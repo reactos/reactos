@@ -60,7 +60,7 @@ LoadAndInitializeNtMarta(VOID)
     FindNtMartaProc(TreeResetNamedSecurityInfo);
     FindNtMartaProc(GetInheritanceSource);
     FindNtMartaProc(FreeIndexArray);
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -68,13 +68,13 @@ DWORD
 CheckNtMartaPresent(VOID)
 {
     DWORD ErrorCode;
-    
+
     if (NtMarta == NULL)
     {
         /* we're the first one trying to use ntmarta, initialize it and change
            the pointer after initialization */
         ErrorCode = LoadAndInitializeNtMarta();
-        
+
         if (ErrorCode == ERROR_SUCCESS)
         {
             /* try change the NtMarta pointer */
@@ -99,7 +99,7 @@ CheckNtMartaPresent(VOID)
         /* ntmarta was already initialized */
         ErrorCode = ERROR_SUCCESS;
     }
-    
+
     return ErrorCode;
 }
 
@@ -1372,7 +1372,7 @@ ProtectSacl:
             }
         }
     }
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -1483,7 +1483,7 @@ SetNamedSecurityInfoW(LPWSTR pObjectName,
                       PACL pSacl)
 {
     DWORD ErrorCode;
-    
+
     if (pObjectName != NULL)
     {
         ErrorCode = CheckNtMartaPresent();
@@ -1532,14 +1532,14 @@ SetNamedSecurityInfoA(LPSTR pObjectName,
     UNICODE_STRING ObjectName;
     NTSTATUS Status;
     DWORD Ret;
-    
+
     Status = RtlCreateUnicodeStringFromAsciiz(&ObjectName,
                                               pObjectName);
     if (!NT_SUCCESS(Status))
     {
         return RtlNtStatusToDosError(Status);
     }
-    
+
     Ret = SetNamedSecurityInfoW(ObjectName.Buffer,
                                 ObjectType,
                                 SecurityInfo,
@@ -1570,7 +1570,7 @@ GetSecurityInfo(HANDLE handle,
                 PSECURITY_DESCRIPTOR* ppSecurityDescriptor)
 {
     DWORD ErrorCode;
-    
+
     if (handle != NULL)
     {
         ErrorCode = CheckNtMartaPresent();
@@ -1627,14 +1627,14 @@ SetSecurityInfo(HANDLE handle,
         if (ErrorCode == ERROR_SUCCESS)
         {
             SECURITY_DESCRIPTOR SecurityDescriptor;
-            
+
             ErrorCode = pSetSecurityInfoCheck(&SecurityDescriptor,
                                               SecurityInfo,
                                               psidOwner,
                                               psidGroup,
                                               pDacl,
                                               pSacl);
-            
+
             if (ErrorCode == ERROR_SUCCESS)
             {
                 /* call the MARTA provider */

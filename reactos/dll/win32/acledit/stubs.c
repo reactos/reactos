@@ -79,7 +79,7 @@ SedDiscretionaryAclEditor(HWND hWndOwner,
                           DWORD Reserved)
 {
   UNREFERENCED_PARAMETER(hWndOwner);
-  UNREFERENCED_PARAMETER(hInstance);	
+  UNREFERENCED_PARAMETER(hInstance);
   UNREFERENCED_PARAMETER(lpMachineName);
   UNREFERENCED_PARAMETER(pAclDlgControl);
   UNREFERENCED_PARAMETER(pAclEditControl);

@@ -27,16 +27,16 @@
 /**
  * \file texformat_tmp.h
  * Texel fetch functions template.
- * 
+ *
  * This template file is used by texformat.c to generate texel fetch functions
- * for 1-D, 2-D and 3-D texture images. 
+ * for 1-D, 2-D and 3-D texture images.
  *
  * It should be expanded by defining \p DIM as the number texture dimensions
  * (1, 2 or 3).  According to the value of \p DIM a series of macros is defined
  * for the texel lookup in the gl_texture_image::Data.
- * 
+ *
  * \sa texformat.c and FetchTexel.
- * 
+ *
  * \author Gareth Hughes
  * \author Brian Paul
  */
@@ -261,8 +261,8 @@ static void FETCH(f_luminance_alpha)( const struct gl_texture_image *texImage,
                                   GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLchan *src = CHAN_ADDR( texImage, i, j, k, 2 );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = CHAN_TO_FLOAT(src[0]);
    texel[ACOMP] = CHAN_TO_FLOAT(src[1]);
 }
@@ -296,9 +296,9 @@ static void FETCH(f_intensity)( const struct gl_texture_image *texImage,
                                 GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLchan *src = CHAN_ADDR( texImage, i, j, k, 1 );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
-   texel[BCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
+   texel[BCOMP] =
    texel[ACOMP] = CHAN_TO_FLOAT(src[0]);
 }
 
@@ -1281,8 +1281,8 @@ static void FETCH(al88)( const struct gl_texture_image *texImage,
 			 GLint i, GLint j, GLint k, GLchan *texel )
 {
    const GLushort s = *USHORT_ADDR( texImage, i, j, k );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = UBYTE_TO_CHAN( s & 0xff );
    texel[ACOMP] = UBYTE_TO_CHAN( s >> 8 );
 }
@@ -1292,8 +1292,8 @@ static void FETCH(f_al88)( const struct gl_texture_image *texImage,
                            GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLushort s = *USHORT_ADDR( texImage, i, j, k );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = UBYTE_TO_FLOAT( s & 0xff );
    texel[ACOMP] = UBYTE_TO_FLOAT( s >> 8 );
 }
@@ -1316,8 +1316,8 @@ static void FETCH(al88_rev)( const struct gl_texture_image *texImage,
                              GLint i, GLint j, GLint k, GLchan *texel )
 {
    const GLushort s = *USHORT_ADDR( texImage, i, j, k );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = UBYTE_TO_CHAN( s >> 8 );
    texel[ACOMP] = UBYTE_TO_CHAN( s & 0xff );
 }
@@ -1327,8 +1327,8 @@ static void FETCH(f_al88_rev)( const struct gl_texture_image *texImage,
                                GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLushort s = *USHORT_ADDR( texImage, i, j, k );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = UBYTE_TO_FLOAT( s >> 8 );
    texel[ACOMP] = UBYTE_TO_FLOAT( s & 0xff );
 }
@@ -1401,8 +1401,8 @@ static void FETCH(f_a8)( const struct gl_texture_image *texImage,
                          GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLubyte *src = UBYTE_ADDR( texImage, i, j, k, 1 );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = 0.0;
    texel[ACOMP] = UBYTE_TO_FLOAT( src[0] );
 }
@@ -1436,8 +1436,8 @@ static void FETCH(f_l8)( const struct gl_texture_image *texImage,
                          GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLubyte *src = UBYTE_ADDR( texImage, i, j, k, 1 );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
    texel[BCOMP] = UBYTE_TO_FLOAT( src[0] );
    texel[ACOMP] = 1.0F;
 }
@@ -1471,9 +1471,9 @@ static void FETCH(f_i8)( const struct gl_texture_image *texImage,
                          GLint i, GLint j, GLint k, GLfloat *texel )
 {
    const GLubyte *src = UBYTE_ADDR( texImage, i, j, k, 1 );
-   texel[RCOMP] = 
-   texel[GCOMP] = 
-   texel[BCOMP] = 
+   texel[RCOMP] =
+   texel[GCOMP] =
+   texel[BCOMP] =
    texel[ACOMP] = UBYTE_TO_FLOAT( src[0] );
 }
 

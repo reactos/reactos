@@ -20,14 +20,14 @@
 
 /* TODO:
  * - implement WINMM (32bit) multitasking and use it in all MCI drivers
- *   instead of the home grown one 
+ *   instead of the home grown one
  * - 16bit mmTaskXXX functions are currently broken because the 16
  *   loader does not support binary command lines => provide Wine's
  *   own mmtask.tsk not using binary command line.
  * - correctly handle the MCI_ALL_DEVICE_ID in functions.
  * - finish mapping 16 <=> 32 of MCI structures and commands
  * - implement auto-open feature (ie, when a string command is issued
- *   for a not yet opened device, MCI automatically opens it) 
+ *   for a not yet opened device, MCI automatically opens it)
  * - use a default registry setting to replace the [mci] section in
  *   configuration file (layout of info in registry should be compatible
  *   with all Windows' version - which use different layouts of course)
@@ -318,7 +318,7 @@ static int MCI_MapMsgAtoW(UINT msg, DWORD_PTR dwParam1, DWORD_PTR *dwParam2)
             if (dwParam1 & MCI_OPEN_ALIAS)
                 mci_openW->lpstrAlias = MCI_strdupAtoW(mci_openA->lpstrAlias);
             /* FIXME: this is only needed for specific types of MCI devices, and
-             * may cause a segfault if the two DWORD:s don't exist at the end of 
+             * may cause a segfault if the two DWORD:s don't exist at the end of
              * mci_openA
              */
             memcpy(mci_openW + 1, mci_openA + 1, 2 * sizeof(DWORD));
@@ -566,7 +566,7 @@ static	DWORD	MCI_GetDevTypeFromFileName(LPCWSTR fileName, LPCWSTR buf, UINT len)
 	if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, keyW,
 			   0, KEY_QUERY_VALUE, &hKey ) == ERROR_SUCCESS) {
 	    DWORD dwLen = len;
-	    LONG lRet = RegQueryValueExW( hKey, tmp + 1, 0, 0, (void*)buf, &dwLen ); 
+	    LONG lRet = RegQueryValueExW( hKey, tmp + 1, 0, 0, (void*)buf, &dwLen );
 	    RegCloseKey( hKey );
 	    if (lRet == ERROR_SUCCESS) return 0;
         }
@@ -1174,7 +1174,7 @@ static	DWORD	MCI_ParseOptArgs(LPDWORD data, int _offset, LPCWSTR lpCmd,
 /**************************************************************************
  * 				MCI_HandleReturnValues	[internal]
  */
-static	DWORD	MCI_HandleReturnValues(DWORD dwRet, LPWINE_MCIDRIVER wmd, DWORD retType, 
+static	DWORD	MCI_HandleReturnValues(DWORD dwRet, LPWINE_MCIDRIVER wmd, DWORD retType,
                                        LPDWORD data, LPWSTR lpstrRet, UINT uRetLen)
 {
     static const WCHAR wszLd  [] = {'%','l','d',0};
@@ -1262,7 +1262,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
     static const WCHAR  wszNew[] = {'n','e','w',0};
     static const WCHAR  wszSAliasS[] = {' ','a','l','i','a','s',' ',0};
 
-    TRACE("(%s, %p, %d, %p)\n", 
+    TRACE("(%s, %p, %d, %p)\n",
           debugstr_w(lpstrCommand), lpstrRet, uRetLen, hwndCallback);
 
     /* format is <command> <device> <optargs> */
@@ -1402,7 +1402,7 @@ DWORD WINAPI mciSendStringW(LPCWSTR lpstrCommand, LPWSTR lpstrRet,
     default:	ERR("oops\n");
     }
 
-    TRACE("verb=%s on dev=%s; offset=%d\n", 
+    TRACE("verb=%s on dev=%s; offset=%d\n",
           debugstr_w(verb), debugstr_w(dev), offset);
 
     if ((dwRet = MCI_ParseOptArgs(data, offset, lpCmd, args, &dwFlags)))
@@ -1647,7 +1647,7 @@ static	DWORD MCI_Open(DWORD dwParam, LPMCI_OPEN_PARMSW lpParms)
 
 	    if (uDevType < MCI_DEVTYPE_FIRST ||
 		uDevType > MCI_DEVTYPE_LAST ||
-		!LoadStringW(WINMM_IData.hWinMM32Instance, uDevType, 
+		!LoadStringW(WINMM_IData.hWinMM32Instance, uDevType,
                              strDevTyp, sizeof(strDevTyp) / sizeof(WCHAR))) {
 		dwRet = MCIERR_BAD_INTEGER;
 		goto errCleanUp;
@@ -1667,7 +1667,7 @@ static	DWORD MCI_Open(DWORD dwParam, LPMCI_OPEN_PARMSW lpParms)
 		 */
 		if (dwParam & MCI_OPEN_ELEMENT) {
 		    ERR("Both MCI_OPEN_ELEMENT(%s) and %s are used\n",
-			debugstr_w(lpParms->lpstrElementName), 
+			debugstr_w(lpParms->lpstrElementName),
                         debugstr_w(strDevTyp));
 		    dwRet = MCIERR_UNRECOGNIZED_KEYWORD;
 		    goto errCleanUp;
@@ -1883,13 +1883,13 @@ static	DWORD MCI_SysInfo(UINT uDevID, DWORD dwFlags, LPMCI_SYSINFO_PARMSW lpParm
 	    ret = MCIERR_UNRECOGNIZED_COMMAND;
 	} else {
 	    s = NULL;
-	    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, wszHklmMci, 0, 
+	    if (RegOpenKeyExW( HKEY_LOCAL_MACHINE, wszHklmMci, 0,
                                KEY_QUERY_VALUE, &hKey ) == ERROR_SUCCESS) {
-		if (RegQueryInfoKeyW( hKey, 0, 0, 0, &cnt, 
-                                      0, 0, 0, 0, 0, 0, 0) == ERROR_SUCCESS && 
+		if (RegQueryInfoKeyW( hKey, 0, 0, 0, &cnt,
+                                      0, 0, 0, 0, 0, 0, 0) == ERROR_SUCCESS &&
                     lpParms->dwNumber <= cnt) {
     		    DWORD bufLen = sizeof(buf);
-		    if (RegEnumKeyExW(hKey, lpParms->dwNumber - 1, 
+		    if (RegEnumKeyExW(hKey, lpParms->dwNumber - 1,
                                       buf, &bufLen, 0, 0, 0, 0) == ERROR_SUCCESS)
                         s = buf;
 		}
@@ -2271,7 +2271,7 @@ UINT WINAPI mciGetDeviceIDA(LPCSTR lpstrName)
  */
 UINT WINAPI mciGetDeviceIDW(LPCWSTR lpwstrName)
 {
-    return MCI_GetDriverFromString(lpwstrName); 
+    return MCI_GetDriverFromString(lpwstrName);
 }
 
 /******************************************************************

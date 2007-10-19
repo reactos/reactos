@@ -41,7 +41,7 @@ BEGIN
     LTEXT           "Οι υπεύθυνοι για την ανάπτυξη του ReactOS θα ήθελαν να αναγνωρίσουν τις παρακάτω εργασίες "\
                     "ελεύθερου λογισμικού, (μέρη των οποίων) χρησιμοποιήθηκαν για την ανάπτυξη του ReactOS:",
                     IDC_STATIC,15,4,286,25
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "Το ReactOS σας έχει δοθεί σύμφωνα με την άδεια GPL, έτσι αν θέλετε να ξαναχρησιμοποιήσετε "\
                     "ή να επαναδιανείμετε μέρη του ή ολόλκληρο το Reactos, πρέπει να τηρείτε την GPL.",
@@ -158,7 +158,7 @@ STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Γενική ’δεια Χρήσης GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
                     ES_READONLY | WS_VSCROLL
     DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
 END

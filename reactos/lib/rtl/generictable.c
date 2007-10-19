@@ -531,7 +531,7 @@ RtlLookupElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 	}
 
 	OurSearchResult = avl_search
-		(Table, Buffer, 
+		(Table, Buffer,
 		 Table->BalancedRoot.LeftChild, &OurNodeOrParent);
 
 	if(SearchResult) *SearchResult = OurSearchResult;
@@ -553,7 +553,7 @@ RtlLookupElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
 {
 	PRTL_BALANCED_LINKS OurNodeOrParent;
 	TABLE_SEARCH_RESULT OurSearchResult;
-	return RtlLookupElementGenericTableFullAvl 
+	return RtlLookupElementGenericTableFullAvl
 	(Table, Buffer, (PVOID *)&OurNodeOrParent, &OurSearchResult);
 }
 
@@ -571,11 +571,11 @@ RtlDeleteElementGenericTableAvl(IN PRTL_AVL_TABLE Table,
 	RtlLookupElementGenericTableFullAvl
 		( Table, Buffer, (PVOID *)&Node, &Result );
 
-	if( Result == TableFoundNode ) 
+	if( Result == TableFoundNode )
 	{
 		avl_delete_node(Table, Node);
 		Table->FreeRoutine(Table, Node);
-		if( Table->NumberGenericTableElements == 0 ) 
+		if( Table->NumberGenericTableElements == 0 )
 			avl_deinit(Table);
 		return TRUE;
 	}
@@ -683,24 +683,24 @@ RtlInsertElementGenericTableFullAvl(IN PRTL_AVL_TABLE Table,
 		*NewElement = FALSE;
 
 	OurSearchResult = avl_search
-		(Table, Buffer, 
+		(Table, Buffer,
 		 Table->BalancedRoot.LeftChild, &OurNodeOrParent);
 
 	if(NodeOrParent) *NodeOrParent = OurNodeOrParent;
 	if(SearchResult) *SearchResult = OurSearchResult;
 
-	if(OurSearchResult == TableFoundNode) 
+	if(OurSearchResult == TableFoundNode)
 	{
 		RtlDeleteElementGenericTableAvl(Table, Buffer);
 		return RtlInsertElementGenericTableFullAvl
-			(Table, Buffer, BufferSize, 
+			(Table, Buffer, BufferSize,
 			 NewElement, NodeOrParent, SearchResult);
 	}
 	else
 	{
-		PRTL_BALANCED_LINKS NewNode = 
+		PRTL_BALANCED_LINKS NewNode =
 			Table->AllocateRoutine
-			(Table, 
+			(Table,
 			 BufferSize + sizeof(RTL_BALANCED_LINKS) + BufferSize);
 
 		if( !NewNode ) return NULL;

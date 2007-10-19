@@ -218,7 +218,7 @@ static BOOL create_nls_file(char *name, CPINFOEXA *cpi, WCHAR *table, WCHAR *oem
      *  1. (256 * sizeof(WORD)) primary CP to Unicode table +
      *  2. (WORD) optional OEM glyph table size in words +
      *  3. OEM glyph table size in words * sizeof(WORD) +
-     *  4. (WORD) Number of DBCS LeadByte ranges + 
+     *  4. (WORD) Number of DBCS LeadByte ranges +
      *  5. if (Number of DBCS LeadByte ranges != 0) 256 * sizeof(WORD) offsets of lead byte sub tables
      *  6. (Number of DBCS LeadByte sub tables * 256 * sizeof(WORD)) LeadByte sub tables +
      *  7. (WORD) Unknown flag
@@ -298,7 +298,7 @@ static WCHAR *Load_CP2Unicode_Table(char *table_name, UINT cp, CPINFOEXA *cpi)
     int lb_ranges, lb_range_started, line;
 
     printf("Loading translation table \"%s\"\n", table_name);
-    
+
     /* Init to default values */
     memset(cpi, 0, sizeof(CPINFOEXA));
     cpi->CodePage = cp;
@@ -409,7 +409,7 @@ static WCHAR *Load_OEM2Unicode_Table(char *table_name, WCHAR *def_table, UINT cp
     int line;
 
     printf("Loading oem glyph table \"%s\"\n", table_name);
-    
+
     table = (WCHAR *)malloc(sizeof(WCHAR) * 65536);
     if(!table) {
 	printf("Not enough memory for Codepage to Unicode table\n");

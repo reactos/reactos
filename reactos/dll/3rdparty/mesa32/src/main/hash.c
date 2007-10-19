@@ -1,10 +1,10 @@
 /**
  * \file hash.c
- * Generic hash table. 
+ * Generic hash table.
  *
  * Used for display lists, texture objects, vertex/fragment programs,
  * buffer objects, etc.  The hash functions are thread-safe.
- * 
+ *
  * \note key=0 is illegal.
  *
  * \author Brian Paul
@@ -47,7 +47,7 @@
 
 
 /**
- * An entry in the hash table.  
+ * An entry in the hash table.
  *
  * This struct is private to this file.
  */
@@ -58,7 +58,7 @@ struct HashEntry {
 };
 
 /**
- * The hash table data structure.  
+ * The hash table data structure.
  *
  * This is an opaque types (it's not defined in hash.h file).
  */
@@ -71,7 +71,7 @@ struct _mesa_HashTable {
 
 /**
  * Create a new hash table.
- * 
+ *
  * \return pointer to a new, empty hash table.
  */
 struct _mesa_HashTable *
@@ -115,10 +115,10 @@ _mesa_DeleteHashTable(struct _mesa_HashTable *table)
 
 /**
  * Lookup an entry in the hash table.
- * 
+ *
  * \param table the hash table.
  * \param key the key.
- * 
+ *
  * \return pointer to user's data or NULL if key not in table
  */
 void *
@@ -144,9 +144,9 @@ _mesa_HashLookup(const struct _mesa_HashTable *table, GLuint key)
 
 
 /**
- * Insert a key/pointer pair into the hash table.  
+ * Insert a key/pointer pair into the hash table.
  * If an entry with this key already exists we'll replace the existing entry.
- * 
+ *
  * \param table the hash table.
  * \param key the key (not zero).
  * \param data pointer to user data.
@@ -192,7 +192,7 @@ _mesa_HashInsert(struct _mesa_HashTable *table, GLuint key, void *data)
 
 /**
  * Remove an entry from the hash table.
- * 
+ *
  * \param table the hash table.
  * \param key key of entry to remove.
  *
@@ -237,12 +237,12 @@ _mesa_HashRemove(struct _mesa_HashTable *table, GLuint key)
 
 /**
  * Get the key of the "first" entry in the hash table.
- * 
+ *
  * This is used in the course of deleting all display lists when
  * a context is destroyed.
- * 
+ *
  * \param table the hash table
- * 
+ *
  * \return key for the "first" entry in the hash table.
  *
  * While holding the lock, walks through all table positions until finding
@@ -315,7 +315,7 @@ _mesa_HashNextEntry(const struct _mesa_HashTable *table, GLuint key)
 
 /**
  * Dump contents of hash table for debugging.
- * 
+ *
  * \param table the hash table.
  */
 void
@@ -336,10 +336,10 @@ _mesa_HashPrint(const struct _mesa_HashTable *table)
 
 /**
  * Find a block of adjacent unused hash keys.
- * 
+ *
  * \param table the hash table.
  * \param numKeys number of keys needed.
- * 
+ *
  * \return Starting key of free block or 0 if failure.
  *
  * If there are enough free keys between the maximum key existing in the table

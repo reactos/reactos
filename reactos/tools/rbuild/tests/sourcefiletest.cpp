@@ -80,7 +80,7 @@ SourceFileTest::FullParseTest ()
 	                      recurse ) );
 	IS_FALSE( IsParentOf ( recurse,
 	                       header1 ) );
-	
+
 }
 
 void

@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Boot Data implementation
  * FILE:            lib/rtl/bootdata.c
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES *****************************************************************/
@@ -573,7 +573,7 @@ RtlCreateSystemVolumeInformationFolder(
         AddSep = TRUE;
         PathLen += sizeof(WCHAR);
     }
-    
+
     /* allocate the new string */
     NewPath.MaximumLength = (USHORT)PathLen + sizeof(WCHAR);
     NewPath.Buffer = RtlpAllocateStringMemory(NewPath.MaximumLength,

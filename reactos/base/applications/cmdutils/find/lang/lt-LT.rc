@@ -18,7 +18,7 @@ IDS_USAGE, "FIND: Spausdina visas bylos eilutes, kuriose yra ieðkomas tekstas.\n
     /I  Ignoruoti raidþiø dydá\n\
     /N  Numeruoti vaizduojamas eilutes, pradedant nuo 1\n\
     /V  Spausdinti eilutes, kuriose nëra ieðkomo teksto"
-    
+
 IDS_NO_SUCH_FILE, "FIND: %s: Tokios bylos nëra\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Nepavyko atverti bylos\n"

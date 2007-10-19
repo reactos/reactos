@@ -76,7 +76,7 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     wcFrame.hIconSm = (HICON)LoadImage(hInstance, MAKEINTRESOURCE(IDI_REGEDIT),
                                        IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
                                        GetSystemMetrics(SM_CYSMICON), LR_SHARED);
-    wcFrame.hCursor = LoadCursor(0, IDC_ARROW); 
+    wcFrame.hCursor = LoadCursor(0, IDC_ARROW);
     wcFrame.lpszClassName = szFrameClass;
 
     hFrameWndClass = RegisterClassEx(&wcFrame); /* register frame window class */
@@ -170,7 +170,7 @@ void DestroyMainMenu() {
 void ExitInstance(HINSTANCE hInstance)
 {
     UnregisterHexEditorClass(hInstance);
-    
+
     DestroyMenu(hPopupMenus);
     UnloadAclUiDll();
 }
@@ -235,7 +235,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
             DispatchMessage(&msg);
         }
     }
-    
+
     ExitInstance(hInstance);
     return (int) msg.wParam;
 }

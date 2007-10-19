@@ -41,7 +41,7 @@ interface IAutoComplete : IUnknown
 		  [in] IUnknown *punkACL,
 		  [in] LPCOLESTR pwszRegKeyPath,
 		  [in] LPCOLESTR pwszQuickComplete);
-    
+
     HRESULT Enable( [in] BOOL fEnable );
 }
 

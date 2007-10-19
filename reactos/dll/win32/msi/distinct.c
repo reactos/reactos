@@ -300,7 +300,7 @@ UINT DISTINCT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
     dv = msi_alloc_zero( sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     dv->view.ops = &distinct_ops;
     msiobj_addref( &db->hdr );

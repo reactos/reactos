@@ -81,8 +81,8 @@ size_t fread(void *vptr, size_t size, size_t count, FILE *iop)
        }
     }
   }
-  // return   count - (to_read/size)  
-  /* FIXME is this formual right ?, I copy the formula from djgpp 
+  // return   count - (to_read/size)
+  /* FIXME is this formual right ?, I copy the formula from djgpp
      in our  to_read or copy ? */
   return size != 0 ? count - ((to_read + size - 1) / size) : 0;
 }

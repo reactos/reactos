@@ -40,20 +40,20 @@ extern ULONG_PTR Win32kSSDT[];
 extern UCHAR Win32kSSPT[];
 extern ULONG Win32kNumberOfSysCalls;
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 Win32kProcessCallback(struct _EPROCESS *Process,
                       BOOLEAN Create)
 {
     PW32PROCESS Win32Process;
     DECLARE_RETURN(NTSTATUS);
-    
+
     DPRINT("Enter Win32kProcessCallback\n");
     UserEnterExclusive();
-    
+
     /* Get the Win32 Process */
     Win32Process = PsGetProcessWin32Process(Process);
-    
+
     /* Allocate one if needed */
     if (!Win32Process)
     {
@@ -65,7 +65,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
         if (Win32Process == NULL) RETURN( STATUS_NO_MEMORY);
 
         RtlZeroMemory(Win32Process, sizeof(W32PROCESS));
-        
+
         PsSetProcessWin32Process(Process, Win32Process);
         /* FIXME - unlock the process */
     }
@@ -129,7 +129,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       IntCleanupCurIcons(Process, Win32Process);
       IntEngCleanupDriverObjs(Process, Win32Process);
       CleanupMonitorImpl();
-      
+
       /* no process windows should exist at this point, or the function will assert! */
       DestroyProcessClasses(Win32Process);
 
@@ -153,7 +153,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
     }
 
   RETURN( STATUS_SUCCESS);
-  
+
 CLEANUP:
   UserLeave();
   DPRINT("Leave Win32kProcessCallback, ret=%i\n",_ret_);
@@ -161,7 +161,7 @@ CLEANUP:
 }
 
 
-NTSTATUS 
+NTSTATUS
 STDCALL
 Win32kThreadCallback(struct _ETHREAD *Thread,
                      PSW32THREADCALLOUTTYPE Type)
@@ -169,15 +169,15 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     struct _EPROCESS *Process;
     PW32THREAD Win32Thread;
     DECLARE_RETURN(NTSTATUS);
-    
+
     DPRINT("Enter Win32kThreadCallback\n");
     UserEnterExclusive();
 
     Process = Thread->ThreadsProcess;
-    
+
     /* Get the Win32 Thread */
     Win32Thread = PsGetThreadWin32Thread(Thread);
-    
+
     /* Allocate one if needed */
     if (!Win32Thread)
     {
@@ -189,7 +189,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
         if (Win32Thread == NULL) RETURN( STATUS_NO_MEMORY);
 
         RtlZeroMemory(Win32Thread, sizeof(W32THREAD));
-        
+
         PsSetThreadWin32Thread(Thread, Win32Thread);
         /* FIXME - unlock the process */
     }
@@ -268,7 +268,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
   else
     {
       PSINGLE_LIST_ENTRY e;
-      
+
       DPRINT("Destroying W32 thread TID:%d at IRQ level: %lu\n", Thread->Cid.UniqueThread, KeGetCurrentIrql());
 
       Win32Thread->IsExiting = TRUE;
@@ -287,7 +287,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
          PUSER_REFERENCE_ENTRY ref = CONTAINING_RECORD(e, USER_REFERENCE_ENTRY, Entry);
          DPRINT("thread clean: remove reference obj 0x%x\n",ref->obj);
          ObmDereferenceObject(ref->obj);
-         
+
          e = PopEntryList(&Win32Thread->ReferencesList);
       }
 
@@ -304,7 +304,7 @@ Win32kThreadCallback(struct _ETHREAD *Thread,
     }
 
   RETURN( STATUS_SUCCESS);
-  
+
 CLEANUP:
   UserLeave();
   DPRINT("Leave Win32kThreadCallback, ret=%i\n",_ret_);
@@ -385,7 +385,7 @@ DriverEntry (
     CalloutData.DesktopDeleteProcedure = IntDesktopObjectDelete;
     CalloutData.ProcessCallout = Win32kProcessCallback;
     CalloutData.ThreadCallout = Win32kThreadCallback;
-    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;    
+    CalloutData.BatchFlushRoutine = NtGdiFlushUserBatch;
 
     /*
      * Register our per-process and per-thread structures.

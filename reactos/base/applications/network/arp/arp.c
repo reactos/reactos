@@ -69,7 +69,7 @@ DWORD DoFormatMessage(VOID)
 
     DWORD ErrorCode = GetLastError();
 
-    if (ErrorCode != ERROR_SUCCESS) 
+    if (ErrorCode != ERROR_SUCCESS)
     {
         RetVal = FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                                FORMAT_MESSAGE_FROM_SYSTEM |
@@ -248,7 +248,7 @@ INT DisplayArpEntries(PTCHAR pszInetAddr, PTCHAR pszIfAddr)
     }
 
     return EXIT_SUCCESS;
-    
+
 cleanup:
     if (pIpNetTable != NULL)
         HeapFree(GetProcessHeap(), 0, pIpNetTable);
@@ -618,4 +618,4 @@ INT main(int argc, char* argv[])
         Usage();
 
     return EXIT_SUCCESS;
-} 
+}

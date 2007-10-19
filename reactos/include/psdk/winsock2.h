@@ -567,7 +567,7 @@ u_long PASCAL htonl(u_long);
 u_long PASCAL ntohl(u_long);
 u_short PASCAL htons(u_short);
 u_short PASCAL ntohs(u_short);
-#ifndef _SYS_SELECT_H /* Work around for Linux Compilers */ 
+#ifndef _SYS_SELECT_H /* Work around for Linux Compilers */
 #define _SYS_SELECT_H
 int PASCAL select(int nfds,fd_set*,fd_set*,fd_set*,const struct timeval*);
 #endif

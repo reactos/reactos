@@ -40,7 +40,7 @@ HalAllProcessorsStarted (VOID)
 
 NTHALAPI
 BOOLEAN
-NTAPI 
+NTAPI
 HalStartNextProcessor(
     IN struct _LOADER_PARAMETER_BLOCK *LoaderBlock,
     IN PKPROCESSOR_STATE ProcessorState

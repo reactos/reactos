@@ -9,7 +9,7 @@ IDS_USAGE, "Sucht in einer Datei nach einer Zeichenfolge.\n\n\
     /I  Ignoriert Groß-/Kleinbuchstaben bei der Suche.\n\
     /N  Zeigt die Zeilen mit ihren Zeilennummern an.\n\
     /V  Zeigt alle Zeilen an, die die Zeichenfolge NICHT enhalten."
-    
+
 IDS_NO_SUCH_FILE, "Datei %s nicht gefunden\n"
 
 IDS_CANNOT_OPEN, "Datei %s kann nicht geöffnet werden.\n"

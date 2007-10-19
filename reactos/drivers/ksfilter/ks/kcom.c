@@ -30,7 +30,7 @@ KoCreateInstance(
     }
 
     /*
-        Find the desired interface and create an instance.  
+        Find the desired interface and create an instance.
 
         But we also need to supply a
         pointer which will be set to a list of available interfaces, to

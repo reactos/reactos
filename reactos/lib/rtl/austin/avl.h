@@ -21,9 +21,9 @@ PRTL_BALANCED_LINKS avl_last(PRTL_AVL_TABLE table);
 PRTL_BALANCED_LINKS avl_next(PRTL_AVL_TABLE table, PRTL_BALANCED_LINKS node);
 
 int  avl_search
-(PRTL_AVL_TABLE table, 
- PVOID _key, 
- PRTL_BALANCED_LINKS node, 
+(PRTL_AVL_TABLE table,
+ PVOID _key,
+ PRTL_BALANCED_LINKS node,
  PRTL_BALANCED_LINKS *where);
 
 

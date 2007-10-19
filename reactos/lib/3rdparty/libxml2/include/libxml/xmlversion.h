@@ -346,7 +346,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  */
 #if 1
 #define LIBXML_MODULES_ENABLED
-#define LIBXML_MODULE_EXTENSION ".so" 
+#define LIBXML_MODULE_EXTENSION ".so"
 #endif
 
 /**

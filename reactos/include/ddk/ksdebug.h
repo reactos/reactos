@@ -10,7 +10,7 @@
 
 #if defined(__cplusplus)
 extern "C" {
-#endif 
+#endif
 #if defined(_NTDDK_)
 
 #define DEBUGLVL_ERROR   0

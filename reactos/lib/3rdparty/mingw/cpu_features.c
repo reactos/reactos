@@ -7,7 +7,7 @@
 #define EDX_MMX (1 << 23)
 #define EDX_FXSR (1 << 24) /* FXSAVE and FXRSTOR */
 #define EDX_SSE (1 << 25)
-#define EDX_SSE2 (1 << 26) 
+#define EDX_SSE2 (1 << 26)
 
 /*  level 1 ecx bits */
 #define ECX_SSE3 (1 << 0)
@@ -23,7 +23,7 @@
 			: "=a" (a), "=b" (b), "=c" (c), "=d" (d)\
 			: "0" (level))
 
-/* Combine the different cpuid flags into a single bitmap.  */ 
+/* Combine the different cpuid flags into a single bitmap.  */
 
 unsigned int __cpu_features = 0;
 
@@ -56,7 +56,7 @@ void  __cpu_features_init (void)
   if (edx & EDX_MMX)
      __cpu_features |= _CRT_MMX;
   if (edx & EDX_FXSR)
-     __cpu_features |= _CRT_FXSR; 
+     __cpu_features |= _CRT_FXSR;
   if (edx & EDX_SSE)
      __cpu_features |= _CRT_SSE;
   if (edx & EDX_SSE2)
@@ -73,9 +73,9 @@ void  __cpu_features_init (void)
     return;
   __cpuid (0x80000001, eax, ebx, ecx, edx);
   if (edx & EDX_3DNOW);
-    __cpu_features |= _CRT_3DNOW; 
+    __cpu_features |= _CRT_3DNOW;
   if (edx & EDX_3DNOWP)
-    __cpu_features |= _CRT_3DNOWP; 
+    __cpu_features |= _CRT_3DNOWP;
 #endif
 }
 

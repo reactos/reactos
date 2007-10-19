@@ -5,7 +5,7 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Καλώς Ήλθατε"
     IDS_DEFAULTTOPICTITLE   "ReactOS"

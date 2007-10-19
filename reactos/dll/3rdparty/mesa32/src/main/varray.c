@@ -921,7 +921,7 @@ _mesa_MultiModeDrawElementsIBM( const GLenum * mode, const GLsizei * count,
 /*****                      Initialization                        *****/
 /**********************************************************************/
 
-void 
+void
 _mesa_init_varray( GLcontext * ctx )
 {
    GLuint i;

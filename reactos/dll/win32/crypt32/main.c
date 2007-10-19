@@ -163,7 +163,7 @@ HCRYPTPROV WINAPI I_CryptGetDefaultCryptProv(DWORD reserved)
 BOOL WINAPI I_CryptReadTrustedPublisherDWORDValueFromRegistry(LPCWSTR name,
  DWORD *value)
 {
-    static const WCHAR safer[] = { 
+    static const WCHAR safer[] = {
      'S','o','f','t','w','a','r','e','\\','P','o','l','i','c','i','e','s','\\',
      'M','i','c','r','o','s','o','f','t','\\','S','y','s','t','e','m',
      'C','e','r','t','i','f','i','c','a','t','e','s','\\',

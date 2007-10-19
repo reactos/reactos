@@ -1,16 +1,16 @@
 //
 //    CardCount is a helper library for CardStacks.
-//    
-//    When you initialize a CardCount object with a 
+//
+//    When you initialize a CardCount object with a
 //  cardstack, it keeps track of the number of cards
 //    the stack contains.
 //
 //    e.g. CardCount count(cardstack);
 //
 //    Then you can do:
-//    
+//
 //        int num_fives = count[5]
-//        
+//
 //        count.Add(cardstack2);        - combine with another stack
 //
 //        int num_aces = count[1]        - aces low
@@ -53,7 +53,7 @@ void CardCount::Sub(const CardStack &cs)
     {
         Card card = cs[i];
         int val = card.LoVal();
-        
+
         if(count[val - 1] > 0)
             count[val - 1]--;
     }
@@ -85,6 +85,6 @@ void CardCount::Dec(size_t index)
 
     index -= 1;
 
-    if(count[index] > 0) 
+    if(count[index] > 0)
         count[index]--;
 }

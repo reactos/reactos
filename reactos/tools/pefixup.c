@@ -318,7 +318,7 @@ int main(int argc, char **argv)
 
    dos_header = (PIMAGE_DOS_HEADER)buffer;
    nt_header = (PIMAGE_NT_HEADERS)(buffer + dtohl(dos_header->e_lfanew));
-   
+
    if (dtohs(dos_header->e_magic) != IMAGE_DOS_SIGNATURE ||
        dtohl(nt_header->Signature) != IMAGE_NT_SIGNATURE)
    {

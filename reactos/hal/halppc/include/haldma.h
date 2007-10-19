@@ -2,7 +2,7 @@
 #define HALDMA_H
 
 /*
- * DMA Page Register Structure  
+ * DMA Page Register Structure
  * 080     DMA        RESERVED
  * 081     DMA        Page Register (channel 2)
  * 082     DMA        Page Register (channel 3)
@@ -62,7 +62,7 @@ typedef struct _DMA_CHANNEL_MASK
 } DMA_CHANNEL_MASK, *PDMA_CHANNEL_MASK;
 
 /*
- * DMA Mask Register Structure 
+ * DMA Mask Register Structure
  *
  * MSB                             LSB
  *    x   x   x   x     x   x   x   x
@@ -101,7 +101,7 @@ typedef union _DMA_MODE
 } DMA_MODE, *PDMA_MODE;
 
 /*
- * DMA Extended Mode Register Structure 
+ * DMA Extended Mode Register Structure
  *
  * MSB                             LSB
  *    x   x   x   x     x   x   x   x
@@ -110,7 +110,7 @@ typedef union _DMA_MODE
  *    |   |     |         |       \---- 01 - Channel 1 select
  *    |   |     |         |             10 - Channel 2 select
  *    |   |     |         |             11 - Channel 3 select
- *    |   |     |         | 
+ *    |   |     |         |
  *    |   |     |         |             00 - 8-bit I/O, by bytes
  *    |   |     |         \------------ 01 - 16-bit I/O, by words, address shifted
  *    |   |     |                       10 - 32-bit I/O, by bytes
@@ -122,7 +122,7 @@ typedef union _DMA_MODE
  *    |   |                             11 - Burst
  *    |   |
  *    |   \---------------------------- 0 - Terminal Count is Output
- *    |                                 
+ *    |
  *    \---------------------------------0 - Disable Stop Register
  *                                      1 - Enable Stop Register
  */
@@ -182,14 +182,14 @@ typedef struct _DMA_CHANNEL_STOP
 typedef struct _DMA1_ADDRESS_COUNT
 {
    UCHAR DmaBaseAddress;
-   UCHAR DmaBaseCount; 
+   UCHAR DmaBaseCount;
 } DMA1_ADDRESS_COUNT, *PDMA1_ADDRESS_COUNT;
 
 typedef struct _DMA2_ADDRESS_COUNT
 {
    UCHAR DmaBaseAddress;
    UCHAR Reserved1;
-   UCHAR DmaBaseCount; 
+   UCHAR DmaBaseCount;
    UCHAR Reserved2;
 } DMA2_ADDRESS_COUNT, *PDMA2_ADDRESS_COUNT;
 
@@ -198,12 +198,12 @@ typedef struct _DMA1_CONTROL
    DMA1_ADDRESS_COUNT DmaAddressCount[4];
    UCHAR DmaStatus;
    UCHAR DmaRequest;
-   UCHAR SingleMask; 
+   UCHAR SingleMask;
    UCHAR Mode;
    UCHAR ClearBytePointer;
    UCHAR MasterClear;
    UCHAR ClearMask;
-   UCHAR AllMask; 
+   UCHAR AllMask;
 } DMA1_CONTROL, *PDMA1_CONTROL;
 
 typedef struct _DMA2_CONTROL
@@ -232,13 +232,13 @@ typedef struct _EISA_CONTROL
 {
    /* DMA Controller 1 */
    DMA1_CONTROL DmaController1;         /* 00h-0Fh */
-   UCHAR Reserved1[16];                 /* 0Fh-1Fh */ 
-   
+   UCHAR Reserved1[16];                 /* 0Fh-1Fh */
+
    /* Interrupt Controller 1 (PIC) */
    UCHAR Pic1Operation;                 /* 20h     */
    UCHAR Pic1Interrupt;                 /* 21h     */
    UCHAR Reserved2[30];                 /* 22h-3Fh */
-   
+
    /* Timer */
    UCHAR TimerCounter;                  /* 40h     */
    UCHAR TimerMemoryRefresh;            /* 41h     */
@@ -252,29 +252,29 @@ typedef struct _EISA_CONTROL
    UCHAR TimerCounter2;                 /* 4Ah     */
    UCHAR TimerOperation2;               /* 4Bh     */
    UCHAR Reserved5[20];                 /* 4Ch-5Fh */
-   
+
    /* NMI / Keyboard / RTC */
    UCHAR Keyboard;                      /* 60h     */
    UCHAR NmiStatus;                     /* 61h     */
    UCHAR Reserved6[14];                 /* 62h-6Fh */
    UCHAR NmiEnable;                     /* 70h     */
    UCHAR Reserved7[15];                 /* 71h-7Fh */
-   
+
    /* DMA Page Registers Controller 1 */
    DMA_PAGE DmaController1Pages;        /* 80h-8Fh */
    UCHAR Reserved8[16];                 /* 90h-9Fh */
-   
+
     /* Interrupt Controller 2 (PIC) */
    UCHAR Pic2Operation;                 /* 0A0h      */
    UCHAR Pic2Interrupt;                 /* 0A1h      */
    UCHAR Reserved9[30];                 /* 0A2h-0BFh */
-   
+
    /* DMA Controller 2 */
    DMA1_CONTROL DmaController2;         /* 0C0h-0CFh */
-   
+
    /* System Reserved Ports */
    UCHAR SystemReserved[816];           /* 0D0h-3FFh */
-   
+
    /* Extended DMA Registers, Controller 1 */
    UCHAR DmaHighByteCount1[8];          /* 400h-407h */
    UCHAR Reserved10[2];                 /* 408h-409h */
@@ -287,25 +287,25 @@ typedef struct _EISA_CONTROL
    UCHAR Reserved12;                    /* 463h      */
    UCHAR BusMaster;                     /* 464h      */
    UCHAR Reserved13[27];                /* 465h-47Fh */
-   
+
    /* DMA Page Registers Controller 2 */
    DMA_PAGE DmaController2Pages;        /* 480h-48Fh */
    UCHAR Reserved14[48];                /* 490h-4BFh */
-   
+
    /* Extended DMA Registers, Controller 2 */
    UCHAR DmaHighByteCount2[16];         /* 4C0h-4CFh */
-   
+
    /* Edge/Level Control Registers */
    UCHAR Pic1EdgeLevel;                 /* 4D0h      */
    UCHAR Pic2EdgeLevel;                 /* 4D1h      */
    UCHAR Reserved15[2];                 /* 4D2h-4D3h */
-  
+
    /* Extended DMA Registers, Controller 2 */
    UCHAR DmaChainMode2;                 /* 4D4h      */
    UCHAR Reserved16;                    /* 4D5h      */
    UCHAR DmaExtendedMode2;              /* 4D6h      */
    UCHAR Reserved17[9];                 /* 4D7h-4DFh */
-   
+
    /* DMA Stop Registers */
    DMA_CHANNEL_STOP DmaChannelStop[8];  /* 4E0h-4FFh */
 } EISA_CONTROL, *PEISA_CONTROL;
@@ -328,7 +328,7 @@ struct _ADAPTER_OBJECT {
    /*
     * For normal adapter objects pointer to master adapter that takes care
     * of channel allocation. For master adapter set to NULL.
-    */ 
+    */
    struct _ADAPTER_OBJECT *MasterAdapter;
 
    ULONG MapRegistersPerChannel;
@@ -358,7 +358,7 @@ struct _ADAPTER_OBJECT {
    BOOLEAN Dma64BitAddresses;
    LIST_ENTRY AdapterList;
 } ADAPTER_OBJECT;
- 
+
 typedef struct _GROW_WORK_ITEM {
    WORK_QUEUE_ITEM WorkQueueItem;
    PADAPTER_OBJECT AdapterObject;

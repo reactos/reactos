@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rossym/fromfile.c
  * PURPOSE:         Creating rossym info from a file
- * 
+ *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 

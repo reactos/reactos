@@ -40,7 +40,7 @@ IntAddAtom(LPWSTR AtomName)
       SetLastNtError(Status);
       return (RTL_ATOM)0;
    }
-   
+
    Status = RtlAddAtomToAtomTable(gAtomTable, AtomName, &Atom);
 
    if (!NT_SUCCESS(Status))

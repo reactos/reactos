@@ -67,7 +67,7 @@ LogEvent(LPCTSTR UserMessage,
                  lpvSysMsg);
 
     }
-    else 
+    else
     {
         _stprintf(MessageBuffer,
                   _T("\n%s"),

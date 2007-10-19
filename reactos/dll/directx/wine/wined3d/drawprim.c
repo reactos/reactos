@@ -493,7 +493,7 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
 		     D3DCOLOR_B_G(diffuseColor),
 		     D3DCOLOR_B_B(diffuseColor),
 		     D3DCOLOR_B_A(diffuseColor));
-            VTRACE(("glColor4ub: r,g,b,a=%lu,%lu,%lu,%lu\n", 
+            VTRACE(("glColor4ub: r,g,b,a=%lu,%lu,%lu,%lu\n",
                     D3DCOLOR_B_R(diffuseColor),
 		    D3DCOLOR_B_G(diffuseColor),
 		    D3DCOLOR_B_B(diffuseColor),
@@ -535,9 +535,9 @@ static void drawStridedSlow(IWineD3DDevice *iface, WineDirect3DVertexStridedData
                 }
             }
 
-            VTRACE(("glSecondaryColor4ub: r,g,b=%lu,%lu,%lu\n", 
-                    D3DCOLOR_B_R(specularColor), 
-                    D3DCOLOR_B_G(specularColor), 
+            VTRACE(("glSecondaryColor4ub: r,g,b=%lu,%lu,%lu\n",
+                    D3DCOLOR_B_R(specularColor),
+                    D3DCOLOR_B_G(specularColor),
                     D3DCOLOR_B_B(specularColor)));
             if (GL_SUPPORT(EXT_SECONDARY_COLOR)) {
                 GL_EXTCALL(glSecondaryColor3ubEXT)(
@@ -1110,7 +1110,7 @@ if(stridedlcl.u.s.type.VBO) { \
 #ifdef SHOW_FRAME_MAKEUP
     {
         static long int primCounter = 0;
-        /* NOTE: set primCounter to the value reported by drawprim 
+        /* NOTE: set primCounter to the value reported by drawprim
            before you want to to write frame makeup to /tmp */
         if (primCounter >= 0) {
             WINED3DLOCKED_RECT r;

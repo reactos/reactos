@@ -63,7 +63,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Kunci Klik", -1, 5, 150, 230, 70
   CHECKBOX "&Hidupkan KunciKlik", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Setelan...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Setelan...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
   LTEXT "Membolehkan anda untuk menerangi atau menggeser tanpa menekan tombol mouse. Untuk menyetel, cukup tekan tombol mouse. Untuk melepaskan, klik tombol mouse lagi", -1, 10, 180, 190, 30
 END
 

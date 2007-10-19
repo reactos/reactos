@@ -55,7 +55,7 @@ DeviceCreateHardwarePageEx(HWND hWndParent,
 HINSTANCE hApplet = 0;
 
 /* Applets */
-const APPLET Applets[NUM_APPLETS] = 
+const APPLET Applets[NUM_APPLETS] =
 {
   {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, MmSysApplet},
 };

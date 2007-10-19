@@ -665,7 +665,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Заетост на ЦПУ: %3d%%"
     IDS_STATUS_PROCESSES          "Действия: %d"
     IDS_Not_Responding            "Не отговаря"
-    IDS_Running                   "Работи"  
+    IDS_Running                   "Работи"
 END
 
 

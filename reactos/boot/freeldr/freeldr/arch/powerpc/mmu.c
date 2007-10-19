@@ -294,7 +294,7 @@ inline void SetSDR1( int sdr ) {
     __asm__("sync");
     __asm__("isync");
     __asm__("ptesync");
-    
+
     for( i = 0; i < 256; i++ ) {
 	j = i << 12;
 	__asm__("tlbie %0,0" : : "r" (j));
@@ -321,7 +321,7 @@ int PpcVirt2phys( int virt, int inst ) {
     int i, bath, batl, sr, sdr1, physbase, vahi, valo;
     int npteg, hash, hashmask, ptehi, ptelo, ptegaddr;
     int vsid, pteh, ptevsid, pteapi;
-		
+
     if( msr & txmask ) {
 	sr = GetSR( virt >> 28 );
 	vsid = sr & 0xfffffff;
@@ -358,7 +358,7 @@ int PpcVirt2phys( int virt, int inst ) {
 		if( (ptehi & 64) != pteh ) continue;
 		if( ptevsid != (vsid & 0xffffff) ) continue;
 		if( pteapi != ((virt >> 22) & 0x3f) ) continue;
-		
+
 		return (ptelo & 0xfffff000) | (virt & 0xfff);
 	    }
 	}
@@ -382,7 +382,7 @@ BOOLEAN InsertPageEntry( int virt, int phys, int slot, int _sdr1 ) {
 
     for( i = 0; i < 8; i++ ) {
 	ptehi = GetPhys( ptegaddr + (i * 8) );
-	
+
 	if( (slot != i) && (ptehi & 0x80000000) ) continue;
 
 	ptehi = (1 << 31) | (vsid << 7) | ((virt >> 22) & 0x3f);

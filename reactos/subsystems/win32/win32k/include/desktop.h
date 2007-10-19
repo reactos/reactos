@@ -45,7 +45,7 @@ InitDesktopImpl(VOID);
 
 NTSTATUS FASTCALL
 CleanupDesktopImpl(VOID);
-                       
+
 NTSTATUS
 STDCALL
 IntDesktopObjectParse(IN PVOID ParseObject,
@@ -74,7 +74,7 @@ IntGetScreenDC(VOID);
 HWND FASTCALL
 IntGetDesktopWindow (VOID);
 
-PWINDOW_OBJECT FASTCALL 
+PWINDOW_OBJECT FASTCALL
 UserGetDesktopWindow(VOID);
 
 HWND FASTCALL

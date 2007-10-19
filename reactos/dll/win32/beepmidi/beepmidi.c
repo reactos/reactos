@@ -499,9 +499,9 @@ PlayNote(
         NoteNode* tail_node = NULL;
 
         EnterCriticalSection(&device_lock);
-    
+
         node = device_info->note_list;
-    
+
         while ( node != NULL )
         {
 #ifndef ALLOW_DUPLICATE_NOTES

@@ -264,7 +264,7 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
     /* count0 */
     serialize_dword(pInfo->count0,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
-    
+
     /* info0 */
     serialize_string(pInfo->info0.pbData,&ptr,
                      pInfo->info0.cbData,sizeof(BYTE),FALSE);
@@ -282,7 +282,7 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
     /* null0 */
     serialize_dword(pInfo->null0,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
-    
+
     /* szDataDescr */
     serialize_string((BYTE*)pInfo->szDataDescr,&ptr,
                      (dwStrLen+1)*sizeof(WCHAR),sizeof(BYTE),TRUE);
@@ -294,7 +294,7 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
     /* unknown1 */
     serialize_dword(pInfo->unknown1,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
-    
+
     /* data0 */
     serialize_string(pInfo->data0.pbData,&ptr,
                      pInfo->data0.cbData,sizeof(BYTE),TRUE);
@@ -303,14 +303,14 @@ BOOL serialize(const struct protect_data_t *pInfo, DATA_BLOB *pSerial)
     /* null1 */
     serialize_dword(pInfo->null1,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
-    
+
     /* unknown2 */
     serialize_dword(pInfo->unknown2,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
     /* unknown3 */
     serialize_dword(pInfo->unknown3,&ptr);
     /*TRACE("used %u\n",ptr-pSerial->pbData);*/
-    
+
     /* salt */
     serialize_string(pInfo->salt.pbData,&ptr,
                      pInfo->salt.cbData,sizeof(BYTE),TRUE);
@@ -362,7 +362,7 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
         ERR("reading count0 failed!\n");
         return FALSE;
     }
-    
+
     /* info0 */
     if (!unserialize_string(ptr,&index,size,16,sizeof(BYTE),FALSE,
                             &pInfo->info0.pbData, &pInfo->info0.cbData))
@@ -392,7 +392,7 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
         ERR("reading null0 failed!\n");
         return FALSE;
     }
-    
+
     /* szDataDescr */
     if (!unserialize_string(ptr,&index,size,0,sizeof(BYTE),TRUE,
                             (BYTE**)&pInfo->szDataDescr, NULL))
@@ -407,14 +407,14 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
         ERR("reading unknown0 failed!\n");
         return FALSE;
     }
-    
+
     /* unknown1 */
     if (!unserialize_dword(ptr,&index,size,&pInfo->unknown1))
     {
         ERR("reading unknown1 failed!\n");
         return FALSE;
     }
-    
+
     /* data0 */
     if (!unserialize_string(ptr,&index,size,0,sizeof(BYTE),TRUE,
                             &pInfo->data0.pbData, &pInfo->data0.cbData))
@@ -429,21 +429,21 @@ BOOL unserialize(const DATA_BLOB *pSerial, struct protect_data_t *pInfo)
         ERR("reading null1 failed!\n");
         return FALSE;
     }
-    
+
     /* unknown2 */
     if (!unserialize_dword(ptr,&index,size,&pInfo->unknown2))
     {
         ERR("reading unknown2 failed!\n");
         return FALSE;
     }
-    
+
     /* unknown3 */
     if (!unserialize_dword(ptr,&index,size,&pInfo->unknown3))
     {
         ERR("reading unknown3 failed!\n");
         return FALSE;
     }
-    
+
     /* salt */
     if (!unserialize_string(ptr,&index,size,0,sizeof(BYTE),TRUE,
                             &pInfo->salt.pbData, &pInfo->salt.cbData))

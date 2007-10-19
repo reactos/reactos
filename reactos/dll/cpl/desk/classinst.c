@@ -119,7 +119,7 @@ DisplayClassInstaller(
 	}
 	rc = RegCreateKeyEx(
 		hDriverKey, L"Settings",
-		0, NULL, REG_OPTION_NON_VOLATILE, 
+		0, NULL, REG_OPTION_NON_VOLATILE,
 #if _WIN32_WINNT >= 0x502
 		KEY_READ | KEY_WRITE,
 #else

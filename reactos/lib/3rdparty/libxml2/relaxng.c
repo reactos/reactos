@@ -7645,7 +7645,7 @@ xmlRelaxNGDumpDefine(FILE * output, xmlRelaxNGDefinePtr define)
  * xmlRelaxNGDumpGrammar:
  * @output:  the file output
  * @grammar:  a grammar structure
- * @top:  is this a top grammar 
+ * @top:  is this a top grammar
  *
  * Dump a RelaxNG structure back
  */

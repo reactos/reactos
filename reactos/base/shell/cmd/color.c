@@ -82,22 +82,22 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 		SetScreenColor (wColor, FALSE);
 		return 0;
 	}
-    
-	
+
+
 	if ( _tcslen(&rest[0])==1)
-	{	 
+	{
 	  if ( (_tcscmp(&rest[0], _T("0")) >=0 ) && (_tcscmp(&rest[0], _T("9")) <=0 ) )
 	  {
         SetConsoleTextAttribute (hConsole, (WORD)_ttoi(rest));
 		return 0;
-	  }	 
+	  }
 	  else if ( (_tcscmp(&rest[0], _T("a")) >=0 ) && (_tcscmp(&rest[0], _T("f")) <=0 ) )
-	  {	   
+	  {
        SetConsoleTextAttribute (hConsole, (WORD) (rest[0] + 10 - _T('a')) );
 	   return 0;
 	  }
       else if ( (_tcscmp(&rest[0], _T("A")) >=0 ) && (_tcscmp(&rest[0], _T("F")) <=0 ) )
-	  {	   
+	  {
        SetConsoleTextAttribute (hConsole, (WORD) (rest[0] + 10 - _T('A')) );
 	   return 0;
 	  }
@@ -107,7 +107,7 @@ INT CommandColor (LPTSTR first, LPTSTR rest)
 	}
 
 	if (StringToColor(&wColor, &rest) == FALSE)
-	{	
+	{
 		ConErrResPuts(STRING_COLOR_ERROR2);
 		nErrorLevel = 1;
 		return 1;

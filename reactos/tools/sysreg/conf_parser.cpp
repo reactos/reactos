@@ -82,7 +82,7 @@ namespace Sysreg_
 			//cerr << "ConfigParser::getValue failed to find " << ConfVariable << endl;
 			return false;
 		}
-		
+
 		ConfValue = it->second;
 		return true;
 	}

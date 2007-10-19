@@ -377,24 +377,24 @@ interface IHlinkFrame : IUnknown
 {
     typedef IHlinkFrame *LPHLINKFRAME;
 
-    HRESULT SetBrowseContext( 
+    HRESULT SetBrowseContext(
         [in, unique] IHlinkBrowseContext * pihlbc);
-    HRESULT GetBrowseContext( 
+    HRESULT GetBrowseContext(
         [out] IHlinkBrowseContext ** ppihlbc);
-    HRESULT Navigate( 
-        [in] DWORD grfHLNF, 
-        [in, unique] LPBC pbc, 
-        [in, unique] IBindStatusCallback *pibsc, 
+    HRESULT Navigate(
+        [in] DWORD grfHLNF,
+        [in, unique] LPBC pbc,
+        [in, unique] IBindStatusCallback *pibsc,
         [in, unique] IHlink *pihlNavigate);
-    HRESULT OnNavigate( 
-        [in] DWORD grfHLNF, 
-        [in, unique] IMoniker *pimkTarget, 
-        [in, unique] LPCWSTR pwzLocation, 
-        [in, unique] LPCWSTR pwzFriendlyName, 
+    HRESULT OnNavigate(
+        [in] DWORD grfHLNF,
+        [in, unique] IMoniker *pimkTarget,
+        [in, unique] LPCWSTR pwzLocation,
+        [in, unique] LPCWSTR pwzFriendlyName,
         [in] DWORD dwreserved);
-    HRESULT UpdateHlink( 
-        [in] ULONG uHLID, 
-        [in, unique] IMoniker *pimkTarget, 
-        [in, unique] LPCWSTR pwzLocation, 
+    HRESULT UpdateHlink(
+        [in] ULONG uHLID,
+        [in, unique] IMoniker *pimkTarget,
+        [in, unique] LPCWSTR pwzLocation,
         [in, unique] LPCWSTR pwzFriendlyName);
 }

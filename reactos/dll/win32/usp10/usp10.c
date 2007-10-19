@@ -365,7 +365,7 @@ HRESULT WINAPI ScriptRecordDigitSubstitution(LCID locale, SCRIPT_DIGITSUBSTITUTE
     TRACE("0x%x, %p\n", locale, sds);
 
     /* This implementation appears to be correct for all languages, but it's
-     * not clear if sds->DigitSubstitute is ever set to anything except 
+     * not clear if sds->DigitSubstitute is ever set to anything except
      * CONTEXT or NONE in reality */
 
     if (!sds) return E_POINTER;
@@ -388,7 +388,7 @@ HRESULT WINAPI ScriptRecordDigitSubstitution(LCID locale, SCRIPT_DIGITSUBSTITUTE
 
     switch (sub)
     {
-    case 0: 
+    case 0:
         if (plgid == LANG_ARABIC || plgid == LANG_FARSI)
             sds->DigitSubstitute = SCRIPT_DIGITSUBSTITUTE_CONTEXT;
         else
@@ -423,7 +423,7 @@ HRESULT WINAPI ScriptRecordDigitSubstitution(LCID locale, SCRIPT_DIGITSUBSTITUTE
  *   Success: S_OK
  *   Failure: E_INVALIDARG if sds is invalid. Otherwise an HRESULT.
  */
-HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE *sds, 
+HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE *sds,
                                             SCRIPT_CONTROL *sc, SCRIPT_STATE *ss)
 {
     SCRIPT_DIGITSUBSTITUTE psds;
@@ -490,7 +490,7 @@ HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItem
     int   cnt = 0, index = 0;
     int   New_Script = SCRIPT_UNDEFINED;
 
-    TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems, 
+    TRACE("%s,%d,%d,%p,%p,%p,%p\n", debugstr_wn(pwcInChars, cInChars), cInChars, cMaxItems,
           psControl, psState, pItems, pcItems);
 
     if (!pwcInChars || !cInChars || !pItems || cMaxItems < 2)
@@ -689,10 +689,10 @@ error:
  */
 HRESULT WINAPI ScriptStringOut(SCRIPT_STRING_ANALYSIS ssa,
                                int iX,
-                               int iY, 
-                               UINT uOptions, 
-                               const RECT *prc, 
-                               int iMinSel, 
+                               int iY,
+                               UINT uOptions,
+                               const RECT *prc,
+                               int iMinSel,
                                int iMaxSel,
                                BOOL fDisabled)
 {
@@ -804,7 +804,7 @@ HRESULT WINAPI ScriptStringCPtoX(SCRIPT_STRING_ANALYSIS ssa, int icp, BOOL fTrai
  *      ScriptStringXtoCP (USP10.@)
  *
  */
-HRESULT WINAPI ScriptStringXtoCP(SCRIPT_STRING_ANALYSIS ssa, int iX, int* piCh, int* piTrailing) 
+HRESULT WINAPI ScriptStringXtoCP(SCRIPT_STRING_ANALYSIS ssa, int iX, int* piCh, int* piTrailing)
 {
     StringAnalysis* analysis = ssa;
     int i;
@@ -1167,7 +1167,7 @@ complex_ranges[] =
 
 /***********************************************************************
  *      ScriptIsComplex (USP10.@)
- * 
+ *
  *  Determine if a string is complex.
  *
  *  PARAMS
@@ -1221,7 +1221,7 @@ HRESULT WINAPI ScriptIsComplex(const WCHAR *chars, int len, DWORD flag)
  *  Success: S_OK
  *  Failure: Non-zero HRESULT value.
  */
-HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars, 
+HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
                            int cChars, int cMaxGlyphs,
                            SCRIPT_ANALYSIS *psa, WORD *pwOutGlyphs, WORD *pwLogClust,
                            SCRIPT_VISATTR *psva, int *pcGlyphs)
@@ -1261,7 +1261,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
        TRACE("\n");
     }
 
-    /*  Set up a valid SCRIPT_VISATTR and LogClust for each char in this run */     
+    /*  Set up a valid SCRIPT_VISATTR and LogClust for each char in this run */
     for (cnt = 0;  cnt < cChars; cnt++) {
         /* FIXME:  set to better values */
          psva[cnt].uJustification = 2;
@@ -1293,7 +1293,7 @@ HRESULT WINAPI ScriptShape(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcChars,
  *  Success: S_OK
  *  Failure: Non-zero HRESULT value.
  */
-HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs, 
+HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs,
                            int cGlyphs, const SCRIPT_VISATTR *psva,
                            SCRIPT_ANALYSIS *psa, int *piAdvance, GOFFSET *pGoffset, ABC *pABC )
 {
@@ -1328,7 +1328,7 @@ HRESULT WINAPI ScriptPlace(HDC hdc, SCRIPT_CACHE *psc, const WORD *pwGlyphs,
      {
          for (wcnt = 0; wcnt < cGlyphs ; wcnt++) {          /* add up the char lengths  */
              TRACE("     Glyph=%04x,  abcA=%d,  abcB=%d,  abcC=%d  wcnt=%d\n",
-                                  pwGlyphs[wcnt],  
+                                  pwGlyphs[wcnt],
                                   lpABC[wcnt].abcA,
                                   lpABC[wcnt].abcB,
                                   lpABC[wcnt].abcC, wcnt);
@@ -1394,8 +1394,8 @@ HRESULT WINAPI ScriptGetCMap(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcInChars
  *      ScriptTextOut (USP10.@)
  *
  */
-HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UINT fuOptions, 
-                             const RECT *lprc, const SCRIPT_ANALYSIS *psa, const WCHAR *pwcReserved, 
+HRESULT WINAPI ScriptTextOut(const HDC hdc, SCRIPT_CACHE *psc, int x, int y, UINT fuOptions,
+                             const RECT *lprc, const SCRIPT_ANALYSIS *psa, const WCHAR *pwcReserved,
                              int iReserved, const WORD *pwGlyphs, int cGlyphs, const int *piAdvance,
                              const int *piJustify, const GOFFSET *pGoffset)
 {

@@ -378,7 +378,7 @@ _mesa_BlendColor( GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha )
  * \param func alpha comparison function.
  * \param ref reference value.
  *
- * Verifies the parameters and updates gl_colorbuffer_attrib. 
+ * Verifies the parameters and updates gl_colorbuffer_attrib.
  * On a change, flushes the vertices and notifies the driver via
  * dd_function_table::AlphaFunc callback.
  */

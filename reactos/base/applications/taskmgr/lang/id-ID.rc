@@ -1,5 +1,5 @@
 /////////////////////////////////////////////////////////////////////////////
-// Indonesian resource file by Zaenal Mutaqin  (ade999@gmail.com) 
+// Indonesian resource file by Zaenal Mutaqin  (ade999@gmail.com)
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
@@ -664,7 +664,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Pemakaian CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Proses: %d"
     IDS_Not_Responding            "Tidak Merespon"
-    IDS_Running                   "Berjalan"  
+    IDS_Running                   "Berjalan"
 END
 
 

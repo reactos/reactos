@@ -659,13 +659,13 @@ static BOOL WINAPI CRYPT_AsnDecodeDerBlob(DWORD dwCertEncodingType,
     {
         BYTE lenBytes = GET_LEN_BYTES(pbEncoded[1]);
         DWORD bytesNeeded = sizeof(CRYPT_DER_BLOB);
-       
+
         if (!(dwFlags & CRYPT_DECODE_NOCOPY_FLAG))
             bytesNeeded += 1 + lenBytes + dataLen;
 
         if (!pvStructInfo)
             *pcbStructInfo = bytesNeeded;
-        else if ((ret = CRYPT_DecodeEnsureSpace(dwFlags, pDecodePara, 
+        else if ((ret = CRYPT_DecodeEnsureSpace(dwFlags, pDecodePara,
          pvStructInfo, pcbStructInfo, bytesNeeded)))
         {
             CRYPT_DER_BLOB *blob;
@@ -1394,7 +1394,7 @@ static BOOL WINAPI CRYPT_AsnDecodeNameValueInternal(DWORD dwCertEncodingType,
                     LPWSTR str = (LPWSTR)value->Value.pbData;
 
                     value->Value.cbData = MultiByteToWideChar(CP_UTF8, 0,
-                     (LPCSTR)pbEncoded + 1 + lenBytes, dataLen, 
+                     (LPCSTR)pbEncoded + 1 + lenBytes, dataLen,
                      str, bytesNeeded - sizeof(CERT_NAME_VALUE)) * 2;
                     break;
                 }
@@ -1805,10 +1805,10 @@ static BOOL WINAPI CRYPT_AsnDecodeAlgorithmId(DWORD dwCertEncodingType,
     BOOL ret = TRUE;
     struct AsnDecodeSequenceItem items[] = {
      { ASN_OBJECTIDENTIFIER, offsetof(CRYPT_ALGORITHM_IDENTIFIER, pszObjId),
-       CRYPT_AsnDecodeOidInternal, sizeof(LPSTR), FALSE, TRUE, 
+       CRYPT_AsnDecodeOidInternal, sizeof(LPSTR), FALSE, TRUE,
        offsetof(CRYPT_ALGORITHM_IDENTIFIER, pszObjId), 0 },
      { 0, offsetof(CRYPT_ALGORITHM_IDENTIFIER, Parameters),
-       CRYPT_AsnDecodeCopyBytes, sizeof(CRYPT_OBJID_BLOB), TRUE, TRUE, 
+       CRYPT_AsnDecodeCopyBytes, sizeof(CRYPT_OBJID_BLOB), TRUE, TRUE,
        offsetof(CRYPT_ALGORITHM_IDENTIFIER, Parameters.pbData), 0 },
     };
 
@@ -2201,7 +2201,7 @@ static BOOL WINAPI CRYPT_AsnDecodeBasicConstraints(DWORD dwCertEncodingType,
     {
         struct AsnDecodeSequenceItem items[] = {
          { ASN_BITSTRING, offsetof(CERT_BASIC_CONSTRAINTS_INFO, SubjectType),
-           CRYPT_AsnDecodeBitsInternal, sizeof(CRYPT_BIT_BLOB), FALSE, TRUE, 
+           CRYPT_AsnDecodeBitsInternal, sizeof(CRYPT_BIT_BLOB), FALSE, TRUE,
            offsetof(CERT_BASIC_CONSTRAINTS_INFO, SubjectType.pbData), 0 },
          { ASN_INTEGER, offsetof(CERT_BASIC_CONSTRAINTS_INFO,
            fPathLenConstraint), CRYPT_AsnDecodePathLenConstraint,

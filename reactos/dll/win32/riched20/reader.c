@@ -2518,7 +2518,7 @@ CharSet(RTF_Info *info)
 {
 	if (info->ansiCodePage == CP_UTF8)
 		return;
- 
+
         switch (info->rtfMinor)
         {
         case rtfAnsiCharSet:
@@ -2546,7 +2546,7 @@ static void
 Destination (RTF_Info *info)
 {
 	if (!RTFGetDestinationCallback(info, info->rtfMinor))
-		RTFSkipGroup (info);    
+		RTFSkipGroup (info);
 }
 
 
@@ -2581,8 +2581,8 @@ static void SpecialChar (RTF_Info *info)
 	{
 	case rtfOptDest:
 		/* the next token determines destination, if it's unknown, skip the group */
-		/* this way we filter out the garbage coming from unknown destinations */ 
-		RTFGetToken(info); 
+		/* this way we filter out the garbage coming from unknown destinations */
+		RTFGetToken(info);
 		if (info->rtfClass != rtfDestination)
 			RTFSkipGroup(info);
 		else

@@ -3,7 +3,7 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/gdi32/object/font.c
- * PURPOSE:         
+ * PURPOSE:
  * PROGRAMMER:
  *
  */
@@ -517,13 +517,13 @@ GetCharacterPlacementW(
   if (lpResults->lpCaretPos && !(dwFlags & GCP_REORDER))
   {
     int pos = 0;
-       
+
     lpResults->lpCaretPos[0] = 0;
     for (i = 1; i < nSet; i++)
       if (GetTextExtentPoint32W(hdc, &(lpString[i - 1]), 1, &size))
         lpResults->lpCaretPos[i] = (pos += size.cx);
   }
-   
+
   /*if(lpResults->lpGlyphs)
     GetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
 
@@ -851,7 +851,7 @@ HFONT
 STDCALL
 CreateFontIndirectExW(const ENUMLOGFONTEXDVW *elfexd)
 {
-  /* Msdn: Note, this function ignores the elfDesignVector member in 
+  /* Msdn: Note, this function ignores the elfDesignVector member in
            ENUMLOGFONTEXDV.
    */
   if ( elfexd )
@@ -904,7 +904,7 @@ CreateFontIndirectW(
                                  sizeof(Logfont.elfEnumLogfontEx.elfStyle));
     RtlZeroMemory( &Logfont.elfEnumLogfontEx.elfScript,
                                  sizeof(Logfont.elfEnumLogfontEx.elfScript));
-    
+
     RtlZeroMemory( &Logfont.elfDesignVector, sizeof(DESIGNVECTOR));
 
     return CreateFontIndirectExW(&Logfont);
@@ -942,7 +942,7 @@ CreateFontA(
 	RtlInitAnsiString(&StringA, (LPSTR)lpszFace);
 	RtlAnsiStringToUnicodeString(&StringU, &StringA, TRUE);
 
-        ret = CreateFontW(nHeight, 
+        ret = CreateFontW(nHeight,
                            nWidth,
                       nEscapement,
                      nOrientation,

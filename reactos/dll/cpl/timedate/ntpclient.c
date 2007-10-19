@@ -134,7 +134,7 @@ RecieveData(PINFO pInfo)
 }
 
 
-ULONG 
+ULONG
 GetServerTime(LPWSTR lpAddress)
 {
     PINFO pInfo;
@@ -143,7 +143,7 @@ GetServerTime(LPWSTR lpAddress)
     ULONG ulTime = 0;
 
     pInfo = (PINFO)HeapAlloc(GetProcessHeap(),
-                             0, 
+                             0,
                              sizeof(INFO));
     lpAddr = (LPSTR)HeapAlloc(GetProcessHeap(),
                               0,

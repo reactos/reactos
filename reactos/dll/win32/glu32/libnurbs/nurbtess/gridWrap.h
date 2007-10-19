@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -52,14 +52,14 @@ class gridWrap{
   Real u_min, u_max;
   Real v_min, v_max;
 
-  /*cache the coordinate values for efficiency. 
-   *these are redundant information when 
+  /*cache the coordinate values for efficiency.
+   *these are redundant information when
    *the grid is uniform.
    */
   Real* u_values; /*size is n_ulines*/
   Real* v_values; /*size is n_vlines*/
 
-  Int is_uniform; 
+  Int is_uniform;
 
 public:
   //uniform grid constructor
@@ -73,7 +73,7 @@ public:
 	   Int nVlines, Real *vvlas
 	   );
   ~gridWrap();
-  
+
   void print();
   Int get_n_ulines() {return n_ulines;}
   Int get_n_vlines() {return n_vlines;}
@@ -82,17 +82,17 @@ public:
   Real get_v_min() {return v_min;}
   Real get_v_max() {return v_max;}
 
-  Real get_u_value(Int i) 
+  Real get_u_value(Int i)
     {
       assert(i<n_ulines);
-      /*if(i>=n_ulines){printf("ERROR, n_ulines=%i,i=%i\n",n_ulines,i);exit(0);}*/      
+      /*if(i>=n_ulines){printf("ERROR, n_ulines=%i,i=%i\n",n_ulines,i);exit(0);}*/
       return u_values[i];}
   Real get_v_value(Int j) {return v_values[j];}
 
   Real* get_u_values() {return u_values;}
   Real* get_v_values() {return v_values;}
 
-  void outputFanWithPoint(Int v, Int uleft, Int uright, 
+  void outputFanWithPoint(Int v, Int uleft, Int uright,
 			  Real vert[2], primStream* pStream);
 
   void draw();

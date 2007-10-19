@@ -15,7 +15,7 @@ typedef struct _stub {
 } stub;
 
 void usage( char *name ) {
-	fprintf( stderr, 
+	fprintf( stderr,
 		"Usage: %s [-n nm] [-m make] libs...\n"
 		"nm   -- The command used to run nm on reactos objects\n"
 		"make -- The command used to build reactos\n\n"
@@ -101,7 +101,7 @@ int main( int argc, char **argv ) {
 		nm_f = popen( line, "r" );
 
 		for( origin = argv[i]; *argv[i]; argv[i]++ )
-			if( *argv[i] == '/' || *argv[i] == '\\' ) 
+			if( *argv[i] == '/' || *argv[i] == '\\' )
 				origin = argv[i] + 1;
 
 
@@ -134,7 +134,7 @@ int main( int argc, char **argv ) {
 			new_f->name   = strdup( import_sign + 1 );
 			new_f->origin = origin;
 			new_f->next   = imports;
-			imports = new_f;	    
+			imports = new_f;
 		}
 
 		fclose( nm_f );

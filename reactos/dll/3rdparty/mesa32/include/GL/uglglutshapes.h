@@ -13,7 +13,7 @@
 extern "C" {
 #endif
 
-#include <GL/gl.h>  
+#include <GL/gl.h>
 
 void glutWireSphere (GLdouble radius, GLint slices, GLint stacks);
 void glutSolidSphere (GLdouble radius, GLint slices, GLint stacks);

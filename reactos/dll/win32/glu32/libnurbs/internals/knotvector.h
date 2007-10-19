@@ -60,7 +60,7 @@ struct Knotvector { /* a knot vector */
 /* tolerance to test knot coincidence */
 #define TOLERANCE 		1.0e-5
 
-inline int 
+inline int
 identical( Knot x, Knot y )
 {
     return ((x-y) < TOLERANCE) ? 1 : 0;

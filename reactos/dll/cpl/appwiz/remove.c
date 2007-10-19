@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* 
+/*
  *
  * PROJECT:         		ReactOS Software Control Panel
  * FILE:            		dll/cpl/appwiz/remove.c
@@ -63,12 +63,12 @@ CallInformation(HWND hwndDlg, HWND infDlg, UINT Control)
     INT nIndex;
     HKEY hKey;
 	TCHAR Buf[256],Title[256];
-	
+
 	nIndex = (INT)SendMessage(GetDlgItem(infDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
     if (nIndex != -1)
     {
 		LVITEM item;
-		
+
 		ZeroMemory(&item, sizeof(LVITEM));
 		item.mask = LVIF_PARAM;
 		item.iItem = nIndex;
@@ -85,7 +85,7 @@ CallInformation(HWND hwndDlg, HWND infDlg, UINT Control)
                        MB_ICONSTOP);
 			return;
         }
-		
+
 		(void)GetInfoItem(hwndDlg, hKey, L"RegOwner", 		IDS_INFO_REGOWNER);
 		(void)GetInfoItem(hwndDlg, hKey, L"ProductID", 		IDS_INFO_PRODUCTID);
 		(void)GetInfoItem(hwndDlg, hKey, L"Publisher", 		IDS_INFO_PUBLISHER);
@@ -110,12 +110,12 @@ CallUninstall(HWND hwndDlg, UINT Control, UINT RemBtn, UINT InfoBtn, BOOL isUpda
     TCHAR pszUninstallString[MAX_PATH];
     DWORD dwSize;
 	TCHAR Buf[256],Title[256];
-	
+
 	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
     if (nIndex != -1)
     {
 		LVITEM item;
-		
+
 		ZeroMemory(&item, sizeof(LVITEM));
 		item.mask = LVIF_PARAM;
 		item.iItem = nIndex;
@@ -183,7 +183,7 @@ AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex
 	LV_ITEM listItem;
 	int ColorDepth;
 	DEVMODE pDevMode;
-	
+
 	/* Icon drawing mode */
 	pDevMode.dmSize = sizeof(DEVMODE);
 	pDevMode.dmDriverExtra = 0;
@@ -207,9 +207,9 @@ AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex
 	hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_CPLSYSTEM),IMAGE_ICON,32,32,LR_DEFAULTCOLOR);
 	ImageList_AddIcon(hImgListLarge,hIcon);
 	DestroyIcon(hIcon);
-	
+
 	hList = GetDlgItem(hwndDlg, Control);
-	
+
 	ZeroMemory(&listItem, sizeof(LV_ITEM));
 	listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
 	listItem.pszText    = (LPTSTR)pszDisplayName;
@@ -217,7 +217,7 @@ AddItemToList(HWND hwndDlg, LPARAM hSubKey, LPTSTR pszDisplayName, INT ItemIndex
 	listItem.iItem      = (int)ItemIndex;
 	listItem.iImage     = index;
 	(void)ListView_InsertItem(hList, &listItem);
-	
+
 	(void)ListView_SetImageList(hList,hImgListSmall,LVSIL_SMALL);
 	(void)ListView_SetImageList(hList,hImgListLarge,LVSIL_NORMAL);
 }
@@ -226,7 +226,7 @@ VOID
 SetNoneAppMsg(HWND hwndDlg, BOOL IsUpdates)
 {
 	TCHAR Buf[256];
-	
+
 	if (IsUpdates)
 	{
 		LoadString(hApplet, IDS_NONE_UPD, Buf, sizeof(Buf) / sizeof(TCHAR));
@@ -332,9 +332,9 @@ FillSoftwareList(HWND hwndDlg, BOOL bShowUpdates, UINT Control)
     }
 
     RegCloseKey(hKey);
-	
+
 	if (!IsAdd) SetNoneAppMsg(hwndDlg, bShowUpdates);
-	
+
 }
 
 VOID
@@ -343,7 +343,7 @@ AddItemsToViewControl(HWND hwndDlg, UINT Control)
 	TCHAR Buf[256];
 	int Index;
 	HWND hList;
-	
+
 	hList = GetDlgItem(hwndDlg, Control);
 	// Large Icons
 	LoadString(hApplet, IDS_LARGEICONS, Buf, sizeof(Buf) / sizeof(TCHAR));
@@ -375,7 +375,7 @@ AddItemsToViewControl(HWND hwndDlg, UINT Control)
                 CB_SETITEMDATA,
                 Index,
                 (LPARAM)Index);
-				
+
 	// Select string
 	SendMessage(hList,
                 CB_SELECTSTRING,
@@ -393,21 +393,21 @@ FindItems(HWND hwndDlg, UINT ListControl, UINT EditControl, UINT RemBtn, UINT In
     size_t i;
 	LV_ITEM listItem;
 	BOOL comp = TRUE;
-	
+
 	hList = GetDlgItem(hwndDlg, ListControl);
 	hEdit = GetDlgItem(hwndDlg, EditControl);
-	
+
 	SendMessage(hEdit, WM_GETTEXT, 128, (LPARAM)szText);
-	
+
 	ZeroMemory(&listItem, sizeof(LV_ITEM));
 	listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
 	listItem.pszText    = (LPTSTR)szText;
 	listItem.iImage     = -1;
 	Index = ListView_InsertItem(hList, &listItem);
-	
+
 	SendMessage(hList, LVM_DELETEITEM, Index, 0);
 	ListView_GetItemText(hList, Index, 0, (LPTSTR)szItemText, 1024);
-	
+
 	for (i = 0; i < _tcslen(szText); i++)
 	{
 		if (szText[i] != szItemText[i]) comp = FALSE;
@@ -454,9 +454,9 @@ ShowPopupMenu(HWND hwndDlg, UINT ResMenu, INT xPos, INT yPos, UINT Control)
 		POINT pt;
 		RECT lvRect;
 		HMENU hMenu;
-			
+
 		GetCursorPos(&pt);
-			
+
 		GetWindowRect(GetDlgItem(hwndDlg, Control), &lvRect);
 		if (PtInRect(&lvRect, pt))
 		{
@@ -597,6 +597,6 @@ RemovePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		}
 		break;
     }
-	
+
     return FALSE;
 }

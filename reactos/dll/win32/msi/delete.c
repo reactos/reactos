@@ -203,7 +203,7 @@ UINT DELETE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table )
     dv = msi_alloc_zero( sizeof *dv );
     if( !dv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     dv->view.ops = &delete_ops;
     dv->db = db;

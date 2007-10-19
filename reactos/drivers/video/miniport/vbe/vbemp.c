@@ -245,7 +245,7 @@ VBEInitialize(PVOID HwDeviceExtension)
          VideoPortDebugPrint(Warn, "No VBE BIOS present\n");
          return FALSE;
       }
-      
+
       VideoPortDebugPrint(Trace, "VBE BIOS Present (%d.%d, %8ld Kb)\n",
          VBEDeviceExtension->VbeInfo.Version / 0x100,
          VBEDeviceExtension->VbeInfo.Version & 0xFF,
@@ -359,7 +359,7 @@ VBEInitialize(PVOID HwDeviceExtension)
          }
 #ifdef VBE12_SUPPORT
          else
-         {   
+         {
             VBEDeviceExtension->ModeNumbers[SuitableModeCount] = ModeTemp;
             SuitableModeCount++;
          }
@@ -887,7 +887,7 @@ VBEQueryMode(
    ULONG VideoModeId)
 {
    PVBE_MODEINFO VBEMode = &DeviceExtension->ModeInfo[VideoModeId];
-   
+
    VideoMode->Length = sizeof(VIDEO_MODE_INFORMATION);
    VideoMode->ModeIndex = VideoModeId;
    VideoMode->VisScreenWidth = VBEMode->XResolution;

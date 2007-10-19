@@ -299,7 +299,7 @@ DWORD WINAPI SHCLSIDFromStringAW (LPCVOID clsid, CLSID *id)
  *
  * Equivalent to CoGetMalloc(MEMCTX_TASK, ...). Under Windows 9x this function
  * could use the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * PARAMS
  *  lpmal [O] Destination for IMalloc interface.
@@ -322,7 +322,7 @@ HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
  *
  * Equivalent to CoTaskMemAlloc. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * NOTES
  *     exported by ordinal
@@ -344,7 +344,7 @@ LPVOID WINAPI SHAlloc(DWORD len)
  *
  * Equivalent to CoTaskMemFree. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * NOTES
  *     exported by ordinal
@@ -456,7 +456,7 @@ static ULONG WINAPI IDefClF_fnRelease(LPCLASSFACTORY iface)
 {
 	IDefClFImpl *This = (IDefClFImpl *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
-	
+
 	TRACE("(%p)->(count=%u)\n", This, refCount + 1);
 
 	if (!refCount)

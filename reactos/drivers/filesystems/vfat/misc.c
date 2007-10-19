@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/misc.c
  * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       
+ * PROGRAMMER:
  *
  */
 

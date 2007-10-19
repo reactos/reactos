@@ -1,4 +1,4 @@
-/* 
+/*
  * time.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -114,7 +114,7 @@ extern _CRTIMP void __cdecl	tzset (void);
 _CRTIMP char* __cdecl	_strdate(char*);
 _CRTIMP char* __cdecl	_strtime(char*);
 
-/* These require newer versions of msvcrt.dll (6.10 or higher). */ 
+/* These require newer versions of msvcrt.dll (6.10 or higher). */
 #if __MSVCRT_VERSION__ >= 0x0601
 _CRTIMP __time64_t __cdecl  _time64( __time64_t*);
 _CRTIMP __time64_t __cdecl  _mktime64 (struct tm*);
@@ -177,7 +177,7 @@ __MINGW_IMPORT char 	*tzname[2];
 #else /* not __MSVCRT__ */
 
 /* CRTDLL is royally messed up when it comes to these macros.
-   TODO: import and alias these via oldnames import library instead 
+   TODO: import and alias these via oldnames import library instead
    of macros.  */
 
 #define daylight        _daylight
@@ -206,7 +206,7 @@ _CRTIMP wchar_t* __cdecl	_wctime64 (const __time64_t*);
 #endif /* __STRICT_ANSI__ */
 _CRTIMP size_t __cdecl		wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
 #define _WTIME_DEFINED
-#endif /* _WTIME_DEFINED */ 
+#endif /* _WTIME_DEFINED */
 
 #ifdef	__cplusplus
 }

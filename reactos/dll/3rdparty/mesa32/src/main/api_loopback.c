@@ -756,14 +756,14 @@ loopback_MultiTexCoord3svARB(GLenum target, const GLshort *v)
 static void GLAPIENTRY
 loopback_MultiTexCoord4dARB(GLenum target, GLdouble s, GLdouble t, GLdouble r, GLdouble q)
 {
-   MULTI_TEXCOORD4( target, (GLfloat) s, (GLfloat) t, 
+   MULTI_TEXCOORD4( target, (GLfloat) s, (GLfloat) t,
 		    (GLfloat) r, (GLfloat) q );
 }
 
 static void GLAPIENTRY
 loopback_MultiTexCoord4dvARB(GLenum target, const GLdouble *v)
 {
-   MULTI_TEXCOORD4( target, (GLfloat) v[0], (GLfloat) v[1], 
+   MULTI_TEXCOORD4( target, (GLfloat) v[0], (GLfloat) v[1],
 		    (GLfloat) v[2], (GLfloat) v[3] );
 }
 
@@ -1125,7 +1125,7 @@ loopback_VertexAttrib3dvNV(GLuint index, const GLdouble *v)
 static void GLAPIENTRY
 loopback_VertexAttrib4svNV(GLuint index, const GLshort *v)
 {
-   ATTRIB4NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], 
+   ATTRIB4NV(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2],
 	  (GLfloat)v[3]);
 }
 
@@ -1340,7 +1340,7 @@ loopback_VertexAttrib3dvARB(GLuint index, const GLdouble *v)
 static void GLAPIENTRY
 loopback_VertexAttrib4svARB(GLuint index, const GLshort *v)
 {
-   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2], 
+   ATTRIB4ARB(index, (GLfloat) v[0], (GLfloat) v[1], (GLfloat) v[2],
 	  (GLfloat)v[3]);
 }
 
@@ -1482,7 +1482,7 @@ _mesa_loopback_init_api_table( struct _glapi_table *dest )
    SET_SecondaryColor3uivEXT(dest, loopback_SecondaryColor3uivEXT_f);
    SET_SecondaryColor3usvEXT(dest, loopback_SecondaryColor3usvEXT_f);
    SET_SecondaryColor3ubvEXT(dest, loopback_SecondaryColor3ubvEXT_f);
-      
+
    SET_Indexd(dest, loopback_Indexd);
    SET_Indexi(dest, loopback_Indexi);
    SET_Indexs(dest, loopback_Indexs);

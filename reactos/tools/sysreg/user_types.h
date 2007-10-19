@@ -26,4 +26,4 @@ using std::cerr;
 using std::endl;
 
 
-#endif // end of USER_TYPES_H__ 
+#endif // end of USER_TYPES_H__

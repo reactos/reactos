@@ -628,7 +628,7 @@ hub_get_port_status_completion(PURB purb, PVOID context)
                 //
                 // must be fatal error
                 // FIXME: better to pass it to the completion for further
-                // processing? 
+                // processing?
                 //
                 usb_free_mem(purb);
             }
@@ -758,7 +758,7 @@ hub_clear_port_feature_completion(PURB purb, PVOID context)
             {
                 //
                 // FIXME: should we pass the error to the completion directly
-                // instead of forstall it here? 
+                // instead of forstall it here?
                 //
                 // do not think the device is workable, no requests to it any more.
                 // including the int polling

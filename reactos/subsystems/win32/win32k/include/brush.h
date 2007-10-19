@@ -65,13 +65,13 @@ typedef struct
 #define GDIBRUSH_IS_SOLID		0x0010 /* Solid brush */
 #define GDIBRUSH_IS_HATCH		0x0020 /* Hatch brush */
 #define GDIBRUSH_IS_BITMAP		0x0040 /* DDB pattern brush */
-#define GDIBRUSH_IS_DIB			0x0080 /* DIB pattern brush */ 
+#define GDIBRUSH_IS_DIB			0x0080 /* DIB pattern brush */
 #define GDIBRUSH_IS_NULL		0x0100 /* Null/hollow brush */
 #define GDIBRUSH_IS_GLOBAL		0x0200 /* Stock objects */
 #define GDIBRUSH_IS_PEN			0x0400 /* Pen */
 #define GDIBRUSH_IS_OLDSTYLEPEN		0x0800 /* Geometric pen */
 #define GDIBRUSH_IS_MASKING		0x8000 /* Pattern bitmap is used as transparent mask (?) */
-#define GDIBRUSH_CACHED_IS_SOLID	0x80000000 
+#define GDIBRUSH_CACHED_IS_SOLID	0x80000000
 
 #define  BRUSHOBJ_AllocBrush() ((HBRUSH) GDIOBJ_AllocObj (GdiHandleTable, GDI_OBJECT_TYPE_BRUSH))
 #define  BRUSHOBJ_FreeBrush(hBrush) GDIOBJ_FreeObj(GdiHandleTable, (HGDIOBJ)hBrush, GDI_OBJECT_TYPE_BRUSH)

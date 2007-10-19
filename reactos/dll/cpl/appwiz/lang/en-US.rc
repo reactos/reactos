@@ -22,7 +22,7 @@ IDD_PROPPAGEINSTALL DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Change or Remove Programs"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
-BEGIN 
+BEGIN
 	ICON IDI_CPLSYSTEM,-1,PROPSHEETPADDING,6,16,16
 	LTEXT "The following Software can be automatically removed. To remove a program or to modify its installed components, select it from the list and click Modify/Remove.",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "Find:",-1,PROPSHEETPADDING,33,30,8
@@ -148,7 +148,7 @@ BEGIN
     PUSHBUTTON "&Close", IDCANCEL, 212, 198, 50, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	IDS_CPLSYSTEMNAME "Add/Remove Programs"
 	IDS_CPLSYSTEMDESCRIPTION "Sets up programs and creates shortcuts."

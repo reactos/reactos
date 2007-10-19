@@ -160,15 +160,15 @@ KeI386VdmInitialize(VOID)
 }
 
 NTSYSAPI
-NTSTATUS 
-NTAPI 
+NTSTATUS
+NTAPI
 NtCallbackReturn
 ( IN PVOID Result OPTIONAL, IN ULONG ResultLength, IN NTSTATUS Status )
 {
     return STATUS_UNSUCCESSFUL;
 }
 
-NTSYSAPI 
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtContinue
@@ -184,13 +184,13 @@ NtGetTickCount() { return __rdtsc(); }
 
 NTSTATUS
 STDCALL
-NtSetLdtEntries 
+NtSetLdtEntries
 (ULONG Selector1, LDT_ENTRY LdtEntry1, ULONG Selector2, LDT_ENTRY LdtEntry2)
 {
     return STATUS_UNSUCCESSFUL;
 }
 
-NTSYSAPI 
+NTSYSAPI
 NTSTATUS
 NTAPI
 NtRaiseException

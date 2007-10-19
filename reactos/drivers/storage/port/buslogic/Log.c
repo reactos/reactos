@@ -1,7 +1,7 @@
 #include "Log.h"
 #include <stdarg.h>
 #include <stdio.h>
-#pragma hdrstop	
+#pragma hdrstop
 
 BOOLEAN LogMessage(PCHAR szFormat, ...)
 {
@@ -14,7 +14,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 	HANDLE FileHandle;
     UNICODE_STRING fileName;
 
-		
+
 	//format the string
     va_start(va,szFormat);
 	vsprintf(messagebuf,szFormat,va);
@@ -32,7 +32,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
     }
     RtlZeroMemory(fileName.Buffer, fileName.MaximumLength);
     status = RtlAppendUnicodeToString(&fileName, (PWSTR)DEFAULT_LOG_FILE_NAME);
-	
+
 	//DbgPrint("\n Initializing Object attributes");
 
 	InitializeObjectAttributes (&objectAttributes,
@@ -42,17 +42,17 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 								NULL );
 
 	DbgPrint("\n BusLogic - Creating the file");
-	
+
 	status = ZwCreateFile(&FileHandle,
 					  FILE_APPEND_DATA,
 					  &objectAttributes,
 					  &IoStatus,
-					  0, 
+					  0,
 					  FILE_ATTRIBUTE_NORMAL,
 					  FILE_SHARE_WRITE,
 					  FILE_OPEN_IF,
 					  FILE_SYNCHRONOUS_IO_NONALERT,
-					  NULL,     
+					  NULL,
 					  0 );
 
 	if(NT_SUCCESS(status))
@@ -66,7 +66,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 		//put a time stamp on the output message
 		sprintf(buf,"%10u-%10u  %s",time.HighPart,time.LowPart,messagebuf);
 
-		//format the string to make sure it appends a newline carrage-return to the 
+		//format the string to make sure it appends a newline carrage-return to the
 		//end of the string.
 		Length=strlen(buf);
 		if(buf[Length-1]=='\n')
@@ -84,7 +84,7 @@ BOOLEAN LogMessage(PCHAR szFormat, ...)
 		buf[Length+1] = '\0';
 		DbgPrint("\n BusLogic - Writing to the file");
 		DbgPrint("\n BusLogic - Buf = %s", buf);
-		
+
 		status = ZwWriteFile(FileHandle,
 				  NULL,
 				  NULL,

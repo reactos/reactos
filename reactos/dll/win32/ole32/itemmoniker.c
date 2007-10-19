@@ -788,7 +788,7 @@ HRESULT WINAPI ItemMonikerImpl_Inverse(IMoniker* iface,IMoniker** ppmk)
 HRESULT WINAPI ItemMonikerImpl_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
 {
     DWORD mkSys;
-    
+
     TRACE("(%p,%p)\n", pmkOther, ppmkPrefix);
 
     IMoniker_IsSystemMoniker(pmkOther,&mkSys);

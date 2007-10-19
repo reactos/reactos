@@ -92,7 +92,7 @@ static UINT event_do_dialog( MSIPACKAGE *package, LPCWSTR name, msi_dialog *pare
 /*
  * End a modal dialog box
  */
-static UINT ControlEvent_EndDialog(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_EndDialog(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     static const WCHAR szExit[] = {
@@ -131,7 +131,7 @@ static UINT ControlEvent_EndDialog(MSIPACKAGE* package, LPCWSTR argument,
 /*
  * transition from one modal dialog to another modal dialog
  */
-static UINT ControlEvent_NewDialog(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_NewDialog(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog *dialog)
 {
     /* store the name of the next dialog, and signal this one to end */
@@ -144,7 +144,7 @@ static UINT ControlEvent_NewDialog(MSIPACKAGE* package, LPCWSTR argument,
 /*
  * Create a new child dialog of an existing modal dialog
  */
-static UINT ControlEvent_SpawnDialog(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_SpawnDialog(MSIPACKAGE* package, LPCWSTR argument,
                               msi_dialog *dialog)
 {
     /* don't destroy a modeless dialogs that might be our parent */
@@ -158,21 +158,21 @@ static UINT ControlEvent_SpawnDialog(MSIPACKAGE* package, LPCWSTR argument,
  * Creates a dialog that remains up for a period of time
  * based on a condition
  */
-static UINT ControlEvent_SpawnWaitDialog(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_SpawnWaitDialog(MSIPACKAGE* package, LPCWSTR argument,
                                   msi_dialog* dialog)
 {
     FIXME("Doing Nothing\n");
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_DoAction(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_DoAction(MSIPACKAGE* package, LPCWSTR argument,
                                   msi_dialog* dialog)
 {
     ACTION_PerformAction(package,argument,TRUE);
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
                                   msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
@@ -192,7 +192,7 @@ static UINT ControlEvent_AddLocal(MSIPACKAGE* package, LPCWSTR argument,
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
                                 msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
@@ -212,7 +212,7 @@ static UINT ControlEvent_Remove(MSIPACKAGE* package, LPCWSTR argument,
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     static const WCHAR szAll[] = {'A','L','L',0};
@@ -231,7 +231,7 @@ static UINT ControlEvent_AddSource(MSIPACKAGE* package, LPCWSTR argument,
     return ERROR_SUCCESS;
 }
 
-static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     LPWSTR path = msi_dup_property( package, argument );
@@ -250,7 +250,7 @@ static UINT ControlEvent_SetTargetPath(MSIPACKAGE* package, LPCWSTR argument,
     return r;
 }
 
-static UINT ControlEvent_Reset(MSIPACKAGE* package, LPCWSTR argument, 
+static UINT ControlEvent_Reset(MSIPACKAGE* package, LPCWSTR argument,
                                    msi_dialog* dialog)
 {
     msi_dialog_reset(dialog);
@@ -304,7 +304,7 @@ VOID ControlEvent_UnSubscribeToEvent( MSIPACKAGE *package, LPCWSTR event,
     }
 }
 
-VOID ControlEvent_FireSubscribedEvent( MSIPACKAGE *package, LPCWSTR event, 
+VOID ControlEvent_FireSubscribedEvent( MSIPACKAGE *package, LPCWSTR event,
                                        MSIRECORD *rec )
 {
     struct subscriber *sub;

@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="wined3d" type="win32dll" installbase="system32" installname="wined3d.dll" allowwarnings ="true">  
+<module name="wined3d" type="win32dll" installbase="system32" installname="wined3d.dll" allowwarnings ="true">
 	<importlibrary definition="wined3d.def" />
 	<include base="wined3d">.</include>
 	<include base="ReactOS">include/reactos/wine</include>

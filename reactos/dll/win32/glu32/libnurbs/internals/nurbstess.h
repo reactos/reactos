@@ -102,7 +102,7 @@ public:
     void set_domain_distance_u_rate(REAL u_rate);
     void set_domain_distance_v_rate(REAL v_rate);
     void set_is_domain_distance_sampling(int flag);
-    
+
 
 protected:
     Renderhints		renderhints;

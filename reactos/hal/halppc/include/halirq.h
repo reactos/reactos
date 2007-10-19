@@ -13,9 +13,9 @@
 #define IRQ_BASE		FIRST_DEVICE_VECTOR
 #define	NR_IRQS			(FIRST_SYSTEM_VECTOR - FIRST_DEVICE_VECTOR)
 
-/* 
- * FIXME: 
- *   This does not work if we have more than 24 IRQs (ie. more than one I/O APIC) 
+/*
+ * FIXME:
+ *   This does not work if we have more than 24 IRQs (ie. more than one I/O APIC)
  */
 #define VECTOR2IRQ(vector)	(23 - (vector - IRQ_BASE) / 8)
 #define VECTOR2IRQL(vector)	(PROFILE_LEVEL - VECTOR2IRQ(vector))

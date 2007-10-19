@@ -4,10 +4,10 @@
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="__USE_W32API" />
-	
+
 	<!-- Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN -->
 	<define name="CARDSTYLE_DEFAULT" />
-	
+
 	<library>kernel32</library>
 	<library>gdi32</library>
 	<library>user32</library>

@@ -631,9 +631,9 @@ BOOL WINAPI EncryptFileA(LPCSTR lpFileName)
 }
 
 BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
-    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
-    DWORD dword, 
-    SECURITY_INFORMATION SecurityInformation, 
+    PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    DWORD dword,
+    SECURITY_INFORMATION SecurityInformation,
     LPWSTR* lpwstr,
     PULONG pulong)
 {
@@ -643,9 +643,9 @@ BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorW(
 }
 
 BOOL WINAPI ConvertSecurityDescriptorToStringSecurityDescriptorA(
-    PSECURITY_DESCRIPTOR pSecurityDescriptor, 
-    DWORD dword, 
-    SECURITY_INFORMATION SecurityInformation, 
+    PSECURITY_DESCRIPTOR pSecurityDescriptor,
+    DWORD dword,
+    SECURITY_INFORMATION SecurityInformation,
     LPSTR* lpstr,
     PULONG pulong)
 {

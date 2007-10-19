@@ -22,7 +22,7 @@
  * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-/** 
+/**
  * \file texstate.c
  *
  * Texture state handling.
@@ -173,7 +173,7 @@ _mesa_print_texunit_state( GLcontext *ctx, GLuint unit )
 /**
  * Convert "classic" texture environment to ARB_texture_env_combine style
  * environments.
- * 
+ *
  * \param state  texture_env_combine state vector to be filled-in.
  * \param mode   Classic texture environment mode (i.e., \c GL_REPLACE,
  *               \c GL_BLEND, \c GL_DECAL, etc.).
@@ -204,7 +204,7 @@ calculate_derived_texenv( struct gl_tex_env_combine_state *state,
    case GL_YCBCR_MESA:
       state->SourceA[0] = GL_PREVIOUS;
       break;
-      
+
    default:
       _mesa_problem(NULL, "Invalid texBaseFormat in calculate_derived_texenv");
       return;
@@ -216,7 +216,7 @@ calculate_derived_texenv( struct gl_tex_env_combine_state *state,
       mode_rgb = (texBaseFormat == GL_ALPHA) ? GL_REPLACE : mode;
       mode_a   = mode;
       break;
-   
+
    case GL_DECAL:
       mode_rgb = GL_INTERPOLATE;
       mode_a   = GL_REPLACE;
@@ -280,7 +280,7 @@ calculate_derived_texenv( struct gl_tex_env_combine_state *state,
                     "Invalid texture env mode in calculate_derived_texenv");
       return;
    }
-   
+
    state->ModeRGB = (state->SourceRGB[0] != GL_PREVIOUS)
        ? mode_rgb : GL_REPLACE;
    state->ModeA   = (state->SourceA[0]   != GL_PREVIOUS)
@@ -1203,7 +1203,7 @@ _mesa_GetTexEnviv( GLenum target, GLenum pname, GLint *params )
 /*                       Texture Parameters                           */
 /**********************************************************************/
 
-static GLboolean 
+static GLboolean
 _mesa_validate_texture_wrap_mode(GLcontext * ctx,
 				 GLenum target, GLenum eparam)
 {
@@ -2922,8 +2922,8 @@ update_texture_state( GLcontext *ctx )
 {
    GLuint unit;
 
-   ctx->NewState |= _NEW_TEXTURE; /* TODO: only set this if there are 
-				   * actual changes. 
+   ctx->NewState |= _NEW_TEXTURE; /* TODO: only set this if there are
+				   * actual changes.
 				   */
 
    ctx->Texture._EnabledUnits = 0;
@@ -3130,11 +3130,11 @@ void _mesa_update_texture( GLcontext *ctx, GLuint new_state )
 
 /**
  * Allocate the proxy textures for the given context.
- * 
+ *
  * \param ctx the context to allocate proxies for.
- * 
+ *
  * \return GL_TRUE on success, or GL_FALSE on failure
- * 
+ *
  * If run out of memory part way through the allocations, clean up and return
  * GL_FALSE.
  */

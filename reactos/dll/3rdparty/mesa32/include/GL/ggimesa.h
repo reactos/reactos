@@ -33,7 +33,7 @@ extern "C" {
 
 #include <ggi/ggi.h>
 #include "GL/gl.h"
-  
+
 typedef struct ggi_mesa_context *ggi_mesa_context_t;
 
 /*

@@ -106,7 +106,7 @@ FreePrincipalsList(IN PSECURITY_PAGE sp,
 {
     PPRINCIPAL_LISTITEM CurItem, NextItem;
     PACE_ENTRY AceEntry, NextAceEntry;
-    
+
     CurItem = *PrincipalsListHead;
     while (CurItem != NULL)
     {
@@ -140,7 +140,7 @@ FreePrincipalsList(IN PSECURITY_PAGE sp,
                  CurItem);
         CurItem = NextItem;
     }
-    
+
     *PrincipalsListHead = NULL;
 }
 
@@ -180,7 +180,7 @@ FindSidInPrincipalsListAddAce(IN PPRINCIPAL_LISTITEM PrincipalsListHead,
                               IN PACE_HEADER AceHeader)
 {
     PPRINCIPAL_LISTITEM CurItem;
-    
+
     for (CurItem = PrincipalsListHead;
          CurItem != NULL;
          CurItem = CurItem->Next)
@@ -198,7 +198,7 @@ FindSidInPrincipalsListAddAce(IN PPRINCIPAL_LISTITEM PrincipalsListHead,
             break;
         }
     }
-    
+
     return NULL;
 }
 
@@ -246,13 +246,13 @@ AddPrincipalToList(IN PSECURITY_PAGE sp,
                                        AceHeader))
     {
         DWORD SidLength;
-        
+
         PrincipalLink = &sp->PrincipalsListHead;
         while (*PrincipalLink != NULL)
         {
             PrincipalLink = &(*PrincipalLink)->Next;
         }
-        
+
         SidLength = GetLengthSid(Sid);
 
         /* allocate the principal */
@@ -587,7 +587,7 @@ ClearOwner:
             PSID Sid;
             PACE_HEADER AceHeader;
             ULONG AceIndex;
-            
+
             for (AceIndex = 0;
                  AceIndex < Dacl->AceCount;
                  AceIndex++)
@@ -630,7 +630,7 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
                  Selected != NULL);
     EnableWindow(sp->hAceCheckList,
                  Selected != NULL);
-    
+
     if (Selected != NULL)
     {
         LPWSTR szLabel;
@@ -655,7 +655,7 @@ UpdateControlStates(IN PSECURITY_PAGE sp)
     else
     {
         WCHAR szPermissions[255];
-        
+
         if (LoadString(hDllInstance,
                        IDS_PERMISSIONS,
                        szPermissions,
@@ -749,7 +749,7 @@ SecurityPageCallback(IN HWND hwnd,
                      IN LPPROPSHEETPAGE ppsp)
 {
     PSECURITY_PAGE sp = (PSECURITY_PAGE)ppsp->lParam;
-    
+
     switch (uMsg)
     {
         case PSPCB_CREATE:
@@ -903,17 +903,17 @@ ResizeControls(IN PSECURITY_PAGE sp,
     HDWP dwp;
     INT nControls = 8;
     LVCOLUMN lvc;
-    
+
     hWndAllow = GetDlgItem(sp->hWnd,
                            IDC_LABEL_ALLOW);
     hWndDeny = GetDlgItem(sp->hWnd,
                           IDC_LABEL_DENY);
-    
+
     GetWindowRect(sp->hWnd,
                   &rcWnd);
 
     cxEdge = GetSystemMetrics(SM_CXEDGE);
-    
+
     /* use the left margin of the principal list view control for all control
        margins */
     pt.x = 0;
@@ -923,12 +923,12 @@ ResizeControls(IN PSECURITY_PAGE sp,
                     &pt,
                     1);
     cxWidth = Width - (2 * pt.x);
-    
+
     if (sp->ObjectInfo.dwFlags & SI_ADVANCED)
     {
         nControls += 2;
     }
-    
+
     if ((dwp = BeginDeferWindowPos(nControls)))
     {
         /* resize the owner edit field */
@@ -1200,7 +1200,7 @@ AddSelectedPrincipal(IN IDsObjectPicker *pDsObjectPicker,
 {
     PACE_HEADER AceHeader;
     PSECURITY_PAGE sp = (PSECURITY_PAGE)Context;
-    
+
     AceHeader = BuildDefaultPrincipalAce(sp,
                                          pSid);
     if (AceHeader != NULL)
@@ -1255,7 +1255,7 @@ SecurityPageProc(IN HWND hwndDlg,
                         case LVN_ITEMCHANGED:
                         {
                             LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
-                            
+
                             if ((pnmv->uChanged & LVIF_STATE) &&
                                 ((pnmv->uOldState & (LVIS_FOCUSED | LVIS_SELECTED)) ||
                                  (pnmv->uNewState & (LVIS_FOCUSED | LVIS_SELECTED))))
@@ -1273,7 +1273,7 @@ SecurityPageProc(IN HWND hwndDlg,
                         case CLN_CHANGINGITEMCHECKBOX:
                         {
                             PNMCHANGEITEMCHECKBOX pcicb = (PNMCHANGEITEMCHECKBOX)lParam;
-                            
+
                             /* make sure only one of both checkboxes is only checked
                                at the same time */
                             if (pcicb->Checked)
@@ -1303,7 +1303,7 @@ SecurityPageProc(IN HWND hwndDlg,
                 }
                 break;
             }
-            
+
             case WM_COMMAND:
             {
                 switch (LOWORD(wParam))
@@ -1311,7 +1311,7 @@ SecurityPageProc(IN HWND hwndDlg,
                     case IDC_ADD_PRINCIPAL:
                     {
                         HRESULT hRet;
-                        
+
                         hRet = InitializeObjectPicker(sp->ServerName,
                                                       &sp->ObjectInfo,
                                                       &sp->pDsObjectPicker);
@@ -1325,7 +1325,7 @@ SecurityPageProc(IN HWND hwndDlg,
                             {
                                 MessageBox(hwndDlg, L"InvokeObjectPickerDialog failed!\n", NULL, 0);
                             }
-                            
+
                             /* delete the instance */
                             FreeObjectPicker(sp->pDsObjectPicker);
                         }
@@ -1350,7 +1350,7 @@ SecurityPageProc(IN HWND hwndDlg,
                 }
                 break;
             }
-            
+
             case WM_SIZE:
             {
                 ResizeControls(sp,
@@ -1358,7 +1358,7 @@ SecurityPageProc(IN HWND hwndDlg,
                                (INT)HIWORD(lParam));
                 break;
             }
-            
+
             case WM_INITDIALOG:
             {
                 sp = (PSECURITY_PAGE)((LPPROPSHEETPAGE)lParam)->lParam;
@@ -1366,7 +1366,7 @@ SecurityPageProc(IN HWND hwndDlg,
                 {
                     LV_COLUMN lvc;
                     RECT rcLvClient;
-                    
+
                     sp->hWnd = hwndDlg;
                     sp->hWndPrincipalsList = GetDlgItem(hwndDlg, IDC_PRINCIPALS);
                     sp->hBtnAdd = GetDlgItem(hwndDlg, IDC_ADD_PRINCIPAL);
@@ -1374,7 +1374,7 @@ SecurityPageProc(IN HWND hwndDlg,
                     sp->hBtnAdvanced = GetDlgItem(hwndDlg, IDC_ADVANCED);
                     sp->hAceCheckList = GetDlgItem(hwndDlg, IDC_ACE_CHECKLIST);
                     sp->hPermissionsForLabel = GetDlgItem(hwndDlg, IDC_LABEL_PERMISSIONS_FOR);
-                    
+
                     sp->SpecialPermCheckIndex = -1;
 
                     /* save the pointer to the structure */
@@ -1419,7 +1419,7 @@ SecurityPageProc(IN HWND hwndDlg,
 
                     GetClientRect(sp->hWndPrincipalsList,
                                   &rcLvClient);
-                    
+
                     /* add a column to the list view */
                     lvc.mask = LVCF_FMT | LVCF_WIDTH;
                     lvc.fmt = LVCFMT_LEFT;
@@ -1427,9 +1427,9 @@ SecurityPageProc(IN HWND hwndDlg,
                     (void)ListView_InsertColumn(sp->hWndPrincipalsList,
                                                 0,
                                                 &lvc);
-                    
+
                     ReloadPrincipalsList(sp);
-                    
+
                     ListViewSelectItem(sp->hWndPrincipalsList,
                                        0);
 
@@ -1461,7 +1461,7 @@ SecurityPageProc(IN HWND hwndDlg,
                         ShowWindow(GetDlgItem(hwndDlg, IDC_LABEL_ADVANCED),
                                    SW_HIDE);
                     }
-                    
+
                     /* enable quicksearch for the permissions checklist control */
                     SendMessage(sp->hAceCheckList,
                                 CLM_ENABLEQUICKSEARCH,
@@ -1540,7 +1540,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
         DPRINT("CoInitialize failed!\n");
         return NULL;
     }
-    
+
     sPage = HeapAlloc(GetProcessHeap(),
                       HEAP_ZERO_MEMORY,
                       sizeof(SECURITY_PAGE));
@@ -1550,7 +1550,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
         CoUninitialize();
 
         SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-        
+
         DPRINT("Not enough memory to allocate a SECURITY_PAGE!\n");
         return NULL;
     }
@@ -1584,7 +1584,7 @@ CreateSecurityPage(IN LPSECURITYINFO psi)
     {
         psp.pszTitle = NULL;
     }
-    
+
     /* NOTE: the SECURITY_PAGE structure will be freed by the property page
              callback! */
 

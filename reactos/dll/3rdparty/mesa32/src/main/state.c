@@ -26,7 +26,7 @@
 /**
  * \file state.c
  * State management.
- * 
+ *
  * This file manages recalculation of derived values in the __GLcontextRec.
  * Also, this is where we initialize the API dispatch table.
  */
@@ -712,7 +712,7 @@ _mesa_init_exec_table(struct _glapi_table *exec)
 
    /* ARB 37. GL_ARB_draw_buffers */
    SET_DrawBuffersARB(exec, _mesa_DrawBuffersARB);
-   
+
 #if FEATURE_ARB_shader_objects
    SET_DeleteObjectARB(exec, _mesa_DeleteObjectARB);
    SET_GetHandleARB(exec, _mesa_GetHandleARB);
@@ -936,7 +936,7 @@ update_program(GLcontext *ctx)
       && ctx->FragmentProgram.Current->Instructions;
    ctx->ATIFragmentShader._Enabled = ctx->ATIFragmentShader.Enabled
       && ctx->ATIFragmentShader.Current->Instructions;
-      
+
    ctx->FragmentProgram._Current = ctx->FragmentProgram.Current;
    ctx->FragmentProgram._Active = ctx->FragmentProgram._Enabled;
 
@@ -959,7 +959,7 @@ update_program(GLcontext *ctx)
  *
  * Calls dd_function_table::UpdateState to perform any internal state
  * management necessary.
- * 
+ *
  * \sa _mesa_update_modelview_project(), _mesa_update_texture(),
  * _mesa_update_buffer_bounds(), _mesa_update_polygon(),
  * _mesa_update_lighting() and _mesa_update_tnl_spaces().
@@ -1019,7 +1019,7 @@ _mesa_update_state( GLcontext *ctx )
     * If the lighting space hasn't changed, may still need to recompute
     * light positions & normal transforms for other reasons.
     */
-   if (new_state & _MESA_NEW_NEED_EYE_COORDS) 
+   if (new_state & _MESA_NEW_NEED_EYE_COORDS)
       _mesa_update_tnl_spaces( ctx, new_state );
 
    /*

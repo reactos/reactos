@@ -1,7 +1,7 @@
 /**
  * \file fog.h
  * Fog operations.
- * 
+ *
  * \if subset
  * (No-op)
  *

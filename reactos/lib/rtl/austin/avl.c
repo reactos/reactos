@@ -68,7 +68,7 @@ void print_tree(udict_t *ud)
 
 void avl_init(udict_t *ud)
 {
-	ud->BalancedRoot.left = ud->BalancedRoot.right = 
+	ud->BalancedRoot.left = ud->BalancedRoot.right =
 	ud->BalancedRoot.parent = (udict_node_t*)
 		ud->AllocateRoutine(ud, sizeof(udict_node_t));
 	ud->BalancedRoot.parent->left = ud->BalancedRoot.parent->right =
@@ -205,7 +205,7 @@ static int Insert(udict_t *ud, udict_node_t *what, udict_node_t **where, udict_n
 		return 1;                       /* higher than before */
 	}/*if*/
 	else {
-		result = ud->compare(ud, key(what), key(here));	
+		result = ud->compare(ud, key(what), key(here));
 
 		assert (result != GenericEqual);
 
@@ -357,7 +357,7 @@ int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where
 	if (avl_is_nil(ud, here))
 		return TableInsertAsLeft;
 
-	result = ud->compare(ud, _key, key(here));	
+	result = ud->compare(ud, _key, key(here));
 
 	if (result == EQUAL) {
 		*where = here;
@@ -382,7 +382,7 @@ int avl_search(udict_t *ud, void *_key, udict_node_t *here, udict_node_t **where
 
 int avl_is_nil(udict_t *ud, udict_node_t *node)
 {
-	return  tree_null_priv(ud) == node || 
+	return  tree_null_priv(ud) == node ||
 		&ud->BalancedRoot == node;
 }
 
@@ -399,7 +399,7 @@ udict_node_t *avl_last(udict_t *ud)
 udict_node_t *avl_next(udict_t *ud, udict_node_t *prev)
 {
 	udict_node_t *node = udict_tree_next(ud, prev);
-	if( node == tree_null_priv(ud) || node == &ud->BalancedRoot ) 
+	if( node == tree_null_priv(ud) || node == &ud->BalancedRoot )
 		return NULL;
 	else
 		return node;

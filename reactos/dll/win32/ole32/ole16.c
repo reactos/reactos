@@ -128,7 +128,7 @@ SEGPTR CDECL IMalloc16_fnRealloc(IMalloc16* iface,SEGPTR pv,DWORD cb)
     SEGPTR ret;
     IMalloc16Impl *This = (IMalloc16Impl *)iface;
     TRACE("(%p)->Realloc(%08x,%d)\n",This,pv,cb);
-    if (!pv) 
+    if (!pv)
 	ret = IMalloc16_fnAlloc(iface, cb);
     else if (cb) {
         ret = MapLS( HeapReAlloc( GetProcessHeap(), 0, MapSL(pv), cb ) );
@@ -420,7 +420,7 @@ HRESULT WINAPI ProgIDFromCLSID16(
   ret = COM_OpenKeyForCLSID(clsid, wszProgID, KEY_READ, &hkey);
   if (FAILED(ret))
     return ret;
-  
+
   if (RegQueryValueA(hkey, NULL, NULL, &len))
     ret = REGDB_E_READREGDB;
 

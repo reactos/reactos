@@ -68,7 +68,7 @@ static ATOM atSubclassProp;
 /* Generate a number of subclass window procs.
  * With a single proc alone, we can't really reliably find out the superclass,
  * so have one for each subclass. The subclass number is also stored in a prop
- * since it's needed by THEMING_CallOriginalClass(). Then, the the subclass 
+ * since it's needed by THEMING_CallOriginalClass(). Then, the the subclass
  * proc and ref data are fetched and the proc called.
  */
 #define MAKE_SUBCLASS_PROC(N)                                               \
@@ -109,9 +109,9 @@ static const WNDPROC subclassProcs[NUM_SUBCLASSES] = {
 void THEMING_Initialize (void)
 {
     int i;
-    static const WCHAR subclassPropName[] = 
+    static const WCHAR subclassPropName[] =
         { 'C','C','3','2','T','h','e','m','i','n','g','S','u','b','C','l',0 };
-    static const WCHAR refDataPropName[] = 
+    static const WCHAR refDataPropName[] =
         { 'C','C','3','2','T','h','e','m','i','n','g','D','a','t','a',0 };
 
     if (!IsThemeActive()) return;
@@ -128,10 +128,10 @@ void THEMING_Initialize (void)
         GetClassInfoExW (NULL, subclasses[i].className, &class);
         originalProcs[i] = class.lpfnWndProc;
         class.lpfnWndProc = subclassProcs[i];
-        
+
         if (!class.lpfnWndProc)
         {
-            ERR("Missing proc for class %s\n", 
+            ERR("Missing proc for class %s\n",
                 debugstr_w (subclasses[i].className));
             continue;
         }
@@ -143,7 +143,7 @@ void THEMING_Initialize (void)
         }
         else
         {
-            TRACE("Re-registered class %s\n", 
+            TRACE("Re-registered class %s\n",
                 debugstr_w (subclasses[i].className));
         }
     }

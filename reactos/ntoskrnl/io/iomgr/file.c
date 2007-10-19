@@ -522,7 +522,7 @@ IopParseDevice(IN PVOID ParseObject,
 
             /* Set the named pipe MJ and set the parameters */
             StackLoc->MajorFunction = IRP_MJ_CREATE_NAMED_PIPE;
-            StackLoc->Parameters.CreatePipe.Parameters = 
+            StackLoc->Parameters.CreatePipe.Parameters =
                 OpenPacket->MailslotOrPipeParameters;
             break;
 
@@ -1939,7 +1939,7 @@ IoCreateStreamFileObjectEx(IN PFILE_OBJECT FileObject OPTIONAL,
 
     /* Set File Object Data */
     RtlZeroMemory(CreatedFileObject, sizeof(FILE_OBJECT));
-    CreatedFileObject->DeviceObject = DeviceObject; 
+    CreatedFileObject->DeviceObject = DeviceObject;
     CreatedFileObject->Type = IO_TYPE_FILE;
     CreatedFileObject->Size = sizeof(FILE_OBJECT);
     CreatedFileObject->Flags = FO_STREAM_FILE;
@@ -2036,7 +2036,7 @@ IoCreateStreamFileObjectLite(IN PFILE_OBJECT FileObject OPTIONAL,
 
     /* Set File Object Data */
     RtlZeroMemory(CreatedFileObject, sizeof(FILE_OBJECT));
-    CreatedFileObject->DeviceObject = DeviceObject; 
+    CreatedFileObject->DeviceObject = DeviceObject;
     CreatedFileObject->Type = IO_TYPE_FILE;
     CreatedFileObject->Size = sizeof(FILE_OBJECT);
     CreatedFileObject->Flags = FO_STREAM_FILE;
@@ -2824,7 +2824,7 @@ NtCancelIoFile(IN HANDLE FileHandle,
     }
     _SEH_HANDLE
     {
-    
+
     }
     _SEH_END;
 

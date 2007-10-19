@@ -63,8 +63,8 @@ public:
     void		surfpts( long, REAL *, long, long, int, int,
           			 REAL, REAL, REAL, REAL );
     void		surfbbox( long, REAL *, REAL * );
-    void		surfgrid( REAL, REAL, long, REAL, REAL, long ); 
-    void		surfmesh( long, long, long, long ); 
+    void		surfgrid( REAL, REAL, long, REAL, REAL, long );
+    void		surfmesh( long, long, long, long );
     void		bgntmesh( char * );
     void		endtmesh( void );
     void		swaptmesh( void );
@@ -83,10 +83,10 @@ public:
     void                endtfan();
     void                bgnqstrip();
     void                endqstrip();
-    void                evalUStrip(int n_upper, REAL v_upper, REAL* upper_val, 
+    void                evalUStrip(int n_upper, REAL v_upper, REAL* upper_val,
 				   int n_lower, REAL v_lower, REAL* lower_val
 				   );
-    void                evalVStrip(int n_left, REAL u_left, REAL* left_val, 
+    void                evalVStrip(int n_left, REAL u_left, REAL* left_val,
 				   int n_right, REAL v_right, REAL* right_val
 				   );
     void                tmeshvertNOGE(TrimVertex *t);
@@ -94,7 +94,7 @@ public:
     void                tmeshvertNOGE_BV(TrimVertex *t);
     void                preEvaluateBU(REAL u);
     void                preEvaluateBV(REAL v);
-	
+
 
     /* curve backend routines */
     void		bgncurv( void );
@@ -102,7 +102,7 @@ public:
     void		curvpts( long, REAL *, long, int, REAL, REAL );
     void		curvgrid( REAL, REAL, long );
     void		curvmesh( long, long );
-    void		curvpt( REAL  );  
+    void		curvpt( REAL  );
     void		bgnline( void );
     void		endline( void );
     void		endcurv( void );

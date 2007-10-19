@@ -120,13 +120,13 @@ CleanupMenuImpl(VOID)
 PMENU_OBJECT FASTCALL UserGetMenuObject(HMENU hMenu)
 {
    PMENU_OBJECT Menu;
-   
+
    if (!hMenu)
    {
       SetLastWin32Error(ERROR_INVALID_MENU_HANDLE);
       return NULL;
    }
-   
+
    Menu = (PMENU_OBJECT)UserGetObject(gHandleTable, hMenu, otMenu);
    if (!Menu)
    {
@@ -1519,12 +1519,12 @@ CLEANUP:
 BOOL FASTCALL UserDestroyMenu(HMENU hMenu)
 {
    PMENU_OBJECT Menu;
-   
+
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       return FALSE;
    }
-   
+
    if(Menu->Process != PsGetCurrentProcess())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -1551,7 +1551,7 @@ NtUserDestroyMenu(
    {
       RETURN( FALSE);
    }
-   
+
    if(Menu->Process != PsGetCurrentProcess())
    {
       SetLastWin32Error(ERROR_ACCESS_DENIED);
@@ -1716,10 +1716,10 @@ NtUserGetMenuBarInfo(
    RECT Rect;
    MENUBARINFO kmbi;
    DECLARE_RETURN(BOOL);
-  
+
    DPRINT("Enter NtUserGetMenuBarInfo\n");
    UserEnterShared();
-  
+
    if (!(WindowObject = UserGetWindowObject(hwnd)))
      {
         SetLastWin32Error(ERROR_INVALID_WINDOW_HANDLE);
@@ -1744,7 +1744,7 @@ NtUserGetMenuBarInfo(
    kmbi.fBarFocused = FALSE;
    kmbi.fFocused = FALSE;
    kmbi.hwndMenu = NULL;
-   
+
    switch (idObject)
    {
       case OBJID_MENU:
@@ -1762,7 +1762,7 @@ NtUserGetMenuBarInfo(
                 }
            }
          else
-           {  
+           {
               /* If items is zero we assume info for the menu itself. */
               if (!(IntGetClientOrigin(WindowObject, &Offset)))
                 {
@@ -1909,7 +1909,7 @@ NtUserGetMenuBarInfo(
 CLEANUP:
    DPRINT("Leave NtUserGetMenuBarInfo, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;  
+   END_CLEANUP;
 }
 
 
@@ -1957,9 +1957,9 @@ NtUserGetMenuItemRect(
         Rect = MenuItem->Rect;
    else
       RETURN(FALSE);
-   
+
    referenceHwnd = hWnd;
-   
+
    if(!hWnd)
    {
       if(!UserMenuInfo(Menu, &mi, FALSE))
@@ -2008,12 +2008,12 @@ NtUserHiliteMenuItem(
    {
       RETURN(FALSE);
    }
-   
+
    if(!(Menu = UserGetMenuObject(hMenu)))
    {
       RETURN(FALSE);
    }
-   
+
    if(Window->IDMenu == (UINT)hMenu)
    {
       RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));

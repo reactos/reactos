@@ -5,17 +5,17 @@
    http://www.freedesktop.org/wiki/Standards_2fwm_2dspec
 
    Copyright (C) Peter Astrand <astrand@cendio.se> 2005
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
    GNU General Public License for more details.
-   
+
    You should have received a copy of the GNU General Public License
    along with this program; if not, write to the Free Software
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
@@ -30,8 +30,8 @@
 #define _NET_WM_STATE_ADD           1	/* add/set property */
 #define _NET_WM_STATE_TOGGLE        2	/* toggle property  */
 
-/* 
-   Get window property value (32 bit format) 
+/*
+   Get window property value (32 bit format)
    Returns zero on success, -1 on error
 */
 static int
@@ -87,7 +87,7 @@ get_property_value(RDPCLIENT * This, Window wnd, char *propname, long max_length
 	return (0);
 }
 
-/* 
+/*
    Get current desktop number
    Returns -1 on error
 */
@@ -183,8 +183,8 @@ ewmh_init(RDPCLIENT * This)
 }
 
 
-/* 
-   Get the window state: normal/minimized/maximized. 
+/*
+   Get the window state: normal/minimized/maximized.
 */
 #ifndef MAKE_PROTO
 int
@@ -313,9 +313,9 @@ ewmh_modify_state(RDPCLIENT * This, Window wnd, int add, Atom atom1, Atom atom2)
 	return 0;
 }
 
-/* 
-   Set the window state: normal/minimized/maximized. 
-   Returns -1 on failure. 
+/*
+   Set the window state: normal/minimized/maximized.
+   Returns -1 on failure.
 */
 int
 ewmh_change_state(RDPCLIENT * This, Window wnd, int state)

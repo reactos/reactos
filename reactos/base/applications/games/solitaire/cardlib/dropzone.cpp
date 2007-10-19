@@ -16,7 +16,7 @@ bool CardWindow::RegisterDropZone(int id, RECT *rect, pDropZoneProc proc)
         return false;
 
     DropZone *dz = new DropZone(id, rect, proc);
-    
+
     dropzone[nNumDropZones++] = dz;
 
     return false;
@@ -28,7 +28,7 @@ DropZone *CardWindow::GetDropZoneFromRect(RECT *rect)
     {
         RECT inter;
         RECT zone;
-                
+
         //if any part of the drag rectangle falls within a drop zone,
         //let that take priority over any other card stack.
         dropzone[i]->GetZone(&zone);
@@ -51,7 +51,7 @@ bool CardWindow::DeleteDropZone(int id)
         if(dropzone[i]->id == id)
         {
             DropZone *dz = dropzone[i];
-            
+
             //shift any after this one backwards
             for(int j = i; j < nNumDropZones - 1; j++)
             {
@@ -61,7 +61,7 @@ bool CardWindow::DeleteDropZone(int id)
             delete dz;
             nNumDropZones--;
             return true;
-        }    
+        }
     }
 
     return false;

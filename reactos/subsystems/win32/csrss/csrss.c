@@ -35,7 +35,7 @@ int _cdecl _main(int argc,
 		 int DebugFlag)
 {
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    //PrintString("ReactOS Client/Server Run-Time (Build %s)\n",
 	     //KERNEL_VERSION_BUILD_STR);
 

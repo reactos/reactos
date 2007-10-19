@@ -298,7 +298,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 	char					buf[128];
 	char					cat[8];
 
-	DWORD dwAllFlags = 
+	DWORD dwAllFlags =
 					PFD_DRAW_TO_WINDOW |
 					PFD_DRAW_TO_BITMAP |
 					PFD_SUPPORT_GDI |
@@ -345,7 +345,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 	strcat(buf, cat);
 
 	/* should find transparent pixel from LAYERPLANEDESCRIPTOR */
-	sprintf(cat, " . "); 
+	sprintf(cat, " . ");
 	strcat(buf, cat);
 
 	sprintf(cat, "%2d ", ppfd->cColorBits);
@@ -353,7 +353,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 
 	/* bReserved field indicates number of over/underlays */
 	if(ppfd->bReserved) sprintf(cat, " %d ", ppfd->bReserved);
-	else sprintf(cat, " . "); 
+	else sprintf(cat, " . ");
 	strcat(buf, cat);
 
 	sprintf(cat, " %c ", ppfd->iPixelType == PFD_TYPE_RGBA ? 'r' : 'c');
@@ -365,38 +365,38 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 	sprintf(cat, " %c ", ppfd->dwFlags & PFD_STEREO ? 'y' : '.');
 	strcat(buf, cat);
 
-	if(ppfd->cRedBits && ppfd->iPixelType == PFD_TYPE_RGBA) 
+	if(ppfd->cRedBits && ppfd->iPixelType == PFD_TYPE_RGBA)
 	    sprintf(cat, "%2d ", ppfd->cRedBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
 
-	if(ppfd->cGreenBits && ppfd->iPixelType == PFD_TYPE_RGBA) 
+	if(ppfd->cGreenBits && ppfd->iPixelType == PFD_TYPE_RGBA)
 	    sprintf(cat, "%2d ", ppfd->cGreenBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
 
-	if(ppfd->cBlueBits && ppfd->iPixelType == PFD_TYPE_RGBA) 
+	if(ppfd->cBlueBits && ppfd->iPixelType == PFD_TYPE_RGBA)
 	    sprintf(cat, "%2d ", ppfd->cBlueBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
-	if(ppfd->cAlphaBits && ppfd->iPixelType == PFD_TYPE_RGBA) 
+
+	if(ppfd->cAlphaBits && ppfd->iPixelType == PFD_TYPE_RGBA)
 		sprintf(cat, "%2d ", ppfd->cAlphaBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cAuxBuffers)     sprintf(cat, "%2d ", ppfd->cAuxBuffers);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cDepthBits)      sprintf(cat, "%2d ", ppfd->cDepthBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cStencilBits)    sprintf(cat, "%2d ", ppfd->cStencilBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cAccumRedBits)   sprintf(cat, "%2d ", ppfd->cAccumRedBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
@@ -404,15 +404,15 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 	if(ppfd->cAccumGreenBits) sprintf(cat, "%2d ", ppfd->cAccumGreenBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cAccumBlueBits)  sprintf(cat, "%2d ", ppfd->cAccumBlueBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	if(ppfd->cAccumAlphaBits) sprintf(cat, "%2d ", ppfd->cAccumAlphaBits);
 	else sprintf(cat, " . ");
 	strcat(buf, cat);
-	
+
 	/* no multisample in Win32 */
 	sprintf(cat, " . .\n");
 	strcat(buf, cat);
@@ -435,7 +435,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 		// Mask illegal flags and continue
 		dwFlags = dwFlags & dwAllFlags;
     }
-	
+
     switch (ppfd->iPixelType) {
     case PFD_TYPE_RGBA:
     case PFD_TYPE_COLORINDEX:
@@ -445,7 +445,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 		ddlogMessage(DDLOG_WARN, "ChoosePixelFormat: bad pixel type\n");
 		return 0;
     }
-	
+
     switch (ppfd->iLayerType) {
     case PFD_MAIN_PLANE:
     case PFD_OVERLAY_PLANE:
@@ -456,15 +456,15 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 		ddlogMessage(DDLOG_WARN, "ChoosePixelFormat: bad layer type\n");
 		return 0;
     }
-	
+
     numPixelFormats = glb.nPixelFormatCount;
-	
+
     /* loop through candidate pixel format descriptors */
     for (i=0; i<numPixelFormats; ++i) {
 		PIXELFORMATDESCRIPTOR ppfdCandidate;
-		
+
 		memcpy(&ppfdCandidate, &lpPF[i].pfd, sizeof(PIXELFORMATDESCRIPTOR));
-		
+
 		/*
 		** Check attributes which must match
 		*/
@@ -475,14 +475,14 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 		if (ppfd->iLayerType != ppfdCandidate.iLayerType) {
 			continue;
 		}
-		
+
 		if (((dwFlags ^ ppfdCandidate.dwFlags) & dwFlags) &
 			(PFD_DRAW_TO_WINDOW | PFD_DRAW_TO_BITMAP |
 			PFD_SUPPORT_GDI | PFD_SUPPORT_OPENGL))
 		{
 			continue;
 		}
-		
+
 		if (!(dwFlags & PFD_DOUBLEBUFFER_DONTCARE)) {
 			if ((dwFlags & PFD_DOUBLEBUFFER) !=
 				(ppfdCandidate.dwFlags & PFD_DOUBLEBUFFER))
@@ -490,7 +490,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 				continue;
 			}
 		}
-		
+
 //		if (!(dwFlags & PFD_STEREO_DONTCARE)) {
 			if ((dwFlags & PFD_STEREO) !=
 				(ppfdCandidate.dwFlags & PFD_STEREO))
@@ -498,21 +498,21 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 				continue;
 			}
 //		}
-		
+
         if (ppfd->iPixelType==PFD_TYPE_RGBA
             && ppfd->cAlphaBits && !ppfdCandidate.cAlphaBits) {
             continue;
 		}
-		
+
         if (ppfd->iPixelType==PFD_TYPE_RGBA
 			&& ppfd->cAccumBits && !ppfdCandidate.cAccumBits) {
 			continue;
         }
-		
+
         if (ppfd->cDepthBits && !ppfdCandidate.cDepthBits) {
 			continue;
         }
-		
+
         if (ppfd->cStencilBits && !ppfdCandidate.cStencilBits) {
             continue;
         }
@@ -520,7 +520,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 		if (ppfd->cAuxBuffers && !ppfdCandidate.cAuxBuffers) {
 			continue;
 		}
-		
+
 		/*
 		** See if candidate is better than the previous best choice
 		*/
@@ -529,7 +529,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if ((ppfd->cColorBits > ppfdBest.cColorBits &&
 			ppfdCandidate.cColorBits > ppfdBest.cColorBits) ||
 			(ppfd->cColorBits <= ppfdCandidate.cColorBits &&
@@ -539,7 +539,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if (ppfd->iPixelType==PFD_TYPE_RGBA
             && ppfd->cAlphaBits
             && ppfdCandidate.cAlphaBits > ppfdBest.cAlphaBits)
@@ -548,7 +548,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if (ppfd->iPixelType==PFD_TYPE_RGBA
 			&& ppfd->cAccumBits
             && ppfdCandidate.cAccumBits > ppfdBest.cAccumBits)
@@ -557,7 +557,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if ((ppfd->cDepthBits > ppfdBest.cDepthBits &&
 			ppfdCandidate.cDepthBits > ppfdBest.cDepthBits) ||
 			(ppfd->cDepthBits <= ppfdCandidate.cDepthBits &&
@@ -567,7 +567,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if (ppfd->cStencilBits &&
 			ppfdCandidate.cStencilBits > ppfdBest.cStencilBits)
 		{
@@ -575,7 +575,7 @@ int APIENTRY _GLD_WGL_EXPORT(ChoosePixelFormat)(
 			bestIndex = i;
 			continue;
 		}
-		
+
 		if (ppfd->cAuxBuffers &&
 			ppfdCandidate.cAuxBuffers > ppfdBest.cAuxBuffers)
 		{
@@ -1783,12 +1783,12 @@ void * __wglRealloc(
 	size_t newSize)
 {
     void *newPtr = NULL;
-	
+
     if (newSize != 0) {
 		newPtr = (void *) GlobalAlloc(GPTR, newSize);
 		if (oldPtr && newPtr) {
 			DWORD oldSize = GlobalSize(oldPtr);
-			
+
 			memcpy(newPtr, oldPtr, (oldSize <= newSize ? oldSize : newSize));
 			GlobalFree(oldPtr);
 		}
@@ -1927,7 +1927,7 @@ BOOL APIENTRY _GLD_WGL_EXPORT(UseFontOutlinesA)(
 			__wglFree(glyphBuf);
 			return FALSE; /*WGL_STATUS_FAILURE*/
 			}
-		
+
 		glyphMetricsFloat->gmfBlackBoxX =
 			(FLOAT) glyphMetrics.gmBlackBoxX * ScaleFactor;
 		glyphMetricsFloat->gmfBlackBoxY =
@@ -1940,7 +1940,7 @@ BOOL APIENTRY _GLD_WGL_EXPORT(UseFontOutlinesA)(
 			(FLOAT) glyphMetrics.gmCellIncX * ScaleFactor;
 		glyphMetricsFloat->gmfCellIncY =
 			(FLOAT) glyphMetrics.gmCellIncY * ScaleFactor;
-		
+
 		/*
 		 * Turn the glyph into a display list:
 		 */
@@ -1984,7 +1984,7 @@ BOOL APIENTRY _GLD_WGL_EXPORT(UseFontOutlinesA)(
  *
  * Gets metrics for the current font and creates an equivalent font
  * scaled to the design units of the font.
- * 
+ *
  *****************************************************************************/
 
 static HFONT
@@ -1996,7 +1996,7 @@ CreateHighResolutionFont(HDC hDC)
 	LOGFONT logFont;
 
 	otmSize = GetOutlineTextMetrics(hDC, 0, NULL);
-	if (otmSize == 0) 
+	if (otmSize == 0)
 		return NULL;
 
 	otm = (OUTLINETEXTMETRIC *) __wglMalloc(otmSize);
@@ -2004,14 +2004,14 @@ CreateHighResolutionFont(HDC hDC)
 		return NULL;
 
 	otm->otmSize = otmSize;
-	if (GetOutlineTextMetrics(hDC, otmSize, otm) == 0) 
+	if (GetOutlineTextMetrics(hDC, otmSize, otm) == 0)
 		return NULL;
-	
+
 	fontHeight = otm->otmTextMetrics.tmHeight -
 			otm->otmTextMetrics.tmInternalLeading;
 	fontWidth = otm->otmTextMetrics.tmAveCharWidth;
 	fontUnits = (LONG) otm->otmEMSquare;
-	
+
 	ScaleFactor = 1.0F / (FLOAT) fontUnits;
 
 	logFont.lfHeight = - ((LONG) fontUnits);
@@ -2045,7 +2045,7 @@ CreateHighResolutionFont(HDC hDC)
 
 /*****************************************************************************
  * MakeDisplayListFromGlyph
- * 
+ *
  * Converts the outline of a glyph to an OpenGL display list.
  *
  * Return value is nonzero for success, zero for failure.
@@ -2071,7 +2071,7 @@ MakeDisplayListFromGlyph(	IN  DWORD		listName,
 					chordalDeviation,
 					extrusion,
 					format);
-		
+
 	_GLD_glTranslatef(glyphMetricsFloat->gmfCellIncX,
 		     glyphMetricsFloat->gmfCellIncY,
 		     0.0F);
@@ -2084,7 +2084,7 @@ MakeDisplayListFromGlyph(	IN  DWORD		listName,
 
 /*****************************************************************************
  * DrawGlyph
- * 
+ *
  * Converts the outline of a glyph to OpenGL drawing primitives, tessellating
  * as needed, and then draws the glyph.  Tessellation of the quadratic splines
  * in the outline is controlled by "chordalDeviation", and the drawing
@@ -2153,7 +2153,7 @@ DrawGlyph(	IN  UCHAR*	glyphBuf,
 		double v[3];
 		FLOAT *save_p = p;
 		GLfloat z_value;
-		
+
 		/*
 		 * This is the hard case.  We have to set up a tessellator
 		 * to convert the outlines into a set of polygonal
@@ -2183,7 +2183,7 @@ DrawGlyph(	IN  UCHAR*	glyphBuf,
 			for (loop = (DWORD) *p++; loop; --loop)
 				{
 				gluTessBeginContourProc(tess);
-				
+
 				for (point = (DWORD) *p++; point; --point)
 					{
 					v[0] = p[0];
@@ -2253,7 +2253,7 @@ DrawGlyph(	IN  UCHAR*	glyphBuf,
 				count = (DWORD) *p++;
 
 				gluTessBeginContourProc(tess);
-				
+
 				for (point = 0; point < count; point++)
 				{
 					vert = p + ((count-point-1)<<1);
@@ -2290,7 +2290,7 @@ exit:
 /*****************************************************************************
  * LoadGLUTesselator
  *
- * Maps the glu32.dll module and gets function pointers for the 
+ * Maps the glu32.dll module and gets function pointers for the
  * tesselator functions.
  *****************************************************************************/
 
@@ -2333,31 +2333,31 @@ LoadGLUTesselator(void)
 	if ((gluNewTessProc = (gluNewTessProto)
 		GetProcAddress(gluModuleHandle, "gluNewTess")) == NULL)
 		return FALSE;
-	
+
 	if ((gluDeleteTessProc = (gluDeleteTessProto)
 		GetProcAddress(gluModuleHandle, "gluDeleteTess")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessBeginPolygonProc = (gluTessBeginPolygonProto)
 		GetProcAddress(gluModuleHandle, "gluTessBeginPolygon")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessBeginContourProc = (gluTessBeginContourProto)
 		GetProcAddress(gluModuleHandle, "gluTessBeginContour")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessVertexProc = (gluTessVertexProto)
 		GetProcAddress(gluModuleHandle, "gluTessVertex")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessEndContourProc = (gluTessEndContourProto)
 		GetProcAddress(gluModuleHandle, "gluTessEndContour")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessEndPolygonProc = (gluTessEndPolygonProto)
 		GetProcAddress(gluModuleHandle, "gluTessEndPolygon")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessPropertyProc = (gluTessPropertyProto)
 		GetProcAddress(gluModuleHandle, "gluTessProperty")) == NULL)
 		return FALSE;
@@ -2365,7 +2365,7 @@ LoadGLUTesselator(void)
 	if ((gluTessNormalProc = (gluTessNormalProto)
 		GetProcAddress(gluModuleHandle, "gluTessNormal")) == NULL)
 		return FALSE;
-	
+
 	if ((gluTessCallbackProc = (gluTessCallbackProto)
 		GetProcAddress(gluModuleHandle, "gluTessCallback")) == NULL)
 		return FALSE;
@@ -2397,7 +2397,7 @@ UnloadGLUTesselator(void)
  *
  * Used by tessellator to handle output vertexes.
  *****************************************************************************/
- 
+
 static void CALLBACK
 TessVertexOut(FLOAT	p[3])
 	{
@@ -2426,7 +2426,7 @@ TessVertexOutData(FLOAT	p[3], GLfloat z)
  * Used by tessellator to handle self-intersecting contours and degenerate
  * geometry.
  *****************************************************************************/
- 
+
 static void CALLBACK
 TessCombine(double	coords[3],
 	    void*	vertex_data[4],
@@ -2447,7 +2447,7 @@ TessCombine(double	coords[3],
  *
  * Saves the last tessellator error code in the global TessErrorOccurred.
  *****************************************************************************/
- 
+
 static void CALLBACK
 TessError(GLenum error)
 	{
@@ -2458,7 +2458,7 @@ TessError(GLenum error)
 
 /*****************************************************************************
  * MakeLinesFromGlyph
- * 
+ *
  * Converts the outline of a glyph from the TTPOLYGON format to a simple
  * array of floating-point values containing one or more loops.
  *
@@ -2755,7 +2755,7 @@ MakeLinesFromArc(	IN	FLOAT	x0,
 					midPointX, midPointY,
 					vertexCountIndex,
 					chordalDeviationSquared);
-		
+
 		MakeLinesFromArc(	midPointX, midPointY,
 					x12, y12,
 					x2, y2,
@@ -2832,7 +2832,7 @@ AppendToLineBuf(FLOAT value)
 	if (LineBufIndex >= LineBufSize)
 		{
 		FLOAT* f;
-		
+
 		f = (FLOAT*) __wglRealloc(LineBuf,
 			(LineBufSize += LINE_BUF_QUANT) * sizeof(FLOAT));
 		if (!f)

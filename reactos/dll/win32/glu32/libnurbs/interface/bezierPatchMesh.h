@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -44,7 +44,7 @@
 
 typedef struct bezierPatchMesh{
   bezierPatch *bpatch; /*vertex*/
-  bezierPatch *bpatch_normal; 
+  bezierPatch *bpatch_normal;
   bezierPatch *bpatch_texcoord; /*s,t,r,q*/
   bezierPatch *bpatch_color; /*RGBA*/
 
@@ -57,10 +57,10 @@ typedef struct bezierPatchMesh{
   int index_UVarray;
   int size_length_array;
   int index_length_array;
-  
+
   int counter; /*track the current strip size*/
   GLenum type; /*track the current type: 0: GL_TRIANGLES, 1: GL_TRIANGLE_STRIP*/
-  
+
   /*we eventually want to evaluate from (u,v) to (x,y,z) and draw them*/
   float *vertex_array; /*each vertex contains three components*/
   float *normal_array; /*each normal contains three components*/
@@ -108,7 +108,7 @@ void bezierPatchMeshDelDeg(bezierPatchMesh* bpm);
 
 
 void bezierPatchMeshEval(bezierPatchMesh* bpm);
-  
+
 void bezierPatchMeshDraw(bezierPatchMesh* bpm);
 
 void bezierPatchMeshListDraw(bezierPatchMesh* list);

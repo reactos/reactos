@@ -74,90 +74,90 @@ static const WCHAR szWriteRegistryValues[] =
             'V','a','l','u','e','s',0};
 static const WCHAR szCostInitialize[] =
     {'C','o','s','t','I','n','i','t','i','a','l','i','z','e',0};
-static const WCHAR szFileCost[] = 
+static const WCHAR szFileCost[] =
     {'F','i','l','e','C','o','s','t',0};
-static const WCHAR szInstallInitialize[] = 
+static const WCHAR szInstallInitialize[] =
     {'I','n','s','t','a','l','l','I','n','i','t','i','a','l','i','z','e',0};
-static const WCHAR szInstallValidate[] = 
+static const WCHAR szInstallValidate[] =
     {'I','n','s','t','a','l','l','V','a','l','i','d','a','t','e',0};
-static const WCHAR szLaunchConditions[] = 
+static const WCHAR szLaunchConditions[] =
     {'L','a','u','n','c','h','C','o','n','d','i','t','i','o','n','s',0};
-static const WCHAR szProcessComponents[] = 
+static const WCHAR szProcessComponents[] =
     {'P','r','o','c','e','s','s','C','o','m','p','o','n','e','n','t','s',0};
-static const WCHAR szRegisterTypeLibraries[] = 
+static const WCHAR szRegisterTypeLibraries[] =
     {'R','e','g','i','s','t','e','r','T','y','p','e',
             'L','i','b','r','a','r','i','e','s',0};
-const WCHAR szRegisterClassInfo[] = 
+const WCHAR szRegisterClassInfo[] =
     {'R','e','g','i','s','t','e','r','C','l','a','s','s','I','n','f','o',0};
-const WCHAR szRegisterProgIdInfo[] = 
+const WCHAR szRegisterProgIdInfo[] =
     {'R','e','g','i','s','t','e','r','P','r','o','g','I','d','I','n','f','o',0};
-static const WCHAR szCreateShortcuts[] = 
+static const WCHAR szCreateShortcuts[] =
     {'C','r','e','a','t','e','S','h','o','r','t','c','u','t','s',0};
-static const WCHAR szPublishProduct[] = 
+static const WCHAR szPublishProduct[] =
     {'P','u','b','l','i','s','h','P','r','o','d','u','c','t',0};
-static const WCHAR szWriteIniValues[] = 
+static const WCHAR szWriteIniValues[] =
     {'W','r','i','t','e','I','n','i','V','a','l','u','e','s',0};
-static const WCHAR szSelfRegModules[] = 
+static const WCHAR szSelfRegModules[] =
     {'S','e','l','f','R','e','g','M','o','d','u','l','e','s',0};
-static const WCHAR szPublishFeatures[] = 
+static const WCHAR szPublishFeatures[] =
     {'P','u','b','l','i','s','h','F','e','a','t','u','r','e','s',0};
-static const WCHAR szRegisterProduct[] = 
+static const WCHAR szRegisterProduct[] =
     {'R','e','g','i','s','t','e','r','P','r','o','d','u','c','t',0};
-static const WCHAR szInstallExecute[] = 
+static const WCHAR szInstallExecute[] =
     {'I','n','s','t','a','l','l','E','x','e','c','u','t','e',0};
-static const WCHAR szInstallExecuteAgain[] = 
+static const WCHAR szInstallExecuteAgain[] =
     {'I','n','s','t','a','l','l','E','x','e','c','u','t','e',
             'A','g','a','i','n',0};
-static const WCHAR szInstallFinalize[] = 
+static const WCHAR szInstallFinalize[] =
     {'I','n','s','t','a','l','l','F','i','n','a','l','i','z','e',0};
-static const WCHAR szForceReboot[] = 
+static const WCHAR szForceReboot[] =
     {'F','o','r','c','e','R','e','b','o','o','t',0};
 static const WCHAR szResolveSource[] =
     {'R','e','s','o','l','v','e','S','o','u','r','c','e',0};
-static const WCHAR szAppSearch[] = 
+static const WCHAR szAppSearch[] =
     {'A','p','p','S','e','a','r','c','h',0};
-static const WCHAR szAllocateRegistrySpace[] = 
+static const WCHAR szAllocateRegistrySpace[] =
     {'A','l','l','o','c','a','t','e','R','e','g','i','s','t','r','y',
             'S','p','a','c','e',0};
-static const WCHAR szBindImage[] = 
+static const WCHAR szBindImage[] =
     {'B','i','n','d','I','m','a','g','e',0};
-static const WCHAR szCCPSearch[] = 
+static const WCHAR szCCPSearch[] =
     {'C','C','P','S','e','a','r','c','h',0};
-static const WCHAR szDeleteServices[] = 
+static const WCHAR szDeleteServices[] =
     {'D','e','l','e','t','e','S','e','r','v','i','c','e','s',0};
-static const WCHAR szDisableRollback[] = 
+static const WCHAR szDisableRollback[] =
     {'D','i','s','a','b','l','e','R','o','l','l','b','a','c','k',0};
-static const WCHAR szExecuteAction[] = 
+static const WCHAR szExecuteAction[] =
     {'E','x','e','c','u','t','e','A','c','t','i','o','n',0};
-const WCHAR szFindRelatedProducts[] = 
+const WCHAR szFindRelatedProducts[] =
     {'F','i','n','d','R','e','l','a','t','e','d',
             'P','r','o','d','u','c','t','s',0};
-static const WCHAR szInstallAdminPackage[] = 
+static const WCHAR szInstallAdminPackage[] =
     {'I','n','s','t','a','l','l','A','d','m','i','n',
             'P','a','c','k','a','g','e',0};
-static const WCHAR szInstallSFPCatalogFile[] = 
+static const WCHAR szInstallSFPCatalogFile[] =
     {'I','n','s','t','a','l','l','S','F','P','C','a','t','a','l','o','g',
             'F','i','l','e',0};
-static const WCHAR szIsolateComponents[] = 
+static const WCHAR szIsolateComponents[] =
     {'I','s','o','l','a','t','e','C','o','m','p','o','n','e','n','t','s',0};
-const WCHAR szMigrateFeatureStates[] = 
+const WCHAR szMigrateFeatureStates[] =
     {'M','i','g','r','a','t','e','F','e','a','t','u','r','e',
             'S','t','a','t','e','s',0};
-const WCHAR szMoveFiles[] = 
+const WCHAR szMoveFiles[] =
     {'M','o','v','e','F','i','l','e','s',0};
-static const WCHAR szMsiPublishAssemblies[] = 
+static const WCHAR szMsiPublishAssemblies[] =
     {'M','s','i','P','u','b','l','i','s','h',
             'A','s','s','e','m','b','l','i','e','s',0};
-static const WCHAR szMsiUnpublishAssemblies[] = 
+static const WCHAR szMsiUnpublishAssemblies[] =
     {'M','s','i','U','n','p','u','b','l','i','s','h',
             'A','s','s','e','m','b','l','i','e','s',0};
-static const WCHAR szInstallODBC[] = 
+static const WCHAR szInstallODBC[] =
     {'I','n','s','t','a','l','l','O','D','B','C',0};
-static const WCHAR szInstallServices[] = 
+static const WCHAR szInstallServices[] =
     {'I','n','s','t','a','l','l','S','e','r','v','i','c','e','s',0};
-const WCHAR szPatchFiles[] = 
+const WCHAR szPatchFiles[] =
     {'P','a','t','c','h','F','i','l','e','s',0};
-static const WCHAR szPublishComponents[] = 
+static const WCHAR szPublishComponents[] =
     {'P','u','b','l','i','s','h','C','o','m','p','o','n','e','n','t','s',0};
 static const WCHAR szRegisterComPlus[] =
     {'R','e','g','i','s','t','e','r','C','o','m','P','l','u','s',0};
@@ -250,10 +250,10 @@ static struct _actions StandardActions[];
 
 static void ui_actionstart(MSIPACKAGE *package, LPCWSTR action)
 {
-    static const WCHAR Query_t[] = 
+    static const WCHAR Query_t[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','A','c','t','i','o', 'n','T','e','x','t','`',' ',
-         'W','H','E','R','E', ' ','`','A','c','t','i','o','n','`',' ','=', 
+         'W','H','E','R','E', ' ','`','A','c','t','i','o','n','`',' ','=',
          ' ','\'','%','s','\'',0};
     MSIRECORD * row;
 
@@ -264,7 +264,7 @@ static void ui_actionstart(MSIPACKAGE *package, LPCWSTR action)
     msiobj_release(&row->hdr);
 }
 
-static void ui_actioninfo(MSIPACKAGE *package, LPCWSTR action, BOOL start, 
+static void ui_actioninfo(MSIPACKAGE *package, LPCWSTR action, BOOL start,
                           UINT rc)
 {
     MSIRECORD * row;
@@ -275,7 +275,7 @@ static void ui_actioninfo(MSIPACKAGE *package, LPCWSTR action, BOOL start,
         {'A','c','t','i','o','n',' ','e','n','d','e','d',' ','%','s',':',' ',
          '%','s', '.',' ','R','e','t','u','r','n',' ','v','a','l','u','e',' ',
          '%','i','.',0};
-    static const WCHAR format[] = 
+    static const WCHAR format[] =
         {'H','H','\'',':','\'','m','m','\'',':','\'','s','s',0};
     WCHAR message[1024];
     WCHAR timet[0x100];
@@ -285,10 +285,10 @@ static void ui_actioninfo(MSIPACKAGE *package, LPCWSTR action, BOOL start,
         sprintfW(message,template_s,timet,action);
     else
         sprintfW(message,template_e,timet,action,rc);
-    
+
     row = MSI_CreateRecord(1);
     MSI_RecordSetStringW(row,1,message);
- 
+
     MSI_ProcessMessage(package, INSTALLMESSAGE_INFO, row);
     msiobj_release(&row->hdr);
 }
@@ -304,7 +304,7 @@ static UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine )
         return ERROR_SUCCESS;
 
     ptr = szCommandLine;
-       
+
     while (*ptr)
     {
         if (*ptr==' ')
@@ -321,7 +321,7 @@ static UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine )
             ERR("command line contains unknown string : %s\n", debugstr_w(ptr));
             break;
         }
- 
+
         quote = FALSE;
 
         len = ptr2-ptr;
@@ -329,9 +329,9 @@ static UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine )
         memcpy(prop,ptr,len*sizeof(WCHAR));
         prop[len]=0;
         ptr2++;
-       
-        len = 0; 
-        ptr = ptr2; 
+
+        len = 0;
+        ptr = ptr2;
         while (*ptr && (quote || (!quote && *ptr!=' ')))
         {
             if (*ptr == '"')
@@ -339,7 +339,7 @@ static UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine )
             ptr++;
             len++;
         }
-       
+
         if (*ptr2=='"')
         {
             ptr2++;
@@ -351,7 +351,7 @@ static UINT msi_parse_command_line( MSIPACKAGE *package, LPCWSTR szCommandLine )
 
         if (lstrlenW(prop) > 0)
         {
-            TRACE("Found commandline property (%s) = (%s)\n", 
+            TRACE("Found commandline property (%s) = (%s)\n",
                    debugstr_w(prop), debugstr_w(val));
             MSI_SetPropertyW(package,prop,val);
         }
@@ -585,7 +585,7 @@ static UINT msi_apply_transforms( MSIPACKAGE *package )
 }
 
 /****************************************************
- * TOP level entry points 
+ * TOP level entry points
  *****************************************************/
 
 UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
@@ -603,12 +603,12 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
 
     package->script->InWhatSequence = SEQUENCE_INSTALL;
 
-    if (szPackagePath)   
+    if (szPackagePath)
     {
         LPWSTR p, check, path;
- 
+
         path = strdupW(szPackagePath);
-        p = strrchrW(path,'\\');    
+        p = strrchrW(path,'\\');
         if (p)
         {
             p++;
@@ -655,7 +655,7 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     }
     else
         rc = ACTION_ProcessExecSequence(package,FALSE);
-    
+
     if (rc == -1)
     {
         /* install was halted but should be considered a success */
@@ -667,16 +667,16 @@ UINT MSI_InstallPackage( MSIPACKAGE *package, LPCWSTR szPackagePath,
     /* process the ending type action */
     if (rc == ERROR_SUCCESS)
         ACTION_PerformActionSequence(package,-1,ui);
-    else if (rc == ERROR_INSTALL_USEREXIT) 
+    else if (rc == ERROR_INSTALL_USEREXIT)
         ACTION_PerformActionSequence(package,-2,ui);
-    else if (rc == ERROR_INSTALL_SUSPEND) 
+    else if (rc == ERROR_INSTALL_SUSPEND)
         ACTION_PerformActionSequence(package,-4,ui);
     else  /* failed */
         ACTION_PerformActionSequence(package,-3,ui);
 
     /* finish up running custom actions */
     ACTION_FinishCustomActions(package);
-    
+
     return rc;
 }
 
@@ -705,7 +705,7 @@ static UINT ACTION_PerformActionSequence(MSIPACKAGE *package, UINT seq, BOOL UI)
     {
         LPCWSTR action, cond;
 
-        TRACE("Running the actions\n"); 
+        TRACE("Running the actions\n");
 
         /* check conditions */
         cond = MSI_RecordGetString(row,2);
@@ -789,7 +789,7 @@ UINT MSI_Sequence( MSIPACKAGE *package, LPCWSTR szTable, INT iSequenceMode )
     static const WCHAR query[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','%','s','`',
-         ' ','W','H','E','R','E',' ', 
+         ' ','W','H','E','R','E',' ',
          '`','S','e','q','u','e','n','c','e','`',' ',
          '>',' ','0',' ','O','R','D','E','R',' ','B','Y',' ',
          '`','S','e','q','u','e','n','c','e','`',0};
@@ -879,7 +879,7 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','I','n','s','t','a','l','l',
          'U','I','S','e','q','u','e','n','c','e','`',
-         ' ','W','H','E','R','E',' ', 
+         ' ','W','H','E','R','E',' ',
          '`','S','e','q','u','e','n','c','e','`',' ',
          '>',' ','0',' ','O','R','D','E','R',' ','B','Y',' ',
          '`','S','e','q','u','e','n','c','e','`',0};
@@ -889,10 +889,10 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
     iap.UI = TRUE;
 
     rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
-    
+
     if (rc == ERROR_SUCCESS)
     {
-        TRACE("Running the actions\n"); 
+        TRACE("Running the actions\n");
 
         rc = MSI_IterateRecords(view, NULL, ITERATE_Actions, &iap);
         msiobj_release(&view->hdr);
@@ -904,24 +904,24 @@ static UINT ACTION_ProcessUISequence(MSIPACKAGE *package)
 /********************************************************
  * ACTION helper functions and functions that perform the actions
  *******************************************************/
-static BOOL ACTION_HandleStandardAction(MSIPACKAGE *package, LPCWSTR action, 
+static BOOL ACTION_HandleStandardAction(MSIPACKAGE *package, LPCWSTR action,
                                         UINT* rc, BOOL force )
 {
-    BOOL ret = FALSE; 
+    BOOL ret = FALSE;
     BOOL run = force;
     int i;
 
     if (!run && !package->script->CurrentlyScripting)
         run = TRUE;
-   
+
     if (!run)
     {
         if (strcmpW(action,szInstallFinalize) == 0 ||
             strcmpW(action,szInstallExecute) == 0 ||
-            strcmpW(action,szInstallExecuteAgain) == 0) 
+            strcmpW(action,szInstallExecuteAgain) == 0)
                 run = TRUE;
     }
-    
+
     i = 0;
     while (StandardActions[i].action != NULL)
     {
@@ -970,17 +970,17 @@ static BOOL ACTION_HandleCustomAction( MSIPACKAGE* package, LPCWSTR action,
     return ret;
 }
 
-/* 
+/*
  * A lot of actions are really important even if they don't do anything
  * explicit... Lots of properties are set at the beginning of the installation
  * CostFinalize does a bunch of work to translate the directories and such
- * 
+ *
  * But until I get write access to the database that is hard, so I am going to
  * hack it to see if I can get something to run.
  */
 UINT ACTION_PerformAction(MSIPACKAGE *package, const WCHAR *action, BOOL force)
 {
-    UINT rc = ERROR_SUCCESS; 
+    UINT rc = ERROR_SUCCESS;
     BOOL handled;
 
     TRACE("Performing action (%s)\n",debugstr_w(action));
@@ -1076,7 +1076,7 @@ static UINT msi_create_directory( MSIPACKAGE* package, LPCWSTR dir )
 
     install_path = resolve_folder(package, dir, FALSE, FALSE, &folder);
     if (!install_path)
-        return ERROR_FUNCTION_FAILED; 
+        return ERROR_FUNCTION_FAILED;
 
     /* create the path */
     if (folder->State == 0)
@@ -1105,7 +1105,7 @@ UINT msi_create_component_directories( MSIPACKAGE *package )
 }
 
 /*
- * Also we cannot enable/disable components either, so for now I am just going 
+ * Also we cannot enable/disable components either, so for now I am just going
  * to do all the directories for all the components.
  */
 static UINT ACTION_CreateFolders(MSIPACKAGE *package)
@@ -1162,7 +1162,7 @@ static UINT load_component( MSIRECORD *row, LPVOID param )
 static UINT load_all_components( MSIPACKAGE *package )
 {
     static const WCHAR query[] = {
-        'S','E','L','E','C','T',' ','*',' ','F','R', 'O','M',' ', 
+        'S','E','L','E','C','T',' ','*',' ','F','R', 'O','M',' ',
          '`','C','o','m','p','o','n','e','n','t','`',0 };
     MSIQUERY *view;
     UINT r;
@@ -1249,7 +1249,7 @@ static UINT load_feature(MSIRECORD * row, LPVOID param)
 {
     MSIPACKAGE* package = (MSIPACKAGE*)param;
     MSIFEATURE* feature;
-    static const WCHAR Query1[] = 
+    static const WCHAR Query1[] =
         {'S','E','L','E','C','T',' ',
          '`','C','o','m','p','o','n','e','n','t','_','`',
          ' ','F','R','O','M',' ','`','F','e','a','t','u','r','e',
@@ -1268,7 +1268,7 @@ static UINT load_feature(MSIRECORD * row, LPVOID param)
 
     list_init( &feature->Children );
     list_init( &feature->Components );
-    
+
     feature->Feature = msi_dup_record_field( row, 1 );
 
     TRACE("Loading feature %s\n",debugstr_w(feature->Feature));
@@ -1279,7 +1279,7 @@ static UINT load_feature(MSIRECORD * row, LPVOID param)
 
     if (!MSI_RecordIsNull(row,5))
         feature->Display = MSI_RecordGetInteger(row,5);
-  
+
     feature->Level= MSI_RecordGetInteger(row,6);
     feature->Directory = msi_dup_record_field( row, 7 );
     feature->Attributes = MSI_RecordGetInteger(row,8);
@@ -1335,7 +1335,7 @@ static UINT load_all_features( MSIPACKAGE *package )
 
     if (!list_empty(&package->features))
         return ERROR_SUCCESS;
- 
+
     r = MSI_DatabaseOpenViewW( package->db, query, &view );
     if (r != ERROR_SUCCESS)
         return r;
@@ -1372,7 +1372,7 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
     file = msi_alloc_zero( sizeof (MSIFILE) );
     if (!file)
         return ERROR_NOT_ENOUGH_MEMORY;
- 
+
     file->File = msi_dup_record_field( row, 1 );
 
     component = MSI_RecordGetString( row, 2 );
@@ -1386,7 +1386,7 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
 
     file->ShortName = msi_dup_record_field( row, 3 );
     file->LongName = strdupW( folder_split_path(file->ShortName, '|'));
-    
+
     file->FileSize = MSI_RecordGetInteger( row, 4 );
     file->Version = msi_dup_record_field( row, 5 );
     file->Language = msi_dup_record_field( row, 6 );
@@ -1411,10 +1411,10 @@ static UINT load_file(MSIRECORD *row, LPVOID param)
         file->IsCompressed = package->WordCount & MSIWORDCOUNT_COMPRESSED;
     }
 
-    TRACE("File Loaded (%s)\n",debugstr_w(file->File));  
+    TRACE("File Loaded (%s)\n",debugstr_w(file->File));
 
     list_add_tail( &package->files, &file->entry );
- 
+
     return ERROR_SUCCESS;
 }
 
@@ -1556,12 +1556,12 @@ static MSIFOLDER *load_folder( MSIPACKAGE *package, LPCWSTR dir )
 
     if (!tgt_long)
         tgt_long = tgt_short;
-	
+
     if (!src_short) {
         src_short = tgt_short;
         src_long = tgt_long;
     }
-    
+
     if (!src_long)
         src_long = src_short;
 
@@ -1576,7 +1576,7 @@ static MSIFOLDER *load_folder( MSIPACKAGE *package, LPCWSTR dir )
     TRACE("SourceShort = %s\n", debugstr_w( folder->SourceShortPath ));
 
     parent = MSI_RecordGetString(row, 2);
-    if (parent) 
+    if (parent)
     {
         folder->Parent = load_folder( package, parent );
         if ( folder->Parent )
@@ -1655,7 +1655,7 @@ static void ACTION_UpdateFeatureInstallStates(MSIPACKAGE *package)
     }
 }
 
-static BOOL process_state_property (MSIPACKAGE* package, LPCWSTR property, 
+static BOOL process_state_property (MSIPACKAGE* package, LPCWSTR property,
                                     INSTALLSTATE state)
 {
     static const WCHAR all[]={'A','L','L',0};
@@ -2086,9 +2086,9 @@ static UINT ACTION_CostFinalize(MSIPACKAGE *package)
     return MSI_SetFeatureStates(package);
 }
 
-/* OK this value is "interpreted" and then formatted based on the 
+/* OK this value is "interpreted" and then formatted based on the
    first few characters */
-static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type, 
+static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
                          DWORD *size)
 {
     LPSTR data = NULL;
@@ -2113,9 +2113,9 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
 
             data = msi_alloc(*size);
 
-            byte[0] = '0'; 
-            byte[1] = 'x'; 
-            byte[4] = 0; 
+            byte[0] = '0';
+            byte[1] = 'x';
+            byte[4] = 0;
             count = 0;
             /* if uneven pad with a zero in front */
             if (strlenW(ptr)%2)
@@ -2147,7 +2147,7 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
             DWORD d = 0;
             deformat_string(package, &value[1], &deformated);
 
-            *type=REG_DWORD; 
+            *type=REG_DWORD;
             *size = sizeof(DWORD);
             data = msi_alloc(*size);
             p = deformated;
@@ -2199,7 +2199,7 @@ static LPSTR parse_value(MSIPACKAGE *package, LPCWSTR value, DWORD *type,
 static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE *package = (MSIPACKAGE*)param;
-    static const WCHAR szHCR[] = 
+    static const WCHAR szHCR[] =
         {'H','K','E','Y','_','C','L','A','S','S','E','S','_',
          'R','O','O','T','\\',0};
     static const WCHAR szHCU[] =
@@ -2253,7 +2253,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
         /* null values can have special meanings */
         if (name[0]=='-' && name[1] == 0)
                 return ERROR_SUCCESS;
-        else if ((name[0]=='+' && name[1] == 0) || 
+        else if ((name[0]=='+' && name[1] == 0) ||
                  (name[0] == '*' && name[1] == 0))
                 name = NULL;
         check_first = TRUE;
@@ -2265,7 +2265,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
     /* get the root key */
     switch (root)
     {
-        case -1: 
+        case -1:
             {
                 static const WCHAR szALLUSER[] = {'A','L','L','U','S','E','R','S',0};
                 LPWSTR all_users = msi_dup_property( package, szALLUSER );
@@ -2282,7 +2282,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
                 msi_free(all_users);
             }
                  break;
-        case 0:  root_key = HKEY_CLASSES_ROOT; 
+        case 0:  root_key = HKEY_CLASSES_ROOT;
                  szRoot = szHCR;
                  break;
         case 1:  root_key = HKEY_CURRENT_USER;
@@ -2291,7 +2291,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
         case 2:  root_key = HKEY_LOCAL_MACHINE;
                  szRoot = szHLM;
                  break;
-        case 3:  root_key = HKEY_USERS; 
+        case 3:  root_key = HKEY_USERS;
                  szRoot = szHU;
                  break;
         default:
@@ -2320,7 +2320,7 @@ static UINT ITERATE_WriteRegistryValues(MSIRECORD *row, LPVOID param)
 
     value = MSI_RecordGetString(row,5);
     if (value)
-        value_data = parse_value(package, value, &type, &size); 
+        value_data = parse_value(package, value, &type, &size);
     else
     {
         static const WCHAR szEmpty[] = {0};
@@ -2445,14 +2445,14 @@ static UINT ACTION_InstallValidate(MSIPACKAGE *package)
             debugstr_w(feature->Feature), feature->Installed, feature->Action,
             feature->ActionRequest);
     }
-    
+
     return ERROR_SUCCESS;
 }
 
 static UINT ITERATE_LaunchConditions(MSIRECORD *row, LPVOID param)
 {
     MSIPACKAGE* package = (MSIPACKAGE*)param;
-    LPCWSTR cond = NULL; 
+    LPCWSTR cond = NULL;
     LPCWSTR message = NULL;
     static const WCHAR title[]=
         {'I','n','s','t','a','l','l',' ','F','a', 'i','l','e','d',0};
@@ -2463,7 +2463,7 @@ static UINT ITERATE_LaunchConditions(MSIRECORD *row, LPVOID param)
     {
         LPWSTR deformated;
         message = MSI_RecordGetString(row,2);
-        deformat_string(package,message,&deformated); 
+        deformat_string(package,message,&deformated);
         MessageBoxW(NULL,deformated,title,MB_OK);
         msi_free(deformated);
         return ERROR_FUNCTION_FAILED;
@@ -2576,7 +2576,7 @@ static UINT ACTION_GetSharedDLLsCount(LPCWSTR dll)
     DWORD type;
     DWORD sz = sizeof(count);
     DWORD rc;
-    
+
     hkey = openSharedDLLsKey();
     rc = RegQueryValueExW(hkey, dll, NULL, &type, (LPBYTE)&count, &sz);
     if (rc != ERROR_SUCCESS)
@@ -2608,8 +2608,8 @@ static void ACTION_RefCountComponent( MSIPACKAGE* package, MSICOMPONENT *comp )
     BOOL write = FALSE;
 
     /* only refcount DLLs */
-    if (comp->KeyPath == NULL || 
-        comp->Attributes & msidbComponentAttributesRegistryKeyPath || 
+    if (comp->KeyPath == NULL ||
+        comp->Attributes & msidbComponentAttributesRegistryKeyPath ||
         comp->Attributes & msidbComponentAttributesODBCDataSource)
         write = FALSE;
     else
@@ -2662,11 +2662,11 @@ static void ACTION_RefCountComponent( MSIPACKAGE* package, MSICOMPONENT *comp )
                 ACTION_WriteSharedDLLsCount( file->TargetPath, count );
         }
     }
-    
+
     /* add a count for permenent */
     if (comp->Attributes & msidbComponentAttributesPermanent)
         count ++;
-    
+
     comp->RefCount = count;
 
     if (write)
@@ -2706,7 +2706,7 @@ static UINT ACTION_ProcessComponents(MSIPACKAGE *package)
             continue;
 
         squash_guid(comp->ComponentId,squished_cc);
-           
+
         msi_free(comp->FullKeypath);
         comp->FullKeypath = resolve_keypath( package, comp );
 
@@ -2776,7 +2776,7 @@ static UINT ACTION_ProcessComponents(MSIPACKAGE *package)
             ui_actiondata(package,szProcessComponents,uirow);
             msiobj_release( &uirow->hdr );
         }
-    } 
+    }
     RegCloseKey(hkey);
     return rc;
 }
@@ -2789,13 +2789,13 @@ typedef struct {
     ITypeLib    *ptLib;
 } typelib_struct;
 
-static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType, 
+static BOOL CALLBACK Typelib_EnumResNameProc( HMODULE hModule, LPCWSTR lpszType,
                                        LPWSTR lpszName, LONG_PTR lParam)
 {
     TLIBATTR *attr;
     typelib_struct *tl_struct = (typelib_struct*) lParam;
     static const WCHAR fmt[] = {'%','s','\\','%','i',0};
-    int sz; 
+    int sz;
     HRESULT res;
 
     if (!IS_INTRESOURCE(lpszName))
@@ -2867,7 +2867,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
 
     comp->Action = INSTALLSTATE_LOCAL;
 
-    file = get_loaded_file( package, comp->KeyPath ); 
+    file = get_loaded_file( package, comp->KeyPath );
     if (!file)
         return ERROR_SUCCESS;
 
@@ -2924,7 +2924,7 @@ static UINT ITERATE_RegisterTypeLibraries(MSIRECORD *row, LPVOID param)
 
 static UINT ACTION_RegisterTypeLibraries(MSIPACKAGE *package)
 {
-    /* 
+    /*
      * OK this is a bit confusing.. I am given a _Component key and I believe
      * that the file that is being registered as a type library is the "key file
      * of that component" which I interpret to mean "The file in the KeyPath of
@@ -3045,7 +3045,7 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
     if (!MSI_RecordIsNull(row,9))
     {
         LPWSTR Path;
-        INT index; 
+        INT index;
 
         buffer = MSI_RecordGetString(row,9);
 
@@ -3076,7 +3076,7 @@ static UINT ITERATE_CreateShortcuts(MSIRECORD *row, LPVOID param)
     TRACE("Writing shortcut to %s\n",debugstr_w(target_file));
     IPersistFile_Save(pf,target_file,FALSE);
 
-    msi_free(target_file);    
+    msi_free(target_file);
 
 err:
     if (pf)
@@ -3147,7 +3147,7 @@ static UINT ITERATE_PublishProduct(MSIRECORD *row, LPVOID param)
         return ERROR_SUCCESS;
     }
 
-    do 
+    do
     {
         DWORD write;
         sz = 1024;
@@ -3155,7 +3155,7 @@ static UINT ITERATE_PublishProduct(MSIRECORD *row, LPVOID param)
         if (rc != ERROR_SUCCESS)
         {
             ERR("Failed to get stream\n");
-            CloseHandle(the_file);  
+            CloseHandle(the_file);
             DeleteFileW(FilePath);
             break;
         }
@@ -3175,7 +3175,7 @@ static UINT ITERATE_PublishProduct(MSIRECORD *row, LPVOID param)
 }
 
 /*
- * 99% of the work done here is only done for 
+ * 99% of the work done here is only done for
  * advertised installs. However this is where the
  * Icon table is processed and written out
  * so that is what I am going to do here.
@@ -3244,15 +3244,15 @@ static UINT ACTION_PublishProduct(MSIPACKAGE *package)
         msi_reg_set_val_dword( hkey, INSTALLPROPERTY_VERSIONW, verdword );
     }
     msi_free(buffer);
-    
+
     /* FIXME: Need to write more keys to the user registry */
-  
+
     hDb= alloc_msihandle( &package->db->hdr );
     if (!hDb) {
         rc = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
-    rc = MsiGetSummaryInformationW(hDb, NULL, 0, &hSumInfo); 
+    rc = MsiGetSummaryInformationW(hDb, NULL, 0, &hSumInfo);
     MsiCloseHandle(hDb);
     if (rc == ERROR_SUCCESS)
     {
@@ -3317,7 +3317,7 @@ static UINT ITERATE_WriteIniValues(MSIRECORD *row, LPVOID param)
 
     comp->Action = INSTALLSTATE_LOCAL;
 
-    identifier = MSI_RecordGetString(row,1); 
+    identifier = MSI_RecordGetString(row,1);
     filename = MSI_RecordGetString(row,2);
     dirproperty = MSI_RecordGetString(row,3);
     section = MSI_RecordGetString(row,4);
@@ -3392,7 +3392,7 @@ static UINT ACTION_WriteIniValues(MSIPACKAGE *package)
 {
     UINT rc;
     MSIQUERY * view;
-    static const WCHAR ExecSeqQuery[] = 
+    static const WCHAR ExecSeqQuery[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','I','n','i','F','i','l','e','`',0};
 
@@ -3471,7 +3471,7 @@ static UINT ACTION_SelfRegModules(MSIPACKAGE *package)
 {
     UINT rc;
     MSIQUERY * view;
-    static const WCHAR ExecSeqQuery[] = 
+    static const WCHAR ExecSeqQuery[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','S','e','l','f','R','e','g','`',0};
 
@@ -3494,7 +3494,7 @@ static UINT ACTION_PublishFeatures(MSIPACKAGE *package)
     UINT rc;
     HKEY hkey=0;
     HKEY hukey=0;
-    
+
     rc = MSIREG_OpenFeaturesKey(package->ProductCode,&hkey,TRUE);
     if (rc != ERROR_SUCCESS)
         goto end;
@@ -3692,18 +3692,18 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     LPWSTR buffer = NULL;
     UINT rc;
     DWORD size, langid;
-    static const WCHAR szWindowsInstaller[] = 
+    static const WCHAR szWindowsInstaller[] =
         {'W','i','n','d','o','w','s','I','n','s','t','a','l','l','e','r',0};
-    static const WCHAR szUpgradeCode[] = 
+    static const WCHAR szUpgradeCode[] =
         {'U','p','g','r','a','d','e','C','o','d','e',0};
-    static const WCHAR modpath_fmt[] = 
+    static const WCHAR modpath_fmt[] =
         {'M','s','i','E','x','e','c','.','e','x','e',' ',
          '/','I','[','P','r','o','d','u','c','t','C','o','d','e',']',0};
-    static const WCHAR szModifyPath[] = 
+    static const WCHAR szModifyPath[] =
         {'M','o','d','i','f','y','P','a','t','h',0};
-    static const WCHAR szUninstallString[] = 
+    static const WCHAR szUninstallString[] =
         {'U','n','i','n','s','t','a','l','l','S','t','r','i','n','g',0};
-    static const WCHAR szEstimatedSize[] = 
+    static const WCHAR szEstimatedSize[] =
         {'E','s','t','i','m','a','t','e','d','S','i','z','e',0};
     static const WCHAR szProductLanguage[] =
         {'P','r','o','d','u','c','t','L','a','n','g','u','a','g','e',0};
@@ -3713,7 +3713,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     SYSTEMTIME systime;
     static const WCHAR date_fmt[] = {'%','i','%','i','%','i',0};
     LPWSTR upgrade_code;
-    WCHAR szDate[9]; 
+    WCHAR szDate[9];
 
     rc = MSIREG_OpenUninstallKey(package->ProductCode,&hkey,TRUE);
     if (rc != ERROR_SUCCESS)
@@ -3725,7 +3725,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
     msi_write_uninstall_property_vals( package, hkey );
 
     msi_reg_set_val_dword( hkey, szWindowsInstaller, 1 );
-    
+
     msi_make_package_local( package, hkey );
 
     /* do ModifyPath and UninstallString */
@@ -3736,11 +3736,11 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
 
     /* FIXME: Write real Estimated Size when we have it */
     msi_reg_set_val_dword( hkey, szEstimatedSize, 0 );
-   
+
     GetLocalTime(&systime);
     sprintfW(szDate,date_fmt,systime.wYear,systime.wMonth,systime.wDay);
     msi_reg_set_val_str( hkey, INSTALLPROPERTY_INSTALLDATEW, szDate );
-   
+
     langid = msi_get_property_int( package, szProductLanguage, 0 );
     msi_reg_set_val_dword( hkey, INSTALLPROPERTY_LANGUAGEW, langid );
 
@@ -3754,7 +3754,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
         msi_reg_set_val_dword( hkey, INSTALLPROPERTY_VERSIONMINORW, (verdword>>16)&0x00FF );
     }
     msi_free(buffer);
-    
+
     /* Handle Upgrade Codes */
     upgrade_code = msi_dup_property( package, szUpgradeCode );
     if (upgrade_code)
@@ -3772,7 +3772,7 @@ static UINT ACTION_RegisterProduct(MSIPACKAGE *package)
 
         msi_free(upgrade_code);
     }
-    
+
     RegCloseKey(hkey);
 
     /* FIXME: call ui_actiondata */
@@ -3857,7 +3857,7 @@ static UINT ACTION_ResolveSource(MSIPACKAGE* package)
     DWORD attrib, len;
     LPWSTR ptr, source;
     UINT rc;
-    
+
     /*
      * we are currently doing what should be done here in the top level Install
      * however for Adminastrative and uninstalls this step will be needed
@@ -3885,13 +3885,13 @@ static UINT ACTION_ResolveSource(MSIPACKAGE* package)
         LPWSTR msg;
         DWORD size = 0;
 
-        rc = MsiSourceListGetInfoW(package->ProductCode, NULL, 
+        rc = MsiSourceListGetInfoW(package->ProductCode, NULL,
                 MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT,
                 INSTALLPROPERTY_DISKPROMPTW,NULL,&size);
         if (rc == ERROR_MORE_DATA)
         {
             prompt = msi_alloc(size * sizeof(WCHAR));
-            MsiSourceListGetInfoW(package->ProductCode, NULL, 
+            MsiSourceListGetInfoW(package->ProductCode, NULL,
                     MSIINSTALLCONTEXT_USERMANAGED, MSICODE_PRODUCT,
                     INSTALLPROPERTY_DISKPROMPTW,prompt,&size);
         }
@@ -3925,7 +3925,7 @@ static UINT ACTION_RegisterUser(MSIPACKAGE *package)
     LPWSTR productid;
     UINT rc,i;
 
-    static const WCHAR szPropKeys[][80] = 
+    static const WCHAR szPropKeys[][80] =
     {
         {'P','r','o','d','u','c','t','I','D',0},
         {'U','S','E','R','N','A','M','E',0},
@@ -3933,7 +3933,7 @@ static UINT ACTION_RegisterUser(MSIPACKAGE *package)
         {0},
     };
 
-    static const WCHAR szRegKeys[][80] = 
+    static const WCHAR szRegKeys[][80] =
     {
         {'P','r','o','d','u','c','t','I','D',0},
         {'R','e','g','O','w','n','e','r',0},
@@ -3995,7 +3995,7 @@ static UINT ITERATE_PublishComponent(MSIRECORD *rec, LPVOID param)
     component = MSI_RecordGetString(rec,3);
     comp = get_loaded_component(package,component);
 
-    if (!ACTION_VerifyComponentForAction( comp, INSTALLSTATE_LOCAL ) && 
+    if (!ACTION_VerifyComponentForAction( comp, INSTALLSTATE_LOCAL ) &&
        !ACTION_VerifyComponentForAction( comp, INSTALLSTATE_SOURCE ) &&
        !ACTION_VerifyComponentForAction( comp, INSTALLSTATE_ADVERTISED ))
     {
@@ -4011,10 +4011,10 @@ static UINT ITERATE_PublishComponent(MSIRECORD *rec, LPVOID param)
     rc = MSIREG_OpenUserComponentsKey(compgroupid, &hkey, TRUE);
     if (rc != ERROR_SUCCESS)
         goto end;
-    
+
     text = MSI_RecordGetString(rec,4);
     feature = MSI_RecordGetString(rec,5);
-  
+
     advertise = create_component_advertise_string(package, comp, feature);
 
     sz = strlenW(advertise);
@@ -4024,7 +4024,7 @@ static UINT ITERATE_PublishComponent(MSIRECORD *rec, LPVOID param)
 
     sz+=3;
     sz *= sizeof(WCHAR);
-           
+
     output = msi_alloc_zero(sz);
     strcpyW(output,advertise);
     msi_free(advertise);
@@ -4033,7 +4033,7 @@ static UINT ITERATE_PublishComponent(MSIRECORD *rec, LPVOID param)
         strcatW(output,text);
 
     msi_reg_set_val_multi_str( hkey, qualifier, output );
-    
+
 end:
     RegCloseKey(hkey);
     msi_free(output);
@@ -4061,7 +4061,7 @@ static UINT ACTION_PublishComponents(MSIPACKAGE *package)
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','P','u','b','l','i','s','h',
          'C','o','m','p','o','n','e','n','t','`',0};
-    
+
     rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -4155,7 +4155,7 @@ static UINT ACTION_InstallServices( MSIPACKAGE *package )
     static const WCHAR ExecSeqQuery[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          'S','e','r','v','i','c','e','I','n','s','t','a','l','l',0};
-    
+
     rc = MSI_DatabaseOpenViewW(package->db, ExecSeqQuery, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
@@ -4175,7 +4175,7 @@ static UINT msi_unimplemented_action_stub( MSIPACKAGE *package,
     MSIQUERY *view = NULL;
     DWORD count = 0;
     UINT r;
-    
+
     r = MSI_OpenQuery( package->db, &view, query, table );
     if (r == ERROR_SUCCESS)
     {

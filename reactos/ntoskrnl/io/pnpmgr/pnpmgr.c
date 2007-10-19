@@ -332,7 +332,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
       /* Complete, untested */
       case DevicePropertyBusTypeGuid:
          /* Sanity check */
-         if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) && 
+         if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
              (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
          {
             /* Return the GUID */
@@ -345,7 +345,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* Copy the GUID */
-            RtlCopyMemory(PropertyBuffer, 
+            RtlCopyMemory(PropertyBuffer,
                           &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
                           sizeof(GUID));
             return STATUS_SUCCESS;
@@ -749,7 +749,7 @@ IopGetBusTypeGuidIndex(LPGUID BusTypeGuid)
    USHORT i = 0, FoundIndex = 0xFFFF;
    ULONG NewSize;
    PVOID NewList;
-    
+
    /* Acquire the lock */
    ExAcquireFastMutex(&IopBusTypeGuidList->Lock);
 

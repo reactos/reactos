@@ -1,9 +1,9 @@
 #include "resource.h"
-/*  
+/*
 * translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/  
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 {

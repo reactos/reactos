@@ -35,7 +35,7 @@ BEGIN
   PUSHBUTTON "&Cancelar", IDCANCEL, 162,116,60,14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
   IDS_DESCRIPTION "Capa de extención de compatibilidad para applicaciones"

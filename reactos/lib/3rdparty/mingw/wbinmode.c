@@ -2,4 +2,4 @@
 
 /* Set default file mode to binary */
 
-int _fmode = _O_BINARY; 
+int _fmode = _O_BINARY;

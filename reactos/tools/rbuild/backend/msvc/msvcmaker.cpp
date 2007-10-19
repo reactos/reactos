@@ -652,7 +652,7 @@ MSVCBackend::_generate_dsp ( const Module& module )
 				output_dir.c_str(),
 				spec_file.c_str(),
 				def_file.c_str() );
-			
+
 			if ( module.name == "ntdll" )
 			{
 				int n = 0;

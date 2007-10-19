@@ -37,7 +37,7 @@
 #include "ole2.h"
 #include "winerror.h"
 
-#include "compobj_private.h" 
+#include "compobj_private.h"
 
 #include "wine/list.h"
 #include "wine/debug.h"
@@ -69,7 +69,7 @@ typedef struct StdGlobalInterfaceTableImpl
   ULONG ref;
   struct list list;
   ULONG nextCookie;
-  
+
 } StdGlobalInterfaceTableImpl;
 
 void* StdGlobalInterfaceTableInstance;
@@ -89,7 +89,7 @@ static void StdGlobalInterfaceTable_Destroy(void* self)
 {
   TRACE("(%p)\n", self);
   FIXME("Revoke held interfaces here\n");
-  
+
   HeapFree(GetProcessHeap(), 0, self);
   StdGlobalInterfaceTableInstance = NULL;
 }
@@ -110,7 +110,7 @@ StdGlobalInterfaceTable_FindEntry(IGlobalInterfaceTable* iface, DWORD cookie)
     if (e->cookie == cookie)
       return e;
   }
-  
+
   TRACE("Entry not found\n");
   return NULL;
 }
@@ -182,7 +182,7 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   TRACE("iface=%p, pUnk=%p, riid=%s, pdwCookie=0x%p\n", iface, pUnk, debugstr_guid(riid), pdwCookie);
 
   if (pUnk == NULL) return E_INVALIDARG;
-  
+
   /* marshal the interface */
   TRACE("About to marshal the interface\n");
 
@@ -202,7 +202,7 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
   if (entry == NULL) return E_OUTOFMEMORY;
 
   EnterCriticalSection(&git_section);
-  
+
   entry->iid = *riid;
   entry->stream = stream;
   entry->cookie = self->nextCookie;
@@ -213,9 +213,9 @@ StdGlobalInterfaceTable_RegisterInterfaceInGlobal(
 
   /* and return the cookie */
   *pdwCookie = entry->cookie;
-  
+
   LeaveCriticalSection(&git_section);
-  
+
   TRACE("Cookie is 0x%x\n", entry->cookie);
   return S_OK;
 }
@@ -241,7 +241,7 @@ StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
   list_remove(&entry->entry);
 
   LeaveCriticalSection(&git_section);
-  
+
   /* Free the stream */
   hr = CoReleaseMarshalData(entry->stream);
   if (hr != S_OK)
@@ -250,7 +250,7 @@ StdGlobalInterfaceTable_RevokeInterfaceFromGlobal(
     return hr;
   }
   IStream_Release(entry->stream);
-		    
+
   HeapFree(GetProcessHeap(), 0, entry);
   return S_OK;
 }
@@ -329,7 +329,7 @@ GITCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pUnk,
                      REFIID riid, LPVOID *ppv)
 {
   if (IsEqualIID(riid,&IID_IGlobalInterfaceTable)) {
-    if (StdGlobalInterfaceTableInstance == NULL) 
+    if (StdGlobalInterfaceTableInstance == NULL)
       StdGlobalInterfaceTableInstance = StdGlobalInterfaceTable_Construct();
     return IGlobalInterfaceTable_QueryInterface( (IGlobalInterfaceTable*) StdGlobalInterfaceTableInstance, riid, ppv);
   }

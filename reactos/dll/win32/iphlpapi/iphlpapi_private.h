@@ -70,9 +70,9 @@ typedef struct _IPRouteEntry {
     ULONG ire_metric3;
     ULONG ire_metric4;
     ULONG ire_gw;
-    ULONG ire_type; 
+    ULONG ire_type;
     ULONG ire_proto;
-    ULONG ire_age; 
+    ULONG ire_age;
     ULONG ire_mask;
     ULONG ire_metric5;
     ULONG ire_info;
@@ -82,17 +82,17 @@ typedef struct _IPRouteEntry {
 typedef char *caddr_t;
 
 typedef union _IFEntrySafelySized {
-    CHAR MaxSize[sizeof(DWORD) + 
-		 sizeof(IFEntry) + 
+    CHAR MaxSize[sizeof(DWORD) +
+		 sizeof(IFEntry) +
 		 MAX_ADAPTER_DESCRIPTION_LENGTH + 1];
     IFEntry ent;
 } IFEntrySafelySized;
 
 typedef union _TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED {
-    CHAR MaxSize[sizeof(TCP_REQUEST_SET_INFORMATION_EX) - 1 + 
+    CHAR MaxSize[sizeof(TCP_REQUEST_SET_INFORMATION_EX) - 1 +
 		 sizeof(IPRouteEntry)];
     TCP_REQUEST_SET_INFORMATION_EX Req;
-} TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED, 
+} TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED,
     *PTCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED;
 
 /* Encapsulates information about an interface */
@@ -120,7 +120,7 @@ NTSTATUS tdiGetEntityIDSet( HANDLE tcpFile, TDIEntityID **entitySet,
 NTSTATUS tdiGetSetOfThings( HANDLE tcpFile, DWORD toiClass, DWORD toiType,
 			    DWORD toiId, DWORD teiEntity, DWORD teiInstance,
 			    DWORD fixedPart,
-			    DWORD entrySize, PVOID *tdiEntitySet, 
+			    DWORD entrySize, PVOID *tdiEntitySet,
 			    PDWORD numEntries );
 VOID tdiFreeThingSet( PVOID things );
 NTSTATUS getNthIpEntity( HANDLE tcpFile, DWORD index, TDIEntityID *ent );

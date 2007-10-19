@@ -52,7 +52,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool PipeReader::closeSource() 
+	bool PipeReader::closeSource()
 	{
 		if (!m_File)
 		{
@@ -61,7 +61,7 @@ namespace System_
 		}
 
 		int res = pclose(m_File);
-		
+
 		if (res == INT_MAX)
 		{
 			cerr << "Error: _pclose failed " <<endl;

@@ -303,7 +303,7 @@ static ULONG WINAPI IShellFolder_fnRelease (IShellFolder2 * iface)
 /**************************************************************************
  *  SHELL32_CreatePidlFromBindCtx  [internal]
  *
- *  If the caller bound File System Bind Data, assume it is the 
+ *  If the caller bound File System Bind Data, assume it is the
  *   find data for the path.
  *  This allows binding of paths that don't exist.
  */
@@ -340,7 +340,7 @@ LPITEMIDLIST SHELL32_CreatePidlFromBindCtx(IBindCtx *pbc, LPCWSTR path)
         }
         IFileSystemBindData_Release( fsbd );
     }
-    
+
     return pidl;
 }
 
@@ -702,12 +702,12 @@ static const WCHAR NeverShowExtW[] = { 'N','e','v','e','r','S','h','o','w','E',
 /******************************************************************************
  * SHELL_FS_HideExtension [Internal]
  *
- * Query the registry if the filename extension of a given path should be 
+ * Query the registry if the filename extension of a given path should be
  * hidden.
  *
  * PARAMS
  *  szPath [I] Relative or absolute path of a file
- *  
+ *
  * RETURNS
  *  TRUE, if the filename's extension should be hidden
  *  FALSE, otherwise.
@@ -718,7 +718,7 @@ BOOL SHELL_FS_HideExtension(LPWSTR szPath)
     DWORD dwData;
     DWORD dwDataSize = sizeof (DWORD);
     BOOL doHide = FALSE; /* The default value is FALSE (win98 at least) */
-    
+
     if (!RegCreateKeyExW(HKEY_CURRENT_USER, AdvancedW, 0, 0, 0, KEY_ALL_ACCESS, 0, &hKey, 0)) {
         if (!RegQueryValueExW(hKey, HideFileExtW, 0, 0, (LPBYTE) &dwData, &dwDataSize))
             doHide = dwData;
@@ -742,7 +742,7 @@ BOOL SHELL_FS_HideExtension(LPWSTR szPath)
     }
     return doHide;
 }
-    
+
 void SHELL_FS_ProcessDisplayFilename(LPWSTR szPath, DWORD dwFlags)
 {
     /*FIXME: MSDN also mentions SHGDN_FOREDITING which is not yet handled. */
@@ -788,7 +788,7 @@ IShellFolder_fnGetDisplayNameOf (IShellFolder2 * iface, LPCITEMIDLIST pidl,
 
     if (_ILIsDesktop(pidl)) { /* empty pidl */
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER)) 
+            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
         {
             if (This->sPathTarget)
                 lstrcpynW(pszPath, This->sPathTarget, MAX_PATH);
@@ -798,8 +798,8 @@ IShellFolder_fnGetDisplayNameOf (IShellFolder2 * iface, LPCITEMIDLIST pidl,
         }
     } else if (_ILIsPidlSimple(pidl)) {
         if ((GET_SHGDN_FOR(dwFlags) & SHGDN_FORPARSING) &&
-            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) && 
-            This->sPathTarget) 
+            (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER) &&
+            This->sPathTarget)
         {
             lstrcpynW(pszPath, This->sPathTarget, MAX_PATH);
             PathAddBackslashW(pszPath);
@@ -879,7 +879,7 @@ static HRESULT WINAPI IShellFolder_fnSetNameOf (IShellFolder2 * iface,
             lstrcpynW(szDest + len, ext, MAX_PATH - len);
         }
     }
-    
+
     TRACE ("src=%s dest=%s\n", debugstr_w(szSrc), debugstr_w(szDest));
 
     if (MoveFileW (szSrc, szDest)) {
@@ -1176,11 +1176,11 @@ static WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pid
     WCHAR *wszListPos;
     int iPathLen;
     int i;
-    
+
     iPathLen = lstrlenW(wszBasePath);
     wszPathsList = HeapAlloc(GetProcessHeap(), 0, MAX_PATH*sizeof(WCHAR)*cidl+1);
     wszListPos = wszPathsList;
-    
+
     for (i = 0; i < cidl; i++) {
         if (!_ILIsFolder(pidls[i]) && !_ILIsValue(pidls[i]))
             continue;

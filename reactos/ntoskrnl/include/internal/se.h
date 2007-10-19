@@ -112,7 +112,7 @@ BOOLEAN
 NTAPI
 SepInitSDs(VOID);
 
-VOID 
+VOID
 NTAPI
 SeDeassignPrimaryToken(struct _EPROCESS *Process);
 

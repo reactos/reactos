@@ -34,7 +34,7 @@
  * Copyright (C) 1994-2003 The XFree86 Project, Inc.  All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to 
+ * of this software and associated documentation files (the "Software"), to
  * deal in the Software without restriction, including without limitation the
  * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
  * sell copies of the Software, and to permit persons to whom the Software is
@@ -54,7 +54,7 @@
  * not be used in advertising or otherwise to promote the sale, use or other
  * dealings in this Software without prior written authorization from the
  * XFree86 Project.
-*/  
+*/
 
 /* DISPLAY OWNERSHIP
  *
@@ -156,10 +156,10 @@ VOID FASTCALL
 HalClearDisplay (UCHAR CharAttribute)
 {
    ULONG i;
-   ULONG deviceSize = 
+   ULONG deviceSize =
        PpcEarlybootInfo.dispDeviceRowBytes *
        PpcEarlybootInfo.dispDeviceRect[3];
-   for(i = 0; i < deviceSize; i += sizeof(int) ) 
+   for(i = 0; i < deviceSize; i += sizeof(int) )
        SetPhys(GraphVideoBuffer + i, CharAttribute);
 
    CursorX = 0;
@@ -172,24 +172,24 @@ HalClearDisplay (UCHAR CharAttribute)
 VOID STATIC
 HalScrollDisplay (VOID)
 {
-    ULONG i, deviceSize = 
+    ULONG i, deviceSize =
 	PpcEarlybootInfo.dispDeviceRowBytes *
 	PpcEarlybootInfo.dispDeviceRect[3];
-    ULONG Dest = (ULONG)GraphVideoBuffer, 
+    ULONG Dest = (ULONG)GraphVideoBuffer,
 	Src = (ULONG)(GraphVideoBuffer + (16 * PpcEarlybootInfo.dispDeviceRowBytes));
     ULONG End  = (ULONG)
-	GraphVideoBuffer + 
+	GraphVideoBuffer +
 	(PpcEarlybootInfo.dispDeviceRowBytes *
 	 (PpcEarlybootInfo.dispDeviceRect[3]-16));
-    
-    while( Src < End ) 
+
+    while( Src < End )
     {
 	SetPhys((ULONG)Dest, GetPhys(Src));
 	Src += 4; Dest += 4;
     }
 
     /* Clear the bottom row */
-    for(i = End; i < deviceSize; i += sizeof(int) ) 
+    for(i = End; i < deviceSize; i += sizeof(int) )
 	SetPhys(GraphVideoBuffer + i, 1);
 }
 
@@ -200,8 +200,8 @@ HalPutCharacter (CHAR Character)
 #if 0
     int i,j,k;
     ULONG Dest =
-	(GraphVideoBuffer + 
-	 (16 * PpcEarlybootInfo.dispDeviceRowBytes * CursorY) + 
+	(GraphVideoBuffer +
+	 (16 * PpcEarlybootInfo.dispDeviceRowBytes * CursorY) +
 	 (8 * (PpcEarlybootInfo.dispDeviceDepth / 8) * CursorX)), RowDest;
     UCHAR ByteToPlace;
 
@@ -270,7 +270,7 @@ HalReleaseDisplayOwnership(VOID)
 VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 /*
- * FUNCTION: 
+ * FUNCTION:
  * ARGUMENTS:
  *         ResetDisplayParameters = Pointer to a driver specific
  *         reset routine.
@@ -308,7 +308,7 @@ HalDisplayString(IN PCH String)
   //KiAcquireSpinLock(&Lock);
 
   _disable();
-  
+
   while (*pch != 0)
     {
       if (*pch == '\n')
@@ -327,14 +327,14 @@ HalDisplayString(IN PCH String)
 	{
 	  HalPutCharacter (*pch);
 	  CursorX++;
-	  
+
 	  if (CursorX >= SizeX)
 	    {
 	      CursorY++;
 	      CursorX = 0;
 	    }
 	}
-  
+
       if (CursorY >= SizeY)
 	{
 	  HalScrollDisplay ();

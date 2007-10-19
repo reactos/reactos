@@ -11,11 +11,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
- * ReactOS emulation layer betwin wine and windows api for directx 
+ * ReactOS emulation layer betwin wine and windows api for directx
  * This transform wine specfiy api to native reactos/windows api
- * wine have done some hack to geting dsound working. But does 
+ * wine have done some hack to geting dsound working. But does
  * hack does not work on windows or reactos. It need to warp thuse
- * api hack to true native api. 
+ * api hack to true native api.
  *
  * this include file really need to be clean up.
  *
@@ -25,7 +25,7 @@
 #ifdef __REACTOS__
 #include <mmsystem.h>
 
-// wine spec 
+// wine spec
 #define MAXWAVEDRIVERS	10
 #define MAXMIDIDRIVERS	10
 #define MAXAUXDRIVERS	10

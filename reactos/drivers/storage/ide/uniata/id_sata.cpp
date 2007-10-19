@@ -134,7 +134,7 @@ UniataSataClearErr(
     //if(ChipFlags & UNIATA_SATA) {
 
         SStatus.Reg = AtapiReadPort4(chan, IDX_SATA_SStatus);
-        SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError); 
+        SError.Reg  = AtapiReadPort4(chan, IDX_SATA_SError);
 
         if(SStatus.Reg) {
             KdPrint2((PRINT_PREFIX "  SStatus %x\n", SStatus.Reg));

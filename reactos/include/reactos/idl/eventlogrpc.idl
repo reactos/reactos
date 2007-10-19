@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright 2005 Saveliy Tretiakov
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -122,8 +122,8 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPWSTR ServerName,
-		[in] PUNICODE_STRING FileName, 
-		[in] PUNICODE_STRING NullStr, 
+		[in] PUNICODE_STRING FileName,
+		[in] PUNICODE_STRING NullStr,
 		[in] long MajorVer,
 		[in] long MinorVer,
 		[out] PLOGHANDLE Handle );
@@ -134,8 +134,8 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPWSTR ServerName,
-		[in] PUNICODE_STRING LogName, 
-		[in] PUNICODE_STRING NullStr, 
+		[in] PUNICODE_STRING LogName,
+		[in] PUNICODE_STRING NullStr,
 		[in] long MajorVer,
 		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -146,7 +146,7 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPWSTR ServerName,
-		[in] PUNICODE_STRING BackupName, 
+		[in] PUNICODE_STRING BackupName,
 		[in] long MajorVer,
 		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -210,8 +210,8 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPSTR ServerName,
-		[in] PANSI_STRING LogName, 
-		[in] PANSI_STRING NullStr, 
+		[in] PANSI_STRING LogName,
+		[in] PANSI_STRING NullStr,
 		[in] long MajorVer,
 		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -222,7 +222,7 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPSTR ServerName,
-		[in] PANSI_STRING LogName, 
+		[in] PANSI_STRING LogName,
 		[in] PANSI_STRING NullStr,
 		[in] long MajorVer,
 		[in] long MinorVer,
@@ -234,7 +234,7 @@ interface eventlog
 		handle_t BindingHandle,
 #endif
 		[in, unique] LPSTR ServerName,
-		[in] PANSI_STRING BakckupName, 
+		[in] PANSI_STRING BakckupName,
 		[in] long MajorVer,
 		[in] long MinorVer,
 		[out] PLOGHANDLE Handle);
@@ -295,12 +295,12 @@ interface eventlog
 		[out, size_is(BufSize)] unsigned char *Buffer,
 		[in] long BufSize,
 		[out] long *BytesNeeded);
-	
+
 	/* Function 0x17 */
 	NTSTATUS ElfrFlushEL(
 #ifndef __midl
 		handle_t BindingHandle,
 #endif
-		[in] LOGHANDLE Handle); 
+		[in] LOGHANDLE Handle);
 
 }

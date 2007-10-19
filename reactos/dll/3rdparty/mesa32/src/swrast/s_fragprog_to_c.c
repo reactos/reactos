@@ -69,9 +69,9 @@
 #define UREG_CHANNEL_W_NEGATE_SHIFT   11
 #define UREG_CHANNEL_W_SHIFT          8
 #define UREG_CHANNEL_ZERO_NEGATE_MBZ  5
-#define UREG_CHANNEL_ZERO_SHIFT       4      
+#define UREG_CHANNEL_ZERO_SHIFT       4
 #define UREG_CHANNEL_ONE_NEGATE_MBZ   1
-#define UREG_CHANNEL_ONE_SHIFT        0      
+#define UREG_CHANNEL_ONE_SHIFT        0
 
 #define UREG_BAD          0xffffffff /* not a valid ureg */
 
@@ -110,12 +110,12 @@
 
 static INLINE int is_swizzled( int reg )
 {
-   return ((reg & UREG_XYZW_CHANNEL_MASK) != 
+   return ((reg & UREG_XYZW_CHANNEL_MASK) !=
 	   (UREG(0,0) & UREG_XYZW_CHANNEL_MASK));
 }
 
 
-/* One neat thing about the UREG representation:  
+/* One neat thing about the UREG representation:
  */
 static INLINE int swizzle( int reg, int x, int y, int z, int w )
 {
@@ -126,7 +126,7 @@ static INLINE int swizzle( int reg, int x, int y, int z, int w )
 	   CHANNEL_SRC( GET_CHANNEL_SRC( reg, w ), 3 ));
 }
 
-/* Another neat thing about the UREG representation:  
+/* Another neat thing about the UREG representation:
  */
 static INLINE int negate( int reg, int x, int y, int z, int w )
 {
@@ -147,7 +147,7 @@ static GLuint src_reg_file( GLuint file )
    case PROGRAM_ENV_PARAM: return UREG_TYPE_ENV_CONST;
 
    case PROGRAM_STATE_VAR: return UREG_TYPE_STATE_CONST;
-   case PROGRAM_NAMED_PARAM: return UREG_TYPE_PARAM; 
+   case PROGRAM_NAMED_PARAM: return UREG_TYPE_PARAM;
    default: return UREG_BAD;
    }
 }
@@ -157,13 +157,13 @@ static void emit( struct fragment_program *p,
 		  ... )
 {
    va_list ap;
-   va_start( ap, fmt );  
+   va_start( ap, fmt );
 
    if (p->c_strlen < sizeof(p->c_str))
-      p->c_strlen += vsnprintf( p->c_str + p->c_strlen, 
+      p->c_strlen += vsnprintf( p->c_str + p->c_strlen,
 				sizeof(p->c_str) - p->c_strlen,
 				fmt, ap );
-   
+
    va_end( ap );
 }
 
@@ -188,7 +188,7 @@ static GLuint src_vector( const struct fp_src_register *source )
 
    src = UREG( src_reg_file( source->File ), source->Index );
 
-   src = swizzle(src, 
+   src = swizzle(src,
 		 _X + source->Swizzle[0],
 		 _X + source->Swizzle[1],
 		 _X + source->Swizzle[2],
@@ -207,7 +207,7 @@ static void print_header( struct fragment_program *p )
 
    /* Mesa's program_parameter struct:
     */
-   emit(p, 
+   emit(p,
 	"struct program_parameter\n"
 	"{\n"
 	"   const char *Name;\n"
@@ -262,7 +262,7 @@ static void print_footer( struct fragment_program *p )
    emit(p, "}\n");
 }
 
-static void print_dest_reg( struct fragment_program *p, 
+static void print_dest_reg( struct fragment_program *p,
 			    const struct fp_instruction *inst )
 {
    switch (inst->DstReg.File) {
@@ -299,7 +299,7 @@ static void print_reg( struct fragment_program *p,
    case UREG_TYPE_STATE_CONST: emit(p, "state_param"); break;
    case UREG_TYPE_PARAM: emit(p, "local_param"); break;
    };
-   
+
    emit(p, "[%d]", GET_UREG_NR(arg));
 
    if (GET_UREG_TYPE(arg) == UREG_TYPE_STATE_CONST) {
@@ -339,7 +339,7 @@ static void print_arg( struct fragment_program *p,
    case _Y: emit(p, "[1]"); break;
    case _Z: emit(p, "[2]"); break;
    case _W: emit(p, "[3]"); break;
-   }   
+   }
 }
 
 
@@ -360,8 +360,8 @@ static void print_expression( struct fragment_program *p,
 	 print_arg( p, deref(reg, i) );
 	 fmt += 2;
       }
-      else { 
-	 emit_char(p, *fmt); 
+      else {
+	 emit_char(p, *fmt);
 	 fmt++;
       }
    }
@@ -408,8 +408,8 @@ static void do_tex( struct fragment_program *p,
    GLuint i;
    GLboolean need_tex = GL_FALSE, need_result = GL_FALSE;
 
-   for (i = 0; i < 4; i++) 
-      if (!inst->DstReg.WriteMask[i]) 
+   for (i = 0; i < 4; i++)
+      if (!inst->DstReg.WriteMask[i])
 	 need_result = GL_TRUE;
 
    if (is_swizzled(arg))
@@ -454,7 +454,7 @@ static void saturate( struct fragment_program *p,
    print_dest(p, inst, i);
    emit(p, ");\n");
 }
-		     
+
 static void assign_single( GLuint i,
 			   struct fragment_program *p,
 			   const struct fp_instruction *inst,
@@ -462,7 +462,7 @@ static void assign_single( GLuint i,
 			   ... )
 {
    va_list ap;
-   va_start( ap, fmt );  
+   va_start( ap, fmt );
 
    if (inst->DstReg.WriteMask[i]) {
       emit(p, "   ");
@@ -483,7 +483,7 @@ static void assign4( struct fragment_program *p,
 {
    GLuint i;
    va_list ap;
-   va_start( ap, fmt );  
+   va_start( ap, fmt );
 
    for (i = 0; i < 4; i++)
       if (inst->DstReg.WriteMask[i]) {
@@ -516,7 +516,7 @@ static void assign4_replicate( struct fragment_program *p,
 
    if (!ok) return;
 
-   va_start( ap, fmt );  
+   va_start( ap, fmt );
 
    emit(p, "   ");
 
@@ -536,7 +536,7 @@ static void assign4_replicate( struct fragment_program *p,
 	 emit(p, ";\n");
       }
 }
-	 
+
 
 
 
@@ -590,8 +590,8 @@ static void translate_program( struct fragment_program *p )
 
       GLuint src[3], i;
       GLuint nr = nr_args( inst->Opcode );
-      
-      for (i = 0; i < nr; i++) 
+
+      for (i = 0; i < nr; i++)
 	 src[i] = src_vector( &inst->SrcReg[i] );
 
       /* Print the original program instruction string */
@@ -607,15 +607,15 @@ static void translate_program( struct fragment_program *p )
       }
 
       switch (inst->Opcode) {
-      case FP_OPCODE_ABS: 
+      case FP_OPCODE_ABS:
 	 assign4(p, inst, "fabsf(%s)", src[0]);
 	 break;
 
-      case FP_OPCODE_ADD: 
+      case FP_OPCODE_ADD:
 	 assign4(p, inst, "%s + %s", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_CMP: 
+      case FP_OPCODE_CMP:
 	 assign4(p, inst, "%s < 0.0F ? %s : %s", src[0], src[1], src[2]);
 	 break;
 
@@ -623,9 +623,9 @@ static void translate_program( struct fragment_program *p )
 	 assign4_replicate(p, inst, "COS(%s)", src[0]);
 	 break;
 
-      case FP_OPCODE_DP3: 
-	 assign4_replicate(p, inst, 
-			   "%s*%s + %s*%s + %s*%s", 
+      case FP_OPCODE_DP3:
+	 assign4_replicate(p, inst,
+			   "%s*%s + %s*%s + %s*%s",
 			   deref(src[0],_X),
 			   deref(src[1],_X),
 			   deref(src[0],_Y),
@@ -634,9 +634,9 @@ static void translate_program( struct fragment_program *p )
 			   deref(src[1],_Z));
 	 break;
 
-      case FP_OPCODE_DP4: 
-	 assign4_replicate(p, inst, 
-			   "%s*%s + %s*%s + %s*%s + %s*%s", 
+      case FP_OPCODE_DP4:
+	 assign4_replicate(p, inst,
+			   "%s*%s + %s*%s + %s*%s + %s*%s",
 			   deref(src[0],_X),
 			   deref(src[1],_X),
 			   deref(src[0],_Y),
@@ -645,9 +645,9 @@ static void translate_program( struct fragment_program *p )
 			   deref(src[1],_Z));
 	 break;
 
-      case FP_OPCODE_DPH:  
-	 assign4_replicate(p, inst, 
-			   "%s*%s + %s*%s + %s*%s + %s", 
+      case FP_OPCODE_DPH:
+	 assign4_replicate(p, inst,
+			   "%s*%s + %s*%s + %s*%s + %s",
 			   deref(src[0],_X),
 			   deref(src[1],_X),
 			   deref(src[0],_Y),
@@ -655,7 +655,7 @@ static void translate_program( struct fragment_program *p )
 			   deref(src[1],_Z));
 	 break;
 
-      case FP_OPCODE_DST: 
+      case FP_OPCODE_DST:
 	 /* result[0] = 1    * 1;
 	  * result[1] = a[1] * b[1];
 	  * result[2] = a[2] * 1;
@@ -663,22 +663,22 @@ static void translate_program( struct fragment_program *p )
 	  */
 	 assign_single(0, p, inst, "1.0");
 
-	 assign_single(1, p, inst, "%s * %s", 
+	 assign_single(1, p, inst, "%s * %s",
 		       deref(src[0], _Y), deref(src[1], _Y));
 
 	 assign_single(2, p, inst, "%s", deref(src[0], _Z));
 	 assign_single(3, p, inst, "%s", deref(src[1], _W));
 	 break;
 
-      case FP_OPCODE_EX2: 
+      case FP_OPCODE_EX2:
 	 assign4_replicate(p, inst, "powf(2.0, %s)", src[0]);
 	 break;
 
-      case FP_OPCODE_FLR: 
+      case FP_OPCODE_FLR:
 	 assign4_replicate(p, inst, "floorf(%s)", src[0]);
 	 break;
 
-      case FP_OPCODE_FRC: 
+      case FP_OPCODE_FRC:
 	 assign4_replicate(p, inst, "%s - floorf(%s)", src[0], src[0]);
 	 break;
 
@@ -686,11 +686,11 @@ static void translate_program( struct fragment_program *p )
 	 do_tex_kill(p, inst, src[0]);
 	 break;
 
-      case FP_OPCODE_LG2: 
+      case FP_OPCODE_LG2:
 	 assign4_replicate(p, inst, "LOG2(%s)", src[0]);
 	 break;
 
-      case FP_OPCODE_LIT: 
+      case FP_OPCODE_LIT:
 	 assign_single(0, p, inst, "1.0");
 	 assign_single(1, p, inst, "MIN2(%s, 0)", deref(src[0], _X));
 	 assign_single(2, p, inst, "(%s > 0.0) ? expf(%s * MIN2(%s, 0)) : 0.0",
@@ -700,9 +700,9 @@ static void translate_program( struct fragment_program *p )
 	 assign_single(3, p, inst, "1.0");
 	 break;
 
-      case FP_OPCODE_LRP: 
-	 assign4(p, inst, 
-		 "%s * %s + (1.0 - %s) * %s", 
+      case FP_OPCODE_LRP:
+	 assign4(p, inst,
+		 "%s * %s + (1.0 - %s) * %s",
 		 src[0], src[1], src[0], src[2]);
 	 break;
 
@@ -714,30 +714,30 @@ static void translate_program( struct fragment_program *p )
 	 assign4(p, inst, "MAX2(%s, %s)", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_MIN: 
+      case FP_OPCODE_MIN:
 	 assign4(p, inst, "MIN2(%s, %s)", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_MOV: 
+      case FP_OPCODE_MOV:
 	 assign4(p, inst, "%s", src[0]);
 	 break;
 
-      case FP_OPCODE_MUL: 
+      case FP_OPCODE_MUL:
 	 assign4(p, inst, "%s * %s", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_POW: 
+      case FP_OPCODE_POW:
 	 assign4_replicate(p, inst, "powf(%s, %s)", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_RCP: 
+      case FP_OPCODE_RCP:
 	 assign4_replicate(p, inst, "1.0/%s", src[0]);
 	 break;
 
-      case FP_OPCODE_RSQ: 
+      case FP_OPCODE_RSQ:
 	 assign4_replicate(p, inst, "_mesa_inv_sqrtf(%s)", src[0]);
 	 break;
-	 
+
       case FP_OPCODE_SCS:
 	 if (inst->DstReg.WriteMask[0]) {
 	    assign_single(0, p, inst, "cosf(%s)", deref(src[0], _X));
@@ -748,7 +748,7 @@ static void translate_program( struct fragment_program *p )
 	 }
 	 break;
 
-      case FP_OPCODE_SGE: 
+      case FP_OPCODE_SGE:
 	 assign4(p, inst, "%s >= %s ? 1.0 : 0.0", src[0], src[1]);
 	 break;
 
@@ -756,11 +756,11 @@ static void translate_program( struct fragment_program *p )
 	 assign4_replicate(p, inst, "sinf(%s)", src[0]);
 	 break;
 
-      case FP_OPCODE_SLT: 
+      case FP_OPCODE_SLT:
 	 assign4(p, inst, "%s < %s ? 1.0 : 0.0", src[0], src[1]);
 	 break;
 
-      case FP_OPCODE_SUB: 
+      case FP_OPCODE_SUB:
 	 assign4(p, inst, "%s - %s", src[0], src[1]);
 	 break;
 
@@ -768,7 +768,7 @@ static void translate_program( struct fragment_program *p )
 	 assign4(p, inst, "%s", src[0]);
 	 break;
 
-      case FP_OPCODE_TEX: 
+      case FP_OPCODE_TEX:
 	 do_tex(p, inst, "TEX", inst->TexSrcUnit, src[0]);
 	 break;
 
@@ -787,7 +787,7 @@ static void translate_program( struct fragment_program *p )
 	  *      result.z = src[0].x * src[1].y - src[0].y * src[1].x;
 	  *      result.w = undef;
 	  */
-	 assign4(p, inst, 
+	 assign4(p, inst,
 		 "%s * %s - %s * %s",
 		 swizzle(src[0], _Y, _Z, _X, _ONE),
 		 swizzle(src[1], _Z, _X, _Y, _ONE),

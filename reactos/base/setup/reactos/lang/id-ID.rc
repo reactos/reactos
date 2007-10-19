@@ -1,7 +1,7 @@
 LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Setup ReactOS"
     IDS_TEXT     "Anda tidak bisa menginstalasi ReactOS secara langsung dari CD ini!\n\nSilahkan mulai lagi komputer anda dari CD ini agar bisa menginstalasi ReactOS."

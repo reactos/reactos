@@ -205,7 +205,7 @@ _mesa_ProgramStringARB(GLenum target, GLenum format, GLsizei len,
       }
       _mesa_parse_arb_vertex_program(ctx, target, (const GLubyte *) string,
                                      len, prog);
-      
+
       if (ctx->Driver.ProgramStringNotify)
 	 ctx->Driver.ProgramStringNotify( ctx, target, &prog->Base );
    }
@@ -233,7 +233,7 @@ void GLAPIENTRY
 _mesa_ProgramEnvParameter4dARB(GLenum target, GLuint index,
                                GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-   _mesa_ProgramEnvParameter4fARB(target, index, (GLfloat) x, (GLfloat) y, 
+   _mesa_ProgramEnvParameter4fARB(target, index, (GLfloat) x, (GLfloat) y,
 		                  (GLfloat) z, (GLfloat) w);
 }
 
@@ -242,8 +242,8 @@ void GLAPIENTRY
 _mesa_ProgramEnvParameter4dvARB(GLenum target, GLuint index,
                                 const GLdouble *params)
 {
-   _mesa_ProgramEnvParameter4fARB(target, index, (GLfloat) params[0], 
-	                          (GLfloat) params[1], (GLfloat) params[2], 
+   _mesa_ProgramEnvParameter4fARB(target, index, (GLfloat) params[0],
+	                          (GLfloat) params[1], (GLfloat) params[2],
 				  (GLfloat) params[3]);
 }
 
@@ -307,7 +307,7 @@ _mesa_GetProgramEnvParameterdvARB(GLenum target, GLuint index,
 
 
 void GLAPIENTRY
-_mesa_GetProgramEnvParameterfvARB(GLenum target, GLuint index, 
+_mesa_GetProgramEnvParameterfvARB(GLenum target, GLuint index,
                                   GLfloat *params)
 {
    GET_CURRENT_CONTEXT(ctx);
@@ -404,7 +404,7 @@ _mesa_ProgramLocalParameter4dARB(GLenum target, GLuint index,
                                  GLdouble x, GLdouble y,
                                  GLdouble z, GLdouble w)
 {
-   _mesa_ProgramLocalParameter4fARB(target, index, (GLfloat) x, (GLfloat) y, 
+   _mesa_ProgramLocalParameter4fARB(target, index, (GLfloat) x, (GLfloat) y,
                                     (GLfloat) z, (GLfloat) w);
 }
 
@@ -628,7 +628,7 @@ _mesa_GetProgramivARB(GLenum target, GLenum pname, GLint *params)
             *params = ctx->Const.MaxFragmentProgramEnvParams;
          break;
       case GL_PROGRAM_UNDER_NATIVE_LIMITS_ARB:
-	 if (ctx->Driver.IsProgramNative) 
+	 if (ctx->Driver.IsProgramNative)
 	    *params = ctx->Driver.IsProgramNative( ctx, target, prog );
 	 else
 	    *params = GL_TRUE;

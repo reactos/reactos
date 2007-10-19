@@ -80,7 +80,7 @@ void DrawHorzCardStrip(HDC hdc, int x, int y, int nCardNum, int height, BOOL fDr
 
     // draw the outer-most lips
     BitBlt(hdc, x,               y+two, 1, height-two*tips, __hdcCardBitmaps, sx,               sy+two, SRCCOPY);
-    BitBlt(hdc, x+__cardwidth-1, y+two, 1, height-two*tips, __hdcCardBitmaps, sx+__cardwidth-1, sy+two, SRCCOPY);    
+    BitBlt(hdc, x+__cardwidth-1, y+two, 1, height-two*tips, __hdcCardBitmaps, sx+__cardwidth-1, sy+two, SRCCOPY);
 }
 
 //
@@ -107,7 +107,7 @@ void DrawVertCardStrip(HDC hdc, int x, int y, int nCardNum, int width, BOOL fDra
     BOOL tips = fDrawTips ? FALSE : TRUE;
 
     if(width == 0) return;
-    
+
 
     if(width < 0)
     {
@@ -145,7 +145,7 @@ void DrawCardCorner(HDC hdc, int x, int y, int cardval, int xdir, int ydir)
 
     HDC hdcSource = __hdcCardBitmaps;
 
-    if(xdir < 0) 
+    if(xdir < 0)
     {
         x  += __cardwidth + xdir - 1;
         sx += __cardwidth + xdir - 1;
@@ -156,7 +156,7 @@ void DrawCardCorner(HDC hdc, int x, int y, int cardval, int xdir, int ydir)
         sx += xdir;
     }
 
-    if(ydir < 0) 
+    if(ydir < 0)
     {
         y  += __cardheight + ydir - 1;
         sy += __cardheight + ydir - 1;
@@ -212,13 +212,13 @@ void CardRegion::Clip(HDC hdc)
 {
     int numtoclip;
 
-    if(fVisible == false) 
+    if(fVisible == false)
         return;
 
     Update();                //Update this stack's size+card count
     numtoclip = nNumApparentCards;
 
-    //if we are making this stack flash on/off, then only 
+    //if we are making this stack flash on/off, then only
     //clip the stack for drawing if the flash is in its ON state
     if(nFlashCount != 0)
     {
@@ -230,9 +230,9 @@ void CardRegion::Clip(HDC hdc)
     if(xoffset != 0 && yoffset != 0 && cardstack.NumCards() != 0)
     {
         for(int j = 0; j < numtoclip; j ++)
-        {    
+        {
             ClipCard(hdc, xpos + xoffset * j, ypos + yoffset * j, __cardwidth, __cardheight);
-        }    
+        }
     }
     //otherwise if just offset along a horizontal/vertical axis
     else
@@ -258,7 +258,7 @@ void CardRegion::Render(HDC hdc)
     int cardnum = 0;
     int numtodraw;
     BOOL fDrawTips;
-    
+
     Update();            //Update this stack's card count + size
 
     numtodraw = nNumApparentCards;
@@ -270,26 +270,26 @@ void CardRegion::Render(HDC hdc)
     }
 
     if(fVisible == 0) return;
-    
+
     cardnum = cardstack.NumCards() - numtodraw;
     int counter;
 
     for(counter = 0; counter < numtodraw; counter++)
     {
         int cardval;
-        
+
         int x = xoffset * counter + xpos;
         int y = yoffset * counter + ypos;
 
         //if about to draw last card, then actually draw the top card
         if(counter == numtodraw - 1) cardnum = cardstack.NumCards() - 1;
-        
+
         Card card = cardstack.cardlist[cardnum];
         cardval = card.Idx();
-        
+
         if(card.FaceDown())
             cardval = nBackCardIdx;    //card-back
-            
+
         //only draw the visible part of the card
         if(counter < numtodraw - 1)
         {
@@ -302,7 +302,7 @@ void CardRegion::Render(HDC hdc)
                 fDrawTips = TRUE;
 
             //draw horizontal strips
-            if(yoffset > 0) 
+            if(yoffset > 0)
             {
                 DrawHorzCardStrip(hdc, x, y, cardval, yoffset, fDrawTips);
             }
@@ -339,12 +339,12 @@ void CardRegion::Render(HDC hdc)
         cardnum ++;
 
     } //end of index
-    
+
     if(counter == 0)    //if the cardstack is empty, then draw it that way
     {
         int x = xpos;
         int y = ypos;
-        
+
         switch(uEmptyImage)
         {
         default:
@@ -354,7 +354,7 @@ void CardRegion::Render(HDC hdc)
             //PaintRect(hdc, &rect, MAKE_PALETTERGB(crBackgnd));
             parentWnd.PaintCardRgn(hdc, x, y, __cardwidth, __cardheight, x, y);
             break;
-            
+
         case CS_EI_SUNK:
             DrawCard(hdc, x, y, __hdcPlaceHolder, __cardwidth, __cardheight);
             break;
@@ -364,7 +364,7 @@ void CardRegion::Render(HDC hdc)
             CardBlt(hdc, x, y, uEmptyImage);
             break;
         }
-        
+
     }
 
     return;
@@ -375,7 +375,7 @@ int calc_offset(int offset, int numcards, int numtodrag, int realvisible)
     if(offset >= 0)
         return -offset * numcards;
     else
-        return -offset * (numtodrag)       + 
+        return -offset * (numtodrag)       +
                -offset * (realvisible - 1);
 }
 
@@ -423,10 +423,10 @@ void CardRegion::PrepareDragBitmaps(int numtodrag)
     //background buffer, so it appears if we have lifted the card from the stack
     //PaintRect(hdcBackGnd, &rect, crBackgnd);
     SetRect(&rect, 0, 0, nDragCardWidth, nDragCardHeight);
- 
+
     xoff = calc_offset(xoffset, numcards, numtodrag, realvisible);
     yoff = calc_offset(yoffset, numcards, numtodrag, realvisible);
-    
+
     parentWnd.PaintCardRgn(hdcBackGnd, 0, 0, nDragCardWidth, nDragCardHeight, xpos - xoff,    ypos - yoff);
 
     //
@@ -438,7 +438,7 @@ void CardRegion::PrepareDragBitmaps(int numtodrag)
     {
         Card card = cardstack.cardlist[iwhichcard];
         int nCardVal;
-        
+
         nCardVal = card.FaceUp() ? card.Idx() : nBackCardIdx;
 
         xoff = xoffset * icard + calc_offset(xoffset, numcards, numtodrag, realvisible);//- xoffset * ((numcards+numtodrag) / nThreedCount - numtodrag);
@@ -447,11 +447,11 @@ void CardRegion::PrepareDragBitmaps(int numtodrag)
         CardBlt(hdcBackGnd, xoff, yoff, nCardVal);
         iwhichcard++;
     }
-    
+
     //
     // If there are no cards under this one, just draw the place holder
     //
-    if(numcards == 0)   
+    if(numcards == 0)
     {
         int xoff = 0, yoff = 0;
 
@@ -491,12 +491,12 @@ void CardRegion::PrepareDragBitmaps(int numtodrag)
 
         if(xoffset >= 0) xoff =  xoffset * icard;
         else              xoff = -xoffset * (numtodrag - icard - 1);
-            
+
         if(yoffset >= 0) yoff =  yoffset * icard;
         else             yoff = -yoffset * (numtodrag - icard - 1);
 
         Card card = dragstack.cardlist[icard];
-        
+
         nCardVal = card.FaceUp() ? card.Idx() : nBackCardIdx;
 
         CardBlt(hdcDragCard, xoff, yoff, nCardVal);
@@ -539,11 +539,11 @@ void CardRegion::PrepareDragBitmapsThreed(int numtodrag)
     //--PaintRect(hdcBackGnd, &rect, crBackgnd);
 
     int threedadjust = numcards  % nThreedCount == 0;
-    
+
     numunder = CalcApparentCards(numcards);
     iwhichcard = (numcards+numtodrag) - numunder - 1;
     if(nThreedCount == 1) iwhichcard = 0;
-    
+
     int xoff = calc_offset(xoffset, numunder, numtodrag, numunder);
     int yoff = calc_offset(yoffset, numunder, numtodrag, numunder);
 
@@ -559,14 +559,14 @@ void CardRegion::PrepareDragBitmapsThreed(int numtodrag)
         Card card = cardstack.cardlist[iwhichcard];
         int nCardVal = card.FaceUp() ? card.Idx() : nBackCardIdx;
 
-        CardBlt(hdcBackGnd, 
+        CardBlt(hdcBackGnd,
                 xoffset * icard - xoffset*(numunder-numtodrag+threedadjust),
                 yoffset * icard - yoffset*(numunder-numtodrag+threedadjust),
                 nCardVal);
 
         iwhichcard++;
     }
-    
+
     //
     // If there are no cards under this one, just draw the place holder
     //
@@ -596,7 +596,7 @@ void CardRegion::PrepareDragBitmapsThreed(int numtodrag)
     //    now render the drag-cards into the dragcard image
     //
     PaintRect(hdcDragCard, &rect, crBackgnd);
-    
+
     for(icard = 0; icard < numtodrag; icard++)
     {
         Card card = dragstack.cardlist[icard];

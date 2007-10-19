@@ -927,6 +927,6 @@ HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);
-    
+
     return S_OK;
 }

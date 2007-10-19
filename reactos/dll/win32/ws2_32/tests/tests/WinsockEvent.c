@@ -24,7 +24,7 @@ static void
 TestWSACloseEventSuccess()
 {
   BOOL result;
-  
+
   _SetHooks(HooksSuccess);
   result = WSACloseEvent(TestHandle);
   _AssertTrue(result);
@@ -53,7 +53,7 @@ static void
 TestWSACloseEventFailure()
 {
   BOOL result;
-  
+
   _SetHooks(HooksFailure);
   result = WSACloseEvent(TestHandle);
   _AssertFalse(result);

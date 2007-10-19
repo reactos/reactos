@@ -193,9 +193,9 @@ static char **bv2str_array( struct berval **bv )
             while (i > 0) HeapFree( GetProcessHeap(), 0, str[--i] );
             HeapFree( GetProcessHeap(), 0, str );
             return NULL;
-        } 
+        }
         i++;
-        p++; 
+        p++;
     }
     str[i] = NULL;
     return str;

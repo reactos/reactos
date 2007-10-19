@@ -56,7 +56,7 @@ public:
 			GridTrimVertex() { g = 0; t = 0; }
     TrimVertex	*t;
     GridVertex	*g;
-   
+
     inline void		set( long, long );
     inline void		set( REAL, REAL );
     inline void		set( TrimVertex * );

@@ -22,7 +22,7 @@ using Sysreg_::RosBootTest;
 using System_::SymbolFile;
 #endif
 
-static const char USAGE[] = 
+static const char USAGE[] =
 "sysreg.exe [conf_file]\nconfiguration file (default: sysreg.cfg)";
 
 
@@ -63,13 +63,13 @@ int main(int argc, char * argv[])
 		cerr << "Error: failed to create regression test" << endl;
 		return -1;
 	}
-	
+
 	string envvar;
 	string ros = "ROS_OUTPUT";
 	config.getStringValue (ros, envvar);
 #if 0
 	SymbolFile::initialize (config, envvar);
-#endif	
+#endif
 
     for(int i = 0; i < 3; i++)
     {

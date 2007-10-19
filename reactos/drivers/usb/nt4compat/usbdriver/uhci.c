@@ -420,7 +420,7 @@ uhci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 
     ASSERT(dev_mgr != NULL);
 
-    //note: hcd count wont increment till the hcd is registered in dev_mgr  
+    //note: hcd count wont increment till the hcd is registered in dev_mgr
     sprintf(str_dev_name, "%s%d", UHCI_DEVICE_NAME, dev_mgr->hcd_count);
     sprintf(str_symb_name, "%s%d", DOS_DEVICE_NAME, dev_mgr->hcd_count);
 
@@ -790,12 +790,12 @@ uhci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     if (addr_space == 0)
     {
-        //port has been mapped to memory space  
+        //port has been mapped to memory space
         pdev_ext->uhci->port_mapped = TRUE;
         pdev_ext->uhci->port_base = (PBYTE) MmMapIoSpace(pdev_ext->uhci->uhci_reg_base,
                                                          pdev_ext->res_port.Length, FALSE);
 
-        //fatal error can not map the registers 
+        //fatal error can not map the registers
         if (pdev_ext->uhci->port_base == NULL)
         {
             release_adapter(pdev_ext->padapter);
@@ -1410,7 +1410,7 @@ uhci_submit_urb(PUHCI_DEV uhci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     else if (usb_endp_busy_count(purb->pendp) && endp_type(purb->pendp) != USB_ENDPOINT_XFER_ISOC)
     {
         //
-        //No urb waiting but urb overlap not allowed, 
+        //No urb waiting but urb overlap not allowed,
         //so leave it in queue and return, will be scheduled
         //later
         //
@@ -1568,13 +1568,13 @@ uhci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     sync_param.context = (PVOID) & temp_list;
 
     uhci_dbg_print(DBGLVL_MAXIMUM, ("uhci_dpc_callback(): entering..., uhci=0x%x\n", uhci));
-    //remove finished urb from uhci's urb-list 
+    //remove finished urb from uhci's urb-list
     KeSynchronizeExecution(uhci->pdev_ext->uhci_int, uhci_sync_remove_urb_finished, &sync_param);
 
     //release resources( tds, and qhs ) the urb occupied
     while (IsListEmpty(&temp_list) == FALSE)
     {
-        //not in any public queue, if do not access into dev, no race 
+        //not in any public queue, if do not access into dev, no race
         //condition will occur
         purb = (PURB) RemoveHeadList(&temp_list);
         urb_status = purb->status;
@@ -1851,7 +1851,7 @@ uhci_remove_device(PUHCI_DEV uhci, PUSB_DEV dev)
     lock_dev(dev, FALSE);
     if (dev->usb_config)
     {
-        //only for configed dev 
+        //only for configed dev
         for(i = 0; i < dev->usb_config->if_count; i++)
         {
             for(j = 0; j < dev->usb_config->interf[i].endp_count; j++)
@@ -2569,12 +2569,12 @@ uhci_remove_bulk_from_schedule(PUHCI_DEV uhci, PURB urb)
 
     if (pprev != pnext)
     {
-        //not the last one      
+        //not the last one
         pprev_qh->link = pnext_qh->phy_addr;
     }
     else
     {
-        //only two qhs in the list      
+        //only two qhs in the list
         for(i = 0; i < UHCI_MAX_SKELQHS; i++)
         {
             if (pprev_qh == uhci->skel_qh[i])
@@ -3356,7 +3356,7 @@ uhci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
             }
             else if (psetup->bmRequestType == 0xd3 && psetup->bRequest == HUB_REQ_GET_STATE)
             {
-                // get bus state        
+                // get bus state
                 if (psetup->wIndex == 0 || psetup->wIndex > 2 || psetup->wLength == 0)
                 {
                     purb->status = STATUS_INVALID_PARAMETER;
@@ -3530,7 +3530,7 @@ uhci_unload(IN PDRIVER_OBJECT DriverObject)
     dev_mgr->term_flag = TRUE;
 
     //
-    // wake up the thread if it is 
+    // wake up the thread if it is
     //
     KeSetEvent(&dev_mgr->wake_up_event, 0, FALSE);
     KeWaitForSingleObject(dev_mgr->pthread, Executive, KernelMode, TRUE, NULL);
@@ -3846,7 +3846,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
     // routines for handling system PNP and power management requests
     //DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = generic_dispatch_irp;
 
-    // The Functional Device Object (FDO) will not be created for PNP devices until 
+    // The Functional Device Object (FDO) will not be created for PNP devices until
     // this routine is called upon device plug-in.
     RtlZeroMemory(&g_dev_mgr, sizeof(USB_DEV_MANAGER));
     g_dev_mgr.usb_driver_obj = DriverObject;

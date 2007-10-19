@@ -109,7 +109,7 @@ HRESULT WINAPI AddDelBackupEntryA(LPCSTR lpcszFileList, LPCSTR lpcszBackupDir,
  * NOTES
  *   If the INI file does not exist before adding entries to it, the file
  *   will be created.
- * 
+ *
  *   If lpcszBackupDir is NULL, the INI file is assumed to exist in
  *   c:\windows or created there if it does not exist.
  */
@@ -122,7 +122,7 @@ HRESULT WINAPI AddDelBackupEntryW(LPCWSTR lpcszFileList, LPCWSTR lpcszBackupDir,
     static const WCHAR szBackupEntry[] = {
         '-','1',',','0',',','0',',','0',',','0',',','0',',','-','1',0
     };
-    
+
     static const WCHAR backslash[] = {'\\',0};
     static const WCHAR ini[] = {'.','i','n','i',0};
     static const WCHAR backup[] = {'b','a','c','k','u','p',0};
@@ -263,7 +263,7 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
 
     if (!lpszSourceDir || !lpszSourceFile || !lpszDestDir)
         return E_INVALIDARG;
-        
+
     fileQueue = SetupOpenFileQueue();
     if (fileQueue == INVALID_HANDLE_VALUE)
         return HRESULT_FROM_WIN32(GetLastError());
@@ -320,9 +320,9 @@ HRESULT WINAPI AdvInstallFileW(HWND hwnd, LPCWSTR lpszSourceDir, LPCWSTR lpszSou
 done:
     SetupTermDefaultQueueCallback(pContext);
     SetupCloseFileQueue(fileQueue);
-    
+
     HeapFree(GetProcessHeap(), 0, szDestFilename);
-    
+
     return HRESULT_FROM_WIN32(dwLastError);
 }
 
@@ -385,7 +385,7 @@ static HRESULT DELNODE_recurse_dirtree(LPWSTR fname, DWORD flags)
             ret = S_OK;
         }
     }
-    
+
     return ret;
 }
 
@@ -419,7 +419,7 @@ HRESULT WINAPI DelNodeA(LPCSTR pszFileOrDirName, DWORD dwFlags)
  *   pszFileOrDirName   [I] Name of file or directory to delete
  *   dwFlags            [I] Flags; see include/advpub.h
  *
- * RETURNS 
+ * RETURNS
  *   Success: S_OK
  *   Failure: E_FAIL
  *
@@ -432,9 +432,9 @@ HRESULT WINAPI DelNodeW(LPCWSTR pszFileOrDirName, DWORD dwFlags)
 {
     WCHAR fname[MAX_PATH];
     HRESULT ret = E_FAIL;
-    
+
     TRACE("(%s, %d)\n", debugstr_w(pszFileOrDirName), dwFlags);
-    
+
     if (dwFlags)
         FIXME("Flags ignored!\n");
 
@@ -547,7 +547,7 @@ static LPSTR convert_file_list(LPCSTR FileList, DWORD *dwNumFiles)
     const char *first = FileList;
     const char *last = FileList + strlen(FileList) - 1;
     LPSTR szConvertedList, temp;
-    
+
     /* any number of these chars before the list is OK */
     while (first < last && (*first == ' ' || *first == '\t' || *first == ':'))
         first++;
@@ -572,7 +572,7 @@ static LPSTR convert_file_list(LPCSTR FileList, DWORD *dwNumFiles)
         HeapFree(GetProcessHeap(), 0, szConvertedList);
         return NULL;
     }
-        
+
     *dwNumFiles = 1;
 
     /* convert the colons to double-null termination */
@@ -689,7 +689,7 @@ static DWORD fill_file_list(EXTRACTdest *extractDest, LPCSTR szCabName, LPCSTR s
  */
 HRESULT WINAPI ExtractFilesA(LPCSTR CabName, LPCSTR ExpandDir, DWORD Flags,
                              LPCSTR FileList, LPVOID LReserved, DWORD Reserved)
-{   
+{
     EXTRACTdest extractDest;
     HMODULE hCabinet;
     HRESULT res = S_OK;
@@ -824,7 +824,7 @@ HRESULT WINAPI FileSaveRestoreA(HWND hDlg, LPSTR pszFileList, LPSTR pszDir,
     RtlFreeUnicodeString(&basename);
 
     return hr;
-}                         
+}
 
 /***********************************************************************
  *      FileSaveRestoreW (ADVPACK.@)

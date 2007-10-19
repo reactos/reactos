@@ -105,13 +105,13 @@ int read_client_conf(void) {
 
        if ((ifi!= NULL) && (ifi->client->config != NULL))
           config = ifi->client->config;
-       else 
+       else
        {
            warn("util.c read_client_conf poorly implemented!");
            return 0;
        }
-       
-           
+
+
        GetComputerName(ComputerName, & ComputerNameSize);
        /* This never gets freed since it's only called once */
        lpCompName =

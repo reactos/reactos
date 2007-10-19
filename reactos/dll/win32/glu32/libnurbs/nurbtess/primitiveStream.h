@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -37,7 +37,7 @@
 ** $Header: /cygdrive/c/RCVS/CVS/ReactOS/reactos/lib/glu32/libnurbs/nurbtess/primitiveStream.h,v 1.1 2004/02/02 16:39:13 navaraf Exp $
 */
 
-/*we do not use the constans GL_... so that this file is independent of 
+/*we do not use the constans GL_... so that this file is independent of
  *<GL/gl.h>
  */
 
@@ -59,13 +59,13 @@ class primStream {
   Int index_vertices;
   Int size_vertices;
 
-  /*the vertex is inserted one by one. counter is used to 
-   *count the number of vertices which have been inserted so far in 
+  /*the vertex is inserted one by one. counter is used to
+   *count the number of vertices which have been inserted so far in
    *the current primitive
    */
   Int counter;
 
-public:  
+public:
   primStream(Int sizeLengths, Int sizeVertices);
   ~primStream();
 
@@ -83,16 +83,16 @@ public:
     }
   Real* get_vertices() {return vertices;}
 
-  /*the begining of inserting a new primitive. 
+  /*the begining of inserting a new primitive.
    *reset counter to be 0.
    */
   void begin();
   void insert(Real u, Real v);
   void insert(Real v[2]) {insert(v[0], v[1]);}
   void end(Int type);
-  
+
   Int num_triangles();
-  
+
   void triangle(Real A[2], Real B[2], Real C[2])
     {
       begin();
@@ -110,7 +110,7 @@ public:
 
 
 
-  
+
 
 #endif
 

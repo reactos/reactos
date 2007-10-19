@@ -31,7 +31,7 @@ LanguagesPageProc(HWND hwndDlg,
 	     UINT uMsg,
 	     WPARAM wParam,
 	     LPARAM lParam);
-		 
+
 /* advanced.c */
 INT_PTR CALLBACK
 AdvancedPageProc(HWND hwndDlg,

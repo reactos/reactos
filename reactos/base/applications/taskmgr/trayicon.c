@@ -148,7 +148,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
 
-	      
+
     LoadString( GetModuleHandle(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
     wsprintf(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 

@@ -26,7 +26,7 @@ LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 // Menu
 //
 
-IDM_MDIFRAME MENU 
+IDM_MDIFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -67,7 +67,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU 
+IDM_DESKTOPBAR MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -78,7 +78,7 @@ BEGIN
     END
 END
 
-IDM_VOLUME MENU 
+IDM_VOLUME MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -87,7 +87,7 @@ BEGIN
     END
 END
 
-IDM_NOTIFYAREA MENU 
+IDM_NOTIFYAREA MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -100,7 +100,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU 
+IDM_SDIFRAME MENU
 BEGIN
     POPUP "&File"
     BEGIN
@@ -263,18 +263,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -288,7 +288,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Start"
@@ -308,7 +308,7 @@ BEGIN
     IDS_ADMIN               "Amministrazione"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_STARTMENU           "Menu avvio"
     IDS_MINIMIZE_ALL        "Minimizza tutte le finestre"
@@ -326,7 +326,7 @@ BEGIN
     IDS_TERMINATE           "Termina ReactOS Explorer"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_NETWORK             "Rete"
     IDS_CONNECTIONS         "Connessioni di rete"
@@ -340,7 +340,7 @@ BEGIN
     IDS_ALL_USERS           "Tutti gli utenti\\"
     IDS_SEARCH              "Cerca"
     IDS_ABOUT_EXPLORER      "&Informazioni su Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS 
+    IDS_LAUNCH_MANY_PROGRAMS
                             "Hai selezionato più di un programma.\nSei sicuro di volerli eseguire tutti?"
     IDS_DESKTOPBAR_SETTINGS "Impostazioni del Desktop"
     IDS_DESKTOP             "Desktop"

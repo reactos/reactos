@@ -61,7 +61,7 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 
 	TCHAR * line = s;
 
- 
+
 	while (_istspace (*line))
 			line++;
 
@@ -71,9 +71,9 @@ INT GetRedirection (LPTSTR s, LPTSTR ifn, LPTSTR ofn, LPTSTR efn, LPINT lpnFlags
 		lpnFlags = 0;
 		*ifn=('\0');
 		*ofn=('\0');
-		*efn=_T('\0');    
+		*efn=_T('\0');
 		return 1;
-	}  
+	}
 #endif
 	/* find and remove all the redirections first */
 	while (*sp)

@@ -18,7 +18,7 @@
 static DRIVER_DISPATCH PciDispatchDeviceControl;
 static NTSTATUS STDCALL PciDispatchDeviceControl(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp);
 
-static DRIVER_ADD_DEVICE PciAddDevice; 
+static DRIVER_ADD_DEVICE PciAddDevice;
 static NTSTATUS STDCALL PciAddDevice(IN PDRIVER_OBJECT DriverObject, IN PDEVICE_OBJECT PhysicalDeviceObject);
 
 static DRIVER_DISPATCH PciPowerControl;
@@ -293,7 +293,7 @@ PciCreateHardwareIDsString(PUNICODE_STRING HardwareIDs,
   Index++;
 
   Buffer[Index] = UNICODE_NULL;
-  
+
   BufferU.Length = BufferU.MaximumLength = (USHORT) Index * sizeof(WCHAR);
   BufferU.Buffer = Buffer;
 
@@ -660,7 +660,7 @@ PciDuplicateUnicodeString(
 
 
     if ((SourceString->Length == 0)
-     && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+     && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
                    RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
     {
         DestinationString->Length = 0;

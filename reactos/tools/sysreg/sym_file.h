@@ -37,7 +37,7 @@ namespace System_
 		typedef std::map<string, string> SymbolMap;
 //---------------------------------------------------------------------------------------
 ///
-/// ~SymbolFile 
+/// ~SymbolFile
 ///
 /// Description: destructor of class SymbolFile
 
@@ -47,7 +47,7 @@ namespace System_
 ///
 /// initialize
 ///
-/// Description: this function initialize the class. It searches the subdirs 
+/// Description: this function initialize the class. It searches the subdirs
 /// of ROS_OUTPUT and adds all files with name *.nostrip.* to a map with module
 /// name as the key.
 ///

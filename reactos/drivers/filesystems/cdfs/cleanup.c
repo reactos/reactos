@@ -22,7 +22,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             services/fs/cdfs/cleanup.c
  * PURPOSE:          CDROM (ISO 9660) filesystem driver
- * PROGRAMMER:       
+ * PROGRAMMER:
  * UPDATE HISTORY:
  */
 

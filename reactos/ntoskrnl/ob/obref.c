@@ -492,14 +492,14 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 /* Get the current process and granted access */
                 CurrentProcess = PsGetCurrentProcess();
                 GrantedAccess = CurrentProcess->GrantedAccess;
-                
+
                 /* Validate access */
                 /* ~GrantedAccess = RefusedAccess.*/
                 /* ~GrantedAccess & DesiredAccess = list of refused bits. */
                 /* !(~GrantedAccess & DesiredAccess) == TRUE means ALL requested rights are granted */
                 if ((AccessMode == KernelMode) ||
                     !(~GrantedAccess & DesiredAccess))
-                {                   
+                {
                     /* Check if the caller wanted handle information */
                     if (HandleInformation)
                     {
@@ -507,11 +507,11 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                         HandleInformation->HandleAttributes = 0;
                         HandleInformation->GrantedAccess = GrantedAccess;
                     }
-                    
+
                     /* Reference ourselves */
                     ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentProcess);
                     InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-                    
+
                     /* Return the pointer */
                     *Object = CurrentProcess;
                     ASSERT(*Object != NULL);
@@ -528,7 +528,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 /* The caller used this special handle value with a non-process type */
                 Status = STATUS_OBJECT_TYPE_MISMATCH;
             }
-            
+
             /* Return the status */
             return Status;
         }
@@ -540,14 +540,14 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 /* Get the current process and granted access */
                 CurrentThread = PsGetCurrentThread();
                 GrantedAccess = CurrentThread->GrantedAccess;
-                
+
                 /* Validate access */
                 /* ~GrantedAccess = RefusedAccess.*/
                 /* ~GrantedAccess & DesiredAccess = list of refused bits. */
                 /* !(~GrantedAccess & DesiredAccess) == TRUE means ALL requested rights are granted */
                 if ((AccessMode == KernelMode) ||
                     !(~GrantedAccess & DesiredAccess))
-                {                   
+                {
                     /* Check if the caller wanted handle information */
                     if (HandleInformation)
                     {
@@ -555,11 +555,11 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                         HandleInformation->HandleAttributes = 0;
                         HandleInformation->GrantedAccess = GrantedAccess;
                     }
-                    
+
                     /* Reference ourselves */
                     ObjectHeader = OBJECT_TO_OBJECT_HEADER(CurrentThread);
                     InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-                    
+
                     /* Return the pointer */
                     *Object = CurrentThread;
                     ASSERT(*Object != NULL);
@@ -576,7 +576,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                 /* The caller used this special handle value with a non-process type */
                 Status = STATUS_OBJECT_TYPE_MISMATCH;
             }
-            
+
             /* Return the status */
             return Status;
         }
@@ -612,7 +612,7 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
         {
             /* Get the granted access and validate it */
             GrantedAccess = HandleEntry->GrantedAccess;
-            
+
             /* Validate access */
             /* ~GrantedAccess = RefusedAccess.*/
             /* ~GrantedAccess & DesiredAccess = list of refused bits. */

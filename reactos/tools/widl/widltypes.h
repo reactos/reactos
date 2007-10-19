@@ -171,7 +171,7 @@ enum type_kind
     TKIND_UNION,
     TKIND_MAX
 };
-   
+
 struct _attr_t {
   enum attr_type type;
   union {

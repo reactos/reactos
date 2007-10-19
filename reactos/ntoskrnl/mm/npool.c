@@ -83,7 +83,7 @@ typedef struct _HDR_USED
     LIST_ENTRY TagListEntry;
 #if defined(NPOOL_REDZONE_CHECK) || defined(NPOOL_REDZONE_CHECK_FULL)
     ULONG UserSize;
-#endif 
+#endif
     BOOLEAN Dumped;
 } HDR_USED, *PHDR_USED;
 
@@ -911,7 +911,7 @@ MiDebugDumpNonPagedPool(BOOLEAN NewOnly)
    }
    DbgPrint("***************** Dump Complete ***************\n");
    KeReleaseSpinLock(&MmNpoolLock, oldIrql);
-#endif 
+#endif
 }
 
 #ifdef ENABLE_VALIDATE_POOL
@@ -1327,7 +1327,7 @@ static HDR_USED* get_block(unsigned int size, unsigned long alignment)
              break;
          }
       }
-      
+
       if (best)
       {
          if (size < PAGE_SIZE)
@@ -1346,7 +1346,7 @@ static HDR_USED* get_block(unsigned int size, unsigned long alignment)
          }
       }
       p = avl_get_next(FreeBlockListRoot, p);
-   }         
+   }
    /*
     * We didn't find anything suitable at all.
     */
@@ -1487,7 +1487,7 @@ void check_redzone_header(HDR_USED* hdr)
          HiOK = FALSE;
       }
    }
-   
+
    if (!HiOK || !LoOK)
    {
       c[0] = (CHAR)((hdr->Tag >> 24) & 0xFF);
@@ -1514,7 +1514,7 @@ void check_redzone_header(HDR_USED* hdr)
       KEBUGCHECK(0);
    }
 }
-#endif 
+#endif
 
 #ifdef NPOOL_REDZONE_CHECK_FULL
 void check_redzone_list(void)

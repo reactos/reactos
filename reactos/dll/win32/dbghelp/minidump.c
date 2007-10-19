@@ -65,9 +65,9 @@ static  void    dump_modules(struct process* pcs, HANDLE hFile, RVA* rva)
     mdModuleList.NumberOfModules = 0;
     for (module = pcs->lmodules; module; module = module->next)
         mdModuleList.NumberOfModules++;
-    WriteFile(hFile, &mdModuleList.NumberOfModules, 
+    WriteFile(hFile, &mdModuleList.NumberOfModules,
               sizeof(mdModuleList.NumberOfModules), &written, NULL);
-    *rva += sizeof(mdModuleList.NumberOfModules) +      
+    *rva += sizeof(mdModuleList.NumberOfModules) +
         sizeof(mdModule) * mdModuleList.NumberOfModules;
     for (module = pcs->lmodules; module; module = module->next)
     {
@@ -88,7 +88,7 @@ static  void    dump_modules(struct process* pcs, HANDLE hFile, RVA* rva)
     }
     for (module = pcs->lmodules; module; module = module->next)
     {
-        WriteFile(hFile, module->module.ModuleName, 
+        WriteFile(hFile, module->module.ModuleName,
                   strlen(module->module.ModuleName) + 1, &written, NULL);
         FIXME("CV and misc records not written\n");
     }
@@ -124,7 +124,7 @@ static  void    dump_system_info(struct process* pcs, HANDLE hFile, RVA* rva)
 
     WriteFile(hFile, &mdSysInfo, sizeof(mdSysInfo), &written, NULL);
     *rva += sizeof(mdSysInfo);
-    WriteFile(hFile, osInfo.szCSDVersion, strlen(osInfo.szCSDVersion) + 1, 
+    WriteFile(hFile, osInfo.szCSDVersion, strlen(osInfo.szCSDVersion) + 1,
               &written, NULL);
     *rva += strlen(osInfo.szCSDVersion) + 1;
 }
@@ -143,9 +143,9 @@ static  void    dump_threads(struct process* pcs, HANDLE hFile, RVA* rva)
     DBG_THREAD*                 thd;
 
     mdThdList.NumberOfThreads = pcs->num_threads;
-    WriteFile(hFile, &mdThdList.NumberOfThreads, sizeof(mdThdList.NumberOfThreads), 
+    WriteFile(hFile, &mdThdList.NumberOfThreads, sizeof(mdThdList.NumberOfThreads),
               &written, NULL);
-    *rva += sizeof(mdThdList.NumberOfThreads) + 
+    *rva += sizeof(mdThdList.NumberOfThreads) +
         mdThdList.NumberOfThreads * sizeof(mdThd);
     for (thd = pcs->threads; thd; thd = thd->next)
     {
@@ -214,7 +214,7 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD ProcessId, HANDLE hFile,
     mdHead.u.TimeDateStamp = time(NULL);
     mdHead.Flags = DumpType;
     WriteFile(hFile, &mdHead, sizeof(mdHead), &written, NULL);
-    
+
     /* 3) write stream directories */
     rva += (nStream + addStream) * sizeof(mdDir);
     /* 3.1) write data stream directories */
@@ -254,9 +254,9 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD ProcessId, HANDLE hFile,
         WriteFile(hFile, &mdDir, sizeof(mdDir), &written, NULL);
         currRva = SetFilePointer(hFile, 0, NULL, FILE_CURRENT);
         SetFilePointer(hFile, rva, NULL, FILE_BEGIN);
-        WriteFile(hFile, 
-                  UserStreamParam->UserStreamArray[i].Buffer, 
-                  UserStreamParam->UserStreamArray[i].BufferSize, 
+        WriteFile(hFile,
+                  UserStreamParam->UserStreamArray[i].Buffer,
+                  UserStreamParam->UserStreamArray[i].BufferSize,
                   &written, NULL);
         rva += UserStreamParam->UserStreamArray[i].BufferSize;
         SetFilePointer(hFile, currRva, NULL, FILE_BEGIN);

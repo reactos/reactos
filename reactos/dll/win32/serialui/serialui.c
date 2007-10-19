@@ -382,7 +382,7 @@ VOID OkButton(HWND hDlg)
 	/* Stop bits */
 	Index = SendMessageW(GetDlgItem(hDlg, IDC_STOPBITS), CB_GETCURSEL, 0, 0);
 	lpDlgInfo->lpCC->dcb.StopBits = StopBits[Index].StopBit;
-	
+
 	/* Flow Control */
 	Index = SendMessageW(GetDlgItem(hDlg, IDC_FLOW), CB_GETCURSEL, 0, 0);
 	if(lpDlgInfo->InitialFlowIndex != Index)

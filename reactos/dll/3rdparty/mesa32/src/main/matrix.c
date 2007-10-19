@@ -80,8 +80,8 @@ _mesa_Frustum( GLdouble left, GLdouble right,
    }
 
    _math_matrix_frustum( ctx->CurrentStack->Top,
-                         (GLfloat) left, (GLfloat) right, 
-			 (GLfloat) bottom, (GLfloat) top, 
+                         (GLfloat) left, (GLfloat) right,
+			 (GLfloat) bottom, (GLfloat) top,
 			 (GLfloat) nearval, (GLfloat) farval );
    ctx->NewState |= ctx->CurrentStack->DirtyFlag;
 }
@@ -124,8 +124,8 @@ _mesa_Ortho( GLdouble left, GLdouble right,
    }
 
    _math_matrix_ortho( ctx->CurrentStack->Top,
-                       (GLfloat) left, (GLfloat) right, 
-		       (GLfloat) bottom, (GLfloat) top, 
+                       (GLfloat) left, (GLfloat) right,
+		       (GLfloat) bottom, (GLfloat) top,
 		       (GLfloat) nearval, (GLfloat) farval );
    ctx->NewState |= ctx->CurrentStack->DirtyFlag;
 }
@@ -217,7 +217,7 @@ _mesa_MatrixMode( GLenum mode )
  * Push the current matrix stack.
  *
  * \sa glPushMatrix().
- * 
+ *
  * Verifies the current matrix stack is not full, and duplicates the top-most
  * matrix in the stack. Marks __GLcontextRec::NewState with the stack dirty
  * flag.
@@ -257,7 +257,7 @@ _mesa_PushMatrix( void )
  * Pop the current matrix stack.
  *
  * \sa glPopMatrix().
- * 
+ *
  * Flushes the vertices, verifies the current matrix stack is not empty, and
  * moves the stack head down. Marks __GLcontextRec::NewState with the dirty
  * stack flag.
@@ -444,7 +444,7 @@ _mesa_Translatef( GLfloat x, GLfloat y, GLfloat z )
    ctx->NewState |= ctx->CurrentStack->DirtyFlag;
 }
 
- 
+
 #if _HAVE_FULL_GL
 void GLAPIENTRY
 _mesa_LoadMatrixd( const GLdouble *m )
@@ -534,7 +534,7 @@ _mesa_MultTransposeMatrixdARB( const GLdouble *m )
 
 /**
  * Set the viewport.
- * 
+ *
  * \param x, y coordinates of the lower-left corner of the viewport rectangle.
  * \param width width of the viewport rectangle.
  * \param height height of the viewport rectangle.
@@ -555,7 +555,7 @@ _mesa_Viewport( GLint x, GLint y, GLsizei width, GLsizei height )
 /**
  * Set new viewport parameters and update derived state (the _WindowMap
  * matrix).  Usually called from _mesa_Viewport().
- * 
+ *
  * \param ctx GL context.
  * \param x, y coordinates of the lower left corner of the viewport rectangle.
  * \param width width of the viewport rectangle.
@@ -674,7 +674,7 @@ _mesa_DepthRange( GLclampd nearval, GLclampd farval )
  *
  * Calls _math_matrix_analyse() with the top-matrix of the projection matrix
  * stack, and recomputes user clip positions if necessary.
- * 
+ *
  * \note This routine references __GLcontextRec::Tranform attribute values to
  * compute userclip positions in clip space, but is only called on
  * _NEW_PROJECTION.  The _mesa_ClipPlane() function keeps these values up to
@@ -738,10 +738,10 @@ void _mesa_update_modelview_project( GLcontext *ctx, GLuint new_state )
 {
    if (new_state & _NEW_MODELVIEW) {
       _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
-    
+
       /* Bring cull position uptodate.
        */
-      TRANSFORM_POINT3( ctx->Transform.CullObjPos, 
+      TRANSFORM_POINT3( ctx->Transform.CullObjPos,
 			ctx->ModelviewMatrixStack.Top->inv,
 			ctx->Transform.CullEyePos );
    }
@@ -770,7 +770,7 @@ void _mesa_update_modelview_project( GLcontext *ctx, GLuint new_state )
  * \param stack matrix stack.
  * \param maxDepth maximum stack depth.
  * \param dirtyFlag dirty flag.
- * 
+ *
  * Allocates an array of \p maxDepth elements for the matrix stack and calls
  * _math_matrix_ctr() and _math_matrix_alloc_inv() for each element to
  * initialize it.
@@ -795,9 +795,9 @@ init_matrix_stack( struct matrix_stack *stack,
 
 /**
  * Free matrix stack.
- * 
+ *
  * \param stack matrix stack.
- * 
+ *
  * Calls _math_matrix_dtr() for each element of the matrix stack and
  * frees the array.
  */
@@ -843,7 +843,7 @@ void _mesa_init_matrix( GLcontext * ctx )
       init_matrix_stack(&ctx->TextureMatrixStack[i], MAX_TEXTURE_STACK_DEPTH,
                         _NEW_TEXTURE_MATRIX);
    for (i = 0; i < MAX_PROGRAM_MATRICES; i++)
-      init_matrix_stack(&ctx->ProgramMatrixStack[i], 
+      init_matrix_stack(&ctx->ProgramMatrixStack[i],
 		        MAX_PROGRAM_MATRIX_STACK_DEPTH, _NEW_TRACK_MATRIX);
    ctx->CurrentStack = &ctx->ModelviewMatrixStack;
 
@@ -854,7 +854,7 @@ void _mesa_init_matrix( GLcontext * ctx )
 
 /**
  * Free the context matrix data.
- * 
+ *
  * \param ctx GL context.
  *
  * Frees each of the matrix stacks and the combined modelview-projection
@@ -877,7 +877,7 @@ void _mesa_free_matrix_data( GLcontext *ctx )
 }
 
 
-/** 
+/**
  * Initialize the context transform attribute group.
  *
  * \param ctx GL context.
@@ -903,11 +903,11 @@ void _mesa_init_transform( GLcontext *ctx )
 }
 
 
-/** 
+/**
  * Initialize the context viewport attribute group.
  *
  * \param ctx GL context.
- * 
+ *
  * \todo Move this to a new file with other 'viewport' routines.
  */
 void _mesa_init_viewport( GLcontext *ctx )
@@ -928,11 +928,11 @@ void _mesa_init_viewport( GLcontext *ctx )
 }
 
 
-/** 
+/**
  * Free the context viewport attribute group data.
  *
  * \param ctx GL context.
- * 
+ *
  * \todo Move this to a new file with other 'viewport' routines.
  */
 void _mesa_free_viewport_data( GLcontext *ctx )

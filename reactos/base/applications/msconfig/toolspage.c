@@ -18,7 +18,7 @@ void FillListView ( void );
 
 DWORD ListItems_Cmds[20];
 DWORD ListItems_Params[20];
-        
+
 void AddItem ( DWORD name_id, DWORD descr_id, DWORD cmd_id , DWORD param_id ) {
     TCHAR szTemp[256];
     LV_ITEM item;
@@ -91,9 +91,9 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_COMMAND:
         {
             switch (LOWORD(wParam))
-            { 
+            {
                 case IDC_BTN_RUN:
-                { 
+                {
                     if (ListView_GetSelectionMark(hToolsListCtrl) != -1)
                     {
                         LoadString(hInst, ListItems_Cmds[ListView_GetSelectionMark(hToolsListCtrl)], szTemp, 256);
@@ -112,7 +112,7 @@ ToolsPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
                 switch (nmh->code)
                 {
                     case NM_CLICK:
-                    {   
+                    {
                         lpnmitem = (LPNMITEMACTIVATE) lParam;
                         if (lpnmitem->iItem > -1)
                         {

@@ -48,9 +48,9 @@ DWORD CALLBACK HelDdSurfLock(LPDDHAL_LOCKDATA lpLockData)
 
 DWORD CALLBACK HelDdSurfreserved4(DWORD *lpPtr)
 {
-    /* 
+    /*
        This api is not doucment by MS So I leave it
-       as stub. 
+       as stub.
      */
 
     DX_STUB;

@@ -53,7 +53,7 @@ friend class Subdivider;
 public:
     			Patchlist( Quilt *, REAL *, REAL * );
     			Patchlist( Patchlist &, int ,  REAL );
-    			~Patchlist();	
+    			~Patchlist();
     void		bbox();
     int			cullCheck( void );
     void		getstepsize( void );
@@ -80,14 +80,14 @@ Patchlist::getStepsize( int param )
 
 inline int
 Patchlist::get_uorder()
-{  
+{
    return patch->get_uorder();
 
 }
 
 inline int
  Patchlist::get_vorder()
-{ 
+{
   return patch->get_vorder();
 }
 

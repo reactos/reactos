@@ -7,7 +7,7 @@
 extern "C" {
 #endif
 #define MAXIMUM_LEADBYTES 12
-typedef struct _CPTABLEINFO 
+typedef struct _CPTABLEINFO
 {
    USHORT  CodePage;
    USHORT  MaximumCharacterSize;
@@ -23,7 +23,7 @@ typedef struct _CPTABLEINFO
    PUSHORT DBCSOffsets;
 } CPTABLEINFO, *PCPTABLEINFO;
 
-typedef struct _NLSTABLEINFO 
+typedef struct _NLSTABLEINFO
 {
    CPTABLEINFO OemTableInfo;
    CPTABLEINFO AnsiTableInfo;
@@ -34,4 +34,4 @@ typedef struct _NLSTABLEINFO
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif

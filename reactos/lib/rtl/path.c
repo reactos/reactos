@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/path.c
  * PURPOSE:         Path and current directory functions
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES *****************************************************************/

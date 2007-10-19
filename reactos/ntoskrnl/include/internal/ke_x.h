@@ -7,7 +7,7 @@
 */
 
 //
-// Thread Dispatcher Header DebugActive Mask 
+// Thread Dispatcher Header DebugActive Mask
 //
 #define DR_MASK(x)                              1 << x
 #define DR_ACTIVE_MASK                          0x10

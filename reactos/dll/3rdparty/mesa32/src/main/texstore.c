@@ -165,7 +165,7 @@ compute_component_mapping(GLenum logicalBaseFormat, GLenum textureBaseFormat,
       _mesa_problem(NULL, "Unexpected logicalBaseFormat");
       map[0] = map[1] = 0;
       break;
-   }   
+   }
 }
 
 
@@ -556,7 +556,7 @@ _mesa_make_temp_chan_image(GLcontext *ctx, GLuint dims,
  * \param count  number of pixels to copy/swizzle.
  */
 static void
-swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src, 
+swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src,
              GLuint srcComponents, const GLubyte *map, GLuint count)
 {
    GLubyte tmp[8];
@@ -568,8 +568,8 @@ swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src,
    switch (dstComponents) {
    case 4:
       for (i = 0; i < count; i++) {
- 	 COPY_4UBV(tmp, src); 
-	 src += srcComponents;      
+ 	 COPY_4UBV(tmp, src);
+	 src += srcComponents;
 	 dst[0] = tmp[map[0]];
 	 dst[1] = tmp[map[1]];
 	 dst[2] = tmp[map[2]];
@@ -579,8 +579,8 @@ swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src,
       break;
    case 3:
       for (i = 0; i < count; i++) {
- 	 COPY_4UBV(tmp, src); 
-	 src += srcComponents;      
+ 	 COPY_4UBV(tmp, src);
+	 src += srcComponents;
 	 dst[0] = tmp[map[0]];
 	 dst[1] = tmp[map[1]];
 	 dst[2] = tmp[map[2]];
@@ -589,8 +589,8 @@ swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src,
       break;
    case 2:
       for (i = 0; i < count; i++) {
- 	 COPY_4UBV(tmp, src); 
-	 src += srcComponents;      
+ 	 COPY_4UBV(tmp, src);
+	 src += srcComponents;
 	 dst[0] = tmp[map[0]];
 	 dst[1] = tmp[map[1]];
 	 dst += 2;
@@ -604,7 +604,7 @@ swizzle_copy(GLubyte *dst, GLuint dstComponents, const GLubyte *src,
  * Transfer a GLubyte texture image with component swizzling.
  */
 static void
-_mesa_swizzle_ubyte_image(GLcontext *ctx, 
+_mesa_swizzle_ubyte_image(GLcontext *ctx,
 			  GLuint dimensions,
 			  GLenum srcFormat,
 			  const GLubyte *dstmap, GLint dstComponents,
@@ -645,7 +645,7 @@ _mesa_swizzle_ubyte_image(GLcontext *ctx,
    if (srcRowStride == srcWidth * srcComponents &&
        (srcImageStride == srcWidth * srcHeight * srcComponents ||
         srcDepth == 1)) {
-      swizzle_copy(dstImage, dstComponents, srcImage, srcComponents, map, 
+      swizzle_copy(dstImage, dstComponents, srcImage, srcComponents, map,
 		   srcWidth * srcHeight * srcDepth);
    }
    else {
@@ -730,7 +730,7 @@ memcpy_texture(GLcontext *ctx,
  *   _mesa_texformat_luminance
  *   _mesa_texformat_luminance_alpha
  *   _mesa_texformat_intensity
- * 
+ *
  * \param dims  either 1 or 2 or 3
  * \param baseInternalFormat  user-specified base internal format
  * \param dstFormat  destination Mesa texture format
@@ -1077,7 +1077,7 @@ _mesa_texstore_rgba8888(STORE_PARAMS)
 #if 0
    else if (!ctx->_ImageTransferState &&
 	    !srcPacking->SwapBytes &&
-	    srcType == GL_UNSIGNED_BYTE && 
+	    srcType == GL_UNSIGNED_BYTE &&
 	    dstFormat == &_mesa_texformat_rgba8888 &&
 	    littleEndian &&
 	    /* Three texture formats involved: srcFormat,
@@ -1097,14 +1097,14 @@ _mesa_texstore_rgba8888(STORE_PARAMS)
       dstmap[2] = 1;
       dstmap[1] = 2;
       dstmap[0] = 3;
-      
+
       _mesa_swizzle_ubyte_image(ctx, dims,
 				srcFormat,
 				dstmap, 4,
 				dstAddr, dstXoffset, dstYoffset, dstZoffset,
 				dstRowStride, dstImageStride,
 				srcWidth, srcHeight, srcDepth, srcAddr,
-				srcPacking);      
+				srcPacking);
    }
 #endif
    else {
@@ -1257,7 +1257,7 @@ _mesa_texstore_argb8888(STORE_PARAMS)
    else if (!ctx->_ImageTransferState &&
 	    !srcPacking->SwapBytes &&
 	    dstFormat == &_mesa_texformat_argb8888 &&
-	    srcType == GL_UNSIGNED_BYTE && 
+	    srcType == GL_UNSIGNED_BYTE &&
 	    littleEndian &&
 	    /* Three texture formats involved: srcFormat,
 	     * baseInternalFormat and destFormat (GL_RGBA). Only two
@@ -1275,14 +1275,14 @@ _mesa_texstore_argb8888(STORE_PARAMS)
       dstmap[2] = 0;		/* red */
       dstmap[1] = 1;		/* green */
       dstmap[0] = 2;		/* blue */
- 
+
       _mesa_swizzle_ubyte_image(ctx, dims,
 				srcFormat,
 				dstmap, 4,
 				dstAddr, dstXoffset, dstYoffset, dstZoffset,
 				dstRowStride, dstImageStride,
 				srcWidth, srcHeight, srcDepth, srcAddr,
-				srcPacking);      
+				srcPacking);
    }
    else {
       /* general path */

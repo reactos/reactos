@@ -52,7 +52,7 @@ GdiAlphaBlend(
    if ( hDCSrc == NULL ) return FALSE;
 
    if (GDI_HANDLE_GET_TYPE(hDCSrc) == GDI_OBJECT_TYPE_METADC) return FALSE;
-      
+
    return NtGdiAlphaBlend(
                       hDCDst,
                         DstX,
@@ -71,7 +71,7 @@ GdiAlphaBlend(
 /*
  * @implemented
  */
-HGDIOBJ 
+HGDIOBJ
 STDCALL
 GdiFixUpHandle(HGDIOBJ hGdiObj)
 {
@@ -103,7 +103,7 @@ GdiQueryTable(VOID)
 BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 {
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 && 
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
      (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
@@ -118,7 +118,7 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
 BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
 {
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 && 
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
      (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
@@ -137,7 +137,7 @@ PLDC GdiGetLDC(HDC hDC)
     PDC_ATTR Dc_Attr;
     if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr))
       return NULL;
-    return Dc_Attr->pvLDC;  
+    return Dc_Attr->pvLDC;
 }
 
 /*

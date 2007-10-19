@@ -38,7 +38,7 @@
 *
 *    22-Jun-2005 (Brandon Turner <turnerb7@msu.edu>)
 *        Implemented /A   example "del /A:H /A:-R *.exe -ping.exe"
-*    
+*
 *    07-Aug-2005
 *        Removed the exclusive deletion (see two comments above) because '-' is a valid file name character.
 *        Optimized the recursive deletion in directories.
@@ -104,13 +104,13 @@ static BOOL
 RemoveFile (LPTSTR lpFileName, DWORD dwFlags, WIN32_FIND_DATA* f)
 {
 	/*This function is called by CommandDelete and
-	does the actual process of deleting the single 
+	does the actual process of deleting the single
 	file*/
 		if(CheckCtrlBreak(BREAK_INPUT))
 			return 1;
 
         /*check to see if it is read only and if this is done based on /A
-          if it is done by file name, access is denied. However, if it is done 
+          if it is done by file name, access is denied. However, if it is done
           using the /A switch you must un-read only the file and allow it to be
           deleted*/
         if((dwFlags & DEL_ATTRIBUTES) || (dwFlags & DEL_FORCE))
@@ -174,7 +174,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 
         _tcscpy(szFileName, FileName);
 
-        if(_tcschr (szFileName, _T('*')) == NULL && 
+        if(_tcschr (szFileName, _T('*')) == NULL &&
 	   IsExistingDirectory (szFileName))
         {
 	        /* If it doesnt have a \ at the end already then on needs to be added */
@@ -282,7 +282,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 	                if(RemoveFile (szFullPath, *dwFlags, &f))
 		                dwFiles++;
 		        else
-                        {		
+                        {
 		                ErrorMessage (GetLastError(), _T(""));
 //                                FindClose(hFile);
 //                                return -1;
@@ -295,7 +295,7 @@ DeleteFiles(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 }
 
 
-static DWORD 
+static DWORD
 ProcessDirectory(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
 {
         TCHAR szFullPath[MAX_PATH];
@@ -364,7 +364,7 @@ ProcessDirectory(LPTSTR FileName, DWORD* dwFlags, DWORD dwAttrFlags)
                 }
         }
         return dwFiles;
-}        
+}
 
 
 
@@ -463,7 +463,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
 					}
 					ch = _totupper (arg[i][3]);
 					if (_tcslen (arg[i]) == 4)
-					{						
+					{
 						if(ch == _T('A'))
 						{
 							dwAttrFlags |= ATTR_ARCHIVE;
@@ -545,7 +545,7 @@ INT CommandDelete (LPTSTR cmd, LPTSTR param)
                 dwFiles += ProcessDirectory(szOrginalArg, &dwFlags, dwAttrFlags);
 
         }
-	
+
 	freep (arg);
 
 	/*Based on MS cmd, we only tell what files are being deleted when /S is used */

@@ -145,7 +145,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '9',         NOCAPS, {'9', '('} },
   { '0',         NOCAPS, {'0', ')'} },
   { 'Q',         NOCAPS, {';', ':'} },
- 
+
   /* Specials */
   /* Ctrl-_ generates GR */
   { VK_OEM_PLUS    ,NOCAPS, {'=', '+'} },
@@ -168,9 +168,9 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
   /* Legacy (telnet-style) ascii escapes */
-  { VK_OEM_1,   NOCAPS, {WCH_DEAD, WCH_DEAD,    WCH_NONE} }, 
+  { VK_OEM_1,   NOCAPS, {WCH_DEAD, WCH_DEAD,    WCH_NONE} },
   { VK_EMPTY,   NOCAPS, {';',      0x00A8,      WCH_NONE} },
-  { 'W',        NOCAPS, {0x3C2,    WCH_DEAD,    WCH_NONE} }, 
+  { 'W',        NOCAPS, {0x3C2,    WCH_DEAD,    WCH_NONE} },
   { VK_EMPTY,   NOCAPS, {0x3C2,    0x385,       WCH_NONE} },
   { VK_OEM_4, 0, {'[', '{', 0x1b /* ESC */} },
   { VK_OEM_6, 0, {']', '}', 0x1d /* GS */} },
@@ -261,9 +261,9 @@ ROSDATA DEADKEY  deadkey[] =
   { DEADTRANS(0x3C9, L';', 0x3CE, 0x000) }, //MIKRO  W
   { DEADTRANS(0x3A9, L';', 0x38F, 0x000) }, //MEGALO W
   { DEADTRANS(0x3C5, 0x00A8, 0x3CB, 0x000) }, //MIKRO  Y ME DIALYTIKA
-  { DEADTRANS(0x3A5, 0x00A8, 0x3AB, 0x000) }, //MEGALO Y ME DIALYTIKA	
+  { DEADTRANS(0x3A5, 0x00A8, 0x3AB, 0x000) }, //MEGALO Y ME DIALYTIKA
   { DEADTRANS(0x3B9, 0x00A8, 0x3CA, 0x000) }, //MIKRO  I ME DIALYTIKA
-  { DEADTRANS(0x399, 0x00A8, 0x3AA, 0x000) }, //MEGALO I ME DIALYTIKA	
+  { DEADTRANS(0x399, 0x00A8, 0x3AA, 0x000) }, //MEGALO I ME DIALYTIKA
   { DEADTRANS(0x3C5, 0x385, 0x3B0, 0x000) }, //MIKRO  Y ME DIALYTIKA
   { DEADTRANS(0x3B9, 0x385, 0x390, 0x000) }, //MIKRO  I ME DIALYTIKA
   { 0, 0, 0}

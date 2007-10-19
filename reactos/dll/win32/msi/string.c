@@ -78,14 +78,14 @@ string_table *msi_init_stringtable( int entries, UINT codepage )
 
     st = msi_alloc( sizeof (string_table) );
     if( !st )
-        return NULL;    
+        return NULL;
     if( entries < 1 )
         entries = 1;
     st->strings = msi_alloc_zero( sizeof (msistring) * entries );
     if( !st->strings )
     {
         msi_free( st );
-        return NULL;    
+        return NULL;
     }
     st->maxcount = entries;
     st->freeslot = 1;
@@ -300,7 +300,7 @@ UINT msi_id2stringW( string_table *st, UINT id, LPWSTR buffer, UINT *sz )
 
     if( *sz < len )
         *sz = len;
-    memcpy( buffer, str, (*sz)*sizeof(WCHAR) ); 
+    memcpy( buffer, str, (*sz)*sizeof(WCHAR) );
     *sz = len;
 
     return ERROR_SUCCESS;
@@ -342,7 +342,7 @@ UINT msi_id2stringA( string_table *st, UINT id, LPSTR buffer, UINT *sz )
     {
         n = strlenW( str ) + 1;
         while( n && (len > *sz) )
-            len = WideCharToMultiByte( st->codepage, 0, 
+            len = WideCharToMultiByte( st->codepage, 0,
                            str, --n, NULL, 0, NULL, NULL );
     }
     else
@@ -412,7 +412,7 @@ UINT msi_strcmp( string_table *st, UINT lval, UINT rval, UINT *res )
     l_str = msi_string_lookup_id( st, lval );
     if( !l_str )
         return ERROR_INVALID_PARAMETER;
-    
+
     r_str = msi_string_lookup_id( st, rval );
     if( !r_str )
         return ERROR_INVALID_PARAMETER;

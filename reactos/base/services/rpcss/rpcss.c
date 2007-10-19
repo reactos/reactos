@@ -1,4 +1,4 @@
-/* 
+/*
  * PROJECT:          ReactOS RpcSs service
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/rpcss/rpcss.c

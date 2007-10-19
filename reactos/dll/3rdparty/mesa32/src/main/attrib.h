@@ -1,7 +1,7 @@
 /**
  * \file attrib.h
  * Attribute stacks.
- * 
+ *
  * \if subset
  * (No-op)
  *
@@ -55,7 +55,7 @@ _mesa_PushClientAttrib( GLbitfield mask );
 extern void GLAPIENTRY
 _mesa_PopClientAttrib( void );
 
-extern void 
+extern void
 _mesa_init_attrib( GLcontext *ctx );
 
 #else

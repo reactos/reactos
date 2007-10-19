@@ -1706,24 +1706,24 @@ static int MACRO_CheckArgs(void* pa[], unsigned max, const char* args)
 
             switch (*args)
             {
-            case 'S': 
+            case 'S':
                 if (t != STRING)
                 {WINE_WARN("missing S\n");return -1;}
-                pa[idx] = (void*)yylval.string;  
+                pa[idx] = (void*)yylval.string;
                 break;
             case 'U':
             case 'I':
                 if (t != INTEGER)
-                {WINE_WARN("missing U\n");return -1;}   
-                pa[idx] = (void*)yylval.integer; 
+                {WINE_WARN("missing U\n");return -1;}
+                pa[idx] = (void*)yylval.integer;
                 break;
             case 'B':
-                if (t != BOOL_FUNCTION) 
-                {WINE_WARN("missing B\n");return -1;}   
+                if (t != BOOL_FUNCTION)
+                {WINE_WARN("missing B\n");return -1;}
                 if (MACRO_CallBoolFunc(yylval.function, yylval.proto, &pa[idx]) == 0)
                     return -1;
                 break;
-            default: 
+            default:
                 WINE_WARN("unexpected %s while args is %c\n", ts(t), *args);
                 return -1;
             }

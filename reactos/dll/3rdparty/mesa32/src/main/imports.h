@@ -663,7 +663,7 @@ _mesa_align_free( void *ptr );
 extern void *
 _mesa_exec_malloc( GLuint size );
 
-extern void 
+extern void
 _mesa_exec_free( void *addr );
 
 extern void *

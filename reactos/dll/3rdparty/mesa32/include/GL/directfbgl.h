@@ -37,7 +37,7 @@ typedef struct {
      int        depth_size;
      int        stencil_size;
      int        aux_buffers;
-    
+
      int        red_size;
      int        green_size;
      int        blue_size;

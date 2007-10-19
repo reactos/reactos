@@ -45,7 +45,7 @@ static INLINE GLint get_size( const GLfloat *f )
 }
 
 
-/* Some nasty stuff still hanging on here.  
+/* Some nasty stuff still hanging on here.
  *
  * TODO - remove VB->ColorPtr, etc and just use the AttrPtr's.
  */
@@ -86,17 +86,17 @@ static void _tnl_bind_vertex_list( GLcontext *ctx,
       }
    }
 
-   
+
    /* Copy edgeflag to a contiguous array
     */
    if (ctx->Polygon.FrontMode != GL_FILL || ctx->Polygon.BackMode != GL_FILL) {
       if (node->attrsz[_TNL_ATTRIB_EDGEFLAG]) {
-	 VB->EdgeFlag = _tnl_translate_edgeflag( ctx, data, 
+	 VB->EdgeFlag = _tnl_translate_edgeflag( ctx, data,
 						 node->count,
 						 node->vertex_size );
 	 data++;
       }
-      else 
+      else
 	 VB->EdgeFlag = _tnl_import_current_edgeflag( ctx, node->count );
    }
 
@@ -120,7 +120,7 @@ static void _tnl_bind_vertex_list( GLcontext *ctx,
 static void _playback_copy_to_current( GLcontext *ctx,
 				       const struct tnl_vertex_list *node )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    const GLfloat *data;
    GLuint i;
 
@@ -193,7 +193,7 @@ void _tnl_playback_vertex_list( GLcontext *ctx, void *data )
 	 _tnl_loopback_vertex_list( ctx, node );
 	 return;
       }
-      
+
       if (ctx->NewState)
 	 _mesa_update_state( ctx );
 

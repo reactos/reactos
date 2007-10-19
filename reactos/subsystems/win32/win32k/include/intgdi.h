@@ -122,8 +122,8 @@ IntGdiPolyPolygon(DC      *dc,
                   int     Count);
 
 BOOL FASTCALL IntGdiGradientFill(DC *dc,
-    PTRIVERTEX pVertex, 
-    ULONG uVertex, 
+    PTRIVERTEX pVertex,
+    ULONG uVertex,
     PVOID pMesh, ULONG uMesh, ULONG ulMode);
 
 /* Rgn functions */
@@ -285,7 +285,7 @@ IntGetPaletteEntries(HPALETTE  hpal,
                      UINT  Entries,
                      LPPALETTEENTRY  pe);
 
-UINT STDCALL 
+UINT STDCALL
 IntSetPaletteEntries(HPALETTE  hpal,
                       UINT  Start,
                       UINT  Entries,

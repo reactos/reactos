@@ -239,7 +239,7 @@ NTSTATUS NTAPI UnlockAndMaybeComplete
   BOOL ShouldUnlock ) {
 
     if( Status == STATUS_PENDING ) {
-	/* We should firstly mark this IRP as pending, because 
+	/* We should firstly mark this IRP as pending, because
 	   otherwise it may be completed by StreamSocketConnectComplete()
 	   before we return from SocketStateUnlock(). */
 	IoMarkIrpPending( Irp );

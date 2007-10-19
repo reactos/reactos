@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Splay-Tree implementation
  * FILE:              lib/rtl/splaytree.c
- * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)   
+ * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -204,7 +204,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
      *            P becomes N's left child, and G becomes N's right child.
      *
      * Finally, if N doesn't have a grandparent node, we simply perform a
-     * left or right rotation to move it to the root. 
+     * left or right rotation to move it to the root.
      *
      * By performing a splay on the node of interest after every operation,
      * we keep recently accessed nodes near the root and keep the tree
@@ -236,7 +236,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                 RtlLeftChild(G) = RtlRightChild(P);
 
                 /*
-                 * If they exist, update their parent pointers too, 
+                 * If they exist, update their parent pointers too,
                  * since they've changed trees.
                  */
                 if (RtlLeftChild(P)) RtlParent(RtlLeftChild(P)) = P;
@@ -297,7 +297,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                 RtlLeftChild(P) = RtlRightChild(N);
 
                 /*
-                 * If they exist, update their parent pointers too, 
+                 * If they exist, update their parent pointers too,
                  * since they've changed trees.
                  */
                 if (RtlRightChild(G)) RtlParent(RtlRightChild(G)) = G;
@@ -378,7 +378,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                 RtlRightChild(P) = RtlLeftChild(N);
 
                 /*
-                 * If they exist, update their parent pointers too, 
+                 * If they exist, update their parent pointers too,
                  * since they've changed trees.
                  */
                 if (RtlRightChild(G)) RtlParent(RtlRightChild(G)) = G;
@@ -439,7 +439,7 @@ RtlSplay(PRTL_SPLAY_LINKS Links)
                 RtlLeftChild(G) = RtlRightChild(N);
 
                 /*
-                 * If they exist, update their parent pointers too, 
+                 * If they exist, update their parent pointers too,
                  * since they've changed trees.
                  */
                 if (RtlRightChild(P)) RtlParent(RtlRightChild(P)) = P;

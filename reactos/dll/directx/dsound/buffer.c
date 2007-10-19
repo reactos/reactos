@@ -1023,7 +1023,7 @@ HRESULT WINAPI IDirectSoundBufferImpl_Create(
 	if (wfex->wFormatTag == WAVE_FORMAT_PCM) {
 		alloc_size = sizeof(WAVEFORMATEX);
 		cp_size = sizeof(PCMWAVEFORMAT);
-	} else 
+	} else
 		alloc_size = cp_size = sizeof(WAVEFORMATEX) + wfex->cbSize;
 
 	dsb->pwfx = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,alloc_size);
@@ -1037,8 +1037,8 @@ HRESULT WINAPI IDirectSoundBufferImpl_Create(
 	CopyMemory(dsb->pwfx, wfex, cp_size);
 
 	if (dsbd->dwBufferBytes % dsbd->lpwfxFormat->nBlockAlign)
-		dsb->buflen = dsbd->dwBufferBytes + 
-			(dsbd->lpwfxFormat->nBlockAlign - 
+		dsb->buflen = dsbd->dwBufferBytes +
+			(dsbd->lpwfxFormat->nBlockAlign -
 			(dsbd->dwBufferBytes % dsbd->lpwfxFormat->nBlockAlign));
 	else
 		dsb->buflen = dsbd->dwBufferBytes;

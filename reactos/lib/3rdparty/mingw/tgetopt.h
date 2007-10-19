@@ -66,7 +66,7 @@ extern int getopt_long (int argc, char *const *argv, const char *shortopts,
 extern int getopt_long_only (int argc, char *const *argv,
 			     const char *shortopts, const struct option *longopts, int *longind);
 
-extern int _wgetopt (int argc, wchar_t *const *argv, const wchar_t *shortopts);        
+extern int _wgetopt (int argc, wchar_t *const *argv, const wchar_t *shortopts);
 extern int _wgetopt_long (int argc, wchar_t *const *argv, const wchar_t *shortopts,
 		          const struct _woption *longopts, int *longind);
 extern int _wgetopt_long_only (int argc, wchar_t *const *argv,

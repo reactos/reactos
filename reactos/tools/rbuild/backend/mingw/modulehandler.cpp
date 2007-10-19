@@ -189,7 +189,7 @@ MingwModuleHandler::InstanciateHandler (
 		case Win32DLL:
 			handler = new MingwWin32DLLModuleHandler ( module );
 			break;
-		case Win32OCX: 
+		case Win32OCX:
 			handler = new MingwWin32OCXModuleHandler ( module );
 			break;
 		case KernelModeDriver:
@@ -2388,7 +2388,7 @@ MingwModuleHandler::GetDefinitionFilename () const
 		else
 			directory = SourceDirectory;
 
-		return new FileLocation ( directory, 
+		return new FileLocation ( directory,
 		                          module.importLibrary->source->relative_path,
 		                          module.importLibrary->source->name );
 	}
@@ -3287,7 +3287,7 @@ MingwBootProgramModuleHandler::GenerateBootProgramModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_BOOTPROG)\n" );
 
 	fprintf ( fMakefile, "\t$(%s_PREPARE) $(OUTPUT)$(SEP)%s %s\n",
-		module.buildtype.c_str (), 
+		module.buildtype.c_str (),
 		NormalizeFilename( backend->GetFullName ( *payload->output ) ).c_str (),
 		backend->GetFullName ( junk_cpy ).c_str () );
 

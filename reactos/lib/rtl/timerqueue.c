@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Timer Queue implementation
  * FILE:              lib/rtl/timerqueue.c
- * PROGRAMMER:        
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

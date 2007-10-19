@@ -1438,7 +1438,7 @@ static void WINAPI DefaultHandler_IAdviseSink_OnClose(
     IAdviseSink *iface)
 {
     DefaultHandler *This = impl_from_IAdviseSink(iface);
-    
+
     TRACE("()\n");
 
     if (This->oleAdviseHolder)

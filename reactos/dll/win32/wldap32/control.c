@@ -338,7 +338,7 @@ ULONG CDECL ldap_free_controlsA( LDAPControlA **controls )
  *
  * RETURNS
  *  LDAP_SUCCESS
- *  
+ *
  * NOTES
  *  Obsolete, use ldap_controls_freeW.
  */

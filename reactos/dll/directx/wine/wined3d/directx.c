@@ -453,7 +453,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
             gl_info->gl_vendor = VENDOR_NVIDIA;
         } else if (strstr(gl_string, "ATI")) {
             gl_info->gl_vendor = VENDOR_ATI;
-        } else if (strstr(gl_string, "Intel(R)") || 
+        } else if (strstr(gl_string, "Intel(R)") ||
 		   strstr(gl_info->gl_renderer, "Intel(R)")) {
             gl_info->gl_vendor = VENDOR_INTEL;
         } else if (strstr(gl_string, "Mesa")) {
@@ -842,7 +842,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
      * without a full database we can return a card with similar features. Second the size of the database
      * can be made quite small because when you know what type of 3d functionality a card has, you know to which
      * GPU family the GPU must belong. Because of this you only have to check a small part of the renderer string
-     * to distinguishes between different models from that family. 
+     * to distinguishes between different models from that family.
      */
     switch (gl_info->gl_vendor) {
         case VENDOR_NVIDIA:
@@ -914,7 +914,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
                         strstr(gl_info->gl_renderer, "X1300") ||
                         strstr(gl_info->gl_renderer, "X1400"))
                             gl_info->gl_card = CARD_ATI_RADEON_X700;
-                /* Radeon R3xx */ 
+                /* Radeon R3xx */
                 else
                     gl_info->gl_card = CARD_ATI_RADEON_9500; /* Radeon 9500/9550/9600/9700/9800/X300/X550/X600 */
             } else if(WINE_D3D8_CAPABLE(gl_info)) {
@@ -942,7 +942,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
         case VENDOR_MESA:
         case VENDOR_WINE:
         default:
-            /* Default to generic Nvidia hardware based on the supported OpenGL extensions. The choice 
+            /* Default to generic Nvidia hardware based on the supported OpenGL extensions. The choice
              * for Nvidia was because the hardware and drivers they make are of good quality. This makes
              * them a good generic choice.
              */
@@ -950,7 +950,7 @@ BOOL IWineD3DImpl_FillGLCaps(WineD3D_GL_Info *gl_info) {
             if(WINE_D3D9_CAPABLE(gl_info))
                 gl_info->gl_card = CARD_NVIDIA_GEFORCEFX_5600;
             else if(WINE_D3D8_CAPABLE(gl_info))
-                gl_info->gl_card = CARD_NVIDIA_GEFORCE3;            
+                gl_info->gl_card = CARD_NVIDIA_GEFORCE3;
             else if(WINE_D3D7_CAPABLE(gl_info))
                 gl_info->gl_card = CARD_NVIDIA_GEFORCE;
             else if(WINE_D3D6_CAPABLE(gl_info))
@@ -1403,7 +1403,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDepthStencilMatch(IWineD3D *iface, UINT 
     return WINED3DERR_NOTAVAILABLE;
 }
 
-static HRESULT WINAPI IWineD3DImpl_CheckDeviceMultiSampleType(IWineD3D *iface, UINT Adapter, WINED3DDEVTYPE DeviceType, 
+static HRESULT WINAPI IWineD3DImpl_CheckDeviceMultiSampleType(IWineD3D *iface, UINT Adapter, WINED3DDEVTYPE DeviceType,
                                                        WINED3DFORMAT SurfaceFormat,
                                                        BOOL Windowed, WINED3DMULTISAMPLE_TYPE MultiSampleType, DWORD*   pQualityLevels) {
 
@@ -1477,7 +1477,7 @@ static HRESULT WINAPI IWineD3DImpl_CheckDeviceType(IWineD3D *iface, UINT Adapter
 }
 
 #define GLINFO_LOCATION Adapters[Adapter].gl_info
-static HRESULT WINAPI IWineD3DImpl_CheckDeviceFormat(IWineD3D *iface, UINT Adapter, WINED3DDEVTYPE DeviceType, 
+static HRESULT WINAPI IWineD3DImpl_CheckDeviceFormat(IWineD3D *iface, UINT Adapter, WINED3DDEVTYPE DeviceType,
                                               WINED3DFORMAT AdapterFormat, DWORD Usage, WINED3DRESOURCETYPE RType, WINED3DFORMAT CheckFormat) {
     IWineD3DImpl *This = (IWineD3DImpl *)iface;
     TRACE_(d3d_caps)("(%p)-> (STUB) (Adptr:%d, DevType:(%u,%s), AdptFmt:(%u,%s), Use:(%u,%s,%s), ResTyp:(%x,%s), CheckFmt:(%u,%s))\n",
@@ -2189,7 +2189,7 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
                                    WINED3DVTXPCAPS_LOCALVIEWER       |
                                    WINED3DVTXPCAPS_VERTEXFOG         |
                                    WINED3DVTXPCAPS_TEXGEN;
-                                  /* FIXME: Add 
+                                  /* FIXME: Add
                                      D3DVTXPCAPS_TWEENING, D3DVTXPCAPS_TEXGEN_SPHEREMAP */
 
     *pCaps->MaxPrimitiveCount   = 0xFFFFF; /* For now set 2^20-1 which is used by most >=Geforce3/Radeon8500 cards */
@@ -2271,13 +2271,13 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
 
         *pCaps->NumSimultaneousRTs = GL_LIMITS(buffers);
 
-            
+
         *pCaps->StretchRectFilterCaps             = WINED3DPTFILTERCAPS_MINFPOINT  |
                                                     WINED3DPTFILTERCAPS_MAGFPOINT  |
                                                     WINED3DPTFILTERCAPS_MINFLINEAR |
                                                     WINED3DPTFILTERCAPS_MAGFLINEAR;
         *pCaps->VertexTextureFilterCaps           = 0;
-        
+
         if(*pCaps->VertexShaderVersion == WINED3DVS_VERSION(3,0)) {
             /* Where possible set the caps based on OpenGL extensions and if they aren't set (in case of software rendering)
                use the VS 3.0 from MSDN or else if there's OpenGL spec use a hardcoded value minimum VS3.0 value. */
@@ -2292,7 +2292,7 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
             *pCaps->VS20Caps.Caps                     = 0;
             *pCaps->VS20Caps.DynamicFlowControlDepth  = WINED3DVS20_MIN_DYNAMICFLOWCONTROLDEPTH;
             *pCaps->VS20Caps.NumTemps                 = max(12, GLINFO_LOCATION.vs_arb_max_temps);
-            *pCaps->VS20Caps.StaticFlowControlDepth   = 1;    
+            *pCaps->VS20Caps.StaticFlowControlDepth   = 1;
 
             *pCaps->MaxVShaderInstructionsExecuted    = 65535;
             *pCaps->MaxVertexShader30InstructionSlots = 0;
@@ -2300,16 +2300,16 @@ static HRESULT WINAPI IWineD3DImpl_GetDeviceCaps(IWineD3D *iface, UINT Adapter, 
             *pCaps->VS20Caps.Caps                     = 0;
             *pCaps->VS20Caps.DynamicFlowControlDepth  = 0;
             *pCaps->VS20Caps.NumTemps                 = 0;
-            *pCaps->VS20Caps.StaticFlowControlDepth   = 0;    
+            *pCaps->VS20Caps.StaticFlowControlDepth   = 0;
 
             *pCaps->MaxVShaderInstructionsExecuted    = 0;
-            *pCaps->MaxVertexShader30InstructionSlots = 0;        
+            *pCaps->MaxVertexShader30InstructionSlots = 0;
         }
 
         if(*pCaps->PixelShaderVersion == WINED3DPS_VERSION(3,0)) {
             /* Where possible set the caps based on OpenGL extensions and if they aren't set (in case of software rendering)
                use the PS 3.0 from MSDN or else if there's OpenGL spec use a hardcoded value minimum PS 3.0 value. */
-            
+
             /* Caps is more or less undocumented on MSDN but it appears to be used for PS20Caps based on results from R9600/FX5900/Geforce6800 cards from Windows */
             *pCaps->PS20Caps.Caps                     = WINED3DPS20CAPS_ARBITRARYSWIZZLE     |
                                                         WINED3DPS20CAPS_GRADIENTINSTRUCTIONS |

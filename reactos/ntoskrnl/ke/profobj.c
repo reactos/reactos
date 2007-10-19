@@ -141,12 +141,12 @@ KeStopProfile(PKPROFILE Profile)
         Profile->Started = FALSE;
 
         /* Find the Source Object */
-        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry) 
+        LIST_FOR_EACH(CurrentSource, &KiProfileSourceListHead, KPROFILE_SOURCE_OBJECT, ListEntry)
         {
             if (CurrentSource->Source == Profile->Source) {
                 /* Remove it */
                 RemoveEntryList(&CurrentSource->ListEntry);
-                break;   
+                break;
             }
         }
 
@@ -245,7 +245,7 @@ KiParseProfileList(IN PKTRAP_FRAME TrapFrame,
         BucketValue = (PULONG)((((ULONG_PTR)Profile->Buffer +
                                (TrapFrame->Eip - (ULONG_PTR)Profile->RangeBase))
                                 >> Profile->BucketShift) &~ 0x3);
-#elif defined(_M_PPC) 
+#elif defined(_M_PPC)
     // XXX arty
 #endif
 

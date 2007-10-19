@@ -141,7 +141,7 @@ CreateNamedPipeW(LPCWSTR lpName,
         CreateOptions |= FILE_SYNCHRONOUS_IO_NONALERT;
     }
 
-    /* Handle all open modes */ 
+    /* Handle all open modes */
     if (dwOpenMode & PIPE_ACCESS_OUTBOUND)
     {
         ShareAccess |= FILE_SHARE_READ;
@@ -268,8 +268,8 @@ WaitNamedPipeA(LPCSTR lpNamedPipeName,
  * Microsoft's NPFS.SYS. The main difference is that:
  *      - This code actually respects the timeout instead of ignoring it!
  *      - This code validates and creates the proper names for both UNC and local pipes
- *      - On NT, you open the *root* pipe directory (either \DosDevices\Pipe or 
- *        \DosDevices\Unc\Server\Pipe) and then send the pipe to wait on in the 
+ *      - On NT, you open the *root* pipe directory (either \DosDevices\Pipe or
+ *        \DosDevices\Unc\Server\Pipe) and then send the pipe to wait on in the
  *        FILE_PIPE_WAIT_FOR_BUFFER structure.
  */
 #ifdef USING_PROPER_NPFS_WAIT_SEMANTICS
@@ -308,7 +308,7 @@ WaitNamedPipeW(LPCWSTR lpNamedPipeName,
     /* Find the path type of the name we were given */
     NewName = NamedPipeName;
     Type = RtlDetermineDosPathNameType_U(lpNamedPipeName);
- 
+
     /* Check if this was a device path, ie : "\\.\pipe\name" */
     if (Type == RtlPathTypeLocalDevice)
     {

@@ -91,7 +91,7 @@ static DWORD _typeFromGUID(REFGUID guid)
 
 
 /******************************************************************************
- *      DirectInputEffect debug helpers 
+ *      DirectInputEffect debug helpers
  */
 
 static void _dump_DIEFFECT_flags(DWORD dwFlags)
@@ -114,7 +114,7 @@ static void _dump_DIEFFECT_flags(DWORD dwFlags)
             if (flags[i].mask & dwFlags)
                 DPRINTF("%s ", flags[i].name);
         DPRINTF("\n");
-    }       
+    }
 }
 
 static void _dump_DIENVELOPE(LPDIENVELOPE env)
@@ -125,7 +125,7 @@ static void _dump_DIENVELOPE(LPDIENVELOPE env)
     }
     TRACE("Envelope has attack (level: %ld time: %ld), fade (level: %ld time: %ld)\n",
 	  env->dwAttackLevel, env->dwAttackTime, env->dwFadeLevel, env->dwFadeTime);
-} 
+}
 
 static void _dump_DICONSTANTFORCE(LPDICONSTANTFORCE frc)
 {
@@ -164,7 +164,7 @@ static void _dump_DICUSTOMFORCE(LPDICUSTOMFORCE frc)
 	    DPRINTF("%ld ", frc->rglForceData[i]);
 	    if (i % frc->cChannels == 0)
 		DPRINTF("\n");
-	}	
+	}
     }
 }
 
@@ -181,17 +181,17 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
     }
     TRACE("  - dwFlags: %ld\n", eff->dwFlags);
     TRACE("    ");
-    _dump_DIEFFECT_flags(eff->dwFlags); 
+    _dump_DIEFFECT_flags(eff->dwFlags);
     TRACE("  - dwDuration: %ld\n", eff->dwDuration);
     TRACE("  - dwGain: %ld\n", eff->dwGain);
     if ((eff->dwGain > 10000) || (eff->dwGain < 0))
-	WARN("dwGain is out of range (0 - 10,000)\n"); 
+	WARN("dwGain is out of range (0 - 10,000)\n");
     TRACE("  - dwTriggerButton: %ld\n", eff->dwTriggerButton);
     TRACE("  - dwTriggerRepeatInterval: %ld\n", eff->dwTriggerRepeatInterval);
     TRACE("  - cAxes: %ld\n", eff->cAxes);
     TRACE("  - rgdwAxes: %p\n", eff->rgdwAxes);
     if (TRACE_ON(dinput)) {
-	TRACE("    ");	
+	TRACE("    ");
 	for (i = 0; i < eff->cAxes; ++i)
 	    DPRINTF("%ld ", eff->rgdwAxes[i]);
 	DPRINTF("\n");
@@ -206,11 +206,11 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
 	_dump_DIENVELOPE(eff->lpEnvelope);
     if (type == DIEFT_CONSTANTFORCE) {
 	if (eff->cbTypeSpecificParams != sizeof(DICONSTANTFORCE)) {
-	    WARN("Effect claims to be a constant force but the type-specific params are the wrong size!\n"); 
+	    WARN("Effect claims to be a constant force but the type-specific params are the wrong size!\n");
 	} else {
 	    _dump_DICONSTANTFORCE(eff->lpvTypeSpecificParams);
 	}
-    } else if (type == DIEFT_PERIODIC) { 
+    } else if (type == DIEFT_PERIODIC) {
         if (eff->cbTypeSpecificParams != sizeof(DIPERIODIC)) {
             WARN("Effect claims to be a periodic force but the type-specific params are the wrong size!\n");
         } else {
@@ -222,7 +222,7 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
         } else {
             _dump_DIRAMPFORCE(eff->lpvTypeSpecificParams);
         }
-    } else if (type == DIEFT_CONDITION) { 
+    } else if (type == DIEFT_CONDITION) {
         if (eff->cbTypeSpecificParams != sizeof(DICONDITION)) {
             WARN("Effect claims to be a condition but the type-specific params are the wrong size!\n");
         } else {
@@ -239,7 +239,7 @@ static void _dump_DIEFFECT(LPCDIEFFECT eff, REFGUID guid)
 
 
 /******************************************************************************
- *      LinuxInputEffectImpl 
+ *      LinuxInputEffectImpl
  */
 
 static ULONG WINAPI LinuxInputEffectImpl_AddRef(
@@ -272,7 +272,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_Escape(
 	LPDIRECTINPUTEFFECT iface,
         LPDIEFFESCAPE pesc)
 {
-    WARN("(this=%p,%p): invalid: no hardware-specific escape codes in this" 
+    WARN("(this=%p,%p): invalid: no hardware-specific escape codes in this"
          " driver!\n", iface, pesc);
 
     return DI_OK;
@@ -287,7 +287,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetEffectGuid(
     TRACE("(this=%p,%p)\n", This, pguid);
 
     pguid = &This->guid;
-    
+
     return DI_OK;
 }
 
@@ -326,7 +326,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
     if (dwFlags & DIEP_AXES) {
 	if (peff->cAxes < 2 /* linuxinput effects always use 2 axes, x and y */)
 	    diErr = DIERR_MOREDATA;
-	peff->cAxes = 2; 
+	peff->cAxes = 2;
 	if (diErr)
 	    return diErr;
 	else {
@@ -334,11 +334,11 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 	    peff->rgdwAxes[1] = DIJOFS_Y;
 	}
     }
- 
+
     if (dwFlags & DIEP_DIRECTION) {
         if (peff->cAxes < 2)
             diErr = DIERR_MOREDATA;
-        peff->cAxes = 2; 
+        peff->cAxes = 2;
         if (diErr)
             return diErr;
         else {
@@ -373,7 +373,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 	    peff->lpEnvelope = NULL;
 	} else if (peff->lpEnvelope == NULL) {
 	    return DIERR_INVALIDPARAM;
-	} else { 
+	} else {
 	    peff->lpEnvelope->dwAttackLevel = (env->attack_level / 33) * 10;
 	    peff->lpEnvelope->dwAttackTime = env->attack_length * 1000;
 	    peff->lpEnvelope->dwFadeLevel = (env->fade_level / 33) * 10;
@@ -412,9 +412,9 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 	    expectedsize = sizeof(DIPERIODIC);
 	} else if (This->effect.type == FF_CONSTANT) {
 	    expectedsize = sizeof(DICONSTANTFORCE);
-	} else if (This->effect.type == FF_SPRING 
-		|| This->effect.type == FF_FRICTION 
-		|| This->effect.type == FF_INERTIA 
+	} else if (This->effect.type == FF_SPRING
+		|| This->effect.type == FF_FRICTION
+		|| This->effect.type == FF_INERTIA
 		|| This->effect.type == FF_DAMPER) {
 	    expectedsize = sizeof(DICONDITION) * 2;
 	} else if (This->effect.type == FF_RAMP) {
@@ -435,16 +435,16 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 	    } else if (This->effect.type == FF_CONSTANT) {
                 LPDICONSTANTFORCE tsp = (LPDICONSTANTFORCE)(peff->lpvTypeSpecificParams);
 		tsp->lMagnitude = (This->effect.u.constant.level / 33) * 10;
-	    } else if (This->effect.type == FF_SPRING 
-		    || This->effect.type == FF_FRICTION 
-		    || This->effect.type == FF_INERTIA 
+	    } else if (This->effect.type == FF_SPRING
+		    || This->effect.type == FF_FRICTION
+		    || This->effect.type == FF_INERTIA
 		    || This->effect.type == FF_DAMPER) {
                 LPDICONDITION tsp = (LPDICONDITION)(peff->lpvTypeSpecificParams);
 		int i;
 		for (i = 0; i < 2; ++i) {
-		    tsp[i].lOffset = (This->effect.u.condition[i].center / 33) * 10; 
+		    tsp[i].lOffset = (This->effect.u.condition[i].center / 33) * 10;
 		    tsp[i].lPositiveCoefficient = (This->effect.u.condition[i].right_coeff / 33) * 10;
-		    tsp[i].lNegativeCoefficient = (This->effect.u.condition[i].left_coeff / 33) * 10; 
+		    tsp[i].lNegativeCoefficient = (This->effect.u.condition[i].left_coeff / 33) * 10;
 		    tsp[i].dwPositiveSaturation = (This->effect.u.condition[i].right_saturation / 33) * 10;
 		    tsp[i].dwNegativeSaturation = (This->effect.u.condition[i].left_saturation / 33) * 10;
 		    tsp[i].lDeadBand = (This->effect.u.condition[i].deadband / 33) * 10;
@@ -455,7 +455,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_GetParameters(
 		tsp->lEnd = (This->effect.u.ramp.end_level / 33) * 10;
 	    }
 	}
-    } 
+    }
 
     return diErr;
 }
@@ -530,8 +530,8 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
         LPDIRECTINPUTEFFECT iface,
         LPCDIEFFECT peff,
         DWORD dwFlags)
-{       
-    LinuxInputEffectImpl* This = (LinuxInputEffectImpl*)iface; 
+{
+    LinuxInputEffectImpl* This = (LinuxInputEffectImpl*)iface;
     DWORD type = _typeFromGUID(&This->guid);
     HRESULT retval = DI_OK;
 
@@ -556,7 +556,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
 
     /* some of this may look funky, but it's 'cause the linux driver and directx have
      * different opinions about which way direction "0" is.  directx has 0 along the x
-     * axis (left), linux has it along the y axis (down). */ 
+     * axis (left), linux has it along the y axis (down). */
     if (dwFlags & DIEP_DIRECTION) {
 	if (peff->cAxes == 1) {
 	    if (peff->dwFlags & DIEFF_CARTESIAN) {
@@ -601,7 +601,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
         if (This->effect.type == FF_CONSTANT) env = &This->effect.u.constant.envelope;
         else if (This->effect.type == FF_PERIODIC) env = &This->effect.u.periodic.envelope;
         else if (This->effect.type == FF_RAMP) env = &This->effect.u.ramp.envelope;
-        else env = NULL; 
+        else env = NULL;
 
 	if (peff->lpEnvelope == NULL) {
 	    /* if this type had an envelope, reset it
@@ -682,7 +682,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
                 for (i = 0; i < 2; ++i) {
                     This->effect.u.condition[i].center = (int)(factor[i] * (tsp->lOffset / 10) * 32);
                     This->effect.u.condition[i].right_coeff = (int)(factor[i] * (tsp->lPositiveCoefficient / 10) * 32);
-                    This->effect.u.condition[i].left_coeff = (int)(factor[i] * (tsp->lNegativeCoefficient / 10) * 32); 
+                    This->effect.u.condition[i].left_coeff = (int)(factor[i] * (tsp->lNegativeCoefficient / 10) * 32);
                     This->effect.u.condition[i].right_saturation = (int)(factor[i] * (tsp->dwPositiveSaturation / 10) * 32);
                     This->effect.u.condition[i].left_saturation = (int)(factor[i] * (tsp->dwNegativeSaturation / 10) * 32);
                     This->effect.u.condition[i].deadband = (int)(factor[i] * (tsp->lDeadBand / 10) * 32);
@@ -702,7 +702,7 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
                 return DIERR_INVALIDPARAM;
 	    }
 	} else {
-	    FIXME("Custom force types are not supported\n");	
+	    FIXME("Custom force types are not supported\n");
 	    return DIERR_INVALIDPARAM;
 	}
     }
@@ -719,9 +719,9 @@ static HRESULT WINAPI LinuxInputEffectImpl_SetParameters(
 	retval = LinuxInputEffectImpl_Start(iface, 1, 0);
     if (retval != DI_OK)
 	return retval;
- 
+
     return DI_OK;
-}   
+}
 
 static ULONG WINAPI LinuxInputEffectImpl_Release(
 	LPDIRECTINPUTEFFECT iface)
@@ -776,18 +776,18 @@ HRESULT linuxinput_create_effect(
 	REFGUID rguid,
 	LPDIRECTINPUTEFFECT* peff)
 {
-    LinuxInputEffectImpl* newEffect = HeapAlloc(GetProcessHeap(), 
+    LinuxInputEffectImpl* newEffect = HeapAlloc(GetProcessHeap(),
 	HEAP_ZERO_MEMORY, sizeof(LinuxInputEffectImpl));
     DWORD type = _typeFromGUID(rguid);
-    
+
     newEffect->lpVtbl = &LinuxInputEffectVtbl;
     newEffect->ref = 1;
     memcpy(&(newEffect->guid), rguid, sizeof(*rguid));
     newEffect->fd = fd;
-    
+
     /* set the type.  this cannot be changed over the effect's life. */
     switch (type) {
-	case DIEFT_PERIODIC: 
+	case DIEFT_PERIODIC:
 	    newEffect->effect.type = FF_PERIODIC;
 	    if (IsEqualGUID(rguid, &GUID_Sine)) {
 		newEffect->effect.u.periodic.waveform = FF_SINE;
@@ -801,13 +801,13 @@ HRESULT linuxinput_create_effect(
                 newEffect->effect.u.periodic.waveform = FF_SAW_DOWN;
 	    }
 	    break;
-	case DIEFT_CONSTANTFORCE: 
+	case DIEFT_CONSTANTFORCE:
             newEffect->effect.type = FF_CONSTANT;
 	    break;
-	case DIEFT_RAMPFORCE: 
+	case DIEFT_RAMPFORCE:
 	    newEffect->effect.type = FF_RAMP;
 	    break;
-	case DIEFT_CONDITION: 
+	case DIEFT_CONDITION:
 	    if (IsEqualGUID(rguid, &GUID_Spring)) {
 		newEffect->effect.type = FF_SPRING;
             } else if (IsEqualGUID(rguid, &GUID_Friction)) {
@@ -831,9 +831,9 @@ HRESULT linuxinput_create_effect(
     /* mark as non-uploaded */
     newEffect->effect.id = -1;
 
-    *peff = (LPDIRECTINPUTEFFECT)newEffect; 
+    *peff = (LPDIRECTINPUTEFFECT)newEffect;
 
-    TRACE("Creating linux input system effect (%p) with guid %s\n", 
+    TRACE("Creating linux input system effect (%p) with guid %s\n",
 	  *peff, _dump_dinput_GUID(rguid));
 
     return DI_OK;
@@ -853,15 +853,15 @@ HRESULT linuxinput_get_info_A(
     if (info->dwSize != sizeof(DIEFFECTINFOA)) return DIERR_INVALIDPARAM;
 
     info->guid = *rguid;
-    
-    info->dwEffType = type; 
+
+    info->dwEffType = type;
     /* the event device API does not support querying for all these things
      * therefore we assume that we have support for them
      * that's not as dangerous as it sounds, since drivers are allowed to
      * ignore parameters they claim to support anyway */
-    info->dwEffType |= DIEFT_DEADBAND | DIEFT_FFATTACK | DIEFT_FFFADE 
+    info->dwEffType |= DIEFT_DEADBAND | DIEFT_FFATTACK | DIEFT_FFFADE
                     | DIEFT_POSNEGCOEFFICIENTS | DIEFT_POSNEGSATURATION
-		    | DIEFT_SATURATION | DIEFT_STARTDELAY; 
+		    | DIEFT_SATURATION | DIEFT_STARTDELAY;
 
     /* again, assume we have support for everything */
     info->dwStaticParams = DIEP_ALLPARAMS;
@@ -895,14 +895,14 @@ HRESULT linuxinput_get_info_W(
      * ignore parameters they claim to support anyway */
     info->dwEffType |= DIEFT_DEADBAND | DIEFT_FFATTACK | DIEFT_FFFADE
                     | DIEFT_POSNEGCOEFFICIENTS | DIEFT_POSNEGSATURATION
-                    | DIEFT_SATURATION | DIEFT_STARTDELAY; 
+                    | DIEFT_SATURATION | DIEFT_STARTDELAY;
 
     /* again, assume we have support for everything */
     info->dwStaticParams = DIEP_ALLPARAMS;
     info->dwDynamicParams = info->dwStaticParams;
 
     /* yes, this is windows behavior (print the GUID_Name for name) */
-    MultiByteToWideChar(CP_ACP, 0, _dump_dinput_GUID(rguid), -1, 
+    MultiByteToWideChar(CP_ACP, 0, _dump_dinput_GUID(rguid), -1,
 		        (WCHAR*)&(info->tszName), MAX_PATH);
 
     return DI_OK;

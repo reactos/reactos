@@ -48,7 +48,7 @@ malloc(size_t Size)
     *((size_t *) Object) = Size;
     Object = (void *)((size_t *) Object + 1);
     }
-    
+
   return Object;
 }
 

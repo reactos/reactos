@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -51,10 +51,10 @@ class directedLine {
   directedLine* next; /*double linked list*/
   directedLine* prev; /*double linked list*/
 
-  /*in case we need a list of polygons each 
+  /*in case we need a list of polygons each
    *consisting of a double linked list
    */
-  directedLine* nextPolygon; 
+  directedLine* nextPolygon;
 
   /*optimization make cutoff polygon faster*/
 /*  directedLine* prevPolygon;*/
@@ -72,7 +72,7 @@ public:
   ~directedLine();
 
   void init(short dir, sampledLine* sl);
-  
+
   Real* head(); /*points[0] if INCREASING, points[n-1] otherwise*/
   Real* tail(); /*points[n-1] if INCREASING, points[0] otherwise*/
   Real* getVertex(Int i); /*points[i] if INCREASING, points[n-1-i] otherwise*/
@@ -108,13 +108,13 @@ public:
   /*check to see if the list forms a closed polygon
    *return 1 if yes
    */
-  short isPolygon(); 
-  
+  short isPolygon();
+
   Int compInY(directedLine* nl);
   Int compInX(directedLine* nl);
 
   /*return an array of pointers.
-   *the 
+   *the
    */
   directedLine** sortAllPolygons();
 
@@ -122,7 +122,7 @@ public:
   Int numEdgesAllPolygons();
   Int numPolygons();
 
-  /*check if the head of this edge is connected to 
+  /*check if the head of this edge is connected to
    *the tail of the prev
    */
   short isConnected();
@@ -133,7 +133,7 @@ public:
   void printList();
   void printAllPolygons();
   void writeAllPolygons(char* filename);
-  
+
 
   /*insert a polygon: using nextPolygon*/
   directedLine* insertPolygon(directedLine* newpolygon);
@@ -142,15 +142,15 @@ public:
   Int toArraySinglePolygon(directedLine** array, Int index);
   directedLine** toArrayAllPolygons(Int& total_num_edges);
 
-  void connectDiagonal(directedLine* v1, directedLine* v2, 
-			   directedLine** ret_p1, 
+  void connectDiagonal(directedLine* v1, directedLine* v2,
+			   directedLine** ret_p1,
 			   directedLine** ret_p2,
 			   sampledLine** generatedLine, directedLine* list);
 
   /*generate two slines
    */
-  void connectDiagonal_2slines(directedLine* v1, directedLine* v2, 
-			   directedLine** ret_p1, 
+  void connectDiagonal_2slines(directedLine* v1, directedLine* v2,
+			   directedLine** ret_p1,
 			   directedLine** ret_p2,
 			   directedLine* list);
 

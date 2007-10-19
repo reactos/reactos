@@ -10,20 +10,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <stdlib.h>
@@ -46,7 +46,7 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
 		 int serv, adns_query qu, const char *fmt, va_list al) {
   const char *bef, *aft;
   vbuf vb;
-  
+
   if (!ads->diagfile ||
       (!(ads->iflags & adns_if_debug) && (!prevent || (ads->iflags & prevent))))
     return;
@@ -74,7 +74,7 @@ void adns__vdiag(adns_state ads, const char *pfx, adns_initflags prevent,
     bef=", "; aft=")\n";
     adns__vbuf_free(&vb);
   }
-  
+
   if (serv>=0) {
     fprintf(ads->diagfile,"%sNS=%s",bef,inet_ntoa(ads->servers[serv].addr));
     bef=", "; aft=")\n";
@@ -115,14 +115,14 @@ void adns__vbuf_init(vbuf *vb) {
 
 int adns__vbuf_ensure(vbuf *vb, int want) {
   void *nb;
-  
+
   if (vb->avail >= want) return 1;
   nb= realloc(vb->buf, (size_t) want); if (!nb) return 0;
   vb->buf= nb;
   vb->avail= want;
   return 1;
 }
-  
+
 void adns__vbuf_appendq(vbuf *vb, const byte *data, int len) {
   memcpy(vb->buf+vb->used,data, (size_t) len);
   vb->used+= len;
@@ -199,7 +199,7 @@ adns_status adns_rr_info(adns_rrtype type,
   if (len_r) *len_r= typei->rrsz;
 
   if (!datap) return adns_s_ok;
-  
+
   adns__vbuf_init(&vb);
   st= typei->convstring(&vb,datap);
   if (st) goto x_freevb;
@@ -239,7 +239,7 @@ static const struct sinfo {
   SINFO(  rcodenotimplemented, "Query not implemented by nameserver"           ),
   SINFO(  rcoderefused,        "Query refused by nameserver"                   ),
   SINFO(  rcodeunknown,        "Nameserver sent unknown response code"         ),
-  
+
   SINFO(  inconsistent,        "Inconsistent resource records in DNS"          ),
   SINFO(  prohibitedcname,     "DNS alias found where canonical name wanted"   ),
   SINFO(  answerdomaininvalid, "Found syntactically invalid domain name"       ),
@@ -304,7 +304,7 @@ static int __cdecl sti_compar(const void *key, const void *elem) {
   here= *st;
   min= (sti==stinfos) ? 0 : sti[-1].stmax+1;
   max= sti->stmax;
-  
+
   return here < min  ? -1 : here > max ? 1 : 0;
 }
 
@@ -351,7 +351,7 @@ void adns__sigpipe_protect(adns_state ads) {
   sa.sa_handler= SIG_IGN;
   sigfillset(&sa.sa_mask);
   sa.sa_flags= 0;
-  
+
   r= sigprocmask(SIG_SETMASK,&toblock,&ads->stdsigmask); assert(!r);
   r= sigaction(SIGPIPE,&sa,&ads->stdsigpipe); assert(!r);
 #endif

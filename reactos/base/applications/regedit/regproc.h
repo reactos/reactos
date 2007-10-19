@@ -101,7 +101,7 @@ LONG RegQueryStringValue(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpValueName, LPTST
 #define RSF_MATCHCASE      0x00010000
 
 LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
-    LPCTSTR pszSearchString, DWORD dwValueIndex,	
+    LPCTSTR pszSearchString, DWORD dwValueIndex,
     DWORD dwSearchFlags, BOOL (*pfnCallback)(LPVOID), LPVOID lpParam);
 
 BOOL RegKeyGetName(LPTSTR pszDest, size_t iDestLength, HKEY hRootKey, LPCTSTR lpSubKey);

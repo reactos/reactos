@@ -131,34 +131,34 @@ DWORD STDCALL NtGdiDdDestroySurface(
     HANDLE hSurface,
     BOOL bRealDestroy
 )
-{	
+{
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 	PDD_SURFACE pSurface;
-	PDD_DIRECTDRAW pDirectDraw;	
-	DD_DESTROYSURFACEDATA DestroySurf; 
-	
+	PDD_DIRECTDRAW pDirectDraw;
+	DD_DESTROYSURFACEDATA DestroySurf;
+
 	DPRINT1("NtGdiDdDestroySurface\n");
-	
+
 	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
-	if (pSurface != NULL) 
-	{		    
+	if (pSurface != NULL)
+	{
 		pDirectDraw = GDIOBJ_LockObj(DdHandleTable, pSurface->hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 		if (pDirectDraw != NULL)
-		{		
-			if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE)			
-			{								
+		{
+			if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_DESTROYSURFACE)
+			{
 				//DestroySurf.lpDD = pSurface->Global;
-				DestroySurf.lpDDSurface = hSurface; 
-                
+				DestroySurf.lpDDSurface = hSurface;
+
 				/*  FIXME
-				    in parma bRealDestroy 
-				    Specifies how to destroy the surface. Can be one of the following values. 
+				    in parma bRealDestroy
+				    Specifies how to destroy the surface. Can be one of the following values.
                     TRUE   =   Destroy the surface and free video memory.
                     FALSE  =   Free the video memory but leave the surface in an uninitialized state
                 */
 
-				DestroySurf.DestroySurface = pDirectDraw->Surf.DestroySurface;		
-				ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf); 
+				DestroySurf.DestroySurface = pDirectDraw->Surf.DestroySurface;
+				ddRVal = pDirectDraw->Surf.DestroySurface(&DestroySurf);
 			}
 
 			 GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
@@ -167,7 +167,7 @@ DWORD STDCALL NtGdiDdDestroySurface(
 		GDIOBJ_UnlockObjByPtr(DdHandleTable, pSurface);
 	}
 
-    return ddRVal;			
+    return ddRVal;
 }
 
 
@@ -187,21 +187,21 @@ DWORD STDCALL NtGdiDdFlip(
 {
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 	PDD_SURFACE pSurface;
-	PDD_DIRECTDRAW pDirectDraw;			
+	PDD_DIRECTDRAW pDirectDraw;
 	DPRINT1("NtGdiDdFlip\n");
-	
+
 	/* DO we need looking all surface or is okay for one */
 	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurfaceCurrent, GDI_OBJECT_TYPE_DD_SURFACE);
-	if (pSurface != NULL) 
-	{				
+	if (pSurface != NULL)
+	{
 		pDirectDraw = GDIOBJ_LockObj(DdHandleTable, pSurface->hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
 		if (pDirectDraw != NULL)
-		{		
-			if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP)			
-			{		
-				/* FIXME is lpDD typecasted tp driver PEV ?? */ 											
-			    ddRVal = pDirectDraw->Surf.Flip(puFlipData);				
+		{
+			if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_FLIP)
+			{
+				/* FIXME is lpDD typecasted tp driver PEV ?? */
+			    ddRVal = pDirectDraw->Surf.Flip(puFlipData);
 			}
 
 			GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
@@ -210,7 +210,7 @@ DWORD STDCALL NtGdiDdFlip(
 		GDIOBJ_UnlockObjByPtr(DdHandleTable, pSurface);
 	}
 
-    return ddRVal;				
+    return ddRVal;
 }
 
 
@@ -228,22 +228,22 @@ DWORD STDCALL NtGdiDdLock(
 {
 	DWORD  ddRVal  = DDHAL_DRIVER_NOTHANDLED;
 	PDD_SURFACE pSurface;
-	PDD_DIRECTDRAW pDirectDraw;	
-	
+	PDD_DIRECTDRAW pDirectDraw;
+
 	DPRINT1("NtGdiDdLock\n");
-		
+
 	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
-	if (pSurface != NULL) 
-	{				
+	if (pSurface != NULL)
+	{
 		pDirectDraw = GDIOBJ_LockObj(DdHandleTable, pSurface->hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
 		if (pDirectDraw != NULL)
-		{		
+		{
 			/* Do we need lock hdc from hdcClip ?? */
 			if (pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_LOCK)
-			{	
-				/* FIXME is lpDD typecasted tp driver PEV ?? */ 			
-				ddRVal = pDirectDraw->Surf.Lock(puLockData);				
+			{
+				/* FIXME is lpDD typecasted tp driver PEV ?? */
+				ddRVal = pDirectDraw->Surf.Lock(puLockData);
 			}
 
 			GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
@@ -252,7 +252,7 @@ DWORD STDCALL NtGdiDdLock(
 		GDIOBJ_UnlockObjByPtr(DdHandleTable, pSurface);
 	}
 
-    return ddRVal;				
+    return ddRVal;
 }
 
 /*

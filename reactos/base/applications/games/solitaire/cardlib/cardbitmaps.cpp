@@ -32,13 +32,13 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
     {
         //convert into the range used by the cdt_xxx functions
         int val;
-        
+
         if(i < 52) val = (i % 4) * 13 + (i/4);
         else       val = i;
-        
+
         hBitmap = LoadBitmap(hCardDll, MAKEINTRESOURCE(val + 1));
         GetObject(hBitmap, sizeof(bmp), &bmp);
-        
+
         width  = bmp.bmWidth;
         height = bmp.bmHeight;
 
@@ -53,11 +53,11 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
 
             ReleaseDC(0, hdc);
         }
-        
+
         hOld = SelectObject(hdcCard, hBitmap);
         BitBlt(__hdcCardBitmaps, i*width, 0, width, height, hdcCard, 0, 0, SRCCOPY);
         SelectObject(hdcCard, hOld);
-        
+
         //Now draw a black border around each card...
         xpos = i*width;
         MoveToEx(__hdcCardBitmaps, xpos+2, 0, 0);
@@ -69,21 +69,21 @@ void LoadCardBitmapsFromLibrary(HINSTANCE hCardDll, int *pwidth, int *pheight)
         LineTo(__hdcCardBitmaps, xpos+0, height - 3);
         LineTo(__hdcCardBitmaps, xpos+0, 2);
         LineTo(__hdcCardBitmaps, xpos+2, 0);
-        
+
         DeleteObject(hBitmap);
     }
-    
+
     DeleteDC(hdcCard);
 
     *pwidth = width;
     *pheight = height;
-                
+
 }
 
 void LoadCardBitmaps(void)
 {
     HINSTANCE hCardDll;
-    
+
 
     //If Windows NT/2000/XP
     if(GetVersion() < 0x80000000)
@@ -96,9 +96,9 @@ void LoadCardBitmaps(void)
             PostQuitMessage(0);
             return;
         }
-        
+
         LoadCardBitmapsFromLibrary(hCardDll, &__cardwidth, &__cardheight);
-        
+
         FreeLibrary(hCardDll);
     }
 #ifndef __REACTOS__
@@ -132,9 +132,9 @@ void FreeCardBitmaps()
 //
 static void DrawCheckedRect(HDC hdc, RECT *rect, COLORREF fg, COLORREF bg)
 {
-    static WORD wCheckPat[8] = 
-    { 
-        0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555 
+    static WORD wCheckPat[8] =
+    {
+        0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555, 0xaaaa, 0x5555
     };
 
     HBITMAP hbmp;
@@ -152,15 +152,15 @@ static void DrawCheckedRect(HDC hdc, RECT *rect, COLORREF fg, COLORREF bg)
 
     fgold = SetTextColor(hdc, fg);
     bgold = SetBkColor(hdc, bg);
-    
-    PatBlt(hdc, rect->left, rect->top, 
-                rect->right - rect->left, 
-                rect->bottom - rect->top, 
+
+    PatBlt(hdc, rect->left, rect->top,
+                rect->right - rect->left,
+                rect->bottom - rect->top,
                 PATCOPY);
-    
+
     SetBkColor(hdc, bgold);
     SetTextColor(hdc, fgold);
-    
+
     SelectObject(hdc, hbrold);
     DeleteObject(hbr);
     DeleteObject(hbmp);
@@ -196,13 +196,13 @@ HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, COLORREF col, int width, int heigh
     hpfg = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(fg));
     hpbg = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(bg));
     hpsh = CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(shadow));
-    hpsh2= CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(shadow2));    
+    hpsh2= CreatePen(PS_SOLID, 0, MAKE_PALETTERGB(shadow2));
 
     hpold = SelectObject(hdc, hpsh);
     MoveToEx(hdc, 2, 0, NULL);
     LineTo  (hdc, width-3,0);
     LineTo  (hdc, width-1, 2);
-    
+
     SelectObject(hdc, hpold);
     hpold = SelectObject(hdc, hpsh2);
     LineTo  (hdc, width-1, height-3);    //vertical
@@ -222,12 +222,12 @@ HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, COLORREF col, int width, int heigh
     hpold = SelectObject(hdc, hpfg);
     MoveToEx(hdc, width - 2, 3, NULL);
     LineTo  (hdc, width - 2, height - 2);
-    
+
     //(horz)
     MoveToEx(hdc, width - 3, height-2, NULL);
     LineTo  (hdc, 3, height-2);
     SelectObject(hdc, hpold);
-    
+
     //draw the background
     InflateRect(&rect, -2, -2);
     DrawCheckedRect(hdc, &rect, MAKE_PALETTERGB(bg), MAKE_PALETTERGB(fg));
@@ -240,7 +240,7 @@ HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, COLORREF col, int width, int heigh
     DeleteObject(hpfg);
     DeleteObject(hpbg);
 
-    
+
     return hbm;
 }
 

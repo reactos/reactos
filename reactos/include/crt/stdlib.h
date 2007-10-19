@@ -128,8 +128,8 @@ __MINGW_IMPORT char**  __argv_dll;
 #endif  	/*  __DECLSPEC_SUPPORTED */
 #endif  /* MB_CUR_MAX */
 
-/* 
- * MS likes to declare errno in stdlib.h as well. 
+/*
+ * MS likes to declare errno in stdlib.h as well.
  */
 
 #ifdef _UWIN
@@ -144,7 +144,7 @@ extern int errno;
 
 #if !defined (__STRICT_ANSI__)
 /*
- * Use environ from the DLL, not as a global. 
+ * Use environ from the DLL, not as a global.
  */
 
 #ifdef __MSVCRT__
@@ -355,7 +355,7 @@ _CRTIMP int __cdecl	system	(const char*);
 _CRTIMP char* __cdecl	getenv	(const char*);
 
 /* bsearch and qsort are also in non-ANSI header search.h  */
-_CRTIMP void* __cdecl	bsearch	(const void*, const void*, size_t, size_t, 
+_CRTIMP void* __cdecl	bsearch	(const void*, const void*, size_t, size_t,
 				 int (*)(const void*, const void*));
 _CRTIMP void __cdecl	qsort	(void*, size_t, size_t,
 				 int (*)(const void*, const void*));
@@ -481,7 +481,7 @@ void __cdecl _Exit(int) __MINGW_ATTRIB_NORETURN;
 #ifndef __STRICT_ANSI__   /* inline using non-ansi functions */
 __CRT_INLINE void __cdecl _Exit(int __status)
 	{  _exit (__status); }
-#endif 
+#endif
 
 typedef struct { long long quot, rem; } lldiv_t;
 
@@ -494,7 +494,7 @@ __CRT_INLINE long long __cdecl llabs(long long _j)
 long long  __cdecl strtoll (const char* __restrict__, char** __restrict, int);
 unsigned long long  __cdecl strtoull (const char* __restrict__, char** __restrict__, int);
 
-#if defined (__MSVCRT__) /* these are stubs for MS _i64 versions */ 
+#if defined (__MSVCRT__) /* these are stubs for MS _i64 versions */
 long long  __cdecl atoll (const char *);
 
 #if !defined (__STRICT_ANSI__)
@@ -514,9 +514,9 @@ __CRT_INLINE char*  __cdecl ulltoa (unsigned long long _n, char * _c, int _i)
 __CRT_INLINE long long  __cdecl wtoll (const wchar_t * _w)
  	{ return _wtoi64 (_w); }
 __CRT_INLINE wchar_t*  __cdecl lltow (long long _n, wchar_t * _w, int _i)
-	{ return _i64tow (_n, _w, _i); } 
+	{ return _i64tow (_n, _w, _i); }
 __CRT_INLINE wchar_t*  __cdecl ulltow (unsigned long long _n, wchar_t * _w, int _i)
-	{ return _ui64tow (_n, _w, _i); } 
+	{ return _ui64tow (_n, _w, _i); }
 #endif /* (__STRICT_ANSI__)  */
 
 #endif /* __MSVCRT__ */

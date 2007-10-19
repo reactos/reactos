@@ -15,9 +15,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * WITTAWAT YAMWONG, OR ANY OTHER CONTRIBUTORS BE LIABLE FOR ANY CLAIM, 
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE 
+ * WITTAWAT YAMWONG, OR ANY OTHER CONTRIBUTORS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  */
@@ -49,7 +49,7 @@ memHeap_t *
 mmInit(int ofs, int size)
 {
    PMemBlock blocks;
-  
+
    if (size <= 0) {
       return NULL;
    }
@@ -67,8 +67,8 @@ mmInit(int ofs, int size)
 
 
 static TMemBlock *
-SliceBlock(TMemBlock *p, 
-           int startofs, int size, 
+SliceBlock(TMemBlock *p,
+           int startofs, int size,
            int reserved, int alignment)
 {
    TMemBlock *newblock;
@@ -145,7 +145,7 @@ mmFindBlock(memHeap_t *heap, int start)
    TMemBlock *p = (TMemBlock *)heap;
 
    while (p) {
-      if (p->ofs == start && p->free) 
+      if (p->ofs == start && p->free)
 	 return p;
 
       p = p->next;

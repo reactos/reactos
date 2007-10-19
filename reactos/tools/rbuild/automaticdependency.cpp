@@ -18,7 +18,7 @@
  */
 #include "pch.h"
 #include <assert.h>
-#include <algorithm> 
+#include <algorithm>
 
 #include "rbuild.h"
 
@@ -117,7 +117,7 @@ SourceFile::ReadInclude ( string& filename,
 					includeNext = true;
 					include = true;
 				}
-	
+
 				if ( include )
 				{
 					SkipWhitespace ();
@@ -396,7 +396,7 @@ AutomaticDependency::LocateIncludedFile ( SourceFile* sourceFile,
 		if ( LocateIncludedFile ( *include.directory,
 		                          includedFilename ) )
 		{
-			if ( includeNext && 
+			if ( includeNext &&
 			     include.directory->directory == sourceFile->file.file.directory &&
 			     include.directory->relative_path == sourceFile->file.file.relative_path )
 			{

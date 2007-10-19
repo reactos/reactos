@@ -134,7 +134,7 @@ HalpInitDma(VOID)
     * Check if Extended DMA is available. We're just going to do a random
     * read and write.
     */
-    
+
    WRITE_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2), 0x2A);
    if (READ_PORT_UCHAR((PUCHAR)FIELD_OFFSET(EISA_CONTROL, DmaController2Pages.Channel2)) == 0x2A)
       HalpEisaDma = TRUE;
@@ -193,7 +193,7 @@ HalpGetAdapterMaximumPhysicalAddress(
  *
  * Allocate initial, or additional, map buffers for DMA master adapter.
  *
- * @param MasterAdapter 
+ * @param MasterAdapter
  *        DMA master adapter to allocate buffers for.
  * @param SizeOfMapBuffers
  *        Size of the map buffers to allocate (not including the size
@@ -228,7 +228,7 @@ HalpGrowMapBuffers(
    LowestAcceptableAddress.LowPart =
       HighestAcceptableAddress.LowPart == 0xFFFFFFFF ? 0x1000000 : 0;
    BoundryAddressMultiple.QuadPart = 0;
-   
+
    VirtualAddress = MmAllocateContiguousMemorySpecifyCache(
       MapRegisterCount << PAGE_SHIFT, LowestAcceptableAddress,
       HighestAcceptableAddress, BoundryAddressMultiple, MmNonCached);
@@ -258,7 +258,7 @@ HalpGrowMapBuffers(
     * a virtual and physical address and corresponds to PAGE_SIZE large
     * buffer.
     */
-   
+
    if (MapRegisterCount > 0)
    {
       PROS_MAP_REGISTER_ENTRY CurrentEntry, PreviousEntry;
@@ -425,7 +425,7 @@ HalpDmaAllocateChildAdapter(
       KernelMode);
    if (!NT_SUCCESS(Status))
       return NULL;
- 
+
    RtlZeroMemory(AdapterObject, sizeof(ADAPTER_OBJECT));
 
    Status = ObInsertObject(
@@ -514,7 +514,7 @@ HalpDmaInitializeEisaAdapter(
    else
    {
       /*
-       * Validate setup for non-busmaster DMA adapter. Secondary controller 
+       * Validate setup for non-busmaster DMA adapter. Secondary controller
        * supports only 16-bit transfers and main controller supports only
        * 8-bit transfers. Anything else is invalid.
        */
@@ -623,7 +623,7 @@ HalGetAdapter(
    {
       EisaAdapter = FALSE;
    }
-	
+
    /*
     * Disallow creating adapter for ISA/EISA DMA channel 4 since it's used
     * for cascading the controllers and it's not available for software use.
@@ -685,7 +685,7 @@ HalGetAdapter(
       AdapterObject = HalpEisaAdapter[DeviceDescription->DmaChannel];
       if (AdapterObject != NULL)
       {
-         if (AdapterObject->NeedsMapRegisters && 
+         if (AdapterObject->NeedsMapRegisters &&
              MapRegisters > AdapterObject->MapRegistersPerChannel)
             AdapterObject->MapRegistersPerChannel = MapRegisters;
       }
@@ -713,7 +713,7 @@ HalGetAdapter(
          AdapterObject->MapRegistersPerChannel = MapRegisters;
 
          /*
-          * FIXME: Verify that the following makes sense. Actually 
+          * FIXME: Verify that the following makes sense. Actually
           * MasterAdapter->NumberOfMapRegisters contains even the number
           * of gaps, so this will not work correctly all the time. It
           * doesn't matter much since it's only optimization to avoid
@@ -946,7 +946,7 @@ HalReadDmaCounter(
     */
 
    KeAcquireSpinLock(&AdapterObject->MasterAdapter->SpinLock, &OldIrql);
-  
+
    /* Send the request to the specific controller. */
    if (AdapterObject->AdapterNumber == 1)
    {
@@ -986,7 +986,7 @@ HalReadDmaCounter(
    }
 
    KeReleaseSpinLock(&AdapterObject->MasterAdapter->SpinLock, OldIrql);
-	
+
    Count++;
    Count &= 0xffff;
    if (AdapterObject->Width16Bits)
@@ -1018,7 +1018,7 @@ HalpGrowMapBufferWorker(PVOID DeferredContext)
 
    KeWaitForSingleObject(&HalpDmaLock, Executive, KernelMode,
                          FALSE, NULL);
-   Succeeded = HalpGrowMapBuffers(WorkItem->AdapterObject->MasterAdapter, 
+   Succeeded = HalpGrowMapBuffers(WorkItem->AdapterObject->MasterAdapter,
                                   WorkItem->NumberOfMapRegisters);
    KeSetEvent(&HalpDmaLock, 0, 0);
 
@@ -1076,7 +1076,7 @@ HalAllocateAdapterChannel(
    ULONG Index = ~0;
    ULONG Result;
    KIRQL OldIrql;
-   
+
    ASSERT(KeGetCurrentIrql() == DISPATCH_LEVEL);
 
    /* Set up the wait context block in case we can't run right away. */
@@ -1180,10 +1180,10 @@ HalAllocateAdapterChannel(
    AdapterObject->CurrentWcb = WaitContextBlock;
 
    Result = ExecutionRoutine(
-      WaitContextBlock->DeviceObject, WaitContextBlock->CurrentIrp, 
+      WaitContextBlock->DeviceObject, WaitContextBlock->CurrentIrp,
       AdapterObject->MapRegisterBase, WaitContextBlock->DeviceContext);
 
-   /* 
+   /*
     * Possible return values:
     *
     * - KeepObject
@@ -1247,7 +1247,7 @@ IoFreeAdapterChannel(
    KIRQL OldIrql;
 
    MasterAdapter = AdapterObject->MasterAdapter;
-   
+
    for (;;)
    {
       /*
@@ -1569,7 +1569,7 @@ IoFlushAdapterBuffers(
    PHYSICAL_ADDRESS PhysicalAddress;
    PPFN_NUMBER MdlPagesPtr;
 
-   ASSERT_IRQL(DISPATCH_LEVEL);  
+   ASSERT_IRQL(DISPATCH_LEVEL);
 
    if (AdapterObject != NULL && !AdapterObject->MasterDevice)
    {
@@ -1588,7 +1588,7 @@ IoFlushAdapterBuffers(
       }
       SlaveDma = TRUE;
    }
-  
+
    /* This can happen if the device supports hardware scatter/gather. */
    if (MapRegisterBase == NULL)
       return TRUE;
@@ -1682,7 +1682,7 @@ IoMapTransfer(
    ULONG Counter;
    DMA_MODE AdapterMode;
    KIRQL OldIrql;
-   
+
    /*
     * Precalculate some values that are used in all cases.
     *
@@ -1747,7 +1747,7 @@ IoMapTransfer(
 
    /*
     * Try to calculate the size of the transfer. We can only transfer
-    * pages that are physically contiguous and that don't cross the 
+    * pages that are physically contiguous and that don't cross the
     * 64Kb boundary (this limitation applies only for ISA controllers).
     */
 
@@ -1841,7 +1841,7 @@ IoMapTransfer(
    if (AdapterObject != NULL && !AdapterObject->MasterDevice)
    {
       AdapterMode = AdapterObject->AdapterMode;
-      
+
       if (WriteToDevice)
       {
          AdapterMode.TransferType = WRITE_TRANSFER;

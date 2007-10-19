@@ -142,7 +142,7 @@
 #define D3DTA_ALPHAREPLICATE    0x00000020
 #define D3DTA_TEMP              0x00000005
 
-#define D3DCOLORWRITEENABLE_RED   (1L<<0)   
+#define D3DCOLORWRITEENABLE_RED   (1L<<0)
 #define D3DCOLORWRITEENABLE_GREEN (1L<<1)
 #define D3DCOLORWRITEENABLE_BLUE  (1L<<2)
 #define D3DCOLORWRITEENABLE_ALPHA (1L<<3)
@@ -154,7 +154,7 @@
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
 
 
-/**************************** 
+/****************************
  * Vertex Shaders Declaration
  */
 

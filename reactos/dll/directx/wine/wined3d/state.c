@@ -2216,7 +2216,7 @@ static void shaderconstant(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
        isStateDirty(context, STATE_PIXELSHADER)) {
        return;
     }
-    
+
     device->shader_backend->shader_load_constants((IWineD3DDevice *) device, use_ps(device), use_vs(device));
 }
 

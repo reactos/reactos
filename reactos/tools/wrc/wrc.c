@@ -173,7 +173,7 @@ int getopt (int argc, char *const *argv, const char *optstring);
 static void rm_tempfile(void);
 static void segvhandler(int sig);
 
-static const char* short_options = 
+static const char* short_options =
 	"D:Ef:F:hi:I:J:l:o:O:rU:v";
 static struct option long_options[] = {
 	{ "debug", 1, 0, 6 },
@@ -390,7 +390,7 @@ int main(int argc,char *argv[])
 		wpp_add_include_path(INCLUDEDIR"/msvcrt");
 		wpp_add_include_path(INCLUDEDIR"/windows");
 	}
-	
+
 	/* Check for input file on command-line */
 	if(optind < argc)
 	{

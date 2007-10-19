@@ -10,21 +10,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -100,7 +100,7 @@ typedef struct __GLcontextModesRec {
 
     /* GLX */
     GLint visualID;
-    GLint visualType;     /**< One of the GLX X visual types. (i.e., 
+    GLint visualType;     /**< One of the GLX X visual types. (i.e.,
 			   * \c GLX_TRUE_COLOR, etc.)
 			   */
 
@@ -222,16 +222,16 @@ struct __GLdrawableRegionRec {
 /* what Resize routines return if resize resorted to fallback case */
 #define __GL_BUFFER_FALLBACK	0x10
 
-typedef void (*__GLbufFallbackInitFn)(__GLdrawableBuffer *buf, 
+typedef void (*__GLbufFallbackInitFn)(__GLdrawableBuffer *buf,
 				      __GLdrawablePrivate *glPriv, GLint bits);
-typedef void (*__GLbufMainInitFn)(__GLdrawableBuffer *buf, 
+typedef void (*__GLbufMainInitFn)(__GLdrawableBuffer *buf,
 				  __GLdrawablePrivate *glPriv, GLint bits,
 				  __GLbufFallbackInitFn back);
 
 /*
 ** A drawable buffer
 **
-** This data structure describes the context side of a drawable.  
+** This data structure describes the context side of a drawable.
 **
 ** According to the spec there could be multiple contexts bound to the same
 ** drawable at the same time (from different threads).  In order to avoid
@@ -285,7 +285,7 @@ struct __GLdrawableBufferRec {
 
     /* imported */
     GLboolean (*resize)(__GLdrawableBuffer *buf,
-			GLint x, GLint y, GLuint width, GLuint height, 
+			GLint x, GLint y, GLuint width, GLuint height,
 			__GLdrawablePrivate *glPriv, GLuint bufferMask);
     void (*lock)(__GLdrawableBuffer *buf, __GLdrawablePrivate *glPriv);
     void (*unlock)(__GLdrawableBuffer *buf, __GLdrawablePrivate *glPriv);
@@ -377,13 +377,13 @@ struct __GLdrawablePrivateRec {
     void *(*realloc)(void *oldAddr, size_t newSize);
     void (*free)(void *addr);
 
-    GLboolean (*addSwapRect)(__GLdrawablePrivate *glPriv, 
+    GLboolean (*addSwapRect)(__GLdrawablePrivate *glPriv,
 			     GLint x, GLint y, GLsizei width, GLsizei height);
-    void (*setClipRect)(__GLdrawablePrivate *glPriv, 
+    void (*setClipRect)(__GLdrawablePrivate *glPriv,
 			GLint x, GLint y, GLsizei width, GLsizei height);
     void (*updateClipRegion)(__GLdrawablePrivate *glPriv);
     GLboolean (*resize)(__GLdrawablePrivate *glPriv);
-    void (*getDrawableSize)(__GLdrawablePrivate *glPriv, 
+    void (*getDrawableSize)(__GLdrawablePrivate *glPriv,
 			    GLint *x, GLint *y, GLuint *width, GLuint *height);
 
     void (*lockDP)(__GLdrawablePrivate *glPriv, __GLcontext *gc);

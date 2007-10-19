@@ -190,8 +190,8 @@ HalAssignSlotResources(
 }
 
 
-BOOLEAN 
-NTAPI 
+BOOLEAN
+NTAPI
 HalBeginSystemInterrupt (KIRQL Irql,
 			 ULONG Vector,
 			 PKIRQL OldIrql)
@@ -443,7 +443,7 @@ HalReadDmaCounter(
   PADAPTER_OBJECT AdapterObject)
 {
   UNIMPLEMENTED;
-  
+
   return 0;
 }
 

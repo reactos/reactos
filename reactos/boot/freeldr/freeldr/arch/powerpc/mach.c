@@ -29,7 +29,7 @@ extern PCHAR GetFreeLoaderVersionString();
 extern ULONG CacheSizeLimit;
 of_proxy ofproxy;
 void *PageDirectoryStart, *PageDirectoryEnd;
-static int chosen_package, stdin_handle, stdout_handle, 
+static int chosen_package, stdin_handle, stdout_handle,
   part_handle = -1, kernel_mem = 0;
 int mmu_handle = 0, FixedMemory = 0;
 BOOLEAN AcpiPresent = FALSE;
@@ -40,7 +40,7 @@ boot_infos_t BootInfo;
 
 void PpcOfwPutChar( int ch ) {
     char buf[3];
-    if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; } 
+    if( ch == 0x0a ) { buf[0] = 0x0d; buf[1] = 0x0a; }
     else { buf[0] = ch; buf[1] = 0; }
     buf[2] = 0;
     ofw_write(stdout_handle, buf, strlen(buf));
@@ -66,7 +66,7 @@ int PpcFindDevice( int depth, int parent, char *devname, int *nth ) {
     if( !nth && match ) return parent;
 
     for( i = 0; i < depth; i++ ) PpcOfwPutChar( ' ' );
-    
+
     if( depth == 1 ) {
 	if( gotname > 0 ) {
 	    printf( "%c Name: %s\n", match ? '*' : ' ', buf );
@@ -152,12 +152,12 @@ BOOLEAN PpcVideoIsPaletteFixed() {
     return FALSE;
 }
 
-VOID PpcVideoSetPaletteColor( UCHAR Color, 
+VOID PpcVideoSetPaletteColor( UCHAR Color,
                               UCHAR Red, UCHAR Green, UCHAR Blue ) {
     printf( "SetPaletteColor(%x,%x,%x,%x)\n", Color, Red, Green, Blue );
 }
 
-VOID PpcVideoGetPaletteColor( UCHAR Color, 
+VOID PpcVideoGetPaletteColor( UCHAR Color,
                               UCHAR *Red, UCHAR *Green, UCHAR *Blue ) {
     printf( "GetPaletteColor(%x)\n", Color);
 }
@@ -212,7 +212,7 @@ VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
     for( node = ofw_finddevice("/"); prom_next_node(&node); ) {
 	memset(type, 0, sizeof(type));
 	memset(path, 0, sizeof(path));
-	
+
 	ret = ofw_getprop(node, "name", name, sizeof(name));
 
 	if(ofw_getprop(node, "device_type", type, sizeof(type)) <= 0) {
@@ -238,7 +238,7 @@ VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
 
     BootInfo.dispDeviceRect[0] = BootInfo.dispDeviceRect[1] = 0;
 
-    ofw_getprop(display_package, "width", 
+    ofw_getprop(display_package, "width",
 		(void *)&BootInfo.dispDeviceRect[2], sizeof(int));
     ofw_getprop(display_package, "height",
 		(void *)&BootInfo.dispDeviceRect[3], sizeof(int));
@@ -266,7 +266,7 @@ VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
     display_size = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
 
     printf("Display size is %x bytes (%x per row times %x rows)\n",
-	   display_size, 
+	   display_size,
 	   BootInfo.dispDeviceRowBytes,
 	   BootInfo.dispDeviceRect[3]);
 
@@ -279,7 +279,7 @@ VOID PpcVideoPrepareForReactOS(BOOLEAN Setup) {
 	    for( k = 0; k < BootInfo.dispDeviceDepth/8; k++ ) {
 		SetPhysByte(((ULONG_PTR)BootInfo.dispDeviceBase)+
 			    k +
-			    ((j * (BootInfo.dispDeviceDepth/8)) + 
+			    ((j * (BootInfo.dispDeviceDepth/8)) +
 			     (i * (BootInfo.dispDeviceRowBytes))),
 			    logo[elts] == ' ' ? 0 : 255);
 	    }
@@ -301,7 +301,7 @@ VOID PpcInitializeMmu(int max_mem)
     }
 }
 
-/* 
+/*
  * Get memory the proper openfirmware way
  */
 ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
@@ -313,7 +313,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
     memhandle = ofw_finddevice("/memory");
 
-    returned = ofw_getprop(memhandle, "available", 
+    returned = ofw_getprop(memhandle, "available",
 			   (char *)memdata, sizeof(memdata));
 
     printf("Returned data: %d\n", returned);
@@ -331,16 +331,16 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
 	BiosMemoryMap[slots].BaseAddress = memdata[i*2];
 	BiosMemoryMap[slots].Length = memdata[i*2+1];
-	printf("MemoryMap[%d] = (%x:%x)\n", 
-	       i, 
+	printf("MemoryMap[%d] = (%x:%x)\n",
+	       i,
 	       (int)BiosMemoryMap[slots].BaseAddress,
 	       (int)BiosMemoryMap[slots].Length);
-        
+
         // Track end of ram
-        if (BiosMemoryMap[slots].BaseAddress + BiosMemoryMap[slots].Length > 
+        if (BiosMemoryMap[slots].BaseAddress + BiosMemoryMap[slots].Length >
             mem_range_end)
         {
-            mem_range_end = 
+            mem_range_end =
                 BiosMemoryMap[slots].BaseAddress + BiosMemoryMap[slots].Length;
         }
 
@@ -389,9 +389,9 @@ BOOLEAN PpcDiskGetBootVolume( PULONG DriveNumber, PULONGLONG StartSector, PULONG
 BOOLEAN PpcDiskGetSystemVolume( char *SystemPath,
                              char *RemainingPath,
                              PULONG Device,
-                             PULONG DriveNumber, 
-                             PULONGLONG StartSector, 
-                             PULONGLONG SectorCount, 
+                             PULONG DriveNumber,
+                             PULONGLONG StartSector,
+                             PULONGLONG SectorCount,
                              int *FsType ) {
     char *remain = strchr(SystemPath, '\\');
     if( remain ) {
@@ -424,7 +424,7 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 
     if( part_handle == -1 ) {
 	part_handle = ofw_open( BootPart );
-	
+
 	if( part_handle == -1 ) {
 	    printf("Could not open any disk devices we know about\n");
 	    return FALSE;
@@ -436,8 +436,8 @@ BOOLEAN PpcDiskReadLogicalSectors( ULONG DriveNumber, ULONGLONG SectorNumber,
 	return FALSE;
     }
 
-    if( ofw_seek( part_handle, 
-		   (ULONG)(SectorNumber >> 25), 
+    if( ofw_seek( part_handle,
+		   (ULONG)(SectorNumber >> 25),
 		   (ULONG)((SectorNumber * 512) & 0xffffffff) ) ) {
 	printf("Seek to %x failed\n", (ULONG)(SectorNumber * 512));
 	return FALSE;
@@ -466,7 +466,7 @@ ULONG PpcDiskGetCacheableBlockCount( ULONG DriveNumber ) {
     return 1;
 }
 
-VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day, 
+VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day,
                                PULONG Hour, PULONG Minute, PULONG Second ) {
     //printf("RTCGeturrentDateTime\n");
 }
@@ -528,7 +528,7 @@ void PpcDefaultMachVtbl()
     MachVtbl.VideoSetTextCursorPosition = PpcVideoSetTextCursorPosition;
     MachVtbl.VideoHideShowTextCursor = PpcVideoHideShowTextCursor;
     MachVtbl.VideoPutChar = PpcVideoPutChar;
-    MachVtbl.VideoCopyOffScreenBufferToVRAM = 
+    MachVtbl.VideoCopyOffScreenBufferToVRAM =
         PpcVideoCopyOffScreenBufferToVRAM;
     MachVtbl.VideoIsPaletteFixed = PpcVideoIsPaletteFixed;
     MachVtbl.VideoSetPaletteColor = PpcVideoSetPaletteColor;
@@ -614,16 +614,16 @@ void MachInit(const char *CmdLine) {
 
     if( strlen(BootPart) == 0 ) {
 	if (ofproxy)
-            len = ofw_getprop(chosen_package, "bootpath", 
+            len = ofw_getprop(chosen_package, "bootpath",
                               BootPath, sizeof(BootPath));
 	else
             len = 0;
 	if( len < 0 ) len = 0;
 	BootPath[len] = 0;
 	printf( "Boot Path: %s\n", BootPath );
-	
+
 	sep = strrchr(BootPath, ',');
-	
+
 	strcpy(BootPart, BootPath);
 	if( sep ) {
 	    BootPart[sep - BootPath] = 0;

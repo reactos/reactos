@@ -90,7 +90,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "&Дополнительно...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12 
+   PUSHBUTTON "&Дополнительно...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
    LTEXT "&Таймаут:", -1, 280, 82, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 280, 93, 25, 12, ES_LEFT
    LTEXT "сек.", -1, 310, 91, 15, 10
@@ -126,9 +126,9 @@ BEGIN
     IDS_MSCONFIG             "Настройка системы"
     IDS_TAB_GENERAL          "Общие"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Службы" 
-    IDS_TAB_STARTUP          "Автозагрузка" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Службы"
+    IDS_TAB_STARTUP          "Автозагрузка"
     IDS_TAB_TOOLS            "Утилиты"
 END
 
@@ -172,5 +172,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "Запущено"
     IDS_SERVICES_STATUS_STOPPED "Остановлено"
     IDS_SERVICES_YES "Да"
-    IDS_SERVICES_UNKNOWN "Неизвестный" 
+    IDS_SERVICES_UNKNOWN "Неизвестный"
 END

@@ -26,7 +26,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -36,9 +36,9 @@ ID_ACCEL ACCELERATORS
     VK_F5, CMD_TIME_DATE, VIRTKEY
 }
 
-MAIN_MENU MENU 
+MAIN_MENU MENU
 BEGIN
-	POPUP "&Файл" 
+	POPUP "&Файл"
 	BEGIN
 		MENUITEM "Созд&ать",                CMD_NEW
 		MENUITEM "&Открыть...",             CMD_OPEN
@@ -77,7 +77,7 @@ BEGIN
 	BEGIN
 		MENUITEM "Строка &состояния",       CMD_STATUSBAR
 	END
-	POPUP "&Справка" 
+	POPUP "&Справка"
 	BEGIN
 		MENUITEM "&Содержание",             CMD_HELP_CONTENTS
 		MENUITEM "&Поиск...",               CMD_HELP_SEARCH
@@ -118,7 +118,7 @@ PUSHBUTTON    "&Справка",   IDHELP,                 180, 39, 40, 15, WS_TABSTOP
 /* Dialog `Encoding' */
 
 DIALOG_ENCODING DIALOG 0, 0, 256, 44
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Кодировка символов"
@@ -162,7 +162,7 @@ BEGIN
   STRING_LICENSE, "Эта программа является свободно распространяемой; Вы можете распространять ее повторно и (или) изменять, соблюдая условия Открытого лицензионного соглашения GNU, опубликованного Фондом свободно распространяемого программного обеспечения; либо редакции 2 Соглашения, либо (на ваше усмотрение) любой редакции, выпущенной позже.\r\n\r\nЭта программа распространяется в надежде на то, что она окажется полезной, но БЕЗ КАКИХ-ЛИБО ГАРАНТИЙ, включая подразумеваемую гарантию КАЧЕСТВА либо ПРИГОДНОСТИ ДЛЯ ОПРЕДЕЛЕННЫХ ЦЕЛЕЙ. Подробности содержатся в Открытом лицензионном соглашении GNU.\r\n\r\nВместе с этой программой должен распространяться экземпляр Открытого лицензионного соглашения GNU, если он отсутствует, сообщите об этом в Фонд свободно распространяемого программного обеспечения (Free Software Foundation, Inc.), 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"            /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Страница &s"   /* FIXME */

@@ -73,10 +73,10 @@ static PVOID CabinetReservedArea = NULL;
 void* __cdecl malloc(size_t _size)
 {
    size_t nSize = ROUND_SIZE(_size);
-   
-   if (nSize<_size) 
-       return NULL;     
-       
+
+   if (nSize<_size)
+       return NULL;
+
    return RtlAllocateHeap(ProcessHeap, HEAP_ZERO_MEMORY, nSize);
 }
 
@@ -147,7 +147,7 @@ MSZipCodecUncompress(PVOID OutputBuffer,
 		  DPRINT("Bad MSZIP block header magic (0x%X)\n", Magic);
 		  return CS_BADSTREAM;
 		}
-	
+
 	  ZStream.next_in   = (PUCHAR)((ULONG)InputBuffer + 2);
 	  ZStream.avail_in  = *InputLength - 2;
 	  ZStream.next_out  = (PUCHAR)OutputBuffer;
@@ -213,12 +213,12 @@ void MSZipFree (voidpf opaque, voidpf address)
 
 static BOOL
 ConvertSystemTimeToFileTime(
-  CONST SYSTEMTIME *  lpSystemTime,	
+  CONST SYSTEMTIME *  lpSystemTime,
   LPFILETIME  lpFileTime)
 {
   TIME_FIELDS TimeFields;
   LARGE_INTEGER liTime;
-  
+
   TimeFields.Year = lpSystemTime->wYear;
   TimeFields.Month = lpSystemTime->wMonth;
   TimeFields.Day = lpSystemTime->wDay;
@@ -226,7 +226,7 @@ ConvertSystemTimeToFileTime(
   TimeFields.Minute = lpSystemTime->wMinute;
   TimeFields.Second = lpSystemTime->wSecond;
   TimeFields.Milliseconds = lpSystemTime->wMilliseconds;
-  
+
   if (RtlTimeFieldsToTime(&TimeFields, &liTime))
     {
       lpFileTime->dwLowDateTime = liTime.u.LowPart;
@@ -246,21 +246,21 @@ ConvertDosDateTimeToFileTime(
   PDOSTIME  pdtime = (PDOSTIME) &wFatTime;
   PDOSDATE  pddate = (PDOSDATE) &wFatDate;
   SYSTEMTIME SystemTime;
-  
+
   if (lpFileTime == NULL)
     return FALSE;
-  
+
   SystemTime.wMilliseconds = 0;
   SystemTime.wSecond = pdtime->Second;
   SystemTime.wMinute = pdtime->Minute;
   SystemTime.wHour = pdtime->Hour;
-  
+
   SystemTime.wDay = pddate->Day;
   SystemTime.wMonth = pddate->Month;
   SystemTime.wYear = 1980 + pddate->Year;
-  
+
   ConvertSystemTimeToFileTime(&SystemTime,lpFileTime);
-  
+
   return TRUE;
 }
 
@@ -276,9 +276,9 @@ GetFileName(PWCHAR Path)
  */
 {
   ULONG i, j;
-  
+
   j = i = 0;
-  
+
   while (Path [i++])
     {
       if (Path[i - 1] == L'\\') j = i;
@@ -297,10 +297,10 @@ RemoveFileName(PWCHAR Path)
 {
   PWCHAR FileName;
   DWORD i;
-  
+
   i = 0;
   FileName = GetFileName(Path + i);
-  
+
   if ((FileName != (Path + i)) && (FileName [-1] == L'\\'))
     FileName--;
   if ((FileName == (Path + i)) && (FileName [0] == L'\\'))
@@ -381,7 +381,7 @@ CloseCabinet(VOID)
 	  NtClose( FileHandle );
       FileBuffer = NULL;
     }
-  
+
   return 0;
 }
 
@@ -398,10 +398,10 @@ CabinetInitialize(VOID)
 
   FileOpen = FALSE;
   wcscpy(DestPath, L"");
-  
+
   CodecId       = CAB_CODEC_RAW;
   CodecSelected = TRUE;
-  
+
   FolderUncompSize = 0;
   BytesLeftInBlock = 0;
   CabinetReserved = 0;
@@ -436,7 +436,7 @@ CabinetNormalizePath(PWCHAR Path,
 {
   ULONG n;
   BOOL OK = TRUE;
-  
+
   if ((n = wcslen(Path)) &&
     (Path[n - 1] != L'\\') &&
     (OK = ((n + 1) < Length)))
@@ -509,7 +509,7 @@ CabinetOpen(VOID)
   PUCHAR Buffer;
   UNICODE_STRING ustring;
   ANSI_STRING astring;
-  
+
   if (!FileOpen)
     {
       OBJECT_ATTRIBUTES ObjectAttributes;
@@ -517,7 +517,7 @@ CabinetOpen(VOID)
       UNICODE_STRING FileName;
       NTSTATUS NtStatus;
       ULONG Size;
-    
+
       RtlInitUnicodeString(&FileName,
         CabinetName);
 
@@ -571,7 +571,7 @@ CabinetOpen(VOID)
 		}
 	  DPRINT( "Cabinet file %S opened and mapped to %x\n", CabinetName, FileBuffer );
 	  PCABHeader = (PCFHEADER)FileBuffer;
-    
+
       /* Check header */
       if(FileSize <= sizeof(CFHEADER) ||
 		 PCABHeader->Signature != CAB_SIGNATURE ||
@@ -584,9 +584,9 @@ CabinetOpen(VOID)
 		  DPRINT("File has invalid header.\n");
 		  return CAB_STATUS_INVALID_CAB;
 		}
-  
+
       Size = 0;
-	  Buffer = (PUCHAR)(PCABHeader+1);  
+	  Buffer = (PUCHAR)(PCABHeader+1);
       /* Read/skip any reserved bytes */
       if (PCABHeader->Flags & CAB_FLAG_RESERVE)
         {
@@ -602,7 +602,7 @@ CabinetOpen(VOID)
 			  Buffer += CabinetReserved;
             }
         }
-  
+
       if (PCABHeader->Flags & CAB_FLAG_HASPREV)
         {
           /* The previous cabinet file is in the same directory as the current */
@@ -629,7 +629,7 @@ CabinetOpen(VOID)
           wcscpy(CabinetPrev, L"");
           wcscpy(DiskPrev, L"");
         }
-    
+
       if (PCABHeader->Flags & CAB_FLAG_HASNEXT)
         {
           /* The next cabinet file is in the same directory as the previous */
@@ -764,17 +764,17 @@ CabinetFindNext(PCAB_SEARCH Search)
 		  if (wcslen(DiskNext) > 0)
 			{
 			  CloseCabinet();
-			  
+
 			  CabinetSetCabinetName(CabinetNext);
 			  wcscpy( Search->Cabinet, CabinetName );
-			  
+
 			  if (DiskChangeHandler != NULL)
 				{
 				  DiskChangeHandler(CabinetNext, DiskNext);
 				}
-			  
+
 			  Status = CabinetOpen();
-			  if (Status != CAB_STATUS_SUCCESS) 
+			  if (Status != CAB_STATUS_SUCCESS)
 				return Status;
 
 			}
@@ -863,7 +863,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	default:
 	  return CAB_STATUS_UNSUPPCOMP;
     }
-  
+
   DPRINT("Extracting file at uncompressed offset (0x%X)  Size (%d bytes)).\n",
 		 (UINT)Search->File->FileOffset,
 		 (UINT)Search->File->FileSize);
@@ -979,7 +979,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
   else
     {
       memcpy(&FileBasic.LastAccessTime, &FileTime, sizeof(FILETIME));
-	  
+
       NtStatus = NtSetInformationFile(DestFile,
 									  &IoStatusBlock,
 									  &FileBasic,
@@ -992,7 +992,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
     }
 
   SetAttributesOnFile(Search->File, DestFile);
-  
+
   /* Call extract event handler */
   if (ExtractHandler != NULL)
     {
@@ -1029,7 +1029,7 @@ ULONG CabinetExtractFile( PCAB_SEARCH Search )
 	  InputLength = -RemainingBlock;   // neg for resume decompression of the same block
 	}
   // now CurrentBuffer points to the first comp byte of the file, so we can begin decompressing
-  
+
   Size = Search->File->FileSize;   // Size = remaining uncomp bytes of the file to decompress
   while(Size > 0)
     {

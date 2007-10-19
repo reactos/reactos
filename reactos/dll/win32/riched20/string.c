@@ -18,7 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "editor.h"     
+#include "editor.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
@@ -40,7 +40,7 @@ ME_String *ME_MakeString(LPCWSTR szText)
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars)
 {
   ME_String *s = ALLOC_OBJ(ME_String);
-  
+
   s->nLen = nMaxChars;
   s->nBuffer = ME_GetOptimalBuffer(s->nLen+1);
   s->szData = ALLOC_N_OBJ(WCHAR, s->nBuffer);
@@ -54,7 +54,7 @@ ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars)
 { /* Make a string by repeating a char nMaxChars times */
   int i;
    ME_String *s = ALLOC_OBJ(ME_String);
-  
+
   s->nLen = nMaxChars;
   s->nBuffer = ME_GetOptimalBuffer(s->nLen+1);
   s->szData = ALLOC_N_OBJ(WCHAR, s->nBuffer);
@@ -68,7 +68,7 @@ ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars)
 ME_String *ME_MakeStringB(int nMaxChars)
 { /* Create a buffer (uninitialized string) of size nMaxChars */
   ME_String *s = ALLOC_OBJ(ME_String);
-  
+
   s->nLen = nMaxChars;
   s->nBuffer = ME_GetOptimalBuffer(s->nLen+1);
   s->szData = ALLOC_N_OBJ(WCHAR, s->nBuffer);
@@ -98,7 +98,7 @@ void ME_AppendString(ME_String *s1, ME_String *s2)
     WCHAR *buf;
     s1->nBuffer = ME_GetOptimalBuffer(s1->nLen+s2->nLen+1);
 
-    buf = ALLOC_N_OBJ(WCHAR, s1->nBuffer); 
+    buf = ALLOC_N_OBJ(WCHAR, s1->nBuffer);
     lstrcpyW(buf, s1->szData);
     lstrcpyW(buf+s1->nLen, s2->szData);
     FREE_OBJ(s1->szData);
@@ -115,7 +115,7 @@ ME_String *ME_ConcatString(ME_String *s1, ME_String *s2)
   s->szData = ALLOC_N_OBJ(WCHAR, s->nBuffer);
   lstrcpyW(s->szData, s1->szData);
   lstrcpyW(s->szData+s1->nLen, s2->szData);
-  return s;  
+  return s;
 }
 
 ME_String *ME_VSplitString(ME_String *orig, int charidx)
@@ -173,7 +173,7 @@ int ME_CalcSkipChars(ME_String *s)
 }
 */
 
-int ME_StrLen(ME_String *s) { 
+int ME_StrLen(ME_String *s) {
   return s->nLen;
 }
 
@@ -184,13 +184,13 @@ int ME_StrVLen(ME_String *s) {
 int ME_StrRelPos(ME_String *s, int nVChar, int *pRelChars)
 {
   int nRelChars = *pRelChars;
-  
+
   TRACE("%s,%d,&%d\n", debugstr_w(s->szData), nVChar, *pRelChars);
 
   assert(*pRelChars);
   if (!nRelChars)
     return nVChar;
-  
+
   if (nRelChars>0)
     nRelChars = min(*pRelChars, s->nLen - nVChar);
   else
@@ -234,11 +234,11 @@ int ME_PosToVPos(ME_String *s, int nPos)
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars)
 {
   int end_ofs;
-  
+
   assert(nVChar >=0 && nVChar <= s->nLen);
   assert(nChars >= 0);
   assert(nVChar+nChars <= s->nLen);
-  
+
   end_ofs = ME_StrRelPos2(s, nVChar, nChars);
   assert(end_ofs <= s->nLen);
   memmove(s->szData+nVChar, s->szData+end_ofs, 2*(s->nLen+1-end_ofs));
@@ -248,11 +248,11 @@ void ME_StrDeleteV(ME_String *s, int nVChar, int nChars)
 int ME_GetCharFwd(ME_String *s, int nPos)
 {
   int nVPos = 0;
-  
+
   assert(nPos < ME_StrLen(s));
   if (nPos)
     nVPos = ME_StrRelPos2(s, nVPos, nPos);
-  
+
   if (nVPos < s->nLen)
     return s->szData[nVPos];
   return -1;
@@ -261,11 +261,11 @@ int ME_GetCharFwd(ME_String *s, int nPos)
 int ME_GetCharBack(ME_String *s, int nPos)
 {
   int nVPos = ME_StrVLen(s);
-  
+
   assert(nPos < ME_StrLen(s));
   if (nPos)
     nVPos = ME_StrRelPos2(s, nVPos, -nPos);
-  
+
   if (nVPos < s->nLen)
     return s->szData[nVPos];
   return -1;
@@ -275,7 +275,7 @@ int ME_FindNonWhitespaceV(ME_String *s, int nVChar) {
   int i;
   for (i = nVChar; i<s->nLen && ME_IsWSpace(s->szData[i]); i++)
     ;
-    
+
   return i;
 }
 
@@ -284,7 +284,7 @@ int ME_ReverseFindNonWhitespaceV(ME_String *s, int nVChar) {
   int i;
   for (i = nVChar; i>0 && ME_IsWSpace(s->szData[i-1]); i--)
     ;
-    
+
   return i;
 }
 
@@ -293,7 +293,7 @@ int ME_ReverseFindWhitespaceV(ME_String *s, int nVChar) {
   int i;
   for (i = nVChar; i>0 && !ME_IsWSpace(s->szData[i-1]); i--)
     ;
-    
+
   return i;
 }
 

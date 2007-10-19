@@ -25,7 +25,7 @@
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
- 
+
 #include <windows.h>
 #include <commctrl.h>
 #include <cpl.h>
@@ -38,14 +38,14 @@
 
 #include "resource.h"
 #include "input.h"
- 
+
 VOID
 CreateKeyboardLayoutList(HWND hWnd)
 {
     TCHAR Layout[256];
     int Index;
 	UINT loIndex;
-	
+
     for ( loIndex = BEGIN_LAYOUT; loIndex <= END_LAYOUT; loIndex++ )
 	{
 		LoadString(hApplet,

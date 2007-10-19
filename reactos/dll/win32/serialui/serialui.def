@@ -5,6 +5,6 @@ drvCommConfigDialogW
 drvCommConfigDialogA
 drvSetDefaultCommConfigW
 drvSetDefaultCommConfigA
-drvGetDefaultCommConfigW 
+drvGetDefaultCommConfigW
 drvGetDefaultCommConfigA
 

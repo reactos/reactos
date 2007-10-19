@@ -111,7 +111,7 @@ static HRESULT WINAPI EnumOleSTATDATA_Next(
 
     for (; celt; celt--, rgelt++)
     {
-        while ((This->index < This->pOleAdviseHolder->maxSinks) && 
+        while ((This->index < This->pOleAdviseHolder->maxSinks) &&
                !This->pOleAdviseHolder->arrayOfSinks[This->index])
         {
             This->index++;
@@ -144,7 +144,7 @@ static HRESULT WINAPI EnumOleSTATDATA_Skip(
 
     for (; celt; celt--)
     {
-        while ((This->index < This->pOleAdviseHolder->maxSinks) && 
+        while ((This->index < This->pOleAdviseHolder->maxSinks) &&
                !This->pOleAdviseHolder->arrayOfSinks[This->index])
         {
             This->index++;
@@ -197,7 +197,7 @@ static HRESULT EnumOleSTATDATA_Construct(OleAdviseHolderImpl *pOleAdviseHolder, 
     This->pOleAdviseHolder = pOleAdviseHolder;
     IOleAdviseHolder_AddRef((IOleAdviseHolder *)pOleAdviseHolder);
     *ppenum = (IEnumSTATDATA *)&This->lpvtbl;
-    return S_OK;    
+    return S_OK;
 }
 
 /**************************************************************************
@@ -573,7 +573,7 @@ static void DataAdviseHolder_Destructor(DataAdviseHolder* ptrToDestroy)
   {
     if (ptrToDestroy->Connections[index].sink != NULL)
     {
-      if (ptrToDestroy->delegate && 
+      if (ptrToDestroy->delegate &&
           (ptrToDestroy->Connections[index].advf & WINE_ADVF_REMOTE))
         IDataObject_DUnadvise(ptrToDestroy->delegate,
           ptrToDestroy->Connections[index].remote_connection);

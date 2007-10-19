@@ -30,7 +30,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
              _SEH_LEAVE;
         }
 
-        // FIXME test if 0x20 exists as a flag and what thuse it do 
+        // FIXME test if 0x20 exists as a flag and what thuse it do
         if ( cooplevel & (~(DDSCL_FPUPRESERVE | DDSCL_FPUSETUP | DDSCL_MULTITHREADED | DDSCL_CREATEDEVICEWINDOW |
                             DDSCL_SETDEVICEWINDOW | DDSCL_SETFOCUSWINDOW | DDSCL_ALLOWMODEX | DDSCL_EXCLUSIVE |
                             DDSCL_NORMAL | DDSCL_NOWINDOWCHANGES | DDSCL_ALLOWREBOOT | DDSCL_FULLSCREEN)))
@@ -56,7 +56,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         {
               retVal = DDERR_INVALIDPARAMS;
              _SEH_LEAVE;
-        }  
+        }
 
         if ((cooplevel & DDSCL_ALLOWMODEX) &&  (!(cooplevel & DDSCL_FULLSCREEN)))
         {
@@ -123,7 +123,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
             This->lpLcl->dwLocalFlags = DDRAWILCL_SETCOOPCALLED     | DDRAWILCL_DIRECTDRAW7  | DDRAWILCL_HOOKEDHWND |
                                         DDRAWILCL_HASEXCLUSIVEMODE  | DDRAWILCL_ISFULLSCREEN | DDRAWILCL_ACTIVEYES |
                                         DDRAWILCL_CURSORCLIPPED;
-            
+
             if (cooplevel & DDSCL_ALLOWMODEX)
             {
                 This->lpLcl->dwLocalFlags = This->lpLcl->dwLocalFlags | DDRAWILCL_ALLOWMODEX;
@@ -150,7 +150,7 @@ Main_DirectDraw_SetCooperativeLevel (LPDDRAWI_DIRECTDRAW_INT This, HWND hwnd, DW
         ///* Handle those levels first which set various hwnds */
         //if(cooplevel & DDSCL_SETFOCUSWINDOW)
         //{
-        //    
+        //
 
         //    if(This->lpLcl->dwLocalFlags & DDRAWILCL_SETCOOPCALLED)
         //    {

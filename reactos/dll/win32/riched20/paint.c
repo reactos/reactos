@@ -43,7 +43,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
     {
       BOOL bPaint = (rcUpdate == NULL);
       if (rcUpdate)
-        bPaint = c.pt.y<rcUpdate->bottom && 
+        bPaint = c.pt.y<rcUpdate->bottom &&
           c.pt.y+item->member.para.nHeight>rcUpdate->top;
       if (bPaint)
       {
@@ -59,7 +59,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
     RECT rc;
     int xs = c.rcView.left, xe = c.rcView.right;
     int ys = c.pt.y, ye = c.rcView.bottom;
-    
+
     if (bOnlyNew)
     {
       int y1 = editor->nTotalLength-yoffset, y2 = editor->nLastTotalLength-yoffset;
@@ -68,7 +68,7 @@ void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpda
       else
         ys = ye;
     }
-    
+
     if (rcUpdate && ys!=ye)
     {
       xs = rcUpdate->left, xe = rcUpdate->right;
@@ -109,14 +109,14 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
 {
   /* Should be called whenever the contents of the control have changed */
   ME_Cursor *pCursor;
-  
+
   if (ME_WrapMarkedParagraphs(editor))
     ME_UpdateScrollBar(editor);
-  
+
   /* Ensure that the cursor is visible */
   pCursor = &editor->pCursors[0];
   ME_EnsureVisible(editor, pCursor->pRun);
-  
+
   /* send EN_CHANGE if the event mask asks for it */
   if(editor->nEventMask & ENM_CHANGE)
   {
@@ -128,19 +128,19 @@ void ME_UpdateRepaint(ME_TextEditor *editor)
 
 void
 ME_RewrapRepaint(ME_TextEditor *editor)
-{ 
+{
   /* RewrapRepaint should be called whenever the control has changed in
    * looks, but not content. Like resizing. */
-  
+
   ME_MarkAllForWrapping(editor);
   ME_WrapMarkedParagraphs(editor);
   ME_UpdateScrollBar(editor);
-  
+
   ME_Repaint(editor);
 }
 
 
-static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChars, 
+static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, int nChars,
   ME_Style *s, int *width, int nSelFrom, int nSelTo, int ymin, int cy) {
   HDC hDC = c->hDC;
   HGDIOBJ hOldFont;
@@ -149,7 +149,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
   hOldFont = ME_SelectStyleFont(c->editor, hDC, s);
   rgbBack = ME_GetBackColor(c->editor);
   if ((s->fmt.dwMask & CFM_LINK) && (s->fmt.dwEffects & CFE_LINK))
-    rgbOld = SetTextColor(hDC, RGB(0,0,255));  
+    rgbOld = SetTextColor(hDC, RGB(0,0,255));
   else if ((s->fmt.dwMask & CFM_COLOR) && (s->fmt.dwEffects & CFE_AUTOCOLOR))
     rgbOld = SetTextColor(hDC, GetSysColor(COLOR_WINDOWTEXT));
   else
@@ -165,7 +165,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
   {
     int numerator = 1;
     int denominator = 1;
-    
+
     if (c->editor->nZoomNumerator)
     {
       numerator = c->editor->nZoomNumerator;
@@ -187,7 +187,7 @@ static void ME_DrawTextWithStyle(ME_Context *c, int x, int y, LPCWSTR szText, in
     GetTextExtentPoint32W(hDC, szText, nSelFrom, &sz);
     x += sz.cx;
     GetTextExtentPoint32W(hDC, szText+nSelFrom, nSelTo-nSelFrom, &sz);
-    
+
     /* Invert selection if not hidden by EM_HIDESELECTION */
     if (c->editor->bHideSelection == FALSE)
 	PatBlt(hDC, x, ymin, sz.cx, cy, DSTINVERT);
@@ -230,18 +230,18 @@ static void ME_DrawGraphics(ME_Context *c, int x, int y, ME_Run *run,
   if (selected)
   {
     /* descent is usually (always?) 0 for graphics */
-    PatBlt(c->hDC, x, y-run->nAscent, sz.cx, run->nAscent+run->nDescent, DSTINVERT);    
+    PatBlt(c->hDC, x, y-run->nAscent, sz.cx, run->nAscent+run->nDescent, DSTINVERT);
   }
 }
 
-static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para) 
+static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Paragraph *para)
 {
   ME_Run *run = &rundi->member.run;
   ME_DisplayItem *start = ME_FindItemBack(rundi, diStartRow);
   int runofs = run->nCharOfs+para->nCharOfs;
   int nSelFrom, nSelTo;
   const WCHAR wszSpace[] = {' ', 0};
-  
+
   if (run->nFlags & MERF_HIDDEN)
     return;
 
@@ -252,9 +252,9 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     ME_DrawTextWithStyle(c, x, y, wszSpace, 1, run->style, NULL, 0, 1,
                          c->pt.y + start->member.row.nYPos,
                          start->member.row.nHeight);
-          
+
   /* you can always comment it out if you need visible paragraph marks */
-  if (run->nFlags & (MERF_ENDPARA | MERF_TAB | MERF_CELL)) 
+  if (run->nFlags & (MERF_ENDPARA | MERF_TAB | MERF_CELL))
     return;
 
   if (run->nFlags & MERF_GRAPHICS)
@@ -264,14 +264,14 @@ static void ME_DrawRun(ME_Context *c, int x, int y, ME_DisplayItem *rundi, ME_Pa
     if (c->editor->cPasswordMask)
     {
       ME_String *szMasked = ME_MakeStringR(c->editor->cPasswordMask,ME_StrVLen(run->strText));
-      ME_DrawTextWithStyle(c, x, y, 
-        szMasked->szData, ME_StrVLen(szMasked), run->style, NULL, 
+      ME_DrawTextWithStyle(c, x, y,
+        szMasked->szData, ME_StrVLen(szMasked), run->style, NULL,
 	nSelFrom-runofs,nSelTo-runofs, c->pt.y+start->member.row.nYPos, start->member.row.nHeight);
       ME_DestroyString(szMasked);
     }
     else
-      ME_DrawTextWithStyle(c, x, y, 
-        run->strText->szData, ME_StrVLen(run->strText), run->style, NULL, 
+      ME_DrawTextWithStyle(c, x, y,
+        run->strText->szData, ME_StrVLen(run->strText), run->style, NULL,
 	nSelFrom-runofs,nSelTo-runofs, c->pt.y+start->member.row.nYPos, start->member.row.nHeight);
     }
 }
@@ -298,7 +298,7 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
   int xs, xe;
   int visible = 0;
   int nMargWidth = 0;
-  
+
   c->pt.x = c->rcView.left;
   rcPara.left = c->rcView.left;
   rcPara.right = c->rcView.right;
@@ -343,7 +343,7 @@ void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph) {
           pt.y = 12+y;
           ME_DebugWrite(c->hDC, &pt, buf);
         }
-        
+
         height = p->member.row.nHeight;
         baseline = p->member.row.nBaseline;
         pno++;
@@ -396,7 +396,7 @@ void ME_ScrollUp(ME_TextEditor *editor, int cy)
 }
 
 void ME_ScrollDown(ME_TextEditor *editor, int cy)
-{ 
+{
   ME_Scroll(editor, cy, 3);
 }
 
@@ -406,10 +406,10 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
   int nOrigPos, nNewPos, nActualScroll;
 
   nOrigPos = ME_GetYScrollPos(editor);
-  
+
   si.cbSize = sizeof(SCROLLINFO);
   si.fMask = SIF_POS;
-  
+
   switch (type)
   {
     case 1:
@@ -428,7 +428,7 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
       FIXME("ME_Scroll called incorrectly\n");
       si.nPos = 0;
   }
-  
+
   nNewPos = SetScrollInfo(editor->hWnd, SB_VERT, &si, editor->bRedraw);
   nActualScroll = nOrigPos - nNewPos;
   if (editor->bRedraw)
@@ -439,45 +439,45 @@ void ME_Scroll(ME_TextEditor *editor, int value, int type)
       ScrollWindowEx(editor->hWnd, 0, nActualScroll, NULL, NULL, NULL, NULL, SW_INVALIDATE);
     ME_Repaint(editor);
   }
-  
+
   ME_UpdateScrollBar(editor);
 }
 
- 
+
  void ME_UpdateScrollBar(ME_TextEditor *editor)
-{ 
-  /* Note that this is the only funciton that should ever call SetScrolLInfo 
+{
+  /* Note that this is the only funciton that should ever call SetScrolLInfo
    * with SIF_PAGE or SIF_RANGE. SetScrollPos and SetScrollRange should never
    * be used at all. */
-  
+
   HWND hWnd;
   SCROLLINFO si;
   BOOL bScrollBarWasVisible,bScrollBarWillBeVisible;
-  
+
   if (ME_WrapMarkedParagraphs(editor))
     FIXME("ME_UpdateScrollBar had to call ME_WrapMarkedParagraphs\n");
-  
+
   hWnd = editor->hWnd;
   si.cbSize = sizeof(si);
   bScrollBarWasVisible = ME_GetYScrollVisible(editor);
   bScrollBarWillBeVisible = editor->nTotalLength > editor->sizeWindow.cy;
-  
+
   if (bScrollBarWasVisible != bScrollBarWillBeVisible)
   {
     ShowScrollBar(hWnd, SB_VERT, bScrollBarWillBeVisible);
     ME_MarkAllForWrapping(editor);
     ME_WrapMarkedParagraphs(editor);
   }
-  
+
   si.fMask = SIF_PAGE | SIF_RANGE;
   if (GetWindowLongW(hWnd, GWL_STYLE) & ES_DISABLENOSCROLL)
     si.fMask |= SIF_DISABLENOSCROLL;
-  
-  si.nMin = 0;  
+
+  si.nMin = 0;
   si.nMax = editor->nTotalLength;
-  
+
   si.nPage = editor->sizeWindow.cy;
-     
+
   TRACE("min=%d max=%d page=%d\n", si.nMin, si.nMax, si.nPage);
   SetScrollInfo(hWnd, SB_VERT, &si, TRUE);
 }
@@ -504,18 +504,18 @@ void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun)
   ME_DisplayItem *pRow = ME_FindItemBack(pRun, diStartRow);
   ME_DisplayItem *pPara = ME_FindItemBack(pRun, diParagraph);
   int y, yrel, yheight, yold;
-  
+
   assert(pRow);
   assert(pPara);
-  
+
   y = pPara->member.para.nYPos+pRow->member.row.nYPos;
   yheight = pRow->member.row.nHeight;
   yold = ME_GetYScrollPos(editor);
   yrel = y - yold;
-  
+
   if (y < yold)
     ME_ScrollAbs(editor,y);
-  else if (yrel + yheight > editor->sizeWindow.cy) 
+  else if (yrel + yheight > editor->sizeWindow.cy)
     ME_ScrollAbs(editor,y+yheight-editor->sizeWindow.cy);
 }
 
@@ -555,16 +555,16 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   assert(para1->type == diParagraph);
   assert(para2->type == diParagraph);
   /* last selection markers aren't always updated, which means
-  they can point past the end of the document */ 
+  they can point past the end of the document */
   if (editor->nLastSelStart > len)
-    editor->nLastSelEnd = len; 
+    editor->nLastSelEnd = len;
   if (editor->nLastSelEnd > len)
-    editor->nLastSelEnd = len; 
-    
+    editor->nLastSelEnd = len;
+
   /* if the start part of selection is being expanded or contracted... */
   if (nStart < editor->nLastSelStart) {
     ME_MarkForPainting(editor, para1, ME_FindItemFwd(editor->pLastSelStartPara, diParagraphOrEnd));
-  } else 
+  } else
   if (nStart > editor->nLastSelStart) {
     ME_MarkForPainting(editor, editor->pLastSelStartPara, ME_FindItemFwd(para1, diParagraphOrEnd));
   }
@@ -572,7 +572,7 @@ ME_InvalidateSelection(ME_TextEditor *editor)
   /* if the end part of selection is being contracted or expanded... */
   if (nEnd < editor->nLastSelEnd) {
     ME_MarkForPainting(editor, para2, ME_FindItemFwd(editor->pLastSelEndPara, diParagraphOrEnd));
-  } else 
+  } else
   if (nEnd > editor->nLastSelEnd) {
     ME_MarkForPainting(editor, editor->pLastSelEndPara, ME_FindItemFwd(para2, diParagraphOrEnd));
   }
@@ -605,10 +605,10 @@ ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator)
         || (float)numerator / (float)denominator > 64.0)
       return FALSE;
   }
-  
+
   editor->nZoomNumerator = numerator;
   editor->nZoomDenominator = denominator;
-  
+
   ME_RewrapRepaint(editor);
   return TRUE;
 }

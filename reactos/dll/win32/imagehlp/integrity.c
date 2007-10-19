@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(imagehlp);
 
 static
 BOOL
-IMAGEHLP_GetSecurityDirOffset(HANDLE handle, 
+IMAGEHLP_GetSecurityDirOffset(HANDLE handle,
                               DWORD *pdwOfs,
                               DWORD *pdwSize)
 {
@@ -86,7 +86,7 @@ IMAGEHLP_GetSecurityDirOffset(HANDLE handle,
 /***********************************************************************
  * IMAGEHLP_GetCertificateOffset (INTERNAL)
  *
- * Read a file's PE header, and return the offset and size of the 
+ * Read a file's PE header, and return the offset and size of the
  *  security directory.
  */
 static BOOL IMAGEHLP_GetCertificateOffset( HANDLE handle, DWORD num,
@@ -223,7 +223,7 @@ BOOL IMAGEAPI ImageEnumerateCertificates(
             return FALSE;
         if( hdr.dwLength > (size-offset) )
             return FALSE;
-       
+
         if( (TypeFilter == CERT_SECTION_TYPE_ANY) ||
             (TypeFilter == hdr.wCertificateType) )
         {

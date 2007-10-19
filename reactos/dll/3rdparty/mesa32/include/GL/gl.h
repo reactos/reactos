@@ -34,7 +34,7 @@
 /**********************************************************************
  * Begin system-specific stuff. Do not do any of this when building
  * for SciTech SNAP, as this is all done before this header file is
- * included. 
+ * included.
  */
 #if !defined(__SCITECH_SNAP__)
 

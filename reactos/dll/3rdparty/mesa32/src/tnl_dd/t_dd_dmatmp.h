@@ -82,7 +82,7 @@ static void *TAG(emit_elts)( GLcontext *ctx, GLuint *elts, GLuint nr,
       EMIT_TWO_ELTS( 0, elts[0], elts[1] );
       INCR_ELTS( 2 );
    }
-   
+
    if (i < nr) {
       EMIT_ELT( 0, elts[0] );
       INCR_ELTS( 1 );
@@ -92,7 +92,7 @@ static void *TAG(emit_elts)( GLcontext *ctx, GLuint *elts, GLuint nr,
 }
 #endif
 
-static __inline void *TAG(emit_verts)( GLcontext *ctx, GLuint start, 
+static __inline void *TAG(emit_verts)( GLcontext *ctx, GLuint start,
 				     GLuint count, void *buf )
 {
    return EMIT_VERTS(ctx, start, count, buf);
@@ -189,7 +189,7 @@ static void TAG(render_line_strip_verts)( GLcontext *ctx,
 	 TAG(emit_verts)( ctx, j, nr, ALLOC_VERTS(nr) );
 	 currentsz = dmasz;
       }
- 
+
       FLUSH();
 
    } else {
@@ -232,8 +232,8 @@ static void TAG(render_line_loop_verts)( GLcontext *ctx,
 	    nr = MIN2( currentsz, count - j );
 
 	    if (j + nr >= count &&
-		start < count - 1 && 
-		(flags & PRIM_END)) 
+		start < count - 1 &&
+		(flags & PRIM_END))
 	    {
 	       void *tmp;
 	       tmp = ALLOC_VERTS(nr+1);
@@ -439,7 +439,7 @@ static void TAG(render_quad_strip_verts)( GLcontext *ctx,
 
       FLUSH();
 
-   } else if (HAVE_TRI_STRIPS && 
+   } else if (HAVE_TRI_STRIPS &&
 	      (ctx->_TriangleCaps & DD_FLATSHADE) &&
 	      TNL_CONTEXT(ctx)->vb.ColorPtr[0]->stride) {
       if (HAVE_ELTS) {
@@ -811,8 +811,8 @@ static void TAG(render_line_loop_elts)( GLcontext *ctx,
 	    nr = MIN2( currentsz, count - j );
 
 	    if (j + nr >= count &&
-		start < count - 1 && 
-		(flags & PRIM_END)) 
+		start < count - 1 &&
+		(flags & PRIM_END))
 	    {
 	       void *tmp;
 	       tmp = ALLOC_ELTS(nr+1);
@@ -1207,7 +1207,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	 if (HAVE_POLYGONS) {
 	    ok = GL_TRUE;
 	 }
-	 else 
+	 else
 	    ok =  (HAVE_TRI_FANS && !(ctx->_TriangleCaps & DD_FLATSHADE));
 	 break;
       case GL_QUAD_STRIP:
@@ -1216,7 +1216,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	 }
 	 else if (HAVE_QUAD_STRIPS) {
 	    ok = GL_TRUE;
-	 } else if (HAVE_TRI_STRIPS && 
+	 } else if (HAVE_TRI_STRIPS &&
 		    (ctx->_TriangleCaps & DD_FLATSHADE) &&
 		    VB->ColorPtr[0]->stride != 0) {
 	    if (HAVE_ELTS) {
@@ -1226,7 +1226,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
 	       ok = GL_FALSE;
 	    }
 	 }
-	 else 
+	 else
 	    ok = HAVE_TRI_STRIPS;
 	 break;
       case GL_QUADS:
@@ -1242,7 +1242,7 @@ static GLboolean TAG(validate_render)( GLcontext *ctx,
       default:
 	 break;
       }
-      
+
       if (!ok) {
 /* 	 fprintf(stderr, "not ok %s\n", _mesa_lookup_enum_by_nr(prim & PRIM_MODE_MASK)); */
 	 return GL_FALSE;

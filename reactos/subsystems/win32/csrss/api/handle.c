@@ -19,7 +19,7 @@
 static unsigned ObjectDefinitionsCount = 0;
 static PCSRSS_OBJECT_DEFINITION ObjectDefinitions = NULL;
 
-BOOL 
+BOOL
 CsrIsConsoleHandle(HANDLE Handle)
 {
   return ((((ULONG)Handle) & 0x10000003) == 0x3) ? TRUE : FALSE;
@@ -182,7 +182,7 @@ NTSTATUS STDCALL CsrDuplicateHandleTable(PCSRSS_PROCESS_DATA SourceProcessData,
 {
     ULONG i;
 
-    if (SourceProcessData == NULL || 
+    if (SourceProcessData == NULL ||
         TargetProcessData == NULL ||
         TargetProcessData->HandleTableSize)
     {

@@ -39,7 +39,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 #include "pshpack1.h"
 
-typedef struct { 
+typedef struct {
     WORD wByteOrder;
     WORD wFormat;
     DWORD dwOSVer;
@@ -47,20 +47,20 @@ typedef struct {
     DWORD reserved;
 } PROPERTYSETHEADER;
 
-typedef struct { 
+typedef struct {
     FMTID fmtid;
     DWORD dwOffset;
 } FORMATIDOFFSET;
 
-typedef struct { 
+typedef struct {
     DWORD cbSection;
     DWORD cProperties;
-} PROPERTYSECTIONHEADER; 
- 
-typedef struct { 
+} PROPERTYSECTIONHEADER;
+
+typedef struct {
     DWORD propid;
     DWORD dwOffset;
-} PROPERTYIDOFFSET; 
+} PROPERTYIDOFFSET;
 
 typedef struct {
     DWORD type;
@@ -74,7 +74,7 @@ typedef struct {
         } str;
     } u;
 } PROPERTY_DATA;
- 
+
 #include "poppack.h"
 
 #define SECT_HDR_SIZE (sizeof(PROPERTYSECTIONHEADER))
@@ -414,7 +414,7 @@ MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
 
     TRACE("%p %d\n", stg, uiUpdateCount );
 
-    si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO, 
+    si = alloc_msiobject( MSIHANDLETYPE_SUMMARYINFO,
                   sizeof (MSISUMMARYINFO), MSI_CloseSummaryInfo );
     if( !si )
         return si;
@@ -436,7 +436,7 @@ MSISUMMARYINFO *MSI_GetSummaryInformationW( IStorage *stg, UINT uiUpdateCount )
     return si;
 }
 
-UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase, 
+UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
               LPCWSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle )
 {
     MSISUMMARYINFO *si;
@@ -479,13 +479,13 @@ UINT WINAPI MsiGetSummaryInformationW( MSIHANDLE hDatabase,
     return ret;
 }
 
-UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase, 
+UINT WINAPI MsiGetSummaryInformationA(MSIHANDLE hDatabase,
               LPCSTR szDatabase, UINT uiUpdateCount, MSIHANDLE *pHandle)
 {
     LPWSTR szwDatabase = NULL;
     UINT ret;
 
-    TRACE("%ld %s %d %p\n", hDatabase, debugstr_a(szDatabase), 
+    TRACE("%ld %s %d %p\n", hDatabase, debugstr_a(szDatabase),
           uiUpdateCount, pHandle);
 
     if( szDatabase )

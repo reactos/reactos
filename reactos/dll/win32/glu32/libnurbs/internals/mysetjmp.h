@@ -74,7 +74,7 @@ deleteJumpbuffer(JumpBuffer *jb)
 }
 
 inline void
-mylongjmp( JumpBuffer *j, int code ) 
+mylongjmp( JumpBuffer *j, int code )
 {
     ::longjmp( j->buf, code );
 }

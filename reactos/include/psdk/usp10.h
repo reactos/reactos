@@ -49,8 +49,8 @@ extern "C" {
 #define  SSA_LPKANSIFALLBACK  0x08000000
 #define  SSA_PIDX             0x10000000
 #define  SSA_LAYOUTRTL        0x20000000
-#define  SSA_DONTGLYPH        0x40000000 
-#define  SSA_NOKASHIDA        0x80000000 
+#define  SSA_DONTGLYPH        0x40000000
+#define  SSA_NOKASHIDA        0x80000000
 
 /** StringIsComplex */
 #define  SIC_COMPLEX     1
@@ -105,8 +105,8 @@ typedef struct tag_SCRIPT_CONTROL {
 typedef struct {
   DWORD langid			:16;
   DWORD fNumeric		:1;
-  DWORD fComplex		:1;     
-  DWORD fNeedsWordBreaking	:1;     
+  DWORD fComplex		:1;
+  DWORD fNeedsWordBreaking	:1;
   DWORD fNeedsCaretInfo		:1;
   DWORD bCharSet		:8;
   DWORD fControl		:1;
@@ -192,7 +192,7 @@ typedef struct tag_SCRIPT_LOGATTR {
 } SCRIPT_LOGATTR;
 
 typedef void *SCRIPT_CACHE;
-typedef void *SCRIPT_STRING_ANALYSIS; 
+typedef void *SCRIPT_STRING_ANALYSIS;
 
 #ifndef LSDEFS_DEFINED
 typedef struct tagGOFFSET {
@@ -203,14 +203,14 @@ typedef struct tagGOFFSET {
 
 /* Function Declarations */
 
-HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE* psds, 
+HRESULT WINAPI ScriptApplyDigitSubstitution(const SCRIPT_DIGITSUBSTITUTE* psds,
                                             SCRIPT_CONTROL* psc, SCRIPT_STATE* pss);
 HRESULT WINAPI ScriptApplyLogicalWidth(const int *piDx, int cChars, int cGlyphs, const WORD *pwLogClust,
                                        const SCRIPT_VISATTR *psva, const int *piAdvance,
                                        const SCRIPT_ANALYSIS *psa, ABC *pABC, int *piJustify);
 HRESULT WINAPI ScriptRecordDigitSubstitution(LCID Locale, SCRIPT_DIGITSUBSTITUTE *psds);
-HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItems, 
-                             const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState, 
+HRESULT WINAPI ScriptItemize(const WCHAR *pwcInChars, int cInChars, int cMaxItems,
+                             const SCRIPT_CONTROL *psControl, const SCRIPT_STATE *psState,
                              SCRIPT_ITEM *pItems, int *pcItems);
 HRESULT WINAPI ScriptGetCMap(HDC hdc, SCRIPT_CACHE *psc, const WCHAR *pwcInChars, int cChars,
                              DWORD dwFlags, WORD *pwOutGlyphs);
@@ -220,9 +220,9 @@ HRESULT WINAPI ScriptGetLogicalWidths(const SCRIPT_ANALYSIS *psa, int cChars, in
                                       const int *piGlyphWidth, const WORD *pwLogClust,
                                       const SCRIPT_VISATTR *psva, int *piDx);
 HRESULT WINAPI ScriptGetProperties(const SCRIPT_PROPERTIES ***ppSp, int *piNumScripts);
-HRESULT WINAPI ScriptStringAnalyse(HDC hdc, 
-				   const void *pString, 
-				   int cString, 
+HRESULT WINAPI ScriptStringAnalyse(HDC hdc,
+				   const void *pString,
+				   int cString,
 				   int cGlyphs,
 				   int iCharset,
 				   DWORD dwFlags,

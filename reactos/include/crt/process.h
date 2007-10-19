@@ -1,4 +1,4 @@
-/* 
+/*
  * process.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -98,7 +98,7 @@ _CRTIMP void __cdecl _endthread	(void);
 
 #ifdef	__MSVCRT__
 _CRTIMP unsigned long __cdecl
-	_beginthreadex	(void *, unsigned, unsigned (__stdcall *) (void *), 
+	_beginthreadex	(void *, unsigned, unsigned (__stdcall *) (void *),
 			 void*, unsigned, unsigned*);
 _CRTIMP void __cdecl _endthreadex (unsigned);
 #endif

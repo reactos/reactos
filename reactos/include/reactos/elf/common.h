@@ -48,7 +48,7 @@ typedef struct {
 	UINT32	n_type;		/* Type of this note. */
 } Elf_Note;
 
-/* Indexes into the e_ident array.  Keep synced with 
+/* Indexes into the e_ident array.  Keep synced with
    http://www.sco.com/developer/gabi/ch4.eheader.html */
 #define EI_MAG0		0	/* Magic number, byte 0. */
 #define EI_MAG1		1	/* Magic number, byte 1. */
@@ -249,12 +249,12 @@ typedef struct {
 #define SHT_STRTAB	3		/* string table section */
 #define SHT_RELA	4		/* relocation section with addends */
 #define SHT_HASH	5		/* symbol hash table section */
-#define SHT_DYNAMIC	6		/* dynamic section */ 
+#define SHT_DYNAMIC	6		/* dynamic section */
 #define SHT_NOTE	7		/* note section */
 #define SHT_NOBITS	8		/* no space section */
 #define SHT_REL		9		/* relocation section - no addends */
 #define SHT_SHLIB	10		/* reserved - purpose unknown */
-#define SHT_DYNSYM	11		/* dynamic symbol table section */ 
+#define SHT_DYNSYM	11		/* dynamic symbol table section */
 #define SHT_NUM		12		/* number of section types */
 #define SHT_LOOS	0x60000000	/* First of OS specific semantics */
 #define SHT_HIOS	0x6fffffff	/* Last of OS specific semantics */

@@ -23,7 +23,7 @@ PEPFUNC LdrPEStartup (PVOID  ImageBase,
 		      HANDLE SectionHandle,
 		      PLDR_DATA_TABLE_ENTRY* Module,
 		      PWSTR FullDosName);
-typedef BOOL 
+typedef BOOL
 (NTAPI *PDLLMAIN_FUNC)(HANDLE hInst,
                          ULONG ul_reason_for_call,
                          LPVOID lpReserved);

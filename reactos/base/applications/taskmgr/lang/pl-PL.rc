@@ -1,8 +1,8 @@
-/*  
+/*
 * translated by xrogers
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/ 
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 /////////////////////////////////////////////////////////////////////////////
 // Polish resources
 
@@ -654,7 +654,7 @@ BEGIN
     IDS_MENU_CPUHISTORY           "&Historia CPU"
     IDS_MENU_SHOWKERNELTIMES      "&Pokazuj czas j¹dra"
     IDS_CREATENEWTASK             "Stwórz nowy proces"
-    IDS_CREATENEWTASK_DESC        "Wpisz nazwê programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez Mened¿er zadañ." 
+    IDS_CREATENEWTASK_DESC        "Wpisz nazwê programu, folderu, dokumentu lub zasobu internetowego, a zostanie on otwarty przez Mened¿er zadañ."
     IDS_MSG_ACCESSPROCESSAFF      "Nie mo¿na uzyskaæ dostêpu lub ustawiæ koligacji procesu"
     IDS_MSG_PROCESSONEPRO         "Proces musi posiadaæ koligacjê z przynajmniej jednym procesorem."
     IDS_MSG_INVALIDOPTION         "Nieprawid³owa opcja"
@@ -664,13 +664,13 @@ BEGIN
     IDS_MSG_WARNINGTERMINATING    "UWAGA: Zakoñczenie procesu mo¿e przynieœæ niepo¿¹dane skutki, w tym równie¿ utratê danych i niestabilnoœæ systemu.\nProces nie bêdzie mia³ szansy na zapisane danych.\nCzy na pewno chcesz zakoñczyæ?"
     IDS_MSG_UNABLETERMINATEPRO    "Nie mo¿na zakoñczyæ procesu"
     IDS_MSG_UNABLECHANGEPRIORITY  "Nie mo¿na zmieniæ priorytetu"
-    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu mo¿e przynieœæ\nniepo¿¹dane skutki, w tym równie¿ niestabilnoœæ systemu.\nCzy na pewno chcesz zmieniæ priorytet?" 
+    IDS_MSG_WARNINGCHANGEPRIORITY "UWAGA: Zmiana priorytetu tego procesu mo¿e przynieœæ\nniepo¿¹dane skutki, w tym równie¿ niestabilnoœæ systemu.\nCzy na pewno chcesz zmieniæ priorytet?"
     IDS_MSG_TRAYICONCPUUSAGE      "U¿ycie procesora: %d%%"
     IDS_STATUS_MEMUSAGE           "Pam. zadeklar.: %dK / %dK"
     IDS_STATUS_CPUUSAGE           "U¿ycie procesora: %3d%%"
     IDS_STATUS_PROCESSES          "Procesy: %d"
     IDS_Not_Responding            "Nie odpowiada"
-    IDS_Running                   "Uruchomiony"  
+    IDS_Running                   "Uruchomiony"
 END
 
 

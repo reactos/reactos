@@ -63,7 +63,7 @@ HWND MainFrameBase::Create(const ExplorerCmd& cmd)
 
 		 // Open the first child window after initializing the application
 		if (cmd.IsValidPath()) {
-			 // We use the static s_path variable to store the path string in order 
+			 // We use the static s_path variable to store the path string in order
 			 // to avoid accessing prematurely freed memory in the PostMessage handlers.
 			static String s_path = cmd._path;
 
@@ -175,7 +175,7 @@ MainFrameBase::MainFrameBase(HWND hwnd)
 		{13, ID_STOP, TBSTATE_ENABLED, BTNS_BUTTON, {0, 0}, 0, 0}
 	};
 
-	_htoolbar = CreateToolbarEx(hwnd, 
+	_htoolbar = CreateToolbarEx(hwnd,
 #ifndef _NO_REBAR
 		CCS_NOPARENTALIGN|CCS_NORESIZE|CCS_NODIVIDER|
 #endif
@@ -536,7 +536,7 @@ void MainFrameBase::resize_frame(int cx, int cy)
 	RECT rect = {0, 0, cx, cy};
 
 	if (_hwndrebar) {
-        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);	  
+        int height = SendMessage(_hwndrebar, RB_GETBARHEIGHT, 0, 0);
 		rect.top += height;
         rect.top += 5;
 	} else {

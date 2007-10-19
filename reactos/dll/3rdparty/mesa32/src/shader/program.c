@@ -210,7 +210,7 @@ struct program *
 _mesa_init_fragment_program( GLcontext *ctx, struct fragment_program *prog,
                              GLenum target, GLuint id)
 {
-   if (prog) 
+   if (prog)
       return _mesa_init_program_struct( ctx, &prog->Base, target, id );
    else
       return NULL;
@@ -224,7 +224,7 @@ struct program *
 _mesa_init_vertex_program( GLcontext *ctx, struct vertex_program *prog,
                            GLenum target, GLuint id)
 {
-   if (prog) 
+   if (prog)
       return _mesa_init_program_struct( ctx, &prog->Base, target, id );
    else
       return NULL;
@@ -238,7 +238,7 @@ _mesa_init_ati_fragment_shader( GLcontext *ctx,
                                 struct ati_fragment_shader *prog,
                                 GLenum target, GLuint id )
 {
-   if (prog) 
+   if (prog)
       return _mesa_init_program_struct( ctx, &prog->Base, target, id );
    else
       return NULL;
@@ -252,7 +252,7 @@ _mesa_init_ati_fragment_shader( GLcontext *ctx,
  * ctx->Driver.NewProgram.  May be overridden (ie. replaced) by a
  * device driver function to implement OO deriviation with additional
  * types not understood by this function.
- * 
+ *
  * \param ctx  context
  * \param id   program id/number
  * \param target  program target/type
@@ -400,7 +400,7 @@ add_parameter(struct program_parameter_list *paramList,
       tmp = paramList->ParameterValues;
       paramList->ParameterValues = ALIGN_MALLOC(paramList->Size * 4 * sizeof(GLfloat), 16);
       if (tmp) {
-	 _mesa_memcpy(paramList->ParameterValues, tmp, 
+	 _mesa_memcpy(paramList->ParameterValues, tmp,
 		      n * 4 * sizeof(GLfloat));
 	 ALIGN_FREE(tmp);
       }
@@ -416,7 +416,7 @@ add_parameter(struct program_parameter_list *paramList,
    else {
       paramList->NumParameters = n + 1;
 
-      _mesa_memset(&paramList->Parameters[n], 0, 
+      _mesa_memset(&paramList->Parameters[n], 0,
 		   sizeof(struct program_parameter));
 
       paramList->Parameters[n].Name = name ? _mesa_strdup(name) : NULL;
@@ -485,7 +485,7 @@ _mesa_add_state_reference(struct program_parameter_list *paramList,
    GLint a, idx;
 
    idx = add_parameter(paramList, NULL, NULL, STATE);
-	
+
    for (a=0; a<6; a++)
       paramList->Parameters[idx].StateIndexes[a] = (enum state_index) stateTokens[a];
 
@@ -648,9 +648,9 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
          case STATE_HALF:
             {
                GLfloat eye_z[] = {0, 0, 1};
-					
+
                /* Compute infinite half angle vector:
-                *   half-vector = light_position + (0, 0, 1) 
+                *   half-vector = light_position + (0, 0, 1)
                 * and then normalize.  w = 0
 		*
 		* light.EyePosition.w should be 0 for infinite lights.
@@ -658,7 +658,7 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
 	       ADD_3V(value, eye_z, ctx->Light.Light[ln].EyePosition);
 	       NORMALIZE_3FV(value);
 	       value[3] = 0;
-            }						  
+            }
             return;
 	 case STATE_POSITION_NORMALIZED:
             COPY_4V(value, ctx->Light.Light[ln].EyePosition);
@@ -766,11 +766,11 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
          }
       }
    case STATE_TEXENV_COLOR:
-      {		
+      {
          /* state[1] is the texture unit */
          const GLuint unit = (GLuint) state[1];
          COPY_4V(value, ctx->Texture.Unit[unit].EnvColor);
-      }			
+      }
       return;
    case STATE_FOG_COLOR:
       COPY_4V(value, ctx->Fog.Color);
@@ -887,7 +887,7 @@ _mesa_fetch_state(GLcontext *ctx, const enum state_index state[],
          }
       }
       return;
-		
+
    case STATE_VERTEX_PROGRAM:
       {
          /* state[1] = {STATE_ENV, STATE_LOCAL} */
@@ -944,7 +944,7 @@ _mesa_load_state_parameters(GLcontext *ctx,
 
    for (i = 0; i < paramList->NumParameters; i++) {
       if (paramList->Parameters[i].Type == STATE) {
-         _mesa_fetch_state(ctx, 
+         _mesa_fetch_state(ctx,
 			   paramList->Parameters[i].StateIndexes,
                            paramList->ParameterValues[i]);
       }
@@ -1072,7 +1072,7 @@ _mesa_BindProgram(GLenum target, GLuint id)
  * \note Not compiled into display lists.
  * \note Called by both glDeleteProgramsNV and glDeleteProgramsARB.
  */
-void GLAPIENTRY 
+void GLAPIENTRY
 _mesa_DeletePrograms(GLsizei n, const GLuint *ids)
 {
    GLint i;

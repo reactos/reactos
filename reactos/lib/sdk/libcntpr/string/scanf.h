@@ -414,9 +414,9 @@ _FUNCTION_ {
           if (!suppress) {
          int*n = va_arg(ap, int*);
 
-         /* 
+         /*
          *n = consumed - (nch!=_EOF_);
-         
+
          FIXME: The above is the Wine version and it doesnt work in ros
          when %n is at end of input string (return one too many).
          But does it fail in Wine too?? If so wine also needs fixin.
@@ -469,7 +469,7 @@ _FUNCTION_ {
 			    if ((*(format - 1)) < *(format + 1))
 				RtlSetBits(&bitMask, *(format - 1) +1 , *(format + 1) - *(format - 1));
 			    else
-				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));			      
+				RtlSetBits(&bitMask, *(format + 1)    , *(format - 1) - *(format + 1));
 			    format++;
 			} else
 			    RtlSetBits(&bitMask, *format, 1);

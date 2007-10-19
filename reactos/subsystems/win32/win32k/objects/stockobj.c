@@ -101,7 +101,7 @@ static LOGFONTW DeviceDefaultFont =
 static LOGFONTW SystemFixedFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, FIXED_PITCH | FF_MODERN, L"Courier New" }; //Bitstream Vera Sans Mono
- 
+
 /* FIXME: Is this correct? */
 static LOGFONTW DefaultGuiFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,

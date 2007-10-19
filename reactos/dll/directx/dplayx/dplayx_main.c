@@ -24,13 +24,13 @@
  *  o DPMSGCMD_REQUESTNEWPLAYERID & DPMSGCMD_NEWPLAYERIDREPLY
  *    Barely work. This needs to be completed for sessions to start.
  *  o A small issue will be the fact that DirectX 6.1(ie. DirectPlay4)
- *    introduces a layer of functionality inside the DP objects which 
+ *    introduces a layer of functionality inside the DP objects which
  *    provide guaranteed protocol delivery.  This is even if the native
  *    protocol, IPX or modem for instance, doesn't guarantee it. I'm going
- *    to leave this kind of implementation to as close to the end as 
- *    possible. However, I will implement an abstraction layer, where 
- *    possible, for this functionality. It will do nothing to start, but 
- *    will require only the implementation of the guaranteness to give 
+ *    to leave this kind of implementation to as close to the end as
+ *    possible. However, I will implement an abstraction layer, where
+ *    possible, for this functionality. It will do nothing to start, but
+ *    will require only the implementation of the guaranteness to give
  *    final implementation.
  *
  * TODO:
@@ -41,11 +41,11 @@
  *  - Change RegEnumKeyEx enumeration pattern to allow error handling and to
  *    share registry implementation (or at least simplify).
  *  - Add in appropriate RegCloseKey calls for all the opening we're doing...
- *  - Fix all the buffer sizes for registry calls. They're off by one - 
+ *  - Fix all the buffer sizes for registry calls. They're off by one -
  *    but in a safe direction.
  *  - Fix race condition on interface destruction
  *  - Handles need to be correctly reference counted
- *  - Check if we need to deallocate any list objects when destroying 
+ *  - Check if we need to deallocate any list objects when destroying
  *    a dplay interface
  *  - RunApplication process spawning needs to have correct syncronization.
  *  - Need to get inter lobby messages working.

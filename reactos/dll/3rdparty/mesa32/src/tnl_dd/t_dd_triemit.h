@@ -1,9 +1,9 @@
 #ifndef DO_DEBUG_VERTS
 #define DO_DEBUG_VERTS 0
-#endif 
+#endif
 
 #ifndef PRINT_VERTEX
-#define PRINT_VERTEX(x) 
+#define PRINT_VERTEX(x)
 #endif
 
 #if defined(USE_X86_ASM)
@@ -52,7 +52,7 @@ static __inline void TAG(quad)( CTX_ARG,
       PRINT_VERTEX(v2);
       PRINT_VERTEX(v3);
    }
-      
+
    COPY_DWORDS( j, vb, vertsize, v0 );
    COPY_DWORDS( j, vb, vertsize, v1 );
    COPY_DWORDS( j, vb, vertsize, v2 );
@@ -76,7 +76,7 @@ static __inline void TAG(quad)( CTX_ARG,
       PRINT_VERTEX(v2);
       PRINT_VERTEX(v3);
    }
- 
+
    COPY_DWORDS( j, vb, vertsize, v0 );
    COPY_DWORDS( j, vb, vertsize, v1 );
    COPY_DWORDS( j, vb, vertsize, v3 );

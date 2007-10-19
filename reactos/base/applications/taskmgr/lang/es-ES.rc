@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////////////////////////////
 // Spanish (Spain) resources by Carlos Garcia Gomez
-//Sync to latest version of En.rc Samuel Serapión 
+//Sync to latest version of En.rc Samuel Serapión
 
 #if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
 #ifdef _WIN32
@@ -47,47 +47,47 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Iconos &Grandes",                ID_VIEW_LARGE
         MENUITEM "Iconos &Pequeños",                ID_VIEW_SMALL
-        MENUITEM "&Detalles",                    ID_VIEW_DETAILS, 
+        MENUITEM "&Detalles",                    ID_VIEW_DETAILS,
 CHECKED
-        MENUITEM "&Seleccionar Columnas...",          
+        MENUITEM "&Seleccionar Columnas...",
 ID_VIEW_SELECTCOLUMNS
         POPUP "Historial de la &CPU"
         BEGIN
-            MENUITEM "&Una Grafica, Todas las CPUs",        
+            MENUITEM "&Una Grafica, Todas las CPUs",
 ID_VIEW_CPUHISTORY_ONEGRAPHALL
 
-            MENUITEM "Una Grafica, &Por CPU",          
+            MENUITEM "Una Grafica, &Por CPU",
 ID_VIEW_CPUHISTORY_ONEGRAPHPERCPU
             , CHECKED
         END
-        MENUITEM "&Mostrar tiempos del Nucleo",          
+        MENUITEM "&Mostrar tiempos del Nucleo",
 ID_VIEW_SHOWKERNELTIMES
     END
     POPUP "&Ventanas"
     BEGIN
-        MENUITEM "Mosaico &Horizontal",          
+        MENUITEM "Mosaico &Horizontal",
 ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Mosaico &Vertical",            
+        MENUITEM "Mosaico &Vertical",
 ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizar",                   ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizar",                   ID_WINDOWS_MAXIMIZE
         MENUITEM "&Cascada",                    ID_WINDOWS_CASCADE
-        MENUITEM "&Traer al Frente",             
+        MENUITEM "&Traer al Frente",
 ID_WINDOWS_BRINGTOFRONT
     END
     POPUP "A&yuda"
     BEGIN
-        MENUITEM "&Temas de Ayuda del Administrador de Tareas",   
+        MENUITEM "&Temas de Ayuda del Administrador de Tareas",
 ID_HELP_TOPICS
         MENUITEM SEPARATOR
-        MENUITEM "&Acerca del Administrador de Tareas",         
+        MENUITEM "&Acerca del Administrador de Tareas",
 ID_HELP_ABOUT
     END
 END
 
 IDR_WINDOWSMENU MENU DISCARDABLE
 BEGIN
-    MENUITEM "Mosaico &Horizontal",          
+    MENUITEM "Mosaico &Horizontal",
 ID_WINDOWS_TILEHORIZONTALLY
     MENUITEM "Mosaico &Vertical",            ID_WINDOWS_TILEVERTICALLY
     MENUITEM "&Minimizar",                   ID_WINDOWS_MINIMIZE
@@ -104,7 +104,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "Iconos &Grandes",                ID_VIEW_LARGE
         MENUITEM "Iconos &Pequeños",                ID_VIEW_SMALL
-        MENUITEM "&Detalles",                    ID_VIEW_DETAILS, 
+        MENUITEM "&Detalles",                    ID_VIEW_DETAILS,
 CHECKED
     END
 END
@@ -113,14 +113,14 @@ IDR_APPLICATION_PAGE_CONTEXT2 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Cambiar A",                  
+        MENUITEM "&Cambiar A",
 ID_APPLICATION_PAGE_SWITCHTO
-        MENUITEM "&Traer al Frente",             
+        MENUITEM "&Traer al Frente",
 ID_WINDOWS_BRINGTOFRONT
         MENUITEM SEPARATOR
-        MENUITEM "Mosaico &Horizontal",          
+        MENUITEM "Mosaico &Horizontal",
 ID_WINDOWS_TILEHORIZONTALLY
-        MENUITEM "Mosaico &Vertical",            
+        MENUITEM "Mosaico &Vertical",
 ID_WINDOWS_TILEVERTICALLY
         MENUITEM "&Minimizar",                 ID_WINDOWS_MINIMIZE
         MENUITEM "Ma&ximizar",                 ID_WINDOWS_MAXIMIZE
@@ -200,7 +200,7 @@ CAPTION "Administrador de Tareas"
 MENU IDR_TASKMANAGER
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         
+    CONTROL
 "Tab1",IDC_TAB,"SysTabControl32",WS_TABSTOP,3,3,257,228
 END
 
@@ -220,7 +220,7 @@ IDD_PROCESS_PAGE DIALOG DISCARDABLE  0, 0, 247, 210
 STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT 
+    CONTROL         "List2",IDC_PROCESSLIST,"SysListView32",LVS_REPORT
 |
                     LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_OWNERDATA |
                     WS_BORDER | WS_TABSTOP,7,7,233,177
@@ -263,10 +263,10 @@ BEGIN
     LTEXT           "Cache del Sistema",IDS_PHYSICAL_MEMORY_SYSTEM_CACHE,137,149,46,8
     EDITTEXT        IDC_PHYSICAL_MEMORY_TOTAL,185,131,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT 
+    EDITTEXT        IDC_PHYSICAL_MEMORY_AVAILABLE,185,140,48,8,ES_RIGHT
 |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
-    EDITTEXT        
+    EDITTEXT
 IDC_PHYSICAL_MEMORY_SYSTEM_CACHE,185,149,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     LTEXT           "Total",IDS_KERNEL_MEMORY_TOTAL,137,174,27,8
@@ -296,7 +296,7 @@ CAPTION "Canales de Depuracion"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "List2",IDC_DEBUG_CHANNELS_LIST,"SysListView32",LVS_REPORT |
-                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER | 
+                    LVS_SINGLESEL | LVS_SHOWSELALWAYS | WS_BORDER |
 WS_TABSTOP |
 		    LVS_SORTASCENDING,7,7,233,177
     PUSHBUTTON      "Cerrar",IDOK,171,189,69,14
@@ -404,7 +404,7 @@ BEGIN
                     WS_TABSTOP,7,105,53,10
     CONTROL         "Objetos de &USUARIO",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,116,62,10
-    CONTROL         "Lecturas E/S",IDC_IOREADS,"Button",BS_AUTOCHECKBOX 
+    CONTROL         "Lecturas E/S",IDC_IOREADS,"Button",BS_AUTOCHECKBOX
 |
                     WS_TABSTOP,7,127,49,10
     CONTROL         "Bytes E/S Leidos",IDC_IOREADBYTES,"Button",
@@ -689,7 +689,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Uso CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Procesos: %d"
     IDS_Not_Responding            "No Responde"
-    IDS_Running                   "Funcionando"  
+    IDS_Running                   "Funcionando"
 END
 
 

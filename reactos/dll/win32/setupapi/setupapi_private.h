@@ -61,7 +61,7 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
     struct DeviceInfoElement* DeviceInfo;
     GUID InterfaceClassGuid;
 
-    
+
     /* SPINT_ACTIVE : the interface is active/enabled
      * SPINT_DEFAULT: the interface is the default interface for the device class
      * SPINT_REMOVED: the interface is removed

@@ -3,7 +3,7 @@
  * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
  * author: Sebastian Gasiorek
- * 
+ *
  * Thanks to: http://www.barcodeman.com/altek/mule/scandoc.php
  * and http://win.tue.nl/~aeb/linux/kbd/scancodes-1.html
  *
@@ -40,7 +40,7 @@
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
-  /* 1 ...         2 ...         3 ...         4 ... */     
+  /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
@@ -49,14 +49,14 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
-  'I',          'O',          'P',          
+  'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
-  VK_LCONTROL,  
+  VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3, 
+  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
@@ -66,15 +66,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
-  
+
   /* - 3b - */
   /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
+  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6,
   VK_F7, VK_F8, VK_F9, VK_F10,
   /* - 45 - */
   /* Locks */
-  VK_NUMLOCK | KMEXT,   
-  VK_SCROLL | KMULTI,    
+  VK_NUMLOCK | KMEXT,
+  VK_SCROLL | KMULTI,
   /* - 47 - */
   /* Number-Pad */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
@@ -90,11 +90,11 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
-  VK_HELP,      
+  VK_HELP,
   /* - 64 - */
   /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
-  VK_F21, VK_F22, VK_F23, 
+  VK_F21, VK_F22, VK_F23,
   /* - 6f - */
   /* Not sure who uses these codes */
   VK_EMPTY, VK_EMPTY, VK_EMPTY,
@@ -337,10 +337,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
   &modifier_bits,
-  
+
   /* character from vk tables */
   vk_to_wchar_master_table,
-  
+
   /* diacritical marks -- currently implemented by wine code */
   NULL,
 

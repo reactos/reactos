@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/cc/copy.c
  * PURPOSE:         Implements cache managers copy interface
  *
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/

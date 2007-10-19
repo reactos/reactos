@@ -29,7 +29,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -69,7 +69,7 @@ BEGIN
 		MENUITEM "&Tid/datum\tF5",    CMD_TIME_DATE
 		MENUITEM SEPARATOR
 		MENUITEM "&Automatiskt radbyte",      CMD_WRAP
-	END	
+	END
 	POPUP "&Hjälp"
 	BEGIN
 		MENUITEM "&Innehåll",         CMD_HELP_CONTENTS

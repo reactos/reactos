@@ -63,7 +63,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Funkce ClickLock", -1, 5, 150, 230, 70
   CHECKBOX "&Zapnout funkci ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 100, 20
-  PUSHBUTTON "&Nastavení...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Nastavení...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
   LTEXT "Funkce ClickLock Vám umožní oznaèení nebo pøetažení bez držení tlaèítka myši. Krátkým stisknutím tlaèítka funkci zapnete, další stisknutí funkci vypne.", -1, 10, 180, 190, 30
 END
 

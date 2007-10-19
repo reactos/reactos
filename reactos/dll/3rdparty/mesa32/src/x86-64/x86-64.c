@@ -104,7 +104,7 @@ void _mesa_init_all_x86_64_transform_asm(void)
    _mesa_transform_tab[4][MATRIX_2D] =
       _mesa_x86_64_transform_points4_2d;
    */
-   
+
 #ifdef DEBUG
    _math_test_all_transform_functions("x86_64");
    _math_test_all_cliptest_functions("x86_64");

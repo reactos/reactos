@@ -350,7 +350,7 @@ NdisAllocateBuffer(
 {
     ASSERT(VirtualAddress != NULL);
     ASSERT(Length > 0);
-    
+
     *Buffer = IoAllocateMdl(VirtualAddress, Length, FALSE, FALSE, NULL);
     if (*Buffer != NULL) {
         MmBuildMdlForNonPagedPool(*Buffer);
@@ -504,25 +504,25 @@ NdisAllocatePacketPoolEx(
         Size   = sizeof(NDISI_PACKET_POOL) + Length * NumberOfDescriptors;
 
         Pool   = ExAllocatePool(NonPagedPool, Size);
-        if (Pool) 
+        if (Pool)
         {
             KeInitializeSpinLock(&Pool->SpinLock.SpinLock);
             Pool->PacketLength = Length;
 
-            if (NumberOfDescriptors > 0) 
+            if (NumberOfDescriptors > 0)
             {
                 Packet         = (PNDIS_PACKET)&Pool->Buffer;
                 Pool->FreeList = Packet;
 
                 NextPacket = (PNDIS_PACKET)((ULONG_PTR)Packet + Length);
-                for (i = 1; i < NumberOfDescriptors; i++) 
+                for (i = 1; i < NumberOfDescriptors; i++)
                 {
                     Packet->Private.Head = (PNDIS_BUFFER)NextPacket;
                     Packet               = NextPacket;
                     NextPacket           = (PNDIS_PACKET)((ULONG_PTR)Packet + Length);
                 }
                 Packet->Private.Head = NULL;
-            } 
+            }
             else
                 Pool->FreeList = NULL;
 

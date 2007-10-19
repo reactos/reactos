@@ -49,7 +49,7 @@ LPWSTR build_icon_path(MSIPACKAGE *package, LPCWSTR icon_name )
 {
     LPWSTR SystemFolder, dest, FilePath;
 
-    static const WCHAR szInstaller[] = 
+    static const WCHAR szInstaller[] =
         {'M','i','c','r','o','s','o','f','t','\\',
          'I','n','s','t','a','l','l','e','r','\\',0};
     static const WCHAR szFolder[] =
@@ -141,7 +141,7 @@ int track_tempfile( MSIPACKAGE *package, LPCWSTR name, LPCWSTR path )
 MSIFOLDER *get_loaded_folder( MSIPACKAGE *package, LPCWSTR dir )
 {
     MSIFOLDER *folder;
-    
+
     LIST_FOR_EACH_ENTRY( folder, &package->folders, MSIFOLDER, entry )
     {
         if (lstrcmpW( dir, folder->Directory )==0)
@@ -207,7 +207,7 @@ static void clean_spaces_from_path( LPWSTR p )
     }
 }
 
-LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source, 
+LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
                       BOOL set_prop, MSIFOLDER **folder)
 {
     MSIFOLDER *f;
@@ -268,7 +268,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
     else if (!source && f->Property)
     {
         path = build_directory_name( 2, f->Property, NULL );
-                    
+
         TRACE("   internally set to %s\n",debugstr_w(path));
         if (set_prop)
             MSI_SetPropertyW( package, name, path );
@@ -293,7 +293,7 @@ LPWSTR resolve_folder(MSIPACKAGE *package, LPCWSTR name, BOOL source,
             if (set_prop)
                 MSI_SetPropertyW(package,name,path);
         }
-        else 
+        else
         {
             /* source may be in a few different places ... check each of them */
             path = NULL;
@@ -370,7 +370,7 @@ UINT schedule_action(MSIPACKAGE *package, UINT script, LPCWSTR action)
         return ERROR_FUNCTION_FAILED;
     }
     TRACE("Scheduling Action %s in script %i\n",debugstr_w(action), script);
-    
+
     count = package->script->ActionCount[script];
     package->script->ActionCount[script]++;
     if (count != 0)
@@ -463,7 +463,7 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
 {
     INT i;
     struct list *item, *cursor;
-    
+
     TRACE("Freeing package action data\n");
 
     remove_tracked_tempfiles(package);
@@ -493,7 +493,7 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
     LIST_FOR_EACH_SAFE( item, cursor, &package->components )
     {
         MSICOMPONENT *comp = LIST_ENTRY( item, MSICOMPONENT, entry );
-        
+
         list_remove( &comp->entry );
         msi_free( comp->Component );
         msi_free( comp->ComponentId );
@@ -606,7 +606,7 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
  *  build_directory_name()
  *
  *  This function is to save messing round with directory names
- *  It handles adding backslashes between path segments, 
+ *  It handles adding backslashes between path segments,
  *   and can add \ at the end of the directory name if told to.
  *
  *  It takes a variable number of arguments.
@@ -620,7 +620,7 @@ void ACTION_free_package_structures( MSIPACKAGE* package)
  *  Path segments will be added with a \ separating them.
  *  A \ will not be added after the last segment, however if the
  *    last segment is NULL, then the last character will be a \
- * 
+ *
  */
 LPWSTR build_directory_name(DWORD count, ...)
 {
@@ -723,10 +723,10 @@ void ui_progress(MSIPACKAGE *package, int a, int b, int c, int d )
 
 void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
 {
-    static const WCHAR Query_t[] = 
+    static const WCHAR Query_t[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',' ',
          '`','A','c','t','i','o', 'n','T','e','x','t','`',' ',
-         'W','H','E','R','E',' ', '`','A','c','t','i','o','n','`',' ','=', 
+         'W','H','E','R','E',' ', '`','A','c','t','i','o','n','`',' ','=',
          ' ','\'','%','s','\'',0};
     WCHAR message[1024];
     MSIRECORD * row = 0;
@@ -760,7 +760,7 @@ void ui_actiondata(MSIPACKAGE *package, LPCWSTR action, MSIRECORD * record)
 
     row = MSI_CreateRecord(1);
     MSI_RecordSetStringW(row,1,message);
- 
+
     MSI_ProcessMessage(package, INSTALLMESSAGE_ACTIONDATA, row);
 
     msiobj_release(&row->hdr);
@@ -808,7 +808,7 @@ void reduce_to_shortfilename(WCHAR* filename)
         *p = 0;
 }
 
-LPWSTR create_component_advertise_string(MSIPACKAGE* package, 
+LPWSTR create_component_advertise_string(MSIPACKAGE* package,
                 MSICOMPONENT* component, LPCWSTR feature)
 {
     static const WCHAR fmt[] = {'%','s','%','s','%','c','%','s',0};
@@ -833,14 +833,14 @@ LPWSTR create_component_advertise_string(MSIPACKAGE* package,
 
     TRACE("prod=%s feat=%s comp=%s\n", debugstr_w(productid_85),
           debugstr_w(feature), debugstr_w(component_85));
- 
+
     sz = 20 + lstrlenW(feature) + 20 + 3;
 
     output = msi_alloc_zero(sz*sizeof(WCHAR));
 
     sprintfW(output, fmt, productid_85, feature,
              component?'>':'<', component_85);
-    
+
     return output;
 }
 
@@ -863,17 +863,17 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
     LIST_FOR_EACH_ENTRY( cl, &feature->Components, ComponentList, entry )
     {
         MSICOMPONENT* component = cl->component;
-    
+
         TRACE("MODIFYING(%i): Component %s (Installed %i, Action %i, Request %i)\n",
-            newstate, debugstr_w(component->Component), component->Installed, 
+            newstate, debugstr_w(component->Component), component->Installed,
             component->Action, component->ActionRequest);
-        
+
         if (!component->Enabled)
             continue;
- 
+
         if (newstate == INSTALLSTATE_LOCAL)
             msi_component_set_state( component, INSTALLSTATE_LOCAL );
-        else 
+        else
         {
             ComponentList *clist;
             MSIFEATURE *f;
@@ -913,9 +913,9 @@ void ACTION_UpdateComponentStates(MSIPACKAGE *package, LPCWSTR szFeature)
             }
         }
         TRACE("Result (%i): Component %s (Installed %i, Action %i, Request %i)\n",
-            newstate, debugstr_w(component->Component), component->Installed, 
+            newstate, debugstr_w(component->Component), component->Installed,
             component->Action, component->ActionRequest);
-    } 
+    }
 }
 
 UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
@@ -927,7 +927,7 @@ UINT register_unique_action(MSIPACKAGE *package, LPCWSTR action)
         return FALSE;
 
     TRACE("Registering Action %s as having fun\n",debugstr_w(action));
-    
+
     count = package->script->UniqueActionsCount;
     package->script->UniqueActionsCount++;
     if (count != 0)

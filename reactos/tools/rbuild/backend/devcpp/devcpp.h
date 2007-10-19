@@ -46,13 +46,13 @@ class DevCppBackend : public Backend
 
 		void ProcessModules();
 		void ProcessFile(std::string filename);
-		
+
 		bool CheckFolderAdded(std::string &folder);
 		void AddFolders(std::string &folder);
 
 		void OutputFolders();
 		void OutputFileUnits();
-		
+
 		std::vector<FileUnit> m_fileUnits;
 		std::vector<std::string> m_folders;
 

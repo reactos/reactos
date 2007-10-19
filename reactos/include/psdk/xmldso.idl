@@ -35,19 +35,19 @@ pointer_default(unique)
 ]
 interface IXMLDSOControl : IDispatch
 {
-	[propget,id(DISPID_XMLDSO_DOCUMENT)] 
+	[propget,id(DISPID_XMLDSO_DOCUMENT)]
         HRESULT XMLDocument([out, retval] IXMLDOMDocument** ppDoc);
 
-	[propput,id(DISPID_XMLDSO_DOCUMENT)] 
+	[propput,id(DISPID_XMLDSO_DOCUMENT)]
         HRESULT XMLDocument([in] IXMLDOMDocument* ppDoc);
 
-	[propget,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)] 
+	[propget,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)]
         HRESULT JavaDSOCompatible([out, retval] BOOL* fJavaDSOCompatible);
 
-	[propput,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)] 
+	[propput,id(DISPID_XMLDSO_JAVADSOCOMPATIBLE)]
         HRESULT JavaDSOCompatible([in]  BOOL fJavaDSOCompatible);
 
-	[propget, id(DISPID_READYSTATE)] 
+	[propget, id(DISPID_READYSTATE)]
         HRESULT readyState([out, retval] long *state);
 }
 

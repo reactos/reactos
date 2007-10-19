@@ -321,7 +321,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_np_open_endpoint(RpcServerProtseq *protse
 }
 
 static void rpcrt4_conn_np_handoff(RpcConnection_np *old_npc, RpcConnection_np *new_npc)
-{    
+{
   /* because of the way named pipes work, we'll transfer the connected pipe
    * to the child, then reopen the server binding to continue listening */
 
@@ -362,7 +362,7 @@ static RPC_STATUS rpcrt4_ncalrpc_handoff(RpcConnection *old_conn, RpcConnection 
   strcat(strcpy(pname, prefix), old_conn->Endpoint);
   status = rpcrt4_conn_create_pipe(old_conn, pname);
   I_RpcFree(pname);
-    
+
   return status;
 }
 
@@ -552,9 +552,9 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
     HANDLE *objs = prev_array;
     RpcConnection_np *conn;
     RpcServerProtseq_np *npps = CONTAINING_RECORD(protseq, RpcServerProtseq_np, common);
-    
+
     EnterCriticalSection(&protseq->cs);
-    
+
     /* open and count connections */
     *count = 1;
     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
@@ -564,7 +564,7 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
             (*count)++;
         conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
     }
-    
+
     /* make array of connections */
     if (objs)
         objs = HeapReAlloc(GetProcessHeap(), 0, objs, *count*sizeof(HANDLE));
@@ -576,7 +576,7 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
         LeaveCriticalSection(&protseq->cs);
         return NULL;
     }
-    
+
     objs[0] = npps->mgr_event;
     *count = 1;
     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
@@ -601,10 +601,10 @@ static int rpcrt4_protseq_np_wait_for_new_connection(RpcServerProtseq *protseq, 
     DWORD res;
     RpcConnection *cconn;
     RpcConnection_np *conn;
-    
+
     if (!objs)
         return -1;
-    
+
     res = WaitForMultipleObjects(count, objs, FALSE, INFINITE);
     if (res == WAIT_OBJECT_0)
         return 0;
@@ -914,7 +914,7 @@ static RPC_STATUS rpcrt4_protseq_ncacn_ip_tcp_open_endpoint(RpcServerProtseq *pr
         conn->Next = protseq->conn;
         protseq->conn = first_connection;
         LeaveCriticalSection(&protseq->cs);
-        
+
         TRACE("listening on %s\n", endpoint);
         return RPC_S_OK;
     }
@@ -1158,7 +1158,7 @@ static void *rpcrt4_protseq_sock_get_wait_array(RpcServerProtseq *protseq, void 
     RpcServerProtseq_sock *sockps = CONTAINING_RECORD(protseq, RpcServerProtseq_sock, common);
 
     EnterCriticalSection(&protseq->cs);
-    
+
     /* open and count connections */
     *count = 1;
     conn = (RpcConnection_tcp *)protseq->conn;
@@ -1167,7 +1167,7 @@ static void *rpcrt4_protseq_sock_get_wait_array(RpcServerProtseq *protseq, void 
             (*count)++;
         conn = (RpcConnection_tcp *)conn->common.Next;
     }
-    
+
     /* make array of connections */
     if (poll_info)
         poll_info = HeapReAlloc(GetProcessHeap(), 0, poll_info, *count*sizeof(*poll_info));
@@ -1208,10 +1208,10 @@ static int rpcrt4_protseq_sock_wait_for_new_connection(RpcServerProtseq *protseq
     int ret, i;
     RpcConnection *cconn;
     RpcConnection_tcp *conn;
-    
+
     if (!poll_info)
         return -1;
-    
+
     ret = poll(poll_info, count, -1);
     if (ret < 0)
     {

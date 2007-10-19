@@ -48,7 +48,7 @@
  */
 static void copy_pv_rgba4_spec5( GLcontext *ctx, GLuint edst, GLuint esrc )
 {
-   LOCALVARS   
+   LOCALVARS
    GLubyte *verts = GET_VERTEX_STORE();
    GLuint size = GET_VERTEX_SIZE();
    GLuint *dst = (GLuint *)(verts + (edst * size));
@@ -262,7 +262,7 @@ void TAG(print_vertex)( GLcontext *ctx, const VERTEX *v )
 	      v->pv.v1,
 	      v->pv.q1);
       break;
-#endif      
+#endif
    default:
       fprintf(stderr, "???\n");
       break;
@@ -274,12 +274,12 @@ void TAG(print_vertex)( GLcontext *ctx, const VERTEX *v )
 
 
 /* Interpolate the elements of the VB not included in typical hardware
- * vertices.  
+ * vertices.
  *
  * NOTE: All these arrays are guarenteed by tnl to be writeable and
  * have good stride.
  */
-#ifndef INTERP_QUALIFIER 
+#ifndef INTERP_QUALIFIER
 #define INTERP_QUALIFIER static
 #endif
 
@@ -317,18 +317,18 @@ INTERP_QUALIFIER void TAG(interp_extras)( GLcontext *ctx,
    INTERP_VERTEX(ctx, t, dst, out, in, force_boundary);
 }
 
-INTERP_QUALIFIER void TAG(copy_pv_extras)( GLcontext *ctx, 
+INTERP_QUALIFIER void TAG(copy_pv_extras)( GLcontext *ctx,
 					   GLuint dst, GLuint src )
 {
    LOCALVARS
       struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
 
    if (VB->ColorPtr[1]) {
-      COPY_4FV( GET_COLOR(VB->ColorPtr[1], dst), 
+      COPY_4FV( GET_COLOR(VB->ColorPtr[1], dst),
 		GET_COLOR(VB->ColorPtr[1], src) );
 
       if (VB->SecondaryColorPtr[1]) {
-	 COPY_4FV( GET_COLOR(VB->SecondaryColorPtr[1], dst), 
+	 COPY_4FV( GET_COLOR(VB->SecondaryColorPtr[1], dst),
 		   GET_COLOR(VB->SecondaryColorPtr[1], src) );
       }
    }

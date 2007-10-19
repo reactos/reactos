@@ -9,7 +9,7 @@ IDS_USAGE, "FIND: Visualizza le linee di un file che contengono un stringa.\n\n\
     /I  Ignora maiuscole/minuscole\n\
     /N  Numera le linee visualizzate a partire da 1\n\
     /V  Visualizza le linee che non contengono la stringa"
-    
+
 IDS_NO_SUCH_FILE, "FIND: %s: File non trovato\n"
 
 IDS_CANNOT_OPEN, "FIND: %s: Impossibile aprire il file\n"

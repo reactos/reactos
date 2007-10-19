@@ -32,7 +32,7 @@
 #include "t_context.h"
 
 /* New mechanism to specify hardware vertices so that tnl can build
- * and manipulate them directly.  
+ * and manipulate them directly.
  */
 
 
@@ -97,7 +97,7 @@ extern void _tnl_get_attr( GLcontext *ctx, const void *vertex, GLenum attrib,
 
 /* Complementary to the above.
  */
-extern void _tnl_set_attr( GLcontext *ctx, void *vout, GLenum attrib, 
+extern void _tnl_set_attr( GLcontext *ctx, void *vout, GLenum attrib,
 			   const GLfloat *src );
 
 
@@ -110,7 +110,7 @@ extern GLuint _tnl_install_attrs( GLcontext *ctx,
 
 extern void _tnl_free_vertices( GLcontext *ctx );
 
-extern void _tnl_init_vertices( GLcontext *ctx, 
+extern void _tnl_init_vertices( GLcontext *ctx,
 				GLuint vb_size,
 				GLuint max_vertex_size );
 
@@ -141,7 +141,7 @@ void _tnl_register_fastpath( struct tnl_clipspace *vtx,
 
 /* t_vertex_generic.c -- Internal functions for t_vertex.c
  */
-void _tnl_generic_copy_pv_extras( GLcontext *ctx, 
+void _tnl_generic_copy_pv_extras( GLcontext *ctx,
 				  GLuint dst, GLuint src );
 
 void _tnl_generic_interp_extras( GLcontext *ctx,

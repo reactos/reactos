@@ -32,7 +32,7 @@ RtlFirstFreeAce(PACL Acl,
       *Ace = Current;
       return(TRUE);
    }
-   
+
    i = 0;
    AclEnd = (ULONG_PTR)Acl + Acl->AclSize;
    do
@@ -77,7 +77,7 @@ RtlGetAce(PACL Acl,
    {
       return(STATUS_INVALID_PARAMETER);
    }
-   
+
    *Ace = (PVOID)((PACE)(Acl + 1));
 
    for (i = 0; i < AceIndex; i++)

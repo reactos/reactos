@@ -18,7 +18,7 @@
  */
 
 #include <d3dhal.h>
- 
+
 /* Define the real export names */
 #define DdCreateDirectDrawObject            GdiEntry1
 #define DdQueryDirectDrawObject             GdiEntry2
@@ -38,16 +38,16 @@
 #define DdSwapTextureHandles                GdiEntry16
 
 
-BOOL 
-STDCALL 
-DdCreateDirectDrawObject( 
+BOOL
+STDCALL
+DdCreateDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     HDC hdc
 );
 
-BOOL 
-STDCALL 
-DdQueryDirectDrawObject( 
+BOOL
+STDCALL
+DdQueryDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     LPDDHALINFO pHalInfo,
     LPDDHAL_DDCALLBACKS pDDCallbacks,
@@ -61,48 +61,48 @@ DdQueryDirectDrawObject(
     LPVIDMEM pvmList
 );
 
-BOOL 
-STDCALL 
-DdDeleteDirectDrawObject( 
+BOOL
+STDCALL
+DdDeleteDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
 );
 
-BOOL 
-STDCALL 
-DdCreateSurfaceObject( 
+BOOL
+STDCALL
+DdCreateSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     BOOL bPrimarySurface
 );
 
-BOOL 
-STDCALL 
-DdDeleteSurfaceObject( 
+BOOL
+STDCALL
+DdDeleteSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
-BOOL 
-STDCALL 
-DdResetVisrgn( 
+BOOL
+STDCALL
+DdResetVisrgn(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     HWND hWnd
 );
 
-HDC 
-STDCALL 
-DdGetDC( 
+HDC
+STDCALL
+DdGetDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     LPPALETTEENTRY pColorTable
 );
 
-BOOL 
-STDCALL 
-DdReleaseDC( 
+BOOL
+STDCALL
+DdReleaseDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
-HBITMAP 
-STDCALL 
-DdCreateDIBSection( 
+HBITMAP
+STDCALL
+DdCreateDIBSection(
     HDC hdc,
     CONST BITMAPINFO *pbmi,
     UINT iUsage,
@@ -111,50 +111,50 @@ DdCreateDIBSection(
     DWORD dwOffset
 );
 
-BOOL 
-STDCALL 
-DdReenableDirectDrawObject( 
+BOOL
+STDCALL
+DdReenableDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     BOOL *pbNewMode
 );
 
-BOOL 
-STDCALL 
-DdAttachSurface( 
+BOOL
+STDCALL
+DdAttachSurface(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 );
 
-VOID 
-STDCALL 
-DdUnattachSurface( 
+VOID
+STDCALL
+DdUnattachSurface(
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
 );
 
-ULONG 
-STDCALL 
+ULONG
+STDCALL
 DdQueryDisplaySettingsUniqueness(VOID);
 
-HANDLE 
-STDCALL 
-DdGetDxHandle( 
+HANDLE
+STDCALL
+DdGetDxHandle(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     BOOL bRelease
 );
 
-BOOL 
-STDCALL 
-DdSetGammaRamp( 
+BOOL
+STDCALL
+DdSetGammaRamp(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     HDC hdc,
     LPVOID lpGammaRamp
 );
 
-DWORD 
-STDCALL 
-DdSwapTextureHandles( 
+DWORD
+STDCALL
+DdSwapTextureHandles(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2

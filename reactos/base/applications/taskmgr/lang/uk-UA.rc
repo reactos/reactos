@@ -665,7 +665,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Використання ЦП: %3d%%"
     IDS_STATUS_PROCESSES          "Процесів: %d"
     IDS_Not_Responding            "Не відповідає"
-    IDS_Running                   "Виконується"  
+    IDS_Running                   "Виконується"
 END
 
 

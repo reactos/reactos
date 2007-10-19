@@ -35,19 +35,19 @@ HANDLE RPCRT4_RpcssNPConnect(void)
   HANDLE the_pipe = NULL;
   DWORD dwmode, wait_result;
   HANDLE master_mutex = RPCRT4_GetMasterMutex();
-  
+
   TRACE("\n");
 
   while (TRUE) {
 
     wait_result = WaitForSingleObject(master_mutex, MASTER_MUTEX_TIMEOUT);
     switch (wait_result) {
-      case WAIT_ABANDONED: 
+      case WAIT_ABANDONED:
       case WAIT_OBJECT_0:
         break;
       case WAIT_FAILED:
       case WAIT_TIMEOUT:
-      default: 
+      default:
         ERR("This should never happen: couldn't enter mutex.\n");
         return NULL;
     }
@@ -67,18 +67,18 @@ HANDLE RPCRT4_RpcssNPConnect(void)
       break;
 
     if (GetLastError() != ERROR_PIPE_BUSY) {
-      WARN("Unable to open named pipe %s (assuming unavailable).\n", 
+      WARN("Unable to open named pipe %s (assuming unavailable).\n",
         debugstr_a(NAME_RPCSS_NAMED_PIPE));
       the_pipe = NULL;
       break;
     }
 
     WARN("Named pipe busy (will wait)\n");
-    
+
     if (!ReleaseMutex(master_mutex))
       ERR("Failed to release master mutex.  Expect deadlock.\n");
 
-    /* wait for the named pipe.  We are only 
+    /* wait for the named pipe.  We are only
        willing to wait only 5 seconds.  It should be available /very/ soon. */
     if (! WaitNamedPipeA(NAME_RPCSS_NAMED_PIPE, MASTER_MUTEX_WAITNAMEDPIPE_TIMEOUT))
     {
@@ -124,7 +124,7 @@ BOOL RPCRT4_SendReceiveNPMsg(HANDLE np, PRPCSS_NP_MESSAGE msg, char *vardata, PR
   /* process the vardata payload if necessary */
   vardata_payload_msg.message_type = RPCSS_NP_MESSAGE_TYPEID_VARDATAPAYLOADMSG;
   vardata_payload_msg.vardata_payload_size = 0; /* meaningless */
-  for ( payload_offset = 0; payload_offset < msg->vardata_payload_size; 
+  for ( payload_offset = 0; payload_offset < msg->vardata_payload_size;
         payload_offset += VARDATA_PAYLOAD_BYTES ) {
     TRACE("sending vardata payload.  vd=%p, po=%d, ps=%d\n", vardata,
       payload_offset, msg->vardata_payload_size);
@@ -138,7 +138,7 @@ BOOL RPCRT4_SendReceiveNPMsg(HANDLE np, PRPCSS_NP_MESSAGE msg, char *vardata, PR
       return FALSE;
     }
   }
-  
+
   if (! ReadFile(np, reply, sizeof(RPCSS_NP_REPLY), &count, NULL)) {
     ERR("read failed.\n");
     return FALSE;

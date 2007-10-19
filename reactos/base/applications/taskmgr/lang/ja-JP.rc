@@ -665,7 +665,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "CPU 使用率: %3d%%"
     IDS_STATUS_PROCESSES          "プロセス: %d"
     IDS_Not_Responding            "応答なし"
-    IDS_Running                   "実行中"  
+    IDS_Running                   "実行中"
 END
 
 

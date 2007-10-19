@@ -16,7 +16,7 @@ UsbhubCreate(
 	IN PIRP Irp)
 {
 	DPRINT("Usbhub: IRP_MJ_CREATE\n");
-	
+
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -29,7 +29,7 @@ UsbhubClose(
 	IN PIRP Irp)
 {
 	DPRINT("Usbhub: IRP_MJ_CLOSE\n");
-	
+
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -42,7 +42,7 @@ UsbhubCleanup(
 	IN PIRP Irp)
 {
 	DPRINT("Usbhub: IRP_MJ_CLEANUP\n");
-	
+
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

@@ -71,7 +71,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Залипання кнопки миші", -1, 5, 150, 230, 70
   CHECKBOX "&Увімкнути залипання", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Параметри...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Параметри...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
   LTEXT "Дозволяє виконувати виділення й перетягування, не утримуючи кнопку миші натиснутою. Щоб увімкнути цей режим, ненадовго натисніть кнопку миші. Щоб вимкнути цей режим, натисніть кнопку миші ще раз.", -1, 10, 180, 190, 30
 END
 

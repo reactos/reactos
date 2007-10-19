@@ -21,7 +21,7 @@
 void ConvertPathCharacters(char *Path)
 {
 	int		i;
-   
+
 	i = 0;
 	while (Path[i] != 0)
 	{
@@ -67,7 +67,7 @@ int MakeDirectory(char *Directory)
 	}
 
 	chdir(CurrentDirectory);
-	
+
 	return 0;
 }
 

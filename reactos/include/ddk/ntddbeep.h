@@ -13,7 +13,7 @@ extern "C" {
 #define BEEP_FREQUENCY_MAXIMUM 0x7FFF
 #define IOCTL_BEEP_SET         CTL_CODE(FILE_DEVICE_BEEP, 0, METHOD_BUFFERED, FILE_ANY_ACCESS)
 
-typedef struct _BEEP_SET_PARAMETERS 
+typedef struct _BEEP_SET_PARAMETERS
 {
    ULONG Frequency;
    ULONG Duration;
@@ -22,5 +22,5 @@ typedef struct _BEEP_SET_PARAMETERS
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif
 

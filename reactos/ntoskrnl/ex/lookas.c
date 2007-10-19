@@ -135,7 +135,7 @@ ExiAllocateFromPagedLookasideList(IN PPAGED_LOOKASIDE_LIST Lookaside)
 
     Lookaside->L.TotalAllocates++;
     Entry = InterlockedPopEntrySList(&Lookaside->L.ListHead);
-    if (!Entry) 
+    if (!Entry)
     {
         Lookaside->L.AllocateMisses++;
         Entry = (Lookaside->L.Allocate)(Lookaside->L.Type,
@@ -154,7 +154,7 @@ ExiFreeToPagedLookasideList(IN PPAGED_LOOKASIDE_LIST  Lookaside,
                             IN PVOID  Entry)
 {
     Lookaside->L.TotalFrees++;
-    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth) 
+    if (ExQueryDepthSList(&Lookaside->L.ListHead) >= Lookaside->L.Depth)
     {
         Lookaside->L.FreeMisses++;
         (Lookaside->L.Free)(Entry);
@@ -258,7 +258,7 @@ ExInitializeNPagedLookasideList(IN PNPAGED_LOOKASIDE_LIST Lookaside,
     {
         Lookaside->L.Free = ExFreePool;
     }
-    
+
     /* Insert it into the list */
     ExInterlockedInsertTailList(&ExpNonPagedLookasideListHead,
                                 &Lookaside->L.ListEntry,

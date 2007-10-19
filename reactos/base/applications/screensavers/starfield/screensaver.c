@@ -56,21 +56,21 @@ void DrawStarField (HDC pDC)
 	{
 		//	Clear last position of this star
 		SetPixel (
-			pDC, 
-			stars[i].m_nOldX, 
-			stars[i].m_nOldY, 
+			pDC,
+			stars[i].m_nOldX,
+			stars[i].m_nOldY,
 			RGB (0, 0, 0));
 
 		nX = (int)((((long)stars[i].m_nXPos << 7) / (long)stars[i].m_nZPos) + m_nCenterX);
 		nY = (int)((((long)stars[i].m_nYPos << 7) / (long)stars[i].m_nZPos) + m_nCenterY);
-		
+
 		// Draw star
 		SetPixel (
-			pDC, 
-			nX, 
-			nY, 
+			pDC,
+			nX,
+			nY,
 			RGB (255, 255, 255));
-		
+
 		// Remember current position for clearing later
 		stars[i].m_nOldX = nX;
 		stars[i].m_nOldY = nY;
@@ -82,9 +82,9 @@ BOOL SetUpStars (int nNumStars)
 	int i;
 	if (nNumStars > MAX_STARS)
 	{
-		MessageBox (0, 
-			_T("Too many stars! Aborting!"), 
-			_T("Error"), 
+		MessageBox (0,
+			_T("Too many stars! Aborting!"),
+			_T("Error"),
 			MB_OK | MB_ICONWARNING);
 		return FALSE;
 	}
@@ -99,8 +99,8 @@ BOOL SetUpStars (int nNumStars)
 	if (!stars)
 	{
 		MessageBox (0,
-			_T("Unable to allocate memory! Aborting!"), 
-			_T("Error"), 
+			_T("Unable to allocate memory! Aborting!"),
+			_T("Error"),
 			MB_OK | MB_ICONWARNING);
 		return FALSE;
 	}
@@ -116,7 +116,7 @@ BOOL SetUpStars (int nNumStars)
 			stars[i].m_nOldY = -1;
 		} while ((stars[i].m_nXPos == 0) || (stars[i].m_nYPos == 0));
 	}
-	
+
 	return TRUE;
 }
 
@@ -154,9 +154,9 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_CREATE :
 		{
 			SetTimer (
-				hwnd, 
-				APP_TIMER, 
-				APP_TIMER_INTERVAL, 
+				hwnd,
+				APP_TIMER,
+				APP_TIMER_INTERVAL,
 				NULL);
 		}
 		break;
@@ -184,7 +184,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		{
 			//	Change the center point of the starfield
 			SetDimensions (
-				LOWORD(lParam), 
+				LOWORD(lParam),
 				HIWORD(lParam));
 		}
 		break;
@@ -226,7 +226,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			GetCursorPos(&ptCursor);
 
 			// if the mouse has moved more than 3 pixels then exit
-			if( (abs(ptCursor.x - ptLast.x) >= 3) || 
+			if( (abs(ptCursor.x - ptLast.x) >= 3) ||
 				(abs(ptCursor.y - ptLast.y) >= 3))
 			{
 				PostMessage(hwnd, WM_CLOSE, 0, 0);
@@ -268,18 +268,18 @@ void InitSaver(HWND hwndParent)
 	{
 		HWND hwnd;
 		hwnd = CreateWindowEx(WS_EX_TOPMOST,
-                          APPNAME, 
+                          APPNAME,
                           APPNAME,
                           WS_VISIBLE | WS_POPUP,
                           0, 0,
                           GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
                           HWND_DESKTOP, 0,
                           hInstance, NULL);
-     
-    SetWindowPos(hwnd, 
-                 0, 0, 0, 0, 0, 
+
+    SetWindowPos(hwnd,
+                 0, 0, 0, 0, 0,
                  SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_SHOWWINDOW);
-                 
+
 		ShowCursor(FALSE);
 		fullscreen = TRUE;
 	}

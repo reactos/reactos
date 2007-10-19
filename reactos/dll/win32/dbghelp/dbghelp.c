@@ -33,9 +33,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  *      + funcargtype:s are (partly) wrong: they should be a specific struct (like
  *        typedef) pointing to the actual type (and not a direct access)
  *      + we should store the underlying type for an enum in the symt_enum struct
- *      + for enums, we store the names & values (associated to the enum type), 
+ *      + for enums, we store the names & values (associated to the enum type),
  *        but those values are not directly usable from a debugger (that's why, I
- *        assume, that we have also to define constants for enum values, as 
+ *        assume, that we have also to define constants for enum values, as
  *        Codeview does BTW.
  *  - most options (dbghelp_options) are not used (loading lines...)
  *  - in symbol lookup by name, we don't use RE everywhere we should. Moreover, when
@@ -47,13 +47,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  *        while processing a function's parameters
  *      + get rid of MSC reading FIXME:s (lots of types are not defined)
  *      + C++ management
- *  - stabs: 
+ *  - stabs:
  *      + when, in a same module, the same definition is used in several compilation
- *        units, we get several definitions of the same object (especially 
+ *        units, we get several definitions of the same object (especially
  *        struct/union). we should find a way not to duplicate them
  *      + in some cases (dlls/user/dialog16.c DIALOG_GetControl16), the same static
  *        global variable is defined several times (at different scopes). We are
- *        getting several of those while looking for a unique symbol. Part of the 
+ *        getting several of those while looking for a unique symbol. Part of the
  *        issue is that we don't give a scope to a static variable inside a function
  *      + C++ management
  *  - implement the callback notification mechanism
@@ -115,7 +115,7 @@ BOOL WINAPI SymSetSearchPath(HANDLE hProcess, PSTR searchPath)
 /***********************************************************************
  *		SymGetSearchPath (DBGHELP.@)
  */
-BOOL WINAPI SymGetSearchPath(HANDLE hProcess, LPSTR szSearchPath, 
+BOOL WINAPI SymGetSearchPath(HANDLE hProcess, LPSTR szSearchPath,
                              DWORD SearchPathLength)
 {
     struct process* pcs = process_find_by_handle(hProcess);
@@ -141,7 +141,7 @@ static BOOL process_invade(HANDLE hProcess)
 
     if (!EnumProcessModules(hProcess, hMods, sizeof(hMods), &sz))
         return FALSE; /* FIXME should grow hMods */
-    
+
     for (i = 0; i < sz / sizeof(HMODULE); i++)
     {
         if (!GetModuleInformation(hProcess, hMods[i], &mi, sizeof(mi)) ||
@@ -159,7 +159,7 @@ static BOOL process_invade(HANDLE hProcess)
  * The initialisation of a dbghelp's context.
  * Note that hProcess doesn't need to be a valid process handle (except
  * when fInvadeProcess is TRUE).
- * Since, we're also allow to load ELF (pure) libraries and Wine ELF libraries 
+ * Since, we're also allow to load ELF (pure) libraries and Wine ELF libraries
  * containing PE (and NE) module(s), here's how we handle it:
  * - we load every module (ELF, NE, PE) passed in SymLoadModule
  * - in fInvadeProcess (in SymInitialize) is TRUE, we set up what is called ELF
@@ -173,7 +173,7 @@ static BOOL process_invade(HANDLE hProcess)
  *   we won't be able to provide the requested debug information. We'll
  *   however be able to load native PE modules (and their debug information)
  *   without any trouble.
- * Note also that this scheme can be intertwined with the deferred loading 
+ * Note also that this scheme can be intertwined with the deferred loading
  * mechanism (ie only load the debug information when we actually need it).
  */
 BOOL WINAPI SymInitialize(HANDLE hProcess, PSTR UserSearchPath, BOOL fInvadeProcess)
@@ -192,7 +192,7 @@ BOOL WINAPI SymInitialize(HANDLE hProcess, PSTR UserSearchPath, BOOL fInvadeProc
 
     if (UserSearchPath)
     {
-        pcs->search_path = strcpy(HeapAlloc(GetProcessHeap(), 0, strlen(UserSearchPath) + 1), 
+        pcs->search_path = strcpy(HeapAlloc(GetProcessHeap(), 0, strlen(UserSearchPath) + 1),
                                   UserSearchPath);
     }
     else
@@ -305,7 +305,7 @@ BOOL WINAPI SymSetContext(HANDLE hProcess, PIMAGEHLP_STACK_FRAME StackFrame,
 /***********************************************************************
  *		SymRegisterCallback (DBGHELP.@)
  */
-BOOL WINAPI SymRegisterCallback(HANDLE hProcess, 
+BOOL WINAPI SymRegisterCallback(HANDLE hProcess,
                                 PSYMBOL_REGISTERED_CALLBACK CallbackFunction,
                                 PVOID UserContext)
 {

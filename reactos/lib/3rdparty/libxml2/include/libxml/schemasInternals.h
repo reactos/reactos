@@ -102,7 +102,7 @@ typedef enum {
     XML_SCHEMA_TYPE_IDC_UNIQUE,
     XML_SCHEMA_TYPE_IDC_KEY,
     XML_SCHEMA_TYPE_IDC_KEYREF,
-    XML_SCHEMA_TYPE_PARTICLE = 25, 
+    XML_SCHEMA_TYPE_PARTICLE = 25,
     XML_SCHEMA_FACET_MININCLUSIVE = 1000,
     XML_SCHEMA_FACET_MINEXCLUSIVE,
     XML_SCHEMA_FACET_MAXINCLUSIVE,
@@ -891,7 +891,7 @@ struct _xmlSchema {
     int preserve;        /* whether to free the document */
     int counter; /* used to give ononymous components unique names */
     xmlHashTablePtr idcDef;
-    void *volatiles; /* Misc. helper items (e.g. reference items) */    
+    void *volatiles; /* Misc. helper items (e.g. reference items) */
 };
 
 XMLPUBFUN void XMLCALL         xmlSchemaFreeType        (xmlSchemaTypePtr type);

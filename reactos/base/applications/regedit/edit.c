@@ -712,26 +712,26 @@ BOOL DeleteKey(HWND hwnd, HKEY hKeyRoot, LPCTSTR keyPath)
     BOOL result = FALSE;
     LONG lRet;
     HKEY hKey;
-    
+
     lRet = RegOpenKeyEx(hKeyRoot, keyPath, 0, KEY_READ|KEY_SET_VALUE, &hKey);
     if (lRet != ERROR_SUCCESS) {
 	error_code_messagebox(hwnd, lRet);
 	return FALSE;
     }
-    
+
     LoadString(hInst, IDS_QUERY_DELETE_KEY_CONFIRM, caption, sizeof(caption)/sizeof(TCHAR));
     LoadString(hInst, IDS_QUERY_DELETE_KEY_ONE, msg, sizeof(msg)/sizeof(TCHAR));
 
     if (MessageBox(g_pChildWnd->hWnd, msg, caption, MB_ICONQUESTION | MB_YESNO) != IDYES)
         goto done;
-	
+
     lRet = SHDeleteKey(hKeyRoot, keyPath);
     if (lRet != ERROR_SUCCESS) {
 	error(hwnd, IDS_BAD_KEY, keyPath);
 	goto done;
     }
     result = TRUE;
-    
+
 done:
     RegCloseKey(hKey);
     return result;

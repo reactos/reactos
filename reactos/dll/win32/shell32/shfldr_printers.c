@@ -63,7 +63,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 typedef struct
 {
     IExtractIconWVtbl *lpVtbl;
-    IExtractIconAVtbl *lpvtblExtractIconA;	
+    IExtractIconAVtbl *lpvtblExtractIconA;
     volatile LONG              ref;
     LPITEMIDLIST       pidl;
 } IExtractIconWImpl;
@@ -286,7 +286,7 @@ static struct IExtractIconAVtbl eiavt =
 static IUnknown *IEI_Printers_Constructor(LPCITEMIDLIST pidl)
 {
     IExtractIconWImpl* ei;
-	
+
     TRACE("%p\n", pidl);
 
     ei = HeapAlloc(GetProcessHeap(),0,sizeof(IExtractIconWImpl));
@@ -430,7 +430,7 @@ static BOOL CreatePrintersEnumList(IEnumIDList *list, DWORD dwFlags)
     {
         DWORD needed, num, i;
         PRINTER_INFO_4W *pi;
-        
+
         EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, 4, NULL, 0, &needed, &num);
         pi = HeapAlloc(GetProcessHeap(), 0, needed);
         if(!EnumPrintersW(PRINTER_ENUM_LOCAL, NULL, 4, (LPBYTE)pi, needed, &needed, &num)) {

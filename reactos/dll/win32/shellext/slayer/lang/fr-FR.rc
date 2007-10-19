@@ -30,7 +30,7 @@ BEGIN
   PUSHBUTTON "&Annuler", IDCANCEL, 162,116,60,14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
   IDS_DESCRIPTION "Application Compatibility Layer Shell Extension"

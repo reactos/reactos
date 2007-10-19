@@ -111,15 +111,15 @@ char* ultoa(unsigned long value, char* string, int radix)
     char buffer[33];
     char *pos;
     int digit;
-    
+
     pos = &buffer[32];
     *pos = '\0';
 
     if (string == NULL)
     {
-      return NULL;         
+      return NULL;
     }
-    
+
     do {
 	digit = value % radix;
 	value = value / radix;

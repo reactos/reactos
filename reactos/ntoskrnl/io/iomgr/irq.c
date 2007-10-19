@@ -135,7 +135,7 @@ IoConnectInterrupt(OUT PKINTERRUPT *InterruptObject,
 /*
  * @implemented
  */
-VOID 
+VOID
 NTAPI
 IoDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {

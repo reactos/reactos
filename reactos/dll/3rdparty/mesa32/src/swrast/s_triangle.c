@@ -779,7 +779,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
       }
       break;
    }
-   
+
    ASSERT(span->arrayMask & SPAN_RGBA);
    _swrast_write_rgba_span(ctx, span);
 
@@ -861,7 +861,7 @@ fast_persp_span(GLcontext *ctx, struct sw_span *span,
 
 #endif /* CHAN_BITS != GL_FLOAT */
 
-                
+
 
 
 /*

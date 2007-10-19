@@ -40,7 +40,7 @@
 //#define CONTROL_DEBUG_ENABLE
 
 #ifdef CONTROL_DEBUG_ENABLE
-#define CTL_DEBUG(x) dbgprint x 
+#define CTL_DEBUG(x) dbgprint x
 #else
 #define CTL_DEBUG(x)
 #endif

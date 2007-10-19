@@ -127,7 +127,7 @@ __asm__ __volatile__("mfmsr 0\n\t" \
                       "or    0,8,0\n\t" \
                       "mtmsr 0\n\t")
 
-#define KePPCHaltProcessor()     
+#define KePPCHaltProcessor()
 
 #define KeArchEraseFlags()
 #define KeArchDisableInterrupts() KePPCDisableInterrupts()
@@ -159,7 +159,7 @@ STDCALL
 KeCreateApplicationProcessorIdleThread(
   ULONG Id);
 
-static VOID KePPCFnInit() 
+static VOID KePPCFnInit()
 {
     __asm__("mfmsr 0\n\tori 0,0,0x2000\n\tmtmsr 0");
 }
@@ -173,8 +173,8 @@ KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
                 BOOLEAN UserThread,
                 KTRAP_FRAME TrapFrame);
 #endif
-VOID 
-NTAPI 
+VOID
+NTAPI
 KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState);
 
 #endif /* __ASM__ */

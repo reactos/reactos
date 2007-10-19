@@ -5188,7 +5188,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	'S', 'e', 'r', 'v', 'i', 'c', 'e', ' ', 'P', 'r', 'o', 'v', 'i', 'd', 'e', 'r', 's', 0 };
     static const WCHAR guidKey[] = { 'G', 'u', 'i', 'd', 0 };
     static const WCHAR descW[] = { 'D', 'e', 's', 'c', 'r', 'i', 'p', 't', 'i', 'o', 'n', 'W', 0 };
-    
+
     DWORD  dwIndex;
     FILETIME filetime;
 
@@ -5196,12 +5196,12 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
     DWORD max_sizeOfDescriptionA = 0;
     WCHAR *descriptionW = NULL;
     DWORD max_sizeOfDescriptionW = 0;
-    
+
     if (!lpEnumCallbackA && !lpEnumCallbackW)
     {
 	return DPERR_INVALIDPARAMS;
     }
-    
+
     /* Need to loop over the service providers in the registry */
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, searchSubKey,
 		      0, KEY_READ, &hkResult) != ERROR_SUCCESS)
@@ -5210,7 +5210,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	ERR(": no service provider key in the registry - check your Wine installation !!!\n");
 	return DPERR_GENERIC;
     }
-    
+
     /* Traverse all the service providers we have available */
     dwIndex = 0;
     while (1)
@@ -5222,7 +5222,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	WCHAR guidKeyContent[(2 * 16) + 1 + 6 /* This corresponds to '{....-..-..-..-......}' */ ];
 	DWORD sizeOfGuidKeyContent = sizeof(guidKeyContent);
 	LONG  ret_value;
-	
+
 	ret_value = RegEnumKeyExW(hkResult, dwIndex, subKeyName, &sizeOfSubKeyName,
 				  NULL, NULL, NULL, &filetime);
 	if (ret_value == ERROR_NO_MORE_ITEMS)
@@ -5233,14 +5233,14 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    return DPERR_EXCEPTION;
 	}
 	TRACE(" this time through sub-key %s.\n", debugstr_w(subKeyName));
-	
+
 	/* Open the key for this service provider */
 	if (RegOpenKeyExW(hkResult, subKeyName, 0, KEY_READ, &hkServiceProvider) != ERROR_SUCCESS)
 	{
 	    ERR(": could not open registry key for service provider %s.\n", debugstr_w(subKeyName));
 	    continue;
 	}
-	
+
 	/* Get the GUID from the registry */
 	if (RegQueryValueExW(hkServiceProvider, guidKey,
 			     NULL, NULL, (LPBYTE) guidKeyContent, &sizeOfGuidKeyContent) != ERROR_SUCCESS)
@@ -5254,7 +5254,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    continue;
 	}
 	CLSIDFromString(guidKeyContent, &serviceProviderGUID );
-	
+
 	/* The enumeration will return FALSE if we are not to continue.
 	 *
 	 * Note: on my windows box, major / minor version is 6 / 0 for all service providers
@@ -5264,7 +5264,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	if (lpEnumCallbackA)
 	{
 	    DWORD sizeOfDescription = 0;
-	    
+
 	    /* Note that this the the A case of this function, so use the A variant to get the description string */
 	    if (RegQueryValueExA(hkServiceProvider, "DescriptionA",
 				 NULL, NULL, NULL, &sizeOfDescription) != ERROR_SUCCESS)
@@ -5281,14 +5281,14 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    descriptionA = HeapAlloc(GetProcessHeap(), 0, sizeOfDescription);
 	    RegQueryValueExA(hkServiceProvider, "DescriptionA",
 			     NULL, NULL, (LPBYTE) descriptionA, &sizeOfDescription);
-	    
+
 	    if (!lpEnumCallbackA(&serviceProviderGUID, descriptionA, 6, 0, lpContext))
 		goto end;
 	}
 	else
 	{
 	    DWORD sizeOfDescription = 0;
-	    
+
 	    if (RegQueryValueExW(hkServiceProvider, descW,
 				 NULL, NULL, NULL, &sizeOfDescription) != ERROR_SUCCESS)
 	    {
@@ -5308,14 +5308,14 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 	    if (!lpEnumCallbackW(&serviceProviderGUID, descriptionW, 6, 0, lpContext))
 		goto end;
 	}
-      
+
       dwIndex++;
   }
 
  end:
     HeapFree(GetProcessHeap(), 0, descriptionA);
     HeapFree(GetProcessHeap(), 0, descriptionW);
-    
+
     return DP_OK;
 }
 
@@ -5326,7 +5326,7 @@ static HRESULT DirectPlayEnumerateAW(LPDPENUMDPCALLBACKA lpEnumCallbackA,
 HRESULT WINAPI DirectPlayEnumerateA(LPDPENUMDPCALLBACKA lpEnumCallback, LPVOID lpContext )
 {
     TRACE("(%p,%p)\n", lpEnumCallback, lpContext);
-    
+
     return DirectPlayEnumerateAW(lpEnumCallback, NULL, lpContext);
 }
 
@@ -5336,7 +5336,7 @@ HRESULT WINAPI DirectPlayEnumerateA(LPDPENUMDPCALLBACKA lpEnumCallback, LPVOID l
 HRESULT WINAPI DirectPlayEnumerateW(LPDPENUMDPCALLBACKW lpEnumCallback, LPVOID lpContext )
 {
     TRACE("(%p,%p)\n", lpEnumCallback, lpContext);
-    
+
     return DirectPlayEnumerateAW(NULL, lpEnumCallback, lpContext);
 }
 

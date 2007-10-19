@@ -40,7 +40,7 @@
 struct arb_program
 {
    struct program Base;
-   struct program_parameter_list *Parameters; 
+   struct program_parameter_list *Parameters;
    GLuint InputsRead;
    GLuint OutputsWritten;
 
@@ -48,7 +48,7 @@ struct arb_program
    GLuint MajorVersion;
    GLuint MinorVersion;
 
-   /* ARB_vertex_program specifics */ 
+   /* ARB_vertex_program specifics */
    struct vp_instruction *VPInstructions;
 
    /* Options currently recognized by the parser */
@@ -61,14 +61,14 @@ struct arb_program
 
    /* ARB_fragment_program specifics */
    struct fp_instruction *FPInstructions;
-   GLuint TexturesUsed[MAX_TEXTURE_IMAGE_UNITS]; 
-   GLuint NumAluInstructions; 
+   GLuint TexturesUsed[MAX_TEXTURE_IMAGE_UNITS];
+   GLuint NumAluInstructions;
    GLuint NumTexInstructions;
    GLuint NumTexIndirections;
 };
 
-extern GLuint 
-_mesa_parse_arb_program( GLcontext *ctx, const GLubyte *str, GLsizei len, 
+extern GLuint
+_mesa_parse_arb_program( GLcontext *ctx, const GLubyte *str, GLsizei len,
                          struct arb_program *Program );
-                          
+
 #endif

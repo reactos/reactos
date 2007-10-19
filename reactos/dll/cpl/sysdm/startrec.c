@@ -114,7 +114,7 @@ PBOOTRECORD ReadFreeldrSection(HINF hInf, TCHAR * szSectionName)
             if (!_tcsnicmp(szValue, _T("ReactOS"), 7))
             {
                 //FIXME store as enum
-                pRecord->BootType = 1; 
+                pRecord->BootType = 1;
             }
             else
             {
@@ -177,14 +177,14 @@ int LoadFreeldrSettings(HINF hInf, HWND hwndDlg)
     }
 
 
-    if (!SetupGetIntField(&InfContext, 
+    if (!SetupGetIntField(&InfContext,
                           1,
                           (PINT)&TimeOut))
     {
         /* failed to retrieve timeout */
         return FALSE;
     }
-    
+
     if (!SetupFindFirstLine(hInf,
                            _T("Operating Systems"),
                            NULL,
@@ -276,8 +276,8 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
 
     do
     {
-        if (!SetupGetStringField(&InfContext, 
-                                 0, 
+        if (!SetupGetStringField(&InfContext,
+                                 0,
                                  szName,
                                  sizeof(szName) / sizeof(TCHAR),
                                  &LineLength))
@@ -285,8 +285,8 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
             return FALSE;
         }
 
-        if (!SetupGetStringField(&InfContext, 
-                                 1, 
+        if (!SetupGetStringField(&InfContext,
+                                 1,
                                  szValue,
                                  sizeof(szValue) / sizeof(TCHAR),
                                  &LineLength))
@@ -298,7 +298,7 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
         {
             TimeOut = _ttoi(szValue);
         }
-        
+
         if (!_tcsnicmp(szName, _T("default"), 7))
         {
             _tcscpy(szDefaultOS, szValue);
@@ -317,8 +317,8 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
 
     do
     {
-        if (!SetupGetStringField(&InfContext, 
-                                 0, 
+        if (!SetupGetStringField(&InfContext,
+                                 0,
                                  szName,
                                  sizeof(szName) / sizeof(TCHAR),
                                  &LineLength))
@@ -326,8 +326,8 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
             return FALSE;
         }
 
-        if (!SetupGetStringField(&InfContext, 
-                                 1, 
+        if (!SetupGetStringField(&InfContext,
+                                 1,
                                  szValue,
                                  sizeof(szValue) / sizeof(TCHAR),
                                  &LineLength))
@@ -335,8 +335,8 @@ int LoadBootSettings(HINF hInf, HWND hwndDlg)
             return FALSE;
         }
 
-        SetupGetStringField(&InfContext, 
-                            2, 
+        SetupGetStringField(&InfContext,
+                            2,
                             szOptions,
                             sizeof(szOptions) / sizeof(TCHAR),
                             &LineLength);
@@ -410,18 +410,18 @@ LRESULT LoadOSList(HWND hwndDlg)
     DWORD dwBufSize;
     TCHAR *szSystemDrive;
     HINF hInf;
-       
+
     dwBufSize = GetSystemDrive(&szSystemDrive);
     if (!dwBufSize)
         return FALSE;
-    
+
 
     _tcscpy(m_szFreeldrIni, szSystemDrive);
     _tcscat(m_szFreeldrIni, _T("\\freeldr.ini"));
     if (PathFileExists(m_szFreeldrIni))
     {
         /* freeldr.ini exists */
-        hInf = SetupOpenInfFile(m_szFreeldrIni, 
+        hInf = SetupOpenInfFile(m_szFreeldrIni,
                                 NULL,
                                 INF_STYLE_OLDNT,
                                 NULL);
@@ -442,7 +442,7 @@ LRESULT LoadOSList(HWND hwndDlg)
     if (PathFileExists(m_szFreeldrIni))
     {
         /* load boot.ini settings */
-        hInf = SetupOpenInfFile(m_szFreeldrIni, 
+        hInf = SetupOpenInfFile(m_szFreeldrIni,
                                 NULL,
                                 INF_STYLE_OLDNT,
                                 NULL);
@@ -664,7 +664,7 @@ StartRecDlgProc(HWND hwndDlg,
                   //  DeleteBootRecords(hwndDlg);
                   //  LoadOSList(hwndDlg);
                     break;
-                }	
+                }
                 case IDOK:
                 {
                     /* save timeout */

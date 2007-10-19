@@ -17,7 +17,7 @@
  */
 
 
- // 
+ //
  // shelltests.cpp
  //
  // Examples for usage of shellclasses.cpp, shellclasses.h

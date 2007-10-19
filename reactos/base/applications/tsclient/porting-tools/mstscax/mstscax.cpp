@@ -42,7 +42,7 @@ namespace
 	void dbgprintf(LPCTSTR fmt, ...)
 	{
 		TCHAR buf[0x1000];
-		
+
 		va_list args;
 		va_start(args, fmt);
 		StringCbVPrintf(buf, sizeof(buf), fmt, args);
@@ -312,7 +312,7 @@ namespace
 				*ppvObject = NULL;
 				hr = E_NOINTERFACE;
 			}
-		
+
 			dbgprintf(TEXT("CConnectionPointContainer::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
 			return hr;
 		}
@@ -343,7 +343,7 @@ namespace
 
 			return hr;
 		}
-        
+
 		virtual HRESULT STDMETHODCALLTYPE FindConnectionPoint(REFIID riid, IConnectionPoint ** ppCP)
 		{
 			dbgprintf(TEXT("CConnectionPointContainer::FindConnectionPoint(%ls, %p)"), UUIDToString(riid).c_str(), ppCP);
@@ -384,7 +384,7 @@ namespace
 				*ppvObject = NULL;
 				hr = E_NOINTERFACE;
 			}
-		
+
 			dbgprintf(TEXT("CEnumConnectionPoints::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
 			return hr;
 		}
@@ -415,7 +415,7 @@ namespace
 
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Skip(ULONG cConnections)
 		{
 			dbgprintf(TEXT("CEnumConnectionPoints::Skip(%lu)"), cConnections);
@@ -423,7 +423,7 @@ namespace
 			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X"), hr);
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Reset(void)
 		{
 			dbgprintf(TEXT("CEnumConnectionPoints::Reset()"));
@@ -431,7 +431,7 @@ namespace
 			dbgprintf(TEXT("CEnumConnectionPoints:: -> %08X"), hr);
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Clone(IEnumConnectionPoints ** ppEnum)
 		{
 			dbgprintf(TEXT("CEnumConnectionPoints::Clone(%p)"), ppEnum);
@@ -472,7 +472,7 @@ namespace
 				*ppvObject = NULL;
 				hr = E_NOINTERFACE;
 			}
-		
+
 			dbgprintf(TEXT("CConnectionPoint::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
 			return hr;
 		}
@@ -534,7 +534,7 @@ namespace
 			dbgprintf(TEXT("CConnectionPoint::EnumConnections(%p)"), ppEnum);
 			HRESULT hr = m_IConnectionPoint->EnumConnections(ppEnum);
 			dbgprintf(TEXT("CConnectionPoint::EnumConnections -> %08X, pEnum = %p"), hr, *ppEnum);
-			
+
 			if(SUCCEEDED(hr))
 				*ppEnum = HookIEnumConnections(*ppEnum);
 
@@ -569,7 +569,7 @@ namespace
 				*ppvObject = NULL;
 				hr = E_NOINTERFACE;
 			}
-		
+
 			dbgprintf(TEXT("CEnumConnections::QueryInterface -> %08X, ppvObject = %p"), hr, *ppvObject);
 			return hr;
 		}
@@ -596,7 +596,7 @@ namespace
 			dbgprintf(TEXT("CEnumConnections:: -> %08X, CD = { pUnk = %p, dwCookie = %lu }, cFetched = %lu"), hr, pCD->pUnk, pCD->dwCookie, *pcFetched);
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Skip(ULONG cConnections)
 		{
 			dbgprintf(TEXT("CEnumConnections::Skip(%lu)"), cConnections);
@@ -604,7 +604,7 @@ namespace
 			dbgprintf(TEXT("CEnumConnections:: -> %08X"), hr);
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Reset(void)
 		{
 			dbgprintf(TEXT("CEnumConnections::Reset()"));
@@ -612,7 +612,7 @@ namespace
 			dbgprintf(TEXT("CEnumConnections:: -> %08X"), hr);
 			return hr;
 		}
-        
+
         virtual HRESULT STDMETHODCALLTYPE Clone(IEnumConnections ** ppEnum)
 		{
 			dbgprintf(TEXT("CEnumConnections::Clone(%p)"), ppEnum);
@@ -827,7 +827,7 @@ namespace
 		{
 			HRESULT hr;
 			IUnknown * pvObject;
-			
+
 			dbgprintf(TEXT("CAdvancedSettings::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
 
 #define QIBEGIN() \
@@ -2672,7 +2672,7 @@ namespace
 		{
 			HRESULT hr;
 			IUnknown * pvObject = NULL;
-			
+
 			dbgprintf(TEXT("IUnknown::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
 
 #define QIBEGIN() \
@@ -2787,7 +2787,7 @@ namespace
 					*ppvObject = this;
 					return S_OK;
 				}
-				
+
 				return InnerToOuter(this)->queryInterface(riid, ppvObject);
 			}
 
@@ -4050,7 +4050,7 @@ namespace
 			dbgprintf(TEXT("IQuickActivate::QuickActivate(%s, %p)"), o1.str().c_str(), pQaControl);
 
 			HRESULT hr = pIQuickActivate->QuickActivate(pQaContainer, pQaControl);
-			
+
 			std::basic_stringstream<TCHAR> o2;
 
 			o2 << "{ ";
@@ -4828,7 +4828,7 @@ namespace
 		{
 			HRESULT hr;
 			IUnknown * pvObject = NULL;
-			
+
 			dbgprintf(TEXT("IUnknown::QueryInterface(%ls, %p)"), UUIDToString(riid).c_str(), ppvObject);
 
 #define QIBEGIN() \

@@ -85,20 +85,20 @@ STDCALL
 NtUserGetLastInputInfo(PLASTINPUTINFO plii)
 {
     BOOL ret = TRUE;
-    
+
     UserEnterShared();
-    
+
     _SEH_TRY
     {
         if (ProbeForReadUint(&plii->cbSize) != sizeof(LASTINPUTINFO))
         {
             SetLastWin32Error(ERROR_INVALID_PARAMETER);
             ret = FALSE;
-            _SEH_LEAVE; 
+            _SEH_LEAVE;
         }
 
         ProbeForWrite(plii, sizeof(LASTINPUTINFO), sizeof(DWORD));
-        
+
         plii->dwTime = IntLastInputTick(FALSE);
     }
     _SEH_HANDLE
@@ -107,9 +107,9 @@ NtUserGetLastInputInfo(PLASTINPUTINFO plii)
         ret = FALSE;
     }
     _SEH_END;
-   
-    UserLeave(); 
-    
+
+    UserLeave();
+
     return ret;
 }
 
@@ -274,7 +274,7 @@ MouseThreadMain(PVOID StartContext)
             DPRINT1("Win32K: Failed to read from mouse.\n");
             return; //(Status);
          }
-         DPRINT("MouseEvent\n");         
+         DPRINT("MouseEvent\n");
 		 IntLastInputTick(TRUE);
 
          UserEnterExclusive();

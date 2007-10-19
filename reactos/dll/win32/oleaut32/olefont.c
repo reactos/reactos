@@ -1269,7 +1269,7 @@ static HRESULT WINAPI OLEFontImpl_GetIDsOfNames(
  * OLEFontImpl_Invoke (IDispatch)
  *
  * See Windows documentation for more details on IDispatch methods.
- * 
+ *
  * Note: Do not call _put_Xxx methods, since setting things here
  * should not call notify functions as I found out debugging the generic
  * MS VB5 installer.
@@ -2100,7 +2100,7 @@ static HRESULT WINAPI OLEFontImpl_IPersistPropertyBag_Save(
   return E_FAIL;
 }
 
-static const IPersistPropertyBagVtbl OLEFontImpl_IPersistPropertyBag_VTable = 
+static const IPersistPropertyBagVtbl OLEFontImpl_IPersistPropertyBag_VTable =
 {
   OLEFontImpl_IPersistPropertyBag_QueryInterface,
   OLEFontImpl_IPersistPropertyBag_AddRef,
@@ -2178,7 +2178,7 @@ static HRESULT WINAPI OLEFontImpl_IPersistStreamInit_InitNew(
   return S_OK;
 }
 
-static const IPersistStreamInitVtbl OLEFontImpl_IPersistStreamInit_VTable = 
+static const IPersistStreamInitVtbl OLEFontImpl_IPersistStreamInit_VTable =
 {
   OLEFontImpl_IPersistStreamInit_QueryInterface,
   OLEFontImpl_IPersistStreamInit_AddRef,

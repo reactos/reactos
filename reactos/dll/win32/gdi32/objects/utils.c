@@ -34,7 +34,7 @@ CalculateColorTableSize(
 
    /*
     * At first get some basic parameters from the passed BitmapInfoHeader
-    * structure. It can have one of the following formats: 
+    * structure. It can have one of the following formats:
     * - BITMAPCOREHEADER (the oldest one with totally different layout
     *                     from the others)
     * - BITMAPINFOHEADER (the standard and most common header)
@@ -74,7 +74,7 @@ CalculateColorTableSize(
             *ColorTableSize = 0;
          else
             *ColorTableSize = 3;
-         
+
          return TRUE;
 
       case BI_RGB:
@@ -100,7 +100,7 @@ CalculateColorTableSize(
                *ColorTableSize = ClrUsed;
                return TRUE;
          }
-         
+
       case BI_RLE4:
          if (BitCount == 4)
          {
@@ -123,7 +123,7 @@ CalculateColorTableSize(
          return TRUE;
 
       default:
-         return FALSE;      
+         return FALSE;
    }
 }
 
@@ -217,7 +217,7 @@ ConvertBitmapInfo(
       {
          DataSize =
             CoreBitmapInfo->bmciHeader.bcHeight *
-            CoreBitmapInfo->bmciHeader.bcWidth *               
+            CoreBitmapInfo->bmciHeader.bcWidth *
             CoreBitmapInfo->bmciHeader.bcBitCount;
          DataSize = ((DataSize + 31) & ~31) / 8;
          DataSize *= CoreBitmapInfo->bmciHeader.bcPlanes;

@@ -272,7 +272,7 @@ IopCompleteRequest(IN PKAPC Apc,
     if (Irp->Flags & IRP_BUFFERED_IO)
     {
         /* Check if we have an input buffer and if we succeeded */
-        if ((Irp->Flags & IRP_INPUT_OPERATION) && 
+        if ((Irp->Flags & IRP_INPUT_OPERATION) &&
             (Irp->IoStatus.Status != STATUS_VERIFY_REQUIRED) &&
             !(NT_ERROR(Irp->IoStatus.Status)))
         {

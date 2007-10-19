@@ -24,7 +24,7 @@ void NewGame(void)
     int i, j;
 
     SolWnd.EmptyStacks();
-    
+
     //create a new card-stack
     CardStack deck;
     deck.NewDeck();
@@ -88,7 +88,7 @@ bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumDragCards)
 }
 
 //
-//    Row a row-stack, we can only drop cards 
+//    Row a row-stack, we can only drop cards
 //    that are lower / different colour
 //
 bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragcards)
@@ -108,7 +108,7 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  const CardStack &dragca
     else
     {
         const CardStack &mystack = stackobj.GetCardStack();
-        
+
         //can only drop if card is 1 less
         if(mystack[0].LoVal() != dragcard.LoVal() + 1)
         {
@@ -194,7 +194,7 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
 {
     TRACE("ENTER RowStackClickProc()\n");
     int numfacedown;
-    
+
     stackobj.GetFaceDirection(&numfacedown);
 
     //if all face-down, then make top card face-up
@@ -249,7 +249,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
     if(fGameOver)
     {
         MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
-    
+
         for(int i = 0; i < 4; i++)
         {
             pSuitStack[i]->Flash(11, 100);
@@ -277,7 +277,7 @@ void CARDLIBPROC RowStackDblClickProc(CardRegion &stackobj, int iNumClicked)
     //find a suit-stack to move the card to...
     const CardStack &cardstack = stackobj.GetCardStack();
     CardRegion *pDest = FindSuitStackFromCard(cardstack[0]);
-    
+
     if(pDest != 0)
     {
         fGameStarted = true;

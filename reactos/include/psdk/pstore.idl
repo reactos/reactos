@@ -245,9 +245,9 @@ interface IPStore : IUnknown
         [in] PPST_PROMPTIFO pProomptInfo,
         [in] DWORD dwFlags );
 
-    HRESULT CloseItem( 
-        [in] PST_KEY Key, 
-        [in] const GUID* pItemType, 
+    HRESULT CloseItem(
+        [in] PST_KEY Key,
+        [in] const GUID* pItemType,
         [in] const GUID* pItemSubtype,
         [in] LPCWSTR* szItemName,
         [in] DWORD dwFlags );

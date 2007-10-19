@@ -992,7 +992,7 @@ static ULONG DirectSoundDevice_Release(DirectSoundDevice * device)
         device->mixlock.DebugInfo->Spare[0] = 0;
         DeleteCriticalSection(&device->mixlock);
         HeapFree(GetProcessHeap(),0,device);
-        TRACE("(%p) released\n", device); 
+        TRACE("(%p) released\n", device);
     }
     return device->ref;
 }

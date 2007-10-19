@@ -44,12 +44,12 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_W
     int adns_status;
 
     /* For now, don't worry about the user's identity. */
-    Context = (PWINDNS_CONTEXT)RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+    Context = (PWINDNS_CONTEXT)RtlAllocateHeap( RtlGetProcessHeap(), 0,
 						sizeof( WINDNS_CONTEXT ) );
     /* The real work here is to create an adns_state that will help us
      * do what we want to later. */
-    adns_status = adns_init( &Context->State, 
-			     adns_if_noenv | 
+    adns_status = adns_init( &Context->State,
+			     adns_if_noenv |
 			     adns_if_noerrprint |
 			     adns_if_noserverwarn,
 			     0 );
@@ -61,7 +61,7 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_W
       return ERROR_SUCCESS;
     }
   } else {
-    return DnsAcquireContextHandle_UTF8( CredentialsFlags, 
+    return DnsAcquireContextHandle_UTF8( CredentialsFlags,
 					 Credentials,
 					 ContextHandle );
   }
@@ -76,14 +76,14 @@ DNS_STATUS WINAPI DnsAcquireContextHandle_UTF8
 				      Credentials,
 				      ContextHandle );
   } else {
-    /* Convert to unicode, then call the _W version 
+    /* Convert to unicode, then call the _W version
      * For now, there is no conversion */
     DNS_STATUS Status;
-    
+
     Status = DnsAcquireContextHandle_W( TRUE,
 					Credentials, /* XXX arty */
 					ContextHandle );
-    
+
     /* Free the unicode credentials when they exist. */
 
     return Status;
@@ -114,4 +114,4 @@ void WINAPI DnsReleaseContextHandle
   adns_finish( Context->State );
   RtlFreeHeap( RtlGetProcessHeap(), 0, Context );
 }
- 
+

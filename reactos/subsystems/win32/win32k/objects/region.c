@@ -2528,7 +2528,7 @@ FASTCALL
 IntGdiPaintRgn(PDC dc, HRGN  hRgn)
 {
   //RECT box;
-  HRGN tmpVisRgn; //, prevVisRgn;   
+  HRGN tmpVisRgn; //, prevVisRgn;
   PROSRGNDATA visrgn;
   CLIPOBJ* ClipRegion;
   BOOL bRet = FALSE;
@@ -2673,7 +2673,7 @@ NtGdiRectInRegion(HRGN  hRgn,
     Status = _SEH_GetExceptionCode();
   }
   _SEH_END;
-  
+
   if (!NT_SUCCESS(Status))
     {
       RGNDATA_UnlockRgn(Rgn);
@@ -2735,7 +2735,7 @@ NtGdiUnionRectWithRgn(HRGN hDest, CONST PRECT UnsafeRect)
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return NULL;
   }
-  
+
   _SEH_TRY
   {
     ProbeForRead(UnsafeRect,
@@ -2789,7 +2789,7 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
 		else		/* user requested buffer size with rgndata NULL */
 		    return size + sizeof(RGNDATAHEADER);
     }
-    
+
     _SEH_TRY
     {
       ProbeForWrite(rgndata,
@@ -2807,7 +2807,7 @@ DWORD STDCALL NtGdiGetRegionData(HRGN hrgn, DWORD count, LPRGNDATA rgndata)
       Status = _SEH_GetExceptionCode();
     }
     _SEH_END;
-    
+
     if(!NT_SUCCESS(Status))
     {
       SetLastNtError(Status);
@@ -3427,7 +3427,7 @@ GdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       /* Windows doesn't set a last error here */
       return (HRGN)0;
    }
-   
+
    _SEH_TRY
    {
       ProbeForRead(PolyCounts,
@@ -3443,7 +3443,7 @@ GdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       Status = _SEH_GetExceptionCode();
    }
    _SEH_END;
-   
+
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -3468,7 +3468,7 @@ GdiCreatePolyPolygonRgn(CONST PPOINT  pt,
       Status = _SEH_GetExceptionCode();
    }
    _SEH_END;
-   
+
    if (!NT_SUCCESS(Status))
    {
       ExFreePool(SafePolyCounts);

@@ -125,10 +125,10 @@ SmLookupSubsystem (IN     PWSTR   Name,
 						if(NT_SUCCESS(Status))
 						{
 							*DataLength = min(*DataLength, Destination.Length);
-							RtlCopyMemory (Data, Destination.Buffer, *DataLength);				
+							RtlCopyMemory (Data, Destination.Buffer, *DataLength);
 						}
 						RtlFreeHeap (RtlGetProcessHeap(), 0, DestinationBuffer);
-					}			
+					}
 				}else{
 					DPRINT("SM: %s: value won't be expanded\n", __FUNCTION__);
 					*DataLength = min(*DataLength, kvpi->DataLength);

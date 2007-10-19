@@ -1,6 +1,6 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDC_EVENTVWR MENU 
+IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Protokoll"
     BEGIN
@@ -23,7 +23,7 @@ BEGIN
     END
 END
 
-IDC_EVENTVWR ACCELERATORS 
+IDC_EVENTVWR ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -41,7 +41,7 @@ BEGIN
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER
 CAPTION "Bitte warten.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -82,7 +82,7 @@ BEGIN
     CONTROL         "&Wörter",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,77,194,33,10
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE				      "Ereignisanzeige"
   	IDC_EVENTSTRINGIDNOTFOUND	"Die Bezeichnung für die Ereignis-ID ( %lu ) in der Quelle ( %s ) kann nicht gefunden werden. Es könnte sein, dass der Lokale Computer die notwendigen Registry Einträge oder Nachrichten DLLs, um Nachrichten von Remoten Computern anzuzeigen, nicht besitzt."

@@ -49,7 +49,7 @@ AuthzInitializeContextFromSid(IN DWORD Flags,
     {
         PAUTHZ_CLIENT_CONTEXT ClientCtx;
         //PAUTHZ_RESMAN ResMan = (PAUTHZ_RESMAN)AuthzResourceManager;
-        
+
         VALIDATE_RESMAN_HANDLE(AuthzResourceManager);
 
         ClientCtx = (PAUTHZ_CLIENT_CONTEXT)LocalAlloc(LMEM_FIXED,
@@ -116,9 +116,9 @@ AuthzGetInformationFromContext(IN AUTHZ_CLIENT_CONTEXT_HANDLE hAuthzClientContex
     if (hAuthzClientContext != NULL && pSizeRequired != NULL)
     {
         PAUTHZ_CLIENT_CONTEXT ClientCtx = (PAUTHZ_CLIENT_CONTEXT)hAuthzClientContext;
-        
+
         VALIDATE_CLIENTCTX_HANDLE(hAuthzClientContext);
-        
+
         switch (InfoClass)
         {
             case AuthzContextInfoUserSid:

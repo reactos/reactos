@@ -171,7 +171,7 @@ AddListViewItems(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
             _tcscat(filename, TEXT("\\"));
             _tcscat(filename, fd.cFileName);
-            
+
             /* Don't add any hidden bitmaps. Also don't add current wallpaper once more. */
             if (((fd.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) == 0) && (_tcscmp(wallpaperFilename, filename) != 0))
             {

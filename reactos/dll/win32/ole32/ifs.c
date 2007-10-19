@@ -172,7 +172,7 @@ static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, DWORD cb) {
 
 	if(Malloc32.pSpy) {
 	    DWORD preAllocResult;
-	    
+
 	    EnterCriticalSection(&IMalloc32_SpyCS);
 	    preAllocResult = IMallocSpy_PreAlloc(Malloc32.pSpy, cb);
 	    if ((cb != 0) && (preAllocResult == 0)) {
@@ -182,7 +182,7 @@ static LPVOID WINAPI IMalloc_fnAlloc(LPMALLOC iface, DWORD cb) {
 		return NULL;
 	    }
 	}
- 	
+
 	addr = HeapAlloc(GetProcessHeap(),0,cb);
 
 	if(Malloc32.pSpy) {

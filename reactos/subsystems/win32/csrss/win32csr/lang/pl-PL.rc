@@ -1,8 +1,8 @@
-/*  
+/*
 * translated by xrogers (http://rogers.cyberdusk.pl/)
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/  
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95

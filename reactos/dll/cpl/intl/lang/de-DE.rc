@@ -11,7 +11,7 @@ BEGIN
   COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
   PUSHBUTTON "&Anpassen...", IDC_SETUP_BUTTON, 178, 56, 52, 13
   LTEXT "Beispiele", -1, 14, 73, 70, 10
-  LTEXT "Zahl:", -1, 16, 86, 48, 10 
+  LTEXT "Zahl:", -1, 16, 86, 48, 10
   LTEXT "Währung:", -1, 16, 101, 48, 10
   LTEXT "Zeit:", -1, 16, 116, 48, 10
   LTEXT "Kurzes Datum:", -1, 16, 131, 48, 10

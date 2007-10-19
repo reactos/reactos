@@ -1,7 +1,7 @@
 /**
  * \file extensions.h
  * Extension handling.
- * 
+ *
  * \if subset
  * (No-op)
  *

@@ -180,7 +180,7 @@ static RPC_STATUS RPCRT4_CompleteBindingW(RpcBinding* Binding, LPCWSTR NetworkAd
 {
   RPC_STATUS status;
 
-  TRACE("(RpcBinding == ^%p, NetworkAddr == %s, EndPoint == %s, NetworkOptions == %s)\n", Binding, 
+  TRACE("(RpcBinding == ^%p, NetworkAddr == %s, EndPoint == %s, NetworkOptions == %s)\n", Binding,
    debugstr_w(NetworkAddr), debugstr_w(Endpoint), debugstr_w(NetworkOptions));
 
   RPCRT4_strfree(Binding->NetworkAddr);
@@ -226,7 +226,7 @@ RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPCSTR Endpoint)
 
 RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, const UUID* ObjectUuid)
 {
-  TRACE("(*RpcBinding == ^%p, UUID == %s)\n", Binding, debugstr_guid(ObjectUuid)); 
+  TRACE("(*RpcBinding == ^%p, UUID == %s)\n", Binding, debugstr_guid(ObjectUuid));
   if (ObjectUuid) memcpy(&Binding->ObjectUuid, ObjectUuid, sizeof(UUID));
   else UuidCreateNil(&Binding->ObjectUuid);
   return RPC_S_OK;
@@ -343,7 +343,7 @@ static LPWSTR RPCRT4_strconcatW(LPWSTR dst, LPCWSTR src)
 {
   DWORD len = strlenW(dst), slen = strlenW(src);
   LPWSTR ndst = HeapReAlloc(GetProcessHeap(), 0, dst, (len+slen+2)*sizeof(WCHAR));
-  if (!ndst) 
+  if (!ndst)
   {
     HeapFree(GetProcessHeap(), 0, dst);
     return NULL;
@@ -527,7 +527,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
             /* FIXME: this is kind of inefficient */
             *Options = (unsigned char*) RPCRT4_strconcatA( (char*)*Options, opt);
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
+          } else
 	    *Options = (unsigned char*) opt;
         }
       }
@@ -536,7 +536,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( RPC_CSTR StringBinding, RPC_CSTR *ObjU
     data = close+1;
     if (*data) goto fail;
   }
-  else if (NetworkAddr) 
+  else if (NetworkAddr)
     *NetworkAddr = (unsigned char*)RPCRT4_strdupA(data);
 
   return RPC_S_OK;
@@ -618,7 +618,7 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
             /* FIXME: this is kind of inefficient */
             *Options = RPCRT4_strconcatW(*Options, opt);
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
+          } else
 	    *Options = opt;
         }
       }
@@ -626,7 +626,7 @@ RPC_STATUS WINAPI RpcStringBindingParseW( RPC_WSTR StringBinding, RPC_WSTR *ObjU
 
     data = close+1;
     if (*data) goto fail;
-  } else if (NetworkAddr) 
+  } else if (NetworkAddr)
     *NetworkAddr = RPCRT4_strdupW(data);
 
   return RPC_S_OK;
@@ -651,7 +651,7 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
   if (status == RPC_S_OK) *Binding = 0;
   return status;
 }
-  
+
 /***********************************************************************
  *             RpcBindingVectorFree (RPCRT4.@)
  */
@@ -668,7 +668,7 @@ RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
   *BindingVector = NULL;
   return RPC_S_OK;
 }
-  
+
 /***********************************************************************
  *             RpcBindingInqObject (RPCRT4.@)
  */
@@ -680,7 +680,7 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
   memcpy(ObjectUuid, &bind->ObjectUuid, sizeof(UUID));
   return RPC_S_OK;
 }
-  
+
 /***********************************************************************
  *             RpcBindingSetObject (RPCRT4.@)
  */
@@ -724,9 +724,9 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( RPC_CSTR StringBinding, RPC_BIND
   RpcStringFreeA((unsigned char**)&Protseq);
   RpcStringFreeA((unsigned char**)&ObjectUuid);
 
-  if (ret == RPC_S_OK) 
+  if (ret == RPC_S_OK)
     *Binding = (RPC_BINDING_HANDLE)bind;
-  else 
+  else
     RPCRT4_DestroyBinding(bind);
 
   return ret;
@@ -770,7 +770,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( RPC_WSTR StringBinding, RPC_BIND
 
   return ret;
 }
-  
+
 /***********************************************************************
  *             RpcBindingToStringBindingA (RPCRT4.@)
  */
@@ -792,7 +792,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, RPC_CS
 
   return ret;
 }
-  
+
 /***********************************************************************
  *             RpcBindingToStringBindingW (RPCRT4.@)
  */

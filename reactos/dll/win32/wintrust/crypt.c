@@ -156,7 +156,7 @@ BOOL WINAPI CryptSIPCreateIndirectData(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pcb
                                        SIP_INDIRECT_DATA* pIndirectData)
 {
     FIXME("(%p %p %p) stub\n", pSubjectInfo, pcbIndirectData, pIndirectData);
- 
+
     return FALSE;
 }
 
@@ -168,7 +168,7 @@ BOOL WINAPI CryptSIPGetSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo, DWORD* pdwEn
 {
     FIXME("(%p %p %d %p %p) stub\n", pSubjectInfo, pdwEncodingType, dwIndex,
           pcbSignedDataMsg, pbSignedDataMsg);
- 
+
     return FALSE;
 }
 
@@ -180,7 +180,7 @@ BOOL WINAPI CryptSIPPutSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo, DWORD pdwEnc
 {
     FIXME("(%p %d %p %d %p) stub\n", pSubjectInfo, pdwEncodingType, pdwIndex,
           cbSignedDataMsg, pbSignedDataMsg);
- 
+
     return FALSE;
 }
 
@@ -191,7 +191,7 @@ BOOL WINAPI CryptSIPRemoveSignedDataMsg(SIP_SUBJECTINFO* pSubjectInfo,
                                        DWORD dwIndex)
 {
     FIXME("(%p %d) stub\n", pSubjectInfo, dwIndex);
- 
+
     return FALSE;
 }
 
@@ -202,6 +202,6 @@ BOOL WINAPI CryptSIPVerifyIndirectData(SIP_SUBJECTINFO* pSubjectInfo,
                                        SIP_INDIRECT_DATA* pIndirectData)
 {
     FIXME("(%p %p) stub\n", pSubjectInfo, pIndirectData);
- 
+
     return FALSE;
 }

@@ -572,7 +572,7 @@ CreateBitCase(FILE *Out, unsigned Bpp, PROPINFO RopInfo, int Flags,
    {
     Output(Out, "PatternX = BasePatternX;\n");
    }
-  
+
   if (ROPCODE_SRCCOPY == RopInfo->RopCode &&
       0 != (Flags & FLAG_TRIVIALXLATE) && Bpp == SourceBpp)
     {
@@ -850,7 +850,7 @@ CreatePrimitive(FILE *Out, unsigned Bpp, PROPINFO RopInfo)
           MARK(Out);
         }
       Output(Out, "LineCount = BltInfo->DestRect.bottom - BltInfo->DestRect.top;\n");
-    
+
       Output(Out, "\n");
       if (RopInfo->UsesPattern)
         {
@@ -955,7 +955,7 @@ CreateTable(FILE *Out, unsigned Bpp)
 
 static void
 CreateBitBlt(FILE *Out, unsigned Bpp)
-{ 
+{
   MARK(Out);
   Output(Out, "\n");
   Output(Out, "BOOLEAN\n");

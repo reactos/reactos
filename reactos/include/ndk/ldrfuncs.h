@@ -50,7 +50,7 @@ LdrFindResource_U(
 );
 
 NTSTATUS
-NTAPI 
+NTAPI
 LdrFindResourceDirectory_U(
     IN PVOID BaseAddress,
     IN PLDR_RESOURCE_INFO ResourceInfo,

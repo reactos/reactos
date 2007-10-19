@@ -1,5 +1,5 @@
 /*
- * reactos emulation layer betwin wine and windows api for directx 
+ * reactos emulation layer betwin wine and windows api for directx
  * get hardware dec
  * Copyright 2004 Magnus Olsen
  *
@@ -20,7 +20,7 @@
  * TODO:
  *      soucre clean
  *      need to rewrite almost everthing so it get all info from the hardware instead
- *      see todo.rtf 
+ *      see todo.rtf
  *
  *      put it in own library that call dxroslayer.a
  *
@@ -64,38 +64,38 @@
 WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
 DWORD dxrosdrv_drv_querydsounddescss(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in, PDSDRIVERDESC pDESC)
-{  
+{
   WAVEOUTCAPSA ac_play;
   WAVEINCAPSA  ac_rec;
   DWORD msg;
-  
-  
+
+
 
   // type 0 = out
   // clear data
   memset(pDESC,0,sizeof(DSDRIVERDESC));
-  memset((char *)pDESC->szDrvname,0,255);  	
+  memset((char *)pDESC->szDrvname,0,255);
   if (type==0) memset(&ac_play,0,sizeof(WAVEOUTCAPSA));
   else memset(&ac_rec,0,sizeof(WAVEINCAPSA));
 
   // get some data
  if (type==0) {
 	            msg = waveOutGetDevCapsA((UINT)hwo_out,&ac_play,sizeof(WAVEOUTCAPSA));
-                if  (ac_play.szPname==NULL) return MMSYSERR_NOTSUPPORTED;	
+                if  (ac_play.szPname==NULL) return MMSYSERR_NOTSUPPORTED;
                 }
 
   else {
 	     msg = waveInGetDevCapsA((UINT)hwo_in,&ac_rec,sizeof(WAVEINCAPSA));
-		 if  (ac_rec.szPname==NULL) return MMSYSERR_NOTSUPPORTED;	
+		 if  (ac_rec.szPname==NULL) return MMSYSERR_NOTSUPPORTED;
          }
 
   if (msg!=MMSYSERR_NOERROR) return msg;
 
 
 
-  // setting up value 
-  //pDESC->wReserved = NULL; 
-  
+  // setting up value
+  //pDESC->wReserved = NULL;
+
 
   if (type==0) {
 	            pDESC->ulDeviceNum = (ULONG)hwo_out;
@@ -113,7 +113,7 @@ DWORD dxrosdrv_drv_querydsounddescss(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in,
                       DSDDESC_DONTNEEDSECONDARYLOCK;
         //pDesc->dnDevNode		= WOutDev[This->wDevID].waveDesc.dnDevNode;
        pDESC->wVxdId		= 0;
-       pDESC->wReserved		= 0;    
+       pDESC->wReserved		= 0;
        pDESC->dwHeapType		= DSDHEAP_NOHEAP;
        pDESC->pvDirectDrawHeap	= NULL;
        pDESC->dwMemStartAddress	= 0;
@@ -126,18 +126,18 @@ DWORD dxrosdrv_drv_querydsounddescss(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in,
 
   pDESC->pvReserved1 = NULL;
   pDESC->pvReserved2 = NULL;
-  
+
   //  we need to fill it right so we do not need ddraw.dll
   pDESC->pvDirectDrawHeap = NULL; // wine dsound does not use ddraw.dll
 
-     	 
+
   // need to write dective for it
   pDESC->dwHeapType = DSDHEAP_NOHEAP;
 
-  // have take the value from wine audio drv  
-  pDESC->dwFlags = DSDDESC_DOMMSYSTEMOPEN | 
+  // have take the value from wine audio drv
+  pDESC->dwFlags = DSDDESC_DOMMSYSTEMOPEN |
 	                                    DSDDESC_DOMMSYSTEMSETFORMAT |
-                                        DSDDESC_USESYSTEMMEMORY | 
+                                        DSDDESC_USESYSTEMMEMORY |
 										DSDDESC_DONTNEEDPRIMARYLOCK |
                                         DSDDESC_DONTNEEDSECONDARYLOCK;
 
@@ -145,18 +145,18 @@ DWORD dxrosdrv_drv_querydsounddescss(int type, HWAVEOUT hwo_out,HWAVEIN  hwo_in,
   //WAVEOPENDESC->DevNode need to fig. how to get it from mmdrv
   pDESC->dnDevNode = 0;  // wine dsound are using this value
 
-   // need to fill the rest also     
+   // need to fill the rest also
 
    // must contain the audio drv name
    // but how to get it ?
-   //memcpy((char *)pDESC->szDrvname,(char *)&"kx.sys",6);	 	 
+   //memcpy((char *)pDESC->szDrvname,(char *)&"kx.sys",6);
 
-   
-    
+
+
    pDESC->dwMemStartAddress = 0;
-   pDESC->dwMemAllocExtra = 0;	 
+   pDESC->dwMemAllocExtra = 0;
    pDESC->wVxdId = 0;
-     
+
 
   return MMSYSERR_NOERROR;
 }

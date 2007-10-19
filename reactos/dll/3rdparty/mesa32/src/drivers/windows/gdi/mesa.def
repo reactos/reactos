@@ -12,7 +12,7 @@ VERSION 6.0
 ;
 ; The linker exports STDCALL entry points with
 ; 'decorated' names; e.g., _glBegin@0, where the
-; trailing number is the number of bytes of 
+; trailing number is the number of bytes of
 ; parameter data pushed onto the stack.  The
 ; callee is responsible for popping this data
 ; off the stack, usually via a RETF n instruction.

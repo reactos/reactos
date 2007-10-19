@@ -61,10 +61,10 @@ init_heap(void)
 {
    if (!exec_heap)
       exec_heap = mmInit( 0, EXEC_HEAP_SIZE );
-   
+
    if (!exec_mem)
-      exec_mem = (unsigned char *) mmap(0, EXEC_HEAP_SIZE, 
-					PROT_EXEC | PROT_READ | PROT_WRITE, 
+      exec_mem = (unsigned char *) mmap(0, EXEC_HEAP_SIZE,
+					PROT_EXEC | PROT_READ | PROT_WRITE,
 					MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
 }
 
@@ -88,19 +88,19 @@ _mesa_exec_malloc(GLuint size)
       addr = exec_mem + block->ofs;
 
    _glthread_UNLOCK_MUTEX(exec_mutex);
-   
+
    return addr;
 }
 
- 
-void 
+
+void
 _mesa_exec_free(void *addr)
 {
    _glthread_LOCK_MUTEX(exec_mutex);
 
    if (exec_heap) {
       PMemBlock block = mmFindBlock(exec_heap, (unsigned char *)addr - exec_mem);
-   
+
       if (block)
 	 mmFreeMem(block);
    }
@@ -121,8 +121,8 @@ _mesa_exec_malloc(GLuint size)
    return _mesa_malloc( size );
 }
 
- 
-void 
+
+void
 _mesa_exec_free(void *addr)
 {
    _mesa_free(addr);

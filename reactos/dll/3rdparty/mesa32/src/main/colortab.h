@@ -1,7 +1,7 @@
 /**
  * \file colortab.h
  * Color tables.
- * 
+ *
  * \if subset
  * (No-op)
  *
@@ -85,10 +85,10 @@ _mesa_init_colortable( struct gl_color_table *table );
 extern void
 _mesa_free_colortable_data( struct gl_color_table *table );
 
-extern void 
+extern void
 _mesa_init_colortables( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_free_colortables_data( GLcontext *ctx );
 
 #else

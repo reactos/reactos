@@ -43,14 +43,14 @@ typedef struct _PREFERENCES_CONTEXT
     PMIXER_WINDOW MixerWindow;
     PSND_MIXER Mixer;
     HWND hwndDlg;
-    
+
     UINT Selected;
     DWORD SelectedLine;
     DWORD PlaybackID;
     DWORD RecordingID;
     UINT OtherLines;
     TCHAR DeviceName[128];
-    
+
     DWORD tmp;
 } PREFERENCES_CONTEXT, *PPREFERENCES_CONTEXT;
 
@@ -128,7 +128,7 @@ PrefDlgAddLine(PSND_MIXER Mixer,
             if (PrefContext->RecordingID == (DWORD)-1)
             {
                 PrefContext->RecordingID = Line->dwLineID;
-                
+
                 if (PrefContext->SelectedLine == (DWORD)-1)
                 {
                     PrefContext->SelectedLine = Line->dwLineID;
@@ -143,7 +143,7 @@ PrefDlgAddLine(PSND_MIXER Mixer,
         {
             LRESULT lres;
             HWND hwndCbOthers;
-            
+
             if (PrefContext->SelectedLine == (DWORD)-1)
             {
                 PrefContext->SelectedLine = Line->dwLineID;
@@ -169,7 +169,7 @@ AddToOthersLines:
             break;
         }
     }
-    
+
     return TRUE;
 }
 
@@ -186,7 +186,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
 
     UNREFERENCED_PARAMETER(Mixer);
 	UNREFERENCED_PARAMETER(LineID);
-    
+
     if (Line->cControls != 0)
     {
         hwndControls = GetDlgItem(PrefContext->hwndDlg,
@@ -207,7 +207,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
             TCHAR LineName[MIXER_LONG_NAME_CHARS];
             DWORD Flags;
             BOOL SelLine = FALSE;
-            
+
             if (SndMixerGetLineName(PrefContext->Mixer,
                                     PrefContext->SelectedLine,
                                     LineName,
@@ -216,7 +216,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
             {
                 LineName[0] = TEXT('\0');
             }
-            
+
             if (ReadLineConfig(PrefContext->DeviceName,
                                LineName,
                                Line->szName,
@@ -233,7 +233,7 @@ PrefDlgAddConnection(PSND_MIXER Mixer,
                                    SelLine);
         }
     }
-                           
+
     return TRUE;
 }
 
@@ -262,20 +262,20 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
             MixerID = 0;
         }
     }
-    
+
     OldID = Context->Selected;
     if (MixerID != OldID &&
         SndMixerSelect(Context->Mixer,
                        MixerID))
     {
         Context->Selected = SndMixerGetSelection(Context->Mixer);
-        
+
         /* update the controls */
         Context->PlaybackID = (DWORD)-1;
         Context->RecordingID = (DWORD)-1;
         Context->OtherLines = 0;
         Context->SelectedLine = (DWORD)-1;
-        
+
         SndMixerGetProductName(Context->Mixer,
                                Context->DeviceName,
                                sizeof(Context->DeviceName) / sizeof(Context->DeviceName[0]));
@@ -322,7 +322,7 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
                            IDC_LINE,
                            (Context->OtherLines != 0 && SelBox++ == 0) ?
                                BST_CHECKED : BST_UNCHECKED);
-            
+
             /* disable the OK button if the device doesn't have any lines */
             EnableWindow(GetDlgItem(Context->hwndDlg,
                                     IDOK),
@@ -333,16 +333,16 @@ UpdatePrefDlgControls(PPREFERENCES_CONTEXT Context,
             LineID = Context->SelectedLine;
         }
     }
-    
+
     /* update the line sources list */
     if ((MixerID != OldID && Context->SelectedLine != (DWORD)-1) ||
         (Context->SelectedLine != LineID && LineID != (DWORD)-1))
     {
         Context->SelectedLine = LineID;
-        
+
         (void)ListView_DeleteAllItems(GetDlgItem(Context->hwndDlg,
                                       IDC_CONTROLS));
-        
+
         Context->tmp = 0;
         SndMixerEnumConnections(Context->Mixer,
                                 LineID,
@@ -376,14 +376,14 @@ DlgPreferencesProc(HWND hwndDlg,
                     }
                     break;
                 }
-                
+
                 case IDC_LINE:
                 {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
                     {
                         DWORD LineID;
                         DWORD Index;
-                        
+
                         Index = SendDlgItemMessage(hwndDlg,
                                                    IDC_LINE,
                                                    CB_GETCURSEL,
@@ -405,7 +405,7 @@ DlgPreferencesProc(HWND hwndDlg,
                     }
                     break;
                 }
-                
+
                 case IDC_PLAYBACK:
                 {
                     UpdatePrefDlgControls(Context,
@@ -415,7 +415,7 @@ DlgPreferencesProc(HWND hwndDlg,
                                  FALSE);
                     break;
                 }
-                
+
                 case IDC_RECORDING:
                 {
                     UpdatePrefDlgControls(Context,
@@ -425,12 +425,12 @@ DlgPreferencesProc(HWND hwndDlg,
                                  FALSE);
                     break;
                 }
-                
+
                 case IDC_OTHER:
                 {
                     INT LineCbIndex;
                     DWORD LineID;
-                    
+
                     EnableWindow(GetDlgItem(hwndDlg,
                                             IDC_LINE),
                                  TRUE);
@@ -455,7 +455,7 @@ DlgPreferencesProc(HWND hwndDlg,
                     }
                     break;
                 }
-                
+
                 case IDOK:
                 case IDCANCEL:
                 {
@@ -603,7 +603,7 @@ MainWindowProc(HWND hwnd,
                     PostQuitMessage(0);
                     break;
                 }
-                
+
                 case IDC_ABOUT:
                 {
                     HICON hAppIcon = (HICON)GetClassLongPtrW(hwnd,
@@ -812,7 +812,7 @@ WinMain(HINSTANCE hInstance,
 
     hAppInstance = hInstance;
     hAppHeap = GetProcessHeap();
-    
+
     if (InitAppConfig())
     {
         /* load the application title */

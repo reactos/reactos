@@ -1262,7 +1262,7 @@ interface INewShortcutHookA : IUnknown
     HRESULT GetExtension(
                 [out] LPSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 
 /*****************************************************************************
@@ -1292,7 +1292,7 @@ interface INewShortcutHookW : IUnknown
     HRESULT GetExtension(
                 [out] LPWSTR pszExtension,
                 [in] int cchExtension);
-} 
+}
 
 
 /*****************************************************************************
@@ -1338,7 +1338,7 @@ interface IFileSystemBindData : IUnknown
 ]
 interface IContextMenuCB : IUnknown
 {
-    HRESULT CallBack( 
+    HRESULT CallBack(
                 [in] IShellFolder *psf,
                 [in] HWND hwndOwner,
                 [in] IDataObject *pdtobj,

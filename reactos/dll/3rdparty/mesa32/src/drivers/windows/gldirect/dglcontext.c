@@ -823,13 +823,13 @@ BOOL dglCreateContextBuffers(
 
 	// Test for Fullscreen
 	if (bHaveWin95) { // Problems with fullscreen on Win2K/XP
-		if ((GetSystemMetrics(SM_CXSCREEN) == lpCtx->dwWidth) && 
+		if ((GetSystemMetrics(SM_CXSCREEN) == lpCtx->dwWidth) &&
 			(GetSystemMetrics(SM_CYSCREEN) == lpCtx->dwHeight))
 		{
 			// Workaround for some apps that crash when going fullscreen.
 			//lpCtx->bFullscreen = TRUE;
 		}
-		
+
 	}
 
 #ifdef _USE_GLD3_WGL
@@ -1458,7 +1458,7 @@ SkipPrimaryCreate:
 	_swsetup_CreateContext( lpCtx->glCtx );
 
 	_gldDriver.InitialiseMesa(lpCtx);
-	
+
 	lpCtx->glCtx->imports.warning	= _gld_mesa_warning;
 	lpCtx->glCtx->imports.fatal		= _gld_mesa_fatal;
 

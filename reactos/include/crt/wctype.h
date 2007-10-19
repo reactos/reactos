@@ -1,4 +1,4 @@
-/* 
+/*
  * wctype.h
  *
  * Functions for testing wide character types and converting characters.
@@ -148,7 +148,7 @@ typedef wchar_t wctrans_t;
    of wctrans and towctrans are not C99 compliant in that wctrans("tolower")
    returns 0, while std specifies that a non-zero value should be returned
    for a valid string descriptor.  If you want the MS behaviour (and you have
-   msvcp60.dll in your path) add -lmsvcp60 to your command line.  */ 	
+   msvcp60.dll in your path) add -lmsvcp60 to your command line.  */
 
 wint_t __cdecl		towctrans(wint_t, wctrans_t);
 wctrans_t __cdecl	wctrans(const char*);

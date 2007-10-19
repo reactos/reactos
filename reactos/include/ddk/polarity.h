@@ -2,8 +2,8 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 
- * PURPOSE:             
+ * FILE:
+ * PURPOSE:
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *
  */
@@ -14,7 +14,7 @@
     #ifdef USE_POLARITY
         #ifdef BUILDING_DLL
             #define POLARITY __declspec( dllexport )
-        #else 
+        #else
             #define POLARITY __declspec( dllimport )
         #endif
     #else

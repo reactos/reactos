@@ -124,15 +124,15 @@ VfatFastIoUnlockAllByKey(IN PFILE_OBJECT FileObject,
 }
 
 static BOOLEAN NTAPI
-VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject, 
-						IN BOOLEAN Wait, 
-						IN PVOID InputBuffer OPTIONAL, 
-						IN ULONG InputBufferLength, 
-						OUT PVOID OutputBuffer OPTIONAL, 
+VfatFastIoDeviceControl(IN PFILE_OBJECT FileObject,
+						IN BOOLEAN Wait,
+						IN PVOID InputBuffer OPTIONAL,
+						IN ULONG InputBufferLength,
+						OUT PVOID OutputBuffer OPTIONAL,
 						IN ULONG OutputBufferLength,
-						IN ULONG IoControlCode, 
-						OUT PIO_STATUS_BLOCK IoStatus, 
-						IN PDEVICE_OBJECT DeviceObject) 
+						IN ULONG IoControlCode,
+						OUT PIO_STATUS_BLOCK IoStatus,
+						IN PDEVICE_OBJECT DeviceObject)
 {
    DPRINT("VfatFastIoDeviceControl\n");
    return FALSE;
@@ -315,7 +315,7 @@ VfatAcquireForLazyWrite(IN PVOID Context,
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
 	DPRINT("VfatAcquireForLazyWrite(): Fcb %p\n", Fcb);
-	
+
 	if (!ExAcquireResourceExclusiveLite(&(Fcb->MainResource), Wait))
 	{
 		DPRINT("VfatAcquireForLazyWrite(): ExReleaseResourceLite failed.\n");
@@ -330,7 +330,7 @@ VfatReleaseFromLazyWrite(IN PVOID Context)
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
 	DPRINT("VfatReleaseFromLazyWrite(): Fcb %p\n", Fcb);
-	
+
 	ExReleaseResourceLite(&(Fcb->MainResource));
 }
 
@@ -341,7 +341,7 @@ VfatAcquireForReadAhead(IN PVOID Context,
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
 	DPRINT("VfatAcquireForReadAhead(): Fcb %p\n", Fcb);
-	
+
 	if (!ExAcquireResourceExclusiveLite(&(Fcb->MainResource), Wait))
 	{
 		DPRINT("VfatAcquireForReadAhead(): ExReleaseResourceLite failed.\n");
@@ -356,7 +356,7 @@ VfatReleaseFromReadAhead(IN PVOID Context)
 	PVFATFCB Fcb = (PVFATFCB)Context;
 	ASSERT(Fcb);
 	DPRINT("VfatReleaseFromReadAhead(): Fcb %p\n", Fcb);
-	
+
 	ExReleaseResourceLite(&(Fcb->MainResource));
 }
 

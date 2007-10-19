@@ -36,15 +36,15 @@
 #define KEBUGCHECK(a) DbgPrint("KeBugCheck at %s:%i\n",__FILE__,__LINE__), KeBugCheck(a)
 #endif
 
-/* iterate through the list using a list entry. 
+/* iterate through the list using a list entry.
  * elem is set to NULL if the list is run thru without breaking out or if list is empty.
  */
 #define LIST_FOR_EACH(elem, list, type, field) \
     for ((elem) = CONTAINING_RECORD((list)->Flink, type, field); \
          &(elem)->field != (list) || (elem == NULL); \
          (elem) = CONTAINING_RECORD((elem)->field.Flink, type, field))
-         
-/* iterate through the list using a list entry, with safety against removal 
+
+/* iterate through the list using a list entry, with safety against removal
  * elem is set to NULL if the list is run thru without breaking out or if list is empty.
  */
 #define LIST_FOR_EACH_SAFE(cursor, cursor2, list, type, field) \
@@ -53,7 +53,7 @@
          &(cursor)->field != (list) || (cursor == NULL); \
          (cursor) = (cursor2), \
          (cursor2) = CONTAINING_RECORD((cursor)->field.Flink, type, field))
-         
+
 #define OPTHDROFFSET(a) ((LPVOID)((BYTE *)a		     +	\
 			 ((PIMAGE_DOS_HEADER)a)->e_lfanew    +	\
 			 sizeof (IMAGE_NT_SIGNATURE)		     +	\

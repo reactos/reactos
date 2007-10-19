@@ -58,7 +58,7 @@ typedef __builtin_va_list __gnuc_va_list;
 /* Define va_list, if desired, from __gnuc_va_list. */
 /* We deliberately do not define va_list when called from
    stdio.h, because ANSI C says that stdio.h is not supposed to define
-   va_list.  stdio.h needs to have access to that data type, 
+   va_list.  stdio.h needs to have access to that data type,
    but must not use that name.  It should use the name __gnuc_va_list,
    which is safe because it is reserved for the implementation.  */
 

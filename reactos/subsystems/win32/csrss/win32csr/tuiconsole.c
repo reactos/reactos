@@ -69,7 +69,7 @@ TuiInit(VOID)
       DPRINT1("Failed to register console wndproc\n");
       return FALSE;
     }
-  
+
   return TRUE;
 }
 
@@ -223,7 +223,7 @@ static VOID STDCALL
 TuiCleanupConsole(PCSRSS_CONSOLE Console)
 {
   DestroyWindow(Console->hWindow);
-  
+
   EnterCriticalSection(&ActiveConsoleLock);
 
   /* Switch to next console */

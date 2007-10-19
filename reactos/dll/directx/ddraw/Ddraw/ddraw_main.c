@@ -9,7 +9,7 @@
  */
 
 /* TODO
- * add warper functions for dx 1 - 6 
+ * add warper functions for dx 1 - 6
  * map the  DirectDraw4_Vtable, DirectDraw2_Vtable, DirectDraw_Vtable
  * table to right version of the functions
  */
@@ -222,10 +222,10 @@ Main_DirectDraw_Initialize (LPDDRAWI_DIRECTDRAW_INT This, LPGUID lpGUID)
 	return DDERR_ALREADYINITIALIZED;
 }
 
-/* 
+/*
  * Main_DirectDraw_Compact
  * ms say this one is not implement but it return  DDERR_NOEXCLUSIVEMODE
- * when no exclusive owner are set in corpativelevel 
+ * when no exclusive owner are set in corpativelevel
  */
 HRESULT WINAPI
 Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
@@ -250,7 +250,7 @@ Main_DirectDraw_Compact(LPDDRAWI_DIRECTDRAW_INT This)
     return retVal;
 }
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_GetAvailableVidMem(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS ddscaps, LPDWORD dwTotal, LPDWORD dwFree)
 {
     DDSCAPS2 myddscaps;
@@ -272,7 +272,7 @@ Main_DirectDraw_GetAvailableVidMem(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS ddsca
     return retValue;
 }
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 ddscaps,
                    LPDWORD dwTotal, LPDWORD dwFree)
 {
@@ -297,7 +297,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
                 _SEH_LEAVE;
             }
 
-            if ( ddscaps->dwCaps & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP | 
+            if ( ddscaps->dwCaps & (DDSCAPS_BACKBUFFER  | DDSCAPS_COMPLEX   | DDSCAPS_FLIP |
                                     DDSCAPS_FRONTBUFFER | DDSCAPS_PALETTE   | DDSCAPS_SYSTEMMEMORY |
                                     DDSCAPS_VISIBLE     | DDSCAPS_WRITEONLY | DDSCAPS_OWNDC))
             {
@@ -305,10 +305,10 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
                 _SEH_LEAVE;
             }
 
-            
+
             /*   ddscaps->dwCaps2 & 0x01
-                this flag is outdate and are 
-                set to 0 in ms dxsdk  the name of 
+                this flag is outdate and are
+                set to 0 in ms dxsdk  the name of
                 this flag is DDSCAPS2_HARDWAREDEINTERLACE
             */
 
@@ -359,7 +359,7 @@ Main_DirectDraw_GetAvailableVidMem4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSCAPS2 dds
 
                 if (dwFree)
                     *dwFree = memdata.dwFree;
-         
+
                 retVal = memdata.ddRVal;
             }
         }
@@ -379,7 +379,7 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
 
     DX_WINDBG_trace();
 
-    
+
      // EnterCriticalSection(&ddcs);
 
     _SEH_TRY
@@ -422,17 +422,17 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
 }
 
 
-/* 
- * We can optain the version of the directdraw object by compare the 
- * vtl table pointer from iface we do not need pass which version 
+/*
+ * We can optain the version of the directdraw object by compare the
+ * vtl table pointer from iface we do not need pass which version
  * we whant to use
  *
  * Main_DirectDraw_CreateSurface is dead at moment we do only support
- * directdraw 7 at moment 
+ * directdraw 7 at moment
  */
 
 /* For DirectDraw 1 - 3 */
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDDSD,
                                LPDIRECTDRAWSURFACE *ppSurf, IUnknown *pUnkOuter)
 {
@@ -468,7 +468,7 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
 
 
 /* For DirectDraw 4 - 7 */
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pDDSD,
                                LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {

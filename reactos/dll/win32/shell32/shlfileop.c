@@ -1015,7 +1015,7 @@ static HRESULT parse_file_list(FILE_LIST *flList, LPCWSTR szFiles)
     /* empty list */
     if (!szFiles[0])
         return ERROR_ACCESS_DENIED;
-        
+
     flList->feFiles = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                 flList->num_alloc * sizeof(FILE_ENTRY));
 
@@ -1119,7 +1119,7 @@ static void copy_dir_to_dir(FILE_OPERATION *op, FILE_ENTRY *feFrom, LPWSTR szDes
     /* Don't ask the user about overwriting files when he accepted to overwrite the
        folder. FIXME: this is not exactly what Windows does - e.g. there would be
        an additional confirmation for a nested folder */
-    fileOp.fFlags |= FOF_NOCONFIRMATION;  
+    fileOp.fFlags |= FOF_NOCONFIRMATION;
 
     SHFileOperationW(&fileOp);
 }
@@ -1131,7 +1131,7 @@ static BOOL copy_file_to_file(FILE_OPERATION *op, WCHAR *szFrom, WCHAR *szTo)
         if (!SHELL_ConfirmDialogW(op->req->hwnd, ASK_OVERWRITE_FILE, PathFindFileNameW(szTo), op))
             return 0;
     }
-    
+
     return SHNotifyCopyFileW(szFrom, szTo, FALSE) == 0;
 }
 
@@ -1344,7 +1344,7 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
                 break;
             }
         }
-        
+
         /* delete the file or directory */
         if (IsAttribFile(fileEntry->attributes))
             bPathExists = DeleteFileW(fileEntry->szFullPath);
@@ -1540,7 +1540,7 @@ int WINAPI SHFileOperationW(LPSHFILEOPSTRUCTW lpFileOp)
 
     if (ret == ERROR_CANCELLED)
         lpFileOp->fAnyOperationsAborted = TRUE;
-    
+
     return ret;
 }
 

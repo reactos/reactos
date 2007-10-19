@@ -78,7 +78,7 @@ void PerfDataUninitialize(void)
 
 static void SidToUserName(PSID Sid, LPTSTR szBuffer, DWORD BufferSize)
 {
-    static TCHAR szDomainNameUnused[255]; 
+    static TCHAR szDomainNameUnused[255];
     DWORD DomainNameLen = sizeof(szDomainNameUnused) / sizeof(szDomainNameUnused[0]);
     SID_NAME_USE Use;
 

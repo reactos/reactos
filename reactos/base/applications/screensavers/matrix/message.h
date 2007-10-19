@@ -15,7 +15,7 @@ typedef struct
 
 	int		msgindex;
 
-	int		counter;			
+	int		counter;
 	WORD	random_reg1;
 
 	int		width, height;

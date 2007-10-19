@@ -253,7 +253,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
 {
     IDataObject *pdo = NULL;
     HRESULT hRet;
-    
+
     hRet = pDsObjectPicker->lpVtbl->InvokeDialog(pDsObjectPicker,
                                                  hwndParent,
                                                  &pdo);
@@ -327,7 +327,7 @@ InvokeObjectPickerDialog(IN IDsObjectPicker *pDsObjectPicker,
 
         pdo->lpVtbl->Release(pdo);
     }
-    
+
     return hRet;
 }
 

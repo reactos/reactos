@@ -102,11 +102,11 @@ BOOL WINAPI SymEnumSourceFiles(HANDLE hProcess, ULONG64 ModBase, LPSTR Mask,
     struct module*      module;
     SOURCEFILE          sf;
     char*               ptr;
-    
+
     if (!cbSrcFiles) return FALSE;
     pcs = process_find_by_handle(hProcess);
     if (!pcs) return FALSE;
-         
+
     if (ModBase)
     {
         module = module_find_by_addr(pcs, ModBase, DMT_UNKNOWN);

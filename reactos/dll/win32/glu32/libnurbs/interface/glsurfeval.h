@@ -59,9 +59,9 @@ class StoredVertex;
 #ifndef IN_MAX_BEZIER_ORDER
 #define IN_MAX_BEZIER_ORDER 40 /*XXX should be bigger than machine order*/
 #endif
-			
+
 #ifndef IN_MAX_DIMENSION
-#define IN_MAX_DIMENSION 4 
+#define IN_MAX_DIMENSION 4
 #endif
 
 typedef struct surfEvalMachine{
@@ -82,14 +82,14 @@ typedef struct surfEvalMachine{
   REAL ucoeffDeriv[IN_MAX_BEZIER_ORDER]; /*cache the polynomial derivatives*/
   REAL vcoeffDeriv[IN_MAX_BEZIER_ORDER];
 } surfEvalMachine;
-  
-  
+
+
 
 class StoredVertex {
 public:
     		StoredVertex() { type = 0; }
 		~StoredVertex(void) {}
-    void	saveEvalCoord(REAL x, REAL y) 
+    void	saveEvalCoord(REAL x, REAL y)
 		    {coord[0] = x; coord[1] = y; type = TYPECOORD; }
     void	saveEvalPoint(long x, long y)
 		    {point[0] = x; point[1] = y; type = TYPEPOINT; }
@@ -113,7 +113,7 @@ public:
     void		enable( long );
     void		disable( long );
     void		bgnmap2f( long );
-    void		map2f( long, REAL, REAL, long, long, 
+    void		map2f( long, REAL, REAL, long, long,
 				     REAL, REAL, long, long, REAL * );
     void		mapgrid2f( long, REAL, REAL, long, REAL, REAL );
     void		mapmesh2f( long, long, long, long, long );
@@ -162,7 +162,7 @@ public:
     void                 put_callback_auto_normal(int flag)
       {
         callback_auto_normal = flag;
-      } 
+      }
 
    int                   get_callback_auto_normal()
      {
@@ -179,7 +179,7 @@ public:
 
 
 
-   
+
 private:
     StoredVertex	*vertexCache[VERTEX_CACHE_SIZE];
     int			tmeshing;
@@ -222,14 +222,14 @@ private:
    void LOD_triangle(REAL A[2], REAL B[2], REAL C[2],
 		     int level);
    void LOD_eval(int num_vert, REAL* verts, int type, int level);
-		     
+
   int LOD_eval_level; //set by LOD_eval_list()
 
    /*************begin for internal evaluators*****************/
-			
- /*the following global variables are only defined in this file. 
+
+ /*the following global variables are only defined in this file.
  *They are used to cache the precomputed Bezier polynomial values.
- *These calues may be used consecutively in which case we don't have 
+ *These calues may be used consecutively in which case we don't have
  *recompute these values again.
  */
  int global_uorder; /*store the uorder in the previous evaluation*/
@@ -273,9 +273,9 @@ private:
  int     global_grid_nv;
 
 /*functions*/
- void inDoDomain2WithDerivs(int k, REAL u, REAL v, 
-				REAL u1, REAL u2, int uorder, 
-				REAL v1,  REAL v2, int vorder, 
+ void inDoDomain2WithDerivs(int k, REAL u, REAL v,
+				REAL u1, REAL u2, int uorder,
+				REAL v1,  REAL v2, int vorder,
 				REAL *baseData,
 				REAL *retPoint, REAL *retdu, REAL *retdv);
  void inPreEvaluate(int order, REAL vprime, REAL *coeff);
@@ -297,20 +297,20 @@ private:
 	      int vorder,
 	      REAL *ctlPoints);
 
- void inMapGrid2f(int nu, REAL u0, REAL u1, 
+ void inMapGrid2f(int nu, REAL u0, REAL u1,
 		  int nv, REAL v0, REAL v1);
 
  void inEvalMesh2(int lowU, int lowV, int highU, int highV);
  void inEvalPoint2(int i, int j);
  void inEvalCoord2f(REAL u, REAL v);
 
-void inEvalULine(int n_points, REAL v, REAL* u_vals, 
+void inEvalULine(int n_points, REAL v, REAL* u_vals,
 	int stride, REAL ret_points[][3], REAL ret_normals[][3]);
 
-void inEvalVLine(int n_points, REAL u, REAL* v_vals, 
+void inEvalVLine(int n_points, REAL u, REAL* v_vals,
 	int stride, REAL ret_points[][3], REAL ret_normals[][3]);
 
-void inEvalUStrip(int n_upper, REAL v_upper, REAL* upper_val, 
+void inEvalUStrip(int n_upper, REAL v_upper, REAL* upper_val,
                        int n_lower, REAL v_lower, REAL* lower_val
                        );
 void inEvalVStrip(int n_left, REAL u_left, REAL* left_val, int n_right, REAL u_right, REAL* right_val);
@@ -324,7 +324,7 @@ void inPreEvaluateBV_intfac(REAL v )
 
 void inPreEvaluateBU_intfac(REAL u)
   {
-    inPreEvaluateBU(global_ev_k, global_ev_uorder, global_ev_vorder, (u-global_ev_u1)/(global_ev_u2-global_ev_u1), global_ev_ctlPoints); 
+    inPreEvaluateBU(global_ev_k, global_ev_uorder, global_ev_vorder, (u-global_ev_u1)/(global_ev_u2-global_ev_u1), global_ev_ctlPoints);
   }
 
 void inDoDomain2WithDerivsBV(int k, REAL u, REAL v,
@@ -375,9 +375,9 @@ void inMap2fEM(int which, //0:vert,1:norm,2:color,3:tex
 	      int vorder,
 	      REAL *ctlPoints);
 
-void inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u, REAL v, 
+void inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u, REAL v,
 				REAL *retPoint, REAL *retdu, REAL *retdv);
-void inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v, 
+void inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v,
 				REAL *retPoint);
  void inDoEvalCoord2EM(REAL u, REAL v);
 
@@ -388,7 +388,7 @@ void inBPMListEvalEM(bezierPatchMesh* list);
 
 
    /*************end for internal evaluators*****************/
-		       
+
 };
 
 inline void StoredVertex::invoke(OpenGLSurfaceEvaluator *eval)

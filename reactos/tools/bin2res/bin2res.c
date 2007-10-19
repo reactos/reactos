@@ -47,7 +47,7 @@
 
 extern int mkstemps(char *template, int suffix_len);
 
-int process_resources(const char* input_file_name, const char* specific_file_name, 
+int process_resources(const char* input_file_name, const char* specific_file_name,
 		      const char* relative_path, const char* output_path,
 		      int inserting, int force_processing, int verbose);
 
@@ -59,7 +59,7 @@ static const char* help =
 	"  -o <filename> extract the named file from the <rsrc.rc> file\n"
 	"  -b <path> assume resources are relative to this base path\n"
 	"  -f force processing of older resources\n"
-	"  -v causes the command to be verbous during processing\n" 
+	"  -v causes the command to be verbous during processing\n"
 	"  -h print this help screen and exit\n"
 	"\n"
 	"This tool allows the insertion/extractions of embedded binary\n"
@@ -171,7 +171,7 @@ char* get_filename_with_full_path(char* output, const char* filename, const char
 	return output;
 }
 
-void process_includes(const char* input_file_name, const char* specific_file_name, 
+void process_includes(const char* input_file_name, const char* specific_file_name,
 		     const char* relative_path, const char* output_path,
 		     int inserting, int force_processing, int verbose)
 {
@@ -193,7 +193,7 @@ void process_includes(const char* input_file_name, const char* specific_file_nam
     fclose(fin);
 }
 
-int process_resources(const char* input_file_name, const char* specific_file_name, 
+int process_resources(const char* input_file_name, const char* specific_file_name,
 		      const char* relative_path, const char* output_path,
 		      int inserting, int force_processing, int verbose)
 {

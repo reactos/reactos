@@ -124,7 +124,7 @@ static UINT fdi_read(INT_PTR hf, void *pv, UINT cb)
 {
     HANDLE handle = (HANDLE) hf;
     DWORD dwRead;
-    
+
     if (ReadFile(handle, pv, cb, &dwRead, NULL))
         return dwRead;
 

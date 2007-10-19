@@ -1571,9 +1571,9 @@ UINT WINAPI SetupRenameErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR source,
  *            SetupCopyErrorA   (SETUPAPI.@)
  */
 
-UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname, 
+UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname,
                              PCSTR sourcepath, PCSTR sourcefile, PCSTR targetpath,
-                             UINT w32error, DWORD style, PSTR pathbuffer, 
+                             UINT w32error, DWORD style, PSTR pathbuffer,
 			     DWORD buffersize, PDWORD requiredsize)
 {
     FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",
@@ -1585,9 +1585,9 @@ UINT WINAPI SetupCopyErrorA( HWND parent, PCSTR dialogTitle, PCSTR diskname,
  *            SetupCopyErrorW   (SETUPAPI.@)
  */
 
-UINT WINAPI SetupCopyErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR diskname, 
+UINT WINAPI SetupCopyErrorW( HWND parent, PCWSTR dialogTitle, PCWSTR diskname,
                              PCWSTR sourcepath, PCWSTR sourcefile, PCWSTR targetpath,
-                             UINT w32error, DWORD style, PWSTR pathbuffer, 
+                             UINT w32error, DWORD style, PWSTR pathbuffer,
 			     DWORD buffersize, PDWORD requiredsize)
 {
     FIXME( "stub: (Error Number %d when attempting to copy file %s from %s to %s)\n",

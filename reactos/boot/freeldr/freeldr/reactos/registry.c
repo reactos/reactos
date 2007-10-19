@@ -258,7 +258,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  name = KeyName;
 	}
       NameSize = (subkeyLength + 1) * sizeof(WCHAR);
-      
+
       Ptr = CurrentKey->SubKeyList.Flink;
       CmpResult = 1;
       while (Ptr != &CurrentKey->SubKeyList)
@@ -271,7 +271,7 @@ RegCreateKey(FRLDRHKEY ParentKey,
 	  DbgPrint((DPRINT_REGISTRY, "SearchKey 0x%x\n", SearchKey));
 	  DbgPrint((DPRINT_REGISTRY, "Searching '%S'\n", SearchKey->Name));
 	  CmpResult = _wcsnicmp(SearchKey->Name, name, subkeyLength);
-	  if (CmpResult == 0 && SearchKey->NameSize == NameSize)	  
+	  if (CmpResult == 0 && SearchKey->NameSize == NameSize)
 	    break;
 	  else if (CmpResult == -1)
 	    break;

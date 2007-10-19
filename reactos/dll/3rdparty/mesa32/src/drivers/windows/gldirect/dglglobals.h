@@ -81,7 +81,7 @@ typedef struct {
 	BOOL				bPrimary; // Is ddraw device the Primary device?
 	BOOL				bHardware; // Is the d3d driver a Hardware driver?
 #ifndef _USE_GLD3_WGL
-	GUID				ddGuid; // GUID of the ddraw device 
+	GUID				ddGuid; // GUID of the ddraw device
 	GUID				d3dGuid; // GUID of the direct3d driver
 #endif // _USE_GLD3_WGL
 //	BOOL				bFullscreen; // Force fullscreen - only useful for primary adaptors.

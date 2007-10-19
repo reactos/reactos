@@ -1,6 +1,6 @@
 /*
  * Copyright (c) 2001-2002 by David Brownell
- * 
+ *
  * This program is free software; you can redistribute it and/or modify it
  * under the terms of the GNU General Public License as published by the
  * Free Software Foundation; either version 2 of the License, or (at your
@@ -140,7 +140,7 @@ typedef struct _EHCI_ELEM_POOL
 
 /*
  * EHCI Specification 0.95 Section 3.5
- * QTD: describe data transfer components (buffer, direction, ...) 
+ * QTD: describe data transfer components (buffer, direction, ...)
  * See Fig 3-6 "Queue Element Transfer Descriptor Block Diagram".
  *
  * These are associated only with "QH" (Queue Head) structures,
@@ -202,7 +202,7 @@ typedef struct _EHCI_QTD
 	/* first part defined by EHCI spec */
 	ULONG			hw_next;		  	/* see EHCI 3.5.1 */
 	ULONG			hw_alt_next;	  	/* see EHCI 3.5.2 */
-	ULONG			hw_token;		  	/* see EHCI 3.5.3 */       
+	ULONG			hw_token;		  	/* see EHCI 3.5.3 */
 	ULONG			hw_buf [5];		  	/* see EHCI 3.5.4 */
 
 	/* the rest is HCD-private */
@@ -292,7 +292,7 @@ typedef struct _EHCI_QH
 	ULONG			hw_info1;			 /* see EHCI 3.6.2 */
 	ULONG			hw_info2;			 /* see EHCI 3.6.2 */
 	ULONG			hw_current;			 /* qtd list - see EHCI 3.6.4 */
-	
+
 	/* qtd overlay (hardware parts of a struct ehci_qtd) */
 	ULONG			hw_qtd_next;
 	ULONG			hw_alt_next;
@@ -371,7 +371,7 @@ typedef struct _EHCI_ITD {
 	/* first part defined by EHCI spec */
 	ULONG			hw_next;           			/* see EHCI 3.3.1 */
 	ULONG			hw_transaction [8];			/* see EHCI 3.3.2 */
-	ULONG			hw_bufp [7];	   			/* see EHCI 3.3.3 */ 
+	ULONG			hw_bufp [7];	   			/* see EHCI 3.3.3 */
 
 	/* the rest is EHCI-private */
 	PEHCI_ELEM_LINKS elem_head_link;
@@ -384,7 +384,7 @@ typedef struct _EHCI_ITD {
 /*-------------------------------------------------------------------------*/
 
 /*
- * EHCI Specification 0.95 Section 3.4 
+ * EHCI Specification 0.95 Section 3.4
  * siTD, aka split-transaction isochronous Transfer Descriptor
  *       ... describe low/full speed iso xfers through TT in hubs
  * see Figure 3-5 "Split-transaction Isochronous Transaction Descriptor (siTD)
@@ -438,7 +438,7 @@ typedef struct _EHCI_SITD_CONTENT
 	ULONG back_terminal : 1;
 	ULONG reserved7 : 4;
 	ULONG back_ptr : 27;
-	
+
 } EHCI_SITD_CONTENT, *PEHCI_SITD_CONTENT;
 
 typedef struct _EHCI_SITD
@@ -501,8 +501,8 @@ typedef struct _EHCI_FSTN
 #define HCS_INDICATOR(p)	((p)&(1 << 16))	/* true: has port indicators */
 #define HCS_N_CC(p)		(((p)>>12)&0xf)	/* bits 15:12, #companion HCs */
 #define HCS_N_PCC(p)		(((p)>>8)&0xf)	/* bits 11:8, ports per CC */
-#define HCS_PORTROUTED(p)	((p)&(1 << 7))	/* true: port routing */ 
-#define HCS_PPC(p)		((p)&(1 << 4))	/* true: port power control */ 
+#define HCS_PORTROUTED(p)	((p)&(1 << 7))	/* true: port routing */
+#define HCS_PPC(p)		((p)&(1 << 4))	/* true: port power control */
 #define HCS_N_PORTS(p)		(((p)>>0)&0xf)	/* bits 3:0, ports on HC */
 
 #define HCC_EXT_CAPS(p)		(((p)>>8)&0xff)	/* for pci extended caps */
@@ -769,7 +769,7 @@ typedef struct _EHCI_DEV
 	PUSHORT 	        frame_bw;							//unit uFrame
 	USHORT				min_bw;								//the bottle-neck of the bandwidths across frame-list
 
-	KTIMER				reset_timer;						//used to reset the host controller 
+	KTIMER				reset_timer;						//used to reset the host controller
 	struct _EHCI_DEVICE_EXTENSION    *pdev_ext;
     PUSB_DEV            root_hub;							//root hub
 
@@ -780,7 +780,7 @@ typedef UHCI_PORT EHCI_MEMORY;
 typedef struct _EHCI_DEVICE_EXTENSION
 {
 	//struct _USB_DEV_MANAGER 	*pdev_mgr;
-	DEVEXT_HEADER		dev_ext_hdr;	
+	DEVEXT_HEADER		dev_ext_hdr;
 	PDEVICE_OBJECT     	pdev_obj;
 	PDRIVER_OBJECT  	pdrvr_obj;
 	PEHCI_DEV 			ehci;

@@ -4,7 +4,7 @@
  * Copyright 2002 Robert Dickenson
  * Copyright 2003 Vincent Béron
  * Copyright 2004 Sylvain Pétréolle
- * Copyright 2007 Pierre Schweitzer 
+ * Copyright 2007 Pierre Schweitzer
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -163,7 +163,7 @@ END
  */
 
 IDD_EDIT_STRING DIALOG  32, 24, 252, 84
-STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la chaîne"
 FONT 8, "MS Shell Dlg"
@@ -177,7 +177,7 @@ BEGIN
 END
 
 IDD_EDIT_MULTI_STRING DIALOG  32, 24, 252, 174
-STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la chaîne multiple"
 FONT 8, "MS Shell Dlg"
@@ -191,7 +191,7 @@ BEGIN
 END
 
 IDD_EDIT_BIN_DATA DIALOG  32, 24, 252, 174
-STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer la valeur binaire"
 FONT 8, "MS Shell Dlg"
@@ -206,7 +206,7 @@ END
 
 
 IDD_EDIT_DWORD DIALOG  32, 24, 252, 104
-STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
     WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Éditer le mot double"
 FONT 8, "MS Shell Dlg"
@@ -396,7 +396,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,107,114,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,7,114,50,14
-    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST | 
+    CONTROL         "List1",IDC_FAVORITESLIST,"SysListView32",LVS_LIST |
                     WS_BORDER | WS_TABSTOP,7,20,150,90
     LTEXT           "Seléctionnez le(s) favori(s):",IDC_STATIC,7,7,99,12
 END
@@ -411,20 +411,20 @@ BEGIN
     GROUPBOX        "Rechercher",IDC_STATIC,7,25,63,51
     LTEXT           "Rechercher:",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
-    CONTROL         "Clés",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Clés",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
-    CONTROL         "&Valeurs",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Valeurs",IDC_LOOKAT_VALUES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,48,36,8
-    CONTROL         "&Données",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Données",IDC_LOOKAT_DATA,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,60,42,8
     CONTROL         "Chaîne complète seulement",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Sensible à la case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Sensible à la case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 
 IDD_FINDING DIALOGEX 0, 0, 145, 50
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP |
     WS_CAPTION | WS_SYSMENU
 CAPTION "Chercher"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1

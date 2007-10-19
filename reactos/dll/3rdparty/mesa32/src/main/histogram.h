@@ -1,7 +1,7 @@
 /**
  * \file histogram.h
  * Histogram.
- * 
+ *
  * \if subset
  * (No-op)
  *
@@ -41,34 +41,34 @@
 
 #if _HAVE_FULL_GL
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetMinmax(GLenum target, GLboolean reset, GLenum format, GLenum types, GLvoid *values);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetHistogram(GLenum target, GLboolean reset, GLenum format, GLenum type, GLvoid *values);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetHistogramParameterfv(GLenum target, GLenum pname, GLfloat *params);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetHistogramParameteriv(GLenum target, GLenum pname, GLint *params);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetMinmaxParameterfv(GLenum target, GLenum pname, GLfloat *params);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_GetMinmaxParameteriv(GLenum target, GLenum pname, GLint *params);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_Histogram(GLenum target, GLsizei width, GLenum internalformat, GLboolean sink);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_Minmax(GLenum target, GLenum internalformat, GLboolean sink);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_ResetHistogram(GLenum target);
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_ResetMinmax(GLenum target);
 
 extern void

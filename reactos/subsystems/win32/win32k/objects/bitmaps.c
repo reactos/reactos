@@ -80,7 +80,7 @@ IntGdiCreateBitmap(
       /* FIXME should we free the hBitmap or return it ?? */
       return 0;
    }
-   
+
    bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
 
    if (NULL != pBits)
@@ -140,7 +140,7 @@ BITMAP_Cleanup(PVOID ObjectBody)
 				EngFreeUserMem(pBmp->SurfObj.pvBits);
 		}
 		if (pBmp->hDIBPalette != NULL)
-		{			
+		{
 			NtGdiDeleteObject(pBmp->hDIBPalette);
 		}
 	}

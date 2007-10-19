@@ -2108,7 +2108,7 @@ static void CRYPT_MakeCertInfo(PCERT_INFO info, const CRYPT_DATA_BLOB *pSerialNu
         info->rgExtension = NULL;
     }
 }
- 
+
 typedef RPC_STATUS (RPC_ENTRY *UuidCreateFunc)(UUID *);
 typedef RPC_STATUS (RPC_ENTRY *UuidToStringFunc)(UUID *, unsigned char **);
 typedef RPC_STATUS (RPC_ENTRY *RpcStringFreeFunc)(unsigned char **);

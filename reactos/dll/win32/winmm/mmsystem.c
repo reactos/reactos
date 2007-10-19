@@ -467,12 +467,12 @@ UINT16 WINAPI auxGetDevCaps16(UINT16 uDeviceID, LPAUXCAPS16 lpCaps, UINT16 uSize
     ret = auxGetDevCapsA(uDeviceID, &acA, sizeof(acA));
     if (ret == MMSYSERR_NOERROR) {
 	AUXCAPS16 ac16;
-	ac16.wMid           = acA.wMid; 
-	ac16.wPid           = acA.wPid; 
-	ac16.vDriverVersion = acA.vDriverVersion; 
-	strcpy(ac16.szPname, acA.szPname); 
-	ac16.wTechnology    = acA.wTechnology; 
-	ac16.dwSupport      = acA.dwSupport; 
+	ac16.wMid           = acA.wMid;
+	ac16.wPid           = acA.wPid;
+	ac16.vDriverVersion = acA.vDriverVersion;
+	strcpy(ac16.szPname, acA.szPname);
+	ac16.wTechnology    = acA.wTechnology;
+	ac16.dwSupport      = acA.dwSupport;
 	memcpy(lpCaps, &ac16, min(uSize, sizeof(ac16)));
     }
     return ret;
@@ -662,7 +662,7 @@ HTASK16 WINAPI mciGetCreatorTask16(UINT16 uDeviceID)
     LPWINE_MCIDRIVER wmd;
     HTASK16 ret = 0;
 
-    if ((wmd = MCI_GetDriver(uDeviceID))) 
+    if ((wmd = MCI_GetDriver(uDeviceID)))
         ret = HTASK_16(wmd->CreatorThread);
 
     TRACE("(%u) => %04x\n", uDeviceID, ret);
@@ -2405,7 +2405,7 @@ exit:
     HeapFree(GetProcessHeap(), 0, lpDrv);
     HeapFree(GetProcessHeap(), 0, fnA);
     HeapFree(GetProcessHeap(), 0, snA);
-    TRACE("Unable to load 16 bit module %s[%s]: %s\n", 
+    TRACE("Unable to load 16 bit module %s[%s]: %s\n",
           debugstr_w(fn), debugstr_w(sn), cause);
     return NULL;
 }
@@ -2415,7 +2415,7 @@ exit:
  *
  *
  */
-static LRESULT  DRIVER_SendMessage16(HDRVR16 hDrv16, UINT msg, 
+static LRESULT  DRIVER_SendMessage16(HDRVR16 hDrv16, UINT msg,
                                      LPARAM lParam1, LPARAM lParam2)
 {
     LRESULT             ret = 0;
@@ -2813,7 +2813,7 @@ HMMIO16 WINAPI mmioOpen16(LPSTR szFileName, MMIOINFO16* lpmmioinfo16,
 	mmioinfo.pchBuffer   = MapSL((DWORD)lpmmioinfo16->pchBuffer);
         mmioinfo.adwInfo[0]  = lpmmioinfo16->adwInfo[0];
         /* if we don't have a file name, it's likely a passed open file descriptor */
-        if (!szFileName) 
+        if (!szFileName)
             mmioinfo.adwInfo[0] = (DWORD)DosFileHandleToWin32Handle(mmioinfo.adwInfo[0]);
 	mmioinfo.adwInfo[1]  = lpmmioinfo16->adwInfo[1];
 	mmioinfo.adwInfo[2]  = lpmmioinfo16->adwInfo[2];
@@ -2917,7 +2917,7 @@ MMRESULT16 WINAPI mmioSetInfo16(HMMIO16 hmmio, const MMIOINFO16* lpmmioinfo, UIN
 
     /* check if seg and lin buffers are the same */
     if (mmioinfo.cchBuffer != lpmmioinfo->cchBuffer  ||
-        mmioinfo.pchBuffer != MapSL((DWORD)lpmmioinfo->pchBuffer)) 
+        mmioinfo.pchBuffer != MapSL((DWORD)lpmmioinfo->pchBuffer))
 	return MMSYSERR_INVALPARAM;
 
     /* check pointers coherence */
@@ -2942,7 +2942,7 @@ MMRESULT16 WINAPI mmioSetInfo16(HMMIO16 hmmio, const MMIOINFO16* lpmmioinfo, UIN
 MMRESULT16 WINAPI mmioSetBuffer16(HMMIO16 hmmio, LPSTR pchBuffer,
                                   LONG cchBuffer, UINT16 uFlags)
 {
-    MMRESULT    ret = mmioSetBuffer(HMMIO_32(hmmio), MapSL((DWORD)pchBuffer), 
+    MMRESULT    ret = mmioSetBuffer(HMMIO_32(hmmio), MapSL((DWORD)pchBuffer),
                                     cchBuffer, uFlags);
 
     if (ret == MMSYSERR_NOERROR)
@@ -2981,7 +2981,7 @@ MMRESULT16 WINAPI mmioAdvance16(HMMIO16 hmmio, MMIOINFO16* lpmmioinfo, UINT16 uF
     }
     else
         ret = mmioAdvance(HMMIO_32(hmmio), NULL, uFlags);
-        
+
     if (ret != MMSYSERR_NOERROR) return ret;
 
     if (lpmmioinfo)
@@ -3021,7 +3021,7 @@ LPMMIOPROC16 WINAPI mmioInstallIOProc16(FOURCC fccIOProc, LPMMIOPROC16 pIOProc,
 LRESULT WINAPI mmioSendMessage16(HMMIO16 hmmio, UINT16 uMessage,
 				 LPARAM lParam1, LPARAM lParam2)
 {
-    return MMIO_SendMessage(HMMIO_32(hmmio), uMessage, 
+    return MMIO_SendMessage(HMMIO_32(hmmio), uMessage,
                             lParam1, lParam2, MMIO_PROC_16);
 }
 
@@ -3060,12 +3060,12 @@ MMRESULT16 WINAPI mmioRename16(LPCSTR szFileName, LPCSTR szNewFileName,
     MMRESULT    ret;
     MMIOINFO    mmioinfo;
 
-    if (lpmmioinfo != NULL && lpmmioinfo->pIOProc != NULL && 
+    if (lpmmioinfo != NULL && lpmmioinfo->pIOProc != NULL &&
         lpmmioinfo->fccIOProc == 0) {
         FIXME("Can't handle this case yet\n");
         return MMSYSERR_ERROR;
     }
-     
+
     /* this is a bit hacky, but it'll work if we get a fourCC code or nothing.
      * but a non installed ioproc without a fourcc won't do
      */

@@ -661,7 +661,7 @@ EmptyWorkingSet(HANDLE hProcess)
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -677,13 +677,13 @@ EnumDeviceDrivers(LPVOID *lpImageBase,
 {
   ENUM_DEVICE_DRIVERS_CONTEXT Context;
   NTSTATUS Status;
- 
+
   if(cb == 0 || lpImageBase == NULL)
   {
     *lpcbNeeded = 0;
     return TRUE;
   }
- 
+
   cb /= sizeof(PVOID);
 
   Context.lpImageBase = lpImageBase;
@@ -715,15 +715,15 @@ EnumProcesses(DWORD *lpidProcess,
 {
   ENUM_PROCESSES_CONTEXT Context;
   NTSTATUS Status;
-  
+
   cb /= sizeof(DWORD);
-  
+
   if(cb == 0 || lpidProcess == NULL)
   {
     *lpcbNeeded = 0;
     return TRUE;
   }
-  
+
   Context.lpidProcess = lpidProcess;
   Context.nCount = cb;
 
@@ -754,9 +754,9 @@ EnumProcessModules(HANDLE hProcess,
 {
   ENUM_PROCESS_MODULES_CONTEXT Context;
   NTSTATUS Status;
-  
+
   cb /= sizeof(HMODULE);
-  
+
   if(cb == 0 || lphModule == NULL)
   {
     *lpcbNeeded = 0;
@@ -776,7 +776,7 @@ EnumProcessModules(HANDLE hProcess,
     SetLastErrorByStatus(Status);
     return FALSE;
   }
-  
+
   return TRUE;
 }
 
@@ -1099,10 +1099,10 @@ EnumPageFilesA(PENUM_PAGE_FILE_CALLBACKA pCallbackRoutine,
                LPVOID lpContext)
 {
   INTERNAL_ENUM_PAGE_FILES_CONTEXT Context;
-  
+
   Context.pCallbackRoutine = pCallbackRoutine;
   Context.lpContext = lpContext;
-  
+
   return EnumPageFilesW(InternalAnsiPageFileCallback, &Context);
 }
 

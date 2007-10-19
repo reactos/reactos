@@ -90,7 +90,7 @@ MmInitializeMdlImplementation(VOID)
    }
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 
-   Buffer = ExAllocatePoolWithTag(NonPagedPool, 
+   Buffer = ExAllocatePoolWithTag(NonPagedPool,
                                   MI_MDL_MAPPING_REGION_SIZE / (PAGE_SIZE * 8),
                                   TAG_MDL);
 

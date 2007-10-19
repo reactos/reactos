@@ -22,7 +22,7 @@
  *                           - PsaWalkFirstProcess
  *                           - PsaWalkNextProcess
  *                           - PsaWalkFirstThread
- *                           - PsaWalkNextThread 
+ *                           - PsaWalkNextThread
  *                           - PsaEnumerateProcessesAndThreads
  *                           - PsaEnumerateProcesses
  *                           - PsaEnumerateThreads
@@ -66,16 +66,16 @@ PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThrea
        that could end up copying a large chunk of data we'd discard anyway */
     PsaiFree(pInfoBuffer);
     pTmp = PsaiMalloc(nSize);
-  
+
     if(pTmp == NULL)
     {
       DPRINT(FAILED_WITH_STATUS, "PsaiMalloc", STATUS_NO_MEMORY);
       Status = STATUS_NO_MEMORY;
       break;
     }
-  
+
     pInfoBuffer = pTmp;
-  
+
     /* query the information */
     Status = NtQuerySystemInformation(SystemProcessInformation,
                                       pInfoBuffer,
@@ -85,7 +85,7 @@ PsaCaptureProcessesAndThreads(OUT PSYSTEM_PROCESS_INFORMATION *ProcessesAndThrea
     /* double the buffer size */
     nSize *= 2;
   } while(Status == STATUS_INFO_LENGTH_MISMATCH);
- 
+
   if(!NT_SUCCESS(Status))
   {
     DPRINT(FAILED_WITH_STATUS, "NtQuerySystemInformation", Status);
@@ -109,7 +109,7 @@ PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
   {
     return STATUS_INVALID_PARAMETER;
   }
-  
+
   Status = STATUS_SUCCESS;
 
   ProcessesAndThreads = PsaWalkFirstProcess(ProcessesAndThreads);
@@ -120,7 +120,7 @@ PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
     if(ProcessCallback)
     {
       Status = ProcessCallback(ProcessesAndThreads, ProcessCallbackContext);
- 
+
       if(!NT_SUCCESS(Status))
       {
         break;
@@ -139,7 +139,7 @@ PsaWalkProcessesAndThreads(IN PSYSTEM_PROCESS_INFORMATION ProcessesAndThreads,
           i++, pCurThread = PsaWalkNextThread(pCurThread))
       {
         Status = ThreadCallback(pCurThread, ThreadCallbackContext);
-        
+
         if(!NT_SUCCESS(Status))
         {
           goto Bail;
@@ -186,7 +186,7 @@ PsaEnumerateProcessesAndThreads(IN PPROC_ENUM_ROUTINE ProcessCallback,
 
 Bail:
   PsaFreeCapture(pInfoBuffer);
- 
+
   return Status;
 }
 

@@ -20,7 +20,7 @@
 
 #include "config.h"
 #include "wine/port.h"
- 
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -414,7 +414,7 @@ void write_client(ifref_list_t *ifaces)
             int expr_eval_routines;
 
             write_implicithandledecl(iface->iface);
-    
+
             write_clientinterfacedecl(iface->iface);
             write_stubdescdecl(iface->iface);
             write_function_stubs(iface->iface, &proc_offset);

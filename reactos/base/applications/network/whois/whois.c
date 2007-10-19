@@ -65,7 +65,7 @@ void getwhoisserver(int argc, char **argv)
 			if (i + 2 < argc)
 			{
 				host = argv[i +1];
-				optset = i + 1;	
+				optset = i + 1;
 			}
 			else
 			{

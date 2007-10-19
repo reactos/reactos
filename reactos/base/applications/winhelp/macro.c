@@ -807,7 +807,7 @@ void CALLBACK MACRO_RegisterRoutine(LPCSTR dll_name, LPCSTR proc, LPCSTR args)
     {
         HANDLE hLib = LoadLibrary(dll_name);
 
-        /* FIXME: the library will not be unloaded until exit of program 
+        /* FIXME: the library will not be unloaded until exit of program
          * We don't send the DW_TERM message
          */
         WINE_TRACE("Loading %s\n", dll_name);

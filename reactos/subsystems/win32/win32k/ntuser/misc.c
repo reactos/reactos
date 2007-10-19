@@ -154,77 +154,77 @@ NtUserCallOneParam(
    {
       PWINSTATION_OBJECT WinSta = PsGetCurrentThreadWin32Thread()->Desktop->WindowStation;
       PSYSTEM_CURSORINFO CurInfo;
-                 
+
       HDC Screen;
       HBITMAP dcbmp;
-      SURFOBJ *SurfObj;         
+      SURFOBJ *SurfObj;
       BITMAPOBJ *BitmapObj;
       GDIDEVICE *ppdev;
       GDIPOINTER *pgp;
       int showpointer=0;
-                                                                                
+
       if(!(Screen = IntGetScreenDC()))
       {
         return showpointer; /* No mouse */
       }
-                       
+
       dc = DC_LockDc(Screen);
 
       if (!dc)
       {
         return showpointer; /* No mouse */
       }
-           
+
       dcbmp = dc->w.hBitmap;
       DC_UnlockDc(dc);
 
       BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);
       if ( !BitmapObj )
       {
-         BITMAPOBJ_UnlockBitmap(BitmapObj); 
+         BITMAPOBJ_UnlockBitmap(BitmapObj);
          return showpointer; /* No Mouse */
       }
-              
+
       SurfObj = &BitmapObj->SurfObj;
       if (SurfObj == NULL)
       {
-        BITMAPOBJ_UnlockBitmap(BitmapObj); 
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
         return showpointer; /* No mouse */
       }
-           
+
       ppdev = GDIDEV(SurfObj);
-                                                                      
+
       if(ppdev == NULL)
       {
-        BITMAPOBJ_UnlockBitmap(BitmapObj); 
+        BITMAPOBJ_UnlockBitmap(BitmapObj);
         return showpointer; /* No mouse */
       }
-                  
+
       pgp = &ppdev->Pointer;
-      
+
       CurInfo = IntGetSysCursorInfo(WinSta);
-           
+
       if (Param == FALSE)
       {
-          pgp->ShowPointer--;         
+          pgp->ShowPointer--;
           showpointer = pgp->ShowPointer;
-          
+
           if (showpointer >= 0)
-          {          
+          {
              //ppdev->SafetyRemoveCount = 1;
              //ppdev->SafetyRemoveLevel = 1;
-             EngMovePointer(SurfObj,-1,-1,NULL);               
-             CurInfo->ShowingCursor = 0;                
+             EngMovePointer(SurfObj,-1,-1,NULL);
+             CurInfo->ShowingCursor = 0;
            }
-           
+
        }
        else
        {
           pgp->ShowPointer++;
           showpointer = pgp->ShowPointer;
-          
-          /* Show Cursor */              
-          if (showpointer < 0) 
+
+          /* Show Cursor */
+          if (showpointer < 0)
           {
              //ppdev->SafetyRemoveCount = 0;
              //ppdev->SafetyRemoveLevel = 0;
@@ -232,16 +232,16 @@ NtUserCallOneParam(
              CurInfo->ShowingCursor = CURSOR_SHOWING;
           }
        }
-                                                    
-       BITMAPOBJ_UnlockBitmap(BitmapObj); 
-       return showpointer;                       
+
+       BITMAPOBJ_UnlockBitmap(BitmapObj);
+       return showpointer;
        }
-         
-   
+
+
    UserEnterExclusive();
 
    switch(Routine)
-   {   	     
+   {
       case ONEPARAM_ROUTINE_GETMENU:
          {
             PWINDOW_OBJECT Window;
@@ -487,7 +487,7 @@ NtUserCallTwoParam(
             RECT rcRect;
             Window = UserGetWindowObject((HWND)Param1);
             if (!Window) RETURN(ERROR);
-            
+
             Ret = (DWORD)IntGetWindowRgnBox(Window, &rcRect);
             Status = MmCopyToCaller((PVOID)Param2, &rcRect, sizeof(RECT));
             if(!NT_SUCCESS(Status))
@@ -561,7 +561,7 @@ NtUserCallTwoParam(
       {
          Window = UserGetWindowObject((HWND)Param1);
          if (!Window) RETURN(0);
-         
+
          RETURN( (DWORD)IntShowOwnedPopups(Window, (BOOL) Param2));
       }
 
@@ -569,12 +569,12 @@ NtUserCallTwoParam(
          {
 #define WIN_NEEDS_SHOW_OWNEDPOPUP (0x00000040)
             DPRINT1("ROS_SHOWWINDOW\n");
-            
+
             if (!(Window = UserGetWindowObject((HWND)Param1)))
             {
                RETURN( 1 );
             }
-            
+
             if (Param2)
             {
                if (!(Window->Flags & WIN_NEEDS_SHOW_OWNEDPOPUP))
@@ -595,7 +595,7 @@ NtUserCallTwoParam(
          RETURN( 0);
 
       case TWOPARAM_ROUTINE_SETWNDCONTEXTHLPID:
-         
+
          if(!(Window = UserGetWindowObject((HWND)Param1)))
          {
             RETURN( (DWORD)FALSE);
@@ -799,16 +799,16 @@ NtUserCallHwndLock(
             Ret = FALSE;
             if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
-            
+
             if(!(Menu = UserGetMenuObject((HMENU) Window->IDMenu)))
                break;
-            
+
             Menu->MenuInfo.WndOwner = hWnd;
             Menu->MenuInfo.Height = 0;
 
             co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |
                                   SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED );
-            
+
             Ret = TRUE;
             break;
          }
@@ -986,7 +986,7 @@ IntSystemParametersInfo(
    switch(uiAction)
    {
      case SPI_GETDRAGFULLWINDOWS:
-           /* FIXME: Implement this, don't just return constant */ 
+           /* FIXME: Implement this, don't just return constant */
            *(PBOOL)pvParam = FALSE;
            break;
 
@@ -997,7 +997,7 @@ IntSystemParametersInfo(
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
       case SPI_SETDESKWALLPAPER:
-      case SPI_SETSCREENSAVERRUNNING: 
+      case SPI_SETSCREENSAVERRUNNING:
       case SPI_SETSCREENSAVETIMEOUT:
       case SPI_SETFLATMENU:
       case SPI_SETMOUSEHOVERTIME:
@@ -1075,7 +1075,7 @@ IntSystemParametersInfo(
                   ASSERT(pvParam);
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   *((UINT*)pvParam) = CurInfo->WheelScroChars;
-                  // FIXME add this value to scroll list as scroll value ?? 
+                  // FIXME add this value to scroll list as scroll value ??
                   break;
                case SPI_SETDOUBLECLKWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
@@ -1097,7 +1097,7 @@ IntSystemParametersInfo(
                    *((UINT*)pvParam) = CurInfo->MouseHoverTime;
                    break;
                case SPI_SETMOUSEHOVERTIME:
-                   /* see http://msdn2.microsoft.com/en-us/library/ms724947.aspx 
+                   /* see http://msdn2.microsoft.com/en-us/library/ms724947.aspx
                     * copy text from it, if some agument why xp and 2003 behovir diffent
                     * only if they do not have SP install
                     * " Windows Server 2003 and Windows XP: The operating system does not
@@ -1106,16 +1106,16 @@ IntSystemParametersInfo(
                     */
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   CurInfo->MouseHoverTime = uiParam;
-                  if(CurInfo->MouseHoverTime < USER_TIMER_MINIMUM) 
+                  if(CurInfo->MouseHoverTime < USER_TIMER_MINIMUM)
                   {
                       CurInfo->MouseHoverTime = USER_TIMER_MINIMUM;
                   }
-                  if(CurInfo->MouseHoverTime > USER_TIMER_MAXIMUM) 
+                  if(CurInfo->MouseHoverTime > USER_TIMER_MAXIMUM)
                   {
                       CurInfo->MouseHoverTime = USER_TIMER_MAXIMUM;
                   }
 
-                  break; 
+                  break;
                case SPI_GETMOUSEHOVERWIDTH:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    *(PUINT)pvParam = CurInfo->MouseHoverWidth;
@@ -1127,27 +1127,27 @@ IntSystemParametersInfo(
                case SPI_SETMOUSEHOVERWIDTH:
                   CurInfo = IntGetSysCursorInfo(WinStaObject);
                   CurInfo->MouseHoverWidth = uiParam;
-                  break; 
+                  break;
                case SPI_SETMOUSEHOVERHEIGHT:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->MouseHoverHeight = uiParam;
-                   break; 
+                   break;
                case SPI_SETMOUSEBUTTONSWAP:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->SwapButtons = uiParam;
-                   break; 
+                   break;
                case SPI_SETMOUSE:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->CursorAccelerationInfo = *(PCURSORACCELERATION_INFO)pvParam;
-                   break; 
+                   break;
                case SPI_GETMOUSE:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    *(PCURSORACCELERATION_INFO)pvParam = CurInfo->CursorAccelerationInfo;
-                   break; 
+                   break;
                case SPI_SETMOUSESPEED:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    CurInfo->MouseSpeed = (UINT)pvParam;
-                   /* Limit value to 1...20 range */ 
+                   /* Limit value to 1...20 range */
                    if(CurInfo->MouseSpeed < 1)
                    {
                        CurInfo->MouseSpeed = 1;
@@ -1160,7 +1160,7 @@ IntSystemParametersInfo(
                case SPI_GETMOUSESPEED:
                    CurInfo = IntGetSysCursorInfo(WinStaObject);
                    *(PUINT)pvParam = CurInfo->MouseSpeed;
-                   break; 
+                   break;
                case SPI_SETDESKWALLPAPER:
                   {
                      /* This function expects different parameters than the user mode version!
@@ -1169,8 +1169,8 @@ IntSystemParametersInfo(
                         the bitmap. We'll change it's ownership to system and replace it with
                         the current wallpaper bitmap */
                      HBITMAP hOldBitmap, hNewBitmap;
-                     UNICODE_STRING Key = RTL_CONSTANT_STRING(L"Control Panel\\Desktop"); 
-                     UNICODE_STRING Tile = RTL_CONSTANT_STRING(L"TileWallpaper"); 
+                     UNICODE_STRING Key = RTL_CONSTANT_STRING(L"Control Panel\\Desktop");
+                     UNICODE_STRING Tile = RTL_CONSTANT_STRING(L"TileWallpaper");
                      UNICODE_STRING Style = RTL_CONSTANT_STRING(L"WallpaperStyle");
                      UNICODE_STRING KeyPath;
                      OBJECT_ATTRIBUTES KeyAttributes;
@@ -1225,7 +1225,7 @@ IntSystemParametersInfo(
                               CurrentUserKey, NULL);
                      ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
                      ZwClose(CurrentUserKey);
-                     
+
                      /* read the tile value in the registry */
                      Status = ZwQueryValueKey(KeyHandle, &Tile, KeyValuePartialInformation,
                                               0, 0, &ResLength);
@@ -1263,7 +1263,7 @@ IntSystemParametersInfo(
                      Tile.Length = KeyValuePartialInfo->DataLength;
                      Tile.MaximumLength = KeyValuePartialInfo->DataLength;
                      Tile.Buffer = (PWSTR)KeyValuePartialInfo->Data;
-                     
+
                      Status = RtlUnicodeStringToInteger(&Tile, 0, &TileNum);
                      if(!NT_SUCCESS(Status))
                      {
@@ -1298,7 +1298,7 @@ IntSystemParametersInfo(
                      Style.Length = KeyValuePartialInfo->DataLength;
                      Style.MaximumLength = KeyValuePartialInfo->DataLength;
                      Style.Buffer = (PWSTR)KeyValuePartialInfo->Data;
-                     
+
                      Status = RtlUnicodeStringToInteger(&Style, 0, &StyleNum);
                      if(!NT_SUCCESS(Status))
                      {
@@ -1315,7 +1315,7 @@ IntSystemParametersInfo(
                      {
                         WinStaObject->WallpaperMode = wmStretch;
                      }
-                     
+
                      ZwClose(KeyHandle);
                      break;
                   }
@@ -1493,7 +1493,7 @@ IntSystemParametersInfo(
    return TRUE;
 }
 
-static BOOL 
+static BOOL
 UserSystemParametersInfo_StructSet(
     UINT uiAction,
     UINT uiParam,
@@ -1531,7 +1531,7 @@ UserSystemParametersInfo_StructSet(
     return IntSystemParametersInfo(uiAction, uiParam, pBuffer, fWinIni);
 }
 
-static BOOL 
+static BOOL
 UserSystemParametersInfo_StructGet(
     UINT uiAction,
     UINT uiParam,
@@ -1609,7 +1609,7 @@ UserSystemParametersInfo(
       case SPI_SETLOWPOWERTIMEOUT:
       case SPI_SETPOWEROFFACTIVE:
       case SPI_SETPOWEROFFTIMEOUT:
-#endif 
+#endif
       case SPI_SETICONS:
       case SPI_SETSCREENSAVETIMEOUT:
       case SPI_SETSCREENSAVEACTIVE:
@@ -1814,7 +1814,7 @@ UserSystemParametersInfo(
           }
       case SPI_SETNONCLIENTMETRICS:
           {
-              NONCLIENTMETRICSW Buffer;  
+              NONCLIENTMETRICSW Buffer;
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_GETANIMATION:
@@ -1829,44 +1829,44 @@ UserSystemParametersInfo(
           }
       case SPI_GETACCESSTIMEOUT:
           {
-              ACCESSTIMEOUT Buffer;  
+              ACCESSTIMEOUT Buffer;
               return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_SETACCESSTIMEOUT:
           {
-              ACCESSTIMEOUT Buffer;  
+              ACCESSTIMEOUT Buffer;
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_GETFILTERKEYS:
           {
-              FILTERKEYS Buffer;  
+              FILTERKEYS Buffer;
               return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni,
                   &Buffer,sizeof(Buffer));
           }
       case SPI_SETFILTERKEYS:
           {
-              FILTERKEYS Buffer;  
+              FILTERKEYS Buffer;
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni,
                   &Buffer,sizeof(Buffer));
           }
       case SPI_GETSTICKYKEYS:
           {
-              STICKYKEYS Buffer;  
+              STICKYKEYS Buffer;
               return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_SETSTICKYKEYS:
           {
-              STICKYKEYS Buffer;  
+              STICKYKEYS Buffer;
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_GETTOGGLEKEYS:
           {
-              TOGGLEKEYS Buffer;  
+              TOGGLEKEYS Buffer;
               return UserSystemParametersInfo_StructGet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_SETTOGGLEKEYS:
           {
-              TOGGLEKEYS Buffer;  
+              TOGGLEKEYS Buffer;
               return UserSystemParametersInfo_StructSet(uiAction, uiParam, pvParam, fWinIni, &Buffer,sizeof(Buffer));
           }
       case SPI_SETWORKAREA:

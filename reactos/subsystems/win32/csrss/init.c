@@ -343,7 +343,7 @@ CsrpCreateListenPort (IN     LPWSTR  Name,
  * CsrpCreateBNODirectory/3
  *
  * These used to be part of kernel32 startup, but that clearly wasn't a good
- * idea, as races were definately possible.  These are moved (as in the 
+ * idea, as races were definately possible.  These are moved (as in the
  * previous fixmes).
  */
 static NTSTATUS
@@ -372,7 +372,7 @@ CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
         DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
     }
 
-    /* Create the "local" Symbolic Link. 
+    /* Create the "local" Symbolic Link.
      * FIXME: CSR should do this -- Fixed */
     InitializeObjectAttributes(&ObjectAttributes,
                                &SymName,
@@ -387,7 +387,7 @@ CsrpCreateBNODirectory (int argc, char ** argv, char ** envp)
     {
         DPRINT1("NtCreateDirectoryObject() failed %08x\n", Status);
     }
-    
+
     /* Create the "global" Symbolic Link. */
     InitializeObjectAttributes(&ObjectAttributes,
                                &SymName2,
@@ -512,20 +512,20 @@ EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
 	ANSI_STRING  AnsiEnv;
 
 	UnicodeEnv->Buffer = NULL;
-	
+
 	for (Index=0; NULL != envp[Index]; Index++)
 	{
 		CharCount += strlen (envp[Index]);
 		++ CharCount;
 	}
 	++ CharCount;
-	
+
 	AnsiEnv.Buffer = RtlAllocateHeap (RtlGetProcessHeap(), 0, CharCount);
 	if (NULL != AnsiEnv.Buffer)
 	{
 
 		PCHAR WritePos = AnsiEnv.Buffer;
-		
+
 		for (Index=0; NULL != envp[Index]; Index++)
 		{
 			strcpy (WritePos, envp[Index]);
@@ -537,7 +537,7 @@ EnvpToUnicodeString (char ** envp, PUNICODE_STRING UnicodeEnv)
 		AnsiEnv.Buffer [CharCount-1] = '\0';
 		AnsiEnv.Length             = CharCount;
 		AnsiEnv.MaximumLength      = CharCount;
-      
+
 		RtlAnsiStringToUnicodeString (UnicodeEnv, & AnsiEnv, TRUE);
 		RtlFreeHeap (RtlGetProcessHeap(), 0, AnsiEnv.Buffer);
 	}
@@ -559,7 +559,7 @@ CsrpLoadKernelModeDriver (int argc, char ** argv, char ** envp)
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
 
-	EnvpToUnicodeString (envp, & Environment);	
+	EnvpToUnicodeString (envp, & Environment);
 	Status = SmLookupSubsystem (L"Kmode",
 				    Data,
 				    & DataLength,

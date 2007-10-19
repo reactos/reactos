@@ -86,7 +86,7 @@
 #define STRING_CMD_HELP5                   612
 #define STRING_CMD_HELP6                   613
 #define STRING_CMD_HELP7                   614
-#define STRING_CMD_HELP8                   615 
+#define STRING_CMD_HELP8                   615
 
 #define STRING_CMD_SHELLINFO               624
 

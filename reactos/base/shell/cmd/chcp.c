@@ -21,7 +21,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	LPTSTR *arg;
-	INT    args;	
+	INT    args;
 	UINT uNewCodePage;
 
 	/* print help */
@@ -30,7 +30,7 @@ INT CommandChcp (LPTSTR cmd, LPTSTR param)
 		ConOutResPaging(TRUE,STRING_CHCP_HELP);
 		return 0;
 	}
-    
+
 	nErrorLevel = 0;
 
 	/* get parameters */

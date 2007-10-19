@@ -301,7 +301,7 @@ void dglBuildPixelFormatList()
 		hRes = DirectDrawCreate(NULL, &lpDD1, NULL);
 	else
 		hRes = DirectDrawCreate(&glb.ddGuid, &lpDD1, NULL);
-		
+
 	if (FAILED(hRes)) {
 		ddlogError(DDLOG_ERROR, "dglBPFL: DirectDrawCreate failed", hRes);
 		return;
@@ -501,7 +501,7 @@ void dglBuildPixelFormatList()
 		strcat(buf, cat);
 
 		/* should find transparent pixel from LAYERPLANEDESCRIPTOR */
-		sprintf(cat, " . "); 
+		sprintf(cat, " . ");
 		strcat(buf, cat);
 
 		sprintf(cat, "%2d ", lpPF->pfd.cColorBits);
@@ -509,7 +509,7 @@ void dglBuildPixelFormatList()
 
 		/* bReserved field indicates number of over/underlays */
 		if(lpPF->pfd.bReserved) sprintf(cat, " %d ", lpPF->pfd.bReserved);
-		else sprintf(cat, " . "); 
+		else sprintf(cat, " . ");
 		strcat(buf, cat);
 
 		sprintf(cat, " %c ", lpPF->pfd.iPixelType == PFD_TYPE_RGBA ? 'r' : 'c');
@@ -521,38 +521,38 @@ void dglBuildPixelFormatList()
 		sprintf(cat, " %c ", lpPF->pfd.dwFlags & PFD_STEREO ? 'y' : '.');
 		strcat(buf, cat);
 
-		if(lpPF->pfd.cRedBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA) 
+		if(lpPF->pfd.cRedBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA)
 		    sprintf(cat, "%2d ", lpPF->pfd.cRedBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
 
-		if(lpPF->pfd.cGreenBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA) 
+		if(lpPF->pfd.cGreenBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA)
 		    sprintf(cat, "%2d ", lpPF->pfd.cGreenBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
 
-		if(lpPF->pfd.cBlueBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA) 
+		if(lpPF->pfd.cBlueBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA)
 		    sprintf(cat, "%2d ", lpPF->pfd.cBlueBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
-		if(lpPF->pfd.cAlphaBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA) 
+
+		if(lpPF->pfd.cAlphaBits && lpPF->pfd.iPixelType == PFD_TYPE_RGBA)
 			sprintf(cat, "%2d ", lpPF->pfd.cAlphaBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cAuxBuffers)     sprintf(cat, "%2d ", lpPF->pfd.cAuxBuffers);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cDepthBits)      sprintf(cat, "%2d ", lpPF->pfd.cDepthBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cStencilBits)    sprintf(cat, "%2d ", lpPF->pfd.cStencilBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cAccumRedBits)   sprintf(cat, "%2d ", lpPF->pfd.cAccumRedBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
@@ -560,15 +560,15 @@ void dglBuildPixelFormatList()
 		if(lpPF->pfd.cAccumGreenBits) sprintf(cat, "%2d ", lpPF->pfd.cAccumGreenBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cAccumBlueBits)  sprintf(cat, "%2d ", lpPF->pfd.cAccumBlueBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		if(lpPF->pfd.cAccumAlphaBits) sprintf(cat, "%2d ", lpPF->pfd.cAccumAlphaBits);
 		else sprintf(cat, " . ");
 		strcat(buf, cat);
-	
+
 		/* no multisample in Win32 */
 		sprintf(cat, " . .\n");
 		strcat(buf, cat);

@@ -112,7 +112,7 @@ InitializeFmIfsOnce(void)
 		NtClose(hKey);
 		return FALSE;
 	}
-	
+
 	while (TRUE)
 	{
 		Status = NtEnumerateValueKey(

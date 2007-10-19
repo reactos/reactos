@@ -53,24 +53,24 @@ static VOID ZeroEvents( PAFD_HANDLE HandleArray,
 
 
 /* you must pass either Poll OR Irp */
-static VOID SignalSocket( 
-   PAFD_ACTIVE_POLL Poll OPTIONAL, 
-   PIRP _Irp OPTIONAL, 
+static VOID SignalSocket(
+   PAFD_ACTIVE_POLL Poll OPTIONAL,
+   PIRP _Irp OPTIONAL,
    PAFD_POLL_INFO PollReq,
-	NTSTATUS Status 
-   ) 
+	NTSTATUS Status
+   )
 {
     UINT i;
     PIRP Irp = _Irp ? _Irp : Poll->Irp;
     AFD_DbgPrint(MID_TRACE,("Called (Status %x)\n", Status));
-    
+
     if (Poll)
     {
        KeCancelTimer( &Poll->Timer );
       RemoveEntryList( &Poll->ListEntry );
       ExFreePool( Poll );
    }
-    
+
     Irp->IoStatus.Status = Status;
     Irp->IoStatus.Information =
         FIELD_OFFSET(AFD_POLL_INFO, Handles) + sizeof(AFD_HANDLE) * PollReq->HandleCount;
@@ -230,11 +230,11 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	    Irp->IoStatus.Status = Status;
 	    SignalSocket( NULL, Irp, PollReq, Status );
 	} else {
-      
+
        PAFD_ACTIVE_POLL Poll = NULL;
-       
+
        Poll = ExAllocatePool( NonPagedPool, AllocSize );
- 
+
        if (Poll){
           Poll->Irp = Irp;
           Poll->DeviceExt = DeviceExt;
@@ -245,7 +245,7 @@ AfdSelect( PDEVICE_OBJECT DeviceObject, PIRP Irp,
           KeInitializeDpc( (PRKDPC)&Poll->TimeoutDpc,
              (PKDEFERRED_ROUTINE)SelectTimeout,
              Poll );
-          
+
           InsertTailList( &DeviceExt->Polls, &Poll->ListEntry );
 
           KeSetTimer( &Poll->Timer, PollReq->Timeout, &Poll->TimeoutDpc );

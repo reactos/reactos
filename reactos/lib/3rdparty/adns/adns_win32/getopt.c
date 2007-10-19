@@ -1,11 +1,11 @@
 
-/* jgaa oct 9th 2000: Found this on www. 
- * No copyright information given. 
+/* jgaa oct 9th 2000: Found this on www.
+ * No copyright information given.
  * Slightly modidied.
  *
  * Origin: http://www.winsite.com/info/pc/win3/winsock/sossntr4.zip/SOSSNT/SRC/GETOPT.C.html
  */
- 
+
  /* got this off net.sources  */
 
 #include <stdio.h>
@@ -32,16 +32,16 @@ int getopt(int argc, char * const *argv, const char *optstring)
 {
 	static char	*place = EMSG;	/* option letter processing */
 	register char	*oli;		/* option letter list index */
-	
+
 	if(!*place) {			/* update scanning pointer */
-		if(optind >= argc || *(place = argv[optind]) != '-' || !*++place) 
+		if(optind >= argc || *(place = argv[optind]) != '-' || !*++place)
 			return(EOF);
 		if (*place == '-') {	/* found "--" */
 			++optind;
 			return(EOF);
 		}
 	}				/* option letter okay? */
-	if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(optstring,optopt))) 
+	if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(optstring,optopt)))
 	{
 		if(!*place) ++optind;
 		tell(": illegal option -- ");

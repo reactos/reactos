@@ -61,7 +61,7 @@ typedef enum _WINED3DSAMPLER_TEXTURE_TYPE {
 
 /** Register types **/
 typedef enum _WINED3DSHADER_PARAM_REGISTER_TYPE {
-  WINED3DSPR_TEMP         =  0, 
+  WINED3DSPR_TEMP         =  0,
   WINED3DSPR_INPUT        =  1,
   WINED3DSPR_CONST        =  2,
   WINED3DSPR_ADDR         =  3,

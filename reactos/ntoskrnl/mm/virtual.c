@@ -299,7 +299,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
           Length,ResultLength);
 
    PreviousMode =  ExGetPreviousMode();
-   
+
    if (PreviousMode != KernelMode && UnsafeResultLength != NULL)
      {
        _SEH_TRY
@@ -311,7 +311,7 @@ NtQueryVirtualMemory (IN HANDLE ProcessHandle,
            Status = _SEH_GetExceptionCode();
          }
        _SEH_END;
-       
+
        if (!NT_SUCCESS(Status))
          {
            return Status;
@@ -450,9 +450,9 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
    ULONG NumberOfBytesToProtect = 0;
    KPROCESSOR_MODE PreviousMode;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    PreviousMode = ExGetPreviousMode();
-   
+
    if (PreviousMode != KernelMode)
      {
        _SEH_TRY
@@ -469,7 +469,7 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
            Status = _SEH_GetExceptionCode();
          }
        _SEH_END;
-       
+
        if (!NT_SUCCESS(Status))
          {
            return Status;
@@ -787,7 +787,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
      }
 
    PreviousMode = ExGetPreviousMode();
-   
+
    if (PreviousMode != KernelMode)
      {
        if ((ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 < (ULONG_PTR)Buffer ||
@@ -807,7 +807,7 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                Status = _SEH_GetExceptionCode();
              }
            _SEH_END;
-       
+
            if (!NT_SUCCESS(Status))
              {
                return Status;

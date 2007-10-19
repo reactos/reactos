@@ -775,7 +775,7 @@ typedef struct tagQUERYCONTEXT
     DWORD dwVersionLo;
 } QUERYCONTEXT;
 
-typedef [v1_enum] enum tagTYSPEC 
+typedef [v1_enum] enum tagTYSPEC
 {
     TYSPEC_CLSID,
     TYSPEC_FILEEXT,

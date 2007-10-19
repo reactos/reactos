@@ -1,6 +1,6 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-IDC_EVENTVWR MENU 
+IDC_EVENTVWR MENU
 BEGIN
     POPUP "&Логи"
     BEGIN
@@ -23,7 +23,7 @@ BEGIN
     END
 END
 
-IDC_EVENTVWR ACCELERATORS 
+IDC_EVENTVWR ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -41,7 +41,7 @@ BEGIN
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
-STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER 
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER
 CAPTION "Подождите.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
@@ -82,7 +82,7 @@ BEGIN
     CONTROL         "&Слова",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,87,192,33,10
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE                                     "Просмотр событий"
     IDC_EVENTSTRINGIDNOTFOUND       "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."

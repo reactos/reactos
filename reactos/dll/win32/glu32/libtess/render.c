@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -289,15 +289,15 @@ static void RenderFan( GLUtesselator *tess, GLUhalfEdge *e, long size )
    * edge "e".  The fan *should* contain exactly "size" triangles
    * (otherwise we've goofed up somewhere).
    */
-  CALL_BEGIN_OR_BEGIN_DATA( GL_TRIANGLE_FAN ); 
-  CALL_VERTEX_OR_VERTEX_DATA( e->Org->data ); 
-  CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data ); 
+  CALL_BEGIN_OR_BEGIN_DATA( GL_TRIANGLE_FAN );
+  CALL_VERTEX_OR_VERTEX_DATA( e->Org->data );
+  CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data );
 
   while( ! Marked( e->Lface )) {
     e->Lface->marked = TRUE;
     --size;
     e = e->Onext;
-    CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data ); 
+    CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data );
   }
 
   assert( size == 0 );
@@ -312,20 +312,20 @@ static void RenderStrip( GLUtesselator *tess, GLUhalfEdge *e, long size )
    * (otherwise we've goofed up somewhere).
    */
   CALL_BEGIN_OR_BEGIN_DATA( GL_TRIANGLE_STRIP );
-  CALL_VERTEX_OR_VERTEX_DATA( e->Org->data ); 
-  CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data ); 
+  CALL_VERTEX_OR_VERTEX_DATA( e->Org->data );
+  CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data );
 
   while( ! Marked( e->Lface )) {
     e->Lface->marked = TRUE;
     --size;
     e = e->Dprev;
-    CALL_VERTEX_OR_VERTEX_DATA( e->Org->data ); 
+    CALL_VERTEX_OR_VERTEX_DATA( e->Org->data );
     if( Marked( e->Lface )) break;
 
     e->Lface->marked = TRUE;
     --size;
     e = e->Onext;
-    CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data ); 
+    CALL_VERTEX_OR_VERTEX_DATA( e->Dst->data );
   }
 
   assert( size == 0 );
@@ -349,7 +349,7 @@ void __gl_renderBoundary( GLUtesselator *tess, GLUmesh *mesh )
       CALL_BEGIN_OR_BEGIN_DATA( GL_LINE_LOOP );
       e = f->anEdge;
       do {
-        CALL_VERTEX_OR_VERTEX_DATA( e->Org->data ); 
+        CALL_VERTEX_OR_VERTEX_DATA( e->Org->data );
 	e = e->Lnext;
       } while( e != f->anEdge );
       CALL_END_OR_END_DATA();
@@ -490,14 +490,14 @@ GLboolean __gl_renderCache( GLUtesselator *tess )
 			  : (tess->cacheCount > 3) ? GL_TRIANGLE_FAN
 			  : GL_TRIANGLES );
 
-  CALL_VERTEX_OR_VERTEX_DATA( v0->data ); 
+  CALL_VERTEX_OR_VERTEX_DATA( v0->data );
   if( sign > 0 ) {
     for( vc = v0+1; vc < vn; ++vc ) {
-      CALL_VERTEX_OR_VERTEX_DATA( vc->data ); 
+      CALL_VERTEX_OR_VERTEX_DATA( vc->data );
     }
   } else {
     for( vc = vn-1; vc > v0; --vc ) {
-      CALL_VERTEX_OR_VERTEX_DATA( vc->data ); 
+      CALL_VERTEX_OR_VERTEX_DATA( vc->data );
     }
   }
   CALL_END_OR_END_DATA();

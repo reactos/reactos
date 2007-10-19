@@ -53,7 +53,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(mapi);
  *  Failure: MAPI_E_FAILURE
  *
  * NOTES
- *  This is a temporary hack. 
+ *  This is a temporary hack.
  */
 ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     lpMapiMessage message, FLAGS flags, ULONG reserved )
@@ -169,7 +169,7 @@ ULONG WINAPI MAPISendMail( LHANDLE session, ULONG_PTR uiparam,
     }
     ret = MAPI_E_FAILURE;
     size = sizeof(format) + to_size + cc_size + bcc_size + subj_size + body_size;
-    
+
     mailto = HeapAlloc( GetProcessHeap(), 0, size );
     if (!mailto) goto exit;
 

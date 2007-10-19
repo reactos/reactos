@@ -620,11 +620,11 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
             for (ndx = 0; ndx < table->numIndexes; ndx++) {
               PIP_ADAPTER_INFO ptr = &pAdapterInfo[ndx];
               DWORD addrLen = sizeof(ptr->Address), type;
-              const char *ifname = 
+              const char *ifname =
                   getInterfaceNameByIndex(table->indexes[ndx]);
 
               /* on Win98 this is left empty, but whatever */
-              
+
               strncpy(ptr->AdapterName,ifname,sizeof(ptr->AdapterName));
               consumeInterfaceName(ifname);
               ptr->AdapterName[MAX_ADAPTER_NAME_LENGTH] = '\0';
@@ -1131,7 +1131,7 @@ static int IpForwardTableSorter(const void *a, const void *b)
 DWORD WINAPI GetIpForwardTable(PMIB_IPFORWARDTABLE pIpForwardTable, PULONG pdwSize, BOOL bOrder)
 {
   DWORD ret;
-  
+
   TRACE("pIpForwardTable %p, pdwSize %p, bOrder %ld\n", pIpForwardTable,
         pdwSize, (DWORD)bOrder);
   if (!pdwSize)
@@ -1244,7 +1244,7 @@ DWORD WINAPI GetIpNetTable(PMIB_IPNETTABLE pIpNetTable, PULONG pdwSize, BOOL bOr
     if (!pIpNetTable || *pdwSize < size) {
       *pdwSize = size;
       ret = ERROR_INSUFFICIENT_BUFFER;
-    } 
+    }
     else {
       PMIB_IPNETTABLE table = getArpTable();
 
@@ -1341,7 +1341,7 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
     return ERROR_INVALID_PARAMETER;
 
   resInfo = getResInfo();
-  if (!resInfo) 
+  if (!resInfo)
     return ERROR_OUTOFMEMORY;
 
   size = sizeof(FIXED_INFO) + (resInfo->riCount > 0 ? (resInfo->riCount  - 1) *
@@ -1366,7 +1366,7 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
 
     for (i = 0, ptr = &pFixedInfo->DnsServerList; i < resInfo->riCount && ptr;
      i++, ptr = ptr->Next) {
-        struct sockaddr_in *addr_v4 = 
+        struct sockaddr_in *addr_v4 =
             (struct sockaddr_in *)&resInfo->riAddressList[i];
         toIPAddressString
             (addr_v4->sin_addr.s_addr,

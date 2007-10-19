@@ -51,9 +51,9 @@
 
 class Bin;
 class Arc;
-struct BezierArc;	
+struct BezierArc;
 
-typedef class Arc *Arc_ptr; 
+typedef class Arc *Arc_ptr;
 
 enum arc_side { arc_none = 0, arc_right, arc_top, arc_left, arc_bottom };
 

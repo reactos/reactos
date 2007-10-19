@@ -10,7 +10,7 @@
 
 #include "console.h"
 
-INT_PTR 
+INT_PTR
 CALLBACK
 FontProc(
   HWND hwndDlg,

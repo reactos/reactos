@@ -35,7 +35,7 @@ namespace Sysreg_
 /// Description: constructor of class RegressionTest
 ///
 /// @param RegName name of derriving subclass
-	
+
 		RegressionTest(const string RegName) : m_Name(RegName)
 		{}
 
@@ -54,21 +54,21 @@ namespace Sysreg_
 ///
 /// Description: returns the value of the member m_Name
 
-		const string & getName() const 
+		const string & getName() const
 		{ return m_Name; }
 
 //---------------------------------------------------------------------------------------
 ///
 /// execute
-/// 
-/// Description: the execute function passes an System_::ConfigParser object to the 
-/// derriving RegresssionTest class. The class can then read required options from the 
+///
+/// Description: the execute function passes an System_::ConfigParser object to the
+/// derriving RegresssionTest class. The class can then read required options from the
 /// configuration file. The RegressionTest shall then perform its specific regression test.
 /// @see System_::PipeReader
 /// @see System_::SymbolFile
-///		
+///
 /// Note :	if an error happens or the option cannot be found, this function
-///         should return false. 
+///         should return false.
 
 	virtual bool execute(ConfigParser & conf_parser) = 0;
 

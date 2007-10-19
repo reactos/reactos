@@ -123,7 +123,7 @@ NdisReleaseReadWriteLock(
       LockState->LockState = -1;
       KfReleaseSpinLock(&Lock->SpinLock, LockState->OldIrql);
       return;
-  }  
+  }
 }
 
 

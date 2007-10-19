@@ -66,7 +66,7 @@ NdisWriteConfiguration(
     ULONG ParameterType = ParameterValue->ParameterType;
     ULONG DataSize;
     PVOID Data;
-    WCHAR Buff[25]; 
+    WCHAR Buff[25];
 
     if(ParameterType != NdisParameterInteger &&
         ParameterType != NdisParameterHexInteger &&
@@ -81,28 +81,28 @@ NdisWriteConfiguration(
 
     /* reset parameter type to standard reg types */
     switch(ParameterType)
-    {        
+    {
         case NdisParameterHexInteger:
-        case NdisParameterInteger:     
-             {                     
+        case NdisParameterInteger:
+             {
                  UNICODE_STRING Str;
-                 
+
                  Str.Buffer = (PWSTR) &Buff;
                  Str.MaximumLength = (USHORT)sizeof(Buff);
                  Str.Length = 0;
-                 
+
                  ParameterType = REG_SZ;
                  if (!NT_SUCCESS(RtlIntegerToUnicodeString(
                       ParameterValue->ParameterData.IntegerData,
-                      (ParameterType == NdisParameterInteger) ? 10 : 16, &Str))) 
+                      (ParameterType == NdisParameterInteger) ? 10 : 16, &Str)))
                  {
                       *Status = NDIS_STATUS_FAILURE;
                       return;
-                 }                              
+                 }
                  Data = Str.Buffer;
-                 DataSize = Str.Length;                    
+                 DataSize = Str.Length;
              }
-             break;                       
+             break;
         case NdisParameterString:
         case NdisParameterMultiString:
             ParameterType = REG_SZ;
@@ -507,7 +507,7 @@ NdisReadConfiguration(
             str.Buffer = (PWCHAR)KeyInformation->Data;
 
             (*ParameterValue)->ParameterType = ParameterType;
-            
+
             /*
                  If ParameterType is NdisParameterInteger then the base of str is decimal.
                  If ParameterType is NdisParameterHexInteger then the base of str is hexadecimal.

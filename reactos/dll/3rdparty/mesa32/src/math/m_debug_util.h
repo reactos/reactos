@@ -191,7 +191,7 @@ extern char *mesa_profile;
      unsigned int a,d; \
      __asm__ volatile("rdtsc" : "=a" (a), "=d" (d)); \
      (val) = ((unsigned long)a) | (((unsigned long)d)<<32); \
-} while(0) 
+} while(0)
 
 /* Copied from i386 PIII version */
 #define  INIT_COUNTER()							\
@@ -306,9 +306,9 @@ enum { NIL = 0, ONE = 1, NEG = -1, VAR = 2 };
 #elif defined(__MSC__)
 #  define ALIGN16(type, array)	type array __declspec(align(16)) /* GH: Does this work? */
 #elif defined(__WATCOMC__)
-#  define ALIGN16(type, array)	                    /* Watcom does not support this */ 
+#  define ALIGN16(type, array)	                    /* Watcom does not support this */
 #elif defined(__xlC__)
-#  define ALIGN16(type, array)       type __align (16) array 
+#  define ALIGN16(type, array)       type __align (16) array
 #else
 #  warning "ALIGN16 will not 16-byte align!\n"
 #  define ALIGN16

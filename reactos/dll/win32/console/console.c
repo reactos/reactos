@@ -22,7 +22,7 @@ INT_PTR CALLBACK ColorsProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPara
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, InitApplet}
 };
@@ -65,21 +65,21 @@ AllocConsoleInfo()
 	PConsoleInfo pConInfo;
 
 	pConInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ConsoleInfo));
-	
+
 	return pConInfo;
 }
 
-void 
+void
 InitConsoleDefaults(PConsoleInfo pConInfo)
 {
 	/* initialize struct */
 	pConInfo->InsertMode = TRUE;
 	pConInfo->HistoryBufferSize = 50;
 	pConInfo->NumberOfHistoryBuffers = 5;
-    pConInfo->ScreenText = RGB(192, 192, 192); 
-	pConInfo->ScreenBackground = RGB(0, 0, 0); 
-	pConInfo->PopupText = RGB(128, 0, 128); 
-	pConInfo->PopupBackground = RGB(255, 255, 255); 
+    pConInfo->ScreenText = RGB(192, 192, 192);
+	pConInfo->ScreenBackground = RGB(0, 0, 0);
+	pConInfo->PopupText = RGB(128, 0, 128);
+	pConInfo->PopupBackground = RGB(255, 255, 255);
 	pConInfo->WindowSize = (DWORD)MAKELONG(80, 25);
 	pConInfo->WindowPosition = UINT_MAX;
 	pConInfo->ScreenBuffer = MAKELONG(80, 300);
@@ -89,8 +89,8 @@ InitConsoleDefaults(PConsoleInfo pConInfo)
 	memcpy(pConInfo->Colors, s_Colors, sizeof(s_Colors));
 }
 
-	
-INT_PTR 
+
+INT_PTR
 CALLBACK
 ApplyProc(
   HWND hwndDlg,
@@ -162,7 +162,7 @@ ApplyConsoleInfo(HWND hwndDlg, PConsoleInfo pConInfo)
 
 /* First Applet */
 LONG APIENTRY
-InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
+InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
 	PROPSHEETPAGE psp[4];
 	PROPSHEETHEADER psh;
@@ -184,8 +184,8 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 	{
 		return 0;
 	}
-	
-	if (lParam) 
+
+	if (lParam)
 	{
 		/* use defaults */
 		InitConsoleDefaults(pConInfo);
@@ -195,7 +195,7 @@ InitApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 		if (IsBadReadPtr((const void *)pSharedInfo, sizeof(ConsoleInfo)))
 		{
 			/* use defaults */
-			InitConsoleDefaults(pConInfo);			
+			InitConsoleDefaults(pConInfo);
 		}
 		else
 		{

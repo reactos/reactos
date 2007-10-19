@@ -246,7 +246,7 @@ exit:
  * RETURNS
  *  Success: LDAP_SUCCESS
  *  Failure: An LDAP error code.
- */ 
+ */
 ULONG CDECL ldap_rename_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newrdn,
     PWCHAR newparent, INT delete, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls )

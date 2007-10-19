@@ -54,7 +54,7 @@ static void fallback_drawarrays( GLcontext *ctx, GLenum mode, GLint start,
    assert(ctx->Driver.CurrentExecPrimitive == GL_POLYGON+1);
 
    CALL_Begin(GET_DISPATCH(), (mode));
-   for (i = 0; i < count; i++) 
+   for (i = 0; i < count; i++)
        CALL_ArrayElement(GET_DISPATCH(), ( start + i ));
    CALL_End(GET_DISPATCH(), ());
 }
@@ -91,7 +91,7 @@ static void _tnl_draw_range_elements( GLcontext *ctx, GLenum mode,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct tnl_prim prim;
    FLUSH_CURRENT( ctx, 0 );
-   
+
    _tnl_vb_bind_arrays( ctx, 0, max_index );
 
    tnl->vb.Primitive = &prim;
@@ -116,10 +116,10 @@ _tnl_DrawArrays(GLenum mode, GLint start, GLsizei count)
    GET_CURRENT_CONTEXT(ctx);
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint thresh = (ctx->Driver.NeedFlush & FLUSH_STORED_VERTICES) ? 30 : 10;
-   
+
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(NULL, "_tnl_DrawArrays %d %d\n", start, count); 
-   
+      _mesa_debug(NULL, "_tnl_DrawArrays %d %d\n", start, count);
+
    /* Check arguments, etc.
     */
    if (!_mesa_validate_DrawArrays( ctx, mode, start, count ))
@@ -132,10 +132,10 @@ _tnl_DrawArrays(GLenum mode, GLint start, GLsizei count)
        * using the immediate interface).
       */
       fallback_drawarrays( ctx, mode, start, count );
-   } 
+   }
    else if (start >= (GLint) ctx->Array.LockFirst &&
 	    start + count <= (GLint)(ctx->Array.LockFirst + ctx->Array.LockCount)) {
-      
+
       struct tnl_prim prim;
 
       /* Locked primitives which can fit in a single vertex buffer:
@@ -144,7 +144,7 @@ _tnl_DrawArrays(GLenum mode, GLint start, GLsizei count)
 
       /* Locked drawarrays.  Reuse any previously transformed data.
        */
-      _tnl_vb_bind_arrays( ctx, ctx->Array.LockFirst, 
+      _tnl_vb_bind_arrays( ctx, ctx->Array.LockFirst,
 			   ctx->Array.LockFirst + ctx->Array.LockCount );
 
       tnl->vb.Primitive = &prim;
@@ -154,7 +154,7 @@ _tnl_DrawArrays(GLenum mode, GLint start, GLsizei count)
       tnl->vb.PrimitiveCount = 1;
 
       tnl->Driver.RunPipeline( ctx );
-   } 
+   }
    else {
       int bufsz = 256;		/* Use a small buffer for cache goodness */
       int j, nr;
@@ -205,7 +205,7 @@ _tnl_DrawArrays(GLenum mode, GLint start, GLsizei count)
       default:
 	 /* Primitives requiring a copied vertex (fan-like primitives)
 	  * must use the slow path if they cannot fit in a single
-	  * vertex buffer.  
+	  * vertex buffer.
 	  */
 	 if (count <= (GLint) ctx->Const.MaxArrayLockSize) {
 	    bufsz = ctx->Const.MaxArrayLockSize;
@@ -265,7 +265,7 @@ _tnl_DrawRangeElements(GLenum mode,
    GLuint *ui_indices;
 
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(NULL, "_tnl_DrawRangeElements %d %d %d\n", start, end, count); 
+      _mesa_debug(NULL, "_tnl_DrawRangeElements %d %d %d\n", start, end, count);
 
    if (ctx->Array.ElementArrayBufferObj->Name) {
       /* use indices in the buffer object */
@@ -297,7 +297,7 @@ _tnl_DrawRangeElements(GLenum mode,
        * at the whole locked range.
        */
 
-      if (start == 0 && ctx->Array.LockFirst == 0 && 
+      if (start == 0 && ctx->Array.LockFirst == 0 &&
 	  end < (ctx->Array.LockFirst + ctx->Array.LockCount))
 	 _tnl_draw_range_elements( ctx, mode,
 				   ctx->Array.LockCount,
@@ -332,7 +332,7 @@ _tnl_DrawElements(GLenum mode, GLsizei count, GLenum type,
    GLuint *ui_indices;
 
    if (MESA_VERBOSE & VERBOSE_API)
-      _mesa_debug(NULL, "_tnl_DrawElements %d\n", count); 
+      _mesa_debug(NULL, "_tnl_DrawElements %d\n", count);
 
    /* Check arguments, etc. */
    if (!_mesa_validate_DrawElements( ctx, mode, count, type, indices ))
@@ -395,7 +395,7 @@ void _tnl_array_init( GLcontext *ctx )
    /* Setup vector pointers that will be used to bind arrays to VB's.
     */
    _mesa_vector4f_init( &tmp->Obj, 0, NULL);
-   _mesa_vector4f_init( &tmp->Normal, 0, NULL);   
+   _mesa_vector4f_init( &tmp->Normal, 0, NULL);
    _mesa_vector4f_init( &tmp->FogCoord, 0, NULL);
    _mesa_vector4f_init( &tmp->Index, 0, NULL);
 

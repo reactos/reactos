@@ -31,7 +31,7 @@ typedef struct
 
 	BOOL	started;
 	int		runlen;
-	
+
 	int		blippos;
 	int		bliplen;
 

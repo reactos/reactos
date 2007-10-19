@@ -21,11 +21,11 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- * 
+ *
  * TODO:
  *   - ComboBox_[GS]etMinVisible()
  *   - CB_GETMINVISIBLE, CB_SETMINVISIBLE
@@ -434,7 +434,7 @@ static void CBCalcPlacement(
   /* don't allow negative window width */
     if (lprEdit->right < lprEdit->left)
         lprEdit->right = lprEdit->left;
-        
+
   TRACE("\ttext\t= (%ld,%ld-%ld,%ld)\n",
 	lprEdit->left, lprEdit->top, lprEdit->right, lprEdit->bottom);
 

@@ -393,7 +393,7 @@
         error = CFF_Err_Invalid_File_Format;
         goto Exit;
       }
-        
+
       sub = cff->subfonts[fd_index];
     }
 

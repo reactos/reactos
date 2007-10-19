@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON "&Riavvio", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Preparazione connessioni di rete..."
     IDS_APPLYINGCOMPUTERSETTINGS "Attivazione delle impostazioni del computer..."
@@ -38,7 +38,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS sta avviandosi..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon non ha potuto avviare l'ambiente utente!"
 END

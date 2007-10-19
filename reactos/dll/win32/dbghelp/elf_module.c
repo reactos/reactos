@@ -110,7 +110,7 @@ struct thunk_area
  *
  * creating an internal hash table to ease use ELF symtab information lookup
  */
-static void elf_hash_symtab(const struct module* module, struct pool* pool, 
+static void elf_hash_symtab(const struct module* module, struct pool* pool,
                             struct hash_table* ht_symtab, const char* map_addr,
                             const Elf32_Shdr* symtab, const Elf32_Shdr* strtab,
                             unsigned num_areas, struct thunk_area* thunks)
@@ -197,7 +197,7 @@ static void elf_hash_symtab(const struct module* module, struct pool* pool,
  *
  * lookup a symbol by name in our internal hash table for the symtab
  */
-static const Elf32_Sym* elf_lookup_symtab(const struct module* module,        
+static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
                                           const struct hash_table* ht_symtab,
                                           const char* name, struct symt* compiland)
 {
@@ -209,7 +209,7 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
     const char*                 compiland_basename;
     const char*                 base;
 
-    /* we need weak match up (at least) when symbols of same name, 
+    /* we need weak match up (at least) when symbols of same name,
      * defined several times in different compilation units,
      * are merged in a single one (hence a different filename for c.u.)
      */
@@ -221,7 +221,7 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
         if (!compiland_basename++) compiland_basename = compiland_name;
     }
     else compiland_name = compiland_basename = NULL;
-    
+
     hash_table_iter_init(ht_symtab, &hti, name);
     while ((ste = hash_table_iter_up(&hti)))
     {
@@ -241,7 +241,7 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
         }
         if (result)
         {
-            FIXME("Already found symbol %s (%s) in symtab %s @%08x and %s @%08x\n", 
+            FIXME("Already found symbol %s (%s) in symtab %s @%08x and %s @%08x\n",
                   name, compiland_name, result->filename, result->symp->st_value,
                   ste->filename, ste->symp->st_value);
         }
@@ -253,7 +253,7 @@ static const Elf32_Sym* elf_lookup_symtab(const struct module* module,
     }
     if (!result && !(result = weak_result))
     {
-        FIXME("Couldn't find symbol %s.%s in symtab\n", 
+        FIXME("Couldn't find symbol %s.%s in symtab\n",
               module->module.ModuleName, name);
         return NULL;
     }
@@ -285,7 +285,7 @@ static void elf_finish_stabs_info(struct module* module, struct hash_table* symt
             {
                 break;
             }
-            symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name, 
+            symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name,
                                      ((struct symt_function*)sym)->container);
             if (symp)
             {
@@ -301,7 +301,7 @@ static void elf_finish_stabs_info(struct module* module, struct hash_table* symt
             case DataIsFileStatic:
                 if (((struct symt_data*)sym)->u.address != module->elf_info->elf_addr)
                     break;
-                symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name, 
+                symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name,
                                          ((struct symt_data*)sym)->container);
                 if (symp)
                 {
@@ -347,18 +347,18 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
         /* FIXME: this is not a good idea anyway... we are creating several
          * compiland objects for a same compilation unit
          * We try to cache the last compiland used, but it's not enough
-         * (we should here only create compilands if they are not yet 
+         * (we should here only create compilands if they are not yet
          *  defined)
          */
         if (!compiland_name || compiland_name != ste->filename)
-            compiland = symt_new_compiland(module, 
+            compiland = symt_new_compiland(module,
                                            compiland_name = ste->filename);
 
         addr = module->elf_info->elf_addr + ste->symp->st_value;
 
         for (j = 0; j < num_areas; j++)
         {
-            if (ste->symp->st_value >= thunks[j].rva_start && 
+            if (ste->symp->st_value >= thunks[j].rva_start &&
                 ste->symp->st_value < thunks[j].rva_end)
                 break;
         }
@@ -373,7 +373,7 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
 
             idx = symt_find_nearest(module, addr);
             if (idx != -1)
-                symt_get_info(&module->addr_sorttab[idx]->symt, 
+                symt_get_info(&module->addr_sorttab[idx]->symt,
                               TI_GET_ADDRESS, &ref_addr);
             if (idx == -1 || addr != ref_addr)
             {
@@ -412,12 +412,12 @@ static int elf_new_wine_thunks(struct module* module, struct hash_table* ht_symt
 
                 /* If none of symbols has a correct size, we consider they are both markers
                  * Hence, we can silence this warning
-                 * Also, we check that we don't have two symbols, one local, the other 
+                 * Also, we check that we don't have two symbols, one local, the other
                  * global which is legal
                  */
-                if ((xsize || ste->symp->st_size) && 
+                if ((xsize || ste->symp->st_size) &&
                     (kind == (ELF32_ST_BIND(ste->symp->st_info) == STB_LOCAL) ? DataIsFileStatic : DataIsGlobal))
-                    FIXME("Duplicate in %s: %s<%08lx-%08x> %s<%s-%08lx>\n", 
+                    FIXME("Duplicate in %s: %s<%08lx-%08x> %s<%s-%08lx>\n",
                           module->module.ModuleName,
                           ste->ht_elt.name, addr, ste->symp->st_size,
                           module->addr_sorttab[idx]->hash_elt.name,
@@ -452,16 +452,16 @@ static int elf_new_public_symbols(struct module* module, struct hash_table* symt
         /* FIXME: this is not a good idea anyway... we are creating several
          * compiland objects for a same compilation unit
          * We try to cache the last compiland used, but it's not enough
-         * (we should here only create compilands if they are not yet 
+         * (we should here only create compilands if they are not yet
          *  defined)
          */
         if (!compiland_name || compiland_name != ste->filename)
-            compiland = symt_new_compiland(module, 
+            compiland = symt_new_compiland(module,
                                            compiland_name = ste->filename);
 
         symt_new_public(module, compiland, ste->ht_elt.name,
                         module->elf_info->elf_addr + ste->symp->st_value,
-                        ste->symp->st_size, TRUE /* FIXME */, 
+                        ste->symp->st_size, TRUE /* FIXME */,
                         ELF32_ST_TYPE(ste->symp->st_info) == STT_FUNC);
     }
     return TRUE;
@@ -610,7 +610,7 @@ static BOOL elf_load_debug_info_from_file(
     const char*	        shstrtab;
     int	       	        i;
     int                 symtab_sect, dynsym_sect, stab_sect, stabstr_sect, debug_sect, debuglink_sect;
-    struct thunk_area   thunks[] = 
+    struct thunk_area   thunks[] =
     {
         {"__wine_spec_import_thunks",           THUNK_ORDINAL_NOTYPE, 0, 0},    /* inter DLL calls */
         {"__wine_spec_delayed_import_loaders",  THUNK_ORDINAL_LOAD,   0, 0},    /* delayed inter DLL calls */
@@ -683,7 +683,7 @@ static BOOL elf_load_debug_info_from_file(
     if (symtab_sect == -1)
     {
         /* if we don't have a symtab but a dynsym, process the dynsym
-         * section instead. It'll contain less (relevant) information, 
+         * section instead. It'll contain less (relevant) information,
          * but it'll be better than nothing
          */
         if (dynsym_sect == -1) goto leave;
@@ -693,7 +693,7 @@ static BOOL elf_load_debug_info_from_file(
     module->module.SymType = SymExport;
 
     /* create a hash table for the symtab */
-    elf_hash_symtab(module, pool, ht_symtab, addr, 
+    elf_hash_symtab(module, pool, ht_symtab, addr,
                     spnt + symtab_sect, spnt + spnt[symtab_sect].sh_link,
                     sizeof(thunks) / sizeof(thunks[0]), thunks);
 
@@ -737,7 +737,7 @@ static BOOL elf_load_debug_info_from_file(
     {
         /* add the thunks for native libraries */
         if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
-            elf_new_wine_thunks(module, ht_symtab, 
+            elf_new_wine_thunks(module, ht_symtab,
                                 sizeof(thunks) / sizeof(thunks[0]), thunks);
     }
     /* add all the public symbols from symtab */
@@ -775,7 +775,7 @@ BOOL elf_load_debug_info(struct module* module)
 
 /******************************************************************
  *		is_dt_flag_valid
- * returns true iff the section tag is valid 
+ * returns true iff the section tag is valid
  */
 static unsigned is_dt_flag_valid(unsigned d_tag)
 {
@@ -898,11 +898,11 @@ static BOOL elf_load_file(struct process* pcs, const char* filename,
 
     if (elf_info->flags & ELF_INFO_MODULE)
     {
-        struct elf_module_info *elf_module_info = 
+        struct elf_module_info *elf_module_info =
             HeapAlloc(GetProcessHeap(), 0, sizeof(struct elf_module_info));
         if (!elf_module_info) goto leave;
-        elf_info->module = module_new(pcs, filename, DMT_ELF, 
-                                        (load_offset) ? load_offset : start, 
+        elf_info->module = module_new(pcs, filename, DMT_ELF,
+                                        (load_offset) ? load_offset : start,
                                         size, 0, 0);
         if (!elf_info->module)
         {
@@ -947,7 +947,7 @@ static BOOL elf_load_file_from_path(HANDLE hProcess,
     if (!path) return FALSE;
 
     paths = strcpy(HeapAlloc(GetProcessHeap(), 0, strlen(path) + 1), path);
-    for (s = paths; s && *s; s = (t) ? (t+1) : NULL) 
+    for (s = paths; s && *s; s = (t) ? (t+1) : NULL)
     {
 	t = strchr(s, ':');
 	if (t) *t = '\0';
@@ -961,7 +961,7 @@ static BOOL elf_load_file_from_path(HANDLE hProcess,
 	if (ret) break;
 	s = (t) ? (t+1) : NULL;
     }
-    
+
     HeapFree(GetProcessHeap(), 0, paths);
     return ret;
 }
@@ -972,7 +972,7 @@ static BOOL elf_load_file_from_path(HANDLE hProcess,
  * lookup a file in standard ELF locations, and if found, load it
  */
 static BOOL elf_search_and_load_file(struct process* pcs, const char* filename,
-                                     unsigned long load_offset, 
+                                     unsigned long load_offset,
                                      struct elf_info* elf_info)
 {
     BOOL                ret = FALSE;
@@ -991,14 +991,14 @@ static BOOL elf_search_and_load_file(struct process* pcs, const char* filename,
     /* if relative pathname, try some absolute base dirs */
     if (!ret && !strchr(filename, '/'))
     {
-        ret = elf_load_file_from_path(pcs, filename, load_offset, 
+        ret = elf_load_file_from_path(pcs, filename, load_offset,
                                       getenv("PATH"), elf_info) ||
             elf_load_file_from_path(pcs, filename, load_offset,
                                     getenv("LD_LIBRARY_PATH"), elf_info) ||
             elf_load_file_from_path(pcs, filename, load_offset,
                                     getenv("WINEDLLPATH"), elf_info);
     }
-    
+
     return ret;
 }
 
@@ -1020,7 +1020,7 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
     struct module*      module;
 
     if (!pcs->dbg_hdr_addr ||
-        !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr, 
+        !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
                            &dbg_hdr, sizeof(dbg_hdr), NULL))
         return FALSE;
 
@@ -1042,7 +1042,7 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
 
 	if (lm.l_prev != NULL && /* skip first entry, normally debuggee itself */
 	    lm.l_name != NULL &&
-	    ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL)) 
+	    ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
         {
 	    bufstr[sizeof(bufstr) - 1] = '\0';
             elf_search_and_load_file(pcs, bufstr, (unsigned long)lm.l_addr,
@@ -1052,7 +1052,7 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
 
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (module->type == DMT_ELF && !module->elf_info->elf_mark && 
+        if (module->type == DMT_ELF && !module->elf_info->elf_mark &&
             !module->elf_info->elf_loader)
         {
             module_remove(pcs, module);
@@ -1082,7 +1082,7 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
      */
     if ((ptr = getenv("WINELOADER")))
         ret = elf_search_and_load_file(pcs, ptr, 0, &elf_info);
-    else 
+    else
     {
         ret = elf_search_and_load_file(pcs, "wine-kthread", 0, &elf_info) ||
             elf_search_and_load_file(pcs, "wine-pthread", 0, &elf_info);
@@ -1131,7 +1131,7 @@ struct module*  elf_load_module(struct process* pcs, const char* name)
 
         if (lm.l_prev != NULL && /* skip first entry, normally debuggee itself */
             lm.l_name != NULL &&
-            ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL)) 
+            ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
         {
             bufstr[sizeof(bufstr) - 1] = '\0';
             /* memcmp is needed for matches when bufstr contains also version information

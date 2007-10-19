@@ -546,10 +546,10 @@ NtUserGetKeyboardState(
 {
    BOOL Result = TRUE;
    DECLARE_RETURN(DWORD);
-   
+
    DPRINT("Enter NtUserGetKeyboardState\n");
    UserEnterShared();
-   
+
    if (lpKeyState)
    {
       if(!NT_SUCCESS(MmCopyToCaller(lpKeyState, gQueueKeyStateTable, 256)))
@@ -557,7 +557,7 @@ NtUserGetKeyboardState(
    }
 
    RETURN(Result);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserGetKeyboardState, ret=%i\n",_ret_);
    UserLeave();
@@ -570,7 +570,7 @@ NtUserSetKeyboardState(LPBYTE lpKeyState)
 {
    BOOL Result = TRUE;
    DECLARE_RETURN(DWORD);
-   
+
    DPRINT("Enter NtUserSetKeyboardState\n");
    UserEnterExclusive();
 
@@ -579,7 +579,7 @@ NtUserSetKeyboardState(LPBYTE lpKeyState)
       if(! NT_SUCCESS(MmCopyFromCaller(gQueueKeyStateTable, lpKeyState, 256)))
          Result = FALSE;
    }
-   
+
    RETURN(Result);
 
 CLEANUP:
@@ -704,21 +704,21 @@ NtUserMapVirtualKeyEx( UINT Code, UINT Type, DWORD keyboardId, HKL dwhkl )
 {
    PKBDTABLES keyLayout;
    DECLARE_RETURN(UINT);
-   
+
    DPRINT("Enter NtUserMapVirtualKeyEx\n");
    UserEnterExclusive();
-   
+
    keyLayout = PsGetCurrentThreadWin32Thread() ? PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0;
 
    if( !keyLayout )
       RETURN(0);
 
    RETURN(IntMapVirtualKeyEx( Code, Type, keyLayout ));
-   
+
 CLEANUP:
    DPRINT("Leave NtUserMapVirtualKeyEx, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;   
+   END_CLEANUP;
 }
 
 
@@ -737,7 +737,7 @@ NtUserToUnicodeEx(
    PWCHAR OutPwszBuff = 0;
    int ret = 0;
    DECLARE_RETURN(int);
-   
+
    DPRINT("Enter NtUserSetKeyboardState\n");
    UserEnterShared();//faxme: this syscall doesnt seem to need any locking...
 
@@ -769,11 +769,11 @@ NtUserToUnicodeEx(
    ExFreePool(OutPwszBuff);
 
    RETURN(ret);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserSetKeyboardState, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;   
+   END_CLEANUP;
 }
 
 static int W32kSimpleToupper( int ch )
@@ -796,10 +796,10 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    PKBDTABLES keyLayout;
    VSC_LPWSTR *KeyNames;
    DECLARE_RETURN(DWORD);
-   
+
    DPRINT("Enter NtUserGetKeyNameText\n");
    UserEnterShared();
-   
+
    keyLayout = PsGetCurrentThreadWin32Thread() ?
       PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0;
 
@@ -864,7 +864,7 @@ NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize )
    }
 
    RETURN(ret);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserGetKeyNameText, ret=%i\n",_ret_);
    UserLeave();
@@ -898,7 +898,7 @@ W32kKeyProcessMessage(LPMSG Msg,
         { VK_UP,     VK_NUMPAD8 },
         { VK_PRIOR,  VK_NUMPAD9 },
         { 0,0 } };
-   PVSC_VK VscVkTable = NULL; 
+   PVSC_VK VscVkTable = NULL;
 
    if( !KeyboardLayout || !Msg ||
          (Msg->message != WM_KEYDOWN && Msg->message != WM_SYSKEYDOWN &&

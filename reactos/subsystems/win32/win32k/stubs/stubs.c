@@ -1305,7 +1305,7 @@ NtGdiCLIPOBJ_ppoGetPath(CLIPOBJ *ClipObj)
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 NtGdiEnableEudc(BOOL enable)
 {
@@ -1446,7 +1446,7 @@ NtGdiEngTransparentBlt(IN SURFOBJ *Dest,
 /*
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngTextOut(SURFOBJ *pso,
                 STROBJ *pstro,
                 FONTOBJ *pfo,
@@ -1492,7 +1492,7 @@ NtGdiEngDeletePalette(IN HPALETTE Palette)
 /*
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngStrokeAndFillPath(SURFOBJ *pso,
                           PATHOBJ *ppo,
                           CLIPOBJ *pco,
@@ -1564,7 +1564,7 @@ NtGdiEngFillPath(SURFOBJ *pso,
     return FALSE;
 }
 
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngGradientFill(SURFOBJ *psoDest,
                      CLIPOBJ *pco,
                      XLATEOBJ *pxlo,
@@ -1599,7 +1599,7 @@ NtGdiEngLineTo(SURFOBJ *Surface,
 /*
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngMarkBandingSurface(HSURF hsurf)
 {
     UNIMPLEMENTED;
@@ -1624,7 +1624,7 @@ NtGdiEngPaint(IN SURFOBJ *Surface,
 /*
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngPlgBlt(SURFOBJ *psoTrg,
                SURFOBJ *psoSrc,
                SURFOBJ *psoMsk,
@@ -1644,7 +1644,7 @@ NtGdiEngPlgBlt(SURFOBJ *psoTrg,
 /*
  * @unimplemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngStretchBltROP(SURFOBJ *psoDest,
                       SURFOBJ *psoSrc,
                       SURFOBJ *psoMask,
@@ -1936,7 +1936,7 @@ NtGdiFONTOBJ_pfdg(IN FONTOBJ *pfo)
  * @unimplemented
  */
 PVOID
-STDCALL 
+STDCALL
 NtGdiFONTOBJ_pvTrueTypeFontFile(
     IN FONTOBJ *pfo,
     OUT ULONG *pcjFile
@@ -2397,7 +2397,7 @@ NtGdiEnumFontOpen(
  * @unimplemented
  */
 BOOL
-STDCALL 
+STDCALL
 NtGdiEudcLoadUnloadLink(
     IN OPTIONAL LPCWSTR pBaseFaceName,
     IN UINT cwcBaseFaceName,
@@ -2648,9 +2648,9 @@ NtGdiQueryFonts( OUT PUNIVERSAL_FONT_ID pufiFontList,
  */
 INT
 STDCALL
-NtGdiGetSpoolMessage( DWORD u1, 
-                      DWORD u2, 
-                      DWORD u3, 
+NtGdiGetSpoolMessage( DWORD u1,
+                      DWORD u2,
+                      DWORD u3,
                       DWORD u4)
 {
     /* FIXME the prototypes */
@@ -2737,7 +2737,7 @@ NtGdiGetMonitorID(
  /*
  * @unimplemented
  */
-BOOL 
+BOOL
 NtGdiGetRealizationInfo(
     IN HDC hdc,
     OUT PREALIZATION_INFO pri,
@@ -2856,7 +2856,7 @@ NtGdiQueryFontAssocInfo(
  /*
  * @unimplemented
  */
-DWORD 
+DWORD
 NtGdiGetFontUnicodeRanges(
     IN HDC hdc,
     OUT OPTIONAL LPGLYPHSET pgs)
@@ -2869,7 +2869,7 @@ NtGdiGetFontUnicodeRanges(
  * @unimplemented
  */
 UINT
-STDCALL  
+STDCALL
 NtGdiGetStringBitmapW(
     IN HDC hdc,
     IN LPWSTR pwsz,
@@ -3274,7 +3274,7 @@ NtGdiGetUFIPathname(
  * @unimplemented
  */
 ULONG
-STDCALL 
+STDCALL
 NtGdiGetEmbedFonts(
     VOID)
 {
@@ -3286,7 +3286,7 @@ NtGdiGetEmbedFonts(
  * @unimplemented
  */
 BOOL
-STDCALL 
+STDCALL
 NtGdiChangeGhostFont(
     IN KERNEL_PVOID *pfontID,
     IN BOOL bLoad)
@@ -3299,7 +3299,7 @@ NtGdiChangeGhostFont(
  * @unimplemented
  */
 BOOL
-STDCALL 
+STDCALL
 NtGdiAddEmbFontToDC(
     IN HDC hdc,
     IN VOID **pFontID)
@@ -3456,7 +3456,7 @@ NtGdiSelectFont(
  * @unimplemented
  */
 HPEN
-STDCALL 
+STDCALL
 NtGdiSelectPen(
     IN HDC hdc,
     IN HPEN hpen)
@@ -3536,7 +3536,7 @@ NtGdiSetMagicColors(
  * @unimplemented
  */
 LONG
-STDCALL 
+STDCALL
 NtGdiGetDeviceWidth(
     IN HDC hdc)
 {

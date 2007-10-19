@@ -779,7 +779,7 @@ void key_event(int scancode, int pressed)
     return;
   rdpkey = scancode;
   ext = 0;
-  
+
   // Keyboard LEDS
   if ((scancode == SCANCODE_CAPSLOCK) && pressed)
   {
@@ -797,7 +797,7 @@ void key_event(int scancode, int pressed)
      numlock = !numlock;
      setled(LED_NUM, numlock);
   }
-     
+
   switch (scancode)
   {
     case SCANCODE_CURSORBLOCKUP:    rdpkey = 0xc8; ext = KBD_FLAG_EXT; break; // up arrow
@@ -825,7 +825,7 @@ void key_event(int scancode, int pressed)
         ext = KBD_FLAG_EXT;
         rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYPRESS | ext, 0x46, 0);
         rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYPRESS | ext, 0xc6, 0);
-      }    
+      }
       rdpkey = 0;
     }
     case SCANCODE_SCROLLLOCK:       rdpkey = 0x46; break; // scroll lock
@@ -847,7 +847,7 @@ void key_event(int scancode, int pressed)
     rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYPRESS | ext, rdpkey, 0);
   else
     rdp_send_input(0, RDP_INPUT_SCANCODE, RDP_KEYRELEASE | ext, rdpkey, 0);
-  
+
 
 }
 

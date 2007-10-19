@@ -109,7 +109,7 @@ HalpAssignDrive(IN PUNICODE_STRING PartitionName,
         PartitionName);
 
     if (hKey &&
-        DriveType == DOSDEVICE_DRIVE_FIXED && 
+        DriveType == DOSDEVICE_DRIVE_FIXED &&
         Signature)
     {
         DiskMountInfo.Signature = Signature;
@@ -190,7 +190,7 @@ xHalpGetRDiskCount(VOID)
                 DPRINT("Count %x\n", Count);
                 DirectoryInfo[Count].Name.Buffer[DirectoryInfo[Count].Name.Length / sizeof(WCHAR)] = 0;
                 ArcNameBuffer = DirectoryInfo[Count].Name.Buffer;
-                if (DirectoryInfo[Count].Name.Length >= sizeof(L"multi(0)disk(0)rdisk(0)") - sizeof(WCHAR) && 
+                if (DirectoryInfo[Count].Name.Length >= sizeof(L"multi(0)disk(0)rdisk(0)") - sizeof(WCHAR) &&
                     !_wcsnicmp(ArcNameBuffer, L"multi(0)disk(0)rdisk(", (sizeof(L"multi(0)disk(0)rdisk(") - sizeof(WCHAR)) / sizeof(WCHAR)))
                 {
                     DPRINT("%S\n", ArcNameBuffer);
@@ -448,9 +448,9 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
     Status = ZwOpenKey(&hKey,
         KEY_ALL_ACCESS,
         &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) 
+    if (!NT_SUCCESS(Status))
     {
-        Status = ZwCreateKey(&hKey, 
+        Status = ZwCreateKey(&hKey,
             KEY_ALL_ACCESS,
             &ObjectAttributes,
             0,
@@ -527,7 +527,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             LayoutArray[i] = NULL;
             continue;
         }
-        /* We don't use the RewritePartition value while mounting the disks. 
+        /* We don't use the RewritePartition value while mounting the disks.
         * We use this value for marking pre-assigned (registry) partitions.
         */
         for (j = 0; j < LayoutArray[i]->PartitionCount; j++)
@@ -575,11 +575,11 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                 PartialInformation,
                 sizeof(KEY_VALUE_PARTIAL_INFORMATION) + sizeof(REG_DISK_MOUNT_INFO),
                 &Length);
-            if (NT_SUCCESS(Status) && 
+            if (NT_SUCCESS(Status) &&
                 PartialInformation->Type == REG_BINARY &&
                 PartialInformation->DataLength == sizeof(REG_DISK_MOUNT_INFO))
             {
-                DPRINT("%wZ => %08x:%08x%08x\n", &UnicodeString1, DiskMountInfo->Signature, 
+                DPRINT("%wZ => %08x:%08x%08x\n", &UnicodeString1, DiskMountInfo->Signature,
                     DiskMountInfo->StartingOffset.u.HighPart, DiskMountInfo->StartingOffset.u.LowPart);
                 {
                     BOOLEAN Found = FALSE;
@@ -1475,12 +1475,12 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             PartitionType = PartitionDescriptor->PartitionType;
 
             /* Print debug messages */
-            DPRINT("Partition Entry %d,%d: type %#x %s\n", 
+            DPRINT("Partition Entry %d,%d: type %#x %s\n",
                     j,
                     Entry,
                     PartitionType,
                     (PartitionDescriptor->ActiveFlag) ? "Active" : "");
-            DPRINT("\tOffset %#08lx for %#08lx Sectors\n", 
+            DPRINT("\tOffset %#08lx for %#08lx Sectors\n",
                     GET_STARTING_SECTOR(PartitionDescriptor),
                     GET_PARTITION_LENGTH(PartitionDescriptor));
 

@@ -232,7 +232,7 @@ BOOL WINAPI OleStrToStrNAW (LPVOID lpOut, INT nOut, LPCVOID lpIn, INT nIn)
  *  length of actual string
  *
  * NOTES
- *  Not really sure if this function returns actually a value at all. 
+ *  Not really sure if this function returns actually a value at all.
  */
 DWORD WINAPI CheckEscapesA(
 	LPSTR	string,         /* [I/O]   string to check ??*/

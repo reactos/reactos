@@ -1,4 +1,4 @@
-/* 
+/*
  * limits.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -80,7 +80,7 @@
 #define ULONG_MAX	0xffffffffUL
 
 #ifndef __STRICT_ANSI__
-/* POSIX wants this.  */ 
+/* POSIX wants this.  */
 #define SSIZE_MAX LONG_MAX
 #endif
 

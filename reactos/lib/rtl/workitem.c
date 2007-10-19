@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Work Item implementation
  * FILE:              lib/rtl/workitem.c
- * PROGRAMMER:        
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

@@ -68,7 +68,7 @@ struct SysKeyboardImpl
         CRITICAL_SECTION                crit;
 };
 
-static SysKeyboardImpl* current_lock = NULL; 
+static SysKeyboardImpl* current_lock = NULL;
 /* Today's acquired device
  * FIXME: currently this can be only one.
  * Maybe this should be a linked list or st.
@@ -102,7 +102,7 @@ LRESULT CALLBACK KeyboardCallback( int code, WPARAM wparam, LPARAM lparam )
 
   /** returns now if not HC_ACTION */
   if (code != HC_ACTION) return CallNextHookEx(keyboard_hook, code, wparam, lparam);
-  
+
   {
     dik_code = hook->scanCode;
     if (hook->flags & LLKHF_EXTENDED) dik_code |= 0x80;
@@ -116,31 +116,31 @@ LRESULT CALLBACK KeyboardCallback( int code, WPARAM wparam, LPARAM lparam )
 
   DInputKeyState[dik_code] = new_diks;
   TRACE(" setting %02X to %02X\n", dik_code, DInputKeyState[dik_code]);
-      
+
   if (current_lock != NULL) {
     if (current_lock->hEvent) SetEvent(current_lock->hEvent);
-    
+
     if (current_lock->buffer != NULL) {
       int n;
-      
+
       EnterCriticalSection(&(current_lock->crit));
-      
+
       n = (current_lock->start + current_lock->count) % current_lock->buffersize;
-      
+
       current_lock->buffer[n].dwOfs = dik_code;
       current_lock->buffer[n].dwData = down ? 0x80 : 0;
       current_lock->buffer[n].dwTimeStamp = timestamp;
       current_lock->buffer[n].dwSequence = current_lock->dinput->evsequence++;
-      
+
       TRACE("Adding event at offset %d : %ld - %ld - %ld - %ld\n", n,
 	    current_lock->buffer[n].dwOfs, current_lock->buffer[n].dwData, current_lock->buffer[n].dwTimeStamp, current_lock->buffer[n].dwSequence);
-      
+
       if (current_lock->count == current_lock->buffersize) {
 	current_lock->start = ++current_lock->start % current_lock->buffersize;
 	current_lock->overflow = TRUE;
       } else
 	current_lock->count++;
-      
+
       LeaveCriticalSection(&(current_lock->crit));
     }
   }
@@ -157,11 +157,11 @@ static GUID DInput_Wine_Keyboard_GUID = { /* 0ab8648a-7735-11d2-8c73-71df54a9644
 static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD version) {
     DWORD dwSize;
     DIDEVICEINSTANCEA ddi;
-    
+
     dwSize = lpddi->dwSize;
 
     TRACE("%ld %p\n", dwSize, lpddi);
-    
+
     memset(lpddi, 0, dwSize);
     memset(&ddi, 0, sizeof(ddi));
 
@@ -181,14 +181,14 @@ static void fill_keyboard_dideviceinstanceA(LPDIDEVICEINSTANCEA lpddi, DWORD ver
 static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD version) {
     DWORD dwSize;
     DIDEVICEINSTANCEW ddi;
-    
+
     dwSize = lpddi->dwSize;
 
     TRACE("%ld %p\n", dwSize, lpddi);
-    
+
     memset(lpddi, 0, dwSize);
     memset(&ddi, 0, sizeof(ddi));
- 
+
     ddi.dwSize = dwSize;
     ddi.guidInstance = GUID_SysKeyboard;/* DInput's GUID */
     ddi.guidProduct = DInput_Wine_Keyboard_GUID; /* Vendor's GUID */
@@ -201,7 +201,7 @@ static void fill_keyboard_dideviceinstanceW(LPDIDEVICEINSTANCEW lpddi, DWORD ver
 
     memcpy(lpddi, &ddi, (dwSize < sizeof(ddi) ? dwSize : sizeof(ddi)));
 }
- 
+
 static BOOL keyboarddev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEINSTANCEA lpddi, DWORD version, int id)
 {
   if (id != 0)
@@ -211,9 +211,9 @@ static BOOL keyboarddev_enum_deviceA(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEI
       ((dwDevType == DIDEVTYPE_KEYBOARD) && (version < 0x0800)) ||
       (((dwDevType == DI8DEVCLASS_KEYBOARD) || (dwDevType == DI8DEVTYPE_KEYBOARD)) && (version >= 0x0800))) {
     TRACE("Enumerating the Keyboard device\n");
- 
+
     fill_keyboard_dideviceinstanceA(lpddi, version);
-    
+
     return TRUE;
   }
 
@@ -231,7 +231,7 @@ static BOOL keyboarddev_enum_deviceW(DWORD dwDevType, DWORD dwFlags, LPDIDEVICEI
     TRACE("Enumerating the Keyboard device\n");
 
     fill_keyboard_dideviceinstanceW(lpddi, version);
-    
+
     return TRUE;
   }
 
@@ -315,7 +315,7 @@ static ULONG WINAPI SysKeyboardAImpl_Release(LPDIRECTINPUTDEVICE8A iface)
 	if (ref)
 		return ref;
 
-	EnterCriticalSection(&keyboard_crit);	
+	EnterCriticalSection(&keyboard_crit);
 	kbd_users = InterlockedDecrement(&keyboard_users);
 	if (0 == kbd_users) {
 	    UnhookWindowsHookEx( keyboard_hook );
@@ -417,7 +417,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetDeviceState(
 	    }
 	}
     }
-    
+
     memcpy(ptr, DInputKeyState, WINE_DINPUT_KEYBOARD_MAX_KEYS);
     LeaveCriticalSection(&(This->crit));
 
@@ -493,7 +493,7 @@ static HRESULT WINAPI SysKeyboardAImpl_EnumObjects(
     SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
     DIDEVICEOBJECTINSTANCEA ddoi;
     int i;
-    
+
     TRACE("(this=%p,%p,%p,%08lx)\n", This, lpCallback, lpvRef, dwFlags);
     if (TRACE_ON(dinput)) {
         TRACE("  - flags = ");
@@ -514,7 +514,7 @@ static HRESULT WINAPI SysKeyboardAImpl_EnumObjects(
 	_dump_OBJECTINSTANCEA(&ddoi);
 	if (lpCallback(&ddoi, lpvRef) != DIENUM_CONTINUE) return DI_OK;
     }
-    
+
     return DI_OK;
 }
 
@@ -550,7 +550,7 @@ static HRESULT WINAPI SysKeyboardAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
 	  FIXME("Not more than one keyboard can be acquired at the same time.\n");
 	  SysKeyboardAImpl_Unacquire(iface);
 	}
-	
+
         current_lock = This;
 
         if (This->buffersize > 0) {
@@ -619,7 +619,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetCapabilities(
         WARN("invalid parameter\n");
         return DIERR_INVALIDPARAM;
     }
-    
+
     devcaps.dwSize = lpDIDevCaps->dwSize;
     devcaps.dwFlags = DIDC_ATTACHED;
     if (This->dinput->dwVersion >= 0x0800)
@@ -636,7 +636,7 @@ static HRESULT WINAPI SysKeyboardAImpl_GetCapabilities(
     devcaps.dwFFDriverVersion = 0;
 
     memcpy(lpDIDevCaps, &devcaps, lpDIDevCaps->dwSize);
-    
+
     return DI_OK;
 }
 
@@ -654,7 +654,7 @@ SysKeyboardAImpl_GetObjectInfo(
     SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
     DIDEVICEOBJECTINSTANCEA ddoi;
     DWORD dwSize = pdidoi->dwSize;
-    
+
     TRACE("(this=%p,%p,%ld,0x%08lx)\n", This, pdidoi, dwObj, dwHow);
 
     if (dwHow == DIPH_BYID) {
@@ -673,7 +673,7 @@ SysKeyboardAImpl_GetObjectInfo(
 
     /* And return our just filled device object instance structure */
     memcpy(pdidoi, &ddoi, (dwSize < sizeof(ddoi) ? dwSize : sizeof(ddoi)));
-    
+
     _dump_OBJECTINSTANCEA(pdidoi);
 
     return DI_OK;
@@ -687,7 +687,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface
     SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
     DIDEVICEOBJECTINSTANCEW ddoi;
     DWORD dwSize = pdidoi->dwSize;
-    
+
     TRACE("(this=%p,%p,%ld,0x%08lx)\n", This, pdidoi, dwObj, dwHow);
 
     if (dwHow == DIPH_BYID) {
@@ -706,7 +706,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface
 
     /* And return our just filled device object instance structure */
     memcpy(pdidoi, &ddoi, (dwSize < sizeof(ddoi) ? dwSize : sizeof(ddoi)));
-    
+
     _dump_OBJECTINSTANCEW(pdidoi);
 
     return DI_OK;
@@ -728,11 +728,11 @@ static HRESULT WINAPI SysKeyboardAImpl_GetDeviceInfo(
     }
 
     fill_keyboard_dideviceinstanceA(pdidi, This->dinput->dwVersion);
-    
+
     return DI_OK;
 }
 
-static HRESULT WINAPI SysKeyboardWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface, LPDIDEVICEINSTANCEW pdidi) 
+static HRESULT WINAPI SysKeyboardWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface, LPDIDEVICEINSTANCEW pdidi)
 {
     SysKeyboardImpl *This = (SysKeyboardImpl *)iface;
     TRACE("(this=%p,%p)\n", This, pdidi);
@@ -743,7 +743,7 @@ static HRESULT WINAPI SysKeyboardWImpl_GetDeviceInfo(LPDIRECTINPUTDEVICE8W iface
     }
 
     fill_keyboard_dideviceinstanceW(pdidi, This->dinput->dwVersion);
-    
+
     return DI_OK;
 }
 

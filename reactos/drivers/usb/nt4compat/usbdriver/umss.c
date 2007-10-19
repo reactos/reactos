@@ -1923,7 +1923,7 @@ Routine Description:
     Wrapper for handling worker thread callbacks, it is importent to
     lock the dev from being deleted by calling usb_query_and_lock_dev
     and in umss_worker, call the usb_unlock_dev to release the ref
-    count. One exception is that the umss_if_disconnect call this 
+    count. One exception is that the umss_if_disconnect call this
     function to delete the device object that is still held by some
     others, and deferred deletion is required.
 

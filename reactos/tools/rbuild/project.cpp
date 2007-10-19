@@ -292,7 +292,7 @@ Project::WriteConfigurationFile ()
 	buf = (char*) malloc ( 10*1024 );
 	if ( buf == NULL )
 		throw OutOfMemoryException ();
-	
+
 	s = buf;
 	s = s + sprintf ( s, "/* Automatically generated. " );
 	s = s + sprintf ( s, "Edit config.xml to change configuration */\n" );
@@ -367,20 +367,20 @@ Project::ProcessXML ( const string& path )
 		ParseContext parseContext;
 		ProcessXMLSubElement ( *node->subElements[i], path, parseContext );
 	}
-	
+
 	non_if_data.ProcessXML ();
 
 	non_if_data.ExtractModules( modules );
 
 	for ( i = 0; i < non_if_data.ifs.size (); i++ )
 	{
-		const Property *property = 
+		const Property *property =
 		    LookupProperty( non_if_data.ifs[i]->property );
 
 		if( !property ) continue;
 
-		bool conditionTrue = 
-			(non_if_data.ifs[i]->negated && 
+		bool conditionTrue =
+			(non_if_data.ifs[i]->negated &&
 			 (property->value != non_if_data.ifs[i]->value)) ||
 			(property->value == non_if_data.ifs[i]->value);
 		if ( conditionTrue )
@@ -410,7 +410,7 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 {
 	bool subs_invalid = false;
 	If* pOldIf = parseContext.ifData;
-	
+
 	string subpath(path);
 	if ( e.name == "module" )
 	{

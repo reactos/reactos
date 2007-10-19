@@ -18,11 +18,11 @@ char* convert_path(char* origpath)
 {
   char* newpath;
   int i;
-   
+
   //newpath = (char *)strdup(origpath);
 	newpath=malloc(strlen(origpath)+1);
 	strcpy(newpath,origpath);
-   
+
   i = 0;
   while (newpath[i] != 0)
     {
@@ -37,8 +37,8 @@ char* convert_path(char* origpath)
         {
           newpath[i] = '\\';
         }
-#endif	
-#endif	
+#endif
+#endif
       i++;
     }
   return(newpath);

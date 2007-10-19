@@ -124,7 +124,7 @@ ParseVCProjectSwitch (
 			temp = string (&switchStart[3]);
 			if ( temp.find ("configuration") != string::npos )
 				configuration.UseConfigurationInPath = true;
-			
+
 			if ( temp.find ("version") != string::npos )
 				configuration.UseVSVersionInPath = true;
 			break;
@@ -241,7 +241,7 @@ ParseArguments ( int argc, char** argv )
 {
 	if ( argc < 2 )
 		return false;
-	
+
 	for ( int i = 1; i < argc; i++ )
 	{
 		if ( argv[i][0] == '-' )
@@ -252,7 +252,7 @@ ParseArguments ( int argc, char** argv )
 		else
 			BuildSystem = argv[i];
 	}
-	
+
 	return true;
 }
 

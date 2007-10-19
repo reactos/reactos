@@ -29,7 +29,7 @@
  *                  Eric Kohl
  *                  Ge van Geldorp
  *                  Royce Mitchell III
- *                  Aleksey Bragin 
+ *                  Aleksey Bragin
  *                  Jason Filby
  *                  Thomas Weidenmueller
  *                  Gunnar Andre' Dalsnes

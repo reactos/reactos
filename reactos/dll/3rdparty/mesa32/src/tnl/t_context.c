@@ -97,9 +97,9 @@ _tnl_CreateContext( GLcontext *ctx )
    _tnl_array_init( ctx );
    _tnl_vtx_init( ctx );
 
-   if (ctx->_MaintainTnlProgram) 
+   if (ctx->_MaintainTnlProgram)
       _tnl_install_pipeline( ctx, _tnl_vp_pipeline );
-   else 
+   else
       _tnl_install_pipeline( ctx, _tnl_default_pipeline );
 
    /* Initialize the arrayelt helper
@@ -181,13 +181,13 @@ _tnl_InvalidateState( GLcontext *ctx, GLuint new_state )
    else {
       tnl->render_inputs |= (_TNL_BIT_POS|_TNL_BIT_INDEX);
    }
-    
+
    if (ctx->Fog.Enabled ||
        (ctx->FragmentProgram._Active &&
         ctx->FragmentProgram._Current->FogOption != GL_NONE))
       tnl->render_inputs |= _TNL_BIT_FOG;
 
-   if (ctx->Polygon.FrontMode != GL_FILL || 
+   if (ctx->Polygon.FrontMode != GL_FILL ||
        ctx->Polygon.BackMode != GL_FILL)
       tnl->render_inputs |= _TNL_BIT_EDGEFLAG;
 
@@ -221,7 +221,7 @@ _tnl_wakeup_exec( GLcontext *ctx )
    _tnl_InvalidateState( ctx, ~0 );
 
    if (ctx->Light.ColorMaterialEnabled) {
-      _mesa_update_color_material( ctx, 
+      _mesa_update_color_material( ctx,
 				   ctx->Current.Attrib[VERT_ATTRIB_COLOR0] );
    }
 }

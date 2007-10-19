@@ -782,7 +782,7 @@ HRESULT WINAPI SHCreateDefaultContextMenu(
       pcm = ISvItemCm_Constructor( pdcm->psf, pdcm->pidlFolder, pdcm->apidl, pdcm->cidl );
    else
       pcm = ISvBgCm_Constructor( pdcm->psf, TRUE );
-        
+
    hr = S_OK;
    *ppv = pcm;
 

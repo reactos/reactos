@@ -32,7 +32,7 @@ BEGIN
     LTEXT           "ReactOS 的开发人员就以下的自由软件项目表示感谢。"\
                     "在建立 ReactOS 时使用了其中的代码 :",
                     IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "ReactOS 是基于GPL协议发布的，因此如果您需要再用或重新发布 ReactOS "\
                     "(或部分)必须遵循GPL许可。",
@@ -146,7 +146,7 @@ STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU 通用公共许可证"
 FONT 9, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
                     ES_READONLY | WS_VSCROLL
     DEFPUSHBUTTON   "确定",IDOK,141,209,50,14
 END

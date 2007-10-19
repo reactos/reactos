@@ -25,7 +25,7 @@ typedef struct _ITS_Control_Data
 
 } ITS_Control_Data, *PITS_Control_Data;
 
-typedef enum ECompactionLev { 
+typedef enum ECompactionLev {
     COMPACT_DATA = 0,
     COMPACT_DATA_AND_PATH
 } ECompactionLev;
@@ -46,7 +46,7 @@ interface IITStorage : IUnknown
     HRESULT StgCreateDocfileOnILockBytes(
         [in] ILockBytes * plkbyt,
         [in] DWORD grfMode,
-        [in] DWORD reserved, 
+        [in] DWORD reserved,
         [out] IStorage ** ppstgOpen);
 
 
@@ -80,7 +80,7 @@ interface IITStorage : IUnknown
 
     HRESULT SetControlData(
         [in] PITS_Control_Data pControlData);
-    
+
     HRESULT DefaultControlData(
         [out] PITS_Control_Data * ppControlData);
 

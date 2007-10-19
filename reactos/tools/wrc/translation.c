@@ -299,7 +299,7 @@ static int compare_control(control_t *control1, control_t *control2) {
 	if(!different && strcmp(nameid, get_nameid_str(control2->ctlclass)))
 		different = 1;
 	free(nameid);
-	if(!different && 
+	if(!different &&
 	   (control1->id != control2->id))
 		different = 1;
 	if(!different && control1->gotstyle && control2->gotstyle) {

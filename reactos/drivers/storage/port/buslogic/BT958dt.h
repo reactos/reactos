@@ -1,10 +1,10 @@
 /*
- * vmscsi-- Miniport driver for the Buslogic BT 958 SCSI Controller 
+ * vmscsi-- Miniport driver for the Buslogic BT 958 SCSI Controller
  *          under Windows 2000/XP/Server 2003
  *
  *          Based in parts on the buslogic driver for the same device
  *          available with the GNU Linux Operating System.
- *          
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -35,67 +35,67 @@ DEFINE_GUID(BT958ExtendedSetupInfoGuid_GUID, \
 
 typedef struct _BT958ExtendedSetupInfo
 {
-    // 
+    //
     UCHAR BusType;
     #define BT958ExtendedSetupInfo_BusType_SIZE sizeof(UCHAR)
     #define BT958ExtendedSetupInfo_BusType_ID 1
 
-    // 
+    //
     UCHAR BIOS_Address;
     #define BT958ExtendedSetupInfo_BIOS_Address_SIZE sizeof(UCHAR)
     #define BT958ExtendedSetupInfo_BIOS_Address_ID 2
 
-    // 
+    //
     USHORT ScatterGatherLimit;
     #define BT958ExtendedSetupInfo_ScatterGatherLimit_SIZE sizeof(USHORT)
     #define BT958ExtendedSetupInfo_ScatterGatherLimit_ID 3
 
-    // 
+    //
     UCHAR MailboxCount;
     #define BT958ExtendedSetupInfo_MailboxCount_SIZE sizeof(UCHAR)
     #define BT958ExtendedSetupInfo_MailboxCount_ID 4
 
-    // 
+    //
     ULONG BaseMailboxAddress;
     #define BT958ExtendedSetupInfo_BaseMailboxAddress_SIZE sizeof(ULONG)
     #define BT958ExtendedSetupInfo_BaseMailboxAddress_ID 5
 
-    // 
+    //
     BOOLEAN FastOnEISA;
     #define BT958ExtendedSetupInfo_FastOnEISA_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_FastOnEISA_ID 6
 
-    // 
+    //
     BOOLEAN LevelSensitiveInterrupt;
     #define BT958ExtendedSetupInfo_LevelSensitiveInterrupt_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_LevelSensitiveInterrupt_ID 7
 
-    // 
+    //
     UCHAR FirmwareRevision[3];
     #define BT958ExtendedSetupInfo_FirmwareRevision_SIZE sizeof(UCHAR[3])
     #define BT958ExtendedSetupInfo_FirmwareRevision_ID 8
 
-    // 
+    //
     BOOLEAN HostWideSCSI;
     #define BT958ExtendedSetupInfo_HostWideSCSI_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_HostWideSCSI_ID 9
 
-    // 
+    //
     BOOLEAN HostDifferentialSCSI;
     #define BT958ExtendedSetupInfo_HostDifferentialSCSI_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_HostDifferentialSCSI_ID 10
 
-    // 
+    //
     BOOLEAN HostSupportsSCAM;
     #define BT958ExtendedSetupInfo_HostSupportsSCAM_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_HostSupportsSCAM_ID 11
 
-    // 
+    //
     BOOLEAN HostUltraSCSI;
     #define BT958ExtendedSetupInfo_HostUltraSCSI_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_HostUltraSCSI_ID 12
 
-    // 
+    //
     BOOLEAN HostSmartTermination;
     #define BT958ExtendedSetupInfo_HostSmartTermination_SIZE sizeof(BOOLEAN)
     #define BT958ExtendedSetupInfo_HostSmartTermination_ID 13

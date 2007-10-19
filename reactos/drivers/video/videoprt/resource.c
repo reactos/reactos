@@ -596,7 +596,7 @@ VideoPortVerifyAccessRanges(
    DPRINT("VideoPortVerifyAccessRanges\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
-   
+
    /* Create the resource list */
    ResourceListSize = sizeof(CM_RESOURCE_LIST)
       + (NumAccessRanges - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
@@ -606,7 +606,7 @@ VideoPortVerifyAccessRanges(
       DPRINT("ExAllocatePool() failed\n");
       return ERROR_INVALID_PARAMETER;
    }
-   
+
    /* Fill resource list */
    ResourceList->Count = 1;
    ResourceList->List[0].InterfaceType = DeviceExtension->AdapterInterfaceType;
@@ -639,7 +639,7 @@ VideoPortVerifyAccessRanges(
       if (AccessRanges->RangePassive & VIDEO_RANGE_10_BIT_DECODE)
          PartialDescriptor->Flags |= CM_RESOURCE_PORT_10_BIT_DECODE;
    }
-   
+
    /* Try to acquire all resource ranges */
    Status = IoReportResourceForDetection(
       DeviceExtension->DriverObject,
@@ -648,7 +648,7 @@ VideoPortVerifyAccessRanges(
       ResourceList, ResourceListSize,
       &ConflictDetected);
    ExFreePool(ResourceList);
-   
+
    if (!NT_SUCCESS(Status) || ConflictDetected)
       return ERROR_INVALID_PARAMETER;
    else

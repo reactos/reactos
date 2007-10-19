@@ -137,7 +137,7 @@ static int compKeyword(const void *m1, const void *m2){
 
 /*
 ** This function looks up an identifier to determine if it is a
-** keyword.  If it is a keyword, the token code of that keyword is 
+** keyword.  If it is a keyword, the token code of that keyword is
 ** returned.  If the input is not a keyword, TK_ID is returned.
 */
 static int sqliteKeywordCode(const WCHAR *z, int n){

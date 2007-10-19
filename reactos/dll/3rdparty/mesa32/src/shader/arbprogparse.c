@@ -628,7 +628,7 @@ parse_string_without_adding (GLubyte ** inst, struct arb_program *Program)
 {
    GLubyte *i = *inst;
    (void) Program;
-   
+
    *inst += _mesa_strlen ((char *) i) + 1;
 
    return (char *) i;
@@ -688,10 +688,10 @@ parse_integer (GLubyte ** inst, struct arb_program *Program)
 }
 
 /**
-  Accumulate this string of digits, and return them as 
+  Accumulate this string of digits, and return them as
   a large integer represented in floating point (for range).
   If scale is not NULL, also accumulates a power-of-ten
-  integer scale factor that represents the number of digits 
+  integer scale factor that represents the number of digits
   in the string.
 */
 static GLdouble
@@ -735,7 +735,7 @@ parse_float (GLubyte ** inst, struct arb_program *Program)
 
    whole = parse_float_string(inst, Program, 0);
    fraction = parse_float_string(inst, Program, &fracScale);
-   
+
    /* Parse signed exponent */
    exponent = parse_integer(inst, Program);   /* This is the exponent */
 
@@ -1607,7 +1607,7 @@ parse_result_binding (GLcontext * ctx, GLubyte ** inst, GLuint * binding,
       case FRAGMENT_RESULT_COLOR:
          /* for frag programs, this is FRAGMENT_RESULT_COLOR */
          if (Program->Base.Target == GL_FRAGMENT_PROGRAM_ARB) {
-            /* This gets result of the color buffer we're supposed to 
+            /* This gets result of the color buffer we're supposed to
              * draw into
              */
             parse_output_color_num(ctx, inst, Program, &out_color);
@@ -2692,13 +2692,13 @@ parse_fp_vector_src_reg (GLcontext * ctx, GLubyte ** inst,
 }
 
 
-static GLuint 
+static GLuint
 parse_fp_dst_reg(GLcontext * ctx, GLubyte ** inst,
 		 struct var_cache **vc_head, struct arb_program *Program,
 		 struct fp_dst_register *reg )
 {
    GLint file, idx, mask;
-   
+
    if (parse_masked_dst_reg (ctx, inst, vc_head, Program, &file, &idx, &mask))
       return 1;
 
@@ -3121,7 +3121,7 @@ parse_fp_instruction (GLcontext * ctx, GLubyte ** inst,
    return 0;
 }
 
-static GLuint 
+static GLuint
 parse_vp_dst_reg(GLcontext * ctx, GLubyte ** inst,
 		 struct var_cache **vc_head, struct arb_program *Program,
 		 struct vp_dst_register *reg )

@@ -43,7 +43,7 @@ CreateDIBPatternBrush(
    PBITMAPINFO pConvertedInfo;
    UINT ConvertedInfoSize;
 
-   lpPackedDIB = GlobalLock(hglbDIBPacked); 
+   lpPackedDIB = GlobalLock(hglbDIBPacked);
    if (lpPackedDIB == NULL)
       return 0;
 
@@ -56,7 +56,7 @@ CreateDIBPatternBrush(
       if ((PBITMAPINFO)lpPackedDIB != pConvertedInfo)
          RtlFreeHeap(RtlGetProcessHeap(), 0, pConvertedInfo);
    }
-   
+
    GlobalUnlock(hglbDIBPacked);
 
    return hBrush;
@@ -145,14 +145,14 @@ CreateBrushIndirect(
          break;
 
       case BS_PATTERN:
-         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch, 
-                                                  FALSE, 
+         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch,
+                                                  FALSE,
                                                   FALSE);
          break;
 
       case BS_PATTERN8X8:
-         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch, 
-                                                  FALSE, 
+         hBrush = NtGdiCreatePatternBrushInternal((HBITMAP)LogBrush->lbHatch,
+                                                  FALSE,
                                                   TRUE);
          break;
 
@@ -161,11 +161,11 @@ CreateBrushIndirect(
          break;
 
       case BS_HATCHED:
-         hBrush = NtGdiCreateHatchBrushInternal(LogBrush->lbHatch, 
-                                                LogBrush->lbColor, 
+         hBrush = NtGdiCreateHatchBrushInternal(LogBrush->lbHatch,
+                                                LogBrush->lbColor,
                                                 FALSE);
          break;
-         
+
       case BS_NULL:
          hBrush = NtGdiGetStockObject(NULL_BRUSH);
          break;

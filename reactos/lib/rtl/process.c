@@ -213,11 +213,11 @@ RtlCreateUserProcess(IN PUNICODE_STRING ImageFileName,
 
     /* Use us as parent if none other specified */
     if (!ParentProcess) ParentProcess = NtCurrentProcess();
-    
+
     /* Initialize the Object Attributes */
-    InitializeObjectAttributes(&ObjectAttributes, 
-                               NULL, 
-                               0, 
+    InitializeObjectAttributes(&ObjectAttributes,
+                               NULL,
+                               0,
                                NULL,
                                ProcessSecurityDescriptor);
 

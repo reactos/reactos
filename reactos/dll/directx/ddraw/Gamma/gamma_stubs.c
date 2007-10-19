@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/gamma/gamma_stubs.c
- * PURPOSE:              IDirectDrawGamma Implementation 
+ * PURPOSE:              IDirectDrawGamma Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -12,27 +12,27 @@
 
 ULONG WINAPI
 DirectDrawGammaControl_AddRef( LPDIRECTDRAWGAMMACONTROL iface)
-{         
+{
   DX_WINDBG_trace();
 
-   DX_STUB;  
+   DX_STUB;
 }
 
 ULONG WINAPI
 DirectDrawGammaControl_Release( LPDIRECTDRAWGAMMACONTROL iface)
-{    
+{
     LPDDRAWI_DDGAMMACONTROL_INT This = (LPDDRAWI_DDGAMMACONTROL_INT)iface;
 
     DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
+    /* FIXME
+       This is not right exiame how it should be done
      */
     DX_STUB_str("FIXME This is not right exiame how it should be done\n");
     return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI
-DirectDrawGammaControl_QueryInterface( LPDIRECTDRAWGAMMACONTROL iface, 
+DirectDrawGammaControl_QueryInterface( LPDIRECTDRAWGAMMACONTROL iface,
                                        REFIID riid,
                                        LPVOID *ppObj)
 {
@@ -41,21 +41,21 @@ DirectDrawGammaControl_QueryInterface( LPDIRECTDRAWGAMMACONTROL iface,
 }
 
 HRESULT WINAPI
-DirectDrawGammaControl_GetGammaRamp( LPDIRECTDRAWGAMMACONTROL iface, 
-                                     DWORD dwFlags, 
+DirectDrawGammaControl_GetGammaRamp( LPDIRECTDRAWGAMMACONTROL iface,
+                                     DWORD dwFlags,
                                      LPDDGAMMARAMP lpGammaRamp)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI
-DirectDrawGammaControl_SetGammaRamp( LPDIRECTDRAWGAMMACONTROL iface, 
-                                     DWORD dwFlags, 
+DirectDrawGammaControl_SetGammaRamp( LPDIRECTDRAWGAMMACONTROL iface,
+                                     DWORD dwFlags,
                                      LPDDGAMMARAMP lpGammaRamp)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 IDirectDrawGammaControlVtbl DirectDrawGammaControl_Vtable =

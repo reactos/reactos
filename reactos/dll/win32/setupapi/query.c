@@ -114,7 +114,7 @@ BOOL WINAPI SetupGetInfInformationA(LPCVOID InfSpec, DWORD SearchControl,
 
 /***********************************************************************
  *      SetupGetInfInformationW    (SETUPAPI.@)
- * 
+ *
  * BUGS
  *   Only handles the case when InfSpec is an INF handle.
  */
@@ -240,7 +240,7 @@ BOOL WINAPI SetupQueryInfFileInformationA(PSP_INF_INFORMATION InfInformation,
  */
 BOOL WINAPI SetupQueryInfFileInformationW(PSP_INF_INFORMATION InfInformation,
                                           UINT InfIndex, PWSTR ReturnBuffer,
-                                          DWORD ReturnBufferSize, PDWORD RequiredSize) 
+                                          DWORD ReturnBufferSize, PDWORD RequiredSize)
 {
     DWORD len;
     LPWSTR ptr;

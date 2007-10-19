@@ -662,7 +662,7 @@ VideoPortInitialize(
    }
 
    /* add no PNP bus here, add more bus type if it needed */
-   
+
    if ( (HwInitializationData->AdapterInterfaceType == InterfaceTypeUndefined) ||
         (HwInitializationData->AdapterInterfaceType == Internal) )
 

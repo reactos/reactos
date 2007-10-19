@@ -12,7 +12,7 @@ _tcscpy:
  mov  0x10(%esp), %esi
  cld
 
-.L1:	
+.L1:
  _tlods
  _tstos
  test %_treg(a), %_treg(a)

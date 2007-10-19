@@ -96,10 +96,10 @@ BRUSH_GetObject (PGDIBRUSHOBJ BrushObject, INT Count, LPLOGBRUSH Buffer)
     }
     else if ((BrushObject->flAttrs & GDIBRUSH_IS_DIB)!=0)
     {
-        Buffer->lbStyle = BS_DIBPATTERN; 
+        Buffer->lbStyle = BS_DIBPATTERN;
     }
 
-    /* FIXME 
+    /* FIXME
     else if ((BrushObject->flAttrs & )!=0)
     {
         Buffer->lbStyle = BS_INDEXED;
@@ -534,7 +534,7 @@ NtGdiCreateDIBBrush(
       Status = _SEH_GetExceptionCode();
    }
    _SEH_END;
-   
+
    if (!NT_SUCCESS(Status))
    {
       EngFreeMem(SafeBitmapInfoAndData);

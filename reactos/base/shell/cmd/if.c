@@ -75,10 +75,10 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		/* find the whole path to the file */
 		for(i = 0; i < _tcslen(param); i++)
 		{
-			if(param[i] == _T('\"')) 
+			if(param[i] == _T('\"'))
 				bInside = !bInside;
 			if((param[i] == _T(' ')) && !bInside)
-			{					
+			{
 				break;
 			}
 			pp++;
@@ -95,10 +95,10 @@ INT cmd_if (LPTSTR cmd, LPTSTR param)
 		}
 
 		if (*pp)
-		{			
+		{
 			WIN32_FIND_DATA f;
 			HANDLE hFind;
-			
+
 			hFind = FindFirstFile (param, &f);
 			x_flag ^= (hFind == INVALID_HANDLE_VALUE) ? 0 : X_EXEC;
 			if (hFind != INVALID_HANDLE_VALUE)

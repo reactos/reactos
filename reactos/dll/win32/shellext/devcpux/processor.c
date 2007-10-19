@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Shell Extensions
  * LICENSE:     LGPL - See COPYING in the top level directory
  * FILE:        dll\win32\shellext\devcpux\processor.c
- * PURPOSE:     
+ * PURPOSE:
  * COPYRIGHT:   Copyright 2007 Christoph von Wittich <Christoph_vW@ReactOS.org>
  *
  */
@@ -56,7 +56,7 @@ PropSheetExtProc(PSP_PROPSHEETPAGE_REQUEST PropPageRequest, LPFNADDPROPSHEETPAGE
 	hPropSheetPage = CreatePropertySheetPage(&PropSheetPage);
 	if(!hPropSheetPage)
 		return FALSE;
-	
+
 	if(!(fAddFunc)(hPropSheetPage, lParam)) {
 		DestroyPropertySheetPage (hPropSheetPage);
 		return FALSE;

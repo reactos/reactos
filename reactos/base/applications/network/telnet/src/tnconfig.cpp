@@ -410,7 +410,7 @@ void TConfig::print_vars(char *s) {
 		printit("\n");
 		return;
 	}
-	
+
 	// Print out the vars in the given group
 	int count = 0;
 	for(j = 0; j < MAX_INI_VARS; j++) {
@@ -486,7 +486,7 @@ int TConfig::print_value(const char *var) {
 			printit(var_name);
 			printit("\t");
 			Result = Result / 8 + 8;
-			
+
 			switch(ini_varlist[j].data_type) {
             case INI_STRING:
 				printit((char *)ini_varlist[j].ini_data);
@@ -527,7 +527,7 @@ void TConfig::init_vars() {
 }
 
 void TConfig::inifile_init() {
-	// B. K. Oxley 9/16/98	
+	// B. K. Oxley 9/16/98
 	char* env_telnet_ini = getenv (ENV_TELNET_INI);
 	if (env_telnet_ini && *env_telnet_ini) {
 		strncpy (inifile, env_telnet_ini, sizeof(inifile));
@@ -675,7 +675,7 @@ bool TConfig::Process_Params(int argc, char *argv[]) {
 			*(s++) = 0;
 			port = s;
 		}
-	}		
+	}
 	if(optind < argc)
 		port = argv[optind++];
 

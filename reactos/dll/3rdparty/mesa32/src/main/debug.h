@@ -25,7 +25,7 @@
 /**
  * \file debug.h
  * Debugging functions.
- * 
+ *
  * \if subset
  * (No-op)
  *

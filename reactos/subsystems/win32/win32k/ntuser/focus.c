@@ -63,12 +63,12 @@ co_IntSendActivateMessages(HWND hWndPrev, HWND hWnd, BOOL MouseActivate)
 {
    USER_REFERENCE_ENTRY Ref;
    PWINDOW_OBJECT Window;
-   
+
    if ((Window = UserGetWindowObject(hWnd)))
    {
-      
+
       UserRefObjectCo(Window, &Ref);
-      
+
       /* Send palette messages */
       if (co_IntPostOrSendMessage(hWnd, WM_QUERYNEWPALETTE, 0, 0))
       {
@@ -239,7 +239,7 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
             UserRefObjectCo(TopWnd, &Ref);
             Ret = co_IntMouseActivateWindow(TopWnd);
             UserDerefObjectCo(TopWnd);
-            
+
             return Ret;
          }
       }
@@ -252,9 +252,9 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
 
    /* TMN: Check return valud from this function? */
    UserRefObjectCo(TopWindow, &Ref);
-   
+
    co_IntSetForegroundAndFocusWindow(TopWindow, Window, TRUE);
-   
+
    UserDerefObjectCo(TopWindow);
 
    return TRUE;
@@ -332,7 +332,7 @@ co_IntSetFocusWindow(PWINDOW_OBJECT Window OPTIONAL)
    else
    {
       ThreadQueue->FocusWindow = 0;
- 
+
       co_IntSendKillFocusMessages(hWndPrev, 0);
    }
    return hWndPrev;
@@ -582,7 +582,7 @@ NtUserSetFocus(HWND hWnd)
       UserRefObjectCo(Window, &Ref);
       ret = co_UserSetFocus(Window);
       UserDerefObjectCo(Window);
-   
+
       RETURN(ret);
    }
    else

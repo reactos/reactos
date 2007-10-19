@@ -2140,7 +2140,7 @@ typedef struct
 /*************************************************************************
  *      @	[SHLWAPI.208]
  *
- * Initialize an FDSA arrary. 
+ * Initialize an FDSA arrary.
  */
 BOOL WINAPI FDSA_Initialize(DWORD block_size, DWORD inc, FDSA_info *info, void *mem,
                             DWORD init_blocks)
@@ -2152,7 +2152,7 @@ BOOL WINAPI FDSA_Initialize(DWORD block_size, DWORD inc, FDSA_info *info, void *
 
     if(mem)
         memset(mem, 0, block_size * init_blocks);
-    
+
     info->num_items = 0;
     info->inc = inc;
     info->mem = mem;
@@ -4195,7 +4195,7 @@ DWORD WINAPI SHGetShellKey(DWORD a, DWORD b, DWORD c)
 /***********************************************************************
  *		SHQueueUserWorkItem (SHLWAPI.@)
  */
-BOOL WINAPI SHQueueUserWorkItem(LPTHREAD_START_ROUTINE pfnCallback, 
+BOOL WINAPI SHQueueUserWorkItem(LPTHREAD_START_ROUTINE pfnCallback,
         LPVOID pContext, LONG lPriority, DWORD_PTR dwTag,
         DWORD_PTR *pdwId, LPCSTR pszModule, DWORD dwFlags)
 {
@@ -4297,7 +4297,7 @@ DWORD WINAPI GetUIVersion(void)
 /***********************************************************************
  *              ShellMessageBoxWrapW [SHLWAPI.388]
  *
- * loads a string resource for a module, displays the string in a 
+ * loads a string resource for a module, displays the string in a
  * message box and writes it into the logfile
  *
  * PARAMS
@@ -4408,7 +4408,7 @@ PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(PSHELL_USER_PERMISSION *a
         BOOL ret = TRUE;
 
         if (!memcmp((void*)sid, (void*)&null_sid, sizeof(SHELL_USER_SID)))
-        {  /* current user's SID */ 
+        {  /* current user's SID */
             if (!cur_user)
             {
                 HANDLE Token;
@@ -4460,14 +4460,14 @@ PSECURITY_DESCRIPTOR WINAPI GetShellSecurityDescriptor(PSHELL_USER_PERMISSION *a
                 case ACCESS_ALLOWED_ACE_TYPE:
                     if (!AddAccessAllowedAce(pAcl, ACL_REVISION, sup->dwAccessMask, sid))
                         goto error;
-                    if (sup->fInherit && !AddAccessAllowedAceEx(pAcl, ACL_REVISION, 
+                    if (sup->fInherit && !AddAccessAllowedAceEx(pAcl, ACL_REVISION,
                                 (BYTE)sup->dwInheritMask, sup->dwInheritAccessMask, sid))
                         goto error;
                     break;
                 case ACCESS_DENIED_ACE_TYPE:
                     if (!AddAccessDeniedAce(pAcl, ACL_REVISION, sup->dwAccessMask, sid))
                         goto error;
-                    if (sup->fInherit && !AddAccessDeniedAceEx(pAcl, ACL_REVISION, 
+                    if (sup->fInherit && !AddAccessDeniedAceEx(pAcl, ACL_REVISION,
                                 (BYTE)sup->dwInheritMask, sup->dwInheritAccessMask, sid))
                         goto error;
                     break;

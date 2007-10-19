@@ -5,8 +5,8 @@ VOID RecursiveMutexInit( PRECURSIVE_MUTEX RecMutex ) {
     RtlZeroMemory( RecMutex, sizeof(*RecMutex) );
     KeInitializeSpinLock( &RecMutex->SpinLock );
     ExInitializeFastMutex( &RecMutex->Mutex );
-    KeInitializeEvent( &RecMutex->StateLockedEvent, 
-		       NotificationEvent, FALSE );    
+    KeInitializeEvent( &RecMutex->StateLockedEvent,
+		       NotificationEvent, FALSE );
 }
 
 /* NOTE: When we leave, the FAST_MUTEX must have been released.  The result
@@ -21,7 +21,7 @@ SIZE_T RecursiveMutexEnter( PRECURSIVE_MUTEX RecMutex, BOOLEAN ToWrite ) {
 
     if( !RecMutex ) return FALSE;
 
-    if( CurrentThread == RecMutex->CurrentThread || 
+    if( CurrentThread == RecMutex->CurrentThread ||
 	(!ToWrite && !RecMutex->Writer) ) {
 	RecMutex->LockCount++;
 	return TRUE;
@@ -75,7 +75,7 @@ VOID RecursiveMutexLeave( PRECURSIVE_MUTEX RecMutex ) {
 	}
 
 	RecMutex->OldIrql = PASSIVE_LEVEL;
-	KePulseEvent( &RecMutex->StateLockedEvent, IO_NETWORK_INCREMENT, 
+	KePulseEvent( &RecMutex->StateLockedEvent, IO_NETWORK_INCREMENT,
 		      FALSE );
     }
 }

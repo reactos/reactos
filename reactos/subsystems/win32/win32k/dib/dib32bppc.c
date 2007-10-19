@@ -1,4 +1,4 @@
-/* 
+/*
  *  ReactOS W32 Subsystem
  *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 2004, 2005, 2006 ReactOS Team
  *
@@ -30,7 +30,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     PDWORD addr = (PDWORD)byteaddr + x1;
     LONG cx = x1;
 
-    while(cx < x2) 
+    while(cx < x2)
     {
         *addr = (DWORD)c;
         ++addr;
@@ -38,7 +38,7 @@ DIB_32BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
     }
 }
 
-BOOLEAN 
+BOOLEAN
 DIB_32BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
     ULONG DestY;

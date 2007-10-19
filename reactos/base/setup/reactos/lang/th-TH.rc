@@ -20,7 +20,7 @@
 LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "การติดตั้ง ReactOS"
     IDS_TEXT     "คุณไม่สามารถติดตั้ง ReactOS จากการอ่านแผ่นซีดีนี้ได้โดยตรง\n\nกรุณาเปิดเครื่องคอมพิวเตอร์ของคุณใหม่อีกครั้ง\n\nพร้อมใส่แผ่นซีดีแล้วทำตามคำสั่งในการติดตั้ง ReactOS"

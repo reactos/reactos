@@ -832,7 +832,7 @@ VOID TCPRemoveIRP( PCONNECTION_ENDPOINT Endpoint, PIRP Irp ) {
 	     Entry != ListHead[i];
 	     Entry = Entry->Flink ) {
 	    Bucket = CONTAINING_RECORD( Entry, TDI_BUCKET, Entry );
-	    
+
 	    if( Bucket->Request.RequestContext == Irp ) {
 		RemoveEntryList( &Bucket->Entry );
 		break;

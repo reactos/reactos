@@ -49,7 +49,7 @@ public:
     virtual int		canPlayAndRecord( void );
     virtual int		createHandle( int handle );
     virtual void	beginOutput( ServiceMode, int handle );
-    virtual void	endOutput( void ); 
+    virtual void	endOutput( void );
     virtual void	discardRecording( int handle );
     virtual void	playRecording( int handle );
 };

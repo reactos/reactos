@@ -235,7 +235,7 @@ BOOL LoadWinTypeFromCHM(CHMInfo *pChmInfo, HH_WINTYPEW *pHHWinType)
     pHHWinType->pszJump2 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszJump2));
     pHHWinType->pszUrlJump1 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszUrlJump1));
     pHHWinType->pszUrlJump2 = strdupAtoW(GetChmString(pChmInfo, (DWORD)pHHWinType->pszUrlJump2));
-    
+
     /* FIXME: pszCustomTabs is a list of multiple zero-terminated strings so ReadString won't
      * work in this case
      */

@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            drivers/filesystems/npfs/finfo.c
  * PURPOSE:         Named pipe filesystem
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/

@@ -95,7 +95,7 @@ EditVariableDlgProc(HWND hwndDlg,
                     }
                     EndDialog(hwndDlg, 1);
                     return TRUE;
-                
+
                 case IDCANCEL:
                     EndDialog(hwndDlg, 0);
                     return TRUE;
@@ -327,9 +327,9 @@ OnNewVariable(HWND hwndDlg,
 
         if (VarData->lpCookedValue != NULL)
             GlobalFree(VarData->lpCookedValue);
-    
+
         GlobalFree(VarData);
-    } 
+    }
     else
     {
         if(VarData->lpName != NULL && (VarData->lpCookedValue || VarData->lpRawValue))
@@ -416,12 +416,12 @@ OnDeleteVariable(HWND hwndDlg,
 
                 if (VarData->lpCookedValue != NULL)
                     GlobalFree(VarData->lpCookedValue);
-                
+
                 GlobalFree(VarData);
                 lvi.lParam = 0;
             }
         }
-        
+
         (void)ListView_DeleteItem(hwndListView, iItem);
     }
 }
@@ -584,7 +584,7 @@ EnvironmentDlgProc(HWND hwndDlg,
                     return TRUE;
             }
             break;
-        
+
         case WM_NOTIFY:
         {
             NMHDR *phdr;
@@ -605,7 +605,7 @@ EnvironmentDlgProc(HWND hwndDlg,
         }
         break;
     }
-    
+
     return FALSE;
 }
 

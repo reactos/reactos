@@ -247,7 +247,7 @@ copy_conv_rgba_pixels(GLcontext *ctx, GLint srcx, GLint srcy,
          span.x = destx;
          span.y = dy;
          span.end = width;
-         _swrast_write_zoomed_rgba_span(ctx, &span, 
+         _swrast_write_zoomed_rgba_span(ctx, &span,
                                      (CONST GLchan (*)[4])span.array->rgba,
                                      desty, 0);
       }
@@ -645,7 +645,7 @@ copy_depth_pixels( GLcontext *ctx, GLint srcx, GLint srcy,
       span.end = width;
       if (ctx->Visual.rgbMode) {
          if (zoom)
-            _swrast_write_zoomed_rgba_span( ctx, &span, 
+            _swrast_write_zoomed_rgba_span( ctx, &span,
                             (const GLchan (*)[4])span.array->rgba, desty, 0 );
          else
             _swrast_write_rgba_span(ctx, &span);
@@ -773,7 +773,7 @@ _swrast_CopyPixels( GLcontext *ctx,
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
    RENDER_START(swrast,ctx);
-      
+
    if (swrast->NewState)
       _swrast_validate_derived( ctx );
 

@@ -43,7 +43,7 @@ typedef struct _CSR_PROCESS
     ULONG ShutdownLevel;
     ULONG ShutdownFlags;
     PVOID ServerData[];
-} CSR_PROCESS, *PCSR_PROCESS; 
+} CSR_PROCESS, *PCSR_PROCESS;
 
 typedef struct _CSR_THREAD
 {
@@ -57,7 +57,7 @@ typedef struct _CSR_THREAD
     ULONG Flags;
     ULONG ReferenceCount;
     ULONG ImpersonationCount;
-} CSR_THREAD, *PCSR_THREAD; 
+} CSR_THREAD, *PCSR_THREAD;
 
 /* ENUMERATIONS **************************************************************/
 #define CSR_SRV_SERVER 0
@@ -171,7 +171,7 @@ typedef struct _CSR_API_MESSAGE
         {
             PVOID CsrCaptureData;
             CSR_API_NUMBER Opcode;
-            ULONG Status; 
+            ULONG Status;
             ULONG Reserved;
             union
             {

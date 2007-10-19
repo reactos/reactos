@@ -3308,7 +3308,7 @@ HRESULT WINAPI PathCreateFromUrlW(LPCWSTR pszUrl, LPWSTR pszPath,
 
     while(*pszPath == '\\')
         pszPath++;
- 
+
     if(isalphaW(*pszPath) && pszPath[1] == '|' && pszPath[2] == '\\') /* c|\ -> c:\ */
         pszPath[1] = ':';
 

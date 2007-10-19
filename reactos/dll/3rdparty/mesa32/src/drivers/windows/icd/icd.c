@@ -156,7 +156,7 @@ WGLAPI HGLRC GLAPIENTRY DrvCreateContext(HDC hdc)
         if ( wgl_ctx[i].ctx == NULL )
         {
             wgl_ctx[i].ctx = WMesaCreateContext( hWnd, NULL, GL_TRUE,
-                pix[curPFD-1].doubleBuffered, 
+                pix[curPFD-1].doubleBuffered,
                 pix[curPFD-1].pfd.cAlphaBits ? GL_TRUE : GL_FALSE);
             if (wgl_ctx[i].ctx == NULL)
                 break;

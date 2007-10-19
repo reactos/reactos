@@ -199,7 +199,7 @@ void
 XboxSetLED(PCSTR pattern) {
 	const char *x = pattern;
 	int r, g;
-	
+
 	if(strlen(pattern) == 4) {
 		r = g = 0;
 		while (*x) {
@@ -207,7 +207,7 @@ XboxSetLED(PCSTR pattern) {
 			g *= 2;
 			switch (*x) {
 				case 'r':
-					r++; 
+					r++;
 					break;
 				case 'g':
 					g++;

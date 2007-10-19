@@ -190,12 +190,12 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     if (addr_space == 0)
     {
-        //port has been mapped to memory space  
+        //port has been mapped to memory space
         pdev_ext->ehci->port_mapped = TRUE;
         pdev_ext->ehci->port_base = (PBYTE) MmMapIoSpace(pdev_ext->ehci->ehci_reg_base,
                                                          pdev_ext->res_port.Length, FALSE);
 
-        //fatal error can not map the registers 
+        //fatal error can not map the registers
         if (pdev_ext->ehci->port_base == NULL)
         {
             release_adapter(pdev_ext->padapter);

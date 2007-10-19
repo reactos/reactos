@@ -9,32 +9,32 @@ class CAdapterSB16 :
         DECLARE_STD_UNKNOWN();
         DEFINE_STD_CONSTRUCTOR(CAdapterSB16);
         ~CAdapterSB16();
-    
+
         STDMETHODIMP_(NTSTATUS) Init(
             IN  PRESOURCELIST ResourceList,
             IN  PDEVICE_OBJECT DeviceObject);
-    
+
         STDMETHODIMP_(PINTERRUPTSYNC) GetInterruptSync(void);
-    
+
         STDMETHODIMP_(void) SetWaveMiniport(
             IN  PWAVEMINIPORTSB16 Miniport);
-    
+
         STDMETHODIMP_(BYTE) Read(void);
-    
+
         STDMETHODIMP_(BOOLEAN) Write(
             IN  BYTE Value);
-    
+
         STDMETHODIMP_(NTSTATUS) Reset(void);
-    
+
         STDMETHODIMP_(void) SetMixerValue(
             IN  BYTE Index,
             IN  BYTE Value);
-    
+
         STDMETHODIMP_(BYTE) GetMixerValue(
             IN  BYTE Index);
-    
+
         STDMETHODIMP_(void) ResetMixer(void);
-    
+
         //IMP_IAdapterPowerManagement;
 };
 

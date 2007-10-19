@@ -295,7 +295,7 @@ static BOOL WINAPI GetFileName95(FileOpenDlgInfos *fodInfos)
                                      fodInfos->ofnInfos->hwndOwner,
                                      FileOpenDlgProc95,
                                      (LPARAM) fodInfos);
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
         OleUninitialize();
 
     /* Unable to create the dialog */
@@ -531,7 +531,7 @@ BOOL  WINAPI GetFileDialog95W(LPOPENFILENAMEW ofn,UINT iDlgType)
 static BOOL COMDLG32_GetDisplayNameOf(LPCITEMIDLIST pidl, LPWSTR pwszPath) {
     LPSHELLFOLDER psfDesktop;
     STRRET strret;
-        
+
     if (FAILED(SHGetDesktopFolder(&psfDesktop)))
         return FALSE;
 
@@ -577,9 +577,9 @@ static void ArrangeCtrlPositions(HWND hwndChildDlg, HWND hwndParentDlg, BOOL hid
       However, if there is a static text component with the stc32 id, a special case happens.
       The x and y coordinates of stc32 indicate the top left corner where to place the standard file dialog box
       in the window and the cx and cy indicate how to size the window.
-      Moreover, if the new component's coordinates are on the left of the stc32 , it is placed on the left 
+      Moreover, if the new component's coordinates are on the left of the stc32 , it is placed on the left
       of the standard file dialog box. If they are above the stc32 component, it is placed above and so on....
-      
+
      */
 
     GetClientRect(hwndParentDlg, &rectParent);
@@ -897,20 +897,20 @@ static INT_PTR FILEDLG95_Handle_GetFilePath(HWND hwnd, DWORD size, LPVOID buffer
     else
     {
         LPSTR bufA = buffer;
-        total = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
+        total = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1,
                                     NULL, 0, NULL, NULL);
-        total += WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
+        total += WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed,
                                     NULL, 0, NULL, NULL);
 
         /* Prepend the current path */
-        n = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1, 
+        n = WideCharToMultiByte(CP_ACP, 0, lpstrCurrentDir, -1,
                                 bufA, size, NULL, NULL);
 
         if(n<size)
         {
             /* 'n' includes trailing \0 */
             bufA[n-1] = '\\';
-            WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed, 
+            WideCharToMultiByte(CP_ACP, 0, lpstrFileList, sizeUsed,
                                 &bufA[n], size-n, NULL, NULL);
         }
 
@@ -970,14 +970,14 @@ static INT_PTR FILEDLG95_HandleCustomDialogMessages(HWND hwnd, UINT uMsg, WPARAM
         case CDM_GETFOLDERPATH:
             TRACE("CDM_GETFOLDERPATH:\n");
             COMDLG32_GetDisplayNameOf(fodInfos->ShellInfos.pidlAbsCurrent, lpstrPath);
-            if (lParam) 
+            if (lParam)
             {
                 if (fodInfos->unicode)
                     lstrcpynW((LPWSTR)lParam, lpstrPath, (int)wParam);
                 else
-                    WideCharToMultiByte(CP_ACP, 0, lpstrPath, -1, 
+                    WideCharToMultiByte(CP_ACP, 0, lpstrPath, -1,
                                         (LPSTR)lParam, (int)wParam, NULL, NULL);
-            }        
+            }
             retval = lstrlenW(lpstrPath);
             break;
 
@@ -1922,9 +1922,9 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
       TRACE("parse now=%s next=%s sf=%p\n",debugstr_w(lpwstrTemp), debugstr_w(lpszTemp), lpsf);
 
       /* append a backslash to drive letters */
-      if(lstrlenW(lpwstrTemp)==2 && lpwstrTemp[1] == ':' && 
+      if(lstrlenW(lpwstrTemp)==2 && lpwstrTemp[1] == ':' &&
 	 ((lpwstrTemp[0] >= 'a' && lpwstrTemp[0] <= 'z') ||
-	  (lpwstrTemp[0] >= 'A' && lpwstrTemp[0] <= 'Z'))) 
+	  (lpwstrTemp[0] >= 'A' && lpwstrTemp[0] <= 'Z')))
       {
         PathAddBackslashW(lpwstrTemp);
       }
@@ -2063,7 +2063,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
         {
             /* if no extension is specified with file name, then */
             /* attach the extension from file filter or default one */
-            
+
             WCHAR *filterExt = NULL;
             LPWSTR lpstrFilter = NULL;
             static const WCHAR szwDot[] = {'.',0};
@@ -2071,7 +2071,7 @@ BOOL FILEDLG95_OnOpen(HWND hwnd)
 
             /* Attach the dot*/
             lstrcatW(lpstrPathAndFile, szwDot);
-    
+
             /*Get the file extension from file type filter*/
             lpstrFilter = (LPWSTR) CBGetItemDataPtr(fodInfos->DlgInfos.hwndFileTypeCB,
                                              fodInfos->ofnInfos->nFilterIndex-1);
@@ -2564,8 +2564,8 @@ static void FILEDLG95_FILETYPE_Clean(HWND hwnd)
  * Initialisation of the look in combo box
  */
 
-/* Small helper function, to determine if the unixfs shell extension is rooted 
- * at the desktop. Copied from dlls/shell32/shfldr_unixfs.c. 
+/* Small helper function, to determine if the unixfs shell extension is rooted
+ * at the desktop. Copied from dlls/shell32/shfldr_unixfs.c.
  */
 static inline BOOL FILEDLG95_unixfs_is_rooted_at_desktop(void) {
     HKEY hKey;
@@ -2576,10 +2576,10 @@ static inline BOOL FILEDLG95_unixfs_is_rooted_at_desktop(void) {
         'N','a','m','e','S','p','a','c','e','\\','{','9','D','2','0','A','A','E','8',
         '-','0','6','2','5','-','4','4','B','0','-','9','C','A','7','-',
         '7','1','8','8','9','C','2','2','5','4','D','9','}',0 };
-    
+
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE, wszRootedAtDesktop, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
         return FALSE;
-        
+
     RegCloseKey(hKey);
     return TRUE;
 }
@@ -2601,7 +2601,7 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
   /* set item height for both text field and listbox */
   CBSetItemHeight(hwndCombo,-1,GetSystemMetrics(SM_CYSMICON));
   CBSetItemHeight(hwndCombo,0,GetSystemMetrics(SM_CYSMICON));
-   
+
   /* Turn on the extended UI for the combo box like Windows does */
   CBSetExtendedUI(hwndCombo, TRUE);
 
@@ -2624,7 +2624,7 @@ static void FILEDLG95_LOOKIN_Init(HWND hwndCombo)
 	FILEDLG95_LOOKIN_AddItem(hwndCombo, pidlTmp,LISTEND);
 
 	/* If the unixfs extension is rooted, we don't expand the drives by default */
-	if (!FILEDLG95_unixfs_is_rooted_at_desktop()) 
+	if (!FILEDLG95_unixfs_is_rooted_at_desktop())
 	{
 	  /* special handling for CSIDL_DRIVES */
 	  if (COMDLG32_PIDL_ILIsEqual(pidlTmp, pidlDrives))
@@ -3125,8 +3125,8 @@ void FILEDLG95_FILENAME_FillFromSelection (HWND hwnd)
 	}
       }
       SetWindowTextW( fodInfos->DlgInfos.hwndFileName, lpstrAllFile );
-       
-      /* Select the file name like Windows does */ 
+
+      /* Select the file name like Windows does */
       SendMessageW(fodInfos->DlgInfos.hwndFileName, EM_SETSEL, 0, (LPARAM)-1);
     }
     HeapFree(GetProcessHeap(),0, lpstrAllFile );
@@ -3279,7 +3279,7 @@ LPITEMIDLIST GetPidlFromDataObject ( IDataObject *doSelected, UINT nPidlIndex)
 
     if (!doSelected)
         return NULL;
-	
+
     /* Set the FORMATETC structure*/
     SETDefFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
 

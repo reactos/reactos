@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Mouse class driver
  * FILE:            drivers/input/mouclass/misc.c
  * PURPOSE:         Misceallenous operations
- * 
+ *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
@@ -30,16 +30,16 @@ ForwardIrpAndWait(
 	PDEVICE_OBJECT LowerDevice;
 	KEVENT Event;
 	NTSTATUS Status;
-	
+
 	ASSERT(!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO);
 	LowerDevice = ((PPORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-	
+
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
-	
+
 	DPRINT("Calling lower device %p\n", LowerDevice);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-	
+
 	Status = IoCallDriver(LowerDevice, Irp);
 	if (Status == STATUS_PENDING)
 	{
@@ -47,7 +47,7 @@ ForwardIrpAndWait(
 		if (NT_SUCCESS(Status))
 			Status = Irp->IoStatus.Status;
 	}
-	
+
 	return Status;
 }
 
@@ -57,10 +57,10 @@ ForwardIrpAndForget(
 	IN PIRP Irp)
 {
 	PDEVICE_OBJECT LowerDevice;
-	
+
 	ASSERT(!((PCOMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsClassDO);
 	LowerDevice = ((PPORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->LowerDevice;
-	
+
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
 }
@@ -81,7 +81,7 @@ DuplicateUnicodeString(
 
 
 	if ((SourceString->Length == 0)
-	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
 	               RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
 	{
 		DestinationString->Length = 0;

@@ -50,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 #define MAX_EXTENSION_LENGTH 20
 
 BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL bPrependDot)
-{	
+{
 	HKEY	hkey;
 	WCHAR	szTemp[MAX_EXTENSION_LENGTH + 2];
 
@@ -66,12 +66,12 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 	lstrcpynW(szTemp + (bPrependDot?1:0), szExtension, MAX_EXTENSION_LENGTH);
 
 	if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, 0x02000000, &hkey))
-	{ 
+	{
 	  return FALSE;
 	}
 
 	if (RegQueryValueW(hkey, NULL, szFileType, &len))
-	{ 
+	{
 	  RegCloseKey(hkey);
 	  return FALSE;
 	}
@@ -100,12 +100,12 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 	lstrcpynA(szTemp + (bPrependDot?1:0), szExtension, MAX_EXTENSION_LENGTH);
 
 	if (RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, 0x02000000, &hkey))
-	{ 
+	{
 	  return FALSE;
 	}
 
 	if (RegQueryValueA(hkey, NULL, szFileType, &len))
-	{ 
+	{
 	  RegCloseKey(hkey);
 	  return FALSE;
 	}
@@ -335,7 +335,7 @@ BOOL HCR_GetDefaultIconFromGUIDW(REFIID riid, LPWSTR szDest, DWORD len, int* pic
 static const WCHAR swEmpty[] = {0};
 
 BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
-{	
+{
 	HKEY	hkey;
 	BOOL ret = FALSE;
 	DWORD buflen = len;
@@ -343,7 +343,7 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
  	szDest[0] = 0;
 	if (HCR_RegOpenClassIDKey(riid, &hkey))
 	{
-          static const WCHAR wszLocalizedString[] = 
+          static const WCHAR wszLocalizedString[] =
             { 'L','o','c','a','l','i','z','e','d','S','t','r','i','n','g', 0 };
           if (!RegLoadMUIStringW(hkey, wszLocalizedString, szDest, len, NULL, 0, NULL) ||
               !RegQueryValueExW(hkey, swEmpty, 0, NULL, (LPBYTE)szDest, &len))
@@ -411,7 +411,7 @@ BOOL HCR_GetClassNameA(REFIID riid, LPSTR szDest, DWORD len)
  * Query the registry for a shell folders' attributes
  *
  * PARAMS
- *  pidlFolder    [I]  A simple pidl of type PT_GUID. 
+ *  pidlFolder    [I]  A simple pidl of type PT_GUID.
  *  pdwAttributes [IO] In: Attributes to be queried, OUT: Resulting attributes.
  *
  * RETURNS
@@ -429,28 +429,28 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
     LONG lResult;
     DWORD dwTemp, dwLen;
     static const WCHAR wszAttributes[] = { 'A','t','t','r','i','b','u','t','e','s',0 };
-    static const WCHAR wszCallForAttributes[] = { 
+    static const WCHAR wszCallForAttributes[] = {
         'C','a','l','l','F','o','r','A','t','t','r','i','b','u','t','e','s',0 };
     WCHAR wszShellFolderKey[] = { 'C','L','S','I','D','\\','{','0','0','0','2','1','4','0','0','-',
         '0','0','0','0','-','0','0','0','0','-','C','0','0','0','-','0','0','0','0','0','0','0',
         '0','0','0','4','6','}','\\','S','h','e','l','l','F','o','l','d','e','r',0 };
 
     TRACE("(pidlFolder=%p, pdwAttributes=%p)\n", pidlFolder, pdwAttributes);
-       
-    if (!_ILIsPidlSimple(pidlFolder)) { 
-        ERR("HCR_GetFolderAttributes should be called for simple PIDL's only!\n");    
+
+    if (!_ILIsPidlSimple(pidlFolder)) {
+        ERR("HCR_GetFolderAttributes should be called for simple PIDL's only!\n");
         return FALSE;
     }
-    
+
     if (!_ILIsDesktop(pidlFolder)) {
         if (FAILED(StringFromCLSID(_ILGetGUIDPointer(pidlFolder), &pwszCLSID))) return FALSE;
         memcpy(&wszShellFolderKey[6], pwszCLSID, 38 * sizeof(WCHAR));
         CoTaskMemFree(pwszCLSID);
     }
-    
+
     lResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszShellFolderKey, 0, KEY_READ, &hSFKey);
     if (lResult != ERROR_SUCCESS) return FALSE;
-    
+
     dwLen = sizeof(DWORD);
     lResult = RegQueryValueExW(hSFKey, wszCallForAttributes, 0, NULL, (LPBYTE)&dwTemp, &dwLen);
     if ((lResult == ERROR_SUCCESS) && (dwTemp & *pdwAttributes)) {
@@ -460,9 +460,9 @@ BOOL HCR_GetFolderAttributes(LPCITEMIDLIST pidlFolder, LPDWORD pdwAttributes)
         RegCloseKey(hSFKey);
         hr = SHGetDesktopFolder(&psfDesktop);
         if (SUCCEEDED(hr)) {
-            hr = IShellFolder_BindToObject(psfDesktop, pidlFolder, NULL, &IID_IShellFolder, 
+            hr = IShellFolder_BindToObject(psfDesktop, pidlFolder, NULL, &IID_IShellFolder,
                                            (LPVOID*)&psfFolder);
-            if (SUCCEEDED(hr)) { 
+            if (SUCCEEDED(hr)) {
                 hr = IShellFolder_GetAttributesOf(psfFolder, 0, NULL, pdwAttributes);
                 IShellFolder_Release(psfFolder);
             }

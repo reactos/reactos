@@ -629,7 +629,7 @@ CompositeMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
         if(FAILED(res))
             break;
         *pdwHash = *pdwHash ^ tempHash;
-        
+
         IMoniker_Release(tempMk);
     }
 
@@ -1411,7 +1411,7 @@ static HRESULT WINAPI CompositeMonikerMarshalImpl_GetMarshalSizeMax(
     return S_OK;
 }
 
-static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL iface, IStream *pStm, 
+static HRESULT WINAPI CompositeMonikerMarshalImpl_MarshalInterface(LPMARSHAL iface, IStream *pStm,
     REFIID riid, void* pv, DWORD dwDestContext,
     void* pvDestContext, DWORD mshlflags)
 {

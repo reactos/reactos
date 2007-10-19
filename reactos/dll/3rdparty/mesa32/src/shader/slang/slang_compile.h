@@ -237,7 +237,7 @@ typedef enum slang_unit_type_
 	slang_unit_fragment_builtin,
 	slang_unit_vertex_builtin
 } slang_unit_type;
-	
+
 typedef struct slang_translation_unit_
 {
 	slang_variable_scope globals;

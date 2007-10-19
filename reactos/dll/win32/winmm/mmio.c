@@ -222,7 +222,7 @@ static LRESULT CALLBACK mmioMemIOProc(LPMMIOINFO lpmmioinfo, UINT uMessage,
     }
 }
 
-/* This array will be the entire list for most apps 
+/* This array will be the entire list for most apps
  * Note that temporary ioProcs will be stored with a 0 fourCC code
  */
 
@@ -296,9 +296,9 @@ LPMMIOPROC MMIO_InstallIOProc(FOURCC fccIOProc, LPMMIOPROC pIOProc,
 	 * let the user delete anyway, that's okay
 	 */
 	ppListNode = &pIOProcListAnchor;
-	while ((*ppListNode) && 
-               ((fccIOProc != 0) ? 
-                (*ppListNode)->fourCC != fccIOProc : 
+	while ((*ppListNode) &&
+               ((fccIOProc != 0) ?
+                (*ppListNode)->fourCC != fccIOProc :
                 (*ppListNode)->pIOProc != pIOProc))
 	    ppListNode = &((*ppListNode)->pNext);
 
@@ -504,9 +504,9 @@ static	MMRESULT MMIO_Flush(WINE_MMIO* wm, UINT uFlags)
 	/* not quite sure what to do here, but I'll guess */
 	if (wm->info.dwFlags & MMIO_DIRTY) {
             /* FIXME: error handling */
-	    send_message(wm->ioProc, &wm->info, MMIOM_SEEK, 
+	    send_message(wm->ioProc, &wm->info, MMIOM_SEEK,
                          wm->info.lBufOffset, SEEK_SET, MMIO_PROC_32A);
-	    send_message(wm->ioProc, &wm->info, MMIOM_WRITE, 
+	    send_message(wm->ioProc, &wm->info, MMIOM_WRITE,
                          (LPARAM)wm->info.pchBuffer,
                          wm->info.pchNext - wm->info.pchBuffer, MMIO_PROC_32A);
 	}
@@ -536,7 +536,7 @@ static LONG	MMIO_GrabNextBuffer(LPWINE_MMIO wm, int for_read)
 
     wm->bBufferLoaded = TRUE;
     if (for_read) {
-	size = send_message(wm->ioProc, &wm->info, MMIOM_READ, 
+	size = send_message(wm->ioProc, &wm->info, MMIOM_READ,
                             (LPARAM)wm->info.pchBuffer, size, MMIO_PROC_32A);
 	if (size > 0)
 	    wm->info.pchEndRead += size;
@@ -592,7 +592,7 @@ static MMRESULT MMIO_SetBuffer(WINE_MMIO* wm, void* pchBuffer, LONG cchBuffer,
 /**************************************************************************
  * 			MMIO_Open       			[internal]
  */
-HMMIO MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo, DWORD dwOpenFlags, 
+HMMIO MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo, DWORD dwOpenFlags,
                 enum mmioProcType type)
 {
     LPWINE_MMIO		wm;
@@ -672,7 +672,7 @@ HMMIO MMIO_Open(LPSTR szFileName, MMIOINFO* refmminfo, DWORD dwOpenFlags,
     wm->info.dwFlags = dwOpenFlags;
 
     /* call IO proc to actually open file */
-    refmminfo->wErrorRet = send_message(wm->ioProc, &wm->info, MMIOM_OPEN, 
+    refmminfo->wErrorRet = send_message(wm->ioProc, &wm->info, MMIOM_OPEN,
                                         (LPARAM)szFileName, 0, MMIO_PROC_32A);
 
     /* grab file size, when possible */
@@ -735,7 +735,7 @@ MMRESULT WINAPI mmioClose(HMMIO hmmio, UINT uFlags)
     if ((result = MMIO_Flush(wm, 0)) != MMSYSERR_NOERROR)
 	return result;
 
-    result = send_message(wm->ioProc, &wm->info, MMIOM_CLOSE, 
+    result = send_message(wm->ioProc, &wm->info, MMIOM_CLOSE,
                           uFlags, 0, MMIO_PROC_32A);
 
     MMIO_SetBuffer(wm, NULL, 0, 0);
@@ -766,7 +766,7 @@ LONG WINAPI mmioRead(HMMIO hmmio, HPSTR pch, LONG cch)
 
     /* unbuffered case first */
     if (!wm->info.pchBuffer)
-	return send_message(wm->ioProc, &wm->info, MMIOM_READ, 
+	return send_message(wm->ioProc, &wm->info, MMIOM_READ,
                             (LPARAM)pch, cch, MMIO_PROC_32A);
 
     /* first try from current buffer */
@@ -847,7 +847,7 @@ LONG WINAPI mmioWrite(HMMIO hmmio, HPCSTR pch, LONG cch)
         }
 	count = bytesW;
     } else {
-	count = send_message(wm->ioProc, &wm->info, MMIOM_WRITE, 
+	count = send_message(wm->ioProc, &wm->info, MMIOM_WRITE,
                              (LPARAM)pch, cch, MMIO_PROC_32A);
 	wm->info.lBufOffset = wm->info.lDiskOffset;
     }
@@ -871,7 +871,7 @@ LONG WINAPI mmioSeek(HMMIO hmmio, LONG lOffset, INT iOrigin)
 
     /* not buffered, direct seek on file */
     if (!wm->info.pchBuffer)
-	return send_message(wm->ioProc, &wm->info, MMIOM_SEEK, 
+	return send_message(wm->ioProc, &wm->info, MMIOM_SEEK,
                             lOffset, iOrigin, MMIO_PROC_32A);
 
     switch (iOrigin) {
@@ -1023,9 +1023,9 @@ MMRESULT WINAPI mmioAdvance(HMMIO hmmio, MMIOINFO* lpmmioinfo, UINT uFlags)
 
     if (uFlags == MMIO_WRITE && (lpmmioinfo->dwFlags & MMIO_DIRTY))
     {
-        send_message(wm->ioProc, &wm->info, MMIOM_SEEK, 
+        send_message(wm->ioProc, &wm->info, MMIOM_SEEK,
                      lpmmioinfo->lBufOffset, SEEK_SET, MMIO_PROC_32A);
-        send_message(wm->ioProc, &wm->info, MMIOM_WRITE, 
+        send_message(wm->ioProc, &wm->info, MMIOM_WRITE,
                      (LPARAM)lpmmioinfo->pchBuffer,
                      lpmmioinfo->pchNext - lpmmioinfo->pchBuffer, MMIO_PROC_32A);
         lpmmioinfo->dwFlags &= ~MMIO_DIRTY;
@@ -1034,7 +1034,7 @@ MMRESULT WINAPI mmioAdvance(HMMIO hmmio, MMIOINFO* lpmmioinfo, UINT uFlags)
 	return MMIOERR_CANNOTWRITE;
 
     if (lpmmioinfo) {
-	wm->dwFileSize = max(wm->dwFileSize, lpmmioinfo->lBufOffset + 
+	wm->dwFileSize = max(wm->dwFileSize, lpmmioinfo->lBufOffset +
                              (lpmmioinfo->pchNext - lpmmioinfo->pchBuffer));
     }
     MMIO_GrabNextBuffer(wm, uFlags == MMIO_READ);
@@ -1108,7 +1108,7 @@ LPMMIOPROC WINAPI mmioInstallIOProcW(FOURCC fccIOProc,
  *
  *
  */
-LRESULT         MMIO_SendMessage(HMMIO hmmio, UINT uMessage, LPARAM lParam1, 
+LRESULT         MMIO_SendMessage(HMMIO hmmio, UINT uMessage, LPARAM lParam1,
                                  LPARAM lParam2, enum mmioProcType type)
 {
     LPWINE_MMIO		wm;

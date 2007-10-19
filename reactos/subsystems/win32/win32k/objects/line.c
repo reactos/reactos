@@ -418,14 +418,14 @@ NtGdiPolyDraw(
     POINT lastmove;
     unsigned int i;
 
-    dc = DC_LockDc(hdc); 
+    dc = DC_LockDc(hdc);
     if(!dc) return FALSE;
 
     _SEH_TRY
     {
         ProbeArrayForRead(lppt, sizeof(POINT), cCount, sizeof(LONG));
         ProbeArrayForRead(lpbTypes, sizeof(BYTE), cCount, sizeof(BYTE));
-        
+
         /* check for each bezierto if there are two more points */
         for( i = 0; i < cCount; i++ )
         if( lpbTypes[i] != PT_MOVETO &&
@@ -434,11 +434,11 @@ NtGdiPolyDraw(
             if( cCount < i+3 ) _SEH_LEAVE;
             else i += 2;
         }
-    
+
         /* if no moveto occurs, we will close the figure here */
         lastmove.x = dc->Dc_Attr.ptlCurrent.x;
         lastmove.y = dc->Dc_Attr.ptlCurrent.y;
-    
+
         /* now let's draw */
         for( i = 0; i < cCount; i++ )
         {
@@ -460,14 +460,14 @@ NtGdiPolyDraw(
                 i += 2;
             }
             else _SEH_LEAVE;
-        
+
             if( lpbTypes[i] & PT_CLOSEFIGURE )
             {
                 if( PATH_IsPathOpen( dc->w.path ) ) IntGdiCloseFigure( dc );
                 else IntGdiLineTo( dc, lastmove.x, lastmove.y );
             }
         }
-        
+
         result = TRUE;
     }
     _SEH_HANDLE
@@ -475,7 +475,7 @@ NtGdiPolyDraw(
         SetLastNtError(_SEH_GetExceptionCode());
     }
     _SEH_END;
-    
+
     DC_UnlockDc(dc);
 
     return result;

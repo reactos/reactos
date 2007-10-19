@@ -157,9 +157,9 @@ interface IDocHostUIHandler : IUnknown
     } DOCHOSTUIINFO;
 
     HRESULT ShowContextMenu(
-        [in] DWORD dwID, 
-        [in] POINT *ppt, 
-        [in] IUnknown *pcmdtReserved,  
+        [in] DWORD dwID,
+        [in] POINT *ppt,
+        [in] IUnknown *pcmdtReserved,
         [in] IDispatch *pdispReserved);
 
     HRESULT GetHostInfo([in, out] DOCHOSTUIINFO *pInfo);
@@ -188,7 +188,7 @@ interface IDocHostUIHandler : IUnknown
 
     HRESULT TranslateAccelerator(
         [in] LPMSG lpMsg,
-        [in] const GUID *pguidCmdGroup, 
+        [in] const GUID *pguidCmdGroup,
         [in] DWORD nCmdID);
 
     HRESULT GetOptionKeyPath(
@@ -196,7 +196,7 @@ interface IDocHostUIHandler : IUnknown
         [in] DWORD dw);
 
     HRESULT GetDropTarget(
-        [in] IDropTarget *pDropTarget, 
+        [in] IDropTarget *pDropTarget,
         [out] IDropTarget **ppDropTarget);
 
     HRESULT GetExternal([out] IDispatch **ppDispatch);

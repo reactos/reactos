@@ -102,29 +102,29 @@ _mesa_MultTransposeMatrixdARB( const GLdouble *m );
 extern void GLAPIENTRY
 _mesa_Viewport( GLint x, GLint y, GLsizei width, GLsizei height );
 
-extern void 
+extern void
 _mesa_set_viewport( GLcontext *ctx, GLint x, GLint y, GLsizei width, GLsizei height );
 
 extern void GLAPIENTRY
 _mesa_DepthRange( GLclampd nearval, GLclampd farval );
 
 
-extern void 
+extern void
 _mesa_init_matrix( GLcontext * ctx );
 
-extern void 
+extern void
 _mesa_init_transform( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_init_viewport( GLcontext *ctx );
 
 extern void
 _mesa_free_matrix_data( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_free_viewport_data( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_update_modelview_project( GLcontext *ctx, GLuint newstate );
 
 

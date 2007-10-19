@@ -1,8 +1,8 @@
-/*  
+/*
  * translation by xrogers
- * xxrogers@users.sourceforge.net  
- * https://sourceforge.net/projects/reactospl  
- */ 
+ * xxrogers@users.sourceforge.net
+ * https://sourceforge.net/projects/reactospl
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -69,7 +69,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Blokada Klikniêcia", -1, 5, 150, 230, 70
   CHECKBOX "&W³¹cz funkcjê Blokada Klikniêcia", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Ustawienia...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
   LTEXT "Umo¿liwia podœwietlanie lub przeci¹ganie bez przytrzymywania naciœniêtego przycisku myszy. Aby ustawiæ, naciœnij na krótko przycisk myszy. Aby zwolniæ, kliknij przycisk myszy ponownie.", -1, 10, 180, 190, 30
 END
 

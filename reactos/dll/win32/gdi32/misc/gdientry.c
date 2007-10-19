@@ -72,7 +72,7 @@ DdDestroySurface(LPDDHAL_DESTROYSURFACEDATA pDestroySurface)
         {
             RealDestroy = FALSE;
         }
-        
+
         /* Call win32k */
         Return = NtGdiDdDestroySurface((HANDLE)pSurfaceLocal->hDDSurface,
                                        RealDestroy);
@@ -86,10 +86,10 @@ WINAPI
 DdFlip(LPDDHAL_FLIPDATA Flip)
 {
     /* Call win32k */
-	
+
     return NtGdiDdFlip( (HANDLE)Flip->lpSurfCurr->hDDSurface,
                         (HANDLE)Flip->lpSurfTarg->hDDSurface,
-   /* FIXME  the two last should be current left handler */ 
+   /* FIXME  the two last should be current left handler */
 						(HANDLE)Flip->lpSurfCurr->hDDSurface,
                         (HANDLE)Flip->lpSurfTarg->hDDSurface,
                         (PDD_FLIPDATA)Flip);
@@ -99,7 +99,7 @@ DWORD
 WINAPI
 DdLock(LPDDHAL_LOCKDATA Lock)
 {
-    /* Call win32k */	
+    /* Call win32k */
     return NtGdiDdLock((HANDLE)Lock->lpDDSurface->hDDSurface,
                         (PDD_LOCKDATA)Lock,
 						(HANDLE)Lock->lpDDSurface->hDC);
@@ -238,11 +238,11 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
         pDdSurfaceGlobal = &DdSurfaceGlobal;
         phSurface = &hPrevSurface;
         puhSurface = &hSurface;
-        
+
         /* Clear the structures */
         RtlZeroMemory(&DdSurfaceLocal, sizeof(DdSurfaceLocal));
         RtlZeroMemory(&DdSurfaceGlobal, sizeof(DdSurfaceGlobal));
-        RtlZeroMemory(&DdSurfaceMore, sizeof(DdSurfaceMore));  
+        RtlZeroMemory(&DdSurfaceMore, sizeof(DdSurfaceMore));
     }
 
     /* check if we got a surface or not */
@@ -262,7 +262,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             phSurface[i] = (HANDLE)lcl->hDDSurface;
             ptmpDdSurfaceLocal->ddsCaps.dwCaps = lcl->ddsCaps.dwCaps;
 
-            ptmpDdSurfaceLocal->dwFlags = (ptmpDdSurfaceLocal->dwFlags & 
+            ptmpDdSurfaceLocal->dwFlags = (ptmpDdSurfaceLocal->dwFlags &
                                           (0xB0000000 | DDRAWISURF_INMASTERSPRITELIST |
                                            DDRAWISURF_HELCB | DDRAWISURF_FRONTBUFFER |
                                            DDRAWISURF_BACKBUFFER | DDRAWISURF_INVALID |
@@ -279,7 +279,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
             if (lcl->dwFlags & DDRAWISURF_HASPIXELFORMAT)
             {
                 RtlCopyMemory( &ptmpDdSurfaceGlobal->ddpfSurface ,
-                               &gpl->ddpfSurface, 
+                               &gpl->ddpfSurface,
                                sizeof(DDPIXELFORMAT));
 
                 ptmpDdSurfaceGlobal->ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
@@ -299,7 +299,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
                 ptmpDdSurfaceMore->dwSurfaceHandle = (DWORD) pCreateSurface->lplpSList[i]->dbnOverlayNode.object_int;
             }
 
-            /* FIXME count to next SurfaceCount for 
+            /* FIXME count to next SurfaceCount for
                ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
                ptmpDdSurfaceLocal = pDdSurfaceLocal;
                ptmpDdSurfaceMore = pDdSurfaceMore;
@@ -368,7 +368,7 @@ DdCreateSurface(LPDDHAL_CREATESURFACEDATA pCreateSurface)
                 lcl->lpSurfMore->ddsCapsEx.dwCaps3 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps3;
                 lcl->lpSurfMore->ddsCapsEx.dwCaps4 = ptmpDdSurfaceMore->ddsCapsEx.dwCaps4;
             }
-            /* FIXME count to next SurfaceCount for 
+            /* FIXME count to next SurfaceCount for
                ptmpDdSurfaceGlobal = pDdSurfaceGlobal;
                ptmpDdSurfaceLocal = pDdSurfaceLocal;
                ptmpDdSurfaceMore = pDdSurfaceMore;
@@ -410,7 +410,7 @@ static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
 
 BOOL
 WINAPI
-bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface, 
+bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
                  BOOL bComplete)
 {
     DD_SURFACE_LOCAL SurfaceLocal;
@@ -440,7 +440,7 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
 
     /* Check if we have a pixel format */
     if (pSurface->dwFlags & DDSD_PIXELFORMAT)
-    {	
+    {
         /* Use global one */
         SurfaceGlobal.ddpfSurface = pSurface->lpGbl->lpDD->vmiData.ddpfDisplay;
         SurfaceGlobal.ddpfSurface.dwSize = sizeof(DDPIXELFORMAT);
@@ -469,13 +469,13 @@ bDDCreateSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
 /*
  * @implemented
  *
- * GDIEntry 1 
+ * GDIEntry 1
  */
-BOOL 
-WINAPI 
+BOOL
+WINAPI
 DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                          HDC hdc)
-{  
+{
     BOOL Return = FALSE;
 
     /* Check if the global hDC (hdc == 0) is being used */
@@ -490,7 +490,7 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                 /* Create the DDraw Object */
                 ghDirectDraw = NtGdiDdCreateDirectDrawObject(hdc);
 
-                /* Delete our DC */                
+                /* Delete our DC */
                 NtGdiDeleteObjectApp(hdc);
             }
         }
@@ -509,8 +509,8 @@ DdCreateDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     else
     {
         /* Using the per-process object, so create it */
-         pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc); 
-    
+         pDirectDrawGlobal->hDD = (ULONG_PTR)NtGdiDdCreateDirectDrawObject(hdc);
+
         /* Set the return value */
         Return = pDirectDrawGlobal->hDD ? TRUE : FALSE;
     }
@@ -745,7 +745,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             if (D3dCallbacks.ContextCreate)
             {
                 /* FIXME
-                 pD3dCallbacks->ContextCreate = D3dContextCreate; 
+                 pD3dCallbacks->ContextCreate = D3dContextCreate;
                  */
             }
             if (D3dCallbacks.ContextDestroy)
@@ -754,7 +754,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
             }
             if (D3dCallbacks.ContextDestroyAll)
             {
-                /* FIXME 
+                /* FIXME
                 pD3dCallbacks->ContextDestroyAll = (LPD3DHAL_CONTEXTDESTROYALLCB) NtGdiD3dContextDestroyAll;
                 */
             }
@@ -783,7 +783,7 @@ DdQueryDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
  *
  * GDIEntry 3
  */
-BOOL 
+BOOL
 WINAPI
 DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
 {
@@ -825,8 +825,8 @@ DdDeleteDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal)
  *
  * GDIEntry 4
  */
-BOOL 
-WINAPI 
+BOOL
+WINAPI
 DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
                        BOOL bPrimarySurface)
 {
@@ -839,8 +839,8 @@ DdCreateSurfaceObject( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
  *
  * GDIEntry 5
  */
-BOOL 
-WINAPI 
+BOOL
+WINAPI
 DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
 {
     BOOL Return = FALSE;
@@ -861,9 +861,9 @@ DdDeleteSurfaceObject(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal)
  *
  * GDIEntry 6
  */
-BOOL 
-WINAPI 
-DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal, 
+BOOL
+WINAPI
+DdResetVisrgn(LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
               HWND hWnd)
 {
     /* Call win32k directly */
@@ -919,15 +919,15 @@ DdCreateDIBSection(HDC hdc,
  *
  * GDIEntry 10
  */
-BOOL 
-WINAPI 
+BOOL
+WINAPI
 DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
                            BOOL *pbNewMode)
 {
     /* Call win32k directly */
     return NtGdiDdReenableDirectDrawObject(GetDdHandle(pDirectDrawGlobal->hDD),
                                            pbNewMode);
-} 
+}
 
 
 /*
@@ -935,8 +935,8 @@ DdReenableDirectDrawObject(LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
  *
  * GDIEntry 11
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 DdAttachSurface( LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
                  LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo)
 {
@@ -984,7 +984,7 @@ DdUnattachSurface(LPDDRAWI_DDRAWSURFACE_LCL pSurface,
  * GDIEntry 13
  */
 ULONG
-STDCALL 
+STDCALL
 DdQueryDisplaySettingsUniqueness()
 {
     /* FIXME share memory */
@@ -996,8 +996,8 @@ DdQueryDisplaySettingsUniqueness()
  *
  * GDIEntry 14
  */
-HANDLE 
-WINAPI 
+HANDLE
+WINAPI
 DdGetDxHandle(LPDDRAWI_DIRECTDRAW_LCL pDDraw,
               LPDDRAWI_DDRAWSURFACE_LCL pSurface,
               BOOL bRelease)

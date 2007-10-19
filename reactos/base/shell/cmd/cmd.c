@@ -517,7 +517,7 @@ Execute (LPTSTR Full, LPTSTR First, LPTSTR Rest)
 		                   NULL,
 		                   &stui,
 		                   &prci))
-						   
+
 		{
 			if (IsConsoleProcess(prci.hProcess))
 			{
@@ -650,7 +650,7 @@ DoCommand (LPTSTR line)
 		*/
 
 		/* Skip over whitespace to rest of line, exclude 'echo' command */
-		if (_tcsicmp (com, _T("echo"))) 
+		if (_tcsicmp (com, _T("echo")))
 		{
 			while (_istspace (*rest))
 			rest++;
@@ -1271,7 +1271,7 @@ GetParsedEnvVar ( LPCTSTR varName, UINT* varNameLen, BOOL ModeSetA )
 		if ( varNameLen )
 			*varNameLen = 2;
 		return ret;
-   
+
     case _T('*'):
         if(bc == NULL)
         {
@@ -1509,21 +1509,21 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 	DWORD			dwWritten;
 	INPUT_RECORD	rec;
 	static BOOL SelfGenerated = FALSE;
-    
+
  	if ((dwCtrlType != CTRL_C_EVENT) &&
 	    (dwCtrlType != CTRL_BREAK_EVENT))
 	{
 		return FALSE;
 	}
 	else
-	{		
+	{
 		if(SelfGenerated)
 		{
 			SelfGenerated = FALSE;
 			return TRUE;
 		}
 	}
-	
+
 	if (bChildProcessRunning == TRUE)
 	{
 		SelfGenerated = TRUE;
@@ -1531,7 +1531,7 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
 		return TRUE;
 	}
 
-    
+
     rec.EventType = KEY_EVENT;
     rec.Event.KeyEvent.bKeyDown = TRUE;
     rec.Event.KeyEvent.wRepeatCount = 1;
@@ -1539,14 +1539,14 @@ BOOL WINAPI BreakHandler (DWORD dwCtrlType)
     rec.Event.KeyEvent.wVirtualScanCode = _T('C') - 35;
     rec.Event.KeyEvent.uChar.AsciiChar = _T('C');
     rec.Event.KeyEvent.uChar.UnicodeChar = _T('C');
-    rec.Event.KeyEvent.dwControlKeyState = RIGHT_CTRL_PRESSED; 
+    rec.Event.KeyEvent.dwControlKeyState = RIGHT_CTRL_PRESSED;
 
     WriteConsoleInput(
         hIn,
         &rec,
         1,
 		&dwWritten);
-        
+
 	bCtrlBreak = TRUE;
 	/* FIXME: Handle batch files */
 

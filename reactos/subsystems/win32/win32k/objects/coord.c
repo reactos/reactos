@@ -431,7 +431,7 @@ NtGdiModifyWorldTransform(HDC hDC,
      SetLastWin32Error(ERROR_INVALID_PARAMETER);
      return FALSE;
    }
-   
+
    dc = DC_LockDc(hDC);
    if (!dc)
    {
@@ -523,7 +523,7 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
   if (Point)
     {
       NTSTATUS Status = STATUS_SUCCESS;
-      
+
       _SEH_TRY
       {
          ProbeForWrite(Point,
@@ -748,7 +748,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
       }
     }
 
-  
+
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
 
@@ -774,7 +774,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
   if (Point)
     {
       NTSTATUS Status = STATUS_SUCCESS;
-      
+
       _SEH_TRY
       {
          ProbeForWrite(Point,
@@ -837,7 +837,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
   if (Size)
     {
       NTSTATUS Status = STATUS_SUCCESS;
-      
+
       _SEH_TRY
       {
          ProbeForWrite(Size,
@@ -888,7 +888,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   if (Point)
     {
       NTSTATUS Status = STATUS_SUCCESS;
-      
+
       _SEH_TRY
       {
          ProbeForWrite(Point,

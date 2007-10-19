@@ -5,7 +5,7 @@
  * Based on kbdes, skbdda and skbdfr
  *
  * Made by Pedro Maia pedrom.maia@gmail.com
- * 
+ *
  *
  * http://keytouch.sourceforge.net/howto_keyboard/node4.html (Very Good)
  * http://www.microsoft.com/globaldev/tools/msklc.mspx (Keyboard layout file from MS)
@@ -40,145 +40,145 @@
 #define KNUMP    0x800  /* Number-pad */
 #define KNUMS    0xc00  /* Special + number pad */
 #define KMEXT    0x300  /* Multi + ext */
- 
+
 #define SHFT_INVALID 0x0F
 
 ROSDATA USHORT scancode_to_vk[] = {
-/* 00 */  VK_EMPTY, 
-/* 01 */  VK_ESCAPE, 
-/* 02 */  '1', 
-/* 03 */  '2', 
-/* 04 */  '3', 
-/* 05 */  '4', 
-/* 06 */  '5', 
-/* 07 */  '6', 
-/* 08 */  '7', 
-/* 09 */  '8', 
-/* 0a */  '9', 
-/* 0b */  '0', 
-/* 0c */  VK_OEM_4, 
-/* 0d */  VK_OEM_6, 
-/* 0e */  VK_BACK, 
-/* 0f */  VK_TAB, 
-/* 10 */  'Q', 
-/* 11 */  'W', 
-/* 12 */  'E', 
-/* 13 */  'R', 
-/* 14 */  'T', 
-/* 15 */  'Y', 
-/* 16 */  'U', 
-/* 17 */  'I', 
-/* 18 */  'O', 
-/* 19 */  'P', 
-/* 1a */  VK_OEM_PLUS, 
-/* 1b */  VK_OEM_1, 
-/* 1c */  VK_RETURN, 
-/* 1d */  VK_LCONTROL, 
-/* 1e */  'A', 
-/* 1f */  'S', 
-/* 20 */  'D', 
-/* 21 */  'F', 
-/* 22 */  'G', 
-/* 23 */  'H', 
-/* 24 */  'J', 
-/* 25 */  'K', 
-/* 26 */  'L', 
-/* 27 */  VK_OEM_3, 
-/* 28 */  VK_OEM_7, 
-/* 29 */  VK_OEM_5, 
-/* 2a */  VK_LSHIFT, 
-/* 2b */  VK_OEM_2, 
-/* 2c */  'Z', 
-/* 2d */  'X', 
-/* 2e */  'C', 
-/* 2f */  'V', 
-/* 30 */  'B', 
-/* 31 */  'N', 
-/* 32 */  'M', 
-/* 33 */  VK_OEM_COMMA, 
-/* 34 */  VK_OEM_PERIOD, 
-/* 35 */  VK_OEM_MINUS, 
-/* 36 */  VK_RSHIFT, 
-/* 37 */  VK_MULTIPLY, 
-/* 38 */  VK_LMENU, 
-/* 39 */  VK_SPACE, 
-/* 3a */  VK_CAPITAL, 
-/* 3b */  VK_F1, 
-/* 3c */  VK_F2, 
-/* 3d */  VK_F3, 
-/* 3e */  VK_F4, 
-/* 3f */  VK_F5, 
-/* 40 */  VK_F6, 
-/* 41 */  VK_F7, 
-/* 42 */  VK_F8, 
-/* 43 */  VK_F9, 
-/* 44 */  VK_F10, 
-/* 45 */  VK_NUMLOCK | KMEXT, 
-/* 46 */  VK_SCROLL | KMULTI, 
-/* 47 */  VK_HOME | KNUMS, 
-/* 48 */  VK_UP | KNUMS, 
-/* 49 */  VK_PRIOR | KNUMS, 
-/* 4a */  VK_SUBTRACT, 
-/* 4b */  VK_LEFT | KNUMS, 
-/* 4c */  VK_CLEAR | KNUMS, 
-/* 4d */  VK_RIGHT | KNUMS, 
-/* 4e */  VK_ADD, 
-/* 4f */  VK_END | KNUMS, 
-/* 50 */  VK_DOWN | KNUMS, 
-/* 51 */  VK_NEXT | KNUMS, 
-/* 52 */  VK_INSERT | KNUMS, 
-/* 53 */  VK_DELETE | KNUMS, 
-/* 54 */  VK_SNAPSHOT, 
-/* 55 */  VK_EMPTY, 
-/* 56 */  VK_OEM_102, 
-/* 57 */  VK_F11, 
-/* 58 */  VK_F12, 
-/* 59 */  VK_EMPTY, 
-/* 5a */  VK_CLEAR, 
-/* 5b */  VK_EMPTY, 
-/* 5c */  VK_EMPTY, 
-/* 5d */  VK_EMPTY, 
+/* 00 */  VK_EMPTY,
+/* 01 */  VK_ESCAPE,
+/* 02 */  '1',
+/* 03 */  '2',
+/* 04 */  '3',
+/* 05 */  '4',
+/* 06 */  '5',
+/* 07 */  '6',
+/* 08 */  '7',
+/* 09 */  '8',
+/* 0a */  '9',
+/* 0b */  '0',
+/* 0c */  VK_OEM_4,
+/* 0d */  VK_OEM_6,
+/* 0e */  VK_BACK,
+/* 0f */  VK_TAB,
+/* 10 */  'Q',
+/* 11 */  'W',
+/* 12 */  'E',
+/* 13 */  'R',
+/* 14 */  'T',
+/* 15 */  'Y',
+/* 16 */  'U',
+/* 17 */  'I',
+/* 18 */  'O',
+/* 19 */  'P',
+/* 1a */  VK_OEM_PLUS,
+/* 1b */  VK_OEM_1,
+/* 1c */  VK_RETURN,
+/* 1d */  VK_LCONTROL,
+/* 1e */  'A',
+/* 1f */  'S',
+/* 20 */  'D',
+/* 21 */  'F',
+/* 22 */  'G',
+/* 23 */  'H',
+/* 24 */  'J',
+/* 25 */  'K',
+/* 26 */  'L',
+/* 27 */  VK_OEM_3,
+/* 28 */  VK_OEM_7,
+/* 29 */  VK_OEM_5,
+/* 2a */  VK_LSHIFT,
+/* 2b */  VK_OEM_2,
+/* 2c */  'Z',
+/* 2d */  'X',
+/* 2e */  'C',
+/* 2f */  'V',
+/* 30 */  'B',
+/* 31 */  'N',
+/* 32 */  'M',
+/* 33 */  VK_OEM_COMMA,
+/* 34 */  VK_OEM_PERIOD,
+/* 35 */  VK_OEM_MINUS,
+/* 36 */  VK_RSHIFT,
+/* 37 */  VK_MULTIPLY,
+/* 38 */  VK_LMENU,
+/* 39 */  VK_SPACE,
+/* 3a */  VK_CAPITAL,
+/* 3b */  VK_F1,
+/* 3c */  VK_F2,
+/* 3d */  VK_F3,
+/* 3e */  VK_F4,
+/* 3f */  VK_F5,
+/* 40 */  VK_F6,
+/* 41 */  VK_F7,
+/* 42 */  VK_F8,
+/* 43 */  VK_F9,
+/* 44 */  VK_F10,
+/* 45 */  VK_NUMLOCK | KMEXT,
+/* 46 */  VK_SCROLL | KMULTI,
+/* 47 */  VK_HOME | KNUMS,
+/* 48 */  VK_UP | KNUMS,
+/* 49 */  VK_PRIOR | KNUMS,
+/* 4a */  VK_SUBTRACT,
+/* 4b */  VK_LEFT | KNUMS,
+/* 4c */  VK_CLEAR | KNUMS,
+/* 4d */  VK_RIGHT | KNUMS,
+/* 4e */  VK_ADD,
+/* 4f */  VK_END | KNUMS,
+/* 50 */  VK_DOWN | KNUMS,
+/* 51 */  VK_NEXT | KNUMS,
+/* 52 */  VK_INSERT | KNUMS,
+/* 53 */  VK_DELETE | KNUMS,
+/* 54 */  VK_SNAPSHOT,
+/* 55 */  VK_EMPTY,
+/* 56 */  VK_OEM_102,
+/* 57 */  VK_F11,
+/* 58 */  VK_F12,
+/* 59 */  VK_EMPTY,
+/* 5a */  VK_CLEAR,
+/* 5b */  VK_EMPTY,
+/* 5c */  VK_EMPTY,
+/* 5d */  VK_EMPTY,
 /* 5e */  VK_EMPTY,  /* EREOF */
-/* 5f */  VK_EMPTY, 
-/* 60 */  VK_EMPTY, 
-/* 61 */  VK_EMPTY, 
-/* 62 */  VK_EMPTY, 
+/* 5f */  VK_EMPTY,
+/* 60 */  VK_EMPTY,
+/* 61 */  VK_EMPTY,
+/* 62 */  VK_EMPTY,
 /* 63 */  VK_EMPTY,  /* ZOOM */
-/* 64 */  VK_HELP, 
-/* 65 */  VK_F13, 
-/* 66 */  VK_F14, 
-/* 67 */  VK_F15, 
-/* 68 */  VK_F16, 
-/* 69 */  VK_F17, 
-/* 6a */  VK_F18, 
-/* 6b */  VK_F19, 
-/* 6c */  VK_F20, 
-/* 6d */  VK_F21, 
-/* 6e */  VK_F22, 
-/* 6f */  VK_F23, 
-/* 70 */  VK_EMPTY, 
-/* 71 */  VK_EMPTY, 
-/* 72 */  VK_EMPTY, 
-/* 73 */  VK_EMPTY, 
-/* 74 */  VK_EMPTY, 
-/* 75 */  VK_EMPTY, 
-/* 76 */  VK_EMPTY, 
-/* 77 */  VK_F24, 
-/* 78 */  VK_EMPTY, 
-/* 79 */  VK_EMPTY, 
-/* 7a */  VK_EMPTY, 
-/* 7b */  VK_EMPTY, 
-/* 7c */  VK_EMPTY, 
-/* 7d */  VK_EMPTY, 
-/* 7e */  VK_EMPTY, 
-/* 7f */  VK_EMPTY, 
-/* 80 */  VK_EMPTY, 
+/* 64 */  VK_HELP,
+/* 65 */  VK_F13,
+/* 66 */  VK_F14,
+/* 67 */  VK_F15,
+/* 68 */  VK_F16,
+/* 69 */  VK_F17,
+/* 6a */  VK_F18,
+/* 6b */  VK_F19,
+/* 6c */  VK_F20,
+/* 6d */  VK_F21,
+/* 6e */  VK_F22,
+/* 6f */  VK_F23,
+/* 70 */  VK_EMPTY,
+/* 71 */  VK_EMPTY,
+/* 72 */  VK_EMPTY,
+/* 73 */  VK_EMPTY,
+/* 74 */  VK_EMPTY,
+/* 75 */  VK_EMPTY,
+/* 76 */  VK_EMPTY,
+/* 77 */  VK_F24,
+/* 78 */  VK_EMPTY,
+/* 79 */  VK_EMPTY,
+/* 7a */  VK_EMPTY,
+/* 7b */  VK_EMPTY,
+/* 7c */  VK_EMPTY,
+/* 7d */  VK_EMPTY,
+/* 7e */  VK_EMPTY,
+/* 7f */  VK_EMPTY,
+/* 80 */  VK_EMPTY,
 /* 00 */  0
 };
- 
+
 ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x10, VK_MEDIA_PREV_TRACK    | KEXT },	// Pista Anterior
-  { 0x19, VK_MEDIA_NEXT_TRACK    | KEXT },	// Proxima Pista 
+  { 0x19, VK_MEDIA_NEXT_TRACK    | KEXT },	// Proxima Pista
   { 0x1D, VK_RCONTROL            | KEXT },	// Tecla ctrl
   { 0x20, VK_VOLUME_MUTE         | KEXT },	// Mute volume
   { 0x21, VK_LAUNCH_APP2         | KEXT },	// Tecla calculadora
@@ -246,7 +246,7 @@ ROSDATA VSC_VK extcode1_to_vk[] = {
 
 
 /* Modifiers */
- 
+
 ROSDATA VK_TO_BIT modifier_keys[] = {
   { VK_SHIFT,   KSHIFT },
   { VK_CONTROL, KCTRL },
@@ -257,7 +257,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
-  {     0,  1<<0, 1<<1, 1<<2, SHFT_INVALID, SHFT_INVALID,             3  } 
+  {     0,  1<<0, 1<<1, 1<<2, SHFT_INVALID, SHFT_INVALID,             3  }
  /*  NONE, SHIFT, CTRL,  ALT,         MENU, SHIFT + MENU, SHIFT+CONTROL  */
 };
 
@@ -286,7 +286,7 @@ ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
 
 ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* Normal vs Shifted */
-  
+
    /* The alphabet */
   { 'A',    CAPS,   {'a', 'A'} },
   { 'B',    CAPS,   {'b', 'B'} },
@@ -318,7 +318,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   //De 2 ate 4 tem tres estados
   { '1',  NOCAPS,   {'1', '!'} },
   { '5',  NOCAPS,   {'5', '%'} },
-  { '6',  NOCAPS,   {'6', '&'} }, 
+  { '6',  NOCAPS,   {'6', '&'} },
   //De 7 ate 0 tem tres estados
 
   /* Specials */
@@ -335,7 +335,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   {    VK_EMPTY,  	NOCAPS, { ACUTE_CHAR, GRAVE_CHAR} },
 
   { ORDERN_SUPERSCRIPT,	NOCAPS, {       0xBA,       0xAA} }, // º ª
-  { MATH_RELATE,	NOCAPS, {        '<',        '>'} }, 
+  { MATH_RELATE,	NOCAPS, {        '<',        '>'} },
   { VK_OEM_COMMA,	NOCAPS, {        ',',        ';'} },
   { VK_OEM_PERIOD,	NOCAPS, {        '.',        ':'} },
   { VK_OEM_MINUS,	NOCAPS, {        '-',        '_'} },
@@ -352,7 +352,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { 0, 0 }
 };
 
- 
+
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
 
@@ -411,7 +411,7 @@ ROSDATA VK_TO_WCHAR_TABLE vk_to_wchar_master_table[] = {
 
 ROSDATA DEADKEY  deadkey[] =
 {
-            //*´* DEADKEY	00B4 
+            //*´* DEADKEY	00B4
             { DEADTRANS(L'a', 0xb4, 0xe1, 0x00) }, // letra a com ´
             { DEADTRANS(L'A', 0xb4, 0xc1, 0x00) }, // letra A com ´
             { DEADTRANS(L'e', 0xb4, 0xe9, 0x00) }, // letra e com ´
@@ -577,7 +577,7 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
     L"\x00a8"	L"Trema",
     NULL
 };
- 
+
 
 
 
@@ -588,28 +588,28 @@ ROSDATA KBDTABLES keyboard_layout_table = {
 
   /* modifier assignments */
   &modifier_bits,
- 
+
   /* character from vk tables */
   vk_to_wchar_master_table,
- 
+
   /* diacritical marks -- currently implemented by wine code */
   /* Portuguese have severals */
   deadkey,
- 
+
   /* Key names */
   (VSC_LPWSTR *)key_names,
   (VSC_LPWSTR *)extended_key_names,
   dead_key_names,
   /* Dead key names */
- 
+
   /* scan code to virtual key maps */
   scancode_to_vk,
   sizeof(scancode_to_vk) / sizeof(scancode_to_vk[0]),
   extcode0_to_vk,
   extcode1_to_vk,
- 
+
   MAKELONG(0,1), /* Version 1.0 */
- 
+
   /* Ligatures -- Portuguese doesn't have any, that i'm aware  */
   0,
   0,

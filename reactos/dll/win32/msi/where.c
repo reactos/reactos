@@ -165,7 +165,7 @@ static const WCHAR *STRING_evaluate( string_table *st,
     return NULL;
 }
 
-static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row, 
+static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row,
                              struct expr *cond, INT *val, MSIRECORD *record )
 {
     int sr;
@@ -189,7 +189,7 @@ static UINT STRCMP_Evaluate( string_table *st, MSIVIEW *table, UINT row,
     return ERROR_SUCCESS;
 }
 
-static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row, 
+static UINT WHERE_evaluate( MSIDATABASE *db, MSIVIEW *table, UINT row,
                              struct expr *cond, INT *val, MSIRECORD *record )
 {
     UINT r, tval;
@@ -571,7 +571,7 @@ UINT WHERE_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     wv = msi_alloc_zero( sizeof *wv );
     if( !wv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     wv->view.ops = &where_ops;
     msiobj_addref( &db->hdr );

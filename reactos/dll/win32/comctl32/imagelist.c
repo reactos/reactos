@@ -910,7 +910,7 @@ ImageList_DragMove (INT x, INT y)
 	BitBlt(hdcBg, 0, 0, InternalDrag.himl->cx, InternalDrag.himl->cy,
 	       hdcOffScreen, origNewX - origRegX, origNewY - origRegY, SRCCOPY);
 	/* draw the image */
-	ImageList_InternalDragDraw(hdcOffScreen, origNewX - origRegX, 
+	ImageList_InternalDragDraw(hdcOffScreen, origNewX - origRegX,
 				   origNewY - origRegY);
 	/* draw the update region to the screen */
 	BitBlt(hdcDrag, origRegX, origRegY, sizeRegX, sizeRegY,
@@ -955,7 +955,7 @@ ImageList_DragShowNolock (BOOL bShow)
 
     if (!is_valid(InternalDrag.himl))
         return FALSE;
-    
+
     TRACE("bShow=0x%X!\n", bShow);
 
     /* DragImage is already visible/hidden */
@@ -1024,7 +1024,7 @@ ImageList_DragShowNolock (BOOL bShow)
 BOOL WINAPI
 ImageList_Draw (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y, UINT fStyle)
 {
-    return ImageList_DrawEx (himl, i, hdc, x, y, 0, 0, 
+    return ImageList_DrawEx (himl, i, hdc, x, y, 0, 0,
 		             CLR_DEFAULT, CLR_DEFAULT, fStyle);
 }
 
@@ -1144,9 +1144,9 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     if (!hImageListDC || !hImageDC || !hImageBmp ||
 	(bBlend && !hBlendMaskBmp) || (himl->hbmMask && !hMaskListDC))
 	goto cleanup;
-    
+
     hOldImageBmp = SelectObject(hImageDC, hImageBmp);
-  
+
     /*
      * To obtain a transparent look, background color should be set
      * to white and foreground color to black when blting the

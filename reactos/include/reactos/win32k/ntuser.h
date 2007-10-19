@@ -458,7 +458,7 @@ NTAPI
 NtUserCallMsgFilter(
   LPMSG msg,
   INT code);
- 
+
 LRESULT
 NTAPI
 NtUserCallNextHookEx(
@@ -1111,7 +1111,7 @@ NtUserGetInternalWindowPos(
   DWORD Unknown2);
 
 HKL
-NTAPI 
+NTAPI
 NtUserGetKeyboardLayout(
   DWORD dwThreadid);
 
@@ -1139,7 +1139,7 @@ NtUserGetKeyboardType(
 DWORD
 NTAPI
 NtUserGetKeyNameText( LONG lParam, LPWSTR lpString, int nSize );
-  
+
 DWORD
 NTAPI
 NtUserGetKeyState(
@@ -1256,15 +1256,15 @@ NtUserGetRegisteredRawInputDevices(
 BOOL
 NTAPI
 NtUserGetScrollBarInfo(
-  HWND hWnd, 
-  LONG idObject, 
+  HWND hWnd,
+  LONG idObject,
   PSCROLLBARINFO psbi);
 
 BOOL
 NTAPI
 NtUserGetScrollInfo(
-  HWND hwnd, 
-  int fnBar, 
+  HWND hwnd,
+  int fnBar,
   LPSCROLLINFO lpsi);
 
 HDESK
@@ -1403,7 +1403,7 @@ NtUserKillTimer
 
 HKL
 STDCALL
-NtUserLoadKeyboardLayoutEx( 
+NtUserLoadKeyboardLayoutEx(
    IN HANDLE Handle,
    IN DWORD offTable,
    IN PUNICODE_STRING puszKeyboardName,
@@ -1495,7 +1495,7 @@ NtUserMonitorFromWindow(
 
 BOOL
 NTAPI
-NtUserMoveWindow(      
+NtUserMoveWindow(
     HWND hWnd,
     int X,
     int Y,
@@ -1719,7 +1719,7 @@ NtUserRegisterClassEx(
    WNDPROC wpExtra,
    DWORD Flags,
    HMENU hMenu);
-   
+
 UINT
 NTAPI
 NtUserRegisterClipboardFormat(
@@ -2039,9 +2039,9 @@ NtUserSetRipFlags(
 DWORD
 NTAPI
 NtUserSetScrollInfo(
-  HWND hwnd, 
-  int fnBar, 
-  LPCSCROLLINFO lpsi, 
+  HWND hwnd,
+  int fnBar,
+  LPCSCROLLINFO lpsi,
   BOOL bRedraw);
 
 BOOL
@@ -2125,8 +2125,8 @@ NtUserSetWindowPlacement(
   HWND hWnd,
   WINDOWPLACEMENT *lpwndpl);
 
-BOOL 
-NTAPI NtUserSetWindowPos(      
+BOOL
+NTAPI NtUserSetWindowPos(
     HWND hWnd,
     HWND hWndInsertAfter,
     int X,
@@ -2417,7 +2417,7 @@ typedef struct _WNDPROC_INFO
     WNDPROC WindowProc;
     BOOL IsUnicode;
 } WNDPROC_INFO, *PWNDPROC_INFO;
-                                    
+
 BOOL NTAPI
 NtUserDereferenceWndProcHandle(IN HANDLE wpHandle, OUT PWNDPROC_INFO wpInfo);
 
@@ -2438,7 +2438,7 @@ NtUserManualGuiCheck(LONG Check);
 
 typedef struct _SETSCROLLBARINFO
 {
-  int nTrackPos; 
+  int nTrackPos;
   int reserved;
   DWORD rgstate[CCHILDREN_SCROLLBAR+1];
 } SETSCROLLBARINFO, *PSETSCROLLBARINFO;
@@ -2456,7 +2456,7 @@ typedef struct tagKMDDEEXECUTEDATA
   HWND Sender;
   HGLOBAL ClientMem;
   /* BYTE Data[DataSize] */
-} KMDDEEXECUTEDATA, *PKMDDEEXECUTEDATA; 
+} KMDDEEXECUTEDATA, *PKMDDEEXECUTEDATA;
 
 typedef struct tagKMDDELPARAM
 {

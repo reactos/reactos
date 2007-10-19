@@ -21,7 +21,7 @@
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  " ReactOS 安装 "
     IDS_TEXT     " 不能直接从这个 CD 安装 ReactOS! \n\n 请重新启动你的计算机选择从光盘引导来安装 ReactOS。"

@@ -55,7 +55,7 @@ static    BOOL                  TIME_TimeToDie = TRUE;
  *
  * Second, a brief survey of a variety of Win 2k and Win X
  * machines showed that a 'standard' (aka default) timer
- * resolution was 1 ms (Win9x is documented as being 1).  However, one 
+ * resolution was 1 ms (Win9x is documented as being 1).  However, one
  * machine had a standard timer resolution of 10 ms.
  *
  * Further, if we set our default resolution to 1,
@@ -140,7 +140,7 @@ static    LPWINE_TIMERENTRY		lpTimers;
      * To cope with that, we just copy the WINE_TIMERENTRY struct
      * that need to trigger the callback, and call it without the
      * mm timer crit sect locked.
-     * the hKillTimeEvent is used to mark the section where we 
+     * the hKillTimeEvent is used to mark the section where we
      * handle the callbacks so we can do synchronous kills.
      * EPP 99/07/13, updated 04/01/10
      */
@@ -155,11 +155,11 @@ static    LPWINE_TIMERENTRY		lpTimers;
         {
             if (timer->lpFunc) {
                 if (idx == nSizeLpTimers) {
-                    if (lpTimers) 
+                    if (lpTimers)
                         lpTimers = (LPWINE_TIMERENTRY)
                             HeapReAlloc(GetProcessHeap(), 0, lpTimers,
                                         ++nSizeLpTimers * sizeof(WINE_TIMERENTRY));
-                    else 
+                    else
                         lpTimers = (LPWINE_TIMERENTRY)
                         HeapAlloc(GetProcessHeap(), 0,
                                   ++nSizeLpTimers * sizeof(WINE_TIMERENTRY));
@@ -191,7 +191,7 @@ static    LPWINE_TIMERENTRY		lpTimers;
                 else
                     delta_time = timer->dwTriggerTime - cur_time;
             }
-        } 
+        }
         else
             delta_time = timer->dwTriggerTime - cur_time;
 
@@ -207,7 +207,7 @@ static    LPWINE_TIMERENTRY		lpTimers;
     if (TIME_hKillEvent) SetEvent(TIME_hKillEvent);
 
     /* Finally, adjust the recommended wait time downward
-       by the amount of time the processing routines 
+       by the amount of time the processing routines
        actually took */
     adjust_time = GetTickCount() - cur_time;
     if (adjust_time > ret_time)
@@ -237,7 +237,7 @@ static DWORD CALLBACK TIME_MMSysTimeThread(LPVOID arg)
                new event; it's not clear if that would be worth
                it or not.                 */
 
-    while (! TIME_TimeToDie) 
+    while (! TIME_TimeToDie)
     {
 	sleep_time = TIME_MMSysTimeCallback(iData);
 
@@ -246,7 +246,7 @@ static DWORD CALLBACK TIME_MMSysTimeThread(LPVOID arg)
 
         rc = WaitForSingleObject(TIME_hWakeEvent, sleep_time);
         if (rc != WAIT_TIMEOUT && rc != WAIT_OBJECT_0)
-        {   
+        {
             FIXME("Unexpected error %ld(%ld) in timer thread\n", rc, GetLastError());
             break;
         }

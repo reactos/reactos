@@ -1029,7 +1029,7 @@ _mesa_3dlabs_create_shader_object (GLenum shaderType)
 GLhandleARB
 _mesa_3dlabs_create_program_object (void)
 {
-	struct gl2_program_impl *x = (struct gl2_program_impl *) 
+	struct gl2_program_impl *x = (struct gl2_program_impl *)
 		_mesa_malloc (sizeof (struct gl2_program_impl));
 
 	if (x != NULL)

@@ -4,7 +4,7 @@
 LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "ReactOS telepítõ"
     IDS_TEXT     "Nem tudod feltelepíteni a ReactOS rendszert így!\n\nKérlek indítsd újra a számítógépet ezzel a CD-vel, hogy feltudjad telepíteni a ReactOS rendszert."

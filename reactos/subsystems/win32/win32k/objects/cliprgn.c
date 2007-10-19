@@ -96,8 +96,8 @@ IntGdiSelectVisRgn(HDC hdc, HRGN hrgn)
 }
 
 
-int STDCALL IntGdiExtSelectClipRgn(PDC dc, 
-                                HRGN hrgn, 
+int STDCALL IntGdiExtSelectClipRgn(PDC dc,
+                                HRGN hrgn,
                                 int fnMode)
 {
   int retval;
@@ -360,7 +360,7 @@ int STDCALL NtGdiOffsetClipRgn(HDC  hDC,
   {
     Result = NULLREGION;
   }
-  
+
   DC_UnlockDc(dc);
   return Result;
 }

@@ -10,20 +10,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <errno.h>
@@ -46,12 +46,12 @@
 static adns_status mkquery_header(adns_state ads, vbuf *vb, int *id_r, int qdlen) {
   int id;
   byte *rqp;
-  
+
   if (!adns__vbuf_ensure(vb,DNS_HDRSIZE+qdlen+4)) return adns_s_nomemory;
 
   vb->used= 0;
   MKQUERY_START(vb);
-  
+
   *id_r= id= (ads->nextid++) & 0x0ffff;
   MKQUERY_ADDW(id);
   MKQUERY_ADDB(0x01); /* QR=Q(0), OPCODE=QUERY(0000), !AA, !TC, RD */
@@ -62,7 +62,7 @@ static adns_status mkquery_header(adns_state ads, vbuf *vb, int *id_r, int qdlen
   MKQUERY_ADDW(0); /* ARCOUNT=0 */
 
   MKQUERY_STOP(vb);
-  
+
   return adns_s_ok;
 }
 
@@ -74,7 +74,7 @@ static adns_status mkquery_footer(vbuf *vb, adns_rrtype type) {
   MKQUERY_ADDW(DNS_CLASS_IN); /* QCLASS=IN */
   MKQUERY_STOP(vb);
   assert(vb->used <= vb->avail);
-  
+
   return adns_s_ok;
 }
 
@@ -87,7 +87,7 @@ adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
   adns_status st;
 
   st= mkquery_header(ads,vb,id_r,ol+2); if (st) return st;
-  
+
   MKQUERY_START(vb);
 
   p= owner; pe= owner+ol;
@@ -129,9 +129,9 @@ adns_status adns__mkquery(adns_state ads, vbuf *vb, int *id_r,
   MKQUERY_ADDB(0);
 
   MKQUERY_STOP(vb);
-  
+
   st= mkquery_footer(vb,typei->type);
-  
+
   return adns_s_ok;
 }
 
@@ -159,9 +159,9 @@ adns_status adns__mkquery_frdgram(adns_state ads, vbuf *vb, int *id_r,
   MKQUERY_ADDB(0);
 
   MKQUERY_STOP(vb);
-  
+
   st= mkquery_footer(vb,type);
-  
+
   return adns_s_ok;
 }
 
@@ -249,14 +249,14 @@ void adns__query_send(adns_query qu, struct timeval now) {
   servaddr.sin_family= AF_INET;
   servaddr.sin_addr= ads->servers[serv].addr;
   servaddr.sin_port= htons(DNS_PORT);
-  
+
   ADNS_CLEAR_ERRNO;
   r= sendto(ads->udpsocket,(char*)qu->query_dgram,qu->query_dglen,0,
 	    (const struct sockaddr*)&servaddr,sizeof(servaddr));
   ADNS_CAPTURE_ERRNO;
   if (r<0 && errno == EMSGSIZE) { qu->retries= 0; query_usetcp(qu,now); return; }
   if (r<0 && errno != EAGAIN) adns__warn(ads,serv,0,"sendto failed: %s (%d)",strerror(errno), errno);
-  
+
   qu->timeout= now;
   timevaladd(&qu->timeout,UDPRETRYMS);
   qu->udpsent |= (1<<serv);

@@ -1,9 +1,9 @@
 /*
  * RichEdit - Operations on rows of text (rows are recreated during
  * wrapping and are used for displaying the document, they don't keep any
- * true document content; delete all rows, rewrap all paragraphs and 
+ * true document content; delete all rows, rewrap all paragraphs and
  * you get them back).
- * 
+ *
  * Copyright 2004 by Krzysztof Foltman
  *
  * This library is free software; you can redistribute it and/or
@@ -19,12 +19,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- */ 
+ */
 
 
 #include "editor.h"
 
-ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *item, 
+ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *item,
                                 int nRelPos) {
   ME_DisplayItem *para = ME_GetParagraph(item);
   ME_MustBeWrapped(c, para);
@@ -70,7 +70,7 @@ ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *item,
 
 /* I'm sure these functions would simplify some code in caret ops etc,
  * I just didn't remember them when I wrote that code
- */ 
+ */
 
 ME_DisplayItem *ME_RowStart(ME_DisplayItem *item) {
   return ME_FindItemBackOrHere(item, diStartRow);
@@ -89,7 +89,7 @@ ME_FindRowWithNumber(ME_TextEditor *editor, int nRow)
 {
   ME_DisplayItem *item = ME_FindItemFwd(editor->pBuffer->pFirst, diParagraph);
   int nCount = 0;
-  
+
   while (item && nCount + item->member.para.nRows <= nRow)
   {
     nCount += item->member.para.nRows;
@@ -117,7 +117,7 @@ ME_RowNumberFromCharOfs(ME_TextEditor *editor, int nOfs)
   if (item)
   {
     ME_DisplayItem *next_para = item->member.para.next_para;
-    
+
     nOfs -= item->member.para.nCharOfs;
     item = ME_FindItemFwd(item, diRun);
     while ((item = ME_FindItemFwd(item, diStartRowOrParagraph)) != NULL)

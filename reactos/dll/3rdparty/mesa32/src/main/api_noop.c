@@ -581,9 +581,9 @@ void GLAPIENTRY _mesa_noop_Materialfv( GLenum face, GLenum pname, const GLfloat 
    default: nr = 4 ; break;
    }
 
-   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
       if (bitmask & (1<<i))
-	 COPY_SZ_4V( mat->Attrib[i], nr, params ); 
+	 COPY_SZ_4V( mat->Attrib[i], nr, params );
 
    _mesa_update_material( ctx, bitmask );
 }
@@ -793,7 +793,7 @@ void GLAPIENTRY _mesa_noop_EvalMesh1( GLenum mode, GLint i1, GLint i2 )
 
    /* No effect if vertex maps disabled.
     */
-   if (!ctx->Eval.Map1Vertex4 && 
+   if (!ctx->Eval.Map1Vertex4 &&
        !ctx->Eval.Map1Vertex3 &&
        !(ctx->VertexProgram._Enabled && ctx->Eval.Map1Attrib[VERT_ATTRIB_POS]))
       return;
@@ -828,7 +828,7 @@ void GLAPIENTRY _mesa_noop_EvalMesh2( GLenum mode, GLint i1, GLint i2, GLint j1,
 
    /* No effect if vertex maps disabled.
     */
-   if (!ctx->Eval.Map2Vertex4 && 
+   if (!ctx->Eval.Map2Vertex4 &&
        !ctx->Eval.Map2Vertex3 &&
        !(ctx->VertexProgram._Enabled && ctx->Eval.Map2Attrib[VERT_ATTRIB_POS]))
       return;
@@ -883,7 +883,7 @@ void GLAPIENTRY _mesa_noop_EvalMesh2( GLenum mode, GLint i1, GLint i2, GLint j1,
 
 
 /* Build a vertexformat full of things to use outside begin/end pairs.
- * 
+ *
  * TODO -- build a whole dispatch table for this purpose, and likewise
  * for inside begin/end.
  */

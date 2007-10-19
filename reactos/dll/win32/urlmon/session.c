@@ -78,7 +78,7 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
         TRACE("Could not open protocol handler key\n");
         return E_FAIL;
     }
-    
+
     size = sizeof(str_clsid);
     res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
     RegCloseKey(hkey);
@@ -340,7 +340,7 @@ static BOOL get_url_encoding(HKEY root, DWORD *encoding)
     DWORD size = sizeof(DWORD), res, type;
     HKEY hkey;
 
-    static const WCHAR wszKeyName[] = 
+    static const WCHAR wszKeyName[] =
         {'S','O','F','T','W','A','R','E',
          '\\','M','i','c','r','o','s','o','f','t',
          '\\','W','i','n','d','o','w','s',

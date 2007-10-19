@@ -532,7 +532,7 @@ _mesa_copy_materials( struct gl_material *dst,
 {
    int i;
 
-   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
       if (bitmask & (1<<i))
 	 COPY_4FV( dst->Attrib[i], src->Attrib[i] );
 }
@@ -547,7 +547,7 @@ _mesa_update_material( GLcontext *ctx, GLuint bitmask )
    struct gl_light *light, *list = &ctx->Light.EnabledList;
    GLfloat (*mat)[4] = ctx->Light.Material.Attrib;
 
-   if (MESA_VERBOSE&VERBOSE_IMMEDIATE) 
+   if (MESA_VERBOSE&VERBOSE_IMMEDIATE)
       _mesa_debug(ctx, "_mesa_update_material, mask 0x%x\n", bitmask);
 
    if (!bitmask)
@@ -556,14 +556,14 @@ _mesa_update_material( GLcontext *ctx, GLuint bitmask )
    /* update material ambience */
    if (bitmask & MAT_BIT_FRONT_AMBIENT) {
       foreach (light, list) {
-         SCALE_3V( light->_MatAmbient[0], light->Ambient, 
+         SCALE_3V( light->_MatAmbient[0], light->Ambient,
 		   mat[MAT_ATTRIB_FRONT_AMBIENT]);
       }
    }
 
    if (bitmask & MAT_BIT_BACK_AMBIENT) {
       foreach (light, list) {
-         SCALE_3V( light->_MatAmbient[1], light->Ambient, 
+         SCALE_3V( light->_MatAmbient[1], light->Ambient,
 		   mat[MAT_ATTRIB_BACK_AMBIENT]);
       }
    }
@@ -584,14 +584,14 @@ _mesa_update_material( GLcontext *ctx, GLuint bitmask )
    /* update material diffuse values */
    if (bitmask & MAT_BIT_FRONT_DIFFUSE) {
       foreach (light, list) {
-	 SCALE_3V( light->_MatDiffuse[0], light->Diffuse, 
+	 SCALE_3V( light->_MatDiffuse[0], light->Diffuse,
 		   mat[MAT_ATTRIB_FRONT_DIFFUSE] );
       }
    }
 
    if (bitmask & MAT_BIT_BACK_DIFFUSE) {
       foreach (light, list) {
-	 SCALE_3V( light->_MatDiffuse[1], light->Diffuse, 
+	 SCALE_3V( light->_MatDiffuse[1], light->Diffuse,
 		   mat[MAT_ATTRIB_BACK_DIFFUSE] );
       }
    }
@@ -599,7 +599,7 @@ _mesa_update_material( GLcontext *ctx, GLuint bitmask )
    /* update material specular values */
    if (bitmask & MAT_BIT_FRONT_SPECULAR) {
       foreach (light, list) {
-	 SCALE_3V( light->_MatSpecular[0], light->Specular, 
+	 SCALE_3V( light->_MatSpecular[0], light->Specular,
 		   mat[MAT_ATTRIB_FRONT_SPECULAR]);
       }
    }
@@ -633,7 +633,7 @@ _mesa_update_color_material( GLcontext *ctx, const GLfloat color[4] )
    struct gl_material *mat = &ctx->Light.Material;
    int i;
 
-   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
       if (bitmask & (1<<i))
 	 COPY_4FV( mat->Attrib[i], color );
 
@@ -937,7 +937,7 @@ _mesa_validate_all_lighting_tables( GLcontext *ctx )
 {
    GLuint i;
    GLfloat shininess;
-   
+
    shininess = ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_SHININESS][0];
    if (!ctx->_ShineTable[0] || ctx->_ShineTable[0]->shininess != shininess)
       validate_shine_table( ctx, 0, shininess );
@@ -998,20 +998,20 @@ _mesa_update_lighting( GLcontext *ctx )
     */
    if (ctx->Visual.rgbMode) {
       if (ctx->Light.Model.TwoSide)
-	 _mesa_update_material( ctx, 
+	 _mesa_update_material( ctx,
 				MAT_BIT_FRONT_EMISSION |
 				MAT_BIT_FRONT_AMBIENT |
-				MAT_BIT_FRONT_DIFFUSE | 
+				MAT_BIT_FRONT_DIFFUSE |
 				MAT_BIT_FRONT_SPECULAR |
 				MAT_BIT_BACK_EMISSION |
 				MAT_BIT_BACK_AMBIENT |
-				MAT_BIT_BACK_DIFFUSE | 
+				MAT_BIT_BACK_DIFFUSE |
 				MAT_BIT_BACK_SPECULAR);
       else
-	 _mesa_update_material( ctx, 
+	 _mesa_update_material( ctx,
 				MAT_BIT_FRONT_EMISSION |
 				MAT_BIT_FRONT_AMBIENT |
-				MAT_BIT_FRONT_DIFFUSE | 
+				MAT_BIT_FRONT_DIFFUSE |
 				MAT_BIT_FRONT_SPECULAR);
    }
    else {
@@ -1189,7 +1189,7 @@ _mesa_allow_light_in_model( GLcontext *ctx, GLboolean flag )
  * Initialize the n-th light data structure.
  *
  * \param l pointer to the gl_light structure to be initialized.
- * \param n number of the light. 
+ * \param n number of the light.
  * \note The defaults for light 0 are different than the other lights.
  */
 static void
@@ -1236,7 +1236,7 @@ init_lightmodel( struct gl_lightmodel *lm )
 
 /**
  * Initialize the material data structure.
- * 
+ *
  * \param m pointer to the gl_material structure to be initialized.
  */
 static void
@@ -1248,7 +1248,7 @@ init_material( struct gl_material *m )
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_EMISSION], 0.0F, 0.0F, 0.0F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_SHININESS], 0.0F, 0.0F, 0.0F, 0.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_FRONT_INDEXES], 0.0F, 1.0F, 1.0F, 0.0F );
- 
+
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_AMBIENT],  0.2F, 0.2F, 0.2F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_DIFFUSE],  0.8F, 0.8F, 0.8F, 1.0F );
    ASSIGN_4V( m->Attrib[MAT_ATTRIB_BACK_SPECULAR], 0.0F, 0.0F, 0.0F, 1.0F );

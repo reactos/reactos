@@ -61,7 +61,7 @@ VOID PrintDate (VOID)
 	TCHAR szDate[32];
 
   GetDateFormat(LOCALE_USER_DEFAULT, 0, NULL, _T("ddd"), szDateDay, sizeof (szDateDay));
-               
+
 	GetDateFormat(LOCALE_USER_DEFAULT, DATE_SHORTDATE, NULL, NULL,szDate, sizeof (szDate));
 	ConOutPrintf(_T("%s %s"),szDateDay, szDate);
 }
@@ -69,10 +69,10 @@ VOID PrintDate (VOID)
 
 VOID PrintTime (VOID)
 {
-	TCHAR szMsg[RC_STRING_MAX_SIZE];	
+	TCHAR szMsg[RC_STRING_MAX_SIZE];
         SYSTEMTIME t;
-        GetLocalTime(&t); 
-  
+        GetLocalTime(&t);
+
 	LoadString(CMD_ModuleHandle, STRING_LOCALE_HELP1, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(_T("%s: %02d%c%02d%c%02d%c%02d\n"), szMsg,  t.wHour, cTimeSeparator,
 		             t.wMinute , cTimeSeparator,

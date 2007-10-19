@@ -9,20 +9,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifdef ADNS_JGAA_WIN32
@@ -49,7 +49,7 @@ struct myctx {
   int doneyet, found;
   const char *fdom;
 };
-  
+
 static struct myctx *mcs;
 static adns_state ads;
 static adns_rrtype *types_a;
@@ -59,7 +59,7 @@ static void quitnow(int rc) {
   free(mcs);
   free(types_a);
   if (ads) adns_finish(ads);
-  
+
   exit(rc);
 }
 
@@ -116,12 +116,12 @@ static const adns_rrtype defaulttypes[]= {
   adns_r_mx_raw,
   adns_r_txt,
   adns_r_rp_raw,
-  
+
   adns_r_addr,
   adns_r_ns,
   adns_r_ptr,
   adns_r_mx,
-  
+
   adns_r_soa,
   adns_r_rp,
 
@@ -195,7 +195,7 @@ int main(int argc, char *const *argv) {
   } else {
     usageerr("bad <initflagsnum>[,<owninitflags>]");
   }
-  
+
   if (argv[0] && argv[1] && argv[1][0] == ':') {
     for (cp= argv[1]+1, tc=1; (ch= *cp); cp++)
       if (ch==',') tc++;
@@ -215,7 +215,7 @@ int main(int argc, char *const *argv) {
     types_a= 0;
     types= defaulttypes;
   }
-  
+
   if (!(argv[0] && argv[1])) usageerr("no query domains supplied");
   fdomlist= (const char *const*)argv+1;
 
@@ -225,7 +225,7 @@ int main(int argc, char *const *argv) {
   if (!mcs) { perror("malloc mcs"); quitnow(3); }
 
   setvbuf(stdout,0,_IOLBF,0);
-  
+
   if (initstring) {
     r= adns_init_strcfg(&ads,
 			(adns_if_debug|adns_if_noautosys|adns_if_checkc_freq)
@@ -300,22 +300,22 @@ int main(int argc, char *const *argv) {
 #ifdef HAVE_POLL
 	if (strchr(owninitflags,'p')) {
 		r= adns_wait_poll(ads,&qu,&ans,&mcr);
-    } else 
+    } else
 #endif
 	{
       r= adns_wait(ads,&qu,&ans,&mcr);
     }
     if (r) failure_errno("wait/check",r);
-    
+
     if (mc) assert(mcr==mc);
     else mc= mcr;
     assert(qu==mc->qu);
     assert(!mc->doneyet);
-    
+
     fdom_split(mc->fdom,&domain,&qflags,ownflags,sizeof(ownflags));
 
     if (gettimeofday(&now,0)) { perror("gettimeofday"); quitnow(3); }
-      
+
     ri= adns_rr_info(ans->type, &rrtn,&fmtn,&len, 0,0);
     fprintf(stdout, "%s flags %d type ",domain,qflags);
     dumptype(ri,rrtn,fmtn);

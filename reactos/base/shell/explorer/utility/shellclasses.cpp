@@ -19,7 +19,7 @@
 
  //
  // Explorer clone
- // 
+ //
  // shellclasses.cpp
  //
  // C++ wrapper classes for COM interfaces and shell objects

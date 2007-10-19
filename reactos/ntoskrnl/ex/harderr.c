@@ -645,7 +645,7 @@ NtRaiseHardError(IN NTSTATUS ErrorStatus,
         SafeParams = Parameters;
 
         /*
-         * Call the Executive Function. It will probe and copy pointers to 
+         * Call the Executive Function. It will probe and copy pointers to
          * user-mode
          */
         ExRaiseHardError(ErrorStatus,

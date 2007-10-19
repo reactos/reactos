@@ -2674,7 +2674,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
 	  DPRINT("  IOCTL_SCSI_GET_DUMP_POINTERS\n");
 	  DumpPointers = (PDUMP_POINTERS)Irp->AssociatedIrp.SystemBuffer;
 	  DumpPointers->DeviceObject = DeviceObject;
-	  
+
 	  Irp->IoStatus.Information = sizeof(DUMP_POINTERS);
 	}
 	break;
@@ -3078,7 +3078,7 @@ SpiAdapterControl(PDEVICE_OBJECT DeviceObject,
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
     Srb = (PSCSI_REQUEST_BLOCK)IrpStack->Parameters.Others.Argument1;
 
-    /* Depending on the map registers number, we allocate 
+    /* Depending on the map registers number, we allocate
        either from NonPagedPool, or from our static list */
     if (SrbInfo->NumberOfMapRegisters > MAX_SG_LIST)
     {
@@ -3710,7 +3710,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                     /* Check if this device is unsupported */
                     if (InquiryData->DeviceTypeQualifier == DEVICE_QUALIFIER_NOT_SUPPORTED)
                     {
-                        DeviceExtension->LunExtensionList[Hint] = 
+                        DeviceExtension->LunExtensionList[Hint] =
                             DeviceExtension->LunExtensionList[Hint]->Next;
 
                         continue;
@@ -3754,7 +3754,7 @@ SpiScanAdapter(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
                 else
                 {
                     /* Remove this LUN from the list */
-                    DeviceExtension->LunExtensionList[Hint] = 
+                    DeviceExtension->LunExtensionList[Hint] =
                         DeviceExtension->LunExtensionList[Hint]->Next;
 
                     /* Decide whether we are continuing or not */
@@ -3818,7 +3818,7 @@ SpiGetInquiryData(IN PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     /* Calculate data size */
     Length = sizeof(SCSI_ADAPTER_BUS_INFO) + (BusCount - 1) *
         sizeof(SCSI_BUS_DATA);
-    
+
     Length += InquiryDataSize * LunCount;
 
     /* Check, if all data is going to fit into provided buffer */
@@ -6108,7 +6108,7 @@ SpiStatusSrbToNt(UCHAR SrbStatus)
     case SRB_STATUS_TIMEOUT:
     case SRB_STATUS_COMMAND_TIMEOUT:
         return STATUS_IO_TIMEOUT;
-    
+
     case SRB_STATUS_BAD_SRB_BLOCK_LENGTH:
     case SRB_STATUS_BAD_FUNCTION:
         return STATUS_INVALID_DEVICE_REQUEST;

@@ -16,10 +16,10 @@
 /* DnsQuery ****************************
  * Begin a DNS query, and allow the result to be placed in the application
  * supplied result pointer.  The result can be manipulated with the record
- * functions.  
+ * functions.
  *
  * Name                 -- The DNS object to be queried.
- * Type                 -- The type of records to be returned.  These are 
+ * Type                 -- The type of records to be returned.  These are
  *                          listed in windns.h
  * Options              -- Query options.  DNS_QUERY_STANDARD is the base
  *                          state, and every other option takes precedence.
@@ -33,7 +33,7 @@
 
 char *xstrsave(const char *str) {
   char *p;
-  
+
   p = RtlAllocateHeap( RtlGetProcessHeap(), 0, strlen(str)+1 );
   if ( NULL != p ) {
     strcpy(p,str);
@@ -65,7 +65,7 @@ DNS_STATUS WINAPI DnsQuery_A
 			    adns_if_noserverwarn |
 			    (Servers ? adns_if_noserver : 0),
 			    0 );
-    
+
     if( adns_error != adns_s_ok ) {
       return DnsIntTranslateAdnsToDNS_STATUS( adns_error );
     }
@@ -93,12 +93,12 @@ DNS_STATUS WINAPI DnsQuery_A
 
     CurrentName = (LPSTR) Name;
     for ( CNameLoop = 0; CNameLoop < CNAME_LOOP_MAX; CNameLoop++ ) {
-      adns_error = adns_synchronous( astate, 
-                                     CurrentName, 
-                                     adns_r_addr, 
-                                     quflags, 
+      adns_error = adns_synchronous( astate,
+                                     CurrentName,
+                                     adns_r_addr,
+                                     quflags,
                                      &answer );
-				   
+
       if( adns_error != adns_s_ok ) {
         adns_finish( astate );
         if ( CurrentName != Name ) {
@@ -111,7 +111,7 @@ DNS_STATUS WINAPI DnsQuery_A
         if ( CurrentName != Name ) {
           RtlFreeHeap( CurrentName, 0, GetProcessHeap() );
         }
-        *QueryResultSet = 
+        *QueryResultSet =
           (PDNS_RECORD)RtlAllocateHeap( RtlGetProcessHeap(), 0,
                                         sizeof( DNS_RECORD ) );
         if ( NULL == *QueryResultSet ) {
@@ -121,7 +121,7 @@ DNS_STATUS WINAPI DnsQuery_A
         (*QueryResultSet)->pNext = NULL;
         (*QueryResultSet)->wType = Type;
         (*QueryResultSet)->wDataLength = sizeof(DNS_A_DATA);
-        (*QueryResultSet)->Data.A.IpAddress = 
+        (*QueryResultSet)->Data.A.IpAddress =
             answer->rrs.addr->addr.inet.sin_addr.s_addr;
         adns_finish( astate );
         (*QueryResultSet)->pName = xstrsave( Name );
@@ -162,7 +162,7 @@ static PCHAR DnsWToC( const WCHAR *WideString ) {
 
 static PWCHAR DnsCToW( const CHAR *NarrowString ) {
   int chars = mbstowcs( NULL, NarrowString, 0 );
-  PWCHAR out = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+  PWCHAR out = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 				(chars + 1) * sizeof(WCHAR) );
   mbstowcs( out, NarrowString, chars + 1 );
   return out;
@@ -194,12 +194,12 @@ DNS_STATUS WINAPI DnsQuery_W
     case DNS_TYPE_AAAA:
     case DNS_TYPE_KEY:
 #endif
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORD) );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
       ConvertedRecord->wDataLength = QueryResultWide->wDataLength;
-      memcpy( ConvertedRecord, QueryResultWide, 
+      memcpy( ConvertedRecord, QueryResultWide,
 	      QueryResultWide->wDataLength );
       break;
 
@@ -211,19 +211,19 @@ DNS_STATUS WINAPI DnsQuery_W
     case DNS_TYPE_MF:
     case DNS_TYPE_MG:
     case DNS_TYPE_MR:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORD) );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
       ConvertedRecord->wDataLength = sizeof(DNS_PTR_DATA);
-      ConvertedRecord->Data.PTR.pNameHost = 
+      ConvertedRecord->Data.PTR.pNameHost =
 	  (PCHAR)DnsCToW( QueryResultWide->Data.PTR.pNameHost );
       break;
     case DNS_TYPE_MINFO:
 #ifndef __USE_W32API
     case DNS_TYPE_RP:
 #endif
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORD) );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
@@ -239,12 +239,12 @@ DNS_STATUS WINAPI DnsQuery_W
     case DNS_TYPE_AFSDB:
     case DNS_TYPE_RT:
 #endif
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORD) );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
       ConvertedRecord->wDataLength = sizeof(DNS_MX_DATA);
-      ConvertedRecord->Data.MX.pNameExchange = 
+      ConvertedRecord->Data.MX.pNameExchange =
 	  (PCHAR)DnsCToW( QueryResultWide->Data.MX.pNameExchange );
       ConvertedRecord->Data.MX.wPreference =
 	  QueryResultWide->Data.MX.wPreference;
@@ -255,42 +255,42 @@ DNS_STATUS WINAPI DnsQuery_W
     case DNS_TYPE_ISDN:
 #endif
     case DNS_TYPE_HINFO:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
-					 sizeof(DNS_TXT_DATA) + 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+					 sizeof(DNS_TXT_DATA) +
 					 QueryResultWide->
 					 Data.TXT.dwStringCount );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
-      ConvertedRecord->wDataLength = 
-	sizeof(DNS_TXT_DATA) + 
+      ConvertedRecord->wDataLength =
+	sizeof(DNS_TXT_DATA) +
 	(sizeof(PWCHAR) * QueryResultWide->Data.TXT.dwStringCount);
-      ConvertedRecord->Data.TXT.dwStringCount = 
+      ConvertedRecord->Data.TXT.dwStringCount =
 	QueryResultWide->Data.TXT.dwStringCount;
       for( i = 0; i < ConvertedRecord->Data.TXT.dwStringCount; i++ ) {
-	ConvertedRecord->Data.TXT.pStringArray[i] = 
+	ConvertedRecord->Data.TXT.pStringArray[i] =
 	    (PCHAR)DnsCToW( QueryResultWide->Data.TXT.pStringArray[i] );
       }
       break;
 
     case DNS_TYPE_NULL:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
-					 sizeof(DNS_NULL_DATA) + 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
+					 sizeof(DNS_NULL_DATA) +
 					 QueryResultWide->
 					 Data.Null.dwByteCount );
       ConvertedRecord->pName = (PCHAR)DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
       ConvertedRecord->wDataLength =
 	sizeof(DNS_NULL_DATA) + QueryResultWide->Data.Null.dwByteCount;
-      ConvertedRecord->Data.Null.dwByteCount = 
+      ConvertedRecord->Data.Null.dwByteCount =
 	QueryResultWide->Data.Null.dwByteCount;
-      memcpy( &ConvertedRecord->Data.Null.Data, 
+      memcpy( &ConvertedRecord->Data.Null.Data,
 	      &QueryResultWide->Data.Null.Data,
 	      QueryResultWide->Data.Null.dwByteCount );
       break;
 
 #ifndef __USE_W32API
     case DNS_TYPE_SIG:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORDA) );
       ConvertedRecord->pName = DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
@@ -303,7 +303,7 @@ DNS_STATUS WINAPI DnsQuery_W
       break;
 
     case DNS_TYPE_NXT:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORDA) );
       ConvertedRecord->pName = DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
@@ -316,7 +316,7 @@ DNS_STATUS WINAPI DnsQuery_W
       break;
 
     case DNS_TYPE_SRV:
-      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0, 
+      ConvertedRecord = RtlAllocateHeap( RtlGetProcessHeap(), 0,
 					 sizeof(DNS_RECORDA) );
       ConvertedRecord->pName = DnsCToW( QueryResultWide->pName );
       ConvertedRecord->wType = QueryResultWide->wType;
@@ -353,7 +353,7 @@ DNS_STATUS WINAPI DnsQuery_UTF8
   PIP4_ARRAY Servers,
   PDNS_RECORD *QueryResultSet,
   PVOID *Reserved ) {
-  return DnsQuery_UTF8( Name, Type, Options, Servers, QueryResultSet, 
+  return DnsQuery_UTF8( Name, Type, Options, Servers, QueryResultSet,
 			Reserved );
 }
 
@@ -362,7 +362,7 @@ void DnsIntFreeRecordList( PDNS_RECORD ToDelete ) {
   PDNS_RECORD next = 0;
 
   while( ToDelete ) {
-      if( ToDelete->pName ) 
+      if( ToDelete->pName )
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->pName );
       switch( ToDelete->wType ) {
       case DNS_TYPE_CNAME:
@@ -378,46 +378,46 @@ void DnsIntFreeRecordList( PDNS_RECORD ToDelete ) {
       case DNS_TYPE_MINFO:
 #ifndef __USE_W32API
       case DNS_TYPE_RP:
-	  RtlFreeHeap( RtlGetProcessHeap(), 0, 
+	  RtlFreeHeap( RtlGetProcessHeap(), 0,
 		       ToDelete->Data.MINFO.pNameMailbox );
 	  RtlFreeHeap( RtlGetProcessHeap(), 0,
 		       ToDelete->Data.MINFO.pNameErrorsMailbox );
 	  break;
-	  
+
       case DNS_TYPE_AFSDB:
       case DNS_TYPE_RT:
 #endif
       case DNS_TYPE_MX:
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->Data.MX.pNameExchange );
 	  break;
-	  
+
 #ifndef __USE_W32API
       case DNS_TYPE_TXT:
       case DNS_TYPE_ISDN:
 #endif
       case DNS_TYPE_HINFO:
 	  for( i = 0; i < ToDelete->Data.TXT.dwStringCount; i++ ) {
-	      RtlFreeHeap( RtlGetProcessHeap(), 0, 
+	      RtlFreeHeap( RtlGetProcessHeap(), 0,
 			   ToDelete->Data.TXT.pStringArray[i] );
 	  }
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->Data.TXT.pStringArray );
 	  break;
-	  
+
 #ifndef __USE_W32API
       case DNS_TYPE_SIG:
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->Data.SIG.pNameSigner );
 	  break;
-	  
+
       case DNS_TYPE_NXT:
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->Data.NXT.pNameNext );
 	  break;
-	  
+
       case DNS_TYPE_SRV:
 	  RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete->Data.SRV.pNameTarget );
 	  break;
 #endif
       }
-      
+
       next = ToDelete->pNext;
       RtlFreeHeap( RtlGetProcessHeap(), 0, ToDelete );
       ToDelete = next;

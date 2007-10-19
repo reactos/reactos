@@ -290,7 +290,7 @@ RPC_STATUS RPC_ENTRY DceErrorInqTextW(RPC_STATUS e, RPC_WSTR buffer);
 
 RPCRTAPI void RPC_ENTRY
   RpcRaiseException( RPC_STATUS exception );
-        
+
 RPCRTAPI RPC_STATUS RPC_ENTRY
   RpcBindingCopy( RPC_BINDING_HANDLE SourceBinding, RPC_BINDING_HANDLE* DestinationBinding );
 
@@ -508,7 +508,7 @@ RPCRTAPI int RPC_ENTRY
 RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcImpersonateClient (IN RPC_BINDING_HANDLE BindingHandle OPTIONAL);
 
-RPCRTAPI RPC_STATUS RPC_ENTRY 
+RPCRTAPI RPC_STATUS RPC_ENTRY
 RpcRevertToSelf ();
 
 #ifdef __cplusplus

@@ -153,25 +153,25 @@ IntHideMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
       return;
    }
 
-      
+
 
    pgp->Enabled = FALSE;
-   
+
    /*
-    * The mouse is hide from ShowCours and it is frist ?? 
+    * The mouse is hide from ShowCours and it is frist ??
     */
    if (pgp->ShowPointer < 0)
    {
      return ;
    }
-   
+
 
   /*
    *  Hide the cours
    */
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
-   
+
 
    if (pgp->SaveSurface != NULL)
    {
@@ -222,17 +222,17 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    {
       return;
    }
-     
+
    pgp->Enabled = TRUE;
-   
+
    /*
-    * Do not blt the mouse if it in hide 
+    * Do not blt the mouse if it in hide
     */
    if (pgp->ShowPointer < 0)
    {
      return ;
    }
-   
+
    pt.x = pgp->Pos.x - pgp->HotSpot.x;
    pt.y = pgp->Pos.y - pgp->HotSpot.y;
 
@@ -265,7 +265,7 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
    }
 
 
-   /*   
+   /*
     * Blit the cursor on the screen.
     */
 
@@ -304,14 +304,14 @@ IntShowMousePointer(GDIDEVICE *ppdev, SURFOBJ *DestSurface)
            }
         }
         else
-        {         
+        {
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
                           ROP3_TO_ROP4(SRCAND), FALSE);
            SrcPoint.y += pgp->Size.cy;
            IntEngBitBltEx(DestSurface, MaskSurf, NULL, NULL, pgp->XlateObject,
                           &DestRect, &SrcPoint, NULL, NULL, NULL,
-                          ROP3_TO_ROP4(SRCINVERT), FALSE);         
+                          ROP3_TO_ROP4(SRCINVERT), FALSE);
         }
         EngUnlockSurface(MaskSurf);
       }
@@ -418,7 +418,7 @@ EngSetPointerShape(
       {
           return SPS_ERROR;
       }
-      
+
       memcpy(Bits, psoColor->pvBits, psoColor->cjBits);
 
       pgp->ColorSurface = (HSURF)EngCreateBitmap(pgp->Size,
@@ -441,7 +441,7 @@ EngSetPointerShape(
       {
           return SPS_ERROR;
       }
-      
+
       memcpy(Bits, psoMask->pvBits, psoMask->cjBits);
 
       pgp->MaskSurface = (HSURF)EngCreateBitmap(Size,

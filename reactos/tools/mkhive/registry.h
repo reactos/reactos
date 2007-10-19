@@ -167,7 +167,7 @@ extern EREGISTRY_HIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 }
 
 /*
- * PURPOSE: Returns the base address structure if the caller knows the 
+ * PURPOSE: Returns the base address structure if the caller knows the
  * address of a field within the structure
  * ARGUMENTS:
  *          Address = address of the field

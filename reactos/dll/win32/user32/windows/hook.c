@@ -76,13 +76,13 @@ CallMsgFilterA(
         CBT_CREATEWNDW cbtcwW;
         CREATESTRUCTW csW;
 	MSG Msg;
-	
+
 	Msg.hwnd = lpMsg->hwnd;
 	Msg.message = lpMsg->message;
 	Msg.time = lpMsg->time;
 	Msg.pt = lpMsg->pt;
 	Msg.wParam = lpMsg->wParam;
-		
+
         cbtcwW.lpcs = &csW;
         cbtcwW.hwndInsertAfter = cbtcwA->hwndInsertAfter;
         csW = *(CREATESTRUCTW *)cbtcwA->lpcs;
@@ -98,12 +98,12 @@ CallMsgFilterA(
             csW.lpszClass = usBuffer.Buffer;
         }
         Msg.lParam =(LPARAM) &cbtcwW;
-        
+
         ret = NtUserCallMsgFilter((LPMSG)&Msg, nCode);
 
         lpMsg->time = Msg.time;
         lpMsg->pt = Msg.pt;
-                
+
         cbtcwA->hwndInsertAfter = cbtcwW.hwndInsertAfter;
         if (HIWORD(csW.lpszName)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszName );
         if (HIWORD(csW.lpszClass)) HeapFree( GetProcessHeap(), 0, (LPWSTR)csW.lpszClass );

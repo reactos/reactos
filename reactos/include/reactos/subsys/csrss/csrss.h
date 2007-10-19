@@ -598,7 +598,7 @@ typedef struct _CSR_API_MESSAGE2
         {
             PVOID CsrCaptureData;
             CSR_API_NUMBER Opcode;
-            ULONG Status; 
+            ULONG Status;
             ULONG Reserved;
             union
             {

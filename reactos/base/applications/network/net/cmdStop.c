@@ -1,11 +1,11 @@
 
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
- * FILE:            
- * PURPOSE:         
+ * PROJECT:         ReactOS net command
+ * FILE:
+ * PURPOSE:
  *
- * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org) 
+ * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
 #include "net.h"
@@ -20,7 +20,7 @@ INT cmdStop(INT argc, CHAR **argv )
 	  help();
 	  return 0;
    }
-  
+
    if (argc==2)
    {
       string = (char *) malloc(size);
@@ -32,20 +32,20 @@ INT cmdStop(INT argc, CHAR **argv )
       }
       return 0;
    }
-    
+
    if (argc==3)
    {
 	  stop_service(argv[1]);
       return 0;
    }
-   
+
    return 0;
 }
 
 
 INT stop_service(CHAR *service)
-{  
- 
+{
+
   CHAR *srvlst;
   LONG pos=0;
   LONG old_pos=0;
@@ -53,8 +53,8 @@ INT stop_service(CHAR *service)
   LONG size=0;
 
   CHAR *row; /* we assume display name can max be 20 row and each row is 80 char */
-  
-  
+
+
   /* Get the size for  srvlst */
   myCreateProcessStartGetSzie("rpcclient -c \"service enum\"", &size);
   if (size==0)
@@ -70,10 +70,10 @@ INT stop_service(CHAR *service)
   /* Get the server list */
   myCreateProcessStart("rpcclient -c \"service enum\"", srvlst, size);
 
-  
+
   /* scan after display name */
   while (pos<size)
-  {	
+  {
 		old_pos = pos;
 
 		if (1 == row_scanner_service(srvlst, &pos, size, service, NULL))
@@ -84,24 +84,24 @@ INT stop_service(CHAR *service)
 		  if (row == NULL)
 	      {
 		    return 0;
-		  }   
+		  }
 		  memset(row,0,row_size*sizeof(CHAR));
 		  if (1 == row_scanner_service(srvlst, &pos, size, service, &row[27]))
 		  {
-		     /* 
-			    display name found 
-		        now we can start the service 
+		     /*
+			    display name found
+		        now we can start the service
 			  */
-			                
+
 			  memcpy(row,"rpcclient -c \"service stop %s\"\"",27*sizeof(CHAR));
 			  row_size = strlen(row);
-			  row[row_size] = '\"';			 
+			  row[row_size] = '\"';
               system(row);
 		  }
 		  free(row);
 		}
   }
-  
+
   free(srvlst);
   return 0;
 }

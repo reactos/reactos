@@ -618,7 +618,7 @@ RegisterClassExA(CONST WNDCLASSEXA *lpwcx)
       if (MenuName.Buffer != NULL)
          hMenu = LoadMenuA(WndClass.hInstance, WndClass.lpszMenuName);
    }
- 
+
    if (IS_ATOM(WndClass.lpszClassName))
    {
       ClassName.Length =

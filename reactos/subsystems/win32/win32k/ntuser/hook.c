@@ -62,13 +62,13 @@ IntAllocHookTable(void)
 PHOOK FASTCALL IntGetHookObject(HHOOK hHook)
 {
    PHOOK Hook;
-   
+
    if (!hHook)
    {
       SetLastWin32Error(ERROR_INVALID_HOOK_HANDLE);
       return NULL;
    }
-   
+
    Hook = (PHOOK)UserGetObject(gHandleTable, hHook, otHook);
    if (!Hook)
    {

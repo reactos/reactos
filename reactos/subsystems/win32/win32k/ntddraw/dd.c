@@ -15,7 +15,7 @@
 
 #define DdHandleTable GdiHandleTable
 
-/* 
+/*
    DdMapMemory, DdDestroyDriver are not exported as NtGdi calls
    This file is complete for DD_CALLBACKS setup
 
@@ -267,7 +267,7 @@ DWORD STDCALL NtGdiDdCreateSurface(
         pLocal->lpAttachList;
         pLocal->lpAttachListFrom;
         */
-        
+
        /* FIXME: a countup to next pLocal, pMore, pGlobal */
 
     }
@@ -412,7 +412,7 @@ DWORD STDCALL NtGdiDdWaitForVerticalBlank(
         {
             pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
 
-            if (pDirectDraw != NULL) 
+            if (pDirectDraw != NULL)
             {
                 if (pDirectDraw->DD.dwFlags & DDHAL_CB32_WAITFORVERTICALBLANK)
                 {
@@ -451,10 +451,10 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 )
 {
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-    
 
 
-    if ((puCanCreateSurfaceData) && 
+
+    if ((puCanCreateSurfaceData) &&
         (hDirectDrawLocal))
     {
         DDSURFACEDESC desc;
@@ -488,11 +488,11 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
         }
         _SEH_END;
 
-        if ((NT_SUCCESS(Status)) && 
+        if ((NT_SUCCESS(Status)) &&
             (desc.dwSize != 0))
         {
             pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-            if ((pDirectDraw) && 
+            if ((pDirectDraw) &&
                 (pDirectDraw->DD.dwFlags & DDHAL_CB32_CANCREATESURFACE))
             {
                 CanCreateSurfaceData.ddRVal = DDERR_GENERIC;
@@ -528,7 +528,7 @@ DWORD STDCALL NtGdiDdCanCreateSurface(
 /* status : This func is now documented in MSDN, and now it's compatible*/
 /*          with Windows 2000 implementation                            */
 /************************************************************************/
-DWORD STDCALL 
+DWORD STDCALL
 NtGdiDdGetScanLine( HANDLE hDirectDrawLocal, PDD_GETSCANLINEDATA puGetScanLineData)
 {
     DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;

@@ -146,45 +146,45 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     LONG res;
 
     static const WCHAR cszbs[]={'\\',0};
-    static const WCHAR CFF[] = 
+    static const WCHAR CFF[] =
 {'C','o','m','m','o','n','F','i','l','e','s','F','o','l','d','e','r',0};
-    static const WCHAR PFF[] = 
+    static const WCHAR PFF[] =
 {'P','r','o','g','r','a','m','F','i','l','e','s','F','o','l','d','e','r',0};
-    static const WCHAR CADF[] = 
+    static const WCHAR CADF[] =
 {'C','o','m','m','o','n','A','p','p','D','a','t','a','F','o','l','d','e','r',0};
-    static const WCHAR FaF[] = 
+    static const WCHAR FaF[] =
 {'F','a','v','o','r','i','t','e','s','F','o','l','d','e','r',0};
-    static const WCHAR FoF[] = 
+    static const WCHAR FoF[] =
 {'F','o','n','t','s','F','o','l','d','e','r',0};
-    static const WCHAR SendTF[] = 
+    static const WCHAR SendTF[] =
 {'S','e','n','d','T','o','F','o','l','d','e','r',0};
-    static const WCHAR SMF[] = 
+    static const WCHAR SMF[] =
 {'S','t','a','r','t','M','e','n','u','F','o','l','d','e','r',0};
-    static const WCHAR StF[] = 
+    static const WCHAR StF[] =
 {'S','t','a','r','t','u','p','F','o','l','d','e','r',0};
-    static const WCHAR TemplF[] = 
+    static const WCHAR TemplF[] =
 {'T','e','m','p','l','a','t','e','F','o','l','d','e','r',0};
-    static const WCHAR DF[] = 
+    static const WCHAR DF[] =
 {'D','e','s','k','t','o','p','F','o','l','d','e','r',0};
-    static const WCHAR PMF[] = 
+    static const WCHAR PMF[] =
 {'P','r','o','g','r','a','m','M','e','n','u','F','o','l','d','e','r',0};
-    static const WCHAR ATF[] = 
+    static const WCHAR ATF[] =
 {'A','d','m','i','n','T','o','o','l','s','F','o','l','d','e','r',0};
-    static const WCHAR ADF[] = 
+    static const WCHAR ADF[] =
 {'A','p','p','D','a','t','a','F','o','l','d','e','r',0};
-    static const WCHAR SF[] = 
+    static const WCHAR SF[] =
 {'S','y','s','t','e','m','F','o','l','d','e','r',0};
-    static const WCHAR SF16[] = 
+    static const WCHAR SF16[] =
 {'S','y','s','t','e','m','1','6','F','o','l','d','e','r',0};
-    static const WCHAR LADF[] = 
+    static const WCHAR LADF[] =
 {'L','o','c','a','l','A','p','p','D','a','t','a','F','o','l','d','e','r',0};
-    static const WCHAR MPF[] = 
+    static const WCHAR MPF[] =
 {'M','y','P','i','c','t','u','r','e','s','F','o','l','d','e','r',0};
-    static const WCHAR PF[] = 
+    static const WCHAR PF[] =
 {'P','e','r','s','o','n','a','l','F','o','l','d','e','r',0};
-    static const WCHAR WF[] = 
+    static const WCHAR WF[] =
 {'W','i','n','d','o','w','s','F','o','l','d','e','r',0};
-    static const WCHAR WV[] = 
+    static const WCHAR WV[] =
 {'W','i','n','d','o','w','s','V','o','l','u','m','e',0};
     static const WCHAR TF[]=
 {'T','e','m','p','F','o','l','d','e','r',0};
@@ -199,7 +199,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     static const WCHAR szFormat[] = {'%','l','i',0};
     static const WCHAR szWinBuild[] =
 {'W','i','n','d','o','w','s','B','u','i','l','d', 0 };
-    static const WCHAR szSPL[] = 
+    static const WCHAR szSPL[] =
 {'S','e','r','v','i','c','e','P','a','c','k','L','e','v','e','l',0 };
     static const WCHAR szSix[] = {'6',0 };
 
@@ -308,7 +308,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     SHGetFolderPathW(NULL,CSIDL_WINDOWS,NULL,0,pth);
     strcatW(pth,cszbs);
     MSI_SetPropertyW(package, WF, pth);
-    
+
     /* Physical Memory is specified in MB. Using total amount. */
     msex.dwLength = sizeof(msex);
     GlobalMemoryStatusEx( &msex );
@@ -320,7 +320,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     if (ptr)
 	*(ptr+1) = 0;
     MSI_SetPropertyW(package, WV, pth);
-    
+
     GetTempPathW(MAX_PATH,pth);
     MSI_SetPropertyW(package, TF, pth);
 
@@ -337,7 +337,7 @@ static VOID set_installer_properties(MSIPACKAGE *package)
     sprintfW(verstr,szFormat,verval);
     switch (OSVersion.dwPlatformId)
     {
-        case VER_PLATFORM_WIN32_WINDOWS:    
+        case VER_PLATFORM_WIN32_WINDOWS:
             MSI_SetPropertyW(package,v9x,verstr);
             break;
         case VER_PLATFORM_WIN32_NT:
@@ -468,7 +468,7 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPWSTR base_url )
         package->PackagePath = strdupW( db->path );
         package->BaseURL = strdupW( base_url );
 
-        /* OK, here is where we do a slew of things to the database to 
+        /* OK, here is where we do a slew of things to the database to
          * prep for all that is to come as a package */
 
         for (i=0; i<PROPERTY_HASH_SIZE; i++)
@@ -490,12 +490,12 @@ MSIPACKAGE *MSI_CreatePackage( MSIDATABASE *db, LPWSTR base_url )
  * copy_package_to_temp   [internal]
  *
  * copy the msi file to a temp file to prevent locking a CD
- * with a multi disc install 
+ * with a multi disc install
  *
  * FIXME: I think this is wrong, and instead of copying the package,
  *        we should read all the tables to memory, then open the
  *        database to read binary streams on demand.
- */ 
+ */
 static LPCWSTR copy_package_to_temp( LPCWSTR szPackage, LPWSTR filename )
 {
     WCHAR path[MAX_PATH];
@@ -736,7 +736,7 @@ INT MSI_ProcessMessage( MSIPACKAGE *package, INSTALLMESSAGE eMessageType,
     {
         static const WCHAR template_s[]=
             {'A','c','t','i','o','n',' ','%','s',':',' ','%','s','.',' ',0};
-        static const WCHAR format[] = 
+        static const WCHAR format[] =
             {'H','H','\'',':','\'','m','m','\'',':','\'','s','s',0};
         WCHAR timet[0x100];
         LPCWSTR action_text, action;
@@ -1027,7 +1027,7 @@ UINT WINAPI MsiSetPropertyW( MSIHANDLE hInstall, LPCWSTR szName, LPCWSTR szValue
 }
 
 /* internal function, not compatible with MsiGetPropertyW */
-UINT MSI_GetPropertyW( MSIPACKAGE *package, LPCWSTR szName, 
+UINT MSI_GetPropertyW( MSIPACKAGE *package, LPCWSTR szName,
                        LPWSTR szValueBuf, DWORD* pchValueBuf )
 {
     msi_property *prop;

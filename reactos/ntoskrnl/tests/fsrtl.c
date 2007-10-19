@@ -5,14 +5,14 @@
 #include "fastio.h"
 #include "fsrtl.h"
 
-/* 
+/*
     This is the main test function. It is called from DriverEntry.
 
     There is a DbgBreakPoint() call at the beginning of DriverEntry.
     In order to run the test again, simply type
         net stop fsrtl
         net start fsrtl
-    
+
     Author: Dom Cote
 */
 
@@ -22,8 +22,8 @@ BOOLEAN FsRtlTest_StartTest() {
 
     HANDLE DirFh = NULL;
     PFILE_OBJECT DirPfo = NULL;
-    
-    
+
+
     IO_STATUS_BLOCK IoStatus;
     BOOLEAN Return;
     NTSTATUS  Status = STATUS_SUCCESS;
@@ -43,10 +43,10 @@ BOOLEAN FsRtlTest_StartTest() {
     PLARGE_INTEGER   FileSize;
 
     PDEVICE_OBJECT pRelatedDo = NULL;
-    
+
     /* Allocate a 100KB buffer to do IOs */
     Buffer = ExAllocatePool(PagedPool,100*_1KB);
-    
+
     /*  ------------------------------------------------------------------------
             TESTING:
                 BOOLEAN
@@ -65,13 +65,13 @@ BOOLEAN FsRtlTest_StartTest() {
         ------------------------------------------------------------------------  */
     FsRtlTest_OpenTestFile(&Fh, &Pfo);
     FSRTL_TEST("Opening Test File.",((Pfo != NULL) && (Fh != NULL)));
-    
+
     /* Extract the test variable from the FCB struct */
     FcbHeader = (PFSRTL_COMMON_FCB_HEADER)Pfo->FsContext;
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
     /* Try to cache without caching having been initialized. This should fail.*/
     Length = 10*_1KB;
     FSRTL_TEST("FsRtlCopyWrite() - No cache map test.",!FsRtlCopyWrite(Pfo,AllocationSize,Length,TRUE,0,Buffer,&IoStatus,NULL));
@@ -90,7 +90,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRltTest_WritefileZw(Fh,NULL,Length, Buffer, &IoStatus);
     FSRTL_TEST("FsRtlCopyWrite() - Extending by 1/2 sector.",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     Return = TRUE;
-    
+
     /* Append to the file past the allocation size*/
     Offset.LowPart = 0xFFFFFFFF;
     Offset.HighPart = 0xFFFFFFFF;
@@ -99,7 +99,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FSRTL_TEST("FsRtlCopyWrite() - Testing extending past allocation size",!FsRtlCopyWrite(Pfo,&Offset,Length+1,TRUE,0,Buffer,&IoStatus,NULL));
     FSRTL_TEST("FsRtlCopyWrite() - Testing extending not past allocation size",FsRtlCopyWrite(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL));
     FSRTL_TEST("FsRtlCopyWrite() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
-    
+
     /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
     Offset.QuadPart = 0;
     Length = 65*_1KB;
@@ -115,7 +115,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FcbHeader->IsFastIoPossible = FastIoIsQuestionable;
     FSRTL_TEST("FastIo is questionable flag",FsRtlCopyWrite(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL))
     */
-    
+
     /* Test the fast Io not possible flag */
     FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
     FSRTL_TEST("FsRtlCopyWrite() - FastIo is not possible flag",!FsRtlCopyWrite(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL))
@@ -123,7 +123,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FcbHeader->IsFastIoPossible = FastIoIsPossible;
     FSRTL_TEST("FsRtlCopyWrite() - FastIo is possbile flag",FsRtlCopyWrite(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL))
 
-    if (Pfo) 
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -134,7 +134,7 @@ BOOLEAN FsRtlTest_StartTest() {
         ZwClose(Fh);
         Fh = NULL;
      }
-    
+
     /*  ------------------------------------------------------------------------
             TESTING:
                 BOOLEAN
@@ -160,7 +160,7 @@ BOOLEAN FsRtlTest_StartTest() {
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
     /* Try to cache without caching having been initialized. This should fail.*/
     Length = 10*_1KB;
     FSRTL_TEST("FsRtlCopyWrite() - No cache map test. Wait = FALSE",!FsRtlCopyWrite(Pfo,AllocationSize,Length,FALSE,0,Buffer,&IoStatus,NULL));
@@ -179,7 +179,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRltTest_WritefileZw(Fh,NULL,Length, Buffer, &IoStatus);
     FSRTL_TEST("FsRtlCopyWrite() - Extending by 1/2 sector. Wait = FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     Return = TRUE;
-    
+
     /* Append to the file past the allocation size*/
     Offset.LowPart = 0xFFFFFFFF;
     Offset.HighPart = 0xFFFFFFFF;
@@ -188,7 +188,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FSRTL_TEST("FsRtlCopyWrite() - Testing extending past allocation size Wait = FALSE",!FsRtlCopyWrite(Pfo,&Offset,Length+1,FALSE,0,Buffer,&IoStatus,NULL));
     FSRTL_TEST("FsRtlCopyWrite() - Testing extending not past allocation size. Wait = FALSE",FsRtlCopyWrite(Pfo,&Offset,Length,FALSE,0,Buffer,&IoStatus,NULL));
     FSRTL_TEST("FsRtlCopyWrite() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
-    
+
     /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
     Offset.QuadPart = 0;
     Length = 65*_1KB;
@@ -204,7 +204,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FcbHeader->IsFastIoPossible = FastIoIsQuestionable;
     FSRTL_TEST("FastIo is questionable flag",FsRtlCopyWrite(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL))
     */
-    
+
     /* Test the fast Io not possible flag */
     FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
     FSRTL_TEST("FsRtlCopyWrite() - FastIo is not possible flag. Wait = FALSE",!FsRtlCopyWrite(Pfo,&Offset,Length,FALSE,0,Buffer,&IoStatus,NULL))
@@ -215,7 +215,7 @@ BOOLEAN FsRtlTest_StartTest() {
 
     /*  ------------------------------------------------------------------------------------------
             TESTING:
-            
+
                 BOOLEAN
                 NTAPI
                 FsRtlCopyRead(IN PFILE_OBJECT FileObject,
@@ -237,7 +237,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRtlCopyRead(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL);
     FSRTL_TEST("FsRtlCopyRead() - Testing 64k IO Wait=TRUE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     Return = TRUE;
-    
+
     /* Testing a 64KB read with Wait = FALSE */
     Return = FsRtlCopyRead(Pfo,&Offset,Length,FALSE,0,Buffer,&IoStatus,NULL);
     FSRTL_TEST("FsRtlCopyRead() - Testing 64k IO Wait=FALSE",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
@@ -248,12 +248,12 @@ BOOLEAN FsRtlTest_StartTest() {
     Length = 10 * _1KB;
     Return = FsRtlCopyRead(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL);
     FSRTL_TEST("FsRtlCopyRead() - Testing reading past end of file but starting before EOF",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status) && IoStatus.Information == (FileSize->QuadPart-Offset.QuadPart)));
-    
+
     Offset.QuadPart = FileSize->QuadPart + 1;
     Length = 10 * _1KB;
     Return = FsRtlCopyRead(Pfo,&Offset,Length,TRUE,0,Buffer,&IoStatus,NULL);
     FSRTL_TEST("FsRtlCopyRead() - Testing reading past end of file but starting after EOF",(NT_SUCCESS(Return) && (IoStatus.Status == STATUS_END_OF_FILE) && IoStatus.Information == 0));
-    
+
 
     /* Testing a 64KB read with Wait = TRUE */
     Offset.LowPart = 0x0;
@@ -265,7 +265,7 @@ BOOLEAN FsRtlTest_StartTest() {
     FcbHeader->IsFastIoPossible = FastIoIsPossible;
     Return = TRUE;
 
-    if (Pfo) 
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -299,12 +299,12 @@ BOOLEAN FsRtlTest_StartTest() {
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
     /* Try to cache without caching having been initialized. This should fail.*/
     Length = 10*_1KB;
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - No cache map test. Wait = FALSE",
         !FsRtlPrepareMdlWriteDev(Pfo,AllocationSize,Length,0,MdlChain,&IoStatus,NULL));
-        
+
     /* We are going to build a 100k file */
     /* This will inititate caching and build some size */
     Offset.QuadPart = 0;
@@ -323,21 +323,21 @@ BOOLEAN FsRtlTest_StartTest() {
 
     pRelatedDo = IoGetRelatedDeviceObject(Pfo);
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Did we get related DO ?",pRelatedDo);
-    
-    
+
+
     /* Append to the file past the allocation size*/
     Offset.QuadPart = FileSize->QuadPart;
     OldSize.QuadPart = FileSize->QuadPart;
     Length = (ULONG) (AllocationSize->QuadPart -ValidDataLength->QuadPart);
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Testing extending past allocation size.",
         !FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length+1,0,&MdlChain,&IoStatus,pRelatedDo));
-        
+
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Testing extending not past allocation size.",
           FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,pRelatedDo));
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,pRelatedDo));
-        
-    
+
+
     /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
     Offset.QuadPart = 0;
     MdlChain = NULL;
@@ -345,20 +345,20 @@ BOOLEAN FsRtlTest_StartTest() {
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - 65KB IO Test.",
         FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,pRelatedDo));
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,pRelatedDo));
-     
+
      /* Try do write a 64kb IO. Maximum IO size for thus function is 64KB */
     Length = 64*_1KB;
     MdlChain = NULL;
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - 64KB IO Test.",
         FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL))
     FSRTL_TEST("FsRtlPrepareMdlWriteDev() - Release the MDL.",FsRtlMdlWriteCompleteDev(Pfo,&Offset,MdlChain,NULL));
-     
+
      /* Test the fast Io not possible flag */
    FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
    FSRTL_TEST("FsRtlPrepareMdlWriteDev() - FastIo is not possible flag.",
        !FsRtlPrepareMdlWriteDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL))
-        
-    if (Pfo) 
+
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -392,12 +392,12 @@ BOOLEAN FsRtlTest_StartTest() {
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
     /* Try to cache without caching having been initialized. This should fail.*/
     Length = 10*_1KB;
     FSRTL_TEST("FsRtlPrepareMdlWrite() - No cache map test. Wait = FALSE",
         !FsRtlPrepareMdlWrite(Pfo,AllocationSize,Length,0,MdlChain,&IoStatus));
-        
+
     /* We are going to build a 100k file */
     /* This will inititate caching and build some size */
     Offset.QuadPart = 0;
@@ -421,13 +421,13 @@ BOOLEAN FsRtlTest_StartTest() {
     Length = (ULONG) (AllocationSize->QuadPart -ValidDataLength->QuadPart);
     FSRTL_TEST("FsRtlPrepareMdlWrite() - Testing extending past allocation size.",
         !FsRtlPrepareMdlWrite(Pfo,&Offset,Length+1,0,&MdlChain,&IoStatus));
-        
+
     FSRTL_TEST("FsRtlPrepareMdlWrite() - Testing extending not past allocation size.",
           FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus));
     FSRTL_TEST("FsRtlPrepareMdlWrite() - Check filesize",(FileSize->QuadPart = (OldSize.QuadPart+Length)));
     FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
-        
-    
+
+
     /* Try do write a 65kb IO and check that if fails. Maximum IO size for thus function is 64KB */
     Offset.QuadPart = 0;
     MdlChain = NULL;
@@ -435,20 +435,20 @@ BOOLEAN FsRtlTest_StartTest() {
     FSRTL_TEST("FsRtlPrepareMdlWrite() - 65KB IO Test.",
         !FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus));
     //FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
-     
+
      /* Try do write a 64kb IO. Maximum IO size for thus function is 64KB */
     Length = 64*_1KB;
     MdlChain = NULL;
     FSRTL_TEST("FsRtlPrepareMdlWrite() - 64KB IO Test.",
         FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus))
     FSRTL_TEST("FsRtlPrepareMdlWrite() - Release the MDL.",FsRtlMdlWriteComplete(Pfo,&Offset,MdlChain));
-     
+
      /* Test the fast Io not possible flag */
    FcbHeader->IsFastIoPossible = FastIoIsNotPossible;
    FSRTL_TEST("FsRtlPrepareMdlWrite() - FastIo is not possible flag.",
        !FsRtlPrepareMdlWrite(Pfo,&Offset,Length,0,&MdlChain,&IoStatus))
-        
-    if (Pfo) 
+
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -459,10 +459,10 @@ BOOLEAN FsRtlTest_StartTest() {
         ZwClose(Fh);
         Fh = NULL;
      }
-    
+
     /*  ------------------------------------------------------------------------------------------
         TESTING:
-        
+
             FsRtlMdlReadDev(IN PFILE_OBJECT FileObject,
                         IN PLARGE_INTEGER FileOffset,
                         IN ULONG Length,
@@ -474,7 +474,7 @@ BOOLEAN FsRtlTest_StartTest() {
             FsRtlMdlReadCompleteDev(IN PFILE_OBJECT FileObject,
                                     IN PMDL MemoryDescriptorList,
                                     IN PDEVICE_OBJECT DeviceObject)
-                        
+
         ------------------------------------------------------------------------------------------
     */
 
@@ -485,7 +485,7 @@ BOOLEAN FsRtlTest_StartTest() {
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
 
     /* We are going to build a 100k file */
     /* This will inititate caching and build some size */
@@ -494,7 +494,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRltTest_WritefileZw(Fh,&Offset,Length, Buffer, &IoStatus);
     FSRTL_TEST("FsRtlMdlReadDev() - Building 100k filesize.",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     Return = TRUE;
-    
+
 
     Offset.LowPart = 0x0;
     Offset.HighPart = 0x0;
@@ -505,7 +505,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRtlMdlReadDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL);
     FSRTL_TEST("FsRtlMdlReadDev() - Testing 64k IO",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     FSRTL_TEST("FsRtlMdlReadDev() - Releasing the MDL",FsRtlMdlReadCompleteDev(Pfo,MdlChain,NULL));
-    
+
 
     /* Testing read past the end of the file */
     Offset.QuadPart = FileSize->QuadPart - (5 * _1KB);
@@ -514,13 +514,13 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRtlMdlReadDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL);
     FSRTL_TEST("FsRtlMdlReadDev() - Testing reading past end of file but starting before EOF",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status) && IoStatus.Information == (FileSize->QuadPart-Offset.QuadPart)));
     FSRTL_TEST("FsRtlMdlReadDev() - Releasing the MDL",FsRtlMdlReadCompleteDev(Pfo,MdlChain,NULL));
-    
+
     Offset.QuadPart = FileSize->QuadPart + 1;
     Length = 10 * _1KB;
     MdlChain = NULL;
     Return = FsRtlMdlReadDev(Pfo,&Offset,Length,0,&MdlChain,&IoStatus,NULL);
     FSRTL_TEST("FsRtlMdlReadDev() - Testing reading past end of file but starting after EOF",(NT_SUCCESS(Return) && (IoStatus.Status == STATUS_END_OF_FILE) && IoStatus.Information == 0));
-    
+
     /* Testing FastIoIsNotPossible */
     Offset.LowPart = 0x0;
     Offset.HighPart = 0x0;
@@ -531,7 +531,7 @@ BOOLEAN FsRtlTest_StartTest() {
 
     Return = TRUE;
 
-    if (Pfo) 
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -545,7 +545,7 @@ BOOLEAN FsRtlTest_StartTest() {
 
     /*  ------------------------------------------------------------------------------------------
         TESTING:
-        
+
             FsRtlMdlRead(IN PFILE_OBJECT FileObject,
                         IN PLARGE_INTEGER FileOffset,
                         IN ULONG Length,
@@ -555,7 +555,7 @@ BOOLEAN FsRtlTest_StartTest() {
 
             FsRtlMdlReadComplete(IN PFILE_OBJECT FileObject,
                                     IN PMDL MemoryDescriptorList)
-                        
+
         ------------------------------------------------------------------------------------------
     */
 
@@ -566,7 +566,7 @@ BOOLEAN FsRtlTest_StartTest() {
     AllocationSize = &FcbHeader->AllocationSize;
     ValidDataLength = &FcbHeader->ValidDataLength;
     FileSize = &FcbHeader->FileSize;
-    
+
 
     /* We are going to build a 100k file */
     /* This will inititate caching and build some size */
@@ -575,7 +575,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRltTest_WritefileZw(Fh,&Offset,Length, Buffer, &IoStatus);
     FSRTL_TEST("FsRtlMdlRead() - Building 100k filesize.",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     Return = TRUE;
-    
+
 
     Offset.LowPart = 0x0;
     Offset.HighPart = 0x0;
@@ -586,7 +586,7 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
     FSRTL_TEST("FsRtlMdlRead() - Testing 64k IO",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status ) && IoStatus.Information == Length));
     FSRTL_TEST("FsRtlMdlRead() - Releasing the MDL",FsRtlMdlReadComplete(Pfo,MdlChain));
-    
+
 
     /* Testing read past the end of the file */
     Offset.QuadPart = FileSize->QuadPart - (5 * _1KB);
@@ -595,13 +595,13 @@ BOOLEAN FsRtlTest_StartTest() {
     Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
     FSRTL_TEST("FsRtlMdlRead() - Testing reading past end of file but starting before EOF",(NT_SUCCESS(Return) && NT_SUCCESS(IoStatus.Status) && IoStatus.Information == (FileSize->QuadPart-Offset.QuadPart)));
     FSRTL_TEST("FsRtlMdlRead() - Releasing the MDL",FsRtlMdlReadComplete(Pfo,MdlChain));
-    
+
     Offset.QuadPart = FileSize->QuadPart + 1;
     Length = 10 * _1KB;
     MdlChain = NULL;
     Return = FsRtlMdlRead(Pfo,&Offset,Length,0,&MdlChain,&IoStatus);
     FSRTL_TEST("FsRtlMdlRead() - Testing reading past end of file but starting after EOF",(NT_SUCCESS(Return) && (IoStatus.Status == STATUS_END_OF_FILE) && IoStatus.Information == 0));
-    
+
     /* Testing FastIoIsNotPossible */
     Offset.LowPart = 0x0;
     Offset.HighPart = 0x0;
@@ -612,7 +612,7 @@ BOOLEAN FsRtlTest_StartTest() {
 
     Return = TRUE;
 
-    if (Pfo) 
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -623,35 +623,35 @@ BOOLEAN FsRtlTest_StartTest() {
         ZwClose(Fh);
         Fh = NULL;
     }
-    
+
 
 
     /*  ------------------------------------------------------------------------------------------
         TESTING:
-        
+
                     FsRtlGetFileSize(IN PFILE_OBJECT  FileObject,
                                      IN OUT PLARGE_INTEGER FileSize)
-                        
+
         ------------------------------------------------------------------------------------------
     */
     FsRtlTest_OpenTestFile(&Fh, &Pfo);
     FSRTL_TEST("FsRtlGetFileSize() - Opening Test File.",((Pfo != NULL) && (Fh != NULL)));
-    
+
     FsRtlTest_OpenTestDirectory(&DirFh, &DirPfo);
     FSRTL_TEST("FsRtlGetFileSize() - Opening Test Directory.",((DirPfo != NULL) && (DirFh != NULL)));
 
     Status = FsRtlGetFileSize(Pfo,&OldSize);
     FSRTL_TEST("FsRtlGetFileSize() - Get the size of a real file",NT_SUCCESS(Status));
-    
+
     Status = FsRtlGetFileSize(DirPfo,&OldSize);
     FSRTL_TEST("FsRtlGetFileSize() - Get the size of a directory file",(Status == STATUS_FILE_IS_A_DIRECTORY));
-    
-    
-    /* The test if over. Do clean up */ 
+
+
+    /* The test if over. Do clean up */
 
 Cleanup:
 
-    if (DirPfo) 
+    if (DirPfo)
     {
         ObDereferenceObject(DirPfo);
         DirPfo = NULL;
@@ -662,7 +662,7 @@ Cleanup:
         ZwClose(DirFh);
         DirFh = NULL;
      }
-    if (Pfo) 
+    if (Pfo)
     {
         ObDereferenceObject(Pfo);
         Pfo = NULL;
@@ -673,7 +673,7 @@ Cleanup:
         ZwClose(Fh);
         Fh = NULL;
      }
-        
+
     if (Buffer != NULL) {
         ExFreePool(Buffer);
         Buffer = NULL;
@@ -706,11 +706,11 @@ NTSTATUS FsRltTest_WritefileZw(HANDLE fh, PLARGE_INTEGER Offset, ULONG Length, P
 void FsRtlTest_FillBuffer(LARGE_INTEGER Start, ULONG Length, PVOID Buffer) {
     ULONG i = 0;
     PULONGLONG Index = (PULONGLONG) Buffer;
-    
+
     for (i=0; i<Length/sizeof(ULONGLONG); i++) {
         Index[i] = Start.QuadPart + i;
     }
-    
+
     return;
  }
 
@@ -722,7 +722,7 @@ void FsRtlTest_FillBuffer(LARGE_INTEGER Start, ULONG Length, PVOID Buffer) {
     OBJECT_ATTRIBUTES oa;
     IO_STATUS_BLOCK IoStatus;
     NTSTATUS  Return;
-    
+
     RtlInitUnicodeString(&FileName,L"\\??\\C:\\fsrtl.bin");
 
     InitializeObjectAttributes(
@@ -763,7 +763,7 @@ void FsRtlTest_FillBuffer(LARGE_INTEGER Start, ULONG Length, PVOID Buffer) {
     OBJECT_ATTRIBUTES oa;
     IO_STATUS_BLOCK IoStatus;
     NTSTATUS  Return;
-    
+
     RtlInitUnicodeString(&FileName,L"\\??\\C:\\testdir01");
 
     InitializeObjectAttributes(
@@ -820,7 +820,7 @@ NTSTATUS DriverEntry( IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING Registr
     } else {
         DbgPrint("FsRtl test OK.\n");
     }
-    
+
     return STATUS_SUCCESS;
 }
 

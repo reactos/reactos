@@ -123,7 +123,7 @@ disk_sector_t *new_image(char *bsfname)
   root = (root_entry_t *)img[N_RESERVED + N_FATS * SECTORS_PER_FAT];
   strncpy(root->name, "REACTOS       ", 11);
   root->attribute = ATTR_VOLUME;
-  
+
   return img;
 }
 
@@ -253,7 +253,7 @@ int copy_files(disk_sector_t *img, char *filenames[], int n_files)
     }
 
     printf("  %s\n", filenames[i]);
-    
+
     size = 0;
     while ((n = fread(img[k], 1, SECTOR_SIZE, f)) > 0)
     {
@@ -339,7 +339,7 @@ int main(int argc, char *argv[])
   {
     return 1;
   }
-  
+
   printf("Finished.\n");
 
   return 0;

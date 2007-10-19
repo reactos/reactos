@@ -22,7 +22,7 @@ BEGIN
     DEFPUSHBUTTON "&Reiniciar", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Preparando las conexiones de red..."
     IDS_APPLYINGCOMPUTERSETTINGS "Aplicando los parámetros de configuración..."
@@ -40,7 +40,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS se está iniciando..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "!Winlogon falló al activar el shell de usuario!"
 END

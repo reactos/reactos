@@ -218,7 +218,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
     return refCount;
 }
 
-static HRESULT WINAPI IStream_fnRead (IStream * iface, 
+static HRESULT WINAPI IStream_fnRead (IStream * iface,
                                       void* pv,
                                       ULONG cb,
                                       ULONG* pcbRead)

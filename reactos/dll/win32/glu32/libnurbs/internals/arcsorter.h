@@ -56,8 +56,8 @@ protected:
     virtual int		qscmp( char *, char * );
     Subdivider&		subdivider;
 private:
-    void		qsexc( char *i, char *j );	// i<-j, j<-i 
-    void		qstexc( char *i, char *j, char *k ); // i<-k, k<-j, j<-i 
+    void		qsexc( char *i, char *j );	// i<-j, j<-i
+    void		qstexc( char *i, char *j, char *k ); // i<-k, k<-j, j<-i
 };
 
 

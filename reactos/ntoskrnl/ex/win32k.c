@@ -19,7 +19,7 @@
 POBJECT_TYPE ExWindowStationObjectType = NULL;
 POBJECT_TYPE ExDesktopObjectType = NULL;
 
-GENERIC_MAPPING ExpWindowStationMapping = 
+GENERIC_MAPPING ExpWindowStationMapping =
 {
     STANDARD_RIGHTS_READ,
     STANDARD_RIGHTS_WRITE,

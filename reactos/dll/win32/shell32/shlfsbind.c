@@ -133,7 +133,7 @@ HRESULT WINAPI FileSystemBindData_SetFindData(LPBC pbc, const WIN32_FIND_DATAW *
     LPUNKNOWN pUnk;
     IFileSystemBindData *pfsbd = NULL;
     HRESULT ret;
-    
+
     TRACE("%p, %p\n", pbc, pfd);
 
     ret = IBindCtx_GetObjectParam(pbc, (LPOLESTR)wFileSystemBindData, &pUnk);
@@ -187,7 +187,7 @@ static ULONG WINAPI IFileSystemBindData_fnRelease(IFileSystemBindData *iface)
 {
     IFileSystemBindDataImpl *This = (IFileSystemBindDataImpl *)iface;
     ULONG refCount = InterlockedDecrement(&This->ref);
-    
+
     TRACE("(%p)->(count=%i)\n", This, refCount + 1);
 
     if (!refCount)

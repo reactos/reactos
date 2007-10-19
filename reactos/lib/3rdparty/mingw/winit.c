@@ -57,7 +57,7 @@ _mingw32_init_wmainargs ()
    * Microsoft's runtime provides a function for doing just that.
    */
 #ifdef __MSVCRT__
-  (void) __wgetmainargs (&_argc, &_wargv, &dummy_environ, _CRT_glob, 
+  (void) __wgetmainargs (&_argc, &_wargv, &dummy_environ, _CRT_glob,
                         &start_info);
 #else
 #error Cannot build unicode version against crtdll

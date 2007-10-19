@@ -64,10 +64,10 @@ private:
 };
 
 inline void
-Varray::append( REAL v ) 
+Varray::append( REAL v )
 {
     if( v != vval[numquads] )
-        vval[++numquads] = v; 
+        vval[++numquads] = v;
 }
 
 

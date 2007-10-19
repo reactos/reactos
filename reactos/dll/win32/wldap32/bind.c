@@ -285,7 +285,7 @@ exit:
  *  cred        [I] Credentials.
  *  serverctrls [I] Array of LDAP server controls.
  *  clientctrls [I] Array of LDAP client controls.
- *  message     [O] Message ID of the bind operation. 
+ *  message     [O] Message ID of the bind operation.
  *
  * RETURNS
  *  Success: LDAP_SUCCESS
@@ -515,7 +515,7 @@ exit:
  *  Failure: An LDAP error code.
  *
  * NOTES
- *  Set dn and passwd to NULL to bind as an anonymous user. 
+ *  Set dn and passwd to NULL to bind as an anonymous user.
  */
 ULONG CDECL ldap_simple_bindW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR passwd )
 {
@@ -609,7 +609,7 @@ exit:
  *  Failure: An LDAP error code.
  *
  * NOTES
- *  Set dn and passwd to NULL to bind as an anonymous user. 
+ *  Set dn and passwd to NULL to bind as an anonymous user.
  */
 ULONG CDECL ldap_simple_bind_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR passwd )
 {

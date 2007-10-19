@@ -30,11 +30,11 @@
  *        Add touch syntax.  "copy arp.exe+,,"
  *        Copy command is now completed.
  */
- 
+
 #include <precomp.h>
- 
+
 #ifdef INCLUDE_CMD_COPY
- 
+
 enum
 {
 	COPY_ASCII       = 0x001,   /* /A  */
@@ -47,11 +47,11 @@ enum
 	COPY_BINARY      = 0x100,   /* /B  */
 };
 
-INT 
-copy (TCHAR source[MAX_PATH], 
-	  TCHAR dest[MAX_PATH], 
-	  INT append, 
-	  DWORD lpdwFlags, 
+INT
+copy (TCHAR source[MAX_PATH],
+	  TCHAR dest[MAX_PATH],
+	  INT append,
+	  DWORD lpdwFlags,
 	  BOOL bTouch)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -67,7 +67,7 @@ copy (TCHAR source[MAX_PATH],
 	TCHAR TempSrc[MAX_PATH];
 	TCHAR * FileName;
 	SYSTEMTIME CurrentTime;
- 
+
 	/* Check Breaker */
 	if(CheckCtrlBreak(BREAK_INPUT))
 		return 0;
@@ -75,7 +75,7 @@ copy (TCHAR source[MAX_PATH],
 #ifdef _DEBUG
 	DebugPrintf (_T("checking mode\n"));
 #endif
- 
+
 	if(bTouch)
 	{
 	hFileSrc = CreateFile (source, GENERIC_WRITE, FILE_SHARE_READ,
@@ -105,7 +105,7 @@ copy (TCHAR source[MAX_PATH],
 	}
 
 	dwAttrib = GetFileAttributes (source);
- 
+
 	hFileSrc = CreateFile (source, GENERIC_READ, FILE_SHARE_READ,
 		NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
@@ -119,14 +119,14 @@ copy (TCHAR source[MAX_PATH],
 #ifdef _DEBUG
 	DebugPrintf (_T("getting time\n"));
 #endif
- 
+
 	GetFileTime (hFileSrc, &srctime, NULL, NULL);
- 
+
 #ifdef _DEBUG
 	DebugPrintf (_T("copy: flags has %s\n"),
 		lpdwFlags & COPY_ASCII ? "ASCII" : "BINARY");
 #endif
- 
+
 	/* Check to see if /D or /Z are true, if so we need a middle
 	   man to copy the file too to allow us to use CopyFileEx later */
 	if(lpdwFlags & COPY_DECRYPT)
@@ -177,47 +177,47 @@ copy (TCHAR source[MAX_PATH],
 		{
 			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 			ConOutPrintf(szMsg, source);
- 
+
 			CloseHandle (hFileSrc);
             nErrorLevel = 1;
 			return 0;
 		}
- 
+
 #ifdef _DEBUG
 		DebugPrintf (_T("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n"), dest);
 #endif
 		SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
- 
+
 #ifdef _DEBUG
 		DebugPrintf (_T("DeleteFile (%s);\n"), dest);
 #endif
 		DeleteFile (dest);
- 
+
 		hFileDest =	CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	}
 	else
 	{
 		LONG lFilePosHigh = 0;
- 
+
 		if (!_tcscmp (dest, source))
 		{
 			CloseHandle (hFileSrc);
 			return 0;
 		}
- 
+
 #ifdef _DEBUG
 		DebugPrintf (_T("opening/appending\n"));
 #endif
 		SetFileAttributes (dest, FILE_ATTRIBUTE_NORMAL);
- 
+
 		hFileDest =
 			CreateFile (dest, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
- 
+
 		/* Move to end of file to start writing */
 		SetFilePointer (hFileDest, 0, &lFilePosHigh,FILE_END);
 	}
- 
- 
+
+
 		if (hFileDest == INVALID_HANDLE_VALUE)
 	{
 		CloseHandle (hFileSrc);
@@ -236,7 +236,7 @@ copy (TCHAR source[MAX_PATH],
         nErrorLevel = 1;
 		return 0;
 	}
- 
+
 	do
 	{
 
@@ -251,15 +251,15 @@ copy (TCHAR source[MAX_PATH],
 				break;
 			}
 		}
- 
+
 		if (dwRead == 0)
 			break;
- 
+
 		WriteFile (hFileDest, buffer, dwRead, &dwWritten, NULL);
 		if (dwWritten != dwRead || CheckCtrlBreak(BREAK_INPUT))
 		{
 			ConOutResPuts(STRING_COPY_ERROR3);
- 
+
 			cmd_free (buffer);
 			CloseHandle (hFileDest);
 			CloseHandle (hFileSrc);
@@ -268,12 +268,12 @@ copy (TCHAR source[MAX_PATH],
 		}
 	}
 	while (!bEof);
- 
+
 #ifdef _DEBUG
 	DebugPrintf (_T("setting time\n"));
 #endif
 	SetFileTime (hFileDest, &srctime, NULL, NULL);
- 
+
 	if ((lpdwFlags & COPY_ASCII) && !bEof)
 	{
 		/* we're dealing with ASCII files! */
@@ -283,16 +283,16 @@ copy (TCHAR source[MAX_PATH],
 #endif
 		WriteFile (hFileDest, buffer, sizeof(CHAR), &dwWritten, NULL);
 	}
- 
+
 	VirtualFree (buffer, 0, MEM_RELEASE);
 	CloseHandle (hFileDest);
 	CloseHandle (hFileSrc);
- 
+
 #ifdef _DEBUG
 	DebugPrintf (_T("setting mode\n"));
 #endif
 	SetFileAttributes (dest, dwAttrib);
- 
+
 	/* Now finish off the copy if needed with CopyFileEx */
 	if(lpdwFlags & COPY_RESTART)
 	{
@@ -300,7 +300,7 @@ copy (TCHAR source[MAX_PATH],
 		{
 		   nErrorLevel = 1;
 		   DeleteFile(dest);
-           return 0;			
+           return 0;
 		}
 		/* Take care of file in the temp folder */
 		DeleteFile(dest);
@@ -312,8 +312,8 @@ copy (TCHAR source[MAX_PATH],
 
 	return 1;
 }
- 
- 
+
+
 static INT CopyOverwrite (LPTSTR fn)
 {
 	/*ask the user if they want to override*/
@@ -324,8 +324,8 @@ static INT CopyOverwrite (LPTSTR fn)
 	res = FilePromptYNA (_T(""));
 	return res;
 }
- 
- 
+
+
 INT cmd_copy (LPTSTR cmd, LPTSTR param)
 {
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
@@ -359,15 +359,15 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
    int size;
 	TCHAR * szTouch;
 	BOOL bDone = FALSE;
- 
-	
+
+
   /*Show help/usage info*/
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE, STRING_COPY_HELP2);
 		return 0;
 	}
- 
+
   nErrorLevel = 0;
 
   /* Get the envor value if it exists */
@@ -375,16 +375,16 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
   if (evar==NULL) size = 0;
   else
   {
-   size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);  
+   size = GetEnvironmentVariable (_T("COPYCMD"), evar, 512);
   }
   if (size > 512)
   {
     evar = cmd_realloc(evar,size * sizeof(TCHAR) );
     if (evar!=NULL)
-    {             
+    {
       size = GetEnvironmentVariable (_T("COPYCMD"), evar, size);
       }
-    else 
+    else
     {
       size=0;
     }
@@ -397,48 +397,48 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
     /* scan and set the flags */
     for (t=0;t<size;t++)
     {
-      if (_tcsncicmp(_T("/A"),&evar[t],2)==0) 
+      if (_tcsncicmp(_T("/A"),&evar[t],2)==0)
       {
         dwFlags |=COPY_ASCII;
         t++;
       }
 
-      else if (_tcsncicmp(_T("/B"),&evar[t],2)==0) 
+      else if (_tcsncicmp(_T("/B"),&evar[t],2)==0)
       {
         dwFlags |= COPY_BINARY;
         t++;
       }
-      else if (_tcsncicmp(_T("/D"),&evar[t],2)==0) 
+      else if (_tcsncicmp(_T("/D"),&evar[t],2)==0)
       {
         dwFlags |= COPY_DECRYPT;
         t++;
       }
 
-			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0) 
+			else if (_tcsncicmp(_T("/V"),&evar[t],2)==0)
       {
         dwFlags |= COPY_VERIFY;
         t++;
       }
 
-			else if (_tcsncicmp(_T("/N"),&evar[t],2)==0) 
+			else if (_tcsncicmp(_T("/N"),&evar[t],2)==0)
       {
         dwFlags |= COPY_SHORTNAME;
         t++;
       }
- 
-      else if (_tcsncicmp(_T("/Y"),&evar[t],2)==0) 
+
+      else if (_tcsncicmp(_T("/Y"),&evar[t],2)==0)
       {
         dwFlags |= COPY_NO_PROMPT;
         t++;
       }
 
-      else if (_tcsncicmp(_T("/-Y"),&evar[t],3)==0) 
+      else if (_tcsncicmp(_T("/-Y"),&evar[t],3)==0)
       {
         dwFlags |= COPY_PROMPT;
         t+=2;
       }
 
-      else if (_tcsncicmp(_T("/Z"),&evar[t],2)==0) 
+      else if (_tcsncicmp(_T("/Z"),&evar[t],2)==0)
       {
         dwFlags |= COPY_PROMPT;
         t++;
@@ -451,8 +451,8 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
   /*Split the user input into array*/
 	arg = split (param, &argc, FALSE);
 	nFiles = argc;
- 
- 
+
+
 	/*Read switches and count files*/
 	for (i = 0; i < argc; i++)
 	{
@@ -462,32 +462,32 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 			{
 				switch (_totupper(arg[i][1]))
 				{
- 
+
 				case _T('A'):
 					dwFlags |= COPY_ASCII;
 					break;
- 
+
 				case _T('B'):
 					dwFlags |= COPY_BINARY;
 					break;
- 
+
 				case _T('D'):
 					dwFlags |= COPY_DECRYPT;
 					break;
- 
+
 				case _T('V'):
 					dwFlags |= COPY_VERIFY;
 					break;
- 
+
 				case _T('N'):
 					dwFlags |= COPY_SHORTNAME;
 					break;
- 
+
 				case _T('Y'):
 					dwFlags |= COPY_NO_PROMPT;
 					dwFlags &= ~COPY_PROMPT;
 					break;
- 
+
 				case _T('-'):
 					if(_tcslen(arg[i]) >= 3)
 						if(_totupper(arg[i][2]) == _T('Y'))
@@ -495,17 +495,17 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 							dwFlags &= ~COPY_NO_PROMPT;
 							dwFlags |= COPY_PROMPT;
 						}
- 
+
 						break;
- 
+
 				case _T('Z'):
 					dwFlags |= COPY_RESTART;
 					break;
- 
+
 				default:
 					/* invaild switch */
                     LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_SWITCH, szMsg, RC_STRING_MAX_SIZE);
-	                ConOutPrintf(szMsg, _totupper(arg[i][1]));					
+	                ConOutPrintf(szMsg, _totupper(arg[i][1]));
 					nErrorLevel = 1;
 					return 1;
 					break;
@@ -528,15 +528,15 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 					directly on source string later on */
 				_tcscat(arg[nSrc],arg[i]);
 				nFiles--;
-			}				
+			}
 			else if(nDes == -1)
 			{
 				nDes = i;
 			}
- 
+
 		}
 	}
- 
+
 	/* keep quiet within batch files */
 	if (bc != NULL)
         {
@@ -551,17 +551,17 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		freep (arg);
 		return 1;
 	}
- 
+
 	if(nFiles > 2)
 	{
 		/* there is too many file names in command */
         LoadString(CMD_ModuleHandle, STRING_ERROR_TOO_MANY_PARAMETERS, szMsg, RC_STRING_MAX_SIZE);
-	    ConErrPrintf(szMsg,_T(""));		
+	    ConErrPrintf(szMsg,_T(""));
         nErrorLevel = 1;
 		freep (arg);
 		return 1;
 	}
- 
+
 	if(((_tcschr (arg[nSrc], _T('+')) != NULL) ||
 		(_tcschr (arg[nSrc], _T('*')) != NULL && _tcschr (arg[nDes], _T('*')) == NULL) ||
 		(IsExistingDirectory (arg[nSrc]) && (_tcschr (arg[nDes], _T('*')) == NULL && !IsExistingDirectory (arg[nDes])))
@@ -574,10 +574,10 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		if(_tcschr (arg[nSrc], _T('+')) != NULL)
 		   appendPointer = arg[nSrc];
 	}
- 
+
 	/* Reusing the number of files variable */
 	nFiles = 0;
- 
+
 	do
 	{
 	/* Set up the string that is the path to the destination */
@@ -590,16 +590,16 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		else
 		/* If the user entered two file names then form the full string path*/
 		GetFullPathName (arg[nDes], MAX_PATH, szDestPath, NULL);
- 
+
 	}
 	else
 	{
-		/* If no destination was entered then just use 
+		/* If no destination was entered then just use
 		the current directory as the destination */
 		GetCurrentDirectory (MAX_PATH, szDestPath);
 	}
- 
- 
+
+
 	/* Get the full string of the path to the source file*/
 	if(_tcschr (arg[nSrc], _T('+')) != NULL)
 	{
@@ -610,7 +610,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		{
 			if(!_tcsncmp (appendPointer,_T("+"),1) || !_tcsncmp (appendPointer,_T("\0"),1))
 			{
-				/* Now that the pointer is on the + we 
+				/* Now that the pointer is on the + we
 				   need to go to the start of the next filename */
 				if(!_tcsncmp (appendPointer,_T("+"),1))
 				   appendPointer++;
@@ -619,24 +619,24 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 				break;
 
 			}
-			
+
 			_tcsncat(tmpName,appendPointer,1);
 			appendPointer++;
 
 		}
 		/* Finish the string off with a null char */
 		_tcsncat(tmpName,_T("\0"),1);
-			
+
 		if(_tcschr (arg[nSrc], _T(',')) != NULL)
 			{
 				/* Only time there is a , in the source is when they are using touch
-				   Cant have a destination and can only have on ,, at the end of the string 
+				   Cant have a destination and can only have on ,, at the end of the string
 					Cant have more then one file name */
 				szTouch = _tcsstr (arg[nSrc], _T("+"));
 				if(_tcsncmp (szTouch,_T("+,,\0"),4) || nDes != -1)
 				{
 					LoadString(CMD_ModuleHandle, STRING_ERROR_INVALID_PARAM_FORMAT, szMsg, RC_STRING_MAX_SIZE);
-					ConErrPrintf(szMsg,arg[nSrc]);		
+					ConErrPrintf(szMsg,arg[nSrc]);
 					nErrorLevel = 1;
 					freep (arg);
 					return 1;
@@ -655,7 +655,7 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		}
 		else
 		/* Get the full path to first file in the string of file names */
-		GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);	
+		GetFullPathName (tmpName, MAX_PATH, szSrcPath, NULL);
 	}
 	else
 	{
@@ -667,17 +667,17 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		else
 		/* Get the full path of the source file */
 		GetFullPathName (arg[nSrc], MAX_PATH, szSrcPath, NULL);
- 
+
 	}
- 
+
 	/* From this point on, we can assume that the shortest path is 3 letters long
 	and that would be [DriveLetter]:\ */
- 
+
 	/* If there is no * in the path name and it is a folder
 	then we will need to add a wildcard to the pathname
 	so FindFirstFile comes up with all the files in that
 	folder */
-	if(_tcschr (szSrcPath, _T('*')) == NULL && 
+	if(_tcschr (szSrcPath, _T('*')) == NULL &&
 		IsExistingDirectory (szSrcPath))
 	{
 		/* If it doesnt have a \ at the end already then on needs to be added */
@@ -687,18 +687,18 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		_tcscat (szSrcPath, _T("*"));
 	}
 	/* Make sure there is an ending slash to the path if the dest is a folder */
-	if(_tcschr (szDestPath, _T('*')) == NULL && 
+	if(_tcschr (szDestPath, _T('*')) == NULL &&
 		IsExistingDirectory(szDestPath))
 	{
 		if(szDestPath[_tcslen(szDestPath) -  1] != _T('\\'))
 			_tcscat (szDestPath, _T("\\"));
 	}
- 
- 
+
+
 	/* Get a list of all the files */
 	hFile = FindFirstFile (szSrcPath, &findBuffer);
-	
- 
+
+
 	/* We need to figure out what the name of the file in the is going to be */
 	if((szDestPath[_tcslen(szDestPath) -  1] == _T('*') && szDestPath[_tcslen(szDestPath) -  2] == _T('\\')) ||
 		szDestPath[_tcslen(szDestPath) -  1] == _T('\\'))
@@ -714,20 +714,20 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 		UseThisName++;
 		_tcscpy(PreserveName,UseThisName);
 	}
- 
+
 	/* Strip the paths back to the folder they are in */
 	for(i = (_tcslen(szSrcPath) -  1); i > -1; i--)
 		if(szSrcPath[i] != _T('\\'))
 			szSrcPath[i] = _T('\0');
 		else
 			break;
- 
+
 	for(i = (_tcslen(szDestPath) -  1); i > -1; i--)
 		if(szDestPath[i] != _T('\\'))
 			szDestPath[i] = _T('\0');
 		else
 			break;
- 
+
 		do
 		{
 			/* Check Breaker */
@@ -738,29 +738,29 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 			}
 			/* Set the override to yes each new file */
 			nOverwrite = 1;
- 
+
 			/* If it couldnt open the file handle, print out the error */
 			if(hFile == INVALID_HANDLE_VALUE)
-			{			
-				ConOutFormatMessage (GetLastError(), szSrcPath);			
+			{
+				ConOutFormatMessage (GetLastError(), szSrcPath);
 				freep (arg);
 				nErrorLevel = 1;
 				return 1;
 			}
- 
+
 			/* Ignore the . and .. files */
 			if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
 				!_tcscmp (findBuffer.cFileName, _T(".."))||
 				findBuffer.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 				continue;
- 
+
 			/* Copy the base folder over to a tmp string */
 			_tcscpy(tmpDestPath,szDestPath);
- 
+
 			/* Can't put a file into a folder that isnt there */
 			if(!IsExistingDirectory(szDestPath))
 			{
-				ConOutFormatMessage (GetLastError (), szSrcPath);			
+				ConOutFormatMessage (GetLastError (), szSrcPath);
 				freep (arg);
 				nErrorLevel = 1;
 				return 1;
@@ -819,10 +819,10 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 					*r = 0;
 					/* Add the filename to the tmp string path */
 					_tcscat (tmpDestPath, DoneFile);
- 
+
 				}
 			}
- 
+
 
 			/* Build the string path to the source file */
 			_tcscpy(tmpSrcPath,szSrcPath);
@@ -866,13 +866,13 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 	/* print out the number of files copied */
 	LoadString(CMD_ModuleHandle, STRING_COPY_FILE, szMsg, RC_STRING_MAX_SIZE);
 	ConOutPrintf(szMsg, nFiles);
-	
-	FindClose(hFile);		
-  if (arg!=NULL) 
+
+	FindClose(hFile);
+  if (arg!=NULL)
       freep(arg);
 
 	return 0;
 }
- 
- 
+
+
 #endif /* INCLUDE_CMD_COPY */

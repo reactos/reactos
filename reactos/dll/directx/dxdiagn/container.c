@@ -1,6 +1,6 @@
-/* 
+/*
  * IDxDiagContainer Implementation
- * 
+ *
  * Copyright 2004 Raphael Junqueira
  *
  * This library is free software; you can redistribute it and/or
@@ -64,7 +64,7 @@ ULONG WINAPI IDxDiagContainerImpl_Release(PDXDIAGCONTAINER iface) {
     }
 
     DXDIAGN_UnlockModule();
-    
+
     return refCount;
 }
 
@@ -83,7 +83,7 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumChildContainerNames(PDXDIAGCONTAINER ifa
   IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface;
   IDxDiagContainerImpl_SubContainer* p = NULL;
   DWORD i = 0;
-  
+
   TRACE("(%p, %lu, %s, %lu)\n", iface, dwIndex, debugstr_w(pwszContainer), cchContainer);
 
   if (NULL == pwszContainer) {
@@ -92,10 +92,10 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumChildContainerNames(PDXDIAGCONTAINER ifa
   if (256 > cchContainer) {
     return DXDIAG_E_INSUFFICIENT_BUFFER;
   }
-  
+
   p = This->subContainers;
   while (NULL != p) {
-    if (dwIndex == i) {  
+    if (dwIndex == i) {
       if (cchContainer <= strlenW(p->contName)) {
 	return DXDIAG_E_INSUFFICIENT_BUFFER;
       }
@@ -104,7 +104,7 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumChildContainerNames(PDXDIAGCONTAINER ifa
     }
     p = p->next;
     ++i;
-  }  
+  }
   return E_INVALIDARG;
 }
 
@@ -114,7 +114,7 @@ HRESULT WINAPI IDxDiagContainerImpl_GetChildContainerInternal(PDXDIAGCONTAINER i
 
   p = This->subContainers;
   while (NULL != p) {
-    if (0 == lstrcmpW(p->contName, pwszContainer)) {      
+    if (0 == lstrcmpW(p->contName, pwszContainer)) {
       *ppInstance = (PDXDIAGCONTAINER)p->pCont;
       return S_OK;
     }
@@ -179,7 +179,7 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumPropNames(PDXDIAGCONTAINER iface, DWORD 
   IDxDiagContainerImpl *This = (IDxDiagContainerImpl *)iface;
   IDxDiagContainerImpl_Property* p = NULL;
   DWORD i = 0;
-  
+
   FIXME("(%p, %lu, %s, %lu)\n", iface, dwIndex, debugstr_w(pwszPropName), cchPropName);
 
   if (NULL == pwszPropName) {
@@ -188,10 +188,10 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumPropNames(PDXDIAGCONTAINER iface, DWORD 
   if (256 > cchPropName) {
     return DXDIAG_E_INSUFFICIENT_BUFFER;
   }
-  
+
   p = This->properties;
   while (NULL != p) {
-    if (dwIndex == i) {  
+    if (dwIndex == i) {
       if (cchPropName <= lstrlenW(p->vName)) {
 	return DXDIAG_E_INSUFFICIENT_BUFFER;
       }
@@ -200,7 +200,7 @@ HRESULT WINAPI IDxDiagContainerImpl_EnumPropNames(PDXDIAGCONTAINER iface, DWORD 
     }
     p = p->next;
     ++i;
-  }  
+  }
   return E_INVALIDARG;
 }
 
@@ -215,7 +215,7 @@ HRESULT WINAPI IDxDiagContainerImpl_GetProp(PDXDIAGCONTAINER iface, LPCWSTR pwsz
 
   p = This->properties;
   while (NULL != p) {
-    if (0 == lstrcmpW(p->vName, pwszPropName)) {      
+    if (0 == lstrcmpW(p->vName, pwszPropName)) {
       VariantCopy(pvarProp, &p->v);
       return S_OK;
     }
@@ -309,7 +309,7 @@ HRESULT DXDiag_CreateDXDiagContainer(REFIID riid, LPVOID *ppobj) {
   IDxDiagContainerImpl* container;
 
   TRACE("(%p, %p)\n", debugstr_guid(riid), ppobj);
-  
+
   container = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDxDiagContainerImpl));
   if (NULL == container) {
     *ppobj = NULL;

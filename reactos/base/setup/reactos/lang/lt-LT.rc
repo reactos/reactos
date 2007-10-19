@@ -3,7 +3,7 @@
 LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "ReactOS Ádiegimas"
     IDS_TEXT     "Jûs negalite ádiegti ReactOS tiesiogiai ið ðio CD!\n\nNorëdami ádiegti ReactOS, praðome perkrauti Jûsø kompiuterá su ðiuo CD."

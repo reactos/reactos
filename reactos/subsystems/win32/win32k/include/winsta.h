@@ -33,7 +33,7 @@ typedef struct _WINSTATION_OBJECT
     UINT CaretBlinkRate;
     HANDLE ShellWindow;
     HANDLE ShellListView;
-     
+
     BOOL FlatMenu;
     /* ScreenSaver */
     BOOL ScreenSaverRunning;
@@ -51,7 +51,7 @@ typedef struct _WINSTATION_OBJECT
 
     PCLIPBOARDSYSTEM Clipboard;
     DWORD           ClipboardSequenceNumber;
-    
+
 } WINSTATION_OBJECT, *PWINSTATION_OBJECT;
 
 extern WINSTATION_OBJECT *InputWindowStation;

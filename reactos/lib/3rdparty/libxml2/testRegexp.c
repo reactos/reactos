@@ -48,10 +48,10 @@ testRegexpFile(const char *filename) {
     while (fgets(expression, 4500, input) != NULL) {
 	len = strlen(expression);
 	len--;
-	while ((len >= 0) && 
+	while ((len >= 0) &&
 	       ((expression[len] == '\n') || (expression[len] == '\t') ||
 		(expression[len] == '\r') || (expression[len] == ' '))) len--;
-	expression[len + 1] = 0;      
+	expression[len + 1] = 0;
 	if (len >= 0) {
 	    if (expression[0] == '#')
 		continue;

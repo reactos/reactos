@@ -51,8 +51,8 @@
 #define EDQUOT                  WSAEDQUOT
 #define ESTALE                  WSAESTALE
 #define EREMOTE                 WSAEREMOTE
-/* These cause conflicts with the codes from errno.h. Since they are 
-   not used in the relevant code (nanoftp, nanohttp), we can leave 
+/* These cause conflicts with the codes from errno.h. Since they are
+   not used in the relevant code (nanoftp, nanohttp), we can leave
    them disabled.
 #define ENAMETOOLONG            WSAENAMETOOLONG
 #define ENOTEMPTY               WSAENOTEMPTY

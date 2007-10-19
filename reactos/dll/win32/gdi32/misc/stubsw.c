@@ -202,7 +202,7 @@ UpdateICMRegKeyW(
 }
 
 
-/* === AFTER THIS POINT I GUESS... ========= 
+/* === AFTER THIS POINT I GUESS... =========
  * (based on stack size in Norlander's .def)
  * === WHERE ARE THEY DEFINED? =============
  */

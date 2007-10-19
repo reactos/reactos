@@ -119,7 +119,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
 
     uirow = MSI_CreateRecord(1);
     attributes = MSI_RecordGetInteger(rec,5);
-    
+
     while (rc == ERROR_SUCCESS)
     {
         rc = RegEnumValueW(hkey, index, product, &sz, NULL, NULL, NULL, NULL);
@@ -144,14 +144,14 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                 index ++;
                 continue;
             }
-          
+
             sz = sizeof(DWORD);
             RegQueryValueExW(hukey, INSTALLPROPERTY_VERSIONW, NULL, NULL,
                     (LPBYTE)&check, &sz);
             /* check min */
             ver = MSI_RecordGetString(rec,2);
             comp_ver = msi_version_str_to_dword(ver);
-            r = check - comp_ver; 
+            r = check - comp_ver;
             if (r < 0 || (r == 0 && !(attributes &
                                     msidbUpgradeAttributesVersionMinInclusive)))
             {
@@ -164,7 +164,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
             ver = MSI_RecordGetString(rec,3);
             comp_ver = msi_version_str_to_dword(ver);
             r = check - comp_ver;
-            if (r > 0 || (r == 0 && !(attributes & 
+            if (r > 0 || (r == 0 && !(attributes &
                                     msidbUpgradeAttributesVersionMaxInclusive)))
             {
                 RegCloseKey(hukey);
@@ -178,7 +178,7 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
                     (LPBYTE)&check, &sz);
             RegCloseKey(hukey);
             language = MSI_RecordGetString(rec,4);
-            TRACE("Checking languages %x and %s\n", check, 
+            TRACE("Checking languages %x and %s\n", check,
                             debugstr_w(language));
             if (!check_language(check, language, attributes))
             {
@@ -194,13 +194,13 @@ static UINT ITERATE_FindRelatedProducts(MSIRECORD *rec, LPVOID param)
     }
     RegCloseKey(hkey);
     msiobj_release( &uirow->hdr);
-    
+
     return ERROR_SUCCESS;
 }
 
 UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
 {
-    static const WCHAR Query[] = 
+    static const WCHAR Query[] =
         {'S','E','L','E','C','T',' ','*',' ','F','R','O','M',
          ' ','`','U','p','g','r','a','d','e','`',0};
     UINT rc = ERROR_SUCCESS;
@@ -217,9 +217,9 @@ UINT ACTION_FindRelatedProducts(MSIPACKAGE *package)
     rc = MSI_DatabaseOpenViewW(package->db, Query, &view);
     if (rc != ERROR_SUCCESS)
         return ERROR_SUCCESS;
-    
+
     rc = MSI_IterateRecords(view, NULL, ITERATE_FindRelatedProducts, package);
     msiobj_release(&view->hdr);
-    
+
     return rc;
 }

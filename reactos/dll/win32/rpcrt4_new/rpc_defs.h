@@ -102,7 +102,7 @@ typedef struct
   unsigned short max_tsize;       /* Maximum transmission fragment size */
   unsigned short max_rsize;       /* Maximum receive fragment size */
   unsigned long assoc_gid;        /* Associated group id */
-  /* 
+  /*
    * Following this header are these fields:
    *   RpcAddressString server_address;
    *   [0 - 3 bytes of padding so that results is 4-byte aligned]

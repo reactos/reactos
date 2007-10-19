@@ -1,9 +1,9 @@
 /* $Id$
  *
  * initrun.c - Run all programs in the boot execution list
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -111,7 +111,7 @@ SmpRunBootAppsQueryRoutine(PWSTR ValueName,
 
 /**********************************************************************
  * SmRunBootApplications/0
- * 
+ *
  * DESCRIPTION
  *
  * Run native applications listed in the registry.
@@ -141,7 +141,7 @@ SmRunBootApplications(VOID)
 				  NULL);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT1("%s: RtlQueryRegistryValues() failed! (Status %lx)\n", 
+      DPRINT1("%s: RtlQueryRegistryValues() failed! (Status %lx)\n",
 	__FUNCTION__,
 	Status);
     }

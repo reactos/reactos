@@ -202,7 +202,7 @@ ReadLineConfig(IN LPTSTR szDeviceName,
         {
             goto ExitClose;
         }
-        
+
         LineStates = HeapAlloc(GetProcessHeap(),
                                0,
                                Size);
@@ -220,7 +220,7 @@ ReadLineConfig(IN LPTSTR szDeviceName,
             {
                 goto ExitClose;
             }
-            
+
             /* try to find the control */
             for (i = 0; i < Size / sizeof(SNDVOL_REG_LINESTATE); i++)
             {
@@ -240,6 +240,6 @@ ExitClose:
                  LineStates);
         RegCloseKey(hLineKey);
     }
-    
+
     return Ret;
 }

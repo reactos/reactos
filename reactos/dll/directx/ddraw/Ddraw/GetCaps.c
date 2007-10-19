@@ -10,7 +10,7 @@
 
 /* TODO
  * lpddNLVHELCaps and lpddNLVCaps
- * Thouse two can be null or inviald in lpGBL 
+ * Thouse two can be null or inviald in lpGBL
  * we need add code in startup to detect if we have lpddNLVCaps set
  * ms HEL does not support lpddNLVHELCaps shall we do that ?
  * ms HEL does not support dwVidMemTotal and dwVidMemFree shall we implement a emulate of them ?
@@ -91,7 +91,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX5 myCaps = (LPDDCAPS_DX5) pDriverCaps;
 
-                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c
                     if (This->lpLcl->lpGbl->lpddNLVCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
                     {
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
@@ -117,7 +117,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX7 myCaps = (LPDDCAPS_DX7) pDriverCaps;
 
-                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVCaps are not set in startup.c
                     if (This->lpLcl->lpGbl->lpddNLVCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
                     {
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVCaps, sizeof(DDNONLOCALVIDMEMCAPS));
@@ -199,7 +199,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX5 myCaps = (LPDDCAPS_DX5) pHELCaps;
 
-                    /* FIXME  This->lpLcl->lpGbl->lpddNLVHELCaps are not set in startup.c 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVHELCaps are not set in startup.c
                     if (This->lpLcl->lpGbl->lpddNLVHELCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
                     {
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVHELCaps, sizeof(DDNONLOCALVIDMEMCAPS));
@@ -225,7 +225,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                 {
                     LPDDCAPS_DX7 myCaps = (LPDDCAPS_DX7) pHELCaps;
 
-                    /* FIXME  This->lpLcl->lpGbl->lpddNLVHELCaps are not set in startup.c 
+                    /* FIXME  This->lpLcl->lpGbl->lpddNLVHELCaps are not set in startup.c
                     if (This->lpLcl->lpGbl->lpddNLVHELCaps->dwSize == sizeof(DDNONLOCALVIDMEMCAPS))
                     {
                         memcpy(&myCaps->dwNLVBCaps, This->lpLcl->lpGbl->lpddNLVHELCaps, sizeof(DDNONLOCALVIDMEMCAPS));

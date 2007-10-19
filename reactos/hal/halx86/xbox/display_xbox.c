@@ -408,7 +408,7 @@ HalReleaseDisplayOwnership(VOID)
 VOID STDCALL
 HalAcquireDisplayOwnership(IN PHAL_RESET_DISPLAY_PARAMETERS ResetDisplayParameters)
 /*
- * FUNCTION: 
+ * FUNCTION:
  * ARGUMENTS:
  *         ResetDisplayParameters = Pointer to a driver specific
  *         reset routine.
@@ -465,7 +465,7 @@ HalDisplayString(IN PCH String)
 	{
 	  HalPutCharacter(*pch);
 	  CursorX++;
-	  
+
 	  if (SizeX <= CursorX)
 	    {
 	      CursorY++;
@@ -478,10 +478,10 @@ HalDisplayString(IN PCH String)
 	  HalScrollDisplay ();
 	  CursorY = SizeY - 1;
 	}
-  
+
       pch++;
     }
-  
+
   Ke386RestoreFlags(Flags);
 
   KiReleaseSpinLock(&Lock);

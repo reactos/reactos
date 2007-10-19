@@ -45,7 +45,7 @@ Main_DirectDraw_CreatePalette(
                               LPDIRECTDRAWPALETTE* ppPalette,
                               LPUNKNOWN pUnkOuter);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_CreateSurface(
                                LPDIRECTDRAW iface,
                                LPDDSURFACEDESC pDDSD,
@@ -58,7 +58,7 @@ Main_DirectDraw_DuplicateSurface(
                                  LPDIRECTDRAWSURFACE src,
                                  LPDIRECTDRAWSURFACE *dst);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_EnumDisplayModes(
                                  LPDIRECTDRAW iface,
                                  DWORD dwFlags,

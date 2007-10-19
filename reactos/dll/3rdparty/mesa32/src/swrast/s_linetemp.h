@@ -113,10 +113,10 @@ NAME( GLcontext *ctx, const SWvertex *vert0, const SWvertex *vert1 )
           vert0->win[0], vert0->win[1], vert0->win[2],
           vert1->win[0], vert1->win[1], vert1->win[2]);
    printf(" (%d, %d, %d) -> (%d, %d, %d)\n",
-          vert0->color[0], vert0->color[1], vert0->color[2], 
+          vert0->color[0], vert0->color[1], vert0->color[2],
           vert1->color[0], vert1->color[1], vert1->color[2]);
    printf(" (%d, %d, %d) -> (%d, %d, %d)\n",
-          vert0->specular[0], vert0->specular[1], vert0->specular[2], 
+          vert0->specular[0], vert0->specular[1], vert0->specular[2],
           vert1->specular[0], vert1->specular[1], vert1->specular[2]);
    */
 

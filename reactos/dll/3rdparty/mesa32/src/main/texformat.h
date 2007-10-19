@@ -46,8 +46,8 @@
  * function in texstore.c used for auto mipmap generation.
  */
 enum _format {
-   /** 
-    * \name Hardware-friendly formats.  
+   /**
+    * \name Hardware-friendly formats.
     *
     * Drivers can override the default formats and convert texture images to
     * one of these as required.  The driver's

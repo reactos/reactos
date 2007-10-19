@@ -91,7 +91,7 @@
  *
  * \note Must be 32-bits!
  */
-typedef GLuint GLdepth;  
+typedef GLuint GLdepth;
 
 
 /**
@@ -346,11 +346,11 @@ struct gl_color_table
  * \name Bit flags used for updating material values.
  */
 /*@{*/
-#define MAT_ATTRIB_FRONT_AMBIENT           0 
+#define MAT_ATTRIB_FRONT_AMBIENT           0
 #define MAT_ATTRIB_BACK_AMBIENT            1
-#define MAT_ATTRIB_FRONT_DIFFUSE           2 
+#define MAT_ATTRIB_FRONT_DIFFUSE           2
 #define MAT_ATTRIB_BACK_DIFFUSE            3
-#define MAT_ATTRIB_FRONT_SPECULAR          4 
+#define MAT_ATTRIB_FRONT_SPECULAR          4
 #define MAT_ATTRIB_BACK_SPECULAR           5
 #define MAT_ATTRIB_FRONT_EMISSION          6
 #define MAT_ATTRIB_BACK_EMISSION           7
@@ -360,12 +360,12 @@ struct gl_color_table
 #define MAT_ATTRIB_BACK_INDEXES            11
 #define MAT_ATTRIB_MAX                     12
 
-#define MAT_ATTRIB_AMBIENT(f)  (MAT_ATTRIB_FRONT_AMBIENT+(f))  
-#define MAT_ATTRIB_DIFFUSE(f)  (MAT_ATTRIB_FRONT_DIFFUSE+(f))  
-#define MAT_ATTRIB_SPECULAR(f) (MAT_ATTRIB_FRONT_SPECULAR+(f)) 
-#define MAT_ATTRIB_EMISSION(f) (MAT_ATTRIB_FRONT_EMISSION+(f)) 
+#define MAT_ATTRIB_AMBIENT(f)  (MAT_ATTRIB_FRONT_AMBIENT+(f))
+#define MAT_ATTRIB_DIFFUSE(f)  (MAT_ATTRIB_FRONT_DIFFUSE+(f))
+#define MAT_ATTRIB_SPECULAR(f) (MAT_ATTRIB_FRONT_SPECULAR+(f))
+#define MAT_ATTRIB_EMISSION(f) (MAT_ATTRIB_FRONT_EMISSION+(f))
 #define MAT_ATTRIB_SHININESS(f)(MAT_ATTRIB_FRONT_SHININESS+(f))
-#define MAT_ATTRIB_INDEXES(f)  (MAT_ATTRIB_FRONT_INDEXES+(f))  
+#define MAT_ATTRIB_INDEXES(f)  (MAT_ATTRIB_FRONT_INDEXES+(f))
 
 #define MAT_INDEX_AMBIENT  0
 #define MAT_INDEX_DIFFUSE  1
@@ -439,7 +439,7 @@ struct gl_light
    GLfloat QuadraticAttenuation;
    GLboolean Enabled;		/**< On/off flag */
 
-   /** 
+   /**
     * \name Derived fields
     */
    /*@{*/
@@ -505,7 +505,7 @@ struct gl_colorbuffer_attrib
 
    GLenum DrawBuffer[MAX_DRAW_BUFFERS];	/**< Which buffer to draw into */
 
-   /** 
+   /**
     * \name alpha testing
     */
    /*@{*/
@@ -514,7 +514,7 @@ struct gl_colorbuffer_attrib
    GLclampf AlphaRef;			/**< Alpha reference value */
    /*@}*/
 
-   /** 
+   /**
     * \name Blending
     */
    /*@{*/
@@ -528,7 +528,7 @@ struct gl_colorbuffer_attrib
    GLfloat BlendColor[4];		/**< Blending color */
    /*@}*/
 
-   /** 
+   /**
     * \name Logic op
     */
    /*@{*/
@@ -558,8 +558,8 @@ struct gl_current_attrib
    /*@}*/
 
    /**
-    * \name Values are always valid.  
-    * 
+    * \name Values are always valid.
+    *
     * \note BTW, note how similar this set of attributes is to the SWvertex
     * data type in the software rasterizer...
     */
@@ -676,7 +676,7 @@ struct gl_enable_attrib
 struct gl_eval_attrib
 {
    /**
-    * \name Enable bits 
+    * \name Enable bits
     */
    /*@{*/
    GLboolean Map1Color4;
@@ -701,7 +701,7 @@ struct gl_eval_attrib
    GLboolean Map2Attrib[16];  /* GL_NV_vertex_program */
    GLboolean AutoNormal;
    /*@}*/
-   
+
    /**
     * \name Map Grid endpoints and divisions and calculated du values
     */
@@ -732,9 +732,9 @@ struct gl_fog_attrib
 };
 
 
-/** 
+/**
  * Hint attribute group (GL_HINT_BIT).
- * 
+ *
  * Values are always one of GL_FASTEST, GL_NICEST, or GL_DONT_CARE.
  */
 struct gl_hint_attrib
@@ -827,11 +827,11 @@ struct gl_light_attrib
 
    struct gl_light EnabledList;         /**< List sentinel */
 
-   /** 
-    * Derived state for optimizations: 
+   /**
+    * Derived state for optimizations:
     */
    /*@{*/
-   GLboolean _NeedEyeCoords;		
+   GLboolean _NeedEyeCoords;
    GLboolean _NeedVertices;		/**< Use fast shader? */
    GLuint  _Flags;		        /**< LIGHT_* flags, see above */
    GLfloat _BaseColor[2][3];
@@ -1130,7 +1130,7 @@ struct gl_stencil_attrib
  * extract RGBA, color indexes and depth components out of 1D, 2D and 3D
  * texture images.  These functions help to isolate us from the gritty
  * details of all the various texture image encodings.
- * 
+ *
  * \param texImage texture image.
  * \param col texel column.
  * \param row texel row.
@@ -1174,7 +1174,7 @@ typedef GLboolean (*StoreTexImageFunc)(GLcontext *ctx, GLuint dims,
 
 
 /**
- * Texture format record 
+ * Texture format record
  */
 struct gl_texture_format
 {
@@ -1337,7 +1337,7 @@ struct gl_texture_object
 
 /**
  * Texture combine environment state.
- * 
+ *
  * \todo
  * If GL_NV_texture_env_combine4 is ever supported, the arrays in this
  * structure will need to be expanded for 4 elements.
@@ -1373,7 +1373,7 @@ struct gl_texture_unit
    /** \name Tex coord generation mode
     * Either GL_OBJECT_LINEAR, GL_EYE_LINEAR or GL_SPHERE_MAP. */
    /*@{*/
-   GLenum GenModeS;		
+   GLenum GenModeS;
    GLenum GenModeT;
    GLenum GenModeR;
    GLenum GenModeQ;
@@ -1393,8 +1393,8 @@ struct gl_texture_unit
    GLfloat EyePlaneQ[4];
    GLfloat LodBias;		/**< for biasing mipmap levels */
 
-   /** 
-    * \name GL_EXT_texture_env_combine 
+   /**
+    * \name GL_EXT_texture_env_combine
     */
    struct gl_tex_env_combine_state Combine;
 
@@ -1443,7 +1443,7 @@ struct texenvprog_cache {
 struct gl_texture_attrib
 {
    /**
-    * name multitexture 
+    * name multitexture
     */
    /**@{*/
    GLuint CurrentUnit;	        /**< Active texture unit */
@@ -1465,7 +1465,7 @@ struct gl_texture_attrib
    /** GL_EXT_shared_texture_palette */
    GLboolean SharedPalette;
    struct gl_color_table Palette;
-   
+
    /** Cached texenv fragment programs */
    struct texenvprog_cache *env_fp_cache;
 };
@@ -1664,7 +1664,7 @@ struct gl_2d_map
  */
 struct gl_evaluators
 {
-   /** 
+   /**
     * \name 1-D maps
     */
    /*@{*/
@@ -1680,8 +1680,8 @@ struct gl_evaluators
    struct gl_1d_map Map1Attrib[16];  /**< GL_NV_vertex_program */
    /*@}*/
 
-   /** 
-    * \name 2-D maps 
+   /**
+    * \name 2-D maps
     */
    /*@{*/
    struct gl_2d_map Map2Vertex3;
@@ -2213,7 +2213,7 @@ struct gl_framebuffer
  */
 struct gl_constants
 {
-   GLint MaxTextureLevels;		/**< Maximum number of allowed mipmap levels. */ 
+   GLint MaxTextureLevels;		/**< Maximum number of allowed mipmap levels. */
    GLint Max3DTextureLevels;		/**< Maximum number of allowed mipmap levels for 3D texture targets. */
    GLint MaxCubeTextureLevels;          /**< Maximum number of allowed mipmap levels for GL_ARB_texture_cube_map */
    GLint MaxTextureRectSize;            /* GL_NV_texture_rectangle */
@@ -2279,7 +2279,7 @@ struct gl_extensions
 {
    /**
     * \name Flags to quickly test if certain extensions are available.
-    * 
+    *
     * Not every extension needs to have such a flag, but it's encouraged.
     */
    /*@{*/
@@ -2411,7 +2411,7 @@ struct matrix_stack
 
 
 /**
- * \name Bits for image transfer operations 
+ * \name Bits for image transfer operations
  *
  * \sa __GLcontextRec::ImageTransferState.
  */
@@ -2447,7 +2447,7 @@ struct matrix_stack
 
 
 /**
- * \name Bits to indicate what state has changed.  
+ * \name Bits to indicate what state has changed.
  *
  * 4 unused flags.
  */
@@ -2485,7 +2485,7 @@ struct matrix_stack
 
 
 /**
- * \name Bits to track array state changes 
+ * \name Bits to track array state changes
  *
  * Also used to summarize array enabled.
  */
@@ -2517,7 +2517,7 @@ struct matrix_stack
 
 /**
  * \name A bunch of flags that we think might be useful to drivers.
- * 
+ *
  * Set in the __GLcontextRec::_TriangleCaps bitfield.
  */
 /*@{*/
@@ -2597,7 +2597,7 @@ struct gl_tnl_module
    const GLvertexformat *Current;
 
    /**
-    * \name Record of functions swapped out.  
+    * \name Record of functions swapped out.
     * On restore, only need to swap these functions back in.
     */
    /*@{*/
@@ -2613,7 +2613,7 @@ struct gl_tnl_module
  * worthwhile adding a tnl private structure just to hold this one bit
  * of information:
  */
-#define MESA_DLIST_DANGLING_REFS     0x1 
+#define MESA_DLIST_DANGLING_REFS     0x1
 
 /* Provide a location where information about a display list can be
  * collected.  Could be extended with driverPrivate structures,
@@ -2645,13 +2645,13 @@ struct mesa_list_state
 
    GLubyte ActiveAttribSize[VERT_ATTRIB_MAX];
    GLfloat CurrentAttrib[VERT_ATTRIB_MAX][4];
-   
+
    GLubyte ActiveMaterialSize[MAT_ATTRIB_MAX];
    GLfloat CurrentMaterial[MAT_ATTRIB_MAX][4];
 
    GLubyte ActiveIndex;
    GLfloat CurrentIndex;
-   
+
    GLubyte ActiveEdgeFlag;
    GLboolean CurrentEdgeFlag;
 };
@@ -2670,7 +2670,7 @@ struct mesa_list_state
 struct __GLcontextRec
 {
    /**
-    * \name OS related interfaces. 
+    * \name OS related interfaces.
     *
     * These \b must be the first members of this structure, because they are
     * exposed to the outside world (i.e. GLX extension).
@@ -2736,7 +2736,7 @@ struct __GLcontextRec
    /*@}*/
 
    /** \name Renderer attribute groups
-    * 
+    *
     * We define a struct for each attribute group to make pushing and popping
     * attributes easy.  Also it's a good organization.
     */
@@ -2828,7 +2828,7 @@ struct __GLcontextRec
    GLfloat _EyeZDir[3];
    GLfloat _ModelViewInvScale;
    GLuint _NeedEyeCoords;
-   GLuint _ForceEyeCoords; 
+   GLuint _ForceEyeCoords;
    GLboolean _RotateMode;
    GLenum _CurrentProgram;    /* currently executing program */
 
@@ -2867,7 +2867,7 @@ struct __GLcontextRec
    struct gl_tnl_module TnlModule;
 
    /**
-    * \name Hooks for module contexts.  
+    * \name Hooks for module contexts.
     *
     * These will eventually live in the driver or elsewhere.
     */

@@ -59,7 +59,7 @@ tm_dump (const char *tag, struct tm * t)
 int count_wide_string( wchar_t *str )
 {
   int i;
-  
+
   for( i = 0; str[i]; i++ );
 
   return i;
@@ -170,12 +170,12 @@ write_h (int build, char *buildstr)
   int dllversion = KERNEL_VERSION_MAJOR + 42;
 
   s1 = s = (char *) malloc(256 * 1024);
-  
+
   s = s + sprintf (s, "/* Do not edit - Machine generated */\n");
-	
+
   s = s + sprintf (s, "#ifndef _INC_REACTOS_BUILDNO\n" );
   s = s + sprintf (s, "#define _INC_REACTOS_BUILDNO\n" );
-  
+
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD\t%d\n", build);
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_HEX\t0x%x\n", atoi(GetRev()));
   s = s + sprintf (s, "#define KERNEL_VERSION_BUILD_STR\t\"%s\"\n", buildstr);
@@ -203,7 +203,7 @@ write_h (int build, char *buildstr)
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
   s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
-  s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d", 
+  s = s + sprintf (s, "#define KERNEL_VERSION_STR\t\"%d.%d",
 		   KERNEL_VERSION_MAJOR,
 		   KERNEL_VERSION_MINOR);
   if (0 != KERNEL_VERSION_PATCH_LEVEL)
@@ -235,7 +235,7 @@ write_h (int build, char *buildstr)
       s = s + sprintf (s, ".%d", KERNEL_VERSION_PATCH_LEVEL);
     }
   s = s + sprintf (s, "-%s\\0\"\n", kernel_version_build_type);
-  s = s + sprintf (s, "#define REACTOS_DLL_VERSION_STR\t\"%d.%d", 
+  s = s + sprintf (s, "#define REACTOS_DLL_VERSION_STR\t\"%d.%d",
 		   dllversion,
 		   KERNEL_VERSION_MINOR);
   if (0 != KERNEL_VERSION_PATCH_LEVEL)
@@ -253,7 +253,7 @@ write_h (int build, char *buildstr)
       if (length == strlen(s1))
 	{
 	  char* orig;
-	  
+
 	  orig = (char *) malloc(length);
 	  fseek(h, 0, SEEK_SET);
 	  fread(orig, 1, length, h);
@@ -268,7 +268,7 @@ write_h (int build, char *buildstr)
     }
 
   h = fopen (filename, "wb");
-  if (!h) 
+  if (!h)
     {
       fprintf (stderr,
 	       "%s: can not create file \"%s\"!\n",
@@ -307,7 +307,7 @@ main (int argc, char * argv [])
 	struct tm	* t1_tm = NULL;
 
 	argv0 = argv[0];
-		
+
 	switch (argc)
 	{
 		case 1:
@@ -361,7 +361,7 @@ main (int argc, char * argv [])
 	  kernel_version_build_type[i] = KERNEL_VERSION_BUILD_TYPE[i];
 	}
 	kernel_version_build_type[i] = 0;
-	
+
 	time (& t1); /* current build time */
 	t1_tm = gmtime (& t1);
 
@@ -374,7 +374,7 @@ main (int argc, char * argv [])
 #endif
 	if (! quiet)
 	{
-		printf ( 
+		printf (
 			"Current date: %4d-%02d-%02d\n\n",
 			t1_tm->tm_year,
 			(t1_tm->tm_mon + 1),

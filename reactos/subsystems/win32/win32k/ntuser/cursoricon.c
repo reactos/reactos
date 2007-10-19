@@ -75,13 +75,13 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 PCURICON_OBJECT FASTCALL UserGetCurIconObject(HCURSOR hCurIcon)
 {
    PCURICON_OBJECT CurIcon;
-   
+
    if (!hCurIcon)
    {
       SetLastWin32Error(ERROR_INVALID_CURSOR_HANDLE);
       return NULL;
    }
-   
+
    CurIcon = (PCURICON_OBJECT)UserGetObject(gHandleTable, hCurIcon, otCursorIcon);
    if (!CurIcon)
    {
@@ -458,7 +458,7 @@ IntDestroyCurIconObject(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT CurIcon, BOOL
          break;
       }
    }
-   
+
    ExFreeToPagedLookasideList(&gProcessLookasideList, Current);
 
    /* If there are still processes referencing this object we can't destroy it yet */
@@ -567,7 +567,7 @@ NtUserCreateCursorIconHandle(PICONINFO IconInfo OPTIONAL, BOOL Indirect)
       ObDereferenceObject(WinSta);
       RETURN( (HANDLE)0);
    }
-   
+
    Ret = CurIcon->Self;
 
    if(IconInfo)
@@ -652,7 +652,7 @@ NtUserGetIconInfo(
       ObDereferenceObject(WinSta);
       RETURN( FALSE);
    }
-   
+
    RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
 
    /* Copy bitmaps */
@@ -708,7 +708,7 @@ NtUserGetCursorIconSize(
       ObDereferenceObject(WinSta);
       RETURN(FALSE);
    }
-   
+
    /* Copy fields */
    Status = MmCopyToCaller(fIcon, &CurIcon->IconInfo.fIcon, sizeof(BOOL));
    if(!NT_SUCCESS(Status))
@@ -1076,17 +1076,17 @@ NtUserSetCursor(
    {
       RETURN(NULL);
    }
-   
+
    if(!(CurIcon = UserGetCurIconObject(hCursor)))
    {
       ObDereferenceObject(WinSta);
       RETURN(NULL);
    }
-   
+
    OldCursor = IntSetCursor(WinSta, CurIcon, FALSE);
 
    ObDereferenceObject(WinSta);
-   
+
    RETURN(OldCursor);
 
 CLEANUP:
@@ -1124,7 +1124,7 @@ NtUserSetCursorContents(
    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
    {
       ObDereferenceObject(WinSta);
-      RETURN(FALSE);      
+      RETURN(FALSE);
    }
 
    /* Copy fields */
@@ -1345,7 +1345,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
                         (Rop3), 0)
 #endif /* STRETCH_CAN_SRCCOPY_ONLY */
 
-BOOL 
+BOOL
 UserDrawIconEx(
    HDC hDc,
    INT xLeft,
@@ -1364,7 +1364,7 @@ UserDrawIconEx(
    BOOL DoFlickerFree;
    INT nStretchMode;
    SIZE IconSize;
-        
+
    HDC hdcOff;
    HGDIOBJ hOldOffBrush = 0;
    HGDIOBJ hOldOffBmp = 0;
@@ -1372,7 +1372,7 @@ UserDrawIconEx(
    HDC hdcMem = 0;
    HGDIOBJ hOldMem;
    BOOL bAlpha = FALSE;
-   
+
    hbmMask = pIcon->IconInfo.hbmMask;
    hbmColor = pIcon->IconInfo.hbmColor;
 
@@ -1388,7 +1388,7 @@ UserDrawIconEx(
    {
       return FALSE;
    }
-   
+
    if (hbmColor)
    {
       IconSize.cx = bmpColor.bmWidth;
@@ -1409,14 +1409,14 @@ UserDrawIconEx(
       diFlags = DI_NORMAL;
 
    if (!cxWidth)
-      cxWidth = ((diFlags & DI_DEFAULTSIZE) ? 
+      cxWidth = ((diFlags & DI_DEFAULTSIZE) ?
          UserGetSystemMetrics(SM_CXICON) : IconSize.cx);
 
    if (!cyHeight)
-      cyHeight = ((diFlags & DI_DEFAULTSIZE) ? 
+      cyHeight = ((diFlags & DI_DEFAULTSIZE) ?
          UserGetSystemMetrics(SM_CYICON) : IconSize.cy);
 
-   DoFlickerFree = (hbrFlickerFreeDraw && 
+   DoFlickerFree = (hbrFlickerFreeDraw &&
       (GDI_HANDLE_GET_TYPE(hbrFlickerFreeDraw) == GDI_OBJECT_TYPE_BRUSH));
 
    if (DoFlickerFree || bAlpha)
@@ -1487,7 +1487,7 @@ UserDrawIconEx(
                    0, 0, IconSize.cx, IconSize.cy,
                    ((diFlags & DI_IMAGE) ? SRCAND : SRCCOPY), FALSE);
 
-      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth) 
+      if (!hbmColor && (bmpMask.bmHeight == 2 * bmpMask.bmWidth)
          && (diFlags & DI_IMAGE))
       {
          DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
@@ -1497,7 +1497,7 @@ UserDrawIconEx(
 
          diFlags &= ~DI_IMAGE;
       }
-      
+
       NtGdiSelectObject(hdcMem, hOldMem);
    }
 
@@ -1580,12 +1580,12 @@ UserDrawIconEx(
         BlendFunc.SourceConstantAlpha = 255;
         BlendFunc.AlphaFormat = AC_SRC_ALPHA;
 
-        NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight, 
+        NtGdiAlphaBlend(hDc, xLeft, yTop, cxWidth, cyHeight,
                         hdcOff, 0, 0, cxWidth, cyHeight, BlendFunc, 0);
     }
     else if (DoFlickerFree)
     {
-        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth, 
+        NtGdiBitBlt(hDc, xLeft, yTop, cxWidth,
                     cyHeight, hdcOff, 0, 0, SRCCOPY, 0, 0);
     }
 
@@ -1603,7 +1603,7 @@ cleanup:
       if(hbmOff) NtGdiDeleteObject(hbmOff);
       if(hdcOff) NtGdiDeleteObjectApp(hdcOff);
    }
-   
+
    if(hdcMem) NtGdiDeleteObjectApp(hdcMem);
    return Ret;
 }
@@ -1631,14 +1631,14 @@ NtUserDrawIconEx(
 
    DPRINT("Enter NtUserDrawIconEx\n");
    UserEnterExclusive();
-   
+
    if(!(pIcon = UserGetCurIconObject(hIcon)))
    {
       DPRINT1("UserGetCurIconObject() failed!\n");
       UserLeave();
       return FALSE;
    }
-   
+
    Ret = UserDrawIconEx(hdc,
       xLeft,
       yTop,

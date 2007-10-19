@@ -7,7 +7,7 @@ typedef struct _RECURSIVE_MUTEX {
     /* Number of times this object was locked */
     SIZE_T LockCount;
     /* CurrentThread */
-    PVOID CurrentThread;  
+    PVOID CurrentThread;
     /* Notification event which signals that another thread can take over */
     KEVENT StateLockedEvent;
     /* IRQL from spin lock */

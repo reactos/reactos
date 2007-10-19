@@ -125,7 +125,7 @@ SetProcNameString(HWND hwnd,
     TCHAR szBuf[31];
     TCHAR* szLastSpace;
     INT LastSpace = 0;
-    
+
     if (RegQueryValueEx(hKey,
                         Value,
                         NULL,
@@ -135,7 +135,7 @@ SetProcNameString(HWND hwnd,
     {
         lpBuf = HeapAlloc(GetProcessHeap(),
                           0,
-                          BufSize);   
+                          BufSize);
         if (!lpBuf) return 0;
 
         if (RegQueryValueEx(hKey,
@@ -268,13 +268,13 @@ GetSystemInformation(HWND hwnd)
                        _T("VendorIdentifier"),
                        CurMachineLine);
         CurMachineLine++;
-        
+
         CurMachineLine += SetProcNameString(hwnd,
                                             hKey,
                                             _T("ProcessorNameString"),
                                             CurMachineLine,
                                             CurMachineLine + 1);
-        
+
         SetProcSpeed(hwnd,
                      hKey,
                      _T("~MHz"),

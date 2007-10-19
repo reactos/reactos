@@ -34,21 +34,21 @@ extern IDirectDrawGammaControlVtbl DirectDrawGammaControl_Vtable;
 extern IDirectDrawKernelVtbl        DirectDrawKernel_Vtable;
 extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
 
-/* Start up direct hal or hel 
- * iface = a pointer to the com object 
- * pGUID = guid hardware acclations or software acclation this can  be NULL 
- * reenable = FALSE if we whant create a new directdraw com 
+/* Start up direct hal or hel
+ * iface = a pointer to the com object
+ * pGUID = guid hardware acclations or software acclation this can  be NULL
+ * reenable = FALSE if we whant create a new directdraw com
  *          = TRUE if we really whant rebuild the whole com interface (not in use)
  */
 
-HRESULT WINAPI 
+HRESULT WINAPI
 StartDirectDraw(
                 LPDIRECTDRAW iface,
                 LPGUID pGUID,
                 BOOL reenable);
 
-/* iface = a pointer to the com object 
- * reenable = FALSE / TRUE rebuld dx hal interface, this is need if we doing a mode change 
+/* iface = a pointer to the com object
+ * reenable = FALSE / TRUE rebuld dx hal interface, this is need if we doing a mode change
  */
 
 HRESULT WINAPI
@@ -56,8 +56,8 @@ StartDirectDrawHal(
                    LPDIRECTDRAW iface,
                    BOOL reenable);
 
-/* iface = a pointer to the com object 
- * reenable = FALSE / TRUE rebuld dx hel interface, this is need if we doing a mode change 
+/* iface = a pointer to the com object
+ * reenable = FALSE / TRUE rebuld dx hel interface, this is need if we doing a mode change
  */
 
 HRESULT WINAPI
@@ -74,10 +74,10 @@ Create_DirectDraw (
 
 HRESULT WINAPI
 ReCreateDirectDraw(LPDIRECTDRAW iface);
-HRESULT 
+HRESULT
 Internal_CreateSurface(
                        LPDDRAWI_DIRECTDRAW_INT pDDraw,
-                       LPDDSURFACEDESC2 pDDSD, 
+                       LPDDSURFACEDESC2 pDDSD,
                        LPDIRECTDRAWSURFACE7 *ppSurf,
                        IUnknown *pUnkOuter);
 

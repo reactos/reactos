@@ -87,7 +87,7 @@ static void OnInitMenu(HWND hWnd)
         while(RemoveMenu(hMenu, s_nFavoriteMenuSubPos, MF_BYPOSITION))
             ;
     }
-    
+
     lResult = RegOpenKey(HKEY_CURRENT_USER, s_szFavoritesRegKey, &hKey);
     if (lResult != ERROR_SUCCESS)
         goto done;
@@ -590,7 +590,7 @@ static BOOL CreateNewValue(HKEY hRootKey, LPCTSTR pszKeyPath, DWORD dwType)
     LVFINDINFO lvfi;
 
     if (RegOpenKey(hRootKey, pszKeyPath, &hKey) != ERROR_SUCCESS)
-        return FALSE;    
+        return FALSE;
 
     LoadString(hInst, IDS_NEW_VALUE, szNewValueFormat, sizeof(szNewValueFormat)
         / sizeof(szNewValueFormat[0]));
@@ -805,7 +805,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         IDsObjectPicker *ObjectPicker;
         TCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
         HRESULT hRet;
-        
+
         hRet = CoInitialize(NULL);
         if (SUCCEEDED(hRet))
         {
@@ -941,12 +941,12 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
               }
             }
           }
-        } else 
+        } else
         if (GetFocus() == g_pChildWnd->hTreeWnd)
         {
           if (keyPath == 0 || *keyPath == 0)
           {
-             MessageBeep(MB_ICONHAND); 
+             MessageBeep(MB_ICONHAND);
           } else
           if (DeleteKey(hWnd, hKeyRoot, keyPath))
           {
@@ -1060,7 +1060,7 @@ LRESULT CALLBACK FrameWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
             return DefWindowProc(hWnd, message, wParam, lParam);
         break;
     case WM_ACTIVATE:
-        if (LOWORD(hWnd)) 
+        if (LOWORD(hWnd))
             SetFocus(g_pChildWnd->hWnd);
         break;
     case WM_SIZE:

@@ -178,7 +178,7 @@ HLPFILE_WINDOWINFO*     WINHELP_GetWindowInfo(HLPFILE* hlpfile, LPCSTR name)
     {
         strcpy(mwi.type, "primary");
         strcpy(mwi.name, "main");
-        if (!LoadString(Globals.hInstance, STID_WINE_HELP, 
+        if (!LoadString(Globals.hInstance, STID_WINE_HELP,
                         mwi.caption, sizeof(mwi.caption)))
             strcpy(mwi.caption, hlpfile->lpszTitle);
         mwi.origin.x = mwi.origin.y = mwi.size.cx = mwi.size.cy = CW_USEDEFAULT;
@@ -199,7 +199,7 @@ static HLPFILE_WINDOWINFO*     WINHELP_GetPopupWindowInfo(HLPFILE* hlpfile, HWND
     static      HLPFILE_WINDOWINFO      wi;
 
     RECT parent_rect;
-    
+
     wi.type[0] = wi.name[0] = wi.caption[0] = '\0';
 
     /* Calculate horizontal size and position of a popup window */
@@ -261,7 +261,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
             break;
 
         case 'x':
-            show = SW_HIDE; 
+            show = SW_HIDE;
             Globals.isBook = FALSE;
             break;
 
@@ -295,7 +295,7 @@ int PASCAL WinMain(HINSTANCE hInstance, HINSTANCE prev, LPSTR cmdline, int show)
         if (!hlpfile) return 0;
     }
     else hlpfile = NULL;
-    WINHELP_CreateHelpWindowByHash(hlpfile, lHash, 
+    WINHELP_CreateHelpWindowByHash(hlpfile, lHash,
                                    WINHELP_GetWindowInfo(hlpfile, wndname), show);
 
     /* Message loop */
@@ -452,7 +452,7 @@ static LRESULT  WINHELP_HandleCommand(HWND hSrcWnd, LPARAM lParam)
  *
  *
  */
-static BOOL     WINHELP_ReuseWindow(WINHELP_WINDOW* win, WINHELP_WINDOW* oldwin, 
+static BOOL     WINHELP_ReuseWindow(WINHELP_WINDOW* win, WINHELP_WINDOW* oldwin,
                                     HLPFILE_PAGE* page, int nCmdShow)
 {
     unsigned int i;
@@ -502,7 +502,7 @@ static BOOL     WINHELP_ReuseWindow(WINHELP_WINDOW* win, WINHELP_WINDOW* oldwin,
                 {
                     /* we're full, remove latest entry */
                     HLPFILE_FreeHlpFile(win->history[0]->file);
-                    memmove(&win->history[0], &win->history[1], 
+                    memmove(&win->history[0], &win->history[1],
                             (num - 1) * sizeof(win->history[0]));
                     win->histIndex--;
                 }
@@ -522,7 +522,7 @@ static BOOL     WINHELP_ReuseWindow(WINHELP_WINDOW* win, WINHELP_WINDOW* oldwin,
             {
                 /* we're full, remove latest entry */
                 HLPFILE_FreeHlpFile(win->back[0]->file);
-                memmove(&win->back[0], &win->back[1], 
+                memmove(&win->back[0], &win->back[1],
                         (num - 1) * sizeof(win->back[0]));
                 win->backIndex--;
             }
@@ -623,7 +623,7 @@ BOOL WINHELP_CreateHelpWindow(HLPFILE_PAGE* page, HLPFILE_WINDOWINFO* wi,
     }
 
     hWnd = CreateWindow(bPopup ? TEXT_WIN_CLASS_NAME : MAIN_WIN_CLASS_NAME,
-                        wi->caption, 
+                        wi->caption,
                         bPrimary ? WS_OVERLAPPEDWINDOW : wi->win_style,
                         wi->origin.x, wi->origin.y, wi->size.cx, wi->size.cy,
                         NULL, bPrimary ? LoadMenu(Globals.hInstance, MAKEINTRESOURCE(MAIN_MENU)) : 0,
@@ -639,13 +639,13 @@ BOOL WINHELP_CreateHelpWindow(HLPFILE_PAGE* page, HLPFILE_WINDOWINFO* wi,
  *
  *           WINHELP_CreateHelpWindowByHash
  */
-BOOL WINHELP_CreateHelpWindowByHash(HLPFILE* hlpfile, LONG lHash, 
+BOOL WINHELP_CreateHelpWindowByHash(HLPFILE* hlpfile, LONG lHash,
                                     HLPFILE_WINDOWINFO* wi, int nCmdShow)
 {
     HLPFILE_PAGE*       page = NULL;
 
     if (hlpfile)
-        page = lHash ? HLPFILE_PageByHash(hlpfile, lHash) : 
+        page = lHash ? HLPFILE_PageByHash(hlpfile, lHash) :
             HLPFILE_Contents(hlpfile);
     if (page) page->file->wRefCount++;
     return WINHELP_CreateHelpWindow(page, wi, nCmdShow);
@@ -776,7 +776,7 @@ static LRESULT CALLBACK WINHELP_MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
             GetScrollRange(win->hTextWnd, SB_VERT, &min, &max);
 
             if (keyDelta == 0)
-            {            
+            {
                 GetClientRect(win->hTextWnd, &rect);
                 keyDelta = (rect.bottom - rect.top) / 2;
                 if (wParam == VK_PRIOR)
@@ -1039,7 +1039,7 @@ static LRESULT CALLBACK WINHELP_TextWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
 	INT   Min, Max;
 	INT   CurPos = GetScrollPos(hWnd, SB_VERT);
 	INT   dy;
-	
+
 	GetScrollRange(hWnd, SB_VERT, &Min, &Max);
 	GetClientRect(hWnd, &rect);
 
@@ -1212,7 +1212,7 @@ static LRESULT CALLBACK WINHELP_TextWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
                 break;
             case hlp_link_popup:
                 hlpfile = WINHELP_LookupHelpFile(part->link->lpszString);
-                if (hlpfile) WINHELP_CreateHelpWindowByHash(hlpfile, part->link->lHash, 
+                if (hlpfile) WINHELP_CreateHelpWindowByHash(hlpfile, part->link->lHash,
                                                WINHELP_GetPopupWindowInfo(hlpfile, hWnd, &mouse),
                                                SW_NORMAL);
                 break;
@@ -1300,7 +1300,7 @@ static LRESULT CALLBACK WINHELP_HistoryWndProc(HWND hWnd, UINT msg, WPARAM wPara
 
         for (i = 0; i < win->histIndex; i++)
         {
-            TextOut(hDc, 0, i * tm.tmHeight, win->history[i]->lpszTitle, 
+            TextOut(hDc, 0, i * tm.tmHeight, win->history[i]->lpszTitle,
                     strlen(win->history[i]->lpszTitle));
         }
         EndPaint(hWnd, &ps);
@@ -1677,7 +1677,7 @@ static BOOL WINHELP_SplitLines(HWND hWnd, LPSIZE newsize)
                 if (p->cookie == para_bitmap)
                 {
                     DIBSECTION              dibs;
-                    
+
                     GetObject(p->u.gfx.u.bmp.hBitmap, sizeof(dibs), &dibs);
                     gfxSize.cx = dibs.dsBm.bmWidth;
                     gfxSize.cy = dibs.dsBm.bmHeight;
@@ -1914,7 +1914,7 @@ WINHELP_LINE_PART* WINHELP_IsOverLink(WINHELP_WINDOW* win, WPARAM wParam, LPARAM
     {
         for (part = &line->first_part; part; part = part->next)
         {
-            if (part->link && 
+            if (part->link &&
                 part->link->lpszString &&
                 part->rect.left   <= mouse.x &&
                 part->rect.right  >= mouse.x &&

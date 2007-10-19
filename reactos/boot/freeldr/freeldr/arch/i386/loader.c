@@ -568,7 +568,7 @@ FrLdrMapImage(IN FILE *Image,
     /* Try to see, maybe it's loaded already */
     if (LdrGetModuleObject(Name) != NULL)
     {
-        /* It's loaded, return NULL. It would be wise to return 
+        /* It's loaded, return NULL. It would be wise to return
            correct LoadBase, but it seems to be ignored almost everywhere */
         return NULL;
     }

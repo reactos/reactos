@@ -42,7 +42,7 @@
 #ifndef __glunurbsconsts_h_
 #define __glunurbsconsts_h_
 
-/* NURBS Properties - one set per map, 
+/* NURBS Properties - one set per map,
    each takes a single INREAL arg */
 #define N_SAMPLING_TOLERANCE  	1
 #define N_S_RATE		6
@@ -52,7 +52,7 @@
 #define N_MINSAVINGS		14
 #define 	N_NOSAVINGSSUBDIVISION	0.0
 
-/* NURBS Properties - one set per map, 
+/* NURBS Properties - one set per map,
    each takes an enumerated value */
 #define N_CULLING		2
 #define 	N_NOCULLING		0.0
@@ -74,7 +74,7 @@
 /* NURBS Rendering Properties - one set per renderer
    each takes an enumerated value */
 #define N_DISPLAY		3
-#define 	N_FILL			1.0 	
+#define 	N_FILL			1.0
 #define 	N_OUTLINE_POLY		2.0
 #define 	N_OUTLINE_TRI		3.0
 #define 	N_OUTLINE_QUAD	 	4.0
@@ -119,8 +119,8 @@
 
 /* type argument for trimming curves */
 #ifndef N_P2D
-#define N_P2D 	 		0x8	
+#define N_P2D 	 		0x8
 #define N_P2DR 	 		0xd
-#endif	
+#endif
 
 #endif /* __glunurbsconsts_h_ */

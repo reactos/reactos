@@ -150,39 +150,39 @@ void _mesa_print_info( void )
 static void add_debug_flags( const char *debug )
 {
 #ifdef MESA_DEBUG
-   if (_mesa_strstr(debug, "varray")) 
+   if (_mesa_strstr(debug, "varray"))
       MESA_VERBOSE |= VERBOSE_VARRAY;
 
-   if (_mesa_strstr(debug, "tex")) 
+   if (_mesa_strstr(debug, "tex"))
       MESA_VERBOSE |= VERBOSE_TEXTURE;
 
-   if (_mesa_strstr(debug, "imm")) 
+   if (_mesa_strstr(debug, "imm"))
       MESA_VERBOSE |= VERBOSE_IMMEDIATE;
 
-   if (_mesa_strstr(debug, "pipe")) 
+   if (_mesa_strstr(debug, "pipe"))
       MESA_VERBOSE |= VERBOSE_PIPELINE;
 
-   if (_mesa_strstr(debug, "driver")) 
+   if (_mesa_strstr(debug, "driver"))
       MESA_VERBOSE |= VERBOSE_DRIVER;
 
-   if (_mesa_strstr(debug, "state")) 
+   if (_mesa_strstr(debug, "state"))
       MESA_VERBOSE |= VERBOSE_STATE;
 
-   if (_mesa_strstr(debug, "api")) 
+   if (_mesa_strstr(debug, "api"))
       MESA_VERBOSE |= VERBOSE_API;
 
-   if (_mesa_strstr(debug, "list")) 
+   if (_mesa_strstr(debug, "list"))
       MESA_VERBOSE |= VERBOSE_DISPLAY_LIST;
 
-   if (_mesa_strstr(debug, "lighting")) 
+   if (_mesa_strstr(debug, "lighting"))
       MESA_VERBOSE |= VERBOSE_LIGHTING;
 
-   if (_mesa_strstr(debug, "disassem")) 
+   if (_mesa_strstr(debug, "disassem"))
       MESA_VERBOSE |= VERBOSE_DISASSEM;
-   
+
    /* Debug flag:
     */
-   if (_mesa_strstr(debug, "flush")) 
+   if (_mesa_strstr(debug, "flush"))
       MESA_DEBUG_FLAGS |= DEBUG_ALWAYS_FLUSH;
 #else
    (void) debug;
@@ -190,7 +190,7 @@ static void add_debug_flags( const char *debug )
 }
 
 
-void 
+void
 _mesa_init_debug( GLcontext *ctx )
 {
    char *c;

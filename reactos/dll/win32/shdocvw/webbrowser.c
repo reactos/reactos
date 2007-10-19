@@ -515,9 +515,9 @@ static HRESULT WINAPI WebBrowser_Navigate2(IWebBrowser2 *iface, VARIANT *URL, VA
     if(!This->client)
         return E_FAIL;
 
-    if((Flags && V_VT(Flags) != VT_EMPTY) 
+    if((Flags && V_VT(Flags) != VT_EMPTY)
        || (TargetFrameName && V_VT(TargetFrameName) != VT_EMPTY)
-       || (PostData && V_VT(PostData) != VT_EMPTY) 
+       || (PostData && V_VT(PostData) != VT_EMPTY)
        || (Headers && V_VT(Headers) != VT_EMPTY))
         FIXME("Unsupported arguments\n");
 

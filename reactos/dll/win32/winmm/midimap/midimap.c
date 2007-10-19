@@ -120,7 +120,7 @@ static BOOL	MIDIMAP_FindPort(const WCHAR* name, unsigned* dev)
     {
         const WCHAR*  ptr = name + 1;
         *dev = 0;
-        do 
+        do
         {
             *dev = *dev * 10 + *ptr - '0';
         } while (isdigit(*++ptr));

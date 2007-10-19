@@ -212,7 +212,7 @@ LRESULT QuickLaunchBar::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case PM_GET_WIDTH: {
-		 // take line wrapping into account 
+		 // take line wrapping into account
 		int btns = SendMessage(_hwnd, TB_BUTTONCOUNT, 0, 0);
 		int rows = SendMessage(_hwnd, TB_GETROWS, 0, 0);
 

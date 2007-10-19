@@ -25,7 +25,7 @@ inline double fMin(double a, double b)
   COPYRIGHT:1995-1997 Robert Mashlan
             Modified for LabWindows/CVI, 1999 Guillaume Dargaud
 ******************************************************************************/
-void RGBtoHLS(const COLORREF rgb, double *H, double *L, double *S ) 
+void RGBtoHLS(const COLORREF rgb, double *H, double *L, double *S )
 {
     double delta;
     double r = (double)((rgb    )&0xFF)/255;
@@ -34,19 +34,19 @@ void RGBtoHLS(const COLORREF rgb, double *H, double *L, double *S )
     double cmax = MAX3(r,g,b);
     double cmin = MIN3(r,g,b);
     *L=(cmax+cmin)/2.0;
-    
-    if(cmax == cmin) 
+
+    if(cmax == cmin)
     {
         *S = *H = 0; // it's really undefined
     }
-    else 
+    else
     {
         if(*L < 0.5)    *S = (cmax-cmin)/(cmax+cmin);
         else            *S = (cmax-cmin)/(2.0-cmax-cmin);
-        
+
         delta = cmax - cmin;
-        
-        if(r == cmax) 
+
+        if(r == cmax)
         {
             *H = (g - b) / delta;
         }
@@ -66,7 +66,7 @@ void RGBtoHLS(const COLORREF rgb, double *H, double *L, double *S )
   COPYRIGHT:1995-1997 Robert Mashlan
             Modified for LabWindows/CVI, 1999 Guillaume Dargaud
 ******************************************************************************/
-double HueToRGB(const double m1, const double m2, double h ) 
+double HueToRGB(const double m1, const double m2, double h )
 {
     if (h<0) h+=1.0;
     if (h>1) h-=1.0;
@@ -86,20 +86,20 @@ double HueToRGB(const double m1, const double m2, double h )
             Modified for LabWindows/CVI, 1999 Guillaume Dargaud
 ******************************************************************************/
 
-COLORREF HLStoRGB(const double H, const double L, const double S ) 
+COLORREF HLStoRGB(const double H, const double L, const double S )
 {
     double r,g,b;
     double m1, m2;
 
-    if(S == 0) 
+    if(S == 0)
     {
         r = g = b = L;
     }
-    else 
+    else
     {
-        if (L <= 0.5) 
+        if (L <= 0.5)
             m2 = L * (1.0 + S);
-        else         
+        else
             m2 = L + S - L * S;
 
         m1 = 2.0 * L - m2;
@@ -108,7 +108,7 @@ COLORREF HLStoRGB(const double H, const double L, const double S )
         g = HueToRGB(m1,m2,H);
         b = HueToRGB(m1,m2,H-1.0/3.0);
     }
-  
+
     return RGB(r*255, g*255, b*255);
 }
 
@@ -118,7 +118,7 @@ COLORREF HLStoRGB(const double H, const double L, const double S )
   FUNCTION: ColorScaleHSL
   PURPOSE:     Returns the HSL linear interpolated color between 2 colors
             (more natural looking than RGB interpolation)
-               For instance if the luminance is the same in Col1 and Col2, 
+               For instance if the luminance is the same in Col1 and Col2,
                    then the luminance of the result will be the same
                If Ratio=0, you get Col1,
              If Ratio=1, you get Col2
@@ -127,10 +127,10 @@ COLORREF HLStoRGB(const double H, const double L, const double S )
         Ratio: 0 for low color, 1 for high color, or in between
   EXAMPLE: Col1=0, Col2=0xFF00FF, Ratio=0.5 returns 0x1F5F3F
 ******************************************************************************/
-COLORREF ColorScaleHSL(    const COLORREF Col1, const COLORREF Col2, const double Ratio) 
+COLORREF ColorScaleHSL(    const COLORREF Col1, const COLORREF Col2, const double Ratio)
 {
     static double H1, H2, S1, S2, L1, L2;
-    
+
     if (Ratio<=0) return Col1;    // Ratio parameter must be between 0 and 1
     else if (Ratio>=1) return Col2;
 
@@ -150,8 +150,8 @@ COLORREF ColorScaleHSL(    const COLORREF Col1, const COLORREF Col2, const doubl
         Ratio: 0 for low color, 1 for high color, or in between
   EXAMPLE: Col1=0, Col2=0xFF00FF, Ratio=0.5 returns 0x800080
 ******************************************************************************/
-COLORREF ColorScaleRGB(    const COLORREF Col1, 
-                        const COLORREF Col2, 
+COLORREF ColorScaleRGB(    const COLORREF Col1,
+                        const COLORREF Col2,
                         const double Ratio) {
     int R1=(Col1)&0xFF, G1=(Col1>>8)&0xFF, B1=(Col1>>16)&0xFF;
     int R2=(Col2)&0xFF, G2=(Col2>>8)&0xFF, B2=(Col2>>16)&0xFF;
@@ -285,7 +285,7 @@ COLORREF HLStoRGB(const double Hue, const double Lum, const double Sat)
 
     if(Sat == 0)
     {
-        red = green = blue = (BYTE)(Lum * 255);        
+        red = green = blue = (BYTE)(Lum * 255);
     }
     else
     {
@@ -317,10 +317,10 @@ COLORREF ScaleLumRGB(COLORREF col1, double ratio)
     return HLStoRGB(H1, L1, S1);
 }
 
-COLORREF ColorScaleHSL(const COLORREF Col1, const COLORREF Col2, const double Ratio) 
+COLORREF ColorScaleHSL(const COLORREF Col1, const COLORREF Col2, const double Ratio)
 {
     static double H1, H2, S1, S2, L1, L2;
-    
+
     if(Ratio <= 0)        return Col1;    // Ratio parameter must be between 0 and 1
     else if(Ratio >= 1)    return Col2;
 

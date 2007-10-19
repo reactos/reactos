@@ -101,7 +101,7 @@ KfAcquireSpinLock (
    KIRQL OldIrql;
 
    ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-   
+
    OldIrql = KfRaiseIrql(DISPATCH_LEVEL);
    KiAcquireSpinLock(SpinLock);
 

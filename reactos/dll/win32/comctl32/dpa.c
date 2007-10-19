@@ -22,11 +22,11 @@
  * NOTES
  *     These functions were involuntarily documented by Microsoft in 2002 as
  *     the outcome of an anti-trust suit brought by various U.S. governments.
- *     As a result the specifications on MSDN are inaccurate, incomplete 
+ *     As a result the specifications on MSDN are inaccurate, incomplete
  *     and misleading. A much more complete (unofficial) documentation is
  *     available at:
  *
- *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32  
+ *     http://members.ozemail.com.au/~geoffch/samples/win32/shell/comctl32
  */
 
 #define COBJMACROS
@@ -83,7 +83,7 @@ typedef HRESULT (CALLBACK *DPALOADPROC)(LPLOADDATA,IStream*,LPARAM);
  *
  * RETURNS
  *     Success: TRUE
- *     Failure: FALSE 
+ *     Failure: FALSE
  *
  * NOTES
  *     No more information available yet!
@@ -181,7 +181,7 @@ HRESULT WINAPI DPA_LoadStream (HDPA *phDpa, DPALOADPROC loadProc,
  *
  * RETURNS
  *     Success: TRUE
- *     Failure: FALSE 
+ *     Failure: FALSE
  *
  * NOTES
  *     No more information available yet!
@@ -212,7 +212,7 @@ HRESULT WINAPI DPA_SaveStream (const HDPA hDpa, DPALOADPROC loadProc,
  *
  * RETURNS
  *     Success: TRUE
- *     Failure: FALSE 
+ *     Failure: FALSE
  *
  * NOTES
  *     No more information available yet!
@@ -545,11 +545,11 @@ INT WINAPI DPA_InsertPtr (const HDPA hdpa, INT i, LPVOID p)
 
     /* create empty spot at the end */
     if (!DPA_SetPtr(hdpa, hdpa->nItemCount, 0)) return -1;
-    
+
     if (i != hdpa->nItemCount - 1)
-        memmove (hdpa->ptrs + i + 1, hdpa->ptrs + i, 
+        memmove (hdpa->ptrs + i + 1, hdpa->ptrs + i,
                  (hdpa->nItemCount - i - 1) * sizeof(LPVOID));
-    
+
     hdpa->ptrs[i] = p;
     return i;
 }
@@ -590,7 +590,7 @@ BOOL WINAPI DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
                 lpTemp = HeapReAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, hdpa->ptrs, nSize);
             else
                 lpTemp = HeapAlloc (hdpa->hHeap, HEAP_ZERO_MEMORY, nSize);
-            
+
             if (!lpTemp)
                 return FALSE;
 

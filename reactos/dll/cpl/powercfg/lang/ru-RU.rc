@@ -44,7 +44,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
     LTEXT           "Нет данных",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
     PUSHBUTTON      "Д&ействие...",-1,20,70,70,15,WS_DISABLED
@@ -60,7 +60,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
     LTEXT           "Нет данных",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
     PUSHBUTTON      "Де&йствие...",-1,20,170,70,15,WS_DISABLED
@@ -80,21 +80,21 @@ BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,32,32
     LTEXT           "Выберите желаемые параметры энергосбережения.",-1,37,5,205,20
     GROUPBOX        "Параметры",-1,5,35,225,55
-    CONTROL         "&Всегда отображать значок на панели задач",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Всегда отображать значок на панели задач",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,48,200,10
-    CONTROL         "&Запрашивать пароль при выходе из ждущего режима",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Запрашивать пароль при выходе из ждущего режима",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,60,200,10
-    CONTROL         "&Снизить яркость монитора при работе от батарей",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Снизить яркость монитора при работе от батарей",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,72,200,10
     GROUPBOX        "Кнопки питания",-1,5,100,230,105
     LTEXT           "&При закрытии крышки переносного компьютера:", IDC_SLIDCLOSE,10,110,210,10
-    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "При &нажатии кнопки включения питания компьютера:", IDC_SPOWERBUTTON,10,140,210,10
-    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "При нажатии &кнопки перехода в спящий режим:", IDC_SSLEEPBUTTON,10,170,210,10
-    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
 END
 
@@ -107,7 +107,7 @@ BEGIN
     LTEXT           "При переходе в спящий режим компьютер переносит содержимое оперативной памяти на диск и выключается. При выходе из спящего режима компьютер возвращается в прежнее состояние.",
                     -1,37,5,195,35
     GROUPBOX        "Спящий режим",-1,5,57,235,25
-    CONTROL         "&Разрешить переход в спящий режим",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Разрешить переход в спящий режим",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,67,210,10
     GROUPBOX        "Место на диске для перехода в спящий режим",-1,5,92,240,60
     LTEXT           "Свободно места на диске:",-1,10,102,100,10

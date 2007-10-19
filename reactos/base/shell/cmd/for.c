@@ -48,7 +48,7 @@
  */
 
 INT cmd_for (LPTSTR cmd, LPTSTR param)
-{	
+{
 	LPBATCH_CONTEXT lpNew;
 	LPTSTR pp;
 	TCHAR  var;

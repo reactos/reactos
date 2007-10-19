@@ -24,7 +24,7 @@ CardButton::CardButton(CardWindow &parent, int Id, TCHAR *szText, UINT Style, bo
 {
     crText = RGB(255,255,255);
     crBack = RGB(0, 128, 0);
-    
+
     xadjust = 0;
     yadjust = 0;
     xjustify = 0;
@@ -57,16 +57,16 @@ void CardButton::DrawRect(HDC hdc, RECT *rect, bool fNormal)
     HPEN hhi = CreatePen(0, 0, MAKE_PALETTERGB(crHighlight));
     HPEN hsh = CreatePen(0, 0, MAKE_PALETTERGB(crShadow));
     HPEN hbl = (HPEN)GetStockObject(BLACK_PEN);
-    
+
     int x        = rect->left;
     int y        = rect->top;
     int width    = rect->right-rect->left - 1;
     int height    = rect->bottom-rect->top - 1;
-    
+
     SetRect(&fill, x+1, y+1, x+width-1, y+height-1);
 
     int one = 1;
-    
+
     if(!fNormal)
     {
         x += width;
@@ -76,7 +76,7 @@ void CardButton::DrawRect(HDC hdc, RECT *rect, bool fNormal)
         one = -1;
         OffsetRect(&fill, 1, 1);
     }
-    
+
     if(fNormal)
         hOld = SelectObject(hdc, hhi);
     else
@@ -107,7 +107,7 @@ void CardButton::DrawRect(HDC hdc, RECT *rect, bool fNormal)
 void CardButton::Clip(HDC hdc)
 {
     if(fVisible == false) return;
-    
+
     ExcludeClipRect(hdc, rect.left,  rect.top, rect.right, rect.bottom);
 }
 
@@ -123,12 +123,12 @@ void CardButton::Draw(HDC hdc, bool fNormal)
     if(fVisible == 0) return;
 
     if(hFont == 0)
-        SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));    
+        SelectObject(hdc, GetStockObject(DEFAULT_GUI_FONT));
     else
-        SelectObject(hdc, hFont);    
-    
+        SelectObject(hdc, hFont);
+
     GetTextExtentPoint32(hdc, szText, lstrlen(szText), &textsize);
-    
+
     if(hIcon)
     {
         x = rect.left + 32 + 8;
@@ -150,11 +150,11 @@ void CardButton::Draw(HDC hdc, bool fNormal)
             x += rect.left + iconwidth;
         }
     }
-    
+
     y = rect.bottom - rect.top;
     y = (y - textsize.cy) / 2;
     y += rect.top;
-    
+
     //calc icon position..
     ix = rect.left + 4;
     iy = rect.top + (rect.bottom-rect.top-32) / 2;
@@ -174,20 +174,20 @@ void CardButton::Draw(HDC hdc, bool fNormal)
     //
     //    Calc icon pos
     //
-    
+
     if(hIcon)
     {
         ExcludeClipRect(hdc, ix, iy, ix + 32, iy + 32);
     }
-    
+
     if(uStyle & CB_PUSHBUTTON)
     {
         DrawRect(hdc, &rect, fNormal);
 
         SetBkColor(hdc,   MAKE_PALETTERGB(crBack));
         SetTextColor(hdc, crText);//MAKE_PALETTERGB(crText));
-        
-        SelectClipRgn(hdc, 0);        
+
+        SelectClipRgn(hdc, 0);
 
         ExtTextOut(hdc, x, y, ETO_OPAQUE, &cliprect, szText, lstrlen(szText), 0);
     }
@@ -257,7 +257,7 @@ void CardButton::AdjustPosition(int winwidth, int winheight)
 
 int CardButton::OnLButtonDown(HWND hwnd, int x, int y)
 {
-    if((uStyle & CB_PUSHBUTTON) == 0) 
+    if((uStyle & CB_PUSHBUTTON) == 0)
         return 0;
 
     //make sure that the user is allowed to do something
@@ -269,7 +269,7 @@ int CardButton::OnLButtonDown(HWND hwnd, int x, int y)
     {
         ReleaseMutex(mxlock);
     }
-    
+
     fMouseDown = true;
     fButtonDown = true;
 
@@ -287,19 +287,19 @@ int CardButton::OnMouseMove(HWND hwnd, int x, int y)
         bool fOldButtonDown = fButtonDown;
 
         POINT pt;
-        
+
         pt.x = x;
         pt.y = y;
-        
+
         if(PtInRect(&rect, pt))
             fButtonDown = true;
         else
             fButtonDown = false;
-        
+
         if(fButtonDown != fOldButtonDown)
             Redraw();
     }
-    
+
     return 0;
 }
 
@@ -309,19 +309,19 @@ int CardButton::OnLButtonUp(HWND hwnd, int x, int y)
     {
         fMouseDown = false;
         fButtonDown = false;
-        
+
         if(uStyle & CB_PUSHBUTTON)
         {
             Redraw();
             ReleaseCapture();
         }
-        
+
         //if have clicked the button
         if(parentWnd.CardButtonFromPoint(x, y) == this)
         {
             if(ButtonCallback)
             {
-                ButtonCallback(*this);    
+                ButtonCallback(*this);
             }
             else
             {
@@ -340,7 +340,7 @@ CardButton *CardWindow::CreateButton(int id, TCHAR *szText, UINT uStyle, bool fV
 {
     CardButton *cb;
 
-    if(nNumButtons == MAXBUTTONS) 
+    if(nNumButtons == MAXBUTTONS)
         return 0;
 
     cb = new CardButton(*this, id, szText, uStyle, fVisible, x, y, width, height);
@@ -357,7 +357,7 @@ CardButton *CardWindow::CreateButton(int id, TCHAR *szText, UINT uStyle, bool fV
         cb->SetBackColor(crBackgnd);
         cb->SetForeColor(RGB(255,255,255));
     }
-    
+
     return cb;
 }
 
@@ -394,9 +394,9 @@ void CardButton::Redraw()
     HPALETTE hOldPal = UseNicePalette(hdc, __hPalette);
 
     Draw(hdc, !fButtonDown);
-    
+
     RestorePalette(hdc, hOldPal);
-    
+
     ReleaseDC((HWND)parentWnd, hdc);
 }
 
@@ -411,7 +411,7 @@ void CardButton::SetBackColor(COLORREF cr)
 
     crHighlight = GetHighlight(cr);
     crShadow    = GetShadow(cr);
-    
+
     //crHighlight = ScaleLumRGB(cr, +0.25);
     //crShadow    = ScaleLumRGB(cr, -0.25);
 }
@@ -444,7 +444,7 @@ void CardButton::SetPlacement(UINT xJustify, UINT yJustify, int xAdjust, int yAd
 void CardButton::SetIcon(HICON hicon, bool fRedraw)
 {
     hIcon = hicon;
-    
+
     if(fRedraw)
         Redraw();
 }
@@ -465,7 +465,7 @@ bool CardButton::Lock()
     DWORD dw = WaitForSingleObject(mxlock, 0);
 
     if(dw == WAIT_OBJECT_0)
-        return true; 
+        return true;
     else
         return false;
 }

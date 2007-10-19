@@ -143,7 +143,7 @@ static HRESULT WINAPI CF_CreateInstance(IClassFactory *iface, IUnknown *pOuter,
     ClassFactory *This = (ClassFactory*)iface;
     HRESULT hres;
     LPUNKNOWN punk;
-    
+
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
     *ppobj = NULL;
@@ -187,7 +187,7 @@ static const ClassFactory SecurityManagerCF =
     { &ClassFactoryVtbl, SecManagerImpl_Construct};
 static const ClassFactory ZoneManagerCF =
     { &ClassFactoryVtbl, ZoneMgrImpl_Construct};
- 
+
 struct object_creation_info
 {
     const CLSID *clsid;
@@ -260,9 +260,9 @@ static void init_session(BOOL init)
 HRESULT WINAPI DllGetClassObject(REFCLSID rclsid, REFIID riid, LPVOID *ppv)
 {
     int i;
-    
+
     TRACE("(%s,%s,%p)\n", debugstr_guid(rclsid), debugstr_guid(riid), ppv);
-    
+
     for (i=0; i < sizeof(object_creation)/sizeof(object_creation[0]); i++)
     {
 	if (IsEqualGUID(object_creation[i].clsid, rclsid))
@@ -322,7 +322,7 @@ HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbS
 
 /**************************************************************************
  *                 IsValidURL (URLMON.@)
- * 
+ *
  * Determines if a specified string is a valid URL.
  *
  * PARAMS
@@ -341,10 +341,10 @@ HRESULT WINAPI ObtainUserAgentString(DWORD dwOption, LPSTR pcszUAOut, DWORD *cbS
 HRESULT WINAPI IsValidURL(LPBC pBC, LPCWSTR szURL, DWORD dwReserved)
 {
     FIXME("(%p, %s, %d): stub\n", pBC, debugstr_w(szURL), dwReserved);
-    
+
     if (pBC != NULL || dwReserved != 0)
         return E_INVALIDARG;
-    
+
     return S_OK;
 }
 

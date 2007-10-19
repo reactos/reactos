@@ -49,7 +49,7 @@ static class MsBuildFactory : public Backend::Factory
 		{
 			return new MsBuildBackend(project, configuration);
 		}
-		
+
 } factory;
 
 
@@ -157,14 +157,14 @@ MsBuildBackend::_generate_sources ( const Module& module )
 
 	/* Disable deprecated function uage warnings */
 	fprintf ( OUT, "C_DEFINES=$(C_DEFINES) /wd4996\r\n" );
-	
+
 
 	/* includes */
 	fprintf ( OUT, "INCLUDES=.; \\\r\n" );
 	for ( i = 1; i < includes.size() -1; i++ )
 	{
 		const string& include = includes[i];
-		
+
 		/* don't include psdk / ddk */
 		std::string::size_type pos = include.find("ddk");
 		std::string::size_type pos2 = include.find("psdk");
@@ -184,7 +184,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	{
 		source_file = DosSeparator(source_files[0]);
 		fprintf ( OUT, "SOURCES=%s \\\r\n", source_file.c_str() );
-	
+
 		for ( size_t isrcfile = 1; isrcfile < source_files.size()-1; isrcfile++ )
 		{
 			source_file = DosSeparator(source_files[isrcfile]);
@@ -198,7 +198,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	}
 
 	fprintf ( OUT, "TARGET_DESTINATION=retail\r\n" );
-	
+
 
 	fclose ( OUT );
 }
@@ -220,7 +220,7 @@ MsBuildBackend::_clean_project_files ( void )
 	{
 		Module& module = *ProjectNode.modules[i];
 		printf("Cleaning project %s %s\n", module.name.c_str (), module.output->relative_path.c_str () );
-		
+
 		string makefile = module.output->relative_path + "\\makefile";
 		string sourcesfile = module.output->relative_path + "\\sources";
 
@@ -235,7 +235,7 @@ MsBuildConfiguration::MsBuildConfiguration ( const std::string &name )
 	/* nothing to do here */
 }
 
-const Property* 
+const Property*
 MsBuildBackend::_lookup_property ( const Module& module, const std::string& name ) const
 {
 	/* Check local values */

@@ -134,7 +134,7 @@ BEGIN
         MENUITEM "F&inalizar árvore de processos",  ID_PROCESS_PAGE_ENDPROCESSTREE
 
         MENUITEM "&Depurar",                        ID_PROCESS_PAGE_DEBUG
-        MENUITEM SEPARATOR 
+        MENUITEM SEPARATOR
         POPUP "Definir &prioridade"
         BEGIN
             MENUITEM "&Tempo real",                 ID_PROCESS_PAGE_SETPRIORITY_REALTIME
@@ -665,7 +665,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Uso de CPU: %3d%%"
     IDS_STATUS_PROCESSES          "Processo: %d"
     IDS_Not_Responding            "Não respondendo"
-    IDS_Running                   "Execuando"  
+    IDS_Running                   "Execuando"
 END
 
 

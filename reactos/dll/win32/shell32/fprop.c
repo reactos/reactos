@@ -48,7 +48,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_PROPERTY_SHEET_PAGE 32
 
-typedef struct _LANGANDCODEPAGE_ 
+typedef struct _LANGANDCODEPAGE_
   {
     WORD lang;
     WORD code;
@@ -119,7 +119,7 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
      WCHAR value[MAX_PATH];
      DWORD lname = MAX_PATH;
      DWORD lvalue = MAX_PATH;
- 
+
      HKEY hKey;
      LONG result;
      HWND hDlgCtrl;
@@ -162,17 +162,17 @@ SH_FileGeneralSetFileType(HWND hwndDlg, WCHAR * filext)
  *
  * SHFileGeneralGetFileTimeString [Internal]
  *
- * formats a given LPFILETIME struct into readable user format 
+ * formats a given LPFILETIME struct into readable user format
  */
 
-BOOL 
+BOOL
 SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR * lpResult)
 {
     FILETIME ft;
     SYSTEMTIME dt;
     WORD wYear;
     static const WCHAR wFormat[] = {'%','0','2','d','/','%','0','2','d','/','%','0','4','d',' ',' ','%','0','2','d',':','%','0','2','u',0};
-  
+
     if (lpFileTime == NULL || lpResult == NULL)
         return FALSE;
 
@@ -184,7 +184,7 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR * lpResult)
     wYear = dt.wYear;
     /* ddmmyy */
     sprintfW (lpResult, wFormat, dt.wDay, dt.wMonth, wYear, dt.wHour, dt.wMinute);
-    
+
     TRACE("result %s\n",debugstr_w(lpResult));
     return TRUE;
 }
@@ -197,7 +197,7 @@ SHFileGeneralGetFileTimeString(LPFILETIME lpFileTime, WCHAR * lpResult)
  *
  */
 
-BOOL 
+BOOL
 SH_FileGeneralSetText(HWND hwndDlg, WCHAR * lpstr)
 {
     int flength;
@@ -205,7 +205,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR * lpstr)
     WCHAR * lpdir;
     WCHAR buff[MAX_PATH];
     HWND hDlgCtrl;
-  
+
     if (lpstr == NULL)
         return FALSE;
 
@@ -213,7 +213,7 @@ SH_FileGeneralSetText(HWND hwndDlg, WCHAR * lpstr)
 
     plength = strlenW(lpstr);
     flength = strlenW(lpdir);
-  
+
     if (lpdir)
     {
         /* location text field */
@@ -246,7 +246,7 @@ BOOL
 SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER lpfilesize)
 {
     BOOL result;
-    HANDLE hFile; 
+    HANDLE hFile;
     FILETIME create_time;
     FILETIME accessed_time;
     FILETIME write_time;
@@ -256,7 +256,7 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
 
     if (lpfilename == NULL)
         return FALSE;
-  
+
     hFile = CreateFileW(lpfilename,
                         GENERIC_READ,
                         FILE_SHARE_READ,NULL,
@@ -269,9 +269,9 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
         WARN("failed to open file %s\n", debugstr_w(lpfilename));
         return FALSE;
     }
-    
+
     result = GetFileTime(hFile, &create_time, &accessed_time, &write_time);
-  
+
     if (!result)
     {
         WARN("GetFileTime failed\n");
@@ -294,7 +294,7 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
         hDlgCtrl = GetDlgItem(hwndDlg, 14019);
         SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
     }
-  
+
     if (!GetFileSizeEx(hFile, &file_size))
     {
         WARN("GetFileSize failed\n");
@@ -307,7 +307,7 @@ SH_FileGeneralSetFileSizeTime(HWND hwndDlg, WCHAR * lpfilename, PULARGE_INTEGER 
     hDlgCtrl = GetDlgItem(hwndDlg, 14011);
     TRACE("result size %u resultstr %s\n", file_size.QuadPart, debugstr_w(resultstr));
     SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)resultstr);
- 
+
     if (lpfilesize)
        lpfilesize->QuadPart = (ULONGLONG)file_size.QuadPart;
 
@@ -329,7 +329,7 @@ SH_FileVersionQuerySetText(HWND hwndDlg, DWORD dlgId, LPVOID pInfo, WCHAR * text
 
   if(hwndDlg == NULL || resptr == NULL || text == NULL)
    return FALSE;
-  
+
   if(VerQueryValueW(pInfo, text, (LPVOID *)resptr, &reslen))
   {
     /* file description property */
@@ -350,7 +350,7 @@ SH_FileVersionQuerySetText(HWND hwndDlg, DWORD dlgId, LPVOID pInfo, WCHAR * text
  */
 
 
-BOOL 
+BOOL
 SH_FileVersionQuerySetListText(HWND hwndDlg, LPVOID pInfo, const WCHAR * text, WCHAR **resptr, WORD lang, WORD code)
 {
   UINT reslen;
@@ -402,9 +402,9 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
   static const WCHAR wFileDescriptionFormat[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
        '\\','%','0','4','x','%','0','4','x','\\','F','i','l','e','D','e','s','c','r','i','p','t','i','o','n',0 };
   static const WCHAR wLegalCopyrightFormat[] = { '\\','S','t','r','i','n','g','F','i','l','e','I','n','f','o',
-       '\\','%','0','4','x','%','0','4','x','\\','L','e','g','a','l','C','o','p','y','r','i','g','h','t',0 };  
+       '\\','%','0','4','x','%','0','4','x','\\','L','e','g','a','l','C','o','p','y','r','i','g','h','t',0 };
   static const WCHAR wTranslation[] = { 'V','a','r','F','i','l','e','I','n','f','o','\\','T','r','a','n','s','l','a','t','i','o','n',0 };
-  static const WCHAR wCompanyName[] = { 'C','o','m','p','a','n','y','N','a','m','e',0 };  
+  static const WCHAR wCompanyName[] = { 'C','o','m','p','a','n','y','N','a','m','e',0 };
   static const WCHAR wFileVersion[] = { 'F','i','l','e','V','e','r','s','i','o','n',0 };
   static const WCHAR wInternalName[] = { 'I','n','t','e','r','n','a','l','N','a','m','e',0 };
   static const WCHAR wOriginalFilename[] = { 'O','r','i','g','i','n','a','l','F','i','l','e','n','a','m','e',0 };
@@ -421,13 +421,13 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
 	WARN("GetFileVersionInfoSize failed\n");
     return FALSE;
   }
-  
+
   if(!(pBuf = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, versize)))
   {
 	WARN("HeapAlloc failed bytes %x\n",versize);
     return FALSE;
   }
-  
+
   if(!GetFileVersionInfoW(lpfilename, handle, versize, pBuf))
   {
 	HeapFree(GetProcessHeap(), 0, pBuf);
@@ -454,10 +454,10 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
     lang = lplangcode->lang;
     code = lplangcode->code;
   }
-  
+
   sprintfW(buff, wFileDescriptionFormat, lang, code);
   SH_FileVersionQuerySetText(hwndDlg, 14003, pBuf, buff, &str);
-    
+
   sprintfW(buff, wLegalCopyrightFormat, lang, code);
   SH_FileVersionQuerySetText(hwndDlg, 14005, pBuf, buff, &str);
 
@@ -472,7 +472,7 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
   SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductName, &str, lang, code);
   SH_FileVersionQuerySetListText(hwndDlg, pBuf, wProductVersion, &str, lang, code);
   SetWindowLong(hwndDlg, DWL_USER, (LONG)pBuf);
-  
+
   /* select first item */
   hDlgCtrl = GetDlgItem(hwndDlg, 14009);
   SendMessageW(hDlgCtrl, LB_SETCURSEL, 0, 0);
@@ -488,9 +488,9 @@ SH_FileVersionInitialize(HWND hwndDlg, WCHAR * lpfilename)
  *
  * wnd proc of 'Version' property sheet page
  */
-INT_PTR 
-CALLBACK 
-SH_FileVersionDlgProc(   
+INT_PTR
+CALLBACK
+SH_FileVersionDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -523,7 +523,7 @@ SH_FileVersionDlgProc(
        HWND hDlgCtrl;
 	   LRESULT lresult;
 	   WCHAR * str;
-	   
+
 	   hDlgCtrl = GetDlgItem(hwndDlg, 14009);
 	   lresult = SendMessageW(hDlgCtrl, LB_GETCURSEL, (WPARAM)NULL, (LPARAM)NULL);
        if(lresult == LB_ERR)
@@ -558,9 +558,9 @@ SH_FileVersionDlgProc(
  *
  */
 
-INT_PTR 
-CALLBACK 
-SH_FileGeneralDlgProc(   
+INT_PTR
+CALLBACK
+SH_FileGeneralDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -603,13 +603,13 @@ SH_FileGeneralDlgProc(
  * SH_ShowPropertiesDialog
  *
  * called from ShellExecuteExW32
- * 
+ *
  * lpf contains (quoted) path of folder/file
  *
  * TODO: provide button change application type if file has registered type
  *        make filename field editable and apply changes to filename on close
  */
-	
+
 BOOL
 SH_ShowPropertiesDialog(WCHAR * lpf)
 {
@@ -624,7 +624,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
 
     if (lpf== NULL)
         return FALSE;
-  
+
     if ( !strlenW(lpf) )
         return FALSE;
 
@@ -634,7 +634,7 @@ SH_ShowPropertiesDialog(WCHAR * lpf)
         /* remove quotes from lpf */
         LPWSTR src = lpf + 1;
         LPWSTR dst = wFileName;
-      
+
         while(*src && *src!='"')
             *dst++ = *src++;
 

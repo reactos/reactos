@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/clipper/clipper_stubs.c
- * PURPOSE:              IDirectDrawClipper Implementation 
+ * PURPOSE:              IDirectDrawClipper Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -20,9 +20,9 @@ DirectDrawClipper_QueryInterface (LPDIRECTDRAWCLIPPER iface,
     return E_NOINTERFACE;
 }
 
-HRESULT WINAPI 
-DirectDrawClipper_Initialize (LPDIRECTDRAWCLIPPER iface, 
-                               LPDIRECTDRAW lpDD,  DWORD dwFlags) 
+HRESULT WINAPI
+DirectDrawClipper_Initialize (LPDIRECTDRAWCLIPPER iface,
+                               LPDIRECTDRAW lpDD,  DWORD dwFlags)
 {
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
     LPDDRAWI_DIRECTDRAW_INT DDraw = (LPDDRAWI_DIRECTDRAW_INT)lpDD;
@@ -51,8 +51,8 @@ DirectDrawClipper_Initialize (LPDIRECTDRAWCLIPPER iface,
     return DD_OK;
 }
 
-ULONG WINAPI 
-DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface) 
+ULONG WINAPI
+DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface)
 {
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
     if(!This)
@@ -72,7 +72,7 @@ DirectDrawClipper_Release(LPDIRECTDRAWCLIPPER iface)
     return This->dwIntRefCnt;
 }
 
-ULONG WINAPI 
+ULONG WINAPI
 DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
 {
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
@@ -91,10 +91,10 @@ DirectDrawClipper_AddRef (LPDIRECTDRAWCLIPPER iface)
     return This->dwIntRefCnt;
 }
 
-HRESULT WINAPI 
-DirectDrawClipper_SetHwnd( LPDIRECTDRAWCLIPPER iface, 
-                           DWORD dwFlags, 
-                           HWND hWnd) 
+HRESULT WINAPI
+DirectDrawClipper_SetHwnd( LPDIRECTDRAWCLIPPER iface,
+                           DWORD dwFlags,
+                           HWND hWnd)
 {
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
 
@@ -112,9 +112,9 @@ DirectDrawClipper_SetHwnd( LPDIRECTDRAWCLIPPER iface,
     return DD_OK;
 }
 
-HRESULT WINAPI 
-DirectDrawClipper_GetHWnd( LPDIRECTDRAWCLIPPER iface, 
-                           HWND* hWndPtr) 
+HRESULT WINAPI
+DirectDrawClipper_GetHWnd( LPDIRECTDRAWCLIPPER iface,
+                           HWND* hWndPtr)
 {
     LPDDRAWI_DDRAWCLIPPER_INT This = (LPDDRAWI_DDRAWCLIPPER_INT)iface;
 

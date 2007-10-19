@@ -377,7 +377,7 @@ ValidateHandle(HANDLE handle, UINT uType)
     return NULL;
   }
 
-  if (!(NtUserValidateHandleSecure(handle, FALSE))) return NULL;  
+  if (!(NtUserValidateHandleSecure(handle, FALSE))) return NULL;
 
   return pEntry->ptr;
 }

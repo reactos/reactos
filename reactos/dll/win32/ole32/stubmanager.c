@@ -53,7 +53,7 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     struct stub_manager *sm;
 
     assert( apt );
-    
+
     sm = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(struct stub_manager));
     if (!sm) return NULL;
 
@@ -101,7 +101,7 @@ struct stub_manager *new_stub_manager(APARTMENT *apt, IUnknown *object)
     LeaveCriticalSection(&apt->cs);
 
     TRACE("Created new stub manager (oid=%s) at %p for object with IUnknown %p\n", wine_dbgstr_longlong(sm->oid), sm, object);
-    
+
     return sm;
 }
 
@@ -155,7 +155,7 @@ struct stub_manager *get_stub_manager_from_object(APARTMENT *apt, void *object)
     else
         TRACE("not found for object %p\n", object);
 
-    return result;    
+    return result;
 }
 
 /* removes the apartment reference to an object, destroying it when no other
@@ -257,13 +257,13 @@ ULONG stub_manager_ext_addref(struct stub_manager *m, ULONG refs)
     ULONG rc;
 
     EnterCriticalSection(&m->lock);
-    
+
     /* make sure we don't overflow extrefs */
     refs = min(refs, (ULONG_MAX-1 - m->extrefs));
     rc = (m->extrefs += refs);
 
     LeaveCriticalSection(&m->lock);
-    
+
     TRACE("added %u refs to %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
     return rc;
@@ -281,7 +281,7 @@ ULONG stub_manager_ext_release(struct stub_manager *m, ULONG refs, BOOL last_unl
     rc = (m->extrefs -= refs);
 
     LeaveCriticalSection(&m->lock);
-    
+
     TRACE("removed %u refs from %p (oid %s), rc is now %u\n", refs, m, wine_dbgstr_longlong(m->oid), rc);
 
     if (rc == 0 && last_unlock_releases)
@@ -294,7 +294,7 @@ static struct ifstub *stub_manager_ipid_to_ifstub(struct stub_manager *m, const 
 {
     struct list    *cursor;
     struct ifstub  *result = NULL;
-    
+
     EnterCriticalSection(&m->lock);
     LIST_FOR_EACH( cursor, &m->ifstubs )
     {
@@ -537,10 +537,10 @@ BOOL stub_manager_notify_unmarshal(struct stub_manager *m, const IPID *ipid)
 void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const IPID *ipid)
 {
     struct ifstub *ifstub;
- 
+
     if (!(ifstub = stub_manager_ipid_to_ifstub(m, ipid)))
         return;
- 
+
     if (ifstub->flags & MSHLFLAGS_TABLEWEAK)
         refs = 0;
     else if (ifstub->flags & MSHLFLAGS_TABLESTRONG)
@@ -553,9 +553,9 @@ void stub_manager_release_marshal_data(struct stub_manager *m, ULONG refs, const
 BOOL stub_manager_is_table_marshaled(struct stub_manager *m, const IPID *ipid)
 {
     struct ifstub *ifstub = stub_manager_ipid_to_ifstub(m, ipid);
- 
+
     assert( ifstub );
-    
+
     return ifstub->flags & (MSHLFLAGS_TABLESTRONG | MSHLFLAGS_TABLEWEAK);
 }
 

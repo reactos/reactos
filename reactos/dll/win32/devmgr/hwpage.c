@@ -151,7 +151,7 @@ UpdateControlStates(IN PHARDWARE_PAGE_DATA hpd)
 {
     PHWDEVINFO HwDevInfo;
     HWND hBtnTroubleShoot, hBtnProperties;
-    
+
     hBtnTroubleShoot = GetDlgItem(hpd->hWnd,
                                   IDC_TROUBLESHOOT);
     hBtnProperties = GetDlgItem(hpd->hWnd,
@@ -819,7 +819,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                         case LVN_ITEMCHANGED:
                         {
                             LPNMLISTVIEW pnmv = (LPNMLISTVIEW)lParam;
-                            
+
                             if ((pnmv->uChanged & LVIF_STATE) &&
                                 ((pnmv->uOldState & (LVIS_FOCUSED | LVIS_SELECTED)) ||
                                  (pnmv->uNewState & (LVIS_FOCUSED | LVIS_SELECTED))))
@@ -862,7 +862,7 @@ HardwareDlgProc(IN HWND hwndDlg,
                 HardwareDlgResize(hpd,
                                   (INT)LOWORD(lParam),
                                   (INT)HIWORD(lParam));
-                break;            
+                break;
 
             case WM_SETTEXT:
             {
@@ -1057,9 +1057,9 @@ DeviceCreateHardwarePageEx(IN HWND hWndParent,
 
         /* create the dialog */
         hWnd = CreateDialogParam(hDllInstance,
-                                 MAKEINTRESOURCE(IDD_HARDWARE), 
-                                 hWndParent, 
-                                 HardwareDlgProc, 
+                                 MAKEINTRESOURCE(IDD_HARDWARE),
+                                 hWndParent,
+                                 HardwareDlgProc,
                                  (LPARAM)hpd);
         if (hWnd != NULL)
         {

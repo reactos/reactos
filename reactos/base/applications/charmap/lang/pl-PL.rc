@@ -1,8 +1,8 @@
-/*  
+/*
 * translated by xrogers
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/ 
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_CHARMAP DIALOGEX 6, 6, 293, 205 //233

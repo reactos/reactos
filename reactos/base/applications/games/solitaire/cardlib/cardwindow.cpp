@@ -94,7 +94,7 @@ CardWindow::CardWindow() : m_hWnd(0)
         __hPalette  = CreateCardPalette();
 
         __hdcPlaceHolder  = CreateCompatibleDC(hdc);
-    
+
         __holdplacepal  = UseNicePalette(__hdcPlaceHolder, __hPalette);
 
         __hbmPlaceHolder  = CreateSinkBmp(hdc, __hdcPlaceHolder, crBackgnd, __cardwidth, __cardheight);
@@ -118,9 +118,9 @@ BOOL CardWindow::Create(HWND hwndParent, DWORD dwExStyle, DWORD dwStyle, int x, 
         return FALSE;
 
     //Create the window associated with this object
-    m_hWnd = CreateWindowEx(WS_EX_CLIENTEDGE, szCardName, 0, 
+    m_hWnd = CreateWindowEx(WS_EX_CLIENTEDGE, szCardName, 0,
         WS_CHILD | WS_VISIBLE,
-        0,0,100,100, 
+        0,0,100,100,
         hwndParent, 0, GetModuleHandle(0), this);
 
     return TRUE;
@@ -183,7 +183,7 @@ void CardWindow::SetBackColor(COLORREF cr)
 {
     crBackgnd = cr;
     int i;
-    
+
     //
     // Create the exact palette we need to render the buttons/stacks
     //
@@ -249,7 +249,7 @@ CardButton* CardWindow::CardButtonFromPoint(int x, int y)
             return bptr;
     }
 
-    return 0;    
+    return 0;
 }
 
 CardRegion* CardWindow::CardRegionFromPoint(int x, int y)
@@ -266,7 +266,7 @@ CardRegion* CardWindow::CardRegionFromPoint(int x, int y)
             return Regions[i];
     }
 
-    return 0;    
+    return 0;
 }
 
 //
@@ -297,7 +297,7 @@ void CardWindow::Paint(HDC hdc)
     }
 
     //
-    //    Clip the buttons 
+    //    Clip the buttons
     //
     for(i = 0; i < nNumButtons; i++)
     {
@@ -305,10 +305,10 @@ void CardWindow::Paint(HDC hdc)
     }
 
 
-    //    Now paint the whole screen with background colour, 
+    //    Now paint the whole screen with background colour,
     //
     GetClientRect(m_hWnd, &rect);
-    
+
     //PaintRect(hdc, &rect, MAKE_PALETTERGB(crBackgnd));
     PaintCardRgn(hdc, 0, 0, rect.right, rect.bottom, 0, 0);
     SelectClipRgn(hdc, NULL);
@@ -326,7 +326,7 @@ void CardWindow::Paint(HDC hdc)
     {
         Regions[i]->Render(hdc);
     }
-        
+
     //    Paint each button now
     //
     SelectClipRgn(hdc, NULL);
@@ -377,7 +377,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
     case WM_SIZE:
         nWidth = LOWORD(lParam);
         nHeight = HIWORD(lParam);
-        
+
         //
         // reposition all the stacks and buttons
         // in case any of them are centered, right-justified etc
@@ -386,17 +386,17 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         {
             Regions[i]->AdjustPosition(nWidth, nHeight);
         }
-    
+
         for(i = 0; i < nNumButtons; i++)
         {
             Buttons[i]->AdjustPosition(nWidth, nHeight);
         }
 
-        // 
+        //
         // Call the user-defined resize proc AFTER all the stacks
         // have been positioned
         //
-        if(ResizeWndCallback) 
+        if(ResizeWndCallback)
             ResizeWndCallback(nWidth, nHeight);
 
         return 0;
@@ -411,7 +411,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         return 0;
 
     case WM_TIMER:
-        
+
         //find the timer object in the registered funcs
         /*if(wParam >= 0x10000)
         {
@@ -420,10 +420,10 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
                 if(RegFuncs[i].id == wParam)
                 {
                     KillTimer(hwnd, wParam);
-    
+
                     //call the registered function!!
                     RegFuncs[i].func(RegFuncs[i].dwParam);
-    
+
                     RegFuncs[i] = RegFuncs[nRegFuncs-1];
                     nRegFuncs--;
                 }
@@ -476,11 +476,11 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
             if(!stackptr->OnLButtonDown(x, y))
                 stackptr = 0;
         }
-        
+
         return 0;
 
     case WM_LBUTTONUP:
-        
+
         x = (short)LOWORD(lParam);
         y = (short)HIWORD(lParam);
 
@@ -493,7 +493,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
             buttonptr = 0;
             return 0;
         }
-        
+
         if(stackptr != 0)
         {
             stackptr->OnLButtonUp(x, y);
@@ -504,7 +504,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         return 0;
 
     case WM_MOUSEMOVE:
-        
+
         x = (short)LOWORD(lParam);
         y = (short)HIWORD(lParam);
 
@@ -519,7 +519,7 @@ LRESULT CALLBACK CardWindow::WndProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM
         {
             return stackptr->OnMouseMove(x, y);
         }
-        
+
         return 0;
 
     }
@@ -563,7 +563,7 @@ bool CardWindow::DeleteButton(CardButton *pButton)
         if(Buttons[i] == pButton)
         {
             CardButton *cb = Buttons[i];
-            
+
             //shift any after this one backwards
             for(int j = i; j < nNumButtons - 1; j++)
             {
@@ -572,7 +572,7 @@ bool CardWindow::DeleteButton(CardButton *pButton)
 
             delete cb;
             nNumButtons--;
-            
+
             return true;
         }
     }
@@ -587,7 +587,7 @@ bool CardWindow::DeleteRegion(CardRegion *pRegion)
         if(Regions[i] == pRegion)
         {
             CardRegion *cr = Regions[i];
-            
+
             //shift any after this one backwards
             for(int j = i; j < nNumCardRegions - 1; j++)
             {
@@ -641,7 +641,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
         if(Regions[i]->IsVisible())
             numvisiblestacks++;
     }
-    
+
     if(xJustify == CS_XJUST_CENTER)
     {
         //startx -= ((numvisiblestacks + spacing) * cardwidth - spacing) / 2;
@@ -658,7 +658,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
                 Regions[i]->xjustify = CS_XJUST_CENTER;
                 curx += Regions[i]->width + xSpacing;
             }
-            
+
         }
     }
 
@@ -666,7 +666,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
     {
         nStartX -= ((numvisiblestacks + xSpacing) * __cardwidth - xSpacing);
     }
-    
+
     if(xJustify == CS_XJUST_NONE)
     {
         for(i = startindex; i < startindex + nNumStacks; i++)
@@ -677,7 +677,7 @@ bool CardWindow::DistributeStacks(int nIdFrom, int nNumStacks, UINT xJustify, in
                 curx += Regions[i]->width + xSpacing;
                 Regions[i]->UpdateSize();
             }
-            
+
         }
     }
 
@@ -748,7 +748,7 @@ void CardWindow::PaintCardRgn(HDC hdc, int dx, int dy, int width, int height, in
     if(hbmBackImage == 0)
     {
         SetRect(&rect, dx, dy, dx+width, dy+height);
-        
+
         /*if(GetVersion() < 0x80000000)
         {
             PaintRect(hdc, &rect, MAKE_PALETTERGB(crBackgnd));
@@ -763,7 +763,7 @@ void CardWindow::PaintCardRgn(HDC hdc, int dx, int dy, int width, int height, in
     //otherwise, paint using the bitmap
     else
     {
-        // Draw whatever part of background we can 
+        // Draw whatever part of background we can
         BitBlt(hdc, dx, dy, width, height, hdcBackImage, sx, sy, SRCCOPY);
 
         // Now we need to paint any area outside the bitmap,
@@ -778,14 +778,14 @@ void CardWindow::PaintCardRgn(HDC hdc, int dx, int dy, int width, int height, in
             HRGN hr2 = CreateRectRgn(0, 0, bm.bmWidth, bm.bmHeight);
             HRGN hr3 = CreateRectRgn(0,0, 1, 1);
             HRGN hr4 = CreateRectRgn(0,0, 1, 1);
-        
+
             CombineRgn(hr3, hr1, hr2, RGN_DIFF);
-        
+
             GetClipRgn(hdc, hr4);
-            
+
             CombineRgn(hr3, hr4, hr3, RGN_AND);
             SelectClipRgn(hdc, hr3);
-        
+
             // Fill remaining space not filled with bitmap
             HBRUSH hbr = CreateSolidBrush(crBackgnd);
             FillRgn(hdc, hr3, hbr);
@@ -793,7 +793,7 @@ void CardWindow::PaintCardRgn(HDC hdc, int dx, int dy, int width, int height, in
 
             // Clean up
             SelectClipRgn(hdc, hr4);
-        
+
             DeleteObject(hr1);
             DeleteObject(hr2);
             DeleteObject(hr3);

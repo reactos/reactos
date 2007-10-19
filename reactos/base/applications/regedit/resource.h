@@ -193,7 +193,7 @@
 #define IDC_EXPORT_BRANCH_TEXT  2010
 
 
-#define IDC_FAVORITENAME                2011  
+#define IDC_FAVORITENAME                2011
 #define IDC_FAVORITESLIST               2012
 #define IDC_FINDWHAT                    2013
 #define IDC_LOOKAT_KEYS                 2014

@@ -60,10 +60,10 @@ _mesa_PolygonStipple( const GLubyte *mask );
 extern void GLAPIENTRY
 _mesa_GetPolygonStipple( GLubyte *mask );
 
-extern void  
+extern void
 _mesa_update_polygon( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_init_polygon( GLcontext * ctx );
 
 #endif

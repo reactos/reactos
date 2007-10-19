@@ -22,14 +22,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- * 
+ *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- * 
+ *
  */
 
 #include <ctype.h>
@@ -66,7 +66,7 @@ typedef struct
     IPPART_INFO	Part[4];
 } IPADDRESS_INFO;
 
-static const WCHAR IP_SUBCLASS_PROP[] = 
+static const WCHAR IP_SUBCLASS_PROP[] =
     { 'C', 'C', 'I', 'P', '3', '2', 'S', 'u', 'b', 'c', 'l', 'a', 's', 's', 'I', 'n', 'f', 'o', 0 };
 
 #define POS_DEFAULT	0
@@ -142,10 +142,10 @@ static LRESULT IPADDRESS_Draw (const IPADDRESS_INFO *infoPtr, HDC hdc)
         bgCol = COLOR_3DFACE;
         fgCol = COLOR_GRAYTEXT;
     }
-    
+
     FillRect (hdc, &rect, (HBRUSH)(DWORD_PTR)(bgCol+1));
     DrawEdge (hdc, &rect, EDGE_SUNKEN, BF_RECT | BF_ADJUST);
-    
+
     SetBkColor  (hdc, GetSysColor(bgCol));
     SetTextColor(hdc, GetSysColor(fgCol));
 

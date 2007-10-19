@@ -81,7 +81,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(lParam);
 
-    if (RegisterMonthCalControl(hApplet) && 
+    if (RegisterMonthCalControl(hApplet) &&
         RegisterClockControl())
     {
         LoadStringW(hApplet, IDS_CPLNAME, Caption, sizeof(Caption) / sizeof(WCHAR));

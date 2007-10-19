@@ -9,20 +9,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifdef ADNS_JGAA_WIN32
@@ -34,7 +34,7 @@
 int vbuf__append_quoted1035(vbuf *vb, const byte *buf, int len) {
   char qbuf[10];
   int i, ch;
-  
+
   while (len) {
     qbuf[0]= 0;
     for (i=0; i<len; i++) {
@@ -109,7 +109,7 @@ adns_status adns__findlabel_next(findlabel_state *fls,
   *lablen_r= -1;
   return adns_s_ok;
 
- x_badresponse: 
+ x_badresponse:
   adns__diag(fls->ads,fls->serv,fls->qu,"label in domain runs beyond end of domain");
   return adns_s_invalidresponse;
 }
@@ -118,7 +118,7 @@ adns_status adns__parse_domain(adns_state ads, int serv, adns_query qu,
 			       vbuf *vb, parsedomain_flags flags,
 			       const byte *dgram, int dglen, int *cbyte_io, int max) {
   findlabel_state fls;
-  
+
   adns__findlabel_start(&fls,ads, serv,qu, dgram,dglen,max, *cbyte_io,cbyte_io);
   vb->used= 0;
   return adns__parse_domain_more(&fls,ads,qu, vb,flags,dgram);
@@ -159,7 +159,7 @@ adns_status adns__parse_domain_more(findlabel_state *fls, adns_state ads,
   if (!adns__vbuf_append(vb,(byte*)"",1)) return adns_s_nomemory;
   return adns_s_ok;
 }
-	
+
 adns_status adns__findrr_anychk(adns_query qu, int serv,
 				const byte *dgram, int dglen, int *cbyte_io,
 				int *type_r, int *class_r, unsigned long *ttl_r,
@@ -168,7 +168,7 @@ adns_status adns__findrr_anychk(adns_query qu, int serv,
 				int *eo_matched_r) {
   findlabel_state fls, eo_fls;
   int cbyte;
-  
+
   int tmp, rdlen, mismatch;
   unsigned long ttl;
   int lablen, labstart, ch;
@@ -184,7 +184,7 @@ adns_status adns__findrr_anychk(adns_query qu, int serv,
   } else {
     mismatch= 1;
   }
-  
+
   for (;;) {
     st= adns__findlabel_next(&fls,&lablen,&labstart);
     if (st) return st;
@@ -203,7 +203,7 @@ adns_status adns__findrr_anychk(adns_query qu, int serv,
     if (!lablen) break;
   }
   if (eo_matched_r) *eo_matched_r= !mismatch;
-   
+
   if (cbyte+10>dglen) goto x_truncated;
   GET_W(cbyte,tmp); *type_r= tmp;
   GET_W(cbyte,tmp); *class_r= tmp;
@@ -211,7 +211,7 @@ adns_status adns__findrr_anychk(adns_query qu, int serv,
   GET_L(cbyte,ttl);
   if (ttl > MAXTTLBELIEVE) ttl= MAXTTLBELIEVE;
   *ttl_r= ttl;
-  
+
   GET_W(cbyte,rdlen); if (rdlen_r) *rdlen_r= rdlen;
   if (rdstart_r) *rdstart_r= cbyte;
   cbyte+= rdlen;

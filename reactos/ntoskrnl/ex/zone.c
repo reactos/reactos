@@ -27,7 +27,7 @@ ExExtendZone(PZONE_HEADER Zone,
     ULONG_PTR Entry;
     ULONG i;
 
-    /* 
+    /*
      * BlockSize and Segment must be 8-byte aligned.
      * Blocksize cannot exceed Segment Size.
      */
@@ -110,7 +110,7 @@ ExInitializeZone(PZONE_HEADER Zone,
     ULONG i;
     ULONG_PTR Entry;
 
-    /* 
+    /*
      * BlockSize and Segment must be 8-byte aligned.
      * Blocksize cannot exceed Segment Size.
      */

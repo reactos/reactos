@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/rtl/largeint.c
  * PURPOSE:         Large integer operations
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES *****************************************************************/

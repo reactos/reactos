@@ -333,7 +333,7 @@ KeFindNextRightSetAffinity(
     IN ULONG Set
 );
 
-VOID 
+VOID
 NTAPI
 DbgBreakPointNoBugCheck(VOID);
 

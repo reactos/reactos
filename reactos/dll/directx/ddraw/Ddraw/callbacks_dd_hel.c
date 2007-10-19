@@ -15,9 +15,9 @@ extern  DDPIXELFORMAT pixelformats[];
 extern DWORD pixelformatsCount;
 
 /*
- * Direct Draw Callbacks 
+ * Direct Draw Callbacks
  */
- 
+
 DWORD CALLBACK  HelDdDestroyDriver(LPDDHAL_DESTROYDRIVERDATA lpDestroyDriver)
 {
     DX_STUB;
@@ -44,7 +44,7 @@ DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode)
     DevMode.dmSize = (WORD)sizeof(DEVMODE);
     DevMode.dmDriverExtra = 0;
 
-    SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;	
+    SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;
 
     if (EnumDisplaySettingsEx(NULL, SetMode->dwModeIndex, &DevMode, 0 ) != 0)
     {
@@ -53,7 +53,7 @@ DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode)
         if (ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN) != DISP_CHANGE_SUCCESSFUL)
         {
             DX_STUB_str("FAIL");
-            SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;		
+            SetMode->ddRVal = DDERR_UNSUPPORTEDMODE;
         }
         else
         {
@@ -90,7 +90,7 @@ DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiv
     DX_WINDBG_trace();
     DX_STUB_str("Not implement yet, return DD_OK for not bsod\n");
     lpSetExclusiveMode->ddRVal = DD_OK;
-    
+
     return DDHAL_DRIVER_HANDLED;
 }
 

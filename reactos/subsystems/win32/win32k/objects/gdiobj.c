@@ -781,13 +781,13 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
 
    ProcessId = (HANDLE)((ULONG_PTR)PsGetCurrentProcessId() & ~1);
    HandleProcessId = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~1);
-    
+
    /* Check for invalid owner. */
    if (ProcessId != HandleProcessId && HandleProcessId != NULL)
    {
       return NULL;
    }
-   
+
    /*
     * Prevent the thread from being terminated during the locking process.
     * It would result in undesired effects and inconsistency of the global
@@ -800,12 +800,12 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
     * Loop until we either successfully lock the handle entry & object or
     * fail some of the check.
     */
-   
+
    for (;;)
    {
       /* Lock the handle table entry. */
       LockedProcessId = (HANDLE)((ULONG_PTR)HandleProcessId | 0x1);
-      PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, 
+      PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId,
                                                      LockedProcessId,
                                                      HandleProcessId);
 
@@ -929,13 +929,13 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
 
    ProcessId = (HANDLE)((ULONG_PTR)PsGetCurrentProcessId() & ~1);
    HandleProcessId = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~1);
-    
+
    /* Check for invalid owner. */
    if (ProcessId != HandleProcessId && HandleProcessId != NULL)
    {
       return NULL;
    }
-   
+
    /*
     * Prevent the thread from being terminated during the locking process.
     * It would result in undesired effects and inconsistency of the global
@@ -948,12 +948,12 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
     * Loop until we either successfully lock the handle entry & object or
     * fail some of the check.
     */
-   
+
    for (;;)
    {
       /* Lock the handle table entry. */
       LockedProcessId = (HANDLE)((ULONG_PTR)HandleProcessId | 0x1);
-      PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId, 
+      PrevProcId = InterlockedCompareExchangePointer(&Entry->ProcessId,
                                                      LockedProcessId,
                                                      HandleProcessId);
 

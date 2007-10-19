@@ -22,7 +22,7 @@
  */
 
 /*
- *        small changes by TestamenT 
+ *        small changes by TestamenT
  *      testament@users.sourceforge.net
  * https://sourceforge.net/projects/reactospl
  */
@@ -35,7 +35,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -60,7 +60,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Zakoñ&cz",             CMD_EXIT
 	END
-	POPUP "&Edycja" 
+	POPUP "&Edycja"
 	BEGIN
 		MENUITEM "&Cofnij\tCtrl+Z",     CMD_UNDO
 		MENUITEM SEPARATOR
@@ -78,7 +78,7 @@ BEGIN
 		MENUITEM "&Zawijanie wierszy",  CMD_WRAP
 		MENUITEM "Czci&onka...",          CMD_FONT
 	END
-	POPUP "Pomo&c" 
+	POPUP "Pomo&c"
 	BEGIN
 		MENUITEM "&Tematy pomocy",         CMD_HELP_CONTENTS
 		MENUITEM "&Szukaj...",        CMD_HELP_SEARCH

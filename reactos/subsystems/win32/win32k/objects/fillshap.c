@@ -95,7 +95,7 @@ IntGdiPolygon(PDC    dc,
 	if (FillBrushObj && !(FillBrushObj->flAttrs & GDIBRUSH_IS_NULL))
 	{
           IntGdiInitBrushInstance(&FillBrushInst, FillBrushObj, dc->XlateBrush);
-          ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->Dc_Attr.jROP2), UnsafePoints, Count, DestRect );  
+          ret = FillPolygon ( dc, BitmapObj, &FillBrushInst.BrushObject, ROP2_TO_MIX(dc->Dc_Attr.jROP2), UnsafePoints, Count, DestRect );
 	}
 	BRUSHOBJ_UnlockBrush(FillBrushObj);
 
@@ -112,7 +112,7 @@ IntGdiPolygon(PDC    dc,
 // DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n",
 //                                 UnsafePoints[0].x, UnsafePoints[0].y,
 //                                 UnsafePoints[1].x, UnsafePoints[1].y );
-                                 
+
   	    ret = IntEngLineTo(&BitmapObj->SurfObj,
 			       dc->CombinedClip,
 			       &PenBrushInst.BrushObject,
@@ -820,7 +820,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
   NTSTATUS Status = STATUS_SUCCESS;
   BOOL Ret = TRUE;
   INT nPoints, nEmpty, nInvalid, i;
-  
+
   if (iFunc == GdiPolyPolyRgn)
   {
    return (ULONG_PTR) GdiCreatePolyPolygonRgn((CONST PPOINT)  Points,
@@ -864,7 +864,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
       SetLastNtError(Status);
       return FALSE;
     }
-  
+
     SafePolyPoints = ExAllocatePoolWithTag(PagedPool, Count * sizeof(INT), TAG_SHAPE);
     if(!SafePolyPoints)
     {
@@ -1592,7 +1592,7 @@ NtGdiGradientFill(
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;
   }
-  
+
   _SEH_TRY
   {
     ProbeForRead(pVertex,
@@ -1607,7 +1607,7 @@ NtGdiGradientFill(
     Status = _SEH_GetExceptionCode();
   }
   _SEH_END;
-  
+
   if (!NT_SUCCESS(Status))
   {
     DC_UnlockDc(dc);
@@ -1621,7 +1621,7 @@ NtGdiGradientFill(
     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   SafeMesh = (PTRIVERTEX)(SafeVertex + uVertex);
 
   _SEH_TRY
@@ -1639,7 +1639,7 @@ NtGdiGradientFill(
     Status = _SEH_GetExceptionCode();
   }
   _SEH_END;
-  
+
   if(!NT_SUCCESS(Status))
   {
     DC_UnlockDc(dc);

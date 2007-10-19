@@ -39,7 +39,7 @@
 #define EPM_PROTOCOL_DSP 			0x16 /* AppleTalk Data Stream Protocol */
 #define EPM_PROTOCOL_DDP		    0x17 /* AppleTalk Data Datagram Protocol */
 #define EPM_PROTOCOL_APPLETALK		0x18 /* AppleTalk */
-#define EPM_PROTOCOL_VINES_SPP		0x1a 
+#define EPM_PROTOCOL_VINES_SPP		0x1a
 #define EPM_PROTOCOL_VINES_IPC		0x1b /* Inter Process Communication */
 #define EPM_PROTOCOL_STREETTALK		0x1c /* Vines Streettalk */
 #define EPM_PROTOCOL_HTTP    		0x1f

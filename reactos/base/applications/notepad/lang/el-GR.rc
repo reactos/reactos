@@ -26,7 +26,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -38,7 +38,7 @@ ID_ACCEL ACCELERATORS
 
 MAIN_MENU MENU
 BEGIN
-	POPUP "&Αρχείο" 
+	POPUP "&Αρχείο"
 	BEGIN
 		MENUITEM "&Νέο...",           CMD_NEW
 		MENUITEM "&’νοιγμα\tCtrl+O",     CMD_OPEN
@@ -51,7 +51,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Έ&ξοδος",             CMD_EXIT
 	END
-	POPUP "&Edit" 
+	POPUP "&Edit"
 	BEGIN
 		MENUITEM "Α&ναίρεση\tCtrl+Z",     CMD_UNDO
 		MENUITEM SEPARATOR
@@ -68,16 +68,16 @@ BEGIN
 		MENUITEM "Επιλογή &Όλων\tCtrl+A",       CMD_SELECT_ALL
 		MENUITEM "&Ώρα/Ημερομηνία\tF5",    CMD_TIME_DATE
 	END
-	POPUP "Φ&ορμά" 
+	POPUP "Φ&ορμά"
 	BEGIN
 		MENUITEM "&Εμφάνιση μεγάλων γραμμών",  CMD_WRAP
 		MENUITEM "&Γραμματοσειρά...",          CMD_FONT
 	END
-	POPUP "&Εμφάνιση" 
+	POPUP "&Εμφάνιση"
 	BEGIN
 		MENUITEM "Γραμμή &κατάστασης",    CMD_STATUSBAR
 	END
-	POPUP "&Βοήθεια" 
+	POPUP "&Βοήθεια"
 	BEGIN
 		MENUITEM "&Περιεχόμενα",         CMD_HELP_CONTENTS
 		MENUITEM "&Αναζήτηση...",        CMD_HELP_SEARCH
@@ -117,7 +117,7 @@ PUSHBUTTON    "&Βοήθεια",       IDHELP,                180, 39, 40, 15, WS_TABST
 
 /* Dialog `Encoding' */
 DIALOG_ENCODING DIALOG 0, 0, 256, 44
-STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS | 
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_CONTROL | WS_CHILD | WS_CLIPSIBLINGS |
     WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 CAPTION "Κωδικοποίηση"

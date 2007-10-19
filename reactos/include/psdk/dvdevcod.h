@@ -33,27 +33,27 @@
 
 
 #ifndef EXCLUDE_DVDEVCODE_ENUMS
-typedef enum _tagDVD_WARNING 
+typedef enum _tagDVD_WARNING
 {
         DVD_WARNING_InvalidDVD1_0Disc  =1,
         DVD_WARNING_FormatNotSupported =2,
         DVD_WARNING_IllegalNavCommand  =3,
-        DVD_WARNING_Open               =4,           
-        DVD_WARNING_Seek               =5,           
-        DVD_WARNING_Read               =6            
+        DVD_WARNING_Open               =4,
+        DVD_WARNING_Seek               =5,
+        DVD_WARNING_Read               =6
 } DVD_WARNING;
 
-typedef enum _tagDVD_ERROR 
+typedef enum _tagDVD_ERROR
 {
-        DVD_ERROR_Unexpected                              =1,         
-        DVD_ERROR_CopyProtectFail                         =2,    
-        DVD_ERROR_InvalidDVD1_0Disc                       =3,  
-        DVD_ERROR_InvalidDiscRegion                       =4,  
-        DVD_ERROR_LowParentalLevel                        =5,   
-        DVD_ERROR_MacrovisionFail                         =6,    
-        DVD_ERROR_IncompatibleSystemAndDecoderRegions     =7,                                    
+        DVD_ERROR_Unexpected                              =1,
+        DVD_ERROR_CopyProtectFail                         =2,
+        DVD_ERROR_InvalidDVD1_0Disc                       =3,
+        DVD_ERROR_InvalidDiscRegion                       =4,
+        DVD_ERROR_LowParentalLevel                        =5,
+        DVD_ERROR_MacrovisionFail                         =6,
+        DVD_ERROR_IncompatibleSystemAndDecoderRegions     =7,
         DVD_ERROR_IncompatibleDiscAndDecoderRegions       =8
-                                                                        
+
 } DVD_ERROR;
 
 #endif

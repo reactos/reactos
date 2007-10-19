@@ -214,7 +214,7 @@ FT_BEGIN_HEADER
 
     FT_Pos            xmin_delta;    /* used for warping */
     FT_Pos            xmax_delta;
-    
+
   } AF_GlyphHintsRec;
 
 

@@ -9,7 +9,7 @@
 interface IDirectMusicSynth;
 interface IDirectMusicSynthSink;
 
-#ifndef __cplusplus 
+#ifndef __cplusplus
     typedef interface IDirectMusicSynth IDirectMusicSynth;
     typedef interface IDirectMusicSynthSink IDirectMusicSynthSink;
 #endif
@@ -22,7 +22,7 @@ DEFINE_GUID(IID_IDirectMusicSynth,          0x9823661,  0x5C85, 0x11D2, 0xAF, 0x
 DEFINE_GUID(IID_IDirectMusicSynth8,         0x53CAB625, 0x2711, 0x4C9F, 0x9D, 0xE7, 0x1B, 0x7F, 0x92, 0x5F, 0x6F, 0xC8);
 DEFINE_GUID(IID_IDirectMusicSynthSink,      0x09823663, 0x5C85, 0x11D2, 0xAF, 0xA6, 0x00, 0xAA, 0x00, 0x24, 0xD8, 0xB6);
 DEFINE_GUID(GUID_DMUS_PROP_SetSynthSink,    0x0A3A5BA5, 0x37B6, 0x11D2, 0xB9, 0xF9, 0x00, 0x00, 0xF8, 0x75, 0xAC, 0x12);
-DEFINE_GUID(GUID_DMUS_PROP_SinkUsesDSound,  0xBE208857, 0x8952, 0x11D2, 0xBA, 0x1C, 0x00, 0x00, 0xF8, 0x75, 0xAC, 0x12); 
+DEFINE_GUID(GUID_DMUS_PROP_SinkUsesDSound,  0xBE208857, 0x8952, 0x11D2, 0xBA, 0x1C, 0x00, 0x00, 0xF8, 0x75, 0xAC, 0x12);
 
 #define REFRESH_F_LASTBUFFER        0x00000001
 
@@ -30,7 +30,7 @@ typedef struct _DMUS_VOICE_STATE
 {
     BOOL bExists;
     SAMPLE_POSITION spPosition;
-} DMUS_VOICE_STATE; 
+} DMUS_VOICE_STATE;
 
 #endif
 
@@ -72,7 +72,7 @@ DECLARE_INTERFACE_(IDirectMusicSynth8, IDirectMusicSynth)
     STDMETHOD(Close) (THIS) PURE;
     STDMETHOD(SetNumChannelGroups) (THIS_ DWORD dwGroups) PURE;
     STDMETHOD(Download) (THIS_ LPHANDLE phDownload, LPVOID pvData, LPBOOL pbFree ) PURE;
-    STDMETHOD(Unload) (THIS_ HANDLE hDownload, HRESULT ( CALLBACK *lpFreeHandle)(HANDLE,HANDLE), HANDLE hUserData ) PURE; 
+    STDMETHOD(Unload) (THIS_ HANDLE hDownload, HRESULT ( CALLBACK *lpFreeHandle)(HANDLE,HANDLE), HANDLE hUserData ) PURE;
     STDMETHOD(PlayBuffer) (THIS_ REFERENCE_TIME rt, LPBYTE pbBuffer, DWORD cbBuffer) PURE;
     STDMETHOD(GetRunningStats) (THIS_ LPDMUS_SYNTHSTATS pStats) PURE;
     STDMETHOD(GetPortCaps) (THIS_ LPDMUS_PORTCAPS pCaps) PURE;

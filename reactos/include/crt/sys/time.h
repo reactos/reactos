@@ -35,7 +35,7 @@ struct timezone
    IEEE Std 1003.1, 2004 Edition
 
    The timezone pointer arg is ignored.  Errors are ignored.
-*/ 
+*/
 int __cdecl gettimeofday(struct timeval *__restrict__,
 			 void *__restrict__  /*	tzp (unused) */);
 

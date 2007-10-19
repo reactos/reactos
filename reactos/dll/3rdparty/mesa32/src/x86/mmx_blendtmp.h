@@ -5,11 +5,11 @@
 
 /*
  * void _mesa_mmx_blend( GLcontext *ctx,
- *                       GLuint n, 
+ *                       GLuint n,
  *                       const GLubyte mask[],
- *                       GLchan rgba[][4], 
+ *                       GLchan rgba[][4],
  *                       CONST GLchan dest[][4] )
- * 
+ *
  */
 ALIGNTEXT16
 GLOBL GLNAME( TAG(_mesa_mmx_blend) )
@@ -31,7 +31,7 @@ GLNAME( TAG(_mesa_mmx_blend) ):
     MOV_L      ( REGOFF(24, EBP), ESI )         /* dest */
 
     INIT
-    
+
     TEST_L     ( CONST(4), EDI )		/* align rgba on an 8-byte boundary */
     JZ         ( LLTAG(GMB_align_end) )
 
@@ -40,7 +40,7 @@ GLNAME( TAG(_mesa_mmx_blend) ):
 
     /* runin */
 #define ONE(x)	x
-#define TWO(x)  
+#define TWO(x)
     MAIN       ( EDI, ESI )
 #undef ONE
 #undef TWO
@@ -50,7 +50,7 @@ LLTAG(GMB_align_continue):
     DEC_L      ( ECX )				/* n -= 1 */
     INC_L      ( EBX )		                /* mask += 1 */
     ADD_L      ( CONST(4), EDI )		/* rgba += 1 */
-    ADD_L      ( CONST(4), ESI )		/* dest += 1 */ 
+    ADD_L      ( CONST(4), ESI )		/* dest += 1 */
 
 LLTAG(GMB_align_end):
 
@@ -76,7 +76,7 @@ LLTAG(GMB_loop_continue):
     DEC_L      ( ECX )				/* n -= 2 */
     ADD_L      ( CONST(2), EBX )		/* mask += 2 */
     ADD_L      ( CONST(8), EDI )		/* rgba += 2 */
-    ADD_L      ( CONST(8), ESI )		/* dest += 2 */ 
+    ADD_L      ( CONST(8), ESI )		/* dest += 2 */
     CMP_L      ( CONST(2), ECX )
     JAE        ( LLTAG(GMB_loop_begin) )
 

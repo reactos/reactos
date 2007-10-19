@@ -38,7 +38,7 @@
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
-  /* 1 ...         2 ...         3 ...         4 ... */ 
+  /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
@@ -47,14 +47,14 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* First Letters Row */
   VK_TAB,       'A',          'Z',          'E',
   'R',          'T',          'Y',          'U',
-  'I',          'O',          'P',          VK_OEM_4,     
+  'I',          'O',          'P',          VK_OEM_4,
   VK_OEM_6,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
-  VK_LCONTROL,  
+  VK_LCONTROL,
   'Q',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          'M',          VK_OEM_7,     VK_OEM_3, 
+  'L',          'M',          VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
@@ -63,15 +63,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_OEM_1,     VK_OEM_PLUS,  VK_RSHIFT,
   /* - 37 - */
   /* Bottom Row */
-  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,  
+  VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
   /* - 3b - */
   /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
+  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6,
   VK_F7, VK_F8, VK_F9, VK_F10,
   /* - 45 - */
   /* Locks */
-  VK_NUMLOCK | KMEXT,   
-  VK_SCROLL | KMULTI,    
+  VK_NUMLOCK | KMEXT,
+  VK_SCROLL | KMULTI,
   /* - 47 - */
   /* Number-Pad */
   VK_HOME | KNUMS,      VK_UP | KNUMS,         VK_PRIOR | KNUMS, VK_SUBTRACT,
@@ -87,11 +87,11 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
-  VK_HELP,      
+  VK_HELP,
   /* - 64 - */
   /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
-  VK_F21, VK_F22, VK_F23, 
+  VK_F21, VK_F22, VK_F23,
   /* - 6f - */
   /* Not sure who uses these codes */
   VK_EMPTY, VK_EMPTY, VK_EMPTY,
@@ -179,12 +179,12 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { '7',           NOCAPS, {0xE8,      '7'} },
   { '8',           NOCAPS, {'!',       '8'} },
   { VK_OEM_2,      NOCAPS, {')',       0xB0} },
-  
+
   /* Specials */
   { VK_OEM_COMMA,  CAPS,   {',',      '?'} },
   { VK_OEM_PERIOD, CAPS,   {';',      '.'} },
- 
-  { VK_OEM_1,	   CAPS,   {':',      '/'} }, 
+
+  { VK_OEM_1,	   CAPS,   {':',      '/'} },
   { VK_OEM_3,      NOCAPS, {0xB2,     0xB3 } },
   { VK_DECIMAL,    NOCAPS, {'.',      '.'} },
   { VK_TAB,        NOCAPS, {'\t',     '\t'} },
@@ -240,7 +240,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   /* Normal, Shifted, Ctrl, Ctrl-Alt */
 
   /* Legacy Ascii generators */
-  { '1',	 NOCAPS, {'&',      '1',     WCH_NONE, '|'     } },       
+  { '1',	 NOCAPS, {'&',      '1',     WCH_NONE, '|'     } },
   { '2',         NOCAPS, {0xE9,     '2',     WCH_NONE, '@'     } },
   { '3',         NOCAPS, {'"',      '3',     WCH_NONE, '#'     } },
   { '6',	 NOCAPS, {0xA7,     '6',     WCH_NONE, WCH_DEAD} },
@@ -249,7 +249,7 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { VK_OEM_PLUS, NOCAPS, {'=',      '+',     WCH_NONE, WCH_DEAD} },
 
   { VK_OEM_4,    NOCAPS, {WCH_DEAD, WCH_DEAD,WCH_NONE, '['     } },
-  { VK_OEM_5,    CAPS,   {0xB5,     0xA3,    WCH_NONE, WCH_DEAD} }, 
+  { VK_OEM_5,    CAPS,   {0xB5,     0xA3,    WCH_NONE, WCH_DEAD} },
   { VK_OEM_6,    NOCAPS, {'$',      '*',     WCH_NONE, ']'     } },
   { VK_OEM_7,    NOCAPS, {0xF9,     '%',     WCH_NONE, WCH_DEAD} },
   { VK_EMPTY ,   NOCAPS, {0xb4,     '`',      '|',     WCH_NONE} },
@@ -398,7 +398,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(0x004f, 0x00a8, 0x00d6, 0x0000) }, // O -> Ö
   { DEADTRANS(0x0055, 0x00a8, 0x00dc, 0x0000) }, // U -> Ü
   { DEADTRANS(0x0020, 0x00a8, 0x00a8, 0x0000) }, // Space -> ¨
-  
+
   /* ^ */
   { DEADTRANS(0x0061, 0x005e, 0x00e2, 0x0000) }, // a -> â
   { DEADTRANS(0x0065, 0x005e, 0x00ea, 0x0000) }, // e -> ê
@@ -409,7 +409,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(0x0045, 0x005e, 0x00ca, 0x0000) }, // E -> Ê
   { DEADTRANS(0x0049, 0x005e, 0x00ce, 0x0000) }, // I -> Î
   { DEADTRANS(0x004f, 0x005e, 0x00d4, 0x0000) }, // O -> Ô
-  { DEADTRANS(0x0055, 0x005e, 0x00db, 0x0000) }, // U -> Û 
+  { DEADTRANS(0x0055, 0x005e, 0x00db, 0x0000) }, // U -> Û
   { DEADTRANS(0x0020, 0x005e, 0x005e, 0x0000) }, // Space -> ^
 
   /* ~ */
@@ -433,7 +433,7 @@ ROSDATA DEADKEY dead_key[] = {
   { DEADTRANS(0x0049, 0x00b4, 0x00cd, 0x0000) }, // I -> Í
   { DEADTRANS(0x004f, 0x00b4, 0x00d3, 0x0000) }, // O -> Ó
   { DEADTRANS(0x0055, 0x00b4, 0x00da, 0x0000) }, // U -> Ú
-  { DEADTRANS(0x0059, 0x00b4, 0x00dd, 0x0000) }, // Y -> Ý 
+  { DEADTRANS(0x0059, 0x00b4, 0x00dd, 0x0000) }, // Y -> Ý
   { DEADTRANS(0x0020, 0x00b4, 0x00b4, 0x0000) }, // Space -> ´
 
   /* ` */
@@ -455,10 +455,10 @@ ROSDATA DEADKEY dead_key[] = {
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
   &modifier_bits,
-  
+
   /* character from vk tables */
   vk_to_wchar_master_table,
-  
+
   /* diacritical marks -- currently implemented by wine code */
   dead_key,
 

@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Zvuky a zvuková zaøízení"
     IDS_CPLDESCRIPTION "Upraví zvukové schéma Vašeho poèítaèe, nebo nastaví reproduktory a nahrávací zaøízení."

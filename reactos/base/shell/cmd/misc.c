@@ -63,7 +63,7 @@ TCHAR cgetchar (VOID)
 	do
  	{
  		ReadConsoleInput (hInput, &irBuffer, 1, &dwRead);
- 		
+
 		if (irBuffer.EventType == KEY_EVENT)
  		{
 			if (irBuffer.Event.KeyEvent.dwControlKeyState &
@@ -84,7 +84,7 @@ TCHAR cgetchar (VOID)
 			{
 				;
 			}
- 
+
 			else
 			{
 				break;
@@ -106,13 +106,13 @@ TCHAR cgetchar (VOID)
 VOID GetPathCase( TCHAR * Path, TCHAR * OutPath)
 {
 	UINT i = 0;
-	TCHAR TempPath[MAX_PATH];  
+	TCHAR TempPath[MAX_PATH];
 	WIN32_FIND_DATA FindFileData;
 	HANDLE hFind;
 	_tcscpy(TempPath, _T(""));
 	_tcscpy(OutPath, _T(""));
 
-	
+
 	for(i = 0; i < _tcslen(Path); i++)
 	{
 		if(Path[i] != _T('\\'))

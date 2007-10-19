@@ -133,7 +133,7 @@ struct JoystickImpl
 	BYTE				evbits[(EV_MAX+7)/8];
 	BYTE				absbits[(ABS_MAX+7)/8];
 	BYTE				keybits[(KEY_MAX+7)/8];
-	BYTE				ffbits[(FF_MAX+7)/8];	
+	BYTE				ffbits[(FF_MAX+7)/8];
 };
 
 /* This GUID is slightly different from the linux joystick one. Take note. */
@@ -161,7 +161,7 @@ static int joydev_have(BOOL require_ff)
 
       sprintf(buf,EVDEVPREFIX"%d",i);
 
-      if (require_ff) 
+      if (require_ff)
 	  flags = O_RDWR;
       else
 	  flags = O_RDONLY;
@@ -183,10 +183,10 @@ static int joydev_have(BOOL require_ff)
 	      if ((-1==ioctl(fd,EVIOCGBIT(0,sizeof(evbits)),evbits))) {
 	          perror("EVIOCGBIT 0");
 	          close(fd);
-	          continue; 
+	          continue;
 	      }
 	      if (   (!test_bit(evbits,EV_FF))
-	          || (-1==ioctl(fd,EVIOCGBIT(EV_FF,sizeof(ffbits)),ffbits)) 
+	          || (-1==ioctl(fd,EVIOCGBIT(EV_FF,sizeof(ffbits)),ffbits))
                   || (-1==ioctl(fd,EVIOCGEFFECTS,&num_effects))
                   || (num_effects <= 0)) {
 		  close(fd);
@@ -310,7 +310,7 @@ static JoystickImpl *alloc_device(REFGUID rguid, const void *jvt, IDirectInputIm
   for (i=0;i<ABS_MAX;i++) {
     newDevice->wantmin[i] = -32768;
     newDevice->wantmax[i] =  32767;
-    /* TODO: 
+    /* TODO:
      * direct input defines a default for the deadzone somewhere; but as long
      * as in map_axis the code for the dead zone is commented out its no
      * problem
@@ -467,9 +467,9 @@ static HRESULT WINAPI JoystickAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
     	return 0;
     for (i=0;i<64;i++) {
       sprintf(buf,EVDEVPREFIX"%d",i);
-      if (-1==(This->joyfd=open(buf,O_RDWR))) { 
+      if (-1==(This->joyfd=open(buf,O_RDWR))) {
         if (-1==(This->joyfd=open(buf,O_RDONLY))) {
-	  /* Couldn't open the device at all */ 
+	  /* Couldn't open the device at all */
 	  if (errno==ENODEV)
 	    return DIERR_NOTFOUND;
 	  perror(buf);
@@ -507,7 +507,7 @@ static HRESULT WINAPI JoystickAImpl_Acquire(LPDIRECTINPUTDEVICE8A iface)
 #ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
     if (!readonly && test_bit(This->evbits, EV_FF)) {
         if (-1!=ioctl(This->joyfd,EVIOCGBIT(EV_FF,sizeof(This->ffbits)),This->ffbits)) {
-	    if (-1!=ioctl(This->joyfd,EVIOCGEFFECTS,&This->num_effects) 
+	    if (-1!=ioctl(This->joyfd,EVIOCGEFFECTS,&This->num_effects)
 		&& This->num_effects > 0) {
 		This->has_ff = TRUE;
 		TRACE("Joystick seems to be capable of force feedback.\n");
@@ -561,7 +561,7 @@ static HRESULT WINAPI JoystickAImpl_Unacquire(LPDIRECTINPUTDEVICE8A iface)
 	This->joyfd = -1;
 	return DI_OK;
     }
-    else 
+    else
     	return DI_NOEFFECT;
 }
 
@@ -600,7 +600,7 @@ map_axis(JoystickImpl* This, int axis, int val) {
     return ret;
 }
 
-/* 
+/*
  * set the current state of the js device as it would be with the middle
  * values on the axes
  */
@@ -1025,7 +1025,7 @@ static HRESULT WINAPI JoystickAImpl_GetCapabilities(
     buttons=0;
     for (i=0;i<KEY_MAX;i++) if (test_bit(This->keybits,i)) buttons++;
 
-    if (This->has_ff) 
+    if (This->has_ff)
 	 lpDIDevCaps->dwFlags |= DIDC_FORCEFEEDBACK;
 
     lpDIDevCaps->dwAxes = axes;
@@ -1295,7 +1295,7 @@ static HRESULT WINAPI JoystickAImpl_GetProperty(LPDIRECTINPUTDEVICE8A iface,
   return DI_OK;
 }
 
-/****************************************************************************** 
+/******************************************************************************
   *	CreateEffect - Create a new FF effect with the specified params
   */
 static HRESULT WINAPI JoystickAImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface,
@@ -1315,7 +1315,7 @@ static HRESULT WINAPI JoystickAImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface,
 #ifndef HAVE_STRUCT_FF_EFFECT_DIRECTION
     TRACE("not available (compiled w/o ff support)\n");
     *ppdef = NULL;
-    return DI_OK; 
+    return DI_OK;
 #else
 
     new = malloc(sizeof(EffectListItem));
@@ -1325,7 +1325,7 @@ static HRESULT WINAPI JoystickAImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface,
     retval = linuxinput_create_effect(&(This->joyfd), rguid, &(new->ref));
     if (retval != DI_OK)
 	return retval;
- 
+
     if (lpeff != NULL)
 	retval = IDirectInputEffect_SetParameters(new->ref, lpeff, 0);
     if (retval != DI_OK && retval != DI_DOWNLOADSKIPPED)
@@ -1339,7 +1339,7 @@ static HRESULT WINAPI JoystickAImpl_CreateEffect(LPDIRECTINPUTDEVICE8A iface,
     return DI_OK;
 
 #endif /* HAVE_STRUCT_FF_EFFECT_DIRECTION */
-} 
+}
 
 /*******************************************************************************
  *	EnumEffects - Enumerate available FF effects
@@ -1357,7 +1357,7 @@ static HRESULT WINAPI JoystickAImpl_EnumEffects(LPDIRECTINPUTDEVICE8A iface,
 
     TRACE("(this=%p,%p,%ld) type=%ld fd=%d\n", This, pvRef, dwEffType, type, xfd);
 
-    dei.dwSize = sizeof(DIEFFECTINFOA);          
+    dei.dwSize = sizeof(DIEFFECTINFOA);
 
     /* We need to return something even if we're not yet acquired */
     if (xfd == -1)
@@ -1391,7 +1391,7 @@ static HRESULT WINAPI JoystickAImpl_EnumEffects(LPDIRECTINPUTDEVICE8A iface,
 	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothDown);
 	    (*lpCallback)(&dei, pvRef);
 	}
-    } 
+    }
 
     if ((type == DIEFT_ALL || type == DIEFT_RAMPFORCE)
 	&& test_bit(This->ffbits, FF_RAMP)) {
@@ -1441,7 +1441,7 @@ static HRESULT WINAPI JoystickWImpl_EnumEffects(LPDIRECTINPUTDEVICE8W iface,
 
     TRACE("(this=%p,%p,%ld) type=%ld fd=%d\n", This, pvRef, dwEffType, type, xfd);
 
-    dei.dwSize = sizeof(DIEFFECTINFOW);          
+    dei.dwSize = sizeof(DIEFFECTINFOW);
 
     /* We need to return something even if we're not yet acquired */
     if (xfd == -1)
@@ -1475,7 +1475,7 @@ static HRESULT WINAPI JoystickWImpl_EnumEffects(LPDIRECTINPUTDEVICE8W iface,
 	    IDirectInputDevice8_GetEffectInfo(iface, &dei, &GUID_SawtoothDown);
 	    (*lpCallback)(&dei, pvRef);
 	}
-    } 
+    }
 
     if ((type == DIEFT_ALL || type == DIEFT_RAMPFORCE)
 	&& test_bit(This->ffbits, FF_RAMP)) {
@@ -1511,7 +1511,7 @@ static HRESULT WINAPI JoystickWImpl_EnumEffects(LPDIRECTINPUTDEVICE8W iface,
 }
 
 /*******************************************************************************
- *      GetEffectInfo - Get information about a particular effect 
+ *      GetEffectInfo - Get information about a particular effect
  */
 static HRESULT WINAPI JoystickAImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8A iface,
 						  LPDIEFFECTINFOA pdei,
@@ -1522,7 +1522,7 @@ static HRESULT WINAPI JoystickAImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8A iface,
     TRACE("(this=%p,%p,%s)\n", This, pdei, _dump_dinput_GUID(guid));
 
 #ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
-    return linuxinput_get_info_A(This->joyfd, guid, pdei); 
+    return linuxinput_get_info_A(This->joyfd, guid, pdei);
 #else
     return DI_OK;
 #endif
@@ -1533,9 +1533,9 @@ static HRESULT WINAPI JoystickWImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8W iface,
                                                   REFGUID guid)
 {
     JoystickImpl* This = (JoystickImpl*)iface;
-            
+
     TRACE("(this=%p,%p,%s)\n", This, pdei, _dump_dinput_GUID(guid));
-        
+
 #ifdef HAVE_STRUCT_FF_EFFECT_DIRECTION
     return linuxinput_get_info_W(This->joyfd, guid, pdei);
 #else
@@ -1544,7 +1544,7 @@ static HRESULT WINAPI JoystickWImpl_GetEffectInfo(LPDIRECTINPUTDEVICE8W iface,
 }
 
 /*******************************************************************************
- *      GetForceFeedbackState - Get information about the device's FF state 
+ *      GetForceFeedbackState - Get information about the device's FF state
  */
 static HRESULT WINAPI JoystickAImpl_GetForceFeedbackState(
 	LPDIRECTINPUTDEVICE8A iface,
@@ -1587,16 +1587,16 @@ static HRESULT WINAPI JoystickAImpl_SendForceFeedbackCommand(
 	/* Stop, unload, release and free all effects */
 	/* This returns the device to its "bare" state */
 	while (This->top_effect) {
-	    EffectListItem* temp = This->top_effect; 
+	    EffectListItem* temp = This->top_effect;
 	    IDirectInputEffect_Stop(temp->ref);
 	    IDirectInputEffect_Unload(temp->ref);
 	    IDirectInputEffect_Release(temp->ref);
-	    This->top_effect = temp->next; 
+	    This->top_effect = temp->next;
 	    free(temp);
 	}
     } else if (dwFlags == DISFFC_PAUSE || dwFlags == DISFFC_CONTINUE) {
 	FIXME("No support for Pause or Continue in linux\n");
-    } else if (dwFlags == DISFFC_SETACTUATORSOFF 
+    } else if (dwFlags == DISFFC_SETACTUATORSOFF
 		|| dwFlags == DISFFC_SETACTUATORSON) {
 	FIXME("No direct actuator control in linux\n");
     } else {

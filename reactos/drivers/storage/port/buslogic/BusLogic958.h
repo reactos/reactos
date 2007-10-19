@@ -1,10 +1,10 @@
 /*
- * vmscsi-- Miniport driver for the Buslogic BT 958 SCSI Controller 
+ * vmscsi-- Miniport driver for the Buslogic BT 958 SCSI Controller
  *          under Windows 2000/XP/Server 2003
  *
  *          Based in parts on the buslogic driver for the same device
  *          available with the GNU Linux Operating System.
- *          
+ *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
  * as published by the Free Software Foundation; either version 2
@@ -46,7 +46,7 @@
 
 
 //#include "miniport.h"
-//#include "scsi.h"    
+//#include "scsi.h"
 //#include "scsiwmi.h"
 //_________________________________________________________________________________________
 // #defines
@@ -113,7 +113,7 @@
 
 
 //_________________________________________________________________________________________
-// typedef 
+// typedef
 //_________________________________________________________________________________________
 typedef enum
 {
@@ -186,8 +186,8 @@ typedef unsigned int BusLogic_ByteCount_T;
 
 typedef struct BusLogic_FetchHostAdapterLocalRAMRequest
 {
-  UCHAR ByteOffset;             // Byte 0 
-  UCHAR ByteCount;              // Byte 1 
+  UCHAR ByteOffset;             // Byte 0
+  UCHAR ByteCount;              // Byte 1
 }
 BusLogic_FetchHostAdapterLocalRAMRequest_T;
 
@@ -338,26 +338,26 @@ typedef struct BusLogic_SetupInformation
 // Define the Inquire Extended Setup Information reply structure.
 typedef struct BusLogic_ExtendedSetupInformation
 {
-  UCHAR BusType;                            // Byte 0    
-  UCHAR BIOS_Address;                       // Byte 1    
-  unsigned short ScatterGatherLimit;        // Bytes 2-3 
-  UCHAR MailboxCount;                       // Byte 4 
-  BusLogic_BusAddress_T BaseMailboxAddress; // Bytes 5-8 
+  UCHAR BusType;                            // Byte 0
+  UCHAR BIOS_Address;                       // Byte 1
+  unsigned short ScatterGatherLimit;        // Bytes 2-3
+  UCHAR MailboxCount;                       // Byte 4
+  BusLogic_BusAddress_T BaseMailboxAddress; // Bytes 5-8
   struct
   {
-      UCHAR :2;                             // Byte 9 Bits 0-1 
-      BOOLEAN FastOnEISA:1;                 // Byte 9 Bit 2 
-      UCHAR :3;                             // Byte 9 Bits 3-5 
-      BOOLEAN LevelSensitiveInterrupt:1;    // Byte 9 Bit 6 
-      UCHAR :1; 
-  } Misc;                                   // Byte 9 Bit 7 
-  UCHAR FirmwareRevision[3];                // Bytes 10-12 
-  BOOLEAN HostWideSCSI:1;                   // Byte 13 Bit 0 
-  BOOLEAN HostDifferentialSCSI:1;           // Byte 13 Bit 1 
-  BOOLEAN HostSupportsSCAM:1;               // Byte 13 Bit 2 
-  BOOLEAN HostUltraSCSI:1;                  // Byte 13 Bit 3 
-  BOOLEAN HostSmartTermination:1;           // Byte 13 Bit 4 
-  UCHAR :3;                                 // Byte 13 Bits 5-7 
+      UCHAR :2;                             // Byte 9 Bits 0-1
+      BOOLEAN FastOnEISA:1;                 // Byte 9 Bit 2
+      UCHAR :3;                             // Byte 9 Bits 3-5
+      BOOLEAN LevelSensitiveInterrupt:1;    // Byte 9 Bit 6
+      UCHAR :1;
+  } Misc;                                   // Byte 9 Bit 7
+  UCHAR FirmwareRevision[3];                // Bytes 10-12
+  BOOLEAN HostWideSCSI:1;                   // Byte 13 Bit 0
+  BOOLEAN HostDifferentialSCSI:1;           // Byte 13 Bit 1
+  BOOLEAN HostSupportsSCAM:1;               // Byte 13 Bit 2
+  BOOLEAN HostUltraSCSI:1;                  // Byte 13 Bit 3
+  BOOLEAN HostSmartTermination:1;           // Byte 13 Bit 4
+  UCHAR :3;                                 // Byte 13 Bits 5-7
 }BusLogic_ExtendedSetupInformation_T;
 
 //  Define the Host Adapter Local RAM AutoSCSI structure.
@@ -547,8 +547,8 @@ typedef enum
 }BusLogic_CCB_Status_T;
 
 //  Define the 32 Bit Mode Command Control Block (CCB) structure.  The first 40
-//  bytes are defined by the MultiMaster Firmware The remaining components are 
-//  defined by the Scsi MiniportDriver.  
+//  bytes are defined by the MultiMaster Firmware The remaining components are
+//  defined by the Scsi MiniportDriver.
 //  Extended LUN Format CCBs differ from Legacy LUN Format 32 Bit Mode
 //  CCBs only in having the TagEnable and QueueTag fields moved from byte 17 to
 //  byte 1, and the Logical Unit field in byte 17 expanded to 6 bits.  In theory,
@@ -624,13 +624,13 @@ typedef struct BusLogic_IncomingMailbox
 // The following structure is allocated
 // from noncached memory as data will be DMA'd to
 // and from it.
-typedef struct _NONCACHED_EXTENSION 
+typedef struct _NONCACHED_EXTENSION
 {
     // Physical base address of mailboxes
     ULONG MailboxPA;
 
     // Mailboxes
-    UCHAR MailboxOut[BusLogic_MaxMailboxes * sizeof(BusLogic_OutgoingMailbox_T)];                                                       
+    UCHAR MailboxOut[BusLogic_MaxMailboxes * sizeof(BusLogic_OutgoingMailbox_T)];
     UCHAR MailboxIn[BusLogic_MaxMailboxes * sizeof(BusLogic_IncomingMailbox_T)];
 } NONCACHED_EXTENSION, *PNONCACHED_EXTENSION;
 
@@ -663,7 +663,7 @@ static BusLogic_HostAdapterBusType_T
                                     BusLogic_EISA_Bus,     /* BT-7xx */
                                     BusLogic_Unknown_Bus,  /* BT-8xx */
                                     BusLogic_PCI_Bus       /* BT-9xx */
-                                  };                
+                                  };
 
 //  Define the BusLogic Driver Host Adapter structure
 typedef struct BusLogic_HostAdapter
@@ -671,7 +671,7 @@ typedef struct BusLogic_HostAdapter
 
   BusLogic_HostAdapterType_T HostAdapterType;
   BusLogic_HostAdapterBusType_T HostAdapterBusType;
-    
+
   UCHAR ModelName[9];
   UCHAR FirmwareVersion[6];
   UCHAR FullModelName[18];
@@ -680,7 +680,7 @@ typedef struct BusLogic_HostAdapter
   PUCHAR IO_Address;
   UCHAR IRQ_Channel;
   UCHAR SCSI_ID;
-  
+
   BOOLEAN ExtendedTranslationEnabled:1;
   BOOLEAN ParityCheckingEnabled:1;
   BOOLEAN BusResetEnabled:1;
@@ -705,7 +705,7 @@ typedef struct BusLogic_HostAdapter
   volatile BOOLEAN HostAdapterCommandCompleted;
   unsigned short HostAdapterScatterGatherLimit;
   unsigned short DriverScatterGatherLimit;
-  
+
   UCHAR MaxTargetDevices;
   UCHAR MaxLogicalUnits;
 
@@ -723,7 +723,7 @@ typedef struct BusLogic_HostAdapter
   unsigned short ExternalHostAdapterResets;
   unsigned short HostAdapterInternalErrors;
   unsigned short TargetDeviceCount;
-  
+
   BusLogic_BusAddress_T BIOS_Address;
 
   BusLogic_CCB_T *FirstCompletedCCB;
@@ -747,14 +747,14 @@ typedef struct BusLogic_HostAdapter
   BusLogic_IncomingMailbox_T *FirstIncomingMailbox;
   BusLogic_IncomingMailbox_T *LastIncomingMailbox;
   BusLogic_IncomingMailbox_T *NextIncomingMailbox;
-  BusLogic_TargetStatistics_T TargetStatistics[BusLogic_MaxTargetDevices];  
+  BusLogic_TargetStatistics_T TargetStatistics[BusLogic_MaxTargetDevices];
 }BusLogic_HostAdapter_T;
 
 
-// Buslogic specific port driver device object extension. 
-typedef struct 
+// Buslogic specific port driver device object extension.
+typedef struct
 _HW_DEVICE_EXTENSION
-{ 
+{
   BusLogic_HostAdapter_T   hcs;
   PNONCACHED_EXTENSION NoncachedExtension;
   SCSI_WMILIB_CONTEXT WmiLibContext;
@@ -795,14 +795,14 @@ typedef struct SCSI_Inquiry
 
 typedef struct BusLogic_WmiExtendedSetupInformation
 {
-  UCHAR BusType;                            // Byte 0    
-  UCHAR BIOS_Address;                       // Byte 1    
-  unsigned short ScatterGatherLimit;        // Bytes 2-3 
-  UCHAR MailboxCount;                       // Byte 4 
-  BusLogic_BusAddress_T BaseMailboxAddress; // Bytes 5-8 
-  BOOLEAN FastOnEISA;                   // Byte 9 
+  UCHAR BusType;                            // Byte 0
+  UCHAR BIOS_Address;                       // Byte 1
+  unsigned short ScatterGatherLimit;        // Bytes 2-3
+  UCHAR MailboxCount;                       // Byte 4
+  BusLogic_BusAddress_T BaseMailboxAddress; // Bytes 5-8
+  BOOLEAN FastOnEISA;                   // Byte 9
   BOOLEAN LevelSensitiveInterrupt;      // Byte 10
-  UCHAR FirmwareRevision[3];            // Bytes 11-14 
+  UCHAR FirmwareRevision[3];            // Bytes 11-14
   BOOLEAN HostWideSCSI;                 // Byte 15
   BOOLEAN HostDifferentialSCSI;         // Byte 16
   BOOLEAN HostSupportsSCAM;             // Byte 17
@@ -862,25 +862,25 @@ BOOLEAN
 BT958WmiSrb(IN     PHW_DEVICE_EXTENSION    HwDeviceExtension,
             IN OUT PSCSI_WMI_REQUEST_BLOCK Srb);
 #endif
-void 
+void
 BT958WmiInitialize( IN PHW_DEVICE_EXTENSION HwDeviceExtension);
 
 
-BOOLEAN 
-Buslogic_InitBT958(PHW_DEVICE_EXTENSION deviceExtension, 
+BOOLEAN
+Buslogic_InitBT958(PHW_DEVICE_EXTENSION deviceExtension,
                    PPORT_CONFIGURATION_INFORMATION ConfigInfo);
 
-BOOLEAN 
+BOOLEAN
 BusLogic_ProbeHostAdapter(BusLogic_HostAdapter_T *HostAdapter);
 
-BOOLEAN 
-BusLogic_HardwareResetHostAdapter(BusLogic_HostAdapter_T  *HostAdapter, 
+BOOLEAN
+BusLogic_HardwareResetHostAdapter(BusLogic_HostAdapter_T  *HostAdapter,
                                   BOOLEAN HardReset);
 
-BOOLEAN 
+BOOLEAN
 BusLogic_CheckHostAdapter(BusLogic_HostAdapter_T *HostAdapter);
 
-int 
+int
 BusLogic_Command(BusLogic_HostAdapter_T *HostAdapter,
                  BusLogic_OperationCode_T OperationCode,
                  void *ParameterData,
@@ -888,36 +888,36 @@ BusLogic_Command(BusLogic_HostAdapter_T *HostAdapter,
                  void *ReplyData,
                  int ReplyLength);
 
-BOOLEAN 
+BOOLEAN
 BusLogic_ReadHostAdapterConfiguration( BusLogic_HostAdapter_T  *HostAdapter);
-                                                     
-BOOLEAN 
+
+BOOLEAN
 BusLogic_InitializeHostAdapter(PHW_DEVICE_EXTENSION deviceExtension,
                                PPORT_CONFIGURATION_INFORMATION ConfigInfo);
 
-BOOLEAN 
+BOOLEAN
 BusLogic_TargetDeviceInquiry(BusLogic_HostAdapter_T *HostAdapter);
 
-int 
+int
 BusLogic_QueueCommand(IN PVOID HwDeviceExtension,
-                      IN PSCSI_REQUEST_BLOCK Srb, 
+                      IN PSCSI_REQUEST_BLOCK Srb,
                       IN PBuslogic_CCB_T ccb);
 
-BOOLEAN 
+BOOLEAN
 BusLogic_WriteOutgoingMailbox(PHW_DEVICE_EXTENSION deviceExtension ,
                               BusLogic_ActionCode_T ActionCode,
                               BusLogic_CCB_T *CCB);
 
-void 
+void
 BusLogic_ScanIncomingMailboxes(PHW_DEVICE_EXTENSION deviceExtension);
 
-void 
+void
 BusLogic_QueueCompletedCCB(PHW_DEVICE_EXTENSION deviceExtension, BusLogic_CCB_T *CCB);
 
-void 
+void
 BusLogic_ProcessCompletedCCBs(PHW_DEVICE_EXTENSION deviceExtension);
 
-UCHAR 
+UCHAR
 BusLogic_ComputeResultCode(BusLogic_HostAdapter_T        *HostAdapter,
                            BusLogic_HostAdapterStatus_T  HostAdapterStatus,
                            BusLogic_TargetDeviceStatus_T TargetDeviceStatus,
@@ -927,13 +927,13 @@ BOOLEAN
 BusLogic_SendBusDeviceReset(IN PVOID HwDeviceExtension,
                             PSCSI_REQUEST_BLOCK Srb);
 
-static UCHAR 
+static UCHAR
 ReadBusLogicPort(PUCHAR adr )
 {
     return ScsiPortReadPortUchar( adr );
 }
 
-static VOID 
+static VOID
 WriteBusLogicPort(UCHAR data,
                   PUCHAR adr)
 {
@@ -945,12 +945,12 @@ WriteBusLogicPort(UCHAR data,
 //_________________________________________________________________________________________
 
 //  Define the BusLogic SCSI Host Adapter I/O Register Offsets.
-#define BusLogic_ControlRegisterOffset          0   // WO register 
-#define BusLogic_StatusRegisterOffset           0   // RO register 
-#define BusLogic_CommandParameterRegisterOffset 1   // WO register 
-#define BusLogic_DataInRegisterOffset           1   // RO register 
-#define BusLogic_InterruptRegisterOffset        2   // RO register 
-#define BusLogic_GeometryRegisterOffset         3   // RO register 
+#define BusLogic_ControlRegisterOffset          0   // WO register
+#define BusLogic_StatusRegisterOffset           0   // RO register
+#define BusLogic_CommandParameterRegisterOffset 1   // WO register
+#define BusLogic_DataInRegisterOffset           1   // RO register
+#define BusLogic_InterruptRegisterOffset        2   // RO register
+#define BusLogic_GeometryRegisterOffset         3   // RO register
 
 
 //  Define the structure of the write-only Control Register.
@@ -959,11 +959,11 @@ typedef union BusLogic_ControlRegister
   UCHAR All;
   struct
   {
-    UCHAR :4;                   // Bits 0-3 
-    BOOLEAN SCSIBusReset:1;     // Bit 4 
-    BOOLEAN InterruptReset:1;   // Bit 5 
-    BOOLEAN SoftReset:1;        // Bit 6 
-    BOOLEAN HardReset:1;        // Bit 7 
+    UCHAR :4;                   // Bits 0-3
+    BOOLEAN SCSIBusReset:1;     // Bit 4
+    BOOLEAN InterruptReset:1;   // Bit 5
+    BOOLEAN SoftReset:1;        // Bit 6
+    BOOLEAN HardReset:1;        // Bit 7
   } Bits;
 }BusLogic_ControlRegister_T;
 
@@ -972,16 +972,16 @@ typedef union BusLogic_ControlRegister
 typedef union BusLogic_StatusRegister
 {
   UCHAR All;
-  struct 
+  struct
   {
-    BOOLEAN CommandInvalid:1;               // Bit 0 
-    BOOLEAN Reserved:1;                     // Bit 1 
-    BOOLEAN DataInRegisterReady:1;          // Bit 2 
-    BOOLEAN CommandParameterRegisterBusy:1; // Bit 3 
-    BOOLEAN HostAdapterReady:1;             // Bit 4 
-    BOOLEAN InitializationRequired:1;       // Bit 5 
-    BOOLEAN DiagnosticFailure:1;            // Bit 6 
-    BOOLEAN DiagnosticActive:1;             // Bit 7 
+    BOOLEAN CommandInvalid:1;               // Bit 0
+    BOOLEAN Reserved:1;                     // Bit 1
+    BOOLEAN DataInRegisterReady:1;          // Bit 2
+    BOOLEAN CommandParameterRegisterBusy:1; // Bit 3
+    BOOLEAN HostAdapterReady:1;             // Bit 4
+    BOOLEAN InitializationRequired:1;       // Bit 5
+    BOOLEAN DiagnosticFailure:1;            // Bit 6
+    BOOLEAN DiagnosticActive:1;             // Bit 7
   } Bits;
 }BusLogic_StatusRegister_T;
 
@@ -993,12 +993,12 @@ typedef union BusLogic_InterruptRegister
   UCHAR All;
   struct
   {
-    BOOLEAN IncomingMailboxLoaded:1;    // Bit 0 
-    BOOLEAN OutgoingMailboxAvailable:1; // Bit 1 
-    BOOLEAN CommandComplete:1;          // Bit 2 
-    BOOLEAN ExternalBusReset:1;         // Bit 3 
-    UCHAR Reserved:3;                   // Bits 4-6 
-    BOOLEAN InterruptValid:1;           // Bit 7 
+    BOOLEAN IncomingMailboxLoaded:1;    // Bit 0
+    BOOLEAN OutgoingMailboxAvailable:1; // Bit 1
+    BOOLEAN CommandComplete:1;          // Bit 2
+    BOOLEAN ExternalBusReset:1;         // Bit 3
+    UCHAR Reserved:3;                   // Bits 4-6
+    BOOLEAN InterruptValid:1;           // Bit 7
   } Bits;
 }BusLogic_InterruptRegister_T;
 
@@ -1017,15 +1017,15 @@ typedef union BusLogic_GeometryRegister
   UCHAR All;
   struct
   {
-    BusLogic_BIOS_DiskGeometryTranslation_T Drive0Geometry:2; // Bits 0-1 
-    BusLogic_BIOS_DiskGeometryTranslation_T Drive1Geometry:2; // Bits 2-3 
-    UCHAR :3;                                                 // Bits 4-6 
-    BOOLEAN ExtendedTranslationEnabled:1;                     // Bit 7 
+    BusLogic_BIOS_DiskGeometryTranslation_T Drive0Geometry:2; // Bits 0-1
+    BusLogic_BIOS_DiskGeometryTranslation_T Drive1Geometry:2; // Bits 2-3
+    UCHAR :3;                                                 // Bits 4-6
+    BOOLEAN ExtendedTranslationEnabled:1;                     // Bit 7
   } Bits;
 }
 BusLogic_GeometryRegister_T;
 
-static void 
+static void
 BusLogic_InterruptReset(BusLogic_HostAdapter_T *HostAdapter)
 {
   BusLogic_ControlRegister_T ControlRegister;
@@ -1046,7 +1046,7 @@ BusLogic_SoftReset(BusLogic_HostAdapter_T *HostAdapter)
        HostAdapter->IO_Address + BusLogic_ControlRegisterOffset);
 }
 
-static void 
+static void
 BusLogic_HardReset(BusLogic_HostAdapter_T *HostAdapter)
 {
   BusLogic_ControlRegister_T ControlRegister;
@@ -1056,31 +1056,31 @@ BusLogic_HardReset(BusLogic_HostAdapter_T *HostAdapter)
        HostAdapter->IO_Address + BusLogic_ControlRegisterOffset);
 }
 
-static UCHAR 
+static UCHAR
 BusLogic_ReadStatusRegister(BusLogic_HostAdapter_T *HostAdapter)
 {
   return ReadBusLogicPort(HostAdapter->IO_Address + BusLogic_StatusRegisterOffset);
 }
 
-static UCHAR 
+static UCHAR
 BusLogic_ReadInterruptRegister(BusLogic_HostAdapter_T *HostAdapter)
 {
   return ReadBusLogicPort(HostAdapter->IO_Address + BusLogic_InterruptRegisterOffset);
 }
 
-static UCHAR 
+static UCHAR
 BusLogic_ReadGeometryRegister(BusLogic_HostAdapter_T *HostAdapter)
 {
   return ReadBusLogicPort(HostAdapter->IO_Address + BusLogic_GeometryRegisterOffset);
 }
 
-static UCHAR 
+static UCHAR
 BusLogic_ReadDataInRegister(BusLogic_HostAdapter_T *HostAdapter)
 {
   return ReadBusLogicPort(HostAdapter->IO_Address + BusLogic_DataInRegisterOffset);
 }
 
-static void 
+static void
 BusLogic_WriteCommandParameterRegister(BusLogic_HostAdapter_T *HostAdapter,
                                        UCHAR Value)
 {
@@ -1091,10 +1091,10 @@ BusLogic_WriteCommandParameterRegister(BusLogic_HostAdapter_T *HostAdapter,
 //  BusLogic_StartMailboxCommand issues an Execute Mailbox Command, which
 //  notifies the Host Adapter that an entry has been made in an Outgoing
 //  Mailbox.
-static void 
+static void
 BusLogic_StartMailboxCommand(BusLogic_HostAdapter_T *HostAdapter)
 {
-  BusLogic_WriteCommandParameterRegister(HostAdapter, 
+  BusLogic_WriteCommandParameterRegister(HostAdapter,
                                          BusLogic_ExecuteMailboxCommand);
 }
 
@@ -1136,7 +1136,7 @@ typedef enum BusLogic_SetCCBFormatRequest
 // Statistics
 //______________________________________________________________________________________
 //  BusLogic_IncrementByteCounter increments Byte Counter by Amount.
-static void 
+static void
 BusLogic_IncrementByteCounter(BusLogic_ByteCounter_T *ByteCounter,
                               unsigned int Amount)
 {
@@ -1149,7 +1149,7 @@ BusLogic_IncrementByteCounter(BusLogic_ByteCounter_T *ByteCounter,
 }
 
 //  BusLogic_IncrementSizeBucket increments the Bucket for Amount.
-static void 
+static void
 BusLogic_IncrementSizeBucket(BusLogic_CommandSizeBuckets_T CommandSizeBuckets,
                              unsigned int Amount)
 {
@@ -1158,17 +1158,17 @@ BusLogic_IncrementSizeBucket(BusLogic_CommandSizeBuckets_T CommandSizeBuckets,
   {
     if (Amount < 2*1024)
         Index = (Amount < 1*1024 ? 0 : 1);
-    else 
+    else
         Index = (Amount < 4*1024 ? 2 : 3);
   }
   else if (Amount < 128*1024)
   {
     if (Amount < 32*1024)
         Index = (Amount < 16*1024 ? 4 : 5);
-    else 
+    else
         Index = (Amount < 64*1024 ? 6 : 7);
   }
-  else 
+  else
       Index = (Amount < 256*1024 ? 8 : 9);
   CommandSizeBuckets[Index]++;
 }
@@ -1176,11 +1176,11 @@ BusLogic_IncrementSizeBucket(BusLogic_CommandSizeBuckets_T CommandSizeBuckets,
 
 //  BusLogic_IncrementErrorCounter increments Error Counter by 1, stopping at
 //  65535 rather than wrapping around to 0.
-static void 
+static void
 BusLogic_IncrementErrorCounter(unsigned short *ErrorCounter)
 {
   if (*ErrorCounter < 65535) (*ErrorCounter)++;
 }
 //____________________________________________________________________________________________
 
-#endif  // _BT958_H_ 
+#endif  // _BT958_H_

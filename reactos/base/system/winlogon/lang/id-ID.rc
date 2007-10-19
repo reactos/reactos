@@ -22,7 +22,7 @@ BEGIN
     DEFPUSHBUTTON "&Mulai Lagi", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Menyiapkan koneksi jaringan..."
     IDS_APPLYINGCOMPUTERSETTINGS "Menerapkan setelan komputer..."
@@ -40,7 +40,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS dimulai..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon gagal untuk mengaktifkan shell pengguna!"
 END

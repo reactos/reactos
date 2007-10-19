@@ -179,7 +179,7 @@ IDB_TRAYMASK            BITMAP  DISCARDABLE "res/traymask.bmp"
  '00 00 00 00 00 FF FF 00 00 00 00 00 00 FF FF FF'
  'FF FF FF FF FF FF'
 } */
-        
+
 /* BINRES trayicon.bmp */
 IDB_TRAYICON            BITMAP  DISCARDABLE "res/trayicon.bmp"
 /* {

@@ -49,7 +49,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 	{
 		ConOutResPaging(TRUE,STRING_TYPE_HELP1);
 		return 0;
-	}	
+	}
 
 	if (!*param)
 	{
@@ -100,7 +100,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 			nErrorLevel = 1;
 			continue;
 		}
-		
+
 		do
 		{
 			bRet = FileGetString (hFile, buff, sizeof(buff) / sizeof(TCHAR));
@@ -116,7 +116,7 @@ INT cmd_type (LPTSTR cmd, LPTSTR param)
 				}
 			}
 			else
-			{				
+			{
 				if(bRet)
 					ConOutPrintf(buff);
 			}

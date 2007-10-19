@@ -1294,7 +1294,7 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 
 	  case NM_RCLICK:
 	    TRACE("-- NM_RCLICK %p\n",This);
-	    break;	    
+	    break;
 
           case NM_DBLCLK:
             TRACE("-- NM_DBLCLK %p\n",This);
@@ -1622,7 +1622,7 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 
 	  case WM_GETDLGCODE:   return SendMessageA(pThis->hWndList,uMessage,0,0);
 
-	  case WM_DESTROY:	
+	  case WM_DESTROY:
 	  			RevokeDragDrop(pThis->hWnd);
 				SHChangeNotifyDeregister(pThis->hNotify);
 	                        break;
@@ -2220,7 +2220,7 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
     HRESULT hr;
     RECT clientRect;
 
-    /* Map from global to client coordinates and query the index of the listview-item, which is 
+    /* Map from global to client coordinates and query the index of the listview-item, which is
      * currently under the mouse cursor. */
     htinfo.pt.x = pt.x;
     htinfo.pt.y = pt.y;
@@ -2236,7 +2236,7 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
     {
         This->cScrollDelay = (This->cScrollDelay + 1) % 5; /* DragOver is called every 50 ms */
         if (This->cScrollDelay == 0) { /* Mouse did hover another 250 ms over the scroll-area */
-            if (htinfo.pt.x < SCROLLAREAWIDTH) 
+            if (htinfo.pt.x < SCROLLAREAWIDTH)
                 SendMessageW(This->hWndList, WM_HSCROLL, SB_LINEUP, 0);
             if (htinfo.pt.x > clientRect.right - SCROLLAREAWIDTH)
                 SendMessageW(This->hWndList, WM_HSCROLL, SB_LINEDOWN, 0);
@@ -2249,11 +2249,11 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
         This->cScrollDelay = 0; /* Reset, if the cursor is not over the listview's scroll-area */
     }
     This->ptLastMousePos = htinfo.pt;
- 
+
     /* If we are still over the previous sub-item, notify it via DragOver and return. */
     if (This->pCurDropTarget && lResult == This->iDragOverItem)
     return IDropTarget_DragOver(This->pCurDropTarget, grfKeyState, pt, pdwEffect);
-  
+
     /* We've left the previous sub-item, notify it via DragLeave and Release it. */
     if (This->pCurDropTarget) {
         IDropTarget_DragLeave(This->pCurDropTarget);
@@ -2265,7 +2265,7 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
     if (lResult == -1) {
         /* We are not above one of the listview's subitems. Bind to the parent folder's
          * DropTarget interface. */
-        hr = IShellFolder_QueryInterface(This->pSFParent, &IID_IDropTarget, 
+        hr = IShellFolder_QueryInterface(This->pSFParent, &IID_IDropTarget,
                                          (LPVOID*)&This->pCurDropTarget);
     } else {
         /* Query the relative PIDL of the shellfolder object represented by the currently
@@ -2281,7 +2281,7 @@ static HRESULT drag_notify_subitem(IShellViewImpl *This, DWORD grfKeyState, POIN
     }
 
     /* If anything failed, pCurDropTarget should be NULL now, which ought to be a save state. */
-    if (FAILED(hr)) 
+    if (FAILED(hr))
         return hr;
 
     /* Notify the item just entered via DragEnter. */
@@ -2317,11 +2317,11 @@ static HRESULT WINAPI ISVDropTarget_DragLeave(IDropTarget *iface) {
     This->pCurDataObject = NULL;
     This->pCurDropTarget = NULL;
     This->iDragOverItem = 0;
-     
+
     return S_OK;
 }
 
-static HRESULT WINAPI ISVDropTarget_Drop(IDropTarget *iface, IDataObject* pDataObject, 
+static HRESULT WINAPI ISVDropTarget_Drop(IDropTarget *iface, IDataObject* pDataObject,
     DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
     IShellViewImpl *This = impl_from_IDropTarget(iface);

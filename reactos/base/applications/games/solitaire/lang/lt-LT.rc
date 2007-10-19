@@ -4,7 +4,7 @@
  * FILE:        base/applications/games/solitaire/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
- * TRANSLATORS: Vytis "CMan" Girdþijauskas (cman@cman.us) 
+ * TRANSLATORS: Vytis "CMan" Girdþijauskas (cman@cman.us)
  */
 #include "resource.h"
 

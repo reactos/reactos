@@ -4,12 +4,12 @@
 
    Copyright (C) Matthew Chapman 1999-2005
    Copyright (C) Peter Astrand <peter@cendio.se> 2003
-   
+
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by
    the Free Software Foundation; either version 2 of the License, or
    (at your option) any later version.
-   
+
    This program is distributed in the hope that it will be useful,
    but WITHOUT ANY WARRANTY; without even the implied warranty of
    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -374,7 +374,7 @@ xkeymap_read(RDPCLIENT * This, char *mapname)
 		scancode = strtol(p, &line_rest, 16);
 
 		/* flags */
-		/* FIXME: Should allow case-insensitive flag names. 
+		/* FIXME: Should allow case-insensitive flag names.
 		   Fix by using lex+yacc... */
 		modifiers = 0;
 		if (strstr(line_rest, "altgr"))
@@ -406,7 +406,7 @@ xkeymap_read(RDPCLIENT * This, char *mapname)
 
 		if (strstr(line_rest, "addupper"))
 		{
-			/* Automatically add uppercase key, with same modifiers 
+			/* Automatically add uppercase key, with same modifiers
 			   plus shift */
 			for (p = keyname; *p; p++)
 				*p = toupper((int) *p);

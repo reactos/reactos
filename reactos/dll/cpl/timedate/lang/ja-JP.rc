@@ -21,7 +21,7 @@ BEGIN
             144, 105, 90, 12
     LTEXT "", IDC_TIMEZONE, 4, 136, 241, 8
     CONTROL "", IDC_CLOCKWND, "ClockWndClass",
-            WS_CHILD | WS_VISIBLE, 138, 12, 102, 89 
+            WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
 END
 
 

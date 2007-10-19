@@ -707,7 +707,7 @@ static HRESULT Stream_LoadLocation( IStream *stm,
     }
 
     /* if there's valid local volume information, load it */
-    if( loc->dwVolTableOfs && 
+    if( loc->dwVolTableOfs &&
        ((loc->dwVolTableOfs + sizeof(LOCAL_VOLUME_INFO)) <= loc->dwTotalSize) )
     {
         LOCAL_VOLUME_INFO *volume_info;
@@ -748,7 +748,7 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
     ULONG count;
     HRESULT r;
     EXP_DARWIN_LINK buffer;
-    
+
     TRACE("%p\n",stm);
 
     r = IStream_Read( stm, &buffer.dbh.cbSize, sizeof (DWORD), &count );
@@ -778,7 +778,7 @@ static HRESULT Stream_LoadAdvertiseInfo( IStream* stm, LPWSTR *str )
         return E_FAIL;
     }
 
-    *str = HeapAlloc( GetProcessHeap(), 0, 
+    *str = HeapAlloc( GetProcessHeap(), 0,
                      (lstrlenW(buffer.szwDarwinID)+1) * sizeof(WCHAR) );
     lstrcpyW( *str, buffer.szwDarwinID );
 
@@ -837,7 +837,7 @@ static HRESULT WINAPI IPersistStream_fnLoad(
     This->sProduct = NULL;
     HeapFree(GetProcessHeap(), 0, This->sComponent);
     This->sComponent = NULL;
-        
+
     This->wHotKey = (WORD)hdr.wHotKey;
     This->iIcoNdx = hdr.nIcon;
     FileTimeToSystemTime (&hdr.Time1, &This->time1);
@@ -954,7 +954,7 @@ end:
 /************************************************************************
  * Stream_WriteString
  *
- * Helper function for IPersistStream_Save. Writes a unicode string 
+ * Helper function for IPersistStream_Save. Writes a unicode string
  *  with terminating nul byte to a stream, preceded by the its length.
  */
 static HRESULT Stream_WriteString( IStream* stm, LPCWSTR str )
@@ -1040,7 +1040,7 @@ static HRESULT Stream_WriteLocationInfo( IStream* stm, LPCWSTR path,
 static EXP_DARWIN_LINK* shelllink_build_darwinid( LPCWSTR string, DWORD magic )
 {
     EXP_DARWIN_LINK *buffer;
-    
+
     buffer = LocalAlloc( LMEM_ZEROINIT, sizeof *buffer );
     buffer->dbh.cbSize = sizeof *buffer;
     buffer->dbh.dwSignature = magic;
@@ -1054,7 +1054,7 @@ static HRESULT Stream_WriteAdvertiseInfo( IStream* stm, LPCWSTR string, DWORD ma
 {
     EXP_DARWIN_LINK *buffer;
     ULONG count;
-    
+
     TRACE("%p\n",stm);
 
     buffer = shelllink_build_darwinid( string, magic );
@@ -1310,7 +1310,7 @@ HRESULT WINAPI IShellLink_ConstructFromFile( IUnknown* pUnkOuter, REFIID riid,
 	if (SUCCEEDED(hr)) {
 	    WCHAR path[MAX_PATH];
 
-	    if (SHGetPathFromIDListW(pidl, path)) 
+	    if (SHGetPathFromIDListW(pidl, path))
 		hr = IPersistFile_Load(ppf, path, 0);
             else
                 hr = E_FAIL;
@@ -1660,7 +1660,7 @@ static HRESULT WINAPI IShellLinkA_fnSetPath(IShellLinkA * iface, LPCSTR pszFile)
     TRACE("(%p)->(path=%s)\n",This, pszFile);
 
     str = HEAP_strdupAtoW(GetProcessHeap(), 0, pszFile);
-    if( !str ) 
+    if( !str )
         return E_OUTOFMEMORY;
 
     r = IShellLinkW_SetPath((IShellLinkW*)&(This->lpvtblw), str);
@@ -2532,7 +2532,7 @@ shelllink_get_msi_component_path( LPWSTR component )
     return path;
 }
 
-INT_PTR CALLBACK ExtendedShortcutProc(      
+INT_PTR CALLBACK ExtendedShortcutProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -2581,9 +2581,9 @@ INT_PTR CALLBACK ExtendedShortcutProc(
  * dialog proc of the shortcut property dialog
  */
 
-INT_PTR 
-CALLBACK 
-SH_ShellLinkDlgProc(   
+INT_PTR
+CALLBACK
+SH_ShellLinkDlgProc(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -2607,7 +2607,7 @@ SH_ShellLinkDlgProc(
         ppsp = (LPPROPSHEETPAGEW)lParam;
         if (ppsp == NULL)
             break;
-     
+
         TRACE("ShellLink_DlgProc (WM_INITDIALOG hwnd %p lParam %p ppsplParam %x)\n",hwndDlg, lParam, ppsp->lParam);
 
         This = (IShellLinkImpl *)ppsp->lParam;
@@ -2632,7 +2632,7 @@ SH_ShellLinkDlgProc(
             SendMessageW( hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)This->sDescription );
         return TRUE;
     case WM_NOTIFY:
-       lppsn = (LPPSHNOTIFY) lParam; 
+       lppsn = (LPPSHNOTIFY) lParam;
        if ( lppsn->hdr.code == PSN_APPLY )
        {
             /* set working directory */
@@ -2670,7 +2670,7 @@ SH_ShellLinkDlgProc(
        switch(LOWORD(wParam))
        {
            case 14020:
-               /// 
+               ///
                /// FIXME
                /// open target directory
                ///

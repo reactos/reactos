@@ -296,7 +296,7 @@ BOOL RefreshTreeView(HWND hwndTV)
 
     SendMessage(hwndTV, WM_SETREDRAW, TRUE, 0);
     SetCursor(hcursorOld);
-    
+
     /* We reselect the currently selected node, this will prompt a refresh of the listview. */
     (void)TreeView_SelectItem(hwndTV, hSelectedItem);
     return TRUE;
@@ -347,7 +347,7 @@ HTREEITEM InsertNode(HWND hwndTV, HTREEITEM hItem, LPTSTR name)
             item.cchTextMax = COUNT_OF(buf);
             if (!TreeView_GetItem(hwndTV, &item)) continue;
             if (lstrcmp(name, item.pszText) == 0) break;
-        }	
+        }
     }
     if (hNewItem) (void)TreeView_SelectItem(hwndTV, hNewItem);
 
@@ -395,7 +395,7 @@ static BOOL InitTreeViewItems(HWND hwndTV, LPTSTR pHostName)
         /* Win9x specific key */
         if (!AddEntryToTree(hwndTV, hRoot, _T("HKEY_DYN_DATA"), HKEY_DYN_DATA, 1)) return FALSE;
 	}
-    
+
     /* expand and select host name */
     (void)TreeView_Expand(hwndTV, hRoot, TVE_EXPAND);
     (void)TreeView_Select(hwndTV, hRoot, TVGN_CARET);

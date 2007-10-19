@@ -49,7 +49,7 @@ typedef struct tagMETAFILEDC {
   HGDIOBJ    Brush;
   HGDIOBJ    Palette;
   HGDIOBJ    Font;
-  
+
   WCHAR      Filename[MAX_PATH+2];
   // Add more later.
 } METAFILEDC,*PMETAFILEDC;
@@ -179,7 +179,7 @@ LogFontW2A(
 
 VOID
 STDCALL
-EnumLogFontExW2A( 
+EnumLogFontExW2A(
     LPENUMLOGFONTEXA fontA,
     CONST ENUMLOGFONTEXW *fontW );
 

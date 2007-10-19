@@ -43,13 +43,13 @@ DllMain(HINSTANCE hinstDLL,
     case DLL_PROCESS_ATTACH:
       hDllInstance = hinstDLL;
       break;
-    
+
     case DLL_THREAD_ATTACH:
       break;
-    
+
     case DLL_THREAD_DETACH:
       break;
-    
+
     case DLL_PROCESS_DETACH:
       break;
   }
@@ -99,7 +99,7 @@ HidD_GetAttributes(IN HANDLE HidDeviceObject,
 {
   HID_COLLECTION_INFORMATION hci;
   DWORD RetLen;
-  
+
   if(!DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_COLLECTION_INFORMATION,
                                        NULL, 0,
                                        &hci, sizeof(HID_COLLECTION_INFORMATION),
@@ -107,13 +107,13 @@ HidD_GetAttributes(IN HANDLE HidDeviceObject,
   {
     return FALSE;
   }
-  
+
   /* copy the fields */
   Attributes->Size = sizeof(HIDD_ATTRIBUTES);
   Attributes->VendorID = hci.VendorID;
   Attributes->ProductID = hci.ProductID;
   Attributes->VersionNumber = hci.VersionNumber;
-  
+
   return TRUE;
 }
 
@@ -255,12 +255,12 @@ HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
   HID_COLLECTION_INFORMATION hci;
   DWORD RetLen;
   BOOL Ret;
-  
+
   if(PreparsedData == NULL)
   {
     return FALSE;
   }
-  
+
   if(!DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_COLLECTION_INFORMATION,
                                        NULL, 0,
                                        &hci, sizeof(HID_COLLECTION_INFORMATION),
@@ -268,14 +268,14 @@ HidD_GetPreparsedData(IN HANDLE HidDeviceObject,
   {
     return FALSE;
   }
-  
+
   *PreparsedData = LocalAlloc(LHND, hci.DescriptorSize);
   if(*PreparsedData == NULL)
   {
     SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return FALSE;
   }
-  
+
   Ret = DeviceIoControl(HidDeviceObject, IOCTL_HID_GET_COLLECTION_DESCRIPTOR,
                         NULL, 0,
                         *PreparsedData, hci.DescriptorSize,
@@ -369,12 +369,12 @@ HidD_Hello(OUT PCHAR Buffer,
            IN ULONG BufferLength)
 {
   const CHAR HelloString[] = "Hello\n";
-  
+
   if(BufferLength > 0)
   {
     memcpy(Buffer, HelloString, min(sizeof(HelloString), BufferLength));
   }
-  
+
   return sizeof(HelloString);
 }
 

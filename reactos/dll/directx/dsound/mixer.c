@@ -286,7 +286,7 @@ static void DSOUND_MixerVol(IDirectSoundBufferImpl *dsb, BYTE *buf, INT len)
 	INT16	*bps = (INT16 *) buf;
 
 	TRACE("(%p,%p,%d)\n",dsb,buf,len);
-	TRACE("left = %lx, right = %lx\n", dsb->cvolpan.dwTotalLeftAmpFactor, 
+	TRACE("left = %lx, right = %lx\n", dsb->cvolpan.dwTotalLeftAmpFactor,
 		dsb->cvolpan.dwTotalRightAmpFactor);
 
 	if ((!(dsb->dsbd.dwFlags & DSBCAPS_CTRLPAN) || (dsb->cvolpan.lPan == 0)) &&
@@ -425,7 +425,7 @@ static DWORD DSOUND_MixInBuffer(IDirectSoundBufferImpl *dsb, DWORD writepos, DWO
 			else if (field < -128) field = -128;
 			*obuf++ = field + 128;
 		}
- 
+
 		if (todo < len) {
 			todo = len - todo;
 			obuf = dsb->dsound->device->buffer;
@@ -541,7 +541,7 @@ static void DSOUND_PhaseCancel(IDirectSoundBufferImpl *dsb, DWORD writepos, DWOR
 			else if (field < -128) field = -128;
 			*obuf++ = field + 128;
 		}
- 
+
 		if (todo < len) {
 			todo = len - todo;
 			obuf = dsb->dsound->device->buffer;
@@ -1136,8 +1136,8 @@ void CALLBACK DSOUND_callback(HWAVEOUT hwo, UINT msg, DWORD dwUser, DWORD dw1, D
 {
         DirectSoundDevice * device = (DirectSoundDevice*)dwUser;
 	TRACE("(%p,%x,%lx,%lx,%lx)\n",hwo,msg,dwUser,dw1,dw2);
-	TRACE("entering at %ld, msg=%08x(%s)\n", GetTickCount(), msg, 
-		msg==MM_WOM_DONE ? "MM_WOM_DONE" : msg==MM_WOM_CLOSE ? "MM_WOM_CLOSE" : 
+	TRACE("entering at %ld, msg=%08x(%s)\n", GetTickCount(), msg,
+		msg==MM_WOM_DONE ? "MM_WOM_DONE" : msg==MM_WOM_CLOSE ? "MM_WOM_CLOSE" :
 		msg==MM_WOM_OPEN ? "MM_WOM_OPEN" : "UNKNOWN");
 	if (msg == MM_WOM_DONE) {
 		DWORD inq, mixq, fraglen, buflen, pwplay, playpos, mixpos;

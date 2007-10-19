@@ -106,7 +106,7 @@ static HMODULE WININET_hModule;
 #define HANDLE_CHUNK_SIZE 0x10
 
 static CRITICAL_SECTION WININET_cs;
-static CRITICAL_SECTION_DEBUG WININET_cs_debug = 
+static CRITICAL_SECTION_DEBUG WININET_cs_debug =
 {
     0, 0, &WININET_cs,
     { &WININET_cs_debug.ProcessLocksList, &WININET_cs_debug.ProcessLocksList },
@@ -127,7 +127,7 @@ HINTERNET WININET_AllocHandle( LPWININETHANDLEHEADER info )
     if( !WININET_dwMaxHandles )
     {
         num = HANDLE_CHUNK_SIZE;
-        p = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY, 
+        p = HeapAlloc( GetProcessHeap(), HEAP_ZERO_MEMORY,
                    sizeof (UINT)* num);
         if( !p )
             goto end;
@@ -150,10 +150,10 @@ HINTERNET WININET_AllocHandle( LPWININETHANDLEHEADER info )
         ERR("handle isn't free but should be\n");
     WININET_Handles[handle] = WININET_AddRef( info );
 
-    while( WININET_Handles[WININET_dwNextHandle] && 
+    while( WININET_Handles[WININET_dwNextHandle] &&
            (WININET_dwNextHandle < WININET_dwMaxHandles ) )
         WININET_dwNextHandle++;
-    
+
 end:
     LeaveCriticalSection( &WININET_cs );
 
@@ -193,7 +193,7 @@ LPWININETHANDLEHEADER WININET_GetObject( HINTERNET hinternet )
 
     EnterCriticalSection( &WININET_cs );
 
-    if( (handle > 0) && ( handle <= WININET_dwMaxHandles ) && 
+    if( (handle > 0) && ( handle <= WININET_dwMaxHandles ) &&
         WININET_Handles[handle-1] )
         info = WININET_AddRef( WININET_Handles[handle-1] );
 
@@ -396,7 +396,7 @@ static BOOL INTERNET_ConfigureProxyFromReg( LPWININETAPPINFOW lpwai )
         TRACE("Proxy is enabled.\n");
 
         /* figure out how much memory the proxy setting takes */
-        r = RegQueryValueExW( key, szProxyServer, NULL, &keytype, 
+        r = RegQueryValueExW( key, szProxyServer, NULL, &keytype,
                               NULL, &len);
         if( (r == ERROR_SUCCESS) && len && (keytype == REG_SZ) )
         {
@@ -442,7 +442,7 @@ static BOOL INTERNET_ConfigureProxyFromReg( LPWININETAPPINFOW lpwai )
  *    None
  *
  */
-static void dump_INTERNET_FLAGS(DWORD dwFlags) 
+static void dump_INTERNET_FLAGS(DWORD dwFlags)
 {
 #define FE(x) { x, #x }
     static const wininet_flag_info flag[] = {
@@ -477,13 +477,13 @@ static void dump_INTERNET_FLAGS(DWORD dwFlags)
     };
 #undef FE
     int i;
-    
+
     for (i = 0; i < (sizeof(flag) / sizeof(flag[0])); i++) {
 	if (flag[i].val & dwFlags) {
 	    TRACE(" %s", flag[i].name);
 	    dwFlags &= ~flag[i].val;
 	}
-    }	
+    }
     if (dwFlags)
         TRACE(" Unknown flags (%08lx)\n", dwFlags);
     else
@@ -517,7 +517,7 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
 #undef FE
 	DWORD i;
 	const char *access_type_str = "Unknown";
-	
+
 	TRACE("(%s, %li, %s, %s, %li)\n", debugstr_w(lpszAgent), dwAccessType,
 	      debugstr_w(lpszProxy), debugstr_w(lpszProxyBypass), dwFlags);
 	for (i = 0; i < (sizeof(access_type) / sizeof(access_type[0])); i++) {
@@ -540,7 +540,7 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
         INTERNET_SetLastError(ERROR_OUTOFMEMORY);
 	goto lend;
     }
- 
+
     memset(lpwai, 0, sizeof(WININETAPPINFOW));
     lpwai->hdr.htype = WH_HINIT;
     lpwai->hdr.lpwhparent = NULL;
@@ -915,7 +915,7 @@ BOOL WINAPI InternetFindNextFileA(HINTERNET hFind, LPVOID lpvFindData)
 {
     BOOL ret;
     WIN32_FIND_DATAW fd;
-    
+
     ret = InternetFindNextFileW(hFind, lpvFindData?&fd:NULL);
     if(lpvFindData)
         WININET_find_data_WtoA(&fd, (LPWIN32_FIND_DATAA)lpvFindData);
@@ -1072,7 +1072,7 @@ static VOID INTERNET_CloseHandle(LPWININETHANDLEHEADER hdr)
 BOOL WINAPI InternetCloseHandle(HINTERNET hInternet)
 {
     LPWININETHANDLEHEADER lpwh;
-    
+
     TRACE("%p\n",hInternet);
 
     lpwh = WININET_GetObject( hInternet );
@@ -1155,7 +1155,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
       dwUrlLength=-1;
   nLength=MultiByteToWideChar(CP_ACP,0,lpszUrl,dwUrlLength,NULL,0);
 
-  /* if dwUrlLength=-1 then nLength includes null but length to 
+  /* if dwUrlLength=-1 then nLength includes null but length to
        InternetCrackUrlW should not include it                  */
   if (dwUrlLength == -1) nLength--;
 
@@ -1202,7 +1202,7 @@ BOOL WINAPI InternetCrackUrlA(LPCSTR lpszUrl, DWORD dwUrlLength, DWORD dwFlags,
   lpUrlComponents->nScheme=UCW.nScheme;
   lpUrlComponents->nPort=UCW.nPort;
   HeapFree(GetProcessHeap(), 0, lpwszUrl);
-  
+
   TRACE("%s: scheme(%s) host(%s) path(%s) extra(%s)\n", lpszUrl,
           debugstr_an(lpUrlComponents->lpszScheme,lpUrlComponents->dwSchemeLength),
           debugstr_an(lpUrlComponents->lpszHostName,lpUrlComponents->dwHostNameLength),
@@ -1325,7 +1325,7 @@ BOOL WINAPI InternetCrackUrlW(LPCWSTR lpszUrl_orig, DWORD dwUrlLength_orig, DWOR
 	}
     }
     lpszap = lpszUrl;
-    
+
     /* Determine if the URI is absolute. */
     while (*lpszap != '\0')
     {
@@ -1664,7 +1664,7 @@ INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackA(
     LPWININETHANDLEHEADER lpwh;
 
     TRACE("0x%08lx\n", (ULONG)hInternet);
-    
+
     lpwh = WININET_GetObject(hInternet);
     if (!lpwh)
         return INTERNET_INVALID_STATUS_CALLBACK;
@@ -1696,7 +1696,7 @@ INTERNET_STATUS_CALLBACK WINAPI InternetSetStatusCallbackW(
     LPWININETHANDLEHEADER lpwh;
 
     TRACE("0x%08lx\n", (ULONG)hInternet);
-    
+
     lpwh = WININET_GetObject(hInternet);
     if (!lpwh)
         return INTERNET_INVALID_STATUS_CALLBACK;
@@ -1750,7 +1750,7 @@ BOOL WINAPI InternetWriteFile(HINTERNET hFile, LPCVOID lpBuffer ,
                 lpwhr = (LPWININETHTTPREQW)lpwh;
 
                 TRACE("HTTPREQ %li\n",dwNumOfBytesToWrite);
-                retval = NETCON_send(&lpwhr->netConnection, lpBuffer, 
+                retval = NETCON_send(&lpwhr->netConnection, lpBuffer,
                         dwNumOfBytesToWrite, 0, (LPINT)lpdwNumOfBytesWritten);
 
                 WININET_Release( lpwh );
@@ -2197,7 +2197,7 @@ static BOOL INET_QueryOptionHelper(BOOL bIsUnicode, HINTERNET hInternet, DWORD d
                                                  sizeof(INTERNET_PROXY_INFOA));
                         *((LPSTR)(pPI->lpszProxy)) = '\0';
                     }
-                    
+
                     if (lpwai->lpszProxyBypass)
                     {
                         pPI->lpszProxyBypass = (LPSTR)((LPBYTE)lpBuffer +
@@ -2843,7 +2843,7 @@ BOOL WINAPI InternetCheckConnectionA(LPCSTR lpszUrl, DWORD dwFlags, DWORD dwRese
     MultiByteToWideChar(CP_ACP, 0, lpszUrl, -1, szUrl, len);
     rc = InternetCheckConnectionW(szUrl, dwFlags, dwReserved);
     HeapFree(GetProcessHeap(), 0, szUrl);
-    
+
     return rc;
 }
 
@@ -2863,10 +2863,10 @@ HINTERNET WINAPI INTERNET_InternetOpenUrlW(LPWININETAPPINFOW hIC, LPCWSTR lpszUr
     WCHAR protocol[32], hostName[MAXHOSTNAME], userName[1024];
     WCHAR password[1024], path[2048], extra[1024];
     HINTERNET client = NULL, client1 = NULL;
-    
+
     TRACE("(%p, %s, %s, %08lx, %08lx, %08lx)\n", hIC, debugstr_w(lpszUrl), debugstr_w(lpszHeaders),
 	  dwHeadersLength, dwFlags, dwContext);
-    
+
     urlComponents.dwStructSize = sizeof(URL_COMPONENTSW);
     urlComponents.lpszScheme = protocol;
     urlComponents.dwSchemeLength = 32;
@@ -2896,7 +2896,7 @@ HINTERNET WINAPI INTERNET_InternetOpenUrlW(LPWININETAPPINFOW hIC, LPCWSTR lpszUr
 	    break;
 	}
 	break;
-	
+
     case INTERNET_SCHEME_HTTP:
     case INTERNET_SCHEME_HTTPS: {
 	static const WCHAR szStars[] = { '*','/','*', 0 };
@@ -2932,7 +2932,7 @@ HINTERNET WINAPI INTERNET_InternetOpenUrlW(LPWININETAPPINFOW hIC, LPCWSTR lpszUr
     }
 
     TRACE(" %p <--\n", client1);
-    
+
     return client1;
 }
 
@@ -2962,11 +2962,11 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
 	INTERNET_SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
  	goto lend;
     }
-    
+
     if (hIC->hdr.dwFlags & INTERNET_FLAG_ASYNC) {
 	WORKREQUEST workRequest;
 	struct WORKREQ_INTERNETOPENURLW *req;
-	
+
 	workRequest.asyncall = INTERNETOPENURLW;
 	workRequest.hdr = WININET_AddRef( &hIC->hdr );
 	req = &workRequest.u.InternetOpenUrlW;
@@ -2981,7 +2981,7 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
 	req->dwHeadersLength = dwHeadersLength;
 	req->dwFlags = dwFlags;
 	req->dwContext = dwContext;
-	
+
 	INTERNET_AsyncCall(&workRequest);
 	/*
 	 * This is from windows.
@@ -2990,12 +2990,12 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
     } else {
 	ret = INTERNET_InternetOpenUrlW(hIC, lpszUrl, lpszHeaders, dwHeadersLength, dwFlags, dwContext);
     }
-    
+
   lend:
     if( hIC )
         WININET_Release( &hIC->hdr );
     TRACE(" %p <--\n", ret);
-    
+
     return ret;
 }
 
@@ -3026,7 +3026,7 @@ HINTERNET WINAPI InternetOpenUrlA(HINTERNET hInternet, LPCSTR lpszUrl,
             return (HINTERNET)NULL;
         MultiByteToWideChar(CP_ACP, 0, lpszUrl, -1, szUrl, lenUrl);
     }
-    
+
     if(lpszHeaders) {
         lenHeaders = MultiByteToWideChar(CP_ACP, 0, lpszHeaders, dwHeadersLength, NULL, 0 );
         szHeaders = HeapAlloc(GetProcessHeap(), 0, lenHeaders*sizeof(WCHAR));
@@ -3036,7 +3036,7 @@ HINTERNET WINAPI InternetOpenUrlA(HINTERNET hInternet, LPCSTR lpszUrl,
         }
         MultiByteToWideChar(CP_ACP, 0, lpszHeaders, dwHeadersLength, szHeaders, lenHeaders);
     }
-    
+
     rc = InternetOpenUrlW(hInternet, szUrl, szHeaders,
         lenHeaders, dwFlags, dwContext);
 
@@ -3453,7 +3453,7 @@ static VOID INTERNET_ExecuteWork(void)
 	{
 	struct WORKREQ_INTERNETOPENURLW *req = &workRequest.u.InternetOpenUrlW;
         LPWININETAPPINFOW hIC = (LPWININETAPPINFOW) workRequest.hdr;
-	
+
         TRACE("INTERNETOPENURLW %p\n", hIC);
 
 	INTERNET_InternetOpenUrlW(hIC, req->lpszUrl,

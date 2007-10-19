@@ -58,8 +58,8 @@ extern void _tnl_do_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v );
 extern void _tnl_do_EvalCoord1f(GLcontext* ctx, GLfloat u);
 extern void _tnl_update_eval( GLcontext *ctx );
 
-extern GLboolean *_tnl_translate_edgeflag( GLcontext *ctx, 
-					   const GLfloat *data, 
+extern GLboolean *_tnl_translate_edgeflag( GLcontext *ctx,
+					   const GLfloat *data,
 					   GLuint count,
 					   GLuint stride );
 

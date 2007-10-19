@@ -44,7 +44,7 @@ static class MSVCFactory : public Backend::Factory
 		{
 			return new MSVCBackend(project, configuration);
 		}
-		
+
 } factory;
 
 
@@ -86,14 +86,14 @@ void MSVCBackend::Process()
 		return;
 	}
 	string filename_sln ( ProjectNode.name );
-	
+
 	if ( configuration.VSProjectVersion == "6.00" )
 		filename_sln += "_auto.dsw";
 	else
 		filename_sln += "_auto.sln";
 
 	printf ( "Creating MSVC workspace: %s\n", filename_sln.c_str() );
-	
+
 	ProcessModules();
 	m_slnFile = fopen ( filename_sln.c_str(), "wb" );
 
@@ -164,7 +164,7 @@ void MSVCBackend::ProcessFile(string &filepath)
 		folder = filepath;
 		folder.erase(pos, folder.length() - pos);
 	}
-	
+
 	FileUnit fileUnit;
 	fileUnit.filename = filepath;
 	fileUnit.folder = folder;
@@ -193,9 +193,9 @@ void MSVCBackend::AddFolders(string &folder)
 	// Check if this folder was already added. true if it was, false otherwise.
 	if(CheckFolderAdded(folder))
 		return;
-	
+
 	m_folders.push_back(folder);
-	
+
 	size_t pos = folder.rfind(string("/"), folder.length() - 1);
 
 	if(pos == string::npos)
@@ -292,7 +292,7 @@ std::string MSVCBackend::_get_vc_dir ( void ) const
 
 }
 
-void 
+void
 MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) const
 {
 	string basepath = module.output->relative_path;
@@ -300,7 +300,7 @@ MSVCBackend::_get_object_files ( const Module& module, vector<string>& out) cons
 	size_t i;
 	string intenv = Environment::GetIntermediatePath () + DEF_SSEP + basepath + DEF_SSEP;
 	string outenv = Environment::GetOutputPath () + DEF_SSEP + basepath + DEF_SSEP;
-	
+
 	if ( configuration.UseVSVersionInPath )
 	{
 		intenv += vcdir + DEF_SSEP;
@@ -395,7 +395,7 @@ MSVCBackend::_clean_project_files ( void )
 		Module& module = *ProjectNode.modules[i];
 		vector<string> out;
 		printf("Cleaning project %s %s %s\n", module.name.c_str (), module.output->relative_path.c_str (), NcbFileName ( module ).c_str () );
-		
+
 		string basepath = module.output->relative_path;
 		remove ( NcbFileName ( module ).c_str () );
 		remove ( DspFileName ( module ).c_str () );
@@ -403,7 +403,7 @@ MSVCBackend::_clean_project_files ( void )
 		remove ( OptFileName ( module ).c_str () );
 		remove ( SlnFileName ( module ).c_str () );
 		remove ( SuoFileName ( module ).c_str () );
-		remove ( VcprojFileName ( module ).c_str () );	
+		remove ( VcprojFileName ( module ).c_str () );
 
 		string username = getenv ( "USERNAME" );
 		string computername = getenv ( "COMPUTERNAME" );
@@ -412,7 +412,7 @@ MSVCBackend::_clean_project_files ( void )
 		if ((computername != "") && (username != ""))
 			vcproj_file_user = VcprojFileName ( module ) + "." + computername + "." + username + ".user";
 
-		remove ( vcproj_file_user.c_str () );	
+		remove ( vcproj_file_user.c_str () );
 
 		_get_object_files ( module, out );
 		_get_def_files ( module, out );

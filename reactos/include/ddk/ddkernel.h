@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 
+ * FILE:
  * PURPOSE:              Directx headers
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *

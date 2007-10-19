@@ -159,7 +159,7 @@ DWORD WINAPI GetSize (LPVOID lpMem)
  * Items are re-ordered by changing the order of the values in the MRUList
  * value. When a new item is added, it becomes the new value of the oldest
  * identifier, and that identifier is moved to the front of the MRUList value.
- * 
+ *
  * Wine stores MRU-lists in the same registry format as Windows, so when
  * switching between the builtin and native comctl32.dll no problems or
  * incompatibilities should occur.

@@ -26,7 +26,7 @@
 		<file>stubs.c</file>
 		<file>stubsa.c</file>
 		<file>stubsw.c</file>
-		<file>wingl.c</file>		
+		<file>wingl.c</file>
 	</directory>
 	<directory name="objects">
 		<file>arc.c</file>

@@ -47,7 +47,7 @@
 // output_buffer_length is the size of the buffer
 
 #define IOCTL_REGISTER_DRIVER 			CTL_CODE( FILE_USB_DEV_TYPE, 4203, METHOD_BUFFERED, FILE_ANY_ACCESS )
-// input_buffer is a CLASS_DRV_REG_INFO, and input_buffer_length is equal to or greater than 
+// input_buffer is a CLASS_DRV_REG_INFO, and input_buffer_length is equal to or greater than
 // sizeof( CLASS_DRV_REG_INFO ); the output_buffer is null and no output_buffer_length,
 // only the following fields in urb can be accessed, others must be zeroed.
 
@@ -205,7 +205,7 @@ typedef struct _UMSS_DEVICE_EXTENSION
 	//this structure is the device extension for dev_obj
 	//created for the device.
 	DEVEXT_HEADER			dev_ext_hdr;
-	
+
 	ULONG					flags;
 	LIST_ENTRY				dev_obj_link;	// this link is used by the driver object to track the existing dev_objs
 
@@ -262,7 +262,7 @@ typedef struct _UMSS_WORKER_PACKET
 	PVOID					pdev;
 
 } UMSS_WORKER_PACKET, *PUMSS_WORKER_PACKET;
-    
+
 BOOLEAN
 umss_driver_init(
 PUSB_DEV_MANAGER dev_mgr,
@@ -313,7 +313,7 @@ IN PUMSS_DEVICE_EXTENSION pdev_ext,
 IN UCHAR trans_dir,
 IN PVOID buf,
 IN ULONG buf_length,
-IN PURBCOMPLETION completion 
+IN PURBCOMPLETION completion
 );
 
 BOOLEAN

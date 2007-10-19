@@ -4,9 +4,9 @@
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/advappdlg.c
  * PURPOSE:         Advanced appearance dialog
- * 
+ *
  * PROGRAMMER:     Timo Kreuzer (timo[dot]kreuzer[at]web[dot]de)
- * 
+ *
  */
 
 #include "desk.h"
@@ -80,13 +80,13 @@ InitColorButtons(HWND hwndDlg, GLOBALS* g)
 	for (i = 0; i <= 2; i++)
 	{
 		/* Create a DC to draw on */
-		hdcCompat = CreateCompatibleDC(hdcColorButton); 
+		hdcCompat = CreateCompatibleDC(hdcColorButton);
 
 		/* Create the button image */
 		g->hbmpColor[i] = CreateCompatibleBitmap(hdcColorButton, 36, 15);
 
 		/* Select the button image to the DC */
-		hgdiTemp = SelectObject(hdcCompat, g->hbmpColor[i]); 
+		hgdiTemp = SelectObject(hdcCompat, g->hbmpColor[i]);
 
 		/* Draw the buttons background color */
 		rect.left = 0;

@@ -189,7 +189,7 @@ struct URB;
 
 #define dev_state( pdEV ) ( ( pdEV )->flags & USB_DEV_STATE_MASK )
 
-#define dev_class( pdev ) ( pdev->flags & USB_DEV_CLASS_MASK ) 
+#define dev_class( pdev ) ( pdev->flags & USB_DEV_CLASS_MASK )
 
 #define uhci_from_hcd( hCD ) ( struct_ptr( ( hCD ), UHCI_DEV, hcd_interf ) )
 #define uhci_from_dev( dEV ) ( struct_ptr( ( dEV->hcd ), UHCI_DEV, hcd_interf ) )
@@ -234,8 +234,8 @@ typedef struct _UHCI_TD_POOL
 
 } UHCI_TD_POOL, *PUHCI_TD_POOL;
 
-BOOLEAN	
-init_td_pool(	
+BOOLEAN
+init_td_pool(
 PUHCI_TD_POOL pool
 );
 
@@ -339,13 +339,13 @@ BOOLEAN at_dpc
 typedef struct _UHCI_QH
 {
     /* Hardware fields */
-    ULONG               link;           // Next queue 
+    ULONG               link;           // Next queue
     ULONG               element;        // Queue element pointer
 
     /* Software fields */
     ULONG               phy_addr;       //constant since initialized
     struct _QH_EXTENSION *pqhe;
-    
+
 } UHCI_QH, *PUHCI_QH;
 
 typedef struct _QH_EXTENSION
@@ -409,7 +409,7 @@ PUHCI_QH_POOL pool,
 BOOLEAN at_dpc
 );
 
-/* 
+/*
  * Search tree for determining where <interval> fits in the
  * skelqh[] skeleton.
  *
@@ -492,8 +492,8 @@ typedef struct _USB_INTERFACE
     LONG               			if_ext_size;
 	UCHAR						altif_count;
 	LIST_ENTRY					altif_list;
-    
-    
+
+
 } USB_INTERFACE, *PUSB_INTERFACE;
 
 #define MAX_INTERFACES_PER_CONFIG          4
@@ -506,7 +506,7 @@ typedef struct _USB_CONFIGURATION
     UCHAR               if_count;
     USB_INTERFACE       interf[MAX_INTERFACES_PER_CONFIG];
     struct _USB_DEV     *pusb_dev;
-    
+
 } USB_CONFIGURATION, *PUSB_CONFIGURATION;
 
 #define USE_IRQL \
@@ -582,7 +582,7 @@ typedef struct _USB_DEV
 
     struct _USB_DEV     *parent_dev;
 	UCHAR 				port_idx;			//parent hub's port idx, to which the dev attached
-	
+
 	struct _HCD			*hcd;				//point to the hcd the dev belongs to
 
 	USB_ENDPOINT       	default_endp;  		//control endp. its interfac pointer is to the first interface
@@ -590,7 +590,7 @@ typedef struct _USB_DEV
     LONG               	desc_buf_size;
     PUCHAR              desc_buf;
 	struct _USB_DEVICE_DESC *pusb_dev_desc;
-    
+
     UCHAR               active_config_idx;
     PUSB_CONFIGURATION  usb_config;			//the active configuration
 
@@ -700,7 +700,7 @@ typedef struct _UHCI
     LONG               	fsbr_cnt;           			//used to record number of fsbr users
 
 	KTIMER				reset_timer;					//used to reset the host controller
-	
+
 	//struct _USB_DEV_MANAGER		dev_mgr;			//it is in hcd_interf
 	struct _DEVICE_EXTENSION    *pdev_ext;
 
@@ -751,7 +751,7 @@ typedef struct _DEVEXT_HEADER
 typedef struct _DEVICE_EXTENSION
 {
 	//struct _USB_DEV_MANAGER 	*pdev_mgr;
-	DEVEXT_HEADER		dev_ext_hdr;	
+	DEVEXT_HEADER		dev_ext_hdr;
 	PDEVICE_OBJECT     	pdev_obj;
 	PDRIVER_OBJECT  	pdrvr_obj;
 	PUHCI_DEV 			uhci;
@@ -864,7 +864,7 @@ PUSB_DEV dev
 );
 
 BOOLEAN
-uhci_remove_device( 
+uhci_remove_device(
 PUHCI_DEV uhci,
 PUSB_DEV dev
 );

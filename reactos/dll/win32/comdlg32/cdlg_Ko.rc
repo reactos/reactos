@@ -1,7 +1,7 @@
 /*
  * Copyright 1996 Bang Jun Young
  * Copyright 2005,2006 YunSong Hwang
- * Copyright 2006 Byeong-Sik Jeon 
+ * Copyright 2006 Byeong-Sik Jeon
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -116,7 +116,7 @@ FONT 9, "MS Shell Dlg"
  COMBOBOX cmb3, 155, 110, 92, 68, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | CBS_AUTOHSCROLL | CBS_SORT | CBS_HASSTRINGS | WS_BORDER | WS_VSCROLL | WS_TABSTOP
 }
 
- 
+
 CHOOSE_FONT DIALOG DISCARDABLE  13, 54, 264, 147
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "±Û²Ã"

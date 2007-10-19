@@ -32,7 +32,7 @@
 #define IDM_SEPARATOR3         1010
 #define IDM_WHATS_THIS         1011
 
-#define IDI_CALCICON           1050 
+#define IDI_CALCICON           1050
 
 /* strings */
 

@@ -806,7 +806,7 @@ ULONG WINAPI CbOfEncoded(LPCSTR lpszEnc)
  *
  * PARAMS
  *  session          [I]   MAPI session handle
- *  item             [I]   Enumerated variable that identifies which 
+ *  item             [I]   Enumerated variable that identifies which
  *                         configuration information is being requested
  *  reference        [O]   Buffer where configuration information is written
  *  config_extensions[I/O] Path of file to create stream on

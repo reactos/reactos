@@ -31,9 +31,9 @@ const struct builtin_class_descr DESKTOP_builtin_class =
   (HBRUSH)(COLOR_BACKGROUND+1)    /* brush */
 };
 
-static 
-LRESULT 
-WINAPI 
+static
+LRESULT
+WINAPI
 DesktopWndProc( HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam )
 {
     FIXME("Desktop Class Atom!\n");
@@ -203,7 +203,7 @@ SystemParametersInfoA(UINT uiAction,
               if (!SystemParametersInfoW(uiAction, sizeof(ICONMETRICSW),
                                         &icmw, fWinIni))
                   return FALSE;
-              
+
               picma->iHorzSpacing = icmw.iHorzSpacing;
               picma->iVertSpacing = icmw.iVertSpacing;
               picma->iTitleWrap = icmw.iTitleWrap;

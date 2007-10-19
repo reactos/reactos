@@ -26,7 +26,7 @@ namespace Sysreg_
 ///
 /// Note: lines beginning with an ; are ignored
 ///
-///	Usage: First, call parseFile with param to file. Finally, call getValue with the 
+///	Usage: First, call parseFile with param to file. Finally, call getValue with the
 ///        appropiate type
 
 	class ConfigParser
@@ -37,7 +37,7 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 ///
 /// ConfigParser
-///	
+///
 /// Description: constructor of class ConfigParser
 
 	ConfigParser();
@@ -45,7 +45,7 @@ namespace Sysreg_
 //---------------------------------------------------------------------------------------
 ///
 /// ~ConfigParser
-/// 
+///
 /// Description: destructor of class ConfigParser
 
 	virtual ~ConfigParser();
@@ -56,7 +56,7 @@ namespace Sysreg_
 ///
 /// Description: this function takes as param a path to file. it attempts to parse this specific
 /// file with the given syntax. On success it returns true.
-/// 
+///
 /// Note: Everytime parseFile is called, the previous stored values are cleared
 ///
 /// @param FileName path to configuration file
@@ -87,6 +87,6 @@ namespace Sysreg_
 
 
 } // end of namspace Sysreg_
-    
+
 
 #endif /* end of CONF_PARSER_H__ */

@@ -72,7 +72,7 @@
 
 
 /**
- * \struct span_arrays 
+ * \struct span_arrays
  * \brief Arrays of fragment values.
  *
  * These will either be computed from the x/xStep values above or
@@ -396,14 +396,14 @@ _swrast_validate_derived( GLcontext *ctx );
 
 
 
-extern void 
+extern void
 _swrast_translate_program( GLcontext *ctx );
 
-extern GLboolean 
+extern GLboolean
 _swrast_execute_codegen_program(GLcontext *ctx,
-				const struct fragment_program *program, 
+				const struct fragment_program *program,
 				GLuint maxInst,
-				struct fp_machine *machine, 
+				struct fp_machine *machine,
 				const struct sw_span *span,
 				GLuint column );
 

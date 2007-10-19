@@ -334,8 +334,8 @@ BOOL WINAPI CryptSIPRetrieveSubjectGuid
      * There is a lot more to be checked:
      * - Check for MSFC in the header
      * - Check for the keys CryptSIPDllIsMyFileType and CryptSIPDllIsMyFileType2
-     *   under HKLM\Software\Microsoft\Cryptography\OID\EncodingType 0. Here are 
-     *   functions listed that need check if a SIP Provider can deal with the 
+     *   under HKLM\Software\Microsoft\Cryptography\OID\EncodingType 0. Here are
+     *   functions listed that need check if a SIP Provider can deal with the
      *   given file.
      */
 

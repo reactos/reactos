@@ -160,13 +160,13 @@ CmiAddKeyToHashTable(
 		if (HashCell->Table[i].HashValue > HashValue)
 			break;
 	}
-	
+
 	if (i < KeyCell->SubKeyCounts[StorageType])
 	{
 		RtlMoveMemory(HashCell->Table + i + 1,
 		              HashCell->Table + i,
 		              (HashCell->HashTableSize - 1 - i) *
-		              sizeof(HashCell->Table[0]));	
+		              sizeof(HashCell->Table[0]));
 	}
 
 	HashCell->Table[i].KeyOffset = NKBOffset;

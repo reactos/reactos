@@ -54,7 +54,7 @@ static DWORD RPCRT4_GetHeaderSize(RpcPktHdr *Header)
     0, 0, 0, 0, 0
   };
   ULONG ret = 0;
-  
+
   if (Header->common.ptype < sizeof(header_sizes) / sizeof(header_sizes[0])) {
     ret = header_sizes[Header->common.ptype];
     if (ret == 0)
@@ -82,7 +82,7 @@ static VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType
   Header->common.call_id = 1;
   Header->common.flags = 0;
   /* Flags and fragment length are computed in RPCRT4_Send. */
-}                              
+}
 
 static RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
                                      unsigned long BufferLength,
@@ -240,7 +240,7 @@ VOID RPCRT4_FreeHeader(RpcPktHdr *Header)
 
 /***********************************************************************
  *           RPCRT4_Send (internal)
- * 
+ *
  * Transmit a packet over connection in acceptable fragments.
  */
 RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
@@ -301,7 +301,7 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
 
 /***********************************************************************
  *           RPCRT4_Receive (internal)
- * 
+ *
  * Receive a packet from connection and merge the fragments.
  */
 RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,

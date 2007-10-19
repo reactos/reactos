@@ -75,7 +75,7 @@
 #include <BaseTsd.h>
 #if _MSC_VER == 1200
 typedef UINT_PTR uintptr_t;
-#endif 
+#endif
 #if defined(__MINGW32__)
 #include <stdint.h>
 #endif
@@ -122,7 +122,7 @@ typedef UINT_PTR uintptr_t;
 /* XXX why is this here?
  * It should probaby be somewhere in src/mesa/drivers/windows/
  */
-#if defined(_WIN32) && !defined(_WINGDI_) && !defined(_WINGDI_H) && !defined(_GNU_H_WINDOWS32_DEFINES) && !defined(OPENSTEP) && !defined(BUILD_FOR_SNAP) 
+#if defined(_WIN32) && !defined(_WINGDI_) && !defined(_WINGDI_H) && !defined(_GNU_H_WINDOWS32_DEFINES) && !defined(OPENSTEP) && !defined(BUILD_FOR_SNAP)
 #	define WGL_FONT_LINES      0
 #	define WGL_FONT_POLYGONS   1
 #ifndef _GNU_H_WINDOWS32_FUNCTIONS
@@ -234,7 +234,7 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 /* If we build the library with gcc's -fvisibility=hidden flag, we'll
  * use the PUBLIC macro to mark functions that are to be exported.
  *
- * We also need to define a USED attribute, so the optimizer doesn't 
+ * We also need to define a USED attribute, so the optimizer doesn't
  * inline a static function that we later use in an alias. - ajax
  */
 #if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) >= 303
@@ -255,7 +255,7 @@ typedef struct tagPIXELFORMATDESCRIPTOR PIXELFORMATDESCRIPTOR, *PPIXELFORMATDESC
 
 
 #if defined(BUILD_FOR_SNAP) && defined(CHECKED)
-#  define ASSERT(X)   _CHECK(X) 
+#  define ASSERT(X)   _CHECK(X)
 #elif defined(DEBUG)
 #  define ASSERT(X)   assert(X)
 #else

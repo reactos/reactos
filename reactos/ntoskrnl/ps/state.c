@@ -477,7 +477,7 @@ NtTestAlert(VOID)
  * @param NormalContext
  *        Pointer to the context to send to the Normal Routine.
  *
- * @param SystemArgument[1-2] 
+ * @param SystemArgument[1-2]
  *        Pointer to a set of two parameters that contain untyped data.
  *
  * @return STATUS_SUCCESS or failure cute from associated calls.

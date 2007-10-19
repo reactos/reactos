@@ -54,7 +54,7 @@ class Backend;
 
 class Mapdesc : public PooledObj {
     friend class Maplist;
-			
+
 public:
     			Mapdesc( long, int, int, Backend & );
     int			isProperty( long );
@@ -129,7 +129,7 @@ private:
     Maxmatrix 		smat;
     REAL 		s_steps;		/* max samples in s direction */
     REAL 		t_steps;		/* max samples in t direction */
-    REAL 		sampling_method;	
+    REAL 		sampling_method;
     REAL 		culling_method;		/* check for culling */
     REAL		bbox_subdividing;
     Mapdesc *		next;
@@ -194,62 +194,62 @@ Mapdesc::xformSampling( REAL *d, REAL *s )
 	xformNonrational( smat, d, s );
 }
 
-inline int 
+inline int
 Mapdesc::isRational( void )
 {
     return isrational ? 1 : 0;
 }
 
-inline int		
-Mapdesc::getNcoords( void ) 
+inline int
+Mapdesc::getNcoords( void )
 {
-    return ncoords; 
+    return ncoords;
 }
 
-inline int			
-Mapdesc::isConstantSampling( void ) 
+inline int
+Mapdesc::isConstantSampling( void )
 {
-    return ((sampling_method == N_FIXEDRATE) ? 1 : 0); 
+    return ((sampling_method == N_FIXEDRATE) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isDomainSampling( void ) 
-{ 
-    return ((sampling_method == N_DOMAINDISTANCE) ? 1 : 0); 
+inline int
+Mapdesc::isDomainSampling( void )
+{
+    return ((sampling_method == N_DOMAINDISTANCE) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isParametricDistanceSampling( void ) 
+inline int
+Mapdesc::isParametricDistanceSampling( void )
 {
     return ((sampling_method == N_PARAMETRICDISTANCE) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isObjectSpaceParaSampling( void ) 
+inline int
+Mapdesc::isObjectSpaceParaSampling( void )
 {
     return ((sampling_method == N_OBJECTSPACE_PARA) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isObjectSpacePathSampling( void ) 
+inline int
+Mapdesc::isObjectSpacePathSampling( void )
 {
     return ((sampling_method == N_OBJECTSPACE_PATH) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isSurfaceAreaSampling( void ) 
+inline int
+Mapdesc::isSurfaceAreaSampling( void )
 {
     return ((sampling_method == N_SURFACEAREA) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isPathLengthSampling( void ) 
+inline int
+Mapdesc::isPathLengthSampling( void )
 {
     return ((sampling_method == N_PATHLENGTH) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isRangeSampling( void ) 
+inline int
+Mapdesc::isRangeSampling( void )
 {
     return ( isParametricDistanceSampling() || isPathLengthSampling() ||
 	    isSurfaceAreaSampling() ||
@@ -263,14 +263,14 @@ Mapdesc::isSampling( void )
     return isRangeSampling() || isConstantSampling() || isDomainSampling();
 }
 
-inline int			
-Mapdesc::isCulling( void ) 
+inline int
+Mapdesc::isCulling( void )
 {
     return ((culling_method != N_NOCULLING) ? 1 : 0);
 }
 
-inline int			
-Mapdesc::isBboxSubdividing( void ) 
+inline int
+Mapdesc::isBboxSubdividing( void )
 {
     return ((bbox_subdividing != N_NOBBOXSUBDIVISION) ? 1 : 0);
 }

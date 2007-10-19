@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -134,7 +134,7 @@ static void Splice( GLUhalfEdge *a, GLUhalfEdge *b )
  * the new vertex *before* vNext so that algorithms which walk the vertex
  * list will not see the newly created vertices.
  */
-static void MakeVertex( GLUvertex *newVertex, 
+static void MakeVertex( GLUvertex *newVertex,
 			GLUhalfEdge *eOrig, GLUvertex *vNext )
 {
   GLUhalfEdge *e;
@@ -174,7 +174,7 @@ static void MakeFace( GLUface *newFace, GLUhalfEdge *eOrig, GLUface *fNext )
   GLUface *fPrev;
   GLUface *fNew = newFace;
 
-  assert(fNew != NULL); 
+  assert(fNew != NULL);
 
   /* insert in circular doubly-linked list before fNext */
   fPrev = fNext->prev;
@@ -286,9 +286,9 @@ GLUhalfEdge *__gl_meshMakeEdge( GLUmesh *mesh )
   if (newVertex1 == NULL || newVertex2 == NULL || newFace == NULL) {
      if (newVertex1 != NULL) memFree(newVertex1);
      if (newVertex2 != NULL) memFree(newVertex2);
-     if (newFace != NULL) memFree(newFace);     
+     if (newFace != NULL) memFree(newFace);
      return NULL;
-  } 
+  }
 
   e = MakeEdge( &mesh->eHead );
   if (e == NULL) return NULL;
@@ -298,7 +298,7 @@ GLUhalfEdge *__gl_meshMakeEdge( GLUmesh *mesh )
   MakeFace( newFace, e, &mesh->fHead );
   return e;
 }
-  
+
 
 /* __gl_meshSplice( eOrg, eDst ) is the basic operation for changing the
  * mesh connectivity and topology.  It changes the mesh so that
@@ -355,7 +355,7 @@ int __gl_meshSplice( GLUhalfEdge *eOrg, GLUhalfEdge *eDst )
     eOrg->Org->anEdge = eOrg;
   }
   if( ! joiningLoops ) {
-    GLUface *newFace= allocFace();  
+    GLUface *newFace= allocFace();
     if (newFace == NULL) return 0;
 
     /* We split one loop into two -- the new loop is eDst->Lface.
@@ -403,7 +403,7 @@ int __gl_meshDelete( GLUhalfEdge *eDel )
     Splice( eDel, eDel->Oprev );
     if( ! joiningLoops ) {
       GLUface *newFace= allocFace();
-      if (newFace == NULL) return 0; 
+      if (newFace == NULL) return 0;
 
       /* We are splitting one loop into two -- create a new loop for eDel. */
       MakeFace( newFace, eDel, eDel->Lface );
@@ -506,7 +506,7 @@ GLUhalfEdge *__gl_meshSplitEdge( GLUhalfEdge *eOrg )
 GLUhalfEdge *__gl_meshConnect( GLUhalfEdge *eOrg, GLUhalfEdge *eDst )
 {
   GLUhalfEdge *eNewSym;
-  int joiningLoops = FALSE;  
+  int joiningLoops = FALSE;
   GLUhalfEdge *eNew = MakeEdge( eOrg );
   if (eNew == NULL) return NULL;
 
@@ -608,7 +608,7 @@ GLUmesh *__gl_meshNewMesh( void )
   if (mesh == NULL) {
      return NULL;
   }
-  
+
   v = &mesh->vHead;
   f = &mesh->fHead;
   e = &mesh->eHead;

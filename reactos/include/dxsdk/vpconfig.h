@@ -18,7 +18,7 @@ DECLARE_INTERFACE_(IVPBaseConfig, IUnknown)
   STDMETHOD (GetMaxPixelRate)(THIS_ IN OUT LPAMVPSIZE pamvpSize,
                                     OUT LPDWORD pdwMaxPixelsPerSecond) PURE;
 
-  STDMETHOD (InformVPInputFormats)(THIS_ IN DWORD dwNumFormats, 
+  STDMETHOD (InformVPInputFormats)(THIS_ IN DWORD dwNumFormats,
                                          IN LPDDPIXELFORMAT pDDPixelFormats) PURE;
 
   STDMETHOD (GetVideoFormats)(THIS_ IN OUT LPDWORD pdwNumFormats,
@@ -30,7 +30,7 @@ DECLARE_INTERFACE_(IVPBaseConfig, IUnknown)
   STDMETHOD (SetDirectDrawKernelHandle)(THIS_ IN ULONG_PTR dwDDKernelHandle) PURE;
   STDMETHOD (SetVideoPortID)(THIS_ IN DWORD dwVideoPortID) PURE;
 
-  STDMETHOD (SetDDSurfaceKernelHandles)(THIS_ IN DWORD cHandles, 
+  STDMETHOD (SetDDSurfaceKernelHandles)(THIS_ IN DWORD cHandles,
                                               IN ULONG_PTR *rgDDKernelHandles) PURE;
 
   STDMETHOD (SetSurfaceParameters)(THIS_ IN DWORD dwPitch, IN DWORD dwXOrigin,

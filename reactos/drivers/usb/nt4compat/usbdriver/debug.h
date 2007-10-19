@@ -1,8 +1,8 @@
 #ifndef _UHCIDBG_H_
-#define _UHCIDBG_H_ 
+#define _UHCIDBG_H_
 
-#define DBGLVL_OFF				0		// if gDebugLevel set to this, there is NO debug output	
-#define DBGLVL_MINIMUM			1		// minimum verbosity	
+#define DBGLVL_OFF				0		// if gDebugLevel set to this, there is NO debug output
+#define DBGLVL_MINIMUM			1		// minimum verbosity
 #define DBGLVL_DEFAULT			2		// default verbosity level if no registry override
 #define DBGLVL_MEDIUM			3		// medium verbosity
 #define DBGLVL_HIGH				4		// highest 'safe' level (without severely affecting timing )
@@ -10,7 +10,7 @@
 #define DBGLVL_ULTRA			6		// ultra, prints hell lots of stuff from ISR/allocs/etc
 
 #ifndef DBGSTR_PREFIX
-#define DBGSTR_PREFIX "wood_uhci: " 
+#define DBGSTR_PREFIX "wood_uhci: "
 #endif
 
 #define DEBUG_UHCI				TRUE
@@ -52,10 +52,10 @@ extern ULONG debug_level;
 
 #define uhci_dbg_print_cond( ilev, cond, _x_ )
 #define uhci_dbg_print( ilev, _x_)
-#define uhci_trap_cont( ilev, cond ) 
+#define uhci_trap_cont( ilev, cond )
 #define uhci_trap( ilev )
 #define uhci_assert( cond )
-#define TRAP() 
+#define TRAP()
 #define dbg_count_list( _x_ )   0
 
 #endif //DBG
@@ -63,7 +63,7 @@ extern ULONG debug_level;
 #define usb_dbg_print( ilev, _x_ )    				uhci_dbg_print( ilev, _x_ )
 #define ehci_dbg_print( ilev, _x_ )				 	uhci_dbg_print( ilev, _x_ )
 #define ohci_dbg_print( ilev, _x_ )					uhci_dbg_print( ilev, _x_ )
-#define ehci_dbg_print_cond( ilev, cond, _x_ )		uhci_dbg_print_cond( ilev, cond, _x_ )	
+#define ehci_dbg_print_cond( ilev, cond, _x_ )		uhci_dbg_print_cond( ilev, cond, _x_ )
 
 #define DO_NOTHING
 

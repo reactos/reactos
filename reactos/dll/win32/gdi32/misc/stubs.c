@@ -55,7 +55,7 @@ StretchDIBits(HDC hdc,
 
 {
     /* FIXME share memory */
-    return NtGdiStretchDIBits(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc, 
+    return NtGdiStretchDIBits(hdc, XDest, YDest, nDestWidth, nDestHeight, XSrc, YSrc,
                               nSrcWidth, nSrcHeight, lpBits, lpBitsInfo, iUsage, dwRop);
 }
 
@@ -224,7 +224,7 @@ SetBrushOrgEx(HDC hdc,
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 PtInRegion(IN HRGN hrgn,
            int x,
@@ -776,7 +776,7 @@ AngleArc(
 
 
 /*
- * @unimplemented 
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1366,8 +1366,8 @@ gdiPlaySpoolStream(
 /*
  * @unimplemented
  */
-HANDLE 
-STDCALL 
+HANDLE
+STDCALL
 AddFontMemResourceEx(
 	PVOID pbFont,
 	DWORD cbFont,
@@ -1383,8 +1383,8 @@ AddFontMemResourceEx(
 /*
  * @unimplemented
  */
-int 
-STDCALL 
+int
+STDCALL
 AddFontResourceTracking(
 	LPCSTR lpString,
 	int unknown
@@ -1400,7 +1400,7 @@ AddFontResourceTracking(
 /*
  * @unimplemented
  */
-HBITMAP 
+HBITMAP
 STDCALL
 ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
@@ -1412,7 +1412,7 @@ ClearBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 /*
  * @unimplemented
  */
-HBRUSH 
+HBRUSH
 STDCALL
 ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
@@ -1424,7 +1424,7 @@ ClearBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 ColorCorrectPalette(HDC hDC,HPALETTE hPalette,DWORD dwFirstEntry,DWORD dwNumOfEntries)
 {
@@ -1450,7 +1450,7 @@ EndFormPage(HDC hdc)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GdiAddGlsBounds(HDC hdc,LPRECT prc)
 {
@@ -1462,7 +1462,7 @@ GdiAddGlsBounds(HDC hdc,LPRECT prc)
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GdiArtificialDecrementDriver(LPWSTR pDriverName,BOOL unknown)
 {
@@ -1498,7 +1498,7 @@ GdiConvertAndCheckDC(HDC hdc)
 /*
  * @unimplemented
  */
-HENHMETAFILE 
+HENHMETAFILE
 STDCALL
 GdiConvertEnhMetaFile(HENHMETAFILE hmf)
 {
@@ -1522,7 +1522,7 @@ GdiDrawStream(HDC dc, ULONG l, VOID *v)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GdiGetCodePage(HDC hdc)
 {
@@ -1582,7 +1582,7 @@ GdiValidateHandle(HGDIOBJ hobj)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GetBitmapAttributes(HBITMAP hbm)
 {
@@ -1594,7 +1594,7 @@ GetBitmapAttributes(HBITMAP hbm)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GetBrushAttributes(HBRUSH hbr)
 {
@@ -1606,7 +1606,7 @@ GetBrushAttributes(HBRUSH hbr)
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GetCharABCWidthsI(HDC hdc,
                   UINT giFirst,
@@ -1623,7 +1623,7 @@ GetCharABCWidthsI(HDC hdc,
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GetCharWidthI(HDC hdc,
               UINT giFirst,
@@ -1642,7 +1642,7 @@ GetCharWidthI(HDC hdc,
 /*
  * @implemented
  */
-ULONG 
+ULONG
 STDCALL
 GetEUDCTimeStamp(VOID)
 {
@@ -1652,7 +1652,7 @@ GetEUDCTimeStamp(VOID)
 /*
  * @implemented
  */
-ULONG 
+ULONG
 STDCALL
 GetFontAssocStatus(HDC hdc)
 {
@@ -1669,7 +1669,7 @@ GetFontAssocStatus(HDC hdc)
 /*
  * @unimplemented
  */
-HFONT 
+HFONT
 STDCALL
 GetHFONT(HDC dc)
 {
@@ -1681,7 +1681,7 @@ GetHFONT(HDC dc)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GetLayout(HDC hdc
 )
@@ -1710,7 +1710,7 @@ GetTextExtentExPointWPri(HDC hdc,
 /*
  * @implemented
  */
-INT 
+INT
 STDCALL
 GetTextFaceAliasW(HDC hdc,
                   int cChar,
@@ -1733,7 +1733,7 @@ GetTextFaceAliasW(HDC hdc,
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 MirrorRgn(HWND hwnd,HRGN hrgn)
 {
@@ -1747,7 +1747,7 @@ MirrorRgn(HWND hwnd,HRGN hrgn)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 QueryFontAssocStatus(VOID)
 {
@@ -1759,7 +1759,7 @@ QueryFontAssocStatus(VOID)
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 RemoveFontMemResourceEx(HANDLE fh)
 {
@@ -1779,7 +1779,7 @@ RemoveFontMemResourceEx(HANDLE fh)
 /*
  * @unimplemented
  */
-int 
+int
 STDCALL
 RemoveFontResourceTracking(LPCSTR lpString,int unknown)
 {
@@ -1791,7 +1791,7 @@ RemoveFontResourceTracking(LPCSTR lpString,int unknown)
 /*
  * @unimplemented
  */
-HBITMAP 
+HBITMAP
 STDCALL
 SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 {
@@ -1803,7 +1803,7 @@ SetBitmapAttributes(HBITMAP hbm, DWORD dwFlags)
 /*
  * @unimplemented
  */
-HBRUSH 
+HBRUSH
 STDCALL
 SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 {
@@ -1815,7 +1815,7 @@ SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 SetLayout(HDC hdc,
           DWORD dwLayout)
@@ -1828,7 +1828,7 @@ SetLayout(HDC hdc,
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 {
@@ -1842,7 +1842,7 @@ SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 /*
  * @implemented
  */
-int 
+int
 STDCALL
 StartFormPage(HDC hdc)
 {
@@ -1852,7 +1852,7 @@ StartFormPage(HDC hdc)
 /*
  * @unimplemented
  */
-VOID 
+VOID
 STDCALL
 UnloadNetworkFonts(DWORD unknown)
 {
@@ -1863,7 +1863,7 @@ UnloadNetworkFonts(DWORD unknown)
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 GetTextExtentExPointI(HDC hdc,
                       LPWORD pgiIn,
@@ -1879,7 +1879,7 @@ GetTextExtentExPointI(HDC hdc,
 /*
  * @implemented
  */
-BOOL 
+BOOL
 STDCALL
 GetTextExtentPointI(HDC hdc,
                     LPWORD pgiIn,
@@ -1896,7 +1896,7 @@ GetTextExtentPointI(HDC hdc,
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GdiRealizationInfo(HDC hdc,
                    PREALIZATION_INFO pri)
@@ -1911,7 +1911,7 @@ GdiRealizationInfo(HDC hdc,
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GetETM(HDC hdc,
        EXTTEXTMETRIC *petm)
@@ -2051,7 +2051,7 @@ GdiCreateLocalMetaFilePict(HENHMETAFILE hmo)
 /*
  * @unimplemented
  */
-HANDLE 
+HANDLE
 STDCALL
 GdiGetSpoolFileHandle(LPWSTR pwszPrinterName,
                       LPDEVMODEW pDevmode,
@@ -2077,7 +2077,7 @@ GdiDeleteSpoolFileHandle(HANDLE SpoolFileHandle)
 /*
  * @unimplemented
  */
-DWORD 
+DWORD
 STDCALL
 GdiGetPageCount(HANDLE SpoolFileHandle)
 {
@@ -2101,7 +2101,7 @@ GdiGetDC(HANDLE SpoolFileHandle)
 /*
  * @unimplemented
  */
-HANDLE 
+HANDLE
 STDCALL
 GdiGetPageHandle(HANDLE SpoolFileHandle,
                  DWORD Page,
@@ -2207,8 +2207,8 @@ GdiResetDCEMF(HANDLE SpoolFileHandle,
 }
 
 
-HBITMAP 
-STDCALL 
+HBITMAP
+STDCALL
 CreateDIBitmap(HDC hDc,
                const BITMAPINFOHEADER *Header,
                DWORD Init, LPCVOID Bits, const BITMAPINFO *Data,
@@ -2229,7 +2229,7 @@ CombineRgn(HRGN  hDest,
            INT  CombineMode)
 {
     /* FIXME some part should be done in user mode */
-    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode); 
+    return NtGdiCombineRgn(hDest, hSrc1, hSrc2, CombineMode);
 }
 
 /*
@@ -2282,7 +2282,7 @@ XLATEOBJ_piVector(XLATEOBJ *XlateObj)
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 STDCALL
 GdiPlayEMF(LPWSTR pwszPrinterName,
            LPDEVMODEW pDevmode,
@@ -2409,17 +2409,17 @@ GdiPrinterThunk(
 HBITMAP
 STDCALL
 GdiConvertBitmapV5(
-    HBITMAP in_format_BitMap, 
+    HBITMAP in_format_BitMap,
     HBITMAP src_BitMap,
     INT bpp,
     INT unuse)
 {
     /* FIXME guessing the prototypes */
 
-    /* 
-     * it have create a new bitmap with desired in format, 
+    /*
+     * it have create a new bitmap with desired in format,
      * then convert it src_bitmap to new format
-     * and return it as HBITMAP 
+     * and return it as HBITMAP
      */
 
     return FALSE;
@@ -2430,8 +2430,8 @@ GdiConvertBitmapV5(
  * @implemented
  *
  */
-COLORREF 
-STDCALL 
+COLORREF
+STDCALL
 GetBkColor(HDC hdc)
 {
     /* FIXME some part are done in user mode */
@@ -2443,7 +2443,7 @@ GetBkColor(HDC hdc)
  *
  */
 int
-STDCALL 
+STDCALL
 GetBkMode(HDC hdc)
 {
     /* FIXME some part are done in user mode */
@@ -2454,8 +2454,8 @@ GetBkMode(HDC hdc)
  * @implemented
  *
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 GetBrushOrgEx(HDC hdc,LPPOINT pt)
 {
     /* FIXME some part are done in user mode */
@@ -2466,8 +2466,8 @@ GetBrushOrgEx(HDC hdc,LPPOINT pt)
  * @implemented
  *
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
 {
     /* FIXME some part are done in user mode */
@@ -2478,8 +2478,8 @@ GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
  * @implemented
  *
  */
-int 
-STDCALL 
+int
+STDCALL
 GetDeviceCaps(HDC hdc,
               int i)
 {
@@ -2492,8 +2492,8 @@ GetDeviceCaps(HDC hdc,
  * @implemented
  *
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 GetCurrentPositionEx(HDC hdc,
                      LPPOINT lpPoint)
 {
@@ -2505,7 +2505,7 @@ GetCurrentPositionEx(HDC hdc,
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetClipBox(HDC hdc,
            LPRECT lprc)
@@ -2518,11 +2518,11 @@ GetClipBox(HDC hdc,
  * @implemented
  *
  */
-BOOL 
+BOOL
 STDCALL
 GetCharWidthFloatW(HDC hdc,
-                   UINT iFirstChar, 
-                   UINT iLastChar, 
+                   UINT iFirstChar,
+                   UINT iLastChar,
                    PFLOAT pxBuffer)
 {
     /* FIXME some part need be done in user mode */
@@ -2564,7 +2564,7 @@ GetCharABCWidths(HDC hdc,
  * @implemented
  *
  */
-DWORD 
+DWORD
 STDCALL
 GetFontData(HDC hdc,
             DWORD dwTable,
@@ -2584,7 +2584,7 @@ GetFontData(HDC hdc,
  * @implemented
  *
  */
-DWORD 
+DWORD
 STDCALL
 GetRegionData(HRGN hrgn,
               DWORD nCount,
@@ -2635,12 +2635,12 @@ GetTextCharsetInfo(HDC hdc,
                    DWORD dwFlags)
 {
     /* FIXME some part are done in user mode */
-    return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags); 
+    return NtGdiGetTextCharsetInfo(hdc, lpSig, dwFlags);
 }
 
 
 
-INT 
+INT
 STDCALL
 IntersectClipRect(HDC hdc,
                   int nLeftRect,
@@ -2652,7 +2652,7 @@ IntersectClipRect(HDC hdc,
     return NtGdiIntersectClipRect(hdc, nLeftRect, nTopRect, nRightRect, nBottomRect);
 }
 
-INT 
+INT
 STDCALL
 OffsetClipRgn(HDC hdc,
               int nXOffset,
@@ -2667,14 +2667,14 @@ INT
 STDCALL
 NamedEscape(HDC hdc,
             PWCHAR pDriver,
-            INT iEsc, 
+            INT iEsc,
             INT cjIn,
             LPSTR pjIn,
             INT cjOut,
             LPSTR pjOut)
 {
-    /* FIXME metadc, metadc are done most in user mode, and we do not support it 
-     * Windows 2000/XP/Vista ignore the current hdc, that are being pass and always set hdc to NULL 
+    /* FIXME metadc, metadc are done most in user mode, and we do not support it
+     * Windows 2000/XP/Vista ignore the current hdc, that are being pass and always set hdc to NULL
      * when it calls to NtGdiExtEscape from NamedEscape
      */
     return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
@@ -2683,11 +2683,11 @@ NamedEscape(HDC hdc,
 
 BOOL
 STDCALL
-PatBlt(HDC hdc, 
-       int nXLeft, 
-       int nYLeft, 
-       int nWidth, 
-       int nHeight, 
+PatBlt(HDC hdc,
+       int nXLeft,
+       int nYLeft,
+       int nWidth,
+       int nHeight,
        DWORD dwRop)
 {
     /* FIXME some part need be done in user mode */

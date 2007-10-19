@@ -1,4 +1,4 @@
-/* 
+/*
  * ctype.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -33,7 +33,7 @@
 #define	_CONTROL	0x0020
 /* _BLANK is set for SP and non-ASCII horizontal space chars (eg,
    "no-break space", 0xA0, in CP1250) but not for HT.  */
-#define	_BLANK		0x0040 
+#define	_BLANK		0x0040
 #define	_HEX		0x0080
 #define	_LEADBYTE	0x8000
 
@@ -79,7 +79,7 @@ _CRTIMP int __cdecl toupper(int);
 /*
  *  These are the cheap non-std versions: The return values are undefined
  *  if the argument is not ASCII char or is not of appropriate case
- */ 
+ */
 _CRTIMP int __cdecl _tolower(int);
 _CRTIMP int __cdecl _toupper(int);
 #endif
@@ -114,7 +114,7 @@ __MINGW_IMPORT unsigned short _ctype[];
 # else /* CRTDLL */
   __MINGW_IMPORT unsigned short* _pctype_dll;
 # define  _pctype _pctype_dll
-# endif 
+# endif
 
 #else		/*  __DECLSPEC_SUPPORTED */
 extern unsigned short** _imp___ctype;
@@ -129,7 +129,7 @@ extern unsigned short** _imp___ctype;
 #endif		/*  __DECLSPEC_SUPPORTED */
 
 /*
- * Use inlines here rather than macros, because macros will upset 
+ * Use inlines here rather than macros, because macros will upset
  * C++ usage (eg, ::isalnum), and so usually get undefined
  *
  * According to standard for SB chars, these function are defined only
@@ -139,7 +139,7 @@ extern unsigned short** _imp___ctype;
  *
  * If no MB char support is needed, these can be simplified even
  * more by command line define -DMB_CUR_MAX=1.  The compiler will then
- * optimise away the constant condition.			
+ * optimise away the constant condition.
  */
 
 #if ! (defined (__NO_INLINE__)  || defined (__NO_CTYPE_INLINES) \
@@ -245,14 +245,14 @@ int __cdecl __iscsymf (int);		/* Valid first character in C symbol */
 int __cdecl __iscsym (int);		/* Valid character in C symbol (after first) */
 
 #if !(defined (__NO_INLINE__) || defined (__NO_CTYPE_INLINES))
-__CRT_INLINE int __cdecl __isascii(int c) {return ((c & ~0x7F) == 0);} 
+__CRT_INLINE int __cdecl __isascii(int c) {return ((c & ~0x7F) == 0);}
 __CRT_INLINE int __cdecl __toascii(int c) {return (c & 0x7F);}
 __CRT_INLINE int __cdecl __iscsymf(int c) {return (isalpha(c) || (c == '_'));}
 __CRT_INLINE int __cdecl __iscsym(int c)  {return  (isalnum(c) || (c == '_'));}
 #endif /* __NO_CTYPE_INLINES */
 
 #ifndef	_NO_OLDNAMES
-/* Not _CRTIMP */ 
+/* Not _CRTIMP */
 int __cdecl isascii (int);
 int __cdecl toascii (int);
 int __cdecl iscsymf (int);

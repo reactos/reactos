@@ -313,7 +313,7 @@ _swrast_span_interpolate_z( const GLcontext *ctx, struct sw_span *span )
 
    if (ctx->Visual.depthBits <= 16) {
       GLfixed zval = span->z;
-      GLdepth *z = span->array->z; 
+      GLdepth *z = span->array->z;
       for (i = 0; i < n; i++) {
          z[i] = FixedToInt(zval);
          zval += span->zStep;
@@ -944,7 +944,7 @@ _swrast_write_index_span( GLcontext *ctx, struct sw_span *span)
          }
 
          if (span->arrayMask & SPAN_XY) {
-            rb->PutMonoValues(ctx, rb, span->end, span->array->x, 
+            rb->PutMonoValues(ctx, rb, span->end, span->array->x,
                               span->array->y, value, span->array->mask);
          }
          else {

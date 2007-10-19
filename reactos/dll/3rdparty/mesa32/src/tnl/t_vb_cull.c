@@ -58,14 +58,14 @@ static GLboolean run_cull_stage( GLcontext *ctx,
    GLuint i;
 
    if (ctx->VertexProgram._Enabled ||
-       !ctx->Transform.CullVertexFlag) 
+       !ctx->Transform.CullVertexFlag)
       return GL_TRUE;
 
    VB->ClipOrMask &= ~CLIP_CULL_BIT;
    VB->ClipAndMask |= CLIP_CULL_BIT;
 
    for (i = 0 ; i < count ; i++) {
-      GLfloat dp = (norm[0] * a + 
+      GLfloat dp = (norm[0] * a +
 		    norm[1] * b +
 		    norm[2] * c);
 

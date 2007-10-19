@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 #include "config.h"
 #include "iphlpapi_private.h"
 
@@ -55,12 +55,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile = INVALID_HANDLE_VALUE;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req = 
+    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
     DWORD         returnSize = 0;
-    
+
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) )
@@ -72,7 +72,7 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
         req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
         req.Req.ID.toi_entity               = id;
         req.Req.BufferSize                  = sizeof(*rte);
-        rte                                 = 
+        rte                                 =
             (IPRouteEntry *)&req.Req.Buffer[0];
 
 	// dwForwardPolicy
@@ -119,12 +119,12 @@ DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     HANDLE tcpFile = INVALID_HANDLE_VALUE;
     NTSTATUS status = openTcpFile( &tcpFile );
-    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req = 
+    TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
         TCP_REQUEST_SET_INFORMATION_INIT;
     IPRouteEntry *rte;
     TDIEntityID   id;
     DWORD         returnSize = 0;
-    
+
     TRACE("Called.\n");
 
     if( NT_SUCCESS(status) )
@@ -136,7 +136,7 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
         req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
         req.Req.ID.toi_entity               = id;
         req.Req.BufferSize                  = sizeof(*rte);
-        rte                                 = 
+        rte                                 =
             (IPRouteEntry *)&req.Req.Buffer[0];
 
 	// dwForwardPolicy

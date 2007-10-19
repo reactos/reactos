@@ -20,7 +20,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 #include "config.h"
 #include "iphlpapi_private.h"
 
@@ -53,7 +53,7 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
     TRACE("pRoute %p\n", pRoute);
   /* could use SIOCADDRT, not sure I want to */
   FIXME(":stub\n");
-  return (DWORD) 0;    
+  return (DWORD) 0;
 }
 
 DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {

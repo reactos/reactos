@@ -46,9 +46,9 @@ typedef struct _ACL_EDIT_CONTROL
   LPWSTR lpDefaultPermissionName;
 } ACL_EDIT_CONTROL, *PACL_EDIT_CONTROL;
 
-typedef DWORD (CALLBACK *PACL_CHANGE)(HWND hWnd, 
-                                      HINSTANCE hInstance, 
-                                      PVOID pCallbackContext, 
+typedef DWORD (CALLBACK *PACL_CHANGE)(HWND hWnd,
+                                      HINSTANCE hInstance,
+                                      PVOID pCallbackContext,
                                       PSECURITY_DESCRIPTOR pNewSD,
                                       PSECURITY_DESCRIPTOR pNewObjectSD,
                                       BOOL bApplyToSubContainers,

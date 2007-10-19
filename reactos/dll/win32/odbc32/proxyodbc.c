@@ -18,8 +18,8 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  * NOTES:
- *   Proxy ODBC driver manager.  This manager delegates all ODBC 
- *   calls to a real ODBC driver manager named by the environment 
+ *   Proxy ODBC driver manager.  This manager delegates all ODBC
+ *   calls to a real ODBC driver manager named by the environment
  *   variable LIB_ODBC_DRIVER_MANAGER, or to libodbc.so if the
  *   variable is not set.
  *

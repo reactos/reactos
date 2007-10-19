@@ -11,7 +11,7 @@ typedef struct Tag_DVAudInfo
     WORD    wBlkMode;
     WORD    wDIFMode;
     WORD    wBlkDiv;
-    
+
 } DVAudInfo;
 
 #define DV_AUDIOMODE                0x00000f00

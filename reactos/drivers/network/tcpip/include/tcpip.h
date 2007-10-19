@@ -121,9 +121,9 @@ typedef unsigned char u_char;
 typedef unsigned short u_short;
 typedef unsigned int u_int;
 typedef unsigned long u_long;
-struct in_addr 
+struct in_addr
 {
-    union 
+    union
     {
         struct { u_char s_b1,s_b2,s_b3,s_b4; } S_un_b;
         struct { u_short s_w1,s_w2; } S_un_w;
@@ -136,7 +136,7 @@ struct in_addr
 #define s_impno S_un.S_un_b.s_b4
 #define s_lh    S_un.S_un_b.s_b3
 };
-struct sockaddr_in 
+struct sockaddr_in
 {
     short sin_family;
     u_short sin_port;

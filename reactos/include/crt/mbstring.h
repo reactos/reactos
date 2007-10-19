@@ -1,7 +1,7 @@
 /*
  * mbstring.h
  *
- * Protototypes for string functions supporting multibyte characters. 
+ * Protototypes for string functions supporting multibyte characters.
  *
  * This file is part of the Mingw32 package.
  *
@@ -29,7 +29,7 @@
 #define __need_size_t
 #include <stddef.h>
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 

@@ -699,7 +699,7 @@ ConvertStringSecurityDescriptorToSecurityDescriptorW(
 					DWORD aclFlags;
 					SIZE_T Length;
 					BOOL isDacl = (ptr[-2] == 'D');
-					
+
 					if (isDacl)
 						ret = ParseFlagsString(ptr, DaclFlagTable, SDDL_ACE_BEGINC, &aclFlags, &Length);
 					else

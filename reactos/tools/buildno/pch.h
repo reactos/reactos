@@ -40,7 +40,7 @@ inline char * strlwr(char *x)
 #define _finite __finite
 #define _isnan __isnan
 #define stricmp strcasecmp
-#define MAX_PATH PATH_MAX 
+#define MAX_PATH PATH_MAX
 #define _MAX_PATH PATH_MAX
 #endif
 

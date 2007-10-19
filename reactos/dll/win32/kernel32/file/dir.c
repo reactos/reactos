@@ -168,7 +168,7 @@ CreateDirectoryExW (
         BOOLEAN ReparsePoint = FALSE;
         PVOID EaBuffer = NULL;
         ULONG EaLength = 0;
-        
+
         OpenOptions = FILE_DIRECTORY_FILE | FILE_OPEN_REPARSE_POINT |
                       FILE_OPEN_FOR_BACKUP_INTENT;
         CreateOptions = FILE_DIRECTORY_FILE | FILE_OPEN_FOR_BACKUP_INTENT;
@@ -216,7 +216,7 @@ OpenTemplateDir:
                 /* Some FSs (FAT) don't support reparse points, try opening
                    the directory without FILE_OPEN_REPARSE_POINT */
                 OpenOptions &= ~FILE_OPEN_REPARSE_POINT;
-                
+
                 DPRINT("Reparse points not supported, try with less options\n");
 
                 /* try again */
@@ -228,11 +228,11 @@ OpenTemplateDir:
                 goto CleanupNoNtPath;
             }
         }
-        
+
         /*
          * Translate the new directory path and check if they're the same
          */
-        
+
         if (!RtlDosPathNameToNtPathName_U (lpNewDirectory,
                                            &NtPathU,
                                            NULL,
@@ -241,7 +241,7 @@ OpenTemplateDir:
             Status = STATUS_OBJECT_PATH_NOT_FOUND;
             goto CleanupNoNtPath;
         }
-        
+
         if (RtlEqualUnicodeString(&NtPathU,
                                   &NtTemplatePathU,
                                   TRUE))
@@ -274,7 +274,7 @@ OpenTemplateDir:
             DPRINT1("Failed to query the basic directory attributes\n");
             goto Cleanup;
         }
-        
+
         /* clear the reparse point attribute if present. We're going to set the
            reparse point later which will cause the attribute to be set */
         if (FileBasicInfo.FileAttributes & FILE_ATTRIBUTE_REPARSE_POINT)
@@ -381,7 +381,7 @@ OpenTemplateDir:
 
             goto Cleanup;
         }
-        
+
         if (ReparsePoint)
         {
             /*

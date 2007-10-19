@@ -52,21 +52,21 @@ void DrawScreen (HDC hdc, HDC hMemDC , RECT rect)
 	y = RANDOM (0, rect.bottom - height);
 
 	BitBlt(
-		hdc, 
-		x, 
-		y, 
-		width, 
-		height, 
-		hMemDC, 
-		0, 
-		0, 
+		hdc,
+		x,
+		y,
+		width,
+		height,
+		hMemDC,
+		0,
+		0,
 		SRCCOPY);
 }
 
 HBITMAP GetScreenSaverBitmap (void)
 {
 	OSVERSIONINFOEX osvi;
-	
+
 	ZeroMemory(&osvi, sizeof(OSVERSIONINFOEX));
 	osvi.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
 	GetVersionEx ((OSVERSIONINFO *) &osvi);
@@ -97,7 +97,7 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
 	switch (msg)
 	{
-		case WM_CREATE: 
+		case WM_CREATE:
 		{
 			hDC = GetDC(hwnd);
 			hBlkBrush = (HBRUSH) GetStockObject(BLACK_BRUSH);
@@ -109,22 +109,22 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 			if(bitmap == NULL)
 			{
 				MessageBox(
-				   hwnd, 
-				   _T("Fatal Error: Could not load bitmap"), 
+				   hwnd,
+				   _T("Fatal Error: Could not load bitmap"),
 				   _T("Error"),
-				   MB_OK | MB_ICONEXCLAMATION); 
+				   MB_OK | MB_ICONEXCLAMATION);
 			}
 
 			SetTimer (
-				hwnd, 
-				APP_TIMER, 
-				APP_TIMER_INTERVAL, 
+				hwnd,
+				APP_TIMER,
+				APP_TIMER_INTERVAL,
 				NULL);
 
-			 break; 
+			 break;
 		 }
 		case WM_PAINT:
-			{	
+			{
 				hDC = BeginPaint(hwnd, &ps);
 				SelectObject(hMemDC, bitmap);
 				DrawScreen (hDC , hMemDC , rect);
@@ -141,13 +141,13 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		  case WM_ERASEBKGND:
 			{
 				SelectObject(hDC, hBlkBrush);
-		        
+
 				PatBlt(
 					hDC,
 					0,
-					0, 
-					rect.right, 
-					rect.bottom, 
+					0,
+					rect.right,
+					rect.bottom,
 					PATCOPY);
 				break;
 			}
@@ -157,9 +157,9 @@ LRESULT WINAPI WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 				DeleteObject(bitmap);
 				ShowCursor(TRUE);
 				PostQuitMessage(0);
-				break;	
+				break;
 			}
-			
+
 			// break out of screen-saver if any keyboard activity
 			case WM_NOTIFY:
 			case WM_SYSKEYDOWN:
@@ -225,16 +225,16 @@ void InitSaver(HWND hwndParent)
 	{
 		HWND hwnd;
 		hwnd = CreateWindowEx(WS_EX_TOPMOST,
-                          APPNAME, 
+                          APPNAME,
                           APPNAME,
                           WS_VISIBLE | WS_POPUP,
                           0, 0,
                           GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
                           HWND_DESKTOP, 0,
                           hInstance, NULL);
-        
-    SetWindowPos(hwnd, 
-                 0, 0, 0, 0, 0, 
+
+    SetWindowPos(hwnd,
+                 0, 0, 0, 0, 0,
                  SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_SHOWWINDOW);
 
     ShowCursor(FALSE);

@@ -359,19 +359,19 @@ NtUserGetMouseMovePointsEx(
        SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
        return GMMP_ERR_POINT_NOT_FOUND;
    }
-       
+
    if (!lppt)
    {
        SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
        return GMMP_ERR_POINT_NOT_FOUND;
    }
-   
+
    if (!lpptBuf)
    {
        SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
        return GMMP_ERR_POINT_NOT_FOUND;
    }
-       
+
    switch(resolution)
    {
      case GMMP_USE_DISPLAY_POINTS:
@@ -381,7 +381,7 @@ NtUserGetMouseMovePointsEx(
         SetLastWin32Error(GMMP_ERR_POINT_NOT_FOUND);
         return GMMP_ERR_POINT_NOT_FOUND;
    }
-  */     
+  */
    UNIMPLEMENTED
 
    return 0;
@@ -780,7 +780,7 @@ NtUserGetAtomName(
 }
 
 /* for hints how the prototype might be, see
-   http://forum.grafika.cz/read.php?23,1816012,1816139,quote=1 
+   http://forum.grafika.cz/read.php?23,1816012,1816139,quote=1
    http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
 BOOL
 NTAPI

@@ -30,7 +30,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -55,7 +55,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Salir",                      CMD_EXIT
 	END
-	POPUP "&Editar" 
+	POPUP "&Editar"
 	BEGIN
 		MENUITEM "&Deshacer\tCtrl+Z",         CMD_UNDO
 		MENUITEM SEPARATOR
@@ -73,7 +73,7 @@ BEGIN
 		MENUITEM "&Ajuste de línea",          CMD_WRAP
 		MENUITEM "Tipo de &letra...",         CMD_FONT
 	END
-	POPUP "A&yuda" 
+	POPUP "A&yuda"
 	BEGIN
 		MENUITEM "Í&ndice",               CMD_HELP_CONTENTS
 		MENUITEM "&Buscar...",            CMD_HELP_SEARCH

@@ -12,9 +12,9 @@ char* convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    newpath = strdup(origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -29,8 +29,8 @@ char* convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -47,16 +47,16 @@ int main(int argc, char* argv[])
    char* buf;
    int n_in;
    int n_out;
-   
+
    if (argc != 3)
      {
 	fprintf(stderr, "Too many arguments\n");
 	exit(1);
      }
-   
+
    path1 = convert_path(argv[1]);
    path2 = convert_path(argv[2]);
-   
+
    in = fopen(path1, "rb");
    if (in == NULL)
      {
@@ -64,8 +64,8 @@ int main(int argc, char* argv[])
 	exit(1);
      }
 
-   
-   
+
+
    out = fopen(path2, "wb");
    if (out == NULL)
      {
@@ -73,9 +73,9 @@ int main(int argc, char* argv[])
 	fclose(in);
 	exit(1);
      }
-   
+
    buf = malloc(TRANSFER_SIZE);
-   
+
    while (!feof(in))
      {
 	n_in = fread(buf, 1, TRANSFER_SIZE, in);

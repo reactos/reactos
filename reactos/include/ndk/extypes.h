@@ -832,7 +832,7 @@ typedef struct _SYSTEM_PERFORMANCE_INFORMATION
     ULONG SystemCalls;
 } SYSTEM_PERFORMANCE_INFORMATION, *PSYSTEM_PERFORMANCE_INFORMATION;
 
-// Class 3 
+// Class 3
 typedef struct _SYSTEM_TIMEOFDAY_INFORMATION
 {
     LARGE_INTEGER BootTime;
@@ -1170,7 +1170,7 @@ typedef struct _SYSTEM_GDI_DRIVER_INFORMATION
 } SYSTEM_GDI_DRIVER_INFORMATION, *PSYSTEM_GDI_DRIVER_INFORMATION;
 
 // Class 27
-// Not an actually class, simply a PVOID to the ImageAddress 
+// Not an actually class, simply a PVOID to the ImageAddress
 
 // Class 28
 typedef struct _SYSTEM_QUERY_TIME_ADJUST_INFORMATION
@@ -1356,7 +1356,7 @@ typedef struct _SYSTEM_VERIFIER_INFORMATION
 
 // FIXME: Class 52
 
-// Class 53 
+// Class 53
 typedef struct _SYSTEM_SESSION_PROCESS_INFORMATION
 {
     ULONG SessionId;

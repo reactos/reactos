@@ -43,7 +43,7 @@ static inline void URLMON_UnlockModule(void) { InterlockedDecrement( &URLMON_ref
 #define DEFINE_THIS(cls,ifc,iface) ((cls*)((BYTE*)(iface)-offsetof(cls,lp ## ifc ## Vtbl)))
 
 typedef struct
-{	
+{
 	const IStreamVtbl	*lpVtbl;
 	LONG		ref;
 	HANDLE		handle;

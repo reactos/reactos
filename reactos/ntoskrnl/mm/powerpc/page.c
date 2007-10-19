@@ -100,7 +100,7 @@ MmCopyMmInfo(PEPROCESS Src,
     DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
 
     KeBugCheck(0);
-    
+
     return(STATUS_SUCCESS);
 }
 
@@ -111,10 +111,10 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
 {
     /* Share the directory base with the idle process */
     *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
-    
+
     /* Initialize the Addresss Space */
     MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
-    
+
     /* The process now has an address space */
     Process->HasAddressSpace = TRUE;
     return STATUS_SUCCESS;
@@ -137,7 +137,7 @@ MmDeletePageTable(PEPROCESS Process, PVOID Address)
     PEPROCESS CurrentProcess = PsGetCurrentProcess();
 
     if(!CurrentProcess) return;
-	
+
     MmuRevokeVsid((paddr_t)Process->UniqueProcessId, -1);
 }
 
@@ -209,10 +209,10 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
  */
 {
     ppc_map_info_t info = { 0 };
-    
+
     DPRINT("MmDeleteVirtualMapping(%x, %x, %d, %x, %x)\n",
 	   Process, Address, FreePage, WasDirty, Page);
-    
+
     info.proc = Process ? (int)Process->UniqueProcessId : 0;
     info.addr = (vaddr_t)Address;
     MmuInqPage(&info, 1);
@@ -221,7 +221,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address, BOOLEAN FreePage,
     {
 	MmReleasePageMemoryConsumer(MC_NPPOOL, info.phys >> PAGE_SHIFT);
     }
-    
+
     /*
      * Return some information to the caller
      */
@@ -252,11 +252,11 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 	Address < MmSystemRangeStart)
     {
 	PUSHORT Ptrc;
-	
+
 	Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
 	MmFreePageTable(Process, Address);
     }
-        
+
     /*
      * Return some information to the caller
      */
@@ -345,18 +345,18 @@ MmCreateVirtualMappingForKernel(PVOID Address,
 {
     ULONG i;
     PVOID Addr;
-    
+
     DPRINT("MmCreateVirtualMappingForKernel(%x, %x, %x, %d)\n",
            Address, flProtect, Pages, PageCount);
-    
+
     if (Address < MmSystemRangeStart)
     {
 	DPRINT1("MmCreateVirtualMappingForKernel is called for user space\n");
 	KEBUGCHECK(0);
     }
-    
+
     Addr = Address;
-    
+
     for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
     {
 #if 0
@@ -396,7 +396,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
     }
 
     // XXX arty
-    
+
     return(STATUS_SUCCESS);
 }
 
@@ -413,7 +413,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     PVOID Addr;
     ULONG i;
     ppc_map_info_t info;
-    
+
     DPRINT("MmCreateVirtualMappingUnsafe(%x, %x, %x, %x (%x), %d)\n",
 	   Process, Address, flProtect, Pages, *Pages, PageCount);
 
@@ -446,10 +446,10 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	    KEBUGCHECK(0);
 	}
     }
-    
+
     Attributes = ProtectToFlags(flProtect);
     Addr = Address;
-    
+
     for (i = 0; i < PageCount; i++, Addr = (PVOID)((ULONG_PTR)Addr + PAGE_SIZE))
     {
 	Process = PsGetCurrentProcess();
@@ -464,9 +464,9 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
 	{
 #if 0
             PUSHORT Ptrc;
-	    
+
             Ptrc = ((PMADDRESS_SPACE)&Process->VadRoot)->PageTableRefCountTable;
-	    
+
             Ptrc[ADDR_TO_PAGE_TABLE(Addr)]++;
 #endif
 	}
@@ -510,7 +510,7 @@ MmGetPageProtect(PEPROCESS Process, PVOID Address)
     info.proc = Process ? (int)Process->UniqueProcessId : 0;
     info.addr = (vaddr_t)Address;
     MmuInqPage(&info, 1);
-    
+
     if (!info.phys) { return PAGE_NOACCESS; }
     if (!(info.flags & MMU_KMASK))
     {
@@ -557,7 +557,7 @@ NTAPI
 MmCreateHyperspaceMapping(PFN_TYPE Page)
 {
     PVOID Address;
-    ppc_map_info_t info = { 0 };    
+    ppc_map_info_t info = { 0 };
 
     Address = (PVOID)((ULONG_PTR)HYPERSPACE * PAGE_SIZE);
     info.proc = 0;
@@ -594,7 +594,7 @@ MmDeleteHyperspaceMapping(PVOID Address)
 
     info.proc = 0;
     info.addr = (vaddr_t)Address;
-    
+
     MmuUnmapPage(&info, 1);
 
     return (PFN_TYPE)info.phys;

@@ -1,5 +1,5 @@
 #ifndef _INC_REACTOS_CONFIG_H
-#define _INC_REACTOS_CONFIG_H 
+#define _INC_REACTOS_CONFIG_H
 /* $Id$ */
 /* ReactOS global configuration options */
 

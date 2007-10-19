@@ -202,8 +202,8 @@ static BOOL COOKIE_matchDomain(LPCWSTR lpszCookieDomain, LPCWSTR lpszCookiePath,
 	    if (!searchDomain->lpCookieDomain)
             return FALSE;
 
-	    TRACE("comparing domain %s with %s\n", 
-            debugstr_w(lpszCookieDomain), 
+	    TRACE("comparing domain %s with %s\n",
+            debugstr_w(lpszCookieDomain),
             debugstr_w(searchDomain->lpCookieDomain));
 
         if (allow_partial && !strstrW(lpszCookieDomain, searchDomain->lpCookieDomain))
@@ -274,7 +274,7 @@ BOOL WINAPI InternetGetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
             struct list * cursor;
             domain_count++;
             TRACE("found domain %p\n", cookiesDomain);
-    
+
             LIST_FOR_EACH(cursor, &cookiesDomain->cookie_list)
             {
                 cookie *thisCookie = LIST_ENTRY(cursor, cookie, entry);
@@ -418,13 +418,13 @@ BOOL WINAPI InternetSetCookieW(LPCWSTR lpszUrl, LPCWSTR lpszCookieName,
 
 	if (!(ourCookieData = strchrW(lpCookieData, '=')))
 	{
-            TRACE("something terribly wrong with cookie data %s\n", 
+            TRACE("something terribly wrong with cookie data %s\n",
                    debugstr_w(ourCookieData));
 	    return FALSE;
 	}
 	ourCookieNameSize = ourCookieData - lpCookieData;
 	ourCookieData += 1;
-	ourCookieName = HeapAlloc(GetProcessHeap(), 0, 
+	ourCookieName = HeapAlloc(GetProcessHeap(), 0,
                               (ourCookieNameSize + 1)*sizeof(WCHAR));
 	memcpy(ourCookieName, ourCookieData, ourCookieNameSize * sizeof(WCHAR));
 	ourCookieName[ourCookieNameSize] = '\0';

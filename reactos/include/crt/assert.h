@@ -1,4 +1,4 @@
-/* 
+/*
  * assert.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -10,7 +10,7 @@
 
 /* We should be able to include this file multiple times to allow the assert
    macro to be enabled/disabled for different parts of code.  So don't add a
-   header guard.  */ 
+   header guard.  */
 
 #ifndef RC_INVOKED
 

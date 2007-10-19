@@ -196,7 +196,7 @@ static HWND get_notif_hwnd(void)
             notif_wnd_proc, 0, 0,
             NULL, NULL, NULL, NULL, NULL,
             wszURLMonikerNotificationWindow,
-            NULL        
+            NULL
         };
 
         wndclass.hInstance = URLMON_hInstance;

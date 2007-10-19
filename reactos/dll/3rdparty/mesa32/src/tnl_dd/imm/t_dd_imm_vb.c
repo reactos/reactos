@@ -165,7 +165,7 @@ static void TAG(clip_draw_triangle)( GLcontext *ctx,
    POLY_CLIP( CLIP_FAR_BIT,     0,  0, -1, 1 );
    POLY_CLIP( CLIP_NEAR_BIT,    0,  0,  1, 1 );
 
-   if ((ctx->_TriangleCaps & DD_FLATSHADE) && v2 != inlist[0]) 
+   if ((ctx->_TriangleCaps & DD_FLATSHADE) && v2 != inlist[0])
       COPY_PV( ctx, inlist[0], v2 );
 
    out = inlist[in];

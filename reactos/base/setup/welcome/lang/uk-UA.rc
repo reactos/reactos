@@ -23,7 +23,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - Ласкаво просимо"
     IDS_DEFAULTTOPICTITLE   "ReactOS"

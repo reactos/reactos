@@ -85,8 +85,8 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 	( uRb )->context = contExt; \
 	( uRb )->reference = refereNce; \
 }
-            
-            
+
+
 
 #define UsbBuildGetDescriptorRequest(uRb, \
 									 endp_hAndle, \
@@ -487,7 +487,7 @@ typedef LONG USBD_STATUS;
 #define USB_STATUS_BABBLE_DETECTED			((USBD_STATUS)0xC0000408L)
 
 //
-// returned by HCD if a transfer is submitted to an endpoint that is 
+// returned by HCD if a transfer is submitted to an endpoint that is
 // stalled
 //
 #define USB_STATUS_ENDPOINT_HALTED         ((USBD_STATUS)0xC0000430L)
@@ -506,7 +506,7 @@ typedef LONG USBD_STATUS;
 //
 #define USB_STATUS_ERROR_BUSY               ((USBD_STATUS)0x80000400L)
 //
-// returned by USBD if it cannot complete a URB request, typically this 
+// returned by USBD if it cannot complete a URB request, typically this
 // will be returned in the URB status field when the Irp is completed
 // with a more specific NT error code in the irp.status field.
 //
@@ -519,25 +519,25 @@ typedef LONG USBD_STATUS;
 #define USB_STATUS_NO_BANDWIDTH             ((USBD_STATUS)0x80000700L)
 //
 // generic HC error
-// 
+//
 #define USB_STATUS_INTERNAL_HC_ERROR        ((USBD_STATUS)0x80000800L)
 //
 // returned when a short packet terminates the transfer
 // ie USBD_SHORT_TRANSFER_OK bit not set
-// 
+//
 #define USB_STATUS_ERROR_SHORT_TRANSFER     ((USBD_STATUS)0x80000900L)
-// 
+//
 // returned if the requested start frame is not within
-// USBD_ISO_START_FRAME_RANGE of the current USB frame, 
+// USBD_ISO_START_FRAME_RANGE of the current USB frame,
 // note that the stall bit is set
-// 
+//
 #define USB_STATUS_BAD_START_FRAME          ((USBD_STATUS)0xC0000A00L)
 //
-// returned by HCD if all packets in an iso transfer complete with an error 
+// returned by HCD if all packets in an iso transfer complete with an error
 //
 #define USB_STATUS_ISOCH_REQUEST_FAILED     ((USBD_STATUS)0xC0000B00L)
 //
-// returned by USBD if the frame length control for a given 
+// returned by USBD if the frame length control for a given
 // HC is already taken by anothe driver
 //
 #define USB_STATUS_FRAME_CONTROL_OWNED      ((USBD_STATUS)0xC0000C00L)
@@ -569,7 +569,7 @@ typedef LONG USBD_STATUS;
 //dev count, output_buffer_length must be no less than sizeof( unsigned long ).
 
 #define IOCTL_ENUM_DEVICES 		CTL_CODE( FILE_HCD_DEV_TYPE, 4094, METHOD_BUFFERED, FILE_ANY_ACCESS )
-//input_buffer is a dword value to indicate the count of elements in the array 
+//input_buffer is a dword value to indicate the count of elements in the array
 //input_buffer_length is sizeof( unsigned long ), output_buffer is to receive a
 //structure ENUM_DEV_ARRAY where dev_count is the elements hold in this array.
 
@@ -582,17 +582,17 @@ typedef LONG USBD_STATUS;
 #define IOCTL_SUBMIT_URB_RD		CTL_CODE( FILE_HCD_DEV_TYPE, 4096, METHOD_IN_DIRECT, FILE_ANY_ACCESS )
 #define IOCTL_SUBMIT_URB_WR 	CTL_CODE( FILE_HCD_DEV_TYPE, 4097, METHOD_OUT_DIRECT, FILE_ANY_ACCESS )
 // if the major_function is IRP_MJ_DEVICE_CONTROL
-// input_buffer is a URB, and input_buffer_length is equal to or greater than 
+// input_buffer is a URB, and input_buffer_length is equal to or greater than
 // sizeof( URB ); the output_buffer is a buffer to receive data from or send data
 // to device. only the following urb fields can be accessed, others must be zeroed.
 //  DEV_HANDLE 			endp_handle;
 //	UCHAR             	setup_packet[8];   	// for control pipe
 // the choosing of IOCTL_SUBMIT_URB_RD or IOCTL_SUBMIT_URB_WR should be determined
-// by the current URB, for example, a request string from device will use XXX_RD, 
+// by the current URB, for example, a request string from device will use XXX_RD,
 // and a write to the bulk endpoint will use XXX_WR
 // if the major_function is IRP_MJ_INTERNAL_DEVICE_CONTROL
-// input_buffer is a URB, and input_buffer_length is equal to or greater than 
-// sizeof( URB ); 
+// input_buffer is a URB, and input_buffer_length is equal to or greater than
+// sizeof( URB );
 // only the following urb fields can be accessed, others must be zeroed.
 //  DEV_HANDLE			endp_handle;
 //	UCHAR             	setup_packet[8];   	// for control pipe, or zeroed
@@ -600,7 +600,7 @@ typedef LONG USBD_STATUS;
 //	ULONG				data_length;		// buffer size in bytes
 
 #define IOCTL_SUBMIT_URB_NOIO	CTL_CODE( FILE_HCD_DEV_TYPE, 4098, METHOD_BUFFERED,	FILE_ANY_ACCESS )
-// input_buffer is a URB, and input_buffer_length is equal to or greater than 
+// input_buffer is a URB, and input_buffer_length is equal to or greater than
 // sizeof( URB ); the output_buffer is null and no output_buffer_length,
 // only the following fields in urb can be accessed, others must be zeroed.
 //  DEV_HANDLE 			endp_handle;
@@ -623,7 +623,7 @@ typedef struct _ENUM_DEV_ELEMENT
 	USHORT		product_id;
 	USHORT		vendor_id;
 	UCHAR		dev_addr;
-	
+
 } ENUM_DEV_ELEMENT, *PENUM_DEV_ELEMENT;
 
 typedef struct _ENUM_DEV_ARRAY
@@ -657,7 +657,7 @@ typedef struct _USB_STRING_DESCRIPTOR
     UCHAR               bLength;
     UCHAR               bDescriptorType;
     USHORT              wData[1];
-    
+
 } USB_STRING_DESCRIPTOR, *PUSB_STRING_DESCRIPTOR;
 
 typedef struct _USB_DESC_HEADER
@@ -677,7 +677,7 @@ typedef struct _USB_ENDPOINT_DESC
     UCHAR                bInterval;
 
 } USB_ENDPOINT_DESC, *PUSB_ENDPOINT_DESC;
-                          
+
 typedef struct _USB_INTERFACE_DESC
 {
     UCHAR               bLength;
@@ -721,7 +721,7 @@ typedef struct _USB_DEVICE_DESC
     UCHAR               iProduct;
     UCHAR               iSerialNumber;
     UCHAR               bNumConfigurations;
-    
+
 } USB_DEVICE_DESC, *PUSB_DEVICE_DESC;
 
 
@@ -742,7 +742,7 @@ typedef struct _USB_DEVICE_DESC
 typedef struct _SPLIT_ISO_BUS_TIME
 {
 	USHORT 				bus_time;
-	USHORT				start_uframe;		
+	USHORT				start_uframe;
 
 } SPLIT_ISO_BUS_TIME, *PSPLIT_ISO_BUS_TIME;
 
@@ -790,9 +790,9 @@ typedef struct _URB_HS_PIPE_CONTENT
 	ULONG max_packet_size : 4; // bit 20-23 log( max_packet_size )
 	ULONG interval : 4;		// bit 24-27 the same definition in USB2.0, for high or full/low speed
 	ULONG start_uframe : 3; // bit 28-30
-	ULONG reserved1 : 1;    // 
+	ULONG reserved1 : 1;    //
 
-} URB_HS_PIPE_CONTENT, *PURB_HS_PIPE_CONTENT;       
+} URB_HS_PIPE_CONTENT, *PURB_HS_PIPE_CONTENT;
 
 typedef struct _URB_HS_CONTEXT_CONTENT
 {
@@ -814,7 +814,7 @@ typedef struct _URB
         //and max packet length is encoded in 3 bits from 23-21
 	    //that means 2^(x) bytes in the packet.
 	ULONG 				pipe;               // bit0-1: endp type, bit 6: ls or fs. bit 7: dir
-    
+
 	union
 	{
 		UCHAR             	setup_packet[8];   	// for control
@@ -856,7 +856,7 @@ typedef struct _URB
 			UCHAR			ctrl_reserved;		// send it down with ctrl_stack_count zero, that means the stack is not initialized,
 												// and can be initialized by receiver to 1 and only 1.
 												// If the initializer found the stack size won't meet the number down the drivers, it must
-												// reallocate one urb with the required stack size. and store the previous urb in 
+												// reallocate one urb with the required stack size. and store the previous urb in
 												// ctrl_parent_urb
 		} ctrl_req_context;
 	};
@@ -872,7 +872,7 @@ typedef struct _URB
 		ISO_PACKET_DESC		iso_packet_desc[ 1 ]; 	//used to build up trasac_list for iso transfer and claim bandwidth
 		CTRL_REQ_STACK		ctrl_req_stack[ 1 ];
 	};
-    
+
 } URB, *PURB;
 
 
@@ -1033,7 +1033,7 @@ PUCHAR* pdesc_BUF
 BOOLEAN
 usb_skip_one_config(
 PUCHAR* pconfig_desc_BUF
-); 
+);
 
 VOID
 usb_wait_ms_dpc(
@@ -1047,14 +1047,14 @@ ULONG us
 
 BOOLEAN
 usb_query_clicks(
-PLARGE_INTEGER	clicks 
+PLARGE_INTEGER	clicks
 );
 
 VOID
 usb_cal_cpu_freq();
 
 NTSTATUS
-usb_reset_pipe_ex( 
+usb_reset_pipe_ex(
 struct _USB_DEV_MANAGER *dev_mgr,
 DEV_HANDLE endp_handle,
 PURBCOMPLETION reset_completion,

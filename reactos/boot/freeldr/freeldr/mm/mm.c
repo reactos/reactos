@@ -110,7 +110,7 @@ PVOID MmAllocateMemory(ULONG MemorySize)
 		SubAllocationPage = MemPointer;
 		SubAllocationRest = MM_PAGE_SIZE - MemorySize;
 	}
-		
+
 
 #ifdef DBG
 	IncrementAllocationCount();

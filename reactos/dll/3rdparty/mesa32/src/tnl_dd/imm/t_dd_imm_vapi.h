@@ -52,7 +52,7 @@ do {
       VERTEX_CLIP(2) =                         m[10] * oz + m[14] * ow;
       VERTEX_CLIP(3) =                                              ow;
       w = ow;
-   } 
+   }
    else {
       ASSERT (DO_IDENTITY_MATRIX);
       VERTEX_CLIP(0) = ox;

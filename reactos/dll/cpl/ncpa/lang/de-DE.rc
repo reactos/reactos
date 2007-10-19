@@ -67,12 +67,12 @@ BEGIN
 	LTEXT "IP-Adresse:", -1, 22, 34, 80, 8
 	LTEXT "Subnetzmaske:", -1, 22, 48, 80, 8
 	LTEXT "Standardgateway:", -1, 22, 62, 80, 8
-	
+
 	RTEXT "Nicht verfügbar", IDC_DETAILSTYPE, 122, 20, 80, 8
 	RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
 	RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
 	RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
- 
+
 	PUSHBUTTON "&Details...", IDC_DETAILS, 22, 76, 62, 14
 END
 
@@ -113,7 +113,7 @@ BEGIN
   IDS_ASSIGNED_MANUAL "Manuell konfiguriert"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	IDS_ERROR "Fehler"
 	IDS_ENTER_VALID_IPADDRESS "Sie müssen eine gültige IP-Adresse angeben"

@@ -431,7 +431,7 @@ l_ReadHeaderFromFile:
 
     if(RTL_CONTAINS_FIELD(piohOptHeader, cbOptHeaderSize, AddressOfEntryPoint))
     {
-	ImageSectionObject->EntryPoint = piohOptHeader->ImageBase + 
+	ImageSectionObject->EntryPoint = piohOptHeader->ImageBase +
                                          piohOptHeader->AddressOfEntryPoint;
     }
 
@@ -598,9 +598,9 @@ l_ReadHeaderFromFile:
 	if(pishSectionHeaders[i].SizeOfRawData != 0)
 	{
 	    /* validate the alignment */
-#if 0	    
+#if 0
 	    /* Yes, this should be a multiple of FileAlignment, but there's
-	     * stuff out there that isn't. We can cope with that 
+	     * stuff out there that isn't. We can cope with that
 	     */
 	    if(!IsAligned(pishSectionHeaders[i].SizeOfRawData, nFileAlignment))
 		DIE(("SizeOfRawData[%u] is not aligned\n", i));

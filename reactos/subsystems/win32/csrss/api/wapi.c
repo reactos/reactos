@@ -65,7 +65,7 @@ CsrApiRegisterDefinitions(PCSRSS_API_DEFINITION NewDefinitions)
   return STATUS_SUCCESS;
 }
 
-VOID 
+VOID
 FASTCALL
 CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
                   PCSR_API_MESSAGE Request)
@@ -73,7 +73,7 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
   BOOL Found = FALSE;
   unsigned DefIndex;
   ULONG Type;
-  
+
   DPRINT("CSR: Calling handler for type: %x.\n", Request->Type);
   Type = Request->Type & 0xFFFF; /* FIXME: USE MACRO */
   DPRINT("CSR: API Number: %x ServerID: %x\n",Type, Request->Type >> 16);
@@ -202,11 +202,11 @@ ClientConnectionThread(HANDLE ServerPort)
     PCSR_API_MESSAGE Request = (PCSR_API_MESSAGE)RawRequest;
     PCSR_API_MESSAGE Reply;
     PCSRSS_PROCESS_DATA ProcessData;
-  
+
     DPRINT("CSR: %s called\n", __FUNCTION__);
 
     /* Reply must be NULL at the first call to NtReplyWaitReceivePort */
-    Reply = NULL; 
+    Reply = NULL;
 
     /* Loop and reply/wait for a new message */
     for (;;)
@@ -259,7 +259,7 @@ ClientConnectionThread(HANDLE ServerPort)
             continue;
         }
 
-        DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n", 
+        DPRINT("CSR: Got CSR API: %x [Message Origin: %x]\n",
                 Request->Type,
                 Request->Header.ClientId.UniqueThread);
 

@@ -390,7 +390,7 @@ BOOL dllReadRegistry(
 	if (bRegistryError || !bSuccess)
 		return FALSE;
 	else
-		
+
 		return TRUE;
 
 #undef REG_READ_DWORD

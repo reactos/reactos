@@ -34,7 +34,7 @@ void (*wine_tsx11_unlock_ptr)(void) = NULL;
 
 /* When updating default value here, make sure to update winecfg as well,
  * where appropriate. */
-wined3d_settings_t wined3d_settings = 
+wined3d_settings_t wined3d_settings =
 {
     VS_HW,          /* Hardware by default */
     PS_HW,          /* Hardware by default */

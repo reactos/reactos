@@ -4659,14 +4659,14 @@ static unsigned char VARIANT_int_divbychar(DWORD * p, unsigned int n, unsigned c
         unsigned char remainder = 0;
         ULONGLONG iTempDividend;
         signed int i;
-        
+
         for (i = n - 1; i >= 0 && !p[i]; i--);  /* skip leading zeros */
         for (; i >= 0; i--) {
             iTempDividend = ((ULONGLONG)remainder << 32) + p[i];
             remainder = iTempDividend % divisor;
             p[i] = iTempDividend / divisor;
         }
-        
+
         return remainder;
     }
 }
@@ -4706,17 +4706,17 @@ static int VARIANT_DI_mul(VARIANT_DI * a, VARIANT_DI * b, VARIANT_DI * result)
         result->sign = 0;
     } else {
         unsigned char remainder = 0;
-        int iA;        
+        int iA;
 
         /* perform actual multiplication */
         for (iA = 0; iA <= mulstart; iA++) {
             ULONG iOverflowMul;
             int iB;
-            
+
             for (iOverflowMul = 0, iB = 0; iB < sizeof(b->bitsnum)/sizeof(DWORD); iB++) {
                 ULONG iRV;
                 int iR;
-                
+
                 iRV = VARIANT_Mul(b->bitsnum[iB], a->bitsnum[iA], &iOverflowMul);
                 iR = iA + iB;
                 do {
@@ -4748,12 +4748,12 @@ static int VARIANT_DI_mul(VARIANT_DI * a, VARIANT_DI * b, VARIANT_DI * result)
         while (result->scale > 0 && !VARIANT_int_iszero(
             running + sizeof(result->bitsnum) / sizeof(DWORD),
             (sizeof(running) - sizeof(result->bitsnum)) / sizeof(DWORD))) {
-            
+
             remainder = VARIANT_int_divbychar(running, sizeof(running) / sizeof(DWORD), 10);
             if (remainder > 0) WARN("losing significant digits (remainder %u)...\n", remainder);
             result->scale--;
         }
-        
+
         /* round up the result - native oleaut32 does this */
         if (remainder >= 5) {
             unsigned int i;
@@ -4768,7 +4768,7 @@ static int VARIANT_DI_mul(VARIANT_DI * a, VARIANT_DI * b, VARIANT_DI * result)
            and copy result bits into result structure
         */
         r_overflow = !VARIANT_int_iszero(
-            running + sizeof(result->bitsnum)/sizeof(DWORD), 
+            running + sizeof(result->bitsnum)/sizeof(DWORD),
             (sizeof(running) - sizeof(result->bitsnum))/sizeof(DWORD));
         memcpy(result->bitsnum, running, sizeof(result->bitsnum));
     }
@@ -4847,7 +4847,7 @@ static int VARIANT_DI_tostringW(VARIANT_DI * a, WCHAR * s, unsigned int n)
             } else {
                 memmove(s + periodpos + 1, s + periodpos, (i + 1 - periodpos) * sizeof(WCHAR));
                 s[periodpos] = '.'; i++;
-                
+
                 /* remove extra zeros at the end, if any */
                 while (s[i - 1] == '0') s[--i] = '\0';
                 if (s[i - 1] == '.') s[--i] = '\0';
@@ -4863,14 +4863,14 @@ static void VARIANT_int_shiftleft(DWORD * p, unsigned int n, unsigned int shift)
 {
     DWORD shifted;
     unsigned int i;
-    
+
     /* shift whole DWORDs to the left */
     while (shift >= 32)
     {
         memmove(p + 1, p, (n - 1) * sizeof(DWORD));
         *p = 0; shift -= 32;
     }
-    
+
     /* shift remainder (1..31 bits) */
     shifted = 0;
     if (shift > 0) for (i = 0; i < n; i++)
@@ -4886,7 +4886,7 @@ static void VARIANT_int_shiftleft(DWORD * p, unsigned int n, unsigned int shift)
    Value at v is incremented by the value at p. Any size is supported, provided
    that v is not shorter than p. Any unapplied carry is returned as a result.
  */
-static unsigned char VARIANT_int_add(DWORD * v, unsigned int nv, DWORD * p, 
+static unsigned char VARIANT_int_add(DWORD * v, unsigned int nv, DWORD * p,
     unsigned int np)
 {
     unsigned char carry = 0;
@@ -4912,11 +4912,11 @@ static unsigned char VARIANT_int_add(DWORD * v, unsigned int nv, DWORD * p,
     return carry;
 }
 
-/* perform integral division with operand p as dividend. Parameter n indicates 
-   number of available DWORDs in divisor p, but available space in p must be 
-   actually at least 2 * n DWORDs, because the remainder of the integral 
-   division is built in the next n DWORDs past the start of the quotient. This 
-   routine replaces the dividend in p with the quotient, and appends n 
+/* perform integral division with operand p as dividend. Parameter n indicates
+   number of available DWORDs in divisor p, but available space in p must be
+   actually at least 2 * n DWORDs, because the remainder of the integral
+   division is built in the next n DWORDs past the start of the quotient. This
+   routine replaces the dividend in p with the quotient, and appends n
    additional DWORDs for the remainder.
 
    Thanks to Lee & Mark Atkinson for their book _Using_C_ (my very first book on
@@ -4961,15 +4961,15 @@ static unsigned char VARIANT_int_mulbychar(DWORD * p, unsigned int n, unsigned c
 {
     unsigned int i;
     ULONG iOverflowMul;
-    
+
     for (iOverflowMul = 0, i = 0; i < n; i++)
         p[i] = VARIANT_Mul(p[i], m, &iOverflowMul);
     return (unsigned char)iOverflowMul;
 }
 
-/* increment value in A by the value indicated in B, with scale adjusting. 
-   Modifies parameters by adjusting scales. Returns 0 if addition was 
-   successful, nonzero if a parameter underflowed before it could be 
+/* increment value in A by the value indicated in B, with scale adjusting.
+   Modifies parameters by adjusting scales. Returns 0 if addition was
+   successful, nonzero if a parameter underflowed before it could be
    successfully used in the addition.
  */
 static int VARIANT_int_addlossy(
@@ -5511,14 +5511,14 @@ HRESULT WINAPI VarDecDiv(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
       if (di_result.scale > DEC_MAX_SCALE)
       {
         unsigned char remainder = 0;
-      
+
         /* division underflowed. In order to comply with the MSDN
            specifications for DECIMAL ranges, some significant digits
            must be removed
          */
         WARN("result scale is %u, scaling (with loss of significant digits)...\n",
             di_result.scale);
-        while (di_result.scale > DEC_MAX_SCALE && 
+        while (di_result.scale > DEC_MAX_SCALE &&
                !VARIANT_int_iszero(di_result.bitsnum, sizeof(di_result.bitsnum) / sizeof(DWORD)))
         {
             remainder = VARIANT_int_divbychar(di_result.bitsnum, sizeof(di_result.bitsnum) / sizeof(DWORD), 10);
@@ -5583,7 +5583,7 @@ HRESULT WINAPI VarDecMul(const DECIMAL* pDecLeft, const DECIMAL* pDecRight, DECI
        */
       WARN("result scale is %u, scaling (with loss of significant digits)...\n",
           di_result.scale);
-      while (di_result.scale > DEC_MAX_SCALE && 
+      while (di_result.scale > DEC_MAX_SCALE &&
             !VARIANT_int_iszero(di_result.bitsnum, sizeof(di_result.bitsnum)/sizeof(DWORD)))
       {
         VARIANT_int_divbychar(di_result.bitsnum, sizeof(di_result.bitsnum)/sizeof(DWORD), 10);
@@ -6348,8 +6348,8 @@ static BSTR VARIANT_BstrReplaceDecimal(WCHAR * buff, LCID lcid, ULONG dwFlags)
   WCHAR lpDecimalSep[16];
 
   /* Native oleaut32 uses the locale-specific decimal separator even in the
-     absence of the LOCALE_USE_NLS flag. For example, the Spanish/Latin 
-     American locales will see "one thousand and one tenth" as "1000,1" 
+     absence of the LOCALE_USE_NLS flag. For example, the Spanish/Latin
+     American locales will see "one thousand and one tenth" as "1000,1"
      instead of "1000.1" (notice the comma). The following code checks for
      the need to replace the decimal separator, and if so, will prepare an
      appropriate NUMBERFMTW structure to do the job via GetNumberFormatW().
@@ -6789,7 +6789,7 @@ HRESULT WINAPI VarBstrFromDec(DECIMAL* pDecIn, LCID lcid, ULONG dwFlags, BSTR* p
   {
     *pbstrOut = VARIANT_BstrReplaceDecimal(buff, lcid, dwFlags);
   }
-  
+
   TRACE("returning %s\n", debugstr_w(*pbstrOut));
   return *pbstrOut ? S_OK : E_OUTOFMEMORY;
 }

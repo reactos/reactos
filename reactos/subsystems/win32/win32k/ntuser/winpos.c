@@ -132,14 +132,14 @@ CLEANUP:
  *
  * Check if we can activate the specified window.
  */
-static 
+static
 BOOL FASTCALL can_activate_window( PWINDOW_OBJECT Wnd OPTIONAL)
 {
     LONG style;
 
     if (!Wnd) return FALSE;
     style = Wnd->Style;
-    if (!(style & WS_VISIBLE) && 
+    if (!(style & WS_VISIBLE) &&
         Wnd->OwnerThread->ThreadsProcess != CsrProcess) return FALSE;
     if ((style & (WS_POPUP|WS_CHILD)) == WS_CHILD) return FALSE;
     return !(style & WS_DISABLED);
@@ -848,9 +848,9 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
             && HWND_BOTTOM != WinPos->hwndInsertAfter)
       {
          PWINDOW_OBJECT InsAfterWnd, Parent = Window->Parent;
-         
+
          InsAfterWnd = UserGetWindowObject(WinPos->hwndInsertAfter);
-         
+
          if (InsAfterWnd && UserGetAncestor(InsAfterWnd, GA_PARENT) != Parent)
          {
             return FALSE;
@@ -975,7 +975,7 @@ co_WinPosSetWindowPos(
    }
 
    WvrFlags = co_WinPosDoNCCALCSize(Window, &WinPos, &NewWindowRect, &NewClientRect);
-    
+
     //DPRINT1("co_WinPosDoNCCALCSize");
 
    /* Relink windows. (also take into account shell window in hwndShellWindow) */
@@ -1315,7 +1315,7 @@ co_WinPosGetNonClientSize(PWINDOW_OBJECT Window, RECT* WindowRect, RECT* ClientR
    LRESULT Result;
 
    ASSERT_REFS_CO(Window);
-   
+
    *ClientRect = *WindowRect;
    Result = co_IntSendMessage(Window->hSelf, WM_NCCALCSIZE, FALSE, (LPARAM) ClientRect);
 
@@ -1428,7 +1428,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    }
 
    ShowFlag = (Cmd != SW_HIDE);
-   
+
    if (ShowFlag != WasVisible)
    {
       co_IntSendMessage(Window->hSelf, WM_SHOWWINDOW, ShowFlag, 0);
@@ -1448,7 +1448,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
    if (Cmd == SW_HIDE)
    {
       PWINDOW_OBJECT ThreadFocusWindow;
-      
+
       /* FIXME: This will cause the window to be activated irrespective
        * of whether it is owned by the same thread. Has to be done
        * asynchronously.
@@ -1462,7 +1462,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
 
       //temphack
       ThreadFocusWindow = UserGetWindowObject(IntGetThreadFocusWindow());
-      
+
       /* Revert focus to parent */
       if (ThreadFocusWindow && (Window == ThreadFocusWindow ||
             IntIsChildWindow(Window, ThreadFocusWindow)))
@@ -1498,7 +1498,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
                         MAKELONG(Window->ClientRect.left,
                                  Window->ClientRect.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-      
+
    }
 
    /* Activate the window if activation is not requested and the window is not minimized */
@@ -1538,24 +1538,24 @@ PWINDOW_OBJECT child_window_from_point(PWINDOW_OBJECT parent, int x, int y )
 }
 #endif
 
-/* wine server: child_window_from_point 
+/* wine server: child_window_from_point
 
 Caller must dereference the "returned" Window
 */
 static
 VOID FASTCALL
 co_WinPosSearchChildren(
-   PWINDOW_OBJECT ScopeWin, 
-   PUSER_MESSAGE_QUEUE OnlyHitTests, 
+   PWINDOW_OBJECT ScopeWin,
+   PUSER_MESSAGE_QUEUE OnlyHitTests,
    POINT *Point,
-   PWINDOW_OBJECT* Window,    
+   PWINDOW_OBJECT* Window,
    USHORT *HitTest
    )
 {
    PWINDOW_OBJECT Current;
    HWND *List, *phWnd;
    USER_REFERENCE_ENTRY Ref;
-   
+
    ASSERT_REFS_CO(ScopeWin);
 
    if ((List = IntWinListChildren(ScopeWin)))
@@ -1576,15 +1576,15 @@ co_WinPosSearchChildren(
             continue;
          }
 
-         if (!IntPtInWindow(Current, Point->x, Point->y)) 
+         if (!IntPtInWindow(Current, Point->x, Point->y))
          {
              continue;
          }
-        
+
          if (*Window) UserDerefObject(*Window);
          *Window = Current;
          UserRefObject(*Window);
-         
+
          if (Current->Style & WS_MINIMIZE)
          {
             *HitTest = HTCAPTION;
@@ -1598,7 +1598,7 @@ co_WinPosSearchChildren(
          }
 
          UserRefObjectCo(Current, &Ref);
-         
+
          if (OnlyHitTests && (Current->MessageQueue == OnlyHitTests))
          {
             *HitTest = co_IntSendMessage(Current->hSelf, WM_NCHITTEST, 0,
@@ -1619,13 +1619,13 @@ co_WinPosSearchChildren(
          {
             co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
          }
-         
+
          UserDerefObjectCo(Current);
 
          break;
       }
       ExFreePool(List);
-   } 
+   }
 }
 
 /* wine: WINPOS_WindowFromPoint */

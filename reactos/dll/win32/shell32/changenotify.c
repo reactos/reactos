@@ -54,7 +54,7 @@ typedef struct _NOTIFICATIONLIST
 	LONG wSignalledEvent;   /* event that occurred */
 	DWORD dwFlags;		/* client flags */
 	LPCITEMIDLIST pidlSignaled; /*pidl of the path that caused the signal*/
-    
+
 } NOTIFICATIONLIST, *LPNOTIFICATIONLIST;
 
 static NOTIFICATIONLIST *head, *tail;
@@ -300,11 +300,11 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
         return;
     }
 
-    if( ( ( wEventId & SHCNE_NOITEMEVENTS ) && 
+    if( ( ( wEventId & SHCNE_NOITEMEVENTS ) &&
           ( wEventId & ~SHCNE_NOITEMEVENTS ) ) ||
-        ( ( wEventId & SHCNE_ONEITEMEVENTS ) && 
+        ( ( wEventId & SHCNE_ONEITEMEVENTS ) &&
           ( wEventId & ~SHCNE_ONEITEMEVENTS ) ) ||
-        ( ( wEventId & SHCNE_TWOITEMEVENTS ) && 
+        ( ( wEventId & SHCNE_TWOITEMEVENTS ) &&
           ( wEventId & ~SHCNE_TWOITEMEVENTS ) ) )
     {
         WARN("mutually incompatible events listed\n");
@@ -341,7 +341,7 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
 
         if( Pidls[0] && SHGetPathFromIDListW(Pidls[0], path ))
             TRACE("notify %08x on item1 = %s\n", wEventId, debugstr_w(path));
-    
+
         if( Pidls[1] && SHGetPathFromIDListW(Pidls[1], path ))
             TRACE("notify %08x on item2 = %s\n", wEventId, debugstr_w(path));
     }
@@ -397,7 +397,7 @@ void WINAPI SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID 
     }
     TRACE("notify Done\n");
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
-    
+
     /* if we allocated it, free it. The ANSI flag is also set in its Unicode sibling. */
     if ((typeFlag & SHCNF_PATHA) || (typeFlag & SHCNF_PRINTERA))
     {

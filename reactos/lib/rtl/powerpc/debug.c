@@ -23,12 +23,12 @@ DebugService
 	    "mr 8,%1\n\t"
 	    "sc\n\t"
 	    "mr %0,3\n\t" :
-	    "=r" (Result) : 
-	    "r" (0x10000), 
-	    "r" (Service), 
-	    "r" (Buffer), 
-	    "r" (Length), 
-	    "r" (Arg1), 
+	    "=r" (Result) :
+	    "r" (0x10000),
+	    "r" (Service),
+	    "r" (Buffer),
+	    "r" (Length),
+	    "r" (Arg1),
 	    "r" (Arg2) );
     return Result;
 }

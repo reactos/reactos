@@ -10,20 +10,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifdef ADNS_JGAA_WIN32
@@ -40,7 +40,7 @@ static unsigned long idcounter;
 void ensure_adns_init(void) {
   adns_initflags initflags;
   int r;
-  
+
   if (ads) return;
 
 #ifdef SIGPIPE
@@ -64,10 +64,10 @@ void ensure_adns_init(void) {
 static void prep_query(struct query_node **qun_r, int *quflags_r) {
   struct query_node *qun;
   char idbuf[20];
-  
+
   if (ov_pipe && !ads) usageerr("-f/--pipe not consistent with domains on command line");
   ensure_adns_init();
-  
+
   qun= malloc(sizeof(*qun));
   qun->pqfr= ov_pqfr;
   if (ov_id) {
@@ -86,10 +86,10 @@ static void prep_query(struct query_node **qun_r, int *quflags_r) {
     (ov_qc_anshost ? adns_qf_quoteok_anshost : 0) |
     (ov_qc_cname ? 0 : adns_qf_quoteok_cname) |
     ov_cname,
-    
+
   *qun_r= qun;
 }
-  
+
 void of_ptr(const struct optioninfo *oi, const char *arg, const char *arg2) {
   struct query_node *qun;
   int quflags, r;
@@ -165,7 +165,7 @@ static void print_withspace(const char *str) {
 static void print_ttl(struct query_node *qun, adns_answer *answer) {
   unsigned long ttl;
   time_t now;
-  
+
   switch (qun->pqfr.ttl) {
   case tm_none:
     return;
@@ -228,7 +228,7 @@ static void print_dnsfail(adns_status st, struct query_node *qun, adns_answer *a
   int r;
   const char *typename, *statusstring;
   adns_status ist;
-  
+
   if (ov_format == fmt_inline) {
     if (fputs("; failed ",stdout) == EOF) outerr();
     print_status(st,qun,answer);
@@ -249,7 +249,7 @@ static void print_dnsfail(adns_status st, struct query_node *qun, adns_answer *a
   }
   if (r == EOF) sysfail("write error message to stderr",errno);
 }
-    
+
 void query_done(struct query_node *qun, adns_answer *answer) {
   adns_status st, ist;
   int rrn, nrrs;

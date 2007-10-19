@@ -358,7 +358,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	/* String that is to be examined */
 	TCHAR str[MAX_PATH];
 	/* temp pointers to used to find needed parts */
-	TCHAR * szSearch;	
+	TCHAR * szSearch;
 	TCHAR * szSearch1;
 	TCHAR * szSearch2;
 	TCHAR * szSearch3;
@@ -372,7 +372,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	/* when phrasing a string, this tells weather
 	   you are inside quotes ot not. */
 	BOOL bInside = FALSE;
-	
+
   szPrefix[0] = _T('\0');
   szSuffix[0] = _T('\0');
 
@@ -404,11 +404,11 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 		else
 			szSearch = szSearch1;
 		/* Move one char past */
-		szSearch++;		
+		szSearch++;
     szSearch[0] = _T('\0');
 		_tcscpy(szPrefix,str);
 		return;
-	
+
 	}
 
 	if(!_tcschr(str, _T(' ')))
@@ -416,10 +416,10 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 		/* No spaces, everything goes to Suffix */
 		_tcscpy(szSuffix,str);
 		/* look for a slash just in case */
-		szSearch = _tcsrchr(str, _T('\\'));		
+		szSearch = _tcsrchr(str, _T('\\'));
 		if(szSearch)
 		{
-			szSearch++;			
+			szSearch++;
       szSearch[0] = _T('\0');
 			_tcscpy(szPrefix,str);
 		}
@@ -448,13 +448,13 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 			szSearch = szSearch3;
 		else
 			szSearch = szSearch1;
-		szSearch++;		
+		szSearch++;
     szSearch[0] = _T('\0');
-		_tcscpy(szPrefix,str);		
+		_tcscpy(szPrefix,str);
 		return;
 	}
-	
-	/* All else fails and there is a lot of quotes, spaces and | 
+
+	/* All else fails and there is a lot of quotes, spaces and |
 	   Then we search through and find the last space or \ that is
 		not inside a quotes */
 	for(i = 0; i < _tcslen(str); i++)
@@ -469,7 +469,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
 	}
 	SBreak++;
 	PBreak++;
-	_tcscpy(szSuffix,&strIN[SBreak]);	
+	_tcscpy(szSuffix,&strIN[SBreak]);
   strIN[PBreak] = _T('\0');
 	_tcscpy(szPrefix,strIN);
 	if (szPrefix[_tcslen(szPrefix) - 2] == _T('\"') &&
@@ -537,12 +537,12 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	static INT Sel;
 	BOOL NeededQuote = FALSE;
 	BOOL ShowAll = TRUE;
-	TCHAR * line = strIN; 
+	TCHAR * line = strIN;
 
 	strOut[0] = _T('\0');
 
 	while (_istspace (*line))
-			line++;	
+			line++;
 	if(!_tcsnicmp (line, _T("rd "), 3) || !_tcsnicmp (line, _T("cd "), 3))
 		ShowAll = FALSE;
 
@@ -617,7 +617,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
  		if(!_tcscmp (file.cFileName, _T(".")) ||
 			!_tcscmp (file.cFileName, _T("..")))
 			continue;
-		
+
 		/* Don't show files when they are doing 'cd' or 'rd' */
 		if(!ShowAll &&
        file.dwFileAttributes != 0xFFFFFFFF &&
@@ -628,8 +628,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
 		/* Add the file to the list of files */
 		FileList = cmd_realloc(FileList, ++FileListSize * sizeof(FileName));
- 
-		if(FileList == NULL) 
+
+		if(FileList == NULL)
 		{
 			/* Assemble the orginal string and return */
 			_tcscpy(strOut,szOrginal);
@@ -639,7 +639,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		}
 		/* Copies the file name into the struct */
 		_tcscpy(FileList[FileListSize-1].Name,file.cFileName);
- 
+
 	} while(FindNextFile(hFile,&file));
 
     FindClose(hFile);
@@ -649,7 +649,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	if(FileListSize == 0)
 	{
 		_tcscpy(strOut,szOrginal);
-		if(FileList != NULL) 
+		if(FileList != NULL)
 			cmd_free(FileList);
 		return;
 
@@ -680,10 +680,10 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		Sel = 0;
 	}
 
-	/* nothing found that matched last time 
+	/* nothing found that matched last time
 	   so return the first thing in the list */
 	strOut[0] = _T('\0');
-	
+
 	/* space in the name */
 	if(_tcschr(FileList[Sel].Name, _T(' ')))
 	{
@@ -706,7 +706,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 		if(szPrefix[LastSpace + 1] != _T('\"') && LastSpace != -1)
 		{
 			memmove ( &szPrefix[LastSpace+1], &szPrefix[LastSpace], (_tcslen(szPrefix)-LastSpace+1) * sizeof(TCHAR) );
-			
+
 			if((UINT)(LastSpace + 1) == _tcslen(szPrefix))
 			{
 				_tcscat(szPrefix,_T("\""));
@@ -739,8 +739,8 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 	_tcscpy(LastReturned,strOut);
 	EndLength = _tcslen(strOut);
 	DiffLength = EndLength - StartLength;
-	if(FileList != NULL) 
+	if(FileList != NULL)
 		cmd_free(FileList);
-	
+
 }
 #endif

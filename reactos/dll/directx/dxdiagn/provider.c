@@ -1,6 +1,6 @@
-/* 
+/*
  * IDxDiagProvider Implementation
- * 
+ *
  * Copyright 2004 Raphael Junqueira
  *
  * This library is free software; you can redistribute it and/or
@@ -107,7 +107,7 @@ HRESULT DXDiag_CreateDXDiagProvider(LPCLASSFACTORY iface, LPUNKNOWN punkOuter, R
   IDxDiagProviderImpl* provider;
 
   TRACE("(%p, %s, %p)\n", punkOuter, debugstr_guid(riid), ppobj);
-  
+
   provider = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IDxDiagProviderImpl));
   if (NULL == provider) {
     *ppobj = NULL;

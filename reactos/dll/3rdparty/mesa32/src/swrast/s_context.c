@@ -699,7 +699,7 @@ _swrast_render_start( GLcontext *ctx )
       swrast->Driver.SpanRenderStart( ctx );
    swrast->PointSpan.end = 0;
 }
- 
+
 void
 _swrast_render_finish( GLcontext *ctx )
 {

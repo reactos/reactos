@@ -46,7 +46,7 @@ MSVCBackend::_gen_guid()
 	HRESULT result;
 	bool good_guid = false;
 	static char guid[38];
-	
+
 	// Load ole32. We will need it later on
 	HMODULE olelib = LoadLibrary ( "ole32.dll" );
 	if ( olelib != NULL )
@@ -82,7 +82,7 @@ MSVCBackend::_gen_guid()
 		m_guid.Data4[6],m_guid.Data4[7],m_guid.Data1,m_guid.Data2,m_guid.Data3,m_guid.Data4[0],
 		m_guid.Data4[1],m_guid.Data4[2],m_guid.Data4[3],m_guid.Data4[4],m_guid.Data4[5],
 		m_guid.Data4[6],m_guid.Data4[7]);
-	
+
 	return guid;
 }
 

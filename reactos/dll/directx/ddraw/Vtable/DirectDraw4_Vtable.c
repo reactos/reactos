@@ -45,7 +45,7 @@ Main_DirectDraw_CreatePalette(
                               LPDIRECTDRAWPALETTE* ppPalette,
                               LPUNKNOWN pUnkOuter);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(
                                LPDIRECTDRAW4 iface,
                                LPDDSURFACEDESC2 pDDSD,
@@ -58,7 +58,7 @@ Main_DirectDraw_DuplicateSurface(
                                  LPDIRECTDRAWSURFACE4 src,
                                  LPDIRECTDRAWSURFACE4* dst);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_EnumDisplayModes(
                                  LPDIRECTDRAW4 iface,
                                  DWORD dwFlags,
@@ -152,16 +152,16 @@ Main_DirectDraw_GetAvailableVidMem4(
                                     LPDWORD dwTotal,
                                     LPDWORD dwFree);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_GetSurfaceFromDC(
                                  LPDIRECTDRAW4 iface,
                                  HDC hdc,
                                  LPDIRECTDRAWSURFACE7 *lpDDS);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW4 iface);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_TestCooperativeLevel(LPDIRECTDRAW4 iface);
 
 HRESULT WINAPI

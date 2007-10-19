@@ -122,12 +122,12 @@ EngCreateDeviceBitmap(IN DHSURF dhsurf,
   SURFOBJ *SurfObj;
 
   NewBitmap = EngCreateBitmap(Size, DIB_GetDIBWidthBytes(Size.cx, BitsPerFormat(Format)), Format, 0, NULL);
-  if(!NewBitmap) 
+  if(!NewBitmap)
   {
     DPRINT1("EngCreateBitmap failed\n");
     return 0;
   }
-    
+
   SurfObj = EngLockSurface((HSURF)NewBitmap);
   SurfObj->dhsurf = dhsurf;
   EngUnlockSurface(SurfObj);

@@ -32,7 +32,7 @@ static DRVFN DrvFunctionTable[] =
    {INDEX_DrvSetPalette, (PFN)DrvSetPalette},
    {INDEX_DrvSetPointerShape, (PFN)DrvSetPointerShape},
    {INDEX_DrvMovePointer, (PFN)DrvMovePointer}
-  
+
 };
 
 /*

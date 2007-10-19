@@ -107,18 +107,18 @@ void InitSaver(HWND hwndParent)
 	{
 		HWND hwnd;
     hwnd = CreateWindowEx(WS_EX_TOPMOST,
-                          APPNAME, 
+                          APPNAME,
                           APPNAME,
                           WS_VISIBLE | WS_POPUP,
                           0, 0,
                           GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN),
                           HWND_DESKTOP, 0,
                           hInstance, NULL);
-     
-    SetWindowPos(hwnd, 
-                 0, 0, 0, 0, 0, 
+
+    SetWindowPos(hwnd,
+                 0, 0, 0, 0, 0,
                  SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_SHOWWINDOW);
-                                              
+
 		ShowCursor(FALSE);
 		fullscreen = TRUE;
 	}

@@ -28,7 +28,7 @@
  */
 
 /* TODO: Check how the WNDOBJ implementation should behave with a driver on windows. */
- 
+
 #include <w32k.h>
 
 #define NDEBUG
@@ -44,12 +44,12 @@ IntEngWndCallChangeProc(
   IN FLONG   flChanged)
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
-  
+
   if (WndObjInt->ChangeProc == NULL)
     {
       return;
     }
-  
+
   /* check flags of the WNDOBJ */
   flChanged &= WndObjInt->Flags;
   if (flChanged == 0)
@@ -125,7 +125,7 @@ IntEngWndUpdateClipObj(
     ClipObj = IntEngCreateClipRegion(1, (PRECTL)&Window->ClientRect,
                                      (PRECTL)&Window->ClientRect);
   }
-  
+
   if (ClipObj == NULL)
   {
     DPRINT1("Warning: IntEngCreateClipRegion() failed!\n");
@@ -137,7 +137,7 @@ IntEngWndUpdateClipObj(
   OldClipObj = InterlockedExchangePointer(&WndObjInt->ClientClipObj, ClipObj);
   if (OldClipObj != NULL)
     IntEngDeleteClipRegion(OldClipObj);
-  
+
   return TRUE;
 }
 
@@ -159,7 +159,7 @@ IntEngWindowChanged(
   while (CurrentEntry != &Window->WndObjListHead)
     {
       Current = CONTAINING_RECORD(CurrentEntry, WNDGDI, ListEntry);
-      
+
       if (Current->WndObj.pvConsumer != NULL)
         {
           /* Update the WNDOBJ */
@@ -169,7 +169,7 @@ IntEngWindowChanged(
               /* Update the clipobj and client rect of the WNDOBJ */
               IntEngWndUpdateClipObj(Current, Window);
               break;
-          
+
             case WOC_DELETE:
               /* FIXME: Should the WNDOBJs be deleted by win32k or by the driver? */
               break;
@@ -177,7 +177,7 @@ IntEngWindowChanged(
 
           /* Call the change proc */
           IntEngWndCallChangeProc(&Current->WndObj, flChanged);
-      
+
           /* HACK: Send WOC_CHANGED after WOC_RGN_CLIENT */
           if (flChanged == WOC_RGN_CLIENT)
             {
@@ -254,9 +254,9 @@ EngCreateWnd(
   InsertTailList(&Window->WndObjListHead, &WndObjInt->ListEntry);
 
   DPRINT("EngCreateWnd: SUCCESS!\n");
-  
+
   RETURN( WndObjUser);
-  
+
 CLEANUP:
 
   if (!calledFromUser){
@@ -277,7 +277,7 @@ EngDeleteWnd(
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   PWINDOW_OBJECT Window;
-  BOOL calledFromUser; 
+  BOOL calledFromUser;
 
   DPRINT("EngDeleteWnd: pwo = 0x%x\n", pwo);
 
@@ -321,10 +321,10 @@ WNDOBJ_bEnum(
 {
   WNDGDI *WndObjInt = ObjToGDI(pwo, WND);
   BOOL Ret;
-  
+
   DPRINT("WNDOBJ_bEnum: pwo = 0x%x, cj = %d, pul = 0x%x\n", pwo, cj, pul);
   Ret = CLIPOBJ_bEnum(WndObjInt->ClientClipObj, cj, pul);
-  
+
   DPRINT("WNDOBJ_bEnum: Returning %s\n", Ret ? "True" : "False");
   return Ret;
 }
@@ -367,7 +367,7 @@ WNDOBJ_vSetConsumer(
   BOOL Hack;
 
   DPRINT("WNDOBJ_vSetConsumer: pwo = 0x%x, pvConsumer = 0x%x\n", pwo, pvConsumer);
-  
+
   Hack = (pwo->pvConsumer == NULL);
   pwo->pvConsumer = pvConsumer;
 

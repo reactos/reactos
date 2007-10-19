@@ -248,8 +248,8 @@ typedef struct _avitimedindex
 
 typedef struct _avitimecodeindex
 {
-  FOURCC fcc; 
-  UINT cb; 
+  FOURCC fcc;
+  UINT cb;
   WORD wLongsPerEntry;
   BYTE bIndexSubType;
   BYTE bIndexType;

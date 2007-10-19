@@ -161,7 +161,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	{
 		cT=GetTickCount();
 		cS=TRUE;
-		    
+
         ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
         PrintTime();
 		freep(p);
@@ -171,7 +171,7 @@ INT CommandTimer (LPTSTR cmd, LPTSTR param)
 	if(bS)
 	{
 		if(cS)
-		{			
+		{
             ConOutPrintf (szMsg,clk_n,cS?_T("ON"):_T("OFF"));
             PrintTime();
 			PrintElapsedTime(GetTickCount()-cT, iFormat);

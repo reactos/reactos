@@ -50,9 +50,9 @@ static void _tnl_print_vtx( GLcontext *ctx )
    for (i = 0 ; i < tnl->vtx.prim_count ; i++) {
       struct tnl_prim *prim = &tnl->vtx.prim[i];
       _mesa_debug(NULL, "   prim %d: %s %d..%d %s %s\n",
-		  i, 
+		  i,
 		  _mesa_lookup_enum_by_nr(prim->mode & PRIM_MODE_MASK),
-		  prim->start, 
+		  prim->start,
 		  prim->start + prim->count,
 		  (prim->mode & PRIM_BEGIN) ? "BEGIN" : "(wrap)",
 		  (prim->mode & PRIM_END) ? "END" : "(wrap)");
@@ -66,9 +66,9 @@ GLboolean *_tnl_translate_edgeflag( GLcontext *ctx, const GLfloat *data,
    GLboolean *ef = tnl->vtx.edgeflag_tmp;
    GLuint i;
 
-   if (!ef) 
+   if (!ef)
       ef = tnl->vtx.edgeflag_tmp = (GLboolean *) MALLOC( tnl->vb.Size );
-   
+
    for (i = 0 ; i < count ; i++, data += stride)
       ef[i] = (data[0] == 1.0);
 
@@ -84,7 +84,7 @@ GLboolean *_tnl_import_current_edgeflag( GLcontext *ctx,
    GLboolean tmp = ctx->Current.EdgeFlag;
    GLuint i;
 
-   if (!ef) 
+   if (!ef)
       ef = tnl->vtx.edgeflag_tmp = (GLboolean *) MALLOC( tnl->vb.Size );
 
    for (i = 0 ; i < count ; i++)
@@ -100,7 +100,7 @@ static INLINE GLint get_size( const GLfloat *f )
    return 2;
 }
 
-/* Some nasty stuff still hanging on here.  
+/* Some nasty stuff still hanging on here.
  *
  * TODO - remove VB->NormalPtr, etc and just use the AttrPtr's.
  */
@@ -148,7 +148,7 @@ static void _tnl_vb_bind_vtx( GLcontext *ctx )
       }
    }
 
-   
+
    /* Copy and translate EdgeFlag to a contiguous array of GLbooleans
     */
    if (ctx->Polygon.FrontMode != GL_FILL || ctx->Polygon.BackMode != GL_FILL) {
@@ -157,7 +157,7 @@ static void _tnl_vb_bind_vtx( GLcontext *ctx )
 						 tnl->vtx.vertex_size );
 	 data++;
       }
-      else 
+      else
 	 VB->EdgeFlag = _tnl_import_current_edgeflag( ctx, count );
    }
 
@@ -190,8 +190,8 @@ static GLuint _tnl_copy_vertices( GLcontext *ctx )
    GLuint ovf, i;
    GLuint sz = tnl->vtx.vertex_size;
    GLfloat *dst = tnl->vtx.copied.buffer;
-   GLfloat *src = (tnl->vtx.buffer + 
-		   tnl->vtx.prim[tnl->vtx.prim_count-1].start * 
+   GLfloat *src = (tnl->vtx.buffer +
+		   tnl->vtx.prim[tnl->vtx.prim_count-1].start *
 		   tnl->vtx.vertex_size);
 
 
@@ -215,7 +215,7 @@ static GLuint _tnl_copy_vertices( GLcontext *ctx )
 	 _mesa_memcpy( dst+i*sz, src+(nr-ovf+i)*sz, sz * sizeof(GLfloat) );
       return i;
    case GL_LINE_STRIP:
-      if (nr == 0) 
+      if (nr == 0)
 	 return 0;
       else {
 	 _mesa_memcpy( dst, src+(nr-1)*sz, sz * sizeof(GLfloat) );
@@ -224,7 +224,7 @@ static GLuint _tnl_copy_vertices( GLcontext *ctx )
    case GL_LINE_LOOP:
    case GL_TRIANGLE_FAN:
    case GL_POLYGON:
-      if (nr == 0) 
+      if (nr == 0)
 	 return 0;
       else if (nr == 1) {
 	 _mesa_memcpy( dst, src+0, sz * sizeof(GLfloat) );
@@ -266,12 +266,12 @@ void _tnl_flush_vtx( GLcontext *ctx )
 
    if (tnl->vtx.prim_count && vertex_count) {
 
-      tnl->vtx.copied.nr = _tnl_copy_vertices( ctx ); 
+      tnl->vtx.copied.nr = _tnl_copy_vertices( ctx );
 
       if (tnl->vtx.copied.nr != vertex_count) {
 	 if (ctx->NewState)
 	    _mesa_update_state( ctx );
-      
+
 	 _tnl_vb_bind_vtx( ctx );
 
 	 tnl->Driver.RunPipeline( ctx );

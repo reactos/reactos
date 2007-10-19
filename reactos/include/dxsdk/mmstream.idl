@@ -23,7 +23,7 @@ cpp_quote("#define MS_E_NOTRUNNING                  MS_ERROR_CODE(10)")
 
 
 
-// FIXME HACK remove the // for two cpp_quote 
+// FIXME HACK remove the // for two cpp_quote
 cpp_quote("#if 0");
     typedef LPVOID PAPCFUNC;
 cpp_quote("#endif");

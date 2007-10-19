@@ -115,7 +115,7 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
    PUNICODE_STRING ClassName;
    UINT Size = 0;
 
-   _SEH_TRY 
+   _SEH_TRY
    {
       if (MMS_SIZE_WPARAM == MsgMemoryEntry->Size)
       {
@@ -167,12 +167,12 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
       {
          Size = MsgMemoryEntry->Size;
       }
-   } 
-   _SEH_HANDLE 
+   }
+   _SEH_HANDLE
    {
       DPRINT1("Exception caught in MsgMemorySize()! Status: 0x%x\n", _SEH_GetExceptionCode());
       Size = 0;
-   } 
+   }
    _SEH_END;
    return Size;
 }
@@ -356,7 +356,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
    else
    {
       PWINDOW_OBJECT Window;
-      
+
       /* Get the window object. */
       Window = UserGetWindowObject(MsgInfo.Msg.hwnd);
       if (NULL == Window)
@@ -564,9 +564,9 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
          if((DesktopWindow = UserGetWindowObject(hDesktop)))
          {
             PWINDOW_OBJECT Wnd;
-            
+
             UserRefObjectCo(DesktopWindow, &DesktopRef);
-            
+
             co_WinPosWindowFromPoint(DesktopWindow, Window->MessageQueue, &Msg->pt, &Wnd);
             if(Wnd)
             {
@@ -790,7 +790,7 @@ MessageFound:
                   goto CheckMessages;
                }
             }
-            
+
             UserDerefObjectCo(MsgWindow);
          }
          else
@@ -976,9 +976,9 @@ NtUserGetMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
    {
       RETURN(-1);
    }
-   
+
 //   if (Window) UserRefObjectCo(Window, &Ref);
-   
+
    if (MsgFilterMax < MsgFilterMin)
    {
       MsgFilterMin = 0;
@@ -1186,7 +1186,7 @@ UserPostMessage(HWND Wnd,
 
       DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       List = IntWinListChildren(DesktopWindow);
-      
+
       if (List != NULL)
       {
          for (i = 0; List[i]; i++)
@@ -1197,7 +1197,7 @@ UserPostMessage(HWND Wnd,
    else
    {
       PWINDOW_OBJECT Window;
-      
+
       Window = UserGetWindowObject(Wnd);
       if (NULL == Window)
       {
@@ -1334,7 +1334,7 @@ co_IntSendMessage(HWND hWnd,
    return 0;
 }
 
-static 
+static
 LRESULT FASTCALL
 co_IntSendMessageTimeoutSingle(HWND hWnd,
                                UINT Msg,
@@ -1359,7 +1359,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    {
        RETURN( FALSE);
    }
-   
+
    UserRefObjectCo(Window, &Ref);
 
    Win32Thread = PsGetCurrentThreadWin32Thread();
@@ -1437,7 +1437,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
    }
 
    RETURN( TRUE);
-   
+
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);
    END_CLEANUP;
@@ -1717,7 +1717,7 @@ UserSendNotifyMessage(HWND hWnd,
 
       DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       List = IntWinListChildren(DesktopWindow);
-      
+
       if (List != NULL)
       {
          for (i = 0; List[i]; i++)

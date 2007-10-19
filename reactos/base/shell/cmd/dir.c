@@ -220,7 +220,7 @@ static ULARGE_INTEGER recurse_bytes;
  * displays help screen for dir
  * Rob Lake
  */
-static VOID 
+static VOID
 DirHelp(VOID)
 {
   ConOutResPaging(TRUE, STRING_DIR_HELP1);
@@ -233,7 +233,7 @@ DirHelp(VOID)
  *
  * Parse the parameters and switches of the command line and exports them
  */
-static BOOL 
+static BOOL
 DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 			LPTSTR** params,			/* [OUT] The parameters after parsing */
 			LPINT entries,				/* [OUT] The number of parameters after parsing */
@@ -270,7 +270,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 	lpFlags->stOrderBy.bParSetted = TRUE;
 	lpFlags->stTimeField.bParSetted = TRUE;
 
-	
+
 	/* Main Loop (see README_DIR.txt) */
 	/* scan the command line char per char, and we process its char */
 	while (*Line)
@@ -363,7 +363,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 				{
 					cCurSwitch = _T(' ');
 					if(ptrStart && ptrEnd)
-					{		
+					{
 						temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 						if(!temp)
 							return FALSE;
@@ -395,7 +395,7 @@ DirReadParam(LPTSTR Line,				/* [IN] The line with the parameters & switches */
 			{
 				/* Process a character for parameter */
 				if ((cCurSwitch == _T(' ')) && ptrStart && ptrEnd)
-				{		
+				{
 					temp = cmd_alloc(((ptrEnd - ptrStart) + 2) * sizeof (TCHAR));
 					if(!temp)
 						return FALSE;
@@ -666,7 +666,7 @@ PrintDirectoryHeader(LPTSTR szPath, LPDIRSWITCHFLAGS lpFlags)
 		 ConOutPrintfPaging(TRUE,szMsg, szRootName[0], szVolName);
 	  else
 		 ConOutPrintf(szMsg, szRootName[0], szVolName);
-		 
+
     }
   else
     {
@@ -886,7 +886,7 @@ PrintSummary(LPTSTR szPath,
 		return 0;
 
 	/* Print recursive specific results */
-	
+
     /* Take this code offline to fix /S does not print duoble info */
    if (TotalSummary && lpFlags->bRecursive)
    {
@@ -942,7 +942,7 @@ TCHAR* getExt(const TCHAR* file)
  *
  * Get the name of the file without extension
  */
-static LPTSTR 
+static LPTSTR
 getName(const TCHAR* file, TCHAR * dest)
 {
 	int iLen;
@@ -1679,7 +1679,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
 			cmd_free(ptrStartNode);
 			ptrStartNode = ptrNextNode;
 			dwCount --;
-		}		
+		}
 		return 1;
 	}
 
@@ -1794,7 +1794,7 @@ ULARGE_INTEGER u64Temp;					/* A temporary counter */
  *
  * internal dir command
  */
-INT 
+INT
 CommandDir(LPTSTR first, LPTSTR rest)
 {
 	TCHAR	dircmd[256];	/* A variable to store the DIRCMD enviroment variable */

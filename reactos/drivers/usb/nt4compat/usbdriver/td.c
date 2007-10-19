@@ -465,7 +465,7 @@ unlock_td_pool(PUHCI_TD_POOL_LIST pool_list, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //    KeReleaseSpinLock( &pool_list->pool_lock );
-    //else 
+    //else
     //        KeReleaseSpinLockFromDpcLevel( &pool_list->pool_lock );
 }
 
@@ -588,7 +588,7 @@ lock_qh_pool(PUHCI_QH_POOL pool, BOOLEAN at_dpc)
 {
     //if( !at_dpc )
     //        KeAcquireSpinLock( &pool->pool_lock );
-    //else 
+    //else
     //        KeAcquireSpinLockAtDpcLevel( &pool->pool_lock );
 }
 

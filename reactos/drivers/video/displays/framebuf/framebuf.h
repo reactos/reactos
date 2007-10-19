@@ -52,7 +52,7 @@ typedef struct _PDEV
    PVOID ScreenPtr;
    HPALETTE DefaultPalette;
    PALETTEENTRY *PaletteEntries;
-  
+
 #ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
    VIDEO_POINTER_ATTRIBUTES PointerAttributes;
    XLATEOBJ *PointerXlateObject;
@@ -62,14 +62,14 @@ typedef struct _PDEV
    POINTL PointerHotSpot;
 #endif
 
-   /* DirectX Support */   
+   /* DirectX Support */
    DWORD iDitherFormat;
    ULONG MemHeight;
    ULONG MemWidth;
    DWORD dwHeap;
-   VIDEOMEMORY* pvmList; 
-   BOOL bDDInitialized;   
-   DDPIXELFORMAT ddpfDisplay;   
+   VIDEOMEMORY* pvmList;
+   BOOL bDDInitialized;
+   DDPIXELFORMAT ddpfDisplay;
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))

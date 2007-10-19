@@ -372,7 +372,7 @@ IDS_INVALID_FILENAME    "La dosiernomo ne povas enhavi la jenajn tipojn: \n / : 
 IDS_PATHNOTEXISTING     "Vojo estas neekzistanta"
 IDS_FILENOTEXISTING     "Dosiero estas neekzistanta"
 }
-	
+
 STRINGTABLE DISCARDABLE
 {
 	IDS_UPFOLDER         "Suriru da unu nivelo"
@@ -381,11 +381,11 @@ STRINGTABLE DISCARDABLE
 	IDS_REPORTVIEW       "Detale"
 	IDS_TODESKTOP        "Foliu Desktop"
 }
-	
+
 STRINGTABLE DISCARDABLE
 {
 	PD32_PRINT_TITLE       "Presu"
-	
+
 	PD32_VALUE_UREADABLE                  "Nelegebla Entry"
 	PD32_INVALID_PAGE_RANGE "Æi tiu valoro ne estas en la paøo.\n\
 	Enigu valoron inter %d kaj %d."
@@ -405,13 +405,13 @@ STRINGTABLE DISCARDABLE
 	PD32_NO_DEVICES                       "Antaý ol vi povos plenumi printiltaskojn \
 	kvazaý impozi paøon aý presi dokumenton, estas necese ke vi instalu printilon. \
 	Oni konsilas instali øin kaj reprovi."
-	
+
 	PD32_DEFAULT_PRINTER                  "Defaýlta Printilo; "
 	PD32_NR_OF_DOCUMENTS_IN_QUEUE         "%d dokumento(j) estas en presvico"
 	PD32_MARGINS_IN_INCHES                "Marøenoj [inches]"
 	PD32_MARGINS_IN_MILIMETERS            "Marøenoj [mm]"
 	PD32_MILIMETERS                       "mm"
-	
+
 	PD32_PRINTER_STATUS_READY             "Preta"
 	PD32_PRINTER_STATUS_PAUSED            "Paýse; "
 	PD32_PRINTER_STATUS_ERROR             "Eroro; "
@@ -439,7 +439,7 @@ STRINGTABLE DISCARDABLE
 	PD32_PRINTER_STATUS_SERVER_UNKNOWN    "Nekonata pres-servanto; "
 	PD32_PRINTER_STATUS_POWER_SAVE        "Energiþpare; "
 }
-	
+
 STRINGTABLE DISCARDABLE /* Color names */
 {
 	IDS_COLOR_BLACK     "Nigro"
@@ -459,7 +459,7 @@ STRINGTABLE DISCARDABLE /* Color names */
 	IDS_COLOR_AQUA      "Akvo"
 	IDS_COLOR_WHITE     "Blanko"
 }
-	
+
 STRINGTABLE DISCARDABLE
 {
 	IDS_FONT_SIZE   "Elektu tiparan grandecvaloron inter %d kaj %d punktoj."

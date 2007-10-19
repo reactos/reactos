@@ -37,7 +37,7 @@
 #endif
     &af_latin_script_class,
     &af_cjk_script_class,
-    &af_indic_script_class, 
+    &af_indic_script_class,
     NULL  /* do not remove */
   };
 

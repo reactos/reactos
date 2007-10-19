@@ -12,9 +12,9 @@ char* convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    newpath = strdup(origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -29,8 +29,8 @@ char* convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -41,7 +41,7 @@ fsize (FILE * f)
 {
   struct stat st;
   int fh = fileno (f);
-   
+
   if (fh < 0 || fstat (fh, &st) < 0)
     return -1;
   return (int) st.st_size;
@@ -70,10 +70,10 @@ int main(int argc, char* argv[])
 	fprintf(stderr, "Wrong argument count\n");
 	exit(1);
      }
-   
+
    path1 = convert_path(argv[1]);
    path2 = convert_path(argv[2]);
-   
+
    in = fopen(path1, "rb");
    if (in == NULL)
      {

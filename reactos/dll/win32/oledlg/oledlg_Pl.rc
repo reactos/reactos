@@ -31,7 +31,7 @@ BEGIN
     DEFPUSHBUTTON   "OK",IDOK,229,7,66,14
     PUSHBUTTON      "Anuluj",IDCANCEL,229,24,66,14
     GROUPBOX        "Wynik",IDC_RESULT,7,103,208,41
-    CONTROL         "Utwórz nowy",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "Utwórz nowy",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
                     WS_GROUP,7,20,62,10
     CONTROL         "Utwórz kontrolkê",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,72,10
@@ -39,7 +39,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
     PUSHBUTTON      "&Dodaj kontrolkê...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
-    CONTROL         "Wyœwietlaj jako ikonê",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Wyœwietlaj jako ikonê",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,84,10
     PUSHBUTTON      "Przegl¹daj...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
     LTEXT           "Plik:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE

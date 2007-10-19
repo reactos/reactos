@@ -22,7 +22,7 @@ BEGIN
     DEFPUSHBUTTON "&Perkrauti", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Ruoðiami tinklo susijungimai..."
     IDS_APPLYINGCOMPUTERSETTINGS "Pritaikomos kompiuterio nuostatos..."
@@ -40,7 +40,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "Paleidþiama ReactOS..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon nepavyko aktyvuoti vartotojo aplinkos!"
 END

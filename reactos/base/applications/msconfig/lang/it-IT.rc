@@ -88,7 +88,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 122, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 137, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 152, 50, 10
-   PUSHBUTTON "Op&zioni avanzate...", IDC_BTN_ADVANCED_OPTIONS, 100, 148, 70, 16 
+   PUSHBUTTON "Op&zioni avanzate...", IDC_BTN_ADVANCED_OPTIONS, 100, 148, 70, 16
    LTEXT "&Timeout:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "sec.", -1, 340, 91, 15, 10
@@ -124,9 +124,9 @@ BEGIN
     IDS_MSCONFIG             "Utilità di configurazione del sistema"
     IDS_TAB_GENERAL          "Generale"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Servizi" 
-    IDS_TAB_STARTUP          "Avvio" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Servizi"
+    IDS_TAB_STARTUP          "Avvio"
     IDS_TAB_TOOLS            "Strumenti"
 END
 
@@ -170,5 +170,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "Esecuzione"
     IDS_SERVICES_STATUS_STOPPED "Interrotto"
     IDS_SERVICES_YES "Sì"
-    IDS_SERVICES_UNKNOWN "Sconosciuto" 
+    IDS_SERVICES_UNKNOWN "Sconosciuto"
 END

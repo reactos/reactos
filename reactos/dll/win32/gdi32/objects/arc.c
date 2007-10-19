@@ -23,7 +23,7 @@ Arc(
       return MFDRV_MetaParam8( hDC, META_ARC, a1, a2, a3, a4, a5, a6, a7, a8)
     else
     {
-      PLDC pLDC = GdiGetLDC(hDC);      
+      PLDC pLDC = GdiGetLDC(hDC);
       if ( !pLDC )
       {
          SetLastError(ERROR_INVALID_HANDLE);
@@ -35,8 +35,8 @@ Arc(
         BOOL Ret = EMFDRV_ArcChordPie( hDC, a1, a2, a3, a4, a5, a6, a7, a8, EMR_ARC);
         return Ret;
       }
-      return FALSE;  
-    } 
+      return FALSE;
+    }
  }
 #endif
 	return NtGdiArcInternal(GdiTypeArc,

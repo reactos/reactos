@@ -49,7 +49,7 @@ _mesa_DepthMask( GLboolean flag );
 extern void GLAPIENTRY
 _mesa_DepthBoundsEXT( GLclampd zmin, GLclampd zmax );
 
-extern void 
+extern void
 _mesa_init_depth( GLcontext * ctx );
 
 #else

@@ -2948,16 +2948,16 @@ void calc_buffer_display(CALC *calc) {
     calcfloat real;
     static int old_base = NBASE_DECIMAL;
 
-   
+
     switch (calc->numBase) {
-    case NBASE_HEX:      
+    case NBASE_HEX:
         real = calc_atof(calc->buffer, old_base);
-        _stprintf(calc->display, _T("%lx"), (long)real);   
-        _stprintf(calc->buffer, _T("%lx"), (long)real);         
-        old_base = NBASE_HEX;        
+        _stprintf(calc->display, _T("%lx"), (long)real);
+        _stprintf(calc->buffer, _T("%lx"), (long)real);
+        old_base = NBASE_HEX;
         break;
 
-    case NBASE_OCTAL:  
+    case NBASE_OCTAL:
          real = calc_atof(calc->buffer, old_base);
         _stprintf(calc->display, TEXT("%lo"), (long)real);
         _stprintf(calc->buffer, TEXT("%lo"), (long)real);
@@ -2966,7 +2966,7 @@ void calc_buffer_display(CALC *calc) {
 
     case NBASE_BINARY:
         {
-          int buf=0;          
+          int buf=0;
           int t;
 
           if (calc->buffer[0]==_T('\0'))
@@ -2977,11 +2977,11 @@ void calc_buffer_display(CALC *calc) {
           {
             real = calc_atof(calc->buffer, old_base);
           }
-          
+
           calc->display[buf]=_T('0');
           calc->buffer[buf]=_T('0');
           for (t=31;t>=0;t--)
-          {                  
+          {
             if (((((long)real)>>t) & ~0xFFFFFFFE)==0)
             {
                 calc->display[buf]=_T('0');
@@ -2994,16 +2994,16 @@ void calc_buffer_display(CALC *calc) {
                 calc->buffer[buf]=_T('1');
                 buf++;
             }
-            
+
           }
-        
-          if (buf==0) 
+
+          if (buf==0)
           {
               buf++;
           }
-         
+
           calc->buffer[buf]=_T('\0');
-          calc->display[buf]=_T('\0');          
+          calc->display[buf]=_T('\0');
           old_base = NBASE_BINARY;
         }
         break;
@@ -3021,7 +3021,7 @@ void calc_buffer_display(CALC *calc) {
                 int lz = 0;
                 int exp = 0;
 
-                       
+
 
                 real = calc_atof(calc->buffer,old_base);
                 _stprintf(s, FMT_DESC_EXP, real);
@@ -3072,10 +3072,10 @@ void calc_buffer_display(CALC *calc) {
                 else
                 {
                     real = calc_atof(calc->buffer, old_base);
-                }           
-                _stprintf(calc->display, _T("%.f"), real);   
-                _stprintf(calc->buffer, _T("%.f"), real);               
-            }                              
+                }
+                _stprintf(calc->display, _T("%.f"), real);
+                _stprintf(calc->buffer, _T("%.f"), real);
+            }
 
             _tcscpy(s,calc->buffer);
             p = s;
@@ -3102,7 +3102,7 @@ void calc_buffer_display(CALC *calc) {
         }
         old_base = NBASE_DECIMAL;
     }
-   
+
     InvalidateRect(calc->hWnd, NULL, FALSE);
     UpdateWindow(calc->hWnd);
 }

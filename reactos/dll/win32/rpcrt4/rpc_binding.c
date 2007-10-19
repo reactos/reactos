@@ -225,7 +225,7 @@ RPC_STATUS RPCRT4_OpenConnection(RpcConnection* Connection)
         HeapFree(GetProcessHeap(), 0, pname);
         memset(&Connection->ovl, 0, sizeof(Connection->ovl));
         /* pipe is connected; change to message-read mode. */
-        dwMode = PIPE_READMODE_MESSAGE; 
+        dwMode = PIPE_READMODE_MESSAGE;
         SetNamedPipeHandleState(conn, &dwMode, NULL, NULL);
         Connection->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
         Connection->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
@@ -371,7 +371,7 @@ RPC_STATUS RPCRT4_CompleteBindingA(RpcBinding* Binding, LPSTR NetworkAddr,  LPST
 
 RPC_STATUS RPCRT4_CompleteBindingW(RpcBinding* Binding, LPWSTR NetworkAddr, LPWSTR Endpoint, LPWSTR NetworkOptions)
 {
-  TRACE("(RpcBinding == ^%p, NetworkAddr == \"%s\", EndPoint == \"%s\", NetworkOptions == \"%s\")\n", Binding, 
+  TRACE("(RpcBinding == ^%p, NetworkAddr == \"%s\", EndPoint == \"%s\", NetworkOptions == \"%s\")\n", Binding,
    debugstr_w(NetworkAddr), debugstr_w(Endpoint), debugstr_w(NetworkOptions));
 
   RPCRT4_strfree(Binding->NetworkAddr);
@@ -399,7 +399,7 @@ RPC_STATUS RPCRT4_ResolveBinding(RpcBinding* Binding, LPSTR Endpoint)
 
 RPC_STATUS RPCRT4_SetBindingObject(RpcBinding* Binding, UUID* ObjectUuid)
 {
-  TRACE("(*RpcBinding == ^%p, UUID == %s)\n", Binding, debugstr_guid(ObjectUuid)); 
+  TRACE("(*RpcBinding == ^%p, UUID == %s)\n", Binding, debugstr_guid(ObjectUuid));
   if (ObjectUuid) memcpy(&Binding->ObjectUuid, ObjectUuid, sizeof(UUID));
   else UuidCreateNil(&Binding->ObjectUuid);
   return RPC_S_OK;
@@ -453,7 +453,7 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
   TRACE("(Binding == ^%p)\n", Binding);
 
   /* if we try to bind a new interface and the connection is already opened,
-   * close the current connection and create a new with the new binding. */ 
+   * close the current connection and create a new with the new binding. */
   if (!Binding->server && Binding->FromConn &&
       memcmp(&Binding->FromConn->ActiveInterface, InterfaceId,
              sizeof(RPC_SYNTAX_IDENTIFIER))) {
@@ -468,7 +468,7 @@ RPC_STATUS RPCRT4_OpenBinding(RpcBinding* Binding, RpcConnection** Connection,
       return RPC_S_OK;
     }
   }
-  
+
   /* create a new connection */
   RPCRT4_CreateConnection(&NewConnection, Binding->server, Binding->Protseq, Binding->NetworkAddr, Binding->Endpoint, NULL, Binding);
   *Connection = NewConnection;
@@ -582,7 +582,7 @@ static LPWSTR RPCRT4_strconcatW(LPWSTR dst, LPCWSTR src)
 {
   DWORD len = strlenW(dst), slen = strlenW(src);
   LPWSTR ndst = HeapReAlloc(GetProcessHeap(), 0, dst, (len+slen+2)*sizeof(WCHAR));
-  if (!ndst) 
+  if (!ndst)
   {
     HeapFree(GetProcessHeap(), 0, dst);
     return NULL;
@@ -607,7 +607,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
     *DestinationBinding = NULL;
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
-  
+
   DestBinding = (RpcBinding*)
     HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RpcBinding));
 
@@ -616,7 +616,7 @@ RPC_STATUS RPC_ENTRY RpcBindingCopy(
     *DestinationBinding = NULL;
     return ERROR_NOT_ENOUGH_MEMORY;
   }
-  
+
   memcpy(DestBinding, SrcBinding, sizeof(RpcBinding));
   DestBinding->refs = 1;
   DestBinding->Next = NULL; // FIXME: ?
@@ -802,7 +802,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
             /* FIXME: this is kind of inefficient */
             *Options = (unsigned char*) RPCRT4_strconcatA( (char*)*Options, opt);
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
+          } else
 	    *Options = (unsigned char*) opt;
         }
       }
@@ -811,7 +811,7 @@ RPC_STATUS WINAPI RpcStringBindingParseA( unsigned char *StringBinding, unsigned
     data = close+1;
     if (*data) goto fail;
   }
-  else if (NetworkAddr) 
+  else if (NetworkAddr)
     *NetworkAddr = (unsigned char*)RPCRT4_strdupA(data);
 
   return RPC_S_OK;
@@ -893,7 +893,7 @@ RPC_STATUS WINAPI RpcStringBindingParseW( LPWSTR StringBinding, LPWSTR *ObjUuid,
             /* FIXME: this is kind of inefficient */
             *Options = RPCRT4_strconcatW(*Options, opt);
             HeapFree(GetProcessHeap(), 0, opt);
-          } else 
+          } else
 	    *Options = opt;
         }
       }
@@ -901,7 +901,7 @@ RPC_STATUS WINAPI RpcStringBindingParseW( LPWSTR StringBinding, LPWSTR *ObjUuid,
 
     data = close+1;
     if (*data) goto fail;
-  } else if (NetworkAddr) 
+  } else if (NetworkAddr)
     *NetworkAddr = RPCRT4_strdupW(data);
 
   return RPC_S_OK;
@@ -926,7 +926,7 @@ RPC_STATUS WINAPI RpcBindingFree( RPC_BINDING_HANDLE* Binding )
   if (status == RPC_S_OK) *Binding = 0;
   return status;
 }
-  
+
 /***********************************************************************
  *             RpcBindingVectorFree (RPCRT4.@)
  */
@@ -943,7 +943,7 @@ RPC_STATUS WINAPI RpcBindingVectorFree( RPC_BINDING_VECTOR** BindingVector )
   *BindingVector = NULL;
   return RPC_S_OK;
 }
-  
+
 /***********************************************************************
  *             RpcBindingInqObject (RPCRT4.@)
  */
@@ -955,7 +955,7 @@ RPC_STATUS WINAPI RpcBindingInqObject( RPC_BINDING_HANDLE Binding, UUID* ObjectU
   memcpy(ObjectUuid, &bind->ObjectUuid, sizeof(UUID));
   return RPC_S_OK;
 }
-  
+
 /***********************************************************************
  *             RpcBindingSetObject (RPCRT4.@)
  */
@@ -999,9 +999,9 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingA( unsigned char *StringBinding, RP
   RpcStringFreeA((unsigned char**)&Protseq);
   RpcStringFreeA((unsigned char**)&ObjectUuid);
 
-  if (ret == RPC_S_OK) 
+  if (ret == RPC_S_OK)
     *Binding = (RPC_BINDING_HANDLE)bind;
-  else 
+  else
     RPCRT4_DestroyBinding(bind);
 
   return ret;
@@ -1045,7 +1045,7 @@ RPC_STATUS WINAPI RpcBindingFromStringBindingW( LPWSTR StringBinding, RPC_BINDIN
 
   return ret;
 }
-  
+
 /***********************************************************************
  *             RpcBindingToStringBindingA (RPCRT4.@)
  */
@@ -1067,7 +1067,7 @@ RPC_STATUS WINAPI RpcBindingToStringBindingA( RPC_BINDING_HANDLE Binding, unsign
 
   return ret;
 }
-  
+
 /***********************************************************************
  *             RpcBindingToStringBindingW (RPCRT4.@)
  */
@@ -1106,7 +1106,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
   UNICODE_STRING protseqW;
 
   if (!protseq) return RPC_S_INVALID_RPC_PROTSEQ; /* ? */
-  
+
   if (RtlCreateUnicodeStringFromAsciiz(&protseqW, (char*)protseq)) {
     RPC_STATUS ret = RpcNetworkIsProtseqValidW(protseqW.Buffer);
     RtlFreeUnicodeString(&protseqW);
@@ -1116,7 +1116,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
 
 /***********************************************************************
  *             RpcNetworkIsProtseqValidW (RPCRT4.@)
- * 
+ *
  * Checks if the given protocol sequence is known by the RPC system.
  * If it is, returns RPC_S_OK, otherwise RPC_S_PROTSEQ_NOT_SUPPORTED.
  *
@@ -1125,7 +1125,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidA(unsigned char *protseq) {
  *   ncacn_np  rpc over named pipes
  */
 RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
-  static const WCHAR protseqsW[][15] = { 
+  static const WCHAR protseqsW[][15] = {
     {'n','c','a','l','r','p','c',0},
     {'n','c','a','c','n','_','n','p',0}
   };
@@ -1137,7 +1137,7 @@ RPC_STATUS WINAPI RpcNetworkIsProtseqValidW(LPWSTR protseq) {
   for (i = 0; i < count; i++) {
     if (!strcmpW(protseq, protseqsW[i])) return RPC_S_OK;
   }
-  
+
   FIXME("Unknown protseq %s - we probably need to implement it one day\n", debugstr_w(protseq));
   return RPC_S_PROTSEQ_NOT_SUPPORTED;
 }

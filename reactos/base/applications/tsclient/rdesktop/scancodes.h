@@ -1,13 +1,13 @@
 
 /* Two defines for every scancode:
-   One called SCANCODE_KEY_<num>, where <num> is the key location number. 
-   One called SCANCODE_CHAR_<char-on-us-kbd>, where <char-on-us-kbd> is the 
-   unshifted character on a US 101/102 keyboard. See the Microsoft 
-   document "Keyboard Scan Code Specification" for more information. 
+   One called SCANCODE_KEY_<num>, where <num> is the key location number.
+   One called SCANCODE_CHAR_<char-on-us-kbd>, where <char-on-us-kbd> is the
+   unshifted character on a US 101/102 keyboard. See the Microsoft
+   document "Keyboard Scan Code Specification" for more information.
 
-   Up keys normally have scancode values +0x80. 
+   Up keys normally have scancode values +0x80.
 
-   0x0: Avoid 
+   0x0: Avoid
    0x1- 0x59: Normal
    0x60, 0x61: Avoid, since the up key would be 0xe1, 0xe1
    0x61 - 0x79: Normal
@@ -17,8 +17,8 @@
    0xe 0x38 is defined as (0x80 | 0x38)
 */
 
-/* FIXME: 
-   Special keys like Numeric / are very complicated and emits many scancodes. 
+/* FIXME:
+   Special keys like Numeric / are very complicated and emits many scancodes.
 */
 
 #define SCANCODE_EXTENDED 0x80
@@ -359,7 +359,7 @@
 /* Key 126: The Pause and Break sequences is complicated, and
    hardcoded in xkeymap.c */
 
-/* 
+/*
    The keys below does not have any key location number
 */
 

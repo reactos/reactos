@@ -120,9 +120,9 @@ enum {
 	_TNL_ATTRIB_MAT_FRONT_SHININESS = 24,
 	_TNL_ATTRIB_MAT_BACK_SHININESS = 25,
 	_TNL_ATTRIB_MAT_FRONT_INDEXES = 26,
-	_TNL_ATTRIB_MAT_BACK_INDEXES = 27, 
-	_TNL_ATTRIB_INDEX = 28,        
-	_TNL_ATTRIB_EDGEFLAG = 29,     
+	_TNL_ATTRIB_MAT_BACK_INDEXES = 27,
+	_TNL_ATTRIB_INDEX = 28,
+	_TNL_ATTRIB_EDGEFLAG = 29,
 	_TNL_ATTRIB_POINTSIZE = 30,
 	_TNL_ATTRIB_MAX = 31
 } ;
@@ -208,7 +208,7 @@ enum {
 #define PRIM_WEAK      0x40
 #define PRIM_MODE_MASK 0x0f
 
-/* 
+/*
  */
 struct tnl_prim {
    GLuint mode;
@@ -264,7 +264,7 @@ struct _tnl_dynfn_generators {
    struct _tnl_dynfn *(*Attribute[4])( GLcontext *ctx, int key );
 };
 
-#define _TNL_MAX_ATTR_CODEGEN 16 
+#define _TNL_MAX_ATTR_CODEGEN 16
 
 
 /* The assembly of vertices in immediate mode is separated from
@@ -322,7 +322,7 @@ struct tnl_vertex_list {
    GLuint count;
    GLuint wrap_count;		/* number of copied vertices at start */
    GLboolean have_materials;	/* bit of a hack - quick check for materials */
-   GLboolean dangling_attr_ref;	/* current attr implicitly referenced 
+   GLboolean dangling_attr_ref;	/* current attr implicitly referenced
 				   outside the list */
 
    GLfloat *normal_lengths;
@@ -380,7 +380,7 @@ struct tnl_save {
    GLuint opcode_vertex_list;
 
    struct tnl_copied_vtx copied;
-   
+
    GLfloat CurrentFloatEdgeFlag;
 
    GLfloat *current[_TNL_ATTRIB_MAX]; /* points into ctx->ListState */
@@ -427,7 +427,7 @@ struct vertex_buffer
 
    /* Pointers to current data.
     */
-   GLuint      *Elts;		                
+   GLuint      *Elts;
    GLvector4f  *ObjPtr;		                /* _TNL_BIT_POS */
    GLvector4f  *EyePtr;		                /* _TNL_BIT_POS */
    GLvector4f  *ClipPtr;	                /* _TNL_BIT_POS */
@@ -445,8 +445,8 @@ struct vertex_buffer
    GLvector4f  *PointSizePtr;	                /* _TNL_BIT_POS */
    GLvector4f  *FogCoordPtr;	                /* _TNL_BIT_FOG */
 
-   struct tnl_prim  *Primitive;	              
-   GLuint      PrimitiveCount;	      
+   struct tnl_prim  *Primitive;
+   GLuint      PrimitiveCount;
 
    /* Inputs to the vertex program stage */
    GLvector4f *AttribPtr[_TNL_ATTRIB_MAX];      /* GL_NV_vertex_program */
@@ -495,10 +495,10 @@ struct tnl_pipeline_stage
 
 
 /** Contains the array of all pipeline stages.
- * The default values are defined at the end of t_pipeline.c 
+ * The default values are defined at the end of t_pipeline.c
  */
 struct tnl_pipeline {
-   
+
    GLuint last_attrib_stride[_TNL_ATTRIB_MAX];
    GLuint last_attrib_size[_TNL_ATTRIB_MAX];
    GLuint input_changes;
@@ -511,16 +511,16 @@ struct tnl_pipeline {
 struct tnl_clipspace;
 struct tnl_clipspace_attr;
 
-typedef void (*tnl_extract_func)( const struct tnl_clipspace_attr *a, 
-				  GLfloat *out, 
+typedef void (*tnl_extract_func)( const struct tnl_clipspace_attr *a,
+				  GLfloat *out,
 				  const GLubyte *v );
 
-typedef void (*tnl_insert_func)( const struct tnl_clipspace_attr *a, 
-				 GLubyte *v, 
+typedef void (*tnl_insert_func)( const struct tnl_clipspace_attr *a,
+				 GLubyte *v,
 				 const GLfloat *in );
 
-typedef void (*tnl_emit_func)( GLcontext *ctx, 
-			       GLuint count, 
+typedef void (*tnl_emit_func)( GLcontext *ctx,
+			       GLuint count,
 			       GLubyte *dest );
 
 
@@ -586,7 +586,7 @@ struct tnl_clipspace_fastpath {
 struct tnl_clipspace
 {
    GLboolean need_extras;
-   
+
    GLuint new_inputs;
 
    GLubyte *vertex_buf;
@@ -603,13 +603,13 @@ struct tnl_clipspace
    /* Parameters and constants for codegen:
     */
    GLboolean need_viewport;
-   GLfloat vp_scale[4];		
+   GLfloat vp_scale[4];
    GLfloat vp_xlate[4];
    GLfloat chan_scale[4];
    GLfloat identity[4];
 
    struct tnl_clipspace_fastpath *fastpath;
-   
+
    void (*codegen_emit)( GLcontext *ctx );
 };
 
@@ -632,7 +632,7 @@ struct tnl_device_driver
    void (*RunPipeline)(GLcontext *ctx);
    /* Replaces PipelineStart/PipelineFinish -- intended to allow
     * drivers to wrap _tnl_run_pipeline() with code to validate state
-    * and grab/release hardware locks.  
+    * and grab/release hardware locks.
     */
 
    void (*NotifyMaterialChange)(GLcontext *ctx);
@@ -713,7 +713,7 @@ struct tnl_device_driver
        *
        * This function is called only from _tnl_render_stage in tnl/t_render.c.
        */
-      
+
 
       GLboolean (*Multipass)( GLcontext *ctx, GLuint passno );
       /* Driver may request additional render passes by returning GL_TRUE
@@ -726,7 +726,7 @@ struct tnl_device_driver
        */
    } Render;
 };
-   
+
 
 /**
  * Context state for T&L context.
@@ -740,7 +740,7 @@ typedef struct
    /* Execute:
     */
    struct tnl_vtx vtx;
-   
+
    /* Compile:
     */
    struct tnl_save save;

@@ -1,7 +1,7 @@
 /**
  * \file eval.h
  * Eval operations.
- * 
+ *
  * \if subset
  * (No-op)
  *

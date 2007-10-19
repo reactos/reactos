@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Unicode Prefix implementation
  * FILE:              lib/rtl/unicodeprefix.c
- * PROGRAMMER:        Alex Ionescu (alex@relsoft.net) 
+ * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
  */
 
 /* INCLUDES *****************************************************************/
@@ -133,7 +133,7 @@ CompareUnicodeStrings(IN PUNICODE_STRING Prefix,
         /* It's not a prefix, and it's shorter, so it's a less */
         return GenericLessThan;
     }
-    
+
     /* Check if the prefix is longer */
     if (PrefixLength > StringLength) return GenericGreaterThan;
 
@@ -202,7 +202,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
              */
             if (!CaseInsensitiveIndex)
             {
-                /* 
+                /*
                  * Check if this entry was a child. We need to return the root,
                  * so if this entry was a child, we'll splay the tree and get
                  * the root, and set the current entry as a child.
@@ -257,7 +257,7 @@ RtlFindUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
 
             /*
              * If we got here, then we found a non-case-sensitive match, but
-             * we need to find a case-sensitive match, so we'll just keep 
+             * we need to find a case-sensitive match, so we'll just keep
              * searching the next tree (NOTE: we need to break out for this).
              */
             break;
@@ -367,7 +367,7 @@ RtlInsertUnicodePrefix(PUNICODE_PREFIX_TABLE PrefixTable,
              */
             PrefixTableEntry->NodeTypeCode = PFX_NTC_CASE_MATCH;
             PrefixTableEntry->NextPrefixTree = NULL;
-            
+
             /* Insert it into the circular list */
             PrefixTableEntry->CaseMatch = Entry->CaseMatch;
             Entry->CaseMatch = PrefixTableEntry;

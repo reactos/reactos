@@ -23,7 +23,7 @@ namespace System_
 ///
 /// class PipeReader
 ///
-/// Description: this class implements a pipe reader. It uses _popen to perform opening of 
+/// Description: this class implements a pipe reader. It uses _popen to perform opening of
 ///              pipe / _pclose
 
     class PipeReader : public DataSource

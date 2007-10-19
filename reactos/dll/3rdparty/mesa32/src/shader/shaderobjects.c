@@ -676,7 +676,7 @@ _mesa_get_object_parameter (GLhandleARB obj, GLenum pname, GLvoid *params, GLboo
 
 	/* set default values */
 	*integral = GL_TRUE;	/* indicates param type, TRUE: GLint, FALSE: GLfloat */
-	*size = 1;				/* param array size */ 
+	*size = 1;				/* param array size */
 
 	switch (pname)
 	{

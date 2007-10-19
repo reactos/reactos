@@ -46,7 +46,7 @@
 #define FALSE 0
 #define TRUE (!(FALSE))
 
-/* FIXME: this value is target specific, host tools MUST not use it 
+/* FIXME: this value is target specific, host tools MUST not use it
  * and this line has to be removed */
 #define PAGE_SIZE 4096
 

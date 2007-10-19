@@ -252,7 +252,7 @@ INT __cdecl abs(INT nm);
 /*
  * @implemented
  */
-BOOL STDCALL 
+BOOL STDCALL
 NtGdiEngBitBlt(
                 IN SURFOBJ  *psoTrg,
                 IN SURFOBJ  *psoSrc,

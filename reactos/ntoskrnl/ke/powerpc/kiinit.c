@@ -60,8 +60,8 @@ KiSetupSyscallHandler()
 {
     paddr_t handler_target;
     int *source;
-    for(source = syscall_start, handler_target = 0xc00; 
-	source < &syscall_end; 
+    for(source = syscall_start, handler_target = 0xc00;
+	source < &syscall_end;
 	source++, handler_target += sizeof(int))
 	SetPhys(handler_target, *source);
 }
@@ -293,7 +293,7 @@ AppCpuInit:
     if (!Cpu) KdInitSystem (0, LoaderBlock);
 
     /* Check for break-in */
-    if (KdPollBreakIn()) 
+    if (KdPollBreakIn())
     {
 	DbgBreakPointWithStatus(1);
     }

@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rossym/frommem.c
  * PURPOSE:         Creating rossym info from an in-memory image
- * 
+ *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 

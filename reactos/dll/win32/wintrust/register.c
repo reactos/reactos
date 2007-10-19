@@ -157,7 +157,7 @@ static void WINTRUST_FreeRegStructs(void)
  *
  */
 static void WINTRUST_Guid2Wstr(const GUID* pgActionID, WCHAR* GuidString)
-{ 
+{
     static const WCHAR wszFormat[] = {'{','%','0','8','l','X','-','%','0','4','X','-','%','0','4','X','-',
                                       '%','0','2','X','%','0','2','X','-','%','0','2','X','%','0','2','X','%','0','2','X','%','0','2',
                                       'X','%','0','2','X','%','0','2','X','}', 0};
@@ -336,7 +336,7 @@ BOOL WINAPI WintrustRemoveActionID( GUID* pgActionID )
     WCHAR GuidString[39];
 
     TRACE("(%s)\n", debugstr_guid(pgActionID));
- 
+
     if (!pgActionID)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -704,7 +704,7 @@ static BOOL WINTRUST_RegisterGenChainVerify(void)
  *   Failure: FALSE.
  *
  * NOTES
- *   WintrustAddDefaultForUsage will only return TRUE or FALSE, no last 
+ *   WintrustAddDefaultForUsage will only return TRUE or FALSE, no last
  *   error is set, not even when the registry cannot be written to.
  */
 BOOL WINAPI WintrustAddDefaultForUsage(const char *pszUsageOID,
@@ -810,7 +810,7 @@ static BOOL WINTRUST_SIPPAddProvider(GUID* Subject, WCHAR* MagicNumber)
     Ret = CryptSIPAddProvider(&NewProv);
 
     HeapFree(GetProcessHeap(), 0, NewProv.pwszDLLFileName);
- 
+
     return Ret;
 }
 
@@ -976,7 +976,7 @@ add_trust_providers:
         return CryptRegisterRes;
     else if (SIPAddProviderRes == S_OK)
         return TrustProviderRes;
-    else 
+    else
         return SIPAddProviderRes;
 }
 

@@ -55,7 +55,7 @@ poll(struct pollfd *fds,
     }
 
     rc = select(++n, ip, op, &efds, toptr);
-    
+
     if (rc <= 0)
         return rc;
 

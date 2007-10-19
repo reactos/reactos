@@ -108,7 +108,7 @@ CmpHiveRootSecurityDescriptor(VOID)
 
     /* Phase 6: Allocate the security descriptor and make space for the ACL */
     SecurityDescriptor = ExAllocatePoolWithTag(PagedPool,
-                                               sizeof(SECURITY_DESCRIPTOR) + 
+                                               sizeof(SECURITY_DESCRIPTOR) +
                                                AclLength,
                                                TAG_CM);
     if (!SecurityDescriptor) KEBUGCHECKEX(REGISTRY_ERROR, 11, 6, 0, 0);

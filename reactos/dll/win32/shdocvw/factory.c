@@ -92,7 +92,7 @@ static HRESULT WINAPI WBCF_LockServer(LPCLASSFACTORY iface, BOOL dolock)
         SHDOCVW_LockModule();
     else
         SHDOCVW_UnlockModule();
-    
+
     return S_OK;
 }
 

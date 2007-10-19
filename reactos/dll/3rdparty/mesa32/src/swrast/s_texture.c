@@ -982,7 +982,7 @@ sample_2d_linear_repeat(GLcontext *ctx,
    GLfloat u, v;
    (void) ctx;
    (void) tObj;
-   
+
    ASSERT(tObj->WrapS == GL_REPEAT);
    ASSERT(tObj->WrapT == GL_REPEAT);
    ASSERT(img->Border == 0);
@@ -1199,7 +1199,7 @@ sample_linear_2d( GLcontext *ctx, GLuint texUnit,
  * Optimized 2-D texture sampling:
  *    S and T wrap mode == GL_REPEAT
  *    GL_NEAREST min/mag filter
- *    No border, 
+ *    No border,
  *    RowStride == Width,
  *    Format = GL_RGB
  */
@@ -2845,7 +2845,7 @@ _swrast_choose_texture_sample_func( GLcontext *ctx,
  * \param n            number of fragments to process (span width)
  * \param primary_rgba incoming fragment color array
  * \param texelBuffer  pointer to texel colors for all texture units
- * 
+ *
  * \param rgba         incoming colors, which get modified here
  */
 static INLINE void
@@ -3486,7 +3486,7 @@ texture_combine( const GLcontext *ctx, GLuint unit, GLuint n,
 #if CHAN_TYPE == GL_FLOAT
                rgba[i][ACOMP] = ((arg0[i][ACOMP] * arg2[i][ACOMP]) - arg1[i][ACOMP]) * Amult;
 #else
-               GLint a = (S_PROD(arg0[i][ACOMP], arg2[i][ACOMP]) 
+               GLint a = (S_PROD(arg0[i][ACOMP], arg2[i][ACOMP])
 			  - ((GLint) arg1[i][ACOMP] << CHAN_BITS))
 		    >> shift;
                rgba[i][ACOMP] = (GLchan) CLAMP(a, 0, CHAN_MAX);

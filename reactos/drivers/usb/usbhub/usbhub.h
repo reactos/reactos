@@ -15,7 +15,7 @@ typedef struct _HUB_DEVICE_EXTENSION
 	PDEVICE_OBJECT LowerDevice;
 
 	PDEVICE_OBJECT Children[USB_MAXCHILDREN];
-	
+
 	/* Fields valid only when IsFDO == FALSE */
 	UNICODE_STRING DeviceId;          // REG_SZ
 	UNICODE_STRING InstanceId;        // REG_SZ

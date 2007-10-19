@@ -655,10 +655,10 @@ static HRESULT WINAPI OLEPictureImpl_Render(IPicture *iface, HDC hdc,
 	  SetWindowExtEx(hdcMask, This->himetricWidth, This->himetricHeight, NULL);
 	  SetViewportOrgEx(hdcMask, 0, This->origHeight, NULL);
 	  SetViewportExtEx(hdcMask, This->origWidth, -This->origHeight, NULL);
-	  
-	  SetBkColor(hdc, RGB(255, 255, 255));    
-	  SetTextColor(hdc, RGB(0, 0, 0));        
-	  StretchBlt(hdc, x, y, cx, cy, hdcMask, xSrc, ySrc, cxSrc, cySrc, SRCAND); 
+
+	  SetBkColor(hdc, RGB(255, 255, 255));
+	  SetTextColor(hdc, RGB(0, 0, 0));
+	  StretchBlt(hdc, x, y, cx, cy, hdcMask, xSrc, ySrc, cxSrc, cySrc, SRCAND);
 	  StretchBlt(hdc, x, y, cx, cy, hdcBmp, xSrc, ySrc, cxSrc, cySrc, SRCPAINT);
 
 	  SelectObject(hdcMask, hOldbm);
@@ -1058,7 +1058,7 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
     if (!cm) cm = gif->SColorMap;
     bmi  = HeapAlloc(GetProcessHeap(),0,sizeof(BITMAPINFOHEADER)+(cm->ColorCount)*sizeof(RGBQUAD));
     bytes= HeapAlloc(GetProcessHeap(),0,padding*gif->SHeight);
-    
+
     /* look for the transparent color extension */
     for (i = 0; i < si->ExtensionBlockCount; ++i) {
 	eb = si->ExtensionBlocks + i;
@@ -1133,7 +1133,7 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
 	/* Create the Mask */
 	HDC hdc = CreateCompatibleDC(0);
 	HDC hdcMask = CreateCompatibleDC(0);
-	HBITMAP hOldbitmap; 
+	HBITMAP hOldbitmap;
 	HBITMAP hOldbitmapmask;
 
         unsigned int monopadding = (((unsigned)(gif->SWidth + 31)) >> 5) << 2;
@@ -1192,7 +1192,7 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
         SelectObject(hdc, This->hbmXor);
 	SetBkColor(hdc, RGB(0,0,0));
 	SetTextColor(hdc, RGB(255,255,255));
-	BitBlt(hdc, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight, 
+	BitBlt(hdc, 0, 0, bmi->bmiHeader.biWidth, bmi->bmiHeader.biHeight,
 		 hdcMask, 0, 0,  SRCAND);
 
 	SelectObject(hdc, hOldbitmap);
@@ -1201,7 +1201,7 @@ static HRESULT OLEPictureImpl_LoadGif(OLEPictureImpl *This, BYTE *xbuf, ULONG xr
 	DeleteDC(hdc);
         DeleteObject(hTempMask);
     }
-    
+
     DeleteDC(hdcref);
     This->desc.picType = PICTYPE_BITMAP;
     OLEPictureImpl_SetBitmap(This);
@@ -1644,7 +1644,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
   WORD		magic;
   STATSTG       statstg;
   OLEPictureImpl *This = impl_from_IPersistStream(iface);
-  
+
   TRACE("(%p,%p)\n",This,pStm);
 
   /****************************************************************************************
@@ -1682,9 +1682,9 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
       }
       headerread += xread;
       xread = 0;
-      
+
       if (!memcmp(&(header[0]),"lt\0\0", 4) && (statfailed || (header[1] + headerread <= statstg.cbSize.QuadPart))) {
-          if (toread != 0 && toread != header[1]) 
+          if (toread != 0 && toread != header[1])
               FIXME("varying lengths of image data (prev=%u curr=%u), only last one will be used\n",
                   toread, header[1]);
           toread = header[1];
@@ -1697,7 +1697,7 @@ static HRESULT WINAPI OLEPictureImpl_Load(IPersistStream* iface,IStream*pStm) {
               (header[1]==0)
           ) {/* Found start of bitmap data */
               headerisdata = TRUE;
-              if (toread == 0) 
+              if (toread == 0)
               	  toread = statstg.cbSize.QuadPart-8;
               else toread -= 8;
               xread = 8;
@@ -1951,7 +1951,7 @@ static int serializeIcon(HICON hIcon, void ** ppBuffer, unsigned int * pLength)
 				||	(pInfoBitmap->bmiHeader.biBitCount == 24)
 				||	(pInfoBitmap->bmiHeader.biBitCount == 32 && pInfoBitmap->bmiHeader.biCompression == BI_RGB)) {
 				iNumEntriesPalette = pInfoBitmap->bmiHeader.biClrUsed;
-				if (iNumEntriesPalette > 256) iNumEntriesPalette = 256; 
+				if (iNumEntriesPalette > 256) iNumEntriesPalette = 256;
 			} else if ((pInfoBitmap->bmiHeader.biBitCount == 16 || pInfoBitmap->bmiHeader.biBitCount == 32)
 				&& pInfoBitmap->bmiHeader.biCompression == BI_BITFIELDS) {
 				iNumEntriesPalette = 3;
@@ -2553,9 +2553,9 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 
   if (!ppvRet) return E_POINTER;
 
-  if (strncmpW(szURLorPath, file, 7) == 0) {	    
+  if (strncmpW(szURLorPath, file, 7) == 0) {
       szURLorPath += 7;
-  
+
       hFile = CreateFileW(szURLorPath, GENERIC_READ, 0, NULL, OPEN_EXISTING,
 				   0, NULL);
       if (hFile == INVALID_HANDLE_VALUE)
@@ -2576,12 +2576,12 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 	  }
       }
       CloseHandle(hFile);
-      
+
       if (!hGlobal)
 	  return E_UNEXPECTED;
 
       hRes = CreateStreamOnHGlobal(hGlobal, TRUE, &stream);
-      if (FAILED(hRes)) 
+      if (FAILED(hRes))
       {
 	  GlobalFree(hGlobal);
 	  return hRes;
@@ -2591,11 +2591,11 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
       IBindCtx *pbc;
 
       hRes = CreateBindCtx(0, &pbc);
-      if (SUCCEEDED(hRes)) 
+      if (SUCCEEDED(hRes))
       {
 	  hRes = CreateURLMoniker(NULL, szURLorPath, &pmnk);
 	  if (SUCCEEDED(hRes))
-	  {	         
+	  {
 	      hRes = IMoniker_BindToStorage(pmnk, pbc, NULL, &IID_IStream, (LPVOID*)&stream);
 	      IMoniker_Release(pmnk);
 	  }
@@ -2605,13 +2605,13 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
 	  return hRes;
   }
 
-  hRes = CoCreateInstance(&CLSID_StdPicture, punkCaller, CLSCTX_INPROC_SERVER, 
+  hRes = CoCreateInstance(&CLSID_StdPicture, punkCaller, CLSCTX_INPROC_SERVER,
 		   &IID_IPicture, (LPVOID*)&ipicture);
   if (hRes != S_OK) {
       IStream_Release(stream);
       return hRes;
   }
-  
+
   hRes = IPicture_QueryInterface(ipicture, &IID_IPersistStream, (LPVOID*)&pStream);
   if (hRes) {
       IStream_Release(stream);
@@ -2619,7 +2619,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
       return hRes;
   }
 
-  hRes = IPersistStream_Load(pStream, stream); 
+  hRes = IPersistStream_Load(pStream, stream);
   IPersistStream_Release(pStream);
   IStream_Release(stream);
 
@@ -2631,7 +2631,7 @@ HRESULT WINAPI OleLoadPicturePath( LPOLESTR szURLorPath, LPUNKNOWN punkCaller,
   hRes = IPicture_QueryInterface(ipicture,riid,ppvRet);
   if (hRes)
       FIXME("Failed to get interface %s from IPicture.\n",debugstr_guid(riid));
-  
+
   IPicture_Release(ipicture);
   return hRes;
 }

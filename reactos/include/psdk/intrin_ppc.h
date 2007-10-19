@@ -268,12 +268,12 @@ PPC_QUAL long _InterlockedExchangeAdd(volatile long * const Addend, const long V
         long x;
 	long y = *Addend;
 	long addend = y;
-	
+
 	do
 	{
 	    x = y;
 	    y = _InterlockedCompareExchange(Addend, addend + Value, x);
-	} 
+	}
 	while(y != x);
 
 	return y;
@@ -481,7 +481,7 @@ PPC_QUAL long _InterlockedIncrement(volatile long * const lpAddend)
 
 /*** String operations ***/
 /* NOTE: we don't set a memory clobber in the __stosX functions because Visual C++ doesn't */
-/* Note that the PPC store multiple operations may raise an exception in LE 
+/* Note that the PPC store multiple operations may raise an exception in LE
  * mode */
 PPC_QUAL void __stosb(unsigned char * Dest, const unsigned char Data, unsigned long Count)
 {
@@ -490,7 +490,7 @@ PPC_QUAL void __stosb(unsigned char * Dest, const unsigned char Data, unsigned l
 
 PPC_QUAL void __stosw(unsigned short * Dest, const unsigned short Data, unsigned long Count)
 {
-    while(Count--) 
+    while(Count--)
 	*Dest++ = Data;
 }
 
@@ -610,7 +610,7 @@ PPC_QUAL unsigned char _BitScanForward(unsigned long * const Index, const unsign
     else {
 	unsigned long mask = Mask;
 	mask &= -mask;
-	*Index = 
+	*Index =
 	    ((mask & 0xffff0000) ? 16 : 0) +
 	    ((mask & 0xff00ff00) ? 8  : 0) +
 	    ((mask & 0xf0f0f0f0) ? 4  : 0) +
@@ -674,17 +674,17 @@ PPC_QUAL unsigned char _rotl8(const unsigned char value, const unsigned char shi
 
 PPC_QUAL unsigned short _rotl16(const unsigned short value, const unsigned char shift)
 {
-    return (value << shift) | (value >> (16-shift));    
+    return (value << shift) | (value >> (16-shift));
 }
 
 PPC_QUAL unsigned char _rotr8(const unsigned char value, const unsigned char shift)
 {
-    return (value >> shift) | (value << (8-shift));    
+    return (value >> shift) | (value << (8-shift));
 }
 
 PPC_QUAL unsigned short _rotr16(const unsigned short value, const unsigned char shift)
 {
-    return (value >> shift) | (value << (16-shift));    
+    return (value >> shift) | (value << (16-shift));
 }
 
 PPC_QUAL unsigned long long __ll_lshift(const unsigned long long Mask, int Bit)
@@ -877,7 +877,7 @@ PPC_QUAL unsigned long long __rdtsc(void)
 /* Finally decided to do this by enabling single step trap */
 PPC_QUAL void __debugbreak(void)
 {
-    
+
 }
 
 PPC_QUAL void __int2c(void)

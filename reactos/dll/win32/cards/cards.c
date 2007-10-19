@@ -39,7 +39,7 @@ BOOL WINAPI WEP(DWORD Unknown)
  * Initialize card library and return cards width and height
  */
 BOOL WINAPI cdtInit(INT *Width, INT *Height)
-{	
+{
     DWORD dwIndex;
 
     /* Report card width and height to user */

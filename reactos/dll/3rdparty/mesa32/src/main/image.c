@@ -201,7 +201,7 @@ GLint _mesa_sizeof_packed_type( GLenum type )
          return sizeof(GLuint);
       case GL_UNSIGNED_SHORT_8_8_MESA:
       case GL_UNSIGNED_SHORT_8_8_REV_MESA:
-          return sizeof(GLushort);      
+          return sizeof(GLushort);
       default:
          return -1;
    }
@@ -465,7 +465,7 @@ _mesa_is_legal_format_and_type( GLcontext *ctx, GLenum format, GLenum type )
  * \param img  which image in the volume (0 for 1D or 2D images)
  * \param row  row of pixel in the image (0 for 1D images)
  * \param column column of pixel in the image
- * 
+ *
  * \return address of pixel on success, or NULL on error.
  *
  * \sa gl_pixelstore_attrib.
@@ -621,7 +621,7 @@ _mesa_image_address3d( const struct gl_pixelstore_attrib *packing,
  * \param width image width.
  * \param format pixel format.
  * \param type pixel data type.
- * 
+ *
  * \return the stride in bytes for the given parameters.
  *
  * Computes the number of bytes per pixel and row and compensates for alignment.

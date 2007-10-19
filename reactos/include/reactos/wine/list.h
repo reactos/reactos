@@ -175,7 +175,7 @@ __inline static unsigned int list_count( const struct list *list )
 #define LIST_FOR_EACH_ENTRY_REV(elem, list, type, field) \
     for ((elem) = LIST_ENTRY((list)->prev, type, field); \
          &(elem)->field != (list); \
-         (elem) = LIST_ENTRY((elem)->field.prev, type, field)) 
+         (elem) = LIST_ENTRY((elem)->field.prev, type, field))
 
 /* macros for statically initialized lists */
 #define LIST_INIT(list)  { &(list), &(list) }

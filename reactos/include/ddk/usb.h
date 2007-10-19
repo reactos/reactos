@@ -87,7 +87,7 @@ typedef struct _USBD_INTERFACE_INFORMATION
   UCHAR Protocol;
   UCHAR Reserved;
   USBD_INTERFACE_HANDLE InterfaceHandle;
-  ULONG NumberOfPipes; 
+  ULONG NumberOfPipes;
   USBD_PIPE_INFORMATION Pipes[1];
 } USBD_INTERFACE_INFORMATION, *PUSBD_INTERFACE_INFORMATION;
 
@@ -318,7 +318,7 @@ struct _URB_ISOCH_TRANSFER
   ULONG StartFrame;
   ULONG NumberOfPackets;
   ULONG ErrorCount;
-  USBD_ISO_PACKET_DESCRIPTOR IsoPacket[1]; 
+  USBD_ISO_PACKET_DESCRIPTOR IsoPacket[1];
 };
 
 typedef struct _URB
@@ -497,6 +497,6 @@ typedef struct _URB
 #define MS_GENRE_DESCRIPTOR_INDEX                       0x0001
 #define MS_POWER_DESCRIPTOR_INDEX                       0x0002
 #define MS_OS_STRING_SIGNATURE                          L"MSFT100"
-#define USBD_PIPE_DIRECTION_IN(pipeInformation)         ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK) 
+#define USBD_PIPE_DIRECTION_IN(pipeInformation)         ((pipeInformation)->EndpointAddress & USB_ENDPOINT_DIRECTION_MASK)
 
 #endif /* __USB_H */

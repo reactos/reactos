@@ -12,7 +12,7 @@
  *
  * This object file is included as a standard in the link process as provided
  * by the appropriate GCC frontend.
- * 
+ *
  * To use this object include the object file in your link command:
  * gcc -o foo.exe foo.o CRTinit.o
  *

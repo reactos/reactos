@@ -31,7 +31,7 @@ FileSupportCode::WriteIfChanged ( char* outbuf,
 	unsigned int end;
 	char* cmpbuf;
 	unsigned int stat;
-	
+
 	out = fopen ( filename.c_str (), "rb" );
 	if ( out == NULL )
 	{
@@ -46,7 +46,7 @@ FileSupportCode::WriteIfChanged ( char* outbuf,
 		fclose ( out );
 		return;
 	}
-	
+
 	fseek ( out, 0, SEEK_END );
 	end = ftell ( out );
 	cmpbuf = (char*) malloc ( end );
@@ -55,7 +55,7 @@ FileSupportCode::WriteIfChanged ( char* outbuf,
 		fclose ( out );
 		throw OutOfMemoryException ();
 	}
-	
+
 	fseek ( out, 0, SEEK_SET );
 	stat = fread ( cmpbuf, 1, end, out );
 	if ( stat != end )
@@ -70,7 +70,7 @@ FileSupportCode::WriteIfChanged ( char* outbuf,
 		fclose ( out );
 		return;
 	}
-	
+
 	free ( cmpbuf );
 	fclose ( out );
 	out = fopen ( filename.c_str (), "wb" );
@@ -78,7 +78,7 @@ FileSupportCode::WriteIfChanged ( char* outbuf,
 	{
 		throw AccessDeniedException ( filename );
 	}
-	
+
 	stat = fwrite ( outbuf, 1, strlen ( outbuf ), out);
 	if ( strlen ( outbuf ) != stat )
 	{

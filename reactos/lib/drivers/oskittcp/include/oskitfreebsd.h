@@ -10,7 +10,7 @@
 extern void oskittcp_die(const char *file, int line);
 
 #define printf DbgPrint
-#define vprintf DbgVPrint 
+#define vprintf DbgVPrint
 #define ovbcopy(x,y,z) bcopy(x,y,z)
 #define bzero(x,y) memset(x,0,y)
 #define bcopy(src,dst,n) memcpy(dst,src,n)

@@ -8,7 +8,7 @@
 
 #define USB_EVENT_FLAG_ACTIVE       0x80000000
 
-#define USB_EVENT_FLAG_QUE_TYPE     0x000000FF    
+#define USB_EVENT_FLAG_QUE_TYPE     0x000000FF
 #define USB_EVENT_FLAG_QUE_RESET  	0x01
 #define USB_EVENT_FLAG_NOQUE        0x00
 
@@ -43,7 +43,7 @@ typedef struct _USB_EVENT
     struct _USB_EVENT   *pnext;         //vertical queue for serialized operation
     PROCESS_EVENT       process_event;
     PROCESS_QUEUE       process_queue;
-    
+
 } USB_EVENT, *PUSB_EVENT;
 
 typedef struct _USB_EVENT_POOL
@@ -101,7 +101,7 @@ typedef struct _TIMER_SVC
     ULONG               context;
     PUSB_DEV            pdev;
     TIMER_SVC_HANDLER   func;
-    
+
 } TIMER_SVC, *PTIMER_SVC;
 
 typedef struct _TIMER_SVC_POOL

@@ -50,9 +50,9 @@ public:
 			FlistSorter(void);
     void		qsort( REAL *a, int n );
 
-protected:	
+protected:
     virtual int		qscmp( char *, char * );
-    virtual void	qsexc( char *i, char *j );	// i<-j, j<-i 
-    virtual void	qstexc( char *i, char *j, char *k ); // i<-k, k<-j, j<-i 
+    virtual void	qsexc( char *i, char *j );	// i<-j, j<-i
+    virtual void	qstexc( char *i, char *j, char *k ); // i<-k, k<-j, j<-i
 };
 #endif /* __gluflistsorter_h_ */

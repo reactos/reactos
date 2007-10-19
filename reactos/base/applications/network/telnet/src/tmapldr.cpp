@@ -49,44 +49,44 @@
 // AVS
 // skip inline comments, empty lines
 static char * getline(istream& i, char* buf, int size){
-	
+
 	int len = 0;
-	
+
 	while (1) {
 		memset(buf,0,size);
 		if (i.eof()) break;
 		i.getline(buf,size,'\n');
-		
+
 		while (buf[len]) {
 			if ( /*(buf[len]>=0) &&*/ buf[len]< ' ' ) buf[len] = ' ';
 			len++;
 		};
 		len = 0;
-		
+
 		// not so fast, but work ;)
 		while ( buf[len] ) {
             if ( (buf[len] == ' ') && (buf[len+1] == ' ')) {
 				memmove(buf+len, buf+len+1, strlen(buf+len));
             } else len++;
 		};
-		
+
 		if (buf[0] == ' ') memmove(buf, buf+1, size-1);
-		
+
 		// empty or comment
 		if ((buf[0]==0)||(buf[0]==';')) continue;
-		
+
 		len = 0; // look for comment like this one
 		while (buf[len])
 			if ((buf[len] == '/') && (buf[len+1] == '/')) buf[len] = 0;
 			else len++;
-			
+
 			if (len && (buf[len-1] == ' ')) {
                 len--;
                 buf[len]=0;
 			};
 			// in case for comment like this one (in line just a comment)
 			if (buf[0]==0) continue;
-			
+
 			break;
 	};
 	return (buf);
@@ -95,7 +95,7 @@ static char * getline(istream& i, char* buf, int size){
 //AVS
 // use string as FIFO queue for lines
 static int getline(string&str, char* buf, size_t sz) {
-	
+
 	if ( !str.length() ) return 0;
 	const char * p = strchr(str.c_str(),'\n');
 	unsigned int len; // Changed to unsigned (Paul Brannan 6/23/98)
@@ -103,9 +103,9 @@ static int getline(string&str, char* buf, size_t sz) {
 		len = str.length();
 	else
 		len = p - str.c_str();
-	
+
 	len = len<sz?len:sz-1;
-	
+
 	strncpy(buf,str.c_str(), len);
 	buf[len]=0;
 	// DJGPP also uses erase rather than remove (Paul Brannan 6/23/98)
@@ -123,12 +123,12 @@ static int getbyte(const char*str) {
 	unsigned char retval = 0;
 	int base = 10;
 	int readed = 0;
-	
+
 	if ( (*str == 'x') || (*str == 'X') ) {
 		base = 16;
 		readed++;
 	};
-	
+
 	while (readed != 3 && str[readed]) {
 		unsigned char ch = toupper(str[readed]);
 		if ( isdigit(ch) ) {
@@ -159,7 +159,7 @@ DWORD Fix_ControlKeyState(char * Next_Token) {
 	if (stricmp(Next_Token, "SCROLLLOCK") == 0) return SCROLLLOCK_ON;
 	if (stricmp(Next_Token, "CAPSLOCK"  ) == 0) return CAPSLOCK_ON;
 	if (stricmp(Next_Token, "ENHANCED"  ) == 0) return ENHANCED_KEY;
-	
+
 	// Paul Brannan 5/27/98
 	if (stricmp(Next_Token, "APP_KEY"   ) == 0) return APP_KEY;
 	// Paul Brannan 6/28/98
@@ -168,7 +168,7 @@ DWORD Fix_ControlKeyState(char * Next_Token) {
 	if (stricmp(Next_Token, "APP3_KEY"  ) == 0) return APP3_KEY;
 	// Paul Brannan 12/9/98
 	if (stricmp(Next_Token, "APP4_KEY"  ) == 0) return APP4_KEY;
-	
+
 	return 0;
 }
 
@@ -178,7 +178,7 @@ DWORD Fix_ControlKeyState(char * Next_Token) {
 char* Fix_Tok(char * tok) {
 	static char s[256];
 	int i,j,n;
-	
+
 	// setmem is nonstandard; memset is standard (Paul Brannan 5/25/98)
 	memset(s, 0, 256);
 	//  setmem(s, 256, 0);
@@ -265,7 +265,7 @@ int TMapLoader::LookForPart(stringArray& sa, const char* partType, const char* p
 // load globals to 'globals'
 // in buf must be a [global] part of input file
 int TMapLoader::LoadGlobal(string& buf) {
-	
+
 	char wbuf[128];
 	while ( buf.length() ) {
 		wbuf[0]=0;
@@ -273,7 +273,7 @@ int TMapLoader::LoadGlobal(string& buf) {
 		if ( wbuf[0]==0 ) break;
 		char* Name = strtok(wbuf, TOKEN_DELIMITERS);
 		if ( stricmp(Name, "[global]")==0 ) continue;
-		
+
 		char* Value = strtok(NULL, TOKEN_DELIMITERS);
 		if ( Value == NULL ) {
 			//              cerr << "[global] -> no value for " << Name << endl;
@@ -301,12 +301,12 @@ char* TMapLoader::ParseKeyDef(const char* buf, WORD& vk_code, DWORD& control) {
 	strcpy(wbuf,buf);
 	char* ptr = strtok(wbuf, TOKEN_DELIMITERS);
 	if ( ptr == NULL ) return NULL;
-	
+
 	int i = KeyTrans.LookOnGlobal(ptr);
 	if ( i == INT_MAX ) return NULL;
-	
+
 	vk_code = KeyTrans.GetGlobalCode(i);
-	
+
 	control = 0;
 	DWORD st;
 	while (1) {
@@ -314,9 +314,9 @@ char* TMapLoader::ParseKeyDef(const char* buf, WORD& vk_code, DWORD& control) {
 		if ((ptr == NULL) || ((st = Fix_ControlKeyState(ptr)) == 0)) break;
 		control |= st;
 	};
-	
+
 	if ( ptr == NULL ) return NULL;
-	
+
 	return Fix_Tok(ptr);
 };
 
@@ -324,7 +324,7 @@ char* TMapLoader::ParseKeyDef(const char* buf, WORD& vk_code, DWORD& control) {
 // load keymap to current map
 // be aware - buf must passed by value, its destroyed
 int TMapLoader::LoadKeyMap(string buf) {
-	
+
 	char wbuf[128];
 	WORD vk_code;
 	DWORD control;
@@ -358,7 +358,7 @@ int TMapLoader::LoadKeyMap(string buf) {
 		if (!getline(buf,wbuf,sizeof(wbuf))) break;
 		if ( wbuf[0]==0 ) break;
 		if ( strnicmp(wbuf,"[keymap",7)==0 ) continue;
-		
+
 		char * keydef = ParseKeyDef(wbuf,vk_code,control);
 
 		if ( keydef != NULL ) {
@@ -378,7 +378,7 @@ int TMapLoader::LoadKeyMap(string buf) {
 				if(!KeyTrans.AddKeyDef(vk_code, control, TN_CR)) return 0;
 			} else if(!strnicmp(keydef, "\\tn_crlf", strlen("\\tn_crlf"))) {
 				if(!KeyTrans.AddKeyDef(vk_code, control, TN_CRLF)) return 0;
-			} else 
+			} else
 				if(!KeyTrans.AddKeyDef(vk_code,control,keydef)) return 0;
 				// else DeleteKeyDef() ???? - I'm not sure...
 		}
@@ -393,9 +393,9 @@ int TMapLoader::LoadCharMap(string buf) {
 	char wbuf[128];
 	char charmapname[128];
 	charmapname[0] = 0;
-	
+
 	//        xlat.init(); now it done by KeyTranslator::Load()
-	
+
 	while ( buf.length() ) {
 		wbuf[0]=0;
 		if (!getline(buf,wbuf,sizeof(wbuf))) break;
@@ -406,10 +406,10 @@ int TMapLoader::LoadCharMap(string buf) {
 		};
 		char * host = strtok(wbuf, " ");
 		char * console = strtok(NULL, " ");
-		
+
 		int bHost;
 		int bConsole;
-		
+
 		if ( host == NULL || console == NULL ) {
 			//              cerr << charmapname << " -> Bad structure" << endl;
 			printm(0, FALSE, MSG_KEYBADSTRUCT, charmapname);
@@ -419,12 +419,12 @@ int TMapLoader::LoadCharMap(string buf) {
 			bHost = getbyte(host+1);
 		else
 			bHost = (unsigned char)host[0];
-		
+
 		if ( strlen(console) > 1 && console[0] == '\\' )
 			bConsole = getbyte(console+1);
 		else
 			bConsole = (unsigned char)console[0];
-		
+
 		if ( bHost <= 0 || bConsole <= 0 ) {
 			//              cerr << charmapname << " -> Bad chars? "
 			//                   << host << " -> " << console << endl;
@@ -442,7 +442,7 @@ int TMapLoader::LoadCharMap(string buf) {
 // ignore long comment [comment] ... [end comment]
 // recursive!
 int getLongComment(istream& is, char* wbuf, size_t sz) {
-	
+
 	int bufLen;
     while ( is ) {
 		wbuf[0] = 0;
@@ -451,7 +451,7 @@ int getLongComment(istream& is, char* wbuf, size_t sz) {
 		bufLen = strlen(wbuf);
 		if ( wbuf[0] == '[' && wbuf[bufLen-1] == ']' ) {
 			string temps(wbuf);
-			
+
 			if (!normalizeSplitter(temps)) {
 				//           cerr << "Unexpected line '" << temps << "'\n";
 				printm(0, FALSE, MSG_KEYUNEXPLINE, temps.c_str());
@@ -474,25 +474,25 @@ int getLongComment(istream& is, char* wbuf, size_t sz) {
 int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 	char buf[256];
 	int bufLen;
-	
+
 	ifstream inpfile(filename);
 	KeyTrans.DeleteAllDefs();
 	Charmap.init();
-	
+
 	// it is an array for store [...] ... [end ...] parts from file
 	stringArray SA(0,0,sizeof(string));
 	int AllOk = 0;
-	
+
 	while ( inpfile ) {
-		
+
 		getline(inpfile, buf, 255);
 		bufLen = strlen(buf);
 		if ( !bufLen ) continue;
-		
+
 		if ( buf[0] == '[' && buf[bufLen-1] == ']' ) {
 			// is a part splitter [...]
 			string temps(buf);
-			
+
 			if (!normalizeSplitter(temps)) {
 				printm(0, FALSE, MSG_KEYUNEXPLINE, temps.c_str());
 				AllOk = 0;
@@ -512,8 +512,8 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 #endif
 				continue;
 			};
-			
-			
+
+
 			string back = temps;
 			// prepare line for make it as [end ...]
 			// and check it
@@ -550,12 +550,12 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 				printm(0, FALSE, MSG_KEYUNEXPTOK, back.c_str());
 				break;
 			};
-			
+
 			back.insert(1,"END "); // now it looks like [END ...]
 #ifdef KEYDEBUG
 			printit(temps.c_str());
 #endif
-			
+
 			int ok = 0;
 			// fetch it to temps
 			while ( 1 ) {
@@ -565,16 +565,16 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 				if ( buf[0] == '[' && buf[bufLen-1] == ']' ) {
 					string t(buf);
 					if ( !normalizeSplitter(t) ) break;
-					
+
 					if ( stricmp(t.c_str(),back.c_str()) == 0 ) {
 						ok = 1;
 						break;
 					};
-					
+
 					// AVS 31.12.97 fix [comment] block inside another block
 					if ( stricmp(t.c_str(),"[comment]") == 0 &&
 						getLongComment(inpfile, buf, sizeof(buf)) ) continue;
-					
+
 					break;
 				};
 				temps += "\n";
@@ -598,13 +598,13 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 			break;
 		};
 	};
-	
+
 	inpfile.close();
-	
+
 	if ( !AllOk ) return 0;
-	
+
 	// now all file are in SA, comments are stripped
-	
+
 	int i = LookForPart(SA, "global", "");
 	if ( i == INT_MAX ) {
 		//     cerr << "No [GLOBAL] definition!" << endl;
@@ -614,7 +614,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 	if ( !LoadGlobal(SA[i]) ) {
 		return 0;
 	};
-	
+
 	// look for need configuration
 	i = LookForPart(SA, "config", szActiveEmul);
 	if ( i == INT_MAX ) {
@@ -625,7 +625,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 	//  cerr << "use configuration: " << szActiveEmul << endl;
 	printm(0, FALSE, MSG_KEYUSECONFIG, szActiveEmul);
 	BOOL hadKeys = FALSE;
-	
+
 	string config = SA[i];
 	// parse it
 	while ( config.length() ) {
@@ -638,7 +638,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 			printit("\t"); printit(buf); printit("\n");
 			char * mapdef = strtok(buf,":");
 			char * switchKey = strtok(NULL,"\n");
-			
+
 			if ( !KeyTrans.mapArray.IsEmpty() && switchKey == NULL ) {
 				//            cerr << "no switch Key for '" << mapdef
 				//                 << "'" << endl;
@@ -687,7 +687,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 					hadKeys = LoadKeyMap(SA[i]); // load it
 				};
 			};
-			
+
 		}
 		else if ( strnicmp(buf,"charmap",7) == 0 ) {
 			printit("\t"); printit(buf); printit("\n");
@@ -713,7 +713,7 @@ int TMapLoader::Load(const char * filename, const char * szActiveEmul) {
 				Charmap.init();
 			};
 			/*         strtok(buf," ");
-			
+
 			  char* name = strtok(NULL," ");
 			  if ( name == NULL ) {
 			  cerr << "No name for CHARMAP" << endl;

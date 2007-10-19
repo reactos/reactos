@@ -2085,7 +2085,7 @@ HCERTSTORE WINAPI CertOpenSystemStoreW(HCRYPTPROV hProv,
 BOOL WINAPI CertSaveStore(HCERTSTORE hCertStore, DWORD dwMsgAndCertEncodingType,
              DWORD dwSaveAs, DWORD dwSaveTo, void* pvSaveToPara, DWORD dwFlags)
 {
-    FIXME("(%p,%d,%d,%d,%p,%08x) stub!\n", hCertStore, 
+    FIXME("(%p,%d,%d,%d,%p,%08x) stub!\n", hCertStore,
           dwMsgAndCertEncodingType, dwSaveAs, dwSaveTo, pvSaveToPara, dwFlags);
     return TRUE;
 }

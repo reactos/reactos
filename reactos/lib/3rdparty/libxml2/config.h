@@ -5,7 +5,7 @@
 /* #undef HAVE_LIBZ */
 /* #undef HAVE_LIBM */
 /* #undef HAVE_ISINF */
-#define HAVE_ISNAN 
+#define HAVE_ISNAN
 /* #undef HAVE_LIBHISTORY */
 /* #undef HAVE_LIBREADLINE */
 /* #undef HAVE_LIBPTHREAD */
@@ -90,7 +90,7 @@
 /* #undef HAVE_ISINF */
 
 /* Define if isnan is there */
-#define HAVE_ISNAN 
+#define HAVE_ISNAN
 
 /* Define to 1 if you have the `isnand' function. */
 /* #undef HAVE_ISNAND */

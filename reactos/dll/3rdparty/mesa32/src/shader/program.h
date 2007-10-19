@@ -96,13 +96,13 @@ _mesa_find_line_column(const GLubyte *string, const GLubyte *pos,
                        GLint *line, GLint *col);
 
 
-extern struct program * 
-_mesa_init_vertex_program(GLcontext *ctx, 
-                          struct vertex_program *prog, 
+extern struct program *
+_mesa_init_vertex_program(GLcontext *ctx,
+                          struct vertex_program *prog,
                           GLenum target, GLuint id);
 
-extern struct program * 
-_mesa_init_fragment_program(GLcontext *ctx, 
+extern struct program *
+_mesa_init_fragment_program(GLcontext *ctx,
                             struct fragment_program *prog,
                             GLenum target, GLuint id);
 
@@ -158,7 +158,7 @@ enum state_index {
    STATE_SPECULAR,
    STATE_EMISSION,
    STATE_SHININESS,
-   STATE_HALF,	
+   STATE_HALF,
 
    STATE_POSITION,
    STATE_ATTENUATION,
@@ -174,7 +174,7 @@ enum state_index {
    STATE_TEXGEN_OBJECT_Q,
 
    STATE_TEXENV_COLOR,
-	
+
    STATE_DEPTH_RANGE,
 
    STATE_VERTEX_PROGRAM,
@@ -191,7 +191,7 @@ enum state_index {
 
 
 /*
- * Named program parameters 
+ * Named program parameters
  * Used for NV_fragment_program "DEFINE"d constants and "DECLARE"d parameters,
  * and ARB_fragment_program global state references.  For the later, Name
  * might be "state.light[0].diffuse", for example.

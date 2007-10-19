@@ -46,7 +46,7 @@
  * Clip a point against the view volume.
  *
  * \param v vertex vector describing the point to clip.
- * 
+ *
  * \return zero if outside view volume, or one if inside.
  */
 static GLuint
@@ -67,7 +67,7 @@ viewclip_point( const GLfloat v[] )
  * Clip a point against the far/near Z clipping planes.
  *
  * \param v vertex vector describing the point to clip.
- * 
+ *
  * \return zero if outside view volume, or one if inside.
  */
 static GLuint
@@ -84,10 +84,10 @@ viewclip_point_z( const GLfloat v[] )
 
 /**
  * Clip a point against the user clipping planes.
- * 
+ *
  * \param ctx GL context.
  * \param v vertex vector describing the point to clip.
- * 
+ *
  * \return zero if the point was clipped, or one otherwise.
  */
 static GLuint
@@ -139,7 +139,7 @@ shade_rastpos(GLcontext *ctx,
       _mesa_validate_all_lighting_tables( ctx );
 
    COPY_3V(diffuseColor, base[0]);
-   diffuseColor[3] = CLAMP( 
+   diffuseColor[3] = CLAMP(
       ctx->Light.Material.Attrib[MAT_ATTRIB_FRONT_DIFFUSE][3], 0.0F, 1.0F );
    ASSIGN_4V(specularColor, 0.0, 0.0, 0.0, 0.0);
 
@@ -395,13 +395,13 @@ compute_texgen(GLcontext *ctx, const GLfloat vObj[4], const GLfloat vEye[4],
  *
  * All glRasterPos command call this function to update the current
  * raster position.
- * 
+ *
  * \param ctx GL context.
  * \param x x coordinate for the raster position.
  * \param y y coordinate for the raster position.
  * \param z z coordinate for the raster position.
  * \param w w coordinate for the raster position.
- * 
+ *
  * \sa Called by _mesa_RasterPos4f().
  *
  * Flushes the vertices, transforms and clips the vertex coordinates, and
@@ -675,7 +675,7 @@ _mesa_RasterPos3sv(const GLshort *v)
 void GLAPIENTRY
 _mesa_RasterPos4dv(const GLdouble *v)
 {
-   _mesa_RasterPos4f((GLfloat) v[0], (GLfloat) v[1], 
+   _mesa_RasterPos4f((GLfloat) v[0], (GLfloat) v[1],
 		     (GLfloat) v[2], (GLfloat) v[3]);
 }
 
@@ -690,7 +690,7 @@ _mesa_RasterPos4fv(const GLfloat *v)
 void GLAPIENTRY
 _mesa_RasterPos4iv(const GLint *v)
 {
-   _mesa_RasterPos4f((GLfloat) v[0], (GLfloat) v[1], 
+   _mesa_RasterPos4f((GLfloat) v[0], (GLfloat) v[1],
 		     (GLfloat) v[2], (GLfloat) v[3]);
 }
 
@@ -907,7 +907,7 @@ _mesa_WindowPos3svMESA(const GLshort *v)
 void GLAPIENTRY
 _mesa_WindowPos4dvMESA(const GLdouble *v)
 {
-   window_pos4f((GLfloat) v[0], (GLfloat) v[1], 
+   window_pos4f((GLfloat) v[0], (GLfloat) v[1],
 			 (GLfloat) v[2], (GLfloat) v[3]);
 }
 
@@ -920,7 +920,7 @@ _mesa_WindowPos4fvMESA(const GLfloat *v)
 void GLAPIENTRY
 _mesa_WindowPos4ivMESA(const GLint *v)
 {
-   window_pos4f((GLfloat) v[0], (GLfloat) v[1], 
+   window_pos4f((GLfloat) v[0], (GLfloat) v[1],
 			 (GLfloat) v[2], (GLfloat) v[3]);
 }
 

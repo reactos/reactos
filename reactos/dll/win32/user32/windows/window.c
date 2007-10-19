@@ -167,7 +167,7 @@ User32CreateWindowEx(DWORD dwExStyle,
 #if 0
   DbgPrint("[window] User32CreateWindowEx style %d, exstyle %d, parent %d\n", dwStyle, dwExStyle, hWndParent);
 #endif
-  
+
   if (IS_ATOM(lpClassName))
     {
       RtlInitUnicodeString(&ClassName, NULL);
@@ -207,7 +207,7 @@ User32CreateWindowEx(DWORD dwExStyle,
         return (HWND)0;
       }
   }
-  
+
   if(!hMenu && (dwStyle & (WS_OVERLAPPEDWINDOW | WS_POPUP)))
   {
     if(Unicode)
@@ -1018,7 +1018,7 @@ int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
    DWORD ProcessId;
- 
+
    if (lpString == NULL)
       return 0;
 
@@ -1101,7 +1101,7 @@ int STDCALL
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
    DWORD ProcessId;
-   
+
    if (lpString == NULL)
       return 0;
 

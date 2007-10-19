@@ -76,7 +76,7 @@ _mesa_CullFace( GLenum mode )
 
 
 /**
- * Define front- and back-facing 
+ * Define front- and back-facing
  *
  * \param mode orientation of front-facing polygons.
  *
@@ -119,8 +119,8 @@ _mesa_FrontFace( GLenum mode )
  * \param face the polygons which \p mode applies to.
  * \param mode how polygons should be rasterized.
  *
- * \sa glPolygonMode(). 
- * 
+ * \sa glPolygonMode().
+ *
  * Verifies the parameters and updates gl_polygon_attrib::FrontMode and
  * gl_polygon_attrib::BackMode. On change flushes the vertices and notifies the
  * driver via the dd_function_table::PolygonMode callback.

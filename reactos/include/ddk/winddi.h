@@ -316,7 +316,7 @@ typedef struct _DEVINFO {
 
 typedef struct _DRIVEROBJ *PDRIVEROBJ;
 
-typedef BOOL  
+typedef BOOL
 (APIENTRY CALLBACK *FREEOBJPROC)(
   IN PDRIVEROBJ  pDriverObj);
 
@@ -3499,7 +3499,7 @@ DrvUnloadFontFile(
 #define WOC_SPRITE_OVERLAP                0x00000080
 #define WOC_SPRITE_NO_OVERLAP             0x00000100
 
-typedef VOID 
+typedef VOID
 (APIENTRY CALLBACK * WNDOBJCHANGEPROC)(
   WNDOBJ  *pwo,
   FLONG  fl);
@@ -3515,12 +3515,12 @@ typedef BOOL
   IN RECTL  *prclSrc,
   IN BLENDOBJ  *pBlendObj);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvAssertMode)(
   IN DHPDEV  dhpdev,
   IN BOOL  bEnable);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvBitBlt)(
   IN SURFOBJ  *psoTrg,
   IN SURFOBJ  *psoSrc,
@@ -3534,12 +3534,12 @@ typedef BOOL
   IN POINTL  *pptlBrush,
   IN ROP4  rop4);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvCompletePDEV)(
   IN DHPDEV  dhpdev,
   IN HDEV  hdev);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvCopyBits)(
   IN SURFOBJ  *psoDest,
   IN SURFOBJ  *psoSrc,
@@ -3548,52 +3548,52 @@ typedef BOOL
   IN RECTL  *prclDest,
   IN POINTL  *pptlSrc);
 
-typedef HBITMAP 
+typedef HBITMAP
 (APIENTRY *PFN_DrvCreateDeviceBitmap)(
   IN DHPDEV  dhpdev,
   IN SIZEL  sizl,
   IN ULONG  iFormat);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvDeleteDeviceBitmap)(
   IN DHSURF  dhsurf);
 
-typedef HBITMAP 
+typedef HBITMAP
 (APIENTRY *PFN_DrvDeriveSurface)(
   DD_DIRECTDRAW_GLOBAL  *pDirectDraw,
   DD_SURFACE_LOCAL  *pSurface);
 
-typedef LONG 
+typedef LONG
 (APIENTRY *PFN_DrvDescribePixelFormat)(
   IN DHPDEV  dhpdev,
   IN LONG  iPixelFormat,
   IN ULONG  cjpfd,
   OUT PIXELFORMATDESCRIPTOR  *ppfd);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvDestroyFont)(
   IN FONTOBJ  *pfo);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvDisableDriver)(
   VOID);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvDisablePDEV)(
   IN DHPDEV  dhpdev);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvDisableSurface)(
   IN DHPDEV  dhpdev);
 
-typedef ULONG 
+typedef ULONG
 (APIENTRY *PFN_DrvDitherColor)(
   IN DHPDEV  dhpdev,
   IN ULONG  iMode,
   IN ULONG  rgb,
   OUT ULONG  *pul);
 
-typedef ULONG 
+typedef ULONG
 (APIENTRY *PFN_DrvDrawEscape)(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -3602,13 +3602,13 @@ typedef ULONG
   IN ULONG  cjIn,
   IN PVOID  pvIn);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvEnableDriver)(
   IN ULONG  iEngineVersion,
   IN ULONG  cj,
   OUT DRVENABLEDATA  *pded);
 #if 0
-typedef DHPDEV 
+typedef DHPDEV
 (APIENTRY *PFN_DrvEnablePDEV)(
   IN DEVMODEW  *pdm,
   IN LPWSTR  pwszLogAddress,
@@ -3622,16 +3622,16 @@ typedef DHPDEV
   IN LPWSTR  pwszDeviceName,
   IN HANDLE  hDriver);
 #endif
-typedef HSURF 
+typedef HSURF
 (APIENTRY *PFN_DrvEnableSurface)(
   IN DHPDEV  dhpdev);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvEndDoc)(
   IN SURFOBJ  *pso,
   IN FLONG  fl);
 
-typedef ULONG 
+typedef ULONG
 (APIENTRY *PFN_DrvEscape)(
   IN SURFOBJ  *pso,
   IN ULONG  iEsc,
@@ -3640,7 +3640,7 @@ typedef ULONG
   IN ULONG  cjOut,
   OUT PVOID  pvOut);
 
-typedef BOOL 
+typedef BOOL
 (APIENTRY *PFN_DrvFillPath)(
   IN SURFOBJ  *pso,
   IN PATHOBJ  *ppo,
@@ -3650,7 +3650,7 @@ typedef BOOL
   IN MIX  mix,
   IN FLONG  flOptions);
 
-typedef ULONG 
+typedef ULONG
 (APIENTRY *PFN_DrvFontManagement)(
   IN SURFOBJ  *pso,
   IN FONTOBJ  *pfo,
@@ -3660,12 +3660,12 @@ typedef ULONG
   IN ULONG  cjOut,
   OUT PVOID  pvOut);
 
-typedef VOID 
+typedef VOID
 (APIENTRY *PFN_DrvFree)(
   IN PVOID  pv,
   IN ULONG_PTR  id);
 
-typedef ULONG 
+typedef ULONG
 (APIENTRY *PFN_DrvGetGlyphMode)(
   IN DHPDEV  dhpdev,
   IN FONTOBJ  *pfo);

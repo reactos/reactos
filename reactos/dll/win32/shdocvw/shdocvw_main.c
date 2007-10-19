@@ -161,7 +161,7 @@ static HRESULT WINAPI
 dlQueryInterface( IBindStatusCallback* This, REFIID riid, void** ppvObject )
 {
     if (ppvObject == NULL) return E_POINTER;
-    
+
     if( IsEqualIID(riid, &IID_IUnknown) ||
         IsEqualIID(riid, &IID_IBindStatusCallback))
     {
@@ -177,7 +177,7 @@ static ULONG WINAPI dlAddRef( IBindStatusCallback* iface )
     IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
 
     SHDOCVW_LockModule();
-    
+
     return InterlockedIncrement( &This->ref );
 }
 
@@ -185,7 +185,7 @@ static ULONG WINAPI dlRelease( IBindStatusCallback* iface )
 {
     IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
     DWORD ref = InterlockedDecrement( &This->ref );
-    
+
     if( !ref )
     {
         DestroyWindow( This->hDialog );
@@ -193,7 +193,7 @@ static ULONG WINAPI dlRelease( IBindStatusCallback* iface )
     }
 
     SHDOCVW_UnlockModule();
-    
+
     return ref;
 }
 
@@ -427,7 +427,7 @@ static BOOL SHDOCVW_TryDownloadMozillaControl(void)
 
     return ret;
 }
- 
+
 static BOOL SHDOCVW_TryLoadMozillaControl(void)
 {
     WCHAR szPath[MAX_PATH];

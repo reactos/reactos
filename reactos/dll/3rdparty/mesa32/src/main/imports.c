@@ -1,7 +1,7 @@
 /**
  * \file imports.c
  * Standard C library function wrappers.
- * 
+ *
  * Imports are services which the device driver or window system or
  * operating system provides to the core renderer.  The core renderer (Mesa)
  * will call these functions in order to do memory allocation, simple I/O,
@@ -115,7 +115,7 @@ _mesa_free(void *ptr)
  *
  * \param bytes number of bytes to allocate.
  * \param alignment alignment (must be greater than zero).
- * 
+ *
  * Allocates extra memory to accommodate rounding up the address for
  * alignment and to record the real malloc address.
  *
@@ -544,7 +544,7 @@ _mesa_float_to_half(float val)
    const int flt_s = (flt >> 31) & 0x1;
    int s, e, m = 0;
    GLhalfARB result;
-   
+
    /* sign bit */
    s = flt_s;
 
@@ -820,7 +820,7 @@ _mesa_sprintf( char *str, const char *fmt, ... )
 {
    int r;
    va_list args;
-   va_start( args, fmt );  
+   va_start( args, fmt );
    va_end( args );
 #if defined(XFree86LOADER) && defined(IN_MODULE)
    r = xf86vsprintf( str, fmt, args );
@@ -837,7 +837,7 @@ _mesa_printf( const char *fmtString, ... )
 {
    char s[MAXSTRING];
    va_list args;
-   va_start( args, fmtString );  
+   va_start( args, fmtString );
    vsnprintf(s, MAXSTRING, fmtString, args);
    va_end( args );
 #if defined(XFree86LOADER) && defined(IN_MODULE)
@@ -859,7 +859,7 @@ _mesa_printf( const char *fmtString, ... )
  *
  * \param ctx GL context.
  * \param fmtString printf() alike format string.
- * 
+ *
  * If debugging is enabled (either at compile-time via the DEBUG macro, or
  * run-time via the MESA_DEBUG environment variable), prints the warning to
  * stderr, either via fprintf() or xf86printf().
@@ -871,7 +871,7 @@ _mesa_warning( GLcontext *ctx, const char *fmtString, ... )
    char str[MAXSTRING];
    va_list args;
    (void) ctx;
-   va_start( args, fmtString );  
+   va_start( args, fmtString );
    (void) vsnprintf( str, MAXSTRING, fmtString, args );
    va_end( args );
 #ifdef DEBUG
@@ -904,7 +904,7 @@ _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
    char str[MAXSTRING];
    (void) ctx;
 
-   va_start( args, fmtString );  
+   va_start( args, fmtString );
    vsnprintf( str, MAXSTRING, fmtString, args );
    va_end( args );
 
@@ -922,13 +922,13 @@ _mesa_problem( const GLcontext *ctx, const char *fmtString, ... )
  *
  * If in debug mode, print error message.
  * Also, record the error code by calling _mesa_record_error().
- * 
+ *
  * \param ctx the GL context.
  * \param error the error value.
  * \param fmtString printf() style format string, followed by optional args
- *         
+ *
  * If debugging is enabled (either at compile-time via the DEBUG macro, or
- * run-time via the MESA_DEBUG environment variable), interperts the error code and 
+ * run-time via the MESA_DEBUG environment variable), interperts the error code and
  * prints the error message via _mesa_debug().
  */
 void
@@ -956,7 +956,7 @@ _mesa_error( GLcontext *ctx, GLenum error, const char *fmtString, ... )
       char where[MAXSTRING];
       const char *errstr;
 
-      va_start( args, fmtString );  
+      va_start( args, fmtString );
       vsnprintf( where, MAXSTRING, fmtString, args );
       va_end( args );
 
@@ -993,14 +993,14 @@ _mesa_error( GLcontext *ctx, GLenum error, const char *fmtString, ... )
    }
 
    _mesa_record_error(ctx, error);
-}  
+}
 
 /**
  * Report debug information.
- * 
+ *
  * \param ctx GL context.
  * \param fmtString printf() alike format string.
- * 
+ *
  * Prints the message to stderr, either via fprintf() or xf86printf().
  */
 void
@@ -1100,7 +1100,7 @@ default_sprintf(__GLcontext *gc, char *str, const char *fmt, ...)
    int r;
    va_list args;
    (void) gc;
-   va_start( args, fmt );  
+   va_start( args, fmt );
    r = vsprintf( str, fmt, args );
    va_end( args );
    return r;
@@ -1129,14 +1129,14 @@ default_fprintf(__GLcontext *gc, void *stream, const char *fmt, ...)
    int r;
    va_list args;
    (void) gc;
-   va_start( args, fmt );  
+   va_start( args, fmt );
    r = vfprintf( (FILE *) stream, fmt, args );
    va_end( args );
    return r;
 }
 
 /**
- * \todo this really is driver-specific and can't be here 
+ * \todo this really is driver-specific and can't be here
  */
 static __GLdrawablePrivate *
 default_GetDrawablePrivate(__GLcontext *gc)
@@ -1150,12 +1150,12 @@ default_GetDrawablePrivate(__GLcontext *gc)
 
 /**
  * Initialize a __GLimports object to point to the functions in this
- * file.  
+ * file.
  *
  * This is to be called from device drivers.
- * 
+ *
  * Also, do some one-time initializations.
- * 
+ *
  * \param imports the object to initialize.
  * \param driverCtx pointer to device driver-specific data.
  */

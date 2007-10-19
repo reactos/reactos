@@ -518,7 +518,7 @@ IsTokenRestricted(HANDLE TokenHandle)
   PTOKEN_GROUPS lpGroups;
   NTSTATUS Status;
   BOOL Ret = FALSE;
-  
+
   /* determine the required buffer size and allocate enough memory to read the
      list of restricted SIDs */
 
@@ -532,7 +532,7 @@ IsTokenRestricted(HANDLE TokenHandle)
     SetLastError(RtlNtStatusToDosError(Status));
     return FALSE;
   }
-  
+
 AllocAndReadRestrictedSids:
   lpGroups = (PTOKEN_GROUPS)HeapAlloc(GetProcessHeap(),
                                       0,
@@ -542,9 +542,9 @@ AllocAndReadRestrictedSids:
     SetLastError(ERROR_OUTOFMEMORY);
     return FALSE;
   }
-  
+
   /* actually read the list of the restricted SIDs */
-  
+
   Status = NtQueryInformationToken(TokenHandle,
                                    TokenRestrictedSids,
                                    lpGroups,
@@ -568,7 +568,7 @@ AllocAndReadRestrictedSids:
   {
     SetLastError(RtlNtStatusToDosError(Status));
   }
-  
+
   /* free allocated memory */
 
   HeapFree(GetProcessHeap(),
@@ -578,7 +578,7 @@ AllocAndReadRestrictedSids:
   return Ret;
 }
 
-BOOL STDCALL 
+BOOL STDCALL
 CreateRestrictedToken(
             HANDLE TokenHandle,
             DWORD Flags,
@@ -636,7 +636,7 @@ GetSiteSidFromToken(IN HANDLE TokenHandle)
                                      &RetLen);
     if (NT_SUCCESS(Status))
     {
-        for (i = 0; i < RestrictedSids->GroupCount; i++) 
+        for (i = 0; i < RestrictedSids->GroupCount; i++)
         {
             SID* RSSid = RestrictedSids->Groups[i].Sid;
 
@@ -649,7 +649,7 @@ GetSiteSidFromToken(IN HANDLE TokenHandle)
                                            0,
                                            RtlLengthSid((RestrictedSids->
                                                          Groups[i]).Sid));
-                if (PSiteSid == NULL) 
+                if (PSiteSid == NULL)
                 {
                     SetLastError(ERROR_OUTOFMEMORY);
                 }

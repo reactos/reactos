@@ -129,7 +129,7 @@ INT WINAPI DirectXUnRegisterApplication( HWND     hWnd, LPGUID   lpGUID);
     #define DirectXSetup  DirectXSetupA
     #define DirectXRegisterApplication  DirectXRegisterApplicationA
     #define DirectXSetupGetEULA  DirectXSetupGetEULAA
-    
+
 #endif
 
     typedef DWORD (*DSETUP_CALLBACK)( DWORD Reason, DWORD MsgType, LPSTR szMessage,

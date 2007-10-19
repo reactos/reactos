@@ -162,10 +162,10 @@ free_shared_state( GLcontext *ctx, struct gl_shared_state *ss );
 
 /**
  * Destroy context callback.
- * 
+ *
  * \param gc context.
  * \return GL_TRUE on success, or GL_FALSE on failure.
- * 
+ *
  * \ifnot subset
  * Called by window system/device driver (via __GLexports::destroyCurrent) when
  * the rendering context is to be destroyed.
@@ -185,7 +185,7 @@ _mesa_destroyContext(__GLcontext *gc)
 
 /**
  * Unbind context callback.
- * 
+ *
  * \param gc context.
  * \return GL_TRUE on success, or GL_FALSE on failure.
  *
@@ -206,7 +206,7 @@ _mesa_loseCurrent(__GLcontext *gc)
 
 /**
  * Bind context callback.
- * 
+ *
  * \param gc context.
  * \return GL_TRUE on success, or GL_FALSE on failure.
  *
@@ -227,7 +227,7 @@ _mesa_makeCurrent(__GLcontext *gc)
 
 /**
  * Share context callback.
- * 
+ *
  * \param gc context.
  * \param gcShare shared context.
  * \return GL_TRUE on success, or GL_FALSE on failure.
@@ -304,8 +304,8 @@ _mesa_notifyResize(__GLcontext *gc)
  * Window/buffer destruction notification callback.
  *
  * \param gc GL context.
- * 
- * Called when the context's window/buffer is going to be destroyed. 
+ *
+ * Called when the context's window/buffer is going to be destroyed.
  *
  * No-op
  */
@@ -318,7 +318,7 @@ _mesa_notifyDestroy(__GLcontext *gc)
 
 /**
  * Swap buffers notification callback.
- * 
+ *
  * \param gc GL context.
  *
  * Called by window system just before swapping buffers.
@@ -354,11 +354,11 @@ _mesa_endDispatchOverride(__GLcontext *gc)
 
 /**
  * \ifnot subset
- * Setup the exports.  
+ * Setup the exports.
  *
  * The window system will call these functions when it needs Mesa to do
  * something.
- * 
+ *
  * \note Device drivers should override these functions!  For example,
  * the Xlib driver should plug in the XMesa*-style functions into this
  * structure.  The XMesa-style functions should then call the _mesa_*
@@ -368,7 +368,7 @@ _mesa_endDispatchOverride(__GLcontext *gc)
  *
  * \if subset
  * No-op.
- * 
+ *
  * \endif
  */
 static void
@@ -438,7 +438,7 @@ __glCoreNopDispatch(void)
 /**
  * Allocates a GLvisual structure and initializes it via
  * _mesa_initialize_visual().
- * 
+ *
  * \param rgbFlag GL_TRUE for RGB(A) mode, GL_FALSE for Color Index mode.
  * \param dbFlag double buffering
  * \param stereoFlag stereo buffer
@@ -454,7 +454,7 @@ __glCoreNopDispatch(void)
  * \param blueBits same as above.
  * \param alphaBits same as above.
  * \param numSamples not really used.
- * 
+ *
  * \return pointer to new GLvisual or NULL if requested parameters can't be
  * met.
  *
@@ -577,7 +577,7 @@ _mesa_initialize_visual( GLvisual *vis,
  * Destroy a visual and free its memory.
  *
  * \param vis visual.
- * 
+ *
  * Frees the visual structure.
  */
 void
@@ -805,7 +805,7 @@ alloc_shared_state( GLcontext *ctx )
  *
  * \param ctx GL context.
  * \param ss shared state pointer.
- * 
+ *
  * Frees the display lists, the texture objects (calling the driver texture
  * deletion callback to free its private data) and the vertex programs, as well
  * as their hash tables.
@@ -924,7 +924,7 @@ _mesa_init_current( GLcontext *ctx )
  * Use defaults from config.h.  The device drivers will often override
  * some of these values (such as number of texture units).
  */
-static void 
+static void
 _mesa_init_constants( GLcontext *ctx )
 {
    assert(ctx);
@@ -1130,7 +1130,7 @@ alloc_dispatch_table(void)
  * Note that the driver needs to pass in its dd_function_table here since
  * we need to at least call driverFunctions->NewTextureObject to create the
  * default texture objects.
- * 
+ *
  * Called by _mesa_create_context().
  *
  * Performs the imports and exports callback tables initialization, and
@@ -1217,7 +1217,7 @@ _mesa_initialize_context( GLcontext *ctx,
    _mesa_init_dlist_table(ctx->Save);
    _mesa_install_save_vtxfmt( ctx, &ctx->ListState.ListVtxfmt );
    /* Neutral tnl module stuff */
-   _mesa_init_exec_vtxfmt( ctx ); 
+   _mesa_init_exec_vtxfmt( ctx );
    ctx->TnlModule.Current = NULL;
    ctx->TnlModule.SwapCount = 0;
 #endif
@@ -1240,7 +1240,7 @@ _mesa_initialize_context( GLcontext *ctx,
  * \param driverFunctions points to the dd_function_table into which the
  *        driver has plugged in all its special functions.
  * \param driverCtx points to the device driver's private context state
- * 
+ *
  * \return pointer to a new __GLcontextRec or NULL if error.
  */
 GLcontext *
@@ -1272,7 +1272,7 @@ _mesa_create_context( const GLvisual *visual,
 
 /**
  * Free the data associated with the given context.
- * 
+ *
  * But doesn't free the GLcontext struct itself.
  *
  * \sa _mesa_initialize_context() and init_attrib_groups().
@@ -1321,7 +1321,7 @@ _mesa_free_context_data( GLcontext *ctx )
  * Destroy a GLcontext structure.
  *
  * \param ctx GL context.
- * 
+ *
  * Calls _mesa_free_context_data() and frees the GLcontext structure itself.
  */
 void
@@ -1337,7 +1337,7 @@ _mesa_destroy_context( GLcontext *ctx )
 #if _HAVE_FULL_GL
 /**
  * Copy attribute groups from one context to another.
- * 
+ *
  * \param src source context
  * \param dst destination context
  * \param mask bitwise OR of GL_*_BIT flags
@@ -1461,7 +1461,7 @@ _mesa_copy_context( const GLcontext *src, GLcontext *dst, GLuint mask )
  * by checking visual attributes.
  * \return GL_TRUE if compatible, GL_FALSE otherwise.
  */
-static GLboolean 
+static GLboolean
 check_compatible(const GLcontext *ctx, const GLframebuffer *buffer)
 {
    const GLvisual *ctxvis = &ctx->Visual;
@@ -1505,11 +1505,11 @@ check_compatible(const GLcontext *ctx, const GLframebuffer *buffer)
  * context.
  * \param drawBuffer draw framebuffer.
  * \param readBuffer read framebuffer.
- * 
+ *
  * Check that the context's and framebuffer's visuals are compatible, returning
  * immediately otherwise. Sets the glapi current context via
  * _glapi_set_context(). If \p newCtx is not NULL, associates \p drawBuffer and
- * \p readBuffer with it and calls dd_function_table::ResizeBuffers if the buffers size has changed. 
+ * \p readBuffer with it and calls dd_function_table::ResizeBuffers if the buffers size has changed.
  * Calls dd_function_table::MakeCurrent callback if defined.
  *
  * When a context is bound by the first time and the \c MESA_INFO environment
@@ -1648,9 +1648,9 @@ _mesa_share_state(GLcontext *ctx, GLcontext *ctxToShare)
 
 /**
  * Get current context for the calling thread.
- * 
+ *
  * \return pointer to the current GL context.
- * 
+ *
  * Calls _glapi_get_context(). This isn't the fastest way to get the current
  * context.  If you need speed, see the #GET_CURRENT_CONTEXT macro in context.h.
  */
@@ -1665,7 +1665,7 @@ _mesa_get_current_context( void )
  *
  * It'll either be the immediate-mode execute dispatcher or the display list
  * compile dispatcher.
- * 
+ *
  * \param ctx GL context.
  *
  * \return pointer to dispatch_table.
@@ -1691,7 +1691,7 @@ _mesa_get_dispatch(GLcontext *ctx)
  *
  * \param ctx GL context.
  * \param error error code.
- * 
+ *
  * Records the given error code and call the driver's dd_function_table::Error
  * function if defined.
  *

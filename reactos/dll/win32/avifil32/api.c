@@ -1159,7 +1159,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
 	break;
       }
     }
-      
+
     memcpy(szFilter, szAllFiles, size * sizeof(szAllFiles[0]));
     szFilter += size;
     szFilter[0] = 0;
@@ -1827,7 +1827,7 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
 	  if (curStream != 0) {
 	    lFirstVideo =
 	      AVIStreamSampleToSample(pInStreams[curStream], pInStreams[0],
-				      (sInfo.fccType == streamtypeVIDEO ? 
+				      (sInfo.fccType == streamtypeVIDEO ?
 				       (LONG)dwInterleave : lSampleInc) +
 				      sInfo.dwInitialFrames + lCurFrame);
 	  } else

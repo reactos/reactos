@@ -12,7 +12,7 @@ class DropZone
 {
 	friend class CardWindow;
 
-	DropZone(int Id, RECT *rect, pDropZoneProc proc) : 
+	DropZone(int Id, RECT *rect, pDropZoneProc proc) :
 	  id(Id), DropZoneCallback(proc) { CopyRect(&zone, rect); }
 
 public:
@@ -21,7 +21,7 @@ public:
 	void GetZone(RECT *rect) { CopyRect(rect, &zone); }
 	void SetCallback(pDropZoneProc callback) { DropZoneCallback = callback; }
 
-	int  DropCards(CardStack &cardstack) 
+	int  DropCards(CardStack &cardstack)
 	{
 		if(DropZoneCallback)
 			return DropZoneCallback(id, cardstack);

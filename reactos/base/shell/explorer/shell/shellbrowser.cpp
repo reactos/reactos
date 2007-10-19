@@ -42,7 +42,7 @@ ShellBrowser::ShellBrowser(HWND hwnd, HWND hwndFrame, HWND left_hwnd, WindowHand
 #ifndef __MINGW32__	// IShellFolderViewCB missing in MinGW (as of 25.09.2005)
  :	super(IID_IShellFolderViewCB),
 #else
- :	
+ :
 #endif
 	_hwnd(hwnd),
 	_hwndFrame(hwndFrame),
@@ -673,7 +673,7 @@ LRESULT MDIShellBrowserChild::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 			return super::WndProc(nmsg, wparam, lparam);
 		}
 		return TRUE;}
-	
+
 	  default:
 		return super::WndProc(nmsg, wparam, lparam);
 	}
@@ -730,7 +730,7 @@ String MDIShellBrowserChild::jump_to_int(LPCTSTR url)
 		if (_shellBrowser->jump_to_pidl(ShellPath(dir)))
 			return FmtString(TEXT("file://%s"), (LPCTSTR)dir);
 	}
-	
+
 	return String();
 }
 

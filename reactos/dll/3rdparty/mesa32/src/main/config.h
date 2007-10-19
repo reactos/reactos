@@ -126,8 +126,8 @@
 #define MAX_TEXTURE_IMAGE_UNITS 8
 /*@}*/
 
-/** 
- * Maximum viewport/image width. Must accomodate all texture sizes too. 
+/**
+ * Maximum viewport/image width. Must accomodate all texture sizes too.
  */
 #define MAX_WIDTH 4096
 /** Maximum viewport/image height */
@@ -240,7 +240,7 @@
 #define ACCUM_BITS 16
 
 /**
- * Bits per depth buffer value.  
+ * Bits per depth buffer value.
  *
  * Any reasonable value up to 31 will work.  32 doesn't work because of integer
  * overflow problems in the rasterizer code.
@@ -272,7 +272,7 @@
 
 /*
  * Color channel component order
- * 
+ *
  * \note Changes will almost certainly cause problems at this time.
  */
 #define RCOMP 0
@@ -310,7 +310,7 @@
 
 
 /**
- * Maximum number of temporary vertices required for clipping.  
+ * Maximum number of temporary vertices required for clipping.
  *
  * Used in array_cache and tnl modules.
  */

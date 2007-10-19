@@ -36,7 +36,7 @@ CmCreateRootNode(
    KeyCell->ValueList.Count = 0;
    KeyCell->ValueList.List = HCELL_NULL;
    KeyCell->SecurityKeyOffset = HCELL_NULL;
-   KeyCell->ClassNameOffset = HCELL_NULL; 
+   KeyCell->ClassNameOffset = HCELL_NULL;
    KeyCell->NameSize = (USHORT)NameSize;
    KeyCell->ClassSize = 0;
    memcpy(KeyCell->Name, Name, NameSize);
@@ -74,7 +74,7 @@ CmpPrepareKey(
 VOID CMAPI
 CmPrepareHive(
    PHHIVE RegistryHive)
-{ 
+{
    PCM_KEY_NODE RootCell;
 
    RootCell = HvGetCell(RegistryHive, RegistryHive->HiveHeader->RootCell);

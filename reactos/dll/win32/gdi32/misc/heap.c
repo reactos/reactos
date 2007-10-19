@@ -18,11 +18,11 @@
  * $Id:
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
- * PURPOSE:          
+ * PURPOSE:
  * FILE:             lib/gdi32/misc/heap.c
- * PROGRAMER:        
- * REVISION HISTORY: 
- * NOTES:            
+ * PROGRAMER:
+ * REVISION HISTORY:
+ * NOTES:
  */
 
 #include "precomp.h"

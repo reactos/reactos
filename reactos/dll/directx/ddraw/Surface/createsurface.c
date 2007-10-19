@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/surface/createsurface.c
- * PURPOSE:              IDirectDrawSurface7 Creation 
+ * PURPOSE:              IDirectDrawSurface7 Creation
  * PROGRAMMER:           Magnus Olsen
  *
  */
@@ -14,13 +14,13 @@
 
 
 /*
- * all param have been checked if they are vaild before they are call to 
- * Internal_CreateSurface, if not please fix the code in the functions 
- * call to Internal_CreateSurface, ppSurf,pDDSD,pDDraw  are being vaildate in 
+ * all param have been checked if they are vaild before they are call to
+ * Internal_CreateSurface, if not please fix the code in the functions
+ * call to Internal_CreateSurface, ppSurf,pDDSD,pDDraw  are being vaildate in
  * Internal_CreateSurface
  */
 
-HRESULT 
+HRESULT
 Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
                         LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
 {
@@ -55,13 +55,13 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_INVALIDPARAMS;
     }
 
-    if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT) 
+    if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT)
         && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
     {
         return DDERR_INVALIDPARAMS;
     }
 
-    else if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwFlags & DDSD_HEIGHT 
+    else if(pDDSD->dwFlags & DDSD_HEIGHT && pDDSD->dwFlags & DDSD_HEIGHT
         && pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
     {
         return DDERR_INVALIDPARAMS;
@@ -129,7 +129,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
             return DDERR_OUTOFMEMORY;
         }
 
-        /* setup a list only one we really need is  slist_lcl 
+        /* setup a list only one we really need is  slist_lcl
           rest of slist shall be release before a return */
 
         slist_int[count] = ThisSurfInt;
@@ -203,7 +203,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     mDdCanCreateSurface.lpDDSurfaceDesc = (LPDDSURFACEDESC) pDDSD;
     mDdCanCreateSurface.ddRVal = DDERR_GENERIC;
 
-    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+    if (mDdCanCreateSurface.CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED)
     {
         DX_STUB_str("mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED fail");
         return DDERR_NOTINITIALIZED;
@@ -227,7 +227,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_NOTINITIALIZED;
     }
 
-    if (mDdCreateSurface.ddRVal != DD_OK) 
+    if (mDdCreateSurface.ddRVal != DD_OK)
     {
         return mDdCreateSurface.ddRVal;
     }

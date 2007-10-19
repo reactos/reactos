@@ -274,7 +274,7 @@ VOID RunLoader(VOID)
     SourcePath = "\\";
 
 #ifdef DBG
-  /* Get load options */  
+  /* Get load options */
   if (InfFindFirstLine (InfHandle,
 			"SetupData",
 			"DbgOsLoadOptions",
@@ -311,7 +311,7 @@ VOID RunLoader(VOID)
 
   strcpy(SystemRoot, SourcePath);
   strcat(SystemRoot, "\\");
-  
+
     /* Setup the boot path and kernel path */
     strcpy(szBootPath, SourcePath);
     strcpy(szKernelName, szBootPath);

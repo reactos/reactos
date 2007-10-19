@@ -68,7 +68,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			BM_SETCHECK,
 			(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable ? BST_CHECKED : BST_UNCHECKED),
 			(LPARAM)0);
-		
+
 		if (LoadString(hApplet, IDS_PROCENT, szTemp, MAX_PATH))
 		{
 			_stprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
@@ -87,7 +87,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			TBM_SETPOS,
 			(WPARAM)TRUE,
 			(LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
-		
+
 		if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
 		{
 			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMAKTION1),szAction);
@@ -95,11 +95,11 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 
 		memset(szMessage, 0x0, sizeof(szMessage));
 		LoadString(hApplet, IDS_NOACTION, szMessage, MAX_PATH);
-						
+
 		if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_TEXT)
 		{
 			if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
-			{	
+			{
 				if (LoadString(hApplet, IDS_SOUND, szSound, MAX_PATH) && LoadString(hApplet, IDS_TEXT, szText, MAX_PATH))
 				{
 					_stprintf(szMessage,_T("%s, %s"),szSound,szText);
@@ -125,7 +125,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 		}
 
 		SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMMSG1),szMessage);
-		
+
 		if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
 		{
 			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMPROG1),szProgram);
@@ -162,7 +162,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 
 		memset(szMessage, 0x0, sizeof(szMessage));
 		LoadString(hApplet, IDS_NOACTION, szMessage, MAX_PATH);
-		
+
 		if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_TEXT)
 		{
 			if (LOWORD(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.EventCode) & POWER_LEVEL_USER_NOTIFY_SOUND)
@@ -192,7 +192,7 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 		}
 
 		SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMMSG2),szMessage);
-		
+
 		if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
 		{
 			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMPROG2),szProgram);

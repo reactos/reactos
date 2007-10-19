@@ -115,38 +115,38 @@ PDCE FASTCALL
 DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 {
     PDCE pDce;
-  
+
     pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), TAG_PDCE);
     if(!pDce)
         return NULL;
-       
+
     pDce->hDC = DceCreateDisplayDC();
     if(!pDce->hDC)
     {
       ExFreePoolWithTag(pDce, TAG_PDCE);
-      return NULL;     
+      return NULL;
     }
 //
-// If NULL, first time through! Build the default window dc!  
+// If NULL, first time through! Build the default window dc!
 //
     if (NULL == defaultDCstate) // Ultra HAX! Dedicated to GvG!
-      { // This is a cheesy way to do this. 
+      { // This is a cheesy way to do this.
         PDC dc = DC_LockDc ( pDce->hDC );
         defaultDCstate = ExAllocatePoolWithTag(PagedPool, sizeof(DC), TAG_DC);
         RtlZeroMemory(defaultDCstate, sizeof(DC));
         IntGdiCopyToSaveState(dc, defaultDCstate);
         DC_UnlockDc( dc );
     }
-    
+
     pDce->hwndCurrent = (Window ? Window->hSelf : NULL);
     pDce->hClipRgn = NULL;
     pDce->pProcess = NULL;
 
-    KeEnterCriticalRegion();    
+    KeEnterCriticalRegion();
     pDce->next = FirstDce;
     FirstDce = pDce;
     KeLeaveCriticalRegion();
-      
+
     if (Type == DCE_WINDOW_DC) //Window DCE have ownership.
      { // Process should already own it.
        pDce->pProcess = PsGetCurrentProcess();
@@ -157,11 +157,11 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
        DC_FreeDcAttr(pDce->hDC);         // Free the dcattr!
        DC_SetOwnership(pDce->hDC, NULL); // This hDC is inaccessible!
     }
-  
+
      if (Type != DCE_CACHE_DC)
      {
        pDce->DCXFlags = DCX_DCEBUSY;
-        
+
         if (Window)
         {
            if (Window->Style & WS_CLIPCHILDREN)
@@ -178,7 +178,7 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
      {
        pDce->DCXFlags = DCX_CACHE | DCX_DCEEMPTY;
      }
-  
+
     return(pDce);
 }
 
@@ -667,33 +667,33 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
      {
         return NULL;
      }
-  
+
    ret = pdce->next;
-  
+
   #if 0 /* FIXME */
-  
+
    SetDCHook(pdce->hDC, NULL, 0L);
   #endif
-  
+
    if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, pdce->hDC))
      {
       DPRINT1("Change ownership for DCE!\n");
       DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
      }
-  
+
    NtGdiDeleteObjectApp(pdce->hDC);
    if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
      {
       NtGdiDeleteObject(pdce->hClipRgn);
      }
-  
+
    DCE_Cleanup(pdce);
    ExFreePoolWithTag(pdce, TAG_PDCE);
 
    if (FirstDce == NULL)
    {
      ExFreePoolWithTag(defaultDCstate, TAG_DC);
-     defaultDCstate = NULL;     
+     defaultDCstate = NULL;
    }
      return ret;
 }

@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/desk.c
  * PURPOSE:         ReactOS Display Control Panel
- * 
+ *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 
@@ -24,7 +24,7 @@ UINT CALLBACK SettingsPageCallbackProc(HWND hwnd, UINT uMsg, LPPROPSHEETPAGE pps
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
     {
         IDC_DESK_ICON,

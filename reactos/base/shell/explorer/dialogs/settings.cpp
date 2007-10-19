@@ -248,7 +248,7 @@ MdiSdiDlg::MdiSdiDlg(HWND hwnd)
 }
 
 int	MdiSdiDlg::Command(int id, int code)
-{	
+{
 	if (code == BN_CLICKED) {
 		switch(id) {
 		  case IDOK: {

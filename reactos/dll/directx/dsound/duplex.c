@@ -259,7 +259,7 @@ DSFDCF_CreateInstance(
 	return E_NOINTERFACE;
     }
 
-    WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);	
+    WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
     return E_NOINTERFACE;
 }
 

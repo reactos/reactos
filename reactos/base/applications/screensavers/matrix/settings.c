@@ -52,7 +52,7 @@ void LoadSettings()
 		if(value >= SPEED_MIN && value <= SPEED_MAX)
 			g_nMatrixSpeed  = value;
 	}
-	
+
 	if(ERROR_SUCCESS == RegQueryValueEx(hkey, _T("Density"),      0, 0, (BYTE *)&value, &len))
 	{
 		if(value >= DENSITY_MIN && value <= DENSITY_MAX)

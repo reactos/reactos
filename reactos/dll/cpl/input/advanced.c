@@ -49,7 +49,7 @@ AdvancedPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
   switch(uMsg)
   {
     case WM_INITDIALOG:
-    
+
 	break;
 	case WM_COMMAND:
 		switch (LOWORD(wParam))

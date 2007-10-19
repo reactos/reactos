@@ -1,6 +1,6 @@
-/* 
+/*
  * DXDiag
- * 
+ *
  * Copyright 2004 Raphael Junqueira
  *
  * This library is free software; you can redistribute it and/or
@@ -32,7 +32,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
   TRACE("%p,%lx,%p\n", hInstDLL, fdwReason, lpvReserved);
   if (fdwReason == DLL_PROCESS_ATTACH) {
-    DisableThreadLibraryCalls(hInstDLL);    
+    DisableThreadLibraryCalls(hInstDLL);
   }
   return TRUE;
 }
@@ -50,7 +50,7 @@ static HRESULT WINAPI DXDiagCF_QueryInterface(LPCLASSFACTORY iface,REFIID riid,L
   FIXME("- no interface\n\tIID:\t%s\n", debugstr_guid(riid));
 
   if (ppobj == NULL) return E_POINTER;
-  
+
   return E_NOINTERFACE;
 }
 
@@ -69,7 +69,7 @@ static ULONG WINAPI DXDiagCF_Release(LPCLASSFACTORY iface) {
 static HRESULT WINAPI DXDiagCF_CreateInstance(LPCLASSFACTORY iface,LPUNKNOWN pOuter,REFIID riid,LPVOID *ppobj) {
   IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
   TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
-  
+
   return This->pfnCreateInstanceFactory(iface, pOuter, riid, ppobj);
 }
 
@@ -80,7 +80,7 @@ static HRESULT WINAPI DXDiagCF_LockServer(LPCLASSFACTORY iface,BOOL dolock) {
     DXDIAGN_LockModule();
   else
     DXDIAGN_UnlockModule();
-  
+
   return S_OK;
 }
 

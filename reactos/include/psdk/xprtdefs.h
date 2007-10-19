@@ -27,7 +27,7 @@
 #define ED_AUDIO_22					         0x0200000L
 #define ED_AUDIO_23					         0x0400000L
 #define ED_AUDIO_24					         0x0800000L
-#define	ED_AUDIO_ALL				         0x10000000	
+#define	ED_AUDIO_ALL				         0x10000000
 #define ED_VIDEO					         0x2000000L
 
 #define ED_TOP					             0x0001
@@ -51,7 +51,7 @@
 
 #define ED_BASE		        		         0x1000L
 #define ED_DEVCAP_CAN_RECORD			     ED_BASE+1
-#define ED_DEVCAP_CAN_RECORD_STROBE		     ED_BASE+2											
+#define ED_DEVCAP_CAN_RECORD_STROBE		     ED_BASE+2
 #define ED_DEVCAP_HAS_AUDIO			         ED_BASE+3
 #define ED_DEVCAP_HAS_VIDEO			         ED_BASE+4
 #define ED_DEVCAP_USES_FILES		         ED_BASE+5
@@ -84,7 +84,7 @@
 #define ED_SYNCACC_PRECISE			         ED_BASE+32
 #define ED_SYNCACC_FRAME			         ED_BASE+33
 #define ED_SYNCACC_ROUGH			         ED_BASE+34
-#define ED_DEVCAP_NORMAL_RATE	             ED_BASE+35	
+#define ED_DEVCAP_NORMAL_RATE	             ED_BASE+35
 #define ED_RATE_24				             ED_BASE+36
 #define ED_RATE_25				             ED_BASE+37
 #define ED_RATE_2997			             ED_BASE+38
@@ -116,7 +116,7 @@
 #define ED_TRANSCAP_CAN_DELAY_VIDEO_OUT	     ED_BASE+106
 #define ED_TRANSCAP_CAN_DELAY_AUDIO_IN	     ED_BASE+107
 #define ED_TRANSCAP_CAN_DELAY_AUDIO_OUT	     ED_BASE+108
-#define ED_TRANSCAP_FWD_VARIABLE_MAX	     ED_BASE+109												
+#define ED_TRANSCAP_FWD_VARIABLE_MAX	     ED_BASE+109
 #define ED_TRANSCAP_REV_VARIABLE_MAX	     ED_BASE+110
 
 #define ED_TRANSCAP_NUM_AUDIO_TRACKS	     ED_BASE+111
@@ -336,7 +336,7 @@
 
 #define ED_EDIT_REHEARSE_MODE	             ED_BASE+672
 #define ED_EDIT_BVB		                     ED_BASE+673
-									
+
 #define ED_EDIT_VBV		                     ED_BASE+674
 #define ED_EDIT_VVV		                     ED_BASE+675
 #define ED_EDIT_PERFORM	                     ED_BASE+676
@@ -411,4 +411,4 @@
 #define ED_DEV_REMOVED_HEVENT_GET            ED_BASE+960
 #define ED_DEV_REMOVED_HEVENT_RELEASE        ED_BASE+961
 
-#endif 
+#endif

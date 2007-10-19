@@ -131,7 +131,7 @@ BOOL CreateFolderEnumList(
 
         do
         {
-            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) 
+            if ( !(stffile.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
              || (dwFlags & SHCONTF_INCLUDEHIDDEN) )
             {
                 if ( (stffile.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) &&

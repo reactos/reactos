@@ -199,10 +199,10 @@ BOOLEAN Pos_InitData()
 		ShowWindow(GetDlgItem(hPos, IDC_STANDBYDCLIST),FALSE);
 		ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEDCLIST),FALSE);
 		ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEACLIST), spc.HiberFilePresent);
-		
+
 	}
 	else
-	{	
+	{
 		ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEDCLIST), spc.HiberFilePresent);
 		ShowWindow(GetDlgItem(hPos, IDC_HYBERNATEACLIST), FALSE);
 	}
@@ -274,10 +274,10 @@ BOOLEAN CreateEnergyList(HWND hwnd)
 	SYSTEM_POWER_CAPABILITIES spc;
 
 	hList = hwnd;
-	
+
 	if (!GetActivePwrScheme(&aps))
 		return FALSE;
-	
+
 	if (!ReadGlobalPwrPolicy(&gGPP))
 		return FALSE;
 

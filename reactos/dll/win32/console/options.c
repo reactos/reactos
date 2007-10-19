@@ -10,10 +10,10 @@
 #include "console.h"
 
 static
-void 
+void
 UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo);
 
-INT_PTR 
+INT_PTR
 CALLBACK
 OptionsProc(
   HWND hwndDlg,
@@ -44,7 +44,7 @@ OptionsProc(
 			{
 				break;
 			}
-			lppsn = (LPPSHNOTIFY) lParam; 
+			lppsn = (LPPSHNOTIFY) lParam;
             if (lppsn->hdr.code == UDN_DELTAPOS)
             {
 				hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_BUFFER_SIZE);
@@ -91,7 +91,7 @@ OptionsProc(
 					break;
 				}
 				case IDC_RADIO_LARGE_CURSOR:
-				{				
+				{
 					pConInfo->CursorSize = 0x64;
 					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 					break;
@@ -169,7 +169,7 @@ OptionsProc(
 }
 
 static
-void 
+void
 UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 {
   HWND hDlgCtrl;
@@ -221,7 +221,7 @@ UpdateDialogElements(HWND hwndDlg, PConsoleInfo pConInfo)
 	hDlgCtrl = GetDlgItem(hwndDlg, IDC_EDIT_BUFFER_SIZE);
 	_stprintf(szBuffer, _T("%d"), pConInfo->HistoryBufferSize);
 	SendMessage(hDlgCtrl, WM_SETTEXT, 0, (LPARAM)szBuffer);
-    
+
 
 
 	/* update discard duplicates */

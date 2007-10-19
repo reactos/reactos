@@ -947,7 +947,7 @@ _mesa_PopAttrib(void)
                /* per-light state */
                if (_math_matrix_is_dirty(ctx->ModelviewMatrixStack.Top))
                   _math_matrix_analyse( ctx->ModelviewMatrixStack.Top );
-	       
+
                for (i = 0; i < MAX_LIGHTS; i++) {
                   GLenum lgt = (GLenum) (GL_LIGHT0 + i);
 		  const struct gl_light *l = &light->Light[i];
@@ -962,11 +962,11 @@ _mesa_PopAttrib(void)
 		  _mesa_Lightfv( lgt, GL_SPOT_DIRECTION, tmp );
 		  _mesa_Lightfv( lgt, GL_SPOT_EXPONENT, &l->SpotExponent );
 		  _mesa_Lightfv( lgt, GL_SPOT_CUTOFF, &l->SpotCutoff );
-		  _mesa_Lightfv( lgt, GL_CONSTANT_ATTENUATION, 
+		  _mesa_Lightfv( lgt, GL_CONSTANT_ATTENUATION,
 				 &l->ConstantAttenuation );
-		  _mesa_Lightfv( lgt, GL_LINEAR_ATTENUATION, 
+		  _mesa_Lightfv( lgt, GL_LINEAR_ATTENUATION,
 				 &l->LinearAttenuation );
-		  _mesa_Lightfv( lgt, GL_QUADRATIC_ATTENUATION, 
+		  _mesa_Lightfv( lgt, GL_QUADRATIC_ATTENUATION,
 				 &l->QuadraticAttenuation );
                }
                /* light model */

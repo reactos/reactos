@@ -76,7 +76,7 @@ static inline IExtractIconW *impl_from_IExtractIconA( IExtractIconA *iface )
 IExtractIconW* IExtractIconW_Constructor(LPCITEMIDLIST pidl)
 {
 	IExtractIconWImpl* ei;
-	
+
 	TRACE("%p\n", pidl);
 
 	ei = HeapAlloc(GetProcessHeap(),0,sizeof(IExtractIconWImpl));
@@ -422,7 +422,7 @@ IExtractIconA* IExtractIconA_Constructor(LPCITEMIDLIST pidl)
 {
 	IExtractIconWImpl *This = (IExtractIconWImpl *)IExtractIconW_Constructor(pidl);
 	IExtractIconA *eia = (IExtractIconA *)&This->lpvtblExtractIconA;
-	
+
 	TRACE("(%p)->(%p)\n", This, eia);
 	return eia;
 }
@@ -470,7 +470,7 @@ static HRESULT WINAPI IExtractIconA_fnGetIconLocation(
 	HRESULT ret;
 	LPWSTR lpwstrFile = HeapAlloc(GetProcessHeap(), 0, cchMax * sizeof(WCHAR));
 	IExtractIconW *This = impl_from_IExtractIconA(iface);
-	
+
 	TRACE("(%p) (flags=%u %p %u %p %p)\n", This, uFlags, szIconFile, cchMax, piIndex, pwFlags);
 
 	ret = IExtractIconW_GetIconLocation(This, uFlags, lpwstrFile, cchMax, piIndex, pwFlags);

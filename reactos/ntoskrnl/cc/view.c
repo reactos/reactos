@@ -248,7 +248,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
       current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
 				  DirtySegmentListEntry);
       current_entry = current_entry->Flink;
-    
+
 //      Locked = current->Bcb->Callbacks.AcquireForLazyWrite(current->Bcb->Context, FALSE);
       Locked = ExTryToAcquireResourceExclusiveLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
       if (!Locked)

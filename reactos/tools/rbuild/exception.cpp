@@ -135,7 +135,7 @@ InvalidAttributeValueException::InvalidAttributeValueException (
 		name.c_str (),
 		value.c_str () )
 {
-	
+
 }
 
 BackendNameConflictException::BackendNameConflictException ( const string& name )

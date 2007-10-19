@@ -104,7 +104,7 @@ static void TAG(triangle)(GLcontext *ctx, GLuint e0, GLuint e1, GLuint e2 )
 		  saved_index[0] = v[0]->index;
 		  saved_index[1] = v[1]->index;
 		  saved_index[2] = v[2]->index;
-		  
+
 		  SS_IND(v[0]->index, (GLuint) vbindex[e0]);
 		  SS_IND(v[1]->index, (GLuint) vbindex[e1]);
 		  SS_IND(v[2]->index, (GLuint) vbindex[e2]);

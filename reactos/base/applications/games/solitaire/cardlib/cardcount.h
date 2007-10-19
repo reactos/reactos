@@ -24,7 +24,7 @@ public:
 	CardCount &operator += (const CardStack &cs);
 
 private:
-	int count[13];	//13 different card values 
+	int count[13];	//13 different card values
 					//(ace,2,3,4,5,6,7,8,9,10,J,Q,K)
 };
 

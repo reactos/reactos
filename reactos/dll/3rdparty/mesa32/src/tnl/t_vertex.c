@@ -42,24 +42,24 @@ static GLboolean match_fastpath( struct tnl_clipspace *vtx,
 {
    GLuint j;
 
-   if (vtx->attr_count != fp->attr_count) 
+   if (vtx->attr_count != fp->attr_count)
       return GL_FALSE;
 
-   for (j = 0; j < vtx->attr_count; j++) 
+   for (j = 0; j < vtx->attr_count; j++)
       if (vtx->attr[j].format != fp->attr[j].format ||
 	  vtx->attr[j].inputsize != fp->attr[j].size ||
-	  vtx->attr[j].vertoffset != fp->attr[j].offset) 
+	  vtx->attr[j].vertoffset != fp->attr[j].offset)
 	 return GL_FALSE;
-      
+
    if (fp->match_strides) {
       if (vtx->vertex_size != fp->vertex_size)
 	 return GL_FALSE;
 
-      for (j = 0; j < vtx->attr_count; j++) 
-	 if (vtx->attr[j].inputstride != fp->attr[j].stride) 
+      for (j = 0; j < vtx->attr_count; j++)
+	 if (vtx->attr[j].inputstride != fp->attr[j].stride)
 	    return GL_FALSE;
    }
-   
+
    return GL_TRUE;
 }
 
@@ -121,7 +121,7 @@ static void choose_emit_func( GLcontext *ctx, GLuint count, GLubyte *dest)
    }
 
    vtx->emit = NULL;
-   
+
    /* Does this match an existing (hardwired, codegen or known-bad)
     * fastpath?
     */
@@ -156,7 +156,7 @@ static void choose_interp_func( GLcontext *ctx,
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
 
-   if (vtx->need_extras && 
+   if (vtx->need_extras &&
        (ctx->_TriangleCaps & (DD_TRI_LIGHT_TWOSIDE|DD_TRI_UNFILLED))) {
       vtx->interp = _tnl_generic_interp_extras;
    } else {
@@ -171,7 +171,7 @@ static void choose_copy_pv_func(  GLcontext *ctx, GLuint edst, GLuint esrc )
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
 
-   if (vtx->need_extras && 
+   if (vtx->need_extras &&
        (ctx->_TriangleCaps & (DD_TRI_LIGHT_TWOSIDE|DD_TRI_UNFILLED))) {
       vtx->copy_pv = _tnl_generic_copy_pv_extras;
    } else {
@@ -277,7 +277,7 @@ static void invalidate_funcs( struct tnl_clipspace *vtx )
 }
 
 GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
-			   GLuint nr, const GLfloat *vp, 
+			   GLuint nr, const GLfloat *vp,
 			   GLuint unpacked_size )
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
@@ -298,8 +298,8 @@ GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
       const GLuint format = map[i].format;
       if (format == EMIT_PAD) {
 	 if (DBG)
-	    _mesa_printf("%d: pad %d, offset %d\n", i,  
-			 map[i].offset, offset);  
+	    _mesa_printf("%d: pad %d, offset %d\n", i,
+			 map[i].offset, offset);
 
 	 offset += map[i].offset;
 
@@ -307,7 +307,7 @@ GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
       else {
 	 GLuint tmpoffset;
 
-	 if (unpacked_size) 
+	 if (unpacked_size)
 	    tmpoffset = map[i].offset;
 	 else
 	    tmpoffset = offset;
@@ -327,11 +327,11 @@ GLuint _tnl_install_attrs( GLcontext *ctx, const struct tnl_attr_map *map,
 	    vtx->attr[j].vertoffset = tmpoffset;
 	 }
 
-	 
+
 	 if (DBG)
-	    _mesa_printf("%d: %s, vp %p, offset %d\n", i,  
+	    _mesa_printf("%d: %s, vp %p, offset %d\n", i,
 			 _tnl_format_info[format].name, (void *)vp,
-			 vtx->attr[j].vertoffset);   
+			 vtx->attr[j].vertoffset);
 
 	 offset += _tnl_format_info[format].attrsize;
 	 j++;
@@ -374,7 +374,7 @@ static void update_input_ptrs( GLcontext *ctx, GLuint start )
    struct tnl_clipspace_attr *a = vtx->attr;
    const GLuint count = vtx->attr_count;
    GLuint j;
-   
+
    for (j = 0; j < count; j++) {
       GLvector4f *vptr = VB->AttribPtr[a[j].attrib];
 
@@ -385,7 +385,7 @@ static void update_input_ptrs( GLcontext *ctx, GLuint start )
 
       a[j].inputptr = ((GLubyte *)vptr->data) + start * vptr->stride;
    }
-   
+
    if (a->vp) {
       vtx->vp_scale[0] = a->vp[MAT_SX];
       vtx->vp_scale[1] = a->vp[MAT_SY];
@@ -404,10 +404,10 @@ void _tnl_build_vertices( GLcontext *ctx,
 			  GLuint end,
 			  GLuint newinputs )
 {
-   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);  
-   update_input_ptrs( ctx, start );      
-   vtx->emit( ctx, end - start, 
-	      (GLubyte *)(vtx->vertex_buf + 
+   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
+   update_input_ptrs( ctx, start );
+   vtx->emit( ctx, end - start,
+	      (GLubyte *)(vtx->vertex_buf +
 			  start * vtx->vertex_size));
 }
 
@@ -425,16 +425,16 @@ void *_tnl_emit_vertices_to_buffer( GLcontext *ctx,
 
    /* Note: dest should not be adjusted for non-zero 'start' values:
     */
-   vtx->emit( ctx, end - start, dest );	
+   vtx->emit( ctx, end - start, dest );
    return (void *)((GLubyte *)dest + vtx->vertex_size * (end - start));
 }
 
 
-void _tnl_init_vertices( GLcontext *ctx, 
+void _tnl_init_vertices( GLcontext *ctx,
 			GLuint vb_size,
 			GLuint max_vertex_size )
 {
-   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);  
+   struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
 
    _tnl_install_attrs( ctx, NULL, 0, NULL, 0 );
 
@@ -490,13 +490,13 @@ void _tnl_free_vertices( GLcontext *ctx )
       ALIGN_FREE(vtx->vertex_buf);
       vtx->vertex_buf = NULL;
    }
-   
+
    for (fp = vtx->fastpath ; fp ; fp = tmp) {
       tmp = fp->next;
       FREE(fp->attr);
       FREE((void *)fp->func);
       FREE(fp);
    }
-   
+
    vtx->fastpath = NULL;
 }

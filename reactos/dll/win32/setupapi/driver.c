@@ -621,7 +621,7 @@ RegpApplyRestrictions( DWORD dwFlags, DWORD dwType, DWORD cbData,
 }
 
 static LONG WINAPI
-RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue, 
+RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
               DWORD dwFlags, LPDWORD pdwType, PVOID pvData,
               LPDWORD pcbData )
 {
@@ -629,7 +629,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     PVOID pvBuf = NULL;
     LONG ret;
 
-    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n", 
+    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n",
           hKey, debugstr_w(pszSubKey), debugstr_w(pszValue), dwFlags, pdwType,
           pvData, pcbData, cbData);
 
@@ -643,7 +643,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     }
 
     ret = RegQueryValueExW(hKey, pszValue, NULL, &dwType, pvData, &cbData);
-    
+
     /* If we are going to expand we need to read in the whole the value even
      * if the passed buffer was too small as the expanded string might be
      * smaller than the unexpanded one and could fit into cbData bytes. */
@@ -652,7 +652,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     {
         do {
             if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
-            
+
             pvBuf = HeapAlloc(GetProcessHeap(), 0, cbData);
             if (!pvBuf)
             {
@@ -661,11 +661,11 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
             }
 
             if (ret == ERROR_MORE_DATA)
-                ret = RegQueryValueExW(hKey, pszValue, NULL, 
+                ret = RegQueryValueExW(hKey, pszValue, NULL,
                                        &dwType, pvBuf, &cbData);
             else
             {
-                /* Even if cbData was large enough we have to copy the 
+                /* Even if cbData was large enough we have to copy the
                  * string since ExpandEnvironmentStrings can't handle
                  * overlapping buffers. */
                 CopyMemory(pvBuf, pvData, cbData);

@@ -35,14 +35,14 @@
                   "glGet" str "v(0x%x)", (int) PNAME); \
       return;                                          \
    }
-    
+
 #define CHECK2(E1, E2, str, PNAME)                     \
    if (!ctx->Extensions.E1 && !ctx->Extensions.E2) {   \
       _mesa_error(ctx, GL_INVALID_VALUE,               \
                   "glGet" str "v(0x%x)", (int) PNAME); \
       return;                                          \
    }
-    
+
 #define CHECK_EXTENSION_B(EXTNAME, PNAME)      \
    CHECK1(EXTNAME, "Boolean", PNAME )
 
@@ -5639,7 +5639,7 @@ _mesa_GetDoublev( GLenum pname, GLdouble *params )
       values[i] = magic;
 
    _mesa_GetFloatv(pname, values);
-   
+
    for (i = 0; i < 16 && values[i] != magic; i++)
       params[i] = (GLdouble) values[i];
 }

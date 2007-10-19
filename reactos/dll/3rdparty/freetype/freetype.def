@@ -163,5 +163,5 @@ EXPORTS
   FT_Vector_Rotate
   FT_Vector_Transform
   FT_Vector_Unit
-TT_New_Context 
-TT_RunIns 
+TT_New_Context
+TT_RunIns

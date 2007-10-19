@@ -73,7 +73,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
 
     /* Assume failure */
     *Object = NULL;
-    
+
     /* Check if this is a special handle */
     if (HandleToLong(Handle) < 0)
     {
@@ -83,40 +83,40 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
             /* Return handle info */
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = Process->GrantedAccess;
-            
+
             /* No audit mask */
             *AuditMask = 0;
-            
+
             /* Reference ourselves */
             ObjectHeader = OBJECT_TO_OBJECT_HEADER(Process);
             InterlockedIncrement(&ObjectHeader->PointerCount);
-            
+
             /* Return the pointer */
             *Object = Process;
             ASSERT(*Object != NULL);
             return STATUS_SUCCESS;
         }
-        
+
         /* Check if the caller wants the current thread */
         if (Handle == NtCurrentThread())
         {
             /* Return handle information */
             HandleInformation->HandleAttributes = 0;
             HandleInformation->GrantedAccess = Thread->GrantedAccess;
-            
+
             /* Reference ourselves */
             ObjectHeader = OBJECT_TO_OBJECT_HEADER(Thread);
             InterlockedExchangeAdd(&ObjectHeader->PointerCount, 1);
-            
+
             /* No audit mask */
             *AuditMask = 0;
-            
+
             /* Return the pointer */
             *Object = Thread;
             ASSERT(*Object != NULL);
             return STATUS_SUCCESS;
         }
-        
+
         /* This is a kernel handle... do we have access? */
         if (AccessMode == KernelMode)
         {
@@ -130,7 +130,7 @@ ObpReferenceProcessObjectByHandle(IN HANDLE Handle,
             return STATUS_INVALID_HANDLE;
         }
     }
-        
+
     /* Enter a critical region while we touch the handle table */
     ASSERT(HandleTable != NULL);
     KeEnterCriticalRegion();
@@ -1969,14 +1969,14 @@ ObInitProcess(IN PEPROCESS Parent OPTIONAL,
               IN PEPROCESS Process)
 {
     PHANDLE_TABLE ParentTable, ObjectTable;
-    
+
     /* Check for a parent */
     if (Parent)
     {
         /* Reference the parent's table */
         ParentTable = ObReferenceProcessHandleTable(Parent);
         if (!ParentTable) return STATUS_PROCESS_IS_TERMINATING;
-        
+
         /* Duplicate it */
         ObjectTable = ExDupHandleTable(Process,
                                        ParentTable,
@@ -1989,23 +1989,23 @@ ObInitProcess(IN PEPROCESS Parent OPTIONAL,
         ParentTable = NULL;
         ObjectTable = ExCreateHandleTable(Process);
     }
-    
+
     /* Make sure we have a table */
     if (ObjectTable)
     {
-        /* Associate it */       
+        /* Associate it */
         Process->ObjectTable = ObjectTable;
-        
+
         /* Check for auditing */
         if (SeDetailedAuditingWithToken(NULL))
         {
             /* FIXME: TODO */
             DPRINT1("Need auditing!\n");
         }
-        
+
         /* Get rid of the old table now */
         if (ParentTable) ObDereferenceProcessHandleTable(Parent);
-        
+
         /* We are done */
         return STATUS_SUCCESS;
     }

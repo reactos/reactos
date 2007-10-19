@@ -164,7 +164,7 @@ MsqInsertSystemMessage(MSG* Msg)
 
    KeQueryTickCount(&LargeTickCount);
    Msg->time = MsqCalculateMessageTime(&LargeTickCount);
-   
+
    /*
     * If we got WM_MOUSEMOVE and there are already messages in the
     * system message queue, check if the last message is mouse move
@@ -267,7 +267,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    USHORT Msg = Message->Msg.message;
    PWINDOW_OBJECT Window = NULL;
    HWND hCaptureWin;
-   
+
    ASSERT_REFS_CO(ScopeWin);
 
    /*
@@ -275,7 +275,7 @@ co_MsqTranslateMouseMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd, UINT Fi
    that window has a ref that we need to deref. Thats why we add "dummy"
    refs in all other cases.
    */
-   
+
    hCaptureWin = IntGetCaptureWindow();
    if (hCaptureWin == NULL)
    {
@@ -478,7 +478,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
-   
+
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
    do
@@ -498,9 +498,9 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    while (NT_SUCCESS(WaitStatus) && STATUS_WAIT_0 != WaitStatus);
 
    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
-   
+
    if (DesktopWindow) UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
-   
+
    /* Process messages in the message queue itself. */
    IntLockHardwareMessageQueue(MessageQueue);
    CurrentEntry = MessageQueue->HardwareMessagesListHead.Flink;
@@ -512,9 +512,9 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       if (Current->Msg.message >= WM_MOUSEFIRST &&
             Current->Msg.message <= WM_MOUSELAST)
       {
-         
-         
-         
+
+
+
          Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
                                               Current, Remove, &Freed,
                                               DesktopWindow, &ScreenPoint, FALSE);
@@ -527,7 +527,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
             IntUnLockHardwareMessageQueue(MessageQueue);
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
             *Message = Current;
-            
+
             RETURN(TRUE);
          }
 
@@ -671,9 +671,9 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 
    RETURN(FALSE);
 
-CLEANUP:   
+CLEANUP:
    if (DesktopWindow) UserDerefObjectCo(DesktopWindow);
-   
+
    END_CLEANUP;
 }
 

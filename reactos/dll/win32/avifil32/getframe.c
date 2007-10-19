@@ -387,7 +387,7 @@ static HRESULT WINAPI IGetFrame_fnSetFormat(IGetFrame *iface,
 
   /* only to pass through? */
   if (This->lpInFormat->biCompression == BI_RGB && lpBits == NULL) {
-    if (lpbi == NULL || 
+    if (lpbi == NULL ||
 	(lpbi->biCompression == BI_RGB &&
 	 lpbi->biWidth == This->lpInFormat->biWidth &&
 	 lpbi->biHeight == This->lpInFormat->biHeight &&

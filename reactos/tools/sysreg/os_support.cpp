@@ -29,7 +29,7 @@ namespace System_
             if (diffsec < 0)
             {
                 cout << "terminating process pid:" << s_Entries[i]->pid << endl;
-                terminateProcess(s_Entries[i]->pid, -2); 
+                terminateProcess(s_Entries[i]->pid, -2);
                 free(s_Entries[i]);
                 s_Entries.erase (s_Entries.begin () + i);
                 i = MAX(0, i-1);
@@ -125,7 +125,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 	OsSupport::ProcessID OsSupport::createProcess(char *procname, int procargsnum, char **procargs, bool wait)
 	{
 		STARTUPINFO siStartInfo;
-		PROCESS_INFORMATION piProcInfo; 
+		PROCESS_INFORMATION piProcInfo;
 		OsSupport::ProcessID pid;
         DWORD length = 0;
         char * szBuffer;
@@ -136,7 +136,7 @@ __inline int gettimeofday(struct timeval *tv, struct timezone *tz)
 		siStartInfo.cb = sizeof(STARTUPINFO);
 		siStartInfo.wShowWindow = SW_SHOWNORMAL;
 		siStartInfo.dwFlags = STARTF_USESHOWWINDOW;
-        
+
         if (procargsnum)
         {
             for (int i = 1; i < procargsnum; i++)

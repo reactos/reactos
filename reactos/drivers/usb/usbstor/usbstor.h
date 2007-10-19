@@ -20,7 +20,7 @@ typedef struct _USBSTOR_DEVICE_EXTENSION
 	PDEVICE_OBJECT LowerDevice;
 
 	PDEVICE_OBJECT Children[USB_MAXCHILDREN];
-	
+
 	/* Fields valid only when IsFDO == FALSE */
 	UNICODE_STRING DeviceDescription; // REG_SZ
 	UNICODE_STRING DeviceId;          // REG_SZ

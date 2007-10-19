@@ -76,7 +76,7 @@ extern void release_DataFormat(DataFormat *df) ;
 }
 
 /**
- * Callback Data used by specific callback 
+ * Callback Data used by specific callback
  *  for EnumObject on 'W' interfaces
  */
 typedef struct {
@@ -127,7 +127,7 @@ extern HRESULT WINAPI IDirectInputDevice2AImpl_GetObjectInfo(
 	LPDIDEVICEOBJECTINSTANCEA pdidoi,
 	DWORD dwObj,
 	DWORD dwHow) ;
-extern HRESULT WINAPI IDirectInputDevice2WImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface, 
+extern HRESULT WINAPI IDirectInputDevice2WImpl_GetObjectInfo(LPDIRECTINPUTDEVICE8W iface,
 							     LPDIDEVICEOBJECTINSTANCEW pdidoi,
 							     DWORD dwObj,
 							     DWORD dwHow);

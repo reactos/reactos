@@ -27,7 +27,7 @@
  *    Gareth Hughes <gareth@valinux.com>
  */
 
-/* Template for immediate mode vertices. 
+/* Template for immediate mode vertices.
  *
  * Probably instantiate once for each vertex format used:
  *   - TINY_VERTICES
@@ -74,10 +74,10 @@ static void TAG(flush_line_1)( GLcontext *ctx, TNL_VERTEX *v0 )
    TNL_VERTEX *v1 = v0 - 1;
    ACTIVE_VERTEX = IMM_VERTICES( 0 );
    FLUSH_VERTEX = TAG(flush_line_0);
-   if (FALLBACK_OR_CLIPPING) 
-      CLIP_OR_DRAW_LINE( ctx, v1, v0 ); 
+   if (FALLBACK_OR_CLIPPING)
+      CLIP_OR_DRAW_LINE( ctx, v1, v0 );
    else
-      DRAW_LINE( ctx, v1, v0 ); 
+      DRAW_LINE( ctx, v1, v0 );
 }
 
 
@@ -167,10 +167,10 @@ static void TAG(flush_line_strip_1)( GLcontext *ctx, TNL_VERTEX *v0 )
    else if (EXTEND_PRIM( 1 )) {
       EMIT_VERTEX( v0 );
    } else {
-      BEGIN_PRIM( GL_LINE_STRIP, 2 ); 
+      BEGIN_PRIM( GL_LINE_STRIP, 2 );
       EMIT_VERTEX( v1 );
-      EMIT_VERTEX( v0 );      
-   }      
+      EMIT_VERTEX( v0 );
+   }
 }
 
 static void TAG(flush_line_strip_2)( GLcontext *ctx, TNL_VERTEX *v0 )
@@ -186,10 +186,10 @@ static void TAG(flush_line_strip_2)( GLcontext *ctx, TNL_VERTEX *v0 )
    else if (EXTEND_PRIM( 1 )) {
       EMIT_VERTEX( v0 );
    } else {
-      BEGIN_PRIM( GL_LINE_STRIP, 2 ); 
+      BEGIN_PRIM( GL_LINE_STRIP, 2 );
       EMIT_VERTEX( v1 );
-      EMIT_VERTEX( v0 );      
-   }      
+      EMIT_VERTEX( v0 );
+   }
 }
 
 
@@ -234,7 +234,7 @@ static void TAG(flush_triangle_2)( GLcontext *ctx, TNL_VERTEX *v0 )
    FLUSH_VERTEX = TAG(flush_triangle_0);
 
    /* nothing gained by trying to emit as hw primitives -- that
-    * happens normally in this case.  
+    * happens normally in this case.
     */
    if (FALLBACK_OR_CLIPPING)
       CLIP_OR_DRAW_TRI( ctx, v2, v1, v0 );
@@ -281,7 +281,7 @@ static void TAG(flush_tri_strip_1)( GLcontext *ctx, TNL_VERTEX *v0 )
       EMIT_VERTEX( v2 );					\
       EMIT_VERTEX( v1 );      					\
       EMIT_VERTEX( v0 );      					\
-   }      
+   }
 
 static void TAG(flush_tri_strip_2)( GLcontext *ctx, TNL_VERTEX *v0 )
 {
@@ -354,7 +354,7 @@ static void TAG(flush_tri_fan_1)( GLcontext *ctx, TNL_VERTEX *v0 )
       EMIT_VERTEX( v2 );					\
       EMIT_VERTEX( v1 );      					\
       EMIT_VERTEX( v0 );      					\
-   }      
+   }
 
 static void TAG(flush_tri_fan_2)( GLcontext *ctx, TNL_VERTEX *v0 )
 {
@@ -420,8 +420,8 @@ static void TAG(flush_quad_3)( GLcontext *ctx, TNL_VERTEX *v0 )
       EXTEND_PRIM_NF( GL_QUADS, 4 );
       EMIT_VERTEX( v3 );
       EMIT_VERTEX( v2 );
-      EMIT_VERTEX( v1 );      
-      EMIT_VERTEX( v0 );      
+      EMIT_VERTEX( v1 );
+      EMIT_VERTEX( v0 );
    }
 }
 
@@ -520,7 +520,7 @@ static void TAG(flush_poly_1)( GLcontext *ctx, TNL_VERTEX *v0 )
       EMIT_VERTEX( v2 );					\
       EMIT_VERTEX( v1 );					\
       EMIT_VERTEX( v0 );					\
-   }      
+   }
 
 static void TAG(flush_poly_2)( GLcontext *ctx, TNL_VERTEX *v0 )
 {

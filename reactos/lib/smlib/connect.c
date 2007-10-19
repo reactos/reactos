@@ -34,7 +34,7 @@
  *	   with full parameters (the function checks them);
  *	b) regular SM clients, will set to 0 the 1st, the 2nd,
  *	   and the 3rd parameter.
- *	
+ *
  * RETURN VALUE
  * 	If all three optional values are omitted, an LPC status.
  * 	STATUS_INVALID_PARAMETER_MIX if PortName is defined and

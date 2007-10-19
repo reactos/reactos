@@ -54,7 +54,7 @@ VOID CreateLangStruct(VOID)
 {
 	UINT Count;
 	TCHAR Layout[256];
-	
+
 	for(Count = 0; Count < END_LAYOUT - BEGIN_LAYOUT; Count++)
 	{
 		LoadString(hApplet,
@@ -103,7 +103,7 @@ CreateLanguagesList(HWND hWnd)
 			   IDS_SELECTED_LANGUAGE,
 			   LangSel,
 			   sizeof(LangSel) / sizeof(TCHAR));
-			   
+
     SendMessage(hLanguageList,
                 CB_SELECTSTRING,
                 (WPARAM) -1,
@@ -115,7 +115,7 @@ VOID
 SelectCurrentLayout(HWND hWnd)
 {
 	TCHAR Layout[256];
-	
+
 	LoadString(hApplet,
 			   IDS_SELECTED_LAYOUT,
 			   Layout,
@@ -153,7 +153,7 @@ AddDlgProc(HWND hDlg,
 					}
 				break;
 				case IDOK:
-				
+
 				break;
 				case IDCANCEL:
 					EndDialog(hDlg,LOWORD(wParam));

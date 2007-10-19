@@ -384,7 +384,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
     VERIFY_KEY_OBJECT(NewKey);
 
-    /* We're holding a pointer to the parent key ..  We must keep it 
+    /* We're holding a pointer to the parent key ..  We must keep it
      * referenced */
     /* Note: Do not dereference NewKey here! */
 

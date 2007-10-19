@@ -7,7 +7,7 @@
 
 #if defined(__cplusplus)
 extern "C" {
-#endif 
+#endif
 
 #define STATIC_KoCreateObject 0x72CF721CL, 0x525A, 0x11D1, 0x9A, 0xA1, 0x00, 0xA0, 0xC9, 0x22, 0x31, 0x96
 DEFINE_GUIDSTRUCT("72CF721C-525A-11D1-9AA1-00A0C9223196", KoCreateObject);
@@ -27,14 +27,14 @@ interface __declspec(uuid("21B36996-8DE3-11D1-8AE0-00A0C9223196")) IKoInitialize
 #ifndef COMDDKMETHOD
 #ifdef _COMDDK_
 #define COMDDKMETHOD
-#else 
+#else
 #define COMDDKMETHOD DECLSPEC_IMPORT
 #endif
 #endif
 
 #ifdef _COMDDK_
 #define COMDDKAPI
-#else 
+#else
 #define COMDDKAPI DECLSPEC_IMPORT
 #endif
 

@@ -211,7 +211,7 @@ MempSetupPaging(IN ULONG StartPage,
 	ULONG Entry, Page;
 
 	//Print(L"MempSetupPaging: SP 0x%X, Number: 0x%X\n", StartPage, NumberOfPages);
-	
+
 	// HACK
 	if (StartPage+NumberOfPages >= 0x80000)
 	{
@@ -309,7 +309,7 @@ MempAddMemoryBlock(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 		}
 		return;
 	}
-	
+
 	if (BasePage == 0xFFF && PageCount == 1)
 	{
 		Mad[MadCount].MemoryType = LoaderSpecialMemory;
@@ -527,7 +527,7 @@ WinLdrTurnOnPaging(IN OUT PLOADER_PARAMETER_BLOCK LoaderBlock,
 
 	Tss = (PKTSS)(KSEG0_BASE | (TssBasePage << MM_PAGE_SHIFT));
 
-	// Fill the memory descriptor list and 
+	// Fill the memory descriptor list and
 	//PrepareMemoryDescriptorList();
 	DbgPrint((DPRINT_WINDOWS, "Memory Descriptor List prepared, printing PDE\n"));
 	List_PaToVa(&LoaderBlock->MemoryDescriptorListHead);

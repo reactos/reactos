@@ -104,7 +104,7 @@ IopApplyRosCdromArcHack(IN ULONG i)
             }
         }
     }
-    
+
     /* OK, how many disks are there? */
     DeviceNumber += ConfigInfo->DiskCount;
 
@@ -113,7 +113,7 @@ IopApplyRosCdromArcHack(IN ULONG i)
     {
         /* Hack until IoAssignDriveLetters is fixed */
         swprintf(SharedUserData->NtSystemRoot, L"%c:\\reactos", 'C' + DeviceNumber);
-        return TRUE; 
+        return TRUE;
     }
 
     /* Failed */

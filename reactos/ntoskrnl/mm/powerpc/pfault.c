@@ -44,16 +44,16 @@ int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
     BOOLEAN AccessFault = !!(frame->dsisr & (1<<28));
     vaddr_t VirtualAddr;
     PVOID TrapInfo = NULL;
-    
+
     /* get the faulting address */
     if (trap == 4) /* Instruction miss */
 	VirtualAddr = frame->srr0;
     else /* Data miss */
 	VirtualAddr = frame->dar;
-    
+
     /* MSR_PR */
     Mode = frame->srr1 & 0x4000 ? KernelMode : UserMode;
-    
+
     /* handle the fault */
     if (AccessFault)
     {
@@ -64,21 +64,21 @@ int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
 	KeBugCheck(0);
 	//Status = MmNotPresentFault(Mode, (PVOID)VirtualAddr, FALSE, TrapInfo);
     }
-    
+
     if (NT_SUCCESS(Status))
 	return 1;
-    
+
     if (KeGetCurrentThread()->ApcState.UserApcPending)
     {
         KIRQL oldIrql;
-        
+
         KeRaiseIrql(APC_LEVEL, &oldIrql);
         KiDeliverApc(UserMode, NULL, NULL);
         KeLowerIrql(oldIrql);
     }
-    
+
     MmpPpcTrapFrameToTrapFrame(frame, &Tf);
-    
+
     Er.ExceptionCode = STATUS_ACCESS_VIOLATION;
     Er.ExceptionFlags = 0;
     Er.ExceptionRecord = NULL;
@@ -86,10 +86,10 @@ int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
     Er.NumberParameters = 2;
     Er.ExceptionInformation[0] = AccessFault;
     Er.ExceptionInformation[1] = VirtualAddr;
-    
+
     /* FIXME: Which exceptions are noncontinuable? */
     Er.ExceptionFlags = 0;
-    
+
     KiDispatchException(&Er, 0, &Tf, Mode, TRUE);
     return 1;
 }

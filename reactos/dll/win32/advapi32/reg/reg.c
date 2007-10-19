@@ -134,7 +134,7 @@ OpenPredefinedKey(IN ULONG Index,
             Status = STATUS_INVALID_PARAMETER;
             break;
     }
-    
+
     return Status;
 }
 
@@ -180,7 +180,7 @@ MapDefaultKey (OUT PHANDLE RealKey,
       Handle = RealKey;
       DoOpen = TRUE;
     }
-  
+
   if (DoOpen)
     {
       /* create/open the default handle */
@@ -195,7 +195,7 @@ MapDefaultKey (OUT PHANDLE RealKey,
        else
           *(PULONG_PTR)Handle |= 0x1;
      }
-  
+
    RtlLeaveCriticalSection (&HandleTableCS);
 
    return Status;
@@ -342,7 +342,7 @@ RegOverridePredefKey(IN HKEY hKey,
                      IN HKEY hNewHKey  OPTIONAL)
 {
     LONG ErrorCode = ERROR_SUCCESS;
-    
+
     if ((hKey == HKEY_CLASSES_ROOT ||
          hKey == HKEY_CURRENT_CONFIG ||
          hKey == HKEY_CURRENT_USER ||
@@ -366,7 +366,7 @@ RegOverridePredefKey(IN HKEY hKey,
             {
                 return RtlNtStatusToDosError(Status);
             }
-            
+
             ASSERT(hNewHKey != NULL);
         }
 
@@ -377,7 +377,7 @@ RegOverridePredefKey(IN HKEY hKey,
         {
             NtClose(*Handle);
         }
-        
+
         /* update the mapping */
         *Handle = hNewHKey;
 
@@ -438,9 +438,9 @@ RegpCopyTree(IN HKEY hKeySrc,
     ULONG Index, BufferSizeRequired, BufferSize = 0x200;
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS Status2 = STATUS_SUCCESS;
-    
+
     InitializeListHead(&copyQueueHead);
-    
+
     Info.Buffer = RtlAllocateHeap(ProcessHeap,
                                   0,
                                   BufferSize);
@@ -448,7 +448,7 @@ RegpCopyTree(IN HKEY hKeySrc,
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
+
     copyKeys = RtlAllocateHeap(ProcessHeap,
                                0,
                                sizeof(REGP_COPY_KEYS));
@@ -458,9 +458,9 @@ RegpCopyTree(IN HKEY hKeySrc,
         copyKeys->hKeyDest = hKeyDest;
         InsertHeadList(&copyQueueHead,
                        &copyKeys->ListEntry);
-        
+
         /* FIXME - copy security from hKeySrc to hKeyDest or just for the subkeys? */
-        
+
         do
         {
             copyKeys = CONTAINING_RECORD(copyQueueHead.Flink,
@@ -481,14 +481,14 @@ RegpCopyTree(IN HKEY hKeySrc,
                 {
                     UNICODE_STRING ValueName;
                     PVOID Data;
-                    
+
                     /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
                     ValueName.Length = Info.KeyValue->NameLength;
                     ValueName.MaximumLength = ValueName.Length;
                     ValueName.Buffer = Info.KeyValue->Name;
-                    
+
                     Data = (PVOID)((ULONG_PTR)Info.KeyValue + Info.KeyValue->DataOffset);
-                    
+
                     Status2 = NtSetValueKey(copyKeys->hKeyDest,
                                             &ValueName,
                                             Info.KeyValue->TitleIndex,
@@ -524,7 +524,7 @@ RegpCopyTree(IN HKEY hKeySrc,
                         /* don't break, let's try to copy as many values as possible */
                         Status2 = STATUS_INSUFFICIENT_RESOURCES;
                         Index++;
-                        
+
                         if (NT_SUCCESS(Status))
                         {
                             Status = Status2;
@@ -539,11 +539,11 @@ RegpCopyTree(IN HKEY hKeySrc,
                     {
                         Status = Status2;
                     }
-                    
+
                     break;
                 }
             }
-            
+
             /* enumerate all subkeys and open and enqueue them */
             Index = 0;
             for (;;)
@@ -559,7 +559,7 @@ RegpCopyTree(IN HKEY hKeySrc,
                     HANDLE KeyHandle, NewKeyHandle;
                     OBJECT_ATTRIBUTES ObjectAttributes;
                     UNICODE_STRING SubKeyName, ClassName;
-                    
+
                     /* don't use RtlInitUnicodeString as the string is not NULL-terminated! */
                     SubKeyName.Length = Info.KeyNode->NameLength;
                     SubKeyName.MaximumLength = SubKeyName.Length;
@@ -567,22 +567,22 @@ RegpCopyTree(IN HKEY hKeySrc,
                     ClassName.Length = Info.KeyNode->ClassLength;
                     ClassName.MaximumLength = ClassName.Length;
                     ClassName.Buffer = (PWSTR)((ULONG_PTR)Info.KeyNode + Info.KeyNode->ClassOffset);
-                    
+
                     /* open the subkey with sufficient rights */
-                    
+
                     InitializeObjectAttributes(&ObjectAttributes,
                                                &SubKeyName,
                                                OBJ_CASE_INSENSITIVE,
                                                copyKeys->hKeySrc,
                                                NULL);
-                    
+
                     Status2 = NtOpenKey(&KeyHandle,
                                         KEY_ENUMERATE_SUB_KEYS | KEY_QUERY_VALUE,
                                         &ObjectAttributes);
                     if (NT_SUCCESS(Status2))
                     {
                         /* FIXME - attempt to query the security information */
-                        
+
                         InitializeObjectAttributes(&ObjectAttributes,
                                                &SubKeyName,
                                                OBJ_CASE_INSENSITIVE,
@@ -613,7 +613,7 @@ RegpCopyTree(IN HKEY hKeySrc,
                             {
                                 NtClose(KeyHandle);
                                 NtClose(NewKeyHandle);
-                                
+
                                 Status2 = STATUS_INSUFFICIENT_RESOURCES;
                             }
                         }
@@ -622,12 +622,12 @@ RegpCopyTree(IN HKEY hKeySrc,
                             NtClose(KeyHandle);
                         }
                     }
-                    
+
                     if (!NT_SUCCESS(Status2) && NT_SUCCESS(Status))
                     {
                         Status = Status2;
                     }
-                    
+
                     Index++;
                 }
                 else if (Status2 == STATUS_BUFFER_OVERFLOW)
@@ -679,7 +679,7 @@ RegpCopyTree(IN HKEY hKeySrc,
             {
                 NtClose(copyKeys->hKeyDest);
             }
-            
+
             RemoveEntryList(&copyKeys->ListEntry);
 
             RtlFreeHeap(ProcessHeap,
@@ -689,7 +689,7 @@ RegpCopyTree(IN HKEY hKeySrc,
     }
     else
         Status = STATUS_INSUFFICIENT_RESOURCES;
-    
+
     RtlFreeHeap(ProcessHeap,
                 0,
                 Info.Buffer);
@@ -710,14 +710,14 @@ RegCopyTreeW(IN HKEY hKeySrc,
 {
     HANDLE DestKeyHandle, KeyHandle, CurKey, SubKeyHandle = NULL;
     NTSTATUS Status;
-    
+
     Status = MapDefaultKey(&KeyHandle,
                            hKeySrc);
     if (!NT_SUCCESS(Status))
     {
         return RtlNtStatusToDosError(Status);
     }
-    
+
     Status = MapDefaultKey(&DestKeyHandle,
                            hKeyDest);
     if (!NT_SUCCESS(Status))
@@ -746,30 +746,30 @@ RegCopyTreeW(IN HKEY hKeySrc,
         {
             goto Cleanup;
         }
-        
+
         CurKey = SubKeyHandle;
     }
     else
         CurKey = KeyHandle;
-    
+
     Status = RegpCopyTree(CurKey,
                           hKeyDest);
-    
+
     if (SubKeyHandle != NULL)
     {
         NtClose(SubKeyHandle);
     }
-    
+
 Cleanup:
     ClosePredefKey(DestKeyHandle);
 Cleanup2:
     ClosePredefKey(KeyHandle);
-    
+
     if (!NT_SUCCESS(Status))
     {
         return RtlNtStatusToDosError(Status);
     }
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -786,7 +786,7 @@ RegCopyTreeA(IN HKEY hKeySrc,
 {
     UNICODE_STRING SubKeyName = {0};
     LONG Ret;
-    
+
     if (lpSubKey != NULL &&
         !RtlCreateUnicodeStringFromAsciiz(&SubKeyName,
                                           (LPSTR)lpSubKey))
@@ -799,7 +799,7 @@ RegCopyTreeA(IN HKEY hKeySrc,
                        hKeyDest);
 
     RtlFreeUnicodeString(&SubKeyName);
-    
+
     return Ret;
 }
 
@@ -816,7 +816,7 @@ RegConnectRegistryA (IN LPCSTR lpMachineName,
 {
     UNICODE_STRING MachineName = {0};
     LONG Ret;
-    
+
     if (lpMachineName != NULL &&
         !RtlCreateUnicodeStringFromAsciiz(&MachineName,
                                           (LPSTR)lpMachineName))
@@ -829,7 +829,7 @@ RegConnectRegistryA (IN LPCSTR lpMachineName,
                               phkResult);
 
     RtlFreeUnicodeString(&MachineName);
-    
+
     return Ret;
 }
 
@@ -1180,7 +1180,7 @@ RegDeleteKeyA (HKEY hKey,
 
   Status = NtDeleteKey (TargetKey);
   NtClose (TargetKey);
-  
+
 Cleanup:
   ClosePredefKey(ParentKey);
 
@@ -1232,7 +1232,7 @@ RegDeleteKeyW (HKEY hKey,
 
   Status = NtDeleteKey (TargetKey);
   NtClose (TargetKey);
-  
+
 Cleanup:
   ClosePredefKey(ParentKey);
 
@@ -1287,7 +1287,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
         {
             goto Cleanup;
         }
-        
+
         CurKey = SubKeyHandle;
     }
     else
@@ -1303,7 +1303,7 @@ RegDeleteKeyValueW(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
-    
+
 Cleanup:
     ClosePredefKey(KeyHandle);
 
@@ -1328,7 +1328,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
 {
     UNICODE_STRING SubKey = {0}, ValueName = {0};
     LONG Ret;
-    
+
     if (lpSubKey != NULL &&
         !RtlCreateUnicodeStringFromAsciiz(&SubKey,
                                           (LPSTR)lpSubKey))
@@ -1350,7 +1350,7 @@ RegDeleteKeyValueA(IN HKEY hKey,
 
     RtlFreeUnicodeString(&SubKey);
     RtlFreeUnicodeString(&ValueName);
-    
+
     return Ret;
 }
 
@@ -1372,11 +1372,11 @@ RegpDeleteTree(IN HKEY hKey)
     PREG_DEL_KEYS KeyDelRoot;
     NTSTATUS Status = STATUS_SUCCESS;
     NTSTATUS Status2 = STATUS_SUCCESS;
-    
+
     InitializeListHead(&delQueueHead);
-    
+
     ProcessHeap = RtlGetProcessHeap();
-    
+
     /* NOTE: no need to allocate enough memory for an additional KEY_BASIC_INFORMATION
              structure for the root key, we only do that for subkeys as we need to
              allocate REGP_DEL_KEYS structures anyway! */
@@ -1413,7 +1413,7 @@ ReadFirstSubKey:
             {
                 OBJECT_ATTRIBUTES ObjectAttributes;
                 UNICODE_STRING SubKeyName;
-                
+
                 ASSERT(newDelKeys != NULL);
                 ASSERT(BasicInfo != NULL);
 
@@ -1523,7 +1523,7 @@ SubKeyFailureNoFree:
             }
 
             Status2 = NtDeleteKey(delKeys->KeyHandle);
-            
+
             /* NOTE: do NOT close the handle anymore, it's invalid already! */
 
             if (!NT_SUCCESS(Status2))
@@ -1543,7 +1543,7 @@ SubKeyFailureNoFree:
                     Status = Status2;
                 }
             }
-            
+
             /* remove the entry from the list */
             RemoveEntryList(&delKeys->ListEntry);
 
@@ -1599,7 +1599,7 @@ RegDeleteTreeW(IN HKEY hKey,
         {
             goto Cleanup;
         }
-        
+
         CurKey = SubKeyHandle;
     }
     else
@@ -1615,7 +1615,7 @@ RegDeleteTreeW(IN HKEY hKey,
         {
             ClosePredefKey(KeyHandle);
         }
-        
+
         return ERROR_SUCCESS;
     }
     else
@@ -1628,7 +1628,7 @@ RegDeleteTreeW(IN HKEY hKey,
 
 Cleanup:
         ClosePredefKey(KeyHandle);
-        
+
         return RtlNtStatusToDosError(Status);
     }
 }
@@ -1736,7 +1736,7 @@ RegpApplyRestrictions( DWORD dwFlags, DWORD dwType, DWORD cbData,
 /******************************************************************************
  * RegGetValueW   [ADVAPI32.@]
  *
- * Retrieves the type and data for a value name associated with a key 
+ * Retrieves the type and data for a value name associated with a key
  * optionally expanding it's content and restricting it's type.
  *
  * PARAMS
@@ -1746,7 +1746,7 @@ RegpApplyRestrictions( DWORD dwFlags, DWORD dwType, DWORD cbData,
  *  dwFlags   [I] Flags restricting the value type to retrieve.
  *  pdwType   [O] Destination for the values type, may be NULL.
  *  pvData    [O] Destination for the values content, may be NULL.
- *  pcbData   [I/O] Size of pvData, updated with the size required to 
+ *  pcbData   [I/O] Size of pvData, updated with the size required to
  *                  retrieve the whole content.
  *
  * RETURNS
@@ -1756,11 +1756,11 @@ RegpApplyRestrictions( DWORD dwFlags, DWORD dwType, DWORD cbData,
  * NOTES
  *  - Unless RRF_NOEXPAND is specified REG_EXPAND_SZ is automatically expanded
  *    and REG_SZ is retrieved instead.
- *  - Restrictions are applied after expanding, using RRF_RT_REG_EXPAND_SZ 
+ *  - Restrictions are applied after expanding, using RRF_RT_REG_EXPAND_SZ
  *    without RRF_NOEXPAND is thus not allowed.
  */
 LONG WINAPI
-RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue, 
+RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
               DWORD dwFlags, LPDWORD pdwType, PVOID pvData,
               LPDWORD pcbData )
 {
@@ -1768,7 +1768,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     PVOID pvBuf = NULL;
     LONG ret;
 
-    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n", 
+    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n",
           hKey, debugstr_w(pszSubKey), debugstr_w(pszValue), dwFlags, pdwType,
           pvData, pcbData, cbData);
 
@@ -1782,7 +1782,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     }
 
     ret = RegQueryValueExW(hKey, pszValue, NULL, &dwType, pvData, &cbData);
-    
+
     /* If we are going to expand we need to read in the whole the value even
      * if the passed buffer was too small as the expanded string might be
      * smaller than the unexpanded one and could fit into cbData bytes. */
@@ -1791,7 +1791,7 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
     {
         do {
             if (pvBuf) HeapFree(GetProcessHeap(), 0, pvBuf);
-            
+
             pvBuf = HeapAlloc(GetProcessHeap(), 0, cbData);
             if (!pvBuf)
             {
@@ -1800,11 +1800,11 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
             }
 
             if (ret == ERROR_MORE_DATA)
-                ret = RegQueryValueExW(hKey, pszValue, NULL, 
+                ret = RegQueryValueExW(hKey, pszValue, NULL,
                                        &dwType, pvBuf, &cbData);
             else
             {
-                /* Even if cbData was large enough we have to copy the 
+                /* Even if cbData was large enough we have to copy the
                  * string since ExpandEnvironmentStrings can't handle
                  * overlapping buffers. */
                 CopyMemory(pvBuf, pvData, cbData);
@@ -1853,15 +1853,15 @@ RegGetValueW( HKEY hKey, LPCWSTR pszSubKey, LPCWSTR pszValue,
  * See RegGetValueW.
  */
 LONG WINAPI
-RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue, 
-              DWORD dwFlags, LPDWORD pdwType, PVOID pvData, 
+RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
+              DWORD dwFlags, LPDWORD pdwType, PVOID pvData,
               LPDWORD pcbData )
 {
     DWORD dwType, cbData = pcbData ? *pcbData : 0;
     PVOID pvBuf = NULL;
     LONG ret;
 
-    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n", 
+    TRACE("(%p,%s,%s,%ld,%p,%p,%p=%ld)\n",
           hKey, pszSubKey, pszValue, dwFlags, pdwType, pvData, pcbData,
           cbData);
 
@@ -1893,11 +1893,11 @@ RegGetValueA( HKEY hKey, LPCSTR pszSubKey, LPCSTR pszValue,
             }
 
             if (ret == ERROR_MORE_DATA)
-                ret = RegQueryValueExA(hKey, pszValue, NULL, 
+                ret = RegQueryValueExA(hKey, pszValue, NULL,
                                        &dwType, pvBuf, &cbData);
             else
             {
-                /* Even if cbData was large enough we have to copy the 
+                /* Even if cbData was large enough we have to copy the
                  * string since ExpandEnvironmentStrings can't handle
                  * overlapping buffers. */
                 CopyMemory(pvBuf, pvData, cbData);
@@ -1963,7 +1963,7 @@ RegSetKeyValueW(IN HKEY hKey,
     {
         return RtlNtStatusToDosError(Status);
     }
-    
+
     if (lpSubKey != NULL)
     {
         OBJECT_ATTRIBUTES ObjectAttributes;
@@ -1986,12 +1986,12 @@ RegSetKeyValueW(IN HKEY hKey,
             Ret = RtlNtStatusToDosError(Status);
             goto Cleanup;
         }
-        
+
         CurKey = SubKeyHandle;
     }
     else
         CurKey = KeyHandle;
-    
+
     Ret = RegSetValueExW(CurKey,
                          lpValueName,
                          0,
@@ -2003,7 +2003,7 @@ RegSetKeyValueW(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
-    
+
 Cleanup:
     ClosePredefKey(KeyHandle);
 
@@ -2064,7 +2064,7 @@ RegSetKeyValueA(IN HKEY hKey,
             Ret = RtlNtStatusToDosError(Status);
             goto Cleanup;
         }
-        
+
         CurKey = SubKeyHandle;
     }
     else
@@ -2081,7 +2081,7 @@ RegSetKeyValueA(IN HKEY hKey,
     {
         NtClose(SubKeyHandle);
     }
-    
+
 Cleanup:
     ClosePredefKey(KeyHandle);
 
@@ -2114,9 +2114,9 @@ RegDeleteValueA (HKEY hKey,
   Status = NtDeleteValueKey (KeyHandle,
 			     &ValueName);
   RtlFreeUnicodeString (&ValueName);
-  
+
   ClosePredefKey(KeyHandle);
-  
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -2776,9 +2776,9 @@ RegFlushKey(HKEY hKey)
     }
 
   Status = NtFlushKey (KeyHandle);
-  
+
   ClosePredefKey(KeyHandle);
-  
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -3031,7 +3031,7 @@ RegOpenKeyA (HKEY hKey,
 	     PHKEY phkResult)
 {
 	TRACE("RegOpenKeyA hKey 0x%x lpSubKey %s phkResult %p\n", hKey, lpSubKey, phkResult);
-	
+
 	if (!hKey && lpSubKey && phkResult)
 	{
 		return ERROR_INVALID_HANDLE;
@@ -3117,7 +3117,7 @@ RegOpenKeyExA (HKEY hKey,
 	{
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
-	
+
 	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
@@ -3168,7 +3168,7 @@ RegOpenKeyExW (HKEY hKey,
 	{
 		ErrorCode = RtlNtStatusToDosError (Status);
 	}
-	
+
 	ClosePredefKey(KeyHandle);
 
 	return ErrorCode;
@@ -3557,7 +3557,7 @@ RegQueryInfoKeyW (HKEY hKey,
 
 Cleanup:
   ClosePredefKey(KeyHandle);
-  
+
   return ErrorCode;
 }
 
@@ -4352,7 +4352,7 @@ RegRestoreKeyW (HKEY hKey,
 			 FileHandle,
 			 (ULONG)dwFlags);
   NtClose (FileHandle);
-  
+
 Cleanup:
   ClosePredefKey(KeyHandle);
 
@@ -4498,7 +4498,7 @@ RegSetKeySecurity (HKEY hKey,
 				pSecurityDescriptor);
 
   ClosePredefKey(KeyHandle);
-  
+
   if (!NT_SUCCESS(Status))
     {
       return RtlNtStatusToDosError (Status);
@@ -4837,7 +4837,7 @@ RegUnLoadKeyW (HKEY hKey,
 			      NULL);
 
   Status = NtUnloadKey (&ObjectAttributes);
-  
+
   ClosePredefKey(KeyHandle);
 
   if (!NT_SUCCESS(Status))
@@ -4963,7 +4963,7 @@ RegLoadMUIStringW(IN HKEY hKey,
             result = ERROR_BADKEY;
             goto cleanup;
         }
- 
+
         uiStringId = _wtoi(pComma+2);
         *pComma = L'\0';
 
@@ -4972,7 +4972,7 @@ RegLoadMUIStringW(IN HKEY hKey,
             result = ERROR_BADKEY;
         FreeLibrary(hModule);
     }
- 
+
 cleanup:
     HeapFree(GetProcessHeap(), 0, pwszTempBuffer);
     HeapFree(GetProcessHeap(), 0, pwszExpandedBuffer);
@@ -5008,9 +5008,9 @@ RegLoadMUIStringA(IN HKEY hKey,
         goto cleanup;
     }
 
-    result = RegLoadMUIStringW(hKey, valueW.Buffer, pwszBuffer, cbData, NULL, Flags, 
+    result = RegLoadMUIStringW(hKey, valueW.Buffer, pwszBuffer, cbData, NULL, Flags,
                                baseDirW.Buffer);
- 
+
     if (result == ERROR_SUCCESS) {
         cbData = WideCharToMultiByte(CP_ACP, 0, pwszBuffer, -1, pszOutBuf, cbOutBuf, NULL, NULL);
         if (pcbData)
@@ -5021,7 +5021,7 @@ cleanup:
     HeapFree(GetProcessHeap(), 0, pwszBuffer);
     RtlFreeUnicodeString(&baseDirW);
     RtlFreeUnicodeString(&valueW);
- 
+
     return result;
 }
 

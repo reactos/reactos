@@ -839,7 +839,7 @@ soshutdown(so, how)
 		    (struct mbuf *)0, (struct mbuf *)0, (struct mbuf *)0));
 	return (0);
     }
-    
+
 	register struct protosw *pr = so->so_proto;
 
 	how++;

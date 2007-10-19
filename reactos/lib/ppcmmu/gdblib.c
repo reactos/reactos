@@ -120,9 +120,9 @@ extern void setup(char *serport, int baud);
 
 char *serport = (char *)0x800003f8;
 
-int isxdigit(int ch) 
-{ 
-    return 
+int isxdigit(int ch)
+{
+    return
         (ch >= 'A' && ch <= 'F') ||
         (ch >= 'a' && ch <= 'f') ||
         (ch >= '0' && ch <= '9');
@@ -136,7 +136,7 @@ inline void sync() {
 inline void send(char *serport, char c) {
 	/* Wait for Clear to Send */
     while( !(serport[LSR] & 0x20) ) sync();
-    
+
     serport[THR] = c;
     sync();
 }
@@ -157,7 +157,7 @@ inline char recv(char *serport) {
     char c;
 
     while( !chr(serport) ) sync();
-    
+
     c = serport[RCV];
     sync();
 
@@ -248,7 +248,7 @@ void PacketFinish()
     int i, ch, count = 0;
 
     PacketSent = 0;
-    
+
     SerialWrite('$');
     for (i = 0; i < DataOutAddr; i++)
     {
@@ -307,7 +307,7 @@ void marker() { }
 void GotPacket()
 {
     int i, memaddr, memsize;
-    
+
     Continue = 0;
     switch (DataInBuffer[DataInAddr++])
     {
@@ -400,11 +400,11 @@ int SerialInterrupt(int signal, ppc_trap_frame_t *tf)
 
     Signal = signal;
     RegisterSaveArea = tf;
-    
-    do 
+
+    do
     {
         ch = SerialRead();
-        
+
         if (ch == 3) /* Break in - tehe */
         {
             Continue = 0;

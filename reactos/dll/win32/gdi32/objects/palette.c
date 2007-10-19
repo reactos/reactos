@@ -66,8 +66,8 @@ GetDIBColorTable(HDC hDC,
 /*
  * @implemented
  */
-UINT 
-WINAPI 
+UINT
+WINAPI
 RealizePalette(HDC hDC) /* [in] Handle of device context */
 {
 #if 0
@@ -78,7 +78,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
       return MFDRV_(hDC);
     else
     {
-      HPALETTE Pal = GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);      
+      HPALETTE Pal = GetDCObject(hDC, GDI_OBJECT_TYPE_PALETTE);
       PLDC pLDC = GdiGetLDC((HDC) Pal);
       if ( !pLDC ) return FALSE;
       if (pLDC->iType == LDC_EMFLDC) return EMFDRV_(Pal);
@@ -91,7 +91,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
 //HACK!!!!!
  return  NtGdiRealizePalette(hDC);
 }
-        
+
 
 /*
  * @implemented

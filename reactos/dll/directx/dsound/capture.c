@@ -1773,7 +1773,7 @@ DSCCF_CreateInstance(
     if ( IsEqualGUID( &IID_IDirectSoundCapture, riid ) )
 	return DSOUND_CaptureCreate8((LPDIRECTSOUNDCAPTURE*)ppobj,pOuter);
 
-    WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);	
+    WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
     return E_NOINTERFACE;
 }
 

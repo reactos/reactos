@@ -87,7 +87,7 @@ struct IDxDiagContainerImpl {
   const IDxDiagContainerVtbl *lpVtbl;
   LONG        ref;
   /* IDxDiagContainer fields */
-  IDxDiagContainerImpl_Property* properties;  
+  IDxDiagContainerImpl_Property* properties;
   IDxDiagContainerImpl_SubContainer* subContainers;
   DWORD nProperties;
   DWORD nSubContainers;

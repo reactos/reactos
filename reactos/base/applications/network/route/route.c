@@ -286,13 +286,13 @@ int main( int argc, char **argv )
             }
             swprintf(argvW[i], L"%hs", argv[i]);
         }
-        
+
         if (j == 0)
         {
             /* no error converting the parameters, call wmain() */
             Ret = wmain(argc, argvW);
         }
-        
+
         /* free the arguments */
         for (i = 0; i < argc; i++)
         {
@@ -301,7 +301,7 @@ int main( int argc, char **argv )
         }
         free(argvW);
     }
-    
+
     return Ret;
 }
 #endif

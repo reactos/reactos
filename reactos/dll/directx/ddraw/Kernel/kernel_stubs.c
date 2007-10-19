@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/kernel/kernel_stubs.c
- * PURPOSE:              IDirectDrawKernel and IDirectDrawSurfaceKernel Implementation 
+ * PURPOSE:              IDirectDrawKernel and IDirectDrawSurfaceKernel Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -13,52 +13,52 @@
 
 /***** IDirectDrawKernel ****/
 
-ULONG WINAPI 
+ULONG WINAPI
 DirectDrawKernel_AddRef ( LPDIRECTDRAWKERNEL iface)
-{   
-  DX_WINDBG_trace();
-
-   DX_STUB;  
-}
-
-ULONG WINAPI 
-DirectDrawKernel_Release ( LPDIRECTDRAWKERNEL iface)
-{    
+{
   DX_WINDBG_trace();
 
    DX_STUB;
 }
 
-HRESULT WINAPI 
-DirectDrawKernel_QueryInterface ( LPDIRECTDRAWKERNEL iface, 
-                                  REFIID riid, 
+ULONG WINAPI
+DirectDrawKernel_Release ( LPDIRECTDRAWKERNEL iface)
+{
+  DX_WINDBG_trace();
+
+   DX_STUB;
+}
+
+HRESULT WINAPI
+DirectDrawKernel_QueryInterface ( LPDIRECTDRAWKERNEL iface,
+                                  REFIID riid,
                                   LPVOID* ppvObj)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
-HRESULT WINAPI 
-DirectDrawKernel_GetKernelHandle ( LPDIRECTDRAWKERNEL iface, 
+HRESULT WINAPI
+DirectDrawKernel_GetKernelHandle ( LPDIRECTDRAWKERNEL iface,
                                    ULONG* handle)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
-HRESULT WINAPI 
+HRESULT WINAPI
 DirectDrawKernel_ReleaseKernelHandle ( LPDIRECTDRAWKERNEL iface)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 
-ULONG WINAPI 
+ULONG WINAPI
 DDSurfaceKernel_AddRef ( LPDIRECTDRAWSURFACEKERNEL iface)
-{         
+{
    LPDDRAWI_DDKERNELSURFACE_INT This = (LPDDRAWI_DDKERNELSURFACE_INT)iface;
-   
+
    DX_WINDBG_trace();
 
     if (iface!=NULL)
@@ -74,41 +74,41 @@ DDSurfaceKernel_AddRef ( LPDIRECTDRAWSURFACEKERNEL iface)
     return This->dwIntRefCnt;
 }
 
-ULONG WINAPI 
+ULONG WINAPI
 DDSurfaceKernel_Release ( LPDIRECTDRAWSURFACEKERNEL iface)
-{    
+{
     LPDDRAWI_DDKERNELSURFACE_INT This = (LPDDRAWI_DDKERNELSURFACE_INT)iface;
 
     DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
+    /* FIXME
+       This is not right exiame how it should be done
      */
     DX_STUB_str("FIXME This is not right exiame how it should be done\n");
     return This->dwIntRefCnt;
 }
 
-HRESULT WINAPI 
-DDSurfaceKernel_QueryInterface ( LPDIRECTDRAWSURFACEKERNEL iface, 
-                                 REFIID riid, 
+HRESULT WINAPI
+DDSurfaceKernel_QueryInterface ( LPDIRECTDRAWSURFACEKERNEL iface,
+                                 REFIID riid,
                                  LPVOID* ppvObj)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
-HRESULT WINAPI 
-DDSurfaceKernel_GetKernelHandle ( LPDIRECTDRAWSURFACEKERNEL iface, 
+HRESULT WINAPI
+DDSurfaceKernel_GetKernelHandle ( LPDIRECTDRAWSURFACEKERNEL iface,
                                   ULONG* handle)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
-HRESULT WINAPI 
+HRESULT WINAPI
 DDSurfaceKernel_ReleaseKernelHandle ( LPDIRECTDRAWSURFACEKERNEL iface)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 

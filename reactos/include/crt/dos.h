@@ -72,7 +72,7 @@ struct _diskfree_t {
 	unsigned bytes_per_sector;
 };
 #define _DISKFREE_T_DEFINED
-#endif  
+#endif
 
 _CRTIMP unsigned __cdecl _getdiskfree (unsigned, struct _diskfree_t *);
 

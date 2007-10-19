@@ -139,7 +139,7 @@ _mesa_CopyPixels( GLint srcx, GLint srcy, GLsizei width, GLsizei height,
    else if (ctx->RenderMode == GL_FEEDBACK) {
       FLUSH_CURRENT( ctx, 0 );
       FEEDBACK_TOKEN( ctx, (GLfloat) (GLint) GL_COPY_PIXEL_TOKEN );
-      _mesa_feedback_vertex( ctx, 
+      _mesa_feedback_vertex( ctx,
                              ctx->Current.RasterPos,
                              ctx->Current.RasterColor,
                              ctx->Current.RasterIndex,
@@ -236,7 +236,7 @@ _mesa_Bitmap( GLsizei width, GLsizei height,
       _mesa_feedback_vertex( ctx,
                              ctx->Current.RasterPos,
                              ctx->Current.RasterColor,
-                             ctx->Current.RasterIndex, 
+                             ctx->Current.RasterIndex,
                              ctx->Current.RasterTexCoords[0] );
    }
    else {

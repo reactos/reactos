@@ -166,7 +166,7 @@ IntAgpReleasePhysical(
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    AgpBusInterface = &DeviceExtension->AgpInterface;
    AgpMapping = (PVIDEO_PORT_AGP_MAPPING)PhysicalContext;
-   
+
    /* Release memory */
    Status = AgpBusInterface->ReleaseMemory(AgpBusInterface->AgpContext,
                                            AgpMapping->MapHandle);
@@ -175,7 +175,7 @@ IntAgpReleasePhysical(
       DPRINT1("Warning: AgpBusInterface->ReleaseMemory failed (Status = 0x%x)\n",
               Status);
    }
-   
+
    /* Free resources */
    ExFreePool(AgpMapping);
 }
@@ -243,7 +243,7 @@ IntAgpReservePhysical(
    *PhysicalContext = (PVOID)AgpMapping;
    return AgpMapping->PhysicalAddress;
 }
-   
+
 
 PVOID NTAPI
 IntAgpCommitVirtual(
@@ -294,7 +294,7 @@ IntAgpCommitVirtual(
       ASSERT(Size == Pages * PAGE_SIZE);
       ASSERT(BaseAddress == (PVOID)((ULONG_PTR)VirtualMapping->MappedAddress +
                                                OffsetInBytes));
-      
+
       /* Map the physical memory into the released virtual memory area */
       Status = IntVideoPortMapPhysicalMemory(VirtualMapping->ProcessHandle,
                                              PhysicalAddress,
@@ -392,7 +392,7 @@ IntAgpReleaseVirtual(
    DPRINT("AgpReleaseVirtual - VirtualContext: 0x%x\n", VirtualContext);
 
    VirtualMapping = (PVIDEO_PORT_AGP_VIRTUAL_MAPPING)VirtualContext;
-   
+
    /* Release the virtual memory */
    if (VirtualMapping->ProcessHandle == NULL)
    {
@@ -410,7 +410,7 @@ IntAgpReleaseVirtual(
          DPRINT1("Warning: ZwFreeVirtualMemory() failed: Status = 0x%x\n", Status);
       }
    }
-   
+
    /* Free resources */
    ExFreePool(VirtualMapping);
 }
@@ -487,7 +487,7 @@ IntAgpSetRate(
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    AgpBusInterface = &DeviceExtension->AgpInterface;
-   
+
    return NT_SUCCESS(AgpBusInterface->SetRate(AgpBusInterface->AgpContext, Rate));
 }
 

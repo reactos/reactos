@@ -35,7 +35,7 @@ int GlyphIntensity(GLYPH glyph)
 GLYPH DarkenGlyph(GLYPH glyph)
 {
 	int intensity = GlyphIntensity(glyph);
-	
+
 	if(intensity > 0)
 		return GLYPH_REDRAW | ((intensity - 1) << 8) | (glyph & 0x00FF);
 	else
@@ -85,19 +85,19 @@ void ScrollMatrixColumn(MATRIX_COLUMN *col)
 		// bottom-most part of "run". Insert a new character (glyph)
 		// at the end to lengthen the run down the screen..gives the
 		// impression that the run is "falling" down the screen
-		if(GlyphIntensity(thisglyph) < GlyphIntensity(lastglyph) && 
+		if(GlyphIntensity(thisglyph) < GlyphIntensity(lastglyph) &&
 			GlyphIntensity(thisglyph) == 0)
 		{
 			col->glyph[y] = RandomGlyph(MAX_INTENSITY - 1);
 			y++;
 		}
 		// top-most part of "run". Delete a character off the top by
-		// darkening the glyph until it eventually disappears (turns black). 
+		// darkening the glyph until it eventually disappears (turns black).
 		// this gives the effect that the run as dropped downwards
 		else if(GlyphIntensity(thisglyph) > GlyphIntensity(lastglyph))
 		{
 			col->glyph[y] = DarkenGlyph(thisglyph);
-			
+
 			// if we've just darkened the last bit, skip on so
 			// the whole run doesn't go dark
 			if(GlyphIntensity(thisglyph) == MAX_INTENSITY - 1)
@@ -110,7 +110,7 @@ void ScrollMatrixColumn(MATRIX_COLUMN *col)
 	// change state from blanks <-> runs when the current run as expired
 	if(--col->runlen <= 0)
 	{
-		if(col->state ^= 1)			
+		if(col->state ^= 1)
 			col->runlen = crc_rand() % (3 * DENSITY/2) + DENSITY_MIN;
 		else
 			col->runlen = crc_rand() % (DENSITY_MAX+1-DENSITY) + (DENSITY_MIN*2);
@@ -126,7 +126,7 @@ void ScrollMatrixColumn(MATRIX_COLUMN *col)
 
 	// advance down screen at double-speed
 	col->blippos += 2;
-	
+
 	// if the blip gets to the end of a run, start it again (for a random
 	// length so that the blips never get synched together)
 	if(col->blippos >= col->bliplen)
@@ -151,7 +151,7 @@ void RandomMatrixColumn(MATRIX_COLUMN *col)
 	for(i = 1, y = 0; i < 16; i++)
 	{
 		// find a run
-		while(GlyphIntensity(col->glyph[y]) < MAX_INTENSITY-1 && y < col->length) 
+		while(GlyphIntensity(col->glyph[y]) < MAX_INTENSITY-1 && y < col->length)
 			y++;
 
 		if(y >= col->length)
@@ -186,12 +186,12 @@ void RedrawMatrixColumn(MATRIX_COLUMN *col, MATRIX *matrix, HDC hdc, int xpos)
 		if(glyph & GLYPH_REDRAW)
 		{
 			if((y == col->blippos+0 || y == col->blippos+1 ||
-				y == col->blippos+8 || y == col->blippos+9) && 
+				y == col->blippos+8 || y == col->blippos+9) &&
 				GlyphIntensity(glyph) >= MAX_INTENSITY-1)
 				glyph |= MAX_INTENSITY << 8;
 
 			DrawGlyph(matrix, hdc, xpos, y * GLYPH_HEIGHT, glyph);
-			
+
 			// clear redraw state
 			col->glyph[y] &= ~GLYPH_REDRAW;
 		}
@@ -205,7 +205,7 @@ void DecodeMatrix(HWND hwnd, MATRIX *matrix)
 
 	for(x = 0; x < matrix->numcols; x++)
 	{
-		RandomMatrixColumn(&matrix->column[x]);		
+		RandomMatrixColumn(&matrix->column[x]);
 		ScrollMatrixColumn(&matrix->column[x]);
 		RedrawMatrixColumn(&matrix->column[x], matrix, hdc, x * GLYPH_WIDTH);
 	}
@@ -250,7 +250,7 @@ MATRIX *CreateMatrix(HWND hwnd, int width, int height)
 		for(y = 0; y < rows; y++)
 			matrix->column[x].glyph[y] = 0;//;
 	}
-	
+
 	// Load bitmap!!
 	hdc = GetDC(NULL);
 	matrix->hbmBitmap = LoadBitmap(GetModuleHandle(0), MAKEINTRESOURCE(IDB_BITMAP1));
@@ -351,7 +351,7 @@ LRESULT WINAPI MatrixWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 	case WM_MBUTTONDOWN:
 	case WM_MBUTTONUP:
 	case WM_MOUSEMOVE:
-        
+
 		// If we've got a parent then we must be a preview
 		if(GetParent(hwnd) != 0)
 			return 0;
@@ -363,13 +363,13 @@ LRESULT WINAPI MatrixWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		}
 
 		GetCursorPos(&ptCursor);
-		
+
 		// if the mouse has moved more than 3 pixels then exit
 		if(abs(ptCursor.x - ptLast.x) >= 3 || abs(ptCursor.y - ptLast.y) >= 3)
 			PostMessage(hwnd, WM_CLOSE, 0, 0);
 
 		ptLast = ptCursor;
-		
+
         return 0;
 
 	// someone wants to close us...see if it's ok
@@ -400,15 +400,15 @@ HWND CreateScreenSaveWnd(HWND hwndParent, RECT *rect)
 	if(hwndParent)
 		GetClientRect(hwndParent, rect);
 
-	return CreateWindowEx(	dwStyleEx, 
-							APPNAME, 
-							0, 
-							WS_VISIBLE | dwStyle, 
-							rect->left, 
+	return CreateWindowEx(	dwStyleEx,
+							APPNAME,
+							0,
+							WS_VISIBLE | dwStyle,
+							rect->left,
 							rect->top,
 							rect->right - rect->left,
 							rect->bottom - rect->top,
-							hwndParent, 
+							hwndParent,
 							0,
 							GetModuleHandle(0),
 							0

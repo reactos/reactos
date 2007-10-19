@@ -191,7 +191,7 @@ RtlDestroyAtomTable(IN PRTL_ATOM_TABLE AtomTable)
 {
    PRTL_ATOM_TABLE_ENTRY *CurrentBucket, *LastBucket;
    PRTL_ATOM_TABLE_ENTRY CurrentEntry, NextEntry;
-   
+
    DPRINT("RtlDestroyAtomTable (AtomTable %p)\n", AtomTable);
 
    if (!RtlpLockAtomTable(AtomTable))
@@ -350,7 +350,7 @@ RtlAddAtomToAtomTable(IN PRTL_ATOM_TABLE AtomTable,
         if (HashLink != NULL)
           {
              ULONG AtomNameLen = wcslen(AtomName);
-             
+
              if (AtomNameLen > RTL_MAXIMUM_ATOM_LENGTH)
              {
                 Status = STATUS_INVALID_PARAMETER;
@@ -545,7 +545,7 @@ RtlPinAtomInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    if (Atom >= 0xC000)
      {
         PRTL_ATOM_TABLE_ENTRY Entry;
-        
+
         RtlpLockAtomTable(AtomTable);
 
         Entry = RtlpGetAtomEntry(AtomTable,
@@ -597,7 +597,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
 {
    ULONG Length;
    BOOL Unlock = FALSE;
-   
+
    union
      {
      /* A RTL_ATOM_TABLE_ENTRY has a "WCHAR Name[1]" entry at the end.
@@ -631,7 +631,7 @@ RtlQueryAtomInAtomTable(PRTL_ATOM_TABLE AtomTable,
    if (Entry != NULL && Entry->Atom == (USHORT)Atom)
      {
         DPRINT("Atom name: %wZ\n", &Entry->Name);
-        
+
         if (RefCount != NULL)
           {
              *RefCount = Entry->ReferenceCount;
@@ -702,9 +702,9 @@ RtlQueryAtomListInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
    PRTL_ATOM_TABLE_ENTRY CurrentEntry;
    ULONG Atoms = 0;
    NTSTATUS Status = STATUS_SUCCESS;
-   
+
    RtlpLockAtomTable(AtomTable);
-   
+
    LastBucket = AtomTable->Buckets + AtomTable->NumberOfBuckets;
    for (CurrentBucket = AtomTable->Buckets;
         CurrentBucket != LastBucket;
@@ -730,9 +730,9 @@ RtlQueryAtomListInAtomTable(IN PRTL_ATOM_TABLE AtomTable,
              CurrentEntry = CurrentEntry->HashLink;
           }
      }
-   
+
    *AtomCount = Atoms;
-   
+
    RtlpUnlockAtomTable(AtomTable);
 
    return Status;

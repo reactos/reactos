@@ -270,7 +270,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
             }
             else {
                ctx->Transform.ClipPlanesEnabled &= ~(1 << p);
-            }               
+            }
          }
          break;
 #endif
@@ -362,7 +362,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
    	   ctx->_TriangleCaps |= DD_TRI_LIGHT_TWOSIDE;
          else
  	   ctx->_TriangleCaps &= ~DD_TRI_LIGHT_TWOSIDE;
- 
+
          break;
       case GL_LINE_SMOOTH:
          if (ctx->Line.SmoothFlag == state)
@@ -857,7 +857,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          CHECK_EXTENSION2(NV_vertex_program, ARB_vertex_program, cap);
          if (ctx->VertexProgram.Enabled == state)
             return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
+         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
          ctx->VertexProgram.Enabled = state;
          break;
       case GL_VERTEX_PROGRAM_POINT_SIZE_NV:
@@ -871,7 +871,7 @@ void _mesa_set_enable( GLcontext *ctx, GLenum cap, GLboolean state )
          CHECK_EXTENSION2(NV_vertex_program, ARB_vertex_program, cap);
          if (ctx->VertexProgram.TwoSideEnabled == state)
             return;
-         FLUSH_VERTICES(ctx, _NEW_PROGRAM); 
+         FLUSH_VERTICES(ctx, _NEW_PROGRAM);
          ctx->VertexProgram.TwoSideEnabled = state;
          break;
       case GL_MAP1_VERTEX_ATTRIB0_4_NV:

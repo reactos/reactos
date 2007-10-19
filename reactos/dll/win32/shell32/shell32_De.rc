@@ -224,7 +224,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
  LTEXT "Zugegriffen:", 14018, 10, 100, 45, 10
  LTEXT "", 14019, 70, 100, 150, 10
  LTEXT "Attribute:", 14020, 10, 115, 45, 10
- CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 67, 10 
+ CHECKBOX "&Schreibgeschützt", 14021, 70, 115, 67, 10
  CHECKBOX "&Versteckt", 14022, 140, 115, 50, 10
  CHECKBOX "&Archiv", 14023, 190, 115, 45, 10
 }

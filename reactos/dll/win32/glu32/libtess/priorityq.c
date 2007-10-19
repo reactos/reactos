@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -82,7 +82,7 @@ PriorityQ *pqNewPriorityQ( int (*leq)(PQkey key1, PQkey key2) )
 /* really __gl_pqSortDeletePriorityQ */
 void pqDeletePriorityQ( PriorityQ *pq )
 {
-  assert(pq != NULL); 
+  assert(pq != NULL);
   if (pq->heap != NULL) __gl_pqHeapDeletePriorityQ( pq->heap );
   if (pq->order != NULL) memFree( pq->order );
   if (pq->keys != NULL) memFree( pq->keys );
@@ -176,7 +176,7 @@ int pqInit( PriorityQ *pq )
 }
 
 /* really __gl_pqSortInsert */
-/* returns LONG_MAX iff out of memory */ 
+/* returns LONG_MAX iff out of memory */
 PQhandle pqInsert( PriorityQ *pq, PQkey keyNew )
 {
   long curr;
@@ -190,15 +190,15 @@ PQhandle pqInsert( PriorityQ *pq, PQkey keyNew )
 
     /* If the heap overflows, double its size. */
     pq->max <<= 1;
-    pq->keys = (PQHeapKey *)memRealloc( pq->keys, 
+    pq->keys = (PQHeapKey *)memRealloc( pq->keys,
 	 	                        (size_t)
 	                                 (pq->max * sizeof( pq->keys[0] )));
-    if (pq->keys == NULL) {	
+    if (pq->keys == NULL) {
        pq->keys = saveKey;	/* restore ptr to free upon return */
        return LONG_MAX;
     }
   }
-  assert(curr != LONG_MAX);	
+  assert(curr != LONG_MAX);
   pq->keys[curr] = keyNew;
 
   /* Negative handles index the sorted array. */

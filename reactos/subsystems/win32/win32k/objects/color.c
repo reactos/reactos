@@ -87,13 +87,13 @@ IntAnimatePalette(HPALETTE hPal,
         PPALGDI palPtr;
         UINT pal_entries;
         HDC hDC;
-        PDC dc;	
+        PDC dc;
         PWINDOW_OBJECT Wnd;
         const PALETTEENTRY *pptr = PaletteColors;
- 
+
         palPtr = (PPALGDI)PALETTE_LockPalette(hPal);
         if (!palPtr) return FALSE;
- 
+
         pal_entries = palPtr->NumColors;
         if (StartIndex >= pal_entries)
         {
@@ -101,7 +101,7 @@ IntAnimatePalette(HPALETTE hPal,
             return FALSE;
         }
         if (StartIndex+NumEntries > pal_entries) NumEntries = pal_entries - StartIndex;
- 
+
         for (NumEntries += StartIndex; StartIndex < NumEntries; StartIndex++, pptr++)
         {
             /* According to MSDN, only animate PC_RESERVED colours */
@@ -113,10 +113,10 @@ IntAnimatePalette(HPALETTE hPal,
                 PALETTE_ValidateFlags(&palPtr->IndexedColors[StartIndex], 1);
             }
         }
- 
+
         PALETTE_UnlockPalette(palPtr);
- 
-        /* Immediately apply the new palette if current window uses it */		
+
+        /* Immediately apply the new palette if current window uses it */
         Wnd = UserGetDesktopWindow();
         hDC =  (HDC)UserGetWindowDC(Wnd);
         dc = DC_LockDc(hDC);
@@ -129,7 +129,7 @@ IntAnimatePalette(HPALETTE hPal,
             }
             else
                 DC_UnlockDc(dc);
-        }		
+        }
         UserReleaseDC(Wnd,hDC, FALSE);
     }
     return ret;
@@ -243,7 +243,7 @@ HPALETTE STDCALL NtGdiCreateHalftonePalette(HDC  hDC)
 /*
  * @implemented
  */
-HPALETTE STDCALL 
+HPALETTE STDCALL
 NtGdiCreatePaletteInternal ( IN LPLOGPALETTE pLogPal, IN UINT cEntries )
 {
     PPALGDI PalGDI;
@@ -465,7 +465,7 @@ IntGetSystemPaletteEntries(HDC  hDC,
 }
 
 UINT STDCALL NtGdiGetSystemPaletteUse(HDC  hDC)
-{  
+{
   return SystemPaletteUse;
 }
 
@@ -491,7 +491,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
    * of bugd in it (calling SetPalette for high/true-color modes,
    * using DEFAULT_PALETTE instead of the device palette, ...).
    */
- 
+
   PALOBJ *palPtr, *sysPtr;
   PPALGDI palGDI, sysGDI;
   int realized = 0;
@@ -510,20 +510,20 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
 
   if (palGDI == NULL)
   {
-	 /* FIXME - Handle palGDI == NULL!!!! 
+	 /* FIXME - Handle palGDI == NULL!!!!
 	    we should not unlock dc and return 0 ??
 		shall we create the pallete ??
-	 */	
+	 */
      DC_UnlockDc(dc);
 	 return 0;
   }
 
   sysGDI = PALETTE_LockPalette(systemPalette);
   sysPtr = (PALOBJ*) sysGDI;
-  
+
   if (sysGDI == NULL)
   {
-	 /* FIXME - Handle sysGDI == NULL!!!!! 
+	 /* FIXME - Handle sysGDI == NULL!!!!!
 	    we should not unlock dc and return 0 ??
 		shall we create the pallete ??
 	 */
@@ -532,7 +532,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
 	 return 0;
   }
 
-  
+
   // Step 1: Create mapping of system palette\DC palette
 #ifndef NO_MAPPING
   realized = PALETTE_SetMapping(palPtr, 0, palGDI->NumColors,
@@ -542,7 +542,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   realized = 0;
 #endif
 
-  
+
 
   // Step 2:
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
@@ -550,7 +550,7 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   // context is a display DC, the physical palette for that device is modified.
   if(dc->w.flags == DC_MEMORY)
   {
-    // Memory managed DC    
+    // Memory managed DC
 	ASSERT(sysGDI->NumColors <= 256);
 	success = ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette(
 		dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
@@ -633,7 +633,7 @@ BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
    return FALSE;
 }
 
-UINT STDCALL 
+UINT STDCALL
 IntSetPaletteEntries(HPALETTE  hpal,
                       UINT  Start,
                       UINT  Entries,
@@ -679,12 +679,12 @@ NtGdiSetSystemPaletteUse(HDC hDC, UINT Usage)
         return SYSPAL_ERROR;
     }
 
-    switch (Usage) 
+    switch (Usage)
 	{
 		case SYSPAL_NOSTATIC:
-        case SYSPAL_NOSTATIC256:       
+        case SYSPAL_NOSTATIC256:
         case SYSPAL_STATIC:
-				SystemPaletteUse = Usage;				
+				SystemPaletteUse = Usage;
 				break;
 
         default:
@@ -713,7 +713,7 @@ NtGdiUnrealizeObject(HGDIOBJ hgdiobj)
    /* From Wine: UnrealizeObject does not SetLastError() on a null object */
    if(!hgdiobj)
      return Ret;
-      
+
    ptr = GDIOBJ_LockObj(GdiHandleTable, hgdiobj, GDI_OBJECT_TYPE_DONTCARE);
    if (ptr == 0)
      {
@@ -752,7 +752,7 @@ NtGdiUpdateColors(HDC hDC)
    USER_REFERENCE_ENTRY Ref;
 
    calledFromUser = UserIsEntered();
-   
+
    if (!calledFromUser){
       UserEnterExclusive();
    }
@@ -765,18 +765,18 @@ NtGdiUpdateColors(HDC hDC)
       if (!calledFromUser){
          UserLeave();
       }
-      
+
       return FALSE;
    }
-   
+
    UserRefObjectCo(Wnd, &Ref);
    ret = co_UserRedrawWindow(Wnd, NULL, 0, RDW_INVALIDATE);
    UserDerefObjectCo(Wnd);
-   
+
    if (!calledFromUser){
       UserLeave();
    }
-   
+
    return ret;
 }
 
@@ -835,7 +835,7 @@ int STDCALL COLOR_PaletteLookupExactIndex( PALETTEENTRY* palPalEntry, int size,
 
 W32KAPI
 LONG
-APIENTRY 
+APIENTRY
 NtGdiDoPalette(
     IN HGDIOBJ hObj,
     IN WORD iStart,

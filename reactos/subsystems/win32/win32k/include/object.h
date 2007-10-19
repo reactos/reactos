@@ -47,7 +47,7 @@ typedef enum _USER_OBJECT_TYPE
   otCallProc = 7,
   otAccel,
   otMonitor = 12
-  
+
 } USER_OBJECT_TYPE;
 
 

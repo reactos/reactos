@@ -108,7 +108,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "&ตัวเลือกระดับสูง...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12 
+   PUSHBUTTON "&ตัวเลือกระดับสูง...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
    LTEXT "&หมดเวลา:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "วินาที", -1, 340, 91, 15, 10
@@ -144,9 +144,9 @@ BEGIN
     IDS_MSCONFIG             "โปรแกรมโครงแบบระบบ"
     IDS_TAB_GENERAL          "ทั่วไป"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "บริการ" 
-    IDS_TAB_STARTUP          "เริ่มงานเครื่อง" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "บริการ"
+    IDS_TAB_STARTUP          "เริ่มงานเครื่อง"
     IDS_TAB_TOOLS            "เครื่องมือ"
 END
 
@@ -190,5 +190,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "กำลังดำเนินงาน"
     IDS_SERVICES_STATUS_STOPPED "หยุดแล้ว"
     IDS_SERVICES_YES "ใช่"
-    IDS_SERVICES_UNKNOWN "ไม่ทราบ" 
+    IDS_SERVICES_UNKNOWN "ไม่ทราบ"
 END

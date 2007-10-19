@@ -54,7 +54,7 @@ HvpVerifyHiveHeader(
 VOID CMAPI
 HvpFreeHiveBins(
    PHHIVE Hive)
-{        	
+{
    ULONG i;
    PHBIN Bin;
    ULONG Storage;
@@ -172,7 +172,7 @@ HvpInitializeMemoryHive(
     * Build a block list from the in-memory chunk and copy the data as
     * we go.
     */
-   
+
    Hive->Storage[HvStable].Length = (ULONG)(ChunkSize / HV_BLOCK_SIZE) - 1;
    Hive->Storage[HvStable].BlockList =
       Hive->Allocate(Hive->Storage[HvStable].Length *
@@ -422,7 +422,7 @@ HvLoadHive(IN PHHIVE Hive,
  *    STATUS_NO_MEMORY - A memory allocation failed.
  *    STATUS_REGISTRY_CORRUPT - Registry corruption was detected.
  *    STATUS_SUCCESS
- *        
+ *
  * @see HvFree
  */
 
@@ -511,7 +511,7 @@ HvInitialize(
  * Free all stroage and handles associated with hive descriptor.
  */
 
-VOID CMAPI 
+VOID CMAPI
 HvFree(
    PHHIVE RegistryHive)
 {

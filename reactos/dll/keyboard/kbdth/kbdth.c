@@ -2,7 +2,7 @@
  * ReactOS Thai keyboard layout (traditional)
  * Copyright (C) 2007 ReactOS
  * License: LGPL, see: LGPL.txt
- * 
+ *
  */
 
 #include <windows.h>
@@ -33,7 +33,7 @@
 ROSDATA USHORT scancode_to_vk[] = {
   /* Numbers Row */
   /* - 00 - */
-  /* 1 ...         2 ...         3 ...         4 ... */     
+  /* 1 ...         2 ...         3 ...         4 ... */
   VK_EMPTY,     VK_ESCAPE,    '1',          '2',
   '3',          '4',          '5',          '6',
   '7',          '8',          '9',          '0',
@@ -42,14 +42,14 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* First Letters Row */
   VK_TAB,       'Q',          'W',          'E',
   'R',          'T',          'Y',          'U',
-  'I',          'O',          'P',          
+  'I',          'O',          'P',
   VK_OEM_4,     VK_OEM_6,     VK_RETURN,
   /* - 1d - */
   /* Second Letters Row */
-  VK_LCONTROL,  
+  VK_LCONTROL,
   'A',          'S',          'D',          'F',
   'G',          'H',          'J',          'K',
-  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3, 
+  'L',          VK_OEM_1,     VK_OEM_7,     VK_OEM_3,
   VK_LSHIFT,    VK_OEM_5,
   /* - 2c - */
   /* Third letters row */
@@ -59,15 +59,15 @@ ROSDATA USHORT scancode_to_vk[] = {
   /* - 37 - */
   /* Bottom Row */
   VK_MULTIPLY,  VK_LMENU,     VK_SPACE,     VK_CAPITAL,
-  
+
   /* - 3b - */
   /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
+  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6,
   VK_F7, VK_F8, VK_F9, VK_F10,
   /* - 45 - */
   /* Locks */
-  VK_NUMLOCK | KMEXT,   
-  VK_SCROLL  | KMULTI,    
+  VK_NUMLOCK | KMEXT,
+  VK_SCROLL  | KMULTI,
   /* - 47 - */
   /* Number-Pad */
   VK_HOME   | KNUMS,      VK_UP     | KNUMS,      VK_PRIOR | KNUMS, VK_SUBTRACT,
@@ -351,10 +351,10 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
   &modifier_bits,
-  
+
   /* character from vk tables */
   vk_to_wchar_master_table,
-  
+
   /* diacritical marks -- currently implemented by wine code */
   NULL,
 

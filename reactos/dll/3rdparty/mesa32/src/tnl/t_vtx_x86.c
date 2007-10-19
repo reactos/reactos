@@ -215,7 +215,7 @@ static struct _tnl_dynfn *makeX86Attribute1fv( GLcontext *ctx, int dest )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    DFN ( _tnl_x86_Attribute1fv, tnl->vtx.cache.Attribute[1-1], dest );
 
-   FIXUP(dfn->code, 0, 0, dest); 
+   FIXUP(dfn->code, 0, 0, dest);
 
    return dfn;
 }
@@ -225,8 +225,8 @@ static struct _tnl_dynfn *makeX86Attribute2fv( GLcontext *ctx, int dest )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    DFN ( _tnl_x86_Attribute2fv, tnl->vtx.cache.Attribute[2-1], dest );
 
-   FIXUP(dfn->code, 0, 0, dest); 
-   FIXUP(dfn->code, 0, 1, 4+dest); 
+   FIXUP(dfn->code, 0, 0, dest);
+   FIXUP(dfn->code, 0, 1, 4+dest);
 
    return dfn;
 }
@@ -236,8 +236,8 @@ static struct _tnl_dynfn *makeX86Attribute3fv( GLcontext *ctx, int dest )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    DFN ( _tnl_x86_Attribute3fv, tnl->vtx.cache.Attribute[3-1], dest );
 
-   FIXUP(dfn->code, 0, 0, dest); 
-   FIXUP(dfn->code, 0, 1, 4+dest); 
+   FIXUP(dfn->code, 0, 0, dest);
+   FIXUP(dfn->code, 0, 1, 4+dest);
    FIXUP(dfn->code, 0, 2, 8+dest);
 
    return dfn;
@@ -248,8 +248,8 @@ static struct _tnl_dynfn *makeX86Attribute4fv( GLcontext *ctx, int dest )
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    DFN ( _tnl_x86_Attribute4fv, tnl->vtx.cache.Attribute[4-1], dest );
 
-   FIXUP(dfn->code, 0, 0, dest); 
-   FIXUP(dfn->code, 0, 1, 4+dest); 
+   FIXUP(dfn->code, 0, 0, dest);
+   FIXUP(dfn->code, 0, 1, 4+dest);
    FIXUP(dfn->code, 0, 2, 8+dest);
    FIXUP(dfn->code, 0, 3, 12+dest);
 
@@ -360,7 +360,7 @@ void _tnl_x86choosers( tnl_attrfv_func (*choose)[4],
    }
 }
 
-#else 
+#else
 
 void _tnl_InitX86Codegen( struct _tnl_dynfn_generators *gen )
 {

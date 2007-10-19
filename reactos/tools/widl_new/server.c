@@ -420,9 +420,9 @@ void write_server(ifref_list_t *ifaces)
 
             write_serverinterfacedecl(iface->iface);
             write_stubdescdecl(iface->iface);
-    
+
             write_function_stubs(iface->iface, &proc_offset);
-    
+
             print_server("#if !defined(__RPC_WIN32__)\n");
             print_server("#error  Invalid build platform for this stub.\n");
             print_server("#endif\n");

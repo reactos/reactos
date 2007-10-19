@@ -32,7 +32,7 @@
  *		set and must match the SmInformationClass info size;
  *	ReturnedDataLength: optional pointer to storage to receive
  *		the size of the returnede data.
- *	
+ *
  * RETURN VALUE
  * 	STATUS_SUCCESS: OK you get what you asked for;
  * 	STATUS_INFO_LENGTH_MISMATCH: you set DataLength to 0 or to a
@@ -40,7 +40,7 @@
  * 		requires;
  * 	STATUS_INVALID_PARAMETER_2: bad information class;
  * 	A port error.
- * 	
+ *
  */
 NTSTATUS STDCALL
 SmQueryInformation (IN      HANDLE                hSmApiPort,

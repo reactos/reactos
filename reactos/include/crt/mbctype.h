@@ -1,4 +1,4 @@
-/* 
+/*
  * mbctype.h
  *
  * Functions for testing multibyte character types and converting characters.
@@ -25,8 +25,8 @@
 #include <_mingw.h>
 
 /* return values for _mbsbtype  and  _mbbtype in mbstring.h */
-#define _MBC_SINGLE 0 
-#define _MBC_LEAD 1  
+#define _MBC_SINGLE 0
+#define _MBC_LEAD 1
 #define _MBC_TRAIL 2
 #define _MBC_ILLEGAL (-1)
 
@@ -48,7 +48,7 @@
 
 #ifndef RC_INVOKED
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 

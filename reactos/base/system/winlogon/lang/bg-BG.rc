@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON "Пре&запуск", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Подготовка на мрежовите свързвания..."
     IDS_APPLYINGCOMPUTERSETTINGS "Прилагане настройките на компютъра..."
@@ -38,7 +38,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "РеактОС тръгва..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Уьинлогон не успя да задейства потребителската обвивка!"
 END

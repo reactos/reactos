@@ -57,7 +57,7 @@ _mingw32_init_mainargs ()
    * Microsoft's runtime provides a function for doing just that.
    */
 #ifdef __MSVCRT__
-  (void) __getmainargs (&_argc, &_argv, &dummy_environ, _CRT_glob, 
+  (void) __getmainargs (&_argc, &_argv, &dummy_environ, _CRT_glob,
                         &start_info);
 #else
   /* CRTDLL version */

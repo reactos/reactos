@@ -54,7 +54,7 @@ KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
 {
     LARGE_INTEGER Result;
     /* for now */
-    if(PerformanceFrequency) PerformanceFrequency->QuadPart = 100000000; 
+    if(PerformanceFrequency) PerformanceFrequency->QuadPart = 100000000;
     Result.HighPart = HalpDecrementerRoll;
     Result.LowPart = __rdtsc();
     return Result;

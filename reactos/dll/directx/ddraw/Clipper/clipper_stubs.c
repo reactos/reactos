@@ -3,36 +3,36 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/clipper/clipper_stubs.c
- * PURPOSE:              IDirectDrawClipper Implementation 
+ * PURPOSE:              IDirectDrawClipper Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
 
 #include "rosdraw.h"
 
-HRESULT WINAPI 
-DirectDrawClipper_GetClipList( LPDIRECTDRAWCLIPPER iface, 
-                               LPRECT lpRect, 
+HRESULT WINAPI
+DirectDrawClipper_GetClipList( LPDIRECTDRAWCLIPPER iface,
+                               LPRECT lpRect,
                                LPRGNDATA lpClipList,
                                LPDWORD lpdwSize)
 {
    DX_WINDBG_trace();
-   DX_STUB;    
+   DX_STUB;
 }
 
-HRESULT WINAPI 
+HRESULT WINAPI
 DirectDrawClipper_SetClipList( LPDIRECTDRAWCLIPPER iface,
                                LPRGNDATA lprgn,
-                               DWORD dwFlag) 
+                               DWORD dwFlag)
 {
    DX_WINDBG_trace();
-   DX_STUB;    
+   DX_STUB;
 }
 
-HRESULT WINAPI 
-DirectDrawClipper_IsClipListChanged( LPDIRECTDRAWCLIPPER iface, 
-                                     BOOL* lpbChanged) 
+HRESULT WINAPI
+DirectDrawClipper_IsClipListChanged( LPDIRECTDRAWCLIPPER iface,
+                                     BOOL* lpbChanged)
 {
    DX_WINDBG_trace();
-   DX_STUB;    
+   DX_STUB;
 }

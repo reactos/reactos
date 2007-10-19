@@ -71,9 +71,9 @@ void TMouse::move_mouse(COORD start_coords, COORD end_coords) {
 
 	FillConsoleOutputAttribute(hStdout, normal,
 		ConsoleInfo.dwSize.X * ConsoleInfo.dwSize.Y, screen_start, &Result);
-					
+
 	get_coords(&start_coords, &end_coords, &first_coords, &last_coords);
-	FillConsoleOutputAttribute(hStdout, inverse, ConsoleInfo.dwSize.X * 
+	FillConsoleOutputAttribute(hStdout, inverse, ConsoleInfo.dwSize.X *
 		(last_coords.Y - first_coords.Y) + (last_coords.X - first_coords.X),
 		first_coords, &Result);
 }
@@ -158,7 +158,7 @@ void TMouse::doMouse() {
     COORD start_coords = InputRecord.Event.MouseEvent.dwMousePosition;
 	COORD end_coords = start_coords;
 	BOOL done = FALSE;
-	
+
 	// init vars
 	doMouse_init();
 	int normal_bg = ini.get_normal_bg();
@@ -171,7 +171,7 @@ void TMouse::doMouse() {
 	// make screen all one attribute
 	FillConsoleOutputAttribute(hStdout, normal, ConsoleInfo.dwSize.X *
 		ConsoleInfo.dwSize.Y, screen_start, &Result);
-	
+
 	while(!done) {
 
 		switch (InputRecord.EventType) {
@@ -183,23 +183,23 @@ void TMouse::doMouse() {
 					done = TRUE;
 				}
 				break;
-				
+
 			case MOUSE_MOVED:
 				end_coords = InputRecord.Event.MouseEvent.dwMousePosition;
-				move_mouse(start_coords, end_coords);					
+				move_mouse(start_coords, end_coords);
 				break;
 			}
 			break;
 		// If we are changing focus, we don't want to highlight anything
 		// (Paul Brannan 9/2/98)
 		case FOCUS_EVENT:
-			return;			
+			return;
 		}
-		
+
 		WaitForSingleObject(hConsole, INFINITE);
 		if (!ReadConsoleInput(hConsole, &InputRecord, 1, &Result))
 			done = TRUE;
-		
+
 	}
 
 	doMouse_cleanup();

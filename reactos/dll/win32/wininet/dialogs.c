@@ -129,7 +129,7 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 /***********************************************************************
  *         WININET_GetSetPassword
  */
-static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer, 
+static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
                                     LPCWSTR szRealm, BOOL bSet )
 {
     WCHAR szResource[0x80], szUserPass[0x40];
@@ -158,11 +158,11 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
     if( bSet )
     {
         szUserPass[0] = 0;
-        GetWindowTextW( hUserItem, szUserPass, 
+        GetWindowTextW( hUserItem, szUserPass,
                         (sizeof szUserPass-1)/sizeof(WCHAR) );
         lstrcatW(szUserPass, szColon);
         u_len = strlenW( szUserPass );
-        GetWindowTextW( hPassItem, szUserPass+u_len, 
+        GetWindowTextW( hPassItem, szUserPass+u_len,
                         (sizeof szUserPass)/sizeof(WCHAR)-u_len );
 
         r_len = (strlenW( szResource ) + 1)*sizeof(WCHAR);
@@ -205,7 +205,7 @@ static BOOL WININET_SetProxyAuthorization( HINTERNET hRequest,
     lpwhr = (LPWININETHTTPREQW) WININET_GetObject( hRequest );
     if( !lpwhr )
 	return FALSE;
-        
+
     lpwhs = (LPWININETHTTPSESSIONW) lpwhr->hdr.lpwhparent;
     if (NULL == lpwhs ||  lpwhs->hdr.htype != WH_HHTTPSESSION)
     {
@@ -218,14 +218,14 @@ static BOOL WININET_SetProxyAuthorization( HINTERNET hRequest,
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( username ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-    
+
     lstrcpyW( p, username );
     hIC->lpszProxyUsername = p;
 
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( password ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-    
+
     lstrcpyW( p, password );
     hIC->lpszProxyPassword = p;
 
@@ -259,7 +259,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
         }
 
         /* extract the name of the proxy server */
-        if( WININET_GetProxyServer( params->hRequest, 
+        if( WININET_GetProxyServer( params->hRequest,
                                     szServer, sizeof szServer/sizeof(WCHAR)) )
         {
             hitem = GetDlgItem( hdlg, IDC_PROXY );
@@ -285,7 +285,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
             hitem = GetDlgItem( hdlg, IDC_USERNAME );
             if( hitem )
                 GetWindowTextW( hitem, username, sizeof username/sizeof(WCHAR) );
-            
+
             password[0] = 0;
             hitem = GetDlgItem( hdlg, IDC_PASSWORD );
             if( hitem )
@@ -296,7 +296,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
                 SendMessageW( hitem, BM_GETSTATE, 0, 0 ) &&
                 WININET_GetAuthRealm( params->hRequest,
                                   szRealm, sizeof szRealm/sizeof(WCHAR)) &&
-                WININET_GetProxyServer( params->hRequest, 
+                WININET_GetProxyServer( params->hRequest,
                                     szServer, sizeof szServer/sizeof(WCHAR)) )
             {
                 WININET_GetSetPassword( hdlg, szServer, szRealm, TRUE );

@@ -40,7 +40,7 @@ BEGIN
     LTEXT           "A ReactOS fejlesztõk szeretnének köszönetet mondani az alábbi Open Source projekteknek "\
                     "amiket (részben) felhasználtak a ReactOS fejlesztéséhez:",
                     IDC_STATIC,15,7,286,19
-    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS | 
+    LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
     LTEXT           "A ReactOS a GPL licenszével rendelkezik, így felhasználásához és terjesztéséhez "\
                     "ezt a licenszt kell figyelembe venni.",
@@ -160,7 +160,7 @@ BEGIN
           "A számítógép 15 másodperc múlva újraindul, vagy azonnal ha rákattintasz "\
           "az Újraindítás gombra.", IDC_STATIC, 13, 33, 212, 32
 //    GROUPBOX "", -1, 7, 3, 231, 106
-    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8 
+    CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 13, 70, 212, 8
     PUSHBUTTON "&Újraindítás", IDOK, 98, 87, 50, 14
 END*/
 
@@ -170,7 +170,7 @@ STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "GNU General Public License"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
                     ES_READONLY | WS_VSCROLL
     DEFPUSHBUTTON   "OK",IDOK,141,209,50,14
 END

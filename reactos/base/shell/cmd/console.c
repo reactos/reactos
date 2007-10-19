@@ -246,13 +246,13 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	static int LineCount = 0;
 
 	/* used to see how big the screen is */
-	int ScreenLines = 0;  
+	int ScreenLines = 0;
 
 	/* the number of chars in a roow */
-	int ScreenCol = 0;  
+	int ScreenCol = 0;
 
 	/* chars since start of line */
-	int CharSL = 0; 
+	int CharSL = 0;
 
 	int i = 0;
 
@@ -275,7 +275,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 	ScreenLines = (csbi.srWindow.Bottom  - csbi.srWindow.Top) - 4;
 	ScreenCol = (csbi.srWindow.Right - csbi.srWindow.Left) + 1;
 
-	//make sure they didnt make the screen to small 
+	//make sure they didnt make the screen to small
 	if(ScreenLines<4)
 	{
 		ConPrintf(szFormat, arg_ptr, nStdHandle);
@@ -297,13 +297,13 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 			CharSL++;
 
 		WriteFile (GetStdHandle (nStdHandle),&pBuf[i-CharSL],sizeof(CHAR)*(CharSL+1),&dwWritten,NULL);
-		LineCount++; 
+		LineCount++;
 		CharSL=0;
 
 		if(LineCount >= ScreenLines)
 		{
 			if(_strnicmp(&pBuf[i], "\n", 2)!=0)
-				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL); 
+				WriteFile (GetStdHandle (nStdHandle),_T("\n"),sizeof(CHAR),&dwWritten,NULL);
 
 			if(PagePrompt() != PROMPT_YES)
 			{
@@ -312,7 +312,7 @@ INT ConPrintfPaging(BOOL NewPage, LPTSTR szFormat, va_list arg_ptr, DWORD nStdHa
 #endif
 				return 1;
 			}
-			//reset the number of lines being printed         
+			//reset the number of lines being printed
 			LineCount = 0;
 			CharSL=0;
 		}

@@ -4,7 +4,7 @@
  * Set and query ioctl constants for tcpip.sys
  *
  * Contributors:
- *   Created by Art Yerkes (ayerkes@speakeasy.net) from 
+ *   Created by Art Yerkes (ayerkes@speakeasy.net) from
  *    drivers/net/tcpip/include/ticonsts.h
  *
  * THIS SOFTWARE IS NOT COPYRIGHTED

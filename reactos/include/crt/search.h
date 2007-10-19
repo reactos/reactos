@@ -1,4 +1,4 @@
-/* 
+/*
  * search.h
  *
  * Functions for searching and sorting.
@@ -38,7 +38,7 @@ typedef unsigned int size_t;
 #endif
 
 /* bsearch and qsort are also declared in stdlib.h */
-_CRTIMP void* __cdecl bsearch (const void*, const void*, size_t, size_t, 
+_CRTIMP void* __cdecl bsearch (const void*, const void*, size_t, size_t,
 			       int (*)(const void*, const void*));
 _CRTIMP void __cdecl qsort (void*, size_t, size_t,
 			    int (*)(const void*, const void*));

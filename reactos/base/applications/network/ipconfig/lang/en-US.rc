@@ -23,7 +23,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
 /* Please keep the spacing/formatting as per En.rc when translating */
-  IDS_USAGE     
+  IDS_USAGE
     "\nUSAGE:\n \
         ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
                   /flushdns | /displaydns | /registerdns |\n \

@@ -149,7 +149,7 @@ struct fp_dst_register
 struct fp_instruction
 {
    GLuint Opcode:6;
-   GLuint Saturate:1;	
+   GLuint Saturate:1;
    GLuint UpdateCondRegister:1;	/* NV */
    GLuint Precision:2;    /* NV: unused/unneeded? */
    GLuint TexSrcUnit:4;   /* texture unit for TEX, TXD, TXP instructions */

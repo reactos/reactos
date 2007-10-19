@@ -33,7 +33,7 @@ ULONG WINAPI
 ThunkDirectDraw_AddRef(LPDIRECTDRAW iface)
 {
 	DX_WINDBG_trace();
-	
+
     return Main_DirectDraw_AddRef((LPDIRECTDRAW7) iface);
 }
 
@@ -58,7 +58,7 @@ ThunkDirectDraw_Release(LPDIRECTDRAW iface)
 {
 	DX_WINDBG_trace();
 
-	return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);     
+	return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);
 }
 
 ULONG WINAPI
@@ -66,7 +66,7 @@ ThunkDirectDraw2_Release(LPDIRECTDRAW2 iface)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);     
+    return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);
 }
 
 ULONG WINAPI
@@ -74,7 +74,7 @@ ThunkDirectDraw4_Release(LPDIRECTDRAW4 iface)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);    
+    return Main_DirectDraw_Release ((LPDIRECTDRAW7) iface);
 }
 
 HRESULT WINAPI
@@ -103,10 +103,10 @@ ThunkDirectDraw4_Compact(LPDIRECTDRAW4 iface)
 
 HRESULT WINAPI
 ThunkDirectDraw_CreateClipper(LPDIRECTDRAW iface,DWORD dwFlags,LPDIRECTDRAWCLIPPER *ppClipper,IUnknown *pUnkOuter)
-{    
+{
 	DX_WINDBG_trace();
 
-	return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);   	
+	return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);
 }
 
 HRESULT WINAPI
@@ -114,7 +114,7 @@ ThunkDirectDraw2_CreateClipper(LPDIRECTDRAW2 iface,DWORD dwFlags,LPDIRECTDRAWCLI
 {
     DX_WINDBG_trace();
 
-	return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);   
+	return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);
 }
 
 HRESULT WINAPI
@@ -122,7 +122,7 @@ ThunkDirectDraw4_CreateClipper(LPDIRECTDRAW4 iface,DWORD dwFlags,LPDIRECTDRAWCLI
 {
    DX_WINDBG_trace();
 
-   return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);   
+   return Main_DirectDraw_CreateClipper( (LPDIRECTDRAW7) iface, dwFlags, ppClipper, pUnkOuter);
 }
 
 HRESULT WINAPI
@@ -148,7 +148,7 @@ ThunkDirectDraw2_CreatePalette(LPDIRECTDRAW2 iface, DWORD dwFlags,
 }
 
 HRESULT WINAPI
-ThunkDirectDraw4_CreatePalette(LPDIRECTDRAW4 iface, DWORD dwFlags, LPPALETTEENTRY pEntries, 
+ThunkDirectDraw4_CreatePalette(LPDIRECTDRAW4 iface, DWORD dwFlags, LPPALETTEENTRY pEntries,
 							   LPDIRECTDRAWPALETTE *ppPalette, IUnknown *pUnkOuter)
 {
     DX_WINDBG_trace();
@@ -161,28 +161,28 @@ ThunkDirectDraw_CreateSurface(LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD,
 			      LPDIRECTDRAWSURFACE *ppSurf,
 			      IUnknown *pUnkOuter)
 {
-	HRESULT retValue = DDERR_GENERIC;	
+	HRESULT retValue = DDERR_GENERIC;
 	LPDDRAWI_DDRAWSURFACE_INT That;
 
 	DX_WINDBG_trace();
-	
+
 	if (pDDSD != NULL)
 	{
 	   DDSURFACEDESC2 pDDSD2;
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, &pDDSD2, 
-		                                          (LPDIRECTDRAWSURFACE7 *) ppSurf, pUnkOuter); 
+	   retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, &pDDSD2,
+		                                          (LPDIRECTDRAWSURFACE7 *) ppSurf, pUnkOuter);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, NULL, 
+		retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, NULL,
 			                                       (LPDIRECTDRAWSURFACE7 *) ppSurf, pUnkOuter);
 	}
-    
+
 	That  = (LPDDRAWI_DDRAWSURFACE_INT) *ppSurf;
 	That->lpVtbl = &DirectDrawSurface3_VTable;
 
@@ -193,25 +193,25 @@ HRESULT WINAPI
 ThunkDirectDraw2_CreateSurface(LPDIRECTDRAW2 iface, LPDDSURFACEDESC pDDSD,
 			                   LPDIRECTDRAWSURFACE *ppSurface, IUnknown *pUnkOuter)
 {
-    HRESULT retValue = DDERR_GENERIC;	
+    HRESULT retValue = DDERR_GENERIC;
 	LPDDRAWI_DDRAWSURFACE_INT That;
 
 	DX_WINDBG_trace();
-	
+
 	if (pDDSD != NULL)
 	{
 	   DDSURFACEDESC2 pDDSD2;
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, &pDDSD2, 
-		                                          (LPDIRECTDRAWSURFACE7 *) ppSurface, pUnkOuter); 
+	   retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, &pDDSD2,
+		                                          (LPDIRECTDRAWSURFACE7 *) ppSurface, pUnkOuter);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, NULL, 
+		retValue =  Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, NULL,
 			                                       (LPDIRECTDRAWSURFACE7 *) ppSurface, pUnkOuter);
 	}
 
@@ -225,19 +225,19 @@ HRESULT WINAPI
 ThunkDirectDraw4_CreateSurface(LPDIRECTDRAW4 iface, LPDDSURFACEDESC2 pDDSD2,
 			                   LPDIRECTDRAWSURFACE4 *ppSurface, IUnknown *pUnkOuter)
 {
-	HRESULT retValue;	
+	HRESULT retValue;
 	LPDDRAWI_DDRAWSURFACE_INT That;
 
 	DX_WINDBG_trace();
-	
 
-	retValue = Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, pDDSD2, 
+
+	retValue = Main_DirectDraw_CreateSurface ((LPDIRECTDRAW7) iface, pDDSD2,
 		                                   (LPDIRECTDRAWSURFACE7 *) ppSurface, pUnkOuter);
 
 	That  = (LPDDRAWI_DDRAWSURFACE_INT) *ppSurface;
 	That->lpVtbl = &DirectDrawSurface3_VTable;
 
-	return retValue;    
+	return retValue;
 }
 
 HRESULT WINAPI
@@ -246,7 +246,7 @@ ThunkDirectDraw_DuplicateSurface(LPDIRECTDRAW iface, LPDIRECTDRAWSURFACE src, LP
 	DX_WINDBG_trace();
 
     return  Main_DirectDraw_DuplicateSurface((LPDIRECTDRAW7) iface, (LPDIRECTDRAWSURFACE7) src,
-                                             (LPDIRECTDRAWSURFACE7*) dst); 
+                                             (LPDIRECTDRAWSURFACE7*) dst);
 }
 
 HRESULT WINAPI
@@ -255,7 +255,7 @@ ThunkDirectDraw2_DuplicateSurface(LPDIRECTDRAW2 iface, LPDIRECTDRAWSURFACE src, 
     DX_WINDBG_trace();
 
     return  Main_DirectDraw_DuplicateSurface((LPDIRECTDRAW7) iface, (LPDIRECTDRAWSURFACE7) src,
-                                             (LPDIRECTDRAWSURFACE7*) dst); 
+                                             (LPDIRECTDRAWSURFACE7*) dst);
 }
 
 HRESULT WINAPI
@@ -264,7 +264,7 @@ ThunkDirectDraw4_DuplicateSurface(LPDIRECTDRAW4 iface, LPDIRECTDRAWSURFACE4 src,
     DX_WINDBG_trace();
 
     return  Main_DirectDraw_DuplicateSurface((LPDIRECTDRAW7) iface, (LPDIRECTDRAWSURFACE7) src,
-                                             (LPDIRECTDRAWSURFACE7*) dst); 
+                                             (LPDIRECTDRAWSURFACE7*) dst);
 }
 
 HRESULT WINAPI
@@ -282,15 +282,15 @@ ThunkDirectDraw_EnumDisplayModes(LPDIRECTDRAW iface, DWORD dwFlags,
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2, 
-		                                             context, (LPDDENUMMODESCALLBACK2)cb); 
+	   retValue =  Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2,
+		                                             context, (LPDDENUMMODESCALLBACK2)cb);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, NULL, 
-			                                           context, (LPDDENUMMODESCALLBACK2)cb); 
+		retValue =   Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, NULL,
+			                                           context, (LPDDENUMMODESCALLBACK2)cb);
 	}
 
     return retValue;
@@ -311,15 +311,15 @@ ThunkDirectDraw2_EnumDisplayModes(LPDIRECTDRAW2 iface, DWORD dwFlags,
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2, 
-		                                             context, (LPDDENUMMODESCALLBACK2)cb); 
+	   retValue =  Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2,
+		                                             context, (LPDDENUMMODESCALLBACK2)cb);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, NULL, 
-			                                           context, (LPDDENUMMODESCALLBACK2)cb); 
+		retValue =   Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, NULL,
+			                                           context, (LPDDENUMMODESCALLBACK2)cb);
 	}
 
     return retValue;
@@ -332,7 +332,7 @@ ThunkDirectDraw4_EnumDisplayModes(LPDIRECTDRAW4 iface, DWORD dwFlags,
 {
    DX_WINDBG_trace();
 
-   return Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, pDDSD, context, cb); 
+   return Main_DirectDraw_EnumDisplayModes((LPDIRECTDRAW7) iface, dwFlags, pDDSD, context, cb);
 }
 
 
@@ -354,15 +354,15 @@ ThunkDirectDraw_EnumSurfaces(LPDIRECTDRAW iface, DWORD dwFlags,
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2, 
-		                                         context, (LPDDENUMSURFACESCALLBACK7)cb); 
+	   retValue =  Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2,
+		                                         context, (LPDDENUMSURFACESCALLBACK7)cb);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, NULL, 
-			                                       context, (LPDDENUMSURFACESCALLBACK7)cb); 
+		retValue =   Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, NULL,
+			                                       context, (LPDDENUMSURFACESCALLBACK7)cb);
 	}
 
     return retValue;
@@ -373,7 +373,7 @@ ThunkDirectDraw2_EnumSurfaces(LPDIRECTDRAW2 iface, DWORD dwFlags,
 			      LPDDSURFACEDESC pDDSD, LPVOID context,
 			      LPDDENUMSURFACESCALLBACK cb)
 {
-    HRESULT retValue = DDERR_GENERIC;	
+    HRESULT retValue = DDERR_GENERIC;
 
 	DX_WINDBG_trace();
 
@@ -383,15 +383,15 @@ ThunkDirectDraw2_EnumSurfaces(LPDIRECTDRAW2 iface, DWORD dwFlags,
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue =  Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2, 
-		                                         context, (LPDDENUMSURFACESCALLBACK7)cb); 
+	   retValue =  Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, &pDDSD2,
+		                                         context, (LPDDENUMSURFACESCALLBACK7)cb);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, NULL, 
-			                                       context, (LPDDENUMSURFACESCALLBACK7)cb); 
+		retValue =   Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, NULL,
+			                                       context, (LPDDENUMSURFACESCALLBACK7)cb);
 	}
 
     return retValue;
@@ -404,7 +404,7 @@ ThunkDirectDraw4_EnumSurfaces(LPDIRECTDRAW4 iface, DWORD dwFlags,
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, pDDSD, context, (LPDDENUMSURFACESCALLBACK7)cb); 
+    return Main_DirectDraw_EnumSurfaces((LPDIRECTDRAW7) iface, dwFlags, pDDSD, context, (LPDDENUMSURFACESCALLBACK7)cb);
 }
 
 
@@ -414,7 +414,7 @@ ThunkDirectDraw_FlipToGDISurface(LPDIRECTDRAW iface)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface); 
+    return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface);
 }
 
 HRESULT WINAPI
@@ -422,7 +422,7 @@ ThunkDirectDraw2_FlipToGDISurface(LPDIRECTDRAW2 iface)
 {
    DX_WINDBG_trace();
 
-   return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface); 
+   return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface);
 }
 
 HRESULT WINAPI
@@ -430,7 +430,7 @@ ThunkDirectDraw4_FlipToGDISurface(LPDIRECTDRAW4 iface)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface); 
+    return Main_DirectDraw_FlipToGDISurface((LPDIRECTDRAW7) iface);
 }
 
 HRESULT WINAPI
@@ -438,7 +438,7 @@ ThunkDirectDraw_GetCaps(LPDIRECTDRAW iface, LPDDCAPS pDDC1, LPDDCAPS pDDC2)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2); 
+    return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2);
 }
 
 HRESULT WINAPI
@@ -446,7 +446,7 @@ ThunkDirectDraw2_GetCaps(LPDIRECTDRAW2 iface, LPDDCAPS pDDC1, LPDDCAPS pDDC2)
 {
 	DX_WINDBG_trace();
 
-    return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2); 
+    return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2);
 }
 
 HRESULT WINAPI
@@ -454,30 +454,30 @@ ThunkDirectDraw4_GetCaps(LPDIRECTDRAW4 iface, LPDDCAPS pDDC1, LPDDCAPS pDDC2)
 {
    DX_WINDBG_trace();
 
-   return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2); 
+   return Main_DirectDraw_GetCaps((LPDIRECTDRAW7) iface, pDDC1, pDDC2);
 }
 
 HRESULT WINAPI
 ThunkDirectDraw_GetDisplayMode(LPDIRECTDRAW iface, LPDDSURFACEDESC pDDSD)
 {
-  
+
 	HRESULT retValue = DDERR_GENERIC;
 
 	DX_WINDBG_trace();
-	
+
 	if (pDDSD != NULL)
 	{
 	   DDSURFACEDESC2 pDDSD2;
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue = Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, &pDDSD2); 
+	   retValue = Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, &pDDSD2);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, NULL); 
+		retValue =   Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, NULL);
 	}
 
     return retValue;
@@ -496,13 +496,13 @@ ThunkDirectDraw2_GetDisplayMode(LPDIRECTDRAW2 iface, LPDDSURFACEDESC pDDSD)
 	   ZeroMemory(&pDDSD2,sizeof(DDSURFACEDESC2));
 	   memcpy(&pDDSD2, pDDSD, sizeof(DDSURFACEDESC));
 	   pDDSD2.dwSize = sizeof(DDSURFACEDESC2);
-	   retValue = Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, &pDDSD2); 
+	   retValue = Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, &pDDSD2);
        memcpy(pDDSD, &pDDSD2, sizeof(DDSURFACEDESC));
 	   pDDSD->dwSize = sizeof(DDSURFACEDESC);
 	}
 	else
 	{
-		retValue =   Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, NULL); 
+		retValue =   Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, NULL);
 	}
 
     return retValue;
@@ -513,7 +513,7 @@ ThunkDirectDraw4_GetDisplayMode(LPDIRECTDRAW4 iface, LPDDSURFACEDESC2 pDDSD2)
 {
 	DX_WINDBG_trace();
 
-    return  Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, pDDSD2); 
+    return  Main_DirectDraw_GetDisplayMode((LPDIRECTDRAW7) iface, pDDSD2);
 }
 
 HRESULT WINAPI
@@ -643,39 +643,39 @@ HRESULT WINAPI
 ThunkDirectDraw_Initialize(LPDIRECTDRAW iface, LPGUID pGUID)
 {
     DX_WINDBG_trace();
-       
-	if (iface==NULL) 
+
+	if (iface==NULL)
 	{
 		return DDERR_NOTINITIALIZED;
 	}
-	
-    return DDERR_ALREADYINITIALIZED;	
+
+    return DDERR_ALREADYINITIALIZED;
 }
 
 HRESULT WINAPI
 ThunkDirectDraw2_Initialize(LPDIRECTDRAW2 iface, LPGUID pGUID)
 {
     DX_WINDBG_trace();
-       
-	if (iface==NULL) 
+
+	if (iface==NULL)
 	{
 		return DDERR_NOTINITIALIZED;
 	}
-	
-    return DDERR_ALREADYINITIALIZED;	
+
+    return DDERR_ALREADYINITIALIZED;
 }
 
 HRESULT WINAPI
 ThunkDirectDraw4_Initialize(LPDIRECTDRAW4 iface, LPGUID pGUID)
 {
     DX_WINDBG_trace();
-       
-	if (iface==NULL) 
+
+	if (iface==NULL)
 	{
 		return DDERR_NOTINITIALIZED;
 	}
-	
-    return DDERR_ALREADYINITIALIZED;	
+
+    return DDERR_ALREADYINITIALIZED;
 }
 
 
@@ -810,17 +810,17 @@ ThunkDirectDraw4_GetDeviceIdentifier(LPDIRECTDRAW4 iface,
 				     LPDDDEVICEIDENTIFIER pDDDI, DWORD dwFlags)
 {
     HRESULT retValue = DDERR_GENERIC;
-	
+
 	DX_WINDBG_trace();
 
 	if (pDDDI != NULL)
 	{
-       
-	   DDDEVICEIDENTIFIER2 pDDDI2;	   
+
+	   DDDEVICEIDENTIFIER2 pDDDI2;
 	   ZeroMemory(&pDDDI2,sizeof(DDDEVICEIDENTIFIER2));
-	   memcpy(&pDDDI2, pDDDI, sizeof(DDDEVICEIDENTIFIER));	  
+	   memcpy(&pDDDI2, pDDDI, sizeof(DDDEVICEIDENTIFIER));
 	   retValue = Main_DirectDraw_GetDeviceIdentifier((LPDIRECTDRAW7) iface, &pDDDI2, dwFlags);
-       memcpy(pDDDI, &pDDDI2, sizeof(DDDEVICEIDENTIFIER));	   	   
+       memcpy(pDDDI, &pDDDI2, sizeof(DDDEVICEIDENTIFIER));
 	}
 	else
 	{

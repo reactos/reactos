@@ -188,20 +188,20 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 	//  Ioannou 29 May 1998 : I prefer the union redefinitions
 	//  than the typecasting (used with them from Pascal and Cobol :-) )
 	//  FIX ME !!!! Shall we use the winsock routines instead ?
-	
+
 	union {
 		char szResponse[2];
 		int n;
 	};
-	
+
 	// Added support for user-defined term name (Paul Brannan 5/13/98)
 #define LASTTERM 4
 	const char *pszTerms[] =  {ini.get_term(), "ANSI","DEC-VT100","DEC-VT52","UNKNOWN"};
 	if(!iTermSet && (pszTerms[0] == 0 || *pszTerms[0] == 0)) iTermSet++;
-	
+
 	if (pszBuffer + 2 < pszBufferEnd) {
 		switch ((unsigned char)pszBuffer[1]) {
-			
+
 			///////////////// DO ////////////////////
 		case DO:
 			{
@@ -229,15 +229,15 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 					TELOPT_PRINTD("RCVD DO TELOPT_NAWS\n");
 					SendIAC(WILL, TELOPT_NAWS);
 					SendIAC(SB, TELOPT_NAWS);
-					
+
 					Network.SetNawsFunc(naws_string);
-					
+
 					n = Console.GetWidth();
 					SendIACParams(szResponse[1],szResponse [0]);
-					
+
 					n = Console.GetHeight();
 					SendIACParams(szResponse[1],szResponse[0]);
-					
+
 					SendIAC(SE);
 					TELOPT_PRINTD("SENT WILL TELOPT_NAWS\n");
 					break;
@@ -257,7 +257,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 					pszBuffer += 3;
 				break;
 			}
-			
+
 			///////////////// WILL ////////////////////
 		case WILL:
 			{
@@ -281,7 +281,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 						if(Network.get_local_echo()) Network.set_line_mode(0);
 					}
 					break;
-					
+
 					// Suppress Go Ahead (Paul Brannan 12/31/98)
 				case TELOPT_SGA:
 					TELOPT_PRINTD("RCVD WILL TELOPT_SGA\n");
@@ -292,7 +292,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 						TELOPT_PRINTD("SENT DO TELOPT_SGA\n");
 					}
 					break;
-					
+
 					////added 1/28/97
 				default:
 					TELOPT_PRINTD2("RCVD WILL", pszBuffer[2]);
@@ -305,7 +305,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 					pszBuffer += 3;
 				break;
 			}
-			
+
 			///////////////// WONT ////////////////////
 		case WONT:
 			{
@@ -321,7 +321,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 						TELOPT_PRINTD("SENT DONT TELOPT_ECHO\n");
 					}
 					break;
-					
+
 					// Suppress Go Ahead (Paul Brannan 12/31/98)
 				case TELOPT_SGA:
 					TELOPT_PRINTD("RCVD WONT TELOPT_SGA\n");
@@ -332,7 +332,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 						TELOPT_PRINTD("SENT DONT TELOPT_SGA\n");
 					}
 					break;
-					
+
 				default:
 					TELOPT_PRINTD2("RCVD WONT", pszBuffer[2]);
 					break;
@@ -341,7 +341,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 					pszBuffer += 3;
 				break;
 			}
-			
+
 			///////////////// DONT ////////////////////
 		case DONT:
 			{
@@ -368,7 +368,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 					pszBuffer += 3;
 				break;
 			}
-			
+
 			///////////////// SB ////////////////////
 		case SB:
 			{
@@ -384,7 +384,7 @@ char* TTelnetHandler::ParseIAC(char* pszBuffer, char* pszBufferEnd)
 							SendIACParams(0);
 							Network.WriteString(pszTerms[iTermSet], strlen(pszTerms[iTermSet]));
 							SendIAC(SE);
-							
+
 							if (iTermSet < LASTTERM )
 								iTermSet+=1;
 						}
@@ -437,7 +437,7 @@ char* TTelnetHandler::ParseBuffer(char* pszBuffer, char* pszBufferEnd){
 		while (pszBuffer < pszBufferEnd) {
 			// if IAC then parse IAC
 			if((unsigned char) *pszBuffer == IAC) {
-			
+
 				// check for escaped IAC
 				if((pszBufferEnd >= pszBuffer + 1) &&
 					(unsigned char)*(pszBuffer + 1) == IAC) {
@@ -492,7 +492,7 @@ DWORD TTelnetHandler::Go(LPVOID pvParams)
 	// of TANSIParser (Paul Brannan 6/15/98)
 
 	Console.sync(); // Sync with the parser so the cursor is positioned
-	
+
 	Parser.Init(); // Reset the parser (Paul Brannan 9/19/98)
 	init(); // Turn on local echo (Paul Brannan 9/19/98)
 
@@ -515,7 +515,7 @@ DWORD TTelnetHandler::Go(LPVOID pvParams)
 			break;
 		}
 		pszTail += Result;
-		
+
 		// Process the buffer
 		char* pszNewHead = pszHead;
 		do {
@@ -525,12 +525,12 @@ DWORD TTelnetHandler::Go(LPVOID pvParams)
 				WaitForSingleObject(pParams->hUnPause, INFINITE);
 				*pParams->bNetPaused = 0;
 			}
-			
+
 			pszHead = pszNewHead;
 			pszNewHead = ParseBuffer(pszHead, pszTail); // Parse buffer
 		} while ((pszNewHead != pszHead) && (pszNewHead < pszTail) && !*pParams->bNetFinish);
 		pszHead = pszNewHead;
-		
+
 		// When we reach the end of the buffer, move contents to the
 		// beginning of the buffer to get free space at the end.
 		if (pszTail == (szBuffer + dwBuffer)) {

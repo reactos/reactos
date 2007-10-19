@@ -492,7 +492,7 @@ WaitForDebugEvent(IN LPDEBUG_EVENT lpDebugEvent,
     }
 
     /* Loop while we keep getting interrupted */
-    do 
+    do
     {
         /* Call the native API */
         Status = DbgUiWaitStateChange(&WaitStateChange, Timeout);

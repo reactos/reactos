@@ -108,7 +108,7 @@ do {						\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair, with return value.
- * 
+ *
  * \param ctx GL context.
  * \param retval value to return value in case the assertion fails.
  */
@@ -124,7 +124,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair.
- * 
+ *
  * \param ctx GL context.
  */
 #define ASSERT_OUTSIDE_SAVE_BEGIN_END(ctx)				\
@@ -139,7 +139,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair and flush the vertices.
- * 
+ *
  * \param ctx GL context.
  */
 #define ASSERT_OUTSIDE_SAVE_BEGIN_END_AND_FLUSH(ctx)			\
@@ -151,7 +151,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair and flush the vertices, with return value.
- * 
+ *
  * \param ctx GL context.
  * \param retval value to return value in case the assertion fails.
  */
@@ -328,7 +328,7 @@ typedef enum {
         OPCODE_STENCIL_FUNC_SEPARATE,
         OPCODE_STENCIL_OP_SEPARATE,
         OPCODE_STENCIL_MASK_SEPARATE,
-	
+
 	/* Vertex attributes -- fallback for when optimized display
 	 * list build isn't active.
 	 */
@@ -441,7 +441,7 @@ void _mesa_destroy_list( GLcontext *ctx, GLuint list )
    dlist = (struct mesa_display_list *) _mesa_HashLookup(ctx->Shared->DisplayList, list);
    if (!dlist)
       return;
-   
+
    n = block = dlist->node;
 
    done = block ? GL_FALSE : GL_TRUE;
@@ -1074,7 +1074,7 @@ static void GLAPIENTRY save_BlendFuncSeparateEXT(GLenum sfactorRGB, GLenum dfact
       n[4].e = dfactorA;
    }
    if (ctx->ExecuteFlag) {
-      CALL_BlendFuncSeparateEXT(ctx->Exec, 
+      CALL_BlendFuncSeparateEXT(ctx->Exec,
 				(sfactorRGB, dfactorRGB, sfactorA, dfactorA));
    }
 }
@@ -1109,7 +1109,7 @@ void GLAPIENTRY _mesa_save_CallList( GLuint list )
    if (n) {
       n[1].ui = list;
    }
-   
+
    /* After this, we don't know what begin/end state we're in:
     */
    ctx->Driver.CurrentSavePrimitive = PRIM_UNKNOWN;
@@ -4805,7 +4805,7 @@ save_BindFragmentShaderATI(GLuint id)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   
+
    n = ALLOC_INSTRUCTION( ctx, OPCODE_BIND_FRAGMENT_SHADER_ATI, 1);
    if (n) {
      n[1].ui = id;
@@ -4820,7 +4820,7 @@ save_SetFragmentShaderConstantATI(GLuint dst, const GLfloat *value)
 {
    GET_CURRENT_CONTEXT(ctx);
    Node *n;
-   
+
    n = ALLOC_INSTRUCTION( ctx, OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI, 5);
    if (n) {
      n[1].ui = dst;
@@ -5173,7 +5173,7 @@ static void GLAPIENTRY save_Materialfv( GLenum face, GLenum pname, const GLfloat
 
    {
       GLuint bitmask = _mesa_material_bitmask( ctx, face, pname, ~0, NULL );
-      for (i = 0 ; i < MAT_ATTRIB_MAX ; i++) 
+      for (i = 0 ; i < MAT_ATTRIB_MAX ; i++)
 	 if (bitmask & (1<<i)) {
 	    ctx->ListState.ActiveMaterialSize[i] = args;
 	    COPY_SZ_4V( ctx->ListState.CurrentMaterial[i], args, param );
@@ -5447,7 +5447,7 @@ static void GLAPIENTRY save_VertexAttrib1fNV( GLuint index, GLfloat x )
    if (index < VERT_ATTRIB_MAX)
       save_Attr1fNV( index, x );
    else
-      enum_error(); 
+      enum_error();
 }
 
 static void GLAPIENTRY save_VertexAttrib1fvNV( GLuint index, const GLfloat *v )
@@ -5474,7 +5474,7 @@ static void GLAPIENTRY save_VertexAttrib2fvNV( GLuint index, const GLfloat *v )
       enum_error();
 }
 
-static void GLAPIENTRY save_VertexAttrib3fNV( GLuint index, GLfloat x, GLfloat y, 
+static void GLAPIENTRY save_VertexAttrib3fNV( GLuint index, GLfloat x, GLfloat y,
 				   GLfloat z )
 {
    if (index < VERT_ATTRIB_MAX)
@@ -5517,7 +5517,7 @@ save_VertexAttrib1fARB( GLuint index, GLfloat x )
    if (index < VERT_ATTRIB_MAX)
       save_Attr1fARB( index, x );
    else
-      enum_error(); 
+      enum_error();
 }
 
 static void GLAPIENTRY
@@ -6389,11 +6389,11 @@ execute_list( GLcontext *ctx, GLuint list )
 	 case OPCODE_BIND_FRAGMENT_SHADER_ATI:
  	    CALL_BindFragmentShaderATI(ctx->Exec, (n[1].i));
 	    break;
-	 case OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI:	
+	 case OPCODE_SET_FRAGMENT_SHADER_CONSTANTS_ATI:
  	    {
 	       GLfloat values[4];
 	       GLuint i, dst = n[1].ui;
-	       
+
 	       for (i = 0; i < 4; i++)
 		  values[i] = n[1+i].f;
 	       CALL_SetFragmentShaderConstantATI(ctx->Exec, (dst, values));
@@ -6410,20 +6410,20 @@ execute_list( GLcontext *ctx, GLuint list )
 	     * on.  With x86_64 becoming common, this will start to
 	     * matter more.
 	     */
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib2fvNV(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib2fNV(ctx->Exec, (n[1].e, n[2].f, n[3].f));
 	    break;
 	 case OPCODE_ATTR_3F_NV:
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib3fvNV(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib3fNV(ctx->Exec, (n[1].e, n[2].f, n[3].f,
 					      n[4].f));
 	    break;
 	 case OPCODE_ATTR_4F_NV:
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib4fvNV(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib4fNV(ctx->Exec, (n[1].e, n[2].f, n[3].f,
@@ -6439,27 +6439,27 @@ execute_list( GLcontext *ctx, GLuint list )
 	     * on.  With x86_64 becoming common, this will start to
 	     * matter more.
 	     */
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib2fvARB(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib2fARB(ctx->Exec, (n[1].e, n[2].f, n[3].f));
 	    break;
 	 case OPCODE_ATTR_3F_ARB:
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib3fvARB(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib3fARB(ctx->Exec, (n[1].e, n[2].f, n[3].f,
 					      n[4].f));
 	    break;
 	 case OPCODE_ATTR_4F_ARB:
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_VertexAttrib4fvARB(ctx->Exec, (n[1].e, &n[2].f));
 	    else
 	       CALL_VertexAttrib4fARB(ctx->Exec, (n[1].e, n[2].f, n[3].f,
 					      n[4].f, n[5].f));
 	    break;
 	 case OPCODE_MATERIAL:
-	    if (sizeof(Node)==sizeof(GLfloat)) 
+	    if (sizeof(Node)==sizeof(GLfloat))
 	       CALL_Materialfv(ctx->Exec, (n[1].e, n[2].e, &n[3].f));
 	    else {
 	       GLfloat f[4];
@@ -6665,7 +6665,7 @@ _mesa_NewList( GLuint list, GLenum mode )
 
    for (i = 0; i < MAT_ATTRIB_MAX; i++)
       ctx->ListState.ActiveMaterialSize[i] = 0;
-      
+
    ctx->ListState.ActiveIndex = 0;
    ctx->ListState.ActiveEdgeFlag = 0;
 
@@ -6679,7 +6679,7 @@ _mesa_NewList( GLuint list, GLenum mode )
 
 
 /*
- * End definition of current display list. 
+ * End definition of current display list.
  */
 void GLAPIENTRY
 _mesa_EndList( void )
@@ -8062,7 +8062,7 @@ static void GLAPIENTRY print_list( GLcontext *ctx, GLuint list )
       return;
 
    n = dlist->node;
-   
+
    _mesa_printf("START-LIST %u, address %p\n", list, (void*)n );
 
    done = n ? GL_FALSE : GL_TRUE;

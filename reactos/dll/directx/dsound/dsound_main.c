@@ -462,7 +462,7 @@ static HRESULT WINAPI DSCF_CreateInstance(
 	if ( IsEqualIID( &IID_IDirectSound8, riid ) )
 		return DSOUND_Create8((LPDIRECTSOUND8*)ppobj,pOuter);
 
-	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);	
+	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
 	return E_NOINTERFACE;
 }
 
@@ -529,7 +529,7 @@ DSPCF_CreateInstance(
 		return IKsPrivatePropertySetImpl_Create((IKsPrivatePropertySetImpl**)ppobj);
 	}
 
-	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);	
+	WARN("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
 	return E_NOINTERFACE;
 }
 

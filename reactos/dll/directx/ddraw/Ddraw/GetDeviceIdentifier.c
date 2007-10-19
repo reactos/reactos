@@ -9,7 +9,7 @@
  */
 
 /* TODO
- * We need adding digtial signarture detections for the drivers 
+ * We need adding digtial signarture detections for the drivers
  * and count out which level the signtature driver got, the value
  * shall be save to pDDDI->dwWHQLLevel, But I do not known how todo
  * this part yet, That is only missing feature in this functions
@@ -150,7 +150,7 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
 
                     /* Count out the guidDeviceIdentifier */
                     memcpy(&pDDDI->guidDeviceIdentifier, &CLSID_DirectDraw,sizeof(GUID));
-                   
+
                     pDDDI->guidDeviceIdentifier.Data1 ^= pDDDI->dwVendorId;
 
                     lpdata = (long *)&pDDDI->guidDeviceIdentifier.Data2;
@@ -163,8 +163,8 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
                     *lpdata = (*lpdata ^ pDDDI->dwRevision) ^ pDDDI->liDriverVersion.HighPart;
 
                     /* FIXME pDDDI->dwWHQLLevel
-                     * we leave this with no informations, I do not known 
-                     * if program care for it, I mark this api done, and 
+                     * we leave this with no informations, I do not known
+                     * if program care for it, I mark this api done, and
                      * tested, no bugs was found in it
                      */
                     pDDDI->dwWHQLLevel = 0;

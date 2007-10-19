@@ -81,7 +81,7 @@ xmlCtxtDumpCleanCtxt(xmlDebugCtxtPtr ctxt ATTRIBUTE_UNUSED)
  *
  * Check that a given namespace is in scope on a node.
  *
- * Returns 1 if in scope, -1 in case of argument error, 
+ * Returns 1 if in scope, -1 in case of argument error,
  *         -2 if the namespace is not in scope, and -3 if not on
  *         an ancestor node.
  */
@@ -305,7 +305,7 @@ xmlCtxtGenericNodeCheck(xmlDebugCtxtPtr ctxt, xmlNodePtr node) {
 	        (node != (xmlNodePtr) node->parent->properties))
 		xmlDebugErr(ctxt, XML_CHECK_NO_PREV,
                     "Attr has no prev and not first of attr list\n");
-	        
+
         } else if ((node->parent != NULL) && (node->parent->children != node))
 	    xmlDebugErr(ctxt, XML_CHECK_NO_PREV,
                     "Node has no prev and not first of parent list\n");
@@ -1583,7 +1583,7 @@ int
 xmlLsCountNode(xmlNodePtr node) {
     int ret = 0;
     xmlNodePtr list = NULL;
-    
+
     if (node == NULL)
 	return(0);
 
@@ -1624,7 +1624,7 @@ xmlLsCountNode(xmlNodePtr node) {
 	    ret = 1;
 	    break;
     }
-    for (;list != NULL;ret++) 
+    for (;list != NULL;ret++)
         list = list->next;
     return(ret);
 }
@@ -1692,11 +1692,11 @@ xmlLsOneNode(FILE *output, xmlNodePtr node) {
     if (node->type != XML_NAMESPACE_DECL) {
 	if (node->properties != NULL)
 	    fprintf(output, "a");
-	else	
+	else
 	    fprintf(output, "-");
-	if (node->nsDef != NULL) 
+	if (node->nsDef != NULL)
 	    fprintf(output, "n");
-	else	
+	else
 	    fprintf(output, "-");
     }
 
@@ -1763,7 +1763,7 @@ xmlLsOneNode(FILE *output, xmlNodePtr node) {
  * xmlBoolToText:
  * @boolval: a bool to turn into text
  *
- * Convenient way to turn bool into text 
+ * Convenient way to turn bool into text
  *
  * Returns a pointer to either "True" or "False"
  */
@@ -2030,7 +2030,7 @@ xmlShellBase(xmlShellCtxtPtr ctxt,
     if (node == NULL) {
 	fprintf(ctxt->output, "NULL\n");
 	return (0);
-    }    
+    }
 
     base = xmlNodeGetBase(node->doc, node);
 
@@ -2257,7 +2257,7 @@ xmlShellDir(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED,
     if (node == NULL) {
 	fprintf(ctxt->output, "NULL\n");
 	return (0);
-    }    
+    }
     if ((node->type == XML_DOCUMENT_NODE) ||
         (node->type == XML_HTML_DOCUMENT_NODE)) {
         xmlDebugDumpDocumentHead(ctxt->output, (xmlDocPtr) node);
@@ -2392,7 +2392,7 @@ xmlShellCat(xmlShellCtxtPtr ctxt, char *arg ATTRIBUTE_UNUSED,
     if (node == NULL) {
 	fprintf(ctxt->output, "NULL\n");
 	return (0);
-    }    
+    }
     if (ctxt->doc->type == XML_HTML_DOCUMENT_NODE) {
 #ifdef LIBXML_HTML_ENABLED
         if (node->type == XML_HTML_DOCUMENT_NODE)
@@ -2728,7 +2728,7 @@ xmlShellDu(xmlShellCtxtPtr ctxt,
  * xmlShellPwd:
  * @ctxt:  the shell context
  * @buffer:  the output buffer
- * @node:  a node 
+ * @node:  a node
  * @node2:  unused
  *
  * Implements the XML shell function "pwd"
@@ -2773,7 +2773,7 @@ xmlShellPwd(xmlShellCtxtPtr ctxt ATTRIBUTE_UNUSED, char *buffer,
  * @input:  the line reading function
  * @output:  the output FILE*, defaults to stdout if NULL
  *
- * Implements the XML shell 
+ * Implements the XML shell
  * This allow to load, validate, view, modify and save a document
  * using a environment similar to a UNIX commandline.
  */

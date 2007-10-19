@@ -28,7 +28,7 @@
 
 /*
  * Author:
- * Stephane Raimbault <stephane.raimbault@windriver.com> 
+ * Stephane Raimbault <stephane.raimbault@windriver.com>
  */
 
 #ifndef UGLMESA_H
@@ -58,13 +58,13 @@ extern "C" {
  * -  HARD 0000 0100
  * WINDML  0001 0000
  *
- * 
+ *
  */
 #define UGL_MESA_SINGLE            0x01
 #define UGL_MESA_DOUBLE            0x06
 #define UGL_MESA_DOUBLE_SOFTWARE   0x02
 #define UGL_MESA_DOUBLE_HARDWARE   0x04
-    
+
 #define UGL_MESA_WINDML_EXCLUSIVE  0x10
 
 #define UGL_MESA_FULLSCREEN_WIDTH  0x0
@@ -73,16 +73,16 @@ extern "C" {
 /*
  * uglMesaPixelStore() parameters:
  */
-    
+
 #define UGL_MESA_ROW_LENGTH	   0x20
 #define UGL_MESA_Y_UP              0x21
 
-/* 
+/*
  * Accepted by uglMesaGetIntegerv:
  */
 
 #define UGL_MESA_LEFT_X		        0x01
-#define UGL_MESA_TOP_Y		        0x02    
+#define UGL_MESA_TOP_Y		        0x02
 #define UGL_MESA_WIDTH		        0x03
 #define UGL_MESA_HEIGHT		        0x04
 #define UGL_MESA_DISPLAY_WIDTH          0x05
@@ -97,13 +97,13 @@ extern "C" {
 #define UGL_MESA_DOUBLE_BUFFER          0x0E
 #define UGL_MESA_DOUBLE_BUFFER_SOFTWARE 0x0F
 #define UGL_MESA_DOUBLE_BUFFER_HARDWARE 0x10
-    
+
 /*
  * typedefs
  */
 
 typedef struct uglMesaContext * UGL_MESA_CONTEXT;
-    
+
 UGL_MESA_CONTEXT uglMesaCreateNewContext (GLenum mode,
 					  UGL_MESA_CONTEXT share_list);
 
@@ -146,7 +146,7 @@ GLboolean uglMesaGetColorBuffer (GLint *width, GLint *height,
 
 GLboolean uglMesaSetColor (GLubyte index, GLfloat red,
 			   GLfloat green, GLfloat blue);
-  
+
 #ifdef __cplusplus
 }
 #endif

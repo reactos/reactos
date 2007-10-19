@@ -192,7 +192,7 @@ typedef struct tagDPNAME
     {
         LPWSTR  lpszShortName;
         LPSTR   lpszShortNameA;
-    }; 
+    };
 
     union /*playerLongName */       /* Player's formal/real name */
     {

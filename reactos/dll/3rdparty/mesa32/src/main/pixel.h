@@ -142,10 +142,10 @@ _mesa_chan_to_float_span(const GLcontext *ctx, GLuint n,
                          CONST GLchan rgba[][4], GLfloat rgbaf[][4]);
 
 
-extern void 
+extern void
 _mesa_update_pixel( GLcontext *ctx, GLuint newstate );
 
-extern void 
+extern void
 _mesa_init_pixel( GLcontext * ctx );
 
 /*@}*/

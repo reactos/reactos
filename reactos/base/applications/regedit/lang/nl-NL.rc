@@ -137,7 +137,7 @@ BEGIN
     ID_EDIT_NEW_KEY         "Een nieuwe sleutel toevoegen"
     ID_EDIT_NEW_STRINGVALUE "Een nieuwe tekenreekswaarde toevoegen"
     ID_EDIT_NEW_BINARYVALUE "Een nieuwe binaire waarde toevoegen"
-    ID_EDIT_NEW_DWORDVALUE  "Een nieuwe DWORD-waarde toevoegen" 
+    ID_EDIT_NEW_DWORDVALUE  "Een nieuwe DWORD-waarde toevoegen"
     ID_REGISTRY_IMPORTREGISTRYFILE "Een tekstbestand in het register importeren"
     ID_REGISTRY_EXPORTREGISTRYFILE
                             "Het register of een gedeelte ervan naar een tekstbestand exporteren"

@@ -102,7 +102,7 @@ _mesa_Accum( GLenum op, GLfloat value )
 
 
 
-void 
+void
 _mesa_init_accum( GLcontext *ctx )
 {
    /* Accumulate buffer group */

@@ -74,7 +74,7 @@ BEGIN
   LTEXT "Formato de Notación del Tiempo\n\n\
 		h = hora    m = minuto    s = segundo    t = am ó pm\n\n\
 		h = 12 houras   H = 24 houras\n\
-		hh, mm, ss = cero inicial  h, m, s = sin cero inicial", 
+		hh, mm, ss = cero inicial  h, m, s = sin cero inicial",
         -1, 13, 133, 214, 47, WS_CHILD |WS_VISIBLE | WS_GROUP
 END
 

@@ -13,7 +13,7 @@
 #include "appwiz.h"
 
 
-BOOL 
+BOOL
 CreateShortcut(PCREATE_LINK_CONTEXT pContext)
 {
     IShellLinkW *pShellLink;
@@ -30,7 +30,7 @@ CreateShortcut(PCREATE_LINK_CONTEXT pContext)
     pShellLink->lpVtbl->SetPath(pShellLink, pContext->szTarget);
     pShellLink->lpVtbl->SetDescription(pShellLink, pContext->szDescription);
     pShellLink->lpVtbl->SetWorkingDirectory(pShellLink, pContext->szWorkingDirectory);
-    
+
     hr = pShellLink->lpVtbl->QueryInterface(pShellLink, &IID_IPersistFile, (void**)&pPersistFile);
     if (hr != S_OK)
     {
@@ -59,7 +59,7 @@ WelcomeDlgProc(HWND hwndDlg,
     LPPSHNOTIFY lppsn;
     WCHAR szPath[MAX_PATH];
     WCHAR szDesc[100];
-    BROWSEINFOW brws; 
+    BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
 
     switch(uMsg)
@@ -116,7 +116,7 @@ WelcomeDlgProc(HWND hwndDlg,
                 {
                     szDesc[0] = L'\0';
                     szPath[0] = L'\0';
-                    if (LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, 100) < 100 && 
+                    if (LoadStringW(hApplet, IDS_CREATE_SHORTCUT, szDesc, 100) < 100 &&
                         LoadStringW(hApplet, IDS_ERROR_NOT_FOUND, szPath, MAX_PATH) < MAX_PATH)
                     {
                         WCHAR szError[MAX_PATH + 100];

@@ -109,7 +109,7 @@ EngDeleteDriverObj(
 {
   PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
   PDRIVERGDI DrvObjInt = ObjToGDI(DrvObjUser, DRIVER);
-  
+
   /* Make sure the obj is locked */
   if (!bLocked)
     {
@@ -118,7 +118,7 @@ EngDeleteDriverObj(
           return FALSE;
         }
     }
-    
+
   /* Call the free-proc */
   if (bCallBack)
     {
@@ -127,13 +127,13 @@ EngDeleteDriverObj(
           return FALSE;
         }
     }
-  
+
   /* Free the DRIVEROBJ */
   IntEngLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
   RemoveEntryList(&DrvObjInt->ListEntry);
   IntEngUnLockProcessDriverObjs(PsGetCurrentProcessWin32Process());
   EngFreeMem(DrvObjInt);
-  
+
   return TRUE;
 }
 
@@ -147,7 +147,7 @@ EngLockDriverObj( IN HDRVOBJ hdo )
 {
   PDRIVEROBJ DrvObjUser = (PDRIVEROBJ)hdo;
   PDRIVERGDI DrvObjInt = ObjToGDI(DrvObjUser, DRIVER);
-  
+
   if (!ExTryToAcquireFastMutex(&DrvObjInt->Lock))
     {
       return NULL;

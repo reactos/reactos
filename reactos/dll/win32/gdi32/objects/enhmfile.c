@@ -7,7 +7,7 @@ HENHMETAFILE
 STDCALL
 CloseEnhMetaFile(
 	HDC	hdc)
-{	
+{
 	return NtGdiCloseEnhMetaFile(hdc);
 }
 
@@ -38,7 +38,7 @@ HDC WINAPI CreateEnhMetaFileW(
     }
 
     pLDC = LocalAlloc(LMEM_ZEROINIT, sizeof(LDC));
-                                                                                
+
     Dc_Attr->pvLDC = pLDC;
     pLDC->hDC = mDC;
     pLDC->iType = LDC_EMFDC
@@ -77,10 +77,10 @@ HDC WINAPI CreateEnhMetaFileW(
 
     EmfDC->emf->iType = EMR_HEADER;
     EmfDC->emf->nSize = size;
-                                                                                
+
     EmfDC->emf->rclBounds.left = EmfDC->emf->rclBounds.top = 0;
     EmfDC->emf->rclBounds.right = EmfDC->emf->rclBounds.bottom = -1;
-                                                                                
+
     if(rect)
     {
         EmfDC->emf->rclFrame.left   = rect->left;
@@ -99,26 +99,26 @@ HDC WINAPI CreateEnhMetaFileW(
     EmfDC->emf->nBytes = pLDC->pvEmfDC->nSize;
     EmfDC->emf->nRecords = 1;
     EmfDC->emf->nHandles = 1;
-                                                                                
+
     EmfDC->emf->sReserved = 0; /* According to docs, this is reserved and must be 0 */
     EmfDC->emf->nDescription = length / 2;
-                                                                                
+
     EmfDC->emf->offDescription = length ? sizeof(ENHMETAHEADER) : 0;
-                                                                                
+
     EmfDC->emf->nPalEntries = 0; /* I guess this should start at 0 */
-                                                                                
+
     /* Size in pixels */
     EmfDC->emf->szlDevice.cx = EmfDC->horzres;
     EmfDC->emf->szlDevice.cy = EmfDC->vertres;
-                                                                                
+
     /* Size in millimeters */
     EmfDC->emf->szlMillimeters.cx = EmfDC->horzsize;
     EmfDC->emf->szlMillimeters.cy = EmfDC->vertsize;
-                                                                                
+
     /* Size in micrometers */
     EmfDC->emf->szlMicrometers.cx = EmfDC->horzsize * 1000;
     EmfDC->emf->szlMicrometers.cy = EmfDC->vertsize * 1000;
-                                                                                
+
     RtlCopyMemory((char *)EmfDC->emf + sizeof(ENHMETAHEADER), description, length);
 
     if (filename)  /* disk based metafile */
@@ -147,8 +147,8 @@ HDC WINAPI CreateEnhMetaFileW(
 /*
  * @implemented
  */
-HENHMETAFILE 
-STDCALL 
+HENHMETAFILE
+STDCALL
 CopyEnhMetaFileW(
 	HENHMETAFILE	hemfSrc,
 	LPCWSTR		lpszFile
@@ -226,7 +226,7 @@ CreateEnhMetaFileA(
 
 	 return rc;
   }
-  
+
   lpDescriptionW = NULL;
   if (lpDescription != NULL)
   {
@@ -236,12 +236,12 @@ CreateEnhMetaFileA(
 
 	  return rc;
   }
-     
+
   rc = NtGdiCreateEnhMetaFile (hdcRef, lpFileNameW, (CONST LPRECT)lpRect, lpDescriptionW );
 
   if (lpDescriptionW != NULL)
       HEAP_free ( lpDescriptionW );
-  
+
   if (lpFileNameW != NULL)
        HEAP_free ( lpFileNameW );
 

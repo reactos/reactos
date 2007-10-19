@@ -48,7 +48,7 @@ void CardLib_SetZoomSpeed(int speed)
                           It uses the Card(int uval) constructor,
                           which results in a 2 of clubs...
                           not what was expected
-*/ 
+*/
 /*
 void CardLib_SetAcesHigh(bool fHigh);
 bool operator != (const Card &lhs, const Card &rhs);

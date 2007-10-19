@@ -446,7 +446,7 @@ struct IDirect3DVolumeTexture8Impl
 
 /* TODO: Generate a valid GUIDs */
 /* {83B073CE-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IDirect3DStateBlock8, 
+DEFINE_GUID(IID_IDirect3DStateBlock8,
 0x83b073ce, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 DEFINE_GUID(IID_IDirect3DVertexDeclaration8,

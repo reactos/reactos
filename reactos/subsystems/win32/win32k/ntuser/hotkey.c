@@ -106,7 +106,7 @@ VOID FASTCALL
 UnregisterWindowHotKeys(PWINDOW_OBJECT Window)
 {
    PHOT_KEY_ITEM HotKeyItem, tmp;
-   
+
    LIST_FOR_EACH_SAFE(HotKeyItem, tmp, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
    {
       if (HotKeyItem->hWnd == Window->hSelf)
@@ -124,7 +124,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 {
    PHOT_KEY_ITEM HotKeyItem, tmp;
 
-   LIST_FOR_EACH_SAFE(HotKeyItem, tmp, &gHotkeyList, HOT_KEY_ITEM, ListEntry)   
+   LIST_FOR_EACH_SAFE(HotKeyItem, tmp, &gHotkeyList, HOT_KEY_ITEM, ListEntry)
    {
       if (HotKeyItem->Thread == Thread)
       {
@@ -136,7 +136,7 @@ UnregisterThreadHotKeys(struct _ETHREAD *Thread)
 }
 
 
-static 
+static
 BOOL FASTCALL
 IsHotKey (UINT fsModifiers, UINT vk)
 {

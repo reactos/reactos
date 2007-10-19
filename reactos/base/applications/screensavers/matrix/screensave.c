@@ -1,12 +1,12 @@
 //
 //	screensave.c
 //
-//	Entrypoint for a win32 screensaver 
+//	Entrypoint for a win32 screensaver
 //
 //	NOTES: Screen savers don't like being UPX'd (compressed). Don't
 //         know why, it just is. C-runtime has been stripped with
-//         "libctiny.lib". 
-//	
+//         "libctiny.lib".
+//
 //	v1.0 1/12/2003 J Brown
 //
 #include <windows.h>
@@ -39,7 +39,7 @@ BOOL CALLBACK MonitorEnumProc(HMONITOR hMonitor, HDC hdcMonitor, RECT *rcMonitor
 
 	// For some reason windows always places this window at 0,0...
 	// position it ourselves
-	SetWindowPos(hwnd, 0, rcMonitor->left, rcMonitor->top, 0, 0, 
+	SetWindowPos(hwnd, 0, rcMonitor->left, rcMonitor->top, 0, 0,
 		SWP_NOZORDER|SWP_NOACTIVATE|SWP_NOSIZE|SWP_SHOWWINDOW);
 
 	return TRUE;
@@ -55,9 +55,9 @@ BOOL ScreenSaver(HWND hwndParent)
 	MSG			msg;
 
 	InitScreenSaveClass(hwndParent);
-	
+
 	SystemParametersInfo(SPI_SETSCREENSAVERRUNNING, TRUE, &nPreviousState, 0);
-	
+
 	// Dynamically locate API call from USER32 - not present in all versions
 	hUser32					= GetModuleHandle(_T("USER32.DLL"));
 	pfnEnumDisplayMonitors	= (PVOID)GetProcAddress(hUser32, "EnumDisplayMonitors");
@@ -112,8 +112,8 @@ VOID ParseCommandLine(LPSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 
 	*chOption = ch;
 	ch = *szCmdLine++;
-	
-	if(ch == ':') 
+
+	if(ch == ':')
 		ch = *szCmdLine++;
 
 	while(ch == ' ' || ch == '\t')
@@ -136,7 +136,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdS
 	HWND   hwndParent;
 	UCHAR  chOption;
 
-	// Make sure that only 1 instance runs at a time - 
+	// Make sure that only 1 instance runs at a time -
 	// Win98 seems to want us to restart every 5 seconds!!
 	if(FindWindowEx(NULL, NULL, APPNAME, APPNAME))
 	{
@@ -146,7 +146,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdS
 	LoadSettings();
 
 	ParseCommandLine(lpCmdLine, &chOption, &hwndParent);
-	
+
 	switch(chOption)
 	{
 	case 's':   return ScreenSaver(NULL);           // screen save

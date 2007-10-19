@@ -30,7 +30,7 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
 			       const GLubyte * str, GLsizei len,
 			       struct vertex_program *program);
 
-extern void 
+extern void
 _mesa_debug_vp_inst(GLint num, struct vp_instruction *vp);
 
 #endif

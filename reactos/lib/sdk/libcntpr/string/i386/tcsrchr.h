@@ -13,13 +13,13 @@ _tcsrchr:
  cld
  mov  _tsize, %ecx
 
-.L1:	
+.L1:
  _tlods
  cmp  %_treg(a), %_treg(d)
  jne  .L2
  mov  %esi, %ecx
 
-.L2:	
+.L2:
  test %_treg(a), %_treg(a)
  jnz  .L1
 

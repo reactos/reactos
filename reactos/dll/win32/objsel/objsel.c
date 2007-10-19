@@ -202,7 +202,7 @@ HRESULT WINAPI OBJSEL_IDsObjectPicker_Create(LPVOID *ppvObj)
     {
         Instance->lpVtbl = &IDsObjectPicker_Vtbl;
         OBJSEL_IDsObjectPicker_AddRef((IDsObjectPicker *)Instance);
-        
+
         *ppvObj = Instance;
         return S_OK;
     }

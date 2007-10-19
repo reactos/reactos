@@ -299,7 +299,7 @@ LdrPEGetOrLoadModule(IN PCHAR ModuleName,
          * code, and we'll just call it instead.
          */
 	FrLdrLoadDriver(ImportedName, 0);
-	
+
 	/* Return the new module */
 	*ImportedModule = LdrGetModuleObject(ImportedName);
 	if (*ImportedModule == NULL)

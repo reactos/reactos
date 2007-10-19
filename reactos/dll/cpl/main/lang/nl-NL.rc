@@ -64,7 +64,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Klikvergrendeling", -1, 5, 150, 230, 70
   CHECKBOX "Klikvergren&deling inschakelen", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Instellingen...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10 
+  PUSHBUTTON "&Instellingen...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
   LTEXT "Hiermee kunt u selecteren en slepen zonder de muisknop ingedrukt te houden. Druk kort op de muisknop om in te schakelen. Druk nogmaals op de muisknop om weer uit te schakelen.", -1, 10, 180, 190, 30
 END
 

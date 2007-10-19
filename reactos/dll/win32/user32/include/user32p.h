@@ -33,7 +33,7 @@
 
 #define NtUserMsqClearWakeMask() \
   NtUserCallNoParam(NOPARAM_ROUTINE_MSQCLEARWAKEMASK)
-  
+
 #define NtUserAnyPopup() \
   (BOOL)NtUserCallNoParam(NOPARAM_ROUTINE_ANYPOPUP)
 

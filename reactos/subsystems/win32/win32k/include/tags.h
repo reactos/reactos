@@ -25,7 +25,7 @@
 #define TAG_CALLBACK	TAG('C', 'B', 'C', 'K') /* callback memory */
 #define TAG_WINSTA	TAG('W', 'S', 'T', 'A') /* window station */
 #define TAG_PDCE      TAG('U', 's', 'd', 'c') /* dce */
- 
+
 /* objects */
 #define TAG_BEZIER	TAG('B', 'E', 'Z', 'R') /* bezier */
 #define TAG_BITMAP	TAG('B', 'T', 'M', 'P') /* bitmap */

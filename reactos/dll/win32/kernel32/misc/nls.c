@@ -710,7 +710,7 @@ IntWideCharToMultiByteCP(UINT CodePage, DWORD Flags,
    }
 }
 
-/** 
+/**
  * @name IntIsLeadByte
  *
  * Internal function to detect if byte is lead byte in specific character
@@ -861,7 +861,7 @@ GetCPFileNameFromRegistry(UINT CodePage, LPWSTR FileName, ULONG FileNameSize)
                    min(Kvpi->DataLength / sizeof(WCHAR), FileNameSize));
       }
    }
-   
+
    /* free temporary buffer */
    HeapFree(GetProcessHeap(),0,Kvpi);
    return bRetValue;
@@ -1063,7 +1063,7 @@ GetACP(VOID)
  * @name GetOEMCP
  *
  * Get active OEM code page number.
- * 
+ *
  * @implemented
  */
 

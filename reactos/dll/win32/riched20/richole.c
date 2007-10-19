@@ -86,8 +86,8 @@ IRichEditOle_fnQueryInterface(IRichEditOle *me, REFIID riid, LPVOID *ppvObj)
         return S_OK;
     }
     FIXME("%p: unhandled interface %s\n", This, debugstr_guid(riid) );
- 
-    return E_NOINTERFACE;   
+
+    return E_NOINTERFACE;
 }
 
 static ULONG WINAPI

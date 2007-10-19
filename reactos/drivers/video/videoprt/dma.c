@@ -132,7 +132,7 @@ VideoPortFreeCommonBuffer( IN PVOID HwDeviceExtension,
    PVP_DMA_ADAPTER VpDmaAdapter;
 
    VpDmaAdapter = VideoPortGetDmaAdapter(
-                    HwDeviceExtension, 
+                    HwDeviceExtension,
                     (PVP_DEVICE_DESCRIPTION)&DeviceDescription);
 
    HalFreeCommonBuffer(

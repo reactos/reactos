@@ -22,7 +22,7 @@
  * PROJECT:         ReactOS Kernel
  * FILE:            services/storage/diskdump/diskdump.c
  * PURPOSE:         Dumping crash data to the pagefile
- * PROGRAMMER:      
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

@@ -171,7 +171,7 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
 
    retval = _mesa_parse_arb_program(ctx, str, len, &ap);
 
-   /*  Parse error. Allocate a dummy program and return */	
+   /*  Parse error. Allocate a dummy program and return */
    if (retval)
    {
       program->Instructions = (struct vp_instruction *)
@@ -180,7 +180,7 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
       return;
    }
 
-   /* copy the relvant contents of the arb_program struct into the 
+   /* copy the relvant contents of the arb_program struct into the
     * fragment_program struct
     */
    program->Base.String          = ap.Base.String;
@@ -193,7 +193,7 @@ _mesa_parse_arb_vertex_program(GLcontext * ctx, GLenum target,
    program->IsPositionInvariant = ap.HintPositionInvariant;
    program->InputsRead     = ap.InputsRead;
    program->OutputsWritten = ap.OutputsWritten;
-   program->Parameters     = ap.Parameters; 
+   program->Parameters     = ap.Parameters;
 
    program->Instructions   = ap.VPInstructions;
 

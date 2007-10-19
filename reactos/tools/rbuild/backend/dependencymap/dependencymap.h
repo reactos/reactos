@@ -54,7 +54,7 @@ class DepMapBackend : public Backend
 		{
 			std::vector <std::string> libraries;
 			std::vector <std::string> references;
-		
+
 			module_data()
 			{}
 			~module_data()

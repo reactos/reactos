@@ -27,14 +27,14 @@
  *                  Ge van Geldorp
  *                  Eric Kohl
  *                  Royce Mitchell III
- *                  Aleksey Bragin 
+ *                  Aleksey Bragin
  *                  Jason Filby
  *                  Art Yerkes
  *                  Gunnar Andre' Dalsnes
  *                  Filip Navara
  *                  Thomas Weidenmueller
  *                  Alex Ionescu
- *                  Trevor McCort 
+ *                  Trevor McCort
  *                  Steven Edwards
  */
 
@@ -599,7 +599,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       DPRINT1("No memory allocation base type\n");
       return STATUS_INVALID_PARAMETER_5;
    }
-   
+
    /* MEM_RESET is an exclusive flag, make sure that is valid too */
    if ((AllocationType & MEM_RESET) && (AllocationType != MEM_RESET))
    {
@@ -659,7 +659,7 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
    RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
                 PAGE_ROUND_DOWN(PBaseAddress);
 
-   /* 
+   /*
     * We've captured and calculated the data, now do more checks
     * Yes, MmCreateMemoryArea does similar checks, but they don't return
     * the right status codes that a caller of this routine would expect.
@@ -680,11 +680,11 @@ NtAllocateVirtualMemory(IN     HANDLE ProcessHandle,
       return STATUS_INVALID_PARAMETER_4;
    }
 
-   /* 
+   /*
     * Copy on Write is reserved for system use. This case is a certain failure
     * but there may be other cases...needs more testing
     */
-   if ((!BaseAddress || (AllocationType & MEM_RESERVE)) && 
+   if ((!BaseAddress || (AllocationType & MEM_RESERVE)) &&
        (Protect & (PAGE_WRITECOPY | PAGE_EXECUTE_WRITECOPY)))
    {
       DPRINT1("Copy on write is not supported by VirtualAlloc\n");

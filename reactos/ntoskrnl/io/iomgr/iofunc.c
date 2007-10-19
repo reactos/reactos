@@ -893,7 +893,7 @@ IoSetInformation(IN PFILE_OBJECT FileObject,
 /*
  * @implemented
  */
-NTSTATUS 
+NTSTATUS
 NTAPI
 NtDeviceIoControlFile(IN HANDLE DeviceHandle,
                       IN HANDLE Event OPTIONAL,
@@ -1530,7 +1530,7 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH_TRY
         {
             /* Allocate a buffer */
-            Irp->AssociatedIrp.SystemBuffer = 
+            Irp->AssociatedIrp.SystemBuffer =
                 ExAllocatePoolWithTag(NonPagedPool,
                                       Length,
                                       TAG_SYSB);

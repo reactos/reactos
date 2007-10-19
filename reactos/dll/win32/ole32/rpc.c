@@ -1021,7 +1021,7 @@ HRESULT RPC_CreateClientChannel(const OXID *oxid, const IPID *ipid,
         endpoint,
         NULL,
         &string_binding);
-        
+
     if (status == RPC_S_OK)
     {
         status = RpcBindingFromStringBindingW(string_binding, &bind);
@@ -1072,7 +1072,7 @@ HRESULT RPC_CreateServerChannel(IRpcChannelBuffer **chan)
 
     This->lpVtbl = &ServerRpcChannelBufferVtbl;
     This->refs = 1;
-    
+
     *chan = (IRpcChannelBuffer*)This;
 
     return S_OK;
@@ -1424,7 +1424,7 @@ HRESULT RPC_RegisterInterface(REFIID riid)
     struct registered_if *rif;
     BOOL found = FALSE;
     HRESULT hr = S_OK;
-    
+
     TRACE("(%s)\n", debugstr_guid(riid));
 
     EnterCriticalSection(&csRegIf);
@@ -1527,7 +1527,7 @@ void RPC_StartRemoting(struct apartment *apt)
         RPC_STATUS status;
 
         get_rpc_endpoint(endpoint, &apt->oxid);
-    
+
         status = RpcServerUseProtseqEpW(
             wszRpcTransport,
             RPC_C_PROTSEQ_MAX_REQS_DEFAULT,
@@ -1712,7 +1712,7 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
 
     while (tries++ < MAXTRIES) {
         TRACE("waiting for %s\n", debugstr_w(pipefn));
-      
+
         WaitNamedPipeW( pipefn, NMPWAIT_WAIT_FOREVER );
         hPipe = CreateFileW(pipefn, GENERIC_READ | GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, 0);
         if (hPipe == INVALID_HANDLE_VALUE) {
@@ -1737,17 +1737,17 @@ HRESULT RPC_GetLocalClassObject(REFCLSID rclsid, REFIID iid, LPVOID *ppv)
         CloseHandle(hPipe);
         break;
     }
-    
+
     if (tries >= MAXTRIES)
         return E_NOINTERFACE;
-    
+
     hres = CreateStreamOnHGlobal(0,TRUE,&pStm);
     if (hres) return hres;
     hres = IStream_Write(pStm,marshalbuffer,bufferlen,&res);
     if (hres) goto out;
     seekto.u.LowPart = 0;seekto.u.HighPart = 0;
     hres = IStream_Seek(pStm,seekto,SEEK_SET,&newpos);
-    
+
     TRACE("unmarshalling classfactory\n");
     hres = CoUnmarshalInterface(pStm,&IID_IClassFactory,ppv);
 out:
@@ -1799,7 +1799,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         FIXME("pipe creation failed for %s, le is %u\n", debugstr_w(pipefn), GetLastError());
         return 1;
     }
-    
+
     while (1) {
         if (!ConnectNamedPipe(hPipe,NULL))
         {
@@ -1819,7 +1819,7 @@ static DWORD WINAPI local_server_thread(LPVOID param)
         }
 
         TRACE("marshalling IClassFactory to client\n");
-        
+
         hres = IStream_Stat(pStm,&ststg,0);
         if (hres) return hres;
 
@@ -1833,14 +1833,14 @@ static DWORD WINAPI local_server_thread(LPVOID param)
 
         buflen = ststg.cbSize.u.LowPart;
         buffer = HeapAlloc(GetProcessHeap(),0,buflen);
-        
+
         hres = IStream_Read(pStm,buffer,buflen,&res);
         if (hres) {
             FIXME("Stream Read failed, %x\n",hres);
             HeapFree(GetProcessHeap(),0,buffer);
             return hres;
         }
-        
+
         WriteFile(hPipe,buffer,buflen,&res,NULL);
         HeapFree(GetProcessHeap(),0,buffer);
 

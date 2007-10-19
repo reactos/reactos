@@ -148,7 +148,7 @@ static BOOL string2intW( LPCWSTR str, int *out )
 
     if( str[0] == '-' ) /* check if it's negative */
         x = -x;
-    *out = x; 
+    *out = x;
 
     return TRUE;
 }
@@ -273,7 +273,7 @@ UINT MSI_RecordSetInteger( MSIRECORD *rec, unsigned int iField, int iVal )
 
     if( iField > rec->count )
         return ERROR_INVALID_PARAMETER;
- 
+
     MSI_FreeField( &rec->fields[iField] );
     rec->fields[iField].type = MSIFIELD_INT;
     rec->fields[iField].u.iVal = iVal;
@@ -329,7 +329,7 @@ BOOL WINAPI MsiRecordIsNull( MSIHANDLE handle, unsigned int iField )
 
 }
 
-UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField, 
+UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField,
                LPSTR szValue, DWORD *pcchValue)
 {
     UINT len=0, ret;
@@ -374,7 +374,7 @@ UINT MSI_RecordGetStringA(MSIRECORD *rec, unsigned int iField,
     return ret;
 }
 
-UINT WINAPI MsiRecordGetStringA(MSIHANDLE handle, unsigned int iField, 
+UINT WINAPI MsiRecordGetStringA(MSIHANDLE handle, unsigned int iField,
                LPSTR szValue, DWORD *pcchValue)
 {
     MSIRECORD *rec;

@@ -2,7 +2,7 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
-typedef enum 
+typedef enum
 {
     MPAA = 0,
     US_TV = 1,
@@ -32,7 +32,7 @@ typedef enum
 } EnTvRat_GenericLevel;
 
 
-typedef enum 
+typedef enum
 {
     MPAA_NotApplicable = TvRat_0,
     MPAA_G = TvRat_1,
@@ -44,7 +44,7 @@ typedef enum
     MPAA_NotRated = TvRat_7
 } EnTvRat_MPAA;
 
-typedef enum 
+typedef enum
 {
     US_TV_None = TvRat_0,
     US_TV_Y = TvRat_1,
@@ -56,7 +56,7 @@ typedef enum
     US_TV_None7 = TvRat_7
 } EnTvRat_US_TV;
 
-typedef enum 
+typedef enum
 {
     CAE_TV_Exempt = TvRat_0,
     CAE_TV_C = TvRat_1,
@@ -68,7 +68,7 @@ typedef enum
     CAE_TV_Reserved = TvRat_7
 } EnTvRat_CAE_TV;
 
-typedef enum 
+typedef enum
 {
     CAF_TV_Exempt = TvRat_0,
     CAF_TV_G = TvRat_1,
@@ -80,7 +80,7 @@ typedef enum
     CAF_TV_Reserved = TvRat_7
 } EnTvRat_CAF_TV;
 
-typedef enum 
+typedef enum
 {
     BfAttrNone = 0,
     BfIsBlocked = 1,
@@ -94,7 +94,7 @@ typedef enum
     BfValidAttrSubmask = 255
 } BfEnTvRat_GenericAttributes;
 
-typedef enum 
+typedef enum
 {
     US_TV_IsBlocked = BfIsBlocked,
     US_TV_IsViolent = BfIsAttr_1,
@@ -104,19 +104,19 @@ typedef enum
     US_TV_ValidAttrSubmask = 31
 } BfEnTvRat_Attributes_US_TV;
 
-typedef enum 
+typedef enum
 {
     MPAA_IsBlocked = BfIsBlocked,
     MPAA_ValidAttrSubmask = 1
 } BfEnTvRat_Attributes_MPAA;
 
-typedef enum 
+typedef enum
 {
     CAE_IsBlocked = BfIsBlocked,
     CAE_ValidAttrSubmask = 1
 } BfEnTvRat_Attributes_CAE_TV;
 
-typedef enum 
+typedef enum
 {
     CAF_IsBlocked = BfIsBlocked,
     CAF_ValidAttrSubmask = 1

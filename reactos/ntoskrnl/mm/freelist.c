@@ -190,9 +190,9 @@ MmGetContinuousPages(ULONG NumberOfBytes,
    {
       start = -1;
       length = 0;
-      /* First try to allocate the pages above the 16MB area. This may fail 
-       * because there are not enough continuous pages or we cannot allocate 
-       * pages above the 16MB area because the caller has specify an upper limit. 
+      /* First try to allocate the pages above the 16MB area. This may fail
+       * because there are not enough continuous pages or we cannot allocate
+       * pages above the 16MB area because the caller has specify an upper limit.
        * The second try uses the specified lower limit.
        */
       for (i = j == 0 ? 0x100000 / PAGE_SIZE : LowestAcceptableAddress.LowPart / PAGE_SIZE; i <= last; )

@@ -109,7 +109,7 @@ static BOOL WriteConsoleOutputCharAndAttribute(
 	// we ought to allocate memory before writing to an address (PB 5/12/98)
 	DWORD cWritten;
 	const LPDWORD lpcWritten = &cWritten;
-	
+
 	DWORD  cWriteCells = strlen(lpWriteBuffer);
 	COORD  coordWrite = {sX,sY};
 	LPWORD lpwAttribute = new WORD[cWriteCells];
@@ -146,7 +146,7 @@ static int setmaxlines(int iDisplay, int iScrollSize, int strippedlines,
 				int con_width) {
 	switch(iDisplay) {
 		case HEX: return(iScrollSize / 16); break;
-		case DUMP: 
+		case DUMP:
 		case DUMPB: return(iScrollSize / con_width); break;
 		case TEXTB: return(strippedlines); break;
 	}
@@ -196,7 +196,7 @@ void TScroller::ScrollBack(){
 	// Create buffer with ANSI codes stripped
 	// Fixed this to work properly with a circular buffer (PB 12/4/98)
 	char *stripped = new char[iScrollSize];
-	memcpy(stripped, pcScrollData + iScrollBegin, iScrollSize - 
+	memcpy(stripped, pcScrollData + iScrollBegin, iScrollSize -
 		iScrollBegin);
 	if(iScrollBegin != 0) memcpy(stripped + (iScrollSize - iScrollBegin),
 		pcScrollData, iScrollBegin - 1);
@@ -210,7 +210,7 @@ void TScroller::ScrollBack(){
 	// init scroll position
 	int current = maxlines - CON_HEIGHT + 1;
 	if(current < 0) current = 0;
-	
+
 	// paint border and info
     // paint last two lines black on white
     char * szStatusLine;
@@ -218,7 +218,7 @@ void TScroller::ScrollBack(){
 	setstatusline(szStatusLine, CON_COLS, iDisplay);
     WriteConsoleOutputCharAndAttribute(hStdout, szStatusLine, status,
 		CON_LEFT, CON_BOTTOM);
-	
+
 	// loop while not done
 	BOOL done = FALSE;
 	while (!done){
@@ -286,7 +286,7 @@ void TScroller::ScrollBack(){
 			// Find the starting position
 			for(ch = 0, lines = 0, x = 1; ch < iScrollSize &&
 				lines < current; ch++, x++) {
-				
+
 				if(stripped[ch] == '\n') lines++;
 				if(stripped[ch] == '\r') x = 1;
 			}
@@ -360,7 +360,7 @@ void TScroller::ScrollBack(){
 			break;
 		}
 	}
-	
+
 	// Clean up
 	restoreScreen(chiBuffer);
 	delete[] szStatusLine;

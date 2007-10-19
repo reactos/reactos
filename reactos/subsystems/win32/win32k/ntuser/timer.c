@@ -181,13 +181,13 @@ InitTimerImpl(VOID)
 
    ExInitializeFastMutex(&Mutex);
 
-   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;   
+   BitmapBytes = ROUND_UP(NUM_WINDOW_LESS_TIMERS, sizeof(ULONG) * 8) / 8;
    WindowLessTimersBitMapBuffer = ExAllocatePoolWithTag(PagedPool, BitmapBytes, TAG_TIMERBMP);
    if (WindowLessTimersBitMapBuffer == NULL)
    {
       return STATUS_UNSUCCESSFUL;
-   }      
-   
+   }
+
    RtlInitializeBitMap(&WindowLessTimersBitMap,
                        WindowLessTimersBitMapBuffer,
                        BitmapBytes * 8);

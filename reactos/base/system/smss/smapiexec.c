@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -64,7 +64,7 @@ SmCreateUserProcess (LPWSTR ImagePath,
 	NTSTATUS			Status = STATUS_SUCCESS;
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
-	
+
 	if (NULL != UserProcessInfo)
 	{
 		pProcessInfo = UserProcessInfo;
@@ -133,9 +133,9 @@ FailProcParams:
 				       NULL,
 				       NULL,
 				       pProcessInfo);
-                   
+
 	RtlDestroyProcessParameters (ProcessParameters);
-   
+
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT1("SM: %s: Running \"%S\" failed (Status=0x%08lx)\n",
@@ -167,7 +167,7 @@ FailProcParams:
 			DPRINT1("SM: %s: NtWaitForSingleObject failed with Status=0x%08lx\n",
 				__FUNCTION__, Status);
 		}
-		
+
 	}
         if (NULL == UserProcessInfo)
         {
@@ -207,7 +207,7 @@ SMAPI(SmExecPgm)
 		ULONG DataLength = sizeof Data;
 		ULONG DataType = REG_EXPAND_SZ;
 
-		
+
 		RtlZeroMemory (Name, sizeof Name);
 		RtlCopyMemory (Name,
 			       ExecPgm->Name,

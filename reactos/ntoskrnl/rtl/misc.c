@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/rtl/misc.c
  * PURPOSE:         Various functions
  *
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES *****************************************************************/

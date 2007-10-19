@@ -12,7 +12,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // Menu
 //
 
-IDC_FDEBUG MENU DISCARDABLE 
+IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "ファイル(&F)"
     BEGIN
@@ -40,7 +40,7 @@ END
 // Accelerator
 //
 
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE 
+IDC_FDEBUG ACCELERATORS MOVEABLE PURE
 BEGIN
     63,            IDM_ABOUT,              ASCII,  ALT // "?"
     47,            IDM_ABOUT,              ASCII,  ALT // "/"
@@ -53,7 +53,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -62,13 +62,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
@@ -82,7 +82,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO DISCARDABLE
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -126,7 +126,7 @@ BEGIN
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
     ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE | 
+    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
 END
 
@@ -162,14 +162,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
     IDS_HELLO               "Hello World!"
     IDC_FDEBUG              "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LICENSE             "このプログラムはフリーソ\フトウェアです。あなたはこれを、フリーソ\フトウェア財団によって発行された GNU General Public License (バージョン 2 か、希望によってはそれ以降のバージョンのうちどれか) の定める条件の下で再頒布または改変することができます。\r\n\r\nこのプログラムは有用であることを願って頒布されますが、*全くの無保証* です。商業可能\性の保証や特定の目的への適合性は、言外に示されたものも含め全く存在しません。詳しくは GNU General Public License をご覧ください。\r\n\r\nあなたはこのプログラムと共に、GNU General Public License の複製物を一部受け取ったはずです。もし受け取っていなければ、フリーソ\フトウェア財団まで請求してください (宛先は the Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111-1307 USA)。"
 END

@@ -1,4 +1,4 @@
-/*  $Id$  
+/*  $Id$
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  *                        Casper S. Hornstrup (chorns@users.sourceforge.net)
@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 
-void 
+void
 convertPath (char * pathToConvert)
 {
   while (*pathToConvert != 0)
@@ -56,7 +56,7 @@ getFilename (const char *filename, char * fileSpec)
   }
 }
 
-int 
+int
 main (int argc, char* argv[])
 {
   int  justPrint = 0;
@@ -78,7 +78,7 @@ main (int argc, char* argv[])
       {
       /* Continue even if there is errors */
 #if 0
-        printf ("Rmdir of %s failed.  Rmdir returned %d.\n", 
+        printf ("Rmdir of %s failed.  Rmdir returned %d.\n",
                 argv [idx],
                 returnCode);
         return  returnCode;

@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 4, 2004, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -342,7 +342,7 @@ static BOOL hasTextStyle( DWORD style )
         case SS_OWNERDRAW:
             return TRUE;
     }
-    
+
     return FALSE;
 }
 
@@ -416,7 +416,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         {
             LPCSTR textA;
             LPCWSTR textW;
-    
+
             if (full_style & SS_SUNKEN)
                 SetWindowLongW( hwnd, GWL_EXSTYLE,
                                 GetWindowLongW( hwnd, GWL_EXSTYLE ) | WS_EX_STATICEDGE );
@@ -662,7 +662,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     if (!(len = SendMessageW( hwnd, WM_GETTEXTLENGTH, 0, 0 ))) return;
     if (!(text = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return;
     SendMessageW( hwnd, WM_GETTEXT, len + 1, (LPARAM)text );
-    
+
     if (((style & SS_TYPEMASK) == SS_SIMPLE) && (style & SS_NOPREFIX))
     {
         /* Windows uses the faster ExtTextOut() to draw the text and
@@ -675,9 +675,9 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     {
     DrawTextW( hdc, text, -1, &rc, wFormat );
     }
-    
+
     HeapFree( GetProcessHeap(), 0, text );
-    
+
     if (hFont)
         SelectObject( hdc, hOldFont );
 }
@@ -815,7 +815,7 @@ static void STATIC_PaintBitmapfn(HWND hwnd, HDC hdc, DWORD style )
 //    HENHMETAFILE hEnhMetaFile;
 //    RECT rc;
 //    HBRUSH hbrush;
-//    
+//
 //    GetClientRect(hwnd, &rc);
 //    hbrush = STATIC_SendWmCtlColorStatic(hwnd, hdc);
 //    FillRect(hdc, &rc, hbrush);

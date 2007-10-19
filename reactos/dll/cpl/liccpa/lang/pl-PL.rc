@@ -1,8 +1,8 @@
-/*  
+/*
 * translated by xrogers
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/ 
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_PROPPAGE1 DIALOG DISCARDABLE  20, 40, 315, 104
@@ -24,7 +24,7 @@ BEGIN
 	CONTROL "",                                              114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_CPLNAME_1 "Mened¿er licencji"
   IDS_CPLDESCRIPTION_1 "Mened¿er licencji"

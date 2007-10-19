@@ -10,20 +10,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifdef ADNS_JGAA_WIN32
@@ -74,7 +74,7 @@ void *xmalloc(size_t sz) {
 
 char *xstrsave(const char *str) {
   char *p;
-  
+
   p= xmalloc(strlen(str)+1);
   strcpy(p,str);
   return p;
@@ -96,12 +96,12 @@ void of_type(const struct optioninfo *oi, const char *arg, const char *arg2) {
     { adns_r_mx,     "mx"     },
     { adns_r_rp,     "rp"     },
     { adns_r_addr,   "addr"   },
-    
+
     /* types with only one version */
     { adns_r_cname,  "cname"  },
     { adns_r_hinfo,  "hinfo"  },
     { adns_r_txt,    "txt"    },
-    
+
     /* raw versions */
     { adns_r_a,        "a"    },
     { adns_r_ns_raw,   "ns-"  },
@@ -182,7 +182,7 @@ static void process_optarg(const char *arg,
     query_do(arg);
   }
 }
-    
+
 static void read_stdin(void) {
   int anydone, r;
   char *newline, *space;
@@ -230,8 +230,8 @@ int main(int argc, const char *const *argv) {
   fd_set readfds, writefds, exceptfds;
   const char *arg;
 
-  ensure_adns_init(); 
-  
+  ensure_adns_init();
+
   while ((arg= *++argv)) process_optarg(arg,&argv,0);
 
   if (!ov_pipe && !ads) usageerr("no domains given, and -f/--pipe not used; try --help");

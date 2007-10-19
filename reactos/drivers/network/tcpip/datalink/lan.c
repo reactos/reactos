@@ -298,32 +298,32 @@ VOID LanReceiveWorker( PVOID Context ) {
     Packet = WorkItem->Packet;
     Adapter = WorkItem->Adapter;
     BytesTransferred = WorkItem->BytesTransferred;
-    
+
     IPPacket.NdisPacket = Packet;
-    
+
     NdisGetFirstBufferFromPacket(Packet,
 				 &NdisBuffer,
 				 &IPPacket.Header,
 				 &IPPacket.ContigSize,
 				 &IPPacket.TotalSize);
-    
+
     IPPacket.ContigSize = IPPacket.TotalSize = BytesTransferred;
     /* Determine which upper layer protocol that should receive
        this packet and pass it to the correct receive handler */
-    
+
     TI_DbgPrint(MID_TRACE,
 		("ContigSize: %d, TotalSize: %d, BytesTransferred: %d\n",
 		 IPPacket.ContigSize, IPPacket.TotalSize,
 		 BytesTransferred));
-    
+
     PacketType = PC(IPPacket.NdisPacket)->PacketType;
     IPPacket.Position = 0;
-    
+
     TI_DbgPrint
 	(DEBUG_DATALINK,
 	 ("Ether Type = %x ContigSize = %d Total = %d\n",
 	  PacketType, IPPacket.ContigSize, IPPacket.TotalSize));
-    
+
     switch (PacketType) {
     case ETYPE_IPv4:
     case ETYPE_IPv6:
@@ -336,7 +336,7 @@ VOID LanReceiveWorker( PVOID Context ) {
     default:
 	break;
     }
-    
+
     FreeNdisPacket( Packet );
 }
 
@@ -486,7 +486,7 @@ NDIS_STATUS STDCALL ProtocolReceive(
     else
     {
 	if (NdisStatus == NDIS_STATUS_SUCCESS)
-        {		  
+        {
             NdisTransferData(&NdisStatus, Adapter->NdisHandle,
                              MacReceiveContext, 0, PacketSize,
 			     NdisPacket, &BytesTransferred);

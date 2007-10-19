@@ -14,8 +14,8 @@ int main()
     USB_INTERFACE_DESCRIPTOR InterfaceDescriptor;
     USBD_GetInterfaceLengthTYPE USBD_GetInterfaceLength;
 
-    InterfaceDescriptor.bLength = 10; 
-    InterfaceDescriptor.bNumEndpoints = 2; 
+    InterfaceDescriptor.bLength = 10;
+    InterfaceDescriptor.bNumEndpoints = 2;
     InterfaceDescriptor.bDescriptorType = /*USB_INTERFACE_DESCRIPTOR_TYPE*/2;
     InterfaceDescriptor.iInterface = 0x1;
 
@@ -30,4 +30,4 @@ int main()
     FreeLibrary(Lib);
     return 0;
 }
-                                                            
+

@@ -9,7 +9,7 @@
  *                  Created 13/08/2006
  */
 
- 
+
 /* INCLUDES ******************************************************************/
 #include "smss.h"
 
@@ -21,16 +21,16 @@
 
 /*++
 * @name SmpDeleteFile
-* 
+*
 * The SmpDeleteFile function deletes a specify file.
-* 
+*
 * @param    lpFileName
 *           the name of a file which should be deleted
 *
 * @return   STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
 *           othwerwise.
 *
-* @remarks 
+* @remarks
 * This function is called by SmpMoveFilesQueryRoutine().
 *
 *
@@ -94,9 +94,9 @@ SmpDeleteFile( IN LPCWSTR lpFileName )
 
 /*++
 * @name SmpMoveFile
-* 
+*
 * The SmpMoveFile function deletes a specify file.
-* 
+*
 * @param	lpExistingFileName
 *			the name of an existing file which should be removed
 *
@@ -106,7 +106,7 @@ SmpDeleteFile( IN LPCWSTR lpFileName )
 * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
 *         othwerwise.
 *
-* @remarks 
+* @remarks
 * This function called from the SmpMoveFilesQueryRoutine function.
 *
 *
@@ -333,9 +333,9 @@ SmpMoveFile( IN LPCWSTR lpExistingFileName,
 
 /*++
 * @name SmpMoveFilesQueryRoutine
-* 
+*
 * The SmpMoveFilesQueryRoutine function processes registry entries.
-* 
+*
 * @param    ValueName
 *           The name of the value.
 *
@@ -357,7 +357,7 @@ SmpMoveFile( IN LPCWSTR lpExistingFileName,
 * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
 *         othwerwise.
 *
-* @remarks 
+* @remarks
 *
 *
 *
@@ -401,15 +401,15 @@ SmpMoveFilesQueryRoutine(IN PWSTR ValueName,
 /*++
 * @name SmProcessFileRenameList
 * @implemented
-* 
+*
 * The SmProcessFileRenameList function moves or deletes files thats have been added to the specify registry key for delayed moving.
-* 
+*
 * @param	VOID
 *
 * @return STATUS_SUCCESS in case of success, STATUS_UNSUCCESSFUL
 *         othwerwise.
 *
-* @remarks 
+* @remarks
 * This function reads the following registry value:
 * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\PendingFileRenameOperations
 * This registry value is of type REG_MULTI_SZ. The each operation is specifed as two file names.

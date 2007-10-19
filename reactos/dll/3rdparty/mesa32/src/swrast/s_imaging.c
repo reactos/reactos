@@ -24,7 +24,7 @@
 
 /* KW:  Moved these here to remove knowledge of swrast from core mesa.
  * Should probably pull the entire software implementation of these
- * extensions into either swrast or a sister module.  
+ * extensions into either swrast or a sister module.
  */
 
 #include "s_context.h"
@@ -34,7 +34,7 @@
 
 
 void
-_swrast_CopyColorTable( GLcontext *ctx, 
+_swrast_CopyColorTable( GLcontext *ctx,
 			GLenum target, GLenum internalformat,
 			GLint x, GLint y, GLsizei width)
 {
@@ -107,8 +107,8 @@ _swrast_CopyColorSubTable( GLcontext *ctx,GLenum target, GLsizei start,
 
 
 void
-_swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target, 
-				GLenum internalFormat, 
+_swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target,
+				GLenum internalFormat,
 				GLint x, GLint y, GLsizei width)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
@@ -128,7 +128,7 @@ _swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target,
    /* read the data from framebuffer */
    _swrast_read_rgba_span( ctx, ctx->ReadBuffer->_ColorReadBuffer,
                            width, x, y, (GLchan (*)[4]) rgba );
-   
+
    RENDER_FINISH( swrast, ctx );
 
    /* Restore reading from draw buffer (the default) */
@@ -148,8 +148,8 @@ _swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target,
 
 
 void
-_swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target, 
-				GLenum internalFormat, 
+_swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target,
+				GLenum internalFormat,
 				GLint x, GLint y, GLsizei width, GLsizei height)
 {
    SWcontext *swrast = SWRAST_CONTEXT(ctx);
@@ -167,7 +167,7 @@ _swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target,
    _swrast_use_read_buffer(ctx);
 
    RENDER_START(swrast,ctx);
-   
+
    /* read pixels from framebuffer */
    for (i = 0; i < height; i++) {
       _swrast_read_rgba_span( ctx, ctx->ReadBuffer->_ColorReadBuffer,
@@ -209,5 +209,5 @@ _swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target,
    ctx->Unpack.BufferObj = bufferSave;
 
    ctx->Unpack = packSave;  /* restore pixel packing params */
-   ctx->NewState |= _NEW_PACKUNPACK; 
+   ctx->NewState |= _NEW_PACKUNPACK;
 }

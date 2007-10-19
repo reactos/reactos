@@ -93,7 +93,7 @@ WSHGetProviderGuid(
 }
 
 
-/* 
+/*
 Document from OSR how WSHGetSockaddrType works
 http://www.osronline.com/ddkx/network/37wshfun_5lyq.htm
 */
@@ -106,37 +106,37 @@ WSHGetSockaddrType(
     OUT PSOCKADDR_INFO SockaddrInfo)
 {
     PSOCKADDR_IN ipv4 = (PSOCKADDR_IN)Sockaddr;
-       
+
     if ((ipv4 != NULL)
 	&& (SockaddrLength == sizeof(SOCKADDR_IN))
 	&& (ipv4->sin_family == AF_INET)
-	&& (SockaddrInfo != NULL)) 
-    { 
-                                 
+	&& (SockaddrInfo != NULL))
+    {
+
       switch (ntohl(ipv4->sin_addr.s_addr))
       {
         case INADDR_ANY:
              SockaddrInfo->AddressInfo = SockaddrAddressInfoWildcard;
              break;
-              
-        case INADDR_BROADCAST:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoBroadcast; 
-             break;
-              
-        case INADDR_LOOPBACK:
-             SockaddrInfo->AddressInfo = SockaddrAddressInfoLoopback; 
-             break;       
 
-        default:            
+        case INADDR_BROADCAST:
+             SockaddrInfo->AddressInfo = SockaddrAddressInfoBroadcast;
+             break;
+
+        case INADDR_LOOPBACK:
+             SockaddrInfo->AddressInfo = SockaddrAddressInfoLoopback;
+             break;
+
+        default:
              SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
-	     break; 
+	     break;
       }
 
       SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
       if (ntohs(ipv4->sin_port) == 0)
 	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoWildcard;
       if (ntohs(ipv4->sin_port) < IPPORT_RESERVED)
-	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;             
+	  SockaddrInfo->EndpointInfo = SockaddrEndpointInfoReserved;
 
       return 0;
     }
@@ -147,7 +147,7 @@ WSHGetSockaddrType(
       SockaddrInfo->AddressInfo = SockaddrAddressInfoNormal;
       SockaddrInfo->EndpointInfo = SockaddrEndpointInfoNormal;
     }
-    
+
     DPRINT1("Size of Address Family %d \n",SockaddrLength);
 
     DPRINT1("FIXME WSHGetSockaddrType return Winsock error, but we do not return any error\n");

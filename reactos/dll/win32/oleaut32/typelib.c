@@ -3753,7 +3753,7 @@ static HRESULT WINAPI ITypeLib2_fnGetTypeInfoType(
     ITypeLibImpl *This = (ITypeLibImpl *)iface;
     int i;
     ITypeInfoImpl *pTInfo = This->pTypeInfo;
-    
+
     if ((ITypeLib2_fnGetTypeInfoCount(iface) < index + 1) || (index < 0))
     	 return TYPE_E_ELEMENTNOTFOUND;
 
@@ -4517,7 +4517,7 @@ static ULONG WINAPI ITypeInfo_fnRelease(ITypeInfo2 *iface)
               pCustDataNext = pCustData->next;
               TLB_Free(pCustData);
           }
-          if (HIWORD(pFInfo->Entry) != 0 && pFInfo->Entry != (BSTR)-1) 
+          if (HIWORD(pFInfo->Entry) != 0 && pFInfo->Entry != (BSTR)-1)
               SysFreeString(pFInfo->Entry);
           SysFreeString(pFInfo->HelpString);
           SysFreeString(pFInfo->Name);
@@ -4636,7 +4636,7 @@ static HRESULT TLB_CopyElemDesc( const ELEMDESC *src, ELEMDESC *dest, char **buf
         *buffer += sizeof(PARAMDESCEX);
         memcpy(pparamdescex_dest, pparamdescex_src, sizeof(PARAMDESCEX));
         VariantInit(&pparamdescex_dest->varDefaultValue);
-        return VariantCopy(&pparamdescex_dest->varDefaultValue, 
+        return VariantCopy(&pparamdescex_dest->varDefaultValue,
                            (VARIANTARG *)&pparamdescex_src->varDefaultValue);
     }
     else
@@ -4793,7 +4793,7 @@ static HRESULT ITypeInfoImpl_GetInternalDispatchFuncDesc( ITypeInfo *iface,
         *funcs = implemented_funcs + This->TypeAttr.cFuncs;
     else
         *hrefoffset = 0;
-    
+
     if (index < implemented_funcs)
         return E_INVALIDARG;
     return ITypeInfoImpl_GetInternalFuncDesc(iface, index - implemented_funcs,
@@ -5372,7 +5372,7 @@ static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, 
         tdesc = tdesc->u.lptdesc;
 
         /* munch VT_PTR -> VT_USERDEFINED(interface) into VT_UNKNOWN or
-         * VT_DISPATCH and VT_PTR -> VT_PTR -> VT_USERDEFINED(interface) into 
+         * VT_DISPATCH and VT_PTR -> VT_PTR -> VT_USERDEFINED(interface) into
          * VT_BYREF|VT_DISPATCH or VT_BYREF|VT_UNKNOWN */
         if ((tdesc->vt == VT_USERDEFINED) ||
             ((tdesc->vt == VT_PTR) && (tdesc->u.lptdesc->vt == VT_USERDEFINED)))
@@ -5385,7 +5385,7 @@ static HRESULT typedescvt_to_variantvt(ITypeInfo *tinfo, const TYPEDESC *tdesc, 
                 tdesc_userdefined = tdesc->u.lptdesc;
             }
             hr = userdefined_to_variantvt(tinfo, tdesc_userdefined, &vt_userdefined);
-            if ((hr == S_OK) && 
+            if ((hr == S_OK) &&
                 (((vt_userdefined & VT_TYPEMASK) == VT_UNKNOWN) ||
                  ((vt_userdefined & VT_TYPEMASK) == VT_DISPATCH)))
             {
@@ -5587,7 +5587,7 @@ static HRESULT WINAPI ITypeInfo_fnInvoke(
             TRACE("invoking:\n");
             dump_TLBFuncDescOne(pFuncInfo);
         }
-        
+
 	switch (func_desc->funckind) {
 	case FUNC_PUREVIRTUAL:
 	case FUNC_VIRTUAL: {
@@ -5989,7 +5989,7 @@ func_fail:
 
         hres = ITypeInfo2_GetVarDesc(iface, var_index, &var_desc);
         if(FAILED(hres)) return hres;
-        
+
         FIXME("varseek: Found memid, but variable-based invoking not supported\n");
         dump_VARDESC(var_desc);
         ITypeInfo2_ReleaseVarDesc(iface, var_desc);
@@ -6418,19 +6418,19 @@ static HRESULT WINAPI ITypeInfo_fnGetContainingTypeLib( ITypeInfo2 *iface,
         ITypeLib  * *ppTLib, UINT  *pIndex)
 {
     ITypeInfoImpl *This = (ITypeInfoImpl *)iface;
-    
+
     /* If a pointer is null, we simply ignore it, the ATL in particular passes pIndex as 0 */
     if (pIndex) {
       *pIndex=This->index;
       TRACE("returning pIndex=%d\n", *pIndex);
     }
-    
+
     if (ppTLib) {
       *ppTLib=(LPTYPELIB )(This->pTypeLib);
       ITypeLib2_AddRef(*ppTLib);
       TRACE("returning ppTLib=%p\n", *ppTLib);
     }
-    
+
     return S_OK;
 }
 

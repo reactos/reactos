@@ -40,7 +40,7 @@ class Monotonizer {
     void		monotonize( Arc *, Bin & );
     int			isMonotone( Arc * );
 public:
-    			Monotonizer( ArcTessellator& at, Pool& ap, Pool& p, jmp_buf& j ) 
+    			Monotonizer( ArcTessellator& at, Pool& ap, Pool& p, jmp_buf& j )
 				: arctessellator(at), arcpool(ap), pwlarcpool(p), nurbsJmpBuf(j) {}
     int			decompose( Bin &, REAL );
 };

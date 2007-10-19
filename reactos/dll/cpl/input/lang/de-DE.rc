@@ -229,7 +229,7 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "Cancel", IDCANCEL, 212, 47, 50, 14
 }
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	//Selected language on "Add Input language"
 	IDS_SELECTED_LANGUAGE               "English (United States)"

@@ -106,7 +106,7 @@ int
 xmlModuleSymbol(xmlModulePtr module, const char *name, void **symbol)
 {
     int rc = -1;
-	
+
     if ((NULL == module) || (symbol == NULL)) {
         __xmlRaiseError(NULL, NULL, NULL, NULL, NULL, XML_FROM_MODULE,
                         XML_MODULE_OPEN, XML_ERR_FATAL, NULL, 0, 0,

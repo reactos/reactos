@@ -31,7 +31,7 @@ FindActCtxSectionStringA(
 {
     BOOL bRetVal;
     LPWSTR lpStringToFindW;
-    
+
     /* Convert lpStringToFind */
     if (lpStringToFind)
     {
@@ -40,9 +40,9 @@ FindActCtxSectionStringA(
     }
 
     /* Call the Unicode function */
-    bRetVal = FindActCtxSectionStringW(dwFlags, 
+    bRetVal = FindActCtxSectionStringW(dwFlags,
                                         lpExtensionGuid,
-                                        ulSectionId, 
+                                        ulSectionId,
                                         lpStringToFindW,
                                         ReturnedData);
 
@@ -79,7 +79,7 @@ CreateActCtxA(
     {
         BasepAnsiStringToHeapUnicodeString(pActCtx->lpSource,
                                           (LPWSTR*) &pActCtxW.lpSource);
-    } 
+    }
     if (pActCtx->lpAssemblyDirectory)
     {
         BasepAnsiStringToHeapUnicodeString(pActCtx->lpAssemblyDirectory,

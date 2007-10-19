@@ -82,10 +82,10 @@ void udict_tree_delete(udict_t *ud, udict_node_t *node, udict_node_t **pswap, ud
 	assert (node->left == nil || node->right == nil);
 
 	child = (node->left != nil) ? node->left : node->right;
-	child->parent = delparent = node->parent;	    
+	child->parent = delparent = node->parent;
 
 	if (node == delparent->left) {
-	    delparent->left = child;    
+	    delparent->left = child;
 	} else {
 	    assert (node == delparent->right);
 	    delparent->right = child;
@@ -140,9 +140,9 @@ udict_node_t *udict_tree_lower_bound(udict_t *ud, const void *_key)
 	    root = root->left;
 	} else {
 	    return root;
-	} 
+	}
     }
-    
+
     return tentative;
 }
 
@@ -162,9 +162,9 @@ udict_node_t *udict_tree_upper_bound(udict_t *ud, const void *_key)
 	    root = root->right;
 	} else {
 	    return root;
-	} 
+	}
     }
-    
+
     return tentative;
 }
 

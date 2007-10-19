@@ -49,7 +49,7 @@
 #endif
 
 #if 0
-// Altered these to get the dispatch table from 
+// Altered these to get the dispatch table from
 // the current context of the calling thread.
 #define DISPATCH(FUNC, ARGS, MESSAGE)	\
 	GET_CURRENT_CONTEXT(gc);			\

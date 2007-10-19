@@ -924,7 +924,7 @@ static int ctl2_encode_typedesc(
 
 	if (typeoffset == This->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -959,7 +959,7 @@ static int ctl2_encode_typedesc(
 
 	if (typeoffset == This->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1200,7 +1200,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnSetGuid(ICreateTypeInfo2 *iface, REFGUI
     guidentry.next_hash = -1;
 
     offset = ctl2_alloc_guid(This->typelib, &guidentry);
-    
+
     if (offset == -1) return E_OUTOFMEMORY;
 
     This->typeinfo->posguid = offset;
@@ -1382,7 +1382,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddFuncDesc(
     FIXME("{%d,%p,%p,%d,%d,%d,%d,%d,%d,%d,{%d},%d}\n", pFuncDesc->memid, pFuncDesc->lprgscode, pFuncDesc->lprgelemdescParam, pFuncDesc->funckind, pFuncDesc->invkind, pFuncDesc->callconv, pFuncDesc->cParams, pFuncDesc->cParamsOpt, pFuncDesc->oVft, pFuncDesc->cScodes, pFuncDesc->elemdescFunc.tdesc.vt, pFuncDesc->wFuncFlags);
 /*     FIXME("{%d, %d}\n", pFuncDesc->lprgelemdescParam[0].tdesc.vt, pFuncDesc->lprgelemdescParam[1].tdesc.vt); */
 /*     return E_OUTOFMEMORY; */
-    
+
     if (!This->typedata) {
 	This->typedata = HeapAlloc(GetProcessHeap(), 0, 0x2000);
 	This->typedata[0] = 0;
@@ -1658,7 +1658,7 @@ static HRESULT WINAPI ICreateTypeInfo2_fnAddVarDesc(
     This->datawidth += var_alignment - 1;
     This->datawidth &= ~(var_alignment - 1);
     typedata[4] = This->datawidth;
-    
+
     /* add the new variable to the total data width */
     This->datawidth += var_datawidth;
 
@@ -2468,7 +2468,7 @@ static HRESULT WINAPI ITypeInfo2_fnGetContainingTypeLib(
     ICreateTypeInfo2Impl *This = impl_from_ITypeInfo2(iface);
 
     TRACE("(%p,%p,%p)\n", iface, ppTLib, pIndex);
-    
+
     *ppTLib = (ITypeLib *)&This->typelib->lpVtblTypeLib2;
     This->typelib->ref++;
     *pIndex = This->typeinfo->typekind >> 16;
@@ -3135,7 +3135,7 @@ static HRESULT WINAPI ICreateTypeLib2_fnSetGuid(ICreateTypeLib2 * iface, REFGUID
     guidentry.next_hash = -1;
 
     offset = ctl2_alloc_guid(This, &guidentry);
-    
+
     if (offset == -1) return E_OUTOFMEMORY;
 
     This->typelib_header.posguid = offset;

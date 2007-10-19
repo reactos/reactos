@@ -27,7 +27,7 @@ BEGIN
 	CONTROL "",                                              114, "EDIT", ES_LEFT | ES_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_TABSTOP, 187, 39, 32, 12
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_CPLNAME_1 "Μενεδζεπ λ³φενη³ι"
   IDS_CPLDESCRIPTION_1 "Μενεδζεπ λ³φενη³ι"

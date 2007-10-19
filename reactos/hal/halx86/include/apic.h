@@ -193,7 +193,7 @@ extern CPU_INFO CPUMap[MAX_CPU];	/* Map of all CPUs in the system */
 
 __inline VOID APICWrite(ULONG Offset, ULONG Value);
 __inline ULONG APICRead(ULONG Offset);
-VOID APICSendIPI(ULONG Target, ULONG Mode); 
+VOID APICSendIPI(ULONG Target, ULONG Mode);
 VOID APICSetup(VOID);
 VOID HaliInitBSP(VOID);
 VOID APICSyncArbIDs(VOID);

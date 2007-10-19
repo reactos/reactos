@@ -38,7 +38,7 @@ typedef xmlRegExecCtxt *xmlRegExecCtxtPtr;
 
 #ifdef __cplusplus
 }
-#endif 
+#endif
 #include <libxml/tree.h>
 #ifdef __cplusplus
 extern "C" {
@@ -50,13 +50,13 @@ extern "C" {
 XMLPUBFUN xmlRegexpPtr XMLCALL
 		    xmlRegexpCompile	(const xmlChar *regexp);
 XMLPUBFUN void XMLCALL			 xmlRegFreeRegexp(xmlRegexpPtr regexp);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
 		    xmlRegexpExec	(xmlRegexpPtr comp,
 					 const xmlChar *value);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
     		    xmlRegexpPrint	(FILE *output,
 					 xmlRegexpPtr regexp);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
 		    xmlRegexpIsDeterminist(xmlRegexpPtr comp);
 
 /*
@@ -70,17 +70,17 @@ typedef void (*xmlRegExecCallbacks) (xmlRegExecCtxtPtr exec,
 /*
  * The progressive API
  */
-XMLPUBFUN xmlRegExecCtxtPtr XMLCALL	
+XMLPUBFUN xmlRegExecCtxtPtr XMLCALL
     		    xmlRegNewExecCtxt	(xmlRegexpPtr comp,
 					 xmlRegExecCallbacks callback,
 					 void *data);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 		    xmlRegFreeExecCtxt	(xmlRegExecCtxtPtr exec);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
     		    xmlRegExecPushString(xmlRegExecCtxtPtr exec,
 					 const xmlChar *value,
 					 void *data);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
 		    xmlRegExecPushString2(xmlRegExecCtxtPtr exec,
 					 const xmlChar *value,
 					 const xmlChar *value2,
@@ -101,7 +101,7 @@ XMLPUBFUN int XMLCALL
 					 int *terminal);
 #ifdef __cplusplus
 }
-#endif 
+#endif
 
 #endif /* LIBXML_REGEXP_ENABLED */
 

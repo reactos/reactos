@@ -22,7 +22,7 @@ BOOLEAN PpcPrepDiskReadLogicalSectors
 ( ULONG DriveNumber, ULONGLONG SectorNumber,
   ULONG SectorCount, PVOID Buffer ) {
     int secct;
-    
+
     for(secct = 0; secct < SectorCount; secct++)
     {
 	ide_seek(&ide1_desc, SectorNumber + secct, 0);
@@ -38,7 +38,7 @@ BOOLEAN PpcPrepConsKbHit()
     //return GetPhysByte(prep_serial+5) & 1;
 }
 
-int PpcPrepConsGetCh() 
+int PpcPrepConsGetCh()
 {
     while(!PpcPrepConsKbHit());
     return GetPhysByte(prep_serial);

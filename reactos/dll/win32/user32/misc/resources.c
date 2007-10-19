@@ -198,8 +198,8 @@ int STDCALL LoadStringW
   (
     (nBufferMax < 1) ||
     ((nBufferMax > 0)  && IsBadWritePtr(lpBuffer, nBufferMax * sizeof(lpBuffer[0]))) ||
-    /* undocumented: If nBufferMax is 0, LoadStringW will copy a pointer to the 
-       in-memory image of the string to the specified buffer and return the length 
+    /* undocumented: If nBufferMax is 0, LoadStringW will copy a pointer to the
+       in-memory image of the string to the specified buffer and return the length
        of the string in WCHARs */
     ((nBufferMax == 0) && IsBadWritePtr(lpBuffer, sizeof(lpBuffer)))
   )
@@ -266,7 +266,7 @@ RegisterDeviceNotificationW(
     return NULL;
   }
   ConfigRet  = RegNotify ( hRecipient, NotificationFilter, Flags, (PULONG) &hDevNotify);
-  if (ConfigRet != CR_SUCCESS) 
+  if (ConfigRet != CR_SUCCESS)
   {
     switch (ConfigRet)
     {
@@ -308,7 +308,7 @@ UnregisterDeviceNotification(
     return FALSE;
   }
   ConfigRet  = UnRegNotify ( (ULONG) Handle );
-  if (ConfigRet != CR_SUCCESS) 
+  if (ConfigRet != CR_SUCCESS)
   {
     switch (ConfigRet)
     {

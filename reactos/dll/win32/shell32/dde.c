@@ -91,7 +91,7 @@ static inline void Dde_OnDisconnect(HCONV hconv)
     FIXME("stub\n");
 }
 
-static HDDEDATA CALLBACK DdeCallback(      
+static HDDEDATA CALLBACK DdeCallback(
     UINT uType,
     UINT uFmt,
     HCONV hconv,

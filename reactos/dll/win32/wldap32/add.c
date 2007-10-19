@@ -110,7 +110,7 @@ ULONG CDECL ldap_addW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *attrs[] )
     char *dnU = NULL;
     LDAPMod **attrsU = NULL;
     int msg;
- 
+
     ret = WLDAP32_LDAP_NO_MEMORY;
 
     TRACE( "(%p, %s, %p)\n", ld, debugstr_w(dn), attrs );

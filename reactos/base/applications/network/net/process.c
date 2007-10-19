@@ -1,11 +1,11 @@
 
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
- * FILE:            
- * PURPOSE:         
+ * PROJECT:         ReactOS net command
+ * FILE:
+ * PURPOSE:
  *
- * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org) 
+ * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
 #include "net.h"
@@ -15,25 +15,25 @@ BOOL myCreateProcessStartGetSzie(CHAR *cmdline, LONG *size)
     HANDLE hChildStdinRd;
 	HANDLE hChildStdinWr;
 	HANDLE hChildStdoutRd;
-	HANDLE hChildStdoutWr;		
-	SECURITY_ATTRIBUTES saAttr;   
+	HANDLE hChildStdoutWr;
+	SECURITY_ATTRIBUTES saAttr;
 
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-    saAttr.bInheritHandle = TRUE; 
-    saAttr.lpSecurityDescriptor = NULL; 
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
 
-    if (! CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)) 
+    if (! CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0))
     {
         return FALSE;
     }
 
-    if (! CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)) 
+    if (! CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0))
     {
         return FALSE;
     }
 
-    myCreateProcess(hChildStdoutWr, hChildStdinRd,"rpcclient -c \"service enum\"");    
-    *size = ReadPipeSize(hChildStdoutWr, hChildStdoutRd);	
+    myCreateProcess(hChildStdoutWr, hChildStdinRd,"rpcclient -c \"service enum\"");
+    *size = ReadPipeSize(hChildStdoutWr, hChildStdoutRd);
 	return TRUE;
 }
 
@@ -43,44 +43,44 @@ BOOL myCreateProcessStart(CHAR *cmdline, CHAR *srvlst, LONG size)
 	HANDLE hChildStdinWr;
 	HANDLE hChildStdoutRd;
 	HANDLE hChildStdoutWr;
-	SECURITY_ATTRIBUTES saAttr;   
+	SECURITY_ATTRIBUTES saAttr;
 
-	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-    saAttr.bInheritHandle = TRUE; 
-    saAttr.lpSecurityDescriptor = NULL; 
+	saAttr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    saAttr.bInheritHandle = TRUE;
+    saAttr.lpSecurityDescriptor = NULL;
 
-    if (! CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0)) 
+    if (! CreatePipe(&hChildStdoutRd, &hChildStdoutWr, &saAttr, 0))
     {
         return FALSE;
     }
 
-    if (! CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0)) 
+    if (! CreatePipe(&hChildStdinRd, &hChildStdinWr, &saAttr, 0))
     {
         return FALSE;
     }
 
     myCreateProcess(hChildStdoutWr, hChildStdinRd,"rpcclient -c \"service enum\"");
-	
-	return ReadPipe(hChildStdoutWr, hChildStdoutRd, srvlst, size);    
+
+	return ReadPipe(hChildStdoutWr, hChildStdoutRd, srvlst, size);
 }
 
-BOOL myCreateProcess(HANDLE hStdoutWr, HANDLE hStdinRd, CHAR *cmdline) 
-{    
-   PROCESS_INFORMATION piProcInfo; 
+BOOL myCreateProcess(HANDLE hStdoutWr, HANDLE hStdinRd, CHAR *cmdline)
+{
+   PROCESS_INFORMATION piProcInfo;
    STARTUPINFO siStartInfo;
-   BOOL status = FALSE; 
- 
-   ZeroMemory( &piProcInfo, sizeof(PROCESS_INFORMATION) ); 
+   BOOL status = FALSE;
+
+   ZeroMemory( &piProcInfo, sizeof(PROCESS_INFORMATION) );
    ZeroMemory( &siStartInfo, sizeof(STARTUPINFO) );
-   siStartInfo.cb = sizeof(STARTUPINFO); 
+   siStartInfo.cb = sizeof(STARTUPINFO);
    siStartInfo.hStdError = hStdoutWr;
    siStartInfo.hStdOutput = hStdoutWr;
    siStartInfo.hStdInput = hStdinRd;
-   siStartInfo.dwFlags |= STARTF_USESTDHANDLES; 
-   status = CreateProcess(NULL, cmdline, NULL, NULL, 
-	                      TRUE, 0, NULL, NULL, &siStartInfo,  &piProcInfo);  
-   
-   if (status != 0) 
+   siStartInfo.dwFlags |= STARTF_USESTDHANDLES;
+   status = CreateProcess(NULL, cmdline, NULL, NULL,
+	                      TRUE, 0, NULL, NULL, &siStartInfo,  &piProcInfo);
+
+   if (status != 0)
    {
       CloseHandle(piProcInfo.hProcess);
       CloseHandle(piProcInfo.hThread);
@@ -89,66 +89,66 @@ BOOL myCreateProcess(HANDLE hStdoutWr, HANDLE hStdinRd, CHAR *cmdline)
    return status;
 }
 
-LONG ReadPipeSize(HANDLE hStdoutWr, HANDLE hStdoutRd)  
-{   
-  CHAR chBuf[2]; 
+LONG ReadPipeSize(HANDLE hStdoutWr, HANDLE hStdoutRd)
+{
+  CHAR chBuf[2];
   LONG pos=0;
-    
-  if (!CloseHandle(hStdoutWr)) 
-  {    
+
+  if (!CloseHandle(hStdoutWr))
+  {
       return 0; /* fail */
   }
-  
-  for (;;) 
-  { 
+
+  for (;;)
+  {
 	  long dwRead;
       if( !ReadFile( hStdoutRd, chBuf, 1, (LPDWORD)&dwRead, NULL) || dwRead == 0)
 	  {
-		 break; 
+		 break;
 	  }
 	  else
-	  {	    
+	  {
 	    pos+=dwRead;
-	  }    
-   } 
+	  }
+   }
    return pos;
 }
 
-LONG ReadPipe(HANDLE hStdoutWr, HANDLE hStdoutRd, CHAR *srvlst, LONG size) 
-{   
-  CHAR chBuf[2]; 
+LONG ReadPipe(HANDLE hStdoutWr, HANDLE hStdoutRd, CHAR *srvlst, LONG size)
+{
+  CHAR chBuf[2];
   LONG pos;
 
   pos=0;
 
-  if (!CloseHandle(hStdoutWr)) 
-  {    
+  if (!CloseHandle(hStdoutWr))
+  {
       return 0; /* fail */
   }
-  
-   for (;;) 
-   { 
+
+   for (;;)
+   {
 	  LONG dwRead;
       if( !ReadFile( hStdoutRd, chBuf, 1, (LPDWORD)&dwRead, NULL) || dwRead == 0)
 	  {
-		 break; 
+		 break;
 	  }
 	  else
 	  {
-	    srvlst[pos++] = chBuf[0] ;	    
-	  }    
-   } 
+	    srvlst[pos++] = chBuf[0] ;
+	  }
+   }
    return 0;
-} 
+}
 
-INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size, 
+INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 					  CHAR *name,CHAR *save)
 {
 	LONG get_semi;
 	LONG t;
 	LONG row_size=0;
 	LONG start_pos;
-		
+
 	start_pos = *pos;
 
 	if (*pos>=size)
@@ -160,7 +160,7 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 	/* get row start */
 	for (t=start_pos;t<size;t++)
 	{
-		if (buffer[t]=='\n')           	
+		if (buffer[t]=='\n')
 		{
 			buffer[t]='\0';
 			if (buffer[t-1]==0x09)
@@ -173,7 +173,7 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 			}
 			*pos = t+1;
             row_size = t;
-            break; 		
+            break;
 		}
 	}
 
@@ -184,12 +184,12 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 		if (buffer[t]==':')
 		{
 			get_semi=t;
-            break;        
+            break;
 		}
 	}
-	
+
 	if (get_semi==-1)
-	{		
+	{
 		return 0;
 	}
 
@@ -203,13 +203,13 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 	}
 	if (t==0)
 	{
-		/* : not found next row*/		
+		/* : not found next row*/
 		return 0;
 	}
 
 	/* Compare now */
 	if (strnicmp(name,&buffer[t],strlen(&buffer[t]))==0)
-	{	
+	{
 		if (save != NULL)
 		{
 			/* lock for space */
@@ -220,10 +220,10 @@ INT row_scanner_service(CHAR *buffer, LONG* pos, LONG size,
 			       break;
 		       }
 	         }
-			 
+
 			 memcpy(save,&buffer[t],get_semi-t);
 		}
 		return 1;
 	}
-  return 0;	 
+  return 0;
 }

@@ -11,7 +11,7 @@ BEGIN
   COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
   PUSHBUTTON "Настро&йка...", IDC_SETUP_BUTTON, 178, 56, 52, 13
   LTEXT "Образцы", -1, 14, 73, 70, 10
-  LTEXT "Число:", -1, 16, 86, 48, 10 
+  LTEXT "Число:", -1, 16, 86, 48, 10
   LTEXT "Сумма денег:", -1, 16, 101, 48, 10
   LTEXT "Время:", -1, 16, 116, 48, 10
   LTEXT "Короткая дата:", -1, 16, 131, 55, 10
@@ -23,7 +23,7 @@ BEGIN
   EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Географического расположение", -1, 5, 172, 234, 55
   LTEXT "&Укажите ваше расположение для того, чтобы службы могли снабжать вас местной информацией, например, новостями и сводками погоды:", -1, 14, 184, 210, 24
-  COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | 
+  COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
              WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 

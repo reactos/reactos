@@ -1,5 +1,5 @@
 /*
- * reactos emulation layer betwin wine and windows api for directx 
+ * reactos emulation layer betwin wine and windows api for directx
  *
  * Copyright 2004 Magnus Olsen
  *
@@ -63,10 +63,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
 
 DWORD dxrosdrv_drv_querydsoundiface(HWAVEIN wDevID, PIDSDRIVER* drv)
-{  
+{
 	// no hardware support for dsound NT 4.0 does not support it
-	// but win 2000/xp drv does support hardware support of direct sound 
-	drv = NULL; 
+	// but win 2000/xp drv does support hardware support of direct sound
+	drv = NULL;
 	// drv should be fild with hardware pointers see PIDSDRIVER struct
 	return MMSYSERR_NOERROR;
 }

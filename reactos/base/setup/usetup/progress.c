@@ -192,10 +192,10 @@ DrawProgressBar(PPROGRESSBAR Bar)
 
   /* Draw the progress bar border */
   DrawBorder(Bar);
-  
+
   /* Write Text Associated with Bar */
   CONSOLE_SetTextXY(Bar->TextTop, Bar->TextRight, Bar->Text);
-  
+
   /* Draw the progress bar "border" border */
   if (Bar->Double)
   {

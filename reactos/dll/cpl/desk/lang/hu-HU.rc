@@ -151,7 +151,7 @@ BEGIN
     IDS_ADVANCEDTITLEFMT "%s and %s"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Képernyõ"
     IDS_CPLDESCRIPTION "A képernyõ és a képernyõvédõ tulajdonságainak testreszabása."

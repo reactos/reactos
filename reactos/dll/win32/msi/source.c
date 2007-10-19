@@ -54,8 +54,8 @@ typedef struct tagMediaInfo
 
 static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, BOOL user, BOOL create)
 {
-    HKEY rootkey = 0; 
-    UINT rc; 
+    HKEY rootkey = 0;
+    UINT rc;
     static const WCHAR szSourceList[] = {'S','o','u','r','c','e','L','i','s','t',0};
 
     if (user)
@@ -69,7 +69,7 @@ static UINT OpenSourceKey(LPCWSTR szProduct, HKEY* key, BOOL user, BOOL create)
     if (create)
         rc = RegCreateKeyW(rootkey, szSourceList, key);
     else
-        rc = RegOpenKeyW(rootkey,szSourceList, key); 
+        rc = RegOpenKeyW(rootkey,szSourceList, key);
 
     return rc;
 }
@@ -82,7 +82,7 @@ static UINT OpenMediaSubkey(HKEY rootkey, HKEY *key, BOOL create)
     if (create)
         rc = RegCreateKeyW(rootkey, media, key);
     else
-        rc = RegOpenKeyW(rootkey,media, key); 
+        rc = RegOpenKeyW(rootkey,media, key);
 
     return rc;
 }
@@ -95,7 +95,7 @@ static UINT OpenNetworkSubkey(HKEY rootkey, HKEY *key, BOOL create)
     if (create)
         rc = RegCreateKeyW(rootkey, net, key);
     else
-        rc = RegOpenKeyW(rootkey, net, key); 
+        rc = RegOpenKeyW(rootkey, net, key);
 
     return rc;
 }
@@ -108,7 +108,7 @@ static UINT OpenURLSubkey(HKEY rootkey, HKEY *key, BOOL create)
     if (create)
         rc = RegCreateKeyW(rootkey, URL, key);
     else
-        rc = RegOpenKeyW(rootkey, URL, key); 
+        rc = RegOpenKeyW(rootkey, URL, key);
 
     return rc;
 }
@@ -132,7 +132,7 @@ static UINT find_given_source(HKEY key, LPCWSTR szSource, media_info *ss)
         if (rc != ERROR_NO_MORE_ITEMS)
         {
             val = msi_alloc(val_size);
-            RegEnumValueW(key, index, szIndex, &size, NULL, NULL, (LPBYTE)val, 
+            RegEnumValueW(key, index, szIndex, &size, NULL, NULL, (LPBYTE)val,
                 &val_size);
             if (lstrcmpiW(szSource,val)==0)
             {
@@ -155,8 +155,8 @@ static UINT find_given_source(HKEY key, LPCWSTR szSource, media_info *ss)
  */
 UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
                                    MSIINSTALLCONTEXT dwContext, DWORD dwOptions,
-                                   LPCWSTR szProperty, LPWSTR szValue, 
-                                   LPDWORD pcchValue) 
+                                   LPCWSTR szProperty, LPWSTR szValue,
+                                   LPDWORD pcchValue)
 {
     HKEY sourcekey;
     UINT rc;
@@ -168,13 +168,13 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
 
     if (szValue && !pcchValue)
         return ERROR_INVALID_PARAMETER;
-    
+
     if (dwOptions == MSICODE_PATCH)
     {
         FIXME("Unhandled options MSICODE_PATCH\n");
         return ERROR_FUNCTION_FAILED;
     }
-    
+
     if (szUserSid)
         FIXME("Unhandled UserSid %s\n",debugstr_w(szUserSid));
 
@@ -225,7 +225,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
             LPWSTR ptr;
             buffer = msi_alloc(size);
             rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW,
-                    0, 0, (LPBYTE)buffer,&size); 
+                    0, 0, (LPBYTE)buffer,&size);
             ptr = strchrW(buffer,';');
             if (ptr) ptr = strchrW(ptr+1,';');
             if (!ptr)
@@ -258,7 +258,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         {
             buffer = msi_alloc(size);
             rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW,
-                    0, 0, (LPBYTE)buffer,&size); 
+                    0, 0, (LPBYTE)buffer,&size);
             if (*pcchValue < 1)
             {
                 rc = ERROR_MORE_DATA;
@@ -274,7 +274,7 @@ UINT WINAPI MsiSourceListGetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
     }
     else if (strcmpW(INSTALLPROPERTY_PACKAGENAMEW, szProperty)==0)
     {
-        rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_PACKAGENAMEW, 0, 0, 
+        rc = RegQueryValueExW(sourcekey, INSTALLPROPERTY_PACKAGENAMEW, 0, 0,
                 (LPBYTE)szValue, pcchValue);
         if (rc != ERROR_SUCCESS && rc != ERROR_MORE_DATA)
             rc = ERROR_UNKNOWN_PROPERTY;
@@ -310,7 +310,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         FIXME("Unhandled options MSICODE_PATCH\n");
         return ERROR_FUNCTION_FAILED;
     }
-    
+
     if (szUserSid)
         FIXME("Unhandled UserSid %s\n",debugstr_w(szUserSid));
 
@@ -358,8 +358,8 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         static const WCHAR LastUsedSource_Fmt[] = {'%','c',';','%','i',';','%','s',0};
 
         /* make sure the source is registered */
-        MsiSourceListAddSourceExW(szProduct, szUserSid, dwContext, 
-                dwOptions, szValue, 0); 
+        MsiSourceListAddSourceExW(szProduct, szUserSid, dwContext,
+                dwOptions, szValue, 0);
 
         if (dwOptions & MSISOURCETYPE_NETWORK)
             typechar = 'n';
@@ -373,7 +373,7 @@ UINT WINAPI MsiSourceListSetInfoW( LPCWSTR szProduct, LPCWSTR szUserSid,
         size = (lstrlenW(szValue)+5)*sizeof(WCHAR);
         buffer = msi_alloc(size);
         sprintfW(buffer, LastUsedSource_Fmt, typechar, 1, szValue);
-        rc = RegSetValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW, 0, 
+        rc = RegSetValueExW(sourcekey, INSTALLPROPERTY_LASTUSEDSOURCEW, 0,
                 REG_EXPAND_SZ, (LPBYTE)buffer, size);
         if (rc != ERROR_SUCCESS)
             rc = ERROR_UNKNOWN_PROPERTY;
@@ -421,7 +421,7 @@ UINT WINAPI MsiSourceListAddSourceW( LPCWSTR szProduct, LPCWSTR szUserName,
         msi_free(psid);
     }
 
-    ret = MsiSourceListAddSourceExW(szProduct, sidstr, 
+    ret = MsiSourceListAddSourceExW(szProduct, sidstr,
         MSIINSTALLCONTEXT_USERMANAGED, MSISOURCETYPE_NETWORK, szSource, 0);
 
     if (sidstr)
@@ -458,7 +458,7 @@ UINT WINAPI MsiSourceListAddSourceA( LPCSTR szProduct, LPCSTR szUserName,
  *  MsiSourceListAddSourceExW (MSI.@)
  */
 UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
-        MSIINSTALLCONTEXT dwContext, DWORD dwOptions, LPCWSTR szSource, 
+        MSIINSTALLCONTEXT dwContext, DWORD dwOptions, LPCWSTR szSource,
         DWORD dwIndex)
 {
     HKEY sourcekey;
@@ -531,7 +531,7 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
 
         current_index ++;
         sprintfW(source_struct.szIndex,fmt,current_index);
-        rc = RegSetValueExW(typekey, source_struct.szIndex, 0, REG_EXPAND_SZ, 
+        rc = RegSetValueExW(typekey, source_struct.szIndex, 0, REG_EXPAND_SZ,
                 (const BYTE *)szSource, size);
     }
 
@@ -543,8 +543,8 @@ UINT WINAPI MsiSourceListAddSourceExW( LPCWSTR szProduct, LPCWSTR szUserSid,
 /******************************************************************
  *  MsiSourceListAddMediaDisk(MSI.@)
  */
-UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid, 
-        MSIINSTALLCONTEXT dwContext, DWORD dwOptions, DWORD dwDiskId, 
+UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
+        MSIINSTALLCONTEXT dwContext, DWORD dwOptions, DWORD dwDiskId,
         LPCWSTR szVolumeLabel, LPCWSTR szDiskPrompt)
 {
     HKEY sourcekey;
@@ -570,7 +570,7 @@ UINT WINAPI MsiSourceListAddMediaDiskW(LPCWSTR szProduct, LPCWSTR szUserSid,
         FIXME("Unhandled options MSICODE_PATCH\n");
         return ERROR_FUNCTION_FAILED;
     }
-    
+
     if (szUserSid)
         FIXME("Unhandled UserSid %s\n",debugstr_w(szUserSid));
 

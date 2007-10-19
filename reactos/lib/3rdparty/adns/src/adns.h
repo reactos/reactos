@@ -10,30 +10,30 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
  *
- * 
+ *
  *  For the benefit of certain LGPL'd `omnibus' software which
  *  provides a uniform interface to various things including adns, I
  *  make the following additional licence.  I do this because the GPL
  *  would otherwise force either the omnibus software to be GPL'd or
  *  the adns-using part to be distributed separately.
- *  
+ *
  *  So: you may also redistribute and/or modify adns.h (but only the
  *  public header file adns.h and not any other part of adns) under the
  *  terms of the GNU Library General Public License as published by the
  *  Free Software Foundation; either version 2 of the License, or (at
  *  your option) any later version.
- *  
+ *
  *  Note that adns itself is GPL'd.  Authors of adns-using applications
  *  with GPL-incompatible licences, and people who distribute adns with
  *  applications where the whole distribution is not GPL'd, are still
@@ -116,34 +116,34 @@ typedef enum {
   adns__rrt_typemask=  0x0ffff,
   adns__qtf_deref=     0x10000, /* dereference domains and perhaps produce extra data */
   adns__qtf_mail822=   0x20000, /* make mailboxes be in RFC822 rcpt field format */
-  
+
   adns_r_none=               0,
-  
+
   adns_r_a=                  1,
-  
+
   adns_r_ns_raw=             2,
   adns_r_ns=                    adns_r_ns_raw|adns__qtf_deref,
-  
+
   adns_r_cname=              5,
-  
+
   adns_r_soa_raw=            6,
-  adns_r_soa=                   adns_r_soa_raw|adns__qtf_mail822, 
-  
+  adns_r_soa=                   adns_r_soa_raw|adns__qtf_mail822,
+
   adns_r_ptr_raw=           12,
   adns_r_ptr=                   adns_r_ptr_raw|adns__qtf_deref,
-  
-  adns_r_hinfo=             13,  
-  
+
+  adns_r_hinfo=             13,
+
   adns_r_mx_raw=            15,
   adns_r_mx=                    adns_r_mx_raw|adns__qtf_deref,
-  
+
   adns_r_txt=               16,
-  
+
   adns_r_rp_raw=            17,
   adns_r_rp=                    adns_r_rp_raw|adns__qtf_mail822,
 
   adns_r_addr=                  adns_r_a|adns__qtf_deref
-  
+
 } adns_rrtype;
 
 /*
@@ -151,7 +151,7 @@ typedef enum {
  * legal syntax, or you get adns_s_querydomainvalid (if the query
  * domain contains bad characters) or adns_s_answerdomaininvalid (if
  * the answer contains bad characters).
- * 
+ *
  * In queries _with_ qf_quoteok_*, domains in the query or response
  * may contain any characters, quoted according to RFC1035 5.1.  On
  * input to adns, the char* is a pointer to the interior of a "
@@ -223,7 +223,7 @@ typedef enum {
   adns_s_systemfail,
 
   adns_s_max_localfail= 29,
-  
+
   /* remotely induced errors, detected locally */
   adns_s_timeout,
   adns_s_allservfail,
@@ -232,7 +232,7 @@ typedef enum {
   adns_s_unknownformat,
 
   adns_s_max_remotefail= 59,
-  
+
   /* remotely induced errors, reported by remote server to us */
   adns_s_rcodeservfail,
   adns_s_rcodeformaterror,
@@ -248,14 +248,14 @@ typedef enum {
   adns_s_answerdomaininvalid,
   adns_s_answerdomaintoolong,
   adns_s_invaliddata,
-  
+
   adns_s_max_misconfig= 199,
 
   /* permanent problems with the query */
   adns_s_querydomainwrong,
   adns_s_querydomaininvalid,
   adns_s_querydomaintoolong,
-  
+
   adns_s_max_misquery= 299,
 
   /* permanent errors */
@@ -263,7 +263,7 @@ typedef enum {
   adns_s_nodata,
 
   adns_s_max_permfail= 499
-  
+
 } adns_status;
 
 typedef struct {
@@ -349,7 +349,7 @@ typedef struct {
  *  For _init, _init_strcfg, _submit and _synchronous, system errors
  *  (eg, failure to create sockets, malloc failure, etc.) return errno
  *  values.
- * 
+ *
  *  For _wait and _check failures are reported in the answer
  *  structure, and only 0, ESRCH or (for _check) EAGAIN is
  *  returned: if no (appropriate) requests are done adns_check returns
@@ -383,7 +383,7 @@ ADNS_API int adns_init_strcfg(adns_state *newstate_r, adns_initflags flags,
  *  is set later overrides any that is set earlier.
  *
  * Standard directives understood in resolv[-adns].conf:
- * 
+ *
  *  nameserver <address>
  *   Must be followed by the IP address of a nameserver.  Several
  *   nameservers may be specified, and they will be tried in the order
@@ -447,7 +447,7 @@ ADNS_API int adns_init_strcfg(adns_state *newstate_r, adns_initflags flags,
  *   Changes the consistency checking frequency; this overrides the
  *   setting of adns_if_check_entex, adns_if_check_freq, or neither,
  *   in the flags passed to adns_init.
- * 
+ *
  * There are a number of environment variables which can modify the
  * behaviour of adns.  They take effect only if adns_init is used, and
  * the caller of adns_init can disable them using adns_if_noenv.  In
@@ -643,7 +643,7 @@ ADNS_API void adns_firsttimeout(adns_state ads,
 		       struct timeval now);
 /* Asks adns when it would first like the opportunity to time
  * something out.  now must be the current time, from gettimeofday.
- * 
+ *
  * If tv_mod points to 0 then tv_buf must be non-null, and
  * _firsttimeout will fill in *tv_buf with the time until the first
  * timeout, and make *tv_mod point to tv_buf.  If adns doesn't have
@@ -731,7 +731,7 @@ ADNS_API int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io, i
 /* Finds out which fd's adns is interested in, and when it would like
  * to be able to time things out.  This is in a form suitable for use
  * with poll(2).
- * 
+ *
  * On entry, usually fds should point to at least *nfds_io structs.
  * adns will fill up to that many structs will information for poll,
  * and record in *nfds_io how many structs it filled.  If it wants to

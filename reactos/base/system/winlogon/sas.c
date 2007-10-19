@@ -328,7 +328,7 @@ CreateLogoffSecurityAttributes(
 #else
 	/* The following code is no only incomplete, it's a mess and uncompilable */
 	/* Still, it gives some ideas about data types and functions involved and */
-	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */ 
+	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */
 	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
 	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
 	PSECURITY_DESCRIPTOR psd = 0;
@@ -396,10 +396,10 @@ CreateLogoffSecurityAttributes(
 	ea[0].Trustee.TrusteeType = TRUSTEE_IS_USER;
 	ea[0].Trustee.ptstrName  = (LPTSTR) pEveryoneSID;
 
-	if (!SetSecurityDescriptorDacl(pSD, 
-	        TRUE,     // bDaclPresent flag   
-	        pACL, 
-	        FALSE))   // not a default DACL 
+	if (!SetSecurityDescriptorDacl(pSD,
+	        TRUE,     // bDaclPresent flag
+	        pACL,
+	        FALSE))   // not a default DACL
 	{
 		DPRINT("SetSecurityDescriptorDacl Error %u\n", GetLastError());
 		HeapFree(GetProcessHeap(), 0, pMem);

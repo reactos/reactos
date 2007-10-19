@@ -132,7 +132,7 @@ struct ZIPstate {
     cab_ULONG x[ZIPBMAX+1];     /* bit offsets, then code stack */
     cab_UBYTE *inpos;
 };
-  
+
 /* Quantum stuff */
 
 struct QTMmodelsym {
@@ -140,7 +140,7 @@ struct QTMmodelsym {
 };
 
 struct QTMmodel {
-  int shiftsleft, entries; 
+  int shiftsleft, entries;
   struct QTMmodelsym *syms;
   cab_UWORD tabloc[256];
 };

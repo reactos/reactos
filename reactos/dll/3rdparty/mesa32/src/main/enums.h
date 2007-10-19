@@ -1,7 +1,7 @@
 /**
  * \file enums.h
  * Enumeration name/number lookup functions.
- * 
+ *
  * \if subset
  * (No-op)
  *

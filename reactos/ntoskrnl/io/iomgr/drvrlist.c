@@ -43,7 +43,7 @@ LIST_ENTRY GroupListHead = {NULL, NULL};
 LIST_ENTRY ServiceListHead  = {NULL, NULL};
 extern BOOLEAN NoGuiBoot;
 
-VOID 
+VOID
 FASTCALL
 INIT_FUNCTION
 IopDisplayLoadingMessage(PVOID ServiceName,

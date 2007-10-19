@@ -19,7 +19,7 @@
 /* $Id$
  *
  * COPYRIGHT : See COPYING in the top level directory
- * PROJECT   : ReactOS/Win32 get host name 
+ * PROJECT   : ReactOS/Win32 get host name
  * FILE      : subsys/system/hostname/hostname.c
  * PROGRAMMER: Emanuele Aliberti (ea@reactos.com)
  */

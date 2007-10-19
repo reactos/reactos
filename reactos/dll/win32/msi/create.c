@@ -66,7 +66,7 @@ static UINT CREATE_execute( struct tagMSIVIEW *view, MSIRECORD *record )
     MSIVIEW *tv = NULL;
     MSIRECORD *rec = NULL;
 
-    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name), 
+    TRACE("%p Table %s (%s)\n", cv, debugstr_w(cv->name),
           cv->bIsTemp?"temporary":"permanent");
 
     /* only add tables that don't exist already */

@@ -61,10 +61,10 @@ UsbhubFdoQueryBusRelations(
 	ULONG NeededSize;
 	NTSTATUS Status;
 	CHAR Buffer[3][40];
-	
+
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	dev = DeviceExtension->dev;
-	
+
 	/* Create PDOs that are missing */
 	for (i = 0; i < dev->maxchild; i++)
 	{
@@ -93,23 +93,23 @@ UsbhubFdoQueryBusRelations(
 			DPRINT("Usbhub: IoCreateDevice() failed with status 0x%08lx\n", Status);
 			return Status;
 		}
-		
+
 		Pdo = DeviceExtension->Children[i];
 		Pdo->Flags |= DO_BUS_ENUMERATED_DEVICE;
-		
+
 		PdoExtension = Pdo->DeviceExtension;
 		RtlZeroMemory(PdoExtension, sizeof(HUB_DEVICE_EXTENSION));
-		
+
 		PdoExtension->IsFDO = FALSE;
 		PdoExtension->dev = dev->children[i];
-		
+
 		sprintf(Buffer[0], "%lu", i);
 		Status = UsbhubInitMultiSzString(
 			&PdoExtension->InstanceId,
 			Buffer[0], NULL);
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
-		
+
 		DPRINT1("child #%lu: USB\\Vid_%04x&Pid_%04x&Rev_%04x\n",
 			i,
 			PdoExtension->dev->descriptor.idVendor,
@@ -127,13 +127,13 @@ UsbhubFdoQueryBusRelations(
 			Buffer[0], Buffer[1], NULL);
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
-		
+
 		Status = UsbhubInitMultiSzString(
 			&PdoExtension->DeviceId,
 			Buffer[1], NULL);
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
-		
+
 		if (PdoExtension->dev->actconfig->desc.bNumInterfaces == 1)
 		{
 			/* Single-interface USB device */
@@ -184,13 +184,13 @@ UsbhubFdoQueryBusRelations(
 				&PdoExtension->CompatibleIds,
 				Buffer[0], Buffer[1], Buffer[2], "USB\\COMPOSITE", NULL);
 		}
-		
+
 		if (!NT_SUCCESS(Status))
 			goto ByeBye;
-		
+
 		Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
 	}
-	
+
 	/* Fill returned structure */
 	NeededSize = sizeof(DEVICE_RELATIONS);
 	if (Children > 1)
@@ -211,7 +211,7 @@ UsbhubFdoQueryBusRelations(
 		}
 	}
 	ASSERT(Children == DeviceRelations->Count);
-	
+
 	*pDeviceRelations = DeviceRelations;
 	return STATUS_SUCCESS;
 
@@ -233,7 +233,7 @@ UsbhubPnpFdo(
 	NTSTATUS Status;
 	ULONG MinorFunction;
 	ULONG_PTR Information = 0;
-	
+
 	IrpSp = IoGetCurrentIrpStackLocation(Irp);
 	MinorFunction = IrpSp->MinorFunction;
 
@@ -335,7 +335,7 @@ UsbhubDeviceControlFdo(
 			PUSB_NODE_CONNECTION_NAME ConnectionName;
 			DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 			ConnectionName = (PUSB_NODE_CONNECTION_NAME)BufferOut;
-			
+
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_NAME\n");
 			if (LengthOut < sizeof(USB_NODE_CONNECTION_NAME))
 				Status = STATUS_BUFFER_TOO_SMALL;
@@ -383,7 +383,7 @@ UsbhubDeviceControlFdo(
 			ULONG NumberOfOpenPipes = 0;
 			ULONG SizeOfOpenPipesArray;
 			ConnectionInformation = (PUSB_NODE_CONNECTION_INFORMATION)BufferOut;
-			
+
 			DPRINT("Usbhub: IOCTL_USB_GET_NODE_CONNECTION_INFORMATION\n");
 			if (LengthOut < sizeof(USB_NODE_CONNECTION_INFORMATION))
 				Status = STATUS_BUFFER_TOO_SMALL;
@@ -417,7 +417,7 @@ UsbhubDeviceControlFdo(
 				ConnectionInformation->DeviceIsHub = dev->descriptor.bDeviceClass == USB_CLASS_HUB;
 				ConnectionInformation->DeviceAddress = dev->devnum;
 				ConnectionInformation->ConnectionStatus = DeviceConnected;
-				
+
 				for (i = 0; i < dev->actconfig->desc.bNumInterfaces; i++)
 					for (j = 0; j < dev->actconfig->interface[i].num_altsetting; j++)
 						for (k = 0; k < dev->actconfig->interface[i].altsetting[j].desc.bNumEndpoints; k++)
@@ -435,7 +435,7 @@ UsbhubDeviceControlFdo(
 							NumberOfOpenPipes++;
 						}
 				ConnectionInformation->NumberOfOpenPipes = NumberOfOpenPipes;
-				
+
 				Information = sizeof(USB_NODE_CONNECTION_INFORMATION);
 				if (NumberOfOpenPipes <= SizeOfOpenPipesArray)
 					Status = STATUS_SUCCESS;

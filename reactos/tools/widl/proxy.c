@@ -239,7 +239,7 @@ static void marshall_size_arg( var_t *arg )
   case RPC_FC_ENUM32:
     print_proxy( "_StubMsg.BufferLength += %d; /* %s */\n", 4, arg->name );
     break;
-      
+
   case RPC_FC_STRUCT:
     print_proxy( "NdrSimpleStructBufferSize(&_StubMsg, (unsigned char*)%s, ", arg->name );
     fprintf(proxy, "&__MIDL_TypeFormatString.Format[%d] );\n", index );
@@ -286,7 +286,7 @@ static void proxy_gen_marshall_size( var_t *arg )
 
   END_OF_LIST(arg);
   while (arg) {
-    if (is_attr(arg->attrs, ATTR_IN)) 
+    if (is_attr(arg->attrs, ATTR_IN))
     {
       marshall_size_arg( arg );
       fprintf(proxy, "\n");
@@ -330,7 +330,7 @@ static void marshall_copy_arg( var_t *arg )
     write_type(proxy, arg->type, arg, arg->tname);
     fprintf(proxy, ");\n");
     break;
-      
+
   case RPC_FC_STRUCT:
     /* FIXME: add the format string, and set the index below */
     print_proxy( "NdrSimpleStructMarshall(&_StubMsg, (unsigned char*)%s, ", arg->name );
@@ -374,7 +374,7 @@ static void gen_marshall_copydata( var_t *arg )
 {
   END_OF_LIST(arg);
   while (arg) {
-    if (is_attr(arg->attrs, ATTR_IN)) 
+    if (is_attr(arg->attrs, ATTR_IN))
     {
       marshall_copy_arg( arg );
       fprintf(proxy, "\n");
@@ -429,7 +429,7 @@ static void unmarshall_copy_arg( var_t *arg )
     write_type(proxy, arg->type, arg, arg->tname);
     fprintf(proxy, ");\n");
     break;
-      
+
   case RPC_FC_STRUCT:
     print_proxy( "NdrSimpleStructUnmarshall(&_StubMsg, (unsigned char**)%s, ", arg->name );
     fprintf(proxy, "&__MIDL_TypeFormatString.Format[%d], 0);\n", index );
@@ -474,7 +474,7 @@ static void gen_unmarshall( var_t *arg )
 {
   END_OF_LIST(arg);
   while (arg) {
-    if (is_attr(arg->attrs, ATTR_OUT)) 
+    if (is_attr(arg->attrs, ATTR_OUT))
     {
       unmarshall_copy_arg( arg );
       fprintf(proxy, "\n");
@@ -536,7 +536,7 @@ static void proxy_free_variables( var_t *arg )
 {
   END_OF_LIST(arg);
   while (arg) {
-    if (is_attr(arg->attrs, ATTR_OUT)) 
+    if (is_attr(arg->attrs, ATTR_OUT))
     {
       free_variable( arg );
       fprintf(proxy, "\n");
@@ -594,7 +594,7 @@ static void gen_proxy(type_t *iface, func_t *cur, int idx)
 
   gen_unmarshall( cur->args );
   if (has_ret) {
-    /* 
+    /*
      * FIXME: We only need to round the buffer up if it could be unaligned...
      *    We should calculate how much buffer we used and output the following
      *    line only if necessary.
@@ -800,7 +800,7 @@ static void gen_stub(type_t *iface, func_t *cur, const char *cas)
   fprintf(proxy, "\n");
 
   if (has_ret) {
-    /* 
+    /*
      * FIXME: We only need to round the buffer up if it could be unaligned...
      *    We should calculate how much buffer we used and output the following
      *    line only if necessary.

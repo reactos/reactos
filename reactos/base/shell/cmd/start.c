@@ -20,7 +20,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 {
 	TCHAR szFullName[CMDLINE_LENGTH];
 	TCHAR first[CMDLINE_LENGTH];
-	TCHAR *rest = NULL; 
+	TCHAR *rest = NULL;
 	TCHAR *param = NULL;
 	TCHAR RestWithoutArgs[CMDLINE_LENGTH];
 	INT size;
@@ -35,11 +35,11 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	INT argc = 0;
 	INT i = 0;
 	DWORD Priority = 0;
-		
+
 	RestWithoutArgs[0] = _T('\0');
 	_tcscpy(first,First);
 	arg = split (Rest, &argc, FALSE);
- 
+
 
 	for (i = 0; i < argc; i++)
 	{
@@ -51,7 +51,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else if(!_tcsicmp(arg[i], _T("/LOW")))
 		{
-			Priority = IDLE_PRIORITY_CLASS;		
+			Priority = IDLE_PRIORITY_CLASS;
 		}
 		else if(!_tcsicmp(arg[i], _T("/NORMAL")))
 		{
@@ -59,7 +59,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else if(!_tcsicmp(arg[i], _T("/HIGH")))
 		{
-			Priority = HIGH_PRIORITY_CLASS;		
+			Priority = HIGH_PRIORITY_CLASS;
 		}
 		else if(!_tcsicmp(arg[i], _T("/REALTIME")))
 		{
@@ -67,7 +67,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 		else if(!_tcsicmp(arg[i], _T("/ABOVENORMAL")))
 		{
-			Priority = ABOVE_NORMAL_PRIORITY_CLASS;		
+			Priority = ABOVE_NORMAL_PRIORITY_CLASS;
 		}
 		else if(!_tcsicmp(arg[i], _T("/BELOWNORMAL")))
 		{
@@ -82,12 +82,12 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 			_tcscat(RestWithoutArgs,arg[i]);
 		}
 	}
-	
-	
-	
-	
+
+
+
+
 	freep (arg);
-	
+
 	/* get comspec */
 	comspec = cmd_alloc ( MAX_PATH * sizeof(TCHAR));
 	if (comspec == NULL)
@@ -114,7 +114,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 				return 1;
 			}
 			size = GetEnvironmentVariable (_T("COMSPEC"), comspec, size);
-		}		
+		}
 	}
 
 	nErrorLevel = 0;
@@ -126,7 +126,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		_tcscat(RestWithoutArgs,_T("\""));
 	}
 
-	rest = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
+	rest = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR));
 	if (rest == NULL)
 	{
 	 if(comspec != NULL)
@@ -135,7 +135,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	 return 1;
 	}
 
-	param = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR)); 
+	param = cmd_alloc ( (_tcslen(RestWithoutArgs) + 1) * sizeof(TCHAR));
 	if (param == NULL)
 	{
 	 if(comspec != NULL)
@@ -149,18 +149,18 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 
 
 	_tcscpy(rest,RestWithoutArgs);
-	
+
 	/* Parsing the command that gets called by start, and it's parameters */
 	if(!_tcschr(rest,_T('\"')))
 	{
 		INT count = _tcslen(rest);
-		
+
 		/* find the end of the command and start of the args */
 		for(i = 0; i < count; i++)
 		{
 			if(rest[i] == _T(' '))
-			{	
-				
+			{
+
 				_tcscpy(param,&rest[i+1]);
 				rest[i] = _T('\0');
 				break;
@@ -169,16 +169,16 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 	}
 	else
 	{
-		INT count = _tcslen(rest);		
+		INT count = _tcslen(rest);
 		BOOL bInside = FALSE;
 
 		/* find the end of the command and put the arguments in param */
 		for(i = 0; i < count; i++)
 		{
-			if(rest[i] == _T('\"')) 
+			if(rest[i] == _T('\"'))
 				bInside = !bInside;
 			if((rest[i] == _T(' ')) && !bInside)
-			{					
+			{
 				_tcscpy(param,&rest[i+1]);
 				rest[i] = _T('\0');
 				break;
@@ -194,9 +194,9 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 				i++;
 		}
 	}
-	
+
 	/* check for a drive change */
-	
+
 	if (!_tcscmp (first + 1, _T(":")) && _istalpha (*first))
 	{
 		TCHAR szPath[CMDLINE_LENGTH];
@@ -208,55 +208,55 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		if (szPath[0] != (TCHAR)_totupper (*first))
 			ConErrResPuts (STRING_FREE_ERROR1);
 
-		if (rest != NULL) 
+		if (rest != NULL)
 		    cmd_free(rest);
 
-	    if (param != NULL) 
+	    if (param != NULL)
 		    cmd_free(param);
 		 if (comspec != NULL)
 			 cmd_free(comspec);
 		return 0;
 	}
-	
+
 	/* get the PATH environment variable and parse it */
 	/* search the PATH environment variable for the binary */
 	if (!SearchForExecutable (rest, szFullName))
 	{
 		error_bad_command ();
 
-		if (rest != NULL) 
+		if (rest != NULL)
 		    cmd_free(rest);
 
-	    if (param != NULL) 
+	    if (param != NULL)
 		    cmd_free(param);
 
 		 if (comspec != NULL)
 			 cmd_free(comspec);
 		return 1;
 	}
-	
+
 
 	/* check if this is a .BAT or .CMD file */
 	if (!_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".bat")) ||
 	    !_tcsicmp (_tcsrchr (szFullName, _T('.')), _T(".cmd")))
 	{
-		bBat = TRUE;				
+		bBat = TRUE;
 		memset(szFullCmdLine,0,CMDLINE_LENGTH * sizeof(TCHAR));
 
 
 		_tcscpy(szFullCmdLine,comspec);
 
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));				
-		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));		
-		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR)); 
-        szFullCmdLine[0] = _T('\"');					
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)],_T("\" /K \""), 6 * sizeof(TCHAR));
+		memcpy(&szFullCmdLine[_tcslen(szFullCmdLine)], szFullName, _tcslen(szFullName) * sizeof(TCHAR));
+		memcpy(&szFullCmdLine[1], &szFullCmdLine[0], _tcslen(szFullCmdLine) * sizeof(TCHAR));
+        szFullCmdLine[0] = _T('\"');
         szFullCmdLine[_tcslen(szFullCmdLine)] = _T('\"');
 	}
 
 #ifdef _DEBUG
 		DebugPrintf (_T("[BATCH: %s %s]\n"), szFullName, rest);
 #endif
-		
+
 
 #ifdef _DEBUG
 		DebugPrintf (_T("[EXEC: %s %s]\n"), szFullName, rest);
@@ -267,7 +267,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		  _tcscpy (szFullCmdLine, first);
 		  if( param != NULL )
 		  {
-			 
+
 		    _tcscat(szFullCmdLine, _T(" ") );
 		    _tcscat (szFullCmdLine, param);
 		  }
@@ -278,7 +278,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		stui.cb = sizeof (STARTUPINFO);
 		stui.dwFlags = STARTF_USESHOWWINDOW;
 		stui.wShowWindow = SW_SHOWDEFAULT;
-		        
+
 		if (bBat == TRUE)
 		{
 		 bCreate = CreateProcess (NULL, szFullCmdLine, NULL, NULL, FALSE,
@@ -289,7 +289,7 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 				bCreate = CreateProcess (szFullName, szFullCmdLine, NULL, NULL, FALSE,
 					CREATE_NEW_CONSOLE | Priority, NULL, NULL, &stui, &prci);
 		}
-		
+
 		if (bCreate)
 		{
 			if (bWait)
@@ -312,10 +312,10 @@ INT cmd_start (LPTSTR First, LPTSTR Rest)
 		}
 
 
-	if (rest != NULL) 
+	if (rest != NULL)
 	    cmd_free(rest);
 
-    if (param != NULL) 
+    if (param != NULL)
 	    cmd_free(param);
 
 	 if (comspec != NULL)

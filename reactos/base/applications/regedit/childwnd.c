@@ -136,8 +136,8 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         if (keyPath == 0 || *keyPath == 0)
         {
-           MessageBeep(MB_ICONHAND); 
-        } else 
+           MessageBeep(MB_ICONHAND);
+        } else
         if (DeleteKey(hWnd, hRootKey, keyPath))
           DeleteNode(g_pChildWnd->hTreeWnd, 0);
         break;
@@ -319,12 +319,12 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
         LoadString(hInst, IDS_MY_COMPUTER, buffer, sizeof(buffer)/sizeof(TCHAR));
 
 	    g_pChildWnd = pChildWnd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ChildWnd));
-		
+
         if (!pChildWnd) return 0;
         _tcsncpy(pChildWnd->szPath, buffer, MAX_PATH);
         pChildWnd->nSplitPos = 250;
         pChildWnd->hWnd = hWnd;
-		pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP, 
+		pChildWnd->hAddressBarWnd = CreateWindowEx(WS_EX_CLIENTEDGE, _T("Edit"), NULL, WS_CHILD | WS_VISIBLE | WS_CHILDWINDOW | WS_TABSTOP,
 										CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT,
 										hWnd, (HMENU)0, hInst, 0);
 		pChildWnd->hTreeWnd = CreateTreeView(hWnd, pChildWnd->szPath, (HMENU) TREE_WINDOW);
@@ -340,7 +340,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
                         (WPARAM)hFont,
                         0);
         }
-		
+
 		/* Subclass the AddressBar */
 		oldproc = (WNDPROC)(LONG_PTR)GetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_WNDPROC);
         SetWindowLongPtr(pChildWnd->hAddressBarWnd, GWL_USERDATA, (DWORD_PTR)oldproc);
@@ -488,7 +488,7 @@ LRESULT CALLBACK ChildWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPa
 
 			    {
 			        HKEY hKey;
-			        TCHAR szBuffer[MAX_PATH];			
+			        TCHAR szBuffer[MAX_PATH];
 			    	_sntprintf(szBuffer, sizeof(szBuffer) / sizeof(szBuffer[0]), _T("My Computer\\%s\\%s"), rootName, keyPath);
 
 			    	if (RegCreateKey(HKEY_CURRENT_USER,

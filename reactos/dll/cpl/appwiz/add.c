@@ -46,14 +46,14 @@ LaunchDownload(HWND hwndDlg)
 	STARTUPINFO si;
     PROCESS_INFORMATION pi;
 	TCHAR Buf[MAX_PATH];
-	
+
 	ZeroMemory(&si, sizeof(si));
 	si.cb = sizeof(si);
 	ZeroMemory(&pi, sizeof(pi));
-	
+
 	if(!GetSystemDirectory(Buf,MAX_PATH)) return FALSE;
 	lstrcat((LPTSTR)Buf, L"\\downloader.exe");
-	
+
 	if(CreateProcess(NULL,Buf,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
 	{
 		CloseHandle(pi.hProcess);

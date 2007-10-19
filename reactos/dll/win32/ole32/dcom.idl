@@ -188,7 +188,7 @@ interface IRemUnknown : IUnknown
     IPID ipid;
     unsigned long cPublicRefs;
     unsigned long cPrivateRefs;
-  } REMINTERFACEREF; 
+  } REMINTERFACEREF;
 
   HRESULT RemQueryInterface(
     [in] REFIPID ripid,
@@ -263,7 +263,7 @@ interface IOXIDResolver
     [out, ref] DUALSTRINGARRAY **ppdsaOxidBindings,
     [out, ref] IPID *pipidRemUnknown,
     [out, ref] DWORD *pAuthnHint,
-    [out, ref] COMVERSION *pComVersion); 
+    [out, ref] COMVERSION *pComVersion);
 }
 
 [

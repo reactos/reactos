@@ -22,7 +22,7 @@ IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Въведете мрежова парола"
 FONT 8, "MS Shell Dlg"
-{       
+{
  LTEXT "Въведете вашето потребителско име и парола:", -1, 40, 6, 150, 15
  LTEXT "Прокси", -1, 40, 26, 50, 10
  LTEXT "Област", -1, 40, 46, 50, 10

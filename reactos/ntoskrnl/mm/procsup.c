@@ -166,7 +166,7 @@ MmDeleteTeb(PEPROCESS Process,
 
     /* Lock the Address Space */
     MmLockAddressSpace(ProcessAddressSpace);
-    
+
     MemoryArea = MmLocateMemoryAreaByAddress(ProcessAddressSpace, (PVOID)Teb);
     if (MemoryArea)
     {
@@ -260,7 +260,7 @@ MmGrowKernelStack(PVOID StackPointer)
     ASSERT(((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) <=
            (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
 
-    /* 
+    /*
      * We'll give you three more pages.
      * NOTE: See note in MmCreateKernelStack. These pages are already being reserved.
      * It would be more efficient to only grow them (commit them) here.
@@ -485,7 +485,7 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
-    
+
     /* Create the shared data page */
     BaseAddress = (PVOID)USER_SHARED_DATA;
     Status = MmCreateMemoryArea(ProcessAddressSpace,
@@ -666,7 +666,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
     /* FIXME: Add part of MmDeleteProcessAddressSpace here */
 }
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
 {

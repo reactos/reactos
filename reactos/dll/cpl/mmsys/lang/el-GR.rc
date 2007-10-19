@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Συσκευές ήχου"
     IDS_CPLDESCRIPTION "Αλλάζει το σχήμα ήχου του υπολογιστή ή τροποποιεί τις ρυθμίσεις για τα ηχεία και τις συσκευές εγγραφής ήχου."

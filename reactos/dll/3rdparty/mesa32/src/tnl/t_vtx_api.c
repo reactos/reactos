@@ -52,12 +52,12 @@ static tnl_attrfv_func generic_attr_func[_TNL_MAX_ATTR_CODEGEN][4];
 
 
 /* Close off the last primitive, execute the buffer, restart the
- * primitive.  
+ * primitive.
  */
 static void _tnl_wrap_buffers( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
-   
+
 
    if (tnl->vtx.prim_count == 0) {
       tnl->vtx.copied.nr = 0;
@@ -71,8 +71,8 @@ static void _tnl_wrap_buffers( GLcontext *ctx )
       if (ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
 	 GLint i = tnl->vtx.prim_count - 1;
 	 assert(i >= 0);
-	 tnl->vtx.prim[i].count = ((tnl->vtx.initial_counter - 
-				    tnl->vtx.counter) - 
+	 tnl->vtx.prim[i].count = ((tnl->vtx.initial_counter -
+				    tnl->vtx.counter) -
 				   tnl->vtx.prim[i].start);
       }
 
@@ -96,7 +96,7 @@ static void _tnl_wrap_buffers( GLcontext *ctx )
 	 tnl->vtx.prim[0].start = 0;
 	 tnl->vtx.prim[0].count = 0;
 	 tnl->vtx.prim_count++;
-      
+
 	 if (tnl->vtx.copied.nr == last_count)
 	    tnl->vtx.prim[0].mode |= last_prim & PRIM_BEGIN;
       }
@@ -119,13 +119,13 @@ void GLAPIENTRY _tnl_wrap_filled_vertex( GLcontext *ctx )
     * to tnl->copied.
     */
    _tnl_wrap_buffers( ctx );
-   
-   /* Copy stored stored vertices to start of new list. 
+
+   /* Copy stored stored vertices to start of new list.
     */
    assert(tnl->vtx.counter > tnl->vtx.copied.nr);
 
    for (i = 0 ; i < tnl->vtx.copied.nr ; i++) {
-      _mesa_memcpy( tnl->vtx.vbptr, data, 
+      _mesa_memcpy( tnl->vtx.vbptr, data,
 		    tnl->vtx.vertex_size * sizeof(GLfloat));
       tnl->vtx.vbptr += tnl->vtx.vertex_size;
       data += tnl->vtx.vertex_size;
@@ -141,7 +141,7 @@ void GLAPIENTRY _tnl_wrap_filled_vertex( GLcontext *ctx )
  */
 static void _tnl_copy_to_current( GLcontext *ctx )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint i;
 
    for (i = _TNL_ATTRIB_POS+1 ; i < _TNL_ATTRIB_INDEX ; i++) {
@@ -149,8 +149,8 @@ static void _tnl_copy_to_current( GLcontext *ctx )
          /* Note: the tnl->vtx.current[i] pointers points to
           * the ctx->Current fields.  The first 16 or so, anyway.
           */
-	 COPY_CLEAN_4V(tnl->vtx.current[i], 
-		    tnl->vtx.attrsz[i], 
+	 COPY_CLEAN_4V(tnl->vtx.current[i],
+		    tnl->vtx.attrsz[i],
 		    tnl->vtx.attrptr[i]);
       }
    }
@@ -165,36 +165,36 @@ static void _tnl_copy_to_current( GLcontext *ctx )
    /* Edgeflag requires additional treatment:
     */
    if (tnl->vtx.attrsz[_TNL_ATTRIB_EDGEFLAG]) {
-      ctx->Current.EdgeFlag = 
+      ctx->Current.EdgeFlag =
 	 (tnl->vtx.CurrentFloatEdgeFlag == 1.0);
    }
 
    /* Colormaterial -- this kindof sucks.
     */
    if (ctx->Light.ColorMaterialEnabled) {
-      _mesa_update_color_material(ctx, 
+      _mesa_update_color_material(ctx,
 				  ctx->Current.Attrib[VERT_ATTRIB_COLOR0]);
    }
 
    if (tnl->vtx.have_materials) {
       tnl->Driver.NotifyMaterialChange( ctx );
    }
-         
+
    ctx->Driver.NeedFlush &= ~FLUSH_UPDATE_CURRENT;
 }
 
 
 static void _tnl_copy_from_current( GLcontext *ctx )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLint i;
 
    /* Edgeflag requires additional treatment:
     */
-   tnl->vtx.CurrentFloatEdgeFlag = 
+   tnl->vtx.CurrentFloatEdgeFlag =
       (GLfloat)ctx->Current.EdgeFlag;
-   
-   for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_MAX ; i++) 
+
+   for (i = _TNL_ATTRIB_POS+1 ; i <= _TNL_ATTRIB_MAX ; i++)
       switch (tnl->vtx.attrsz[i]) {
       case 4: tnl->vtx.attrptr[i][3] = tnl->vtx.current[i][3];
       case 3: tnl->vtx.attrptr[i][2] = tnl->vtx.current[i][2];
@@ -208,12 +208,12 @@ static void _tnl_copy_from_current( GLcontext *ctx )
 
 
 /* Flush existing data, set new attrib size, replay copied vertices.
- */ 
-static void _tnl_wrap_upgrade_vertex( GLcontext *ctx, 
+ */
+static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
 				      GLuint attr,
 				      GLuint newsz )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint oldsz;
    GLuint i;
    GLfloat *tmp;
@@ -227,7 +227,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
 
    /* Do a COPY_TO_CURRENT to ensure back-copying works for the case
     * when the attribute already exists in the vertex and is having
-    * its size increased.  
+    * its size increased.
     */
    _tnl_copy_to_current( ctx );
 
@@ -236,7 +236,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
     * begin/end so that they don't bloat the vertices.
     */
    if (ctx->Driver.CurrentExecPrimitive == PRIM_OUTSIDE_BEGIN_END &&
-       tnl->vtx.attrsz[attr] == 0 && 
+       tnl->vtx.attrsz[attr] == 0 &&
        lastcount > 8 &&
        tnl->vtx.vertex_size) {
       reset_attrfv( tnl );
@@ -261,7 +261,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
 	 tnl->vtx.attrptr[i] = tmp;
 	 tmp += tnl->vtx.attrsz[i];
       }
-      else 
+      else
 	 tnl->vtx.attrptr[i] = NULL; /* will not be dereferenced */
    }
 
@@ -312,7 +312,7 @@ static void _tnl_wrap_upgrade_vertex( GLcontext *ctx,
     * codegen.  Might be a reasonable place to try & detect attributes
     * in the vertex which aren't being submitted any more.
     */
-   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++)
       if (tnl->vtx.attrsz[i]) {
 	 GLuint j = tnl->vtx.attrsz[i] - 1;
 
@@ -347,9 +347,9 @@ static void _tnl_fixup_vertex( GLcontext *ctx, GLuint attr, GLuint sz )
     * vtxfmt on each flush (otherwise flags won't get reset
     * afterwards).
     */
-   if (attr == 0) 
+   if (attr == 0)
       ctx->Driver.NeedFlush |= FLUSH_STORED_VERTICES;
-   else 
+   else
       ctx->Driver.NeedFlush |= FLUSH_UPDATE_CURRENT;
 }
 
@@ -360,7 +360,7 @@ static struct _tnl_dynfn *lookup( struct _tnl_dynfn *l, GLuint key )
    struct _tnl_dynfn *f;
 
    foreach( f, l ) {
-      if (f->key == key) 
+      if (f->key == key)
 	 return f;
    }
 
@@ -370,7 +370,7 @@ static struct _tnl_dynfn *lookup( struct _tnl_dynfn *l, GLuint key )
 
 static tnl_attrfv_func do_codegen( GLcontext *ctx, GLuint attr, GLuint sz )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct _tnl_dynfn *dfn = NULL;
 
    if (attr == 0) {
@@ -390,7 +390,7 @@ static tnl_attrfv_func do_codegen( GLcontext *ctx, GLuint attr, GLuint sz )
 	 dfn = tnl->vtx.gen.Attribute[sz-1]( ctx, key );
    }
 
-   if (dfn) 
+   if (dfn)
       return *(tnl_attrfv_func *) &dfn->code;
    else
       return NULL;
@@ -403,21 +403,21 @@ static tnl_attrfv_func do_codegen( GLcontext *ctx, GLuint attr, GLuint sz )
  */
 
 static tnl_attrfv_func do_choose( GLuint attr, GLuint sz )
-{ 
-   GET_CURRENT_CONTEXT( ctx ); 
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+{
+   GET_CURRENT_CONTEXT( ctx );
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint oldsz = tnl->vtx.attrsz[attr];
 
    assert(attr < _TNL_MAX_ATTR_CODEGEN);
 
    if (oldsz != sz) {
-      /* Reset any active pointers for this attribute 
+      /* Reset any active pointers for this attribute
        */
       if (oldsz)
 	 tnl->vtx.tabfv[attr][oldsz-1] = choose[attr][oldsz-1];
-   
+
       _tnl_fixup_vertex( ctx, attr, sz );
- 
+
    }
 
 
@@ -482,15 +482,15 @@ static void error_attrib( const GLfloat *unused )
    GET_CURRENT_CONTEXT( ctx );
    (void) unused;
    _mesa_error( ctx, GL_INVALID_ENUM, "glVertexAttrib" );
-}   
+}
 
 
 
 static void reset_attrfv( TNLcontext *tnl )
-{   
+{
    GLuint i;
 
-   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++)
       if (tnl->vtx.attrsz[i]) {
 	 GLint j = tnl->vtx.attrsz[i] - 1;
 	 tnl->vtx.attrsz[i] = 0;
@@ -506,14 +506,14 @@ static void reset_attrfv( TNLcontext *tnl )
    tnl->vtx.vertex_size = 0;
    tnl->vtx.have_materials = 0;
 }
-      
 
 
-/* Materials:  
- * 
+
+/* Materials:
+ *
  * These are treated as per-vertex attributes, at indices above where
  * the NV_vertex_program leaves off.  There are a lot of good things
- * about treating materials this way.  
+ * about treating materials this way.
  *
  * However: I don't want to double the number of generated functions
  * just to cope with this, so I unroll the 'C' varients of CHOOSE and
@@ -549,10 +549,10 @@ do {								\
 
 /* Colormaterial is dealt with later on.
  */
-static void GLAPIENTRY _tnl_Materialfv( GLenum face, GLenum pname, 
+static void GLAPIENTRY _tnl_Materialfv( GLenum face, GLenum pname,
 			       const GLfloat *params )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
    switch (face) {
@@ -560,7 +560,7 @@ static void GLAPIENTRY _tnl_Materialfv( GLenum face, GLenum pname,
    case GL_BACK:
    case GL_FRONT_AND_BACK:
       break;
-      
+
    default:
       _mesa_error( ctx, GL_INVALID_ENUM, "glMaterialfv" );
       return;
@@ -600,7 +600,7 @@ static void GLAPIENTRY _tnl_Materialfv( GLenum face, GLenum pname,
 
 static void GLAPIENTRY _tnl_EdgeFlag( GLboolean b )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLfloat f = (GLfloat)b;
 
@@ -609,7 +609,7 @@ static void GLAPIENTRY _tnl_EdgeFlag( GLboolean b )
 
 static void GLAPIENTRY _tnl_EdgeFlagv( const GLboolean *v )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLfloat f = (GLfloat)v[0];
 
@@ -618,7 +618,7 @@ static void GLAPIENTRY _tnl_EdgeFlagv( const GLboolean *v )
 
 static void GLAPIENTRY _tnl_Indexf( GLfloat f )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
    OTHER_ATTR( _TNL_ATTRIB_INDEX, 1, &f );
@@ -626,7 +626,7 @@ static void GLAPIENTRY _tnl_Indexf( GLfloat f )
 
 static void GLAPIENTRY _tnl_Indexfv( const GLfloat *v )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
    TNLcontext *tnl = TNL_CONTEXT(ctx);
 
    OTHER_ATTR( _TNL_ATTRIB_INDEX, 1, v );
@@ -642,18 +642,18 @@ static void GLAPIENTRY _tnl_EvalCoord1f( GLfloat u )
    /* TODO: use a CHOOSE() function for this: */
    {
       GLint i;
-      if (tnl->vtx.eval.new_state) 
+      if (tnl->vtx.eval.new_state)
 	 _tnl_update_eval( ctx );
 
       for (i = 0 ; i <= _TNL_ATTRIB_INDEX ; i++) {
-	 if (tnl->vtx.eval.map1[i].map) 
+	 if (tnl->vtx.eval.map1[i].map)
 	    if (tnl->vtx.attrsz[i] != tnl->vtx.eval.map1[i].sz)
 	       _tnl_fixup_vertex( ctx, i, tnl->vtx.eval.map1[i].sz );
       }
    }
 
 
-   _mesa_memcpy( tnl->vtx.copied.buffer, tnl->vtx.vertex, 
+   _mesa_memcpy( tnl->vtx.copied.buffer, tnl->vtx.vertex,
                  tnl->vtx.vertex_size * sizeof(GLfloat));
 
    _tnl_do_EvalCoord1f( ctx, u );
@@ -670,26 +670,26 @@ static void GLAPIENTRY _tnl_EvalCoord2f( GLfloat u, GLfloat v )
    /* TODO: use a CHOOSE() function for this: */
    {
       GLint i;
-      if (tnl->vtx.eval.new_state) 
+      if (tnl->vtx.eval.new_state)
 	 _tnl_update_eval( ctx );
 
       for (i = 0 ; i <= _TNL_ATTRIB_INDEX ; i++) {
-	 if (tnl->vtx.eval.map2[i].map) 
+	 if (tnl->vtx.eval.map2[i].map)
 	    if (tnl->vtx.attrsz[i] != tnl->vtx.eval.map2[i].sz)
 	       _tnl_fixup_vertex( ctx, i, tnl->vtx.eval.map2[i].sz );
       }
 
-      if (ctx->Eval.AutoNormal) 
+      if (ctx->Eval.AutoNormal)
 	 if (tnl->vtx.attrsz[_TNL_ATTRIB_NORMAL] != 3)
 	    _tnl_fixup_vertex( ctx, _TNL_ATTRIB_NORMAL, 3 );
    }
 
-   _mesa_memcpy( tnl->vtx.copied.buffer, tnl->vtx.vertex, 
+   _mesa_memcpy( tnl->vtx.copied.buffer, tnl->vtx.vertex,
                  tnl->vtx.vertex_size * sizeof(GLfloat));
 
    _tnl_do_EvalCoord2f( ctx, u, v );
 
-   _mesa_memcpy( tnl->vtx.vertex, tnl->vtx.copied.buffer, 
+   _mesa_memcpy( tnl->vtx.vertex, tnl->vtx.copied.buffer,
                  tnl->vtx.vertex_size * sizeof(GLfloat));
 }
 
@@ -717,9 +717,9 @@ static void GLAPIENTRY _tnl_EvalPoint1( GLint i )
 static void GLAPIENTRY _tnl_EvalPoint2( GLint i, GLint j )
 {
    GET_CURRENT_CONTEXT( ctx );
-   GLfloat du = ((ctx->Eval.MapGrid2u2 - ctx->Eval.MapGrid2u1) / 
+   GLfloat du = ((ctx->Eval.MapGrid2u2 - ctx->Eval.MapGrid2u1) /
 		 (GLfloat) ctx->Eval.MapGrid2un);
-   GLfloat dv = ((ctx->Eval.MapGrid2v2 - ctx->Eval.MapGrid2v1) / 
+   GLfloat dv = ((ctx->Eval.MapGrid2v2 - ctx->Eval.MapGrid2v1) /
 		 (GLfloat) ctx->Eval.MapGrid2vn);
    GLfloat u = i * du + ctx->Eval.MapGrid2u1;
    GLfloat v = j * dv + ctx->Eval.MapGrid2v1;
@@ -733,10 +733,10 @@ static void GLAPIENTRY _tnl_EvalPoint2( GLint i, GLint j )
  */
 static void GLAPIENTRY _tnl_Begin( GLenum mode )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
 
    if (ctx->Driver.CurrentExecPrimitive == GL_POLYGON+1) {
-      TNLcontext *tnl = TNL_CONTEXT(ctx); 
+      TNLcontext *tnl = TNL_CONTEXT(ctx);
       int i;
 
       if (ctx->NewState) {
@@ -749,7 +749,7 @@ static void GLAPIENTRY _tnl_Begin( GLenum mode )
             return;
          }
 
-	 if (!(tnl->Driver.NotifyBegin && 
+	 if (!(tnl->Driver.NotifyBegin &&
 	       tnl->Driver.NotifyBegin( ctx, mode )))
 	     CALL_Begin(ctx->Exec, (mode));
 	 return;
@@ -758,7 +758,7 @@ static void GLAPIENTRY _tnl_Begin( GLenum mode )
       /* Heuristic: attempt to isolate attributes occuring outside
        * begin/end pairs.
        */
-      if (tnl->vtx.vertex_size && !tnl->vtx.attrsz[0]) 
+      if (tnl->vtx.vertex_size && !tnl->vtx.attrsz[0])
 	 _tnl_FlushVertices( ctx, ~0 );
 
       i = tnl->vtx.prim_count++;
@@ -768,21 +768,21 @@ static void GLAPIENTRY _tnl_Begin( GLenum mode )
 
       ctx->Driver.CurrentExecPrimitive = mode;
    }
-   else 
+   else
       _mesa_error( ctx, GL_INVALID_OPERATION, "glBegin" );
-      
+
 }
 
 static void GLAPIENTRY _tnl_End( void )
 {
-   GET_CURRENT_CONTEXT( ctx ); 
+   GET_CURRENT_CONTEXT( ctx );
 
    if (ctx->Driver.CurrentExecPrimitive != GL_POLYGON+1) {
-      TNLcontext *tnl = TNL_CONTEXT(ctx); 
+      TNLcontext *tnl = TNL_CONTEXT(ctx);
       int idx = tnl->vtx.initial_counter - tnl->vtx.counter;
       int i = tnl->vtx.prim_count - 1;
 
-      tnl->vtx.prim[i].mode |= PRIM_END; 
+      tnl->vtx.prim[i].mode |= PRIM_END;
       tnl->vtx.prim[i].count = idx - tnl->vtx.prim[i].start;
 
       ctx->Driver.CurrentExecPrimitive = GL_POLYGON+1;
@@ -791,15 +791,15 @@ static void GLAPIENTRY _tnl_End( void )
        * carried over (or not) between adjacent primitives.
        */
 #if 0
-      if (tnl->vtx.prim_count == TNL_MAX_PRIM) 
+      if (tnl->vtx.prim_count == TNL_MAX_PRIM)
 	 _tnl_FlushVertices( ctx, ~0 );
 #else
       if (tnl->vtx.prim_count == TNL_MAX_PRIM)
-	 _tnl_flush_vtx( ctx );	
+	 _tnl_flush_vtx( ctx );
 #endif
 
    }
-   else 
+   else
       _mesa_error( ctx, GL_INVALID_OPERATION, "glEnd" );
 }
 
@@ -853,18 +853,18 @@ void _tnl_FlushVertices( GLcontext *ctx, GLuint flags )
 }
 
 
-static void _tnl_current_init( GLcontext *ctx ) 
+static void _tnl_current_init( GLcontext *ctx )
 {
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLint i;
 
    /* setup the pointers for the typical 16 vertex attributes */
-   for (i = 0; i < VERT_ATTRIB_MAX; i++) 
+   for (i = 0; i < VERT_ATTRIB_MAX; i++)
       tnl->vtx.current[i] = ctx->Current.Attrib[i];
 
    /* setup pointers for the 12 material attributes */
    for (i = 0; i < MAT_ATTRIB_MAX; i++)
-      tnl->vtx.current[_TNL_ATTRIB_MAT_FRONT_AMBIENT + i] = 
+      tnl->vtx.current[_TNL_ATTRIB_MAT_FRONT_AMBIENT + i] =
 	 ctx->Light.Material.Attrib[i];
 
    tnl->vtx.current[_TNL_ATTRIB_INDEX] = &ctx->Current.Index;
@@ -879,11 +879,11 @@ static struct _tnl_dynfn *no_codegen( GLcontext *ctx, int key )
 
 void _tnl_vtx_init( GLcontext *ctx )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct tnl_vertex_arrays *tmp = &tnl->vtx_inputs;
    GLuint i;
    static int firsttime = 1;
-   
+
    if (firsttime) {
       firsttime = 0;
 
@@ -945,7 +945,7 @@ void _tnl_vtx_init( GLcontext *ctx )
 
    memcpy( tnl->vtx.tabfv, choose, sizeof(choose) );
 
-   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++) 
+   for (i = 0 ; i < _TNL_ATTRIB_MAX ; i++)
       tnl->vtx.attrsz[i] = 0;
 
    tnl->vtx.vertex_size = 0;
@@ -965,12 +965,12 @@ static void free_funcs( struct _tnl_dynfn *l )
 
 void _tnl_vtx_destroy( GLcontext *ctx )
 {
-   TNLcontext *tnl = TNL_CONTEXT(ctx); 
+   TNLcontext *tnl = TNL_CONTEXT(ctx);
    GLuint i;
 
    for (i = 0; i < 4; i++) {
       free_funcs( &tnl->vtx.cache.Vertex[i] );
-      free_funcs( &tnl->vtx.cache.Attribute[i] ); 
+      free_funcs( &tnl->vtx.cache.Attribute[i] );
    }
 }
 

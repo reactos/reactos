@@ -32,7 +32,7 @@
  *
  * The internals of the implementation are private, but can be hooked
  * into tnl at any time (except between RenderStart/RenderEnd) by
- * calling _swsetup_Wakeup(). 
+ * calling _swsetup_Wakeup().
  */
 
 #ifndef SWRAST_SETUP_H
@@ -55,7 +55,7 @@ _swsetup_Wakeup( GLcontext *ctx );
 /* Helper function to translate a hardware vertex (as understood by
  * the tnl/t_vertex.c code) to a swrast vertex.
  */
-extern void 
+extern void
 _swsetup_Translate( GLcontext *ctx, const void *vertex, SWvertex *dest );
 
 #endif

@@ -66,7 +66,7 @@ PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd);
 PVOID FASTCALL
 ObmCreateObject(PUSER_HANDLE_TABLE ht, HANDLE* h,USER_OBJECT_TYPE type , ULONG size);
 
-BOOL FASTCALL 
+BOOL FASTCALL
 ObmDeleteObject(HANDLE h, USER_OBJECT_TYPE type );
 
 #define UserRefObject(o) ObmReferenceObject(o)
@@ -141,14 +141,14 @@ UserSystemParametersInfo(
   UINT uiParam,
   PVOID pvParam,
   UINT fWinIni);
-  
+
 /*************** MESSAGE.C ***************/
-  
+
 BOOL FASTCALL
 UserPostMessage(HWND Wnd,
         UINT Msg,
         WPARAM wParam,
-        LPARAM lParam); 
+        LPARAM lParam);
 
 
 
@@ -191,14 +191,14 @@ BOOL FASTCALL UserDestroyMenu(HMENU hMenu);
 
 
 
- 
- 
+
+
 /*************** SCROLLBAR.C ***************/
- 
+
 DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow);
 
- 
+
 #endif /* _WIN32K_USERFUNCS_H */
 
 /* EOF */

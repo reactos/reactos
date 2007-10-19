@@ -102,14 +102,14 @@ _mesa_ClearColor( GLclampf red, GLclampf green, GLclampf blue, GLclampf alpha )
 
 /**
  * Clear buffers.
- * 
+ *
  * \param mask bit-mask indicating the buffers to be cleared.
  *
  * Flushes the vertices and verifies the parameter. If __GLcontextRec::NewState
  * is set then calls _mesa_update_state() to update gl_frame_buffer::_Xmin,
  * etc. If the rasterization mode is set to GL_RENDER then requests the driver
  * to clear the buffers, via the dd_function_table::Clear callback.
- */ 
+ */
 void GLAPIENTRY
 _mesa_Clear( GLbitfield mask )
 {
@@ -409,7 +409,7 @@ _mesa_DrawBuffersARB(GLsizei n, const GLenum *buffers)
              || _mesa_bitcount(destMask[output]) > 1) {
             _mesa_error(ctx, GL_INVALID_ENUM, "glDrawBuffersARB(buffer)");
             return;
-         }         
+         }
          destMask[output] &= supportedMask;
          if (destMask[output] == 0) {
             _mesa_error(ctx, GL_INVALID_OPERATION,

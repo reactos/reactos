@@ -84,7 +84,7 @@ INT cmd_call (LPTSTR cmd, LPTSTR param)
 		bc->Out[0] = _T('\0');
 		bc->Err[0] = _T('\0');
 	}
-	
+
 
 	/* Wasn't a batch file so remove conext */
 	if (bc->hBatchFile == INVALID_HANDLE_VALUE)

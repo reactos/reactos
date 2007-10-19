@@ -2192,7 +2192,7 @@ interface IRpcOptions : IUnknown
 enum {
    COMBND_RPCTIMEOUT = 1,
    COMBND_SERVER_LOCALITY = 2
-};  
+};
 
 enum {
    SERVER_LOCALITY_PROCESS_LOCAL = 0,

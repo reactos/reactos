@@ -338,7 +338,7 @@ public:
 		wcexDisplay.hCursor = LoadCursor(NULL, IDC_ARROW);
 		wcexDisplay.hbrBackground = nullBrush;
 		wcexDisplay.lpszClassName = TEXT("MissTosca_Display");
-		
+
 		wcexInput.style = CS_VREDRAW | CS_HREDRAW;
 		wcexInput.lpfnWndProc = NULL; // TODO
 		wcexInput.hInstance = GetCurrentModule();
@@ -416,7 +416,7 @@ private:
 				}
 
 				SCROLLINFO scroll = { sizeof(scroll), SIF_ALL, 0 };
-			
+
 				// update the horizontal scrollbar
 				scroll.nMax = m_consoleWidth;
 				scroll.nPage = rcClient.right;
@@ -1122,7 +1122,7 @@ public:
 		int fromstride = cx * m_displayBufferByteDepth;
 
 		const uint8 * src = cache_get_desktop(/*This*/NULL, offset, cx, cy, m_displayBufferByteDepth);
-		
+
 		uint8 * dst =
 			(uint8 *)m_displayBufferRaw +
 			x * m_displayBufferByteDepth +
@@ -1174,7 +1174,7 @@ public:
 			/* Keyboard stuff */
 			// TODO: we need a good way to post output cross-thread
 		case WM_SYSKEYDOWN:
-		case WM_KEYDOWN:		
+		case WM_KEYDOWN:
 			//rdp_send_input(This, GetMessageTime(), RDP_INPUT_SCANCODE, RDP_KEYPRESS | (lparam & 0x1000000 ? KBD_FLAG_EXT : 0), LOBYTE(HIWORD(lparam)), 0);
 			break;
 
@@ -1814,7 +1814,7 @@ private:
 						break;
 
 					strNewPassword = SysAllocStringLen(redirectArgs->password, redirectArgs->password_len / sizeof(OLECHAR));
-					
+
 					if(strNewPassword == NULL && redirectArgs->password_len)
 						break;
 
@@ -1904,7 +1904,7 @@ private:
 	(
 		DISPID eventId,
 		VARIANTARG * rgvarg = NULL,
-		unsigned int cArgs = 0, 
+		unsigned int cArgs = 0,
 		VARIANTARG * retval = NULL,
 		AsyncEventCallback callback = NULL
 	)
@@ -2516,7 +2516,7 @@ private:
 		{
 			if(iTInfo != 0)
 				return DISP_E_BADINDEX;
-		
+
 			return AcquireDispTypeInfo(ppTInfo);
 		}
 
@@ -3439,7 +3439,7 @@ private:
 		{
 			if(iTInfo != 0)
 				return DISP_E_BADINDEX;
-		
+
 			return AcquireDispTypeInfo(ppTInfo);
 		}
 
@@ -3806,7 +3806,7 @@ private:
 				goto l_Disconnect;
 		}
 
-		if(overallConnectionTimer)			
+		if(overallConnectionTimer)
 			SetWaitableTimer(overallConnectionTimer, &overallTimeout, 0, ConnectionTimerAPC, NULL, FALSE);
 
 		// Initial connection
@@ -3930,7 +3930,7 @@ private:
 					++ autoReconnections;
 				}
 
-				if(overallConnectionTimer)			
+				if(overallConnectionTimer)
 					SetWaitableTimer(overallConnectionTimer, &overallTimeout, 0, ConnectionTimerAPC, NULL, FALSE);
 
 				// Reconnection
@@ -4233,11 +4233,11 @@ private:
 			}
 
 			return 0;
-			
+
 		default:
 			{
 				LRESULT result;
-				
+
 				if(HandleEvent(uMsg, wParam, lParam, result))
 					return result;
 			}
@@ -4354,7 +4354,7 @@ private:
 			else
 			{
 				hr = CreateControlWindow(hwndParent);
-				
+
 				if(FAILED(hr))
 					break;
 			}
@@ -4444,7 +4444,7 @@ public:
 	{
 		if(iTInfo != 0)
 			return DISP_E_BADINDEX;
-	
+
 		return AcquireDispTypeInfo(ppTInfo);
 	}
 
@@ -4532,7 +4532,7 @@ public:
 					return E_OUTOFMEMORY;
 				}
 
-				std::copy(sinks, sinks + m_EventSinksCount, newSinks);			
+				std::copy(sinks, sinks + m_EventSinksCount, newSinks);
 
 				m_EventSinks = newSinks;
 				sinks = newSinks;
@@ -4821,7 +4821,7 @@ public:
 			hr = S_OK;
 			break;
 
-		default:			
+		default:
 			if(iVerb > 0)
 				hr = OLEOBJ_S_INVALIDVERB;
 			else
@@ -5798,7 +5798,7 @@ HCURSOR ui_create_cursor(RDPCLIENT * This, unsigned int x, unsigned int y, int w
 	iconinfo.yHotspot = y;
 	iconinfo.hbmMask = hbmMask;
 	iconinfo.hbmColor = hbmColor;
-	
+
 	HICON icon = CreateIconIndirect(&iconinfo);
 
 	if(icon == NULL)
@@ -5993,7 +5993,7 @@ public:
 
 		return RdpClient::CreateInstance(m_classId, m_libIndex, pUnkOuter, riid, ppvObject);
 	}
-    
+
 	virtual STDMETHODIMP LockServer(BOOL fLock)
 	{
 		if(fLock)

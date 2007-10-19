@@ -68,7 +68,7 @@ __asm__(".align 4"                                    "\n\t"          \
         "       movl %fs:0x18, %eax"                  "\n\t"          \
         "       movl 0xbe8(%eax), %eax"               "\n\t"          \
         "       jmp *"FOO((icdidx*4))"(%eax)"         "\n\t");
-        
+
 GLFUNCS_MACRO
 # undef FOO
 # undef X

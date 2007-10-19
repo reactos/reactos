@@ -22,11 +22,11 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 08, 2004, by Robert Shearman.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features or bugs please note them below.
- * 
+ *
  * TODO:
  *   - Custom draw support.
  *   - Animation.
@@ -261,7 +261,7 @@ TOOLTIPS_Refresh (HWND hwnd, HDC hdc)
             BOOL icon_present;
 
             /* draw icon */
-            icon_present = infoPtr->hTitleIcon && 
+            icon_present = infoPtr->hTitleIcon &&
                 DrawIconEx(hdc, rc.left, rc.top, infoPtr->hTitleIcon,
                            ICON_WIDTH, ICON_HEIGHT, 0, NULL, DI_NORMAL);
             if (icon_present)
@@ -685,7 +685,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
         }
 
         hrStem = CreatePolygonRgn(pts, sizeof(pts) / sizeof(pts[0]), ALTERNATE);
-        
+
         hRgn = CreateRoundRectRgn(0,
                                   (infoPtr->bToolBelow ? BALLOON_STEMHEIGHT : 0),
                                   rect.right - rect.left,
@@ -696,7 +696,7 @@ TOOLTIPS_Show (HWND hwnd, TOOLTIPS_INFO *infoPtr)
         DeleteObject(hrStem);
 
         SetWindowRgn(hwnd, hRgn, FALSE);
-        /* we don't free the region handle as the system deletes it when 
+        /* we don't free the region handle as the system deletes it when
          * it is no longer needed */
     }
 
@@ -827,7 +827,7 @@ TOOLTIPS_TrackShow (HWND hwnd, TOOLTIPS_INFO *infoPtr)
         hRgn = CreateRoundRectRgn(0, 0, rect.right - rect.left, rect.bottom - rect.top, BALLOON_ROUNDEDNESS, BALLOON_ROUNDEDNESS);
 
         SetWindowRgn(hwnd, hRgn, FALSE);
-        /* we don't free the region handle as the system deletes it when 
+        /* we don't free the region handle as the system deletes it when
          * it is no longer needed */
     }
 

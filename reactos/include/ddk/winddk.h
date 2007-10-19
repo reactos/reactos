@@ -5396,7 +5396,7 @@ KeGetCurrentProcessorNumber(VOID)
   );
   return Number;
 }
-  
+
 #else
 #error Unknown architecture
 #endif

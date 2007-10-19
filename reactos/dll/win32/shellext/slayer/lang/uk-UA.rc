@@ -38,7 +38,7 @@ BEGIN
   PUSHBUTTON "&Скасувати", IDCANCEL, 162,116,60,14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
   IDS_DESCRIPTION "Розширеня оболонки для Прошарка сумісності програм"

@@ -1465,7 +1465,7 @@ const char* filename)
 
         for (y = 0; y < This->pow2Height; y++) {
             unsigned char *src = (unsigned char *) This->resource.allocatedMemory + (y * 1 * IWineD3DSurface_GetPitch(iface));
-            for (x = 0; x < This->pow2Width; x++) {	    
+            for (x = 0; x < This->pow2Width; x++) {
                 unsigned int color;
                 unsigned int comp;
                 int i;

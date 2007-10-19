@@ -79,14 +79,14 @@ static void TAG(emit_vfmt)( GLcontext *ctx, VERTEX *v )
       if (DO_PTEX) {
 	 if (HAVE_PTEX_VERTICES) {
 	    v->pv.q0 = tc[3];
-	 } 
+	 }
 	 else {
 	    float rhw = 1.0 / tc[3];
 	    v->v.w *= tc[3];
 	    v->v.u0 *= rhw;
 	    v->v.v0 *= rhw;
-	 } 
-      } 
+	 }
+      }
    }
    if (DO_TEX1) {
       GLfloat *tc = ctx->Current.Texture[1];
@@ -94,12 +94,12 @@ static void TAG(emit_vfmt)( GLcontext *ctx, VERTEX *v )
 	 v->pv.u1 = tc[0];
 	 v->pv.v1 = tc[1];
 	 v->pv.q1 = tc[3];
-      } 
+      }
       else {
 	 v->v.u1 = tc[0];
 	 v->v.v1 = tc[1];
       }
-   } 
+   }
    else if (DO_PTEX) {
       *(GLuint *)&v->pv.q1 = 0;	/* avoid culling on radeon */
    }
@@ -109,24 +109,24 @@ static void TAG(emit_vfmt)( GLcontext *ctx, VERTEX *v )
 	 v->pv.u2 = tc[0];
 	 v->pv.v2 = tc[1];
 	 v->pv.q2 = tc[3];
-      } 
+      }
       else {
 	 v->v.u2 = tc[0];
 	 v->v.v2 = tc[1];
       }
-   } 
+   }
    if (DO_TEX3) {
       GLfloat *tc = ctx->Current.Texture[3];
       if (DO_PTEX) {
 	 v->pv.u3 = tc[0];
 	 v->pv.v3 = tc[1];
 	 v->pv.q3 = tc[3];
-      } 
+      }
       else {
 	 v->v.u3 = tc[0];
 	 v->v.v3 = tc[1];
       }
-   } 
+   }
 }
 
 
@@ -241,7 +241,7 @@ static void TAG(interp)( GLcontext *ctx,
 
 
 static __inline void TAG(copy_pv)( GLcontext *ctx,
-				   TNL_VERTEX *dst, 
+				   TNL_VERTEX *dst,
 				   TNL_VERTEX *src )
 {
    if (DO_TEX0 || DO_TEX1 || !HAVE_TINY_VERTICES) {

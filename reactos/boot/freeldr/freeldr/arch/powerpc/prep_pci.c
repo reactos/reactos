@@ -54,12 +54,12 @@ pci_desc pci1_desc = { (void *)0x80000cf8 };
 	return ret;
     }
 
-void pci_read_bar( pci_desc *desc, int bus, int dev, int fn, int bar, 
+void pci_read_bar( pci_desc *desc, int bus, int dev, int fn, int bar,
 		   struct _pci_bar *bar_data ) {
     bar_data->data = pci_read( desc, bus, dev, fn, 0x10 + (bar * 4), 4 );
 }
 
-/* 
+/*
  * Imagine: offset 3, len 1
  * let oldval = 0x12345678 and val = 0xabcd1234;
  * mask = ((1 << 8) - 1) << 24; // 0xff000000
@@ -106,7 +106,7 @@ void pci_setup( pci_desc *desc ) {
             type = pci_read(desc,bus,dev,0,PCI_HEADER_TYPE,1);
             vendor = pci_read(desc,bus,dev,0,PCI_VENDORID,2);
             device = pci_read(desc,bus,dev,0,PCI_DEVICEID,2);
-            
+
             if(vendor == 0 || vendor == 0xffff) continue;
             if(type & 0x80) funcs = 8; else funcs = 1;
 
@@ -114,7 +114,7 @@ void pci_setup( pci_desc *desc ) {
                 devclass = pci_read(desc,bus,dev,fn,PCI_BASECLASS,1);
 		printf(" %d:%d -> vendor:device:class %x:%x:%x\n",
 		       bus, dev, vendor, device, devclass);
-                
+
                 if( devclass == 3 ) {
 		    printf("Setting up vga...\n");
                     vga_setup(desc,&vga1_desc,bus,dev,fn);

@@ -234,7 +234,7 @@ BOOL STDCALL
 GetKeyboardLayoutNameA(LPSTR pwszKLID)
 {
   WCHAR buf[KL_NAMELENGTH];
-    
+
   if (GetKeyboardLayoutNameW(buf))
     return WideCharToMultiByte( CP_ACP, 0, buf, -1, pwszKLID, KL_NAMELENGTH, NULL, NULL ) != 0;
   return FALSE;
@@ -358,7 +358,7 @@ MapVirtualKeyW(UINT uCode,
 
 /*
  * @implemented
- */ 
+ */
 DWORD STDCALL
 OemKeyScan(WORD wOemChar)
 {
@@ -370,7 +370,7 @@ OemKeyScan(WORD wOemChar)
   Vk = VkKeyScanW(p);
   Scan = MapVirtualKeyW((Vk & 0x00ff), 0);
   if(!Scan) return -1;
-  /* 
+  /*
      Page 450-1, MS W2k SuperBible by SAMS. Return, low word has the
      scan code and high word has the shift state.
    */
@@ -880,7 +880,7 @@ TrackMouseEvent(
     }
 
     return TRUE;
- 
+
 }
 
 /* EOF */

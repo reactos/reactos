@@ -219,8 +219,8 @@ StartDirectDraw(LPDIRECTDRAW iface, LPGUID lpGuid, BOOL reenable)
         }
 
     }
-    /* Windows handler are by set of SetCooperLevel 
-     * so do not set it 
+    /* Windows handler are by set of SetCooperLevel
+     * so do not set it
      */
 
     if (reenable == FALSE)
@@ -516,7 +516,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     if (mHALInfo.ddCaps.dwNumFourCCCodes > 0 )
     {
-      
+
         DxHeapMemAlloc(mpFourCC, sizeof(DWORD) * (mHALInfo.ddCaps.dwNumFourCCCodes + 2));
 
         if (mpFourCC == NULL)
@@ -577,7 +577,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
     }
 
     memcpy(&ddgbl.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
-    
+
 
     memcpy(&ddgbl.ddCaps,  &mHALInfo.ddCaps,sizeof(DDCORECAPS));
 
@@ -593,7 +593,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
 
     /* FIXME D3D setup mD3dCallbacks and mD3dDriverData */
 
-    
+
 
 
     if (mHALInfo.dwFlags & DDHALINFO_GETDRIVERINFOSET)
@@ -615,8 +615,8 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
         RtlZeroMemory(&DdGetDriverInfo, sizeof(DDHAL_GETDRIVERINFODATA));
         DdGetDriverInfo.dwSize = sizeof (DDHAL_GETDRIVERINFODATA);
         DdGetDriverInfo.guidInfo = GUID_Miscellaneous2Callbacks;
-        
-        /* FIXME 
+
+        /* FIXME
         DdGetDriverInfo.lpvData = (PVOID)&ddgbl.lpDDCBtmp->HALDDMiscellaneous;
         DdGetDriverInfo.dwExpectedSize = sizeof (DDHAL_DDMISCELLANEOUS2CALLBACKS);
 
@@ -628,7 +628,7 @@ StartDirectDrawHal(LPDIRECTDRAW iface, BOOL reenable)
             // FIXME Close DX fristcall and second call
             return DD_FALSE;
         }
-        DD_MISCELLANEOUS2CALLBACKS 
+        DD_MISCELLANEOUS2CALLBACKS
         {
             DWORD                dwSize;
             DWORD                dwFlags;

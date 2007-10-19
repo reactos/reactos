@@ -31,7 +31,7 @@ GLOBAL_POWER_POLICY gGPP;
 TCHAR langSel[255];
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
   {IDC_CPLICON_1, IDS_CPLNAME_1, IDS_CPLDESCRIPTION_1, Applet1}
 };
@@ -101,7 +101,7 @@ PropSheetProc(
           return FALSE;
       }
       break;
-      
+
     case PSCB_INITIALIZED:
       break;
   }
@@ -110,7 +110,7 @@ PropSheetProc(
 
 /* First Applet */
 static LONG APIENTRY
-Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)	
+Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 {
   HPROPSHEETPAGE hpsp[MAX_POWER_PAGES];
   PROPSHEETHEADER psh;
@@ -118,7 +118,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   TCHAR Caption[1024];
   SYSTEM_POWER_CAPABILITIES spc;
   LONG ret;
- 
+
   UNREFERENCED_PARAMETER(hwnd);
   UNREFERENCED_PARAMETER(uMsg);
   UNREFERENCED_PARAMETER(wParam);
@@ -126,7 +126,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
   memset(Caption, 0x0, sizeof(Caption));
   LoadString(hApplet, IDS_CPLNAME_1, Caption, sizeof(Caption) / sizeof(TCHAR));
-  
+
   ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
   psh.dwSize = sizeof(PROPSHEETHEADER);
   psh.dwFlags =  PSH_USECALLBACK | PSH_PROPTITLE;
@@ -138,7 +138,7 @@ Applet1(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
   psh.nStartPage = 0;
   psh.phpage = hpsp;
   psh.pfnCallback = PropSheetProc;
-  
+
   InitPropSheetPage(&psh, IDD_PROPPAGEPOWERSHEMES, (DLGPROC) powershemesProc);
   if (GetPwrCapabilities(&spc))
   {
@@ -172,7 +172,7 @@ CPlApplet(
 	LPARAM lParam2)
 {
   int i = (int)lParam1;
-  
+
   switch(uMsg)
   {
     case CPL_INIT:

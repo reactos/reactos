@@ -75,7 +75,7 @@ TConsole::TConsole(HANDLE h) {
 	SetConsoleTextAttribute(hConsole, wAttributes);
 
 	insert_mode = 0;
-	
+
 	// Set the screen size
 	SetWindowSize(ini.get_term_width(), ini.get_term_height());
 
@@ -125,7 +125,7 @@ void TConsole::Normal() {
 	// but not with others (for example SCO)
 	// we must preserve the colors :
 	// 06/04/98 thanks to Paul a .ini parameter from now on
-	
+
 	BlinkOff();
 	UnderlineOff();
 	if(ini.get_preserve_colors()) {
@@ -141,13 +141,13 @@ void TConsole::Normal() {
 
 void TConsole::SetForeground(unsigned char wAttrib) {
 	if(reverse) bg = wAttrib; else fg = wAttrib;
-	wAttributes = (wAttributes & (unsigned char)0x88) | 
+	wAttributes = (wAttributes & (unsigned char)0x88) |
 		(unsigned char)fg | (bg << 4);
 }
 
 void TConsole::SetBackground(unsigned char wAttrib) {
 	if(reverse) fg = wAttrib; else bg = wAttrib;
-	wAttributes = (wAttributes & (unsigned char)0x88) | 
+	wAttributes = (wAttributes & (unsigned char)0x88) |
 		(unsigned char)fg | (bg << 4);
 }
 
@@ -268,7 +268,7 @@ void TConsole::Lightbg() {
 
 		ReadConsoleOutputAttribute(hConsole, pAttributes, (DWORD)(CON_COLS),
 			Coord, &Result);
-	
+
 		for(DWORD j = 0; j < Result; j++) pAttributes[j] |= 0x80;
 
 		WriteConsoleOutputAttribute(hConsole, pAttributes, Result, Coord,
@@ -294,7 +294,7 @@ void TConsole::Darkbg() {
 
 		ReadConsoleOutputAttribute(hConsole, pAttributes, (DWORD)(CON_COLS),
 			Coord, &Result);
-	
+
 		for(DWORD j = 0; j < Result; j++) pAttributes[j] &= 0x7f;
 
 		WriteConsoleOutputAttribute(hConsole, pAttributes, Result, Coord,
@@ -473,7 +473,7 @@ unsigned long TConsole::WriteStringFast(const char* pszString, unsigned long cbS
 
 unsigned long TConsole::WriteString(const char* pszString, unsigned long cbString) {
 	DWORD Result = 0;
-	
+
 	SetConsoleTextAttribute(hConsole, wAttributes);
 
 	//check to see if the line is longer than the display
@@ -559,14 +559,14 @@ unsigned long TConsole::WriteCtrlChar(char c) {
 	// The console does not handel the CR/LF chars as we might expect
 	// when using color. The attributes are not set correctly, so we
 	// must interpret them manualy to preserve the colors on the screen.
-	
+
 	unsigned long Result = 0; // just in case (Paul Brannan 6/26/98)
 	switch (c) {
     case '\x09': // horizontal tab
 		SetCursorPosition((((CON_CUR_X/8)+1)*8), CON_CUR_Y);
 		Result = 1;
 		break;
-		
+
     case '\x0a': // line feed
 		index();
 		Result = 1;
@@ -583,7 +583,7 @@ unsigned long TConsole::WriteCtrlChar(char c) {
     default :    // else just write it like normal
 		break;
 	}
-	
+
 	return Result;
 }
 
@@ -595,7 +595,7 @@ void TConsole::index() {
 	} else if ((iScrollEnd == -1 && (signed)CON_CUR_Y >= (signed)CON_HEIGHT)) {
 		DWORD Result;
 		WriteConsole(hConsole, "\n", 1, &Result, NULL);
-		
+
 		// If we aren't at the bottom of the buffer, then we need to
 		// scroll down (Paul Brannan 4/14/2000)
 		if(iScrollEnd == -1 && ConsoleInfo.srWindow.Bottom < ConsoleInfo.dwSize.Y - 1) {
@@ -626,11 +626,11 @@ void TConsole::reverse_index() {
 void TConsole::ScrollDown( int iStartRow , int iEndRow, int bUp ){
 	CHAR_INFO ciChar;
 	SMALL_RECT srScrollWindow;
-	
+
 	// Correction from I.Ioannou 11 May 1997
 	// check the scroll region
 	if (iStartRow < iScrollStart) iStartRow = iScrollStart;
-	
+
 	// Correction from I.Ioannou 11 May 1997
 	// this will make Top the CON_TOP
 	if ( iStartRow == -1) iStartRow = 0;
@@ -646,7 +646,7 @@ void TConsole::ScrollDown( int iStartRow , int iEndRow, int bUp ){
 
 	if ( iStartRow > CON_HEIGHT) iStartRow = CON_HEIGHT;
 	if ( iEndRow > CON_HEIGHT) iEndRow = CON_HEIGHT;
-	
+
 	srScrollWindow.Left =           (CON_LEFT);
 	srScrollWindow.Right =  (SHORT) (CON_RIGHT);
 	srScrollWindow.Top =    (SHORT) (CON_TOP + iStartRow );
@@ -654,10 +654,10 @@ void TConsole::ScrollDown( int iStartRow , int iEndRow, int bUp ){
 
 	ciChar.Char.AsciiChar = ' ';           // fill with spaces
 	ciChar.Attributes = wAttributes;       // fill with current attrib
-	
+
 	// This should speed things up (Paul Brannan 9/2/98)
 	COORD dwDestOrg = {srScrollWindow.Left, srScrollWindow.Top + bUp};
-	
+
 	// Note that iEndRow and iStartRow had better not be equal to -1 at this
 	// point.  There are four cases to consider for out of bounds.  Two of
 	// these cause the scroll window to be cleared; the others cause the
@@ -680,7 +680,7 @@ void TConsole::ScrollDown( int iStartRow , int iEndRow, int bUp ){
 		// Modify the scroll region (Paul Brannan 12/3/98)
 		srScrollWindow.Bottom -= bUp;
 	}
-	
+
 	ScrollConsoleScreenBuffer(hConsole, &srScrollWindow,
 		0, dwDestOrg, &ciChar);
 }
@@ -773,27 +773,27 @@ void TConsole::InsertLine(int numlines)
 	SMALL_RECT	clip;
 	CHAR_INFO		fill;
 	int		acty;
-	
+
 	// Rest of screen would be deleted
 	if ( (acty = GetCursorY()) >= CON_LINES - numlines ) {
 		ClearEOScreen();    // delete rest of screen
 		return;
 	} /* IF */
-	
+
 	//	Else scroll down the part of the screen which is below the
 	//	cursor.
 	from.Left =		CON_LEFT;
 	from.Top =		CON_TOP + (SHORT)acty;
 	from.Right =	CON_LEFT + (SHORT)CON_COLS;
 	from.Bottom =	CON_TOP + (SHORT)CON_LINES;
-	
+
 	clip = from;
 	to.X = 0;
 	to.Y = (SHORT)(from.Top + numlines);
-	
+
 	fill.Char.AsciiChar = ' ';
 	fill.Attributes = 7; 		// WHICH ATTRIBUTES TO TAKE FOR BLANK LINE ??
-	
+
 	ScrollConsoleScreenBuffer(hConsole, &from, &clip, to, &fill);
 } /* InsertLine */
 
@@ -805,24 +805,24 @@ void TConsole::InsertCharacter(int numchar)
 	SMALL_RECT	clip;
 	COORD			to;
 	CHAR_INFO		fill;
-	
+
 	if ( (actx = GetCursorX()) >= CON_COLS - numchar ) {
 		ClearEOLine();
 		return;
 	} /* IF */
-	
+
 	from.Left =		CON_LEFT + (SHORT)actx;
 	from.Top =		CON_TOP + (SHORT)GetCursorY();
 	from.Right =	CON_LEFT + (SHORT)CON_COLS;
 	from.Bottom =	CON_TOP + (SHORT)from.Top;
-	
+
 	clip = from;
 	to.X = (SHORT)(actx + numchar);
 	to.Y = from.Top;
-	
+
 	fill.Char.AsciiChar = ' ';
 	fill.Attributes = wAttributes; // WHICH ATTRIBUTES TO TAKE FOR BLANK CHAR ??
-	
+
 	ScrollConsoleScreenBuffer(hConsole, &from, &clip, to, &fill);
 } /* InsertCharacter */
 
@@ -837,24 +837,24 @@ void TConsole::DeleteCharacter(int numchar)
 	SMALL_RECT	clip;
 	COORD			to;
 	CHAR_INFO		fill;
-	
+
 	if ( (actx = GetCursorX()) >= CON_COLS - numchar ) {
 		ClearEOLine();
 		return;
 	} /* IF */
-	
+
 	from.Left =		CON_LEFT + (SHORT)actx;
 	from.Top =		CON_TOP + (SHORT)GetCursorY();
 	from.Right =	CON_LEFT + (SHORT)CON_COLS;
 	from.Bottom =	CON_TOP + from.Top;
-	
+
 	clip = from;
 	to.X = (SHORT)(actx - numchar);
 	to.Y = from.Top;
-	
+
 	fill.Char.AsciiChar = ' ';
 	fill.Attributes = wAttributes; // WHICH ATTRIBUTES TO TAKE FOR BLANK CHAR ??
-	
+
 	ScrollConsoleScreenBuffer(hConsole, &from, &clip, to, &fill);
 } /* DeleteCharacter */
 
@@ -865,11 +865,11 @@ void TConsole::SetRawCursorPosition(int x, int y) {
 	if (y < 0)			y = 0;
 	COORD Coord = {(short)(CON_LEFT + x), (short)(CON_TOP + y)};
 	SetConsoleCursorPosition(hConsole, Coord);
-	
+
 	// Update the ConsoleInfo struct (Paul Brannan 5/9/98)
 	ConsoleInfo.dwCursorPosition.Y = Coord.Y;
 	ConsoleInfo.dwCursorPosition.X = Coord.X;
-	
+
 	// bug fix in case we went too far (Paul Brannan 5/25/98)
 	if(ConsoleInfo.dwCursorPosition.X < CON_LEFT)
 		ConsoleInfo.dwCursorPosition.X = CON_LEFT;
@@ -899,7 +899,7 @@ void TConsole::SetCursorPosition(int x, int y) {
 
 	COORD Coord = {(short)(CON_LEFT + x), (short)(CON_TOP + y)};
 	SetConsoleCursorPosition(hConsole, Coord);
-	
+
 	// Update the ConsoleInfo struct
 	ConsoleInfo.dwCursorPosition.Y = Coord.Y;
 	ConsoleInfo.dwCursorPosition.X = Coord.X;
@@ -938,26 +938,26 @@ void saveScreen(CHAR_INFO *chiBuffer) {
 	SMALL_RECT srctReadRect;
 	COORD coordBufSize;
 	COORD coordBufCoord;
-	
+
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	GetConsoleScreenBufferInfo(hStdout, &ConsoleInfo);
-	
+
     srctReadRect.Top = CON_TOP;    /* top left: row 0, col 0  */
     srctReadRect.Left = CON_LEFT;
     srctReadRect.Bottom = CON_BOTTOM; /* bot. right: row 1, col 79 */
     srctReadRect.Right = CON_RIGHT;
-	
+
     coordBufSize.Y = CON_BOTTOM-CON_TOP+1;
     coordBufSize.X = CON_RIGHT-CON_LEFT+1;
-	
+
     coordBufCoord.X = CON_TOP;
     coordBufCoord.Y = CON_LEFT;
-	
+
     ReadConsoleOutput(
 		hStdout,        /* screen buffer to read from       */
 		chiBuffer,      /* buffer to copy into              */
 		coordBufSize,   /* col-row size of chiBuffer        */
-		
+
 		coordBufCoord,  /* top left dest. cell in chiBuffer */
 		&srctReadRect); /* screen buffer source rectangle   */
 }
@@ -968,19 +968,19 @@ void restoreScreen(CHAR_INFO *chiBuffer) {
 	SMALL_RECT srctReadRect;
 	COORD coordBufSize;
 	COORD coordBufCoord;
-	
+
 	hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
 	GetConsoleScreenBufferInfo(hStdout, &ConsoleInfo);
-	
+
 	// restore screen
     srctReadRect.Top = CON_TOP;    /* top left: row 0, col 0  */
     srctReadRect.Left = CON_LEFT;
     srctReadRect.Bottom = CON_BOTTOM; /* bot. right: row 1, col 79 */
     srctReadRect.Right = CON_RIGHT;
-	
+
     coordBufSize.Y = CON_BOTTOM-CON_TOP+1;
     coordBufSize.X = CON_RIGHT-CON_LEFT+1;
-	
+
     coordBufCoord.X = CON_TOP;
     coordBufCoord.Y = CON_LEFT;
     WriteConsoleOutput(
@@ -990,7 +990,7 @@ void restoreScreen(CHAR_INFO *chiBuffer) {
         coordBufCoord, /* top left src cell in chiBuffer  */
         &srctReadRect); /* dest. screen buffer rectangle */
 	// end restore screen
-    
+
 }
 
 CHAR_INFO* newBuffer() {

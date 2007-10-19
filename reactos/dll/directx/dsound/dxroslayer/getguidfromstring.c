@@ -1,5 +1,5 @@
 /*
- * ReactOS emulation layer betwin wine and windows api for directx 
+ * ReactOS emulation layer betwin wine and windows api for directx
  * convort string to GUID
  *
  * Copyright 2004 Magnus Olsen
@@ -21,7 +21,7 @@
  *
  * TODO:
  *      soucre clean
- *      Rewrite so it use unicode instead for asc or find how windows convert it 
+ *      Rewrite so it use unicode instead for asc or find how windows convert it
  */
 
 #include "config.h"
@@ -65,15 +65,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(dsound);
 
 
 void dxGetGuidFromString( char *in_str, GUID *guid )
-{	
+{
     unsigned long c=0;
 	int i;
 
-	// this string hex converter need to be rewrite or find uhow windows convort a string 
+	// this string hex converter need to be rewrite or find uhow windows convort a string
 	// to GUID
 
 	for (i=1;i<9;i++)
-	{		 
+	{
 	 if (in_str[i]>='0' && in_str[i]<='9')
 	 {
 	  c=c * 16 + (in_str[i] - 48);
@@ -82,13 +82,13 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 	 {
 	  c=c * 16 + (in_str[i] - 55);
 	  }
-	 } 
+	 }
 	 guid->Data1 = c;
 	 c=0;
 
 	for (i=9;i<14;i++)
 	{
-	  if (in_str[i]>='0' && in_str[i]<='9') 
+	  if (in_str[i]>='0' && in_str[i]<='9')
 	  {
 	   c=c * 16 + (in_str[i] - 48);
 	  }
@@ -104,12 +104,12 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 	for (i=14;i<19;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
-		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);				 		 
+		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
 		 }
 		 guid->Data3 = (short) c;
-		 c=0;		 
-          
-	for (i=20;i<22;i++) 
+		 c=0;
+
+	for (i=20;i<22;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -117,7 +117,7 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[0] = (BYTE) c;
 		 c=0;
 
-	for (i=22;i<24;i++) 
+	for (i=22;i<24;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -125,8 +125,8 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[1] = (BYTE) c;
 		 c=0;
 
-		 
-	for (i=25;i<27;i++) 
+
+	for (i=25;i<27;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -134,15 +134,15 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[2] = (BYTE) c;
 		 c=0;
 
-	for (i=27;i<29;i++) 
+	for (i=27;i<29;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
 		 }
 		 guid->Data4[3] = (BYTE) c;
 		 c=0;
-		 
-	for (i=29;i<31;i++) 
+
+	for (i=29;i<31;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -150,7 +150,7 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[4] = (BYTE) c;
 		 c=0;
 
-	for (i=31;i<33;i++) 
+	for (i=31;i<33;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -158,7 +158,7 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[5] = (BYTE) c;
 		 c=0;
 
-	for (i=33;i<35;i++) 
+	for (i=33;i<35;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
@@ -166,11 +166,11 @@ void dxGetGuidFromString( char *in_str, GUID *guid )
 		 guid->Data4[6] = (BYTE) c;
 		 c=0;
 
-	for (i=35;i<37;i++) 
+	for (i=35;i<37;i++)
 		 {
 		 if (in_str[i]>='0' && in_str[i]<='9') c=c * 16 + (in_str[i] - 48);
 		 else if (in_str[i]>='A' && in_str[i]<='F') c=c * 16 + (in_str[i] - 55);
 		 }
 		 guid->Data4[7] = (BYTE) c;
-		 c=0;		 		     
+		 c=0;
      }

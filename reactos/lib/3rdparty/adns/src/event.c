@@ -11,20 +11,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, adns_socket_write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <errno.h>
@@ -49,7 +49,7 @@
 
 static void tcp_close(adns_state ads) {
   int serv;
-  
+
   serv= ads->tcpserver;
   adns_socket_close(ads->tcpsocket);
   ads->tcpsocket= INVALID_SOCKET;
@@ -59,7 +59,7 @@ static void tcp_close(adns_state ads) {
 void adns__tcp_broken(adns_state ads, const char *what, const char *why) {
   int serv;
   adns_query qu;
-  
+
   assert(ads->tcpstate == server_connecting || ads->tcpstate == server_ok);
   serv= ads->tcpserver;
   if (what) adns__warn(ads,serv,0,"TCP connection failed: %s: %s",what,why);
@@ -77,7 +77,7 @@ void adns__tcp_broken(adns_state ads, const char *what, const char *why) {
 
 static void tcp_connected(adns_state ads, struct timeval now) {
   adns_query qu, nqu;
-  
+
   adns__debug(ads,ads->tcpserver,0,"TCP connected");
   ads->tcpstate= server_ok;
   for (qu= ads->tcpw.head; qu && ads->tcpstate == server_ok; qu= nqu) {
@@ -104,7 +104,7 @@ void adns__tcp_tryconnect(adns_state ads, struct timeval now) {
     default:
       abort();
     }
-    
+
     assert(!ads->tcpsend.used);
     assert(!ads->tcprecv.used);
     assert(!ads->tcprecv_skip);
@@ -167,7 +167,7 @@ static void inter_immed(struct timeval **tv_io, struct timeval *tvbuf) {
 
   timerclear(rbuf);
 }
-    
+
 static void inter_maxto(struct timeval **tv_io, struct timeval *tvbuf,
 			struct timeval maxto) {
   struct timeval *rbuf;
@@ -204,7 +204,7 @@ static void timeouts_queue(adns_state ads, int act,
 			   struct timeval **tv_io, struct timeval *tvbuf,
 			   struct timeval now, struct query_queue *queue) {
   adns_query qu, nqu;
-  
+
   for (qu= queue->head; qu; qu= nqu) {
     nqu= qu->next;
     if (!timercmp(&now,&qu->timeout,>)) {
@@ -226,7 +226,7 @@ static void tcp_events(adns_state ads, int act,
 		       struct timeval **tv_io, struct timeval *tvbuf,
 		       struct timeval now) {
   adns_query qu, nqu;
-  
+
   for (;;) {
     switch (ads->tcpstate) {
     case server_broken:
@@ -337,7 +337,7 @@ int adns_processreadable(adns_state ads, ADNS_SOCKET fd, const struct timeval *n
   int want, dgramlen, r, udpaddrlen, serv, old_skip;
   byte udpbuf[DNS_MAXUDP];
   struct sockaddr_in udpaddr;
-  
+
   adns__consistency(ads,0,cc_entex);
 
   switch (ads->tcpstate) {
@@ -440,7 +440,7 @@ xit:
 
 int adns_processwriteable(adns_state ads, ADNS_SOCKET fd, const struct timeval *now) {
   int r;
-  
+
   adns__consistency(ads,0,cc_entex);
 
   switch (ads->tcpstate) {
@@ -498,7 +498,7 @@ xit:
   adns__consistency(ads,0,cc_entex);
   return r;
 }
-  
+
 int adns_processexceptional(adns_state ads, ADNS_SOCKET fd, const struct timeval *now) {
   adns__consistency(ads,0,cc_entex);
   switch (ads->tcpstate) {
@@ -523,7 +523,7 @@ static void fd_event(adns_state ads, ADNS_SOCKET fd,
 		     int (*func)(adns_state, ADNS_SOCKET fd, const struct timeval *now),
 		     struct timeval now, int *r_r) {
   int r;
-  
+
   if (!(revent & pollflag)) return;
   if (fds && !((int)fd<maxfd && FD_ISSET(fd,fds))) return;
   r= func(ads,fd,&now);
@@ -565,7 +565,7 @@ void adns_beforeselect(adns_state ads, int *maxfd_io, fd_set *readfds_io,
   struct pollfd pollfds[MAX_POLLFDS];
   int i, maxfd, npollfds;
   ADNS_SOCKET fd;
-  
+
   adns__consistency(ads,0,cc_entex);
 
   if (tv_mod && (!*tv_mod || (*tv_mod)->tv_sec || (*tv_mod)->tv_usec)) {
@@ -619,7 +619,7 @@ void adns_globalsystemfailure(adns_state ads) {
 
   while (ads->udpw.head) adns__query_fail(ads->udpw.head, adns_s_systemfail);
   while (ads->tcpw.head) adns__query_fail(ads->tcpw.head, adns_s_systemfail);
-  
+
   switch (ads->tcpstate) {
   case server_connecting:
   case server_ok:
@@ -698,7 +698,7 @@ int adns_wait(adns_state ads,
   int r, maxfd, rsel;
   fd_set readfds, writefds, exceptfds;
   struct timeval tvbuf, *tvp;
-  
+
   adns__consistency(ads,*query_io,cc_entex);
   for (;;) {
     r= adns__internal_check(ads,query_io,answer_r,context_r);
@@ -732,7 +732,7 @@ int adns_check(adns_state ads,
 	       void **context_r) {
   struct timeval now;
   int r;
-  
+
   adns__consistency(ads,*query_io,cc_entex);
   r= gettimeofday(&now,0);
   if (!r) adns__autosys(ads,now);

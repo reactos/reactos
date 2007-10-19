@@ -178,7 +178,7 @@ public:
 				numberOfFailedTests++;
 			}
 		}
-		
+
 		if (numberOfFailedTests > 0)
 			printf("%d tests failed\n",
 			       numberOfFailedTests);

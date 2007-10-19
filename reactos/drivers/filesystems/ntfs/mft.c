@@ -197,7 +197,7 @@ ReadFileRecord (PDEVICE_EXTENSION Vcb,
   ULONGLONG vcn = index * BytesPerFileRecord / Vcb->NtfsInfo.BytesPerCluster;
   LONG m = (Vcb->NtfsInfo.BytesPerCluster / BytesPerFileRecord) - 1;
   ULONG n = m > 0 ? (index & m) : 0;
-  
+
   p = ExAllocatePool(NonPagedPool, clusters * Vcb->NtfsInfo.BytesPerCluster);
 
   ReadVCN (Vcb, Mft, AttributeData, vcn, clusters, p);

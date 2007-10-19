@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -159,7 +159,7 @@ static void __gluMultMatrixVecd(const GLdouble matrix[16], const GLdouble in[4],
     int i;
 
     for (i=0; i<4; i++) {
-	out[i] = 
+	out[i] =
 	    in[0] * matrix[0*4+i] +
 	    in[1] * matrix[1*4+i] +
 	    in[2] * matrix[2*4+i] +
@@ -242,7 +242,7 @@ static void __gluMultMatricesd(const GLdouble a[16], const GLdouble b[16],
 
     for (i = 0; i < 4; i++) {
 	for (j = 0; j < 4; j++) {
-	    r[i*4+j] = 
+	    r[i*4+j] =
 		a[i*4+0]*b[0*4+j] +
 		a[i*4+1]*b[1*4+j] +
 		a[i*4+2]*b[2*4+j] +
@@ -252,8 +252,8 @@ static void __gluMultMatricesd(const GLdouble a[16], const GLdouble b[16],
 }
 
 GLint GLAPIENTRY
-gluProject(GLdouble objx, GLdouble objy, GLdouble objz, 
-	      const GLdouble modelMatrix[16], 
+gluProject(GLdouble objx, GLdouble objy, GLdouble objz,
+	      const GLdouble modelMatrix[16],
 	      const GLdouble projMatrix[16],
               const GLint viewport[4],
 	      GLdouble *winx, GLdouble *winy, GLdouble *winz)
@@ -288,7 +288,7 @@ gluProject(GLdouble objx, GLdouble objy, GLdouble objz,
 
 GLint GLAPIENTRY
 gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
-		const GLdouble modelMatrix[16], 
+		const GLdouble modelMatrix[16],
 		const GLdouble projMatrix[16],
                 const GLint viewport[4],
 	        GLdouble *objx, GLdouble *objy, GLdouble *objz)
@@ -327,10 +327,10 @@ gluUnProject(GLdouble winx, GLdouble winy, GLdouble winz,
 
 GLint GLAPIENTRY
 gluUnProject4(GLdouble winx, GLdouble winy, GLdouble winz, GLdouble clipw,
-	      const GLdouble modelMatrix[16], 
+	      const GLdouble modelMatrix[16],
 	      const GLdouble projMatrix[16],
 	      const GLint viewport[4],
-	      GLclampd nearVal, GLclampd farVal,		    
+	      GLclampd nearVal, GLclampd farVal,
 	      GLdouble *objx, GLdouble *objy, GLdouble *objz,
 	      GLdouble *objw)
 {
@@ -369,7 +369,7 @@ void GLAPIENTRY
 gluPickMatrix(GLdouble x, GLdouble y, GLdouble deltax, GLdouble deltay,
 		  GLint viewport[4])
 {
-    if (deltax <= 0 || deltay <= 0) { 
+    if (deltax <= 0 || deltay <= 0) {
 	return;
     }
 

@@ -39,12 +39,12 @@ DWORD WINAPI addr_to_linear(HANDLE hProcess, HANDLE hThread, ADDRESS* addr)
     {
     case AddrMode1616:
         if (GetThreadSelectorEntry(hThread, addr->Segment, &le))
-            return (le.HighWord.Bits.BaseHi << 24) + 
+            return (le.HighWord.Bits.BaseHi << 24) +
                 (le.HighWord.Bits.BaseMid << 16) + le.BaseLow + LOWORD(addr->Offset);
         break;
     case AddrMode1632:
         if (GetThreadSelectorEntry(hThread, addr->Segment, &le))
-            return (le.HighWord.Bits.BaseHi << 24) + 
+            return (le.HighWord.Bits.BaseHi << 24) +
                 (le.HighWord.Bits.BaseMid << 16) + le.BaseLow + addr->Offset;
         break;
     case AddrModeReal:

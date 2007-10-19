@@ -9,20 +9,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <limits.h>
@@ -65,7 +65,7 @@ int adns_beforepoll(adns_state ads, struct pollfd *fds, int *nfds_io, int *timeo
     }
     *timeout_io= timeout_ms;
   }
-  
+
   space= *nfds_io;
   if (space >= MAX_POLLFDS) {
     found= adns__pollfds(ads,fds);
@@ -101,7 +101,7 @@ int adns_wait_poll(adns_state ads,
 		   void **context_r) {
   int r, nfds, to;
   struct pollfd fds[MAX_POLLFDS];
-  
+
   adns__consistency(ads,0,cc_entex);
 
   for (;;) {

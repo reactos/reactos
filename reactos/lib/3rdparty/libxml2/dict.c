@@ -143,7 +143,7 @@ xmlDictAddString(xmlDictPtr dict, const xmlChar *name, int namelen) {
     if (pool == NULL) {
         if (size == 0) size = 1000;
 	else size *= 4; /* exponential growth */
-        if (size < 4 * namelen) 
+        if (size < 4 * namelen)
 	    size = 4 * namelen; /* just in case ! */
 	pool = (xmlDictStringsPtr) xmlMalloc(sizeof(xmlDictStrings) + size);
 	if (pool == NULL)
@@ -199,7 +199,7 @@ xmlDictAddQString(xmlDictPtr dict, const xmlChar *prefix,
     if (pool == NULL) {
         if (size == 0) size = 1000;
 	else size *= 4; /* exponential growth */
-        if (size < 4 * namelen) 
+        if (size < 4 * namelen)
 	    size = 4 * namelen; /* just in case ! */
 	pool = (xmlDictStringsPtr) xmlMalloc(sizeof(xmlDictStrings) + size);
 	if (pool == NULL)
@@ -230,7 +230,7 @@ found_pool:
 static unsigned long
 xmlDictComputeKey(const xmlChar *name, int namelen) {
     unsigned long value = 0L;
-    
+
     if (name == NULL) return(0);
     value = *name;
     value <<= 5;
@@ -262,7 +262,7 @@ xmlDictComputeQKey(const xmlChar *prefix, const xmlChar *name, int len)
 {
     unsigned long value = 0L;
     int plen;
-    
+
     if (prefix == NULL)
         return(xmlDictComputeKey(name, len));
 
@@ -271,7 +271,7 @@ xmlDictComputeQKey(const xmlChar *prefix, const xmlChar *name, int len)
 	value += 30 * (unsigned long) ':';
     else
 	value += 30 * (*prefix);
-    
+
     if (len > 10) {
         value += name[len - (plen + 1 + 1)];
         len = 10;
@@ -326,7 +326,7 @@ xmlDictCreate(void) {
     if (!xmlDictInitialized)
         if (!xmlInitializeDict())
             return(NULL);
- 
+
     dict = xmlMalloc(sizeof(xmlDict));
     if (dict) {
         dict->ref_counter = 1;
@@ -362,7 +362,7 @@ xmlDictCreate(void) {
 xmlDictPtr
 xmlDictCreateSub(xmlDictPtr sub) {
     xmlDictPtr dict = xmlDictCreate();
-  
+
     if ((dict != NULL) && (sub != NULL)) {
         dict->subdict = sub;
 	xmlDictReference(dict->subdict);
@@ -409,7 +409,7 @@ xmlDictGrow(xmlDictPtr dict, int size) {
 #ifdef DEBUG_GROW
     unsigned long nbElem = 0;
 #endif
-  
+
     if (dict == NULL)
 	return(-1);
     if (size < 8)
@@ -421,7 +421,7 @@ xmlDictGrow(xmlDictPtr dict, int size) {
     olddict = dict->dict;
     if (olddict == NULL)
         return(-1);
-  
+
     dict->dict = xmlMalloc(size * sizeof(xmlDictEntry));
     if (dict->dict == NULL) {
 	dict->dict = olddict;
@@ -431,13 +431,13 @@ xmlDictGrow(xmlDictPtr dict, int size) {
     dict->size = size;
 
     /*	If the two loops are merged, there would be situations where
-	a new entry needs to allocated and data copied into it from 
+	a new entry needs to allocated and data copied into it from
 	the main dict. So instead, we run through the array twice, first
 	copying all the elements in the main array (where we can't get
 	conflicts) and then the rest, so we only free (and don't allocate)
     */
     for (i = 0; i < oldsize; i++) {
-	if (olddict[i].valid == 0) 
+	if (olddict[i].valid == 0)
 	    continue;
 	key = xmlDictComputeKey(olddict[i].name, olddict[i].len) % dict->size;
 	memcpy(&(dict->dict[key]), &(olddict[i]), sizeof(xmlDictEntry));
@@ -655,7 +655,7 @@ xmlDictLookup(xmlDictPtr dict, const xmlChar *name, int len) {
     entry->valid = 1;
 
 
-    if (insert != NULL) 
+    if (insert != NULL)
 	insert->next = entry;
 
     dict->nbElems++;
@@ -763,7 +763,7 @@ xmlDictExists(xmlDictPtr dict, const xmlChar *name, int len) {
 /**
  * xmlDictQLookup:
  * @dict: the dictionnary
- * @prefix: the prefix 
+ * @prefix: the prefix
  * @name: the name
  *
  * Add the QName @prefix:@name to the hash @dict if not present.
@@ -838,7 +838,7 @@ xmlDictQLookup(xmlDictPtr dict, const xmlChar *prefix, const xmlChar *name) {
     entry->next = NULL;
     entry->valid = 1;
 
-    if (insert != NULL) 
+    if (insert != NULL)
 	insert->next = entry;
 
     dict->nbElems++;

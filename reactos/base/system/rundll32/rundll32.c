@@ -468,7 +468,7 @@ int WINAPI WinMain(
 
 		lptMsgBuffer = (LPTSTR)malloc((_tcslen(szMsg) - 2 + _tcslen(lptDllName) + 1) * sizeof(TCHAR));
 		_stprintf(lptMsgBuffer,szMsg,lptDllName);
-		
+
 		MessageBox(0,lptMsgBuffer,ModuleTitle,MB_ICONERROR);
 		free(lptMsgBuffer);
 	}

@@ -68,7 +68,7 @@ struct _IO_CSQ;
  * Function to insert an IRP in the queue.  No need to worry about locking;
  * just tack it onto your list or something.
  *
- * Sample implementation: 
+ * Sample implementation:
  *
 	VOID NTAPI CsqInsertIrp(PIO_CSQ Csq, PIRP Irp)
 	{
@@ -151,7 +151,7 @@ typedef VOID (NTAPI *PIO_CSQ_RELEASE_LOCK) (struct _IO_CSQ *Csq,
 /*
  * Finally, this is called by the queue library when it wants to complete
  * a canceled IRP.
- * 
+ *
  * Sample:
  *
 	VOID NTAPI CsqCompleteCancelledIrp(PIO_CSQ Csq, PIRP Irp)
@@ -286,7 +286,7 @@ PIRP NTAPI IoCsqRemoveIrp(PIO_CSQ Csq,
                           PIO_CSQ_IRP_CONTEXT Context);
 
 /*
- * Remove the next IRP from the queue 
+ * Remove the next IRP from the queue
  */
 NTKERNELAPI
 PIRP NTAPI IoCsqRemoveNextIrp(PIO_CSQ Csq,

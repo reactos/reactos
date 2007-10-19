@@ -41,9 +41,9 @@
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 
-/* 
+/*
  * This module will be all the helper functions for registry access by the
- * installer bits. 
+ * installer bits.
  */
 static const WCHAR szUserFeatures_fmt[] = {
 'S','o','f','t','w','a','r','e','\\',
@@ -724,7 +724,7 @@ UINT WINAPI MsiEnumProductsW(DWORD index, LPWSTR lpguid)
     return r;
 }
 
-UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index, 
+UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index,
       LPSTR szFeature, LPSTR szParent)
 {
     DWORD r;
@@ -754,7 +754,7 @@ UINT WINAPI MsiEnumFeaturesA(LPCSTR szProduct, DWORD index,
     return r;
 }
 
-UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index, 
+UINT WINAPI MsiEnumFeaturesW(LPCWSTR szProduct, DWORD index,
       LPWSTR szFeature, LPWSTR szParent)
 {
     HKEY hkeyProduct = 0;
@@ -902,7 +902,7 @@ static UINT WINAPI MSI_EnumComponentQualifiers( LPCWSTR szComponent, DWORD iInde
             break;
         if (r != ERROR_MORE_DATA)
             goto end;
- 
+
         if (type != REG_MULTI_SZ)
         {
             ERR("component data has wrong type (%d)\n", type);

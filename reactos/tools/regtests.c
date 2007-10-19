@@ -43,12 +43,12 @@ convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
 	 /* for no good reason, i'm having trouble getting gcc to link strdup */
    //newpath = strdup(origpath);
 	 newpath = malloc(strlen(origpath)+1);
 	 strcpy(newpath, origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -63,8 +63,8 @@ convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -614,11 +614,11 @@ create_stubs_and_hooks(
     char *dllname;
     char *decoratedname_and_forward;
     int stub_index;
-  
+
     write_stubs_header(stubs_out);
-    
+
     write_hooks_header(hooks_out);
-    
+
     /*
      * Scan the database. The database is a text file; each
      * line is a record, which contains data for one stub.
@@ -628,7 +628,7 @@ create_stubs_and_hooks(
      * DECORATED NAME (e.g. NtCreateProcess@32, @InterlockedIncrement@4 or printf)
      */
     stub_index = 0; /* First stub has index zero */
-    
+
     for (
 	;
 	/* Go on until EOF or read zero bytes */
@@ -640,12 +640,12 @@ create_stubs_and_hooks(
 	 * Ignore leading blanks
 	 */
 	for( start = line; *start && isspace(*start); start++ );
-	    
+
 	/*
 	 * Strip comments, eols
 	 */
 	for( s = start; *s && !strchr("#\n\r", *s); s++ );
-	
+
 	*s = '\0';
 
 	/*
@@ -655,7 +655,7 @@ create_stubs_and_hooks(
 	for( s--; s > start && isspace(*s); s-- ) *s = '\0';
 
 	/*
-	 * Skip empty lines 
+	 * Skip empty lines
 	 */
 	if (s > start)
 	{
@@ -670,25 +670,25 @@ create_stubs_and_hooks(
 		 */
 		decoratedname_and_forward = (char *) strtok(NULL, " \t");
 		/* Extract the argument count */
-		
-		/* Something went wrong finding the separator ... 
+
+		/* Something went wrong finding the separator ...
 		 * print an error and bail. */
 		if( !decoratedname_and_forward ) {
 		    fprintf
-			( stderr, 
+			( stderr,
 			  "Could not find separator between decorated "
 			  "function name and dll name.\n"
 			  "Format entries as <dllname> <import>\n"
 			  "Legal comments start with #\n");
 		    exit(1);
 		}
-		
+
 		write_stub(stubs_out, hooks_out, dllname, decoratedname_and_forward, stub_index);
 		stub_index++;
 	    }
 	}
     }
-    
+
     write_hooks_footer(hooks_out, stub_index);
 }
 
@@ -698,7 +698,7 @@ int run_stubs(int argc,
   FILE *in;
   FILE *stubs_out;
   FILE *hooks_out;
-  
+
 	in = fopen(argv[2], "rb");
 	if (in == NULL)
   	{

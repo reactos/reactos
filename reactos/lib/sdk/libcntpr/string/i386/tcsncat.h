@@ -19,7 +19,7 @@ _tcsncat:
 
  mov   0x14(%esp),%ecx
 
-.L1:	
+.L1:
  dec   %ecx
  js    .L2
  _tlods
@@ -32,7 +32,7 @@ _tcsncat:
  xor   %eax, %eax
  _tstos
 
-.L3:		
+.L3:
  mov   0x0C(%esp), %eax
  pop   %edi
  pop   %esi

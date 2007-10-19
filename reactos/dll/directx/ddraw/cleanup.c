@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
  * FILE:                 lib/ddraw/ddraw.c
- * PURPOSE:              DirectDraw Library 
+ * PURPOSE:              DirectDraw Library
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *
  */
@@ -12,8 +12,8 @@
 #include "rosdraw.h"
 #include "d3dhal.h"
 
-VOID 
-Cleanup(LPDDRAWI_DIRECTDRAW_INT This) 
+VOID
+Cleanup(LPDDRAWI_DIRECTDRAW_INT This)
 {
     DX_WINDBG_trace();
 
@@ -34,7 +34,7 @@ Cleanup(LPDDRAWI_DIRECTDRAW_INT This)
 
     DdDeleteDirectDrawObject(&ddgbl);
 
-    /* 
+    /*
        are it any more I forget to release ?
     */
 

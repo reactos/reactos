@@ -518,7 +518,7 @@ static LONG recursive_delete_keyW(HKEY base, WCHAR const *name) {
  *		coclass list
  */
 static struct regsvr_coclass const coclass_list[] = {
-    {     
+    {
         &CLSID_DsObjectPicker,
 	"DsObjectPicker",
 	NULL,
@@ -527,7 +527,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	"Both",
 	NULL,
 	NULL
-    },    
+    },
     { NULL }			/* list terminator */
 };
 

@@ -290,7 +290,7 @@ static void CreateVBO(IWineD3DVertexBufferImpl *object) {
     return;
 }
 
-static HRESULT WINAPI IWineD3DDeviceImpl_CreateVertexBuffer(IWineD3DDevice *iface, UINT Size, DWORD Usage, 
+static HRESULT WINAPI IWineD3DDeviceImpl_CreateVertexBuffer(IWineD3DDevice *iface, UINT Size, DWORD Usage,
                              DWORD FVF, WINED3DPOOL Pool, IWineD3DVertexBuffer** ppVertexBuffer, HANDLE *sharedHandle,
                              IUnknown *parent) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
@@ -331,7 +331,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateVertexBuffer(IWineD3DDevice *ifac
      * more. In this call we can convert dx7 buffers too.
      */
     conv = ((FVF & WINED3DFVF_POSITION_MASK) == WINED3DFVF_XYZRHW ) || (FVF & (WINED3DFVF_DIFFUSE | WINED3DFVF_SPECULAR));
-    if( GL_SUPPORT(ARB_VERTEX_BUFFER_OBJECT) && Pool != WINED3DPOOL_SYSTEMMEM && !(Usage & WINED3DUSAGE_DYNAMIC) && 
+    if( GL_SUPPORT(ARB_VERTEX_BUFFER_OBJECT) && Pool != WINED3DPOOL_SYSTEMMEM && !(Usage & WINED3DUSAGE_DYNAMIC) &&
         (dxVersion > 7 || !conv) ) {
         CreateVBO(object);
     }
@@ -388,7 +388,7 @@ out:
     object->vbo = 0;
 }
 
-static HRESULT WINAPI IWineD3DDeviceImpl_CreateIndexBuffer(IWineD3DDevice *iface, UINT Length, DWORD Usage, 
+static HRESULT WINAPI IWineD3DDeviceImpl_CreateIndexBuffer(IWineD3DDevice *iface, UINT Length, DWORD Usage,
                                                     WINED3DFORMAT Format, WINED3DPOOL Pool, IWineD3DIndexBuffer** ppIndexBuffer,
                                                     HANDLE *sharedHandle, IUnknown *parent) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
@@ -406,7 +406,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateIndexBuffer(IWineD3DDevice *iface
         CreateIndexBufferVBO(This, object);
     }
 
-    TRACE("(%p) : Len=%d, Use=%x, Format=(%u,%s), Pool=%d - Memory@%p, Iface@%p\n", This, Length, Usage, Format, 
+    TRACE("(%p) : Len=%d, Use=%x, Format=(%u,%s), Pool=%d - Memory@%p, Iface@%p\n", This, Length, Usage, Format,
                            debug_d3dformat(Format), Pool, object, object->resource.allocatedMemory);
     *ppIndexBuffer = (IWineD3DIndexBuffer *) object;
 
@@ -434,7 +434,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateStateBlock(IWineD3DDevice* iface,
            be freed due to circular dependencies                                   */
         return WINED3D_OK;
     }
-    
+
     temp_result = allocate_shader_constants(object);
     if (WINED3D_OK != temp_result)
         return temp_result;
@@ -625,24 +625,24 @@ MSDN:
 [in] Render targets are not lockable unless the application specifies TRUE for Lockable. Note that lockable render targets reduce performance on some graphics hardware.
 
 Discard
- [in] Set this flag to TRUE to enable z-buffer discarding, and FALSE otherwise. 
+ [in] Set this flag to TRUE to enable z-buffer discarding, and FALSE otherwise.
 
 If this flag is set, the contents of the depth stencil buffer will be invalid after calling either IDirect3DDevice9::Present or IDirect3DDevice9::SetDepthStencilSurface with a different depth surface.
 
 ******************************** */
- 
+
 static HRESULT  WINAPI IWineD3DDeviceImpl_CreateSurface(IWineD3DDevice *iface, UINT Width, UINT Height, WINED3DFORMAT Format, BOOL Lockable, BOOL Discard, UINT Level, IWineD3DSurface **ppSurface,WINED3DRESOURCETYPE Type, DWORD Usage, WINED3DPOOL Pool, WINED3DMULTISAMPLE_TYPE MultiSample ,DWORD MultisampleQuality, HANDLE* pSharedHandle, WINED3DSURFTYPE Impl, IUnknown *parent) {
-    IWineD3DDeviceImpl  *This = (IWineD3DDeviceImpl *)iface;    
+    IWineD3DDeviceImpl  *This = (IWineD3DDeviceImpl *)iface;
     IWineD3DSurfaceImpl *object; /*NOTE: impl ref allowed since this is a create function */
     unsigned int Size       = 1;
     const StaticPixelFormatDesc *tableEntry = getFormatDescEntry(Format, NULL, NULL);
     TRACE("(%p) Create surface\n",This);
-    
-    /** FIXME: Check ranges on the inputs are valid 
+
+    /** FIXME: Check ranges on the inputs are valid
      * MSDN
      *   MultisampleQuality
      *    [in] Quality level. The valid range is between zero and one less than the level
-     *    returned by pQualityLevels used by IDirect3D9::CheckDeviceMultiSampleType. 
+     *    returned by pQualityLevels used by IDirect3D9::CheckDeviceMultiSampleType.
      *    Passing a larger value returns the error WINED3DERR_INVALIDCALL. The MultisampleQuality
      *    values of paired render targets, depth stencil surfaces, and the MultiSample type
      *    must all match.
@@ -813,7 +813,7 @@ static HRESULT  WINAPI IWineD3DDeviceImpl_CreateTexture(IWineD3DDevice *iface, U
     TRACE("Format %#x (%s), Pool %#x, ppTexture %p, pSharedHandle %p, parent %p\n",
             Format, debug_d3dformat(Format), Pool, ppTexture, pSharedHandle, parent);
 
-    /* TODO: It should only be possible to create textures for formats 
+    /* TODO: It should only be possible to create textures for formats
              that are reported as supported */
     if (WINED3DFMT_UNKNOWN >= Format) {
         WARN("(%p) : Texture cannot be created with a format of WINED3DFMT_UNKNOWN\n", This);
@@ -821,7 +821,7 @@ static HRESULT  WINAPI IWineD3DDeviceImpl_CreateTexture(IWineD3DDevice *iface, U
     }
 
     D3DCREATERESOURCEOBJECTINSTANCE(object, Texture, WINED3DRTYPE_TEXTURE, 0);
-    D3DINITIALIZEBASETEXTURE(object->baseTexture);    
+    D3DINITIALIZEBASETEXTURE(object->baseTexture);
     object->width  = Width;
     object->height = Height;
 
@@ -899,7 +899,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateVolumeTexture(IWineD3DDevice *ifa
     UINT                       tmpH;
     UINT                       tmpD;
 
-    /* TODO: It should only be possible to create textures for formats 
+    /* TODO: It should only be possible to create textures for formats
              that are reported as supported */
     if (WINED3DFMT_UNKNOWN >= Format) {
         WARN("(%p) : Texture cannot be created with a format of WINED3DFMT_UNKNOWN\n", This);
@@ -1008,7 +1008,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateCubeTexture(IWineD3DDevice *iface
     HRESULT                  hr;
     unsigned int pow2EdgeLength  = EdgeLength;
 
-    /* TODO: It should only be possible to create textures for formats 
+    /* TODO: It should only be possible to create textures for formats
              that are reported as supported */
     if (WINED3DFMT_UNKNOWN >= Format) {
         WARN("(%p) : Texture cannot be created with a format of WINED3DFMT_UNKNOWN\n", This);
@@ -1776,7 +1776,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreatePalette(IWineD3DDevice *iface, DW
     object->parent = Parent;
     object->wineD3DDevice = This;
     object->palNumEntries = IWineD3DPaletteImpl_Size(Flags);
-	
+
     object->hpal = CreatePalette((const LOGPALETTE*)&(object->palVersion));
 
     if(!object->hpal) {
@@ -3792,7 +3792,7 @@ process_vertices_strided(IWineD3DDeviceImpl *This, DWORD dwDestIndex, DWORD dwCo
 
             if( !doClip ||
                 ( (-rhw -eps < x) && (-rhw -eps < y) && ( -eps < z) &&
-                  (x <= rhw + eps) && (y <= rhw + eps ) && (z <= rhw + eps) && 
+                  (x <= rhw + eps) && (y <= rhw + eps ) && (z <= rhw + eps) &&
                   ( rhw > eps ) ) ) {
 
                 /* "Normal" viewport transformation (not clipped)
@@ -3887,7 +3887,7 @@ process_vertices_strided(IWineD3DDeviceImpl *This, DWORD dwDestIndex, DWORD dwCo
         }
 
         if (DestFVF & WINED3DFVF_DIFFUSE) {
-            DWORD *color_d = 
+            DWORD *color_d =
               (DWORD *) (((char *) lpStrideData->u.s.diffuse.lpData) + i * lpStrideData->u.s.diffuse.dwStride);
             if(!color_d) {
                 static BOOL warned = FALSE;
@@ -3916,9 +3916,9 @@ process_vertices_strided(IWineD3DDeviceImpl *This, DWORD dwDestIndex, DWORD dwCo
             }
         }
 
-        if (DestFVF & WINED3DFVF_SPECULAR) { 
+        if (DestFVF & WINED3DFVF_SPECULAR) {
             /* What's the color value in the feedback buffer? */
-            DWORD *color_s = 
+            DWORD *color_s =
               (DWORD *) (((char *) lpStrideData->u.s.specular.lpData) + i * lpStrideData->u.s.specular.dwStride);
             if(!color_s) {
                 static BOOL warned = FALSE;
@@ -3949,7 +3949,7 @@ process_vertices_strided(IWineD3DDeviceImpl *This, DWORD dwDestIndex, DWORD dwCo
 
         for (tex_index = 0; tex_index < numTextures; tex_index++) {
             float *tex_coord =
-              (float *) (((char *) lpStrideData->u.s.texCoords[tex_index].lpData) + 
+              (float *) (((char *) lpStrideData->u.s.texCoords[tex_index].lpData) +
                             i * lpStrideData->u.s.texCoords[tex_index].dwStride);
             if(!tex_coord) {
                 ERR("No source texture, but destination requests one\n");
@@ -4153,7 +4153,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_SetTexture(IWineD3DDevice *iface, DWORD
     oldTexture = This->updateStateBlock->textures[Stage];
 
     if(pTexture != NULL) {
-        /* SetTexture isn't allowed on textures in WINED3DPOOL_SCRATCH; 
+        /* SetTexture isn't allowed on textures in WINED3DPOOL_SCRATCH;
          */
         if(((IWineD3DTextureImpl*)pTexture)->resource.pool == WINED3DPOOL_SCRATCH) {
             WARN("(%p) Attempt to set scratch texture rejected\n", pTexture);
@@ -4345,11 +4345,11 @@ static HRESULT WINAPI IWineD3DDeviceImpl_BeginStateBlock(IWineD3DDevice *iface) 
     int i;
 
     ERR("(%p)\n", This);
-    
+
     if (This->isRecordingState) {
         return WINED3DERR_INVALIDCALL;
     }
-    
+
     object = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3DStateBlockImpl));
     if (NULL == object ) {
         FIXME("(%p)Error allocating memory for stateblock\n", This);
@@ -6522,7 +6522,7 @@ static void WINAPI IWineD3DDeviceImpl_RemoveResource(IWineD3DDevice *iface, IWin
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
     ResourceList* resourceList = NULL;
     ResourceList* previousResourceList = NULL;
-    
+
     TRACE("(%p) : resource %p\n", This, resource);
 
     resourceList = This->resources;

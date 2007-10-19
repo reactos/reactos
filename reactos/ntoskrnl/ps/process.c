@@ -602,12 +602,12 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     {
         /* Check our priority class */
         if (Parent->PriorityClass == PROCESS_PRIORITY_CLASS_IDLE ||
-            Parent->PriorityClass == PROCESS_PRIORITY_CLASS_BELOW_NORMAL) 
+            Parent->PriorityClass == PROCESS_PRIORITY_CLASS_BELOW_NORMAL)
         {
             /* Normalize it */
             Process->PriorityClass = Parent->PriorityClass;
         }
-        
+
         /* Initialize object manager for the process */
         Status = ObInitProcess(Flags & PS_INHERIT_HANDLES ? Parent : NULL,
                                Process);
@@ -619,7 +619,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
         Status = MmInitializeHandBuiltProcess2(Process);
         if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
-    
+
     /* Set success for now */
     Status = STATUS_SUCCESS;
 
@@ -634,7 +634,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                                  &Process->
                                                  SeAuditProcessCreationInfo.
                                                  ImageFileName);
-        if (!NT_SUCCESS(Status)) goto CleanupWithRef;    
+        if (!NT_SUCCESS(Status)) goto CleanupWithRef;
     }
     else if (Parent)
     {
@@ -654,7 +654,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                                                      &Flags,
                                                      NULL);
             if (!NT_SUCCESS(Status)) goto CleanupWithRef;
-            
+
             /* Create a dummy image file name */
             Process->SeAuditProcessCreationInfo.ImageFileName =
                 ExAllocatePoolWithTag(PagedPool,
@@ -666,7 +666,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
                 Status = STATUS_INSUFFICIENT_RESOURCES;
                 goto CleanupWithRef;
             }
-            
+
             /* Zero it out */
             RtlZeroMemory(Process->SeAuditProcessCreationInfo.ImageFileName,
                           sizeof(OBJECT_NAME_INFORMATION));
@@ -823,7 +823,7 @@ PspCreateProcess(OUT PHANDLE ProcessHandle,
     _SEH_END;
 
 CleanupWithRef:
-    /* 
+    /*
      * Dereference the process. For failures, kills the process and does
      * cleanup present in PspDeleteProcess. For success, kills the extra
      * reference added by ObInsertObject.

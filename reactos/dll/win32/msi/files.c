@@ -103,7 +103,7 @@ static UINT writeout_cabinet_stream(MSIPACKAGE *package, LPCWSTR stream_name,
     HANDLE  the_file;
     WCHAR tmp[MAX_PATH];
 
-    rc = read_raw_stream_data(package->db,stream_name,&data,&size); 
+    rc = read_raw_stream_data(package->db,stream_name,&data,&size);
     if (rc != ERROR_SUCCESS)
         return rc;
 
@@ -175,7 +175,7 @@ static INT_PTR cabinet_open(char *pszFile, int oflag, int pmode)
         dwCreateDisposition = CREATE_NEW;
     else if (oflag & _O_CREAT)
         dwCreateDisposition = CREATE_ALWAYS;
-    handle = CreateFileA( pszFile, dwAccess, dwShareMode, NULL, 
+    handle = CreateFileA( pszFile, dwAccess, dwShareMode, NULL,
                           dwCreateDisposition, 0, NULL );
     if (handle == INVALID_HANDLE_VALUE)
         return 0;
@@ -576,7 +576,7 @@ static UINT ready_media(MSIPACKAGE *package, MSIFILE *file, struct media_info *m
     return rc;
 }
 
-static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key, 
+static UINT get_file_target(MSIPACKAGE *package, LPCWSTR file_key,
                             MSIFILE** file)
 {
     LIST_FOR_EACH_ENTRY( *file, &package->files, MSIFILE, entry )
@@ -647,7 +647,7 @@ static UINT copy_install_file(MSIFILE *file)
 
 /*
  * ACTION_InstallFiles()
- * 
+ *
  * For efficiency, this is done in two passes:
  * 1) Correct all the TargetPaths and determine what files are to be installed.
  * 2) Extract Cabinets and copy files.
@@ -755,7 +755,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         TRACE("Skipping copy due to disabled component %s\n",
                         debugstr_w(component));
 
-        /* the action taken was the same as the current install state */        
+        /* the action taken was the same as the current install state */
         comp->Action = comp->Installed;
 
         return ERROR_SUCCESS;
@@ -815,7 +815,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
     dest = build_directory_name(2, dest_path, dest_name);
 
     TRACE("Duplicating file %s to %s\n",debugstr_w(file->TargetPath),
-                    debugstr_w(dest)); 
+                    debugstr_w(dest));
 
     if (strcmpW(file->TargetPath,dest))
         rc = !CopyFileW(file->TargetPath,dest,TRUE);
@@ -826,7 +826,7 @@ static UINT ITERATE_DuplicateFiles(MSIRECORD *row, LPVOID param)
         ERR("Failed to copy file %s -> %s, last error %d\n",
             debugstr_w(file->TargetPath), debugstr_w(dest_path), GetLastError());
 
-    FIXME("We should track these duplicate files as well\n");   
+    FIXME("We should track these duplicate files as well\n");
 
     msi_free(dest_path);
     msi_free(dest);

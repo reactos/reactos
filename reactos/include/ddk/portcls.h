@@ -14,87 +14,87 @@
 
     == EXPORTS ==
     DRM (new in XP):
-    * PcAddContentHandlers 
+    * PcAddContentHandlers
     * PcCreateContentMixed
     * PcDestroyContent
-    * PcForwardContentToDeviceObject 
+    * PcForwardContentToDeviceObject
     * PcForwardContentToFileObject
     * PcForwardContentToInterface
     * PcGetContentRights
 
     IRP HANDLING:
-    * PcCompleteIrp 
-    * PcDispatchIrp 
+    * PcCompleteIrp
+    * PcDispatchIrp
     * PcForwardIrpSynchronous
 
     ADAPTER:
-    * PcAddAdapterDevice 
-    * PcInitializeAdapterDriver 
+    * PcAddAdapterDevice
+    * PcInitializeAdapterDriver
 
     FACTORIES:
-    * PcNewDmaChannel 
-    * PcNewInterruptSync 
-    * PcNewMiniport 
-    * PcNewPort 
-    * PcNewRegistryKey 
-    * PcNewResourceList 
-    * PcNewResourceSublist 
-    * PcNewServiceGroup 
+    * PcNewDmaChannel
+    * PcNewInterruptSync
+    * PcNewMiniport
+    * PcNewPort
+    * PcNewRegistryKey
+    * PcNewResourceList
+    * PcNewResourceSublist
+    * PcNewServiceGroup
 
     POWER MANAGEMENT:
-    * PcRegisterAdapterPowerManagement 
+    * PcRegisterAdapterPowerManagement
     * PcRequestNewPowerState
 
     PROPERTIES:
-    * PcCompletePendingPropertyRequest 
-    * PcGetDeviceProperty 
+    * PcCompletePendingPropertyRequest
+    * PcGetDeviceProperty
 
     IO TIMEOUTS:
     * PcRegisterIoTimeout
     * PcUnregisterIoTimeout
 
     PHYSICAL CONNECTIONS:
-    * PcRegisterPhysicalConnection 
-    * PcRegisterPhysicalConnectionFromExternal 
-    * PcRegisterPhysicalConnectionToExternal 
+    * PcRegisterPhysicalConnection
+    * PcRegisterPhysicalConnectionFromExternal
+    * PcRegisterPhysicalConnectionToExternal
 
     MISC:
-    * PcGetTimeInterval 
-    * PcRegisterSubdevice 
+    * PcGetTimeInterval
+    * PcRegisterSubdevice
 
 
     == AUDIO HELPER OBJECT INTERFACES ==
-    IDmaChannel 
-    IDmaChannelSlave 
-    IDmaOperations 
+    IDmaChannel
+    IDmaChannelSlave
+    IDmaOperations
     IDrmPort                        (XP)
     IDrmPort2                       (XP)
-    IInterruptSync 
-    IMasterClock 
+    IInterruptSync
+    IMasterClock
     IPortClsVersion                 (XP)
-    IPortEvents 
+    IPortEvents
     IPreFetchOffset                 (XP)
     IRegistryKey
-    IResourceList 
-    IServiceGroup 
+    IResourceList
+    IServiceGroup
     IServiceSink
     IUnregisterPhysicalConnection   (Vista)
     IUnregisterSubdevice            (Vista)
 
     == AUDIO PORT OBJECT INTERFACES ==
-    IPort 
-    IPortDMus 
-    IPortMidi 
-    IPortTopology 
-    IPortWaveCyclic 
+    IPort
+    IPortDMus
+    IPortMidi
+    IPortTopology
+    IPortWaveCyclic
     IPortWavePci
 
     == AUDIO MINIPORT OBJECT INTERFACES ==
-    IMiniport 
-    IMiniportDMus 
-    IMiniportMidi 
-    IMiniportTopology 
-    IMiniportWaveCyclic 
+    IMiniport
+    IMiniportDMus
+    IMiniportMidi
+    IMiniportTopology
+    IMiniportWaveCyclic
     IMiniportWavePci
 
     == AUDIO MINIPORT AUXILIARY INTERFACES ==
@@ -102,17 +102,17 @@
     IPinCount                       (XP)
 
     == AUDIO STREAM OBJECT INTERFACES ==
-    IAllocatorMXF 
+    IAllocatorMXF
     IDrmAudioStream                 (XP)
-    IMiniportMidiStream 
-    IMiniportWaveCyclicStream 
-    IMiniportWavePciStream 
-    IMXF 
-    IPortWavePciStream 
+    IMiniportMidiStream
+    IMiniportWaveCyclicStream
+    IMiniportWavePciStream
+    IMXF
+    IPortWavePciStream
     ISynthSinkDMus
 
     == DIRECTMUSIC USERMODE SYNTH AND SYNTH SINK INTERFACES ==
-    IDirectMusicSynth 
+    IDirectMusicSynth
     IDirectMusicSynthSink
 
     == AUDIO POWER MANAGEMENT INTERFACES ==

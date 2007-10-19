@@ -1,11 +1,11 @@
 
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
- * FILE:            
- * PURPOSE:         
+ * PROJECT:         ReactOS net command
+ * FILE:
+ * PURPOSE:
  *
- * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org) 
+ * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
 #include "net.h"

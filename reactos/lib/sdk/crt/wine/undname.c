@@ -67,7 +67,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 #define UNDNAME_NO_COMPLEX_TYPE          (0x8000)
 
 /* How data types modifiers are stored:
- * M (in the following definitions) is defined for 
+ * M (in the following definitions) is defined for
  * 'A', 'B', 'C' and 'D' as follows
  *      {<A>}:  ""
  *      {<B>}:  "const "
@@ -81,7 +81,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
  *      in data fields:
  *              same as for arguments and also the following
  *              ?<M>x   {<M>}x
- *              
+ *
  */
 
 #define MAX_ARRAY_ELTS  32
@@ -140,7 +140,7 @@ static void*    und_alloc(struct parsed_symbol* sym, size_t len)
         sym->avail_in_first = 0;
         ptr = (char*)sym->alloc_list + sizeof(void*);
     }
-    else 
+    else
     {
         if (len > sym->avail_in_first)
         {
@@ -191,7 +191,7 @@ static void str_array_init(struct array* a)
  *		str_array_push
  * Adding a new string to an array
  */
-static void str_array_push(struct parsed_symbol* sym, const char* ptr, size_t len, 
+static void str_array_push(struct parsed_symbol* sym, const char* ptr, size_t len,
                            struct array* a)
 {
     assert(ptr);
@@ -201,7 +201,7 @@ static void str_array_push(struct parsed_symbol* sym, const char* ptr, size_t le
     a->elts[a->num] = und_alloc(sym, len + 1);
     assert(a->elts[a->num]);
     memcpy(a->elts[a->num], ptr, len);
-    a->elts[a->num][len] = '\0'; 
+    a->elts[a->num][len] = '\0';
     if (++a->num >= a->max) a->max = a->num;
     {
         int i;
@@ -227,18 +227,18 @@ static char* str_array_get_ref(struct array* cref, unsigned idx)
     assert(cref);
     if (cref->start + idx >= cref->max)
     {
-        WARN("Out of bounds: %p %d + %d >= %d\n", 
+        WARN("Out of bounds: %p %d + %d >= %d\n",
               cref, cref->start, idx, cref->max);
         return NULL;
     }
-    TRACE("Returning %p[%d] => %s\n", 
+    TRACE("Returning %p[%d] => %s\n",
           cref, idx, cref->elts[cref->start + idx]);
     return cref->elts[cref->start + idx];
 }
 
 /******************************************************************
  *		str_printf
- * Helper for printf type of command (only %s and %c are implemented) 
+ * Helper for printf type of command (only %s and %c are implemented)
  * while dynamically allocating the buffer
  */
 static char* str_printf(struct parsed_symbol* sym, const char* format, ...)
@@ -305,7 +305,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
  * Parses a list of function/method arguments, creates a string corresponding
  * to the arguments' list.
  */
-static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_term, 
+static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_term,
                       char open_char, char close_char)
 
 {
@@ -333,7 +333,7 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
             if (!z_term && *sym->current == '@') sym->current++;
             break;
         }
-        str_array_push(sym, str_printf(sym, "%s%s", ct.left, ct.right), -1, 
+        str_array_push(sym, str_printf(sym, "%s%s", ct.left, ct.right), -1,
                        &arg_collect);
         if (!strcmp(ct.left, "...")) break;
     }
@@ -342,8 +342,8 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
      */
     if (z_term && *sym->current++ != 'Z') return NULL;
 
-    if (arg_collect.num == 0 || 
-        (arg_collect.num == 1 && !strcmp(arg_collect.elts[0], "void")))        
+    if (arg_collect.num == 0 ||
+        (arg_collect.num == 1 && !strcmp(arg_collect.elts[0], "void")))
         return str_printf(sym, "%cvoid%c", open_char, close_char);
     for (i = 1; i < arg_collect.num; i++)
     {
@@ -351,12 +351,12 @@ static char* get_args(struct parsed_symbol* sym, struct array* pmt_ref, BOOL z_t
     }
 
     if (close_char == '>' && args_str && args_str[strlen(args_str) - 1] == '>')
-        args_str = str_printf(sym, "%c%s%s %c", 
+        args_str = str_printf(sym, "%c%s%s %c",
                               open_char, arg_collect.elts[0], args_str, close_char);
     else
-        args_str = str_printf(sym, "%c%s%s%c", 
+        args_str = str_printf(sym, "%c%s%s%c",
                               open_char, arg_collect.elts[0], args_str, close_char);
-    
+
     return args_str;
 }
 
@@ -400,8 +400,8 @@ static const char* get_modified_type(struct parsed_symbol* sym, char modif)
         /* Recurse to get the referred-to type */
         if (!demangle_datatype(sym, &sub_ct, NULL, FALSE))
             return NULL;
-        ret = str_printf(sym, "%s%s%s%s%s", 
-                         sub_ct.left, sub_ct.left && modifier ? " " : NULL, 
+        ret = str_printf(sym, "%s%s%s%s%s",
+                         sub_ct.left, sub_ct.left && modifier ? " " : NULL,
                          modifier, sub_ct.right, str_modif);
         sym->stack.num = mark;
     }
@@ -433,7 +433,7 @@ static BOOL get_class(struct parsed_symbol* sym)
             str_array_push(sym, ptr, -1, &sym->stack);
             break;
         case '?':
-            if (*++sym->current == '$') 
+            if (*++sym->current == '$')
             {
                 const char*     name = ++sym->current;
                 char*           full = NULL;
@@ -469,7 +469,7 @@ static BOOL get_class(struct parsed_symbol* sym)
 
 /******************************************************************
  *		get_class_string
- * From an array collected by get_class, constructs the corresponding (allocated) 
+ * From an array collected by get_class, constructs the corresponding (allocated)
  * string
  */
 static char* get_class_string(struct parsed_symbol* sym, /*const struct array* a, */int start)
@@ -504,7 +504,7 @@ static char* get_class_string(struct parsed_symbol* sym, /*const struct array* a
  * Returns a static string corresponding to the calling convention described
  * by char 'ch'. Sets export to TRUE iff the calling convention is exported.
  */
-static BOOL get_calling_convention(struct parsed_symbol* sym, char ch, 
+static BOOL get_calling_convention(struct parsed_symbol* sym, char ch,
                                    const char** call_conv, const char** exported,
                                    unsigned flags)
 {
@@ -551,7 +551,7 @@ static BOOL get_calling_convention(struct parsed_symbol* sym, char ch,
 static const char* get_simple_type(struct parsed_symbol* sym, char c)
 {
     const char* type_string;
-    
+
     switch (c)
     {
     case 'C': type_string = "signed char"; break;
@@ -579,7 +579,7 @@ static const char* get_simple_type(struct parsed_symbol* sym, char c)
 static const char* get_extended_type(struct parsed_symbol* sym, char c)
 {
     const char* type_string;
-    
+
     switch (c)
     {
     case 'D': type_string = "__int8"; break;
@@ -614,7 +614,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
 
     assert(ct);
     ct->left = ct->right = NULL;
-    
+
     switch (dt = *sym->current++)
     {
     case '_':
@@ -640,7 +640,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
             if (!get_class(sym) ||
                 !(struct_name = get_class_string(sym, mark))) goto done;
             sym->stack.num = mark;
-            if (!(sym->flags & UNDNAME_NO_COMPLEX_TYPE)) 
+            if (!(sym->flags & UNDNAME_NO_COMPLEX_TYPE))
             {
                 switch (dt)
                 {
@@ -674,8 +674,8 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
                 struct datatype_t       sub_ct;
                 unsigned                mark = sym->stack.num;
 
-                if (!get_calling_convention(sym, *sym->current++, 
-                                            &call_conv, &exported, 
+                if (!get_calling_convention(sym, *sym->current++,
+                                            &call_conv, &exported,
                                             sym->flags & ~UNDNAME_NO_ALLOCATION_LANGUAGE) ||
                     !demangle_datatype(sym, &sub_ct, pmt_ref, FALSE))
                     goto done;
@@ -684,7 +684,7 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
                 if (!args) goto done;
                 sym->stack.num = mark;
 
-                ct->left  = str_printf(sym, "%s%s (%s*", 
+                ct->left  = str_printf(sym, "%s%s (%s*",
                                        sub_ct.left, sub_ct.right, call_conv);
                 ct->right = str_printf(sym, ")%s", args);
             }
@@ -752,10 +752,10 @@ static BOOL demangle_datatype(struct parsed_symbol* sym, struct datatype_t* ct,
         break;
     }
     if (add_pmt && pmt_ref && in_args)
-        str_array_push(sym, str_printf(sym, "%s%s", ct->left, ct->right), 
+        str_array_push(sym, str_printf(sym, "%s%s", ct->left, ct->right),
                        -1, pmt_ref);
 done:
-    
+
     return ct->left != NULL;
 }
 
@@ -792,7 +792,7 @@ static BOOL handle_data(struct parsed_symbol* sym)
         case '0': access = "private: "; break;
         case '1': access = "protected: "; break;
         case '2': access = "public: "; break;
-        } 
+        }
     }
 
     if (!(sym->flags & UNDNAME_NO_MEMBER_TYPE))
@@ -833,8 +833,8 @@ static BOOL handle_data(struct parsed_symbol* sym)
     }
     if (sym->flags & UNDNAME_NAME_ONLY) ct.left = ct.right = modifier = NULL;
     sym->result = str_printf(sym, "%s%s%s%s%s%s%s%s", access,
-                             member_type, ct.left, 
-                             modifier && ct.left ? " " : NULL, modifier, 
+                             member_type, ct.left,
+                             modifier && ct.left ? " " : NULL, modifier,
                              modifier || ct.left ? " " : NULL, name, ct.right);
     ret = TRUE;
 done:
@@ -924,8 +924,8 @@ static BOOL handle_method(struct parsed_symbol* sym, BOOL cast_op)
     sym->current++;
 
     name = get_class_string(sym, 0);
-  
-    if (!get_calling_convention(sym, *sym->current++, 
+
+    if (!get_calling_convention(sym, *sym->current++,
                                 &call_conv, &exported, sym->flags))
         goto done;
 
@@ -960,10 +960,10 @@ static BOOL handle_method(struct parsed_symbol* sym, BOOL cast_op)
      * Yet!!! FIXME
      */
     sym->result = str_printf(sym, "%s%s%s%s%s%s%s%s%s%s%s%s",
-                             access, member_type, ct_ret.left, 
+                             access, member_type, ct_ret.left,
                              (ct_ret.left && !ct_ret.right) ? " " : NULL,
                              call_conv, call_conv ? " " : NULL, exported,
-                             name, args_str, modifier, 
+                             name, args_str, modifier,
                              modifier ? " " : NULL, ct_ret.right);
     ret = TRUE;
 done:
@@ -981,7 +981,7 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
 
     /* MS mangled names always begin with '?' */
     if (*sym->current != '?') return FALSE;
-    
+
     /* FIXME seems wrong as name, as it demangles a simple data type */
     if (sym->flags & UNDNAME_NO_ARGUMENTS)
     {
@@ -1137,7 +1137,7 @@ static BOOL symbol_demangle(struct parsed_symbol* sym)
         ret = handle_method(sym, do_after == 3);
     else ret = FALSE;
 done:
-    if (ret) 
+    if (ret)
 	assert(sym->result);
     if (!ret)
 	ERR("Failed at %s\n", sym->current);
@@ -1171,7 +1171,7 @@ char* __unDNameEx(char* buffer, const char* mangled, int buflen,
 
     TRACE("(%p,%s,%d,%p,%p,%p,%x) stub!\n",
           buffer, mangled, buflen, memget, memfree, unknown, flags);
-    
+
     /* The flags details is not documented by MS. However, it looks exactly
      * like the UNDNAME_ manifest constants from imagehlp.h and dbghelp.h
      * So, we copied those (on top of the file)

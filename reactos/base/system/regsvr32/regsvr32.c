@@ -332,7 +332,7 @@ int WINAPI WinMain(
 		}
 	}
 
-	// An unrecognized flag was used, display a message and show available options	
+	// An unrecognized flag was used, display a message and show available options
 
 	if (lptFuncName) {
 		lptMsgBuffer = (LPTSTR)malloc((_tcslen(UsageMessage) - 2 + _tcslen(InvalidFlag) - 2 + _tcslen(lptFuncName) + 1) * sizeof(TCHAR));

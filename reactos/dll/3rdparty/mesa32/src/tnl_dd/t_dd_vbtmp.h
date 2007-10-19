@@ -60,7 +60,7 @@
  *    unsigned char ub4[4][16];
  * }
  *
- 
+
  * VERTEX:   hw vertex type as above
  * VERTEX_COLOR: hw color struct type in VERTEX
  *
@@ -104,8 +104,8 @@
 #endif
 
 #if (HAVE_HW_DIVIDE && !HAVE_PTEX_VERTICES)
-#error "can't cope with this combination" 
-#endif 
+#error "can't cope with this combination"
+#endif
 
 #ifndef LOCALVARS
 #define LOCALVARS
@@ -179,7 +179,7 @@ static void TAG(emit)( GLcontext *ctx,
       const GLuint t0 = GET_TEXSOURCE(0);
       tc0_stride = VB->TexCoordPtr[t0]->stride;
       tc0 = VB->TexCoordPtr[t0]->data;
-      if (DO_PTEX) 
+      if (DO_PTEX)
 	 tc0_size = VB->TexCoordPtr[t0]->size;
    }
 
@@ -217,13 +217,13 @@ static void TAG(emit)( GLcontext *ctx,
       STRIDE_4F(coord, start * coord_stride);
       if (DO_TEX0)
 	 STRIDE_4F(tc0, start * tc0_stride);
-      if (DO_TEX1) 
+      if (DO_TEX1)
 	 STRIDE_4F(tc1, start * tc1_stride);
-      if (DO_TEX2) 
+      if (DO_TEX2)
 	 STRIDE_4F(tc2, start * tc2_stride);
-      if (DO_TEX3) 
+      if (DO_TEX3)
 	 STRIDE_4F(tc3, start * tc3_stride);
-      if (DO_RGBA) 
+      if (DO_RGBA)
 	 STRIDE_4F(col, start * col_stride);
       if (DO_SPEC)
 	 STRIDE_4F(spec, start * spec_stride);
@@ -267,35 +267,35 @@ static void TAG(emit)( GLcontext *ctx,
 	 v->v.v0 = tc0[0][1];
 	 if (DO_PTEX) {
 	    if (HAVE_PTEX_VERTICES) {
-	       if (tc0_size == 4) 
+	       if (tc0_size == 4)
 		  v->pv.q0 = tc0[0][3];
 	       else
 		  v->pv.q0 = 1.0;
-	    } 
+	    }
 	    else if (tc0_size == 4) {
 	       float rhw = 1.0 / tc0[0][3];
 	       v->v.w *= tc0[0][3];
 	       v->v.u0 *= rhw;
 	       v->v.v0 *= rhw;
-	    } 
-	 } 
+	    }
+	 }
 	 STRIDE_4F(tc0, tc0_stride);
       }
       if (DO_TEX1) {
 	 if (DO_PTEX) {
 	    v->pv.u1 = tc1[0][0];
 	    v->pv.v1 = tc1[0][1];
-	    if (tc1_size == 4) 
+	    if (tc1_size == 4)
 	       v->pv.q1 = tc1[0][3];
 	    else
 	       v->pv.q1 = 1.0;
-	 } 
+	 }
 	 else {
 	    v->v.u1 = tc1[0][0];
 	    v->v.v1 = tc1[0][1];
 	 }
 	 STRIDE_4F(tc1, tc1_stride);
-      } 
+      }
       else if (DO_PTEX) {
 	 *(GLuint *)&v->pv.q1 = 0;	/* avoid culling on radeon */
       }
@@ -303,32 +303,32 @@ static void TAG(emit)( GLcontext *ctx,
 	 if (DO_PTEX) {
 	    v->pv.u2 = tc2[0][0];
 	    v->pv.v2 = tc2[0][1];
-	    if (tc2_size == 4) 
+	    if (tc2_size == 4)
 	       v->pv.q2 = tc2[0][3];
 	    else
 	       v->pv.q2 = 1.0;
-	 } 
+	 }
 	 else {
 	    v->v.u2 = tc2[0][0];
 	    v->v.v2 = tc2[0][1];
 	 }
 	 STRIDE_4F(tc2, tc2_stride);
-      } 
+      }
       if (DO_TEX3) {
 	 if (DO_PTEX) {
 	    v->pv.u3 = tc3[0][0];
 	    v->pv.v3 = tc3[0][1];
-	    if (tc3_size == 4) 
+	    if (tc3_size == 4)
 	       v->pv.q3 = tc3[0][3];
 	    else
 	       v->pv.q3 = 1.0;
-	 } 
+	 }
 	 else {
 	    v->v.u3 = tc3[0][0];
 	    v->v.v3 = tc3[0][1];
 	 }
 	 STRIDE_4F(tc3, tc3_stride);
-      } 
+      }
    }
 
 }
@@ -421,7 +421,7 @@ static GLboolean TAG(check_tex_sizes)( GLcontext *ctx )
 
    if (DO_PTEX)
       return GL_TRUE;
-   
+
    if ((DO_TEX3 && VB->TexCoordPtr[GET_TEXSOURCE(3)]->size == 4) ||
        (DO_TEX2 && VB->TexCoordPtr[GET_TEXSOURCE(2)]->size == 4) ||
        (DO_TEX1 && VB->TexCoordPtr[GET_TEXSOURCE(1)]->size == 4) ||
@@ -504,7 +504,7 @@ static void TAG(interp)( GLcontext *ctx,
       VIEWPORT_Z( dst->v.z, dstclip[2] * w );
    }
 
-   if ((HAVE_HW_DIVIDE && CHECK_HW_DIVIDE) || 
+   if ((HAVE_HW_DIVIDE && CHECK_HW_DIVIDE) ||
        DO_FOG || DO_SPEC || DO_TEX0 || DO_TEX1 ||
        DO_TEX2 || DO_TEX3 || !HAVE_TINY_VERTICES) {
 

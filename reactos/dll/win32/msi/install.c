@@ -46,7 +46,7 @@ UINT WINAPI MsiDoActionA( MSIHANDLE hInstall, LPCSTR szAction )
 
     szwAction = strdupAtoW(szAction);
     if (szAction && !szwAction)
-        return ERROR_FUNCTION_FAILED; 
+        return ERROR_FUNCTION_FAILED;
 
     ret = MsiDoActionW( hInstall, szwAction );
     msi_free( szwAction );
@@ -69,7 +69,7 @@ UINT WINAPI MsiDoActionW( MSIHANDLE hInstall, LPCWSTR szAction )
     package = msihandle2msiinfo( hInstall, MSIHANDLETYPE_PACKAGE );
     if (!package)
         return ERROR_INVALID_HANDLE;
- 
+
     ret = ACTION_PerformUIAction( package, szAction );
     msiobj_release( &package->hdr );
 
@@ -88,7 +88,7 @@ UINT WINAPI MsiSequenceA( MSIHANDLE hInstall, LPCSTR szTable, INT iSequenceMode 
 
     szwTable = strdupAtoW(szTable);
     if (szTable && !szwTable)
-        return ERROR_FUNCTION_FAILED; 
+        return ERROR_FUNCTION_FAILED;
 
     ret = MsiSequenceW( hInstall, szwTable, iSequenceMode );
     msi_free( szwTable );
@@ -111,7 +111,7 @@ UINT WINAPI MsiSequenceW( MSIHANDLE hInstall, LPCWSTR szTable, INT iSequenceMode
 
     ret = MSI_Sequence( package, szTable, iSequenceMode );
     msiobj_release( &package->hdr );
- 
+
     return ret;
 }
 
@@ -124,11 +124,11 @@ UINT msi_strcpy_to_awstring( LPCWSTR str, awstring *awbuf, DWORD *sz )
 
     if (!sz)
         return r;
- 
+
     if (awbuf->unicode)
     {
         len = lstrlenW( str );
-        if (awbuf->str.w) 
+        if (awbuf->str.w)
             lstrcpynW( awbuf->str.w, str, *sz );
     }
     else
@@ -178,7 +178,7 @@ static UINT WINAPI MSI_GetTargetPath( MSIHANDLE hInstall, LPCWSTR szFolder,
 /***********************************************************************
  * MsiGetTargetPathA        (MSI.@)
  */
-UINT WINAPI MsiGetTargetPathA( MSIHANDLE hInstall, LPCSTR szFolder, 
+UINT WINAPI MsiGetTargetPathA( MSIHANDLE hInstall, LPCSTR szFolder,
                                LPSTR szPathBuf, DWORD* pcchPathBuf )
 {
     LPWSTR szwFolder;
@@ -189,7 +189,7 @@ UINT WINAPI MsiGetTargetPathA( MSIHANDLE hInstall, LPCSTR szFolder,
 
     szwFolder = strdupAtoW(szFolder);
     if (szFolder && !szwFolder)
-        return ERROR_FUNCTION_FAILED; 
+        return ERROR_FUNCTION_FAILED;
 
     path.unicode = FALSE;
     path.str.a = szPathBuf;
@@ -257,7 +257,7 @@ static UINT MSI_GetSourcePath( MSIHANDLE hInstall, LPCWSTR szFolder,
 /***********************************************************************
  * MsiGetSourcePathA     (MSI.@)
  */
-UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder, 
+UINT WINAPI MsiGetSourcePathA( MSIHANDLE hInstall, LPCSTR szFolder,
                                LPSTR szPathBuf, DWORD* pcchPathBuf )
 {
     LPWSTR folder;
@@ -323,7 +323,7 @@ end:
  * changed a bit also. The given folder path does not have to actually already
  * exist, it just cannot be read only and must be a legal folder path.
  */
-UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder, 
+UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
                              LPCWSTR szFolderPath)
 {
     DWORD attrib;
@@ -351,7 +351,7 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
     if (lstrcmpiW(path, folder->Property) == 0)
     {
         /*
-         *  Resolved Target has not really changed, so just 
+         *  Resolved Target has not really changed, so just
          *  set this folder and do not recalculate everything.
          */
         msi_free(folder->ResolvedTarget);
@@ -398,7 +398,7 @@ UINT MSI_SetTargetPathW(MSIPACKAGE *package, LPCWSTR szFolder,
 /***********************************************************************
  * MsiSetTargetPathW  (MSI.@)
  */
-UINT WINAPI MsiSetTargetPathW(MSIHANDLE hInstall, LPCWSTR szFolder, 
+UINT WINAPI MsiSetTargetPathW(MSIHANDLE hInstall, LPCWSTR szFolder,
                              LPCWSTR szFolderPath)
 {
     MSIPACKAGE *package;
@@ -514,8 +514,8 @@ UINT WINAPI MsiSetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
 
     if (!szwFeature)
         return ERROR_FUNCTION_FAILED;
-   
-    rc = MsiSetFeatureStateW(hInstall,szwFeature, iState); 
+
+    rc = MsiSetFeatureStateW(hInstall,szwFeature, iState);
 
     msi_free(szwFeature);
 
@@ -536,7 +536,7 @@ UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
     if (!feature)
         return ERROR_UNKNOWN_FEATURE;
 
-    if (iState == INSTALLSTATE_ADVERTISED && 
+    if (iState == INSTALLSTATE_ADVERTISED &&
         feature->Attributes & msidbFeatureAttributesDisallowAdvertise)
         return ERROR_FUNCTION_FAILED;
 
@@ -550,7 +550,7 @@ UINT WINAPI MSI_SetFeatureStateW(MSIPACKAGE* package, LPCWSTR szFeature,
         if (lstrcmpW(szFeature, child->Feature_Parent) == 0)
             MSI_SetFeatureStateW(package, child->Feature, iState);
     }
-    
+
     return rc;
 }
 
@@ -583,7 +583,7 @@ UINT WINAPI MsiGetFeatureStateA(MSIHANDLE hInstall, LPCSTR szFeature,
 {
     LPWSTR szwFeature = NULL;
     UINT rc;
-    
+
     szwFeature = strdupAtoW(szFeature);
 
     rc = MsiGetFeatureStateW(hInstall,szwFeature,piInstalled, piAction);
@@ -680,7 +680,7 @@ UINT WINAPI MsiGetComponentStateA(MSIHANDLE hInstall, LPCSTR szComponent,
 {
     LPWSTR szwComponent= NULL;
     UINT rc;
-    
+
     szwComponent= strdupAtoW(szComponent);
 
     rc = MsiGetComponentStateW(hInstall,szwComponent,piInstalled, piAction);
@@ -775,7 +775,7 @@ LANGID WINAPI MsiGetLanguage(MSIHANDLE hInstall)
     LANGID langid;
     static const WCHAR szProductLanguage[] =
         {'P','r','o','d','u','c','t','L','a','n','g','u','a','g','e',0};
-    
+
     package = msihandle2msiinfo(hInstall, MSIHANDLETYPE_PACKAGE);
     if (!package)
         return ERROR_INVALID_HANDLE;

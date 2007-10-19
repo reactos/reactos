@@ -224,7 +224,7 @@ DWORD WINAPI CertNameToStrA(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                 }
                 /* FIXME: handle quoting */
                 chars = CertRDNValueToStrA(
-                 info->rgRDN[i].rgRDNAttr[j].dwValueType, 
+                 info->rgRDN[i].rgRDNAttr[j].dwValueType,
                  &info->rgRDN[i].rgRDNAttr[j].Value, psz ? psz + ret : NULL,
                  psz ? csz - ret : 0);
                 if (chars)
@@ -389,7 +389,7 @@ DWORD WINAPI CertNameToStrW(DWORD dwCertEncodingType, PCERT_NAME_BLOB pName,
                 }
                 /* FIXME: handle quoting */
                 chars = CertRDNValueToStrW(
-                 info->rgRDN[i].rgRDNAttr[j].dwValueType, 
+                 info->rgRDN[i].rgRDNAttr[j].dwValueType,
                  &info->rgRDN[i].rgRDNAttr[j].Value, psz ? psz + ret : NULL,
                  psz ? csz - ret : 0);
                 if (chars)

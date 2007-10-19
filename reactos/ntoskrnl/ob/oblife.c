@@ -1135,7 +1135,7 @@ ObCreateObjectType(IN PUNICODE_STRING TypeName,
     /* Calculate how much space our header'll take up */
     HeaderSize = sizeof(OBJECT_HEADER) +
                  sizeof(OBJECT_HEADER_NAME_INFO) +
-                 (ObjectTypeInitializer->MaintainHandleCount ? 
+                 (ObjectTypeInitializer->MaintainHandleCount ?
                   sizeof(OBJECT_HEADER_HANDLE_INFO) : 0);
 
     /* Check the pool type */

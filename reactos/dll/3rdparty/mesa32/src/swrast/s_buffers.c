@@ -119,7 +119,7 @@ clear_rgba_buffer(GLcontext *ctx, struct gl_renderbuffer *rb)
    ASSERT(ctx->Color.ColorMask[0] &&
           ctx->Color.ColorMask[1] &&
           ctx->Color.ColorMask[2] &&
-          ctx->Color.ColorMask[3]);             
+          ctx->Color.ColorMask[3]);
 
    ASSERT(rb->PutMonoRow);
 
@@ -212,9 +212,9 @@ clear_color_buffers(GLcontext *ctx)
    GLuint i;
 
    if (ctx->Visual.rgbMode) {
-      if (ctx->Color.ColorMask[0] && 
-          ctx->Color.ColorMask[1] && 
-          ctx->Color.ColorMask[2] && 
+      if (ctx->Color.ColorMask[0] &&
+          ctx->Color.ColorMask[1] &&
+          ctx->Color.ColorMask[2] &&
           ctx->Color.ColorMask[3]) {
          masking = GL_FALSE;
       }

@@ -1,5 +1,5 @@
 /**
- * threads.c: set of generic threading related routines 
+ * threads.c: set of generic threading related routines
  *
  * See Copyright for the status of this software.
  *
@@ -388,7 +388,7 @@ xmlRMutexUnlock(xmlRMutexPtr tok ATTRIBUTE_UNUSED)
 #ifdef HAVE_PTHREAD_H
     if (libxml_is_threaded == 0)
         return;
-    
+
     pthread_mutex_lock(&tok->lock);
     tok->held--;
     if (tok->held == 0) {
@@ -398,7 +398,7 @@ xmlRMutexUnlock(xmlRMutexPtr tok ATTRIBUTE_UNUSED)
     }
     pthread_mutex_unlock(&tok->lock);
 #elif defined HAVE_WIN32_THREADS
-    if (!--tok->count) 
+    if (!--tok->count)
 	LeaveCriticalSection(&tok->cs);
 #elif defined HAVE_BEOS_THREADS
 	if (tok->lock->tid == find_thread(NULL)) {
@@ -451,7 +451,7 @@ static xmlGlobalStatePtr
 xmlNewGlobalState(void)
 {
     xmlGlobalState *gs;
-    
+
     gs = malloc(sizeof(xmlGlobalState));
     if (gs == NULL)
 	return(NULL);
@@ -561,12 +561,12 @@ xmlGetGlobalState(void)
 	p = (xmlGlobalStateCleanupHelperParams *) malloc(sizeof(xmlGlobalStateCleanupHelperParams));
 	p->memory = tsd;
 #if defined(LIBXML_STATIC) && !defined(LIBXML_STATIC_FOR_DLL)
-	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), 
+	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
 		GetCurrentProcess(), &p->thread, 0, TRUE, DUPLICATE_SAME_ACCESS);
 	TlsSetValue(globalkey, tsd);
 	_beginthread(xmlGlobalStateCleanupHelper, 0, p);
 #else
-	EnterCriticalSection(&cleanup_helpers_cs);	
+	EnterCriticalSection(&cleanup_helpers_cs);
         if (cleanup_helpers_head != NULL) {
             cleanup_helpers_head->prev = p;
         }
@@ -574,7 +574,7 @@ xmlGetGlobalState(void)
 	p->prev = NULL;
 	cleanup_helpers_head = p;
 	TlsSetValue(globalkey, p);
-	LeaveCriticalSection(&cleanup_helpers_cs);	
+	LeaveCriticalSection(&cleanup_helpers_cs);
 #endif
 
 	return (tsd);
@@ -646,11 +646,11 @@ xmlIsMainThread(void)
         return(1);
     pthread_once(&once_control, xmlOnceInit);
 #elif defined HAVE_WIN32_THREADS
-    xmlOnceInit (); 
+    xmlOnceInit ();
 #elif defined HAVE_BEOS_THREADS
     xmlOnceInit();
 #endif
-        
+
 #ifdef DEBUG_THREADS
     xmlGenericError(xmlGenericErrorContext, "xmlIsMainThread()\n");
 #endif
@@ -827,9 +827,9 @@ xmlOnceInit(void) {
  */
 #if defined(HAVE_WIN32_THREADS) && !defined(HAVE_COMPILER_TLS) && (!defined(LIBXML_STATIC) || defined(LIBXML_STATIC_FOR_DLL))
 #if defined(LIBXML_STATIC_FOR_DLL)
-BOOL WINAPI xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) 
+BOOL WINAPI xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #else
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved) 
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 #endif
 {
     switch(fdwReason) {

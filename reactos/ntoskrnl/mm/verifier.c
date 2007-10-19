@@ -33,7 +33,7 @@ MiLookupDataTableEntry(IN PVOID Address)
 
     /* Loop entries */
     NextEntry = PsLoadedModuleList.Flink;
-    do 
+    do
     {
         /* Get the loader entry */
         LdrEntry =  CONTAINING_RECORD(NextEntry,

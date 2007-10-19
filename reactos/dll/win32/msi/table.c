@@ -126,7 +126,7 @@ static LPWSTR encode_streamname(BOOL bTable, LPCWSTR in)
          *p++ = 0x4840;
          count --;
     }
-    while( count -- ) 
+    while( count -- )
     {
         ch = *in++;
         if( !ch )
@@ -238,7 +238,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
 
     TRACE("%s -> %s\n",debugstr_w(stname),debugstr_w(encname));
 
-    r = IStorage_OpenStream(stg, encname, NULL, 
+    r = IStorage_OpenStream(stg, encname, NULL,
             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm);
     msi_free( encname );
     if( FAILED( r ) )
@@ -259,7 +259,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
         WARN("Too big!\n");
         goto end;
     }
-        
+
     sz = stat.cbSize.QuadPart;
     data = msi_alloc( sz );
     if( !data )
@@ -268,7 +268,7 @@ static UINT read_stream_data( IStorage *stg, LPCWSTR stname,
         ret = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
-        
+
     r = IStream_Read(stm, data, sz, &count );
     if( FAILED( r ) || ( count != sz ) )
     {
@@ -296,7 +296,7 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
 
     TRACE("%s -> %s\n",debugstr_w(stname),debugstr_w(encname));
 
-    r = IStorage_OpenStream(db->storage, encname, NULL, 
+    r = IStorage_OpenStream(db->storage, encname, NULL,
             STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm);
     if( FAILED( r ) )
     {
@@ -305,7 +305,7 @@ UINT db_get_raw_stream( MSIDATABASE *db, LPCWSTR stname, IStream **stm )
         LIST_FOR_EACH_ENTRY( transform, &db->transforms, MSITRANSFORM, entry )
         {
             TRACE("looking for %s in transform storage\n", debugstr_w(stname) );
-            r = IStorage_OpenStream( transform->stg, encname, NULL, 
+            r = IStorage_OpenStream( transform->stg, encname, NULL,
                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, stm );
             if (SUCCEEDED(r))
                 break;
@@ -342,7 +342,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
         WARN("Too big!\n");
         goto end;
     }
-        
+
     sz = stat.cbSize.QuadPart;
     data = msi_alloc( sz );
     if( !data )
@@ -351,7 +351,7 @@ UINT read_raw_stream_data( MSIDATABASE *db, LPCWSTR stname,
         ret = ERROR_NOT_ENOUGH_MEMORY;
         goto end;
     }
-        
+
     r = IStream_Read(stm, data, sz, &count );
     if( FAILED( r ) || ( count != sz ) )
     {
@@ -382,7 +382,7 @@ static UINT write_stream_data( IStorage *stg, LPCWSTR stname,
     LPWSTR encname;
 
     encname = encode_streamname(TRUE, stname );
-    r = IStorage_OpenStream( stg, encname, NULL, 
+    r = IStorage_OpenStream( stg, encname, NULL,
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, &stm);
     if( FAILED(r) )
     {
@@ -604,7 +604,7 @@ static UINT save_table( MSIDATABASE *db, MSITABLE *t )
     r = table_get_column_info( db, t->name, &cols, &num_cols );
     if( r != ERROR_SUCCESS )
         return r;
-    
+
     row_size = msi_table_get_row_size( cols, num_cols );
 
     rawsize = t->row_count * row_size;
@@ -653,7 +653,7 @@ HRESULT init_string_table( IStorage *stg )
     r = IStorage_CreateStream( stg, encname,
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
     msi_free( encname );
-    if( r ) 
+    if( r )
     {
         TRACE("Failed\n");
         return r;
@@ -673,7 +673,7 @@ HRESULT init_string_table( IStorage *stg )
     r = IStorage_CreateStream( stg, encname,
             STGM_WRITE | STGM_SHARE_EXCLUSIVE, 0, 0, &stm);
     msi_free( encname );
-    if( r ) 
+    if( r )
     {
         TRACE("Failed\n");
         return E_FAIL;
@@ -1335,7 +1335,7 @@ static UINT TABLE_close( struct tagMSIVIEW *view )
         return ERROR_FUNCTION_FAILED;
 
     tv->table = NULL;
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -1557,7 +1557,7 @@ static UINT TABLE_find_matching_rows( struct tagMSIVIEW *view, UINT col,
             {
             case 4:
                 offset = tv->columns[col-1].offset/2;
-                row_value = tv->table->data[i][offset] + 
+                row_value = tv->table->data[i][offset] +
                     (tv->table->data[i][offset + 1] << 16);
                 break;
             case 2:
@@ -1640,7 +1640,7 @@ UINT TABLE_CreateView( MSIDATABASE *db, LPCWSTR name, MSIVIEW **view )
     tv = msi_alloc_zero( sz );
     if( !tv )
         return ERROR_FUNCTION_FAILED;
-    
+
     columns = msi_alloc( column_count*sizeof (MSICOLUMNINFO));
     if( !columns )
     {

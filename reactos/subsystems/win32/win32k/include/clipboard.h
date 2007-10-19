@@ -14,8 +14,8 @@ typedef struct _ClipboardChainElement
 typedef struct _ClipboardElement
 {
     UINT                        format;
-    HANDLE                      hData;  
-    DWORD                       size;   // data may be delayed o synth render 
+    HANDLE                      hData;
+    DWORD                       size;   // data may be delayed o synth render
     struct _ClipboardElement   *next;
 } CLIPBOARDELEMENT, *PCLIPBOARDELEMENT;
 
@@ -31,16 +31,16 @@ typedef struct _CLIPBOARDSYSTEM
     BOOL            delayedRender;
     UINT            lastEnumClipboardFormats;
     DWORD           ClipboardSequenceNumber;
-    
+
     PCLIPBOARDCHAINELEMENT WindowsChain;
     PCLIPBOARDELEMENT      ClipboardData;
-    
+
     PCHAR synthesizedData;
     DWORD synthesizedDataSize;
-    
+
 } CLIPBOARDSYSTEM, *PCLIPBOARDSYSTEM;
 
-VOID FASTCALL 
+VOID FASTCALL
 IntClipboardFreeWindow(PWINDOW_OBJECT window);
 
 /*

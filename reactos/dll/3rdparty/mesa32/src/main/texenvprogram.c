@@ -1,8 +1,8 @@
 /**************************************************************************
- * 
+ *
  * Copyright 2003 Tungsten Graphics, Inc., Cedar Park, Texas.
  * All Rights Reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the
  * "Software"), to deal in the Software without restriction, including
@@ -10,11 +10,11 @@
  * distribute, sub license, and/or sell copies of the Software, and to
  * permit persons to whom the Software is furnished to do so, subject to
  * the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice (including the
  * next paragraph) shall be included in all copies or substantial portions
  * of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT.
@@ -22,7 +22,7 @@
  * ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
  * TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- * 
+ *
  **************************************************************************/
 
 #include "glheader.h"
@@ -185,18 +185,18 @@ static struct state_key *make_state_key( GLcontext *ctx )
 {
    struct state_key *key = CALLOC_STRUCT(state_key);
    GLuint i, j;
-	
+
    for (i=0;i<MAX_TEXTURE_UNITS;i++) {
       struct gl_texture_unit *texUnit = &ctx->Texture.Unit[i];
-		
+
       if (!texUnit->_ReallyEnabled)
          continue;
 
       key->unit[i].enabled = 1;
       key->enabled_units |= (1<<i);
 
-      key->unit[i].source_index = 
-	 translate_tex_src_bit(texUnit->_ReallyEnabled);		
+      key->unit[i].source_index =
+	 translate_tex_src_bit(texUnit->_ReallyEnabled);
 
       key->unit[i].NumArgsRGB = texUnit->_CurrentCombine->_NumArgsRGB;
       key->unit[i].NumArgsA = texUnit->_CurrentCombine->_NumArgsA;
@@ -205,7 +205,7 @@ static struct state_key *make_state_key( GLcontext *ctx )
 	 translate_mode(texUnit->_CurrentCombine->ModeRGB);
       key->unit[i].ModeA =
 	 translate_mode(texUnit->_CurrentCombine->ModeA);
-		
+
       key->unit[i].ScaleShiftRGB = texUnit->_CurrentCombine->ScaleShiftRGB;
       key->unit[i].ScaleShiftA = texUnit->_CurrentCombine->ScaleShiftRGB;
 
@@ -220,7 +220,7 @@ static struct state_key *make_state_key( GLcontext *ctx )
 	    translate_source(texUnit->_CurrentCombine->SourceA[j]);
       }
    }
-	
+
    if (ctx->_TriangleCaps & DD_SEPARATE_SPECULAR)
       key->separate_specular = 1;
 
@@ -228,12 +228,12 @@ static struct state_key *make_state_key( GLcontext *ctx )
       key->fog_enabled = 1;
       key->fog_mode = translate_fog_mode(ctx->Fog.Mode);
    }
-	
+
    return key;
 }
 
 /* Use uregs to represent registers internally, translate to Mesa's
- * expected formats on emit.  
+ * expected formats on emit.
  *
  * NOTE: These are passed by value extensively in this file rather
  * than as usual by pointer reference.  If this disturbs you, try
@@ -254,7 +254,7 @@ struct ureg {
    GLuint pad:5;
 };
 
-const static struct ureg undef = { 
+const static struct ureg undef = {
    ~0,
    ~0,
    0,
@@ -286,12 +286,12 @@ struct texenv_fragment_program {
 
    GLboolean error;
 
-   struct ureg src_texture[MAX_TEXTURE_UNITS];   
+   struct ureg src_texture[MAX_TEXTURE_UNITS];
    /* Reg containing each texture unit's sampled texture color,
     * else undef.
     */
 
-   struct ureg src_previous;	/* Reg containing color from previous 
+   struct ureg src_previous;	/* Reg containing color from previous
 				 * stage.  May need to be decl'd.
 				 */
 
@@ -347,7 +347,7 @@ static GLboolean is_undef( struct ureg reg )
 static struct ureg get_temp( struct texenv_fragment_program *p )
 {
    int bit;
-   
+
    /* First try and reuse temps which have been used already:
     */
    bit = ffs( ~p->temp_in_use & p->alu_temps );
@@ -369,7 +369,7 @@ static struct ureg get_temp( struct texenv_fragment_program *p )
 static struct ureg get_tex_temp( struct texenv_fragment_program *p )
 {
    int bit;
-   
+
    /* First try to find availble temp not previously used (to avoid
     * starting a new texture indirection).  According to the spec, the
     * ~p->temps_output isn't necessary, but will keep it there for
@@ -379,7 +379,7 @@ static struct ureg get_tex_temp( struct texenv_fragment_program *p )
 
    /* Then any unused temporary:
     */
-   if (!bit) 
+   if (!bit)
       bit = ffs( ~p->temp_in_use );
 
    if (!bit) {
@@ -406,7 +406,7 @@ static void release_temps( struct texenv_fragment_program *p )
 }
 
 
-static struct ureg register_param6( struct texenv_fragment_program *p, 
+static struct ureg register_param6( struct texenv_fragment_program *p,
 				    GLint s0,
 				    GLint s1,
 				    GLint s2,
@@ -473,14 +473,14 @@ emit_op(struct texenv_fragment_program *p,
 {
    GLuint nr = p->program->Base.NumInstructions++;
    struct fp_instruction *inst = &p->program->Instructions[nr];
-      
+
    memset(inst, 0, sizeof(*inst));
    inst->Opcode = op;
-   
+
    emit_arg( &inst->SrcReg[0], src0 );
    emit_arg( &inst->SrcReg[1], src1 );
    emit_arg( &inst->SrcReg[2], src2 );
-   
+
    inst->Saturate = saturate;
 
    emit_dst( &inst->DstReg, dest, mask );
@@ -492,7 +492,7 @@ emit_op(struct texenv_fragment_program *p,
 
    return inst;
 }
-   
+
 
 static struct ureg emit_arith( struct texenv_fragment_program *p,
 			       GLuint op,
@@ -504,7 +504,7 @@ static struct ureg emit_arith( struct texenv_fragment_program *p,
 			       struct ureg src2 )
 {
    emit_op(p, op, dest, mask, saturate, src0, src1, src2);
-   
+
    /* Accounting for indirection tracking:
     */
    if (src0.file == PROGRAM_TEMPORARY)
@@ -518,7 +518,7 @@ static struct ureg emit_arith( struct texenv_fragment_program *p,
 
    if (dest.file == PROGRAM_TEMPORARY)
       p->alu_temps |= 1 << dest.idx;
-       
+
    p->program->NumAluInstructions++;
    return dest;
 }
@@ -531,13 +531,13 @@ static struct ureg emit_texld( struct texenv_fragment_program *p,
 			       GLuint tex_idx,
 			       struct ureg coord )
 {
-   struct fp_instruction *inst = emit_op( p, op, 
-					  dest, destmask, 
+   struct fp_instruction *inst = emit_op( p, op,
+					  dest, destmask,
 					  0,		/* don't saturate? */
 					  coord, 	/* arg 0? */
 					  undef,
 					  undef);
-   
+
    inst->TexSrcIdx = tex_idx;
    inst->TexSrcUnit = tex_unit;
 
@@ -559,7 +559,7 @@ static struct ureg emit_texld( struct texenv_fragment_program *p,
 }
 
 
-static struct ureg register_const4f( struct texenv_fragment_program *p, 
+static struct ureg register_const4f( struct texenv_fragment_program *p,
 				     GLfloat s0,
 				     GLfloat s1,
 				     GLfloat s2,
@@ -585,21 +585,21 @@ static struct ureg register_const4f( struct texenv_fragment_program *p,
 
 static struct ureg get_one( struct texenv_fragment_program *p )
 {
-   if (is_undef(p->one)) 
+   if (is_undef(p->one))
       p->one = register_scalar_const(p, 1.0);
    return p->one;
 }
 
 static struct ureg get_half( struct texenv_fragment_program *p )
 {
-   if (is_undef(p->half)) 
+   if (is_undef(p->half))
       p->one = register_scalar_const(p, 0.5);
    return p->half;
 }
 
 static struct ureg get_zero( struct texenv_fragment_program *p )
 {
-   if (is_undef(p->zero)) 
+   if (is_undef(p->zero))
       p->one = register_scalar_const(p, 0.0);
    return p->zero;
 }
@@ -614,11 +614,11 @@ static void program_error( struct texenv_fragment_program *p, const char *msg )
    p->error = 1;
 }
 
-static struct ureg get_source( struct texenv_fragment_program *p, 
+static struct ureg get_source( struct texenv_fragment_program *p,
 			       GLuint src, GLuint unit )
 {
    switch (src) {
-   case SRC_TEXTURE: 
+   case SRC_TEXTURE:
       assert(!is_undef(p->src_texture[unit]));
       return p->src_texture[unit];
 
@@ -629,7 +629,7 @@ static struct ureg get_source( struct texenv_fragment_program *p,
    case SRC_TEXTURE4:
    case SRC_TEXTURE5:
    case SRC_TEXTURE6:
-   case SRC_TEXTURE7: 
+   case SRC_TEXTURE7:
       assert(!is_undef(p->src_texture[src - SRC_TEXTURE0]));
       return p->src_texture[src - SRC_TEXTURE0];
 
@@ -648,10 +648,10 @@ static struct ureg get_source( struct texenv_fragment_program *p,
    }
 }
 
-static struct ureg emit_combine_source( struct texenv_fragment_program *p, 
+static struct ureg emit_combine_source( struct texenv_fragment_program *p,
 					GLuint mask,
 					GLuint unit,
-					GLuint source, 
+					GLuint source,
 					GLuint operand )
 {
    struct ureg arg, src, one;
@@ -659,7 +659,7 @@ static struct ureg emit_combine_source( struct texenv_fragment_program *p,
    src = get_source(p, source, unit);
 
    switch (operand) {
-   case OPR_ONE_MINUS_SRC_COLOR: 
+   case OPR_ONE_MINUS_SRC_COLOR:
       /* Get unused tmp,
        * Emit tmp = 1.0 - arg.xyzw
        */
@@ -667,12 +667,12 @@ static struct ureg emit_combine_source( struct texenv_fragment_program *p,
       one = get_one( p );
       return emit_arith( p, FP_OPCODE_SUB, arg, mask, 0, one, src, undef);
 
-   case OPR_SRC_ALPHA: 
+   case OPR_SRC_ALPHA:
       if (mask == WRITEMASK_W)
 	 return src;
       else
 	 return swizzle1( src, W );
-   case OPR_ONE_MINUS_SRC_ALPHA: 
+   case OPR_ONE_MINUS_SRC_ALPHA:
       /* Get unused tmp,
        * Emit tmp = 1.0 - arg.wwww
        */
@@ -684,7 +684,7 @@ static struct ureg emit_combine_source( struct texenv_fragment_program *p,
       return get_zero(p);
    case OPR_ONE:
       return get_one(p);
-   case OPR_SRC_COLOR: 
+   case OPR_SRC_COLOR:
    default:
       return src;
    }
@@ -695,29 +695,29 @@ static GLboolean args_match( struct state_key *key, GLuint unit )
    int i, nr = key->unit[unit].NumArgsRGB;
 
    for (i = 0 ; i < nr ; i++) {
-      if (key->unit[unit].OptA[i].Source != key->unit[unit].OptRGB[i].Source) 
+      if (key->unit[unit].OptA[i].Source != key->unit[unit].OptRGB[i].Source)
 	 return GL_FALSE;
 
       switch(key->unit[unit].OptA[i].Operand) {
-      case OPR_SRC_ALPHA: 
+      case OPR_SRC_ALPHA:
 	 switch(key->unit[unit].OptRGB[i].Operand) {
-	 case OPR_SRC_COLOR: 
-	 case OPR_SRC_ALPHA: 
+	 case OPR_SRC_COLOR:
+	 case OPR_SRC_ALPHA:
 	    break;
 	 default:
 	    return GL_FALSE;
 	 }
 	 break;
-      case OPR_ONE_MINUS_SRC_ALPHA: 
+      case OPR_ONE_MINUS_SRC_ALPHA:
 	 switch(key->unit[unit].OptRGB[i].Operand) {
-	 case OPR_ONE_MINUS_SRC_COLOR: 
-	 case OPR_ONE_MINUS_SRC_ALPHA: 
+	 case OPR_ONE_MINUS_SRC_COLOR:
+	 case OPR_ONE_MINUS_SRC_ALPHA:
 	    break;
 	 default:
 	    return GL_FALSE;
 	 }
 	 break;
-      default: 
+      default:
 	 return GL_FALSE;	/* impossible */
       }
    }
@@ -742,16 +742,16 @@ static struct ureg emit_combine( struct texenv_fragment_program *p,
       src[i] = emit_combine_source( p, mask, unit, opt[i].Source, opt[i].Operand );
 
    switch (mode) {
-   case MODE_REPLACE: 
+   case MODE_REPLACE:
       if (mask == WRITEMASK_XYZW && !saturate)
 	 return src[0];
       else
 	 return emit_arith( p, FP_OPCODE_MOV, dest, mask, saturate, src[0], undef, undef );
-   case MODE_MODULATE: 
+   case MODE_MODULATE:
       return emit_arith( p, FP_OPCODE_MUL, dest, mask, saturate,
 			 src[0], src[1], undef );
-   case MODE_ADD: 
-      return emit_arith( p, FP_OPCODE_ADD, dest, mask, saturate, 
+   case MODE_ADD:
+      return emit_arith( p, FP_OPCODE_ADD, dest, mask, saturate,
 			 src[0], src[1], undef );
    case MODE_ADD_SIGNED:
       /* tmp = arg0 + arg1
@@ -761,16 +761,16 @@ static struct ureg emit_combine( struct texenv_fragment_program *p,
       emit_arith( p, FP_OPCODE_ADD, tmp, mask, 0, src[0], src[1], undef );
       emit_arith( p, FP_OPCODE_SUB, dest, mask, saturate, tmp, half, undef );
       return dest;
-   case MODE_INTERPOLATE: 
+   case MODE_INTERPOLATE:
       /* Arg0 * (Arg2) + Arg1 * (1-Arg2) -- note arguments are reordered:
        */
       return emit_arith( p, FP_OPCODE_LRP, dest, mask, saturate, src[2], src[0], src[1] );
 
-   case MODE_SUBTRACT: 
+   case MODE_SUBTRACT:
       return emit_arith( p, FP_OPCODE_SUB, dest, mask, saturate, src[0], src[1], undef );
 
    case MODE_DOT3_RGBA:
-   case MODE_DOT3_RGBA_EXT: 
+   case MODE_DOT3_RGBA_EXT:
    case MODE_DOT3_RGB_EXT:
    case MODE_DOT3_RGB: {
       struct ureg tmp0 = get_temp( p );
@@ -781,15 +781,15 @@ static struct ureg emit_combine( struct texenv_fragment_program *p,
       /* tmp0 = 2*src0 - 1
        * tmp1 = 2*src1 - 1
        *
-       * dst = tmp0 dot3 tmp1 
+       * dst = tmp0 dot3 tmp1
        */
-      emit_arith( p, FP_OPCODE_MAD, tmp0, WRITEMASK_XYZW, 0, 
+      emit_arith( p, FP_OPCODE_MAD, tmp0, WRITEMASK_XYZW, 0,
 		  two, src[0], neg1);
 
       if (memcmp(&src[0], &src[1], sizeof(struct ureg)) == 0)
 	 tmp1 = tmp0;
       else
-	 emit_arith( p, FP_OPCODE_MAD, tmp1, WRITEMASK_XYZW, 0, 
+	 emit_arith( p, FP_OPCODE_MAD, tmp1, WRITEMASK_XYZW, 0,
 		     two, src[1], neg1);
       emit_arith( p, FP_OPCODE_DP3, dest, mask, saturate, tmp0, tmp1, undef);
       return dest;
@@ -810,7 +810,7 @@ static struct ureg emit_combine( struct texenv_fragment_program *p,
       /* Arg0 * Arg2 - Arg1 */
       emit_arith( p, FP_OPCODE_MAD, dest, mask, 0, src[0], src[2], negate(src[1]) );
       return dest;
-   default: 
+   default:
       return src[0];
    }
 }
@@ -827,7 +827,7 @@ static struct ureg emit_texenv( struct texenv_fragment_program *p, int unit )
    if (!key->unit[unit].enabled) {
       return get_source(p, SRC_PREVIOUS, 0);
    }
-   
+
    switch (key->unit[unit].ModeRGB) {
    case MODE_DOT3_RGB_EXT:
       alpha_shift = key->unit[unit].ScaleShiftA;
@@ -842,7 +842,7 @@ static struct ureg emit_texenv( struct texenv_fragment_program *p, int unit )
       alpha_shift = key->unit[unit].ScaleShiftA;
       break;
    }
-   
+
    /* If this is the very last calculation, emit direct to output reg:
     */
    if (key->separate_specular ||
@@ -895,13 +895,13 @@ static struct ureg emit_texenv( struct texenv_fragment_program *p, int unit )
 	 shift = register_scalar_const(p, 1<<rgb_shift);
       }
       else {
-	 shift = register_const4f(p, 
+	 shift = register_const4f(p,
 				  1<<rgb_shift,
 				  1<<rgb_shift,
 				  1<<rgb_shift,
 				  1<<alpha_shift);
       }
-      return emit_arith( p, FP_OPCODE_MUL, dest, WRITEMASK_XYZW, 
+      return emit_arith( p, FP_OPCODE_MUL, dest, WRITEMASK_XYZW,
 			 saturate, out, shift, undef );
    }
    else
@@ -919,20 +919,20 @@ static void load_texture( struct texenv_fragment_program *p, GLuint unit )
 
       if (dim == TEXTURE_UNKNOWN_INDEX)
          program_error(p, "TexSrcBit");
-			  
+
       /* TODO: Use D0_MASK_XY where possible.
        */
       p->src_texture[unit] = emit_texld( p, FP_OPCODE_TXP,
-					 tmp, WRITEMASK_XYZW, 
+					 tmp, WRITEMASK_XYZW,
 					 unit, dim, texcoord );
    }
 }
 
-static GLboolean load_texenv_source( struct texenv_fragment_program *p, 
+static GLboolean load_texenv_source( struct texenv_fragment_program *p,
 				     GLuint src, GLuint unit )
 {
    switch (src) {
-   case SRC_TEXTURE: 
+   case SRC_TEXTURE:
       load_texture(p, unit);
       break;
 
@@ -943,16 +943,16 @@ static GLboolean load_texenv_source( struct texenv_fragment_program *p,
    case SRC_TEXTURE4:
    case SRC_TEXTURE5:
    case SRC_TEXTURE6:
-   case SRC_TEXTURE7:       
-      if (!p->state->unit[src - SRC_TEXTURE0].enabled) 
+   case SRC_TEXTURE7:
+      if (!p->state->unit[src - SRC_TEXTURE0].enabled)
 	 return GL_FALSE;
       load_texture(p, src - SRC_TEXTURE0);
       break;
-      
+
    default:
       break;
    }
- 
+
    return GL_TRUE;
 }
 
@@ -1051,7 +1051,7 @@ static void create_new_program(struct state_key *key, GLcontext *ctx,
    } else
       p.program->FogOption = GL_NONE;
 
-   if (p.program->NumTexIndirections > ctx->Const.MaxFragmentProgramTexIndirections) 
+   if (p.program->NumTexIndirections > ctx->Const.MaxFragmentProgramTexIndirections)
       program_error(&p, "Exceeded max nr indirect texture lookups");
 
    if (p.program->NumTexInstructions > ctx->Const.MaxFragmentProgramTexInstructions)
@@ -1065,7 +1065,7 @@ static void create_new_program(struct state_key *key, GLcontext *ctx,
     */
    if (ctx->Driver.ProgramStringNotify || DISASSEM) {
       if (ctx->Driver.ProgramStringNotify)
-	 ctx->Driver.ProgramStringNotify( ctx, GL_FRAGMENT_PROGRAM_ARB, 
+	 ctx->Driver.ProgramStringNotify( ctx, GL_FRAGMENT_PROGRAM_ARB,
 					  &p.program->Base );
 
       if (DISASSEM) {
@@ -1073,7 +1073,7 @@ static void create_new_program(struct state_key *key, GLcontext *ctx,
 			     p.program->Instructions);
 	 _mesa_printf("\n");
       }
-      
+
    }
 
 }
@@ -1123,24 +1123,24 @@ void _mesa_UpdateTexEnvProgram( GLcontext *ctx )
 {
    struct state_key *key;
    GLuint hash;
-	
+
    if (ctx->FragmentProgram._Enabled)
       return;
-	
+
    key = make_state_key(ctx);
    hash = hash_key(key);
 
    ctx->FragmentProgram._Current = ctx->_TexEnvProgram =
       (struct fragment_program *)
       search_cache(ctx->Texture.env_fp_cache, hash, key, sizeof(*key));
-	
+
    if (!ctx->_TexEnvProgram) {
       if (0) _mesa_printf("Building new texenv proggy for key %x\n", hash);
-		
-      ctx->FragmentProgram._Current = ctx->_TexEnvProgram = 
-	 (struct fragment_program *) 
+
+      ctx->FragmentProgram._Current = ctx->_TexEnvProgram =
+	 (struct fragment_program *)
 	 ctx->Driver.NewProgram(ctx, GL_FRAGMENT_PROGRAM_ARB, 0);
-		
+
       create_new_program(key, ctx, ctx->_TexEnvProgram);
 
       cache_item(&ctx->Texture.env_fp_cache, hash, key, ctx->_TexEnvProgram);
@@ -1148,7 +1148,7 @@ void _mesa_UpdateTexEnvProgram( GLcontext *ctx )
       FREE(key);
       if (0) _mesa_printf("Found existing texenv program for key %x\n", hash);
    }
-	
+
 }
 
 void _mesa_TexEnvProgramCacheDestroy( GLcontext *ctx )

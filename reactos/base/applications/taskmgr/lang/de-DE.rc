@@ -676,7 +676,7 @@ BEGIN
     IDS_TAB_IOWRITES              "E/A (Schreiben)"
     IDS_TAB_IOOTHER               "E/A (Andere)"
     IDS_TAB_IOREADBYTES           "E/A-Bytes (Lesen)"
-    IDS_TAB_IOWRITESBYTES         "E/A-Bytes (Schreiben)" 
+    IDS_TAB_IOWRITESBYTES         "E/A-Bytes (Schreiben)"
     IDS_TAB_IOOTHERBYTES          "E/A-Bytes (Andere)"
     IDS_MENU_SELECTCOLUMNS        "&Spalten auswählen..."
     IDS_MENU_16BITTASK            "&16-Bit-Tasks anzeigen"
@@ -705,7 +705,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "CPU-Auslastung: %3d%%"
     IDS_STATUS_PROCESSES          "Prozesse: %d"
     IDS_Not_Responding            "Keine Rückmeldung"
-    IDS_Running                   "Wird ausgeführt"  
+    IDS_Running                   "Wird ausgeführt"
 
 END
 

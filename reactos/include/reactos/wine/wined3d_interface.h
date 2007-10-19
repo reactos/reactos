@@ -36,7 +36,7 @@ struct IWineD3DSurface;
 
 #include "wined3d_types.h"
 /*****************************************************************
- * THIS FILE MUST NOT CONTAIN X11 or MESA DEFINES 
+ * THIS FILE MUST NOT CONTAIN X11 or MESA DEFINES
  * PLEASE USE wine/wined3d_gl.h INSTEAD
  */
 
@@ -109,14 +109,14 @@ struct IWineD3DClipper;
 
 
 /* {108F9C44-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3D, 
+DEFINE_GUID(IID_IWineD3D,
 0x108f9c44, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 DEFINE_GUID(IID_IWineD3DBase,
 0x46799311, 0x8e0e, 0x40ce, 0xb2, 0xec, 0xdd, 0xb9, 0x9f, 0x18, 0xfc, 0xb4);
 
 /* {108F9C44-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DDevice, 
+DEFINE_GUID(IID_IWineD3DDevice,
 0x108f9c44, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {f756720c-32b9-4439-b5a3-1d6c97037d9e} */
@@ -124,49 +124,49 @@ DEFINE_GUID(IID_IWineD3DPalette,
 0xf756720c, 0x32b9, 0x4439, 0xb5, 0xa3, 0x1d, 0x6c, 0x97, 0x03, 0x7d, 0x9e);
 
 /* {1F3BFB34-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DResource, 
+DEFINE_GUID(IID_IWineD3DResource,
 0x1f3bfb34, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {217F671E-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DVertexBuffer, 
+DEFINE_GUID(IID_IWineD3DVertexBuffer,
 0x217f671e, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {24769ED8-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DVolume, 
+DEFINE_GUID(IID_IWineD3DVolume,
 0x24769ed8, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 
 /* {34D01B10-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DSwapChain, 
+DEFINE_GUID(IID_IWineD3DSwapChain,
 0x34d01b10, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {37CD5526-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DSurface, 
+DEFINE_GUID(IID_IWineD3DSurface,
 0x37cd5526, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 
 /* {3A02A54E-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DIndexBuffer, 
+DEFINE_GUID(IID_IWineD3DIndexBuffer,
 0x3a02a54e, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {3C2AEBF6-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DBaseTexture, 
+DEFINE_GUID(IID_IWineD3DBaseTexture,
 0x3c2aebf6, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {3E72CC1C-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DTexture, 
+DEFINE_GUID(IID_IWineD3DTexture,
 0x3e72cc1c, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {41752900-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DCubeTexture, 
+DEFINE_GUID(IID_IWineD3DCubeTexture,
 0x41752900, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {7B39470C-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DVolumeTexture, 
+DEFINE_GUID(IID_IWineD3DVolumeTexture,
 0x7b39470c, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {7CD55BE6-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DVertexDeclaration, 
+DEFINE_GUID(IID_IWineD3DVertexDeclaration,
 0x7cd55be6, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {EAC93065-A4DF-446F-86A1-9EF2BCA40A3C} */
@@ -174,19 +174,19 @@ DEFINE_GUID(IID_IWineD3DBaseShader,
 0xeac93065, 0xa4df, 0x446f, 0x86, 0xa1, 0x9e, 0xf2, 0xbc, 0xa4, 0x0a, 0x3c);
 
 /* {7F7A2B60-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DVertexShader, 
+DEFINE_GUID(IID_IWineD3DVertexShader,
 0x7f7a2b60, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {818503DA-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DPixelShader, 
+DEFINE_GUID(IID_IWineD3DPixelShader,
 0x818503da, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {83B073CE-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DStateBlock, 
+DEFINE_GUID(IID_IWineD3DStateBlock,
 0x83b073ce, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {905DDBAC-6F30-11d9-C687-00046142C14F} */
-DEFINE_GUID(IID_IWineD3DQuery, 
+DEFINE_GUID(IID_IWineD3DQuery,
 0x905ddbac, 0x6f30, 0x11d9, 0xc6, 0x87, 0x0, 0x4, 0x61, 0x42, 0xc1, 0x4f);
 
 /* {8f2bceb1-d338-488c-ab7f-0ec980bf5d2d} */
@@ -201,9 +201,9 @@ typedef HRESULT WINAPI (*D3DCB_CREATERENDERTARGETFN) (IUnknown *pDevice,
                                                UINT       Width,
                                                UINT       Height,
                                                WINED3DFORMAT  Format,
-                                               WINED3DMULTISAMPLE_TYPE MultiSample, 
-                                               DWORD      MultisampleQuality, 
-                                               BOOL       Lockable, 
+                                               WINED3DMULTISAMPLE_TYPE MultiSample,
+                                               DWORD      MultisampleQuality,
+                                               BOOL       Lockable,
                                                struct IWineD3DSurface **ppSurface,
                                                HANDLE    *pSharedHandle);
 
@@ -213,7 +213,7 @@ typedef HRESULT WINAPI (*D3DCB_CREATESURFACEFN) (IUnknown *pDevice,
                                                UINT       Height,
                                                WINED3DFORMAT Format,
                                                DWORD      Usage,
-                                               WINED3DPOOL Pool,            
+                                               WINED3DPOOL Pool,
                                                UINT       Level,
                                                WINED3DCUBEMAP_FACES Face,
                                                struct IWineD3DSurface **ppSurface,
@@ -224,9 +224,9 @@ typedef HRESULT WINAPI (*D3DCB_CREATEDEPTHSTENCILSURFACEFN) (IUnknown *pDevice,
                                                UINT       Width,
                                                UINT       Height,
                                                WINED3DFORMAT  Format,
-                                               WINED3DMULTISAMPLE_TYPE MultiSample, 
-                                               DWORD      MultisampleQuality, 
-                                               BOOL       Discard, 
+                                               WINED3DMULTISAMPLE_TYPE MultiSample,
+                                               DWORD      MultisampleQuality,
+                                               BOOL       Discard,
                                                struct IWineD3DSurface **ppSurface,
                                                HANDLE    *pSharedHandle);
 
@@ -236,7 +236,7 @@ typedef HRESULT WINAPI (*D3DCB_CREATEVOLUMEFN) (IUnknown *pDevice,
                                                UINT       Width,
                                                UINT       Height,
                                                UINT       Depth,
-                                               WINED3DFORMAT  Format, 
+                                               WINED3DFORMAT  Format,
                                                WINED3DPOOL Pool,
                                                DWORD      Usage,
                                                struct IWineD3DVolume **ppVolume,
@@ -282,7 +282,7 @@ DECLARE_INTERFACE_(IWineD3DBase, IUnknown)
 #endif
 
 /*****************************************************************************
- * IWineD3D interface 
+ * IWineD3D interface
  */
 
 #define INTERFACE IWineD3D
@@ -341,11 +341,11 @@ DECLARE_INTERFACE_(IWineD3D, IWineD3DBase)
 IWineD3D* WINAPI WineDirect3DCreate(UINT SDKVersion, UINT dxVersion, IUnknown *parent);
 
 /*****************************************************************************
- * IWineD3DDevice interface 
+ * IWineD3DDevice interface
  */
 #define INTERFACE IWineD3DDevice
-DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase) 
-{ 
+DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase)
+{
     /*** IUnknown methods ***/
     STDMETHOD_(HRESULT,QueryInterface)(THIS_ REFIID riid, void** ppvObject) PURE;
     STDMETHOD_(ULONG,AddRef)(THIS) PURE;
@@ -356,7 +356,7 @@ DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase)
     STDMETHOD(CreateVertexBuffer)(THIS_ UINT  Length,DWORD  Usage,DWORD  FVF,WINED3DPOOL  Pool,struct IWineD3DVertexBuffer **ppVertexBuffer, HANDLE *sharedHandle, IUnknown *parent) PURE;
     STDMETHOD(CreateIndexBuffer)(THIS_ UINT Length, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DIndexBuffer** ppIndexBuffer, HANDLE* pSharedHandle, IUnknown *parent) PURE;
     STDMETHOD(CreateStateBlock)(THIS_ WINED3DSTATEBLOCKTYPE Type, struct IWineD3DStateBlock **ppStateBlock, IUnknown *parent) PURE;
-    STDMETHOD(CreateSurface)(THIS_ UINT Width, UINT Height, WINED3DFORMAT Format,  BOOL Lockable, BOOL Discard, UINT Level,  struct IWineD3DSurface** ppSurface, WINED3DRESOURCETYPE Type, DWORD Usage, WINED3DPOOL Pool, WINED3DMULTISAMPLE_TYPE MultiSample ,DWORD MultisampleQuality,  HANDLE* pSharedHandle, WINED3DSURFTYPE Impl, IUnknown *parent) PURE;    
+    STDMETHOD(CreateSurface)(THIS_ UINT Width, UINT Height, WINED3DFORMAT Format,  BOOL Lockable, BOOL Discard, UINT Level,  struct IWineD3DSurface** ppSurface, WINED3DRESOURCETYPE Type, DWORD Usage, WINED3DPOOL Pool, WINED3DMULTISAMPLE_TYPE MultiSample ,DWORD MultisampleQuality,  HANDLE* pSharedHandle, WINED3DSURFTYPE Impl, IUnknown *parent) PURE;
     STDMETHOD(CreateTexture)(THIS_ UINT Width, UINT Height, UINT Levels, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DTexture** ppTexture, HANDLE* pSharedHandle, IUnknown *parent, D3DCB_CREATESURFACEFN pFn) PURE;
     STDMETHOD(CreateVolumeTexture)(THIS_ UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DVolumeTexture** ppVolumeTexture, HANDLE* pSharedHandle, IUnknown *parent, D3DCB_CREATEVOLUMEFN pFn) PURE;
     STDMETHOD(CreateVolume)(THIS_ UINT Width, UINT Height, UINT Depth, DWORD Usage, WINED3DFORMAT Format, WINED3DPOOL Pool, struct IWineD3DVolume** ppVolumeTexture, HANDLE* pSharedHandle, IUnknown *parent) PURE;
@@ -624,7 +624,7 @@ DECLARE_INTERFACE_(IWineD3DDevice,IWineD3DBase)
 #endif
 
 /*****************************************************************************
- * WineD3DResource interface 
+ * WineD3DResource interface
  */
 #define INTERFACE IWineD3DResource
 DECLARE_INTERFACE_(IWineD3DResource,IWineD3DBase)
@@ -666,7 +666,7 @@ DECLARE_INTERFACE_(IWineD3DResource,IWineD3DBase)
 #endif
 
 /*****************************************************************************
- * WineD3DVertexBuffer interface 
+ * WineD3DVertexBuffer interface
  */
 #define INTERFACE IWineD3DVertexBuffer
 DECLARE_INTERFACE_(IWineD3DVertexBuffer,IWineD3DResource)
@@ -716,7 +716,7 @@ DECLARE_INTERFACE_(IWineD3DVertexBuffer,IWineD3DResource)
 #endif
 
 /*****************************************************************************
- * WineD3DIndexBuffer interface 
+ * WineD3DIndexBuffer interface
  */
 #define INTERFACE IWineD3DIndexBuffer
 DECLARE_INTERFACE_(IWineD3DIndexBuffer,IWineD3DResource)
@@ -1210,7 +1210,7 @@ DECLARE_INTERFACE_(IWineD3DVolume,IWineD3DResource)
     STDMETHOD_(ULONG,Release)(THIS) PURE;
     /*** IWineD3DBase methods ***/
     STDMETHOD(GetParent)(THIS_ IUnknown **pParent) PURE;
-    /*** IWineD3DResource methods ***/    
+    /*** IWineD3DResource methods ***/
     STDMETHOD(GetDevice)(THIS_ IWineD3DDevice ** ppDevice) PURE;
     STDMETHOD(SetPrivateData)(THIS_ REFGUID  refguid, CONST void * pData, DWORD  SizeOfData, DWORD  Flags) PURE;
     STDMETHOD(GetPrivateData)(THIS_ REFGUID  refguid, void * pData, DWORD * pSizeOfData) PURE;
@@ -1218,8 +1218,8 @@ DECLARE_INTERFACE_(IWineD3DVolume,IWineD3DResource)
     STDMETHOD_(DWORD,SetPriority)(THIS_ DWORD  PriorityNew) PURE;
     STDMETHOD_(DWORD,GetPriority)(THIS) PURE;
     STDMETHOD_(void,PreLoad)(THIS) PURE;
-    STDMETHOD_(WINED3DRESOURCETYPE, GetType)(THIS) PURE;    
-    /*** IWineD3DVolume methods ***/    
+    STDMETHOD_(WINED3DRESOURCETYPE, GetType)(THIS) PURE;
+    /*** IWineD3DVolume methods ***/
     STDMETHOD(GetContainer)(THIS_ REFIID  riid, void ** ppContainer) PURE;
     STDMETHOD(GetDesc)(THIS_ WINED3DVOLUME_DESC * pDesc) PURE;
     STDMETHOD(LockBox)(THIS_ WINED3DLOCKED_BOX* pLockedVolume, CONST WINED3DBOX* pBox, DWORD Flags) PURE;
@@ -1291,7 +1291,7 @@ DECLARE_INTERFACE_(IWineD3DVertexDeclaration,IWineD3DBase)
 #endif
 
 /*****************************************************************************
- * IWineD3DStateBlock interface 
+ * IWineD3DStateBlock interface
  */
 #define INTERFACE IWineD3DStateBlock
 DECLARE_INTERFACE_(IWineD3DStateBlock,IWineD3DBase)
@@ -1325,7 +1325,7 @@ DECLARE_INTERFACE_(IWineD3DStateBlock,IWineD3DBase)
 #endif
 
 /*****************************************************************************
- * WineD3DQuery interface 
+ * WineD3DQuery interface
  */
 #define INTERFACE IWineD3DQuery
 DECLARE_INTERFACE_(IWineD3DQuery,IWineD3DBase)
@@ -1342,7 +1342,7 @@ DECLARE_INTERFACE_(IWineD3DQuery,IWineD3DBase)
     STDMETHOD_(DWORD,GetDataSize)(THIS) PURE;
     STDMETHOD_(WINED3DQUERYTYPE, GetType)(THIS) PURE;
     STDMETHOD(Issue)(THIS_ DWORD dwIssueFlags) PURE;
-    
+
 };
 #undef INTERFACE
 
@@ -1441,7 +1441,7 @@ DECLARE_INTERFACE_(IWineD3DBaseShader,IWineD3DBase)
 #endif
 
 /*****************************************************************************
- * IWineD3DVertexShader interface 
+ * IWineD3DVertexShader interface
  */
 #define INTERFACE IWineD3DVertexShader
 DECLARE_INTERFACE_(IWineD3DVertexShader,IWineD3DBaseShader)

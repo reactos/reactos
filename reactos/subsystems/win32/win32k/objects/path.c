@@ -67,7 +67,7 @@ NtGdiBeginPath( HDC  hDC )
   PDC dc = DC_LockDc ( hDC );
 
   if( !dc ) return FALSE;
-      
+
   /* If path is already open, do nothing */
   if ( dc->w.path.state != PATH_Open )
   {
@@ -105,12 +105,12 @@ NtGdiCloseFigure(HDC hDC)
 {
    BOOL Ret = FALSE; // default to failure
    PDC pDc;
-   
+
    DPRINT("Enter %s\n", __FUNCTION__);
-    
+
    pDc = DC_LockDc(hDC);
    if(!pDc) return FALSE;
-  
+
    if(pDc->w.path.state==PATH_Open)
    {
       IntGdiCloseFigure(pDc);
@@ -121,7 +121,7 @@ NtGdiCloseFigure(HDC hDC)
       // FIXME: check if lasterror is set correctly
       SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
    }
-   
+
    DC_UnlockDc(pDc);
 
    return Ret;
@@ -156,9 +156,9 @@ NtGdiFillPath(HDC  hDC)
   PDC dc = DC_LockDc ( hDC );
 
   if ( !dc ) return FALSE;
-  
+
   ret = PATH_FillPath( dc, &dc->w.path );
-  if( ret ) 
+  if( ret )
   {
     /* FIXME: Should the path be emptied even if conversion
        failed? */
@@ -175,9 +175,9 @@ NtGdiFlattenPath(HDC  hDC)
 {
     BOOL Ret = FALSE;
     DC *pDc;
-    
+
     DPRINT("Enter %s\n", __FUNCTION__);
-    
+
     pDc = DC_LockDc(hDC);
     if(!pDc) return FALSE;
 
@@ -224,7 +224,7 @@ NtGdiGetPath(
       SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
       goto done;
    }
- 
+
    if(nSize==0)
    {
       ret = pPath->numEntriesUsed;
@@ -240,10 +240,10 @@ NtGdiGetPath(
       {
          memcpy(Points, pPath->pPoints, sizeof(POINT)*pPath->numEntriesUsed);
          memcpy(Types, pPath->pFlags, sizeof(BYTE)*pPath->numEntriesUsed);
- 
+
          /* Convert the points to logical coordinates */
          IntDPtoLP(dc, Points, pPath->numEntriesUsed);
-         
+
          ret = pPath->numEntriesUsed;
       }
       _SEH_HANDLE
@@ -252,8 +252,8 @@ NtGdiGetPath(
       }
       _SEH_END
    }
- 
-done:   
+
+done:
    DC_UnlockDc(dc);
    return ret;
 }
@@ -265,15 +265,15 @@ NtGdiPathToRegion(HDC  hDC)
    GdiPath *pPath;
    HRGN  hrgnRval = 0;
    DC *pDc;
-   
+
    DPRINT("Enter %s\n", __FUNCTION__);
-   
+
    pDc = DC_LockDc(hDC);
    if(!pDc) return NULL;
 
    pPath = &pDc->w.path;
 
-   if(pPath->state!=PATH_Closed) 
+   if(pPath->state!=PATH_Closed)
    {
       //FIXME: check that setlasterror is being called correctly
       SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
@@ -284,7 +284,7 @@ NtGdiPathToRegion(HDC  hDC)
       if(PATH_PathToRegion(pPath, pDc->Dc_Attr.jFillMode, &hrgnRval))
            PATH_EmptyPath(pPath);
    }
-   
+
    DC_UnlockDc(pDc);
    return hrgnRval;
 }
@@ -304,17 +304,17 @@ BOOL
 STDCALL
 NtGdiStrokeAndFillPath(HDC hDC)
 {
-   DC *pDc; 
+   DC *pDc;
    BOOL bRet = FALSE;
 
    DPRINT("Enter %s\n", __FUNCTION__);
-   
+
    if(!(pDc = DC_LockDc(hDC))) return FALSE;
 
    bRet = PATH_FillPath(pDc, &pDc->w.path);
    if(bRet) bRet = PATH_StrokePath(pDc, &pDc->w.path);
    if(bRet) PATH_EmptyPath(&pDc->w.path);
-   
+
    DC_UnlockDc(pDc);
    return bRet;
 }
@@ -327,12 +327,12 @@ NtGdiStrokePath(HDC hDC)
     BOOL bRet = FALSE;
 
     DPRINT("Enter %s\n", __FUNCTION__);
-    
+
     if(!(pDc = DC_LockDc(hDC))) return FALSE;
 
     bRet = PATH_StrokePath(pDc, &pDc->w.path);
     PATH_EmptyPath(&pDc->w.path);
-    
+
     DC_UnlockDc(pDc);
     return bRet;
 }
@@ -382,11 +382,11 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
 
 
 /* PATH_FillPath
- * 
- * 
+ *
+ *
  */
 BOOL
-FASTCALL 
+FASTCALL
 PATH_FillPath( PDC dc, GdiPath *pPath )
 {
   INT   mapMode, graphicsMode;
@@ -400,7 +400,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
     SetLastWin32Error(ERROR_CAN_NOT_COMPLETE);
     return FALSE;
   }
-    
+
   if( PATH_PathToRegion( pPath, dc->Dc_Attr.jFillMode, &hrgn ))
   {
     /* Since PaintRgn interprets the region as being in logical coordinates
@@ -425,7 +425,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
      * not reset the world transform.
      */
     xform = dc->w.xformWorld2Wnd;
-    
+
     /* Set MM_TEXT */
     IntGdiSetMapMode( dc, MM_TEXT );
     dc->Dc_Attr.ptlViewportOrg.x = 0;
@@ -643,7 +643,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
 
   /* Close the rectangle figure */
   IntGdiCloseFigure(dc) ;
-  
+
   return TRUE;
 }
 
@@ -1473,10 +1473,10 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
     XFORM xform;
 
     DPRINT("Enter %s\n", __FUNCTION__);
-    
+
     if(pPath->state != PATH_Closed)
         return FALSE;
-    
+
     /* Save the mapping mode info */
     mapMode=dc->Dc_Attr.iMapMode;
     IntGetViewportExtEx(dc, &szViewportExt);
@@ -1497,33 +1497,33 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
     dc->Dc_Attr.iGraphicsMode = graphicsMode;
 
     /* Allocate enough memory for the worst case without beziers (one PT_MOVETO
-     * and the rest PT_LINETO with PT_CLOSEFIGURE at the end) plus some buffer 
+     * and the rest PT_LINETO with PT_CLOSEFIGURE at the end) plus some buffer
      * space in case we get one to keep the number of reallocations small. */
-    nAlloc = pPath->numEntriesUsed + 1 + 300; 
+    nAlloc = pPath->numEntriesUsed + 1 + 300;
     pLinePts = ExAllocatePoolWithTag(PagedPool, nAlloc * sizeof(POINT), TAG_PATH);
     if(!pLinePts)
     {
         DPRINT1("Can't allocate pool!\n");
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         goto end;
-    }          
+    }
     nLinePts = 0;
 
-    for(i = 0; i < pPath->numEntriesUsed; i++) 
+    for(i = 0; i < pPath->numEntriesUsed; i++)
     {
-        if((i == 0 || (pPath->pFlags[i-1] & PT_CLOSEFIGURE)) 
-                && (pPath->pFlags[i] != PT_MOVETO)) 
+        if((i == 0 || (pPath->pFlags[i-1] & PT_CLOSEFIGURE))
+                && (pPath->pFlags[i] != PT_MOVETO))
         {
-            DPRINT1("Expected PT_MOVETO %s, got path flag %d\n", 
+            DPRINT1("Expected PT_MOVETO %s, got path flag %d\n",
                 i == 0 ? "as first point" : "after PT_CLOSEFIGURE",
                 (INT)pPath->pFlags[i]);
                 goto end;
         }
-    
-        switch(pPath->pFlags[i]) 
+
+        switch(pPath->pFlags[i])
         {
         case PT_MOVETO:
-            DPRINT("Got PT_MOVETO (%ld, %ld)\n", 
+            DPRINT("Got PT_MOVETO (%ld, %ld)\n",
                 pPath->pPoints[i].x, pPath->pPoints[i].y);
             if(nLinePts >= 2) IntGdiPolyline(dc, pLinePts, nLinePts);
             nLinePts = 0;
@@ -1543,32 +1543,32 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
                 DPRINT1("Path didn't contain 3 successive PT_BEZIERTOs\n");
                 ret = FALSE;
                 goto end;
-            } 
-            else 
+            }
+            else
             {
                 INT nBzrPts, nMinAlloc;
                 POINT *pBzrPts = GDI_Bezier(&pPath->pPoints[i-1], 4, &nBzrPts);
-                /* Make sure we have allocated enough memory for the lines of 
+                /* Make sure we have allocated enough memory for the lines of
                  * this bezier and the rest of the path, assuming we won't get
                  * another one (since we won't reallocate again then). */
                 nMinAlloc = nLinePts + (pPath->numEntriesUsed - i) + nBzrPts;
                 if(nAlloc < nMinAlloc)
                 {
                     // Reallocate memory
-                    
+
                     POINT *Realloc = NULL;
                     nAlloc = nMinAlloc * 2;
-                    
-                    Realloc = ExAllocatePoolWithTag(PagedPool, 
-                        nAlloc * sizeof(POINT), 
+
+                    Realloc = ExAllocatePoolWithTag(PagedPool,
+                        nAlloc * sizeof(POINT),
                         TAG_PATH);
-                    
+
                     if(!Realloc)
                     {
                         DPRINT1("Can't allocate pool!\n");
                         goto end;
                     }
-                    
+
                     memcpy(Realloc, pLinePts, nLinePts*sizeof(POINT));
                     ExFreePool(pLinePts);
                     pLinePts = Realloc;
@@ -1583,16 +1583,16 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
             DPRINT1("Got path flag %d (not supported)\n", (INT)pPath->pFlags[i]);
             goto end;
         }
-        
+
         if(pPath->pFlags[i] & PT_CLOSEFIGURE)
         {
             pLinePts[nLinePts++] = pLinePts[0];
         }
     }//for
-    
+
     if(nLinePts >= 2)
         IntGdiPolyline(dc, pLinePts, nLinePts);
-        
+
     ret = TRUE;
 
 end:
@@ -1604,7 +1604,7 @@ end:
     dc->Dc_Attr.szlWindowExt.cy = szWindowExt.cy;
     dc->Dc_Attr.ptlWindowOrg.x = ptWindowOrg.x;
     dc->Dc_Attr.ptlWindowOrg.y = ptWindowOrg.y;
-    
+
     dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cx;
     dc->Dc_Attr.szlViewportExt.cy = szViewportExt.cy;
     dc->Dc_Attr.ptlViewportOrg.x = ptViewportOrg.x;
@@ -1619,7 +1619,7 @@ end:
        dc->CurPosX|Y so that their values are in the correct mapping
        mode.
     */
-    if(i > 0) 
+    if(i > 0)
     {
         POINT pt;
         IntGetCurrentPositionEx(dc, &pt);

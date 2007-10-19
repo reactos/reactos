@@ -83,8 +83,8 @@ static BSTR WINAPI ERRORINFO_SysAllocString(const OLECHAR* in)
     newBuffer++;
 
     /*
-     * Copy the information in the buffer.  It is not possible to pass 
-     * a NULL pointer here. 
+     * Copy the information in the buffer.  It is not possible to pass
+     * a NULL pointer here.
      */
     memcpy(newBuffer, in, bufferSize);
 
@@ -528,7 +528,7 @@ HRESULT WINAPI GetErrorInfo(ULONG dwReserved, IErrorInfo **pperrinfo)
 	}
 
 	*pperrinfo = COM_CurrentInfo()->errorinfo;
-        
+
 	/* clear thread error state */
 	COM_CurrentInfo()->errorinfo = NULL;
 	return S_OK;
@@ -566,6 +566,6 @@ HRESULT WINAPI SetErrorInfo(ULONG dwReserved, IErrorInfo *perrinfo)
 	/* set to new value */
 	COM_CurrentInfo()->errorinfo = perrinfo;
 	if (perrinfo) IErrorInfo_AddRef(perrinfo);
-        
+
 	return S_OK;
 }

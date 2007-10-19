@@ -5,7 +5,7 @@
  * Initial file : http://svn.reactos.org/viewcvs/trunk/reactos/base/applications/games/winemine/En.rc
  * Revision : 85
  */
- 
+
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE {

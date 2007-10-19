@@ -220,11 +220,11 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
 
     /* Don't even try at ISR level or later */
     if (KeGetCurrentIrql() > DISPATCH_LEVEL) return FALSE;
-    
+
     /* Start with defaults */
     *StackBegin = Thread->StackLimit;
     *StackEnd = (ULONG_PTR)Thread->StackBase;
-    
+
     /* Check if EBP is inside the stack */
     if ((*StackBegin <= Ebp) && (Ebp <= *StackEnd))
     {
@@ -236,7 +236,7 @@ RtlpCaptureStackLimits(IN ULONG_PTR Ebp,
         /* Now we're going to assume we're on the DPC stack */
         *StackEnd = (ULONG_PTR)(KeGetPcr()->Prcb->DpcStack);
         *StackBegin = *StackEnd - KERNEL_STACK_SIZE;
-        
+
         /* Check if we seem to be on the DPC stack */
         if ((*StackEnd) && (*StackBegin < Ebp) && (Ebp <= *StackEnd))
         {
@@ -271,7 +271,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
     PKTHREAD Thread = KeGetCurrentThread();
     PTEB Teb;
     PKTRAP_FRAME TrapFrame;
-    
+
     /* Get current EBP */
 #if defined(_M_IX86)
 #if defined __GNUC__
@@ -286,10 +286,10 @@ RtlWalkFrameChain(OUT PVOID *Callers,
 #else
 #error Unknown architecture
 #endif
-    
+
     /* Set it as the stack begin limit as well */
     StackBegin = (ULONG_PTR)Stack;
-    
+
     /* Check if we're called for non-logging mode */
     if (!Flags)
     {
@@ -299,23 +299,23 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                                         &StackEnd);
         if (!Result) return 0;
     }
-    
+
     /* Use a SEH block for maximum protection */
     _SEH_TRY
     {
         /* Check if we want the user-mode stack frame */
         if (Flags == 1)
         {
-            /* Get the trap frame and TEB */          
+            /* Get the trap frame and TEB */
             TrapFrame = Thread->TrapFrame;
             Teb = Thread->Teb;
-            
+
             /* Make sure we can trust the TEB and trap frame */
-            if (!(Teb) || 
-                !((PVOID)((ULONG_PTR)TrapFrame & 0x80000000)) || 
+            if (!(Teb) ||
+                !((PVOID)((ULONG_PTR)TrapFrame & 0x80000000)) ||
                 ((PVOID)TrapFrame <= (PVOID)Thread->StackLimit) ||
                 ((PVOID)TrapFrame >= (PVOID)Thread->StackBase) ||
-                (KeIsAttachedProcess()) || 
+                (KeIsAttachedProcess()) ||
                 (KeGetCurrentIrql() >= DISPATCH_LEVEL))
             {
                 /* Invalid or unsafe attempt to get the stack */
@@ -337,7 +337,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                          StackEnd - StackBegin,
                          sizeof(CHAR));
         }
-        
+
         /* Loop the frames */
         for (i = 0; i < Count; i++)
         {
@@ -353,27 +353,27 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                 /* We're done or hit a bad address */
                 break;
             }
-            
+
             /* Get new stack and EIP */
             NewStack = *(PULONG_PTR)Stack;
             Eip = *(PULONG_PTR)(Stack + sizeof(ULONG_PTR));
-            
+
             /* Check if the new pointer is above the oldone and past the end */
             if (!((Stack < NewStack) && (NewStack < StackEnd)))
             {
                 /* Stop searching after this entry */
                 StopSearch = TRUE;
             }
-            
+
             /* Also make sure that the EIP isn't a stack address */
             if ((StackBegin < Eip) && (Eip < StackEnd)) break;
-            
+
             /* Check if we reached a user-mode address */
             if (!(Flags) && !(Eip & 0x80000000)) break;
-            
+
             /* Save this frame */
             Callers[i] = (PVOID)Eip;
-            
+
             /* Check if we should continue */
             if (StopSearch)
             {
@@ -381,7 +381,7 @@ RtlWalkFrameChain(OUT PVOID *Callers,
                 i++;
                 break;
             }
-            
+
             /* Move to the next stack */
             Stack = NewStack;
         }
@@ -392,9 +392,9 @@ RtlWalkFrameChain(OUT PVOID *Callers,
         i = 0;
     }
     _SEH_END;
-    
+
     /* Return frames parsed */
-    return i;    
+    return i;
 }
 
 /* RTL Atom Tables ************************************************************/
@@ -457,7 +457,7 @@ RtlpAllocAtomTable(ULONG Size)
       RtlZeroMemory(Table,
                     Size);
    }
-   
+
    return Table;
 }
 
@@ -501,10 +501,10 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
    HANDLE_TABLE_ENTRY ExEntry;
    HANDLE Handle;
    USHORT HandleIndex;
-   
+
    ExEntry.Object = Entry;
    ExEntry.GrantedAccess = 0x1; /* FIXME - valid handle */
-   
+
    Handle = ExCreateHandle(AtomTable->ExHandleTable,
                                 &ExEntry);
    if (Handle != NULL)
@@ -515,7 +515,7 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
       {
          Entry->HandleIndex = HandleIndex;
          Entry->Atom = 0xC000 + HandleIndex;
-         
+
          return TRUE;
       }
       else
@@ -523,7 +523,7 @@ RtlpCreateAtomHandle(PRTL_ATOM_TABLE AtomTable, PRTL_ATOM_TABLE_ENTRY Entry)
                          Handle,
                          NULL);
    }
-   
+
    return FALSE;
 }
 
@@ -532,21 +532,21 @@ RtlpGetAtomEntry(PRTL_ATOM_TABLE AtomTable, ULONG Index)
 {
    PHANDLE_TABLE_ENTRY ExEntry;
    PRTL_ATOM_TABLE_ENTRY Entry = NULL;
-   
+
    /* NOTE: There's no need to explicitly enter a critical region because it's
             guaranteed that we're in a critical region right now (as we hold
             the atom table lock) */
-   
+
    ExEntry = ExMapHandleToPointer(AtomTable->ExHandleTable,
                                   (HANDLE)((ULONG_PTR)Index << 2));
    if (ExEntry != NULL)
    {
       Entry = ExEntry->Object;
-      
+
       ExUnlockHandleTableEntry(AtomTable->ExHandleTable,
                                ExEntry);
    }
-   
+
    return Entry;
 }
 

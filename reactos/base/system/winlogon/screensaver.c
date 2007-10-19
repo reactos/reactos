@@ -280,7 +280,7 @@ StartScreenSaver(
 
 	if (bufferSize == 0)
 		goto cleanup;
-	
+
 	szApplicationName[bufferSize] = 0; /* Terminate the string */
 
 	if (wcslen(szApplicationName) == 0)

@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS kernel
  * FILE:             drivers/fs/vfat/flush.c
  * PURPOSE:          VFAT Filesystem
- * PROGRAMMER:       
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

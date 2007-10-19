@@ -51,9 +51,9 @@ class CurveMap;
 #ifndef IN_MAX_BEZIER_ORDER
 #define IN_MAX_BEZIER_ORDER 40 /*XXX should be bigger than machine order*/
 #endif
-			
+
 #ifndef IN_MAX_DIMENSION
-#define IN_MAX_DIMENSION 4 
+#define IN_MAX_DIMENSION 4
 #endif
 
 typedef struct curveEvalMachine{
@@ -67,7 +67,7 @@ typedef struct curveEvalMachine{
   REAL ucoeff[IN_MAX_BEZIER_ORDER];//cache the polynomial values
 } curveEvalMachine;
 
-class OpenGLCurveEvaluator : public BasicCurveEvaluator  {  
+class OpenGLCurveEvaluator : public BasicCurveEvaluator  {
 public:
 			OpenGLCurveEvaluator(void);
 			virtual ~OpenGLCurveEvaluator(void);

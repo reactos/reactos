@@ -972,7 +972,7 @@ static HRESULT WINAPI StorageBaseImpl_CreateStream(
   if ( FAILED( validateSTGM(grfMode) ))
     return STG_E_INVALIDFLAG;
 
-  if (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE) 
+  if (STGM_SHARE_MODE(grfMode) != STGM_SHARE_EXCLUSIVE)
     return STG_E_INVALIDFLAG;
 
   /*
@@ -4344,8 +4344,8 @@ void StorageUtl_CopyPropertyToSTATSTG(
   /*
    * The copy of the string occurs only when the flag is not set
    */
-  if( ((statFlags & STATFLAG_NONAME) != 0) || 
-       (source->name == NULL) || 
+  if( ((statFlags & STATFLAG_NONAME) != 0) ||
+       (source->name == NULL) ||
        (source->name[0] == 0) )
   {
     destination->pwcsName = 0;
@@ -5819,25 +5819,25 @@ HRESULT WINAPI StgCreateStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD st
     if (stgfmt != STGFMT_FILE && grfAttrs != 0)
     {
         ERR("grfAttrs must be 0 if stgfmt != STGFMT_FILE\n");
-        return STG_E_INVALIDPARAMETER;  
+        return STG_E_INVALIDPARAMETER;
     }
 
     if (stgfmt == STGFMT_FILE && grfAttrs != 0 && grfAttrs != FILE_FLAG_NO_BUFFERING)
     {
         ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_FILE\n");
-        return STG_E_INVALIDPARAMETER;  
+        return STG_E_INVALIDPARAMETER;
     }
 
     if (stgfmt == STGFMT_FILE)
     {
-        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");  
+        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");
         return STG_E_INVALIDPARAMETER;
     }
 
     if (stgfmt == STGFMT_STORAGE || stgfmt == STGFMT_DOCFILE)
     {
         FIXME("Stub: calling StgCreateDocfile, but ignoring pStgOptions and grfAttrs\n");
-        return StgCreateDocfile(pwcsName, grfMode, 0, (IStorage **)ppObjectOpen); 
+        return StgCreateDocfile(pwcsName, grfMode, 0, (IStorage **)ppObjectOpen);
     }
 
     ERR("Invalid stgfmt argument\n");
@@ -5872,15 +5872,15 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
     if (stgfmt != STGFMT_DOCFILE && grfAttrs != 0)
     {
         ERR("grfAttrs must be 0 if stgfmt != STGFMT_DOCFILE\n");
-        return STG_E_INVALIDPARAMETER;  
+        return STG_E_INVALIDPARAMETER;
     }
 
     switch (stgfmt)
     {
     case STGFMT_FILE:
-        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");  
+        ERR("Cannot use STGFMT_FILE - this is NTFS only\n");
         return STG_E_INVALIDPARAMETER;
-        
+
     case STGFMT_STORAGE:
         break;
 
@@ -5888,7 +5888,7 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
         if (grfAttrs && grfAttrs != FILE_FLAG_NO_BUFFERING)
         {
             ERR("grfAttrs must be 0 or FILE_FLAG_NO_BUFFERING if stgfmt == STGFMT_DOCFILE\n");
-            return STG_E_INVALIDPARAMETER;  
+            return STG_E_INVALIDPARAMETER;
         }
         FIXME("Stub: calling StgOpenStorage, but ignoring pStgOptions and grfAttrs\n");
         break;
@@ -5901,7 +5901,7 @@ HRESULT WINAPI StgOpenStorageEx(const WCHAR* pwcsName, DWORD grfMode, DWORD stgf
         return STG_E_INVALIDPARAMETER;
     }
 
-    return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen); 
+    return StgOpenStorage(pwcsName, NULL, grfMode, (SNB)NULL, 0, (IStorage **)ppObjectOpen);
 }
 
 
@@ -6240,7 +6240,7 @@ HRESULT WINAPI StgSetTimes(OLECHAR const *str, FILETIME const *pctime,
 {
   IStorage *stg = NULL;
   HRESULT r;
- 
+
   TRACE("%s %p %p %p\n", debugstr_w(str), pctime, patime, pmtime);
 
   r = StgOpenStorage(str, NULL, STGM_READWRITE | STGM_SHARE_DENY_WRITE,
@@ -7026,7 +7026,7 @@ static HRESULT STREAM_ReadString( IStream *stm, LPWSTR *string )
         return E_OUTOFMEMORY;
 
     TRACE("%d bytes\n",len);
-    
+
     str = CoTaskMemAlloc( len );
     if( !str )
         return E_OUTOFMEMORY;
@@ -7128,7 +7128,7 @@ HRESULT WINAPI WriteFmtUserTypeStg(
 
     TRACE("progid is %s\n",debugstr_w(wstrProgID));
 
-    r = STORAGE_WriteCompObj( pstg, &clsid, 
+    r = STORAGE_WriteCompObj( pstg, &clsid,
                               lpszUserType, szwClipName, wstrProgID );
 
     CoTaskMemFree(wstrProgID);
@@ -7153,7 +7153,7 @@ HRESULT WINAPI ReadFmtUserTypeStg (LPSTORAGE pstg, CLIPFORMAT* pcf, LPOLESTR* lp
 
     TRACE("(%p,%p,%p)\n", pstg, pcf, lplpszUserType);
 
-    r = IStorage_OpenStream( pstg, szCompObj, NULL, 
+    r = IStorage_OpenStream( pstg, szCompObj, NULL,
                     STGM_READ | STGM_SHARE_EXCLUSIVE, 0, &stm );
     if( FAILED ( r ) )
     {

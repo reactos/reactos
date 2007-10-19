@@ -30,7 +30,7 @@ VOID ShortVersion (VOID)
 	unsigned RosVersionLen;
 	LPTSTR RosVersion;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
-	
+
 	ConOutResPuts (STRING_CMD_SHELLINFO );
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 

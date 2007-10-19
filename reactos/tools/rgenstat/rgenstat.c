@@ -67,9 +67,9 @@ convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    newpath = strdup(origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -84,8 +84,8 @@ convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -95,7 +95,7 @@ static char*
 path_to_url(char* path)
 {
    int i;
-      
+
    i = 0;
    while (path[i] != 0)
      {
@@ -578,7 +578,7 @@ process_directory (char *path, char *cvspath)
                 {
                   continue;
                 }
-  
+
               parse_file(buf, cvspath, entry->d_name);
            }
       }

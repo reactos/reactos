@@ -1089,7 +1089,7 @@ const struct gl_texture_format _mesa_null_texformat = {
  *
  * \return a pointer to a gl_texture_format object which describes the
  * choosen texture format, or NULL on failure.
- * 
+ *
  * This is called via dd_function_table::ChooseTextureFormat.  Hardware drivers
  * will typically override this function with a specialized version.
  */

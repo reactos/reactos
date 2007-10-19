@@ -10,20 +10,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #ifdef ADNS_JGAA_WIN32
@@ -48,7 +48,7 @@ static const struct optioninfo global_options[]= {
     "f", "pipe",           &ov_pipe, 1 },
   { ot_flag,             "Allow answers to be reordered",
     "a", "asynch",         &ov_asynch, 1 },
-  
+
   { ot_desconly, "answer/error output format and destination (see below):" },
   { ot_value,            "Answers to stdout, errors as messages to stderr (default)",
     "Fs", "fmt-simple",    &ov_format, fmt_simple },
@@ -56,7 +56,7 @@ static const struct optioninfo global_options[]= {
     "Fi", "fmt-inline",    &ov_format, fmt_inline },
   { ot_value,            "Fully-parseable output format (default for --asynch)",
     "Fa", "fmt-asynch",    &ov_format, fmt_asynch },
-  		         
+
   { ot_desconly, "global verbosity level:" },
   { ot_value,            "Do not print anything to stderr",
     "Vq", "quiet",         &ov_verbose, adns_if_noerrprint },
@@ -64,7 +64,7 @@ static const struct optioninfo global_options[]= {
     "Vn", "no-quiet",      &ov_verbose, 0 },
   { ot_value,            "Debugging mode",
     "Vd", "debug",         &ov_verbose, adns_if_debug },
-  		         
+
   { ot_desconly, "other global options:" },
   { ot_funcarg,          "Configuration to use instead of /etc/resolv.conf",
     0, "config",           0,0, of_config, "<config-text>" },
@@ -102,7 +102,7 @@ static const struct optioninfo perquery_options[]= {
     "Dt", "show-type",    &ov_pqfr.show_type, 0 },
   { ot_flag,             "Do not display CNAME target in output",
     "Dc", "show-cname",    &ov_pqfr.show_cname, 0 },
-  
+
   { ot_desconly, "per-query TTL mode (NB TTL is minimum across all info in reply):" },
   { ot_value,            "Show the TTL as a TTL",
     "Tt", "ttl-ttl",       &ov_pqfr.ttl, tm_rel },
@@ -110,7 +110,7 @@ static const struct optioninfo perquery_options[]= {
     "Ta", "ttl-abs",       &ov_pqfr.ttl, tm_abs },
   { ot_value,            "Do not show the TTL (default)",
     "Tn", "no-ttl",        &ov_pqfr.ttl, tm_none },
-  
+
   { ot_desconly, "per-query CNAME handling mode:" },
   { ot_value,            "Call it an error if a CNAME is found",
     "Cf", "cname-reject",  &ov_cname, adns_qf_cname_forbid },
@@ -118,7 +118,7 @@ static const struct optioninfo perquery_options[]= {
     "Cl", "cname-loose",   &ov_cname, adns_qf_cname_loose },
   { ot_value,            "CNAME ok for query domain, but not in RRs (default)",
     "Cs", "cname-ok",      &ov_cname, 0 },
-  
+
   { ot_desconly, "asynchronous/pipe mode options:" },
   { ot_funcarg,          "Set <id>, default is decimal sequence starting 0",
     0, "asynch-id",        0,0, &of_asynch_id, "id" },
@@ -137,7 +137,7 @@ static void printusage(void) {
   int maxsopt, maxlopt, l;
 
   maxsopt= maxlopt= 0;
-  
+
   for (oiap=all_optiontables; *oiap; oiap++) {
     for (oip=*oiap; oip->type != ot_end; oip++) {
       if (oip->type == ot_funcarg) continue;
@@ -149,7 +149,7 @@ static void printusage(void) {
       }
     }
   }
-	
+
   fputs("usage: adnshost [global-opts] [query-opts] query-domain\n"
 	"                             [[query-opts] query-domain ...]\n"
 	"       adnshost [global-opts] [query-opts] -f|--pipe\n",
@@ -223,7 +223,7 @@ static void printusage(void) {
   printf("\nEscaping domains which might start with `-':\n"
 	 " - %-*s Next argument is a domain, but more options may follow\n",
 	 maxlopt+maxsopt+3, "<domain>");
-  
+
   fputs("\n"
 	"Query domains should always be quoted according to master file format.\n"
 	"\n"

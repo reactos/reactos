@@ -1,6 +1,6 @@
 /**
  * \file hash.h
- * Generic hash table. 
+ * Generic hash table.
  */
 
 /*

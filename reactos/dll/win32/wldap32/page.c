@@ -220,7 +220,7 @@ ULONG CDECL ldap_parse_page_controlA( WLDAP32_LDAP *ld, PLDAPControlA *ctrls,
 
     ret = ldap_parse_page_controlW( ld, ctrlsW, count, cookie );
     controlarrayfreeW( ctrlsW );
- 
+
 #endif
     return ret;
 }
@@ -250,8 +250,8 @@ ULONG CDECL ldap_parse_page_controlW( WLDAP32_LDAP *ld, PLDAPControlW *ctrls,
     }
 
     if (!control)
-        return WLDAP32_LDAP_CONTROL_NOT_FOUND; 
-            
+        return WLDAP32_LDAP_CONTROL_NOT_FOUND;
+
     ber = ber_init( &((LDAPControl *)control)->ldctl_value );
     if (!ber)
         return WLDAP32_LDAP_NO_MEMORY;
@@ -263,7 +263,7 @@ ULONG CDECL ldap_parse_page_controlW( WLDAP32_LDAP *ld, PLDAPControlW *ctrls,
         ret = LDAP_SUCCESS;
 
     ber_free( ber, 1 );
-    
+
 #endif
     return ret;
 }

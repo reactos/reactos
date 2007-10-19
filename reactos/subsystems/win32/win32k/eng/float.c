@@ -56,7 +56,7 @@
 #define EXP(fp)         (((fp) >> 23L) & 0xFF)
 #define MANT(fp)        ((fp) & 0x7FFFFFL)
 #define PACK(s,e,m)     ((s) | ((e) << 23L) | (m))
- 
+
 /* FUNCTIONS *****************************************************************/
 
 BOOL
@@ -144,14 +144,14 @@ FtoEF( EFLOAT_S * efp, FLOATL f)
 #endif
 
  Exp = EXP(worker.l);
- Mant = MANT(worker.l); 
+ Mant = MANT(worker.l);
  if (SIGN(worker.l)) Sign = -1;
 //// M$ storage emulation
  Mant = ((Mant << 7) | 0x40000000);
- Mant ^= Sign; 
+ Mant ^= Sign;
  Mant -= Sign;
  Exp -= (EXCESS-1);
-//// 
+////
  efp->lMant = Mant;
  efp->lExp = Exp;
 }
@@ -175,7 +175,7 @@ FLOATOBJ_Add (
   FtoEF( efp, f.l );
 #else
   FtoEF( efp, f.f );
-#endif 
+#endif
 }
 
 VOID
@@ -278,7 +278,7 @@ FLOATOBJ_Div(
   FtoEF( efp, f.l );
 #else
   FtoEF( efp, f.f );
-#endif 
+#endif
 }
 
 VOID
@@ -339,7 +339,7 @@ FLOATOBJ_Equal(
   gxf_long f1;
   f.l = EFtoF(efp);
   f1.l = EFtoF(efp1);
-  if (f.f == f1.f) return TRUE;            
+  if (f.f == f1.f) return TRUE;
   return FALSE;
 }
 
@@ -354,7 +354,7 @@ FLOATOBJ_EqualLong(
   EFLOAT_S * efp = (EFLOAT_S *)pf;
   gxf_long f;
   f.l = EFtoF(efp);
-  if (f.f == l) return TRUE;            
+  if (f.f == l) return TRUE;
   return FALSE;
 }
 
@@ -375,10 +375,10 @@ FLOATOBJ_GetLong ( IN PFLOATOBJ pf )
   EFLOAT_S * efp = (EFLOAT_S *)pf;
   gxf_long f;
   long l;
-   
+
   f.l = EFtoF( efp );
   FLOAT_TO_INT(f.f, l); // Let FPP handle it the fasty haxy way.
-     
+
   return l;
 }
 
@@ -396,7 +396,7 @@ FLOATOBJ_GreaterThan(
   gxf_long f1;
   f.l = EFtoF(efp);
   f1.l = EFtoF(efp1);
-  if(f.f > f1.f) return TRUE;            
+  if(f.f > f1.f) return TRUE;
   return FALSE;
 }
 
@@ -411,7 +411,7 @@ FLOATOBJ_GreaterThanLong(
   EFLOAT_S * efp = (EFLOAT_S *)pf;
   gxf_long f;
   f.l = EFtoF(efp);
-  if (f.f > l) return TRUE;            
+  if (f.f > l) return TRUE;
   return FALSE;
 }
 
@@ -429,7 +429,7 @@ FLOATOBJ_LessThan(
   gxf_long f1;
   f.l = EFtoF(efp);
   f1.l = EFtoF(efp1);
-  if(f.f < f1.f) return TRUE;            
+  if(f.f < f1.f) return TRUE;
   return FALSE;
 }
 
@@ -444,7 +444,7 @@ FLOATOBJ_LessThanLong(
   EFLOAT_S * efp = (EFLOAT_S *)pf;
   gxf_long f;
   f.l = EFtoF(efp);
-  if (f.f < l) return TRUE;            
+  if (f.f < l) return TRUE;
   return FALSE;
 }
 
@@ -467,7 +467,7 @@ FLOATOBJ_Mul(
   FtoEF( efp, f.l );
 #else
   FtoEF( efp, f.f );
-#endif 
+#endif
 }
 
 VOID
@@ -550,7 +550,7 @@ FLOATOBJ_SetLong(
   FtoEF( efp, f.l );
 #else
   FtoEF( efp, f.f );
-#endif       
+#endif
 }
 
 VOID
@@ -572,7 +572,7 @@ FLOATOBJ_Sub(
   FtoEF( efp, f.l );
 #else
   FtoEF( efp, f.f );
-#endif 
+#endif
 }
 
 VOID

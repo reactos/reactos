@@ -3243,7 +3243,7 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             LISTBOX_HandleMouseMove( descr, mousePos.x, mousePos.y);
 
             descr->captured = captured;
-        } 
+        }
         else if (GetCapture() == descr->self)
         {
             LISTBOX_HandleMouseMove( descr, (INT16)LOWORD(lParam),

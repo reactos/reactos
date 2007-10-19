@@ -112,7 +112,7 @@ AddAlias (LPTSTR name, LPTSTR subst)
 		{
 			s = (LPTSTR)cmd_alloc ((_tcslen (subst) + 1)*sizeof(TCHAR));
 			if (!s)
-			{        
+			{
 				error_out_of_memory ();
 				return;
 			}

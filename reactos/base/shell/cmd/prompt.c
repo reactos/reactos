@@ -136,15 +136,15 @@ VOID PrintPrompt(VOID)
 					ConOutChar (_T(' '));
 					break;
 
-				case _T('T'):					
-          {          
+				case _T('T'):
+          {
           SYSTEMTIME t;
-          GetSystemTime(&t); 
+          GetSystemTime(&t);
           ConOutPrintf(_T("%02d%c%02d%c%02d%c%02d\n"),t.wHour, cTimeSeparator,t.wMinute , cTimeSeparator,
 		      t.wSecond , cDecimalSeparator, t.wMilliseconds );
           }
 					break;
-          
+
 				case _T('V'):
 					switch (osvi.dwPlatformId)
 					{
@@ -191,7 +191,7 @@ VOID PrintPrompt(VOID)
 #ifdef INCLUDE_CMD_PROMPT
 
 INT cmd_prompt (LPTSTR cmd, LPTSTR param)
-{		
+{
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_PROMPT_HELP1);
@@ -206,8 +206,8 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 	/* if it is null, then it needs to set to default,
 	   because that means the user entered "prompt" only.
 		so even if param is null you _must_ still set prompt
-		to the default.  There seems to be some kinda difference 
-		between winxp and 2k in this matter and this way will 
+		to the default.  There seems to be some kinda difference
+		between winxp and 2k in this matter and this way will
 		cover both. Do not use fixed size of szParam for param the buffer are 8192bytes
 		and will later change to dymatic buffer */
 
@@ -222,11 +222,11 @@ INT cmd_prompt (LPTSTR cmd, LPTSTR param)
 		TCHAR szParam[5];
 		_tcscpy(szParam,_T("$P$G"));
 		if (!SetEnvironmentVariable (_T("PROMPT"),szParam))
-		return 1;	
+		return 1;
 	}
 
-	
-			
+
+
 	return 0;
 }
 #endif

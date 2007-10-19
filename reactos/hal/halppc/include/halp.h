@@ -1,5 +1,5 @@
 /*
- * 
+ *
  */
 
 #ifndef __INTERNAL_HAL_HAL_H
@@ -37,7 +37,7 @@
 
 /* adapter.c */
 PADAPTER_OBJECT STDCALL HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
-  
+
 /* bus.c */
 VOID NTAPI HalpInitNonBusHandler (VOID);
 

@@ -166,7 +166,7 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
     {
         /* it's a filesystem path with a drive. Let MyComputer/UnixDosFolder parse it */
 #if 0
-        if (UNIXFS_is_rooted_at_desktop()) 
+        if (UNIXFS_is_rooted_at_desktop())
             pidlTemp = _ILCreateGuid(PT_GUID, &CLSID_UnixDosFolder);
         else
 #endif
@@ -408,10 +408,10 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
-    static const DWORD dwDesktopAttributes = 
+    static const DWORD dwDesktopAttributes =
         SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-    static const DWORD dwMyComputerAttributes = 
+    static const DWORD dwMyComputerAttributes =
         SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
         SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
 
@@ -425,13 +425,13 @@ static HRESULT WINAPI ISF_Desktop_fnGetAttributesOf (IShellFolder2 * iface,
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
-    
+
     if(cidl == 0) {
-        *rgfInOut &= dwDesktopAttributes; 
+        *rgfInOut &= dwDesktopAttributes;
     } else {
         while (cidl > 0 && *apidl) {
             pdump (*apidl);
-            if (_ILIsDesktop(*apidl)) { 
+            if (_ILIsDesktop(*apidl)) {
                 *rgfInOut &= dwDesktopAttributes;
             } else if (_ILIsMyComputer(*apidl)) {
                 *rgfInOut &= dwMyComputerAttributes;

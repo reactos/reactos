@@ -3,11 +3,11 @@
 #define RC_STRING_MAX_SIZE                 4096
 
 #define STRING_HELP                        100
-#define STRING_COMPLETE                    101 
+#define STRING_COMPLETE                    101
 #define STRING_FORMAT_FAIL                 102
 #define STRING_NO_SUPPORT                  103
 #define STRING_FMIFS_FAIL                  104
-#define STRING_UNKNOW_ARG                  105 
+#define STRING_UNKNOW_ARG                  105
 #define STRING_DRIVE_PARM                  106
 #define STRING_ERROR_DRIVE_TYPE            107
 #define STRING_INSERT_DISK                 108

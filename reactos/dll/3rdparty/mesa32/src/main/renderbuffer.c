@@ -277,7 +277,7 @@ put_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb, GLuint count,
       }
    }
 }
- 
+
 
 static void
 put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
@@ -303,7 +303,7 @@ put_mono_values_ushort(GLcontext *ctx, struct gl_renderbuffer *rb,
       }
    }
 }
- 
+
 
 /**********************************************************************
  * Functions for buffers of 1 X GLuint values.

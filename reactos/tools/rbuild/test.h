@@ -24,7 +24,7 @@
 #define SSEP DEF_SSEP
 
 #define RBUILD_BASE "tools" SSEP "rbuild" SSEP
-	
+
 class BaseTest
 {
 public:

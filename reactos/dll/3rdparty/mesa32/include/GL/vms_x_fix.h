@@ -11,7 +11,7 @@
 #ifndef VMS_X_FIX
 #define VMS_X_FIX
 
-#define _XRegisterFilterByType _XREGISTERFILTERBYTYPE 
+#define _XRegisterFilterByType _XREGISTERFILTERBYTYPE
 #define XAllocClassHint XALLOCCLASSHINT
 #define XAllocColor XALLOCCOLOR
 #define XAllocColorCells XALLOCCOLORCELLS

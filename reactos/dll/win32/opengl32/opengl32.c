@@ -71,7 +71,7 @@ OPENGL32_ThreadAttach()
 
 	teb->glTable = dispatchTable;
 	TlsSetValue( OPENGL32_tls, lpData );
-	
+
 	return TRUE;
 }
 
@@ -542,7 +542,7 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
  *               Output is length of the drivername.
  *               Can be NULL if name is NULL.
  *
- * \return Error code 
+ * \return Error code
  * \retval ERROR_NO_MORE_ITEMS  End of driver list.
  * \retval ERROR_SUCCESS        Success.
  */
@@ -593,7 +593,7 @@ OPENGL32_RegEnumDrivers( DWORD idx, LPWSTR name, LPDWORD cName )
  * \param driver  Name of the driver to get information about.
  * \param icd     Pointer to GLDRIVERDATA.
  *
- * \return Error code. 
+ * \return Error code.
  * \retval ERROR_SUCCESS  Success.
  *
  * \note On success the following fields of \a icd are filled: \a driver_name,

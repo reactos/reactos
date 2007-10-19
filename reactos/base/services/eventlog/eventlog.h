@@ -36,7 +36,7 @@ typedef struct _IO_ERROR_LPC
  */
 #define LOGFILE_SIGNATURE 0x654c664c
 
-/*  
+/*
  *  FIXME
  *  Flags used in logfile header
  */

@@ -46,7 +46,7 @@
   ("RPCSSMasterMutex" STRINGIFIED_RPCSS_NP_PROTOCOL_VERSION)
 
 /* payloads above 1K are fragmented into multiple messages */
-#define VARDATA_PAYLOAD_BYTES 1024 
+#define VARDATA_PAYLOAD_BYTES 1024
 
 /* ick -- maybe we should pass a handle to a mailslot or something? */
 #define MAX_RPCSS_NP_REPLY_STRING_LEN 512
@@ -63,7 +63,7 @@ typedef struct _RPCSS_NP_MESSAGE_UNION_VARDATAPAYLOADMSG {
   char payload[VARDATA_PAYLOAD_BYTES];
 } RPCSS_NP_MESSAGE_UNION_VARDATAPAYLOADMSG;
 
-/* RANMSG: 
+/* RANMSG:
  *   Simply tells the server that another rpcss instance ran.
  *   The server should respond by resetting its timeout to the
  *   full lazy timeout.
@@ -125,8 +125,8 @@ typedef union {
 
 /* vardata_payload_size specifies the number of bytes
  * to be transferred over the pipe in VARDATAPAYLOAD
- * messages (divide by VARDATA_PAYLOAD_BYTES to 
- * get the # of payloads) 
+ * messages (divide by VARDATA_PAYLOAD_BYTES to
+ * get the # of payloads)
  */
 typedef struct _RPCSS_NP_MESSAGE {
   UINT32 message_type;

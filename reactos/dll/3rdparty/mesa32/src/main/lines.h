@@ -42,7 +42,7 @@ _mesa_LineWidth( GLfloat width );
 extern void GLAPIENTRY
 _mesa_LineStipple( GLint factor, GLushort pattern );
 
-extern void GLAPIENTRY 
+extern void GLAPIENTRY
 _mesa_init_line( GLcontext * ctx );
 
 #endif

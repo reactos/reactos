@@ -6,7 +6,7 @@
 </directory>
 <directory name="wavemap">
 	<xi:include href="wavemap/wavemap.rbuild" />
-</directory> 
+</directory>
 <module name="winmm" type="win32dll" baseaddress="${BASEADDRESS_WINMM}" installbase="system32" installname="winmm.dll" allowwarnings="true">
 	<importlibrary definition="winmm.spec.def" />
 	<include base="winmm">.</include>

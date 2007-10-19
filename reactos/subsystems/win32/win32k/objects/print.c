@@ -192,14 +192,14 @@ NtGdiExtEscape(
         Status = _SEH_GetExceptionCode();
       }
       _SEH_END;
-      
+
       if (!NT_SUCCESS(Status))
       {
         DC_UnlockDc(pDC);
         SetLastNtError(Status);
         return -1;
       }
-      
+
       SafeInData = ExAllocatePoolWithTag ( PagedPool, InSize, TAG_PRINT );
       if ( !SafeInData )
       {
@@ -207,7 +207,7 @@ NtGdiExtEscape(
          SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
          return -1;
       }
-      
+
       _SEH_TRY
       {
         /* pointers were already probed! */
@@ -249,7 +249,7 @@ NtGdiExtEscape(
         SetLastNtError(Status);
         goto freeout;
       }
-      
+
       SafeOutData = ExAllocatePoolWithTag ( PagedPool, OutSize, TAG_PRINT );
       if ( !SafeOutData )
       {

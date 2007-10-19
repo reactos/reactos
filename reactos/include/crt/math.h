@@ -1,4 +1,4 @@
-/* 
+/*
  * math.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -65,7 +65,7 @@
 #define M_SQRT1_2	0.70710678118654752440
 #endif
 
-/* These are also defined in Mingw float.h; needed here as well to work 
+/* These are also defined in Mingw float.h; needed here as well to work
    around GCC build issues.  */
 #ifndef	__STRICT_ANSI__
 #ifndef __MINGW_FPCLASS_DEFINED
@@ -224,7 +224,7 @@ _CRTIMP double __cdecl _y1 (double);
 _CRTIMP double __cdecl _yn (int, double);
 _CRTIMP int __cdecl _matherr (struct _exception *);
 
-/* These are also declared in Mingw float.h; needed here as well to work 
+/* These are also declared in Mingw float.h; needed here as well to work
    around GCC build issues.  */
 /* BEGIN FLOAT.H COPY */
 /*
@@ -276,7 +276,7 @@ _CRTIMP int __cdecl fpclass (double);
 
 #endif /* Not _NO_OLDNAMES */
 
-/* This require msvcr70.dll or higher. */ 
+/* This require msvcr70.dll or higher. */
 #if __MSVCRT_VERSION__ >= 0x0700
 _CRTIMP int __cdecl _set_SSE2_enable (int);
 #endif /* __MSVCRT_VERSION__ >= 0x0700 */
@@ -321,8 +321,8 @@ extern const double __QNAN;
 
 /*
   We can't inline float or double, because we want to ensure truncation
-  to semantic type before classification. 
-  (A normal long double value might become subnormal when 
+  to semantic type before classification.
+  (A normal long double value might become subnormal when
   converted to double, and zero when converted to float.)
 */
 
@@ -442,7 +442,7 @@ __CRT_INLINE float __cdecl tanhf (float x)
   {return (float) tanh (x);}
 extern long double __cdecl tanhl (long double);
 
-/* Inverse hyperbolic trig functions  */ 
+/* Inverse hyperbolic trig functions  */
 /* 7.12.5.1 */
 extern double __cdecl acosh (double);
 extern float __cdecl acoshf (float);
@@ -516,7 +516,7 @@ extern float __cdecl logbf (float);
 extern long double __cdecl logbl (long double);
 
 /* Inline versions.  GCC-4.0+ can do a better fast-math optimization
-   with __builtins. */ 
+   with __builtins. */
 #if !(__MINGW_GNUC_PREREQ (4, 0) && defined __FAST_MATH__ )
 __CRT_INLINE double __cdecl logb (double x)
 {
@@ -557,7 +557,7 @@ extern float __cdecl scalblnf (float, long);
 extern long double __cdecl scalblnl (long double, long);
 
 /* 7.12.7.1 */
-/* Implementations adapted from Cephes versions */ 
+/* Implementations adapted from Cephes versions */
 extern double __cdecl cbrt (double);
 extern float __cdecl cbrtf (float);
 extern long double __cdecl cbrtl (long double);
@@ -629,7 +629,7 @@ extern long long __cdecl llrint (double);
 extern long long __cdecl llrintf (float);
 extern long long __cdecl llrintl (long double);
 
-/* Inline versions of above. 
+/* Inline versions of above.
    GCC 4.0+ can do a better fast-math job with __builtins. */
 #if !(__MINGW_GNUC_PREREQ (4, 0) && defined __FAST_MATH__ )
 __CRT_INLINE double __cdecl rint (double x)
@@ -653,15 +653,7 @@ __CRT_INLINE long double __cdecl rintl (long double x)
   return retval;
 }
 
-__CRT_INLINE long __cdecl lrint (double x) 
-{
-  long retval;  
-  __asm__ __volatile__
-    ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
-  return retval;
-}
-
-__CRT_INLINE long __cdecl lrintf (float x) 
+__CRT_INLINE long __cdecl lrint (double x)
 {
   long retval;
   __asm__ __volatile__
@@ -669,7 +661,15 @@ __CRT_INLINE long __cdecl lrintf (float x)
   return retval;
 }
 
-__CRT_INLINE long __cdecl lrintl (long double x) 
+__CRT_INLINE long __cdecl lrintf (float x)
+{
+  long retval;
+  __asm__ __volatile__
+    ("fistpl %0"  : "=m" (retval) : "t" (x) : "st");
+  return retval;
+}
+
+__CRT_INLINE long __cdecl lrintl (long double x)
 {
   long retval;
   __asm__ __volatile__
@@ -693,7 +693,7 @@ __CRT_INLINE long long __cdecl llrintf (float x)
   return retval;
 }
 
-__CRT_INLINE long long __cdecl llrintl (long double x) 
+__CRT_INLINE long long __cdecl llrintl (long double x)
 {
   long long retval;
   __asm__ __volatile__
@@ -727,7 +727,7 @@ extern long double __cdecl truncl (long double);
 extern float __cdecl fmodf (float, float);
 extern long double __cdecl fmodl (long double, long double);
 
-/* 7.12.10.2 */ 
+/* 7.12.10.2 */
 extern double __cdecl remainder (double, double);
 extern float __cdecl remainderf (float, float);
 extern long double __cdecl remainderl (long double, long double);
@@ -785,18 +785,18 @@ extern float __cdecl fminf (float, float);
 extern long double __cdecl fminl (long double, long double);
 
 /* 7.12.13.1 */
-/* return x * y + z as a ternary op */ 
+/* return x * y + z as a ternary op */
 extern double __cdecl fma (double, double, double);
 extern float __cdecl fmaf (float, float, float);
 extern long double __cdecl fmal (long double, long double, long double);
 
 
 /* 7.12.14 */
-/* 
+/*
  *  With these functions, comparisons involving quiet NaNs set the FP
  *  condition code to "unordered".  The IEEE floating-point spec
  *  dictates that the result of floating-point comparisons should be
- *  false whenever a NaN is involved, with the exception of the != op, 
+ *  false whenever a NaN is involved, with the exception of the != op,
  *  which always returns true: yes, (NaN != NaN) is true).
  */
 

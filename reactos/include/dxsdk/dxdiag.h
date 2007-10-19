@@ -35,7 +35,7 @@ DECLARE_INTERFACE_(IDxDiagContainer,IUnknown)
     STDMETHOD_(ULONG,Release) (THIS) PURE;
     STDMETHOD(GetNumberOfChildContainers) (THIS_ DWORD *pdwCount) PURE;
     STDMETHOD(EnumChildContainerNames) (THIS_ DWORD dwIndex, LPWSTR pwszContainer, DWORD cchContainer) PURE;
-    STDMETHOD(GetChildContainer) (THIS_ LPCWSTR pwszContainer, IDxDiagContainer **ppInstance) PURE;  
+    STDMETHOD(GetChildContainer) (THIS_ LPCWSTR pwszContainer, IDxDiagContainer **ppInstance) PURE;
     STDMETHOD(GetNumberOfProps) (THIS_ DWORD *pdwCount) PURE;
     STDMETHOD(EnumPropNames) (THIS_ DWORD dwIndex, LPWSTR pwszPropName, DWORD cchPropName) PURE;
     STDMETHOD(GetProp) (THIS_ LPCWSTR pwszPropName, VARIANT *pvarProp) PURE;
@@ -49,7 +49,7 @@ DECLARE_INTERFACE_(IDxDiagProvider,IUnknown)
   STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *ppvObj) PURE;
   STDMETHOD_(ULONG,AddRef) (THIS) PURE;
   STDMETHOD_(ULONG,Release) (THIS) PURE;
-  STDMETHOD(Initialize) (THIS_ DXDIAG_INIT_PARAMS* pParams) PURE; 
+  STDMETHOD(Initialize) (THIS_ DXDIAG_INIT_PARAMS* pParams) PURE;
   STDMETHOD(GetRootContainer) (THIS_ IDxDiagContainer **ppInstance) PURE;
 };
 

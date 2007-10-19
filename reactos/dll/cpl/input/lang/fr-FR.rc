@@ -231,7 +231,7 @@ FONT 8, "MS Shell Dlg"
 
 /* FIXME : To improve/complete */
 /* FIXME : À améliorer/compléter */
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	//Selected language on "Add Input language"
 	IDS_SELECTED_LANGUAGE               "Anglais (États-Unis)"

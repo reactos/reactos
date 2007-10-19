@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rossym/initum.c
  * PURPOSE:         Initialize library for use in user mode
- * 
+ *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 

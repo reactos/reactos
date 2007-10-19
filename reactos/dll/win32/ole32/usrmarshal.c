@@ -371,7 +371,7 @@ ULONG __RPC_USER HGLOBAL_UserSize(ULONG *pFlags, ULONG StartingSize, HGLOBAL *ph
             size += (ULONG)ret;
         }
     }
-    
+
     return size;
 }
 
@@ -1079,7 +1079,7 @@ ULONG __RPC_USER HENHMETAFILE_UserSize(ULONG *pFlags, ULONG StartingSize, HENHME
         if (*phEmf)
         {
             UINT emfsize;
-    
+
             size += 2 * sizeof(ULONG);
             emfsize = GetEnhMetaFileBits(*phEmf, 0, NULL);
             size += emfsize;
@@ -1128,11 +1128,11 @@ unsigned char * __RPC_USER HENHMETAFILE_UserMarshal(ULONG *pFlags, unsigned char
         pBuffer += sizeof(ULONG);
         *(ULONG *)pBuffer = (ULONG)(ULONG_PTR)*phEmf;
         pBuffer += sizeof(ULONG);
-    
+
         if (*phEmf)
         {
             UINT emfsize = GetEnhMetaFileBits(*phEmf, 0, NULL);
-    
+
             *(ULONG *)pBuffer = emfsize;
             pBuffer += sizeof(ULONG);
             *(ULONG *)pBuffer = emfsize;
@@ -1200,7 +1200,7 @@ unsigned char * __RPC_USER HENHMETAFILE_UserUnmarshal(ULONG *pFlags, unsigned ch
             *phEmf = SetEnhMetaFileBits(size, pBuffer);
             pBuffer += size;
         }
-        else 
+        else
             *phEmf = NULL;
     }
     else

@@ -659,14 +659,14 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 #ifndef USE_ROS_CC_AND_FS
 		if (!(*pFcb->Attributes & FILE_ATTRIBUTE_DIRECTORY))
 		{
-			if (Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA || 
+			if (Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA ||
 				RequestedDisposition == FILE_OVERWRITE ||
 				RequestedDisposition == FILE_OVERWRITE_IF)
 			{
 				if (!MmFlushImageSection(&pFcb->SectionObjectPointers, MmFlushForWrite))
 				{
 					DPRINT1("%wZ\n", &pFcb->PathNameU);
-					DPRINT1("%d %d %d\n", Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA, 
+					DPRINT1("%d %d %d\n", Stack->Parameters.Create.SecurityContext->DesiredAccess & FILE_WRITE_DATA,
 							RequestedDisposition == FILE_OVERWRITE, RequestedDisposition == FILE_OVERWRITE_IF);
 					VfatCloseFile (DeviceExt, FileObject);
 					return STATUS_SHARING_VIOLATION;
@@ -728,7 +728,7 @@ VfatCreateFile ( PDEVICE_OBJECT DeviceObject, PIRP Irp )
 		{
 			Irp->IoStatus.Information = FILE_SUPERSEDED;
 		}
-		else if (RequestedDisposition == FILE_OVERWRITE || 
+		else if (RequestedDisposition == FILE_OVERWRITE ||
 		         RequestedDisposition == FILE_OVERWRITE_IF)
 		{
 			Irp->IoStatus.Information = FILE_OVERWRITTEN;

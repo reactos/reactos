@@ -386,7 +386,7 @@ static HRESULT WINAPI StgStreamImpl_Write(
     WARN("storage reverted\n");
     return STG_E_REVERTED;
   }
- 
+
   /*
    * If the caller is not interested in the number of bytes written,
    * we use another buffer to avoid "if" statements in the code.

@@ -438,7 +438,7 @@
   }
 
 
-  
+
 #ifdef FT_CONFIG_OPTION_OLD_INTERNALS
 
   /* yet another backwards-legacy structure */

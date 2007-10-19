@@ -1,11 +1,11 @@
 
 /*
  * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS net command 
- * FILE:            
- * PURPOSE:         
+ * PROJECT:         ReactOS net command
+ * FILE:
+ * PURPOSE:
  *
- * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org) 
+ * PROGRAMMERS:     Magnus Olsen (greatlord@reactos.org)
  */
 
 #include "net.h"
@@ -13,13 +13,13 @@
 
 
 int main(int argc, char **argv)
-{	     
+{
     if (argc<2)
 	{
       help();
       return 1;
 	}
-   
+
     if (stricmp(argv[1],"ACCOUNTS")==0)
     {
 		return unimplement();
@@ -79,7 +79,7 @@ int main(int argc, char **argv)
     }
 
     if (stricmp(argv[1],"START")==0)
-    {        
+    {
        return cmdStart(argc, &argv[1]);
     }
     if (stricmp(argv[1],"STATISTICS")==0)

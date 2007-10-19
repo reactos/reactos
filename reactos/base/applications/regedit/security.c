@@ -409,7 +409,7 @@ ISecurityInformation_fnGetSecurity(struct ISecurityInformation *this,
 {
     PCRegKeySecurity obj = impl_from_ISecurityInformation(this);
     LONG ErrorCode;
-  
+
     ErrorCode = GetNamedSecurityInfo(obj->szRegKey,
                                      SE_REGISTRY_KEY,
                                      RequestedInformation,

@@ -17,7 +17,7 @@ static LONG APIENTRY UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lP
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
     {
         IDC_USRMGR_ICON,

@@ -144,10 +144,10 @@ InitBadBlocks(
 
         QueryTable[0].QueryRoutine    = BadBlockQueryRoutine;
         QueryTable[0].Flags           = RTL_QUERY_REGISTRY_REQUIRED;
-        QueryTable[0].Name            = NULL;   // If Name is NULL, the QueryRoutine function 
-                                                //  specified for this table entry is called 
-                                                //  for all values associated with the current 
-                                                //  registry key. 
+        QueryTable[0].Name            = NULL;   // If Name is NULL, the QueryRoutine function
+                                                //  specified for this table entry is called
+                                                //  for all values associated with the current
+                                                //  registry key.
         QueryTable[0].EntryContext    = NULL;
         QueryTable[0].DefaultType     = REG_NONE;
         QueryTable[0].DefaultData     = 0;
@@ -253,7 +253,7 @@ CheckIfBadBlock(
 
     for (ULONG i = 0; i < nBadBlocks; i++)
     {
-        if (lba + count > arrBadBlocks->m_lbaStart  &&  
+        if (lba + count > arrBadBlocks->m_lbaStart  &&
                     lba < arrBadBlocks->m_lbaEnd) {
             KdPrint(( "listed BB @ %I64x\n", lba));
             return true;

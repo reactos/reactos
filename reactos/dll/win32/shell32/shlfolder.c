@@ -80,7 +80,7 @@ static inline BOOL SHELL32_GetCustomFolderAttributeFromPath(
 
     PathAddBackslashW(pwszFolderPath);
     PathAppendW(pwszFolderPath, wszDesktopIni);
-    return GetPrivateProfileStringW(pwszHeading, pwszAttribute, wszDefault, 
+    return GetPrivateProfileStringW(pwszHeading, pwszAttribute, wszDefault,
                                     pwszValue, cchValue, pwszFolderPath);
 }
 
@@ -100,7 +100,7 @@ BOOL SHELL32_GetCustomFolderAttribute(
         if (!SHGetPathFromIDListW(pidl, wszFolderPath))
             return FALSE;
 
-        return SHELL32_GetCustomFolderAttributeFromPath(wszFolderPath, pwszHeading, 
+        return SHELL32_GetCustomFolderAttributeFromPath(wszFolderPath, pwszHeading,
                                                 pwszAttribute, pwszValue, cchValue);
     }
     return FALSE;
@@ -207,7 +207,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
 	IPersistFolder3 *ppf;
 
         if (_ILIsFolder(pidlChild) &&
-            SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf))) 
+            SUCCEEDED (IUnknown_QueryInterface ((IUnknown *) * ppvOut, &IID_IPersistFolder3, (LPVOID *) & ppf)))
         {
 	    PERSIST_FOLDER_TARGET_INFO ppfti;
 
@@ -247,7 +247,7 @@ static HRESULT SHELL32_CoCreateInitSF (LPCITEMIDLIST pidlRoot, LPCWSTR pathRoot,
  *	SHELL32_BindToChild [Internal]
  *
  * Common code for IShellFolder_BindToObject.
- * 
+ *
  * PARAMS
  *  pidlRoot     [I] The parent shell folder's absolute pidl.
  *  pathRoot     [I] Absolute dos path of the parent shell folder.
@@ -283,7 +283,7 @@ HRESULT SHELL32_BindToChild (LPCITEMIDLIST pidlRoot,
         CLSID clsidFolder = CLSID_ShellFSFolder;
         static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
         WCHAR wszCLSIDValue[CHARS_IN_GUID], wszFolderPath[MAX_PATH], *pwszPathTail = wszFolderPath;
-       
+
         /* see if folder CLSID should be overridden by desktop.ini file */
         if (pathRoot) {
             lstrcpynW(wszFolderPath, pathRoot, MAX_PATH);
@@ -403,7 +403,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
                           SFGAO_FOLDER |            /*0x20000000 */
                           SFGAO_FILESYSTEM |        /*0x40000000 */
                           SFGAO_HASSUBFOLDER;       /*0x80000000 */
-    
+
     TRACE ("0x%08x\n", *pdwAttributes);
 
     if (*pdwAttributes & ~dwSupportedAttr)
@@ -442,7 +442,7 @@ HRESULT SHELL32_GetItemAttributes (IShellFolder * psf, LPCITEMIDLIST pidl, LPDWO
 	}
 
         /* Set common attributes */
-        *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE | 
+        *pdwAttributes |= SFGAO_FILESYSTEM | SFGAO_DROPTARGET | SFGAO_HASPROPSHEET | SFGAO_CANDELETE |
                           SFGAO_CANRENAME | SFGAO_CANLINK | SFGAO_CANMOVE | SFGAO_CANCOPY;
 
 	if (dwAttributes & FILE_ATTRIBUTE_DIRECTORY)

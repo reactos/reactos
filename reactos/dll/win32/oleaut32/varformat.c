@@ -1492,7 +1492,7 @@ VARIANT_FormatNumber_Bool:
     }
     if (localeValue)
     {
-      if (GetLocaleInfoW(lcid, localeValue, pBuff, 
+      if (GetLocaleInfoW(lcid, localeValue, pBuff,
                          sizeof(buff)/sizeof(WCHAR)-(pBuff-buff)))
       {
         TRACE("added %s\n", debugstr_w(pBuff));

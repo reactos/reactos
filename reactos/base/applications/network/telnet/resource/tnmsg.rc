@@ -3,7 +3,7 @@
 LANGUAGE 0,0
 
 // String Table
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     MSG_COPYRIGHT           "Telnet Win32 v2.1b2, Copyright (C) 2000 Paul Brannan <pbranna@clemson.edu>\nand the team.  This program comes with ABSOLUTELY NO WARRANTY; for details\nread LICENSE.TXT.  "
     MSG_COPYRIGHT_1         "This is free software, and you are welcome to redistribute\nit under certain conditions.\n\n"

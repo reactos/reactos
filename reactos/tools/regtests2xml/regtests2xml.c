@@ -54,9 +54,9 @@ convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    newpath = strdup(origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -71,8 +71,8 @@ convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);

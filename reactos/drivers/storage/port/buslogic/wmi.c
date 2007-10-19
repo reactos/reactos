@@ -38,7 +38,7 @@ BT958QueryWmiRegInfo
     OUT PWCHAR *MofResourceName
 );
 
-SCSIWMIGUIDREGINFO BT958GuidList[] = 
+SCSIWMIGUIDREGINFO BT958GuidList[] =
 {
    {&BT958WmiExtendedSetupInfoGuid,
     1,
@@ -54,9 +54,9 @@ void BT958WmiInitialize(
     )
 {
     PSCSI_WMILIB_CONTEXT WmiLibContext;
-    
+
     WmiLibContext = &HwDeviceExtension->WmiLibContext;
-    
+
     WmiLibContext->GuidList = BT958GuidList;
     WmiLibContext->GuidCount = BT958GuidCount;
     WmiLibContext->QueryWmiRegInfo = BT958QueryWmiRegInfo;
@@ -64,7 +64,7 @@ void BT958WmiInitialize(
     WmiLibContext->SetWmiDataItem = NULL;
     WmiLibContext->SetWmiDataBlock = NULL;
     WmiLibContext->WmiFunctionControl = NULL;
-    WmiLibContext->ExecuteWmiMethod = NULL;    
+    WmiLibContext->ExecuteWmiMethod = NULL;
 }
 
 
@@ -107,11 +107,11 @@ Return Value:
    ASSERT(Srb->Length == sizeof(SCSI_WMI_REQUEST_BLOCK));
    ASSERT(Srb->DataTransferLength >= sizeof(ULONG));
    ASSERT(Srb->DataBuffer);
-   
+
    // Check if the WMI SRB is targetted for the adapter or one of the disks
-   if (!(Srb->WMIFlags & SRB_WMI_FLAGS_ADAPTER_REQUEST)) 
+   if (!(Srb->WMIFlags & SRB_WMI_FLAGS_ADAPTER_REQUEST))
    {
-           
+
       // This is targetted to one of the disks, since there are no per disk
       // wmi information we return an error. Note that if there was per
       // disk information, then you'd likely have a differen WmiLibContext
@@ -119,7 +119,7 @@ Return Value:
       Srb->DataTransferLength = 0;
       Srb->SrbStatus = SRB_STATUS_SUCCESS;
 
-   } 
+   }
    else
    {
        // Process the incoming WMI request.
@@ -130,24 +130,24 @@ Return Value:
                                                 Srb->DataPath,
                                                 Srb->DataTransferLength,
                                                 Srb->DataBuffer);
-                    
+
        // We assune that the wmi request will never pend so that we can
        // allocate the requestContext from stack. If the WMI request could
        // ever pend then we'd need to allocate the request context from
        // the SRB extension.
        //
        ASSERT(! pending);
-     
+
        retSize =  ScsiPortWmiGetReturnSize(&requestContext);
        status =  ScsiPortWmiGetReturnStatus(&requestContext);
-    
-       // We can do this since we assume it is done synchronously       
+
+       // We can do this since we assume it is done synchronously
        Srb->DataTransferLength = retSize;
-           
+
        //
        // Adapter ready for next request.
        //
-    
+
        Srb->SrbStatus = status;
    }
 
@@ -175,53 +175,53 @@ BT958QueryWmiDataBlock(
 Routine Description:
 
     This routine is a callback into the miniport to query for the contents of
-    one or more instances of a data block. This callback may be called with 
+    one or more instances of a data block. This callback may be called with
     an output buffer that is too small to return all of the data queried.
-    In this case the callback is responsible to report the correct output 
+    In this case the callback is responsible to report the correct output
         buffer size needed.
-        
-    If the request can be completed immediately without pending, 
-        ScsiPortWmiPostProcess should be called from within this callback and 
+
+    If the request can be completed immediately without pending,
+        ScsiPortWmiPostProcess should be called from within this callback and
     FALSE returned.
-                
+
     If the request cannot be completed within this callback then TRUE should
     be returned. Once the pending operations are finished the miniport should
     call ScsiPortWmiPostProcess and then complete the srb.
-        
+
 Arguments:
 
     DeviceContext is a caller specified context value originally passed to
         ScsiPortWmiDispatchFunction.
 
     RequestContext is a context associated with the srb being processed.
-                        
+
     GuidIndex is the index into the list of guids provided when the
         miniport registered
 
     InstanceIndex is the index that denotes first instance of the data block
         is being queried.
-            
+
     InstanceCount is the number of instances expected to be returned for
         the data block.
-            
-    InstanceLengthArray is a pointer to an array of ULONG that returns the 
+
+    InstanceLengthArray is a pointer to an array of ULONG that returns the
         lengths of each instance of the data block. This may be NULL when
         there is not enough space in the output buffer to fufill the request.
         In this case the miniport should call ScsiPortWmiPostProcess with
         a status of SRB_STATUS_DATA_OVERRUN and the size of the output buffer
         needed to fufill the request.
-            
+
     BufferAvail on entry has the maximum size available to write the data
-        blocks in the output buffer. If the output buffer is not large enough 
-        to return all of the data blocks then the miniport should call 
-        ScsiPortWmiPostProcess with a status of SRB_STATUS_DATA_OVERRUN 
+        blocks in the output buffer. If the output buffer is not large enough
+        to return all of the data blocks then the miniport should call
+        ScsiPortWmiPostProcess with a status of SRB_STATUS_DATA_OVERRUN
         and the size of the output buffer needed to fufill the request.
 
     Buffer on return is filled with the returned data blocks. Note that each
-        instance of the data block must be aligned on a 8 byte boundry. This 
-        may be NULL when there is not enough space in the output buffer to 
-        fufill the request. In this case the miniport should call 
-        ScsiPortWmiPostProcess with a status of SRB_STATUS_DATA_OVERRUN and 
+        instance of the data block must be aligned on a 8 byte boundry. This
+        may be NULL when there is not enough space in the output buffer to
+        fufill the request. In this case the miniport should call
+        ScsiPortWmiPostProcess with a status of SRB_STATUS_DATA_OVERRUN and
         the size of the output buffer needed to fufill the request.
 
 
@@ -240,12 +240,12 @@ Return Value:
     ASSERT((InstanceIndex == 0) &&
            (InstanceCount == 1));
 
-    switch (GuidIndex) 
+    switch (GuidIndex)
     {
         case BT958_SETUP_GUID_INDEX:
         {
             size = sizeof(BT958ExtendedSetupInfo)-1;
-            if (OutBufferSize < size) 
+            if (OutBufferSize < size)
             {
                 //
                 // The buffer passed to return the data is too small
@@ -333,7 +333,7 @@ Return Value:
 
 --*/
 {
-    *MofResourceName = BT958Wmi_MofResourceName;    
+    *MofResourceName = BT958Wmi_MofResourceName;
     return SRB_STATUS_SUCCESS;
 }
 
@@ -373,7 +373,7 @@ Return Value:
    BusLogic_WmiExtendedSetupInformation_T WmiExtendedSetupInfo;
    PUCHAR SourceBuf = (PUCHAR) &WmiExtendedSetupInfo;
 
-      
+
    //
    //  Issue the Inquire Extended Setup Information command.  Only genuine
    //  BusLogic Host Adapters and TRUE clones support this command.  Adaptec 1542C
@@ -390,23 +390,23 @@ Return Value:
    {
      Result = FALSE;
    }
-  
-   WmiExtendedSetupInfo.BusType      =        ExtendedSetupInformation.BusType;				           
-   WmiExtendedSetupInfo.BIOS_Address =        ExtendedSetupInformation.BIOS_Address;				       
-   WmiExtendedSetupInfo.ScatterGatherLimit =  ExtendedSetupInformation.ScatterGatherLimit;	
-   WmiExtendedSetupInfo.MailboxCount       =  ExtendedSetupInformation.MailboxCount;				       
+
+   WmiExtendedSetupInfo.BusType      =        ExtendedSetupInformation.BusType;
+   WmiExtendedSetupInfo.BIOS_Address =        ExtendedSetupInformation.BIOS_Address;
+   WmiExtendedSetupInfo.ScatterGatherLimit =  ExtendedSetupInformation.ScatterGatherLimit;
+   WmiExtendedSetupInfo.MailboxCount       =  ExtendedSetupInformation.MailboxCount;
    WmiExtendedSetupInfo.BaseMailboxAddress =  ExtendedSetupInformation.BaseMailboxAddress;
-   WmiExtendedSetupInfo.FastOnEISA         =  ExtendedSetupInformation.Misc.FastOnEISA;		  			
-   WmiExtendedSetupInfo.LevelSensitiveInterrupt = ExtendedSetupInformation.Misc.LevelSensitiveInterrupt;	    
-   WmiExtendedSetupInfo.FirmwareRevision[0] = ExtendedSetupInformation.FirmwareRevision[0];		    
-   WmiExtendedSetupInfo.FirmwareRevision[1] = ExtendedSetupInformation.FirmwareRevision[1];		    
-   WmiExtendedSetupInfo.FirmwareRevision[2] = ExtendedSetupInformation.FirmwareRevision[2];		    
-   WmiExtendedSetupInfo.HostWideSCSI        = ExtendedSetupInformation.HostWideSCSI;				    
-   WmiExtendedSetupInfo.HostDifferentialSCSI= ExtendedSetupInformation.HostDifferentialSCSI;			
-   WmiExtendedSetupInfo.HostSupportsSCAM    = ExtendedSetupInformation.HostSupportsSCAM;				
-   WmiExtendedSetupInfo.HostUltraSCSI       = ExtendedSetupInformation.HostUltraSCSI;				
-   WmiExtendedSetupInfo.HostSmartTermination= ExtendedSetupInformation.HostSmartTermination;			
-   
+   WmiExtendedSetupInfo.FastOnEISA         =  ExtendedSetupInformation.Misc.FastOnEISA;
+   WmiExtendedSetupInfo.LevelSensitiveInterrupt = ExtendedSetupInformation.Misc.LevelSensitiveInterrupt;
+   WmiExtendedSetupInfo.FirmwareRevision[0] = ExtendedSetupInformation.FirmwareRevision[0];
+   WmiExtendedSetupInfo.FirmwareRevision[1] = ExtendedSetupInformation.FirmwareRevision[1];
+   WmiExtendedSetupInfo.FirmwareRevision[2] = ExtendedSetupInformation.FirmwareRevision[2];
+   WmiExtendedSetupInfo.HostWideSCSI        = ExtendedSetupInformation.HostWideSCSI;
+   WmiExtendedSetupInfo.HostDifferentialSCSI= ExtendedSetupInformation.HostDifferentialSCSI;
+   WmiExtendedSetupInfo.HostSupportsSCAM    = ExtendedSetupInformation.HostSupportsSCAM;
+   WmiExtendedSetupInfo.HostUltraSCSI       = ExtendedSetupInformation.HostUltraSCSI;
+   WmiExtendedSetupInfo.HostSmartTermination= ExtendedSetupInformation.HostSmartTermination;
+
    for (; numberOfBytes; numberOfBytes--)
    {
       *Buffer++ = *SourceBuf++;

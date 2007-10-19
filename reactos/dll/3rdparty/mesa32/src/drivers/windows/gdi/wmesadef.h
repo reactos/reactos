@@ -12,7 +12,7 @@ typedef struct wmesa_context{
     GLcontext           *gl_ctx;	/* The core GL/Mesa context */
     GLvisual            *gl_visual;	/* Describes the buffers */
     GLframebuffer       *gl_buffer;	/* Depth, stencil, accum, etc buffers*/
-    
+
     HWND		Window;
     HDC                 hDC;
     COLORREF		clearColorRef;

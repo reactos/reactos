@@ -53,14 +53,14 @@ FtoEF( EFLOAT_S * efp, FLOATL f)
 #endif
 
  Exp = EXP(worker.l);
- Mant = MANT(worker.l); 
+ Mant = MANT(worker.l);
  if (SIGN(worker.l)) Sign = -1;
 //// M$ storage emulation
  Mant = ((Mant << 7) | 0x40000000);
- Mant ^= Sign; 
+ Mant ^= Sign;
  Mant -= Sign;
  Exp -= (EXCESS-1);
-//// 
+////
  efp->lMant = Mant;
  efp->lExp = Exp;
 }
@@ -71,7 +71,7 @@ CoordCnvP(MATRIX_S * mx, LPPOINT Point)
 {
   FLOAT x, y;
   gxf_long a, b, c;
-  
+
   x = (FLOAT)Point->x;
   y = (FLOAT)Point->y;
 
@@ -97,7 +97,7 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
 #if 0
   INT i;
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
   if (Dc_Attr->flXform & ( DEVICE_TO_WORLD_INVALID | // Force a full recalibration!
@@ -124,7 +124,7 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
 #if 0
   INT i;
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
   if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
@@ -187,7 +187,7 @@ ModifyWorldTransform(
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        if (iMode ==  MWT_MAX+1) 
+        if (iMode ==  MWT_MAX+1)
           if (!EMFDRV_SetWorldTransform( hDC, Xform) ) return FALSE;
         return EMFDRV_ModifyWorldTransform( hDC, Xform, iMode); // Ported from wine.
       }
@@ -195,11 +195,11 @@ ModifyWorldTransform(
     }
   }
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
   /* Check that graphics mode is GM_ADVANCED */
-  if ( Dc_Attr->iGraphicsMode != GM_ADVANCED ) return FALSE;  
+  if ( Dc_Attr->iGraphicsMode != GM_ADVANCED ) return FALSE;
 #endif
   return NtGdiModifyWorldTransform(hDC, (CONST LPXFORM) Xform, iMode);
 }

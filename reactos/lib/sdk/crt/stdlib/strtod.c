@@ -21,10 +21,10 @@ strtod(const char *s, char **sret)
   sign = 1;
   e = 0;
   esign = 1;
-  
+
   if (s == NULL)
      return r;
-     
+
 
   while ((*s == ' ') || (*s == '\t'))
     s++;

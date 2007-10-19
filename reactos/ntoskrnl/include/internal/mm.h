@@ -64,7 +64,7 @@ typedef ULONG PFN_TYPE, *PPFN_TYPE;
 
 /* Although Microsoft says this isn't hardcoded anymore,
    they won't be able to change it. Stuff depends on it */
-#define MM_VIRTMEM_GRANULARITY              (64 * 1024) 
+#define MM_VIRTMEM_GRANULARITY              (64 * 1024)
 
 #define STATUS_MM_RESTART_OPERATION         ((NTSTATUS)0xD0000001)
 
@@ -165,7 +165,7 @@ typedef struct
 
 typedef struct _MM_SECTION_SEGMENT
 {
-    LONG FileOffset;		/* start offset into the file for image sections */		     
+    LONG FileOffset;		/* start offset into the file for image sections */
     ULONG_PTR VirtualAddress;	/* dtart offset into the address range for image sections */
     ULONG RawLength;		/* length of the segment which is part of the mapped file */
     ULONG Length;			/* absolute length of the segment */
@@ -335,7 +335,7 @@ typedef VOID
 
 /* aspace.c ******************************************************************/
 
-VOID 
+VOID
 NTAPI
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace);
 
@@ -490,11 +490,11 @@ VOID
 NTAPI
 ExFreeNonPagedPool(PVOID block);
 
-VOID 
+VOID
 NTAPI
 ExFreePagedPool(IN PVOID Block);
 
-VOID 
+VOID
 NTAPI
 MmInitializePagedPool(VOID);
 
@@ -821,14 +821,14 @@ MmInitializeMemoryConsumer(
     NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed)
 );
 
-VOID 
+VOID
 NTAPI
 MmInitializeBalancer(
     ULONG NrAvailablePages,
     ULONG NrSystemPages
 );
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 MmReleasePageMemoryConsumer(
     ULONG Consumer,
@@ -1326,7 +1326,7 @@ MmGetFileNameForSection(
     OUT POBJECT_NAME_INFORMATION *ModuleName
 );
 
-PVOID 
+PVOID
 NTAPI
 MmAllocateSection(
     IN ULONG Length,

@@ -148,7 +148,7 @@ HvpWriteHive(
    BOOLEAN Success;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
-   
+
    DPRINT("HvpWriteHive called\n");
 
    if (RegistryHive->HiveHeader->Sequence1 !=

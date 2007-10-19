@@ -53,7 +53,7 @@ CardRegion *CardWindow::GetBestStack(int x, int y, int w, int h)
             maxoverlapidx = i;
         }
     }
-    
+
     //if we found a stack to drop onto
     if(maxoverlapidx != -1)
     {
@@ -69,7 +69,7 @@ bool CardRegion::IsPointInStack(int x, int y)
 {
     int axpos = xoffset < 0 ? xpos + (nNumApparentCards-1)*xoffset : xpos;
     int aypos = yoffset < 0 ? ypos + (nNumApparentCards-1)*yoffset : ypos;
-    
+
     if(x >= axpos && x < axpos + width && y >= aypos && y < aypos + height && fVisible)
         return true;
     else
@@ -84,7 +84,7 @@ int CardRegion::GetNumDragCards(int x, int y)
     //make x,y relative to the stack's upper left corner
     x -= xpos + (xoffset < 0 ? (nNumApparentCards/*cardstack.NumCards()*/ - 1) * xoffset : 0);
     y -= ypos + (yoffset < 0 ? (nNumApparentCards/*cardstack.NumCards()*/ - 1) * yoffset : 0);
-    
+
     //if stack is empty, cannot drag any cards from it
     if(cardstack.NumCards() <= 0)
         return 0;
@@ -158,19 +158,19 @@ bool CardRegion::CanDragCards(int iNumCards)
     {
     case CS_DRAG_ALL:
         return true;
-        
+
     case CS_DRAG_TOP:
 
         if(iNumCards == 1)
             return true;
         else
             return false;
-        
+
     case CS_DRAG_NONE:
         return false;
-        
+
     case CS_DRAG_CALLBACK:
-        
+
         if(CanDragCallback)
         {
             return CanDragCallback(*this, iNumCards);
@@ -179,7 +179,7 @@ bool CardRegion::CanDragCards(int iNumCards)
         {
             return false;
         }
-        
+
     default:
         return false;
     }
@@ -203,7 +203,7 @@ bool CardRegion::CanDropCards(CardStack &cards)
         return false;
 
     case CS_DROP_CALLBACK:
-        
+
         if(CanDropCallback)
         {
             return CanDropCallback(*this, cards);
@@ -220,7 +220,7 @@ bool CardRegion::CanDropCards(CardStack &cards)
 
 bool CardRegion::OnLButtonDblClk(int x, int y)
 {
-    iNumDragCards = GetNumDragCards(x, y); 
+    iNumDragCards = GetNumDragCards(x, y);
 
     if(DblClickCallback)
         DblClickCallback(*this, iNumDragCards);
@@ -230,7 +230,7 @@ bool CardRegion::OnLButtonDblClk(int x, int y)
 
 bool CardRegion::OnLButtonDown(int x, int y)
 {
-    iNumDragCards = GetNumDragCards(x, y); 
+    iNumDragCards = GetNumDragCards(x, y);
 
 #ifdef _DEBUG
     if(DebugStackClickProc)
@@ -250,13 +250,13 @@ bool CardRegion::OnLButtonDown(int x, int y)
         //of the cards that are being dragged
         mousexoffset = x - xpos - xoffset * (nNumApparentCards - iNumDragCards);
         mouseyoffset = y - ypos - yoffset * (nNumApparentCards - iNumDragCards);
-        
+
         if(xoffset < 0)
             mousexoffset += -xoffset * (iNumDragCards - 1);
 
         if(yoffset < 0)
             mouseyoffset += -yoffset * (iNumDragCards - 1);
-        
+
         //remove the cards from the source stack
         dragstack = cardstack.Pop(iNumDragCards);
 
@@ -265,7 +265,7 @@ bool CardRegion::OnLButtonDown(int x, int y)
 
         oldx = x - mousexoffset;
         oldy = y - mouseyoffset;
-        
+
         Update();            //Update this stack's card count + size
 
         SetCapture((HWND)parentWnd);
@@ -284,7 +284,7 @@ bool CardRegion::OnLButtonUp(int x, int y)
     CardRegion *pDestStack = 0;
     HDC hdc;
     int dropstackid = CS_DROPZONE_NODROP;
-    
+
     RECT dragrect;
     DropZone *dropzone;
 
@@ -298,7 +298,7 @@ bool CardRegion::OnLButtonUp(int x, int y)
     if(dropzone)
     {
         dropstackid = dropzone->DropCards(dragstack);
-        
+
         if(dropstackid != CS_DROPZONE_NODROP)
             pDestStack = parentWnd.CardRegionFromId(dropstackid);
         else
@@ -308,28 +308,28 @@ bool CardRegion::OnLButtonUp(int x, int y)
     {
         pDestStack = parentWnd.GetBestStack(x - mousexoffset, y - mouseyoffset, nDragCardWidth, nDragCardHeight);
     }
-    
+
     // If have found a stack to drop onto
     //
     TRACE ( "can I drop card?\n" );
-    if(pDestStack && pDestStack->CanDropCards(dragstack)) 
+    if(pDestStack && pDestStack->CanDropCards(dragstack))
     {
         TRACE ( "yes, dropping card\n" );
         hdc = GetDC((HWND)parentWnd);
         //            UseNicePalette(hdc);
         ZoomCard(hdc, x - mousexoffset, y  - mouseyoffset, pDestStack);
         ReleaseDC((HWND)parentWnd, hdc);
-        
+
         //
         //add the cards to the destination stack
         //
         CardStack temp = pDestStack->GetCardStack();
         temp.Push(dragstack);
-        
+
         pDestStack->SetCardStack(temp);
 //        pDestStack->Update();        //Update this stack's card count + size
 //        pDestStack->UpdateFaceDir(temp);
-        
+
         //    Call the remove callback on THIS stack, if one is specified
         //
         if(RemoveCallback)
@@ -339,7 +339,7 @@ bool CardRegion::OnLButtonUp(int x, int y)
         //
         if(pDestStack->AddCallback)
             pDestStack->AddCallback(*pDestStack, pDestStack->cardstack);//index, deststack->numcards);
-        
+
         RedrawIfNotDim(pDestStack, true);
         TRACE ( "done dropping card\n" );
     }
@@ -362,10 +362,10 @@ bool CardRegion::OnLButtonUp(int x, int y)
         Update();        //Update this stack's card count + size
         TRACE ( "done putting card back\n" );
     }
-    
+
     ReleaseDragBitmaps();
     ReleaseCapture();
-    
+
     TRACE ( "OnLButtonUp() done\n" );
     return true;
 }
@@ -375,20 +375,20 @@ bool CardRegion::OnMouseMove(int x, int y)
     HDC hdc;
 
     hdc = GetDC((HWND)parentWnd);
-        
+
     x -= mousexoffset;
     y -= mouseyoffset;
-        
+
     MoveDragCardTo(hdc, x, y);
 
     //BitBlt(hdc, nDragCardWidth+10, 0, nDragCardWidth, nDragCardHeight, hdcBackGnd, 0, 0, SRCCOPY);
     //BitBlt(hdc, 0, 0, nDragCardWidth, nDragCardHeight, hdcDragCard, 0, 0, SRCCOPY);
-    
+
     ReleaseDC((HWND)parentWnd, hdc);
-        
+
     oldx = x;
     oldy = y;
-    
+
     return true;
 }
 
@@ -423,48 +423,48 @@ void CardRegion::MoveDragCardTo(HDC hdc, int x, int y)
     //mask off the new position of the drag-card, so
     //that it will not be painted over
     ClipCard(hdc, x, y, nDragCardWidth, nDragCardHeight);
-    
+
     //restore the area covered by the card at its previous position
     BitBlt(hdc, oldx, oldy, nDragCardWidth, nDragCardHeight, hdcBackGnd, 0, 0, SRCCOPY);
 
     //remove clipping so we can draw the card at its new place
     SelectClipRgn(hdc, NULL);
-    
+
     //if the card's old and new positions overlap, then we
     //need some funky code to update the "saved background" image,
     SetRect(&rect1, oldx, oldy, oldx+nDragCardWidth, oldy+nDragCardHeight);
     SetRect(&rect2,    x,    y,    x+nDragCardWidth,    y+nDragCardHeight);
-    
+
     if(IntersectRect(&inter, &rect1, &rect2))
     {
         int interwidth = inter.right-inter.left;
         int interheight = inter.bottom-inter.top;
         int destx, desty, srcx, srcy;
-        
-        if(rect2.left > rect1.left) 
-        {    
-            destx = 0; srcx = nDragCardWidth - interwidth; 
+
+        if(rect2.left > rect1.left)
+        {
+            destx = 0; srcx = nDragCardWidth - interwidth;
         }
         else
         {
             destx = nDragCardWidth  - interwidth; srcx = 0;
         }
-        
-        if(rect2.top  > rect1.top) 
+
+        if(rect2.top  > rect1.top)
         {
             desty = 0; srcy = nDragCardHeight - interheight;
         }
-        else 
+        else
         {
             desty = nDragCardHeight - interheight; srcy = 0;
         }
-        
+
         //shift the bit we didn't use for the restore (due to the clipping)
         //into the opposite corner
         BitBlt(hdcBackGnd, destx,desty, interwidth, interheight, hdcBackGnd, srcx, srcy, SRCCOPY);
-        
+
         ExcludeClipRect(hdcBackGnd, destx, desty, destx+interwidth, desty+interheight);
-        
+
         //this bit requires us to clip the BitBlt (from screen to background)
         //as BitBlt is a bit buggy it seems
         ClippedBitBlt(hdcBackGnd, 0,0, nDragCardWidth, nDragCardHeight, hdc, x, y, SRCCOPY);
@@ -474,7 +474,7 @@ void CardRegion::MoveDragCardTo(HDC hdc, int x, int y)
     {
         BitBlt(hdcBackGnd, 0,0, nDragCardWidth, nDragCardHeight, hdc, x, y, SRCCOPY);
     }
-    
+
     //finally draw the card to the screen
     DrawCard(hdc, x, y, hdcDragCard, nDragCardWidth, nDragCardHeight);
 }
@@ -494,7 +494,7 @@ void ZoomCard(HDC hdc, int xpos, int ypos, CARDSTACK *dest)
 {
     long dx, dy, x , y;
 
-    
+
     int apparentcards;
     x = xpos << PRECISION; y = ypos << PRECISION;
 
@@ -503,7 +503,7 @@ void ZoomCard(HDC hdc, int xpos, int ypos, CARDSTACK *dest)
 
     apparentcards=dest->numcards/dest->threedcount;
 
-    int idestx = dest->xpos + dest->xoffset * (apparentcards);// - iNumDragCards); 
+    int idestx = dest->xpos + dest->xoffset * (apparentcards);// - iNumDragCards);
     int idesty = dest->ypos + dest->yoffset * (apparentcards);// - iNumDragCards);
 
     //normalise the motion vector
@@ -511,7 +511,7 @@ void ZoomCard(HDC hdc, int xpos, int ypos, CARDSTACK *dest)
     dy = (idesty<<PRECISION) - y;
     long recip = (1 << PRECISION) / 1;//sqrt(dx*dx + dy*dy);
 
-    dx *= recip * 16;//CARDZOOMSPEED; 
+    dx *= recip * 16;//CARDZOOMSPEED;
     dy *= recip * 16;//CARDZOOMSPEED;
 
     //if(dx < 0) dxinc = 1.001; else
@@ -612,7 +612,7 @@ void CardRegion::ZoomCard(HDC hdc, int xpos, int ypos, CardRegion *pDestStack)
                 if(pDestStack->xoffset < 0)
                     xdraw = -pDestStack->xoffset * (iNumDragCards-i-1);
 
-                if(pDestStack->facedirection == CS_FACEUP && 
+                if(pDestStack->facedirection == CS_FACEUP &&
                     pDestStack->numcards+i >= dest->numfacedown)
                 {
                     //cdtDraw(hdcDragCard, xdraw, ydraw, iDragCards[i], ectFACES, 0);

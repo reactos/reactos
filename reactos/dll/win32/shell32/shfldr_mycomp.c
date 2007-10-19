@@ -442,7 +442,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetAttributesOf (IShellFolder2 * iface,
 
     if (*rgfInOut == 0)
         *rgfInOut = ~0;
-    
+
     if(cidl == 0){
         IShellFolder *psfParent = NULL;
         LPCITEMIDLIST rpidl = NULL;
@@ -535,7 +535,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetUIObjectOf (IShellFolder2 * iface,
         hr = IShellLink_ConstructFromFile(NULL, riid, pidl, (LPVOID*) &pObj);
         SHFree (pidl);
     }
-    else 
+    else
         hr = E_NOINTERFACE;
 
     if (SUCCEEDED(hr) && !pObj)
@@ -576,7 +576,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         pszPath[1] = ':';
         SHELL32_GUIDToStringW(&CLSID_MyComputer, &pszPath[2]);
     }
-    else if (_ILIsPidlSimple(pidl))    
+    else if (_ILIsPidlSimple(pidl))
     {
         /* take names of special folders only if its only this folder */
         if (_ILIsSpecialFolder(pidl))
@@ -602,7 +602,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                     /*
                      * We can only get a filesystem path from a shellfolder
                      * if the value WantsFORPARSING exists in
-                     *      CLSID\\{...}\\shellfolder 
+                     *      CLSID\\{...}\\shellfolder
                      * exception: the MyComputer folder has this keys not
                      *            but like any filesystem backed
                      *            folder it needs these behaviour
@@ -613,7 +613,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                     lstrcpyW (szRegPath, clsidW);
                     SHELL32_GUIDToStringW (clsid, &szRegPath[6]);
                     lstrcatW (szRegPath, shellfolderW);
-                    r = SHGetValueW (HKEY_CLASSES_ROOT, szRegPath, 
+                    r = SHGetValueW (HKEY_CLASSES_ROOT, szRegPath,
                                      wantsForParsingW, NULL, NULL, NULL);
                     if (r == ERROR_SUCCESS)
                         bWantsForParsing = TRUE;
@@ -659,7 +659,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
             }
         }
         else if (_ILIsDrive(pidl))
-        {        
+        {
             _ILSimpleGetTextW (pidl, pszPath, MAX_PATH);    /* append my own path */
 
             /* long view "lw_name (C:)" */
@@ -680,7 +680,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                 strcpyW (pszPath, wszDrive);
             }
         }
-        else 
+        else
         {
             /* Neither a shell namespace extension nor a drive letter. */
             ERR("Wrong pidl type\n");

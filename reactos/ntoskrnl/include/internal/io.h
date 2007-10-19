@@ -538,7 +538,7 @@ IoDestroyDriverList(
     VOID
 );
 
-NTSTATUS 
+NTSTATUS
 INIT_FUNCTION
 IopInitPlugPlayEvents(VOID);
 
@@ -610,7 +610,7 @@ IopMountVolume(
     OUT PVPB *Vpb
 );
 
-PVOID 
+PVOID
 IoOpenSymlink(
     IN PVOID SymbolicLink
 );
@@ -849,7 +849,7 @@ IopLoadUnloadDriver(
     IN OUT PLOAD_UNLOAD_PARAMS LoadParams
 );
 
-NTSTATUS 
+NTSTATUS
 FASTCALL
 IopInitializeDriverModule(
     IN PDEVICE_NODE DeviceNode,

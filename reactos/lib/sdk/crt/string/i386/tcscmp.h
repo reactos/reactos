@@ -24,7 +24,7 @@ _tcscmp:
 
 .L2:
  sbb  %eax, %eax
- or   $1, %al		
+ or   $1, %al
 
 .L3:
  pop  %edi

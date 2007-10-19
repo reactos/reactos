@@ -82,7 +82,7 @@ struct CoffFileSet
     int		        nfiles_alloc;
 };
 
-static const char*	coff_get_name(const IMAGE_SYMBOL* coff_sym, 
+static const char*	coff_get_name(const IMAGE_SYMBOL* coff_sym,
                                       const char* coff_strtab)
 {
     static	char	namebuff[9];
@@ -137,7 +137,7 @@ static void coff_add_symbol(struct CoffFile* coff_file, struct symt* sym)
         coff_file->entries = (coff_file->entries) ?
             HeapReAlloc(GetProcessHeap(), 0, coff_file->entries,
                         coff_file->neps_alloc * sizeof(struct symt*)) :
-            HeapAlloc(GetProcessHeap(), 0, 
+            HeapAlloc(GetProcessHeap(), 0,
                       coff_file->neps_alloc * sizeof(struct symt*));
     }
     coff_file->entries[coff_file->neps++] = sym;
@@ -174,9 +174,9 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 
     coff = (const IMAGE_COFF_SYMBOLS_HEADER*)msc_dbg->root;
 
-    coff_symbols = (const IMAGE_SYMBOL*)((unsigned int)coff + 
+    coff_symbols = (const IMAGE_SYMBOL*)((unsigned int)coff +
                                          coff->LvaToFirstSymbol);
-    coff_linetab = (const IMAGE_LINENUMBER*)((unsigned int)coff + 
+    coff_linetab = (const IMAGE_LINENUMBER*)((unsigned int)coff +
                                              coff->LvaToFirstLinenumber);
     coff_strtab = (const char*)(coff_symbols + coff->NumberOfSymbols);
 
@@ -189,7 +189,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 
         if (coff_sym->StorageClass == IMAGE_SYM_CLASS_FILE)
 	{
-            curr_file_idx = coff_add_file(&coff_files, msc_dbg->module, 
+            curr_file_idx = coff_add_file(&coff_files, msc_dbg->module,
                                           (const char*)(coff_sym + 1));
             TRACE("New file %s\n", (const char*)(coff_sym + 1));
             i += naux;
@@ -221,7 +221,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                  */
                 const char* fn;
 
-                fn = source_get(msc_dbg->module, 
+                fn = source_get(msc_dbg->module,
                                 coff_files.files[curr_file_idx].compiland->source);
 
                 TRACE("Duplicating sect from %s: %lx %x %x %d %d\n",
@@ -268,7 +268,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             continue;
 	}
 
-        if (coff_sym->StorageClass == IMAGE_SYM_CLASS_STATIC && naux == 0 && 
+        if (coff_sym->StorageClass == IMAGE_SYM_CLASS_STATIC && naux == 0 &&
             coff_sym->SectionNumber == 1)
 	{
             DWORD base = msc_dbg->sectp[coff_sym->SectionNumber - 1].VirtualAddress;
@@ -283,8 +283,8 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 
             /* FIXME: was adding symbol to this_file ??? */
             coff_add_symbol(&coff_files.files[curr_file_idx],
-                            &symt_new_function(msc_dbg->module, 
-                                               coff_files.files[curr_file_idx].compiland, 
+                            &symt_new_function(msc_dbg->module,
+                                               coff_files.files[curr_file_idx].compiland,
                                                nampnt,
                                                msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                                0 /* FIXME */,
@@ -321,13 +321,13 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             if (j < coff_files.nfiles)
             {
                 coff_add_symbol(&coff_files.files[j],
-                                &symt_new_function(msc_dbg->module, compiland, nampnt, 
+                                &symt_new_function(msc_dbg->module, compiland, nampnt,
                                                    msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                                    0 /* FIXME */, NULL /* FIXME */)->symt);
-            } 
-            else 
+            }
+            else
             {
-                symt_new_function(msc_dbg->module, NULL, nampnt, 
+                symt_new_function(msc_dbg->module, NULL, nampnt,
                                   msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                   0 /* FIXME */, NULL /* FIXME */);
             }
@@ -373,7 +373,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
         TRACE("Skipping unknown entry '%s' %d %d %d\n",
               coff_get_name(coff_sym, coff_strtab),
               coff_sym->StorageClass, coff_sym->SectionNumber, naux);
-        
+
         /*
          * For now, skip past the aux entries.
          */
@@ -430,7 +430,7 @@ BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
                          * first.
                          */
                         symt_get_info(coff_files.files[j].entries[l+1], TI_GET_ADDRESS, &addr);
-                        symt_add_func_line(msc_dbg->module, (struct symt_function*)coff_files.files[j].entries[l+1], 
+                        symt_add_func_line(msc_dbg->module, (struct symt_function*)coff_files.files[j].entries[l+1],
                                            coff_files.files[j].compiland->source, linepnt->Linenumber,
                                            msc_dbg->module->module.BaseOfImage + linepnt->Type.VirtualAddress - addr);
                     }

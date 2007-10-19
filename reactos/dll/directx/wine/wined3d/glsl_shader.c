@@ -1,7 +1,7 @@
 /*
  * GLSL pixel and vertex shader implementation
  *
- * Copyright 2006 Jason Green 
+ * Copyright 2006 Jason Green
  * Copyright 2006-2007 Henri Verbeet
  *
  * This library is free software; you can redistribute it and/or
@@ -53,7 +53,7 @@ typedef struct {
 
 /** Prints the GLSL info log which will contain error messages if they exist */
 void print_glsl_info_log(WineD3D_GL_Info *gl_info, GLhandleARB obj) {
-    
+
     int infologLength = 0;
     char *infoLog;
 
@@ -124,7 +124,7 @@ static void shader_glsl_load_vsamplers(WineD3D_GL_Info *gl_info, IWineD3DStateBl
     }
 }
 
-/** 
+/**
  * Loads floating point constants (aka uniforms) into the currently set GLSL program.
  * When constant_list == NULL, it will load all the constants.
  */
@@ -187,7 +187,7 @@ static void shader_glsl_load_constantsF(IWineD3DBaseShaderImpl* This, WineD3D_GL
     checkGLcall("glUniform4fvARB()");
 }
 
-/** 
+/**
  * Loads integer constants (aka uniforms) into the currently set GLSL program.
  * When @constants_set == NULL, it will load all the constants.
  */
@@ -198,7 +198,7 @@ static void shader_glsl_load_constantsI(
     unsigned max_constants,
     int* constants,
     BOOL* constants_set) {
-    
+
     GLhandleARB tmp_loc;
     int i;
     char tmp_name[8];
@@ -212,7 +212,7 @@ static void shader_glsl_load_constantsI(
             TRACE_(d3d_constants)("Loading constants %i: %i, %i, %i, %i\n",
                   i, constants[i*4], constants[i*4+1], constants[i*4+2], constants[i*4+3]);
 
-            /* TODO: Benchmark and see if it would be beneficial to store the 
+            /* TODO: Benchmark and see if it would be beneficial to store the
              * locations of the constants to avoid looking up each time */
             _snprintf(tmp_name, sizeof(tmp_name), "%s[%i]", prefix, i);
             tmp_loc = GL_EXTCALL(glGetUniformLocationARB(programId, tmp_name));
@@ -245,7 +245,7 @@ static void shader_glsl_load_constantsI(
     }
 }
 
-/** 
+/**
  * Loads boolean constants (aka uniforms) into the currently set GLSL program.
  * When @constants_set == NULL, it will load all the constants.
  */
@@ -256,7 +256,7 @@ static void shader_glsl_load_constantsB(
     unsigned max_constants,
     BOOL* constants,
     BOOL* constants_set) {
-    
+
     GLhandleARB tmp_loc;
     int i;
     char tmp_name[8];
@@ -269,7 +269,7 @@ static void shader_glsl_load_constantsB(
 
             TRACE_(d3d_constants)("Loading constants %i: %i;\n", i, constants[i*4]);
 
-            /* TODO: Benchmark and see if it would be beneficial to store the 
+            /* TODO: Benchmark and see if it would be beneficial to store the
              * locations of the constants to avoid looking up each time */
             _snprintf(tmp_name, sizeof(tmp_name), "%s[%i]", prefix, i);
             tmp_loc = GL_EXTCALL(glGetUniformLocationARB(programId, tmp_name));
@@ -310,7 +310,7 @@ void shader_glsl_load_constants(
     IWineD3DDevice* device,
     char usePixelShader,
     char useVertexShader) {
-   
+
     IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) device;
     IWineD3DStateBlockImpl* stateBlock = deviceImpl->stateBlock;
     WineD3D_GL_Info *gl_info = &deviceImpl->adapter->gl_info;
@@ -373,12 +373,12 @@ void shader_glsl_load_constants(
 
         /* Load DirectX 9 integer constants/uniforms for pixel shader */
         shader_glsl_load_constantsI(pshader, gl_info, programId, MAX_CONST_I,
-                                    stateBlock->pixelShaderConstantI, 
+                                    stateBlock->pixelShaderConstantI,
                                     stateBlock->changed.pixelShaderConstantsI);
 
         /* Load DirectX 9 boolean constants/uniforms for pixel shader */
         shader_glsl_load_constantsB(pshader, gl_info, programId, MAX_CONST_B,
-                                    stateBlock->pixelShaderConstantB, 
+                                    stateBlock->pixelShaderConstantB,
                                     stateBlock->changed.pixelShaderConstantsB);
 
         /* Upload the environment bump map matrix if needed. The needsbumpmat member specifies the texture stage to load the matrix from.
@@ -416,7 +416,7 @@ void shader_generate_glsl_declarations(
 
     /* Declare the constants (aka uniforms) */
     if (This->baseShader.limits.constant_float > 0) {
-        unsigned max_constantsF = min(This->baseShader.limits.constant_float, 
+        unsigned max_constantsF = min(This->baseShader.limits.constant_float,
                 (pshader ? GL_LIMITS(pshader_constantsF) : GL_LIMITS(vshader_constantsF)));
         shader_addline(buffer, "uniform vec4 %cC[%u];\n", prefix, max_constantsF);
     }
@@ -432,7 +432,7 @@ void shader_generate_glsl_declarations(
     else if(reg_maps->bumpmat != -1)
         shader_addline(buffer, "uniform mat2 bumpenvmat;\n");
 
-    /* Declare texture samplers */ 
+    /* Declare texture samplers */
     for (i = 0; i < This->baseShader.limits.sampler; i++) {
         if (reg_maps->samplers[i]) {
 
@@ -458,7 +458,7 @@ void shader_generate_glsl_declarations(
             }
         }
     }
-    
+
     /* Declare address variables */
     for (i = 0; i < This->baseShader.limits.address; i++) {
         if (reg_maps->address[i])
@@ -467,7 +467,7 @@ void shader_generate_glsl_declarations(
 
     /* Declare texture coordinate temporaries and initialize them */
     for (i = 0; i < This->baseShader.limits.texcoord; i++) {
-        if (reg_maps->texcoord[i]) 
+        if (reg_maps->texcoord[i])
             shader_addline(buffer, "vec4 T%lu = gl_TexCoord[%lu];\n", i, i);
     }
 
@@ -500,7 +500,7 @@ void shader_generate_glsl_declarations(
         shader_addline(buffer, "int aL;\n");
         shader_addline(buffer, "int tmpInt;\n");
     }
-    
+
     /* Temporary variables for matrix operations */
     shader_addline(buffer, "vec4 tmp0;\n");
     shader_addline(buffer, "vec4 tmp1;\n");
@@ -521,22 +521,22 @@ static void shader_glsl_add_src_param(SHADER_OPCODE_ARG* arg, const DWORD param,
 
 /** Used for opcode modifiers - They multiply the result by the specified amount */
 static const char * const shift_glsl_tab[] = {
-    "",           /*  0 (none) */ 
-    "2.0 * ",     /*  1 (x2)   */ 
-    "4.0 * ",     /*  2 (x4)   */ 
-    "8.0 * ",     /*  3 (x8)   */ 
-    "16.0 * ",    /*  4 (x16)  */ 
-    "32.0 * ",    /*  5 (x32)  */ 
-    "",           /*  6 (x64)  */ 
-    "",           /*  7 (x128) */ 
-    "",           /*  8 (d256) */ 
-    "",           /*  9 (d128) */ 
-    "",           /* 10 (d64)  */ 
-    "",           /* 11 (d32)  */ 
-    "0.0625 * ",  /* 12 (d16)  */ 
-    "0.125 * ",   /* 13 (d8)   */ 
-    "0.25 * ",    /* 14 (d4)   */ 
-    "0.5 * "      /* 15 (d2)   */ 
+    "",           /*  0 (none) */
+    "2.0 * ",     /*  1 (x2)   */
+    "4.0 * ",     /*  2 (x4)   */
+    "8.0 * ",     /*  3 (x8)   */
+    "16.0 * ",    /*  4 (x16)  */
+    "32.0 * ",    /*  5 (x32)  */
+    "",           /*  6 (x64)  */
+    "",           /*  7 (x128) */
+    "",           /*  8 (d256) */
+    "",           /*  9 (d128) */
+    "",           /* 10 (d64)  */
+    "",           /* 11 (d32)  */
+    "0.0625 * ",  /* 12 (d16)  */
+    "0.125 * ",   /* 13 (d8)   */
+    "0.25 * ",    /* 14 (d4)   */
+    "0.5 * "      /* 15 (d2)   */
 };
 
 /* Generate a GLSL parameter that does the input modifier computation and return the input register/mask to use */
@@ -547,7 +547,7 @@ static void shader_glsl_gen_modifier (
     char *out_str) {
 
     out_str[0] = 0;
-    
+
     if (instr == WINED3DSIO_TEXKILL)
         return;
 
@@ -617,8 +617,8 @@ static void shader_glsl_get_register_name(
     char pshader = shader_is_pshader_version(This->baseShader.hex_version);
     char tmpStr[50];
 
-    *is_color = FALSE;   
- 
+    *is_color = FALSE;
+
     switch (regtype) {
     case WINED3DSPR_TEMP:
         sprintf(tmpStr, "R%u", reg);
@@ -638,7 +638,7 @@ static void shader_glsl_get_register_name(
             if (vshader_input_is_color((IWineD3DVertexShader*) This, reg))
                *is_color = TRUE;
             sprintf(tmpStr, "attrib%u", reg);
-        } 
+        }
         break;
     case WINED3DSPR_CONST:
     {
@@ -647,7 +647,7 @@ static void shader_glsl_get_register_name(
         /* Relative addressing */
         if (param & WINED3DSHADER_ADDRMODE_RELATIVE) {
 
-           /* Relative addressing on shaders 2.0+ have a relative address token, 
+           /* Relative addressing on shaders 2.0+ have a relative address token,
             * prior to that, it was hard-coded as "A0.x" because there's only 1 register */
            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) >= 2)  {
                glsl_src_param_t rel_param;
@@ -846,9 +846,9 @@ static DWORD shader_glsl_append_dst(SHADER_BUFFER *buffer, SHADER_OPCODE_ARG *ar
 
 /** Process GLSL instruction modifiers */
 void shader_glsl_add_instruction_modifiers(SHADER_OPCODE_ARG* arg) {
-    
+
     DWORD mask = arg->dst & WINED3DSP_DSTMOD_MASK;
- 
+
     if (arg->opcode->dst_token && mask != 0) {
         glsl_dst_param_t dst_param;
 
@@ -913,9 +913,9 @@ static void shader_glsl_get_sample_function(DWORD sampler_type, BOOL projected, 
 
 
 /*****************************************************************************
- * 
+ *
  * Begin processing individual instruction opcodes
- * 
+ *
  ****************************************************************************/
 
 /* Generate GLSL arithmetic functions (dst = src1 + src2) */
@@ -1286,13 +1286,13 @@ void shader_glsl_mad(SHADER_OPCODE_ARG* arg) {
             src0_param.param_str, src1_param.param_str, src2_param.param_str);
 }
 
-/** Handles transforming all WINED3DSIO_M?x? opcodes for 
+/** Handles transforming all WINED3DSIO_M?x? opcodes for
     Vertex shaders to GLSL codes */
 void shader_glsl_mnxn(SHADER_OPCODE_ARG* arg) {
     int i;
     int nComponents = 0;
     SHADER_OPCODE_ARG tmpArg;
-   
+
     memset(&tmpArg, 0, sizeof(SHADER_OPCODE_ARG));
 
     /* Set constants for the temporary argument */
@@ -1301,8 +1301,8 @@ void shader_glsl_mnxn(SHADER_OPCODE_ARG* arg) {
     tmpArg.src[0]      = arg->src[0];
     tmpArg.src_addr[0] = arg->src_addr[0];
     tmpArg.src_addr[1] = arg->src_addr[1];
-    tmpArg.reg_maps = arg->reg_maps; 
-    
+    tmpArg.reg_maps = arg->reg_maps;
+
     switch(arg->opcode->opcode) {
         case WINED3DSIO_M4x4:
             nComponents = 4;
@@ -1336,7 +1336,7 @@ void shader_glsl_mnxn(SHADER_OPCODE_ARG* arg) {
 }
 
 /**
-    The LRP instruction performs a component-wise linear interpolation 
+    The LRP instruction performs a component-wise linear interpolation
     between the second and third operands using the first operand as the
     blend factor.  Equation:  (dst = src2 + src0 * (src1 - src2))
     This is equivalent to mix(src2, src1, src0);
@@ -1408,7 +1408,7 @@ void shader_glsl_dst(SHADER_OPCODE_ARG* arg) {
 /** Process the WINED3DSIO_SINCOS instruction in GLSL:
  * VS 2.0 requires that specific cosine and sine constants be passed to this instruction so the hardware
  * can handle it.  But, these functions are built-in for GLSL, so we can just ignore the last 2 params.
- * 
+ *
  * dst.x = cos(src0.?)
  * dst.y = sin(src0.?)
  * dst.z = dst.z
@@ -1450,7 +1450,7 @@ void shader_glsl_loop(SHADER_OPCODE_ARG* arg) {
     glsl_src_param_t src1_param;
 
     shader_glsl_add_src_param(arg, arg->src[1], arg->src_addr[1], WINED3DSP_WRITEMASK_ALL, &src1_param);
-  
+
     shader_addline(arg->buffer, "for (tmpInt = 0, aL = %s.y; tmpInt < %s.x; tmpInt++, aL += %s.z) {\n",
             src1_param.reg_name, src1_param.reg_name, src1_param.reg_name);
 }
@@ -1643,7 +1643,7 @@ void shader_glsl_texldl(SHADER_OPCODE_ARG* arg) {
 void pshader_glsl_texcoord(SHADER_OPCODE_ARG* arg) {
 
     /* FIXME: Make this work for more than just 2D textures */
-    
+
     IWineD3DPixelShaderImpl* This = (IWineD3DPixelShaderImpl*) arg->shader;
     SHADER_BUFFER* buffer = arg->buffer;
     DWORD hex_version = This->baseShader.hex_version;
@@ -1841,7 +1841,7 @@ void pshader_glsl_texm3x3(SHADER_OPCODE_ARG* arg) {
     current_state->current_row = 0;
 }
 
-/** Process the WINED3DSIO_TEXM3X3SPEC instruction in GLSL 
+/** Process the WINED3DSIO_TEXM3X3SPEC instruction in GLSL
  * Peform the final texture lookup based on the previous 2 3x3 matrix multiplies */
 void pshader_glsl_texm3x3spec(SHADER_OPCODE_ARG* arg) {
 
@@ -1876,7 +1876,7 @@ void pshader_glsl_texm3x3spec(SHADER_OPCODE_ARG* arg) {
     current_state->current_row = 0;
 }
 
-/** Process the WINED3DSIO_TEXM3X3VSPEC instruction in GLSL 
+/** Process the WINED3DSIO_TEXM3X3VSPEC instruction in GLSL
  * Peform the final texture lookup based on the previous 2 3x3 matrix multiplies */
 void pshader_glsl_texm3x3vspec(SHADER_OPCODE_ARG* arg) {
 

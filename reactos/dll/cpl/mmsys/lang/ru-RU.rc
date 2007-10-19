@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Звук и аудиоустройства"
     IDS_CPLDESCRIPTION "Изменение звуковых схем вашего компьютера, настройка колонок и записывающих устройств."

@@ -28,7 +28,7 @@
 #define RES_STR_BUILD_DATE      KERNEL_VERSION_BUILD_RC
 
 /* FILE_VERSION defaults to PRODUCT_VERSION */
-#define RES_STR_FILE_VERSION	KERNEL_RELEASE_RC	
+#define RES_STR_FILE_VERSION	KERNEL_RELEASE_RC
 
 /* ReactOS default Application Registry Root Path */
 #define RES_STR_ROSAPP_REGISTRY_ROOT	"Software\\ReactWare"

@@ -37,7 +37,7 @@ AuthzpQueryToken(IN OUT PAUTHZ_RESMAN ResMan,
     DWORD BufLen;
     PSID UserSid = NULL;
     BOOL Ret = FALSE;
-    
+
     /* query information about the user */
     BufLen = sizeof(User);
     Ret = GetTokenInformation(hToken,
@@ -64,7 +64,7 @@ AuthzpQueryToken(IN OUT PAUTHZ_RESMAN ResMan,
         else
             Ret = FALSE;
     }
-    
+
     if (Ret)
     {
         /* query general information */
@@ -75,7 +75,7 @@ AuthzpQueryToken(IN OUT PAUTHZ_RESMAN ResMan,
                                   BufLen,
                                   &BufLen);
     }
-    
+
     if (Ret)
     {
         ResMan->UserSid = UserSid;
@@ -109,7 +109,7 @@ AuthzpInitUnderImpersonation(IN OUT PAUTHZ_RESMAN ResMan)
                                hToken);
         CloseHandle(hToken);
     }
-    
+
     return Ret;
 }
 
@@ -153,12 +153,12 @@ AuthzInitializeResourceManager(IN DWORD flags,
     {
         PAUTHZ_RESMAN ResMan;
         SIZE_T RequiredSize = sizeof(AUTHZ_RESMAN);
-        
+
         if (ResourceManagerName != NULL)
         {
             RequiredSize += wcslen(ResourceManagerName) * sizeof(WCHAR);
         }
-        
+
         ResMan = (PAUTHZ_RESMAN)LocalAlloc(LMEM_FIXED,
                                            RequiredSize);
         if (ResMan != NULL)
@@ -178,17 +178,17 @@ AuthzInitializeResourceManager(IN DWORD flags,
             }
             else
                 ResMan->ResourceManagerName[0] = UNICODE_NULL;
-            
+
             ResMan->pfnAccessCheck = pfnAccessCheck;
             ResMan->pfnComputeDynamicGroups = pfnComputeDynamicGroups;
             ResMan->pfnFreeDynamicGroups = pfnFreeDynamicGroups;
-            
+
             if (!(flags & AUTHZ_RM_FLAG_NO_AUDIT))
             {
                 /* FIXME - initialize auditing */
                 DPRINT1("Auditing not implemented!\n");
             }
-            
+
             if (flags & AUTHZ_RM_FLAG_INITIALIZE_UNDER_IMPERSONATION)
             {
                 Ret = AuthzpInitUnderImpersonation(ResMan);
@@ -197,7 +197,7 @@ AuthzInitializeResourceManager(IN DWORD flags,
             {
                 Ret = AuthzpInitSelf(ResMan);
             }
-            
+
             if (Ret)
             {
                 /* finally return the handle */
@@ -212,7 +212,7 @@ AuthzInitializeResourceManager(IN DWORD flags,
     }
     else
         SetLastError(ERROR_INVALID_PARAMETER);
-    
+
     return Ret;
 }
 
@@ -230,19 +230,19 @@ AuthzFreeResourceManager(IN AUTHZ_RESOURCE_MANAGER_HANDLE AuthzResourceManager)
     if (AuthzResourceManager != NULL)
     {
         PAUTHZ_RESMAN ResMan = (PAUTHZ_RESMAN)AuthzResourceManager;
-        
+
         VALIDATE_RESMAN_HANDLE(AuthzResourceManager);
-        
+
         if (!(ResMan->flags & AUTHZ_RM_FLAG_NO_AUDIT))
         {
             /* FIXME - cleanup auditing */
         }
-        
+
         if (ResMan->UserSid != NULL)
         {
             LocalFree((HLOCAL)ResMan->UserSid);
         }
-        
+
         LocalFree((HLOCAL)AuthzResourceManager);
         Ret = TRUE;
     }

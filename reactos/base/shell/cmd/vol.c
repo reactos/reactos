@@ -42,7 +42,7 @@ PrintVolumeHeader (LPTSTR pszRootPath)
 				  NULL,
 				  0))
 	{
-		ErrorMessage (GetLastError (), _T(""));    
+		ErrorMessage (GetLastError (), _T(""));
 		return 1;
 	}
 
@@ -90,7 +90,7 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 			szRootPath[0] = param[0];
 		else
 		{
-			error_invalid_drive ();     
+			error_invalid_drive ();
       nErrorLevel = 1;
 			return 1;
 		}
@@ -98,14 +98,14 @@ INT cmd_vol (LPTSTR cmd, LPTSTR param)
 
 	if (!IsValidPathName (szRootPath))
 	{
-		error_invalid_drive ();    
+		error_invalid_drive ();
      nErrorLevel = 1;
 		return 1;
 	}
 
 	/* print the header */
 	if (!PrintVolumeHeader (szRootPath))
-  {    
+  {
 	    nErrorLevel = 1;
 		return 1;
   }

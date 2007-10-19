@@ -309,9 +309,9 @@ USHORT
 NTAPI
 KiTagWordFnsaveToFxsave(USHORT TagWord)
 {
-    INT FxTagWord = ~TagWord; 
+    INT FxTagWord = ~TagWord;
 
-    /* 
+    /*
      * Empty is now 00, any 2 bits containing 1 mean valid
      * Now convert the rest (11->0 and the rest to 1)
      */
@@ -802,17 +802,17 @@ KeTrapFrameToContext(IN PKTRAP_FRAME TrapFrame,
 BOOLEAN
 FASTCALL
 KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL)
-{   
+{
     ULONG Eip;
     PKTRAP_FRAME TrapFrame = TrapInformation;
     VOID NTAPI ExpInterlockedPopEntrySListFault(VOID);
-    
+
     /* Don't do anything if we didn't get a trap frame */
     if (!TrapInformation) return FALSE;
 
     /* Check where we came from */
     switch (TrapFrame->SegCs)
-    {       
+    {
         /* Kernel mode */
         case KGDT_R0_CODE:
 
@@ -827,7 +827,7 @@ KeInvalidAccessAllowed(IN PVOID TrapInformation OPTIONAL)
             //Eip = (ULONG)KeUserPopEntrySListFault;
             Eip = 0;
             break;
-            
+
         default:
 
             /* Anything else gets a bugcheck */

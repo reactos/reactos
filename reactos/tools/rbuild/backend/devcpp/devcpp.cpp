@@ -38,7 +38,7 @@ static class DevCppFactory : public Backend::Factory
 		{
 			return new DevCppBackend(project, configuration);
 		}
-		
+
 } factory;
 
 
@@ -51,7 +51,7 @@ DevCppBackend::DevCppBackend(Project &project,
 void DevCppBackend::Process()
 {
 	string filename = ProjectNode.name + ".dev";
-	
+
 	cout << "Creating Dev-C++ project: " << filename << endl;
 
 	ProcessModules();
@@ -65,7 +65,7 @@ void DevCppBackend::Process()
 	}
 
 	m_devFile << "[Project]" << endl;
-	
+
 	m_devFile	<< "FileName="				<< filename 		<< endl
 				<< "Name="					<< ProjectNode.name	<< endl
 				<< "UnitCount="				<< m_unitCount		<< endl
@@ -93,9 +93,9 @@ void DevCppBackend::Process()
 				<< "IncludeVersionInto=0"	<< endl
 				<< "SupportXPThemes=0"		<< endl
 				<< "CompilerSet=0"			<< endl
-				
+
 				<< "CompilerSettings=0000000000000000000000" << endl;
-	
+
 	OutputFolders();
 
 	m_devFile << endl << endl;
@@ -103,11 +103,11 @@ void DevCppBackend::Process()
 	OutputFileUnits();
 
 	m_devFile.close();
-	
+
 	// Dev-C++ needs a makefile, so use the MinGW backend to create one.
-	
+
 	cout << "Creating Makefile: " << ProjectNode.makefile << endl;
-	
+
 	Backend *backend = Backend::Factory::Create("mingw",
 	                                            ProjectNode,
 	                                            configuration );
@@ -132,7 +132,7 @@ void DevCppBackend::ProcessModules()
 		for(size_t k = 0; k < module.non_if_data.files.size(); k++)
 		{
 			File &file = *module.non_if_data.files[k];
-			
+
 			ProcessFile( file.file.relative_path + sSep + file.file.name );
 		}
 	}
@@ -158,13 +158,13 @@ void DevCppBackend::ProcessFile(string filepath)
 		return;
 
 	// Change the \ to /
-	
+
 	for(size_t i = 0; i < filepath.length(); i++)
 	{
 		if(filepath[i] == '/')
 			filepath[i] = '\\';
 	}
-	
+
 
 	// Remove the filename from the path
 	string folder = "";
@@ -176,7 +176,7 @@ void DevCppBackend::ProcessFile(string filepath)
 		folder = filepath;
 		folder.erase(pos, folder.length() - pos);
 	}
-	
+
 	FileUnit fileUnit;
 	fileUnit.filename = filepath;
 	fileUnit.folder = folder;
@@ -205,9 +205,9 @@ void DevCppBackend::AddFolders(string &folder)
 	// Check if this folder was already added. true if it was, false otherwise.
 	if(CheckFolderAdded(folder))
 		return;
-	
+
 	m_folders.push_back(folder);
-	
+
 	size_t pos = folder.rfind(string("\\"), folder.length() - 1);
 
 	if(pos == string::npos)
@@ -235,7 +235,7 @@ void DevCppBackend::OutputFileUnits()
 	for(size_t i = 0; i < m_fileUnits.size(); i++)
 	{
 		m_devFile << "[Unit" << i + 1 << "]" << endl;
-		
+
 
 		m_devFile << "FileName="			<< m_fileUnits[i].filename << endl;
 		m_devFile << "CompileCpp=1" 		<< endl;

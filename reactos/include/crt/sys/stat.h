@@ -171,7 +171,7 @@ _CRTIMP int __cdecl	stat (const char*, struct stat*);
 #if defined (__MSVCRT__)
 _CRTIMP int __cdecl  _fstati64(int, struct _stati64 *);
 _CRTIMP int __cdecl  _stati64(const char *, struct _stati64 *);
-/* These require newer versions of msvcrt.dll (6.10 or higher).  */ 
+/* These require newer versions of msvcrt.dll (6.10 or higher).  */
 #if __MSVCRT_VERSION__ >= 0x0601
 _CRTIMP int __cdecl _fstat64 (int, struct __stat64*);
 _CRTIMP int __cdecl _stat64 (const char*, struct __stat64*);

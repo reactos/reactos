@@ -40,13 +40,13 @@ disp_urb_completion(PURB purb, PVOID context)
     // at this stage, the irp can not be canceled since the urb
     // won't be found in any queue and the irp is not in any queue.
     // see line 4685 in hub.c
-    // Sometimes, it may be very fast to enter this routine before 
+    // Sometimes, it may be very fast to enter this routine before
     // the dev_mgr_register_irp to be called in dispatch routine in
     // usb2.0 environment as
-    // we did in usb1.1 driver. We can not simply add a loop to wait 
+    // we did in usb1.1 driver. We can not simply add a loop to wait
     // for the dispatch thread to add the irp to the list, because
     // here we are at DPC level higher than the dispatch thread
-    // running level. And the solution is to register the irp 
+    // running level. And the solution is to register the irp
     // before the urb is scheduled instead of registering it after
     // urb is scheduled.
     if (purb->pirp)
@@ -134,7 +134,7 @@ disp_noio_urb_completion(PURB purb, PVOID context)
     return;
 }
 
-//this function is called by the hcd's 
+//this function is called by the hcd's
 //dispatch when they have done their job.
 NTSTATUS
 dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
@@ -504,7 +504,7 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
 //dev count, output_buffer_length must be no less than sizeof( long ).
 
 #define IOCTL_ENUM_DEVICES 		CTL_CODE( FILE_HCD_DEV_TYPE, 4094, METHOD_BUFFERED, FILE_ANY_ACCESS )
-//input_buffer is a dword value to indicate the count of elements in the array 
+//input_buffer is a dword value to indicate the count of elements in the array
 //input_buffer_length is sizeof( long ), output_buffer is to receive a
 //structure ENUM_DEV_ARRAY where dev_count is the elements hold in this array.
 
@@ -516,17 +516,17 @@ dev_mgr_dispatch(IN PUSB_DEV_MANAGER dev_mgr, IN PIRP irp)
 
 #define IOCTL_SUBMIT_URB_RD		CTL_CODE( FILE_HCD_DEV_TYPE, 4096, METHOD_IN_DIRECT, FILE_ANY_ACCESS )
 #define IOCTL_SUBMIT_URB_WR 	CTL_CODE( FILE_HCD_DEV_TYPE, 4097, METHOD_OUT_DIRECT, FILE_ANY_ACCESS )
-// input_buffer is a URB, and input_buffer_length is equal to or greater than 
+// input_buffer is a URB, and input_buffer_length is equal to or greater than
 // sizeof( URB ); the output_buffer is a buffer to receive data from or send data
 // to device. only the following urb fields can be accessed, others must be zeroed.
 //  DEV_HANDLE 			endp_handle;
 //	UCHAR             	setup_packet[8];   	//for control pipe
 // the choosing of IOCTL_SUBMIT_URB_RD or IOCTL_SUBMIT_URB_WR should be determined
-// by the current URB, for example, a request string from device will use XXX_RD, 
+// by the current URB, for example, a request string from device will use XXX_RD,
 // and a write to the bulk endpoint will use XXX_WR
 
 #define IOCTL_SUBMIT_URB_NOIO	CTL_CODE( FILE_HCD_DEV_TYPE, 4098, METHOD_BUFFERED,	FILE_ANY_ACCESS )
-// input_buffer is a URB, and input_buffer_length is equal to or greater than 
+// input_buffer is a URB, and input_buffer_length is equal to or greater than
 // sizeof( URB ); the output_buffer is null and no output_buffer_length,
 // only the following fields in urb can be accessed, others must be zeroed.
 //  DEV_HANDLE 			endp_handle;

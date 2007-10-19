@@ -139,7 +139,7 @@ DATE [/T][日付]\n\n\
   /T    日付の表\示のみ行います。\n\n\
 パラメータの指定がない場合は、現在の日付が表\示され、新しい日付の入力を\n\
 求められます。変更しない場合は、Enter キーを押します。\n"
-				
+
 STRING_DEL_HELP1,  "1 つまたは複数のファイルを削除します。\n\n\
 DEL [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] ファイル名 ...\n\
 DELETE [/N /P /T /Q /S /W /Y /Z /A[[:]属性]] ファイル名 ...\n\
@@ -398,7 +398,7 @@ REN [/E /N /P /Q /S /T] 元のファイル名 ... 新ファイル名\n\n\
 STRING_REN_HELP2, "    %lu 個のファイルの名前が変更されました\n"
 
 STRING_REN_HELP3, "    %lu 個のファイルの名前が変更されました\n"
-		 
+
 STRING_SHIFT_HELP, "バッチ ファイル中の置き換え可能\なパラメータの位置を変更します。\n\n\
 SHIFT [DOWN]"
 
@@ -602,7 +602,7 @@ STRING_ERROR_ERROR1,         "不明なエラーです! エラー コード: 0x%lx\n"
 STRING_ERROR_ERROR2,         "構\文エラー"
 STRING_FOR_ERROR1,           "命令文中に 'in' が不足しています。"
 STRING_FOR_ERROR2,           "括弧が見つかりません。"
-STRING_FOR_ERROR3,           "'do' が不足しています。" 
+STRING_FOR_ERROR3,           "'do' が不足しています。"
 STRING_FOR_ERROR4,           "'do' の後にコマンドがありません。"
 STRING_FREE_ERROR1,          "無効なドライブです。"
 STRING_FREE_ERROR2,          "ラベルがありません。"

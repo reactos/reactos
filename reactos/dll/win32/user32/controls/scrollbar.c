@@ -1277,7 +1277,7 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
           HDC hdc;
           DbgPrint("ScrollBarWndProc WM_ENABLE\n");
           NtUserEnableScrollBar(Wnd,SB_CTL,(wParam ? ESB_ENABLE_BOTH : ESB_DISABLE_BOTH));
-          /* Refresh Scrollbars. */          
+          /* Refresh Scrollbars. */
           hdc = GetDCEx( Wnd, 0, DCX_CACHE );
           if (!hdc) return 1;
           IntDrawScrollBar( Wnd, hdc, SB_CTL);

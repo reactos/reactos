@@ -1763,7 +1763,7 @@ interface IHTMLElement : IDispatch
 
     [propput, id(DISPID_IHTMLELEMENT_ONKEYUP)]
     HRESULT onkeyup([in] VARIANT v);
-    
+
     [propget, id(DISPID_IHTMLELEMENT_ONKEYUP)]
     HRESULT onkeyup([retval, out] VARIANT *p);
 
@@ -4881,7 +4881,7 @@ interface IHTMLDocument3 : IDispatch
 
     [propget, id(DISPID_IHTMLDOCUMENT3_UNIQUEID), hidden]
     HRESULT uniqueID([retval, out] BSTR *p);
-    
+
     [id(DISPID_IHTMLDOCUMENT3_ATTACHEVENT)]
     HRESULT attachEvent(
         [in] BSTR event,

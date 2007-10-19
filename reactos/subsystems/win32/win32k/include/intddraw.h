@@ -72,21 +72,21 @@ typedef struct
     DD_MISCELLANEOUSCALLBACKS        Misc;
 
     /* NT-based Callback */
-    PDD_FLIPTOGDISURFACE             DdFlipToGDISurface; 
-    PDD_FREEDRIVERMEMORY             DdFreeDriverMemory; 
-    PDD_SETEXCLUSIVEMODE             DdSetExclusiveMode; 
+    PDD_FLIPTOGDISURFACE             DdFlipToGDISurface;
+    PDD_FREEDRIVERMEMORY             DdFreeDriverMemory;
+    PDD_SETEXCLUSIVEMODE             DdSetExclusiveMode;
 
     /*.Motion Compensation .*/
-    PDD_MOCOMPCB_BEGINFRAME          DdMoCompBeginFrame; 
-    PDD_MOCOMPCB_CREATE              DdMoCompCreate; 
-    PDD_MOCOMPCB_DESTROY             DdMoCompDestroy; 
+    PDD_MOCOMPCB_BEGINFRAME          DdMoCompBeginFrame;
+    PDD_MOCOMPCB_CREATE              DdMoCompCreate;
+    PDD_MOCOMPCB_DESTROY             DdMoCompDestroy;
     PDD_MOCOMPCB_ENDFRAME            DdMoCompEndFrame;
-    PDD_MOCOMPCB_GETCOMPBUFFINFO     DdMoCompGetBuffInfo; 
+    PDD_MOCOMPCB_GETCOMPBUFFINFO     DdMoCompGetBuffInfo;
     PDD_MOCOMPCB_GETFORMATS          DdMoCompGetFormats;
-    PDD_MOCOMPCB_GETGUIDS            DdMoCompGetGuids; 
-    PDD_MOCOMPCB_GETINTERNALINFO     DdMoCompGetInternalInfo; 
-    PDD_MOCOMPCB_QUERYSTATUS         DdMoCompQueryStatus; 
-    PDD_MOCOMPCB_RENDER              DdMoCompRender; 
+    PDD_MOCOMPCB_GETGUIDS            DdMoCompGetGuids;
+    PDD_MOCOMPCB_GETINTERNALINFO     DdMoCompGetInternalInfo;
+    PDD_MOCOMPCB_QUERYSTATUS         DdMoCompQueryStatus;
+    PDD_MOCOMPCB_RENDER              DdMoCompRender;
 
     /* Video Port Callback */
     PDD_VPORTCB_CANCREATEVIDEOPORT   DdVideoPortCanCreate;
@@ -113,7 +113,7 @@ typedef struct
 
     DWORD dwNumFourCC;
     LPDWORD pdwFourCC;
-    
+
 
 } DD_DIRECTDRAW, *PDD_DIRECTDRAW;
 

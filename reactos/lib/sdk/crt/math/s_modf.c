@@ -7,7 +7,7 @@
  *
  * Developed at SunPro, a Sun Microsystems, Inc. business.
  * Permission to use, copy, modify, and distribute this
- * software is freely granted, provided that this notice 
+ * software is freely granted, provided that this notice
  * is preserved.
  * ====================================================
  */
@@ -45,7 +45,7 @@ DESCRIPTION
 	is, if . <[realpart]> = modf(<[val]>, &<[intpart]>); then
 	`<<<[realpart]>+<[intpart]>>>' is the same as <[val]>.
 	<<modff>> is identical, save that it takes and returns
-	<<float>> rather than <<double>> values. 
+	<<float>> rather than <<double>> values.
 
 RETURNS
 	The fractional part is returned.  Each result has the same
@@ -55,13 +55,13 @@ PORTABILITY
 	<<modf>> is ANSI C. <<modff>> is an extension.
 
 QUICKREF
-	modf  ansi pure 
+	modf  ansi pure
 	modff - pure
 
 */
 
 /*
- * modf(double x, double *iptr) 
+ * modf(double x, double *iptr)
  * return fraction part of x, and return x's integral part in *iptr.
  * Method:
  *	Bit twiddling.
@@ -79,9 +79,9 @@ static const double one = 1.0;
 
 #ifdef __IEEE_BIG_ENDIAN
 
-typedef union 
+typedef union
 {
-  struct 
+  struct
   {
     __uint32_t msw;
     __uint32_t lsw;
@@ -93,9 +93,9 @@ typedef union
 
 #ifdef __IEEE_LITTLE_ENDIAN
 
-typedef union 
+typedef union
 {
-  struct 
+  struct
   {
     __uint32_t lsw;
     __uint32_t msw;

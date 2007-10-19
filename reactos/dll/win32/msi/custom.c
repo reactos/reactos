@@ -83,7 +83,7 @@ static BOOL check_execution_scheduling_options(MSIPACKAGE *package, LPCWSTR acti
     if (!package->script)
         return TRUE;
 
-    if ((options & msidbCustomActionTypeClientRepeat) == 
+    if ((options & msidbCustomActionTypeClientRepeat) ==
             msidbCustomActionTypeClientRepeat)
     {
         if (!(package->script->InWhatSequence & SEQUENCE_UI &&
@@ -284,7 +284,7 @@ end:
 }
 
 
-static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source, 
+static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
                                 LPWSTR tmp_file)
 {
     DWORD sz=MAX_PATH;
@@ -313,7 +313,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
 
         the_file = CreateFileW(tmp_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                            FILE_ATTRIBUTE_NORMAL, NULL);
-    
+
         if (the_file == INVALID_HANDLE_VALUE)
             return ERROR_FUNCTION_FAILED;
 
@@ -321,7 +321,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
         if (!row)
             return ERROR_FUNCTION_FAILED;
 
-        do 
+        do
         {
             DWORD write;
             sz = 1024;
@@ -329,7 +329,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
             if (rc != ERROR_SUCCESS)
             {
                 ERR("Failed to get stream\n");
-                CloseHandle(the_file);  
+                CloseHandle(the_file);
                 DeleteFileW(tmp_file);
                 break;
             }
@@ -344,7 +344,7 @@ static UINT store_binary_to_temp(MSIPACKAGE *package, LPCWSTR source,
     return ERROR_SUCCESS;
 }
 
-static void file_running_action(MSIPACKAGE* package, HANDLE Handle, 
+static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
                                 BOOL process, LPCWSTR name)
 {
     MSIRUNNINGACTION *action;
@@ -361,11 +361,11 @@ static void file_running_action(MSIPACKAGE* package, HANDLE Handle,
 static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
 {
     DWORD rc=0;
-    
+
     if (type == 2)
     {
         GetExitCodeProcess(ThreadHandle,&rc);
-    
+
         if (rc == 0)
             return ERROR_SUCCESS;
         else
@@ -389,7 +389,7 @@ static UINT process_action_return_value(UINT type, HANDLE ThreadHandle)
     }
 }
 
-static UINT process_handle(MSIPACKAGE* package, UINT type, 
+static UINT process_handle(MSIPACKAGE* package, UINT type,
                            HANDLE ThreadHandle, HANDLE ProcessHandle,
                            LPCWSTR Name, BOOL *finished)
 {
@@ -418,7 +418,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
         if (finished)
             *finished = TRUE;
     }
-    else 
+    else
     {
         TRACE("Asynchronous Execution of action %s\n",debugstr_w(Name));
         /* asynchronous */
@@ -448,7 +448,7 @@ static UINT process_handle(MSIPACKAGE* package, UINT type,
 
 typedef UINT __stdcall CustomEntry(MSIHANDLE);
 
-typedef struct 
+typedef struct
 {
         MSIPACKAGE *package;
         WCHAR *target;
@@ -529,7 +529,7 @@ static HANDLE do_msidbCustomActionTypeDll(MSIPACKAGE *package, LPCWSTR dll, LPCW
     return CreateThread(NULL, 0, DllThread, info, 0, NULL);
 }
 
-static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source, 
+static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action)
 {
     WCHAR tmp_file[MAX_PATH];
@@ -546,7 +546,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
     {
         static const WCHAR dot[]={'.',0};
         strcatW(tmp_file,dot);
-    } 
+    }
 
     ThreadHandle = do_msidbCustomActionTypeDll( package, tmp_file, target );
 
@@ -560,7 +560,7 @@ static UINT HANDLE_CustomType1(MSIPACKAGE *package, LPCWSTR source,
     return rc;
 }
 
-static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source, 
+static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
                                LPCWSTR target, const INT type, LPCWSTR action)
 {
     WCHAR tmp_file[MAX_PATH];
@@ -584,7 +584,7 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
 
     if (deformated)
         len += strlenW(deformated);
-   
+
     cmd = msi_alloc(sizeof(WCHAR)*len);
 
     strcpyW(cmd,tmp_file);
@@ -610,14 +610,14 @@ static UINT HANDLE_CustomType2(MSIPACKAGE *package, LPCWSTR source,
     }
     msi_free(cmd);
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
+    prc = process_handle(package, type, info.hThread, info.hProcess, action,
                           &finished);
 
     if (!finished)
         track_tempfile(package, tmp_file, tmp_file);
     else
         DeleteFileW(tmp_file);
-    
+
     return prc;
 }
 
@@ -683,7 +683,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    
+
     if ( !rc )
     {
         ERR("Unable to execute command %s\n", debugstr_w(cmd));
@@ -692,7 +692,7 @@ static UINT HANDLE_CustomType18(MSIPACKAGE *package, LPCWSTR source,
     }
     msi_free(cmd);
 
-    prc = process_handle(package, type, info.hThread, info.hProcess, action, 
+    prc = process_handle(package, type, info.hThread, info.hProcess, action,
                          NULL);
 
     return prc;
@@ -769,7 +769,7 @@ static UINT HANDLE_CustomType50(MSIPACKAGE *package, LPCWSTR source,
     rc = CreateProcessW(NULL, cmd, NULL, NULL, FALSE, 0, NULL,
                   c_collen, &si, &info);
 
-    
+
     if ( !rc )
     {
         ERR("Unable to execute command %s\n", debugstr_w(cmd));

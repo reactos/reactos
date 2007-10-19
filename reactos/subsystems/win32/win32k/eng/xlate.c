@@ -282,11 +282,11 @@ end:
      if (PaletteDest != PaletteSource)
          if (DestPalGDI != NULL)
               PALETTE_UnlockPalette(DestPalGDI);
-     
-      
+
+
    if (PaletteSource != NULL)
       PALETTE_UnlockPalette(SourcePalGDI);
-  
+
    return XlateObj;
 }
 
@@ -500,7 +500,7 @@ XLATEOBJ_iXlate(XLATEOBJ *XlateObj, ULONG Color)
 
    if (XlateObj->flXlate & XO_TRIVIAL)
       return Color;
-    
+
    if (XlateObj->flXlate & XO_TABLE)
    {
       if (Color >= XlateObj->cEntries)

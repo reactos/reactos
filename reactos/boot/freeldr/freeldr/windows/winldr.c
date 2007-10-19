@@ -127,7 +127,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	PLOADER_PARAMETER_EXTENSION Extension;
 
 	LoaderBlock->u.I386.CommonDataArea = NULL; // Force No ABIOS support
-	
+
 	/* Fill Arc BootDevice */
 	LoaderBlock->ArcBootDeviceName = MmAllocateMemory(strlen(ArcBoot)+1);
 	strcpy(LoaderBlock->ArcBootDeviceName, ArcBoot);

@@ -5,8 +5,8 @@
 /*
  * @implemented
  */
-BOOL  
-STDCALL 
+BOOL
+STDCALL
 TextOutA(
 	HDC  hdc,
 	int  nXStart,
@@ -58,7 +58,7 @@ GetTextCharacterExtra(
 {
 #if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hDc, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->lTextExtra;
 #endif
@@ -84,10 +84,10 @@ GetTextCharset(HDC hdc)
 /*
  * @implemented
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 GetTextMetricsA(
-	HDC		hdc, 
+	HDC		hdc,
 	LPTEXTMETRICA	lptm
 	)
 {
@@ -105,10 +105,10 @@ GetTextMetricsA(
 /*
  * @implemented
  */
-BOOL 
-STDCALL 
+BOOL
+STDCALL
 GetTextMetricsW(
-	HDC		hdc, 
+	HDC		hdc,
 	LPTEXTMETRICW	lptm
 	)
 {
@@ -267,16 +267,16 @@ GetTextExtentPoint32W(
 /*
  * @implemented
  */
-BOOL  
-STDCALL 
+BOOL
+STDCALL
 ExtTextOutA(
-	HDC		hdc, 
-	int		X, 
-	int		Y, 
-	UINT		fuOptions, 
+	HDC		hdc,
+	int		X,
+	int		Y,
+	UINT		fuOptions,
 	CONST RECT	*lprc,
-	LPCSTR		lpString, 
-	UINT		cbCount, 
+	LPCSTR		lpString,
+	UINT		cbCount,
 	CONST INT	*lpDx
 	)
 {
@@ -298,16 +298,16 @@ ExtTextOutA(
 /*
  * @implemented
  */
-BOOL  
-STDCALL 
+BOOL
+STDCALL
 ExtTextOutW(
-	HDC		hdc, 
-	int		X, 
-	int		Y, 
-	UINT		fuOptions,	 
+	HDC		hdc,
+	int		X,
+	int		Y,
+	UINT		fuOptions,
 	CONST RECT	*lprc,
-	LPCWSTR		lpString, 
-	UINT		cbCount, 
+	LPCWSTR		lpString,
+	UINT		cbCount,
 	CONST INT	*lpDx
 	)
 {
@@ -443,8 +443,8 @@ SetTextCharacterExtra(
   cExtra = Dc_Attr->lTextExtra;
   Dc_Attr->lTextExtra = CharExtra;
   return cExrta;
-#endif  
-// Do this for now.  
+#endif
+// Do this for now.
   return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
 }
 

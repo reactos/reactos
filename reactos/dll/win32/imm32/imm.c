@@ -970,7 +970,7 @@ LONG WINAPI ImmGetCompositionStringW(
     else
     {
         FIXME("Unhandled index 0x%x\n",dwIndex);
-    }   
+    }
 
     ImmUnlockIMCC(data->IMC.hCompStr);
 

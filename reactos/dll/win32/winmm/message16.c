@@ -1798,9 +1798,9 @@ theEnd:
  *		MMDRV_LoadMMDrvFunc16
  *
  */
-unsigned   MMDRV_LoadMMDrvFunc16(LPCSTR drvName, LPWINE_DRIVER d, 
+unsigned   MMDRV_LoadMMDrvFunc16(LPCSTR drvName, LPWINE_DRIVER d,
                                  LPWINE_MM_DRIVER lpDrv)
-{        
+{
     WINEMM_msgFunc16	func;
     unsigned            count = 0;
     char    		buffer[128];
@@ -3351,7 +3351,7 @@ static  WINMM_MapType	MCI_UnMapMsg32WTo16(WORD uDevType, WORD wMsg, DWORD dwFlag
             LPMCI_INFO_PARMS16  mip16  = (LPMCI_INFO_PARMS16)MapSL(lParam);
 	    LPMCI_INFO_PARMSW   mip32w = *(LPMCI_INFO_PARMSW*)((char*)mip16 - sizeof(LPMCI_INFO_PARMSW));
 
-            MultiByteToWideChar(CP_ACP, 0, MapSL(mip16->lpstrReturn), mip16->dwRetSize, 
+            MultiByteToWideChar(CP_ACP, 0, MapSL(mip16->lpstrReturn), mip16->dwRetSize,
                                 mip32w->lpstrReturn, mip32w->dwRetSize / sizeof(WCHAR));
             UnMapLS( lParam );
             UnMapLS( mip16->lpstrReturn );
@@ -3451,7 +3451,7 @@ static  WINMM_MapType	MCI_UnMapMsg32WTo16(WORD uDevType, WORD wMsg, DWORD dwFlag
 
             UnMapLS( lParam );
 	    if (msip16) {
-                MultiByteToWideChar(CP_ACP, 0, MapSL(msip16->lpstrReturn), msip16->dwRetSize, 
+                MultiByteToWideChar(CP_ACP, 0, MapSL(msip16->lpstrReturn), msip16->dwRetSize,
                                     msip32w->lpstrReturn, msip32w->dwRetSize);
                 UnMapLS( msip16->lpstrReturn );
                 HeapFree( GetProcessHeap(), 0, MapSL(msip16->lpstrReturn) );

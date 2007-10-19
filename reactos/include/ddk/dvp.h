@@ -3,7 +3,7 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 
+ * FILE:
  * PURPOSE:              Directx headers
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *
@@ -51,7 +51,7 @@ typedef struct _DDVIDEOPORTCONNECT
     ULONG_PTR dwReserved1;
 } DDVIDEOPORTCONNECT, *LPDDVIDEOPORTCONNECT;
 
-typedef struct _DDVIDEOPORTDESC 
+typedef struct _DDVIDEOPORTDESC
 {
   DWORD dwSize;
   DWORD dwFieldWidth;
@@ -69,32 +69,32 @@ typedef struct _DDVIDEOPORTDESC
 typedef struct _DDVIDEOPORTBANDWIDTH
 {
   DWORD dwSize;
-  DWORD dwOverlay;    
-  DWORD dwColorkey;	
+  DWORD dwOverlay;
+  DWORD dwColorkey;
   DWORD dwYInterpolate;
   DWORD dwYInterpAndColorkey;
-  ULONG_PTR dwReserved1;	
-  ULONG_PTR dwReserved2;	
+  ULONG_PTR dwReserved1;
+  ULONG_PTR dwReserved2;
 } DDVIDEOPORTBANDWIDTH, *LPDDVIDEOPORTBANDWIDTH;
 
 typedef struct _DDVIDEOPORTCAPS
 {
-   DWORD dwSize;		
-   DWORD dwFlags;		
-   DWORD dwMaxWidth;	
+   DWORD dwSize;
+   DWORD dwFlags;
+   DWORD dwMaxWidth;
    DWORD dwMaxVBIWidth;
-   DWORD dwMaxHeight; 	
+   DWORD dwMaxHeight;
    DWORD dwVideoPortID;
-   DWORD dwCaps;		
-   DWORD dwFX;			
+   DWORD dwCaps;
+   DWORD dwFX;
    DWORD dwNumAutoFlipSurfaces;
-   DWORD dwAlignVideoPortBoundary;	
+   DWORD dwAlignVideoPortBoundary;
    DWORD dwAlignVideoPortPrescaleWidth;
-   DWORD dwAlignVideoPortCropBoundary;	
-   DWORD dwAlignVideoPortCropWidth;	
-   DWORD dwPreshrinkXStep;	
-   DWORD dwPreshrinkYStep;	
-   DWORD dwNumVBIAutoFlipSurfaces;	
+   DWORD dwAlignVideoPortCropBoundary;
+   DWORD dwAlignVideoPortCropWidth;
+   DWORD dwPreshrinkXStep;
+   DWORD dwPreshrinkYStep;
+   DWORD dwNumVBIAutoFlipSurfaces;
    DWORD dwNumPreferredAutoflip;
    WORD  wNumFilterTapsX;
    WORD  wNumFilterTapsY;
@@ -130,10 +130,10 @@ typedef struct _DDVIDEOPORTSTATUS
 
 typedef struct _DDVIDEOPORTNOTIFY
 {
-    LARGE_INTEGER ApproximateTimeStamp;	
-    LONG lField;                        
-    UINT dwSurfaceIndex;                
-    LONG lDone;                         
+    LARGE_INTEGER ApproximateTimeStamp;
+    LONG lField;
+    UINT dwSurfaceIndex;
+    LONG lDone;
 } DDVIDEOPORTNOTIFY, *LPDDVIDEOPORTNOTIFY;
 
 
@@ -246,10 +246,10 @@ typedef HRESULT (*LPDDENUMVIDEOCALLBACK)(LPDDVIDEOPORTCAPS, LPVOID);
     #undef INTERFACE
     #define INTERFACE IDDVideoPortContainer
     DECLARE_INTERFACE_( IDDVideoPortContainer, IUnknown )
-    {    
+    {
       STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID *ppvObj) PURE;
       STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
-      STDMETHOD_(ULONG,Release) (THIS) PURE;    
+      STDMETHOD_(ULONG,Release) (THIS) PURE;
       STDMETHOD(CreateVideoPort)(THIS_ DWORD, LPDDVIDEOPORTDESC, LPDIRECTDRAWVIDEOPORT *, IUnknown *) PURE;
       STDMETHOD(EnumVideoPorts)(THIS_ DWORD, LPDDVIDEOPORTCAPS, LPVOID,LPDDENUMVIDEOCALLBACK ) PURE;
       STDMETHOD(GetVideoPortConnectInfo)(THIS_ DWORD, LPDWORD, LPDDVIDEOPORTCONNECT ) PURE;
@@ -279,10 +279,10 @@ typedef HRESULT (*LPDDENUMVIDEOCALLBACK)(LPDDVIDEOPORTCAPS, LPVOID);
     #undef INTERFACE
     #define INTERFACE IDirectDrawVideoPort
     DECLARE_INTERFACE_( IDirectDrawVideoPort, IUnknown )
-    {    
+    {
       STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE;
       STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
-      STDMETHOD_(ULONG,Release) (THIS) PURE;    
+      STDMETHOD_(ULONG,Release) (THIS) PURE;
       STDMETHOD(Flip)(THIS_ LPDIRECTDRAWSURFACE, DWORD) PURE;
       STDMETHOD(GetBandwidthInfo)(THIS_ LPDDPIXELFORMAT, DWORD, DWORD, DWORD, LPDDVIDEOPORTBANDWIDTH) PURE;
       STDMETHOD(GetColorControls)(THIS_ LPDDCOLORCONTROL) PURE;
@@ -343,10 +343,10 @@ typedef HRESULT (*LPDDENUMVIDEOCALLBACK)(LPDDVIDEOPORTCAPS, LPVOID);
     #define INTERFACE IDirectDrawVideoPortNotify
 
     DECLARE_INTERFACE_( IDirectDrawVideoPortNotify, IUnknown )
-    {    
+    {
       STDMETHOD(QueryInterface) (THIS_ REFIID riid, LPVOID * ppvObj) PURE;
       STDMETHOD_(ULONG,AddRef) (THIS)  PURE;
-      STDMETHOD_(ULONG,Release) (THIS) PURE;    
+      STDMETHOD_(ULONG,Release) (THIS) PURE;
       STDMETHOD(AcquireNotification)(THIS_ HANDLE *, LPDDVIDEOPORTNOTIFY) PURE;
       STDMETHOD(ReleaseNotification)(THIS_ HANDLE) PURE;
     };
@@ -369,5 +369,5 @@ typedef HRESULT (*LPDDENUMVIDEOCALLBACK)(LPDDVIDEOPORTCAPS, LPVOID);
 #ifdef __cplusplus
 };
 #endif
-#endif 
+#endif
 #endif

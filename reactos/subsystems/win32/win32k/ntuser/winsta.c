@@ -501,7 +501,7 @@ NtUserCreateWindowStation(
     */
 
    WindowStationObject->ScreenSaverRunning = FALSE;
-   
+
    WindowStationObject->FlatMenu = FALSE;
 
    if(!(CurInfo = ExAllocatePool(PagedPool, sizeof(SYSTEM_CURSORINFO))))
@@ -518,9 +518,9 @@ NtUserCreateWindowStation(
    CurInfo->CursorClipInfo.IsClipped = FALSE;
    CurInfo->LastBtnDown = 0;
    CurInfo->CurrentCursorObject = NULL;
-   CurInfo->ShowingCursor = 0;   
+   CurInfo->ShowingCursor = 0;
 
-   /* FIXME: Obtain the following information from the registry */    
+   /* FIXME: Obtain the following information from the registry */
 
    CurInfo->WheelScroLines = 3;
    CurInfo->WheelScroChars = 3;
@@ -547,8 +547,8 @@ NtUserCreateWindowStation(
    if (!IntSetupClipboard(WindowStationObject))
    {
        DPRINT1("WindowStation: Error Setting up the clipboard!!!\n");
-   }   
-    
+   }
+
    if (!IntSetupCurIconHandles(WindowStationObject))
    {
       DPRINT1("Setting up the Cursor/Icon Handle table failed!\n");

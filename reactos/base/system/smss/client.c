@@ -1,9 +1,9 @@
 /* $Id$
  *
  * client.c - Session Manager client Management
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -91,7 +91,7 @@ static INT STDCALL SmpGetFirstFreeClientEntry (VOID)
 			}
 		}
 	}
-	return SM_INVALID_CLIENT_INDEX; // full!		
+	return SM_INVALID_CLIENT_INDEX; // full!
 }
 /**********************************************************************
  *	SmpLookupClient/1					PRIVATE
@@ -129,7 +129,7 @@ SmpLookupClient (USHORT SubsystemId)
 				}
 			}
 		}
-	}	
+	}
 	return SM_INVALID_CLIENT_INDEX;
 }
 /**********************************************************************
@@ -158,7 +158,7 @@ SmpDestroyClientObject (PSM_CLIENT_DATA Client, NTSTATUS DestroyReason)
  * ARGUMENTS
  *	Request: message received by \SmApiPort
  *	ClientData:
- *		
+ *
  * RETURN VALUES
  *	NTSTATUS
  */
@@ -175,7 +175,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 
 	DPRINT("SM: %s(%08lx,%08lx) called\n", __FUNCTION__,
 			Request, ClientData);
-	
+
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
 	/*
 	 * Is there a subsystem bootstrap in progress?
@@ -184,7 +184,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 	{
 		PROCESS_BASIC_INFORMATION pbi;
         OBJECT_ATTRIBUTES ObjectAttributes;
-		
+
 		RtlZeroMemory (& pbi, sizeof pbi);
         InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
         Status = NtOpenProcess(&Process,
@@ -208,7 +208,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 		DPRINT1("SM: %s: subsys booting with no descriptor!\n", __FUNCTION__);
 		Status = STATUS_NOT_FOUND;
 		RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
-		return Status;		
+		return Status;
 	}
 	/*
 	 * Check if a client for the ID already exist.
@@ -268,7 +268,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 	/*
 	 * Notify to the caller the reference to the client data.
 	 */
-	if (ClientData) 
+	if (ClientData)
 	{
 		*ClientData = SmpClientDirectory.CandidateClient;
 	}
@@ -279,7 +279,7 @@ SmBeginClientInitialization (IN  PSM_PORT_MESSAGE Request,
 
 	/* Done */
 	RtlLeaveCriticalSection (& SmpClientDirectory.Lock);
-	
+
 	return STATUS_SUCCESS;
 }
 /**********************************************************************
@@ -301,7 +301,7 @@ SmCompleteClientInitialization (ULONG ProcessId)
 	if (SmpClientDirectory.Count > 0)
 	{
 		for (ClientIndex = 0; ClientIndex < SM_MAX_CLIENT_COUNT; ClientIndex ++)
-		{		
+		{
 			if ((NULL != SmpClientDirectory.Client [ClientIndex]) &&
 				(ProcessId == SmpClientDirectory.Client [ClientIndex]->ServerProcessId))
 			{
@@ -403,14 +403,14 @@ static VOID STDCALL SmpTimeoutCandidateClient (PVOID x)
  * 		STATUS_SUCCESS if all OK;
  * 		STATUS_DEVICE_BUSY if another SS is still booting;
  * 		STATUS_NO_MEMORY if client descriptor allocation failed;
- * 		
- * 		
+ *
+ *
  */
 NTSTATUS STDCALL
 SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
-	
+
 	DPRINT("SM: %s(%lx, %S) called\n", __FUNCTION__, ProcessInfo->ProcessHandle, ProgramName);
 
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);
@@ -450,7 +450,7 @@ SmCreateClient (PRTL_USER_PROCESS_INFORMATION ProcessInfo, PWSTR ProgramName)
 			RtlInitializeCriticalSection(& SmpClientDirectory.CandidateClient->Lock);
 			SmpClientDirectory.CandidateClient->ServerProcess =
 				(HANDLE) ProcessInfo->ProcessHandle;
-			SmpClientDirectory.CandidateClient->ServerProcessId = 
+			SmpClientDirectory.CandidateClient->ServerProcessId =
 				(ULONG) ProcessInfo->ClientId.UniqueProcess;
 			/*
 			 * Copy the program name
@@ -534,7 +534,7 @@ SmGetClientBasicInformation (PSM_BASIC_INFORMATION i)
 
 	i->SubSystemCount = SmpClientDirectory.Count;
 	i->Unused = 0;
-	
+
 	if (SmpClientDirectory.Count > 0)
 	{
 		for (ClientIndex = 0; (ClientIndex < SM_MAX_CLIENT_COUNT); ClientIndex ++)
@@ -562,7 +562,7 @@ SmGetSubSystemInformation (PSM_SUBSYSTEM_INFORMATION i)
 {
 	NTSTATUS  Status = STATUS_SUCCESS;
 	INT       ClientIndex = SM_INVALID_CLIENT_INDEX;
-	
+
 	DPRINT("SM: %s(%08lx) called\n", __FUNCTION__, i);
 
 	RtlEnterCriticalSection (& SmpClientDirectory.Lock);

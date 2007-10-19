@@ -891,7 +891,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
   /* Get file attributes */
   Status = NtQueryFullAttributesFile(&ObjectAttributes,
                                      &FileInformation);
-                                     
+
   RtlFreeUnicodeString (&FileName);
   if (!NT_SUCCESS (Status))
     {
@@ -978,15 +978,15 @@ GetFileAttributesByHandle(IN HANDLE hFile,
     FILE_BASIC_INFORMATION FileBasic;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
-    
+
     UNREFERENCED_PARAMETER(dwFlags);
-    
+
     if (IsConsoleHandle(hFile))
     {
         SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    
+
     Status = NtQueryInformationFile(hFile,
                                     &IoStatusBlock,
                                     &FileBasic,
@@ -997,7 +997,7 @@ GetFileAttributesByHandle(IN HANDLE hFile,
         *dwFileAttributes = FileBasic.FileAttributes;
         return TRUE;
     }
-    
+
     SetLastErrorByStatus(Status);
     return FALSE;
 }
@@ -1016,7 +1016,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
     NTSTATUS Status;
 
     UNREFERENCED_PARAMETER(dwFlags);
-    
+
     if (IsConsoleHandle(hFile))
     {
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1031,7 +1031,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
     if (NT_SUCCESS(Status))
     {
         FileBasic.FileAttributes = dwFileAttributes;
-        
+
         Status = NtSetInformationFile(hFile,
                                       &IoStatusBlock,
                                       &FileBasic,
@@ -1044,7 +1044,7 @@ SetFileAttributesByHandle(IN HANDLE hFile,
         SetLastErrorByStatus(Status);
         return FALSE;
     }
-    
+
     return TRUE;
 }
 

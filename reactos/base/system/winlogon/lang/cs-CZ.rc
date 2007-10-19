@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON "&Restart", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Pшнprava sнќovэch pшipojenн..."
     IDS_APPLYINGCOMPUTERSETTINGS "Nastavenн poинtaиe..."
@@ -38,7 +38,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS se spouљtн..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Aplikace Winlogon selhala pшi aktivaci shellu!"
 END

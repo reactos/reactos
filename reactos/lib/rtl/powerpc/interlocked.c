@@ -21,8 +21,8 @@ InterlockedExchangeAdd(LONG volatile *Target, LONG Value)
 }
 
 NTKERNELAPI
-LONG 
-WINAPI 
+LONG
+WINAPI
 InterlockedCompareExchange
 (LONG volatile *Destination, LONG Exchange, LONG Comparand)
 {
@@ -53,7 +53,7 @@ PSLIST_ENTRY WINAPI InterlockedPopEntrySList(PSLIST_HEADER ListHead)
     KIRQL OldIrql;
     static BOOLEAN GLLInit = FALSE;
     static KSPIN_LOCK GlobalListLock;
-    
+
     if(!GLLInit)
     {
 	KeInitializeSpinLock(&GlobalListLock);
@@ -86,7 +86,7 @@ InterlockedPushEntrySList
     }
     while
 	(InterlockedCompareExchangePointer
-	 (&ListHead->Next.Next, 
+	 (&ListHead->Next.Next,
 	  ListEntry,
 	  PrevValue) != PrevValue);
 
@@ -117,7 +117,7 @@ ExInterlockedCompareExchange64(
 
     KeAcquireSpinLock(Lock, &OldIrql);
     Result = *Destination;
-    if(*Destination == Result) 
+    if(*Destination == Result)
 	*Destination = *Exchange;
     KeReleaseSpinLock(Lock, OldIrql);
     return Result;

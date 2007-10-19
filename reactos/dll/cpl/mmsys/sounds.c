@@ -133,7 +133,7 @@ LoadEventLabels()
                      KEY_READ,
                      &hSubKey) != ERROR_SUCCESS)
     {
-        return FALSE;    
+        return FALSE;
     }
 
     dwCurKey = 0;
@@ -189,7 +189,7 @@ AddSoundProfile(HWND hwndDlg, HKEY hKey, TCHAR * szSubKey, BOOL SetDefault)
     TCHAR szValue[MAX_PATH];
     DWORD dwValue, dwResult;
 
-    if (RegOpenKeyEx(hKey, 
+    if (RegOpenKeyEx(hKey,
                      szSubKey,
                      0,
                      KEY_READ,
@@ -257,9 +257,9 @@ EnumerateSoundProfiles(HWND hwndDlg, HKEY hKey)
                      KEY_READ,
                      &hSubKey) != ERROR_SUCCESS)
     {
-        return FALSE;    
+        return FALSE;
     }
-    
+
     dwNumSchemes = 0;
     dwCurKey = 0;
     do
@@ -293,7 +293,7 @@ PSOUND_SCHEME_CONTEXT FindSoundProfile(HWND hwndDlg, TCHAR * szName)
 {
     LRESULT lCount, lIndex, lResult;
     PSOUND_SCHEME_CONTEXT pScheme;
-    
+
     lCount = SendDlgItemMessage(hwndDlg, IDC_SOUND_SCHEME, CB_GETCOUNT, (WPARAM)0, (LPARAM)0);
     if (lCount == CB_ERR)
     {
@@ -382,7 +382,7 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
         pAppContext = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(APP_CONTEXT));
         Create = TRUE;
     }
-    
+
     if (!pAppContext)
     {
 
@@ -414,7 +414,7 @@ ImportSoundLabel(HWND hwndDlg, HKEY hKey, TCHAR * szProfile, TCHAR * szLabelName
     _tcscpy(pLabelContext->szName, szLabelName);
     pLabelContext->Next = pAppContext->LabelContext;
     pAppContext->LabelContext = pLabelContext;
-    
+
     if (Create)
     {
         _tcscpy(pAppContext->szName, szAppName);
@@ -635,7 +635,7 @@ LoadSoundProfiles(HWND hwndDlg)
                      KEY_READ,
                      &hSubKey) != ERROR_SUCCESS)
     {
-        return FALSE;    
+        return FALSE;
     }
 
     dwNumSchemes = EnumerateSoundProfiles(hwndDlg, hSubKey);
@@ -644,7 +644,7 @@ LoadSoundProfiles(HWND hwndDlg)
     if (dwNumSchemes)
     {
         //MessageBox(hwndDlg, _T("importing sound profiles..."), NULL, MB_OK);
-        ImportSoundProfiles(hwndDlg, hSubKey);            
+        ImportSoundProfiles(hwndDlg, hSubKey);
     }
     RegCloseKey(hSubKey);
     return FALSE;
@@ -659,7 +659,7 @@ LoadSoundFiles(HWND hwndDlg)
     HANDLE hFile;
     LRESULT lResult;
     UINT length;
-    
+
     length = GetWindowsDirectory(szPath, sizeof(szPath) / sizeof(TCHAR));
     if (length == 0 || length > (sizeof(szPath) / sizeof(TCHAR)))
     {
@@ -756,7 +756,7 @@ ShowSoundScheme(HWND hwndDlg)
         PLABEL_CONTEXT pLabelContext = pAppContext->LabelContext;
         if (pLabelContext)
         {
-#if 0            
+#if 0
             ZeroMemory(&listItem, sizeof(LV_ITEM));
             listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_IMAGE;
             listItem.pszText    = pAppContext->szDesc;
@@ -865,7 +865,7 @@ SoundsDlgProc(HWND hwndDlg,
                             SendDlgItemMessage(hwndDlg, IDC_SOUND_LIST, CB_GETLBTEXT, (WPARAM)lIndex, (LPARAM)szValue);
                             ///
                             /// should store in current member
-                            /// 
+                            ///
                             _tcscpy(pLabelContext->szValue, szValue);
                             if (_tcslen(szValue) && lIndex != 0)
                             {

@@ -76,7 +76,7 @@ static GLfloat RoughApproxLog2(GLfloat t)
 }
 
 static GLfloat RoughApproxExp2(GLfloat t)
-{   
+{
 #if 0
    fi_type fi;
    fi.i = (GLint) t;
@@ -101,7 +101,7 @@ static GLfloat ApproxLog2(GLfloat t)
 }
 
 static GLfloat ApproxExp2(GLfloat t)
-{   
+{
    return (GLfloat) _mesa_pow(2.0, t);
 }
 
@@ -121,7 +121,7 @@ static GLfloat rough_approx_log2_0_1(GLfloat x)
 /**
  * Perform a reduced swizzle:
  */
-static void do_RSW( struct arb_vp_machine *m, union instruction op ) 
+static void do_RSW( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.rsw.dst];
    const GLfloat *arg0 = m->File[op.rsw.file0][op.rsw.idx0];
@@ -132,7 +132,7 @@ static void do_RSW( struct arb_vp_machine *m, union instruction op )
    result[1] = arg0[GET_RSW(swz, 1)];
    result[2] = arg0[GET_RSW(swz, 2)];
    result[3] = arg0[GET_RSW(swz, 3)];
-   
+
    if (neg) {
       if (neg & 0x1) result[0] = -result[0];
       if (neg & 0x2) result[1] = -result[1];
@@ -155,7 +155,7 @@ static void do_MSK( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *dst = m->File[0][op.msk.dst];
    const GLfloat *arg = m->File[op.msk.file][op.msk.idx];
- 
+
    if (op.msk.mask & 0x1) dst[0] = arg[0];
    if (op.msk.mask & 0x2) dst[1] = arg[1];
    if (op.msk.mask & 0x4) dst[2] = arg[2];
@@ -166,8 +166,8 @@ static void do_MSK( struct arb_vp_machine *m, union instruction op )
 static void do_PRT( struct arb_vp_machine *m, union instruction op )
 {
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
-   
-   _mesa_printf("%d: %f %f %f %f\n", m->vtx_nr, 
+
+   _mesa_printf("%d: %f %f %f %f\n", m->vtx_nr,
 		arg0[0], arg0[1], arg0[2], arg0[3]);
 }
 
@@ -177,7 +177,7 @@ static void do_PRT( struct arb_vp_machine *m, union instruction op )
  * internal registers and ignore write masks and swizzling issues.
  */
 
-static void do_ABS( struct arb_vp_machine *m, union instruction op ) 
+static void do_ABS( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -207,8 +207,8 @@ static void do_DP3( struct arb_vp_machine *m, union instruction op )
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
    const GLfloat *arg1 = m->File[op.alu.file1][op.alu.idx1];
 
-   result[0] = (arg0[0] * arg1[0] + 
-		arg0[1] * arg1[1] + 
+   result[0] = (arg0[0] * arg1[0] +
+		arg0[1] * arg1[1] +
 		arg0[2] * arg1[2]);
 
    PUFF(result);
@@ -222,9 +222,9 @@ static void do_DP4( struct arb_vp_machine *m, union instruction op )
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
    const GLfloat *arg1 = m->File[op.alu.file1][op.alu.idx1];
 
-   result[0] = (arg0[0] * arg1[0] + 
-		arg0[1] * arg1[1] + 
-		arg0[2] * arg1[2] + 
+   result[0] = (arg0[0] * arg1[0] +
+		arg0[1] * arg1[1] +
+		arg0[2] * arg1[2] +
 		arg0[3] * arg1[3]);
 
    PUFF(result);
@@ -236,11 +236,11 @@ static void do_DPH( struct arb_vp_machine *m, union instruction op )
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
    const GLfloat *arg1 = m->File[op.alu.file1][op.alu.idx1];
 
-   result[0] = (arg0[0] * arg1[0] + 
-		arg0[1] * arg1[1] + 
-		arg0[2] * arg1[2] + 
+   result[0] = (arg0[0] * arg1[0] +
+		arg0[1] * arg1[1] +
+		arg0[2] * arg1[2] +
 		1.0     * arg1[3]);
-   
+
    PUFF(result);
 }
 
@@ -259,7 +259,7 @@ static void do_DST( struct arb_vp_machine *m, union instruction op )
 
 /* Intended to be high precision:
  */
-static void do_EX2( struct arb_vp_machine *m, union instruction op ) 
+static void do_EX2( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -285,7 +285,7 @@ static void do_EXP( struct arb_vp_machine *m, union instruction op )
    result[3] = 1.0F;
 }
 
-static void do_FLR( struct arb_vp_machine *m, union instruction op ) 
+static void do_FLR( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -296,7 +296,7 @@ static void do_FLR( struct arb_vp_machine *m, union instruction op )
    result[3] = FLOORF(arg0[3]);
 }
 
-static void do_FRC( struct arb_vp_machine *m, union instruction op ) 
+static void do_FRC( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -309,7 +309,7 @@ static void do_FRC( struct arb_vp_machine *m, union instruction op )
 
 /* High precision log base 2:
  */
-static void do_LG2( struct arb_vp_machine *m, union instruction op ) 
+static void do_LG2( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -410,7 +410,7 @@ static void do_MUL( struct arb_vp_machine *m, union instruction op )
 
 /* Intended to be "high" precision
  */
-static void do_POW( struct arb_vp_machine *m, union instruction op ) 
+static void do_POW( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -437,7 +437,7 @@ static void do_RCP( struct arb_vp_machine *m, union instruction op )
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
 
-   result[0] = 1.0F / arg0[0];  
+   result[0] = 1.0F / arg0[0];
    PUFF(result);
 }
 
@@ -476,7 +476,7 @@ static void do_SLT( struct arb_vp_machine *m, union instruction op )
    result[3] = (arg0[3] < arg1[3]) ? 1.0F : 0.0F;
 }
 
-static void do_SUB( struct arb_vp_machine *m, union instruction op ) 
+static void do_SUB( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -489,7 +489,7 @@ static void do_SUB( struct arb_vp_machine *m, union instruction op )
 }
 
 
-static void do_XPD( struct arb_vp_machine *m, union instruction op ) 
+static void do_XPD( struct arb_vp_machine *m, union instruction op )
 {
    GLfloat *result = m->File[0][op.alu.dst];
    const GLfloat *arg0 = m->File[op.alu.file0][op.alu.idx0];
@@ -500,7 +500,7 @@ static void do_XPD( struct arb_vp_machine *m, union instruction op )
    result[2] = arg0[0] * arg1[1] - arg0[1] * arg1[0];
 }
 
-static void do_NOP( struct arb_vp_machine *m, union instruction op ) 
+static void do_NOP( struct arb_vp_machine *m, union instruction op )
 {
 }
 
@@ -525,7 +525,7 @@ static void print_reg( GLuint file, GLuint reg )
    };
 
    if (file == 0) {
-      if (reg == REG_RES) 
+      if (reg == REG_RES)
 	 _mesa_printf("RES");
       else if (reg >= REG_ARG0 && reg <= REG_ARG1)
 	 _mesa_printf("ARG%d", reg - REG_ARG0);
@@ -542,7 +542,7 @@ static void print_reg( GLuint file, GLuint reg )
       else
 	 _mesa_printf("REG%d", reg);
    }
-   else 
+   else
       _mesa_printf("%s:%d", reg_file[file], reg);
 }
 
@@ -560,7 +560,7 @@ static void print_RSW( union instruction op, const struct opcode_info *info )
    _mesa_printf(".");
    for (i = 0; i < 4; i++, swz >>= 2) {
       const char *cswz = "xyzw";
-      if (neg & (1<<i))   
+      if (neg & (1<<i))
 	 _mesa_printf("-");
       _mesa_printf("%c", cswz[swz&0x3]);
    }
@@ -600,7 +600,7 @@ static void print_NOP( union instruction op, const struct opcode_info *info )
 #define ALU 1
 #define SWZ 2
 
-static const struct opcode_info opcode_info[] = 
+static const struct opcode_info opcode_info[] =
 {
    { 1, "ABS", print_ALU },
    { 2, "ADD", print_ALU },
@@ -644,7 +644,7 @@ void _tnl_disassem_vba_insn( union instruction op )
 }
 
 
-static void (* const opcode_func[])(struct arb_vp_machine *, union instruction) = 
+static void (* const opcode_func[])(struct arb_vp_machine *, union instruction) =
 {
    do_ABS,
    do_ADD,
@@ -730,23 +730,23 @@ static struct reg cvp_load_reg( struct compilation *cp,
 
       /* These two aren't populated by the parser?
        */
-   case PROGRAM_LOCAL_PARAM: 
+   case PROGRAM_LOCAL_PARAM:
       reg = cvp_make_reg(FILE_LOCAL_PARAM, index);
-      if (rel) 
+      if (rel)
 	 return cvp_emit_rel(cp, reg, tmpreg);
       else
 	 return reg;
 
-   case PROGRAM_ENV_PARAM: 
+   case PROGRAM_ENV_PARAM:
       reg = cvp_make_reg(FILE_ENV_PARAM, index);
-      if (rel) 
+      if (rel)
 	 return cvp_emit_rel(cp, reg, tmpreg);
       else
 	 return reg;
 
    case PROGRAM_STATE_VAR:
       reg = cvp_make_reg(FILE_STATE_PARAM, index);
-      if (rel) 
+      if (rel)
 	 return cvp_emit_rel(cp, reg, tmpreg);
       else
 	 return reg;
@@ -767,8 +767,8 @@ static struct reg cvp_emit_arg( struct compilation *cp,
 {
    struct reg reg = cvp_load_reg( cp, src->File, src->Index, src->RelAddr, arg );
    union instruction rsw, noop;
-   
-   /* Emit any necessary swizzling.  
+
+   /* Emit any necessary swizzling.
     */
    rsw.dword = 0;
    rsw.rsw.neg = src->Negate ? WRITEMASK_XYZW : 0;
@@ -815,7 +815,7 @@ static GLuint cvp_choose_result( struct compilation *cp,
    }
 
    /* Optimization: When writing (with a writemask) to an undefined
-    * value for the first time, the writemask may be ignored. 
+    * value for the first time, the writemask may be ignored.
     */
    if (mask != WRITEMASK_XYZW && (cp->reg_active & (1 << idx))) {
       fixup->msk.opcode = MSK;
@@ -833,10 +833,10 @@ static GLuint cvp_choose_result( struct compilation *cp,
    }
 }
 
-static struct reg cvp_emit_rsw( struct compilation *cp, 
+static struct reg cvp_emit_rsw( struct compilation *cp,
 				GLuint dst,
 				struct reg src,
-				GLuint neg, 
+				GLuint neg,
 				GLuint swz,
 				GLboolean force)
 {
@@ -850,7 +850,7 @@ static struct reg cvp_emit_rsw( struct compilation *cp,
       op->rsw.idx0 = src.idx;
       op->rsw.neg = neg;
       op->rsw.swz = swz;
-	    
+
       retval.file = FILE_REG;
       retval.idx = dst;
       return retval;
@@ -863,7 +863,7 @@ static struct reg cvp_emit_rsw( struct compilation *cp,
       op->alu.dst = dst;
       op->alu.file0 = src.file;
       op->alu.idx0 = src.idx;
-      
+
       retval.file = FILE_REG;
       retval.idx = dst;
       return retval;
@@ -892,7 +892,7 @@ static void cvp_emit_inst( struct compilation *cp,
        */
    case VP_OPCODE_MAD:
       result = cvp_choose_result( cp, &inst->DstReg, &fixup );
-      for (i = 0; i < 3; i++) 
+      for (i = 0; i < 3; i++)
 	 reg[i] = cvp_emit_arg( cp, &inst->SrcReg[i], REG_ARG0+i );
 
       op = cvp_next_instruction(cp);
@@ -959,7 +959,7 @@ static void cvp_emit_inst( struct compilation *cp,
 
       if (mask == WRITEMASK_XYZW) {
 	 cvp_emit_rsw(cp, result, reg[0], neg0, swz0, GL_TRUE);
-	 
+
       }
       else if (mask == 0) {
 	 cvp_emit_rsw(cp, result, reg[1], neg1, swz1, GL_TRUE);
@@ -988,7 +988,7 @@ static void cvp_emit_inst( struct compilation *cp,
 
    default:
       result = cvp_choose_result( cp, &inst->DstReg, &fixup );
-      for (i = 0; i < info->nr_args; i++) 
+      for (i = 0; i < info->nr_args; i++)
 	 reg[i] = cvp_emit_arg( cp, &inst->SrcReg[i], REG_ARG0 + i );
 
       op = cvp_next_instruction(cp);
@@ -1002,7 +1002,7 @@ static void cvp_emit_inst( struct compilation *cp,
       if (result == REG_RES) {
 	 op = cvp_next_instruction(cp);
 	 op->dword = fixup.dword;
-      }      	 
+      }
       break;
    }
 }
@@ -1018,14 +1018,14 @@ static void free_tnl_data( struct vertex_program *program  )
 
 static void compile_vertex_program( struct vertex_program *program,
 				    GLboolean try_codegen )
-{ 
+{
    struct compilation cp;
    struct tnl_compiled_program *p = CALLOC_STRUCT(tnl_compiled_program);
    GLuint i;
 
-   if (program->TnlData) 
+   if (program->TnlData)
       free_tnl_data( program );
-   
+
    program->TnlData = p;
 
    /* Initialize cp.  Note that ctx and VB aren't used in compilation
@@ -1052,7 +1052,7 @@ static void compile_vertex_program( struct vertex_program *program,
       }
       _mesa_printf("\n\n");
    }
-   
+
 #ifdef USE_SSE_ASM
    if (try_codegen)
       _tnl_sse_codegen_vertex_program(p);
@@ -1086,7 +1086,7 @@ static void userclip( GLcontext *ctx,
          GLuint count = clip->count;
 
 	 for (nr = 0, i = 0 ; i < count ; i++) {
-	    GLfloat dp = (coord[0] * a + 
+	    GLfloat dp = (coord[0] * a +
 			  coord[1] * b +
 			  coord[2] * c +
 			  coord[3] * d);
@@ -1174,8 +1174,8 @@ static INLINE void call_func( struct tnl_compiled_program *p,
 }
 
 /**
- * Execute the given vertex program.  
- * 
+ * Execute the given vertex program.
+ *
  * TODO: Integrate the t_vertex.c code here, to build machine vertices
  * directly at this point.
  *
@@ -1194,12 +1194,12 @@ run_arb_vertex_program(GLcontext *ctx, struct tnl_pipeline_stage *stage)
    GLuint i, j, outputs;
 
    if (!program || program->IsNVProgram)
-      return GL_TRUE;   
+      return GL_TRUE;
 
    if (program->Parameters) {
       _mesa_load_state_parameters(ctx, program->Parameters);
-   }   
-   
+   }
+
    p = (struct tnl_compiled_program *)program->TnlData;
    assert(p);
 
@@ -1215,7 +1215,7 @@ run_arb_vertex_program(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 	 m->input[j].size = m->VB->AttribPtr[i]->size;
 	 ASSIGN_4V(m->File[0][REG_IN0 + i], 0, 0, 0, 1);
       }
-   }     
+   }
 
    for (i = 0; i < 15; i++) {
       if (program->OutputsWritten & (1<<i)) {
@@ -1223,7 +1223,7 @@ run_arb_vertex_program(GLcontext *ctx, struct tnl_pipeline_stage *stage)
 	 m->output[j].idx = i;
 	 m->output[j].data = (GLfloat *)m->attribs[i].data;
       }
-   }     
+   }
 
 
    /* Run the actual program:
@@ -1246,7 +1246,7 @@ run_arb_vertex_program(GLcontext *ctx, struct tnl_pipeline_stage *stage)
       }
       else {
 	 for (j = 0; j < p->nr_instructions; j++) {
-	    union instruction inst = p->instructions[j];	 
+	    union instruction inst = p->instructions[j];
 	    opcode_func[inst.alu.opcode]( m, inst );
 	 }
       }
@@ -1335,7 +1335,7 @@ static void
 validate_vertex_program( GLcontext *ctx, struct tnl_pipeline_stage *stage )
 {
    struct arb_vp_machine *m = ARB_VP_MACHINE(stage);
-   struct vertex_program *program = 
+   struct vertex_program *program =
       (ctx->VertexProgram._Enabled ? ctx->VertexProgram.Current : 0);
 
    if (!program && ctx->_MaintainTnlProgram) {
@@ -1345,7 +1345,7 @@ validate_vertex_program( GLcontext *ctx, struct tnl_pipeline_stage *stage )
    if (program) {
       if (!program->TnlData)
 	 compile_vertex_program( program, m->try_codegen );
-      
+
       /* Grab the state GL state and put into registers:
        */
       m->File[FILE_LOCAL_PARAM] = program->Base.LocalParams;

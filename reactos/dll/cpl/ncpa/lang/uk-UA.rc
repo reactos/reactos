@@ -75,12 +75,12 @@ BEGIN
  LTEXT "IP-адреса:", -1, 22, 34, 80, 8
  LTEXT "Маска підмережі:", -1, 22, 48, 80, 8
  LTEXT "Основний шлюз:", -1, 22, 62, 80, 8
- 
+
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
- 
+
  PUSHBUTTON "&Склад...", IDC_DETAILS, 22, 76, 62, 14
 END
 
@@ -110,7 +110,7 @@ BEGIN
 END
 
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "Настройки мережі"
   IDS_CPLSYSTEMDESCRIPTION "Встановлює настройки мережі."
@@ -122,7 +122,7 @@ BEGIN
   IDS_ASSIGNED_MANUAL "Налаштовано вручну"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_ERROR "Помилка"
   IDS_ENTER_VALID_IPADDRESS "Ви маєте ввести правильну IP-адресу"

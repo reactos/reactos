@@ -258,7 +258,7 @@ struct module
     struct module*              next;
     enum module_type		type;
     struct elf_module_info*	elf_info;
-    
+
     /* memory allocation pool */
     struct pool                 pool;
 
@@ -277,7 +277,7 @@ struct module
     char*                       sources;
 };
 
-struct process 
+struct process
 {
     struct process*             next;
     HANDLE                      handle;
@@ -307,14 +307,14 @@ extern struct module*
                     module_find_by_addr(const struct process* pcs, unsigned long addr,
                                         enum module_type type);
 extern struct module*
-                    module_find_by_name(const struct process* pcs, 
+                    module_find_by_name(const struct process* pcs,
                                         const char* name, enum module_type type);
 extern struct module*
                     module_get_debug(const struct process* pcs, struct module*);
 extern struct module*
-                    module_new(struct process* pcs, const char* name, 
-                               enum module_type type, unsigned long addr, 
-                               unsigned long size, unsigned long stamp, 
+                    module_new(struct process* pcs, const char* name,
+                               enum module_type type, unsigned long addr,
+                               unsigned long size, unsigned long stamp,
                                unsigned long checksum);
 extern struct module*
                     module_get_container(const struct process* pcs,
@@ -323,11 +323,11 @@ extern struct module*
                     module_get_containee(const struct process* pcs,
                                          const struct module* inner);
 extern void         module_reset_debug_info(struct module* module);
-extern BOOL         module_remove(struct process* pcs, 
+extern BOOL         module_remove(struct process* pcs,
                                   struct module* module);
 /* msc.c */
-extern BOOL         pe_load_debug_directory(const struct process* pcs, 
-                                            struct module* module, 
+extern BOOL         pe_load_debug_directory(const struct process* pcs,
+                                            struct module* module,
                                             const BYTE* mapping,
                                             const IMAGE_SECTION_HEADER* sectp, DWORD nsect,
                                             const IMAGE_DEBUG_DIRECTORY* dbg, int nDbg);
@@ -336,9 +336,9 @@ extern struct module*
                     pe_load_module(struct process* pcs, char* name,
                                    HANDLE hFile, DWORD base, DWORD size);
 extern struct module*
-                    pe_load_module_from_pcs(struct process* pcs, const char* name, 
+                    pe_load_module_from_pcs(struct process* pcs, const char* name,
                                             const char* mod_name, DWORD base, DWORD size);
-extern BOOL         pe_load_debug_info(const struct process* pcs, 
+extern BOOL         pe_load_debug_info(const struct process* pcs,
                                        struct module* module);
 /* source.c */
 extern unsigned     source_new(struct module* module, const char* source);
@@ -354,19 +354,19 @@ extern const char*  symt_get_name(const struct symt* sym);
 extern int          symt_cmp_addr(const void* p1, const void* p2);
 extern int          symt_find_nearest(struct module* module, DWORD addr);
 extern struct symt_compiland*
-                    symt_new_compiland(struct module* module, 
+                    symt_new_compiland(struct module* module,
                                        const char* filename);
 extern struct symt_public*
-                    symt_new_public(struct module* module, 
-                                    struct symt_compiland* parent, 
+                    symt_new_public(struct module* module,
+                                    struct symt_compiland* parent,
                                     const char* typename,
                                     unsigned long address, unsigned size,
                                     BOOL in_code, BOOL is_func);
 extern struct symt_data*
-                    symt_new_global_variable(struct module* module, 
+                    symt_new_global_variable(struct module* module,
                                              struct symt_compiland* parent,
                                              const char* name, unsigned is_static,
-                                             unsigned long addr, unsigned long size, 
+                                             unsigned long addr, unsigned long size,
                                              struct symt* type);
 extern struct symt_function*
                     symt_new_function(struct module* module,
@@ -374,38 +374,38 @@ extern struct symt_function*
                                       const char* name,
                                       unsigned long addr, unsigned long size,
                                       struct symt* type);
-extern BOOL         symt_normalize_function(struct module* module, 
+extern BOOL         symt_normalize_function(struct module* module,
                                             struct symt_function* func);
 extern void         symt_add_func_line(struct module* module,
-                                       struct symt_function* func, 
-                                       unsigned source_idx, int line_num, 
+                                       struct symt_function* func,
+                                       unsigned source_idx, int line_num,
                                        unsigned long offset);
 extern struct symt_data*
-                    symt_add_func_local(struct module* module, 
-                                        struct symt_function* func, 
+                    symt_add_func_local(struct module* module,
+                                        struct symt_function* func,
                                         int regno, int offset,
                                         struct symt_block* block,
                                         struct symt* type, const char* name);
 extern struct symt_block*
-                    symt_open_func_block(struct module* module, 
+                    symt_open_func_block(struct module* module,
                                          struct symt_function* func,
-                                         struct symt_block* block, 
+                                         struct symt_block* block,
                                          unsigned pc, unsigned len);
 extern struct symt_block*
-                    symt_close_func_block(struct module* module, 
+                    symt_close_func_block(struct module* module,
                                           struct symt_function* func,
                                           struct symt_block* block, unsigned pc);
 extern struct symt_function_point*
-                    symt_add_function_point(struct module* module, 
+                    symt_add_function_point(struct module* module,
                                             struct symt_function* func,
-                                            enum SymTagEnum point, 
+                                            enum SymTagEnum point,
                                             unsigned offset, const char* name);
 extern BOOL         symt_fill_func_line_info(struct module* module,
-                                             struct symt_function* func, 
+                                             struct symt_function* func,
                                              DWORD addr, IMAGEHLP_LINE* line);
 extern BOOL         symt_get_func_line_next(struct module* module, PIMAGEHLP_LINE line);
 extern struct symt_thunk*
-                    symt_new_thunk(struct module* module, 
+                    symt_new_thunk(struct module* module,
                                    struct symt_compiland* parent,
                                    const char* name, THUNK_ORDINAL ord,
                                    unsigned long addr, unsigned long size);
@@ -415,35 +415,35 @@ extern void         symt_init_basic(struct module* module);
 extern BOOL         symt_get_info(const struct symt* type,
                                   IMAGEHLP_SYMBOL_TYPE_INFO req, void* pInfo);
 extern struct symt_basic*
-                    symt_new_basic(struct module* module, enum BasicType, 
+                    symt_new_basic(struct module* module, enum BasicType,
                                    const char* typename, unsigned size);
 extern struct symt_udt*
                     symt_new_udt(struct module* module, const char* typename,
                                  unsigned size, enum UdtKind kind);
 extern BOOL         symt_set_udt_size(struct module* module,
                                       struct symt_udt* type, unsigned size);
-extern BOOL         symt_add_udt_element(struct module* module, 
-                                         struct symt_udt* udt_type, 
+extern BOOL         symt_add_udt_element(struct module* module,
+                                         struct symt_udt* udt_type,
                                          const char* name,
-                                         struct symt* elt_type, unsigned offset, 
+                                         struct symt* elt_type, unsigned offset,
                                          unsigned size);
 extern struct symt_enum*
                     symt_new_enum(struct module* module, const char* typename);
-extern BOOL         symt_add_enum_element(struct module* module, 
-                                          struct symt_enum* enum_type, 
+extern BOOL         symt_add_enum_element(struct module* module,
+                                          struct symt_enum* enum_type,
                                           const char* name, int value);
 extern struct symt_array*
-                    symt_new_array(struct module* module, int min, int max, 
+                    symt_new_array(struct module* module, int min, int max,
                                    struct symt* base);
 extern struct symt_function_signature*
-                    symt_new_function_signature(struct module* module, 
+                    symt_new_function_signature(struct module* module,
                                                 struct symt* ret_type);
 extern BOOL         symt_add_function_signature_parameter(struct module* module,
                                                           struct symt_function_signature* sig,
                                                           struct symt* param);
 extern struct symt_pointer*
-                    symt_new_pointer(struct module* module, 
+                    symt_new_pointer(struct module* module,
                                      struct symt* ref_type);
 extern struct symt_typedef*
-                    symt_new_typedef(struct module* module, struct symt* ref, 
+                    symt_new_typedef(struct module* module, struct symt* ref,
                                      const char* name);

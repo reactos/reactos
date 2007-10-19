@@ -26,8 +26,8 @@ VOID APIENTRY DhcpCApiCleanup() {
 }
 
 DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
-                                     PDWORD MediaType, 
-                                     PDWORD Mtu, 
+                                     PDWORD MediaType,
+                                     PDWORD Mtu,
                                      PDWORD Speed ) {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
@@ -50,7 +50,7 @@ DWORD APIENTRY DhcpQueryHWInfo( DWORD AdapterIndex,
     }
 }
 
-DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {   
+DWORD APIENTRY DhcpLeaseIpAddress( DWORD AdapterIndex ) {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;
     DWORD BytesRead;
@@ -98,8 +98,8 @@ DWORD APIENTRY DhcpRenewIpAddressLease( DWORD AdapterIndex ) {
     return Reply.Reply;
 }
 
-DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex, 
-                                             DWORD Address, 
+DWORD APIENTRY DhcpStaticRefreshParams( DWORD AdapterIndex,
+                                             DWORD Address,
                                              DWORD Netmask ) {
     COMM_DHCP_REQ Req;
     COMM_DHCP_REPLY Reply;

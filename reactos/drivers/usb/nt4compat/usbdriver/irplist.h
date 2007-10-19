@@ -22,7 +22,7 @@ typedef struct _IRP_LIST
 } IRP_LIST, *PIRP_LIST;
 
 BOOLEAN
-init_irp_list( 
+init_irp_list(
 PIRP_LIST irp_list
 );
 

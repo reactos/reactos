@@ -11,17 +11,17 @@ DWORD hMFCount = 0;
 /* INTERNAL FUNCTIONS ********************************************************/
 
 BOOL
-MF_CreateMFDC ( HGDIOBJ hMDC, 
+MF_CreateMFDC ( HGDIOBJ hMDC,
                 PMETAFILEDC pmfDC )
 {
   PMF_ENTRY pMFME;
-  
+
   pMFME = LocalAlloc(LMEM_ZEROINIT, sizeof(MF_ENTRY));
   if (!pMFME)
   {
     return FALSE;
   }
-  
+
   if (hMF_List == NULL)
   {
     hMF_List = pMFME;
@@ -32,7 +32,7 @@ MF_CreateMFDC ( HGDIOBJ hMDC,
 
   pMFME->hmDC  = hMDC;
   pMFME->pmfDC = pmfDC;
-    
+
   hMFCount++;
   return TRUE;
 }
@@ -145,7 +145,7 @@ CreateMetaFileW(
   HDC hmDC;
   PMETAFILEDC pmfDC = LocalAlloc(LMEM_ZEROINIT, sizeof(METAFILEDC));
   if (!pmfDC) return NULL;
-  
+
   pmfDC->mh.mtHeaderSize   = sizeof(METAHEADER) / sizeof(WORD);
   pmfDC->mh.mtVersion      = 0x0300;
   pmfDC->mh.mtSize         = pmfDC->mh.mtHeaderSize;
@@ -175,7 +175,7 @@ CreateMetaFileW(
 //       MFDRV_DeleteDC( dc->physDev );
        return NULL;
     }
-      pmfDC->hFile = hFile; 
+      pmfDC->hFile = hFile;
   }
   else  /* memory based metafile */
     pmfDC->mh.mtType = METAFILE_MEMORY;

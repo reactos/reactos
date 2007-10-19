@@ -530,7 +530,7 @@ HRESULT WINAPI ConvertINetMultiByteToUnicode(
             *pcDstSize = MultiByteToWideChar(dwEncoding, 0, pSrcStr, *pcSrcSize, NULL, 0);
         break;
     }
-    
+
     if (!*pcDstSize)
         return E_FAIL;
 
@@ -830,7 +830,7 @@ static HRESULT WINAPI MLANGCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOu
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
     HRESULT hres;
     LPUNKNOWN punk;
-    
+
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
     *ppobj = NULL;
@@ -1384,7 +1384,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePageToCodePages(
 {
     ICOM_THIS_MULTI(MLang_impl, vtbl_IMLangFontLink, iface);
     CHARSETINFO cs;
-    BOOL rc; 
+    BOOL rc;
 
     TRACE("(%p) Seeking %u\n",This, uCodePage);
     memset(&cs, 0, sizeof(cs));
@@ -1412,7 +1412,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
     DWORD mask = 0x00000000;
     UINT i;
     CHARSETINFO cs;
-    BOOL rc; 
+    BOOL rc;
 
     TRACE("(%p) scanning  0x%x  default page %u\n",This, dwCodePages,
             uDefaultCodePage);
@@ -1420,7 +1420,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
     *puCodePage = 0x00000000;
 
     rc = TranslateCharsetInfo((DWORD*)uDefaultCodePage, &cs, TCI_SRCCODEPAGE);
-  
+
     if (rc && (dwCodePages & cs.fs.fsCsb[0]))
     {
         TRACE("Found Default Codepage\n");
@@ -1428,7 +1428,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
         return S_OK;
     }
 
-    
+
     for (i = 0; i < 32; i++)
     {
 
@@ -1862,7 +1862,7 @@ static BOOL CALLBACK enum_locales_proc(LPWSTR locale)
     info->wszLocaleName[0] = 0;
     GetLocaleInfoW(info->lcid, LOCALE_SLANGUAGE, info->wszLocaleName, MAX_LOCALE_NAME);
     TRACE("ISO639: %s SLANGUAGE: %s\n", wine_dbgstr_w(info->wszRfc1766), wine_dbgstr_w(info->wszLocaleName));
-    
+
     data->total++;
 
     return TRUE;
@@ -2298,7 +2298,7 @@ static HRESULT WINAPI fnIMultiLanguage2_ConvertStringToUnicodeEx(
  *
  * PARAMS
  *   see ConvertStringToUnicode
- *   dwFlag 
+ *   dwFlag
  *   lpFallBack if dwFlag contains MLCONVCHARF_USEDEFCHAR, lpFallBack string used
  *              instead unconvertible characters.
  *

@@ -98,7 +98,7 @@ static UINT ORDER_mergesort( MSIORDERVIEW *ov, UINT left, UINT right )
         if( r != ERROR_SUCCESS )
             return r;
         if( swap )
-        { 
+        {
             temp = array[j];
             memmove( &array[i+1], &array[i], (j-i)*sizeof (UINT) );
             array[i] = temp;
@@ -339,7 +339,7 @@ UINT ORDER_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     ov = msi_alloc_zero( sizeof *ov + sizeof (UINT) * count );
     if( !ov )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     ov->view.ops = &order_ops;
     msiobj_addref( &db->hdr );

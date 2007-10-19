@@ -63,7 +63,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Verrouillage clic", -1, 5, 150, 230, 70
   CHECKBOX "&Activer le Verrouillage clic", IDC_CHECK_CLICK_LOCK, 10, 160, 95, 20
-  PUSHBUTTON "&Paramètres...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 15 
+  PUSHBUTTON "&Paramètres...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 15
   LTEXT "Vous permet de sélectionner ou de déplacer sans maintenir le bouton de la souris enfoncé. Pour activer, presser le bouton brièvement. Pour désactiver, presser de nouveau le bouton.", -1, 10, 180, 200, 30
 END
 

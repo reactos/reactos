@@ -963,7 +963,7 @@ static BOOL MDI_RestoreFrameMenu( HWND frame, HWND hChild, HBITMAP hBmpClose )
 
     if ( menuInfo.hbmpItem != 0 )
          DeleteObject(menuInfo.hbmpItem);
-            
+
     /* close */
     DeleteMenu(menu, SC_CLOSE, MF_BYCOMMAND);
     /* restore */
@@ -1255,7 +1255,7 @@ static LRESULT MDIClientWndProc_common( HWND hwnd, UINT message,
                 if (!ci->child)
                     ci->child = HeapAlloc(GetProcessHeap(), 0, sizeof(HWND));
                 else
-                    ci->child = HeapReAlloc(GetProcessHeap(), 0, ci->child, sizeof(HWND) * ci->nActiveChildren); 
+                    ci->child = HeapReAlloc(GetProcessHeap(), 0, ci->child, sizeof(HWND) * ci->nActiveChildren);
 
                 ci->child[ci->nActiveChildren - 1] = (HWND)lParam;
             }
@@ -1514,7 +1514,7 @@ LRESULT WINAPI DefMDIChildProcW( HWND hwnd, UINT message,
     TRACE("%p %04x (%s) %08x %08lx\n", hwnd, message, SPY_GetMsgName(message, hwnd), wParam, lParam);
 #ifndef __REACTOS__
     hwnd = WIN_GetFullHandle( hwnd );
-#endif    
+#endif
     if (!ci) return DefWindowProcW( hwnd, message, wParam, lParam );
 
     switch (message)

@@ -104,7 +104,7 @@ HGLOBAL16 WINAPI OleMetaFilePictFromIconAndLabel16(
 	    return 0;
     }
 
-    FIXME("(%04x, '%s', '%s', %d): incorrect metrics, please try to correct them !\n", 
+    FIXME("(%04x, '%s', '%s', %d): incorrect metrics, please try to correct them !\n",
           hIcon, lpszLabel, lpszSourceFile, iIconIndex);
 
     hdc = CreateMetaFileW(NULL);

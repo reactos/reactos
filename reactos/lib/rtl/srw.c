@@ -301,7 +301,7 @@ RtlpAcquireSRWLockExclusiveWait(IN OUT PRTL_SRWLOCK SRWLock,
             }
             else
             {
-                /* The last wait block was removed and/or we're 
+                /* The last wait block was removed and/or we're
                    finally a simple exclusive lock. This means we
                    don't need to wait anymore, we acquired the lock! */
                 break;
@@ -350,7 +350,7 @@ RtlpAcquireSRWLockSharedWait(IN OUT PRTL_SRWLOCK SRWLock,
                 }
                 else
                 {
-                    /* The last wait block was removed and/or we're 
+                    /* The last wait block was removed and/or we're
                        finally a simple shared lock. This means we
                        don't need to wait anymore, we acquired the lock! */
                     break;

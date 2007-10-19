@@ -1,7 +1,7 @@
-/*  
+/*
 * translated by xrogers
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
 */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -83,6 +83,6 @@ BEGIN
   IDS_HINT_SYS_MOVE     " Przesuwa to okno."
   IDS_HINT_SYS_SIZE     " Zmienia rozmiar tego okna."
   IDS_HINT_SYS_MINIMIZE " Minimalizuje to okno do ikony."
-  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiarów ekranu." 
+  IDS_HINT_SYS_MAXIMIZE " Rozszerza to okno do rozmiarów ekranu."
   IDS_HINT_SYS_CLOSE    " Zamyka okno."
 END

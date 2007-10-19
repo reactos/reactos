@@ -54,13 +54,13 @@ BOOL DRIVER_RegisterDriver(LPCWSTR  Name, PGD_ENABLEDRIVER  EnableDriver)
     Driver->Name = ExAllocatePoolWithTag(PagedPool,
                                          (wcslen(Name) + 1) * sizeof(WCHAR),
                                          TAG_DRIVER);
-    if (Driver->Name == NULL)                                         
+    if (Driver->Name == NULL)
     {
         DPRINT1("Out of memory\n");
         ExFreePool(Driver);
         return  FALSE;
     }
-    
+
     wcscpy(Driver->Name, Name);
     Driver->Next  = DriverList;
     DriverList = Driver;

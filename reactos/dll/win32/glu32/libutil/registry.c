@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -60,7 +60,7 @@ gluGetString(GLenum name)
 }
 
 /* extName is an extension name.
- * extString is a string of extensions separated by blank(s). There may or 
+ * extString is a string of extensions separated by blank(s). There may or
  * may not be leading or trailing blank(s) in extString.
  * This works in cases of extensions being prefixes of another like
  * GL_EXT_texture and GL_EXT_texture3D.
@@ -76,7 +76,7 @@ gluCheckExtension(const GLubyte *extName, const GLubyte *extString)
 
   if (extString == NULL) return GL_FALSE;
 
-  deleteThis = lookHere = (char *)malloc(strlen((const char *)extString)+1); 
+  deleteThis = lookHere = (char *)malloc(strlen((const char *)extString)+1);
   if (lookHere == NULL)
      return GL_FALSE;
   /* strtok() will modify string, so copy it somewhere */
@@ -86,7 +86,7 @@ gluCheckExtension(const GLubyte *extName, const GLubyte *extString)
      if (strcmp(word,(const char *)extName) == 0) {
         flag = GL_TRUE;
 	break;
-     }  
+     }
      lookHere = NULL;		/* get next token */
   }
   free((void *)deleteThis);

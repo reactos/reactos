@@ -44,7 +44,7 @@ typedef struct _PROGRESS
 
   ULONG StepCount;
   ULONG CurrentStep;
-  
+
   BOOLEAN Double;
   CHAR *Text;
 } PROGRESSBAR, *PPROGRESSBAR;

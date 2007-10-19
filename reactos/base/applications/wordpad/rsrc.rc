@@ -26,23 +26,23 @@ MAINACCELTABLE ACCELERATORS
 BEGIN
     "1",          ID_BACK_1,          VIRTKEY, CONTROL
     "2",          ID_BACK_2,          VIRTKEY, CONTROL
-    "L",          ID_ALIGN_LEFT,      VIRTKEY, CONTROL    
-    "E",          ID_ALIGN_CENTER,    VIRTKEY, CONTROL    
-    "R",          ID_ALIGN_RIGHT,     VIRTKEY, CONTROL    
+    "L",          ID_ALIGN_LEFT,      VIRTKEY, CONTROL
+    "E",          ID_ALIGN_CENTER,    VIRTKEY, CONTROL
+    "R",          ID_ALIGN_RIGHT,     VIRTKEY, CONTROL
     "F",          ID_FIND,            VIRTKEY, CONTROL
     VK_F3,        ID_FIND_NEXT,       VIRTKEY
     "H",          ID_REPLACE,         VIRTKEY, CONTROL
-    "A",          ID_EDIT_SELECTALL,  VIRTKEY, CONTROL    
-    "X",          ID_EDIT_CUT,        VIRTKEY, CONTROL    
-    "C",          ID_EDIT_COPY,       VIRTKEY, CONTROL    
-    "Z",          ID_EDIT_UNDO,       VIRTKEY, CONTROL    
-    "Y",          ID_EDIT_REDO,       VIRTKEY, CONTROL    
-    "B",          ID_FORMAT_BOLD,     VIRTKEY, CONTROL    
-    "I",          ID_FORMAT_ITALIC,   VIRTKEY, CONTROL    
+    "A",          ID_EDIT_SELECTALL,  VIRTKEY, CONTROL
+    "X",          ID_EDIT_CUT,        VIRTKEY, CONTROL
+    "C",          ID_EDIT_COPY,       VIRTKEY, CONTROL
+    "Z",          ID_EDIT_UNDO,       VIRTKEY, CONTROL
+    "Y",          ID_EDIT_REDO,       VIRTKEY, CONTROL
+    "B",          ID_FORMAT_BOLD,     VIRTKEY, CONTROL
+    "I",          ID_FORMAT_ITALIC,   VIRTKEY, CONTROL
     "U",          ID_FORMAT_UNDERLINE,VIRTKEY, CONTROL
-    "N",          ID_FILE_NEW,        VIRTKEY, CONTROL    
-    "O",          ID_FILE_OPEN,       VIRTKEY, CONTROL    
-    "S",          ID_FILE_SAVE,       VIRTKEY, CONTROL    
+    "N",          ID_FILE_NEW,        VIRTKEY, CONTROL
+    "O",          ID_FILE_OPEN,       VIRTKEY, CONTROL
+    "S",          ID_FILE_SAVE,       VIRTKEY, CONTROL
     "P",          ID_PRINT,           VIRTKEY, CONTROL
 END
 

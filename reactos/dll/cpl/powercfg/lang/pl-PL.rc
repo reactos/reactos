@@ -1,8 +1,8 @@
-/**  
+/**
  * translated by aart3k
  * aart3k@gmail.com
- * https://sourceforge.net/projects/reactospl  
- */ 
+ * https://sourceforge.net/projects/reactospl
+ */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_PROPPAGEPOWERSHEMES DIALOGEX 0, 0, 250, 220
@@ -47,7 +47,7 @@ BEGIN
                     "Przycisk",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
     LTEXT           "nieznany",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
     PUSHBUTTON      "Dzia³anie &alarmu...",-1,20,70,70,15,WS_DISABLED
@@ -63,7 +63,7 @@ BEGIN
                     "Przycisk",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
     LTEXT           "nieznany",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
     PUSHBUTTON      "Dzia³anie &alarmu...",-1,20,170,70,15,WS_DISABLED
@@ -83,7 +83,7 @@ BEGIN
     ICON            IDI_ACDC,IDI_ACDC,5,5,20,20
     LTEXT           "Wybierz, których ustawieñ oszczêdzania energii chcesz u¿ywaæ.",-1,30,5,205,20
     GROUPBOX        "Opcje",-1,5,35,225,55
-    CONTROL         "&Zawsze pokazuj ikonê w zasobniku systemowym",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Zawsze pokazuj ikonê w zasobniku systemowym",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
     CONTROL         "Zapytaj o &has³o kiedy komputer powraca ze stanu czuwania",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,55,200,10
@@ -91,13 +91,13 @@ BEGIN
                     WS_TABSTOP,15,65,200,10
     GROUPBOX        "Przyciski zasilania",-1,5,100,230,105
     LTEXT           "&Kiedy zamykam mój komputer przenoœny:", IDC_SLIDCLOSE,10,110,210,10
-    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "K&iedy naciskam wy³¹cznik mojego komputera:", IDC_SPOWERBUTTON,10,135,210,10
-    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Ki&edy naciskam przycisk uœpienia:", IDC_SSLEEPBUTTON,10,165,210,10
-    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
 END
 
@@ -110,7 +110,7 @@ BEGIN
     LTEXT           "Kiedy Twój komputer przechodzi w stan hibernacji ca³a zawartoœæ pamiêci jest zrzucana na dysk twardy i komputer jest wy³¹czany. Kiedy komputer budzi siê z hibernacji, powraca on do poprzedniego stanu. ",
                     -1,35,5,195,35
     GROUPBOX        "Hibernacja",-1,5,45,235,25
-    CONTROL         "W³¹cz &hibernacjê",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "W³¹cz &hibernacjê",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,55,210,10
     GROUPBOX        "Przestrzeñ dyskowa dla hibernacji",-1,5,80,240,60
     LTEXT           "Wolna przestrzeñ dyskowa:",-1,10,90,100,10

@@ -765,7 +765,7 @@ static void write_iface_guid(const type_t *iface)
 {
   const UUID *uuid = get_attrp(iface->attrs, ATTR_UUID);
   write_guid(header, "IID", iface->name, uuid);
-} 
+}
 
 static void write_dispiface_guid(const type_t *iface)
 {

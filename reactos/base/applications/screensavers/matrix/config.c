@@ -77,7 +77,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 		//select the first message, and preview it
 		SendDlgItemMessage(hwnd, IDC_COMBO1, CB_SETCURSEL, 0, 0);
-		
+
 		SendDlgItemMessage(hwnd, IDC_SLIDER1, TBM_SETRANGE, 0, MAKELONG(SPEED_MIN, SPEED_MAX));
 		SendDlgItemMessage(hwnd, IDC_SLIDER2, TBM_SETRANGE, 0, MAKELONG(DENSITY_MIN, DENSITY_MAX));
 		SendDlgItemMessage(hwnd, IDC_SLIDER3, TBM_SETRANGE, 0, MAKELONG(MSGSPEED_MIN, MSGSPEED_MAX));
@@ -87,7 +87,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 		SendDlgItemMessage(hwnd, IDC_SLIDER2, TBM_SETTICFREQ, 5, 0);
 		SendDlgItemMessage(hwnd, IDC_SLIDER3, TBM_SETTICFREQ, 50, 0);
 		SendDlgItemMessage(hwnd, IDC_SLIDER4, TBM_SETTICFREQ, 2, 0);
-		
+
 		SendDlgItemMessage(hwnd, IDC_SLIDER1, TBM_SETPOS, TRUE, g_nMatrixSpeed);
 		SendDlgItemMessage(hwnd, IDC_SLIDER2, TBM_SETPOS, TRUE, g_nDensity);
 		SendDlgItemMessage(hwnd, IDC_SLIDER3, TBM_SETPOS, TRUE, g_nMessageSpeed);
@@ -120,7 +120,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			RECT clip;
 
 			GetDlgItemText(hwnd, IDC_COMBO1, buf, 256);
-			
+
 			GetClientRect((HWND)lParam, &rect);
 
 			if(prevwidth < rect.right)
@@ -132,7 +132,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			{
 				rect.left  = 0;
 				rect.right = prevwidth;
-			}		
+			}
 
 			if(prevheight < rect.bottom)
 			{
@@ -165,10 +165,10 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			// now draw it!
 			DrawText(hdc, buf, -1, &rect, DT_CENTER|DT_VCENTER|DT_WORDBREAK);
-			
+
 
 			return (BOOL)GetStockObject(NULL_BRUSH);
-		}	
+		}
 		else
 		{
 			break;
@@ -195,7 +195,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			index = SendDlgItemMessage(hwnd, IDC_COMBO2, CB_GETCURSEL, 0, 0);
 			SendDlgItemMessage(hwnd, IDC_COMBO2, CB_GETLBTEXT, index, (LPARAM)g_szFontName);
 			//SetMessageFont(hwnd, g_szFontName, g_nFontSize, TRUE);
-			
+
 			UpdatePreview(hwnd);
 			return 0;
 		}
@@ -212,7 +212,7 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 
 		case IDOK:
-			
+
 			hwndCtrl = GetDlgItem(hwnd, IDC_COMBO1);
 
 			items = min(MAX_MESSAGES, SendMessage(hwndCtrl, CB_GETCOUNT, 0, 0));
@@ -223,24 +223,24 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			}
 
 			g_nNumMessages = items;
-			
+
 			//matrix speed
-			val = SendDlgItemMessage(hwnd, IDC_SLIDER1, TBM_GETPOS, 0, 0);	
+			val = SendDlgItemMessage(hwnd, IDC_SLIDER1, TBM_GETPOS, 0, 0);
 			if(val >= SPEED_MIN && val <= SPEED_MAX)
 				g_nMatrixSpeed = val;
 
 			//density
-			val = SendDlgItemMessage(hwnd, IDC_SLIDER2, TBM_GETPOS, 0, 0);	
+			val = SendDlgItemMessage(hwnd, IDC_SLIDER2, TBM_GETPOS, 0, 0);
 			if(val >= DENSITY_MIN && val <= DENSITY_MAX)
 				g_nDensity = val;
 
 			//message speed
-			val = SendDlgItemMessage(hwnd, IDC_SLIDER3, TBM_GETPOS, 0, 0);	
+			val = SendDlgItemMessage(hwnd, IDC_SLIDER3, TBM_GETPOS, 0, 0);
 			if(val >= MSGSPEED_MIN && val <= MSGSPEED_MAX)
 				g_nMessageSpeed = val;
 
 			//font size
-			val = SendDlgItemMessage(hwnd, IDC_SLIDER4, TBM_GETPOS, 0, 0);	
+			val = SendDlgItemMessage(hwnd, IDC_SLIDER4, TBM_GETPOS, 0, 0);
 			if(val >= FONT_MIN && val <= FONT_MAX)
 				g_nFontSize = val;
 
@@ -253,14 +253,14 @@ BOOL CALLBACK ConfigDlgProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return TRUE;
 
 		case IDC_ADD:
-			
+
 			hwndCombo = GetDlgItem(hwnd, IDC_COMBO1);
-			
+
 			if(GetWindowText(hwndCombo, buf, 256))
 			{
 				SendMessage(hwndCombo, CB_ADDSTRING, 0, (LPARAM)buf);
 			}
-			
+
 			UpdatePreview(hwnd);
 
 			return 0;
@@ -306,7 +306,7 @@ int Configure(HWND hwndParent)
 #endif
 
 	DialogBox(GetModuleHandle(0), MAKEINTRESOURCE(IDD_CONFIG), hwndParent, ConfigDlgProc);
-	
+
 	return 0;
 }
 

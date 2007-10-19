@@ -28,7 +28,7 @@
 	<directory name="dxdiagn">
 		<xi:include href="dxdiagn/dxdiagn.rbuild" />
 	</directory>
-	
+
 	<directory name="wine">
 		<xi:include href="wine/wine.rbuild" />
 	</directory>

@@ -178,13 +178,13 @@ _mesa_GetPixelTexGenParameterivSGIS(GLenum target, GLint *value);
  */
 /*@{*/
 
-extern void 
+extern void
 _mesa_update_texture( GLcontext *ctx, GLuint new_state );
 
 extern GLboolean
 _mesa_init_texture( GLcontext *ctx );
 
-extern void 
+extern void
 _mesa_free_texture_data( GLcontext *ctx );
 
 /*@}*/

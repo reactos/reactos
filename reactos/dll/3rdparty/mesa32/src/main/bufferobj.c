@@ -96,7 +96,7 @@ buffer_object_get_target( GLcontext *ctx, GLenum target, const char * str )
  * \sa glBufferSubDataARB, glGetBufferSubDataARB
  */
 static struct gl_buffer_object *
-buffer_object_subdata_range_good( GLcontext * ctx, GLenum target, 
+buffer_object_subdata_range_good( GLcontext * ctx, GLenum target,
                                   GLintptrARB offset, GLsizeiptrARB size,
                                   const char * str )
 {
@@ -135,7 +135,7 @@ buffer_object_subdata_range_good( GLcontext * ctx, GLenum target,
 
 /**
  * Allocate and initialize a new buffer object.
- * 
+ *
  * This function is intended to be called via
  * \c dd_function_table::NewBufferObject.
  */
@@ -154,7 +154,7 @@ _mesa_new_buffer_object( GLcontext *ctx, GLuint name, GLenum target )
 
 /**
  * Delete a buffer object.
- * 
+ *
  * This function is intended to be called via
  * \c dd_function_table::DeleteBuffer.
  */
@@ -505,7 +505,7 @@ _mesa_BindBufferARB(GLenum target, GLuint buffer)
       }
       newBufObj->RefCount++;
    }
-   
+
    switch (target) {
       case GL_ARRAY_BUFFER_ARB:
          ctx->Array.ArrayBufferObj = newBufObj;
@@ -542,7 +542,7 @@ _mesa_BindBufferARB(GLenum target, GLuint buffer)
 
 /**
  * Delete a set of buffer objects.
- * 
+ *
  * \param n      Number of buffer objects to delete.
  * \param ids    Array of \c n buffer object IDs.
  */
@@ -654,7 +654,7 @@ _mesa_DeleteBuffersARB(GLsizei n, const GLuint *ids)
 
 /**
  * Generate a set of unique buffer object IDs and store them in \c buffer.
- * 
+ *
  * \param n       Number of IDs to generate.
  * \param buffer  Array of \c n locations to store the IDs.
  */
@@ -703,9 +703,9 @@ _mesa_GenBuffersARB(GLsizei n, GLuint *buffer)
 
 /**
  * Determine if ID is the name of a buffer object.
- * 
+ *
  * \param id  ID of the potential buffer object.
- * \return  \c GL_TRUE if \c id is the name of a buffer object, 
+ * \return  \c GL_TRUE if \c id is the name of a buffer object,
  *          \c GL_FALSE otherwise.
  */
 GLboolean GLAPIENTRY
@@ -761,11 +761,11 @@ _mesa_BufferDataARB(GLenum target, GLsizeiptrARB size,
       _mesa_error(ctx, GL_INVALID_OPERATION, "glBufferDataARB" );
       return;
    }
-   
+
    if (bufObj->Pointer) {
       _mesa_error(ctx, GL_INVALID_OPERATION, "glBufferDataARB(buffer is mapped)" );
       return;
-   }  
+   }
 
    ASSERT(ctx->Driver.BufferData);
 

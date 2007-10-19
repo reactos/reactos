@@ -56,7 +56,7 @@
 /**********************************************************************/
 /** \name Create/destroy a GLvisual. */
 /*@{*/
- 
+
 extern GLvisual *
 _mesa_create_visual( GLboolean rgbFlag,
                      GLboolean dbFlag,
@@ -251,7 +251,7 @@ do {								\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair, with return value.
- * 
+ *
  * \param ctx GL context.
  * \param retval value to return value in case the assertion fails.
  */
@@ -266,7 +266,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair.
- * 
+ *
  * \param ctx GL context.
  */
 #define ASSERT_OUTSIDE_BEGIN_END(ctx)					\
@@ -280,7 +280,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair and flush the vertices.
- * 
+ *
  * \param ctx GL context.
  */
 #define ASSERT_OUTSIDE_BEGIN_END_AND_FLUSH(ctx)				\
@@ -292,7 +292,7 @@ do {									\
 /**
  * Macro to assert that the API call was made outside the
  * glBegin()/glEnd() pair and flush the vertices, with return value.
- * 
+ *
  * \param ctx GL context.
  * \param retval value to return value in case the assertion fails.
  */

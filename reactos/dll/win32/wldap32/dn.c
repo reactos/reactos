@@ -75,7 +75,7 @@ PCHAR CDECL ldap_dn2ufnA( PCHAR dn )
  *  dn  [I] DN to convert.
  *
  * RETURNS
- *  Success: Pointer to a string containing the user-friendly name. 
+ *  Success: Pointer to a string containing the user-friendly name.
  *  Failure: NULL
  *
  * NOTES
@@ -139,7 +139,7 @@ PCHAR * CDECL ldap_explode_dnA( PCHAR dn, ULONG notypes )
  *
  * RETURNS
  *  Success: Pointer to a NULL-terminated array that contains the DN
- *           components. 
+ *           components.
  *  Failure: NULL
  *
  * NOTES
@@ -268,7 +268,7 @@ ULONG CDECL ldap_ufn2dnA( PCHAR ufn, PCHAR *dn )
  *
  * PARAMS
  *  ufn  [I] User-friendly name to convert.
- *  dn   [O] Receives a pointer to a string containing the DN. 
+ *  dn   [O] Receives a pointer to a string containing the DN.
  *
  * RETURNS
  *  Success: LDAP_SUCCESS

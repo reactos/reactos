@@ -190,7 +190,7 @@ STDMETHODIMP IDataObjectImpl::EnumFormatEtc(
 
 		 (*ppenumFormatEtc)->AddRef();
 		 break;
-	
+
 	  case DATADIR_SET:
 	  default:
 		 return E_NOTIMPL;
@@ -273,7 +273,7 @@ STDMETHODIMP EnumFormatEtcImpl::Next(ULONG celt,LPFORMATETC lpFormatEtc, ULONG* 
 {
    if (pceltFetched != NULL)
 	   *pceltFetched=0;
-	
+
    ULONG cReturn = celt;
 
    if (celt <= 0 || lpFormatEtc == NULL || m_iCur >= m_pFmtEtc.size())
@@ -307,12 +307,12 @@ STDMETHODIMP EnumFormatEtcImpl::Reset(void)
    m_iCur = 0;
    return S_OK;
 }
-			
+
 STDMETHODIMP EnumFormatEtcImpl::Clone(IEnumFORMATETC** ppCloneEnumFormatEtc)
 {
   if (ppCloneEnumFormatEtc == NULL)
 	return E_POINTER;
-	
+
   EnumFormatEtcImpl* newEnum = new EnumFormatEtcImpl(m_pFmtEtc);
 
   if (!newEnum)
@@ -419,7 +419,7 @@ bool IDropTargetImpl::QueryDrop(DWORD grfKeyState, LPDWORD pdwEffect)
 	}
 
 	return (DROPEFFECT_NONE == *pdwEffect)?false:true;
-}	
+}
 
 HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragEnter(
 	/* [unique][in] */ IDataObject __RPC_FAR *pDataObj,
@@ -474,7 +474,7 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::DragLeave()
 {
 	if (m_pDropTargetHelper)
 		m_pDropTargetHelper->DragLeave();
-	
+
 	m_bAllowDrop = false;
 	m_pSupportedFrmt = NULL;
 
@@ -487,7 +487,7 @@ HRESULT STDMETHODCALLTYPE IDropTargetImpl::Drop(
 	/* [out][in] */ DWORD __RPC_FAR *pdwEffect)
 {
 	if (pDataObj == NULL)
-		return E_INVALIDARG;	
+		return E_INVALIDARG;
 
 	if (m_pDropTargetHelper)
 		m_pDropTargetHelper->Drop(pDataObj, (LPPOINT)&pt, *pdwEffect);

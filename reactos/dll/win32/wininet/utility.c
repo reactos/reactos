@@ -247,11 +247,11 @@ VOID INTERNET_SendCallback(LPWININETHANDLEHEADER hdr, DWORD dwContext,
             lpvNewInfo = WININET_strdup_WtoA(lpvStatusInfo);
         }
     }
-    
+
     TRACE(" callback(%p) (%p (%p), %08lx, %ld (%s), %p, %ld)\n",
 	  hdr->lpfnStatusCB, hHttpSession, hdr, dwContext, dwInternetStatus, get_callback_name(dwInternetStatus),
 	  lpvNewInfo, dwStatusInfoLength);
-    
+
     hdr->lpfnStatusCB(hHttpSession, dwContext, dwInternetStatus,
                       lpvNewInfo, dwStatusInfoLength);
 
@@ -274,10 +274,10 @@ VOID SendAsyncCallback(LPWININETHANDLEHEADER hdr, DWORD dwContext,
 	  lpvStatusInfo, dwStatusInfoLength,
 	  hdr->dwFlags & INTERNET_FLAG_ASYNC ? "" : "non ",
 	  hdr->lpfnStatusCB);
-    
+
     if (!(hdr->lpfnStatusCB))
 	return;
-    
+
     if (hdr->dwFlags & INTERNET_FLAG_ASYNC)
     {
 	WORKREQUEST workRequest;
@@ -297,7 +297,7 @@ VOID SendAsyncCallback(LPWININETHANDLEHEADER hdr, DWORD dwContext,
 	req->dwInternetStatus = dwInternetStatus;
 	req->lpvStatusInfo = lpvStatusInfo_copy;
 	req->dwStatusInfoLength = dwStatusInfoLength;
-	
+
 	INTERNET_AsyncCall(&workRequest);
     }
     else

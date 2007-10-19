@@ -3,7 +3,7 @@
  * PROJECT:     System regression tool for ReactOS
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        tools/sysreg/conf_parser.h
- * PURPOSE:     file reading support 
+ * PURPOSE:     file reading support
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald at sbox tugraz at)
  */
 
@@ -57,7 +57,7 @@ namespace System_
 		{
 			return false;
 		}
-		
+
 		bool ret = true;
 		size_t total_length = 0;
 		size_t line_count = lines.size();
@@ -79,7 +79,7 @@ namespace System_
 				readoffset = num - total_length;
 			}
 
-			num = fread(&szBuffer[readoffset], 
+			num = fread(&szBuffer[readoffset],
 				        sizeof(char), sizeof(szBuffer)/sizeof(char) - (readoffset+1) * sizeof(char),
 						m_File);
 

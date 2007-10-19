@@ -21,7 +21,7 @@ class CardRegion
 	//	Constructor is PRIVATE - only
 	//  a CardWindow can create cardstacks!
 	//
-	CardRegion(CardWindow &parent, int id, bool fVisible, 
+	CardRegion(CardWindow &parent, int id, bool fVisible,
 		int x, int y, int xOffset, int yOffset);
 
 	~CardRegion();
@@ -29,7 +29,7 @@ class CardRegion
 public:
 
 	void SetBackColor(COLORREF cr);
-	
+
 	void	          SetCardStack(const CardStack &cs);
 	const CardStack & GetCardStack();
 
@@ -38,7 +38,7 @@ public:
 	//
 	bool SetDragRule(UINT uDragType, pCanDragProc proc = 0);
 	bool SetDropRule(UINT uDropType, pCanDropProc proc = 0);
-	
+
 	void SetClickProc    (pClickProc proc);
 	void SetDblClickProc (pClickProc proc);
 
@@ -87,7 +87,7 @@ public:
 	void        Clear()          { cardstack.Clear();    }
 
 	void		Reverse()        { cardstack.Reverse();  }
-	
+
 	void		Push(const Card card)     { cardstack.Push(card); }
 	void		Push(const CardStack &cs) { cardstack.Push(cs);   }
 
@@ -118,7 +118,7 @@ private:
 
 	bool CanDragCards(int iNumCards);
 	bool CanDropCards(CardStack &cards);
-	
+
 	void CalcApparentCards();
 	int	 CalcApparentCards(int realnum);
 
@@ -133,15 +133,15 @@ private:
 	bool  OnMouseMove(int x, int y);
 	bool  OnLButtonUp(int x, int y);
 
-	
+
 	//
 	//	Private data members
 	//
 
 	int		id;
-	
+
 	CardWindow &parentWnd;
-	
+
 	CardStack  cardstack;	//cards in this stack
 	CardStack  dragstack;	//cards which we might be dragging
 
@@ -167,14 +167,14 @@ private:
 	//	Used for mouse-dragging / moving cards
 	//
 	int		iNumDragCards;
-	int		mousexoffset;	
+	int		mousexoffset;
 	int		mouseyoffset;
 	int		oldx;
 	int		oldy;
-	
+
 	int		nDragCardWidth;
 	int		nDragCardHeight;
-	
+
 	HDC		hdcBackGnd;
 	HBITMAP	hbmBackGnd;
 	HDC		hdcDragCard;
@@ -183,7 +183,7 @@ private:
 	int		nNumApparentCards;
 	int		nThreedCount;
 	bool	fVisible;
-	
+
 	int		nFlashCount;
 	bool	fFlashVisible;
 	UINT	uFlashTimer;
@@ -197,10 +197,10 @@ private:
 
 	UINT	uDragRule;
 	UINT	uDropRule;
-	
+
 	//
 	//	Stack callback support
-	//	
+	//
 	pCanDragProc	CanDragCallback;
 	pCanDropProc	CanDropCallback;
 	pClickProc		ClickCallback;
@@ -209,7 +209,7 @@ private:
 	pRemoveProc		RemoveCallback;
 
 	//locking mechanism to prevent user dragging etc
-	HANDLE			mxlock;		
+	HANDLE			mxlock;
 };
 
 #endif

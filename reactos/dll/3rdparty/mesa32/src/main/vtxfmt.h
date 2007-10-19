@@ -1,6 +1,6 @@
 /**
  * \file vtxfmt.h
- * 
+ *
  * \author Keith Whitwell <keith@tungstengraphics.com>
  * \author Gareth Hughes
  */

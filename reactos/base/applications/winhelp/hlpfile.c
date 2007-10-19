@@ -406,7 +406,7 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned off
         if (GET_UINT(buf, 0x4) > GET_UINT(buf, 0) - GET_UINT(buf, 0x10))
         {
             /* need to decompress */
-            HLPFILE_Uncompress3(page->lpszTitle, page->lpszTitle + titlesize, 
+            HLPFILE_Uncompress3(page->lpszTitle, page->lpszTitle + titlesize,
                                 title, end);
         }
         else
@@ -442,7 +442,7 @@ static BOOL HLPFILE_AddPage(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigned off
     page->browse_fwd = GET_UINT(buf, 0x1D);
 
     WINE_TRACE("Added page[%d]: title='%s' %08x << %08x >> %08x\n",
-               page->wNumber, page->lpszTitle, 
+               page->wNumber, page->lpszTitle,
                page->browse_bwd, page->offset, page->browse_fwd);
 
     memset(&attributes, 0, sizeof(attributes));
@@ -502,7 +502,7 @@ static unsigned long fetch_ulong(BYTE** ptr)
         (*ptr) += 2;
     }
     return ret;
-}    
+}
 
 static short fetch_short(BYTE** ptr)
 {
@@ -598,7 +598,7 @@ static BYTE*    HLPFILE_DecompressGfx(BYTE* src, unsigned csz, unsigned sz, BYTE
  *
  *
  */
-static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack, 
+static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
                                HLPFILE_PARAGRAPH* paragraph)
 {
     BYTE*               ptr;
@@ -626,7 +626,7 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
     if (bi->bmiHeader.biPlanes != 1) WINE_FIXME("Unsupported planes %u\n", bi->bmiHeader.biPlanes);
     bi->bmiHeader.biSizeImage = (((bi->bmiHeader.biWidth * bi->bmiHeader.biBitCount + 31) & ~31) / 8) * bi->bmiHeader.biHeight;
     WINE_TRACE("planes=%d bc=%d size=(%d,%d)\n",
-               bi->bmiHeader.biPlanes, bi->bmiHeader.biBitCount, 
+               bi->bmiHeader.biPlanes, bi->bmiHeader.biBitCount,
                bi->bmiHeader.biWidth, bi->bmiHeader.biHeight);
 
     csz = fetch_ulong(&ptr);
@@ -634,17 +634,17 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
 
     off = GET_UINT(ptr, 0);     ptr += 4;
     /* GET_UINT(ptr, 0); hotspot offset */ ptr += 4;
-    
+
     /* now read palette info */
     if (type == 0x06)
     {
         unsigned nc = bi->bmiHeader.biClrUsed;
         unsigned i;
-        
+
         /* not quite right, especially for bitfields type of compression */
         if (!nc && bi->bmiHeader.biBitCount <= 8)
             nc = 1 << bi->bmiHeader.biBitCount;
-        
+
         bi = HeapReAlloc(GetProcessHeap(), 0, bi, sizeof(*bi) + nc * sizeof(RGBQUAD));
         if (!bi) return FALSE;
         for (i = 0; i < nc; i++)
@@ -657,14 +657,14 @@ static BOOL HLPFILE_LoadBitmap(BYTE* beg, BYTE type, BYTE pack,
         }
     }
     pict_beg = HLPFILE_DecompressGfx(beg + off, csz, bi->bmiHeader.biSizeImage, pack);
-    
-    paragraph->u.gfx.u.bmp.hBitmap = CreateDIBitmap(hdc = GetDC(0), &bi->bmiHeader, 
-                                                    CBM_INIT, pict_beg, 
+
+    paragraph->u.gfx.u.bmp.hBitmap = CreateDIBitmap(hdc = GetDC(0), &bi->bmiHeader,
+                                                    CBM_INIT, pict_beg,
                                                     bi, DIB_RGB_COLORS);
-    ReleaseDC(0, hdc);      
+    ReleaseDC(0, hdc);
     if (!paragraph->u.gfx.u.bmp.hBitmap)
         WINE_ERR("Couldn't create bitmap\n");
-    
+
     HeapFree(GetProcessHeap(), 0, bi);
     if (pict_beg != beg + off) HeapFree(GetProcessHeap(), 0, pict_beg);
 
@@ -726,13 +726,13 @@ static BOOL     HLPFILE_LoadMetaFile(BYTE* beg, BYTE pack, HLPFILE_PARAGRAPH* pa
  *
  */
 static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
-                                      unsigned long size, 
+                                      unsigned long size,
                                       HLPFILE_PARAGRAPH* paragraph)
 {
     unsigned    i, numpict;
 
     numpict = GET_USHORT(ref, 2);
-    WINE_TRACE("Got picture magic=%04x #=%d\n", 
+    WINE_TRACE("Got picture magic=%04x #=%d\n",
                GET_USHORT(ref, 0), numpict);
 
     for (i = 0; i < numpict; i++)
@@ -746,14 +746,14 @@ static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
 
         type = *ptr++;
         pack = *ptr++;
-        
+
         switch (type)
         {
         case 5: /* device dependent bmp */
         case 6: /* device independent bmp */
             HLPFILE_LoadBitmap(beg, type, pack, paragraph);
             break;
-        case 8: 
+        case 8:
             HLPFILE_LoadMetaFile(beg, pack, paragraph);
             break;
         default: WINE_FIXME("Unknown type %u\n", type); return FALSE;
@@ -773,7 +773,7 @@ static  BOOL    HLPFILE_LoadGfxByAddr(HLPFILE *hlpfile, BYTE* ref,
  *
  *
  */
-static  BOOL    HLPFILE_LoadGfxByIndex(HLPFILE *hlpfile, unsigned index, 
+static  BOOL    HLPFILE_LoadGfxByIndex(HLPFILE *hlpfile, unsigned index,
                                        HLPFILE_PARAGRAPH* paragraph)
 {
     char        tmp[16];
@@ -803,10 +803,10 @@ static  BOOL    HLPFILE_LoadGfxByIndex(HLPFILE *hlpfile, unsigned index,
         {
             hlpfile->numBmps = index + 1;
 	    if (hlpfile->bmps)
-        	hlpfile->bmps = HeapReAlloc(GetProcessHeap(), 0, hlpfile->bmps, 
+        	hlpfile->bmps = HeapReAlloc(GetProcessHeap(), 0, hlpfile->bmps,
                                         hlpfile->numBmps * sizeof(hlpfile->bmps[0]));
 	    else
-	    	hlpfile->bmps = HeapAlloc(GetProcessHeap(), 0, 
+	    	hlpfile->bmps = HeapAlloc(GetProcessHeap(), 0,
                                         hlpfile->numBmps * sizeof(hlpfile->bmps[0]));
 
         }
@@ -841,7 +841,7 @@ static HLPFILE_LINK*       HLPFILE_AllocLink(int cookie, const char* str, LONG h
     link->wRefCount   = 1;
 
     WINE_TRACE("Link[%d] to %s@%08x:%d\n",
-               link->cookie, link->lpszString, 
+               link->cookie, link->lpszString,
                link->lHash, link->window);
     return link;
 }
@@ -936,7 +936,7 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
             }
         }
         /* 0x0400, 0x0800 and 0x1000 don't need space */
-        if ((bits & 0xE080) != 0) 
+        if ((bits & 0xE080) != 0)
             WINE_FIXME("Unsupported bits %04x, potential trouble ahead\n", bits);
 
         while (text < text_end && format < format_end)
@@ -1046,14 +1046,14 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
                         switch (GET_SHORT(format, 0))
                         {
                         case 0:
-                            HLPFILE_LoadGfxByIndex(hlpfile, GET_SHORT(format, 2), 
+                            HLPFILE_LoadGfxByIndex(hlpfile, GET_SHORT(format, 2),
                                                    paragraph);
                             break;
                         case 1:
-                            WINE_FIXME("does it work ??? %x<%lu>#%u\n", 
-                                       GET_SHORT(format, 0), 
+                            WINE_FIXME("does it work ??? %x<%lu>#%u\n",
+                                       GET_SHORT(format, 0),
                                        size, GET_SHORT(format, 2));
-                            HLPFILE_LoadGfxByAddr(hlpfile, format + 2, size - 4, 
+                            HLPFILE_LoadGfxByAddr(hlpfile, format + 2, size - 4,
                                                   paragraph);
                             break;
                         default:
@@ -1096,7 +1096,7 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
             case 0xCC:
                 WINE_TRACE("macro => %s\n", format + 3);
                 HLPFILE_FreeLink(attributes.link);
-                attributes.link = HLPFILE_AllocLink(hlp_link_macro, (const char*)format + 3, 
+                attributes.link = HLPFILE_AllocLink(hlp_link_macro, (const char*)format + 3,
                                                     0, !(*format & 4), -1);
                 format += 3 + GET_USHORT(format, 1);
                 break;
@@ -1113,8 +1113,8 @@ static BOOL HLPFILE_AddParagraph(HLPFILE *hlpfile, BYTE *buf, BYTE *end, unsigne
             case 0xE7:
                 HLPFILE_FreeLink(attributes.link);
                 attributes.link = HLPFILE_AllocLink((*format & 1) ? hlp_link_link : hlp_link_popup,
-                                                    hlpfile->lpszPath, 
-                                                    GET_UINT(format, 1), 
+                                                    hlpfile->lpszPath,
+                                                    GET_UINT(format, 1),
                                                     !(*format & 4), -1);
                 format += 5;
                 break;
@@ -1312,7 +1312,7 @@ static BOOL HLPFILE_FindSubFile(LPCSTR name, BYTE **subbuf, BYTE **subend)
 
     /* FIXME: this should be using the EnumBTree functions from this file */
     pgsize = GET_USHORT(bth, 4);
-    WINE_TRACE("%s => pgsize=%u #pg=%u rootpg=%u #lvl=%u\n", 
+    WINE_TRACE("%s => pgsize=%u #pg=%u rootpg=%u #lvl=%u\n",
                name, pgsize, GET_USHORT(bth, 30), GET_USHORT(bth, 26), GET_USHORT(bth, 32));
 
     ptr = bth + 38 + GET_USHORT(bth, 26) * pgsize;
@@ -1431,13 +1431,13 @@ static BOOL HLPFILE_SystemCommands(HLPFILE* hlpfile)
         case 6:
             if (GET_USHORT(ptr, 2) != 90) {WINE_WARN("system6\n");break;}
 
-	    if (hlpfile->windows) 
-        	hlpfile->windows = HeapReAlloc(GetProcessHeap(), 0, hlpfile->windows, 
+	    if (hlpfile->windows)
+        	hlpfile->windows = HeapReAlloc(GetProcessHeap(), 0, hlpfile->windows,
                                            sizeof(HLPFILE_WINDOWINFO) * ++hlpfile->numWindows);
-	    else 
-        	hlpfile->windows = HeapAlloc(GetProcessHeap(), 0, 
+	    else
+        	hlpfile->windows = HeapAlloc(GetProcessHeap(), 0,
                                            sizeof(HLPFILE_WINDOWINFO) * ++hlpfile->numWindows);
-	    
+
             if (hlpfile->windows)
             {
                 unsigned flags = GET_USHORT(ptr, 4);
@@ -1662,17 +1662,17 @@ static BOOL HLPFILE_Uncompress_Topic(HLPFILE* hlpfile)
     case 4:
         buf += 9;
         topic.wMapLen = (end - buf - 1) / 0x1000 + 1;
-        
+
         for (i = 0; i < topic.wMapLen; i++)
         {
             ptr = buf + i * 0x1000;
-            
+
             /* I don't know why, it's necessary for printman.hlp */
             if (ptr + 0x44 > end) ptr = end - 0x44;
 
             newsize += HLPFILE_UncompressedLZ77_Size(ptr + 0xc, min(end, ptr + 0x1000));
         }
-        
+
         topic.map = HeapAlloc(GetProcessHeap(), 0,
                               topic.wMapLen * sizeof(topic.map[0]) + newsize);
         if (!topic.map) return FALSE;
@@ -1739,7 +1739,7 @@ static void HLPFILE_Uncompress2(const BYTE *ptr, const BYTE *end, BYTE *newptr, 
 
             if (newptr + (phend - phptr) > newend)
             {
-                WINE_FIXME("buffer overflow %p > %p for %d bytes\n", 
+                WINE_FIXME("buffer overflow %p > %p for %d bytes\n",
                            newptr, newend, phend - phptr);
                 return;
             }
@@ -1768,12 +1768,12 @@ static BOOL HLPFILE_Uncompress3(char* dst, const char* dst_end,
         if ((*src & 1) == 0)
         {
             idx = *src / 2;
-            if (idx > phrases.num) 
+            if (idx > phrases.num)
             {
                 WINE_ERR("index in phrases %d/%d\n", idx, phrases.num);
                 len = 0;
             }
-            else 
+            else
             {
                 len = phrases.offsets[idx + 1] - phrases.offsets[idx];
                 if (dst + len <= dst_end)
@@ -1784,7 +1784,7 @@ static BOOL HLPFILE_Uncompress3(char* dst, const char* dst_end,
         {
             idx = (*src + 1) * 64;
             idx += *++src;
-            if (idx > phrases.num) 
+            if (idx > phrases.num)
             {
                 WINE_ERR("index in phrases %d/%d\n", idx, phrases.num);
                 len = 0;

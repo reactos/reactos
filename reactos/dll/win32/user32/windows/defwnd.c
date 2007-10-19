@@ -40,10 +40,10 @@ HBRUSH SysBrushes[NUM_SYSCOLORS] = {0};
 /* Bits in the dwKeyData */
 #define KEYDATA_ALT             0x2000
 #define KEYDATA_PREVSTATE       0x4000
-  
+
 static short iF10Key = 0;
 static short iMenuSysKey = 0;
-  
+
 /* FUNCTIONS *****************************************************************/
 
 void
@@ -207,7 +207,7 @@ DefWndSetRedraw(HWND hWnd, WPARAM wParam)
        }
     }
     else /* Content cannot be redrawn after a change. */
-    { 
+    {
        if (Style & WS_VISIBLE) /* Visible */
        {
             RedrawWindow( hWnd, NULL, 0, RDW_ALLCHILDREN | RDW_VALIDATE );
@@ -823,7 +823,7 @@ DefWndHandleSysCommand(HWND hWnd, WPARAM wParam, LPARAM lParam)
           DefWndTrackScrollBar(hWnd, wParam, Pt);
         }
 	break;
-        
+
       default:
 	/* FIXME: Implement */
         UNIMPLEMENTED;
@@ -986,30 +986,30 @@ VOID FASTCALL
 DefWndScreenshot(HWND hWnd)
 {
     RECT rect;
-    
+
     OpenClipboard(hWnd);
     EmptyClipboard();
-    
+
     HDC hdc = GetWindowDC(hWnd);
     GetWindowRect(hWnd, &rect);
     INT w = rect.right - rect.left;
     INT h = rect.bottom - rect.top;
-    
+
     HBITMAP hbitmap = CreateCompatibleBitmap(hdc, w, h);
     HDC hdc2 = CreateCompatibleDC(hdc);
     SelectObject(hdc2, hbitmap);
-    
+
     BitBlt(hdc2, 0, 0, w, h,
            hdc, 0, 0,
            SRCCOPY);
-           
+
     SetClipboardData(CF_BITMAP, hbitmap);
-    
+
     ReleaseDC(hWnd, hdc);
     ReleaseDC(hWnd, hdc2);
-    
+
     CloseClipboard();
-    
+
 }
 
 
@@ -1051,14 +1051,14 @@ User32DefWindowProc(HWND hWnd,
         case WM_MBUTTONDOWN:
             iF10Key = iMenuSysKey = 0;
             break;
-                            
+
         case WM_NCLBUTTONDOWN:
         {
             return (DefWndNCLButtonDown(hWnd, wParam, lParam));
         }
 
         case WM_LBUTTONDBLCLK:
-            return (DefWndNCLButtonDblClk(hWnd, HTCLIENT, lParam));            
+            return (DefWndNCLButtonDblClk(hWnd, HTCLIENT, lParam));
 
         case WM_NCLBUTTONDBLCLK:
         {
@@ -1360,7 +1360,7 @@ User32DefWindowProc(HWND hWnd,
                    iMenuSysKey = 1;
                 else
                    iMenuSysKey = 0;
-                                                                                           
+
                 iF10Key = 0;
 
                 if (wParam == VK_F4) /* Try to close the window */
@@ -1427,7 +1427,7 @@ User32DefWindowProc(HWND hWnd,
         {
             LONG Style;
             INT Ret = 0;
-            
+
             if (!lParam) return 0;
             Style = GetWindowLongW(hWnd, GWL_STYLE);
             if ((Style & WS_VISIBLE) && wParam) return 0;
@@ -1551,34 +1551,34 @@ User32DefWindowProc(HWND hWnd,
         {
             return (1);
         }
-        
+
         case WM_INPUTLANGCHANGEREQUEST:
         {
             HKL NewHkl;
-            
-            if(wParam & INPUTLANGCHANGE_BACKWARD 
+
+            if(wParam & INPUTLANGCHANGE_BACKWARD
                && wParam & INPUTLANGCHANGE_FORWARD)
             {
                 return FALSE;
             }
-          
+
             //FIXME: What to do with INPUTLANGCHANGE_SYSCHARSET ?
-          
+
             if(wParam & INPUTLANGCHANGE_BACKWARD) NewHkl = (HKL) HKL_PREV;
             else if(wParam & INPUTLANGCHANGE_FORWARD) NewHkl = (HKL) HKL_NEXT;
             else NewHkl = (HKL) lParam;
-          
+
             NtUserActivateKeyboardLayout(NewHkl, 0);
-            
+
             return TRUE;
         }
-        
-        case WM_INPUTLANGCHANGE: 
+
+        case WM_INPUTLANGCHANGE:
         {
             //FIXME: What to do?
             return TRUE;
         }
-   
+
         case WM_ENDSESSION:
             if (wParam) PostQuitMessage(0);
             return 0;

@@ -4,7 +4,7 @@
  * FILE:            include/internal/debug.h
  * PURPOSE:         Useful debugging macros
  * PROGRAMMER:      David Welch (welch@mcmail.com)
- * UPDATE HISTORY: 
+ * UPDATE HISTORY:
  *                28/05/98: Created
  */
 
@@ -72,17 +72,17 @@ RtlAssert(
 
 /* Print stuff only on Debug Builds*/
 #ifdef DBG
-    
+
     /* These are always printed */
     #define DPRINT1 DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
     #define CHECKPOINT1 do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
 
     /* These are printed only if NDEBUG is NOT defined */
     #ifndef NDEBUG
-    
+
         #define DPRINT DbgPrint("(%s:%d) ",__FILE__,__LINE__), DbgPrint
         #define CHECKPOINT do { DbgPrint("%s:%d\n",__FILE__,__LINE__); } while(0);
-    
+
     #else
         #ifdef _MSC_VER
             static __inline void DPRINT ( const char* fmt, ... )

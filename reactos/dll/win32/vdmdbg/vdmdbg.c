@@ -33,14 +33,14 @@ ULONG WINAPI VDMGetPointer( HANDLE handle,
   UNIMPLEMENTED;
   return ERROR_CALL_NOT_IMPLEMENTED;
 }
-    
+
 BOOL WINAPI VDMProcessException( LPDEBUG_EVENT   lpDebugEvent )
 {
   UNIMPLEMENTED;
   return FALSE;
 }
 
-BOOL WINAPI VDMGetSegmentInfo( WORD        word, 
+BOOL WINAPI VDMGetSegmentInfo( WORD        word,
 							   ULONG       ulong,
                                BOOL        boolVal,
                                VDM_SEGINFO *pVDMSegInfo )
@@ -105,7 +105,7 @@ BOOL WINAPI VDMTerminateTaskWOW( DWORD dwProcessId,
                                  WORD  hTask )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMGetContext( HANDLE       handle,
@@ -113,7 +113,7 @@ BOOL WINAPI VDMGetContext( HANDLE       handle,
                            LPVDMCONTEXT lpVDMContext )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMSetContext( HANDLE       handle,
@@ -121,7 +121,7 @@ BOOL WINAPI VDMSetContext( HANDLE       handle,
                            LPVDMCONTEXT lpVDMContext)
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 
@@ -135,7 +135,7 @@ BOOL WINAPI VDMGetSelectorModule( HANDLE handle,
                                   UINT   uInt2 )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 
@@ -146,7 +146,7 @@ BOOL WINAPI VDMGetModuleSelector( HANDLE handle,
                                   LPWORD lpword )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMModuleFirst( HANDLE         handle,
@@ -156,7 +156,7 @@ BOOL WINAPI VDMModuleFirst( HANDLE         handle,
                             LPVOID         lpvoid )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMGlobalFirst( HANDLE         handle,
@@ -167,7 +167,7 @@ BOOL WINAPI VDMGlobalFirst( HANDLE         handle,
                             LPVOID         lpvoid )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMGlobalNext( HANDLE         handle,
@@ -178,7 +178,7 @@ BOOL WINAPI VDMGlobalNext( HANDLE         handle,
                            LPVOID         lpvoid )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL WINAPI VDMModuleNext( HANDLE         handle,
@@ -188,7 +188,7 @@ BOOL WINAPI VDMModuleNext( HANDLE         handle,
                            LPVOID         lpvoid )
 {
   UNIMPLEMENTED;
-  return FALSE; 
+  return FALSE;
 }
 
 BOOL STDCALL

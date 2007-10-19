@@ -47,11 +47,11 @@
 
 #include <libtcc.h>
 
-typedef int (*cfunc)( void *ctx, 
-		      const GLfloat (*local_param)[4], 
-		      const GLfloat (*env_param)[4], 
-		      const struct program_parameter *state_param, 
-		      const GLfloat (*interp)[4], 
+typedef int (*cfunc)( void *ctx,
+		      const GLfloat (*local_param)[4],
+		      const GLfloat (*env_param)[4],
+		      const struct program_parameter *state_param,
+		      const GLfloat (*interp)[4],
 		      GLfloat (*outputs)[4]);
 
 
@@ -115,11 +115,11 @@ static cfunc codegen( TCCState *s, const char *prog, const char *fname )
 {
     unsigned long val;
 
-    if (s) 
+    if (s)
        tcc_delete(s);
-    
+
     s = tcc_new();
-    if (!s) 
+    if (!s)
        return 0;
 
     tcc_set_output_type(s, TCC_OUTPUT_MEMORY);
@@ -151,13 +151,13 @@ _swrast_execute_codegen_program( GLcontext *ctx,
 			 GLuint column )
 {
    if (program != current_program) {
-      
+
       _swrast_translate_program( ctx );
 
       fprintf(stderr, "%s: compiling:\n%s\n", __FUNCTION__, program->c_str);
 
       current_program = program;
-      current_func = codegen( current_tcc_state, program->c_str, 
+      current_func = codegen( current_tcc_state, program->c_str,
 			      "run_program" );
    }
 
@@ -165,7 +165,7 @@ _swrast_execute_codegen_program( GLcontext *ctx,
 
    return current_func( ctx,
 			program->Base.LocalParams,
- 			(const GLfloat (*)[4])ctx->FragmentProgram.Parameters, 
+ 			(const GLfloat (*)[4])ctx->FragmentProgram.Parameters,
 			program->Parameters->Parameters,
 			(const GLfloat (*)[4])machine->Inputs,
 			machine->Outputs );

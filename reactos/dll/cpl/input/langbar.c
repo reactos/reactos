@@ -51,14 +51,14 @@ LangBarDlgProc(HWND hDlg,
     {
         case WM_INITDIALOG:
         {
-		
+
         }
         case WM_COMMAND:
         {
 		    switch (LOWORD(wParam))
 			{
 				case IDOK:
-				
+
 				break;
 				case IDCANCEL:
 					EndDialog(hDlg,LOWORD(wParam));

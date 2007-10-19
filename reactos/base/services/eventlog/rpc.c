@@ -3,7 +3,7 @@
  * LICENSE:          GPL - See COPYING in the top level directory
  * FILE:             services/eventlog/rpc.c
  * PURPOSE:          Event logging service
- * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov            
+ * COPYRIGHT:        Copyright 2005 Saveliy Tretiakov
  */
 
 /* INCLUDES *****************************************************************/

@@ -664,7 +664,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "Использование ЦП: %3d%%"
     IDS_STATUS_PROCESSES          "Процессов: %d"
     IDS_Not_Responding            "Не отвечает"
-    IDS_Running                   "Работает"  
+    IDS_Running                   "Работает"
 END
 
 

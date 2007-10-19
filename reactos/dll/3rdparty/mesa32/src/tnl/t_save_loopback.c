@@ -39,13 +39,13 @@
 
 /* If someone compiles a display list like:
  *      glBegin(Triangles)
- *      glVertex() 
+ *      glVertex()
  *      ... lots of vertices ...
  *      glEnd()
  *
- * or: 
+ * or:
  *      glDrawArrays(...)
- * 
+ *
  * and then tries to execute it like this:
  *
  *      glBegin(Lines)
@@ -54,12 +54,12 @@
  *
  * it will wind up in here, as the vertex copying used when wrapping
  * buffers in list compilation (Triangles) won't be right for how the
- * list is being executed (as Lines). 
+ * list is being executed (as Lines).
  *
  * This could be avoided by not compiling as vertex_lists until after
  * the first glEnd() has been seen.  However, that would miss an
  * important category of display lists, for the sake of a degenerate
- * usage. 
+ * usage.
  *
  * Further, replaying degenerately-called lists in this fashion is
  * probably still faster than the replay using opcodes.
@@ -246,7 +246,7 @@ static void loopback_prim( GLcontext *ctx,
 	 la[k].func( ctx, la[k].target, tmp );
 	 tmp += la[k].sz;
       }
-	 
+
       /* Fire the vertex
        */
       la[0].func( ctx, VERT_ATTRIB_POS, data );
@@ -270,7 +270,7 @@ static void loopback_weak_prim( GLcontext *ctx,
 				const struct tnl_vertex_list *list, GLuint i,
 				const struct loopback_attr *la, GLuint nr )
 {
-   if (ctx->Driver.CurrentExecPrimitive == PRIM_OUTSIDE_BEGIN_END) 
+   if (ctx->Driver.CurrentExecPrimitive == PRIM_OUTSIDE_BEGIN_END)
       loopback_prim( ctx, list, i, la, nr );
    else {
       struct tnl_prim *prim = &list->prim[i];
@@ -306,8 +306,8 @@ void _tnl_loopback_vertex_list( GLcontext *ctx,
       }
    }
 
-   for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT ; 
-	i <= _TNL_ATTRIB_MAT_BACK_INDEXES ; 
+   for (i = _TNL_ATTRIB_MAT_FRONT_AMBIENT ;
+	i <= _TNL_ATTRIB_MAT_BACK_INDEXES ;
 	i++) {
       if (list->attrsz[i]) {
 	 la[nr].target = i;

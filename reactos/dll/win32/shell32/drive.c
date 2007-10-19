@@ -81,7 +81,7 @@ GetFreeBytesShare(LARGE_INTEGER TotalNumberOfFreeBytes, LARGE_INTEGER TotalNumbe
       Result = ConvertUlongToLargeInteger(1);
    }else
    {
-      Result = LargeIntegerDivide(TotalNumberOfFreeBytes, Temp, &Remainder);      
+      Result = LargeIntegerDivide(TotalNumberOfFreeBytes, Temp, &Remainder);
    }
 
    return Result;
@@ -121,7 +121,7 @@ PaintStaticControls(HWND hwndDlg, LPDRAWITEMSTRUCT drawItem)
 
       hBlueBrush = CreateSolidBrush(RGB(0, 0, 255));
       hMagBrush = CreateSolidBrush(RGB(255, 0, 255));
-      
+
       SendDlgItemMessageW(hwndDlg, 14007, WM_GETTEXT, 20, (LPARAM)szBuffer);
       Result.QuadPart = _wtoi(szBuffer);
 
@@ -220,9 +220,9 @@ InitializeGeneralDriveDialog(HWND hwndDlg, WCHAR * szDrive)
 }
 
 
-INT_PTR 
-CALLBACK 
-DriveGeneralDlg(   
+INT_PTR
+CALLBACK
+DriveGeneralDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -246,7 +246,7 @@ DriveGeneralDlg(
         lpstr = (WCHAR *)ppsp->lParam;
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)lpstr);
         InitializeGeneralDriveDialog(hwndDlg, lpstr);
-        return TRUE;     
+        return TRUE;
 	case WM_DRAWITEM:
 		drawItem = (LPDRAWITEMSTRUCT)lParam;
 	    if (drawItem->CtlID >= 14013 && drawItem->CtlID <= 14015)
@@ -281,9 +281,9 @@ DriveGeneralDlg(
    return FALSE;
 }
 
-INT_PTR 
-CALLBACK 
-DriveExtraDlg(   
+INT_PTR
+CALLBACK
+DriveExtraDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -347,9 +347,9 @@ DriveExtraDlg(
    return FALSE;
 }
 
-INT_PTR 
-CALLBACK 
-DriveHardwareDlg(   
+INT_PTR
+CALLBACK
+DriveHardwareDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -376,7 +376,7 @@ DriveHardwareDlg(
     return FALSE;
 }
 
-static 
+static
 const
 struct
 {

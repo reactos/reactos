@@ -90,12 +90,12 @@ LONG WINAPI WinVerifyTrust( HWND hwnd, GUID *ActionID, LPVOID ActionData )
     /* Trust providers can be found at:
      * HKLM\SOFTWARE\Microsoft\Cryptography\Providers\Trust\CertCheck\
      *
-     * Process Explorer expects a correct implementation, so we 
+     * Process Explorer expects a correct implementation, so we
      * return TRUST_E_PROVIDER_UNKNOWN.
      *
      * Girotel needs ERROR_SUCCESS.
      *
-     * For now return TRUST_E_PROVIDER_UNKNOWN only when 
+     * For now return TRUST_E_PROVIDER_UNKNOWN only when
      * ActionID = WINTRUST_ACTION_GENERIC_VERIFY_V2.
      *
      */

@@ -50,9 +50,9 @@
    GLfloat yMin, yMax;
    GLboolean ltor;
    GLfloat majDx, majDy;  /* major (i.e. long) edge dx and dy */
-   
+
    struct sw_span span;
-   
+
 #ifdef DO_Z
    GLfloat zPlane[4];
 #endif
@@ -82,8 +82,8 @@
    GLfloat texHeight[MAX_TEXTURE_COORD_UNITS];
 #endif
    GLfloat bf = SWRAST_CONTEXT(ctx)->_BackfaceSign;
-   
-   
+
+
    INIT_SPAN(span, GL_POLYGON, 0, 0, SPAN_COVERAGE);
 
    /* determine bottom to top order of vertices */
@@ -339,10 +339,10 @@
             count++;
             coverage = compute_coveragef(pMin, pMid, pMax, ix, iy);
          }
-         
+
          if (ix <= startX)
             continue;
-         
+
          span.x = startX;
          span.y = iy;
          span.end = (GLuint) ix - (GLuint) startX;
@@ -367,7 +367,7 @@
          GLint ix, left, startX = (GLint) (x + xAdj);
          GLuint count, n;
          GLfloat coverage = 0.0F;
-         
+
          /* make sure we're not past the window edge */
          if (startX >= ctx->DrawBuffer->_Xmax) {
             startX = ctx->DrawBuffer->_Xmax - 1;
@@ -380,7 +380,7 @@
                break;
             startX--;
          }
-         
+
          /* enter interior of triangle */
          ix = startX;
          count = 0;
@@ -445,7 +445,7 @@
             count++;
             coverage = compute_coveragef(pMin, pMax, pMid, ix, iy);
          }
-         
+
          if (startX <= ix)
             continue;
 

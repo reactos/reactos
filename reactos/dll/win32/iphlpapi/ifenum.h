@@ -140,7 +140,7 @@ DWORD getInterfaceEntryByIndex(DWORD index, PMIB_IFROW entry);
 char *toIPAddressString(unsigned int addr, char string[16]);
 
 /* add and delete IP addresses */
-NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex, 
+NTSTATUS addIPAddress( IPAddr Address, IPMask Mask, DWORD IfIndex,
                        PULONG NteContext, PULONG NteInstance );
 NTSTATUS deleteIpAddress( ULONG NteContext );
 

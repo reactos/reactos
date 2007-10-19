@@ -15,7 +15,7 @@ _tcsncpy:
  xor  %eax, %eax
  cld
 
-.L1:	
+.L1:
  dec  %ecx
  js   .L2
  _tlods

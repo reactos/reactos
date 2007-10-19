@@ -127,7 +127,7 @@ static inline D3DVALUE AngleBetweenVectorsDeg (LPD3DVECTOR a, LPD3DVECTOR b)
 	angle = RadToDeg(angle);
 	TRACE("angle between (%f,%f,%f) and (%f,%f,%f) = %f degrees\n",  a->x, a->y, a->z, b->x,
 	      b->y, b->z, angle);
-	return angle;	
+	return angle;
 }
 
 /* angle between vectors - rad version */
@@ -142,7 +142,7 @@ static inline D3DVALUE AngleBetweenVectorsRad (LPD3DVECTOR a, LPD3DVECTOR b)
 	angle = acos(cos);
 	TRACE("angle between (%f,%f,%f) and (%f,%f,%f) = %f radians\n",  a->x, a->y, a->z, b->x,
 	      b->y, b->z, angle);
-	return angle;	
+	return angle;
 }
 
 /* calculates vector between two points */
@@ -194,7 +194,7 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 
 	/* initial buffer volume */
 	lVolume = dsb->ds3db_lVolume;
-	
+
 	switch (dsb->ds3db_ds3db.dwMode)
 	{
 		case DS3DMODE_DISABLE:
@@ -215,29 +215,29 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 			flDistance = VectorMagnitude (&dsb->ds3db_ds3db.vPosition);
 			break;
 	}
-	
+
 	if (flDistance > dsb->ds3db_ds3db.flMaxDistance)
 	{
 		/* some apps don't want you to hear too distant sounds... */
 		if (dsb->dsbd.dwFlags & DSBCAPS_MUTE3DATMAXDISTANCE)
 		{
 			dsb->volpan.lVolume = DSBVOLUME_MIN;
-			DSOUND_RecalcVolPan (&dsb->volpan);		
+			DSOUND_RecalcVolPan (&dsb->volpan);
 			/* i guess mixing here would be a waste of power */
 			return;
 		}
 		else
 			flDistance = dsb->ds3db_ds3db.flMaxDistance;
-	}		
+	}
 
 	if (flDistance < dsb->ds3db_ds3db.flMinDistance)
 		flDistance = dsb->ds3db_ds3db.flMinDistance;
-	
+
 	/* the following formula is taken from my physics book. I think it's ok for the *real* world...i hope m$ does it that way */
 	lVolume += 10000; /* ms likes working with negative volume...i don't */
 	lVolume /= 1000; /* convert hundreths of dB into B */
 	/* intensity level (loudness) = log10(Intensity/DefaultIntensity)...therefore */
-	flIntensity = pow(10,lVolume)*DEFAULT_INTENSITY;	
+	flIntensity = pow(10,lVolume)*DEFAULT_INTENSITY;
 	flTemp = (flDistance/dsb->ds3db_ds3db.flMinDistance)*(flDistance/dsb->ds3db_ds3db.flMinDistance);
 	flIntensity /= flTemp;
 	lVolume = log10(flIntensity/DEFAULT_INTENSITY);
@@ -274,7 +274,7 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 		       flAngle, dsb->ds3db_ds3db.dwInsideConeAngle/2, dsb->ds3db_ds3db.dwOutsideConeAngle/2, dsb->ds3db_ds3db.lConeOutsideVolume, lVolume);
 	}
 	dsb->volpan.lVolume = lVolume;
-	
+
 	/* panning */
 	if (dsb->dsound->device->ds3dl.vPosition.x == dsb->ds3db_ds3db.vPosition.x &&
 	    dsb->dsound->device->ds3dl.vPosition.y == dsb->ds3db_ds3db.vPosition.y &&
@@ -293,7 +293,7 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 	TRACE("panning: Angle = %f rad, lPan = %ld\n", flAngle, dsb->volpan.lPan);
 
 	/* FIXME: Doppler Effect disabled since i have no idea which frequency to change and how to do it */
-#if 0	
+#if 0
 	/* doppler shift*/
 	if ((VectorMagnitude(&ds3db.vVelocity) == 0) && (VectorMagnitude(&dsb->dsound->device->ds3dl.vVelocity) == 0))
 	{
@@ -317,8 +317,8 @@ void DSOUND_Calc3DBuffer(IDirectSoundBufferImpl *dsb)
 		/* FIXME: replace following line with correct frequency setting ! */
 		dsb->freq = flFreq;
 	}
-#endif	
-	
+#endif
+
 	/* time for remix */
 	DSOUND_RecalcVolPan(&dsb->volpan);
 }
@@ -328,7 +328,7 @@ static void DSOUND_Mix3DBuffer(IDirectSoundBufferImpl *dsb)
 	TRACE("(%p)\n",dsb);
 
 	DSOUND_Calc3DBuffer(dsb);
-	DSOUND_ForceRemix(dsb);			
+	DSOUND_ForceRemix(dsb);
 }
 
 static void WINAPI DSOUND_ChangeListener(IDirectSound3DListenerImpl *ds3dl)
@@ -402,7 +402,7 @@ static HRESULT WINAPI IDirectSound3DBufferImpl_GetAllParameters(
 		WARN("invalid parameter: lpDs3dBuffer->dwSize = %ld < %d\n",lpDs3dBuffer->dwSize, sizeof(*lpDs3dBuffer));
 		return DSERR_INVALIDPARAM;
 	}
-	
+
 	TRACE("returning: all parameters\n");
 	*lpDs3dBuffer = This->dsb->ds3db_ds3db;
 	return DS_OK;
@@ -837,7 +837,7 @@ static HRESULT WINAPI IDirectSound3DListenerImpl_GetAllParameter(
 		WARN("invalid parameter: lpDS3DL->dwSize = %ld < %d\n",lpDS3DL->dwSize, sizeof(*lpDS3DL));
 		return DSERR_INVALIDPARAM;
 	}
-	
+
 	TRACE("returning: all parameters\n");
 	*lpDS3DL = This->dsound->device->ds3dl;
 	return DS_OK;

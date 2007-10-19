@@ -20,7 +20,7 @@ BEGIN
     DEFPUSHBUTTON "&Перезагрузка", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Подготавливаются сетевые подключения..."
     IDS_APPLYINGCOMPUTERSETTINGS "Применяются настройки..."
@@ -38,7 +38,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "ReactOS загружается..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon не может активировать пользовательский интерфейс!"
 END

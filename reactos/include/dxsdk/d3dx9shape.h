@@ -7,16 +7,16 @@
 extern "C" {
 #endif
 
-HRESULT WINAPI 
+HRESULT WINAPI
   D3DXCreateBox(
-  LPDIRECT3DDEVICE9 pDevice, 
+  LPDIRECT3DDEVICE9 pDevice,
   FLOAT Width,
   FLOAT Height,
   FLOAT Depth,
   LPD3DXMESH* ppMesh,
   LPD3DXBUFFER* ppAdjacency);
 
-HRESULT WINAPI 
+HRESULT WINAPI
   D3DXCreateCylinder(
   LPDIRECT3DDEVICE9 pDevice,
   FLOAT Radius1,
@@ -27,7 +27,7 @@ HRESULT WINAPI
   LPD3DXMESH* ppMesh,
   LPD3DXBUFFER* ppAdjacency);
 
-HRESULT WINAPI 
+HRESULT WINAPI
 D3DXCreatePolygon(
   LPDIRECT3DDEVICE9 pDevice,
   FLOAT Length,
@@ -37,7 +37,7 @@ D3DXCreatePolygon(
 
 HRESULT WINAPI
 D3DXCreateSphere(
-  LPDIRECT3DDEVICE9 pDevice, 
+  LPDIRECT3DDEVICE9 pDevice,
   FLOAT Radius,
   UINT Slices,
   UINT Stacks,
@@ -78,7 +78,7 @@ D3DXCreateTorus(
   FLOAT InnerRadius,
   FLOAT OuterRadius,
   UINT Sides,
-  UINT Rings, 
+  UINT Rings,
   LPD3DXMESH* ppMesh,
   LPD3DXBUFFER* ppAdjacency);
 

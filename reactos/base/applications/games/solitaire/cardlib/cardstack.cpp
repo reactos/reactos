@@ -61,10 +61,10 @@ void CardStack::Shuffle()
             //want to do this:
             //  bad:   src = rand() % (dest + 1)
             //  good:  src = rand() / (RAND_MAX / (dest+1) + 1)
-            
+
             //positions from 0 to dest
             src = rand() / (RAND_MAX / (dest+1) + 1);
-            
+
             //swap the cards
             temp           = cardlist[src];
             cardlist[src]  = cardlist[dest];
@@ -93,7 +93,7 @@ void CardStack::Push(const CardStack &cardstack)
     if(nNumCards + cardstack.nNumCards < MAX_CARDSTACK_SIZE)
     {
         int num = cardstack.NumCards();
-        
+
         for(int i = 0; i < num; i++)
             cardlist[nNumCards++] = cardstack.cardlist[i];
     }

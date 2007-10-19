@@ -27,13 +27,13 @@
  *
  ***************************************************************
  *                     WMesa                                   *
- *                     version 2.3                             *	
+ *                     version 2.3                             *
  *                                                             *
  *                        By                                   *
  *                      Li Wei                                 *
  *       Institute of Artificial Intelligence & Robotics       *
  *       Xi'an Jiaotong University                             *
- *       Email: liwei@aiar.xjtu.edu.cn                         * 
+ *       Email: liwei@aiar.xjtu.edu.cn                         *
  *       Web page: http://sun.aiar.xjtu.edu.cn                 *
  *                                                             *
  *	       July 7th, 1997				       *

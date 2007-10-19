@@ -425,7 +425,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
                 state = 3;
                 break;
             }
- 
+
             /* Now at root location, cannot back up any more. */
             /* "root" will point at the '/' */
 
@@ -1044,7 +1044,7 @@ HRESULT WINAPI UrlEscapeW(
     for(src = pszUrl; *src; ) {
         WCHAR cur = *src;
         len = 0;
-        
+
         if((int_flags & WINE_URL_COLLAPSE_SLASHES) && src == pszUrl + parsed_url.cchProtocol + 1) {
             int localhost_len = sizeof(localhost)/sizeof(WCHAR) - 1;
             while(cur == '/' || cur == '\\') {
@@ -1443,7 +1443,7 @@ HRESULT WINAPI HashData(const unsigned char *lpSrc, DWORD nSrcLen,
  *  pszUrl   [I] Url to hash
  *  lpDest   [O] Destinationh for hash
  *  nDestLen [I] Length of lpDest
- * 
+ *
  * RETURNS
  *  Success: S_OK. lpDest is filled with the computed hash value.
  *  Failure: E_INVALIDARG, if any argument is invalid.
@@ -2178,7 +2178,7 @@ BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 
 /*************************************************************************
  *      UrlCreateFromPathA  	[SHLWAPI.@]
- * 
+ *
  * See UrlCreateFromPathW
  */
 HRESULT WINAPI UrlCreateFromPathA(LPCSTR pszPath, LPSTR pszUrl, LPDWORD pcchUrl, DWORD dwReserved)

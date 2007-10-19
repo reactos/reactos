@@ -257,7 +257,7 @@ BOOL gldInitDriverPointers(
 		_gldDriver.GetDisplayMode			= gldGetDisplayMode_MesaSW;
 		return TRUE;
 	}
-	
+
 	if ((dwDriver == GLDS_DRIVER_REF) || (dwDriver == GLDS_DRIVER_HAL)) {
 		// Direct3D driver, either HW or SW
 		_gldDriver.CreateDrawable			= gldCreateDrawable_DX;

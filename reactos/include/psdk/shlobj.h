@@ -1376,7 +1376,7 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
  * SHCreateDefaultContextMenu API
  */
 
-typedef struct 
+typedef struct
 {
   HWND hwnd;
   IContextMenuCB *pcmcb;

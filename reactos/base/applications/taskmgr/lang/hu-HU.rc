@@ -665,7 +665,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "CPU használat: %3d%%"
     IDS_STATUS_PROCESSES          "Folyamatok: %d"
     IDS_Not_Responding            "Nem válaszol"
-    IDS_Running                   "Fut"  
+    IDS_Running                   "Fut"
 END
 
 

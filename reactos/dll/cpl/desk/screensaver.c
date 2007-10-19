@@ -1,9 +1,9 @@
-/* 
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            dll/cpl/desk/screensaver.c
  * PURPOSE:         Screen saver property page
- * 
+ *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  *                  Ged Murphy (gedmurphy@reactos.org)
  */
@@ -57,7 +57,7 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
                           BufSize);
         if (lpBuf)
         {
-            Ret = RegQueryValueEx(hKey, 
+            Ret = RegQueryValueEx(hKey,
                                   lpValue,
                                   0,
                                   &Type,
@@ -69,7 +69,7 @@ GetCurrentScreenSaverValue(LPTSTR lpValue)
     }
 
     RegCloseKey(hKey);
-    
+
     return lpBuf;
 }
 
@@ -118,7 +118,7 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
     if (pGlobalData->Selection > 0)
     {
-        _stprintf(szCmdline, 
+        _stprintf(szCmdline,
                   _T("%s /p %u"),
                   pGlobalData->ScreenSaverItems[pGlobalData->Selection].szFilename,
                   hPreview);
@@ -127,15 +127,15 @@ SetScreenSaverPreviewBox(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         si.cb = sizeof(si);
         ZeroMemory(&pGlobalData->PrevWindowPi, sizeof(pGlobalData->PrevWindowPi));
 
-        if (!CreateProcess(NULL, 
-                           szCmdline, 
-                           NULL, 
-                           NULL, 
-                           FALSE, 
-                           0, 
-                           NULL, 
-                           NULL, 
-                           &si, 
+        if (!CreateProcess(NULL,
+                           szCmdline,
+                           NULL,
+                           NULL,
+                           FALSE,
+                           0,
+                           NULL,
+                           NULL,
+                           &si,
                            &pGlobalData->PrevWindowPi))
         {
             pGlobalData->PrevWindowPi.hThread = pGlobalData->PrevWindowPi.hProcess = NULL;
@@ -157,7 +157,7 @@ WaitForSettingsDialog(HWND hwndDlg,
                            0,
                            0,
                            PM_REMOVE))
-        { 
+        {
             if (msg.message == WM_QUIT)
                 return FALSE;
 
@@ -176,7 +176,7 @@ WaitForSettingsDialog(HWND hwndDlg,
         if (Ret == (WAIT_OBJECT_0))
         {
             return TRUE;
-        } 
+        }
     }
 }
 
@@ -195,7 +195,7 @@ ScreensaverConfig(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
     if (pGlobalData->Selection < 1)
         return;
 
-    _stprintf(szCmdline, 
+    _stprintf(szCmdline,
               _T("%s /c:%u"),
               pGlobalData->ScreenSaverItems[pGlobalData->Selection].szFilename,
               hwndDlg);
@@ -252,7 +252,7 @@ ScreensaverPreview(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         pGlobalData->PrevWindowPi.hThread = pGlobalData->PrevWindowPi.hProcess = NULL;
     }
 
-    _stprintf(szCmdline, 
+    _stprintf(szCmdline,
               _T("%s /s"),
               pGlobalData->ScreenSaverItems[pGlobalData->Selection].szFilename);
 
@@ -421,10 +421,10 @@ SetScreenSaver(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     HKEY regKey;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, 
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
                      _T("Control Panel\\Desktop"),
-                     0, 
-                     KEY_ALL_ACCESS, 
+                     0,
+                     KEY_ALL_ACCESS,
                      &regKey) == ERROR_SUCCESS)
     {
         INT Time;
@@ -435,7 +435,7 @@ SetScreenSaver(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         /* set the screensaver */
         if (pGlobalData->ScreenSaverItems[pGlobalData->Selection].bIsScreenSaver)
         {
-            RegSetValueEx(regKey, 
+            RegSetValueEx(regKey,
                           _T("SCRNSAVE.EXE"),
                           0,
                           REG_SZ,
@@ -449,7 +449,7 @@ SetScreenSaver(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
         }
 
         /* set the screensaver time delay */
-        Time = GetDlgItemInt(hwndDlg, 
+        Time = GetDlgItemInt(hwndDlg,
                              IDC_SCREENS_TIMEDELAY,
                              &bRet,
                              FALSE);
@@ -485,15 +485,15 @@ SetScreenSaver(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 }
 
 
-static BOOL 
+static BOOL
 OnInitDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 {
     LPTSTR lpCurSs;
     HWND hwndSSCombo = GetDlgItem(hwndDlg, IDC_SCREENS_LIST);
     INT Num;
 
-    pGlobalData = HeapAlloc(GetProcessHeap(), 
-                            HEAP_ZERO_MEMORY, 
+    pGlobalData = HeapAlloc(GetProcessHeap(),
+                            HEAP_ZERO_MEMORY,
                             sizeof(GLOBAL_DATA));
     if (!pGlobalData)
     {
@@ -537,7 +537,7 @@ OnInitDialog(HWND hwndDlg, PGLOBAL_DATA pGlobalData)
 
         if (bFound)
         {
-            Num = SendMessage(hwndSSCombo, 
+            Num = SendMessage(hwndSSCombo,
                               CB_FINDSTRINGEXACT,
                               -1,
                               (LPARAM)pGlobalData->ScreenSaverItems[i].szDisplayName);
@@ -651,7 +651,7 @@ ScreenSaverPageProc(HWND hwndDlg,
                     }
                     break;
                 }
-                
+
                 case IDC_SCREENS_TIMEDELAY:
                 {
                     PropSheet_Changed(GetParent(hwndDlg), hwndDlg);

@@ -309,7 +309,7 @@ NtCreateSymbolicLinkObject(OUT PHANDLE LinkHandle,
         SymbolicLink->LinkTarget.Length = CapturedLinkTarget.Length;
         SymbolicLink->LinkTarget.MaximumLength = CapturedLinkTarget.Length +
                                                  sizeof(WCHAR);
-        SymbolicLink->LinkTarget.Buffer = 
+        SymbolicLink->LinkTarget.Buffer =
             ExAllocatePoolWithTag(PagedPool,
                                   CapturedLinkTarget.MaximumLength,
                                   TAG_SYMLINK_TARGET);

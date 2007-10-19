@@ -48,7 +48,7 @@ static class CBFactory : public Backend::Factory
 		{
 			return new CBBackend(project, configuration);
 		}
-		
+
 } factory;
 
 
@@ -75,7 +75,7 @@ void CBBackend::Process()
 	filename_wrkspace += "_auto.workspace";
 
 	printf ( "Creating Code::Blocks workspace: %s\n", filename_wrkspace.c_str() );
-	
+
 	ProcessModules();
 	m_wrkspaceFile = fopen ( filename_wrkspace.c_str(), "wb" );
 
@@ -150,7 +150,7 @@ void CBBackend::ProcessFile(string &filepath)
 		folder = filepath;
 		folder.erase(pos, folder.length() - pos);
 	}
-	
+
 	FileUnit fileUnit;
 	fileUnit.filename = filepath;
 	fileUnit.folder = folder;
@@ -179,9 +179,9 @@ void CBBackend::AddFolders(string &folder)
 	// Check if this folder was already added. true if it was, false otherwise.
 	if(CheckFolderAdded(folder))
 		return;
-	
+
 	m_folders.push_back(folder);
-	
+
 	size_t pos = folder.rfind(string("/"), folder.length() - 1);
 
 	if(pos == string::npos)
@@ -230,7 +230,7 @@ CBBackend::DependFileName ( const Module& module ) const
 		);
 }
 
-void 
+void
 CBBackend::_get_object_files ( const Module& module, vector<string>& out) const
 {
 	string basepath = module.output->relative_path;
@@ -286,7 +286,7 @@ CBBackend::_clean_project_files ( void )
 		Module& module = *ProjectNode.modules[i];
 		vector<string> out;
 		printf("Cleaning project %s %s\n", module.name.c_str (), module.output->relative_path.c_str () );
-		
+
 		string basepath = module.output->relative_path;
 		remove ( CbpFileName ( module ).c_str () );
 		remove ( DependFileName ( module ).c_str () );
@@ -315,14 +315,14 @@ CBBackend::_generate_workspace ( FILE* OUT )
 	{
 		Module& module = *ProjectNode.modules[i];
 
-		if ((module.type != Iso) && 
+		if ((module.type != Iso) &&
 			(module.type != LiveIso) &&
 			(module.type != IsoRegTest) &&
 			(module.type != LiveIsoRegTest))
 		{
 			std::string Cbp_file = CbpFileName ( module );
 			fprintf ( OUT, "\t\t<Project filename=\"%s\">\r\n", Cbp_file.c_str());
-			
+
 			/* dependencies */
 			vector<const IfableData*> ifs_list;
 			ifs_list.push_back ( &module.project.non_if_data );
@@ -336,7 +336,7 @@ CBBackend::_generate_workspace ( FILE* OUT )
 					fprintf ( OUT, "\t\t\t<Depends filename=\"%s\\%s_auto.cbp\" />\r\n", libs[j]->importedModule->output->relative_path.c_str(), libs[j]->name.c_str() );
 			}
 			fprintf ( OUT, "\t\t</Project>\r\n" );
-		}	
+		}
 	}
 	fprintf ( OUT, "\t</Workspace>\r\n" );
 	fprintf ( OUT, "</CodeBlocks_workspace_file>\r\n" );
@@ -556,7 +556,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\t<Option type=\"0\" />\r\n" );
 			}
 		}
-		
+
 		fprintf ( OUT, "\t\t\t\t<Option compiler=\"gcc\" />\r\n" );
 
 		if ( module_type == ".cpl" )
@@ -565,7 +565,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t<Option host_application=\"rundll32.exe\" />\r\n" );
 		}
 		fprintf ( OUT, "\t\t\t\t<Compiler>\r\n" );
-		
+
 		bool debug = ( cfg.optimization == Debug );
 
 		if ( debug )
@@ -600,7 +600,7 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t\t\t<Add directory=\"%s\" />\r\n", include.c_str() );
 		}
 		fprintf ( OUT, "\t\t\t\t</ResourceCompiler>\r\n" );
-		
+
 		fprintf ( OUT, "\t\t\t\t<Linker>\r\n" );
 		fprintf ( OUT, "\t\t\t\t\t<Add option=\"%s\" />\r\n", project_linker_flags.c_str() );
 
@@ -759,18 +759,18 @@ CBBackend::_generate_cbproj ( const Module& module )
 			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"gcc -x assembler-with-cpp -c $file -o $link_objects $includes -D__ASM__ $options\" />\r\n" );
 		}
-		else if ( extension == ".asm" || extension == ".ASM" )		
+		else if ( extension == ".asm" || extension == ".ASM" )
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"nasm -f win32 $file -o $link_objects\" />\r\n" );
 		}
-		else if ( extension == ".idl" || extension == ".IDL" )		
+		else if ( extension == ".idl" || extension == ".IDL" )
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option compiler=\"gcc\" use=\"1\" buildCommand=\"%s\\tools\\widl\\widl.exe %s %s -h -H &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.h&quot; -c -C &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; $file\\ngcc %s -c &quot;$(TARGET_OUTPUT_DIR)$filetitle_c.c&quot; -o &quot;$(TARGET_OUTPUT_DIR)$file_c.o&quot;\" />\r\n", outdir.c_str(), widl_options.c_str(), windres_defines.c_str(), widl_options.c_str() );
 		}
-		else if ( extension == ".spec" || extension == ".SPEC" )		
+		else if ( extension == ".spec" || extension == ".SPEC" )
 		{
 			fprintf ( OUT, "\t\t\t<Option compile=\"1\" />\r\n" );
 			fprintf ( OUT, "\t\t\t<Option link=\"1\" />\r\n" );
@@ -884,7 +884,7 @@ CBBackend::MingwAddImplicitLibraries( Module &module )
 	}
 }
 
-const Property* 
+const Property*
 CBBackend::_lookup_property ( const Module& module, const std::string& name ) const
 {
 	/* Check local values */

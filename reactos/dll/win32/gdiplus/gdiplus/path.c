@@ -6,7 +6,7 @@
 /*
  * @unimplemented
  */
-GpStatus WINGDIPAPI 
+GpStatus WINGDIPAPI
 GdipCreatePath( GpFillMode brushMode,GpPath **path)
 {
     return NotImplemented;

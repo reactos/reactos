@@ -123,7 +123,7 @@ VOID UntrackFL( PCHAR File, DWORD Line, PVOID Thing ) {
 
 	    ExFreeToNPagedLookasideList( &AllocatedObjectsLookasideList,
 	                                ThingInList );
- 
+
 	    TcpipReleaseSpinLock( &AllocatedObjectsLock, OldIrql );
 	    /* TrackDumpFL( File, Line ); */
 	    return;

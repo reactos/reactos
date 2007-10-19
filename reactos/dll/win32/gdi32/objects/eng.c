@@ -23,7 +23,7 @@ EngAcquireSemaphore ( IN HSEMAPHORE hsem )
 /*
  * @unimplemented
  */
-BOOL 
+BOOL
 copy_my_glyphset( FD_GLYPHSET *dst_glyphset , FD_GLYPHSET * src_glyphset, ULONG Size)
 {
     BOOL retValue = FALSE;
@@ -128,7 +128,7 @@ EngFindResource(HANDLE h,
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 EngFreeModule(HANDLE h)
 {
     FreeLibrary(h);
@@ -159,7 +159,7 @@ EngGetPrinterDataFileName(HDEV hdev)
 /*
  * @implemented
  */
-HANDLE STDCALL 
+HANDLE STDCALL
 EngLoadModule(LPWSTR pwsz)
 {
    return LoadLibraryExW ( pwsz, NULL, LOAD_LIBRARY_AS_DATAFILE);
@@ -168,7 +168,7 @@ EngLoadModule(LPWSTR pwsz)
 /*
  * @implemented
  */
-INT STDCALL 
+INT STDCALL
 EngMultiByteToWideChar(UINT CodePage,
                        LPWSTR WideCharString,
                        INT BytesInWideCharString,
@@ -181,7 +181,7 @@ EngMultiByteToWideChar(UINT CodePage,
 /*
  * @implemented
  */
-VOID STDCALL 
+VOID STDCALL
 EngQueryLocalTime(PENG_TIME_FIELDS etf)
 {
   SYSTEMTIME SystemTime;
@@ -213,7 +213,7 @@ EngReleaseSemaphore ( IN HSEMAPHORE hsem )
  * @implemented
  */
 INT
-STDCALL 
+STDCALL
 EngWideCharToMultiByte( UINT CodePage,
                         LPWSTR WideCharString,
                         INT BytesInWideCharString,

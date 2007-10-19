@@ -1,9 +1,9 @@
 /* $Id$
  *
  * debug.c - Session Manager debug messages switch and router
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -42,7 +42,7 @@ DbgSsApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	PORT_MESSAGE	Request ;
-    
+
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{
@@ -62,7 +62,7 @@ DbgUiApiPortThread (PVOID dummy)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	PORT_MESSAGE	Request;
-    
+
     RtlZeroMemory(&Request, sizeof(PORT_MESSAGE));
 	while (TRUE)
 	{

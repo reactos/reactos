@@ -67,9 +67,9 @@ BEGIN
     IDS_MSCONFIG             "Rendszerkonfiguráciüs segédprogram"
     IDS_TAB_GENERAL          "Általános"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Szolgáltatások" 
-    IDS_TAB_STARTUP          "Automatikus indítás" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Szolgáltatások"
+    IDS_TAB_STARTUP          "Automatikus indítás"
     IDS_TAB_TOOLS            "Segédprogramok"
 END
 

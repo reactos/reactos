@@ -146,7 +146,7 @@ const char *ClosestStateKey(WORD keyCode, DWORD keyState,
 const char *FindClosestKey(WORD keyCode, DWORD keyState,
 						   KeyTranslator &KeyTrans) {
 	char const *p;
-	
+
 	// Paul Brannan 7/20/98
 	if(ini.get_alt_erase()) {
 		if(keyCode == VK_BACK) {
@@ -210,10 +210,10 @@ int telProcessConsole(NetParams *pParams, KeyTranslator &KeyTrans,
 	HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
 
 	SetConsoleMode(hConsole, ini.get_enable_mouse() ? ENABLE_MOUSE_INPUT : 0);
-	
+
 	const DWORD nHandle = 2;
 	HANDLE hHandle[nHandle] = {hConsole, pParams->hExit};
-	
+
 	for (;;) {
 		DWORD dwInput;
 		switch (WaitForMultipleObjects(nHandle, hHandle, FALSE, INFINITE)) {
@@ -237,7 +237,7 @@ int telProcessConsole(NetParams *pParams, KeyTranslator &KeyTrans,
 			INPUT_RECORD InputRecord[11];
 			if (!ReadConsoleInput(hConsole, &InputRecord[0], 10, &dwInput))
 				return TNPROMPT;
-			
+
 			for (i = 0; (unsigned)i < dwInput; i++){
 				switch (InputRecord[i].EventType) {
 				case KEY_EVENT:{
@@ -245,7 +245,7 @@ int telProcessConsole(NetParams *pParams, KeyTranslator &KeyTrans,
 
 						WORD  keyCode  = KEYEVENT.wVirtualKeyCode;
 						DWORD keyState = KEYEVENT.dwControlKeyState;
-						
+
 						// Paul Brannan 5/27/98
 						// Moved the code that was here to FindClosestKey()
 						keydef.szKeyDef = FindClosestKey(keyCode,
@@ -309,7 +309,7 @@ int telProcessConsole(NetParams *pParams, KeyTranslator &KeyTrans,
 					Network.do_naws(Console.GetWidth(), Console.GetHeight());
 					break;
 				}
-			
+
 			} // keep going until no more input
 			break;
 							}
@@ -323,7 +323,7 @@ WORD scrollkeys() {
 	HANDLE hConsole = GetStdHandle(STD_INPUT_HANDLE);
 	INPUT_RECORD InputRecord;
 	BOOL done = FALSE;
-	
+
 	while (!done) {
 		DWORD dwInput;
 		WaitForSingleObject( hConsole, INFINITE );

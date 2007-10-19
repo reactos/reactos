@@ -609,7 +609,7 @@ typedef struct _KIPCR
     union
     {
         NT_TIB NtTib;
-        struct 
+        struct
         {
             struct _EXCEPTION_REGISTRATION_RECORD *Used_ExceptionList;
             PVOID Used_StackBase;

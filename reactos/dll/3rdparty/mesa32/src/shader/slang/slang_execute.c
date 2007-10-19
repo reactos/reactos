@@ -37,7 +37,7 @@
 static void dump_instruction (FILE *f, slang_assembly *a, unsigned int i)
 {
 	fprintf (f, "%.5u:\t", i);
-	
+
 	switch (a->type)
 	{
 	case slang_asm_none:

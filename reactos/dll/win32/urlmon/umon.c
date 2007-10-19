@@ -408,7 +408,7 @@ static HRESULT WINAPI URLMonikerImpl_IsDirty(IMoniker* iface)
 static HRESULT WINAPI URLMonikerImpl_Load(IMoniker* iface,IStream* pStm)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
-    
+
     HRESULT res;
     ULONG size;
     ULONG got;
@@ -610,7 +610,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
                             url.nPort = INTERNET_DEFAULT_FTP_PORT;
                         dwService = INTERNET_SERVICE_FTP;
                         break;
-    
+
                     case INTERNET_SCHEME_GOPHER:
                         if (!url.nPort)
                             url.nPort = INTERNET_DEFAULT_GOPHER_PORT;
@@ -715,7 +715,7 @@ static HRESULT URLMonikerImpl_BindToStorage_hack(LPCWSTR URLName,
                         InternetCloseHandle(bind->hrequest);
                             hres = S_OK;
                     }
-            
+
                     InternetCloseHandle(bind->hconnect);
                     InternetCloseHandle(bind->hinternet);
                 } while(0);
@@ -776,7 +776,7 @@ static HRESULT WINAPI URLMonikerImpl_Reduce(IMoniker* iface,
 					    IMoniker** ppmkReduced)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
-    
+
     TRACE("(%p,%p,%d,%p,%p)\n",This,pbc,dwReduceHowFar,ppmkToLeft,ppmkReduced);
 
     if(!ppmkReduced)
@@ -860,7 +860,7 @@ static HRESULT WINAPI URLMonikerImpl_IsEqual(IMoniker* iface,IMoniker* pmkOtherM
 static HRESULT WINAPI URLMonikerImpl_Hash(IMoniker* iface,DWORD* pdwHash)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
-    
+
     int  h = 0,i,skip,len;
     int  off = 0;
     LPOLESTR val;
@@ -959,14 +959,14 @@ static HRESULT WINAPI URLMonikerImpl_GetDisplayName(IMoniker* iface,
 						    LPOLESTR *ppszDisplayName)
 {
     URLMonikerImpl *This = (URLMonikerImpl *)iface;
-    
+
     int len;
-    
+
     TRACE("(%p,%p,%p,%p)\n",This,pbc,pmkToLeft,ppszDisplayName);
-    
+
     if(!ppszDisplayName)
         return E_INVALIDARG;
-    
+
     /* FIXME: If this is a partial URL, try and get a URL moniker from SZ_URLCONTEXT in the bind context,
         then look at pmkToLeft to try and complete the URL
     */
@@ -1093,7 +1093,7 @@ HRESULT WINAPI CreateAsyncBindCtx(DWORD reserved, IBindStatusCallback *callback,
  *           CreateAsyncBindCtxEx (URLMON.@)
  *
  * Create an asynchronous bind context.
- */ 
+ */
 HRESULT WINAPI CreateAsyncBindCtxEx(IBindCtx *ibind, DWORD options,
     IBindStatusCallback *callback, IEnumFORMATETC *format, IBindCtx** pbind,
     DWORD reserved)
@@ -1173,7 +1173,7 @@ HRESULT WINAPI CreateURLMonikerEx(IMoniker *pmkContext, LPCWSTR szURL, IMoniker 
             IBindCtx_Release(bind);
         }
     }
-        
+
     hres = URLMonikerImpl_Construct(obj, lefturl, szURL);
     CoTaskMemFree(lefturl);
     if(SUCCEEDED(hres))
@@ -1229,7 +1229,7 @@ HRESULT WINAPI CoInternetQueryInfo(LPCWSTR pwzUrl, QUERYOPTION QueryOption,
 HRESULT WINAPI IsAsyncMoniker(IMoniker *pmk)
 {
     IUnknown *am;
-    
+
     TRACE("(%p)\n", pmk);
     if(!pmk)
         return E_INVALIDARG;
@@ -1384,20 +1384,20 @@ HRESULT WINAPI URLDownloadToFileA(LPUNKNOWN pCaller,
 	FIXME("(%p,%s,%s,%08x,%p) cannot accept NULL strings !\n", pCaller, debugstr_a(szURL), debugstr_a(szFileName), dwReserved, lpfnCB);
 	return E_INVALIDARG; /* The error code is not specified in this case... */
     }
-    
+
     if (RtlCreateUnicodeStringFromAsciiz(&szURL_w, szURL)) {
 	if (RtlCreateUnicodeStringFromAsciiz(&szFileName_w, szFileName)) {
 	    HRESULT ret = URLDownloadToFileW(pCaller, szURL_w.Buffer, szFileName_w.Buffer, dwReserved, lpfnCB);
 
 	    RtlFreeUnicodeString(&szURL_w);
 	    RtlFreeUnicodeString(&szFileName_w);
-	    
+
 	    return ret;
 	} else {
 	    RtlFreeUnicodeString(&szURL_w);
 	}
     }
-    
+
     FIXME("(%p,%s,%s,%08x,%p) could not allocate W strings !\n", pCaller, szURL, szFileName, dwReserved, lpfnCB);
     return E_OUTOFMEMORY;
 }
@@ -1447,7 +1447,7 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
     hinternet = InternetOpenW(wszAppName, INTERNET_OPEN_TYPE_PRECONFIG, NULL, NULL, 0);
     if (hinternet == NULL) {
 	return E_OUTOFMEMORY;
-    }                                                                                                                             
+    }
 
     memset(&url, 0, sizeof(url));
     url.dwStructSize = sizeof(url);
@@ -1467,7 +1467,7 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	    return S_OK;
 	}
     }
-    
+
     hcon = InternetConnectW(hinternet, url.lpszHostName, url.nPort,
                             url.lpszUserName, url.lpszPassword,
                             INTERNET_SERVICE_HTTP, 0, 0);
@@ -1475,13 +1475,13 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	InternetCloseHandle(hinternet);
 	return E_OUTOFMEMORY;
     }
-    
+
     hreq = HttpOpenRequestW(hcon, NULL, url.lpszUrlPath, NULL, NULL, NULL, 0, 0);
     if (!hreq) {
 	InternetCloseHandle(hinternet);
 	InternetCloseHandle(hcon);
 	return E_OUTOFMEMORY;
-    }                                                                                                                             
+    }
 
     if (!HttpSendRequestW(hreq, NULL, 0, NULL, 0)) {
 	InternetCloseHandle(hinternet);
@@ -1489,18 +1489,18 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	InternetCloseHandle(hreq);
 	return E_OUTOFMEMORY;
     }
-    
+
     if (HttpQueryInfoW(hreq, HTTP_QUERY_CONTENT_LENGTH | HTTP_QUERY_FLAG_NUMBER,
 		       &total_size, &arg_size, NULL)) {
 	TRACE(" total size : %d\n", total_size);
     }
-    
+
     hfile = CreateFileW(szFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                         FILE_ATTRIBUTE_NORMAL, NULL );
     if (hfile == INVALID_HANDLE_VALUE) {
 	return E_ACCESSDENIED;
     }
-    
+
     if (lpfnCB) {
 	if (IBindStatusCallback_OnProgress(lpfnCB, 0, total_size != 0xFFFFFFFF ? total_size : 0,
 					   BINDSTATUS_BEGINDOWNLOADDATA, szURL) == E_ABORT) {
@@ -1511,7 +1511,7 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	    return S_OK;
 	}
     }
-    
+
     total = 0;
     while (1) {
 	r = InternetReadFile(hreq, buffer, sizeof(buffer), &sz);
@@ -1519,13 +1519,13 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	    InternetCloseHandle(hreq);
 	    InternetCloseHandle(hcon);
 	    InternetCloseHandle(hinternet);
-	    
+
 	    CloseHandle(hfile);
-	    return E_OUTOFMEMORY;	    
+	    return E_OUTOFMEMORY;
 	}
 	if (!sz)
 	    break;
-	
+
 	total += sz;
 
 	if (lpfnCB) {
@@ -1538,12 +1538,12 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 		return S_OK;
 	    }
 	}
-	
+
 	if (!WriteFile(hfile, buffer, sz, &written, NULL)) {
 	    InternetCloseHandle(hreq);
 	    InternetCloseHandle(hcon);
 	    InternetCloseHandle(hinternet);
-	    
+
 	    CloseHandle(hfile);
 	    return E_OUTOFMEMORY;
 	}
@@ -1559,11 +1559,11 @@ HRESULT WINAPI URLDownloadToFileW(LPUNKNOWN pCaller,
 	    return S_OK;
 	}
     }
-    
+
     InternetCloseHandle(hreq);
     InternetCloseHandle(hcon);
     InternetCloseHandle(hinternet);
-    
+
     CloseHandle(hfile);
 
     return S_OK;
@@ -1668,7 +1668,7 @@ HRESULT WINAPI HlinkSimpleNavigateToString( LPCWSTR szTarget,
 HRESULT WINAPI HlinkNavigateString( IUnknown *pUnk, LPCWSTR szTarget )
 {
     TRACE("%p %s\n", pUnk, debugstr_w( szTarget ) );
-    return HlinkSimpleNavigateToString( 
+    return HlinkSimpleNavigateToString(
                szTarget, NULL, NULL, pUnk, NULL, NULL, 0, 0 );
 }
 

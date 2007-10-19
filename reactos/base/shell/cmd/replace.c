@@ -66,7 +66,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
 // 	ConOutPrintf(_T("old-dest: %s\n"), d);
 // 	ConOutPrintf(_T("src:  %s\n"), source);
 // 	ConOutPrintf(_T("dest: %s\n"), dest);
-	
+
 	/* Open up the sourcefile */
 	hFileSrc = CreateFile (source, GENERIC_READ, FILE_SHARE_READ,NULL, OPEN_EXISTING, 0, NULL);
 	if (hFileSrc == INVALID_HANDLE_VALUE)
@@ -75,15 +75,15 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
 		ConOutPrintf(szMsg, source);
 		return 0;
 	}
-	
+
 	/* Get the time from source file to be used in the comparison with
 	   dest time if update switch is set */
 	GetFileTime (hFileSrc, &srcCreationTime, &srcLastAccessTime, &srcLastWriteTime);
-	
+
 	/* Retrieve the source attributes so that they later on can be
 	   inserted in to the destination */
 	dwAttrib = GetFileAttributes (source);
-	
+
 	if(IsExistingFile (dest))
 	{
 		/* Resets the attributes to avoid probles with read only files,
@@ -148,7 +148,7 @@ INT replace(TCHAR source[MAX_PATH], TCHAR dest[MAX_PATH], DWORD dwFlags, BOOL *d
 		*doMore = FALSE;
 		return 0;
 	}
-	
+
 	/* Open destination file to write to */
 	hFileDest = CreateFile (dest, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 0, NULL);
 	if (hFileDest == INVALID_HANDLE_VALUE)
@@ -238,7 +238,7 @@ INT recReplace(DWORD dwFlags, TCHAR szSrcPath[MAX_PATH], TCHAR szDestPath[MAX_PA
 		/* Problem with file handler */
 		if(hFile == INVALID_HANDLE_VALUE)
 			return filesReplaced;
-		
+
 		/* We do not want to replace any .. . ocr directory */
 		if(!_tcscmp (findBuffer.cFileName, _T("."))  ||
 				!_tcscmp (findBuffer.cFileName, _T(".."))||
@@ -385,7 +385,7 @@ INT cmd_replace (LPTSTR cmd, LPTSTR param)
 
 	/* Divide the argument in to an array of c-strings */
 	arg = split (param, &argc, FALSE);
-	nFiles = argc;	
+	nFiles = argc;
 
 	/* Read options */
 	for (i = 0; i < argc; i++)

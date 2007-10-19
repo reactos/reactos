@@ -2248,7 +2248,7 @@ static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
 			  ck.cksize, NULL, NULL);
 
       if (mmioWrite(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize) {
-	HeapFree(GetProcessHeap(), 0, str);	
+	HeapFree(GetProcessHeap(), 0, str);
 	return AVIERR_FILEWRITE;
       }
 

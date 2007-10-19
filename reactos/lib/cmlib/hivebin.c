@@ -55,7 +55,7 @@ HvpAddBin(
 
    RegistryHive->Storage[Storage].BlockList = BlockList;
    RegistryHive->Storage[Storage].Length += BlockCount;
-  
+
    for (i = 0; i < BlockCount; i++)
    {
       RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].Block =

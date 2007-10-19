@@ -6,7 +6,7 @@
  *
  * PROGRAMMERS:     Gregor Anich
  */
-      
+
 /* INCLUDES ******************************************************************/
 
 #include <ntoskrnl.h>
@@ -159,12 +159,12 @@ KdbpKdbTrapFrameToTrapFrame(PKDB_KTRAP_FRAME KdbTrapFrame, PKTRAP_FRAME TrapFram
 {
    /* Copy the TrapFrame only up to Eflags and zero the rest*/
    RtlCopyMemory(TrapFrame, &KdbTrapFrame->Tf, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
-   
+
    /* FIXME: write cr0, cr2, cr3 and cr4 (not needed atm) */
-   
+
     KiSsToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareSegSs);
     KiEspToTrapFrame(TrapFrame, KdbTrapFrame->Tf.HardwareEsp);
-   
+
    /* FIXME: copy v86 registers if TrapFrame is a V86 trapframe */
 }
 

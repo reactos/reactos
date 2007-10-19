@@ -4,7 +4,7 @@
  *
  * GDI32.DLL Stubs
  *
- * Api that does basic nothing, but is here for backwords compatible with older windows 
+ * Api that does basic nothing, but is here for backwords compatible with older windows
  *
  */
 
@@ -77,7 +77,7 @@ GdiPlayScript(DWORD a0,
 /*
  * @implemented
  */
-HBITMAP 
+HBITMAP
 STDCALL
 GdiConvertBitmap(HBITMAP hbm)
 {
@@ -99,7 +99,7 @@ GdiConvertBrush(HBRUSH hbr)
 /*
  * @implemented
  */
-HDC 
+HDC
 STDCALL
 GdiConvertDC(HDC hdc)
 {
@@ -110,7 +110,7 @@ GdiConvertDC(HDC hdc)
 /*
  * @implemented
  */
-HFONT 
+HFONT
 STDCALL
 GdiConvertFont(HFONT hfont)
 {
@@ -121,7 +121,7 @@ GdiConvertFont(HFONT hfont)
 /*
  * @implemented
  */
-HPALETTE 
+HPALETTE
 STDCALL
 GdiConvertPalette(HPALETTE hpal)
 {
@@ -166,7 +166,7 @@ GdiDeleteLocalDC(HDC hdc)
 /*
  * @implemented
  */
-VOID 
+VOID
 STDCALL
 GdiSetServerAttr(HDC hdc,DWORD attr)
 {
@@ -269,7 +269,7 @@ SelectFontLocal(HFONT Currenthfnt,
 /*
  * @implemented
  */
-HBRUSH 
+HBRUSH
 STDCALL
 GdiGetLocalBrush(HBRUSH hbr)
 {
@@ -279,7 +279,7 @@ GdiGetLocalBrush(HBRUSH hbr)
 /*
  * @implemented
  */
-HDC 
+HDC
 STDCALL
 GdiGetLocalDC(HDC hdc)
 {
@@ -289,7 +289,7 @@ GdiGetLocalDC(HDC hdc)
 /*
  * @implemented
  */
-HFONT 
+HFONT
 STDCALL
 GdiGetLocalFont(HFONT hfont)
 {

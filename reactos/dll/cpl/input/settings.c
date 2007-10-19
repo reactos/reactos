@@ -57,17 +57,17 @@ CreateDefaultLangList(HWND hWnd)
 		return FALSE;
 	}
     RegQueryInfoKey(hKey,NULL,NULL,NULL,NULL,NULL,NULL,&cValues,NULL,NULL,NULL,NULL);
-	
+
 	if (cValues)
 	{
-	    for (Count = 0; Count < cValues; Count++) 
-        { 
-            szCount[0] = '\0'; 
+	    for (Count = 0; Count < cValues; Count++)
+        {
+            szCount[0] = '\0';
             lRet = RegEnumValue(hKey,Count,(LPTSTR)szCount,&dwBufCLen,NULL,NULL,NULL,NULL);
- 
-			sprintf(szCount,"%d",Count + 1);	
+
+			sprintf(szCount,"%d",Count + 1);
 			RegQueryValueEx(hKey,(LPTSTR)szCount,NULL,NULL,(LPBYTE)szPreload,&dwBufLen);
-			
+
 			Lcid = wcstoul((LPTSTR)szPreload, NULL, 16);
 			GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
 
@@ -85,9 +85,9 @@ CreateDefaultLangList(HWND hWnd)
         }
 
 	}
-				
+
 	RegCloseKey(hKey);
-	
+
 	return TRUE;
 }
 

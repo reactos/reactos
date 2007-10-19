@@ -6,7 +6,7 @@
  *
  * GDI32.DLL hacks
  *
- * Api that are hacked but we can not do correct implemtions yetm but using own syscall 
+ * Api that are hacked but we can not do correct implemtions yetm but using own syscall
  *
  */
 
@@ -14,12 +14,12 @@
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetPolyFillMode(HDC hdc)
 {
     /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove 
+     * this hack need be remove
      */
      return NtGdiGetPolyFillMode(hdc);
 }
@@ -29,12 +29,12 @@ GetPolyFillMode(HDC hdc)
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetGraphicsMode(HDC hdc)
 {
     /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove 
+     * this hack need be remove
      */
      return NtGdiGetGraphicsMode(hdc);
 }
@@ -43,12 +43,12 @@ GetGraphicsMode(HDC hdc)
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetROP2(HDC hdc)
 {
     /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove 
+     * this hack need be remove
      */
      return NtGdiGetROP2(hdc);
 }
@@ -58,7 +58,7 @@ GetROP2(HDC hdc)
  * @implemented
  *
  */
-INT 
+INT
 STDCALL
 SetDIBitsToDevice(
     HDC hDC,
@@ -96,9 +96,9 @@ SetDIBitsToDevice(
  * @implemented
  *
  */
-int 
+int
 STDCALL
-SetBkMode(HDC hdc, 
+SetBkMode(HDC hdc,
               int iBkMode)
 {
     return NtGdiSetBkMode(hdc,iBkMode);
@@ -110,7 +110,7 @@ SetBkMode(HDC hdc,
  */
 HGDIOBJ
 STDCALL
-SelectObject(HDC hdc, 
+SelectObject(HDC hdc,
              HGDIOBJ hgdiobj)
 {
     return NtGdiSelectObject(hdc,hgdiobj);
@@ -121,7 +121,7 @@ SelectObject(HDC hdc,
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetMapMode(HDC hdc)
 {
@@ -132,7 +132,7 @@ GetMapMode(HDC hdc)
  * @implemented
  *
  */
-int 
+int
 STDCALL
 GetStretchBltMode(HDC hdc)
 {
@@ -143,7 +143,7 @@ GetStretchBltMode(HDC hdc)
  * @implemented
  *
  */
-UINT 
+UINT
 STDCALL
 GetTextAlign(HDC hdc)
 {
@@ -194,7 +194,7 @@ OffsetViewportOrgEx(HDC hdc,
  * @implemented
  *
  */
-BOOL 
+BOOL
 STDCALL
 OffsetWindowOrgEx(HDC hdc,
                   int nXOffset,

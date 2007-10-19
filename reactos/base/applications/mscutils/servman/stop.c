@@ -59,7 +59,7 @@ DoStop(PMAIN_WND_INFO Info)
                         _sntprintf(str, 499, _T("%s depends on this service, implement the dialog to allow closing of other services"),
                                    lpServiceConfig->lpDependencies);
                         MessageBox(NULL, str, NULL, 0);
-                        
+
                         //FIXME: open 'stop other services' box
                     }
                     else

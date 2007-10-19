@@ -97,7 +97,7 @@ get_api_attr(void) {
     if ((api_root == NULL) || (api_root->type != XML_ELEMENT_NODE)) {
         get_api_root();
     }
-    if (api_root == NULL) 
+    if (api_root == NULL)
         return(NULL);
     if (api_root->properties != NULL) {
         api_attr = api_root->properties;
@@ -187,7 +187,7 @@ int main(int argc, char **argv) {
 #include <libxml/xpointer.h>
 #include <libxml/debugXML.h>
 
-/* 
+/*
   We manually define xmlErrMemory because it's normal declaration
   is "hidden" by #ifdef IN_LIBXML
 */
@@ -528,7 +528,7 @@ static void des_xmlNodePtr(int no, xmlNodePtr val, int nr ATTRIBUTE_UNUSED) {
 
 #define gen_nb_xmlDtdPtr 3
 static xmlDtdPtr gen_xmlDtdPtr(int no, int nr ATTRIBUTE_UNUSED) {
-    if (no == 0) 
+    if (no == 0)
         return(xmlNewDtd(NULL, BAD_CAST "dtd", BAD_CAST"foo", BAD_CAST"bar"));
     if (no == 1) return(get_api_dtd());
     return(NULL);
@@ -689,7 +689,7 @@ static void des_xmlCharEncoding(int no ATTRIBUTE_UNUSED, xmlCharEncoding val ATT
 }
 
 #define gen_nb_xmlHashDeallocator 2
-static void 
+static void
 test_xmlHashDeallocator(void *payload ATTRIBUTE_UNUSED, xmlChar *name ATTRIBUTE_UNUSED) {
 }
 
@@ -13343,7 +13343,7 @@ test_xmlParseBalancedChunkMemory(void) {
         depth = gen_int(n_depth, 3);
         string = gen_const_xmlChar_ptr(n_string, 4);
         lst = gen_xmlNodePtr_ptr(n_lst, 5);
-        
+
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -13423,7 +13423,7 @@ test_xmlParseBalancedChunkMemoryRecover(void) {
         string = gen_const_xmlChar_ptr(n_string, 4);
         lst = gen_xmlNodePtr_ptr(n_lst, 5);
         recover = gen_int(n_recover, 6);
-        
+
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -14902,7 +14902,7 @@ test_xmlSAXUserParseFile(void) {
         sax = gen_xmlSAXHandlerPtr(n_sax, 0);
         user_data = gen_userdata(n_user_data, 1);
         filename = gen_filepath(n_filename, 2);
-        
+
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif
@@ -14961,7 +14961,7 @@ test_xmlSAXUserParseMemory(void) {
         user_data = gen_userdata(n_user_data, 1);
         buffer = gen_const_char_ptr(n_buffer, 2);
         size = gen_int(n_size, 3);
-        
+
 #ifdef LIBXML_SAX1_ENABLED
         if (sax == (xmlSAXHandlerPtr)&xmlDefaultSAXHandler) user_data = NULL;
 #endif

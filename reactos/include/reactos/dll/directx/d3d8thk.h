@@ -18,7 +18,7 @@ BOOL STDCALL OsThunkD3dContextCreate(
 );
 
 
-DWORD STDCALL OsThunkD3dContextDestroy(      
+DWORD STDCALL OsThunkD3dContextDestroy(
     PD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
 );
 
@@ -29,7 +29,7 @@ DWORD STDCALL
 DWORD STDCALL OsThunkD3dContextDestroyAll(LPVOID);
 
 /* FIXME PD3DNTHAL_DRAWPRIMITIVES2DATA, PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA missing
-DWORD STDCALL OsThunkD3dDrawPrimitives2(      
+DWORD STDCALL OsThunkD3dDrawPrimitives2(
     HANDLE hCmdBuf,
     HANDLE hVBuf,
     PD3DNTHAL_DRAWPRIMITIVES2DATA pded,
@@ -39,12 +39,12 @@ DWORD STDCALL OsThunkD3dDrawPrimitives2(
     DWORD *pdwSizeVtx
 );
 
-DWORD STDCALL OsThunkD3dValidateTextureStageState(      
+DWORD STDCALL OsThunkD3dValidateTextureStageState(
     PD3DNTHAL_VALIDATETEXTURESTAGESTATEDATA pData
 );
 */
 
-DWORD STDCALL OsThunkDdAddAttachedSurface( 
+DWORD STDCALL OsThunkDdAddAttachedSurface(
     HANDLE hSurface,
     HANDLE hSurfaceAttached,
     PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
@@ -57,33 +57,33 @@ BOOL STDCALL OsThunkDdAttachSurface(
     HANDLE hSurfaceTo
 );
 
-DWORD STDCALL OsThunkDdBeginMoCompFrame(      
+DWORD STDCALL OsThunkDdBeginMoCompFrame(
     HANDLE hMoComp,
     PDD_BEGINMOCOMPFRAMEDATA puBeginFrameData
 );
 
-DWORD STDCALL OsThunkDdBlt(      
+DWORD STDCALL OsThunkDdBlt(
     HANDLE hSurfaceDest,
     HANDLE hSurfaceSrc,
     PDD_BLTDATA puBltData
 );
 
-DWORD STDCALL OsThunkDdCanCreateD3DBuffer(      
+DWORD STDCALL OsThunkDdCanCreateD3DBuffer(
     HANDLE hDirectDraw,
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 );
 
-DWORD STDCALL OsThunkDdCanCreateSurface(      
+DWORD STDCALL OsThunkDdCanCreateSurface(
     HANDLE hDirectDraw,
     PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
 );
 
-DWORD STDCALL OsThunkDdColorControl(      
+DWORD STDCALL OsThunkDdColorControl(
     HANDLE hSurface,
     PDD_COLORCONTROLDATA puColorControlData
 );
 
-DWORD STDCALL OsThunkDdCreateD3DBuffer(      
+DWORD STDCALL OsThunkDdCreateD3DBuffer(
     HANDLE hDirectDraw,
     HANDLE *hSurface,
     DDSURFACEDESC *puSurfaceDescription,
@@ -96,12 +96,12 @@ DWORD STDCALL OsThunkDdCreateD3DBuffer(
 
 HANDLE STDCALL OsThunkDdCreateDirectDrawObject(HDC hdc);
 
-HANDLE STDCALL OsThunkDdCreateMoComp(      
+HANDLE STDCALL OsThunkDdCreateMoComp(
     HANDLE hDirectDraw,
     PDD_CREATEMOCOMPDATA puCreateMoCompData
 );
 
-DWORD STDCALL OsThunkDdCreateSurface(      
+DWORD STDCALL OsThunkDdCreateSurface(
     HANDLE hDirectDraw,
     HANDLE *hSurface,
     DDSURFACEDESC *puSurfaceDescription,
@@ -112,13 +112,13 @@ DWORD STDCALL OsThunkDdCreateSurface(
     HANDLE *puhSurface
 );
 
-DWORD STDCALL OsThunkDdCreateSurfaceEx(      
+DWORD STDCALL OsThunkDdCreateSurfaceEx(
     HANDLE hDirectDraw,
     HANDLE hSurface,
     DWORD dwSurfaceHandle
 );
 
-HANDLE STDCALL OsThunkDdCreateSurfaceObject(      
+HANDLE STDCALL OsThunkDdCreateSurfaceObject(
     HANDLE hDirectDrawLocal,
     HANDLE hSurface,
     PDD_SURFACE_LOCAL puSurfaceLocal,
@@ -127,34 +127,34 @@ HANDLE STDCALL OsThunkDdCreateSurfaceObject(
     BOOL bComplete
 );
 
-BOOL STDCALL OsThunkDdDeleteDirectDrawObject(      
+BOOL STDCALL OsThunkDdDeleteDirectDrawObject(
     HANDLE hDirectDrawLocal
 );
 
-BOOL STDCALL OsThunkDdDeleteSurfaceObject(      
+BOOL STDCALL OsThunkDdDeleteSurfaceObject(
     HANDLE hSurface
 );
 
-DWORD STDCALL OsThunkDdDestroyD3DBuffer(      
+DWORD STDCALL OsThunkDdDestroyD3DBuffer(
     HANDLE hSurface
 );
 
-DWORD STDCALL OsThunkDdDestroyMoComp(      
+DWORD STDCALL OsThunkDdDestroyMoComp(
     HANDLE hMoComp,
     PDD_DESTROYMOCOMPDATA puBeginFrameData
 );
 
-DWORD STDCALL OsThunkDdDestroySurface(      
+DWORD STDCALL OsThunkDdDestroySurface(
     HANDLE hSurface,
     BOOL bRealDestroy
 );
 
-DWORD STDCALL OsThunkDdEndMoCompFrame(      
+DWORD STDCALL OsThunkDdEndMoCompFrame(
     HANDLE hMoComp,
     PDD_ENDMOCOMPFRAMEDATA puEndFrameData
 );
 
-DWORD STDCALL OsThunkDdFlip(      
+DWORD STDCALL OsThunkDdFlip(
     HANDLE hSurfaceCurrent,
     HANDLE hSurfaceTarget,
     HANDLE hSurfaceCurrentLeft,
@@ -162,78 +162,78 @@ DWORD STDCALL OsThunkDdFlip(
     PDD_FLIPDATA puFlipData
 );
 
-DWORD STDCALL OsThunkDdFlipToGDISurface(      
+DWORD STDCALL OsThunkDdFlipToGDISurface(
     HANDLE hDirectDraw,
     PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData
 );
 
-DWORD STDCALL OsThunkDdGetAvailDriverMemory(      
+DWORD STDCALL OsThunkDdGetAvailDriverMemory(
     HANDLE hDirectDraw,
     PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
 );
 
-DWORD STDCALL OsThunkDdGetBltStatus(      
+DWORD STDCALL OsThunkDdGetBltStatus(
     HANDLE hSurface,
     PDD_GETBLTSTATUSDATA puGetBltStatusData
 );
 
-HDC STDCALL OsThunkDdGetDC(      
+HDC STDCALL OsThunkDdGetDC(
     HANDLE hSurface,
     PALETTEENTRY *puColorTable
 );
 
-DWORD STDCALL OsThunkDdGetDriverInfo(      
+DWORD STDCALL OsThunkDdGetDriverInfo(
     HANDLE hDirectDraw,
     PDD_GETDRIVERINFODATA puGetDriverInfoData
 );
 
-DWORD STDCALL OsThunkDdGetDriverState(      
+DWORD STDCALL OsThunkDdGetDriverState(
     PDD_GETDRIVERSTATEDATA pdata
 );
 
-DWORD STDCALL OsThunkDdGetDxHandle(      
+DWORD STDCALL OsThunkDdGetDxHandle(
     HANDLE hDirectDraw,
     HANDLE hSurface,
     BOOL bRelease
 );
 
-DWORD STDCALL OsThunkDdGetFlipStatus(      
+DWORD STDCALL OsThunkDdGetFlipStatus(
     HANDLE hSurface,
     PDD_GETFLIPSTATUSDATA puGetFlipStatusData
 );
 
-DWORD STDCALL OsThunkDdGetInternalMoCompInfo(      
+DWORD STDCALL OsThunkDdGetInternalMoCompInfo(
     HANDLE hDirectDraw,
     PDD_GETINTERNALMOCOMPDATA puGetInternalData
 );
 
-DWORD STDCALL OsThunkDdGetMoCompBuffInfo(      
+DWORD STDCALL OsThunkDdGetMoCompBuffInfo(
     HANDLE hDirectDraw,
     PDD_GETMOCOMPCOMPBUFFDATA puGetBuffData
 );
 
-DWORD STDCALL OsThunkDdGetMoCompFormats(      
+DWORD STDCALL OsThunkDdGetMoCompFormats(
     HANDLE hDirectDraw,
     PDD_GETMOCOMPFORMATSDATA puGetMoCompFormatsData
 );
 
-DWORD STDCALL OsThunkDdGetMoCompGuids(      
+DWORD STDCALL OsThunkDdGetMoCompGuids(
     HANDLE hDirectDraw,
     PDD_GETMOCOMPGUIDSDATA puGetMoCompGuidsData
 );
 
-DWORD STDCALL OsThunkDdGetScanLine(      
+DWORD STDCALL OsThunkDdGetScanLine(
     HANDLE hDirectDraw,
     PDD_GETSCANLINEDATA puGetScanLineData
 );
 
-DWORD STDCALL OsThunkDdLock(      
+DWORD STDCALL OsThunkDdLock(
     HANDLE hSurface,
     PDD_LOCKDATA puLockData,
     HDC hdcClip
 );
 
-DWORD STDCALL OsThunkDdLockD3D(      
+DWORD STDCALL OsThunkDdLockD3D(
     HANDLE hSurface,
     PDD_LOCKDATA puLockData
 );
@@ -254,74 +254,74 @@ BOOL STDCALL OsThunkDdQueryDirectDrawObject(
 );
 
 
-DWORD STDCALL OsThunkDdQueryMoCompStatus(      
+DWORD STDCALL OsThunkDdQueryMoCompStatus(
     HANDLE hMoComp,
     PDD_QUERYMOCOMPSTATUSDATA puQueryMoCompStatusData
 );
 
-BOOL STDCALL OsThunkDdReenableDirectDrawObject(      
+BOOL STDCALL OsThunkDdReenableDirectDrawObject(
     HANDLE hDirectDrawLocal,
     BOOL *pubNewMode
 );
 
-BOOL STDCALL OsThunkDdReleaseDC(      
+BOOL STDCALL OsThunkDdReleaseDC(
     HANDLE hSurface
 );
 
-DWORD STDCALL OsThunkDdRenderMoComp(      
+DWORD STDCALL OsThunkDdRenderMoComp(
     HANDLE hMoComp,
     PDD_RENDERMOCOMPDATA puRenderMoCompData
 );
 
-BOOL STDCALL OsThunkDdResetVisrgn(      
+BOOL STDCALL OsThunkDdResetVisrgn(
     HANDLE hSurface,
     HWND hwnd
 );
 
-DWORD STDCALL OsThunkDdSetColorKey(      
+DWORD STDCALL OsThunkDdSetColorKey(
     HANDLE hSurface,
     PDD_SETCOLORKEYDATA puSetColorKeyData
 );
 
-DWORD STDCALL OsThunkDdSetExclusiveMode(      
+DWORD STDCALL OsThunkDdSetExclusiveMode(
     HANDLE hDirectDraw,
     PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
 );
 
-BOOL STDCALL OsThunkDdSetGammaRamp(      
+BOOL STDCALL OsThunkDdSetGammaRamp(
     HANDLE hDirectDraw,
     HDC hdc,
     LPVOID lpGammaRamp
 );
 
-DWORD STDCALL OsThunkDdSetOverlayPosition(      
+DWORD STDCALL OsThunkDdSetOverlayPosition(
     HANDLE hSurfaceSource,
     HANDLE hSurfaceDestination,
     PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
 );
 
-VOID STDCALL OsThunkDdUnattachSurface(      
+VOID STDCALL OsThunkDdUnattachSurface(
     HANDLE hSurface,
     HANDLE hSurfaceAttached
 );
 
-DWORD STDCALL OsThunkDdUnlock(      
+DWORD STDCALL OsThunkDdUnlock(
     HANDLE hSurface,
     PDD_UNLOCKDATA puUnlockData
 );
 
-DWORD STDCALL OsThunkDdUnlockD3D(      
+DWORD STDCALL OsThunkDdUnlockD3D(
     HANDLE hSurface,
     PDD_UNLOCKDATA puUnlockData
 );
 
-DWORD STDCALL OsThunkDdUpdateOverlay(      
+DWORD STDCALL OsThunkDdUpdateOverlay(
     HANDLE hSurfaceDestination,
     HANDLE hSurfaceSource,
     PDD_UPDATEOVERLAYDATA puUpdateOverlayData
 );
 
-DWORD STDCALL OsThunkDdWaitForVerticalBlank(      
+DWORD STDCALL OsThunkDdWaitForVerticalBlank(
     HANDLE hDirectDraw,
     PDD_WAITFORVERTICALBLANKDATA puWaitForVerticalBlankData
 );

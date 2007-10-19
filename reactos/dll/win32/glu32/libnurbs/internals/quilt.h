@@ -51,7 +51,7 @@ class Mapdesc;
 class Flist;
 struct Knotvector;
 
-/* constants for memory allocation of NURBS to Bezier conversion */ 
+/* constants for memory allocation of NURBS to Bezier conversion */
 #define	MAXDIM 		2
 
 struct Quiltspec { /* a specification for a dimension of a quilt */
@@ -66,7 +66,7 @@ struct Quiltspec { /* a specification for a dimension of a quilt */
 };
 
 typedef Quiltspec *Quiltspec_ptr;
-    
+
 class Quilt : public PooledObj { /* an array of bezier patches */
 public:
     			Quilt( Mapdesc * );
@@ -75,7 +75,7 @@ public:
     Quiltspec		qspec[MAXDIM];	/* the dimensional data */
     Quiltspec_ptr	eqspec;		/* qspec trailer */
     Quilt		*next;		/* next quilt in linked list */
-			
+
 public:
     void		deleteMe( Pool& );
     void		toBezier( Knotvector &, INREAL *, long  );

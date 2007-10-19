@@ -58,11 +58,11 @@ public:
 
 typedef class TrimVertex *TrimVertex_p;
 
-inline REAL  
-det3( TrimVertex *a, TrimVertex *b, TrimVertex *c ) 
-{         
-    return a->param[0] * (b->param[1]-c->param[1]) + 
-	   b->param[0] * (c->param[1]-a->param[1]) + 
+inline REAL
+det3( TrimVertex *a, TrimVertex *b, TrimVertex *c )
+{
+    return a->param[0] * (b->param[1]-c->param[1]) +
+	   b->param[0] * (c->param[1]-a->param[1]) +
 	   c->param[0] * (a->param[1]-b->param[1]);
 }
 

@@ -37,7 +37,7 @@ static LONG APIENTRY Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam);
 HINSTANCE hApplet = 0;
 
 /* Applets */
-APPLET Applets[] = 
+APPLET Applets[] =
 {
     {IDI_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };

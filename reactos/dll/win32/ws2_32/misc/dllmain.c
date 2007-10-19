@@ -80,7 +80,7 @@ WSAStartup(IN  WORD wVersionRequested,
 
     WS_DbgPrint(MAX_TRACE, ("WSAStartup of ws2_32.dll\n"));
 
-    if (!g_hInstDll) 
+    if (!g_hInstDll)
         return WSASYSNOTREADY;
 
     if (lpWSAData == NULL)
@@ -95,7 +95,7 @@ WSAStartup(IN  WORD wVersionRequested,
         return WSAVERNOTSUPPORTED;
     }
 
-    if (Low == 1) 
+    if (Low == 1)
     {
         if (High == 0)
         {

@@ -1,9 +1,9 @@
 /* $Id$
  *
  * initss.c - Load the subsystems
- * 
+ *
  * ReactOS Operating System
- * 
+ *
  * --------------------------------------------------------------------
  *
  * This software is free software; you can redistribute it and/or
@@ -19,7 +19,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this software; see the file COPYING.LIB. If not, write
  * to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge,
- * MA 02139, USA.  
+ * MA 02139, USA.
  *
  * --------------------------------------------------------------------
  */
@@ -40,7 +40,7 @@ HANDLE hSmApiPort = (HANDLE) 0;
 
 /**********************************************************************
  *	SmRegisterInternalSubsystem/3
- * 
+ *
  * DESCRIPTION
  *	Register with itself for ImageSubsystemId
  *	(programmatically).
@@ -52,7 +52,7 @@ NTSTATUS STDCALL SmRegisterInternalSubsystem (LPWSTR PgmName,
 	NTSTATUS                      Status = STATUS_SUCCESS;
 	RTL_USER_PROCESS_INFORMATION  ProcessInfo;
 
-	
+
 	DPRINT("SM: %s(%S,%d) called\n",__FUNCTION__, PgmName, ImageSubsystemId);
 
 	RtlZeroMemory (& ProcessInfo, sizeof ProcessInfo);
@@ -65,8 +65,8 @@ NTSTATUS STDCALL SmRegisterInternalSubsystem (LPWSTR PgmName,
 	if (NT_SUCCESS(Status))
 	{
 		UNICODE_STRING SbApiPortName = {0,0,NULL};
-		
-		RtlInitUnicodeString (& SbApiPortName, L"");	
+
+		RtlInitUnicodeString (& SbApiPortName, L"");
 		Status = SmConnectApiPort(& SbApiPortName,
 					  (HANDLE) -1, /* internal SS have no SB port */
 					  ImageSubsystemId,
@@ -103,7 +103,7 @@ SmpLoadRequiredSubsystems (VOID)
 	ULONG     DataLength = sizeof Data;
 	ULONG     DataType = 0;
 
-	
+
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
 	RtlZeroMemory (Data, DataLength);
@@ -116,7 +116,7 @@ SmpLoadRequiredSubsystems (VOID)
 	{
 		PWCHAR Name = NULL;
 		ULONG Offset = 0;
-		
+
 		for (Name = Data; (Offset < DataLength); )
 		{
 			if(L'\0' != *Name)
@@ -154,7 +154,7 @@ SmLoadSubsystems(VOID)
 {
 	NTSTATUS  Status = STATUS_SUCCESS;
 
-	
+
 	DPRINT("SM: loading subsystems...\n");
 
 	/*
@@ -162,7 +162,7 @@ SmLoadSubsystems(VOID)
 	 * in loading required subsystems.
 	 */
 	Status = SmRegisterInternalSubsystem (L"Session Manager", IMAGE_SUBSYSTEM_NATIVE, & hSmApiPort);
-	if(!NT_SUCCESS(Status)) 
+	if(!NT_SUCCESS(Status))
 	{
 		DPRINT1("SM: SmRegisterInternalSubsystem failed Status=%08lx\n", __FUNCTION__, Status);
 		return Status;

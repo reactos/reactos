@@ -526,7 +526,7 @@ NtUserChangeClipboardChain(HWND hWndRemove, HWND hWndNewNext)
     {
         // only send message to the first window in the chain,
         // then they do the chain
-        
+
         /* WindowsChain->window may be NULL */
         LPARAM lparam = WindowsChain->window == NULL ? 0 : (LPARAM)WindowsChain->window->hSelf;
         DPRINT1("Message: WM_CHANGECBCHAIN to %p", WindowsChain->window->hSelf);
@@ -988,7 +988,7 @@ NtUserSetClipboardData(UINT uFormat, HANDLE hMem, DWORD size)
 
                     hdc = UserGetDCEx(NULL, NULL, DCX_USESTYLE);
 
-                    
+
                     BitmapObj = BITMAPOBJ_LockBitmap(hMem);
                     BITMAP_GetObject(BitmapObj, sizeof(BITMAP), (LPSTR)&bm);
                     if(BitmapObj)

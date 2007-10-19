@@ -277,7 +277,7 @@ VOID ShowGameOptionsDlg(HWND hwnd)
 }
 
 
-LRESULT CALLBACK 
+LRESULT CALLBACK
 CardImageWndProc(HWND hwnd,
                  UINT msg,
                  WPARAM wParam,
@@ -464,7 +464,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
             //SendMessage(hwndStatus, SB_SIMPLE, (WPARAM)TRUE, 0);
 
-            SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
+            SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts);
             SendMessage(hwndStatus, SB_SETTEXT, 0 | SBT_NOBORDERS, (LPARAM)"");
 
             SolWnd.Create(hwnd, WS_EX_CLIENTEDGE, WS_CHILD|WS_VISIBLE, 0, 0, 0, 0);
@@ -502,7 +502,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
                 MoveWindow(SolWnd, 0, 0, nWidth, nHeight, TRUE);
             }
             //parts[0] = nWidth - 256;
-            //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts); 
+            //SendMessage(hwndStatus, SB_SETPARTS, 2, (LPARAM)parts);
             return 0;
 
         case WM_GETMINMAXINFO:

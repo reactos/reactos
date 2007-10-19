@@ -273,7 +273,7 @@ _mesa_base_tex_format( GLcontext *ctx, GLint internalFormat )
             ; /* fallthrough */
       }
    }
-         
+
    if (ctx->Extensions.TDFX_texture_compression_FXT1) {
       switch (internalFormat) {
          case GL_COMPRESSED_RGB_FXT1_3DFX:
@@ -497,9 +497,9 @@ is_ycbcr_format(GLenum format)
 
 /**
  * Test if it is a supported compressed format.
- * 
+ *
  * \param internalFormat the internal format token provided by the user.
- * 
+ *
  * \ret GL_TRUE if \p internalFormat is a supported compressed format, or
  * GL_FALSE otherwise.
  *
@@ -531,12 +531,12 @@ is_compressed_format(GLcontext *ctx, GLenum internalFormat)
 /**
  * Store a gl_texture_image pointer in a gl_texture_object structure
  * according to the target and level parameters.
- * 
+ *
  * \param tObj texture object.
  * \param target texture target.
  * \param level image level.
  * \param texImage texture image.
- * 
+ *
  * This was basically prompted by the introduction of cube maps.
  */
 void
@@ -559,7 +559,7 @@ _mesa_set_tex_image(struct gl_texture_object *tObj,
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB:
       case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB:
          {
-            GLuint face = ((GLuint) target - 
+            GLuint face = ((GLuint) target -
                            (GLuint) GL_TEXTURE_CUBE_MAP_POSITIVE_X);
             tObj->Image[face][level] = texImage;
          }
@@ -579,7 +579,7 @@ _mesa_set_tex_image(struct gl_texture_object *tObj,
 
 /**
  * Allocate a texture image structure.
- * 
+ *
  * Called via ctx->Driver.NewTextureImage() unless overriden by a device
  * driver.
  *
@@ -659,7 +659,7 @@ is_proxy_target(GLenum target)
  * \param target texture target.
  *
  * \return pointer to the texture object on success, or NULL on failure.
- * 
+ *
  * \sa gl_texture_unit.
  */
 struct gl_texture_object *
@@ -741,9 +741,9 @@ _mesa_select_tex_image(GLcontext *ctx, const struct gl_texture_unit *texUnit,
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB:
       case GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB:
       case GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB:
-      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB: 
+      case GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB:
          if (ctx->Extensions.ARB_texture_cube_map) {
-	    GLuint face = ((GLuint) target - 
+	    GLuint face = ((GLuint) target -
 			   (GLuint) GL_TEXTURE_CUBE_MAP_POSITIVE_X);
             return texUnit->CurrentCubeMap->Image[face][level];
 	 }
@@ -904,7 +904,7 @@ _mesa_get_proxy_tex_image(GLcontext *ctx, GLenum target, GLint level)
  *
  * \param ctx GL context.
  * \param target texture target.
- * 
+ *
  * \return the maximum number of allowed mipmap levels for the given
  * texture target, or zero if passed a bad target.
  *
@@ -997,7 +997,7 @@ make_null_texture(GLint width, GLint height, GLint depth, GLenum format)
 
 /**
  * Reset the fields of a gl_texture_image struct to zero.
- * 
+ *
  * \param img texture image structure.
  *
  * This is called when a proxy texture test fails, we set all the
@@ -1205,7 +1205,7 @@ _mesa_test_proxy_teximage(GLcontext *ctx, GLenum target, GLint level,
 
 /**
  * Test the glTexImage[123]D() parameters for errors.
- * 
+ *
  * \param ctx GL context.
  * \param target texture target given by the user.
  * \param level image level given by the user.
@@ -1217,7 +1217,7 @@ _mesa_test_proxy_teximage(GLcontext *ctx, GLenum target, GLint level,
  * \param height image height given by the user.
  * \param depth image depth given by the user.
  * \param border image border given by the user.
- * 
+ *
  * \return GL_TRUE if an error was detected, or GL_FALSE if no errors.
  *
  * Verifies each of the parameters against the constants specified in
@@ -1455,7 +1455,7 @@ texture_error_check( GLcontext *ctx, GLenum target,
 
 /**
  * Test glTexSubImage[123]D() parameters for errors.
- * 
+ *
  * \param ctx GL context.
  * \param dimensions texture image dimensions (must be 1, 2 or 3).
  * \param target texture target given by the user.
@@ -1468,7 +1468,7 @@ texture_error_check( GLcontext *ctx, GLenum target,
  * \param width image width given by the user.
  * \param height image height given by the user.
  * \param depth image depth given by the user.
- * 
+ *
  * \return GL_TRUE if an error was detected, or GL_FALSE if no errors.
  *
  * Verifies each of the parameters against the constants specified in
@@ -1623,12 +1623,12 @@ subtexture_error_check( GLcontext *ctx, GLuint dimensions,
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glTexSubImage%D(width)", dimensions);
          return GL_TRUE;
-      }         
+      }
       if ((height & 3) && (GLuint) height != texImage->Height) {
          _mesa_error(ctx, GL_INVALID_OPERATION,
                      "glTexSubImage%D(width)", dimensions);
          return GL_TRUE;
-      }         
+      }
    }
 
    return GL_FALSE;
@@ -1637,7 +1637,7 @@ subtexture_error_check( GLcontext *ctx, GLuint dimensions,
 
 /**
  * Test glCopyTexImage[12]D() parameters for errors.
- * 
+ *
  * \param ctx GL context.
  * \param dimensions texture image dimensions (must be 1, 2 or 3).
  * \param target texture target given by the user.
@@ -1647,9 +1647,9 @@ subtexture_error_check( GLcontext *ctx, GLuint dimensions,
  * \param height image height given by the user.
  * \param depth image depth given by the user.
  * \param border texture border.
- * 
+ *
  * \return GL_TRUE if an error was detected, or GL_FALSE if no errors.
- * 
+ *
  * Verifies each of the parameters against the constants specified in
  * __GLcontextRec::Const and the supported extensions, and according to the
  * OpenGL specification.
@@ -1775,7 +1775,7 @@ copytexture_error_check( GLcontext *ctx, GLuint dimensions,
 
 /**
  * Test glCopyTexImage[12]D() parameters for errors.
- * 
+ *
  * \param ctx GL context.
  * \param dimensions texture image dimensions (must be 1, 2 or 3).
  * \param target texture target given by the user.
@@ -1785,9 +1785,9 @@ copytexture_error_check( GLcontext *ctx, GLuint dimensions,
  * \param zoffset sub-image z offset given by the user.
  * \param width image width given by the user.
  * \param height image height given by the user.
- * 
+ *
  * \return GL_TRUE if an error was detected, or GL_FALSE if no errors.
- * 
+ *
  * Verifies each of the parameters against the constants specified in
  * __GLcontextRec::Const and the supported extensions, and according to the
  * OpenGL specification.
@@ -1915,12 +1915,12 @@ copytexsubimage_error_check( GLcontext *ctx, GLuint dimensions,
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "glCopyTexSubImage%D(width)", dimensions);
          return GL_TRUE;
-      }         
+      }
       if ((height & 3) != 0 && (GLuint) height != teximage->Height) {
          _mesa_error(ctx, GL_INVALID_VALUE,
                      "glCopyTexSubImage%D(height)", dimensions);
          return GL_TRUE;
-      }         
+      }
    }
 
    if (teximage->IntFormat == GL_YCBCR_MESA) {
@@ -3166,7 +3166,7 @@ _mesa_CompressedTexSubImage1DARB(GLenum target, GLint level, GLint xoffset,
       _mesa_error(ctx, GL_INVALID_VALUE, "glCompressedTexSubImage1D(width)");
       return;
    }
-      
+
    if (width == 0)
       return;  /* no-op, not an error */
 
@@ -3217,7 +3217,7 @@ _mesa_CompressedTexSubImage2DARB(GLenum target, GLint level, GLint xoffset,
       _mesa_error(ctx, GL_INVALID_VALUE, "glCompressedTexSubImage2D(size)");
       return;
    }
-      
+
    if (width == 0 || height == 0)
       return;  /* no-op, not an error */
 
@@ -3268,7 +3268,7 @@ _mesa_CompressedTexSubImage3DARB(GLenum target, GLint level, GLint xoffset,
       _mesa_error(ctx, GL_INVALID_VALUE, "glCompressedTexSubImage3D(size)");
       return;
    }
-      
+
    if (width == 0 || height == 0 || depth == 0)
       return;  /* no-op, not an error */
 

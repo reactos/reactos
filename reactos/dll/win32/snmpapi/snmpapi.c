@@ -166,7 +166,7 @@ SnmpSvcInitUptime()
 /*
  * @implemented
  */
-DWORD 
+DWORD
 SNMP_FUNC_TYPE
 SnmpSvcGetUptime()
 {

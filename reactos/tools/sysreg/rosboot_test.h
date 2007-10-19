@@ -30,7 +30,7 @@ namespace Sysreg_
 /// class RosBootTest
 ///
 /// Description: this class attempts to boot ReactOS in an emulator with console logging enabled.
-/// It 
+/// It
 
 	class RosBootTest
 	{

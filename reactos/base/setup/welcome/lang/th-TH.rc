@@ -10,7 +10,7 @@ LANGUAGE LANG_THAI, SUBLANG_DEFAULT
 /* String Tables */
 
 /* Default settings */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APPTITLE            "ReactOS - ยินดีต้อนรับ"
     IDS_DEFAULTTOPICTITLE   "ReactOS"

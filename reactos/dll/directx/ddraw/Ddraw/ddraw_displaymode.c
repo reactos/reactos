@@ -14,7 +14,7 @@
 /* PSEH for SEH Support */
 #include <pseh/pseh.h>
 
-HRESULT WINAPI 
+HRESULT WINAPI
 Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                                   LPDDSURFACEDESC2 pDDSD, LPVOID pContext, LPDDENUMMODESCALLBACK2 pCallback)
 {
@@ -27,7 +27,7 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
     _SEH_TRY
     {
 
-        if 
+        if
         ((!IsBadReadPtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2)))  ||
         (!IsBadWritePtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2))) ||
         (!IsBadReadPtr(pDDSD,sizeof(DDSURFACEDESC2)))  ||
@@ -43,7 +43,7 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
-                DDSURFACEDESC2 SurfaceDesc; 
+                DDSURFACEDESC2 SurfaceDesc;
 
                 iMode++;
 
@@ -57,11 +57,11 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                 SurfaceDesc.ddpfPixelFormat.dwSize = sizeof (DDPIXELFORMAT);
                 SurfaceDesc.ddpfPixelFormat.dwFlags = DDPF_RGB;
                 // FIXME: get these
-                /*      
-                    SurfaceDesc.ddpfPixelFormat.dwRBitMask = 
-                    SurfaceDesc.ddpfPixelFormat.dwGBitMask = 
-                    SurfaceDesc.ddpfPixelFormat.dwBBitMask = 
-                    SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask = 
+                /*
+                    SurfaceDesc.ddpfPixelFormat.dwRBitMask =
+                    SurfaceDesc.ddpfPixelFormat.dwGBitMask =
+                    SurfaceDesc.ddpfPixelFormat.dwBBitMask =
+                    SurfaceDesc.ddpfPixelFormat.dwRGBAlphaBitMask =
                 */
                 SurfaceDesc.ddpfPixelFormat.dwRGBBitCount = DevMode.dmBitsPerPel;
 
@@ -123,10 +123,10 @@ Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWO
         }
         else
         {
-            if ((!dwHeight || This->lpLcl->lpGbl->vmiData.dwDisplayHeight == dwHeight) && 
-                (!dwWidth || This->lpLcl->lpGbl->vmiData.dwDisplayWidth == dwWidth)  && 
+            if ((!dwHeight || This->lpLcl->lpGbl->vmiData.dwDisplayHeight == dwHeight) &&
+                (!dwWidth || This->lpLcl->lpGbl->vmiData.dwDisplayWidth == dwWidth)  &&
                 (!dwBPP || This->lpLcl->lpGbl->vmiData.ddpfDisplay.dwRGBBitCount == dwBPP) &&
-                (!dwRefreshRate || This->lpLcl->lpGbl->dwMonitorFrequency == dwRefreshRate))  
+                (!dwRefreshRate || This->lpLcl->lpGbl->dwMonitorFrequency == dwRefreshRate))
             {
                 ret = DD_OK; // nothing to do here for us
             }
@@ -137,13 +137,13 @@ Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWO
                 DEVMODE DevMode;
                 DevMode.dmFields = 0;
 
-                if (dwHeight) 
+                if (dwHeight)
                     DevMode.dmFields |= DM_PELSHEIGHT;
-                if (dwWidth) 
+                if (dwWidth)
                     DevMode.dmFields |= DM_PELSWIDTH;
-                if (dwBPP) 
+                if (dwBPP)
                     DevMode.dmFields |= DM_BITSPERPEL;
-                if (dwRefreshRate) 
+                if (dwRefreshRate)
                     DevMode.dmFields |= DM_DISPLAYFREQUENCY;
 
                 DevMode.dmPelsHeight = dwHeight;
@@ -194,7 +194,7 @@ Main_DirectDraw_RestoreDisplayMode (LPDDRAWI_DIRECTDRAW_INT This)
 
         // Update Interals
 
-        
+
         This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
         DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
         StartDirectDraw((LPDIRECTDRAW)This, 0, TRUE);

@@ -1083,7 +1083,7 @@ static HRESULT PropertyStorage_ReadProperty(PropertyStorage_impl *This,
     case VT_LPSTR:
     {
         DWORD count;
-       
+
         StorageUtl_ReadDWord(data, 0, &count);
         if (This->codePage == CP_UNICODE && count / 2)
         {

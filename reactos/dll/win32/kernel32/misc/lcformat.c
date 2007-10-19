@@ -1695,7 +1695,7 @@ INT WINAPI GetCurrencyFormatW(LCID lcid, DWORD dwFlags,
             break;
         }
     }
-    
+
     // Add left bracket
     if (dwFmt & CF_PARENS)
     {

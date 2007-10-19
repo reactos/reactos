@@ -17,7 +17,7 @@
 #include "os_support.h"
 #include "env_var.h"
 
-#include <iostream> 
+#include <iostream>
 #include <vector>
 #include <fstream>
 #include <time.h>
@@ -77,7 +77,7 @@ namespace Sysreg_
 	}
 
 //---------------------------------------------------------------------------------------
-	RosBootTest::~RosBootTest() 
+	RosBootTest::~RosBootTest()
 	{
 
 	}
@@ -108,7 +108,7 @@ namespace Sysreg_
         {
             strcpy(szBuffer, pBuf);
         }
-        m_Pid = OsSupport::createProcess (szBuffer, numargs-1, args, false); 
+        m_Pid = OsSupport::createProcess (szBuffer, numargs-1, args, false);
         if (!m_Pid)
         {
             cerr << "Error: failed to launch boot cmd " << m_BootCmd << endl;
@@ -146,7 +146,7 @@ namespace Sysreg_
     {
         FILE * file;
         file = fopen(output.c_str(), "r");
-        
+
         if (file)
         {
             /* the file exists */
@@ -182,7 +182,7 @@ namespace Sysreg_
 
 #else
         qemuimgdir += "\\qemu-img.exe";
-#endif  
+#endif
 
        if (!isFileExisting(qemuimgdir))
         {
@@ -207,7 +207,7 @@ namespace Sysreg_
 
         options[0] = (char*)qemuimgdir.c_str();
         options[4] = (char*)image.c_str();
-            
+
         cerr << "Creating HDD Image ..." << image << endl;
         OsSupport::createProcess ((char*)qemuimgdir.c_str(), 6, options, true);
         if (isFileExisting(image))
@@ -224,7 +224,7 @@ namespace Sysreg_
 
         if (m_BootCmd.length())
         {
-            /* the boot cmd is already provided 
+            /* the boot cmd is already provided
              * check if path to qemu is valid
              */
             string::size_type pos = m_BootCmd.find_first_of(" ");
@@ -248,7 +248,7 @@ namespace Sysreg_
     bool RosBootTest::hasQemuNoRebootOption()
     {
         ///
-        /// FIXME 
+        /// FIXME
         /// extract version
         ///
 
@@ -261,13 +261,13 @@ namespace Sysreg_
 
 #ifdef __LINUX__
         pos = m_EmuPath.find_last_of("/");
-#else       
+#else
         pos = m_EmuPath.find_last_of("\\");
 #endif
         if (pos == string::npos)
         {
             cerr << "Error: ROS_EMU_PATH is invalid!!!" << endl;
-            return false; 
+            return false;
         }
         qemupath = m_EmuPath.substr(0, pos);
         return true;
@@ -294,14 +294,14 @@ namespace Sysreg_
         }
         else
         {
-        
+
             pipe = "pipe:/tmp/qemu";
 	    m_Src = "/tmp/qemu";
         }
 
         qemudir = "/usr/share/qemu";
         m_DebugPort = "pipe";
-#else		
+#else
         if (_mktemp(pipename))
         {
             string temp = pipename;
@@ -319,9 +319,9 @@ namespace Sysreg_
         {
             return false;
         }
-#endif	 
+#endif
 
-        
+
         m_BootCmd = m_EmuPath + " -L " + qemudir + " -m " + m_MaxMem + " -serial " + pipe;
 
         if (m_CDImage.length())
@@ -344,7 +344,7 @@ namespace Sysreg_
         else
         {
             /*
-             * no boot device provided 
+             * no boot device provided
              */
             cerr << "Error: no bootdevice provided" << endl;
             return false;
@@ -417,7 +417,7 @@ namespace Sysreg_
         else if (!m_BootCmd.length ())
         {
             /* no hdd image provided
-             * but also no override by 
+             * but also no override by
              * ROS_BOOT_CMD
              */
             if (!m_CDImage.length ())
@@ -503,7 +503,7 @@ namespace Sysreg_
             m_CDImage = "";
             return true;
         }
-        
+
         string::size_type pos = m_BootCmd.find("-boot ");
         if (pos == string::npos)
         {
@@ -548,7 +548,7 @@ namespace Sysreg_
         {
             rest = rest.substr(0, pos);
         }
-        
+
         if (!isFileExisting(rest))
         {
             cerr << "Error: cdrom image " << rest << " does not exist" << endl;
@@ -595,10 +595,10 @@ namespace Sysreg_
                 return false;
             }
         }
-#ifdef __LINUX__        
+#ifdef __LINUX__
 	if (mkfifo(m_Src.c_str(), 400))
 	{
-/*	
+/*
 	    if (errno != EEXIST)
 	    {
             	cerr <<"Error: mkfifo failed with " << errno << endl;
@@ -623,7 +623,7 @@ namespace Sysreg_
             cerr << "Error: failed to launch emulator with: " << m_BootCmd << endl;
             return false;
         }
-        
+
         return true;
     }
 
@@ -693,9 +693,9 @@ namespace Sysreg_
             remove(m_PidFile.c_str ());
         }
 	}
-    
+
 //---------------------------------------------------------------------------------------
-	bool RosBootTest::execute(ConfigParser &conf_parser) 
+	bool RosBootTest::execute(ConfigParser &conf_parser)
 	{
 		if (!readConfigurationValues(conf_parser))
         {
@@ -719,7 +719,7 @@ namespace Sysreg_
             }
         }
         else
-        {   
+        {
             ///
             /// unsupported emulator
 
@@ -737,7 +737,7 @@ namespace Sysreg_
         if (m_DelayRead)
         {
             cerr << "Delaying read for " << m_DelayRead << " seconds" << endl;
-            OsSupport::delayExecution(m_DelayRead); 
+            OsSupport::delayExecution(m_DelayRead);
         }
 
         if (!m_DataSource->openSource(m_Src))
@@ -878,7 +878,7 @@ namespace Sysreg_
 
 				///
 				/// extract address from next line
-				/// 
+				///
 
 				string address = debug_data[i+2];
 				string::size_type pos = address.find_last_of (" ");
@@ -895,7 +895,7 @@ namespace Sysreg_
 				/// extract module name
 				///
 				string modulename = debug_data[i+3];
-				
+
 				pos = modulename.find_last_of ("\\");
 				if (pos == string::npos)
 				{
@@ -906,7 +906,7 @@ namespace Sysreg_
 				string appname = modulename.substr (pos + 1, modulename.length () - pos);
 				if (m_CriticalImage.find (appname) == string::npos && m_CriticalImage.length () > 1)
 				{
-					/// the application is not in the list of 
+					/// the application is not in the list of
 					/// critical apps. Therefore we ignore the user-mode
 					/// exception
 
@@ -933,11 +933,11 @@ namespace Sysreg_
 #if 0
 				SymbolFile::resolveAddress (modulename, address, result);
 				cerr << result << endl;
-#endif				
+#endif
 				///
 				/// TODO
 				///
-				/// resolve frame addresses 
+				/// resolve frame addresses
 
 
 
@@ -972,7 +972,7 @@ namespace Sysreg_
 			size_t prev_count = vect.size ();
 			if (!m_DataSource->readSource (vect))
 			{
-				continue;				
+				continue;
 			}
 			if (write_log)
 			{

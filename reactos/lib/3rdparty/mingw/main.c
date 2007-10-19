@@ -16,7 +16,7 @@
 
 #define ISSPACE(a)	(a == ' ' || a == '\t')
 
-extern int PASCAL WinMain (HINSTANCE hInst, HINSTANCE hPrevInst, 
+extern int PASCAL WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
                            LPSTR szCmdLine, int nShow);
 
 int

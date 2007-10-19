@@ -9,7 +9,7 @@
 #else
 #include <sys/io.h>
 #include <errno.h>
-#include <sys/types.h> 
+#include <sys/types.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <string.h>
@@ -50,11 +50,11 @@ char* convert_path(char* origpath)
 {
    char* newpath;
    int i;
-   
+
    //newpath = strdup(origpath);
 	 newpath = malloc(strlen(origpath)+1);
 	 strcpy(newpath, origpath);
-   
+
    i = 0;
    while (newpath[i] != 0)
      {
@@ -69,8 +69,8 @@ char* convert_path(char* origpath)
 	  {
 	     newpath[i] = '\\';
 	  }
-#endif	
-#endif	
+#endif
+#endif
 	i++;
      }
    return(newpath);
@@ -87,7 +87,7 @@ copy_file(char* path1, char* path2)
    int n_in;
    int n_out;
    struct stat st_buffer;
-   struct utimbuf ut_buffer; 
+   struct utimbuf ut_buffer;
 
    in = fopen(path1, "rb");
    if (in == NULL)
@@ -103,7 +103,7 @@ copy_file(char* path1, char* path2)
 	fclose(in);
 	exit(1);
      }
-   
+
    buf = malloc(TRANSFER_SIZE);
    while (!feof(in))
      {
@@ -125,14 +125,14 @@ copy_file(char* path1, char* path2)
    if (stat(path2, &st_buffer) >= 0)
    {
       ut_buffer.actime = st_buffer.st_atime;
-   
+
       if (stat(path1, &st_buffer) >= 0)
       {
          ut_buffer.modtime = st_buffer.st_mtime;
 	 utime(path2, &ut_buffer);
       }
    }
-   
+
 }
 
 #ifdef WIN32
@@ -224,7 +224,7 @@ copy_directory (char *path1, char *path2)
   char tobuf[MAX_PATH];
   char err[400];
 
-  dirp = opendir(path1); 
+  dirp = opendir(path1);
 
   if (dirp != NULL)
     {
@@ -305,7 +305,7 @@ int main(int argc, char* argv[])
    char* path2;
    int dir1;
    int dir2;
-   
+
    if (argc != 3)
      {
 	fprintf(stderr, "Wrong argument count\n");

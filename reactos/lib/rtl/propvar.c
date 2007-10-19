@@ -3,7 +3,7 @@
  * PROJECT:           ReactOS system libraries
  * FILE:              lib/rtl/propvar.c
  * PURPOSE:           Native properties and variants API
- * PROGRAMMER:        
+ * PROGRAMMER:
  */
 
 /* INCLUDES *****************************************************************/

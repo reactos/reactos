@@ -30,7 +30,7 @@
  * between a DRI driver and driver loader.  Currently, the most common driver
  * loader is the XFree86 libGL.so.  However, other loaders do exist, and in
  * the future the server-side libglx.a will also be a loader.
- * 
+ *
  * \author Kevin E. Martin <kevin@precisioninsight.com>
  * \author Ian Romanick <idr@us.ibm.com>
  */
@@ -122,7 +122,7 @@ extern const char __driConfigOptions[];
 /**
  * Stored version of some component (i.e., server-side DRI module, kernel-side
  * DRM, etc.).
- * 
+ *
  * \todo
  * There are several data structures that explicitly store a major version,
  * minor version, and patch level.  These structures should be modified to
@@ -173,7 +173,7 @@ struct __DRIinterfaceMethodsRec {
     /*@{*/
     /**
      * Determine if the specified window ID still exists.
-     * 
+     *
      * \note
      * Implementations may assume that the driver will only pass an ID into
      * this function that actually corresponds to a window.  On
@@ -230,7 +230,7 @@ struct __DRIinterfaceMethodsRec {
 
     /**
      * Get the media stream counter (MSC) rate.
-     * 
+     *
      * Matching the definition in GLX_OML_sync_control, this function returns
      * the rate of the "media stream counter".  In practical terms, this is
      * the frame refresh rate of the display.
@@ -240,11 +240,11 @@ struct __DRIinterfaceMethodsRec {
     /*@}*/
 };
 
-   
+
 /**
  * Framebuffer information record.  Used by libGL to communicate information
  * about the framebuffer to the driver's \c __driCreateNewScreen function.
- * 
+ *
  * In XFree86, most of this information is derrived from data returned by
  * calling \c XF86DRIGetDeviceInfo.
  *
@@ -303,13 +303,13 @@ struct __DRIscreenRec {
     /**
      * Get the number of vertical refreshes since some point in time before
      * this function was first called (i.e., system start up).
-     * 
+     *
      * \since Internal API version 20030317.
      */
     int (*getMSC)( void *screenPrivate, int64_t *msc );
 
     /**
-     * Opaque pointer that points back to the containing 
+     * Opaque pointer that points back to the containing
      * \c __GLXscreenConfigs.  This data structure is shared with DRI drivers
      * but \c __GLXscreenConfigs is not. However, they are needed by some GLX
      * functions called by DRI drivers.
@@ -327,9 +327,9 @@ struct __DRIscreenRec {
     void *(*allocateMemory)(__DRInativeDisplay *dpy, int scrn, GLsizei size,
 			    GLfloat readfreq, GLfloat writefreq,
 			    GLfloat priority);
-   
+
     void (*freeMemory)(__DRInativeDisplay *dpy, int scrn, GLvoid *pointer);
-   
+
     GLuint (*memoryOffset)(__DRInativeDisplay *dpy, int scrn, const GLvoid *pointer);
     /*@}*/
 
@@ -430,7 +430,7 @@ struct __DRIdrawableRec {
      * the next time (MSC % divisor) is equal to remainder.  If divisor is
      * zero, the function will return as soon as MSC is greater than or equal
      * to target_msc.
-     * 
+     *
      * \since Internal API version 20030317.
      */
     int (*waitForMSC)( __DRInativeDisplay * dpy, void *drawablePriv,
@@ -443,7 +443,7 @@ struct __DRIdrawableRec {
      * if that has already passed, waits until (MSC % divisor) is equal
      * to remainder.  If divisor is zero, the swap will happen as soon as
      * MSC is greater than or equal to target_msc.
-     * 
+     *
      * \since Internal API version 20030317.
      */
     int64_t (*swapBuffersMSC)(__DRInativeDisplay *dpy, void *drawablePrivate,
@@ -452,14 +452,14 @@ struct __DRIdrawableRec {
 
     /**
      * Enable or disable frame usage tracking.
-     * 
+     *
      * \since Internal API version 20030317.
      */
     int (*frameTracking)(__DRInativeDisplay *dpy, void *drawablePrivate, GLboolean enable);
 
     /**
      * Retrieve frame usage information.
-     * 
+     *
      * \since Internal API version 20030317.
      */
     int (*queryFrameTracking)(__DRInativeDisplay *dpy, void *drawablePrivate,

@@ -43,7 +43,7 @@ typedef struct _AUTHZ_RESMAN
     PFN_AUTHZ_DYNAMIC_ACCESS_CHECK pfnAccessCheck;
     PFN_AUTHZ_COMPUTE_DYNAMIC_GROUPS pfnComputeDynamicGroups;
     PFN_AUTHZ_FREE_DYNAMIC_GROUPS pfnFreeDynamicGroups;
-    
+
     DWORD flags;
     PSID UserSid;
     LUID AuthenticationId;

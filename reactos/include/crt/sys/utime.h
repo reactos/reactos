@@ -66,7 +66,7 @@ _CRTIMP int __cdecl	_futime (int, struct _utimbuf*);
 _CRTIMP int __cdecl	_wutime (const wchar_t*, struct _utimbuf*);
 #endif /* MSVCRT runtime */
 
-/* These require newer versions of msvcrt.dll (6.10 or higher).  */ 
+/* These require newer versions of msvcrt.dll (6.10 or higher).  */
 #if __MSVCRT_VERSION__ >= 0x0601
 _CRTIMP int __cdecl	_utime64 (const char*, struct __utimbuf64*);
 _CRTIMP int __cdecl	_wutime64 (const wchar_t*, struct __utimbuf64*);

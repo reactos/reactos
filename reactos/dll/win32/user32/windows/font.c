@@ -104,7 +104,7 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
         INT x0;
         x0 = x;
         r.left = x0;
-        /* chop the string into substrings of 0 or more <tabs> 
+        /* chop the string into substrings of 0 or more <tabs>
          * possibly followed by 1 or more normal characters */
         for (i = 0; i < count; i++)
             if (lpstr[i] != '\t') break;
@@ -149,7 +149,7 @@ static LONG TEXT_TabbedTextOut( HDC hdc, INT x, INT y, LPCWSTR lpstr,
             }
         } else
             x += extent.cx;
-        
+
         if (fDisplayText)
         {
             r.top    = y;
@@ -1006,7 +1006,7 @@ static void TEXT_DrawUnderscore (HDC hdc, int x, int y, const WCHAR *str, int of
         if (prefix_x   < rect->left ) prefix_x   = rect->left;
         if (prefix_end > rect->right) prefix_end = rect->right;
     }
-    
+
     hpen = CreatePen (PS_SOLID, 1, GetTextColor (hdc));
     oldPen = SelectObject (hdc, hpen);
     MoveToEx (hdc, prefix_x, y, NULL);

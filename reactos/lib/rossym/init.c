@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rossym/data.c
  * PURPOSE:         Definition of external variables
- * 
+ *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 

@@ -906,7 +906,7 @@ typedef struct _HW_DEVICE_EXTENSION {
     BOOLEAN        opt_AtapiDmaZeroTransfer; // default FALSE
     BOOLEAN        opt_AtapiDmaControlCmd;   // default FALSE
     BOOLEAN        opt_AtapiDmaRawRead;      // default TRUE
-    BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE  
+    BOOLEAN        opt_AtapiDmaReadWrite;    // default TRUE
 
 } HW_DEVICE_EXTENSION, *PHW_DEVICE_EXTENSION;
 
@@ -951,7 +951,7 @@ UniataDisconnectIntr2(
     IN PVOID HwDeviceExtension
     );
 
-extern ULONG 
+extern ULONG
 ScsiPortGetBusDataByOffset(
     IN PVOID  HwDeviceExtension,
     IN BUS_DATA_TYPE  BusDataType,

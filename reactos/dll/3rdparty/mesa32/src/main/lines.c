@@ -86,7 +86,7 @@ _mesa_LineWidth( GLfloat width )
  *
  * \param factor pattern scale factor.
  * \param pattern bit pattern.
- * 
+ *
  * \sa glLineStipple().
  *
  * Updates gl_line_attrib::StippleFactor and gl_line_attrib::StipplePattern. On

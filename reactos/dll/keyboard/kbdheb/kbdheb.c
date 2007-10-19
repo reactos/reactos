@@ -173,10 +173,10 @@ ROSDATA USHORT scancode_to_vk[] =
   VK_LMENU,     // 38: lalt
   VK_SPACE,     // 39: space
   VK_CAPITAL,   // 3A: caps lock?
-  
+
   /* - 3b - */
   /* F-Keys */
-  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6, 
+  VK_F1, VK_F2, VK_F3, VK_F4, VK_F5, VK_F6,
   VK_F7, VK_F8, VK_F9, VK_F10,
   /* - 45 - */
   /* Locks */
@@ -197,11 +197,11 @@ ROSDATA USHORT scancode_to_vk[] =
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
-  VK_HELP,      
+  VK_HELP,
   /* - 64 - */
   /* Even more F-Keys (for example, NCR keyboards from the early 90's) */
   VK_F13, VK_F14, VK_F15, VK_F16, VK_F17, VK_F18, VK_F19, VK_F20,
-  VK_F21, VK_F22, VK_F23, 
+  VK_F21, VK_F22, VK_F23,
   /* - 6f - */
   /* Not sure who uses these codes */
   VK_EMPTY, VK_EMPTY, VK_EMPTY,
@@ -443,10 +443,10 @@ ROSDATA KBDTABLES keyboard_layout_table =
 {
   /* modifier assignments */
   &modifier_bits,
-  
+
   /* character from vk tables */
   vk_to_wchar_master_table,
-  
+
   /* diacritical marks -- currently implemented by wine code */
   /* English doesn't have any, anyway */
   NULL,

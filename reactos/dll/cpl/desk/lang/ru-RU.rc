@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT | 
+    CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
                     WS_BORDER | WS_TABSTOP, 8, 114, 174, 78
     LTEXT           "¬ыберите изображение дл€ рабочего стола:",
@@ -150,7 +150,7 @@ BEGIN
     IDS_ADVANCEDTITLEFMT "%s and %s"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME             "Ёкран"
     IDS_CPLDESCRIPTION      "¬ыберите дисплей рабочего стола и заставку."

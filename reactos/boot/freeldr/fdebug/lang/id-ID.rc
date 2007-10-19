@@ -13,7 +13,7 @@ LANGUAGE LANG_INDONESIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDC_FDEBUG MENU DISCARDABLE 
+IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN
@@ -41,7 +41,7 @@ END
 // Accelerator
 //
 
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE 
+IDC_FDEBUG ACCELERATORS MOVEABLE PURE
 BEGIN
     63,            IDM_ABOUT,              ASCII,  ALT // "?"
     47,            IDM_ABOUT,              ASCII,  ALT // "/"
@@ -54,7 +54,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -63,13 +63,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
@@ -83,7 +83,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO DISCARDABLE
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -127,7 +127,7 @@ BEGIN
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
     ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE | 
+    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
 END
 
@@ -163,14 +163,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
     IDS_HELLO               "Halo Dunia!"
     IDC_FDEBUG              "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LICENSE "Program ini adalah software bebas; anda dapat mendistribusikan dan/atau mengubahnya di bawah term GNU General Public License seperti dipublikasikan oleh Free Software Foundation; baik Lisensi versi 2, atau (menurut opini anda) setiap versi berikutnya.\r\n\r\nProgram ini didistribusikan dengan harapan ia akan berguna, tetapi TANPA JAMINAN APAPUN; bahkan tanpa jaminan berarti dari MERCANTABILITAS atau KECUKUPAN UNTUK KEPERLUAN TERTENTU.  Lihat GNU General Public License untuk lebih jelasnya.\r\n\r\nAnda seharusnya menerima duplikat GNU General Public License bersamaan dengan program ini; jika tidak, tulis ke Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END

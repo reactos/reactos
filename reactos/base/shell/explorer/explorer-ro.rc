@@ -29,7 +29,7 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MDIFRAME MENU DISCARDABLE 
+IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fiºier"
     BEGIN
@@ -70,7 +70,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU DISCARDABLE 
+IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Fiºier"
     BEGIN
@@ -128,7 +128,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Începe"
@@ -148,7 +148,7 @@ BEGIN
     IDS_ADMIN               "Administrare"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -166,7 +166,7 @@ BEGIN
     IDS_TERMINATE           "Închide sesiunea"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Reþea"
     IDS_CONNECTIONS         "Conecþii"
@@ -180,7 +180,7 @@ BEGIN
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Cãutare..."
     IDS_ABOUT_EXPLORER      "&Despre Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS 
+    IDS_LAUNCH_MANY_PROGRAMS
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
     IDS_DESKTOP             "Desktop"
@@ -206,12 +206,12 @@ LANGUAGE LANG_ROMANIAN, SUBLANG_DEFAULT
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""resource.h""\r\n"
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
@@ -220,7 +220,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"

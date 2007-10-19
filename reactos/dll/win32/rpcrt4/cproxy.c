@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
- * 
+ *
  * TODO: Handle non-i386 architectures
  *       Get rid of #if 0'ed code.
  */
@@ -174,7 +174,7 @@ HRESULT WINAPI StdProxy_Construct(REFIID riid,
       }
     }
   }
-  else 
+  else
     This->PVtbl = vtbl->Vtbl;
 
   This->lpVtbl = &StdProxy_Vtbl;

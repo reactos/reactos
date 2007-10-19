@@ -25,7 +25,7 @@ CAPTION "Opções de compressão"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Escolha a stream:",-1,2,5,114,10
-    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL | 
+    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL |
                     WS_TABSTOP
     PUSHBUTTON      "&Opções...",IDC_OPTIONS,145,17,45,14
     AUTOCHECKBOX    "&Interleave every",IDC_INTERLEAVE,3,42,60,11,WS_TABSTOP

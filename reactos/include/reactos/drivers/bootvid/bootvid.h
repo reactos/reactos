@@ -26,7 +26,7 @@ VidSetScrollRegion(ULONG x1,
                    ULONG y1,
                    ULONG x2,
                    ULONG y2);
-                   
+
 
 VOID
 NTAPI

@@ -20,7 +20,7 @@
  */
 
 /*
-http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msiformatrecord.asp 
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msiformatrecord.asp
  */
 
 #include <stdarg.h>
@@ -40,14 +40,14 @@ http://msdn.microsoft.com/library/default.asp?url=/library/en-us/msi/setup/msifo
 WINE_DEFAULT_DEBUG_CHANNEL(msi);
 
 
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
+static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                                      WCHAR** data, DWORD len, MSIRECORD* record,
                                      BOOL* in_group);
 
 
 static LPWSTR build_default_format(MSIRECORD* record)
 {
-    int i;  
+    int i;
     int count;
     LPWSTR rc, buf;
     static const WCHAR fmt[] = {'%','i',':',' ','%','s',' ',0};
@@ -129,7 +129,7 @@ static LPWSTR deformat_component(MSIPACKAGE* package, LPCWSTR key, DWORD* sz)
     return value;
 }
 
-static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz, 
+static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
                             BOOL shortname)
 {
     LPWSTR value = NULL;
@@ -173,7 +173,7 @@ static LPWSTR deformat_file(MSIPACKAGE* package, LPCWSTR key, DWORD* sz,
     return value;
 }
 
-static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key, 
+static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
                                    DWORD* chunk)
 {
     LPWSTR value = NULL;
@@ -196,7 +196,7 @@ static LPWSTR deformat_environment(MSIPACKAGE* package, LPCWSTR key,
     return value;
 }
 
- 
+
 static LPWSTR deformat_NULL(DWORD* chunk)
 {
     LPWSTR value;
@@ -235,7 +235,7 @@ static BOOL is_key_number(LPCWSTR key)
 static LPWSTR deformat_index(MSIRECORD* record, LPCWSTR key, DWORD* chunk )
 {
     INT index;
-    LPWSTR value; 
+    LPWSTR value;
 
     index = atoiW(key);
     TRACE("record index %i\n",index);
@@ -266,10 +266,10 @@ static LPWSTR deformat_property(MSIPACKAGE* package, LPCWSTR key, DWORD* chunk)
 }
 
 /*
- * Groups cannot be nested. They are just treated as from { to next } 
+ * Groups cannot be nested. They are just treated as from { to next }
  */
 static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *group, LPCWSTR *mark, 
+                                    LPWSTR *group, LPCWSTR *mark,
                                     LPCWSTR* mark2)
 {
     int i;
@@ -290,7 +290,7 @@ static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
     if (! found)
         return FALSE;
 
-    *mark2 = &(*mark)[i]; 
+    *mark2 = &(*mark)[i];
 
     i = *mark2 - *mark;
     *group = msi_alloc(i*sizeof(WCHAR));
@@ -305,7 +305,7 @@ static BOOL find_next_group(LPCWSTR source, DWORD len_remaining,
 
 
 static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
-                                    LPWSTR *key, LPCWSTR *mark, LPCWSTR* mark2, 
+                                    LPWSTR *key, LPCWSTR *mark, LPCWSTR* mark2,
                                     BOOL *nested)
 {
     INT count = 0;
@@ -336,7 +336,7 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     if (count > 0)
         return FALSE;
 
-    *mark2 = &(*mark)[i-1]; 
+    *mark2 = &(*mark)[i-1];
 
     i = *mark2 - *mark;
     *key = msi_alloc(i*sizeof(WCHAR));
@@ -349,7 +349,7 @@ static BOOL find_next_outermost_key(LPCWSTR source, DWORD len_remaining,
     return TRUE;
 }
 
-static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len, 
+static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
                       MSIRECORD* record, DWORD* size)
 {
     LPWSTR value = NULL;
@@ -360,7 +360,7 @@ static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
     static const WCHAR fmt[] = {'{','%','s','}',0};
     UINT sz;
 
-    if (!group || group[0] == 0) 
+    if (!group || group[0] == 0)
     {
         *size = 0;
         return NULL;
@@ -412,7 +412,7 @@ static LPWSTR deformat_group(MSIPACKAGE* package, LPWSTR group, DWORD len,
  * len is in WCHARs
  * return is also in WCHARs
  */
-static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr, 
+static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                                      WCHAR** data, DWORD len, MSIRECORD* record,
                                      INT* failcount)
 {
@@ -437,7 +437,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
     TRACE("Starting with %s\n",debugstr_wn(ptr,len));
 
     /* scan for special characters... fast exit */
-    if ((!scanW(ptr,'[',len) || (scanW(ptr,'[',len) && !scanW(ptr,']',len))) && 
+    if ((!scanW(ptr,'[',len) || (scanW(ptr,'[',len) && !scanW(ptr,']',len))) &&
         (scanW(ptr,'{',len) && !scanW(ptr,'}',len)))
     {
         /* not formatted */
@@ -446,7 +446,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         TRACE("Returning %s\n",debugstr_wn(*data,len));
         return len;
     }
-  
+
     progress = ptr;
 
     while (progress - ptr < len)
@@ -455,14 +455,14 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         if (find_next_group(progress, len - (progress - ptr), &key,
                                 &mark, &mark2))
         {
-            value = deformat_group(package, key, strlenW(key)+1, record, 
+            value = deformat_group(package, key, strlenW(key)+1, record,
                             &chunk);
             msi_free( key );
             key = NULL;
             nested = FALSE;
         }
         /* formatted string located */
-        else if (!find_next_outermost_key(progress, len - (progress - ptr), 
+        else if (!find_next_outermost_key(progress, len - (progress - ptr),
                                 &key, &mark, &mark2, &nested))
         {
             LPBYTE nd2;
@@ -494,7 +494,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             else
                 tgt = msi_realloc(newdata,size);
             newdata  = tgt;
-            memcpy(&newdata[old_size],progress,(cnt * sizeof(WCHAR)));  
+            memcpy(&newdata[old_size],progress,(cnt * sizeof(WCHAR)));
         }
 
         progress = mark;
@@ -509,7 +509,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             key = value;
         }
 
-        TRACE("Current %s .. %s\n",debugstr_wn((LPWSTR)newdata, 
+        TRACE("Current %s .. %s\n",debugstr_wn((LPWSTR)newdata,
                                 size/sizeof(WCHAR)),debugstr_w(key));
 
         if (!package)
@@ -517,7 +517,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
             /* only deformat number indexs */
             if (key && is_key_number(key))
             {
-                value = deformat_index(record,key,&chunk);  
+                value = deformat_index(record,key,&chunk);
                 if (!chunk && failcount && *failcount >= 0)
                     (*failcount)++;
             }
@@ -573,7 +573,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                         }
                     else
                         value = deformat_property(package,key,&chunk);
-                break;      
+                break;
             }
         }
 
@@ -590,7 +590,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
                 nd2= msi_alloc(chunk);
             newdata = nd2;
             memcpy(&newdata[size],value,chunk);
-            size+=chunk;   
+            size+=chunk;
             msi_free(value);
         }
         else if (failcount && *failcount >=0 )
@@ -599,7 +599,7 @@ static DWORD deformat_string_internal(MSIPACKAGE *package, LPCWSTR ptr,
         progress = mark2+1;
     }
 
-    TRACE("after everything %s\n",debugstr_wn((LPWSTR)newdata, 
+    TRACE("after everything %s\n",debugstr_wn((LPWSTR)newdata,
                             size/sizeof(WCHAR)));
 
     *data = (LPWSTR)newdata;
@@ -672,7 +672,7 @@ UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
 
     len = deformat_string_internal(package,rec,&deformated,strlenW(rec),
                                    record, NULL);
-    /* If len is zero then WideCharToMultiByte will return 0 indicating 
+    /* If len is zero then WideCharToMultiByte will return 0 indicating
      * failure, but that will do just as well since we are ignoring
      * possible errors.
      */
@@ -705,7 +705,7 @@ UINT MSI_FormatRecordA( MSIPACKAGE* package, MSIRECORD* record, LPSTR buffer,
 }
 
 
-UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord, 
+UINT WINAPI MsiFormatRecordW( MSIHANDLE hInstall, MSIHANDLE hRecord,
                               LPWSTR szResult, DWORD *sz )
 {
     UINT r = ERROR_INVALID_HANDLE;

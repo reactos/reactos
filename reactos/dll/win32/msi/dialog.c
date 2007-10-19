@@ -97,7 +97,7 @@ struct msi_dialog_tag
 };
 
 typedef UINT (*msi_dialog_control_func)( msi_dialog *dialog, MSIRECORD *rec );
-struct control_handler 
+struct control_handler
 {
     LPCWSTR control_type;
     msi_dialog_control_func func;
@@ -133,7 +133,7 @@ static const WCHAR szMaskedEdit[] = { 'M','a','s','k','e','d','E','d','i','t',0 
 static const WCHAR szPathEdit[] = { 'P','a','t','h','E','d','i','t',0 };
 static const WCHAR szProgressBar[] = {
      'P','r','o','g','r','e','s','s','B','a','r',0 };
-static const WCHAR szRadioButtonGroup[] = { 
+static const WCHAR szRadioButtonGroup[] = {
     'R','a','d','i','o','B','u','t','t','o','n','G','r','o','u','p',0 };
 static const WCHAR szIcon[] = { 'I','c','o','n',0 };
 static const WCHAR szSelectionTree[] = {
@@ -539,7 +539,7 @@ static HICON msi_load_icon( MSIDATABASE *db, LPCWSTR text, UINT attributes )
 
 
 /* called from the Control Event subscription code */
-void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control, 
+void msi_dialog_handle_event( msi_dialog* dialog, LPCWSTR control,
                               LPCWSTR attribute, MSIRECORD *rec )
 {
     msi_control* ctrl;
@@ -991,7 +991,7 @@ static HBITMAP msi_load_picture( MSIDATABASE *db, LPCWSTR name,
         ERR("failed to get bitmap handle\n");
         goto end;
     }
- 
+
     /* make the bitmap the desired size */
     r = GetObjectW( hOleBitmap, sizeof bm, &bm );
     if (r != sizeof bm )
@@ -1055,7 +1055,7 @@ static UINT msi_dialog_bitmap_control( msi_dialog *dialog, MSIRECORD *rec )
         ERR("Failed to load bitmap %s\n", debugstr_w(text));
 
     msi_free( text );
-    
+
     return ERROR_SUCCESS;
 }
 
@@ -1069,7 +1069,7 @@ static UINT msi_dialog_icon_control( msi_dialog *dialog, MSIRECORD *rec )
 
     control = msi_dialog_add_control( dialog, rec, szStatic,
                             SS_ICON | SS_CENTERIMAGE | WS_GROUP );
-            
+
     attributes = MSI_RecordGetInteger( rec, 8 );
     text = msi_get_deformatted_field( dialog->package, rec, 10 );
     control->hIcon = msi_load_icon( dialog->package->db, text, attributes );
@@ -1653,7 +1653,7 @@ static UINT msi_dialog_radiogroup_control( msi_dialog *dialog, MSIRECORD *rec )
     r = MSI_OpenQuery( package->db, &view, query, prop );
     if( r != ERROR_SUCCESS )
     {
-        ERR("query failed for dialog %s radio group %s\n", 
+        ERR("query failed for dialog %s radio group %s\n",
             debugstr_w(dialog->name), debugstr_w(prop));
         return ERROR_INVALID_PARAMETER;
     }
@@ -2404,7 +2404,7 @@ static void msi_dialog_vcl_add_columns( msi_dialog *dialog, msi_control *control
         lstrcpynW( num, begin + 1, end - begin );
         begin += end - begin + 1;
 
-        /* empty braces or '0' hides the column */ 
+        /* empty braces or '0' hides the column */
         if ( !num[0] || !lstrcmpW( num, zero ) )
         {
             count++;
@@ -2968,7 +2968,7 @@ static UINT msi_dialog_button_handler( msi_dialog *dialog,
 
         if ( r != ERROR_SUCCESS )
             goto done;
-    }    
+    }
 
     /* handle all other events */
     LIST_FOR_EACH_ENTRY_SAFE( rec_entry, next, &events, struct rec_list, entry )
@@ -3097,7 +3097,7 @@ static LRESULT msi_dialog_oncommand( msi_dialog *dialog, WPARAM param, HWND hwnd
     case 2: /* escape */
         control = msi_dialog_find_control( dialog, dialog->control_cancel );
         break;
-    default: 
+    default:
         control = msi_dialog_find_control_by_hwnd( dialog, hwnd );
     }
 
@@ -3150,7 +3150,7 @@ static LRESULT WINAPI MSIDialog_WndProc( HWND hwnd, UINT msg,
         dialog->package->center_x = LOWORD(lParam) + dialog->size.cx / 2.0;
         dialog->package->center_y = HIWORD(lParam) + dialog->size.cy / 2.0;
         break;
-        
+
     case WM_CREATE:
         return msi_dialog_oncreate( hwnd, (LPCREATESTRUCTW)lParam );
 
@@ -3370,7 +3370,7 @@ void msi_dialog_destroy( msi_dialog *dialog )
 
     if( dialog->hwnd )
         ShowWindow( dialog->hwnd, SW_HIDE );
-    
+
     if( dialog->hwnd )
         DestroyWindow( dialog->hwnd );
 
@@ -3482,7 +3482,7 @@ static UINT msi_error_dialog_set_error( MSIPACKAGE *package, LPWSTR error_dialog
 {
     MSIRECORD * row;
 
-    static const WCHAR update[] = 
+    static const WCHAR update[] =
         {'U','P','D','A','T','E',' ','`','C','o','n','t','r','o','l','`',' ',
          'S','E','T',' ','`','T','e','x','t','`',' ','=',' ','\'','%','s','\'',' ',
          'W','H','E','R','E', ' ','`','D','i','a','l','o','g','_','`',' ','=',' ','\'','%','s','\'',' ',

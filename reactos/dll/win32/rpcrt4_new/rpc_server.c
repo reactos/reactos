@@ -272,7 +272,7 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
 
       /* put in the drep. FIXME: is this more universally applicable?
          perhaps we should move this outward... */
-      msg->DataRepresentation = 
+      msg->DataRepresentation =
         MAKELONG( MAKEWORD(hdr->common.drep[0], hdr->common.drep[1]),
                   MAKEWORD(hdr->common.drep[2], hdr->common.drep[3]));
 
@@ -503,7 +503,7 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
       status = RPCRT4_start_listen_protseq(cps, TRUE);
       if (status != RPC_S_OK)
         break;
-      
+
       /* make sure server is actually listening on the interface before
        * returning */
       RPCRT4_sync_with_server_thread(cps);
@@ -613,14 +613,14 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
 RPC_STATUS WINAPI RpcServerUseProtseqEpA( RPC_CSTR Protseq, UINT MaxCalls, RPC_CSTR Endpoint, LPVOID SecurityDescriptor )
 {
   RPC_POLICY policy;
-  
+
   TRACE( "(%s,%u,%s,%p)\n", Protseq, MaxCalls, Endpoint, SecurityDescriptor );
-  
+
   /* This should provide the default behaviour */
   policy.Length        = sizeof( policy );
   policy.EndpointFlags = 0;
   policy.NICFlags      = 0;
-  
+
   return RpcServerUseProtseqEpExA( Protseq, MaxCalls, Endpoint, SecurityDescriptor, &policy );
 }
 
@@ -630,14 +630,14 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpA( RPC_CSTR Protseq, UINT MaxCalls, RPC_C
 RPC_STATUS WINAPI RpcServerUseProtseqEpW( RPC_WSTR Protseq, UINT MaxCalls, RPC_WSTR Endpoint, LPVOID SecurityDescriptor )
 {
   RPC_POLICY policy;
-  
+
   TRACE( "(%s,%u,%s,%p)\n", debugstr_w( Protseq ), MaxCalls, debugstr_w( Endpoint ), SecurityDescriptor );
-  
+
   /* This should provide the default behaviour */
   policy.Length        = sizeof( policy );
   policy.EndpointFlags = 0;
   policy.NICFlags      = 0;
-  
+
   return RpcServerUseProtseqEpExW( Protseq, MaxCalls, Endpoint, SecurityDescriptor, &policy );
 }
 
@@ -935,7 +935,7 @@ RPC_STATUS WINAPI RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid )
   if ((! TypeUuid) || UuidIsNil(TypeUuid, &dummy)) {
     /* ... and drop it from the list */
     if (map) {
-      if (prev) 
+      if (prev)
         prev->next = map->next;
       else
         RpcObjTypeMaps = map->next;
@@ -966,7 +966,7 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG Au
                             LPVOID Arg )
 {
   FIXME( "(%s,%u,%p,%p): stub\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg );
-  
+
   return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
 }
 
@@ -977,7 +977,7 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
                             LPVOID Arg )
 {
   FIXME( "(%s,%u,%p,%p): stub\n", debugstr_w( ServerPrincName ), AuthnSvc, GetKeyFn, Arg );
-  
+
   return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
 }
 
@@ -1013,7 +1013,7 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
     LeaveCriticalSection(&listen_cs);
     return RPC_S_NOT_LISTENING;
   }
-  
+
   LeaveCriticalSection(&listen_cs);
 
   FIXME("not waiting for server calls to finish\n");
@@ -1032,7 +1032,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
     FIXME("client-side invocation not implemented.\n");
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
-  
+
   RPCRT4_stop_listen(FALSE);
 
   return RPC_S_OK;

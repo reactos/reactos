@@ -32,7 +32,7 @@
  *                  Ge van Geldorp
  *                  Royce Mitchell III
  *                  Filip Navara
- *                  Aleksey Bragin 
+ *                  Aleksey Bragin
  *                  Jason Filby
  *                  Thomas Weidenmueller
  *                  Gunnar Andre' Dalsnes
@@ -154,7 +154,7 @@ MmGetFileNameForAddress(IN PVOID Address,
     /*
      * FIXME: TODO.
      * Filip says to get the MADDRESS_SPACE from EPROCESS,
-     * then use the MmMarea routines to locate the Marea that 
+     * then use the MmMarea routines to locate the Marea that
      * corresponds to the address. Then make sure it's a section
      * view type (MEMORY_AREA_SECTION_VIEW) and use the marea's
      * per-type union to get the .u.SectionView.Section pointer to
@@ -741,7 +741,7 @@ MmNotPresentFaultSectionView(PMADDRESS_SPACE AddressSpace,
    }
 
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress 
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress
             + MemoryArea->Data.SectionData.ViewOffset;
 
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -1259,7 +1259,7 @@ MmAccessFaultSectionView(PMADDRESS_SPACE AddressSpace,
     * Find the offset of the page
     */
    PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
-   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress 
+   Offset = (ULONG_PTR)PAddress - (ULONG_PTR)MemoryArea->StartingAddress
             + MemoryArea->Data.SectionData.ViewOffset;
 
    Segment = MemoryArea->Data.SectionData.Segment;
@@ -1437,7 +1437,7 @@ MmPageOutDeleteMapping(PVOID Context, PEPROCESS Process, PVOID Address)
    {
       MmUnlockAddressSpace((PMADDRESS_SPACE)&Process->VadRoot);
    }
-   
+
    if (PageOutContext->Private)
    {
       MmReleasePageMemoryConsumer(MC_USER, Page);
@@ -1472,7 +1472,7 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
-   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+   Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                     + MemoryArea->Data.SectionData.ViewOffset;
    FileOffset = Context.Offset + Context.Segment->FileOffset;
 
@@ -1821,7 +1821,7 @@ MmWritePageSectionView(PMADDRESS_SPACE AddressSpace,
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
-   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+   Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
             + MemoryArea->Data.SectionData.ViewOffset;
 
    /*
@@ -1986,7 +1986,7 @@ MmAlterViewAttributes(PMADDRESS_SPACE AddressSpace,
             ULONG Entry;
             PFN_TYPE Page;
 
-            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+            Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                      + MemoryArea->Data.SectionData.ViewOffset;
             Entry = MmGetPageEntrySectionSegment(Segment, Offset);
             Page = MmGetPfnForProcess(AddressSpace->Process, Address);
@@ -2266,7 +2266,7 @@ MmInitSectionImplementation(VOID)
    UNICODE_STRING Name;
 
    DPRINT("Creating Section Object Type\n");
-  
+
    /* Initialize the Section object type  */
    RtlZeroMemory(&ObjectTypeInitializer, sizeof(ObjectTypeInitializer));
    RtlInitUnicodeString(&Name, L"Section");
@@ -3342,7 +3342,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
          ObDereferenceObject(Section);
          return(STATUS_NO_MEMORY);
       }
-      
+
       RtlZeroMemory(ImageSectionObject, sizeof(MM_IMAGE_SECTION_OBJECT));
 
       StatusExeFmt = ExeFmtpCreateImageSection(FileHandle, ImageSectionObject);
@@ -4001,7 +4001,7 @@ MmUnmapViewOfSection(PEPROCESS Process,
    ASSERT(Process);
 
    AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
-   
+
    MmLockAddressSpace(AddressSpace);
    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                                             BaseAddress);

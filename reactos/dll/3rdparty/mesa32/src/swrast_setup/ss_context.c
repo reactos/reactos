@@ -55,7 +55,7 @@ _swsetup_CreateContext( GLcontext *ctx )
    swsetup->NewState = ~0;
    _swsetup_trifuncs_init( ctx );
 
-   _tnl_init_vertices( ctx, ctx->Const.MaxArrayLockSize + 12, 
+   _tnl_init_vertices( ctx, ctx->Const.MaxArrayLockSize + 12,
 		       sizeof(SWvertex) );
 
 
@@ -125,16 +125,16 @@ _swsetup_RenderStart( GLcontext *ctx )
       int i, e = 0;
 
       EMIT_ATTR( _TNL_ATTRIB_POS, EMIT_4F_VIEWPORT, win );
-   
+
       if (index & _TNL_BIT_COLOR0)
 	 EMIT_ATTR( _TNL_ATTRIB_COLOR0, EMIT_4CHAN_4F_RGBA, color );
 
       if (index & _TNL_BIT_COLOR1)
 	 EMIT_ATTR( _TNL_ATTRIB_COLOR1, EMIT_4CHAN_4F_RGBA, specular);
 
-      if (index & _TNL_BIT_FOG) 
+      if (index & _TNL_BIT_FOG)
 	 EMIT_ATTR( _TNL_ATTRIB_FOG, EMIT_1F, fog);
-	 
+
       if (index & _TNL_BITS_TEX_ANY) {
 	 for (i = 0; i < MAX_TEXTURE_COORD_UNITS; i++) {
 	    if (index & _TNL_BIT_TEX(i)) {
@@ -142,17 +142,17 @@ _swsetup_RenderStart( GLcontext *ctx )
 	    }
 	 }
       }
-      
-      if (index & _TNL_BIT_INDEX) 
+
+      if (index & _TNL_BIT_INDEX)
 	 EMIT_ATTR( _TNL_ATTRIB_INDEX, EMIT_1F, index );
- 
+
       if (index & _TNL_BIT_POINTSIZE)
 	 EMIT_ATTR( _TNL_ATTRIB_POINTSIZE, EMIT_1F, pointSize );
-   
+
       _tnl_install_attrs( ctx, map, e,
 			  ctx->Viewport._WindowMap.m,
-			  sizeof(SWvertex) ); 
-      
+			  sizeof(SWvertex) );
+
       swsetup->last_index = index;
    }
 
@@ -214,7 +214,7 @@ _swsetup_Wakeup( GLcontext *ctx )
 
 /* Populate a swrast SWvertex from an attrib-style vertex.
  */
-void 
+void
 _swsetup_Translate( GLcontext *ctx, const void *vertex, SWvertex *dest )
 {
    const GLfloat *m = ctx->Viewport._WindowMap.m;
@@ -231,7 +231,7 @@ _swsetup_Translate( GLcontext *ctx, const void *vertex, SWvertex *dest )
 
    for (i = 0 ; i < ctx->Const.MaxTextureUnits ; i++)
       _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_TEX0+i, dest->texcoord[i] );
-	  
+
    _tnl_get_attr( ctx, vertex, _TNL_ATTRIB_COLOR0, tmp );
    UNCLAMPED_FLOAT_TO_RGBA_CHAN( dest->color, tmp );
 

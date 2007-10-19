@@ -47,7 +47,7 @@
 #define CULL_TRIVIAL_ACCEPT	1
 #define CULL_ACCEPT		2
 
-/* maximum order of a B-Spline */ 
+/* maximum order of a B-Spline */
 #define	MAXORDER 	24
 
 /* maximum dimension of any B-spline range space  */

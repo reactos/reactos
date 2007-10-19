@@ -191,7 +191,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
         nBarsUsed = 1;
     }
     nBarsFree = nBars - (nlastBarsUsed>nBarsUsed ? nlastBarsUsed : nBarsUsed);
-    
+
     if (TaskManagerSettings.ShowKernelTimes)
     {
         CpuKernelUsage = PerfDataGetProcessorSystemUsage();
@@ -222,7 +222,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 
     if (nBarsUsedKernel < 0)     nBarsUsedKernel = 0;
     if (nBarsUsedKernel > nBars) nBarsUsedKernel = nBars;
-    
+
     /*
      * Draw the "free" bars
      */
@@ -245,13 +245,13 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
 	    for (i=0; i< (nlastBarsUsed - nBarsUsed); i++)
 	    {
 	        if (nlastBarsUsed > 5000) nlastBarsUsed = 5000;
-	
+
 	        FillSolidRect(hDC, &rcBarLeft, MEDIUM_GREEN);
 	        FillSolidRect(hDC, &rcBarRight, MEDIUM_GREEN);
-	
+
 	        rcBarLeft.top += 3;
 	        rcBarLeft.bottom += 3;
-	
+
 	        rcBarRight.top += 3;
 	        rcBarRight.bottom += 3;
 	    }
@@ -277,13 +277,13 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     /*
      * Draw the "used" kernel bars
      */
-    
+
     rcBarLeft.top -=3;
     rcBarLeft.bottom -=3;
 
     rcBarRight.top -=3;
     rcBarRight.bottom -=3;
-    
+
     for (i=0; i<nBarsUsedKernel; i++)
     {
 

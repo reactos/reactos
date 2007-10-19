@@ -69,7 +69,7 @@ EmptyClipboard(VOID)
 UINT STDCALL
 EnumClipboardFormats(UINT format)
 {
-    UINT ret = NtUserEnumClipboardFormats(format); 
+    UINT ret = NtUserEnumClipboardFormats(format);
     return ret;
 }
 
@@ -82,19 +82,19 @@ GetClipboardData(UINT uFormat)
     HGLOBAL hGlobal = NULL;
     PVOID pGlobal = NULL;
     DWORD size = 0;
-    
+
     /* dealing with bitmap object */
     if (uFormat != CF_BITMAP)
     {
         size = (DWORD)NtUserGetClipboardData(uFormat, QUERY_SIZE);
-        
+
         if (size)
         {
             hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, size);
             pGlobal = GlobalLock(hGlobal);
-          
+
             size = (DWORD)NtUserGetClipboardData(uFormat, (DWORD)pGlobal);
-    
+
             GlobalUnlock(hGlobal);
         }
     }
@@ -102,7 +102,7 @@ GetClipboardData(UINT uFormat)
     {
         hGlobal = NtUserGetClipboardData(CF_BITMAP, !QUERY_SIZE);
     }
-    
+
     return hGlobal;
 }
 
@@ -116,12 +116,12 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
     UNICODE_STRING FormatName;
     INT Length;
     ANSI_STRING ClassName;
-    
+
     ClassName.MaximumLength = cchMaxCount;
     ClassName.Buffer = lpszFormatName;
 
     lpBuffer = HEAP_alloc(cchMaxCount * sizeof(WCHAR));
-    
+
     if (!lpBuffer)
     {
         SetLastError(ERROR_OUTOFMEMORY);
@@ -136,7 +136,7 @@ GetClipboardFormatNameA(UINT format, LPSTR lpszFormatName, int cchMaxCount)
    Length = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
 
    HEAP_strcpyWtoA(lpszFormatName, FormatName.Buffer, Length);
-   
+
    return strlen(lpszFormatName);
 }
 
@@ -154,7 +154,7 @@ GetClipboardFormatNameW(UINT format, LPWSTR lpszFormatName, INT cchMaxCount)
     FormatName.Buffer = (PWSTR)lpszFormatName;
     Ret = NtUserGetClipboardFormatName(format, &FormatName, cchMaxCount);
     return Ret;
-   
+
 }
 
 /*
@@ -216,13 +216,13 @@ IsClipboardFormatAvailable(UINT format)
 /*
  * @implemented
  */
-    
+
 UINT STDCALL
 RegisterClipboardFormatA(LPCSTR lpszFormat)
 {
     UINT ret = 0;
     UNICODE_STRING usFormat = {0};
-    
+
     if (lpszFormat == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -235,7 +235,7 @@ RegisterClipboardFormatA(LPCSTR lpszFormat)
         SetLastError(ERROR_INVALID_NAME);
         return 0;
     }
-    
+
     ret = RtlCreateUnicodeStringFromAsciiz(&usFormat, lpszFormat);
     if (ret)
     {
@@ -254,13 +254,13 @@ RegisterClipboardFormatW(LPCWSTR lpszFormat)
 {
     UINT ret = 0;
     UNICODE_STRING usFormat = {0};
-    
+
     if (lpszFormat == NULL)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
         return 0;
     }
-    
+
     /* check for "" */
     if (*lpszFormat == 0) //NULL
     {
@@ -280,18 +280,18 @@ HGLOBAL renderLocale (DWORD Locale)
 	HGLOBAL hGlobal;
 
 	hGlobal = GlobalAlloc(GMEM_DDESHARE | GMEM_MOVEABLE, sizeof(DWORD));
-	
+
 	if(!hGlobal)
 	{
 	    return hGlobal;
 	}
-     
+
     pLocale = (DWORD*)GlobalLock(hGlobal);
-    
+
 	*pLocale = Locale;
-	
+
 	GlobalUnlock(hGlobal);
-	
+
 	return hGlobal;
 }
 
@@ -304,12 +304,12 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
 	DWORD size;
 	LPVOID pMem;
 	HANDLE ret = NULL;
-	
+
 	if (hMem == NULL)
 	{
-	    return NtUserSetClipboardData(uFormat, 0, 0); 
+	    return NtUserSetClipboardData(uFormat, 0, 0);
     }
-    
+
 	if (uFormat == CF_BITMAP)
 	{
 	    /* GlobalLock should return 0 for GDI handles
@@ -327,18 +327,18 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
 	        /* GetObject for HBITMAP not implemented in ReactOS */
     	    //if (GetObject(hMem, 0, NULL) == sifeof(BITMAP))
     	    //{
-    	        return NtUserSetClipboardData(CF_BITMAP, hMem, 0); 
+    	        return NtUserSetClipboardData(CF_BITMAP, hMem, 0);
     	    //}
     	/*}*/
 	}
 
     size = GlobalSize(hMem);
     pMem = GlobalLock(hMem);
-	
-	if ((pMem) && (size)) 
+
+	if ((pMem) && (size))
 	{
     	size = GlobalSize(hMem);
-    	ret = NtUserSetClipboardData(uFormat, pMem, size); 
+    	ret = NtUserSetClipboardData(uFormat, pMem, size);
         //should i unlock hMem?
         GlobalUnlock(hMem);
     }
@@ -346,9 +346,9 @@ SetClipboardData(UINT uFormat, HANDLE hMem)
     {
         ERR("SetClipboardData failed\n");
     }
-            
+
     return ret;
-    
+
 }
 
 /*

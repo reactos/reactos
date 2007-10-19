@@ -1,7 +1,7 @@
 /*  -*- c-basic-offset: 8 -*-
    rdesktop: A Remote Desktop Protocol client.
    Support for the Matrox "lspci" channel
-   Copyright (C) 2005 Matrox Graphics Inc. 
+   Copyright (C) 2005 Matrox Graphics Inc.
 
    This program is free software; you can redistribute it and/or modify
    it under the terms of the GNU General Public License as published by

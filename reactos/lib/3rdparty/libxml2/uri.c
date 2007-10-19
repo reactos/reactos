@@ -1,5 +1,5 @@
 /**
- * uri.c: set of generic URI related routines 
+ * uri.c: set of generic URI related routines
  *
  * Reference: RFCs 2396, 2732 and 2373
  *
@@ -160,14 +160,14 @@
 #define IS_URIC(p) ((IS_UNRESERVED(*(p))) || (IS_ESCAPED(p)) ||		\
 	            (IS_RESERVED(*(p))))
 
-/*                                                                              
+/*
 * unwise = "{" | "}" | "|" | "\" | "^" | "`"
-*/                                                                             
+*/
 
 #define IS_UNWISE(p)                                                    \
       (((*(p) == '{')) || ((*(p) == '}')) || ((*(p) == '|')) ||         \
        ((*(p) == '\\')) || ((*(p) == '^')) || ((*(p) == '[')) ||        \
-       ((*(p) == ']')) || ((*(p) == '`')))  
+       ((*(p) == ']')) || ((*(p) == '`')))
 
 /*
  * Skip to next pointer char, handle escaped sequences
@@ -468,7 +468,7 @@ xmlSaveUri(xmlURIPtr uri) {
 			return(NULL);
 		    }
 		}
-		if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p)))) 
+		if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p))))
 		    ret[len++] = *p++;
 		else {
 		    int val = *(unsigned char *)p++;
@@ -504,7 +504,7 @@ xmlSaveUri(xmlURIPtr uri) {
 		    return(NULL);
 		}
 	    }
-	    if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p)))) 
+	    if ((IS_UNRESERVED(*(p))) || (IS_RESERVED(*(p))))
 		ret[len++] = *p++;
 	    else {
 		int val = *(unsigned char *)p++;
@@ -832,14 +832,14 @@ xmlURIUnescapeString(const char *str, int len, char *target) {
     while(len > 0) {
 	if ((len > 2) && (*in == '%') && (is_hex(in[1])) && (is_hex(in[2]))) {
 	    in++;
-	    if ((*in >= '0') && (*in <= '9')) 
+	    if ((*in >= '0') && (*in <= '9'))
 	        *out = (*in - '0');
 	    else if ((*in >= 'a') && (*in <= 'f'))
 	        *out = (*in - 'a') + 10;
 	    else if ((*in >= 'A') && (*in <= 'F'))
 	        *out = (*in - 'A') + 10;
 	    in++;
-	    if ((*in >= '0') && (*in <= '9')) 
+	    if ((*in >= '0') && (*in <= '9'))
 	        *out = *out * 16 + (*in - '0');
 	    else if ((*in >= 'a') && (*in <= 'f'))
 	        *out = *out * 16 + (*in - 'a') + 10;
@@ -994,7 +994,7 @@ xmlURIEscape(const xmlChar * str)
     if (uri->user) {
         segment = xmlURIEscapeStr(BAD_CAST uri->user, BAD_CAST ";:&=+$,");
         NULLCHK(segment)
-		ret = xmlStrcat(ret,BAD_CAST "//");	
+		ret = xmlStrcat(ret,BAD_CAST "//");
         ret = xmlStrcat(ret, segment);
         ret = xmlStrcat(ret, BAD_CAST "@");
         xmlFree(segment);
@@ -1068,7 +1068,7 @@ xmlURIEscape(const xmlChar * str)
  *
  * Parse an URI fragment string and fills in the appropriate fields
  * of the @uri structure.
- * 
+ *
  * fragment = *uric
  *
  * Returns 0 or the error code
@@ -1098,7 +1098,7 @@ xmlParseURIFragment(xmlURIPtr uri, const char **str)
  * @str:  pointer to the string to analyze
  *
  * Parse the query part of an URI
- * 
+ *
  * query = *uric
  *
  * Returns 0 or the error code
@@ -1128,7 +1128,7 @@ xmlParseURIQuery(xmlURIPtr uri, const char **str)
  * @str:  pointer to the string to analyze
  *
  * Parse an URI scheme
- * 
+ *
  * scheme = alpha *( alpha | digit | "+" | "-" | "." )
  *
  * Returns 0 or the error code
@@ -1139,7 +1139,7 @@ xmlParseURIScheme(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
     if (!IS_ALPHA(*cur))
 	return(2);
@@ -1160,7 +1160,7 @@ xmlParseURIScheme(xmlURIPtr uri, const char **str) {
  * @str:  pointer to the string to analyze
  *
  * Parse an URI opaque part
- * 
+ *
  * opaque_part = uric_no_slash *uric
  *
  * Returns 0 or the error code
@@ -1196,7 +1196,7 @@ xmlParseURIOpaquePart(xmlURIPtr uri, const char **str)
  *
  * Parse a server subpart of an URI, it's a finer grain analysis
  * of the authority part.
- * 
+ *
  * server        = [ [ userinfo "@" ] hostport ]
  * userinfo      = *( unreserved | escaped |
  *                       ";" | ":" | "&" | "=" | "+" | "$" | "," )
@@ -1225,7 +1225,7 @@ xmlParseURIServer(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
 
     /*
@@ -1302,7 +1302,7 @@ xmlParseURIServer(xmlURIPtr uri, const char **str) {
 	 * Not IPV6, maybe IPV4
 	 */
 	for (oct = 0; oct < IPV4max; ++oct) {
-            if (*cur == '.') 
+            if (*cur == '.')
                 return(3); /* e.g. http://.xml/ or http://18.29..30/ */
             while(IS_DIGIT(*cur)) cur++;
             if (oct == (IPV4max-1))
@@ -1369,7 +1369,7 @@ xmlParseURIServer(xmlURIPtr uri, const char **str) {
     }
     *str = cur;
     return(0);
-}	
+}
 
 /**
  * xmlParseURIRelSegment:
@@ -1377,7 +1377,7 @@ xmlParseURIServer(xmlURIPtr uri, const char **str) {
  * @str:  pointer to the string to analyze
  *
  * Parse an URI relative segment
- * 
+ *
  * rel_segment = 1*( unreserved | escaped | ";" | "@" | "&" | "=" |
  *                          "+" | "$" | "," )
  *
@@ -1414,7 +1414,7 @@ xmlParseURIRelSegment(xmlURIPtr uri, const char **str)
  * @slash:  should we add a leading slash
  *
  * Parse an URI set of path segments
- * 
+ *
  * path_segments = segment *( "/" segment )
  * segment       = *pchar *( ";" param )
  * param         = *pchar
@@ -1488,7 +1488,7 @@ xmlParseURIPathSegments(xmlURIPtr uri, const char **str, int slash)
  * @str:  pointer to the string to analyze
  *
  * Parse the authority part of an URI.
- * 
+ *
  * authority = server | reg_name
  * server    = [ [ userinfo "@" ] hostport ]
  * reg_name  = 1*( unreserved | escaped | "$" | "," | ";" | ":" |
@@ -1512,7 +1512,7 @@ xmlParseURIAuthority(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
 
     /*
@@ -1550,7 +1550,7 @@ xmlParseURIAuthority(xmlURIPtr uri, const char **str) {
  * @str:  pointer to the string to analyze
  *
  * Parse an URI hierarchical part
- * 
+ *
  * hier_part = ( net_path | abs_path ) [ "?" query ]
  * abs_path = "/"  path_segments
  * net_path = "//" authority [ abs_path ]
@@ -1564,7 +1564,7 @@ xmlParseURIHierPart(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
 
     if ((cur[0] == '/') && (cur[1] == '/')) {
@@ -1601,7 +1601,7 @@ xmlParseURIHierPart(xmlURIPtr uri, const char **str) {
  *
  * Parse an URI reference string and fills in the appropriate fields
  * of the @uri structure
- * 
+ *
  * absoluteURI   = scheme ":" ( hier_part | opaque_part )
  *
  * Returns 0 or the error code
@@ -1613,7 +1613,7 @@ xmlParseAbsoluteURI(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
 
     ret = xmlParseURIScheme(uri, str);
@@ -1635,7 +1635,7 @@ xmlParseAbsoluteURI(xmlURIPtr uri, const char **str) {
  *
  * Parse an relative URI string and fills in the appropriate fields
  * of the @uri structure
- * 
+ *
  * relativeURI = ( net_path | abs_path | rel_path ) [ "?" query ]
  * abs_path = "/"  path_segments
  * net_path = "//" authority [ abs_path ]
@@ -1650,7 +1650,7 @@ xmlParseRelativeURI(xmlURIPtr uri, const char **str) {
 
     if (str == NULL)
 	return(-1);
-    
+
     cur = *str;
     if ((cur[0] == '/') && (cur[1] == '/')) {
 	cur += 2;
@@ -1692,7 +1692,7 @@ xmlParseRelativeURI(xmlURIPtr uri, const char **str) {
  *
  * Parse an URI reference string and fills in the appropriate fields
  * of the @uri structure
- * 
+ *
  * URI-reference = [ absoluteURI | relativeURI ] [ "#" fragment ]
  *
  * Returns 0 or the error code
@@ -1737,8 +1737,8 @@ xmlParseURIReference(xmlURIPtr uri, const char *str) {
  * xmlParseURI:
  * @str:  the URI string to analyze
  *
- * Parse an URI 
- * 
+ * Parse an URI
+ *
  * URI-reference = [ absoluteURI | relativeURI ] [ "#" fragment ]
  *
  * Returns a newly built xmlURIPtr or NULL in case of error
@@ -1774,7 +1774,7 @@ xmlParseURI(const char *str) {
  *
  * Computes he final URI of the reference done by checking that
  * the given URI is valid, and building the final URI using the
- * base URI. This is processed according to section 5.2 of the 
+ * base URI. This is processed according to section 5.2 of the
  * RFC 2396
  *
  * 5.2. Resolving Relative References to Absolute Form
@@ -1798,7 +1798,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
      *    as a reference to "." rather than as a synonym for the current
      *    URI.  Should we do that here?
      */
-    if (URI == NULL) 
+    if (URI == NULL)
 	ret = -1;
     else {
 	if (*URI) {
@@ -1869,7 +1869,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
 	    res->server = xmlMemStrdup(bas->server);
 	    if (bas->user != NULL)
 		res->user = xmlMemStrdup(bas->user);
-	    res->port = bas->port;		
+	    res->port = bas->port;
 	}
 	if (bas->path != NULL)
 	    res->path = xmlMemStrdup(bas->path);
@@ -1894,7 +1894,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
     }
     if (bas->scheme != NULL)
 	res->scheme = xmlMemStrdup(bas->scheme);
- 
+
     if (ref->query != NULL)
 	res->query = xmlMemStrdup(ref->query);
     if (ref->fragment != NULL)
@@ -1914,7 +1914,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
 	    res->server = xmlMemStrdup(ref->server);
 	    if (ref->user != NULL)
 		res->user = xmlMemStrdup(ref->user);
-            res->port = ref->port;		
+            res->port = ref->port;
 	}
 	if (ref->path != NULL)
 	    res->path = xmlMemStrdup(ref->path);
@@ -1926,7 +1926,7 @@ xmlBuildURI(const xmlChar *URI, const xmlChar *base) {
 	res->server = xmlMemStrdup(bas->server);
 	if (bas->user != NULL)
 	    res->user = xmlMemStrdup(bas->user);
-	res->port = bas->port;		
+	res->port = bas->port;
     }
 
     /*
@@ -2210,11 +2210,11 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
  * xmlCanonicPath:
  * @path:  the resource locator in a filesystem notation
  *
- * Constructs a canonic path from the specified path. 
+ * Constructs a canonic path from the specified path.
  *
- * Returns a new canonic path, or a duplicate of the path parameter if the 
+ * Returns a new canonic path, or a duplicate of the path parameter if the
  * construction fails. The caller is responsible for freeing the memory occupied
- * by the returned string. If there is insufficient memory available, or the 
+ * by the returned string. If there is insufficient memory available, or the
  * argument is NULL, the function returns NULL.
  */
 #define IS_WINDOWS_PATH(p) 					\
@@ -2225,7 +2225,7 @@ xmlBuildRelativeURI (const xmlChar * URI, const xmlChar * base)
 xmlChar*
 xmlCanonicPath(const xmlChar *path)
 {
-#if defined(_WIN32) && !defined(__CYGWIN__)    
+#if defined(_WIN32) && !defined(__CYGWIN__)
     int len = 0;
     int i = 0;
     xmlChar *p = NULL;
@@ -2245,7 +2245,7 @@ xmlCanonicPath(const xmlChar *path)
         return(NULL);
     }
 
-#if defined(_WIN32) && !defined(__CYGWIN__)    
+#if defined(_WIN32) && !defined(__CYGWIN__)
     len = xmlStrlen(path);
     if ((len > 2) && IS_WINDOWS_PATH(path)) {
 	uri->scheme = xmlStrdup(BAD_CAST "file");

@@ -133,7 +133,7 @@ static void _tryLoadProvider(PCWSTR provider)
         {
             static const WCHAR szProviderName[] = { 'N','a','m','e',0 };
             PWSTR name = NULL;
-           
+
             size = 0;
             RegQueryValueExW(hKey, szProviderName, NULL, NULL, NULL, &size);
             if (size)
@@ -893,7 +893,7 @@ static DWORD _enumerateProvidersW(PWNetEnumerator enumerator, LPDWORD lpcCount,
     if (*lpBufferSize < sizeof(NETRESOURCEA))
         return WN_MORE_DATA;
 
-    if (!providerTable || enumerator->providerIndex >= 
+    if (!providerTable || enumerator->providerIndex >=
      providerTable->numProviders)
         ret = WN_NO_MORE_ENTRIES;
     else

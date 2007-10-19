@@ -12,7 +12,7 @@ void main ( int argc, char** argv, char** environ )
  printf ( "HIGH RESOLUTION PERFOMANCE COUNTER Frequency = %I64d CLOCKS IN SECOND\n",
 	     liFrequency.QuadPart );
 
- 
+
  if (liFrequency.QuadPart == 0)
  {
 	printf("Your computer does not support High Resolution Performance counter\n");

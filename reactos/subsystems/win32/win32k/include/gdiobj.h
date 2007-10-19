@@ -44,7 +44,7 @@ typedef struct _GDIOBJHDR
 } GDIOBJHDR, *PGDIOBJHDR;
 
 //
-// Every GDI Object must have this standard type of header. 
+// Every GDI Object must have this standard type of header.
 // It's for thread locking.
 // This header is standalone, used only in gdiobj.c.
 //

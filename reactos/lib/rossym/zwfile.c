@@ -3,7 +3,7 @@
  * PROJECT:         ReactOS kernel
  * FILE:            lib/rossym/zwfile.c
  * PURPOSE:         File I/O using native functions
- * 
+ *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)
  */
 

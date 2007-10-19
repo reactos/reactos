@@ -697,7 +697,7 @@ typedef struct _INITIAL_TEB
 //
 // TEB Active Frame Structures
 //
-typedef struct _TEB_ACTIVE_FRAME_CONTEXT 
+typedef struct _TEB_ACTIVE_FRAME_CONTEXT
 {
     ULONG Flags;
     LPSTR FrameName;

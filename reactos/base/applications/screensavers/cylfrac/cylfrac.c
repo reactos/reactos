@@ -239,7 +239,7 @@ void InitSaver(HWND hwndParent)
 void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
 {
 	int ch;
-	
+
 	if (!strlen(szCmdLine))
 		return;
 

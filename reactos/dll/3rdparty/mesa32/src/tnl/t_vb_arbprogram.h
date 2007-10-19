@@ -176,7 +176,7 @@ struct arb_vp_machine {
 struct tnl_compiled_program {
    union instruction instructions[1024];
    GLint nr_instructions;
-   void (*compiled_func)( struct arb_vp_machine * ); /**< codegen'd program */   
+   void (*compiled_func)( struct arb_vp_machine * ); /**< codegen'd program */
 };
 
 void _tnl_program_string_change( struct vertex_program * );

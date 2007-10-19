@@ -44,7 +44,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,25,180,15
     LTEXT           "Inconnu",IDC_ALARMVALUE1,200,25,40,10
     LTEXT           "0%",-1,20,40,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
     PUSHBUTTON      "Action d'alarme...",-1,20,70,70,15,WS_DISABLED
@@ -60,7 +60,7 @@ BEGIN
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
     LTEXT           "Inconnu",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
-    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ | 
+    CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
     PUSHBUTTON      "Action d'alarme...",-1,20,170,70,15,WS_DISABLED
@@ -82,19 +82,19 @@ BEGIN
     GROUPBOX        "Options",-1,5,35,225,55
     CONTROL         "Toujours &afficher l'icone sur la barre des taches",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
-    CONTROL         "&Demander un mot de passe pour sortir de la mise en veille",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Demander un mot de passe pour sortir de la mise en veille",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,55,200,10
-    CONTROL         "&Luminosité faible quand l'ordinateur est sur piles.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Luminosité faible quand l'ordinateur est sur piles.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,65,200,10
     GROUPBOX        "Boutons d'alimentation",-1,5,100,230,105
     LTEXT           "&Quand je ferme le couvercle de mon portable:", IDC_SLIDCLOSE,10,110,210,10
-    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_LIDCLOSE,10,120,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Quand j'appuie sur le bouton Power de l'ordinateur:", IDC_SPOWERBUTTON,10,135,210,10
-    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
     LTEXT           "Quand j'appuie sur le bouton Sleep de l'ordinateur:", IDC_SSLEEPBUTTON,10,165,210,10
-    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
 END
 
@@ -107,7 +107,7 @@ BEGIN
     LTEXT           "Quand votre ordinateur se met en veille, il enregistre tout ce qu'il a en memoire sur le disque dur et s'arrête. Quand votre ordinateur sort de la mise en veille, il reprend son état précédent. ",
                     -1,35,5,195,35
     GROUPBOX        "Mise en veille",-1,5,45,235,25
-    CONTROL         "Activer la mise en veille",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Activer la mise en veille",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,55,210,10
     GROUPBOX        "Espace disque pour la mise en veille",-1,5,80,240,60
     LTEXT           "Espace disque libre:",-1,10,90,100,10

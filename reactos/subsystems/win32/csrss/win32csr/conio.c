@@ -612,9 +612,9 @@ CSR_API(CsrReadConsole)
         {
           /*
            * backspace handling - if we are in charge of echoing it then we handle it here
-           * otherwise we treat it like a normal char. 
+           * otherwise we treat it like a normal char.
            */
-          if ('\b' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar && 0 
+          if ('\b' == Input->InputEvent.Event.KeyEvent.uChar.AsciiChar && 0
               != (Console->Mode & ENABLE_ECHO_INPUT))
             {
               /* echo if it has not already been done, and either we or the client has chars to be deleted */
@@ -636,7 +636,7 @@ CSR_API(CsrReadConsole)
                   Request->Data.ReadConsoleRequest.NrCharactersRead = 0;
                   Request->Status = STATUS_NOTIFY_CLEANUP;
                   return STATUS_NOTIFY_CLEANUP;
-                  
+
                 }
               Request->Data.ReadConsoleRequest.nCharsCanBeDeleted--;
               Input->Echoed = TRUE;   /* mark as echoed so we don't echo it below */

@@ -47,7 +47,7 @@ class VReportBackend : public Backend
 		FILE* m_VReportFile;
 
 		std::vector<VReportConfiguration*> m_configurations;
-		
+
 		void GenerateReport ( FILE* OUT );
 		void CleanFiles ( void );
 
@@ -55,7 +55,7 @@ class VReportBackend : public Backend
 		{
 			std::vector <std::string> libraries;
 			std::vector <std::string> references;
-		
+
 			module_data()
 			{}
 			~module_data()

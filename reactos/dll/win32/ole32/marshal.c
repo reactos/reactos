@@ -105,7 +105,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
             debugstr_guid(riid), hr);
         return E_NOINTERFACE;
     }
-  
+
     /* IUnknown doesn't require a stub buffer, because it never goes out on
      * the wire */
     if (!IsEqualIID(riid, &IID_IUnknown))
@@ -119,7 +119,7 @@ HRESULT marshal_object(APARTMENT *apt, STDOBJREF *stdobjref, REFIID riid, IUnkno
             IUnknown_Release(iobject);
             return hr;
         }
-    
+
         hr = IPSFactoryBuffer_CreateStub(psfb, riid, iobject, &stub);
         IPSFactoryBuffer_Release(psfb);
         if (hr != S_OK)
@@ -1116,7 +1116,7 @@ typedef struct _StdMarshalImpl
     DWORD		mshlflags;
 } StdMarshalImpl;
 
-static HRESULT WINAPI 
+static HRESULT WINAPI
 StdMarshalImpl_QueryInterface(LPMARSHAL iface, REFIID riid, LPVOID *ppv)
 {
     *ppv = NULL;
@@ -1304,9 +1304,9 @@ StdMarshalImpl_UnmarshalInterface(LPMARSHAL iface, IStream *pStm, REFIID riid, v
     {
         TRACE("Unmarshalling object marshalled in same apartment for iid %s, "
               "returning original object %p\n", debugstr_guid(riid), stubmgr->object);
-    
+
         hres = IUnknown_QueryInterface(stubmgr->object, riid, ppv);
-      
+
         /* unref the ifstub. FIXME: only do this on success? */
         if (!stub_manager_is_table_marshaled(stubmgr, &stdobjref.ipid))
             stub_manager_ext_release(stubmgr, stdobjref.cPublicRefs, TRUE);
@@ -1363,7 +1363,7 @@ StdMarshalImpl_ReleaseMarshalData(LPMARSHAL iface, IStream *pStm)
     APARTMENT           *apt;
 
     TRACE("iface=%p, pStm=%p\n", iface, pStm);
-    
+
     hres = IStream_Read(pStm, &stdobjref, sizeof(stdobjref), &res);
     if (hres) return STG_E_READFAULT;
 
@@ -1416,7 +1416,7 @@ static const IMarshalVtbl VT_StdMarshal =
 
 static HRESULT StdMarshalImpl_Construct(REFIID riid, void** ppvObject)
 {
-    StdMarshalImpl * pStdMarshal = 
+    StdMarshalImpl * pStdMarshal =
         HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(StdMarshalImpl));
     if (!pStdMarshal)
         return E_OUTOFMEMORY;
@@ -1533,7 +1533,7 @@ static HRESULT get_unmarshaler_from_stream(IStream *stream, IMarshal **marshal, 
     }
     else if (objref.flags & OBJREF_CUSTOM)
     {
-        ULONG custom_header_size = FIELD_OFFSET(OBJREF, u_objref.u_custom.pData) - 
+        ULONG custom_header_size = FIELD_OFFSET(OBJREF, u_objref.u_custom.pData) -
                                    FIELD_OFFSET(OBJREF, u_objref.u_custom);
         TRACE("Using custom unmarshaling\n");
         /* read constant sized OR_CUSTOM data from stream */
@@ -1752,7 +1752,7 @@ cleanup:
     IMarshal_Release(pMarshal);
 
     TRACE("completed with hr 0x%08x\n", hr);
-    
+
     return hr;
 }
 
@@ -1818,7 +1818,7 @@ HRESULT WINAPI CoUnmarshalInterface(IStream *pStream, REFIID riid, LPVOID *ppv)
     IMarshal_Release(pMarshal);
 
     TRACE("completed with hr 0x%x\n", hr);
-    
+
     return hr;
 }
 
@@ -1837,7 +1837,7 @@ HRESULT WINAPI CoUnmarshalInterface(IStream *pStream, REFIID riid, LPVOID *ppv)
  *  Failure: HRESULT error code.
  *
  * NOTES
- * 
+ *
  * Call this function to release resources associated with a normal or
  * table-weak marshal that will not be unmarshaled, and all table-strong
  * marshals when they are no longer needed.

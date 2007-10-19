@@ -78,7 +78,7 @@ _mesa_ExecuteProgramNV(GLenum target, GLuint id, const GLfloat *params)
       _mesa_error(ctx, GL_INVALID_OPERATION, "glExecuteProgramNV");
       return;
    }
-   
+
    _mesa_init_vp_per_vertex_registers(ctx);
    _mesa_init_vp_per_primitive_registers(ctx);
    COPY_4V(ctx->VertexProgram.Inputs[VERT_ATTRIB_POS], params);
@@ -569,7 +569,7 @@ void GLAPIENTRY
 _mesa_ProgramParameter4dNV(GLenum target, GLuint index,
                            GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-   _mesa_ProgramParameter4fNV(target, index, 
+   _mesa_ProgramParameter4fNV(target, index,
 		   	      (GLfloat)x, (GLfloat)y, (GLfloat)z, (GLfloat)w);
 }
 
@@ -583,7 +583,7 @@ _mesa_ProgramParameter4dvNV(GLenum target, GLuint index,
                             const GLdouble *params)
 {
    _mesa_ProgramParameter4fNV(target, index,
-                              (GLfloat)params[0], (GLfloat)params[1], 
+                              (GLfloat)params[0], (GLfloat)params[1],
 			      (GLfloat)params[2], (GLfloat)params[3]);
 }
 
@@ -806,7 +806,7 @@ void GLAPIENTRY
 _mesa_ProgramNamedParameter4dNV(GLuint id, GLsizei len, const GLubyte *name,
                                 GLdouble x, GLdouble y, GLdouble z, GLdouble w)
 {
-   _mesa_ProgramNamedParameter4fNV(id, len, name, (GLfloat)x, (GLfloat)y, 
+   _mesa_ProgramNamedParameter4fNV(id, len, name, (GLfloat)x, (GLfloat)y,
                                    (GLfloat)z, (GLfloat)w);
 }
 

@@ -37,10 +37,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 /******************************************************************
  *		pe_load_stabs
  *
- * look for stabs information in PE header (it's how the mingw compiler provides 
+ * look for stabs information in PE header (it's how the mingw compiler provides
  * its debugging information)
  */
-static BOOL pe_load_stabs(const struct process* pcs, struct module* module, 
+static BOOL pe_load_stabs(const struct process* pcs, struct module* module,
                           const void* mapping, IMAGE_NT_HEADERS* nth)
 {
     IMAGE_SECTION_HEADER*       section;
@@ -66,8 +66,8 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module,
 
     if (stabstrsize && stabsize)
     {
-        ret = stabs_parse(module, 
-                          module->module.BaseOfImage - nth->OptionalHeader.ImageBase, 
+        ret = stabs_parse(module,
+                          module->module.BaseOfImage - nth->OptionalHeader.ImageBase,
                           RtlImageRvaToVa(nth, (void*)mapping, stabs, NULL),
                           stabsize,
                           RtlImageRvaToVa(nth, (void*)mapping, stabstr, NULL),
@@ -99,10 +99,10 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
 
     WINE_TRACE("Processing DBG file %s\n", dbg_name);
 
-    if (SymFindFileInPath(pcs->handle, NULL, (char*)dbg_name, 
+    if (SymFindFileInPath(pcs->handle, NULL, (char*)dbg_name,
                           NULL, 0, 0, 0,
                           tmp, dbg_match, NULL) &&
-        (hFile = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, NULL, 
+        (hFile = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) != INVALID_HANDLE_VALUE &&
         ((hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != 0) &&
         ((dbg_mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL))
@@ -125,8 +125,8 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
             const IMAGE_SECTION_HEADER *sectp =
                 (const IMAGE_SECTION_HEADER*)(hdr + 1);
             /* and after that and the exported names comes the debug directory */
-            dbg = (const IMAGE_DEBUG_DIRECTORY*) 
-                (dbg_mapping + sizeof(*hdr) + 
+            dbg = (const IMAGE_DEBUG_DIRECTORY*)
+                (dbg_mapping + sizeof(*hdr) +
                  hdr->NumberOfSections * sizeof(IMAGE_SECTION_HEADER) +
                  hdr->ExportedNamesSize);
 
@@ -152,7 +152,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
  *
  * Process MSC debug information in PE file.
  */
-static BOOL pe_load_msc_debug_info(const struct process* pcs, 
+static BOOL pe_load_msc_debug_info(const struct process* pcs,
                                    struct module* module,
                                    const void* mapping, IMAGE_NT_HEADERS* nth)
 {
@@ -200,8 +200,8 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs,
 /***********************************************************************
  *			pe_load_export_debug_info
  */
-static BOOL pe_load_export_debug_info(const struct process* pcs, 
-                                      struct module* module, 
+static BOOL pe_load_export_debug_info(const struct process* pcs,
+                                      struct module* module,
                                       const void* mapping, IMAGE_NT_HEADERS* nth)
 {
     unsigned int 		        i;
@@ -217,22 +217,22 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
     symt_new_public(module, NULL, module->module.ModuleName, base, 0,
                     TRUE /* FIXME */, TRUE /* FIXME */);
 #endif
-    
+
     /* Add entry point */
-    symt_new_public(module, NULL, "EntryPoint", 
+    symt_new_public(module, NULL, "EntryPoint",
                     base + nth->OptionalHeader.AddressOfEntryPoint, 0,
                     TRUE, TRUE);
 #if 0
-    /* FIXME: we'd better store addresses linked to sections rather than 
+    /* FIXME: we'd better store addresses linked to sections rather than
        absolute values */
     IMAGE_SECTION_HEADER*       section;
     /* Add start of sections */
     section = (IMAGE_SECTION_HEADER*)
         ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
-    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
+    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
     {
-	symt_new_public(module, NULL, section->Name, 
-                        RtlImageRvaToVa(nth, (void*)mapping, section->VirtualAddress, NULL), 
+	symt_new_public(module, NULL, section->Name,
+                        RtlImageRvaToVa(nth, (void*)mapping, section->VirtualAddress, NULL),
                         0, TRUE /* FIXME */, TRUE /* FIXME */);
     }
 #endif
@@ -251,16 +251,16 @@ static BOOL pe_load_export_debug_info(const struct process* pcs,
         ordinals  = RtlImageRvaToVa(nth, (void*)mapping, exports->AddressOfNameOrdinals, NULL);
         names     = RtlImageRvaToVa(nth, (void*)mapping, exports->AddressOfNames, NULL);
 
-        for (i = 0; i < exports->NumberOfNames; i++) 
+        for (i = 0; i < exports->NumberOfNames; i++)
         {
             if (!names[i]) continue;
-            symt_new_public(module, NULL, 
+            symt_new_public(module, NULL,
                             RtlImageRvaToVa(nth, (void*)mapping, names[i], NULL),
-                            base + functions[ordinals[i]], 
+                            base + functions[ordinals[i]],
                             0, TRUE /* FIXME */, TRUE /* FIXME */);
         }
-	    
-        for (i = 0; i < exports->NumberOfFunctions; i++) 
+
+        for (i = 0; i < exports->NumberOfFunctions; i++)
         {
             if (!functions[i]) continue;
             /* Check if we already added it with a name */
@@ -304,7 +304,7 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
                 ret = pe_load_stabs(pcs, module, mapping, nth) ||
                     pe_load_msc_debug_info(pcs, module, mapping, nth);
                 /* if we still have no debug info (we could only get SymExport at this
-                 * point), then do the SymExport except if we have an ELF container, 
+                 * point), then do the SymExport except if we have an ELF container,
                  * in which case we'll rely on the export's on the ELF side
                  */
             }
@@ -359,9 +359,9 @@ struct module* pe_load_module(struct process* pcs, char* name,
             {
                 if (!base) base = nth->OptionalHeader.ImageBase;
                 if (!size) size = nth->OptionalHeader.SizeOfImage;
-            
+
                 module = module_new(pcs, loaded_name, DMT_PE, base, size,
-                                    nth->FileHeader.TimeDateStamp, 
+                                    nth->FileHeader.TimeDateStamp,
                                     nth->OptionalHeader.CheckSum);
                 if (module)
                 {
@@ -384,7 +384,7 @@ struct module* pe_load_module(struct process* pcs, char* name,
  *		pe_load_module_from_pcs
  *
  */
-struct module* pe_load_module_from_pcs(struct process* pcs, const char* name, 
+struct module* pe_load_module_from_pcs(struct process* pcs, const char* name,
                                        const char* mod_name, DWORD base, DWORD size)
 {
     struct module*      module;
@@ -411,7 +411,7 @@ struct module* pe_load_module_from_pcs(struct process* pcs, const char* name,
 
         if (ReadProcessMemory(pcs->handle, (char*)base, &dos, sizeof(dos), NULL) &&
             dos.e_magic == IMAGE_DOS_SIGNATURE &&
-            ReadProcessMemory(pcs->handle, (char*)(base + dos.e_lfanew), 
+            ReadProcessMemory(pcs->handle, (char*)(base + dos.e_lfanew),
                               &nth, sizeof(nth), NULL) &&
             nth.Signature == IMAGE_NT_SIGNATURE)
         {

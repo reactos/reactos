@@ -37,13 +37,13 @@ go:
 	cmp	ax,101h			; See if version 1.1 or greater
 	mov	dx,offset wrongver
 	jc	error
-	
+
 	mov	[ver],ax
 	mov	ax,5301h		; Do a real mode connection
 	mov	bx,0			; device = BIOS
 	int	15h
 	jnc	noconerr
-	
+
 	cmp	ah,2			; Pass if already connected
 	mov	dx,offset errmsg	; else error
 	jnz	error
@@ -54,14 +54,14 @@ noconerr:
 	int	15h
 	mov	dx,offset errmsg
 	jc	error
-	
+
 	mov	ax,530dh		; Now engage and enable CPU management
 	mov	bx,1			; device = all
 	mov	cx,1			; enable
 	int	15h
 	mov	dx,offset errmsg
 	jc	error
-	
+
 	mov	ax,530fh
 	mov	bx,1			; device = ALL
 	mov	cx,1			; enable

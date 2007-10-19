@@ -86,7 +86,7 @@ DoStartService(PMAIN_WND_INFO Info,
                     }
                 }
             }
-            
+
             CloseServiceHandle(hSc);
         }
 

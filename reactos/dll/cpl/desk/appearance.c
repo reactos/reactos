@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/appearance.c
  * PURPOSE:         Appearance property page
- * 
+ *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  *                  Timo Kreuzer (timo[dot]kreuzer[at]web[dot]de
  */
@@ -17,7 +17,7 @@
 /* This const assigns the color and metric numbers to the elements from the elements list */
 
 /* Size 1 (width)	Size 2 (height)	Color 1					Color 2							Font			Fontcolor */
-const ASSIGNMENT g_Assignment[NUM_ELEMENTS] = 
+const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
 { {-1,				-1,				COLOR_DESKTOP,			-1,								-1,				-1},				/* -Desktop */
   {SIZE_CAPTION_Y,	-1,				COLOR_INACTIVECAPTION,	COLOR_GRADIENTINACTIVECAPTION,	FONT_CAPTION,	-1},				/* inactive window caption */
   {SIZE_BORDER_X,	SIZE_BORDER_Y,	COLOR_INACTIVEBORDER,	-1,								-1,				-1},  				/* inactive window border */
@@ -42,7 +42,7 @@ const ASSIGNMENT g_Assignment[NUM_ELEMENTS] =
   {SIZE_ICON_X,		SIZE_ICON_Y,	-1,						-1,								FONT_ICON,		-1}};				/* symbol */
 
 /* This is the list of names for the colors stored in the registry */
-const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH] = 
+const TCHAR g_RegColorNames[NUM_COLORS][MAX_COLORNAMELENGTH] =
 	{TEXT("Scrollbar"),				/* 00 = COLOR_SCROLLBAR */
 	TEXT("Background"),				/* 01 = COLOR_DESKTOP */
 	TEXT("ActiveTitle"),			/* 02 = COLOR_ACTIVECAPTION  */
@@ -140,7 +140,7 @@ LoadThemeFromReg(GLOBALS* g, INT iPreset)
 	DWORD dwType, dwLength;
 	BOOL Ret = FALSE;
 
-	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 
+	if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"),
 		0, KEY_READ, &hkNewSchemes) == ERROR_SUCCESS)
 	{
 		if(RegOpenKeyEx(hkNewSchemes, g->ThemeTemplates[iPreset].strKeyName, 0, KEY_READ, &hkScheme) == ERROR_SUCCESS)
@@ -228,7 +228,7 @@ ApplyTheme(GLOBALS* g)
 	g->crCOLOR_BTNSHADOW = g->Theme.crColor[COLOR_BTNSHADOW];
 	g->crCOLOR_BTNHIGHLIGHT = g->Theme.crColor[COLOR_BTNHIGHLIGHT];
 	lfButtonFont = g->Theme.lfFont[FONT_DIALOG];
-	
+
 	/* Create new font for bold button */
 	lfButtonFont.lfWeight = FW_BOLD;
 	lfButtonFont.lfItalic = FALSE;
@@ -275,7 +275,7 @@ ApplyTheme(GLOBALS* g)
 
 		RegCloseKey(hKey);
 	}
-	
+
 	/* Apply the fonts */
 	NonClientMetrics.cbSize = sizeof(NONCLIENTMETRICS);
 	SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &NonClientMetrics, 0);
@@ -359,7 +359,7 @@ AppearancePage_OnInit(HWND hwndDlg, GLOBALS *g)
 	LoadCurrentTheme(g);
 
 	/* Fill color schemes combo */
-	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"), 
+	Result = RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Control Panel\\Appearance\\New Schemes"),
 		0, KEY_READ, &hkNewSchemes);
 	if (Result != ERROR_SUCCESS)
 	{

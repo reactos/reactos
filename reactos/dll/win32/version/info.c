@@ -594,12 +594,12 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
         /* We have a 16bit resource. */
 #endif /* ! __REACTOS__ */
     }
-    else 
+    else
     {
         static const char signature[] = "FE2X";
         DWORD bufsize = vvis->wLength + strlen(signature);
         DWORD convbuf;
- 
+
         /* We have a 32bit resource.
          *
          * XP/W2K/W2K3 uses a buffer which is 2 times the actual needed space + 4 bytes "FE2X"

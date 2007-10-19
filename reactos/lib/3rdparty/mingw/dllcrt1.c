@@ -63,7 +63,7 @@ DllMainCRTStartup (HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
       next_atexit = first_atexit;
 
       /* Adust references to dllimported data (from other DLL's)
-	 that have non-zero offsets.  */ 
+	 that have non-zero offsets.  */
       _pei386_runtime_relocator ();
 
 #ifdef	__GNUC__
@@ -72,7 +72,7 @@ DllMainCRTStartup (HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
 	 as the first entry of the private atexit table we
 	 have just initialised  */
       __main ();
-      	
+
 #endif
    }
 
@@ -85,7 +85,7 @@ DllMainCRTStartup (HANDLE hDll, DWORD dwReason, LPVOID lpReserved)
    */
 
   bRet = DllMain (hDll, dwReason, lpReserved);
-  /* Handle case where DllMain returns FALSE on attachment attempt.  */ 
+  /* Handle case where DllMain returns FALSE on attachment attempt.  */
 
   if ( (dwReason == DLL_PROCESS_ATTACH) && !bRet)
     {
@@ -126,7 +126,7 @@ __dll_exit(void)
     {
       p_atexit_fn* __last = next_atexit - 1;
       while ( __last >= first_atexit )
-	{	
+	{
           if ( *__last != NULL )
 	    {
 #ifdef DEBUG
@@ -141,7 +141,7 @@ __dll_exit(void)
       first_atexit = NULL ;
     }
     /*
-       Make sure output buffers opened by DllMain or 
+       Make sure output buffers opened by DllMain or
        atexit-registered functions are flushed before detaching,
        otherwise we can have problems with redirected output.
      */
@@ -153,7 +153,7 @@ __dll_exit(void)
  * Here, we override the exported version of atexit with one that passes the
  * private table initialised in DllMainCRTStartup to __dllonexit.
  * That means we have to hide the mscvrt.dll atexit because the
- * atexit defined here gets __dllonexit from the same lib. 
+ * atexit defined here gets __dllonexit from the same lib.
  */
 
 #if 0
@@ -170,7 +170,7 @@ atexit (p_atexit_fn pfn )
 
 /*
  * Likewise for non-ANSI function _onexit that may be called by
- * code in the dll. 
+ * code in the dll.
  */
 
 _onexit_t

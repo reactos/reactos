@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2002-2003 Jason Edmeades 
+ * Copyright (C) 2002-2003 Jason Edmeades
  * Copyright (C) 2002-2003 Raphael Junqueira
  * Copyright (C) 2005 Oliver Stieber
  *
@@ -106,7 +106,7 @@
 #define D3DUSAGE_RTPATCHES          0x00000080L
 #define D3DUSAGE_NPATCHES           0x00000100L
 #define D3DUSAGE_DYNAMIC            0x00000200L
-#define D3DUSAGE_AUTOGENMIPMAP      0x00000400L 
+#define D3DUSAGE_AUTOGENMIPMAP      0x00000400L
 #define D3DUSAGE_DMAP               0x00004000L
 
 #define D3DUSAGE_QUERY_FILTER                   0x00020000L
@@ -167,7 +167,7 @@
 #define D3DTA_COMPLEMENT        0x00000010
 #define D3DTA_ALPHAREPLICATE    0x00000020
 
-#define D3DCOLORWRITEENABLE_RED   (1L<<0)   
+#define D3DCOLORWRITEENABLE_RED   (1L<<0)
 #define D3DCOLORWRITEENABLE_GREEN (1L<<1)
 #define D3DCOLORWRITEENABLE_BLUE  (1L<<2)
 #define D3DCOLORWRITEENABLE_ALPHA (1L<<3)
@@ -205,7 +205,7 @@
 #define D3DPRESENT_BACK_BUFFERS_MAX         3L
 #define D3DPRESENT_RATE_DEFAULT             0x00000000
 
-/**************************** 
+/****************************
  * Vertex Shaders Declaration
  */
 
@@ -213,17 +213,17 @@ typedef enum _D3DDECLUSAGE {
   D3DDECLUSAGE_POSITION     = 0,
   D3DDECLUSAGE_BLENDWEIGHT  = 1,
   D3DDECLUSAGE_BLENDINDICES = 2,
-  D3DDECLUSAGE_NORMAL       = 3,      
-  D3DDECLUSAGE_PSIZE        = 4,       
-  D3DDECLUSAGE_TEXCOORD     = 5,    
-  D3DDECLUSAGE_TANGENT      = 6,     
-  D3DDECLUSAGE_BINORMAL     = 7,    
-  D3DDECLUSAGE_TESSFACTOR   = 8,  
-  D3DDECLUSAGE_POSITIONT    = 9,   
-  D3DDECLUSAGE_COLOR        = 10,       
-  D3DDECLUSAGE_FOG          = 11,        
-  D3DDECLUSAGE_DEPTH        = 12,      
-  D3DDECLUSAGE_SAMPLE       = 13     
+  D3DDECLUSAGE_NORMAL       = 3,
+  D3DDECLUSAGE_PSIZE        = 4,
+  D3DDECLUSAGE_TEXCOORD     = 5,
+  D3DDECLUSAGE_TANGENT      = 6,
+  D3DDECLUSAGE_BINORMAL     = 7,
+  D3DDECLUSAGE_TESSFACTOR   = 8,
+  D3DDECLUSAGE_POSITIONT    = 9,
+  D3DDECLUSAGE_COLOR        = 10,
+  D3DDECLUSAGE_FOG          = 11,
+  D3DDECLUSAGE_DEPTH        = 12,
+  D3DDECLUSAGE_SAMPLE       = 13
 } D3DDECLUSAGE;
 
 /* MSDN is quite confussing at this point...
@@ -439,7 +439,7 @@ typedef enum _D3DSHADER_INSTRUCTION_OPCODE_TYPE {
   D3DSIO_SETP         = 94,
   D3DSIO_TEXLDL       = 95,
   D3DSIO_BREAKP       = 96,
-  
+
   D3DSIO_PHASE        = 0xFFFD,
   D3DSIO_COMMENT      = 0xFFFE,
   D3DSIO_END          = 0XFFFF,
@@ -506,7 +506,7 @@ typedef enum _D3DSHADER_PARAM_DSTMOD_TYPE {
 #define D3DSP_REGTYPE_MASK2      0x00001800
 
 typedef enum _D3DSHADER_PARAM_REGISTER_TYPE {
-  D3DSPR_TEMP         =  0, 
+  D3DSPR_TEMP         =  0,
   D3DSPR_INPUT        =  1,
   D3DSPR_CONST        =  2,
   D3DSPR_ADDR         =  3,
@@ -728,7 +728,7 @@ typedef enum _D3DDEGREETYPE {
     D3DDEGREE_QUADRATIC   = 2,
     D3DDEGREE_CUBIC       = 3,
     D3DDEGREE_QUINTIC     = 5,
-    
+
     D3DDEGREE_FORCE_DWORD   = 0x7fffffff
 } D3DDEGREETYPE;
 
@@ -778,7 +778,7 @@ typedef enum _D3DFORMAT {
     D3DFMT_G16R16               =  34,
     D3DFMT_A2R10G10B10          =  35,
     D3DFMT_A16B16G16R16         =  36,
-  
+
 
     D3DFMT_A8P8                 =  40,
     D3DFMT_P8                   =  41,
@@ -824,12 +824,12 @@ typedef enum _D3DFORMAT {
     D3DFMT_R16F                 = 111,
     D3DFMT_G16R16F              = 112,
     D3DFMT_A16B16G16R16F        = 113,
-    
+
     /* IEEE formats */
     D3DFMT_R32F                 = 114,
     D3DFMT_G32R32F              = 115,
     D3DFMT_A32B32G32R32F        = 116,
-    
+
     D3DFMT_CxV8U8               = 117,
 
 
@@ -1214,7 +1214,7 @@ typedef enum _D3DSAMPLERSTATETYPE {
     D3DSAMP_SRGBTEXTURE    = 11,
     D3DSAMP_ELEMENTINDEX   = 12,
     D3DSAMP_DMAPOFFSET     = 13,
-                                
+
     D3DSAMP_FORCE_DWORD   = 0x7fffffff,
 } D3DSAMPLERSTATETYPE;
 
@@ -1234,7 +1234,7 @@ typedef struct _D3DADAPTER_IDENTIFIER9 {
     char            Driver[MAX_DEVICE_IDENTIFIER_STRING];
     char            Description[MAX_DEVICE_IDENTIFIER_STRING];
     char            DeviceName[32];
-    LARGE_INTEGER   DriverVersion; 
+    LARGE_INTEGER   DriverVersion;
 
     DWORD           VendorId;
     DWORD           DeviceId;
@@ -1314,13 +1314,13 @@ typedef struct _D3DDEVINFO_D3D9STAGETIMINGS {
 /* Vertex cache optimization hints. */
 typedef struct D3DDEVINFO_VCACHE {
     /* Must be a 4 char code FOURCC (e.g. CACH) */
-    DWORD         Pattern; 
+    DWORD         Pattern;
     /* 0 to get the longest  strips, 1 vertex cache */
-    DWORD         OptMethod; 
+    DWORD         OptMethod;
      /* Cache size to use (only valid if OptMethod==1) */
     DWORD         CacheSize;
     /* internal for deciding when to restart strips, non user modifyable (only valid if OptMethod==1) */
-    DWORD         MagicNumber; 
+    DWORD         MagicNumber;
 } D3DDEVINFO_VCACHE;
 
 typedef struct D3DRESOURCESTATS {

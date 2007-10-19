@@ -155,7 +155,7 @@ PciIdeXSetBusData(
 	{
 		Status = STATUS_UNSUCCESSFUL;
 		goto cleanup;
-	}		
+	}
 
 	BytesWritten = (*FdoDeviceExtension->BusInterface->SetBusData)(
 		FdoDeviceExtension->BusInterface->Context,

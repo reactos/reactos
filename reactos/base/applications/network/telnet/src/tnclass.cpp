@@ -214,7 +214,7 @@ int Telnet::Open(const char *szHost1, const char *strPort1){
 	} else if(bWinsockUp && bConnected) {
 			printm (0, FALSE, MSG_ALREADYCONNECTED, szHost);
 	}
- 	
+
 	return TNNOCON; // cannot do winsock stuff or already connected
 }
 
@@ -341,7 +341,7 @@ SOCKET Telnet::Connect()
 	itoa(SockAddr.sin_addr.S_un.S_un_b.s_b4, ss_b4, 10);
 	itoa(ntohs(SockAddr.sin_port), ss_b5, 10);
 	printm(0, FALSE, MSG_TRYING, ss_b1, ss_b2, ss_b3, ss_b4, ss_b5);
-	
+
 	if (connect(Socket1, (sockaddr*)&SockAddr, sizeof(SockAddr)))
 		return INVALID_SOCKET;
 
@@ -366,7 +366,7 @@ void Telnet::NewProcess() {
 
 	strcpy(cmd_line, ini.get_startdir());
 	strcat(cmd_line, ini.get_exename());	// Thomas Briggs 12/7/98
-	
+
 	if(!SpawnProcess(cmd_line, &pi)) printm(0, FALSE, MSG_NOSPAWN);
 }
 

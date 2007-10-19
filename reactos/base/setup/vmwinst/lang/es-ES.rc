@@ -88,7 +88,7 @@ BEGIN
   LTEXT "El instalador de ReactOS va a proceder a desinstalar su controlador SVGA VMware(r)!!!\n\n\nHaga click en 'Finalizar' para desinstalar el controlador o 'Cancelar' para dejarlo como está.",-1,25,25,225,85
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_WIZARD_NAME "VMware(r) detectado"
   IDS_FAILEDTOLOCATEDRIVERS "El instalador de ReactOS no puede encontrar los archivos requeridos.\nPor favor asegúrese que el CD-ROM de VMware(r) tools está insertado."

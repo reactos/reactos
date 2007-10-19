@@ -24,7 +24,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 8, 2004, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -1058,13 +1058,13 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
                 }
                 break;
 
-            
-	/* IME messages to make the edit control IME aware */           
+
+	/* IME messages to make the edit control IME aware */
 	case WM_IME_SETCONTEXT:
 		break;
 
 	case WM_IME_STARTCOMPOSITION:
-	/* 
+	/*
 	 * FIXME in IME: This message is not always sent like it should be
 	 */
 		if (es->selection_start != es->selection_end)
@@ -1080,7 +1080,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 		if (es->composition_len == 0)
 		{
 			if (es->selection_start != es->selection_end)
-			{    
+			{
 				static const WCHAR empty_stringW[] = {0};
 				EDIT_EM_ReplaceSel(es, TRUE, empty_stringW, TRUE, TRUE);
 			}
@@ -1102,7 +1102,7 @@ static LRESULT WINAPI EditWndProc_common( HWND hwnd, UINT msg,
 
 	case WM_IME_CONTROL:
 		break;
-                
+
 	default:
 		result = DefWindowProcT(hwnd, msg, wParam, lParam, unicode);
 		break;
@@ -2429,7 +2429,7 @@ static void EDIT_SetCaretPos(EDITSTATE *es, INT pos,
 static void EDIT_AdjustFormatRect(EDITSTATE *es)
 {
 	RECT ClientRect;
-	
+
 	es->format_rect.right = max(es->format_rect.right, es->format_rect.left + es->char_width);
 	if (es->style & ES_MULTILINE)
 	{
@@ -2464,7 +2464,7 @@ static void EDIT_AdjustFormatRect(EDITSTATE *es)
 
 	if ((es->style & ES_MULTILINE) && !(es->style & ES_AUTOHSCROLL))
 		EDIT_BuildLineDefs_ML(es, 0, strlenW(es->text), 0, NULL);
-	
+
 	EDIT_SetCaretPos(es, es->selection_end, es->flags & EF_AFTER_WRAP);
 }
 
@@ -2482,13 +2482,13 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
 	LONG_PTR ExStyle;
 	INT bw, bh;
 	ExStyle = GetWindowLongPtrW(es->hwndSelf, GWL_EXSTYLE);
-	
+
 	CopyRect(&es->format_rect, rc);
-	
+
 	if (ExStyle & WS_EX_CLIENTEDGE) {
 		es->format_rect.left++;
 		es->format_rect.right--;
-		
+
 		if (es->format_rect.bottom - es->format_rect.top
 		    >= es->line_height + 2)
 		{
@@ -2508,7 +2508,7 @@ static void EDIT_SetRectNP(EDITSTATE *es, LPRECT rc)
 		    es->format_rect.bottom -= bh;
 		}
 	}
-	
+
 	es->format_rect.left += es->left_margin;
 	es->format_rect.right -= es->right_margin;
 	EDIT_AdjustFormatRect(es);
@@ -3333,7 +3333,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 			if (e != s)
 				for (i = 0 , p = es->text ; i < e - s ; i++)
 					p[i + s] = buf[i];
-			EDIT_BuildLineDefs_ML(es, s, e, 
+			EDIT_BuildLineDefs_ML(es, s, e,
 				abs(es->selection_end - es->selection_start) - strl, hrgn);
 			strl = 0;
 			e = s;
@@ -3354,7 +3354,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 			EDIT_NOTIFY_PARENT(es, EN_MAXTEXT);
 		}
 	}
-	
+
 	if (e != s) {
 		if (can_undo) {
 			utl = strlenW(es->undo_text);
@@ -3406,7 +3406,7 @@ static void EDIT_EM_ReplaceSel(EDITSTATE *es, BOOL can_undo, LPCWSTR lpsz_replac
 
 	if (bufl)
 		HeapFree(GetProcessHeap(), 0, buf);
- 
+
 	s += strl;
 
 	/* If text has been deleted and we're right or center aligned then scroll rightward */
@@ -3824,7 +3824,7 @@ static void EDIT_EM_SetMargins(EDITSTATE *es, INT action,
 			es->right_margin = default_right_margin;
 		es->format_rect.right -= es->right_margin;
 	}
-	
+
 	if (action & (EC_LEFTMARGIN | EC_RIGHTMARGIN)) {
 		EDIT_AdjustFormatRect(es);
 		if (repaint) EDIT_UpdateText(es, NULL, TRUE);
@@ -4256,7 +4256,7 @@ static void EDIT_WM_Copy(EDITSTATE *es)
 static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
 {
         RECT clientRect;
-        
+
 	TRACE("%s\n", debugstr_w(name));
        /*
         *	To initialize some final structure members, we call some helper
@@ -4266,7 +4266,7 @@ static LRESULT EDIT_WM_Create(EDITSTATE *es, LPCWSTR name)
         */
         EDIT_WM_SetFont(es, 0, FALSE);
         EDIT_EM_EmptyUndoBuffer(es);
-        
+
         /* We need to calculate the format rect
            (applications may send EM_SETMARGINS before the control gets visible) */
         GetClientRect(es->hwndSelf, &clientRect);
@@ -4960,7 +4960,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 
 	/* paint the border and the background */
 	IntersectClipRect(dc, rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
-	
+
 	if(es->style & WS_BORDER) {
 		bw = GetSystemMetrics(SM_CXBORDER);
 		bh = GetSystemMetrics(SM_CYBORDER);
@@ -4969,7 +4969,7 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 			if(es->style & WS_HSCROLL) rc.bottom+=bh;
 			if(es->style & WS_VSCROLL) rc.right+=bw;
 		}
-		
+
 		/* Draw the frame. Same code as in nonclient.c */
 		old_brush = SelectObject(dc, GetSysColorBrush(COLOR_WINDOWFRAME));
 		PatBlt(dc, rc.left, rc.top, rc.right - rc.left, bh, PATCOPY);
@@ -4977,12 +4977,12 @@ static void EDIT_WM_Paint(EDITSTATE *es, HDC hdc)
 		PatBlt(dc, rc.left, rc.bottom - 1, rc.right - rc.left, -bw, PATCOPY);
 		PatBlt(dc, rc.right - 1, rc.top, -bw, rc.bottom - rc.top, PATCOPY);
 		SelectObject(dc, old_brush);
-		
+
 		/* Keep the border clean */
 		IntersectClipRect(dc, rc.left+bw, rc.top+bh,
 		    max(rc.right-bw, rc.left+bw), max(rc.bottom-bh, rc.top+bh));
 	}
-	
+
 	GetClipBox(dc, &rc);
 	FillRect(dc, &rc, brush);
 
@@ -5098,7 +5098,7 @@ static void EDIT_WM_SetFont(EDITSTATE *es, HFONT font, BOOL redraw)
 	if (font)
 		SelectObject(dc, old_font);
 	ReleaseDC(es->hwndSelf, dc);
-	
+
 	/* Reset the format rect and the margins */
 	GetClientRect(es->hwndSelf, &clientRect);
 	EDIT_SetRectNP(es, &clientRect);
@@ -5152,14 +5152,14 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
 	    "selection.\n");
 
     EDIT_EM_SetSel(es, 0, (UINT)-1, FALSE);
-    if (text) 
+    if (text)
     {
 	TRACE("%s\n", debugstr_w(text));
 	EDIT_EM_ReplaceSel(es, FALSE, text, FALSE, FALSE);
 	if(!unicode)
 	    HeapFree(GetProcessHeap(), 0, (LPWSTR)text);
-    } 
-    else 
+    }
+    else
     {
 	static const WCHAR empty_stringW[] = {0};
 	TRACE("<NULL>\n");
@@ -5179,7 +5179,7 @@ static void EDIT_WM_SetText(EDITSTATE *es, LPCWSTR text, BOOL unicode)
         EDIT_NOTIFY_PARENT(es, EN_CHANGE);
     }
     EDIT_EM_ScrollCaret(es);
-    EDIT_UpdateScrollInfo(es);    
+    EDIT_UpdateScrollInfo(es);
 }
 
 
@@ -5444,7 +5444,7 @@ static void EDIT_UpdateText(EDITSTATE *es, LPRECT rc, BOOL bErase)
 }
 
 /********************************************************************
- * 
+ *
  * The Following code is to handle inline editing from IMEs
  */
 
@@ -5480,7 +5480,7 @@ static void EDIT_GetCompositionStr(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
 
     if (CompFlag & GCS_COMPATTR)
     {
-        /* 
+        /*
          * We do not use the attributes yet. it would tell us what characters
          * are in transition and which are converted or decided upon
          */
@@ -5496,7 +5496,7 @@ static void EDIT_GetCompositionStr(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
                 ImmReleaseContext(hwnd,hIMC);
                 return;
             }
-            ImmGetCompositionStringW(hIMC,GCS_COMPATTR, lpCompStrAttr, 
+            ImmGetCompositionStringW(hIMC,GCS_COMPATTR, lpCompStrAttr,
                     dwBufLenAttr);
             lpCompStrAttr[dwBufLenAttr] = 0;
         }
@@ -5507,7 +5507,7 @@ static void EDIT_GetCompositionStr(HWND hwnd, LPARAM CompFlag, EDITSTATE *es)
     /* check for change in composition start */
     if (es->selection_end < es->composition_start)
         es->composition_start = es->selection_end;
-    
+
     /* replace existing selection string */
     es->selection_start = es->composition_start;
 

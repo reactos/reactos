@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/surface/surface_stubs.c
- * PURPOSE:              IDirectDrawSurface7 Implementation 
+ * PURPOSE:              IDirectDrawSurface7 Implementation
  * PROGRAMMER:           Magnus Olsen, Maarten Bosma
  *
  */
@@ -77,7 +77,7 @@ Main_DDrawSurface_EnumAttachedSurfaces(LPDIRECTDRAWSURFACE7 iface,
 {
 	DX_WINDBG_trace();
 
-	DX_STUB;    
+	DX_STUB;
 }
 
 HRESULT WINAPI
@@ -93,10 +93,10 @@ Main_DDrawSurface_EnumOverlayZOrders(LPDIRECTDRAWSURFACE7 iface,
 HRESULT WINAPI
 Main_DDrawSurface_Flip(LPDIRECTDRAWSURFACE7 iface,
 			    LPDIRECTDRAWSURFACE7 lpDDSurfaceTargetOverride, DWORD dwFlags)
-{        
+{
     DX_WINDBG_trace();
 
-    DX_STUB;    
+    DX_STUB;
 }
 
 HRESULT WINAPI
@@ -112,7 +112,7 @@ Main_DDrawSurface_GetColorKey(LPDIRECTDRAWSURFACE7 iface, DWORD dwFlags,
 {
     //LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 
-	DX_WINDBG_trace();	
+	DX_WINDBG_trace();
 
     DX_STUB;
 }
@@ -192,7 +192,7 @@ Main_DDrawSurface_IsLost(LPDIRECTDRAWSURFACE7 iface)
 
     //DX_STUB;
     DX_STUB_str("not implement return not lost\n");
-    return DD_OK;    
+    return DD_OK;
 }
 
 HRESULT WINAPI
@@ -256,12 +256,12 @@ Main_DDrawSurface_UpdateOverlay (LPDIRECTDRAWSURFACE7 iface,
 HRESULT WINAPI
 Main_DDrawSurface_UpdateOverlayDisplay (LPDIRECTDRAWSURFACE7 iface,
 					    DWORD dwFlags)
-{    
+{
     LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 
 	DX_WINDBG_trace();
 
-	if (!This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY) 
+	if (!This->lpLcl->lpGbl->lpDD->lpDDCBtmp->cbDDSurfaceCallbacks.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY)
 	{
 		return DDERR_GENERIC;
 	}

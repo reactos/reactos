@@ -310,7 +310,7 @@ CmiExportSubKey (PHHIVE Hive,
           break;
         }
     }
-          
+
   /* Allocate key cell */
   KeyCellSize = sizeof(CM_KEY_NODE) + NameSize;
   NKBOffset = HvAllocateCell (Hive, KeyCellSize, HvStable);
@@ -583,7 +583,7 @@ RegImportValue (PHHIVE Hive,
 			   ValueCell->DataType,
 			   DataCell,
 			   DataSize);
-	
+
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));

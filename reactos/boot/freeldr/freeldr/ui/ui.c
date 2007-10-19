@@ -252,9 +252,9 @@ BOOLEAN SetupUiInitialize(VOID)
 	CHAR	DisplayModeText[260];
 	ULONG	Depth;
 
-	
+
 	DisplayModeText[0] = '\0';
-	
+
 
 	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
@@ -272,7 +272,7 @@ BOOLEAN SetupUiInitialize(VOID)
     UiDrawTime = FALSE;
     UiStatusBarBgColor = 7;
 	UserInterfaceUp = TRUE;
-    
+
     TuiDrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
     TuiDrawText(3, 2, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD", ATTR(COLOR_GRAY, UiBackdropBgColor));
 

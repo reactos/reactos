@@ -214,7 +214,7 @@ HvInitialize(
    IN const /*CONST*/ UNICODE_STRING* FileName);
 /* NOTE: Can not use CONST here, as this file is used from user-mode too */
 
-VOID CMAPI 
+VOID CMAPI
 HvFree(
    PHHIVE RegistryHive);
 

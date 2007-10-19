@@ -72,7 +72,7 @@ ULONG CDECL ldap_parse_extended_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
 /***********************************************************************
  *      ldap_parse_extended_resultW     (WLDAP32.@)
  *
- * Parse the result of an extended operation. 
+ * Parse the result of an extended operation.
  *
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
@@ -134,7 +134,7 @@ ULONG CDECL ldap_parse_referenceA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
     *referrals = strarrayWtoA( referralsW );
     ldap_value_freeW( referralsW );
 
-#endif 
+#endif
     return ret;
 }
 
@@ -165,7 +165,7 @@ ULONG CDECL ldap_parse_referenceW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
     TRACE( "(%p, %p, %p)\n", ld, message, referrals );
 
     if (!ld) return ~0UL;
-    
+
     ret = ldap_parse_reference( ld, message, &referralsU, NULL, 0 );
 
     *referrals = strarrayUtoW( referralsU );
@@ -215,7 +215,7 @@ ULONG CDECL ldap_parse_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
 /***********************************************************************
  *      ldap_parse_resultW     (WLDAP32.@)
  *
- * Parse a result message. 
+ * Parse a result message.
  *
  * PARAMS
  *  ld           [I] Pointer to an LDAP context.
@@ -386,7 +386,7 @@ INT CDECL ldap_parse_vlv_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
  * PARAMS
  *  ld         [I] Pointer to an LDAP context.
  *  control    [I] Controls obtained from a result message.
- *  targetpos  [O] Positition of the target in the result list. 
+ *  targetpos  [O] Positition of the target in the result list.
  *  listcount  [O] Estimate of the number of results in the list.
  *  context    [O] Server side context.
  *  errcode    [O] Error code from the listview operation.

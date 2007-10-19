@@ -78,7 +78,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
 	ISHRegStream *This = (ISHRegStream *)iface;
 	ULONG refCount = InterlockedIncrement(&This->ref);
-	
+
 	TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
 	return refCount;

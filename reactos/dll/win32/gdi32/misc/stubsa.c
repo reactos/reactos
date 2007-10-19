@@ -55,11 +55,11 @@ StartDocA(
 /*
  * @unimplemented
  */
-BOOL  
-STDCALL 
+BOOL
+STDCALL
 PolyTextOutA(
-	HDC			hdc, 
-	CONST POLYTEXTA		*a1, 
+	HDC			hdc,
+	CONST POLYTEXTA		*a1,
 	int			a2
 	)
 {

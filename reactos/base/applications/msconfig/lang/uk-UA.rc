@@ -96,7 +96,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "Д&одатково...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12 
+   PUSHBUTTON "Д&одатково...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
    LTEXT "&Затримка:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "сек.", -1, 340, 91, 15, 10
@@ -132,9 +132,9 @@ BEGIN
     IDS_MSCONFIG             "Програма налаштування системи"
     IDS_TAB_GENERAL          "Загальні"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Служби" 
-    IDS_TAB_STARTUP          "Автозавантаження" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Служби"
+    IDS_TAB_STARTUP          "Автозавантаження"
     IDS_TAB_TOOLS            "Утиліти"
 END
 
@@ -178,5 +178,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "Працює"
     IDS_SERVICES_STATUS_STOPPED "Зупинена"
     IDS_SERVICES_YES "Так"
-    IDS_SERVICES_UNKNOWN "Невідомо" 
+    IDS_SERVICES_UNKNOWN "Невідомо"
 END

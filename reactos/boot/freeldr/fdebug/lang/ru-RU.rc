@@ -11,7 +11,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 // Menu
 //
 
-IDC_FDEBUG MENU DISCARDABLE 
+IDC_FDEBUG MENU DISCARDABLE
 BEGIN
     POPUP "&Файл"
     BEGIN
@@ -39,7 +39,7 @@ END
 // Accelerator
 //
 
-IDC_FDEBUG ACCELERATORS MOVEABLE PURE 
+IDC_FDEBUG ACCELERATORS MOVEABLE PURE
 BEGIN
     63,            IDM_ABOUT,              ASCII,  ALT // "?"
     47,            IDM_ABOUT,              ASCII,  ALT // "/"
@@ -52,7 +52,7 @@ END
 // TEXTINCLUDE
 //
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -61,13 +61,13 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
 END
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
@@ -81,7 +81,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO DISCARDABLE 
+GUIDELINES DESIGNINFO DISCARDABLE
 BEGIN
     IDD_ABOUTBOX, DIALOG
     BEGIN
@@ -125,7 +125,7 @@ BEGIN
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
     ICON            IDI_FDEBUG,IDC_STATIC,19,30,20,20
-    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE | 
+    EDITTEXT        IDC_LICENSE_EDIT,53,63,174,107,ES_MULTILINE |
                     ES_READONLY | WS_VSCROLL
 END
 
@@ -161,14 +161,14 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_APP_TITLE           "fdebug"
     IDS_HELLO               "Привет мир!"
     IDC_FDEBUG              "FDEBUG"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
 END

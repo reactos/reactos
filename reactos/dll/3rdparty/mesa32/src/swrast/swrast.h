@@ -37,7 +37,7 @@
 /**
  * \struct SWvertex
  * \brief Data-structure to handle vertices in the software rasterizer.
- * 
+ *
  * The software rasterizer now uses this format for vertices.  Thus a
  * 'RasterSetup' stage or other translation is required between the
  * tnl module and the swrast rasterization functions.  This serves to
@@ -203,22 +203,22 @@ _swrast_print_vertex( GLcontext *ctx, const SWvertex *v );
 
 /*
  * Imaging fallbacks (a better solution should be found, perhaps
- * moving all the imaging fallback code to a new module) 
+ * moving all the imaging fallback code to a new module)
  */
 extern void
-_swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target, 
-				GLenum internalFormat, 
-				GLint x, GLint y, GLsizei width, 
+_swrast_CopyConvolutionFilter2D(GLcontext *ctx, GLenum target,
+				GLenum internalFormat,
+				GLint x, GLint y, GLsizei width,
 				GLsizei height);
 extern void
-_swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target, 
-				GLenum internalFormat, 
+_swrast_CopyConvolutionFilter1D(GLcontext *ctx, GLenum target,
+				GLenum internalFormat,
 				GLint x, GLint y, GLsizei width);
 extern void
 _swrast_CopyColorSubTable( GLcontext *ctx,GLenum target, GLsizei start,
 			   GLint x, GLint y, GLsizei width);
 extern void
-_swrast_CopyColorTable( GLcontext *ctx, 
+_swrast_CopyColorTable( GLcontext *ctx,
 			GLenum target, GLenum internalformat,
 			GLint x, GLint y, GLsizei width);
 
@@ -257,7 +257,7 @@ _swrast_copy_texsubimage3d(GLcontext *ctx,
 
 
 /* The driver interface for the software rasterizer.
- * Unless otherwise noted, all functions are mandatory.  
+ * Unless otherwise noted, all functions are mandatory.
  */
 struct swrast_device_driver {
 #if OLD_RENDERBUFFER

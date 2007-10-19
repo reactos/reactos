@@ -74,7 +74,7 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 	char chr;
 	char temp[2];
 	char temp1[80];
-	
+
 	INPUT_RECORD InputRecord;
 	BOOL done = FALSE;
 
@@ -93,10 +93,10 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 			MustRefresh = 0;
 			if (InputRecord.EventType == KEY_EVENT &&
 				InputRecord.Event.KeyEvent.bKeyDown ) {
-				
+
 				if(InputRecord.Event.KeyEvent.dwControlKeyState &
 					(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)) {
-					
+
 					switch(InputRecord.Event.KeyEvent.wVirtualKeyCode) {
 					case 'D': // Thomas Briggs 8/11/98
 						buf[0] = '\04';
@@ -112,7 +112,7 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 						break;
 					}
 				}
-				
+
 				switch (InputRecord.Event.KeyEvent.wVirtualKeyCode) {
 				case VK_UP:
 					// crn@ozemail.com.au
@@ -207,7 +207,7 @@ struct cmdHistory * cfgets (char *buf, unsigned int length, struct cmdHistory *c
 					}
 					MustRefresh = 1;
 					break;
-					
+
 				default:
 					chr = InputRecord.Event.KeyEvent.uChar.AsciiChar;
 					if (chr == '\r') {
@@ -312,11 +312,11 @@ int main(int ArgC, char* ArgV[]) {
 		GetStdHandle(STD_OUTPUT_HANDLE),
 		&ConsoleScreenBufferInfo
 		);
-	
+
 	char *k;
 	char startdir[MAX_PATH*2];
 	char exename[MAX_PATH];
-	
+
 	// strncpy(startdir, ArgV[0],MAX_PATH);
 	// This should be more accurate than using argv[0] (Paul Brannan 9/16/98)
 	GetModuleFileName(NULL, startdir, sizeof(startdir));
@@ -325,7 +325,7 @@ int main(int ArgC, char* ArgV[]) {
 	// ("Pedro A. Aranda Gutiérrez" <paag@coppi.tid.es>)
 	TCHAR ConsoleTitle[255];
 	GetConsoleTitle(ConsoleTitle, sizeof(ConsoleTitle));
-	
+
 	k = strrchr(startdir, '\\');
 	if (k == NULL){						// if the \ character is not found...
 		strcpy(exename, startdir);
@@ -338,9 +338,9 @@ int main(int ArgC, char* ArgV[]) {
 
 	printm(0, FALSE, MSG_COPYRIGHT);
 	printm(0, FALSE, MSG_COPYRIGHT_1);
-	
+
 	// set up the ini class
-	ini.init(startdir, exename);					
+	ini.init(startdir, exename);
 
 	// Process the command line arguments and connect to a host if necessary
 	if(ini.Process_Params(ArgC, ArgV)) {
@@ -359,7 +359,7 @@ int main(int ArgC, char* ArgV[]) {
 		}
 	}
 	//// (Paul Brannan 5/14/98)
-	
+
 	if(ini.get_term_width() != -1 || ini.get_term_height() != -1) {
 		SetConsoleScreenBufferSize(
 			GetStdHandle(STD_OUTPUT_HANDLE),	// handle of console screen buffer
@@ -389,7 +389,7 @@ enum {
 		EMPTY_LINE = -2,
 		INVALID_CMD = -1,
 		__FIRST_COMMAND = 0,
-		
+
 		OPEN = __FIRST_COMMAND,
 		CLOSE,
 		KEYS,
@@ -399,16 +399,16 @@ enum {
 		K_LOAD,				// subcommand of 'keys'
 		K_SWITCH,			// subcommand of 'keys'
 		K_DISPLAY,			// subcommand of 'keys'
-		
+
 		SET,				// Paul Brannan 5/30/98
-		
+
 		SUSPEND,
 		FASTQUIT,			// Thomas Briggs 8/11/98
 		CMD_HISTORY,		// crn@ozemail.com.au
 		CLEAR_HISTORY,		// crn@ozemail.com.au
-		
+
 		ALIASES,			// Paul Brannan 1/1/99
-		
+
 		__COMMAND_LIST_SIZE	// must be last
 };
 
@@ -459,12 +459,12 @@ static int cmdMatch(const char* cmd, const char* token, int tokenLen, int minM) 
 	// The (unsigned) gets rid of a compiler warning (Paul Brannan 5/25/98)
     if ( (unsigned)tokenLen > strlen(cmd) ) return 0;
     if ( strcmp(cmd,token) == 0 ) return 1;
-	
+
     int i;
     for ( i = 0; i < minM; i++ ) if ( cmd[i] != token[i] ) return 0;
-	
+
     for ( i = minM; i < tokenLen; i++ ) if ( cmd[i] != token[i] ) return 0;
-	
+
     return 1;
 };
 
@@ -510,7 +510,7 @@ int tokenizeCommand(char* szCommand, int& argc, char** argv) {
 	// 	tokens[args] = p;
 	// 	args++;
 	// };
-	
+
     if ( !args ) return EMPTY_LINE;
     argc = args - 1;
     args = 0;
@@ -547,12 +547,12 @@ int tokenizeCommand(char* szCommand, int& argc, char** argv) {
 			return -3;
 		};
     };
-	
+
     for ( int i = 0; i<argc; i++ ) {
         argv[i] = tokens[i+args+1];
     };
     return ok;
-	
+
 };
 
 int telCommandLine (Telnet &MyConnection){
@@ -564,7 +564,7 @@ int telCommandLine (Telnet &MyConnection){
 	char *extitle, *newtitle;
 	struct cmdHistory *cmdhist;
 	cmdhist = NULL;
-	
+
 	// printit("\n");  // crn@ozemail.com.au 14/12/98
 	while (!bDone){
 		// printit("\n"); // Paul Brannan 5/25/98
@@ -576,7 +576,7 @@ int telCommandLine (Telnet &MyConnection){
 		// i = sscanf(szCommand,"%80s %80s %80s %80s", szCmd, szArg1, szArg2, szArg3);
 		switch ( tokenizeCommand(szCommand, i, Parms) ) {
 		case BAD_USAGE:   break;
-		case EMPTY_LINE:  
+		case EMPTY_LINE:
 			if(MyConnection.Resume() == TNPROMPT) {
 				printit("\n");
 				break;
@@ -585,7 +585,7 @@ int telCommandLine (Telnet &MyConnection){
 			 	return 1;
 		case INVALID_CMD:
 			printm(0, FALSE, MSG_INVCMD);
-			break;			
+			break;
 		case OPEN:
 			if (i == 1)
 				retval = MyConnection.Open(Parms[0], "23");
@@ -624,7 +624,7 @@ int telCommandLine (Telnet &MyConnection){
 		case K_SWITCH:
 			MyConnection.SwitchKeyMap(atoi(Parms[0]));
 			break;
-			
+
 			// Paul Brannan 5/30/98
 		case SET:
 			if(i == 0) {
@@ -639,19 +639,19 @@ int telCommandLine (Telnet &MyConnection){
 				//  something like Parser.ConLineWrap(Wrap_Line);
 			}
 			break;
-			
+
 		case SUSPEND: // Thomas Briggs 8/11/98
-			
+
 			// remind the user we're suspended -crn@ozemail.com.au 15/12/98
 			extitle = new char[128];
 			GetConsoleTitle (extitle, 128);
-			
+
 			newtitle = new char[128+sizeof("[suspended]")];
 			strcpy(newtitle, extitle);
 			strncat(newtitle, "[suspended]", 128+sizeof("[suspended]"));
 			if(ini.get_set_title()) SetConsoleTitle (newtitle);
 			delete[] newtitle;
-			
+
 			if (getenv("comspec") == NULL) {
 				switch (GetWin32Version()) {
 				case 2:		// 'cmd' is faster than 'command' in NT -crn@ozemail.com.au
@@ -664,13 +664,13 @@ int telCommandLine (Telnet &MyConnection){
 			} else {
 				system(getenv("comspec"));
 			}
-			
+
 			if(ini.get_set_title()) SetConsoleTitle (extitle);
 			delete[] extitle;
 			///
-			
+
 			break;
-			
+
 		case CMD_HISTORY:	//crn@ozemail.com.au
 			if (cmdhist != NULL) {
 				while (cmdhist->prev != NULL)
@@ -678,7 +678,7 @@ int telCommandLine (Telnet &MyConnection){
 				printf ("Command history:\n");
 				while (1) {
 					printf ("\t%s\n", cmdhist->cmd);
-					
+
 					if (cmdhist->next != NULL)
 						cmdhist = cmdhist->next;
 					else
@@ -686,9 +686,9 @@ int telCommandLine (Telnet &MyConnection){
 				}
 			} else
 				printf ("No command history available.\n");
-			
+
 			break;
-			
+
 		case CLEAR_HISTORY:	//crn@ozemail.com.au
 			if (cmdhist != NULL) {
 				while (cmdhist->next != NULL)
@@ -702,11 +702,11 @@ int telCommandLine (Telnet &MyConnection){
 				printf ("Command history cleared.\n");
 			} else
 				printf ("No command history available.\n");
-			
+
 		case ALIASES: // Paul Brannan 1/1/99
 			ini.print_aliases();
 			break;
-			
+
 		default: // paranoik
 			printm(0, FALSE, MSG_INVCMD);
 			break;

@@ -332,10 +332,10 @@ BOOL STDCALL NtGdiDdResetVisrgn(
 	DPRINT1("UNIMPLEMENTED NtGdiDdResetVisrgn \n");
 	/* see http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/lowlevelclientsupport/graphics/ddresetvisrgn.asp
 	   for more info, I pasted some part of it here
-	 Clipping can change asynchronously from the point of view of user-mode threads. 
-	 The kernel-mode parts of DirectDraw and Microsoft Windows Graphics Device Interface (GDI) 
-	 maintain a counter that is incremented whenever the clipping list for the entire desktop 
-	 changes. A call to this function records this counter with every existing DirectDraw 
+	 Clipping can change asynchronously from the point of view of user-mode threads.
+	 The kernel-mode parts of DirectDraw and Microsoft Windows Graphics Device Interface (GDI)
+	 maintain a counter that is incremented whenever the clipping list for the entire desktop
+	 changes. A call to this function records this counter with every existing DirectDraw
 	 primary surface on the system.
 
     */

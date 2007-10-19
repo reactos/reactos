@@ -75,7 +75,7 @@ DllMain(PVOID hinstDll, ULONG dwReason, PVOID reserved)
         hHeap = HeapCreate(0, 100000, 0);
         if (hHeap == NULL)
             return FALSE;
-        if (!__fileno_init()) 
+        if (!__fileno_init())
             return FALSE;
 
         /* create tls stuff */

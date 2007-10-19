@@ -64,7 +64,7 @@ xmlHashComputeKey(xmlHashTablePtr table, const xmlChar *name,
 	          const xmlChar *name2, const xmlChar *name3) {
     unsigned long value = 0L;
     char ch;
-    
+
     if (name != NULL) {
 	value += 30 * (*name);
 	while ((ch = *name++) != 0) {
@@ -91,7 +91,7 @@ xmlHashComputeQKey(xmlHashTablePtr table,
 		   const xmlChar *prefix3, const xmlChar *name3) {
     unsigned long value = 0L;
     char ch;
-    
+
     if (prefix != NULL)
 	value += 30 * (*prefix);
     else
@@ -144,10 +144,10 @@ xmlHashComputeQKey(xmlHashTablePtr table,
 xmlHashTablePtr
 xmlHashCreate(int size) {
     xmlHashTablePtr table;
-  
+
     if (size <= 0)
         size = 256;
-  
+
     table = xmlMalloc(sizeof(xmlHashTable));
     if (table) {
         table->dict = NULL;
@@ -202,7 +202,7 @@ xmlHashGrow(xmlHashTablePtr table, int size) {
 #ifdef DEBUG_GROW
     unsigned long nbElem = 0;
 #endif
-  
+
     if (table == NULL)
 	return(-1);
     if (size < 8)
@@ -214,7 +214,7 @@ xmlHashGrow(xmlHashTablePtr table, int size) {
     oldtable = table->table;
     if (oldtable == NULL)
         return(-1);
-  
+
     table->table = xmlMalloc(size * sizeof(xmlHashEntry));
     if (table->table == NULL) {
 	table->table = oldtable;
@@ -224,13 +224,13 @@ xmlHashGrow(xmlHashTablePtr table, int size) {
     table->size = size;
 
     /*	If the two loops are merged, there would be situations where
-	a new entry needs to allocated and data copied into it from 
+	a new entry needs to allocated and data copied into it from
 	the main table. So instead, we run through the array twice, first
 	copying all the elements in the main array (where we can't get
 	conflicts) and then the rest, so we only free (and don't allocate)
     */
     for (i = 0; i < oldsize; i++) {
-	if (oldtable[i].valid == 0) 
+	if (oldtable[i].valid == 0)
 	    continue;
 	key = xmlHashComputeKey(table, oldtable[i].name, oldtable[i].name2,
 				oldtable[i].name3);
@@ -572,7 +572,7 @@ xmlHashAddEntry3(xmlHashTablePtr table, const xmlChar *name,
     entry->valid = 1;
 
 
-    if (insert != NULL) 
+    if (insert != NULL)
 	insert->next = entry;
 
     table->nbElems++;
@@ -721,7 +721,7 @@ xmlHashUpdateEntry3(xmlHashTablePtr table, const xmlChar *name,
  * Returns the a pointer to the userdata
  */
 void *
-xmlHashLookup3(xmlHashTablePtr table, const xmlChar *name, 
+xmlHashLookup3(xmlHashTablePtr table, const xmlChar *name,
 	       const xmlChar *name2, const xmlChar *name3) {
     unsigned long key;
     xmlHashEntryPtr entry;
@@ -794,14 +794,14 @@ typedef struct {
     void *data;
 } stubData;
 
-static void 
-stubHashScannerFull (void *payload, void *data, const xmlChar *name, 
+static void
+stubHashScannerFull (void *payload, void *data, const xmlChar *name,
                      const xmlChar *name2 ATTRIBUTE_UNUSED,
 		     const xmlChar *name3 ATTRIBUTE_UNUSED) {
     stubData *stubdata = (stubData *) data;
     stubdata->hashscanner (payload, stubdata->data, (xmlChar *) name);
-}                                  
- 
+}
+
 /**
  * xmlHashScan:
  * @table: the hash table
@@ -814,7 +814,7 @@ void
 xmlHashScan(xmlHashTablePtr table, xmlHashScanner f, void *data) {
     stubData stubdata;
     stubdata.data = data;
-    stubdata.hashscanner = f; 
+    stubdata.hashscanner = f;
     xmlHashScanFull (table, stubHashScannerFull, &stubdata);
 }
 
@@ -839,7 +839,7 @@ xmlHashScanFull(xmlHashTablePtr table, xmlHashScannerFull f, void *data) {
 
     if (table->table) {
 	for(i = 0; i < table->size; i++) {
-	    if (table->table[i].valid == 0) 
+	    if (table->table[i].valid == 0)
 		continue;
 	    iter = &(table->table[i]);
 	    while (iter) {
@@ -867,7 +867,7 @@ xmlHashScanFull(xmlHashTablePtr table, xmlHashScannerFull f, void *data) {
  * the comparison is considered to match.
  */
 void
-xmlHashScan3(xmlHashTablePtr table, const xmlChar *name, 
+xmlHashScan3(xmlHashTablePtr table, const xmlChar *name,
 	     const xmlChar *name2, const xmlChar *name3,
 	     xmlHashScanner f, void *data) {
     xmlHashScanFull3 (table, name, name2, name3,
@@ -888,7 +888,7 @@ xmlHashScan3(xmlHashTablePtr table, const xmlChar *name,
  * the comparison is considered to match.
  */
 void
-xmlHashScanFull3(xmlHashTablePtr table, const xmlChar *name, 
+xmlHashScanFull3(xmlHashTablePtr table, const xmlChar *name,
 		 const xmlChar *name2, const xmlChar *name3,
 		 xmlHashScannerFull f, void *data) {
     int i;

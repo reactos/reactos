@@ -67,7 +67,7 @@ LPCTSTR GetValueName(HWND hwndLV, int iStartAt)
     LVItem.iSubItem = 0;
     LVItem.mask = LVIF_PARAM;
     if (ListView_GetItem(hwndLV, &LVItem) == FALSE)
-        return NULL; 
+        return NULL;
 
     lineinfo = (PLINE_INFO)LVItem.lParam;
     if (lineinfo == NULL)
@@ -486,7 +486,7 @@ void DestroyListView(HWND hwndLV)
         free(((LINE_INFO*)item.lParam)->name);
         HeapFree(GetProcessHeap(), 0, (void*)item.lParam);
     }
- 
+
 }
 
 BOOL RefreshListView(HWND hwndLV, HKEY hKey, LPCTSTR keyPath)

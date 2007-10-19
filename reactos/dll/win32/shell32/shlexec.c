@@ -259,7 +259,7 @@ static BOOL SHELL_ArgifyW(WCHAR* out, int len, const WCHAR* fmt, const WCHAR* lp
         else
         {
             used ++;
-            if (used < len) 
+            if (used < len)
                 *res++ = *fmt++;
             else
                 fmt++;
@@ -1044,7 +1044,7 @@ static HKEY ShellExecute_GetClassKey( LPSHELLEXECUTEINFOW sei )
 
     if (sei->fMask & SEE_MASK_CLASSALL)
         return sei->hkeyClass;
- 
+
     if (sei->fMask & SEE_MASK_CLASSNAME)
         lpClass = sei->lpClass;
     else
@@ -1177,7 +1177,7 @@ static HRESULT shellex_run_context_menu_default( IShellExtInit *obj,
     ici.lpVerb = MAKEINTRESOURCEA( def );
     ici.hwnd = sei->hwnd;
     ici.lpParametersW = sei->lpParameters;
-    
+
     r = IContextMenu_InvokeCommand( cm, (LPCMINVOKECOMMANDINFO) &ici );
 
     TRACE("invoke command returned %08x\n", r );

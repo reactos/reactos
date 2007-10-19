@@ -33,7 +33,7 @@ public:
     virtual bool closeSource() = 0;
 
     virtual bool readSource(std::vector<string> & vect) = 0;
-    
+
     virtual bool isSourceOpen() = 0;
 
 }; // end of class DataSource

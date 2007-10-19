@@ -126,7 +126,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
    TNLcontext *tnl = TNL_CONTEXT(ctx);
    struct vertex_buffer *VB = &tnl->vb;
 
-   if (ctx->VertexProgram._Enabled) 
+   if (ctx->VertexProgram._Enabled)
       return GL_TRUE;
 
    if (ctx->_NeedEyeCoords) {
@@ -148,7 +148,7 @@ static GLboolean run_vertex_stage( GLcontext *ctx,
    /* Drivers expect this to be clean to element 4...
     */
    switch (VB->ClipPtr->size) {
-   case 1:			
+   case 1:
       /* impossible */
    case 2:
       _mesa_vector4f_clean_elem( VB->ClipPtr, VB->Count, 2 );

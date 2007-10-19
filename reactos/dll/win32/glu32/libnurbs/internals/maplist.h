@@ -77,7 +77,7 @@ Maplist::isMap( long type )
     return (locate( type ) ? 1 : 0);
 }
 
-inline void 
+inline void
 Maplist::undefine( long type )
 {
     Mapdesc *m = locate( type );

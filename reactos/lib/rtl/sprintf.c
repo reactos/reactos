@@ -34,9 +34,9 @@ typedef struct {
     unsigned int sign:1;
 } double_t;
 
-static 
+static
 __inline
-int 
+int
 _isinf(double __x)
 {
 	union
@@ -49,9 +49,9 @@ _isinf(double __x)
 	return ( x.x->exponent == 0x7ff  && ( x.x->mantissah == 0 && x.x->mantissal == 0 ));
 }
 
-static 
+static
 __inline
-int 
+int
 _isnan(double __x)
 {
 	union
@@ -115,12 +115,12 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			size--;
 		}
 	}
-	
+
 	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 		if (base == 16)
 			size -= 2;
-	
-	} 
+
+	}
 	i = 0;
 	if ((num == 0) && (precision !=0))
 		tmp[i++] = '0';
@@ -141,7 +141,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			*buf = sign;
 		++buf;
 	}
-	
+
 	if ((type & SPECIAL) && ((type & REMOVEHEX) == 0)) {
 		 if (base==16) {
 			if (buf <= end)
@@ -152,7 +152,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			++buf;
 		}
 	}
-	
+
 	if (!(type & LEFT)) {
 		while (size-- > 0) {
 			if (buf <= end)
@@ -175,7 +175,7 @@ number(char * buf, char * end, long long num, int base, int size, int precision,
 			*buf = ' ';
 		++buf;
 	}
-	
+
 	return buf;
 }
 
@@ -189,10 +189,10 @@ numberf(char * buf, char * end, double num, int base, int size, int precision, i
 	int i;
 	long long x;
 
-    /* FIXME 
-       the float version of number is direcly copy of number 
+    /* FIXME
+       the float version of number is direcly copy of number
     */
-    
+
 	digits = (type & LARGE) ? large_digits : small_digits;
 	if (type & LEFT)
 		type &= ~ZEROPAD;
@@ -287,7 +287,7 @@ string(char* buf, char* end, const char* s, int len, int field_width, int precis
 {
 	int i;
     char c;
-    
+
     c = (flags & ZEROPAD) ? '0' : ' ';
 
 	if (s == NULL)
@@ -336,9 +336,9 @@ stringw(char* buf, char* end, const wchar_t* sw, int len, int field_width, int p
 {
 	int i;
 	char c;
-    
+
     c = (flags & ZEROPAD) ? '0' : ' ';
-    
+
 	if (sw == NULL)
 	{
 		sw = L"<NULL>";
@@ -388,7 +388,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	int len;
 	unsigned long long num;
 	double _double;
-	
+
 	int base;
 	char *str, *end;
 	const char *s;
@@ -401,8 +401,8 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				   number of chars for from string */
 	int qualifier;		/* 'h', 'l', 'L', 'I' or 'w' for integer fields */
 
-    /* clear the string buffer with zero so we do not need NULL terment it at end */ 
-    
+    /* clear the string buffer with zero so we do not need NULL terment it at end */
+
 	str = buf;
 	end = buf + cnt - 1;
 	if (end < buf - 1) {
@@ -468,7 +468,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 			qualifier = *fmt;
 			fmt += 3;
 		} else if (*fmt == 'I' && *(fmt+1) == '3' && *(fmt+2) == '2') {
-			qualifier = 'l'; 
+			qualifier = 'l';
 			fmt += 3;
 		} else if (*fmt == 'F' && *(fmt+1) == 'p') {
 			fmt += 1;
@@ -480,7 +480,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		switch (*fmt) {
 		case 'c': /* finished */
-             if (qualifier == 'l' || qualifier == 'w') {    
+             if (qualifier == 'l' || qualifier == 'w') {
 	              wchar_t sw1[2];
 				/* print unicode string */
                 sw1[0] = (wchar_t) va_arg(args, int);
@@ -570,8 +570,8 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 
 		case 'p':
             if ((flags & LARGE) == 0)
-                flags |= LARGE; 
-                 
+                flags |= LARGE;
+
 			if (field_width == -1) {
 				field_width = 2 * sizeof(void *);
 				flags |= ZEROPAD;
@@ -591,14 +591,14 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 				*ip = (str - buf);
 			}
 			continue;
-			
+
 		/* float number formats - set up the flags and "break" */
         case 'e':
 		case 'E':
 		case 'f':
 		case 'g':
 		case 'G':
-          _double = (double)va_arg(args, double);          
+          _double = (double)va_arg(args, double);
          if ( _isnan(_double) ) {
             s = "Nan";
             len = 3;
@@ -628,10 +628,10 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
             }
          } else {
             if ( precision == -1 )
-               precision = 6;                
-               	str = numberf(str, end, (int)_double, base, field_width, precision, flags);           
+               precision = 6;
+               	str = numberf(str, end, (int)_double, base, field_width, precision, flags);
          }
-            
+
           continue;
 
 
@@ -694,7 +694,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
 	{
 		/* don't write out a null byte if the buf size is zero */
 		//*end = '\0';
-	   if (str-buf >cnt ) 
+	   if (str-buf >cnt )
        {
 		 *end = '\0';
        }
@@ -703,7 +703,7 @@ int __cdecl _vsnprintf(char *buf, size_t cnt, const char *fmt, va_list args)
            end++;
           *end = '\0';
        }
-       
+
     }
 	return str-buf;
 }

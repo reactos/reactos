@@ -1,4 +1,4 @@
-/* 
+/*
  * DirectDraw NT driver interface
  */
 
@@ -59,7 +59,7 @@ extern "C" {
 
 typedef ULONG_PTR FLATPTR;
 
-typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL; 
+typedef struct _DD_VIDEOPORT_LOCAL   *PDD_VIDEOPORT_LOCAL;
 
 /************************************************************************/
 /* _DD_GETHEAPALIGNMENTDATA is defined in dmemmgr.h                     */
@@ -122,13 +122,13 @@ typedef struct _DD_DIRECTDRAW_LOCAL
 
 typedef struct _DD_SURFACE_GLOBAL
 {
-    union 
+    union
     {
         DWORD        dwBlockSizeY;
         LONG         lSlicePitch;
     };
 
-    union 
+    union
     {
         PVIDEOMEMORY lpVidMemHeap;
         DWORD        dwBlockSizeX;
@@ -561,7 +561,7 @@ typedef struct _DD_GETAVAILDRIVERMEMORYDATA
 	PVOID                    GetAvailDriverMemory;
 } DD_GETAVAILDRIVERMEMORYDATA, *PDD_GETAVAILDRIVERMEMORYDATA;
 typedef DWORD (STDCALL *PDD_GETAVAILDRIVERMEMORY)(PDD_GETAVAILDRIVERMEMORYDATA);
-            
+
 typedef struct _DD_MISCELLANEOUSCALLBACKS
 {
 	DWORD                    dwSize;
@@ -1146,7 +1146,7 @@ typedef struct _DD_GETDRIVERINFODATA
 	PVOID   lpvData;
 	// Output:
 	DWORD   dwActualSize;
-	HRESULT ddRVal;	
+	HRESULT ddRVal;
 } DD_GETDRIVERINFODATA, *PDD_GETDRIVERINFODATA;
 typedef DWORD (STDCALL *PDD_GETDRIVERINFO)(PDD_GETDRIVERINFODATA);
 
@@ -1265,30 +1265,30 @@ typedef struct _DD_MORESURFACECAPS
 /*********************************************************/
 typedef struct _DD_SYNCSURFACEDATA
 {
-    PDD_DIRECTDRAW_LOCAL  lpDD;    
+    PDD_DIRECTDRAW_LOCAL  lpDD;
     PDD_SURFACE_LOCAL     lpDDSurface;
-    DWORD                 dwSurfaceOffset;      
-    ULONG_PTR             fpLockPtr;           
-    LONG                  lPitch;               
-    DWORD                 dwOverlayOffset;       
-    ULONG                 dwDriverReserved1;     
-    ULONG                 dwDriverReserved2;     
-    ULONG                 dwDriverReserved3;     
-    ULONG                 dwDriverReserved4;     
+    DWORD                 dwSurfaceOffset;
+    ULONG_PTR             fpLockPtr;
+    LONG                  lPitch;
+    DWORD                 dwOverlayOffset;
+    ULONG                 dwDriverReserved1;
+    ULONG                 dwDriverReserved2;
+    ULONG                 dwDriverReserved3;
+    ULONG                 dwDriverReserved4;
     HRESULT               ddRVal;
 } DD_SYNCSURFACEDATA, *PDD_SYNCSURFACEDATA;
 typedef DWORD (STDCALL *PDD_KERNELCB_SYNCSURFACE)(PDD_SYNCSURFACEDATA);
 
 typedef struct _DD_SYNCVIDEOPORTDATA
 {
-    PDD_DIRECTDRAW_LOCAL  lpDD;       
+    PDD_DIRECTDRAW_LOCAL  lpDD;
     PDD_VIDEOPORT_LOCAL   lpVideoPort;
-    DWORD                 dwOriginOffset;      
-    DWORD                 dwHeight;            
-    DWORD                 dwVBIHeight;         
-    ULONG                 dwDriverReserved1;   
-    ULONG                 dwDriverReserved2;   
-    ULONG                 dwDriverReserved3;   
+    DWORD                 dwOriginOffset;
+    DWORD                 dwHeight;
+    DWORD                 dwVBIHeight;
+    ULONG                 dwDriverReserved1;
+    ULONG                 dwDriverReserved2;
+    ULONG                 dwDriverReserved3;
     HRESULT               ddRVal;
 } DD_SYNCVIDEOPORTDATA, *PDD_SYNCVIDEOPORTDATA;
 typedef DWORD (STDCALL *PDD_KERNELCB_SYNCVIDEOPORT)(PDD_SYNCVIDEOPORTDATA);
@@ -1302,18 +1302,18 @@ typedef struct DD_NTPRIVATEDRIVERCAPS
 
 typedef struct _DD_UPDATENONLOCALHEAPDATA
 {
-    PDD_DIRECTDRAW_GLOBAL   lpDD;        
-    DWORD                   dwHeap;      
-    FLATPTR                 fpGARTLin;   
-    FLATPTR                 fpGARTDev;   
+    PDD_DIRECTDRAW_GLOBAL   lpDD;
+    DWORD                   dwHeap;
+    FLATPTR                 fpGARTLin;
+    FLATPTR                 fpGARTDev;
     ULONG_PTR               ulPolicyMaxBytes;
-    HRESULT                 ddRVal; 
+    HRESULT                 ddRVal;
     VOID*                   UpdateNonLocalHeap;
 } DD_UPDATENONLOCALHEAPDATA, *PDD_UPDATENONLOCALHEAPDATA;
 
 typedef struct _DD_STEREOMODE
 {
-    DWORD dwSize; 
+    DWORD dwSize;
     DWORD dwHeight;
     DWORD dwWidth;
     DWORD dwBpp;
@@ -1392,12 +1392,12 @@ typedef struct DD_KERNELCALLBACKS
 #define DDHAL_PLEASEALLOC_USERMEM             0x00000004l
 
 
-#define VIDMEM_ISLINEAR                       0x00000001l 
-#define VIDMEM_ISRECTANGULAR                  0x00000002l 
-#define VIDMEM_ISHEAP                         0x00000004l 
-#define VIDMEM_ISNONLOCAL                     0x00000008l 
-#define VIDMEM_ISWC                           0x00000010l 
-#define VIDMEM_HEAPDISABLED                   0x00000020l 
+#define VIDMEM_ISLINEAR                       0x00000001l
+#define VIDMEM_ISRECTANGULAR                  0x00000002l
+#define VIDMEM_ISHEAP                         0x00000004l
+#define VIDMEM_ISNONLOCAL                     0x00000008l
+#define VIDMEM_ISWC                           0x00000010l
+#define VIDMEM_HEAPDISABLED                   0x00000020l
 
 #define DDHAL_CREATESURFACEEX_SWAPHANDLES     0x00000001l
 
@@ -1408,13 +1408,13 @@ typedef struct DD_KERNELCALLBACKS
 #define DDHAL_DRIVER_HANDLED                  0x00000001l
 #define DDHAL_DRIVER_NOCKEYHW                 0x00000002l
 
-#define DDRAWISURF_HASCKEYSRCBLT              0x00000800L 
-#define DDRAWISURF_HASPIXELFORMAT             0x00002000L 
-#define DDRAWISURF_HASOVERLAYDATA             0x00004000L 
-#define DDRAWISURF_FRONTBUFFER                0x04000000L 
-#define DDRAWISURF_BACKBUFFER                 0x08000000L 
-#define DDRAWISURF_INVALID                    0x10000000L 
-#define DDRAWISURF_DRIVERMANAGED              0x40000000L 
+#define DDRAWISURF_HASCKEYSRCBLT              0x00000800L
+#define DDRAWISURF_HASPIXELFORMAT             0x00002000L
+#define DDRAWISURF_HASOVERLAYDATA             0x00004000L
+#define DDRAWISURF_FRONTBUFFER                0x04000000L
+#define DDRAWISURF_BACKBUFFER                 0x08000000L
+#define DDRAWISURF_INVALID                    0x10000000L
+#define DDRAWISURF_DRIVERMANAGED              0x40000000L
 
 #define ROP_HAS_SOURCE                        0x00000001l
 #define ROP_HAS_PATTERN                       0x00000002l
@@ -1437,9 +1437,9 @@ typedef struct DD_KERNELCALLBACKS
 #define DDHALINFO_GETDRIVERINFOSET            0x00000004
 #define DDHALINFO_GETDRIVERINFO2              0x00000008
 
-#define DDRAWIVPORT_ON                        0x00000001  
-#define DDRAWIVPORT_SOFTWARE_AUTOFLIP         0x00000002  
-#define DDRAWIVPORT_COLORKEYANDINTERP         0x00000004  
+#define DDRAWIVPORT_ON                        0x00000001
+#define DDRAWIVPORT_SOFTWARE_AUTOFLIP         0x00000002
+#define DDRAWIVPORT_COLORKEYANDINTERP         0x00000004
 
 #define DDHAL_PRIVATECAP_ATOMICSURFACECREATION   0x00000001l
 #define DDHAL_PRIVATECAP_NOTIFYPRIMARYCREATION   0x00000002l

@@ -675,7 +675,7 @@ typedef struct _settextex {
 } SETTEXTEX;
 
 /* Flags of the EM_SETTEXTEX message */
-#define ST_DEFAULT	      0x00000000	
+#define ST_DEFAULT	      0x00000000
 #define ST_KEEPUNDO           0x00000001
 #define ST_SELECTION          0x00000002
 

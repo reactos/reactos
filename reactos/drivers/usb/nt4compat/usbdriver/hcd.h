@@ -12,7 +12,7 @@
 #define	HCD_ID_MASK		0xf
 
 #define HCD_DISP_READ_PORT_COUNT	1		// the param is a pointer to UCHAR
-#define HCD_DISP_READ_RH_DEV_CHANGE	2		// the param is a buffer to hold conn change on all the port 
+#define HCD_DISP_READ_RH_DEV_CHANGE	2		// the param is a buffer to hold conn change on all the port
 											// must have the rh dev_lock acquired
 
 struct _HCD;
@@ -23,12 +23,12 @@ struct _URB;
 
 typedef	VOID ( *PHCD_SET_DEV_MGR )( struct _HCD* hcd, struct _USB_DEV_MANAGER  *dev_mgr );
 typedef	struct _USB_DEV_MANAGER* ( *PHCD_GET_DEV_MGR )( struct _HCD* hcd );
-typedef ULONG ( *PHCD_GET_TYPE )( struct _HCD* hcd );	
+typedef ULONG ( *PHCD_GET_TYPE )( struct _HCD* hcd );
 typedef VOID ( *PHCD_SET_ID )(  struct _HCD* hcd, UCHAR id );
 typedef UCHAR ( *PHCD_GET_ID )( struct _HCD* hcd );
 typedef UCHAR ( *PHCD_ALLOC_ADDR )( struct _HCD* hcd );
 typedef VOID ( *PHCD_FREE_ADDR )(  struct _HCD* hcd, UCHAR addr );
-typedef NTSTATUS ( *PHCD_SUBMIT_URB )( struct _HCD* hcd, struct _USB_DEV *pdev, struct _USB_ENDPOINT *pendp, struct _URB *purb );	
+typedef NTSTATUS ( *PHCD_SUBMIT_URB )( struct _HCD* hcd, struct _USB_DEV *pdev, struct _USB_ENDPOINT *pendp, struct _URB *purb );
 typedef VOID ( *PHCD_GENERIC_URB_COMPLETION )(  struct _URB *purb, PVOID context ); //we can get te hcd from purb
 typedef struct _USB_DEV* ( *PHCD_GET_ROOT_HUB )(  struct _HCD* hcd );
 typedef VOID ( *PHCD_SET_ROOT_HUB )(  struct _HCD* hcd, struct _USB_DEV *root_hub );
@@ -52,7 +52,7 @@ typedef struct _HCD
 	PHCD_GENERIC_URB_COMPLETION hcd_generic_urb_completion;
 	PHCD_GET_ROOT_HUB 			hcd_get_root_hub;
 	PHCD_SET_ROOT_HUB			hcd_set_root_hub;
-	PHCD_REMOVE_DEVICE			hcd_remove_device; 
+	PHCD_REMOVE_DEVICE			hcd_remove_device;
 	PHCD_RH_RESET_PORT			hcd_rh_reset_port;
 	PHCD_RELEASE				hcd_release;
 	PHCD_CANCEL_URB				hcd_cancel_urb;

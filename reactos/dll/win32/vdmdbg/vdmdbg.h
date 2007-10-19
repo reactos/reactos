@@ -28,7 +28,7 @@ typedef struct {
 
 typedef BOOL ( WINAPI *PROCESSENUMPROC )
 (
-  DWORD  dwProcessId, 
+  DWORD  dwProcessId,
   DWORD  dwAttributes,
   LPARAM lpUserDefined
 );
@@ -62,7 +62,7 @@ typedef struct {
 typedef DWORD ( CALLBACK* DEBUGEVENTPROC )
               ( LPDEBUG_EVENT, LPVOID );
 
-typedef BOOL ( WINAPI *TASKENUMPROC ) 
+typedef BOOL ( WINAPI *TASKENUMPROC )
              ( DWORD  dwThreadId,
                WORD   hMod16,
                WORD   hTask16,

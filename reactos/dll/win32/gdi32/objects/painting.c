@@ -40,9 +40,9 @@ STDCALL
 MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
 {
  PDC_ATTR Dc_Attr;
- 
+
  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
- 
+
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
@@ -79,7 +79,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
 
  Dc_Attr->ptlCurrent.x = x;
  Dc_Attr->ptlCurrent.y = y;
- 
+
  Dc_Attr->ulDirty_ |= ( DIRTY_PTLCURRENT|DIRTY_STYLESTATE); // Set dirty
  return TRUE;
 }
@@ -156,7 +156,7 @@ Rectangle(HDC hDC, INT Left, INT Top, INT Right, INT Bottom)
  */
 BOOL
 STDCALL
-RoundRect(HDC hDC, INT Left, INT Top, INT Right, INT Bottom, 
+RoundRect(HDC hDC, INT Left, INT Top, INT Right, INT Bottom,
                                                 INT ell_Width, INT ell_Height)
 {
 #if 0
@@ -176,7 +176,7 @@ RoundRect(HDC hDC, INT Left, INT Top, INT Right, INT Bottom,
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        return EMFDRV_RoundRect( hDC, Left, Top, Right, Bottom, 
+        return EMFDRV_RoundRect( hDC, Left, Top, Right, Bottom,
                                                       ell_Width, ell_Height );
       }
       return FALSE;
@@ -256,7 +256,7 @@ FillRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush )
 {
 
  if ( (!hRgn) || (!hBrush) ) return FALSE;
-#if 0 
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -291,7 +291,7 @@ FrameRgn( HDC hDC, HRGN hRgn, HBRUSH hBrush, INT nWidth, INT nHeight )
 {
 
  if ( (!hRgn) || (!hBrush) ) return FALSE;
-#if 0 
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
@@ -326,14 +326,14 @@ InvertRgn( HDC hDC, HRGN hRgn )
 {
 
  if ( !hRgn ) return FALSE;
-#if 0 
+#if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
       return MFDRV_InvertRgn( hDC, HRGN hRgn ); // Use this instead of MFDRV_MetaParam.
     else
-    {  
+    {
       PLDC pLDC = GdiGetLDC(hDC);
       if ( !pLDC )
       {
@@ -423,7 +423,7 @@ PolyBezier(HDC hDC ,const POINT* Point, DWORD cPoints)
 #endif
  return NtGdiPolyPolyDraw( hDC ,(PPOINT) Point, &cPoints, 1, GdiPolyBezier );
 }
- 
+
 
 /*
  * @implemented
@@ -472,7 +472,7 @@ PolyDraw(HDC hDC, const POINT* Point, const BYTE *lpbTypes, int cCount )
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
       return FALSE;
     else
-    { 
+    {
       PLDC pLDC = GdiGetLDC(hDC);
       if ( !pLDC )
       {
@@ -586,7 +586,7 @@ PolylineTo(HDC hDC, const POINT* Point, DWORD Count)
     }
  }
 #endif
- return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, &Count, 1, GdiPolyLineTo ); 
+ return NtGdiPolyPolyDraw( hDC , (PPOINT) Point, &Count, 1, GdiPolyLineTo );
 }
 
 
@@ -663,7 +663,7 @@ BOOL
 STDCALL
 ExtFloodFill(
        HDC hDC,
-       int nXStart, 
+       int nXStart,
        int nYStart,
        COLORREF crFill,
        UINT fuFillType

@@ -347,7 +347,7 @@ compute_coveragei(const struct LineInfo *info,
 
 typedef void (*plot_func)(GLcontext *ctx, struct LineInfo *line,
                           int ix, int iy);
-                         
+
 
 
 /*
@@ -533,7 +533,7 @@ _swrast_choose_aa_line_function(GLcontext *ctx)
       if (ctx->Texture._EnabledCoordUnits != 0) {
          if (ctx->Texture._EnabledCoordUnits > 1) {
             /* Multitextured! */
-            if (ctx->Light.Model.ColorControl==GL_SEPARATE_SPECULAR_COLOR || 
+            if (ctx->Light.Model.ColorControl==GL_SEPARATE_SPECULAR_COLOR ||
                 ctx->Fog.ColorSumEnabled)
                swrast->Line = aa_multitex_spec_line;
             else

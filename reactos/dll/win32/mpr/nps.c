@@ -82,7 +82,7 @@ static INT_PTR WINAPI NPS_ProxyPasswordDialog(
             hitem = GetDlgItem( hdlg, IDC_USERNAME );
             if( hitem )
                 GetWindowTextA( hitem, lpAuthDlgStruct->lpUsername, lpAuthDlgStruct->cbUsername );
-            
+
             password[0] = 0;
             hitem = GetDlgItem( hdlg, IDC_PASSWORD );
             if( hitem )
@@ -119,7 +119,7 @@ DWORD WINAPI NPSAuthenticationDialogA( LPAUTHDLGSTRUCTA lpAuthDlgStruct )
           lpAuthDlgStruct->lpOUTitle, lpAuthDlgStruct->lpExplainText);
 
     return DialogBoxParamW( hwininet, MAKEINTRESOURCEW( IDD_PROXYDLG ),
-             lpAuthDlgStruct->hwndOwner, NPS_ProxyPasswordDialog, 
+             lpAuthDlgStruct->hwndOwner, NPS_ProxyPasswordDialog,
              (LPARAM) lpAuthDlgStruct );
 }
 

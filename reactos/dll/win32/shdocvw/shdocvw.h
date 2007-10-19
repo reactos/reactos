@@ -52,7 +52,7 @@ extern IClassFactoryImpl SHDOCVW_ClassFactory;
 /**********************************************************************
  * Shell Instance Objects
  */
-extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid, 
+extern HRESULT SHDOCVW_GetShellInstanceObjectClassObject(REFCLSID rclsid,
     REFIID riid, LPVOID *ppvClassObj);
 
 /**********************************************************************

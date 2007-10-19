@@ -19,7 +19,7 @@
 import "ocidl.idl";
 import "oleidl.idl";
 import "oaidl.idl";
- 
+
 typedef enum tagSCRIPTSTATE {
     SCRIPTSTATE_UNINITIALIZED = 0,
     SCRIPTSTATE_STARTED       = 1,
@@ -91,13 +91,13 @@ interface IActiveScriptError : IUnknown
     HRESULT GetExceptionInfo(
             [out] EXCEPINFO *pexcepinfo
     );
-    
+
     HRESULT GetSourcePosition(
             [out] DWORD *pdwSourceContext,
             [out] ULONG *pulLineNumber,
             [out] LONG *plCharacterPosition
     );
-    
+
     HRESULT GetSourceLineText(
             [out] BSTR *pbstrSourceLine
     );
@@ -112,33 +112,33 @@ interface IActiveScriptSite : IUnknown
 {
     HRESULT GetLCID(
             [out] LCID *plcid);
-    
+
     HRESULT GetItemInfo(
             [in] LPCOLESTR pstrName,
             [in] DWORD dwReturnMask,
             [out] IUnknown **ppiunkItem,
             [out] ITypeInfo **ppti
     );
-    
+
     HRESULT GetDocVersionString(
             [out] BSTR *pbstrVersion
     );
-    
+
     HRESULT OnScriptTerminate(
             [in] const VARIANT *pvarResult,
             [in] const EXCEPINFO *pexcepinfo
     );
-    
+
     HRESULT OnStateChange(
             [in] SCRIPTSTATE ssScriptState
     );
-    
+
     HRESULT OnScriptError(
             [in] IActiveScriptError *pscripterror
     );
-    
+
     HRESULT OnEnterScript(void);
-    
+
     HRESULT OnLeaveScript(void);
 }
 

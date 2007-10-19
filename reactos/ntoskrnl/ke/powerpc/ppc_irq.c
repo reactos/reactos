@@ -98,7 +98,7 @@ void trap_handler_13(void);
 void trap_handler_14(void);
 void trap_handler_15(void);
 
-static unsigned int trap_handler[NR_TRAPS] __attribute__((unused)) = 
+static unsigned int trap_handler[NR_TRAPS] __attribute__((unused)) =
 {
    (int)&trap_handler_0,
    (int)&trap_handler_1,
@@ -542,7 +542,7 @@ KeDumpIrqList(VOID)
 /*
  * @implemented
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 KeConnectInterrupt(PKINTERRUPT InterruptObject)
 {
@@ -617,7 +617,7 @@ KeConnectInterrupt(PKINTERRUPT InterruptObject)
  * ARGUMENTS:
  *        InterruptObject = isr to release
  */
-BOOLEAN 
+BOOLEAN
 STDCALL
 KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 {
@@ -652,10 +652,10 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
             /* Completely Disable the Interrupt */
             HalDisableSystemInterrupt(InterruptObject->Vector, InterruptObject->Irql);
         }
-        
+
         /* Disconnect it */
         InterruptObject->Connected = FALSE;
-    
+
         /* Release the interrupt lock */
         KeReleaseInterruptSpinLock(InterruptObject, synch_oldlvl);
     }
@@ -665,7 +665,7 @@ KeDisconnectInterrupt(PKINTERRUPT InterruptObject)
 
     /* Go back to default affinity */
     KeRevertToUserAffinityThread();
-    
+
     /* Return Old Interrupt State */
     return State;
 }
@@ -690,7 +690,7 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
     /* Set the Interrupt Header */
     Interrupt->Type = InterruptObject;
     Interrupt->Size = sizeof(KINTERRUPT);
-    
+
     /* Check if we got a spinlock */
     if (SpinLock)
     {
@@ -702,7 +702,7 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
         KeInitializeSpinLock(&Interrupt->SpinLock);
         Interrupt->ActualLock = &Interrupt->SpinLock;
     }
-    
+
     /* Set the other settings */
     Interrupt->ServiceRoutine = ServiceRoutine;
     Interrupt->ServiceContext = ServiceContext;
@@ -713,7 +713,7 @@ KeInitializeInterrupt(PKINTERRUPT Interrupt,
     Interrupt->ShareVector = ShareVector;
     Interrupt->Number = ProcessorNumber;
     Interrupt->FloatingSave = FloatingSave;
-    
+
     /* Disconnect it at first */
     Interrupt->Connected = FALSE;
 }
@@ -818,7 +818,7 @@ __asm__(".globl KiSystemService\n\t"
 	"mtsrr1 0\n\t"
 	"lwz 1,4(1)\n"    /* Stack */
 	"rfi\n");
-	
+
 VOID
 NTAPI
 KiSystemService(ppc_trap_frame_t *trap_frame)
@@ -831,7 +831,7 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
 	    SetPhysByte(0x800003f8, ((PCHAR)trap_frame->gpr[4])[i]);
 
 	trap_frame->gpr[3] = KdpServiceDispatcher
-	    (trap_frame->gpr[3], 
+	    (trap_frame->gpr[3],
 	     (PCHAR)trap_frame->gpr[4],
 	     trap_frame->gpr[5]);
 	break;

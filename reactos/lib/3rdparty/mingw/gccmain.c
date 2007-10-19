@@ -51,7 +51,7 @@ __do_global_ctors (void)
 	;
     }
 
-  /* 
+  /*
    * Go through the list backwards calling constructors.
    */
   for (i = nptrs; i >= 1; i--)

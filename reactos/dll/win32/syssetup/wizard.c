@@ -432,7 +432,7 @@ WriteOwnerSettings(TCHAR * OwnerName,
       RegCloseKey(hKey);
       return FALSE;
     }
- 
+
   res = RegSetValueEx(hKey,
                       _T("RegisteredOrganization"),
                       0,
@@ -506,7 +506,7 @@ OwnerPageDlgProc(HWND hwndDlg,
 
                   SetFocus(GetDlgItem(hwndDlg, IDC_OWNERNAME));
                   SetWindowLong(hwndDlg, DWL_MSGRESULT, -1);
-                  
+
                   return TRUE;
                 }
 
@@ -1450,7 +1450,7 @@ DateTimePageDlgProc(HWND hwndDlg,
           SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
 
           CreateTimeZoneList(SetupData);
-          
+
           if (SetupData->UnattendSetup)
             {
               ShowTimeZoneList(GetDlgItem(hwndDlg, IDC_TIMEZONELIST),
@@ -1607,7 +1607,7 @@ RegistrationNotificationProc(PVOID Context,
               if (SPREG_TIMEOUT != StatusInfo->FailureCode)
                 {
                   FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL,
-                                 StatusInfo->Win32Error, 0, 
+                                 StatusInfo->Win32Error, 0,
                                  ErrorMessage + wcslen(ErrorMessage),
                                  sizeof(ErrorMessage) / sizeof(ErrorMessage[0]) -
                                  wcslen(ErrorMessage), NULL);
@@ -1730,7 +1730,7 @@ StartComponentRegistration(HWND hwndDlg, PULONG MaxProgress)
   INFCONTEXT Context;
   WCHAR SectionName[512];
   PREGISTRATIONDATA RegistrationData;
-  
+
   DllCount = -1;
   if (! SetupFindFirstLineW(hSysSetupInf, L"RegistrationPhase2",
                             L"RegisterDlls", &Context))
@@ -1967,7 +1967,7 @@ FinishDlgProc(HWND hwndDlg,
               case PSN_SETACTIVE:
                 /* Enable the correct buttons on for the active page */
                 PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_FINISH);
-                
+
                 SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETRANGE, 0,
                                    MAKELPARAM(0, 300));
                 SendDlgItemMessage(hwndDlg, IDC_RESTART_PROGRESS, PBM_SETPOS, 0, 0);
@@ -2016,7 +2016,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       DPRINT1("Error: Cant find UnattendSetupEnabled Key! %d\n", GetLastError());
       return FALSE;
     }
-    
+
    if (!SetupGetStringField(&InfContext,
                1,
                szValue,
@@ -2026,13 +2026,13 @@ ProcessUnattendInf(HINF hUnattendedInf)
       DPRINT1("Error: SetupGetStringField failed with %d\n", GetLastError());
       return FALSE;
     }
-    
+
   if (_tcscmp(szValue, _T("yes")) != 0)
     {
       DPRINT("Unattend setup was disabled by UnattendSetupEnabled key.\n");
       return FALSE;
-    }    
-      
+    }
+
   if (!SetupFindFirstLine(hUnattendedInf,
               _T("Unattend"),
               NULL,
@@ -2041,10 +2041,10 @@ ProcessUnattendInf(HINF hUnattendedInf)
       DPRINT1("Error: SetupFindFirstLine failed %d\n", GetLastError());
       return FALSE;
     }
-    
-      
+
+
   do
-  {	
+  {
     if (!SetupGetStringField(&InfContext,
                  0,
                  szName,
@@ -2103,9 +2103,9 @@ ProcessUnattendInf(HINF hUnattendedInf)
       }
     else if (!_tcscmp(szName, _T("DisableVmwInst")))
       {
-        if(!_tcscmp(szValue, _T("yes"))) 
+        if(!_tcscmp(szValue, _T("yes")))
             SetupData.DisableVmwInst = 1;
-        else 
+        else
             SetupData.DisableVmwInst = 0;
       }
     else if (!_tcscmp(szName, _T("BootCDRegTestActive")))
@@ -2136,7 +2136,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
       int i = 0;
       do
       {
-        if(SetupGetStringField(&InfContext, 
+        if(SetupGetStringField(&InfContext,
                                0,
                                szValue,
                                sizeof(szValue) / sizeof(TCHAR),
@@ -2150,7 +2150,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
              {
                DPRINT("value %S\n", szPath);
                if (RegSetValueEx(hKey,
-                                 szName, 
+                                 szName,
                                  0,
                                  REG_SZ,
                                  (const BYTE*)szPath,
@@ -2203,7 +2203,7 @@ ProcessUnattendInf(HINF hUnattendedInf)
             }
           strcpy(&szPath[length], "dbgprint.exe SYSREG_CHECKPOINT:THIRDBOOT_COMPLETE\n");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
-          strcpy(&szPath[length], "shutdown.exe -s"); 
+          strcpy(&szPath[length], "shutdown.exe -s");
           fwrite(szPath, 1, strlen(szPath) + 1, file);
         }
       fclose(file);
@@ -2215,10 +2215,10 @@ ProcessUnattendInf(HINF hUnattendedInf)
 /*
  * GetRosInstallCD should find the path to ros installation medium
  * BUG 1
- * If there are more than one CDDrive in it containing a ReactOS 
+ * If there are more than one CDDrive in it containing a ReactOS
  * installation cd, then it will pick the first one regardless if
  * it is really the installation cd
- * 
+ *
  * The best way to implement this is to set the key
  * HKLM\Software\Microsoft\Windows NT\CurrentVersion\SourcePath (REG_SZ)
  */
@@ -2275,8 +2275,8 @@ ProcessUnattendSetup()
   dwLength = wcslen(szPath);
   if (dwLength + 21 > MAX_PATH)
   {
-    /* FIXME 
-     * allocate bigger buffer 
+    /* FIXME
+     * allocate bigger buffer
      */
     return;
   }
@@ -2306,9 +2306,9 @@ InstallWizard(VOID)
 
   /* Clear setup data */
   ZeroMemory(&SetupData, sizeof(SETUPDATA));
-   
+
   ProcessUnattendSetup();
-  
+
 
   /* Create the Welcome page */
   psp.dwSize = sizeof(PROPSHEETPAGE);

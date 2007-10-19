@@ -3,7 +3,7 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 
+ * FILE:
  * PURPOSE:              headers
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *

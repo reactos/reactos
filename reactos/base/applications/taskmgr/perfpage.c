@@ -140,7 +140,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          */
         hPerformancePageTotalsFrame = GetDlgItem(hDlg, IDC_TOTALS_FRAME);
         hPerformancePageCommitChargeFrame = GetDlgItem(hDlg, IDC_COMMIT_CHARGE_FRAME);
-        hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);        
+        hPerformancePageKernelMemoryFrame = GetDlgItem(hDlg, IDC_KERNEL_MEMORY_FRAME);
         hPerformancePagePhysicalMemoryFrame = GetDlgItem(hDlg, IDC_PHYSICAL_MEMORY_FRAME);
 
         hPerformancePageCpuUsageFrame = GetDlgItem(hDlg, IDC_CPU_USAGE_FRAME);
@@ -165,7 +165,7 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         hPerformancePageMemUsageGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_GRAPH);
         hPerformancePageMemUsageHistoryGraph = GetDlgItem(hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
         hPerformancePageCpuUsageHistoryGraph = GetDlgItem(hDlg, IDC_CPU_USAGE_HISTORY_GRAPH);
-        
+
         GetClientRect(hPerformancePageCpuUsageHistoryGraph, &rc);
         /*  create the control */
         /* PerformancePageCpuUsageHistoryGraph.Create(0, rc, hDlg, IDC_CPU_USAGE_HISTORY_GRAPH); */
@@ -179,10 +179,10 @@ PerformancePageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 /*         PerformancePageCpuUsageHistoryGraph.SetPlotColor(RGB(255, 255, 255)) ; */
         GraphCtrl_SetBackgroundColor(&PerformancePageCpuUsageHistoryGraph, RGB(0, 0, 0)) ;
         GraphCtrl_SetGridColor(&PerformancePageCpuUsageHistoryGraph, RGB(152, 205, 152)) ;
-        
+
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 0, RGB(0, 255, 0)) ;
         GraphCtrl_SetPlotColor(&PerformancePageCpuUsageHistoryGraph, 1, RGB(255, 0, 0)) ;
-        
+
 
         GetClientRect(hPerformancePageMemUsageHistoryGraph, &rc);
         GraphCtrl_Create(&PerformancePageMemUsageHistoryGraph, hPerformancePageMemUsageHistoryGraph, hDlg, IDC_MEM_USAGE_HISTORY_GRAPH);
@@ -427,13 +427,13 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 	        CpuUsage = PerfDataGetProcessorUsage();
         	if (CpuUsage <= 0 )        CpuUsage = 0;
         	if (CpuUsage > 100)       CpuUsage = 100;
-        	
+
         	if (TaskManagerSettings.ShowKernelTimes)
         	{
         		CpuKernelUsage = PerfDataGetProcessorSystemUsage();
         		if (CpuKernelUsage <= 0)   CpuKernelUsage = 0;
         		if (CpuKernelUsage > 100) CpuKernelUsage = 100;
-			} 
+			}
 			else
 			{
 				CpuKernelUsage = 0;
@@ -449,7 +449,7 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
 			PhysicalMemoryAvailable = PerfDataGetPhysicalMemoryAvailableK();
             nBarsUsed2 = PhysicalMemoryTotal ? ((PhysicalMemoryAvailable * 100) / PhysicalMemoryTotal) : 0;
 
-			 
+
 
             GraphCtrl_AppendPoint(&PerformancePageCpuUsageHistoryGraph, CpuUsage, CpuKernelUsage, 0.0, 0.0);
             GraphCtrl_AppendPoint(&PerformancePageMemUsageHistoryGraph, nBarsUsed1, nBarsUsed2, 0.0, 0.0);

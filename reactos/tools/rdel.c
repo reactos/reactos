@@ -1,4 +1,4 @@
-/*  $Id$  
+/*  $Id$
  * COPYRIGHT:             See COPYING in the top level directory
  * PROGRAMMER:            Rex Jolliff (rex@lvcablemodem.com)
  * PURPOSE:               Platform independent delete command
@@ -16,7 +16,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-void 
+void
 convertPath (char * pathToConvert)
 {
   while (*pathToConvert != 0)
@@ -61,7 +61,7 @@ getFilename (const char *filename, char * fileSpec)
   }
 }
 
-int 
+int
 main (int argc, char* argv[])
 {
   int  justPrint = 0;
@@ -88,7 +88,7 @@ main (int argc, char* argv[])
       {
       /* Continue even if there is errors */
 #if 0
-        printf ("Unlink of %s failed.  Unlink returned %d.\n", 
+        printf ("Unlink of %s failed.  Unlink returned %d.\n",
                 argv [idx],
                 returnCode);
         return  returnCode;

@@ -70,7 +70,7 @@ create_dst_mod_str(GLuint mod)
    return ret_str;
 }
 
-static char *atifs_ops[] = {"ColorFragmentOp1ATI", "ColorFragmentOp2ATI", "ColorFragmentOp3ATI", 
+static char *atifs_ops[] = {"ColorFragmentOp1ATI", "ColorFragmentOp2ATI", "ColorFragmentOp3ATI",
 			    "AlphaFragmentOp1ATI", "AlphaFragmentOp2ATI", "AlphaFragmentOp3ATI" };
 
 static void debug_op(GLint optype, GLuint arg_count, GLenum op, GLuint dst,
@@ -82,14 +82,14 @@ static void debug_op(GLint optype, GLuint arg_count, GLenum op, GLuint dst,
   char *op_name;
 
   op_name = atifs_ops[(arg_count-1)+(optype?3:0)];
-  
+
   fprintf(stderr, "%s(%s, %s", op_name, _mesa_lookup_enum_by_nr(op),
 	      _mesa_lookup_enum_by_nr(dst));
   if (!optype)
     fprintf(stderr, ", %d", dstMask);
-  
+
   fprintf(stderr, ", %s", create_dst_mod_str(dstMod));
-  
+
   fprintf(stderr, ", %s, %s, %d", _mesa_lookup_enum_by_nr(arg1),
 	      _mesa_lookup_enum_by_nr(arg1Rep), arg1Mod);
   if (arg_count>1)
@@ -261,7 +261,7 @@ _mesa_PassTexCoordATI(GLuint dst, GLuint coord, GLenum swizzle)
 
    new_inst(curProg);
    ci = curProg->Base.NumInstructions - 1;
-   /* some validation 
+   /* some validation
       if ((swizzle != GL_SWIZZLE_STR_ATI) ||
       (swizzle != GL_SWIZZLE_STQ_ATI) ||
       (swizzle != GL_SWIZZLE_STR_DR_ATI) ||
@@ -360,7 +360,7 @@ _mesa_FragmentOpXATI(GLint optype, GLuint arg_count, GLenum op, GLuint dst,
    curI->DstReg[optype].Index = dst;
    curI->DstReg[optype].dstMod = dstMod;
    curI->DstReg[optype].dstMask = dstMask;
-   
+
 #if MESA_DEBUG_ATI_FS
    debug_op(optype, arg_count, op, dst, dstMask, dstMod, arg1, arg1Rep, arg1Mod, arg2, arg2Rep, arg2Mod, arg3, arg3Rep, arg3Mod);
 #endif

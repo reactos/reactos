@@ -59,7 +59,7 @@ IoGetStackLimits(OUT PULONG LowLimit,
 
     /* Save our stack address so we always know it's valid */
     StackAddress = (ULONG_PTR)(&StackAddress);
-    
+
     /* Get stack values */
     RtlpGetStackLimits(LowLimit, HighLimit);
 
@@ -201,7 +201,7 @@ IoCheckEaBufferValidity(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                     }
                 }
                 else
-                { 
+                {
                     /* From the MSDN
                        http://msdn2.microsoft.com/en-us/library/ms795740.aspx
                        For all entries except the last, the value of

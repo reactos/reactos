@@ -56,7 +56,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
     // well as level, such as internal buses.
     ULONG BusInterruptVector;
     KINTERRUPT_MODE InterruptMode;	// Interrupt mode (level-sensitive or edge-triggered)
-    
+
     ULONG MaximumTransferLength;	// Max bytes that can be transferred in a single SRB
     ULONG NumberOfPhysicalBreaks;	// Number of contiguous blocks of physical memory
     ULONG DmaChannel;				// DMA channel for devices using system DMA
@@ -84,8 +84,8 @@ typedef struct _PORT_CONFIGURATION_INFORMATION {
     BOOLEAN MultipleRequestPerLu;	// Supports multiple requests per logical unit.
     BOOLEAN ReceiveEvent;			// Support receive event function.
     BOOLEAN RealModeInitialized;	// Indicates the real-mode driver has initialized the card.
-    
-    BOOLEAN BufferAccessScsiPortControlled; // Indicate that the miniport will not touch 
+
+    BOOLEAN BufferAccessScsiPortControlled; // Indicate that the miniport will not touch
 									// the data buffers directly.
     UCHAR   MaximumNumberOfTargets;	// Indicator for wide scsi.
     UCHAR   ReservedUchars[2];		// Ensure quadword alignment.
@@ -110,7 +110,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION_NT {
 } PORT_CONFIGURATION_INFORMATION_NT, *PPORT_CONFIGURATION_INFORMATION_NT;
 
 typedef struct _PORT_CONFIGURATION_INFORMATION_2K {
-    // Used to determine whether the system and/or the miniport support 
+    // Used to determine whether the system and/or the miniport support
     // 64-bit physical addresses.  See SCSI_DMA64_* flags below.
     UCHAR  Dma64BitAddresses;
     // Indicates that the miniport can accept a SRB_FUNCTION_RESET_DEVICE
@@ -141,9 +141,9 @@ typedef struct _PORT_CONFIGURATION_INFORMATION_COMMON {
 //
 
 //
-// Set by scsiport on entering HwFindAdapter if the system can support 64-bit 
-// physical addresses.  The miniport can use this information before calling 
-// ScsiPortGetUncachedExtension to modify the DeviceExtensionSize, 
+// Set by scsiport on entering HwFindAdapter if the system can support 64-bit
+// physical addresses.  The miniport can use this information before calling
+// ScsiPortGetUncachedExtension to modify the DeviceExtensionSize,
 // SpecificLuExtensionSize & SrbExtensionSize fields to account for the extra
 // size of the scatter gather list.
 //
@@ -152,7 +152,7 @@ typedef struct _PORT_CONFIGURATION_INFORMATION_COMMON {
 
 //
 // Set by the miniport before calling ScsiPortGetUncachedExtension to indicate
-// that scsiport should provide it with 64-bit physical addresses.  If the 
+// that scsiport should provide it with 64-bit physical addresses.  If the
 // system does not support 64-bit PA's then this bit will be ignored.
 //
 
@@ -363,9 +363,9 @@ typedef struct _SCSI_WMI_REQUEST_BLOCK {
 #define SRB_STATUS_INTERNAL_ERROR           0x30
 
 //
-// Srb status values 0x38 through 0x3f are reserved for internal port driver 
+// Srb status values 0x38 through 0x3f are reserved for internal port driver
 // use.
-// 
+//
 
 
 
@@ -566,7 +566,7 @@ typedef struct _HW_INITIALIZATION_DATA {
     ULONG SrbExtensionSize;
     ULONG NumberOfAccessRanges;
     PVOID Reserved;
-    
+
     BOOLEAN MapBuffers;				// Data buffers must be mapped into virtual address space.
     BOOLEAN NeedPhysicalAddresses;	// We need to tranlate virtual to physical addresses.
     BOOLEAN TaggedQueuing;			// Supports tagged queuing

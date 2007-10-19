@@ -142,7 +142,7 @@ void Hib_InitDialog(HWND hwndDlg)
 		}
 		if (TotalNumberOfFreeBytes.QuadPart < msex.ullTotalPhys && !PowerCaps.HiberFilePresent)
 		{
-			EnableWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE), FALSE);		
+			EnableWindow(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE), FALSE);
 			ShowWindow(GetDlgItem(hwndDlg, IDC_TOLESSFREESPACE), TRUE);
 		}
 		else
@@ -156,7 +156,7 @@ void Hib_InitDialog(HWND hwndDlg)
 INT_PTR Hib_SaveData(HWND hwndDlg)
 {
 	BOOLEAN bHibernate;
-	
+
 	bHibernate = (BOOLEAN)SendMessage(GetDlgItem(hwndDlg, IDC_HIBERNATEFILE),
 		BM_GETCHECK,
 		(WPARAM)0,

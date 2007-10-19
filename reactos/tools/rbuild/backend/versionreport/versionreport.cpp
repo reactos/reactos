@@ -50,7 +50,7 @@ static class VReportFactory : public Backend::Factory
 		{
 			return new VReportBackend(project, configuration);
 		}
-		
+
 } factory;
 
 
@@ -95,13 +95,13 @@ VReportBackend::GenerateReport ( FILE* OUT )
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		if ((module.type != Iso) && 
+		if ((module.type != Iso) &&
 			(module.type != LiveIso) &&
 			(module.type != IsoRegTest) &&
 			(module.type != LiveIsoRegTest))
 		{
 			Module& module = *ProjectNode.modules[i];
-				
+
 			if (module.metadata)
 			{
 				if (module.metadata->version.length() > 0)

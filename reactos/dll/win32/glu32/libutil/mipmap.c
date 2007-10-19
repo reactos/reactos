@@ -1452,7 +1452,7 @@ static void scale_internal_ubyte(GLint components, GLint widthin,
 			totals[k] += (GLubyte)(*(temp_index)) * percent;
 		}
 
-		/* calculate the value for pixels in the last row */	        
+		/* calculate the value for pixels in the last row */
 		y_percent = highy_float;
 		percent = y_percent * (1-lowx_float);
 		temp = (const char *)datain + xindex + highy_int * ysize;
@@ -1666,7 +1666,7 @@ static void scale_internal_byte(GLint components, GLint widthin,
 			totals[k] += (GLbyte)(*(temp_index)) * percent;
 		}
 
-		/* calculate the value for pixels in the last row */	        
+		/* calculate the value for pixels in the last row */
 		y_percent = highy_float;
 		percent = y_percent * (1-lowx_float);
 		temp = (const char *)datain + xindex + highy_int * ysize;
@@ -1893,7 +1893,7 @@ static void scale_internal_ushort(GLint components, GLint widthin,
 		    }
 		}
 
-		/* calculate the value for pixels in the last row */	        
+		/* calculate the value for pixels in the last row */
 		y_percent = highy_float;
 		percent = y_percent * (1-lowx_float);
 		temp = (const char *)datain + xindex + highy_int * ysize;
@@ -3279,7 +3279,7 @@ static GLboolean legalType(GLenum type)
       case GL_UNSIGNED_INT:
       case GL_FLOAT:
       case GL_UNSIGNED_BYTE_3_3_2:
-      case GL_UNSIGNED_BYTE_2_3_3_REV:  
+      case GL_UNSIGNED_BYTE_2_3_3_REV:
       case GL_UNSIGNED_SHORT_5_6_5:
       case GL_UNSIGNED_SHORT_5_6_5_REV:
       case GL_UNSIGNED_SHORT_4_4_4_4:
@@ -3376,7 +3376,7 @@ static void closestFit(GLenum target, GLint width, GLint height,
    if ( (strtod((const char *)glGetString(GL_VERSION),NULL) >= 1.1)
 	) {
       GLint widthPowerOf2= nearestPower(width);
-      GLint heightPowerOf2= nearestPower(height);       
+      GLint heightPowerOf2= nearestPower(height);
       GLint proxyWidth;
 
       do {
@@ -3886,7 +3886,7 @@ static int gluBuild2DMipmapLevelsCore(GLenum target, GLint internalFormat,
 	case GL_UNSIGNED_INT_8_8_8_8_REV:
 	case GL_UNSIGNED_INT_10_10_10_2:
 	case GL_UNSIGNED_INT_2_10_10_10_REV:
-	  dstImage = (GLuint *)malloc(memreq);  
+	  dstImage = (GLuint *)malloc(memreq);
 	  break;
 	default:
 	  return GLU_INVALID_ENUM;
@@ -4250,7 +4250,7 @@ static int gluBuild2DMipmapLevelsCore(GLenum target, GLint internalFormat,
 	     int nextWidth= newwidth/2;
 	     int nextHeight= newheight/2;
 	     if (nextWidth < 1) nextWidth= 1;
-	     if (nextHeight < 1) nextHeight= 1; 
+	     if (nextHeight < 1) nextHeight= 1;
 
 	  memreq = image_size(nextWidth, nextHeight, format, type);
 	  }
@@ -4391,13 +4391,13 @@ static int gluBuild2DMipmapLevelsCore(GLenum target, GLint internalFormat,
 				      srcImage,dstImage,element_size,rowsize,
 				      myswap_bytes);
 		break;
-	    case GL_UNSIGNED_SHORT_5_5_5_1:	        
+	    case GL_UNSIGNED_SHORT_5_5_5_1:
 		halveImagePackedPixel(4,extract5551,shove5551,
 				      newwidth,newheight,
 				      srcImage,dstImage,element_size,rowsize,
 				      myswap_bytes);
 		break;
-	    case GL_UNSIGNED_SHORT_1_5_5_5_REV: 	        
+	    case GL_UNSIGNED_SHORT_1_5_5_5_REV:
 		halveImagePackedPixel(4,extract1555rev,shove1555rev,
 				      newwidth,newheight,
 				      srcImage,dstImage,element_size,rowsize,
@@ -4778,7 +4778,7 @@ static GLfloat bytes_per_element(GLenum type)
       case GL_FLOAT:
 	return(sizeof(GLfloat));
       case GL_UNSIGNED_BYTE_3_3_2:
-      case GL_UNSIGNED_BYTE_2_3_3_REV:  
+      case GL_UNSIGNED_BYTE_2_3_3_REV:
 	return(sizeof(GLubyte));
       case GL_UNSIGNED_SHORT_5_6_5:
       case GL_UNSIGNED_SHORT_5_6_5_REV:
@@ -4944,31 +4944,31 @@ static void fill_image(const PixelStorageModes *psm,
 			*iter2++ = (*((const GLbyte *) iter)) * 516;
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_5_6_5: 		        
+		  case GL_UNSIGNED_SHORT_5_6_5:
 		    extract565(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 3; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_5_6_5_REV:		        
+		  case GL_UNSIGNED_SHORT_5_6_5_REV:
 		    extract565rev(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 3; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_4_4_4_4:	        
+		  case GL_UNSIGNED_SHORT_4_4_4_4:
 		    extract4444(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_4_4_4_4_REV:	        
+		  case GL_UNSIGNED_SHORT_4_4_4_4_REV:
 		    extract4444rev(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_5_5_5_1:	        
+		  case GL_UNSIGNED_SHORT_5_5_5_1:
 		    extract5551(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
@@ -5000,19 +5000,19 @@ static void fill_image(const PixelStorageModes *psm,
 			*iter2++ = widget.us[0];
 		    }
 		    break;
-		  case GL_UNSIGNED_INT_8_8_8_8:         
+		  case GL_UNSIGNED_INT_8_8_8_8:
 		    extract8888(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_INT_8_8_8_8_REV:	        
+		  case GL_UNSIGNED_INT_8_8_8_8_REV:
 		    extract8888rev(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
 		    }
 		    break;
-		  case GL_UNSIGNED_INT_10_10_10_2:	        
+		  case GL_UNSIGNED_INT_10_10_10_2:
 		    extract1010102(myswap_bytes,iter,extractComponents);
 		    for (k = 0; k < 4; k++) {
 		      *iter2++ = (GLushort)(extractComponents[k]*65535);
@@ -5066,7 +5066,7 @@ static void fill_image(const PixelStorageModes *psm,
 	    /* want 'iter' pointing at start, not within, row for assertion
 	     * purposes
 	     */
-	    iter= start;        
+	    iter= start;
 #endif
 	} /* for i */
 
@@ -5216,7 +5216,7 @@ static void empty_image(const PixelStorageModes *psm,
 			*((GLbyte *) iter) = *iter2++ >> 9;
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_5_6_5:         
+		  case GL_UNSIGNED_SHORT_5_6_5:
 		    for (k = 0; k < 3; k++) {
 		       shoveComponents[k]= *iter2++ / 65535.0;
 		    }
@@ -5229,7 +5229,7 @@ static void empty_image(const PixelStorageModes *psm,
 		       *(GLushort *)iter = widget.us[0];
 		    }
 		    break;
-		  case GL_UNSIGNED_SHORT_5_6_5_REV:	        
+		  case GL_UNSIGNED_SHORT_5_6_5_REV:
 		    for (k = 0; k < 3; k++) {
 		       shoveComponents[k]= *iter2++ / 65535.0;
 		    }
@@ -5408,7 +5408,7 @@ static void empty_image(const PixelStorageModes *psm,
 	    /* want 'iter' pointing at start, not within, row for assertion
 	     * purposes
 	     */
-	    iter= start;        
+	    iter= start;
 #endif
 	} /* for i */
 
@@ -5448,7 +5448,7 @@ static void extract332(int isSwap,
 } /* extract332() */
 
 static void shove332(const GLfloat shoveComponents[],
-		     int index, void *packedPixel)      
+		     int index, void *packedPixel)
 {
    /* 11100000 == 0xe0 */
    /* 00011100 == 0x1c */
@@ -5484,7 +5484,7 @@ static void extract233rev(int isSwap,
 } /* extract233rev() */
 
 static void shove233rev(const GLfloat shoveComponents[],
-			int index, void *packedPixel)   
+			int index, void *packedPixel)
 {
    /* 0000,0111 == 0x07 */
    /* 0011,1000 == 0x38 */
@@ -6094,7 +6094,7 @@ static void scaleInternalPackedPixel(int components,
 #endif
 
 		/* calculate the value for pixels in the last row */
-	        
+
 		y_percent = highy_float;
 		percent = y_percent * (1-lowx_float);
 		temp = (const char *)dataIn + xindex + highy_int * rowSizeInBytes;
@@ -6490,7 +6490,7 @@ static void halve1DimagePackedPixel(int components,
 	 (*extractPackedPixel)(isSwap,src,
 			       &extractTotals[0][0]);
 	 (*extractPackedPixel)(isSwap,(src+pixelSizeInBytes),
-			       &extractTotals[1][0]);		        
+			       &extractTotals[1][0]);
 	 for (cc = 0; cc < components; cc++) {
 	    int kk;
 
@@ -6536,7 +6536,7 @@ static void halve1DimagePackedPixel(int components,
 	 (*extractPackedPixel)(isSwap,src,
 			       &extractTotals[0][0]);
 	 (*extractPackedPixel)(isSwap,(src+rowSizeInBytes),
-			       &extractTotals[1][0]);		        
+			       &extractTotals[1][0]);
 	 for (cc = 0; cc < components; cc++) {
 	    int kk;
 
@@ -6728,31 +6728,31 @@ static void fillImage3D(const PixelStorageModes *psm,
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_5_6_5:			        
+	    case GL_UNSIGNED_SHORT_5_6_5:
 	      extract565(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 3; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_5_6_5_REV:			        
+	    case GL_UNSIGNED_SHORT_5_6_5_REV:
 	      extract565rev(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 3; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_4_4_4_4:	        
+	    case GL_UNSIGNED_SHORT_4_4_4_4:
 	      extract4444(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_4_4_4_4_REV:         
+	    case GL_UNSIGNED_SHORT_4_4_4_4_REV:
 	      extract4444rev(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_5_5_5_1:	        
+	    case GL_UNSIGNED_SHORT_5_5_5_1:
 	      extract5551(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
@@ -6784,19 +6784,19 @@ static void fillImage3D(const PixelStorageModes *psm,
 		  *iter2++ = widget.us[0];
 	      }
 	      break;
-	    case GL_UNSIGNED_INT_8_8_8_8:	        
+	    case GL_UNSIGNED_INT_8_8_8_8:
 	      extract8888(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_INT_8_8_8_8_REV:	        
+	    case GL_UNSIGNED_INT_8_8_8_8_REV:
 	      extract8888rev(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
 	      }
 	      break;
-	    case GL_UNSIGNED_INT_10_10_10_2:	        
+	    case GL_UNSIGNED_INT_10_10_10_2:
 	      extract1010102(myswapBytes,iter,extractComponents);
 	      for (k = 0; k < 4; k++) {
 		*iter2++ = (GLushort)(extractComponents[k]*65535);
@@ -7094,7 +7094,7 @@ static void emptyImage3D(const PixelStorageModes *psm,
 	      }
 	      shove233rev(shoveComponents,0,(void *)iter);
 	      break;
-	    case GL_UNSIGNED_SHORT_5_6_5:	        
+	    case GL_UNSIGNED_SHORT_5_6_5:
 	      for (k = 0; k < 3; k++) {
 		 shoveComponents[k]= *iter2++ / 65535.0;
 	      }
@@ -7107,7 +7107,7 @@ static void emptyImage3D(const PixelStorageModes *psm,
 		 *(GLushort *)iter = widget.us[0];
 	      }
 	      break;
-	    case GL_UNSIGNED_SHORT_5_6_5_REV:	        
+	    case GL_UNSIGNED_SHORT_5_6_5_REV:
 	      for (k = 0; k < 3; k++) {
 		 shoveComponents[k]= *iter2++ / 65535.0;
 	      }
@@ -7365,7 +7365,7 @@ static void closestFit3D(GLenum target, GLint width, GLint height, GLint depth,
 			 GLint *newWidth, GLint *newHeight, GLint *newDepth)
 {
    GLint widthPowerOf2= nearestPower(width);
-   GLint heightPowerOf2= nearestPower(height);	        
+   GLint heightPowerOf2= nearestPower(height);
    GLint depthPowerOf2= nearestPower(depth);
    GLint proxyWidth ;
 
@@ -7462,7 +7462,7 @@ static void halveImagePackedPixelSlice(int components,
 	    }
 	    totals[cc]/= (float)BOX2;
 	 } /* for cc */
-        
+
 	 (*shovePackedPixel)(totals,outIndex,dataOut);
 	 outIndex++;
 	 /* skip over to next group of 2 */
@@ -7782,7 +7782,7 @@ static int gluBuild3DMipmapLevelsCore(GLenum target, GLint internalFormat,
 	  /* clamp to 1 */
 	  if (nextWidth < 1) nextWidth= 1;
 	  if (nextHeight < 1) nextHeight= 1;
-	  if (nextDepth < 1) nextDepth= 1;      
+	  if (nextDepth < 1) nextDepth= 1;
        memReq = imageSize3D(nextWidth, nextHeight, nextDepth, format, type);
        }
        switch(type) {
@@ -7823,7 +7823,7 @@ static int gluBuild3DMipmapLevelsCore(GLenum target, GLint internalFormat,
        case GL_UNSIGNED_INT_8_8_8_8_REV:
        case GL_UNSIGNED_INT_10_10_10_2:
        case GL_UNSIGNED_INT_2_10_10_10_REV:
-	 dstImage = (GLuint *)malloc(memReq);   
+	 dstImage = (GLuint *)malloc(memReq);
 	 break;
        default:
 	 return GLU_INVALID_ENUM; /* assertion */
@@ -8133,8 +8133,8 @@ static int gluBuild3DMipmapLevelsCore(GLenum target, GLint internalFormat,
 	    int nextHeight= newHeight/2;
 	    int nextDepth= newDepth/2;
 	    if (nextWidth < 1) nextWidth= 1;
-	    if (nextHeight < 1) nextHeight= 1;  
-	    if (nextDepth < 1) nextDepth= 1;    
+	    if (nextHeight < 1) nextHeight= 1;
+	    if (nextDepth < 1) nextDepth= 1;
 
 	 memReq = imageSize3D(nextWidth, nextHeight, nextDepth, format, type);
 	 }
@@ -8193,7 +8193,7 @@ static int gluBuild3DMipmapLevelsCore(GLenum target, GLint internalFormat,
 	 }
        }
        /* level userLevel is in srcImage; nothing saved yet */
-       level = userLevel;       
+       level = userLevel;
    }
 
    glPixelStorei(GL_UNPACK_SWAP_BYTES, GL_FALSE);
@@ -8324,13 +8324,13 @@ static int gluBuild3DMipmapLevelsCore(GLenum target, GLint internalFormat,
 				       srcImage,dstImage,elementSize,rowSize,
 				       imageSize,myswapBytes);
 	       break;
-	   case GL_UNSIGNED_SHORT_5_5_5_1:	        
+	   case GL_UNSIGNED_SHORT_5_5_5_1:
 	       halveImagePackedPixel3D(4,extract5551,shove5551,
 				       newWidth,newHeight,newDepth,
 				       srcImage,dstImage,elementSize,rowSize,
 				       imageSize,myswapBytes);
 	       break;
-	   case GL_UNSIGNED_SHORT_1_5_5_5_REV:	        
+	   case GL_UNSIGNED_SHORT_1_5_5_5_REV:
 	       halveImagePackedPixel3D(4,extract1555rev,shove1555rev,
 				       newWidth,newHeight,newDepth,
 				       srcImage,dstImage,elementSize,rowSize,

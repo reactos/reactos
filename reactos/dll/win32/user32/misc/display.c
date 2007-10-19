@@ -62,7 +62,7 @@ EnumDisplayDevicesA(
       return FALSE;
     }
 
-  DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);  
+  DisplayDeviceW.cb = sizeof(DISPLAY_DEVICEW);
   rc = NtUserEnumDisplayDevices (
     &Device,
     iDevNum,
@@ -216,7 +216,7 @@ EnumDisplaySettingsExA(
 
   memset(&lpDevModeW,0,sizeof(DEVMODEW));
   lpDevModeW.dmSize = sizeof(DEVMODEW);
- 
+
   rc = NtUserEnumDisplaySettings ( &DeviceName, iModeNum, &lpDevModeW,
                                    dwFlags );
   if (!rc)

@@ -108,7 +108,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "&Geavanceerde opties...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12 
+   PUSHBUTTON "&Geavanceerde opties...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 70, 12
    LTEXT "Time-&out:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "sec.", -1, 340, 91, 15, 10
@@ -144,9 +144,9 @@ BEGIN
     IDS_MSCONFIG             "Hulpprogramma voor systeemconfiguratie"
     IDS_TAB_GENERAL          "Algemeen"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Services" 
-    IDS_TAB_STARTUP          "Opstarten" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Services"
+    IDS_TAB_STARTUP          "Opstarten"
     IDS_TAB_TOOLS            "Hulpmiddelen"
 END
 
@@ -190,5 +190,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "Wordt uitgevoerd"
     IDS_SERVICES_STATUS_STOPPED "Gestopt"
     IDS_SERVICES_YES "Ja"
-    IDS_SERVICES_UNKNOWN "Onbekend" 
+    IDS_SERVICES_UNKNOWN "Onbekend"
 END

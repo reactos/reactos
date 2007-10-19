@@ -40,7 +40,7 @@ PsaEnumerateSystemModules(IN PSYSMOD_ENUM_ROUTINE Callback,
 #endif
   /* capture the system modules */
   Status = PsaCaptureSystemModules(&psmModules);
- 
+
   if(!NT_SUCCESS(Status))
   {
     break;
@@ -60,7 +60,7 @@ PsaEnumerateSystemModules(IN PSYSMOD_ENUM_ROUTINE Callback,
 #if 0
   }
 #endif
- 
+
   return Status;
 }
 
@@ -102,7 +102,7 @@ PsaCaptureSystemModules(OUT PRTL_PROCESS_MODULES *SystemModules)
   do
   {
     PVOID pTmp;
-  
+
     /* free the buffer, and reallocate it to the new size. RATIONALE: since we
        ignore the buffer's content at this point, there's no point in a realloc,
        that could end up copying a large chunk of data we'd discard anyway */
@@ -169,7 +169,7 @@ PsaWalkSystemModules(IN PRTL_PROCESS_MODULES SystemModules,
   {
     /* return current module to the callback */
     Status = Callback(&(SystemModules->Modules[i]), CallbackContext);
-  
+
     if(!NT_SUCCESS(Status))
     {
       return Status;
@@ -181,7 +181,7 @@ PsaWalkSystemModules(IN PRTL_PROCESS_MODULES SystemModules,
 
 PRTL_PROCESS_MODULE_INFORMATION FASTCALL
 PsaWalkFirstSystemModule(IN PRTL_PROCESS_MODULES SystemModules)
-{ 
+{
   return &(SystemModules->Modules[0]);
 }
 

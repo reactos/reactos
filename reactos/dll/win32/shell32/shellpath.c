@@ -1615,7 +1615,7 @@ end:
 /*************************************************************************
  * SHGetFolderPathW			[SHELL32.@]
  *
- * Convert nFolder to path.  
+ * Convert nFolder to path.
  *
  * RETURNS
  *  Success: S_OK
@@ -1649,7 +1649,7 @@ HRESULT WINAPI SHGetFolderPathW(
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
-    
+
     TRACE("%p,%p,nFolder=0x%04x\n", hwndOwner,pszPath,nFolder);
 
     /* Windows always NULL-terminates the resulting path regardless of success
@@ -1934,8 +1934,8 @@ static HRESULT _SHRegisterCommonShellFolders(void)
 /******************************************************************************
  * _SHAppendToUnixPath  [Internal]
  *
- * Helper function for _SHCreateSymbolicLinks. Appends pwszSubPath (or the 
- * corresponding resource, if IS_INTRESOURCE) to the unix base path 'szBasePath' 
+ * Helper function for _SHCreateSymbolicLinks. Appends pwszSubPath (or the
+ * corresponding resource, if IS_INTRESOURCE) to the unix base path 'szBasePath'
  * and replaces backslashes with slashes.
  *
  * PARAMS
@@ -1975,24 +1975,24 @@ static inline BOOL _SHAppendToUnixPath(char *szBasePath, LPCWSTR pwszSubPath) {
     } else {
         lstrcpyW(wszSubPath, pwszSubPath);
     }
- 
+
     if (szBasePath[cLen-1] != '/') szBasePath[cLen++] = '/';
- 
+
     if (!WideCharToMultiByte(CP_ACP, 0, wszSubPath, -1, szBasePath + cLen,
                              FILENAME_MAX - cLen, NULL, NULL))
     {
         return FALSE;
     }
- 
+
     pBackslash = szBasePath + cLen;
     while ((pBackslash = strchr(pBackslash, '\\'))) *pBackslash = '/';
- 
+
     return TRUE;
 }
 #if 0
 /******************************************************************************
  * _SHCreateSymbolicLinks  [Internal]
- * 
+ *
  * Sets up symbol links for various shell folders to point into the users home
  * directory. We do an educated guess about what the user would probably want:
  * - If there is a 'My Documents' directory in $HOME, the user probably wants
@@ -2036,17 +2036,17 @@ static void _SHCreateSymbolicLinks(void)
         if (_SHAppendToUnixPath(szPersonalTarget, MAKEINTRESOURCEW(IDS_PERSONAL)) &&
             !stat(szPersonalTarget, &statFolder) && S_ISDIR(statFolder.st_mode))
         {
-            /* '$HOME/My Documents' exists. Create 'My Pictures', 'My Videos' and 
+            /* '$HOME/My Documents' exists. Create 'My Pictures', 'My Videos' and
              * 'My Music' subfolders or fail silently if they already exist. */
             for (i = 0; i < sizeof(aidsMyStuff)/sizeof(aidsMyStuff[0]); i++) {
                 strcpy(szMyStuffTarget, szPersonalTarget);
                 if (_SHAppendToUnixPath(szMyStuffTarget, MAKEINTRESOURCEW(aidsMyStuff[i])))
                     mkdir(szMyStuffTarget);
             }
-        } 
+        }
         else
         {
-            /* '$HOME/My Documents' doesn't exists, but '$HOME' does. */ 
+            /* '$HOME/My Documents' doesn't exists, but '$HOME' does. */
             strcpy(szPersonalTarget, pszHome);
         }
 
@@ -2076,7 +2076,7 @@ static void _SHCreateSymbolicLinks(void)
         if (FAILED(hr)) continue;
         pszMyStuff = wine_get_unix_file_name(wszTempPath);
         if (!pszMyStuff) continue;
-        
+
         strcpy(szMyStuffTarget, szPersonalTarget);
         if (_SHAppendToUnixPath(szMyStuffTarget, MAKEINTRESOURCEW(aidsMyStuff[i])) &&
             !stat(szMyStuffTarget, &statFolder) && S_ISDIR(statFolder.st_mode))
@@ -2084,7 +2084,7 @@ static void _SHCreateSymbolicLinks(void)
             /* If there's a 'My Whatever' directory where 'My Documents' links to, link to it. */
             rmdir(pszMyStuff);
             symlink(szMyStuffTarget, pszMyStuff);
-        } 
+        }
         else
         {
             /* Else link to where 'My Documents' itself links to. */
@@ -2101,7 +2101,7 @@ static void _SHCreateSymbolicLinks(void)
     {
         hr = SHGetFolderPathW(NULL, CSIDL_DESKTOPDIRECTORY|CSIDL_FLAG_CREATE, NULL,
                               SHGFP_TYPE_DEFAULT, wszTempPath);
-        if (SUCCEEDED(hr) && (pszDesktop = wine_get_unix_file_name(wszTempPath))) 
+        if (SUCCEEDED(hr) && (pszDesktop = wine_get_unix_file_name(wszTempPath)))
         {
             rmdir(pszDesktop);
             symlink(szDesktopTarget, pszDesktop);
@@ -2125,7 +2125,7 @@ HRESULT SHELL_RegisterShellFolders(void)
 #if 0
     _SHCreateSymbolicLinks();
 #endif
-    
+
     hr = _SHRegisterUserShellFolders(TRUE);
     if (SUCCEEDED(hr))
         hr = _SHRegisterUserShellFolders(FALSE);
@@ -2216,7 +2216,7 @@ HRESULT WINAPI SHGetFolderLocation(
 
     TRACE("%p 0x%08x %p 0x%08x %p\n",
      hwndOwner, nFolder, hToken, dwReserved, ppidl);
-    
+
     if (!ppidl)
         return E_INVALIDARG;
     if (dwReserved)

@@ -391,7 +391,7 @@ HvReallocateCell(
 
       NewCell = HvGetCell(RegistryHive, NewCellIndex);
       RtlCopyMemory(NewCell, OldCell, (SIZE_T)OldCellSize);
-      
+
       HvFreeCell(RegistryHive, CellIndex);
 
       return NewCellIndex;
@@ -412,11 +412,11 @@ HvFreeCell(
    ULONG CellBlock;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
-   
+
    Free = HvpGetCellHeader(RegistryHive, CellIndex);
 
-   ASSERT(Free->Size < 0);   
-   
+   ASSERT(Free->Size < 0);
+
    Free->Size = -Free->Size;
 
    CellType = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;

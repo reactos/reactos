@@ -103,7 +103,7 @@ typedef long _ssize_t;
 #ifndef	_NO_OLDNAMES
 typedef _ssize_t ssize_t;
 #endif
-#endif /* Not _SSIZE_T_ */ 
+#endif /* Not _SSIZE_T_ */
 
 #ifndef _FPOS64_T_
 #define _FPOS64_T_

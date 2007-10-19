@@ -17,7 +17,7 @@ public:
 	void		Shuffle();
 	void		Clear();
 	void		Reverse();
-	
+
 	void		Push(const Card card);
 	void		Push(const CardStack &cardstack);
 
@@ -41,8 +41,8 @@ public:
 
 	CardStack operator +  (Card card);
 	CardStack operator +  (CardStack &cs);
-		
-private:	
+
+private:
 
 	CardStack(CardStack &copythis, size_t fromindex);
 

@@ -583,10 +583,10 @@ interface IProvideMultipleClassInfo : IProvideClassInfo2
 
     typedef IProvideMultipleClassInfo *LPPROVIDEMULTIPLECLASSINFO;
 
-    HRESULT GetMultiTypeInfoCount( 
+    HRESULT GetMultiTypeInfoCount(
         [out] ULONG *pcti);
 
-    HRESULT GetInfoOfIndex( 
+    HRESULT GetInfoOfIndex(
         [in] ULONG iti,
         [in] DWORD dwFlags,
         [out] ITypeInfo **pptiCoClass,
@@ -1156,7 +1156,7 @@ interface IObjectWithSite : IUnknown
         [in] IUnknown * pUnkSite);
 
     HRESULT GetSite(
-        [in] REFIID riid, 
+        [in] REFIID riid,
         [out, iid_is(riid)] PVOID *ppvSite);
 }
 
@@ -1285,7 +1285,7 @@ interface IQuickActivate : IUnknown
     } QACONTAINERFLAGS;
 
     typedef DWORD OLE_COLOR;
-    
+
     typedef struct tagQACONTAINER
     {
         ULONG cbSize;

@@ -46,35 +46,35 @@
 
 struct _CLASS_INIT_DATA;
 
-typedef VOID 
+typedef VOID
 (STDCALL *PCLASS_ERROR)(IN PDEVICE_OBJECT DeviceObject,
 		IN PSCSI_REQUEST_BLOCK Srb,
 		IN OUT NTSTATUS *Status,
 		IN OUT BOOLEAN *Retry);
 
-typedef BOOLEAN 
+typedef BOOLEAN
 (STDCALL *PCLASS_DEVICE_CALLBACK)(IN PINQUIRYDATA);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *PCLASS_READ_WRITE)(IN PDEVICE_OBJECT DeviceObject,
 		     IN PIRP Irp);
 
-typedef BOOLEAN 
+typedef BOOLEAN
 (STDCALL *PCLASS_FIND_DEVICES)(IN PDRIVER_OBJECT DriverObject,
 		       IN PUNICODE_STRING RegistryPath,
 		       IN struct _CLASS_INIT_DATA *InitializationData,
 		       IN PDEVICE_OBJECT PortDeviceObject,
 		       IN ULONG PortNumber);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *PCLASS_DEVICE_CONTROL)(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *PCLASS_SHUTDOWN_FLUSH)(IN PDEVICE_OBJECT DeviceObject,
 			 IN PIRP Irp);
 
-typedef NTSTATUS 
+typedef NTSTATUS
 (STDCALL *PCLASS_CREATE_CLOSE)(IN PDEVICE_OBJECT DeviceObject,
 		       IN PIRP Irp);
 

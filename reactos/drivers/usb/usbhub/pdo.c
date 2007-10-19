@@ -21,18 +21,18 @@ UsbhubInternalDeviceControlPdo(
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
-	
+
 	DPRINT("Usbhub: UsbhubInternalDeviceControlPdo() called\n");
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	Status = Irp->IoStatus.Status;
-	
+
 	switch (Stack->Parameters.DeviceIoControl.IoControlCode)
 	{
 		case IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO:
 		{
 			PHUB_DEVICE_EXTENSION DeviceExtension;
-			
+
 			DPRINT("Usbhub: IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO\n");
 			if (Irp->AssociatedIrp.SystemBuffer == NULL
 				|| Stack->Parameters.DeviceIoControl.OutputBufferLength != sizeof(PVOID))
@@ -43,7 +43,7 @@ UsbhubInternalDeviceControlPdo(
 			{
 				PVOID* pHubPointer;
 				DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-				
+
 				pHubPointer = (PVOID*)Irp->AssociatedIrp.SystemBuffer;
 				*pHubPointer = DeviceExtension->dev;
 				Information = sizeof(PVOID);
@@ -58,7 +58,7 @@ UsbhubInternalDeviceControlPdo(
 			Status = Irp->IoStatus.Status;
 		}
 	}
-	
+
 	Irp->IoStatus.Information = Information;
 	Irp->IoStatus.Status = Status;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -72,9 +72,9 @@ UsbhubPdoStartDevice(
 {
 	PHUB_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
-	
+
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-	
+
 	/* Register and activate device interface */
 	Status = IoRegisterDeviceInterface(
 		DeviceObject,
@@ -88,14 +88,14 @@ UsbhubPdoStartDevice(
 		DPRINT("Usbhub: IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
-	
+
 	Status = IoSetDeviceInterfaceState(&DeviceExtension->SymbolicLinkName, TRUE);
 	if (!NT_SUCCESS(Status))
 	{
 		DPRINT("Usbhub: IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -110,11 +110,11 @@ UsbhubPdoQueryId(
 	PUNICODE_STRING SourceString;
 	UNICODE_STRING String;
 	NTSTATUS Status;
-	
+
 	IdType = IoGetCurrentIrpStackLocation(Irp)->Parameters.QueryId.IdType;
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	RtlInitUnicodeString(&String, NULL);
-	
+
 	switch (IdType)
 	{
 		case BusQueryDeviceID:
@@ -145,7 +145,7 @@ UsbhubPdoQueryId(
 			DPRINT1("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n", IdType);
 			return STATUS_NOT_SUPPORTED;
 	}
-	
+
 	Status = UsbhubDuplicateUnicodeString(
 		&String,
 		SourceString,
@@ -182,7 +182,7 @@ UsbhubPdoQueryDeviceText(
 				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextDescription\n");
 			else
 				DPRINT("Usbhub: IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_TEXT / DeviceTextLocationInformation\n");
-			
+
 			if (!DeviceExtension->dev->descriptor.iProduct)
 				return STATUS_NOT_SUPPORTED;
 
@@ -235,7 +235,7 @@ UsbhubPnpPdo(
 	PIO_STACK_LOCATION Stack;
 	ULONG_PTR Information = 0;
 	NTSTATUS Status;
-	
+
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	MinorFunction = Stack->MinorFunction;
 

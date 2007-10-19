@@ -168,7 +168,7 @@ SetShortDateFormat(HWND hwndDlg, LCID lcid)
                        _T("Error"), MB_OK | MB_ICONERROR);
             return FALSE;
         }
-        
+
     }
 
     if (OpenApostFlg)
@@ -226,7 +226,7 @@ SetLongDateFormat(HWND hwndDlg, LCID lcid)
                        _T("Error"), MB_OK | MB_ICONERROR);
             return FALSE;
         }
-        
+
     }
 
     if (OpenApostFlg)

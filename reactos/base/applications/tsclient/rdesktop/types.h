@@ -83,7 +83,7 @@ typedef struct _BOUNDS
 BOUNDS;
 
 // TODO: nuke, use LOGPEN
-typedef struct _PEN 
+typedef struct _PEN
 {
 	uint8 style;
 	uint8 width;

@@ -19,7 +19,7 @@
 
  //
  // Explorer clone
- // 
+ //
  // shellbrowserimpl.cpp
  //
  // Martin Fuchs, 28.09.2003

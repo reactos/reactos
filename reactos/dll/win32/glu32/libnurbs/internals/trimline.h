@@ -51,7 +51,7 @@ class Backend;
 
 class Trimline {
 private:
-    TrimVertex**	pts; 	
+    TrimVertex**	pts;
     long 		numverts;
     long		i;
     long		size;
@@ -78,32 +78,32 @@ public:
     void		getNextPts( Arc_ptr );
     void		getPrevPts( Arc_ptr );
     inline TrimVertex *	next( void );
-    inline TrimVertex *	prev( void ); 
+    inline TrimVertex *	prev( void );
     inline TrimVertex *	first( void );
     inline TrimVertex *	last( void );
 };
 
 inline TrimVertex *
-Trimline::next( void ) 
+Trimline::next( void )
 {
-    if( i < numverts) return pts[i++]; else return 0; 
-} 
-
-inline TrimVertex *
-Trimline::prev( void ) 
-{
-    if( i >= 0 ) return pts[i--]; else return 0; 
-} 
-
-inline TrimVertex *
-Trimline::first( void ) 
-{
-    i = 0; return pts[i]; 
+    if( i < numverts) return pts[i++]; else return 0;
 }
 
 inline TrimVertex *
-Trimline::last( void ) 
+Trimline::prev( void )
 {
-    i = numverts; return pts[--i]; 
-}  
+    if( i >= 0 ) return pts[i--]; else return 0;
+}
+
+inline TrimVertex *
+Trimline::first( void )
+{
+    i = 0; return pts[i];
+}
+
+inline TrimVertex *
+Trimline::last( void )
+{
+    i = numverts; return pts[--i];
+}
 #endif /* __glutrimline_h_ */

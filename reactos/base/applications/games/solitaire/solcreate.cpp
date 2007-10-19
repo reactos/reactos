@@ -68,8 +68,8 @@ void CreateSol()
         pRowStack[i] = SolWnd.CreateRegion(ROW_ID+i, true, 0, Y_BORDER + __cardheight + Y_ROWSTACK_BORDER, 0, yRowStackCardOffset);
         pRowStack[i]->SetEmptyImage(CS_EI_SUNK);
         pRowStack[i]->SetFaceDirection(CS_FACE_DOWNUP, i);
-        
-        pRowStack[i]->SetPlacement(CS_XJUST_CENTER, 0, 
+
+        pRowStack[i]->SetPlacement(CS_XJUST_CENTER, 0,
             (i - NUM_ROW_STACKS/2) * (__cardwidth + X_ROWSTACK_BORDER),     0);
 
         pRowStack[i]->SetEmptyImage(CS_EI_NONE);

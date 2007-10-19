@@ -30,12 +30,12 @@ MemAlloc(IN HANDLE Heap,
   {
     return NULL;
   }
-  
+
   if(Heap == NULL)
   {
     Heap = NtCurrentPeb()->ProcessHeap;
   }
- 
+
   if(Size > 0)
   {
     if(Ptr == NULL)

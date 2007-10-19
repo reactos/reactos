@@ -674,7 +674,7 @@ ehci_process_pending_endp(PEHCI_DEV ehci)
         pwork_item = (PWORK_QUEUE_ITEM) & cancel_list[1];
 
         // we do not need to worry the ehci_cancel_pending_endp_urb running when the
-        // driver is unloading since purb-reference count will prevent the dev_mgr to 
+        // driver is unloading since purb-reference count will prevent the dev_mgr to
         // quit till all the reference count to the dev drop to zero.
         ExInitializeWorkItem(pwork_item, ehci_cancel_pending_endp_urb, (PVOID) cancel_list);
         ExQueueWorkItem(pwork_item, DelayedWorkQueue);
@@ -771,7 +771,7 @@ ehci_submit_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     else if (usb_endp_busy_count(purb->pendp) && endp_type(purb->pendp) != USB_ENDPOINT_XFER_ISOC)
     {
         //
-        //No purb waiting but purb overlap not allowed, 
+        //No purb waiting but purb overlap not allowed,
         //so leave it in queue and return, will be scheduled
         //later
         //
@@ -960,13 +960,13 @@ ehci_dpc_callback(PKDPC dpc, PVOID context, PVOID sysarg1, PVOID sysarg2)
     sync_param.context = (PVOID) & temp_list;
 
     ehci_dbg_print(DBGLVL_MAXIMUM, ("ehci_dpc_callback(): entering..., ehci=0x%x\n", ehci));
-    //remove finished purb from ehci's purb-list 
+    //remove finished purb from ehci's purb-list
     KeSynchronizeExecution(ehci->pdev_ext->ehci_int, ehci_sync_remove_urb_finished, &sync_param);
 
-    //release resources( itds, sitds, fstns, tds, and qhs ) allocated for the purb 
+    //release resources( itds, sitds, fstns, tds, and qhs ) allocated for the purb
     while (IsListEmpty(&temp_list) == FALSE)
     {
-        //not in any public queue, if do not access into dev, no race 
+        //not in any public queue, if do not access into dev, no race
         //condition will occur
         purb = (PURB) RemoveHeadList(&temp_list);
         urb_status = purb->status;
@@ -1300,7 +1300,7 @@ ehci_remove_device(PEHCI_DEV ehci, PUSB_DEV dev)
     lock_dev(dev, FALSE);
     if (dev->usb_config)
     {
-        //only for configed dev 
+        //only for configed dev
         for(i = 0; i < dev->usb_config->if_count; i++)
         {
             for(j = 0; j < dev->usb_config->interf[i].endp_count; j++)
@@ -2376,7 +2376,7 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
             if (pipe_content->interval < 3)
             {
                 // this indicates one itd schedules more than one uframes
-                // for multiple transactions described by iso_packet_desc 
+                // for multiple transactions described by iso_packet_desc
                 if (i == 0)
                     k = td_count == 1 ? purb->iso_frame_count : j;      // the first itd
                 else
@@ -2461,9 +2461,9 @@ ehci_internal_submit_iso(PEHCI_DEV ehci, PURB purb)
                     }
                     else
                     {
-                        // scan to find if the buf pointer already filled in the td 
+                        // scan to find if the buf pointer already filled in the td
                         // since interval = 1, we do not need k * REAL_INTERVAL
-                        // k is transaction count for current td, 
+                        // k is transaction count for current td,
                         // n is hw_bufp( pbuf ) index
                         // n2 is the last phys_addr index we stopped
                         for(m = n2; m < start_uf + k; m++)
@@ -2820,7 +2820,7 @@ ehci_cancel_urb(PEHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
         return STATUS_SUCCESS;
     }
 
-    //      search the purb in the purb-list and try to cancel      
+    //      search the purb in the purb-list and try to cancel
     sync_param.ehci = ehci;
     sync_param.context = purb;
 
@@ -3059,7 +3059,7 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                     case USB_PORT_FEAT_C_RESET:
                     {
                         ps->wPortChange &= ~USB_PORT_STAT_C_RESET;
-                        //the reset signal is down in rh_timer_svc_reset_port_completion        
+                        //the reset signal is down in rh_timer_svc_reset_port_completion
                         // enable or not is set by host controller
                         // status = EHCI_READ_PORT_ULONG( ( PUSHORT ) ( ehci->port_base + i ) );
                         usb_dbg_print(DBGLVL_MAXIMUM,
@@ -3083,7 +3083,7 @@ ehci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
             }
             else if (psetup->bmRequestType == 0xd3 && psetup->bRequest == HUB_REQ_GET_STATE)
             {
-                // get bus state        
+                // get bus state
                 if (psetup->wIndex == 0 || psetup->wIndex > port_count || psetup->wLength == 0)
                 {
                     purb->status = STATUS_INVALID_PARAMETER;
@@ -3599,12 +3599,12 @@ ehci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     if (addr_space == 0)
     {
-        //port has been mapped to memory space  
+        //port has been mapped to memory space
         pdev_ext->ehci->port_mapped = TRUE;
         pdev_ext->ehci->port_base = (PBYTE) MmMapIoSpace(pdev_ext->ehci->ehci_reg_base,
                                                          pdev_ext->res_port.Length, FALSE);
 
-        //fatal error can not map the registers 
+        //fatal error can not map the registers
         if (pdev_ext->ehci->port_base == NULL)
         {
             release_adapter(pdev_ext->padapter);
@@ -3687,7 +3687,7 @@ ehci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
     if (drvr_obj == NULL)
         return NULL;
 
-    //note: hcd count wont increment till the hcd is registered in dev_mgr  
+    //note: hcd count wont increment till the hcd is registered in dev_mgr
     sprintf(str_dev_name, "%s%d", EHCI_DEVICE_NAME, dev_mgr->hcd_count);
     sprintf(str_symb_name, "%s%d", EHCI_DOS_DEVICE_NAME, dev_mgr->hcd_count);
 
@@ -3850,7 +3850,7 @@ ehci_init_schedule(PEHCI_DEV ehci, PADAPTER_OBJECT padapter)
     // chain qh to the shadow list
     InsertTailList(&ehci->periodic_list_cpu[EHCI_SCHED_INT8_INDEX], &pelnk->sched_link);
 
-    // chain it to the periodic schedule, we use it as a docking point 
+    // chain it to the periodic schedule, we use it as a docking point
     // for req of 8- uframes request
     pqh = (PEHCI_QH) pqh_content;
 
@@ -4290,7 +4290,7 @@ ehci_claim_bw_for_int(PEHCI_DEV ehci, PURB purb, BOOLEAN release)
             // 55 is 144 - 90 + 1, turnaround time is one byte not the worst case 90 bytes,
             // refer to ehci-1.0 table 4-5 p64
             ss_time = 231 * 25 / 12;
-            // cs_time = ( 55 * 8 + ( LONG )( ( ( 19 + 7 * 8 * purb->data_length ) / 6 ) ) ) * 25 / 12; 
+            // cs_time = ( 55 * 8 + ( LONG )( ( ( 19 + 7 * 8 * purb->data_length ) / 6 ) ) ) * 25 / 12;
             cs_time = (55 * 8 + (LONG) (((7 * 8 * purb->data_length) / 6))) * 25 / 12;
         }
         else
@@ -4406,7 +4406,7 @@ ehci_get_cache_policy(PEHCI_DEV ehci)
 #define BEST_BUDGET_TIME_UFRAME  ( ( 188 * 7 / 6 ) * 25 / 12 )
 
 //  in: 231 is sum of split token + host ipg + token, 8 is bus turn-around time, 67 is full speed data token in DATA packet
-// out: 49 byte is sum of split token+ host ipg + token + host ipg + data packet 
+// out: 49 byte is sum of split token+ host ipg + token + host ipg + data packet
 #define iso_max_data_load( dir ) ( dir == USB_DIR_IN ? \
 		( ( 188 * 8 - 231 - 8 - 67 + ( 8 - 1 ) ) / 8 ) : ( 188 - 49 ) )
 
@@ -4527,7 +4527,7 @@ ehci_claim_bw_for_iso(PEHCI_DEV ehci, PURB purb, BOOLEAN release)
         //
         // calculate for each frame
         // in: 231 is sum of split token + host ipg + token, 8 is bus turn-around time, 67 is full speed data token in DATA packet
-        // out: 49 byte is sum of split token+ host ipg + token + host ipg + data packet 
+        // out: 49 byte is sum of split token+ host ipg + token + host ipg + data packet
         // bit-stuffing is for high speed bus transfer
         //
 
@@ -4541,12 +4541,12 @@ ehci_claim_bw_for_iso(PEHCI_DEV ehci, PURB purb, BOOLEAN release)
         else
         {
             // an output transfer according to ehci-1.0 table 4-5 p64
-            // ss_time = ( 49 * 8 + ( LONG )( ( ( 19 + 7 * 8 * 188 ) / 6 ) ) ) * 25 / 12; 
+            // ss_time = ( 49 * 8 + ( LONG )( ( ( 19 + 7 * 8 * 188 ) / 6 ) ) ) * 25 / 12;
             ss_time = (49 * 8 + (LONG) (((7 * 8 * 188) / 6))) * 25 / 12;
             cs_time = 0;
             for(i = 0; i < (LONG) purb->iso_frame_count; i++)
             {
-                // remainder = ( 49 * 8 + ( LONG )( ( ( 19 + 7 * 8 * ( purb->iso_packet_desc[ i ].length % 188 ) ) / 6 ) ) ) * 25 / 12; 
+                // remainder = ( 49 * 8 + ( LONG )( ( ( 19 + 7 * 8 * ( purb->iso_packet_desc[ i ].length % 188 ) ) / 6 ) ) ) * 25 / 12;
                 remainder =
                     (49 * 8 + (LONG) (((7 * 8 * (purb->iso_packet_desc[i].length % 188)) / 6))) * 25 / 12;
                 remainder >>= 1;
@@ -6160,7 +6160,7 @@ ehci_unload(IN PDRIVER_OBJECT DriverObject)
     //
     dev_mgr->term_flag = TRUE;
     //
-    // wake up the thread if it is 
+    // wake up the thread if it is
     //
     KeSetEvent(&dev_mgr->wake_up_event, 0, FALSE);
     KeWaitForSingleObject(dev_mgr->pthread, Executive, KernelMode, TRUE, NULL);
@@ -6264,7 +6264,7 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject, IN PUNICODE_STRING RegistryPath)
     // routines for handling system PNP and power management requests
     //DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = generic_dispatch_irp;
 
-    // The Functional Device Object (FDO) will not be created for PNP devices until 
+    // The Functional Device Object (FDO) will not be created for PNP devices until
     // this routine is called upon device plug-in.
     RtlZeroMemory(&g_dev_mgr, sizeof(USB_DEV_MANAGER));
     g_dev_mgr.usb_driver_obj = DriverObject;

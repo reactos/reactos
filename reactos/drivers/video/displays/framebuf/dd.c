@@ -23,16 +23,16 @@
 #include "framebuf.h"
 
 
-DWORD CALLBACK 
+DWORD CALLBACK
 DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 {
-	 	  	  	 	
+
 	 /* We do not support 3d buffer so we fail here */
-	 if ((pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER) && 
+	 if ((pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_ZBUFFER) &&
 		(pccsd->lpDDSurfaceDesc->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY))
 	 {
 		pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
-        return DDHAL_DRIVER_HANDLED;	
+        return DDHAL_DRIVER_HANDLED;
 	 }
 
 
@@ -41,11 +41,11 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
      {
 		/* check the fourcc diffent FOURCC, but we only support BMP for now */
 		//if(pccsd->lpDDSurfaceDesc->ddpfPixelFormat.dwFlags & DDPF_FOURCC)
-        //{   	 
+        //{
 		//	/* We do not support other pixel format */
 		//	switch (pccsd->lpDDSurfaceDesc->ddpfPixelFormat.dwFourCC)
-		//	{         
-		//		default:                
+		//	{
+		//		default:
 		//			pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
 		//			return DDHAL_DRIVER_HANDLED;
 		//	}
@@ -55,7 +55,7 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 		//{
 		//	/* We do not support texture surface */
 		//	pccsd->ddRVal = DDERR_INVALIDPIXELFORMAT;
-		//	return DDHAL_DRIVER_HANDLED;            
+		//	return DDHAL_DRIVER_HANDLED;
 		//}
 
 		/* Fail */
@@ -63,53 +63,53 @@ DdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA pccsd)
 		return DDHAL_DRIVER_HANDLED;
     }
 
-	 pccsd->ddRVal = DD_OK;    
+	 pccsd->ddRVal = DD_OK;
 	 return DDHAL_DRIVER_HANDLED;
 }
 
-DWORD CALLBACK 
+DWORD CALLBACK
 DdCreateSurface(PDD_CREATESURFACEDATA pcsd)
 {
 	int i;
-	
+
 	if (pcsd->dwSCnt < 1)
 	{
 		pcsd->ddRVal = DDERR_GENERIC;
         return DDHAL_DRIVER_NOTHANDLED;
 	}
 
-	
+
 	for (i=0; i<(int)pcsd->dwSCnt; i++)
-    {               
-		pcsd->lplpSList[i]->lpGbl->lPitch = (DWORD)(pcsd->lplpSList[i]->lpGbl->wWidth * 
+    {
+		pcsd->lplpSList[i]->lpGbl->lPitch = (DWORD)(pcsd->lplpSList[i]->lpGbl->wWidth *
 			                                (pcsd->lplpSList[i]->lpGbl->ddpfSurface.dwRGBBitCount / 8));
-       
-		pcsd->lplpSList[i]->lpGbl->dwBlockSizeX = pcsd->lplpSList[i]->lpGbl->lPitch * 
+
+		pcsd->lplpSList[i]->lpGbl->dwBlockSizeX = pcsd->lplpSList[i]->lpGbl->lPitch *
 			                                      (DWORD)(pcsd->lplpSList[i]->lpGbl->wHeight);
 
         pcsd->lplpSList[i]->lpGbl->dwBlockSizeY = 1;
-        
+
         if ( pcsd->lplpSList[i] ->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE)
         {
-			/* We maybe should alloc it with EngAlloc 
-			   for now we trusting ddraw alloc it        */			
+			/* We maybe should alloc it with EngAlloc
+			   for now we trusting ddraw alloc it        */
             pcsd->lplpSList[i]->lpGbl->fpVidMem = 0;
         }
         else
         {
-			
-			/* We maybe should alloc it with EngAlloc 
-			   for now we trusting ddraw alloc it        */			
+
+			/* We maybe should alloc it with EngAlloc
+			   for now we trusting ddraw alloc it        */
             pcsd->lplpSList[i]->lpGbl->fpVidMem = DDHAL_PLEASEALLOC_BLOCKSIZE;
         }
 
         pcsd->lpDDSurfaceDesc->lPitch = pcsd->lplpSList[i]->lpGbl->lPitch;
         pcsd->lpDDSurfaceDesc->dwFlags |= DDSD_PITCH;
-       
+
     } // for i
 
 
-	    
+
 	pcsd->ddRVal = DD_OK;
     return DDHAL_DRIVER_HANDLED;
 }

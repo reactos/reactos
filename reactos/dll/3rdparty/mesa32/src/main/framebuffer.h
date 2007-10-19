@@ -55,7 +55,7 @@ extern void
 _mesa_resize_framebuffer(GLcontext *ctx, struct gl_framebuffer *b,
                          GLuint width, GLuint height);
 
-extern void 
+extern void
 _mesa_update_draw_buffer_bounds(GLcontext *ctx);
 
 extern void

@@ -5,7 +5,7 @@
  * FILE:            ntoskrnl/cc/pin.c
  * PURPOSE:         Implements cache managers pinning interface
  *
- * PROGRAMMERS:     
+ * PROGRAMMERS:
  */
 
 /* INCLUDES ******************************************************************/

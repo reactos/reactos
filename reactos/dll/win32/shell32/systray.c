@@ -87,7 +87,7 @@ BOOL WINAPI Shell_NotifyIconA(DWORD dwMessage, PNOTIFYICONDATAA pnid)
         nidW.u.uTimeout = pnid->u.uTimeout;
         nidW.dwInfoFlags = pnid->dwInfoFlags;
     }
-    
+
     if (cbSize >= NOTIFYICONDATAA_V3_SIZE)
         nidW.guidItem = pnid->guidItem;
 

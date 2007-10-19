@@ -36,7 +36,7 @@ struct _diskfree_t {
 	unsigned bytes_per_sector;
 };
 #define _DISKFREE_T_DEFINED
-#endif  
+#endif
 
 /*
  * You really shouldn't be using these. Use the Win32 API functions instead.
@@ -54,7 +54,7 @@ _CRTIMP unsigned __cdecl _getdiskfree (unsigned, struct _diskfree_t *);
 
 #ifndef _WDIRECT_DEFINED
 /* wide character versions. Also in wchar.h */
-#ifdef __MSVCRT__ 
+#ifdef __MSVCRT__
 _CRTIMP int __cdecl _wchdir(const wchar_t*);
 _CRTIMP wchar_t* __cdecl _wgetcwd(wchar_t*, int);
 _CRTIMP wchar_t* __cdecl _wgetdcwd(int, wchar_t*, int);

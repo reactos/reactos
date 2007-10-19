@@ -71,7 +71,7 @@ typedef enum ifstub_state
 } STUB_STATE;
 
 /* an interface stub */
-struct ifstub   
+struct ifstub
 {
     struct list       entry;      /* entry in stub_manager->ifstubs list (CS stub_manager->lock) */
     IRpcStubBuffer   *stubbuffer; /* RO */
@@ -284,7 +284,7 @@ static inline struct oletls *COM_CurrentInfo(void)
 }
 
 static inline APARTMENT* COM_CurrentApt(void)
-{  
+{
     return COM_CurrentInfo()->apt;
 }
 

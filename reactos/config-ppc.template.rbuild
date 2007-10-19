@@ -36,7 +36,7 @@
 <property name="MP" value="0" />
 
 <!--
-        New style kernel debugger 
+        New style kernel debugger
 -->
 <property name="_WINKD_" value="0" />
 

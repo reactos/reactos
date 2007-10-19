@@ -17,7 +17,7 @@
 
 /* GLOBALS ****************************************************************/
 
-/* 
+/*
  * FIXME: this is WRONG! The global atom table should live in the WinSta struct
  * and accessed through a win32k callout (received in PsEstablishWin32Callouts)
  * NOTE: There is a session/win32k global atom table also, but its private to

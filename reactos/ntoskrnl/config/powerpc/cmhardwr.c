@@ -250,7 +250,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
     PCHAR CurrentVersion;
     extern UNICODE_STRING KeRosProcessorName, KeRosBiosDate, KeRosBiosVersion;
     extern UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
-    
+
     /* Open the SMSS Memory Management key */
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\"
@@ -475,7 +475,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
 
                     /* ROS: Save a copy for bugzilla reporting */
                     RtlCreateUnicodeString(&KeRosProcessorName, Data.Buffer);
-                    
+
                     /* Free the temporary buffer */
                     RtlFreeUnicodeString(&Data);
                 }
@@ -495,7 +495,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                            REG_SZ,
                                            Data.Buffer,
                                            Data.Length + sizeof(UNICODE_NULL));
-                    
+
                     /* Free the temporary buffer */
                     RtlFreeUnicodeString(&Data);
                 }
@@ -652,7 +652,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                            REG_SZ,
                                            Data.Buffer,
                                            Data.Length + sizeof(UNICODE_NULL));
-                    
+
                     /* ROS: Save a copy for bugzilla reporting */
                     RtlCreateUnicodeString(&KeRosBiosDate, Data.Buffer);
 
@@ -712,7 +712,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                        REG_MULTI_SZ,
                                        BiosVersion,
                                        TotalLength);
-                
+
                 /* ROS: Save a copy for bugzilla reporting */
                 RtlCreateUnicodeString(&KeRosBiosVersion, (PWCH)BiosVersion);
             }
@@ -756,7 +756,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                    REG_SZ,
                                    Data.Buffer,
                                    Data.Length + sizeof(UNICODE_NULL));
-            
+
             /* ROS: Save a copy for bugzilla reporting */
             RtlCreateUnicodeString(&KeRosVideoBiosDate, Data.Buffer);
 
@@ -811,7 +811,7 @@ CmpInitializeMachineDependentConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBloc
                                        REG_MULTI_SZ,
                                        BiosVersion,
                                        TotalLength);
-                
+
                 /* ROS: Save a copy for bugzilla reporting */
                 RtlCreateUnicodeString(&KeRosVideoBiosVersion, (PWCH)BiosVersion);
             }

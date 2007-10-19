@@ -36,7 +36,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 // Menu
 //
 
-IDM_MDIFRAME MENU DISCARDABLE 
+IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&S˙bor"
     BEGIN
@@ -77,7 +77,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
+IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -88,7 +88,7 @@ BEGIN
     END
 END
 
-IDM_VOLUME MENU DISCARDABLE 
+IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -97,7 +97,7 @@ BEGIN
     END
 END
 
-IDM_NOTIFYAREA MENU DISCARDABLE 
+IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -110,7 +110,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU DISCARDABLE 
+IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&S˙bor"
     BEGIN
@@ -163,7 +163,7 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Hæadaù program v ponuke ätart"
@@ -171,8 +171,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
                     WS_TABSTOP,7,25,186,33
     PUSHBUTTON      "&Check Entries",IDC_CHECK_ENTRIES,143,7,50,14
 END
@@ -184,29 +184,29 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Vyberte si prosÌm, vami uprednostÚovan˝ spÙsob zarovnania ikÛn:",
                     IDC_STATIC,7,7,166,8
-    CONTROL         "zæava zhora dole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+    CONTROL         "zæava zhora dole",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "zæava zhora vpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+    CONTROL         "zæava zhora vpravo",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "zprava zhora væavo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+    CONTROL         "zprava zhora væavo",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "zprava zhora dole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+    CONTROL         "zprava zhora dole",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "zæava zdola hore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+    CONTROL         "zæava zdola hore",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "zæava zdola vpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+    CONTROL         "zæava zdola vpravo",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "zprava zdola væavo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+    CONTROL         "zprava zdola væavo",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "zprava zdola hore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "zprava zdola hore",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "po okrajoch dole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+    CONTROL         "po okrajoch dole",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "po okrajoch H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+    CONTROL         "po okrajoch H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "dookola",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+    CONTROL         "dookola",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,121,46,44
 //    CONTROL         "Zobraziù ËÌslo &verzie",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
@@ -217,10 +217,10 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Vlastnosti panela ˙loh"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "Zobraziù &hodiny",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Zobraziù &hodiny",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,152,52,10
     CONTROL         "&Skryù neaktÌvne ikony",
-                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,174,111,10
     PUSHBUTTON      "&PrispÙsobiù...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
@@ -233,13 +233,13 @@ BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "PrispÙsobenie oznamovacÌch ikÛn"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
     LTEXT           "&Text popisu:",IDC_LABEL1,7,44,40,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
@@ -248,7 +248,7 @@ BEGIN
     LTEXT           "&Cesta:",IDC_LABEL3,7,81,43,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
     GROUPBOX        "&Zobrazenie",IDC_LABEL4,7,96,157,28
-    CONTROL         "z&obraziù",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "z&obraziù",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,33,10
     CONTROL         "&skryù",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
                     108,29,10
@@ -256,7 +256,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,112,108,43,10
     ICON            "",IDC_PICTURE,173,101,21,20
     LTEXT           "&Posledn· zmena:",IDC_LABEL6,7,132,43,8
-    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
                     ES_READONLY
     CONTROL         "zo&braziù skrytÈ",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
@@ -279,7 +279,7 @@ BEGIN
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
     CONTROL         "Otv·raù prieËinky v samostatn˝ch &okn·ch",
-                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,135,10
     LTEXT           "Toto nastavenie sa v bud˙cnosti pouûije ako predvolenÈ pre vöetkÈ okn· PriezkumnÌka.",
                     IDC_STATIC,7,111,174,22
@@ -309,18 +309,18 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE MOVEABLE PURE 
+1 TEXTINCLUDE MOVEABLE PURE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE MOVEABLE PURE 
+2 TEXTINCLUDE MOVEABLE PURE
 BEGIN
     "#include <windows.h>\r\n"
     "\0"
 END
 
-3 TEXTINCLUDE MOVEABLE PURE 
+3 TEXTINCLUDE MOVEABLE PURE
 BEGIN
     "\r\n"
     "\0"
@@ -334,7 +334,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "ätart"
@@ -354,7 +354,7 @@ BEGIN
     IDS_ADMIN               "Administration"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Ponuka ätart"
     IDS_MINIMIZE_ALL        "minimalizovaù vöetkÈ okn·"
@@ -372,7 +372,7 @@ BEGIN
     IDS_TERMINATE           "UkonËiù ReactOS Explorer"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Sieù"
     IDS_CONNECTIONS         "SieùovÈ pripojenia"
@@ -386,7 +386,7 @@ BEGIN
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Hæadaù"
     IDS_ABOUT_EXPLORER      "»&o je Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS 
+    IDS_LAUNCH_MANY_PROGRAMS
                             "Vybrali ste viac programov.\nPrajete si spustiù ich vöetky?"
     IDS_DESKTOPBAR_SETTINGS "Nastavenia plochy"
     IDS_DESKTOP             "Pracovn· plocha"

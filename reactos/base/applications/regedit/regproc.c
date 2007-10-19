@@ -1623,7 +1623,7 @@ LONG RegRenameKey(HKEY hKey, LPCTSTR lpSubKey, LPCTSTR lpNewName)
         else
             return ERROR_NOT_ENOUGH_MEMORY;
     }
-    
+
     Ret = RegMoveKey(hKey, lpNewName, hKey, lpSubKey);
 
     if (lpNewSubKey)
@@ -1722,7 +1722,7 @@ static LONG RegNextKey(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength)
         lResult = RegEnumKeyEx(hSubKey, 0, lpSubKey + _tcslen(lpSubKey) + 1,
             &cbName, NULL, NULL, NULL, &ft);
         RegCloseKey(hSubKey);
-        
+
         if (lResult == ERROR_SUCCESS)
         {
             lpSubKey[_tcslen(lpSubKey)] = '\\';
@@ -1809,7 +1809,7 @@ static BOOL RegSearchCompare(LPCTSTR s1, LPCTSTR s2, DWORD dwSearchFlags)
 }
 
 LONG RegSearch(HKEY hKey, LPTSTR lpSubKey, size_t iSubKeyLength,
-    LPCTSTR pszSearchString, DWORD dwValueIndex,    
+    LPCTSTR pszSearchString, DWORD dwValueIndex,
     DWORD dwSearchFlags, BOOL (*pfnCallback)(LPVOID), LPVOID lpParam)
 {
     LONG lResult;

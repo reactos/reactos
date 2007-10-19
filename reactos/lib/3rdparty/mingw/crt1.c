@@ -11,7 +11,7 @@
 
 /* Hide the declaration of _fmode with dllimport attribute in stdlib.h to
    avoid problems with older GCC. */
-#define __IN_MINGW_RUNTIME 
+#define __IN_MINGW_RUNTIME
 #include <stdlib.h>
 #include <stdio.h>
 #include <io.h>
@@ -34,7 +34,7 @@ extern void _pei386_runtime_relocator (void);
 extern int main (int, char **, char **);
 
 /*
- * Must have the correct app type for MSVCRT. 
+ * Must have the correct app type for MSVCRT.
  */
 
 #ifdef __MSVCRT__
@@ -50,8 +50,8 @@ void __set_app_type(int);
 /*  Global _fmode for this .exe, not the one in msvcrt.dll,
     The default is set in txtmode.o in libmingw32.a */
 /* Override the dllimport'd declarations in stdlib.h */
-#undef _fmode 
-extern int _fmode; 
+#undef _fmode
+extern int _fmode;
 #ifdef __MSVCRT__
 extern int* __p__fmode(void); /* To access the dll _fmode */
 #endif
@@ -93,7 +93,7 @@ _mingw32_init_fmode (void)
 
     /*  Now sync  the dll _fmode to the  one for this .exe.  */
 #ifdef __MSVCRT__
-    *__p__fmode() = _fmode;	
+    *__p__fmode() = _fmode;
 #else
     *_imp___fmode_dll = _fmode;
 #endif
@@ -192,7 +192,7 @@ __mingw_CRTStartup (void)
    * Set up the top-level exception handler so that signal handling
    * works as expected. The mapping between ANSI/POSIX signals and
    * Win32 SE is not 1-to-1, so caveat emptore.
-   * 
+   *
    */
   SetUnhandledExceptionFilter (_gnu_exception_handler);
 
@@ -214,7 +214,7 @@ __mingw_CRTStartup (void)
    * NOTE: DLLs don't do this because that would be rude!
    */
   _mingw32_init_fmode ();
-  
+
    /* Adust references to dllimported data that have non-zero offsets.  */
 #if defined(__i386__)
   _pei386_runtime_relocator ();

@@ -299,7 +299,7 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 		    int i, j;
 
 		    dwFileSize = NEWFILE_SIZE;
-		
+
 		    /* First set some constants and defaults in the header */
 		    strcpy(pHeader->szSignature, "WINE URLCache Ver 0.2005001");
 		    pHeader->dwFileSize = dwFileSize;
@@ -309,14 +309,14 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 		    pHeader->dwCacheLimitLow = 0x07ff5400;
 		    /* Copied from a Windows 2000 cache index */
 		    pHeader->DirectoryCount = 4;
-		
+
 		    /* If the registry has a cache size set, use the registry value */
 		    if (RegOpenKeyA(HKEY_CURRENT_USER, szCacheContent, &key) == ERROR_SUCCESS)
 		    {
 		        DWORD dw;
 		        DWORD len = sizeof(dw);
 		        DWORD keytype;
-		
+
 		        if (RegQueryValueExA(key, "CacheLimit", NULL, &keytype,
 					     (BYTE *) &dw, &len) == ERROR_SUCCESS &&
 			    keytype == REG_DWORD)
@@ -326,17 +326,17 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 			}
 			RegCloseKey(key);
 		    }
-		
+
 		    URLCache_CreateHashTable(pHeader, NULL);
 
 		    /* Last step - create the directories */
-	
+
 		    strcpyW(wszDirPath, pContainer->path);
 		    pwchDir = wszDirPath + strlenW(wszDirPath);
 		    pwchDir[8] = 0;
-	
+
 		    GetSystemTimeAsFileTime(&ft);
-	
+
 		    for (i = 0; !dwError && i < pHeader->DirectoryCount; ++i)
 		    {
 			/* The following values were copied from a Windows index.
@@ -349,7 +349,7 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 			{
 			    int k;
 			    ULONGLONG n = ft.dwHighDateTime;
-	
+
 			    /* Generate a file name to attempt to create.
 			     * This algorithm will create what will appear
 			     * to be random and unrelated directory names
@@ -358,26 +358,26 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 			    n <<= 32;
 			    n += ft.dwLowDateTime;
 			    n ^= ((ULONGLONG) i << 56) | ((ULONGLONG) j << 48);
-	
+
 			    for (k = 0; k < 8; ++k)
 			    {
 				int r = (n % 36);
-	
+
 				/* Dividing by a prime greater than 36 helps
 				 * with the appearance of randomness
 				 */
 				n /= 37;
-	
+
 				if (r < 10)
 				    pwchDir[k] = '0' + r;
 				else
 				    pwchDir[k] = 'A' + (r - 10);
 			    }
-	
+
 			    if (CreateDirectoryW(wszDirPath, 0))
 			    {
 				int k;
-	
+
 				/* The following is OK because we generated an
 				 * 8 character directory name made from characters
 				 * [A-Z0-9], which are equivalent for all code
@@ -399,7 +399,7 @@ static BOOL URLCacheContainer_OpenIndex(URLCACHECONTAINER * pContainer)
 			    }
 			}
 		    }
-		
+
 		    UnmapViewOfFile(pHeader);
 		}
 		else
@@ -530,7 +530,7 @@ void URLCacheContainers_CreateDefaults(void)
         int nFolder; /* CSIDL_* constant */
         const WCHAR * shpath_suffix; /* suffix on path returned by SHGetSpecialFolderPath */
         const WCHAR * cache_prefix; /* prefix used to reference the container */
-    } DefaultContainerData[] = 
+    } DefaultContainerData[] =
     {
         { CSIDL_INTERNET_CACHE, UrlSuffix, UrlPrefix },
         { CSIDL_HISTORY, HistorySuffix, HistoryPrefix },
@@ -561,7 +561,7 @@ void URLCacheContainers_CreateDefaults(void)
         wszCachePath[path_len] = '\\';
 
         strcpyW(wszMutexName, wszCachePath);
-        
+
         if (suffix_len)
         {
             memcpy(wszCachePath + path_len + 1, DefaultContainerData[i].shpath_suffix, (suffix_len + 1) * sizeof(WCHAR));
@@ -669,7 +669,7 @@ static LPURLCACHE_HEADER URLCacheContainer_LockIndex(URLCACHECONTAINER * pContai
     {
         TRACE("Directory[%d] = \"%.8s\"\n", index, pHeader->directory_data[index].filename);
     }
-    
+
     return pHeader;
 }
 
@@ -753,7 +753,7 @@ static BOOL URLCache_FindFirstFreeEntry(URLCACHE_HEADER * pHeader, DWORD dwBlock
     DWORD dwFreeCounter;
     for (dwBlockNumber = 0; dwBlockNumber < pHeader->dwIndexCapacityInBlocks; dwBlockNumber++)
     {
-        for (dwFreeCounter = 0; 
+        for (dwFreeCounter = 0;
             dwFreeCounter < dwBlocksNeeded &&
               dwFreeCounter + dwBlockNumber < pHeader->dwIndexCapacityInBlocks &&
               URLCache_Allocation_BlockIsFree(AllocationTable, dwBlockNumber + dwFreeCounter);
@@ -904,9 +904,9 @@ static BOOL URLCache_LocalFileNameToPathA(
  */
 static BOOL URLCache_CopyEntry(
     URLCACHECONTAINER * pContainer,
-    LPCURLCACHE_HEADER pHeader, 
-    LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo, 
-    LPDWORD lpdwBufferSize, 
+    LPCURLCACHE_HEADER pHeader,
+    LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
+    LPDWORD lpdwBufferSize,
     URL_CACHEFILE_ENTRY * pUrlEntry,
     BOOL bUnicode)
 {
@@ -943,7 +943,7 @@ static BOOL URLCache_CopyEntry(
     else
         lenUrl = strlen(pUrlEntry->szSourceUrlName);
     dwRequiredSize += lenUrl + 1;
-    
+
     /* FIXME: is source url optional? */
     if (*lpdwBufferSize >= dwRequiredSize)
     {
@@ -1045,7 +1045,7 @@ static DWORD URLCache_HashKey(LPCSTR lpszKey)
     /* NOTE: this uses the same lookup table as SHLWAPI.UrlHash{A,W}
      * but the algorithm and result are not the same!
      */
-    static const unsigned char lookupTable[256] = 
+    static const unsigned char lookupTable[256] =
     {
         0x01, 0x0E, 0x6E, 0x19, 0x61, 0xAE, 0x84, 0x77,
         0x8A, 0xAA, 0x7D, 0x76, 0x1B, 0xE9, 0x8C, 0x33,
@@ -1334,7 +1334,7 @@ BOOL WINAPI GetUrlCacheEntryInfoExA(
     DWORD dwFlags)
 {
     TRACE("(%s, %p, %p, %p, %p, %p, %lx)\n",
-        debugstr_a(lpszUrl), 
+        debugstr_a(lpszUrl),
         lpCacheEntryInfo,
         lpdwCacheEntryInfoBufSize,
         lpszReserved,
@@ -1518,7 +1518,7 @@ BOOL WINAPI GetUrlCacheEntryInfoExW(
     DWORD dwFlags)
 {
     TRACE("(%s, %p, %p, %p, %p, %p, %lx)\n",
-        debugstr_w(lpszUrl), 
+        debugstr_w(lpszUrl),
         lpCacheEntryInfo,
         lpdwCacheEntryInfoBufSize,
         lpszReserved,
@@ -1662,7 +1662,7 @@ BOOL WINAPI SetUrlCacheEntryInfoW(LPCWSTR lpszUrl, LPINTERNET_CACHE_ENTRY_INFOW 
  */
 BOOL WINAPI RetrieveUrlCacheEntryFileA(
     IN LPCSTR lpszUrlName,
-    OUT LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo, 
+    OUT LPINTERNET_CACHE_ENTRY_INFOA lpCacheEntryInfo,
     IN OUT LPDWORD lpdwCacheEntryInfoBufferSize,
     IN DWORD dwReserved
     )
@@ -1748,7 +1748,7 @@ BOOL WINAPI RetrieveUrlCacheEntryFileW(
  *
  */
 BOOL WINAPI UnlockUrlCacheEntryFileA(
-    IN LPCSTR lpszUrlName, 
+    IN LPCSTR lpszUrlName,
     IN DWORD dwReserved
     )
 {
@@ -1914,12 +1914,12 @@ BOOL WINAPI CreateUrlCacheEntryW(
 
     for (lpszUrlEnd = lpszUrlName; *lpszUrlEnd; lpszUrlEnd++)
         ;
-    
+
     if (((lpszUrlEnd - lpszUrlName) > 1) && (*(lpszUrlEnd - 1) == '/' || *(lpszUrlEnd - 1) == '\\'))
         lpszUrlEnd--;
 
-    for (lpszUrlPart = lpszUrlEnd; 
-        (lpszUrlPart >= lpszUrlName); 
+    for (lpszUrlPart = lpszUrlEnd;
+        (lpszUrlPart >= lpszUrlName);
         lpszUrlPart--)
     {
         if ((*lpszUrlPart == '/' || *lpszUrlPart == '\\') && ((lpszUrlEnd - lpszUrlPart) > 1))
@@ -1968,7 +1968,7 @@ BOOL WINAPI CreateUrlCacheEntryW(
     URLCacheContainer_UnlockIndex(pContainer, pHeader);
 
     for (lpszFileNameNoPath = lpszFileName + lBufferSize / sizeof(WCHAR) - 2;
-        lpszFileNameNoPath >= lpszFileName; 
+        lpszFileNameNoPath >= lpszFileName;
         --lpszFileNameNoPath)
     {
         if (*lpszFileNameNoPath == '/' || *lpszFileNameNoPath == '\\')
@@ -2056,7 +2056,7 @@ static BOOL WINAPI CommitUrlCacheEntryInternal(
 
     if (lpszOriginalUrl)
         WARN(": lpszOriginalUrl ignored\n");
- 
+
     if (lpszLocalFileName)
     {
         HANDLE hFile;
@@ -2428,7 +2428,7 @@ HANDLE WINAPI RetrieveUrlCacheEntryStreamA(
         NULL);
     if (hFile == INVALID_HANDLE_VALUE)
         return FALSE;
-    
+
     /* allocate handle storage space */
     pStream = HeapAlloc(GetProcessHeap(), 0, sizeof(STREAM_HANDLE) + strlen(lpszUrlName) * sizeof(CHAR));
     if (!pStream)

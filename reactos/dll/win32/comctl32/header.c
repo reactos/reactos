@@ -117,7 +117,7 @@ static void HEADER_StoreHDItemInHeader(HEADER_ITEM *lpItem, UINT mask, const HDI
 {
     if (mask & HDI_UNSUPPORTED_FIELDS)
         FIXME("unsupported header fields %x\n", (mask & HDI_UNSUPPORTED_FIELDS));
-    
+
     if (mask & HDI_BITMAP)
         lpItem->hbm = phdi->hbm;
 
@@ -130,7 +130,7 @@ static void HEADER_StoreHDItemInHeader(HEADER_ITEM *lpItem, UINT mask, const HDI
     if (mask & HDI_WIDTH)
         lpItem->cxy = phdi->cxy;
 
-    if (mask & HDI_IMAGE) 
+    if (mask & HDI_IMAGE)
     {
         lpItem->iImage = phdi->iImage;
         if (phdi->iImage == I_IMAGECALLBACK)
@@ -157,7 +157,7 @@ static void HEADER_StoreHDItemInHeader(HEADER_ITEM *lpItem, UINT mask, const HDI
         {
             lpItem->pszText = NULL;
             lpItem->callbackMask |= HDI_TEXT;
-        }  
+        }
     }
 }
 
@@ -263,7 +263,7 @@ static void HEADER_GetHotDividerRect(HWND hwnd, const HEADER_INFO *infoPtr, RECT
     if (infoPtr->uNumItem > 0)
     {
         HEADER_ITEM *lpItem;
-        
+
         if (iDivider < infoPtr->uNumItem)
         {
             lpItem = &infoPtr->items[iDivider];
@@ -335,7 +335,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
     }
     else {
         HBRUSH hbr;
-    
+
         if (GetWindowLongW (hwnd, GWL_STYLE) & HDS_BUTTONS) {
             if (phdi->bDown) {
                 DrawEdge (hdc, &r, BDR_RAISEDOUTER,
@@ -413,7 +413,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
 	}
 
 	if (bw || iw)
-	    cw += *w; 
+	    cw += *w;
 
 	/* align cx using the unclipped cw */
 	if ((phdi->fmt & HDF_JUSTIFYMASK) == HDF_LEFT)
@@ -422,17 +422,17 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
 	    cx = r.left + rw / 2 - cw / 2;
 	else /* HDF_RIGHT */
 	    cx = r.right - cw;
-        
+
 	/* clip cx & cw */
 	if (cx < r.left)
 	    cx = r.left;
 	if (cx + cw > r.right)
 	    cw = r.right - cx;
-	
+
 	tx = cx + infoPtr->iMargin;
 	/* since cw might have changed we have to recalculate tw */
 	tw = cw - infoPtr->iMargin * 2;
-			
+
 	if (iw || bw) {
 	    tw -= *w;
 	    if (phdi->fmt & HDF_BITMAP_ON_RIGHT) {
@@ -460,17 +460,17 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
 	    HDC hClipDC = GetDC(hwnd);
 	    HRGN hClipRgn = CreateRectRgn(r.left, r.top, r.right, r.bottom);
 	    SelectClipRgn(hClipDC, hClipRgn);
-	    
+
 	    if (bw) {
 	        HDC hdcBitmap = CreateCompatibleDC (hClipDC);
 	        SelectObject (hdcBitmap, phdi->hbm);
-	        BitBlt (hClipDC, bx, r.top + ((INT)rh - bmp.bmHeight) / 2, 
+	        BitBlt (hClipDC, bx, r.top + ((INT)rh - bmp.bmHeight) / 2,
 		        bmp.bmWidth, bmp.bmHeight, hdcBitmap, 0, 0, SRCCOPY);
 	        DeleteDC (hdcBitmap);
 	    }
 
 	    if (iw) {
-	        ImageList_DrawEx (infoPtr->himl, phdi->iImage, hClipDC, 
+	        ImageList_DrawEx (infoPtr->himl, phdi->iImage, hClipDC,
 	                          ix, r.top + ((INT)rh - infoPtr->himl->cy) / 2,
 	                          infoPtr->himl->cx, infoPtr->himl->cy, CLR_DEFAULT, CLR_DEFAULT, 0);
 	    }
@@ -478,7 +478,7 @@ HEADER_DrawItem (HWND hwnd, HDC hdc, INT iItem, BOOL bHotTrack, LRESULT lCDFlags
 	    DeleteObject(hClipRgn);
 	    ReleaseDC(hwnd, hClipDC);
 	}
-        
+
 	if (((phdi->fmt & HDF_STRING)
 		|| (!(phdi->fmt & (HDF_OWNERDRAW|HDF_STRING|HDF_BITMAP|
 				   HDF_BITMAP_ON_RIGHT|HDF_IMAGE)))) /* no explicit format specified? */
@@ -503,7 +503,7 @@ HEADER_DrawHotDivider(HWND hwnd, HDC hdc)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     HBRUSH brush;
     RECT r;
-    
+
     HEADER_GetHotDividerRect(hwnd, infoPtr, &r);
     brush = CreateSolidBrush(GetSysColor(COLOR_HIGHLIGHT));
     FillRect(hdc, &r, brush);
@@ -528,7 +528,7 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
     /* get rect for the bar, adjusted for the border */
     GetClientRect (hwnd, &rect);
     lCDFlags = HEADER_SendCtrlCustomDraw(hwnd, CDDS_PREPAINT, hdc, &rect);
-    
+
     if (infoPtr->bDragging)
 	ImageList_DragShowNolock(FALSE);
 
@@ -562,14 +562,14 @@ HEADER_Refresh (HWND hwnd, HDC hdc)
                 DrawEdge (hdc, &rcRest, EDGE_ETCHED, BF_BOTTOM|BF_MIDDLE);
         }
     }
-    
+
     if (infoPtr->iHotDivider != -1)
         HEADER_DrawHotDivider(hwnd, hdc);
 
     if (infoPtr->bDragging)
 	ImageList_DragShowNolock(TRUE);
     SelectObject (hdc, hOldFont);
-    
+
     if (lCDFlags & CDRF_NOTIFYPOSTPAINT)
         HEADER_SendCtrlCustomDraw(hwnd, CDDS_POSTPAINT, hdc, &rect);
 }
@@ -737,7 +737,7 @@ HEADER_DrawTrackLine (HWND hwnd, HDC hdc, INT x)
  * [I] fSourceUnicode : is src a HDITEMW or HDITEMA
  * [O] ppvScratch : a pointer to a scratch buffer that needs to be freed after
  *                  the HDITEM is no longer in use or NULL if none was needed
- * 
+ *
  * NOTE: We depend on HDITEMA and HDITEMW having the same structure
  */
 static void HEADER_CopyHDItemForNotify(const HEADER_INFO *infoPtr, HDITEMW *dest,
@@ -745,7 +745,7 @@ static void HEADER_CopyHDItemForNotify(const HEADER_INFO *infoPtr, HDITEMW *dest
 {
     *ppvScratch = NULL;
     *dest = *src;
-    
+
     if (src->mask & HDI_TEXT && src->pszText != LPSTR_TEXTCALLBACKW) /* covers TEXTCALLBACKA as well */
     {
         if (fSourceUnicode && infoPtr->nNotifyFormat != NFR_UNICODE)
@@ -754,7 +754,7 @@ static void HEADER_CopyHDItemForNotify(const HEADER_INFO *infoPtr, HDITEMW *dest
             Str_SetPtrWtoA((LPSTR *)&dest->pszText, src->pszText);
             *ppvScratch = dest->pszText;
         }
-        
+
         if (!fSourceUnicode && infoPtr->nNotifyFormat == NFR_UNICODE)
         {
             dest->pszText = NULL;
@@ -812,7 +812,7 @@ HEADER_SendNotifyWithHDItemT(HWND hwnd, UINT code, INT iItem, HDITEMW *lpItem)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr (hwnd);
     NMHEADERW nmhdr;
-    
+
     if (infoPtr->nNotifyFormat != NFR_UNICODE)
         code = HEADER_NotifyCodeWtoA(code);
     nmhdr.iItem = iItem;
@@ -856,9 +856,9 @@ HEADER_SendNotifyWithIntFieldT(HWND hwnd, UINT code, INT iItem, INT mask, INT iV
 
 /**
  * Prepare callback items
- *   depends on NMHDDISPINFOW having same structure as NMHDDISPINFOA 
+ *   depends on NMHDDISPINFOW having same structure as NMHDDISPINFOA
  *   (so we handle the two cases only doing a specific cast for pszText).
- * Checks if any of the required field are callback. If there are sends a 
+ * Checks if any of the required field are callback. If there are sends a
  * NMHDISPINFO notify to retrieve these items. The items are stored in the
  * HEADER_ITEM pszText and iImage fields. They should be freed with
  * HEADER_FreeCallbackItems.
@@ -886,7 +886,7 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
         Free(lpItem->pszText);
         lpItem->pszText = NULL;
     }
-    
+
     memset(&dispInfo, 0, sizeof(NMHDDISPINFOW));
     dispInfo.hdr.hwndFrom = hwnd;
     dispInfo.hdr.idFrom   = GetWindowLongPtrW (hwnd, GWLP_ID);
@@ -907,17 +907,17 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
     dispInfo.iItem        = iItem;
     dispInfo.mask         = mask;
     dispInfo.lParam       = lpItem->lParam;
-    
+
     TRACE("Sending HDN_GETDISPINFO%c\n", infoPtr->nNotifyFormat == NFR_UNICODE?'W':'A');
-    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, 
-                 (WPARAM) dispInfo.hdr.idFrom, 
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY,
+                 (WPARAM) dispInfo.hdr.idFrom,
                  (LPARAM) &dispInfo);
 
-    TRACE("SendMessage returns(mask:0x%x,str:%s,lParam:%p)\n", 
+    TRACE("SendMessage returns(mask:0x%x,str:%s,lParam:%p)\n",
           dispInfo.mask,
           (infoPtr->nNotifyFormat == NFR_UNICODE ? debugstr_w(dispInfo.pszText) : (LPSTR) dispInfo.pszText),
           (void*) dispInfo.lParam);
-          
+
     if (mask & HDI_IMAGE)
         lpItem->iImage = dispInfo.iImage;
     if (mask & HDI_TEXT)
@@ -936,13 +936,13 @@ HEADER_PrepareCallbackItems(HWND hwnd, INT iItem, INT reqMask)
             Free(pvBuffer);
         }
     }
-        
-    if (dispInfo.mask & HDI_DI_SETITEM) 
+
+    if (dispInfo.mask & HDI_DI_SETITEM)
     {
         /* make the items permanent */
         lpItem->callbackMask &= ~dispInfo.mask;
     }
-    
+
     return TRUE;
 }
 
@@ -980,7 +980,7 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     HDC hDeviceDC;
     int height, width;
     HFONT hFont;
-    
+
     if (wParam < 0 || wParam >= infoPtr->uNumItem)
         return FALSE;
 
@@ -990,7 +990,7 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     lpItem = &infoPtr->items[wParam];
     width = lpItem->rect.right - lpItem->rect.left;
     height = lpItem->rect.bottom - lpItem->rect.top;
-    
+
     hDeviceDC = GetDC(NULL);
     hMemoryDC = CreateCompatibleDC(hDeviceDC);
     hMemory = CreateCompatibleBitmap(hDeviceDC, width, height);
@@ -1005,13 +1005,13 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     HEADER_DrawItem(hwnd, hMemoryDC, wParam, FALSE, lCDFlags);
     if (lCDFlags & CDRF_NOTIFYPOSTPAINT)
         HEADER_SendCtrlCustomDraw(hwnd, CDDS_POSTPAINT, hMemoryDC, &rc);
-    
+
     hMemory = SelectObject(hMemoryDC, hOldBitmap);
     DeleteDC(hMemoryDC);
-    
+
     if (hMemory == NULL)    /* if anything failed */
         return FALSE;
-    
+
     himl = ImageList_Create(width, height, ILC_COLORDDB, 1, 1);
     ImageList_Add(himl, hMemory, NULL);
     DeleteObject(hMemory);
@@ -1024,7 +1024,7 @@ HEADER_SetHotDivider(HWND hwnd, WPARAM wParam, LPARAM lParam)
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr(hwnd);
     INT iDivider;
     RECT r;
-    
+
     if (wParam)
     {
         POINT pt;
@@ -1032,7 +1032,7 @@ HEADER_SetHotDivider(HWND hwnd, WPARAM wParam, LPARAM lParam)
         pt.x = (INT)(SHORT)LOWORD(lParam);
         pt.y = 0;
         HEADER_InternalHitTest (hwnd, &pt, &flags, &iDivider);
-        
+
         if (flags & HHT_TOLEFT)
             iDivider = 0;
         else if (flags & HHT_NOWHERE || flags & HHT_TORIGHT)
@@ -1046,7 +1046,7 @@ HEADER_SetHotDivider(HWND hwnd, WPARAM wParam, LPARAM lParam)
     }
     else
         iDivider = (INT)lParam;
-        
+
     /* Note; wParam==FALSE, lParam==-1 is valid and is used to clear the hot divider */
     if (iDivider<-1 || iDivider>(int)infoPtr->uNumItem)
         return iDivider;
@@ -1094,7 +1094,7 @@ HEADER_DeleteItem (HWND hwnd, WPARAM wParam)
             (infoPtr->uNumItem - iOrder) * sizeof(INT));
     infoPtr->items = ReAlloc(infoPtr->items, sizeof(HEADER_ITEM) * infoPtr->uNumItem);
     infoPtr->order = ReAlloc(infoPtr->order, sizeof(INT) * infoPtr->uNumItem);
-        
+
     /* Correct the orders */
     for (i = 0; i < infoPtr->uNumItem; i++)
     {
@@ -1146,7 +1146,7 @@ HEADER_GetItemT (HWND hwnd, INT nItem, LPHDITEMW phdi, BOOL bUnicode)
         TRACE("mask %x contains unknown fields. Using only comctl32 4.0 fields\n", mask);
         mask &= HDI_COMCTL32_4_0_FIELDS;
     }
-    
+
     lpItem = &infoPtr->items[nItem];
     HEADER_PrepareCallbackItems(hwnd, nItem, mask);
 
@@ -1162,7 +1162,7 @@ HEADER_GetItemT (HWND hwnd, INT nItem, LPHDITEMW phdi, BOOL bUnicode)
     if (mask & HDI_LPARAM)
         phdi->lParam = lpItem->lParam;
 
-    if (mask & HDI_IMAGE) 
+    if (mask & HDI_IMAGE)
         phdi->iImage = lpItem->iImage;
 
     if (mask & HDI_ORDER)
@@ -1288,7 +1288,7 @@ HEADER_InsertItemT (HWND hwnd, INT nItem, const HDITEMW *phdi, BOOL bUnicode)
     infoPtr->uNumItem++;
     infoPtr->items = ReAlloc(infoPtr->items, sizeof(HEADER_ITEM) * infoPtr->uNumItem);
     infoPtr->order = ReAlloc(infoPtr->order, sizeof(INT) * infoPtr->uNumItem);
-    
+
     /* make space for the new item */
     memmove(&infoPtr->items[nItem + 1], &infoPtr->items[nItem],
             (infoPtr->uNumItem - nItem - 1) * sizeof(HEADER_ITEM));
@@ -1381,7 +1381,7 @@ static LRESULT
 HEADER_GetBitmapMargin(HWND hwnd)
 {
     HEADER_INFO *infoPtr = HEADER_GetInfoPtr(hwnd);
-    
+
     return infoPtr->iMargin;
 }
 
@@ -1639,11 +1639,11 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	{
             HEADER_ITEM *lpItem = &infoPtr->items[infoPtr->iMoveItem];
             INT iNewOrder;
-            
+
 	    ImageList_DragShowNolock(FALSE);
 	    ImageList_EndDrag();
             lpItem->bDown=FALSE;
-            
+
             if (infoPtr->iHotDivider == -1)
                 iNewOrder = -1;
             else if (infoPtr->iHotDivider == infoPtr->uNumItem)
@@ -1664,7 +1664,7 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    }
 	    else
 		InvalidateRect(hwnd, &infoPtr->items[infoPtr->iMoveItem].rect, FALSE);
-                
+
             HEADER_SetHotDivider(hwnd, FALSE, -1);
 	}
 	else if (!(dwStyle&HDS_DRAGDROP) || !HEADER_IsDragDistance(infoPtr, &pt))
@@ -1694,7 +1694,7 @@ HEADER_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    HEADER_DrawTrackLine (hwnd, hdc, infoPtr->xOldTrack);
             ReleaseDC (hwnd, hdc);
         }
-          
+
         if (!HEADER_SendNotifyWithIntFieldT(hwnd, HDN_ITEMCHANGINGW, infoPtr->iMoveItem, HDI_WIDTH, iNewWidth))
         {
             infoPtr->items[infoPtr->iMoveItem].cxy = iNewWidth;
@@ -1796,7 +1796,7 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 		}
 	    }
 	}
-	
+
 	if (infoPtr->bDragging)
 	{
 	    POINT drag;
@@ -1806,7 +1806,7 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	    ImageList_DragMove(drag.x, drag.y);
 	    HEADER_SetHotDivider(hwnd, TRUE, lParam);
 	}
-	
+
 	if (infoPtr->bPressed && !infoPtr->bDragging) {
             BOOL oldState = infoPtr->items[infoPtr->iMoveItem].bDown;
 	    if ((nItem == infoPtr->iMoveItem) && (flags == HHT_ONHEADER))
@@ -1830,18 +1830,18 @@ HEADER_MouseMove (HWND hwnd, WPARAM wParam, LPARAM lParam)
                     INT nOldWidth = lpItem->rect.right - lpItem->rect.left;
                     RECT rcClient;
                     RECT rcScroll;
-                    
+
                     if (nWidth < 0) nWidth = 0;
                     infoPtr->items[infoPtr->iMoveItem].cxy = nWidth;
                     HEADER_SetItemBounds(hwnd);
-                    
+
                     GetClientRect(hwnd, &rcClient);
                     rcScroll = rcClient;
                     rcScroll.left = lpItem->rect.left + nOldWidth;
                     ScrollWindowEx(hwnd, nWidth - nOldWidth, 0, &rcScroll, &rcClient, NULL, NULL, 0);
                     InvalidateRect(hwnd, &lpItem->rect, FALSE);
                     UpdateWindow(hwnd);
-                    
+
                     HEADER_SendNotifyWithIntFieldT(hwnd, HDN_ITEMCHANGEDW, infoPtr->iMoveItem, HDI_WIDTH, nWidth);
 		}
 	    }

@@ -24,9 +24,9 @@ namespace System_
 ///
 /// ComponentFactoryTemplate
 ///
-/// This class servess as a factory class for components. In general 
+/// This class servess as a factory class for components. In general
 /// can be used for any possible class which has base class
-/// and a derrived class 
+/// and a derrived class
 ///
 
 //--------------------------------------------------------------------
@@ -37,7 +37,7 @@ namespace System_
 /// objects of type ElementType but in real are objects of DerrivedType
 ///
 
-  template<class ElementType, class DerrivedType> 
+  template<class ElementType, class DerrivedType>
 	static ElementType * create ()
   {
     return new DerrivedType();
@@ -50,9 +50,9 @@ namespace System_
     {
       typedef ElementType * (*creation_function)();
       typedef map<ElementId, creation_function> ElementMap;
-      typedef vector<ElementId> ElementIdVector;     
+      typedef vector<ElementId> ElementIdVector;
     public:
-  
+
 //--------------------------------------------------------------------
 ///
 /// ComponentFactoryTemplate
@@ -96,7 +96,7 @@ namespace System_
 ///
 /// @return bool
 /// @param element id of the component
-    
+
   bool isComponentRegistered(ElementId const & id)
   {
      typename ElementMap::const_iterator iter = elements_.find(id);
@@ -121,14 +121,14 @@ namespace System_
 ///
 /// registerComponent
 ///
-/// Description: this function is template function in a class template. 
-/// The purpose is that at compiletime for each of the derriving classes of 
+/// Description: this function is template function in a class template.
+/// The purpose is that at compiletime for each of the derriving classes of
 /// ElementType a registerComponent function is generated and then all classes
 /// of that type are added at runtime to factory.
 /// returns zero on success, nonzero on failure
 ///
 /// @return bool
-/// @param id the element id of the content type      
+/// @param id the element id of the content type
         template<typename ContentType>
 	bool registerComponent(ElementId const & id)
 	{
@@ -138,19 +138,19 @@ namespace System_
 	  ids_.insert(ids_.begin(),id);
 	  elements_.insert(std::make_pair<ElementId, creation_function >(id, &create<ElementType, ContentType>));
 	  return true;
-	  
+
 	}
-	
+
    //--------------------------------------------------------------------
 ///
 /// deregisterComponent
 ///
 /// Description: unregisters a given component indentified by param id
-/// After unregistration, the specified component can no longer be 
+/// After unregistration, the specified component can no longer be
 /// created
 /// @return bool
 /// @param id the element id of the ContentType
-    
+
       template<typename ContentType>
 	const bool deregisterComponent(ElementId const & id)
 	{
@@ -163,7 +163,7 @@ namespace System_
 	  else
 	    return false;
 	}
-      
+
 
 //--------------------------------------------------------------------
 ///
@@ -188,7 +188,7 @@ namespace System_
 ///
 /// Description: deletes a component
 /// @param element the element to be deleted
-      
+
     void deleteComponent(ElementType * element)
 	{
 	   delete element;
@@ -197,9 +197,9 @@ namespace System_
      ElementMap elements_;
 	 ElementIdVector ids_;
   };
-    
+
 
 } //end of namespace Sysreg_
 
-#endif 
+#endif
 

@@ -82,7 +82,7 @@ BOOL WINAPI DllMain( HINSTANCE inst, DWORD reason, LPVOID reserv)
  */
 HRESULT WINAPI DirectInputCreateEx(
 	HINSTANCE hinst, DWORD dwVersion, REFIID riid, LPVOID *ppDI,
-	LPUNKNOWN punkOuter) 
+	LPUNKNOWN punkOuter)
 {
 	IDirectInputImpl* This;
 
@@ -94,7 +94,7 @@ HRESULT WINAPI DirectInputCreateEx(
 	  This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	  This->lpVtbl = &ddi7avt;
 	  This->ref = 1;
-	  This->dwVersion = dwVersion; 
+	  This->dwVersion = dwVersion;
 	  *ppDI = This;
 
 	  return DI_OK;
@@ -106,7 +106,7 @@ HRESULT WINAPI DirectInputCreateEx(
 	  This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	  This->lpVtbl = &ddi7wvt;
 	  This->ref = 1;
-	  This->dwVersion = dwVersion; 
+	  This->dwVersion = dwVersion;
 	  *ppDI = This;
 
 	  return DI_OK;
@@ -116,7 +116,7 @@ HRESULT WINAPI DirectInputCreateEx(
 	  This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	  This->lpVtbl = &ddi8avt;
 	  This->ref = 1;
-	  This->dwVersion = dwVersion; 
+	  This->dwVersion = dwVersion;
 	  *ppDI = This;
 
 	  return DI_OK;
@@ -126,7 +126,7 @@ HRESULT WINAPI DirectInputCreateEx(
 	  This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	  This->lpVtbl = &ddi8wvt;
 	  This->ref = 1;
-	  This->dwVersion = dwVersion; 
+	  This->dwVersion = dwVersion;
 	  *ppDI = This;
 
 	  return DI_OK;
@@ -145,7 +145,7 @@ HRESULT WINAPI DirectInputCreateA(HINSTANCE hinst, DWORD dwVersion, LPDIRECTINPU
 	This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	This->lpVtbl = &ddi7avt;
 	This->ref = 1;
-	This->dwVersion = dwVersion; 
+	This->dwVersion = dwVersion;
 	*ppDI = (IDirectInputA*)This;
 	return 0;
 
@@ -161,7 +161,7 @@ HRESULT WINAPI DirectInputCreateW(HINSTANCE hinst, DWORD dwVersion, LPDIRECTINPU
 	This = HeapAlloc(GetProcessHeap(),0,sizeof(IDirectInputImpl));
 	This->lpVtbl = &ddi7wvt;
 	This->ref = 1;
-	This->dwVersion = dwVersion; 
+	This->dwVersion = dwVersion;
 	*ppDI = (IDirectInputW*)This;
 	return 0;
 }
@@ -212,7 +212,7 @@ static HRESULT WINAPI IDirectInputAImpl_EnumDevices(
     IDirectInputImpl *This = (IDirectInputImpl *)iface;
     DIDEVICEINSTANCEA devInstance;
     int i, j, r;
-    
+
     TRACE("(this=%p,0x%04lx '%s',%p,%p,%04lx)\n",
 	  This, dwDevType, _dump_DIDEVTYPE_value(dwDevType),
 	  lpCallback, pvRef, dwFlags);
@@ -229,7 +229,7 @@ static HRESULT WINAPI IDirectInputAImpl_EnumDevices(
 	    }
 	}
     }
-    
+
     return 0;
 }
 /******************************************************************************
@@ -237,12 +237,12 @@ static HRESULT WINAPI IDirectInputAImpl_EnumDevices(
  */
 static HRESULT WINAPI IDirectInputWImpl_EnumDevices(
 	LPDIRECTINPUT7W iface, DWORD dwDevType, LPDIENUMDEVICESCALLBACKW lpCallback,
-	LPVOID pvRef, DWORD dwFlags) 
+	LPVOID pvRef, DWORD dwFlags)
 {
     IDirectInputImpl *This = (IDirectInputImpl *)iface;
     DIDEVICEINSTANCEW devInstance;
     int i, j, r;
-    
+
     TRACE("(this=%p,0x%04lx '%s',%p,%p,%04lx)\n",
 	  This, dwDevType, _dump_DIDEVTYPE_value(dwDevType),
 	  lpCallback, pvRef, dwFlags);
@@ -259,7 +259,7 @@ static HRESULT WINAPI IDirectInputWImpl_EnumDevices(
 	    }
 	}
     }
-    
+
     return 0;
 }
 
@@ -345,7 +345,7 @@ static HRESULT WINAPI IDirectInputAImpl_CreateDevice(
 	return ret_value;
 }
 
-static HRESULT WINAPI IDirectInputWImpl_CreateDevice(LPDIRECTINPUT7A iface, 
+static HRESULT WINAPI IDirectInputWImpl_CreateDevice(LPDIRECTINPUT7A iface,
 						     REFGUID rguid, LPDIRECTINPUTDEVICEW* pdev, LPUNKNOWN punk) {
         IDirectInputImpl *This = (IDirectInputImpl *)iface;
 	HRESULT ret_value = DIERR_DEVICENOTREG;
@@ -656,7 +656,7 @@ static HRESULT WINAPI DICF_CreateInstance(
 		return DirectInputCreateEx(0,0,riid,ppobj,pOuter);
 	}
 
-	FIXME("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);	
+	FIXME("(%p,%p,%s,%p) Interface not found!\n",This,pOuter,debugstr_guid(riid),ppobj);
 	return E_NOINTERFACE;
 }
 

@@ -66,7 +66,7 @@ RETURN
 */
 BOOL FASTCALL UserIsEntered()
 {
-   return ExIsResourceAcquiredExclusiveLite(&UserLock) 
+   return ExIsResourceAcquiredExclusiveLite(&UserLock)
       || ExIsResourceAcquiredSharedLite(&UserLock);
 }
 

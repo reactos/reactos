@@ -5,12 +5,12 @@
 
 #define ED_BASE		        		            0x1000L
 #define ED_DEVCAP_CAN_RECORD			        ED_BASE+1L
-#define ED_DEVCAP_CAN_RECORD_STROBE		        ED_BASE+2L	
+#define ED_DEVCAP_CAN_RECORD_STROBE		        ED_BASE+2L
 #define ED_DEVCAP_HAS_AUDIO			            ED_BASE+3L
 #define ED_DEVCAP_HAS_VIDEO			            ED_BASE+4L
 #define ED_DEVCAP_USES_FILES		            ED_BASE+5L
 #define ED_DEVCAP_CAN_SAVE			            ED_BASE+6L
-#define ED_DEVCAP_DEVICE_TYPE		            ED_BASE+7L	
+#define ED_DEVCAP_DEVICE_TYPE		            ED_BASE+7L
 #define ED_DEVTYPE_VCR				            ED_BASE+8L
 #define ED_DEVTYPE_LASERDISK		            ED_BASE+9L
 #define ED_DEVTYPE_ATR 				            ED_BASE+10L
@@ -49,10 +49,10 @@
 #define ED_DEVCAP_VIDEO_INPUTS		            ED_BASE+43L
 #define ED_DEVCAP_AUDIO_INPUTS		            ED_BASE+44L
 #define ED_DEVCAP_NEEDS_CALIBRATING	            ED_BASE+45L
-#define ED_DEVCAP_SEEK_TYPE			            ED_BASE+46L	
-#define ED_SEEK_PERFECT				            ED_BASE+47L													
-#define ED_SEEK_FAST				            ED_BASE+48L	
-#define ED_SEEK_SLOW				            ED_BASE+49L	
+#define ED_DEVCAP_SEEK_TYPE			            ED_BASE+46L
+#define ED_SEEK_PERFECT				            ED_BASE+47L
+#define ED_SEEK_FAST				            ED_BASE+48L
+#define ED_SEEK_SLOW				            ED_BASE+49L
 #define ED_POWER_ON					            ED_BASE+50L
 #define ED_POWER_OFF				            ED_BASE+51L
 #define ED_POWER_STANDBY			            ED_BASE+52L
@@ -71,14 +71,14 @@
 #define ED_TRANSCAP_CAN_DELAY_AUDIO_IN	        ED_BASE+107L
 #define ED_TRANSCAP_CAN_DELAY_AUDIO_OUT	        ED_BASE+108L
 #define ED_TRANSCAP_FWD_VARIABLE_MAX	        ED_BASE+109L
-#define ED_TRANSCAP_REV_VARIABLE_MAX	        ED_BASE+110L	
-#define ED_TRANSCAP_NUM_AUDIO_TRACKS	        ED_BASE+111L	
-#define ED_TRANSCAP_LTC_TRACK			        ED_BASE+112L															
-#define ED_TRANSCAP_NEEDS_TBC			        ED_BASE+113L	
-#define ED_TRANSCAP_NEEDS_CUEING		        ED_BASE+114L	
+#define ED_TRANSCAP_REV_VARIABLE_MAX	        ED_BASE+110L
+#define ED_TRANSCAP_NUM_AUDIO_TRACKS	        ED_BASE+111L
+#define ED_TRANSCAP_LTC_TRACK			        ED_BASE+112L
+#define ED_TRANSCAP_NEEDS_TBC			        ED_BASE+113L
+#define ED_TRANSCAP_NEEDS_CUEING		        ED_BASE+114L
 #define ED_TRANSCAP_CAN_INSERT			        ED_BASE+115L
 #define ED_TRANSCAP_CAN_ASSEMBLE		        ED_BASE+116L
-#define ED_TRANSCAP_FIELD_STEP			        ED_BASE+117L														
+#define ED_TRANSCAP_FIELD_STEP			        ED_BASE+117L
 #define ED_TRANSCAP_CLOCK_INC_RATE		        ED_BASE+118L
 #define ED_TRANSCAP_CAN_DETECT_LENGTH	        ED_BASE+119L
 #define ED_TRANSCAP_CAN_FREEZE			        ED_BASE+120L
@@ -121,14 +121,14 @@
 #define ED_TCG_VIDEO				            ED_BASE+411L
 #define ED_TCG_READER				            ED_BASE+412L
 #define ED_TCG_FREE					            ED_BASE+413L
-#define ED_TCG_REFERENCE_SOURCE		            ED_BASE+414L	
+#define ED_TCG_REFERENCE_SOURCE		            ED_BASE+414L
 
-#define ED_TCR_SOURCE			                ED_BASE+416L	
+#define ED_TCR_SOURCE			                ED_BASE+416L
 #define ED_TCR_LTC				                ED_BASE+417L
 #define ED_TCR_VITC				                ED_BASE+418L
-#define ED_TCR_CT				                ED_BASE+419L	
-#define ED_TCR_FTC				                ED_BASE+420L	
-#define ED_TCR_LAST_VALUE		                ED_BASE+421L	
+#define ED_TCR_CT				                ED_BASE+419L
+#define ED_TCR_FTC				                ED_BASE+420L
+#define ED_TCR_LAST_VALUE		                ED_BASE+421L
 #define ED_TCD_SOURCE			                ED_BASE+422L
 #define ED_TCR					                ED_BASE+423L
 #define ED_TCG					                ED_BASE+424L
@@ -186,7 +186,7 @@
 #define	ED_TIMEREF_CONTROL_TRACK	            ED_BASE+551L
 #define	ED_TIMEREF_INDEX			            ED_BASE+552L
 #define	ED_TRANSBASIC_SUPERIMPOSE		        ED_BASE+553L
-#define	ED_TRANSBASIC_END_STOP_ACTION	        ED_BASE+554L														
+#define	ED_TRANSBASIC_END_STOP_ACTION	        ED_BASE+554L
 #define	ED_TRANSBASIC_RECORD_FORMAT	            ED_BASE+555L
 #define	ED_RECORD_FORMAT_SP			            ED_BASE+556L
 #define	ED_RECORD_FORMAT_LP			            ED_BASE+557L
@@ -272,7 +272,7 @@
 #define ED_EDIT_MODE_ASSEMBLE		            ED_BASE+660L
 #define ED_EDIT_MODE_INSERT			            ED_BASE+661L
 #define ED_EDIT_MODE_CRASH_RECORD	            ED_BASE+662L
-#define ED_EDIT_MODE_BOOKMARK_TIME	            ED_BASE+663L	
+#define ED_EDIT_MODE_BOOKMARK_TIME	            ED_BASE+663L
 #define ED_EDIT_MODE_BOOKMARK_CHAPTER	        ED_BASE+664L
 #define ED_EDIT_MASTER	                        ED_BASE+666L
 #define ED_EDIT_TRACK		                    ED_BASE+667L
@@ -281,10 +281,10 @@
 #define ED_EDIT_REC_INPOINT		                ED_BASE+670L
 #define ED_EDIT_REC_OUTPOINT	                ED_BASE+671L
 #define ED_EDIT_REHEARSE_MODE	                ED_BASE+672L
-#define ED_EDIT_BVB		                        ED_BASE+673L	
+#define ED_EDIT_BVB		                        ED_BASE+673L
 #define ED_EDIT_VBV	                        	ED_BASE+674L
 #define ED_EDIT_VVV	                        	ED_BASE+675L
-#define ED_EDIT_PERFORM	                        ED_BASE+676L											
+#define ED_EDIT_PERFORM	                        ED_BASE+676L
 #define ED_EDIT_ABORT                       	ED_BASE+677L
 #define ED_EDIT_TIMEOUT	                        ED_BASE+678L
 #define ED_EDIT_SEEK	                    	ED_BASE+679L
@@ -298,13 +298,13 @@
 
 #define ED_ERR_DEVICE_NOT_READY		            ED_BASE+700L
 
-#define ED_TRANSCAP_FWD_VARIABLE_MIN	        ED_BASE+800L	
-#define ED_TRANSCAP_REV_VARIABLE_MIN	        ED_BASE+801L	
-#define ED_TRANSCAP_FWD_SHUTTLE_MAX		        ED_BASE+802L	
-#define ED_TRANSCAP_FWD_SHUTTLE_MIN		        ED_BASE+803L	
-#define ED_TRANSCAP_REV_SHUTTLE_MAX		        ED_BASE+804L															
-#define ED_TRANSCAP_REV_SHUTTLE_MIN		        ED_BASE+805L	
-#define ED_TRANSCAP_MULTIPLE_EDITS		        ED_BASE+806L									
+#define ED_TRANSCAP_FWD_VARIABLE_MIN	        ED_BASE+800L
+#define ED_TRANSCAP_REV_VARIABLE_MIN	        ED_BASE+801L
+#define ED_TRANSCAP_FWD_SHUTTLE_MAX		        ED_BASE+802L
+#define ED_TRANSCAP_FWD_SHUTTLE_MIN		        ED_BASE+803L
+#define ED_TRANSCAP_REV_SHUTTLE_MAX		        ED_BASE+804L
+#define ED_TRANSCAP_REV_SHUTTLE_MIN		        ED_BASE+805L
+#define ED_TRANSCAP_MULTIPLE_EDITS		        ED_BASE+806L
 #define ED_TRANSCAP_IS_MASTER			        ED_BASE+807L
 #define ED_MODE_RECORD_FREEZE		            ED_BASE+808L
 #define	ED_MODE_STEP_REV			            ED_BASE+809L
@@ -316,14 +316,14 @@
 #define ED_EDIT_PREREAD	                        ED_BASE+815L
 
 #define DEV_PORT_SIM	                        1
-#define DEV_PORT_COM1	                        2	
+#define DEV_PORT_COM1	                        2
 #define DEV_PORT_COM2	                        3
 #define DEV_PORT_COM3	                        4
 #define DEV_PORT_COM4	                        5
-#define DEV_PORT_DIAQ	                        6	
-#define DEV_PORT_ARTI	                        7	
-#define DEV_PORT_1394	                        8	
-#define DEV_PORT_USB	                        9	
+#define DEV_PORT_DIAQ	                        6
+#define DEV_PORT_ARTI	                        7
+#define DEV_PORT_1394	                        8
+#define DEV_PORT_USB	                        9
 #define DEV_PORT_MIN	                        DEV_PORT_SIM
 #define DEV_PORT_MAX	                        DEV_PORT_USB
 
@@ -358,9 +358,9 @@
 #define ED_AUDIO_22		    	        		0x0200000L
 #define ED_AUDIO_23	            				0x0400000L
 #define ED_AUDIO_24     		    			0x0800000L
-#define	ED_AUDIO_ALL               				0x10000000	
+#define	ED_AUDIO_ALL               				0x10000000
 
-#define ED_VIDEO			    		        0x2000000L	
+#define ED_VIDEO			    		        0x2000000L
 
 
 #endif

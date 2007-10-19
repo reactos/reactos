@@ -302,7 +302,7 @@ static UINT SELECT_AddColumn( MSISELECTVIEW *sv, LPCWSTR name )
         return r;
 
     sv->cols[sv->num_cols] = n;
-    TRACE("Translating column %s from %d -> %d\n", 
+    TRACE("Translating column %s from %d -> %d\n",
           debugstr_w( name ), sv->num_cols, n);
 
     sv->num_cols++;
@@ -331,7 +331,7 @@ UINT SELECT_CreateView( MSIDATABASE *db, MSIVIEW **view, MSIVIEW *table,
     sv = msi_alloc_zero( sizeof *sv + count*sizeof (UINT) );
     if( !sv )
         return ERROR_FUNCTION_FAILED;
-    
+
     /* fill the structure */
     sv->view.ops = &select_ops;
     sv->db = db;

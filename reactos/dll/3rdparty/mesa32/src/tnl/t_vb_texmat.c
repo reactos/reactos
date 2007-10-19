@@ -61,7 +61,7 @@ static GLboolean run_texmat_stage( GLcontext *ctx,
    struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
    GLuint i;
 
-   if (!ctx->Texture._TexMatEnabled || ctx->VertexProgram._Enabled) 
+   if (!ctx->Texture._TexMatEnabled || ctx->VertexProgram._Enabled)
       return GL_TRUE;
 
    /* ENABLE_TEXMAT implies that the texture matrix is not the
@@ -73,7 +73,7 @@ static GLboolean run_texmat_stage( GLcontext *ctx,
 			      ctx->TextureMatrixStack[i].Top,
 			      VB->TexCoordPtr[i]);
 
-	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] = 
+	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] =
 	    VB->TexCoordPtr[i] = &store->texcoord[i];
       }
    }

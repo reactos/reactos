@@ -1,4 +1,4 @@
-/* 
+/*
  * io.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -42,7 +42,7 @@ typedef	unsigned long	_fsize_t;
 /*
  * The maximum length of a file name. You should use GetVolumeInformation
  * instead of this constant. But hey, this works.
- * Also defined in stdio.h. 
+ * Also defined in stdio.h.
  */
 #ifndef FILENAME_MAX
 #define	FILENAME_MAX	(260)
@@ -73,8 +73,8 @@ struct _finddatai64_t {
 
 struct __finddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;    
-        __time64_t  time_access;    
+        __time64_t  time_create;
+        __time64_t  time_access;
         __time64_t  time_write;
         _fsize_t    size;
          char       name[FILENAME_MAX];
@@ -101,7 +101,7 @@ struct _wfinddatai64_t {
 
 struct __wfinddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;    
+        __time64_t  time_create;
         __time64_t  time_access;
         __time64_t  time_write;
         _fsize_t    size;
@@ -139,14 +139,14 @@ _CRTIMP long __cdecl _findfirsti64(const char*, struct _finddatai64_t*);
 _CRTIMP int __cdecl _findnexti64(long, struct _finddatai64_t*);
 _CRTIMP __int64 __cdecl _lseeki64(int, __int64, int);
 _CRTIMP __int64 __cdecl _telli64(int);
-/* These require newer versions of msvcrt.dll (6.1 or higher). */ 
+/* These require newer versions of msvcrt.dll (6.1 or higher). */
 #if __MSVCRT_VERSION__ >= 0x0601
 _CRTIMP intptr_t __cdecl _findfirst64(const char*, struct __finddata64_t*);
-_CRTIMP intptr_t __cdecl _findnext64(intptr_t, struct __finddata64_t*); 
+_CRTIMP intptr_t __cdecl _findnext64(intptr_t, struct __finddata64_t*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 
 #ifndef __NO_MINGW_LFS
-__CRT_INLINE off64_t lseek64 (int fd, off64_t offset, int whence) 
+__CRT_INLINE off64_t lseek64 (int fd, off64_t offset, int whence)
 {
   return _lseeki64(fd, (__int64) offset, whence);
 }
@@ -181,7 +181,7 @@ _CRTIMP int __cdecl chmod (const char*, int);
  * it doesn't seem to hurt to add them). */
 #define	F_OK	0	/* Check for file existence */
 /* Well maybe it does hurt.  On newer versions of MSVCRT, an access mode
-   of 1 causes invalid parameter error. */   
+   of 1 causes invalid parameter error. */
 #define	X_OK	1	/* MS access() doesn't check for execute permission. */
 #define	W_OK	2	/* Check for write permission */
 #define	R_OK	4	/* Check for read permission */
@@ -259,7 +259,7 @@ _CRTIMP wchar_t * __cdecl _wmktemp(wchar_t*);
 _CRTIMP long __cdecl _wfindfirsti64(const wchar_t*, struct _wfinddatai64_t*);
 _CRTIMP int __cdecl _wfindnexti64(long, struct _wfinddatai64_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*); 
+_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*);
 _CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
 #endif
 #endif /* defined (__MSVCRT__) */

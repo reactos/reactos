@@ -1748,7 +1748,7 @@ MMRESULT WINAPI midiStreamClose(HMIDISTRM hMidiStrm)
  * 				MMSYSTEM_MidiStream_Open	[internal]
  */
 MMRESULT MIDI_StreamOpen(HMIDISTRM* lphMidiStrm, LPUINT lpuDeviceID, DWORD cMidi,
-                         DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen, 
+                         DWORD_PTR dwCallback, DWORD_PTR dwInstance, DWORD fdwOpen,
                          BOOL bFrom32)
 {
     WINE_MIDIStream*	lpMidiStrm;
@@ -2000,8 +2000,8 @@ MMRESULT WINAPI midiStreamStop(HMIDISTRM hMidiStrm)
     return ret;
 }
 
-UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType, 
-               LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback, 
+UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
+               LPCWAVEFORMATEX lpFormat, DWORD_PTR dwCallback,
                DWORD_PTR dwInstance, DWORD dwFlags, BOOL bFrom32)
 {
     HANDLE		handle;
@@ -2053,14 +2053,14 @@ UINT WAVE_Open(HANDLE* lphndl, UINT uDeviceID, UINT uType,
             wod.uMappedDeviceID = -1;
         }
         wmld->uDeviceID = uDeviceID;
-    
-        dwRet = MMDRV_Open(wmld, (uType == MMDRV_WAVEOUT) ? WODM_OPEN : WIDM_OPEN, 
+
+        dwRet = MMDRV_Open(wmld, (uType == MMDRV_WAVEOUT) ? WODM_OPEN : WIDM_OPEN,
                            (DWORD)&wod, dwFlags);
 
         TRACE("dwRet = %s\n", WINMM_ErrorToString(dwRet));
         if (dwRet != WAVERR_BADFORMAT ||
             ((dwFlags & (WAVE_MAPPED|WAVE_FORMAT_DIRECT)) != 0) || (uDeviceID == WAVE_MAPPER)) break;
-        /* if we ask for a format which isn't supported by the physical driver, 
+        /* if we ask for a format which isn't supported by the physical driver,
          * let's try to map it through the wave mapper (except, if we already tried
          * or user didn't allow us to use acm codecs or the device is already the mapper)
          */
@@ -2257,7 +2257,7 @@ UINT WINAPI waveOutUnprepareHeader(HWAVEOUT hWaveOut,
 
     if (lpWaveOutHdr == NULL || uSize < sizeof (WAVEHDR))
 	return MMSYSERR_INVALPARAM;
-    
+
     if (!(lpWaveOutHdr->dwFlags & WHDR_PREPARED)) {
 	return MMSYSERR_NOERROR;
     }

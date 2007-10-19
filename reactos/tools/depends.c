@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     }
 
   prefix = strdup(argv[1]);
-  
+
   out = fopen(argv[2], "wb");
   if (out == NULL)
     {
@@ -47,7 +47,7 @@ int main(int argc, char* argv[])
       i++;
     }
   buf[i] = 0;
-  
+
   if (i == 0)
     {
       return(0);
@@ -97,7 +97,7 @@ int main(int argc, char* argv[])
     {
       *dot = 0;
     }
-  fprintf(out, "%s/.%s.TAG %s/.%s.d %s/%s.%s:%s ", prefix, buf, prefix, buf, 
+  fprintf(out, "%s/.%s.TAG %s/.%s.d %s/%s.%s:%s ", prefix, buf, prefix, buf,
           prefix,buf,ext ? ext : "o" , buf2);
 
   while ((ch = fgetc(stdin)) != EOF)

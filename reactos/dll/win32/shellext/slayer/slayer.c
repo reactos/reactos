@@ -66,7 +66,7 @@ static VOID
 ClearCItemList(LPCOMPATIBILITYPAGE info)
 {
     PCITEM item, next;
-  
+
     for (item = info->CItems;
          item != NULL;
          item = next)
@@ -76,7 +76,7 @@ ClearCItemList(LPCOMPATIBILITYPAGE info)
                  0,
                  item);
     }
-  
+
     info->CSelectedItem = NULL;
     info->CItems = NULL;
     info->nItems = 0;
@@ -320,7 +320,7 @@ FillComboBoxWithCompatibilityModes(LPCOMPATIBILITYPAGE info,
                 CB_RESETCONTENT,
                 0,
                 0);
-  
+
     for (item = info->CItems;
          item != NULL;
          item = item->next)
@@ -340,7 +340,7 @@ FillComboBoxWithCompatibilityModes(LPCOMPATIBILITYPAGE info,
         }
         i++;
     }
-  
+
     if (!sel && bSelectItem && i > 0)
     {
         /* select the first item */
@@ -511,7 +511,7 @@ ApplySettings(LPCOMPATIBILITYPAGE this,
     TCHAR szFlags[256];
     BOOL enabled = IsDlgButtonChecked(hwndDlg,
                                       IDC_CHKRUNCOMPATIBILITY) == BST_CHECKED;
-  
+
     if (enabled)
     {
         HWND hCombo = GetDlgItem(hwndDlg,
@@ -961,7 +961,7 @@ DllUnregisterServer(VOID)
     LONG e;
     HKEY hk;
     WCHAR szGuid[40];
-  
+
     StringFromGUID2(&CLSID_ICompatibilityPage,
                     szGuid,
                     sizeof(szGuid) / sizeof(szGuid[0]));

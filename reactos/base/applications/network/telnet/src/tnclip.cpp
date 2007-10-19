@@ -41,7 +41,7 @@ Tnclip::~Tnclip() {
 void Tnclip::Copy(HGLOBAL clipboard_data) {
 	if(!OpenClipboard(Window)) return;
 	if(!EmptyClipboard()) return;
-						
+
 	SetClipboardData(CF_TEXT, clipboard_data);
 	CloseClipboard();
 }
@@ -54,7 +54,7 @@ void Tnclip::Paste() {
 	DWORD size = strlen((const char *)clipboard_data);
 	Network.WriteString((const char *)clipboard_ptr, size);
 	GlobalUnlock(clipboard_data);
-	
+
 	CloseClipboard();
 }
 

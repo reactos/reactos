@@ -30,12 +30,12 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""resource.h""\r\n"
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
@@ -44,7 +44,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
@@ -79,7 +79,7 @@ BEGIN
     CONTROL         "Co&mando:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
                     18,60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
-    CONTROL         "Como &Símbolo",214,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Como &Símbolo",214,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,3,45,71,12
     DEFPUSHBUTTON   "&OK",1,158,6,47,14
     PUSHBUTTON      "&Cancelar",2,158,23,47,14
@@ -92,7 +92,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "Explorador do ReactOS"
     IDS_START               "Iniciar"
@@ -112,7 +112,7 @@ BEGIN
     IDS_ADMIN               "Administrar"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenu"
     IDS_MINIMIZE_ALL        "mimimize all windows"
@@ -130,7 +130,7 @@ BEGIN
     IDS_TERMINATE           "Terminar ROS Explorador"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Rede"
     IDS_CONNECTIONS         "Conecções da rede"
@@ -144,7 +144,7 @@ BEGIN
     IDS_ALL_USERS           "Todos utilizadores\\"
     IDS_SEARCH              "Procurar"
     IDS_ABOUT_EXPLORER      "Sobre o Explorador..."
-    IDS_LAUNCH_MANY_PROGRAMS 
+    IDS_LAUNCH_MANY_PROGRAMS
                             "You have selected more than one program.\nAre you sure you want to launch all of them?"
     IDS_DESKTOPBAR_SETTINGS "Desktop Settings"
     IDS_DESKTOP             "Desktop"

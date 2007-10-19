@@ -654,7 +654,7 @@ BEGIN
     IDS_STATUS_CPUUSAGE           "CPU-gebruik: %3d%%"
     IDS_STATUS_PROCESSES          "Processen: %d"
     IDS_Not_Responding            "Reageert niet"
-    IDS_Running                   "Geactiveerd"  
+    IDS_Running                   "Geactiveerd"
 END
 
 

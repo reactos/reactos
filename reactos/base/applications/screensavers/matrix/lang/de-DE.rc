@@ -9,44 +9,44 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Dekodierung&sgeschwindigkeit",IDC_STATIC,7,7,133,36
     LTEXT           "Langsamer",IDC_STATIC,13,24,37,8
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,48,17,62,22
     LTEXT           "Schneller",IDC_STATIC,105,24,30,8
     GROUPBOX        "Cypher &Dichte",IDC_STATIC,7,50,133,36
     LTEXT           "Weniger",IDC_STATIC,13,67,31,8
-    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,48,60,62,22
     LTEXT           "Mehr",IDC_STATIC,105,67,23,8
     GROUPBOX        "&Nachrichtengeschwindigkeit",IDC_MSGSPEEDGRP,7,93,133,36
     LTEXT           "Langsamer",IDC_STATIC,13,110,37,8
-    CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,48,103,62,22
     LTEXT           "Schneller",IDC_STATIC,105,110,30,8
     GROUPBOX        "&Schriftgröße",IDC_STATIC,7,137,133,36
     LTEXT           "Kleiner",IDC_STATIC,13,153,24,8
-    CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS | 
-                    TBS_BOTH | WS_TABSTOP,48,146,62,22 
+    CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
+                    TBS_BOTH | WS_TABSTOP,48,146,62,22
     LTEXT           "Größer",IDC_STATIC,105,153,25,8
     GROUPBOX        "Codierte Nachrichten",IDC_STATIC,145,7,188,142
-    COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
-    CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP | 
+    CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
     PUSHBUTTON      "&Hinzufügen",IDC_ADD,280,41,44,18
     PUSHBUTTON      "&Entfernen",IDC_REMOVE,280,66,44,18
-    CONTROL         "Nachrichten vermischen",IDC_RANDOM,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Nachrichten vermischen",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,90,10
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
     PUSHBUTTON      "Abbrechen",IDCANCEL,283,162,50,14
     LTEXT           "&Schrift Name:",IDC_STATIC,151,118,38,8
-    COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "&Fette Schrift",IDC_BOLD,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Fette Schrift",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,60,10
     CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,143, 158, 75, 18
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION         "Matrix Bildschirmschoner"
 END

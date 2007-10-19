@@ -525,7 +525,7 @@ static LONG recursive_delete_keyW(HKEY base, WCHAR const *name) {
  *		coclass list
  */
 static struct regsvr_coclass const coclass_list[] = {
-    {     
+    {
         &CLSID_IMsiServer,
 	"Msi install server",
 	"ole32.dll",
@@ -535,8 +535,8 @@ static struct regsvr_coclass const coclass_list[] = {
         PROGID_CLSID,
 	"IMsiServer",
 	NULL
-    },    
-    {     
+    },
+    {
         &CLSID_IMsiServerMessage,
 	"Wine Installer Message RPC",
 	NULL,
@@ -547,7 +547,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	"WindowsInstaller.Message",
 	NULL
     },
-    {     
+    {
         &CLSID_IMsiServerX1,
 	"Msi install server",
 	"ole32.dll",
@@ -558,7 +558,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	"WindowsInstaller.Installer",
 	NULL
     },
-    {     
+    {
         &CLSID_IMsiServerX2,
 	"Msi install server",
 	"ole32.dll",
@@ -569,7 +569,7 @@ static struct regsvr_coclass const coclass_list[] = {
 	"WindowsInstaller.Installer",
 	NULL
     },
-    {     
+    {
         &CLSID_IMsiServerX3,
 	"Msi install server",
 	"ole32.dll",
@@ -588,18 +588,18 @@ static struct regsvr_coclass const coclass_list[] = {
  */
 /*
  * we should declare: (@see ole32/regsvr.c for examples)
- [-HKEY_CLASSES_ROOT\Interface\{000C101C-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C101D-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C1025-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C1033-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C1090-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C1093-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C1095-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C109A-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C109B-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C109C-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C109D-0000-0000-C000-000000000046}] 
- [-HKEY_CLASSES_ROOT\Interface\{000C109E-0000-0000-C000-000000000046}] 
+ [-HKEY_CLASSES_ROOT\Interface\{000C101C-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C101D-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C1025-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C1033-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C1090-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C1093-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C1095-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C109A-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C109B-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C109C-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C109D-0000-0000-C000-000000000046}]
+ [-HKEY_CLASSES_ROOT\Interface\{000C109E-0000-0000-C000-000000000046}]
  [-HKEY_CLASSES_ROOT\Interface\{000C109F-0000-0000-C000-000000000046}]
 */
 static struct regsvr_interface const interface_list[] = {

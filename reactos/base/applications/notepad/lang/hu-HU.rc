@@ -29,7 +29,7 @@ ID_ACCEL ACCELERATORS
     "^C", CMD_COPY
     "^F", CMD_SEARCH
     "^G", CMD_GOTO
-    "H", CMD_REPLACE, VIRTKEY, CONTROL 
+    "H", CMD_REPLACE, VIRTKEY, CONTROL
     "^O", CMD_OPEN
     "^S", CMD_SAVE
     "^V", CMD_PASTE
@@ -39,9 +39,9 @@ ID_ACCEL ACCELERATORS
     VK_F5, CMD_TIME_DATE, VIRTKEY
 }
 
-MAIN_MENU MENU 
+MAIN_MENU MENU
 BEGIN
-	POPUP "&Fájl" 
+	POPUP "&Fájl"
 	BEGIN
 		MENUITEM "Ú&j",           CMD_NEW
 		MENUITEM "Meg&nyitás...",             CMD_OPEN
@@ -54,7 +54,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Kilépés",             CMD_EXIT
 	END
-	POPUP "S&zerkesztés" 
+	POPUP "S&zerkesztés"
 	BEGIN
 		MENUITEM "&Visszavonás\tCtrl+Z",     CMD_UNDO
 		MENUITEM SEPARATOR
@@ -71,7 +71,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "&Hosszú sorok tördelése",  CMD_WRAP
 	END
-	POPUP "&Súgó" 
+	POPUP "&Súgó"
 	BEGIN
 		MENUITEM "&Témakörök",         CMD_HELP_CONTENTS
 		MENUITEM "&Keresés...",        CMD_HELP_SEARCH
@@ -129,7 +129,7 @@ BEGIN
   STRING_LICENSE, "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 {
 STRING_PAGESETUP_HEADERVALUE,   "&n"        /* FIXME */
 STRING_PAGESETUP_FOOTERVALUE,   "Oldalszám: &s."   /* FIXME */

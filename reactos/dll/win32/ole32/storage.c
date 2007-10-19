@@ -114,18 +114,18 @@ static void _create_istream16(LPSTREAM16 *str);
  * #define DF_VTOC_FREE		-1
  * #define DF_NAMELEN	0x20	// Maximum entry name length - 31 characters plus
  * 				// a NUL terminator
- * 
+ *
  * #define DF_FT_STORAGE	1
  * #define DF_FT_STREAM		2
  * #define DF_FT_LOCKBYTES	3	// Not used -- How the bloody hell did I manage
  * #define DF_FT_PROPERTY	4	// Not Used -- to figure these two out?
  * #define DF_FT_ROOT		5
- * 
+ *
  * #define DF_BLOCK_SIZE	0x200
  * #define DF_VTOC_SIZE		0x80
  * #define DF_DE_PER_BLOCK	4
  * #define DF_STREAM_BLOCK_SIZE	0x40
- * 
+ *
  * A DocFile is divided into blocks of 512 bytes.
  * The first block contains the header.
  *
@@ -199,36 +199,36 @@ static void _create_istream16(LPSTREAM16 *str);
  *
  *
  * #define TOTAL_SIMPLE_VTOCS	109
- * 
+ *
  * struct	DocFile_Header
  * {
- * 	df_byte iMagic1;	// 0xd0 
- * 	df_byte iMagic2;	// 0xcf 
- * 	df_byte iMagic3;	// 0x11 
- * 	df_byte iMagic4;	// 0xe0 - Spells D0CF11E0, or DocFile 
- * 	df_byte iMagic5;	// 161	(igi upside down) 
- * 	df_byte iMagic6;	// 177	(lli upside down - see below 
- * 	df_byte iMagic7;	// 26 (gz upside down) 
- * 	df_byte iMagic8;	// 225 (szz upside down) - see below 
+ * 	df_byte iMagic1;	// 0xd0
+ * 	df_byte iMagic2;	// 0xcf
+ * 	df_byte iMagic3;	// 0x11
+ * 	df_byte iMagic4;	// 0xe0 - Spells D0CF11E0, or DocFile
+ * 	df_byte iMagic5;	// 161	(igi upside down)
+ * 	df_byte iMagic6;	// 177	(lli upside down - see below
+ * 	df_byte iMagic7;	// 26 (gz upside down)
+ * 	df_byte iMagic8;	// 225 (szz upside down) - see below
  * 	df_int4 aiUnknown1[4];
- * 	df_int4 iVersion;	// DocFile Version - 0x03003E	
+ * 	df_int4 iVersion;	// DocFile Version - 0x03003E
  * 	df_int4 aiUnknown2[4];
- * 	df_int4 nVTOCs;		// Number of VTOCs 
- * 	df_int4 iFirstDirBlock; // First Directory Block 
+ * 	df_int4 nVTOCs;		// Number of VTOCs
+ * 	df_int4 iFirstDirBlock; // First Directory Block
  * 	df_int4 aiUnknown3[2];
- * 	df_int4 iFirstDataVTOC; // First data VTOC block 
+ * 	df_int4 iFirstDataVTOC; // First data VTOC block
  * 	df_int4 iHasData;	// 1 if there is data in the file - yes, this is important
- * 	df_int4 iExtendedVTOC;	// Extended VTOC location 
- * 	df_int4 iExtendedVTOCSize; // Size of extended VTOC (+1?) 
+ * 	df_int4 iExtendedVTOC;	// Extended VTOC location
+ * 	df_int4 iExtendedVTOCSize; // Size of extended VTOC (+1?)
  * 	df_int4 aiVTOCofVTOCs[TOTAL_SIMPLE_VTOCS];
  * };
- * 
+ *
  * struct	DocFile_VTOC
  * {
  * 	df_int4 aiBlocks[DF_VTOC_SIZE];
  * };
- * 
- * 
+ *
+ *
  * The meaning of the magic numbers
  *
  * 0xd0cf11e0 is DocFile with a zero on the end (sort of)
@@ -243,27 +243,27 @@ static void _create_istream16(LPSTREAM16 *str);
  * Microsoft placeholder variables, along the lines of foo, bar and baz.
  * Alternatively, it could be 22526, which would be gzszz.
  *
- * 
+ *
  * struct	DocFile_DirEnt
  * {
- * 	df_char achEntryName[DF_NAMELEN];	// Entry Name 
- * 	df_int2 iNameLen;			// Name length in bytes, including NUL terminator 
- * 	df_byte iFileType;			// Entry type 
- * 	df_byte iColour;			// 1 = Black, 0 = Red 
- * 	df_int4 iLeftSibling;			// Next Left Sibling Entry - See below 
- * 	df_int4 iRightSibling;			// Next Right Sibling Entry 
- * 	df_int4 iFirstChild;			// First Child Entry 
- * 	df_byte achClassID[16];			// Class ID 
- * 	df_int4 iStateBits;			// [GS]etStateBits value 
- * 	df_int4 iCreatedLow;			// Low DWORD of creation time 
- * 	df_int4 iCreatedHigh;			// High DWORD of creation time 
- * 	df_int4 iModifiedLow;			// Low DWORD of modification time 
- * 	df_int4 iModifiedHigh;			// High DWORD of modification time 
- * 	df_int4 iVTOCPosition;			// VTOC Position 
- * 	df_int4 iFileSize;			// Size of the stream 
- * 	df_int4 iZero;				// We think this is part of the 64 bit stream size - must be 0 
+ * 	df_char achEntryName[DF_NAMELEN];	// Entry Name
+ * 	df_int2 iNameLen;			// Name length in bytes, including NUL terminator
+ * 	df_byte iFileType;			// Entry type
+ * 	df_byte iColour;			// 1 = Black, 0 = Red
+ * 	df_int4 iLeftSibling;			// Next Left Sibling Entry - See below
+ * 	df_int4 iRightSibling;			// Next Right Sibling Entry
+ * 	df_int4 iFirstChild;			// First Child Entry
+ * 	df_byte achClassID[16];			// Class ID
+ * 	df_int4 iStateBits;			// [GS]etStateBits value
+ * 	df_int4 iCreatedLow;			// Low DWORD of creation time
+ * 	df_int4 iCreatedHigh;			// High DWORD of creation time
+ * 	df_int4 iModifiedLow;			// Low DWORD of modification time
+ * 	df_int4 iModifiedHigh;			// High DWORD of modification time
+ * 	df_int4 iVTOCPosition;			// VTOC Position
+ * 	df_int4 iFileSize;			// Size of the stream
+ * 	df_int4 iZero;				// We think this is part of the 64 bit stream size - must be 0
  * };
- * 
+ *
  * Siblings
  * ========
  *
@@ -364,7 +364,7 @@ STORAGE_get_big_block(stream_access16 *str,int n,BYTE *block)
 	DWORD args[6];
 	HRESULT hres;
 	HANDLE16 hsig;
-	
+
 	args[0] = (DWORD)str->lockbytes;	/* iface */
 	args[1] = (n+1)*BIGSIZE;
 	args[2] = 0;	/* ULARGE_INTEGER offset */
@@ -1095,7 +1095,7 @@ static void
 _ilockbytes16_addref(SEGPTR lockbytes) {
     DWORD args[1];
     HRESULT hres;
-    
+
     args[0] = (DWORD)lockbytes;	/* iface */
     if (!WOWCallback16Ex(
 	(DWORD)((const ILockBytes16Vtbl*)MapSL(
@@ -1113,7 +1113,7 @@ static void
 _ilockbytes16_release(SEGPTR lockbytes) {
     DWORD args[1];
     HRESULT hres;
-    
+
     args[0] = (DWORD)lockbytes;	/* iface */
     if (!WOWCallback16Ex(
 	(DWORD)((const ILockBytes16Vtbl*)MapSL(
@@ -1131,7 +1131,7 @@ static void
 _ilockbytes16_flush(SEGPTR lockbytes) {
     DWORD args[1];
     HRESULT hres;
-    
+
     args[0] = (DWORD)lockbytes;	/* iface */
     if (!WOWCallback16Ex(
 	(DWORD)((const ILockBytes16Vtbl*)MapSL(
@@ -2151,7 +2151,7 @@ HRESULT WINAPI StgIsStorageILockBytes16(SEGPTR plkbyt)
   DWORD args[6];
   HRESULT hres;
   HANDLE16 hsig;
-  
+
   args[0] = (DWORD)plkbyt;	/* iface */
   args[1] = args[2] = 0;	/* ULARGE_INTEGER offset */
   args[3] = WOWGlobalAllocLock16( 0, 8, &hsig ); /* sig */

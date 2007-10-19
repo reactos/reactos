@@ -68,10 +68,10 @@ _mesa_Scissor( GLint x, GLint y, GLsizei width, GLsizei height );
 extern void GLAPIENTRY
 _mesa_SampleCoverageARB(GLclampf value, GLboolean invert);
 
-extern void 
+extern void
 _mesa_init_scissor(GLcontext *ctx);
 
-extern void 
+extern void
 _mesa_init_multisample(GLcontext *ctx);
 
 

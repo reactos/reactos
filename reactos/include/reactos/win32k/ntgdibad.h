@@ -85,7 +85,7 @@ NtGdiGetTextExtentPoint32(
     HDC hDC,
     LPCWSTR String,
     int Count,
-    LPSIZE   
+    LPSIZE
 );
 
 BOOL
@@ -114,7 +114,7 @@ NtGdiCloseEnhMetaFile (
 BOOL
 STDCALL
 NtGdiColorMatchToTarget(HDC  hDC,
-                             HDC  hDCTarget, 
+                             HDC  hDCTarget,
                              DWORD  Action);
 
 /* Metafiles are user mode */
@@ -326,7 +326,7 @@ NtGdiGetEnhMetaFilePaletteEntries (
 UINT
 STDCALL
 NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
-                                    DWORD  BufSize, 
+                                    DWORD  BufSize,
                                     CONST PPIXELFORMATDESCRIPTOR  pfd);
 
 /* Should be done in user-mode. */
@@ -342,7 +342,7 @@ NtGdiGetGraphicsMode ( HDC hDC );
 /* Should be done in user-mode. */
 BOOL
 STDCALL
-NtGdiGetICMProfile(HDC  hDC,  
+NtGdiGetICMProfile(HDC  hDC,
                         LPDWORD  NameSize,
                         LPWSTR  Filename);
 
@@ -589,8 +589,8 @@ NtGdiStretchDIBits (
 /* Needs to be done in user-mode. */
 BOOL
 STDCALL
-NtGdiUpdateICMRegKey(DWORD  Reserved,  
-                          LPWSTR  CMID, 
+NtGdiUpdateICMRegKey(DWORD  Reserved,
+                          LPWSTR  CMID,
                           LPWSTR  Filename,
                           UINT  Command);
 
@@ -621,17 +621,17 @@ NtUserCallTwoParam(
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
 
 
-/* Follow thing need be rewriten 
+/* Follow thing need be rewriten
  *
  * Opengl icd are complete hacked in reactos and are using own way, this need be rewriten and be setup with the correct syscall
  * and the opengl32 shall using correct syscall to optain then driver interface or using the correct version in gdi32.
  * it mean whole icd are hacked in frist place and need be rewtiten from scrash. and it need enum the opengl correct way and
  * export the driver correct
  *
- * DirectX aka ReactX alot api that have been implement in reactos win32k for ReactX shall move to a file call dxg.sys 
- * there from it will really doing the stuff. And we should setup loading of dxg.sys 
+ * DirectX aka ReactX alot api that have been implement in reactos win32k for ReactX shall move to a file call dxg.sys
+ * there from it will really doing the stuff. And we should setup loading of dxg.sys
  *
- *  The Init of Gdi subsystem shall move into NtGdiInit() 
+ *  The Init of Gdi subsystem shall move into NtGdiInit()
  *
  *  The Init of spooler are done in NtGdiInitSpool()
  *

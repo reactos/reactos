@@ -279,7 +279,7 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
                                  (CONST BYTE*)(buffer), strlen(buffer)+1);
             if (res != ERROR_SUCCESS) goto error_close_clsid_key;
         }
-        
+
         if (list->idDefaultIcon) {
             HKEY icon_key;
             char buffer[64];
@@ -334,7 +334,7 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    RegCloseKey(mcdm_key);
 	}
 
-	if (list->flags & 
+	if (list->flags &
 		(SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES))
 	{
 	    HKEY shellfolder_key;
@@ -345,10 +345,10 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	    if (list->flags & SHELLFOLDER_WANTSFORPARSING)
 		res = RegSetValueExA(shellfolder_key, wfparsing_valuename, 0, REG_SZ, (const BYTE *)"", 1);
-	    if (list->flags & SHELLFOLDER_ATTRIBUTES) 
-		res = RegSetValueExA(shellfolder_key, attributes_valuename, 0, REG_DWORD, 
+	    if (list->flags & SHELLFOLDER_ATTRIBUTES)
+		res = RegSetValueExA(shellfolder_key, attributes_valuename, 0, REG_DWORD,
 				     (const BYTE *)&list->dwAttributes, sizeof(DWORD));
-	    if (list->flags & SHELLFOLDER_CALLFORATTRIBUTES) 
+	    if (list->flags & SHELLFOLDER_CALLFORATTRIBUTES)
 		res = RegSetValueExA(shellfolder_key, cfattributes_valuename, 0, REG_DWORD,
 				     (const BYTE *)&list->dwCallForAttributes, sizeof(DWORD));
 	    RegCloseKey(shellfolder_key);
@@ -476,13 +476,13 @@ static WCHAR *get_namespace_key(struct regsvr_namespace const *list) {
 static HRESULT register_namespace_extensions(struct regsvr_namespace const *list) {
     WCHAR *pwszKey;
     HKEY hKey;
-    
+
     for (; list->clsid; list++) {
         pwszKey = get_namespace_key(list);
-            
+
         /* Create the key and set the value. */
-        if (pwszKey && ERROR_SUCCESS == 
-            RegCreateKeyExW(HKEY_LOCAL_MACHINE, pwszKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL)) 
+        if (pwszKey && ERROR_SUCCESS ==
+            RegCreateKeyExW(HKEY_LOCAL_MACHINE, pwszKey, 0, NULL, 0, KEY_WRITE, NULL, &hKey, NULL))
         {
             RegSetValueExW(hKey, NULL, 0, REG_SZ, (const BYTE *)list->value, sizeof(WCHAR)*(lstrlenW(list->value)+1));
             RegCloseKey(hKey);
@@ -495,7 +495,7 @@ static HRESULT register_namespace_extensions(struct regsvr_namespace const *list
 
 static HRESULT unregister_namespace_extensions(struct regsvr_namespace const *list) {
     WCHAR *pwszKey;
-    
+
     for (; list->clsid; list++) {
         pwszKey = get_namespace_key(list);
         RegDeleteKeyW(HKEY_LOCAL_MACHINE, pwszKey);
@@ -702,18 +702,18 @@ static const WCHAR wszRecycleBin[] = { 'T','r','a','s','h', 0 };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
 #if 0
-    {   
+    {
         &CLSID_UnixDosFolder,
         wszDesktop,
         wszSlash
     },
-    {   
+    {
         &CLSID_MyDocuments,
         wszDesktop,
         wszMyDocuments
     },
 #endif
-    {   
+    {
         &CLSID_RecycleBin,
         wszDesktop,
         wszRecycleBin

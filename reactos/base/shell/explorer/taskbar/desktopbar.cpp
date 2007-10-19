@@ -102,10 +102,10 @@ LRESULT DesktopBar::Init(LPCREATESTRUCT pcs)
 	 // create "Start" button
 	HWND hwndStart = Button(_hwnd, start_str, 1, 1, start_btn_width, REBARBAND_HEIGHT, IDC_START, WS_VISIBLE|WS_CHILD|BS_OWNERDRAW);
 	new StartButton(hwndStart);
-	
+
 	/* Save the handle to the window, needed for push-state handling */
 	_hwndStartButton = hwndStart;
-	
+
 	 // disable double clicks
 	SetClassLong(hwndStart, GCL_STYLE, GetClassLong(hwndStart, GCL_STYLE) & ~CS_DBLCLKS);
 
@@ -459,7 +459,7 @@ void DesktopBar::ShowStartMenu()
 	if (_startMenuRoot)
 	{
 		// set the Button, if not set
-		if (!Button_GetState(_hwndStartButton)) 
+		if (!Button_GetState(_hwndStartButton))
 			Button_SetState(_hwndStartButton, TRUE);
 
  		_startMenuRoot->TrackStartmenu();

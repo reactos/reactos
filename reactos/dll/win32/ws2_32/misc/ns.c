@@ -523,8 +523,8 @@ void free_hostent(struct hostent *he)
     {
        char *next = 0;
         HFREE(he->h_name);
-        if(he->h_aliases) 
-       { 
+        if(he->h_aliases)
+       {
            next = he->h_aliases[0];
            while(next) { HFREE(next); next++; }
        }

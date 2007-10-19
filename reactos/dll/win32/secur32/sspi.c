@@ -122,7 +122,7 @@ QueryContextAttributesW(PCtxtHandle Handle,
 
 SECURITY_STATUS
 WINAPI
-AcquireCredentialsHandleA ( 
+AcquireCredentialsHandleA (
     SEC_CHAR* pszPrincipal,
     SEC_CHAR* pszPackage,
     ULONG fUsage,
@@ -140,7 +140,7 @@ AcquireCredentialsHandleA (
 
 SECURITY_STATUS
 WINAPI
-AcquireCredentialsHandleW ( 
+AcquireCredentialsHandleW (
     SEC_WCHAR* pszPrincipal,
     SEC_WCHAR* pszPackage,
     ULONG fUsage,
@@ -159,7 +159,7 @@ AcquireCredentialsHandleW (
 
 SECURITY_STATUS
 WINAPI
-InitializeSecurityContextA ( 
+InitializeSecurityContextA (
     PCredHandle phCred,
     PCtxtHandle phContext,
     SEC_CHAR* pszTarget,

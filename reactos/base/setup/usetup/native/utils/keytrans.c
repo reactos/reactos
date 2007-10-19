@@ -119,8 +119,8 @@ static WORD KeyTableEnhanced[] = {
 
 /*
  * Note how the keyboard lights are not handled, so while NUMLOCK_ON can
- * be on, the light will never be. If this starts to be a problem it can be 
- * fixed, but it's too much work for too little gain to do now. 
+ * be on, the light will never be. If this starts to be a problem it can be
+ * fixed, but it's too much work for too little gain to do now.
  * Look in win32k/ntuser/input.c for an example.
  */
 
@@ -278,7 +278,7 @@ IntUpdateControlKeyState(LPDWORD State, PKEYBOARD_INPUT_DATA InputData)
 
 			case 0x45:
 				Value = NUMLOCK_ON;
-				if (!(InputData->Flags & KEY_BREAK)) 
+				if (!(InputData->Flags & KEY_BREAK))
 					*State ^= Value;
 				return;
 			default:

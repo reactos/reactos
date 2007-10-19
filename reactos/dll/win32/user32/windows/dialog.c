@@ -878,7 +878,7 @@ static void DEFDLG_RestoreFocus( HWND hwnd )
         infoPtr->hwndFocus = GetNextDlgTabItem( hwnd, 0, FALSE );
        if (!IsWindow( infoPtr->hwndFocus )) return;
     }
-    SetFocus( infoPtr->hwndFocus );    
+    SetFocus( infoPtr->hwndFocus );
 
     /* This used to set infoPtr->hwndFocus to NULL for no apparent reason,
        sometimes losing focus when receiving WM_SETFOCUS messages. */
@@ -1362,7 +1362,7 @@ CreateDialogIndirectParamAorW(
 /* FIXME:
  *   This function might be obsolete since I don't think it is exported by NT
  *   Also wine has one more parameter identifying weather it should call
- *   the function with unicode or not 
+ *   the function with unicode or not
  */
   return DIALOG_CreateIndirect( hInstance, lpTemplate, hWndParent, lpDialogFunc, lParamInit , !Flags, FALSE );
 }
@@ -2005,7 +2005,7 @@ GetNextDlgGroupItem(
 
     }
 
-    /* Always go forward around the group and list of controls; for the 
+    /* Always go forward around the group and list of controls; for the
      * previous control keep track; for the next break when you find one
      */
     retvalue = hCtl;
@@ -2158,7 +2158,7 @@ static void DIALOG_FixChildrenOnChangeFocus (HWND hwndDlg, HWND hwndNext)
             {
                 INT dlgcode_def = SendMessageW (hwndDef, WM_GETDLGCODE, 0, 0);
                 /* I know that if it is a button then it should already be a
-                 * UNDEFPUSHBUTTON, since we have just told the buttons to 
+                 * UNDEFPUSHBUTTON, since we have just told the buttons to
                  * change style.  But maybe they ignored our request
                  */
                 if ((dlgcode_def & DLGC_BUTTON) &&
@@ -2276,7 +2276,7 @@ IsDialogMessageW(
                  if ((GetFocus() == lpMsg->hwnd) &&
                      (SendMessageW (lpMsg->hwnd, WM_GETDLGCODE, 0, 0) & DLGC_DEFPUSHBUTTON))
                  {
-                     SendMessageW (hDlg, WM_COMMAND, MAKEWPARAM (GetDlgCtrlID(lpMsg->hwnd),BN_CLICKED), (LPARAM)lpMsg->hwnd); 
+                     SendMessageW (hDlg, WM_COMMAND, MAKEWPARAM (GetDlgCtrlID(lpMsg->hwnd),BN_CLICKED), (LPARAM)lpMsg->hwnd);
                  }
                  else if (DC_HASDEFID == HIWORD(dw = SendMessageW (hDlg, DM_GETDEFID, 0, 0)))
                  {

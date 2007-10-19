@@ -2,10 +2,10 @@
 
 typedef int WINAPI DOWINMAIN(HMODULE hMod, LPSTR cmdline);
 
-int WINAPI 
-WinMain(HINSTANCE hInst, 
-        HINSTANCE hPrevInst, 
-        LPSTR cmdline, 
+int WINAPI
+WinMain(HINSTANCE hInst,
+        HINSTANCE hPrevInst,
+        LPSTR cmdline,
         int cmdshow)
 {
     HMODULE hModule;

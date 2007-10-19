@@ -3,7 +3,7 @@
  * Moved all hardcoded strings to En.rc.
  * By Magnus Olsen  2005 magnus@itkonsult-olsen.com
  * GR.rc by Dj Apal®
- * 
+ *
  */
 
 LANGUAGE LANG_GREEK, SUBLANG_DEFAULT

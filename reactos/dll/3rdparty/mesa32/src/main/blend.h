@@ -72,7 +72,7 @@ extern void GLAPIENTRY
 _mesa_ColorMask( GLboolean red, GLboolean green,
                  GLboolean blue, GLboolean alpha );
 
-extern void  
+extern void
 _mesa_init_color( GLcontext * ctx );
 
 #endif

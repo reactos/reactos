@@ -29,7 +29,7 @@ GetClipRgn(
 
 
 HRGN
-WINAPI 
+WINAPI
 CreatePolygonRgn( const POINT * lppt, int cPoints, int fnPolyFillMode)
 {
     return (HRGN) NtGdiPolyPolyDraw( (HDC) fnPolyFillMode, (PPOINT) lppt, (PULONG) &cPoints, 1, GdiPolyPolyRgn);
@@ -57,8 +57,8 @@ CreateEllipticRgnIndirect(
 
 }
 
-HRGN    
-WINAPI 
+HRGN
+WINAPI
 CreateRectRgn(int x1, int y1, int x2,int y2)
 {
     /* FIXME Some part need be done in user mode */

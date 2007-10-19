@@ -92,8 +92,8 @@ typedef struct _DC
   HPALETTE    PalIndexed;
 
   WIN_DC_INFO w;
-  
-  HANDLE      hFile;  
+
+  HANDLE      hFile;
   LPENHMETAHEADER emh;
 } DC, *PDC;
 
@@ -109,7 +109,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   HSURF MaskSurface;
   HSURF SaveSurface;
   int  ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
-  
+
   /* public pointer information */
   RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
   PGD_MOVEPOINTER MovePointer;

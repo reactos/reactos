@@ -63,10 +63,10 @@ DWORD APIENTRY DhcpNotifyConfigChange(LPWSTR ServerName, LPWSTR AdapterName,
 
 static void
 ManualDNS(HWND Dlg, BOOL Enabled, UINT uCmd) {
-    PTCPIP_PROPERTIES_DATA DlgData = 
+    PTCPIP_PROPERTIES_DATA DlgData =
         (PTCPIP_PROPERTIES_DATA) GetWindowLongPtrW(Dlg, GWL_USERDATA);
 
-    if (! DlgData->OldDhcpEnabled && 
+    if (! DlgData->OldDhcpEnabled &&
         (uCmd == IDC_USEDHCP || uCmd == IDC_NODHCP)) {
         if (INADDR_NONE != DlgData->OldIpAddress) {
             SendDlgItemMessage(Dlg, IDC_IPADDR, IPM_SETADDRESS, 0,
@@ -82,7 +82,7 @@ ManualDNS(HWND Dlg, BOOL Enabled, UINT uCmd) {
         }
     }
 
-    if (INADDR_NONE != DlgData->OldDns1 && 
+    if (INADDR_NONE != DlgData->OldDns1 &&
         (uCmd == IDC_FIXEDDNS || uCmd == IDC_AUTODNS || IDC_NODHCP)) {
         SendDlgItemMessage(Dlg, IDC_DNS1, IPM_SETADDRESS, 0,
                            ntohl(DlgData->OldDns1));
@@ -101,7 +101,7 @@ ManualDNS(HWND Dlg, BOOL Enabled, UINT uCmd) {
     if (! Enabled) {
         SendDlgItemMessage(Dlg, IDC_DNS1, IPM_CLEARADDRESS, 0, 0);
         SendDlgItemMessage(Dlg, IDC_DNS2, IPM_CLEARADDRESS, 0, 0);
-	
+
     }
 }
 
@@ -139,7 +139,7 @@ ShowError(HWND Parent, UINT MsgId)
 }
 
 static
-BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId, 
+BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId,
                           DWORD *dwIPAddr,
                           const char **AddressString ) {
     LRESULT lResult;
@@ -147,10 +147,10 @@ BOOL GetAddressFromField( HWND hwndDlg, UINT CtlId,
 
     *AddressString = NULL;
 
-    lResult = SendMessage(GetDlgItem(hwndDlg, CtlId), IPM_GETADDRESS, 0, 
+    lResult = SendMessage(GetDlgItem(hwndDlg, CtlId), IPM_GETADDRESS, 0,
                           (ULONG_PTR)dwIPAddr);
     if( lResult != 4 ) return FALSE;
-    
+
     *dwIPAddr = htonl(*dwIPAddr);
     inIPAddr.s_addr = *dwIPAddr;
     *AddressString = inet_ntoa(inIPAddr);
@@ -520,7 +520,7 @@ DisplayTCPIPProperties(HWND hParent, IP_ADAPTER_INFO *pInfo)
             _tcscat(tpszCaption, suffix);
         }
     }
-    
+
     if (! LoadDataFromInfo(&DlgData, pInfo))
     {
         ShowError(hParent, IDS_CANNOT_LOAD_CONFIG);

@@ -62,7 +62,7 @@ class CBBackend : public Backend
 
 		void ProcessModules();
 		void ProcessFile(std::string &filename);
-		
+
 		bool CheckFolderAdded(std::string &folder);
 		void AddFolders(std::string &folder);
 

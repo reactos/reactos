@@ -283,7 +283,7 @@ typedef long ssize_t;
    symbols in the _FOO_T_ family, stays defined even after its
    corresponding type is defined).  If we define wchar_t, then we
    must undef _WCHAR_T_; for BSD/386 1.1 (and perhaps others), if
-   we undef _WCHAR_T_, then we must also define rune_t, since 
+   we undef _WCHAR_T_, then we must also define rune_t, since
    headers like runetype.h assume that if machine/ansi.h is included,
    and _BSD_WCHAR_T_ is not defined, then rune_t is available.
    machine/ansi.h says, "Note that _WCHAR_T_ and _RUNE_T_ must be of

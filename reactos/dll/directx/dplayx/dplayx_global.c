@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  *
  *
- * NOTES: 
+ * NOTES:
  *  o Implementation of all things which are associated with dplay on
  *    the computer - ie shared resources and such. Methods in this
  *    compilation unit should not call anything out side this unit

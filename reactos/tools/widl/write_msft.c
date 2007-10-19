@@ -887,7 +887,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -925,7 +925,7 @@ static int encode_type(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & VT_TYPEMASK) | VT_ARRAY;
 	    } else {
@@ -1083,7 +1083,7 @@ static int encode_var(
 
 	if (typeoffset == typelib->typelib_segdir[MSFT_SEG_TYPEDESC].length) {
 	    int mix_field;
-	    
+
 	    if (target_type & 0x80000000) {
 		mix_field = ((target_type >> 16) & 0x3fff) | VT_BYREF;
 	    } else {
@@ -1201,7 +1201,7 @@ static void write_value(msft_typelib_t* typelib, int *out, int vt, void *value)
         int len = strlen(s), seg_len = (len + 6 + 3) & ~0x3;
         int offset = ctl2_alloc_segment(typelib, MSFT_SEG_CUSTDATA, seg_len, 0);
         *((unsigned short *)&typelib->typelib_segment_data[MSFT_SEG_CUSTDATA][offset]) = vt;
-        *((unsigned int *)&typelib->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = len;        
+        *((unsigned int *)&typelib->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+2]) = len;
         memcpy(&typelib->typelib_segment_data[MSFT_SEG_CUSTDATA][offset+6], value, len);
         len += 6;
         while(len < seg_len) {
@@ -1302,7 +1302,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, func_t *func, int index)
     name_offset = ctl2_alloc_name(typeinfo->typelib, func->def->name);
 
     for(attr = func->def->attrs; attr; attr = NEXT_LINK(attr)) {
-        expr_t *expr = attr->u.pval; 
+        expr_t *expr = attr->u.pval;
         switch(attr->type) {
         case ATTR_ENTRY_ORDINAL:
             extra_attr = max(extra_attr, 3);
@@ -1514,7 +1514,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, func_t *func, int index)
     }
 
     /* update the index data */
-    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id; 
+    typeinfo->func_indices[typeinfo->typeinfo->cElement & 0xffff] = id;
     typeinfo->func_offsets[typeinfo->typeinfo->cElement & 0xffff] = offset;
     typeinfo->func_names[typeinfo->typeinfo->cElement & 0xffff] = name_offset;
 
@@ -1546,7 +1546,7 @@ static HRESULT add_func_desc(msft_typeinfo_t* typeinfo, func_t *func, int index)
     if(typeinfo->typekind == TKIND_MODULE)
         namedata[9] |= 0x20;
 
-    if(invokekind != 0x4 /* INVOKE_PROPERTYPUT */ && invokekind != 0x8 /* INVOKE_PROPERTYPUTREF */) { 
+    if(invokekind != 0x4 /* INVOKE_PROPERTYPUT */ && invokekind != 0x8 /* INVOKE_PROPERTYPUTREF */) {
         /* don't give the arg of a [propput*] func a name */
         for (arg = last_arg, i = 0; arg; arg = PREV_LINK(arg), i++) {
             int *paramdata = typedata + 6 + extra_attr + (num_defaults ? num_params : 0) + i * 3;
@@ -1564,7 +1564,7 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     INT *typedata;
     int var_datawidth;
     int var_alignment;
-    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */; 
+    int var_type_size, var_kind = 0 /* VAR_PERINSTANCE */;
     int alignment;
     int varflags = 0;
     const attr_t *attr;
@@ -1576,7 +1576,7 @@ static HRESULT add_var_desc(msft_typeinfo_t *typeinfo, UINT index, var_t* var)
     id = 0x40000000 + index;
 
     for(attr = var->attrs; attr; attr = NEXT_LINK(attr)) {
-        expr_t *expr = attr->u.pval; 
+        expr_t *expr = attr->u.pval;
         switch(attr->type) {
         case ATTR_HIDDEN:
             varflags |= 0x40; /* VARFLAG_FHIDDEN */
@@ -1900,7 +1900,7 @@ static void add_dispatch(msft_typelib_t *typelib)
 }
 
 static void add_dispinterface_typeinfo(msft_typelib_t *typelib, type_t *dispinterface)
-{ 
+{
     int idx = 0;
     func_t *func;
     var_t *var;
@@ -2262,7 +2262,7 @@ static void set_guid(msft_typelib_t *typelib)
     }
 
     offset = ctl2_alloc_guid(typelib, &guidentry);
-    
+
     if (offset == -1) return;
 
     typelib->typelib_header.posguid = offset;
@@ -2439,7 +2439,7 @@ static void ctl2_write_typeinfos(msft_typelib_t *typelib, int fd)
         if (typeinfo->func_names)
             ctl2_write_chunk(fd, typeinfo->func_names,   (typeinfo->typeinfo->cElement & 0xffff) * 4);
         if (typeinfo->var_names)
-            ctl2_write_chunk(fd, typeinfo->var_names,   (typeinfo->typeinfo->cElement >> 16) * 4); 
+            ctl2_write_chunk(fd, typeinfo->var_names,   (typeinfo->typeinfo->cElement >> 16) * 4);
         if (typeinfo->func_offsets)
             ctl2_write_chunk(fd, typeinfo->func_offsets, (typeinfo->typeinfo->cElement & 0xffff) * 4);
         if (typeinfo->var_offsets) {
@@ -2524,8 +2524,8 @@ int create_msft_typelib(typelib_t *typelib)
     typelib_entry_t *entry;
     time_t cur_time;
     unsigned int version = 5 << 24 | 1 << 16 | 164; /* 5.01.0164 */
-    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
-    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}}; 
+    GUID midl_time_guid    = {0xde77ba63,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
+    GUID midl_version_guid = {0xde77ba64,0x517c,0x11d1,{0xa2,0xda,0x00,0x00,0xf8,0x77,0x3c,0xe9}};
 
     msft = malloc(sizeof(*msft));
     if (!msft) return 0;
@@ -2562,7 +2562,7 @@ int create_msft_typelib(typelib_t *typelib)
     set_help_context(msft);
     set_help_string_dll(msft);
     set_help_string_context(msft);
-    
+
     /* midl adds two sets of custom data to the library: the current unix time
        and midl's version number */
     cur_time = time(NULL);

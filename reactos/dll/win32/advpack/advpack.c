@@ -365,7 +365,7 @@ HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
     set_ldids(*phInf, pszInstallSection, NULL);
-    
+
     return S_OK;
 }
 
@@ -672,7 +672,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
             else
                 res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         }
-        
+
         HeapFree(GetProcessHeap(), 0, bufferW);
     }
 
@@ -789,7 +789,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
             else
                 res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         }
-        
+
         HeapFree(GetProcessHeap(), 0, bufferW);
     }
 
@@ -850,7 +850,7 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
         return SPAPI_E_LINE_NOT_FOUND;
     }
 
-    return S_OK;   
+    return S_OK;
 }
 
 /***********************************************************************

@@ -229,13 +229,13 @@ BEGIN
     PUSHBUTTON "Cancel", IDCANCEL, 169, 53, 52, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
 	//Selected language on "Add Input language"
 	IDS_SELECTED_LANGUAGE               "English (United States)"
 	//Selected keyboard layout on "Add Input language"
 	IDS_SELECTED_LAYOUT, 				"United States-Dvorak"
-	
+
     IDS_CPLSYSTEMNAME "Text Services and Input Languages"
     IDS_CPLSYSTEMDESCRIPTION "Customizes settings for text input of languages."
 	IDS_US_LAYOUT, 									"US"

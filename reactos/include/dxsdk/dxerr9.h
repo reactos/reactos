@@ -3,7 +3,7 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 
 const char*  WINAPI DXGetErrorString9A(HRESULT hr);
@@ -22,7 +22,7 @@ HRESULT WINAPI DXTraceW( const char* strFile, DWORD dwLine, HRESULT hr, const WC
   #define DXGetErrorString9 DXGetErrorString9A
   #define DXGetErrorDescription9 DXGetErrorDescription9A
   #define DXTrace DXTraceA
-#endif 
+#endif
 
 
 #if defined(DEBUG) | defined(_DEBUG)

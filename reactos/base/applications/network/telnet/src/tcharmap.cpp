@@ -198,7 +198,7 @@ TCharmap::TCharmap() {
 TCharmap::~TCharmap() {
 	for(int j = 0; j < 256; j++) {
 		if(map[j]) {
-			// Don't delete static maps! 
+			// Don't delete static maps!
 			switch(j) {
 				case 'B':
 				case 'A':

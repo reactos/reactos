@@ -19,10 +19,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- * 
+ *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
@@ -364,12 +364,12 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
     {
         RECT cntRect;
         int part = (dwStyle & PBS_VERTICAL) ? PP_BARVERT : PP_BAR;
-        
-        GetThemeBackgroundContentRect (pdi.theme, hdc, part, 0, &pdi.rect, 
+
+        GetThemeBackgroundContentRect (pdi.theme, hdc, part, 0, &pdi.rect,
             &cntRect);
-        
+
         /* Exclude content rect - content background will be drawn later */
-        ExcludeClipRect (hdc, cntRect.left, cntRect.top, 
+        ExcludeClipRect (hdc, cntRect.left, cntRect.top,
             cntRect.right, cntRect.bottom);
         if (IsThemeBackgroundPartiallyTransparent (pdi.theme, part, 0))
             DrawThemeParentBackground (infoPtr->Self, hdc, NULL);
@@ -402,7 +402,7 @@ static LRESULT PROGRESS_Draw (PROGRESS_INFO *infoPtr, HDC hdc)
 
         if (ledMEnd > leds)
         {
-            /* case 1: the marquee bar extends over the end and wraps around to 
+            /* case 1: the marquee bar extends over the end and wraps around to
              * the start */
             const int gapStart = max((ledMEnd - leds) * ledW, 0);
             const int gapEnd = min(infoPtr->MarqueePos * ledW, barSize);
@@ -475,12 +475,12 @@ static LRESULT PROGRESS_Timer (PROGRESS_INFO *infoPtr, INT idTimer)
         get_client_rect (infoPtr->Self, &rect);
 
         if(!barSmooth)
-            ledWidth = get_led_size( infoPtr, style, &rect ) + 
+            ledWidth = get_led_size( infoPtr, style, &rect ) +
                 get_led_gap( infoPtr );
         else
             ledWidth = 1;
 
-        leds = (get_bar_size( style, &rect ) + ledWidth - 1) / 
+        leds = (get_bar_size( style, &rect ) + ledWidth - 1) /
             ledWidth;
 
         /* increment the marquee progress */
@@ -556,7 +556,7 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_CREATE:
     {
 	DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
-        
+
         theme = OpenThemeData (hwnd, themeClass);
 
 	dwExStyle &= ~(WS_EX_CLIENTEDGE | WS_EX_WINDOWEDGE);
@@ -614,18 +614,18 @@ static LRESULT WINAPI ProgressWindowProc(HWND hwnd, UINT message,
     case WM_THEMECHANGED:
     {
         DWORD dwExStyle = GetWindowLongW (hwnd, GWL_EXSTYLE);
-        
+
         theme = GetWindowTheme (hwnd);
         CloseThemeData (theme);
         theme = OpenThemeData (hwnd, themeClass);
-        
+
         /* WS_EX_STATICEDGE disappears when the control is themed */
         if (theme)
             dwExStyle &= ~WS_EX_STATICEDGE;
         else
             dwExStyle |= WS_EX_STATICEDGE;
         SetWindowLongW (hwnd, GWL_EXSTYLE, dwExStyle);
-        
+
         InvalidateRect (hwnd, NULL, FALSE);
         return 0;
     }

@@ -150,7 +150,7 @@ UINT MSI_OpenDatabaseW(LPCWSTR szDBPath, LPCWSTR szPersist, MSIDATABASE **pdb)
     }
 
     if ( !IsEqualGUID( &stat.clsid, &CLSID_MsiDatabase ) &&
-         !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) ) 
+         !IsEqualGUID( &stat.clsid, &CLSID_MsiPatch ) )
     {
         ERR("storage GUID is not a MSI database GUID %s\n",
              debugstr_guid(&stat.clsid) );
@@ -603,16 +603,16 @@ static UINT msi_add_records_to_table(MSIDATABASE *db, LPWSTR *columns, LPWSTR *t
 
     LPWSTR prelude = msi_build_insertsql_prelude(labels[0]);
     LPWSTR columns_sql = msi_build_insertsql_columns(columns, types, num_columns);
-    
+
     for (i = 0; i < num_records; i++)
     {
         LPWSTR data = msi_build_insertsql_data(records, types, num_columns, i);
 
-        size = lstrlenW(prelude) + lstrlenW(columns_sql) + sizeof(mid) + lstrlenW(data) + sizeof(end) - 1; 
+        size = lstrlenW(prelude) + lstrlenW(columns_sql) + sizeof(mid) + lstrlenW(data) + sizeof(end) - 1;
         insert_sql = msi_alloc(size * sizeof(WCHAR));
         if (!insert_sql)
             return ERROR_OUTOFMEMORY;
-    
+
         lstrcpyW(insert_sql, prelude);
         lstrcatW(insert_sql, columns_sql);
         lstrcatW(insert_sql, mid);

@@ -29,7 +29,7 @@ LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 // Menu
 //
 
-IDM_MDIFRAME MENU DISCARDABLE 
+IDM_MDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -70,7 +70,7 @@ BEGIN
     END
 END
 
-IDM_SDIFRAME MENU DISCARDABLE 
+IDM_SDIFRAME MENU DISCARDABLE
 BEGIN
     POPUP "&Datei"
     BEGIN
@@ -100,7 +100,7 @@ BEGIN
     END
 END
 
-IDM_DESKTOPBAR MENU DISCARDABLE 
+IDM_DESKTOPBAR MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -111,7 +111,7 @@ BEGIN
     END
 END
 
-IDM_NOTIFYAREA MENU DISCARDABLE 
+IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -124,7 +124,7 @@ BEGIN
     END
 END
 
-IDM_VOLUME MENU DISCARDABLE 
+IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
@@ -145,7 +145,7 @@ CAPTION "Ausführen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,162,10
-    CONTROL         "Befehls&zeile:",-1,"Static",SS_LEFTNOWORDWRAP | 
+    CONTROL         "Befehls&zeile:",-1,"Static",SS_LEFTNOWORDWRAP |
                     WS_GROUP,3,18,60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "Als &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,
@@ -177,29 +177,29 @@ FONT 8, "MS Sans Serif"
 BEGIN
     LTEXT           "Bitte wählen Sie den gewünschten Platzierungs-Algorithmus für die Desktop-Icons aus:",
                     IDC_STATIC,7,7,197,23
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
+    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,35,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
+    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,35,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
+    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,35,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
+    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,35,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
+    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,83,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
+    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,83,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
+    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,83,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
+    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,159,83,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
+    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,7,131,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
+    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,57,131,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
+    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
                     BS_BOTTOM | WS_TABSTOP,110,131,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
                     WS_TABSTOP,159,131,46,44
 //    CONTROL         "Anzeige der &Versionsnummer",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,187,107,10
@@ -220,7 +220,7 @@ BEGIN
     CONTROL         "Anzeigen der &Uhr",ID_SHOW_CLOCK,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,152,71,10
     CONTROL         "&verstecke inaktive Notification-Icons",
-                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX | 
+                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,174,131,10
     PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
 END
@@ -240,7 +240,7 @@ BEGIN
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
     CONTROL         "Öffne Unterverzeichnisses in &neuen Fenstern",
-                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,90,157,10
     LTEXT           "Diese Auswahl wird künftig für alle Explorer-Fenster verwendet werden.",
                     IDC_STATIC,7,111,174,22
@@ -249,13 +249,13 @@ BEGIN
 END
 
 IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Konfiguration der Benachrichtigungs-Icons"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
     LTEXT           "&Tooltip-Text:",IDC_LABEL1,7,44,40,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
@@ -264,7 +264,7 @@ BEGIN
     LTEXT           "&Modulpfad:",IDC_LABEL3,7,81,36,8
     EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
     GROUPBOX        "&Anzeigemodus",IDC_LABEL4,7,96,157,28
-    CONTROL         "&zeigen",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+    CONTROL         "&zeigen",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
                     WS_TABSTOP,15,108,37,10
     CONTROL         "&verstecken",IDC_NOTIFY_HIDE,"Button",
                     BS_AUTORADIOBUTTON,55,108,51,10
@@ -272,7 +272,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,110,108,54,10
     ICON            "",IDC_PICTURE,173,101,20,20
     LTEXT           "&Letzte Änderung:",IDC_LABEL6,7,132,55,8
-    EDITTEXT        IDC_LAST_CHANGE,66,129,98,14,ES_AUTOHSCROLL | 
+    EDITTEXT        IDC_LAST_CHANGE,66,129,98,14,ES_AUTOHSCROLL |
                     ES_READONLY
     CONTROL         "zei&ge versteckte",ID_SHOW_HIDDEN_ICONS,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,154,68,10
@@ -281,7 +281,7 @@ BEGIN
 END
 
 IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
 CAPTION "Programmsuche im Startmenü"
@@ -289,8 +289,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     LTEXT           "&Filter:",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,96,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
                     WS_TABSTOP,7,25,186,33
     PUSHBUTTON      "Alle über&prüfen",IDC_CHECK_ENTRIES,138,7,55,14
 END
@@ -302,12 +302,12 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE DISCARDABLE 
+1 TEXTINCLUDE DISCARDABLE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE DISCARDABLE 
+2 TEXTINCLUDE DISCARDABLE
 BEGIN
     "#include ""resource.h""\r\n"
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
@@ -316,7 +316,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE DISCARDABLE 
+3 TEXTINCLUDE DISCARDABLE
 BEGIN
     "\r\n"
     "\0"
@@ -330,7 +330,7 @@ END
 // String Table
 //
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_TITLE               "ReactOS Explorer"
     IDS_START               "Start"
@@ -350,7 +350,7 @@ BEGIN
     IDS_ADMIN               "Verwaltung"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_STARTMENU           "Startmenü"
     IDS_MINIMIZE_ALL        "alle Fenster minimieren"
@@ -368,7 +368,7 @@ BEGIN
     IDS_TERMINATE           "ROS Explorer beenden"
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Netzwerk"
     IDS_CONNECTIONS         "Netzwerk-Verbindungen"
@@ -382,7 +382,7 @@ BEGIN
     IDS_ALL_USERS           "Alle Benutzer\\"
     IDS_SEARCH              "Suche"
     IDS_ABOUT_EXPLORER      "&Über Explorer..."
-    IDS_LAUNCH_MANY_PROGRAMS 
+    IDS_LAUNCH_MANY_PROGRAMS
                             "Sie haben mehrere Programme ausgewählt.\nSind Sie sicher, daß sie diese alle starten wollen?"
     IDS_DESKTOPBAR_SETTINGS "Desktop-Einstellungen"
     IDS_DESKTOP             "Desktop"

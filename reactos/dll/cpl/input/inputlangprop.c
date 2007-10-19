@@ -44,7 +44,7 @@ VOID
 SelectKeyboardLayout(HWND hWnd)
 {
 	TCHAR Layout[256];
-	
+
 	SendMessage(hWnd,
 			    CB_SELECTSTRING,
 				(WPARAM) -1,
@@ -71,7 +71,7 @@ InputLangPropDlgProc(HWND hDlg,
 		    switch (LOWORD(wParam))
 			{
 				case IDOK:
-				
+
 				break;
 				case IDCANCEL:
 					EndDialog(hDlg,LOWORD(wParam));

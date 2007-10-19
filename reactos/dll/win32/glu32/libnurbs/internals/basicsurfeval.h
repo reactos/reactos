@@ -54,8 +54,8 @@ public:
     virtual void	enable( long );
     virtual void	disable( long );
     virtual void	bgnmap2f( long );
-    virtual void	map2f( long, REAL, REAL, long, long, 
-				     REAL, REAL, long, long, 
+    virtual void	map2f( long, REAL, REAL, long, long,
+				     REAL, REAL, long, long,
 				     REAL *  );
     virtual void	mapgrid2f( long, REAL, REAL, long,  REAL, REAL );
     virtual void	mapmesh2f( long, long, long, long, long );
@@ -89,7 +89,7 @@ public:
     virtual void        inDoEvalCoord2NOGE_BV(REAL u, REAL v, REAL* ret_point, REAL* ret_normal) = 0;
     virtual void inPreEvaluateBV_intfac(REAL v ) = 0;
     virtual void inPreEvaluateBU_intfac(REAL u ) = 0;
-    
+
 };
 
 #endif /* __glubasicsurfeval_h_ */

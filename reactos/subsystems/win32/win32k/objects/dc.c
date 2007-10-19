@@ -167,7 +167,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
   INT DC_Type = DC_TYPE_DIRECT;
-  
+
   DisplayDC = NULL;
   if (hDC == NULL)
     {
@@ -208,7 +208,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->hSelf = hNewDC;
   NewDC->IsIC = FALSE;
   NewDC->DC_Type = DC_Type;
-  
+
   NewDC->PDev = OrigDC->PDev;
   memcpy(NewDC->FillPatternSurfaces,
          OrigDC->FillPatternSurfaces,
@@ -942,10 +942,10 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   {
     /* From MSDN2:
        The CreateIC function creates an information context for the specified device.
-       The information context provides a fast way to get information about the 
+       The information context provides a fast way to get information about the
        device without creating a device context (DC). However, GDI drawing functions
        cannot accept a handle to an information context.
-     */  
+     */
     NewDC->DC_Type = DC_TYPE_INFO;
     DC_UnlockDc( NewDC );
   }
@@ -1015,7 +1015,7 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
                        (BOOL) iType); // FALSE 0 DCW, TRUE 1 ICW
 
   if (pUMdhpdev) pUMdhpdev = Dhpdev;
-  
+
   return Ret;
 
 }
@@ -1151,7 +1151,7 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
   switch(ObjectType)
   {
     case GDI_OBJECT_TYPE_EXTPEN:
-    case GDI_OBJECT_TYPE_PEN:         
+    case GDI_OBJECT_TYPE_PEN:
       SelObject = dc->Dc_Attr.hpen;
       break;
     case GDI_OBJECT_TYPE_BRUSH:
@@ -1366,7 +1366,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
 VOID
 FASTCALL
 IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
-{ 
+{
   dc->w.flags                   = dcs->w.flags & ~DC_SAVED;
 
   dc->w.hFirstBitmap            = dcs->w.hFirstBitmap;
@@ -1447,7 +1447,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   DC_UnlockDc ( dc );
 #endif
   if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
-  
+
   NtGdiSelectObject( hDC, dcs->w.hBitmap );
   NtGdiSelectObject( hDC, dcs->Dc_Attr.hbrush );
   NtGdiSelectObject( hDC, dcs->Dc_Attr.hlfntNew );
@@ -1898,7 +1898,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
     DC_UnlockDc(dc);
     return FALSE;
   }
-  
+
   success=TRUE;
   while (dc->saveLevel >= SaveLevel)
   {
@@ -1942,7 +1942,7 @@ NtGdiRestoreDC(HDC  hDC, INT  SaveLevel)
   DC_UnlockDc( dc );
   return  success;
 }
-  
+
 
 INT STDCALL
 NtGdiSaveDC(HDC  hDC)
@@ -2270,7 +2270,7 @@ NtGdiGetDCDword(
   DC_UnlockDc(dc);
   return Ret;
 }
-                                        
+
 BOOL
 STDCALL
 NtGdiGetAndSetDCDword(
@@ -2327,7 +2327,7 @@ NtGdiGetAndSetDCDword(
       {
          SetLastWin32Error(ERROR_INVALID_PARAMETER);
          Ret = FALSE;
-      }                        
+      }
       SafeResult = dc->w.ArcDirection;
       dc->w.ArcDirection = dwIn;
       break;
@@ -2378,7 +2378,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   PDC  NewDC;
   HDC  hDC;
   PWSTR Buf = NULL;
-  
+
   if (Driver != NULL)
   {
     Buf = ExAllocatePoolWithTag(PagedPool, Driver->MaximumLength, TAG_DC);
@@ -2445,7 +2445,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
 
   NewDC->Dc_Attr.hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
   TextIntRealizeFont(NewDC->Dc_Attr.hlfntNew);
-  
+
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
   DC_UnlockDc(NewDC);
@@ -2502,7 +2502,7 @@ DC_AllocateDcAttr(HDC hDC)
     if (NT_SUCCESS(Status))
     {
       RtlZeroMemory(NewMem, MemSize);
-      Entry->UserData  = NewMem; 
+      Entry->UserData  = NewMem;
       DPRINT("DC_ATTR allocated! 0x%x\n",NewMem);
     }
     else
@@ -3232,19 +3232,19 @@ IntChangeDisplaySettings(
 
     /* Check if pDeviceName is NULL, we need to retrieve it */
     if (pDeviceName == NULL)
-    {     
+    {
       WCHAR szBuffer[MAX_DRIVER_NAME];
       PDC DC;
       PWINDOW_OBJECT Wnd=NULL;
-      HWND hWnd; 
+      HWND hWnd;
       HDC hDC;
-      
+
       hWnd = IntGetDesktopWindow();
       if (!(Wnd = UserGetWindowObject(hWnd)))
       {
           return FALSE;
       }
-      
+
       hDC = (HDC)UserGetWindowDC(Wnd);
 
       DC = DC_LockDc(hDC);

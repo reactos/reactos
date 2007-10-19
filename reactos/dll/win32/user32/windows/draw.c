@@ -771,7 +771,7 @@ static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
         }
         else
         {
-            SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW)); 
+            SetTextColor(dc, GetSysColor(COLOR_BTNSHADOW));
             TextOut(dc, rc.left, rc.top, OutRight, 1);
             SetTextColor(dc, GetSysColor(COLOR_BTNHIGHLIGHT));
             TextOut(dc, rc.left, rc.top, OutLeft, 1);
@@ -789,7 +789,7 @@ static BOOL UITOOLS95_DFC_ButtonRadio(HDC dc, LPRECT r, UINT uFlags)
         SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
         TextOut(dc, rc.left, rc.top, Check, 1);
     }
-    
+
     SetTextColor(dc, GetSysColor(COLOR_WINDOWTEXT));
     SelectObject(dc, hOldFont);
 

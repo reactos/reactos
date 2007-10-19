@@ -74,11 +74,11 @@ extern "C" {
 #if(WINVER >= 0x0400)
 #define CF_HDROP 15
 #define CF_LOCALE 16
-#endif 
+#endif
 
 #if(WINVER >= 0x0500)
 #define CF_DIBV5 17
-#endif 
+#endif
 
 #if(WINVER >= 0x0500)
 #define CF_MAX 18

@@ -152,6 +152,6 @@ BOOL WINAPI InitiateSystemShutdownExW( LPWSTR lpMachineName, LPWSTR lpMessage,
 {
      UNIMPLEMENTED;
      return TRUE;
-} 
+}
 
 /* EOF */

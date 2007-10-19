@@ -102,7 +102,7 @@ typedef struct _FDO_DEVICE_EXTENSION
 /* Driver extension associated with PCI driver */
 typedef struct _PCI_DRIVER_EXTENSION
 {
-  // 
+  //
   LIST_ENTRY BusListHead;
   // Lock for namespace bus list
   KSPIN_LOCK BusListLock;

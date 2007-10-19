@@ -116,7 +116,7 @@ static void _tnl_import_secondarycolor( GLcontext *ctx,
    struct tnl_vertex_arrays *inputs = &TNL_CONTEXT(ctx)->array_inputs;
    const GLubyte *data;
 
-   tmp = _ac_import_secondarycolor(ctx, 
+   tmp = _ac_import_secondarycolor(ctx,
 				   GL_FLOAT,
 				   stride ? 4*sizeof(GLfloat) : 0,
 				   4,
@@ -245,7 +245,7 @@ static void _tnl_constant_attrib( TNLcontext *tnl,
    tmp->Attribs[i].count = 1;
    tmp->Attribs[i].data = (GLfloat (*)[4]) tnl->vtx.current[i];
    tmp->Attribs[i].start = tnl->vtx.current[i];
-   tmp->Attribs[i].size = 4; 
+   tmp->Attribs[i].size = 4;
    tmp->Attribs[i].stride = 0;
    tnl->vb.AttribPtr[i] = &tmp->Attribs[i];
 }

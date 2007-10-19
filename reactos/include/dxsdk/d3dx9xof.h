@@ -68,7 +68,7 @@ typedef struct _D3DXF_FILELOADRESOURCE
     #if !defined( DECLSPEC_UUID )
         #if _MSC_VER >= 1100
             #define DECLSPEC_UUID( x ) __declspec( uuid( x ) )
-        #else 
+        #else
             #define DECLSPEC_UUID( x )
         #endif
     #endif

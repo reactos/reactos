@@ -82,7 +82,7 @@ PsGetThreadHardErrorsAreDisabled(
 );
 
 NTKERNELAPI
-VOID 
+VOID
 NTAPI
 PsSetThreadHardErrorsAreDisabled(
     PETHREAD Thread,
@@ -90,7 +90,7 @@ PsSetThreadHardErrorsAreDisabled(
 );
 
 NTKERNELAPI
-VOID 
+VOID
 NTAPI
 PsEstablishWin32Callouts(
     PWIN32_CALLOUTS_FPNS CalloutData

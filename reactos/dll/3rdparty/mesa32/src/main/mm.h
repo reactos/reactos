@@ -15,9 +15,9 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
  * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
- * KEITH WHITWELL, OR ANY OTHER CONTRIBUTORS BE LIABLE FOR ANY CLAIM, 
- * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
- * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE 
+ * KEITH WHITWELL, OR ANY OTHER CONTRIBUTORS BE LIABLE FOR ANY CLAIM,
+ * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+ * OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE
  * OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
@@ -69,7 +69,7 @@ mmOffset(PMemBlock b)
 
 
 
-/** 
+/**
  * input: total size in bytes
  * return: a heap pointer if OK, NULL if error
  */
@@ -85,7 +85,7 @@ extern memHeap_t *mmInit(int ofs, int size);
  *		startSearch = linear offset from start of heap to begin search
  * return: pointer to the allocated block, 0 if error
  */
-extern PMemBlock mmAllocMem(memHeap_t *heap, int size, int align2, 
+extern PMemBlock mmAllocMem(memHeap_t *heap, int size, int align2,
                             int startSearch);
 
 /**

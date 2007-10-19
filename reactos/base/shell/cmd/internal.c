@@ -129,12 +129,12 @@
  *
  *    19-Jul-2005 (Brandon Turner <turnerb7@msu.edu>)
  *        Rewrite the CD, it working as Windows 2000 CMD
- *		
+ *
  *    19-Jul-2005 (Magnus Olsen <magnus@greatlord.com>)
- *        Add SetRootPath and GetRootPath 
+ *        Add SetRootPath and GetRootPath
  *
  *    14-Jul-2007 (Pierre Schweitzer <heis_spiter@hotmail.com>)
- *        Added commands help display to help command (ex. : "help cmd")           
+ *        Added commands help display to help command (ex. : "help cmd")
  */
 
 #include <precomp.h>
@@ -156,7 +156,7 @@ VOID FreeLastPath (VOID)
 		cmd_free (lpLastPath);
 }
 
-/* help functions for getting current path from drive 
+/* help functions for getting current path from drive
    without changing drive. Return code 0 = ok, 1 = fail.
    INT GetRootPath("C:",outbuffer,chater size of outbuffer);
    the first param can have any size, if the the two frist
@@ -167,18 +167,18 @@ VOID FreeLastPath (VOID)
 INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
 {
   INT retcode = 1;
-  
+
   if (_tcslen(InPath)>1)
   {
-    if (InPath[1]==_T(':'))    
-    {   
+    if (InPath[1]==_T(':'))
+    {
       INT t=0;
-     
+
       if ((InPath[0] >= _T('0')) && (InPath[0] <= _T('9')))
       {
           t = (InPath[0] - _T('0')) +28;
       }
-      
+
       if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
       {
           t = (InPath[0] - _T('a')) +1;
@@ -189,29 +189,29 @@ INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
       {
           t = (InPath[0] - _T('A')) +1;
       }
-                
-      if (_tgetdcwd(t,OutPath,size) != NULL) 
-      {                 
-        return 0;          
-      }    
-     } 
+
+      if (_tgetdcwd(t,OutPath,size) != NULL)
+      {
+        return 0;
+      }
+     }
     }
-   
+
   /* fail */
   if (_tcslen(InPath)>1)
   {
     if (InPath[1]==_T(':'))
-       return 1;  
+       return 1;
   }
 
   /* Get current directory */
-  retcode = GetCurrentDirectory(size,OutPath);     
-  if (retcode==0) 
+  retcode = GetCurrentDirectory(size,OutPath);
+  if (retcode==0)
       return 1;
 
   return 0;
 }
-  
+
 
 BOOL SetRootPath(TCHAR *InPath)
 {
@@ -220,26 +220,26 @@ BOOL SetRootPath(TCHAR *InPath)
   TCHAR OutPathTemp[MAX_PATH];
   TCHAR OutPathTemp2[MAX_PATH];
   BOOL fail;
-  
-  
+
+
   /* Get The current directory path and save it */
   fail = GetCurrentDirectory(MAX_PATH,oldpath);
-  if (!fail)   
+  if (!fail)
       return 1;
-  
+
   /* Get current drive directory path if C: was only pass down*/
-  
+
   if (_tcsncicmp(&InPath[1],_T(":\\"),2)!=0)
   {
       if (!GetRootPath(InPath,OutPathTemp,MAX_PATH))
          _tcscpy(OutPathTemp,InPath);
   }
-  else 
+  else
   {
     _tcscpy(OutPathTemp,InPath);
   }
-  
-   _tcsupr(OutPathTemp); 
+
+   _tcsupr(OutPathTemp);
   /* The use of both of these together will correct the case of a path
      where as one alone or GetFullPath will not.  Exameple:
 	  c:\windows\SYSTEM32 => C:\WINDOWS\system32 */
@@ -247,20 +247,20 @@ BOOL SetRootPath(TCHAR *InPath)
   GetPathCase(OutPathTemp2, OutPath);
 
   fail = SetCurrentDirectory(OutPath);
-  if (!fail) 
+  if (!fail)
       return 1;
 
-  
-    
+
+
   SetCurrentDirectory(OutPath);
   GetCurrentDirectory(MAX_PATH,OutPath);
   _tchdir(OutPath);
 
-  if (_tcsncicmp(OutPath,oldpath,2)!=0)      
-      SetCurrentDirectory(oldpath);   
+  if (_tcsncicmp(OutPath,oldpath,2)!=0)
+      SetCurrentDirectory(oldpath);
 
  return 0;
-} 
+}
 
 
 /*
@@ -269,8 +269,8 @@ BOOL SetRootPath(TCHAR *InPath)
  */
 INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 {
- 
-	WIN32_FIND_DATA f; 
+
+	WIN32_FIND_DATA f;
 	HANDLE hFile;
 	BOOL bChangeDrive = FALSE;
 	TCHAR szPath[MAX_PATH];
@@ -279,17 +279,17 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	TCHAR szCurrent[MAX_PATH];
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	INT i;
- 
- 
+
+
 	/* Filter out special cases first */
- 
+
 	/* Print Help */
 	if (!_tcsncmp(param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_CD_HELP);
 		return 0;
 	}
- 
+
   /* Set Error Level to Success */
 	nErrorLevel = 0;
 
@@ -313,10 +313,10 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 	{
 		_tcscpy(szPath,param);
 	}
- 
+
 	/* Print Current Directory on a disk */
 	if (_tcslen(szPath) == 2 && szPath[1] == _T(':'))
-	{		
+	{
 		if(GetRootPath(szPath,szCurrent,MAX_PATH))
 		{
 			nErrorLevel = 1;
@@ -325,10 +325,10 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		ConOutPuts(szCurrent);
 		return 0;
 	}
- 
+
 	/* Get Current Directory */
 	GetRootPath(_T("."),szCurrent,MAX_PATH);
- 
+
    /* Remove " */
 	i = 0;
 	while(i < (INT)_tcslen(szPath))
@@ -338,28 +338,28 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		else
 			i++;
 	}
- 
+
 	tmpPath = szPath;
 	while (_istspace (*tmpPath))
 			tmpPath++;
 	_tcscpy(szPath,tmpPath);
- 
-	if (szPath[0] == _T('\0')) 
+
+	if (szPath[0] == _T('\0'))
 	{
 		ConOutPuts(szCurrent);
 		return 0;
 	}
-	 
+
 
 	/* change to full path if relative path was given */
 	GetFullPathName(szPath,MAX_PATH,szFinalPath,NULL);
- 
+
 	if(szFinalPath[_tcslen(szFinalPath) - 1] == _T('\\') && _tcslen(szFinalPath) > 3)
 		szFinalPath[_tcslen(szFinalPath) - 1] = _T('\0');
- 
+
 	/* Handle Root Directory Alone*/
 	if (_tcslen(szFinalPath) == 3 && szFinalPath[1] == _T(':'))
-	{		
+	{
 		if(!SetRootPath(szFinalPath))
 		{
 			/* Change prompt if it is one the same drive or /D */
@@ -372,38 +372,38 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 		ConErrPrintf(szMsg);
 		nErrorLevel = 1;
 		return 1;
- 
+
 	}
- 
+
 	/* Get a list of all the files */
 	hFile = FindFirstFile (szFinalPath, &f);
- 
+
 	do
 	{
 		if(hFile == INVALID_HANDLE_VALUE)
-		{		
-			ConErrFormatMessage (GetLastError(), szFinalPath);			
+		{
+			ConErrFormatMessage (GetLastError(), szFinalPath);
 			nErrorLevel = 1;
 			return 1;
 		}
- 
+
 		/* Strip the paths back to the folder they are in */
 		for(i = (_tcslen(szFinalPath) -  1); i > -1; i--)
 			if(szFinalPath[i] != _T('\\'))
 				szFinalPath[i] = _T('\0');
 			else
 				break;
- 
-		_tcscat(szFinalPath,f.cFileName);      
-		
+
+		_tcscat(szFinalPath,f.cFileName);
+
 		if ((f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) ==  FILE_ATTRIBUTE_DIRECTORY)
-		{  		       
+		{
 			if(!SetRootPath(szFinalPath))
 			{
 				/* Change for /D */
 				if(bChangeDrive)
-				{   
-					_tcsupr(szFinalPath);   
+				{
+					_tcsupr(szFinalPath);
 					GetPathCase(szFinalPath, szPath);
 					SetCurrentDirectory(szPath);
 				}
@@ -412,7 +412,7 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 		}
 	}while(FindNextFile (hFile, &f));
- 
+
 	/* Didnt find an directories */
 	LoadString(CMD_ModuleHandle, STRING_ERROR_PATH_NOT_FOUND, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg);
@@ -426,18 +426,18 @@ INT cmd_chdir (LPTSTR cmd, LPTSTR param)
 
 #ifdef INCLUDE_CMD_MKDIR
 
-/* Helper funtion for mkdir to make directories in a path.  
+/* Helper funtion for mkdir to make directories in a path.
 Dont use the api to decrease depence on libs */
-BOOL 
+BOOL
 MakeFullPath(TCHAR * DirPath)
 {
     TCHAR path[MAX_PATH];
     TCHAR *p = DirPath;
     INT  n;
 
-    if (p[0] && p[1] == _T(':')) 
+    if (p[0] && p[1] == _T(':'))
         p += 2;
-    while (*p == _T('\\')) 
+    while (*p == _T('\\'))
         p++; /* skip drive root */
     while ((p = _tcschr(p, _T('\\'))) != NULL)
     {
@@ -602,7 +602,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 	INT res;
 	TCHAR szMsg[RC_STRING_MAX_SIZE];
 	TCHAR szFullPath[MAX_PATH];
-	
+
 	if (!_tcsncmp (param, _T("/?"), 2))
 	{
 		ConOutResPaging(TRUE,STRING_RMDIR_HELP);
@@ -647,7 +647,7 @@ INT cmd_rmdir (LPTSTR cmd, LPTSTR param)
 			_tcscpy(dir,arg[i]);
 		}
 	}
-	
+
 	if (dir[0] == _T('\0'))
 	{
 		/* No folder to remove */
@@ -741,11 +741,11 @@ INT CommandExit (LPTSTR cmd, LPTSTR param)
 			nErrorLevel = _ttoi(param);
 		ExitBatch (NULL);
 	}
-		
+
 	else
 		bExit = TRUE;
 
-	
+
 	return 0;
 
 }

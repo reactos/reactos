@@ -4,7 +4,7 @@
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<define name="__USE_W32API" />
 	<define name="_DEBUG" />
-	<include base="uniata">.</include> 
+	<include base="uniata">.</include>
 	<include base="uniata">inc</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
@@ -17,11 +17,11 @@
 	<file>id_queue.cpp</file>
 	<file>id_sata.cpp</file>
 	<file>idedma.rc</file>
-	
+
 	<directory name="ros_glue">
 		<file>ros_glue.cpp</file>
 		<file>ros_glue_asm.s</file>
 	</directory>
-	
+
 	<linkerflag>-lgcc</linkerflag>
 </module>

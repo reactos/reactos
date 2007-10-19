@@ -988,7 +988,7 @@ static void flush_to_framebuffer_drawpixels(IWineD3DSurfaceImpl *This) {
 
         case WINED3DFMT_X8R8G8B8:
         {
-            /* make sure the X byte is set to alpha on, since it 
+            /* make sure the X byte is set to alpha on, since it
                could be any random value. This fixes the intro movie in Pirates! */
             int size;
             unsigned int *data;
@@ -2444,7 +2444,7 @@ static HRESULT WINAPI IWineD3DSurfaceImpl_Flip(IWineD3DSurface *iface, IWineD3DS
     if( !(This->resource.usage & WINED3DUSAGE_RENDERTARGET) ) return WINEDDERR_NOTFLIPPABLE;
 
     if(override) {
-        /* DDraw sets this for the X11 surfaces, so don't confuse the user 
+        /* DDraw sets this for the X11 surfaces, so don't confuse the user
          * FIXME("(%p) Target override is not supported by now\n", This);
          * Additionally, it isn't really possible to support triple-buffering
          * properly on opengl at all
@@ -3428,7 +3428,7 @@ HRESULT WINAPI IWineD3DSurfaceImpl_SetPalette(IWineD3DSurface *iface, IWineD3DPa
     IWineD3DPaletteImpl *PalImpl = (IWineD3DPaletteImpl *) Pal;
     TRACE("(%p)->(%p)\n", This, Pal);
 
-    if(This->palette != NULL) 
+    if(This->palette != NULL)
         if(This->resource.usage & WINED3DUSAGE_RENDERTARGET)
             This->palette->Flags &= ~WINEDDPCAPS_PRIMARYSURFACE;
 

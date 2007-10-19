@@ -120,7 +120,7 @@ USBD_CalculateUsbBandwidth(
             0x0d  /* UsbdPipeTypeInterrupt */
         };
     DWORD Result;
-    
+
     if (OverheadTable[EndpointType] != 0)
     {
         Result = ((MaxPacketSize + OverheadTable[EndpointType]) * 8 * 7) / 6;
@@ -235,7 +235,7 @@ USBD_CompleteRequest(DWORD Unknown1, DWORD Unknown2)
  */
 VOID STDCALL
 USBD_RegisterHcFilter(
-    PDEVICE_OBJECT DeviceObject, 
+    PDEVICE_OBJECT DeviceObject,
     PDEVICE_OBJECT FilterDeviceObject
     )
 {
@@ -325,14 +325,14 @@ USBD_CreateConfigurationRequestEx(
     /* Include the NULL entry */
     ++InterfaceCount;
 
-    UrbSize = sizeof(Urb->UrbSelectConfiguration) + 
+    UrbSize = sizeof(Urb->UrbSelectConfiguration) +
        (InterfaceCount * sizeof(PUSBD_INTERFACE_LIST_ENTRY));
     Urb = ExAllocatePool(NonPagedPool, UrbSize);
     Urb->UrbSelectConfiguration.Hdr.Function =
-        URB_FUNCTION_SELECT_CONFIGURATION;        
+        URB_FUNCTION_SELECT_CONFIGURATION;
     Urb->UrbSelectConfiguration.Hdr.Length =
         sizeof(Urb->UrbSelectConfiguration);
-    Urb->UrbSelectConfiguration.ConfigurationDescriptor = 
+    Urb->UrbSelectConfiguration.ConfigurationDescriptor =
        ConfigurationDescriptor;
     memcpy((PVOID)&Urb->UrbSelectConfiguration.Interface, (PVOID)InterfaceList,
        InterfaceCount * sizeof(PUSBD_INTERFACE_LIST_ENTRY));
@@ -455,8 +455,8 @@ USBD_ParseConfigurationDescriptorEx(
 
        if (UsbInterfaceDesc->bLength == 0) break;
        UsbInterfaceDesc = UsbInterfaceDesc + UsbInterfaceDesc->bLength;
-    }    
-    return NULL;    
+    }
+    return NULL;
 }
 
 /*

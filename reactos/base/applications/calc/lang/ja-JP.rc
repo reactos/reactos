@@ -39,7 +39,7 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 // Menu
 //
 
-MAIN_MENU MENU 
+MAIN_MENU MENU
 BEGIN
     POPUP "編集(&E)"
     BEGIN
@@ -61,7 +61,7 @@ BEGIN
     END
 END
 
-SCIMS_MENU MENU 
+SCIMS_MENU MENU
 BEGIN
     POPUP "編集(&E)"
     BEGIN
@@ -92,7 +92,7 @@ BEGIN
     END
 END
 
-SCIWS_MENU MENU 
+SCIWS_MENU MENU
 BEGIN
     POPUP "編集(&E)"
     BEGIN
@@ -124,7 +124,7 @@ BEGIN
     END
 END
 
-WHATS_THIS_MENU MENU 
+WHATS_THIS_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
@@ -138,9 +138,9 @@ END
 // Accelerator
 //
 
-MAIN_MENU ACCELERATORS 
+MAIN_MENU ACCELERATORS
 BEGIN
-    VK_F1,          IDV_HELP,               VIRTKEY 
+    VK_F1,          IDV_HELP,               VIRTKEY
 END
 
 
@@ -173,7 +173,7 @@ END
 // String Table
 //
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APPNAME             "電卓"
     IDS_BTN_BACKSPACE       "Back"

@@ -19,7 +19,7 @@
  */
 /*
  * Translation made by Jerome Signouret, 2005.
- * Updated by Pierre Schweitzer, 2007. 
+ * Updated by Pierre Schweitzer, 2007.
  */
 #include "windows.h"
 #include "resource.h"

@@ -35,7 +35,7 @@ SmCompleteSession (IN HANDLE hSmApiPort,
 {
   NTSTATUS         Status;
   SM_PORT_MESSAGE  SmReqMsg;
-    
+
   DPRINT("SMLIB: %s called\n", __FUNCTION__);
 
   /* Marshal Ses in the LPC message */

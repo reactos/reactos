@@ -108,10 +108,10 @@ inline static void WININET_find_data_WtoA(LPWIN32_FIND_DATAW dataW, LPWIN32_FIND
     dataA->nFileSizeLow     = dataW->nFileSizeLow;
     dataA->dwReserved0      = dataW->dwReserved0;
     dataA->dwReserved1      = dataW->dwReserved1;
-    WideCharToMultiByte(CP_ACP, 0, dataW->cFileName, -1, 
+    WideCharToMultiByte(CP_ACP, 0, dataW->cFileName, -1,
         dataA->cFileName, sizeof(dataA->cFileName),
         NULL, NULL);
-    WideCharToMultiByte(CP_ACP, 0, dataW->cAlternateFileName, -1, 
+    WideCharToMultiByte(CP_ACP, 0, dataW->cAlternateFileName, -1,
         dataA->cAlternateFileName, sizeof(dataA->cAlternateFileName),
         NULL, NULL);
 }

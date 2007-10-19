@@ -82,7 +82,7 @@ static HRESULT del_dirs_callback(HINF hinf, PCWSTR field, const void *arg)
     DWORD size;
 
     BOOL ok = SetupFindFirstLineW(hinf, field, NULL, &context);
-    
+
     for (; ok; ok = SetupFindNextLine(&context, &context))
     {
         WCHAR directory[MAX_INF_STRING_LENGTH];
@@ -148,7 +148,7 @@ static HRESULT register_ocxs_callback(HINF hinf, PCWSTR field, const void *arg)
     HRESULT hr = S_OK;
 
     BOOL ok = SetupFindFirstLineW(hinf, field, NULL, &context);
-    
+
     for (; ok; ok = SetupFindNextLine(&context, &context))
     {
         WCHAR buffer[MAX_INF_STRING_LENGTH];
@@ -633,7 +633,7 @@ HRESULT WINAPI ExecuteCabA(HWND hwnd, CABINFOA* pCab, LPVOID pReserved)
 
     RtlCreateUnicodeStringFromAsciiz(&inf, pCab->pszInf);
     RtlCreateUnicodeStringFromAsciiz(&section, pCab->pszSection);
-    
+
     MultiByteToWideChar(CP_ACP, 0, pCab->szSrcPath, -1, cabinfo.szSrcPath,
                         sizeof(cabinfo.szSrcPath) / sizeof(WCHAR));
 
@@ -654,14 +654,14 @@ HRESULT WINAPI ExecuteCabA(HWND hwnd, CABINFOA* pCab, LPVOID pReserved)
 
 /***********************************************************************
  *             ExecuteCabW    (ADVPACK.@)
- * 
+ *
  * Installs the INF file extracted from a specified cabinet file.
- * 
+ *
  * PARAMS
  *   hwnd      [I] Handle to the window used for the display.
  *   pCab      [I] Information about the cabinet file.
  *   pReserved [I] Reserved.  Must be NULL.
- * 
+ *
  * RETURNS
  *   Success: S_OK.
  *   Failure: E_FAIL.

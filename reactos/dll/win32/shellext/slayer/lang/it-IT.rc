@@ -31,7 +31,7 @@ BEGIN
   PUSHBUTTON "A&nnulla", IDCANCEL, 162,116,60,14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
   IDS_DESCRIPTION "Estensione dell'ambiente per la compatibilià delle applicazioni"

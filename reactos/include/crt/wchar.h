@@ -59,7 +59,7 @@
 
 #ifndef RC_INVOKED
 
-#ifdef __cplusplus 
+#ifdef __cplusplus
 extern "C" {
 #endif
 
@@ -115,7 +115,7 @@ _CRTIMP wint_t __cdecl	fgetwc (FILE*);
 _CRTIMP wint_t __cdecl	fputwc (wchar_t, FILE*);
 _CRTIMP wint_t __cdecl	ungetwc (wchar_t, FILE*);
 
-#ifdef __MSVCRT__ 
+#ifdef __MSVCRT__
 _CRTIMP wchar_t* __cdecl fgetws (wchar_t*, int, FILE*);
 _CRTIMP int __cdecl	fputws (const wchar_t*, FILE*);
 _CRTIMP wint_t __cdecl	getwc (FILE*);
@@ -179,7 +179,7 @@ _CRTIMP wchar_t* __cdecl	_wctime64 (const __time64_t*);
 #endif /* __STRICT_ANSI__ */
 _CRTIMP size_t __cdecl	wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
 #define _WTIME_DEFINED
-#endif /* _WTIME_DEFINED */ 
+#endif /* _WTIME_DEFINED */
 
 
 #ifndef _WSTRING_DEFINED
@@ -280,7 +280,7 @@ int __cdecl wctob(wint_t);
 #ifndef __NO_ISOCEXT /* these need static lib libmingwex.a */
 __CRT_INLINE int __cdecl fwide(FILE* __UNUSED_PARAM(stream),
 			       int __UNUSED_PARAM(mode))
-  {return -1;} /* limited to byte orientation */ 
+  {return -1;} /* limited to byte orientation */
 __CRT_INLINE int __cdecl mbsinit(const mbstate_t* __UNUSED_PARAM(ps))
   {return 1;}
 wchar_t* __cdecl wmemset(wchar_t *, wchar_t, size_t);
@@ -323,7 +323,7 @@ struct _wfinddatai64_t {
 };
 struct __wfinddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;    
+        __time64_t  time_create;
         __time64_t  time_access;
         __time64_t  time_write;
         _fsize_t    size;
@@ -350,7 +350,7 @@ _CRTIMP wchar_t* __cdecl _wmktemp (wchar_t*);
 _CRTIMP long __cdecl	_wfindfirsti64 (const wchar_t*, struct _wfinddatai64_t*);
 _CRTIMP int __cdecl 	_wfindnexti64 (long, struct _wfinddatai64_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*); 
+_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*);
 _CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 #endif /* defined (__MSVCRT__) */
@@ -359,7 +359,7 @@ _CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
 
 #ifndef _WDIRECT_DEFINED
 /* Also in direct.h */
-#ifdef __MSVCRT__ 
+#ifdef __MSVCRT__
 _CRTIMP int __cdecl	  _wchdir (const wchar_t*);
 _CRTIMP wchar_t* __cdecl  _wgetcwd (wchar_t*, int);
 _CRTIMP wchar_t* __cdecl  _wgetdcwd (int, wchar_t*, int);

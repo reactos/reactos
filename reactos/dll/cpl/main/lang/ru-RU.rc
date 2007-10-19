@@ -63,7 +63,7 @@ BEGIN
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
   GROUPBOX "Залипание кнопки мыши", -1, 5, 150, 230, 70
   CHECKBOX "&Включить залипание", IDC_CHECK_CLICK_LOCK, 10, 160, 84, 20
-  PUSHBUTTON "&Параметры...", IDC_BUTTON_CLICK_LOCK, 170, 160, 55, 14 
+  PUSHBUTTON "&Параметры...", IDC_BUTTON_CLICK_LOCK, 170, 160, 55, 14
   LTEXT "Позволяет выполнять выделение и перетаскивание без удерживания кнопки нажатой. Для включения ненадолго задержите кнопку мыши в нажатом положении. Для освобождения снова сделайте щелчок.", -1, 10, 180, 200, 30
 END
 

@@ -51,7 +51,7 @@ static xmlDocPtr document = NULL;
 /*
  * Default document
  */
-static xmlChar buffer[] = 
+static xmlChar buffer[] =
 "<?xml version=\"1.0\"?>\n\
 <EXAMPLE prop1=\"gnome is great\" prop2=\"&amp; linux too\">\n\
   <head>\n\
@@ -79,7 +79,7 @@ static void
 testXPath(const char *str) {
     xmlXPathObjectPtr res;
     xmlXPathContextPtr ctxt;
-    
+
 #if defined(LIBXML_XPTR_ENABLED)
     if (xptr) {
 	ctxt = xmlXPtrNewContext(document, NULL, NULL);
@@ -96,7 +96,7 @@ testXPath(const char *str) {
 
 	    comp = xmlXPathCompile(BAD_CAST str);
 	    if (comp != NULL) {
-		if (tree) 
+		if (tree)
 		    xmlXPathDebugDumpCompExpr(stdout, comp, 0);
 
 		res = xmlXPathCompiledEval(comp, ctxt);
@@ -127,10 +127,10 @@ testXPathFile(const char *filename) {
     while (fgets(expression, 4500, input) != NULL) {
 	len = strlen(expression);
 	len--;
-	while ((len >= 0) && 
+	while ((len >= 0) &&
 	       ((expression[len] == '\n') || (expression[len] == '\t') ||
 		(expression[len] == '\r') || (expression[len] == ' '))) len--;
-	expression[len + 1] = 0;      
+	expression[len + 1] = 0;
 	if (len >= 0) {
 	    printf("\n========================\nExpression: %s\n", expression) ;
 	    testXPath(expression);
@@ -150,7 +150,7 @@ int main(int argc, char **argv) {
 #if defined(LIBXML_XPTR_ENABLED)
 	if ((!strcmp(argv[i], "-xptr")) || (!strcmp(argv[i], "--xptr")))
 	    xptr++;
-	else 
+	else
 #endif
 	if ((!strcmp(argv[i], "-debug")) || (!strcmp(argv[i], "--debug")))
 	    debug++;
@@ -211,7 +211,7 @@ int main(int argc, char **argv) {
 	printf("\t--file : or\n");
 	printf("\t-f     : read queries from files, args\n");
     }
-    if (document != NULL) 
+    if (document != NULL)
 	xmlFreeDoc(document);
     xmlCleanupParser();
     xmlMemoryDump();

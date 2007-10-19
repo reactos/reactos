@@ -61,7 +61,7 @@ ProcessExistingDevices()
                                                       0,
                                                       length);
 
-    while ( 
+    while (
     SetupDiEnumDeviceInterfaces(dev_info,
                                 NULL,
                                 &category_guid,

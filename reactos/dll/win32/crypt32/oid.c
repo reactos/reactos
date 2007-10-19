@@ -497,7 +497,7 @@ error_close_key:
 
     RegCloseKey(hKey);
 
-    if (r != ERROR_SUCCESS) 
+    if (r != ERROR_SUCCESS)
     {
         SetLastError(r);
         return FALSE;

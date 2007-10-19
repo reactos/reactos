@@ -270,10 +270,10 @@ static void check_os_sse_support( void )
    }
 #elif defined(WIN32)
    LPTOP_LEVEL_EXCEPTION_FILTER oldFilter;
-   
+
    /* Install our ExceptionFilter */
    oldFilter = SetUnhandledExceptionFilter( ExceptionFilter );
-   
+
    if ( cpu_has_xmm ) {
       message( "Testing OS support for SSE... " );
 
@@ -397,7 +397,7 @@ void _mesa_init_all_x86_transform_asm( void )
        }
 
    }
-   
+
    if ( _mesa_getenv( "MESA_NO_ASM" ) ) {
       _mesa_x86_cpu_features = 0;
    }

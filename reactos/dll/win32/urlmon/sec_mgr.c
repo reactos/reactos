@@ -271,7 +271,7 @@ static HRESULT WINAPI SecManagerImpl_MapUrlToZone(IInternetSecurityManager *ifac
     return hres;
 }
 
-static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *iface, 
+static HRESULT WINAPI SecManagerImpl_GetSecurityId(IInternetSecurityManager *iface,
         LPCWSTR pwszUrl, BYTE *pbSecurityId, DWORD *pcbSecurityId, DWORD_PTR dwReserved)
 {
     SecManagerImpl *This = SECMGR_THIS(iface);
@@ -375,7 +375,7 @@ static HRESULT WINAPI SecManagerImpl_ProcessUrlAction(IInternetSecurityManager *
     FIXME("Default action is not implemented\n");
     return E_NOTIMPL;
 }
-                                               
+
 
 static HRESULT WINAPI SecManagerImpl_QueryCustomPolicy(IInternetSecurityManager *iface,
                                                        LPCWSTR pwszUrl, REFGUID guidKey,
@@ -574,7 +574,7 @@ static ULONG WINAPI ZoneMgrImpl_Release(IInternetZoneManager* iface)
         HeapFree(GetProcessHeap(), 0, This);
         URLMON_UnlockModule();
     }
-    
+
     return refCount;
 }
 

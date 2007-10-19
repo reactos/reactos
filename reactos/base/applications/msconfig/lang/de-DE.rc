@@ -89,7 +89,7 @@ BEGIN
    CHECKBOX "/&BOOTLOG", IDC_CBX_BOOT_LOG, 15, 120, 50, 10
    CHECKBOX "/BAS&EVIDEO", IDC_CBX_BASE_VIDEO, 15, 135, 55, 10
    CHECKBOX "/S&OS", IDC_CBX_SOS, 15, 150, 50, 10
-   PUSHBUTTON "E&rweiterte Optionen...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 90, 12 
+   PUSHBUTTON "E&rweiterte Optionen...", IDC_BTN_ADVANCED_OPTIONS, 100, 150, 90, 12
    LTEXT "&Zeitlimit:", -1, 280, 91, 30, 10
    EDITTEXT IDC_TXT_BOOT_TIMEOUT, 310, 90, 25, 12, ES_LEFT
    LTEXT "Sek.", -1, 340, 91, 15, 10
@@ -125,9 +125,9 @@ BEGIN
     IDS_MSCONFIG             "Systemkonfigurationsprogramm"
     IDS_TAB_GENERAL          "Allgemein"
     IDS_TAB_SYSTEM           "SYSTEM.INI"
-    IDS_TAB_FREELDR          "FREELDR.INI"   
-    IDS_TAB_SERVICES         "Dienste" 
-    IDS_TAB_STARTUP          "Systemstart" 
+    IDS_TAB_FREELDR          "FREELDR.INI"
+    IDS_TAB_SERVICES         "Dienste"
+    IDS_TAB_STARTUP          "Systemstart"
     IDS_TAB_TOOLS            "Tools"
 END
 
@@ -145,7 +145,7 @@ BEGIN
     IDS_TOOLS_COLUMN_DESCR   "Beschreibung"
 
     IDS_TOOLS_CMD_NAME       "Konsole"
-    IDS_TOOLS_CMD_DESCR      ""           
+    IDS_TOOLS_CMD_DESCR      ""
     IDS_TOOLS_CMD_CMD        "cmd.exe"
 
     IDS_TOOLS_INFO_NAME      "Version"
@@ -171,5 +171,5 @@ BEGIN
     IDS_SERVICES_STATUS_RUNNING "Gestartet"
     IDS_SERVICES_STATUS_STOPPED "Beendet"
     IDS_SERVICES_YES "Ja"
-    IDS_SERVICES_UNKNOWN "Unbekannt" 
+    IDS_SERVICES_UNKNOWN "Unbekannt"
 END

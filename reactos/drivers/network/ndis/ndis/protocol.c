@@ -623,8 +623,8 @@ NdisOpenAdapter(
   AdapterBinding->NdisOpenBlock.SendPacketsHandler  = ProSendPackets;
   AdapterBinding->NdisOpenBlock.TransferDataHandler = ProTransferData;
 
-  AdapterBinding->NdisOpenBlock.RequestCompleteHandler = 
-    Protocol->Chars.RequestCompleteHandler; 
+  AdapterBinding->NdisOpenBlock.RequestCompleteHandler =
+    Protocol->Chars.RequestCompleteHandler;
 
 #if 0
   /* XXX this looks fishy */

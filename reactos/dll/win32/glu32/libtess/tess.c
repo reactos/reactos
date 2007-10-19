@@ -502,7 +502,7 @@ gluTessEndPolygon( GLUtesselator *tess )
 {
   GLUmesh *mesh;
 
-  if (setjmp(tess->env) != 0) { 
+  if (setjmp(tess->env) != 0) {
      /* come back here if out of memory */
      CALL_ERROR_OR_ERROR_DATA( GLU_OUT_OF_MEMORY );
      return;

@@ -47,7 +47,7 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 #endif
 
 	if (!_tcsncmp (param, _T("/?"), 2))
-	{		
+	{
 		ConOutResPaging(TRUE,STRING_GOTO_HELP1);
 		return 0;
 	}
@@ -67,19 +67,19 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 
 	/* terminate label at first space char */
 	tmp = param+1;
-  while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))  
+  while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))
   tmp++;
 	*(tmp) = _T('\0');
-     
+
 	/* set file pointer to the beginning of the batch file */
 	lNewPosHigh = 0;
-	   
+
   /* jump to end of the file */
-  if ( _tcsicmp( param, _T(":eof"))==0) 
-  {      
+  if ( _tcsicmp( param, _T(":eof"))==0)
+  {
     SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_END);
     return 0;
-  } 
+  }
 
   /* jump to begin of the file */
   SetFilePointer (bc->hBatchFile, 0, &lNewPosHigh, FILE_BEGIN);
@@ -87,18 +87,18 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
 	while (FileGetString (bc->hBatchFile, textline, sizeof(textline) / sizeof(textline[0])))
 	{
      int pos;
-     int size;     
+     int size;
 
 		/* Strip out any trailing spaces or control chars */
 		tmp = textline + _tcslen (textline) - 1;
-		
-    
+
+
     while (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':')))
 			tmp--;
 		*(tmp + 1) = _T('\0');
-                
+
 		/* Then leading spaces... */
-		tmp = textline;   
+		tmp = textline;
 		while (_istspace (*tmp))
 			tmp++;
 
@@ -107,16 +107,16 @@ INT cmd_goto (LPTSTR cmd, LPTSTR param)
     pos=0;
     while (tmp+pos < tmp+size)
     {
-     if (_istspace(tmp[pos])) 
+     if (_istspace(tmp[pos]))
          tmp[pos]=_T('\0');
      pos++;
-    }          
-           
+    }
+
 		/* use whole label name */
 		if ((*tmp == _T(':')) && (_tcsicmp (++tmp, param) == 0))
 			return 0;
 	}
-  
+
 	LoadString(CMD_ModuleHandle, STRING_GOTO_ERROR2, szMsg, RC_STRING_MAX_SIZE);
 	ConErrPrintf(szMsg, param);
 	ExitBatch(NULL);

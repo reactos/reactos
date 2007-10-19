@@ -1347,7 +1347,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
       if (gdb_attached_yet)
         {
           LONG Esp;
-  
+
           stop_reply:
           /* reply to host that an exception has occurred */
           SigVal = GspComputeSignal(ExceptionRecord->ExceptionCode);
@@ -1360,16 +1360,16 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
 
           *ptr++ = HexChars[ESP];
           *ptr++ = ':';
-  
+
           Esp = GspGetEspFromTrapFrame(TrapFrame);      /* SP */
           ptr = GspMem2Hex((PCHAR) &Esp, ptr, 4, 0);
           *ptr++ = ';';
-  
+
           *ptr++ = HexChars[EBP];
           *ptr++ = ':';
           ptr = GspMem2Hex((PCHAR) &TrapFrame->Ebp, ptr, 4, 0);       /* FP */
           *ptr++ = ';';
-  
+
           *ptr++ = HexChars[PC];
           *ptr++ = ':';
           ptr = GspMem2Hex((PCHAR) &TrapFrame->Eip, ptr, 4, 0);        /* PC */
@@ -1383,7 +1383,7 @@ KdpGdbEnterDebuggerException(PEXCEPTION_RECORD ExceptionRecord,
         {
           gdb_attached_yet = 1;
         }
-      
+
       Stepping = FALSE;
 
       while (TRUE)

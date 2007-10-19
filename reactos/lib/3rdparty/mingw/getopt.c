@@ -129,7 +129,7 @@ int _tgetopt(int argc, _TCHAR * const argv[], const _TCHAR * optstring)
   else
    _toptarg = argv[_toptind] + s_nArgChar;
  }
- 
+
  /* success */
  return _toptopt;
 }

@@ -3,7 +3,7 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 
+ * FILE:
  * PURPOSE:              Directx headers
  * PROGRAMMER:           Magnus Olsen (greatlrd)
  *
@@ -25,7 +25,7 @@ typedef struct _VIDEOMEMORY *LPVIDMEM;
 #endif
 
 #define SURFACEALIGN_DISCARDABLE 0x00000001
-#define VMEMHEAP_LINEAR 0x00000001 
+#define VMEMHEAP_LINEAR 0x00000001
 #define VMEMHEAP_RECTANGULAR 0x00000002
 #define VMEMHEAP_ALIGNMENT 0x00000004
 
@@ -41,7 +41,7 @@ typedef struct _VMEMR
 {
   struct _VMEMR *next;
   struct _VMEMR *prev;
-  
+
   struct _VMEMR *pUp;
   struct _VMEMR *pDown;
   struct _VMEMR *pLeft;
@@ -101,7 +101,7 @@ typedef struct _VMEMHEAP
     DWORD dwTotalSize;
     FLATPTR fpGARTLin;
     FLATPTR fpGARTDev;
-    DWORD dwCommitedSize;     
+    DWORD dwCommitedSize;
     DWORD dwCoalesceCount;
     HEAPALIGNMENT Alignment;
     DDSCAPSEX ddsCapsEx;
@@ -117,7 +117,7 @@ typedef struct _VMEMHEAP
 
 typedef struct _DD_GETHEAPALIGNMENTDATA
 {
-    ULONG_PTR dwInstance; 
+    ULONG_PTR dwInstance;
     DWORD dwHeap;
     HRESULT ddRVal;
     VOID* GetHeapAlignment;
@@ -127,7 +127,7 @@ typedef struct _DD_GETHEAPALIGNMENTDATA
 extern void WINAPI VidMemFree( LPVMEMHEAP pvmh, FLATPTR ptr);
 extern FLATPTR WINAPI VidMemAlloc( LPVMEMHEAP pvmh, DWORD width, DWORD height);
 
-extern FLATPTR WINAPI 
+extern FLATPTR WINAPI
        HeapVidMemAllocAligned(
                                LPVIDMEM lpVidMem,
                                DWORD dwWidth,

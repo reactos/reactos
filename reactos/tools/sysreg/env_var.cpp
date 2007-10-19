@@ -17,7 +17,7 @@ namespace System_
 	EnvironmentVariable::EnvironmentMap EnvironmentVariable::m_Map;
 
 //---------------------------------------------------------------------------------------
-	EnvironmentVariable::EnvironmentVariable() 
+	EnvironmentVariable::EnvironmentVariable()
 	{
 
 	}
@@ -30,7 +30,7 @@ namespace System_
 
 //---------------------------------------------------------------------------------------
 
-	bool EnvironmentVariable::getValue( string const &EnvName, string &EnvValue) 
+	bool EnvironmentVariable::getValue( string const &EnvName, string &EnvValue)
 	{
 		EnvironmentMap::const_iterator it = m_Map.find (EnvName);
 		if (it != m_Map.end())
@@ -38,9 +38,9 @@ namespace System_
 			EnvValue = it->second;
 			return true;
 		}
-		
+
 		char * value = getenv(EnvName.c_str ());
-		
+
 		if (!value)
 		{
 			cerr << "EnvironmentVariable::getValue found no value for " << EnvName << endl;

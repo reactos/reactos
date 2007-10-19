@@ -265,7 +265,7 @@ static void texgen_reflection_map_nv( GLcontext *ctx,
    out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
    out->count = VB->Count;
    out->size = MAX2(in->size, 3);
-   if (in->size == 4) 
+   if (in->size == 4)
       _mesa_copy_tab[0x8]( out, in );
 }
 
@@ -294,7 +294,7 @@ static void texgen_normal_map_nv( GLcontext *ctx,
    out->flags |= (in->flags & VEC_SIZE_FLAGS) | VEC_SIZE_3;
    out->count = count;
    out->size = MAX2(in->size, 3);
-   if (in->size == 4) 
+   if (in->size == 4)
       _mesa_copy_tab[0x8]( out, in );
 }
 
@@ -488,7 +488,7 @@ static GLboolean run_texgen_stage( GLcontext *ctx,
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled) 
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled)
       return GL_TRUE;
 
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {
@@ -498,7 +498,7 @@ static GLboolean run_texgen_stage( GLcontext *ctx,
 
 	 store->TexgenFunc[i]( ctx, store, i );
 
-	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] = 
+	 VB->AttribPtr[VERT_ATTRIB_TEX0+i] =
 	    VB->TexCoordPtr[i] = &store->texcoord[i];
       }
    }
@@ -513,7 +513,7 @@ static void validate_texgen_stage( GLcontext *ctx,
    struct texgen_stage_data *store = TEXGEN_STAGE_DATA(stage);
    GLuint i;
 
-   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled) 
+   if (!ctx->Texture._TexGenEnabled || ctx->VertexProgram._Enabled)
       return;
 
    for (i = 0 ; i < ctx->Const.MaxTextureCoordUnits ; i++) {

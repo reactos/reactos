@@ -120,7 +120,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                + MemoryArea->Data.SectionData.ViewOffset;
       /*
        * Get or create a pageop
@@ -245,7 +245,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
              + MemoryArea->Data.SectionData.ViewOffset;;
 
       /*
@@ -411,7 +411,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
 #else
    new_entry->Caller = _ReturnAddress();
 #endif
-#endif   
+#endif
 
    if (MmGetPfnForProcess(Process, Address) != Page)
    {
@@ -430,7 +430,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    {
       if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)
       {
-          DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ", 
+          DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ",
                    current_entry->Address);
           DbgPrint("%p", new_entry->Caller);
           DbgPrint("\n    previous caller ");

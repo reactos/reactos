@@ -359,5 +359,5 @@ GdiplusNotificationHook(OUT ULONG_PTR *token)
  */
 VOID WINGDIPAPI
 GdiplusNotificationUnhook(ULONG_PTR token)
-{	 
+{
 }

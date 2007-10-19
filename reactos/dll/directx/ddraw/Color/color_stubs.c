@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/color/color.c
- * PURPOSE:              IDirectDrawColorControl Implementation 
+ * PURPOSE:              IDirectDrawColorControl Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -12,10 +12,10 @@
 
 ULONG WINAPI
 DirectDrawColorControl_AddRef( LPDIRECTDRAWCOLORCONTROL iface)
-{           
+{
   DX_WINDBG_trace();
 
-   DX_STUB;  
+   DX_STUB;
 }
 
 ULONG WINAPI
@@ -24,28 +24,28 @@ DirectDrawColorControl_Release( LPDIRECTDRAWCOLORCONTROL iface)
     LPDDRAWI_DDCOLORCONTROL_INT This = (LPDDRAWI_DDCOLORCONTROL_INT)iface;
 
     DX_WINDBG_trace();
-    /* FIXME 
-       This is not right exiame how it should be done 
+    /* FIXME
+       This is not right exiame how it should be done
      */
     DX_STUB_str("FIXME This is not right exiame how it should be done\n");
     return This->dwIntRefCnt;
 }
 
 HRESULT WINAPI
-DirectDrawColorControl_QueryInterface( LPDIRECTDRAWCOLORCONTROL iface, 
-                                       REFIID riid, 
-                                       LPVOID* ppvObj) 
+DirectDrawColorControl_QueryInterface( LPDIRECTDRAWCOLORCONTROL iface,
+                                       REFIID riid,
+                                       LPVOID* ppvObj)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI
-DirectDrawColorControl_GetColorControls( LPDIRECTDRAWCOLORCONTROL iface, 
+DirectDrawColorControl_GetColorControls( LPDIRECTDRAWCOLORCONTROL iface,
                                          LPDDCOLORCONTROL lpColorControl)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI
@@ -53,7 +53,7 @@ DirectDrawColorControl_SetColorControls( LPDIRECTDRAWCOLORCONTROL iface,
                                          LPDDCOLORCONTROL lpColorControl)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 IDirectDrawColorControlVtbl DirectDrawColorControl_Vtable =

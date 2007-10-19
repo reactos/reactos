@@ -20,14 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- * 
+ *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 20, 2004, by Dimitrie O. Paun.
- * 
+ *
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- * 
+ *
  * TODO:
  *    -- DTS_APPCANPARSE
  *    -- DTS_SHORTDATECENTURYFORMAT
@@ -395,7 +395,7 @@ DATETIME_ReturnTxt (const DATETIME_INFO *infoPtr, int count, LPWSTR result, int 
 	    wsprintfW (result, fmt__2dW, date.wMonth);
 	    break;
 	case THREECHARMONTH:
-	    GetLocaleInfoW(GetSystemDefaultLCID(), LOCALE_SMONTHNAME1+date.wMonth -1, 
+	    GetLocaleInfoW(GetSystemDefaultLCID(), LOCALE_SMONTHNAME1+date.wMonth -1,
 			   buffer, sizeof(buffer)/sizeof(buffer[0]));
 	    wsprintfW (result, fmt__3sW, buffer);
 	    break;
@@ -440,7 +440,7 @@ static const int DayOfWeekTable[] = {0, 3, 2, 5, 0, 3, 5, 1, 4, 6, 2, 4};
 static int DATETIME_CalculateDayOfWeek(DWORD day, DWORD month, DWORD year)
 {
     year-=(month < 3);
-    
+
     return((year + year/4 - year/100 + year/400 +
          DayOfWeekTable[month-1] + day ) % 7);
 }
@@ -611,7 +611,7 @@ DATETIME_ReturnFieldWidth (const DATETIME_INFO *infoPtr, HDC hdc, int count, SHO
     *fieldWidthPtr = size.cx;
 }
 
-static void 
+static void
 DATETIME_Refresh (DATETIME_INFO *infoPtr, HDC hdc)
 {
     int i,prevright;
@@ -720,7 +720,7 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, WORD wKey, INT x, INT y)
 
         /* recalculate the position of the monthcal popup */
         if(infoPtr->dwStyle & DTS_RIGHTALIGN)
-            infoPtr->monthcal_pos.x = infoPtr->calbutton.left - 
+            infoPtr->monthcal_pos.x = infoPtr->calbutton.left -
                 (rcMonthCal.right - rcMonthCal.left);
         else
             /* FIXME: this should be after the area reserved for the checkbox */
@@ -736,7 +736,7 @@ DATETIME_LButtonDown (DATETIME_INFO *infoPtr, WORD wKey, INT x, INT y)
             ShowWindow(infoPtr->hMonthCal, SW_HIDE);
         } else {
             const SYSTEMTIME *lprgSysTimeArray = &infoPtr->date;
-            TRACE("update calendar %04d/%02d/%02d\n", 
+            TRACE("update calendar %04d/%02d/%02d\n",
             lprgSysTimeArray->wYear, lprgSysTimeArray->wMonth, lprgSysTimeArray->wDay);
             SendMessageW(infoPtr->hMonthCal, MCM_SETCURSEL, 0, (LPARAM)(&infoPtr->date));
             ShowWindow(infoPtr->hMonthCal, SW_SHOW);
@@ -790,9 +790,9 @@ DATETIME_Button_Command (DATETIME_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     }
     return 0;
 }
-          
-        
-        
+
+
+
 static LRESULT
 DATETIME_Command (DATETIME_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
@@ -855,7 +855,7 @@ DATETIME_Notify (DATETIME_INFO *infoPtr, int idCtrl, LPNMHDR lpnmh)
         ShowWindow(infoPtr->hMonthCal, SW_HIDE);
         infoPtr->dateValid = TRUE;
         SendMessageW (infoPtr->hMonthCal, MCM_GETCURSEL, 0, (LPARAM)&infoPtr->date);
-        TRACE("got from calendar %04d/%02d/%02d day of week %d\n", 
+        TRACE("got from calendar %04d/%02d/%02d day of week %d\n",
         infoPtr->date.wYear, infoPtr->date.wMonth, infoPtr->date.wDay, infoPtr->date.wDayOfWeek);
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, BST_CHECKED, 0);
         InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
@@ -959,7 +959,7 @@ DATETIME_KeyDown (DATETIME_INFO *infoPtr, DWORD vkCode, LPARAM flags)
 	        break;
 	}
     }
-    
+
     switch (vkCode) {
 	case VK_ADD:
     	case VK_UP:
@@ -1115,7 +1115,7 @@ DATETIME_Size (DATETIME_INFO *infoPtr, WORD flags, INT width, INT height)
     TRACE("Height=%d, Width=%d\n", infoPtr->rcClient.bottom, infoPtr->rcClient.right);
 
     infoPtr->rcDraw = infoPtr->rcClient;
-    
+
     if (infoPtr->dwStyle & DTS_UPDOWN) {
         SetWindowPos(infoPtr->hUpdown, NULL,
             infoPtr->rcClient.right-14, 0,
@@ -1144,7 +1144,7 @@ DATETIME_Size (DATETIME_INFO *infoPtr, WORD flags, INT width, INT height)
 }
 
 
-static LRESULT 
+static LRESULT
 DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lpss)
 {
     static const WCHAR buttonW[] = { 'b', 'u', 't', 't', 'o', 'n', 0 };
@@ -1153,12 +1153,12 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
-  
+
     infoPtr->dwStyle = lpss->styleNew;
 
     if ( !(lpss->styleOld & DTS_SHOWNONE) && (lpss->styleNew & DTS_SHOWNONE) ) {
         infoPtr->hwndCheckbut = CreateWindowExW (0, buttonW, 0, WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
-         					 2, 2, 13, 13, infoPtr->hwndSelf, 0, 
+         					 2, 2, 13, 13, infoPtr->hwndSelf, 0,
 						(HINSTANCE)GetWindowLongPtrW (infoPtr->hwndSelf, GWLP_HINSTANCE), 0);
         SendMessageW (infoPtr->hwndCheckbut, BM_SETCHECK, 1, 0);
     }
@@ -1167,7 +1167,7 @@ DATETIME_StyleChanged(DATETIME_INFO *infoPtr, WPARAM wStyleType, const STYLESTRU
         infoPtr->hwndCheckbut = 0;
     }
     if ( !(lpss->styleOld & DTS_UPDOWN) && (lpss->styleNew & DTS_UPDOWN) ) {
-	infoPtr->hUpdown = CreateUpDownControl (WS_CHILD | WS_BORDER | WS_VISIBLE, 120, 1, 20, 20, 
+	infoPtr->hUpdown = CreateUpDownControl (WS_CHILD | WS_BORDER | WS_VISIBLE, 120, 1, 20, 20,
 						infoPtr->hwndSelf, 1, 0, 0, UD_MAXVAL, UD_MINVAL, 0);
     }
     if ( (lpss->styleOld & DTS_UPDOWN) && !(lpss->styleNew & DTS_UPDOWN) ) {
@@ -1212,7 +1212,7 @@ DATETIME_Create (HWND hwnd, const CREATESTRUCTW *lpcs)
     DATETIME_SetFormatW (infoPtr, 0);
 
     /* create the monthcal control */
-    infoPtr->hMonthCal = CreateWindowExW (0, SysMonthCal32W, 0, WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS, 
+    infoPtr->hMonthCal = CreateWindowExW (0, SysMonthCal32W, 0, WS_BORDER | WS_POPUP | WS_CLIPSIBLINGS,
 					  0, 0, 0, 0, infoPtr->hwndSelf, 0, 0, 0);
 
     /* initialize info structure */
@@ -1234,7 +1234,7 @@ DATETIME_Destroy (DATETIME_INFO *infoPtr)
 	DestroyWindow(infoPtr->hwndCheckbut);
     if (infoPtr->hUpdown)
 	DestroyWindow(infoPtr->hUpdown);
-    if (infoPtr->hMonthCal) 
+    if (infoPtr->hMonthCal)
         DestroyWindow(infoPtr->hMonthCal);
     SetWindowLongPtrW( infoPtr->hwndSelf, 0, 0 ); /* clear infoPtr */
     Free (infoPtr);

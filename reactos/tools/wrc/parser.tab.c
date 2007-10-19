@@ -1735,7 +1735,7 @@ yyparse ()
 #endif
 #endif
 {
-  
+
   register int yystate;
   register int yyn;
   int yyresult;

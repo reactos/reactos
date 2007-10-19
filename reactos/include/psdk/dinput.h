@@ -212,7 +212,7 @@ DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE8)
 #define DI8DEVTYPE_SCREENPOINTER    0x1A
 #define DI8DEVTYPE_REMOTE           0x1B
 #define DI8DEVTYPE_SUPPLEMENTAL     0x1C
-	
+
 #define DIDEVTYPEMOUSE_UNKNOWN          1
 #define DIDEVTYPEMOUSE_TRADITIONAL      2
 #define DIDEVTYPEMOUSE_FINGERSTICK      3
@@ -310,7 +310,7 @@ DECL_WINELIB_TYPE_AW(LPDIRECTINPUTDEVICE8)
 #define DI8DEVTYPESUPPLEMENTAL_DUALPEDALS          11
 #define DI8DEVTYPESUPPLEMENTAL_THREEPEDALS         12
 #define DI8DEVTYPESUPPLEMENTAL_RUDDERPEDALS        13
-	
+
 #define GET_DIDEVICE_TYPE(dwDevType)     LOBYTE(dwDevType)
 #define GET_DIDEVICE_SUBTYPE(dwDevType)  HIBYTE(dwDevType)
 
@@ -798,7 +798,7 @@ typedef struct DIDEVCAPS {
 #define DISCL_BACKGROUND	0x00000008
 
 #define DIEFT_ALL		0x00000000
-                                                                                
+
 #define DIEFT_CONSTANTFORCE	0x00000001
 #define DIEFT_RAMPFORCE		0x00000002
 #define DIEFT_PERIODIC		0x00000003
@@ -813,7 +813,7 @@ typedef struct DIDEVCAPS {
 #define DIEFT_DEADBAND		0x00004000
 #define DIEFT_STARTDELAY	0x00008000
 #define DIEFT_GETTYPE(n)	LOBYTE(n)
-                                                                                
+
 #define DI_DEGREES		100
 #define DI_FFNOMINALMAX		10000
 #define DI_SECONDS		1000000

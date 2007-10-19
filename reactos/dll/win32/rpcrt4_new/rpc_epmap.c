@@ -231,7 +231,7 @@ RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE
   msg.message_type = RPCSS_NP_MESSAGE_TYPEID_RESOLVEEPMSG;
   msg.message.resolveepmsg.iface = If->InterfaceId;
   msg.message.resolveepmsg.object = bind->ObjectUuid;
- 
+
   msg.vardata_payload_size = strlen(bind->Protseq) + 1;
 
   /* send the message */
@@ -241,7 +241,7 @@ RPC_STATUS WINAPI RpcEpResolveBinding( RPC_BINDING_HANDLE Binding, RPC_IF_HANDLE
   /* empty-string result means not registered */
   if (reply.as_string[0] == '\0')
     return EPT_S_NOT_REGISTERED;
-  
+
   /* otherwise we fully bind the handle & return RPC_S_OK */
   return RPCRT4_ResolveBinding(Binding, reply.as_string);
 }

@@ -83,7 +83,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 	COLORREF nbkColor, ntColor;
 	HBRUSH hBrush = NULL;
 	TCHAR szText[1024];
-	
+
 	ZeroMemory(szText, sizeof(szText));
 	LoadString(hApplet, IDS_SCREEN_TEXT, szText, sizeof(szText) / sizeof(TCHAR));
 
@@ -122,7 +122,7 @@ void PaintText(LPDRAWITEMSTRUCT drawItem, PConsoleInfo pConInfo)
 
 
 
-INT_PTR 
+INT_PTR
 CALLBACK
 LayoutProc(
   HWND hwndDlg,
@@ -154,7 +154,7 @@ LayoutProc(
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_SCREEN_BUFFER_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_HEIGHT), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
 			SendMessage(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_SIZE_WIDTH), UDM_SETRANGE, 0, (LPARAM)MAKELONG(9999, 1));
-			
+
 			hDC = GetDC(NULL);
 			xres = GetDeviceCaps(hDC, HORZRES);
 			yres = GetDeviceCaps(hDC, VERTRES);
@@ -177,7 +177,7 @@ LayoutProc(
 				EnableWindow(GetDlgItem(hwndDlg, IDC_UPDOWN_WINDOW_POS_TOP), FALSE);
 				SendMessage(GetDlgItem(hwndDlg, IDC_CHECK_SYSTEM_POS_WINDOW), BM_SETCHECK, (WPARAM)BST_CHECKED, 0);
 			}
-			
+
 			return TRUE;
 		}
 		case WM_DRAWITEM:
@@ -188,7 +188,7 @@ LayoutProc(
 		case WM_NOTIFY:
 		{
 			lpnmud = (LPNMUPDOWN) lParam;
-			lppsn = (LPPSHNOTIFY) lParam; 
+			lppsn = (LPPSHNOTIFY) lParam;
 
 			if (lppsn->hdr.code == UDN_DELTAPOS)
 			{

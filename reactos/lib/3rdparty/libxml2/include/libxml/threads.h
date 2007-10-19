@@ -37,40 +37,40 @@ typedef xmlRMutex *xmlRMutexPtr;
 extern "C" {
 #endif
 
-XMLPUBFUN xmlMutexPtr XMLCALL		
+XMLPUBFUN xmlMutexPtr XMLCALL
 			xmlNewMutex	(void);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlMutexLock	(xmlMutexPtr tok);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlMutexUnlock	(xmlMutexPtr tok);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlFreeMutex	(xmlMutexPtr tok);
 
-XMLPUBFUN xmlRMutexPtr XMLCALL		
+XMLPUBFUN xmlRMutexPtr XMLCALL
 			xmlNewRMutex	(void);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlRMutexLock	(xmlRMutexPtr tok);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlRMutexUnlock	(xmlRMutexPtr tok);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlFreeRMutex	(xmlRMutexPtr tok);
 
 /*
  * Library wide APIs.
  */
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlInitThreads	(void);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlLockLibrary	(void);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlUnlockLibrary(void);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
 			xmlGetThreadId	(void);
-XMLPUBFUN int XMLCALL			
+XMLPUBFUN int XMLCALL
 			xmlIsMainThread	(void);
-XMLPUBFUN void XMLCALL			
+XMLPUBFUN void XMLCALL
 			xmlCleanupThreads(void);
-XMLPUBFUN xmlGlobalStatePtr XMLCALL	
+XMLPUBFUN xmlGlobalStatePtr XMLCALL
 			xmlGetGlobalState(void);
 
 #ifdef __cplusplus

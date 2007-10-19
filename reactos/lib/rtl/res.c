@@ -215,7 +215,7 @@ LdrFindResource_U(PVOID BaseAddress,
 
     _SEH_TRY
     {
-	if (ResourceInfo) 
+	if (ResourceInfo)
         {
             DPRINT( "module %p type %ws name %ws lang %04lx level %ld\n",
                      BaseAddress, (LPCWSTR)ResourceInfo->Type,

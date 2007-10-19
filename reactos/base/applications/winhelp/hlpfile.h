@@ -21,7 +21,7 @@
 
 struct tagHelpFile;
 
-typedef struct 
+typedef struct
 {
     char        type[10];
     char        name[9];
@@ -63,9 +63,9 @@ typedef struct tagHlpFileParagraph
         struct
         {
             unsigned                    pos;    /* 0: center, 1: left, 2: right */
-            union 
+            union
             {
-                struct 
+                struct
                 {
                     HBITMAP             hBitmap;
                 } bmp;

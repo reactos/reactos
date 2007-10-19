@@ -329,7 +329,7 @@ INT STDCALL PALETTE_SetMapping(PALOBJ *palPtr, UINT uStart, UINT uNum, BOOL mapO
         }
 
         if( !prevMapping || palPtr->mapping[uStart] != index ) iRemapped++;
-        if (palPtr->mapping != NULL)            
+        if (palPtr->mapping != NULL)
         {
             palPtr->mapping[uStart] = index;
         }

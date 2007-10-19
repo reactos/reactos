@@ -121,7 +121,7 @@ ReadWriteVMDcAttr(PDC dc, FLONG Dirty, BOOL Write)
            Ret = FALSE;
          }
       }
-    }            
+    }
   KeLeaveCriticalRegion();
   return Ret;
 }

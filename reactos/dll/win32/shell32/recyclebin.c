@@ -237,7 +237,7 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
         ERR("GetDeletedFileDetailsW failed\n");
         return FALSE;
     }
-    
+
     pidl = SHAlloc(dwSize);
     if (!pidl)
     {
@@ -274,9 +274,9 @@ static HRESULT WINAPI RecycleBin_EnumObjects(IShellFolder2 *iface, HWND hwnd, SH
     RecycleBin *This = (RecycleBin *)iface;
     IEnumIDList *list;
     static const WCHAR szDrive = L'C';
-    
+
     TRACE("(%p, %p, %x, %p)\n", This, hwnd, (unsigned int)grfFlags, ppenumIDList);
-    
+
     if (grfFlags & SHCONTF_NONFOLDERS)
     {
         TRACE("Starting Enumeration\n");
@@ -299,7 +299,7 @@ static HRESULT WINAPI RecycleBin_EnumObjects(IShellFolder2 *iface, HWND hwnd, SH
         if (*ppenumIDList == NULL)
             return E_OUTOFMEMORY;
     }
-    
+
     return S_OK;
 
 }
@@ -403,7 +403,7 @@ static HRESULT WINAPI RecycleBin_Initialize(IPersistFolder2 *iface, LPCITEMIDLIS
 {
     RecycleBin *This = impl_from_IPersistFolder(iface);
     TRACE("(%p, %p)\n", This, pidl);
-    
+
     This->pidl = ILClone(pidl);
     if (This->pidl == NULL)
         return E_OUTOFMEMORY;
@@ -476,7 +476,7 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
 
     if (iColumn == COLUMN_NAME)
         return RecycleBin_GetDisplayNameOf(iface, pidl, SHGDN_NORMAL, &pDetails->str);
-    
+
     pFileDetails = UnpackDetailsFromPidl(pidl);
     switch (iColumn)
     {
@@ -500,7 +500,7 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
         default:
             return E_FAIL;
     }
-    
+
     pDetails->str.uType = STRRET_WSTR;
     pDetails->str.u.pOleStr = StrDupW(buffer);
     return (pDetails->str.u.pOleStr != NULL ? S_OK : E_OUTOFMEMORY);
@@ -517,7 +517,7 @@ static HRESULT WINAPI RecycleBin_MapColumnToSCID(IShellFolder2 *iface, UINT iCol
     return S_OK;
 }
 
-static const IShellFolder2Vtbl recycleBinVtbl = 
+static const IShellFolder2Vtbl recycleBinVtbl =
 {
     /* IUnknown */
     RecycleBin_QueryInterface,
@@ -702,9 +702,9 @@ static const IContextMenuVtbl recycleBincmVtbl =
     RecycleBin_IContextMenu_GetCommandString
 };
 
-INT_PTR 
-CALLBACK 
-RecycleBinGeneralDlg(   
+INT_PTR
+CALLBACK
+RecycleBinGeneralDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,
@@ -749,9 +749,9 @@ InitializeBitBucketDlg(HWND hwndDlg)
 
 
 
-INT_PTR 
-CALLBACK 
-BitBucketDlg(   
+INT_PTR
+CALLBACK
+BitBucketDlg(
     HWND hwndDlg,
     UINT uMsg,
     WPARAM wParam,

@@ -11,53 +11,53 @@
 
 #ifdef __cplusplus
 extern "C" {
-#endif 
+#endif
 
 #include <ddraw.h>
 
 #define  AMDDS_NONE        0x00
 #define  AMDDS_DCIPS       0x01
-#define  AMDDS_PS          0x02   
-#define  AMDDS_RGBOVR      0x04 
-#define  AMDDS_YUVOVR      0x08 
-#define  AMDDS_RGBOFF      0x10 
-#define  AMDDS_YUVOFF      0x20 
-#define  AMDDS_RGBFLP      0x40 
-#define  AMDDS_YUVFLP      0x80 
-#define  AMDDS_            ALL 0xFF    
+#define  AMDDS_PS          0x02
+#define  AMDDS_RGBOVR      0x04
+#define  AMDDS_YUVOVR      0x08
+#define  AMDDS_RGBOFF      0x10
+#define  AMDDS_YUVOFF      0x20
+#define  AMDDS_RGBFLP      0x40
+#define  AMDDS_YUVFLP      0x80
+#define  AMDDS_            ALL 0xFF
 #define  AMDDS_DEFAULT     AMDDS_ALL
 #define  AMDDS_YUV         (AMDDS_YUVOFF | AMDDS_YUVOVR | AMDDS_YUVFLP)
 #define  AMDDS_RGB         (AMDDS_RGBOFF | AMDDS_RGBOVR | AMDDS_RGBFLP)
 #define  AMDDS_PRIMARY     (AMDDS_DCIPS | AMDDS_PS)
-#define  iPALETTE_COLORS   256 
+#define  iPALETTE_COLORS   256
 #define  iEGA_COLORS       16
 #define  iMASK_COLORS      3
-#define  iTRUECOLOR        16 
-#define  iRED              0     
-#define  iGREEN            1   
-#define  iBLUE             2    
-#define  iPALETTE          8 
-#define  iMAXBITS          8 
+#define  iTRUECOLOR        16
+#define  iRED              0
+#define  iGREEN            1
+#define  iBLUE             2
+#define  iPALETTE          8
+#define  iMAXBITS          8
 
-typedef struct tag_TRUECOLORINFO 
+typedef struct tag_TRUECOLORINFO
 {
          DWORD             dwBitMasks[iMASK_COLORS];
          RGBQUAD           bmiColors[iPALETTE_COLORS];
 } TRUECOLORINFO;
 
 
-typedef struct tagVIDEOINFOHEADER 
+typedef struct tagVIDEOINFOHEADER
 {
          RECT              rcSource;
          RECT              rcTarget;
-         DWORD             dwBitRate; 
+         DWORD             dwBitRate;
          DWORD             dwBitErrorRate;
          REFERENCE_TIME    AvgTimePerFrame;
          BITMAPINFOHEADER  bmiHeader;
 } VIDEOINFOHEADER;
 
 
-typedef struct tagVIDEOINFO 
+typedef struct tagVIDEOINFO
 {
          RECT               rcSource;
          RECT               rcTarget;
@@ -65,7 +65,7 @@ typedef struct tagVIDEOINFO
          DWORD              dwBitErrorRate;
          REFERENCE_TIME     AvgTimePerFrame;
          BITMAPINFOHEADER   bmiHeader;
-         union 
+         union
          {
                RGBQUAD       bmiColors[iPALETTE_COLORS];
                DWORD         dwBitMasks[iMASK_COLORS];
@@ -73,15 +73,15 @@ typedef struct tagVIDEOINFO
          };
 } VIDEOINFO;
 
-typedef struct tagMPEG1VIDEOINFO 
+typedef struct tagMPEG1VIDEOINFO
 {
         VIDEOINFOHEADER      hdr;
-        DWORD                dwStartTimeCode;                                      
-        DWORD                cbSequenceHeader; 
-        BYTE                 bSequenceHeader[1];                                       
+        DWORD                dwStartTimeCode;
+        DWORD                cbSequenceHeader;
+        BYTE                 bSequenceHeader[1];
 } MPEG1VIDEOINFO;
 
-typedef struct tagAnalogVideoInfo 
+typedef struct tagAnalogVideoInfo
 {
         RECT                 rcSource;
         RECT                 rcTarget;
@@ -101,7 +101,7 @@ typedef struct tagAnalogVideoInfo
 #define SIZE_VIDEOHEADER  (sizeof(BITMAPINFOHEADER) + SIZE_PREHEADER)
 
 #define WIDTHBYTES(BTIS)  ((DWORD)(((BTIS)+31) & (~31)) / 8)
-#define DIBWIDTHBYTES(BI) (DWORD)(BI).biBitCount) * (DWORD)WIDTHBYTES((DWORD)(BI).biWidth 
+#define DIBWIDTHBYTES(BI) (DWORD)(BI).biBitCount) * (DWORD)WIDTHBYTES((DWORD)(BI).biWidth
 #define _DIBSIZE(BI)      (DIBWIDTHBYTES(BI) * (DWORD)(BI).biHeight)
 #define DIBSIZE(BI)       ((BI).biHeight < 0 ? (-1)*(_DIBSIZE(BI)) : _DIBSIZE(BI))
 
@@ -184,11 +184,11 @@ DECLARE_INTERFACE_(IQualProp, IUnknown)
   STDMETHOD_(ULONG,AddRef)(THIS) PURE;
   STDMETHOD_(ULONG,Release)(THIS) PURE;
   STDMETHOD(get_FramesDroppedInRenderer)(THIS_ int *pcFrames) PURE;
-  STDMETHOD(get_FramesDrawn)(THIS_ int *pcFramesDrawn) PURE;       
-  STDMETHOD(get_AvgFrameRate)(THIS_ int *piAvgFrameRate) PURE;     
-  STDMETHOD(get_Jitter)(THIS_ int *iJitter) PURE;                  
-  STDMETHOD(get_AvgSyncOffset)(THIS_ int *piAvg) PURE;             
-  STDMETHOD(get_DevSyncOffset)(THIS_ int *piDev) PURE;             
+  STDMETHOD(get_FramesDrawn)(THIS_ int *pcFramesDrawn) PURE;
+  STDMETHOD(get_AvgFrameRate)(THIS_ int *piAvgFrameRate) PURE;
+  STDMETHOD(get_Jitter)(THIS_ int *iJitter) PURE;
+  STDMETHOD(get_AvgSyncOffset)(THIS_ int *piAvg) PURE;
+  STDMETHOD(get_DevSyncOffset)(THIS_ int *piDev) PURE;
 };
 
 
@@ -240,7 +240,7 @@ DECLARE_INTERFACE_(IFullScreenVideoEx, IFullScreenVideo)
 
 
 
-typedef enum 
+typedef enum
 {
   AM_PROPERTY_FRAMESTEP_STEP            = 0x01,
   AM_PROPERTY_FRAMESTEP_CANCEL          = 0x02,
@@ -256,5 +256,5 @@ typedef struct _AM_FRAMESTEP_STEP
 #ifdef __cplusplus
 }
 #endif
-#endif 
+#endif
 

@@ -476,19 +476,19 @@ _mesa_ConvolutionParameteriv(GLenum target, GLenum pname, const GLint *params)
          break;
       case GL_CONVOLUTION_FILTER_SCALE:
 	 /* COPY_4V(ctx->Pixel.ConvolutionFilterScale[c], params); */
-	 /* need cast to prevent compiler warnings */  
-	 ctx->Pixel.ConvolutionFilterScale[c][0] = (GLfloat) params[0]; 
-	 ctx->Pixel.ConvolutionFilterScale[c][1] = (GLfloat) params[1]; 
-	 ctx->Pixel.ConvolutionFilterScale[c][2] = (GLfloat) params[2]; 
-	 ctx->Pixel.ConvolutionFilterScale[c][3] = (GLfloat) params[3]; 
+	 /* need cast to prevent compiler warnings */
+	 ctx->Pixel.ConvolutionFilterScale[c][0] = (GLfloat) params[0];
+	 ctx->Pixel.ConvolutionFilterScale[c][1] = (GLfloat) params[1];
+	 ctx->Pixel.ConvolutionFilterScale[c][2] = (GLfloat) params[2];
+	 ctx->Pixel.ConvolutionFilterScale[c][3] = (GLfloat) params[3];
          break;
       case GL_CONVOLUTION_FILTER_BIAS:
 	 /* COPY_4V(ctx->Pixel.ConvolutionFilterBias[c], params); */
-	 /* need cast to prevent compiler warnings */  
-	 ctx->Pixel.ConvolutionFilterBias[c][0] = (GLfloat) params[0]; 
-	 ctx->Pixel.ConvolutionFilterBias[c][1] = (GLfloat) params[1]; 
-	 ctx->Pixel.ConvolutionFilterBias[c][2] = (GLfloat) params[2]; 
-	 ctx->Pixel.ConvolutionFilterBias[c][3] = (GLfloat) params[3]; 
+	 /* need cast to prevent compiler warnings */
+	 ctx->Pixel.ConvolutionFilterBias[c][0] = (GLfloat) params[0];
+	 ctx->Pixel.ConvolutionFilterBias[c][1] = (GLfloat) params[1];
+	 ctx->Pixel.ConvolutionFilterBias[c][2] = (GLfloat) params[2];
+	 ctx->Pixel.ConvolutionFilterBias[c][3] = (GLfloat) params[3];
          break;
       default:
          _mesa_error(ctx, GL_INVALID_ENUM, "glConvolutionParameteriv(pname)");
@@ -522,7 +522,7 @@ _mesa_CopyConvolutionFilter1D(GLenum target, GLenum internalFormat, GLint x, GLi
       return;
    }
 
-   ctx->Driver.CopyConvolutionFilter1D( ctx, target, 
+   ctx->Driver.CopyConvolutionFilter1D( ctx, target,
 					internalFormat, x, y, width);
 }
 
@@ -554,7 +554,7 @@ _mesa_CopyConvolutionFilter2D(GLenum target, GLenum internalFormat, GLint x, GLi
       return;
    }
 
-   ctx->Driver.CopyConvolutionFilter2D( ctx, target, internalFormat, x, y, 
+   ctx->Driver.CopyConvolutionFilter2D( ctx, target, internalFormat, x, y,
 					width, height );
 }
 

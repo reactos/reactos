@@ -526,7 +526,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
         return Status;
     }
 
-    if (ObjectName.Buffer && 
+    if (ObjectName.Buffer &&
         ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
     {
         ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;

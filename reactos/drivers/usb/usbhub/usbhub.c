@@ -35,9 +35,9 @@ GetRootHubPointer(
 	PIRP Irp;
 	IO_STATUS_BLOCK IoStatus;
 	NTSTATUS Status;
-	
+
 	KeInitializeEvent (&Event, NotificationEvent, FALSE);
-	
+
 	Irp = IoBuildDeviceIoControlRequest(IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO,
 		Pdo,
 		NULL, sizeof(NULL),
@@ -50,25 +50,25 @@ GetRootHubPointer(
 		DPRINT("Usbhub: IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
-	
+
 	/* Initialize the status block before sending the IRP */
 	IoGetNextIrpStackLocation(Irp)->MajorFunction = IRP_MJ_INTERNAL_DEVICE_CONTROL;
 	IoStatus.Status = STATUS_NOT_SUPPORTED;
 	IoStatus.Information = 0;
-	
+
 	Status = IoCallDriver(Pdo, Irp);
-	
+
 	if (Status == STATUS_PENDING)
 	{
 		DPRINT("Usbhub: Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
-	
+
 	return Status;
 }
 
-NTSTATUS STDCALL 
+NTSTATUS STDCALL
 UsbhubAddDevice(
 	IN PDRIVER_OBJECT DriverObject,
 	IN PDEVICE_OBJECT Pdo)
@@ -76,7 +76,7 @@ UsbhubAddDevice(
 	PDEVICE_OBJECT Fdo;
 	PHUB_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
-	
+
 	Status = IoCreateDevice(DriverObject,
 		sizeof(HUB_DEVICE_EXTENSION),
 		NULL, /* DeviceName */
@@ -89,11 +89,11 @@ UsbhubAddDevice(
 		DPRINT1("Usbhub: IoCreateDevice() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
-	
+
 	// zerofill device extension
 	DeviceExtension = (PHUB_DEVICE_EXTENSION)Fdo->DeviceExtension;
 	RtlZeroMemory(DeviceExtension, sizeof(HUB_DEVICE_EXTENSION));
-	
+
 	/* Get a pointer to the linux structure created by the USB controller,
 	 * by sending IOCTL_INTERNAL_USB_GET_PARENT_HUB_INFO to lower device.
 	 */
@@ -105,7 +105,7 @@ UsbhubAddDevice(
 		return Status;
 	}
 	DeviceExtension->dev->dev.dev_ext = Pdo;
-	
+
 	DeviceExtension->IsFDO = TRUE;
 	Fdo->Flags |= DO_POWER_PAGABLE;
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
@@ -117,7 +117,7 @@ UsbhubAddDevice(
 	}
 	Fdo->Flags |= DO_BUFFERED_IO;
 	Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
-	
+
 	return STATUS_SUCCESS;
 }
 
@@ -190,19 +190,19 @@ DriverEntry(
 	IN PUNICODE_STRING RegistryPath)
 {
 	ULONG i;
-	
+
 	DriverObject->DriverExtension->AddDevice = UsbhubAddDevice;
-	
+
 	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
 		DriverObject->MajorFunction[i] = IrpStub;
-	
+
 	DriverObject->MajorFunction[IRP_MJ_CREATE] = UsbhubCreate;
 	DriverObject->MajorFunction[IRP_MJ_CLOSE] = UsbhubClose;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = UsbhubCleanup;
 	DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = DispatchDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] = DispatchInternalDeviceControl;
 	DriverObject->MajorFunction[IRP_MJ_PNP] = DispatchPnp;
-	
+
 	return STATUS_SUCCESS;
 }
 

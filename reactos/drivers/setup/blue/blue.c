@@ -273,7 +273,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     NTSTATUS Status;
 
     DeviceExtension = DeviceObject->DeviceExtension;
-    
+
     ScrAcquireOwnership(DeviceExtension);
 
     /* get pointer to video memory */

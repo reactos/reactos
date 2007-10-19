@@ -6,7 +6,7 @@
 
 // from the PVAX (http://www.ccas.ru/~posp/popov/spawn.htm)
 // Create a process with pipes to stdin/out/err
-BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi, 
+BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
                                 LPHANDLE phInWrite, LPHANDLE phOutRead,
                                 LPHANDLE phErrRead) {
     BOOL fCreated;
@@ -36,7 +36,7 @@ BOOL CreateHiddenConsoleProcess(LPCTSTR szChildName, PROCESS_INFORMATION* ppi,
 
     // process startup information
     memset( &si, 0, sizeof( si ));
-    si.cb = sizeof( si ); 
+    si.cb = sizeof( si );
     si.dwFlags = STARTF_USESHOWWINDOW | STARTF_USESTDHANDLES;
     // child process' console must be hidden for Win95 compatibility
     si.wShowWindow = SW_HIDE;
@@ -72,7 +72,7 @@ error:
     CloseHandle( hErrWrite );
     CloseHandle( ppi->hProcess );
     CloseHandle( ppi->hThread );
-    
+
     hInRead =
     hOutWrite =
     hErrWrite =
@@ -87,7 +87,7 @@ BOOL SpawnProcess(char *cmd_line, PROCESS_INFORMATION *pi) {
 
 	memset(&si, 0, sizeof(si));
 	si.cb = sizeof(si);
-		
+
 	return CreateProcess(cmd_line, NULL, NULL, FALSE, NORMAL_PRIORITY_CLASS,
 	                     CREATE_NEW_CONSOLE, NULL, NULL, &si, pi);
 }
@@ -97,9 +97,9 @@ int GetWin32Version(void) {
 	// return win32 version; 0 = Win32s, 1 = Win95, 2 = WinNT, 3 = Unknown -crn@ozemail.com.au
 	LPOSVERSIONINFO osv;
 	DWORD retval;
-	
+
 	osv = new OSVERSIONINFO;
-	
+
 	osv->dwOSVersionInfoSize = sizeof (OSVERSIONINFO);
 	GetVersionEx (osv);
 	retval = osv->dwPlatformId;
@@ -134,7 +134,7 @@ HWND TelnetGetConsoleWindow() {
 bool SetIcon(HWND hConsoleWindow, HANDLE hIcon, LPARAM *pOldBIcon, LPARAM *pOldSIcon,
 			 const char *icondir) {
 	if(!hConsoleWindow) return false;
-	
+
 // FIX ME!!! The LoadIcon code should work with any compiler!
 // (Paul Brannan 12/17/98)
 #ifndef __BORLANDC__ // Ioannou Dec. 8, 1998
@@ -149,7 +149,7 @@ bool SetIcon(HWND hConsoleWindow, HANDLE hIcon, LPARAM *pOldBIcon, LPARAM *pOldS
 		hIcon =	LoadImage(NULL, filename, IMAGE_ICON, 0, 0, LR_DEFAULTSIZE +
 			LR_LOADFROMFILE);
 	}
-#else	
+#else
 	// load the icon from the resource file -crn@ozemail.com.au 16/12/98
 	if(!hIcon) {
 		hIcon = LoadIcon ((HANDLE)GetWindowLong(hConsoleWindow,

@@ -13,7 +13,7 @@
 	<file>print.c</file>
 	<file>query.c</file>
 	<file>sc.c</file>
-	<file>start.c</file>	
+	<file>start.c</file>
 	<file>usage.c</file>
 	<file>sc.rc</file>
 	<pch>sc.h</pch>

@@ -91,7 +91,7 @@ ProcessPageWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
         /* Close the event handle, this will make the */
         /* refresh thread exit when the wait fails */
         CloseHandle(hProcessPageEvent);
-        CloseHandle(hRefreshThread);	
+        CloseHandle(hRefreshThread);
 
         SaveColumnSettings();
 

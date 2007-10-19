@@ -26,7 +26,7 @@ BOOLEAN HalIsaProbe(VOID)
  */
 {
    DbgPrint("Assuming ISA bus\n");
-   
+
    /*
     * Probe for plug and play support
     */

@@ -141,7 +141,7 @@ static void wprint_name(WCHAR *buffer, int len, ULONG transport,
 /***********************************************************************
  *                NetWkstaTransportEnum  (NETAPI32.@)
  */
- 
+
 struct WkstaTransportEnumData
 {
     UCHAR          n_adapt;
@@ -246,14 +246,14 @@ static BOOL WkstaEnumAdaptersCallback(UCHAR totalLANAs, UCHAR lanaIndex,
 
 /**********************************************************************/
 
-NET_API_STATUS WINAPI 
+NET_API_STATUS WINAPI
 NetWkstaTransportEnum(LPWSTR ServerName, DWORD level, PBYTE* pbuf,
       DWORD prefmaxlen, LPDWORD read_entries,
       PDWORD total_entries, PDWORD hresume)
 {
     NET_API_STATUS ret;
 
-    TRACE(":%s, 0x%08x, %p, 0x%08x, %p, %p, %p\n", debugstr_w(ServerName), 
+    TRACE(":%s, 0x%08x, %p, 0x%08x, %p, %p, %p\n", debugstr_w(ServerName),
      level, pbuf, prefmaxlen, read_entries, total_entries,hresume);
     if (!NETAPI_IsLocalComputer(ServerName))
     {
@@ -497,7 +497,7 @@ NET_API_STATUS WINAPI NetWkstaGetInfo( LPWSTR servername, DWORD level,
             LSA_OBJECT_ATTRIBUTES ObjectAttributes;
             LSA_HANDLE PolicyHandle;
             NTSTATUS NtStatus;
-           
+
             computerNameLen = MAX_COMPUTERNAME_LENGTH + 1;
             GetComputerNameW(computerName, &computerNameLen);
             computerNameLen++; /* include NULL terminator */

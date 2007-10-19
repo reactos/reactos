@@ -24,13 +24,13 @@ _tcsncmp:
  test %eax, %eax
  jne  .L1
 
-.L2:	
+.L2:
  xor  %eax, %eax
  jmp  .L4
 
 .L3:
  sbb  %eax, %eax
- or   $1, %al		
+ or   $1, %al
 
 .L4:
  pop  %edi

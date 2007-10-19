@@ -4,7 +4,7 @@
  * PROJECT:         ReactOS Display Control Panel
  * FILE:            lib/cpl/desk/dibitmap.c
  * PURPOSE:         DIB loading
- * 
+ *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)
  */
 

@@ -52,9 +52,9 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListW(PVOID Reserved1, DWORD Reserved2, UINT 
     list = HeapAlloc(GetProcessHeap(),0,sizeof(DISKSPACELIST));
 
     list->dwDriveCount = 0;
-    
+
     ptr = drives;
-    
+
     while (*ptr)
     {
         DWORD type = GetDriveTypeW(ptr);
@@ -89,8 +89,8 @@ HDSKSPC WINAPI SetupCreateDiskSpaceListA(PVOID Reserved1, DWORD Reserved2, UINT 
 /***********************************************************************
  *		SetupAddInstallSectionToDiskSpaceListA  (SETUPAPI.@)
  */
-BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace, 
-                        HINF InfHandle, HINF LayoutInfHandle, 
+BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace,
+                        HINF InfHandle, HINF LayoutInfHandle,
                         LPCSTR SectionName, PVOID Reserved1, UINT Reserved2)
 {
     FIXME ("Stub\n");
@@ -100,8 +100,8 @@ BOOL WINAPI SetupAddInstallSectionToDiskSpaceListA(HDSKSPC DiskSpace,
 /***********************************************************************
 *		SetupQuerySpaceRequiredOnDriveA  (SETUPAPI.@)
 */
-BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace, 
-                        LPCSTR DriveSpec, LONGLONG* SpaceRequired, 
+BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
+                        LPCSTR DriveSpec, LONGLONG* SpaceRequired,
                         PVOID Reserved1, UINT Reserved2)
 {
     WCHAR driveW[20];
@@ -115,7 +115,7 @@ BOOL WINAPI SetupQuerySpaceRequiredOnDriveA(HDSKSPC DiskSpace,
     lstrcatW(driveW,bkslsh);
 
     TRACE("Looking for drive %s\n",debugstr_w(driveW));
- 
+
     for (i = 0; i < list->dwDriveCount; i++)
     {
         TRACE("checking drive %s\n",debugstr_w(list->Drives[i].lpzName));
@@ -137,5 +137,5 @@ BOOL WINAPI SetupDestroyDiskSpaceList(HDSKSPC DiskSpace)
 {
     LPDISKSPACELIST list = (LPDISKSPACELIST)DiskSpace;
     HeapFree(GetProcessHeap(),0,list);
-    return TRUE; 
+    return TRUE;
 }

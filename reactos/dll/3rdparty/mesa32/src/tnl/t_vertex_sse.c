@@ -52,7 +52,7 @@ struct x86_program {
    GLboolean inputs_safe;
    GLboolean outputs_safe;
    GLboolean have_sse2;
-   
+
    struct x86_reg identity;
    struct x86_reg chan0;
 };
@@ -63,14 +63,14 @@ static struct x86_reg get_identity( struct x86_program *p )
    return p->identity;
 }
 
-static void emit_load4f_4( struct x86_program *p, 			   
+static void emit_load4f_4( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    sse_movups(&p->func, dest, arg0);
 }
 
-static void emit_load4f_3( struct x86_program *p, 
+static void emit_load4f_3( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
@@ -87,7 +87,7 @@ static void emit_load4f_3( struct x86_program *p,
    sse_movlps(&p->func, dest, arg0);
 }
 
-static void emit_load4f_2( struct x86_program *p, 
+static void emit_load4f_2( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
@@ -97,7 +97,7 @@ static void emit_load4f_2( struct x86_program *p,
    sse_movlps(&p->func, dest, arg0);
 }
 
-static void emit_load4f_1( struct x86_program *p, 
+static void emit_load4f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
@@ -108,7 +108,7 @@ static void emit_load4f_1( struct x86_program *p,
 
 
 
-static void emit_load3f_3( struct x86_program *p, 			   
+static void emit_load3f_3( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
@@ -117,11 +117,11 @@ static void emit_load3f_3( struct x86_program *p,
     */
    if (p->inputs_safe) {
       sse_movups(&p->func, dest, arg0);
-   } 
+   }
    else {
       /* c 0 0 0
        * c c c c
-       * a b c c 
+       * a b c c
        */
       sse_movss(&p->func, dest, x86_make_disp(arg0, 8));
       sse_shufps(&p->func, dest, dest, SHUF(X,X,X,X));
@@ -129,63 +129,63 @@ static void emit_load3f_3( struct x86_program *p,
    }
 }
 
-static void emit_load3f_2( struct x86_program *p, 
+static void emit_load3f_2( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    emit_load4f_2(p, dest, arg0);
 }
 
-static void emit_load3f_1( struct x86_program *p, 
+static void emit_load3f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    emit_load4f_1(p, dest, arg0);
 }
 
-static void emit_load2f_2( struct x86_program *p, 
+static void emit_load2f_2( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    sse_movlps(&p->func, dest, arg0);
 }
 
-static void emit_load2f_1( struct x86_program *p, 
+static void emit_load2f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    emit_load4f_1(p, dest, arg0);
 }
 
-static void emit_load1f_1( struct x86_program *p, 
+static void emit_load1f_1( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    sse_movss(&p->func, dest, arg0);
 }
 
-static void (*load[4][4])( struct x86_program *p, 
+static void (*load[4][4])( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 ) = {
-   { emit_load1f_1, 
-     emit_load1f_1, 
-     emit_load1f_1, 
+   { emit_load1f_1,
+     emit_load1f_1,
+     emit_load1f_1,
      emit_load1f_1 },
 
-   { emit_load2f_1, 
-     emit_load2f_2, 
-     emit_load2f_2, 
+   { emit_load2f_1,
+     emit_load2f_2,
+     emit_load2f_2,
      emit_load2f_2 },
 
-   { emit_load3f_1, 
-     emit_load3f_2, 
-     emit_load3f_3, 
+   { emit_load3f_1,
+     emit_load3f_2,
+     emit_load3f_3,
      emit_load3f_3 },
 
-   { emit_load4f_1, 
-     emit_load4f_2, 
-     emit_load4f_3, 
-     emit_load4f_4 } 
+   { emit_load4f_1,
+     emit_load4f_2,
+     emit_load4f_3,
+     emit_load4f_4 }
 };
 
 static void emit_load( struct x86_program *p,
@@ -197,14 +197,14 @@ static void emit_load( struct x86_program *p,
    load[sz-1][src_sz-1](p, dest, src);
 }
 
-static void emit_store4f( struct x86_program *p, 			   
+static void emit_store4f( struct x86_program *p,
 			  struct x86_reg dest,
 			  struct x86_reg arg0 )
 {
    sse_movups(&p->func, dest, arg0);
 }
 
-static void emit_store3f( struct x86_program *p, 
+static void emit_store3f( struct x86_program *p,
 			  struct x86_reg dest,
 			  struct x86_reg arg0 )
 {
@@ -223,14 +223,14 @@ static void emit_store3f( struct x86_program *p,
    }
 }
 
-static void emit_store2f( struct x86_program *p, 
+static void emit_store2f( struct x86_program *p,
 			   struct x86_reg dest,
 			   struct x86_reg arg0 )
 {
    sse_movlps(&p->func, dest, arg0);
 }
 
-static void emit_store1f( struct x86_program *p, 
+static void emit_store1f( struct x86_program *p,
 			  struct x86_reg dest,
 			  struct x86_reg arg0 )
 {
@@ -238,14 +238,14 @@ static void emit_store1f( struct x86_program *p,
 }
 
 
-static void (*store[4])( struct x86_program *p, 
+static void (*store[4])( struct x86_program *p,
 			 struct x86_reg dest,
-			 struct x86_reg arg0 ) = 
+			 struct x86_reg arg0 ) =
 {
-   emit_store1f, 
-   emit_store2f, 
-   emit_store3f, 
-   emit_store4f 
+   emit_store1f,
+   emit_store2f,
+   emit_store3f,
+   emit_store4f
 };
 
 static void emit_store( struct x86_program *p,
@@ -318,8 +318,8 @@ static void update_src_ptr( struct x86_program *p,
        * pull the stride value from memory each time).
        */
       x86_lea(&p->func, srcREG, x86_make_disp(srcREG, a->inputstride));
-      
-      /* save new value of a[j].inputptr 
+
+      /* save new value of a[j].inputptr
        */
       x86_mov(&p->func, ptr_to_src, srcREG);
    }
@@ -329,8 +329,8 @@ static void update_src_ptr( struct x86_program *p,
 /* Lots of hardcoding
  *
  * EAX -- pointer to current output vertex
- * ECX -- pointer to current attribute 
- * 
+ * ECX -- pointer to current attribute
+ *
  */
 static GLboolean build_vertex_emit( struct x86_program *p )
 {
@@ -349,7 +349,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
    GLubyte *fixup, *label;
 
    x86_init_func(&p->func);
-   
+
    /* Push a few regs?
     */
    x86_push(&p->func, countEBP);
@@ -363,7 +363,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
    x86_cmp(&p->func, countEBP, srcECX);
    fixup = x86_jcc_forward(&p->func, cc_E);
 
-   /* Initialize destination register. 
+   /* Initialize destination register.
     */
    x86_mov(&p->func, vertexEAX, x86_fn_arg(&p->func, 3));
 
@@ -373,7 +373,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
    x86_mov(&p->func, vtxESI, x86_make_disp(vtxESI, get_offset(ctx, &ctx->swtnl_context)));
    vtxESI = x86_make_disp(vtxESI, get_offset(tnl, &tnl->clipspace));
 
-   
+
    /* Possibly load vp0, vp1 for viewport calcs:
     */
    if (vtx->need_viewport) {
@@ -444,7 +444,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 emit_store(p, dest, 4, temp);
 	 update_src_ptr(p, srcECX, vtxESI, a);
 	 break;
-      case EMIT_2F_VIEWPORT: 
+      case EMIT_2F_VIEWPORT:
 	 get_src_ptr(p, srcECX, vtxESI, a);
 	 emit_load(p, temp, 2, x86_deref(srcECX), a->inputsize);
 	 sse_mulps(&p->func, temp, vp0);
@@ -452,7 +452,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 emit_store(p, dest, 2, temp);
 	 update_src_ptr(p, srcECX, vtxESI, a);
 	 break;
-      case EMIT_3F_VIEWPORT: 
+      case EMIT_3F_VIEWPORT:
 	 get_src_ptr(p, srcECX, vtxESI, a);
 	 emit_load(p, temp, 3, x86_deref(srcECX), a->inputsize);
 	 sse_mulps(&p->func, temp, vp0);
@@ -460,7 +460,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 emit_store(p, dest, 3, temp);
 	 update_src_ptr(p, srcECX, vtxESI, a);
 	 break;
-      case EMIT_4F_VIEWPORT: 
+      case EMIT_4F_VIEWPORT:
 	 get_src_ptr(p, srcECX, vtxESI, a);
 	 emit_load(p, temp, 4, x86_deref(srcECX), a->inputsize);
 	 sse_mulps(&p->func, temp, vp0);
@@ -476,7 +476,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 update_src_ptr(p, srcECX, vtxESI, a);
 	 break;
 
-      case EMIT_1UB_1F:	 
+      case EMIT_1UB_1F:
 	 /* Test for PAD3 + 1UB:
 	  */
 	 if (j > 0 &&
@@ -590,7 +590,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 	 _mesa_printf("unknown a[%d].format %d\n", j, a->format);
 	 return GL_FALSE;	/* catch any new opcodes */
       }
-      
+
       /* Increment j by at least 1 - may have been incremented above also:
        */
       j++;
@@ -603,7 +603,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
    /* decr count, loop if not zero
     */
    x86_dec(&p->func, countEBP);
-   x86_test(&p->func, countEBP, countEBP); 
+   x86_test(&p->func, countEBP, countEBP);
    x86_jcc(&p->func, cc_NZ, label);
 
    /* Exit mmx state?
@@ -630,7 +630,7 @@ static GLboolean build_vertex_emit( struct x86_program *p )
 void _tnl_generate_sse_emit( GLcontext *ctx )
 {
    struct tnl_clipspace *vtx = GET_VERTEX_STATE(ctx);
-   struct x86_program p;   
+   struct x86_program p;
 
    if (!cpu_has_xmm) {
       vtx->codegen_emit = NULL;

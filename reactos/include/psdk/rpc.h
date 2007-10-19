@@ -27,7 +27,7 @@ extern "C" {
     #define __RPC_WIN32__
     #include <pshpack2.h>
 
-#else 
+#else
     #if defined(_M_IA64) || defined(_M_AMD64) || defined(_WIN64)
         #define __RPC_WIN64__
     #else
@@ -78,17 +78,17 @@ typedef long RPC_STATUS;
     #if !defined(_RPCRT4_)
         #define RPCRTAPI DECLSPEC_IMPORT
     #else
-        #define RPCRTAPI 
+        #define RPCRTAPI
     #endif
 
     #if !defined(_RPCNS4_)
         #define RPCNSAPI DECLSPEC_IMPORT
     #else
-        #define RPCNSAPI 
+        #define RPCNSAPI
     #endif
 #else
-    #define RPCRTAPI 
-    #define RPCNSAPI 
+    #define RPCRTAPI
+    #define RPCNSAPI
 #endif
 
 

@@ -24,7 +24,7 @@ BEGIN
     DEFPUSHBUTTON "&Újraindítás", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Hálózati kapcsolatok elõkészítése..."
     IDS_APPLYINGCOMPUTERSETTINGS "Beállítások érvényesítése..."
@@ -42,7 +42,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "A ReactOS indul..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "A Winlogon nemtudta elindítani a felhasználói felületet!"
 END

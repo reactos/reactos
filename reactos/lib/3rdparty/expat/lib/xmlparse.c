@@ -323,15 +323,15 @@ processXmlDecl(XML_Parser parser, int isGeneralTextEntity,
 static enum XML_Error
 initializeEncoding(XML_Parser parser);
 static enum XML_Error
-doProlog(XML_Parser parser, const ENCODING *enc, const char *s, 
-         const char *end, int tok, const char *next, const char **nextPtr, 
+doProlog(XML_Parser parser, const ENCODING *enc, const char *s,
+         const char *end, int tok, const char *next, const char **nextPtr,
          XML_Bool haveMore);
 static enum XML_Error
-processInternalEntity(XML_Parser parser, ENTITY *entity, 
+processInternalEntity(XML_Parser parser, ENTITY *entity,
                       XML_Bool betweenDecl);
 static enum XML_Error
 doContent(XML_Parser parser, int startTagLevel, const ENCODING *enc,
-          const char *start, const char *end, const char **endPtr, 
+          const char *start, const char *end, const char **endPtr,
           XML_Bool haveMore);
 static enum XML_Error
 doCdataSection(XML_Parser parser, const ENCODING *, const char **startPtr,
@@ -349,7 +349,7 @@ static enum XML_Error
 addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
            const XML_Char *uri, BINDING **bindingsPtr);
 static int
-defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, XML_Bool isCdata, 
+defineAttribute(ELEMENT_TYPE *type, ATTRIBUTE_ID *, XML_Bool isCdata,
                 XML_Bool isId, const XML_Char *dfltValue, XML_Parser parser);
 static enum XML_Error
 storeAttributeValue(XML_Parser parser, const ENCODING *, XML_Bool isCdata,
@@ -1453,7 +1453,7 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
         XmlUpdatePosition(encoding, positionPtr, bufferPtr, &position);
         positionPtr = bufferPtr;
         return XML_STATUS_SUSPENDED;
-      case XML_INITIALIZED: 
+      case XML_INITIALIZED:
       case XML_PARSING:
         ps_parsing = XML_FINISHED;
         /* fall through */
@@ -1576,7 +1576,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal)
     case XML_SUSPENDED:
       result = XML_STATUS_SUSPENDED;
       break;
-    case XML_INITIALIZED: 
+    case XML_INITIALIZED:
     case XML_PARSING:
       if (isFinal) {
         ps_parsing = XML_FINISHED;
@@ -1723,7 +1723,7 @@ XML_ResumeParser(XML_Parser parser)
     case XML_SUSPENDED:
       result = XML_STATUS_SUSPENDED;
       break;
-    case XML_INITIALIZED: 
+    case XML_INITIALIZED:
     case XML_PARSING:
       if (ps_finalBuffer) {
         ps_parsing = XML_FINISHED;
@@ -2010,7 +2010,7 @@ contentProcessor(XML_Parser parser,
                  const char *end,
                  const char **endPtr)
 {
-  enum XML_Error result = doContent(parser, 0, encoding, start, end, 
+  enum XML_Error result = doContent(parser, 0, encoding, start, end,
                                     endPtr, (XML_Bool)!ps_finalBuffer);
   if (result == XML_ERROR_NONE) {
     if (!storeRawNames(parser))
@@ -2092,7 +2092,7 @@ externalEntityInitProcessor3(XML_Parser parser,
       if (result != XML_ERROR_NONE)
         return result;
       switch (ps_parsing) {
-      case XML_SUSPENDED: 
+      case XML_SUSPENDED:
         *endPtr = next;
         return XML_ERROR_NONE;
       case XML_FINISHED:
@@ -2126,7 +2126,7 @@ externalEntityContentProcessor(XML_Parser parser,
                                const char *end,
                                const char **endPtr)
 {
-  enum XML_Error result = doContent(parser, 1, encoding, start, end, 
+  enum XML_Error result = doContent(parser, 1, encoding, start, end,
                                     endPtr, (XML_Bool)!ps_finalBuffer);
   if (result == XML_ERROR_NONE) {
     if (!storeRawNames(parser))
@@ -2145,7 +2145,7 @@ doContent(XML_Parser parser,
           XML_Bool haveMore)
 {
   /* save one level of indirection */
-  DTD * const dtd = _dtd;  
+  DTD * const dtd = _dtd;
 
   const char **eventPP;
   const char **eventEndPP;
@@ -2176,8 +2176,8 @@ doContent(XML_Parser parser,
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
-      /* We are at the end of the final buffer, should we check for 
-         XML_SUSPENDED, XML_FINISHED? 
+      /* We are at the end of the final buffer, should we check for
+         XML_SUSPENDED, XML_FINISHED?
       */
       if (startTagLevel == 0)
         return XML_ERROR_NO_ELEMENTS;
@@ -2528,8 +2528,8 @@ doContent(XML_Parser parser,
       }
       else if (defaultHandler)
         reportDefault(parser, enc, s, end);
-      /* We are at the end of the final buffer, should we check for 
-         XML_SUSPENDED, XML_FINISHED? 
+      /* We are at the end of the final buffer, should we check for
+         XML_SUSPENDED, XML_FINISHED?
       */
       if (startTagLevel == 0) {
         *eventPP = end;
@@ -2578,7 +2578,7 @@ doContent(XML_Parser parser,
     }
     *eventPP = s = next;
     switch (ps_parsing) {
-    case XML_SUSPENDED: 
+    case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
@@ -2940,20 +2940,20 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     'X', 'M', 'L', '/', '1', '9', '9', '8', '/',
     'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', '\0'
   };
-  static const int xmlLen = 
+  static const int xmlLen =
     (int)sizeof(xmlNamespace)/sizeof(XML_Char) - 1;
   static const XML_Char xmlnsNamespace[] = {
     'h', 't', 't', 'p', ':', '/', '/',
     'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/',
     '2', '0', '0', '0', '/', 'x', 'm', 'l', 'n', 's', '/', '\0'
   };
-  static const int xmlnsLen = 
+  static const int xmlnsLen =
     (int)sizeof(xmlnsNamespace)/sizeof(XML_Char) - 1;
 
   XML_Bool mustBeXML = XML_FALSE;
   XML_Bool isXML = XML_TRUE;
   XML_Bool isXMLNS = XML_TRUE;
-  
+
   BINDING *b;
   int len;
 
@@ -2980,7 +2980,7 @@ addBinding(XML_Parser parser, PREFIX *prefix, const ATTRIBUTE_ID *attId,
     if (isXML && (len > xmlLen || uri[len] != xmlNamespace[len]))
       isXML = XML_FALSE;
 
-    if (!mustBeXML && isXMLNS 
+    if (!mustBeXML && isXMLNS
         && (len > xmlnsLen || uri[len] != xmlnsNamespace[len]))
       isXMLNS = XML_FALSE;
   }
@@ -3188,7 +3188,7 @@ ignoreSectionProcessor(XML_Parser parser,
                        const char *end,
                        const char **endPtr)
 {
-  enum XML_Error result = doIgnoreSection(parser, encoding, &start, end, 
+  enum XML_Error result = doIgnoreSection(parser, encoding, &start, end,
                                           endPtr, (XML_Bool)!ps_finalBuffer);
   if (result != XML_ERROR_NONE)
     return result;
@@ -3470,7 +3470,7 @@ entityValueInitProcessor(XML_Parser parser,
   const char *next = start;
   eventPtr = start;
 
-  for (;;) {  
+  for (;;) {
     tok = XmlPrologTok(encoding, start, end, &next);
     eventEndPtr = next;
     if (tok <= 0) {
@@ -3498,7 +3498,7 @@ entityValueInitProcessor(XML_Parser parser,
       if (result != XML_ERROR_NONE)
         return result;
       switch (ps_parsing) {
-      case XML_SUSPENDED: 
+      case XML_SUSPENDED:
         *nextPtr = next;
         return XML_ERROR_NONE;
       case XML_FINISHED:
@@ -3563,7 +3563,7 @@ externalParEntProcessor(XML_Parser parser,
   }
 
   processor = prologProcessor;
-  return doProlog(parser, encoding, s, end, tok, next, 
+  return doProlog(parser, encoding, s, end, tok, next,
                   nextPtr, (XML_Bool)!ps_finalBuffer);
 }
 
@@ -3613,7 +3613,7 @@ prologProcessor(XML_Parser parser,
 {
   const char *next = s;
   int tok = XmlPrologTok(encoding, s, end, &next);
-  return doProlog(parser, encoding, s, end, tok, next, 
+  return doProlog(parser, encoding, s, end, tok, next,
                   nextPtr, (XML_Bool)!ps_finalBuffer);
 }
 
@@ -3647,7 +3647,7 @@ doProlog(XML_Parser parser,
   static const XML_Char enumValueStart[] = { '(', '\0' };
 
   /* save one level of indirection */
-  DTD * const dtd = _dtd; 
+  DTD * const dtd = _dtd;
 
   const char **eventPP;
   const char **eventEndPP;
@@ -3821,8 +3821,8 @@ doProlog(XML_Parser parser,
                                         entity->publicId))
             return XML_ERROR_EXTERNAL_ENTITY_HANDLING;
           if (dtd->paramEntityRead) {
-            if (!dtd->standalone && 
-                notStandaloneHandler && 
+            if (!dtd->standalone &&
+                notStandaloneHandler &&
                 !notStandaloneHandler(handlerArg))
               return XML_ERROR_NOT_STANDALONE;
           }
@@ -4260,7 +4260,7 @@ doProlog(XML_Parser parser,
       switch (tok) {
       case XML_TOK_PARAM_ENTITY_REF:
         /* PE references in internal subset are
-           not allowed within declarations. */  
+           not allowed within declarations. */
         return XML_ERROR_PARAM_ENTITY_REF;
       case XML_TOK_XML_DECL:
         return XML_ERROR_MISPLACED_XML_PI;
@@ -4381,7 +4381,7 @@ doProlog(XML_Parser parser,
           return XML_ERROR_RECURSIVE_ENTITY_REF;
         if (entity->textPtr) {
           enum XML_Error result;
-          XML_Bool betweenDecl = 
+          XML_Bool betweenDecl =
             (role == XML_ROLE_PARAM_ENTITY_REF ? XML_TRUE : XML_FALSE);
           result = processInternalEntity(parser, entity, betweenDecl);
           if (result != XML_ERROR_NONE)
@@ -4576,7 +4576,7 @@ doProlog(XML_Parser parser,
       reportDefault(parser, enc, s, next);
 
     switch (ps_parsing) {
-    case XML_SUSPENDED: 
+    case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
@@ -4646,7 +4646,7 @@ epilogProcessor(XML_Parser parser,
     }
     eventPtr = s = next;
     switch (ps_parsing) {
-    case XML_SUSPENDED: 
+    case XML_SUSPENDED:
       *nextPtr = next;
       return XML_ERROR_NONE;
     case XML_FINISHED:
@@ -4689,12 +4689,12 @@ processInternalEntity(XML_Parser parser, ENTITY *entity,
 #ifdef XML_DTD
   if (entity->is_param) {
     int tok = XmlPrologTok(internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, internalEncoding, textStart, textEnd, tok, 
+    result = doProlog(parser, internalEncoding, textStart, textEnd, tok,
                       next, &next, XML_FALSE);
   }
-  else 
+  else
 #endif /* XML_DTD */
-    result = doContent(parser, tagLevel, internalEncoding, textStart, 
+    result = doContent(parser, tagLevel, internalEncoding, textStart,
                        textEnd, &next, XML_FALSE);
 
   if (result == XML_ERROR_NONE) {
@@ -4734,13 +4734,13 @@ internalEntityProcessor(XML_Parser parser,
 #ifdef XML_DTD
   if (entity->is_param) {
     int tok = XmlPrologTok(internalEncoding, textStart, textEnd, &next);
-    result = doProlog(parser, internalEncoding, textStart, textEnd, tok, 
+    result = doProlog(parser, internalEncoding, textStart, textEnd, tok,
                       next, &next, XML_FALSE);
   }
   else
 #endif /* XML_DTD */
-    result = doContent(parser, openEntity->startTagLevel, internalEncoding, 
-                       textStart, textEnd, &next, XML_FALSE);  
+    result = doContent(parser, openEntity->startTagLevel, internalEncoding,
+                       textStart, textEnd, &next, XML_FALSE);
 
   if (result != XML_ERROR_NONE)
     return result;
@@ -4761,7 +4761,7 @@ internalEntityProcessor(XML_Parser parser,
     int tok;
     processor = prologProcessor;
     tok = XmlPrologTok(encoding, s, end, &next);
-    return doProlog(parser, encoding, s, end, tok, next, nextPtr, 
+    return doProlog(parser, encoding, s, end, tok, next, nextPtr,
                     (XML_Bool)!ps_finalBuffer);
   }
   else
@@ -4770,8 +4770,8 @@ internalEntityProcessor(XML_Parser parser,
     processor = contentProcessor;
     /* see externalEntityContentProcessor vs contentProcessor */
     return doContent(parser, parentParser ? 1 : 0, encoding, s, end,
-                     nextPtr, (XML_Bool)!ps_finalBuffer); 
-  }  
+                     nextPtr, (XML_Bool)!ps_finalBuffer);
+  }
 }
 
 static enum XML_Error PTRCALL

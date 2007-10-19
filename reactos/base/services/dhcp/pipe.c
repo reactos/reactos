@@ -84,7 +84,7 @@ DWORD WINAPI PipeThreadProc( LPVOID Parameter ) {
         }
         DisconnectNamedPipe( CommPipe );
     }
-    
+
     return TRUE;
 }
 

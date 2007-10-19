@@ -132,7 +132,7 @@ typedef struct _DMUS_WAVE
 typedef struct _DMUS_WAVEDATA
 {
   ULONG cbSize;
-  BYTE byData[DMUS_MIN_DATA_SIZE]; 
+  BYTE byData[DMUS_MIN_DATA_SIZE];
 } DMUS_WAVEDATA;
 
 typedef struct _DMUS_ARTICULATION

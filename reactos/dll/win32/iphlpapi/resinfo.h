@@ -1,5 +1,5 @@
 /*
- * iphlpapi dll implementation -- Resolver information helper function 
+ * iphlpapi dll implementation -- Resolver information helper function
  *                                prototypes
  *
  * Copyright (C) 2004 Art Yerkes

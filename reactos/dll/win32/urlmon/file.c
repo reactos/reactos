@@ -246,7 +246,7 @@ static HRESULT WINAPI FileProtocol_Read(IInternetProtocol *iface, void *pv,
 
     if(pcbRead)
         *pcbRead = read;
-    
+
     return cb == read ? S_OK : S_FALSE;
 }
 
@@ -362,6 +362,6 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);
-    
+
     return S_OK;
 }

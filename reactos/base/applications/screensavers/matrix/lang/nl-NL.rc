@@ -9,45 +9,45 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Decodeer &Snelheid",IDC_STATIC,7,7,128,36
     LTEXT           "Langzamer",IDC_STATIC,13,24,22,8
-    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider1",IDC_SLIDER1,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,17,62,22
     LTEXT           "Sneller",IDC_STATIC,104,24,20,8
     GROUPBOX        "Cypher &Dichtheid",IDC_STATIC,7,50,128,36
     LTEXT           "Minder",IDC_STATIC,13,67,19,8
-    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider1",IDC_SLIDER2,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,60,62,22
     LTEXT           "Meer",IDC_STATIC,104,67,23,8
     GROUPBOX        "Snel&heid van het bericht",IDC_MSGSPEEDGRP,7,93,127,36
     LTEXT           "Langzamer",IDC_STATIC,13,110,22,8
-    CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider3",IDC_SLIDER3,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,103,62,22
     LTEXT           "Sneller",IDC_STATIC,104,110,22,8
     GROUPBOX        "&Lettertype Grootte",IDC_STATIC,7,137,127,36
     LTEXT           "Kleiner",IDC_STATIC,13,153,24,8
-    CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS | 
+    CONTROL         "Slider3",IDC_SLIDER4,"msctls_trackbar32",TBS_AUTOTICKS |
                     TBS_BOTH | WS_TABSTOP,38,146,62,22
     LTEXT           "Groter",IDC_STATIC,104,153,25,8
     GROUPBOX        "&Gecodeerde berichten",IDC_STATIC,145,7,188,142
-    COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL | 
+    COMBOBOX        IDC_COMBO1,153,22,172,62,CBS_DROPDOWN | WS_VSCROLL |
                     WS_TABSTOP
-    CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP | 
+    CONTROL         "",IDC_PREVIEW,"Static",SS_LEFTNOWORDWRAP |
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
     PUSHBUTTON      "&Toevoegen",IDC_ADD,280,41,44,18
     PUSHBUTTON      "&Verwijderen",IDC_REMOVE,280,66,44,18
-    CONTROL         "Willekeurige &Berichten",IDC_RANDOM,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "Willekeurige &Berichten",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,151,134,85,10
     DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
     PUSHBUTTON      "&Annuleren",IDCANCEL,283,162,50,14
     LTEXT           "&Lettertype:",IDC_STATIC,151,118,38,8
-    COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT | 
+    COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "&Vetgedrukt",IDC_BOLD,"Button",BS_AUTOCHECKBOX | 
+    CONTROL         "&Vetgedrukt",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,46,10
     CTEXT           "Matrix Schermbeveiliging www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION         "Matrix Schermbeveiliging"
 END

@@ -18,7 +18,7 @@ _tcscat:
  repne _tscas
  _tdec(%edi)
 
-.L1:	
+.L1:
  _tlods
  _tstos
  test  %_treg(a), %_treg(a)

@@ -124,14 +124,14 @@ PMONITOR_OBJECT FASTCALL
 UserGetMonitorObject(IN HMONITOR hMonitor)
 {
    PMONITOR_OBJECT Monitor;
-   
+
    if (!hMonitor)
    {
       SetLastWin32Error(ERROR_INVALID_MONITOR_HANDLE);
       return NULL;
    }
-   
-   
+
+
    Monitor = (PMONITOR_OBJECT)UserGetObject(gHandleTable, hMonitor, otMonitor);
    if (!Monitor)
    {
@@ -618,10 +618,10 @@ NtUserGetMonitorInfo(
    MONITORINFOEXW MonitorInfo;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
-   
+
    DPRINT("Enter NtUserGetMonitorInfo\n");
    UserEnterShared();
-   
+
    /* get monitor object */
    if (!(Monitor = UserGetMonitorObject(hMonitor)))
    {
@@ -684,7 +684,7 @@ NtUserGetMonitorInfo(
    DPRINT("GetMonitorInfo: success\n");
 
    RETURN(TRUE);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserGetMonitorInfo, ret=%i\n",_ret_);
    UserLeave();
@@ -777,7 +777,7 @@ NtUserMonitorFromRect(
    HMONITOR hMonitor = NULL;
    RECT rect;
    NTSTATUS status;
-   
+
    /* get rect */
    status = MmCopyFromCaller(&rect, pRect, sizeof (RECT));
    if (!NT_SUCCESS(status))
@@ -870,10 +870,10 @@ NtUserMonitorFromWindow(
    HMONITOR hMonitor = NULL;
    RECT Rect;
    DECLARE_RETURN(HMONITOR);
-   
+
    DPRINT("Enter NtUserMonitorFromWindow\n");
    UserEnterShared();
-   
+
    if (!(Window = UserGetWindowObject(hWnd)))
    {
       RETURN(NULL);
@@ -885,9 +885,9 @@ NtUserMonitorFromWindow(
    IntGetMonitorsFromRect(&Rect, &hMonitor, NULL, 1, dwFlags);
 
    RETURN(hMonitor);
-   
+
 CLEANUP:
    DPRINT("Leave NtUserMonitorFromWindow, ret=%i\n",_ret_);
    UserLeave();
-   END_CLEANUP;   
+   END_CLEANUP;
 }

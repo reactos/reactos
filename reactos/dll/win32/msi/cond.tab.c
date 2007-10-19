@@ -1622,7 +1622,7 @@ yyreduce:
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             MSI_GetComponentStateW(cond->package, yyvsp[0].string, &install, &action );
             yyval.value = action;
             msi_free( yyvsp[0].string );
@@ -1634,7 +1634,7 @@ yyreduce:
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             MSI_GetComponentStateW(cond->package, yyvsp[0].string, &install, &action );
             yyval.value = install;
             msi_free( yyvsp[0].string );
@@ -1646,7 +1646,7 @@ yyreduce:
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             MSI_GetFeatureStateW(cond->package, yyvsp[0].string, &install, &action );
             yyval.value = action;
             msi_free( yyvsp[0].string );
@@ -1658,7 +1658,7 @@ yyreduce:
     {
             COND_input* cond = (COND_input*) info;
             INSTALLSTATE install = INSTALLSTATE_UNKNOWN, action = INSTALLSTATE_UNKNOWN;
-      
+
             MSI_GetFeatureStateW(cond->package, yyvsp[0].string, &install, &action );
             yyval.value = install;
             msi_free( yyvsp[0].string );
@@ -2008,12 +2008,12 @@ static INT comp_substring(LPWSTR a, LPWSTR b, BOOL casless)
 /* ERROR NOT WORKING REWRITE */
 { if (casless) return strstrW(a,b)!=NULL; else return strstrW(a,b)!=NULL;}
 static INT comp_start(LPWSTR a, LPWSTR b, BOOL casless)
-{ if (casless) return strncmpiW(a,b,strlenW(b))==0; 
+{ if (casless) return strncmpiW(a,b,strlenW(b))==0;
   else return strncmpW(a,b,strlenW(b))==0;}
 static INT comp_end(LPWSTR a, LPWSTR b, BOOL casless)
-{ 
-    int i = strlenW(a); 
-    int j = strlenW(b); 
+{
+    int i = strlenW(a);
+    int j = strlenW(b);
     if (j>i)
         return 0;
     if (casless) return (!strcmpiW(&a[i-j-1],b));
@@ -2051,7 +2051,7 @@ static INT comp_ge_m2(INT a, LPWSTR b)
 
 static int COND_IsIdent( WCHAR x )
 {
-    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' ) 
+    return( COND_IsAlpha( x ) || COND_IsNumber( x ) || ( x == '_' )
             || ( x == '#' ) || (x == '.') );
 }
 
@@ -2098,7 +2098,7 @@ static int COND_GetOne( struct cond_str *str, COND_input *cond )
 	ERR("Unterminated string\n");
 	rc = COND_ERROR;
     	break;
-    default: 
+    default:
         if( COND_IsAlpha( ch ) )
         {
             while( COND_IsIdent( str->data[len] ) )
@@ -2145,7 +2145,7 @@ static int COND_lex( void *COND_lval, COND_input *cond )
     do {
         rc = COND_GetOne( str, cond );
     } while (rc == COND_SPACE);
-    
+
     return rc;
 }
 
@@ -2191,8 +2191,8 @@ MSICONDITION MSI_EvaluateConditionW( MSIPACKAGE *package, LPCWSTR szCondition )
     cond.str   = szCondition;
     cond.n     = 0;
     cond.result = -1;
-    
-    TRACE("Evaluating %s\n",debugstr_w(szCondition));    
+
+    TRACE("Evaluating %s\n",debugstr_w(szCondition));
 
     if ( szCondition == NULL || szCondition[0] == 0)
     	r = MSICONDITION_NONE;

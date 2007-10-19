@@ -213,7 +213,7 @@ import( const GLcontext *ctx,
 {
    const ACcontext *ac = AC_CONTEXT(ctx);
 
-   if (destType == 0) 
+   if (destType == 0)
       destType = from->Type;
 
    switch (destType) {
@@ -229,7 +229,7 @@ import( const GLcontext *ctx,
       to->StrideB = 4 * sizeof(GLfloat);
       to->Type = GL_FLOAT;
       break;
-      
+
    case GL_UNSIGNED_BYTE:
       _math_trans_4ub( (GLubyte (*)[4]) to->Ptr,
                        from->Ptr,
@@ -255,7 +255,7 @@ import( const GLcontext *ctx,
       to->StrideB = 4 * sizeof(GLushort);
       to->Type = GL_UNSIGNED_SHORT;
       break;
-      
+
    default:
       _mesa_problem(ctx, "Unexpected dest format in import()");
       break;
@@ -361,7 +361,7 @@ import_color( GLcontext *ctx, GLenum type, GLuint stride )
    (void) stride;
 
    import( ctx, type, to, from );
-   
+
    ac->IsCached.Color = GL_TRUE;
 }
 

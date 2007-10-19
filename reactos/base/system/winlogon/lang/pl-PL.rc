@@ -21,7 +21,7 @@ BEGIN
     DEFPUSHBUTTON "&Uruchom ponownie", 1, 80, 91, 68, 14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_PREPARENETWORKCONNECTIONS "Trwa przygotowywanie po³¹czeñ sieciowych..."
     IDS_APPLYINGCOMPUTERSETTINGS "Trwa wprowadzanie ustawieñ komputera..."
@@ -39,7 +39,7 @@ BEGIN
     IDS_REACTOSISSTARTINGUP "Trwa uruchamianie systemu ReactOS..."
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_FAILEDACTIVATEUSERSHELL "Winlogon nie móg³ aktywowaæ pow³oki u¿ytkownika!"
 END

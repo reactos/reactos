@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* 
+/*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
  * PURPOSE:          LineDDA Function
@@ -43,7 +43,7 @@ BOOL STDCALL LineDDA(INT nXStart, INT nYStart, INT nXEnd, INT nYEnd,
     INT cnt;
     INT dx = nXEnd - nXStart;
     INT dy = nYEnd - nYStart;
-	
+
 	// optimized for vertical and horizontal lines so we avoid unnecessary math
 	if(nXStart == nXEnd)
 	{
@@ -59,10 +59,10 @@ BOOL STDCALL LineDDA(INT nXStart, INT nYStart, INT nXEnd, INT nYEnd,
 	  for(cnt = dx; cnt <= dy; cnt++)
 	  {
 	   lpLineFunc(nXStart,cnt,lpData);
-	  } 
+	  }
 	  return TRUE;
 	}
-	
+
 	if(nYStart == nYEnd)
 	{
 	  // horizontal line - use dx,dy as temp variables so we don't waste stack space

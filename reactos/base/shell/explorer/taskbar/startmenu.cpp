@@ -1482,7 +1482,7 @@ void StartMenu::ResizeToButtons()
 	if (rect.bottom > cyscreen) {
 		_arrow_btns = true;
 
-		_invisible_lines = (rect.bottom-cyscreen+(STARTMENU_LINE_HEIGHT(icon_size)+1))/STARTMENU_LINE_HEIGHT(icon_size)+1; 
+		_invisible_lines = (rect.bottom-cyscreen+(STARTMENU_LINE_HEIGHT(icon_size)+1))/STARTMENU_LINE_HEIGHT(icon_size)+1;
 		rect.bottom -= _invisible_lines * STARTMENU_LINE_HEIGHT(icon_size);
 
 		bottom_max = rect.bottom;

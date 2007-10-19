@@ -32,7 +32,7 @@ PaintStaticControls(HWND hwndDlg, PConsoleInfo pConInfo, LPDRAWITEMSTRUCT drawIt
 	return TRUE;
 }
 
-INT_PTR 
+INT_PTR
 CALLBACK
 ColorsProc(
   HWND hwndDlg,
@@ -83,7 +83,7 @@ ColorsProc(
 		case WM_NOTIFY:
 		{
 			lpnmud = (LPNMUPDOWN) lParam;
-			lppsn = (LPPSHNOTIFY) lParam; 
+			lppsn = (LPPSHNOTIFY) lParam;
 
 			if (lppsn->hdr.code == PSN_APPLY)
 			{
@@ -98,7 +98,7 @@ ColorsProc(
 					return TRUE;
 				}
 				return TRUE;
-			}			
+			}
 
 			if (lpnmud->hdr.idFrom == IDC_UPDOWN_COLOR_RED)
 			{
@@ -162,7 +162,7 @@ ColorsProc(
 				case IDC_RADIO_SCREEN_TEXT:
 				{
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(pConInfo->ScreenText), FALSE);
-					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->ScreenText), FALSE);					
+					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->ScreenText), FALSE);
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->ScreenText), FALSE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
@@ -171,7 +171,7 @@ ColorsProc(
 				case IDC_RADIO_SCREEN_BACKGROUND:
 				{
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(pConInfo->ScreenBackground), FALSE);
-					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->ScreenBackground), FALSE);					
+					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->ScreenBackground), FALSE);
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->ScreenBackground), FALSE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
@@ -180,7 +180,7 @@ ColorsProc(
 				case IDC_RADIO_POPUP_TEXT:
 				{
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(pConInfo->PopupText), FALSE);
-					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->PopupText), FALSE);					
+					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->PopupText), FALSE);
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->PopupText), FALSE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);
@@ -189,7 +189,7 @@ ColorsProc(
 				case IDC_RADIO_POPUP_BACKGROUND:
 				{
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_RED, GetRValue(pConInfo->PopupBackground), FALSE);
-					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->PopupBackground), FALSE);					
+					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_GREEN, GetGValue(pConInfo->PopupBackground), FALSE);
 					SetDlgItemInt(hwndDlg, IDC_EDIT_COLOR_BLUE, GetBValue(pConInfo->PopupBackground), FALSE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_SCREEN_COLOR), NULL, TRUE);
 					InvalidateRect(GetDlgItem(hwndDlg, IDC_STATIC_POPUP_COLOR), NULL, TRUE);

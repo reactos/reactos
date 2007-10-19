@@ -30,13 +30,13 @@ int _tmain(int argc, TCHAR *argv[])
 {
   OFSTRUCT SourceOpenStruct1, SourceOpenStruct2;
   LONG ret;
-  HFILE hSourceFile, hDestFile;  
+  HFILE hSourceFile, hDestFile;
   TCHAR szMsg[RC_STRING_MAX_SIZE];
 
   if (argc < 2)
   {
-      LoadString( GetModuleHandle(NULL), IDS_Copy, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);	  
-      _ftprintf( stderr, szMsg, argv[0] );      
+      LoadString( GetModuleHandle(NULL), IDS_Copy, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
+      _ftprintf( stderr, szMsg, argv[0] );
       return 1;
   }
   hSourceFile = LZOpenFile(argv[1], &SourceOpenStruct1, OF_READ);
@@ -51,7 +51,7 @@ int _tmain(int argc, TCHAR *argv[])
   ret = LZCopy(hSourceFile, hDestFile);
   LZClose(hSourceFile);
   LZClose(hDestFile);
-  LoadString( GetModuleHandle(NULL), IDS_FAILS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);	  
+  LoadString( GetModuleHandle(NULL), IDS_FAILS, (LPTSTR) szMsg,RC_STRING_MAX_SIZE);
   if (ret <= 0) _ftprintf(stderr,szMsg,ret);
   return (ret <= 0);
 }

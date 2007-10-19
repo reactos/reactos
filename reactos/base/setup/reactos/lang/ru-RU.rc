@@ -3,7 +3,7 @@
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Установка ReactOS"
     IDS_TEXT     "Вы не можете установить ReactOS с диска в данный момент!\n\nПожалуйста, загрузите компьютер с этого диска для установки ReactOS."

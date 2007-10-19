@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- * 
+ *
  * WINE RPC TODO's (and a few TODONT's)
  *
  * - Ove's decreasingly incomplete widl is an IDL compiler for wine.  For widl
@@ -45,11 +45,11 @@
  *
  * - Some transports are not yet implemented.  The existing transport implementations
  *   are incomplete and may be bug-infested.
- * 
+ *
  * - The various transports that we do support ought to be supported in a more
  *   object-oriented manner, as in DCE's RPC implementation, instead of cluttering
  *   up the code with conditionals like we do now.
- * 
+ *
  * - Data marshalling: So far, only the beginnings of a full implementation
  *   exist in wine.  NDR protocol itself is documented, but the MS API's to
  *   convert data-types in memory into NDR are not.  This is challenging work,
@@ -59,7 +59,7 @@
  *   use it to implement out-of-process OLE client/server communications.
  *   ATM there is maybe a disconnect between the marshalling in the OLE DLLs
  *   and the marshalling going on here [TODO: well, is there or not?]
- * 
+ *
  * - In-source API Documentation, at least for those functions which we have
  *   implemented, but preferably for everything we can document, would be nice,
  *   since some of this stuff is quite obscure.
@@ -215,7 +215,7 @@ void WINAPI RpcRaiseException(RPC_STATUS exception)
  *     UUID *Uuid1        [I] Uuid to compare
  *     UUID *Uuid2        [I] Uuid to compare
  *     RPC_STATUS *Status [O] returns RPC_S_OK
- * 
+ *
  * RETURNS
  *    -1  if Uuid1 is less than Uuid2
  *     0  if Uuid1 and Uuid2 are equal
@@ -321,7 +321,7 @@ static void RPC_UuidGetSystemTime(ULONGLONG *time)
     *time += TICKS_15_OCT_1582_TO_1601;
 }
 
-/* Assume that a hardware address is at least 6 bytes long */ 
+/* Assume that a hardware address is at least 6 bytes long */
 #define ADDRESS_BYTES_NEEDED 6
 
 static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
@@ -368,9 +368,9 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
  *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
  *
  *  FIXME: No compensation for changes across reloading
- *         this dll or across reboots (e.g. clock going 
+ *         this dll or across reboots (e.g. clock going
  *         backwards and swapped network cards). The RFC
- *         suggests using NVRAM for storing persistent 
+ *         suggests using NVRAM for storing persistent
  *         values.
  */
 RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
@@ -693,11 +693,11 @@ static BOOL RPCRT4_StartRPCSS(void)
 
 /***********************************************************************
  *           RPCRT4_RPCSSOnDemandCall (internal)
- * 
+ *
  * Attempts to send a message to the RPCSS process
  * on the local machine, invoking it if necessary.
  * For remote RPCSS calls, use.... your imagination.
- * 
+ *
  * PARAMS
  *     msg             [I] pointer to the RPCSS message
  *     vardata_payload [I] pointer vardata portion of the RPCSS message
@@ -728,7 +728,7 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
             Sleep(200);
             client_handle = RPCRT4_RpcssNPConnect();
             if (INVALID_HANDLE_VALUE != client_handle) break;
-        } 
+        }
         /* we are only willing to try twice */
 	if (j++ >= 1) break;
     }

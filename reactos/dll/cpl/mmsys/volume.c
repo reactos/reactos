@@ -78,7 +78,7 @@ InitVolumeControls(HWND hwndDlg)
     }
 
     SendDlgItemMessage(hwndDlg, IDC_DEVICE_NAME, WM_SETTEXT, (WPARAM)0, (LPARAM)woc.szPname);
-    
+
     if (!(woc.dwSupport & WAVECAPS_VOLUME))
     {
         /// the device does not support volume changes

@@ -15,9 +15,9 @@
  *
  * copy this swab from wine cvs 2006-05-24
  */
-void _swab (const char *  src,  char *  dst,  size_t  sizeToCopy 
- )   
- 
+void _swab (const char *  src,  char *  dst,  size_t  sizeToCopy
+ )
+
 {
  if (sizeToCopy > 1)
   {

@@ -38,142 +38,142 @@
 #define KNUMP    0x800  /* Number-pad */
 #define KNUMS    0xc00  /* Special + number pad */
 #define KMEXT    0x300  /* Multi + ext */
- 
+
 #define SHFT_INVALID 0x0F
 
 ROSDATA USHORT scancode_to_vk[] = {
-/* 00 */  VK_EMPTY, 	
-/* 01 */  VK_ESCAPE,	
-/* 02 */  '1',		
-/* 03 */  '2',		
-/* 04 */  '3',		
-/* 05 */  '4',		
-/* 06 */  '5',		
-/* 07 */  '6',		
-/* 08 */  '7',    	     
-/* 09 */  '8',    	 
-/* 0a */  '9',  	       
-/* 0b */  '0',		
-/* 0c */  VK_OEM_4, 	
-/* 0d */  VK_OEM_6,    
-/* 0e */  VK_BACK,	
-/* 0f */  VK_TAB, 	     
-/* 10 */  'Q', 		    
-/* 11 */  'W',		        
-/* 12 */  'E',		
-/* 13 */  'R',  	      
-/* 14 */  'T', 		      
-/* 15 */  'Y', 		         
-/* 16 */  'U',  	
-/* 17 */  'I',          
-/* 18 */  'O',          
-/* 19 */  'P',         
-/* 1a */  VK_OEM_1,     
-/* 1b */  VK_OEM_PLUS,     
+/* 00 */  VK_EMPTY,
+/* 01 */  VK_ESCAPE,
+/* 02 */  '1',
+/* 03 */  '2',
+/* 04 */  '3',
+/* 05 */  '4',
+/* 06 */  '5',
+/* 07 */  '6',
+/* 08 */  '7',
+/* 09 */  '8',
+/* 0a */  '9',
+/* 0b */  '0',
+/* 0c */  VK_OEM_4,
+/* 0d */  VK_OEM_6,
+/* 0e */  VK_BACK,
+/* 0f */  VK_TAB,
+/* 10 */  'Q',
+/* 11 */  'W',
+/* 12 */  'E',
+/* 13 */  'R',
+/* 14 */  'T',
+/* 15 */  'Y',
+/* 16 */  'U',
+/* 17 */  'I',
+/* 18 */  'O',
+/* 19 */  'P',
+/* 1a */  VK_OEM_1,
+/* 1b */  VK_OEM_PLUS,
 /* 1c */  VK_RETURN,
-/* 1d */  VK_LCONTROL, 
-/* 1e */  'A',          
-/* 1f */  'S',          
-/* 20 */  'D',          
+/* 1d */  VK_LCONTROL,
+/* 1e */  'A',
+/* 1f */  'S',
+/* 20 */  'D',
 /* 21 */  'F',
-/* 22 */  'G',          
-/* 23 */  'H',          
-/* 24 */  'J',          
+/* 22 */  'G',
+/* 23 */  'H',
+/* 24 */  'J',
 /* 25 */  'K',
-/* 26 */  'L',         
-/* 27 */  VK_OEM_3,                           
-/* 28 */  VK_OEM_7,               
+/* 26 */  'L',
+/* 27 */  VK_OEM_3,
+/* 28 */  VK_OEM_7,
 /* 29 */  VK_OEM_5,
-/* 2a */  VK_LSHIFT,    
-/* 2b */  VK_OEM_2,     
-/* 2c */  'Z',          
-/* 2d */  'X',          
-/* 2e */  'C',         
-/* 2f */  'V',         
-/* 30 */  'B',          
-/* 31 */  'N',          
-/* 32 */  'M',                                
+/* 2a */  VK_LSHIFT,
+/* 2b */  VK_OEM_2,
+/* 2c */  'Z',
+/* 2d */  'X',
+/* 2e */  'C',
+/* 2f */  'V',
+/* 30 */  'B',
+/* 31 */  'N',
+/* 32 */  'M',
 /* 33 */  VK_OEM_COMMA,
-/* 34 */  VK_OEM_PERIOD, 
-/* 35 */  VK_OEM_MINUS,     
+/* 34 */  VK_OEM_PERIOD,
+/* 35 */  VK_OEM_MINUS,
 /* 36 */  VK_RSHIFT,
-/* 37 */  VK_MULTIPLY,  
-/* 38 */  VK_LMENU,     
-/* 39 */  VK_SPACE,     
+/* 37 */  VK_MULTIPLY,
+/* 38 */  VK_LMENU,
+/* 39 */  VK_SPACE,
 /* 3a */  VK_CAPITAL,
-/* 3b */  VK_F1, 
-/* 3c */  VK_F2, 
-/* 3d */  VK_F3, 
-/* 3e */  VK_F4, 
-/* 3f */  VK_F5, 
+/* 3b */  VK_F1,
+/* 3c */  VK_F2,
+/* 3d */  VK_F3,
+/* 3e */  VK_F4,
+/* 3f */  VK_F5,
 /* 40 */  VK_F6,
 /* 41 */  VK_F7,
 /* 42 */  VK_F8,
-/* 43 */  VK_F9, 
+/* 43 */  VK_F9,
 /* 44 */  VK_F10,
-/* 45 */  VK_NUMLOCK | KMEXT,  
-/* 46 */  VK_SCROLL | KMULTI, 
-/* 47 */  VK_HOME | KNUMS,    
-/* 48 */  VK_UP | KNUMS,        
-/* 49 */  VK_PRIOR | KNUMS,       
+/* 45 */  VK_NUMLOCK | KMEXT,
+/* 46 */  VK_SCROLL | KMULTI,
+/* 47 */  VK_HOME | KNUMS,
+/* 48 */  VK_UP | KNUMS,
+/* 49 */  VK_PRIOR | KNUMS,
 /* 4a */  VK_SUBTRACT,
 /* 4b */  VK_LEFT | KNUMS,
-/* 4c */  VK_CLEAR | KNUMS,      
-/* 4d */  VK_RIGHT | KNUMS,       
+/* 4c */  VK_CLEAR | KNUMS,
+/* 4d */  VK_RIGHT | KNUMS,
 /* 4e */  VK_ADD,
-/* 4f */  VK_END | KNUMS, 
-/* 50 */  VK_DOWN | KNUMS,      
-/* 51 */  VK_NEXT | KNUMS,       
-/* 52 */  VK_INSERT | KNUMS, 
-/* 53 */  VK_DELETE | KNUMS,   
+/* 4f */  VK_END | KNUMS,
+/* 50 */  VK_DOWN | KNUMS,
+/* 51 */  VK_NEXT | KNUMS,
+/* 52 */  VK_INSERT | KNUMS,
+/* 53 */  VK_DELETE | KNUMS,
 /* 54 */  VK_SNAPSHOT,
-/* 55 */  VK_EMPTY,     
-/* 56 */  VK_OEM_102,  
-/* 57 */  VK_F11,           
+/* 55 */  VK_EMPTY,
+/* 56 */  VK_OEM_102,
+/* 57 */  VK_F11,
 /* 58 */  VK_F12,
-/* 59 */  VK_EMPTY,     
-/* 5a */  VK_CLEAR,     
-/* 5b */  VK_EMPTY,     
-/* 5c */  VK_EMPTY,     
-/* 5d */  VK_EMPTY,     
+/* 59 */  VK_EMPTY,
+/* 5a */  VK_CLEAR,
+/* 5b */  VK_EMPTY,
+/* 5c */  VK_EMPTY,
+/* 5d */  VK_EMPTY,
 /* 5e */  VK_EMPTY, /* EREOF */
-/* 5f */  VK_EMPTY,     
-/* 60 */  VK_EMPTY,     
-/* 61 */  VK_EMPTY,     
-/* 62 */  VK_EMPTY,     
+/* 5f */  VK_EMPTY,
+/* 60 */  VK_EMPTY,
+/* 61 */  VK_EMPTY,
+/* 62 */  VK_EMPTY,
 /* 63 */  VK_EMPTY, /* ZOOM */
-/* 64 */  VK_HELP,     
-/* 65 */  VK_F13, 
-/* 66 */  VK_F14, 
-/* 67 */  VK_F15, 
-/* 68 */  VK_F16, 
-/* 69 */  VK_F17, 
-/* 6a */  VK_F18, 
-/* 6b */  VK_F19, 
+/* 64 */  VK_HELP,
+/* 65 */  VK_F13,
+/* 66 */  VK_F14,
+/* 67 */  VK_F15,
+/* 68 */  VK_F16,
+/* 69 */  VK_F17,
+/* 6a */  VK_F18,
+/* 6b */  VK_F19,
 /* 6c */  VK_F20,
-/* 6d */  VK_F21, 
-/* 6e */  VK_F22, 
+/* 6d */  VK_F21,
+/* 6e */  VK_F22,
 /* 6f */  VK_F23,
-/* 70 */  VK_EMPTY, 
-/* 71 */  VK_EMPTY, 
+/* 70 */  VK_EMPTY,
+/* 71 */  VK_EMPTY,
 /* 72 */  VK_EMPTY,
 /* 73 */  VK_EMPTY,
-/* 74 */  VK_EMPTY, 
-/* 75 */  VK_EMPTY, 
+/* 74 */  VK_EMPTY,
+/* 75 */  VK_EMPTY,
 /* 76 */  VK_EMPTY,
 /* 77 */  VK_F24,
 /* 78 */  VK_EMPTY,
-/* 79 */  VK_EMPTY, 
-/* 7a */  VK_EMPTY, 
+/* 79 */  VK_EMPTY,
+/* 7a */  VK_EMPTY,
 /* 7b */  VK_EMPTY,
-/* 7c */  VK_EMPTY, 
-/* 7d */  VK_EMPTY, 
-/* 7e */  VK_EMPTY, 
-/* 7f */  VK_EMPTY, 
+/* 7c */  VK_EMPTY,
+/* 7d */  VK_EMPTY,
+/* 7e */  VK_EMPTY,
+/* 7f */  VK_EMPTY,
 /* 80 */  VK_EMPTY,
 /* 00 */  0
 };
- 
+
 ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x10, VK_MEDIA_PREV_TRACK | KEXT }, // Pista anterior, no puedo probarlo hasta que no se implemente el sonido
   { 0x19, VK_MEDIA_NEXT_TRACK | KEXT }, // Pista siguiente,
@@ -185,8 +185,8 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x2E, VK_VOLUME_DOWN | KEXT }, // Bajar volumen
   { 0x30, VK_VOLUME_UP | KEXT }, // Subir volumen
   { 0x32, VK_BROWSER_HOME | KEXT }, // Pagina de inicio del navegador de internet o abrirlo si no esta activolo
-  { 0x35, VK_DIVIDE | KEXT }, // Tecla 
-  { 0x37, VK_SNAPSHOT | KEXT }, // La tecla de imprimir pantalla 
+  { 0x35, VK_DIVIDE | KEXT }, // Tecla
+  { 0x37, VK_SNAPSHOT | KEXT }, // La tecla de imprimir pantalla
   { 0x38, VK_RMENU | KEXT }, // Tecla alt
   { 0x47, VK_HOME | KEXT }, // Tecla inicio
   { 0x48, VK_UP | KEXT }, // Cursor arriba
@@ -203,7 +203,7 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
   { 0x5D, VK_APPS | KEXT }, // Tecla menu aplicacion derecha
   { 0x5F, VK_SLEEP | KEXT }, // Tecla Sleep
   { 0x65, VK_BROWSER_SEARCH | KEXT }, // Pagina de b˙squeda en el navegador de internet
-  { 0x66, VK_BROWSER_FAVORITES | KEXT }, // Favoritos, tengo que esperar a que el tcp/ip 
+  { 0x66, VK_BROWSER_FAVORITES | KEXT }, // Favoritos, tengo que esperar a que el tcp/ip
   { 0x67, VK_BROWSER_REFRESH | KEXT }, // Refrescar el navegador de internet
   { 0x68, VK_BROWSER_STOP | KEXT }, // Stop en el navegador de internet
   { 0x69, VK_BROWSER_FORWARD | KEXT }, // Adelante en el navegador de internet
@@ -220,7 +220,7 @@ ROSDATA VSC_VK extcode0_to_vk[] = {
 ROSDATA VSC_VK extcode1_to_vk[] = {
   { 0, 0 },
 };
- 
+
 ROSDATA VK_TO_BIT modifier_keys[] = {
   { VK_SHIFT,   KSHIFT },
   { VK_CONTROL, KCTRL },
@@ -231,7 +231,7 @@ ROSDATA VK_TO_BIT modifier_keys[] = {
 ROSDATA MODIFIERS modifier_bits = {
   modifier_keys,
   6,
-  {   0,     1,    2,          4,   SHFT_INVALID, SHFT_INVALID, 3  } 
+  {   0,     1,    2,          4,   SHFT_INVALID, SHFT_INVALID, 3  }
 /* NONE, SHIFT, CTRL, CTRL+SHIFT, ALT */
 };
 
@@ -243,14 +243,14 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* The numbers */
   //Del 1 al 5 tienen tres estados
   { '4',         NOCAPS, {'4', '$'} },
-  { '5', 	     NOCAPS, {'5',	'%'} }, 
+  { '5', 	     NOCAPS, {'5',	'%'} },
   //El 6 tiene 3 estados
   { '7',         NOCAPS, {'7', '/'} },
   { '8',         NOCAPS, {'8', '('} },
   { '9',         NOCAPS, {'9', ')'} },
   { '0',         NOCAPS, {'0', '='} },
   { VK_OEM_3,    CAPS,   {0x00F1, 0x00D1} }, // Ò—
-  
+
   /* Specials */
   /* Ctrl-_ generates ES */
   { VK_OEM_6	 ,NOCAPS, {0x00a1, 0x00bf} }, // °ø
@@ -258,7 +258,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_OEM_COMMA   ,NOCAPS, {',',    ';'}    },
   { VK_OEM_PERIOD  ,NOCAPS, {'.',    ':'}    },
   { VK_OEM_MINUS   ,NOCAPS, {'-',    '_'}    },
-  { VK_OEM_102     ,NOCAPS, {'<',    '>'}    }, 
+  { VK_OEM_102     ,NOCAPS, {'<',    '>'}    },
 
   /* Keys that do not have shift states */
   { VK_TAB,		NOCAPS, {'\t',	'\t'}   },
@@ -270,7 +270,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   { VK_SPACE,	NOCAPS, {' ', 	' '}    },
   { 0, 0 }
 };
- 
+
 
 ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   /* Normal, Shifted, Ctrl */
@@ -316,19 +316,19 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
   { '6', 		NOCAPS, {'6', 	'&',      WCH_NONE,  0x00AC}  }, // 6&¨
   { 'E', 		CAPS,   {'e', 	'E',      0x05,  0x20AC}  }, // eEÄ
   { VK_OEM_PLUS,  NOCAPS, {'+',      '*', 	    WCH_NONE,  0x005d}  }, // +*]
-  { VK_OEM_2,  	NOCAPS, {0x00e7,   0x00c7,   WCH_NONE,  '}'}     }, // Á«} 
-  
+  { VK_OEM_2,  	NOCAPS, {0x00e7,   0x00c7,   WCH_NONE,  '}'}     }, // Á«}
+
   { VK_OEM_7,  	NOCAPS, {WCH_DEAD,   WCH_DEAD, WCH_NONE,  '{'} }, //  ¥®{
   { VK_EMPTY, 	NOCAPS, {0xB4,       0xA8,     WCH_NONE,  WCH_NONE} },  //  ¥®{
- 
+
   { VK_OEM_1,  	NOCAPS, {WCH_DEAD,   WCH_DEAD, WCH_NONE,  0x5B}    }, // `^[
   { VK_EMPTY,  	NOCAPS, {0x60,       0x5e,     WCH_NONE,  WCH_NONE}  }, // `^[
-  
+
   { VK_OEM_5,  	NOCAPS, {0x00BA,   0x00AA,   WCH_NONE,  0x005c}  }, // Á«}
   { 0, 0 }
 };
 
- 
+
 
 ROSDATA VK_TO_WCHARS1 keypad_numbers[] = {
   { VK_NUMPAD0, 0, {'0'} },
@@ -497,35 +497,35 @@ ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
 	L"\x00A8"	L"Dieresis",
     NULL
 };
- 
+
 
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
 
   /* modifier assignments */
   &modifier_bits,
- 
+
   /* character from vk tables */
   vk_to_wchar_master_table,
- 
+
   /* diacritical marks -- currently implemented by wine code */
   /* Spanish have severals */
   deadkey,
- 
+
   /* Key names */
   (VSC_LPWSTR *)key_names,
   (VSC_LPWSTR *)extended_key_names,
   dead_key_names,
   /* Dead key names */
- 
+
   /* scan code to virtual key maps */
   scancode_to_vk,
   sizeof(scancode_to_vk) / sizeof(scancode_to_vk[0]),
   extcode0_to_vk,
   extcode1_to_vk,
- 
+
   MAKELONG(0,1), /* Version 1.0 */
- 
+
   /* Ligatures -- Spanish doesn't have any  */
   0,
   0,

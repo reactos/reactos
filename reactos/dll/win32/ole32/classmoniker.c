@@ -482,7 +482,7 @@ static HRESULT WINAPI ClassMoniker_Inverse(IMoniker* iface,IMoniker** ppmk)
 static HRESULT WINAPI ClassMoniker_CommonPrefixWith(IMoniker* iface,IMoniker* pmkOther,IMoniker** ppmkPrefix)
 {
     DWORD mkSys;
-    
+
     TRACE("(%p, %p)\n", pmkOther, ppmkPrefix);
 
     *ppmkPrefix = NULL;

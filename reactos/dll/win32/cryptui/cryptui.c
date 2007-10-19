@@ -6,7 +6,7 @@
 * PURPOSE:         Library main function
 * PROGRAMMER:      Christoph von Wittich
 * UPDATE HISTORY:
-*                  
+*
 */
 
 #include <windows.h>

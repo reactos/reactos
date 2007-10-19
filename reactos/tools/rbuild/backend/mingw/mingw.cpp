@@ -312,7 +312,7 @@ MingwBackend::CheckAutomaticDependenciesForModuleOnly ()
 			        configuration.CheckDependenciesForModuleOnlyModule.c_str () );
 			return;
 		}
-		
+
 		printf ( "Checking automatic dependencies for module '%s'...",
 		         module->name.c_str () );
 		AutomaticDependency automaticDependency ( ProjectNode );
@@ -446,7 +446,7 @@ MingwBackend::GenerateProjectGccOptionsMacro ( const char* assignmentOperation,
 		fMakefile,
 		"PROJECT_GCCOPTIONS %s",
 		assignmentOperation );
-	
+
 	for ( i = 0; i < data.compilerFlags.size(); i++ )
 	{
 		fprintf (
@@ -654,7 +654,7 @@ MingwBackend::GenerateXmlBuildFilesMacro() const
 		}
 
 		fclose ( f );
-		
+
 		xmlbuildFilenames += NormalizeFilename ( xmlbuildfile.topIncludeFilename );
 		if ( numberOfExistingFiles % 5 == 4 || i == ProjectNode.xmlbuildfiles.size () - 1 )
 		{
@@ -843,10 +843,10 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	char buffer[81];
 
 	fp = popen ( versionCommand.c_str () , "r" );
-	for( i = 0; 
-             ( i < 80 ) && 
-                 ( feof ( fp ) == 0 && 
-                   ( ( ch = fgetc( fp ) ) != -1 ) ); 
+	for( i = 0;
+             ( i < 80 ) &&
+                 ( feof ( fp ) == 0 &&
+                   ( ( ch = fgetc( fp ) ) != -1 ) );
              i++ )
 	{
 		buffer[i] = (char) ch;
@@ -946,10 +946,10 @@ MingwBackend::GetBinutilsVersionDate ( const string& binutilsCommand )
 	                                   NUL,
 	                                   NUL );
 	fp = popen ( versionCommand.c_str () , "r" );
-	for( i = 0; 
-             ( i < 80 ) && 
-                 ( feof ( fp ) == 0 && 
-                   ( ( ch = fgetc( fp ) ) != -1 ) ); 
+	for( i = 0;
+             ( i < 80 ) &&
+                 ( feof ( fp ) == 0 &&
+                   ( ( ch = fgetc( fp ) ) != -1 ) );
              i++ )
 	{
 		buffer[i] = (char) ch;

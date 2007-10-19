@@ -140,7 +140,7 @@ void TANSIParser::ConSetAttribute(unsigned char TextAttrib){
 			return;
 		}
 	}
-	
+
 	switch (TextAttrib){
 		// Text Attributes
 	case 0: Console.Normal();           break;	// Normal video
@@ -179,7 +179,7 @@ void TANSIParser::ConSetAttribute(unsigned char TextAttrib){
 		// Select second alternate font,
 		// toggle high bit before
 		// displaying as ROM char.
-		
+
 	case 21:									// not really Low video
 	case 22: Console.LowVideo();		break;	// but this works good also
 	case 24: Console.UnderlineOff();	break;	// Underline off
@@ -247,13 +247,13 @@ const char* TANSIParser::GetTerminalID()
 
 char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 {
-	
+
 	//	The buffer contains something like <ESC>[pA
 	//	where p is an optional decimal number specifying the count by which the
 	//	appropriate action should take place.
 	//	The pointer pszBuffer points us to the p, <ESC> and [ are
 	//	already 'consumed'
-	
+
 	//	TITUS: Simplification of the code: Assume default count of 1 in case
 	//	there are no parameters.
 	char tmpc;
@@ -305,10 +305,10 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		if (iCurrentParam < nParam)
 			iCurrentParam++;
 	}
-	
+
 	//~~~ TITUS: Apparently the digit is optional (look at termcap or terminfo)
 	// So: If there is no digit, assume a count of 1
-	
+
 	switch ((unsigned char)*pszBuffer++) {
 		// Insert Character
 		case '@':
@@ -350,7 +350,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			break;
 		// Move cursor to beginning of line, p lines down.
 		// Added by I.Ioannou 06 April, 1997
-		case 'E': 
+		case 'E':
 			Console.MoveCursorPosition(-Console.GetCursorX(), iParam[0]);
 			break;
 		// Moves active position to beginning of line, p lines up
@@ -365,7 +365,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		// Go to column p
 		// Added by I.Ioannou 06 April, 1997
 		// With '=' this changes the default bg color (Paul Brannan 6/27/98)
-		case '`': 
+		case '`':
 		case 'G': // 'G' is from Linux kernel sources
 			if(flag & FLAG_EQUAL) {
 				Console.setDefaultBg(iParam[0]);
@@ -378,14 +378,14 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Set cursor position.
-		case 'f': 
+		case 'f':
 		case 'H':
 			if (iCurrentParam < 2 || iParam[1] < 1)
 				iParam[1] = 1;
 			ConSetCursorPos(iParam[1] - 1, iParam[0] - 1);
 			break;
 		// Clear screen
-		case 'J': 
+		case 'J':
 			if ( iCurrentParam < 1 ) iParam[0] = 0;	// Alter Default
 			switch (iParam[0]) {
 				case 0: Console.ClearEOScreen(); break;
@@ -397,7 +397,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Clear line
-		case 'K': 
+		case 'K':
 			if (iCurrentParam < 1)			// Alter Default
 				iParam[0] = 0;
 			switch (iParam[0]) {
@@ -408,7 +408,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			break;
 		//  Insert p new, blank lines.
 		// Added by I.Ioannou 06 April, 1997
-		case 'L': 
+		case 'L':
 			{
 				// for (int i = 1; i <= iParam[0]; i++)
 				// This should speed things up a bit (Paul Brannan 9/2/98)
@@ -417,7 +417,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 		//  Delete p lines.
 		// Added by I.Ioannou 06 April, 1997
-		case 'M': 
+		case 'M':
 			{
 				for (int i = 1; i <= iParam[0]; i++)
 				// This should speed things up a bit (Paul Brannan 9/2/98)
@@ -425,7 +425,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 				break;
 			}
 		// DELETE CHAR
-		case 'P': 
+		case 'P':
 			Console.DeleteCharacter(iParam[0]);
 			break;
 		// Scrolls screen up (down? -- PB) p lines,
@@ -433,7 +433,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		// ANSI X3.64-1979 references this but I didn't
 		// found it in any telnet implementation
 		// note 05 Oct 97  : but SCO terminfo uses them, so uncomment them !!
-		case 'S': 
+		case 'S':
 			{
 				//for (int i = 1; i <= iParam[0]; i++)
 				// This should speed things up a bit (Paul Brannan 9/2/98)
@@ -445,7 +445,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		// ANSI X3.64-1979 references this but I didn't
 		// found it in any telnet implementation
 		// note 05 Oct 97  : but SCO terminfo uses them, so uncomment them !!
-		case 'T': 
+		case 'T':
 			{
 				// for (int i = 1; i <= iParam[0]; i++)
 				// This should speed things up a bit (Paul Brannan 9/2/98)
@@ -454,7 +454,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 		//  Erases p characters up to the end of line
 		// Added by I.Ioannou 06 April, 1997
-		case 'X': 
+		case 'X':
 			{
 				int iKeepX = Console.GetRawCursorX();
 				int iKeepY = Console.GetRawCursorY();
@@ -477,7 +477,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Get Terminal ID
-		case 'c': 
+		case 'c':
 			{
 				const char* szTerminalId = GetTerminalID();
 				Network.WriteString(szTerminalId, strlen(szTerminalId));
@@ -500,7 +500,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 		break;
 		// Go to line p
 		// Added by I.Ioannou 06 April, 1997
-		case 'd': 
+		case 'd':
 			if (iCurrentParam < 1)			// Alter Default
 				iParam[0] = 0;
 			// this was backward, and we should subtract 1 from y
@@ -509,7 +509,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			break;
 		// iBCS2 tab erase
 		// Added by I.Ioannou 06 April, 1997
-		case 'g': 
+		case 'g':
 			if (iCurrentParam < 1)			// Alter Default
 				iParam[0] = 0;
 			switch (iParam[0]) {
@@ -535,7 +535,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Set extended mode
-		case 'h': 
+		case 'h':
 			{
 				for (int i = 0; i < iCurrentParam; i++) {
 					// Changed to a switch statement (Paul Brannan 5/27/98)
@@ -607,7 +607,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Print Screen
-		case 'i': 
+		case 'i':
 			if (iCurrentParam < 1)
 				iParam[0]=0;
 			switch (iParam[0]){
@@ -628,7 +628,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Unset extended mode
-		case 'l': 
+		case 'l':
 			{
 				for (int i = 0; i < iCurrentParam; i++) {
 					// Changed to a switch statement (Paul Brannan 5/27/98)
@@ -708,7 +708,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// report cursor position Row X Col
-		case 'n': 
+		case 'n':
 			if (iCurrentParam == 1 && iParam[0]==5) {
 				// report the cursor position
 				Network.WriteString("\x1B[0n", 6);
@@ -728,7 +728,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 				strcat(szCursorReport, "R");
 
 				Network.WriteString(szCursorReport, strlen(szCursorReport));
-		
+
 			}
 			break;
 		// Miscellaneous weird sequences (Paul Brannan 6/27/98)
@@ -747,7 +747,7 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			}
 			break;
 		// Scroll Screen
-		case 'r': 
+		case 'r':
 			if (iCurrentParam < 1) {
 				// Enable scrolling for entire display
 				Console.SetScroll(-1, -1);
@@ -771,12 +771,12 @@ char* TANSIParser::ParseEscapeANSI(char* pszBuffer, char* pszBufferEnd)
 			Console.SetCursorPosition(0, 0);
 			break;
 		// Save cursor position
-		case 's': 
+		case 's':
 			SaveCurY(Console.GetRawCursorY());
 			SaveCurX(Console.GetRawCursorX());
 			break;
 		// Restore cursor position
-		case 'u': 
+		case 'u':
 			Console.SetRawCursorPosition(iSavedCurX, iSavedCurY);
 			break;
 		// DEC terminal report (Paul Brannan 6/28/98)
@@ -814,7 +814,7 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 	int     iParam[nParam] = {1, 0, 0, 0, 0};       // Assume 1 parameter, Default 1
 	int iCurrentParam = 0;
 	char sRepeat[2];
-	
+
 	// Get parameters from escape sequence.
 	while ((tmpc = *pszBuffer) <= '?') {
 		if(tmpc < '0' || tmpc > '9') {
@@ -825,16 +825,16 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 			}
 			pszBuffer++;
 		}
-		
+
 		//  Got Numerical Parameter.
 		iParam[iCurrentParam] = strtoul(pszBuffer, &pszBuffer, 10);
 		if (iCurrentParam < nParam)
 			iCurrentParam++;
 	}
-	
+
 	//~~~ TITUS: Apparently the digit is optional (look at termcap or terminfo)
 	// So: If there is no digit, assume a count of 1
-	
+
 	switch ((unsigned char)*pszBuffer++) {
 		case 'A':
 			// set colors
@@ -843,7 +843,7 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 			if (iParam[0] <= 15 && iParam[1] <= 15)
 				Console.SetAttrib( (iParam[1] << 4) | iParam[0] );
 			break;
-			
+
 		case 'R':
 			// define region
 			mteRegionXF = -1;
@@ -852,7 +852,7 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 			mteRegionXF = iParam[1]-1;
 			mteRegionYF = iParam[0]-1;
 			break;
-			
+
 		case 'F':
 			// fill with char
 			{
@@ -868,12 +868,12 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 				{
 					Console.SetCursorPosition(xi,y);
 					for(int x=xi;x<=xf;++x)
-						
+
 						Console.WriteStringFast(sRepeat,1);
 				}
 			}
 			break;
-			
+
 		case 'S':
 			// Scroll region
 			{
@@ -910,7 +910,7 @@ char* TANSIParser::ParseEscapeMTE(char* pszBuffer, char* pszBufferEnd)
 #endif
 			break;
 	}
-	
+
 	return pszBuffer;
  }
 #endif
@@ -921,19 +921,19 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 	// Check if we have enough characters in buffer.
 	if ((pszBufferEnd - pszBuffer) < 2)
 		return pszBuffer;
-	
+
 	//  I.Ioannou 04 Sep 1997
 	// there is no need for pszBuffer++; after each command
-	
+
 	// Decode the command.
 	pszBuffer++;
-	
+
 	switch (*pszBuffer++) {
 		case 'A': // Cursor up
 			Console.MoveCursorPosition(0, -1);
 			break;
 		// Cursor down
-		case 'B': 
+		case 'B':
   			Console.MoveCursorPosition(0, 1);
 			break;
 		// Cursor right
@@ -960,7 +960,7 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 			Charmap.setmap('B');
 			break;
 		// Home cursor/tab set
-		case 'H': 
+		case 'H':
 			if(ini.get_vt100_mode()) {
 				int x = Console.GetCursorX();
 				if(x != 0) {
@@ -980,7 +980,7 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 			Console.reverse_index();
 			break;
 		// Erase end of screen
-		case 'J': 
+		case 'J':
 			Console.ClearEOScreen();
 			break;
 		// Erase EOL
@@ -1040,7 +1040,7 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 				}
 			} else {
 				pszBuffer--;
-			}			
+			}
 			break;
 		// Graphics processor off (See note 3)
 		case '2':
@@ -1129,7 +1129,7 @@ char* TANSIParser::ParseEscape(char* pszBuffer, char* pszBufferEnd) {
 char* TANSIParser::ParseBuffer(char* pszHead, char* pszTail){
 	// copy into ANSI buffer
 	char * pszResult;
-	
+
 	// Parse the buffer for ANSI or display
 	while (pszHead < pszTail) {
 		if(!ini.get_output_redir()) {
@@ -1204,7 +1204,7 @@ int TANSIParser::StripBuffer(char* pszHead, char* pszTail, int width) {
 		if(c != 0 && !(c%width))
 			lines++;
 	}
-	
+
 	// Fill in the end of the buffer with blanks
 	while(pszBuf <= pszTail) *pszBuf++ = ' ';
 
@@ -1216,13 +1216,13 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 	if(InPrintMode) {
 		return PrintBuffer(pszBuffer, pszBufferEnd);
 	}
-	
+
 	unsigned char tmpc = *(unsigned char *)pszBuffer;
 
 	if(tmpc == 27) {
 		return ParseEscape(pszBuffer, pszBufferEnd);
 	}
-	
+
 //	if((fast_write && tmpc < 32) ||
 //		!print_ctrl && (tmpc < 32 || (EightBit_Ansi &&
 //		(tmpc > 128 && tmpc < 128 + ' ')))) {
@@ -1239,7 +1239,7 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 		const long CTRL_ACTION = 0x0d00ff81;
 		const long CTRL_ALWAYS = 0x0800f501;
 		if(!(((print_ctrl?CTRL_ALWAYS:CTRL_ACTION)>>tmpc)&1)) {
-			
+
 			Console.WriteString((char *)&tmpc, 1);
 			pszBuffer++;
 			return pszBuffer;
@@ -1249,13 +1249,13 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 		case 0:
 			pszBuffer++;
 			break;
-		
+
 		// I.Ioannou 5/30/98
 		case 7:
 			Console.Beep();
 			pszBuffer++;
 			break;
-		
+
 		// destructive backspace
 		case 8:
 			// Added option for destructive backspace (Paul Brannan 5/13/98)
@@ -1269,7 +1269,7 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 			else Console.WriteCtrlChar('\b');
 			pszBuffer++;
 			break;
-		
+
 		// horizontal tab
 		case 9:
 			{
@@ -1279,7 +1279,7 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 					Console.SetCursorPosition(tab_stops[x], Console.GetCursorY());
 			}
 			break;
-		
+
 		// Line Feed Char
 		case 10:
 			// Test for local echo (Paul Brannan 8/25/98)
@@ -1288,14 +1288,14 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 			Console.WriteCtrlChar('\x0a');
 			pszBuffer++;
 			break;
-		
+
 		// form feed
 		case 12:
 			pszBuffer++;
 			Console.ClearScreen();
 			Console.SetRawCursorPosition(Console.GetCursorX(), 1); // changed fm 1
 			break;
-		
+
 		case 13:
 			Console.WriteCtrlChar('\x0d');
 			pszBuffer++;
@@ -1307,13 +1307,13 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 			Charmap.setmap(map_G1); // Paul Brannan 6/25/98
 			current_map = 1;
 			break;
-	
+
 		case 15:  // shift in
 			pszBuffer++;
 			Charmap.setmap(map_G0); // Paul Brannan 6/25/98
 			current_map = 0;
 			break;
-		
+
 		// Paul Brannan 9/1/98 - Is this okay?
 		default:
 			pszBuffer++;
@@ -1352,13 +1352,13 @@ char* TANSIParser::ParseANSIBuffer(char* pszBuffer, char* pszBufferEnd)
 			*pszCurrent |= 0x80 ;
 		pszCurrent++;
 	}
-	
+
 	// Note that this may break dumpfiles slightly.
 	// If 'B' is set to anything other than ASCII, this will cause problems
 	// (Paul Brannan 6/28/98)
 	if(current_map != 'B' && Charmap.enabled)
-		Charmap.translate_buffer(pszBuffer, pszCurrent);    
-	
+		Charmap.translate_buffer(pszBuffer, pszCurrent);
+
 	last_char = *(pszCurrent-1);    // TITUS++: Remember last char
 
 	if(fast_write) {
@@ -1379,7 +1379,7 @@ char* TANSIParser::PrintBuffer(char* pszBuffer, char* pszBufferEnd) {
 	if ((pszBufferEnd - pszBuffer) < 4)
 		return pszBuffer;
 	char *tmpChar;
-	
+
 	tmpChar = pszBuffer;
 	if ( *tmpChar == 27 ) {
 		tmpChar++;
@@ -1397,13 +1397,13 @@ char* TANSIParser::PrintBuffer(char* pszBuffer, char* pszBufferEnd) {
 			}
 		}
 	}
-	
+
 	if (printfile != NULL) {
 		fputc( *pszBuffer, printfile);
 		pszBuffer++;
 	} else
 		InPrintMode = 0;
-	
+
 	return pszBuffer;
 }
 

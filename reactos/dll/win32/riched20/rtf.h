@@ -1083,7 +1083,7 @@ struct _RTF_Info {
 
     /* edit window to output to */
     HWND hwndEdit;
-    
+
     ME_TextEditor *editor;
     ME_Style *style;
 

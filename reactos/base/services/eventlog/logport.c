@@ -4,7 +4,7 @@
  * FILE:             services/eventlog/logport.c
  * PURPOSE:          Event logging service
  * COPYRIGHT:        Copyright 2002 Eric Kohl
- *                   Copyright 2005 Saveliy Tretiakov 
+ *                   Copyright 2005 Saveliy Tretiakov
  */
 
 /* INCLUDES *****************************************************************/

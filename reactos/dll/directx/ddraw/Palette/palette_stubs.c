@@ -3,7 +3,7 @@
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
  * FILE:                 ddraw/palette/palette_stubs.c
- * PURPOSE:              IDirectDrawPalette Implementation 
+ * PURPOSE:              IDirectDrawPalette Implementation
  * PROGRAMMER:           Maarten Bosma
  *
  */
@@ -12,32 +12,32 @@
 
 ULONG WINAPI
 DirectDrawPalette_Release( LPDIRECTDRAWPALETTE iface)
-{    
+{
   DX_WINDBG_trace();
 
-   DX_STUB;  
+   DX_STUB;
 }
 
-ULONG WINAPI 
-DirectDrawPalette_AddRef( LPDIRECTDRAWPALETTE iface) 
-{         
+ULONG WINAPI
+DirectDrawPalette_AddRef( LPDIRECTDRAWPALETTE iface)
+{
   DX_WINDBG_trace();
 
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI
 DirectDrawPalette_Initialize( LPDIRECTDRAWPALETTE iface,
-				              LPDIRECTDRAW ddraw, 
+				              LPDIRECTDRAW ddraw,
                               DWORD dwFlags,
 				              LPPALETTEENTRY palent)
 {
    DX_WINDBG_trace();
-   DX_STUB;  
+   DX_STUB;
 }
 
 HRESULT WINAPI
-DirectDrawPalette_GetEntries( LPDIRECTDRAWPALETTE iface, 
+DirectDrawPalette_GetEntries( LPDIRECTDRAWPALETTE iface,
                               DWORD dwFlags,
 				              DWORD dwStart, DWORD dwCount,
 				              LPPALETTEENTRY palent)
@@ -47,7 +47,7 @@ DirectDrawPalette_GetEntries( LPDIRECTDRAWPALETTE iface,
 }
 
 HRESULT WINAPI
-DirectDrawPalette_SetEntries( LPDIRECTDRAWPALETTE iface, 
+DirectDrawPalette_SetEntries( LPDIRECTDRAWPALETTE iface,
                               DWORD dwFlags,
 				              DWORD dwStart,
                               DWORD dwCount,
@@ -57,7 +57,7 @@ DirectDrawPalette_SetEntries( LPDIRECTDRAWPALETTE iface,
    DX_STUB;
 }
 HRESULT WINAPI
-DirectDrawPalette_GetCaps( LPDIRECTDRAWPALETTE iface, 
+DirectDrawPalette_GetCaps( LPDIRECTDRAWPALETTE iface,
                            LPDWORD lpdwCaps)
 {
    DX_WINDBG_trace();
@@ -66,7 +66,7 @@ DirectDrawPalette_GetCaps( LPDIRECTDRAWPALETTE iface,
 
 HRESULT WINAPI
 DirectDrawPalette_QueryInterface( LPDIRECTDRAWPALETTE iface,
-				                  REFIID refiid, 
+				                  REFIID refiid,
                                   LPVOID *obj)
 {
    DX_WINDBG_trace();

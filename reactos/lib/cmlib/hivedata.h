@@ -65,7 +65,7 @@ typedef struct _HBASE_BLOCK
 
    /* Update counter */
    ULONG Sequence2;
-   
+
    /* When this hive file was last modified */
    LARGE_INTEGER TimeStamp;
 

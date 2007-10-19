@@ -60,7 +60,7 @@ fast_draw_pixels(GLcontext *ctx, GLint x, GLint y,
    if (!ctx->Current.RasterPosValid) {
       return GL_TRUE;      /* no-op */
    }
-   
+
    if (swrast->_RasterMask & MULTI_DRAW_BIT)
       return GL_FALSE;
 
@@ -227,7 +227,7 @@ fast_draw_pixels(GLcontext *ctx, GLint x, GLint y,
                   span.x = destX;
                   span.y = destY;
                   span.end = drawWidth;
-                  _swrast_write_zoomed_rgb_span(ctx, &span, 
+                  _swrast_write_zoomed_rgb_span(ctx, &span,
                                          (CONST GLchan (*)[3]) src, zoomY0, 0);
                   src += rowLength * 3;
                   destY++;
@@ -491,7 +491,7 @@ draw_index_pixels( GLcontext *ctx, GLint x, GLint y,
          span.x = spanX;
          span.y = spanY;
          span.end = spanEnd;
-         
+
          if (zoom)
             _swrast_write_zoomed_index_span(ctx, &span, y, skipPixels);
          else

@@ -17,9 +17,9 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
  HDC hDC = NULL;
  BOOL Display = FALSE, Default = TRUE;
  ULONG UMdhpdev = 0;
- 
+
  HANDLE hspool = NULL;
-                
+
  if ((!lpwszDevice) && (!lpwszDriver))
  {
      Default = FALSE;  // Ask Win32k to set Default device.
@@ -36,13 +36,13 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     {
       if (lpwszDriver) // Second
       {
-        if ((!_wcsnicmp(lpwszDriver, L"DISPLAY",7)) || 
+        if ((!_wcsnicmp(lpwszDriver, L"DISPLAY",7)) ||
               (!_wcsnicmp(lpwszDriver, L"\\\\.\\DISPLAY",11))) Display = TRUE;
         RtlInitUnicodeString(&Device, lpwszDriver);
       }
     }
  }
- 
+
  if (lpwszOutput) RtlInitUnicodeString(&Output, lpwszOutput);
 
  if (!Display)
@@ -50,7 +50,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     //Handle Print device or something else.
     DPRINT1("Not a DISPLAY device! %wZ\n", &Device);
  }
-        
+
  hDC = NtGdiOpenDCW( (Default ? &Device : NULL),
                      (PDEVMODEW) lpInitData,
                      (lpwszOutput ? &Output : NULL),
@@ -75,7 +75,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     DbgPrint("DC_ATTR Allocated -> 0x%x\n",Dc_Attr);
  }
 #endif
- return hDC;     
+ return hDC;
 }
 
 
@@ -229,7 +229,7 @@ CreateICA(
 	  {
 	    if ( lpdvmInit )
                dvmInitW = GdiConvertToDevmodeW((LPDEVMODEA)lpdvmInit);
-        
+
                rc = IntCreateDICW ( lpszDriverW,
                                     lpszDeviceW,
                                     lpszOutputW,
@@ -259,7 +259,7 @@ DeleteDC(HDC hDC)
   PLDC pLDC;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
-  
+
   if ( Dc_Attr )
     {
       pLDC = Dc_Attr->pvLDC;
@@ -272,7 +272,7 @@ DeleteDC(HDC hDC)
     }
 #endif
   Ret = NtGdiDeleteObjectApp(hDC);
-  
+
   return Ret;
 }
 
@@ -287,7 +287,7 @@ DeleteObject(HGDIOBJ hObject)
 {
   /* From Wine: DeleteObject does not SetLastError() on a null object */
   if(!hObject) return FALSE;
-  
+
   if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
     {
       DPRINT1("Trying to delete system object 0x%x\n", hObject);
@@ -327,24 +327,24 @@ GetDCObject( HDC hDC, INT iType)
  {
    HGDIOBJ hGO = NULL;
    PDC_ATTR Dc_Attr;
-   
+
    if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return NULL;
 
    switch (iType)
    {
      case GDI_OBJECT_TYPE_BRUSH:
-          hGO = Dc_Attr->hbrush;  
+          hGO = Dc_Attr->hbrush;
           break;
-     
+
      case GDI_OBJECT_TYPE_EXTPEN:
      case GDI_OBJECT_TYPE_PEN:
           hGO = Dc_Attr->hpen;
           break;
-     
+
      case GDI_OBJECT_TYPE_COLORSPACE:
           hGO = Dc_Attr->hColorSpace;
           break;
-   }   
+   }
    return hGO;
  }
  return NtGdiGetDCObject( hDC, iType );
@@ -355,7 +355,7 @@ GetDCObject( HDC hDC, INT iType)
  * @implemented
  *
  */
-HGDIOBJ 
+HGDIOBJ
 STDCALL
 GetCurrentObject(HDC hdc,
                  UINT uObjectType)
@@ -428,7 +428,7 @@ DWORD
 STDCALL
 GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3 )
 {
-  BOOL Ret = TRUE; 
+  BOOL Ret = TRUE;
 // Handle something other than a normal dc object.
   if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
   {
@@ -451,10 +451,10 @@ GetAndSetDCDWord( HDC hDC, INT u, DWORD dwIn, DWORD Unk1, DWORD Unk2, DWORD Unk3
        }
     }
   }
-  Ret = NtGdiGetAndSetDCDword( hDC, u, dwIn, (DWORD*) &u );                
-  if (Ret) 
+  Ret = NtGdiGetAndSetDCDword( hDC, u, dwIn, (DWORD*) &u );
+  if (Ret)
      return u;
-  else 
+  else
      SetLastError(ERROR_INVALID_HANDLE);
   return 0;
 }
@@ -518,7 +518,7 @@ GetDCOrg(
 }
 
 
-int   
+int
 GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   INT dwType;
@@ -556,7 +556,7 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
     case GDI_OBJECT_TYPE_REGION:
     case GDI_OBJECT_TYPE_METAFILE:
     case GDI_OBJECT_TYPE_ENHMETAFILE:
-    case GDI_OBJECT_TYPE_EMF:    
+    case GDI_OBJECT_TYPE_EMF:
       SetLastError(ERROR_INVALID_HANDLE);
   }
   return 0;
@@ -566,8 +566,8 @@ GetNonFontObject(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 /*
  * @implemented
  */
-int   
-STDCALL 
+int
+STDCALL
 GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   ENUMLOGFONTEXDVW LogFont;
@@ -580,7 +580,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
   {
      SetLastError(ERROR_NOT_SUPPORTED);
      return 0;
-  } 
+  }
 
   if (dwType == GDI_OBJECT_TYPE_FONT)
   {
@@ -601,7 +601,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
     {
       return 0;
     }
-  
+
     switch (cbSize)
       {
          case sizeof(ENUMLOGFONTEXDVA):
@@ -609,7 +609,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
          case sizeof(ENUMLOGFONTEXA):
             EnumLogFontExW2A( (LPENUMLOGFONTEXA) lpBuffer, &LogFont.elfEnumLogfontEx );
             break;
-             
+
          case sizeof(ENUMLOGFONTA):
          // Same here, maybe? Check the structures.
          case sizeof(EXTLOGFONTA):
@@ -620,7 +620,7 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 
          default:
             SetLastError(ERROR_BUFFER_OVERFLOW);
-            return 0;         
+            return 0;
       }
     return cbSize;
   }
@@ -632,8 +632,8 @@ GetObjectA(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 /*
  * @implemented
  */
-int   
-STDCALL 
+int
+STDCALL
 GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 {
   DWORD dwType = GDI_HANDLE_GET_TYPE(hGdiObj);
@@ -683,7 +683,7 @@ GetObjectW(HGDIOBJ hGdiObj, int cbSize, LPVOID lpBuffer)
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 GetDCBrushColor(
 	HDC hdc
@@ -691,7 +691,7 @@ GetDCBrushColor(
 {
 //#if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
 //#endif
@@ -701,7 +701,7 @@ GetDCBrushColor(
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 GetDCPenColor(
 	HDC hdc
@@ -709,7 +709,7 @@ GetDCPenColor(
 {
 //#if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
 //#endif
@@ -719,7 +719,7 @@ GetDCPenColor(
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 SetDCBrushColor(
 	HDC hdc,
@@ -750,7 +750,7 @@ SetDCBrushColor(
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 SetDCPenColor(
 	HDC hdc,
@@ -781,7 +781,7 @@ SetDCPenColor(
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 SetTextColor(
 	HDC hdc,
@@ -829,7 +829,7 @@ SetTextColor(
 /*
  * @implemented
  */
-COLORREF 
+COLORREF
 STDCALL
 SetBkColor(
 	HDC hdc,
@@ -912,8 +912,8 @@ ResetDCA(
 /*
  * @implemented
  */
-int 
-STDCALL 
+int
+STDCALL
 StartDocW(
 	HDC		hdc,
 	CONST DOCINFOW	*a1
@@ -933,7 +933,7 @@ GetObjectType(
 	)
 {
   DWORD Ret = 0;
-  
+
   if(GdiIsHandleValid(h))
   {
     LONG Type = GDI_HANDLE_GET_TYPE(h);
@@ -976,7 +976,7 @@ GetObjectType(
         break;
       case GDI_OBJECT_TYPE_METADC:
         Ret = OBJ_METADC;
-        break;      
+        break;
       case GDI_OBJECT_TYPE_EXTPEN:
         Ret = OBJ_EXTPEN;
         break;
@@ -1015,7 +1015,7 @@ GetStockObject(
          return Obj;
       }// Returns Null anyway.
   }
-  return Ret;                    
+  return Ret;
 }
 
 
@@ -1028,7 +1028,7 @@ GetViewportExtEx(
 {
 #if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
 
   if ( Dc_Attr->flXform & PAGE_EXTENTS_CHANGED ) // Something was updated, go to kernel.
@@ -1054,7 +1054,7 @@ GetViewportOrgEx(
 {
 #if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpPoint->x = Dc_Attr->ptlViewportOrg.x;
   lpPoint->x = Dc_Attr->ptlViewportOrg.x;
@@ -1074,7 +1074,7 @@ GetWindowExtEx(
 {
 #if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpSize->cx = Dc_Attr->szlWindowExt.cx;
   lpSize->cy = Dc_Attr->szlWindowExt.cy;
@@ -1094,7 +1094,7 @@ GetWindowOrgEx(
 {
 #if 0
   PDC_ATTR Dc_Attr;
- 
+
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpPoint->x = Dc_Attr->ptlWindowOrg.x;
   lpPoint->x = Dc_Attr->ptlWindowOrg.x;

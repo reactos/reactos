@@ -36,13 +36,13 @@ void dumphex(const char *buf, int len, int pos)
 		for(i = 0; i < 16; i++) {
 			if(i + j < len)
 				printf("%02x%c", (unsigned char)buf[i + j], j + i + 1 == pos ? '*' : ' ');
-			else 
+			else
 				printf("   ");
 		}
 		for(i = 0; i < 16; i++) {
 			if(i + j < len)
 				printf("%c", buf[i + j] >= ' ' ? buf[i + j] : '.');
-			else 
+			else
 				printf(" ");
 		}
 		printf("\n");

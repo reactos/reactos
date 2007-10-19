@@ -128,7 +128,7 @@ static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
   return caseSensitive ? (a == b) : (toupperW(a) == toupperW(b));
 }
 
-/* note: those two really return the first matching offset (starting from EOS)+1 
+/* note: those two really return the first matching offset (starting from EOS)+1
  * in other words, an offset of the first trailing white/black */
 int ME_ReverseFindNonWhitespaceV(ME_String *s, int nVChar);
 int ME_ReverseFindWhitespaceV(ME_String *s, int nVChar);
@@ -186,7 +186,7 @@ int ME_CharFromPos(ME_TextEditor *editor, int x, int y);
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y);
 void ME_MouseMove(ME_TextEditor *editor, int x, int y);
 void ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
-void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
+void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
                              const WCHAR *str, int len, ME_Style *style);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
@@ -220,7 +220,7 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
 
 /* para.c */
-ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
+ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run);
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
 void ME_MakeFirstParagraph(HDC hDC, ME_TextBuffer *editor);
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style);

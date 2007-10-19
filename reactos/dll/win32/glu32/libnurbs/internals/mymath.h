@@ -47,7 +47,7 @@
 #if defined(GLBUILD) || defined(STANDALONE)
 #define M_SQRT2		1.41421356237309504880
 #define ceilf		myceilf
-#define floorf		myfloorf	
+#define floorf		myfloorf
 #define sqrtf		sqrt
 extern "C" double	sqrt(double);
 extern "C" float	ceilf(float);

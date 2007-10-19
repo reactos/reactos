@@ -51,7 +51,7 @@ void pool_destroy(struct pool* pool)
 
 #ifdef USE_STATS
     unsigned    alloc, used, num;
-    
+
     for (alloc = used = num = 0, arena = pool->first; arena; arena = arena->next)
     {
         alloc += pool->arena_size;
@@ -89,7 +89,7 @@ void* pool_alloc(struct pool* pool, unsigned len)
             return ret;
         }
     }
- 
+
     arena = HeapAlloc(GetProcessHeap(), 0, pool->arena_size);
     if (!arena) {FIXME("OOM\n");return NULL;}
 
@@ -117,7 +117,7 @@ void* pool_realloc(struct pool* pool, void* p, unsigned old_size, unsigned new_s
     struct pool_arena*  arena;
     void*               new;
 
-    if ((arena = pool_is_last(pool, p, old_size)) && 
+    if ((arena = pool_is_last(pool, p, old_size)) &&
         (char*)p + new_size <= (char*)arena + pool->arena_size)
     {
         arena->current = (char*)p + new_size;
@@ -195,10 +195,10 @@ static unsigned vector_position(const struct vector* v, const void* elt)
 
     for (i = 0; i < v->num_buckets; i++)
     {
-        if (v->buckets[i] <= elt && 
+        if (v->buckets[i] <= elt &&
             (const char*)elt < (const char*)v->buckets[i] + (v->elt_size << v->shift))
         {
-            return (i << v->shift) + 
+            return (i << v->shift) +
                 ((const char*)elt - (const char*)v->buckets[i]) / v->elt_size;
         }
     }
@@ -309,7 +309,7 @@ void* hash_table_find(const struct hash_table* ht, const char* name)
     return NULL;
 }
 
-void hash_table_iter_init(const struct hash_table* ht, 
+void hash_table_iter_init(const struct hash_table* ht,
                           struct hash_table_iter* hti, const char* name)
 {
     hti->ht = ht;
@@ -329,7 +329,7 @@ void hash_table_iter_init(const struct hash_table* ht,
 void* hash_table_iter_up(struct hash_table_iter* hti)
 {
     if (hti->element) hti->element = hti->element->next;
-    while (!hti->element && hti->index < hti->last) 
+    while (!hti->element && hti->index < hti->last)
         hti->element = hti->ht->buckets[++hti->index];
     return hti->element;
 }

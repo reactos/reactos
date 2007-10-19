@@ -416,7 +416,7 @@ ULONG CDECL ldap_set_optionA( WLDAP32_LDAP *ld, int option, void *value )
  *
  * NOTES
  *  Set value to LDAP_OPT_ON or LDAP_OPT_OFF for on/off options.
- */ 
+ */
 ULONG CDECL ldap_set_optionW( WLDAP32_LDAP *ld, int option, void *value )
 {
     ULONG ret = LDAP_NOT_SUPPORTED;

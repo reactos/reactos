@@ -194,7 +194,7 @@ VOID SetMenuAndButtonStates(PMAIN_WND_INFO Info)
                 SendMessage(Info->hTool, TB_SETSTATE, ID_START,
                        (LPARAM)MAKELONG(TBSTATE_ENABLED, 0));
             }
-            
+
             if ( (Flags & SERVICE_ACCEPT_STOP) && (State == SERVICE_RUNNING) )
             {
                 EnableMenuItem(hMainMenu, ID_RESTART, MF_ENABLED);

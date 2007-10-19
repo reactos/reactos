@@ -213,7 +213,7 @@ LONG read_pipe(HANDLE hPipe, SOCKET sock)
 
 			if (error == ERROR_PIPE_LISTENING)
 				Sleep(1000);
-			else 
+			else
 				return error;
 		}
 

@@ -94,11 +94,11 @@ int KeyTranslator::switchMap(TKeyDef& tk) {
 
 // Let the calling function interpret the error code (Paul Brannan 12/17/98)
 int KeyTranslator::SwitchTo(int to) {
-	
+
     int max = mapArray.GetItemsInContainer();
     if (max == 0) return -1;
     if (to < 0 || to > (max-1)) return 0;
-	
+
     currentKeyMap = to;
     return 1;
 };
@@ -109,16 +109,16 @@ const char *KeyTranslator::TranslateKey(WORD wVirtualKeyCode,
 											  DWORD dwControlKeyState)
 {
 	if ( mapArray.IsEmpty() ) return NULL;
-	
+
 	TKeyDef ask(NULL, dwControlKeyState, wVirtualKeyCode);
-	
+
 	// if a keymap switch pressed
 	if ( switchMap(ask) > 0 ) return "";
-	
+
 	int i = mapArray[currentKeyMap].map.Find(ask);
-	
+
 	if ( i != INT_MAX) return mapArray[currentKeyMap].map[i].GetszKey();
-	
+
 	// if not found in current keymap
 	if ( currentKeyMap != mainKeyMap ) {
 		i = mapArray[mainKeyMap].map.Find(ask);
@@ -192,9 +192,9 @@ int KeyTranslator::DeleteKeyDef(WORD wVirtualKeyCode, DWORD dwControlKeyState)
 {
 	if ( mapArray.IsEmpty() || mapArray[currentKeyMap].map.IsEmpty() )
 		return 0;
-	
+
 	int i = mapArray[currentKeyMap].map.Find(TKeyDef(NULL, dwControlKeyState, wVirtualKeyCode));
-	
+
 	if ( i != INT_MAX) {
 		mapArray[currentKeyMap].map.Destroy(i);
 		return 1;
@@ -211,7 +211,7 @@ void KeyTranslator::DeleteAllDefs(void)
 	// memory.  I think flush() should do the same thing, at least the
 	// way it is written with STL_BIDS (Paul Brannan 5/25/98).
 	int max;
-	
+
 	max = mapArray.GetItemsInContainer();
 	if ( ! mapArray.IsEmpty() ) {
 		for ( int i = 0; i < max; i++ ) {

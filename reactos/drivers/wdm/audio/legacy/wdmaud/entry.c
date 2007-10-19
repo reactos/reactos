@@ -29,7 +29,7 @@ NTSTATUS AudioAddDevice(
         /* What do we do?! */
         /* RtlAssert("FAIL", __FILE__, __LINE__, "?" */
     }
-    
+
     return STATUS_SUCCESS;
 }
 

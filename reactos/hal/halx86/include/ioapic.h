@@ -52,13 +52,13 @@ typedef struct _IOAPIC_ROUTE_ENTRY {
    mask		    :  1,   /* 0: enabled, 1: disabled */
    __reserved_2	    : 15;
 
-   union {		
-      struct { 
+   union {
+      struct {
          ULONG __reserved_1  : 24,
                physical_dest :  4,
                __reserved_2  :  4;
       } physical;
-      struct { 
+      struct {
          ULONG __reserved_1  : 24,
                logical_dest  :  8;
       } logical;

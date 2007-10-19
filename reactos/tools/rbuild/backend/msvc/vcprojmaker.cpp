@@ -242,7 +242,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 	fprintf ( OUT, "\tVersion=\"%s\"\r\n", configuration.VSProjectVersion.c_str() );
 	fprintf ( OUT, "\tName=\"%s\"\r\n", module.name.c_str() );
-	fprintf ( OUT, "\tProjectGUID=\"%s\"\r\n", module.guid.c_str() ); 
+	fprintf ( OUT, "\tProjectGUID=\"%s\"\r\n", module.guid.c_str() );
 	fprintf ( OUT, "\tKeyword=\"Win32Proj\">\r\n" );
 
 	fprintf ( OUT, "\t<Platforms>\r\n" );
@@ -379,7 +379,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fprintf ( OUT, "\t\t\t\tRuntimeLibrary=\"%d\"\r\n", debug ? 1 : 5 );	// 1=/MTd 5=/MT
 		fprintf ( OUT, "\t\t\t\tBufferSecurityCheck=\"FALSE\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tEnableFunctionLevelLinking=\"FALSE\"\r\n" );
-		
+
 		if ( module.pch != NULL )
 		{
 			fprintf ( OUT, "\t\t\t\tUsePrecompiledHeader=\"2\"\r\n" );
@@ -388,7 +388,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				module.output->relative_path );
 			string::size_type pos = pch_path.find_last_of ("/");
 			if ( pos != string::npos )
-				pch_path.erase(0, pos+1);         
+				pch_path.erase(0, pos+1);
 			fprintf ( OUT, "\t\t\t\tPrecompiledHeaderThrough=\"%s\"\r\n", pch_path.c_str() );
 
 			// Only include from the same module
@@ -494,7 +494,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 				fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
 				fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false) == "" ? "DriverEntry" : module.GetEntryPoint(false).c_str ());
-				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());	
+				fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr == "" ? "0x10000" : baseaddr.c_str ());
 			}
 			else if ( exe )
 			{
@@ -506,7 +506,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\tSubSystem=\"%d\"\r\n", 3 );
 					fprintf ( OUT, "\t\t\t\tDriver=\"%d\"\r\n", 1 );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"KiSystemStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
 				}
 				else if ( module.type == NativeCUI )
 				{
@@ -515,7 +515,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 					fprintf ( OUT, "\t\t\t\tGenerateManifest=\"FALSE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tIgnoreAllDefaultLibraries=\"TRUE\"\r\n" );
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"NtProcessStartup\"\r\n" );
-					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());	
+					fprintf ( OUT, "\t\t\t\tBaseAddress=\"%s\"\r\n", baseaddr.c_str ());
 				}
 				else if ( module.type == Win32CUI || module.type == Win32GUI || module.type == Win32SCR)
 				{
@@ -531,10 +531,10 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 				if (module.GetEntryPoint(false) == "0")
 					fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
 				else
-				{	
+				{
 					// get rid of DllMain@12 because MSVC needs to link to _DllMainCRTStartup@12
 					// when using CRT
-					if (module.GetEntryPoint(false) == "DllMain@12") 
+					if (module.GetEntryPoint(false) == "DllMain@12")
 						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"\"\r\n" );
 					else
 						fprintf ( OUT, "\t\t\t\tEntryPointSymbol=\"%s\"\r\n", module.GetEntryPoint(false).c_str ());
@@ -547,7 +547,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 			fprintf ( OUT, "\t\t\t\tTargetMachine=\"%d\"/>\r\n", 1 );
 		}
-		
+
 		fprintf ( OUT, "\t\t\t<Tool\r\n" );
 		fprintf ( OUT, "\t\t\t\tName=\"VCResourceCompilerTool\"\r\n" );
 		fprintf ( OUT, "\t\t\t\tAdditionalIncludeDirectories=\"" );
@@ -698,13 +698,13 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 						{
 							fprintf ( OUT, "%s\t\t\tCommandLine=\"midl.exe /cstub %s_c.c /header %s_c.h /server none &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", indent_tab.c_str(), src.c_str (), src.c_str () );
 							fprintf ( OUT, "&#x0D;&#x0A;");
-							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_c.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
+							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_c.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () );
 						}
 						else
 						{
 							fprintf ( OUT, "%s\t\t\tCommandLine=\"midl.exe /sstub %s_s.c /header %s_s.h /client none &quot;$(InputPath)&quot; /out &quot;$(IntDir)&quot;", indent_tab.c_str(), src.c_str (), src.c_str () );
 							fprintf ( OUT, "&#x0D;&#x0A;");
-							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_s.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () ); 
+							fprintf ( OUT, "cl.exe /Od /D &quot;WIN32&quot; /D &quot;_DEBUG&quot; /D &quot;_WINDOWS&quot; /D &quot;_WIN32_WINNT=0x502&quot; /D &quot;_UNICODE&quot; /D &quot;UNICODE&quot; /Gm /EHsc /RTC1 /MDd /Fo&quot;$(IntDir)\\%s.obj&quot; /W3 /c /Wp64 /ZI /TC &quot;$(IntDir)\\%s_s.c&quot; /nologo /errorReport:prompt", src.c_str (), src.c_str () );
 
 						}
 						fprintf ( OUT, "&#x0D;&#x0A;");
@@ -919,13 +919,13 @@ MSVCBackend::_generate_sln_footer ( FILE* OUT )
 		Module& module = *ProjectNode.modules[i];
 		std::string guid = module.guid;
 		_generate_sln_configurations ( OUT, guid.c_str() );
-	} 
+	}
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "\tGlobalSection(ExtensibilityGlobals) = postSolution\r\n" );
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
 	fprintf ( OUT, "\tGlobalSection(ExtensibilityAddIns) = postSolution\r\n" );
 	fprintf ( OUT, "\tEndGlobalSection\r\n" );
-	
+
 	if (configuration.VSProjectVersion == "7.00") {
 		fprintf ( OUT, "\tGlobalSection(ProjectDependencies) = postSolution\r\n" );
 		//FIXME: Add dependencies for VS 2002
@@ -965,14 +965,14 @@ MSVCBackend::_generate_sln ( FILE* OUT )
 	for ( size_t i = 0; i < ProjectNode.modules.size(); i++ )
 	{
 		Module& module = *ProjectNode.modules[i];
-		
+
 		std::string vcproj_file = VcprojFileName ( module );
 		_generate_sln_project ( OUT, module, vcproj_file, sln_guid, module.guid, module.non_if_data.libraries );
 	}
 	_generate_sln_footer ( OUT );
 }
 
-const Property* 
+const Property*
 MSVCBackend::_lookup_property ( const Module& module, const std::string& name ) const
 {
 	/* Check local values */

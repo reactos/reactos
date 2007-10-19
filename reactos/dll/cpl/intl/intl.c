@@ -46,7 +46,7 @@ DWORD UnattendLCID = 0;
 
 
 /* Applets */
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
   {IDC_CPLICON, IDS_CPLNAME, IDS_CPLDESCRIPTION, Applet}
 };
@@ -91,7 +91,7 @@ OpenSetupInf(VOID)
   }
 
   lpSwitch[len-1] = _T('\0');
-  
+
   hSetupInf = SetupOpenInfFile(&lpSwitch[4],
                                NULL,
                                INF_STYLE_OLDNT,
@@ -124,7 +124,7 @@ ParseSetupInf(VOID)
     SetupCloseInfFile(hSetupInf);
     return;
   }
-  
+
   UnattendLCID = _tcstoul(szBuffer, NULL, 16);
   IsUnattendedSetupEnabled = 1;
   SetupCloseInfFile(hSetupInf);
@@ -164,7 +164,7 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
 
 
 /* Control Panel Callback */
-LONG APIENTRY 
+LONG APIENTRY
 CPlApplet(HWND hwndCpl,
 	  UINT uMsg,
 	  LPARAM lParam1,

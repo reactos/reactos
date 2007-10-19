@@ -516,7 +516,7 @@ depth_test_span( GLcontext *ctx, struct sw_span *span)
 
    ASSERT((span->arrayMask & SPAN_XY) == 0);
    ASSERT(span->arrayMask & SPAN_Z);
-   
+
    if (rb->GetPointer(ctx, rb, 0, 0)) {
       /* Directly access buffer */
       if (ctx->DrawBuffer->Visual.depthBits <= 16) {

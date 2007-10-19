@@ -28,7 +28,7 @@ BOOL STDCALL DllMain(HINSTANCE hInstance, ULONG Reason, PVOID Reserved)
 	     return(FALSE);
 	  }
 	break;
-	
+
       case DLL_PROCESS_DETACH:
 	if (!RtlDestroyHeap(Secur32Heap))
 	  {

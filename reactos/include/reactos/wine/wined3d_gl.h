@@ -2709,7 +2709,7 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #endif
 
 /**
- * Point sprites 
+ * Point sprites
  */
 /* GL_ARB_point_sprite */
 #ifndef GL_ARB_point_sprite
@@ -2718,11 +2718,11 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #define GL_COORD_REPLACE_ARB              0x8862
 #endif
 /**
- * @TODO: GL_NV_point_sprite 
+ * @TODO: GL_NV_point_sprite
  */
 
 /**
- * Occlusion Queries 
+ * Occlusion Queries
  */
 /* GL_ARB_occlusion_query */
 #ifndef GL_ARB_occlusion_query
@@ -3018,8 +3018,8 @@ typedef void (WINE_GLAPI * PGLFNVERTEXATTRIBPOINTERPROC) (GLuint index, GLint si
 
 
 /****************************************************
- * OpenGL Official Version 
- *  defines 
+ * OpenGL Official Version
+ *  defines
  ****************************************************/
 /* GL_VERSION_1_3 */
 #if !defined(GL_DOT3_RGBA)
@@ -3187,7 +3187,7 @@ typedef enum _GL_SupportedExt {
 
 
 /****************************************************
- * #Defines       
+ * #Defines
  ****************************************************/
 #define GL_EXT_FUNCS_GEN \
     /** ARB Extensions **/ \
@@ -3657,7 +3657,7 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLQUERYPBUFFERARBPROC) (HPBUFFERARB hPbuffer,
 
 
 /****************************************************
- * Structures       
+ * Structures
  ****************************************************/
 
 typedef struct {
@@ -3675,7 +3675,7 @@ typedef struct _WineD3D_GL_Info {
   DWORD  gl_driver_version;
   CHAR   gl_renderer[255];
   /**
-   * CAPS Constants 
+   * CAPS Constants
    */
   UINT   max_buffers;
   UINT   max_lights;

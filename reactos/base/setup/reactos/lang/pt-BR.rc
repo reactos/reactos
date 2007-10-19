@@ -3,7 +3,7 @@
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Instalação do ReactOS"
     IDS_TEXT     "Você não pode instalar o ReactOS diretamento deste CD!\n\nPor favor reinicie seu computador a partir deste CD para instalar o ReactOS."

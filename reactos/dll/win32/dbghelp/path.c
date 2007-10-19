@@ -57,17 +57,17 @@ HANDLE WINAPI FindDebugInfoFile(PSTR FileName, PSTR SymbolPath, PSTR DebugFilePa
     }
     return (h == INVALID_HANDLE_VALUE) ? NULL : h;
 }
- 
+
 /******************************************************************
  *		FindDebugInfoFileEx (DBGHELP.@)
  *
  */
 HANDLE WINAPI FindDebugInfoFileEx(PSTR FileName, PSTR SymbolPath,
-                                  PSTR DebugFilePath, 
+                                  PSTR DebugFilePath,
                                   PFIND_DEBUG_FILE_CALLBACK Callback,
                                   PVOID CallerData)
 {
-    FIXME("(%s %s %p %p %p): stub\n", 
+    FIXME("(%s %s %p %p %p): stub\n",
           FileName, SymbolPath, DebugFilePath, Callback, CallerData);
     return NULL;
 }
@@ -81,7 +81,7 @@ HANDLE WINAPI FindExecutableImage(PSTR FileName, PSTR SymbolPath, PSTR ImageFile
     HANDLE h;
     if (!SearchPathA(SymbolPath, FileName, NULL, MAX_PATH, ImageFilePath, NULL))
         return NULL;
-    h = CreateFileA(ImageFilePath, GENERIC_READ, FILE_SHARE_READ, NULL, 
+    h = CreateFileA(ImageFilePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     return (h == INVALID_HANDLE_VALUE) ? NULL : h;
 }
@@ -153,7 +153,7 @@ static BOOL do_search(const char* file, char* buffer,
     strcpy(buffer + pos, "*.*");
     if ((h = FindFirstFileA(buffer, &fd)) == INVALID_HANDLE_VALUE)
         return FALSE;
-    /* doc doesn't specify how the tree is enumerated... 
+    /* doc doesn't specify how the tree is enumerated...
      * doing a depth first based on, but may be wrong
      */
     do
@@ -179,7 +179,7 @@ static BOOL do_search(const char* file, char* buffer,
  */
 BOOL WINAPI SearchTreeForFile(LPSTR root, LPSTR file, LPSTR buffer)
 {
-    TRACE("(%s, %s, %p)\n", 
+    TRACE("(%s, %s, %p)\n",
           debugstr_a(root), debugstr_a(file), buffer);
     strcpy(buffer, root);
     return do_search(file, buffer, NULL, NULL);
@@ -237,7 +237,7 @@ BOOL WINAPI SymFindFileInPath(HANDLE hProcess, LPSTR searchPath, LPSTR file,
     char*               ptr;
 
     TRACE("(%p %s %s %p %08lx %08lx %08lx %p %p %p)\n",
-          hProcess, searchPath, file, id, two, three, flags, 
+          hProcess, searchPath, file, id, two, three, flags,
           buffer, cb, user);
 
     if (!pcs) return FALSE;

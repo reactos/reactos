@@ -705,7 +705,7 @@ execute_program( GLcontext *ctx,
                GLfloat a[4], b[4], result[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, a );
                fetch_vector4( ctx, &inst->SrcReg[1], machine, program, b );
-               result[0] = result[1] = result[2] = result[3] = 
+               result[0] = result[1] = result[2] = result[3] =
                   a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
                store_vector4( inst, machine, result );
 #if DEBUG_FRAG
@@ -719,7 +719,7 @@ execute_program( GLcontext *ctx,
                GLfloat a[4], b[4], result[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, a );
                fetch_vector4( ctx, &inst->SrcReg[1], machine, program, b );
-               result[0] = result[1] = result[2] = result[3] = 
+               result[0] = result[1] = result[2] = result[3] =
                   a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + a[3] * b[3];
                store_vector4( inst, machine, result );
 #if DEBUG_FRAG
@@ -733,7 +733,7 @@ execute_program( GLcontext *ctx,
                GLfloat a[4], b[4], result[4];
                fetch_vector4( ctx, &inst->SrcReg[0], machine, program, a );
                fetch_vector4( ctx, &inst->SrcReg[1], machine, program, b );
-               result[0] = result[1] = result[2] = result[3] = 
+               result[0] = result[1] = result[2] = result[3] =
                   a[0] * b[0] + a[1] * b[1] + a[2] * b[2] + b[3];
                store_vector4( inst, machine, result );
             }
@@ -866,7 +866,7 @@ execute_program( GLcontext *ctx,
                store_vector4( inst, machine, result );
 #if DEBUG_FRAG
                printf("MAX (%g %g %g %g) = (%g %g %g %g), (%g %g %g %g)\n",
-                      result[0], result[1], result[2], result[3], 
+                      result[0], result[1], result[2], result[3],
                       a[0], a[1], a[2], a[3],
                       b[0], b[1], b[2], b[3]);
 #endif
@@ -907,7 +907,7 @@ execute_program( GLcontext *ctx,
                store_vector4( inst, machine, result );
 #if DEBUG_FRAG
                printf("MUL (%g %g %g %g) = (%g %g %g %g) * (%g %g %g %g)\n",
-                      result[0], result[1], result[2], result[3], 
+                      result[0], result[1], result[2], result[3],
                       a[0], a[1], a[2], a[3],
                       b[0], b[1], b[2], b[3]);
 #endif
@@ -1089,7 +1089,7 @@ execute_program( GLcontext *ctx,
             {
                GLfloat a[4], result[4];
                fetch_vector1( ctx, &inst->SrcReg[0], machine, program, a );
-               result[0] = result[1] = result[2] = 
+               result[0] = result[1] = result[2] =
 		       result[3] = (GLfloat)_mesa_sin(a[0]);
                store_vector4( inst, machine, result );
             }
@@ -1189,7 +1189,7 @@ execute_program( GLcontext *ctx,
 		* implement normal GL semantics through the fragment
 		* shader.
 		*/
-               fetch_texel( ctx, texcoord, 
+               fetch_texel( ctx, texcoord,
 			    span->array->lambda[inst->TexSrcUnit][column],
 			    inst->TexSrcUnit, color );
                store_vector4( inst, machine, color );
@@ -1245,7 +1245,7 @@ execute_program( GLcontext *ctx,
 		* still be calculated normally for TEX & TXP though,
 		* not set to zero.
 		*/
-               fetch_texel( ctx, texcoord, 
+               fetch_texel( ctx, texcoord,
 			    span->array->lambda[inst->TexSrcUnit][column],
 			    inst->TexSrcUnit, color );
                store_vector4( inst, machine, color );
@@ -1448,7 +1448,7 @@ _swrast_exec_fragment_program( GLcontext *ctx, struct sw_span *span )
 
    if (program->Parameters) {
       _mesa_load_state_parameters(ctx, program->Parameters);
-   }   
+   }
 
    for (i = 0; i < span->end; i++) {
       if (span->array->mask[i]) {

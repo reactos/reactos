@@ -499,9 +499,9 @@ stencil_and_ztest_span(GLcontext *ctx, struct sw_span *span, GLuint face)
    if (!rb->GetPointer(ctx, rb, 0, 0)) {
       rb->PutRow(ctx, rb, n, x, y, stencil, mask);
    }
-   
+
    span->writeAll = GL_FALSE;
-   
+
    return GL_TRUE;  /* one or more fragments passed both tests */
 }
 
@@ -1210,7 +1210,7 @@ _swrast_clear_stencil_buffer( GLcontext *ctx, struct gl_renderbuffer *rb )
          GLint i;
          for (i = 0; i < height; i++) {
             rb->PutMonoRow(ctx, rb, width, x, y + i, &clear8, NULL);
-         }         
+         }
       }
    }
 }

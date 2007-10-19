@@ -28,7 +28,7 @@ typedef union _BM_REQUEST_TYPE
     UCHAR   Type:2;
     UCHAR   Dir:1;
   };
-  UCHAR B;        
+  UCHAR B;
 } BM_REQUEST_TYPE, *PBM_REQUEST_TYPE;
 
 typedef struct _USB_DEFAULT_PIPE_SETUP_PACKET

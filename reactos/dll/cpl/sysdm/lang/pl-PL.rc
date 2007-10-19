@@ -1,8 +1,8 @@
-/*  
+/*
 * translated by xrogers
-* xxrogers@users.sourceforge.net  
-* https://sourceforge.net/projects/reactospl  
-*/ 
+* xxrogers@users.sourceforge.net
+* https://sourceforge.net/projects/reactospl
+*/
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
@@ -182,7 +182,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0x0
 BEGIN
     LTEXT       "&Dysk [Etykieta woluminu]", IDC_STATIC, 12, 5, 96, 9
     LTEXT       "Rozmiar pliku stronicowania (MB)", IDC_STATIC, 115, 5, 96, 9
-    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS    
+    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX    "Rozmiar pliku stronicowania dla wybranego dysku", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT       "Dysk:", IDC_STATIC, 20, 80, 20, 8
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9

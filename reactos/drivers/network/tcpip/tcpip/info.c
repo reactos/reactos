@@ -98,7 +98,7 @@ TDI_STATUS InfoTdiQueryListEntities(PNDIS_BUFFER Buffer,
     *BufferSize = Size;
 
     TI_DbgPrint(DEBUG_INFO,("BufSize: %d, NeededSize: %d\n", BufSize, Size));
-    
+
     if (BufSize < Size)
     {
 	TcpipReleaseSpinLock( &EntityListLock, OldIrql );

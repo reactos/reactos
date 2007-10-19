@@ -15,7 +15,7 @@ HBITMAP CreateSinkBmp(HDC hdcCompat, HDC hdc, int width, int height);
 
 void PaintRect(HDC hdc, RECT *rect, COLORREF colour);
 
-CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, int xOffset, int yOffset) 
+CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, int xOffset, int yOffset)
 : id(Id), parentWnd(parent), xpos(x), ypos(y), xoffset(xOffset), yoffset(yOffset), fVisible(visible)
 {
     width  = __cardwidth;
@@ -40,7 +40,7 @@ CardRegion::CardRegion(CardWindow &parent, int Id, bool visible, int x, int y, i
 
     nDragCardWidth = 0;
     nDragCardHeight = 0;
-    
+
     CanDragCallback  = 0;
     CanDropCallback  = 0;
     AddCallback      = 0;
@@ -116,7 +116,7 @@ CardRegion *CardWindow::CreateRegion(int id, bool fVisible, int x, int y, int xo
     cr->SetBackCardIdx(nBackCardIdx);
 
     Regions[nNumCardRegions++] = cr;
-    
+
     return cr;
 }
 
@@ -147,7 +147,7 @@ int CardRegion::GetOverlapRatio(int x, int y, int w, int h)
 }
 
 bool CardRegion::SetDragRule(UINT uDragType, pCanDragProc proc)
-{ 
+{
     switch(uDragType)
     {
     case CS_DRAG_NONE: case CS_DRAG_ALL: case CS_DRAG_TOP:
@@ -165,10 +165,10 @@ bool CardRegion::SetDragRule(UINT uDragType, pCanDragProc proc)
 }
 
 bool CardRegion::SetDropRule(UINT uDropType, pCanDropProc proc)
-{ 
+{
     switch(uDropType)
     {
-    case CS_DROP_NONE: case CS_DROP_ALL: 
+    case CS_DROP_NONE: case CS_DROP_ALL:
         uDropRule = uDropType;
         return true;
 
@@ -205,14 +205,14 @@ void CardRegion::SetRemoveCardProc(pRemoveProc proc)
 void CardRegion::Update()
 {
     CalcApparentCards();
-    UpdateSize(); 
+    UpdateSize();
     UpdateFaceDir(cardstack);
 }
 
 
 bool CardRegion::SetThreedCount(int count)
 {
-    if(count < 1) 
+    if(count < 1)
     {
         return false;
     }
@@ -241,7 +241,7 @@ void CardRegion::Show(bool fShow)
 }
 
 bool CardRegion::IsVisible()
-{ 
+{
     return fVisible;
 }
 
@@ -283,13 +283,13 @@ void CardRegion::AdjustPosition(int winwidth, int winheight)
     switch(xjustify)
     {
     default: case CS_XJUST_NONE: break;
-    
+
     case CS_XJUST_CENTER:        //centered
         xpos = (winwidth - (width & ~0x1)) / 2;
         xpos += xadjust;
 
         if(xoffset < 0)    xpos += (width - __cardwidth);
-    
+
         break;
 
     case CS_XJUST_RIGHT:        //right-aligned
@@ -301,7 +301,7 @@ void CardRegion::AdjustPosition(int winwidth, int winheight)
     switch(yjustify)
     {
     default: case CS_YJUST_NONE: break;
-    
+
     case CS_YJUST_CENTER:        //centered
         ypos = (winheight - height) / 2;
         ypos += yadjust;
@@ -324,7 +324,7 @@ void CardRegion::Flash(int count, int milliseconds)
     nFlashCount        = count;
     fFlashVisible   = false;
     uFlashTimer        = SetTimer((HWND)parentWnd, (WPARAM)this, milliseconds, 0);
-    
+
     parentWnd.Redraw();
 }
 
@@ -351,7 +351,7 @@ void CardRegion::DoFlash()
             uFlashTimer = (UINT)-1;
             fFlashVisible = true;
         }
-    
+
         parentWnd.Redraw();
     }
 }
@@ -376,7 +376,7 @@ void CardRegion::SetEmptyImage(UINT uImage)
         uEmptyImage = CS_EI_NONE;
         break;
     }
-    
+
 }
 
 void CardRegion::SetBackCardIdx(UINT uBackIdx)
@@ -386,18 +386,18 @@ void CardRegion::SetBackCardIdx(UINT uBackIdx)
 }
 
 void CardRegion::SetCardStack(const CardStack &cs)
-{ 
+{
     //make a complete copy of the specified stack..
-    cardstack = cs; 
+    cardstack = cs;
 
     // Update the face-direction and stack-size
     Update();
 }
 
 const CardStack & CardRegion::GetCardStack()
-{ 
+{
     //return reference to our internal stack
-    return cardstack; 
+    return cardstack;
 }
 
 //
@@ -488,7 +488,7 @@ bool CardRegion::MoveCard(CardRegion *pDestStack, int nNumCards, bool fAnimate)
 
     oldx = x;
     oldy = y;
-    
+
     dragstack = cardstack.Pop(nNumCards);
 
     //Alter the drag-stack so that it's cards are the same way up
@@ -515,7 +515,7 @@ bool CardRegion::MoveCard(CardRegion *pDestStack, int nNumCards, bool fAnimate)
         hdc = GetDC((HWND)parentWnd);
 
         ZoomCard(hdc, x, y, pDestStack);
-        
+
         ReleaseDC((HWND)parentWnd, hdc);
         ReleaseDragBitmaps();
     }
@@ -523,9 +523,9 @@ bool CardRegion::MoveCard(CardRegion *pDestStack, int nNumCards, bool fAnimate)
     // Get a copy of the cardstack
     CardStack cs = pDestStack->GetCardStack();
     cs.Push(dragstack);
-    
+
     pDestStack->SetCardStack(cs);
-    
+
     //cs = pDestStack->GetCardStack();
     //pDestStack->Update();
     //pDestStack->UpdateFaceDir(cs);
@@ -544,7 +544,7 @@ int CardRegion::NumCards() const
     if(fMouseDragging)
         return cardstack.NumCards() + dragstack.NumCards();
     else
-        return cardstack.NumCards(); 
+        return cardstack.NumCards();
 }
 
 bool CardRegion::Lock()
@@ -554,7 +554,7 @@ bool CardRegion::Lock()
     if(dw == WAIT_OBJECT_0)
     {
         //TRACE("LockStack succeeded\n");
-        return true; 
+        return true;
     }
     else
     {
@@ -573,7 +573,7 @@ bool CardRegion::UnLock()
     }
     else
     {
-        //TRACE("Unlocking stack failed\n");    
+        //TRACE("Unlocking stack failed\n");
         return false;
     }
 }
@@ -611,8 +611,8 @@ void CardRegion::RedrawIfNotDim(CardRegion *pCompare, bool fFullRedraw)
     //
     //
     //
-    if( pCompare->xoffset != xoffset || 
-        pCompare->yoffset != yoffset || 
+    if( pCompare->xoffset != xoffset ||
+        pCompare->yoffset != yoffset ||
         pCompare->nThreedCount != nThreedCount ||
         pCompare->uFaceDirType != uFaceDirType ||
         pCompare->uFaceDirType != CS_FACE_ANY
@@ -623,7 +623,7 @@ void CardRegion::RedrawIfNotDim(CardRegion *pCompare, bool fFullRedraw)
         else
             pCompare->Redraw();
     }
-    
+
 }
 
 //
@@ -641,18 +641,18 @@ bool CardRegion::SimulateDrag(CardRegion *pDestStack, int iNumDragCards, bool fA
         //make a list of the cards that would be in the drag list
         CardStack tempstack = cardstack.Top(iNumDragCards);
 
-        if(pDestStack->CanDropCards(tempstack)) 
+        if(pDestStack->CanDropCards(tempstack))
         {
-            MoveCard(pDestStack, iNumDragCards, fAnimate);        
-                
+            MoveCard(pDestStack, iNumDragCards, fAnimate);
+
             if(RemoveCallback)
                 RemoveCallback(*this, iNumDragCards);
 
             if(pDestStack->AddCallback)
                 pDestStack->AddCallback(*pDestStack, pDestStack->cardstack);
-        
+
             RedrawIfNotDim(pDestStack, true);
-        }    
+        }
 
     }
 

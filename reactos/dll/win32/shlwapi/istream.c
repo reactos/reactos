@@ -82,7 +82,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
-  
+
   TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
   return refCount;
@@ -94,10 +94,10 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 static ULONG WINAPI IStream_fnRelease(IStream *iface)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
-  ULONG refCount = InterlockedDecrement(&This->ref); 
+  ULONG refCount = InterlockedDecrement(&This->ref);
 
   TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
-  
+
   if (!refCount)
   {
     IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
@@ -105,7 +105,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
     CloseHandle(This->hFile);
     HeapFree(GetProcessHeap(), 0, This);
   }
-  
+
   return refCount;
 }
 

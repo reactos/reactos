@@ -171,6 +171,6 @@ pointer_default(unique)
 ]
 interface IObjectIdentity : IUnknown
 {
-    HRESULT IsEqualObject( 
+    HRESULT IsEqualObject(
             [in] IUnknown *punk);
 }

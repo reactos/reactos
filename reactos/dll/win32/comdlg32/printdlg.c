@@ -121,7 +121,7 @@ INT PRINTDLG_SetUpPrinterListComboA(HWND hDlg, UINT id, LPCSTR name)
 		  &num);
 
     SendDlgItemMessageA(hDlg, id, CB_RESETCONTENT, 0, 0);
-    
+
     for(i = 0; i < num; i++) {
         SendDlgItemMessageA(hDlg, id, CB_ADDSTRING, 0,
 			    (LPARAM)pi[i].pPrinterName );
@@ -822,7 +822,7 @@ static void PRINTDLG_UpdatePrinterInfoTextsA(HWND hDlg, const PRINTER_INFO_2A *p
 
     /* set all other printer info texts */
     SetDlgItemTextA(hDlg, stc11, pi->pDriverName);
-    
+
     if (pi->pLocation != NULL && pi->pLocation[0] != '\0')
         SetDlgItemTextA(hDlg, stc14, pi->pLocation);
     else
@@ -1987,14 +1987,14 @@ static BOOL PRINTDLG_CreateDCW(LPPRINTDLGW lppd)
  *
  *  Displays the the PRINT dialog box, which enables the user to specify
  *  specific properties of the print job.
- *  
+ *
  * PARAMS
  *  lppd  [IO] ptr to PRINTDLG32 struct
- * 
+ *
  * RETURNS
  *  nonzero if the user pressed the OK button
  *  zero    if the user cancelled the window or an error occurred
- *  
+ *
  * BUGS
  *  PrintDlg:
  *  * The Collate Icons do not display, even though they are in the code.
@@ -2345,7 +2345,7 @@ static HGLOBAL PRINTDLG_GetPGSTemplateA(const PAGESETUPDLGA *lppd)
 {
     HRSRC hResInfo;
     HGLOBAL hDlgTmpl;
-	
+
     if(lppd->Flags & PSD_ENABLEPAGESETUPTEMPLATEHANDLE) {
 	hDlgTmpl = lppd->hPageSetupTemplate;
     } else if(lppd->Flags & PSD_ENABLEPAGESETUPTEMPLATE) {
@@ -2488,7 +2488,7 @@ _c_str2sizeW(const PAGESETUPDLGW *dlga, LPCWSTR strin) {
 /****************************************************************************
  * PRINTDLG_PS_UpdateDlgStructA
  *
- * Updates pda->dlga structure 
+ * Updates pda->dlga structure
  * Function calls when user presses OK button
  *
  * PARAMS
@@ -2507,7 +2507,7 @@ PRINTDLG_PS_UpdateDlgStructA(HWND hDlg, PageSetupDataA *pda) {
     memcpy(pda->dlga, &pda->curdlg, sizeof(pda->curdlg));
     pda->dlga->hDevMode  = pda->pdlg.hDevMode;
     pda->dlga->hDevNames = pda->pdlg.hDevNames;
-    
+
     dn = GlobalLock(pda->pdlg.hDevNames);
     dm = GlobalLock(pda->pdlg.hDevMode);
 
@@ -2593,12 +2593,12 @@ PRINTDLG_PS_UpdateDlgStructW(HWND hDlg, PageSetupDataW *pda) {
  * PRINTDLG_PS_ChangeActivePrinerA
  *
  * Redefines hDevMode and hDevNames HANDLES and initialises it.
- * 
+ *
  * PARAMS
  * 	name	[in] 	 Name of a printer for activation
  * 	pda	[in/out] ptr to PageSetupDataA structure
- * 	
- * RETURN 
+ *
+ * RETURN
  * 	TRUE if success
  * 	FALSE if fail
  */
@@ -2609,7 +2609,7 @@ PRINTDLG_PS_ChangeActivePrinterA(LPSTR name, PageSetupDataA *pda){
 	LPPRINTER_INFO_2A lpPrinterInfo;
 	LPDRIVER_INFO_3A  lpDriverInfo;
 	DEVMODEA          *pDevMode, *dm;
-	
+
 	if(!OpenPrinterA(name, &hprn, NULL)){
 		ERR("Can't open printer %s\n", name);
 		return FALSE;
@@ -2626,7 +2626,7 @@ PRINTDLG_PS_ChangeActivePrinterA(LPSTR name, PageSetupDataA *pda){
 		return FALSE;
 	}
 	ClosePrinter(hprn);
-	
+
 	needed = DocumentPropertiesA(0, 0, name, NULL, NULL, 0);
 	if(needed == -1) {
 		ERR("DocumentProperties fails on %s\n", debugstr_a(name));
@@ -2642,12 +2642,12 @@ PRINTDLG_PS_ChangeActivePrinterA(LPSTR name, PageSetupDataA *pda){
 							 GMEM_MOVEABLE);
 	dm = GlobalLock(pda->pdlg.hDevMode);
 	memcpy(dm, pDevMode, pDevMode->dmSize + pDevMode->dmDriverExtra);
-	
+
 	PRINTDLG_CreateDevNames(&(pda->pdlg.hDevNames),
 			lpDriverInfo->pDriverPath,
 			lpPrinterInfo->pPrinterName,
 			lpPrinterInfo->pPortName);
-	
+
 	GlobalUnlock(pda->pdlg.hDevMode);
 	HeapFree(GetProcessHeap(), 0, pDevMode);
 	HeapFree(GetProcessHeap(), 0, lpPrinterInfo);
@@ -2660,7 +2660,7 @@ PRINTDLG_PS_ChangeActivePrinterA(LPSTR name, PageSetupDataA *pda){
  *
  *  Fills Printers, Paper and Source combo
  *
- *  RETURNS 
+ *  RETURNS
  *   TRUE
  */
 static BOOL
@@ -2668,7 +2668,7 @@ PRINTDLG_PS_ChangePrinterA(HWND hDlg, PageSetupDataA *pda) {
     DEVNAMES	*dn;
     DEVMODEA	*dm;
     LPSTR	devname,portname;
-	
+
     dn = GlobalLock(pda->pdlg.hDevNames);
     dm = GlobalLock(pda->pdlg.hDevMode);
     devname	    = ((char*)dn)+dn->wDeviceOffset;
@@ -2699,8 +2699,8 @@ PRINTDLG_PS_ChangePrinterW(HWND hDlg, PageSetupDataW *pda) {
 }
 
 /******************************************************************************************
- * PRINTDLG_PS_ChangePaperPrev 
- * 
+ * PRINTDLG_PS_ChangePaperPrev
+ *
  * Changes paper preview size / position
  *
  * PARAMS:
@@ -2709,12 +2709,12 @@ PRINTDLG_PS_ChangePrinterW(HWND hDlg, PageSetupDataW *pda) {
  * RETURNS:
  *  always - TRUE
  */
-static BOOL 
+static BOOL
 PRINTDLG_PS_ChangePaperPrev(const PageSetupDataA *pda)
 {
     LONG width, height, x, y;
     RECT rtTmp;
-    
+
     if(pda->curdlg.ptPaperSize.x > pda->curdlg.ptPaperSize.y) {
 	width  = pda->rtDrawRect.right - pda->rtDrawRect.left;
 	height = pda->curdlg.ptPaperSize.y * width / pda->curdlg.ptPaperSize.x;
@@ -2735,7 +2735,7 @@ PRINTDLG_PS_ChangePaperPrev(const PageSetupDataA *pda)
     memcpy(&rtTmp, &pda->rtDrawRect, sizeof(RECT));
     rtTmp.right  += SHADOW;
     rtTmp.bottom += SHADOW;
-#undef SHADOW 
+#undef SHADOW
 
     InvalidateRect(pda->hDlg, &rtTmp, TRUE);
     return TRUE;
@@ -2754,7 +2754,7 @@ if(msg == EN_CHANGE){ \
  * process WM_COMMAND message for PageSetupDlgA
  *
  * PARAMS
- *  hDlg 	[in] 	Main dialog HANDLE 
+ *  hDlg 	[in] 	Main dialog HANDLE
  *  wParam 	[in]	WM_COMMAND wParam
  *  lParam	[in]	WM_COMMAND lParam
  *  pda		[in/out] ptr to PageSetupDataA
@@ -2767,7 +2767,7 @@ PRINTDLG_PS_WMCommandA(
     WORD msg = HIWORD(wParam);
     WORD id  = LOWORD(wParam);
     char buf[200];
-	
+
     TRACE("loword (lparam) %d, wparam 0x%lx, lparam %08lx\n",
 	    LOWORD(lParam),wParam,lParam);
     switch (id)  {
@@ -2820,7 +2820,7 @@ PRINTDLG_PS_WMCommandA(
 	        PRINTDLG_PaperSizeA(&(pda->pdlg), paperword,&(pda->curdlg.ptPaperSize));
 	        pda->curdlg.ptPaperSize.x = _c_10mm2size(pda->dlga,pda->curdlg.ptPaperSize.x);
 	        pda->curdlg.ptPaperSize.y = _c_10mm2size(pda->dlga,pda->curdlg.ptPaperSize.y);
-	    
+
 		if (IsDlgButtonChecked(hDlg, rad2)) {
 	            DWORD tmp = pda->curdlg.ptPaperSize.x;
  		    pda->curdlg.ptPaperSize.x = pda->curdlg.ptPaperSize.y;
@@ -2829,7 +2829,7 @@ PRINTDLG_PS_WMCommandA(
 	        PRINTDLG_PS_ChangePaperPrev(pda);
 	    } else
 	        FIXME("could not get dialog text for papersize cmbbox?\n");
-	}    
+	}
 	break;
     case cmb3:
 	if(msg == CBN_SELCHANGE){
@@ -2846,7 +2846,7 @@ PRINTDLG_PS_WMCommandA(
 	    DEVMODEA *dm;
 	    LRESULT  count;
 	    int      i;
-	    
+
             GetDlgItemTextA(hDlg, cmb1, PrinterName, 255);
 	    if (!OpenPrinterA(PrinterName, &hPrinter, NULL)) {
 	        FIXME("Call to OpenPrinter did not succeed!\n");
@@ -2872,7 +2872,7 @@ PRINTDLG_PS_WMCommandA(
 	    PRINTDLG_PS_ChangePaperPrev(pda);
 	    /* Selecting paper in combo */
 	    count = SendDlgItemMessageA(hDlg, cmb2, CB_GETCOUNT, 0, 0);
-	    if(count != CB_ERR){ 
+	    if(count != CB_ERR){
                 for(i=0; i<count; ++i){
 		    if(SendDlgItemMessageA(hDlg, cmb2, CB_GETITEMDATA, i, 0) == dm->u.s.dmPaperSize) {
 			SendDlgItemMessageA(hDlg, cmb2, CB_SETCURSEL, i, 0);
@@ -2880,10 +2880,10 @@ PRINTDLG_PS_WMCommandA(
 		    }
 		}
 	    }
-									    
+
 	    GlobalUnlock(pda->pdlg.hDevMode);
 	    break;
-	}       
+	}
     case edt4:
     	GETVAL(id, pda->curdlg.rtMargin.left);
 	break;
@@ -2900,7 +2900,7 @@ PRINTDLG_PS_WMCommandA(
     InvalidateRect(GetDlgItem(hDlg, rct1), NULL, TRUE);
     return FALSE;
 }
-#undef GETVAL			   
+#undef GETVAL
 
 static BOOL
 PRINTDLG_PS_WMCommandW(
@@ -2933,7 +2933,7 @@ PRINTDLG_PS_WMCommandW(
 
 /***********************************************************************
  *           DefaultPagePaintHook
- * Default hook paint procedure that receives WM_PSD_* messages from the dialog box 
+ * Default hook paint procedure that receives WM_PSD_* messages from the dialog box
  * whenever the sample page is redrawn.
 */
 
@@ -3012,7 +3012,7 @@ PRINTDLG_DefaultPagePaintHook(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPa
  * The image consists of a rectangle that represents the selected paper
  * or envelope type, with a dotted-line rectangle representing
  * the current margins, and partial (Greek text) characters
- * to show how text looks on the printed page. 
+ * to show how text looks on the printed page.
  *
  * The following messages in the order sends to user hook procedure:
  *   WM_PSD_PAGESETUPDLG    Draw the contents of the sample page
@@ -3063,16 +3063,16 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     hdc = BeginPaint(hWnd, &ps);
     GetClientRect(hWnd, &rcClient);
-    
+
     scalx = rcClient.right  / (double)pda->curdlg.ptPaperSize.x;
-    scaly = rcClient.bottom / (double)pda->curdlg.ptPaperSize.y; 
+    scaly = rcClient.bottom / (double)pda->curdlg.ptPaperSize.y;
     rcMargin = rcClient;
- 
+
     rcMargin.left   += (LONG)pda->curdlg.rtMargin.left   * scalx;
     rcMargin.top    += (LONG)pda->curdlg.rtMargin.top    * scalx;
     rcMargin.right  -= (LONG)pda->curdlg.rtMargin.right  * scaly;
     rcMargin.bottom -= (LONG)pda->curdlg.rtMargin.bottom * scaly;
-    
+
     /* if the space is too small then we make sure to not draw anything */
     rcMargin.left = min(rcMargin.left, rcMargin.right);
     rcMargin.top = min(rcMargin.top, rcMargin.bottom);
@@ -3087,7 +3087,7 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
         hpen = CreatePen(PS_SOLID, 1, GetSysColor(COLOR_3DSHADOW));
         holdpen = SelectObject(hdc, hpen);
-        
+
         /* paint left edge */
         MoveToEx(hdc, rcClient.left, rcClient.top, NULL);
         LineTo(hdc, rcClient.left, rcClient.bottom-1);
@@ -3117,7 +3117,7 @@ PRINTDLG_PagePaintProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         rcMargin.top += 2;
         rcMargin.right -= 2;
         rcMargin.bottom -= 2;
-        
+
         /* if the space is too small then we make sure to not draw anything */
         rcMargin.left = min(rcMargin.left, rcMargin.right);
         rcMargin.top = min(rcMargin.top, rcMargin.bottom);
@@ -3146,8 +3146,8 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
         pda = (PageSetupDataA*)lParam;
 	pda->hDlg   = hDlg; /* saving handle to main window to PageSetupDataA structure */
 	memcpy(&pda->curdlg, pda->dlga, sizeof(pda->curdlg));
-	
-	hDrawWnd = GetDlgItem(hDlg, rct1); 
+
+	hDrawWnd = GetDlgItem(hDlg, rct1);
         TRACE("set property to %p\n", pda);
 	SetPropA(hDlg, "__WINE_PAGESETUPDLGDATA", pda);
 	SetPropA(hDrawWnd, "__WINE_PAGESETUPDLGDATA", pda);
@@ -3158,7 +3158,7 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
             hDrawWnd,
             GWLP_WNDPROC,
             (ULONG_PTR)PRINTDLG_PagePaintProc);
-	
+
 	/* FIXME: Paint hook. Must it be at begin of initializtion or at end? */
 	res = TRUE;
 	if (pda->dlga->Flags & PSD_ENABLEPAGESETUPHOOK) {
@@ -3236,7 +3236,7 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 pda->curdlg.ptPaperSize.y = pda->curdlg.ptPaperSize.x;
                 pda->curdlg.ptPaperSize.x = tmp;
             }
-	} else 
+	} else
 	    WARN("GlobalLock(pda->pdlg.hDevMode) fail? hDevMode=%p\n", pda->pdlg.hDevMode);
 	/* Drawing paper prev */
 	PRINTDLG_PS_ChangePaperPrev(pda);
@@ -3262,8 +3262,8 @@ PRINTDLG_PageDlgProcA(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 static INT_PTR CALLBACK
 PageDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-    static const WCHAR __WINE_PAGESETUPDLGDATA[] = 
-	{ '_', '_', 'W', 'I', 'N', 'E', '_', 'P', 'A', 'G', 'E', 
+    static const WCHAR __WINE_PAGESETUPDLGDATA[] =
+	{ '_', '_', 'W', 'I', 'N', 'E', '_', 'P', 'A', 'G', 'E',
 	  'S', 'E', 'T', 'U', 'P', 'D', 'L', 'G', 'D', 'A', 'T', 'A', 0 };
     PageSetupDataW	*pda;
     LPDEVMODEW          dm;
@@ -3371,7 +3371,7 @@ PageDlgProcW(HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
  * NOTES
  *    The values of hDevMode and hDevNames are filled on output and can be
  *    changed in PAGESETUPDLG when they are passed in PageSetupDlg.
- * 
+ *
  */
 
 BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
@@ -3457,7 +3457,7 @@ BOOL WINAPI PageSetupDlgA(LPPAGESETUPDLGA setupdlg) {
 	COMDLG32_SetCommDlgExtendedError(CDERR_LOADRESFAILURE);
 	return FALSE;
     }
-    
+
     pda = HeapAlloc(GetProcessHeap(),0,sizeof(*pda));
     pda->dlga = setupdlg;
     memcpy(&pda->pdlg,&pdlg,sizeof(pdlg));
@@ -3577,10 +3577,10 @@ HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
  * Display the the PRINT dialog box, which enables the user to specify
  * specific properties of the print job.  The property sheet can also have
  * additional application-specific and driver-specific property pages.
- *  
+ *
  * PARAMS
  *  lppd  [IO] ptr to PRINTDLGEX struct
- * 
+ *
  * RETURNS
  *  Success: S_OK
  *  Failure: One of the following COM error codes:
@@ -3589,7 +3589,7 @@ HRESULT WINAPI PrintDlgExA(LPPRINTDLGEXA lpPrintDlgExA)
  *    E_POINTER     Invalid pointer.
  *    E_HANDLE      Invalid handle.
  *    E_FAIL        Unspecified error.
- *  
+ *
  * FIXME
  *   Stub
  */

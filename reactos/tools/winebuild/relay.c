@@ -862,7 +862,7 @@ static void BuildCallFrom32Regs( FILE *outfile )
  * pending DPMI events.
  *
  * Stack layout:
- *   
+ *
  * (sp+12) long   eflags
  * (sp+6)  long   cs
  * (sp+2)  long   ip

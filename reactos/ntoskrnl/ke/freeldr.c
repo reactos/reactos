@@ -226,7 +226,7 @@ KiRosAllocateArcDescriptor(IN ULONG PageBegin,
 
         /* Cut down the current free descriptor */
         MDArray[i].PageCount = PageBegin - MDArray[i].BasePage;
-        
+
         /* Allocate a new memory descriptor for our memory range */
         MDArray[NumberDescriptors].BasePage = PageBegin;
         MDArray[NumberDescriptors].PageCount = PageEnd - PageBegin;

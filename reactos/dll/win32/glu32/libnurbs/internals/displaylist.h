@@ -60,7 +60,7 @@ struct Dlnode : public PooledObj {
 };
 
 inline
-Dlnode::Dlnode( PFVS _work, void *_arg, PFVS _cleanup ) 
+Dlnode::Dlnode( PFVS _work, void *_arg, PFVS _cleanup )
 {
     work = _work;
     arg = _arg;

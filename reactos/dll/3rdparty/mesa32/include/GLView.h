@@ -12,7 +12,7 @@
 #include <GL/gl.h>
 
 #define BGL_RGB			0
-#define BGL_INDEX		1 
+#define BGL_INDEX		1
 #define BGL_SINGLE		0
 #define BGL_DOUBLE		2
 #define BGL_DIRECT		0
@@ -50,14 +50,14 @@ virtual 			~BGLView();
 		status_t    CopyPixelsOut(BPoint source, BBitmap *dest);
 		status_t    CopyPixelsIn(BBitmap *source, BPoint dest);
 virtual	void        ErrorCallback(unsigned long errorCode); 	// Mesa's GLenum is uint where Be's ones was ulong!
-		
+
 virtual	void		Draw(BRect updateRect);
 
 virtual void		AttachedToWindow();
 virtual void        AllAttached();
 virtual void        DetachedFromWindow();
 virtual void        AllDetached();
- 
+
 virtual void		FrameResized(float width, float height);
 virtual status_t    Perform(perform_code d, void *arg);
 
@@ -82,17 +82,17 @@ virtual status_t    GetSupportedSuites(BMessage *data);
 		void		EnableDirectMode( bool enabled );
 
 		void *		getGC()	{ return m_gc; }
-		
+
 private:
 
 virtual void        _ReservedGLView1();
-virtual void        _ReservedGLView2(); 
-virtual void        _ReservedGLView3(); 
-virtual void        _ReservedGLView4(); 
-virtual void        _ReservedGLView5(); 
-virtual void        _ReservedGLView6(); 
-virtual void        _ReservedGLView7(); 
-virtual void        _ReservedGLView8(); 
+virtual void        _ReservedGLView2();
+virtual void        _ReservedGLView3();
+virtual void        _ReservedGLView4();
+virtual void        _ReservedGLView5();
+virtual void        _ReservedGLView6();
+virtual void        _ReservedGLView7();
+virtual void        _ReservedGLView8();
 
 					BGLView(const BGLView &);
 					BGLView     &operator=(const BGLView &);
@@ -100,7 +100,7 @@ virtual void        _ReservedGLView8();
 		void        dither_front();
 		bool        confirm_dither();
 		void        draw(BRect r);
-		
+
 		void *		m_gc;
 		uint32		m_options;
 		uint32      m_ditherCount;
@@ -115,7 +115,7 @@ virtual void        _ReservedGLView8();
 		uint64      _reserved[8];
 
 	/* Direct Window stuff */
-private:	
+private:
 		void 		drawScanline( int x1, int x2, int y, void *data );
 static 	void 		scanlineHandler(struct rasStateRec *state, GLint x1, GLint x2);
 
@@ -167,7 +167,7 @@ private:
 	virtual void        _ReservedGLScreen5();
 	virtual void        _ReservedGLScreen6();
 	virtual void        _ReservedGLScreen7();
-	virtual void        _ReservedGLScreen8(); 
+	virtual void        _ReservedGLScreen8();
 
 	BGLScreen(const BGLScreen &);
 	BGLScreen   &operator=(const BGLScreen &);
@@ -175,10 +175,10 @@ private:
 	void *		m_gc;
 	long		m_options;
 	BLocker		m_drawLock;
-		
+
 	int32		m_colorSpace;
 	uint32		m_screen_mode;
-		
+
 	uint64      _reserved[7];
 };
 

@@ -46,7 +46,7 @@ namespace System_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool SymbolFile::initialize(ConfigParser & conf_parser, string const &Path) 
+	bool SymbolFile::initialize(ConfigParser & conf_parser, string const &Path)
 	{
 		vector<string> vect;
 		string current_dir;
@@ -97,7 +97,7 @@ namespace System_
 					string path = current_dir;
 					path.insert (path.length () -1, "\\");
 					path.insert (path.length () -1, filename);
-#ifdef NDEBUG				
+#ifdef NDEBUG
 					cerr << "Module Name " << modulename << endl << "File Name " << path << endl;
 #endif
 
@@ -145,7 +145,7 @@ namespace System_
 	}
 
 //---------------------------------------------------------------------------------------
-	bool SymbolFile::resolveAddress(const string &module_name, const string &module_address, string &Buffer) 
+	bool SymbolFile::resolveAddress(const string &module_name, const string &module_address, string &Buffer)
 	{
 		SymbolMap::const_iterator it = m_Map.find (module_name);
 
@@ -157,9 +157,9 @@ namespace System_
 
 		char szCmd[300];
 
-		sprintf(szCmd, "%s %s %s", m_SymResolver.c_str (), it->second.c_str (), module_address.c_str());	
+		sprintf(szCmd, "%s %s %s", m_SymResolver.c_str (), it->second.c_str (), module_address.c_str());
 		string pipe_cmd(szCmd);
-        vector<string> vect;        
+        vector<string> vect;
 		PipeReader pipe_reader;
 
 		if (!pipe_reader.openSource(pipe_cmd))

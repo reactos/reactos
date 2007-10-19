@@ -95,7 +95,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_CPLNAME "Son et périphériques audio"
     IDS_CPLDESCRIPTION "Change le modèle de sons de votre ordinateur, ou configure les paramètres de vos hauts-parleurs et de vos périphériques d'enregistrement."

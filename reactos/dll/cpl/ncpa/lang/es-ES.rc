@@ -71,12 +71,12 @@ BEGIN
  LTEXT "Dirección IP:", -1, 22, 34, 80, 8
  LTEXT "Máscara de subred:", -1, 22, 48, 80, 8
  LTEXT "Puerta de enlace pred:", -1, 22, 62, 80, 8
- 
+
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSSUBNET, 122, 48, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSGATEWAY, 122, 62, 80, 8
- 
+
  PUSHBUTTON "&Detalles...", IDC_DETAILS, 22, 76, 62, 14
 END
 
@@ -107,7 +107,7 @@ BEGIN
 }
 
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_CPLSYSTEMNAME "Propiedades de Red"
   IDS_CPLSYSTEMDESCRIPTION "Cambia las opciones de la red."
@@ -119,7 +119,7 @@ BEGIN
   IDS_ASSIGNED_MANUAL "Manually configured"
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_ERROR "Error"
   IDS_ENTER_VALID_IPADDRESS "You must enter a valid IP address"

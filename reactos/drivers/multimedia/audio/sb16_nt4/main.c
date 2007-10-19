@@ -359,7 +359,7 @@ CreateDeviceName(
 
     DeviceName->Buffer[DeviceName->Length / sizeof(UNICODE_NULL)] = UNICODE_NULL;
 
-    return STATUS_SUCCESS; 
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS STDCALL

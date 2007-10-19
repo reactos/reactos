@@ -9,20 +9,20 @@
  *  It is part of adns, which is
  *    Copyright (C) 1997-2000 Ian Jackson <ian@davenant.greenend.org.uk>
  *    Copyright (C) 1999-2000 Tony Finch <dot@dotat.at>
- *  
+ *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
  *  the Free Software Foundation; either version 2, or (at your option)
  *  any later version.
- *  
+ *
  *  This program is distributed in the hope that it will be useful,
  *  but WITHOUT ANY WARRANTY; without even the implied warranty of
  *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  *  GNU General Public License for more details.
- *  
+ *
  *  You should have received a copy of the GNU General Public License
  *  along with this program; if not, write to the Free Software Foundation,
- *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA. 
+ *  Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  */
 
 #include <stdio.h>
@@ -86,7 +86,7 @@ static void *treeroot;
 static int nonblock(int fd, int isnonblock) {
   int r;
 
-  r= fcntl(fd,F_GETFL); 
+  r= fcntl(fd,F_GETFL);
   if (r==-1) return -1;
   r= fcntl(fd,F_SETFL, isnonblock ? r|O_NONBLOCK : r&~O_NONBLOCK);
   if (r==-1) return -1;
@@ -215,10 +215,10 @@ static void parseargs(const char *const *argv) {
 
 static void queueoutchar(int c) {
   struct outqueuenode *entry;
-  
+
   entry= outqueue.tail;
   if (!entry || entry->addr || entry->textlen >= peroutqueuenode) {
-    peroutqueuenode= !peroutqueuenode || !entry || entry->addr ? 128 : 
+    peroutqueuenode= !peroutqueuenode || !entry || entry->addr ? 128 :
       peroutqueuenode >= 1024 ? 4096 : peroutqueuenode<<2;
     entry= xmalloc(sizeof(*entry));
     entry->buffer= xmalloc(peroutqueuenode);
@@ -310,7 +310,7 @@ static void procaddr(void) {
   void **searchfound;
   struct outqueuenode *entry;
   int r;
-  
+
   if (!newthing) {
     newthing= xmalloc(sizeof(struct treething));
     newthing->qu= 0;
@@ -427,7 +427,7 @@ int main(int argc, const char *const *argv) {
 	continue;
       }
       if (entry->addr->ans) {
-	if (entry->addr->ans->nrrs) 
+	if (entry->addr->ans->nrrs)
 	  replacetextwithname(entry);
 	entry->addr= 0;
 	continue;
@@ -450,7 +450,7 @@ int main(int argc, const char *const *argv) {
     }
     if (outblocked) FD_SET(1,&writefds);
     if (!inputeof && outqueuelen<1024) FD_SET(0,&readfds);
-    
+
 	ADNS_CLEAR_ERRNO;
     r= select(maxfd,&readfds,&writefds,&exceptfds,tv);
 	ADNS_CAPTURE_ERRNO;

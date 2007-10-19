@@ -407,7 +407,7 @@ _CRTIMP int __cdecl	fileno (FILE*);
 #include <sys/types.h>
 __CRT_INLINE FILE* __cdecl fopen64 (const char* filename, const char* mode)
 {
-  return fopen (filename, mode); 
+  return fopen (filename, mode);
 }
 
 int __cdecl fseeko64 (FILE*, off64_t, int);
@@ -448,7 +448,7 @@ _CRTIMP wint_t __cdecl	fgetwc (FILE*);
 _CRTIMP wint_t __cdecl	fputwc (wchar_t, FILE*);
 _CRTIMP wint_t __cdecl	ungetwc (wchar_t, FILE*);
 
-#ifdef __MSVCRT__ 
+#ifdef __MSVCRT__
 _CRTIMP wchar_t* __cdecl fgetws (wchar_t*, int, FILE*);
 _CRTIMP int __cdecl	fputws (const wchar_t*, FILE*);
 _CRTIMP wint_t __cdecl	getwc (FILE*);

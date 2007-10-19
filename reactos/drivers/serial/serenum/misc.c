@@ -196,7 +196,7 @@ DuplicateUnicodeString(
 
 
 	if ((SourceString->Length == 0)
-	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE | 
+	 && (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
 	               RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
 	{
 		DestinationString->Length = 0;

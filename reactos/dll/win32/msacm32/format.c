@@ -789,8 +789,8 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
     /* (WS) MSDN info page says that if had != 0, then we should find
      * the specific driver to get its tags from. Therefore I'm removing
      * the FIXME call and adding a search block below. It also seems
-     * that the lack of this functionality was the responsible for 
-     * codecs to be multiply and incorrectly listed. 
+     * that the lack of this functionality was the responsible for
+     * codecs to be multiply and incorrectly listed.
      */
 
     /* if (had) FIXME("had != NULL, not supported\n"); */
@@ -815,7 +815,7 @@ MMRESULT WINAPI acmFormatTagEnumW(HACMDRIVER had, PACMFORMATTAGDETAILSW paftd,
 		if (bPcmDone) continue;
 		   bPcmDone = TRUE;
 	     }
-	     if (!(fnCallback)((HACMDRIVERID)padid, paftd, dwInstance, padid->fdwSupport)) 
+	     if (!(fnCallback)((HACMDRIVERID)padid, paftd, dwInstance, padid->fdwSupport))
                 return MMSYSERR_NOERROR;
 	  }
        }

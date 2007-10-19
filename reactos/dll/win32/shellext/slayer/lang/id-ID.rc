@@ -30,7 +30,7 @@ BEGIN
   PUSHBUTTON "&Batal", IDCANCEL, 162,116,60,14
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
   IDS_SLAYER "Slayer"
   IDS_DESCRIPTION "Kompatibilitas Aplikasi Ekstensi Lapisan Shell"

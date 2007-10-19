@@ -180,7 +180,7 @@ NTKERNELAPI
 INTERLOCKED_RESULT
 NTAPI
 ExInterlockedIncrementLong(
-    IN PLONG  Addend, 
+    IN PLONG  Addend,
     IN PKSPIN_LOCK Lock)
 {
     return 0;

@@ -31,8 +31,8 @@
 #include <time.h>
 
 #if _MSC_VER
-	#pragma warning(disable: 4996)   // 'strdup' was declared deprecated 
-	#define _CRT_SECURE_NO_DEPRECATE // all deprecated 'unsafe string functions 
+	#pragma warning(disable: 4996)   // 'strdup' was declared deprecated
+	#define _CRT_SECURE_NO_DEPRECATE // all deprecated 'unsafe string functions
 #endif
 
 static const LPSTR EVENT_SOURCE_APPLICATION	= "Application";
@@ -42,8 +42,8 @@ static const TCHAR szWindowClass[] = _T("EVENTVWR");			// the main window class 
 
 //MessageFile message buffer size
 #define EVENT_MESSAGE_EVENTTEXT_BUFFER		1024*10
-#define EVENT_MESSAGE_FILE_BUFFER			1024*10      
-#define EVENT_DLL_SEPARATOR		            ";" 
+#define EVENT_MESSAGE_FILE_BUFFER			1024*10
+#define EVENT_DLL_SEPARATOR		            ";"
 #define EVENT_MESSAGE_FILE					"EventMessageFile"
 #define EVENT_CATEGORY_MESSAGE_FILE			"CategoryMessageFile"
 #define EVENT_PARAMETER_MESSAGE_FILE		"ParameterMessageFile"
@@ -122,7 +122,7 @@ VOID EventTimeToSystemTime (DWORD EventTime, SYSTEMTIME *pSystemTime)
 		FILETIME ft;
 		ULONGLONG ll;
 	} u1970, uUCT;
-	
+
 	uUCT.ft.dwHighDateTime = 0;
 	uUCT.ft.dwLowDateTime = EventTime;
 	SystemTimeToFileTime(&st1970, &u1970.ft);
@@ -131,24 +131,24 @@ VOID EventTimeToSystemTime (DWORD EventTime, SYSTEMTIME *pSystemTime)
 	FileTimeToSystemTime(&ftLocal, pSystemTime);
 }
 
-void 
-TrimNulls ( LPSTR s ) 
-{ 
-    char *c; 
+void
+TrimNulls ( LPSTR s )
+{
+    char *c;
 
-    if ( s != (char *) NULL ) 
-    { 
-        c = s + strlen ( s ) - 1; 
-        while ( c >= s && isspace ( *c ) ) 
-            --c; 
-        *++c = '\0'; 
-    } 
-} 
+    if ( s != (char *) NULL )
+    {
+        c = s + strlen ( s ) - 1;
+        while ( c >= s && isspace ( *c ) )
+            --c;
+        *++c = '\0';
+    }
+}
 
 BOOL GetEventMessageFileDLL(
 	IN LPCTSTR lpLogName,
 	IN LPCTSTR SourceName,
-	IN LPCTSTR EntryName, 
+	IN LPCTSTR EntryName,
 	OUT LPSTR ExpandedName)
 {
 	DWORD dwSize;
@@ -161,13 +161,13 @@ BOOL GetEventMessageFileDLL(
     _tcscpy(szKeyName, TEXT("SYSTEM\\CurrentControlSet\\Services\\EventLog"));
     _tcscat(szKeyName, _T("\\"));
     _tcscat(szKeyName, lpLogName);
-	
+
 	if (RegOpenKeyEx(
 		HKEY_LOCAL_MACHINE,
 		szKeyName,
 		0,
 		KEY_READ,
-		&hAppKey) == ERROR_SUCCESS) 
+		&hAppKey) == ERROR_SUCCESS)
 	{
 		if (RegOpenKeyEx(
 			hAppKey,
@@ -196,15 +196,15 @@ BOOL GetEventMessageFileDLL(
 	else
 	{
 		MessageBox (NULL ,
-			_TEXT("Registry access failed!") , 
-			_TEXT("Event Log") , 
+			_TEXT("Registry access failed!") ,
+			_TEXT("Event Log") ,
 			MB_OK | MB_ICONINFORMATION);
 	}
 
-	if (hSourceKey != NULL) 
+	if (hSourceKey != NULL)
 		RegCloseKey(hSourceKey);
-	
-	if (hAppKey != NULL) 
+
+	if (hAppKey != NULL)
 		RegCloseKey(hAppKey);
 
 	return bReturn;
@@ -212,7 +212,7 @@ BOOL GetEventMessageFileDLL(
 
 BOOL GetEventCategory(
 	IN LPCTSTR KeyName,
-	IN LPCTSTR SourceName, 
+	IN LPCTSTR SourceName,
 	IN EVENTLOGRECORD *pevlr,
 	OUT LPTSTR CategoryName)
 {
@@ -227,9 +227,9 @@ BOOL GetEventCategory(
 			NULL,
 			DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 
-		if(hLibrary != NULL) 
+		if(hLibrary != NULL)
 		{
-			// Retrieve the message string. 
+			// Retrieve the message string.
 			if(FormatMessage(
 				FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_HMODULE | FORMAT_MESSAGE_ARGUMENT_ARRAY,
 				hLibrary,
@@ -255,7 +255,7 @@ BOOL GetEventCategory(
 				strcpy (CategoryName, "None");
 			}
 
-			if(hLibrary != NULL) 
+			if(hLibrary != NULL)
 				FreeLibrary(hLibrary);
 
 			//  Free the buffer allocated by FormatMessage
@@ -273,7 +273,7 @@ BOOL GetEventCategory(
 
 BOOL GetEventMessage(
 	IN LPCTSTR KeyName,
-	IN LPCTSTR SourceName, 
+	IN LPCTSTR SourceName,
 	IN EVENTLOGRECORD *pevlr,
 	OUT LPTSTR EventText)
 {
@@ -299,7 +299,7 @@ BOOL GetEventMessage(
 
 		for (i = 0; i < pevlr->NumStrings ; i++)
 		{
-			if (strstr(szMessage , "%%")) 
+			if (strstr(szMessage , "%%"))
 			{
 				if (GetEventMessageFileDLL (KeyName , SourceName, EVENT_PARAMETER_MESSAGE_FILE , ParameterModuleName))
 				{
@@ -318,37 +318,37 @@ BOOL GetEventMessage(
 
 		szDll = strtok(SourceModuleName, EVENT_DLL_SEPARATOR);
 		while ((szDll != NULL) && (!bDone))
-		{ 
+		{
 			hLibrary = LoadLibraryEx(
 				szDll,
 				NULL,
 				DONT_RESOLVE_DLL_REFERENCES | LOAD_LIBRARY_AS_DATAFILE);
 
-			if (hLibrary == NULL) 
+			if (hLibrary == NULL)
 			{
 				// The DLL could not be loaded try the next one (if any)
 				szDll = strtok (NULL, EVENT_DLL_SEPARATOR);
 			}
 			else
 			{
-				// Retrieve the message string. 
+				// Retrieve the message string.
 				if(FormatMessage(
-					FORMAT_MESSAGE_FROM_SYSTEM | 
-					FORMAT_MESSAGE_ALLOCATE_BUFFER | 
-					FORMAT_MESSAGE_FROM_HMODULE | 
+					FORMAT_MESSAGE_FROM_SYSTEM |
+					FORMAT_MESSAGE_ALLOCATE_BUFFER |
+					FORMAT_MESSAGE_FROM_HMODULE |
 					FORMAT_MESSAGE_ARGUMENT_ARRAY,
 					hLibrary,
 					pevlr->EventID,
 					MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					(LPTSTR)&lpMsgBuf,
 					0,
-					szArguments) == 0) 
+					szArguments) == 0)
 				{
 					// We haven't found the string , get next DLL (if any)
-					szDll = strtok (NULL, EVENT_DLL_SEPARATOR); 
+					szDll = strtok (NULL, EVENT_DLL_SEPARATOR);
 				}
 				else
-				{	
+				{
 					if (lpMsgBuf)
 					{
 						// The ID was found and the message was formated
@@ -411,7 +411,7 @@ GetEventType (WORD dwEventType, OUT LPSTR eventTypeText)
     }
 }
 
-BOOL 
+BOOL
 GetEventUserName (EVENTLOGRECORD *pelr, OUT LPSTR pszUser)
 {
     PSID lpSid;
@@ -421,19 +421,19 @@ GetEventUserName (EVENTLOGRECORD *pelr, OUT LPSTR pszUser)
     DWORD cbName = 1024;
     DWORD cbDomain = 1024;
 
-    // Point to the SID. 
-    lpSid = (PSID)((LPBYTE) pelr + pelr->UserSidOffset); 
+    // Point to the SID.
+    lpSid = (PSID)((LPBYTE) pelr + pelr->UserSidOffset);
 
 	 // User SID
 	if(pelr->UserSidLength > 0)
 	{
 		if (LookupAccountSid(
-				NULL, 
-				lpSid, 
-				szName, 
-				&cbName, 
-				szDomain, 
-				&cbDomain, 
+				NULL,
+				lpSid,
+				szName,
+				&cbName,
+				szDomain,
+				&cbDomain,
 				&peUse))
 		{
 			strcpy (pszUser , szName);
@@ -475,7 +475,7 @@ ShowStatusMessageThread(
 }
 
 VOID QueryEventMessages (
-	LPTSTR lpMachineName , 
+	LPTSTR lpMachineName ,
 	LPTSTR lpLogName)
 {
 	HWND hwndDlg;
@@ -509,7 +509,7 @@ VOID QueryEventMessages (
 	lpComputerName = lpMachineName;
 
     // Open the event log.
-    hEventLog = OpenEventLog( 
+    hEventLog = OpenEventLog(
 					lpMachineName,
 					lpLogName);
 
@@ -517,7 +517,7 @@ VOID QueryEventMessages (
     {
 		MessageBox (NULL ,
 			_TEXT("Could not open the event log.") ,
-			_TEXT("Event Log") , 
+			_TEXT("Event Log") ,
 			MB_OK | MB_ICONINFORMATION);
         return;
     }
@@ -527,7 +527,7 @@ VOID QueryEventMessages (
 
 	// Clear the list view
 	(void)ListView_DeleteAllItems (hwndListView);
-    
+
     // Initialize the event record buffer.
     pevlr = (EVENTLOGRECORD *)&bBuffer;
 
@@ -552,7 +552,7 @@ VOID QueryEventMessages (
     while (dwCurrentRecord < dwTotalRecords)
     {
 		pevlr = (EVENTLOGRECORD*)malloc(MAX_PATH);
-              
+
 		bResult = ReadEventLog(
 			hEventLog,						// Event log handle
 			dwFlags,						// Sequential read
@@ -588,36 +588,36 @@ VOID QueryEventMessages (
 			// Get the computer name
 			lpComputerName = (LPSTR) ((LPBYTE) pevlr + sizeof(EVENTLOGRECORD) + lstrlen(lpSourceName) + 1);
 
-			// This ist the data section of the current event 
+			// This ist the data section of the current event
 			lpData = (LPSTR) ((LPBYTE)pevlr + pevlr->DataOffset);
 
 			// This is the text of the current event
 			lpEventStr = (LPSTR) ((LPBYTE) pevlr + pevlr->StringOffset);
 
 			// Compute the event type
-			EventTimeToSystemTime(pevlr->TimeWritten, &time);  
+			EventTimeToSystemTime(pevlr->TimeWritten, &time);
 
 			// Get the username that generated the event
 			GetEventUserName (pevlr , szUsername);
 
 			GetDateFormat( LOCALE_USER_DEFAULT, DATE_SHORTDATE, &time, NULL, szLocalDate, MAX_PATH );
 			GetTimeFormat( LOCALE_USER_DEFAULT, TIME_NOSECONDS, &time, NULL, szLocalTime, MAX_PATH );
-		
+
 			GetEventType (pevlr->EventType , szEventTypeText);
 			GetEventCategory (lpLogName , lpSourceName , pevlr , szCategory);
 
 			wsprintf (szEventID, "%u", (DWORD)(pevlr->EventID & 0xFFFF));
 			wsprintf (szCategoryID, "%u", (DWORD)(pevlr->EventCategory));
 
-			lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM; 
+			lviEventItem.mask = LVIF_IMAGE | LVIF_TEXT | LVIF_PARAM;
 			lviEventItem.iItem = 0;
 			lviEventItem.iSubItem = 0;
 			lviEventItem.lParam = (LPARAM)pevlr;
 			lviEventItem.pszText = szEventTypeText;
 
-			switch(pevlr->EventType) 
+			switch(pevlr->EventType)
 			{
-				case EVENTLOG_ERROR_TYPE: 
+				case EVENTLOG_ERROR_TYPE:
 					lviEventItem.iImage = 2;
 					break;
 				case EVENTLOG_AUDIT_FAILURE:
@@ -647,7 +647,7 @@ VOID QueryEventMessages (
 			ListView_SetItemText(hwndListView, lviEventItem.iItem, 6, szUsername); //User
 			ListView_SetItemText(hwndListView, lviEventItem.iItem, 7, lpComputerName); //Computer
 			ListView_SetItemText(hwndListView, lviEventItem.iItem, 8, lpData); //Event Text
-        
+
             dwRead -= pevlr->Length;
             pevlr = (EVENTLOGRECORD *) ((LPBYTE) pevlr + pevlr->Length);
         }
@@ -672,16 +672,16 @@ VOID QueryEventMessages (
 
 	//Resume list view redraw
 	SendMessage(hwndListView, WM_SETREDRAW, TRUE, 0);
-   
+
     // Close the event log.
     CloseEventLog(hEventLog);
 }
 
-VOID 
+VOID
 Refresh (VOID)
 {
 	QueryEventMessages(
-		lpComputerName , 
+		lpComputerName ,
 		lpSourceLogName);
 }
 
@@ -737,13 +737,13 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	hInst = hInstance; // Store instance handle in our global variable
 
 	hwndMainWindow = CreateWindow(
-		szWindowClass, 
-		szTitle, 
+		szWindowClass,
+		szTitle,
 		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0, 
-		NULL, 
-		NULL, 
-		hInstance, 
+		CW_USEDEFAULT, 0, CW_USEDEFAULT, 0,
+		NULL,
+		NULL,
+		hInstance,
 		NULL);
 
 	if (!hwndMainWindow)
@@ -751,10 +751,10 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 		return FALSE;
 	}
 
-	hwndStatus = CreateWindowEx( 
+	hwndStatus = CreateWindowEx(
             0,									// no extended styles
             STATUSCLASSNAME,					// status bar
-            "Done.",                            // no text 
+            "Done.",                            // no text
             WS_CHILD | WS_BORDER | WS_VISIBLE,  // styles
             0, 0, 0, 0,							// x, y, cx, cy
             hwndMainWindow,                     // parent window
@@ -766,17 +766,17 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
     // and WS_BORDER to create the normal "sunken" look.  Also note that
     // LVS_EX_ styles cannot be set in CreateWindowEx().
     hwndListView = CreateWindowEx(
-		WS_EX_CLIENTEDGE, 
-		WC_LISTVIEW, 
+		WS_EX_CLIENTEDGE,
+		WC_LISTVIEW,
 		_T(""),
         LVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE | LVS_REPORT,
-        0, 
-		0, 
-		243, 
-		200, 
-		hwndMainWindow, 
-		NULL, 
-		hInstance, 
+        0,
+		0,
+		243,
+		200,
+		hwndMainWindow,
+		NULL,
+		hInstance,
 		NULL);
 
     // After the ListView is created, we can add extended list view styles.
@@ -785,11 +785,11 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	// Create the ImageList
 	hSmall = ImageList_Create(
 		GetSystemMetrics(SM_CXSMICON),
-		GetSystemMetrics(SM_CYSMICON), 
+		GetSystemMetrics(SM_CYSMICON),
 		ILC_MASK,
 		1,
 		1);
-	
+
 	// Add event type icons to ImageList
 	ImageList_AddIcon (hSmall, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_INFORMATIONICON)));
 	ImageList_AddIcon (hSmall, LoadIcon(hInstance, MAKEINTRESOURCE(IDI_WARNINGICON)));
@@ -929,8 +929,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			case IDM_HELP:
 				MessageBox (
 					NULL ,
-					_TEXT("Help not implemented yet!") , 
-					_TEXT("Event Log") , 
+					_TEXT("Help not implemented yet!") ,
+					_TEXT("Event Log") ,
 					MB_OK | MB_ICONINFORMATION);
 				break;
 			case IDM_EXIT:
@@ -944,14 +944,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		{
 			//Gets the window rectangle
 			GetClientRect(hWnd, &rect);
-		
+
 			//Relocate the listview
 			MoveWindow(
 				hwndListView,
-				0, 
-				0, 
-				rect.right, 
-				rect.bottom - 20, 
+				0,
+				0,
+				rect.right,
+				rect.bottom - 20,
 				1);
 
 			// Resize the statusbar;
@@ -989,7 +989,7 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 	return (INT_PTR)FALSE;
 }
 
-VOID 
+VOID
 DisplayEvent (HWND hDlg)
 {
 	char szEventType[MAX_PATH];
@@ -1057,7 +1057,7 @@ DisplayEvent (HWND hDlg)
 	}
 }
 
-static 
+static
 INT_PTR CALLBACK StatusMessageWindowProc(
     IN HWND hwndDlg,
     IN UINT uMsg,
@@ -1126,8 +1126,8 @@ INT_PTR CALLBACK EventDetails(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 			if (LOWORD(wParam) == IDHELP)
 			{
 				MessageBox (NULL ,
-					_TEXT("Help not implemented yet!") , 
-					_TEXT("Event Log") , 
+					_TEXT("Help not implemented yet!") ,
+					_TEXT("Event Log") ,
 					MB_OK | MB_ICONINFORMATION);
 				return (INT_PTR)TRUE;
 			}

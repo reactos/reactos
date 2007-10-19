@@ -19,7 +19,7 @@
 
  //
  // Explorer clone
- // 
+ //
  // utility.cpp
  //
  // Martin Fuchs, 23.07.2003
