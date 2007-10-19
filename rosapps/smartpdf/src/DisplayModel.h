@@ -90,7 +90,7 @@ typedef struct PdfPageInfo {
     int             bitmapX, bitmapY, bitmapDx, bitmapDy;
     /* where it should be blitted on the screen */
     int             screenX, screenY;
-    
+
     // TODO: remove it from common code, only splash needs it
     Links *         links;
     TextPage *      textPage;
@@ -99,7 +99,7 @@ typedef struct PdfPageInfo {
 /* When searching, we can be in one of those states. The state determines what
    will happen after searching for next or previous term.
    */
-enum SearchState { 
+enum SearchState {
     /* Search hasn't started yet. 'Next' will start searching from the top
        of current page, searching forward. 'Previous' will start searching from
        the top of current page, searching backward. */
@@ -110,7 +110,7 @@ enum SearchState {
     /* Previous 'next' search found the term, without wrapping. 'Next' will
        continue searching forward from the current position. 'Previous' will
        search backward from the current position.*/
-    eSsFoundNext, 
+    eSsFoundNext,
     /* Like eSsFoundNext but we wrapped past last page. In that case we show
        a message about being wrapped and continuing from top. */
     eSsFoundNextWrapped,
@@ -363,7 +363,7 @@ extern void       cancelRenderingForDisplayModel(DisplayModel *dm);
 BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo, double zoomLevel, int rotation);
 BitmapCacheEntry *BitmapCache_Find(DisplayModel *dm, int pageNo);
 bool              BitmapCache_Exists(DisplayModel *dm, int pageNo, double zoomLevel, int rotation);
-void              BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotation, 
+void              BitmapCache_Add(DisplayModel *dm, int pageNo, double zoomLevel, int rotation,
                                   RenderedBitmap *bitmap, double renderTime);
 void              BitmapCache_FreeAll(void);
 bool              BitmapCache_FreeForDisplayModel(DisplayModel *dm);

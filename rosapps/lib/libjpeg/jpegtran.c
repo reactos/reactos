@@ -366,7 +366,7 @@ main (int argc, char **argv)
   jvirt_barray_ptr * dst_coef_arrays;
   int file_index;
   /* We assume all-in-memory processing and can therefore use only a
-   * single file pointer for sequential input and output operation. 
+   * single file pointer for sequential input and output operation.
    */
   FILE * fp;
 

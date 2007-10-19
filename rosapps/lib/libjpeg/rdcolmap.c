@@ -123,7 +123,7 @@ pbm_getc (FILE * infile)
 /* A comment/newline sequence is returned as a newline */
 {
   register int ch;
-  
+
   ch = getc(infile);
   if (ch == '#') {
     do {
@@ -143,17 +143,17 @@ read_pbm_integer (j_decompress_ptr cinfo, FILE * infile)
 {
   register int ch;
   register unsigned int val;
-  
+
   /* Skip any leading whitespace */
   do {
     ch = pbm_getc(infile);
     if (ch == EOF)
       ERREXIT(cinfo, JERR_BAD_CMAP_FILE);
   } while (ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r');
-  
+
   if (ch < '0' || ch > '9')
     ERREXIT(cinfo, JERR_BAD_CMAP_FILE);
-  
+
   val = ch - '0';
   while ((ch = pbm_getc(infile)) >= '0' && ch <= '9') {
     val *= 10;

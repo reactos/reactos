@@ -29,7 +29,7 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
     // DiskSizeBytes
     if (Fractional)
     {
-        swprintf (Text, L"%.2f %s", (double)(signed)(Report.DiskSizeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.DiskSizeBytes /
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
@@ -44,7 +44,7 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
     // DiskFreeBytes
     if (Fractional)
     {
-        swprintf (Text, L"%.2f %s", (double)(signed)(Defrag->GetVolume().GetVolumeInfo().FreeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Defrag->GetVolume().GetVolumeInfo().FreeBytes /
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
@@ -85,7 +85,7 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
     // FilesSizeBytes
     if (Fractional)
     {
-        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSizeBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSizeBytes /
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
@@ -99,7 +99,7 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
     // Files SizeOnDisk
     if (Fractional)
     {
-        swprintf (Text, L"%.2f %s", (double)(signed)((Report.FilesSizeBytes + Report.FilesSlackBytes) / 
+        swprintf (Text, L"%.2f %s", (double)(signed)((Report.FilesSizeBytes + Report.FilesSlackBytes) /
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
@@ -107,14 +107,14 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
         AddCommas (Text, (Report.FilesSizeBytes + Report.FilesSlackBytes) / (uint64)BytesDivisor);
         wcscat (Text, L" ");
         wcscat (Text, BytesUnits);
-       
+
     }
     SetDlgItemText (Dlg, IDC_FILESSIZEONDISK, Text);
 
     // FilesSlackBytes
     if (Fractional)
     {
-        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSlackBytes / 
+        swprintf (Text, L"%.2f %s", (double)(signed)(Report.FilesSlackBytes /
             (BytesDivisor / 1024)) / 1024.0, BytesUnits);
     }
     else
@@ -141,7 +141,7 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
 
     if (PFRec)
     {
-        swprintf 
+        swprintf
         (
             Text2,
             L"%.2f%% of the files on this volume are fragmented. ",
@@ -174,9 +174,9 @@ void SetReportInfo (HWND Dlg, DefragReport &Report, uint32 BytesDivisor, wchar_t
     // Should we recommend a smaller cluster size?
     if (Report.PercentSlack >= 10.0f)
     {
-        swprintf 
+        swprintf
         (
-            Text2, 
+            Text2,
             L"\n* A large amount of disk space (%.2f%%) is being lost "
             L"due to a large (%u bytes) cluster size. It is recommended "
             L"that you use a disk utility such as Partition Magic to "

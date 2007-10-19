@@ -55,7 +55,7 @@ int CShellCommandDeleteKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
 	BOOL blnHelp = FALSE;
 	BOOL blnExitAfterHelp = FALSE;
 	BOOL blnRecursive = FALSE;
-	
+
 	while((pchArg = rArguments.GetNextArgument()) != NULL)
 	{
 		if ((_tcsicmp(pchArg,_T("/?")) == 0)
@@ -119,7 +119,7 @@ int CShellCommandDeleteKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
   TCHAR *pszPattern = pch;
   if (*pch == _T('\\'))
     pszPattern++;
-  
+
   if (pch == pchKey)
   {
     pszPath = _T(".");
@@ -137,7 +137,7 @@ int CShellCommandDeleteKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
       pszPath = pchKey;
     }
   }
-  
+
   {
     size_t s = _tcslen(pszPattern);
     if (s && (pszPattern[0] == _T('\"'))&&(pszPattern[s-1] == _T('\"')))
@@ -146,7 +146,7 @@ int CShellCommandDeleteKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
       pszPattern++;
     }
   }
-  
+
 	if (!m_rTree.DeleteSubkeys(pszPattern,pszPath,blnRecursive))
 	{
 		rConsole.Write(_T("Cannot delete key(s).\n"));
@@ -156,7 +156,7 @@ int CShellCommandDeleteKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
   {
     InvalidateCompletion();
   }
-  
+
 	return 0;
 }
 

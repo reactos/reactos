@@ -118,7 +118,7 @@ int runzip(int argc, char **argv)
 	}
 
 	sa_closezip(zip);
-	
+
 	return 0;
 }
 

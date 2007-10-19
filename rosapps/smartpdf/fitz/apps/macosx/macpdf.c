@@ -80,7 +80,7 @@ view_construct(EventRef inEvent)
 
     pdf = (pdfapp_t *)malloc(sizeof(pdfapp_t));
     require_action(pdf != NULL, CantMalloc, err = memFullErr);
-    
+
     pdfapp_init(pdf);
 
     err = GetEventParameter(inEvent, kEventParamHIObjectInstance,
@@ -113,16 +113,16 @@ view_initialize(EventHandlerCallRef inCallRef, EventRef inEvent,
     OSStatus err;
     HIRect bounds;
     HIViewRef view = (HIViewRef)pdf->userdata;
-    
+
     err = CallNextEventHandler(inCallRef, inEvent);
     require_noerr(err, TroubleInSuperClass);
 
     HIViewGetBounds (view, &bounds);
     pdf->scrw = bounds.size.width;
     pdf->scrh = bounds.size.height;
-    
+
     pdfapp_open(pdf, gDefaultFilename);
-    
+
  TroubleInSuperClass:
     return err;
 }
@@ -400,7 +400,7 @@ int main(int argc, char *argv[])
     WindowRef window;
 
     pdfapp_t pdf;
-    
+
     fz_cpudetect();
     fz_accelerate();
 
@@ -413,7 +413,7 @@ int main(int argc, char *argv[])
 
     err = SetMenuBarFromNib(nibRef, CFSTR("MenuBar"));
     require_noerr(err, CantSetMenuBar);
- 
+
     err = CreateWindowFromNib(nibRef, CFSTR("MainWindow"), &window);
     require_noerr(err, CantCreateWindow);
 
@@ -423,7 +423,7 @@ int main(int argc, char *argv[])
 
     pdfapp_init(&pdf);
     pdfapp_open(&pdf, gDefaultFilename);
-    
+
     ShowWindow(window);
     RunApplicationEventLoop();
 

@@ -146,7 +146,7 @@ public:
 
   // Called to indicate that a new PDF document has been loaded.
   void startDoc(XRef *xrefA);
- 
+
   void setPaperColor(SplashColorPtr paperColorA);
 
   GBool isReverseVideo() { return reverseVideo; }

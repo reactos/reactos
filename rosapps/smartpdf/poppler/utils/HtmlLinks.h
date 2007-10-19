@@ -8,7 +8,7 @@
 
 class HtmlLink{
 
-private:  
+private:
   double Xmin;
   double Ymin;
   double Xmax;
@@ -30,7 +30,7 @@ public:
   GBool inLink(double xmin,double ymin,double xmax,double ymax) const ;
   //GooString *Link(GooString *content);
   GooString* getLinkStart();
-  
+
 };
 
 class HtmlLinks{
@@ -46,4 +46,4 @@ public:
 };
 
 #endif
-   
+

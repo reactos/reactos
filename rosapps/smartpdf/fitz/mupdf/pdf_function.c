@@ -413,7 +413,7 @@ parsecode(pdf_function *func, fz_stream *stream, int *codeptr)
 				if (token == PDF_TERROR || token == PDF_TEOF)
 					goto cleanup;
 			}
-			else 
+			else
 				elseptr = -1;
 
 			if (token == PDF_TKEYWORD) {

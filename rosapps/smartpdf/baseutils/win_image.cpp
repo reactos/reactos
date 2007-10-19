@@ -33,7 +33,7 @@ win_image *win_image_from_file(const TCHAR *file_path)
 
     if (FAILED(hr))
         goto Error;
-    
+
     hr = imageFactory->CreateImageFromFile(file_path, &img->image);
     imageFactory->Release();
     if (FAILED(hr))
@@ -67,7 +67,7 @@ win_image * win_image_from_buffer(void *buf, UINT buf_size)
 
     if (FAILED(hr))
         goto Error;
-    
+
     hr = imageFactory->CreateImageFromBuffer(buf, buf_size,  BufferDisposalFlagNone, &img->image);
     imageFactory->Release();
     if (FAILED(hr))

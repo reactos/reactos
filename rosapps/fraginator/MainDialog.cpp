@@ -101,9 +101,9 @@ void UpdateDefragInfo (HWND Dlg)
 
     if (Defrag == NULL)
         return;
-   
+
     NewPercent = Defrag->GetStatusPercent ();
-    if (NewPercent > 100.0f) 
+    if (NewPercent > 100.0f)
         NewPercent = 100.0f;
     if (NewPercent < 0.0f)
         NewPercent = 0.0f;
@@ -111,7 +111,7 @@ void UpdateDefragInfo (HWND Dlg)
     {
         swprintf (PercentText, L"%6.2f%%", NewPercent);
         SendDlgItemMessage (Dlg, IDC_PERCENT, WM_SETTEXT, 0, (LPARAM) PercentText);
-        SendDlgItemMessage (Dlg, IDC_PROGRESS, PBM_SETPOS, 
+        SendDlgItemMessage (Dlg, IDC_PROGRESS, PBM_SETPOS,
             (WPARAM) (int)(NewPercent * 100.0f), 0);
         OldPercent = NewPercent;
     }
@@ -135,7 +135,7 @@ void UpdateDefragInfo (HWND Dlg)
             it++;
         }
 
-        SendDlgItemMessage (Dlg, IDC_STATUS, WM_SETTEXT, 0, 
+        SendDlgItemMessage (Dlg, IDC_STATUS, WM_SETTEXT, 0,
             (LPARAM) Status.c_str());
 
         OldStatus = NewStatus;
@@ -166,7 +166,7 @@ wstring GetDefragTitle (void)
     DefragText = GetDefaultTitle ();
     if (Defrag != NULL)
     {
-        DefragText = wstring(Percent) + wstring (L" - ") + Defrag->GetVolume().GetRootPath() + 
+        DefragText = wstring(Percent) + wstring (L" - ") + Defrag->GetVolume().GetRootPath() +
             wstring (L" - ") + DefragText;
     }
 
@@ -456,7 +456,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
 
                 if (Defrag->IsDoneYet()  ||  Defrag->HasError())
                 {   // This is the code executed when defragging is finished (or stopped :)
-                    if (Defrag->GetDefragType() == DefragAnalyze  &&  
+                    if (Defrag->GetDefragType() == DefragAnalyze  &&
                         !Defrag->HasError()  &&
                         !Stopping)
                     {   // Show report
@@ -533,7 +533,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
                         if (Defrag != NULL)
                             return (1);
 
-                        SendMessage (GetDlgItem (Dlg, IDC_DRIVES_LIST), WM_GETTEXT, 
+                        SendMessage (GetDlgItem (Dlg, IDC_DRIVES_LIST), WM_GETTEXT,
                             sizeof (Drive) - 1, (LPARAM) Drive);
 
                         if (wcslen(Drive) != 2  ||  Drive[1] != L':')
@@ -556,7 +556,7 @@ INT_PTR CALLBACK MainDialogProc (HWND Dlg, UINT Msg, WPARAM WParam, LPARAM LPara
                             Defrag->SetDoLimitLength (false);
                             SetWindowText (Dlg, GetDefragTitle().c_str());
                             SetDisables (Dlg);
-                        }   
+                        }
                     }
                     else
                     {   // L"Stop"

@@ -99,8 +99,8 @@ public:
 
     // builds list of files on drive
     // if QuitMonitor ever becomes true (ie from a separate thread) it will clean up and return
-    bool BuildFileList   (bool &QuitMonitor, double &Progress); 
-        
+    bool BuildFileList   (bool &QuitMonitor, double &Progress);
+
     // Functions for accessing the volume bitmap
     bool IsClusterUsed   (uint64 Cluster);
     void SetClusterUsed  (uint64 Cluster, bool Used);

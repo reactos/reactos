@@ -10,7 +10,7 @@ void UpdateDefragInfo (HWND Dlg)
     char PercentText[100];
 
     Defrag = (Defragment *) GetWindowLongPtr (Dlg, GWLP_USERDATA);
-    
+
     sprintf (PercentText, "%6.2f%%", Defrag->GetStatusPercent());
     PercentItem = GetDlgItem (Dlg, IDC_PERCENT);
     SendMessage (GetDlgItem (Dlg, IDC_PERCENT), WM_SETTEXT, 0, (LPARAM) PercentText);

@@ -393,7 +393,7 @@ void process_c ( Header& h, const string& element )
 	Symbol *s = new Symbol;
 	s->definition = element;
 	s->type = process ( element, s->names, isTypedef, s->dependencies );
-	
+
 	for ( int i = 0; i < h.ifs.size(); i++ )
 	{
 		if ( h.ifs[i].size() )

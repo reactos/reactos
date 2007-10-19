@@ -330,7 +330,7 @@ process(fz_faxe *fax, fz_buffer *in, fz_buffer *out)
 			fax->a0 = -1;
 
 			fax->stage ++;
-			
+
 		case 3:
 			error = 0; /* to silence compiler */
 

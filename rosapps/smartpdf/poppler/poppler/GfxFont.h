@@ -82,28 +82,28 @@ struct GfxFontCIDWidths {
 class GfxFont {
 public:
 
-  enum Stretch { 
-	StretchNotDefined, 
-	UltraCondensed, 
-	ExtraCondensed, 
-	Condensed, 
-	SemiCondensed, 
-	Normal, 
-	SemiExpanded, 
-	Expanded, 
-	ExtraExpanded, 
+  enum Stretch {
+	StretchNotDefined,
+	UltraCondensed,
+	ExtraCondensed,
+	Condensed,
+	SemiCondensed,
+	Normal,
+	SemiExpanded,
+	Expanded,
+	ExtraExpanded,
 	UltraExpanded };
 
-  enum Weight { 
-	WeightNotDefined, 
-	W100, 
-	W200, 
-	W300, 
+  enum Weight {
+	WeightNotDefined,
+	W100,
+	W200,
+	W300,
 	W400, // Normal
-	W500, 
-	W600, 
+	W500,
+	W600,
 	W700, // Bold
-	W800, 
+	W800,
 	W900 };
 
   // Build a GfxFont object.
@@ -129,13 +129,13 @@ public:
 
   // Get base font name.
   GooString *getName() { return name; }
-  
+
   // Get font family name.
   GooString *getFamily() { return family; }
-  
+
   // Get font stretch.
   Stretch getStretch() { return stretch; }
-  
+
   // Get font weight.
   Weight getWeight() { return weight; }
 

@@ -177,7 +177,7 @@ get_8bit_gray_row (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   tga_source_ptr source = (tga_source_ptr) sinfo;
   register JSAMPROW ptr;
   register JDIMENSION col;
-  
+
   ptr = source->pub.buffer[0];
   for (col = cinfo->image_width; col > 0; col--) {
     (*source->read_pixel) (source); /* Load next pixel into tga_pixel */
@@ -215,7 +215,7 @@ get_16bit_row (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   register int t;
   register JSAMPROW ptr;
   register JDIMENSION col;
-  
+
   ptr = source->pub.buffer[0];
   for (col = cinfo->image_width; col > 0; col--) {
     (*source->read_pixel) (source); /* Load next pixel into tga_pixel */
@@ -242,7 +242,7 @@ get_24bit_row (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   tga_source_ptr source = (tga_source_ptr) sinfo;
   register JSAMPROW ptr;
   register JDIMENSION col;
-  
+
   ptr = source->pub.buffer[0];
   for (col = cinfo->image_width; col > 0; col--) {
     (*source->read_pixel) (source); /* Load next pixel into tga_pixel */
@@ -365,7 +365,7 @@ start_input_tga (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
       (UCH(targaheader[16]) & 7) != 0 || /* bits/pixel must be multiple of 8 */
       interlace_type != 0)	/* currently don't allow interlaced image */
     ERREXIT(cinfo, JERR_TGA_BADPARMS);
-  
+
   if (subtype > 8) {
     /* It's an RLE-coded file */
     source->read_pixel = read_rle_pixel;
@@ -440,7 +440,7 @@ start_input_tga (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
     source->pub.buffer_height = 1;
     source->pub.get_pixel_rows = source->get_pixel_rows;
   }
-  
+
   while (idlen--)		/* Throw away ID field */
     (void) read_byte(source);
 

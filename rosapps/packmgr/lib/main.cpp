@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // main.cpp
-// 
+//
 // Doit stuff and
 // everything that fits nowhere else.
 //
@@ -32,17 +32,17 @@ extern "C" void PML_Abort (void)
 }
 
 // Callback function of the "doit"-thread
-DWORD WINAPI DoitThread (void* lpParam) 
-{ 
+DWORD WINAPI DoitThread (void* lpParam)
+{
 	UINT i;
 	int ret = ERR_OK;
 	TREE* tree = (TREE*)lpParam;
 	vector<SCRIPT*> scripts;
-			
+
 	/* Load the scripts */
 
 	tree->setStatus(0, 0, L"Downloading Install instructions ...");
-	
+
 	for(i=0; i<tree->todo.size(); i++)
 	{
 		SCRIPT* script;
@@ -60,7 +60,7 @@ DWORD WINAPI DoitThread (void* lpParam)
 	Log("*  enter preinstall");
 
 	tree->setStatus(250, 0, L"Preinstall");
-	
+
 	for(i=0; i<scripts.size(); i++)
 	{
 		if(RPS_Execute(scripts[i], "preinstall") != ERR_OK)
@@ -105,13 +105,13 @@ DWORD WINAPI DoitThread (void* lpParam)
 
 	tree->setStatus(1000, ret, NULL);
 
-    return 1; 
-} 
+    return 1;
+}
 
 // Do the actions the user wants us to do
 extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus, PML_Ask Ask)
-{ 
-    DWORD dummy; 
+{
+    DWORD dummy;
 	tree->setStatus = SetStatus;
 
 	if(!tree->todo.size())
@@ -125,15 +125,15 @@ extern "C" int PML_DoIt (TREE* tree, PML_SetStatus SetStatus, PML_Ask Ask)
 
 	if(!Ask(buffer))
 		return ERR_GENERIC;
-	
+
 
 	hThread = CreateThread(NULL, 0, DoitThread, tree, 0, &dummy);
 
 	if(!hThread)
 		return ERR_GENERIC;
-	
+
 	LogAdd("\n");
-	
+
 	return ERR_OK;
 }
 

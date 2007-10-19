@@ -592,7 +592,7 @@ void handlekey(int c)
 	exit(0);
     else if (c == '?' || c == 'h')
 	help();
-    else 
+    else
 	pdfapp_onkey(&gapp, c);
 }
 
@@ -661,7 +661,7 @@ frameproc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 	return SendMessage(hwndview, message, wParam, lParam);
     }
 
-    return DefWindowProc(hwnd, message, wParam, lParam); 
+    return DefWindowProc(hwnd, message, wParam, lParam);
 }
 
 LRESULT CALLBACK

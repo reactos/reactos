@@ -23,7 +23,7 @@ bool CheckWinVer (void)
     ZeroMemory (&OSVersion, sizeof (OSVersion));
     OSVersion.dwOSVersionInfoSize = sizeof (OSVersion);
     GetVersionEx (&OSVersion);
-    
+
     // Need Windows 2000!
 
     // Check for NT first
@@ -246,7 +246,7 @@ int wmain (int argc, wchar_t **argv)
         for (size_t d = 0; d < Drives.size (); d++)
         {
             if (!Defrags[d]->IsDoneYet()  &&  !Defrags[d]->HasError())
-                Continue = true;                
+                Continue = true;
         }
     }
 
@@ -336,7 +336,7 @@ int wmain (int argc, wchar_t **argv)
                         if (Info.Attributes.Unmovable == 1)
                             wprintf (L"unmovable, ");
 
-                        wprintf (L"%I64u bytes, %I64u bytes on disk, %I64u bytes slack, %u fragments\n", 
+                        wprintf (L"%I64u bytes, %I64u bytes on disk, %I64u bytes slack, %u fragments\n",
                             Info.Size, Used, Slack, Info.Fragments.size());
                     }
                 }

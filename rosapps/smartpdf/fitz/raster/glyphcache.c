@@ -95,7 +95,7 @@ fz_newglyphcache(fz_glyphcache **arenap, int slots, int size)
 
 cleanup:
 	fz_free(arena->hash);
-	fz_free(arena->lru);	
+	fz_free(arena->lru);
 	fz_free(arena->buffer);
 	fz_free(arena);
 	return fz_outofmem;
@@ -105,7 +105,7 @@ void
 fz_dropglyphcache(fz_glyphcache *arena)
 {
 	fz_free(arena->hash);
-	fz_free(arena->lru);	
+	fz_free(arena->lru);
 	fz_free(arena->buffer);
 	fz_free(arena);
 }

@@ -75,19 +75,19 @@ ShowMessage (WCHAR* title, WCHAR* message)
 {
 	DescriptionHeadline = title;
 	DescriptionText = message;
-	InvalidateRect(hwnd,NULL,TRUE); 
+	InvalidateRect(hwnd,NULL,TRUE);
 	UpdateWindow(hwnd);
 }
 
 void
 AddItems(HWND hwnd, struct Category* Category, struct Category* Parent)
-{ 
-	TV_INSERTSTRUCTW Insert; 
+{
+	TV_INSERTSTRUCTW Insert;
 
 	Insert.item.lParam = (UINT)Category;
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE|TVIF_SELECTEDIMAGE;;
 	Insert.item.pszText = Category->Name;
-	Insert.item.cchTextMax = lstrlenW(Category->Name); 
+	Insert.item.cchTextMax = lstrlenW(Category->Name);
 	Insert.item.iImage = Category->Icon;
 	Insert.item.iSelectedImage = Category->Icon;
 	Insert.hInsertAfter = TVI_LAST;
@@ -108,7 +108,7 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 	struct Application* CurrentApplication;
 	TV_INSERTSTRUCTW Insert;
 	SelectedApplication = NULL;
-	
+
 	if(Category->Children && !Category->Apps)
 		ShowMessage(Category->Name, Strings[IDS_CHOOSE_SUB]);
 	else if(!Category->Children && Category->Apps)
@@ -119,7 +119,7 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 		ShowMessage(Category->Name, Strings[IDS_NO_APPS]);
 
 	(void)TreeView_DeleteItem(hwnd, TVI_ROOT);
-	(void)TreeView_DeleteItem(hwnd, TVI_ROOT); // Delete twice to bypass bug in windows 
+	(void)TreeView_DeleteItem(hwnd, TVI_ROOT); // Delete twice to bypass bug in windows
 
 	Insert.item.mask = TVIF_TEXT|TVIF_PARAM|TVIF_IMAGE;
 	Insert.hInsertAfter = TVI_LAST;
@@ -137,7 +137,7 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 		if(StrCmpW(CurrentApplication->RegName,L"")) {
 			if(getUninstaller(CurrentApplication->RegName, Uninstaller))
 				Insert.item.iImage = 9;
-		} 
+		}
 		SendMessage(hwnd, TVM_INSERTITEM, 0, (LPARAM)&Insert);
 		CurrentApplication = CurrentApplication->Next;
 	}
@@ -158,7 +158,7 @@ SetupControls (HWND hwnd)
 	if(!GetSystemDirectory(Buf,sizeof(Buf)/sizeof(char))) return FALSE;
 	lstrcat((LPTSTR)Buf, L"\\downloader.xml");
 	for (i = 0; i < _tcslen(Buf) + 1; i++) Tmp[i] = Buf[i];
-	
+
 	// Parse the XML file
 	if (!ProcessXML(Tmp, &Root))
 		return FALSE;
@@ -168,11 +168,11 @@ SetupControls (HWND hwnd)
 
 	// Set up the controls
 	hCategories = CreateWindowExW(0, WC_TREEVIEWW, Cats,
-								  WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+								  WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,
 								  0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
 	hApps = CreateWindowExW(0, WC_TREEVIEWW, Apps,
-							WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS, 
+							WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS|TVS_SHOWSELALWAYS,
 							0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
 	hLogo = LoadBitmap(GetModuleHandle(NULL),
@@ -200,7 +200,7 @@ SetupControls (HWND hwnd)
 									 WS_CHILD | WS_VISIBLE | BS_BITMAP,
 									 260, 505, 140, 33,
 									 hwnd, 0, hInstance, NULL);
-	
+
 	SendMessageW(hProfButton,
 				BM_SETIMAGE,
 				(WPARAM)IMAGE_ICON,
@@ -226,9 +226,9 @@ SetupControls (HWND hwnd)
 	// Set deflaut entry for hApps
 	Insert.item.mask = TVIF_TEXT|TVIF_IMAGE;
 	Insert.item.pszText = Strings[IDS_CHOOSE_CATEGORY];
-	Insert.item.cchTextMax = lstrlenW(Strings[IDS_CHOOSE_CATEGORY]); 
+	Insert.item.cchTextMax = lstrlenW(Strings[IDS_CHOOSE_CATEGORY]);
 	Insert.item.iImage = 0;
-	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert); 
+	SendMessage(hApps, TVM_INSERTITEM, 0, (LPARAM)&Insert);
 
 	// Create Tree Icons
 	hImageList = ImageList_Create(16, 16, ILC_COLORDDB, 1, 1);
@@ -236,25 +236,25 @@ SetupControls (HWND hwnd)
 	SendMessageW(hApps, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hImageList);
 
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_0)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_0)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_1)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_1)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_2)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_2)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_3)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_3)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_4)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_4)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_5)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_5)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_6)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_6)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_7)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_7)), NULL);
 	ImageList_Add(hImageList,
 				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_8)), NULL);
 	ImageList_Add(hImageList,
-				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_9)), NULL); 
+				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_9)), NULL);
 	ImageList_Add(hImageList,
 				  LoadBitmap(hInstance, MAKEINTRESOURCE(IDB_TREEVIEW_ICON_10)), NULL);
 	ImageList_Add(hImageList,
@@ -305,14 +305,14 @@ DrawDescription (HDC hdc, RECT DescriptionRect)
 		DrawBitmap(hdc, i, DescriptionRect.top+22, hUnderline); // less code then stretching ;)
 
 	// Headline
-	Font = CreateFont(-16 , 0, 0, 0, FW_EXTRABOLD, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+	Font = CreateFont(-16 , 0, 0, 0, FW_EXTRABOLD, FALSE, FALSE, FALSE, ANSI_CHARSET,
 					  OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, L"Arial");
 	SelectObject(hdc, Font);
 	DrawTextW(hdc, DescriptionHeadline, lstrlenW(DescriptionHeadline), &Rect, DT_SINGLELINE|DT_NOPREFIX);
 	DeleteObject(Font);
 
 	// Description
-	Font = CreateFont(-13 , 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET, 
+	Font = CreateFont(-13 , 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
 					  OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, FF_DONTCARE, L"Arial");
 	SelectObject(hdc, Font);
 	Rect.top += 50;
@@ -346,7 +346,7 @@ void startUninstaller(WCHAR* Uninstaller) {
 
 	memset(&si, 0, sizeof(si));
 	si.cb = sizeof(si);
-	CreateProcessW(NULL,Uninstaller,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi); 
+	CreateProcessW(NULL,Uninstaller,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi);
 	CloseHandle(pi.hThread);
 	// WaitForSingleObject(pi.hProcess, INFINITE); // If you want to wait for the Unistaller
 	CloseHandle(pi.hProcess);
@@ -358,12 +358,12 @@ SaveSettings(HWND hwnd)
 {
 	HKEY hKey;
 	TCHAR szBuf[MAX_PATH];
-	
+
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
                    TEXT("Software\\ReactOS\\Download!"),
                    &hKey) != ERROR_SUCCESS)
 		return FALSE;
-	
+
 	SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_GETTEXT, sizeof(szBuf)/sizeof(TCHAR), (LPARAM)szBuf);
 	if (GetFileAttributes(szBuf) == 0xFFFFFFFF)
 		if (!CreateDirectory((LPCTSTR)szBuf,NULL))
@@ -379,7 +379,7 @@ SaveSettings(HWND hwnd)
 					  (LPBYTE)szBuf,
 					  (DWORD)(sizeof(szBuf) / sizeof(TCHAR))))
 		return FALSE;
-		
+
 	SendMessage(GetDlgItem(hwnd, IDC_UPDATE_SERVER_EDIT), WM_GETTEXT, sizeof(szBuf)/sizeof(TCHAR), (LPARAM)szBuf);
 	if (RegSetValueEx(hKey,
 					  L"UpdateServer",
@@ -388,7 +388,7 @@ SaveSettings(HWND hwnd)
 					  (LPBYTE)szBuf,
 					  (DWORD)(sizeof(szBuf) / sizeof(TCHAR))))
 		return FALSE;
-	
+
 	DWORD dwValue;
 	if (SendMessage(GetDlgItem(hwnd, IDC_DELINST_FILES_CHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
 		dwValue = 0x1;
@@ -401,9 +401,9 @@ SaveSettings(HWND hwnd)
 					  (LPBYTE)&dwValue,
 					  sizeof(DWORD)))
 			return FALSE;
-	
+
 	RegCloseKey(hKey);
-	
+
 	return TRUE;
 }
 
@@ -413,12 +413,12 @@ InitProfDlg(HWND hwnd)
 	HKEY hKey;
 	TCHAR Buf[MAX_PATH];
 	DWORD dwDisp, dwSize;
-	
+
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
                    TEXT("Software\\ReactOS\\Download!"),
                    &hKey) != ERROR_SUCCESS)
 	{
-		if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\Download!", 
+		if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\Download!",
 						   0, NULL, REG_OPTION_NON_VOLATILE,
 						   KEY_WRITE, NULL, &hKey, &dwDisp))
 		{
@@ -427,7 +427,7 @@ InitProfDlg(HWND hwnd)
 			return FALSE;
 		}
 	}
-	
+
 	dwSize = MAX_PATH;
 	if (RegQueryValueEx(hKey,
                         L"DownloadFolder",
@@ -441,7 +441,7 @@ InitProfDlg(HWND hwnd)
 	else
 	{
 		if (!GetWindowsDirectory(Buf, sizeof(Buf) / sizeof(TCHAR))) return FALSE;
-			
+
 		TCHAR DPath[256];
 		int i;
 		for (i = 0; i < 4; i++)
@@ -469,7 +469,7 @@ InitProfDlg(HWND hwnd)
 			SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_SETTEXT, -1, (LPARAM)DPath);
 		}
 	}
-	
+
 	dwSize = MAX_PATH;
 	if (RegQueryValueEx(hKey,
                         L"UpdateServer",
@@ -495,7 +495,7 @@ InitProfDlg(HWND hwnd)
 			SendMessage(GetDlgItem(hwnd, IDC_UPDATE_SERVER_EDIT), WM_SETTEXT, -1, (LPARAM)Buf);
 		}
 	}
-	
+
 	DWORD dwValue, dwType = REG_DWORD;
 	dwSize = sizeof(DWORD);
 	if (RegQueryValueEx(hKey,
@@ -519,9 +519,9 @@ InitProfDlg(HWND hwnd)
 						  sizeof(DWORD)))
 			return FALSE;
 	}
-	
+
 	RegCloseKey(hKey);
-	
+
 	return TRUE;
 }
 
@@ -531,7 +531,7 @@ ChooseFolder(HWND hwnd)
 	BROWSEINFO fi;
 	LPCITEMIDLIST lpItemList;
 	TCHAR szPath[MAX_PATH],Buf[256];
-	
+
 	ZeroMemory(&fi, sizeof(BROWSEINFO));
 	fi.hwndOwner = hwnd;
 	LoadString(GetModuleHandle(NULL), IDS_CHOOSE_FOLDER, Buf, sizeof(Buf) / sizeof(TCHAR));
@@ -540,13 +540,13 @@ ChooseFolder(HWND hwnd)
 	fi.lpfn = NULL;
 	fi.lParam = -1;
 	fi.iImage = 0;
-	
+
 	if(!(lpItemList = SHBrowseForFolder(&fi))) return FALSE;
 	SHGetPathFromIDList(lpItemList, szPath);
-	
+
 	if (_tcslen(szPath) == 0) return FALSE;
 	SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_SETTEXT, -1, (LPARAM)szPath);
-	
+
 	return TRUE;
 }
 
@@ -611,7 +611,7 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if(!SetupControls(hwnd))
 				return -1;
 			ShowMessage(Strings[IDS_WELCOME_TITLE], Strings[IDS_WELCOME]);
-		} 
+		}
 		break;
 
 		case WM_PAINT:
@@ -621,11 +621,11 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			HDC BackbufferHdc = CreateCompatibleDC(hdc);
 			HBITMAP BackbufferBmp = CreateCompatibleBitmap(hdc, ps.rcPaint.right, ps.rcPaint.bottom);
 			SelectObject(BackbufferHdc, BackbufferBmp);
-			
+
 			FillRect(BackbufferHdc, &ps.rcPaint, CreateSolidBrush(RGB(235,235,235)));
 			DrawBitmap(BackbufferHdc, 10, 12, hLogo);
 			DrawDescription(BackbufferHdc, DescriptionRect);
-			
+
 			BitBlt(hdc, 0, 0, ps.rcPaint.right, ps.rcPaint.bottom, BackbufferHdc, 0, 0, SRCCOPY);
 			DeleteObject(BackbufferBmp);
 			DeleteDC(BackbufferHdc);
@@ -680,12 +680,12 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 			if(data->code == TVN_SELCHANGED)
 			{
 				BOOL bShowUninstaller = FALSE;
-				if(data->hwndFrom == hCategories) 
+				if(data->hwndFrom == hCategories)
 				{
 					struct Category* Category = (struct Category*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
 					CategoryChoosen (hApps, Category);
 				}
-				else if(data->hwndFrom == hApps) 
+				else if(data->hwndFrom == hApps)
 				{
 					SelectedApplication = (struct Application*) ((LPNMTREEVIEW)lParam)->itemNew.lParam;
 					if(SelectedApplication)
@@ -760,7 +760,7 @@ WndProc (HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 
 		case WM_DESTROY:
 		{
-			DeleteObject(hLogo);	
+			DeleteObject(hLogo);
 			if(Root.Children)
 				FreeTree(Root.Children);
 			PostQuitMessage(0);
@@ -786,10 +786,10 @@ wWinMain (HINSTANCE hInstance,
 
 	// Load strings
 	for(i=0; i<STRING_COUNT; i++)
-		LoadStringW(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me. 
+		LoadStringW(hInstance, i, Strings[i], MAX_STRING_LENGHT); // if you know a better method please tell me.
 
 	// Create the window
-	WndClass.cbSize			= sizeof(WNDCLASSEX); 
+	WndClass.cbSize			= sizeof(WNDCLASSEX);
 	WndClass.lpszClassName	= L"Downloader";
 	WndClass.lpfnWndProc	= WndProc;
 	WndClass.hInstance		= hInstance;
@@ -799,14 +799,14 @@ wWinMain (HINSTANCE hInstance,
 
 	RegisterClassExW(&WndClass);
 
-	hwnd = CreateWindowW(L"Downloader", 
+	hwnd = CreateWindowW(L"Downloader",
 						Strings[IDS_WINDOW_TITLE],
 						WS_OVERLAPPEDWINDOW|WS_CLIPCHILDREN,
-						CW_USEDEFAULT,  
-						CW_USEDEFAULT,   
-						650, 550, 
+						CW_USEDEFAULT,
+						CW_USEDEFAULT,
+						650, 550,
 						NULL, NULL,
-						hInstance, 
+						hInstance,
 						NULL);
 
 	// Show it

@@ -226,7 +226,7 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * With typical images and quantization tables, half or more of the
      * column DCT calculations can be simplified this way.
      */
-    
+
     if (inptr[DCTSIZE*1] == 0 && inptr[DCTSIZE*2] == 0 &&
 	inptr[DCTSIZE*3] == 0 && inptr[DCTSIZE*4] == 0 &&
 	inptr[DCTSIZE*5] == 0 && inptr[DCTSIZE*6] == 0 &&
@@ -242,13 +242,13 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
       wsptr[DCTSIZE*5] = dcval;
       wsptr[DCTSIZE*6] = dcval;
       wsptr[DCTSIZE*7] = dcval;
-      
+
       inptr++;			/* advance pointers to next column */
       quantptr++;
       wsptr++;
       continue;
     }
-    
+
     /* Even part */
 
     tmp0 = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
@@ -266,7 +266,7 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     tmp3 = tmp10 - tmp13;
     tmp1 = tmp11 + tmp12;
     tmp2 = tmp11 - tmp12;
-    
+
     /* Odd part */
 
     tmp4 = DEQUANTIZE(inptr[DCTSIZE*1], quantptr[DCTSIZE*1]);
@@ -303,7 +303,7 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     quantptr++;
     wsptr++;
   }
-  
+
   /* Pass 2: process rows from work array, store into output array. */
   /* Note that we must descale the results by a factor of 8 == 2**3, */
   /* and also undo the PASS1_BITS scaling. */
@@ -318,14 +318,14 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * test takes more time than it's worth.  In that case this section
      * may be commented out.
      */
-    
+
 #ifndef NO_ZERO_ROW_TEST
     if (wsptr[1] == 0 && wsptr[2] == 0 && wsptr[3] == 0 && wsptr[4] == 0 &&
 	wsptr[5] == 0 && wsptr[6] == 0 && wsptr[7] == 0) {
       /* AC terms all zero */
       JSAMPLE dcval = range_limit[IDESCALE(wsptr[0], PASS1_BITS+3)
 				  & RANGE_MASK];
-      
+
       outptr[0] = dcval;
       outptr[1] = dcval;
       outptr[2] = dcval;
@@ -339,7 +339,7 @@ jpeg_idct_ifast (j_decompress_ptr cinfo, jpeg_component_info * compptr,
       continue;
     }
 #endif
-    
+
     /* Even part */
 
     tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]);
@@ -432,7 +432,7 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * With typical images and quantization tables, half or more of the
      * column DCT calculations can be simplified this way.
      */
-    
+
     if ((inptr[DCTSIZE*1] | inptr[DCTSIZE*2] | inptr[DCTSIZE*3] |
 	 inptr[DCTSIZE*4] | inptr[DCTSIZE*5] | inptr[DCTSIZE*6] |
 	 inptr[DCTSIZE*7]) == 0) {
@@ -447,13 +447,13 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
       wsptr[DCTSIZE*5] = dcval;
       wsptr[DCTSIZE*6] = dcval;
       wsptr[DCTSIZE*7] = dcval;
-      
+
       inptr++;			/* advance pointers to next column */
       quantptr++;
       wsptr++;
       continue;
     }
-    
+
     /* Even part */
 
     tmp0 = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
@@ -471,7 +471,7 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     tmp3 = tmp10 - tmp13;
     tmp1 = tmp11 + tmp12;
     tmp2 = tmp11 - tmp12;
-    
+
     /* Odd part */
 
     tmp4 = DEQUANTIZE(inptr[DCTSIZE*1], quantptr[DCTSIZE*1]);
@@ -508,7 +508,7 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
     quantptr++;
     wsptr++;
   }
-  
+
   /* Pass 2: process rows from work array, store into output array. */
   /* Note that we must descale the results by a factor of 8 == 2**3, */
   /* and also undo the PASS1_BITS scaling. */
@@ -523,14 +523,14 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
      * test takes more time than it's worth.  In that case this section
      * may be commented out.
      */
-    
+
 #ifndef NO_ZERO_ROW_TEST
     if ((wsptr[1] | wsptr[2] | wsptr[3] | wsptr[4] | wsptr[5] | wsptr[6] |
 	 wsptr[7]) == 0) {
       /* AC terms all zero */
       JSAMPLE dcval = range_limit[IDESCALE(wsptr[0], PASS1_BITS+3)
 				  & RANGE_MASK];
-      
+
       outptr[0] = dcval;
       outptr[1] = dcval;
       outptr[2] = dcval;
@@ -544,7 +544,7 @@ jpeg_idct_ifast_orig (j_decompress_ptr cinfo, jpeg_component_info * compptr,
       continue;
     }
 #endif
-    
+
     /* Even part */
 
     tmp10 = ((DCTELEM) wsptr[0] + (DCTELEM) wsptr[4]);
@@ -619,8 +619,8 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
   int16 *wsptr=workspace;
   int16 *quantptr=compptr->dct_table;
 
-  __asm{ 
-    
+  __asm{
+
 	mov		edi, quantptr
 	mov		ebx, inptr
 	mov		esi, wsptr
@@ -649,7 +649,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	paddw	mm1, mm0					;z13 = tmp6 + tmp5;
 
 	pmullw		mm4, [edi + 8*14]	    ;tmp7 = DEQUANTIZE(inptr[DCTSIZE*7], quantptr[DCTSIZE*7]);
-	psubw	mm2, mm0					;z10 = tmp6 - tmp5   
+	psubw	mm2, mm0					;z10 = tmp6 - tmp5
 
 	psllw		mm2, 2				;shift z10
 	movq		mm0, mm2			;copy z10
@@ -670,7 +670,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
  	movq		mm7, mm5			;copy z12
 
 	pmulhw		mm5, fix_108n184	;MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; /* 2*(c2-c6) */ even part
-	paddw		mm3, mm1				;tmp7 = z11 + z13;	
+	paddw		mm3, mm1				;tmp7 = z11 + z13;
 
 
     /* Even part */
@@ -696,7 +696,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		[esi+8*0], mm1			;save tmp13 in workspace
 	psllw		mm5, 2					;shift tmp1-tmp3
-    
+
 	movq		mm7, [ebx + 8*0]		;load inptr[DCTSIZE*0]
 
 	pmulhw		mm5, fix_141			;MULTIPLY(tmp1 - tmp3, FIX_1_414213562)
@@ -705,7 +705,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	pmullw		mm7, [edi + 8*0]		;tmp0 = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
 
 	movq		mm4, [ebx + 8*8]		;load inptr[DCTSIZE*4]
-	
+
 	pmullw		mm4, [edi + 8*8]		;tmp2 = DEQUANTIZE(inptr[DCTSIZE*4], quantptr[DCTSIZE*4]);
 	psubw		mm5, mm1				;tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; /* 2*c4 */
 
@@ -713,22 +713,22 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		mm1, mm7			;copy tmp0	/* phase 3 */
 
 	movq		[esi+8*2], mm5		;save tmp12 in workspace
-	psubw		mm1, mm4			;tmp11 = tmp0 - tmp2; 
+	psubw		mm1, mm4			;tmp11 = tmp0 - tmp2;
 
 	paddw		mm7, mm4			;tmp10 = tmp0 + tmp2;
     movq		mm5, mm1		;copy tmp11
-	
+
 	paddw		mm1, [esi+8*2]	;tmp1 = tmp11 + tmp12;
 	movq		mm4, mm7		;copy tmp10		/* phase 2 */
 
-	paddw		mm7, [esi+8*0]	;tmp0 = tmp10 + tmp13;	
+	paddw		mm7, [esi+8*0]	;tmp0 = tmp10 + tmp13;
 
 	psubw		mm4, [esi+8*0]	;tmp3 = tmp10 - tmp13;
 	movq		mm0, mm7		;copy tmp0
 
 	psubw		mm5, [esi+8*2]	;tmp2 = tmp11 - tmp12;
 	paddw		mm7, mm3		;wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7);
-	
+
 	psubw		mm0, mm3			;wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7);
 
 	movq		[esi + 8*0], mm7	;wsptr[DCTSIZE*0]
@@ -789,7 +789,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	paddw	mm1, mm0					;z13 = tmp6 + tmp5;
 
 	pmullw		mm4, [edi + 8*14]	    ;tmp7 = DEQUANTIZE(inptr[DCTSIZE*7], quantptr[DCTSIZE*7]);
-	psubw	mm2, mm0					;z10 = tmp6 - tmp5   
+	psubw	mm2, mm0					;z10 = tmp6 - tmp5
 
 	psllw		mm2, 2				;shift z10
 	movq		mm0, mm2			;copy z10
@@ -810,7 +810,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
  	movq		mm7, mm5			;copy z12
 
 	pmulhw		mm5, fix_108n184	;MULT(z12, (FIX_1_08-FIX_1_84)) //- z5; /* 2*(c2-c6) */ even part
-	paddw		mm3, mm1				;tmp7 = z11 + z13;	
+	paddw		mm3, mm1				;tmp7 = z11 + z13;
 
 
     /* Even part */
@@ -836,7 +836,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		[esi+8*0], mm1			;save tmp13 in workspace
 	psllw		mm5, 2					;shift tmp1-tmp3
-    
+
 	movq		mm7, [ebx + 8*0]		;load inptr[DCTSIZE*0]
 	paddw		mm0, mm6		;tmp4 = tmp10 + tmp5;
 
@@ -845,7 +845,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	pmullw		mm7, [edi + 8*0]		;tmp0 = DEQUANTIZE(inptr[DCTSIZE*0], quantptr[DCTSIZE*0]);
 
 	movq		mm4, [ebx + 8*8]		;load inptr[DCTSIZE*4]
-	
+
 	pmullw		mm4, [edi + 8*8]		;tmp2 = DEQUANTIZE(inptr[DCTSIZE*4], quantptr[DCTSIZE*4]);
 	psubw		mm5, mm1				;tmp12 = MULTIPLY(tmp1 - tmp3, FIX_1_414213562) - tmp13; /* 2*c4 */
 
@@ -853,22 +853,22 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		mm1, mm7			;copy tmp0	/* phase 3 */
 
 	movq		[esi+8*2], mm5		;save tmp12 in workspace
-	psubw		mm1, mm4			;tmp11 = tmp0 - tmp2; 
+	psubw		mm1, mm4			;tmp11 = tmp0 - tmp2;
 
 	paddw		mm7, mm4			;tmp10 = tmp0 + tmp2;
     movq		mm5, mm1		;copy tmp11
-	
+
 	paddw		mm1, [esi+8*2]	;tmp1 = tmp11 + tmp12;
 	movq		mm4, mm7		;copy tmp10		/* phase 2 */
 
-	paddw		mm7, [esi+8*0]	;tmp0 = tmp10 + tmp13;	
+	paddw		mm7, [esi+8*0]	;tmp0 = tmp10 + tmp13;
 
 	psubw		mm4, [esi+8*0]	;tmp3 = tmp10 - tmp13;
 	movq		mm0, mm7		;copy tmp0
 
 	psubw		mm5, [esi+8*2]	;tmp2 = tmp11 - tmp12;
 	paddw		mm7, mm3		;wsptr[DCTSIZE*0] = (int) (tmp0 + tmp7);
-	
+
 	psubw		mm0, mm3			;wsptr[DCTSIZE*7] = (int) (tmp0 - tmp7);
 
 	movq		[esi + 8*0], mm7	;wsptr[DCTSIZE*0]
@@ -923,7 +923,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm1, [esi+8*1]		;wsptr[0,4],[0,5],[0,6],[0,7]
 	movq		mm2, mm0
-	
+
 	movq		mm3, [esi+8*2]		;wsptr[1,0],[1,1],[1,2],[1,3]
 	paddw		mm0, mm1			;wsptr[0,tmp10],[xxx],[0,tmp13],[xxx]
 
@@ -932,7 +932,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm6, mm0
 	movq		mm5, mm3
-	
+
 	paddw		mm3, mm4			;wsptr[1,tmp10],[xxx],[1,tmp13],[xxx]
 	movq		mm1, mm2
 
@@ -954,7 +954,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		mm5, [esi+8*5]		;wsptr[2,4],[2,5],[2,6],[2,7]
 	punpckldq	mm1, mm2	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
 
-	
+
 	paddw		mm3, mm5			;wsptr[2,tmp10],[xxx],[2,tmp13],[xxx]
 	movq		mm2, mm6
 
@@ -963,7 +963,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm5, mm3
 	punpcklwd	mm3, mm6			;wsptr[2,tmp10],[3,tmp10],[xxx],[xxx]
-	
+
 	psubw		mm2, mm7			;wsptr[3,tmp11],[xxx],[3,tmp14],[xxx]
 	punpckhwd	mm5, mm6			;wsptr[2,tmp13],[3,tmp13],[xxx],[xxx]
 
@@ -1028,7 +1028,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		[esi+8*0], mm0		;save tmp0
 	paddw		mm2, mm4			;wsptr[xxx],[0,z11],[xxx],[0,z13]
 
-	
+
 //Continue with z10 --- z13
 	movq		mm6, [esi+8*2]		;wsptr[1,0],[1,1],[1,2],[1,3]
 	psubw		mm3, mm4			;wsptr[xxx],[0,z12],[xxx],[0,z10]
@@ -1041,11 +1041,11 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	punpckhdq	mm0, mm4			;wsptr[1,6],[1,7],[1,2],[1,3]
 	movq		mm1, mm6
-	
+
 //Save tmp2 and tmp3 in wsptr
 	paddw		mm6, mm0		;wsptr[xxx],[1,z11],[xxx],[1,z13]
 	movq		mm4, mm2
-	
+
 //Continue with z10 --- z13
 	movq		[esi+8*2], mm5		;save tmp2
 	punpcklwd	mm2, mm6		;wsptr[xxx],[xxx],[0,z11],[1,z11]
@@ -1073,7 +1073,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	punpckhdq	mm7, mm4			;wsptr[2,6],[2,7],[2,2],[2,3]
 	movq		mm2, mm6
-	
+
 	movq		mm4, [esi+8*7]		;wsptr[3,4],[3,5],[3,6],[3,7]
 	paddw		mm6, mm7		;wsptr[xxx],[2,z11],[xxx],[2,z13]
 
@@ -1135,7 +1135,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 //	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) /* -2*(c2+c6) */
 //			+ MULTIPLY(z12, FIX_1_847759065); /* 2*c2 */
 	movq		mm4, mm2		;final1
-  
+
 	pmulhw		mm0, fix_184n261
 	paddw		mm2, mm5		;tmp0+tmp7,final1
 
@@ -1180,10 +1180,10 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	paddsw		mm0, const_0x0080
 	psraw		mm6, 5			;outptr[0,6],[1,6],[2,6],[3,6]
-	
+
 	paddsw		mm6, const_0x0080		;need to check this value
 	packuswb	mm0, mm4	;out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7]
-	
+
 	movq		mm5, [esi+8*2]		;tmp2,final3
 	packuswb	mm2, mm6	;out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6]
 
@@ -1252,9 +1252,9 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	add		 	eax, 4
 	movq		mm3, mm1
 
-	add			ebx, output_col 
+	add			ebx, output_col
 	punpckhwd	mm7, mm4	;out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7]
-	
+
 	movq		[ecx], mm2
 	punpckhdq	mm0, mm6	;out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7]
 
@@ -1275,9 +1275,9 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		[ebx], mm3
 
 
-		
+
 /*******************************************************************/
-	
+
 
 	add			esi, 64
 	add			eax, 4
@@ -1292,7 +1292,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm1, [esi+8*1]		;wsptr[0,4],[0,5],[0,6],[0,7]
 	movq		mm2, mm0
-	
+
 	movq		mm3, [esi+8*2]		;wsptr[1,0],[1,1],[1,2],[1,3]
 	paddw		mm0, mm1			;wsptr[0,tmp10],[xxx],[0,tmp13],[xxx]
 
@@ -1301,7 +1301,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm6, mm0
 	movq		mm5, mm3
-	
+
 	paddw		mm3, mm4			;wsptr[1,tmp10],[xxx],[1,tmp13],[xxx]
 	movq		mm1, mm2
 
@@ -1323,7 +1323,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		mm5, [esi+8*5]		;wsptr[2,4],[2,5],[2,6],[2,7]
 	punpckldq	mm1, mm2	;wsptr[0,tmp11],[1,tmp11],[0,tmp14],[1,tmp14]
 
-	
+
 	paddw		mm3, mm5			;wsptr[2,tmp10],[xxx],[2,tmp13],[xxx]
 	movq		mm2, mm6
 
@@ -1332,7 +1332,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	movq		mm5, mm3
 	punpcklwd	mm3, mm6			;wsptr[2,tmp10],[3,tmp10],[xxx],[xxx]
-	
+
 	psubw		mm2, mm7			;wsptr[3,tmp11],[xxx],[3,tmp14],[xxx]
 	punpckhwd	mm5, mm6			;wsptr[2,tmp13],[3,tmp13],[xxx],[xxx]
 
@@ -1397,7 +1397,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	movq		[esi+8*0], mm0		;save tmp0
 	paddw		mm2, mm4			;wsptr[xxx],[0,z11],[xxx],[0,z13]
 
-	
+
 //Continue with z10 --- z13
 	movq		mm6, [esi+8*2]		;wsptr[1,0],[1,1],[1,2],[1,3]
 	psubw		mm3, mm4			;wsptr[xxx],[0,z12],[xxx],[0,z10]
@@ -1410,11 +1410,11 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	punpckhdq	mm0, mm4			;wsptr[1,6],[1,7],[1,2],[1,3]
 	movq		mm1, mm6
-	
+
 //Save tmp2 and tmp3 in wsptr
 	paddw		mm6, mm0		;wsptr[xxx],[1,z11],[xxx],[1,z13]
 	movq		mm4, mm2
-	
+
 //Continue with z10 --- z13
 	movq		[esi+8*2], mm5		;save tmp2
 	punpcklwd	mm2, mm6		;wsptr[xxx],[xxx],[0,z11],[1,z11]
@@ -1442,7 +1442,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	punpckhdq	mm7, mm4			;wsptr[2,6],[2,7],[2,2],[2,3]
 	movq		mm2, mm6
-	
+
 	movq		mm4, [esi+8*7]		;wsptr[3,4],[3,5],[3,6],[3,7]
 	paddw		mm6, mm7		;wsptr[xxx],[2,z11],[xxx],[2,z13]
 
@@ -1504,7 +1504,7 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 //	 tmp22 = MULTIPLY(z10,(FIX_1_847759065 - FIX_2_613125930)) /* -2*(c2+c6) */
 //			+ MULTIPLY(z12, FIX_1_847759065); /* 2*c2 */
 	movq		mm4, mm2		;final1
-  
+
 	pmulhw		mm0, fix_184n261
 	paddw		mm2, mm5		;tmp0+tmp7,final1
 
@@ -1549,10 +1549,10 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 
 	paddsw		mm0, const_0x0080
 	psraw		mm6, 5			;outptr[0,6],[1,6],[2,6],[3,6]
-	
+
 	paddsw		mm6, const_0x0080		;need to check this value
 	packuswb	mm0, mm4	;out[0,1],[1,1],[2,1],[3,1],[0,7],[1,7],[2,7],[3,7]
-	
+
 	movq		mm5, [esi+8*2]		;tmp2,final3
 	packuswb	mm2, mm6	;out[0,0],[1,0],[2,0],[3,0],[0,6],[1,6],[2,6],[3,6]
 
@@ -1621,9 +1621,9 @@ jpeg_idct_ifast_mmx (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	add		 	eax, 4
 	movq		mm3, mm1
 
-	add			ebx, output_col 
+	add			ebx, output_col
 	punpckhwd	mm7, mm4	;out[2,4],[2,5],[2,6],[2,7],[3,4],[3,5],[3,6],[3,7]
-	
+
 	movq		[ecx], mm2
 	punpckhdq	mm0, mm6	;out[1,0],[1,1],[1,2],[1,3],[1,4],[1,5],[1,6],[1,7]
 

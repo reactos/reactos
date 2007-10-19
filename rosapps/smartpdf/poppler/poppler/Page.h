@@ -116,11 +116,11 @@ public:
   PDFRectangle *getMediaBox() { return attrs->getMediaBox(); }
   PDFRectangle *getCropBox() { return attrs->getCropBox(); }
   GBool isCropped() { return attrs->isCropped(); }
-  double getMediaWidth() 
+  double getMediaWidth()
     { return attrs->getMediaBox()->x2 - attrs->getMediaBox()->x1; }
   double getMediaHeight()
     { return attrs->getMediaBox()->y2 - attrs->getMediaBox()->y1; }
-  double getCropWidth() 
+  double getCropWidth()
     { return attrs->getCropBox()->x2 - attrs->getCropBox()->x1; }
   double getCropHeight()
     { return attrs->getCropBox()->y2 - attrs->getCropBox()->y1; }
@@ -188,7 +188,7 @@ public:
                     void *annotDisplayDecideCbkData = NULL);
 
   void display(Gfx *gfx);
-  
+
   // Get the page's default CTM.
   void getDefaultCTM(double *ctm, double hDPI, double vDPI,
 		     int rotate, GBool upsideDown);

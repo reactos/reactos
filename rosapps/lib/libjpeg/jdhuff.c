@@ -176,7 +176,7 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
 				  SIZEOF(d_derived_tbl));
   dtbl = *pdtbl;
   dtbl->pub = htbl;		/* fill in back link */
-  
+
   /* Figure C.1: make table of Huffman code length for each symbol */
 
   p = 0;
@@ -189,10 +189,10 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
   }
   huffsize[p] = 0;
   numsymbols = p;
-  
+
   /* Figure C.2: generate the codes themselves */
   /* We also validate that the counts represent a legal Huffman code tree. */
-  
+
   code = 0;
   si = huffsize[0];
   p = 0;
@@ -570,10 +570,10 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	/* Since zeroes are skipped, output area must be cleared beforehand */
 	for (k = 1; k < DCTSIZE2; k++) {
 	  HUFF_DECODE(s, br_state, actbl, return FALSE, label2);
-      
+
 	  r = s >> 4;
 	  s &= 15;
-      
+
 	  if (s) {
 	    k += r;
 	    CHECK_BIT_BUFFER(br_state, s, return FALSE);
@@ -597,10 +597,10 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 	/* In this path we just discard the values */
 	for (k = 1; k < DCTSIZE2; k++) {
 	  HUFF_DECODE(s, br_state, actbl, return FALSE, label3);
-      
+
 	  r = s >> 4;
 	  s &= 15;
-      
+
 	  if (s) {
 	    k += r;
 	    CHECK_BIT_BUFFER(br_state, s, return FALSE);

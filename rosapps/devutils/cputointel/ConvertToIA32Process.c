@@ -80,7 +80,7 @@ static void standardreg(CPU_INT *RegTableCount, CPU_INT reg, CPU_INT setup_ebp, 
 }
 
 CPU_INT ConvertToIA32Process( FILE *outfp,
-                               PMYBrainAnalys pMystart, 
+                               PMYBrainAnalys pMystart,
                                PMYBrainAnalys pMyend, CPU_INT regbits,
                                CPU_INT HowManyRegInUse,
                                CPU_INT *RegTableCount)
@@ -202,7 +202,7 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
                 if ((pMystart->type & 2)== 2)
                 {
                     /* dest [eax - 0x20], source reg */
-                    
+
                     fprintf(outfp,"mov dword [");
                     standardreg( RegTableCount,
                                  pMystart->dst,
@@ -255,7 +255,7 @@ CPU_INT ConvertToIA32Process( FILE *outfp,
             pMystart=NULL;
         else
             pMystart = (PMYBrainAnalys) pMystart->ptr_next;
-        
+
     }
     return 0;
 }

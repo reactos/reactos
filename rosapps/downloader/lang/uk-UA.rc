@@ -33,7 +33,7 @@ BEGIN
   PUSHBUTTON "&Cancel", IDCANCEL, 207, 90, 54, 15
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_WINDOW_TITLE		"Завантажити ! - Завантажувач ReactOS"
   IDS_WELCOME_TITLE		"Ласкаво просимо у Завантажувач ReactOS"

@@ -37,7 +37,7 @@ IDI_SUMATRAPDF          ICON                    "SumatraPDF.ico"
 // Accelerator
 //
 
-IDC_SUMATRAPDF ACCELERATORS 
+IDC_SUMATRAPDF ACCELERATORS
 BEGIN
     "O",            IDM_OPEN,               VIRTKEY, CONTROL
     "W",            IDM_CLOSE,              VIRTKEY, CONTROL
@@ -109,12 +109,12 @@ END
 // TEXTINCLUDE
 //
 
-1 TEXTINCLUDE 
+1 TEXTINCLUDE
 BEGIN
     "resource.h\0"
 END
 
-2 TEXTINCLUDE 
+2 TEXTINCLUDE
 BEGIN
     "#define APSTUDIO_HIDDEN_SYMBOLS\r\n"
     "#include ""windows.h""\r\n"
@@ -122,7 +122,7 @@ BEGIN
     "\0"
 END
 
-3 TEXTINCLUDE 
+3 TEXTINCLUDE
 BEGIN
     "\r\n"
     "\0"
@@ -137,7 +137,7 @@ END
 //
 
 #ifdef APSTUDIO_INVOKED
-GUIDELINES DESIGNINFO 
+GUIDELINES DESIGNINFO
 BEGIN
     IDD_DIALOG_GOTO_PAGE, DIALOG
     BEGIN
@@ -165,7 +165,7 @@ END
 
 IDC_CURSORDRAG          CURSOR                  "dragcursor.cur"
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Sumatra PDF"
 END

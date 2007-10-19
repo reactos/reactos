@@ -25,7 +25,7 @@
 	<file>From/dummycpu/Dummyopcode.c</file>
 
 	<file>ImageLoader.c</file>
-	<file>AnyalsingProcess.c</file>	
+	<file>AnyalsingProcess.c</file>
 	<file>ConvertingProcess.c</file>
 	<file>ConvertToIA32Process.c</file>
 	<file>ConvertToPPCProcess.c</file>

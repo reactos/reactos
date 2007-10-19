@@ -1,28 +1,28 @@
 
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "PPC.h"
 #include "../../misc.h"
 #include "../../any_op.h"
 
-/* reg r0-r31 
+/* reg r0-r31
   r3 = eax
  */
 
 /* cpuDummyInit_Add
- * Input param : 
- *               out         : The file pointer that we write to (the output file to intel asm) 
+ * Input param :
+ *               out         : The file pointer that we write to (the output file to intel asm)
  *               cpu_buffer  : The memory buffer we have our binary code that we whant convert
- *               cpu_pos     : Current positions in the cpu_buffer 
+ *               cpu_pos     : Current positions in the cpu_buffer
  *               cpu_size    : The memory size of the cpu_buffer
- *               BaseAddress : The base address you whant the binay file should run from 
+ *               BaseAddress : The base address you whant the binay file should run from
  *               cpuarch     : if it exists diffent cpu from a manufactor like pentium,
- *                             pentinum-mmx so on, use this flag to specify which type 
+ *                             pentinum-mmx so on, use this flag to specify which type
  *                             of cpu you whant or do not use it if it does not exists
  *                             other or any sub model.
  *
  * Return value :
- *               value -1            : unimplement 
+ *               value -1            : unimplement
  *               value  0            : wrong opcode or not vaild opcode
  *               value +1 and higher : who many byte we should add to cpu_pos
  */

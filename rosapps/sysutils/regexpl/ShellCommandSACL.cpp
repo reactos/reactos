@@ -65,7 +65,7 @@ int CShellCommandSACL::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 #define ERROR_MSG_BUFFER_SIZE 1024
   TCHAR pszError_msg[ERROR_MSG_BUFFER_SIZE];
   pszError_msg[ERROR_MSG_BUFFER_SIZE-1] = 0;
-  
+
   rArguments.ResetArgumentIteration();
 
   const TCHAR *pszKey = NULL;
@@ -78,7 +78,7 @@ int CShellCommandSACL::Execute(CConsole &rConsole, CArgumentParser& rArguments)
   PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
   CSecurityDescriptor sd;
   HANDLE hThreadToken = INVALID_HANDLE_VALUE;
-  
+
   if ((_tcsnicmp(pszCommandItself,SACL_CMD _T(".."),SACL_CMD_LENGTH+2*sizeof(TCHAR)) == 0)||
       (_tcsnicmp(pszCommandItself,SACL_CMD _T("\\"),SACL_CMD_LENGTH+1*sizeof(TCHAR)) == 0))
   {
@@ -89,7 +89,7 @@ int CShellCommandSACL::Execute(CConsole &rConsole, CArgumentParser& rArguments)
     pszParameter = pszCommandItself + SACL_CMD_LENGTH;
     goto CheckSACLArgument;
   }
-  
+
   while((pszParameter = rArguments.GetNextArgument()) != NULL)
   {
 CheckSACLArgument:
@@ -120,7 +120,7 @@ CheckSACLArgument:
   CRegistryKey Key;
 
   ASSERT(hThreadToken == INVALID_HANDLE_VALUE);
-  
+
   // Open thread token
   if (!OpenThreadToken(GetCurrentThread(),TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,FALSE,&hThreadToken))
   {	// OpenThreadToken failed
@@ -130,7 +130,7 @@ CheckSACLArgument:
       _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot open thread token.\nOpenThreadToken fails with error: %u\n"),(unsigned int)dwError);
       goto Error;
     }
-    
+
     // If the thread does not have an access token, we'll examine the
     // access token associated with the process.
     if (!OpenProcessToken(GetCurrentProcess(),TOKEN_ADJUST_PRIVILEGES|TOKEN_QUERY,&hThreadToken))
@@ -139,7 +139,7 @@ CheckSACLArgument:
       goto Error;
     }
   }
-  
+
   ASSERT(hThreadToken != INVALID_HANDLE_VALUE);
 
   // enable SeSecurityPrivilege privilege
@@ -148,7 +148,7 @@ CheckSACLArgument:
   priv.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
   if (!LookupPrivilegeValue(
       NULL,							// lookup privilege on local system
-      SE_SECURITY_NAME,				// privilege to lookup 
+      SE_SECURITY_NAME,				// privilege to lookup
       &(priv.Privileges[0].Luid)))	// receives LUID of privilege
   {
     _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot retrieve the locally unique identifier for %s privilege.\nLookupPrivilegeValue error: %u\n"),SE_SECURITY_NAME,(unsigned int)GetLastError());
@@ -169,7 +169,7 @@ CheckSACLArgument:
     _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot enable %s privilege.\nAdjustTokenPrivileges fails with error: %u%s\n"),SE_SECURITY_NAME,(unsigned int)dwError,(dwError == 5)?_T(" (Access denied)"):_T(""));
     goto Error;
   }
-  
+
   if (dwError != ERROR_SUCCESS)
   {
     if (dwError == ERROR_NOT_ALL_ASSIGNED)
@@ -180,16 +180,16 @@ CheckSACLArgument:
     {
       _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot enable %s privilege.\nAdjustTokenPrivileges succeds with error: %u\n"),SE_SECURITY_NAME,(unsigned int)dwError);
     }
-    
+
     goto Error;
   }
-  
+
   if (!m_rTree.GetKey(pszKey?pszKey:_T("."),KEY_QUERY_VALUE|READ_CONTROL|ACCESS_SYSTEM_SECURITY,Key))
   {
     rConsole.Write(m_rTree.GetLastErrorDescription());
     blnDo = FALSE;
   }
-  
+
   if (blnHelp)
   {
     rConsole.Write(GetHelpString());
@@ -200,17 +200,17 @@ CheckSACLArgument:
 
   if (!blnDo)
     return 0;
-  
+
   if (Key.IsRoot())
   {
     _tcsncpy(pszError_msg,SACL_CMD COMMAND_NA_ON_ROOT,ERROR_MSG_BUFFER_SIZE-1);
     goto Error;
   }
-      
+
   DWORD dwSecurityDescriptorLength;
   rConsole.Write(_T("Key : "));
   rConsole.Write(_T("\\"));
-  
+
   rConsole.Write(Key.GetKeyName());
   rConsole.Write(_T("\n"));
   dwError = Key.GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
@@ -219,14 +219,14 @@ CheckSACLArgument:
     _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot get security descriptor's length for current key.\nError: %u\n"),(unsigned int)dwError);
     goto Error;
   }
-  
+
   pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
   if (!pSecurityDescriptor)
   {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
       goto Error;
   }
-  
+
   DWORD dwSecurityDescriptorLength1;
   dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
   dwError = Key.GetSecurityDescriptor((SECURITY_INFORMATION)SACL_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
@@ -235,22 +235,22 @@ CheckSACLArgument:
     _sntprintf(pszError_msg,ERROR_MSG_BUFFER_SIZE-1,_T("\nCannot get security descriptor for current key.\nError: %u%s\n"),(unsigned int)dwError,(dwError == 1314)?_T("(A required privilege is not held by the client.)\n"):_T(""));
     goto Error;
   }
-  
+
   sd.AssociateDescriptor(pSecurityDescriptor);
   sd.BeginSACLInteration();
-  
+
   if ((!sd.DescriptorContainsSACL())||(sd.HasNULLSACL()))
   {
     _tcsncpy(pszError_msg,_T("Key has not SACL.\n"),ERROR_MSG_BUFFER_SIZE-1);
     goto Error;
   }
-  
+
   if (!sd.HasValidSACL())
   {
     _tcsncpy(pszError_msg,_T("Invalid SACL.\n"),ERROR_MSG_BUFFER_SIZE-1);
     goto Error;
   }
-  
+
   DWORD nACECount;
   nACECount = sd.GetSACLEntriesCount();
   rConsole.Write(_T("SACL has "));
@@ -272,22 +272,22 @@ CheckSACLArgument:
       rConsole.Write(_T("Unknown ACE type.\nCannot continue ACE list dump.\n"));
       goto AbortDumpSACL;
     }
-    
+
     if (blnFailed)
       rConsole.Write(_T("Failed access"));
-    
+
     if (blnFailed && blnSuccessful)
       rConsole.Write(_T(" & "));
     if (blnSuccessful)
       rConsole.Write(_T("Successful access"));
     rConsole.Write(_T("\n"));
-    
+
     PSID pSID = sd.GetCurrentACE_SID();
     if ((pSID == NULL)||(!IsValidSid(pSID)))
     {
       rConsole.Write(_T("\tInvalid SID.\n"));
     }
-    
+
     DWORD dwSIDStringSize = 0;
     BOOL blnRet = GetTextualSid(pSID,NULL,&dwSIDStringSize);
     ASSERT(!blnRet);
@@ -299,7 +299,7 @@ CheckSACLArgument:
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
       goto Error;
     }
-    
+
     if(!GetTextualSid(pSID,pszSID,&dwSIDStringSize))
     {
       dwError = GetLastError();
@@ -316,26 +316,26 @@ CheckSACLArgument:
       rConsole.Write(_T("\n"));
     }
     delete pszSID;
-    
+
     TCHAR *pszName, *pszDomainName;
     DWORD dwNameBufferLength, dwDomainNameBufferLength;
     dwNameBufferLength = 1024;
     dwDomainNameBufferLength = 1024;
-    
+
     pszName = new TCHAR [dwNameBufferLength];
     if (!pszName)
     {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
       goto Error;
     }
-    
+
     pszDomainName = new TCHAR [dwDomainNameBufferLength];
     if (!pszDomainName)
     {
       _tcsncpy(pszError_msg,_T("\nOut of memory.\n"),ERROR_MSG_BUFFER_SIZE-1);
       goto Error;
     }
-    
+
     DWORD dwNameLength = dwNameBufferLength, dwDomainNameLength = dwDomainNameBufferLength;
     SID_NAME_USE Use;
     if (!LookupAccountSid(NULL,pSID,pszName,&dwNameLength,pszDomainName,&dwDomainNameLength,&Use))
@@ -421,7 +421,7 @@ CheckSACLArgument:
       rConsole.Write(_T("\t\tKEY_QUERY_VALUE\n"));
     }
   }	// for
-  
+
 AbortDumpSACL:
   ASSERT(pSecurityDescriptor);
   delete pSecurityDescriptor;
@@ -435,7 +435,7 @@ Error:
 
   if (hThreadToken != INVALID_HANDLE_VALUE)
     VERIFY(CloseHandle(hThreadToken));
-  
+
   rConsole.Write(pszError_msg);
   return 0;
 }

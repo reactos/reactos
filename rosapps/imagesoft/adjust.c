@@ -438,7 +438,7 @@ DisplaySharpness(HWND hwnd,
 
             /* Green */
             c1 = g;
-            if ((Count < ((bitmap.bmHeight - 1)* bitmap.bmWidth * 4lu)) && 
+            if ((Count < ((bitmap.bmHeight - 1)* bitmap.bmWidth * 4lu)) &&
                 (Count > (bitmap.bmWidth * 4lu)))
             {
                 CopyMemory(&Val, &pBits[(Count - (bitmap.bmWidth * 4l))], 4);
@@ -458,7 +458,7 @@ DisplaySharpness(HWND hwnd,
 
             /* Blue */
             c1 = b;
-            if ((Count < ((bitmap.bmHeight - 1) * bitmap.bmWidth * 4lu)) && 
+            if ((Count < ((bitmap.bmHeight - 1) * bitmap.bmWidth * 4lu)) &&
                 (Count > (bitmap.bmWidth * 4lu)))
             {
                 CopyMemory(&Val, &pBits[(Count - (bitmap.bmWidth * 4l))], 4);

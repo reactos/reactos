@@ -25,7 +25,7 @@ BEGIN
   PUSHBUTTON "&Cancel", IDCANCEL, 207, 90, 54, 15
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_WINDOW_TITLE		"Télécharger ! - Téléchargeur de ReactOS"
   IDS_WELCOME_TITLE		"Bienvenue dans le Téléchargeur de ReactOS"

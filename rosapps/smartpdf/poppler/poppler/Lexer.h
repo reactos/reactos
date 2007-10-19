@@ -75,14 +75,14 @@ private:
   int getChar() {
     int       c;
     GBool     hasMoreData;
-  
+
     if (LOOK_VALUE_NOT_CACHED != lookCharLastValueCached) {
       c = lookCharLastValueCached;
       lookCharLastValueCached = LOOK_VALUE_NOT_CACHED;
       assert( (c >= LOOK_VALUE_NOT_CACHED) && (c < 256));
       return c;
     }
-  
+
     while (curStrHasGetBuf) {
       if (bufLeft > 0) {
         c = *bufCurPos++ & 0xff;
@@ -93,7 +93,7 @@ private:
       if (!hasMoreData)
         nextStream();
     }
-  
+
     c = EOF;
     while (!curStr.isNone() && (c = curStr.streamGetChar()) == EOF) {
       nextStream();
@@ -114,7 +114,7 @@ private:
   // often (e.g. ~30% on PDF Refernce 1.6 pdf file from Adobe site) getChar
   // is called right after lookChar. In order to avoid expensive re-doing
   // getChar() of underlying stream, we cache the last value found by
-  // lookChar() in lookCharLastValueCached. A special value 
+  // lookChar() in lookCharLastValueCached. A special value
   // LOOK_VALUE_NOT_CACHED that should never be part of stream indicates
   // that no value was cached
   static const int LOOK_VALUE_NOT_CACHED = -3;

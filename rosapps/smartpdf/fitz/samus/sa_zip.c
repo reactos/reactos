@@ -269,7 +269,7 @@ static fz_error *reallyopenzipentry(fz_stream **stmp, sa_zip *zip, int idx)
 		return fz_ioerror(zip->file);
 
 	switch (method)
-	{	
+	{
 	case 0:
 		error = fz_newnullfilter(&filter, csize);
 		if (error)

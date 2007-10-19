@@ -60,7 +60,7 @@ private:
 
 class EmbFile {
 public:
-  EmbFile(GooString *name, GooString *description, 
+  EmbFile(GooString *name, GooString *description,
 	  GooString *createDate,
 	  GooString *modDate, Object objStr) :
     m_name(name),

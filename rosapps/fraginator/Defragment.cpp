@@ -56,16 +56,16 @@ int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename,
 		len4path = pathLen;
 		len4fn = (totalWidth - len4path);
 	}
-	/* 
-		if halfTotLen was adjusted above to avoid a rounding error, give the 
-		extra wchar_t to the filename 
+	/*
+		if halfTotLen was adjusted above to avoid a rounding error, give the
+		extra wchar_t to the filename
 	*/
-	if (halfTotLen < (totalWidth/2)) len4path++; 
+	if (halfTotLen < (totalWidth/2)) len4path++;
 
 	if (pathLen > len4path)	swprintf (fmtStrPath, L"%%.%ds...\\", len4path-4);
 	else
 		swprintf (fmtStrPath, L"%%s");
-	
+
 	if (fnLen > len4fn)	swprintf (fmtStrFile, L"%%.%ds...", len4fn-3);
 	else
 		swprintf (fmtStrFile, L"%%s");
@@ -74,8 +74,8 @@ int FitName (wchar_t *destination, const wchar_t *path, const wchar_t *filename,
 	wcscat (fmtString, fmtStrFile);
 	/*swprintf (fmtString, L"%s%s", fmtStrPath, fmtStrFile);*/
 	swprintf (destination, fmtString, path,filename);
-	
-	return (1);	
+
+	return (1);
 }
 
 
@@ -304,7 +304,7 @@ void Defragment::Start (void)
             break;
         }
 
-        // 
+        //
         Info = Volume.GetDBFile (i);
 
         PreviousClusters = ClustersProgress;
@@ -367,7 +367,7 @@ void Defragment::Start (void)
                     }
                 }
             }
- 
+
             // New: Only update bitmap if it's older than 15 seconds
             if ((GetTickCount() - LastBMPUpdate) < 15000)
                 Retry = 1;

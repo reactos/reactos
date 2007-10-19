@@ -61,7 +61,7 @@ static char *get_media_descr( unsigned char media )
 static void dump_boot(DOS_FS *fs,struct boot_sector *b,unsigned lss)
 {
     unsigned short sectors;
-    
+
     printf("Boot sector contents:\n");
     if (!atari_format) {
 	char id[9];
@@ -147,7 +147,7 @@ static void check_backup_boot(DOS_FS *fs, struct boot_sector *b, int lss)
 	}
 	else return;
     }
-    
+
     fs_read(fs->backupboot_start,sizeof(b2),&b2);
     if (memcmp(b,&b2,sizeof(b2)) != 0) {
 	/* there are any differences */
@@ -232,10 +232,10 @@ static void read_fsinfo(DOS_FS *fs, struct boot_sector *b,int lss)
 	}
 	else return;
     }
-    
+
     fs->fsinfo_start = CF_LE_W(b->info_sector)*lss;
     fs_read(fs->fsinfo_start,sizeof(i),&i);
-    
+
     if (i.magic != CT_LE_L(0x41615252) ||
 	i.signature != CT_LE_L(0x61417272) ||
 	i.boot_sign != CT_LE_W(0xaa55)) {
@@ -321,7 +321,7 @@ void read_boot(DOS_FS *fs)
 
 	fs->backupboot_start = CF_LE_W(b.backup_boot)*logical_sector_size;
 	check_backup_boot(fs,&b,logical_sector_size);
-	
+
 	read_fsinfo(fs,&b,logical_sector_size);
     }
     else if (!atari_format) {

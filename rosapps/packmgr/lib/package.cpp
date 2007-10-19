@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // package.cpp
-// 
+//
 // package related functions
 //
 //
@@ -14,7 +14,7 @@
 #include "expat.h"
 #include "log.h"
 
-int PML_XmlDownload (pTree, const char* url, void* usrdata, XML_StartElementHandler start, 
+int PML_XmlDownload (pTree, const char* url, void* usrdata, XML_StartElementHandler start,
 									XML_EndElementHandler end, XML_CharacterDataHandler text=0);
 
 
@@ -28,7 +28,7 @@ void pack_start (void* usrdata, const char* tag, const char** arg)
 	if(!strcmp(tag, "scripts"))
 	{
 		// ... read the arguments
-		for (i=0; arg[i]; i+=2) 
+		for (i=0; arg[i]; i+=2)
 		{
 			if(!strcmp(arg[i], "inst"))
 				id = 0;
@@ -98,9 +98,9 @@ extern "C" int PML_LoadPackage (TREE* tree, int id, PML_SetButton SetButton)
 	{
 		SetButton(1, pack->action);
 		SetButton(2, pack->inst); // && pack->action != 0
-		SetButton(3, pack->src_inst); 
+		SetButton(3, pack->src_inst);
 		SetButton(4, pack->update);
-		SetButton(5, pack->uninstall); 
+		SetButton(5, pack->uninstall);
 	}
 
 	// root notes (like network) return here
@@ -155,11 +155,11 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 	for (i=0; i<pack->children.size(); i++)
 		ret = ret || PML_SetAction(tree, pack->children[i], action, SetIcon, Ask);
 
-	// is the action possible ? 
+	// is the action possible ?
 	if(!pack->actions[action])
 		return ERR_GENERIC;
 
-	// is it already set 
+	// is it already set
 	if(pack->action == action)
 		return ERR_OK;
 
@@ -244,14 +244,14 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 
 		// root notes (like network) return here
 		if(!pack->path)
-			return ret; 
+			return ret;
 
 		// save the name of the corresponding script in a vector
 		tree->todo.push_back(pack->files[action-1]);
 	}
 
 	// undoing
-	else 
+	else
 	{
 		for(i=0; i<pack->neededBy.size(); i++)
 		{
@@ -264,7 +264,7 @@ extern "C" int PML_SetAction (TREE* tree, int id, int action, PML_SetIcon SetIco
 
 		// root notes (like network) return here
 		if(!pack->path || pack->action==0)
-			return ret; 
+			return ret;
 
 		// erase from todo list
 		for(i=0; i<tree->todo.size(); i++)

@@ -80,10 +80,10 @@ typedef union {
 
 GLOBAL(void)
 jpeg_idct_islow_sse2 (
-	j_decompress_ptr cinfo, 
+	j_decompress_ptr cinfo,
 	jpeg_component_info * compptr,
 	JCOEFPTR coef_block,
-	JSAMPARRAY output_buf, 
+	JSAMPARRAY output_buf,
 	JDIMENSION output_col);
 
 
@@ -139,14 +139,14 @@ start_pass (j_decompress_ptr cinfo)
 #else
 		method_ptr = jpeg_idct_islow;
 		method = JDCT_ISLOW;
-		  
+
 #endif /* HAVE_SSE2_INTEL_MNEMONICS */
 	break;
 #endif
 #ifdef DCT_IFAST_SUPPORTED
       case JDCT_IFAST:
 #ifdef HAVE_SSE2_INTEL_MNEMONICS
-		if (SSE2Available==1) 
+		if (SSE2Available==1)
 		{
 			method_ptr = jpeg_idct_islow_sse2;
 			method = JDCT_ISLOW;

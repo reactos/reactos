@@ -1,4 +1,4 @@
-/* 
+/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS test application
  * FILE:        apps/net/netreg/netreg.cpp
@@ -22,7 +22,7 @@ using std::map;
 using std::string;
 using std::ostringstream;
 
-const char *root_entries[] = { 
+const char *root_entries[] = {
   "HKEY_LOCAL_MACHINE",
   "HKEY_CURRENT_USER",
   "HKEY_CLASSES_ROOT",
@@ -54,7 +54,7 @@ public:
       space_pos++;
       if( full_input[space_pos] != '/' ) { state = SHOULD_DIE; return; }
       space_pos++;
-      string reg_key_and_remainder = 
+      string reg_key_and_remainder =
 	full_input.substr( space_pos, full_input.size() - space_pos );
       space_pos = reg_key_and_remainder.find( ' ' );
       if( space_pos == string::npos ) { state = SHOULD_DIE; return; }
@@ -64,14 +64,14 @@ public:
     }
   }
   void OkToSend() {
-    int rv = send( socket, 
-		   remaining_output.c_str(), 
+    int rv = send( socket,
+		   remaining_output.c_str(),
 		   remaining_output.size(), 0 );
     if( rv < 0 ) {
       state = SHOULD_DIE;
       return;
     } else {
-      remaining_output = 
+      remaining_output =
 	remaining_output.substr( rv, remaining_output.size() - rv );
       if( remaining_output.size() == 0 ) {
 	state = SHOULD_DIE;
@@ -88,7 +88,7 @@ public:
   bool WantPollout() const {
     return state == REQUEST_RECVD_SENDING_REPLY;
   }
-						   
+
 
 private:
   string urlenc( string in ) {
@@ -97,8 +97,8 @@ private:
     for( string::iterator i = in.begin();
 	 i != in.end();
 	 i++ ) {
-      if( isalnum( *i ) || *i == '/' ) 
-	out << *i; 
+      if( isalnum( *i ) || *i == '/' )
+	out << *i;
       else {
 	char minibuf[10];
 	sprintf( minibuf, "%02x", *i );
@@ -127,8 +127,8 @@ private:
 	    buf[1] = *i;
 	    buf[2] = 0;
 	    sscanf( buf, "%x", &res );
-	    fprintf( stderr, "Interpreting %c%c as %02x\n", 
-		     buf[0], buf[1], 
+	    fprintf( stderr, "Interpreting %c%c as %02x\n",
+		     buf[0], buf[1],
 		     res );
 	    out += (char)res;
 	  }
@@ -142,11 +142,11 @@ private:
   string dump_one_line( const char *data, int llen, int len, int addr ) {
     ostringstream out;
     int i;
-    
+
     out << setw( 8 ) << setfill( '0' ) << hex << addr << ": ";
-    
+
     for( i = 0; i < llen; i++ ) {
-      if( i < len ) out << setw( 2 ) << setfill( '0' ) << hex << 
+      if( i < len ) out << setw( 2 ) << setfill( '0' ) << hex <<
 		      (data[i] & 0xff) << " ";
       else out << "   ";
     }
@@ -154,7 +154,7 @@ private:
     out << " : ";
 
     for( i = 0; i < llen; i++ ) {
-      if( i < len && i < llen && 
+      if( i < len && i < llen &&
 	  data[i] >= ' ' && data[i] < 0x7f ) out << data[i]; else out << '.';
     }
 
@@ -169,7 +169,7 @@ private:
     int addr = 0;
 
     out += "<pre>";
-    
+
     while( data < end ) {
       out += dump_one_line( data, 16, end - data, addr );
       addr += 16;
@@ -198,7 +198,7 @@ private:
     DWORD num_values;
     DWORD max_value_name_len;
     DWORD max_value_len;
-    
+
     char *value_name_buf;
     char *value_buf;
     char *key_name_buf;
@@ -218,7 +218,7 @@ private:
       process_invalid_request( key_name );
       return;
     }
-    
+
     value_name_buf = new char [max_value_name_len+1];
     value_buf      = new char [max_value_len+1];
     key_name_buf   = new char [max_subkey_len+1];
@@ -227,7 +227,7 @@ private:
     if( ending_slash != string::npos )
       up_level = key_name.substr( 0, ending_slash );
 
-    text_out << "HTTP/1.0 200 OK\r\n" 
+    text_out << "HTTP/1.0 200 OK\r\n"
 	     << "Content-Type: text/html\r\n"
 	     << "\r\n"
 	     << "<html><head><title>Registry Key `"
@@ -237,10 +237,10 @@ private:
 	     << "<a href='/" << urlenc(up_level)
 	     << "'>(Up one level)</a><p>\r\n"
 	     << "<h2>Subkeys:</h2><table border='1'>\r\n";
-    
+
     DWORD which_index;
     DWORD key_name_size;
- 
+
     for( which_index = 0; which_index < num_sub_keys; which_index++ ) {
       key_name_size = max_subkey_len+1;
       RegEnumKeyEx( open_reg_key,
@@ -256,9 +256,9 @@ private:
 	       << string(key_name_buf,key_name_size)
 	       << "</a></td></tr>\r\n";
     }
-    
+
     text_out << "</table><h2>Values:</h2><table border='1'>\r\n";
-    
+
     DWORD value_name_size;
     DWORD value_data_size;
     DWORD value_type;
@@ -276,14 +276,14 @@ private:
 		    (BYTE *)value_buf,
 		    &value_data_size );
 
-      text_out << "<tr><td><b>" << string(value_name_buf,value_name_size) 
+      text_out << "<tr><td><b>" << string(value_name_buf,value_name_size)
 	       << "</b></td><td>"
 	       << present_value( value_type, value_buf, value_data_size )
 	       << "</td></tr>";
     }
-    
+
     text_out << "</ul></body></html>\r\n";
-    
+
     delete [] key_name_buf;
     delete [] value_name_buf;
     delete [] value_buf;
@@ -326,7 +326,7 @@ private:
 
       for( i = 0; root_entries[i]; i++ )
 	text_out << "<li>"
-		 << "<a href='/" << urlenc(root_entries[i]) 
+		 << "<a href='/" << urlenc(root_entries[i])
 		 << "'>" << root_entries[i]
 		 << "</a></li>\r\n";
 
@@ -345,17 +345,17 @@ private:
     // Parse the key name...
     size_t slash = reg_key.find( '/' );
     string reg_initial = "";
-    
+
     if( slash == string::npos ) // A root key...
       reg_initial = reg_key;
     else // Any other key
       reg_initial = reg_key.substr( 0, slash );
-    
-    fprintf( stderr, "reg_init = %s, reg_key = %s\n", 
+
+    fprintf( stderr, "reg_init = %s, reg_key = %s\n",
 	     reg_initial.c_str(),
 	     reg_key.c_str() );
 
-    for( i = 0; root_entries[i]; i++ ) 
+    for( i = 0; root_entries[i]; i++ )
       if( reg_initial == root_entries[i] ) hRegKey = root_handles[i];
 
     if( hRegKey != 0 && reg_initial != reg_key ) {
@@ -370,7 +370,7 @@ private:
 
 	if( slash != string::npos ) {
 	  reg_single_key = reg_open_path.substr( 0, slash );
-	  reg_open_path = reg_open_path.substr( slash+1, 
+	  reg_open_path = reg_open_path.substr( slash+1,
 						reg_open_path.size() );
 	}
 
@@ -378,7 +378,7 @@ private:
 
 	fprintf( stderr, "Opening %s\n", reg_single_key.c_str() );
 
-	if( RegOpenKey( hRegKey, reg_single_key.c_str(), &hRegKey ) != 
+	if( RegOpenKey( hRegKey, reg_single_key.c_str(), &hRegKey ) !=
 	    ERROR_SUCCESS ) {
 	  hRegKey = 0;
 	  break;
@@ -409,12 +409,12 @@ private:
 
 SOCKET make_listening_socket( int port ) {
   struct sockaddr_in sa;
-  
+
   ZeroMemory( &sa, sizeof( sa ) );
-  
+
   sa.sin_family = PF_INET;
   sa.sin_port = ntohs( port );
-  
+
   fprintf( stderr, "Creating the listener\n" );
   SOCKET l = socket( PF_INET, SOCK_STREAM, 0 );
   fprintf( stderr, "Socket %x\n", l );
@@ -481,7 +481,7 @@ int main( int argc, char **argv ) {
     FD_SET(listen_socket,&pollin);
 
     active_fds = select( active_fds, &pollin, &pollout, &pollerr, NULL );
-    
+
     if( active_fds > 0 ) {
       if( FD_ISSET(listen_socket,&pollin) ) {
 	SOCKET ns = accept( listen_socket, NULL, NULL );

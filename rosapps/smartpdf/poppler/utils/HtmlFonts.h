@@ -26,7 +26,7 @@ class HtmlFontColor{
    GBool isEqual(const HtmlFontColor& col) const{
      return ((r==col.r)&&(g==col.g)&&(b==col.b));
    }
-} ;  
+} ;
 
 
 class HtmlFont{
@@ -40,7 +40,7 @@ class HtmlFont{
    GooString *FontName;
    HtmlFontColor color;
    static GooString* HtmlFilter(Unicode* u, int uLen); //char* s);
-public:  
+public:
 
    HtmlFont(){FontName=NULL;};
    HtmlFont(GooString* fontname,int _size, GfxRGB rgb);
@@ -67,19 +67,19 @@ public:
 class HtmlFontAccu{
 private:
   GooVector<HtmlFont> *accu;
-  
+
 public:
   HtmlFontAccu();
   ~HtmlFontAccu();
   int AddFont(const HtmlFont& font);
   HtmlFont* Get(int i){
     GooVector<HtmlFont>::iterator g=accu->begin();
-    g+=i;  
+    g+=i;
     return g;
-  } 
+  }
   GooString* getCSStyle (int i, GooString* content);
   GooString* CSStyle(int i);
   int size() const {return accu->size();}
-  
-};  
+
+};
 #endif

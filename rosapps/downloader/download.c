@@ -57,7 +57,7 @@ dlQueryInterface(IBindStatusCallback* This, REFIID riid, void** ppvObject)
     {
 		return E_POINTER;
     }
-    
+
 	if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IBindStatusCallback))
     {
 		IBindStatusCallback_AddRef( This );
@@ -72,7 +72,7 @@ static ULONG WINAPI
 dlAddRef(IBindStatusCallback* iface)
 {
 	IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
-    
+
 	return InterlockedIncrement(&This->ref);
 }
 
@@ -81,13 +81,13 @@ dlRelease(IBindStatusCallback* iface)
 {
 	IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
 	DWORD ref = InterlockedDecrement(&This->ref);
-    
+
 	if( !ref )
     {
 		DestroyWindow( This->hDialog );
 		HeapFree(GetProcessHeap(), 0, This);
     }
-    
+
 	return ref;
 }
 
@@ -242,7 +242,7 @@ ThreadFunc(LPVOID Context)
 	{
 		goto end;
 	}
-  
+
 	DWORD dwSize = MAX_PATH;
 	if (RegQueryValueEx(hKey,
 						L"DownloadFolder",
@@ -253,7 +253,7 @@ ThreadFunc(LPVOID Context)
 	{
 		goto end;
 	}
-  
+
 	if (GetFileAttributes(path) == 0xFFFFFFFF)
 		if (!CreateDirectory((LPCTSTR)path,NULL))
 		{

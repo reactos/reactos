@@ -11,7 +11,7 @@
 #include <package.h>
 #include "resource.h"
 
-/* Some Variables */ 
+/* Some Variables */
 
 int selected, splitter_pos = 50;
 
@@ -22,7 +22,7 @@ HWND hTBar, hTree, hEdit, hStatus;
 HTREEITEM nodes [MAXNODES];
 
 /* Window Callbacks */
- 
+
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK StatusProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsProc (HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);

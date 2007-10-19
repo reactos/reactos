@@ -75,7 +75,7 @@ int CShellCommandChangeKey::Execute(CConsole &rConsole, CArgumentParser& rArgume
 	{
     size_t size = _tcslen(pchPath);
 		ASSERT(size <= PROMPT_BUFFER_SIZE);
-    
+
 		if (!m_rTree.ChangeCurrentKey(pchPath))
 		{
 			rConsole.Write(m_rTree.GetLastErrorDescription());

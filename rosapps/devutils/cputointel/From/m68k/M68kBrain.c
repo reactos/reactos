@@ -1,20 +1,20 @@
 
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "M68kBrain.h"
 #include "m68k.h"
 #include "../../misc.h"
 
-/* 
- * DummyBrain is example how you create you own cpu brain to translate from 
+/*
+ * DummyBrain is example how you create you own cpu brain to translate from
  * cpu to intel assembler, I have not add DummyBrain to the loader it is not
  * need it in our example. When you write you own brain, it must be setup in
  * misc.c function LoadPFileImage and PEFileStart, PEFileStart maybe does not
  * need the brain you have writen so you do not need setup it there then.
  *
- * input param: 
+ * input param:
  *         cpu_buffer   : the memory buffer with loaded program we whant translate
- *         cpu_pos      : the positions in the cpu_buffer 
+ *         cpu_pos      : the positions in the cpu_buffer
  *         cpu_size     : the alloced memory size of the cpu_buffer
  *         BaseAddress  : the virtual memory address we setup to use.
  *         cpuarch      : the sub arch for the brain, example if it exists more one
@@ -22,8 +22,8 @@
  *         outfp        : the output file pointer
  *
  * return value
- *         0            : Ok 
- *         1            : unimplemt 
+ *         0            : Ok
+ *         1            : unimplemt
  *         2            : Unkonwn Opcode
  *         3            : unimplement cpu
  *         4            : unknown machine
@@ -47,7 +47,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         cpu_oldpos = cpu_pos;
 
         cpuint = cpu_buffer[cpu_pos];
-    
+
         /* Abcd */
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_Abcd))) == ConvertBitToByte(cpuM68kInit_Abcd))
         {
@@ -120,7 +120,7 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
         }
         /* AndToCCR */
         if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_AndToCCRF))) == ConvertBitToByte(cpuM68kInit_AndToCCRF))
-        {            
+        {
             cpuint = cpu_buffer[cpu_pos+1];
             if ((cpuint - (cpuint & GetMaskByte(cpuM68kInit_AndToCCRS))) == ConvertBitToByte(cpuM68kInit_AndToCCRS))
             {
@@ -300,11 +300,11 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
 
         /* Check if we have found a cpu opcode */
         if (cpu_oldpos == cpu_pos)
-        {            
+        {
             if (retcode == 0)
-            {              
+            {
                 /* no unimplement error where found so we return a msg for unknown opcode */
-                printf("Unkonwn Opcode found at 0x%8x opcode 0x%2x\n",cpu_oldpos+BaseAddress,(unsigned int)cpu_buffer[cpu_oldpos]);                
+                printf("Unkonwn Opcode found at 0x%8x opcode 0x%2x\n",cpu_oldpos+BaseAddress,(unsigned int)cpu_buffer[cpu_oldpos]);
                 retcode = 2;
             }
         }
@@ -316,5 +316,5 @@ CPU_INT M68KBrain(   CPU_BYTE *cpu_buffer,
             break;
         }
     }
-    return retcode;    
+    return retcode;
 }

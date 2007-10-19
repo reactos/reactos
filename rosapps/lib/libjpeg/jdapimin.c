@@ -68,7 +68,7 @@ jpeg_CreateDecompress (j_decompress_ptr cinfo, int version, size_t structsize)
   if (version != JPEG_LIB_VERSION)
     ERREXIT2(cinfo, JERR_BAD_LIB_VERSION, JPEG_LIB_VERSION, version);
   if (structsize != SIZEOF(struct jpeg_decompress_struct))
-    ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE, 
+    ERREXIT2(cinfo, JERR_BAD_STRUCT_SIZE,
 	     (int) SIZEOF(struct jpeg_decompress_struct), (int) structsize);
 
   /* For debugging purposes, we zero the whole master structure.
@@ -152,7 +152,7 @@ default_decompress_parms (j_decompress_ptr cinfo)
     cinfo->jpeg_color_space = JCS_GRAYSCALE;
     cinfo->out_color_space = JCS_GRAYSCALE;
     break;
-    
+
   case 3:
     if (cinfo->saw_JFIF_marker) {
       cinfo->jpeg_color_space = JCS_YCbCr; /* JFIF implies YCbCr */
@@ -187,7 +187,7 @@ default_decompress_parms (j_decompress_ptr cinfo)
     /* Always guess RGB is proper output colorspace. */
     cinfo->out_color_space = JCS_RGB;
     break;
-    
+
   case 4:
     if (cinfo->saw_Adobe_marker) {
       switch (cinfo->Adobe_transform) {
@@ -208,7 +208,7 @@ default_decompress_parms (j_decompress_ptr cinfo)
     }
     cinfo->out_color_space = JCS_CMYK;
     break;
-    
+
   default:
     cinfo->jpeg_color_space = JCS_UNKNOWN;
     cinfo->out_color_space = JCS_UNKNOWN;
@@ -437,10 +437,10 @@ static int mmxsupport()
 		pushfd					//Save Eflag to stack
 		pop eax					//Get Eflag from stack into eax
 		mov ecx, eax			//Make another copy of Eflag in ecx
-		xor eax, 0x200000		//Toggle ID bit in Eflag [i.e. bit(21)] 
+		xor eax, 0x200000		//Toggle ID bit in Eflag [i.e. bit(21)]
 		push eax				//Save modified Eflag back to stack
 
-		popfd					//Restored modified value back to Eflag reg 
+		popfd					//Restored modified value back to Eflag reg
 		pushfd					//Save Eflag to stack
 		pop eax					//Get Eflag from stack
 		xor eax, ecx			//Compare the new Eflag with the original Eflag
@@ -449,16 +449,16 @@ static int mmxsupport()
 								//NOT_SUPPORTED label
 
 		xor eax, eax			//Set eax to zero
-					
+
 		cpuid
-		
+
 		cmp eax, 1				//make sure eax return non-zero value
 		jl NOT_SUPPORTED		//If eax is zero, mmx not supported
 
 		xor eax, eax			//set eax to zero
-		inc eax					//Now increment eax to 1.  This instruction is 
+		inc eax					//Now increment eax to 1.  This instruction is
 								//faster than the instruction "mov eax, 1"
-		
+
 		cpuid
 
 		and edx, 0x00800000		//mask out all bits but mmx bit(24)
@@ -468,11 +468,11 @@ static int mmxsupport()
 		mov	mmx_supported, 1	//set return value to 1
 
 NOT_SUPPORTED:
-		mov	eax, mmx_supported	//move return value to eax	
+		mov	eax, mmx_supported	//move return value to eax
 
 	}
 
-	return mmx_supported;		
+	return mmx_supported;
 }
 #endif
 
@@ -484,12 +484,12 @@ static int sse2support()
 	int my_edx;
 	_asm
 	{
-		mov eax, 01                       
-		cpuid                                    
-		mov my_edx, edx    
+		mov eax, 01
+		cpuid
+		mov my_edx, edx
 	}
-	if (my_edx & (0x1 << 26)) 
-		sse2available = 1; 
+	if (my_edx & (0x1 << 26))
+		sse2available = 1;
 	else sse2available = 2;
 
 	return sse2available;

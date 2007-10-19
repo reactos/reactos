@@ -162,7 +162,7 @@ static void srow5(byte *src, byte *dst, int w, int denom)
 
 static void srow5p2(byte * restrict src, byte * restrict dst, int w, int log2denom)
 {
-    srownp2(src, dst, w, log2denom, 5);        
+    srownp2(src, dst, w, log2denom, 5);
 }
 
 static FORCEINLINE void scoln(byte * restrict src, byte * restrict dst, int w, int denom, int n)
@@ -315,7 +315,7 @@ fz_scalepixmap(fz_pixmap **dstp, fz_pixmap *src, int xdenom, int ydenom)
                         while ((v >>= 1)) ydenom2++;
                         scolx = scol5p2;
                 }
-                
+
                 break;
 	}
 

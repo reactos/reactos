@@ -240,7 +240,7 @@ h2v1_merged_upsample (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
 		      JSAMPARRAY output_buf)
 {
- 
+
 
  my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
   register int y, cred, cgreen, cblue;
@@ -309,7 +309,7 @@ h2v2_merged_upsample_mmx (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
 		      JSAMPARRAY output_buf);
 #endif
- 
+
 METHODDEF(void)
 h2v2_merged_upsample (j_decompress_ptr cinfo,
 		      JSAMPIMAGE input_buf, JDIMENSION in_row_group_ctr,
@@ -429,9 +429,9 @@ h2v2_merged_upsample_mmx (j_decompress_ptr cinfo,
   INT32 * Crgtab = upsample->Cr_g_tab;
   INT32 * Cbgtab = upsample->Cb_g_tab;
   SHIFT_TEMPS
-  
 
-  // Added for MMX	  
+
+  // Added for MMX
   register int width = cinfo->image_width;
   int cols = cinfo->output_width;
   int cols_asm = (cols >> 3);
@@ -448,13 +448,13 @@ h2v2_merged_upsample_mmx (j_decompress_ptr cinfo,
   outptr1 = output_buf[1];
   /* Loop for each group of output pixels */
 
-	   
+
   _asm
   {
 	  mov esi, inptr00
 
 	  mov eax, inptr01
-	  
+
 	  mov ebx, inptr2
 
 	  mov ecx, inptr1
@@ -464,7 +464,7 @@ h2v2_merged_upsample_mmx (j_decompress_ptr cinfo,
 	  mov edx, outptr1
 
 do_next16:
-	  
+
 	  movd mm0, [ebx]			; Cr7 Cr6.....Cr1 Cr0
 
 	  pxor mm6, mm6
@@ -480,20 +480,20 @@ do_next16:
 	  punpcklbw mm0, mm6		; Cr0 Cr0 Cr0 Cr0
 
 	  psubsw mm0, mm7			; Cr0 - 128:Cr0-128:Cr0-128:Cr0 -128
-	  
+
 	  movd mm1, [ecx]			; Cb7 Cb6...... Cb1 Cb0
-	  	   
+
 	  psllw mm0, 2				; left shift by 2 bits
 
 	  punpcklbw mm1, mm1		; Cb3 Cb3 Cb2 Cb2 Cb1 Cb1 Cb0 Cb0
-	  
+
 	  paddsw mm0, const05		; add (one_half/fix(x)) << 2
 
 	  punpcklwd mm1, mm1		; Cb1 Cb1 Cb1 Cb1 Cb0 Cb0 Cb0 Cb0
 
 	  movq mm5, mm1
 
-	  pmulhw mm0, const1		; multiply by (fix(x) >> 1) 
+	  pmulhw mm0, const1		; multiply by (fix(x) >> 1)
 
 	  punpcklbw mm1, mm6		; Cb0 Cb0 Cb0 Cb0
 
@@ -504,14 +504,14 @@ do_next16:
 	  punpckhbw mm5, mm6		; Cb1 Cb1 Cb1 Cb1
 
 	  psllw mm1, 2				; left shift by 2 bits
- 
+
 	  paddsw mm1, const15		; add (one_half/fix(x)) << 2
 
 	  psubsw mm4, mm7			; Cr1 - 128:Cr1-128:Cr1-128:Cr1 -128
-						
+
 	  psubsw mm5, mm7			; Cb1 - 128:Cb1-128:Cb1-128:Cb1 -128
 
-	  pmulhw mm1, const2		; multiply by (fix(x) >> 1) 
+	  pmulhw mm1, const2		; multiply by (fix(x) >> 1)
 
 	  psllw mm4, 2				; left shift by 2 bits
 
@@ -521,7 +521,7 @@ do_next16:
 
 	  movd mm7, [esi]			;  Y13 Y12 Y9 Y8 Y5 Y4 Y1 Y0
 
-	  pmulhw mm4, const5		; multiply by (fix(x) >> 1) 
+	  pmulhw mm4, const5		; multiply by (fix(x) >> 1)
 
 	  movq mm6, mm7
 
@@ -533,7 +533,7 @@ do_next16:
 
 	  movq mm1, mm7
 
-	  pmulhw mm5, const6		; multiply by (fix(x) >> 1) 
+	  pmulhw mm5, const6		; multiply by (fix(x) >> 1)
 
 	  movq	mm2, mm0			; cred0 cbl0 cgr0 cred0
 
@@ -558,13 +558,13 @@ do_next16:
 	  psllq	mm3, 16				; cgr1 cred1 0 0
 
 	  movq mm6, mm1				; 0 0 Y5 Y5 Y4 Y4 Y1 Y1
-	
+
 	  por	mm2, mm3			; cgr1 cred1 cbl0 cgr0
 
 	  punpcklbw mm6, empty		; Y4 Y4 Y1 Y1
 
 	  movd mm3, [eax]			; Y15 Y14 Y11 Y10 Y7 Y6 Y3 Y2
-	  
+
 	  paddsw mm6, mm2			; g4 r4 b1 g1
 
 	  packuswb mm7, mm6			; g4 r4 b1 g1 r1 b0 g0 r0
@@ -594,7 +594,7 @@ do_next16:
 	  punpcklbw mm6, empty		; Y6 Y6 Y3 Y3
 
 	  psrlq mm1, 24				; 0 0 0 0 0 Y5 Y5 Y4
-	  
+
 	  paddsw mm6, mm2			; g6 r6 b3 g3
 
 	  packuswb mm3, mm6			; g6 r6 b3 g3 r3 b2 g2 r2
@@ -604,37 +604,37 @@ do_next16:
 	  psrlq mm0, 32				; 0 0 0 0 0 0 Y5 Y5
 
 	  movq [edx], mm3			; move to memory g6 r6 b3 g3 r3 b2 g2 r2
-	  
+
 	  punpcklwd mm1, mm0		; X X X X Y5 Y5 Y5 Y4
 
-	  psrlq mm5, 24				; 0 0 0 0 0 Y7 Y7 Y6 
+	  psrlq mm5, 24				; 0 0 0 0 0 Y7 Y7 Y6
 
 	  movd mm0, [ebx]			; Cr9 Cr8.....Cr3 Cr2
 
-	  psrlq mm2, 32	   			; 0 0 0 0 0 0 Y7 Y7	 
-	  
-	  psrlq	mm0, 16		
+	  psrlq mm2, 32	   			; 0 0 0 0 0 0 Y7 Y7
+
+	  psrlq	mm0, 16
 
 	  punpcklbw mm1, empty		; Y5 Y5 Y5 Y4
 
 	  punpcklwd mm5, mm2		; X X X X Y7 Y7 Y7 Y6
 
 	  paddsw mm1, mm4			; b5 g5 r5 b4
-	 
-	  punpcklbw mm5, empty		; Y7 Y7 Y7 Y6	    
+
+	  punpcklbw mm5, empty		; Y7 Y7 Y7 Y6
 
 	  pxor mm6, mm6				; clear mm6 registr
-	  
+
 	  punpcklbw mm0, mm0		; X X X X Cr3 Cr3 Cr2 Cr2
-  
+
 	  paddsw mm5, mm4			; b7 g7 r7 b6
-	  
+
 	  punpcklwd mm0, mm0		; Cr3 Cr3 Cr3 Cr3 Cr2 Cr2 Cr2 Cr2
 
 	  movq mm4, mm0
 
 	  movd mm3, [ecx]			; Cb9 Cb8...... Cb3 Cb2
-	  
+
 	  punpcklbw mm0, mm6		; Cr2 Cr2 Cr2 Cr2
 
 	  psrlq	mm3, 16
@@ -650,57 +650,57 @@ do_next16:
 	  punpcklwd mm3, mm3		; Cb3 Cb3 Cb3 Cb3 Cb2 Cb2 Cb2 Cb2
 
 	  movq mm7, mm3
-	  
-	  pmulhw mm0, const1		; multiply by (fix(x) >> 1) 	  	  
+
+	  pmulhw mm0, const1		; multiply by (fix(x) >> 1)
 
 	  punpcklbw mm3, mm6		; Cb2 Cb2 Cb2 Cb2
 
 	  psubsw mm3, const128		; Cb0 - 128:Cb0-128:Cb0-128:Cb0 -128
 
 	  punpckhbw mm4, mm6		; Cr3 Cr3 Cr3 Cr3
-	  
+
 	  psllw mm3, 2				; left shift by 2 bits
 
 	  paddsw mm3, const15		; add (one_half/fix(x)) << 2
 
 	  punpckhbw mm7, mm6		; Cb3 Cb3 Cb3 Cb3
 
-	  pmulhw mm3, const2		; multiply by (fix(x) >> 1) 
-	  
+	  pmulhw mm3, const2		; multiply by (fix(x) >> 1)
+
 	  psubsw mm7, const128		; Cb3 - 128:Cb3-128:Cb3-128:Cb3 -128
 
 	  paddsw  mm0, mm3			; cred2 cbl2 cgr2 cred2
-	    
+
 	  psllw mm7, 2				; left shift by 2 bits
 
 	  psubsw mm4, const128		; Cr3 - 128:Cr3-128:Cr3-128:Cr3 -128
-	  
+
 	  movd mm3, [esi+4]			;  Y21 Y20 Y17 Y16 Y13 Y12 Y9 Y8
-	  
+
 	  psllw mm4, 2				; left shift by 2 bits
 
 	  paddsw mm7, const55		; add (one_half/fix(x)) << 2
-	  	  
+
 	  movq mm6, mm3				;  Y21 Y20 Y17 Y16 Y13 Y12 Y9 Y8
 
 	  movq	mm2, mm0
-	  	  
+
 	  pand mm2, davemask
 
 	  punpcklbw mm3, mm3		; Y13 Y13 Y12 Y12 Y9 Y9 Y8 Y8
 
 	  psrlq	mm2, 16
-	    	  
+
 	  paddsw mm4, const45		; add (one_half/fix(x)) << 2
 
 	  punpcklwd mm3, mm6		; X X X X Y9 Y8 Y8 Y8
-	  
-	  pmulhw mm4, const5		; multiply by (fix(x) >> 1) 
 
-	  pmulhw mm7, const6		; multiply by (fix(x) >> 1) 
+	  pmulhw mm4, const5		; multiply by (fix(x) >> 1)
+
+	  pmulhw mm7, const6		; multiply by (fix(x) >> 1)
 
 	  punpcklbw mm3, empty		; Y9 Y8 Y8 Y8
-	  
+
 	  paddsw mm4, mm7			; cbl3 cgr3 cred3 cbl3
 
 	  paddsw mm3, mm0			; r9 b8 g8 r8
@@ -710,13 +710,13 @@ do_next16:
 	  packuswb mm1, mm3			; r9 b8 g8 r8 b5 g5 r5 b4
 
 	  movd mm3, [eax+4]			; Y23 Y22 Y19 Y18 Y15 Y14 Y11 Y10
- 	  
+
 	  pand	mm7, davemask
 
 	  psrlq mm6, 8				; 0 Y21 Y20 Y17 Y16 Y13 Y12 Y9
 
 	  psllq	mm7, 16
-						   
+
 	  movq [edi+8], mm1			; move to memory r9 b8 g8 r8 b5 g5 r5 b4
 
 	  por	mm2, mm7
@@ -732,7 +732,7 @@ do_next16:
 	  punpcklbw mm3, mm1		; Y11 Y10 Y10 Y10
 
 	  psrlq mm7, 8				; 0 Y23 Y22 Y19 Y18 Y15 Y14 Y11
-	  
+
 	  paddsw mm3, mm0			; r11 b10 g10 r10
 
 	  movq mm0, mm7				; 0 Y23 Y22 Y19 Y18 Y15 Y14 Y11
@@ -769,11 +769,11 @@ do_next16:
 
 	  add eax, 8
 
-	  psrlq mm0, 8				; 0 0 Y23 Y22 Y19 Y18 Y15 Y14	
+	  psrlq mm0, 8				; 0 0 Y23 Y22 Y19 Y18 Y15 Y14
 
 	  punpcklbw mm1, empty		; Y13 Y13 Y13 Y12
 
-	  movq mm5, mm0				; 0 0 Y23 Y22 Y19 Y18 Y15 Y14	
+	  movq mm5, mm0				; 0 0 Y23 Y22 Y19 Y18 Y15 Y14
 
 	  punpcklbw mm0, mm0		; X X X X Y15 Y15 Y14 Y14
 
@@ -782,17 +782,17 @@ do_next16:
 	  psrlq mm0, 16				; X X X X X X Y15 Y15
 
 	  add edi, 24
-	  
+
 	  punpcklwd mm5, mm0		; X X X X Y15 Y15 Y15 Y14
 
 	  packuswb mm6, mm1			; b13 g13 r13 b12 g12 r12 b9 g9
 
 	  add edx, 24
-	  
+
 	  punpcklbw mm5, empty		; Y15 Y15 Y15 Y14
 
 	  add ebx, 4
-	  	  
+
 	  paddsw mm5, mm4			; b15 g15 r15 b14
 
 	  movq [edi-8], mm6		; move to memory b13 g13 r13 b12 g12 r12 b9 g9
@@ -800,18 +800,18 @@ do_next16:
 	  packuswb mm7, mm5			; b15 g15 r15 b14 g14 r14 b11 g11
 
 	  add ecx, 4
-  
+
 	  movq [edx-8], mm7		; move to memory b15 g15 r15 b14 g14 r14 b11 g11
 
 	  dec cols_asm
-	  
+
 	  jnz do_next16
 
 	  EMMS
-	  	  
+
 	  }
 
-	  
+
   inptr1 += (cols_asm_copy<<2);
 
   inptr2 += (cols_asm_copy<<2);
@@ -823,7 +823,7 @@ do_next16:
   outptr0 += cols_asm_copy*24;
 
   outptr1 += cols_asm_copy*24;
-  		  
+
   //for (col = cinfo->output_width >> 1; col > 0; col--) {
       /* Do the chroma part of the calculation */
     /*cb = GETJSAMPLE(*inptr1++);
@@ -883,9 +883,9 @@ do_next16:
     outptr1[RGB_GREEN] = range_limit[y + cgreen];
     outptr1[RGB_BLUE] =  range_limit[y + cblue];
     outptr1 += RGB_PIXELSIZE;
-  }	  
+  }
 
-					  
+
   /* If image width is odd, do the last output column separately */
   //if (cinfo->output_width & 1) {
   if (diff & 1) {
@@ -902,7 +902,7 @@ do_next16:
     outptr1[RGB_RED] =   range_limit[y + cred];
     outptr1[RGB_GREEN] = range_limit[y + cgreen];
     outptr1[RGB_BLUE] =  range_limit[y + cblue];
-  }    
+  }
 }
 #else
 

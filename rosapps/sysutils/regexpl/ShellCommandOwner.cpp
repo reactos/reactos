@@ -109,7 +109,7 @@ CheckOwnerArgument:
 	}
 
 	CRegistryKey Key;
-  
+
   if (!m_rTree.GetKey(pchKey?pchKey:_T("."),KEY_QUERY_VALUE|READ_CONTROL,Key))
   {
     rConsole.Write(m_rTree.GetLastErrorDescription());
@@ -125,13 +125,13 @@ CheckOwnerArgument:
 
 	if (!blnDo)
     return 0;
-  
+
   if (Key.IsRoot())
   {	// root key
     rConsole.Write(OWNER_CMD COMMAND_NA_ON_ROOT);
     return 0;
   }
-  
+
   PSECURITY_DESCRIPTOR pSecurityDescriptor = NULL;
   TCHAR *pchName = NULL, *pchDomainName = NULL;
   try
@@ -143,7 +143,7 @@ CheckOwnerArgument:
     rConsole.Write(_T("\n"));
     dwError = Key.GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
     if (dwError != ERROR_SUCCESS) throw dwError;
-				
+
     pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
     DWORD dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
     dwError = Key.GetSecurityDescriptor((SECURITY_INFORMATION)OWNER_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
@@ -213,7 +213,7 @@ CheckOwnerArgument:
         pchName = NULL;
         delete [] pchDomainName;
         pchDomainName = NULL;
-						
+
       }
     }
     delete [] pSecurityDescriptor;
@@ -228,7 +228,7 @@ CheckOwnerArgument:
     if (pchDomainName) delete [] pchDomainName;
     if (pSecurityDescriptor) delete [] pSecurityDescriptor;
   }
-  
+
 	return 0;
 }
 

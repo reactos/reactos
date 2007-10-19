@@ -119,7 +119,7 @@ private:
   int streamEndsLen;		// number of valid entries in streamEnds
   ObjectStream *objStr;		// cached object stream
   GBool encrypted;		// true if file is encrypted
-  int encRevision;		
+  int encRevision;
   int encVersion;		// encryption algorithm
   int keyLength;		// length of key, in bytes
   int permFlags;		// permission bits

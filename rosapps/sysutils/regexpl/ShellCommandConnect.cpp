@@ -80,7 +80,7 @@ int CShellCommandConnect::Execute(CConsole &rConsole, CArgumentParser& rArgument
     rConsole.Write(m_rTree.GetLastErrorDescription());
     rConsole.Write(_T("\n"));
   }
-  
+
 	return 0;
 }
 

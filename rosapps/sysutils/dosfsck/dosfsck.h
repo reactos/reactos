@@ -83,7 +83,7 @@ struct boot_sector {
     __u16	heads;		/* number of heads */
     __u32	hidden;		/* hidden sectors (unused) */
     __u32	total_sect;	/* number of sectors (if sectors == 0) */
-    
+
     /* The following fields are only used by FAT32 */
     __u32	fat32_length;	/* sectors/FAT */
     __u16	flags;		/* bit 8: fat mirroring, low 4: active fat */

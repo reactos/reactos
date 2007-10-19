@@ -228,7 +228,7 @@ jpeg_mem_available (j_common_ptr cinfo, long min_bytes_needed,
  *   2. Extended memory, accessed per the XMS V2.0 specification.
  *   3. Expanded memory, accessed per the LIM/EMS 4.0 specification.
  * You'll need copies of those specs to make sense of the related code.
- * The specs are available by Internet FTP from the SIMTEL archives 
+ * The specs are available by Internet FTP from the SIMTEL archives
  * (oak.oakland.edu and its various mirror sites).  See files
  * pub/msdos/microsoft/xms20.arc and pub/msdos/info/limems41.zip.
  */
@@ -347,7 +347,7 @@ read_xms_store (j_common_ptr cinfo, backing_store_ptr info,
   spec.src.offset = file_offset;
   spec.dst_handle = 0;
   spec.dst.ptr = buffer_address;
-  
+
   ctx.ds_si = (void far *) & spec;
   ctx.ax = 0x0b00;		/* EMB move */
   jxms_calldriver(xms_driver, (XMScontext far *) & ctx);
@@ -503,7 +503,7 @@ read_ems_store (j_common_ptr cinfo, backing_store_ptr info,
   DST_TYPE(spec) = 0;
   DST_HANDLE(spec) = 0;
   DST_PTR(spec)    = buffer_address;
-  
+
   ctx.ds_si = (void far *) & spec;
   ctx.ax = 0x5700;		/* move memory region */
   jems_calldriver((EMScontext far *) & ctx);
@@ -528,7 +528,7 @@ write_ems_store (j_common_ptr cinfo, backing_store_ptr info,
   DST_HANDLE(spec) = info->handle.ems_handle;
   DST_PAGE(spec)   = (unsigned short) (file_offset / EMSPAGESIZE);
   DST_OFFSET(spec) = (unsigned short) (file_offset % EMSPAGESIZE);
-  
+
   ctx.ds_si = (void far *) & spec;
   ctx.ax = 0x5700;		/* move memory region */
   jems_calldriver((EMScontext far *) & ctx);

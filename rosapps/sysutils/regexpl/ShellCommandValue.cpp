@@ -119,11 +119,11 @@ CheckValueArgument:
 			rConsole.Write(_T("\n"));
 		}
 	}
-	
+
 	CRegistryKey Key;
 	TCHAR *pchValueName;
 	const TCHAR *pszPath;
-	
+
 	if (blnHelp)
 	{
 		rConsole.Write(GetHelpString());
@@ -142,7 +142,7 @@ CheckValueArgument:
 		TCHAR *pchSep = _tcsrchr(pchValueFull,_T('\\'));
 		pchValueName = pchSep?(pchSep+1):(pchValueFull);
 		pszPath = pchSep?pchValueFull:_T(".");
-				
+
 		//if (_tcsrchr(pchValueName,_T('.')))
 		//{
 		//	pchValueName = _T("");
@@ -166,7 +166,7 @@ CheckValueArgument:
 
 	if (Key.IsRoot())
     goto ValueCommandNAonRoot;
-  
+
   {
     rConsole.Write(_T("Value name : \""));
     rConsole.Write(_T("\\"));
@@ -181,7 +181,7 @@ CheckValueArgument:
     }
     rConsole.Write(pchValueName);
     rConsole.Write(_T("\"\n"));
-  
+
     nError = Key.GetValue(pchValueName,NULL,NULL,&dwValueSize);
     if (nError == ERROR_SUCCESS)
     {

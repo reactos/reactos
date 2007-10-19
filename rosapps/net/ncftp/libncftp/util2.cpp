@@ -9,7 +9,7 @@ GetSpecialDir(char *dst, size_t size, int whichDir)
 	LPMALLOC shl;
 	char path[MAX_PATH + 1];
 	HRESULT hResult;
-	
+
 	memset(dst, 0, size);
 	hResult = SHGetMalloc(&shl);
 	if (SUCCEEDED(hResult)) {

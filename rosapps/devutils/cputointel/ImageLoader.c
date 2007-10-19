@@ -13,7 +13,7 @@ static  CPU_INT machine_type = 0;
 //static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_I386;
 static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_POWERPC;
 /*
- * infileName       file name to convert or disambler 
+ * infileName       file name to convert or disambler
  * outputfileName   file name to save to
  * BaseAddress      the address we should emulate
  * cpuid            the cpu we choice not vaild for pe loader
@@ -21,7 +21,7 @@ static  CPU_INT ToMachine_type = IMAGE_FILE_MACHINE_POWERPC;
  * mode             disambler mode : 0 the arch cpu.
  *                  translate mode : 1 intel
  *                  translate mode : 2 ppc
- * 
+ *
  */
 
 static void SetCPU(CPU_INT FromCpu, CPU_INT mode)
@@ -57,18 +57,18 @@ static void Convert(FILE *outfp, CPU_INT FromCpu, CPU_INT mode)
 }
 
 
-CPU_INT LoadPFileImage( char *infileName, char *outputfileName, 
+CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
                      CPU_UNINT BaseAddress, char *cpuid,
                      CPU_UNINT type, CPU_INT mode)
 {
     FILE *infp;
     FILE *outfp;
-    CPU_BYTE *cpu_buffer;   
+    CPU_BYTE *cpu_buffer;
     CPU_UNINT cpu_pos = 0;
     CPU_UNINT cpu_size=0;
     CPU_INT ret;
      //fopen("testms.exe","RB");
-    
+
 
     /* Open file for read */
 
@@ -94,7 +94,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
         fclose(outfp);
         return 5;
     }
-    
+
     /* get the memory size buffer */
     cpu_size = ftell(infp);
     if (ferror(infp))
@@ -145,7 +145,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
     }
     fclose(infp);
 
-    if (type==0) 
+    if (type==0)
     {
        if ( PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode) !=0)
        {
@@ -238,7 +238,7 @@ CPU_INT LoadPFileImage( char *infileName, char *outputfileName,
         }
     }
 
-    if (type==2) 
+    if (type==2)
     {
 
        ret = PEFileStart(cpu_buffer, 0, BaseAddress, cpu_size, outfp, mode);
@@ -371,8 +371,8 @@ CPU_INT PEFileStart( CPU_BYTE *memory, CPU_UNINT pos,
                  SectionHeader[i].VirtualAddress + SectionHeader[i].SizeOfRawData > (ULONG)NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress)
             {
                   ExportEntry = (PIMAGE_NT_HEADERS) (((ULONG)memory) +
-                                (ULONG)(NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress - 
-                                SectionHeader[i].VirtualAddress + 
+                                (ULONG)(NtHeader->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress -
+                                SectionHeader[i].VirtualAddress +
                                 SectionHeader[i].PointerToRawData));
             }
         }

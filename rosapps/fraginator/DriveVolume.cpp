@@ -48,7 +48,7 @@ bool DriveVolume::Open (wstring Name)
     RootPath = Name.c_str();
     RootPath += L"\\";
 
-    Handle = CreateFile 
+    Handle = CreateFile
     (
         FileName,
         MAXIMUM_ALLOWED,                          // access
@@ -91,7 +91,7 @@ bool DriveVolume::Open (wstring Name)
             VolInfo.MaxNameLen = VolMaxFileLen;
             VolInfo.Name       = VolName;
 
-            swprintf (SerialText, L"%x-%x", (VolSN & 0xffff0000) >> 16, 
+            swprintf (SerialText, L"%x-%x", (VolSN & 0xffff0000) >> 16,
                 VolSN & 0x0000ffff);
 
             wcsupr (SerialText);
@@ -153,7 +153,7 @@ bool DriveVolume::ObtainInfo (void)
     if (!Result)
         return (false);
 
-    VolInfo.ClusterSize = SectorsPerCluster * BytesPerSector;        
+    VolInfo.ClusterSize = SectorsPerCluster * BytesPerSector;
 
     Result = GetDiskFreeSpaceEx
     (
@@ -324,7 +324,7 @@ bool BuildDBCallback (FileInfo &Info, HANDLE &FileHandle, void *UserData)
         return (false);
 
     DBInfo->ClusterProgress += (uint64)Info.Clusters;
-    *(DBInfo->Percent) = 
+    *(DBInfo->Percent) =
         ((double)DBInfo->ClusterProgress / (double)DBInfo->ClusterCount) * 100.0f;
 
     return (true);
@@ -511,12 +511,12 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     if (Handle == INVALID_HANDLE_VALUE)
     {
 	    LPVOID lpMsgBuf;
- 
+
 	    FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-					    NULL, GetLastError(), 
+					    NULL, GetLastError(),
 					    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					    (LPTSTR) &lpMsgBuf, 0, NULL );
-	    
+
 
         Info.Attributes.AccessDenied = 1;
 	    LocalFree( lpMsgBuf );
@@ -529,7 +529,7 @@ bool DriveVolume::GetClusterInfo (FileInfo &Info, HANDLE &HandleResult)
     if (Result == FALSE)
     {
         Info.Attributes.AccessDenied = 1;
-        wprintf (L"GetFileInformationByHandle ('%s%s') failed\n", GetDBDir (Info.DirIndice).c_str(), 
+        wprintf (L"GetFileInformationByHandle ('%s%s') failed\n", GetDBDir (Info.DirIndice).c_str(),
             Info.Name.c_str());
 
         CloseHandle (Handle);
@@ -705,10 +705,10 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
 	    LPVOID lpMsgBuf;
 
 	    FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-					    NULL, GetLastError(), 
+					    NULL, GetLastError(),
 					    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					    (LPTSTR) &lpMsgBuf, 0, NULL );
-	    
+
 
 	    LocalFree (lpMsgBuf);
         //
@@ -762,12 +762,12 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
             {
                 //
 	            LPVOID lpMsgBuf;
- 
+
 	            FormatMessage( FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM,
-					            NULL, GetLastError(), 
+					            NULL, GetLastError(),
 					            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
 					            (LPTSTR) &lpMsgBuf, 0, NULL );
-	            
+
 
 	            LocalFree( lpMsgBuf );
                 //
@@ -778,7 +778,7 @@ bool DriveVolume::MoveFileDumb (uint32 FileIndice, uint64 NewLCN)
 
             // Ok good. Now update our drive bitmap and file infos.
             uint64 j;
-            for (j = 0; 
+            for (j = 0;
                  j < Info.Fragments[i].Length;
                  j++)
             {

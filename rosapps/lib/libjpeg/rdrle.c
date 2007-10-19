@@ -38,7 +38,7 @@
 
 /*
  * We support the following types of RLE files:
- *   
+ *
  *   GRAYSCALE   - 8 bits, no colormap
  *   MAPPEDGRAY  - 8 bits, 1 channel colomap
  *   PSEUDOCOLOR - 8 bits, 3 channel colormap
@@ -111,7 +111,7 @@ start_input_rle (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   }
 
   /* Figure out what we have, set private vars and return values accordingly */
-  
+
   width  = source->header.xmax - source->header.xmin + 1;
   height = source->header.ymax - source->header.ymin + 1;
   source->header.xmin = 0;		/* realign horizontally */
@@ -141,7 +141,7 @@ start_input_rle (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
     TRACEMS2(cinfo, 1, JTRC_RLE, width, height);
   } else
     ERREXIT(cinfo, JERR_RLE_UNSUPPORTED);
-  
+
   if (source->visual == GRAYSCALE || source->visual == MAPPEDGRAY) {
     cinfo->in_color_space   = JCS_GRAYSCALE;
     cinfo->input_components = 1;
@@ -348,7 +348,7 @@ load_image (j_compress_ptr cinfo, cjpeg_source_ptr sinfo)
   source->row = cinfo->image_height;
 
   /* And fetch the topmost (bottommost) row */
-  return (*source->pub.get_pixel_rows) (cinfo, sinfo);   
+  return (*source->pub.get_pixel_rows) (cinfo, sinfo);
 }
 
 

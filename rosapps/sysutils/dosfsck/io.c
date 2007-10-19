@@ -105,7 +105,7 @@ void fs_read(loff_t pos,int size,void *data)
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
  	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
  	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
-	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN: 
+	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
 	char* tmpBuf = malloc(readsize_aligned);                                    // TMN:
 #ifdef _MSC_VER
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %I64d",pos);
@@ -145,7 +145,7 @@ int fs_test(loff_t pos,int size)
 	const size_t readsize_aligned = (size % 512) ? (size + (512 - (size % 512))) : size;        // TMN:
 	const loff_t seekpos_aligned = pos - (pos % 512);                   // TMN:
 	const size_t seek_delta = (size_t)(pos - seekpos_aligned);          // TMN:
-	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN: 
+	const size_t readsize = (size_t)(pos - seekpos_aligned) + readsize_aligned; // TMN:
     scratch = alloc(readsize_aligned);
     if (llseek(fd,seekpos_aligned,0) != seekpos_aligned) pdie("Seek to %lld",pos);
     okay = read(fd,scratch,readsize_aligned) == (int)readsize_aligned;
@@ -419,5 +419,5 @@ int fsctl(int fd, int code)
 		errno = GetLastError();
 		return -1;
 	}
-	return 0; 
+	return 0;
 }

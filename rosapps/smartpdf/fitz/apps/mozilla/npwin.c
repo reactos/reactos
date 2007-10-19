@@ -46,7 +46,7 @@ Private_GetJavaClass(void)
 
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
-//						PLUGIN DLL entry points   
+//						PLUGIN DLL entry points
 //
 // These are the Windows specific DLL entry points. They must be exoprted
 //
@@ -68,12 +68,12 @@ static NPPluginFuncs* g_pluginFuncs;
 NPError WINAPI NP_EXPORT
 NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 {
-    // trap a NULL ptr 
+    // trap a NULL ptr
     if(pFuncs == NULL)
 	return NPERR_INVALID_FUNCTABLE_ERROR;
 
     // if the plugin's function table is smaller than the plugin expects,
-    // then they are incompatible, and should return an error 
+    // then they are incompatible, and should return an error
 
     pFuncs->version       = (NP_VERSION_MAJOR << 8) | NP_VERSION_MINOR;
     pFuncs->newp          = NPP_New;
@@ -85,7 +85,7 @@ NP_GetEntryPoints(NPPluginFuncs* pFuncs)
     pFuncs->writeready    = NPP_WriteReady;
     pFuncs->write         = NPP_Write;
     pFuncs->print         = NPP_Print;
-    pFuncs->event         = 0;       /// reserved 
+    pFuncs->event         = 0;       /// reserved
 
     g_pluginFuncs		  = pFuncs;
 
@@ -98,17 +98,17 @@ NP_GetEntryPoints(NPPluginFuncs* pFuncs)
 //
 //	called immediately after the plugin DLL is loaded
 //
-NPError WINAPI NP_EXPORT 
+NPError WINAPI NP_EXPORT
 NP_Initialize(NPNetscapeFuncs* pFuncs)
 {
-    // trap a NULL ptr 
+    // trap a NULL ptr
     if(pFuncs == NULL)
 	return NPERR_INVALID_FUNCTABLE_ERROR;
 
-    g_pNavigatorFuncs = pFuncs; // save it for future reference 
+    g_pNavigatorFuncs = pFuncs; // save it for future reference
 
     // if the plugin's major ver level is lower than the Navigator's,
-    // then they are incompatible, and should return an error 
+    // then they are incompatible, and should return an error
     if(HIBYTE(pFuncs->version) > NP_VERSION_MAJOR)
 	return NPERR_INCOMPATIBLE_VERSION_ERROR;
 
@@ -137,9 +137,9 @@ NP_Initialize(NPNetscapeFuncs* pFuncs)
 //
 //	called immediately before the plugin DLL is unloaded.
 //	This functio shuold check for some ref count on the dll to see if it is
-//	unloadable or it needs to stay in memory. 
+//	unloadable or it needs to stay in memory.
 //
-NPError WINAPI NP_EXPORT 
+NPError WINAPI NP_EXPORT
 NP_Shutdown()
 {
     NPP_Shutdown();
@@ -147,7 +147,7 @@ NP_Shutdown()
     return NPERR_NO_ERROR;
 }
 
-//						END - PLUGIN DLL entry points   
+//						END - PLUGIN DLL entry points
 ////\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//.
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\.
 
@@ -229,7 +229,7 @@ NPError NPN_RequestRead(NPStream* stream, NPByteRange* rangeList)
 /* Creates a new stream of data from the plug-in to be interpreted
    by Netscape in the current window.
  */
-NPError NPN_NewStream(NPP instance, NPMIMEType type, 
+NPError NPN_NewStream(NPP instance, NPMIMEType type,
 	const char* target, NPStream** stream)
 {
     int navMinorVersion = g_pNavigatorFuncs->version & 0xFF;
@@ -260,7 +260,7 @@ int32 NPN_Write(NPP instance, NPStream *stream, int32 len, void *buffer)
     return result;
 }
 
-/* Closes a stream object.  
+/* Closes a stream object.
 reason indicates why the stream was closed.
 */
 NPError NPN_DestroyStream(NPP instance, NPStream* stream, NPError reason)

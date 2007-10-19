@@ -35,11 +35,11 @@ BOOL PatternMatch(const TCHAR *pszPattern, const TCHAR *pszTry)
 
     if (((*pszTry) == 0) || ((*pszPattern) == 0))
       return FALSE;
-    
+
     pszTry++;
-    pszPattern++;	
+    pszPattern++;
   }
-   
+
   if (*pszPattern == _T('*'))
   {
     pszPattern++;
@@ -51,9 +51,9 @@ BOOL PatternMatch(const TCHAR *pszPattern, const TCHAR *pszTry)
         pszTry++;
     }
   }
-   
+
   if (((*pszTry) == 0) && ((*pszPattern) == 0))
     return TRUE;
-   
+
   return FALSE;
 }

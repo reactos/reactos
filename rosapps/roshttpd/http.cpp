@@ -16,10 +16,10 @@
 #include <string.h>
 #include <http.h>
 
-CHAR MethodTable[NUMMETHODS][8] = {"OPTIONS", "GET", "HEAD", "POST", "PUT", 
+CHAR MethodTable[NUMMETHODS][8] = {"OPTIONS", "GET", "HEAD", "POST", "PUT",
     "DELETE", "TRACE"};
 
-CHAR GenerelTable[NUMGENERELS][18] = {"Cache-Control", "Connection", "Date", "Pragma", 
+CHAR GenerelTable[NUMGENERELS][18] = {"Cache-Control", "Connection", "Date", "Pragma",
     "Transfer-Encoding", "Upgrade", "Via"};
 
 CHAR RequestTable[NUMREQUESTS][20] = {"Accept", "Accept-Charset", "Accept-Encoding",
@@ -98,7 +98,7 @@ BOOL CHttpParser::ReadChar(LPSTR lpsStr)
 BOOL CHttpParser::PeekChar(LPSTR lpsStr)
 {
     UINT nFakeTail;
-    
+
     if (nTail == sizeof(sBuffer))
         nFakeTail = 0;
     else
@@ -117,10 +117,10 @@ BOOL CHttpParser::ReadString(LPSTR lpsStr, UINT nLength)
 {
     UINT i = 0;
     CHAR sTmp;
-    
+
     while (PeekChar(&sTmp)) {
         if (((sTmp >= 'A') && (sTmp <= 'Z')) || ((sTmp >= 'a') && (sTmp <= 'z')) ||
-            ((sTmp >= '0') && (sTmp <= '9')) || (sTmp == '-')) { 
+            ((sTmp >= '0') && (sTmp <= '9')) || (sTmp == '-')) {
             if (i >= (nLength - 1)) {
                 lpsStr[0] = 0;
                 return FALSE;
@@ -137,13 +137,13 @@ BOOL CHttpParser::ReadString(LPSTR lpsStr, UINT nLength)
     return FALSE;
 }
 
-// Read a string from buffer. Stop if SP or CR is found or when there are no more 
+// Read a string from buffer. Stop if SP or CR is found or when there are no more
 // characters
 BOOL CHttpParser::ReadSpecial(LPSTR lpsStr, UINT nLength)
 {
     UINT i = 0;
     CHAR sTmp;
- 
+
     while (PeekChar(&sTmp) && (sTmp != ' ') && (sTmp != 13)) {
         if (i >= (nLength - 1)) {
             lpsStr[nLength - 1] = 0;
@@ -186,7 +186,7 @@ BOOL CHttpParser::ExpectCRLF()
     return (Expect(13) && Expect(10));
 }
 
-// Request = RequestLine | *( GenerelHeader | RequestHeader | EntityHeader ) 
+// Request = RequestLine | *( GenerelHeader | RequestHeader | EntityHeader )
 //           CRLF [ MessageBody ]
 BOOL CHttpParser::Parse()
 {
@@ -217,10 +217,10 @@ BOOL CHttpParser::RequestLine()
 
     bUnknownMethod = FALSE;
 
-    // RFC 2068 states that servers SHOULD ignore any empty nine(s) received where a 
+    // RFC 2068 states that servers SHOULD ignore any empty nine(s) received where a
     // Request-Line is expected
     while (PeekChar(&sCh) && ((sCh == 13) || (sCh == 10)));
-    
+
     if (!ReadString(sMethod, sizeof(sMethod)))
         return FALSE;
 
@@ -248,7 +248,7 @@ BOOL CHttpParser::RequestLine()
     return FALSE;
 }
 
-// GenerelHeader = Cache-Control | Connection | Date | Pragma | Transfer-Encoding | 
+// GenerelHeader = Cache-Control | Connection | Date | Pragma | Transfer-Encoding |
 //                 Upgrade | Via
 BOOL CHttpParser::GenerelHeader()
 {
@@ -354,9 +354,9 @@ BOOL CHttpParser::EntityHeader()
     for (i = 0; i < NUMENTITIES; i++) {
         if (strcmp(EntityTable[i], sHeader) == 0) {
             switch (i) {
-                case 0: 
+                case 0:
                 default: {
-                    //cout << "<Entity-Header>: #" << i << endl; 
+                    //cout << "<Entity-Header>: #" << i << endl;
                     Expect(':');
                     Expect(' ');
                     Skip(13);

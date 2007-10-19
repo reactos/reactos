@@ -159,20 +159,20 @@ int fz_readall(fz_buffer **bufp, fz_stream *stm)
         totallen += n;
         if (n != chunksize)
             break;
-        
+
         if (chunksize < MAXCHUNKSIZE)
             chunksize = chunksize + MINCHUNKSIZE;
         error = fz_growlinkedbuf(buf, chunksize, &data);
-        if (error) 
-        { 
-            fz_droplinkedbuf(buf); 
-            return -1; 
+        if (error)
+        {
+            fz_droplinkedbuf(buf);
+            return -1;
         }
     }
 
     error = fz_linearizelinkedbuf(buf, totallen, &data);
     fz_droplinkedbuf(buf);
-    if (error) 
+    if (error)
         return -1;
 
     real = *bufp = fz_malloc(sizeof(fz_buffer));

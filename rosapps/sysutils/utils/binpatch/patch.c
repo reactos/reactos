@@ -59,7 +59,7 @@ loadFile(const char *fileName, int *fileSize_)
    struct stat sb;
    int fileSize;
    void *p;
-   
+
    /* Open the file */
    f = fopen(fileName, "rb");
    if (f == NULL)
@@ -67,7 +67,7 @@ loadFile(const char *fileName, int *fileSize_)
       printf("Couldn't open file %s for reading!\n", fileName);
       return NULL;
    }
-   
+
    /* Get file size */
    if (fstat(fileno(f), &sb) < 0)
    {
@@ -76,7 +76,7 @@ loadFile(const char *fileName, int *fileSize_)
       return NULL;
    }
    fileSize = sb.st_size;
-   
+
    /* Load file */
    p = malloc(fileSize);
    if (p == NULL)
@@ -85,7 +85,7 @@ loadFile(const char *fileName, int *fileSize_)
       printf("Couldn't allocate %d bytes for file %s!\n", fileSize, fileName);
       return NULL;
    }
-   
+
    if (fread(p, fileSize, 1, f) != 1)
    {
       fclose(f);
@@ -93,10 +93,10 @@ loadFile(const char *fileName, int *fileSize_)
       printf("Couldn't read file %s into memory!\n", fileName);
       return NULL;
    }
-   
+
    /* Close file */
    fclose(f);
-   
+
    *fileSize_ = fileSize;
    return p;
 }
@@ -139,7 +139,7 @@ compareFiles(
    int origSize, patchedSize, i, patchCount;
    PatchedByte *patches = NULL;
    int patchesArrayCount = 0;
-   
+
    /* Load both files */
    origChunk = loadFile(originalFileName, &origSize);
    if (origChunk == NULL)
@@ -159,7 +159,7 @@ compareFiles(
              origSize, patchedSize);
       return -1;
    }
-   
+
    /* Compare the files and record any differences */
    printf("Comparing %s to %s", originalFileName, patchedFileName);
    for (i = 0, patchCount = 0; i < origSize; i++)
@@ -167,7 +167,7 @@ compareFiles(
       if (origChunk[i] != patchedChunk[i])
       {
          patchCount++;
-         
+
          /* Resize patches array if needed */
          if (patchesArrayCount < patchCount)
          {
@@ -185,7 +185,7 @@ compareFiles(
             }
             patches = newPatches;
          }
-         
+
          /* Fill in patch info */
          patches[patchCount - 1].offset = i;
          patches[patchCount - 1].expected = origChunk[i];
@@ -195,16 +195,16 @@ compareFiles(
          printf(".");
    }
    printf(" %d changed bytes found.\n", patchCount);
-   
+
    /* Unload the files */
    free(origChunk);
    free(patchedChunk);
-   
+
    /* Save patch info */
    patchedFile->fileSize = patchedSize;
    patchedFile->patchCount = patchCount;
    patchedFile->patches = patches;
-   
+
    return 0;
 }
 
@@ -216,9 +216,9 @@ outputPatch(const char *outputFileName)
    int i, size, patchExeSize, patchSize, stringSize, stringOffset, patchOffset;
    Patch *patch;
    PatchedFile *files;
-   
+
    printf("Putting patch into %s...\n", outputFileName);
-   
+
    /* Calculate size of the patch */
    patchSize = sizeof (Patch) + sizeof (PatchedFile) * m_patch.fileCount;
    stringSize = strlen(m_patch.name) + 1;
@@ -240,14 +240,14 @@ outputPatch(const char *outputFileName)
    {
       return -1;
    }
-   
+
    /* Try to find the magic mark for the patch buffer */
    for (i = 0; i < (patchExeSize - SIZEOF_PATCH_BUFFER_MAGIC); i++)
    {
       if (memcmp(patchExe + i, m_patchBuffer, SIZEOF_PATCH_BUFFER_MAGIC) == 0)
       {
          patchBuffer = patchExe + i + SIZEOF_PATCH_BUFFER_MAGIC;
-         
+
          break;
       }
    }
@@ -257,29 +257,29 @@ outputPatch(const char *outputFileName)
       printf("Couldn't find patch buffer magic in file %s - this shouldn't happen!!!\n", m_argv[0]);
       return -1;
    }
-   
+
    /* Pack patch together and replace string pointers by offsets */
    patch = (Patch *)patchBuffer;
    files = (PatchedFile *)(patchBuffer + sizeof (Patch));
    patchOffset = sizeof (Patch) + sizeof (PatchedFile) * m_patch.fileCount;
    stringOffset = patchSize;
-   
+
    patch->fileCount = m_patch.fileCount;
    patch->files = (PatchedFile *)sizeof (Patch);
 
    patch->name = (const char *)stringOffset;
    strcpy(patchBuffer + stringOffset, m_patch.name);
    stringOffset += strlen(m_patch.name) + 1;
-   
+
    for (i = 0; i < m_patch.fileCount; i++)
    {
       files[i].fileSize = m_patch.files[i].fileSize;
       files[i].patchCount = m_patch.files[i].patchCount;
-      
+
       files[i].name = (const char *)stringOffset;
       strcpy(patchBuffer + stringOffset, m_patch.files[i].name);
       stringOffset += strlen(m_patch.files[i].name) + 1;
-      
+
       size = files[i].patchCount * sizeof (PatchedByte);
       files[i].patches = (PatchedByte *)patchOffset;
       memcpy(patchBuffer + patchOffset, m_patch.files[i].patches, size);
@@ -307,15 +307,15 @@ loadPatch()
    char *p;
    Patch *patch;
    int i;
-   
+
    p = m_patchBuffer + SIZEOF_PATCH_BUFFER_MAGIC;
    patch = (Patch *)p;
-   
+
    if (patch->name == NULL)
    {
       return -1;
    }
-   
+
    m_patch.name = p + (int)patch->name;
    m_patch.fileCount = patch->fileCount;
    m_patch.files = (PatchedFile *)(p + (int)patch->files);
@@ -325,7 +325,7 @@ loadPatch()
       m_patch.files[i].name = p + (int)m_patch.files[i].name;
       m_patch.files[i].patches = (PatchedByte *)(p + (int)m_patch.files[i].patches);
    }
-   
+
    printf("Patch %s loaded...\n", m_patch.name);
    return 0;
 }
@@ -377,7 +377,7 @@ createPatch()
          return status;
       }
    }
-   
+
    /* Output patch */
    return outputPatch(outputFileName);
 }
@@ -391,7 +391,7 @@ applyPatch()
    char *p;
    const char *fileName;
    char buffer[MAX_PATH];
-   
+
 
    if (m_argc > 1 && strcmp(m_argv[1], "-d") != 0)
    {
@@ -491,7 +491,7 @@ applyPatch_file_open_error:
             }
             return -1;
          }
-         
+
          /* Ask for backup */
          printf("Do you want to make a backup of %s? (Y)es, (N)o, (A)bort", fileName);
          do
@@ -534,7 +534,7 @@ applyPatch_file_open_error:
             free(file);
             return 0;
          }
-         
+
          /* Patch file */
          for (j = 0; j < m_patch.files[i].patchCount; j++)
          {
@@ -548,7 +548,7 @@ applyPatch_file_open_error:
             }
             file[offset] = m_patch.files[i].patches[j].patched;
          }
-         
+
          /* Save file */
          if (saveFile(fileName, file, fileSize) < 0)
          {
@@ -557,7 +557,7 @@ applyPatch_file_open_error:
          }
          free(file);
       }
-      
+
       printf("Patch applied sucessfully!\n");
    }
 
@@ -610,7 +610,7 @@ main(
          return -1;
       }
    }
-   
+
    return applyPatch();
 }
 

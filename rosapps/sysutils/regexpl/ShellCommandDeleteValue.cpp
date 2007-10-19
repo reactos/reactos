@@ -90,11 +90,11 @@ CheckValueArgument:
       rConsole.Write(_T("\n"));
     }
   }
-	
+
   CRegistryKey Key;
   TCHAR *pszValueNamePattern;
   const TCHAR *pszPath;
-	
+
   if (blnHelp)
   {
     rConsole.Write(GetHelpString());
@@ -118,7 +118,7 @@ CheckValueArgument:
     pszValueNamePattern = _T("");
     pszPath = _T(".");
   }
-  
+
   {
     size_t s = _tcslen(pszValueNamePattern);
     if (s && (pszValueNamePattern[0] == _T('\"'))&&(pszValueNamePattern[s-1] == _T('\"')))

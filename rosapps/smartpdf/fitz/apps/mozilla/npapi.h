@@ -34,11 +34,11 @@
   #include <Quickdraw.h>
   #include <Events.h>
 #endif
-              
+
 #ifdef XP_UNIX
   #include <X11/Xlib.h>
   #include <X11/Xutil.h>
-#endif          
+#endif
 
 
 /*----------------------------------------------------------------------*/

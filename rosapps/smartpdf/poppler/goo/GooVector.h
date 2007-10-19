@@ -6,11 +6,11 @@
 template<class T>
 class GooVector{
 private:
-   
+
    int _size;
    T*  last;
-   T*  storage; 
- 
+   T*  storage;
+
    void resize(){
      if (_size==0) _size=2;else _size=2*_size;
       T *tmp=new T[_size];
@@ -18,7 +18,7 @@ private:
        last=copy(storage,last,tmp);
        delete [] storage;
       }
-     else last=tmp; 
+     else last=tmp;
      storage=tmp;
     }
 
@@ -45,7 +45,7 @@ public:
 
 virtual ~GooVector(){
   delete[] storage ;
-}  
+}
 
 void reset(){
   last=storage;
@@ -53,27 +53,27 @@ void reset(){
 
 int size(){
   return (last-storage);
-}   
+}
 void push_back(const T& elem){
   if (!storage||(size() >=_size)) resize();
         *last=elem;
          last++;
-  
-     
-} 
+
+
+}
 
 
 T pop_back() {
     if (last!=storage) last--;
 
     return *last;
-} 
+}
 
 
 T operator[](unsigned int i){
  return *(storage+i);
 }
-  
+
 
 GBool isEmpty() const{
  return !_size || (last==storage) ;
@@ -93,9 +93,9 @@ iterator end() const {
 
 
 
-   
-  
-  
+
+
+
 
 
 

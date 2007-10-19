@@ -196,7 +196,7 @@ static int netstr_get_str_len(const TCHAR **str_ptr, size_t *str_len_cb_ptr, int
         return FALSE;
 
     *str_ptr = tmp;
-    *str_len_cb_ptr = str_len_cb;    
+    *str_len_cb_ptr = str_len_cb;
     *num_out = num;
     return TRUE;
 }

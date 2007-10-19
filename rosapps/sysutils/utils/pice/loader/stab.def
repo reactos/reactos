@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.  */
    e.g. "foo.c", without any path information.  The symbol's n_desc gives
    the count of upcoming symbols associated with this file (not including
    this one).  */
-__define_stab (N_UNDF, 0x00, "UNDF") 
+__define_stab (N_UNDF, 0x00, "UNDF")
 
 /* Global variable.  Only the name is significant.
    To find the address, look in the corresponding external symbol.  */

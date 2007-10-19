@@ -13,10 +13,10 @@
 #include "From/PPC/PPC.h"
 
 
-/* retun 
- * 0 = Ok 
- * 1 = unimplemt 
- * 2 = Unkonwn Opcode 
+/* retun
+ * 0 = Ok
+ * 1 = unimplemt
+ * 2 = Unkonwn Opcode
  * 3 = can not open read file
  * 4 = can not open write file
  * 5 = can not seek to end of read file
@@ -41,7 +41,7 @@ CPU_UNINT ConvertBitToByte(CPU_BYTE *bit)
 
     for(t=size;t>=0;t--)
     {
-        if (bit[size-t] != 2) 
+        if (bit[size-t] != 2)
             Byte = Byte + (bit[size-t]<<t);
     }
     return Byte;
@@ -56,8 +56,8 @@ CPU_UNINT GetMaskByte(CPU_BYTE *bit)
 
     for(t=size;t>=0;t--)
     {
-        if (bit[size-t] == 2) 
-        {            
+        if (bit[size-t] == 2)
+        {
             MaskByte = MaskByte + ( (bit[size-t]-1) <<t);
         }
     }
@@ -73,7 +73,7 @@ CPU_UNINT ConvertBitToByte32(CPU_BYTE *bit)
 
     for(t=size;t>=0;t--)
     {
-        if (bit[size-t] != 2) 
+        if (bit[size-t] != 2)
             Byte = Byte + (bit[size-t]<<t);
     }
     return Byte;
@@ -88,8 +88,8 @@ CPU_UNINT GetMaskByte32(CPU_BYTE *bit)
 
     for(t=size;t>=0;t--)
     {
-        if (bit[size-t] == 2) 
-        {            
+        if (bit[size-t] == 2)
+        {
             MaskByte = MaskByte + ( (bit[size-t]-1) <<t);
         }
     }
@@ -154,7 +154,7 @@ CPU_INT AllocAny()
 
         pMyBrainAnalys->ptr_next = (CPU_BYTE*)tmp;
         tmp->ptr_prev= (CPU_BYTE*)pMyBrainAnalys;
-        
+
         pMyBrainAnalys = tmp;
     }
 return 0;

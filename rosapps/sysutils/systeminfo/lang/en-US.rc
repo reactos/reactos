@@ -28,7 +28,7 @@ Examples:\n\
   SYSTEMINFO /S system /U domain\\user /P password /FO TABLE\n\
   SYSTEMINFO /S system /FO LIST\n\
   SYSTEMINFO /S system /FO CSV /NH\n"
-   
+
 IDS_OS_NAME, 				"OS Name:			%s\n"
 IDS_OS_VERSION, 			"OS Version:			%d.%d.%d %s"
 IDS_OS_BUILD, 				" Build %s\n"

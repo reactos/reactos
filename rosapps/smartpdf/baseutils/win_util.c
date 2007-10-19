@@ -88,7 +88,7 @@ LRESULT lv_set_items_count(HWND hwnd, int items_count)
 #ifdef __GNUC__
 	ListView_SetItemCount(hwnd, items_count);
 #else
-    return ListView_SetItemCount(hwnd, items_count);        
+    return ListView_SetItemCount(hwnd, items_count);
 #endif
 }
 
@@ -297,7 +297,7 @@ void launch_url(const TCHAR *url)
  #endif
 #endif
 
-/* see http://www.opennetcf.org/Forums/post.asp?method=TopicQuote&TOPIC_ID=95&FORUM_ID=12 
+/* see http://www.opennetcf.org/Forums/post.asp?method=TopicQuote&TOPIC_ID=95&FORUM_ID=12
    for more possibilities
    return false on failure, true if ok. Even if returns false, it'll return root ("\")
    directory so that clients can ignore failures from this function
@@ -370,7 +370,7 @@ const TCHAR *load_string(int str_id)
 {
     int          res;
     const TCHAR *str;
- 
+
     /* little-known hack: when lpBuffer is NULL, LoadString() returns
        a pointer to a string, that can be cast to TCHAR * (LPCTSTR)
        requires -n option to RC (resource compiler)

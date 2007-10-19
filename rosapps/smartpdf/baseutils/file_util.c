@@ -66,7 +66,7 @@ DirIterState *DirIter_New(const char *path)
         DirIter_Delete(state);
         return NULL;
     }
-    state->dir = INVALID_HANDLE_VALUE;   
+    state->dir = INVALID_HANDLE_VALUE;
     return state;
 }
 
@@ -255,7 +255,7 @@ static int FileList_Append(char *path, FileList *fl, int (*filter)(FileInfo *))
         return 0;
     }
 
-    /* TODO: handle errors from DirIter_Next */        
+    /* TODO: handle errors from DirIter_Next */
     while (DirIter_Next(state)) {
         fi = FileInfo_FromDirIterState(state);
         if (!fi) {
@@ -397,8 +397,8 @@ char *file_read_all(const char *file_path, size_t *file_size_out)
     char *      data = NULL;
     int         f_ok;
 
-    h = CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,  
-            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    h = CreateFileA(file_path, GENERIC_READ, FILE_SHARE_READ, NULL,
+            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL,  NULL);
     if (h == INVALID_HANDLE_VALUE)
         return NULL;
 
@@ -468,8 +468,8 @@ BOOL write_to_file(const TCHAR *file_path, void *data, size_t data_len)
     HANDLE      h;
     BOOL        f_ok;
 
-    h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
-            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    h = CreateFile(file_path, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+            CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL);
     if (h == INVALID_HANDLE_VALUE)
         return FALSE;
 

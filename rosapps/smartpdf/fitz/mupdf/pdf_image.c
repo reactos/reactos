@@ -297,7 +297,7 @@ pdf_loadimage(pdf_image **imgp, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 		error = pdf_loadimage(&mask, xref, sub, obj);
 		fz_dropobj(sub);
-		if (error) 
+		if (error)
 			return error;
 
 		if (mask->super.cs != pdf_devicegray)

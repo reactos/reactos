@@ -834,20 +834,20 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    (resumable = 0) an already suspended parser. Some call-backs may
    still follow because they would otherwise get lost. Examples:
    - endElementHandler() for empty elements when stopped in
-     startElementHandler(), 
-   - endNameSpaceDeclHandler() when stopped in endElementHandler(), 
+     startElementHandler(),
+   - endNameSpaceDeclHandler() when stopped in endElementHandler(),
    and possibly others.
 
    Can be called from most handlers, including DTD related call-backs,
    except when parsing an external parameter entity and resumable != 0.
    Returns XML_STATUS_OK when successful, XML_STATUS_ERROR otherwise.
-   Possible error codes: 
+   Possible error codes:
    - XML_ERROR_SUSPENDED: when suspending an already suspended parser.
    - XML_ERROR_FINISHED: when the parser has already finished.
    - XML_ERROR_SUSPEND_PE: when suspending while parsing an external PE.
 
-   When resumable != 0 (true) then parsing is suspended, that is, 
-   XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED. 
+   When resumable != 0 (true) then parsing is suspended, that is,
+   XML_Parse() and XML_ParseBuffer() return XML_STATUS_SUSPENDED.
    Otherwise, parsing is aborted, that is, XML_Parse() and XML_ParseBuffer()
    return XML_STATUS_ERROR with error code XML_ERROR_ABORTED.
 
@@ -858,7 +858,7 @@ XML_ParseBuffer(XML_Parser parser, int len, int isFinal);
    the externalEntityRefHandler() to call XML_StopParser() on the parent
    parser (recursively), if one wants to stop parsing altogether.
 
-   When suspended, parsing can be resumed by calling XML_ResumeParser(). 
+   When suspended, parsing can be resumed by calling XML_ResumeParser().
 */
 XMLPARSEAPI(enum XML_Status)
 XML_StopParser(XML_Parser parser, XML_Bool resumable);
@@ -866,7 +866,7 @@ XML_StopParser(XML_Parser parser, XML_Bool resumable);
 /* Resumes parsing after it has been suspended with XML_StopParser().
    Must not be called from within a handler call-back. Returns same
    status codes as XML_Parse() or XML_ParseBuffer().
-   Additional error code XML_ERROR_NOT_SUSPENDED possible.   
+   Additional error code XML_ERROR_NOT_SUSPENDED possible.
 
    *Note*:
    This must be called on the most deeply nested child parser instance
@@ -967,7 +967,7 @@ XML_GetErrorCode(XML_Parser parser);
    be within the relevant markup.  When called outside of the callback
    functions, the position indicated will be just past the last parse
    event (regardless of whether there was an associated callback).
-   
+
    They may also be called after returning from a call to XML_Parse
    or XML_ParseBuffer.  If the return value is XML_STATUS_ERROR then
    the location is the location of the character at which the error

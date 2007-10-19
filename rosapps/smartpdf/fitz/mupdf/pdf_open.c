@@ -230,7 +230,7 @@ readoldxref(fz_obj **trailerp, pdf_xref *xref, char *buf, int cap)
 		n = fz_readline(xref->file, buf, cap);
 		if (n < 0)
 			return fz_ioerror(xref->file);
-		
+
 		s = buf;
 		ofs = atoi(strsep(&s, " "));
 		len = atoi(strsep(&s, " "));

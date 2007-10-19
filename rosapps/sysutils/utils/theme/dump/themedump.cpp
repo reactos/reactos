@@ -227,7 +227,7 @@ namespace tmdump
      // enumeration
      else
      {
-      m_state = at_enum;      
+      m_state = at_enum;
       m_cur.p_enum = &(tm_enums[name] = tm_enum_t());
      }
     }
@@ -485,7 +485,7 @@ int main(int argc, char * argv[])
    {
     public:
      HTHEME m_handle;
-     
+
      htheme_t(HTHEME handle_): m_handle(handle_) { }
      ~htheme_t() { ::CloseThemeData(m_handle); }
 

@@ -96,13 +96,13 @@ fz_processa85e(fz_filter *filter, fz_buffer *in, fz_buffer *out)
 				case 1: word |= in->rp[0] << 24;
 			}
 			in->rp += count;
-			
+
 			divisor = 85L * 85 * 85 * 85;
 			while (count-- >= 0) {
 				*out->wp++ = ((word / divisor) % 85) + '!';
 				divisor /= 85;
 			}
-	
+
 			*out->wp++ = '~';
 			*out->wp++ = '>';
 			out->eof = 1;

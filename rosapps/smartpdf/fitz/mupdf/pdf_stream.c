@@ -323,7 +323,7 @@ cleanup0:
 }
 
 /*
- * Open a stream for reading the raw (compressed but decrypted) data. 
+ * Open a stream for reading the raw (compressed but decrypted) data.
  * Using xref->file while this is open is a bad idea.
  */
 fz_error *
@@ -375,7 +375,7 @@ pdf_openrawstream(fz_stream **stmp, pdf_xref *xref, int oid, int gen)
 }
 
 /*
- * Open a stream for reading uncompressed data. 
+ * Open a stream for reading uncompressed data.
  * Put the opened file in xref->stream.
  * Using xref->file while a stream is open is a Bad idea.
  */

@@ -70,7 +70,7 @@ loff_t alloc_rootdir_entry(DOS_FS *fs, DIR_ENT *de, const char *pattern)
 	int i = 0, got = 0;
 	unsigned long clu_num, prev = 0;
 	loff_t offset2;
-	
+
 	clu_num = fs->root_cluster;
 	offset = cluster_start(fs,clu_num);
 	while (clu_num > 0 && clu_num != -1) {
@@ -228,7 +228,7 @@ static int bad_name(unsigned char *name)
      * of OS/2. */
     if (strncmp(name,"EA DATA  SF",11) == 0 ||
         strncmp(name,"WP ROOT  SF",11) == 0) return 0;
-    
+
     for (i = 0; i < 8; i++) {
 	if (name[i] < ' ' || name[i] == 0x7f) return 1;
 	if (name[i] > 0x7f) ++suspicious;
@@ -264,7 +264,7 @@ static int bad_name(unsigned char *name)
     /* Under GEMDOS, chars >= 128 are never allowed. */
     if (atari_format && suspicious)
 	return 1;
-    
+
     /* Only complain about too much suspicious chars in interactive mode,
      * never correct them automatically. The chars are all basically ok, so we
      * shouldn't auto-correct such names. */
@@ -290,7 +290,7 @@ static void truncate_file(DOS_FS *fs,DOS_FILE *file,unsigned long clusters)
 {
     int deleting;
     unsigned long walk,next,prev;
-    
+
     walk = FSTART(file,fs);
     prev = 0;
     if ((deleting = !clusters)) MODIFY_START(file,0,fs);
@@ -733,7 +733,7 @@ static void undelete(DOS_FS *fs,DOS_FILE *file)
     if (left)
 	printf("Warning: Did only undelete %lu of %lu cluster%s.\n",clusters-left,
 	  clusters,clusters == 1 ? "" : "s");
-   
+
 }
 
 

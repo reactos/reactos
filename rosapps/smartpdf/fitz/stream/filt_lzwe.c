@@ -203,7 +203,7 @@ resume:
 
 		/* reserve space for this code and an eventual CLEAR code */
 		if (out->wp + 5 > out->ep)
-		{	
+		{
 			lzw->resume = 1;
 			return fz_ioneedout;
 		}

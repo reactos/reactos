@@ -55,7 +55,7 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
 	BOOL blnHelp = FALSE;
 	BOOL blnExitAfterHelp = FALSE;
 	BOOL blnVolatile = FALSE;
-	
+
 	while((pszArg = rArguments.GetNextArgument()) != NULL)
 	{
 		if ((_tcsicmp(pszArg,_T("/?")) == 0)
@@ -119,7 +119,7 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
   TCHAR *pszSubkeyName = pch;
   if (*pch == _T('\\'))
     pszSubkeyName++;
-  
+
   if (pch == pszNewKey)
   {
     pszPath = _T(".");
@@ -137,7 +137,7 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
       pszPath = pszNewKey;
     }
   }
-  
+
   {
     size_t s = _tcslen(pszSubkeyName);
     if (s && (pszSubkeyName[0] == _T('\"')) && (pszSubkeyName[s-1] == _T('\"')))
@@ -156,7 +156,7 @@ int CShellCommandNewKey::Execute(CConsole &rConsole, CArgumentParser& rArguments
   {
     InvalidateCompletion();
   }
-  
+
 	return 0;
 }
 

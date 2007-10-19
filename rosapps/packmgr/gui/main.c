@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // main.cpp
-// 
+//
 // Implementation of the Package Manager GUI
 //
 //
@@ -43,7 +43,7 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 	WCHAR errbuf[2000];
 
 	// Window creation
-	wc.cbSize        = sizeof(WNDCLASSEX); 
+	wc.cbSize        = sizeof(WNDCLASSEX);
 	wc.lpszClassName = L"pgkmgr";
 	wc.style         = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc   = (WNDPROC)WndProc;
@@ -56,18 +56,18 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 	hwnd = CreateWindow(L"pgkmgr",
                        L"ReactOS - Package Manager v0.3",
                        WS_OVERLAPPEDWINDOW,
-                       CW_USEDEFAULT,  
-                       CW_USEDEFAULT,   
-                       500, 600, 
+                       CW_USEDEFAULT,
+                       CW_USEDEFAULT,
+                       500, 600,
                        NULL, NULL,
-                       hinst, 
+                       hinst,
 					   NULL);
 
 
 	// Toolbar creation
 	InitCommonControls();
 
-	hTBar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT, 0, 8, hinst, IDB_TOOLBAR, 
+	hTBar = CreateToolbarEx(hwnd, WS_CHILD|WS_VISIBLE|TBSTYLE_FLAT, 0, 8, hinst, IDB_TOOLBAR,
 										Buttons, sizeof(Buttons)/sizeof(TBBUTTON), TBSIZE, TBSIZE, TBSIZE, TBSIZE, sizeof(TBBUTTON));
 
 	// Show the windows
@@ -76,13 +76,13 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 
 	// Load the tree
 	int error = PML_LoadTree(&tree, "tree_bare.xml", AddItem);
-	
+
 	if(error)
 	{
 		MessageBox(0,PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)),0,0);
 		return 0;
 	}
-	
+
 	// Read the help
 	Help();
 
@@ -95,7 +95,7 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 			DispatchMessage(&msg);
 		}
 	}
-	
+
 	// Close our handle
 	PML_CloseTree (tree);
 
@@ -104,13 +104,13 @@ int WINAPI WinMain (HINSTANCE hinst, HINSTANCE hPrevInstance, PSTR szCmdLine, in
 
 // Add a item to our tree
 int AddItem (int id, const char* name, int parent, int icon)
-{ 
-	TV_INSERTSTRUCT tvins; 
+{
+	TV_INSERTSTRUCT tvins;
 
 	tvins.item.lParam = (UINT)id;
 	tvins.item.mask = TVIF_TEXT|TVIF_PARAM;
 	tvins.item.pszText = (WCHAR*)name; //that is ok
-	tvins.item.cchTextMax = strlen(name); 
+	tvins.item.cchTextMax = strlen(name);
 	tvins.hInsertAfter = TVI_LAST;
 
 	if(icon)
@@ -128,7 +128,7 @@ int AddItem (int id, const char* name, int parent, int icon)
 	nodes[id] = (HTREEITEM)SendMessage(hTree, TVM_INSERTITEMA, 0, (LPARAM)&tvins);
 
 	return 0;
-} 
+}
 
 // Load the Help from file and display it
 void Help (void)
@@ -158,43 +158,43 @@ void InitControls (HWND hwnd)
 	WCHAR errbuf[2000];
 
 	// Create the controls
-	hTree = CreateWindowEx(0, WC_TREEVIEW, L"TreeView", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS, 
+	hTree = CreateWindowEx(0, WC_TREEVIEW, L"TreeView", WS_CHILD|WS_VISIBLE|WS_BORDER|TVS_HASLINES|TVS_LINESATROOT|TVS_HASBUTTONS,
 							0, 0, 0, 0, hwnd, NULL, hinst, NULL);
 
-	hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"edit", PML_TransError(IDS_LOAD, errbuf, sizeof(errbuf)/sizeof(WCHAR)), WS_CHILD|WS_VISIBLE|ES_MULTILINE, 
+	hEdit = CreateWindowEx(WS_EX_CLIENTEDGE, L"edit", PML_TransError(IDS_LOAD, errbuf, sizeof(errbuf)/sizeof(WCHAR)), WS_CHILD|WS_VISIBLE|ES_MULTILINE,
 							0, 0, 100, 100, hwnd, NULL, hinst, NULL);
-	
+
 	hPopup = LoadMenu(hinst, MAKEINTRESOURCE(IDR_POPUP));
 
 	// Create Tree Icons
 	HIMAGELIST hIcon = ImageList_Create(16, 16, ILC_MASK|ILC_COLOR32, 1, 1);
 	SendMessage(hTree, TVM_SETIMAGELIST, TVSIL_NORMAL, (LPARAM)(HIMAGELIST)hIcon);
-		
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(1))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(11))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(12))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(13))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(14))); 
 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(2))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(3))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(4))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(5))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(6))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(7))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(8))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(9))); 
-	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(10))); 
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(1)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(11)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(12)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(13)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(14)));
+
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(2)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(3)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(4)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(5)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(6)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(7)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(8)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(9)));
+	ImageList_AddIcon(hIcon, LoadIcon(hinst, MAKEINTRESOURCE(10)));
 
 	// Setup Hotkeys
 	hHotKeys = LoadAccelerators (hinst, MAKEINTRESOURCE(IDR_HOTKEYS));
 }
 
 // Set the Icons
-int SetIcon (int id, int icon) 
+int SetIcon (int id, int icon)
 {
     TVITEMEX item;
-	
+
 	item.hItem = nodes[id];
 	item.iImage = icon;
 	item.iSelectedImage = icon;
@@ -204,8 +204,8 @@ int SetIcon (int id, int icon)
 }
 
 // Set the Icons
-int Ask (const WCHAR* message) 
-{	
+int Ask (const WCHAR* message)
+{
 	int ans = MessageBox (0,message,0,MB_YESNO);
 
 	if(ans == IDYES)
@@ -215,7 +215,7 @@ int Ask (const WCHAR* message)
 }
 
 // En- or Disable a Button inside of the toolbar and the Context Menu
-int SetButton (DWORD id, BOOL state) 
+int SetButton (DWORD id, BOOL state)
 {
 	// Change the Toorbar Button
     TBBUTTONINFO ti;
@@ -248,7 +248,7 @@ int SetButton (DWORD id, BOOL state)
 }
 
 // Set the text of the text box
-int SetText (const char* text) 
+int SetText (const char* text)
 {
 	int i, j;
 	char buffer [2000];
@@ -283,7 +283,7 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		case WM_CREATE:
 		{
 			InitControls(hwnd);
-		} 
+		}
 		break;
 
 		// calculate the size of the controls
@@ -304,15 +304,15 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 		// for the treeview
 		case WM_NOTIFY:
 		{
-			if(((LPNMHDR)lParam)->code == TVN_SELCHANGED) 
+			if(((LPNMHDR)lParam)->code == TVN_SELCHANGED)
 			{
-				selected = ((LPNMTREEVIEW)lParam)->itemNew.lParam; 
+				selected = ((LPNMTREEVIEW)lParam)->itemNew.lParam;
 				PML_LoadPackage (tree, selected, SetButton);
 				SetText(PML_GetDescription (tree, selected));
 			}
 
 			else if ((int)(((LPNMHDR)lParam)->code) == NM_RCLICK) // <= aarrggg LISP
-			{ 
+			{
 				// which item has been click on
 				HTREEITEM item = TreeView_GetDropHilight(hTree);
 
@@ -422,7 +422,7 @@ INT_PTR CALLBACK StatusProc (HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 		case WM_INITDIALOG:
 		{
 			hStatus = hwnd;
-			
+
 		} break;
 
 		case WM_COMMAND: // can only be the about button

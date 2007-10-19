@@ -82,7 +82,7 @@ ErrorMsgBox(HWND hParent, DWORD dwCaptionID, DWORD dwMessageId, ...)
 	LocalFree(hMemText);
 }
 
-int WINAPI 
+int WINAPI
 WinMain (HINSTANCE hThisInstance,
          HINSTANCE hPrevInstance,
          LPSTR lpCmdLine,

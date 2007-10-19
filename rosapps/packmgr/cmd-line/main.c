@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // main.cpp
-// 
+//
 // Implementation of a Commandlne Interface
 // for the ReactOs Package Manager
 //
@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 
-int main (int argc, char **argv) 
+int main (int argc, char **argv)
 {
 	wprintf(L"ReactOs PackageManager %d.%d.%d Commandline Interface \n\n", PACKMGR_VERSION_MAJOR, PACKMGR_VERSION_MINOR, PACKMGR_VERSION_PATCH_LEVEL);
 	Argv = argv; Argc = argc;
@@ -23,7 +23,7 @@ int main (int argc, char **argv)
 		return Help();
 
 	// install a package
-	if (!strcmp(argv[1], "install")) 
+	if (!strcmp(argv[1], "install"))
 		Install();
 
 	// install a package from source
@@ -67,7 +67,7 @@ int main (int argc, char **argv)
 
 	//
 	wprintf(L"\n");
-	
+
 
 	return 0;
 }
@@ -111,7 +111,7 @@ int Ask (const WCHAR* question)
 
 	return Ask(question);
 }
-	
+
 int SetStatus (int status1, int status2, WCHAR* text)
 {
 	WCHAR errbuf[2000];
@@ -142,7 +142,7 @@ int Install (void)
 		wprintf(PML_TransError(error, errbuf, sizeof(errbuf)/sizeof(WCHAR)));
 		return 0;
 	}
-		
+
 	// look up the item
 	for (i=2; i<Argc; i++)
 	{
@@ -154,7 +154,7 @@ int Install (void)
 			PML_SetAction(tree, id, 1, NULL, Ask);
 		}
 
-		else 
+		else
 			printf("Could not find the Package \"%s\"\n", Argv[i]);
 	}
 
@@ -200,7 +200,7 @@ int Show (void)
 		if(id)
 			printf(PML_GetDescription(tree, id));
 
-		else 
+		else
 			printf("Could not find the Package \"%s\"\n", Argv[i]);
 	}
 

@@ -16,7 +16,7 @@ public:
     CIDType0C,
     CIDTrueType
   };
-    
+
   // Constructor.
   FontInfo(GfxFont *fontA, PDFDoc *doc);
   // Copy constructor

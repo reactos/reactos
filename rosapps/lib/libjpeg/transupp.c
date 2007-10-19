@@ -786,7 +786,7 @@ jtransform_parse_crop_spec (jpeg_transform_info *info, const char *spec)
       return FALSE;
     info->crop_width_set = JCROP_POS;
   }
-  if (*spec == 'x' || *spec == 'X') {	
+  if (*spec == 'x' || *spec == 'X') {
     /* fetch height */
     spec++;
     if (! jt_read_integer(&spec, &info->crop_height))

@@ -4,32 +4,32 @@
 LIBRARY DFLAT32.DLL
 
 EXPORTS
-DfCreateWindow		
-DfInitialize                    ;message.c		
+DfCreateWindow
+DfInitialize                    ;message.c
 DfPostMessage                   ;message.c
 DfSendMessage                   ;message.c
 DfDispatchMessage               ;message.c
 handshake                       ;message.c
 TestCriticalError		;stubs.c
-;DefaultWndProc         
-;BaseWndProc            
-;WindowHeight           
-;WindowWidth            
-;ClientWidth            
-;ClientHeight           
-;GetTop			
-;GetBottom		
-;GetLeft			
-;GetRight		
-;GetClientTop		
-;GetClientBottom		
-;GetClientLeft		
-;GetClientRight		
-;GetParent		
+;DefaultWndProc
+;BaseWndProc
+;WindowHeight
+;WindowWidth
+;ClientWidth
+;ClientHeight
+;GetTop
+;GetBottom
+;GetLeft
+;GetRight
+;GetClientTop
+;GetClientBottom
+;GetClientLeft
+;GetClientRight
+;GetParent
 ;FirstWindow
-;LastWindow 
+;LastWindow
 ;NextWindow
-;PrevWindow 
+;PrevWindow
 CharInView
 ;TopBorderAdj
 ;BorderAdj

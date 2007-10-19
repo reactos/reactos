@@ -352,7 +352,7 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
         goto LeaveCsAndExit;
     }
 
-    if (gCurPageRenderReq && 
+    if (gCurPageRenderReq &&
         (gCurPageRenderReq->pageNo == pageNo) && (gCurPageRenderReq->dm == dm)) {
         if ((gCurPageRenderReq->zoomLevel != zoomLevel) || (gCurPageRenderReq->rotation != rotation)) {
             /* Currently rendered page is for the same page but with different zoom
@@ -386,7 +386,7 @@ void RenderQueue_Add(DisplayModel *dm, int pageNo) {
                 req->zoomLevel = zoomLevel;
                 req->rotation = rotation;
                 goto LeaveCsAndExit;
-            
+
             }
         }
     }
@@ -458,7 +458,7 @@ static void SwitchToDisplayMode(WindowInfo *win, DisplayMode displayMode)
 {
     HMENU   menuMain;
     UINT    id;
-    
+
     menuMain = GetMenu(win->hwndFrame);
     CheckMenuItem(menuMain, IDM_VIEW_SINGLE_PAGE, MF_BYCOMMAND | MF_UNCHECKED);
     CheckMenuItem(menuMain, IDM_VIEW_CONTINUOUS, MF_BYCOMMAND | MF_UNCHECKED);
@@ -749,7 +749,7 @@ char *GetPasswordForFile(WindowInfo *win, const char *fileName)
     return Dialog_GetPassword(win, fileName);
 }
 
-void *StandardSecurityHandler::getAuthData() 
+void *StandardSecurityHandler::getAuthData()
 {
     WindowInfo *        win;
     const char *        pwd;
@@ -983,7 +983,7 @@ static void UpdateCurrentFileDisplayStateForWin(WindowInfo *win)
     if (!fileName)
         return;
 
-    if (!gRunningDLL) 
+    if (!gRunningDLL)
     {
         node = FileHistoryList_Node_FindByFilePath(&gFileHistoryRoot, fileName);
         assert(node);
@@ -1046,7 +1046,7 @@ static void Prefs_Save(void)
         * write to a temp file
         * rename temp file to final file */
     write_to_file((TCHAR*)path.pString, (void*)prefsStr.pString, prefsStr.length); /* @note: TCHAR* cast */
-    
+
 Exit:
     DStringFree(&prefsStr);
     DStringFree(&path);
@@ -1491,7 +1491,7 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     }
 #endif
 
-    /* TODO: make sure it doesn't have a stupid position like 
+    /* TODO: make sure it doesn't have a stupid position like
        outside of the screen etc. */
 #if 0
     if (totalDrawAreaSize.dxI() > maxCanvasSize.dx)
@@ -1522,10 +1522,10 @@ static WindowInfo* LoadPdf(const char *fileName, bool ignoreHistorySizePos = tru
     }
 
     if (gUseFitz) {
-        win->dm = DisplayModelFitz_CreateFromFileName(fileName, 
+        win->dm = DisplayModelFitz_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     } else {
-        win->dm = DisplayModelSplash_CreateFromFileName(fileName, 
+        win->dm = DisplayModelSplash_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, win);
     }
 
@@ -1621,7 +1621,7 @@ static HFONT Win32_Font_GetSimple(HDC hdc, char *fontName, int fontSize)
     lf.lfOutPrecision = OUT_TT_PRECIS;
     lf.lfQuality = DEFAULT_QUALITY;
     //lf.lfQuality = CLEARTYPE_QUALITY;
-    lf.lfPitchAndFamily = DEFAULT_PITCH;    
+    lf.lfPitchAndFamily = DEFAULT_PITCH;
     strcpy_s((char*)lf.lfFaceName, LF_FACESIZE, fontName); /* @note: char* cast */
     lf.lfWeight = FW_DONTCARE;
     font = CreateFontIndirect(&lf);
@@ -1810,7 +1810,7 @@ int WindowsVerMajor()
 int WindowsVerMinor()
 {
     DWORD version = GetVersion();
-    return (int)((version & 0xFF00) >> 8);    
+    return (int)((version & 0xFF00) >> 8);
 }
 
 bool WindowsVer2000OrGreater()
@@ -2068,7 +2068,7 @@ static void OnBenchNextAction(WindowInfo *win)
 }
 
 static void DrawCenteredText(HDC hdc, RECT *r, char *txt)
-{    
+{
     SetBkMode(hdc, TRANSPARENT);
     DrawText(hdc, (TCHAR*)txt, strlen(txt), r, DT_CENTER | DT_VCENTER | DT_SINGLELINE); /* @note: TCHAR* cast */
 }
@@ -2109,7 +2109,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
 
     for (int y = 0; y < rect->dy; y++) {
         for (int x = 0; x < rect->dx; x++) {
-            if (x < margin || x > rect->dx - margin - 1 
+            if (x < margin || x > rect->dx - margin - 1
                     || y < margin || y > rect->dy - margin - 1)
                 ((UINT32 *)pvBits)[x + y * rect->dx] = selectionColorBlack;
             else
@@ -2123,7 +2123,7 @@ static void PaintTransparentRectangle(WindowInfo *win, HDC hdc, RectI *rect) {
 
     /*if (!AlphaBlend(hdc, rect->x, rect->y, rect->dx, rect->dy,
         rectDC, 0, 0, rect->dx, rect->dy, bf))
-        DBG_OUT("AlphaBlending error\n");*/	
+        DBG_OUT("AlphaBlending error\n");*/
     /* @note: error: 'AlphaBlend' was not declared in this scope; even with WINVER: 0x0500 set in rbuild file, weird; @FIXME */
     DeleteObject (hbitmap);
     DeleteDC (rectDC);
@@ -2134,9 +2134,9 @@ static void PaintSelection (WindowInfo *win, HDC hdc) {
         // during selecting
         RectI selRect;
 
-        selRect.x = min (win->selectionRect.x, 
+        selRect.x = min (win->selectionRect.x,
             win->selectionRect.x + win->selectionRect.dx);
-        selRect.y = min (win->selectionRect.y, 
+        selRect.y = min (win->selectionRect.y,
             win->selectionRect.y + win->selectionRect.dy);
         selRect.dx = abs (win->selectionRect.dx);
         selRect.dy = abs (win->selectionRect.dy);
@@ -2612,10 +2612,10 @@ static void CopySelectionTextToClipboard(WindowInfo *win)
 
     int copied = 0;
     while (selOnPage != NULL) {
-        int charCopied = win->dm->getTextInRegion(selOnPage->pageNo, 
+        int charCopied = win->dm->getTextInRegion(selOnPage->pageNo,
             &selOnPage->selectionPage, ucsbuf + copied, ucsbuflen - copied - 1);
         copied += charCopied;
-        if (ucsbuflen - copied == 1) 
+        if (ucsbuflen - copied == 1)
             break;
         selOnPage = selOnPage->next;
     }
@@ -2727,7 +2727,7 @@ static void OnMouseLeftButtonUp(WindowInfo *win, int x, int y)
         win->dragPrevPosY = y;
         win->mouseAction = MA_IDLE;
         SetCursor(gCursorArrow);
-        ReleaseCapture();            
+        ReleaseCapture();
         return;
     }
 
@@ -2906,7 +2906,7 @@ static void DrawAnim2(WindowInfo *win, HDC hdc, PAINTSTRUCT *ps)
     assert(fontArial24);
 
     origFont = (HFONT)SelectObject(hdc, fontArial24);
-    
+
     SetBkMode(hdc, TRANSPARENT);
     FillRect(hdc, &rc, gBrushBg);
     //DStringSprintf(&txt, "Welcome to animation %d", state->frame);
@@ -3148,8 +3148,8 @@ static void OnMenuPrint(WindowInfo *win)
     ZeroMemory(&pd, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner   = win->hwndFrame;
-    pd.hDevMode    = NULL;   
-    pd.hDevNames   = NULL;   
+    pd.hDevMode    = NULL;
+    pd.hDevNames   = NULL;
     pd.Flags       = PD_USEDEVMODECOPIESANDCOLLATE | PD_RETURNDC;
     pd.nCopies     = 1;
     /* by default print all pages */
@@ -3651,7 +3651,7 @@ static void OnKeydown(WindowInfo *win, int key, LPARAM lparam)
     } else if (VK_HOME == key) {
         win->dm->goToFirstPage();
     } else if (VK_END == key) {
-        win->dm->goToLastPage();    
+        win->dm->goToLastPage();
 #if 0 // we do it via accelerators
     } else if ('G' == key) {
         if (ctrlPressed)
@@ -4500,7 +4500,7 @@ static void CreatePageRenderThread(void)
 
 static void PrintFile(WindowInfo *win, const char *fileName, const char *printerName)
 {
-    char        devstring[256];      // array for WIN.INI data 
+    char        devstring[256];      // array for WIN.INI data
     HANDLE      printer;
     LPDEVMODE   devMode = NULL;
     DWORD       structSize, returnCode;
@@ -4510,13 +4510,13 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
         return;
     }
 
-    // Retrieve the printer, printer driver, and 
-    // output-port names from WIN.INI. 
+    // Retrieve the printer, printer driver, and
+    // output-port names from WIN.INI.
     GetProfileString(TEXT("Devices"), (TCHAR*)printerName, TEXT(""), (TCHAR*)devstring, sizeof(devstring));
 
-    // Parse the string of names, setting ptrs as required 
-    // If the string contains the required names, use them to 
-    // create a device context. 
+    // Parse the string of names, setting ptrs as required
+    // If the string contains the required names, use them to
+    // create a device context.
     char *driver = strtok (devstring, (const char *) ",");
     char *port = strtok((char *) NULL, (const char *) ",");
 
@@ -4524,7 +4524,7 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
         MessageBox(win->hwndFrame, TEXT("Printer with given name doesn't exist"), TEXT("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
         return;
     }
-    
+
     BOOL fOk = OpenPrinter((TCHAR*)printerName, &printer, NULL); /* @note: neither LPCTSTR nor LPCTSTR work => TCHAR* cast */
     if (!fOk) {
 	 /* @note: translation need some care */
@@ -4535,11 +4535,11 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
 
     HDC  hdcPrint = NULL;
     structSize = DocumentProperties(NULL,
-        printer,                /* Handle to our printer. */ 
+        printer,                /* Handle to our printer. */
         (TCHAR*) printerName,    /* Name of the printer. */  /* @note: neither LPCTSTR nor LPCTSTR work => TCHAR* cast */
-        NULL,                   /* Asking for size, so */ 
-        NULL,                   /* these are not used. */ 
-        0);                     /* Zero returns buffer size. */ 
+        NULL,                   /* Asking for size, so */
+        NULL,                   /* these are not used. */
+        0);                     /* Zero returns buffer size. */
     devMode = (LPDEVMODE)malloc(structSize);
     if (!devMode) {
          /* @note: "crosses initialization of [...]" issues */
@@ -4552,9 +4552,9 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
     returnCode = DocumentProperties(NULL,
         printer,
         (TCHAR*) printerName,    /* Name of the printer. */  /* @note: neither LPCTSTR nor LPCTSTR work => TCHAR* cast */
-        devMode,        /* The address of the buffer to fill. */ 
-        NULL,           /* Not using the input buffer. */ 
-        DM_OUT_BUFFER); /* Have the output buffer filled. */ 
+        devMode,        /* The address of the buffer to fill. */
+        NULL,           /* Not using the input buffer. */
+        DM_OUT_BUFFER); /* Have the output buffer filled. */
 
     if (IDOK != returnCode) {
         // If failure, inform the user, cleanup and return failure.
@@ -4577,18 +4577,18 @@ static void PrintFile(WindowInfo *win, const char *fileName, const char *printer
      * Merge the new settings with the old.
      * This gives the driver an opportunity to update any private
      * portions of the DevMode structure.
-     */ 
+     */
      DocumentProperties(NULL,
         printer,
         (TCHAR*) printerName,    /* Name of the printer. */  /* @note: neither LPCTSTR nor LPCTSTR work => TCHAR* cast */
-        devMode,        /* Reuse our buffer for output. */ 
-        devMode,        /* Pass the driver our changes. */ 
-        DM_IN_BUFFER |  /* Commands to Merge our changes and */ 
-        DM_OUT_BUFFER); /* write the result. */ 
+        devMode,        /* Reuse our buffer for output. */
+        devMode,        /* Pass the driver our changes. */
+        DM_IN_BUFFER |  /* Commands to Merge our changes and */
+        DM_OUT_BUFFER); /* write the result. */
 
     ClosePrinter(printer);
 
-    hdcPrint = CreateDC((TCHAR*)driver, (TCHAR*)printerName, (TCHAR*)port, devMode); 
+    hdcPrint = CreateDC((TCHAR*)driver, (TCHAR*)printerName, (TCHAR*)port, devMode);
     if (!hdcPrint) {
         MessageBox(win->hwndFrame, TEXT("Couldn't initialize printer"), TEXT("Printing problem."), MB_ICONEXCLAMATION | MB_OK);
          /* @note: "crosses initialization of [...]" issues */
@@ -4608,11 +4608,11 @@ static void EnumeratePrinters()
 {
     PRINTER_INFO_5 *info5Arr = NULL;
     DWORD bufSize = 0, printersCount;
-    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+    BOOL fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     if (!fOk) {
         info5Arr = (PRINTER_INFO_5*)malloc(bufSize);
-        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL, 
+        fOk = EnumPrinters(PRINTER_ENUM_LOCAL | PRINTER_ENUM_CONNECTIONS, NULL,
         5, (LPBYTE)info5Arr, bufSize, &bufSize, &printersCount);
     }
     if (!info5Arr)
@@ -4647,7 +4647,7 @@ char *GetDefaultPrinterName()
     if (GetDefaultPrinterA(buf, &bufSize))
         return str_dup(buf);
     return NULL;
-}     
+}
 
 int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCmdLine, int nCmdShow)
 {
@@ -4781,7 +4781,7 @@ int APIENTRY _tWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPTSTR lpCm
 
     if (printerName && exitOnPrint)
         goto Exit;
- 
+
     if (0 == pdfOpened) {
         /* disable benchmark mode if we couldn't open file to benchmark */
         gBenchFileName = 0;
@@ -4883,11 +4883,11 @@ static void OpenPdf(WindowInfo* pdfWin,const char *fileName,  HWND parentHandle)
     int scrollbarXDy = 0;
 
     if (gUseFitz) {
-        pdfWin->dm = DisplayModelFitz_CreateFromFileName(fileName, 
+        pdfWin->dm = DisplayModelFitz_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, pdfWin);
-    } 
+    }
     else {
-        pdfWin->dm = DisplayModelSplash_CreateFromFileName(fileName, 
+        pdfWin->dm = DisplayModelSplash_CreateFromFileName(fileName,
             totalDrawAreaSize, scrollbarYDx, scrollbarXDy, displayMode, startPage, pdfWin);
     }
 
@@ -5042,7 +5042,7 @@ long Sumatra_GetCurrentZoom(WindowInfo* pdfWin)
     if (WindowInfo_PdfLoaded(pdfWin))
         zoomLevel = pdfWin->dm->zoomReal();
     return (long)zoomLevel;
-} 
+}
 
 void Sumatra_Resize(WindowInfo* pdfWin)
 {
@@ -5100,7 +5100,7 @@ WindowInfo* Sumatra_Init(HWND pHandle)
 
     bool reuseExistingWindow = false;
 
-    if (pHandle == 0 ) 
+    if (pHandle == 0 )
         pHandle = NULL;
 
     pdfWin = CreateEmpty(pHandle);

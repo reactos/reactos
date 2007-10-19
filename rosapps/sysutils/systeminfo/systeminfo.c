@@ -48,7 +48,7 @@ GetRegistryValue(HKEY hKeyName, LPCTSTR SubKey, LPCTSTR ValueName, LPCTSTR Buf)
 	DWORD CharCount = BUFFER_SIZE;
 	HKEY hKey;
 	LONG lRet;
-	
+
 	CharCount = BUFFER_SIZE;
 	lRet = RegOpenKeyEx(hKeyName,
 						SubKey,
@@ -86,28 +86,28 @@ AllSysInfo(VOID)
 	TCHAR Buf[BUFFER_SIZE],Tmp[BUFFER_SIZE], Msg[BUFFER_SIZE];
 	MEMORYSTATUS memory;
 	unsigned int DIV = 1024;
-	
+
 	GetSystemInfo(&SysInfo);
 
 	// getting computer name
 	CharCount = BUFFER_SIZE;
 	if(!GetComputerName(Buf,&CharCount)) printf("Error getting: GetComputerName");
 		if(GetOemStrings(IDS_HOST_NAME,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting OS Name
 	GetRegistryValue(HKEY_LOCAL_MACHINE,
 					 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
 					 TEXT("ProductName"),
 					 Buf);
 		if(GetOemStrings(IDS_OS_NAME,Msg)) fprintf(stderr,Msg,Buf);
-  
+
 	//getting OS Version
 	ZeroMemory(&VersionInfo, sizeof(OSVERSIONINFO));
 	VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
 	if(!(bOsVersionInfoEx = GetVersionEx((OSVERSIONINFO*)&VersionInfo)))
 	{
 		VersionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-		if (!GetVersionEx((OSVERSIONINFO*)&VersionInfo)) 
+		if (!GetVersionEx((OSVERSIONINFO*)&VersionInfo))
 		return;
 	}
 	if (VersionInfo.dwPlatformId == VER_PLATFORM_WIN32_NT)
@@ -130,57 +130,57 @@ AllSysInfo(VOID)
 	}
 
 	//getting OS Manufacturer
-	
+
 	//getting OS Configuration
-	
+
 	//getting OS Build Type
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
 						 TEXT("CurrentType"),
 						 Buf))
 		if(GetOemStrings(IDS_OS_BUILD_TYPE,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Registered Owner
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
 						 TEXT("RegisteredOwner"),
 						 Buf))
 		if(GetOemStrings(IDS_REG_OWNER,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Registered Organization
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
 						 TEXT("RegisteredOrganization"),
 						 Buf))
 		if(GetOemStrings(IDS_REG_ORG,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Product ID
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion"),
 						 TEXT("ProductId"),
 						 Buf))
 		if(GetOemStrings(IDS_PRODUCT_ID,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Install Date
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\WBEM\\CIMOM"),
 						 TEXT("SetupDate"),
 						 Buf))
 		if(GetOemStrings(IDS_INST_DATE,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Install Time
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SOFTWARE\\Microsoft\\WBEM\\CIMOM"),
 						 TEXT("SetupTime"),
 						 Buf))
 		if(GetOemStrings(IDS_INST_TIME,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting System Up Time
-	
+
 	//getting System Manufacturer
-	
+
 	//getting System Model
-	
+
 	//getting System type
 	switch (SysInfo.wProcessorArchitecture)
 	{
@@ -197,7 +197,7 @@ AllSysInfo(VOID)
 			if(GetOemStrings(IDS_SYS_TYPE_AMD64,Msg)) printf("%s",Msg);
 		break;
 	}
-	
+
 	//getting Processor(s)
 	if(GetOemStrings(IDS_PROCESSORS,Msg))
 	{
@@ -218,24 +218,24 @@ AllSysInfo(VOID)
 				printf(" %s\n",Buf);
 		}
 	}
-	
+
 	//getting BIOS Version
-  
+
 	//getting ReactOS Directory
-	if(!GetWindowsDirectory(Buf,BUFFER_SIZE)) printf("Error getting: GetWindowsDirectory"); 
+	if(!GetWindowsDirectory(Buf,BUFFER_SIZE)) printf("Error getting: GetWindowsDirectory");
 		if(GetOemStrings(IDS_ROS_DIR,Msg)) fprintf(stderr,Msg,Buf);
- 
+
 	//getting System Directory
 	if(!GetSystemDirectory(Buf,BUFFER_SIZE)) printf("Error getting: GetSystemDirectory");
 		if(GetOemStrings(IDS_SYS_DIR,Msg)) fprintf(stderr,Msg,Buf);
-  
+
 	//getting Boot Device
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SYSTEM\\Setup"),
 						 TEXT("SystemPartition"),
 						 Buf))
 		if(GetOemStrings(IDS_BOOT_DEV,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting System Locale
 	if (GetRegistryValue(HKEY_CURRENT_USER,
 						 TEXT("Control Panel\\International"),
@@ -246,7 +246,7 @@ AllSysInfo(VOID)
 						 (LPTSTR)Tmp,
 						 Buf))
 		if(GetOemStrings(IDS_SYS_LOCALE,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Input Locale
 	if (GetRegistryValue(HKEY_CURRENT_USER,
 						 TEXT("Keyboard Layout\\Preload"),
@@ -261,7 +261,7 @@ AllSysInfo(VOID)
 							 Buf))
 			if(GetOemStrings(IDS_INPUT_LOCALE,Msg)) fprintf(stderr,Msg,Buf);
 	}
-	
+
 	//getting Time Zone
 	TIME_ZONE_INFORMATION TimeZoneInfo;
 	GetTimeZoneInformation(&TimeZoneInfo);
@@ -271,7 +271,7 @@ AllSysInfo(VOID)
 						 TEXT("Display"),
 						 Buf))
 		if(GetOemStrings(IDS_TIME_ZONE,Msg)) fprintf(stderr,Msg,Buf);
-	
+
 	//getting Total Physical Memory
 	GlobalMemoryStatus(&memory);
 	if(GetOemStrings(IDS_TOTAL_PHYS_MEM,Msg))
@@ -279,35 +279,35 @@ AllSysInfo(VOID)
 				Msg,
 				memory.dwTotalPhys/(DIV*DIV),
 				memory.dwTotalPhys/DIV);
-	
+
 	//getting Available Physical Memory
 	if(GetOemStrings(IDS_AVAIL_PHISICAL_MEM,Msg))
 		fprintf(stderr,
 				Msg,
 				memory.dwAvailPhys/(DIV*DIV),
 				memory.dwAvailPhys/DIV);
-	
+
 	//getting Virtual Memory: Max Size
 	if(GetOemStrings(IDS_VIRT_MEM_MAX,Msg))
 		fprintf(stderr,
 				Msg,
 				memory.dwTotalVirtual/(DIV*DIV),
 				memory.dwTotalVirtual/DIV);
-	
+
 	//getting Virtual Memory: Available
 	if(GetOemStrings(IDS_VIRT_MEM_AVAIL,Msg))
 		fprintf(stderr,
 				Msg,
 				memory.dwAvailVirtual/(DIV*DIV),
 				memory.dwAvailVirtual/DIV);
-	
+
 	//getting Virtual Memory: In Use
 	if(GetOemStrings(IDS_VIRT_MEM_INUSE,Msg))
 		fprintf(stderr,
 				Msg,
 				(memory.dwTotalVirtual-memory.dwAvailVirtual)/(DIV*DIV),
 				(memory.dwTotalVirtual-memory.dwAvailVirtual)/DIV);
-	
+
 	//getting Page File Location(s)
 	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
 						 TEXT("SYSTEM\\ControlSet001\\Control\\Session Manager\\Memory Management"),
@@ -325,13 +325,13 @@ AllSysInfo(VOID)
 		}
 		if(GetOemStrings(IDS_PAGEFILE_LOC,Msg)) fprintf(stderr,Msg,Buf);
 	}
-	
+
 	//getting Domain
-	
+
 	//getting Logon Server
-	
+
 	//getting NetWork Card(s)
-	
+
 }
 
 /* Main program */

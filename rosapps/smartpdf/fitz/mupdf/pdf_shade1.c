@@ -30,7 +30,7 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		x1 = fz_toreal(fz_arrayget(obj, 1));
 		y0 = fz_toreal(fz_arrayget(obj, 2));
 		y1 = fz_toreal(fz_arrayget(obj, 3));
-	} 
+	}
 	else {
 		x0 = 0;
 		x1 = 1.0;
@@ -46,7 +46,7 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 		matrix = pdf_tomatrix(obj);
 		pdf_logshade("matrix [%g %g %g %g %g %g]\n",
 			matrix.a, matrix.b, matrix.c, matrix.d, matrix.e, matrix.f);
-	} 
+	}
 	else
 		matrix = fz_identity();
 
@@ -54,7 +54,7 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 	error = pdf_loadfunction(&func, xref, obj);
 	if (error)
 		return error;
-	
+
 	shade->usefunction = 0;
 
 	if (error)
@@ -98,7 +98,7 @@ pdf_loadtype1shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 			ADD_VERTEX(x, y);
 			ADD_VERTEX(xn, y);
 			ADD_VERTEX(xn, yn);
-			
+
 			ADD_VERTEX(x, y);
 			ADD_VERTEX(xn, yn);
 			ADD_VERTEX(x, yn);
@@ -225,7 +225,7 @@ pdf_loadtype2shade(fz_shade *shade, pdf_xref *xref, fz_obj *dict, fz_obj *ref)
 
 static int
 buildannulusmesh(float* mesh, int pos,
-					float x0, float y0, float r0, float x1, float y1, float r1, 
+					float x0, float y0, float r0, float x1, float y1, float r1,
 					float c0, float c1, int nomesh)
 {
 	int n = pos * 3;
@@ -326,7 +326,7 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 
 	pdf_loadshadefunction(shade, xref, shading, t0, t1);
 
-	if (r0 < r1) 
+	if (r0 < r1)
 		rs = r0 / (r0 - r1);
 	else
 		rs = -BIGNUM;
@@ -335,7 +335,7 @@ pdf_loadtype3shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 	ey0 = y0 + (y1 - y0) * rs;
 	er0 = r0 + (r1 - r0) * rs;
 
-	if (r0 > r1) 
+	if (r0 > r1)
 		rs = r1 / (r1 - r0);
 	else
 		rs = -BIGNUM;

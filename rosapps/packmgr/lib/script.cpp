@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // script.cpp
-// 
+//
 // Implementaion of a basic basic :) interpreter
 //
 //
@@ -29,9 +29,9 @@ int RPS_Load (SCRIPT** script, const char* path)
 {
 	string source;
 
-	/* We have to do it that way (doublepointer) because MinGw 
+	/* We have to do it that way (doublepointer) because MinGw
 	   calls "delete" at the end of function otherwise. */
-	(*script) = new SCRIPT;	
+	(*script) = new SCRIPT;
 
 	// Load file to string
 	ifstream file(path, ios_base::in);
@@ -41,11 +41,11 @@ int RPS_Load (SCRIPT** script, const char* path)
 	getline(file, source, '\0');
 
 	// make sure last char is a new line
-	source += "\n"; 
-	
+	source += "\n";
+
 	// Are all subs and strings closed ?
 	// FIXME: Just a quick hack sould be both checked line by line
-	if(FindCount(source, "\"")%2) // if count is uneven not all strings are closed 
+	if(FindCount(source, "\"")%2) // if count is uneven not all strings are closed
 		return ERR_SYNATX;
 
 	if(FindCount(source, "Sub ") != FindCount(source, "End Sub\n"))
@@ -103,7 +103,7 @@ int RPS_Load (SCRIPT** script, const char* path)
 	for (i=0; i < (*script)->code.size(); i++) // code.size() is the cout of lines
 	{
 		SUB sub;
-		
+
 		if((*script)->code[i].substr(0,4) != "sub ")
 			return ERR_SYNATX; // script has to start with sub
 
@@ -115,7 +115,7 @@ int RPS_Load (SCRIPT** script, const char* path)
 			i++;
 			//if script does not end with "end sub" we got a problem
 			if (i>(*script)->code.size())
-				return ERR_SYNATX; 
+				return ERR_SYNATX;
 		}
 
 		sub.end = i;
@@ -145,13 +145,13 @@ int RPS_Execute (SCRIPT* script, const char* function)
 	// call the function
 	for (a=script->subs[nr].start; a<script->subs[nr].end; a++)
 	{
-		// create a temporarry buffer 
+		// create a temporarry buffer
 		buffer = new char[script->code[a].size()];
 		strcpy(buffer, script->code[a].c_str());
 
 		// make the fist argument the function's name
 		argv[0] = &buffer[0];
-	
+
 		int buffer_size = (int)strlen(buffer);
 		for (b=0; b<buffer_size+1; b++)
 		{
@@ -173,7 +173,7 @@ int RPS_Execute (SCRIPT* script, const char* function)
 				buffer[b] = '\0';
 
 				// we don't want buffer overflows
-				if(argc == 99) 
+				if(argc == 99)
 					return ERR_GENERIC;
 
 			}
@@ -187,7 +187,7 @@ int RPS_Execute (SCRIPT* script, const char* function)
 				Log("*   excute command: ");
 				for(c=0; c<argc+1; c++)
 				{
-					LogAdd(argv[c]); 
+					LogAdd(argv[c]);
 					LogAdd(" ");
 				}
 
@@ -228,12 +228,12 @@ void RPS_Clear (SCRIPT* script)
 int FindCount (string where, string what, int start, int end)
 {
 	int counter = 0, pos;
-	
+
 	while(true)
 	{
 		pos = (int)where.find (what, start);
-		//could could not be found or is outside of search area 
-		if (pos == (int)string::npos || (end!=-1 && pos>end)) 
+		//could could not be found or is outside of search area
+		if (pos == (int)string::npos || (end!=-1 && pos>end))
 			break;
 		start = pos+1;
 		counter++;
@@ -247,14 +247,14 @@ int Find (string where, string what, int start, int end, int instring)
 {
 	int pos = (int)where.find (what, start);
 
-	//could could not be found or is outside of search area 
-	if (pos == (int)string::npos || (end!=-1 && pos>end)) 
+	//could could not be found or is outside of search area
+	if (pos == (int)string::npos || (end!=-1 && pos>end))
 		return -1;
 
-	// if the count of this quotes is eaven we are in string 
+	// if the count of this quotes is eaven we are in string
 	int isInString = FindCount(where, "\"", start, pos)%2;
 
-	// if so we go on searching 
+	// if so we go on searching
     if(isInString == instring)
 		return Find (where, what, pos+1, end, instring);
 

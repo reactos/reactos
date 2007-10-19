@@ -5,5 +5,5 @@
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>shell32</library>
 	<library>kernel32</library>
-	<file>winver.c</file>	
+	<file>winver.c</file>
 </module>

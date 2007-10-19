@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // download.cpp
-// 
+//
 // Stuff related to downloading
 //
 //
@@ -15,7 +15,7 @@
 #include "log.h"
 #include <urlmon.h>
 
-HRESULT WINAPI URLDownloadToFileA(      
+HRESULT WINAPI URLDownloadToFileA(
     LPUNKNOWN pCaller,
     LPCSTR szURL,
     LPCSTR szFileName,
@@ -26,8 +26,8 @@ HRESULT WINAPI URLDownloadToFileA(
 int FindCount (string What, string Where, int start = 0, int end = -1);
 
 
-// Download a file 
-char* PML_Download (pTree tree, const char* url, const char* server = "tree", const char* filename = "packmgr.xml") 
+// Download a file
+char* PML_Download (pTree tree, const char* url, const char* server = "tree", const char* filename = "packmgr.xml")
 {
 	UINT i;
 	static char downl [MAX_PATH]; // the full url
@@ -47,7 +47,7 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 	else
 		strcpy(path, "");
 
-	
+
 	// create the local file name
 	if(filename)
 	{
@@ -55,13 +55,13 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 		DeleteFileA (path);
 	}
 	else
-		GetTempFileNameA (path, "pml", 1, path); 
+		GetTempFileNameA (path, "pml", 1, path);
 
 	// get the url
 	if (!server)
 		strcpy(downl, "");
 
-	else if(!strcmp(server, "tree")) 
+	else if(!strcmp(server, "tree"))
 	{
 		char* ret;
 		for (i=0; i<tree->sources.size(); i++)
@@ -73,7 +73,7 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 		return NULL;
 	}
 
-	else 
+	else
 		strcpy(downl, server);
 
 	strcat(downl, url);
@@ -108,7 +108,7 @@ char* PML_Download (pTree tree, const char* url, const char* server = "tree", co
 
 // Download and prozess a xml file
 int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
-						 XML_StartElementHandler start, XML_EndElementHandler end, XML_CharacterDataHandler text) 
+						 XML_StartElementHandler start, XML_EndElementHandler end, XML_CharacterDataHandler text)
 {
 	int done = 0;
 	char buffer[255];
@@ -126,7 +126,7 @@ int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 		filename = PML_Download(tree, url);
 
 
-	if(!filename) 
+	if(!filename)
 	{
 		Log("!  ERROR: Could not download the xml file");
 		return ERR_DOWNL;
@@ -134,7 +134,7 @@ int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 
 	// open the file
 	FILE* file = fopen(filename, "r");
-	if(!file) 
+	if(!file)
 	{
 		Log("!  ERROR: Could not open the xml file ");
 		LogAdd(filename);
@@ -153,7 +153,7 @@ int PML_XmlDownload (pTree tree, const char* url, void* usrdata,
 		done = len < sizeof(buffer);
 
 		buffer[len] = 0;
-		if(!XML_Parse(parser, buffer, len, done)) 
+		if(!XML_Parse(parser, buffer, len, done))
 		{
 			Log("!  ERROR: Could not parse the xml file");
 			return ERR_GENERIC;

@@ -190,8 +190,8 @@ public:
   virtual void beginMarkedContent(char *name, Dict *properties);
   virtual void markPoint(char *name);
   virtual void markPoint(char *name, Dict *properties);
-  
-  
+
+
 
 #if OPI_SUPPORT
   //----- OPI functions
@@ -212,7 +212,7 @@ public:
   virtual GooHash *getProfileHash() {return profileHash; }
   virtual GooHash *endProfile();
 
-  
+
 private:
 
   double defCTM[6];		// default coordinate transform matrix

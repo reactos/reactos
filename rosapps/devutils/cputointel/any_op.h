@@ -5,7 +5,7 @@
 #define OP_ANY_mov  0x00000000
 #define OP_ANY_ret  0x00000001
 
-/* We are using same abi as PPC 
+/* We are using same abi as PPC
  * eax = register 3
  * edx = register 4
  * esp = register 1
@@ -46,8 +46,8 @@ typedef struct _BrainAnalys
 
     CPU_UNINT memAdr; /* where are we in the current memory pos + baseaddress */
 
-    CPU_INT row; /* 0 = no row, 
-                  * 1 = row is bcc (conditions), 
+    CPU_INT row; /* 0 = no row,
+                  * 1 = row is bcc (conditions),
                   * 2 = row is jsr (Call)
                   */
 
@@ -59,14 +59,14 @@ typedef struct _BrainAnalys
 extern PMYBrainAnalys pMyBrainAnalys;     /* current working address */
 extern PMYBrainAnalys pStartMyBrainAnalys; /* start address */
 
-CPU_INT ConvertToIA32Process( FILE *outfp, 
-                               PMYBrainAnalys pMystart, 
+CPU_INT ConvertToIA32Process( FILE *outfp,
+                               PMYBrainAnalys pMystart,
                                PMYBrainAnalys pMyend, CPU_INT regbits,
                                CPU_INT HowManyRegInUse,
                                CPU_INT *RegTableCount);
 
-CPU_INT ConvertToPPCProcess( FILE *outfp, 
-                               PMYBrainAnalys pMystart, 
+CPU_INT ConvertToPPCProcess( FILE *outfp,
+                               PMYBrainAnalys pMystart,
                                PMYBrainAnalys pMyend, CPU_INT regbits,
                                CPU_INT HowManyRegInUse,
                                CPU_INT *RegTableCount);

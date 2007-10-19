@@ -97,7 +97,7 @@ start_output_rle (j_decompress_ptr cinfo, djpeg_dest_ptr dinfo)
    */
 
   if (cinfo->output_width > 32767 || cinfo->output_height > 32767)
-    ERREXIT2(cinfo, JERR_RLE_DIMENSIONS, cinfo->output_width, 
+    ERREXIT2(cinfo, JERR_RLE_DIMENSIONS, cinfo->output_width,
 	     cinfo->output_height);
 
   if (cinfo->out_color_space != JCS_GRAYSCALE &&

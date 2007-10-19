@@ -136,7 +136,7 @@ addtextchar(pdf_textline *line, fz_irect bbox, int c)
 
 	if (line->len + 1 >= line->cap)
 	{
-		newcap = line->cap ? line->cap * 2 : 80; 
+		newcap = line->cap ? line->cap * 2 : 80;
 		newtext = fz_realloc(line->text, sizeof(pdf_textchar) * newcap);
 		if (!newtext)
 			return fz_outofmem;
@@ -200,7 +200,7 @@ extracttext(pdf_textline **line, fz_node *node, fz_matrix ctm)
 			{
 				h = fz_gethmtx(text->font, g);
 				oldpt.x += h.w * 0.001;
-				
+
 				vx.x = h.w * 0.001; vx.y = 0;
 				vy.x = 0; vy.y = 1;
 			}

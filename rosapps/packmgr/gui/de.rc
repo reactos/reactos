@@ -14,22 +14,22 @@ IDD_DOIT DIALOG DISCARDABLE  0, 0, 180, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Performing Operations"
 FONT 8, "MS Sans Serif"
-BEGIN    
+BEGIN
 
     CTEXT	    "{Status}", IDC_TSTATUS, 0, 10, 180, 8
 
     CONTROL         "", IDC_STATUS1, "msctls_progress32", PBS_SMOOTH, 20, 25, 140, 15
-    
+
     CONTROL         "", IDC_STATUS2, "msctls_progress32", PBS_SMOOTH, 20, 45, 140, 15
 
     PUSHBUTTON      "Abort", IDC_CANCEL, 65, 70, 50, 14, WS_DISABLED
 END
 
-IDR_POPUP MENU DISCARDABLE 
+IDR_POPUP MENU DISCARDABLE
 BEGIN
-    POPUP "PopUp", MENUBARBREAK	
+    POPUP "PopUp", MENUBARBREAK
     BEGIN
-        MENUITEM "Keine Action",        	1, GRAYED 
+        MENUITEM "Keine Action",        	1, GRAYED
         MENUITEM "Intallieren (empfohlen)",     2, GRAYED
         MENUITEM "Intallieren vom Quellcode",   3, GRAYED
         MENUITEM "Aktualisieren",               4, GRAYED

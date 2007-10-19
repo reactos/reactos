@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // log.cpp
-// 
+//
 // Script Functions
 //
 //
@@ -28,14 +28,14 @@ void Log (const char *message)
 	char version[50];
 	char versionos[50];
 
-	if (!LogCreated) 
-	{		
+	if (!LogCreated)
+	{
 		file = fopen(LOGFILE, "w");
 		LogCreated = true;
 
 		//HTML Header
 		fputs("<html><head><title>Logfile</title></head><body>\n", file);
-		
+
 		// date and time
 		time_t now;
 		now = time(NULL);
@@ -57,23 +57,23 @@ void Log (const char *message)
 		fputs("<h2>ReactOS Package Manager - Log File</h2>\n", file);
 		//fputs("WARNING: This is still pre-alpha software.<br>\n", file);
 
-		fputs("Date: ", file); 
+		fputs("Date: ", file);
 		fputs(GTime, file);
 		fputs("<br>\n", file);
 
 		fputs("Version: ", file);
-		fputs(version, file); 
+		fputs(version, file);
 		fputs("<br>\n", file);
 
 		fputs("OS: ", file);
-		fputs(versionos, file); 
+		fputs(versionos, file);
 		fputs("<br>\n", file);
 	}
 
-	else		
+	else
 		file = fopen(LOGFILE, "a");
-		
-	if (file == NULL) 
+
+	if (file == NULL)
 	{
 		if (LogCreated)
 			LogCreated = false;
@@ -107,7 +107,7 @@ void LogAdd (const char *message)
 	FILE *file;
 
 	file = fopen(LOGFILE, "a");
-		
+
 	// Save log entry
 	fputs(message, file);
 	fclose(file);

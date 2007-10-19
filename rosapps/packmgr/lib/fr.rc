@@ -5,7 +5,7 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LOAD	   "Chargement ..."
   ERR_OK	   "Fini."
@@ -13,7 +13,7 @@ BEGIN
   ERR_GENERIC      "Une erreur s'est produite. \nVeuillez consulter le fichier journal pour les détails."
   ERR_DOWNL	   "Un fichier requis ne peut etre téléchargé !\nVeuillez consulter le fichier journal pour les détails."
   ERR_FILE	   "Erreur pendant l'éxécution du script.\nUn fichier n'a pu etre ouvert."
- 
+
   ERR_SYNATX       "Erreur pendant l'éxécution du script.\nErreur de syntaxe."
   ERR_CALL         "Erreur pendant l'éxécution du script.\nUne fonction ne peut etre trouvée."
   ERR_PARAMETER    "Erreur pendant l'éxécution du script.\nParamètre(s) erroné(s)."

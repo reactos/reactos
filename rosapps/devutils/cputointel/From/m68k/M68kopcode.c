@@ -1,6 +1,6 @@
 
 #include <stdio.h>
-#include <stdlib.h> 
+#include <stdlib.h>
 #include "m68k.h"
 #include "misc.h"
 
@@ -22,7 +22,7 @@ CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     CPU_INT Rx;
     CPU_INT Ry;
     //CPU_INT cpuint;
-            
+
     opmode = ConvertBitToByte(M68k_Opmode);
     mode = ConvertBitToByte(M68k_Mode);
     Rx = ConvertBitToByte(M68k_Rx);
@@ -32,9 +32,9 @@ CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
 
     if (opmode == 0x00)
     {
-        /* <ea> + Dn -> Dn */  
+        /* <ea> + Dn -> Dn */
         printf(";Add unimplement of  \"<ea> + Dn -> Dn\" \n");
-        
+
     }
 
     if (opmode == 0x01)
@@ -54,7 +54,7 @@ CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
         /* <ea> + An -> An */
         printf(";Add unimplement of \"<ea> + An -> An\" \n");
     }
-    
+
     if (opmode == 0x04)
     {
         /* Dn + <ea> -> <ea> */
@@ -80,9 +80,9 @@ CPU_INT M68k_Add(FILE *out, CPU_BYTE * cpu_buffer, CPU_UNINT cpu_pos,
     }
 
 
-    
 
-    
+
+
     return -1;
 }
 

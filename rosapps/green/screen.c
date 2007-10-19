@@ -144,7 +144,7 @@ ScreenAddDevice(
 	{
 		DPRINT("Attaching to old blue\n");
 
-		/* Suggested by hpoussin .. Hide previous blue device 
+		/* Suggested by hpoussin .. Hide previous blue device
 		 * This makes us able to coexist with blue, and install
 		 * when loaded */
 		Status = IoCreateDevice(

@@ -164,7 +164,7 @@ fz_dropflatee(fz_filter *f)
 	err = deflateEnd(zp);
 	if (err != Z_OK)
 		fprintf(stderr, "deflateEnd: %s", zp->msg);
-	
+
 	fz_free(f);
 }
 

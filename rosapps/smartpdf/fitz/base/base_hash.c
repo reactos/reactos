@@ -7,7 +7,7 @@
  * correctly in this implementation so it wont start
  * exhibiting bad behaviour if entries are inserted
  * and removed frequently.
- */ 
+ */
 
 #include "fitz-base.h"
 

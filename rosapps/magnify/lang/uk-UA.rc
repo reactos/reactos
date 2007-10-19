@@ -8,7 +8,7 @@
 
 LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
-IDC_MAGNIFIER MENU 
+IDC_MAGNIFIER MENU
 BEGIN
     POPUP "&Файл"
     BEGIN
@@ -19,7 +19,7 @@ BEGIN
     END
 END
 
-IDC_MAGNIFIER ACCELERATORS 
+IDC_MAGNIFIER ACCELERATORS
 BEGIN
     "?",            IDM_ABOUT,              ASCII,  ALT
     "/",            IDM_ABOUT,              ASCII,  ALT
@@ -66,7 +66,7 @@ BEGIN
     CONTROL         "Більше не показувати це повідомлення",IDC_SHOWWARNINGCHECK, "Button",BS_AUTOCHECKBOX | WS_TABSTOP,43,80,137,10
 END
 
-STRINGTABLE 
+STRINGTABLE
 BEGIN
     IDS_APP_TITLE           "Екранна лупа"
 END

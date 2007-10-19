@@ -2,7 +2,7 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LOAD	   "Lade ..."
   ERR_OK	   "Fertig."
@@ -10,7 +10,7 @@ BEGIN
   ERR_GENERIC      "Ein Fehler ist aufgetreten. \nnFür mehr Details schauen Sie bitte in ""logfile.html""."
   ERR_DOWNL	   "Eine benötigte Datei konnte nicht runtergeladen werden!\nFür mehr Details schauen Sie bitte in ""logfile.html""."
   ERR_FILE	   "Bei der Scriptausfürhung trat ein Fehler auf.\nDatei konnte nicht geöffnet werden."
- 
+
   ERR_SYNATX       "Bei der Scriptausfürhung trat ein Fehler auf.\nSynatx-Fehler."
   ERR_CALL         "Bei der Scriptausfürhung trat ein Fehler auf.\nUnbekannte Funktion."
   ERR_PARAMETER    "Bei der Scriptausfürhung trat ein Fehler auf.\nUngültige(r) Parameter."

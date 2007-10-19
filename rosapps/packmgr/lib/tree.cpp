@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // tree.cpp
-// 
+//
 // Loading of the package tree
 //
 //
@@ -20,7 +20,7 @@ int LoadOptions (TREE* tree);
 void tree_end (void* tree, const char* tag);
 void tree_start (void* usrdata, const char* tag, const char** arg);
 
-int PML_XmlDownload (pTree tree, const char* file, void* usrdata, XML_StartElementHandler start, 
+int PML_XmlDownload (pTree tree, const char* file, void* usrdata, XML_StartElementHandler start,
 											XML_EndElementHandler end, XML_CharacterDataHandler text=0);
 
 
@@ -32,7 +32,7 @@ extern "C" int PML_LoadTree (TREE** tree, char* url, PML_AddItem AddItem)
 
 	// set every to zero
 	memset((*tree), 0, sizeof((*tree)));
-	
+
 	// set addItem callback
 	(*tree)->addItem = AddItem;
 
@@ -64,7 +64,7 @@ void tree_start (void* usrdata, const char* tag, const char** arg)
 	tree->packages[id].name = "\0";
 
 	// read the arguments
-	for (i=0; arg[i]; i+=2) 
+	for (i=0; arg[i]; i+=2)
 	{
 		if(!strcmp(arg[i], "name"))
 		{

@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////
 //
 // functions.cpp
-// 
+//
 // Script Functions
 //
 //
@@ -36,7 +36,7 @@ int download (int argc, char* argv[])
 	else if (argc==2)
 		result = PML_Download(NULL, argv[1], NULL, argv[2]);
 
-	else 
+	else
 		return ERR_GENERIC;
 
 	if(!result)
@@ -59,7 +59,7 @@ int msgbox (int argc, char* argv[])
 	else if (argc==2)
 		MessageBoxA(0,argv[1],argv[2],0);
 
-	else 
+	else
 		return ERR_GENERIC;
 
 	return ERR_OK;
@@ -75,7 +75,7 @@ int shell (int argc, char* argv[])
 	info.cbSize = sizeof(SHELLEXECUTEINFO);
 	info.fMask = SEE_MASK_NOCLOSEPROCESS;
 	info.lpVerb = "open";
-	info.lpFile = argv[1];		
+	info.lpFile = argv[1];
 	info.lpDirectory = tmp;
 	info.nShow = SW_SHOW;
 
@@ -92,7 +92,7 @@ int shell (int argc, char* argv[])
 
 const FUNC_TABLE FuncTable[] =
 {
-   /* Name */   /* Function */ 
+   /* Name */   /* Function */
   {"download",	download},
   {"extract",	extract},
   {"shell",		shell},

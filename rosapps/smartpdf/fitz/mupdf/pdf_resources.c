@@ -34,7 +34,7 @@ while in the middle of parsing a content stream.
 	/Pattern <<
 		/Pat0 20 0 R
 	>>
-	/Shading << 
+	/Shading <<
 		/Sh0 30 0 R
 	>>
 	/XObject <<

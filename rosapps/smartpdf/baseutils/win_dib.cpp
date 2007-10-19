@@ -5,21 +5,21 @@
 // Author      : Chris Maunder (cmaunder@mail.com)
 // Date        : 17 May 1999
 //
-// Copyright © Dundas Software Ltd. 1999, All Rights Reserved                      
+// Copyright © Dundas Software Ltd. 1999, All Rights Reserved
 //
 // This code may be used in compiled form in any way you desire. This
-// file may be redistributed unmodified by any means PROVIDING it is 
-// not sold for profit without the authors written consent, and 
-// providing that this notice and the authors name is included. If 
-// the source code in this file is used in any commercial application 
+// file may be redistributed unmodified by any means PROVIDING it is
+// not sold for profit without the authors written consent, and
+// providing that this notice and the authors name is included. If
+// the source code in this file is used in any commercial application
 // then a simple email would be nice.
 //
 // This file is provided "as is" with no expressed or implied warranty.
 // The author accepts no liability for any damage, in any form, caused
 // by this code. Use it at your own risk and as with all code expect bugs!
 // It's been tested but I'm not perfect.
-// 
-// Please use and enjoy. Please let me know of any bugs/mods/improvements 
+//
+// Please use and enjoy. Please let me know of any bugs/mods/improvements
 // that you have found/implemented and I will fix/incorporate them into this
 // file.
 //
@@ -304,34 +304,34 @@ UINT CEGetDIBColorTable(HDC hdc, UINT uStartIndex, UINT cEntries, RGBQUAD *pColo
 /////////////////////////////////////////////////////////////////////////////
 // CDIB static functions
 
-// 
+//
 // --- In  : nBitsPerPixel - bits per pixel
 //           nCompression  - type of compression
-// --- Out : 
+// --- Out :
 // --- Returns :The number of colors for this color depth
 // --- Effect : Returns the number of color table entries given the number
 //              of bits per pixel of a bitmap
-/*static*/ int CDIB::NumColorEntries(int nBitsPerPixel, int nCompression) 
+/*static*/ int CDIB::NumColorEntries(int nBitsPerPixel, int nCompression)
 {
     int nColors = 0;
 
-    switch (nBitsPerPixel) 
+    switch (nBitsPerPixel)
     {
-	    case 1:  
-            nColors = 2;   
+	    case 1:
+            nColors = 2;
             break;
 #ifdef _WIN32_WCE
-        case 2:  
-            nColors = 4;   
-            break;   // winCE only       
+        case 2:
+            nColors = 4;
+            break;   // winCE only
 #endif
-        case 4:  
-            nColors = 16;  
+        case 4:
+            nColors = 16;
             break;
-        case 8:  
-            nColors = 256; 
+        case 8:
+            nColors = 256;
             break;
-        case 24: 
+        case 24:
             nColors = 0;
             break;
         case 16:
@@ -349,13 +349,13 @@ UINT CEGetDIBColorTable(HDC hdc, UINT uStartIndex, UINT cEntries, RGBQUAD *pColo
     return nColors;
 }
 
-// 
+//
 // --- In  : nWidth - image width in pixels
 //           nBitsPerPixel - bits per pixel
 // --- Out :
-// --- Returns : Returns the number of storage bytes needed for each scanline 
+// --- Returns : Returns the number of storage bytes needed for each scanline
 //               in the bitmap
-// --- Effect : 
+// --- Effect :
 /*static*/ int CDIB::BytesPerLine(int nWidth, int nBitsPerPixel)
 {
     return ( (nWidth * nBitsPerPixel + 31) & (~31) ) / 8;
@@ -385,7 +385,7 @@ BOOL CDIB::CreateHalftonePalette(HPALETTE hPal, int nNumColors)
     else if  (nNumColors <= 256)
         nNumColors = 256;
 
-    PALETTEINFO pi;                   
+    PALETTEINFO pi;
     pi.palNumEntries = (WORD) nNumColors;
 
     if (nNumColors == 2)
@@ -492,8 +492,8 @@ CDIB::~CDIB()
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-BOOL CDIB::Draw(HDC hDC, POINT& ptDest, BOOL bForceBackground /*=FALSE*/) 
-{ 
+BOOL CDIB::Draw(HDC hDC, POINT& ptDest, BOOL bForceBackground /*=FALSE*/)
+{
     if (!m_hBitmap)
         return FALSE;
 
@@ -505,7 +505,7 @@ BOOL CDIB::Draw(HDC hDC, POINT& ptDest, BOOL bForceBackground /*=FALSE*/)
     HDC hMemDC = GetMemoryDC(hDC, FALSE);
     if (!hMemDC)
         return FALSE;
-        
+
 #ifndef DIBSECTION_NO_PALETTE
     // Select and realize the palette
     HPALETTE hOldPalette = NULL;
@@ -523,7 +523,7 @@ BOOL CDIB::Draw(HDC hDC, POINT& ptDest, BOOL bForceBackground /*=FALSE*/)
         if (hOldPalette)
             SelectPalette(hDC, hOldPalette, FALSE);
 #endif // DIBSECTION_NO_PALETTE
-        
+
     ReleaseMemoryDC();
 
     return bResult;
@@ -541,8 +541,8 @@ BOOL CDIB::Draw(HDC hDC, POINT& ptDest, BOOL bForceBackground /*=FALSE*/)
 //
 ///////////////////////////////////////////////////////////////////////////////
 
-BOOL CDIB::Stretch(HDC hDC, POINT& ptDest, SIZE& size, BOOL bForceBackground /*=FALSE*/) 
-{ 
+BOOL CDIB::Stretch(HDC hDC, POINT& ptDest, SIZE& size, BOOL bForceBackground /*=FALSE*/)
+{
     if (!m_hBitmap)
         return FALSE;
 
@@ -560,7 +560,7 @@ BOOL CDIB::Stretch(HDC hDC, POINT& ptDest, SIZE& size, BOOL bForceBackground /*=
     HDC hMemDC = GetMemoryDC(hDC, FALSE);
     if (!hMemDC)
         return FALSE;
-        
+
 #ifndef DIBSECTION_NO_PALETTE
     // Select and realize the palette
     HPALETTE hOldPalette = NULL;
@@ -571,14 +571,14 @@ BOOL CDIB::Stretch(HDC hDC, POINT& ptDest, SIZE& size, BOOL bForceBackground /*=
     }
 #endif // DIBSECTION_NO_PALETTE
 
-    bResult = StretchBlt(hDC, ptDest.x, ptDest.y, size.cx, size.cy, 
+    bResult = StretchBlt(hDC, ptDest.x, ptDest.y, size.cx, size.cy,
 		hMemDC, ptOrigin.x, ptOrigin.y, imagesize.cx, imagesize.cy, SRCCOPY);
-        
+
 #ifndef DIBSECTION_NO_PALETTE
         if (hOldPalette)
 			SelectPalette(hDC, hOldPalette, FALSE);
 #endif // DIBSECTION_NO_PALETTE
-        
+
     ReleaseMemoryDC();
 
     return bResult;
@@ -614,7 +614,7 @@ BOOL CDIB::SetBitmap(UINT nIDResource, HINSTANCE hInst /*= NULL*/ )
 BOOL CDIB::SetBitmap(LPCTSTR lpszRes, HINSTANCE hInst /*= NULL*/ )
 {
     HBITMAP hBmp = (HBITMAP)::LoadImage(hInst, lpszRes, IMAGE_BITMAP, 0,0,0);
-	if (!hBmp) 
+	if (!hBmp)
 	{
 		TRACE0("Unable to LoadImage");
 		return FALSE;
@@ -661,7 +661,7 @@ BOOL CDIB::SetBitmap(LPBITMAPINFO lpBitmapInfo, LPVOID lpBits)
 
     // Create a DC which will be used to get DIB, then create DIBsection
     hDC = ::GetDC(NULL);
-    if (!hDC) 
+    if (!hDC)
     {
         TRACE0("Unable to get DC\n");
 		return FALSE;
@@ -677,7 +677,7 @@ BOOL CDIB::SetBitmap(LPBITMAPINFO lpBitmapInfo, LPVOID lpBits)
 
     if (m_DIBinfo.bmiHeader.biSizeImage == 0)
     {
-        int nBytesPerLine = BytesPerLine(lpBitmapInfo->bmiHeader.biWidth, 
+        int nBytesPerLine = BytesPerLine(lpBitmapInfo->bmiHeader.biWidth,
                                          lpBitmapInfo->bmiHeader.biBitCount);
         m_DIBinfo.bmiHeader.biSizeImage = nBytesPerLine * lpBitmapInfo->bmiHeader.biHeight;
     }
@@ -756,7 +756,7 @@ BOOL CDIB::SetBitmap(HBITMAP hBitmap, HPALETTE hPal /*= NULL*/)
     m_hBitmap = CreateDIBSection(hDC, (const BITMAPINFO*) m_DIBinfo, m_iColorDataType, &m_ppvBits, NULL, 0);
     if (hOldPal)
         SelectPalette(hDC, hOldPal, FALSE);
-    hOldPal = NULL; 
+    hOldPal = NULL;
 
     if (! m_hBitmap)
     {
@@ -772,8 +772,8 @@ BOOL CDIB::SetBitmap(HBITMAP hBitmap, HPALETTE hPal /*= NULL*/)
     // Need to copy the supplied bitmap onto the newly created DIBsection
     HDC hMemDC = CreateCompatibleDC(hDC);
 	HDC hCopyDC = CreateCompatibleDC(hDC);
-	
-    if (! hMemDC || ! hCopyDC) 
+
+    if (! hMemDC || ! hCopyDC)
     {
         TRACE0("Unable to create compatible DC's\n");
         //AfxThrowResourceException();
@@ -836,7 +836,7 @@ BOOL CDIB::SetColorTable(UINT nNumColors, RGBQUAD *pColors)
 // --- In  :
 // --- Out :
 // --- Returns : TRUE on success
-// --- Effect : Creates the palette from the DIBSection's color table. Assumes 
+// --- Effect : Creates the palette from the DIBSection's color table. Assumes
 //              m_iColorTableSize has been set and the DIBsection m_hBitmap created
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -873,7 +873,7 @@ BOOL CDIB::CreatePalette()
         return CreateHalftonePalette(m_hPal, m_iColorTableSize);
     }
     ReleaseDC(NULL, hDC);
-    
+
     HBITMAP hOldBitmap = (HBITMAP) SelectObject(hMemDC, m_hBitmap);
     if (!hOldBitmap)
     {
@@ -893,12 +893,12 @@ BOOL CDIB::CreatePalette()
     {
         delete [] pRGB;
         return CreateHalftonePalette(m_hPal, m_iColorTableSize);
-    }   
-    
+    }
+
     // Create and fill a LOGPALETTE structure with the colors used.
     PALETTEINFO PaletteInfo;
     PaletteInfo.palNumEntries = m_iColorTableSize;
-                        
+
     for (int ii = 0; ii < nColors; ii++)
     {
         PaletteInfo.palPalEntry[ii].peRed   = pRGB[ii].rgbRed;
@@ -937,7 +937,7 @@ BOOL CDIB::SetPalette(HPALETTE hPal)
 
     // Get palette entries
     PALETTEINFO pi;
-    pi.palNumEntries = (WORD) ::GetPaletteEntries(hPal, 0, nColors, (LPPALETTEENTRY) pi);                          
+    pi.palNumEntries = (WORD) ::GetPaletteEntries(hPal, 0, nColors, (LPPALETTEENTRY) pi);
     return SetLogPalette(&pi);
 }
 
@@ -978,7 +978,7 @@ BOOL CDIB::SetLogPalette(LOGPALETTE* pLogPalette)
         return TRUE;
 
     // Set the DIB colors
-    RGBQUAD RGBquads[256]; 
+    RGBQUAD RGBquads[256];
     for (UINT i = 0; i < nColors; i++)
     {
         RGBquads[i].rgbRed   = pLogPalette->palPalEntry[i].peRed;
@@ -986,7 +986,7 @@ BOOL CDIB::SetLogPalette(LOGPALETTE* pLogPalette)
         RGBquads[i].rgbBlue  = pLogPalette->palPalEntry[i].peBlue;
         RGBquads[i].rgbReserved = 0;
     }
-    
+
     return FillDIBColorTable(nColors, RGBquads);
 }
 
@@ -1035,8 +1035,8 @@ BOOL CDIB::FillDIBColorTable(UINT nNumColors, RGBQUAD *pRGB)
 //                     color table filled.
 // --- Out :
 // --- Returns : the number of colors placed in the color table
-// --- Effect : This function is a replacement for GetDIBits, in that it retrieves 
-//              (or synthesizes) the color table from the given bitmap, and stores 
+// --- Effect : This function is a replacement for GetDIBits, in that it retrieves
+//              (or synthesizes) the color table from the given bitmap, and stores
 //              the values in the BITMAPINFO structure supplied.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -1048,7 +1048,7 @@ UINT CDIB::GetColorTableEntries(HDC hdc, HBITMAP hBitmap)
 
     // Fill the color table with the colors from the bitmap's color table
     LPRGBQUAD pColorTable = GetColorTable();
-    
+
     // Get the color table from the HBITMAP and copy them over.
     UINT nCount;
     RGBQUAD* pRGB = new RGBQUAD[m_iColorTableSize];
@@ -1067,7 +1067,7 @@ UINT CDIB::GetColorTableEntries(HDC hdc, HBITMAP hBitmap)
 
     // Didn't work - so synthesize one.
     if (!nCount)
-    {       
+    {
         nCount = min( m_iColorTableSize, sizeof(ms_StdColors) / sizeof(ms_StdColors[0]) );
         memcpy(pColorTable, ms_StdColors, nCount*sizeof(RGBQUAD));
     }
@@ -1078,9 +1078,9 @@ UINT CDIB::GetColorTableEntries(HDC hdc, HBITMAP hBitmap)
 
 ///////////////////////////////////////////////////////////////////////////////
 //
-// This function is from the MS KB article "HOWTO: Get the Color Table of 
+// This function is from the MS KB article "HOWTO: Get the Color Table of
 //  DIBSection in Windows CE".
-// 
+//
 // PARAMETERS:
 // HDC - the Device Context in which the DIBSection is selected
 /// UINT - the index of the first color table entry to retrieve
@@ -1095,39 +1095,39 @@ UINT CDIB::GetColorTableEntries(HDC hdc, HBITMAP hBitmap)
 ///////////////////////////////////////////////////////////////////////////////
 
 UINT CEGetDIBColorTable(HDC hdc, UINT uStartIndex, UINT cEntries, RGBQUAD *pColors)
-{   
+{
     if (pColors == NULL)
         return 0;                       // No place to put them, fail
-    
+
     // Get a description of the DIB Section
     HBITMAP hDIBSection = (HBITMAP) GetCurrentObject( hdc, OBJ_BITMAP );
 
     DIBSECTION ds;
     DWORD dwSize = GetObject( hDIBSection, sizeof(DIBSECTION), &ds );
-    
+
     if (dwSize != sizeof(DIBSECTION))
         return 0;                      // Must not be a DIBSection, fail
-    
+
     if (ds.dsBmih.biBitCount > 8)
         return 0;                      // Not Palettized, fail
-    
+
     // get the number of colors to return per BITMAPINFOHEADER docs
     UINT cColors;
     if (ds.dsBmih.biClrUsed)
         cColors = ds.dsBmih.biClrUsed;
     else
         cColors = 1 << (ds.dsBmih.biBitCount * ds.dsBmih.biPlanes);
-    
+
     // Create a mask for the palette index bits for 1, 2, 4, and 8 bpp
     WORD wIndexMask = (0xFF << (8 - ds.dsBmih.biBitCount)) & 0x00FF;
-    
+
     // Get the pointer to the image bits
     LPBYTE pBits = (LPBYTE) ds.dsBm.bmBits;
-    
+
     // Initialize the loop variables
     cColors = min( cColors, cEntries );
     BYTE OldPalIndex = *pBits;
- 
+
     UINT TestPixelY;
     if (ds.dsBmih.biHeight > 0 )
         // If button up DIB, pBits points to last row
@@ -1135,27 +1135,27 @@ UINT CEGetDIBColorTable(HDC hdc, UINT uStartIndex, UINT cEntries, RGBQUAD *pColo
     else
         // If top down DIB, pBits points to first row
         TestPixelY = 0;
-    
+
     for (UINT iColor = uStartIndex; iColor < cColors; iColor++)
     {
         COLORREF    rgbColor;
-        
+
         // Set the palette index for the test pixel,
         // modifying only the bits for one pixel
         *pBits = (iColor << (8 - ds.dsBmih.biBitCount)) | (*pBits & ~wIndexMask);
-        
+
         // now get the resulting color
         rgbColor = GetPixel( hdc, 0, TestPixelY );
-        
+
         pColors[iColor - uStartIndex].rgbReserved = 0;
         pColors[iColor - uStartIndex].rgbBlue = GetBValue(rgbColor);
         pColors[iColor - uStartIndex].rgbRed = GetRValue(rgbColor);
         pColors[iColor - uStartIndex].rgbGreen = GetGValue(rgbColor);
     }
-    
+
     // Restore the test pixel
     *pBits = OldPalIndex;
-    
+
     return cColors;
 }
 
@@ -1221,15 +1221,15 @@ HDC CDIB::GetMemoryDC(HDC hDC /*=NULL*/, BOOL bSelectPalette /*=TRUE*/)
 // --- In  : bForceRelease - if TRUE, then the memory DC is forcibly released
 // --- Out :
 // --- Returns : TRUE on success
-// --- Effect : Selects out the current bitmap and deletes the mem dc. If bForceRelease 
-//              is FALSE, then the DC release will not actually occur. This is provided 
+// --- Effect : Selects out the current bitmap and deletes the mem dc. If bForceRelease
+//              is FALSE, then the DC release will not actually occur. This is provided
 //              so you can have
 //
 //                 GetMemoryDC(...)
 //                 ... do something
 //                 ReleaseMemoryDC()
 //
-//               bracketed calls. If m_bReuseMemDC is subsequently set to FALSE, then 
+//               bracketed calls. If m_bReuseMemDC is subsequently set to FALSE, then
 //               the same code fragment will still work.
 //
 ///////////////////////////////////////////////////////////////////////////////
@@ -1238,7 +1238,7 @@ BOOL CDIB::ReleaseMemoryDC(BOOL bForceRelease /*=FALSE*/)
 {
     if ( !m_hMemDC
 #ifndef DIBSECTION_NO_MEMDC_REUSE
-        || (m_bReuseMemDC && !bForceRelease) 
+        || (m_bReuseMemDC && !bForceRelease)
 #endif // DIBSECTION_NO_MEMDC_REUSE
         )
         return TRUE; // Nothing to do

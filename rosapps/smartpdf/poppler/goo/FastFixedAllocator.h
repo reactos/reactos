@@ -54,9 +54,9 @@ typedef struct ChunkBlockNode {
 class FastFixedAllocator {
 
 public:
-  FastFixedAllocator(size_t chunkSizeLowA, size_t chunkSizeHighA, 
-                     int chunksAtATimeA, FreeListNode *magicCookieA) : 
-    chunkSizeLow(chunkSizeLowA), 
+  FastFixedAllocator(size_t chunkSizeLowA, size_t chunkSizeHighA,
+                     int chunksAtATimeA, FreeListNode *magicCookieA) :
+    chunkSizeLow(chunkSizeLowA),
     chunkSizeHigh(chunkSizeHighA),
     magicCookie(magicCookieA),
     chunksAtATime(chunksAtATimeA),
@@ -93,7 +93,7 @@ public:
     ChunkBlockNode *  currChunk;
     char *            p, *blockStart, *blockEnd;
 
-#if DEBUG  
+#if DEBUG
     assert(pA);
     FreeListNode *    freeListNode;
     freeListNode = (FreeListNode*)((char*)pA - sizeof(FreeListNode));
@@ -128,7 +128,7 @@ private:
     return sizeof(ChunkBlockNode) + (GetTotalChunkSize() * chunksAtATime);
   }
 
-  /* This allocator handles allocations for allocation sizes 
+  /* This allocator handles allocations for allocation sizes
      in range <chunkSizeLow, chunkSizeHigh> */
   size_t            chunkSizeLow;
   size_t            chunkSizeHigh;
@@ -136,7 +136,7 @@ private:
   /* We need a relly fast check for deciding whether a given pointer was allocated
      by us or not, so that we know we can put it on a free list when it's being
      freed.
-     We do that by putting a magic value (<magicCookie> in the place used to store 
+     We do that by putting a magic value (<magicCookie> in the place used to store
      pointer to next free chunk when this value is on a free list. That way
      if the magic value is not there, we know it's not pointer to memory we
      allocated (should be majority of cases).

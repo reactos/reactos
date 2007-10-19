@@ -142,20 +142,20 @@ public:
 
   // Called to indicate that a new PDF document has been loaded.
   void startDoc(XRef *xrefA);
- 
+
   GBool isReverseVideo() { return gFalse; }
-  
+
   void setCairo (cairo_t *cr);
 
 protected:
   void doPath(GfxState *state, GfxPath *path);
-  
+
   GfxRGB fill_color, stroke_color;
   cairo_pattern_t *fill_pattern, *stroke_pattern;
   double fill_opacity;
   double stroke_opacity;
   CairoFont *currentFont;
-  
+
   XRef *xref;			// xref table for current document
 
   FT_Library ft_lib;

@@ -28,8 +28,8 @@ static void standardreg(CPU_INT *RegTableCount, CPU_UNINT reg,
     }
 }
 
-CPU_INT ConvertToPPCProcess( FILE *outfp, 
-                               PMYBrainAnalys pMystart, 
+CPU_INT ConvertToPPCProcess( FILE *outfp,
+                               PMYBrainAnalys pMystart,
                                PMYBrainAnalys pMyend, CPU_INT regbits,
                                CPU_INT HowManyRegInUse,
                                CPU_INT *RegTableCount)
@@ -71,7 +71,7 @@ CPU_INT ConvertToPPCProcess( FILE *outfp,
     }
 
 
-/*  fixme gas compatible 
+/*  fixme gas compatible
     fprintf(outfp,"BITS 32\n");
     fprintf(outfp,"GLOBAL _main\n");
     fprintf(outfp,"SECTION .text\n\n");
@@ -130,7 +130,7 @@ CPU_INT ConvertToPPCProcess( FILE *outfp,
                     }
                 }
             } /* end pMyBrainAnalys->type & 8 */
-            
+
             if ((pMystart->type & 64)== 64)
             {
                 if ((pMystart->type & 2)== 2)
@@ -149,7 +149,7 @@ CPU_INT ConvertToPPCProcess( FILE *outfp,
                                  pMystart->src,
                                  setup_ebp, outfp);
                     fprintf(outfp,", %d(",pMystart->dst_extra);
-                    
+
                     standardreg( RegTableCount,
                                  pMystart->dst,
                                  setup_ebp, outfp);
@@ -165,7 +165,7 @@ CPU_INT ConvertToPPCProcess( FILE *outfp,
             {
                if (setup_ebp == 1)
                {
-                    // FIXME end our own frame pointer 
+                    // FIXME end our own frame pointer
                     fprintf(outfp,"\n; clean up after the frame \n");
                }
             }

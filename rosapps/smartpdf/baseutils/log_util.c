@@ -70,8 +70,8 @@ void slog_str(const char *txt)
 
     /* we're using this inefficient way of re-opening the file for each
        log so that we can also watch this file life using tail-like program */
-    fh = CreateFile(g_cur_fileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,  
-            OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL); 
+    fh = CreateFile(g_cur_fileName, GENERIC_WRITE, FILE_SHARE_READ, NULL,
+            OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL,  NULL);
     if (INVALID_HANDLE_VALUE == fh)
         return;
     SetFilePointer(fh, 0, NULL, FILE_END);

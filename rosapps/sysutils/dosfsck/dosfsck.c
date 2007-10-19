@@ -85,7 +85,7 @@ int main(int argc,char **argv)
     DOS_FS fs;
     int rw,salvage_files,verify,c;
     unsigned long free_clusters;
-    
+
     rw = salvage_files = verify = 0;
     interactive = 1;
     check_atari();

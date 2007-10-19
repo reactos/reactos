@@ -1,7 +1,7 @@
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 /* String Tables */
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_LOAD	   "Cargando ..."
   ERR_OK	   "Operación completada."
@@ -9,7 +9,7 @@ BEGIN
   ERR_GENERIC      "Ocurrió un error. \nPor favor, mira el archivo de log para más detalles."
   ERR_DOWNL	   "¡Un archivo necesario no pudo ser descargado!\nPor favor, mira el archivo de log para más detalles."
   ERR_FILE	   "Error durante la ejecución del Script.\nEl archivo no pudo abrirse."
- 
+
   ERR_SYNATX       "Error durante la ejecución del Script.\nSintaxis errónea."
   ERR_CALL         "Error durante la ejecución del Script.\nNo se pudo encontrar la función."
   ERR_PARAMETER    "Error durante la ejecución del Script.\nParametro(s) erróneo."

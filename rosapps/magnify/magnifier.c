@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Magnify
  * LICENSE:     GPL - See COPYING in the top level directory
  * FILE:        base/applications/magnify/magnifier.c
- * PURPOSE:     
+ * PURPOSE:
  * COPYRIGHT:   Copyright 2007 Marc Piulachs <marc.piulachs@codexchange.net>
  *
  */
@@ -95,7 +95,7 @@ ATOM MyRegisterClass(HINSTANCE hInstance)
 {
 	WNDCLASS wc;
 
-	wc.style            = CS_HREDRAW | CS_VREDRAW; 
+	wc.style            = CS_HREDRAW | CS_VREDRAW;
 	wc.lpfnWndProc      = WndProc;
 	wc.cbClsExtra       = 0;
 	wc.cbWndExtra       = 0;
@@ -126,16 +126,16 @@ BOOL InitInstance(HINSTANCE hInstance, int nCmdShow)
 	// Create the Window
    hMainWnd = CreateWindowEx(
 	    WS_EX_TOPMOST,
-		szWindowClass, 
-		szTitle, 
+		szWindowClass,
+		szTitle,
 		WS_OVERLAPPEDWINDOW,
-		CW_USEDEFAULT, 
-		CW_USEDEFAULT, 
-		CW_USEDEFAULT, 
-		CW_USEDEFAULT, 
-		NULL, 
-		NULL, 
-		hInstance, 
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		CW_USEDEFAULT,
+		NULL,
+		NULL,
+		hInstance,
 		NULL);
 
    if (!hMainWnd)
@@ -153,8 +153,8 @@ void Refresh ()
 {
 	if (!IsIconic(hMainWnd))
 	{
-		// Invalidate the client area forcing a WM_PAINT message 
-		InvalidateRgn(hMainWnd, NULL, TRUE); 
+		// Invalidate the client area forcing a WM_PAINT message
+		InvalidateRgn(hMainWnd, NULL, TRUE);
 	}
 }
 
@@ -181,16 +181,16 @@ void Draw(HDC aDc)
     GetCursorInfo(&info);
     hCursor = info.hCursor;
 
-	 /* Create a memory DC compatible with client area DC.*/ 
-	HdcStrech = CreateCompatibleDC(desktopHdc); 
-	   
-	/* Create a bitmap compatible with the client area DC.*/ 
+	 /* Create a memory DC compatible with client area DC.*/
+	HdcStrech = CreateCompatibleDC(desktopHdc);
+
+	/* Create a bitmap compatible with the client area DC.*/
 	HbmpStrech = CreateCompatibleBitmap(
 		desktopHdc,
 		R.right,
-		R.bottom); 
+		R.bottom);
 
-	/* Select our bitmap in memory DC and save the old one.*/ 
+	/* Select our bitmap in memory DC and save the old one.*/
 	hOld = SelectObject (HdcStrech , HbmpStrech);
 
 	/* Paint the screen bitmap to our in memory DC */
@@ -207,9 +207,9 @@ void Draw(HDC aDc)
 
 	/* Draw the mouse pointer in the right position */
 	DrawIcon(
-		HdcStrech , 
-		pMouse.x - 10, 
-		pMouse.y - 10, 
+		HdcStrech ,
+		pMouse.x - 10,
+		pMouse.y - 10,
 		hCursor);
 
 	int Width = (R.right - R.left);
@@ -262,19 +262,19 @@ void Draw(HDC aDc)
 		blitAreaHeight,
 		rop);
 
-	/* Blast the image from memory DC to client DC.*/ 
+	/* Blast the image from memory DC to client DC.*/
 	BitBlt (
 		aDc,
-		0 , 
-		0 , 
+		0 ,
+		0 ,
 		AppWidth ,
 		AppHeight ,
 		HdcStrech ,
 		0 ,
-		0 , 
+		0 ,
 		SRCCOPY);
 
-	/* Cleanup.*/ 
+	/* Cleanup.*/
 	SelectObject (HdcStrech, hOld);
 	DeleteObject (HbmpStrech);
 	DeleteDC (HdcStrech);
@@ -302,19 +302,19 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			POINT pNewCaret;
 			POINT pNewFocus;
 
-			//Get current mouse position 
+			//Get current mouse position
 			GetCursorPos (&pNewMouse);
 
 			//Get caret position
-			HWND hwnd1 = GetForegroundWindow (); 
-			DWORD a = GetWindowThreadProcessId(hwnd1, NULL); 
-			DWORD b = GetCurrentThreadId(); 
-			AttachThreadInput (a, b, TRUE); 
-			HWND hwnd2 = GetFocus(); 
+			HWND hwnd1 = GetForegroundWindow ();
+			DWORD a = GetWindowThreadProcessId(hwnd1, NULL);
+			DWORD b = GetCurrentThreadId();
+			AttachThreadInput (a, b, TRUE);
+			HWND hwnd2 = GetFocus();
 
-			GetCaretPos( &pNewCaret); 
-			ClientToScreen (hwnd2, (LPPOINT) &pNewCaret); 
-			AttachThreadInput (a, b, FALSE); 
+			GetCaretPos( &pNewCaret);
+			ClientToScreen (hwnd2, (LPPOINT) &pNewCaret);
+			AttachThreadInput (a, b, FALSE);
 
 			//Get current control focus
 			HWND hwnd3 = GetFocus ();
@@ -376,7 +376,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
       break;
    case WM_ERASEBKGND:
-		//handle WM_ERASEBKGND by simply returning non-zero because we did all the drawing in WM_PAINT. 
+		//handle WM_ERASEBKGND by simply returning non-zero because we did all the drawing in WM_PAINT.
 	   break;
 	case WM_DESTROY:
 		//Save settings to registry
@@ -390,7 +390,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 			//Get the desktop window
 			hDesktopWindow = GetDesktopWindow();
-			
+
 			if (bShowWarning)
 			{
 				DialogBox (hInst, MAKEINTRESOURCE(IDD_WARNINGDIALOG), hWnd, (DLGPROC)WarningProc);
@@ -400,8 +400,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				ShowWindow (hMainWnd, SW_MINIMIZE );
 			}
-			
-			//Set the timer 
+
+			//Set the timer
 			SetTimer (hWnd , 1, REPAINT_SPEED , NULL);
 			break;
 	default:
@@ -487,11 +487,11 @@ INT_PTR CALLBACK OptionsProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		switch(LOWORD(wParam))
 		{
             case IDC_ZOOM:
-				if(HIWORD(wParam) == CBN_SELCHANGE) 
-				{ 
+				if(HIWORD(wParam) == CBN_SELCHANGE)
+				{
 					HWND hCombo = GetDlgItem(hDlg,IDC_ZOOM);
 
-					/* Get index of current selection and the text of that selection. */ 
+					/* Get index of current selection and the text of that selection. */
 					iZoom = SendMessage( hCombo, CB_GETCURSEL, (WPARAM) wParam, (LPARAM) lParam ) + 1;
 
 					//Update the magnigier UI

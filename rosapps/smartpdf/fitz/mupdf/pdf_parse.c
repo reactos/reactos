@@ -235,7 +235,7 @@ skip:
 			goto cleanup;
 
 		error = fz_newname(&key, buf);
-		if (error) 
+		if (error)
             goto cleanup;
 
 		tok = pdf_lex(file, buf, cap, &len);
@@ -259,7 +259,7 @@ skip:
 				error = fz_newint(&val, a);
 				if (error) goto cleanup;
 				error = fz_dictput(dict, key, val);
-				if (error) 
+				if (error)
                     goto cleanup;
 				fz_dropobj(val);
 				fz_dropobj(key);
@@ -281,11 +281,11 @@ skip:
 			goto cleanup;
 		}
 
-		if (error) 
+		if (error)
             goto cleanup;
 
 		error = fz_dictput(dict, key, val);
-		if (error) 
+		if (error)
             goto cleanup;
 
 		fz_dropobj(val);
@@ -294,11 +294,11 @@ skip:
 	}
 
 cleanup:
-	if (key) 
+	if (key)
         fz_dropobj(key);
 	if (val)
         fz_dropobj(val);
-	if (dict) 
+	if (dict)
         fz_dropobj(dict);
     *op = nil;
     if (error) return error;

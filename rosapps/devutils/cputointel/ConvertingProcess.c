@@ -68,7 +68,7 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
     switch (ToCpuid)
     {
         case IMAGE_FILE_MACHINE_I386:
-             ret = ConvertToIA32Process( outfp, pMystart, 
+             ret = ConvertToIA32Process( outfp, pMystart,
                                          pMyend, regbits,
                                          HowManyRegInUse,
                                          RegTableCount);
@@ -80,7 +80,7 @@ CPU_INT ConvertProcess(FILE *outfp, CPU_INT FromCpuid, CPU_INT ToCpuid)
              break;
 
         case IMAGE_FILE_MACHINE_POWERPC:
-             ret = ConvertToPPCProcess( outfp, pMystart, 
+             ret = ConvertToPPCProcess( outfp, pMystart,
                                         pMyend, regbits,
                                         HowManyRegInUse,
                                         RegTableCount);

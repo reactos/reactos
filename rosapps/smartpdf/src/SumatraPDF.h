@@ -9,7 +9,7 @@
 #define WINVER 0x0410
 #endif
 
-#ifndef _WIN32_WINNT 
+#ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x0400
 #endif
 
@@ -82,7 +82,7 @@ public:
     WindowInfo() {
         memzero(this, sizeof(*this)); // TODO: this might not be valid
     }
-    void GetCanvasSize() { 
+    void GetCanvasSize() {
         GetClientRect(hwndCanvas, &m_canvasRc);
     }
     int winDx() { return rect_dx(&m_canvasRc); }
@@ -124,7 +124,7 @@ public:
     AnimState       animState;
 
 	bool showSelection;
-	
+
 	/* selection rectangle in screen coordinates
 	 * while selecting, it represents area which is being selected */
 	RectI selectionRect;
@@ -146,17 +146,17 @@ extern "C" {
     SUMATRAPDF_API void Sumatra_Print(WindowInfo* pdfWin);
     SUMATRAPDF_API void Sumatra_PrintPDF(WindowInfo* pdfWin, const char *pdfFile, long showOptionWindow);
     SUMATRAPDF_API void Sumatra_SetDisplayMode(WindowInfo* pdfWin, long displayMode);
-    SUMATRAPDF_API long Sumatra_GoToNextPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToPreviousPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToFirstPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GoToLastPage(WindowInfo* pdfWin); 
+    SUMATRAPDF_API long Sumatra_GoToNextPage(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_GoToPreviousPage(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_GoToFirstPage(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_GoToLastPage(WindowInfo* pdfWin);
     SUMATRAPDF_API long Sumatra_GoToThisPage(WindowInfo* pdfWin, long pageNumber);
-    SUMATRAPDF_API long Sumatra_GetNumberOfPages(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_GetCurrentPage(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_ZoomIn(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_ZoomOut(WindowInfo* pdfWin); 
-    SUMATRAPDF_API long Sumatra_SetZoom(WindowInfo* pdfWin, long zoomValue); 
-    SUMATRAPDF_API long Sumatra_GetCurrentZoom(WindowInfo* pdfWin); 
+    SUMATRAPDF_API long Sumatra_GetNumberOfPages(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_GetCurrentPage(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_ZoomIn(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_ZoomOut(WindowInfo* pdfWin);
+    SUMATRAPDF_API long Sumatra_SetZoom(WindowInfo* pdfWin, long zoomValue);
+    SUMATRAPDF_API long Sumatra_GetCurrentZoom(WindowInfo* pdfWin);
     SUMATRAPDF_API void Sumatra_Resize(WindowInfo* pdfWin);
     SUMATRAPDF_API void Sumatra_ClosePdf(WindowInfo* pdfWin);
     SUMATRAPDF_API void Sumatra_ShowPrintDialog(WindowInfo* pdfWin);

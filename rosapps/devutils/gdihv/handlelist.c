@@ -85,7 +85,7 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 		if ( ((ProcessId != (HANDLE)1) && ((pEntry->Type & GDI_HANDLE_BASETYPE_MASK) != 0)) ||
 		     ((ProcessId == (HANDLE)1) && ((pEntry->Type & GDI_HANDLE_BASETYPE_MASK) == 0)) )
 		{
-			if (ProcessId == (HANDLE)1 || 
+			if (ProcessId == (HANDLE)1 ||
 			    ProcessId == (HANDLE)((ULONG)pEntry->ProcessId & 0xfffc))
 			{
 				handle = GDI_HANDLE_CREATE(i, pEntry->Type);

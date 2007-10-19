@@ -27,8 +27,8 @@ enum
 
 static char *basenames[14] =
 {
-	"Courier", 
-	"Courier-Bold", 
+	"Courier",
+	"Courier-Bold",
 	"Courier-Oblique",
 	"Courier-BoldOblique",
 	"Helvetica",
@@ -39,7 +39,7 @@ static char *basenames[14] =
 	"Times-Bold",
 	"Times-Italic",
 	"Times-BoldItalic",
-	"Symbol", 
+	"Symbol",
 	"ZapfDingbats"
 };
 

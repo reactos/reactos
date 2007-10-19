@@ -28,7 +28,7 @@ CSocket::CSocket()
     // Any address will do
     SockAddrIn.sin_addr.s_addr = INADDR_ANY;
 
-    // Convert to network ordering 
+    // Convert to network ordering
     SockAddrIn.sin_port = htons(0);
 }
 
@@ -48,7 +48,7 @@ VOID CSocket::SetSocket(SOCKET socket)
 {
 	Socket = socket;
 }
-	
+
 
 // Return socket address
 SOCKADDR_IN CSocket::GetSockAddrIn()
@@ -71,7 +71,7 @@ VOID CSocket::SetEvents(LONG lEvents)
 		if (Event == WSA_INVALID_EVENT)
 			throw ESocketOpen(TS("Unable to create event."));
 	}
-	
+
 	if (lEvents != Events) {
 		// Associate network events with socket
 		if (WSAEventSelect(Socket, Event, lEvents) == SOCKET_ERROR)
@@ -138,7 +138,7 @@ VOID CServerClientSocket::MessageLoop()
     if ((nStatus == 0) && (WSAEnumNetworkEvents(Socket, Event, &NetworkEvents) != SOCKET_ERROR)) {
         if ((NetworkEvents.lNetworkEvents & FD_READ) != 0) {
 			OnRead();
-		} 
+		}
         if ((NetworkEvents.lNetworkEvents & FD_CLOSE) != 0) {
 			OnClose();
         }
@@ -165,7 +165,7 @@ CServerClientThread::~CServerClientThread()
 }
 
 
-// ************************** CServerSocket **************************	
+// ************************** CServerSocket **************************
 
 // Default constructor
 CServerSocket::CServerSocket()
@@ -183,8 +183,8 @@ CServerSocket::~CServerSocket()
 VOID CServerSocket::Open()
 {
 	assert(!Active);
-	
-	// Convert to network ordering 
+
+	// Convert to network ordering
 	SockAddrIn.sin_port = htons(Port);
 
 	if (Socket == INVALID_SOCKET) {
@@ -222,7 +222,7 @@ VOID CServerSocket::Close()
 			throw ESocketClose(TS("Unable to close socket event."));
 		Event = WSA_INVALID_EVENT;
 	}
-	
+
 	CIterator<LPCServerClientThread> *i = Connections.CreateIterator();
 
 	// Terminate and free all client threads
@@ -257,7 +257,7 @@ VOID CServerSocket::MessageLoop()
     WSANETWORKEVENTS NetworkEvents;
 	LPCServerClientSocket lpClient;
 	LPCServerClientThread lpThread;
-	
+
     nStatus = WSAWaitForMultipleEvents(1, &Event, FALSE, 0, FALSE);
     if ((nStatus == 0) && (WSAEnumNetworkEvents(Socket, Event, &NetworkEvents) != SOCKET_ERROR)) {
         if ((NetworkEvents.lNetworkEvents & FD_ACCEPT) != 0) {
@@ -322,13 +322,13 @@ VOID InitWinsock()
     WSADATA wsaData;
 
     wVersionRequested = MAKEWORD(2, 0);
- 
+
     if (WSAStartup(wVersionRequested, &wsaData) != 0)
         // Return FALSE as we couldn't find a usable WinSock DLL
 		throw ESocketWinsock(TS("Unable to initialize winsock dll."));
-   
+
     /* Confirm that the WinSock DLL supports 2.0 */
- 
+
     if (LOBYTE(wsaData.wVersion) != 2 || HIBYTE(wsaData.wVersion) != 0) {
         // We couldn't find a usable winsock dll
         WSACleanup();

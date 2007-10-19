@@ -123,7 +123,7 @@ private:
 //Uncomment if you want to gather stats on hit rate of the cache
 //#define CALC_OBJECT_STRING_CACHE_STATS 1
 
-/* A cache for GooString. You can think of it as a custom allocator 
+/* A cache for GooString. You can think of it as a custom allocator
    for GooString(). Use alloc() to get a new GooString() and free() to free
    existing GooString(). It keeps last GooStringCache::CACHE_SIZE free()ed
    strings in a cache (which is a stack) and satisfies the alloc()s from
@@ -131,7 +131,7 @@ private:
    It's used by Object::free()/Object::init*() and works great for them
    because they recycle strings like crazy.
 */
-class GooStringCache 
+class GooStringCache
 {
 public:
   GooStringCache() {

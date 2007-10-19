@@ -31,7 +31,7 @@ getrun(const unsigned char *line, int x, int w, int c)
 {
 	int z;
 	int b;
-	
+
 	if (x < 0)
 		x = 0;
 
@@ -47,7 +47,7 @@ getrun(const unsigned char *line, int x, int w, int c)
 	return z - x;
 }
 
-static inline int 
+static inline int
 findchanging(const unsigned char *line, int x, int w)
 {
 	int a, b;
@@ -77,7 +77,7 @@ findchanging(const unsigned char *line, int x, int w)
 	return x;
 }
 
-static inline int 
+static inline int
 findchangingcolor(const unsigned char *line, int x, int w, int color)
 {
 	if (line == 0)
@@ -97,7 +97,7 @@ static const unsigned char lm[8] =
 static const unsigned char rm[8] =
 	{ 0x00, 0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE };
 
-static inline void 
+static inline void
 setbits(unsigned char *line, int x0, int x1)
 {
 	int a0, a1, b0, b1, a;

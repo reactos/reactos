@@ -52,7 +52,7 @@ public:
   // get the unicode
   Unicode *unicode() const { return s; }
 
-  // Return a newly allocated copy of the string converted to 
+  // Return a newly allocated copy of the string converted to
   // ascii (non-Unicode) format. Caller has to delete [] the result
   char *getCStringCopy() const;
 

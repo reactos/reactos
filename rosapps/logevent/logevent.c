@@ -57,7 +57,7 @@ Usage(VOID)
     fputs("  /?  Help\n", stderr);
 }
 
-void 
+void
 WriteEvent (VOID)
 {
     HANDLE hAppLog;
@@ -199,7 +199,7 @@ static BOOL ParseCmdline(int argc, TCHAR **argv)
 
 int main(int argc, char **argv)
 {
-    if (ParseCmdline(argc, argv)) 
+    if (ParseCmdline(argc, argv))
         WriteEvent ();
 
     return 0;

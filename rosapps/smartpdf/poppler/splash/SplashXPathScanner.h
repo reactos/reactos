@@ -59,7 +59,7 @@ private:
 
   int interY;			// current y value
   int interIdx;			// current index into <inter> - used by
-				//   getNextSpan 
+				//   getNextSpan
   int interCount;		// current EO/NZWN counter - used by
 				//   getNextSpan
   int xPathIdx;			// current index into <xPath> - used by

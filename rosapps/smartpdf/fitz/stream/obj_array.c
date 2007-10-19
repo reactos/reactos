@@ -12,7 +12,7 @@ fz_newarray(fz_obj **op, int initialcap)
 	obj = *op = fz_malloc(sizeof (fz_obj));
 	if (!obj) return fz_outofmem;
 
-	obj->refs = 1;	
+	obj->refs = 1;
 	obj->kind = FZ_ARRAY;
 
 	obj->u.a.len = 0;

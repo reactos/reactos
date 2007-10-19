@@ -88,14 +88,14 @@ public:
     { initObj(objInt); intg = intgA; return this; }
   Object *initReal(double realA)
     { initObj(objReal); real = realA; return this; }
-  Object *initString(GooString *stringA) { 
-        initObj(objString); 
-        string = stringA; 
+  Object *initString(GooString *stringA) {
+        initObj(objString);
+        string = stringA;
         return this; }
   Object *initName(char *nameA) {
     initObj(objName);
     name = g_objectStringCache.alloc(nameA);
-    return this; 
+    return this;
   }
 
   Object *initNull()
@@ -107,9 +107,9 @@ public:
   Object *initRef(int numA, int genA)
     { initObj(objRef); ref.num = numA; ref.gen = genA; return this; }
   Object *initCmd(char *cmdA) {
-    initObj(objCmd); 
+    initObj(objCmd);
     cmd = g_objectStringCache.alloc(cmdA);
-    return this; 
+    return this;
   }
   Object *initError()
     { initObj(objError); return this; }
@@ -331,7 +331,7 @@ inline void Object::streamClose()
   { stream->close(); }
 
 inline int Object::streamGetChar(){
-    return stream->getChar(); 
+    return stream->getChar();
 }
 
 inline int Object::streamLookChar()

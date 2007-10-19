@@ -30,7 +30,7 @@ enum
 	GETTYPE_BUILD	= 0x080
 };
 
-INT 
+INT
 GetVersionNumber(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 {
 	INT VersionNumber = 255;
@@ -40,7 +40,7 @@ GetVersionNumber(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 		VersionNumber += (pBuf102->sv102_version_minor * 100);
 	}
 	else if(bLocal)
-	{		
+	{
 		VersionNumber = osvi->dwMajorVersion * 1000;
 		VersionNumber += (osvi->dwMinorVersion * 100);
 	}
@@ -48,7 +48,7 @@ GetVersionNumber(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 	return VersionNumber;
 }
 
-INT 
+INT
 GetMajValue(BOOL Major, BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 {
 	INT VersionNumber = 255;
@@ -69,7 +69,7 @@ GetMajValue(BOOL Major, BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 p
 	return VersionNumber;
 }
 
-INT 
+INT
 GetSystemRole(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 {
 
@@ -96,7 +96,7 @@ GetSystemRole(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 
 }
 
-INT 
+INT
 GetServicePack(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102, TCHAR * Server)
 {
 	INT SPNumber = 255;
@@ -111,7 +111,7 @@ GetServicePack(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102, T
 	return SPNumber;
 }
 
-INT 
+INT
 GetBuildNumber(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 {
 	INT BuildNum = 255;
@@ -147,7 +147,7 @@ INT GetType(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 					return 5;
 				else if(osvi->wSuiteMask & VER_SUITE_ENTERPRISE)
 					return 4;
-				else 
+				else
 					return 3;
 			}
 		}
@@ -159,7 +159,7 @@ INT GetType(BOOL bLocal, LPOSVERSIONINFOEX osvi, LPSERVER_INFO_102 pBuf102)
 	return 255;
 }
 
-VOID 
+VOID
 GetBasicInfo(LPOSVERSIONINFOEX osvi, TCHAR * HostName, TCHAR * OSName, TCHAR * Version, TCHAR * Role, TCHAR * Components)
 {
 	/* Host Name - COMPUTERNAME*/
@@ -191,7 +191,7 @@ GetBasicInfo(LPOSVERSIONINFOEX osvi, TCHAR * HostName, TCHAR * OSName, TCHAR * V
 	{
 		_tcscpy(OSName, _T("Microsoft Windows Vista "));
 	}
-	else 
+	else
 	{
 		_tcscpy(OSName, _T("Microsoft Windows "));
 	}

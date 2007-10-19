@@ -77,7 +77,7 @@ int CShellCommandsLinkedList::Execute(CArgumentParser& rArgumentParser, int& nRe
 	int i = -1;
 
 	SNode *pNode = m_pRoot;
-	
+
 	while(pNode)
 	{
 		i++;
@@ -95,7 +95,7 @@ int CShellCommandsLinkedList::Execute(CArgumentParser& rArgumentParser, int& nRe
 CShellCommand * CShellCommandsLinkedList::Match(const TCHAR * pchCommand)
 {
 	SNode *pNode = m_pRoot;
-	
+
 	while(pNode)
 	{
 		if (pNode->m_pData->Match(pchCommand))

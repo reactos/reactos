@@ -238,7 +238,7 @@ tiffreadfiltered(sa_tiff *tiff,
 		}
 		else if (error == fz_ioneedout)
 		{
-			if (out->wp - out->rp == 0)	
+			if (out->wp - out->rp == 0)
 			{
 				error = fz_growbuffer(out);
 				if (error)

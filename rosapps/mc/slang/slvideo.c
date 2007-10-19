@@ -1258,7 +1258,7 @@ void SLtt_putchar (char ch)
 #   ifdef USE_ASM
 	SNOW_CHECK;
 #   endif
-	
+
 #  endif	/* GO32_VIDEO */
 # endif	/* __os2__ */
 #endif	/* EMX_VIDEO */

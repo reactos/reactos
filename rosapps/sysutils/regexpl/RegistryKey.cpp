@@ -61,7 +61,7 @@ HRESULT CRegistryKey::InitRoot(const TCHAR *pszMachineName)
   {
     return E_INVALIDARG;
   }
-    
+
   HRESULT hr = Uninit();
   if (FAILED(hr))
     return hr;
@@ -81,7 +81,7 @@ HRESULT CRegistryKey::InitRoot(const TCHAR *pszMachineName)
   {
     m_pszMachineName = NULL; // local registry
   }
-  
+
   ASSERT(m_pszKeyName == NULL);
 	m_CurrentAccess = 0;
 	ASSERT(m_hKey == NULL);
@@ -97,12 +97,12 @@ HRESULT CRegistryKey::Init(HKEY hKey, const TCHAR *pszPath, const TCHAR *pszKeyN
 
   if (!pszKeyName || !hKey)
     return E_INVALIDARG;
-  
+
   // copy key name name
   size_t size = _tcslen(pszKeyName);
   if (pszPath)
     size += _tcslen(pszPath);
-  
+
   m_pszKeyName = new TCHAR [size+2];
   if (!m_pszKeyName)
     return E_OUTOFMEMORY;
@@ -132,9 +132,9 @@ HRESULT CRegistryKey::Uninit()
   LONG nError = ERROR_SUCCESS;
 	if((m_hKey != NULL)&&(!IsHive(m_hKey)))
 		nError = RegCloseKey(m_hKey);
-     
+
   m_hKey = NULL;
-  
+
   return (nError == ERROR_SUCCESS)?S_OK:E_FAIL;
 }
 
@@ -172,87 +172,87 @@ LONG CRegistryKey::OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, HKE
 				(_tcsicmp(pszSubkeyName,_T("HKEY_CLASSES_ROOT")) == 0))
     {
       rhKey = HKEY_CLASSES_ROOT;
-      
+
       if (m_pszMachineName)
         return ERROR_FILE_NOT_FOUND;
-            
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKCU")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_CURRENT_USER")) == 0))
     {
       rhKey = HKEY_CURRENT_USER;
-      
+
       if (m_pszMachineName)
         return ERROR_FILE_NOT_FOUND;
-            
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKLM")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_LOCAL_MACHINE")) == 0))
     {
       rhKey = HKEY_LOCAL_MACHINE;
-      
+
       if (m_pszMachineName)
         return RegConnectRegistry(m_pszMachineName,rhKey,&rhKey);
-      
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKU")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_USERS")) == 0))
     {
       rhKey = HKEY_USERS;
-      
+
       if (m_pszMachineName)
         return RegConnectRegistry(m_pszMachineName,rhKey,&rhKey);
-      
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKPD")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_PERFORMANCE_DATA")) == 0))
     {
       rhKey = HKEY_PERFORMANCE_DATA;
-      
+
       if (m_pszMachineName)
         return RegConnectRegistry(m_pszMachineName,rhKey,&rhKey);
-      
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKDD")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_DYN_DATA")) == 0))
     {
       rhKey = HKEY_DYN_DATA;
-      
+
       if (m_pszMachineName)
         return RegConnectRegistry(m_pszMachineName,rhKey,&rhKey);
-      
+
       return ERROR_SUCCESS;
     }
     else if ((_tcsicmp(pszSubkeyName,_T("HKCC")) == 0)||
              (_tcsicmp(pszSubkeyName,_T("HKEY_CURRENT_CONFIG")) == 0))
     {
       rhKey = HKEY_CURRENT_CONFIG;
-      
+
       if (m_pszMachineName)
       {
         TCHAR *pch = m_pszMachineName;
         while (*pch)
           pch++;
         pch--;
-        
+
         ASSERT(*pch == _T('\\'));
         if (*pch != _T('\\'))
           return ERROR_INTERNAL_ERROR;
 
         *pch = 0;
-        
+
         LONG nError = RegConnectRegistry(m_pszMachineName,rhKey,&rhKey);
 
         *pch = _T('\\');
-        
+
         return nError;
       }
-      
+
       return ERROR_SUCCESS;
     }
     else
@@ -260,7 +260,7 @@ LONG CRegistryKey::OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, HKE
       return ERROR_FILE_NOT_FOUND;
     }
   }
-  
+
 	return RegOpenKeyEx(m_hKey,pszSubkeyName,0,samDesired,&rhKey);
 }
 
@@ -268,7 +268,7 @@ LONG CRegistryKey::OpenSubkey(REGSAM samDesired, const TCHAR *pszSubkeyName, CRe
 {
   HKEY hKey;
   LONG nError = OpenSubkey(samDesired, pszSubkeyName, hKey);
-  
+
   if (nError == ERROR_SUCCESS)
   {
     const TCHAR *pszKeyName = GetKeyName();
@@ -309,18 +309,18 @@ LONG CRegistryKey::GetSubkeyNameMaxLength(DWORD &rdwMaxSubkeyNameLength)
       if (rdwMaxSubkeyNameLength < l)
         rdwMaxSubkeyNameLength = l;
     }
-    
+
     rdwMaxSubkeyNameLength++; // terminating null
-    
+
     return ERROR_SUCCESS;
   }
-  
+
   LONG nRet;
 
   nRet = RegQueryInfoKey(m_hKey,NULL,NULL,NULL,NULL,&rdwMaxSubkeyNameLength,NULL,NULL,NULL,NULL,NULL,NULL);
 
   rdwMaxSubkeyNameLength = (nRet == ERROR_SUCCESS)?(rdwMaxSubkeyNameLength+1):0;
-  
+
   return nRet;
 }
 
@@ -334,7 +334,7 @@ void CRegistryKey::InitSubkeyEnumeration(TCHAR *pszSubkeyNameBuffer, DWORD dwBuf
 LONG CRegistryKey::GetNextSubkeyName(DWORD *pdwActualSize)
 {
   LONG nError;
-  
+
   if (m_hKey == NULL)
   {
     if (m_dwCurrentSubKeyIndex < (DWORD)(m_pszMachineName?5:7))
@@ -365,7 +365,7 @@ LONG CRegistryKey::GetNextSubkeyName(DWORD *pdwActualSize)
     if (pdwActualSize)
       *pdwActualSize = dwActualSize;
   }
-  
+
 	m_dwCurrentSubKeyIndex++;
 
   if (pdwActualSize)
@@ -389,7 +389,7 @@ LONG CRegistryKey::GetMaxValueNameLength(DWORD& rdwMaxValueNameBuferSize)
 
   if (!m_hKey)
     return 0; // the root key abstraction has only subkeys (hives)
-  
+
 	LONG nError = RegQueryInfoKeyW(m_hKey,NULL,NULL,NULL,NULL,NULL,NULL,NULL,&rdwMaxValueNameBuferSize,NULL,NULL,NULL);
 
   rdwMaxValueNameBuferSize++;
@@ -407,7 +407,7 @@ void CRegistryKey::InitValueEnumeration(TCHAR *pszValueNameBuffer,
   m_pbValueDataBuffer = pbValueDataBuffer;
   m_dwValueDataBufferSize = dwValueDataBufferSize;
   m_pdwType = pdwType;
-  
+
 	m_dwCurrentValueIndex = 0;
 }
 
@@ -418,7 +418,7 @@ LONG CRegistryKey::GetNextValue(DWORD *pdwNameActualSize, DWORD *pdwDataActualSi
 {
   if (!m_hKey)
     return ERROR_NO_MORE_ITEMS; // the root key abstraction has only subkeys (hives)
-  
+
 	DWORD dwValueNameBufferSize = m_dwValueNameBufferSize;
 	DWORD dwValueDataBufferSize = m_dwValueDataBufferSize;
   LONG nError = RegEnumValue(m_hKey,
@@ -432,10 +432,10 @@ LONG CRegistryKey::GetNextValue(DWORD *pdwNameActualSize, DWORD *pdwDataActualSi
 
   if (pdwNameActualSize)
     *pdwNameActualSize = dwValueNameBufferSize;
-  
+
   if (pdwDataActualSize)
     *pdwDataActualSize = dwValueDataBufferSize;
-  
+
 	m_dwCurrentValueIndex++;
 	return nError;
 }
@@ -444,7 +444,7 @@ LONG CRegistryKey::GetValueCount(DWORD& rdwValueCount)
 {
   if (!m_hKey)
     return 0; // the root key abstraction has only subkeys (hives)
-  
+
   return RegQueryInfoKeyW(m_hKey,NULL,NULL,NULL,NULL,NULL,NULL,&rdwValueCount,NULL,NULL,NULL,NULL);
 }
 
@@ -454,7 +454,7 @@ LONG CRegistryKey::GetDefaultValue(DWORD *pdwType,
                                    DWORD *pdwValueDataActualSize)
 {
   DWORD dwBufferSize = dwValueDataBufferSize;
-  
+
 	LONG nError = RegQueryValueEx(m_hKey,NULL,NULL,pdwType,pbValueDataBuffer,&dwBufferSize);
 
   if (pdwValueDataActualSize && (nError == ERROR_SUCCESS))
@@ -506,7 +506,7 @@ LONG CRegistryKey::CreateSubkey(REGSAM samDesired,
                                 BOOL blnVolatile)
 {
   DWORD dwDisposition;
-  
+
 	LONG nError = RegCreateKeyEx(
       m_hKey,
       pszSubkeyName,
@@ -520,7 +520,7 @@ LONG CRegistryKey::CreateSubkey(REGSAM samDesired,
 
   if ((nError == ERROR_SUCCESS)&&(pblnOpened))
     *pblnOpened = dwDisposition == REG_OPENED_EXISTING_KEY;
-  
+
 	return nError;
 }
 
@@ -543,7 +543,7 @@ const TCHAR * CRegistryKey::GetLastWriteTime()
 	SYSTEMTIME st;
 	if (GetLastWriteTime(st) != ERROR_SUCCESS)
     return _T("(Cannot get time last write time)");
-  
+
 	static TCHAR Buffer[256];
 	_stprintf(Buffer,_T("%d.%d.%d %02d:%02d:%02d"),st.wDay,st.wMonth,st.wYear,st.wHour,st.wMinute,st.wSecond);
 	return Buffer;

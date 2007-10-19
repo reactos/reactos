@@ -64,7 +64,7 @@ pdf_loadtype4shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		pdf_loadshadefunction(shade, xref, shading, c0[0], c1[0]);
 	}
 
-	bitspervertex = bpflag + bpcoord * 2 + bpcomp * ncomp;	
+	bitspervertex = bpflag + bpcoord * 2 + bpcomp * ncomp;
 	bytepervertex = (bitspervertex+7) / 8;
 
 	error = pdf_loadstream(&buf, xref, fz_tonum(ref), fz_togen(ref));
@@ -241,7 +241,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		ncomp = 1;
 		pdf_loadshadefunction(shade, xref, shading, c0[0], c1[0]);
 		shade->usefunction = 1;
-	} 
+	}
 	else
 		shade->usefunction = 0;
 
@@ -306,7 +306,7 @@ pdf_loadtype5shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 			ADD_VERTEX(q * vpr + p);
 			ADD_VERTEX(q * vpr + p + 1);
 			ADD_VERTEX((q + 1) * vpr + p + 1);
-			
+
 			ADD_VERTEX(q * vpr + p);
 			ADD_VERTEX((q + 1) * vpr + p + 1);
 			ADD_VERTEX((q + 1) * vpr + p);
@@ -376,7 +376,7 @@ filltensorinterior(pdf_tensorpatch *p)
 		lcp2(p->pole[2][0].x, p->pole[2][3].x) -
 		lcp2(lcp2(p->pole[0][0].x, p->pole[0][3].x),
 		lcp2(p->pole[3][0].x, p->pole[3][3].x));
-	
+
 	p->pole[1][1].y = lcp1(p->pole[0][1].y, p->pole[3][1].y) +
 		lcp1(p->pole[1][0].y, p->pole[1][3].y) -
 		lcp1(lcp1(p->pole[0][0].y, p->pole[0][3].y),
@@ -438,7 +438,7 @@ split_patch(pdf_tensorpatch *s0, pdf_tensorpatch *s1, const pdf_tensorpatch *p)
 
 	copycolor(s1->color[0], s0->color[1]);
 	copycolor(s1->color[1], p->color[1]);
-	copycolor(s1->color[2], p->color[2]);	
+	copycolor(s1->color[2], p->color[2]);
 	copycolor(s1->color[3], s0->color[2]);
 }
 
@@ -520,12 +520,12 @@ static int
 drawstripe(pdf_tensorpatch patch, fz_shade *shade, int ptr, int ncomp, int depth)
 {
 	pdf_tensorpatch s0, s1;
-	
+
 	split_stripe(&s0, &s1, &patch);
 
 	depth++;
-	
-	if (depth >= SEGMENTATION_DEPTH) 
+
+	if (depth >= SEGMENTATION_DEPTH)
 	{
 		ptr = triangulatepatch(s0, shade, ptr, ncomp);
 		ptr = triangulatepatch(s1, shade, ptr, ncomp);
@@ -542,11 +542,11 @@ static int
 drawpatch(pdf_tensorpatch patch, fz_shade *shade, int ptr, int ncomp, int depth)
 {
 	pdf_tensorpatch s0, s1;
-	
+
 	split_patch(&s0, &s1, &patch);
 	depth++;
-	
-	if (depth > SEGMENTATION_DEPTH) 
+
+	if (depth > SEGMENTATION_DEPTH)
 	{
 		ptr = drawstripe(s0, shade, ptr, ncomp, 0);
 		ptr = drawstripe(s1, shade, ptr, ncomp, 0);
@@ -614,7 +614,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		ncomp = 1;
 		pdf_loadshadefunction(shade, xref, shading, c0[0], c1[0]);
 		shade->usefunction = 1;
-	} 
+	}
 	else
 		shade->usefunction = 0;
 
@@ -644,7 +644,7 @@ pdf_loadtype6shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 			int k;
 			for (k=0; k < ncomp; ++k) {
 				t = getdata(stream, bpcomp);
-				patch.color[i][k] = 
+				patch.color[i][k] =
 					c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
 			}
 		}
@@ -729,7 +729,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 		ncomp = 1;
 		pdf_loadshadefunction(shade, xref, shading, c0[0], c1[0]);
 		shade->usefunction = 1;
-	} 
+	}
 	else
 		shade->usefunction = 0;
 
@@ -759,7 +759,7 @@ pdf_loadtype7shade(fz_shade *shade, pdf_xref *xref, fz_obj *shading, fz_obj *ref
 			int k;
 			for (k=0; k < ncomp; ++k) {
 				t = getdata(stream, bpcomp);
-				patch.color[i][k] = 
+				patch.color[i][k] =
 					c0[k] + (t * (c1[k] - c0[k]) / (pow(2, bpcomp) - 1.0f));
 			}
 		}

@@ -28,7 +28,7 @@ Exemples:\n\
   SYSTEMINFO /S système /U domaine\\utilisateur /P motdepasse /FO TABLE\n\
   SYSTEMINFO /S système /FO LIST\n\
   SYSTEMINFO /S système /FO CSV /NH\n"
-   
+
 IDS_OS_NAME, 				"Nom du système d'exploitation:			%s\n"
 IDS_OS_VERSION, 			"Version du système d'exploitation:			%d.%d.%d %s"
 IDS_OS_BUILD, 				" Compilation %s\n"

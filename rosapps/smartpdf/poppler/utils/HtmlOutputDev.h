@@ -63,7 +63,7 @@ public:
   // Add a character to the string.
   void addChar(GfxState *state, double x, double y,
 	       double dx, double dy,
-	       Unicode u); 
+	       Unicode u);
   HtmlLink* getLink() { return link; }
   void endString(); // postprocessing
 
@@ -82,7 +82,7 @@ private:
   int len;			// length of text and xRight
   int size;			// size of text and xRight arrays
   UnicodeTextDirection dir;	// direction (left to right/right to left)
-  
+
   friend class HtmlPage;
 
 };
@@ -108,8 +108,8 @@ public:
 
   // Add a character to the current string.
   void addChar(GfxState *state, double x, double y,
-	       double dx, double dy, 
-		double ox, double oy, 
+	       double dx, double dy,
+		double ox, double oy,
 		Unicode *u, int uLen); //Guchar c);
 
   void updateFont(GfxState *state);
@@ -125,7 +125,7 @@ public:
   // stops looking at bottom of page; otherwise stops looking at
   // <xMax>,<yMax>.  If found, sets the text bounding rectange and
   // returns true; otherwise returns false.
-  
+
 
   // new functions
   void AddLink(const HtmlLink& x){
@@ -136,7 +136,7 @@ public:
 
   // Clear the page.
   void clear();
-  
+
   void conv();
 private:
   HtmlFont* getFont(HtmlString *hStr) { return fonts->Get(hStr->fontpos); }
@@ -149,16 +149,16 @@ private:
   HtmlString *yxStrings;	// strings in y-major order
   HtmlString *xyStrings;	// strings in x-major order
   HtmlString *yxCur1, *yxCur2;	// cursors for yxStrings list
-  
+
   void setDocName(char* fname);
   void dumpAsXML(FILE* f,int page);
   void dumpComplex(FILE* f, int page);
 
   // marks the position of the fonts that belong to current page (for noframes)
-  int fontsPageMarker; 
+  int fontsPageMarker;
   HtmlFontAccu *fonts;
-  HtmlLinks *links; 
-  
+  HtmlLinks *links;
+
   GooString *DocName;
   GooString *imgExt;
   int pageWidth;
@@ -175,9 +175,9 @@ private:
 class HtmlMetaVar {
 public:
     HtmlMetaVar(char *_name, char *_content);
-    ~HtmlMetaVar();    
-    
-    GooString* toString();	
+    ~HtmlMetaVar();
+
+    GooString* toString();
 
 private:
 
@@ -198,7 +198,7 @@ public:
   // 8-bit ISO Latin-1.  <useASCII7> should also be set for Japanese
   // (EUC-JP) text.  If <rawOrder> is true, the text is kept in content
   // stream order.
-  HtmlOutputDev(char *fileName, char *title, 
+  HtmlOutputDev(char *fileName, char *title,
 	  char *author,
 	  char *keywords,
 	  char *subject,
@@ -248,8 +248,8 @@ public:
 			double dx, double dy,
 			double originX, double originY,
 			CharCode code, int nBytes, Unicode *u, int uLen);
-  
-  virtual void drawImageMask(GfxState *state, Object *ref, 
+
+  virtual void drawImageMask(GfxState *state, Object *ref,
 			     Stream *str,
 			     int width, int height, GBool invert,
 			     GBool inlineImg);
@@ -257,9 +257,9 @@ public:
 			  int width, int height, GfxImageColorMap *colorMap,
 			 int *maskColors, GBool inlineImg);
 
-  //new feature    
+  //new feature
   virtual int DevType() {return 1234;}
-  virtual void drawLink(Link *link,Catalog *cat); 
+  virtual void drawLink(Link *link,Catalog *cat);
 
   int getPageWidth() { return maxPageWidth; }
   int getPageHeight() { return maxPageHeight; }

@@ -189,7 +189,7 @@ linejoin(struct sctx *s, fz_point a, fz_point b, fz_point c)
 
 	if (linejoin == ROUND)
 	{
-		if (cross < 0)	
+		if (cross < 0)
 		{
 			error = line(s, b.x - dlx0, b.y - dly0, b.x - dlx1, b.y - dly1);
 			if (error) return error;
@@ -323,7 +323,7 @@ strokemoveto(struct sctx *s, fz_point cur)
 {
 	fz_error *error;
 
-	error = strokeflush(s); 
+	error = strokeflush(s);
 	if (error) return error;
 
 	s->seg[0] = cur;

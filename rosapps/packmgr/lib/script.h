@@ -48,7 +48,7 @@ typedef struct
   FUNC_PROC function;
 } FUNC_TABLE;
 
-// very function is listed in there 
+// very function is listed in there
 extern const FUNC_TABLE FuncTable[];
 
 // count of functions
@@ -61,5 +61,5 @@ extern const FUNC_TABLE FuncTable[];
 #define STR_ONLY  0x0;
 #define STR_YES   0x2;
 
-// ^^ I would write down here that they 
+// ^^ I would write down here that they
 // mean but I don't know anymore myself :O

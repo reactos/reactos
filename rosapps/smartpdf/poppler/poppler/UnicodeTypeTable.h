@@ -17,7 +17,7 @@ extern GBool unicodeTypeR(Unicode c);
 
 extern Unicode unicodeToUpper(Unicode c);
 
-extern Unicode *unicodeNormalizeNFKC(Unicode *in, int len, 
+extern Unicode *unicodeNormalizeNFKC(Unicode *in, int len,
 				     int *out_len, int **offsets);
 
 #endif

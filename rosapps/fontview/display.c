@@ -194,7 +194,7 @@ Display_SetTypeFace(HWND hwnd, LPARAM lParam)
 	si.nPage  = rect.bottom;
 	si.nPos   = 0;
 	si.nTrackPos = 0;
-	SetScrollInfo(hwnd, SB_VERT, &si, TRUE); 
+	SetScrollInfo(hwnd, SB_VERT, &si, TRUE);
 
 	return 0;
 }

@@ -15,38 +15,38 @@
 // Properties:
 //	NO	Abstract class (does not have any objects)
 //	NO	Derived from CWnd
-//	NO	Is a CWnd.                     
+//	NO	Is a CWnd.
 //	NO	Two stage creation (constructor & Create())
 //	NO	Has a message map
 //	NO 	Needs a resource (template)
-//	YES	Persistent objects (saveable on disk)      
+//	YES	Persistent objects (saveable on disk)
 //	YES	Uses exceptions
 
 // //////////////////////////////////////////////////////////////////////////
 
-// Desciption :         
+// Desciption :
 
 // CDIBSectionLite is DIBSection wrapper class for win32 and WinCE platforms.
 // This class provides a simple interface to DIBSections including loading,
 // saving and displaying DIBsections.
 //
-// Full palette support is provided for Win32 and CE 2.11 and above. 
+// Full palette support is provided for Win32 and CE 2.11 and above.
 
 // Using CDIBSectionLite :
 
 // This class is very simple to use. The bitmap can be set using either SetBitmap()
-// (which accepts either a Device dependant or device independant bitmap, or a 
-// resource ID) or by using Load(), which allows an image to be loaded from disk. 
+// (which accepts either a Device dependant or device independant bitmap, or a
+// resource ID) or by using Load(), which allows an image to be loaded from disk.
 // To display the bitmap simply use Draw or Stretch.
 //
-// eg. 
+// eg.
 //
 //      CDIBsection dibsection;
 //      dibsection.Load(_T("image.bmp"));
 //      dibsection.Draw(pDC, CPoint(0,0));  // pDC is of type CDC*
 //
 //      CDIBsection dibsection;
-//      dibsection.SetBitmap(IDB_BITMAP); 
+//      dibsection.SetBitmap(IDB_BITMAP);
 //      dibsection.Draw(pDC, CPoint(0,0));  // pDC is of type CDC*
 //
 // The CDIBsection API includes many methods to extract information about the
@@ -97,11 +97,11 @@ struct PALETTEINFO : public LOGPALETTE
 {
     PALETTEENTRY arPalEntries[255];               // Palette entries
 
-    PALETTEINFO() 
+    PALETTEINFO()
     {
         palVersion    = (WORD) 0x300;
         palNumEntries = 0;
-        ::memset(palPalEntry, 0, 256*sizeof(PALETTEENTRY)); 
+        ::memset(palPalEntry, 0, 256*sizeof(PALETTEENTRY));
     }
 
     operator LPLOGPALETTE()   { return (LPLOGPALETTE) this;            }
@@ -137,7 +137,7 @@ public:
     HBITMAP      GetSafeHandle() const       { return (this)? m_hBitmap : NULL;        }
     operator     HBITMAP() const             { return GetSafeHandle();                 }
 	void		 GetSize(SIZE& size) const   { size.cx = GetWidth(); size.cy = GetHeight(); }
-    int          GetHeight() const           { return m_DIBinfo.bmiHeader.biHeight;    } 
+    int          GetHeight() const           { return m_DIBinfo.bmiHeader.biHeight;    }
     int          GetWidth() const            { return m_DIBinfo.bmiHeader.biWidth;     }
     int          GetPlanes() const           { return m_DIBinfo.bmiHeader.biPlanes;    }
     int          GetBitCount() const         { return m_DIBinfo.bmiHeader.biBitCount;  }
@@ -162,7 +162,7 @@ public:
     BOOL SetBitmap(UINT nIDResource, HINSTANCE hInst = NULL);
     BOOL SetBitmap(LPCTSTR lpszResourceName, HINSTANCE hInst = NULL);
     BOOL SetBitmap(HBITMAP hBitmap, HPALETTE hPal = NULL);
-    BOOL SetBitmap(LPBITMAPINFO lpBitmapInfo, LPVOID lpBits);   
+    BOOL SetBitmap(LPBITMAPINFO lpBitmapInfo, LPVOID lpBits);
 
     BOOL Load(LPCTSTR lpszFileName);
     BOOL Save(LPCTSTR lpszFileName);

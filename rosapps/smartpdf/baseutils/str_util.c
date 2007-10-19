@@ -656,7 +656,7 @@ Error:
 }
 
 #ifdef _WIN32
-void win32_dbg_out(const char *format, ...) 
+void win32_dbg_out(const char *format, ...)
 {
     char        buf[4096];
     char *      p = buf;

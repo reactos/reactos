@@ -32,7 +32,7 @@ fz_newdict(fz_obj **op, int initialcap)
 	obj = *op = fz_malloc(sizeof (fz_obj));
 	if (!obj) return fz_outofmem;
 
-	obj->refs = 1;  
+	obj->refs = 1;
 	obj->kind = FZ_DICT;
 
 	obj->u.d.sorted = 1;

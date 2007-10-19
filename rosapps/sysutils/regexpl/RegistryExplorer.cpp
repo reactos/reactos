@@ -151,7 +151,7 @@ int main ()
 		_ftprintf(stderr,_T("Cannot load settings. Error is 0x%X.\n"),(unsigned int)hr);
 		goto Abort;
 	}
-  
+
   pPrompt = new CPrompt(Tree,hr);
   if (!pPrompt)
 	{
@@ -202,7 +202,7 @@ int main ()
     _ftprintf(stderr,_T("Cannot initialize prompt. Error is 0x%X.\n"),(unsigned int)hr);
     goto Abort;
   }
-  
+
 GetCommand:
 	// prompt
 	// TODO: make prompt user-customizable

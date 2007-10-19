@@ -1,4 +1,4 @@
-/* 
+/*
  *
  *  ReactOS ps - process list console viewer
  *
@@ -27,8 +27,8 @@
 #include <windows.h>
 #include <ndk/ntndk.h>
 
-typedef struct _SYSTEM_THREADS 	 
- { 	 
+typedef struct _SYSTEM_THREADS
+ {
     LARGE_INTEGER KernelTime;
     LARGE_INTEGER UserTime;
     LARGE_INTEGER CreateTime;
@@ -40,10 +40,10 @@ typedef struct _SYSTEM_THREADS
     ULONG ContextSwitches;
     ULONG ThreadState;
     ULONG WaitReason;
- } SYSTEM_THREADS, *PSYSTEM_THREADS; 	 
-  	 
- typedef struct _SYSTEM_PROCESSES 	 
- { 	 
+ } SYSTEM_THREADS, *PSYSTEM_THREADS;
+
+ typedef struct _SYSTEM_PROCESSES
+ {
     ULONG NextEntryOffset;
     ULONG NumberOfThreads;
     LARGE_INTEGER SpareLi1;
@@ -85,9 +85,9 @@ typedef struct _SYSTEM_THREADS
     LARGE_INTEGER WriteTransferCount;
     LARGE_INTEGER OtherTransferCount;
 
-         SYSTEM_THREADS       Threads [1];  	 
- } SYSTEM_PROCESSES, *PSYSTEM_PROCESSES; 	 
- 
+         SYSTEM_THREADS       Threads [1];
+ } SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
+
 
 //                     x00000000 00000000 000:00:00  000:00:00 ()
 static char title[]  = "P     PID     PPID     KTime      UTime   NAME\n";
@@ -98,7 +98,7 @@ static char title2[] = "w     PID     Hwnd  WndStile        TID   WndName\n";
 struct status {
     DWORD state;
     const char  desc[10];
-}   thread_stat[8 + 1] = { 
+}   thread_stat[8 + 1] = {
     {0,	"Init      "},
     {1,	"Ready     "},
     {2,	"Running   "},
@@ -113,7 +113,7 @@ struct status {
 struct waitres {
     DWORD state;
     char  desc[17];
-}   waitreason[35 + 1] = { 
+}   waitreason[35 + 1] = {
    {0, "Executive        "},
    {1, "FreePage         "},
    {2, "PageIn           "},
@@ -159,9 +159,9 @@ EnumThreadProc(HWND hwnd, LPARAM lp)
 	LONG style;
 	char buf[256];
     HANDLE Stdout = GetStdHandle(STD_OUTPUT_HANDLE);
-	
+
 	GetWindowText(hwnd, (LPTSTR)lp, 30);
-	
+
 	if(hwnd != 0)
 	{
 	style = GetWindowLong(hwnd, GWL_STYLE);
@@ -185,7 +185,7 @@ int main()
     NTSTATUS Status;
     char buf[256];
     char buf1[256];
-    
+
     WriteFile(Stdout, title, lstrlen(title), &r, NULL);
     WriteFile(Stdout, title1, lstrlen(title1), &r, NULL);
     WriteFile(Stdout, title2, lstrlen(title2), &r, NULL);
@@ -222,7 +222,7 @@ int main()
 	hour    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
 	seconds = (ptime.QuadPart / 10000000LL) % 60LL;
-	
+
 	ptime.QuadPart = CurrentProcess->UserTime.QuadPart;
 	hour1    = (ptime.QuadPart / (10000000LL * 3600LL));
 	minute1  = (ptime.QuadPart / (10000000LL * 60LL)) % 60LL;
@@ -235,7 +235,7 @@ int main()
                  hour, minute, seconds, hour1, minute1, seconds1,
                  astring.Buffer);
         WriteFile(stdout, buf, lstrlen(buf), &r, NULL);
-        
+
         RtlFreeAnsiString(&astring);
 
 	for (ti = 0; ti < CurrentProcess->NumberOfThreads; ti++)
@@ -262,7 +262,7 @@ int main()
                 while (waitt->state != CurrentProcess->Threads[ti].WaitReason  && waitt->state >= 0)
                         waitt++;
 
-		wsprintf (buf1, 
+		wsprintf (buf1,
 		          "t%         %8d %3d:%02d:%02d  %3d:%02d:%02d   %s %s\n",
 		          CurrentProcess->Threads[ti].ClientId.UniqueThread,
 		          thour, tmin, tsec, thour1, tmin1, tsec1,
@@ -276,6 +276,6 @@ int main()
 
 	   CurrentProcess = (PSYSTEM_PROCESSES)((ULONG_PTR)CurrentProcess +
 	                     (ULONG_PTR)CurrentProcess->NextEntryOffset);
-	} 
+	}
   	return (0);
 }

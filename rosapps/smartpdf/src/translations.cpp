@@ -4,9 +4,9 @@
 #include "str_util.h"
 
 /*
-This code relies on the following variables that must be defined in a 
+This code relies on the following variables that must be defined in a
 separate file (translations_txt.h and translations_txt.c).
-The idea is that those files are automatically generated 
+The idea is that those files are automatically generated
 by a script from translations file.
 
 // number of languages we support
@@ -19,7 +19,7 @@ const char **g_transLangs;
 // total number of translated strings
 int g_transTranslationsCount;
 
-// array of translated strings. 
+// array of translated strings.
 // it has g_transLangsCount * g_translationsCount elements
 // (for simplicity). Translation i for language n is at position
 // (n * g_transTranslationsCount) + i
@@ -36,7 +36,7 @@ static int currLangIdx = 0;
    The list is not valid after a call to Translations_FreeData.
    The function must be called before any other function in this module.
    It can be called multiple times. This is to make debugging of translations
-   easier by allowing re-loading translation file at runtime. 
+   easier by allowing re-loading translation file at runtime.
    */
 bool Translations_FromData(const char* langs, const char* data, size_t data_len)
 {

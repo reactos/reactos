@@ -66,7 +66,7 @@ static int prefs_serialize_pref(prefs_data *pref, TCHAR **buf_ptr, size_t *buf_l
     if (!name_with_type) return FALSE;
     f_ok = netstr_tstr_serialize(name_with_type, buf_ptr, buf_len_cb_ptr);
     free((void*)name_with_type);
-    if (!f_ok) 
+    if (!f_ok)
         return FALSE;
 
     if (PT_INT == pref->type)
@@ -212,7 +212,7 @@ static int prefs_parse_item(prefs_data *prefs, const TCHAR **str_ptr, size_t *st
         assert(0);
         goto Exit;
     }
-    
+
     if (PT_INT == type)
         *pref->data.data_int = value_int;
     else if (PT_STRING == type) {

@@ -120,7 +120,7 @@ BOOL CShellCommandSetValue::Match(const TCHAR *pszCommand)
 int CShellCommandSetValue::Execute(CConsole &rConsole, CArgumentParser& rArguments)
 {
   LONG nError;
-  
+
 	rArguments.ResetArgumentIteration();
 	TCHAR *pszCommandItself = rArguments.GetNextArgument();
 
@@ -206,11 +206,11 @@ CheckValueArgument:
 
 	if (!pszValueData)
 		blnHelp = TRUE;
-	
+
 	CRegistryKey Key;
 	TCHAR *pszValueName;
 	const TCHAR *pszPath;
-	
+
 	if (blnHelp)
 	{
 		rConsole.Write(GetHelpString());
@@ -229,7 +229,7 @@ CheckValueArgument:
 		TCHAR *pchSep = _tcsrchr(pszValueFull,_T('\\'));
 		pszValueName = pchSep?(pchSep+1):(pszValueFull);
 		pszPath = pchSep?pszValueFull:_T(".");
-				
+
 		//if (_tcsrchr(pszValueName,_T('.')))
 		//{
 		//	pszValueName = _T("");
@@ -244,16 +244,16 @@ CheckValueArgument:
 		pszValueName = _T("");
 		pszPath = _T(".");
 	}
-		
+
   if (!m_rTree.GetKey(pszPath,KEY_SET_VALUE,Key))
   {
     rConsole.Write(m_rTree.GetLastErrorDescription());
     goto SkipCommand;
   }
-	
+
 	if (Key.IsRoot())
     goto CommandNAonRoot;
-  
+
   switch (dwType)
   {
   case REG_BINARY:

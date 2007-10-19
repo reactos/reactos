@@ -40,7 +40,7 @@ static fz_memorycontext *curmem = &defmem;
 
 fz_error fz_koutofmem = {
 	-1,
-	{"out of memory"}, 
+	{"out of memory"},
 	{"<malloc>"},
 	{"memory.c"},
 	0

@@ -54,7 +54,7 @@ public:
   int getRawChar() {
     if (fill_buffer())
       return EOF;
-  
+
     return out_buf[out_pos++];
   }
 

@@ -84,9 +84,9 @@ protected:
 
 class PdfEngine {
 public:
-    PdfEngine() : 
+    PdfEngine() :
         _fileName(0)
-        , _pageCount(INVALID_PAGE_NO) 
+        , _pageCount(INVALID_PAGE_NO)
     { }
 
     virtual ~PdfEngine() { free((void*)_fileName); }

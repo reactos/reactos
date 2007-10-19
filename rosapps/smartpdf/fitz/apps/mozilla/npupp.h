@@ -35,7 +35,7 @@ typedef UniversalProcPtr NPP_InitializeUPP;
 
 enum {
   uppNPP_InitializeProcInfo = kThinkCStackBased
-    | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(0))    
+    | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(0))
     | RESULT_SIZE(SIZE_CODE(0))
 };
 
@@ -43,7 +43,7 @@ enum {
     (NPP_InitializeUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPP_InitializeProcInfo, GetCurrentArchitecture())
 #define CallNPP_InitializeProc(FUNC)    \
     (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPP_InitializeProcInfo)
-    
+
 #else
 
 typedef void (*NPP_InitializeUPP)(void);
@@ -62,7 +62,7 @@ typedef UniversalProcPtr NPP_ShutdownUPP;
 
 enum {
   uppNPP_ShutdownProcInfo = kThinkCStackBased
-    | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(0))    
+    | STACK_ROUTINE_PARAMETER(1, SIZE_CODE(0))
     | RESULT_SIZE(SIZE_CODE(0))
 };
 
@@ -70,7 +70,7 @@ enum {
     (NPP_ShutdownUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPP_ShutdownProcInfo, GetCurrentArchitecture())
 #define CallNPP_ShutdownProc(FUNC)    \
     (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPP_ShutdownProcInfo)
-    
+
 #else
 
 typedef void (*NPP_ShutdownUPP)(void);
@@ -657,7 +657,7 @@ enum {
 #define NewNPN_NewStreamProc(FUNC)    \
     (NPN_NewStreamUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_NewStreamProcInfo, GetCurrentArchitecture())
 #define CallNPN_NewStreamProc(FUNC, npp, type, window, stream)    \
-    (NPError)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_NewStreamProcInfo, (npp), (type), (window), (stream)) 
+    (NPError)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_NewStreamProcInfo, (npp), (type), (window), (stream))
 
 #else
 
@@ -686,7 +686,7 @@ enum {
 #define NewNPN_WriteProc(FUNC)    \
     (NPN_WriteUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_WriteProcInfo, GetCurrentArchitecture())
 #define CallNPN_WriteProc(FUNC, npp, stream, len, buffer)   \
-    (int32)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_WriteProcInfo, (npp), (stream), (len), (buffer))  
+    (int32)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_WriteProcInfo, (npp), (stream), (len), (buffer))
 
 #else
 
@@ -714,7 +714,7 @@ enum {
 #define NewNPN_DestroyStreamProc(FUNC)    \
     (NPN_DestroyStreamUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_DestroyStreamProcInfo, GetCurrentArchitecture())
 #define CallNPN_DestroyStreamProc(FUNC, npp, stream, reason)    \
-    (NPError)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_DestroyStreamProcInfo, (npp), (stream), (reason)) 
+    (NPError)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_DestroyStreamProcInfo, (npp), (stream), (reason))
 
 #else
 
@@ -741,7 +741,7 @@ enum {
 #define NewNPN_StatusProc(FUNC)   \
     (NPN_StatusUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_StatusProcInfo, GetCurrentArchitecture())
 #define CallNPN_StatusProc(FUNC, npp, msg)    \
-    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_StatusProcInfo, (npp), (msg))  
+    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_StatusProcInfo, (npp), (msg))
 
 #else
 
@@ -749,7 +749,7 @@ typedef void (*NPN_StatusUPP)(NPP instance, const char* message);
 #define NewNPN_StatusProc(FUNC)   \
     ((NPN_StatusUPP) (FUNC))
 #define CallNPN_StatusProc(FUNC, npp, msg)    \
-    (*(FUNC))((npp), (msg)) 
+    (*(FUNC))((npp), (msg))
 
 #endif
 
@@ -793,7 +793,7 @@ enum {
 #define NewNPN_MemAllocProc(FUNC)   \
     (NPN_MemAllocUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_MemAllocProcInfo, GetCurrentArchitecture())
 #define CallNPN_MemAllocProc(FUNC, ARG1)    \
-    (void*)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_MemAllocProcInfo, (ARG1)) 
+    (void*)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_MemAllocProcInfo, (ARG1))
 
 #else
 
@@ -801,7 +801,7 @@ typedef void* (*NPN_MemAllocUPP)(uint32 size);
 #define NewNPN_MemAllocProc(FUNC)   \
     ((NPN_MemAllocUPP) (FUNC))
 #define CallNPN_MemAllocProc(FUNC, ARG1)    \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 
@@ -827,7 +827,7 @@ typedef void (*NPN_MemFreeUPP)(void* ptr);
 #define NewNPN_MemFreeProc(FUNC)    \
     ((NPN_MemFreeUPP) (FUNC))
 #define CallNPN_MemFreeProc(FUNC, ARG1)   \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 
@@ -846,7 +846,7 @@ enum {
 #define NewNPN_MemFlushProc(FUNC)   \
     (NPN_MemFlushUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_MemFlushProcInfo, GetCurrentArchitecture())
 #define CallNPN_MemFlushProc(FUNC, ARG1)    \
-    (uint32)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_MemFlushProcInfo, (ARG1))  
+    (uint32)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_MemFlushProcInfo, (ARG1))
 
 #else
 
@@ -854,7 +854,7 @@ typedef uint32 (*NPN_MemFlushUPP)(uint32 size);
 #define NewNPN_MemFlushProc(FUNC)   \
     ((NPN_MemFlushUPP) (FUNC))
 #define CallNPN_MemFlushProc(FUNC, ARG1)    \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 
@@ -874,7 +874,7 @@ enum {
 #define NewNPN_ReloadPluginsProc(FUNC)    \
     (NPN_ReloadPluginsUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_ReloadPluginsProcInfo, GetCurrentArchitecture())
 #define CallNPN_ReloadPluginsProc(FUNC, ARG1)   \
-    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_ReloadPluginsProcInfo, (ARG1)) 
+    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_ReloadPluginsProcInfo, (ARG1))
 
 #else
 
@@ -882,7 +882,7 @@ typedef void (*NPN_ReloadPluginsUPP)(NPBool reloadPages);
 #define NewNPN_ReloadPluginsProc(FUNC)    \
     ((NPN_ReloadPluginsUPP) (FUNC))
 #define CallNPN_ReloadPluginsProc(FUNC, ARG1)   \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 
@@ -900,7 +900,7 @@ enum {
 #define NewNPN_GetJavaEnvProc(FUNC)   \
     (NPN_GetJavaEnvUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_GetJavaEnvProcInfo, GetCurrentArchitecture())
 #define CallNPN_GetJavaEnvProc(FUNC)    \
-    (JRIEnv*)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetJavaEnvProcInfo) 
+    (JRIEnv*)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetJavaEnvProcInfo)
 
 #else
 
@@ -908,7 +908,7 @@ typedef JRIEnv* (*NPN_GetJavaEnvUPP)(void);
 #define NewNPN_GetJavaEnvProc(FUNC)   \
     ((NPN_GetJavaEnvUPP) (FUNC))
 #define CallNPN_GetJavaEnvProc(FUNC)    \
-    (*(FUNC))() 
+    (*(FUNC))()
 
 #endif
 
@@ -927,7 +927,7 @@ enum {
 #define NewNPN_GetJavaPeerProc(FUNC)    \
     (NPN_GetJavaPeerUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_GetJavaPeerProcInfo, GetCurrentArchitecture())
 #define CallNPN_GetJavaPeerProc(FUNC, ARG1)   \
-    (jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetJavaPeerProcInfo, (ARG1)) 
+    (jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_GetJavaPeerProcInfo, (ARG1))
 
 #else
 
@@ -935,7 +935,7 @@ typedef jref (*NPN_GetJavaPeerUPP)(NPP instance);
 #define NewNPN_GetJavaPeerProc(FUNC)    \
     ((NPN_GetJavaPeerUPP) (FUNC))
 #define CallNPN_GetJavaPeerProc(FUNC, ARG1)   \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 
@@ -955,7 +955,7 @@ enum {
 #define NewNPN_InvalidateRectProc(FUNC)   \
     (NPN_InvalidateRectUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_InvalidateRectProcInfo, GetCurrentArchitecture())
 #define CallNPN_InvalidateRectProc(FUNC, ARG1, ARG2)    \
-    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvalidateRectProcInfo, (ARG1), (ARG2))  
+    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvalidateRectProcInfo, (ARG1), (ARG2))
 
 #else
 
@@ -963,7 +963,7 @@ typedef void (*NPN_InvalidateRectUPP)(NPP instance, NPRect *rect);
 #define NewNPN_InvalidateRectProc(FUNC)   \
     ((NPN_InvalidateRectUPP) (FUNC))
 #define CallNPN_InvalidateRectProc(FUNC, ARG1, ARG2)    \
-    (*(FUNC))((ARG1), (ARG2)) 
+    (*(FUNC))((ARG1), (ARG2))
 
 #endif
 
@@ -983,7 +983,7 @@ enum {
 #define NewNPN_InvalidateRegionProc(FUNC)   \
     (NPN_InvalidateRegionUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_InvalidateRegionProcInfo, GetCurrentArchitecture())
 #define CallNPN_InvalidateRegionProc(FUNC, ARG1, ARG2)    \
-    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvalidateRegionProcInfo, (ARG1), (ARG2))  
+    (void)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_InvalidateRegionProcInfo, (ARG1), (ARG2))
 
 #else
 
@@ -991,7 +991,7 @@ typedef void (*NPN_InvalidateRegionUPP)(NPP instance, NPRegion region);
 #define NewNPN_InvalidateRegionProc(FUNC)   \
     ((NPN_InvalidateRegionUPP) (FUNC))
 #define CallNPN_InvalidateRegionProc(FUNC, ARG1, ARG2)    \
-    (*(FUNC))((ARG1), (ARG2)) 
+    (*(FUNC))((ARG1), (ARG2))
 
 #endif
 
@@ -1009,7 +1009,7 @@ enum {
 #define NewNPN_ForceRedrawProc(FUNC)    \
     (NPN_ForceRedrawUPP) NewRoutineDescriptor((ProcPtr)(FUNC), uppNPN_ForceRedrawProcInfo, GetCurrentArchitecture())
 #define CallNPN_ForceRedrawProc(FUNC, ARG1)   \
-    (jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_ForceRedrawProcInfo, (ARG1)) 
+    (jref)CallUniversalProc((UniversalProcPtr)(FUNC), uppNPN_ForceRedrawProcInfo, (ARG1))
 
 #else
 
@@ -1017,7 +1017,7 @@ typedef void (*NPN_ForceRedrawUPP)(NPP instance);
 #define NewNPN_ForceRedrawProc(FUNC)    \
     ((NPN_ForceRedrawUPP) (FUNC))
 #define CallNPN_ForceRedrawProc(FUNC, ARG1)   \
-    (*(FUNC))((ARG1)) 
+    (*(FUNC))((ARG1))
 
 #endif
 

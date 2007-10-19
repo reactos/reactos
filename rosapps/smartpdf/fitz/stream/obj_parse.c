@@ -285,7 +285,7 @@ static fz_error *parsehexstring(fz_obj **obj, char **sp)
 
 		*p++ = fromhex(a) * 16 + fromhex(b);
 	}
-	
+
 	*sp = s;
 	return fz_newstring(obj, buf, p - buf);
 }

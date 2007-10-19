@@ -42,7 +42,7 @@
 	<directory name="imagesoft">
 		<xi:include href="imagesoft/imagesoft.rbuild" />
 	</directory>
-	
+
 	<directory name="lib">
 		<xi:include href="lib/directory.rbuild" />
 	</directory>
@@ -84,7 +84,7 @@
 	<directory name="screenshot">
 		<xi:include href="screenshot/screenshot.rbuild" />
 	</directory>
-	
+
 	<!--
 	<directory name="smartpdf">
 		<xi:include href="smartpdf/fitz.rbuild" />
@@ -92,7 +92,7 @@
 		<xi:include href="smartpdf/smartpdf.rbuild" />
 	</directory>
 	-->
-	
+
 	<directory name="sysutils">
 		<xi:include href="sysutils/sysutils.rbuild" />
 	</directory>

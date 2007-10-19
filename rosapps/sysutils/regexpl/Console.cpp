@@ -343,11 +343,11 @@ Paste:
 #else
 						CF_TEXT
 #endif
-						)) 
-						continue; 
-					if (!OpenClipboard(NULL)) 
-						continue; 
- 
+						))
+						continue;
+					if (!OpenClipboard(NULL))
+						continue;
+
 					const TCHAR *pch = NULL;
 
 					HANDLE hglb = GetClipboardData(
@@ -357,17 +357,17 @@ Paste:
 						CF_TEXT
 #endif
 						);
-					if (hglb != NULL) 
-					{ 
+					if (hglb != NULL)
+					{
 						LPTSTR lptstr = (LPTSTR)GlobalLock(hglb);
-						if (lptstr != NULL) 
+						if (lptstr != NULL)
 						{
 							_tcsncpy(m_pchBuffer1,lptstr,m_dwBufferSize);
 							m_pchBuffer1[m_dwBufferSize-1] = 0;
 							pch = m_pchBuffer1;
-							GlobalUnlock(hglb); 
-						} 
-					} 
+							GlobalUnlock(hglb);
+						}
+					}
 					CloseClipboard();
 
 					if (pch == NULL) continue;
@@ -393,7 +393,7 @@ Paste:
 							{
 								COORD Cursor = m_CursorPosition;
 								DWORD ofs = dwCurrentCharOffset;
-								
+
 								while(ofs <= dwLastCharOffset)
 								{
 									ch = m_pchBuffer[ofs];
@@ -401,11 +401,11 @@ Paste:
 									ch1 = ch;
 									ofs++;
 								}
-								
+
 								if (dwCurrentCharOffset < dwLastCharOffset)
 								{
 									if (!Write(m_pchBuffer+dwCurrentCharOffset,dwLastCharOffset-dwCurrentCharOffset)) return FALSE;
-									
+
 									if (m_LinesScrolled)
 									{
 										if (m_LinesScrolled > FristCharCursorPosition.Y) return FALSE;
@@ -442,7 +442,7 @@ Paste:
 						{
 							if (_istspace(*(pchWordBegin-1))) break;
 							pchWordBegin--;
-						}							
+						}
 
 						ASSERT(pchWordBegin >= m_pchBuffer);
 						dwCurrentCharOffset = pchWordBegin - m_pchBuffer;
@@ -599,16 +599,16 @@ Paste:
 						m_pchBuffer[dwCharOffset] = m_pchBuffer[dwCharOffset+1];
 						dwCharOffset++;
 					}
-					
+
 					m_pchBuffer[dwLastCharOffset-1] = _T(' ');
-					
+
 					// Save cursor position
 					COORD Cursor = m_CursorPosition;
-					
+
 					if (!Write(m_pchBuffer+dwCurrentCharOffset,dwLastCharOffset-dwCurrentCharOffset)) return FALSE;
-					
+
 					dwLastCharOffset--;
-					
+
 					// Update cursor position
 					m_CursorPosition = Cursor;
 					if (!SetConsoleCursorPosition(m_hStdOut,m_CursorPosition)) return FALSE;
@@ -688,7 +688,7 @@ Paste:
 		}
 		else if (ch == _T('\t'))
 		{ // Tab
-      
+
 			if (!blnCompletionMode) // If tab was pressed after non-tab. We enter in completion mode.
 			{
         // Initialize completion index
@@ -705,7 +705,7 @@ Paste:
 					dwCompletionOffset--;
 					if (m_pchBuffer[dwCompletionOffset] == _T('\"'))
 					{
-						blnQuotedParameter = !blnQuotedParameter; 
+						blnQuotedParameter = !blnQuotedParameter;
 					}
 					else if (!blnQuotedParameter && _istspace(m_pchBuffer[dwCompletionOffset]))
 					{ // Found ! We are not inside quored parameter and we are on whitespace.
@@ -713,7 +713,7 @@ Paste:
 						break;
 					}
 				}
-        
+
 				ASSERT(dwCompletionOffset <= dwCurrentCharOffset);
 
         // Save not changing part (context) of completion in m_pchBuffer1
@@ -742,7 +742,7 @@ Paste:
 				pchCompletion = m_pfReplaceCompletionCallback(nCompletionIndex,
                                                       blnCompletionMode?&blnForward:NULL, // If this is first time we call the completion callback, do not change completion index
                                                       m_pchBuffer1,m_pchBuffer2);
-      
+
 			if (pchCompletion) // If completion found
 			{
 				// Set cursor position to compeltion position
@@ -768,14 +768,14 @@ Paste:
 				{
           // Copy competion into main buffer
 					_tcsncpy(m_pchBuffer+dwCompletionOffset,pchCompletion,dwCompletionStringSize);
-					
+
 					// Write completion string to console
 					if (!Write(m_pchBuffer+dwCompletionOffset,dwCompletionStringSize))
             return FALSE;
 
           // Set new offsets
 					dwCurrentCharOffset = dwLastCharOffset = dwCompletionOffset + dwCompletionStringSize;
-          
+
 					ASSERT(dwLastCharOffset < m_dwBufferSize);
 				}
 
@@ -897,7 +897,7 @@ TCHAR * CConsole::Init(DWORD dwBufferSize, DWORD dwMaxHistoryLines)
     goto Abort;
   }
 	m_wAttributes = info.wAttributes;
-	
+
 	if (!m_blnOldInputModeSaved)
 	{
 		if (!GetConsoleMode(m_hStdIn,&m_dwOldInputMode))

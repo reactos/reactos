@@ -340,7 +340,7 @@ public:
                             int objNum, int objGen);
 
   virtual GBool hasGetBuf() { return gFalse; }
-  virtual GBool getBuf(char **bufOut, int *bufSizeOut, int maxSize) { 
+  virtual GBool getBuf(char **bufOut, int *bufSizeOut, int maxSize) {
     assert(0);
     return gFalse;
   }

@@ -47,12 +47,12 @@ public:
     pszUnique = pszUnique?(pszUnique+1):pszText;
     BOOL b = _tcschr(pszUnique,_T(' ')) != NULL; // has it spaces in it ???
     size_t s = _tcslen(pszText);
-    
+
     if (m_pszText)
       delete m_pszText;
-    
+
     m_pszText = new TCHAR [s+(b?3:1)]; // if we have spaces in unique part, we need 2 addtional chars for "
-    
+
     if (!m_pszText)
       return FALSE;
 
@@ -63,21 +63,21 @@ public:
 
     if (b)
       m_pszText[s++] = _T('\"');
-    
+
     _tcscpy(m_pszText+s,pszUnique);
 
     if (b)
       _tcscat(m_pszText,_T("\""));
-    
+
     return TRUE;
   }
-  
+
   ~CCompletionMatch()
   {
     if (m_pszText)
       delete m_pszText;
   }
-  
+
 private:
   TCHAR *m_pszText;
   BOOL m_blnIsKey;
@@ -100,7 +100,7 @@ public:
   const TCHAR * GetBegin();
   void DeleteList();
   void Invalidate();
-    
+
 private:
   CCompletionMatch *m_pHead; // head of completions linked list
   CCompletionMatch *m_pTail; // tail of completions linked list
@@ -127,10 +127,10 @@ CCompletionList::CCompletionList()
 CCompletionList::~CCompletionList()
 {
   DeleteList();
-    
+
   if (m_pszContext)
     delete m_pszContext;
-    
+
   if (m_pszBegin)
     delete m_pszBegin;
 
@@ -176,7 +176,7 @@ BOOL CCompletionList::IsNewCompletion(const TCHAR *pszContext, const TCHAR *pszB
       delete m_pszCurrentKey;
       m_pszCurrentKey = NULL;
     }
-      
+
     size_t s = _tcslen(pszContext);
     m_pszContext = new TCHAR[s+1];
     if (!m_pszContext)
@@ -188,20 +188,20 @@ BOOL CCompletionList::IsNewCompletion(const TCHAR *pszContext, const TCHAR *pszB
     if (!m_pszBegin)
       return FALSE;
     _tcscpy(m_pszBegin,pszBegin);
-      
+
     s = _tcslen(pszCurrentKey);
     m_pszCurrentKey = new TCHAR[s+1];
     if (!m_pszCurrentKey)
       return FALSE;
     _tcscpy(m_pszCurrentKey,pszCurrentKey);
-      
+
     return TRUE;
   }
 
   rblnNew = FALSE;
   return TRUE;
 }
-  
+
 BOOL CCompletionList::Add(const TCHAR *pszText, BOOL blnIsKey)
 {
   if (_tcsnicmp(pszText,m_pszBegin,_tcslen(m_pszBegin)) != 0)
@@ -233,10 +233,10 @@ BOOL CCompletionList::Add(const TCHAR *pszText, BOOL blnIsKey)
   m_nCount++;
 
   m_pLastSearched = NULL;
-    
+
   return TRUE;
 }
-  
+
 const TCHAR * CCompletionList::Get(unsigned __int64 nIndex, BOOL& rblnIsKey)
 {
   ASSERT(nIndex < m_nCount);
@@ -253,14 +253,14 @@ const TCHAR * CCompletionList::Get(unsigned __int64 nIndex, BOOL& rblnIsKey)
     if ((nRelativeIndex > nIndex)||(nRelativeIndex > m_nCount-nIndex-1))
       pNode = NULL; // seraching from tail or from head is more effective
   }
-    
+
   if (!pNode && (nIndex <= m_nCount/2))
   { // search from head
     pNode = m_pHead;
     blnForward = TRUE;
     nRelativeIndex = nIndex;
   }
-    
+
   if (!pNode)
   { // search from tail
     pNode = m_pTail;
@@ -279,9 +279,9 @@ const TCHAR * CCompletionList::Get(unsigned __int64 nIndex, BOOL& rblnIsKey)
         ASSERT(FALSE);
       return pNode->m_pszText;
     }
-      
+
     nRelativeIndex--;
-      
+
     pNode = blnForward?(pNode->m_pNext):(pNode->m_pPrev);
   }
 
@@ -303,7 +303,7 @@ const TCHAR * CCompletionList::GetBegin()
 {
   return m_pszBegin;
 }
-  
+
 void CCompletionList::DeleteList()
 {
   CCompletionMatch *pNode;
@@ -332,7 +332,7 @@ BOOL FillCompletion(const TCHAR *pszKey)
 
   if (!Tree.GetKey(pszKey?pszKey:_T("."),KEY_ENUMERATE_SUB_KEYS|KEY_QUERY_VALUE,Key))
     return FALSE;
-  
+
   BOOL blnCompletionOnKeys = TRUE;
   BOOL blnCompletionOnValues = TRUE;
 
@@ -355,8 +355,8 @@ BOOL FillCompletion(const TCHAR *pszKey)
     nKeyNameSize = _tcslen(pszKey);
     if (_tcscmp(pszKey,_T("\\")))
       nKeyNameSize++;
-  } 
-  
+  }
+
   if (blnCompletionOnKeys)
   {
     nError = Key.GetSubkeyNameMaxLength(dwMaxSubkeyNameLength);
@@ -369,7 +369,7 @@ BOOL FillCompletion(const TCHAR *pszKey)
 
     if (pszKey)
       _stprintf(pszSubkeyName,_tcscmp(pszKey,_T("\\"))?_T("%s\\"):_T("%s"),pszKey);
-      
+
     Key.InitSubkeyEnumeration(pszSubkeyName+nKeyNameSize,dwMaxSubkeyNameLength);
     while ((nError = Key.GetNextSubkeyName()) == ERROR_SUCCESS)
       if (!g_Completion.Add(pszSubkeyName,TRUE))
@@ -396,10 +396,10 @@ BOOL FillCompletion(const TCHAR *pszKey)
     pszValueName = new TCHAR[nKeyNameSize+dwMaxValueNameSize+1];
     if (!pszValueName)
       goto Abort;
-      
+
     if (pszKey)
       _stprintf(pszValueName,_tcscmp(pszKey,_T("\\"))?_T("%s\\"):_T("%s"),pszKey);
-      
+
     Key.InitValueEnumeration(pszValueName+nKeyNameSize,dwMaxValueNameSize,NULL,0,NULL);
     while((nError = Key.GetNextValue()) == ERROR_SUCCESS)
       if (!g_Completion.Add(pszValueName,FALSE))
@@ -433,7 +433,7 @@ const TCHAR * CompletionCallback(unsigned __int64 & rnIndex,
                                  const TCHAR *pszBegin)
 {
   static TCHAR pszBuffer[COMPLETION_BUFFER_SIZE];
-  
+
   // Find first non-white space in context
   while(*pszContext && _istspace(*pszContext))
     pszContext++;
@@ -456,18 +456,18 @@ const TCHAR * CompletionCallback(unsigned __int64 & rnIndex,
       if (pszSeparator)
         *pszSeparator = 0;
     }
-    
+
     if (!FillCompletion(pszSeparator?pszBuffer:NULL))
       return NULL;
   }
-  
+
   unsigned __int64 nTotalItems = g_Completion.GetCount();
   if (nTotalItems == 0)
     return NULL;
 
   if (rnIndex >= nTotalItems)
     rnIndex = nTotalItems-1;
-  
+
   if (pblnForward)
   {
     if (*pblnForward)

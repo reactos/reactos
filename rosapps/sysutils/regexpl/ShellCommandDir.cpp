@@ -116,14 +116,14 @@ CheckDirArgument:
 			rConsole.Write(_T("\n"));
 		}
 	}
-	
+
   const TCHAR *pszPattern = PATTERN_MATCH_ALL;
   const TCHAR *pszPath = _T(".");
 
   if (pszKey)
   {
     pszPath = pszKey;
-    
+
     TCHAR *pch = pszKey;
     while(*pch) // search end of string
       pch++;
@@ -135,11 +135,11 @@ CheckDirArgument:
     {
       while ((pch > pszKey) && (*pch != _T('\\')))
         pch--;
-    
+
       if (*pch == _T('\\'))
       {
         pszPattern = pch+1;
-        
+
         if (pch > pszKey)
         {
           ASSERT(*pch == _T('\\'));
@@ -173,10 +173,10 @@ CheckDirArgument:
 	}
 
 	LONG nError;
-	
+
 	if (!blnDo)
     return 0;
-  
+
   rConsole.Write(_T("\n Key is "));
   rConsole.Write(Key.GetKeyName());
 
@@ -185,16 +185,16 @@ CheckDirArgument:
     rConsole.Write(_T("\n Last modify time is "));
     rConsole.Write(Key.GetLastWriteTime());
   }
-  
+
   rConsole.Write(_T("\n\n"));
   unsigned __int64 nTotalItems = 0;
-  
+
   try
   {
     ASSERT(nTotalItems == 0);
     rConsole.Write(_T("\t(KEY)\t\t\t\t..\\\n"));	// parent key abstraction
     nTotalItems = 1;
-				
+
     DWORD dwMaxSubkeyNameLength;
     nError = Key.GetSubkeyNameMaxLength(dwMaxSubkeyNameLength);
     if (nError != ERROR_SUCCESS)
@@ -203,7 +203,7 @@ CheckDirArgument:
     TCHAR *pszSubkeyNameBuffer = new TCHAR[dwMaxSubkeyNameLength];
     if (!pszSubkeyNameBuffer)
       throw ERROR_OUTOFMEMORY;
-    
+
     Key.InitSubkeyEnumeration(pszSubkeyNameBuffer,dwMaxSubkeyNameLength);
     while ((nError = Key.GetNextSubkeyName()) == ERROR_SUCCESS)
     {
@@ -217,7 +217,7 @@ CheckDirArgument:
     }
 
     delete pszSubkeyNameBuffer;
-    
+
     if (nError != ERROR_NO_MORE_ITEMS)
       throw nError;
 
@@ -225,11 +225,11 @@ CheckDirArgument:
     nError = Key.GetMaxValueNameLength(dwMaxValueNameBufferSize);
     if (nError != ERROR_SUCCESS)
       throw nError;
-    
+
     TCHAR *pchValueNameBuffer = new TCHAR[dwMaxValueNameBufferSize];
     if (!pchValueNameBuffer)
       throw ERROR_OUTOFMEMORY;
-    
+
 
     DWORD Type;
     Key.InitValueEnumeration(pchValueNameBuffer,
@@ -258,12 +258,12 @@ CheckDirArgument:
         nTotalItems++;
       }
     }
-    
+
     delete pchValueNameBuffer;
-    
+
     if (nError != ERROR_NO_MORE_ITEMS)
       throw nError;
-    
+
   }	// try
   catch (LONG nError)
   {
@@ -272,7 +272,7 @@ CheckDirArgument:
     rConsole.Write(_itoa(nError,Buffer,10));
     rConsole.Write(_T("\n"));
   }
-		
+
   rConsole.Write(_T("\n Total: "));
   TCHAR Buffer[256];
   rConsole.Write(_ui64tot(nTotalItems,Buffer,10));

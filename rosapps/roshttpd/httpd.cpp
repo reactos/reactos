@@ -53,7 +53,7 @@ VOID CHttpClient::SplitUri(LPSTR lpsUri, LPSTR lpsHost, LPSTR lpsResource, LPSTR
         lpsStr = &lpsPos[3];
 	else
 		lpsStr = lpsUri;
-        
+
     lpsPos = strstr(lpsStr, "/");
     if (lpsPos != NULL) {
         strncat(lpsHost, lpsPos, lpsPos - lpsStr);
@@ -80,11 +80,11 @@ VOID CHttpClient::SplitUri(LPSTR lpsUri, LPSTR lpsHost, LPSTR lpsResource, LPSTR
 VOID CHttpClient::SplitResource(LPSTR lpsResource, LPSTR lpsPath, LPSTR lpsFilename, LPSTR lpsExtension)
 {
     INT i,len,fileptr,extptr;
-	
+
 	strcpy(lpsPath, "");
 	strcpy(lpsFilename, "");
 	strcpy(lpsExtension, "");
-	
+
 	len = strlen(lpsResource);
 	if (len != 0) {
 		if (lpsResource[len - 1] == '/') {
@@ -102,7 +102,7 @@ VOID CHttpClient::SplitResource(LPSTR lpsResource, LPSTR lpsPath, LPSTR lpsFilen
 				strncat(lpsPath, lpsResource, fileptr);
 			} else
 				fileptr = 1;
-			
+
 			// Get filename and possibly extension
 			if (extptr != 0) {
 				strncat(lpsFilename, &lpsResource[fileptr], extptr - fileptr);
@@ -126,7 +126,7 @@ VOID CHttpClient::ProcessRequest()
     switch (Parser.nMethodNo) {
 		case hmGET: {
 			SplitUri(Parser.sUri, sHost, sResource, sParams);
-			
+
 			// Default resource?
 			if (strlen(sResource) == 0) {
 				CIterator<LPSTR> *i = pConfiguration->GetDefaultResources()->CreateIterator();
@@ -166,7 +166,7 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
       unsigned long long Big;
         struct {
             DWORD Low;
-            DWORD High; 
+            DWORD High;
         } u;
     } nTotalBytes;
 	DWORD nBytesToRead;
@@ -175,16 +175,16 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
 
 	// Try to open file
     hFile = CreateFileA(lpsFilename,
-        GENERIC_READ,               // Open for reading 
-        FILE_SHARE_READ,            // Share for reading 
-        NULL,                       // No security 
-        OPEN_EXISTING,              // Existing file only 
-        FILE_ATTRIBUTE_NORMAL,      // Normal file 
-        NULL);                      // No attr. template 
-    if (hFile == INVALID_HANDLE_VALUE) { 
+        GENERIC_READ,               // Open for reading
+        FILE_SHARE_READ,            // Share for reading
+        NULL,                       // No security
+        OPEN_EXISTING,              // Existing file only
+        FILE_ATTRIBUTE_NORMAL,      // Normal file
+        NULL);                      // No attr. template
+    if (hFile == INVALID_HANDLE_VALUE) {
         // File not found
         Report("404 Not Found", HttpMsg404);
-        return; 
+        return;
     }
     // Get file size
     nTotalBytes.u.Low = GetFileSize(hFile, &nTotalBytes.u.High);
@@ -251,7 +251,7 @@ VOID CHttpClient::SendFile(LPSTR lpsFilename)
 		// We can't send an error message here as we are in the process of sending a file.
 		// We have to terminate the connection instead
 		Close();
-	
+
 	// Free allocated memory
 	free(lpsBuffer);
 
@@ -264,7 +264,7 @@ VOID CHttpClient::Report(LPCSTR lpsCode, LPSTR lpsStr)
 {
     CHAR sTmp[128];
     CHAR sTmp2[16];
-	
+
     strcpy(sTmp, "HTTP/1.1 ");
     strcat(sTmp, lpsCode);
     SendText(sTmp);
@@ -407,9 +407,9 @@ BOOL CHttpDaemon::Start()
 	SetPort(pConfiguration->GetPort());
 
 	Open();
-	
+
 	State = hsRunning;
-	
+
     return TRUE;
 }
 
@@ -449,7 +449,7 @@ VOID CHttpDaemon::OnAccept(LPCServerClientThread lpThread)
 VOID CHttpDaemonThread::Execute()
 {
 	MSG Msg;
-	
+
 	try {
 		Daemon = NULL;
 		Daemon = new CHttpDaemon;

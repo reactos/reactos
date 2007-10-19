@@ -64,7 +64,7 @@ static __inline char* CNV_THIS_PART(LFN_ENT *lfn)
 	copy_lfn_part( __part_uni, lfn );
 	cnv_unicode( __part_uni, CHARS_PER_LFN, 0 );
 }
-    
+
 /* Convert name parts collected so far (from previous slots) from unicode to
  * ASCII */
 #define CNV_PARTS_SO_FAR()					\
@@ -79,7 +79,7 @@ static char *cnv_unicode( const unsigned char *uni, int maxlen, int use_q )
     const unsigned char *up;
     unsigned char *out, *cp;
     int len, val;
-    
+
     for( len = 0, up = uni; (up-uni)/2 < maxlen && (up[0] || up[1]); up += 2 ){
 	if (UNICODE_CONVERTABLE(up[0],up[1]))
 	    ++len;
@@ -128,7 +128,7 @@ static void clear_lfn_slots( int start, int end )
      */
     memset( &empty, 0, sizeof(empty) );
     empty.id = DELETED_FLAG;
-    
+
     for( i = start; i <= end; ++i ) {
 	fs_write( lfn_offsets[i], sizeof(LFN_ENT), &empty );
     }
@@ -362,7 +362,7 @@ char *lfn_get( DIR_ENT *de )
     char *lfn;
     __u8 sum;
     int i;
-    
+
     if (de->attr == VFAT_LN_ATTR)
 	die("lfn_get called with LFN directory entry");
 

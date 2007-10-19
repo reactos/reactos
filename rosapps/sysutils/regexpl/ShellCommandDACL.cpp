@@ -111,7 +111,7 @@ CheckDACLArgument:
 	}
 
 	CRegistryKey Key;
-  
+
   if (!m_rTree.GetKey(pszKey?pszKey:_T("."),KEY_QUERY_VALUE|READ_CONTROL,Key))
   {
     rConsole.Write(m_rTree.GetLastErrorDescription());
@@ -127,13 +127,13 @@ CheckDACLArgument:
 
 	if (!blnDo)
     return 0;
-  
+
   if (Key.IsRoot())
 	{	// root key
     rConsole.Write(DACL_CMD COMMAND_NA_ON_ROOT);
     return 0;
   }
-  
+
   DWORD dwSecurityDescriptorLength;
   rConsole.Write(_T("Key : "));
   rConsole.Write(_T("\\"));
@@ -146,7 +146,7 @@ CheckDACLArgument:
     nError = Key.GetSecurityDescriptorLength(&dwSecurityDescriptorLength);
     if (nError != ERROR_SUCCESS)
       throw nError;
-				
+
     pSecurityDescriptor = (PSECURITY_DESCRIPTOR) new unsigned char [dwSecurityDescriptorLength];
     DWORD dwSecurityDescriptorLength1 = dwSecurityDescriptorLength;
     nError = Key.GetSecurityDescriptor((SECURITY_INFORMATION)DACL_SECURITY_INFORMATION,pSecurityDescriptor,&dwSecurityDescriptorLength1);
@@ -154,7 +154,7 @@ CheckDACLArgument:
       throw nError;
     CSecurityDescriptor sd;
     sd.AssociateDescriptor(pSecurityDescriptor);
-				
+
     sd.BeginDACLInteration();
     ASSERT(sd.DescriptorContainsDACL());
     if (sd.HasNULLDACL())

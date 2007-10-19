@@ -110,8 +110,8 @@ pdf_storeitem(pdf_store *store, pdf_itemkind kind, fz_obj *key, void *val)
     case PDF_KFUNCTION: pdf_keepfunction(val); break;
     case PDF_KXOBJECT: pdf_keepxobject(val); break;
     case PDF_KIMAGE: fz_keepimage(val); break;
-    case PDF_KPATTERN: 
-        pdf_keeppattern(val); 
+    case PDF_KPATTERN:
+        pdf_keeppattern(val);
         break;
     case PDF_KSHADE: fz_keepshade(val); break;
     case PDF_KCMAP: pdf_keepcmap(val); break;

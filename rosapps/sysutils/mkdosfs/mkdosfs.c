@@ -24,7 +24,7 @@
    - New options -A, -S, -C
    - Support for filesystems > 2GB
    - FAT32 support
-   
+
    Port to work under Windows NT/2K/XP Dec 2002 by
    Jens-Uwe Mager <jum@anubis.han.de>
 
@@ -97,7 +97,7 @@
 #define CT_LE_W(v) CF_LE_W(v)
 #define CT_LE_L(v) CF_LE_L(v)
 #endif /* defined(__le16_to_cpu) */
-    
+
 #else
 
 #define CF_LE_W(v) (v)
@@ -286,7 +286,7 @@ int fsctl(int fd, int code)
 		errno = GetLastError();
 		return -1;
 	}
-	return 0; 
+	return 0;
 }
 
 #else
@@ -938,7 +938,7 @@ establish_params (int device_num,int size)
 	    case 720:
 	      param.sect = 9 ;
 	      param.head = 2;
-	      break; 
+	      break;
 	    case 1440:
 	      param.sect = 9;
 	      param.head = 2;
@@ -961,7 +961,7 @@ establish_params (int device_num,int size)
 	      param.head = 64;
 	      break;
 	    }
-	  
+
 	}
       else 	/* is a floppy diskette */
 	{
@@ -992,7 +992,7 @@ establish_params (int device_num,int size)
 	  bs.dir_entries[0] = (char) 224;
 	  bs.dir_entries[1] = (char) 0;
 	  break;
-	  
+
 	case 5760:		/* 3.5", 2, 36, 80 - 2880K */
 	  bs.media = (char) 0xf0;
 	  bs.cluster_size = (char) 2;
@@ -1018,7 +1018,7 @@ establish_params (int device_num,int size)
   else if ((device_num & 0xff00) == 0x0700) /* This is a loop device */
     {
       /* Can we get the loop geometry? This is in 512 byte blocks, always? */
-      if (ioctl (dev, BLKGETSIZE, &loop_size)) 
+      if (ioctl (dev, BLKGETSIZE, &loop_size))
 	die ("unable to get loop geometry for '%s'");
       loop_size = loop_size >> 1;
 
@@ -1050,7 +1050,7 @@ establish_params (int device_num,int size)
 	  bs.dir_entries[0] = (char) 224;
 	  bs.dir_entries[1] = (char) 0;
 	  break;
-	  
+
 	case 5760:		/* 3.5", 2, 36, 80 - 2880K */
 	  bs.secs_track = CF_LE_W(36);
 	  bs.heads = CF_LE_W(2);
@@ -1112,7 +1112,7 @@ setup_tables (void)
   unsigned fatdata;			/* Sectors for FATs + data area */
   struct tm *ctime;
   struct msdos_volume_info *vi = (size_fat == 32 ? &bs.fat32.vi : &bs.oldfat.vi);
-  
+
   if (atari_format)
       /* On Atari, the first few bytes of the boot sector are assigned
        * differently: The jump code is only 2 bytes (and m68k machine code
@@ -1152,7 +1152,7 @@ setup_tables (void)
 
   if (!atari_format) {
     memcpy(vi->volume_label, volume_name, 11);
-  
+
     memcpy(bs.boot_jump, dummy_boot_jump, 3);
     /* Patch in the correct offset to the boot code */
     bs.boot_jump[1] = ((size_fat == 32 ?
@@ -1200,7 +1200,7 @@ setup_tables (void)
     unsigned maxclust12, maxclust16, maxclust32;
     unsigned clust12, clust16, clust32;
     int maxclustsize;
-    
+
     fatdata = num_sectors - cdiv (root_dir_entries * 32, sector_size) -
 	      reserved_sectors;
 
@@ -1341,14 +1341,14 @@ setup_tables (void)
 	bs.fat32.fat32_length = CT_LE_L(fatlength32);
 	memcpy(vi->fs_type, MSDOS_FAT32_SIGN, 8);
 	break;
-	
+
       default:
 	die("FAT not 12, 16 or 32 bits");
     }
   }
   else {
     unsigned clusters, maxclust;
-      
+
     /* GEMDOS always uses a 12 bit FAT on floppies, and always a 16 bit FAT on
      * hard disks. So use 12 bit if the size of the file system suggests that
      * this fs is for a floppy disk, if the user hasn't explicitly requested a
@@ -1394,7 +1394,7 @@ setup_tables (void)
       if (verbose >= 2)
 	printf( "ss=%d: #clu=%d, fat_len=%d, maxclu=%d\n",
 		sector_size, clusters, fat_length, maxclust );
-      
+
       /* last 10 cluster numbers are special (except FAT32: 4 high bits rsvd);
        * first two numbers are reserved */
       if (maxclust <= (size_fat == 32 ? MAX_CLUST_32 : (1<<size_fat)-0x10) &&
@@ -1411,7 +1411,7 @@ setup_tables (void)
       num_sectors >>= 1;
       sector_size <<= 1;
     } while( sector_size <= GEMDOS_MAX_SECTOR_SIZE );
-    
+
     if (sector_size > GEMDOS_MAX_SECTOR_SIZE)
       die( "Would need a sector size > 16k, which GEMDOS can't work with");
 
@@ -1451,7 +1451,7 @@ setup_tables (void)
       bs.fat32.backup_boot = CT_LE_W(backup_boot);
       memset( &bs.fat32.reserved2, 0, sizeof(bs.fat32.reserved2) );
     }
-  
+
   if (atari_format) {
       /* Just some consistency checks */
       if (num_sectors >= GEMDOS_MAX_SECTORS)
@@ -1485,7 +1485,7 @@ setup_tables (void)
 	die ("Attempting to create a too large file system");
     }
 
-  
+
   /* The two following vars are in hard sectors, i.e. 512 byte sectors! */
   start_data_sector = (reserved_sectors + nr_fats * fat_length) *
 		      (sector_size/HARD_SECTOR_SIZE);
@@ -1499,7 +1499,7 @@ setup_tables (void)
     {
       printf("%s has %d head%s and %d sector%s per track,\n",
 	     device_name, CF_LE_W(bs.heads), (CF_LE_W(bs.heads) != 1) ? "s" : "",
-	     CF_LE_W(bs.secs_track), (CF_LE_W(bs.secs_track) != 1) ? "s" : ""); 
+	     CF_LE_W(bs.secs_track), (CF_LE_W(bs.secs_track) != 1) ? "s" : "");
       printf("logical sector size is %d,\n",sector_size);
       printf("using 0x%02x media descriptor, with %d sectors;\n",
 	     (int) (bs.media), num_sectors);
@@ -1571,7 +1571,7 @@ setup_tables (void)
   if (size_fat == 32) {
     /* For FAT32, create an info sector */
     struct fat32_fsinfo *info;
-    
+
     if (!(info_sector = malloc( sector_size )))
       die("Out of memory");
     memset(info_sector, 0, sector_size);
@@ -1593,7 +1593,7 @@ setup_tables (void)
     /* Info sector also must have boot sign */
     *(__u16 *)(info_sector + 0x1fe) = CT_LE_W(BOOT_SIGN);
   }
-  
+
   if (!(blank_sector = malloc( sector_size )))
       die( "Out of memory" );
   memset(blank_sector, 0, sector_size);
@@ -1738,7 +1738,7 @@ main (int argc, char **argv)
 #endif
   int i = 0, pos, ch;
   int create = 0;
-  
+
   if (argc && *argv) {		/* What's the program name? */
     char *p;
     program_name = *argv;
@@ -1753,7 +1753,7 @@ main (int argc, char **argv)
   time(&create_time);
   volume_id = (long)create_time;	/* Default volume ID = creation time */
   check_atari();
-  
+
   printf ("%s " VERSION " (" VERSION_DATE ")\n"
 #ifdef _WIN32
 	  "Win32 port by Jens-Uwe Mager <jum@anubis.han.de>\n"
@@ -1776,7 +1776,7 @@ main (int argc, char **argv)
 	    usage ();
 	  }
 	break;
-	
+
       case 'c':		/* c : Check FS as we build it */
 	check = TRUE;
 	break;
@@ -1879,10 +1879,10 @@ main (int argc, char **argv)
 	    while( i < BOOTCODE_SIZE-1 )
 		dummy_boot_code[i++] = '\0';
 	    dummy_boot_code[BOOTCODE_SIZE-1] = '\0'; /* Just in case */
-	    
+
 	    if ( ch != EOF )
 	      printf ("Warning: message too long; truncated\n");
-	    
+
 	    if ( msgfile != stdin )
 	      fclose(msgfile);
 	  }
@@ -1909,7 +1909,7 @@ main (int argc, char **argv)
 	    usage ();
 	  }
 	break;
-	
+
       case 's':		/* s : Sectors per cluster */
 	sectors_per_cluster = (int) strtol (optarg, &tmp, 0);
 	if (*tmp || (sectors_per_cluster != 1 && sectors_per_cluster != 2
@@ -1938,7 +1938,7 @@ main (int argc, char **argv)
       case 'v':		/* v : Verbose execution */
 	++verbose;
 	break;
-	
+
       default:
 	printf( "Unknown option: %c\n", c );
 	usage ();
@@ -2011,7 +2011,7 @@ main (int argc, char **argv)
       if (llseek( dev, 0, SEEK_SET ) != 0)
 	die( "seek failed" );
   }
-  
+
 #ifdef _WIN32
   if (!is_device)
 	  check = 0;
@@ -2039,7 +2039,7 @@ main (int argc, char **argv)
 	)
       die ("Will not try to make filesystem on '%s'");
 
-  establish_params (statbuf.st_rdev,statbuf.st_size);	
+  establish_params (statbuf.st_rdev,statbuf.st_size);
                                 /* Establish the media parameters */
 #endif
 

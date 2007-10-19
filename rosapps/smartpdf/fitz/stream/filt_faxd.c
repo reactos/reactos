@@ -19,7 +19,7 @@ typedef struct fz_faxd_s fz_faxd;
 struct fz_faxd_s
 {
 	fz_filter super;
-	
+
 	int k;
 	int endofline;
 	int encodedbytealign;

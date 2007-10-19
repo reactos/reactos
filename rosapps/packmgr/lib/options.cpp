@@ -1,8 +1,8 @@
 ////////////////////////////////////////////////////////
 //
 // options.cpp
-// 
-// Settting and Loading Options 
+//
+// Settting and Loading Options
 //
 //
 // Maarten Bosma, 09.01.2004
@@ -69,7 +69,7 @@ int CreateOptions (TREE* tree)
 		Log("! ERROR: Could not load it !");
 		return ERR_GENERIC;
 	}
-	
+
 	MessageBox(0,(WCHAR*)LockResource(LoadResource(NULL, hres)), 0, 0);	// is empty
 	//file << (WCHAR*)LockResource(LoadResource(NULL, hres));
 
@@ -84,7 +84,7 @@ int CreateOptions (TREE* tree)
 	Log("* Load options.xml from the Internet (Temporary Hack)");
 
 	CopyFileA( PML_Download(tree, "http://svn.reactos.org/svn/*checkout*/reactos/trunk/rosapps/packmgr/lib/options.xml", NULL, "options.xml"), "options.xml", TRUE);
-	
+
 	return ERR_OK;
 }
 

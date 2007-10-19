@@ -27,7 +27,7 @@ BEGIN
   PUSHBUTTON "О&тмена", IDCANCEL, 207, 90, 54, 15
 END
 
-STRINGTABLE DISCARDABLE 
+STRINGTABLE DISCARDABLE
 BEGIN
   IDS_WINDOW_TITLE		"Скачать! - Менеджер закачек ReactOS"
   IDS_WELCOME_TITLE		"Добро пожаловать в Менеджер закачек ReactOS"

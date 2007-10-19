@@ -40,7 +40,7 @@ int PML_DoIt (pTree, PML_SetStatus, PML_Ask);
 void PML_CloseTree (pTree);
 
 
-/* Version */ 
+/* Version */
 
 #define PACKMGR_VERSION_MAJOR		0
 #define PACKMGR_VERSION_MINOR		3

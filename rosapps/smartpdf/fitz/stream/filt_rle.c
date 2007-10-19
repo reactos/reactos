@@ -224,7 +224,7 @@ fprintf(stderr, "--record--\n");
 		case END:
 			error = puteod(enc, in, out);
 			if (error) return error;
-			
+
 			out->eof = 1;
 			return fz_iodone;
 		}
