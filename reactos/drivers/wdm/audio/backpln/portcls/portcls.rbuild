@@ -12,7 +12,6 @@
 
 	<define name="__USE_W32API" />
 	<define name="_NTDDK_" />
-	<define name="DBG" />
 	<define name="PC_NO_IMPORTS" />
 
 	<include base="portcls">../include</include>

@@ -20,7 +20,7 @@
 	<file>wcscmpi.c</file>
 	<file>_wgetopt.c</file>
 	<if property="ARCH" value="i386">
-	    <file>pseudo-reloc.c</file>
+		<file>pseudo-reloc.c</file>
 	</if>
 </module>
 <module name="mingw_main" type="staticlibrary" isstartuplib="true" allowwarnings="true">

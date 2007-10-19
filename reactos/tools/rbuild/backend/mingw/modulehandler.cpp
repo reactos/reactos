@@ -816,18 +816,16 @@ MingwModuleHandler::GenerateMacro (
 		const Define& define = *data.defines[i];
 		if ( used_defs && used_defs->find ( define.name ) != used_defs->end () )
 		{
-#if 0 /* FIXME: activate */
 			if ( !define.overridable )
 			{
 				throw InvalidOperationException ( __FILE__,
 				                                  __LINE__,
-				                                  "Invalid override of define '%s' in '%s'",
+				                                  "Invalid override of define '%s' in module '%s'",
 				                                  define.name.c_str (),
 				                                  module.name.c_str () );
 			}
-#endif
 			if ( backend->configuration.Verbose )
-				printf("%s define overridden in '%s' module\n",
+				printf("Define '%s' overridden in module '%s'\n",
 					define.name.c_str (), module.name.c_str () );
 			continue;
 		}
