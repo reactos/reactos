@@ -217,6 +217,11 @@ NtUserEnumDisplayDevices (
       /* Only one display device present */
       return FALSE;
    }
+   else if (lpDevice->Length != 0)
+   {
+       /* Can't enumerate monitors :( */
+       return FALSE;
+   }
    if (lpDisplayDevice->cb < sizeof(DISPLAY_DEVICE))
       return FALSE;
 
