@@ -766,7 +766,7 @@ static void test_CommandLine(void)
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
-    
+
     get_file_name(resfile);
     len = GetFullPathNameA(selfname, MAX_PATH, fullpath, &lpFilePart);
     assert ( lpFilePart != 0);
@@ -783,7 +783,7 @@ static void test_CommandLine(void)
     okChildString("Arguments", "argvA0", buffer);
     release_memory();
     assert(DeleteFileA(resfile) != 0);
-    
+
 }
 
 static void test_Directory(void)
@@ -831,7 +831,7 @@ static void cmpEnvironment(const char* gesA)
     BOOL                found;
 
     clen = GetPrivateProfileIntA("EnvironmentA", "len", 0, resfile);
-    
+
     /* now look each parent env in child */
     if ((ptrA = gesA) != NULL)
     {
@@ -846,7 +846,7 @@ static void cmpEnvironment(const char* gesA)
             }
             found = i < clen;
             ok(found, "Parent-env string %s isn't in child process\n", ptrA);
-            
+
             ptrA += strlen(ptrA) + 1;
             release_memory();
         }
@@ -900,7 +900,7 @@ static void test_Environment(void)
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    
+
     cmpEnvironment(GetEnvironmentStringsA());
     release_memory();
     assert(DeleteFileA(resfile) != 0);
@@ -913,7 +913,7 @@ static void test_Environment(void)
     /* the basics */
     get_file_name(resfile);
     sprintf(buffer, "%s tests/process.c %s", selfname, resfile);
-    
+
     child_env_len = 0;
     ptr = GetEnvironmentStringsA();
     while(*ptr)
@@ -925,7 +925,7 @@ static void test_Environment(void)
     /* Add space for additional environment variables */
     child_env_len += 256;
     child_env = HeapAlloc(GetProcessHeap(), 0, child_env_len);
-    
+
     ptr = child_env;
     sprintf(ptr, "=%c:=%s", 'C', "C:\\FOO\\BAR");
     ptr += strlen(ptr) + 1;
@@ -956,7 +956,7 @@ static void test_Environment(void)
     ok(WaitForSingleObject(info.hProcess, 30000) == WAIT_OBJECT_0, "Child process termination\n");
     /* child process has changed result file, so let profile functions know about it */
     WritePrivateProfileStringA(NULL, NULL, NULL, resfile);
-    
+
     cmpEnvironment(child_env);
 
     HeapFree(GetProcessHeap(), 0, child_env);
@@ -1028,7 +1028,7 @@ static  void    test_DebuggingFlag(void)
     ok(CreateProcessA(NULL, buffer, NULL, NULL, FALSE, DEBUG_PROCESS, NULL, NULL, &startup, &info), "CreateProcess\n");
 
     /* get all startup events up to the entry point break exception */
-    do 
+    do
     {
         ok(WaitForDebugEvent(&de, INFINITE), "reading debug event\n");
         ContinueDebugEvent(de.dwProcessId, de.dwThreadId, DBG_CONTINUE);
@@ -1104,7 +1104,7 @@ static void test_Console(void)
     startup.hStdError = startup.hStdOutput;
 
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbi), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeIn) && 
+    ok(GetConsoleMode(startup.hStdInput, &modeIn) &&
        GetConsoleMode(startup.hStdOutput, &modeOut), "Getting console modes\n");
     cpIn = GetConsoleCP();
     cpOut = GetConsoleOutputCP();
@@ -1120,7 +1120,7 @@ static void test_Console(void)
 
     /* now get the modification the child has made, and resets parents expected values */
     ok(GetConsoleScreenBufferInfo(startup.hStdOutput, &sbiC), "Getting sb info\n");
-    ok(GetConsoleMode(startup.hStdInput, &modeInC) && 
+    ok(GetConsoleMode(startup.hStdInput, &modeInC) &&
        GetConsoleMode(startup.hStdOutput, &modeOutC), "Getting console modes\n");
 
     SetConsoleMode(startup.hStdInput, modeIn);
@@ -1177,17 +1177,17 @@ static void test_Console(void)
     assert(DeleteFileA(resfile) != 0);
 
     ok(CreatePipe(&hParentIn, &hChildOut, NULL, 0), "Creating parent-input pipe\n");
-    ok(DuplicateHandle(GetCurrentProcess(), hChildOut, GetCurrentProcess(), 
+    ok(DuplicateHandle(GetCurrentProcess(), hChildOut, GetCurrentProcess(),
                        &hChildOutInh, 0, TRUE, DUPLICATE_SAME_ACCESS),
        "Duplicating as inheritable child-output pipe\n");
     CloseHandle(hChildOut);
- 
+
     ok(CreatePipe(&hChildIn, &hParentOut, NULL, 0), "Creating parent-output pipe\n");
-    ok(DuplicateHandle(GetCurrentProcess(), hChildIn, GetCurrentProcess(), 
+    ok(DuplicateHandle(GetCurrentProcess(), hChildIn, GetCurrentProcess(),
                        &hChildInInh, 0, TRUE, DUPLICATE_SAME_ACCESS),
        "Duplicating as inheritable child-input pipe\n");
-    CloseHandle(hChildIn); 
-    
+    CloseHandle(hChildIn);
+
     memset(&startup, 0, sizeof(startup));
     startup.cb = sizeof(startup);
     startup.dwFlags = STARTF_USESHOWWINDOW|STARTF_USESTDHANDLES;

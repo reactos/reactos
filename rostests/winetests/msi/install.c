@@ -248,7 +248,7 @@ static INT_PTR fci_open(char *pszFile, int oflag, int pmode, int *err, void *pv)
     DWORD dwAccess = 0;
     DWORD dwShareMode = 0;
     DWORD dwCreateDisposition = OPEN_EXISTING;
-    
+
     dwAccess = GENERIC_READ | GENERIC_WRITE;
     dwShareMode = FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE;
 
@@ -270,7 +270,7 @@ static UINT fci_read(INT_PTR hf, void *memory, UINT cb, int *err, void *pv)
     HANDLE handle = (HANDLE)hf;
     DWORD dwRead;
     BOOL res;
-    
+
     res = ReadFile(handle, memory, cb, &dwRead, NULL);
     ok(res, "Failed to ReadFile\n");
 
@@ -301,7 +301,7 @@ static long fci_seek(INT_PTR hf, long dist, int seektype, int *err, void *pv)
 {
     HANDLE handle = (HANDLE)hf;
     DWORD ret;
-    
+
     ret = SetFilePointer(handle, dist, NULL, seektype);
     ok(ret != INVALID_SET_FILE_POINTER, "Failed to SetFilePointer\n");
 
@@ -362,7 +362,7 @@ static INT_PTR get_open_info(char *pszName, USHORT *pdate, USHORT *ptime,
 
     res = GetFileInformationByHandle(handle, &finfo);
     ok(res, "Expected GetFileInformationByHandle to succeed\n");
-   
+
     FileTimeToLocalFileTime(&finfo.ftLastWriteTime, &filetime);
     FileTimeToDosDateTime(&filetime, pdate, ptime);
 
@@ -754,10 +754,10 @@ START_TEST(install)
 
     create_test_files();
     create_database(msifile, tables, sizeof(tables) / sizeof(msi_table));
-    
+
     test_MsiInstallProduct();
     test_MsiSetComponentState();
     test_packagecoltypes();
-    
+
     delete_test_files();
 }

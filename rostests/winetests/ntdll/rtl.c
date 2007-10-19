@@ -410,7 +410,7 @@ static void test_RtlUniform(void)
 	    expected = (expected + (~seed & 1)) & MAXLONG;
 	} else if (seed < 0x1435e50b) {
 	    expected = expected + (seed & 1);
-	} else if (seed < 0x1af286ba) { 
+	} else if (seed < 0x1af286ba) {
 	    expected = (expected + (~seed & 1)) & MAXLONG;
 	} else if (seed < 0x21af2869) {
 	    expected = expected + (seed & 1);
@@ -725,7 +725,7 @@ static void test_RtlRandom(void)
  *
  * What remains to be determined is: The size of the saved_value array,
  * the initial values of the saved_value array and the function
- * position(seed). These tests are not shown here. 
+ * position(seed). These tests are not shown here.
  * The result of these tests is: The size of the saved_value array
  * is 128, the initial values can be seen in the my_RtlRandom
  * function and the position(seed) function is (seed & 0x7f).

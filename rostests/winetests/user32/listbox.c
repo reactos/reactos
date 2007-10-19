@@ -179,7 +179,7 @@ check (const struct listbox_test test)
 	HeapFree (GetProcessHeap(), 0, txtw);
 	HeapFree (GetProcessHeap(), 0, txt);
   }
-  
+
   /* Confirm the count of items, and that an invalid delete does not remove anything */
   res = SendMessage (hLB, LB_GETCOUNT, 0, 0);
   ok((res==4), "Expected 4 items, got %d\n", res);
@@ -395,7 +395,7 @@ static void test_listbox_height(void)
     HWND hList;
     int r, id;
 
-    hList = CreateWindow( "ListBox", "list test", 0, 
+    hList = CreateWindow( "ListBox", "list test", 0,
                           1, 1, 600, 100, NULL, NULL, NULL, NULL );
     ok( hList != NULL, "failed to create listbox\n");
 

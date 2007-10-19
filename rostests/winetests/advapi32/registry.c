@@ -352,20 +352,20 @@ static void test_reg_delete_key()
 {
     DWORD ret;
     HKEY hkResult = NULL;
-    
+
     ret = RegDeleteKey(hkey_main, NULL);
     ok(ret == ERROR_INVALID_PARAMETER || ret == ERROR_ACCESS_DENIED,
        "expected ERROR_INVALID_PARAMETER or ERROR_ACCESS_DENIED, got %ld\n", ret);
-       
+
     ret = RegCreateKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Tost", &hkResult);
 
     ret = RegDeleteValue(hkResult, "noExists");
     ok(ret == ERROR_FILE_NOT_FOUND, "expected ERROR_FILE_NOT_FOUND, got %ld\n", ret);
 
     ret = RegDeleteKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Tost");
-    
-    ret = RegCloseKey(hkResult); 
-  
+
+    ret = RegCloseKey(hkResult);
+
 }
 
 static void test_reg_save_key()

@@ -323,10 +323,10 @@ static void test_file_inherit_child_no(const char* fd_s)
     int ret;
 
     ret = write(fd, "Success", 8);
-    ok( ret == -1 && errno == EBADF, 
+    ok( ret == -1 && errno == EBADF,
        "Wrong write result in child process on %d (%s)\n", fd, strerror(errno));
 }
- 
+
 static void test_file_inherit( const char* selfname )
 {
     int			fd;
@@ -345,7 +345,7 @@ static void test_file_inherit( const char* selfname )
     ok(read(fd, buffer, sizeof (buffer)) == 8 && memcmp(buffer, "Success", 8) == 0, "Couldn't read back the data\n");
     close (fd);
     ok(unlink("fdopen.tst") == 0, "Couldn't unlink\n");
-    
+
     fd = open ("fdopen.tst", O_CREAT | O_RDWR | O_BINARY | O_NOINHERIT, _S_IREAD |_S_IWRITE);
     ok(fd != -1, "Couldn't create test file\n");
     arg_v[0] = selfname;
@@ -385,7 +385,7 @@ static void test_chsize( void )
     long cur, pos, count;
     char temptext[] = "012345678";
     char *tempfile = _tempnam( ".", "tst" );
-    
+
     ok( tempfile != NULL, "Couldn't create test file: %s\n", tempfile );
 
     fd = _open( tempfile, _O_CREAT|_O_TRUNC|_O_RDWR, _S_IREAD|_S_IWRITE );
@@ -405,7 +405,7 @@ static void test_chsize( void )
     ok( _filelength( fd ) == sizeof(temptext) / 2, "Wrong file size\n" );
 
     /* enlarge the file */
-    ok( _chsize( fd, sizeof(temptext) * 2 ) == 0, "_chsize() failed\n" ); 
+    ok( _chsize( fd, sizeof(temptext) * 2 ) == 0, "_chsize() failed\n" );
 
     pos = _lseek( fd, 0, SEEK_CUR );
     ok( cur == pos, "File pointer changed from: %ld to: %ld\n", cur, pos );
@@ -435,11 +435,11 @@ static void test_fopen_fclose_fcloseall( void )
     ok(stream3 != NULL, "The file '%s' should be opened now\n", fname3 );
     errno = 0xfaceabad;
     stream4 = fopen("", "w+");
-    ok(stream4 == NULL && errno == ENOENT, 
+    ok(stream4 == NULL && errno == ENOENT,
        "filename is empty, errno = %d (expected 2)\n", errno);
     errno = 0xfaceabad;
     stream4 = fopen(NULL, "w+");
-    ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT), 
+    ok(stream4 == NULL && (errno == EINVAL || errno == ENOENT),
        "filename is NULL, errno = %d (expected 2 or 22)\n", errno);
 
     /* testing fclose() */
@@ -474,7 +474,7 @@ START_TEST(file)
     /* testing low-level I/O */
     if (arg_c >= 3)
     {
-        if (arg_c == 3) test_file_inherit_child(arg_v[2]); 
+        if (arg_c == 3) test_file_inherit_child(arg_v[2]);
         else test_file_inherit_child_no(arg_v[2]);
         return;
     }

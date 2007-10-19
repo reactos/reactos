@@ -26,10 +26,10 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winreg.h"
-#include "commctrl.h" 
+#include "commctrl.h"
 
 #include "wine/test.h"
- 
+
 static HWND hMainWnd;
 
 static HWND hTree;
@@ -135,20 +135,20 @@ static void DoTest2(void)
 LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
-                  
+
     case WM_CREATE:
     {
         hTree = CreateWindowExA(WS_EX_CLIENTEDGE, WC_TREEVIEWA, NULL, WS_CHILD|WS_VISIBLE|
-            TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS, 
+            TVS_LINESATROOT|TVS_HASLINES|TVS_HASBUTTONS,
             0, 0, 300, 50, hWnd, (HMENU)100, GetModuleHandleA(0), 0);
-    
+
         SetFocus(hTree);
         return 0;
     }
     case WM_NOTIFY:
     {
         NMHDR *pHdr = (NMHDR *)lParam;
-    
+
         if (pHdr->idFrom == 100) {
             NMTREEVIEWA *pTreeView = (LPNMTREEVIEWA) lParam;
             switch(pHdr->code) {
@@ -166,15 +166,15 @@ LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         }
         return 0;
     }
-  
+
     case WM_SIZE:
         MoveWindow(hTree, 0, 0, LOWORD(lParam), HIWORD(lParam), TRUE);
         break;
-      
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-  
+
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
@@ -187,11 +187,11 @@ START_TEST(treeview)
     MSG msg;
     INITCOMMONCONTROLSEX icex;
     RECT rc;
-  
+
     icex.dwSize = sizeof(INITCOMMONCONTROLSEX);
     icex.dwICC   = ICC_TREEVIEW_CLASSES;
     InitCommonControlsEx(&icex);
-  
+
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
@@ -203,9 +203,9 @@ START_TEST(treeview)
     wc.lpszClassName = "MyTestWnd";
     wc.lpfnWndProc = MyWndProc;
     RegisterClassA(&wc);
-    
-    
-    hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW, 
+
+
+    hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     GetClientRect(hMainWnd, &rc);
 

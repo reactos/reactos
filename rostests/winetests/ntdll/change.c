@@ -59,7 +59,7 @@ static void test_ntncdf(void)
 
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
@@ -67,7 +67,7 @@ static void test_ntncdf(void)
     ok(r==STATUS_ACCESS_VIOLATION, "should return access violation\n");
 
     fflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE, FILE_SHARE_READ, NULL, 
+    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
@@ -187,7 +187,7 @@ static void test_ntncdf_async(void)
 
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
@@ -195,7 +195,7 @@ static void test_ntncdf_async(void)
     ok(r==STATUS_ACCESS_VIOLATION, "should return access violation\n");
 
     fflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE, FILE_SHARE_READ, NULL, 
+    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
@@ -317,7 +317,7 @@ START_TEST(change)
 {
     HMODULE hntdll = GetModuleHandle("ntdll");
 
-    pNtNotifyChangeDirectoryFile = (fnNtNotifyChangeDirectoryFile) 
+    pNtNotifyChangeDirectoryFile = (fnNtNotifyChangeDirectoryFile)
         GetProcAddress(hntdll, "NtNotifyChangeDirectoryFile");
     pNtCancelIoFile = (fnNtCancelIoFile)
         GetProcAddress(hntdll, "NtCancelIoFile");

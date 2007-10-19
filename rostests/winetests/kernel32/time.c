@@ -153,7 +153,7 @@ static void test_invalid_arg(void)
 
     ok( !SystemTimeToFileTime(&st, &ft), "bad minute\n");
 }
- 
+
 static void test_GetTimeZoneInformation(void)
 {
     TIME_ZONE_INFORMATION tzinfo, tzinfo1;
@@ -164,13 +164,13 @@ static void test_GetTimeZoneInformation(void)
     res =  GetTimeZoneInformation(&tzinfo1);
     ok(res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
 
-    ok(((tzinfo.Bias == tzinfo1.Bias) && 
+    ok(((tzinfo.Bias == tzinfo1.Bias) &&
 	(tzinfo.StandardBias == tzinfo1.StandardBias) &&
 	(tzinfo.DaylightBias == tzinfo1.DaylightBias)),
-       "Bias influenced by TZ variable\n"); 
+       "Bias influenced by TZ variable\n");
     ok(SetEnvironmentVariableA("TZ",NULL) != 0,
        "SetEnvironmentVariableA failed\n");
-        
+
 }
 
 static void test_FileTimeToSystemTime(void)
@@ -210,7 +210,7 @@ static void test_FileTimeToLocalFileTime(void)
     TIME_ZONE_INFORMATION tzinfo;
     DWORD res =  GetTimeZoneInformation(&tzinfo);
     ULONGLONG time = (ULONGLONG)TICKSPERSEC + TICKS_1601_TO_1970 +
-        (LONGLONG)(tzinfo.Bias + 
+        (LONGLONG)(tzinfo.Bias +
             ( res == TIME_ZONE_ID_STANDARD ? tzinfo.StandardBias :
             ( res == TIME_ZONE_ID_DAYLIGHT ? tzinfo.DaylightBias : 0 ))) *
              SECSPERMIN *TICKSPERSEC;
@@ -261,7 +261,7 @@ typedef struct {
 } TZLT2ST_case;
 
 static void test_TzSpecificLocalTimeToSystemTime(void)
-{    
+{
     HMODULE hKernel = GetModuleHandle("kernel32");
     fnTzSpecificLocalTimeToSystemTime pTzSpecificLocalTimeToSystemTime;
     fnSystemTimeToTzSpecificLocalTime pSystemTimeToTzSpecificLocalTime = NULL;
@@ -369,7 +369,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
                 cases[i].slt.wDay = yeardays[j][i/3];
                 pTzSpecificLocalTimeToSystemTime( cases[i].ptz, &(cases[i].slt), &result);
                 ok( result.wHour == cases[i].ehour,
-                        "Test TzSpecificLocalTimeToSystemTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour =  %02d\n", 
+                        "Test TzSpecificLocalTimeToSystemTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour =  %02d\n",
                         cases[i].nr, result.wYear, result.wMonth, result.wDay,
                         result.wHour, result.wMinute, cases[i].ehour);
             }
@@ -401,7 +401,7 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
             { 18, &tzS, {2004,10,-1,24,6,0,0,0}, 3},
 
             {0}
-        }; 
+        };
     /*  days of transitions to put into the cases array */
         int yeardays[][6]=
         {
@@ -434,13 +434,13 @@ static void test_TzSpecificLocalTimeToSystemTime(void)
                 cases[i].slt.wDay = yeardays[j][i/3];
                 pSystemTimeToTzSpecificLocalTime( cases[i].ptz, &(cases[i].slt), &result);
                 ok( result.wHour == cases[i].ehour,
-                        "Test SystemTimeToTzSpecificLocalTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour = %02d\n", 
+                        "Test SystemTimeToTzSpecificLocalTime #%d. Got %4d-%02d-%02d %02d:%02d. Expect hour = %02d\n",
                         cases[i].nr, result.wYear, result.wMonth, result.wDay,
                         result.wHour, result.wMinute, cases[i].ehour);
             }
         }
 
-    }        
+    }
 }
 
 START_TEST(time)

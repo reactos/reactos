@@ -78,7 +78,7 @@ static void test_logfont(void)
     memset(&lf, 'A', sizeof(lf));
     hfont = CreateFontIndirectA(&lf);
     ok(hfont != 0, "CreateFontIndirectA with strange LOGFONT failed\n");
-    
+
     lf.lfFaceName[LF_FACESIZE - 1] = 0;
     check_font("AAA...", &lf, hfont);
     DeleteObject(hfont);
@@ -403,7 +403,7 @@ static void test_GetGlyphIndices()
     TEXTMETRIC textm;
 
     typedef BOOL (WINAPI *fnGetGlyphIndicesW)(HDC hdc, LPCWSTR lpstr, INT count, LPWORD pgi, DWORD flags);
-    fnGetGlyphIndicesW GetGlyphIndicesW = (fnGetGlyphIndicesW)GetProcAddress(LoadLibrary("gdi32"), 
+    fnGetGlyphIndicesW GetGlyphIndicesW = (fnGetGlyphIndicesW)GetProcAddress(LoadLibrary("gdi32"),
                                            "GetGlyphIndicesW");
     if (!GetGlyphIndicesW) {
         trace("GetGlyphIndices not available on platform\n");
@@ -425,7 +425,7 @@ static void test_GetGlyphIndices()
     flags = 0;
     charcount = GetGlyphIndicesW(hdc, testtext, (sizeof(testtext)/2)-1, glyphs, flags);
     ok(charcount == 5, "GetGlyphIndices count of glyphs should = 5 not %ld\n", charcount);
-    ok(glyphs[4] == textm.tmDefaultChar, "GetGlyphIndices should have returned a %04x not %04x\n", 
+    ok(glyphs[4] == textm.tmDefaultChar, "GetGlyphIndices should have returned a %04x not %04x\n",
                     textm.tmDefaultChar, glyphs[4]);
 }
 

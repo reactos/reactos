@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright 2006 Saveliy Tretiakov
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -26,13 +26,13 @@ HINSTANCE hInst;
 INT testnum = 0;
 
 
-LRESULT CALLBACK WndProc(HWND hWnd, 
-							 UINT msg, 
-							 WPARAM wParam, 
+LRESULT CALLBACK WndProc(HWND hWnd,
+							 UINT msg,
+							 WPARAM wParam,
 							 LPARAM lParam)
-{	
+{
    HICON hIcon;
-	
+
 	switch (msg)
 	{
 	   case WM_GETICON:
@@ -43,17 +43,17 @@ LRESULT CALLBACK WndProc(HWND hWnd,
 	         else if(wParam == ICON_BIG)
 	            hIcon = LoadIcon(hInst, MAKEINTRESOURCE(ID_ICON2BIG));
 	         else hIcon = (HICON)1;
-	      
+
 	         if(!hIcon)
 	         {
 	            printf("LoadIcon() failed: %d\n", (INT)GetLastError());
 	            break;
 	         }
-	      
+
 	         return (LRESULT)hIcon;
 	      }
 	      break;
-      	
+
       	case WM_DESTROY:
 			PostQuitMessage(0);
 			return 0;
@@ -82,16 +82,16 @@ INT main(INT argc, CHAR **argv)
 			"5. WM_GETICON only\n\n");
 		return 0;
 	}
-	
+
 	testnum = atoi(argv[1]);
 	if(testnum < 1 || testnum > 5)
 	{
 		printf("Unknown test %d\n", testnum);
 		return 1;
 	}
-	
+
 	hInst = GetModuleHandle(NULL);
-	
+
 	memset(&wcx, 0, sizeof(wcx));
 	wcx.cbSize = sizeof(wcx);
 	wcx.style = CS_HREDRAW | CS_VREDRAW;
@@ -102,16 +102,16 @@ INT main(INT argc, CHAR **argv)
 	if(testnum<5)wcx.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(ID_ICON1BIG));
 	if(testnum == 1 || testnum == 3)
 	   wcx.hIconSm = LoadIcon(hInst, MAKEINTRESOURCE(ID_ICON1SM));
-	
+
 	if(!(result = RegisterClassEx(&wcx)))
 	{
-		printf("Shit! RegisterClassEx failed: %d\n", 
+		printf("Shit! RegisterClassEx failed: %d\n",
 			(int)GetLastError());
 		return 1;
 	}
-	
-	hWnd = CreateWindowEx(0, 
-				WndClass, 
+
+	hWnd = CreateWindowEx(0,
+				WndClass,
 				L"DrawCaption icon test",
 				WS_OVERLAPPED|WS_THICKFRAME|WS_SYSMENU,
 				CW_USEDEFAULT,
@@ -122,23 +122,23 @@ INT main(INT argc, CHAR **argv)
 				0,
 				hInst,
 				NULL);
-	
+
 	if(!hWnd)
 	{
 		printf("Shit! Can't create wnd!\n");
 		UnregisterClass(WndClass, hInst);
 		return 1;
 	}
-	
-	
-	ShowWindow(hWnd, SW_SHOW); 
-	UpdateWindow(hWnd);  
+
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
 
 	while(GetMessage(&msg, NULL, 0, 0 ))
 	{
-		TranslateMessage(&msg); 
-		DispatchMessage(&msg); 
-	} 
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
 	UnregisterClass(WndClass, hInst);
 	return 0;

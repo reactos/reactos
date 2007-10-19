@@ -100,7 +100,7 @@ int main( int argc, char **argv ) {
           CloseHandle(pi.hProcess);
       return 6;
     }
-	
+
     if (pi.hProcess != INVALID_HANDLE_VALUE)
         CloseHandle(pi.hProcess);
 

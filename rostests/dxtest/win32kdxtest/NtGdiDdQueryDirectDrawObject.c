@@ -16,21 +16,21 @@ struct
 } *mytest;
 
 /*
- * Test see if we can setup DirectDrawObject 
+ * Test see if we can setup DirectDrawObject
  *
  */
 
-/* 
- * ToDO 
- * 1. add more testcase it is only some, but we do not test for all case 
+/*
+ * ToDO
+ * 1. add more testcase it is only some, but we do not test for all case
  *    that happen only some
  *
- * 2.Fixed the false alaret for drivers only support 2d dx interface 
+ * 2.Fixed the false alaret for drivers only support 2d dx interface
  *
- * 3. fixed the dumping of d3d struct. 
+ * 3. fixed the dumping of d3d struct.
  *
  */
- 
+
 void
 test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
 {
@@ -69,14 +69,14 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     memset(CallBackFlags,0,sizeof(DWORD)*3);
 
     printf("Start testing of NtGdiDdQueryDirectDrawObject\n");
-    
+
     /* testing  OsThunkDdQueryDirectDrawObject( NULL, ....  */
     printf("testing  DdQueryDirectDrawObject( NULL, ....)\n");
 
-    retValue = OsThunkDdQueryDirectDrawObject( NULL, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( NULL, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
     testing_noteq(retValue,FALSE,fails,"1. NtGdiDdQueryDirectDrawObject(NULL, ...);\0");
@@ -92,10 +92,10 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     /* testing  OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, NULL, ....  */
     printf("testing  DdQueryDirectDrawObject( hDD, NULL, ....)\n");
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
@@ -113,10 +113,10 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     printf("testing  DdQueryDirectDrawObject( hDD, pHalInfo, NULL, ....)\n");
 
     pHalInfo = &HalInfo;
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
@@ -150,10 +150,10 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
 
     RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
@@ -189,16 +189,16 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
     RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
     testing_noteq(retValue,FALSE,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
     testing_eq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
-    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");    
+    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
     testing_noteq(puD3dCallbacks->dwSize,sizeof(D3DNTHAL_CALLBACKS),fails,"4. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
 
     testing_noteq(puD3dDriverData,NULL,fails,"5. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
@@ -232,16 +232,16 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
     RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
     testing_noteq(retValue,FALSE,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...);\0");
     testing_eq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...);\0");
-    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...);\0");    
+    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...);\0");
     testing_noteq(puD3dCallbacks->dwSize,sizeof(D3DNTHAL_CALLBACKS),fails,"4. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, NULL, ...);\0");
 
     testing_noteq(puD3dDriverData->dwSize,sizeof(D3DNTHAL_GLOBALDRIVERDATA),fails,"5. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, NULL, ...);\0");
@@ -279,16 +279,16 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
     RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
     RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_CALLBACKS));
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
     testing_noteq(retValue,FALSE,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...);\0");
     testing_eq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...);\0");
-    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...);\0");    
+    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...);\0");
     testing_noteq(puD3dCallbacks->dwSize,sizeof(D3DNTHAL_CALLBACKS),fails,"4. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, NULL, ...);\0");
 
     testing_noteq(puD3dDriverData->dwSize,sizeof(D3DNTHAL_GLOBALDRIVERDATA),fails,"5. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dBufferCallbacks, NULL, ...);\0");
@@ -315,7 +315,7 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         /* FIXME dump puD3dCallbacks */
         /* FIXME dump puD3dDriverData */
         /* FIXME dump D3dBufferCallbacks */
-        
+
     }
 
 /* testing  OsThunkDdQueryDirectDrawObject( hDD, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, D3dBufferCallbacks, puD3dTextureFormats, NULL, */
@@ -342,16 +342,16 @@ test_NtGdiDdQueryDirectDrawObject( HANDLE hDirectDrawLocal)
         RtlZeroMemory(puD3dTextureFormats, puD3dDriverData->dwNumTextureFormats * sizeof(DDSURFACEDESC2));
     }
 
-    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo, 
-                                                pCallBackFlags, puD3dCallbacks, 
-                                                puD3dDriverData, puD3dBufferCallbacks, 
-                                                puD3dTextureFormats, puNumHeaps, 
+    retValue = OsThunkDdQueryDirectDrawObject( hDirectDrawLocal, pHalInfo,
+                                                pCallBackFlags, puD3dCallbacks,
+                                                puD3dDriverData, puD3dBufferCallbacks,
+                                                puD3dTextureFormats, puNumHeaps,
                                                 puvmList, puNumFourCC,
                                                 puFourCC);
 
     testing_noteq(retValue,FALSE,fails,"1. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");
     testing_eq(pHalInfo,NULL,fails,"2. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");
-    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");    
+    testing_eq(pCallBackFlags,NULL,fails,"3. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");
     testing_noteq(puD3dCallbacks->dwSize,sizeof(D3DNTHAL_CALLBACKS),fails,"4. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");
 
     testing_noteq(puD3dDriverData->dwSize,sizeof(D3DNTHAL_GLOBALDRIVERDATA),fails,"5. NtGdiDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dBufferCallbacks, puD3dTextureFormats, NULL, ...);\0");

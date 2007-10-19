@@ -76,7 +76,7 @@ static void testGetModuleFileName(const char* name)
         ok(len1W / 2 == len2W, "Correct length in GetModuleFilenameW with buffer too small (%ld/%ld)\n", len1W / 2, len2W);
     }
 
-    ok(len1A / 2 == len2A || 
+    ok(len1A / 2 == len2A ||
        len1A / 2 == len2A + 1, /* Win9x */
        "Correct length in GetModuleFilenameA with buffer too small (%ld/%ld)\n", len1A / 2, len2A);
 }
@@ -136,7 +136,7 @@ static void testLoadLibraryA_Wrong(void)
     SetLastError(0xdeadbeef);
     hModule = LoadLibraryA("non_ex_pv.dll");
     ok( !hModule, "non_ex_pv.dll should be not loadable\n");
-    ok( GetLastError() == ERROR_MOD_NOT_FOUND || GetLastError() == ERROR_DLL_NOT_FOUND, 
+    ok( GetLastError() == ERROR_MOD_NOT_FOUND || GetLastError() == ERROR_DLL_NOT_FOUND,
         "Expected ERROR_MOD_NOT_FOUND or ERROR_DLL_NOT_FOUND (win9x), got %08lx\n", GetLastError());
 
     /* Just in case */

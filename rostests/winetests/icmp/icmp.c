@@ -17,7 +17,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-/* 
+/*
  * TODO:
  * It seems under Windows XP, 2003 and Vista these functions are not implemented
  * in iphlpapi. Move the implementation and tests there.

@@ -6,19 +6,19 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
 //*********************************************************//
-//                                                         // 
+//                                                         //
 // SYNOPSIS:                                               //
 //   This sample project demonstrates how to render        //
 //   a background image in response to the WM_ERASEBKGND   //
 //   message.  It also shows how to create a transparent   //
 //   static (text) control by handling the                 //
 //   WM_CTLCOLORSTATIC message.                            //
-//                                                         // 
+//                                                         //
 //*********************************************************//
 
 
@@ -31,7 +31,7 @@ HINSTANCE HInst;
 HINSTANCE HPrevInst;
 TCHAR *cmdline;
 const char* WndClassName = "GMainWnd";
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
 
 
@@ -44,25 +44,25 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
 
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
-    
+
    wc.style = CS_VREDRAW | CS_HREDRAW | CS_DBLCLKS;
    wc.lpfnWndProc = MainWndProc;
    wc.hInstance = HInstance;
    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
-   wc.hbrBackground = 
+   wc.hbrBackground =
       reinterpret_cast<HBRUSH>(COLOR_BTNFACE + 1);
    wc.lpszClassName = WndClassName;
 
    if (RegisterClass(&wc))
    {
-      HWND HWnd = 
-         CreateWindow(WndClassName, 
+      HWND HWnd =
+         CreateWindow(WndClassName,
                       TEXT("WM_ERASEBKGND Demo"),
-                      WS_OVERLAPPEDWINDOW | WS_CAPTION | 
+                      WS_OVERLAPPEDWINDOW | WS_CAPTION |
                       WS_VISIBLE | WS_CLIPSIBLINGS,
                       CW_USEDEFAULT, CW_USEDEFAULT, 205, 85,
                       NULL, NULL, HInstance, NULL);
-                                 
+
       if (HWnd)
       {
          ShowWindow(HWnd, nCmdShow);
@@ -73,7 +73,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE HPrevInstance,
          {
              TranslateMessage(&msg);
              DispatchMessage(&msg);
-         }      
+         }
       }
     }
     return 0;
@@ -87,17 +87,17 @@ HDC HMemDC;
 HBITMAP HBmp, HOldBmp;
 const char* filename = "BACKBITMAP.BMP";
 
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam)
 {
    switch (Msg)
    {
       case WM_CREATE:
       {
-         HStatic = 
-            CreateWindow(TEXT("STATIC"), TEXT("Static Text"), 
-                         WS_CHILD | WS_VISIBLE | SS_CENTER, 
-                         10, 20, 175, 30, 
+         HStatic =
+            CreateWindow(TEXT("STATIC"), TEXT("Static Text"),
+                         WS_CHILD | WS_VISIBLE | SS_CENTER,
+                         10, 20, 175, 30,
                          HWnd, NULL, HInst, NULL);
 
          // create a memory DC compatible with the screen
@@ -106,7 +106,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          {
             // load a DDB from file
             HBmp = static_cast<HBITMAP>(
-               LoadImage(HInst, filename, IMAGE_BITMAP, 
+               LoadImage(HInst, filename, IMAGE_BITMAP,
                          0, 0, LR_LOADFROMFILE)
                );
             if (HBmp)
@@ -139,19 +139,19 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             RECT RClient;
             GetClientRect(HWnd, &RClient);
 
-            HDC Hdc = reinterpret_cast<HDC>(WParam); 
+            HDC Hdc = reinterpret_cast<HDC>(WParam);
             SetStretchBltMode(Hdc, COLORONCOLOR);
-            
+
             //
-            // TODO: add palette handling code for 
+            // TODO: add palette handling code for
             // palettized displays (see Chapter 9)...
             //
 
-            // render the background image            
-            StretchBlt(Hdc, 0, 0, 
+            // render the background image
+            StretchBlt(Hdc, 0, 0,
                        RClient.right - RClient.left,
                        RClient.bottom - RClient.top,
-                       HMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight, 
+                       HMemDC, 0, 0, bmp.bmWidth, bmp.bmHeight,
                        SRCCOPY);
             return TRUE;
          }

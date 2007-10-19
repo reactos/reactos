@@ -54,7 +54,7 @@ static void test_GetRandomRgn(void)
     GetRgnBox(hrgn, &ret_rc);
     ok(EqualRect(&rc, &ret_rc), "GetRandomRgn %ld,%ld - %ld,%ld\n",
        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom);
- 
+
     ret = GetRandomRgn(hdc, hrgn, 2);
     ok(ret == 0, "GetRandomRgn rets %d\n", ret);
 
@@ -96,7 +96,7 @@ static void test_GetRandomRgn(void)
     GetRgnBox(hrgn, &ret_rc);
     ok(EqualRect(&rc, &ret_rc), "GetRandomRgn %ld,%ld - %ld,%ld\n",
        ret_rc.left, ret_rc.top, ret_rc.right, ret_rc.bottom);
- 
+
     IntersectRect(&rc2, &rc, &rc2);
 
     ret = GetRandomRgn(hdc, hrgn, 3);

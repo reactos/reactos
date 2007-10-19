@@ -1,6 +1,6 @@
 /* Unit test suite for header control.
  *
- * Copyright 2005 Vijay Kiran Kamuju 
+ * Copyright 2005 Vijay Kiran Kamuju
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -100,10 +100,10 @@ static LONG setItemUnicodeNotify(HWND hdex, int idx, LPCSTR text, LPCWSTR wText)
     hdexItem.mask       = HDI_TEXT;
     hdexItem.pszText    = (LPSTR)text;
     hdexItem.cchTextMax = 0;
-    
+
     hdexNotify.mask    = HDI_TEXT;
     hdexNotify.pszText = (LPWSTR)wText;
-    
+
     expect_notify(HDN_ITEMCHANGINGW, TRUE, (HDITEMA*)&hdexNotify);
     expect_notify(HDN_ITEMCHANGEDW, TRUE, (HDITEMA*)&hdexNotify);
     ret = (LONG)SendMessage(hdex, HDM_SETITEMA, (WPARAM)idx, (LPARAM)&hdexItem);
@@ -159,7 +159,7 @@ static HWND create_header_control (void)
     hlayout.prc = &rectwin;
     hlayout.pwpos = &winpos;
     SendMessageA(handle,HDM_LAYOUT,0,(LPARAM) &hlayout);
-    SetWindowPos(handle, winpos.hwndInsertAfter, winpos.x, winpos.y, 
+    SetWindowPos(handle, winpos.hwndInsertAfter, winpos.x, winpos.y,
                  winpos.cx, winpos.cy, 0);
 
     return handle;
@@ -200,7 +200,7 @@ static void compare_items(INT iCode, HDITEMA *hdi1, HDITEMA *hdi2, BOOL fUnicode
 
 static const char *str_items[] =
     {"First Item", "Second Item", "Third Item", "Fourth Item", "Replace Item", "Out Of Range Item"};
-    
+
 static const char pszUniTestA[] = "TST";
 static const WCHAR pszUniTestW[] = {'T','S','T',0};
 
@@ -432,12 +432,12 @@ static void test_header_control (void)
         TEST_GET_ITEM(i, 4);
         TEST_GET_ITEMCOUNT(6);
     }
-    
+
     SendMessageA(hWndHeader, HDM_SETUNICODEFORMAT, (WPARAM)TRUE, 0);
     setItemUnicodeNotify(hWndHeader, 3, pszUniTestA, pszUniTestW);
     SendMessageA(hWndHeader, WM_NOTIFYFORMAT, (WPARAM)hHeaderParentWnd, (LPARAM)NF_REQUERY);
     setItem(hWndHeader, 3, str_items[4], TRUE);
-    
+
     dont_expect_notify(HDN_GETDISPINFOA);
     dont_expect_notify(HDN_GETDISPINFOW);
     addItem(hWndHeader, 0, LPSTR_TEXTCALLBACKA);
@@ -488,30 +488,30 @@ LRESULT CALLBACK HeaderTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lP
         NMHEADERA *hdr = (NMHEADER *)lParam;
         EXPECTEDNOTIFY *expected;
         int i;
-        
+
         for (i=0; i<nUnexpectedNotify; i++)
             ok(hdr->hdr.code != unexpectedNotify[i], "Received invalid notify %d\n", hdr->hdr.code);
-        
+
         if (nReceivedNotify >= nExpectedNotify || hdr->hdr.hwndFrom != hWndHeader )
             break;
 
         expected = &expectedNotify[nReceivedNotify];
         if (hdr->hdr.code != expected->iCode)
             break;
-        
+
         nReceivedNotify++;
         compare_items(hdr->hdr.code, &expected->hdItem, hdr->pitem, expected->fUnicode);
         break;
     }
-    
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-  
+
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
-    
+
     return 0L;
 }
 
@@ -535,7 +535,7 @@ static void init(void) {
     wc.lpfnWndProc = HeaderTestWndProc;
     RegisterClassA(&wc);
 
-    hHeaderParentWnd = CreateWindowExA(0, "HeaderTestClass", "Header test", WS_OVERLAPPEDWINDOW, 
+    hHeaderParentWnd = CreateWindowExA(0, "HeaderTestClass", "Header test", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     assert(hHeaderParentWnd != NULL);
 }

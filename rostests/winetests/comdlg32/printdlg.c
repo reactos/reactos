@@ -1,4 +1,4 @@
-/* 
+/*
  * Unit test suite for comdlg32 API functions: printer dialogs
  *
  * Copyright 2006 Detlef Riekenberg

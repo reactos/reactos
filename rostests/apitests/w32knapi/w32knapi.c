@@ -9,7 +9,7 @@ IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
 	DWORD ret;
 
-	asm volatile 
+	asm volatile
 	(
 		"pushfl;"				// Save flags
 		"movl %%ecx, %%eax;"

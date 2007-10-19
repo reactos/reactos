@@ -41,7 +41,7 @@ extern "C" int is_stack_ptr ( const void* p )
 }
 
 int TCPSocketState(void *ClientData,
-		   void *WhichSocket, 
+		   void *WhichSocket,
 		   void *WhichConnection,
 		   OSK_UINT NewState ) {
     PCONNECTION_ENDPOINT Connection = (PCONNECTION_ENDPOINT)WhichConnection;
@@ -54,22 +54,22 @@ int TCPSocketState(void *ClientData,
 	return 0;
     }
 
-    if( (NewState & SEL_CONNECT) && 
+    if( (NewState & SEL_CONNECT) &&
 	!(Connection->State & SEL_CONNECT) ) {
     } else if( (NewState & SEL_READ) || (NewState & SEL_FIN) ) {
-    } 
+    }
 
     return 0;
 }
 
 #define STRINGIFY(x) #x
 
-char hdr[14] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+char hdr[14] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		 0x08, 0x00 };
 
 int TCPPacketSend(void *ClientData, OSK_PCHAR data, OSK_UINT len ) {
-    output_packets.push_back( std::string( hdr, 14 ) + 
+    output_packets.push_back( std::string( hdr, 14 ) +
 			      std::string( (char *)data, (int)len ) );
     return 0;
 }
@@ -79,14 +79,14 @@ struct ifaddr *TCPFindInterface( void *ClientData,
 				 OSK_UINT FindType,
 				 struct sockaddr *ReqAddr ) {
     static struct sockaddr_in ifa = { AF_INET }, nm = { AF_INET };
-    static struct ifaddr a = { 
-	(struct sockaddr *)&ifa, 
-	NULL, 
-	(struct sockaddr *)&nm, 
-	0, 
-	0, 
-	1, 
-	1500 
+    static struct ifaddr a = {
+	(struct sockaddr *)&ifa,
+	NULL,
+	(struct sockaddr *)&nm,
+	0,
+	0,
+	1,
+	1500
     };
     ifa.sin_addr.s_addr = inet_addr( "10.10.2.115" );
     nm.sin_addr.s_addr  = inet_addr( "255.255.255.0" );
@@ -110,7 +110,7 @@ int TCPSleep( void *ClientData, void *token, int priority, char *msg,
 	      int tmio ) {
 #if 0
     PSLEEPING_THREAD SleepingThread;
-    
+
     TI_DbgPrint(MID_TRACE,
 		("Called TSLEEP: tok = %x, pri = %d, wmesg = %s, tmio = %x\n",
 		 token, priority, msg, tmio));
@@ -222,7 +222,7 @@ int main( int argc, char **argv ) {
     while( true ) {
 	FD_ZERO( &readf );
 	FD_SET( asock, &readf );
-	tv.tv_sec = 0; 
+	tv.tv_sec = 0;
 	tv.tv_usec = 10000;
 	selret = select( asock + 1, &readf, NULL, NULL, &tv );
 
@@ -236,11 +236,11 @@ int main( int argc, char **argv ) {
 		int theport, bytes, /*recvret,*/ off, bytin;
 		struct sockaddr_in nam;
 		std::string faddr, word;
-		std::istringstream 
+		std::istringstream
 		    cmdin( std::string( datagram + 4, dgrecv - 4 ) );
-		
+
 		cmdin >> word;
-		
+
 		if( word == "socket" ) {
 		    cmdin >> faddr >> theport;
 
@@ -248,18 +248,18 @@ int main( int argc, char **argv ) {
 		    nam.sin_addr.s_addr = inet_addr(faddr.c_str());
 		    nam.sin_port = htons(theport);
 
-		    if( (err = OskitTCPSocket( NULL, &conn, AF_INET, 
+		    if( (err = OskitTCPSocket( NULL, &conn, AF_INET,
 					      SOCK_STREAM, 0 )) != 0 ) {
 			fprintf( stderr, "OskitTCPSocket: error %d\n", err );
 		    }
-		    
-		    if( (err = OskitTCPConnect( conn, NULL, &nam, 
+
+		    if( (err = OskitTCPConnect( conn, NULL, &nam,
 						sizeof(nam) )) != 0 ) {
 			fprintf( stderr, "OskitTCPConnect: error %d\n", err );
 		    } else {
 			printf( "Socket created\n" );
 		    }
-		} 
+		}
 
 		/* The rest of the commands apply only to an open socket */
 		if( !conn ) continue;
@@ -267,7 +267,7 @@ int main( int argc, char **argv ) {
 		if( word == "recv" ) {
 		    cmdin >> bytes;
 
-		    if( (err = OskitTCPRecv( conn, (OSK_PCHAR)datagram, 
+		    if( (err = OskitTCPRecv( conn, (OSK_PCHAR)datagram,
 					     sizeof(datagram),
 					     (unsigned int *)&bytin, 0 )) != 0 ) {
 			fprintf( stderr, "OskitTCPRecv: error %d\n", err );
@@ -311,12 +311,12 @@ int main( int argc, char **argv ) {
 		} else if( word == "send" ) {
 		    off = 0;
 		    while( cmdin >> word ) {
-			datagram[off++] = 
+			datagram[off++] =
 			    atoi( (std::string("0x") + word).c_str() );
 		    }
-		    
-		    if( (err = OskitTCPSend( conn, (OSK_PCHAR)datagram, 
-					     off, (OSK_UINT *)&bytin, 0 )) 
+
+		    if( (err = OskitTCPSend( conn, (OSK_PCHAR)datagram,
+					     off, (OSK_UINT *)&bytin, 0 ))
 			!= 0 ) {
 			fprintf( stderr, "OskitTCPConnect: error %d\n", err );
 		    } else {
@@ -346,9 +346,9 @@ int main( int argc, char **argv ) {
 		    datagram[21] = 2;
 
 		    err = sendto( asock, datagram, dgrecv, 0,
-				  (struct sockaddr *)&addr_to, 
+				  (struct sockaddr *)&addr_to,
 				  sizeof(addr_to) );
-		    
+
 		    if( err != 0 )
 			printf( "sendto: %d\n", err );
 		} else {
@@ -356,7 +356,7 @@ int main( int argc, char **argv ) {
 		    memcpy( hdr + 6, datagram, 6 );
 		    memcpy( hdr + 12, datagram + 12, 2 );
 		    OskitTCPReceiveDatagram
-			( (unsigned char *)datagram + 14, 
+			( (unsigned char *)datagram + 14,
 			  dgrecv - 14, 20 );
 		}
 	    }
@@ -365,7 +365,7 @@ int main( int argc, char **argv ) {
 	TimerOskitTCP();
 
 	for( i = output_packets.begin(); i != output_packets.end(); i++ ) {
-	    err = sendto( asock, i->c_str(), i->size(), 0, 
+	    err = sendto( asock, i->c_str(), i->size(), 0,
 			  (struct sockaddr *)&addr_to, sizeof(addr_to) );
 
 	    fprintf( stderr, "** SENDING PACKET %d bytes **\n", i->size() );
@@ -377,4 +377,4 @@ int main( int argc, char **argv ) {
 	output_packets.clear();
     }
 }
-    
+

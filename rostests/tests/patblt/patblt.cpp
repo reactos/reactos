@@ -6,7 +6,7 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
@@ -18,18 +18,18 @@
 
 HINSTANCE HInst;
 const char* WndClassName = "GMainWnd";
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
 
 
-int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE, LPTSTR, 
+int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE, LPTSTR,
    int nCmdShow)
 {
    HInst = HInstance;
 
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
-    
+
    wc.style = CS_VREDRAW | CS_HREDRAW;
    wc.lpszClassName = WndClassName;
    wc.lpfnWndProc = MainWndProc;
@@ -41,14 +41,14 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE, LPTSTR,
 
    if (RegisterClass(&wc))
    {
-      HWND HWnd = 
-         CreateWindow(WndClassName, 
+      HWND HWnd =
+         CreateWindow(WndClassName,
                       TEXT("PatBlt Tracking Rect Demo"),
-                      WS_OVERLAPPEDWINDOW | WS_CAPTION | 
+                      WS_OVERLAPPEDWINDOW | WS_CAPTION |
                       WS_VISIBLE | WS_CLIPCHILDREN,
                       CW_USEDEFAULT, CW_USEDEFAULT, 640, 480,
                       NULL, NULL, HInst, NULL);
-                                 
+
       if (HWnd)
       {
          ShowWindow(HWnd, nCmdShow);
@@ -59,7 +59,7 @@ int APIENTRY WinMain(HINSTANCE HInstance, HINSTANCE, LPTSTR,
          {
              TranslateMessage(&msg);
              DispatchMessage(&msg);
-         }      
+         }
       }
     }
     return 0;
@@ -101,31 +101,31 @@ void RenderTrackingRect(IN HDC HDestDC, IN const RECT& RRender)
    const DWORD dwROP3 = DSTINVERT; // experiment with others
 
    // render top bar
-   PatBlt(HDestDC, 
-          RRender.left, RRender.top, 
-          width, line_width, 
+   PatBlt(HDestDC,
+          RRender.left, RRender.top,
+          width, line_width,
           dwROP3);
    // render bottom bar
-   PatBlt(HDestDC, 
-          RRender.left, RRender.bottom - line_width, 
-          width, line_width, 
+   PatBlt(HDestDC,
+          RRender.left, RRender.bottom - line_width,
+          width, line_width,
           dwROP3);
    // render left bar
-   PatBlt(HDestDC, 
-          RRender.left, RRender.top + line_width, 
-          line_width, height - (2 * line_width), 
+   PatBlt(HDestDC,
+          RRender.left, RRender.top + line_width,
+          line_width, height - (2 * line_width),
           dwROP3);
    // render right bar
-   PatBlt(HDestDC, 
-          RRender.right - line_width, RRender.top + line_width, 
-          line_width, height - (2 * line_width), 
+   PatBlt(HDestDC,
+          RRender.right - line_width, RRender.top + line_width,
+          line_width, height - (2 * line_width),
           dwROP3);
 
 }
 //------------------------------------------------------------------
 
 
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam)
 {
    switch (Msg)
@@ -138,15 +138,15 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          {
             // load the penguin bitmap
             HBITMAP HBmp = static_cast<HBITMAP>(
-               LoadImage(HInst, filename, IMAGE_BITMAP, 0, 0, 
+               LoadImage(HInst, filename, IMAGE_BITMAP, 0, 0,
                          LR_LOADFROMFILE | LR_DEFAULTSIZE)
-               );         
+               );
             if (HBmp)
             {
                // get the bitmap's dimensions
                BITMAP bmp;
                if (GetObject(HBmp, sizeof(BITMAP), &bmp))
-               {  
+               {
                   RImage.right += bmp.bmWidth;
                   RImage.bottom += bmp.bmHeight;
 
@@ -166,9 +166,9 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          PMouse.y = HIWORD(LParam);
 
          RECT RClient;
-         if (PtInRect(&RImage, PMouse) && 
+         if (PtInRect(&RImage, PMouse) &&
              GetClientRect(HWnd, &RClient))
-         {   
+         {
             MapRect(HWnd, HWND_DESKTOP, RClient);
             ClipCursor(&RClient);
 
@@ -178,23 +178,23 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             HRGN HClipRgn = CreateRectRgnIndirect(&RClient);
             SelectClipRgn(HScreenDC, HClipRgn);
             DeleteObject(HClipRgn);
-            
+
             CopyRect(&RTrack, &RImage);
-            MapRect(HWnd, HWND_DESKTOP, RTrack);                  
+            MapRect(HWnd, HWND_DESKTOP, RTrack);
 
             // render the first tracking rect
             RenderTrackingRect(HScreenDC, RTrack);
             is_tracking = true;
-         }                                       
+         }
          break;
       }
       case WM_MOUSEMOVE:
       {
          if (HScreenDC && is_tracking)
-         {  
-            POINT PCurrent = {LOWORD(LParam), HIWORD(LParam)};       
+         {
+            POINT PCurrent = {LOWORD(LParam), HIWORD(LParam)};
             const int dX = PCurrent.x - PMouse.x;
-            const int dY = PCurrent.y - PMouse.y; 
+            const int dY = PCurrent.y - PMouse.y;
 
             // erase the previous rectangle
             RenderTrackingRect(HScreenDC, RTrack);
@@ -227,12 +227,12 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          break;
       }
       case WM_PAINT:
-      {  
+      {
          PAINTSTRUCT ps;
          HDC Hdc = BeginPaint(HWnd, &ps);
          try
          {
-            // 
+            //
             // TODO: Add palette support...
             //
 
@@ -240,7 +240,7 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
             BitBlt(Hdc, RImage.left, RImage.top,
                    RImage.right - RImage.left,
                    RImage.bottom - RImage.top,
-                   HMemDC, 0, 0, 
+                   HMemDC, 0, 0,
                    SRCCOPY);
          }
          catch (...)
@@ -249,11 +249,11 @@ LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
          }
          EndPaint(HWnd, &ps);
          break;
-      }      
+      }
       case WM_DESTROY:
       {
          // clean up
-         if (HOldBmp) 
+         if (HOldBmp)
          {
             DeleteObject(SelectObject(HMemDC, HOldBmp));
          }

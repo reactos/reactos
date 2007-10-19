@@ -34,16 +34,16 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
    ULONG NextEaBufferOffset;
    UINT IntEaLength;
 
-   /* Lenght of the rest. Inital equal to EaLength */ 
+   /* Lenght of the rest. Inital equal to EaLength */
    IntEaLength = EaLength;
-   /* Inital EaBuffer equal to EaBuffer */ 
+   /* Inital EaBuffer equal to EaBuffer */
    EaBufferEnd = EaBuffer;
 
    /* The rest length of the buffer */
    /* 8 = sizeof(ULONG) + sizeof(UCHAR) + sizeof(UCHAR) + sizeof(USHORT) */
    while (IntEaLength >= 8)
    {
-      /* rest of buffer must greater then the sizeof(FILE_FULL_EA_INFORMATION) + buffer */ 
+      /* rest of buffer must greater then the sizeof(FILE_FULL_EA_INFORMATION) + buffer */
       NextEaBufferOffset = EaBufferEnd->EaNameLength+EaBufferEnd->EaValueLength + 9;
       if (IntEaLength >= NextEaBufferOffset)
       {
@@ -61,11 +61,11 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
                }
             }
             else
-            { 
-               /* 
-                  From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). 
-                  For all entries except the last, the value of NextEntryOffset must be greater 
-                  than zero and must fall on a ULONG boundary. 
+            {
+               /*
+                  From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx).
+                  For all entries except the last, the value of NextEntryOffset must be greater
+                  than zero and must fall on a ULONG boundary.
                */
                NextEaBufferOffset = ((NextEaBufferOffset + 3) & 0xFFFFFFFC);
                if ((EaBufferEnd->NextEntryOffset == NextEaBufferOffset) && (EaBufferEnd->NextEntryOffset>0))
@@ -89,7 +89,7 @@ IoCheckEaBufferValidityROS(IN PFILE_FULL_EA_INFORMATION EaBuffer,
       /* calculate the error offset. Or in */
       *ErrorOffset = (ULONG)((ULONG_PTR)EaBufferEnd - (ULONG_PTR)EaBuffer);
    }
-   
+
    return STATUS_EA_LIST_INCONSISTENT;
 }
 
@@ -125,7 +125,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
    void *pFunction;
    pIoCheckEaBufferValidity IoCheckEaBufferValidity;
-   
+
    HMODULE hKrnlMod = LoadLibrary(L"ntoskrnl.exe");
    if (hKrnlMod)
    {
@@ -144,29 +144,29 @@ int _tmain(int argc, _TCHAR* argv[])
          int iTestCount,i;
          ULONG TestEaLength;
          UCHAR TestEaBufferFlags;
-         
+
          // Test the flag
          TestEaBufferFlags = 0;
-         
+
          iTestCount = 1;
          WinEaBuffer = (PFILE_FULL_EA_INFORMATION)malloc(TEST_BUFFER_LEN);
          ROSEaBuffer = (PFILE_FULL_EA_INFORMATION)malloc(TEST_BUFFER_LEN);
-         
+
 
          printf("1.) Test : *********************\n");
 
          /* Check EaLength calculation */
-         /* Here all zero : only i>9 pass the test with STATUS_SUCCESS */ 
+         /* Here all zero : only i>9 pass the test with STATUS_SUCCESS */
 
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             ulROSError = RANDOM_INIT_ERROR;
@@ -179,18 +179,18 @@ int _tmain(int argc, _TCHAR* argv[])
 
          printf("2.) Test : *********************\n");
 
-         /* Here all zero but EaBuffer::EaName is set : will allways end in STATUS_EA_LIST_INCONSISTENT */ 
-         /* There must a link to EaBuffer::EaName */ 
+         /* Here all zero but EaBuffer::EaName is set : will allways end in STATUS_EA_LIST_INCONSISTENT */
+         /* There must a link to EaBuffer::EaName */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -202,20 +202,20 @@ int _tmain(int argc, _TCHAR* argv[])
          }
 
          printf("3.) Test : *********************\n");
-         
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is count up. EaLength is maxbuffer: STATUS_SUCCESS when EaBuffer::EaNameLength>strlen(EaBuffer::EaName) */ 
+
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is count up. EaLength is maxbuffer: STATUS_SUCCESS when EaBuffer::EaNameLength>strlen(EaBuffer::EaName) */
          TestEaLength = TEST_BUFFER_LEN;
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
 
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
             WinEaBuffer->EaNameLength = i;
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -229,19 +229,19 @@ int _tmain(int argc, _TCHAR* argv[])
          }
 
          printf("4.) Test : *********************\n");
-         
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName). EaLength is count: STATUS_SUCCESS when EaLength>=17 (EaBuffer::EaNameLength+9) */ 
+
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName). EaLength is count: STATUS_SUCCESS when EaLength>=17 (EaBuffer::EaNameLength+9) */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
             WinEaBuffer->EaNameLength = (UCHAR)strlen(WinEaBuffer->EaName);
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -256,11 +256,11 @@ int _tmain(int argc, _TCHAR* argv[])
 
          printf("5.) Test : *********************\n");
 
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: STATUS_SUCCESS when EaLength>=26 (EaBuffer::EaNameLength+EaBuffer::EaValueLength+9) */ 
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: STATUS_SUCCESS when EaLength>=26 (EaBuffer::EaNameLength+EaBuffer::EaValueLength+9) */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
             WinEaBuffer->EaNameLength = (UCHAR)strlen(WinEaBuffer->EaName);
@@ -268,7 +268,7 @@ int _tmain(int argc, _TCHAR* argv[])
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -282,16 +282,16 @@ int _tmain(int argc, _TCHAR* argv[])
             iTestCount++;
          }
 
-         
+
          printf("6.) Test : *********************\n");
 
          /* The same test like 5.) but more data in the buffer*/
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: STATUS_SUCCESS when EaLength>=26 (EaBuffer::EaNameLength+EaBuffer::EaValueLength+9) */ 
-         
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: STATUS_SUCCESS when EaLength>=26 (EaBuffer::EaNameLength+EaBuffer::EaValueLength+9) */
+
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -300,7 +300,7 @@ int _tmain(int argc, _TCHAR* argv[])
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
@@ -316,13 +316,13 @@ int _tmain(int argc, _TCHAR* argv[])
          }
 
          printf("7.) Test : *********************\n");
-         
+
          /* The same test like 6.) but wrong strlen */
-         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will allways end in STATUS_EA_LIST_INCONSISTENT */ 
+         /* Here EaBuffer::EaName is set and EaBuffer::EaNameLength is strlen(EaBuffer::EaName) EaBuffer::EaValueLength is strlen(EaBuffer::EaName)+1. EaLength is count: will allways end in STATUS_EA_LIST_INCONSISTENT */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = i;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -331,7 +331,7 @@ int _tmain(int argc, _TCHAR* argv[])
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
@@ -348,13 +348,13 @@ int _tmain(int argc, _TCHAR* argv[])
 
 
          printf("8.) Test : *********************\n");
-         
-         /* Here WinEaBuffer->NextEntryOffset test : STATUS_SUCCESS when NextEntryOffset=0 else STATUS_EA_LIST_INCONSISTENT when NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC then ErrorOffset 28 */ 
+
+         /* Here WinEaBuffer->NextEntryOffset test : STATUS_SUCCESS when NextEntryOffset=0 else STATUS_EA_LIST_INCONSISTENT when NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC then ErrorOffset 28 */
          /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
@@ -364,7 +364,7 @@ int _tmain(int argc, _TCHAR* argv[])
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinEaBuffer->NextEntryOffset = i;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x%x%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
@@ -382,27 +382,27 @@ int _tmain(int argc, _TCHAR* argv[])
          }
 
          printf("9.) Test : *********************\n");
-         
-         /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */ 
+
+         /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */
          /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
-            
+
             WinEaBuffer->EaNameLength = (UCHAR)strlen(WinEaBuffer->EaName)-1;
             WinEaBuffer->EaValueLength = (UCHAR)strlen(WinEaBuffer->EaName);
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinEaBuffer->NextEntryOffset = i;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
-            
+
             ROSEaBuffer->EaNameLength = (UCHAR)strlen(ROSEaBuffer->EaName)-1;
             ROSEaBuffer->EaValueLength = (UCHAR)strlen(ROSEaBuffer->EaName);
             ulROSError = RANDOM_INIT_ERROR;
@@ -416,27 +416,27 @@ int _tmain(int argc, _TCHAR* argv[])
          }
 
          printf("10.) Test : *********************\n");
-         
-         /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */ 
+
+         /* Here WinEaBuffer->NextEntryOffset test wrong strlen: STATUS_SUCCESS NextEntryOffset=0 & NextEntryOffset = 28 = 8+8+9 ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC */
          /* From the MSDN (http://msdn2.microsoft.com/en-us/library/ms795740.aspx). For all entries except the last, the value of NextEntryOffset must be greater than zero and must fall on a ULONG boundary.*/
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
-            
+
             WinEaBuffer->EaNameLength = (UCHAR)strlen(WinEaBuffer->EaName)+1;
             WinEaBuffer->EaValueLength = (UCHAR)strlen(WinEaBuffer->EaName)+1;
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinEaBuffer->NextEntryOffset = i;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR);
-            
+
             ROSEaBuffer->EaNameLength = (UCHAR)strlen(ROSEaBuffer->EaName)+1;
             ROSEaBuffer->EaValueLength = (UCHAR)strlen(ROSEaBuffer->EaName)+1;
             ulROSError = RANDOM_INIT_ERROR;
@@ -451,25 +451,25 @@ int _tmain(int argc, _TCHAR* argv[])
 
          printf("11.) Test : *********************\n");
 
-         /* Here WinEaBuffer->NextEntryOffset :  */ 
+         /* Here WinEaBuffer->NextEntryOffset :  */
          for (i=0;i<TEST_BUFFER_LEN;i++)
          {
             TestEaLength = TEST_BUFFER_LEN;
-            // Windows 
+            // Windows
             memset(WinEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(WinEaBuffer->EaName,"%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
-            
+
             WinEaBuffer->EaNameLength = (UCHAR)strlen(WinEaBuffer->EaName);
             WinEaBuffer->EaValueLength = (UCHAR)strlen(WinEaBuffer->EaName);
             ulWinError = RANDOM_INIT_ERROR;
             WinEaBuffer->Flags = TestEaBufferFlags;
             WinEaBuffer->NextEntryOffset = ((WinEaBuffer->EaNameLength+WinEaBuffer->EaNameLength+9)+3)&0xFFFFFFFC;
             WinStatus = IoCheckEaBufferValidity(WinEaBuffer,TestEaLength,&ulWinError);
-            
+
             // ROS
             memset(ROSEaBuffer,0,TEST_BUFFER_LEN);
             sprintf(ROSEaBuffer->EaName,"%x",RANDOM_INIT_ERROR,RANDOM_INIT_ERROR);
-            
+
             ROSEaBuffer->EaNameLength = (UCHAR)strlen(ROSEaBuffer->EaName);
             ROSEaBuffer->EaValueLength = (UCHAR)strlen(ROSEaBuffer->EaName);
             ulROSError = RANDOM_INIT_ERROR;
@@ -486,7 +486,7 @@ int _tmain(int argc, _TCHAR* argv[])
          free(WinEaBuffer);
          free(ROSEaBuffer);
       }
-      
+
       FreeLibrary(hKrnlMod);
    }
    else

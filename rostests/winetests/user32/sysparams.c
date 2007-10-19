@@ -157,7 +157,7 @@ static LRESULT CALLBACK SysParamsTestWndProc( HWND hWnd, UINT msg, WPARAM wParam
     switch (msg) {
 
     case WM_SETTINGCHANGE:
-        if (change_counter>0) { 
+        if (change_counter>0) {
             /* ignore these messages caused by resizing of toolbars */
             if( wParam == SPI_SETWORKAREA) break;
             if( change_last_param == SPI_SETWORKAREA) {
@@ -380,12 +380,12 @@ static int lffromreg( char *keyname,  char *valname, LOGFONTA *plf)
     LOGFONTW lfw;
     DWORD ret, size, type;
 
-    RegOpenKeyA( HKEY_CURRENT_USER, keyname, &hkey ); 
+    RegOpenKeyA( HKEY_CURRENT_USER, keyname, &hkey );
     size = sizeof( lfw);
     ret=RegQueryValueExA( hkey, valname, NULL, &type, (LPBYTE)&lfw, &size );
     RegCloseKey( hkey );
     ok( ret == ERROR_SUCCESS, "Key \"%s\" value \"%s\" not found\n", keyname, valname);
-    if( ret != ERROR_SUCCESS) 
+    if( ret != ERROR_SUCCESS)
         return FALSE;
     if( size <= sizeof( LOGFONT16)) {
         LOGFONT16 *plf16 = (LOGFONT16*) &lfw;
@@ -509,7 +509,7 @@ static void run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
     rc=0;
     if ((aw_turn % 2!=0) && (w_implemented))
     {
-        /* call unicode on odd (non even) calls */ 
+        /* call unicode on odd (non even) calls */
         SetLastError(0xdeadbeef);
         rc=SystemParametersInfoW( SPI_SETMOUSE, 0, curr_val, SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         if (rc==0 && GetLastError()==ERROR_CALL_NOT_IMPLEMENTED)
@@ -542,7 +542,7 @@ static void run_spi_setmouse_test( int curr_val[], POINT *req_change, POINT *pro
     }
 
     if (w_implemented)
-    { 
+    {
         rc=SystemParametersInfoW( SPI_GETMOUSE, 0, mi, 0 );
         ok(rc!=0,"SystemParametersInfoW: rc=%d err=%ld\n",rc,GetLastError());
         for (i = 0; i < 3; i++)
@@ -662,7 +662,7 @@ static void test_setborder(UINT curr_val, int usesetborder, int dpi)
     rc=SystemParametersInfo( SPI_GETNONCLIENTMETRICS, 0, &ncm, 0);
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
     eq( (UINT)ncm.iBorderWidth, curr_val, "NonClientMetric.iBorderWidth", "%d");
-    /* and from SPI_GETBORDER */ 
+    /* and from SPI_GETBORDER */
     rc=SystemParametersInfoA( SPI_GETBORDER, 0, &border, 0 );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
     eq( border, curr_val, "SPI_{GET,SET}BORDER", "%d");
@@ -1210,7 +1210,7 @@ static void test_SPI_SETMOUSEBUTTONSWAP( void )        /*     33 */
                                   SPIF_UPDATEINIFILE | SPIF_SENDCHANGE );
         if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEBUTTONSWAP"))
             break;
-            
+
         test_change_message( SPI_SETMOUSEBUTTONSWAP, 0 );
         test_reg_key( SPI_SETMOUSEBUTTONSWAP_REGKEY,
                       SPI_SETMOUSEBUTTONSWAP_VALNAME,
@@ -1285,7 +1285,7 @@ static void test_SPI_SETDRAGFULLWINDOWS( void )        /*     37 */
     regval = metricfromreg( KEY, VAL, dpi);\
     ok( regval==val, "wrong value \"%s\" in registry %d, expected %d\n", VAL, regval, val);\
 }
- 
+
 #define test_reg_metric2( KEY1, KEY2, VAL, val) \
 {   INT regval;\
     regval = metricfromreg( KEY1, VAL, dpi);\
@@ -1353,7 +1353,7 @@ static void test_SPI_SETNONCLIENTMETRICS( void )               /*     44 */
     if (!test_error_msg(rc,"SPI_{GET,SET}NONCLIENTMETRICS"))
         return;
     Ncmstart = Ncmorig;
-    /* SPI_GETNONCLIENTMETRICS returns some "cooked" values. For instance if 
+    /* SPI_GETNONCLIENTMETRICS returns some "cooked" values. For instance if
        the caption font height is higher than the CaptionHeight field,
        the latter is adjusted accordingly. To be able to restore these setting
        accurately be restore the raw values. */
@@ -1578,7 +1578,7 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
     ICONMETRICSA im_new;
     ICONMETRICSA im_cur;
     INT regval;
-        
+
     im_orig.cbSize = sizeof(ICONMETRICSA);
     im_new.cbSize = sizeof(ICONMETRICSA);
     im_cur.cbSize = sizeof(ICONMETRICSA);
@@ -1588,7 +1588,7 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
     rc=SystemParametersInfoA( SPI_GETICONMETRICS, sizeof(ICONMETRICSA), &im_orig, FALSE );
     if (!test_error_msg(rc,"SPI_{GET,SET}ICONMETRICS"))
         return;
-   /* check some registry values */ 
+   /* check some registry values */
     regval = metricfromreg( SPI_ICONHORIZONTALSPACING_REGKEY, SPI_ICONHORIZONTALSPACING_VALNAME, dpi);
     ok( regval==im_orig.iHorzSpacing, "wrong value in registry %d, expected %d\n", regval, im_orig.iHorzSpacing);
     regval = metricfromreg( SPI_ICONVERTICALSPACING_REGKEY, SPI_ICONVERTICALSPACING_VALNAME, dpi);
@@ -1616,7 +1616,7 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
                                 OUT_TT_PRECIS : OUT_DEFAULT_PRECIS;
     im_cur.lfFont.lfClipPrecision ^= CLIP_LH_ANGLES;
     im_cur.lfFont.lfPitchAndFamily = im_cur.lfFont.lfPitchAndFamily ? 0 : 1;
-    im_cur.lfFont.lfQuality = im_cur.lfFont.lfQuality == DEFAULT_QUALITY ? 
+    im_cur.lfFont.lfQuality = im_cur.lfFont.lfQuality == DEFAULT_QUALITY ?
                                 DRAFT_QUALITY : DEFAULT_QUALITY;
     if( strcmp( im_cur.lfFont.lfFaceName, "MS Serif"))
         strcpy( im_cur.lfFont.lfFaceName, "MS Serif");
@@ -1628,7 +1628,7 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
 
     rc=SystemParametersInfoA( SPI_GETICONMETRICS, sizeof(ICONMETRICSA), &im_new, FALSE );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
-    /* test GET <-> SETICONMETRICS */ 
+    /* test GET <-> SETICONMETRICS */
     eq( im_new.iHorzSpacing, im_cur.iHorzSpacing, "iHorzSpacing", "%d" );
     eq( im_new.iVertSpacing, im_cur.iVertSpacing, "iVertSpacing", "%d" );
     eq( im_new.iTitleWrap,   im_cur.iTitleWrap,   "iTitleWrap",   "%d" );
@@ -1652,7 +1652,7 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
         im_new.iHorzSpacing, "iHorzSpacing", "%d" );
     eq( GetSystemMetrics( SM_CYICONSPACING ),
         im_new.iVertSpacing, "iVertSpacing", "%d" );
-   /* check some registry values */ 
+   /* check some registry values */
     regval = metricfromreg( SPI_ICONHORIZONTALSPACING_REGKEY, SPI_ICONHORIZONTALSPACING_VALNAME, dpi);
     ok( regval==im_cur.iHorzSpacing, "wrong value in registry %d, expected %d\n", regval, im_cur.iHorzSpacing);
     regval = metricfromreg( SPI_ICONVERTICALSPACING_REGKEY, SPI_ICONVERTICALSPACING_VALNAME, dpi);
@@ -1677,10 +1677,10 @@ static void test_SPI_SETICONMETRICS( void )               /*     46 */
     /* restore old values */
     rc=SystemParametersInfoA( SPI_SETICONMETRICS, sizeof(ICONMETRICSA), &im_orig,SPIF_UPDATEINIFILE );
     ok(rc!=0,"***warning*** failed to restore the original value: rc=%d err=%ld\n",rc,GetLastError());
-    
+
     rc=SystemParametersInfoA( SPI_GETICONMETRICS, sizeof(ICONMETRICSA), &im_new, FALSE );
     ok(rc!=0,"SystemParametersInfoA: rc=%d err=%ld\n",rc,GetLastError());
-    
+
     eq( im_new.iHorzSpacing, im_orig.iHorzSpacing, "iHorzSpacing", "%d" );
     eq( im_new.iVertSpacing, im_orig.iVertSpacing, "iVertSpacing", "%d" );
     eq( im_new.iTitleWrap,   im_orig.iTitleWrap,   "iTitleWrap",   "%d" );
@@ -1845,7 +1845,7 @@ static void test_SPI_SETFONTSMOOTHING( void )         /*     75 */
     unsigned int i;
 
     trace("testing SPI_{GET,SET}FONTSMOOTHING\n");
-    if( iswin9x) return; /* 95/98/ME don't seem to implement this fully */ 
+    if( iswin9x) return; /* 95/98/ME don't seem to implement this fully */
     SetLastError(0xdeadbeef);
     rc=SystemParametersInfoA( SPI_GETFONTSMOOTHING, 0, &old_b, 0 );
     if (!test_error_msg(rc,"SPI_{GET,SET}FONTSMOOTHING"))
@@ -1955,7 +1955,7 @@ static void test_SPI_SETMOUSEHOVERWIDTH( void )      /*     99 */
     */
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERWIDTH"))
         return;
-    
+
     for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
     {
         UINT v;
@@ -1994,7 +1994,7 @@ static void test_SPI_SETMOUSEHOVERHEIGHT( void )      /*     101 */
      */
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERHEIGHT"))
         return;
-    
+
     for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
     {
         UINT v;
@@ -2034,10 +2034,10 @@ static void test_SPI_SETMOUSEHOVERTIME( void )      /*     103 */
     rc=SystemParametersInfoA( SPI_GETMOUSEHOVERTIME, 0, &old_time, 0 );
     /* SPI_{GET,SET}MOUSEHOVERWIDTH does not seem to be supported on Win9x despite
      * what MSDN states (Verified on Win98SE)
-     */    
+     */
     if (!test_error_msg(rc,"SPI_{GET,SET}MOUSEHOVERTIME"))
         return;
-    
+
     for (i=0;i<sizeof(vals)/sizeof(*vals);i++)
     {
         UINT v;
@@ -2209,7 +2209,7 @@ static DWORD WINAPI SysParamsThreadFunc( LPVOID lpParam )
 }
 
 /* test calculation of GetSystemMetrics values (mostly) from non client metrics,
- * icon metrics and minimized metrics. 
+ * icon metrics and minimized metrics.
  */
 
 /* copied from wine's GdiGetCharDimensions, which is not available on most

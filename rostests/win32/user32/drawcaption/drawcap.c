@@ -1,4 +1,4 @@
-/* 
+/*
  *  Copyright 2006 Saveliy Tretiakov
  *
  *  This program is free software; you can redistribute it and/or modify
@@ -34,32 +34,32 @@ INT testnum = 0;
 //		 LPCWSTR     str,
 //		 UINT        uFlags);
 
-VOID CapTest(HWND hWnd, 
-	HDC hDc, 
-	LPRECT pR, 
-	WCHAR *Text, 
+VOID CapTest(HWND hWnd,
+	HDC hDc,
+	LPRECT pR,
+	WCHAR *Text,
 	DWORD Flags,
 	WCHAR *AddonStr,
 	DWORD Addon)
 {
 	WCHAR Buf[512];
-	
+
 	lstrcpy(Buf, AddonStr);
 	if(lstrlen(Buf))lstrcat(Buf, L" | ");
 	lstrcat(Buf, Text);
-	
-	DrawText( hDc, Buf, lstrlen(Buf), pR, DT_LEFT );  
-	
+
+	DrawText( hDc, Buf, lstrlen(Buf), pR, DT_LEFT );
+
 	pR->top+=20;
-	pR->bottom+=20;	
-		
+	pR->bottom+=20;
+
 	if(!DrawCaption(hWnd, hDc, pR, Flags | Addon))
 	{
 		printf("PAINT: DrawCaption failed: %d\n", (int)GetLastError());
 	}
 
 	pR->top+=30;
-	pR->bottom+=30;	
+	pR->bottom+=30;
 }
 
 VOID DrawCaptionTest(HWND hWnd, HDC hDc, WCHAR *AddonStr, DWORD Addon)
@@ -71,52 +71,52 @@ VOID DrawCaptionTest(HWND hWnd, HDC hDc, WCHAR *AddonStr, DWORD Addon)
 	Rect.right-=10;
 	Rect.top = 10;
 
-	CapTest(hWnd, hDc, &Rect, L"DC_TEXT:", DC_TEXT, AddonStr, Addon); 
-	
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_ACTIVE:", 
-		DC_TEXT | DC_ACTIVE, 
-		AddonStr, Addon); 
-	
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_ICON:" , 
-		DC_TEXT | DC_ICON, 
-		AddonStr, Addon);
-	 
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_ACTIVE | DC_ICON:" , 
-		DC_TEXT | DC_ACTIVE | DC_ICON, 
-		AddonStr, Addon); 
+	CapTest(hWnd, hDc, &Rect, L"DC_TEXT:", DC_TEXT, AddonStr, Addon);
 
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_INBUTTON:" , 
-		DC_TEXT | DC_INBUTTON, 
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_ACTIVE:",
+		DC_TEXT | DC_ACTIVE,
 		AddonStr, Addon);
-	 
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_ACTIVE | DC_INBUTTON:" , 
-		DC_TEXT | DC_ACTIVE | DC_INBUTTON, 
-		AddonStr, Addon); 
-				
-	CapTest(hWnd, hDc, &Rect, 
-		L"DC_TEXT | DC_ICON | DC_INBUTTON:" , 
-		DC_TEXT | DC_ICON | DC_INBUTTON, 
+
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_ICON:" ,
+		DC_TEXT | DC_ICON,
 		AddonStr, Addon);
-	 
-	CapTest(hWnd, hDc, &Rect, 
+
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_ACTIVE | DC_ICON:" ,
+		DC_TEXT | DC_ACTIVE | DC_ICON,
+		AddonStr, Addon);
+
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_INBUTTON:" ,
+		DC_TEXT | DC_INBUTTON,
+		AddonStr, Addon);
+
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_ACTIVE | DC_INBUTTON:" ,
+		DC_TEXT | DC_ACTIVE | DC_INBUTTON,
+		AddonStr, Addon);
+
+	CapTest(hWnd, hDc, &Rect,
+		L"DC_TEXT | DC_ICON | DC_INBUTTON:" ,
+		DC_TEXT | DC_ICON | DC_INBUTTON,
+		AddonStr, Addon);
+
+	CapTest(hWnd, hDc, &Rect,
 		L"DC_TEXT | DC_ACTIVE | DC_ICON | DC_INBUTTON:" ,
-		DC_TEXT | DC_ACTIVE | DC_ICON | DC_INBUTTON, 
-		AddonStr, Addon); 			
+		DC_TEXT | DC_ACTIVE | DC_ICON | DC_INBUTTON,
+		AddonStr, Addon);
 
 }
 
-LRESULT CALLBACK CaptWndProc(HWND hWnd, 
-							 UINT msg, 
-							 WPARAM wParam, 
+LRESULT CALLBACK CaptWndProc(HWND hWnd,
+							 UINT msg,
+							 WPARAM wParam,
 							 LPARAM lParam)
-{	
+{
 
-	
+
 	switch (msg)
 	{
 
@@ -124,10 +124,10 @@ LRESULT CALLBACK CaptWndProc(HWND hWnd,
 		{
 			HDC hDc;
 			PAINTSTRUCT Ps;
-			
+
 			hDc = BeginPaint(hWnd, &Ps);
 			SetBkMode( hDc, TRANSPARENT );
-			
+
 			switch(testnum)
 			{
 			case 1:
@@ -143,29 +143,29 @@ LRESULT CALLBACK CaptWndProc(HWND hWnd,
 				DrawCaptionTest(hWnd, hDc, L"DC_BUTTONS", DC_BUTTONS);
 				break;
 			case 5:
-				DrawCaptionTest(hWnd, hDc, 
-					L"DC_GRADIENT | DC_SMALLCAP", 
+				DrawCaptionTest(hWnd, hDc,
+					L"DC_GRADIENT | DC_SMALLCAP",
 					DC_GRADIENT | DC_SMALLCAP);
 				break;
 			case 6:
-				DrawCaptionTest(hWnd, hDc, 
-					L"DC_GRADIENT | DC_BUTTONS", 
+				DrawCaptionTest(hWnd, hDc,
+					L"DC_GRADIENT | DC_BUTTONS",
 					DC_GRADIENT | DC_BUTTONS);
 				break;
-			case 7: 
-				DrawCaptionTest(hWnd, hDc, 
-					L"DC_BUTTONS | DC_SMALLCAP", 
+			case 7:
+				DrawCaptionTest(hWnd, hDc,
+					L"DC_BUTTONS | DC_SMALLCAP",
 					DC_BUTTONS | DC_SMALLCAP);
 				break;
 			case 8:
-				DrawCaptionTest(hWnd, hDc, 
-					L"DC_BUTTONS | DC_SMALLCAP | DC_GRADIENT", 
+				DrawCaptionTest(hWnd, hDc,
+					L"DC_BUTTONS | DC_SMALLCAP | DC_GRADIENT",
 					DC_BUTTONS | DC_SMALLCAP | DC_GRADIENT);
 				break;
 			}
-			
+
 			EndPaint(hWnd, &Ps);
-		
+
 			return 0;
 		}
 
@@ -188,7 +188,7 @@ INT main(INT argc, CHAR **argv)
 	UINT result;
 	HBRUSH hBr;
 	//HMODULE hLib;
-	
+
 	if(argc<2)
 	{
 		printf("DrawCaption testcode.\n");
@@ -204,37 +204,37 @@ INT main(INT argc, CHAR **argv)
 			"8. DrawCaption test + DC_BUTTONS | DC_SMALLCAP | DC_GRADIENT\n\n");
 		return 0;
 	}
-	
+
 	testnum = atoi(argv[1]);
 	if(testnum < 1 || testnum > 8)
 	{
 		printf("Unknown test %d\n", testnum);
 		return 1;
 	}
-		
+
 	hInst = GetModuleHandle(NULL);
-	
+
 	//hLib = LoadLibrary(L"user32");
 	//if(!hLib)
 	//{
 	//	printf("Shit! Can't load user32.dll\n");
 	//	return 1;
 	//}
-	
+
 	//DrawCaptionTemp = GetProcAddress(hLib, "DrawCaptionTempW");
 	//if(!DrawCaptionTemp)
 	//{
 	//	printf("Shit! Can't get DrawCaptionTemp address\n");
 	//	return 1;
 	//}
-	
+
 	hBr = CreateSolidBrush(RGB(255, 255, 255));
 	if(!hBr)
 	{
 		printf("Shit! Can't create brush.");
 		return 1;
 	}
-	
+
 	memset(&wcx, 0, sizeof(wcx));
 	wcx.cbSize = sizeof(wcx);
 	wcx.style = CS_HREDRAW | CS_VREDRAW;
@@ -243,17 +243,17 @@ INT main(INT argc, CHAR **argv)
 	wcx.hbrBackground = hBr;
 	wcx.lpszClassName = CaptWndClass;
 	if(argc > 2) wcx.hIconSm = LoadIcon(hInst, MAKEINTRESOURCE(ID_ICON1SM));
-	
+
 	if(!(result = RegisterClassEx(&wcx)))
 	{
-		printf("Shit! RegisterClassEx failed: %d\n", 
+		printf("Shit! RegisterClassEx failed: %d\n",
 			(int)GetLastError());
 		DeleteObject(hBr);
 		return 1;
 	}
-	
-	hWnd = CreateWindowEx(0, 
-				CaptWndClass, 
+
+	hWnd = CreateWindowEx(0,
+				CaptWndClass,
 				L"DrawCaption test",
 				WS_OVERLAPPED|WS_THICKFRAME|WS_SYSMENU,
 				CW_USEDEFAULT,
@@ -264,7 +264,7 @@ INT main(INT argc, CHAR **argv)
 				0,
 				hInst,
 				NULL);
-	
+
 	if(!hWnd)
 	{
 		printf("Shit! Can't create wnd!\n");
@@ -272,16 +272,16 @@ INT main(INT argc, CHAR **argv)
 		DeleteObject(hBr);
 		return 1;
 	}
-	
-	
-	ShowWindow(hWnd, SW_SHOW); 
-	UpdateWindow(hWnd);  
+
+
+	ShowWindow(hWnd, SW_SHOW);
+	UpdateWindow(hWnd);
 
 	while(GetMessage(&msg, NULL, 0, 0 ))
 	{
-		TranslateMessage(&msg); 
-		DispatchMessage(&msg); 
-	} 
+		TranslateMessage(&msg);
+		DispatchMessage(&msg);
+	}
 
 	DeleteObject(hBr);
 	UnregisterClass(CaptWndClass, hInst);

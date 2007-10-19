@@ -1,5 +1,5 @@
 /*
- *  ReactOS test program - 
+ *  ReactOS test program -
  *
  *  loadlib.c
  *
@@ -91,7 +91,7 @@ const char* appName(const char* argv0)
     const char* name;
 
     name = (const char*)strrchr(argv0, '\\');
-    if (name != NULL) 
+    if (name != NULL)
         return name + 1;
     return argv0;
 }

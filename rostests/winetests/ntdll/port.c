@@ -147,7 +147,7 @@ static void ProcessConnectionRequest(PLPC_MESSAGE LpcMessage, PHANDLE pAcceptPor
 
     status = pNtAcceptConnectPort(pAcceptPortHandle, 0, LpcMessage, 1, 0, NULL);
     ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
-    
+
     status = pNtCompleteConnectPort(*pAcceptPortHandle);
     ok(status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %ld\n", status);
 }

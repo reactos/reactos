@@ -57,7 +57,7 @@ static void test_DIB_PAL_COLORS(void) {
     logpalette->palVersion = 0x300;
     logpalette->palNumEntries = 8;
     memcpy( logpalette->palPalEntry, logpalettedata, sizeof(logpalettedata) );
-    hpal = CreatePalette( logpalette ); 
+    hpal = CreatePalette( logpalette );
     hpalOld = SelectPalette( memhdc, hpal, FALSE );
     ok( hpalOld != NULL, "error=%ld\n", GetLastError() );
 

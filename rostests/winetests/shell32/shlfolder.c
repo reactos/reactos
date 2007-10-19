@@ -86,25 +86,25 @@ static void test_ParseDisplayName(void)
     if(res != INVALID_FILE_ATTRIBUTES) return;
 
     MultiByteToWideChar(CP_ACP, 0, cNonExistDir1A, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder, 
+    hr = IShellFolder_ParseDisplayName(IDesktopFolder,
         NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    ok((hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) || (hr == E_FAIL), 
+    ok((hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) || (hr == E_FAIL),
         "ParseDisplayName returned %08x, expected 80070002 or E_FAIL\n", hr);
 
     res = GetFileAttributesA(cNonExistDir2A);
     if(res != INVALID_FILE_ATTRIBUTES) return;
 
     MultiByteToWideChar(CP_ACP, 0, cNonExistDir2A, -1, cTestDirW, MAX_PATH);
-    hr = IShellFolder_ParseDisplayName(IDesktopFolder, 
+    hr = IShellFolder_ParseDisplayName(IDesktopFolder,
         NULL, NULL, cTestDirW, NULL, &newPIDL, 0);
-    ok((hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) || (hr == E_FAIL) || (hr == E_INVALIDARG), 
+    ok((hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND)) || (hr == E_FAIL) || (hr == E_INVALIDARG),
         "ParseDisplayName returned %08x, expected 80070002, E_FAIL or E_INVALIDARG\n", hr);
 
     /* I thought that perhaps the DesktopFolder's ParseDisplayName would recognize the
      * path corresponding to CSIDL_PERSONAL and return a CLSID_MyDocuments PIDL. Turns
      * out it doesn't. The magic seems to happen in the file dialogs, then. */
     if (!pSHGetSpecialFolderPathW || !pILFindLastID) goto finished;
-    
+
     bRes = pSHGetSpecialFolderPathW(NULL, cTestDirW, CSIDL_PERSONAL, FALSE);
     ok(bRes, "SHGetSpecialFolderPath(CSIDL_PERSONAL) failed! %u\n", GetLastError());
     if (!bRes) goto finished;
@@ -116,7 +116,7 @@ static void test_ParseDisplayName(void)
     ok(pILFindLastID(newPIDL)->mkid.abID[0] == 0x31, "Last pidl should be of type "
        "PT_FOLDER, but is: %02x\n", pILFindLastID(newPIDL)->mkid.abID[0]);
     IMalloc_Free(ppM, newPIDL);
-    
+
 finished:
     IShellFolder_Release(IDesktopFolder);
 }
@@ -198,13 +198,13 @@ static void test_EnumObjects(IShellFolder *iFolder)
      * the filesystem shellfolders return S_OK even if less than 'celt' items are
      * returned (in contrast to S_FALSE). We have to do it in a loop since WinXP
      * only ever returns a single entry per call. */
-    while (IEnumIDList_Next(iEnumList, 10-i, &idlArr[i], &NumPIDLs) == S_OK) 
+    while (IEnumIDList_Next(iEnumList, 10-i, &idlArr[i], &NumPIDLs) == S_OK)
         i += NumPIDLs;
     ok (i == 5, "i: %d\n", i);
 
     hr = IEnumIDList_Release(iEnumList);
     ok(hr == S_OK, "IEnumIDList_Release failed %08x\n", hr);
-    
+
     /* Sort them first in case of wrong order from system */
     for (i=0;i<5;i++) for (j=0;j<5;j++)
         if ((SHORT)IShellFolder_CompareIDs(iFolder, 0, idlArr[i], idlArr[j]) < 0)
@@ -213,7 +213,7 @@ static void test_EnumObjects(IShellFolder *iFolder)
             idlArr[i] = idlArr[j];
             idlArr[j] = newPIDL;
         }
-	    
+
     for (i=0;i<5;i++) for (j=0;j<5;j++)
     {
         hr = IShellFolder_CompareIDs(iFolder, 0, idlArr[i], idlArr[j]);
@@ -251,7 +251,7 @@ static void test_BindToObject(void)
     LPITEMIDLIST pidlMyComputer, pidlSystemDir, pidlEmpty = (LPITEMIDLIST)&emptyitem;
     WCHAR wszSystemDir[MAX_PATH];
     char szSystemDir[MAX_PATH];
-    WCHAR wszMyComputer[] = { 
+    WCHAR wszMyComputer[] = {
         ':',':','{','2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-',
         'A','2','D','8','-','0','8','0','0','2','B','3','0','3','0','9','D','}',0 };
 
@@ -261,7 +261,7 @@ static void test_BindToObject(void)
     hr = SHGetDesktopFolder(&psfDesktop);
     ok (SUCCEEDED(hr), "SHGetDesktopFolder failed! hr = %08x\n", hr);
     if (FAILED(hr)) return;
-    
+
     hr = IShellFolder_BindToObject(psfDesktop, pidlEmpty, NULL, &IID_IShellFolder, (LPVOID*)&psfChild);
     ok (hr == E_INVALIDARG, "Desktop's BindToObject should fail, when called with empty pidl! hr = %08x\n", hr);
 
@@ -274,7 +274,7 @@ static void test_BindToObject(void)
         IShellFolder_Release(psfDesktop);
         return;
     }
-    
+
     hr = IShellFolder_BindToObject(psfDesktop, pidlMyComputer, NULL, &IID_IShellFolder, (LPVOID*)&psfMyComputer);
     ok (SUCCEEDED(hr), "Desktop failed to bind to MyComputer object! hr = %08x\n", hr);
     IShellFolder_Release(psfDesktop);
@@ -297,7 +297,7 @@ static void test_BindToObject(void)
         return;
     }
     MultiByteToWideChar(CP_ACP, 0, szSystemDir, -1, wszSystemDir, MAX_PATH);
-    
+
     hr = IShellFolder_ParseDisplayName(psfMyComputer, NULL, NULL, wszSystemDir, NULL, &pidlSystemDir, NULL);
     ok (SUCCEEDED(hr), "MyComputers's ParseDisplayName failed to parse the SystemDirectory! hr = %08x\n", hr);
     if (FAILED(hr)) {
@@ -312,19 +312,19 @@ static void test_BindToObject(void)
     if (FAILED(hr)) return;
 
     hr = IShellFolder_BindToObject(psfSystemDir, pidlEmpty, NULL, &IID_IShellFolder, (LPVOID*)&psfChild);
-    ok (hr == E_INVALIDARG, 
+    ok (hr == E_INVALIDARG,
         "FileSystem ShellFolder's BindToObject should fail, when called with empty pidl! hr = %08x\n", hr);
-    
+
 #if 0
     /* this call segfaults on 98SE */
     hr = IShellFolder_BindToObject(psfSystemDir, NULL, NULL, &IID_IShellFolder, (LPVOID*)&psfChild);
-    ok (hr == E_INVALIDARG, 
+    ok (hr == E_INVALIDARG,
         "FileSystem ShellFolder's BindToObject should fail, when called with NULL pidl! hr = %08x\n", hr);
 #endif
 
     IShellFolder_Release(psfSystemDir);
 }
-  
+
 static void test_GetDisplayName(void)
 {
     BOOL result;
@@ -344,7 +344,7 @@ static void test_GetDisplayName(void)
 
     /* I'm trying to figure if there is a functional difference between calling
      * SHGetPathFromIDList and calling GetDisplayNameOf(SHGDN_FORPARSING) after
-     * binding to the shellfolder. One thing I thought of was that perhaps 
+     * binding to the shellfolder. One thing I thought of was that perhaps
      * SHGetPathFromIDList would be able to get the path to a file, which does
      * not exist anymore, while the other method would'nt. It turns out there's
      * no functional difference in this respect.
@@ -398,15 +398,15 @@ static void test_GetDisplayName(void)
         ok(!lstrcmpW((WCHAR*)&pidlLast->mkid.abID[46], wszFileName),
             "WinXP stores the filename as a wchar-string at this position!\n");
     }
-    
-    /* It seems as if we cannot bind to regular files on windows, but only directories. 
+
+    /* It seems as if we cannot bind to regular files on windows, but only directories.
      */
     hr = IShellFolder_BindToObject(psfDesktop, pidlTestFile, NULL, &IID_IUnknown, (VOID**)&psfFile);
     todo_wine { ok (hr == HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), "hr = %08x\n", hr); }
     if (SUCCEEDED(hr)) {
         IShellFolder_Release(psfFile);
     }
-  
+
     /* Some tests for IShellFolder::SetNameOf */
     hr = pSHBindToParent(pidlTestFile, &IID_IShellFolder, (VOID**)&psfPersonal, &pidlLast);
     ok(SUCCEEDED(hr), "SHBindToParent failed! hr = %08x\n", hr);
@@ -418,12 +418,12 @@ static void test_GetDisplayName(void)
         /* The pidl returned through the last parameter of SetNameOf is a simple one. */
         hr = IShellFolder_SetNameOf(psfPersonal, NULL, pidlLast, wszDirName, SHGDN_NORMAL, &pidlNew);
         ok (SUCCEEDED(hr), "SetNameOf failed! hr = %08x\n", hr);
-        ok (((LPITEMIDLIST)((LPBYTE)pidlNew+pidlNew->mkid.cb))->mkid.cb == 0, 
+        ok (((LPITEMIDLIST)((LPBYTE)pidlNew+pidlNew->mkid.cb))->mkid.cb == 0,
             "pidl returned from SetNameOf should be simple!\n");
 
         /* Passing an absolute path to SetNameOf fails. The HRESULT code indicates that SetNameOf
          * is implemented on top of SHFileOperation in WinXP. */
-        hr = IShellFolder_SetNameOf(psfPersonal, NULL, pidlNew, wszAbsoluteFilename, 
+        hr = IShellFolder_SetNameOf(psfPersonal, NULL, pidlNew, wszAbsoluteFilename,
                 SHGDN_FORPARSING, NULL);
         ok (hr == HRESULT_FROM_WIN32(ERROR_CANCELLED), "SetNameOf succeeded! hr = %08x\n", hr);
 
@@ -455,22 +455,22 @@ static void test_GetDisplayName(void)
     hr = pSHBindToParent(pidlEmpty, &IID_IShellFolder, (VOID**)&psfPersonal, &pidlLast);
     ok (SUCCEEDED(hr), "SHBindToParent(empty PIDL) should succeed! hr = %08x\n", hr);
     ok (pidlLast == pidlEmpty, "The last element of an empty PIDL should be the PIDL itself!\n");
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
         IShellFolder_Release(psfPersonal);
-    
+
     /* Binding to the folder and querying the display name of the file also works. */
-    hr = pSHBindToParent(pidlTestFile, &IID_IShellFolder, (VOID**)&psfPersonal, &pidlLast); 
+    hr = pSHBindToParent(pidlTestFile, &IID_IShellFolder, (VOID**)&psfPersonal, &pidlLast);
     ok (SUCCEEDED(hr), "SHBindToParent failed! hr = %08x\n", hr);
     if (FAILED(hr)) {
         IShellFolder_Release(psfDesktop);
         return;
     }
 
-    /* This test shows that Windows doesn't allocate a new pidlLast, but returns a pointer into 
+    /* This test shows that Windows doesn't allocate a new pidlLast, but returns a pointer into
      * pidlTestFile (In accordance with MSDN). */
-    ok (pILFindLastID(pidlTestFile) == pidlLast, 
+    ok (pILFindLastID(pidlTestFile) == pidlLast,
                                 "SHBindToParent doesn't return the last id of the pidl param!\n");
-    
+
     hr = IShellFolder_GetDisplayNameOf(psfPersonal, pidlLast, SHGDN_FORPARSING, &strret);
     ok (SUCCEEDED(hr), "Personal->GetDisplayNameOf failed! hr = %08x\n", hr);
     if (FAILED(hr)) {
@@ -485,7 +485,7 @@ static void test_GetDisplayName(void)
         ok (SUCCEEDED(hr), "StrRetToBufW failed! hr = %08x\n", hr);
         ok (!lstrcmpiW(wszTestFile, wszTestFile2), "GetDisplayNameOf returns incorrect path!\n");
     }
-    
+
     IShellFolder_Release(psfDesktop);
     IShellFolder_Release(psfPersonal);
 }
@@ -500,7 +500,7 @@ static void test_CallForAttributes(void)
     LPITEMIDLIST pidlMyDocuments;
     DWORD dwAttributes, dwCallForAttributes, dwOrigAttributes, dwOrigCallForAttributes;
     static const WCHAR wszAttributes[] = { 'A','t','t','r','i','b','u','t','e','s',0 };
-    static const WCHAR wszCallForAttributes[] = { 
+    static const WCHAR wszCallForAttributes[] = {
         'C','a','l','l','F','o','r','A','t','t','r','i','b','u','t','e','s',0 };
     static const WCHAR wszMyDocumentsKey[] = {
         'C','L','S','I','D','\\','{','4','5','0','D','8','F','B','A','-','A','D','2','5','-',
@@ -509,9 +509,9 @@ static void test_CallForAttributes(void)
     WCHAR wszMyDocuments[] = {
         ':',':','{','4','5','0','D','8','F','B','A','-','A','D','2','5','-','1','1','D','0','-',
         '9','8','A','8','-','0','8','0','0','3','6','1','B','1','1','0','3','}',0 };
-    
+
     /* For the root of a namespace extension, the attributes are not queried by binding
-     * to the object and calling GetAttributesOf. Instead, the attributes are read from 
+     * to the object and calling GetAttributesOf. Instead, the attributes are read from
      * the registry value HKCR/CLSID/{...}/ShellFolder/Attributes. This is documented on MSDN.
      *
      * The MyDocuments shellfolder on WinXP has a HKCR/CLSID/{...}/ShellFolder/CallForAttributes
@@ -522,10 +522,10 @@ static void test_CallForAttributes(void)
     hr = SHGetDesktopFolder(&psfDesktop);
     ok (SUCCEEDED(hr), "SHGetDesktopFolder failed! hr = %08x\n", hr);
     if (FAILED(hr)) return;
-    
-    hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, wszMyDocuments, NULL, 
+
+    hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, wszMyDocuments, NULL,
                                        &pidlMyDocuments, NULL);
-    ok (SUCCEEDED(hr), 
+    ok (SUCCEEDED(hr),
         "Desktop's ParseDisplayName failed to parse MyDocuments's CLSID! hr = %08x\n", hr);
     if (FAILED(hr)) {
         IShellFolder_Release(psfDesktop);
@@ -533,7 +533,7 @@ static void test_CallForAttributes(void)
     }
 
     dwAttributes = 0xffffffff;
-    hr = IShellFolder_GetAttributesOf(psfDesktop, 1, 
+    hr = IShellFolder_GetAttributesOf(psfDesktop, 1,
                                       (LPCITEMIDLIST*)&pidlMyDocuments, &dwAttributes);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf(MyDocuments) failed! hr = %08x\n", hr);
 
@@ -543,7 +543,7 @@ static void test_CallForAttributes(void)
     ok (!(dwAttributes & SFGAO_GHOSTED), "SFGAO_GHOSTED attribute is set for MyDocuments!\n");
 
     /* We don't have the MyDocuments shellfolder in wine yet, and thus we don't have the registry
-     * key. So the test will return at this point, if run on wine. 
+     * key. So the test will return at this point, if run on wine.
      */
     lResult = RegOpenKeyExW(HKEY_CLASSES_ROOT, wszMyDocumentsKey, 0, KEY_WRITE|KEY_READ, &hKey);
     ok (lResult == ERROR_SUCCESS, "RegOpenKeyEx failed! result: %08x\n", lResult);
@@ -552,7 +552,7 @@ static void test_CallForAttributes(void)
         IShellFolder_Release(psfDesktop);
         return;
     }
-    
+
     /* Query MyDocuments' Attributes value, to be able to restore it later. */
     dwSize = sizeof(DWORD);
     lResult = RegQueryValueExW(hKey, wszAttributes, NULL, NULL, (LPBYTE)&dwOrigAttributes, &dwSize);
@@ -566,7 +566,7 @@ static void test_CallForAttributes(void)
 
     /* Query MyDocuments' CallForAttributes value, to be able to restore it later. */
     dwSize = sizeof(DWORD);
-    lResult = RegQueryValueExW(hKey, wszCallForAttributes, NULL, NULL, 
+    lResult = RegQueryValueExW(hKey, wszCallForAttributes, NULL, NULL,
                               (LPBYTE)&dwOrigCallForAttributes, &dwSize);
     ok (lResult == ERROR_SUCCESS, "RegQueryValueEx failed! result: %08x\n", lResult);
     if (lResult != ERROR_SUCCESS) {
@@ -575,40 +575,40 @@ static void test_CallForAttributes(void)
         IShellFolder_Release(psfDesktop);
         return;
     }
-    
-    /* Define via the Attributes value that MyDocuments attributes are SFGAO_ISSLOW and 
+
+    /* Define via the Attributes value that MyDocuments attributes are SFGAO_ISSLOW and
      * SFGAO_GHOSTED and that MyDocuments should be called for the SFGAO_ISSLOW and
      * SFGAO_FILESYSTEM attributes. */
     dwAttributes = SFGAO_ISSLOW|SFGAO_GHOSTED;
     RegSetValueExW(hKey, wszAttributes, 0, REG_DWORD, (LPBYTE)&dwAttributes, sizeof(DWORD));
     dwCallForAttributes = SFGAO_ISSLOW|SFGAO_FILESYSTEM;
-    RegSetValueExW(hKey, wszCallForAttributes, 0, REG_DWORD, 
+    RegSetValueExW(hKey, wszCallForAttributes, 0, REG_DWORD,
                    (LPBYTE)&dwCallForAttributes, sizeof(DWORD));
 
-    /* Although it is not set in CallForAttributes, the SFGAO_GHOSTED flag is reset by 
+    /* Although it is not set in CallForAttributes, the SFGAO_GHOSTED flag is reset by
      * GetAttributesOf. It seems that once there is a single attribute queried, for which
      * CallForAttributes is set, all flags are taken from the GetAttributesOf call and
-     * the flags in Attributes are ignored. 
+     * the flags in Attributes are ignored.
      */
     dwAttributes = SFGAO_ISSLOW|SFGAO_GHOSTED|SFGAO_FILESYSTEM;
-    hr = IShellFolder_GetAttributesOf(psfDesktop, 1, 
+    hr = IShellFolder_GetAttributesOf(psfDesktop, 1,
                                       (LPCITEMIDLIST*)&pidlMyDocuments, &dwAttributes);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf(MyDocuments) failed! hr = %08x\n", hr);
-    if (SUCCEEDED(hr)) 
-        ok (dwAttributes == SFGAO_FILESYSTEM, 
-            "Desktop->GetAttributes(MyDocuments) returned unexpected attributes: %08x\n", 
+    if (SUCCEEDED(hr))
+        ok (dwAttributes == SFGAO_FILESYSTEM,
+            "Desktop->GetAttributes(MyDocuments) returned unexpected attributes: %08x\n",
             dwAttributes);
 
     /* Restore MyDocuments' original Attributes and CallForAttributes registry values */
     RegSetValueExW(hKey, wszAttributes, 0, REG_DWORD, (LPBYTE)&dwOrigAttributes, sizeof(DWORD));
-    RegSetValueExW(hKey, wszCallForAttributes, 0, REG_DWORD, 
+    RegSetValueExW(hKey, wszCallForAttributes, 0, REG_DWORD,
                    (LPBYTE)&dwOrigCallForAttributes, sizeof(DWORD));
     RegCloseKey(hKey);
     IMalloc_Free(ppM, pidlMyDocuments);
     IShellFolder_Release(psfDesktop);
 }
 
-static void test_GetAttributesOf(void) 
+static void test_GetAttributesOf(void)
 {
     HRESULT hr;
     LPSHELLFOLDER psfDesktop, psfMyComputer;
@@ -622,7 +622,7 @@ static void test_GetAttributesOf(void)
     static const DWORD dwMyComputerFlags = /* As observed on WinXP SP2 */
         SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
         SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
-    WCHAR wszMyComputer[] = { 
+    WCHAR wszMyComputer[] = {
         ':',':','{','2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-',
         'A','2','D','8','-','0','8','0','0','2','B','3','0','3','0','9','D','}',0 };
     char  cCurrDirA [MAX_PATH] = {0};
@@ -641,16 +641,16 @@ static void test_GetAttributesOf(void)
     dwFlags = 0xffffffff;
     hr = IShellFolder_GetAttributesOf(psfDesktop, 1, &pidlEmpty, &dwFlags);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf(empty pidl) failed! hr = %08x\n", hr);
-    ok (dwFlags == dwDesktopFlags, "Wrong Desktop attributes: %08x, expected: %08x\n", 
+    ok (dwFlags == dwDesktopFlags, "Wrong Desktop attributes: %08x, expected: %08x\n",
         dwFlags, dwDesktopFlags);
 
     /* .. or with no itemidlist at all. */
     dwFlags = 0xffffffff;
     hr = IShellFolder_GetAttributesOf(psfDesktop, 0, NULL, &dwFlags);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf(NULL) failed! hr = %08x\n", hr);
-    ok (dwFlags == dwDesktopFlags, "Wrong Desktop attributes: %08x, expected: %08x\n", 
+    ok (dwFlags == dwDesktopFlags, "Wrong Desktop attributes: %08x, expected: %08x\n",
         dwFlags, dwDesktopFlags);
-   
+
     /* Testing the attributes of the MyComputer shellfolder */
     hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, wszMyComputer, NULL, &pidlMyComputer, NULL);
     ok (SUCCEEDED(hr), "Desktop's ParseDisplayName failed to parse MyComputer's CLSID! hr = %08x\n", hr);
@@ -659,7 +659,7 @@ static void test_GetAttributesOf(void)
         return;
     }
 
-    /* WinXP SP2 sets the SFGAO_CANLINK flag, when MyComputer is queried via the Desktop 
+    /* WinXP SP2 sets the SFGAO_CANLINK flag, when MyComputer is queried via the Desktop
      * folder object. It doesn't do this, if MyComputer is queried directly (see below).
      * SFGAO_CANLINK is the same as DROPEFFECT_LINK, which MSDN says means: "Drag source
      * should create a link to the original data". You can't create links on MyComputer on
@@ -669,7 +669,7 @@ static void test_GetAttributesOf(void)
     dwFlags = 0xffffffff;
     hr = IShellFolder_GetAttributesOf(psfDesktop, 1, (LPCITEMIDLIST*)&pidlMyComputer, &dwFlags);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf(MyComputer) failed! hr = %08x\n", hr);
-    ok ((dwFlags & ~(DWORD)SFGAO_CANLINK) == dwMyComputerFlags, 
+    ok ((dwFlags & ~(DWORD)SFGAO_CANLINK) == dwMyComputerFlags,
                     "Wrong MyComputer attributes: %08x, expected: %08x\n", dwFlags, dwMyComputerFlags);
 
     hr = IShellFolder_BindToObject(psfDesktop, pidlMyComputer, NULL, &IID_IShellFolder, (LPVOID*)&psfMyComputer);
@@ -683,8 +683,8 @@ static void test_GetAttributesOf(void)
 
     dwFlags = 0xffffffff;
     hr = IShellFolder_GetAttributesOf(psfMyComputer, 0, NULL, &dwFlags);
-    ok (SUCCEEDED(hr), "MyComputer->GetAttributesOf(NULL) failed! hr = %08x\n", hr); 
-    todo_wine { ok (dwFlags == dwMyComputerFlags, 
+    ok (SUCCEEDED(hr), "MyComputer->GetAttributesOf(NULL) failed! hr = %08x\n", hr);
+    todo_wine { ok (dwFlags == dwMyComputerFlags,
                     "Wrong MyComputer attributes: %08x, expected: %08x\n", dwFlags, dwMyComputerFlags); }
 
     IShellFolder_Release(psfMyComputer);
@@ -703,7 +703,7 @@ static void test_GetAttributesOf(void)
 	cCurrDirA[len-1] = 0;
 
     MultiByteToWideChar(CP_ACP, 0, cCurrDirA, -1, cCurrDirW, MAX_PATH);
- 
+
     hr = SHGetDesktopFolder(&IDesktopFolder);
     ok(hr == S_OK, "SHGetDesktopfolder failed %08x\n", hr);
 
@@ -740,7 +740,7 @@ static void test_GetAttributesOf(void)
     hr = IShellFolder_GetAttributesOf(IDesktopFolder, 1, (LPCITEMIDLIST*)&newPIDL, &dwFlags);
     ok (SUCCEEDED(hr), "Desktop->GetAttributesOf() failed! hr = %08x\n", hr);
     ok ((dwFlags&SFGAO_FOLDER), "Wrong directory attribute for absolute PIDL: %08x\n", dwFlags);
-        
+
     /* free memory */
     IMalloc_Free(ppM, newPIDL);
 
@@ -749,7 +749,7 @@ static void test_GetAttributesOf(void)
     Cleanup();
 
     IShellFolder_Release(IDesktopFolder);
-}    
+}
 
 static void test_SHGetPathFromIDList(void)
 {
@@ -760,7 +760,7 @@ static void test_SHGetPathFromIDList(void)
     BOOL result;
     HRESULT hr;
     LPSHELLFOLDER psfDesktop;
-    WCHAR wszMyComputer[] = { 
+    WCHAR wszMyComputer[] = {
         ':',':','{','2','0','D','0','4','F','E','0','-','3','A','E','A','-','1','0','6','9','-',
         'A','2','D','8','-','0','8','0','0','2','B','3','0','3','0','9','D','}',0 };
     WCHAR wszFileName[MAX_PATH];
@@ -786,7 +786,7 @@ static void test_SHGetPathFromIDList(void)
     result = pSHGetSpecialFolderPathW(NULL, wszDesktop, CSIDL_DESKTOP, FALSE);
     ok(result, "SHGetSpecialFolderPathW(CSIDL_DESKTOP) failed! Last error: %u\n", GetLastError());
     if (!result) return;
-    
+
     result = SHGetPathFromIDListW(pidlEmpty, wszPath);
     ok(result, "SHGetPathFromIDListW failed! Last error: %u\n", GetLastError());
     if (!result) return;
@@ -856,7 +856,7 @@ static void test_SHGetPathFromIDList(void)
     if (pStrRetToBufW)
     {
         pStrRetToBufW(&strret, pidlTestFile, wszPath, MAX_PATH);
-        ok(0 == lstrcmpW(wszFileName, wszPath), 
+        ok(0 == lstrcmpW(wszFileName, wszPath),
            "Desktop->GetDisplayNameOf(pidlTestFile, SHGDN_FORPARSING) "
            "returned incorrect path for file placed on desktop\n");
     }
@@ -930,7 +930,7 @@ static void test_EnumObjects_and_CompareIDs(void)
  * 'Target' and 'Attributes' properties.
  */
 static HRESULT WINAPI InitPropertyBag_IPropertyBag_QueryInterface(IPropertyBag *iface, REFIID riid,
-    void **ppvObject) 
+    void **ppvObject)
 {
     if (!ppvObject)
         return E_INVALIDARG;
@@ -965,13 +965,13 @@ static HRESULT WINAPI InitPropertyBag_IPropertyBag_Read(IPropertyBag *iface, LPC
         'A','t','t','r','i','b','u','t','e','s',0 };
     static const WCHAR wszResolveLinkFlags[] = {
         'R','e','s','o','l','v','e','L','i','n','k','F','l','a','g','s',0 };
-       
+
     if (!lstrcmpW(pszPropName, wszTargetSpecialFolder)) {
         ok(V_VT(pVar) == VT_I4, "Wrong variant type for 'TargetSpecialFolder' property!\n");
         return E_INVALIDARG;
     }
-    
-    if (!lstrcmpW(pszPropName, wszResolveLinkFlags)) 
+
+    if (!lstrcmpW(pszPropName, wszResolveLinkFlags))
     {
         ok(V_VT(pVar) == VT_UI4, "Wrong variant type for 'ResolveLinkFlags' property!\n");
         return E_INVALIDARG;
@@ -980,7 +980,7 @@ static HRESULT WINAPI InitPropertyBag_IPropertyBag_Read(IPropertyBag *iface, LPC
     if (!lstrcmpW(pszPropName, wszTarget)) {
         WCHAR wszPath[MAX_PATH];
         BOOL result;
-        
+
         ok(V_VT(pVar) == VT_BSTR, "Wrong variant type for 'Target' property!\n");
         if (V_VT(pVar) != VT_BSTR) return E_INVALIDARG;
 
@@ -1010,7 +1010,7 @@ static HRESULT WINAPI InitPropertyBag_IPropertyBag_Write(IPropertyBag *iface, LP
     ok(FALSE, "Unexpected call to IPropertyBag_Write\n");
     return E_NOTIMPL;
 }
-    
+
 static const IPropertyBagVtbl InitPropertyBag_IPropertyBagVtbl = {
     InitPropertyBag_IPropertyBag_QueryInterface,
     InitPropertyBag_IPropertyBag_AddRef,
@@ -1044,18 +1044,18 @@ static void test_FolderShortcut(void) {
         'N','a','m','e','S','p','a','c','e','\\',
         '{','9','b','3','5','2','e','b','f','-','2','7','6','5','-','4','5','c','1','-',
         'b','4','c','6','-','8','5','c','c','7','f','7','a','b','c','6','4','}',0 };
-    
+
     WCHAR wszSomeSubFolder[] = { 'S','u','b','F','o','l','d','e','r', 0};
-    static const GUID CLSID_UnixDosFolder = 
+    static const GUID CLSID_UnixDosFolder =
         {0x9d20aae8, 0x0625, 0x44b0, {0x9c, 0xa7, 0x71, 0x88, 0x9c, 0x22, 0x54, 0xd9}};
 
     if (!pSHGetSpecialFolderPathW || !pStrRetToBufW) return;
-   
+
     /* These tests basically show, that CLSID_FolderShortcuts are initialized
      * via their IPersistPropertyBag interface. And that the target folder
      * is taken from the IPropertyBag's 'Target' property.
      */
-    hr = CoCreateInstance(&CLSID_FolderShortcut, NULL, CLSCTX_INPROC_SERVER, 
+    hr = CoCreateInstance(&CLSID_FolderShortcut, NULL, CLSCTX_INPROC_SERVER,
                           &IID_IPersistPropertyBag, (LPVOID*)&pPersistPropertyBag);
     ok (SUCCEEDED(hr), "CoCreateInstance failed! hr = 0x%08x\n", hr);
     if (FAILED(hr)) return;
@@ -1066,8 +1066,8 @@ static void test_FolderShortcut(void) {
         IPersistPropertyBag_Release(pPersistPropertyBag);
         return;
     }
-    
-    hr = IPersistPropertyBag_QueryInterface(pPersistPropertyBag, &IID_IShellFolder, 
+
+    hr = IPersistPropertyBag_QueryInterface(pPersistPropertyBag, &IID_IShellFolder,
                                             (LPVOID*)&pShellFolder);
     IPersistPropertyBag_Release(pPersistPropertyBag);
     ok(SUCCEEDED(hr), "IPersistPropertyBag_QueryInterface(IShellFolder) failed! hr = %08x\n", hr);
@@ -1099,9 +1099,9 @@ static void test_FolderShortcut(void) {
     hr = IPersistFolder3_GetCurFolder(pPersistFolder3, &pidlCurrentFolder);
     ok(SUCCEEDED(hr), "IPersistFolder3_GetCurFolder failed! hr=0x%08x\n", hr);
     ok(!pidlCurrentFolder, "IPersistFolder3_GetCurFolder should return a NULL pidl!\n");
-                    
+
     /* For FolderShortcut objects, the Initialize method initialized the folder's position in the
-     * shell namespace. The target folder, read from the property bag above, remains untouched. 
+     * shell namespace. The target folder, read from the property bag above, remains untouched.
      * The following tests show this: The itemidlist for some imaginary shellfolder object
      * is created and the FolderShortcut is initialized with it. GetCurFolder now returns this
      * itemidlist, but GetDisplayNameOf still returns the path from above.
@@ -1110,7 +1110,7 @@ static void test_FolderShortcut(void) {
     ok (SUCCEEDED(hr), "SHGetDesktopFolder failed! hr = %08x\n", hr);
     if (FAILED(hr)) return;
 
-    /* Temporarily register WineTestFolder as a shell namespace extension at the Desktop. 
+    /* Temporarily register WineTestFolder as a shell namespace extension at the Desktop.
      * Otherwise ParseDisplayName fails on WinXP with E_INVALIDARG */
     RegCreateKeyW(HKEY_CURRENT_USER, wszShellExtKey, &hShellExtKey);
     RegCloseKey(hShellExtKey);
@@ -1159,8 +1159,8 @@ static void test_FolderShortcut(void) {
         IShellFolder_Release(pShellFolder);
         return;
     }
-    
-    hr = IShellFolder_ParseDisplayName(pShellFolder, NULL, NULL, wszSomeSubFolder, NULL, 
+
+    hr = IShellFolder_ParseDisplayName(pShellFolder, NULL, NULL, wszSomeSubFolder, NULL,
                                        &pidlSubFolder, NULL);
     RemoveDirectoryW(wszDesktopPath);
     ok (SUCCEEDED(hr), "IShellFolder::ParseDisplayName failed! hr = %08x\n", hr);
@@ -1208,7 +1208,7 @@ struct FileStructW {
     BYTE  abFooBar2[4]; /* Beyond any recognition. */
     WCHAR wszName[1];   /* The long filename in unicode. */
     /* Just for documentation: Right after the unicode string: */
-    WORD  cbOffset;     /* FileStructW's offset from the beginning of the SHITMEID. 
+    WORD  cbOffset;     /* FileStructW's offset from the beginning of the SHITMEID.
                          * SHITEMID->cb == uOffset + cbLen */
 };
 #include "poppack.h"
@@ -1220,10 +1220,10 @@ static void test_ITEMIDLIST_format(void) {
     HANDLE hFile;
     HRESULT hr;
     BOOL bResult;
-    WCHAR wszFile[3][17] = { { 'e','v','e','n','_',0 }, { 'o','d','d','_',0 }, 
+    WCHAR wszFile[3][17] = { { 'e','v','e','n','_',0 }, { 'o','d','d','_',0 },
         { 'l','o','n','g','e','r','_','t','h','a','n','.','8','_','3',0 } };
     int i;
-    
+
     if(!pSHGetSpecialFolderPathW) return;
 
     bResult = pSHGetSpecialFolderPathW(NULL, wszPersonal, CSIDL_PERSONAL, FALSE);
@@ -1256,9 +1256,9 @@ static void test_ITEMIDLIST_format(void) {
         CHAR szFile[MAX_PATH];
         struct FileStructA *pFileStructA;
         WORD cbOffset;
-        
+
         WideCharToMultiByte(CP_ACP, 0, wszFile[i], -1, szFile, MAX_PATH, NULL, NULL);
-        
+
         hFile = CreateFileW(wszFile[i], GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_FLAG_WRITE_THROUGH, NULL);
         ok(hFile != INVALID_HANDLE_VALUE, "CreateFile failed! (%u)\n", GetLastError());
         if (hFile == INVALID_HANDLE_VALUE) {
@@ -1278,11 +1278,11 @@ static void test_ITEMIDLIST_format(void) {
         pFileStructA = (struct FileStructA *)pidlFile->mkid.abID;
         ok(pFileStructA->type == 0x32, "PIDLTYPE should be 0x32!\n");
         ok(pFileStructA->dummy == 0x00, "Dummy Byte should be 0x00!\n");
-        ok(pFileStructA->dwFileSize == 0, "Filesize should be zero!\n"); 
+        ok(pFileStructA->dwFileSize == 0, "Filesize should be zero!\n");
 
-        if (i < 2) /* First two file names are already in valid 8.3 format */ 
+        if (i < 2) /* First two file names are already in valid 8.3 format */
             ok(!strcmp(szFile, (CHAR*)&pidlFile->mkid.abID[12]), "Wrong file name!\n");
-        else 
+        else
             /* WinXP stores a derived 8.3 dos name (LONGER~1.8_3) here. We probably
              * can't implement this correctly, since unix filesystems don't support
              * this nasty short/long filename stuff. So we'll probably stay with our
@@ -1291,11 +1291,11 @@ static void test_ITEMIDLIST_format(void) {
             todo_wine { ok(pidlFile->mkid.abID[18] == '~', "Should be derived 8.3 name!\n"); }
 
         if (i == 0) /* First file name has an even number of chars. No need for alignment. */
-            ok(pidlFile->mkid.abID[12 + strlen(szFile) + 1] != '\0', 
-                "Alignment byte, where there shouldn't be!\n"); 
-        
+            ok(pidlFile->mkid.abID[12 + strlen(szFile) + 1] != '\0',
+                "Alignment byte, where there shouldn't be!\n");
+
         if (i == 1) /* Second file name has an uneven number of chars => alignment byte */
-            ok(pidlFile->mkid.abID[12 + strlen(szFile) + 1] == '\0', 
+            ok(pidlFile->mkid.abID[12 + strlen(szFile) + 1] == '\0',
                 "There should be an alignment byte, but isn't!\n");
 
         /* The offset of the FileStructW member is stored as a WORD at the end of the pidl. */
@@ -1305,24 +1305,24 @@ static void test_ITEMIDLIST_format(void) {
             "Wrong offset value (%d) stored at the end of the PIDL\n", cbOffset);
 
         if (cbOffset >= sizeof(struct FileStructA) &&
-            cbOffset <= pidlFile->mkid.cb - sizeof(struct FileStructW)) 
+            cbOffset <= pidlFile->mkid.cb - sizeof(struct FileStructW))
         {
             struct FileStructW *pFileStructW = (struct FileStructW *)(((LPBYTE)pidlFile)+cbOffset);
 
-            ok(pidlFile->mkid.cb == cbOffset + pFileStructW->cbLen, 
+            ok(pidlFile->mkid.cb == cbOffset + pFileStructW->cbLen,
                 "FileStructW's offset and length should add up to the PIDL's length!\n");
 
             if (pidlFile->mkid.cb == cbOffset + pFileStructW->cbLen) {
                 /* Since we just created the file, time of creation,
-                 * time of last access and time of last write access just be the same. 
-                 * These tests seem to fail sometimes (on WinXP), if the test is run again shortly 
+                 * time of last access and time of last write access just be the same.
+                 * These tests seem to fail sometimes (on WinXP), if the test is run again shortly
                  * after the first run. I do remember something with NTFS keeping the creation time
                  * if a file is deleted and then created again within a couple of seconds or so.
                  * Might be the reason. */
                 ok (pFileStructA->uFileDate == pFileStructW->uDate &&
                     pFileStructA->uFileTime == pFileStructW->uTime,
                     "Last write time should match creation time!\n");
-    
+
                 ok (pFileStructA->uFileDate == pFileStructW->uDate2 &&
                     pFileStructA->uFileTime == pFileStructW->uTime2,
                     "Last write time should match last access time!\n");

@@ -108,12 +108,12 @@ static void testQuery(void)
             ok( value.Length == strlen(test->val) * sizeof(WCHAR), "Wrong length %d/%d for %s\n",
                 value.Length, strlen(test->val) * sizeof(WCHAR), test->var );
             ok((value.Length == strlen(test->val) * sizeof(WCHAR) && memcmp(bv, bn, test->len*sizeof(WCHAR)) == 0) ||
-	       lstrcmpW(bv, bn) == 0, 
+	       lstrcmpW(bv, bn) == 0,
 	       "Wrong result for %s/%d\n", test->var, test->len);
             ok(bv[test->len] == '@', "Writing too far away in the buffer for %s/%d\n", test->var, test->len);
             break;
         case STATUS_BUFFER_TOO_SMALL:
-            ok( value.Length == strlen(test->val) * sizeof(WCHAR), 
+            ok( value.Length == strlen(test->val) * sizeof(WCHAR),
                 "Wrong returned length %d/%d (too small buffer) for %s\n",
                 value.Length, strlen(test->val) * sizeof(WCHAR), test->var );
             break;
@@ -214,7 +214,7 @@ static void testExpand(void)
          * {"hello%foo%world%=oOH%eeck",   "hellototoworldIIIeeck"},
          * Interestingly enough, with a 8 WCHAR buffers, we get on 2k:
          *      helloIII
-         * so it seems like strings overflowing the buffer are written 
+         * so it seems like strings overflowing the buffer are written
          * (troncated) but the write cursor is not advanced :-/
          */
         {NULL, NULL}
@@ -240,7 +240,7 @@ static void testExpand(void)
         us_dst.Buffer = NULL;
 
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s: %lu <> %u\n",
            test->src, ul, strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR));
 
@@ -250,10 +250,10 @@ static void testExpand(void)
 
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
         ok(nts == STATUS_SUCCESS, "Call failed (%lu)\n", nts);
-        ok(ul == us_dst.Length + sizeof(WCHAR), 
+        ok(ul == us_dst.Length + sizeof(WCHAR),
            "Wrong returned length for %s: %lu <> %u\n",
            test->src, ul, us_dst.Length + sizeof(WCHAR));
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s: %lu <> %u\n",
            test->src, ul, strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR));
         ok(lstrcmpW(dst, rst) == 0, "Wrong result for %s: expecting %s\n",
@@ -265,7 +265,7 @@ static void testExpand(void)
         dst[8] = '-';
         nts = pRtlExpandEnvironmentStrings_U(small_env, &us_src, &us_dst, &ul);
         ok(nts == STATUS_BUFFER_TOO_SMALL, "Call failed (%lu)\n", nts);
-        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR), 
+        ok(ul == strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR),
            "Wrong  returned length for %s (with buffer too small): %lu <> %u\n",
            test->src, ul, strlen(test->dst) * sizeof(WCHAR) + sizeof(WCHAR));
         ok(memcmp(dst, rst, 8*sizeof(WCHAR)) == 0,

@@ -30,7 +30,7 @@ PVOID GlobalBufferPool, GlobalPacketPool;
 
 char hwaddr[6] = { 0x08, 0x00, 0x20, 0x0b, 0xb7, 0xbb };
 
-char hdr[14] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
+char hdr[14] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
 		 0x08, 0x00 };
 
@@ -70,7 +70,7 @@ void receive_complete( void *context, NTSTATUS status, unsigned long count ) {
 class SocketObject {
 public:
     virtual ~SocketObject() { }
-    virtual int send( char *buf, int len, int *bytes, 
+    virtual int send( char *buf, int len, int *bytes,
 		      struct sockaddr_in *si ) = 0;
     virtual int recv( char *buf, int len, int *bytes,
 		      struct sockaddr_in *si ) = 0;
@@ -88,7 +88,7 @@ UINT TdiAddressSizeFromType( UINT AddressType ) {
 
 NTSTATUS TdiBuildNullConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnInfo,
-  ULONG Type ) 
+  ULONG Type )
 /*
  * FUNCTION: Builds a NULL TDI connection information structure
  * ARGUMENTS:
@@ -99,7 +99,7 @@ NTSTATUS TdiBuildNullConnectionInfoInPlace
  */
 {
   ULONG TdiAddressSize;
-  
+
   TdiAddressSize = TdiAddressSizeFromType(Type);
 
   RtlZeroMemory(ConnInfo,
@@ -119,7 +119,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 /*
  * FUNCTION: Builds a NULL TDI connection information structure
  * ARGUMENTS:
- *     ConnectionInfo = Address of buffer pointer to allocate connection 
+ *     ConnectionInfo = Address of buffer pointer to allocate connection
  *                      information in
  *     Type           = TDI style address type (TDI_ADDRESS_TYPE_XXX).
  * RETURNS:
@@ -129,7 +129,7 @@ NTSTATUS TdiBuildNullConnectionInfo
   PTDI_CONNECTION_INFORMATION ConnInfo;
   ULONG TdiAddressSize;
   NTSTATUS Status;
-  
+
   TdiAddressSize = TdiAddressSizeFromType(Type);
 
   ConnInfo = (PTDI_CONNECTION_INFORMATION)
@@ -141,7 +141,7 @@ NTSTATUS TdiBuildNullConnectionInfo
 
   Status = TdiBuildNullConnectionInfoInPlace( ConnInfo, Type );
 
-  if (!NT_SUCCESS(Status)) 
+  if (!NT_SUCCESS(Status))
       ExFreePool( ConnInfo );
   else
       *ConnectionInfo = ConnInfo;
@@ -164,11 +164,11 @@ TdiBuildConnectionInfoInPlace
 ( PTDI_CONNECTION_INFORMATION ConnectionInfo,
   PTA_ADDRESS Address ) {
     NTSTATUS Status = STATUS_SUCCESS;
-    
+
     RtlCopyMemory( ConnectionInfo->RemoteAddress,
-		   Address, 
+		   Address,
 		   ConnectionInfo->RemoteAddressLength );
-    
+
     return Status;
 }
 
@@ -178,10 +178,10 @@ TdiBuildConnectionInfo
   PTA_ADDRESS Address ) {
   NTSTATUS Status = TdiBuildNullConnectionInfo( ConnectionInfo,
 						Address->AddressType );
-  
+
   if( NT_SUCCESS(Status) )
       TdiBuildConnectionInfoInPlace( *ConnectionInfo, Address );
-  
+
   return Status;
 }
 
@@ -200,10 +200,10 @@ public:
 	TdiBuildConnectionInfo( &ConnInfo, (PTA_ADDRESS)&ConnectTo );
 
 	Connection = TCPAllocateConnectionEndpoint( NULL );
-	*status = TCPSocket( Connection, 
+	*status = TCPSocket( Connection,
 			     AF_INET,
 			     SOCK_STREAM, IPPROTO_TCP );
-	if( !*status ) 
+	if( !*status )
 	    *status = TCPConnect( Connection,
 				  ConnInfo,
 				  NULL,
@@ -220,7 +220,7 @@ public:
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
 	if( Connection )
-	    Status = TCPSendData( Connection, 
+	    Status = TCPSendData( Connection,
 				  buf,
 				  len,
 				  (PULONG)bytes,
@@ -232,7 +232,7 @@ public:
 	NTSTATUS Status = STATUS_UNSUCCESSFUL;
 
 	if( Connection )
-	    Status = TCPSendData( Connection, 
+	    Status = TCPSendData( Connection,
 				  buf,
 				  len,
 				  (PULONG)bytes,
@@ -244,9 +244,9 @@ private:
     PCONNECTION_ENDPOINT Connection;
 };
 
-VOID SendPacket( PVOID Context, 
-		 PNDIS_PACKET NdisPacket, 
-		 UINT Offset, 
+VOID SendPacket( PVOID Context,
+		 PNDIS_PACKET NdisPacket,
+		 UINT Offset,
 		 PVOID LinkAddress,
 		 USHORT Type ) {
     PCHAR DataOut;
@@ -254,9 +254,9 @@ VOID SendPacket( PVOID Context,
     UINT Size;
     std::string output_packet;
 
-    printf( "Sending packet: %02x:%02x:%02x:%02x:%02x:%02x\n", 
+    printf( "Sending packet: %02x:%02x:%02x:%02x:%02x:%02x\n",
 	    Addr[0], Addr[1], Addr[2], Addr[3], Addr[4], Addr[5] );
-    
+
     GetDataPtr( NdisPacket, Offset, &DataOut, &Size );
     for( int off = 0; off < Size; off += 16 ) {
 	display_row( DataOut, off, Size );
@@ -298,7 +298,7 @@ int main( int argc, char **argv ) {
     SocketObject *S = NULL;
 
     RtlInitUnicodeString
-	( &RegistryUnicodePath, 
+	( &RegistryUnicodePath,
 	  L"\\SYSTEM\\CurrentControlSet\\Services"
 	  L"\\Tcpip" );
 
@@ -316,7 +316,7 @@ int main( int argc, char **argv ) {
     BindInfo.Address = (PUCHAR)hwaddr;
     BindInfo.AddressLength = sizeof(hwaddr);
     BindInfo.Transmit = SendPacket;
-    
+
     IPCreateInterface( &BindInfo );
 
     asock = socket( AF_INET, SOCK_DGRAM, 0 );
@@ -327,32 +327,32 @@ int main( int argc, char **argv ) {
 	printf( "Bind error\n" );
 	return 0;
     }
-    
+
     while( true ) {
 	FD_ZERO( &readf );
 	FD_SET( asock, &readf );
-	tv.tv_sec = 0; 
+	tv.tv_sec = 0;
 	tv.tv_usec = 10000;
 	selret = select( asock + 1, &readf, NULL, NULL, &tv );
-	
+
 	if( FD_ISSET( asock, &readf ) ) {
 	    fromsize = sizeof( addr_from );
 	    dgrecv = recvfrom( asock, datagram, sizeof(datagram), 0,
 			       (struct sockaddr *)&addr_from, &fromsize );
-	    
+
 	    if( datagram[0] == 'C' && datagram[1] == 'M' &&
 		datagram[2] == 'D' && datagram[3] == ' ' ) {
 		int theport, bytes, recvret, off, bytin;
 		struct sockaddr_in nam;
 		std::string faddr, word;
-		std::istringstream 
+		std::istringstream
 		    cmdin( std::string( datagram + 4, dgrecv - 4 ) );
-		
+
 		cmdin >> word;
-		
+
 /* UDP Section */
 		if( word == "udpsocket" ) {
-/* TCP Section */		
+/* TCP Section */
 		} else if( word == "tcpsocket" ) {
 		    cmdin >> host >> port;
 		    S = new TCPSocketObject( host, port, &Status );
@@ -385,23 +385,23 @@ int main( int argc, char **argv ) {
 			*dst++ = c;
 		    }
 		    *dst = '\0';
-		    if( S ) 
+		    if( S )
 			err = S->send( p, strlen(p), &bytes, NULL );
 		    if( err > 0 ) { bytin = err; err = 0; }
-		    
-		    if( err ) 
-			fprintf ( stderr, "OskitTCPConnect: error %d\n", 
+
+		    if( err )
+			fprintf ( stderr, "OskitTCPConnect: error %d\n",
 				  err );
 		    else {
 			printf ( "wrote %d bytes\n", bytin );
-		    }		    
+		    }
 		} else if( word == "send" ) {
 		    off = 0;
 		    while( cmdin >> word ) {
-			datagram[off++] = 
+			datagram[off++] =
 			    atoi( (std::string("0x") + word).c_str() );
 		    }
-		    
+
 		    if( (err = S->send( datagram, off, &bytin, NULL )) != 0 ) {
 			fprintf( stderr, "OskitTCPConnect: error %d\n", err );
 		    } else {
@@ -409,21 +409,21 @@ int main( int argc, char **argv ) {
 		    }
 		} else if( word == "recv" ) {
 		    cmdin >> bytes;
-		    
-		    if( (err = S->recv( datagram, 
+
+		    if( (err = S->recv( datagram,
 					sizeof(datagram),
-					&bytes, 
+					&bytes,
 					NULL )) != 0 ) {
 			fprintf( stderr, "OskitTCPRecv: error %d\n", err );
 		    }
-		    
+
 /* Misc section */
 		} else if( word == "end" ) {
 		    return 0;
 		}
 	    } else if( dgrecv > 14 ) {
 		addr_to = addr_from;
-		
+
 		if( datagram[12] == 8 && datagram[13] == 6 ) {
 		    /* Answer arp query */
 		    char laddr[4];
@@ -439,11 +439,11 @@ int main( int argc, char **argv ) {
 		    memcpy( datagram + 38, laddr, 4 );
 		    /* Set reply opcode */
 		    datagram[21] = 2;
-		    
+
 		    err = sendto( asock, datagram, dgrecv, 0,
-				  (struct sockaddr *)&addr_to, 
+				  (struct sockaddr *)&addr_to,
 				  sizeof(addr_to) );
-		    
+
 		    if( err != 0 )
 			printf( "sendto: %d\n", err );
 		} else {
@@ -457,20 +457,20 @@ int main( int argc, char **argv ) {
 		}
 	    }
 	}
-	
+
 	IPTimeout(NULL, NULL, NULL, NULL);
-	
+
 	for( i = output_packets.begin(); i != output_packets.end(); i++ ) {
-	    err = sendto( asock, i->c_str(), i->size(), 0, 
+	    err = sendto( asock, i->c_str(), i->size(), 0,
 			  (struct sockaddr *)&addr_to, sizeof(addr_to) );
-	    
+
 	    fprintf( stderr, "** SENDING PACKET %d bytes **\n", i->size() );
-	    
+
 	    if( err != 0 )
 		printf( "sendto: %d\n", err );
 	}
-	
+
 	output_packets.clear();
     }
 }
-    
+

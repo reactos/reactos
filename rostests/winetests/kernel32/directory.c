@@ -216,7 +216,7 @@ static void test_CreateDirectoryA(void)
     GetTempPathA(MAX_PATH, tmpdir);
     lstrcatA(tmpdir, "Please Remove Me/Please Remove Me");
     ret = CreateDirectoryA(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, 
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
        "CreateDirectoryA(%s): ret=%d err=%ld\n", tmpdir, ret, GetLastError());
     RemoveDirectoryA(tmpdir);
 
@@ -385,13 +385,13 @@ static void test_CreateDirectoryW(void)
        "CreateDirectoryW with * wildcard name should fail with error 183, ret=%s error=%ld\n",
        ret ? " True" : "False", GetLastError());
     ret = RemoveDirectoryW(tmpdir);
-    
+
     GetTempPathW(MAX_PATH, tmpdir);
     lstrcatW(tmpdir, tmp_dir_name);
     lstrcatW(tmpdir, slashW);
     lstrcatW(tmpdir, tmp_dir_name);
     ret = CreateDirectoryW(tmpdir, NULL);
-    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND, 
+    ok(ret == FALSE && GetLastError() == ERROR_PATH_NOT_FOUND,
       "CreateDirectoryW with multiple nonexistent directories in path should fail\n");
     ret = RemoveDirectoryW(tmpdir);
 }

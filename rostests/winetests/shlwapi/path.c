@@ -335,7 +335,7 @@ struct {
 static LPWSTR GetWideString(const char* szString)
 {
   LPWSTR wszString = HeapAlloc(GetProcessHeap(), 0, (2*INTERNET_MAX_URL_LENGTH) * sizeof(WCHAR));
-  
+
   MultiByteToWideChar(0, 0, szString, -1, wszString, INTERNET_MAX_URL_LENGTH);
 
   return wszString;
@@ -359,7 +359,7 @@ static void hash_url(const char* szUrl)
 {
   LPCSTR szTestUrl = szUrl;
   LPWSTR wszTestUrl = GetWideString(szTestUrl);
-  
+
   DWORD cbSize = sizeof(DWORD);
   DWORD dwHash1, dwHash2;
   ok(UrlHashA(szTestUrl, (LPBYTE)&dwHash1, cbSize) == S_OK, "UrlHashA didn't return S_OK\n");
@@ -424,7 +424,7 @@ static void test_UrlGetPart(void)
   ok (res==S_FALSE, "UrlGetPartA(\"hi\") returned %08X\n", res);
   ok(szPart[0]==0, "UrlGetPartA(\"hi\") return \"%s\" instead of \"\"\n", szPart);
   }
-  
+
   test_url_part(TEST_URL_3, URL_PART_HOSTNAME, 0, "localhost");
   test_url_part(TEST_URL_3, URL_PART_PORT, 0, "21");
   test_url_part(TEST_URL_3, URL_PART_USERNAME, 0, "foo");
@@ -443,7 +443,7 @@ static void test_url_escape(const char *szUrl, DWORD dwFlags, HRESULT dwExpectRe
 
     ok(UrlEscapeA(szUrl, szReturnUrl, &dwEscaped, dwFlags) == dwExpectReturn, "UrlEscapeA didn't return 0x%08x from \"%s\"\n", dwExpectReturn, szUrl);
     ok(strcmp(szReturnUrl,szExpectUrl)==0, "Expected \"%s\", but got \"%s\" from \"%s\"\n", szExpectUrl, szReturnUrl, szUrl);
-    
+
     dwEscaped = INTERNET_MAX_URL_LENGTH;
     urlW = GetWideString(szUrl);
     expected_urlW = GetWideString(szExpectUrl);
@@ -462,9 +462,9 @@ static void test_url_canonicalize(const char *szUrl, DWORD dwFlags, HRESULT dwEx
     LPWSTR wszUrl = GetWideString(szUrl);
     LPWSTR wszExpectUrl = GetWideString(szExpectUrl);
     LPWSTR wszConvertedUrl;
-    
+
     DWORD dwSize;
-    
+
     dwSize = INTERNET_MAX_URL_LENGTH;
     ok(UrlCanonicalizeA(szUrl, NULL, &dwSize, dwFlags) != dwExpectReturn, "Unexpected return for NULL buffer\n");
     ok(UrlCanonicalizeA(szUrl, szReturnUrl, &dwSize, dwFlags) == dwExpectReturn, "UrlCanonicalizeA didn't return 0x%08x\n", dwExpectReturn);
@@ -476,8 +476,8 @@ static void test_url_canonicalize(const char *szUrl, DWORD dwFlags, HRESULT dwEx
     wszConvertedUrl = GetWideString(szReturnUrl);
     ok(lstrcmpW(wszReturnUrl, wszConvertedUrl)==0, "Strings didn't match between ascii and unicode UrlCanonicalize!\n");
     FreeWideString(wszConvertedUrl);
-    
-            
+
+
     FreeWideString(wszUrl);
     FreeWideString(wszExpectUrl);
 }
@@ -535,7 +535,7 @@ static void test_url_combine(const char *szUrl1, const char *szUrl2, DWORD dwFla
 
     hr = UrlCombineA(szUrl1, szUrl2, NULL, NULL, dwFlags);
     ok(hr == E_INVALIDARG, "UrlCombineA returned 0x%08x, expected 0x%08x\n", hr, E_INVALIDARG);
-    
+
     dwSize = 0;
     hr = UrlCombineA(szUrl1, szUrl2, NULL, &dwSize, dwFlags);
     ok(hr == E_POINTER, "Checking length of string, return was 0x%08x, expected 0x%08x\n", hr, E_POINTER);
@@ -545,7 +545,7 @@ static void test_url_combine(const char *szUrl1, const char *szUrl2, DWORD dwFla
     hr = UrlCombineA(szUrl1, szUrl2, szReturnUrl, &dwSize, dwFlags);
     ok(hr == E_POINTER, "UrlCombineA returned 0x%08x, expected 0x%08x\n", hr, E_POINTER);
     ok(dwSize == dwExpectLen+1, "Got length %d, expected %d\n", dwSize, dwExpectLen+1);
-    
+
     hr = UrlCombineA(szUrl1, szUrl2, szReturnUrl, &dwSize, dwFlags);
     ok(hr == dwExpectReturn, "UrlCombineA returned 0x%08x, expected 0x%08x\n", hr, dwExpectReturn);
     ok(dwSize == dwExpectLen, "Got length %d, expected %d\n", dwSize, dwExpectLen);
@@ -562,7 +562,7 @@ static void test_url_combine(const char *szUrl1, const char *szUrl2, DWORD dwFla
     hr = UrlCombineW(wszUrl1, wszUrl2, wszReturnUrl, &dwSize, dwFlags);
     ok(hr == E_POINTER, "UrlCombineA returned 0x%08x, expected 0x%08x\n", hr, E_POINTER);
     ok(dwSize == dwExpectLen+1, "Got length %d, expected %d\n", dwSize, dwExpectLen+1);
-    
+
     hr = UrlCombineW(wszUrl1, wszUrl2, wszReturnUrl, &dwSize, dwFlags);
     ok(hr == dwExpectReturn, "UrlCombineW returned 0x%08x, expected 0x%08x\n", hr, dwExpectReturn);
     ok(dwSize == dwExpectLen, "Got length %d, expected %d\n", dwSize, dwExpectLen);
@@ -661,14 +661,14 @@ static void test_UrlUnescape(void)
 {
     CHAR szReturnUrl[INTERNET_MAX_URL_LENGTH];
     WCHAR ret_urlW[INTERNET_MAX_URL_LENGTH];
-    WCHAR *urlW, *expected_urlW; 
+    WCHAR *urlW, *expected_urlW;
     DWORD dwEscaped;
     size_t i;
     static char inplace[] = "file:///C:/Program%20Files";
     static WCHAR inplaceW[] = {'f','i','l','e',':','/','/','/','C',':','/',
                                'P','r','o','g','r','a','m','%','2','0','F','i','l','e','s',0};
 
-    for(i=0; i<sizeof(TEST_URL_UNESCAPE)/sizeof(TEST_URL_UNESCAPE[0]); i++) { 
+    for(i=0; i<sizeof(TEST_URL_UNESCAPE)/sizeof(TEST_URL_UNESCAPE[0]); i++) {
         dwEscaped=INTERNET_MAX_URL_LENGTH;
         ok(UrlUnescapeA(TEST_URL_UNESCAPE[i].url, szReturnUrl, &dwEscaped, 0) == S_OK, "UrlUnescapeA didn't return 0x%08x from \"%s\"\n", S_OK, TEST_URL_UNESCAPE[i].url);
         ok(strcmp(szReturnUrl,TEST_URL_UNESCAPE[i].expect)==0, "Expected \"%s\", but got \"%s\" from \"%s\"\n", TEST_URL_UNESCAPE[i].expect, szReturnUrl, TEST_URL_UNESCAPE[i].url);
@@ -695,8 +695,8 @@ static void test_PathSearchAndQualify(void)
     WCHAR path1[] = {'c',':','\\','f','o','o',0};
     WCHAR expect1[] = {'c',':','\\','f','o','o',0};
     WCHAR path2[] = {'c',':','f','o','o',0};
-    WCHAR c_drive[] = {'c',':',0}; 
-    WCHAR foo[] = {'f','o','o',0}; 
+    WCHAR c_drive[] = {'c',':',0};
+    WCHAR foo[] = {'f','o','o',0};
     WCHAR path3[] = {'\\','f','o','o',0};
     WCHAR winini[] = {'w','i','n','.','i','n','i',0};
     WCHAR out[MAX_PATH];
@@ -714,7 +714,7 @@ static void test_PathSearchAndQualify(void)
     GetFullPathNameW(c_drive, MAX_PATH, cur_dir, NULL);
     PathAddBackslashW(cur_dir);
     lstrcatW(cur_dir, foo);
-    ok(!lstrcmpiW(out, cur_dir), "strings don't match\n");    
+    ok(!lstrcmpiW(out, cur_dir), "strings don't match\n");
 
     /* foo */
     ok(PathSearchAndQualifyW(foo, out, MAX_PATH) != 0,
@@ -722,7 +722,7 @@ static void test_PathSearchAndQualify(void)
     GetFullPathNameW(dot, MAX_PATH, cur_dir, NULL);
     PathAddBackslashW(cur_dir);
     lstrcatW(cur_dir, foo);
-    ok(!lstrcmpiW(out, cur_dir), "strings don't match\n");    
+    ok(!lstrcmpiW(out, cur_dir), "strings don't match\n");
 
     /* \foo */
     ok(PathSearchAndQualifyW(path3, out, MAX_PATH) != 0,
@@ -751,7 +751,7 @@ static void test_PathCreateFromUrl(void)
 
     /* Check ret_path = NULL */
     len = sizeof(url);
-    ret = PathCreateFromUrlA(url, NULL, &len, 0); 
+    ret = PathCreateFromUrlA(url, NULL, &len, 0);
     ok ( ret == E_INVALIDARG, "got 0x%08x expected E_INVALIDARG\n", ret);
 
     for(i = 0; i < sizeof(TEST_PATHFROMURL) / sizeof(TEST_PATHFROMURL[0]); i++) {
@@ -952,7 +952,7 @@ static void test_PathCombineW(void)
     WCHAR wbuf[MAX_PATH+1], wstr1[MAX_PATH] = {'C',':','\\',0}, wstr2[MAX_PATH];
     static const WCHAR expout[] = {'C',':','\\','A','A',0};
     int i;
-   
+
     wszString2 = HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
 
     /* NULL test */
@@ -1365,7 +1365,7 @@ static void test_PathCanonicalizeA(void)
     SetLastError(0xdeadbeef);
     res = PathCanonicalizeA(dest, NULL);
     ok(!res, "Expected failure\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, 
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
     todo_wine
     {
@@ -1384,7 +1384,7 @@ static void test_PathCanonicalizeA(void)
     SetLastError(0xdeadbeef);
     res = PathCanonicalizeA(NULL, "C:\\");
     ok(!res, "Expected failure\n");
-    ok(GetLastError() == ERROR_INVALID_PARAMETER, 
+    ok(GetLastError() == ERROR_INVALID_PARAMETER,
        "Expected ERROR_INVALID_PARAMETER, got %d\n", GetLastError());
 
     /* try empty dest */

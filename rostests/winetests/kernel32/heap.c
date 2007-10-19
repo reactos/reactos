@@ -49,7 +49,7 @@ START_TEST(heap)
         SIZE_T heap_size;
         mem = HeapAlloc(GetProcessHeap(), 0, size);
         heap_size = HeapSize(GetProcessHeap(), 0, mem);
-        ok(heap_size == size || heap_size == resize_9x(size), 
+        ok(heap_size == size || heap_size == resize_9x(size),
             "HeapSize returned %lu instead of %lu or %lu\n", heap_size, size, resize_9x(size));
         HeapFree(GetProcessHeap(), 0, mem);
     }

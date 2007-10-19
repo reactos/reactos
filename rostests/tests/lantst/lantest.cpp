@@ -93,10 +93,10 @@ int main( int argc, char **argv ) {
 			   NULL,
 			   0,
 			   0 );
-    
+
     RtlInitUnicodeString( &LanDevice, L"\\Device\\Lan" );
 
-    InitializeObjectAttributes( &Attributes, 
+    InitializeObjectAttributes( &Attributes,
 				&LanDevice,
 				OBJ_CASE_INSENSITIVE,
 				NULL,
@@ -106,9 +106,9 @@ int main( int argc, char **argv ) {
     LAN_FILL_EA_INFO(EaBuffer,sizeof(TypesToListen)/sizeof(USHORT),
 		     TypesToListen);
 
-    Status = ZwCreateFile( &LanFile, 
-			   SYNCHRONIZE | GENERIC_READ | GENERIC_WRITE | 
-			   GENERIC_EXECUTE, 
+    Status = ZwCreateFile( &LanFile,
+			   SYNCHRONIZE | GENERIC_READ | GENERIC_WRITE |
+			   GENERIC_EXECUTE,
 			   &Attributes,
 			   &Iosb,
 			   NULL,
@@ -123,7 +123,7 @@ int main( int argc, char **argv ) {
 	cerr << "Could not open lan device " << Status << "\n";
 	return 1;
     }
-    
+
     Status = DeviceIoControl( LanFile,
 			      IOCTL_IF_BUFFERED_MODE,
 			      &On,
@@ -132,7 +132,7 @@ int main( int argc, char **argv ) {
 			      0,
 			      &PktLen,
 			      NULL );
-    
+
     if( !Status ) {
 	cerr << "Could not turn on buffered mode " << Status << "\n";
 	return 1;
@@ -153,7 +153,7 @@ int main( int argc, char **argv ) {
 				      NULL );
 
 	    cout << "EnumAdapters: " << Status << "\n";
-	    if( Status ) 
+	    if( Status )
 		display_buffer( Packet, PktLen );
 	} else if( word == "query" ) {
 	    cin >> PktLen;
@@ -166,18 +166,18 @@ int main( int argc, char **argv ) {
 				      sizeof(Packet),
 				      &PktLen,
 				      NULL );
-	    
+
 	    cout << "QueryAdapterInfo: " << Status << "\n";
 	    if( Status )
 		display_buffer( Packet, PktLen );
 	} else if( word == "send" ) {
-	    cin >> Hdr->Fixed.Adapter 
-		>> Hdr->Fixed.AddressType 
-		>> Hdr->Fixed.AddressLen 
+	    cin >> Hdr->Fixed.Adapter
+		>> Hdr->Fixed.AddressType
+		>> Hdr->Fixed.AddressLen
 		>> Hdr->Fixed.PacketType;
 	    Hdr->Fixed.Mdl = NULL;
 	    PktLen = byte_till_end( Packet, Hdr->Address - (PCHAR)Hdr );
-	    Status = NtWriteFile( LanFile, 
+	    Status = NtWriteFile( LanFile,
 				  NULL,
 				  NULL,
 				  NULL,
@@ -203,7 +203,7 @@ int main( int argc, char **argv ) {
 	    if( Status == STATUS_PENDING ) {
 		LARGE_INTEGER Timeout = { 0 };
 		Status = NtWaitForSingleObject( Event, 1, &Timeout );
-	    } 
+	    }
 
 	    ReadLen = Iosb.Information;
 

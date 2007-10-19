@@ -44,7 +44,7 @@ BEGIN
     CONTROL "PB1", IDC_PB1, PROGRESS_CLASS, 0,    5,  40, 150, 15
     LTEXT   "Network transfer:", IDC_ST2,        10,  60, 140, 10
     CONTROL "PB2", IDC_PB2, PROGRESS_CLASS, 0,    5,  70, 150, 10
-                                               
+
     LTEXT   "Tag:",               IDC_STATIC,    10,  89, 100, 10
     EDITTEXT                      IDC_TAG,       25,  88, 125, 10,
              ES_READONLY

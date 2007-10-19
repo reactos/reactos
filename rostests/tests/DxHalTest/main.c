@@ -3,7 +3,7 @@
 
 
 // TODO:
-//  
+//
 // - free memory
 // - Check if we ran out of memory (HeapAlloc == NULL)
   HDC hdc;
@@ -67,7 +67,7 @@ typedef struct _DD_MISCELLANEOUSCALLBACKS {
 } DD_MISCELLANEOUSCALLBACKS;
 
 
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst, 
+int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 					LPSTR lpCmdLine, int nCmdShow)
 {
 	/* get the functions we need */
@@ -84,13 +84,13 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     const UINT bmiSize = sizeof(BITMAPINFOHEADER) + 0x10;
     UCHAR *pbmiData;
     BITMAPINFO *pbmi;
-    
+
     DWORD *pMasks;
     //BOOL newmode = FALSE;
 	//DWORD Status; /* for create surface */
 	UINT i;
 	UINT j;
-    	
+
 
 	printf("This apps showing how to start up directx draw/d3d interface and some other as well\n");
 	printf("This code have been releae to some close applactons with my premtions, if any company\n");
@@ -104,17 +104,17 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	printf("and a overlay sufrace and blt to the primary surface\n");
 
 
-    /* 
-       Get and Create mode info 
+    /*
+       Get and Create mode info
     */
     mcModeInfos = 1;
-    mpModeInfos = (DDHALMODEINFO*)HeapAlloc(GetProcessHeap(), 
-                                                  HEAP_ZERO_MEMORY, 
-                                                  mcModeInfos * sizeof(DDHALMODEINFO));  
-   
+    mpModeInfos = (DDHALMODEINFO*)HeapAlloc(GetProcessHeap(),
+                                                  HEAP_ZERO_MEMORY,
+                                                  mcModeInfos * sizeof(DDHALMODEINFO));
+
     if (mpModeInfos == NULL)
     {
-       printf("Fail to alloc mpModeInfos\n"); 
+       printf("Fail to alloc mpModeInfos\n");
        return DD_FALSE;
     }
 
@@ -128,28 +128,28 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     mpModeInfos[0].wRefreshRate = (WORD)devmode.dmDisplayFrequency;
 
     /*
-       Setup HDC and mDDrawGlobal right 
-    */    
-    hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);    
+       Setup HDC and mDDrawGlobal right
+    */
+    hdc = CreateDCW(L"DISPLAY",L"DISPLAY",NULL,NULL);
 
     if (hdc == NULL)
     {
-	  printf("Fail to create HDC\n"); 
+	  printf("Fail to create HDC\n");
       return DD_FALSE;
     }
 
     /*
-      Dectect RGB bit mask 
-    */  
-    hbmp = CreateCompatibleBitmap(hdc, 1, 1);  
+      Dectect RGB bit mask
+    */
+    hbmp = CreateCompatibleBitmap(hdc, 1, 1);
     if (hbmp==NULL)
     {
        HeapFree(GetProcessHeap(), 0, mpModeInfos);
        DeleteDC(hdc);
-	   printf("Fail to Create Compatible Bitmap\n"); 
+	   printf("Fail to Create Compatible Bitmap\n");
        return DD_FALSE;
     }
-  
+
     pbmiData = (UCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, bmiSize);
     pbmi = (BITMAPINFO*)pbmiData;
 
@@ -159,7 +159,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
        free(mpModeInfos);
        DeleteDC(hdc);
        DeleteObject(hbmp);
-	   printf("Fail to Alloc  pbmiData\n"); 
+	   printf("Fail to Alloc  pbmiData\n");
        return DDERR_UNSUPPORTED;
     }
 
@@ -180,32 +180,32 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
     HeapFree(GetProcessHeap(), 0, pbmiData);
 
-    /* 
-      prepare start up the DX Draw HAL interface now 
+    /*
+      prepare start up the DX Draw HAL interface now
     */
-   
+
     memset(&mDDrawGlobal, 0, sizeof(DDRAWI_DIRECTDRAW_GBL));
     memset(&mHALInfo,     0, sizeof(DDHALINFO));
     memset(&mCallbacks,   0, sizeof(DDHAL_CALLBACKS));
-	
-    /* 
-      Startup DX HAL step one of three 
+
+    /*
+      Startup DX HAL step one of three
     */
     if (!DdCreateDirectDrawObject(&mDDrawGlobal, hdc))
     {
-       HeapFree(GetProcessHeap(), 0, mpModeInfos);       
+       HeapFree(GetProcessHeap(), 0, mpModeInfos);
        DeleteDC(hdc);
        DeleteObject(hbmp);
-	   printf("Fail to Create Direct DrawObject\n"); 
+	   printf("Fail to Create Direct DrawObject\n");
        return DD_FALSE;
     }
 
 	mDDrawGlobal.dwRefCnt = 1; //addref / remove ref
 
-    // Do not relase HDC it have been map in kernel mode 
+    // Do not relase HDC it have been map in kernel mode
     // DeleteDC(hdc);
-  
-    /* we need reanable it if screen res have changes, and some bad drv need be reanble very few 
+
+    /* we need reanable it if screen res have changes, and some bad drv need be reanble very few
 	   to contiune */
 	/*
     if (!DdReenableDirectDrawObject(&mDDrawGlobal, &newmode))
@@ -215,11 +215,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       DeleteObject(hbmp);
       return DD_FALSE;
     }*/
-  
+
     /*
-      Setup the DirectDraw Local 
+      Setup the DirectDraw Local
     */
-  
+
     mDDrawLocal.lpDDCB = &mCallbacks;
     mDDrawLocal.lpGbl = &mDDrawGlobal;
     mDDrawLocal.dwProcessId = GetCurrentProcessId();
@@ -228,16 +228,16 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     mDDrawGlobal.lpExclusiveOwner = &mDDrawLocal;
 	//mDDrawLocal.dwLocalFlags = DDRAWILCL_DIRECTDRAW7;
 
-	
+
     /*
-       Startup DX HAL step two of three 
+       Startup DX HAL step two of three
     */
 
     if (!DdQueryDirectDrawObject(&mDDrawGlobal,
                                  &mHALInfo,
                                  &mCallbacks.HALDD,
                                  &mCallbacks.HALDDSurface,
-                                 &mCallbacks.HALDDPalette, 
+                                 &mCallbacks.HALDDPalette,
                                  &mD3dCallbacks,
                                  &mD3dDriverData,
                                  &mD3dBufferCallbacks,
@@ -255,12 +255,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     mcvmList = mHALInfo.vmiData.dwNumHeaps;
     mpvmList = (VIDMEM*) HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VIDMEM) * mcvmList);
     if (mpvmList == NULL)
-    {      
+    {
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
       // FIXME Close DX fristcall and second call
-	  printf("Fail to QueryDirect Draw Object frist pass\n"); 
+	  printf("Fail to QueryDirect Draw Object frist pass\n");
       return DD_FALSE;
     }
 
@@ -279,14 +279,14 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     mcTextures = mD3dDriverData.dwNumTextureFormats;
     mpTextures = (DDSURFACEDESC*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DDSURFACEDESC) * mcTextures);
     if (mpTextures == NULL)
-    {      
+    {
       HeapFree(GetProcessHeap(), 0, mpFourCC);
       HeapFree(GetProcessHeap(), 0, mpvmList);
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
       // FIXME Close DX fristcall and second call
-	  printf("Fail QueryDirect Draw Object to Alloc mpTextures \n"); 
+	  printf("Fail QueryDirect Draw Object to Alloc mpTextures \n");
       return DD_FALSE;
     }
 
@@ -299,14 +299,14 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
                                     &mHALInfo,
                                     &mCallbacks.HALDD,
                                     &mCallbacks.HALDDSurface,
-                                    &mCallbacks.HALDDPalette, 
+                                    &mCallbacks.HALDDPalette,
                                     &mD3dCallbacks,
                                     &mD3dDriverData,
                                     &mCallbacks.HALDDExeBuf,
                                     mpTextures,
                                     mpFourCC,
                                     mpvmList))
-  
+
     {
       HeapFree(GetProcessHeap(), 0, mpTextures);
       HeapFree(GetProcessHeap(), 0, mpFourCC);
@@ -314,7 +314,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       HeapFree(GetProcessHeap(), 0, mpModeInfos);
       DeleteDC(hdc);
       DeleteObject(hbmp);
-	  printf("Fail to QueryDirect Draw Object second pass\n"); 
+	  printf("Fail to QueryDirect Draw Object second pass\n");
       return DD_FALSE;
     }
 
@@ -322,7 +322,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       Copy over from HalInfo to DirectDrawGlobal
    */
 
-  // this is wrong, cDriverName need be in ASC code not UNICODE 
+  // this is wrong, cDriverName need be in ASC code not UNICODE
   //memcpy(mDDrawGlobal.cDriverName, mDisplayAdapter, sizeof(wchar)*MAX_DRIVER_NAME);
 
   memcpy(&mDDrawGlobal.vmiData, &mHALInfo.vmiData,sizeof(VIDMEMINFO));
@@ -336,11 +336,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   mDDrawGlobal.dwModeIndex        = mHALInfo.dwModeIndex;
   mDDrawGlobal.dwNumModes         = mHALInfo.dwNumModes;
   mDDrawGlobal.lpModeInfo         = mHALInfo.lpModeInfo;
-  mDDrawGlobal.hInstance          = mHALInfo.hInstance;    
-  
+  mDDrawGlobal.hInstance          = mHALInfo.hInstance;
+
   mDDrawGlobal.lp16DD = &mDDrawGlobal;
 
-  
+
 
   /* Hal insate is down now */
 
@@ -358,7 +358,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   /* cleare surface ends now */
 
   /* create primare surface now */
-  
+
    memset(&mddsdPrimary,   0, sizeof(DDSURFACEDESC));
    mddsdPrimary.dwSize      = sizeof(DDSURFACEDESC);
    mddsdPrimary.dwFlags     = DDSD_CAPS;
@@ -369,16 +369,16 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
    mDdCanCreateSurface.CanCreateSurface = mCallbacks.HALDD.CanCreateSurface;
    mDdCanCreateSurface.bIsDifferentPixelFormat = FALSE; //isDifferentPixelFormat;
    mDdCanCreateSurface.lpDDSurfaceDesc = &mddsdPrimary; // pDDSD;
-      
-   if (mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+
+   if (mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED)
    {
-     printf("Fail to mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED\n"); 
+     printf("Fail to mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED\n");
      return DDERR_NOTINITIALIZED;
    }
 
    if (mDdCanCreateSurface.ddRVal != DD_OK)
    {
-	   printf("Fail to mDdCanCreateSurface mDdCanCreateSurface.ddRVal = %d:%s\n",(int)mDdCanCreateSurface.ddRVal,DDErrorString(mDdCanCreateSurface.ddRVal)); 
+	   printf("Fail to mDdCanCreateSurface mDdCanCreateSurface.ddRVal = %d:%s\n",(int)mDdCanCreateSurface.ddRVal,DDErrorString(mDdCanCreateSurface.ddRVal));
        return DDERR_NOTINITIALIZED;
    }
 
@@ -393,7 +393,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   memset(&mPrimaryMore,   0, sizeof(DDRAWI_DDRAWSURFACE_MORE));
   mPrimaryMore.dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
 
-   
+
   //mPrimaryMore. = mpr
 
   memset(&mPrimaryLocal,  0, sizeof(DDRAWI_DDRAWSURFACE_LCL));
@@ -407,7 +407,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 
   DDHAL_CREATESURFACEDATA      mDdCreateSurface;
   mDdCreateSurface.lpDD = &mDDrawGlobal;
-  mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;  
+  mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;
   mDdCreateSurface.lpDDSurfaceDesc = &mddsdPrimary;//pDDSD;
   mDdCreateSurface.lplpSList = mpPrimaryLocals; //cSurfaces;
   mDdCreateSurface.dwSCnt = 1 ;  //ppSurfaces;
@@ -417,11 +417,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
     printf("Fail to mDdCreateSurface  DDHAL_DRIVER_NOTHANDLED \n");
 	return DDERR_NOTINITIALIZED;
   }
-  
 
-  if (mDdCreateSurface.ddRVal != DD_OK) 
-  {   
-    printf("Fail to mDdCanCreateSurface mDdCreateSurface.ddRVal = %d:%s\n",(int)mDdCreateSurface.ddRVal,DDErrorString(mDdCreateSurface.ddRVal)); 
+
+  if (mDdCreateSurface.ddRVal != DD_OK)
+  {
+    printf("Fail to mDdCanCreateSurface mDdCreateSurface.ddRVal = %d:%s\n",(int)mDdCreateSurface.ddRVal,DDErrorString(mDdCreateSurface.ddRVal));
     return mDdCreateSurface.ddRVal;
   }
 
@@ -429,7 +429,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   memset(&mPrimaryClipperGlobal, 0, sizeof(DDRAWI_DDRAWCLIPPER_GBL));
   mPrimaryClipperGlobal.dwFlags = DDRAWICLIP_ISINITIALIZED;
   mPrimaryClipperGlobal.dwProcessId = GetCurrentProcessId();
-  //mPrimaryClipperGlobal.hWnd = (ULONG_PTR)hwnd; 
+  //mPrimaryClipperGlobal.hWnd = (ULONG_PTR)hwnd;
   mPrimaryClipperGlobal.hWnd = (ULONG_PTR)GetDesktopWindow();
   mPrimaryClipperGlobal.lpDD = &mDDrawGlobal;
   mPrimaryClipperGlobal.lpStaticClipList = NULL;
@@ -447,12 +447,12 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   //mPrimaryMore.lpDDIClipper = &mPrimaryClipperInterface;
 
   mDdBlt.lpDDDestSurface = mpPrimaryLocals[0];
-  
-  
+
+
   /* create primare surface is down now */
 
   /* create overlay surface now */
-  
+
   memset(&mddsdOverlay, 0, sizeof(DDSURFACEDESC));
   mddsdOverlay.dwSize = sizeof(DDSURFACEDESC);
   mddsdOverlay.dwFlags = DDSD_CAPS | DDSD_PIXELFORMAT | DDSD_BACKBUFFERCOUNT | DDSD_WIDTH | DDSD_HEIGHT;
@@ -464,32 +464,32 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   mddsdOverlay.dwBackBufferCount = 1; //cBuffers;
 
   mddsdOverlay.ddpfPixelFormat.dwSize = sizeof(DDPIXELFORMAT);
-  mddsdOverlay.ddpfPixelFormat.dwFlags = DDPF_RGB; 
+  mddsdOverlay.ddpfPixelFormat.dwFlags = DDPF_RGB;
   mddsdOverlay.ddpfPixelFormat.dwRGBBitCount = 32;
-  
+
 
    //DDHAL_CANCREATESURFACEDATA   mDdCanCreateSurface;
    mDdCanCreateSurface.lpDD = &mDDrawGlobal;
    mDdCanCreateSurface.CanCreateSurface = mCallbacks.HALDD.CanCreateSurface;
    mDdCanCreateSurface.bIsDifferentPixelFormat = TRUE; //isDifferentPixelFormat;
    mDdCanCreateSurface.lpDDSurfaceDesc = &mddsdOverlay; // pDDSD;
-   
-   
-   if (mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED) 
+
+
+   if (mHALInfo.lpDDCallbacks->CanCreateSurface(&mDdCanCreateSurface)== DDHAL_DRIVER_NOTHANDLED)
    {
     // derr(L"DirectDrawImpl[%08x]::__createPrimary Cannot create primary [%08x]", this, rv);
-	   
-	 printf("Fail to mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED \n"); 
+
+	 printf("Fail to mDdCanCreateSurface DDHAL_DRIVER_NOTHANDLED \n");
     return DDERR_NOTINITIALIZED;
    }
 
    if (mDdCanCreateSurface.ddRVal != DD_OK)
    {
-	 printf("Fail to mDdCanCreateSurface mDdCanCreateSurface.ddRVal = %d:%s\n",(int)mDdCanCreateSurface.ddRVal,DDErrorString(mDdCanCreateSurface.ddRVal)); 
+	 printf("Fail to mDdCanCreateSurface mDdCanCreateSurface.ddRVal = %d:%s\n",(int)mDdCanCreateSurface.ddRVal,DDErrorString(mDdCanCreateSurface.ddRVal));
      return DDERR_NOTINITIALIZED;
    }
 
- 
+
   memset(&mOverlayGlobal, 0, sizeof(DDRAWI_DDRAWSURFACE_GBL));
   mOverlayGlobal.dwGlobalFlags = 0;
   mOverlayGlobal.lpDD       = &mDDrawGlobal;
@@ -514,7 +514,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
       (DDRAWISURF_IMPLICITROOT|DDRAWISURF_FRONTBUFFER):
       (DDRAWISURF_IMPLICITCREATE|DDRAWISURF_BACKBUFFER);
 
-    mOverlayLocal[i].dwFlags |= 
+    mOverlayLocal[i].dwFlags |=
       DDRAWISURF_ATTACHED|DDRAWISURF_ATTACHED_FROM|
       DDRAWISURF_HASPIXELFORMAT|
       DDRAWISURF_HASOVERLAYDATA;
@@ -527,26 +527,26 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   {
     j = (i + 1) % cSurfaces;
 
-	
-    /*if (!mHALInfo.lpDDSurfaceCallbacks->AddAttachedSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
+
+    /*if (!mHALInfo.lpDDSurfaceCallbacks->AddAttachedSurface(mpOverlayLocals[i], mpOverlayLocals[j]))
 	{
      // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
       return DD_FALSE;
     }*/
 
-	if (!DdAttachSurface(mpOverlayLocals[i], mpOverlayLocals[j])) 
+	if (!DdAttachSurface(mpOverlayLocals[i], mpOverlayLocals[j]))
 	{
      // derr(L"DirectDrawImpl[%08x]::__setupDevice DdAttachSurface(%d, %d) failed", this, i, j);
 		printf("Fail to DdAttachSurface (%d:%d)\n", i, j);
       return DD_FALSE;
     }
-	
+
   }
 
 
   // DDHAL_CREATESURFACEDATA      mDdCreateSurface;
   mDdCreateSurface.lpDD = &mDDrawGlobal;
-  mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;  
+  mDdCreateSurface.CreateSurface = mCallbacks.HALDD.CreateSurface;
   mDdCreateSurface.lpDDSurfaceDesc = &mddsdOverlay;//pDDSD;
   mDdCreateSurface.lplpSList = mpOverlayLocals; //cSurfaces;
   mDdCreateSurface.dwSCnt = 1 ;  //ppSurfaces;
@@ -556,11 +556,11 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
 	printf("Fail to mDdCreateSurface = DDHAL_DRIVER_HANDLED\n");
 	return DDERR_NOTINITIALIZED;
   }
-  
 
-  if (mDdCreateSurface.ddRVal != DD_OK) 
-  {   
-	 printf("Fail to mDdCreateSurface mDdCreateSurface.ddRVal = %d:%s\n",(int)mDdCreateSurface.ddRVal,DDErrorString(mDdCreateSurface.ddRVal)); 
+
+  if (mDdCreateSurface.ddRVal != DD_OK)
+  {
+	 printf("Fail to mDdCreateSurface mDdCreateSurface.ddRVal = %d:%s\n",(int)mDdCreateSurface.ddRVal,DDErrorString(mDdCreateSurface.ddRVal));
      return mDdCreateSurface.ddRVal;
   }
 
@@ -577,7 +577,7 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   copyRect(&mDdUpdateOverlay.rDest, pdst);
   copyRect(&mDdUpdateOverlay.rSrc, psrc);
 */
-  
+
   mDdUpdateOverlay.rDest.top = 0;
   mDdUpdateOverlay.rDest.left = 0;
   mDdUpdateOverlay.rDest.right = 50;
@@ -588,63 +588,63 @@ int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrevInst,
   mDdUpdateOverlay.rSrc.right = 50;
   mDdUpdateOverlay.rSrc.bottom = 50;
 
- 
- 
+
+
 
   if ( mDdUpdateOverlay.UpdateOverlay(&mDdUpdateOverlay) == DDHAL_DRIVER_NOTHANDLED)
   {
 	 printf("Fail to mDdBlt = DDHAL_DRIVER_HANDLED\n");
 	 return DDERR_NOTINITIALIZED;
   }
-  
 
-  if (mDdUpdateOverlay.ddRVal != DD_OK) 
-  {   
-	  printf("Fail to mDdUpdateOverlay mDdUpdateOverlay.ddRVal = %d:%s\n",(int)mDdUpdateOverlay.ddRVal,DDErrorString(mDdUpdateOverlay.ddRVal)); 
+
+  if (mDdUpdateOverlay.ddRVal != DD_OK)
+  {
+	  printf("Fail to mDdUpdateOverlay mDdUpdateOverlay.ddRVal = %d:%s\n",(int)mDdUpdateOverlay.ddRVal,DDErrorString(mDdUpdateOverlay.ddRVal));
       return mDdUpdateOverlay.ddRVal;
   }
- 
+
   /* blt */
-    
+
 
   DDRAWI_DDRAWSURFACE_LCL *pDDSurface = mpPrimaryLocals[0];
 
-  if (!DdResetVisrgn(pDDSurface, NULL)) 
+  if (!DdResetVisrgn(pDDSurface, NULL))
   {
    // derr(L"DirectDrawImpl[%08x]::_clear DdResetVisrgn failed", this);
   }
 
-   
+
   memset(&mDdBlt, 0, sizeof(DDHAL_BLTDATA));
   memset(&mDdBlt.bltFX, 0, sizeof(DDBLTFX));
   mDdBlt.bltFX.dwSize = sizeof(DDBLTFX);
 
   mDdBlt.lpDD = &mDDrawGlobal;
-  mDdBlt.Blt = mCallbacks.HALDDSurface.Blt; 
+  mDdBlt.Blt = mCallbacks.HALDDSurface.Blt;
   mDdBlt.lpDDDestSurface = mpPrimaryLocals[0];
-	
+
   mpPrimaryLocals[0]->hDC = (ULONG_PTR)GetDC(GetDesktopWindow());
   mDdBlt.rDest.top = 50;
   mDdBlt.rDest.bottom = 100;
   mDdBlt.rDest.left = 0;
   mDdBlt.rDest.right = 100;
   mDdBlt.lpDDSrcSurface = NULL;
-  mDdBlt.IsClipped = FALSE;    
+  mDdBlt.IsClipped = FALSE;
   mDdBlt.bltFX.dwFillColor = 0xFFFF00;
   mDdBlt.dwFlags = DDBLT_COLORFILL | DDBLT_WAIT;
  // mDdBlt.IsClipped = TRUE;
-    
+
     if (mDdBlt.Blt(&mDdBlt) != DDHAL_DRIVER_HANDLED)
 	{
       printf("Fail to mDdBlt = DDHAL_DRIVER_HANDLED\n");
 	  return DDHAL_DRIVER_HANDLED;
     }
 
-	
 
-    if (mDdBlt.ddRVal!=DD_OK) 
-	{      
-		printf("Fail to mDdBlt mDdBlt.ddRVal = %d:%s\n",(int)mDdBlt.ddRVal,DDErrorString(mDdBlt.ddRVal)); 
+
+    if (mDdBlt.ddRVal!=DD_OK)
+	{
+		printf("Fail to mDdBlt mDdBlt.ddRVal = %d:%s\n",(int)mDdBlt.ddRVal,DDErrorString(mDdBlt.ddRVal));
 		return mDdBlt.ddRVal;
     }
 

@@ -118,24 +118,24 @@ void test_isotropic_mapping(void)
 {
     SIZE win, vp;
     HDC hdc = GetDC(0);
-    
+
     SetMapMode(hdc, MM_ISOTROPIC);
-    
+
     /* MM_ISOTROPIC is set up like MM_LOMETRIC.
        Initial values after SetMapMode():
        (1 inch = 25.4 mm)
-       
+
                        Windows 9x:               Windows NT:
        Window Ext:     254 x -254                HORZSIZE*10 x VERTSIZE*10
        Viewport Ext:   LOGPIXELSX x LOGPIXELSY   HORZRES x -VERTRES
-       
+
        To test without rounding errors, we have to use multiples of
        these values!
      */
-    
+
     GetWindowExtEx(hdc, &win);
     GetViewportExtEx(hdc, &vp);
-    
+
     test_SetViewportExt(hdc, 10 * vp.cx, 10 * vp.cy, 10 * vp.cx, 10 * vp.cy);
     test_SetWindowExt(hdc, win.cx, win.cy, 10 * vp.cx, 10 * vp.cy);
     test_SetWindowExt(hdc, 2 * win.cx, win.cy, 10 * vp.cx, 5 * vp.cy);
@@ -146,10 +146,10 @@ void test_isotropic_mapping(void)
     test_SetViewportExt(hdc, 4 * vp.cx, 2 * vp.cy, 2 * vp.cx, 2 * vp.cy);
     test_SetWindowExt(hdc, 4 * win.cx, 2 * win.cy, 2 * vp.cx, vp.cy);
     test_SetViewportExt(hdc, -2 * vp.cx, -4 * vp.cy, -2 * vp.cx, -vp.cy);
-    test_SetViewportExt(hdc, -2 * vp.cx, -1 * vp.cy, -2 * vp.cx, -vp.cy);    
+    test_SetViewportExt(hdc, -2 * vp.cx, -1 * vp.cy, -2 * vp.cx, -vp.cy);
     test_SetWindowExt(hdc, -4 * win.cx, -2 * win.cy, -2 * vp.cx, -vp.cy);
     test_SetWindowExt(hdc, 4 * win.cx, -4 * win.cy, -vp.cx, -vp.cy);
-    
+
     ReleaseDC(0, hdc);
 }
 

@@ -33,7 +33,7 @@
         return FALSE; \
     }
 
-/* All PSAPI functions return non-zero and call SetLastError() 
+/* All PSAPI functions return non-zero and call SetLastError()
  * on failure so we can use some macros for convenience */
 
 #define w32_suc(x) \
@@ -67,7 +67,7 @@ static BOOL  (WINAPI *pGetProcessMemoryInfo)(HANDLE, PPROCESS_MEMORY_COUNTERS, D
 static BOOL  (WINAPI *pGetWsChanges)(HANDLE, PPSAPI_WS_WATCH_INFORMATION, DWORD);
 static BOOL  (WINAPI *pInitializeProcessForWsWatch)(HANDLE);
 static BOOL  (WINAPI *pQueryWorkingSet)(HANDLE, PVOID, DWORD);
-      
+
 static BOOL InitFunctionPtrs(HMODULE hpsapi)
 {
     PSAPI_GET_PROC(EmptyWorkingSet);
@@ -120,7 +120,7 @@ static void test_GetModuleInformation(void)
 {
     HMODULE hMod = GetModuleHandle(NULL);
     MODULEINFO info;
-    
+
     w32_err(pGetModuleInformation(NULL, hMod, &info, sizeof(info)), ERROR_INVALID_HANDLE);
     w32_err(pGetModuleInformation(hpQI, hMod, &info, sizeof(info)), ERROR_ACCESS_DENIED);
     w32_err(pGetModuleInformation(hpQV, hBad, &info, sizeof(info)), ERROR_INVALID_HANDLE);
@@ -144,7 +144,7 @@ static void test_GetMappedFileName(void)
     HMODULE hMod = GetModuleHandle(NULL);
     char szMapPath[MAX_PATH], szModPath[MAX_PATH], *szMapBaseName;
     DWORD ret;
-    
+
     w32_err(pGetMappedFileNameA(NULL, hMod, szMapPath, sizeof(szMapPath)), ERROR_INVALID_HANDLE);
     w32_err(pGetMappedFileNameA(hpSR, hMod, szMapPath, sizeof(szMapPath)), ERROR_ACCESS_DENIED);
     if(!w32_suc(ret = pGetMappedFileNameA(hpQI, hMod, szMapPath, sizeof(szMapPath))))
@@ -184,7 +184,7 @@ static void test_GetProcessImageFileName(void)
 
         return;
     }
-    
+
     w32_err(pGetProcessImageFileNameA(NULL, szImgPath, sizeof(szImgPath)), ERROR_INVALID_HANDLE);
     w32_err(pGetProcessImageFileNameA(hpSR, szImgPath, sizeof(szImgPath)), ERROR_ACCESS_DENIED);
     w32_err(pGetProcessImageFileNameA(hpQI, szImgPath, 0), ERROR_INSUFFICIENT_BUFFER);
@@ -194,7 +194,7 @@ static void test_GetProcessImageFileName(void)
     /* Windows returns 2*strlen-1 */
     ok(ret >= strlen(szImgPath), "szImgPath=\"%s\" ret=%ld\n", szImgPath, ret);
     ok(!strcmp(szImgPath, szMapPath),
-       "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);    
+       "szImgPath=\"%s\" szMapPath=\"%s\"\n", szImgPath, szMapPath);
 }
 
 static void test_GetModuleFileNameEx(void)
@@ -202,7 +202,7 @@ static void test_GetModuleFileNameEx(void)
     HMODULE hMod = GetModuleHandle(NULL);
     char szModExPath[MAX_PATH+1], szModPath[MAX_PATH+1];
     DWORD ret;
-    
+
     w32_err(pGetModuleFileNameExA(NULL, hMod, szModExPath, sizeof(szModExPath)), ERROR_INVALID_HANDLE);
     w32_err(pGetModuleFileNameExA(hpQI, hMod, szModExPath, sizeof(szModExPath)), ERROR_ACCESS_DENIED);
     w32_err(pGetModuleFileNameExA(hpQV, hBad, szModExPath, sizeof(szModExPath)), ERROR_INVALID_HANDLE);
@@ -210,7 +210,7 @@ static void test_GetModuleFileNameEx(void)
         return;
     ok(ret == strlen(szModExPath), "szModExPath=\"%s\" ret=%ld\n", szModExPath, ret);
     GetModuleFileNameA(NULL, szModPath, sizeof(szModPath));
-    ok(!strncmp(szModExPath, szModPath, MAX_PATH), 
+    ok(!strncmp(szModExPath, szModPath, MAX_PATH),
        "szModExPath=\"%s\" szModPath=\"%s\"\n", szModExPath, szModPath);
 }
 
@@ -237,14 +237,14 @@ static void test_ws_functions(void)
     ULONG_PTR pages[4096];
     char *addr;
     int i;
-    
+
     todo_wine w32_err(pEmptyWorkingSet(NULL), ERROR_INVALID_HANDLE);
     todo_wine w32_err(pEmptyWorkingSet(hpSR), ERROR_ACCESS_DENIED);
     w32_suc(pEmptyWorkingSet(hpAA));
-    
+
     todo_wine w32_err(pInitializeProcessForWsWatch(NULL), ERROR_INVALID_HANDLE);
     w32_suc(pInitializeProcessForWsWatch(hpAA));
-    
+
     if(!w32_suc(addr = VirtualAlloc(NULL, 1, MEM_COMMIT, PAGE_READWRITE)))
         return;
 
@@ -253,7 +253,7 @@ static void test_ws_functions(void)
         trace("locking failed (error=%ld) - skipping test\n", GetLastError());
         goto free_page;
     }
-	
+
     todo_wine if(w32_suc(pQueryWorkingSet(hpQI, pages, 4096 * sizeof(ULONG_PTR))))
     {
        for(i = 0; i < pages[0]; i++)
@@ -262,7 +262,7 @@ static void test_ws_functions(void)
 	       ok(1, "QueryWorkingSet found our page\n");
 	       goto test_gwsc;
 	   }
-       
+
        ok(0, "QueryWorkingSet didn't find our page\n");
     }
 
@@ -278,7 +278,7 @@ test_gwsc:
 
 	ok(0, "GetWsChanges didn't find our page\n");
     }
-    
+
 free_page:
     VirtualFree(addr, 0, MEM_RELEASE);
 }
@@ -286,7 +286,7 @@ free_page:
 START_TEST(psapi_main)
 {
     HMODULE hpsapi = LoadLibraryA("psapi.dll");
-    
+
     if(!hpsapi)
     {
         trace("Could not load psapi.dll\n");
@@ -320,6 +320,6 @@ START_TEST(psapi_main)
 	CloseHandle(hpQV);
 	CloseHandle(hpAA);
     }
-    
+
     FreeLibrary(hpsapi);
 }

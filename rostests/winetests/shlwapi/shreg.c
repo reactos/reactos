@@ -102,10 +102,10 @@ static HKEY create_test_entries(void)
 
         trace("sExplen2 = (%d)\n", nExpLen2);
 	if (nExpectedLen2 != nExpLen2)
-            trace( "Expanding %s failed (expected %d) - known bug in NT4\n", sTestpath2, nExpectedLen2 );	
+            trace( "Expanding %s failed (expected %d) - known bug in NT4\n", sTestpath2, nExpectedLen2 );
 
 	/* Make sure we carry on with correct values */
-	nExpLen1 = nExpectedLen1; 
+	nExpLen1 = nExpectedLen1;
 	nExpLen2 = nExpectedLen2;
 	return hKey;
 }
@@ -238,7 +238,7 @@ static void test_SHQUeryValueEx(void)
         todo_wine
         {
                 ok( (0 == strcmp("", buf)) || (0 == strcmp(sTestpath2, buf)),
-                    "Expected empty or unexpanded string (win98), got (%s)\n", buf); 
+                    "Expected empty or unexpanded string (win98), got (%s)\n", buf);
         }
 
         ok( dwSize >= nUsedBuffer2, "Buffer size (%u) should be >= (%u)\n", dwSize, nUsedBuffer2);

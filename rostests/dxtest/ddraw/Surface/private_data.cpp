@@ -29,7 +29,7 @@ BOOL Test_PrivateData (INT* passed, INT* failed)
     TEST(Surface->FreePrivateData(guid) == DD_OK);
     TEST(Surface->FreePrivateData(guid) == DDERR_NOTFOUND);
 
-    // Test for DDSPD_VOLATILE flag 
+    // Test for DDSPD_VOLATILE flag
     TEST(Surface->SetPrivateData(guid, (LPVOID)&dummy, sizeof(DWORD), DDSPD_VOLATILE) == DD_OK);
     size = 0;
     TEST(Surface->GetPrivateData(guid, NULL, &size) == DDERR_MOREDATA && size == sizeof(DWORD));
@@ -37,7 +37,7 @@ BOOL Test_PrivateData (INT* passed, INT* failed)
 
 	DDBLTFX	 bltfx;
 	bltfx.dwSize = sizeof(DDBLTFX);
-	bltfx.dwFillColor = RGB(0, 0, 0); 	
+	bltfx.dwFillColor = RGB(0, 0, 0);
 	if(Surface->Blt(NULL, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &bltfx) != DD_OK)
         printf("ERROR: Failed to draw to surface !");
     TEST(Surface->GetPrivateData(guid, &dummy, &size) == DDERR_EXPIRED);

@@ -37,7 +37,7 @@ test_NtGdiDdCreateDirectDrawObject()
     }
 
     printf("Start testing of NtGdiDdCreateDirectDrawObject\n");
-    
+
     retValue = OsThunkDdCreateDirectDrawObject(NULL);
     testing_noteq(retValue,NULL,fails,"NtGdiDdCreateDirectDrawObject(NULL);\0");
 

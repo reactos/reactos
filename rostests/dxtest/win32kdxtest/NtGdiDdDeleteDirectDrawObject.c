@@ -17,7 +17,7 @@ test_NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
     int fails=0;
     BOOL retValue=FALSE;
     printf("Start testing of NtGdiDdDeleteDirectDrawObject\n");
-    
+
     retValue = OsThunkDdDeleteDirectDrawObject(hDirectDrawLocal);
     testing_eq(retValue,FALSE,fails,"NtGdiDdDeleteDirectDrawObject(hDirectDrawLocal);\0");
 

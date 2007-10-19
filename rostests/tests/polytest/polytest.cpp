@@ -315,10 +315,10 @@ POLYGONFILL_MakeEdge(POINT From, POINT To)
 ** lines will become active first when scanning from
 ** top (min y) to bottom (max y).
 **
-** Return Value Meaning 
-** Negative integer element1 < element2 
-** Zero element1 = element2 
-** Positive integer element1 > element2 
+** Return Value Meaning
+** Negative integer element1 < element2
+** Zero element1 = element2
+** Positive integer element1 > element2
 */
 static
 INT
@@ -427,7 +427,7 @@ fail:
 
 
 /*
-** This slow routine uses the data stored in the edge list to 
+** This slow routine uses the data stored in the edge list to
 ** calculate the x intercepts for each line in the edge list
 ** for scanline Scanline.
 **TODO: Get rid of this floating point arithmetic
@@ -664,14 +664,14 @@ POLYGONFILL_FillScanLineWinding(
 		RopMode); // MIX
 }
 
-//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and 
-//even-numbered polygon sides on each scan line. That is, GDI fills the area between the 
-//first and second side, between the third and fourth side, and so on. 
+//When the fill mode is ALTERNATE, GDI fills the area between odd-numbered and
+//even-numbered polygon sides on each scan line. That is, GDI fills the area between the
+//first and second side, between the third and fourth side, and so on.
 
-//WINDING Selects winding mode (fills any region with a nonzero winding value). 
+//WINDING Selects winding mode (fills any region with a nonzero winding value).
 //When the fill mode is WINDING, GDI fills any region that has a nonzero winding value.
 //This value is defined as the number of times a pen used to draw the polygon would go around the region.
-//The direction of each edge of the polygon is important. 
+//The direction of each edge of the polygon is important.
 
 BOOL
 STDCALL
@@ -711,7 +711,7 @@ FillPolygon(
   else /* default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;
 
-  /* For each Scanline from BoundRect.bottom to BoundRect.top, 
+  /* For each Scanline from BoundRect.bottom to BoundRect.top,
    * determine line segments to draw
    */
   for ( ScanLine = BoundRect.top; ScanLine < BoundRect.bottom; ++ScanLine )
@@ -780,7 +780,7 @@ Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
       DestRect.top      = MIN(DestRect.top, Points[CurrentPoint].y);
       DestRect.bottom   = MAX(DestRect.bottom, Points[CurrentPoint].y);
     }
-    
+
   // Draw the Polygon Edges with the current pen
   for (CurrentPoint = 0; CurrentPoint < Count; ++CurrentPoint)
     {
@@ -804,9 +804,9 @@ Polygon ( CONST PPOINT UnsafePoints, int Count, int polyFillMode )
       IntEngLineTo(SurfObj,
 	           dc.CombinedClip,
 	           OutBrushObj,
-	           From.x, 
-	           From.y, 
-	           To.x, 
+	           From.x,
+	           From.y,
+	           To.x,
 	           To.y,
 	           &DestRect,
 	           EDGE_CHAR); /* MIX */

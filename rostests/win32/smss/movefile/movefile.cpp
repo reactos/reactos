@@ -140,7 +140,7 @@ int Generate()
 	WriteFile(hFile, sBuf, sizeof(sBuf), &dwSize, NULL);
 	CloseHandle(hFile);
 
-	
+
 	hFile = CreateFile(
 		szxMovedFileWithRepl,
 		FILE_ALL_ACCESS,
@@ -217,7 +217,7 @@ int _tmain(int argc, _TCHAR* argv[])
 	}
 	else if( 0 == strncmp(argv[1], "-s", 2) )
 	{
-		// 
+		//
 		return ShowRegValue();
 	}
 	else if( 0 == strncmp(argv[1], "-d", 2) )

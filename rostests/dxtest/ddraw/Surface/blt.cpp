@@ -53,11 +53,11 @@ VOID Blt_Test (LPDIRECTDRAWSURFACE7 Surface, INT* passed, INT* failed)
 	bltfx.dwFillColor = RGB(255, 255, 0);
     TEST (Source->Blt(&rect, NULL, NULL, DDBLT_COLORFILL | DDBLT_WAIT, &bltfx) == DD_OK);
     TEST (GetPixel(Source, 0, 0) == RGB(0, 255, 0));
-    TEST (GetPixel(Source, 100, 100) == RGB(255, 255, 0));    
+    TEST (GetPixel(Source, 100, 100) == RGB(255, 255, 0));
 
     // Test DestRect and SrcRect
-    RECT SourceRect = {100, 100, 200, 200}; 
-    RECT DestRect = {0, 0, 200, 100}; 
+    RECT SourceRect = {100, 100, 200, 200};
+    RECT DestRect = {0, 0, 200, 100};
 
     TEST (Surface->Blt(&SourceRect, Source, &DestRect, 0, NULL) == DD_OK);
     TEST (GetPixel(Surface, 100, 100) == RGB(0, 255, 0)); // Src bigger: normal blt
@@ -68,20 +68,20 @@ VOID Blt_Test (LPDIRECTDRAWSURFACE7 Surface, INT* passed, INT* failed)
     DestRect.right = 100; // both are same size now
     TEST (Surface->Blt(&DestRect, Source, &SourceRect, 0, NULL) == DD_OK);
     TEST (GetPixel(Surface, 0, 0) == RGB(255, 255, 0));
-    
-    RECT TooBig = {100, 100, 200, 250}; 
+
+    RECT TooBig = {100, 100, 200, 250};
     TEST (Surface->Blt(&TooBig, Source, &SourceRect, 0, NULL) == DDERR_INVALIDRECT);
     TEST (Surface->Blt(&DestRect, Source, &TooBig, 0, NULL) == DDERR_INVALIDRECT);
 
     // Test Rotation
 	bltfx.dwDDFX = DDBLTFX_MIRRORLEFTRIGHT|DDBLTFX_MIRRORUPDOWN;
-    TEST (Surface->Blt(NULL, Source, NULL, DDBLT_WAIT|DDBLT_DDFX, &bltfx) == DD_OK); 
+    TEST (Surface->Blt(NULL, Source, NULL, DDBLT_WAIT|DDBLT_DDFX, &bltfx) == DD_OK);
     TEST (GetPixel(Surface, 0, 0) == RGB(255, 255, 0));
 
 	bltfx.dwDDFX = DDBLTFX_ROTATE180;
     TEST (Surface->Blt(NULL, Source, NULL, DDBLT_DDFX, &bltfx) == DDERR_NOROTATIONHW);
 
-	//bltfx.dwRotationAngle = 
+	//bltfx.dwRotationAngle =
     TEST (Surface->Blt(NULL, Source, NULL, DDBLT_ROTATIONANGLE, &bltfx) == DDERR_NOROTATIONHW);
 
     // Test Raster Operations
@@ -95,7 +95,7 @@ VOID Blt_Test (LPDIRECTDRAWSURFACE7 Surface, INT* passed, INT* failed)
     TEST (Surface->Blt(NULL, Source, NULL, DDBLT_WAIT|DDBLT_ROP, &bltfx) == DD_OK);
     TEST(GetPixel(Surface, 0, 0) == RGB(0, 255, 0));
 	bltfx.dwROP = SRCAND;
-    TEST (Surface->Blt(NULL, Source, NULL, DDBLT_WAIT|DDBLT_ROP, &bltfx) == DDERR_NORASTEROPHW); 
+    TEST (Surface->Blt(NULL, Source, NULL, DDBLT_WAIT|DDBLT_ROP, &bltfx) == DDERR_NORASTEROPHW);
 
     // Test Direct Draw Raster Operations
 	bltfx.dwDDROP = 0x123;

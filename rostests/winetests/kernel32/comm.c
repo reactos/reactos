@@ -905,7 +905,7 @@ static void test_LoopbackRead(HANDLE hcom)
     read = 0;
     read1 =0;
     i=0;
-    do 
+    do
     {
 	res = ReadFile(hcom, rbuf+read, sizeof(rbuf-read), &read1, NULL);
 	ok(res, "Readfile failed\n");
@@ -916,7 +916,7 @@ static void test_LoopbackRead(HANDLE hcom)
     after =  GetTickCount();
     ok( read == sizeof(tbuf),"ReadFile read %ld bytes, expected %d\n", read, sizeof(tbuf));
     trace("Plain Read for %d char at %d baud took %ld ms\n", sizeof(tbuf), SLOWBAUD, after-before);
-    
+
 }
 
 static void test_LoopbackCtsRts(HANDLE hcom)
@@ -1549,7 +1549,7 @@ static void  test_WaitDcd(HANDLE hcom)
 	args[1] = CLRDTR;
 }
 
-/* 
+/*
    Set Break after timeout
 */
 static DWORD CALLBACK set_CommBreak(LPVOID arg)

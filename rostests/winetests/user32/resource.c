@@ -25,7 +25,7 @@
 
 static UINT (WINAPI *pPrivateExtractIconsA)(LPCTSTR, int, int, int, HICON *, UINT *, UINT, UINT) = NULL;
 
-static void init_function_pointers(void) 
+static void init_function_pointers(void)
 {
     HMODULE hmod = GetModuleHandleA("user32.dll");
     if (hmod) {
@@ -264,11 +264,11 @@ static void test_PrivateExtractIcons(void) {
     UINT cIcons, cIcons2;
 
     if (!pPrivateExtractIconsA) return;
-    
+
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, NULL, NULL, 0, 0);
-    cIcons2 = pPrivateExtractIconsA(szShell32Dll, 4, MAKELONG(32,16), MAKELONG(32,16), 
+    cIcons2 = pPrivateExtractIconsA(szShell32Dll, 4, MAKELONG(32,16), MAKELONG(32,16),
                                    NULL, NULL, 256, 0);
-    ok((cIcons == cIcons2) && (cIcons > 0), 
+    ok((cIcons == cIcons2) && (cIcons > 0),
        "Icon count should be independent of requested icon sizes and base icon index! "
        "(cIcons=%d, cIcons2=%d)\n", cIcons, cIcons2);
 
@@ -278,22 +278,22 @@ static void test_PrivateExtractIcons(void) {
     cIcons = pPrivateExtractIconsA(szShell32Dll, 0, 16, 16, ahIcon, aIconId, 3, 0);
     ok(cIcons == 3, "Three icons requested got cIcons=%d\n", cIcons);
 
-    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(32,16), MAKELONG(32,16), 
+    cIcons = pPrivateExtractIconsA(szShell32Dll, 0, MAKELONG(32,16), MAKELONG(32,16),
                                   ahIcon, aIconId, 3, 0);
     ok(cIcons == 4, "Three icons requested, four expected, got cIcons=%d\n", cIcons);
 }
 
 static void test_LoadImage(void) {
     HBITMAP bmp;
-    
+
     bmp = LoadBitmapA(NULL, MAKEINTRESOURCE(OBM_CHECK));
     ok(bmp != NULL, "Could not load the OBM_CHECK bitmap\n");
     if (bmp) DeleteObject(bmp);
-    
+
     bmp = LoadBitmapA(NULL, "#32760"); /* Value of OBM_CHECK */
     ok(bmp != NULL, "Could not load the OBM_CHECK bitmap\n");
     if (bmp) DeleteObject(bmp);
-}    
+}
 
 START_TEST(resource)
 {

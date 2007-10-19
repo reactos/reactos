@@ -100,7 +100,7 @@ static void test_FindFirstChangeNotification(void)
        "FindFirstChangeNotification error: %ld\n", GetLastError());
 
     if (0) /* This documents win2k behavior. It crashes on win98. */
-    { 
+    {
         change = FindFirstChangeNotificationA(NULL, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
         ok(change == NULL && GetLastError() == ERROR_PATH_NOT_FOUND,
         "FindFirstChangeNotification error: %ld\n", GetLastError());
@@ -198,7 +198,7 @@ static void test_FindFirstChangeNotification(void)
 
     /* Create a file */
     thread = StartNotificationThread(workdir, FALSE, FILE_NOTIFY_CHANGE_FILE_NAME);
-    file = CreateFileA(filename2, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS, 
+    file = CreateFileA(filename2, GENERIC_WRITE|GENERIC_READ, 0, NULL, CREATE_ALWAYS,
                        FILE_ATTRIBUTE_NORMAL, 0);
     ok(file != INVALID_HANDLE_VALUE, "CreateFileA error: %ld\n", GetLastError());
     ret = CloseHandle(file);
@@ -217,7 +217,7 @@ static void test_FindFirstChangeNotification(void)
 
     /* Change last write time by writing to a file */
     thread = StartNotificationThread(workdir, FALSE, FILE_NOTIFY_CHANGE_LAST_WRITE);
-    file = CreateFileA(filename2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
+    file = CreateFileA(filename2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                        FILE_ATTRIBUTE_NORMAL, 0);
     ok(file != INVALID_HANDLE_VALUE, "CreateFileA error: %ld\n", GetLastError());
     ret = WriteFile(file, buffer, sizeof(buffer), &count, NULL);
@@ -228,7 +228,7 @@ static void test_FindFirstChangeNotification(void)
 
     /* Change file size by truncating a file */
     thread = StartNotificationThread(workdir, FALSE, FILE_NOTIFY_CHANGE_SIZE);
-    file = CreateFileA(filename2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
+    file = CreateFileA(filename2, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                        FILE_ATTRIBUTE_NORMAL, 0);
     ok(file != INVALID_HANDLE_VALUE, "CreateFileA error: %ld\n", GetLastError());
     ret = WriteFile(file, buffer, sizeof(buffer) / 2, &count, NULL);
@@ -238,7 +238,7 @@ static void test_FindFirstChangeNotification(void)
     ok(FinishNotificationThread(thread), "Missed notification\n");
 
     /* clean up */
-    
+
     ret = DeleteFileA(filename2);
     ok(ret, "DeleteFileA error: %ld\n", GetLastError());
 
@@ -267,7 +267,7 @@ static void test_ffcn(void)
 
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
@@ -351,7 +351,7 @@ static void test_readdirectorychanges(void)
     RemoveDirectoryW( subsubdir );
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
@@ -361,8 +361,8 @@ static void test_readdirectorychanges(void)
     ok(r==FALSE, "should return false\n");
 
     fflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY, 
-                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 
+    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY,
+                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
@@ -555,13 +555,13 @@ static void test_readdirectorychanges_null(void)
 
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
     fflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY, 
-                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 
+    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY,
+                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 
@@ -648,13 +648,13 @@ static void test_readdirectorychanges_filedir(void)
     DeleteFileW( file );
     RemoveDirectoryW( subdir );
     RemoveDirectoryW( path );
-    
+
     r = CreateDirectoryW(path, NULL);
     ok( r == TRUE, "failed to create directory\n");
 
     fflags = FILE_FLAG_BACKUP_SEMANTICS | FILE_FLAG_OVERLAPPED;
-    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY, 
-                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, 
+    hdir = CreateFileW(path, GENERIC_READ|SYNCHRONIZE|FILE_LIST_DIRECTORY,
+                        FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
                         OPEN_EXISTING, fflags, NULL);
     ok( hdir != INVALID_HANDLE_VALUE, "failed to open directory\n");
 

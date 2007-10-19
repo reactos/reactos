@@ -486,7 +486,7 @@ static const struct message WmShowVisMaxPopupSeq[] = {
 /* CreateWindow (for a child popup window, not initially visible) */
 static const struct message WmCreateChildPopupSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -499,7 +499,7 @@ static const struct message WmCreateChildPopupSeq[] = {
  */
 static const struct message WmCreateInvisiblePopupSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { WM_STYLECHANGING, sent },
@@ -539,7 +539,7 @@ static const struct message WmShowVisiblePopupSeq_3[] = {
 /* CreateWindow (for child window, not initially visible) */
 static const struct message WmCreateChildSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     /* child is inserted into parent's child list after WM_NCCREATE returns */
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
@@ -552,7 +552,7 @@ static const struct message WmCreateChildSeq[] = {
 /* CreateWindow (for maximized child window, not initially visible) */
 static const struct message WmCreateMaximizedChildSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -571,7 +571,7 @@ static const struct message WmCreateMaximizedChildSeq[] = {
 /* CreateWindow (for a child window, initially visible) */
 static const struct message WmCreateVisibleChildSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     /* child is inserted into parent's child list after WM_NCCREATE returns */
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { EVENT_OBJECT_REORDER, winevent_hook|wparam|lparam, 0, 0 },
@@ -1262,12 +1262,12 @@ static int log_all_parent_messages;
 
 static void add_message(const struct message *msg)
 {
-    if (!sequence) 
+    if (!sequence)
     {
 	sequence_size = 10;
 	sequence = HeapAlloc( GetProcessHeap(), 0, sequence_size * sizeof (struct message) );
     }
-    if (sequence_cnt == sequence_size) 
+    if (sequence_cnt == sequence_size)
     {
 	sequence_size *= 2;
 	sequence = HeapReAlloc( GetProcessHeap(), 0, sequence, sequence_size * sizeof (struct message) );
@@ -1314,7 +1314,7 @@ static void ok_sequence_(const struct message *expected, const char *context, in
     static const struct message end_of_sequence = { 0, 0, 0, 0 };
     const struct message *actual;
     int failcount = 0;
-    
+
     add_message(&end_of_sequence);
 
     actual = sequence;
@@ -1499,7 +1499,7 @@ static const struct message WmDestroyMDIclientSeq[] = {
 /* CreateWindow for MDI child window, initially visible */
 static const struct message WmCreateMDIchildVisibleSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -1607,7 +1607,7 @@ static const struct message WmDestroyMDIchildVisibleSeq[] = {
 /* CreateWindow for MDI child window, initially invisible */
 static const struct message WmCreateMDIchildInvisibleSeq[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -1638,7 +1638,7 @@ static const struct message WmDestroyMDIchildInvisibleSeq[] = {
 /* CreateWindow for the 1st MDI child window, initially visible and maximized */
 static const struct message WmCreateMDIchildVisibleMaxSeq1[] = {
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -1711,7 +1711,7 @@ static const struct message WmCreateMDIchildVisibleMaxSeq2[] = {
     { WM_SETREDRAW, sent|wparam, 1 }, /* in the 1st MDI child */
     /* create the 2nd MDI child */
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -1777,7 +1777,7 @@ static const struct message WmCreateMDIchildVisibleMaxSeq2[] = {
 static const struct message WmCreateMDIchildVisibleMaxSeq3[] = {
     { WM_MDICREATE, sent },
     { HCBT_CREATEWND, hook },
-    { WM_NCCREATE, sent }, 
+    { WM_NCCREATE, sent },
     { WM_NCCALCSIZE, sent|wparam, 0 },
     { WM_CREATE, sent },
     { EVENT_OBJECT_CREATE, winevent_hook|wparam|lparam, 0, 0 },
@@ -3036,12 +3036,12 @@ static void test_showwindow(void)
     ShowWindow(hchild, SW_HIDE);
     ShowWindow(hwnd, SW_HIDE);
     flush_sequence();
-    /* ShowWindow(SW_SHOWNA) with child and parent invisible */ 
+    /* ShowWindow(SW_SHOWNA) with child and parent invisible */
     trace("calling ShowWindow( SW_SHOWNA) for invisible child with invisible parent\n");
     ok( ShowWindow(hchild, SW_SHOWNA) == FALSE, "ShowWindow: window was visible\n" );
     ok_sequence(WmSHOWNAChildInvisParInvis, "ShowWindow(SW_SHOWNA) invisible child and parent", FALSE);
     trace("done\n");
-    /* ShowWindow(SW_SHOWNA) with child visible and parent invisible */ 
+    /* ShowWindow(SW_SHOWNA) with child visible and parent invisible */
     ok( ShowWindow(hchild, SW_SHOW) != FALSE, "ShowWindow: window was invisible\n" );
     flush_sequence();
     trace("calling ShowWindow( SW_SHOWNA) for the visible child and invisible parent\n");
@@ -3310,7 +3310,7 @@ static void test_messages(void)
                              0, 0, 10, 10, hparent, 0, 0, NULL);
     ok (hchild != 0, "Failed to create child window\n");
     ok_sequence(WmCreateChildSeq, "CreateWindow:child", FALSE);
-    
+
     hchild2 = CreateWindowExA(0, "SimpleWindowClass", "Test child2", WS_CHILD,
                                100, 100, 50, 50, hparent, 0, 0, NULL);
     ok (hchild2 != 0, "Failed to create child2 window\n");
@@ -4886,7 +4886,7 @@ static void test_accelerators(void)
 
 /************* window procedures ********************/
 
-static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message, 
+static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
 			     WPARAM wParam, LPARAM lParam)
 {
     static long defwndproc_counter = 0;
@@ -4954,7 +4954,7 @@ static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
 	/* test_accelerators() depends on this */
 	case WM_NCHITTEST:
 	    return HTCLIENT;
-    
+
 	/* ignore */
 	case WM_MOUSEMOVE:
 	case WM_SETCURSOR:
@@ -5024,7 +5024,7 @@ static LRESULT MsgCheckProc (BOOL unicode, HWND hwnd, UINT message,
     }
 
     defwndproc_counter++;
-    ret = unicode ? DefWindowProcW(hwnd, message, wParam, lParam) 
+    ret = unicode ? DefWindowProcW(hwnd, message, wParam, lParam)
 		  : DefWindowProcA(hwnd, message, wParam, lParam);
     defwndproc_counter--;
 
@@ -5244,8 +5244,8 @@ static BOOL RegisterWindowClasses(void)
 static HHOOK hCBT_hook;
 static DWORD cbt_hook_thread_id;
 
-static LRESULT CALLBACK cbt_hook_proc(int nCode, WPARAM wParam, LPARAM lParam) 
-{ 
+static LRESULT CALLBACK cbt_hook_proc(int nCode, WPARAM wParam, LPARAM lParam)
+{
     static const char *CBT_code_name[10] = {
 	"HCBT_MOVESIZE",
 	"HCBT_MINMAX",
@@ -5391,7 +5391,7 @@ static const struct message WmGetTextLengthAfromW[] = {
     { 0 }
 };
 
-static const WCHAR testWindowClassW[] = 
+static const WCHAR testWindowClassW[] =
 { 'T','e','s','t','W','i','n','d','o','w','C','l','a','s','s','W',0 };
 
 static const WCHAR dummy_window_text[] = {'d','u','m','m','y',' ','t','e','x','t',0};
@@ -5708,8 +5708,8 @@ static void CALLBACK win_event_global_hook_proc(HWINEVENTHOOK hevent,
 static HHOOK hCBT_global_hook;
 static DWORD cbt_global_hook_thread_id;
 
-static LRESULT CALLBACK cbt_global_hook_proc(int nCode, WPARAM wParam, LPARAM lParam) 
-{ 
+static LRESULT CALLBACK cbt_global_hook_proc(int nCode, WPARAM wParam, LPARAM lParam)
+{
     HWND hwnd;
     char buf[256];
 
@@ -6176,7 +6176,7 @@ static void test_scrollwindowex(void)
             WS_VISIBLE|WS_OVERLAPPEDWINDOW,
             100, 100, 200, 200, 0, 0, 0, NULL);
     ok (hwnd != 0, "Failed to create overlapped window\n");
-    hchild = CreateWindowExA(0, "TestWindowClass", "Test child", 
+    hchild = CreateWindowExA(0, "TestWindowClass", "Test child",
             WS_VISIBLE|WS_CAPTION|WS_CHILD,
             10, 10, 150, 150, hwnd, 0, 0, NULL);
     ok (hchild != 0, "Failed to create child\n");

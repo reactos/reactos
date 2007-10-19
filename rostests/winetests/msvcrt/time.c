@@ -44,9 +44,9 @@ static void test_gmtime(void)
 	(gmt_tm->tm_mday ==  1) && (gmt_tm->tm_wday == 4) && (gmt_tm->tm_hour  == 0) &&
 	(gmt_tm->tm_min  ==  0) && (gmt_tm->tm_sec  == 0) && (gmt_tm->tm_isdst == 0)),
        "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday, 
-       gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst); 
-  
+       gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday,
+       gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst);
+
 }
 static void test_mktime(void)
 {
@@ -75,7 +75,7 @@ static void test_mktime(void)
     my_tm.tm_isdst=  0;
 
     sav_tm = my_tm;
-  
+
     local_time = mktime(&my_tm);
     ok(((DWORD)local_time == SECSPERDAY), "mktime returned 0x%08lx\n",(DWORD)local_time);
     /* now test some unnormalized struct tm's */
@@ -156,7 +156,7 @@ static void test_localtime(void)
 
     char TZ_env[256];
     struct tm* lt;
-    
+
     ok (res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
     lt = localtime(&gmt);
     ok(((lt->tm_year == 70) && (lt->tm_mon  == 0) && (lt->tm_yday  == 1) &&
@@ -164,8 +164,8 @@ static void test_localtime(void)
 	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst ==
                                                       (res == TIME_ZONE_ID_DAYLIGHT))),
        "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour, 
-       lt->tm_min, lt->tm_sec, lt->tm_isdst); 
+       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour,
+       lt->tm_min, lt->tm_sec, lt->tm_isdst);
 
     _snprintf(TZ_env,255,"TZ=%s",(getenv("TZ")?getenv("TZ"):""));
     putenv("TZ=GMT");
@@ -175,8 +175,8 @@ static void test_localtime(void)
 	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst ==
                                                       (res == TIME_ZONE_ID_DAYLIGHT))),
        "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour, 
-       lt->tm_min, lt->tm_sec, lt->tm_isdst); 
+       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour,
+       lt->tm_min, lt->tm_sec, lt->tm_isdst);
     putenv(TZ_env);
 }
 static void test_strdate(void)

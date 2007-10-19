@@ -2,7 +2,7 @@
 #include <reactos/resource.h>
 #include "resource.h"
 
-IDR_MAINMENU MENU DISCARDABLE 
+IDR_MAINMENU MENU DISCARDABLE
 BEGIN
     POPUP "&File"
     BEGIN

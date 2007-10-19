@@ -1033,7 +1033,7 @@ static const app_ustr2str_t app_ustr2str[] = {
     { 4, 12, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 12, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
     { 4, 11, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 11, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
     { 4, 10, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8, 10, 14,   "FakeUstr\0\0cdef", STATUS_SUCCESS},
-/* In the following test the native function writes beyond MaximumLength 
+/* In the following test the native function writes beyond MaximumLength
  *  { 4,  9, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8,  9, 14,     "FakeUstrabcdef", STATUS_SUCCESS},
  */
     { 4,  8, 14,     "Fake0123abcdef", 4, 6, 8,   "UstrZYXW",  8,  8, 14,     "FakeUstrabcdef", STATUS_SUCCESS},

@@ -103,7 +103,7 @@ static void check_parents( HWND hwnd, HWND ga_parent, HWND gwl_parent, HWND get_
     }
 }
 
-BOOL CALLBACK EnumChildProc( HWND hwndChild, LPARAM lParam) 
+BOOL CALLBACK EnumChildProc( HWND hwndChild, LPARAM lParam)
 {
     (*(LPINT)lParam)++;
     trace("EnumChildProc on %p\n", hwndChild);
@@ -112,7 +112,7 @@ BOOL CALLBACK EnumChildProc( HWND hwndChild, LPARAM lParam)
 }
 
 /* will search for the given window */
-BOOL CALLBACK EnumChildProc1( HWND hwndChild, LPARAM lParam) 
+BOOL CALLBACK EnumChildProc1( HWND hwndChild, LPARAM lParam)
 {
     trace("EnumChildProc1 on %p\n", hwndChild);
     if ((HWND)lParam == hwndChild) return FALSE;
@@ -814,8 +814,8 @@ static void test_nonclient_area(HWND hwnd)
     ok(EqualRect(&rc, &rc_client), "synthetic rect does not match: style:exstyle=0x%08lx:0x%08lx, menu=%d\n", style, exstyle, menu);
 }
 
-static LRESULT CALLBACK cbt_hook_proc(int nCode, WPARAM wParam, LPARAM lParam) 
-{ 
+static LRESULT CALLBACK cbt_hook_proc(int nCode, WPARAM wParam, LPARAM lParam)
+{
     static const char *CBT_code_name[10] = {
 	"HCBT_MOVESIZE",
 	"HCBT_MINMAX",
@@ -1868,7 +1868,7 @@ static void test_SetMenu(HWND parent)
     ok(SetMenu(parent, hMenu), "SetMenu on a top level window should not fail\n");
 #if 0
     /* fails on (at least) Wine, NT4, XP SP2 */
-    test_nonclient_area(parent); 
+    test_nonclient_area(parent);
 #endif
     ret = GetMenu(parent);
     ok(ret == hMenu, "unexpected menu id %p\n", ret);
@@ -1907,7 +1907,7 @@ static void test_SetMenu(HWND parent)
     test_nonclient_area(parent);
     ret = GetMenu(parent);
     ok(ret == 0, "unexpected menu id %p\n", ret);
- 
+
     /* child */
     child = CreateWindowExA(0, "static", NULL, WS_CHILD, 0, 0, 0, 0, parent, (HMENU)10, 0, NULL);
     assert(child);
@@ -2121,7 +2121,7 @@ static void test_SetActiveWindow(HWND hwnd)
     SetActiveWindow(hwnd);
     ok( GetActiveWindow() == hwnd, "Window %p not active\n", hwnd );
     ok( !(GetWindowLong(hwnd,GWL_STYLE) & WS_VISIBLE), "Window %p is visible\n", hwnd );
-    
+
     ShowWindow(hwnd, SW_SHOW);
 
     hwnd2 = CreateWindowExA(0, "static", NULL, WS_POPUP|WS_VISIBLE, 0, 0, 0, 0, hwnd, 0, 0, NULL);
@@ -2497,7 +2497,7 @@ static void test_mouse_input(HWND hwnd)
 #define TEST_MOUSEACTIVATE(A,B)                                                          \
        res = SendMessageA(hwnd, WM_MOUSEACTIVATE, (WPARAM)hwnd, (LPARAM)MAKELRESULT(A,0));   \
        ok(res == B, "WM_MOUSEACTIVATE for %s returned %ld\n", #A, res);
-       
+
     TEST_MOUSEACTIVATE(HTERROR,MA_ACTIVATE);
     TEST_MOUSEACTIVATE(HTTRANSPARENT,MA_ACTIVATE);
     TEST_MOUSEACTIVATE(HTNOWHERE,MA_ACTIVATE);
@@ -2570,7 +2570,7 @@ static void nccalchelper(HWND hwnd, INT x, INT y, RECT *prc)
 {
     MoveWindow( hwnd, 0, 0, x, y, 0);
     GetWindowRect( hwnd, prc);
-    trace("window rect is %ld,%ld - %ld,%ld\n", 
+    trace("window rect is %ld,%ld - %ld,%ld\n",
             prc->left,prc->top,prc->right,prc->bottom);
     DefWindowProcA(hwnd, WM_NCCALCSIZE, 0, (LPARAM)prc);
     trace("nccalc rect is %ld,%ld - %ld,%ld\n",
@@ -2582,37 +2582,37 @@ static void test_nccalcscroll(HWND parent)
     RECT rc1;
     INT sbheight = GetSystemMetrics( SM_CYHSCROLL);
     INT sbwidth = GetSystemMetrics( SM_CXVSCROLL);
-    HWND hwnd = CreateWindowExA(0, "static", NULL, 
-            WS_CHILD| WS_VISIBLE | WS_VSCROLL | WS_HSCROLL , 
-            10, 10, 200, 200, parent, 0, 0, NULL); 
+    HWND hwnd = CreateWindowExA(0, "static", NULL,
+            WS_CHILD| WS_VISIBLE | WS_VSCROLL | WS_HSCROLL ,
+            10, 10, 200, 200, parent, 0, 0, NULL);
     ShowWindow( parent, SW_SHOW);
     UpdateWindow( parent);
 
     /* test window too low for a horizontal scroll bar */
     nccalchelper( hwnd, 100, sbheight, &rc1);
-    ok( rc1.bottom - rc1.top == sbheight, "Height should be %d size is %ld,%ld - %ld,%ld\n", 
+    ok( rc1.bottom - rc1.top == sbheight, "Height should be %d size is %ld,%ld - %ld,%ld\n",
             sbheight, rc1.left, rc1.top, rc1.right, rc1.bottom);
 
     /* test window just high enough for a horizontal scroll bar */
     nccalchelper( hwnd, 100, sbheight + 1, &rc1);
-    ok( rc1.bottom - rc1.top == 1, "Height should be %d size is %ld,%ld - %ld,%ld\n", 
+    ok( rc1.bottom - rc1.top == 1, "Height should be %d size is %ld,%ld - %ld,%ld\n",
             1, rc1.left, rc1.top, rc1.right, rc1.bottom);
 
     /* test window too narrow for a vertical scroll bar */
     nccalchelper( hwnd, sbwidth - 1, 100, &rc1);
-    ok( rc1.right - rc1.left == sbwidth - 1 , "Width should be %d size is %ld,%ld - %ld,%ld\n", 
+    ok( rc1.right - rc1.left == sbwidth - 1 , "Width should be %d size is %ld,%ld - %ld,%ld\n",
             sbwidth - 1, rc1.left, rc1.top, rc1.right, rc1.bottom);
 
     /* test window just wide enough for a vertical scroll bar */
     nccalchelper( hwnd, sbwidth, 100, &rc1);
-    ok( rc1.right - rc1.left == 0, "Width should be %d size is %ld,%ld - %ld,%ld\n", 
+    ok( rc1.right - rc1.left == 0, "Width should be %d size is %ld,%ld - %ld,%ld\n",
             0, rc1.left, rc1.top, rc1.right, rc1.bottom);
 
     /* same test, but with client edge: not enough width */
     SetWindowLong( hwnd, GWL_EXSTYLE, WS_EX_CLIENTEDGE | GetWindowLong( hwnd, GWL_EXSTYLE));
     nccalchelper( hwnd, sbwidth, 100, &rc1);
     ok( rc1.right - rc1.left == sbwidth - 2 * GetSystemMetrics(SM_CXEDGE),
-            "Width should be %d size is %ld,%ld - %ld,%ld\n", 
+            "Width should be %d size is %ld,%ld - %ld,%ld\n",
             sbwidth - 2 * GetSystemMetrics(SM_CXEDGE), rc1.left, rc1.top, rc1.right, rc1.bottom);
 
     DestroyWindow( hwnd);
@@ -2759,7 +2759,7 @@ static void register_style_check_class(void)
         NULL,
         TEXT("WineStyleCheck"),
     };
-    
+
     atomStyleCheckClass = RegisterClass(&wc);
 }
 
@@ -2842,7 +2842,7 @@ static void test_scrollvalidate( HWND parent)
     ShowWindow( parent, SW_SHOW);
     UpdateWindow( parent);
     GetClientRect( hwnd1, &rc);
-    cliprc=rc; 
+    cliprc=rc;
     SetRectRgn( clipping, 10, 10, 90, 90);
     hdc = GetDC( hwnd1);
     /* for a visual touch */
@@ -2952,7 +2952,7 @@ static void test_scrollvalidate( HWND parent)
 }
 
 /* couple of tests of return values of scrollbar functions
- * called on a scrollbarless window */ 
+ * called on a scrollbarless window */
 static void test_scroll(void)
 {
     BOOL ret;
@@ -3011,15 +3011,15 @@ static void test_scrolldc( HWND parent)
     rc2.bottom = ( rc.top + rc.bottom) /2;
     FillRect( hdc, &rc2, GetStockObject(BLACK_BRUSH));
     /* clip region is the lower half */
-    cliprc=rc; 
+    cliprc=rc;
     cliprc.top = (rc.top + rc.bottom) /2;
-    /* test whether scrolled pixels are properly clipped */ 
+    /* test whether scrolled pixels are properly clipped */
     colr = GetPixel( hdc, (rc.left+rc.right)/2, ( rc.top + rc.bottom) /2 - 1);
-    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr); 
-    /* this scroll should not cause any visible changes */ 
+    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr);
+    /* this scroll should not cause any visible changes */
     ScrollDC( hdc, 5, -20, &rc, &cliprc, hrgn, &rcu);
     colr = GetPixel( hdc, (rc.left+rc.right)/2, ( rc.top + rc.bottom) /2 - 1);
-    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr); 
+    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr);
     /* test with NULL clip rect */
     ScrollDC( hdc, 20, -20, &rc, NULL, hrgn, &rcu);
     /*FillRgn(hdc, hrgn, GetStockObject(WHITE_BRUSH));*/
@@ -3035,7 +3035,7 @@ static void test_scrolldc( HWND parent)
     CombineRgn(exprgn, exprgn, tmprgn, RGN_OR);
     if (winetest_debug > 0) dump_region(exprgn);
     ok(EqualRgn(exprgn, hrgn), "wrong update region\n");
-    /* test clip rect > scroll rect */ 
+    /* test clip rect > scroll rect */
     FillRect( hdc, &rc, GetStockObject(WHITE_BRUSH));
     rc2=rc;
     InflateRect( &rc2, -(rc.right-rc.left)/4, -(rc.bottom-rc.top)/4);
@@ -3046,7 +3046,7 @@ static void test_scrolldc( HWND parent)
     CombineRgn(exprgn, exprgn, tmprgn, RGN_OR);
     ok(EqualRgn(exprgn, hrgn), "wrong update region\n");
     colr = GetPixel( hdc, 80, 80);
-    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr); 
+    ok ( colr == 0, "pixel should be black, color is %08lx\n", colr);
     trace("update rect: %ld,%ld - %ld,%ld\n",
            rcu.left, rcu.top, rcu.right, rcu.bottom);
     if (winetest_debug > 0) dump_region(hrgn);
@@ -3116,7 +3116,7 @@ static BOOL AWR_init(void)
     class.hbrBackground = 0;
     class.lpszMenuName  = 0;
     class.lpszClassName = szAWRClass;
-    
+
     if (!RegisterClass (&class)) {
 	ok(FALSE, "RegisterClass failed\n");
 	return FALSE;
@@ -3127,7 +3127,7 @@ static BOOL AWR_init(void)
 	return FALSE;
     ok(hmenu != 0, "Failed to create menu\n");
     ok(AppendMenu(hmenu, MF_STRING, 1, "Test!"), "Failed to create menu item\n");
-    
+
     return TRUE;
 }
 
@@ -3136,8 +3136,8 @@ static void test_AWR_window_size(BOOL menu)
 {
     LONG styles[] = {
 	WS_POPUP,
-	WS_MAXIMIZE, WS_BORDER, WS_DLGFRAME, 
-	WS_SYSMENU, 
+	WS_MAXIMIZE, WS_BORDER, WS_DLGFRAME,
+	WS_SYSMENU,
 	WS_THICKFRAME,
 	WS_MINIMIZEBOX, WS_MAXIMIZEBOX,
 	WS_HSCROLL, WS_VSCROLL
@@ -3148,12 +3148,12 @@ static void test_AWR_window_size(BOOL menu)
 	WS_EX_APPWINDOW,
 #if 0
 	/* These styles have problems on (at least) WinXP (SP2) and Wine */
-	WS_EX_DLGMODALFRAME, 
-	WS_EX_STATICEDGE, 
+	WS_EX_DLGMODALFRAME,
+	WS_EX_STATICEDGE,
 #endif
     };
 
-    int i;    
+    int i;
 
     /* A exhaustive check of all the styles takes too long
      * so just do a (hopefully representative) sample
@@ -3173,7 +3173,7 @@ static void test_AdjustWindowRect(void)
 {
     if (!AWR_init())
 	return;
-    
+
     SHOWSYSMETRIC(SM_CYCAPTION);
     SHOWSYSMETRIC(SM_CYSMCAPTION);
     SHOWSYSMETRIC(SM_CYMENU);
@@ -3186,7 +3186,7 @@ static void test_AdjustWindowRect(void)
     SHOWSYSMETRIC(SM_CXDLGFRAME);
     SHOWSYSMETRIC(SM_CYDLGFRAME);
     SHOWSYSMETRIC(SM_CXBORDER);
-    SHOWSYSMETRIC(SM_CYBORDER);  
+    SHOWSYSMETRIC(SM_CYBORDER);
 
     test_AWR_window_size(FALSE);
     test_AWR_window_size(TRUE);
@@ -3344,49 +3344,49 @@ static void test_csparentdc(void)
    struct parentdc_test test_answer;
 
 #define nothing_todo {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}
-   const struct parentdc_test test1 = 
+   const struct parentdc_test test1 =
    {
         {{0, 0, 150, 150}, {0, 0, 150, 150}, {0, 0, 150, 150}}, nothing_todo,
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-40, -40, 110, 110}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
    };
 
-   const struct parentdc_test test2 = 
+   const struct parentdc_test test2 =
    {
         {{0, 0, 150, 150}, {0, 0, 50, 50}, {0, 0, 50, 50}}, nothing_todo,
         {{0, 0, 40, 40}, {-20, -20, 30, 30}, {0, 0, 30, 30}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-40, -40, 10, 10}, {0, 0, 10, 10}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
    };
 
-   const struct parentdc_test test3 = 
+   const struct parentdc_test test3 =
    {
         {{0, 0, 150, 150}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
    };
 
-   const struct parentdc_test test4 = 
+   const struct parentdc_test test4 =
    {
         {{0, 0, 150, 150}, {40, 40, 50, 50}, {40, 40, 50, 50}}, nothing_todo,
         {{0, 0, 40, 40}, {20, 20, 30, 30}, {20, 20, 30, 30}}, nothing_todo,
         {{0, 0, 40, 40}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
    };
 
-   const struct parentdc_test test5 = 
+   const struct parentdc_test test5 =
    {
         {{0, 0, 150, 150}, {20, 20, 60, 60}, {20, 20, 60, 60}}, nothing_todo,
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},
         {{0, 0, 40, 40}, {-20, -20, 20, 20}, {0, 0, 20, 20}}, {{0, 0, 0, 0}, {1, 1, 0, 0}, {0, 0, 0, 0}},
    };
 
-   const struct parentdc_test test6 = 
+   const struct parentdc_test test6 =
    {
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
         {{0, 0, 40, 40}, {0, 0, 10, 10}, {0, 0, 10, 10}}, nothing_todo,
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
    };
 
-   const struct parentdc_test test7 = 
+   const struct parentdc_test test7 =
    {
         {{0, 0, 0, 0}, {0, 0, 0, 0}, {0, 0, 0, 0}}, nothing_todo,
         {{0, 0, 40, 40}, {-20, -20, 130, 130}, {0, 0, 40, 40}}, {{0, 0, 0, 0}, {1, 1, 1, 1}, {0, 0, 0, 0}},

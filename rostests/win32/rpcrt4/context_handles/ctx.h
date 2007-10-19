@@ -9,8 +9,8 @@
  */
 /* Compiler settings for ctx.idl:
     Os (OptLev=s), W1, Zp8, env=Win32 (32b run), ms_ext, c_ext
-    error checks: allocation ref bounds_check enum stub_data 
-    VC __declspec() decoration level: 
+    error checks: allocation ref bounds_check enum stub_data
+    VC __declspec() decoration level:
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
          DECLSPEC_UUID(), MIDL_INTERFACE()
 */
@@ -28,33 +28,33 @@
 #ifndef __ctx_h__
 #define __ctx_h__
 
-/* Forward Declarations */ 
+/* Forward Declarations */
 
 #ifdef __cplusplus
 extern "C"{
-#endif 
+#endif
 
 void __RPC_FAR * __RPC_USER MIDL_user_allocate(size_t);
-void __RPC_USER MIDL_user_free( void __RPC_FAR * ); 
+void __RPC_USER MIDL_user_free( void __RPC_FAR * );
 
 #ifndef __hello_INTERFACE_DEFINED__
 #define __hello_INTERFACE_DEFINED__
 
 /* interface hello */
-/* [implicit_handle][version][uuid] */ 
+/* [implicit_handle][version][uuid] */
 
 typedef long CTXTYPE;
 
 typedef /* [context_handle] */ CTXTYPE __RPC_FAR *PCTXTYPE;
 
-void CtxOpen( 
+void CtxOpen(
     /* [out] */ PCTXTYPE __RPC_FAR *pphContext,
     /* [in] */ long Value);
 
-void CtxHello( 
+void CtxHello(
     /* [in] */ PCTXTYPE phContext);
 
-void CtxClose( 
+void CtxClose(
     /* [out][in] */ PCTXTYPE __RPC_FAR *pphContext);
 
 

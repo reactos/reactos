@@ -52,7 +52,7 @@ static void test_GetAcceptLanguagesA(void)
 	trace("GetAcceptLanguagesA: skipping tests\n");
 	return;
     }
-    ok( (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()) || 
+    ok( (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()) ||
 	(ERROR_CLASS_DOES_NOT_EXIST == GetLastError()) ||
 	(ERROR_PROC_NOT_FOUND == GetLastError()) ||
 	(ERROR_CALL_NOT_IMPLEMENTED == GetLastError()) ||
@@ -380,7 +380,7 @@ static void test_GetShellSecurityDescriptor(void)
                 "GetSecurityDescriptorControl failed with error %u\n", GetLastError());
         ok(0 == (control & SE_SELF_RELATIVE), "SD should be absolute\n");
 
-        ok(GetSecurityDescriptorDacl(psd, &bHasDacl, &pAcl, &bDefaulted), 
+        ok(GetSecurityDescriptorDacl(psd, &bHasDacl, &pAcl, &bDefaulted),
             "GetSecurityDescriptorDacl failed with error %u\n", GetLastError());
 
         ok(bHasDacl, "SD has no DACL\n");
@@ -404,21 +404,21 @@ static void test_GetShellSecurityDescriptor(void)
                     ACCESS_ALLOWED_ACE *paaa; /* will use for DENIED too */
 
                     ok(GetAce(pAcl, 0, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_ALLOWED_ACE_TYPE, 
-                            "Invalid ACE type %d\n", paaa->Header.AceType); 
+                    ok(paaa->Header.AceType == ACCESS_ALLOWED_ACE_TYPE,
+                            "Invalid ACE type %d\n", paaa->Header.AceType);
                     ok(paaa->Header.AceFlags == 0, "Invalid ACE flags %x\n", paaa->Header.AceFlags);
                     ok(paaa->Mask == GENERIC_ALL, "Invalid ACE mask %x\n", paaa->Mask);
 
                     ok(GetAce(pAcl, 1, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE, 
-                            "Invalid ACE type %d\n", paaa->Header.AceType); 
+                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE,
+                            "Invalid ACE type %d\n", paaa->Header.AceType);
                     /* first one of two ACEs generated from inheritable entry - without inheritance */
                     ok(paaa->Header.AceFlags == 0, "Invalid ACE flags %x\n", paaa->Header.AceFlags);
                     ok(paaa->Mask == GENERIC_WRITE, "Invalid ACE mask %x\n", paaa->Mask);
 
                     ok(GetAce(pAcl, 2, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE, 
-                            "Invalid ACE type %d\n", paaa->Header.AceType); 
+                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE,
+                            "Invalid ACE type %d\n", paaa->Header.AceType);
                     /* second ACE - with inheritance */
                     ok(paaa->Header.AceFlags == MY_INHERITANCE,
                             "Invalid ACE flags %x\n", paaa->Header.AceFlags);

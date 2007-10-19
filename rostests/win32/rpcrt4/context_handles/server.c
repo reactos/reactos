@@ -33,7 +33,7 @@ void main()
 
 	status = RpcServerUseProtseqEp("ncacn_np", 20, "\\pipe\\hello", NULL);
 
-	if (status) 
+	if (status)
 	{
 		printf("RpcServerUseProtseqEp %x\n", status);
 		exit(status);
@@ -41,7 +41,7 @@ void main()
 
 	status = RpcServerRegisterIf(hello_v1_0_s_ifspec, NULL, NULL);
 
-	if (status) 
+	if (status)
 	{
 		printf("RpcServerRegisterIf %x\n", status);
 	exit(status);
@@ -49,7 +49,7 @@ void main()
 
 	status = RpcServerListen(1, 20, FALSE);
 
-	if (status) 
+	if (status)
 	{
 		printf("RpcServerListen %x", status);
 		exit(status);
@@ -71,7 +71,7 @@ void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
 	return(malloc(len));
 }
- 
+
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
 	free(ptr);

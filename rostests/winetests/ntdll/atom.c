@@ -25,7 +25,7 @@
 #include <stdarg.h>
 
 #include "ntstatus.h"
-/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro 
+/* Define WIN32_NO_STATUS so MSVC does not give us duplicate macro
  * definition errors when we get to winnt.h
  */
 #define WIN32_NO_STATUS
@@ -404,7 +404,7 @@ static void test_NtRefPinAtom(void)
         res = pRtlQueryAtomInAtomTable(AtomTable, Atom, &RefCount, &PinCount, NULL, NULL);
         ok(!res, "Unable to query atom in atom table, retval: %lx\n", res);
         ok(PinCount == 0, "Expected pincount 0 but got %lx\n", PinCount);
-        ok(RefCount == 3, "Expected refcount 3 but got %lx\n", RefCount); 
+        ok(RefCount == 3, "Expected refcount 3 but got %lx\n", RefCount);
 
         res = pRtlPinAtomInAtomTable(AtomTable, Atom);
         ok(!res, "Unable to pin atom in atom table, retval: %lx\n", res);

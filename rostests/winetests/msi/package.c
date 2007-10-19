@@ -724,7 +724,7 @@ static void test_settargetpath(void)
     query_file_path( hpkg, "[#TestFile]", buffer );
     ok( !lstrcmp(buffer, "C:\\one\\two\\TestDir\\testfile.txt"),
         "Expected C:\\one\\two\\TestDir\\testfile.txt, got %s\n", buffer );
-    
+
     MsiCloseHandle( hpkg );
 }
 
@@ -2071,7 +2071,7 @@ static void test_states(void)
     ok( r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r );
     ok( state == INSTALLSTATE_ABSENT, "Expected INSTALLSTATE_ABSENT, got %d\n", state);
     ok( action == INSTALLSTATE_LOCAL, "Expected INSTALLSTATE_LOCAL, got %d\n", action);
-    
+
     MsiCloseHandle( hpkg );
 }
 
@@ -2254,7 +2254,7 @@ static void test_removefiles(void)
     ok( r == ERROR_SUCCESS, "remove files failed\n");
 
     ok(DeleteFileA("hydrogen.txt"), "Expected hydrogen.txt to exist\n");
-    ok(DeleteFileA("lithium.txt"), "Expected lithium.txt to exist\n");    
+    ok(DeleteFileA("lithium.txt"), "Expected lithium.txt to exist\n");
     ok(DeleteFileA("beryllium.txt"), "Expected beryllium.txt to exist\n");
     ok(DeleteFileA("carbon.txt"), "Expected carbon.txt to exist\n");
     ok(DeleteFileA("helium.txt"), "Expected helium.txt to exist\n");

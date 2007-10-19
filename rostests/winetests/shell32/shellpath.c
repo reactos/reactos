@@ -43,7 +43,7 @@
 #ifndef PT_GUID
 #define PT_GUID       0x1f /* no path */
 #endif
-#ifndef PT_DRIVE 
+#ifndef PT_DRIVE
 #define PT_DRIVE      0x23 /* has path */
 #endif
 #ifndef PT_DRIVE2
@@ -800,7 +800,7 @@ static void doChild(const char *arg)
  */
 static void testNonExistentPath(void)
 {
-    static const char userShellFolders[] = 
+    static const char userShellFolders[] =
      "Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\User Shell Folders";
     char originalPath[MAX_PATH], modifiedPath[MAX_PATH];
     HKEY key;

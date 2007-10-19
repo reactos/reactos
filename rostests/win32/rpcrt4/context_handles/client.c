@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <ctype.h>
-#include "ctx.h" 
- 
-#define TYPE_FORMAT_STRING_SIZE   23                                
-#define PROC_FORMAT_STRING_SIZE   21                                
-#define TRANSMIT_AS_TABLE_SIZE    0            
-#define WIRE_MARSHAL_TABLE_SIZE   0   
+#include "ctx.h"
+
+#define TYPE_FORMAT_STRING_SIZE   23
+#define PROC_FORMAT_STRING_SIZE   21
+#define TRANSMIT_AS_TABLE_SIZE    0
+#define WIRE_MARSHAL_TABLE_SIZE   0
 
 typedef struct _MIDL_TYPE_FORMAT_STRING
     {
@@ -29,23 +29,23 @@ extern const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString;
  *****************************************************************/
 
 
-void m_CtxOpen( 
+void m_CtxOpen(
     /* [out] */ PCTXTYPE __RPC_FAR *pphContext,
     /* [in] */ long Value)
 {
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
 
 	char *ctx, *buf;
 	int i;
-	
+
 	printf("\n*******************************************************************\n");
 	printf("**** CtxOpen()                                                  ***\n");
 	printf("*******************************************************************\n\n");
-    
+
     if(!pphContext)
         {
         RpcRaiseException(RPC_X_NULL_REF_POINTER);
@@ -57,18 +57,18 @@ void m_CtxOpen(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           0);
-        
-        
+
+
         _Handle = hBinding;
-        
-        
+
+
         _StubMsg.BufferLength = 4U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         *(( long __RPC_FAR * )_StubMsg.Buffer)++ = Value;
-        
+
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
             NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[0] );
 
@@ -77,74 +77,74 @@ void m_CtxOpen(
         for(buf = _StubMsg.Buffer, i = 0; i < _StubMsg.RpcMsg->BufferLength; i++)
         	printf("0x%x, ", buf[i] & 0x0FF);
         printf("\n\n");
-        
+
         *pphContext = (void *)0;
         NdrClientContextUnmarshall(
                               ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                               ( NDR_CCONTEXT __RPC_FAR * )pphContext,
                               _Handle);
-        
+
         ctx = (char*)*pphContext;
         printf("\nNdrClientContextUnmarshall returned: handle=0x%p\n", ctx);
         printf("00: 0x%x <- obviously pointer to binding handle copyed from _Handle\n", *((int*)ctx));
         ctx+=4;
         printf("04: 0x%x <- unknown field\n", *((int*)ctx));
         printf("08: ");
-        
+
         for(ctx+=4, i = 0; i < 20; i++)
         	printf("0x%x,", *(ctx+i) & 0x0FF); printf(" <- ndr 20 bytes\n\n");
-        	
+
         printf("Buflen=%d, Buffer: ", _StubMsg.BufferLength);
         for(buf = _StubMsg.BufferStart; buf < _StubMsg.BufferEnd; buf++)
         	printf("0x%x,", *buf & 0x0FF);
         printf("\n");
-        
-        
+
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
-void m_CtxOpen2( 
+void m_CtxOpen2(
     /* [out] */ PCTXTYPE __RPC_FAR *pphContext,
     /* [in] */ long Value)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
-    
+
     char buf[255];
-    
+
         NdrClientInitializeNew(
                           ( PRPC_MESSAGE  )&_RpcMessage,
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           0);
-        
-        
+
+
         _Handle = hBinding;
-        
-        
+
+
         _StubMsg.BufferLength = 4U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         *(( long __RPC_FAR * )_StubMsg.Buffer)++ = Value;
-        
+
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
             NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[0] );
-        
+
         *pphContext = (void *)0;
-        
+
         RpcTryExcept
         {
         NdrClientContextUnmarshall(
@@ -157,9 +157,9 @@ void m_CtxOpen2(
         	printf("NdrClientContextUnmarshall reported exception = %d\n", RpcExceptionCode());
         }
         RpcEndExcept
-        
-        
-        
+
+
+
         RpcTryExcept
         {
         NdrClientContextUnmarshall(
@@ -172,8 +172,8 @@ void m_CtxOpen2(
         	printf("NdrClientContextUnmarshall reported exception = %d\n", RpcExceptionCode());
         }
         RpcEndExcept
-        
-                            
+
+
         RpcTryExcept
         {
         NdrClientContextMarshall(
@@ -186,7 +186,7 @@ void m_CtxOpen2(
         	printf("NdrClientContextMarshall reported exception = %d\n", RpcExceptionCode());
         }
         RpcEndExcept
-        
+
         RpcTryExcept
         {
 		NDRCContextUnmarshall( NULL, _Handle, buf, _RpcMessage.DataRepresentation  );
@@ -197,29 +197,29 @@ void m_CtxOpen2(
         }
         RpcEndExcept
 
-        
+
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
-    
+
+
 }
 
-void m_CtxHello( 
+void m_CtxHello(
     /* [in] */ PCTXTYPE phContext)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
-    
+
     char *buf;
     int i;
-    
+
 	printf("\n*******************************************************************\n");
 	printf("**** CtxHello()                                                 ***\n");
 	printf("*******************************************************************\n\n");
-    
+
     RpcTryFinally
         {
         NdrClientInitializeNew(
@@ -227,21 +227,21 @@ void m_CtxHello(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           1);
-        
-        
+
+
         if(phContext != 0)
             {
             _Handle = NDRCContextBinding(( NDR_CCONTEXT  )phContext);;
-            
+
             }
         else
             {
             RpcRaiseException(RPC_X_SS_IN_NULL_CONTEXT);
             }
-        
+
         _StubMsg.BufferLength = 20U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         NdrClientContextMarshall(
                             ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                             ( NDR_CCONTEXT  )phContext,
@@ -250,36 +250,36 @@ void m_CtxHello(
         for(buf = _StubMsg.Buffer, i = 0; i < _StubMsg.BufferLength; i++)
         	printf("0x%x, ", buf[i] & 0x0FF);
         printf("\n\n");
-        
+
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
 
-void m_CtxClose( 
+void m_CtxClose(
     /* [out][in] */ PCTXTYPE __RPC_FAR *pphContext)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
     char *buf;
     int i;
-	
+
 	printf("\n*******************************************************************\n");
 	printf("**** CtxClose()                                                 ***\n");
 	printf("*******************************************************************\n\n");
-	
+
     if(!pphContext)
         {
         RpcRaiseException(RPC_X_NULL_REF_POINTER);
@@ -291,50 +291,50 @@ void m_CtxClose(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           2);
-        
-        
+
+
         if(*pphContext != 0)
             {
             _Handle = NDRCContextBinding(( NDR_CCONTEXT  )*pphContext);;
-            
+
             }
-        
+
         _StubMsg.BufferLength = 20U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         NdrClientContextMarshall(
                             ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                             ( NDR_CCONTEXT  )*pphContext,
                             0);
-        
+
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
             NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[14] );
-        
-        
+
+
       printf("Before NdrClientContextUnmarshall: Buflen=%d\nBuffer: ",  _StubMsg.BufferLength );
         for(buf = _StubMsg.Buffer, i = 0; i < _StubMsg.BufferLength; i++)
         	printf("0x%x, ", buf[i] & 0x0FF);
         printf("\n\n");
-        
+
         NdrClientContextUnmarshall(
                               ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                               ( NDR_CCONTEXT __RPC_FAR * )pphContext,
                               _Handle);
-                            
- 
+
+
 		printf("\nNdrClientContextUnmarshall returned: handle=0x%p\n", *pphContext);
-               
-        
+
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
 int interactive = 0;
@@ -356,10 +356,10 @@ void main(int argc, char **argv)
 	char *pszStringBinding = NULL;
 	RPC_BINDING_HANDLE Handle =	0;
 	char buffer[255];
-	
+
 	int test_num = 0;
 	int test_value = 31337;
-	
+
 	if(argc<2)
 	{
 		printf("USAGE: client.exe <test_number> [test_value] [interactive]\n"
@@ -369,24 +369,24 @@ void main(int argc, char **argv)
 			"2. Context rundown routine");
 		return;
 	}
-	
+
 	test_num = atoi(argv[1]);
 	if(argc>2) test_value = atoi(argv[2]);
 	if(argc>3) interactive = 1;
 
-	status = RpcStringBindingCompose(NULL, 
-		"ncacn_np", 
-		NULL, 
-		"\\pipe\\hello", 
-		NULL, 
+	status = RpcStringBindingCompose(NULL,
+		"ncacn_np",
+		NULL,
+		"\\pipe\\hello",
+		NULL,
 		&pszStringBinding);
 
-	if (status) 
+	if (status)
 	{
 		printf("RpcStringBindingCompose %x\n", status);
 		exit(status);
 	}
-	
+
 	status = RpcBindingFromStringBinding(pszStringBinding, &hBinding);
 
 	if (status)
@@ -395,8 +395,8 @@ void main(int argc, char **argv)
 		exit(status);
 	}
 
-	RpcStringFree(&pszStringBinding); 
-	
+	RpcStringFree(&pszStringBinding);
+
 	switch(test_num)
 	{
 	case 0:
@@ -417,10 +417,10 @@ void main(int argc, char **argv)
 		{
 			 printf("NDRCContextBinding(NULL) reported exception = %d\n", RpcExceptionCode());
 		}
-		RpcEndExcept	
-		
+		RpcEndExcept
+
 		m_CtxOpen2(&hContext, test_value);
-		
+
 		/////////////////////////////////////////////////////////////////////////////////////////
 		RpcTryExcept
 		{
@@ -431,7 +431,7 @@ void main(int argc, char **argv)
 		{
 			 printf("NDRCContextMarshall(NULL) reported exception = %d\n", RpcExceptionCode());
 		}
-		RpcEndExcept	
+		RpcEndExcept
 		/////////////////////////////////////////////////////////////////////////////////////////
 		break;
 	case 2:
@@ -450,7 +450,7 @@ void __RPC_FAR * __RPC_USER midl_user_allocate(size_t len)
 {
 	return(malloc(len));
 }
- 
+
 void __RPC_USER midl_user_free(void __RPC_FAR * ptr)
 {
 	free(ptr);

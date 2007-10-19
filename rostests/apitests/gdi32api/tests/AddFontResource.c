@@ -16,7 +16,7 @@ Test_AddFontResourceA(PTESTINFO pti)
 
     RtlZeroMemory(szFileNameA,MAX_PATH);
 
-    /* 
+    /*
      * Start testing Ansi version
      *
      */

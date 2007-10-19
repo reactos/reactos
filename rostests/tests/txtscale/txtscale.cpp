@@ -6,7 +6,7 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
@@ -23,18 +23,18 @@
 
 HINSTANCE hInst;
 const char* WndClassName = "GMainWnd";
-LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam, 
+LRESULT CALLBACK MainWndProc(HWND HWnd, UINT Msg, WPARAM WParam,
    LPARAM LParam);
 
 
-int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR, 
+int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR,
    int nCmdShow)
 {
    hInst = hInstance;
 
    WNDCLASS wc;
    memset(&wc, 0, sizeof(WNDCLASS));
-    
+
    wc.style = CS_HREDRAW | CS_VREDRAW;
    wc.lpszClassName = WndClassName;
    wc.lpfnWndProc = MainWndProc;
@@ -46,15 +46,15 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR,
 
    if (RegisterClass(&wc))
    {
-      HWND hWnd = 
+      HWND hWnd =
          CreateWindow(
             WndClassName, TEXT("Scaled Text Demo"),
-            WS_OVERLAPPEDWINDOW | WS_CAPTION | 
+            WS_OVERLAPPEDWINDOW | WS_CAPTION |
             WS_VISIBLE | WS_CLIPCHILDREN,
             CW_USEDEFAULT, CW_USEDEFAULT, 800, 300,
             NULL, NULL, hInst, NULL
             );
-                                 
+
       if (hWnd)
       {
          ShowWindow(hWnd, nCmdShow);
@@ -65,10 +65,10 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE, LPTSTR,
          {
              TranslateMessage(&msg);
              DispatchMessage(&msg);
-         }      
+         }
       }
     }
-    return 0;                                                               
+    return 0;
 }
 //-------------------------------------------------------------------------
 
@@ -78,7 +78,7 @@ HFONT hTTFont = NULL;
 double scale = 0.0;
 LPCSTR pText = TEXT("The Scaled Text!");
 
-LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam, 
+LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
    LPARAM lParam)
 {
    switch (msg)
@@ -91,13 +91,13 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
 
          InitCommonControlsEx(&icx);
 
-         hTrackBar = 
+         hTrackBar =
             CreateWindow(
-               TRACKBAR_CLASS, "", 
-               TBS_HORZ | TBS_BOTH | TBS_AUTOTICKS | 
+               TRACKBAR_CLASS, "",
+               TBS_HORZ | TBS_BOTH | TBS_AUTOTICKS |
                TBS_FIXEDLENGTH | TBS_ENABLESELRANGE |
-               WS_CHILD | WS_VISIBLE, 
-               10, 260, 375, 40, 
+               WS_CHILD | WS_VISIBLE,
+               10, 260, 375, 40,
                hWnd, NULL, hInst, NULL
                );
 
@@ -136,9 +136,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
          break;
       }
       case WM_ERASEBKGND:
-      {  
+      {
          LRESULT res = DefWindowProc(hWnd, msg, wParam, lParam);
-                       
+
          HDC hDC = reinterpret_cast<HDC>(wParam);
          HFONT hOldFont = static_cast<HFONT>(
             SelectObject(hDC, hTTFont)
@@ -182,8 +182,8 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                            );
                         pPEnds[iPoint].y = static_cast<LONG>(
                            scale * pPEnds[iPoint].y + 0.5
-                           );                           
-                     }  
+                           );
+                     }
 
                      for (iPoint = 0; iPoint < num_points; ++iPoint)
                      {
@@ -227,9 +227,9 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
                   delete [] pPEnds;
                   throw;
                }
-               // clean up 
-               delete [] pTypes; 
-               delete [] pPEnds; 
+               // clean up
+               delete [] pTypes;
+               delete [] pPEnds;
             }
             // ...
          }
@@ -243,11 +243,11 @@ LRESULT CALLBACK MainWndProc(HWND hWnd, UINT msg, WPARAM wParam,
       case WM_SIZE:
       {
          MoveWindow(
-            hTrackBar, 
+            hTrackBar,
             0, HIWORD(lParam) - 40, LOWORD(lParam), 40,
             false
             );
-         break;         
+         break;
       }
       case WM_DESTROY:
       {

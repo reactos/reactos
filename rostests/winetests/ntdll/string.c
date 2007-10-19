@@ -1069,7 +1069,7 @@ static void test_wtoi64(void)
 }
 
 static void test_wcsfuncs(void)
-{       
+{
     static const WCHAR testing[] = {'T','e','s','t','i','n','g',0};
     ok (p_wcschr(testing,0)!=NULL, "wcschr Not finding terminating character\n");
     ok (p_wcsrchr(testing,0)!=NULL, "wcsrchr Not finding terminating character\n");

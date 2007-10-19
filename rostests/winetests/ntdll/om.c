@@ -206,7 +206,7 @@ static void test_name_collisions(void)
     DIR_TEST_OPEN_SUCCESS(&dir)
     pRtlCreateUnicodeStringFromAsciiz(&str, "om.c-test");
     InitializeObjectAttributes(&attr, &str, OBJ_OPENIF, dir, NULL);
-    
+
     h = CreateMutexA(NULL, FALSE, "om.c-test");
     ok(h != 0, "CreateMutexA failed got ret=%p (%ld)\n", h, GetLastError());
     status = pNtCreateMutant(&h1, GENERIC_ALL, &attr, FALSE);
@@ -245,7 +245,7 @@ static void test_name_collisions(void)
     pNtClose(h);
     pNtClose(h1);
     pNtClose(h2);
-    
+
     h = CreateWaitableTimerA(NULL, TRUE, "om.c-test");
     ok(h != 0, "CreateWaitableTimerA failed got ret=%p (%ld)\n", h, GetLastError());
     status = pNtCreateTimer(&h1, GENERIC_ALL, &attr, NotificationTimer);

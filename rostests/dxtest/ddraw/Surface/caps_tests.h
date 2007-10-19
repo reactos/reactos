@@ -1,7 +1,7 @@
 /*
- * The following test cases have been generated automatically. Many of them might be 
- * redundant. Also some of them might fail on other other machines then the one I 
- * used (win xp, nvidea, 32 bit color deepth) - mbosma 
+ * The following test cases have been generated automatically. Many of them might be
+ * redundant. Also some of them might fail on other other machines then the one I
+ * used (win xp, nvidea, 32 bit color deepth) - mbosma
  *
  */
 

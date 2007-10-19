@@ -891,7 +891,7 @@ static void test_msiexport(void)
 
 static void test_longstrings(void)
 {
-    const char insert_query[] = 
+    const char insert_query[] =
         "INSERT INTO `strings` ( `id`, `val` ) VALUES('1', 'Z')";
     char *str;
     MSIHANDLE hdb = 0, hview = 0, hrec = 0;
@@ -905,7 +905,7 @@ static void test_longstrings(void)
     ok(r == ERROR_SUCCESS, "MsiOpenDatabase failed\n");
 
     /* create a table */
-    r = try_query( hdb, 
+    r = try_query( hdb,
         "CREATE TABLE `strings` ( `id` INT, `val` CHAR(0) PRIMARY KEY `id`)");
     ok(r == ERROR_SUCCESS, "query failed\n");
 
@@ -948,7 +948,7 @@ static void test_longstrings(void)
     MsiCloseHandle(hdb);
     DeleteFile(msifile);
 }
- 
+
 static void test_streamtable(void)
 {
     MSIHANDLE hdb = 0, rec;

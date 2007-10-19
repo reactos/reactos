@@ -60,19 +60,19 @@ static void test_usefeature(void)
     r = pMsiUseFeatureExA(NULL, "WORDVIEWFiles", -2, 1 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}",
                          NULL, -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{9085040-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{9085040-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{0085040-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{0085040-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 0 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 
-    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}", 
+    r = pMsiUseFeatureExA("{90850409-6000-11d3-8cfe-0150048383c9}",
                          "WORDVIEWFiles", -2, 1 );
     ok( r == INSTALLSTATE_INVALIDARG, "wrong return val\n");
 }
@@ -170,7 +170,7 @@ static void test_filehash(void)
     r = pMsiGetFileHashA(name, 0, &hash);
     ok( r == ERROR_FILE_NOT_FOUND, "wrong error %d\n", r);
 
-    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE, 0, NULL, 
+    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE, 0, NULL,
                 CREATE_ALWAYS, FILE_ATTRIBUTE_ARCHIVE, NULL);
     ok(handle != INVALID_HANDLE_VALUE, "failed to create file\n");
 
@@ -201,11 +201,11 @@ static void test_filehash(void)
 START_TEST(msi)
 {
     HMODULE hmod = GetModuleHandle("msi.dll");
-    pMsiUseFeatureExA = (fnMsiUseFeatureExA) 
+    pMsiUseFeatureExA = (fnMsiUseFeatureExA)
         GetProcAddress(hmod, "MsiUseFeatureExA");
-    pMsiOpenPackageExA = (fnMsiOpenPackageExA) 
+    pMsiOpenPackageExA = (fnMsiOpenPackageExA)
         GetProcAddress(hmod, "MsiOpenPackageExA");
-    pMsiOpenPackageExW = (fnMsiOpenPackageExW) 
+    pMsiOpenPackageExW = (fnMsiOpenPackageExW)
         GetProcAddress(hmod, "MsiOpenPackageExW");
     pMsiGetComponentPathA = (fnMsiGetComponentPathA)
         GetProcAddress(hmod, "MsiGetComponentPathA" );

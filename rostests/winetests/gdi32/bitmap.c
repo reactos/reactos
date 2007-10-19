@@ -127,7 +127,7 @@ static void test_createdibitmap(void)
     bmih.biPlanes = 1;
     bmih.biBitCount = 32;
     bmih.biCompression = BI_RGB;
- 
+
     /* First create an un-initialised bitmap.  The depth of the bitmap
        should match that of the hdc and not that supplied in bmih.
     */
@@ -137,7 +137,7 @@ static void test_createdibitmap(void)
     ok(hbm != NULL, "CreateDIBitmap failed\n");
     test_bitmap_info(hbm, screen_depth, &bmih);
     DeleteObject(hbm);
-    
+
     /* Then 16 */
     bmih.biBitCount = 16;
     hbm = CreateDIBitmap(hdc, &bmih, 0, NULL, NULL, 0);
@@ -161,14 +161,14 @@ static void test_createdibitmap(void)
     ok(hbm != NULL, "CreateDIBitmap failed\n");
     test_bitmap_info(hbm, 1, &bmih);
     DeleteObject(hbm);
-    
+
     /* Then 16 */
     bmih.biBitCount = 16;
     hbm = CreateDIBitmap(hdcmem, &bmih, 0, NULL, NULL, 0);
     ok(hbm != NULL, "CreateDIBitmap failed\n");
     test_bitmap_info(hbm, 1, &bmih);
     DeleteObject(hbm);
-    
+
     /* Then 1 */
     bmih.biBitCount = 1;
     hbm = CreateDIBitmap(hdcmem, &bmih, 0, NULL, NULL, 0);
@@ -187,14 +187,14 @@ static void test_createdibitmap(void)
     ok(hbm != NULL, "CreateDIBitmap failed\n");
     test_bitmap_info(hbm, screen_depth, &bmih);
     DeleteObject(hbm);
-    
+
     /* Then 16 */
     bmih.biBitCount = 16;
     hbm = CreateDIBitmap(hdcmem, &bmih, 0, NULL, NULL, 0);
     ok(hbm != NULL, "CreateDIBitmap failed\n");
     test_bitmap_info(hbm, screen_depth, &bmih);
     DeleteObject(hbm);
-    
+
     /* Then 1 */
     bmih.biBitCount = 1;
     hbm = CreateDIBitmap(hdcmem, &bmih, 0, NULL, NULL, 0);
@@ -214,7 +214,7 @@ static void test_createdibitmap(void)
         test_bitmap_info(hbm, 1, &bmih);
         DeleteObject(hbm);
     }
-    
+
     ReleaseDC(0, hdc);
 }
 
@@ -451,8 +451,8 @@ static void test_dibsections(void)
     ok(dibsec.dsBmih.biClrUsed == 2,
         "created DIBSection: wrong biClrUsed field: %lu, should be: %u\n", dibsec.dsBmih.biClrUsed, 2);
 
-    /* Test if the old BITMAPCOREINFO structure is supported */    
-        
+    /* Test if the old BITMAPCOREINFO structure is supported */
+
     pbci->bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
     pbci->bmciHeader.bcBitCount = 0;
 
@@ -572,9 +572,9 @@ static void test_dibsections(void)
     oldbm = SelectObject(hdcmem, hdib);
 
     for (i = 0; i < 256; i++) {
-        test_color(hdcmem, DIBINDEX(i), 
+        test_color(hdcmem, DIBINDEX(i),
             RGB(pbmi->bmiColors[i].rgbRed, pbmi->bmiColors[i].rgbGreen, pbmi->bmiColors[i].rgbBlue), 0, 0);
-        test_color(hdcmem, PALETTERGB(pbmi->bmiColors[i].rgbRed, pbmi->bmiColors[i].rgbGreen, pbmi->bmiColors[i].rgbBlue), 
+        test_color(hdcmem, PALETTERGB(pbmi->bmiColors[i].rgbRed, pbmi->bmiColors[i].rgbGreen, pbmi->bmiColors[i].rgbBlue),
             RGB(pbmi->bmiColors[i].rgbRed, pbmi->bmiColors[i].rgbGreen, pbmi->bmiColors[i].rgbBlue), 0, 0);
     }
 
@@ -705,19 +705,19 @@ static void test_dibsections(void)
     ret = GetDIBColorTable(hdcmem, 0, 256, rgb);
     ok(ret == 256, "GetDIBColorTable returned %d\n", ret);
     for (i = 0; i < 256; i++) {
-        ok(rgb[i].rgbRed == plogpal->palPalEntry[i].peRed && 
-            rgb[i].rgbBlue == plogpal->palPalEntry[i].peBlue && 
-            rgb[i].rgbGreen == plogpal->palPalEntry[i].peGreen, 
+        ok(rgb[i].rgbRed == plogpal->palPalEntry[i].peRed &&
+            rgb[i].rgbBlue == plogpal->palPalEntry[i].peBlue &&
+            rgb[i].rgbGreen == plogpal->palPalEntry[i].peGreen,
             "GetDIBColorTable returns table %d: r%02x g%02x b%02x res%02x\n",
             i, rgb[i].rgbRed, rgb[i].rgbGreen, rgb[i].rgbBlue, rgb[i].rgbReserved);
     }
 
     for (i = 0; i < 256; i++) {
-        test_color(hdcmem, DIBINDEX(i), 
+        test_color(hdcmem, DIBINDEX(i),
             RGB(plogpal->palPalEntry[i].peRed, plogpal->palPalEntry[i].peGreen, plogpal->palPalEntry[i].peBlue), 0, 0);
-        test_color(hdcmem, PALETTEINDEX(i), 
+        test_color(hdcmem, PALETTEINDEX(i),
             RGB(plogpal->palPalEntry[i].peRed, plogpal->palPalEntry[i].peGreen, plogpal->palPalEntry[i].peBlue), 0, 0);
-        test_color(hdcmem, PALETTERGB(plogpal->palPalEntry[i].peRed, plogpal->palPalEntry[i].peGreen, plogpal->palPalEntry[i].peBlue), 
+        test_color(hdcmem, PALETTERGB(plogpal->palPalEntry[i].peRed, plogpal->palPalEntry[i].peGreen, plogpal->palPalEntry[i].peBlue),
             RGB(plogpal->palPalEntry[i].peRed, plogpal->palPalEntry[i].peGreen, plogpal->palPalEntry[i].peBlue), 0, 0);
     }
 
@@ -729,7 +729,7 @@ static void test_dibsections(void)
 
     DeleteDC(hdcmem);
     ReleaseDC(0, hdc);
-}    
+}
 
 void test_mono_dibsection(void)
 {
@@ -877,7 +877,7 @@ todo_wine {
     /*
      * Now a dib section with a strange colour map just for fun.  This behaves just like an inverted one.
      */
- 
+
     pbmi->bmiColors[0].rgbRed = 0xff;
     pbmi->bmiColors[0].rgbGreen = 0x0;
     pbmi->bmiColors[0].rgbBlue = 0x0;

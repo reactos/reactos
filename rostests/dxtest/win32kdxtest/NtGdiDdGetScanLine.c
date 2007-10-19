@@ -20,7 +20,7 @@ test_NtGdiDdGetScanLine(HANDLE hDirectDrawLocal)
 
     printf("Start testing of NtGdiDdGetScanLine\n");
     RtlZeroMemory(&puGetScanLineData,sizeof(DD_GETSCANLINEDATA));
-    
+
     retValue = OsThunkDdGetScanLine(NULL,NULL);
     testing_eq(retValue, DDHAL_DRIVER_HANDLED,fails,"1. NtGdiDdGetScanLine(NULL,NULL);\0");
 
@@ -33,7 +33,7 @@ test_NtGdiDdGetScanLine(HANDLE hDirectDrawLocal)
     testing_noteq(puGetScanLineData.ddRVal,DD_OK,fails,"4. NtGdiDdGetScanLine(hDirectDrawLocal,puGetScanLineData);\0");
     testing_eq(puGetScanLineData.dwScanLine,0,fails,"4. NtGdiDdGetScanLine(hDirectDrawLocal,puGetScanLineData);\0");
 
-    
+
     /* FIXME DDERR_VERTICALBLANKINPROGRESS test */
 
     show_status(fails, "NtGdiDdGetScanLine\0");

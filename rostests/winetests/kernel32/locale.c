@@ -801,14 +801,14 @@ static void test_CompareStringA(void)
 
     ret = lstrcmpA(NULL, "");
     ok (ret == -1, "lstrcmpA(NULL, \"\") should return -1, got %d\n", ret);
-  
+
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"EndDialog",-1,"_Property",-1);
     ok( ret == 3, "EndDialog vs _Property ... expected 3, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"osp_vba.sreg0070",-1,"_IEWWBrowserComp",-1);
     ok( ret == 3, "osp_vba.sreg0070 vs _IEWWBrowserComp ... expected 3, got %d\n", ret);
 
-    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"r",-1,"\\",-1); 
+    ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"r",-1,"\\",-1);
     ok( ret == 3, "r vs \\ ... expected 3, got %d\n", ret);
 
     ret = CompareStringA(LOCALE_SYSTEM_DEFAULT,0,"osp_vba.sreg0031", -1, "OriginalDatabase", -1 );

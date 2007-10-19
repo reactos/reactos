@@ -145,7 +145,7 @@ static void test_DrawTextCalcRect(void)
         ok( !(rect.left == rect.right && rect.bottom == rect.top),
                 "rectangle should NOT be empty.\n");
     }
-   
+
     SelectObject(hdc, hOldFont);
     ret = DeleteObject(hFont);
     ok( ret, "DeleteObject error %lu\n", GetLastError());
@@ -167,7 +167,7 @@ static void strfmt( char *str, char *strout)
             strout[j]='t';
         }
 }
-  
+
 
 #define TABTEST( tabval, tabcount, string, _exp) \
 { int i,x_act, x_exp; char strdisp[64];\
@@ -207,11 +207,11 @@ static void test_TabbedText(void)
     trace( "cx is %d cy is %d\n", cx, cy);
 
     align=1;
-    for( t=-1; t<=1; t++) { /* slightly adjust the 4 char tabstop, to 
+    for( t=-1; t<=1; t++) { /* slightly adjust the 4 char tabstop, to
                                catch the one off errors */
         tab =  (cx *4 + t);
         /* test the special case tabcount =1 and the general array (80 of tabs */
-        for( tabcount = 1; tabcount <= 8; tabcount +=7) { 
+        for( tabcount = 1; tabcount <= 8; tabcount +=7) {
             TABTEST( align * tab, tabcount, "\t", tab)
             TABTEST( align * tab, tabcount, "xxx\t", tab)
             TABTEST( align * tab, tabcount, "\tx", tab+cx)
@@ -225,11 +225,11 @@ static void test_TabbedText(void)
         }
     }
     align=-1;
-    for( t=-1; t<=1; t++) { /* slightly adjust the 4 char tabstop, to 
+    for( t=-1; t<=1; t++) { /* slightly adjust the 4 char tabstop, to
                                catch the one off errors */
         tab =  (cx *4 + t);
         /* test the special case tabcount =1 and the general array (8) of tabs */
-        for( tabcount = 1; tabcount <= 8; tabcount +=7) { 
+        for( tabcount = 1; tabcount <= 8; tabcount +=7) {
             TABTEST( align * tab, tabcount, "\t", tab)
             TABTEST( align * tab, tabcount, "xxx\t", tab)
             TABTEST( align * tab, tabcount, "\tx", tab)

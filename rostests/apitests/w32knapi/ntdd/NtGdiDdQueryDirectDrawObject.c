@@ -52,10 +52,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	/* Test ReactX */
 	hDirectDraw = (HANDLE) Syscall(L"NtGdiDdCreateDirectDrawObject", 1, &hdc);
 
-	RTEST(NtGdiDdQueryDirectDrawObject( NULL, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( NULL, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC) == FALSE);
 
@@ -70,10 +70,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puNumHeaps == NULL);
 	RTEST(puvmList == NULL);
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC) == FALSE);
 
@@ -89,10 +89,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RTEST(puvmList == NULL);
 
 	pHalInfo = &HalInfo;
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -124,11 +124,11 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 
 		/* Check the res */
 		RTEST(pHalInfo->vmiData.dwDisplayWidth == devmode.dmPelsWidth );
-		RTEST(pHalInfo->vmiData.dwDisplayHeight == devmode.dmPelsHeight ); 
-		/* FIXME 
+		RTEST(pHalInfo->vmiData.dwDisplayHeight == devmode.dmPelsHeight );
+		/* FIXME
 			RTEST(pHalInfo->vmiData.lDisplayPitch == 0x1700;
 		*/
-		RTEST(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT) ); 
+		RTEST(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT) );
 		ASSERT(pHalInfo->vmiData.ddpfDisplay.dwSize == sizeof(DDPIXELFORMAT));
 
 		/* Fail on 8bit screen deep */
@@ -159,18 +159,18 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 		/* the primary display address */
 		/* test see if it in kmode memory or not */
 		RTEST(pHalInfo->vmiData.pvPrimary != 0 );
-		
+
 		/* Test see if we got any hardware acclartions for 2d or 3d */
 		//RTEST(pHalInfo->ddCaps.dwSize == sizeof(DDCORECAPS));
 
-		/* Testing see if we got any hw support for 
-		 * This test can fail on video card that does not support 2d/overlay/3d 
+		/* Testing see if we got any hw support for
+		 * This test can fail on video card that does not support 2d/overlay/3d
 		 */
 		RTEST( pHalInfo->ddCaps.dwCaps != 0);
 		RTEST( pHalInfo->ddCaps.ddsCaps.dwCaps != 0);
 
 		/* if this fail we do not have a dx driver install acodring ms, some version of windows it
-		 * is okay this fail and drv does then only support basic dx 
+		 * is okay this fail and drv does then only support basic dx
 		 */
 		RTEST( (pHalInfo->dwFlags & (DDHALINFO_GETDRIVERINFOSET | DDHALINFO_GETDRIVERINFO2)) != 0 );
 
@@ -191,10 +191,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	pCallBackFlags = CallBackFlags;
 	RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -225,10 +225,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RtlZeroMemory(pHalInfo,sizeof(DD_HALINFO));
 	RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -266,10 +266,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RtlZeroMemory(pCallBackFlags,sizeof(DWORD)*3);
 	RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -309,10 +309,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RtlZeroMemory(puD3dCallbacks,sizeof(D3DNTHAL_CALLBACKS));
 	RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_CALLBACKS));
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -354,10 +354,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
 	RtlZeroMemory(&D3dBufferCallbacks,sizeof(DD_D3DBUFCALLBACKS));
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -408,10 +408,10 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 	RtlZeroMemory(puD3dDriverData,sizeof(D3DNTHAL_GLOBALDRIVERDATA));
 	RtlZeroMemory(&D3dBufferCallbacks,sizeof(DD_D3DBUFCALLBACKS));
 
-	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo, 
-										pCallBackFlags, puD3dCallbacks, 
-										puD3dDriverData, puD3dBufferCallbacks, 
-										puD3dTextureFormats, puNumHeaps, 
+	RTEST(NtGdiDdQueryDirectDrawObject( hDirectDraw, pHalInfo,
+										pCallBackFlags, puD3dCallbacks,
+										puD3dDriverData, puD3dBufferCallbacks,
+										puD3dTextureFormats, puNumHeaps,
 										puvmList, puNumFourCC,
 										puFourCC)== FALSE);
 	RTEST(pHalInfo != NULL);
@@ -445,8 +445,8 @@ Test_NtGdiDdQueryDirectDrawObject(PTESTINFO pti)
 
 
 
-	/* Todo 
-	* adding test for 
+	/* Todo
+	* adding test for
 	* puD3dCallbacks
 	* puD3dDriverData
 	* puD3dBufferCallbacks

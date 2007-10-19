@@ -34,7 +34,7 @@ static void test_null_source(void)
     len = WideCharToMultiByte(CP_ACP, 0, NULL, 0, NULL, 0, NULL, NULL);
     GLE = GetLastError();
     ok(!len && GLE == ERROR_INVALID_PARAMETER,
-        "WideCharToMultiByte returned %d with GLE=%ld (expected 0 with ERROR_INVALID_PARAMETER)\n", 
+        "WideCharToMultiByte returned %d with GLE=%ld (expected 0 with ERROR_INVALID_PARAMETER)\n",
         len, GLE);
 }
 

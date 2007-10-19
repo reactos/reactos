@@ -59,7 +59,7 @@ static void test_query_basic(void)
     ULONG ReturnLength;
     SYSTEM_BASIC_INFORMATION sbi;
 
-    /* This test also covers some basic parameter testing that should be the same for 
+    /* This test also covers some basic parameter testing that should be the same for
      * every information class
     */
 
@@ -149,7 +149,7 @@ static void test_query_timeofday(void)
     } SYSTEM_TIMEOFDAY_INFORMATION_PRIVATE, *PSYSTEM_TIMEOFDAY_INFORMATION_PRIVATE;
 
     SYSTEM_TIMEOFDAY_INFORMATION_PRIVATE sti;
-  
+
     /*  The struct size for NT (32 bytes) and Win2K/XP (48 bytes) differ.
      *
      *  Windows 2000 and XP return STATUS_INFO_LENGTH_MISMATCH if the given buffer size is greater
@@ -167,7 +167,7 @@ static void test_query_timeofday(void)
     if (status == STATUS_INFO_LENGTH_MISMATCH)
     {
         trace("Windows version is NT, we have to cater for differences with W2K/WinXP\n");
- 
+
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, 0, &ReturnLength);
         ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08lx\n", status);
         ok( 0 == ReturnLength, "ReturnLength should be 0, it is (%ld)\n", ReturnLength);
@@ -191,17 +191,17 @@ static void test_query_timeofday(void)
         ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
         ok( 24 == ReturnLength, "ReturnLength should be 24, it is (%ld)\n", ReturnLength);
         ok( 0xdeadbeef == sti.uCurrentTimeZoneId, "This part of the buffer should not have been filled\n");
-    
+
         sti.uCurrentTimeZoneId = 0xdeadbeef;
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, 32, &ReturnLength);
         ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
         ok( 32 == ReturnLength, "ReturnLength should be 32, it is (%ld)\n", ReturnLength);
         ok( 0xdeadbeef != sti.uCurrentTimeZoneId, "Buffer should have been partially filled\n");
-    
+
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, 49, &ReturnLength);
         ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08lx\n", status);
         ok( 0 == ReturnLength, "ReturnLength should be 0, it is (%ld)\n", ReturnLength);
-    
+
         status = pNtQuerySystemInformation(SystemTimeOfDayInformation, &sti, sizeof(sti), &ReturnLength);
         ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
         ok( sizeof(sti) == ReturnLength, "Inconsistent length (%d) <-> (%ld)\n", sizeof(sti), ReturnLength);
@@ -250,7 +250,7 @@ static void test_query_process(void)
         status = pNtQuerySystemInformation(SystemProcessInformation, spi, SystemInformationLength, &ReturnLength);
 
         if (status != STATUS_INFO_LENGTH_MISMATCH) break;
-        
+
         spi = HeapReAlloc(GetProcessHeap(), 0, spi , SystemInformationLength *= 2);
     }
 
@@ -278,11 +278,11 @@ static void test_query_process(void)
     if (is_nt) trace("Windows version is NT, we will skip thread tests\n");
 
     /* Check if we have some return values
-     * 
+     *
      * On windows there will be several processes running (Including the always present Idle and System)
      * On wine we only have one (if this test is the only wine process running)
     */
-    
+
     /* Loop through the processes */
 
     for (;;)
@@ -294,14 +294,14 @@ static void test_query_process(void)
         ok( spi->dwThreadCount > 0, "Expected some threads for this process, got 0\n");
 
         /* Loop through the threads, skip NT4 for now */
-        
+
         if (!is_nt)
         {
             DWORD j;
-            for ( j = 0; j < spi->dwThreadCount; j++) 
+            for ( j = 0; j < spi->dwThreadCount; j++)
             {
                 k++;
-                ok ( spi->ti[j].dwOwningPID == spi->dwProcessID, 
+                ok ( spi->ti[j].dwOwningPID == spi->dwProcessID,
                      "The owning pid of the thread (%ld) doesn't equal the pid (%ld) of the process\n",
                      spi->ti[j].dwOwningPID, spi->dwProcessID);
             }
@@ -344,7 +344,7 @@ static void test_query_procperf(void)
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
     ok( sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION) == ReturnLength,
         "Inconsistent length (%d) <-> (%ld)\n", sizeof(SYSTEM_PROCESSOR_PERFORMANCE_INFORMATION), ReturnLength);
- 
+
     /* Try it for all processors */
     status = pNtQuerySystemInformation(SystemProcessorPerformanceInformation, sppi, NeededLength, &ReturnLength);
     ok( status == STATUS_SUCCESS, "Expected STATUS_SUCCESS, got %08lx\n", status);
@@ -366,7 +366,7 @@ static void test_query_module(void)
     ULONG ModuleCount, i;
 
     ULONG SystemInformationLength = sizeof(SYSTEM_MODULE_INFORMATION);
-    SYSTEM_MODULE_INFORMATION* smi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength); 
+    SYSTEM_MODULE_INFORMATION* smi = HeapAlloc(GetProcessHeap(), 0, SystemInformationLength);
     SYSTEM_MODULE* sm;
 
     /* Request the needed length */
@@ -573,7 +573,7 @@ static void test_query_process_basic(void)
     status = pNtQueryInformationProcess(GetCurrentProcess(), ProcessBasicInformation, &pbi, sizeof(pbi) * 2, &ReturnLength);
     ok( status == STATUS_INFO_LENGTH_MISMATCH, "Expected STATUS_INFO_LENGTH_MISMATCH, got %08lx\n", status);
     ok( sizeof(pbi) == ReturnLength, "Inconsistent length (%d) <-> (%ld)\n", sizeof(pbi), ReturnLength);
-                                                                                                                                               
+
     /* Check if we have some return values */
     trace("ProcessID : %ld\n", pbi.UniqueProcessId);
     ok( pbi.UniqueProcessId > 0, "Expected a ProcessID > 0, got 0\n");
@@ -630,7 +630,7 @@ static void test_query_process_io(void)
         trace("ProcessIoCounters information class not supported, skipping tests\n");
         return;
     }
- 
+
     status = pNtQueryInformationProcess(NULL, ProcessIoCounters, NULL, sizeof(pii), NULL);
     ok( status == STATUS_ACCESS_VIOLATION || status == STATUS_INVALID_HANDLE,
         "Expected STATUS_ACCESS_VIOLATION or STATUS_INVALID_HANDLE(W2K3), got %08lx\n", status);

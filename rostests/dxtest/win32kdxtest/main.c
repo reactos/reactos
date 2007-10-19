@@ -14,11 +14,11 @@
 
 BOOL dumping_on =FALSE;
 
-/* we using d3d8thk.dll it is doing the real syscall in windows 2000 
+/* we using d3d8thk.dll it is doing the real syscall in windows 2000
  * in ReactOS and Windows XP and higher d3d8thk.dll it linking to
- * gdi32.dll instead doing syscall, gdi32.dll export DdEntry1-56 
- * and doing the syscall direcly. I did forget about it, This 
- * test program are now working on any Windows and ReactOS 
+ * gdi32.dll instead doing syscall, gdi32.dll export DdEntry1-56
+ * and doing the syscall direcly. I did forget about it, This
+ * test program are now working on any Windows and ReactOS
  * that got d3d8thk.dll
  */
 

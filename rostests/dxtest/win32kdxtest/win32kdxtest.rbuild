@@ -15,5 +15,5 @@
 	<file>NtGdiDdGetScanLine.c</file>
 	<file>NtGdiDdWaitForVerticalBlank.c</file>
 	<file>NtGdiDdCanCreateSurface.c</file>
-	<file>dump.c</file>	
+	<file>dump.c</file>
 </module>

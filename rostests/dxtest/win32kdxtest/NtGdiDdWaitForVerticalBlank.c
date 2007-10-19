@@ -19,7 +19,7 @@ test_NtGdiDdWaitForVerticalBlank(HANDLE hDirectDrawLocal)
     int fails=0;
     BOOL retValue=FALSE;
     DDHAL_WAITFORVERTICALBLANKDATA pDdWaitForVerticalBlankData;
-    
+
     RtlZeroMemory(&pDdWaitForVerticalBlankData,sizeof(DDHAL_WAITFORVERTICALBLANKDATA));
 
     retValue = OsThunkDdWaitForVerticalBlank(NULL,NULL);

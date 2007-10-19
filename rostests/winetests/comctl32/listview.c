@@ -43,7 +43,7 @@ static void test_images(void)
     r = ImageList_Add(himl, hbmp, 0);
     ok(r == 0, "should be zero\n");
 
-    hwnd = CreateWindowEx(0, "SysListView32", "foo", LVS_OWNERDRAWFIXED, 
+    hwnd = CreateWindowEx(0, "SysListView32", "foo", LVS_OWNERDRAWFIXED,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 
@@ -101,7 +101,7 @@ static void test_checkboxes(void)
                 text2[] = "Text2",
                 text3[] = "Text3";
 
-    hwnd = CreateWindowEx(0, "SysListView32", "foo", LVS_REPORT, 
+    hwnd = CreateWindowEx(0, "SysListView32", "foo", LVS_REPORT,
                 10, 10, 100, 200, hwndparent, NULL, NULL, NULL);
     ok(hwnd != NULL, "failed to create listview window\n");
 

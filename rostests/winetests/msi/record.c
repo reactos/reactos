@@ -30,11 +30,11 @@ static BOOL create_temp_file(char *name)
     unsigned char buffer[26], i;
     DWORD sz;
     HANDLE handle;
-    
+
     r = GetTempFileName(".", "msitest",0,name);
     if(!r)
         return r;
-    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE, 
+    handle = CreateFile(name, GENERIC_READ|GENERIC_WRITE,
         0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if(handle==INVALID_HANDLE_VALUE)
         return 0;
@@ -268,7 +268,7 @@ static void test_msirecord(void)
     ok(r == ERROR_SUCCESS, "Failed to close handle\n");
 
     /* now try streams in a new record - need to create a file to play with */
-    r = create_temp_file(filename); 
+    r = create_temp_file(filename);
     if(!r)
         return;
 

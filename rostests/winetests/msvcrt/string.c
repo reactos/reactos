@@ -36,13 +36,13 @@ static void test_swab( void ) {
     char expected1[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ@#";
     char expected2[] = "ABCDEFGHIJKLMNOPQRSTUVWX$";
     char expected3[] = "$";
-    
+
     char from[30];
     char to[30];
-    
+
     int testsize;
-    
-    /* Test 1 - normal even case */                               
+
+    /* Test 1 - normal even case */
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 26;
@@ -50,7 +50,7 @@ static void test_swab( void ) {
     _swab( from, to, testsize );
     ok(memcmp(to,expected1,testsize) == 0, "Testing even size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 2 - uneven case  */                               
+    /* Test 2 - uneven case  */
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 25;
@@ -58,7 +58,7 @@ static void test_swab( void ) {
     _swab( from, to, testsize );
     ok(memcmp(to,expected2,testsize) == 0, "Testing odd size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 3 - from = to */                               
+    /* Test 3 - from = to */
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 26;
@@ -66,7 +66,7 @@ static void test_swab( void ) {
     _swab( to, to, testsize );
     ok(memcmp(to,expected1,testsize) == 0, "Testing overlapped size %d returned '%*.*s'\n", testsize, testsize, testsize, to);
 
-    /* Test 4 - 1 bytes */                               
+    /* Test 4 - 1 bytes */
     memset(to,'$', sizeof(to));
     memset(from,'@', sizeof(from));
     testsize = 1;
@@ -115,7 +115,7 @@ START_TEST(string)
     ok(mem != NULL, "memory not allocated for size 0\n");
     strcpy((char*)mem,xilstring);
     pmemcpy((char*)mem+5, mem,nLen+1);
-    ok(pmemcmp((char*)mem+5,xilstring, nLen) == 0, 
+    ok(pmemcmp((char*)mem+5,xilstring, nLen) == 0,
        "Got result %s\n",(char*)mem+5);
 
     /* Test _swab function */

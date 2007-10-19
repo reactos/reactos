@@ -26,10 +26,10 @@
 #include "winuser.h"
 #include "winnls.h"
 #include "winreg.h"
-#include "commctrl.h" 
+#include "commctrl.h"
 
 #include "wine/test.h"
- 
+
 static void MakeButton(TBBUTTON *p, int idCommand, int fsStyle, int nString) {
   p->iBitmap = -2;
   p->idCommand = idCommand;
@@ -41,7 +41,7 @@ static void MakeButton(TBBUTTON *p, int idCommand, int fsStyle, int nString) {
 static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
-                  
+
     case WM_CREATE:
     {
         TBBUTTON buttons[9];
@@ -98,7 +98,7 @@ static LRESULT CALLBACK MyWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lPa
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-  
+
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
@@ -111,9 +111,9 @@ START_TEST(toolbar)
     MSG msg;
     RECT rc;
     HWND hMainWnd;
-  
+
     InitCommonControls();
-  
+
     wc.style = CS_HREDRAW | CS_VREDRAW;
     wc.cbClsExtra = 0;
     wc.cbWndExtra = 0;
@@ -125,8 +125,8 @@ START_TEST(toolbar)
     wc.lpszClassName = "MyTestWnd";
     wc.lpfnWndProc = MyWndProc;
     RegisterClassA(&wc);
-    
-    hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW, 
+
+    hMainWnd = CreateWindowExA(0, "MyTestWnd", "Blah", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     GetClientRect(hMainWnd, &rc);
 

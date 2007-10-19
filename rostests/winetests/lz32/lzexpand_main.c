@@ -35,14 +35,14 @@ static char filename2[] = "testfile.yyy";
 
 /* This is the hex string representation of the file created by compressing
    a simple text file with the contents "This is a test file."
- 
+
    The file was created using COMPRESS.EXE from the Windows Server 2003
    Resource Kit from Microsoft.  The resource kit was retrieved from the
-   following URL:  
+   following URL:
 
    http://www.microsoft.com/downloads/details.aspx?FamilyID=9d467a69-57ff-4ae7-96ee-b18c4790cffd&displaylang=en
  */
-static const unsigned char compressed_file[] = 
+static const unsigned char compressed_file[] =
   {0x53,0x5A,0x44,0x44,0x88,0xF0,0x27,0x33,0x41,
    0x74,0x75,0x14,0x00,0x00,0xDF,0x54,0x68,0x69,
    0x73,0x20,0xF2,0xF0,0x61,0x20,0xFF,0x74,0x65,
@@ -62,7 +62,7 @@ static void test_lzopenfile(void)
 
   /* Check for nonexistent file. */
   file = LZOpenFile("badfilename_", &test, OF_READ);
-  ok(file == LZERROR_BADINHANDLE, 
+  ok(file == LZERROR_BADINHANDLE,
      "LZOpenFile succeeded on nonexistent file\n");
   LZClose(file);
 
@@ -71,7 +71,7 @@ static void test_lzopenfile(void)
   ok(file >= 0, "LZOpenFile failed on creation\n");
   LZClose(file);
   retval = GetFileAttributes(filename_);
-  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributes: error %ld\n", 
+  ok(retval != INVALID_FILE_ATTRIBUTES, "GetFileAttributes: error %ld\n",
      GetLastError());
 
   /* Check various opening options. */
@@ -91,14 +91,14 @@ static void test_lzopenfile(void)
 
   /* If the file "foo.xxx" does not exist, LZOpenFile should then
      check for the file "foo.xx_" and open that -- at least on some
-     operating systems.  Doesn't seem to on my copy of Win98.   
+     operating systems.  Doesn't seem to on my copy of Win98.
      The Wine testing guidelines say we should accept the behavior of
      any valid version of Windows.  Thus it seems we cannot check this?!
      Revisit this at some point to see if this can be tested somehow.
    */
 #if 0
   file = LZOpenFile(filename, &test, OF_EXIST);
-  ok(file != LZERROR_BADINHANDLE, 
+  ok(file != LZERROR_BADINHANDLE,
      "LZOpenFile \"filename_\" check failed\n");
   LZClose(file);
 #endif
@@ -109,9 +109,9 @@ static void test_lzopenfile(void)
   LZClose(file);
 
   retval = GetFileAttributes(filename_);
-  ok(retval == INVALID_FILE_ATTRIBUTES, 
+  ok(retval == INVALID_FILE_ATTRIBUTES,
      "GetFileAttributes succeeded on deleted file\n");
-  
+
 }
 
 static void test_lzread(void)
@@ -162,7 +162,7 @@ static void test_lzcopy(void)
 
   /* Create the compressed file. */
   file = CreateFile(filename_, GENERIC_WRITE, 0, NULL, CREATE_NEW, 0, 0);
-  ok(file != INVALID_HANDLE_VALUE, 
+  ok(file != INVALID_HANDLE_VALUE,
      "CreateFile: error %ld\n", GetLastError());
   retok = WriteFile(file, compressed_file, compressed_file_size, &ret, 0);
   ok( retok, "WriteFile error %ld\n", GetLastError());

@@ -9,8 +9,8 @@
  */
 /* Compiler settings for ctx.idl:
     Os (OptLev=s), W1, Zp8, env=Win32 (32b run), ms_ext, c_ext
-    error checks: allocation ref bounds_check enum stub_data 
-    VC __declspec() decoration level: 
+    error checks: allocation ref bounds_check enum stub_data
+    VC __declspec() decoration level:
          __declspec(uuid()), __declspec(selectany), __declspec(novtable)
          DECLSPEC_UUID(), MIDL_INTERFACE()
 */
@@ -24,10 +24,10 @@
 
 #include "ctx.h"
 
-#define TYPE_FORMAT_STRING_SIZE   23                                
-#define PROC_FORMAT_STRING_SIZE   21                                
-#define TRANSMIT_AS_TABLE_SIZE    0            
-#define WIRE_MARSHAL_TABLE_SIZE   0            
+#define TYPE_FORMAT_STRING_SIZE   23
+#define PROC_FORMAT_STRING_SIZE   21
+#define TRANSMIT_AS_TABLE_SIZE    0
+#define WIRE_MARSHAL_TABLE_SIZE   0
 
 typedef struct _MIDL_TYPE_FORMAT_STRING
     {
@@ -45,7 +45,7 @@ typedef struct _MIDL_PROC_FORMAT_STRING
 extern const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString;
 extern const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString;
 
-#define GENERIC_BINDING_TABLE_SIZE   0            
+#define GENERIC_BINDING_TABLE_SIZE   0
 
 
 /* Standard interface: hello, ver. 1.0,
@@ -73,17 +73,17 @@ extern const MIDL_STUB_DESC hello_StubDesc;
 RPC_BINDING_HANDLE hello__MIDL_AutoBindHandle;
 
 
-void CtxOpen( 
+void CtxOpen(
     /* [out] */ PCTXTYPE __RPC_FAR *pphContext,
     /* [in] */ long Value)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
-    
+
     if(!pphContext)
         {
         RpcRaiseException(RPC_X_NULL_REF_POINTER);
@@ -95,48 +95,48 @@ void CtxOpen(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           0);
-        
-        
+
+
         _Handle = hBinding;
-        
-        
+
+
         _StubMsg.BufferLength = 4U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         *(( long __RPC_FAR * )_StubMsg.Buffer)++ = Value;
-        
+
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
             NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[0] );
-        
+
         *pphContext = (void *)0;
         NdrClientContextUnmarshall(
                               ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                               ( NDR_CCONTEXT __RPC_FAR * )pphContext,
                               _Handle);
-        
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
 
-void CtxHello( 
+void CtxHello(
     /* [in] */ PCTXTYPE phContext)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
-    
+
     RpcTryFinally
         {
         NdrClientInitializeNew(
@@ -144,48 +144,48 @@ void CtxHello(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           1);
-        
-        
+
+
         if(phContext != 0)
             {
             _Handle = NDRCContextBinding(( NDR_CCONTEXT  )phContext);;
-            
+
             }
         else
             {
             RpcRaiseException(RPC_X_SS_IN_NULL_CONTEXT);
             }
-        
+
         _StubMsg.BufferLength = 20U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         NdrClientContextMarshall(
                             ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                             ( NDR_CCONTEXT  )phContext,
                             1);
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
 
-void CtxClose( 
+void CtxClose(
     /* [out][in] */ PCTXTYPE __RPC_FAR *pphContext)
 {
 
     RPC_BINDING_HANDLE _Handle	=	0;
-    
+
     RPC_MESSAGE _RpcMessage;
-    
+
     MIDL_STUB_MESSAGE _StubMsg;
-    
+
     if(!pphContext)
         {
         RpcRaiseException(RPC_X_NULL_REF_POINTER);
@@ -197,43 +197,43 @@ void CtxClose(
                           ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                           ( PMIDL_STUB_DESC  )&hello_StubDesc,
                           2);
-        
-        
+
+
         if(*pphContext != 0)
             {
             _Handle = NDRCContextBinding(( NDR_CCONTEXT  )*pphContext);;
-            
+
             }
-        
+
         _StubMsg.BufferLength = 20U;
         NdrGetBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg, _StubMsg.BufferLength, _Handle );
-        
+
         NdrClientContextMarshall(
                             ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                             ( NDR_CCONTEXT  )*pphContext,
                             0);
         NdrSendReceive( (PMIDL_STUB_MESSAGE) &_StubMsg, (unsigned char __RPC_FAR *) _StubMsg.Buffer );
-        
+
         if ( (_RpcMessage.DataRepresentation & 0X0000FFFFUL) != NDR_LOCAL_DATA_REPRESENTATION )
             NdrConvert( (PMIDL_STUB_MESSAGE) &_StubMsg, (PFORMAT_STRING) &__MIDL_ProcFormatString.Format[14] );
-        
+
         NdrClientContextUnmarshall(
                               ( PMIDL_STUB_MESSAGE  )&_StubMsg,
                               ( NDR_CCONTEXT __RPC_FAR * )pphContext,
                               _Handle);
-        
+
         }
     RpcFinally
         {
         NdrFreeBuffer( (PMIDL_STUB_MESSAGE) &_StubMsg );
-        
+
         }
     RpcEndFinally
-    
+
 }
 
 
-const MIDL_STUB_DESC hello_StubDesc = 
+const MIDL_STUB_DESC hello_StubDesc =
     {
     (void __RPC_FAR *)& hello___RpcClientInterface,
     MIDL_user_allocate,
@@ -265,7 +265,7 @@ const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =
     {
         0,
         {
-			
+
 			0x51,		/* FC_OUT_PARAM */
 #ifndef _ALPHA_
 			0x1,		/* x86, MIPS & PPC stack size = 1 */
@@ -277,7 +277,7 @@ const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =
 			0x8,		/* FC_LONG */
 /*  6 */	0x5b,		/* FC_END */
 			0x5c,		/* FC_PAD */
-/*  8 */	
+/*  8 */
 			0x4d,		/* FC_IN_PARAM */
 #ifndef _ALPHA_
 			0x1,		/* x86, MIPS & PPC stack size = 1 */
@@ -287,7 +287,7 @@ const MIDL_PROC_FORMAT_STRING __MIDL_ProcFormatString =
 /* 10 */	NdrFcShort( 0xa ),	/* Type Offset=10 */
 /* 12 */	0x5b,		/* FC_END */
 			0x5c,		/* FC_PAD */
-/* 14 */	
+/* 14 */
 			0x50,		/* FC_IN_OUT_PARAM */
 #ifndef _ALPHA_
 			0x1,		/* x86, MIPS & PPC stack size = 1 */
@@ -307,7 +307,7 @@ const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =
         0,
         {
 			NdrFcShort( 0x0 ),	/* 0 */
-/*  2 */	
+/*  2 */
 			0x11, 0x0,	/* FC_RP */
 /*  4 */	NdrFcShort( 0x2 ),	/* Offset= 2 (6) */
 /*  6 */	0x30,		/* FC_BIND_CONTEXT */
@@ -318,7 +318,7 @@ const MIDL_TYPE_FORMAT_STRING __MIDL_TypeFormatString =
 			0x41,		/* Ctxt flags:  in, can't be null */
 /* 12 */	0x0,		/* 0 */
 			0x0,		/* 0 */
-/* 14 */	
+/* 14 */
 			0x11, 0x0,	/* FC_RP */
 /* 16 */	NdrFcShort( 0x2 ),	/* Offset= 2 (18) */
 /* 18 */	0x30,		/* FC_BIND_CONTEXT */

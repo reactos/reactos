@@ -704,7 +704,7 @@ static void test_StrRStrI(void)
     static const WCHAR wszPattern4[] = {'a','b',0};
     LPWSTR retW;
     LPSTR retA;
-    
+
     check_strrstri(A, szTest, 4, "A", szTest+1);
     check_strrstri(A, szTest, 4, "aX", szTest+1);
     check_strrstri(A, szTest, 4, "Ay", NULL);

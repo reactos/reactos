@@ -53,7 +53,7 @@ static void test_pRtlTimeToTimeFields(void)
         /* test at the last second of the month */
         pRtlTimeToTimeFields( &litime, &tfresult);
         ok( tfresult.Year == tftest.Year && tfresult.Month == tftest.Month &&
-            tfresult.Day == tftest.Day && tfresult.Hour == tftest.Hour && 
+            tfresult.Day == tftest.Day && tfresult.Hour == tftest.Hour &&
             tfresult.Minute == tftest.Minute && tfresult.Second == tftest.Second,
             "#%d expected: %d-%d-%d %d:%d:%d  got:  %d-%d-%d %d:%d:%d\n", ++i,
             tftest.Year, tftest.Month, tftest.Day,
@@ -71,7 +71,7 @@ static void test_pRtlTimeToTimeFields(void)
         pRtlTimeToTimeFields( &litime, &tfresult);
         ok( tfresult.Year == tftest.Year + (tftest.Month ==12) &&
             tfresult.Month == tftest.Month % 12 + 1 &&
-            tfresult.Day == 1 && tfresult.Hour == 0 && 
+            tfresult.Day == 1 && tfresult.Hour == 0 &&
             tfresult.Minute == 0 && tfresult.Second == 0,
             "#%d expected: %d-%d-%d %d:%d:%d  got:  %d-%d-%d %d:%d:%d\n", ++i,
             tftest.Year + (tftest.Month ==12),
@@ -89,7 +89,7 @@ static void test_pRtlTimeToTimeFields(void)
         if( tftest.Month == 12) {
             tftest.Month = 1;
             tftest.Year += 1;
-        } else 
+        } else
             tftest.Month += 1;
         tftest.Day = MonthLengths[IsLeapYear(tftest.Year)][tftest.Month - 1];
         litime.QuadPart +=  (LONGLONG) tftest.Day * TICKSPERSEC * SECSPERDAY;

@@ -8,7 +8,7 @@ IsFunctionPresent(LPWSTR lpszFunction)
 	return TRUE;
 }
 
-int APIENTRY 
+int APIENTRY
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
         LPSTR     lpCmdLine,

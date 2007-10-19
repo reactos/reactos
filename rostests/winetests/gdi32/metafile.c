@@ -304,7 +304,7 @@ static int CALLBACK savedc_emf_enum_proc(HDC hdc, HANDLETABLE *handle_table,
     }
 
 
-    return 1;        
+    return 1;
 }
 
 void test_SaveDC(void)
@@ -665,7 +665,7 @@ static int compare_mf_bits (const HMETAFILE mf, const unsigned char *bits, UINT 
     ok (diff == 0, "%s: mfsize=%d, bsize=%d, diff=%d\n",
         desc, mfsize, bsize, diff);
 
-    return diff; 
+    return diff;
 }
 
 static int compare_mf_disk_bits(LPCSTR name, const BYTE *bits, UINT bsize, const char *desc)
@@ -701,7 +701,7 @@ static int compare_mf_disk_bits(LPCSTR name, const BYTE *bits, UINT bsize, const
     ok(diff == 0, "%s: mfsize=%ld, bsize=%d, diff=%d\n",
         desc, mfsize, bsize, diff);
 
-    return diff; 
+    return diff;
 }
 
 /* For debugging or dumping the raw EMFs produced by
@@ -1162,7 +1162,7 @@ static INT CALLBACK EmfEnumProc(HDC hdc, HANDLETABLE *lpHTable, const ENHMETAREC
 {
     LPMETAFILEPICT lpMFP = (LPMETAFILEPICT)lpData;
     POINT mapping[2] = { { 0, 0 }, { 10, 10 } };
-    /* When using MM_TEXT Win9x does not update the mapping mode 
+    /* When using MM_TEXT Win9x does not update the mapping mode
      * until a record is played which actually outputs something */
     PlayEnhMetaFileRecord(hdc, lpHTable, lpEMFR, nObj);
     LPtoDP(hdc, mapping, 2);
@@ -1183,7 +1183,7 @@ static INT CALLBACK EmfEnumProc(HDC hdc, HANDLETABLE *lpHTable, const ENHMETAREC
         else
         {
             ok(lpMFP->mm == MM_ANISOTROPIC, "mm=%ld\n", lpMFP->mm);
-            
+
             x0 = MulDiv(0, GetDeviceCaps(hdc, HORZSIZE) * 100, GetDeviceCaps(hdc, HORZRES));
             y0 = MulDiv(0, GetDeviceCaps(hdc, VERTSIZE) * 100, GetDeviceCaps(hdc, VERTRES));
             x1 = MulDiv(10, GetDeviceCaps(hdc, HORZSIZE) * 100, GetDeviceCaps(hdc, HORZRES));

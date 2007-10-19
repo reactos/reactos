@@ -37,7 +37,7 @@ BOOL CreateSurface(LPDIRECTDRAWSURFACE7* pSurface)
 		printf("ERROR: Failed to set up ddraw\n");
 		return FALSE;
 	}
- 
+
 	if(!( hwnd = CreateBasicWindow() ))
 	{
 		printf("ERROR: Failed to create window\n");
@@ -53,9 +53,9 @@ BOOL CreateSurface(LPDIRECTDRAWSURFACE7* pSurface)
 	}
 
     // Creat Surface
-	DDSURFACEDESC2 Desc = { 0 }; 
+	DDSURFACEDESC2 Desc = { 0 };
 	Desc.dwHeight = 200;
-	Desc.dwWidth = 200;	
+	Desc.dwWidth = 200;
     Desc.dwSize = sizeof (DDSURFACEDESC2);
     Desc.ddsCaps.dwCaps = DDSCAPS_OFFSCREENPLAIN;
 	Desc.dwFlags = DDSD_CAPS | DDSD_HEIGHT | DDSD_WIDTH;

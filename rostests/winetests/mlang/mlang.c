@@ -629,7 +629,7 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
             "IMLangFontLink_CodePageToCodePages failed\n");
     ok (dwCodePages != 0, "No CodePages returned\n");
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwCodePages, 1035,
-                &CodePage)==S_OK, 
+                &CodePage)==S_OK,
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 932, "Incorrect CodePage Returned (%i)\n",CodePage);
 
@@ -644,12 +644,12 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
     dwManyCodePages = dwManyCodePages | dwCodePages;
 
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 1256,
-                &CodePage)==S_OK, 
+                &CodePage)==S_OK,
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 1256, "Incorrect CodePage Returned (%i)\n",CodePage);
 
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 936,
-                &CodePage)==S_OK, 
+                &CodePage)==S_OK,
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 1252, "Incorrect CodePage Returned (%i)\n",CodePage);
 }
@@ -783,6 +783,6 @@ START_TEST(mlang)
 
     IMLangFontLink_Test(iMLFL);
     IMLangFontLink_Release(iMLFL);
-    
+
     CoUninitialize();
 }

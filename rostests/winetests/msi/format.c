@@ -239,7 +239,7 @@ static void test_formatrecord(void)
     r = MsiFormatRecord(0, hrec, buffer, &sz);
     ok( r == ERROR_SUCCESS, "format failed\n");
     ok( sz == 30, "size wrong %li\n",sz);
-    ok( 0 == strcmp(buffer,"1: boo 2: hoo 3:  4:  5:  6:  "), 
+    ok( 0 == strcmp(buffer,"1: boo 2: hoo 3:  4:  5:  6:  "),
                     "wrong output(%s)\n",buffer);
 
     /* play games with recursive lookups */
@@ -575,7 +575,7 @@ static void test_formatrecord(void)
     ok( sz == 3, "size wrong,(%li)\n",sz);
     ok( 0 == strcmp(buffer," 12"), "wrong output (%s)\n",buffer);
     }
-    
+
     /* now put play games with escaping */
     r = MsiRecordSetString(hrec, 0, "[1] [2] [\\3asdf]");
     r = MsiRecordSetString(hrec, 1, "boo");

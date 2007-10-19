@@ -903,7 +903,7 @@ void func_power(void)
    test_WriteGlobalPwrPolicy();
    test_WriteProcessorPwrScheme();
 
-}	
+}
 
 void func_ros_init(void)
 {

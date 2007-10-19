@@ -28,71 +28,71 @@ extern   DDRAWI_DIRECTDRAW_GBL mDDrawGlobal;
 
 
 
-BOOL (APIENTRY *DdCreateDirectDrawObject) ( 
+BOOL (APIENTRY *DdCreateDirectDrawObject) (
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     HDC hdc
 );
 
-BOOL (APIENTRY *DdQueryDirectDrawObject) ( 
+BOOL (APIENTRY *DdQueryDirectDrawObject) (
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     LPDDHALINFO pHalInfo,
     LPDDHAL_DDCALLBACKS pDDCallbacks,
     LPDDHAL_DDSURFACECALLBACKS pDDSurfaceCallbacks,
     LPDDHAL_DDPALETTECALLBACKS pDDPaletteCallbacks,
-    LPD3DHAL_CALLBACKS pD3dCallbacks, 
-    LPD3DHAL_GLOBALDRIVERDATA pD3dDriverData, 
+    LPD3DHAL_CALLBACKS pD3dCallbacks,
+    LPD3DHAL_GLOBALDRIVERDATA pD3dDriverData,
     LPDDHAL_DDEXEBUFCALLBACKS pD3dBufferCallbacks,
     LPDDSURFACEDESC pD3dTextureFormats,
     LPDWORD pdwFourCC,
     LPVIDMEM pvmList
 );
 
-BOOL 
-APIENTRY 
-DdDeleteDirectDrawObject( 
+BOOL
+APIENTRY
+DdDeleteDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal
 );
 
-BOOL 
-APIENTRY 
-DdCreateSurfaceObject( 
+BOOL
+APIENTRY
+DdCreateSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     BOOL bPrimarySurface
 );
 
-BOOL 
-APIENTRY 
-DdDeleteSurfaceObject( 
+BOOL
+APIENTRY
+DdDeleteSurfaceObject(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
-//BOOL 
-//APIENTRY 
-//DdResetVisrgn( 
+//BOOL
+//APIENTRY
+//DdResetVisrgn(
 //    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
 //    HWND hWnd
 //);
-BOOL (APIENTRY *DdResetVisrgn) ( 
+BOOL (APIENTRY *DdResetVisrgn) (
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     HWND hWnd
 );
 
-HDC 
-APIENTRY 
-DdGetDC( 
+HDC
+APIENTRY
+DdGetDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal,
     LPPALETTEENTRY pColorTable
 );
 
-BOOL 
-APIENTRY 
-DdReleaseDC( 
+BOOL
+APIENTRY
+DdReleaseDC(
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceLocal
 );
 
-HBITMAP 
-APIENTRY 
-DdCreateDIBSection( 
+HBITMAP
+APIENTRY
+DdCreateDIBSection(
     HDC hdc,
     CONST BITMAPINFO *pbmi,
     UINT iUsage,
@@ -101,62 +101,62 @@ DdCreateDIBSection(
     DWORD dwOffset
 );
 
-BOOL 
-APIENTRY 
-DdReenableDirectDrawObject( 
+BOOL
+APIENTRY
+DdReenableDirectDrawObject(
     LPDDRAWI_DIRECTDRAW_GBL pDirectDrawGlobal,
     BOOL *pbNewMode
 );
 
-//BOOL 
-//APIENTRY 
-//DdAttachSurface( 
+//BOOL
+//APIENTRY
+//DdAttachSurface(
 //    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
 //    LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 //);
 
-BOOL (APIENTRY *DdAttachSurface) ( 
+BOOL (APIENTRY *DdAttachSurface) (
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceFrom,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceTo
 );
 
-VOID 
-APIENTRY 
-DdUnattachSurface( 
+VOID
+APIENTRY
+DdUnattachSurface(
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     LPDDRAWI_DDRAWSURFACE_LCL pSurfaceAttached
 );
 
-ULONG 
-APIENTRY 
+ULONG
+APIENTRY
 DdQueryDisplaySettingsUniqueness(VOID);
 
-HANDLE 
-APIENTRY 
-DdGetDxHandle( 
+HANDLE
+APIENTRY
+DdGetDxHandle(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pSurface,
     BOOL bRelease
 );
 
-BOOL 
-APIENTRY 
-DdSetGammaRamp( 
+BOOL
+APIENTRY
+DdSetGammaRamp(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     HDC hdc,
     LPVOID lpGammaRamp
 );
 
-DWORD 
-APIENTRY 
-DdSwapTextureHandles( 
+DWORD
+APIENTRY
+DdSwapTextureHandles(
     LPDDRAWI_DIRECTDRAW_LCL pDDraw,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 );
 
 char* DDErrorString (HRESULT hr)
-{ 
+{
 	switch (hr)
 	{
 		case DD_OK:								 return "DD_OK";
@@ -261,7 +261,7 @@ char* DDErrorString (HRESULT hr)
 		case DDERR_NOTPAGELOCKED:                return "DDERR_NOTPAGELOCKED";
 		case DDERR_NOTINITIALIZED:               return "DDERR_NOTINITIALIZED";
 	}
-	
+
 	return "Unknown Error ";
 }
 

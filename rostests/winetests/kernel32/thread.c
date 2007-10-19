@@ -458,7 +458,7 @@ static VOID test_thread_priority(void)
    ok(SetThreadPriority(curthread,0)!=0,"SetThreadPriority Failed\n");
 
 /* Check thread priority boost */
-   if (!pGetThreadPriorityBoost || !pSetThreadPriorityBoost) 
+   if (!pGetThreadPriorityBoost || !pSetThreadPriorityBoost)
      return; /* Win9x */
 
    SetLastError(0xdeadbeef);
@@ -608,7 +608,7 @@ static VOID test_GetThreadExitCode(void)
     ret = WaitForSingleObject(thread,100);
     ok(ret==WAIT_OBJECT_0, "threadFunc2 did not exit during 100 ms\n");
     ret = GetExitCodeThread(thread,&exitCode);
-    ok(ret==exitCode || ret==1, 
+    ok(ret==exitCode || ret==1,
        "GetExitCodeThread returned %ld (expected 1 or %ld)\n", ret, exitCode);
     ok(exitCode==99, "threadFunc2 exited with code %ld (expected 99)\n", exitCode);
     ok(CloseHandle(thread)!=0,"Error closing thread handle\n");

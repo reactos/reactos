@@ -5,7 +5,7 @@ CreateTestPalette()
 	{
 		LOGPALETTE logpal;
 		PALETTEENTRY entry[5];
-	} palstruct = 
+	} palstruct =
 	{ {0x300,5,
 	  { {1,2,3,0} }},
 	  { {22,33,44,PC_RESERVED},

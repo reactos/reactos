@@ -173,7 +173,7 @@ static void register_menu_check_class(void)
         NULL,
         TEXT("WineMenuCheck"),
     };
-    
+
     atomMenuCheckClass = RegisterClass(&wc);
 }
 
@@ -231,7 +231,7 @@ static void test_menu_ownerdraw(void)
     k=0;
     for( j=0;j<2;j++) /* create columns */
         for(i=0;i<2;i++) { /* create rows */
-            ret = AppendMenu( hmenu, MF_OWNERDRAW | 
+            ret = AppendMenu( hmenu, MF_OWNERDRAW |
                     (i==0 ? MF_MENUBREAK : 0), k, (LPCTSTR) k);
             k++;
             ok( ret, "AppendMenu failed for %d\n", k-1);
@@ -261,11 +261,11 @@ static void test_menu_ownerdraw(void)
     /* test what MF_MENUBREAK did at the first position. Also show
      * that an MF_SEPARATOR is ignored in the height calculation. */
     leftcol= MOD_rc[0].left;
-    ModifyMenu( hmenu, 0, MF_BYCOMMAND| MF_OWNERDRAW| MF_SEPARATOR, 0, 0); 
+    ModifyMenu( hmenu, 0, MF_BYCOMMAND| MF_OWNERDRAW| MF_SEPARATOR, 0, 0);
     /* display the menu */
     ret = TrackPopupMenu( hmenu, 0x100, 100,100, 0, hwnd, NULL);
     /* left should be 4 pixels less now */
-    ok( leftcol == MOD_rc[0].left + 4, 
+    ok( leftcol == MOD_rc[0].left + 4,
             "columns should be 4 pixels to the left (actual %ld).\n",
             leftcol - MOD_rc[0].left);
     /* test width */
@@ -284,7 +284,7 @@ static void test_menu_ownerdraw(void)
     ok(hmenu != NULL, "CreateMenu failed with error %ld\n", GetLastError());
     if( !hmenu) { DestroyWindow(hwnd);return;}
     MOD_maxid=1;
-    for(i=0;i<2;i++) { 
+    for(i=0;i<2;i++) {
         ret = AppendMenu( hmenu, MF_OWNERDRAW , i, 0);
         ok( ret, "AppendMenu failed for %d\n", i);
     }
@@ -515,7 +515,7 @@ static void test_menu_add_string( void )
 
     char strback[0x80];
     WCHAR strbackW[0x80];
-    static const WCHAR expectedString[] = {'D', 'u', 'm', 'm', 'y', ' ', 
+    static const WCHAR expectedString[] = {'D', 'u', 'm', 'm', 'y', ' ',
                          's', 't', 'r', 'i', 'n', 'g', 0};
 
     hmenu = CreateMenu();
@@ -543,10 +543,10 @@ static void test_menu_add_string( void )
     /* Test combination of ownerdraw and strings with GetMenuItemString(A/W) */
     strcpy(string, "Dummy string");
     memset(&info, 0x00, sizeof(info));
-    info.cbSize= sizeof(MENUITEMINFO); 
+    info.cbSize= sizeof(MENUITEMINFO);
     info.fMask= MIIM_FTYPE | MIIM_STRING; /* Set OwnerDraw + typeData */
     info.fType= MFT_OWNERDRAW;
-    info.dwTypeData= string; 
+    info.dwTypeData= string;
     rc = InsertMenuItem( hmenu, 0, TRUE, &info );
     ok (rc, "InsertMenuItem failed\n");
 
@@ -559,10 +559,10 @@ static void test_menu_add_string( void )
 
     /* Just change ftype to string and see what text is stored */
     memset(&info, 0x00, sizeof(info));
-    info.cbSize= sizeof(MENUITEMINFO); 
+    info.cbSize= sizeof(MENUITEMINFO);
     info.fMask= MIIM_FTYPE; /* Set string type */
     info.fType= MFT_STRING;
-    info.dwTypeData= (char *)0xdeadbeef; 
+    info.dwTypeData= (char *)0xdeadbeef;
     rc = SetMenuItemInfo( hmenu, 0, TRUE, &info );
     ok (rc, "SetMenuItemInfo failed\n");
 
@@ -572,29 +572,29 @@ static void test_menu_add_string( void )
 
     /* Ensure change to bitmap type fails */
     memset(&info, 0x00, sizeof(info));
-    info.cbSize= sizeof(MENUITEMINFO); 
+    info.cbSize= sizeof(MENUITEMINFO);
     info.fMask= MIIM_FTYPE; /* Set as bitmap type */
     info.fType= MFT_BITMAP;
-    info.dwTypeData= (char *)0xdeadbee2; 
+    info.dwTypeData= (char *)0xdeadbee2;
     rc = SetMenuItemInfo( hmenu, 0, TRUE, &info );
     ok (!rc, "SetMenuItemInfo unexpectedly worked\n");
 
     /* Just change ftype back and ensure data hasn't been freed */
     info.fType= MFT_OWNERDRAW; /* Set as ownerdraw type */
-    info.dwTypeData= (char *)0xdeadbee3; 
+    info.dwTypeData= (char *)0xdeadbee3;
     rc = SetMenuItemInfo( hmenu, 0, TRUE, &info );
     ok (rc, "SetMenuItemInfo failed\n");
-    
+
     /* Did we keep the old dwTypeData? */
     ok (GetMenuString( hmenu, 0, strback, 99, MF_BYPOSITION), "GetMenuString on ownerdraw entry failed\n");
     ok (!strcmp( strback, "Dummy string" ), "Menu text from Ansi version incorrect\n");
 
     /* Just change string value (not type) */
     memset(&info, 0x00, sizeof(info));
-    info.cbSize= sizeof(MENUITEMINFO); 
+    info.cbSize= sizeof(MENUITEMINFO);
     info.fMask= MIIM_STRING; /* Set typeData */
     strcpy(string2, "string2");
-    info.dwTypeData= string2; 
+    info.dwTypeData= string2;
     rc = SetMenuItemInfo( hmenu, 0, TRUE, &info );
     ok (rc, "SetMenuItemInfo failed\n");
 
@@ -603,7 +603,7 @@ static void test_menu_add_string( void )
 
     /*  crashes with wine 0.9.5 */
     memset(&info, 0x00, sizeof(info));
-    info.cbSize= sizeof(MENUITEMINFO); 
+    info.cbSize= sizeof(MENUITEMINFO);
     info.fMask= MIIM_FTYPE | MIIM_STRING; /* Set OwnerDraw + typeData */
     info.fType= MFT_OWNERDRAW;
     rc = InsertMenuItem( hmenu, 0, TRUE, &info );
@@ -650,7 +650,7 @@ static  WCHAR *strcpyW( WCHAR *dst, const WCHAR *src )
     DMIINFF( i, e, dwTypeData)\
     DMIINFF( i, e, cch)\
     if( s==sizeof(MENUITEMINFOA)) DMIINFF( i, e, hbmpItem)\
-}    
+}
 
 /* insert menu item */
 #define TMII_INSMI( a1,b1,c1,d1,e1,f1,g1,h1,i1,j1,k1,l1,m1,n1,\
@@ -850,13 +850,13 @@ static void test_menu_iteminfo( void )
         txt, OK, OK )
     TMII_DONE
     /* to be continued */
-    /* set text with MIIM_TYPE and retrieve with MIIM_STRING */ 
+    /* set text with MIIM_TYPE and retrieve with MIIM_STRING */
     TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
     TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING, -9, -9, 0, -9, -9, -9, string, 4, -9, },
         txt, OK, OK )
     TMII_DONE
-    /* set text with MIIM_TYPE and retrieve with MIIM_STRING; MFT_OWNERDRAW causes an empty string */ 
+    /* set text with MIIM_TYPE and retrieve with MIIM_STRING; MFT_OWNERDRAW causes an empty string */
     TMII_INSMI( {, S, MIIM_TYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 6, -1, }, OK)
     TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 0, -9, },
@@ -877,13 +877,13 @@ static void test_menu_iteminfo( void )
         {, S, 0, -9, -9, -9, 0, -9, -9, -9, string, 80, -9, },
         init, OK, OK )
     TMII_DONE
-    /* contrary to MIIM_TYPE,you can set the text for an owner draw menu */ 
+    /* contrary to MIIM_TYPE,you can set the text for an owner draw menu */
     TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
     TMII_GMII ( {, S, MIIM_STRING|MIIM_FTYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_STRING|MIIM_FTYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, string, 4, -9, },
         txt, OK, OK )
     TMII_DONE
-    /* same but retrieve with MIIM_TYPE */ 
+    /* same but retrieve with MIIM_TYPE */
     TMII_INSMI( {, S, MIIM_STRING|MIIM_FTYPE, MFT_STRING|MFT_OWNERDRAW, -1, -1, -1, -1, -1, -1, txt, 0, -1, }, OK)
     TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_TYPE, MFT_OWNERDRAW, -9, -9, 0, -9, -9, -9, NULL, 4, NULL, },
@@ -900,7 +900,7 @@ static void test_menu_iteminfo( void )
         empty, OK, ER )
     TMII_DONE
 
-    /* How is that with bitmaps? */ 
+    /* How is that with bitmaps? */
     TMII_INSMI( {, S, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
     TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_TYPE, MFT_BITMAP, -9, -9, 0, -9, -9, -9, hbm, 0, hbm, },
@@ -956,7 +956,7 @@ static void test_menu_iteminfo( void )
         {, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, },
         init, OK, ER )
     TMII_DONE
- 
+
     TMII_INSMI( {, S, MIIM_TYPE, MFT_SEPARATOR, 0, 0, 0, 0, 0, 0, txt, 0, 0, }, OK)
     TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, 0, 0, 0, },
@@ -1069,7 +1069,7 @@ static void test_menu_iteminfo( void )
                 {, S, 0, -9, -9, -9,  0, -9, -9, -9, string, 80, -9, },
         init, OK, OK )
     TMII_DONE
-    /* some tests with small cbSize: the hbmpItem is to be ignored */ 
+    /* some tests with small cbSize: the hbmpItem is to be ignored */
     TMII_INSMI( {, S - 4, MIIM_BITMAP, -1, -1, -1, -1, -1, -1, -1, -1, -1, hbm, }, OK)
     TMII_GMII ( {, S, MIIM_TYPE, -9, -9, -9, -9, -9, -9, -9, string, 80, -9, },
         {, S, MIIM_TYPE, MFT_SEPARATOR, -9, -9, 0, -9, -9, -9, NULL, 0, NULL, },
@@ -1152,8 +1152,8 @@ static void test_menu_iteminfo( void )
   DeleteObject( hbm);
 }
 
-/* 
-   The following tests try to confirm the algorithm used to return the menu items 
+/*
+   The following tests try to confirm the algorithm used to return the menu items
    when there is a collision between a menu item and a popup menu
  */
 void test_menu_search_bycommand( void )
@@ -1167,7 +1167,7 @@ void test_menu_search_bycommand( void )
 
     /* Case 1: Menu containing a menu item */
     hmenu = CreateMenu();
-    
+
     memset( &info, 0, sizeof info );
     info.cbSize = sizeof info;
     info.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
@@ -1175,7 +1175,7 @@ void test_menu_search_bycommand( void )
     strcpy(strIn, "Case 1 MenuItem");
     info.dwTypeData = strIn;
     info.wID = (UINT) 0x1234;
-    
+
     rc = InsertMenuItem(hmenu, 0, TRUE, &info );
     ok (rc, "Inserting the menuitem failed\n");
 
@@ -1213,7 +1213,7 @@ void test_menu_search_bycommand( void )
     /* Case 2: Menu containing a popup menu */
     hmenu = CreateMenu();
     hmenuSub = CreateMenu();
-    
+
     strcpy(strIn, "Case 2 SubMenu");
     rc = InsertMenu(hmenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT_PTR)hmenuSub, strIn);
     ok (rc, "Inserting the popup menu into the main menu failed\n");
@@ -1248,7 +1248,7 @@ void test_menu_search_bycommand( void )
     ok (info.wID == (UINT_PTR)hmenuSub, "IDs differ for the popup menu\n");
     ok (!strcmp(info.dwTypeData, "Case 2 SubMenu"), "Returned item has wrong label\n");
 
-    /* 
+    /*
         Now add an item after it with the same id
      */
     memset( &info, 0, sizeof info );
@@ -1274,7 +1274,7 @@ void test_menu_search_bycommand( void )
     ok (info.wID == (UINT_PTR)hmenuSub, "IDs differ for the popup menu\n");
     ok (!strcmp(info.dwTypeData, "Case 2 MenuItem 1"), "Returned item has wrong label (%s)\n", info.dwTypeData);
 
-    /* 
+    /*
         Now add an item before the popup (with the same id)
      */
     memset( &info, 0, sizeof info );
@@ -1303,14 +1303,14 @@ void test_menu_search_bycommand( void )
     DestroyMenu( hmenu );
     DestroyMenu( hmenuSub );
 
-    /* 
-        Case 3: Menu containing a popup menu which in turn 
+    /*
+        Case 3: Menu containing a popup menu which in turn
            contains 2 items with the same id as the popup itself
      */
-             
+
     hmenu = CreateMenu();
     hmenuSub = CreateMenu();
-    
+
     memset( &info, 0, sizeof info );
     info.cbSize = sizeof info;
     info.fMask = MIIM_FTYPE | MIIM_STRING | MIIM_ID;
@@ -1330,7 +1330,7 @@ void test_menu_search_bycommand( void )
     info.fType = MFT_STRING;
     info.dwTypeData = "MenuItem 2";
     info.wID = (UINT_PTR) hmenuSub; /* Enforce id collisions with the hmenu of the popup submenu*/
-    
+
     rc = InsertMenuItem(hmenuSub, 1, TRUE, &info );
     ok (rc, "Inserting the sub menu menuitem 2 failed\n");
 
@@ -1353,17 +1353,17 @@ void test_menu_search_bycommand( void )
     DestroyMenu( hmenu );
     DestroyMenu( hmenuSub );
 
-    /* 
+    /*
         Case 4: Menu containing 2 popup menus, the second
            contains 2 items with the same id as the first popup menu
      */
     hmenu = CreateMenu();
     hmenuSub = CreateMenu();
     hmenuSub2 = CreateMenu();
-    
+
     rc = InsertMenu(hmenu, 0, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT_PTR)hmenuSub, "Submenu");
     ok (rc, "Inserting the popup menu into the main menu failed\n");
-    
+
     rc = InsertMenu(hmenu, 1, MF_BYPOSITION | MF_POPUP | MF_STRING, (UINT_PTR)hmenuSub2, "Submenu2");
     ok (rc, "Inserting the popup menu into the main menu failed\n");
 
@@ -1373,7 +1373,7 @@ void test_menu_search_bycommand( void )
     info.fType = MFT_STRING;
     info.dwTypeData = "MenuItem";
     info.wID = (UINT_PTR) hmenuSub; /* Enforce id collisions with the hmenu of the popup submenu*/
-   
+
     rc = InsertMenuItem(hmenuSub2, 0, TRUE, &info );
     ok (rc, "Inserting the sub menu menuitem failed\n");
 
@@ -1383,7 +1383,7 @@ void test_menu_search_bycommand( void )
     info.fType = MFT_STRING;
     info.dwTypeData = "MenuItem 2";
     info.wID = (UINT_PTR) hmenuSub; /* Enforce id collisions with the hmenu of the popup submenu*/
-    
+
     rc = InsertMenuItem(hmenuSub2, 1, TRUE, &info );
     ok (rc, "Inserting the sub menu menuitem 2 failed\n");
 

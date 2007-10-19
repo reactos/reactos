@@ -105,7 +105,7 @@ static void test_signalandwait(void)
     CloseHandle(semaphore[1]);
 
     /* try a registry key */
-    file = CreateFile("x", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, 
+    file = CreateFile("x", GENERIC_READ|GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
         FILE_ATTRIBUTE_NORMAL | FILE_FLAG_DELETE_ON_CLOSE, NULL);
     r = pSignalObjectAndWait(file, file, 0, FALSE);
     ok( r == WAIT_FAILED, "should fail\n");

@@ -37,30 +37,30 @@
  * Returns a list of device interfaces of a particular device interface class.
  *
  * Parameters
- *    InterfaceClassGuid 
+ *    InterfaceClassGuid
  *       Points to a class GUID specifying the device interface class.
  *
- *    PhysicalDeviceObject 
+ *    PhysicalDeviceObject
  *       Points to an optional PDO that narrows the search to only the
- *       device interfaces of the device represented by the PDO. 
+ *       device interfaces of the device represented by the PDO.
  *
- *    Flags 
+ *    Flags
  *       Specifies flags that modify the search for device interfaces. The
  *       DEVICE_INTERFACE_INCLUDE_NONACTIVE flag specifies that the list of
  *       returned symbolic links should contain also disabled device
- *       interfaces in addition to the enabled ones.  
+ *       interfaces in addition to the enabled ones.
  *
- *    SymbolicLinkList 
+ *    SymbolicLinkList
  *       Points to a character pointer that is filled in on successful return
  *       with a list of unicode strings identifying the device interfaces
  *       that match the search criteria. The newly allocated buffer contains
  *       a list of symbolic link names. Each unicode string in the list is
  *       null-terminated; the end of the whole list is marked by an additional
  *       NULL. The caller is responsible for freeing the buffer (ExFreePool)
- *       when it is no longer needed. 
+ *       when it is no longer needed.
  *       If no device interfaces match the search criteria, this routine
  *       returns STATUS_SUCCESS and the string contains a single NULL
- *       character. 
+ *       character.
  *
  * Status
  *    @unimplemented
@@ -102,7 +102,7 @@ ReactOS_IoGetDeviceInterfaces(
    ULONG i = 0;
    ULONG j = 0;
    OBJECT_ATTRIBUTES ObjectAttributes;
-  
+
    Status = RtlStringFromGUID(InterfaceClassGuid, &GuidString);
    if (!NT_SUCCESS(Status))
    {
@@ -144,17 +144,17 @@ ReactOS_IoGetDeviceInterfaces(
       }
 
       DPRINT("IoGetDeviceInterfaces() called with PDO, not implemented.\n");
-      return STATUS_NOT_IMPLEMENTED;    
+      return STATUS_NOT_IMPLEMENTED;
    }
    else
-   {				     
+   {
       InitializeObjectAttributes(
          &ObjectAttributes,
          &BaseKeyName,
          OBJ_CASE_INSENSITIVE,
          NULL,
          NULL);
-  							  
+
       Status = ZwOpenKey(
          &InterfaceKey,
          KEY_READ,
@@ -191,7 +191,7 @@ ReactOS_IoGetDeviceInterfaces(
          fip,
          Size,
          &Size);
-  
+
       if (!NT_SUCCESS(Status))
       {
          DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
@@ -224,7 +224,7 @@ ReactOS_IoGetDeviceInterfaces(
 
          bip = (PKEY_BASIC_INFORMATION)ExAllocatePool(NonPagedPool, Size);
          ASSERT(bip != NULL);
-    
+
          Status = ZwEnumerateKey(
             InterfaceKey,
             i,
@@ -232,7 +232,7 @@ ReactOS_IoGetDeviceInterfaces(
             bip,
             Size,
             &Size);
-      
+
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwEnumerateKey() Failed.(0x%X)\n", Status);
@@ -244,7 +244,7 @@ ReactOS_IoGetDeviceInterfaces(
             ZwClose(InterfaceKey);
             return Status;
          }
-         
+
          SubKeyName.Length = 0;
          SubKeyName.MaximumLength = BaseKeyName.Length + bip->NameLength + sizeof(WCHAR);
          SubKeyName.Buffer = ExAllocatePool(NonPagedPool, SubKeyName.MaximumLength);
@@ -308,7 +308,7 @@ ReactOS_IoGetDeviceInterfaces(
             bfip,
             Size,
             &Size);
-  
+
          if (!NT_SUCCESS(Status))
          {
             DPRINT("ZwQueryKey() Failed. (0x%X)\n", Status);
@@ -319,7 +319,7 @@ ReactOS_IoGetDeviceInterfaces(
             ZwClose(InterfaceKey);
             return Status;
          }
-         
+
          for(j = 0; j < bfip->SubKeys; j++)
          {
             Status = ZwEnumerateKey(
@@ -372,12 +372,12 @@ ReactOS_IoGetDeviceInterfaces(
                ZwClose(InterfaceKey);
                return Status;
             }
-         
+
             if (!wcsncmp(bip->Name, L"Control", bip->NameLength))
             {
                continue;
             }
-            
+
             SymbolicLinkKeyName.Length = 0;
             SymbolicLinkKeyName.MaximumLength = SubKeyName.Length + bip->NameLength + sizeof(WCHAR);
             SymbolicLinkKeyName.Buffer = ExAllocatePool(NonPagedPool, SymbolicLinkKeyName.MaximumLength);
@@ -394,7 +394,7 @@ ReactOS_IoGetDeviceInterfaces(
             ASSERT(ControlKeyName.Buffer != NULL);
             RtlCopyUnicodeString(&ControlKeyName, &SymbolicLinkKeyName);
             RtlAppendUnicodeStringToString(&ControlKeyName, &Control);
-   
+
             ExFreePool(bip);
 
             InitializeObjectAttributes(
@@ -425,16 +425,16 @@ ReactOS_IoGetDeviceInterfaces(
             }
 
             Status = ZwQueryValueKey(
-               SymbolicLinkKey, 
-               &SymbolicLink, 
+               SymbolicLinkKey,
+               &SymbolicLink,
                KeyValuePartialInformation,
                NULL,
                0,
                &Size);
-               
+
             if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
                continue;
-      
+
             if (Status != STATUS_BUFFER_TOO_SMALL)
             {
                DPRINT("ZwQueryValueKey() Failed.(0x%X)\n", Status);
@@ -482,7 +482,7 @@ ReactOS_IoGetDeviceInterfaces(
             Status = RtlCheckRegistryKey(RTL_REGISTRY_ABSOLUTE, ControlKeyName.Buffer);
 
             if (NT_SUCCESS(Status))
-            {         
+            {
                /* Put the name in the string here */
                if (SymLinkList == NULL)
                {
@@ -510,7 +510,7 @@ ReactOS_IoGetDeviceInterfaces(
                   RtlCopyMemory(SymLinkListPtr, vpip->Data, vpip->DataLength);
                   SymLinkListPtr[vpip->DataLength / sizeof(WCHAR)] = 0;
                   SymLinkListPtr[1] = '?';
-               }               
+               }
             }
 
             RtlFreeUnicodeString(&SymbolicLinkKeyName);
@@ -534,7 +534,7 @@ ReactOS_IoGetDeviceInterfaces(
       }
 
       *SymbolicLinkList = SymLinkList;
-    
+
       RtlFreeUnicodeString(&BaseKeyName);
       ZwClose(InterfaceKey);
       ExFreePool(bfip);

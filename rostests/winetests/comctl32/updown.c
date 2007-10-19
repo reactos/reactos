@@ -54,7 +54,7 @@ static HWND create_updown_control (HWND hWndEdit)
 	 UDS_SETBUDDYINT | UDS_ALIGNRIGHT |
 	 UDS_ARROWKEYS | UDS_NOTHOUSANDS,
 	 /* placement */
-	 0, 0, 8, 8, 
+	 0, 0, 8, 8,
 	 /* parent, etc */
 	 NULL, NULL, hinst, NULL);
     assert (hWndUpDown);

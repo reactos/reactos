@@ -4,7 +4,7 @@ FASTCALL
 DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
 {
     UINT MaxBits = 0;
-    
+
     if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
     {
        PBITMAPCOREHEADER Core = (PBITMAPCOREHEADER)Info;
@@ -14,7 +14,7 @@ DIB_BitmapMaxBitsSize( PBITMAPINFO Info, UINT ScanLines )
     {
        if ((Info->bmiHeader.biCompression) && (Info->bmiHeader.biCompression != BI_BITFIELDS))
            return Info->bmiHeader.biSizeImage;
-    // Planes are over looked by Yuan. I guess assumed always 1.    
+    // Planes are over looked by Yuan. I guess assumed always 1.
        MaxBits = Info->bmiHeader.biBitCount * Info->bmiHeader.biPlanes * Info->bmiHeader.biWidth;
     }
     MaxBits = ((MaxBits + 31) & ~31 ) / 8; // From Yuan, ScanLineSize = (Width * bitcount + 31)/32

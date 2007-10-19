@@ -49,7 +49,7 @@ static PVOID   (WINAPI *pDPA_DeleteAllPtrs)(const HDPA);
 static PVOID   (WINAPI *pDPA_DeletePtr)(const HDPA,INT);
 static BOOL    (WINAPI *pDPA_Destroy)(const HDPA);
 static VOID    (WINAPI *pDPA_DestroyCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID);
-static VOID    (WINAPI *pDPA_EnumCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID); 
+static VOID    (WINAPI *pDPA_EnumCallback)(HDPA,PFNDPAENUMCALLBACK,PVOID);
 static INT     (WINAPI *pDPA_GetPtr)(const HDPA,INT);
 static INT     (WINAPI *pDPA_GetPtrIndex)(const HDPA,PVOID);
 static BOOL    (WINAPI *pDPA_Grow)(HDPA,INT);
@@ -63,7 +63,7 @@ static BOOL    (WINAPI *pDPA_Sort)(const HDPA,PFNDPACOMPARE,LPARAM);
 
 #define COMCTL32_GET_PROC(func, ord) \
   ((p ## func = (PVOID)GetProcAddress(hcomctl32,(LPCSTR)ord)) ? 1 \
-   : (trace( #func " not exported\n"), 0)) 
+   : (trace( #func " not exported\n"), 0))
 
 static BOOL InitFunctionPtrs(HMODULE hcomctl32)
 {
@@ -112,7 +112,7 @@ static PVOID CALLBACK CB_MergeInsertSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
     ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
     return p1;
-}        
+}
 
 static PVOID CALLBACK CB_MergeDeleteOddSrc(UINT op, PVOID p1, PVOID p2, LPARAM lp)
 {
@@ -123,7 +123,7 @@ static PVOID CALLBACK CB_MergeDeleteOddSrc(UINT op, PVOID p1, PVOID p2, LPARAM l
 static INT nEnum;
 
 static INT CALLBACK CB_EnumFirstThree(PVOID pItem, PVOID lp)
-{   
+{
     INT i;
 
     i = pDPA_GetPtrIndex(lp, pItem);
@@ -136,7 +136,7 @@ static INT CALLBACK CB_EnumFirstThree(PVOID pItem, PVOID lp)
 static HRESULT CALLBACK CB_Save(LPITEMDATA pInfo, IStream *pStm, LPARAM lp)
 {
     HRESULT hRes;
-    
+
     ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
     hRes = IStream_Write(pStm, &pInfo->iPos, sizeof(INT), NULL);
     ok(hRes == S_OK, "hRes=0x%lx\n", hRes);
@@ -149,7 +149,7 @@ static HRESULT CALLBACK CB_Load(LPITEMDATA pInfo, IStream *pStm, LPARAM lp)
 {
     HRESULT hRes;
     INT iOldPos;
-    
+
     iOldPos = pInfo->iPos;
     ok(lp == 0xdeadbeef, "lp=%ld\n", lp);
     hRes = IStream_Read(pStm, &pInfo->iPos, sizeof(INT), NULL);
@@ -171,23 +171,23 @@ static BOOL CheckDPA(HDPA dpa, DWORD dwIn, PDWORD pdwOut)
         if(!ulItem) break;
         dwOut = dwOut << 4 | (ulItem & 0xf);
     }
-    
+
     *pdwOut = dwOut;
 
     if(dwOut != dwIn)
     {
         pDPA_DeleteAllPtrs(dpa);
-        
+
         do
         {
             pDPA_InsertPtr(dpa, 0, (PVOID)(dwIn & 0xf));
             dwIn >>= 4;
         }
         while(dwIn);
-        
+
         return FALSE;
     }
-    
+
     return TRUE;
 }
 
@@ -200,16 +200,16 @@ static void test_dpa(void)
     PVOID p;
     DWORD dw, dw2, dw3;
     HRESULT hRes;
-    
+
     GetSystemInfo(&si);
     hHeap = HeapCreate(0, 1, 2);
     ok(hHeap != NULL, "error=%ld\n", GetLastError());
     dpa3 = pDPA_CreateEx(0, hHeap);
     ok(dpa3 != NULL, "\n");
     ret = pDPA_Grow(dpa3, si.dwPageSize + 1);
-    todo_wine ok(!ret && GetLastError() == ERROR_NOT_ENOUGH_MEMORY, 
+    todo_wine ok(!ret && GetLastError() == ERROR_NOT_ENOUGH_MEMORY,
        "ret=%d error=%ld\n", ret, GetLastError());
-        
+
     dpa = pDPA_Create(0);
     ok(dpa != NULL, "\n");
 
@@ -218,7 +218,7 @@ static void test_dpa(void)
     /* Fill the greated gap */
     ok(pDPA_SetPtr(dpa, 0, (PVOID)5), "\n");
     ok(CheckDPA(dpa, 0x56, &dw), "dw=0x%lx\n", dw);
-    
+
     /* Prepend item */
     ret = pDPA_InsertPtr(dpa, 1, (PVOID)1);
     ok(ret == 1, "ret=%d\n", ret);
@@ -228,7 +228,7 @@ static void test_dpa(void)
     /* Append item using out of bound index */
     ret = pDPA_InsertPtr(dpa, 5, (PVOID)2);
     ok(ret == 4, "ret=%d\n", ret);
-    /* Append item using DPA_APPEND */ 
+    /* Append item using DPA_APPEND */
     ret = pDPA_InsertPtr(dpa, DPA_APPEND, (PVOID)4);
     ok(ret == 5, "ret=%d\n", ret);
 
@@ -246,14 +246,14 @@ static void test_dpa(void)
     /* Sort DPA */
     ok(pDPA_Sort(dpa, CB_CmpGT, 0xdeadbeef), "\n");
     ok(CheckDPA(dpa, 0x654321, &dw), "dw=0x%lx\n", dw);
-    
+
     /* Clone into a new DPA */
     dpa2 = pDPA_Clone(dpa, NULL);
     ok(dpa2 != NULL, "\n");
     /* The old data should have been preserved */
     ok(CheckDPA(dpa2, 0x654321, &dw2), "dw=0x%lx\n", dw2);
     ok(pDPA_Sort(dpa, CB_CmpLT, 0xdeadbeef), "\n");
-    
+
     /* Test if the DPA itself was really copied */
     ok(CheckDPA(dpa,  0x123456, &dw),  "dw=0x%lx\n",  dw );
     ok(CheckDPA(dpa2, 0x654321, &dw2), "dw2=0x%lx\n", dw2);
@@ -281,11 +281,11 @@ static void test_dpa(void)
         j = pDPA_Search(dpa, (PVOID)i, i+1, CB_CmpLT, 0xdeadbeef, DPAS_SORTED);
         todo_wine ok(j+1 == i, "j=%d i=%d\n", j, i);
     }
-    
+
     /* Try to get the index of a nonexistent item */
     i = pDPA_GetPtrIndex(dpa, (PVOID)7);
     ok(i == DPA_ERR, "i=%d\n", i);
-    
+
     /* Try to delete out of bound indexes */
     p = pDPA_DeletePtr(dpa, -1);
     ok(p == NULL, "p=%p\n", p);
@@ -298,7 +298,7 @@ static void test_dpa(void)
     ok(CheckDPA(dpa, 0x12456, &dw), "dw=0x%lx\n", dw);
 
     /* Check where to re-insert the deleted item */
-    i = pDPA_Search(dpa, (PVOID)3, 0, 
+    i = pDPA_Search(dpa, (PVOID)3, 0,
                     CB_CmpLT, 0xdeadbeef, DPAS_SORTED|DPAS_INSERTAFTER);
     ok(i == 2, "i=%d\n", i);
     /* DPAS_INSERTBEFORE works just like DPAS_INSERTAFTER */
@@ -314,7 +314,7 @@ static void test_dpa(void)
     ret = pDPA_InsertPtr(dpa, 2, (PVOID)3);
     ok(ret == 2, "ret=%d i=%d\n", ret, 2);
     ok(CheckDPA(dpa, 0x123456, &dw), "dw=0x%lx\n", dw);
-    
+
     /* When doing a binary search while claiming reverse order all indexes
      * should be bogus */
     for(i = 0; i < 6; i++)
@@ -331,18 +331,18 @@ static void test_dpa(void)
         p = pDPA_DeletePtr(dpa, 2);
         p = pDPA_DeletePtr(dpa, 3);
         ok(CheckDPA(dpa, 0x135, &dw), "dw=0x%lx\n", dw);
-    
+
         /* Delete all odd entries from dpa2 */
-        pDPA_Merge(dpa2, dpa, DPAM_DELETE, 
+        pDPA_Merge(dpa2, dpa, DPAM_DELETE,
                    CB_CmpLT, CB_MergeDeleteOddSrc, 0xdeadbeef);
         todo_wine ok(CheckDPA(dpa2, 0x246, &dw2), "dw=0x%lx\n", dw2);
-    
+
         /* Merge dpa3 into dpa2 and dpa */
-        pDPA_Merge(dpa, dpa3, DPAM_INSERT|DPAM_NOSORT, 
+        pDPA_Merge(dpa, dpa3, DPAM_INSERT|DPAM_NOSORT,
                    CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
-        pDPA_Merge(dpa2, dpa3, DPAM_INSERT|DPAM_NOSORT, 
+        pDPA_Merge(dpa2, dpa3, DPAM_INSERT|DPAM_NOSORT,
                    CB_CmpLT, CB_MergeInsertSrc, 0xdeadbeef);
-    
+
         ok(CheckDPA(dpa,  0x123456, &dw ), "dw=0x%lx\n",  dw);
         ok(CheckDPA(dpa2, 0x123456, &dw2), "dw2=0x%lx\n", dw2);
         ok(CheckDPA(dpa3, 0x123456, &dw3), "dw3=0x%lx\n", dw3);
@@ -355,12 +355,12 @@ static void test_dpa(void)
         ok(CheckDPA(dpa2, 0x777456, &dw2), "dw=0x%lx\n", dw2);
         ok(nEnum == 3, "nEnum=%d\n", nEnum);
     }
-    
+
     /* Setting item with huge index should work */
     ok(pDPA_SetPtr(dpa2, 0x12345, (PVOID)0xdeadbeef), "\n");
     ret = pDPA_GetPtrIndex(dpa2, (PVOID)0xdeadbeef);
     ok(ret == 0x12345, "ret=%d\n", ret);
-          
+
     pDPA_DeleteAllPtrs(dpa2);
     ok(CheckDPA(dpa2, 0, &dw2), "dw2=0x%lx\n", dw2);
     pDPA_Destroy(dpa2);
@@ -396,7 +396,7 @@ static void test_dpa(void)
         hRes = pDPA_SaveStream(dpa, CB_Save, pStm, 0xdeadbeef);
         todo_wine ok(hRes == S_OK, "hRes=0x%lx\n", hRes);
         pDPA_Destroy(dpa);
-        
+
         hRes = IStream_Seek(pStm, liZero, STREAM_SEEK_SET, NULL);
         ok(hRes == S_OK, "hRes=0x%lx\n", hRes);
         hRes = pDPA_LoadStream(&dpa, CB_Load, pStm, 0xdeadbeef);
@@ -406,7 +406,7 @@ static void test_dpa(void)
 
         ret = IStream_Release(pStm);
         ok(!ret, "ret=%d\n", ret);
-	
+
         ret = IStorage_Release(pStg);
         ok(!ret, "ret=%d\n", ret);
 

@@ -276,7 +276,7 @@ static void test_get_atom_name(void)
             if (i)
             {
                 WCHAR res[20];
-                
+
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
                 print_integral( res, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));
@@ -448,7 +448,7 @@ static void test_local_get_atom_name(void)
     len = GetAtomNameA( atom, buf, 6 );
     ok( len == 5, "bad length %d\n", len );
     ok( !memcmp( buf, "fooba\0....", 10 ), "bad buffer contents\n" );
- 
+
     /* Repeat, unicode-style */
     if (unicode_OS)
     {
@@ -460,7 +460,7 @@ static void test_local_get_atom_name(void)
         ok( len == 5, "bad length %d\n", len );
         ok( !memcmp( bufW, resW, 10*sizeof(WCHAR) ), "bad buffer contents\n" );
     }
- 
+
     /* Check error code returns */
     memset(buf, '.', 10);
     ok( !GetAtomNameA( atom, buf,  0 ), "succeeded\n" );
@@ -546,7 +546,7 @@ static void test_local_get_atom_name(void)
             if (i)
             {
                 WCHAR res[20];
-                
+
                 ok( (len > 1) && (len < 7), "bad length %d\n", len );
                 print_integral( res, i );
                 memset( res + lstrlenW(res) + 1, 'a', 10 * sizeof(WCHAR));

@@ -954,7 +954,7 @@ static void test_lnks(void)
             {
                 okChildInt("argcA", 5);
             }
-            else 
+            else
             {
                 okChildInt("argcA", 5);
             }

@@ -1,4 +1,4 @@
-                    
+
 // ------------------------------------------------------------------
 // Windows 2000 Graphics API Black Book
 // Chapter 4 - Utility functions
@@ -6,7 +6,7 @@
 // Created by Damon Chandler <dmc27@ee.cornell.edu>
 // Updates can be downloaded at: <www.coriolis.com>
 //
-// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu 
+// Please do not hesistate to e-mail me at dmc27@ee.cornell.edu
 // if you have any questions about this code.
 // ------------------------------------------------------------------
 
@@ -23,7 +23,7 @@ namespace font {
 HFONT MakeFont(
     IN HDC hDestDC,           // handle to target DC
     IN LPCSTR typeface_name,  // font's typeface name
-    IN int point_size,        // font's point size 
+    IN int point_size,        // font's point size
     IN const BYTE charset,    // font's character set
     IN const DWORD style      // font's styles
    )
@@ -38,12 +38,12 @@ HFONT MakeFont(
    int pixels_per_inch = GetDeviceCaps(hDestDC, LOGPIXELSY);
 
    POINT PSize = {
-      0, 
-      -MulDiv(static_cast<int>(xf.eM22 * point_size + 0.5), 
+      0,
+      -MulDiv(static_cast<int>(xf.eM22 * point_size + 0.5),
               pixels_per_inch, 72)
       };
 
-   HFONT hResult = NULL;      
+   HFONT hResult = NULL;
    if (DPtoLP(hDestDC, &PSize, 1))
    {
       LOGFONT lf;

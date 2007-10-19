@@ -30,7 +30,7 @@
 #define TESTFILE ".\\testwine.ini"
 #define TESTFILE2 ".\\testwine2.ini"
 
-struct _profileInt { 
+struct _profileInt {
     LPCSTR section;
     LPCSTR key;
     LPCSTR value;
@@ -76,11 +76,11 @@ static void test_profile_int(void)
 
     for (i=0; i < num_test; i++) {
         if (profileInt[i].value)
-            WritePrivateProfileStringA(SECTION, KEY, profileInt[i].value, 
+            WritePrivateProfileStringA(SECTION, KEY, profileInt[i].value,
                                       profileInt[i].iniFile);
 
-       res = GetPrivateProfileIntA(profileInt[i].section, profileInt[i].key, 
-                 profileInt[i].defaultVal, profileInt[i].iniFile); 
+       res = GetPrivateProfileIntA(profileInt[i].section, profileInt[i].key,
+                 profileInt[i].defaultVal, profileInt[i].iniFile);
        ok((res == profileInt[i].result) || (res == profileInt[i].result9x),
 	    "test<%02d>: ret<%010u> exp<%010u><%010u>\n",
             i, res, profileInt[i].result, profileInt[i].result9x);
@@ -110,24 +110,24 @@ static void test_profile_string(void)
     /* enumerate the keys */
     ret=GetPrivateProfileStringA( "s", NULL, "", buf, sizeof(buf),
         TESTFILE2);
-    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1) 
+    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1)
         p[-1] = ',';
     /* and test */
     ok( ret == 18 && !strcmp( buf, "name1,name2,name4"), "wrong keys returned(%d): %s\n", ret,
             buf);
 
     ret=GetPrivateProfileSectionA("s", buf, sizeof(buf), TESTFILE2);
-    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1) 
+    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1)
         p[-1] = ',';
     /* and test */
     ok( ret == 35 && !strcmp( buf, "name1=val1,name2=,name3,name4=val4"), "wrong section returned(%d): %s\n",
             ret, buf);
-    
+
     /* add a new key to test that the file is quite usable */
-    WritePrivateProfileStringA( "s", "name5", "val5", TESTFILE2); 
+    WritePrivateProfileStringA( "s", "name5", "val5", TESTFILE2);
     ret=GetPrivateProfileStringA( "s", NULL, "", buf, sizeof(buf),
         TESTFILE2);
-    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1) 
+    for( p = buf + strlen(buf) + 1; *p;p += strlen(p)+1)
         p[-1] = ',';
     ok( ret == 24 && !strcmp( buf, "name1,name2,name4,name5"), "wrong keys returned(%d): %s\n",
             ret, buf);

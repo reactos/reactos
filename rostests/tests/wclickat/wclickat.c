@@ -242,7 +242,7 @@ static BOOL CALLBACK find_top_window(HWND hwnd, LPARAM lParam)
             return TRUE;
         hwnd=control;
     }
-        
+
     pwindow = (HWND*)lParam;
     *pwindow = hwnd;
     return FALSE;
@@ -298,7 +298,7 @@ static void do_click(HWND window, DWORD down, DWORD up)
             if (dragto_y<window_info.rcWindow.top || dragto_y>=window_info.rcWindow.bottom)
                 dragto_y=(window_info.rcWindow.bottom+window_info.rcWindow.top)/2;
             dragto_y=(dragto_y << 16)/GetSystemMetrics(SM_CYSCREEN);
-	
+
             dx = g_dragto_x - g_x;
             dy = g_dragto_y - g_y;
             step_per_x = dx / 4;
@@ -309,8 +309,8 @@ static void do_click(HWND window, DWORD down, DWORD up)
             x=dragto_x;
             y=dragto_y;
         }
-    } 
-    if (up) 
+    }
+    if (up)
        mouse_event(MOUSEEVENTF_ABSOLUTE | up, x, y, 0, 0);
 }
 

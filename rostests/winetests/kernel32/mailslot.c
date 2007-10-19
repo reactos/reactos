@@ -107,7 +107,7 @@ static int mailslot_test(void)
             "slot write\n");
 
     /*
-     * we can't read from this client, 
+     * we can't read from this client,
      * but we should be able to write to it
      */
     ok( !ReadFile( hWriter, buffer, sizeof buffer/2, &count, NULL),

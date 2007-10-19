@@ -18,7 +18,7 @@ HRESULT CALLBACK EnumDisplayModes( LPDDSURFACEDESC2 pDDSD, ENUMCONTEXT* Context 
 	if(setcout >= 5)
 		return DDENUMRET_OK;
 
-	DWORD lpdwFrequency = 0; 
+	DWORD lpdwFrequency = 0;
 	INT* passed = Context->passed;
 	INT* failed = Context->failed;
 	DDSURFACEDESC2 DisplayMode = {0};
@@ -29,12 +29,12 @@ HRESULT CALLBACK EnumDisplayModes( LPDDSURFACEDESC2 pDDSD, ENUMCONTEXT* Context 
 	TEST ( Context->DirectDraw->SetDisplayMode (pDDSD->dwWidth, pDDSD->dwHeight, pDDSD->ddpfPixelFormat.dwRGBBitCount, pDDSD->dwRefreshRate, 0) == DD_OK);
 	TEST ( Context->DirectDraw->GetMonitorFrequency (&lpdwFrequency) == DD_OK && lpdwFrequency == pDDSD->dwRefreshRate);
 	TEST ( Context->DirectDraw->GetDisplayMode (&DisplayMode) == DD_OK
-		&& pDDSD->dwHeight == DisplayMode.dwHeight 
-		&& pDDSD->dwWidth == DisplayMode.dwWidth 
+		&& pDDSD->dwHeight == DisplayMode.dwHeight
+		&& pDDSD->dwWidth == DisplayMode.dwWidth
 		&& pDDSD->dwRefreshRate == DisplayMode.dwRefreshRate
-		&& pDDSD->ddpfPixelFormat.dwRGBBitCount == DisplayMode.ddpfPixelFormat.dwRGBBitCount 
+		&& pDDSD->ddpfPixelFormat.dwRGBBitCount == DisplayMode.ddpfPixelFormat.dwRGBBitCount
 		&& DisplayMode.dwFlags == DDSD_HEIGHT | DDSD_WIDTH | DDSD_PITCH | DDSD_PIXELFORMAT | DDSD_REFRESHRATE );
-	
+
 	setcout++;
 	return DDENUMRET_OK;
 }

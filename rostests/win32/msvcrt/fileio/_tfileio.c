@@ -1,5 +1,5 @@
 /*
- *  ReactOS test program - 
+ *  ReactOS test program -
  *
  *  _tfileio.c
  *
@@ -31,8 +31,8 @@
 #define _tfopen      _wfopen
 #define _tunlink     _wunlink
 #define _TEOF        WEOF
-#define _gettchar    getwchar 
-#define _puttchar    putwchar  
+#define _gettchar    getwchar
+#define _puttchar    putwchar
 #define _THEX_FORMAT _T("0x%04x ")
 #else /*UNICODE*/
 #define _tfopen      fopen

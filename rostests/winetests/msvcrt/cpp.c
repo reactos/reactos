@@ -838,7 +838,7 @@ static void test_demangle_datatype(void)
 /*	{ "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@", "?AV?$CDB_GEN_BIG_ENUM_FLAG@W4CDB_WYSIWYG_BITS_ENUM@@$011@@@",FALSE}, */
     };
     int i, num_test = (sizeof(demangle)/sizeof(struct _demangle));
-    
+
     for (i = 0; i < num_test; i++)
     {
 	name = p__unDName(0, demangle[i].mangled, 0, pmalloc, pfree, 0x2800);
@@ -846,11 +846,11 @@ static void test_demangle_datatype(void)
 	    ok(name != NULL && !strcmp(name,demangle[i].result), "Got name \"%s\" for %d\n", name, i);
 	else
 	    todo_wine ok(name != NULL && !strcmp(name,demangle[i].result), "Got name %s for %d\n", name, i);
-	      
+
     }
 }
 
-/* Compare two strings treating multiple spaces (' ', ascii 0x20) in s2 
+/* Compare two strings treating multiple spaces (' ', ascii 0x20) in s2
    as single space. Needed for test_demangle as __unDName() returns sometimes
    two spaces instead of one in some older native msvcrt dlls. */
 static int strcmp_space(const char *s1, const char *s2)

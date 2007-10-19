@@ -39,7 +39,7 @@ static int CALLBACK sheet_callback(HWND hwnd, UINT msg, LPARAM lparam)
     }
     return 0;
 }
-        
+
 static INT_PTR CALLBACK page_dlg_proc(HWND hwnd, UINT msg, WPARAM wparam,
                                       LPARAM lparam)
 {

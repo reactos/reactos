@@ -65,13 +65,13 @@ static HWND create_child_editcontrol (DWORD style, DWORD exstyle)
     HWND parentWnd;
     HWND editWnd;
     RECT rect;
-    
+
     rect.left = 0;
     rect.top = 0;
     rect.right = 300;
     rect.bottom = 300;
     assert(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW, FALSE));
-    
+
     parentWnd = CreateWindowEx(0,
                             szEditTextPositionClass,
                             "Edit Test",
@@ -140,7 +140,7 @@ static void set_client_height(HWND Wnd, unsigned Height)
 
     /* Workaround for a bug in Windows' edit control
        (multi-line mode) */
-    GetWindowRect(Wnd, &WindowRect);             
+    GetWindowRect(Wnd, &WindowRect);
     SetWindowPos(Wnd, NULL, 0, 0,
                  WindowRect.right - WindowRect.left + 1,
                  WindowRect.bottom - WindowRect.top + 1,
@@ -168,7 +168,7 @@ static void test_edit_control_1(void)
     trace("EDIT: Single line\n");
     hwEdit = create_editcontrol(ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     r = get_edit_style(hwEdit);
-    ok(r == (ES_AUTOVSCROLL | ES_AUTOHSCROLL), "Wrong style expected 0xc0 got: 0x%lx\n", r); 
+    ok(r == (ES_AUTOVSCROLL | ES_AUTOHSCROLL), "Wrong style expected 0xc0 got: 0x%lx\n", r);
     for (i=0;i<65535;i++)
     {
 	msMessage.wParam = i;
@@ -181,7 +181,7 @@ static void test_edit_control_1(void)
     trace("EDIT: Single line want returns\n");
     hwEdit = create_editcontrol(ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     r = get_edit_style(hwEdit);
-    ok(r == (ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN), "Wrong style expected 0x10c0 got: 0x%lx\n", r); 
+    ok(r == (ES_AUTOVSCROLL | ES_AUTOHSCROLL | ES_WANTRETURN), "Wrong style expected 0x10c0 got: 0x%lx\n", r);
     for (i=0;i<65535;i++)
     {
 	msMessage.wParam = i;
@@ -194,7 +194,7 @@ static void test_edit_control_1(void)
     trace("EDIT: Multiline line\n");
     hwEdit = create_editcontrol(ES_MULTILINE | WS_VSCROLL | ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     r = get_edit_style(hwEdit);
-    ok(r == (ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE), "Wrong style expected 0xc4 got: 0x%lx\n", r); 
+    ok(r == (ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE), "Wrong style expected 0xc4 got: 0x%lx\n", r);
     for (i=0;i<65535;i++)
     {
 	msMessage.wParam = i;
@@ -207,7 +207,7 @@ static void test_edit_control_1(void)
     trace("EDIT: Multi line want returns\n");
     hwEdit = create_editcontrol(ES_MULTILINE | WS_VSCROLL | ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
     r = get_edit_style(hwEdit);
-    ok(r == (ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE), "Wrong style expected 0x10c4 got: 0x%lx\n", r); 
+    ok(r == (ES_WANTRETURN | ES_AUTOHSCROLL | ES_AUTOVSCROLL | ES_MULTILINE), "Wrong style expected 0x10c4 got: 0x%lx\n", r);
     for (i=0;i<65535;i++)
     {
 	msMessage.wParam = i;
@@ -713,26 +713,26 @@ static void test_margins(void)
     DWORD old_margins, new_margins;
 
     hwEdit = create_editcontrol(WS_BORDER | ES_AUTOHSCROLL | ES_AUTOVSCROLL, 0);
-    
+
     old_margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
     old_left_margin = LOWORD(old_margins);
     old_right_margin = HIWORD(old_margins);
-    
+
     /* Check if setting the margins works */
-    
+
     SendMessage(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN, MAKELONG(10, 0));
     new_margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
     ok(LOWORD(new_margins) == 10, "Wrong left margin: %d\n", LOWORD(new_margins));
     ok(HIWORD(new_margins) == old_right_margin, "Wrong right margin: %d\n", HIWORD(new_margins));
-    
+
     SendMessage(hwEdit, EM_SETMARGINS, EC_RIGHTMARGIN, MAKELONG(0, 10));
     new_margins = SendMessage(hwEdit, EM_GETMARGINS, 0, 0);
     ok(LOWORD(new_margins) == 10, "Wrong left margin: %d\n", LOWORD(new_margins));
     ok(HIWORD(new_margins) == 10, "Wrong right margin: %d\n", HIWORD(new_margins));
-    
-    
+
+
     /* The size of the rectangle must decrease if we increase the margin */
-    
+
     SendMessage(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(5, 5));
     SendMessage(hwEdit, EM_GETRECT, 0, (LPARAM)&old_rect);
     SendMessage(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(15, 20));
@@ -741,17 +741,17 @@ static void test_margins(void)
     ok(new_rect.right == old_rect.right - 15, "The right border of the rectangle is wrong\n");
     ok(new_rect.top == old_rect.top, "The top border of the rectangle must not change\n");
     ok(new_rect.bottom == old_rect.bottom, "The bottom border of the rectangle must not change\n");
-    
-    
+
+
     /* If we set the margin to same value as the current margin,
        the rectangle must not change */
-    
+
     SendMessage(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(10, 10));
     old_rect.left = 1;
     old_rect.right = 99;
     old_rect.top = 1;
     old_rect.bottom = 99;
-    SendMessage(hwEdit, EM_SETRECT, 0, (LPARAM)&old_rect);    
+    SendMessage(hwEdit, EM_SETRECT, 0, (LPARAM)&old_rect);
     SendMessage(hwEdit, EM_GETRECT, 0, (LPARAM)&old_rect);
     SendMessage(hwEdit, EM_SETMARGINS, EC_LEFTMARGIN | EC_RIGHTMARGIN, MAKELONG(10, 10));
     SendMessage(hwEdit, EM_GETRECT, 0, (LPARAM)&new_rect);
@@ -759,7 +759,7 @@ static void test_margins(void)
     ok(new_rect.right == old_rect.right, "The right border of the rectangle has changed\n");
     ok(new_rect.top == old_rect.top, "The top border of the rectangle has changed\n");
     ok(new_rect.bottom == old_rect.bottom, "The bottom border of the rectangle has changed\n");
-    
+
     DestroyWindow (hwEdit);
 }
 
@@ -791,15 +791,15 @@ void test_text_position_style(DWORD style)
     b2 = 2 * b;
     b3 = 3 * b;
     bm = b2 - 1;
-    
+
     /* Get a stock font for which we can determine the metrics */
     assert(font = GetStockObject(SYSTEM_FONT));
     assert(dc = GetDC(NULL));
     oldFont = SelectObject(dc, font);
-    assert(GetTextMetrics(dc, &metrics));    
+    assert(GetTextMetrics(dc, &metrics));
     SelectObject(dc, oldFont);
     ReleaseDC(NULL, dc);
-    
+
     /* Windows' edit control has some bugs in multi-line mode:
      * - Sometimes the format rectangle doesn't get updated
      *   (see workaround in set_client_height())
@@ -807,9 +807,9 @@ void test_text_position_style(DWORD style)
      *   line, the format rectangle is still as high as a text line
      *   (higher than the client rectangle) and the caret is not shown
      */
-    
+
     /* Edit controls that are in a parent window */
-       
+
     hwEdit = create_child_editcontrol(style | WS_VISIBLE, 0);
     SendMessage(hwEdit, WM_SETFONT, (WPARAM) font, (LPARAM) FALSE);
     if (single_line)
@@ -853,7 +853,7 @@ void test_text_position_style(DWORD style)
 
 
     /* Edit controls that are popup windows */
-    
+
     hwEdit = create_editcontrol(style | WS_POPUP, 0);
     SendMessage(hwEdit, WM_SETFONT, (WPARAM) font, (LPARAM) FALSE);
     if (single_line)
@@ -909,7 +909,7 @@ static BOOL RegisterWindowClasses (void)
     WNDCLASSA test2;
     WNDCLASSA test3;
     WNDCLASSA text_position;
-    
+
     test2.style = 0;
     test2.lpfnWndProc = ET2_WndProc;
     test2.cbClsExtra = 0;
@@ -968,6 +968,6 @@ START_TEST(edit)
     test_edit_control_5();
     test_margins();
     test_text_position();
-    
+
     UnregisterWindowClasses();
 }

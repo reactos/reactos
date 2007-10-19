@@ -107,40 +107,40 @@ static void test_comboboxex(void) {
        ok(res == -1, "Adding out of range worked unexpectedly (%ld)\n", res);
      */
 
-    /* Get an item completely out of range */ 
-    res = getItem(myHwnd, 99, &cbexItem); 
+    /* Get an item completely out of range */
+    res = getItem(myHwnd, 99, &cbexItem);
     ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
-    res = getItem(myHwnd, 4, &cbexItem); 
+    res = getItem(myHwnd, 4, &cbexItem);
     ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
-    res = getItem(myHwnd, -2, &cbexItem); 
+    res = getItem(myHwnd, -2, &cbexItem);
     ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
 
-    /* Get an item in range */ 
-    res = getItem(myHwnd, 0, &cbexItem); 
+    /* Get an item in range */
+    res = getItem(myHwnd, 0, &cbexItem);
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(first_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 1, &cbexItem); 
+    res = getItem(myHwnd, 1, &cbexItem);
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(middle_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 2, &cbexItem); 
+    res = getItem(myHwnd, 2, &cbexItem);
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(second_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 3, &cbexItem); 
+    res = getItem(myHwnd, 3, &cbexItem);
     ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
     ok(strcmp(third_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    /* Set an item completely out of range */ 
-    res = setItem(myHwnd, 99, replacement_item); 
+    /* Set an item completely out of range */
+    res = setItem(myHwnd, 99, replacement_item);
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, 4, replacement_item); 
+    res = setItem(myHwnd, 4, replacement_item);
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, -2, replacement_item); 
+    res = setItem(myHwnd, -2, replacement_item);
     ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
 
-    /* Set an item in range */ 
+    /* Set an item in range */
     res = setItem(myHwnd, 0, replacement_item);
     ok(res != 0, "Setting first item failed (%ld)\n", res);
     res = setItem(myHwnd, 3, replacement_item);
@@ -175,15 +175,15 @@ static void test_comboboxex(void) {
 LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
-    
+
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-  
+
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
-    
+
     return 0L;
 }
 
@@ -207,7 +207,7 @@ static void init(void) {
     wc.lpfnWndProc = ComboExTestWndProc;
     RegisterClassA(&wc);
 
-    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW, 
+    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW,
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     assert(hComboExParentWnd != NULL);
 
@@ -218,13 +218,13 @@ static void init(void) {
 static void cleanup(void)
 {
     MSG msg;
-    
+
     PostMessageA(hComboExParentWnd, WM_CLOSE, 0, 0);
     while (GetMessageA(&msg,0,0,0)) {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
-    
+
     UnregisterClassA(ComboExTestClass, GetModuleHandleA(NULL));
 }
 

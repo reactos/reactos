@@ -52,11 +52,11 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
     int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
-    WCHAR           TestItem2[] = {'T', 'e', 's', 't', 'b', 0}; 
-    WCHAR           TestItem3[] = {'T', 'e', 's', 't', 'c',' ','1','2','3',' ',' ','e','n','d',0}; 
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
+    WCHAR           TestItem2[] = {'T', 'e', 's', 't', 'b', 0};
+    WCHAR           TestItem3[] = {'T', 'e', 's', 't', 'c',' ','1','2','3',' ',' ','e','n','d',0};
     WCHAR           TestItem4[] = {'T', 'e', 's', 't', 'c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0};
-    WCHAR           TestItem5[] = {0x0684,'T','e','s','t','c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0}; 
+    WCHAR           TestItem5[] = {0x0684,'T','e','s','t','c',' ',0x0684,0x0694,0x06a4,' ',' ','e','n','d',0};
 
     SCRIPT_CACHE    psc;
     int             cChars;
@@ -76,7 +76,7 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
      * by checking a known value in the table                                                */
     hr = ScriptGetProperties(&ppSp, &iMaxProps);
     trace("number of script properties %d\n", iMaxProps);
-    ok (iMaxProps > 0, "Number of scripts returned should not be 0\n"); 
+    ok (iMaxProps > 0, "Number of scripts returned should not be 0\n");
     if  (iMaxProps > 0)
          ok( ppSp[5]->langid == 9, "Langid[5] not = to 9\n"); /* Check a known value to ensure   */
                                                               /* ptrs work                       */
@@ -241,12 +241,12 @@ static void test_ScriptItemIzeShapePlace(HDC hdc, unsigned short pwOutGlyphs[256
 
     /*
      * This test is for when the first unicode character requires bidi support
-     */ 
+     */
     cInChars = (sizeof(TestItem5)-1)/sizeof(WCHAR);
     hr = ScriptItemize(TestItem5, cInChars, cMaxItems, NULL, NULL, pItem, &pcItems);
     ok (hr == 0, "ScriptItemize should return 0, returned %08x\n", hr);
     ok (pcItems == 4, "There should have been 4 items, found %d\n", pcItems);
-    ok (pItem[0].a.s.uBidiLevel == 1, "The first character should have been bidi=1 not %d\n", 
+    ok (pItem[0].a.s.uBidiLevel == 1, "The first character should have been bidi=1 not %d\n",
                                        pItem[0].a.s.uBidiLevel);
 }
 
@@ -257,7 +257,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     int             cInChars;
     int             cChars;
     unsigned short  pwOutGlyphs3[256];
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
     DWORD           dwFlags;
     int             cnt;
 
@@ -300,7 +300,7 @@ static void test_ScriptGetCMap(HDC hdc, unsigned short pwOutGlyphs[256])
     for (cnt=0; cnt < cChars && pwOutGlyphs[cnt] == pwOutGlyphs3[cnt]; cnt++) {}
     ok (cnt == cInChars, "Translation not correct. WCHAR %d - %04x != %04x\n",
                          cnt, pwOutGlyphs[cnt], pwOutGlyphs3[cnt]);
-        
+
     hr = ScriptFreeCache( &psc);
     ok (!psc, "psc is not null after ScriptFreeCache\n");
 
@@ -377,7 +377,7 @@ static void test_ScriptTextOut(HDC hdc)
     int             cMaxItems;
     SCRIPT_ITEM     pItem[255];
     int             pcItems;
-    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0}; 
+    WCHAR           TestItem1[] = {'T', 'e', 's', 't', 'a', 0};
 
     SCRIPT_CACHE    psc;
     int             cChars;
@@ -572,7 +572,7 @@ static void test_ScriptXtoX(void)
     cGlyphs = 10;
     hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
-    ok(piX == 1171, "iCP=%d should return piX=1171 not %d\n", iCP, piX);   
+    ok(piX == 1171, "iCP=%d should return piX=1171 not %d\n", iCP, piX);
     iCP=6;
     fTrailing = FALSE;
     cChars = 10;
@@ -593,7 +593,7 @@ static void test_ScriptXtoX(void)
     cGlyphs = 10;
     hr = ScriptCPtoX(iCP, fTrailing, cChars, cGlyphs, pwLogClust, psva, piAdvance, &psa, &piX);
     ok(hr == S_OK, "ScriptCPtoX should return S_OK not %08x\n", hr);
-    ok(piX == 1953, "iCP=%d should return piX=1953 not %d\n", iCP, piX); 
+    ok(piX == 1953, "iCP=%d should return piX=1953 not %d\n", iCP, piX);
 
 }
 
@@ -622,10 +622,10 @@ static void test_ScriptString(HDC hdc)
     const BYTE      InClass = 0;
     SCRIPT_STRING_ANALYSIS ssa = NULL;
 
-    int             X = 10; 
+    int             X = 10;
     int             Y = 100;
-    UINT            Options = 0; 
-    const RECT      rc = {0, 50, 100, 100}; 
+    UINT            Options = 0;
+    const RECT      rc = {0, 50, 100, 100};
     int             MinSel = 0;
     int             MaxSel = 0;
     BOOL            Disabled = FALSE;
@@ -733,7 +733,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
             hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
             ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
             ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, X);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
+            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
                                   iTrailing, X);
             fTrailing = TRUE;
             hr = ScriptStringCPtoX(ssa, Cp, fTrailing, &X);
@@ -747,7 +747,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
              * again works
              */
             ok(Cp + 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp + 1, Ch, X);
-            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
+            ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
                                    iTrailing, X);
         }
         /*
@@ -762,13 +762,13 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp, Ch, X);
-        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n", 
+        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
                                   iTrailing, X);
 
         /*
          * This test is to check that if the X position is just outside the trailing edge of the
          * character then iTrailing will indicate the leading edge, ie. FALSE, and Ch will indicate
-         * the next character, ie. Cp + 1 
+         * the next character, ie. Cp + 1
          */
         fTrailing = TRUE;
         Cp = 3;
@@ -778,13 +778,13 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp + 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp + 1, Ch, X);
-        ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n", 
+        ok(iTrailing == FALSE, "ScriptStringXtoCP should return iTrailing = 0 not %d for X = %d\n",
                                   iTrailing, X);
 
         /*
          * This test is to check that if the X position is just outside the leading edge of the
          * character then iTrailing will indicate the trailing edge, ie. TRUE, and Ch will indicate
-         * the next character down , ie. Cp - 1 
+         * the next character down , ie. Cp - 1
          */
         fTrailing = FALSE;
         Cp = 3;
@@ -794,7 +794,7 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
         hr = ScriptStringXtoCP(ssa, X, &Ch, &iTrailing);
         ok(hr == S_OK, "ScriptStringXtoCP should return S_OK not %08x\n", hr);
         ok(Cp - 1 == Ch, "ScriptStringXtoCP should return Ch = %d not %d for X = %d\n", Cp - 1, Ch, X);
-        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n", 
+        ok(iTrailing == TRUE, "ScriptStringXtoCP should return iTrailing = 1 not %d for X = %d\n",
                                   iTrailing, X);
 
         /*
@@ -814,11 +814,11 @@ static void test_ScriptStringXtoCP_CPtoX(HDC hdc)
 
         /*
          * When ScriptStringCPtoX is called with a character position Cp that exceeds the
-         * string length, return E_INVALIDARG.  This also invalidates the ssa so a 
+         * string length, return E_INVALIDARG.  This also invalidates the ssa so a
          * ScriptStringFree should also fail.
          */
         fTrailing = FALSE;
-        Cp = String_len + 1; 
+        Cp = String_len + 1;
         hr = ScriptStringCPtoX(ssa, Cp, fTrailing, &X);
         ok(hr == E_INVALIDARG, "ScriptStringCPtoX should return E_INVALIDARG not %08x\n", hr);
 

@@ -19,7 +19,7 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
- 
+
 #include <stdio.h>
 
 #include "wine/test.h"
@@ -523,7 +523,7 @@ static void test_fcvt(void)
 {
     char *str;
     int dec=100, sign=100;
-    
+
     str = _fcvt(0.0001, 1, &dec, &sign );
     todo_wine {
     ok( 0 == strcmp(str,""), "bad return\n");

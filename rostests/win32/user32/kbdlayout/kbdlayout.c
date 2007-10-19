@@ -1,5 +1,5 @@
 /*
- * PROJECT:         ReactOS 
+ * PROJECT:         ReactOS
  * LICENSE:         GPL - See COPYING in the top level directory
  * FILE:            base/applications/testset/user32/kbdlayout/kbdlayout.c
  * PURPOSE:         Keyboard layout testapp
@@ -28,10 +28,10 @@ typedef struct {
 DWORD WINAPI ThreadProc(LPVOID lpParam)
 {
 
-	DialogBoxParam(hInst, 
+	DialogBoxParam(hInst,
 		MAKEINTRESOURCE(IDD_MAINDIALOG),
-		NULL, 
-		(DLGPROC)MainDialogProc, 
+		NULL,
+		(DLGPROC)MainDialogProc,
 		(LPARAM)NULL);
 
 	return 0;
@@ -91,8 +91,8 @@ void UpdateData(HWND hDlg)
 	for(i = 0; i < n; i++)
 	{
 		swprintf(buf, L"%x", klList[i] );
-		j = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM) buf); 
-		SendMessage(hList, LB_SETITEMDATA, j, (LPARAM) klList[i]); 
+		j = SendMessage(hList, LB_ADDSTRING, 0, (LPARAM) buf);
+		SendMessage(hList, LB_SETITEMDATA, j, (LPARAM) klList[i]);
 		if(klList[i] == hKl) SendMessage(hList, LB_SETCURSEL, j, 0);
 	}
 
@@ -129,15 +129,15 @@ LRESULT CALLBACK WndSubclassProc( HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 		FormatMsg(L"%s: WM_INPUTLANGCHANGE lParam=%x wParam=%x\n", data->WndName, lParam, wParam);
 		UpdateData(hMainDlg);
 		//Pass message to defwindowproc
-	} 
+	}
 	else if(uMsg == WM_INPUTLANGCHANGEREQUEST)
 	{
 		FormatMsg(L"%s: WM_INPUTLANGCHANGEREQUEST lParam=%x wParam=%x\n", data->WndName, lParam, wParam);
 		UpdateData(hMainDlg);
 		//Pass message to defwindowproc
 	}
-	
-	return ( CallWindowProc( data->OrigProc, hwnd, uMsg, wParam, lParam) ); 
+
+	return ( CallWindowProc( data->OrigProc, hwnd, uMsg, wParam, lParam) );
 }
 
 void SubclassWnd(HWND hWnd, WCHAR* Name)
@@ -221,7 +221,7 @@ HKL GetActivateHandle(HWND hDlg)
 
 	if(IsDlgButtonChecked(hDlg, IDC_FROMLIST))
 		return GetSelectedLayout(hDlg);
-	else if(IsDlgButtonChecked(hDlg, IDC_HKL_NEXT)) 
+	else if(IsDlgButtonChecked(hDlg, IDC_HKL_NEXT))
 		return (HKL)HKL_NEXT;
 
 	return (HKL)HKL_PREV;
@@ -284,10 +284,10 @@ LRESULT MainDialogProc(HWND hDlg,
 					{
 						Sleep(GetDelayMilliseconds(hDlg));
 						if(!(hKl = ActivateKeyboardLayout(hKl, GetActivateFlags(hDlg))))
-							FormatBox(hDlg, MB_ICONERROR, L"Error", 
+							FormatBox(hDlg, MB_ICONERROR, L"Error",
 								L"ActivateKeyboardLayout() failed. %d", GetLastError());
 						else UpdateData(hDlg);
-						//FormatBox(hDlg, 0, L"Activated", L"Prev - %x, err - %d.", hKl, 
+						//FormatBox(hDlg, 0, L"Activated", L"Prev - %x, err - %d.", hKl,
 						// GetLastError());
 					}
 					else MessageBox(hDlg, L"No item selected", L"Error", MB_ICONERROR);
@@ -300,11 +300,11 @@ LRESULT MainDialogProc(HWND hDlg,
 					{
 						Sleep(GetDelayMilliseconds(hDlg));
 						if(!UnloadKeyboardLayout(hKl))
-							FormatBox(hDlg, MB_ICONERROR, L"Error", 
-								L"UnloadKeyboardLayout() failed. %d", 
+							FormatBox(hDlg, MB_ICONERROR, L"Error",
+								L"UnloadKeyboardLayout() failed. %d",
 								GetLastError());
 						else UpdateData(hDlg);
-					}			
+					}
 					else MessageBox(hDlg,  L"No item selected", L"Error", MB_ICONERROR);
 					break;
 				}
@@ -315,7 +315,7 @@ LRESULT MainDialogProc(HWND hDlg,
 					GetWindowText(GetDlgItem(hDlg, IDC_KLID), buf, sizeof(buf));
 					Sleep(GetDelayMilliseconds(hDlg));
 					if(!LoadKeyboardLayout(buf, GetLoadFlags(hDlg)))
-						FormatBox(hDlg, MB_ICONERROR, L"Error", 
+						FormatBox(hDlg, MB_ICONERROR, L"Error",
 							L"LoadKeyboardLayout() failed. %d",
 							GetLastError());
 					else UpdateData(hDlg);
@@ -332,7 +332,7 @@ LRESULT MainDialogProc(HWND hDlg,
 				{
 					if(!CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL))
 					{
-						FormatBox(hDlg, MB_ICONERROR, L"Error!", 
+						FormatBox(hDlg, MB_ICONERROR, L"Error!",
 							L"Can not create thread (%d).", GetLastError());
 					}
 				}

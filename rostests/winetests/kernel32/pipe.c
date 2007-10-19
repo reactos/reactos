@@ -205,7 +205,7 @@ static void test_CreateNamedPipe(int pipemode)
             todo_wine {
                 ok(SetNamedPipeHandleState(hFile, &lpmode, NULL, NULL), "Change mode\n");
             }
-        
+
             memset(ibuf, 0, sizeof(ibuf));
             ok(WriteFile(hnp, obuf, sizeof(obuf), &written, NULL), "WriteFile5a\n");
             ok(written == sizeof(obuf), "write file len 3a\n");
@@ -223,7 +223,7 @@ static void test_CreateNamedPipe(int pipemode)
             }
             pbuf = ibuf;
             ok(memcmp(obuf, pbuf, sizeof(obuf)) == 0, "content 5a check\n");
-    
+
             /* Multiple writes in the reverse direction */
             /* the write of obuf2 from write4 should still be in the buffer */
             ok(PeekNamedPipe(hnp, ibuf, sizeof(ibuf), &readden, &avail, NULL), "Peek6a\n");
@@ -741,9 +741,9 @@ static void test_CreatePipe(void)
     DWORD read;
     char readbuf[32];
 
-    pipe_attr.nLength = sizeof(SECURITY_ATTRIBUTES); 
-    pipe_attr.bInheritHandle = TRUE; 
-    pipe_attr.lpSecurityDescriptor = NULL; 
+    pipe_attr.nLength = sizeof(SECURITY_ATTRIBUTES);
+    pipe_attr.bInheritHandle = TRUE;
+    pipe_attr.lpSecurityDescriptor = NULL;
     ok(CreatePipe(&piperead, &pipewrite, &pipe_attr, 0) != 0, "CreatePipe failed\n");
     ok(WriteFile(pipewrite,PIPENAME,sizeof(PIPENAME), &written, NULL), "Write to anonymous pipe failed\n");
     ok(written == sizeof(PIPENAME), "Write to anonymous pipe wrote %ld bytes instead of %d\n", written,sizeof(PIPENAME));

@@ -265,7 +265,7 @@ FrameworkGetFunction(_PAPI_DESCRIPTION ApiDescription)
   exportedFunctionName = FrameworkGetExportedFunctionNameInternal(ApiDescription);
 
   hModule = _GetModuleHandleA(ApiDescription->FileName);
-  if (hModule != NULL) 
+  if (hModule != NULL)
     {
       function = _GetProcAddress(hModule, exportedFunctionName);
     }
@@ -303,7 +303,7 @@ FrameworkGetHookInternal(ULONG index)
     ExternalDependencies[index].FileName);
 
   address = FrameworkGetFunction(&ExternalDependencies[index]);
- 
+
   if (address == NULL)
     {
       printf("Function '%s' not found in DLL '%s'.\n",
@@ -311,7 +311,7 @@ FrameworkGetHookInternal(ULONG index)
         ExternalDependencies[index].FileName);
     }
   ExternalDependencies[index].FunctionAddress = address;
- 
+
   return address;
 }
 

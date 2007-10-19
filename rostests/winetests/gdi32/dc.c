@@ -154,7 +154,7 @@ static void test_savedc(void)
     ret = SaveDC(hdc);
     ok(ret == 1, "ret = %d\n", ret);
     ret = SaveDC(hdc);
-    ok(ret == 2, "ret = %d\n", ret); 
+    ok(ret == 2, "ret = %d\n", ret);
     ret = RestoreDC(hdc, -4);
     ok(!ret, "ret = %d\n", ret);
     ret = RestoreDC(hdc, 3);

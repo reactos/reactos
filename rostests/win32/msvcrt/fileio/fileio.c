@@ -1,5 +1,5 @@
 /*
- *  ReactOS test program - 
+ *  ReactOS test program -
  *
  *  _fileio.c
  *

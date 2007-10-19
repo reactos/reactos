@@ -1139,7 +1139,7 @@ static void test_file_sharing(void)
                             "  indexes = %d, %d, %d, %d\n"
                             "  modes   =\n  %lx/%lx/%lx/%lx\n",
 			    ret,
-                            a1, s1, a2, s2, 
+                            a1, s1, a2, s2,
                             access_modes[a1], sharing_modes[s1],
 			    access_modes[a2], sharing_modes[s2]
                             );
@@ -1406,11 +1406,11 @@ static void test_OpenFile_exists(void)
 {
     HFILE hFile;
     OFSTRUCT ofs;
-    
+
     static const char *file = "\\winver.exe";
     char buff[MAX_PATH];
     UINT length;
-    
+
     length = GetSystemDirectoryA(buff, MAX_PATH);
 
     if ((length + lstrlen(file) < MAX_PATH))

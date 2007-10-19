@@ -30,13 +30,13 @@ START_TEST(heap)
 
     mem = realloc(NULL, 10);
     ok(mem != NULL, "memory not allocated\n");
-    
+
     mem = realloc(mem, 20);
     ok(mem != NULL, "memory not reallocated\n");
- 
+
     mem = realloc(mem, 0);
     ok(mem == NULL, "memory not freed\n");
-    
+
     mem = realloc(NULL, 0);
     ok(mem != NULL, "memory not (re)allocated for size 0\n");
 }
