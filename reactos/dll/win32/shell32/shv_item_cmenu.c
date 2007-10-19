@@ -35,7 +35,7 @@
 
 #include "shell32_main.h"
 #include "shellfolder.h"
-
+#include "debughlp.h"
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 /* ugly hack for cut&paste files */
@@ -52,8 +52,13 @@ typedef struct
 	LPITEMIDLIST	*apidl;		/* array of child pidls */
 	UINT		cidl;
 	BOOL		bAllValues;
+    IContextMenu ** ecmenu;
+    UINT           esize;
+    UINT           ecount;
 } ItemCmImpl;
 
+UINT
+SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj);
 
 static const IContextMenu2Vtbl cmvt;
 
@@ -209,6 +214,67 @@ void WINAPI _InsertMenuItem (
 	InsertMenuItemA( hmenu, indexMenu, fByPosition, &mii);
 }
 
+BOOL
+SH_EnlargeContextMenuArray(ItemCmImpl *This, UINT newsize)
+{
+    BOOL ret = FALSE;
+
+    if (This->ecmenu == NULL)
+    {
+        This->ecmenu = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY, sizeof(IContextMenu*) *10);
+        if(This->ecmenu)
+            ret = TRUE;
+        This->ecount = 0;
+        This->esize = 10;
+    }
+    else
+    {
+        IContextMenu ** newcmenu = HeapAlloc(GetProcessHeap(),HEAP_ZERO_MEMORY,sizeof(IContextMenu*)*newsize);
+        if (newcmenu)
+        {
+            memcpy(newcmenu, This->ecmenu, This->ecount * sizeof(IContextMenu*));
+            HeapFree(GetProcessHeap(), 0, This->ecmenu);
+            This->ecmenu = newcmenu;
+            ret = TRUE;
+        }
+    }
+    return ret;
+}
+
+VOID
+SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj)
+{
+    UINT i;
+    WCHAR buffer[111];
+    char ebuf[10];
+    HRESULT hr;
+
+    for (i = 0; i < This->cidl; i++)
+    {
+        GUID * guid = _ILGetGUIDPointer(This->apidl[i]);
+        if (guid)
+        {
+            LPOLESTR pwszCLSID;
+            static const WCHAR CLSID[] = { 'C','L','S','I','D','\\',0 };
+            wcscpy(buffer, CLSID);
+            hr = StringFromCLSID(guid, &pwszCLSID);
+            if (hr == S_OK)
+            {
+                memcpy(&buffer[6], pwszCLSID, 38 * sizeof(WCHAR));
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+            }
+        }
+
+        if (_ILGetExtension(This->apidl[i], ebuf, sizeof(ebuf) / sizeof(char)))
+        {
+            buffer[0] = L'\0';
+            if (MultiByteToWideChar(CP_ACP, 0, ebuf, -1, buffer, 111))
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+        }
+    }
+
+}
+
 /**************************************************************************
 * ISvItemCm_fnQueryContextMenu()
 * FIXME: load menu MENU_SHV_FILE out of resources instead if creating
@@ -222,7 +288,10 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	UINT idCmdLast,
 	UINT uFlags)
 {
+    IDataObject * pDataObj;
 	ItemCmImpl *This = (ItemCmImpl *)iface;
+    USHORT lastindex = 0;
+
 
 	TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",This, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
@@ -260,9 +329,18 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
 	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
 
-	  return MAKE_HRESULT(SEVERITY_SUCCESS, 0, (FCIDM_SHVIEWLAST));
+      lastindex = FCIDM_SHVIEWLAST;
 	}
-	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, 0);
+#if 0
+    pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
+    if (pDataObj)
+    {
+        SH_LoadContextMenuHandlers(This, pDataObj);
+        pDataObj->Release ();
+    }
+#endif
+
+	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, lastindex);
 }
 
 /**************************************************************************
@@ -600,6 +678,93 @@ static const IContextMenu2Vtbl cmvt =
 	ISvItemCm_fnHandleMenuMsg
 };
 
+HRESULT
+SH_LoadDynamicContextMenuHandler(HKEY hKey, LPCWSTR szClass, IContextMenu** ppv, IDataObject * pDataObj)
+{
+  HRESULT hr;
+  IContextMenu * cmobj;
+  IShellExtInit *shext;
+
+  hr = SHCoCreateInstance(szClass, NULL, NULL, &IID_IContextMenu, (void**)&cmobj);
+  if (hr != S_OK)
+  {
+      TRACE("SHCoCreateInstance failed\n");
+      return hr;
+  }
+
+  hr = cmobj->lpVtbl->QueryInterface(cmobj, &IID_IShellExtInit, (void**)&shext);
+  if (hr != S_OK)
+  {
+      TRACE("Failed to query for interface IID_IShellExtInit\n");
+      cmobj->lpVtbl->Release(cmobj);
+      return FALSE;
+  }
+
+  hr = shext->lpVtbl->Initialize(shext, NULL, pDataObj, hKey);
+  if (hr != S_OK)
+  {
+      TRACE("Failed to initialize shell extension\n");
+      shext->lpVtbl->Release(shext);
+      cmobj->lpVtbl->Release(cmobj);
+  }
+  else
+  {
+      *ppv = cmobj;
+  }
+
+  return hr;
+}
+
+UINT
+SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj)
+{
+   HKEY hKey;
+   WCHAR szKey[MAX_PATH];
+   WCHAR szName[MAX_PATH];
+   DWORD dwIndex, dwName;
+   LONG res;
+   HRESULT hResult;
+   IContextMenu * cmobj;
+   UINT index;
+   static const WCHAR szShellEx[] = { '\\','s','h','e','l','l','e','x','\\','C','o','n','t','e','x','t','M','e','n','u','H','a','n','d','l','e','r','s',0 };
+
+   wcscpy(szKey, szFileClass);
+   wcscat(szKey, szShellEx);
+
+   if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+   {
+      TRACE("RegOpenKeyExW failed for key %s\n", debugstr_w(szKey));
+      return 0;
+   }
+
+   dwIndex = 0;
+   index = 0;
+   do
+   {
+      dwName = MAX_PATH;
+      res = RegEnumKeyExW(hKey, dwIndex, szName, &dwName, NULL, NULL, NULL, NULL);
+      if (res == ERROR_SUCCESS)
+      {
+         hResult = SH_LoadDynamicContextMenuHandler(hKey, szName, &cmobj, pDataObj);
+         if (hResult == S_OK)
+         {
+            if (This->ecount + 1 > This->esize)
+            {
+                if (!SH_EnlargeContextMenuArray(This, max(This->esize * 2, 10)))
+                    break;
+            }
+
+            This->ecmenu[This->ecount] = cmobj;
+            This->ecount++;
+         }
+      }
+      dwIndex++;
+   }while(res == ERROR_SUCCESS);
+
+   RegCloseKey(hKey);
+   return index;
+}
+
 /*************************************************************************
  * SHCreateDefaultContextMenu			[SHELL32.325] Vista API
  *
@@ -610,7 +775,18 @@ HRESULT WINAPI SHCreateDefaultContextMenu(
 	REFIID riid,
 	void **ppv)
 {
-   return E_FAIL;
+   HRESULT hr;
+   IContextMenu2 * pcm;
+
+   if (pdcm->cidl > 0)
+      pcm = ISvItemCm_Constructor( pdcm->psf, pdcm->pidlFolder, pdcm->apidl, pdcm->cidl );
+   else
+      pcm = ISvBgCm_Constructor( pdcm->psf, TRUE );
+        
+   hr = S_OK;
+   *ppv = pcm;
+
+   return hr;
 }
 
 /*************************************************************************
@@ -630,6 +806,7 @@ INT CDefFolderMenu_Create2(
 	IContextMenu **ppcm)
 {
    DEFCONTEXTMENU pdcm;
+   HRESULT hr;
 
    pdcm.hwnd = hwnd;
    pdcm.pcmcb = NULL; //FIXME
@@ -641,5 +818,6 @@ INT CDefFolderMenu_Create2(
    pdcm.cKeys = nKeys;
    pdcm.aKeys = ahkeyClsKeys;
 
-   return SHCreateDefaultContextMenu(&pdcm, &IID_IContextMenu, (void**)ppcm);
+   hr = SHCreateDefaultContextMenu(&pdcm, &IID_IContextMenu, (void**)ppcm);
+   return hr;
 }
