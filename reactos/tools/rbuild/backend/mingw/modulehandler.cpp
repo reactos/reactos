@@ -766,12 +766,16 @@ MingwModuleHandler::GenerateMacro (
 	const char* assignmentOperation,
 	const string& macro,
 	const IfableData& data,
-	set<string> *used_defs )
+	set<string> *used_defs,
+	bool generatingCompilerMacro )
 {
 	size_t i;
 	bool generateAssignment;
 
-	generateAssignment = (use_pch && module.pch != NULL ) || data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0;
+	if ( generatingCompilerMacro )
+		generateAssignment = (use_pch && module.pch != NULL ) || data.includes.size () > 0 || data.defines.size () > 0 || data.compilerFlags.size () > 0;
+	else
+		generateAssignment = (use_pch && module.pch != NULL ) || data.includes.size () > 0 || data.defines.size () > 0;
 	if ( generateAssignment )
 	{
 		fprintf ( fMakefile,
@@ -787,15 +791,17 @@ MingwModuleHandler::GenerateMacro (
 		          backend->GetFullPath ( *GetPrecompiledHeaderFilename () ).c_str () );
 	}
 
-	string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
-	if ( compilerParameters.size () > 0 )
+	if ( generatingCompilerMacro )
 	{
-		fprintf (
-			fMakefile,
-			" %s",
-			compilerParameters.c_str () );
+		string compilerParameters = GenerateCompilerParametersFromVector ( data.compilerFlags );
+		if ( compilerParameters.size () > 0 )
+		{
+			fprintf (
+				fMakefile,
+				" %s",
+				compilerParameters.c_str () );
+		}
 	}
-
 	for ( i = 0; i < data.includes.size(); i++ )
 	{
 		const Include& include = *data.includes[i];
@@ -845,11 +851,13 @@ MingwModuleHandler::GenerateMacros (
 	GenerateMacro ( assignmentOperation,
 	                cflagsMacro,
 	                data,
-	                &used_defs );
+	                &used_defs,
+	                true );
 	GenerateMacro ( assignmentOperation,
 	                windresflagsMacro,
 	                data,
-	                NULL );
+	                NULL,
+	                false );
 
 	if ( linkerFlags != NULL )
 	{
