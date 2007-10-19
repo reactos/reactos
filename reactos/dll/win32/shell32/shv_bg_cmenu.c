@@ -48,8 +48,208 @@ typedef struct
 	BOOL		bDesktop;
 } BgCmImpl;
 
+typedef enum
+{
+   SHELLNEW_TYPE_COMMAND = 1,
+   SHELLNEW_TYPE_DATA = 2,
+   SHELLNEW_TYPE_FILENAME = 4,
+   SHELLNEW_TYPE_NULLFILE = 8
+}SHELLNEW_TYPE;
+
+
+typedef struct __SHELLNEW_ITEM__
+{
+  SHELLNEW_TYPE Type;
+  LPWSTR szTarget;
+  LPWSTR szDesc;
+  LPWSTR szIcon;
+  struct __SHELLNEW_ITEM__ * Next;
+}SHELLNEW_ITEM, *PSHELLNEW_ITEM;
+
 
 static const IContextMenu2Vtbl cmvt;
+
+static PSHELLNEW_ITEM s_SnHead = NULL;
+
+
+PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
+{
+  HKEY hKey;
+  DWORD dwIndex;
+  WCHAR szName[MAX_PATH];
+  WCHAR szCommand[MAX_PATH];
+  WCHAR szDesc[MAX_PATH];
+  WCHAR szIcon[MAX_PATH];
+  DWORD dwName, dwCommand, dwDesc;
+  LONG result;
+  PSHELLNEW_ITEM pNewItem;
+  
+  static const WCHAR szShellNew[] = { '\\','S','h','e','l','l','N','e','w',0 };
+  static const WCHAR szCmd[] = { 'C','o','m','m','a','n','d',0 };
+  static const WCHAR szData[] = { 'D','a','t','a',0 };
+  static const WCHAR szFileName[] = { 'F','i','l','e','N','a','m','e', 0 };
+  static const WCHAR szNullFile[] = { 'N','u','l','l','F','i','l','e', 0 };
+  static const WCHAR szDefaultIcon[] ={ '\\','D','e','f','a','u','l','t','I','c','o','n',0 };
+
+  result = RegOpenKeyExW(HKEY_CLASSES_ROOT,szKeyName,0,KEY_READ,&hKey);
+
+  if (result != ERROR_SUCCESS)
+  {
+    return NULL;
+  }
+  
+  dwName = MAX_PATH;
+  result = RegGetValueW(hKey,NULL,NULL,RRF_RT_REG_SZ,NULL,szName, &dwName);
+
+  RegCloseKey(hKey);
+  szDesc[0] = L'\0';
+  szIcon[0] = L'\0';
+  if (result == ERROR_SUCCESS)
+  {
+     dwDesc = MAX_PATH;
+     RegGetValueW(HKEY_CLASSES_ROOT,szName,NULL,RRF_RT_REG_SZ,NULL,szDesc,&dwDesc);
+     dwDesc = MAX_PATH;
+     wcscat(szName, szDefaultIcon);
+     RegGetValueW(HKEY_CLASSES_ROOT,szName,NULL,RRF_RT_REG_SZ,NULL,szIcon,&dwDesc);
+  }
+  
+  wcscpy(szName, szKeyName);
+  wcscat(szName, szShellNew);
+  result = RegOpenKeyExW(HKEY_CLASSES_ROOT,szName,0,KEY_READ,&hKey);
+
+  //TRACE("LoadItem keyname %s szName %s szDesc %s szIcon %s\n", debugstr_w(szKeyName), debugstr_w(szName), debugstr_w(szDesc), debugstr_w(szIcon));
+
+
+  if (result != ERROR_SUCCESS)
+  {
+    return NULL;
+  }
+
+  dwIndex = 0;
+  pNewItem = NULL;
+
+  do
+  {
+     dwName = MAX_PATH;
+     dwCommand = MAX_PATH;
+     result = RegEnumValueW(hKey,dwIndex,szName,&dwName,NULL,NULL,(LPBYTE)szCommand, &dwCommand);
+     if (result == ERROR_SUCCESS)
+     {
+         long type = -1;
+         LPWSTR szTarget = szCommand;
+         //TRACE("szName %s szCommand %s\n", debugstr_w(szName), debugstr_w(szCommand));
+         if (!wcsicmp(szName, szCmd))
+         {
+            type = SHELLNEW_TYPE_COMMAND;
+         }else if (!wcsicmp(szName, szData))
+         {
+             type = SHELLNEW_TYPE_DATA;
+         }
+         else if (!wcsicmp(szName, szFileName))
+         {
+            type = SHELLNEW_TYPE_FILENAME;
+         }
+         else if (!wcsicmp(szName, szNullFile))
+         {
+            type = SHELLNEW_TYPE_NULLFILE;
+            szTarget = NULL;
+         }
+         if (type != -1)
+         {
+            pNewItem = HeapAlloc(GetProcessHeap(), 0, sizeof(SHELLNEW_ITEM));
+            pNewItem->Type = type;
+            if (szTarget)
+                pNewItem->szTarget = wcsdup(szTarget);
+            else
+                pNewItem->szTarget = NULL;
+
+            pNewItem->szDesc = wcsdup(szDesc);
+            pNewItem->szIcon = wcsdup(szIcon);
+            pNewItem->Next = NULL;
+            break;
+         }
+     }
+     dwIndex++;
+  }while(result != ERROR_NO_MORE_ITEMS);
+  RegCloseKey(hKey);
+  return pNewItem;
+}
+
+
+BOOL
+LoadShellNewItems()
+{
+  DWORD dwIndex;
+  WCHAR szName[MAX_PATH];
+  LONG result;
+  PSHELLNEW_ITEM pNewItem;
+  PSHELLNEW_ITEM pCurItem = NULL;
+
+  dwIndex = 0;
+  do
+  {
+     result = RegEnumKeyW(HKEY_CLASSES_ROOT,dwIndex,szName,MAX_PATH);
+     if (result == ERROR_SUCCESS)
+     {
+        pNewItem = LoadItem(szName);
+        if (pNewItem)
+        {
+            if (pCurItem)
+            {
+                pCurItem->Next = pNewItem;
+                pCurItem = pNewItem;
+            }
+            else
+            {
+                pCurItem = s_SnHead = pNewItem;
+            }
+        }
+     }
+     dwIndex++;
+  }while(result != ERROR_NO_MORE_ITEMS);
+
+  if (s_SnHead == NULL)
+      return FALSE;
+  else
+      return TRUE;
+}
+VOID
+InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
+{
+  MENUITEMINFOW mii;
+  PSHELLNEW_ITEM pCurItem;
+
+  if (s_SnHead == NULL)
+  {
+    if (!LoadShellNewItems())
+        return;
+
+  }
+
+  ZeroMemory(&mii, sizeof(mii));
+  mii.cbSize = sizeof(mii);
+
+  mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA; //MIIM_BITMAP;
+  mii.fType = MFT_STRING;
+  mii.fState = MFS_ENABLED;
+
+  pCurItem = s_SnHead;
+
+  while(pCurItem)
+  {
+    mii.dwTypeData = pCurItem->szDesc;
+    mii.cch = strlenW(mii.dwTypeData);
+    mii.wID = idFirst;
+    if (InsertMenuItemW(hMenu, idMenu, TRUE, &mii))
+    {
+        idMenu++;
+        idFirst++;
+    }
+    pCurItem = pCurItem->Next;
+  }
+}
+
+
 
 /**************************************************************************
 *   ISVBgCm_Constructor()
@@ -150,6 +350,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
 {
     HMENU	hMyMenu;
     UINT	idMax;
+    MENUITEMINFOW mii;
     HRESULT hr;
 
     BgCmImpl *This = (BgCmImpl *)iface;
@@ -178,6 +379,13 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
         hr =  MAKE_HRESULT(SEVERITY_SUCCESS, FACILITY_NULL, idMax-idCmdFirst+1);
     }
     DestroyMenu(hMyMenu);
+
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_SUBMENU;
+    if (GetMenuItemInfoW(hMenu, 10, TRUE, &mii))
+    {
+      InsertShellNewItems(mii.hSubMenu, 0x6000, 0x6000);
+    }
 
     TRACE("(%p)->returning 0x%x\n",This,hr);
     return hr;
