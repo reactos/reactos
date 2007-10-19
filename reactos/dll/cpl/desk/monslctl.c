@@ -922,6 +922,8 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
                  hpOldFg);
     SelectObject(hDC,
                  hbOldBk);
+
+    DeleteObject(hpFg);
 }
 
 static VOID
