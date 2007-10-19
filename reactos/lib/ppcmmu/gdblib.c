@@ -249,42 +249,24 @@ void PacketFinish()
 
     PacketSent = 0;
     
-    do {
-        if (!count)
-        { 
-            SerialWrite('$');
-            for (i = 0; i < DataOutAddr; i++)
-            {
-                SerialWrite(DataOutBuffer[i]);
-            }
-            SerialWrite('#');
-            SerialWrite(hex[(DataOutCsum >> 4) & 15]);
-            SerialWrite(hex[DataOutCsum & 15]);
-        }
-        while(count-- != 0)
-        {
-            if (chr(serport))
-            {
-                ch = SerialRead();
-                break;
-            }
-        }
-        
-        switch (ch)
-        {
-        default:
-            break;
+    SerialWrite('$');
+    for (i = 0; i < DataOutAddr; i++)
+    {
+        SerialWrite(DataOutBuffer[i]);
+    }
+    SerialWrite('#');
+    SerialWrite(hex[(DataOutCsum >> 4) & 15]);
+    SerialWrite(hex[DataOutCsum & 15]);
 
-        case '-':
-            count = 0;
-            break;
-
-        case '+':
-            PacketSent = 1;
-            break;
-        }
-    } while(PacketSent != 1);
+    while(!chr(serport) && ((ch = SerialRead()) != '+') && (ch != '$'));
+    if (ch == '$')
+    {
+        ParseState = 0;
+        DataInAddr = 0;
+        ComputedCsum = 0;
+    }
 }
+
 
 void PacketWriteString(char *str)
 {
@@ -481,8 +463,7 @@ int TakeException(int n, ppc_trap_frame_t *tf)
 {
     Signal = n;
     RegisterSaveArea = tf;
-    if (SendSignal)
-        PacketWriteSignal(Signal);
+    PacketWriteSignal(Signal);
     SendSignal = 0;
     Continue = 0;
     while(!Continue) SerialInterrupt(n, tf);

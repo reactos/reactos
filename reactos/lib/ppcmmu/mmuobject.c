@@ -304,6 +304,9 @@ void initme()
     /* Serial Interrupt */
     callback[5] = SerialInterrupt;
 
+    /* Program Exception */
+    callback[6] = TakeException;
+
     /* Floating point exception */
     callback[8] = fpenable;
 

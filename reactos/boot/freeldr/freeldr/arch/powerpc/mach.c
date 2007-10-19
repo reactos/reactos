@@ -514,7 +514,7 @@ BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {
 }
 
 extern int _bss;
-typedef unsigned int uint32_t;
+//typedef unsigned int uint32_t;
 
 void PpcDefaultMachVtbl()
 {
@@ -661,5 +661,5 @@ void ChainLoadBiosBootSectorCode() {
 }
 
 void DbgBreakPoint() {
-    ofw_exit();
+    __asm__("twi 31,0,0");
 }
