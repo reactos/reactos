@@ -813,25 +813,35 @@ MingwModuleHandler::GenerateMacro (
 	}
 	for ( i = 0; i < data.defines.size(); i++ )
 	{
-		const Define& d = *data.defines[i];
-		if (used_defs && used_defs->find(d.name) != used_defs->end())
+		const Define& define = *data.defines[i];
+		if ( used_defs && used_defs->find ( define.name ) != used_defs->end () )
 		{
+#if 0 /* FIXME: activate */
+			if ( !define.overridable )
+			{
+				throw InvalidOperationException ( __FILE__,
+				                                  __LINE__,
+				                                  "Invalid override of define '%s' in '%s'",
+				                                  define.name.c_str (),
+				                                  module.name.c_str () );
+			}
+#endif
 			if ( backend->configuration.Verbose )
 				printf("%s define overridden in '%s' module\n",
-					d.name.c_str (), module.name.c_str () );
+					define.name.c_str (), module.name.c_str () );
 			continue;
 		}
 		fprintf (
 			fMakefile,
 			" -D%s",
-			d.name.c_str() );
-		if ( d.value.size() )
+			define.name.c_str() );
+		if ( define.value.size() )
 			fprintf (
 				fMakefile,
 				"=%s",
-				d.value.c_str() );
-		if (used_defs)
-			used_defs->insert(used_defs->begin(), d.name);
+				define.value.c_str() );
+		if ( used_defs )
+			used_defs->insert(used_defs->begin(), define.name);
 	}
 	if ( generateAssignment )
 	{

@@ -37,6 +37,7 @@
 <!ELEMENT define (#PCDATA)>
 <!ATTLIST define
 	name  %CIdentifier; #REQUIRED
+	overridable (true) #IMPLIED
 >
 
 <!ELEMENT directory (compilationunit*|directory*|group*|cdfile|file*|if*|ifnot*|module+|pch*|xi:include*)+>

@@ -63,12 +63,21 @@ void
 Define::Initialize()
 {
 	const XMLAttribute* att = node->GetAttribute ( "name", true );
-	const XMLAttribute* bck = node->GetAttribute ( "backend", false );
+
+	att = node->GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
 	value = node->value;
-	if ( bck )
-		backend = bck->value;
+
+	att = node->GetAttribute ( "backend", false );
+	if ( att )
+		backend = att->value;
+
+	att = node->GetAttribute ( "overridable", false );
+	if ( att )
+		overridable = ( att->value == "true" || att->value == "yes" );
+	else
+		overridable = false;
 }
 
 void

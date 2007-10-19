@@ -426,6 +426,7 @@ public:
 	std::string name;
 	std::string value;
 	std::string backend;
+	bool overridable;
 
 	Define ( const Project& project,
 	         const XMLElement& defineNode );
