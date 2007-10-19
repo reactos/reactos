@@ -37,8 +37,6 @@
 <!ELEMENT define (#PCDATA)>
 <!ATTLIST define
 	name  %CIdentifier; #REQUIRED
-	value %Text;        #IMPLIED
-	empty (true) #IMPLIED
 >
 
 <!ELEMENT directory (compilationunit*|directory*|group*|cdfile|file*|if*|ifnot*|module+|pch*|xi:include*)+>

@@ -434,8 +434,8 @@ public:
 	         const XMLElement& defineNode );
 	Define ( const Project& project,
 	         const Module* module,
-	         const std::string name_,
-	         const std::string backend_ = "" );
+	         const std::string& name_,
+	         const std::string& backend_ = "" );
 	~Define();
 	void ProcessXML();
 private:
