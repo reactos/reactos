@@ -97,7 +97,7 @@ LPWSTR* WINAPI CommandLineToArgvW(LPCWSTR lpCmdline, int* numargs)
         /* Return the path to the executable */
         DWORD len, size=16;
 
-        hargv=GlobalAlloc(size, 0);
+        hargv=GlobalAlloc(0, size);
         argv=GlobalLock(hargv);
         for (;;)
         {
