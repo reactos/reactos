@@ -253,6 +253,9 @@
 <directory name="syssetup">
 	<xi:include href="syssetup/syssetup.rbuild" />
 </directory>
+<directory name="tapiui">
+	<xi:include href="tapiui/tapiui.rbuild" />
+</directory>
 <directory name="twain_32">
 	<xi:include href="twain_32/twain_32.rbuild" />
 </directory>
