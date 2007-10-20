@@ -135,22 +135,22 @@ inline void sync() {
 
 inline void send(char *serport, char c) {
 	/* Wait for Clear to Send */
-    while( !(serport[LSR] & 0x20) ) sync();
+    while( !(GetPhysByte((paddr_t)serport+LSR) & 0x20) ) sync();
 
-    serport[THR] = c;
+    SetPhysByte(serport+THR, c);
     sync();
 }
 
 inline int rdy(char *serport)
 {
     sync();
-    return (serport[LSR] & 0x20);
+    return (GetPhysByte((paddr_t)serport+LSR) & 0x20);
 }
 
 inline int chr(char *serport)
 {
     sync();
-    return serport[LSR] & 1;
+    return GetPhysByte((paddr_t)serport+LSR) & 1;
 }
 
 inline char recv(char *serport) {
@@ -158,7 +158,7 @@ inline char recv(char *serport) {
 
     while( !chr(serport) ) sync();
 
-    c = serport[RCV];
+    c = GetPhysByte((paddr_t)serport+RCV);
     sync();
 
     return c;
@@ -166,13 +166,13 @@ inline char recv(char *serport) {
 
 void setup(char *serport, int baud) {
 	int x = 115200 / baud;
-	serport[LCR] = 128;
+	SetPhysByte((paddr_t)serport+LCR, 128);
 	sync();
-	serport[BAUDLOW] = x & 255;
+	SetPhysByte((paddr_t)serport+BAUDLOW, x & 255);
 	sync();
-	serport[BAUDHIGH] = x >> 8;
+	SetPhysByte((paddr_t)serport+BAUDHIGH, x >> 8);
 	sync();
-	serport[LCR] = 3;
+	SetPhysByte((paddr_t)serport+LCR, 3);
 	sync();
 }
 
@@ -187,7 +187,7 @@ extern int SerialInterrupt(int signal, ppc_trap_frame_t *tf);
 
 void IntEnable()
 {
-    serport[IER] |= 1;
+    SetPhysByte((paddr_t)serport+IER, GetPhysByte((paddr_t)serport+IER) | 1);
 }
 
 void SerialWrite(int ch)
