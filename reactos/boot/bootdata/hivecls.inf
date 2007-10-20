@@ -122,6 +122,8 @@ HKCR,"lnkfile\shellex\ContextMenuHandlers\{00021401-0000-0000-C000-000000000046}
 ; Text Documents
 HKCR,".log","",0x00000000,"txtfile"
 HKCR,".txt","",0x00000000,"txtfile"
+HKCR,".txt\shellnew","",0x00000000,""
+HKCR,".txt\shellnew","NullFile",0x00020000,""
 HKCR,"txtfile","",0x00000000,"Text Document"
 HKCR,".txt","Content Type",0x00000000,"text/plain"
 HKCR,"txtfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-152"
