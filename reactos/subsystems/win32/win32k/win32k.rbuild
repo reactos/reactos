@@ -31,6 +31,18 @@
 		<file>dib24bpp.c</file>
 		<file>dib32bpp.c</file>
 		<file>dib.c</file>
+
+		<if property="ARCH" value="i386">
+			<directory name="i386">
+				<file>dib24bpp_hline.s</file>
+				<file>dib32bpp_hline.s</file>
+				<file>dib32bpp_colorfill.s</file>
+			</directory>
+		</if>
+		<ifnot property="ARCH" value="i386">
+			<file>dib24bppc.c</file>
+			<file>dib32bppc.c</file>
+		</ifnot>
 	</directory>
 	<directory name="eng">
 			<file>bitblt.c</file>

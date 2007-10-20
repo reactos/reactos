@@ -38,105 +38,7 @@ DIB_24BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
-VOID
-DIB_24BPP_HLine(SURFOBJ *SurfObj, LONG x1, LONG x2, LONG y, ULONG c)
-{
-  PBYTE addr = (PBYTE)SurfObj->pvScan0 + y * SurfObj->lDelta + (x1 << 1) + x1;
-  ULONG Count = x2 - x1;
-#if !defined(_M_IX86) || defined(_MSC_VER)
-  ULONG MultiCount;
-  ULONG Fill[3];
-#endif
 
-  if (Count < 8)
-    {
-      /* For small fills, don't bother doing anything fancy */
-      while (Count--)
-        {
-          *(PUSHORT)(addr) = c;
-          addr += 2;
-          *(addr) = c >> 16;
-          addr += 1;
-        }
-    }
-  else
-    {
-      /* Align to 4-byte address */
-      while (0 != ((ULONG_PTR) addr & 0x3))
-        {
-          *(PUSHORT)(addr) = c;
-          addr += 2;
-          *(addr) = c >> 16;
-          addr += 1;
-          Count--;
-        }
-      /* If the color we need to fill with is 0ABC, then the final mem pattern
-       * (note little-endianness) would be:
-       *
-       * |C.B.A|C.B.A|C.B.A|C.B.A|   <- pixel borders
-       * |C.B.A.C|B.A.C.B|A.C.B.A|   <- ULONG borders
-       *
-       * So, taking endianness into account again, we need to fill with these
-       * ULONGs: CABC BCAB ABCA */
-#if defined(_M_IX86) && !defined(_MSC_VER)
-       /* This is about 30% faster than the generic C code below */
-       __asm__ __volatile__ (
-"      movl %1, %%ecx\n"
-"      andl $0xffffff, %%ecx\n"         /* 0ABC */
-"      movl %%ecx, %%ebx\n"             /* Construct BCAB in ebx */
-"      shrl $8, %%ebx\n"
-"      movl %%ecx, %%eax\n"
-"      shll $16, %%eax\n"
-"      orl  %%eax, %%ebx\n"
-"      movl %%ecx, %%edx\n"             /* Construct ABCA in edx */
-"      shll $8, %%edx\n"
-"      movl %%ecx, %%eax\n"
-"      shrl $16, %%eax\n"
-"      orl  %%eax, %%edx\n"
-"      movl %%ecx, %%eax\n"             /* Construct CABC in eax */
-"      shll $24, %%eax\n"
-"      orl  %%ecx, %%eax\n"
-"      movl %2, %%ecx\n"                /* Load count */
-"      shr  $2, %%ecx\n"
-"      movl %3, %%edi\n"                /* Load dest */
-"0:\n"
-"      movl %%eax, (%%edi)\n"           /* Store 4 pixels, 12 bytes */
-"      movl %%ebx, 4(%%edi)\n"
-"      movl %%edx, 8(%%edi)\n"
-"      addl $12, %%edi\n"
-"      dec  %%ecx\n"
-"      jnz  0b\n"
-"      movl %%edi, %0\n"
-  : "=m"(addr)
-  : "m"(c), "m"(Count), "m"(addr)
-  : "%eax", "%ebx", "%ecx", "%edx", "%edi");
-#else
-      c = c & 0xffffff;                /* 0ABC */
-      Fill[0] = c | (c << 24);         /* CABC */
-      Fill[1] = (c >> 8) | (c << 16);  /* BCAB */
-      Fill[2] = (c << 8) | (c >> 16);  /* ABCA */
-      MultiCount = Count / 4;
-      do
-        {
-          *(PULONG)addr = Fill[0];
-          addr += 4;
-          *(PULONG)addr = Fill[1];
-          addr += 4;
-          *(PULONG)addr = Fill[2];
-          addr += 4;
-        }
-      while (0 != --MultiCount);
-#endif
-      Count = Count & 0x03;
-      while (0 != Count--)
-        {
-          *(PUSHORT)(addr) = c;
-          addr += 2;
-          *(addr) = c >> 16;
-          addr += 1;
-        }
-    }
-}
 
 VOID
 DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
@@ -284,9 +186,20 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       }
       else
       {
-	/* FIXME */
-	DPRINT1("DIB_24BPP_Bitblt: Unhandled BltInfo->XlateSourceToDest for 16 -> 16 copy\n");
-        return FALSE;
+        sx = BltInfo->SourcePoint.x;
+        sy = BltInfo->SourcePoint.y;
+
+      for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
+      {
+        sx = BltInfo->SourcePoint.x;
+        for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+        {
+           DWORD pixel = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
+           DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, pixel));
+          sx++;
+        }
+        sy++;
+      }
       }
       break;
 
@@ -391,10 +304,10 @@ DIB_24BPP_BitBlt(PBLTINFO BltInfo)
 }
 
 /* BitBlt Optimize */
-BOOLEAN 
+BOOLEAN
 DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 {
-  ULONG DestY;	
+  ULONG DestY;
 
 #if defined(_M_IX86) && !defined(_MSC_VER)
   PBYTE xaddr = (PBYTE)DestSurface->pvScan0 + DestRect->top * DestSurface->lDelta + (DestRect->left << 1) + DestRect->left;
@@ -405,7 +318,7 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
   {
     Count = xCount;
-    addr = xaddr;    
+    addr = xaddr;
     xaddr = (PBYTE)((ULONG_PTR)addr + DestSurface->lDelta);
 
     if (Count < 8)
@@ -483,8 +396,8 @@ DIB_24BPP_ColorFill(SURFOBJ* DestSurface, RECTL* DestRect, ULONG color)
 #else
 
   for (DestY = DestRect->top; DestY< DestRect->bottom; DestY++)
-    {			 				
-      DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);			  				
+    {
+      DIB_24BPP_HLine(DestSurface, DestRect->left, DestRect->right, DestY, color);
     }
 #endif
   return TRUE;
@@ -500,16 +413,16 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
    LONG SrcSizeY;
    LONG SrcSizeX;
    LONG DesSizeY;
-   LONG DesSizeX;      
+   LONG DesSizeX;
    LONG sx;
    LONG sy;
    LONG DesX;
    LONG DesY;
    LONG color;
-  
+
    SrcSizeY = SourceRect->bottom - SourceRect->top;
    SrcSizeX = SourceRect->right - SourceRect->left;
-  
+
    DesSizeY = DestRect->bottom - DestRect->top;
    DesSizeX = DestRect->right - DestRect->left;
 
@@ -518,118 +431,118 @@ BOOLEAN DIB_24BPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf,
       case BMF_1BPP:
 	  /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
+            {
                   sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
-                   		
+
                   if(DIB_1BPP_GetPixel(SourceSurf, sx, sy) == 0)
 				  {
 					DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 0));
-                  } 
-				  else 
+                  }
+				  else
 				  {
                     DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, 1));
                   }
             }
-       }		
+       }
 
 	  break;
 
-      case BMF_4BPP:		
+      case BMF_4BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                  color = DIB_4BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
-       }	  	   
+       }
       break;
 
-      case BMF_8BPP:		
+      case BMF_8BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                  color = DIB_8BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
-       }	  	   
+       }
       break;
 
-      case BMF_16BPP:		
+      case BMF_16BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                  color = DIB_16BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
-       }	  	   
+       }
       break;
 
-      case BMF_24BPP:		
+      case BMF_24BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                  color = DIB_24BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
-       }	  	   
+       }
       break;
 
-      case BMF_32BPP:		
+      case BMF_32BPP:
       /* FIXME :  MaskOrigin, BrushOrigin, ClipRegion, Mode ? */
       /* This is a reference implementation, it hasn't been optimized for speed */
-                      
+
        for (DesY=DestRect->top; DesY<DestRect->bottom; DesY++)
-       {			 
+       {
            sy = (((DesY - DestRect->top) * SrcSizeY) / DesSizeY) + SourceRect->top;
-                     
+
             for (DesX=DestRect->left; DesX<DestRect->right; DesX++)
-            {			
-                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;  		
+            {
+                 sx = (((DesX - DestRect->left) * SrcSizeX) / DesSizeX) + SourceRect->left;
                  color = DIB_32BPP_GetPixel(SourceSurf, sx, sy);
                  DIB_24BPP_PutPixel(DestSurf, DesX, DesY, XLATEOBJ_iXlate(ColorTranslation, color));
             }
-       }	  	   
+       }
       break;
 
       default:
       //DPRINT1("DIB_24BPP_StretchBlt: Unhandled Source BPP: %u\n", BitsPerFormat(SourceSurf->iBitmapFormat));
       return FALSE;
     }
-  
+
   return TRUE;
 }
 
