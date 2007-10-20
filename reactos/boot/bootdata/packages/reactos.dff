@@ -115,6 +115,7 @@ dll\cpl\powercfg\powercfg.cpl                       1
 dll\cpl\sysdm\sysdm.cpl                             1
 dll\cpl\timedate\timedate.cpl                       1
 dll\cpl\input\input.dll                             1
+dll\cpl\joy\joy.cpl                                 1
 
 dll\directx\dinput\dinput.dll                       1
 dll\directx\dinput8\dinput8.dll                     1
@@ -261,6 +262,7 @@ dll\win32\wtsapi32\wtsapi32.dll                     1
 dll\win32\beepmidi\beepmidi.dll                     1
 dll\win32\shellext\deskadp\deskadp.dll              1
 dll\win32\shellext\deskmon\deskmon.dll              1
+dll\win32\tapiui\tapiui.dll                         1
 
 ; Drivers
 drivers\base\bootvid\bootvid.dll                    1
