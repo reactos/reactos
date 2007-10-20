@@ -46,6 +46,8 @@
 *
 * Before call to this api please set the puCanCreateSurfaceData->ddRVal to a error value example DDERR_NOTUSPORTED.
 * for the ddRVal will other wise be unchange if some error happen inside the driver. 
+* puCanCreateSurfaceData->lpDD  is pointer to DDRAWI_DIRECTDRAW_GBL, MSDN say it is PDD_DIRECTDRAW_GLOBAL it is not.
+* puCanCreateSurfaceData->lpDD->hDD need also be fill in with the handle we got from NtGdiDdCreateDirectDrawObject
 *
 *--*/
 
@@ -54,7 +56,7 @@ STDCALL
 NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
                           PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
-    PGD_DXDDDESTROYD3DBUFFER pfnDdCanCreateD3DBuffer = gpDxFuncs[DXG_INDEX_DxDdCanCreateD3DBuffer].pfn;
+    PGD_DDCANCREATED3DBUFFER pfnDdCanCreateD3DBuffer = (PGD_DDCANCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdCanCreateD3DBuffer].pfn;
 
     if (pfnDdCanCreateD3DBuffer == NULL)
     {
@@ -92,12 +94,13 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
 *
 *
 * @remarks.
-* dxg.sys NtGdiD3dContextCreate and NtGdiD3dContextCreate call are redirect to 
+* dxg.sys NtGdiD3dContextCreate call are redirect to 
 * same functions in the dxg.sys. So they are working exacly same. everthing else is lying if they
 * are diffent.
 *
 * Before call to this api please set the hSurfZ->ddRVal to a error value example DDERR_NOTUSPORTED.
 * for the ddRVal will other wise be unchange if some error happen inside the driver. 
+* hSurfZ->dwhContext need also be fill in with the handle we got from NtGdiDdCreateDirectDrawObject
 *
 *--*/
 BOOL 
@@ -107,7 +110,7 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfZ,
                       D3DNTHAL_CONTEXTCREATEDATA* pdcci)
 {
-    PGD_DDCANCREATED3DBUFFER pfnD3dContextCreate = gpDxFuncs[DXG_INDEX_DxD3dContextCreate].pfn;
+    PGD_D3DCONTEXTCREATE pfnD3dContextCreate = (PGD_D3DCONTEXTCREATE)gpDxFuncs[DXG_INDEX_DxD3dContextCreate].pfn;
 
     if (pfnD3dContextCreate == NULL)
     {
@@ -119,17 +122,30 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
     return pfnD3dContextCreate(hDirectDrawLocal, hSurfColor, hSurfZ, pdcci);
 }
 
-/************************************************************************/
-/* NtGdiD3dContextDestroy                                               */
-/************************************************************************/
+/*++
+* @name NtGdiD3dContextDestroy
+* @implemented
+*
+* The Function NtGdiD3dContextDestroy Destory the context data we got from NtGdiD3dContextCreate
+*
+* @param LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData
+* The context data we want to destory
+*
+* @remarks.
+* dxg.sys NtGdiD3dContextDestroy call are redirect to 
+* same functions in the dxg.sys. So they are working exacly same. everthing else is lying if they
+* are diffent.
+*
+* Before call to this api please set the pContextDestroyData->ddRVal to a error value example DDERR_NOTUSPORTED.
+* for the ddRVal will other wise be unchange if some error happen inside the driver.
+* pContextDestroyData->dwhContext need also be fill in with the handle we got from NtGdiDdCreateDirectDrawObject
+*
+*--*/
 DWORD
 STDCALL
 NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
 {
-    PGD_D3DCONTEXTDESTROY pfnD3dContextDestroy = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxD3dContextDestroy, pfnD3dContextDestroy);
+    PGD_D3DCONTEXTDESTROY pfnD3dContextDestroy = (PGD_D3DCONTEXTDESTROY)gpDxFuncs[DXG_INDEX_DxD3dContextDestroy].pfn;
 
     if ( pfnD3dContextDestroy == NULL)
     {
