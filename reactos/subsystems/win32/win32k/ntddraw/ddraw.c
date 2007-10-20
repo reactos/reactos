@@ -26,16 +26,16 @@ ULONG gcEngFuncs;
 NTSTATUS
 STDCALL
 DxDdStartupDxGraphics(  ULONG ulc1,
-                        PDRVENABLEDATA pDrved1,
+                        PDRVENABLEDATA DxEngDrvOld,
                         ULONG ulc2,
-                        PDRVENABLEDATA pDrved2,
-                        PULONG DDContext,
+                        PDRVENABLEDATA DxgDrvOld,
+                        PULONG DirectDrawContext,
                         PEPROCESS Proc)
 {
-    DRVENABLEDATA EngDrv;
-    DRVENABLEDATA DXG_API;
+    DRVENABLEDATA DxEngDrv;
+    DRVENABLEDATA DxgDrv;
 
-    NTSTATUS Status = STATUS_DLL_NOT_FOUND;
+    NTSTATUS Status = STATUS_PROCEDURE_NOT_FOUND;
 
     /* FIXME setup of gaEngFuncs driver export list
      * but not in this api, we can add it here tempary until we figout where 
@@ -51,45 +51,57 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     if (!ghDxGraphics)
     {
         DPRINT1("Warring no dxg.sys in ReactOS");
-        return Status;
-    }
-
-    /* import DxDdStartupDxGraphics and  DxDdCleanupDxGraphics */
-    gpfnStartupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdStartupDxGraphics");
-    gpfnCleanupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdCleanupDxGraphics");
-
-    if ((gpfnStartupDxGraphics) &&
-        (gpfnCleanupDxGraphics))
-    {
-        /* Setup driver data for activate the dx interface */
-        EngDrv.iDriverVersion = DDI_DRIVER_VERSION_NT5_01;
-        EngDrv.pdrvfn = &gaEngFuncs;
-        EngDrv.c = gcEngFuncs;
-
-        Status = gpfnStartupDxGraphics ( sizeof(DRVENABLEDATA),
-                                         &EngDrv,
-                                         sizeof(DRVENABLEDATA),
-                                         &DXG_API,
-                                         &gdwDirectDrawContext,
-                                         Proc );
-    }
-
-    /* check if we manger loading the data and execute the dxStartupDxGraphics and it susscess */
-    if (!NT_SUCCESS(Status))
-    {
-         gpfnStartupDxGraphics = NULL;
-         gpfnCleanupDxGraphics = NULL;
-         EngUnloadImage( ghDxGraphics);
-         ghDxGraphics = NULL;
-         DPRINT1("Warring no init of DirectX graphic interface");
+        Status = STATUS_DLL_NOT_FOUND;
     }
     else
     {
-        gpDxFuncs =  DXG_API.pdrvfn;
-        DPRINT1("DirectX interface is Activated");
+        /* import DxDdStartupDxGraphics and  DxDdCleanupDxGraphics */
+        gpfnStartupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdStartupDxGraphics");
+        gpfnCleanupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdCleanupDxGraphics");
+
+        if ((gpfnStartupDxGraphics) &&
+            (gpfnCleanupDxGraphics))
+        {
+            /* Setup driver data for activate the dx interface */
+            DxEngDrv.iDriverVersion = DDI_DRIVER_VERSION_NT5_01;
+            DxEngDrv.pdrvfn = &gaEngFuncs;
+            DxEngDrv.c = gcEngFuncs;
+
+            Status = gpfnStartupDxGraphics ( sizeof(DRVENABLEDATA),
+                                             &DxEngDrv,
+                                             sizeof(DRVENABLEDATA),
+                                             &DxgDrv,
+                                             &gdwDirectDrawContext,
+                                             Proc );
+        }
+
+        /* check if we manger loading the data and execute the dxStartupDxGraphics and it susscess */
+        if (!NT_SUCCESS(Status))
+        {
+            gpfnStartupDxGraphics = NULL;
+            gpfnCleanupDxGraphics = NULL;
+            EngUnloadImage( ghDxGraphics);
+            ghDxGraphics = NULL;
+            DPRINT1("Warring no init of DirectX graphic interface");
+        }
+        else
+        {
+            /* Sort the drv functions list in index order, this allown us doing, smaller optimze
+             * in api that are redirect to dx.sys
+             */
+
+            PDRVFN lstDrvFN = DxgDrv.pdrvfn;
+            INT t;
+            for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
+            {
+                gpDxFuncs[lstDrvFN[t].iFunc].iFunc =lstDrvFN[t].iFunc;
+                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;
+            }
+            DPRINT1("DirectX interface is Activated");
+        }
+        /* return the status */
     }
 
-    /* return the status */
     return Status;
 }
 

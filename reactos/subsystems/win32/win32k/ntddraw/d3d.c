@@ -16,19 +16,45 @@
 #include <w32k.h>
 #include <debug.h>
 
-/************************************************************************/
-/* NtGdiDdCanCreateD3DBuffer                                            */
-/************************************************************************/
+
+/*++
+* @name NtGdiDdCanCreateD3DBuffer
+* @implemented
+*
+* The function NtGdiDdCanCreateD3DBuffer checks if you can create a 
+* surface for DirectX. It is redirected to dxg.sys.
+*
+* @param HANDLE hDirectDraw
+* The handle we got from NtGdiDdCreateDirectDrawObject
+*
+* @param PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
+* This contains information to check if the driver can create the buffers,
+* surfaces, textures and vertexes, and how many of each the driver can create.
+
+*
+* @return 
+* Depending on if the driver supports this API or not, DDHAL_DRIVER_HANDLED 
+* or DDHAL_DRIVER_NOTHANDLED is returned.
+* To check if the function has been successful, do a full check. 
+* A full check is done by checking if the return value is DDHAL_DRIVER_HANDLED 
+* and puCanCreateSurfaceData->ddRVal is set to DD_OK.
+*
+* @remarks.
+* dxg.sys NtGdiDdCanCreateD3DBuffer and NtGdiDdCanCreateSurface call are redirect to dxg.sys
+* inside the dxg.sys they ar redirect to same functions. examine the driver list functions
+* table, the memory address you will see they are pointed to same memory address.
+*
+* Before call to this api please set the puCanCreateSurfaceData->ddRVal to a error value example DDERR_NOTUSPORTED.
+* for the ddRVal will other wise be unchange if some error happen inside the driver. 
+*
+*--*/
+
 DWORD
 STDCALL
 NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
-                          PDD_CANCREATESURFACEDATA puCanCreateSurfaceData
-)
+                          PDD_CANCREATESURFACEDATA puCanCreateSurfaceData)
 {
-    PGD_DDCANCREATED3DBUFFER pfnDdCanCreateD3DBuffer = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCanCreateD3DBuffer, pfnDdCanCreateD3DBuffer);
+    PGD_DXDDDESTROYD3DBUFFER pfnDdCanCreateD3DBuffer = gpDxFuncs[DXG_INDEX_DxDdCanCreateD3DBuffer].pfn;
 
     if (pfnDdCanCreateD3DBuffer == NULL)
     {
@@ -40,9 +66,40 @@ NtGdiDdCanCreateD3DBuffer(HANDLE hDirectDraw,
     return pfnDdCanCreateD3DBuffer(hDirectDraw,puCanCreateSurfaceData);
 }
 
-/************************************************************************/
-/* NtGdiD3dContextCreate                                                */
-/************************************************************************/
+/*++
+* @name NtGdiD3dContextCreate
+* @implemented
+*
+* The Function NtGdiDdCanCreateD3DBuffer check if you can create a 
+* surface for directx it redirect the call to dxg.sys.
+*
+* @param HANDLE hDirectDrawLocal
+* The handle we got from NtGdiDdCreateDirectDrawObject
+*
+* @param HANDLE hSurfColor
+* Handle to DD_SURFACE_LOCAL to be use as target rendring
+*
+* @param HANDLE hSurfZ
+* Handle to a DD_SURFACE_LOCAL it is the Z deep buffer, accdoing MSDN if it set to NULL nothing should happen.
+*
+* @param D3DNTHAL_CONTEXTCREATEDATA* hSurfZ
+* the buffer to create the context data
+*
+* @return 
+* DDHAL_DRIVER_HANDLED or DDHAL_DRIVER_NOTHANDLED if the driver support this api.
+* Todo full check if we sussess is to check the return value DDHAL_DRIVER_HANDLED
+* puCanCreateSurfaceData->ddRVal are set to DD_OK.
+*
+*
+* @remarks.
+* dxg.sys NtGdiD3dContextCreate and NtGdiD3dContextCreate call are redirect to 
+* same functions in the dxg.sys. So they are working exacly same. everthing else is lying if they
+* are diffent.
+*
+* Before call to this api please set the hSurfZ->ddRVal to a error value example DDERR_NOTUSPORTED.
+* for the ddRVal will other wise be unchange if some error happen inside the driver. 
+*
+*--*/
 BOOL 
 STDCALL
 NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
@@ -50,15 +107,12 @@ NtGdiD3dContextCreate(HANDLE hDirectDrawLocal,
                       HANDLE hSurfZ,
                       D3DNTHAL_CONTEXTCREATEDATA* pdcci)
 {
-    PGD_D3DCONTEXTCREATE pfnD3dContextCreate = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxD3dContextCreate, pfnD3dContextCreate);
+    PGD_DDCANCREATED3DBUFFER pfnD3dContextCreate = gpDxFuncs[DXG_INDEX_DxD3dContextCreate].pfn;
 
     if (pfnD3dContextCreate == NULL)
     {
         DPRINT1("Warring no pfnD3dContextCreate");
-        return DDHAL_DRIVER_NOTHANDLED;
+        return FALSE;
     }
 
     DPRINT1("Calling on dxg.sys D3dContextCreate");

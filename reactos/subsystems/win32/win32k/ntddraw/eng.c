@@ -33,7 +33,7 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
     if (pfnHeapVidMemAllocAligned == NULL)
     {
         DPRINT1("Warring no pfnHeapVidMemAllocAligned");
-        return DDHAL_DRIVER_NOTHANDLED;
+        return NULL;
     }
 
     DPRINT1("Calling on dxg.sys pfnHeapVidMemAllocAligned");
@@ -56,11 +56,12 @@ VidMemFree(LPVMEMHEAP pvmh,
     if (pfnVidMemFree == NULL)
     {
         DPRINT1("Warring no pfnVidMemFree");
-        return DDHAL_DRIVER_NOTHANDLED;
     }
-
-    DPRINT1("Calling on dxg.sys pfnVidMemFree");
-    return pfnVidMemFree(pvmh, ptr);
+    else
+    {
+        DPRINT1("Calling on dxg.sys pfnVidMemFree");
+        pfnVidMemFree(pvmh, ptr);
+    }
 }
 
 /************************************************************************/
