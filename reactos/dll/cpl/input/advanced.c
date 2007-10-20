@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/advanced.c
- * PURPOSE:         			input.dll
- * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/advanced.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -41,28 +41,29 @@
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
-AdvancedPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
+AdvancedPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
-  UNREFERENCED_PARAMETER(hwndDlg);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
+    UNREFERENCED_PARAMETER(lParam);
+    UNREFERENCED_PARAMETER(wParam);
+    UNREFERENCED_PARAMETER(hwndDlg);
 
-	break;
-	case WM_COMMAND:
-		switch (LOWORD(wParam))
-		{
-			case IDC_SUPPORT_ADV_SERV_CHECKBOX:
-			case IDC_TURNOFF_ADV_TXTSERV_CHECKBOX:
-				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-			break;
-		}
-	break;
-  }
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
 
-  return FALSE;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_SUPPORT_ADV_SERV_CHECKBOX:
+                case IDC_TURNOFF_ADV_TXTSERV_CHECKBOX:
+                    PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
 }
 
 /* EOF */

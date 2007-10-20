@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/langbar.c
- * PURPOSE:         			input.dll
- * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/langbar.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -50,22 +50,19 @@ LangBarDlgProc(HWND hDlg,
     switch (message)
     {
         case WM_INITDIALOG:
-        {
+            break;
 
-        }
         case WM_COMMAND:
-        {
-		    switch (LOWORD(wParam))
-			{
-				case IDOK:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    break;
 
-				break;
-				case IDCANCEL:
-					EndDialog(hDlg,LOWORD(wParam));
-				break;
-			}
-        }
-        break;
+                case IDCANCEL:
+                    EndDialog(hDlg, LOWORD(wParam));
+                    break;
+            }
+            break;
     }
 
     return FALSE;

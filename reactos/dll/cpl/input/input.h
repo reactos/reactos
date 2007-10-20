@@ -5,10 +5,10 @@ typedef LONG (CALLBACK *CPLAPPLET_PROC)(VOID);
 
 typedef struct
 {
-  int idIcon;
-  int idName;
-  int idDescription;
-  CPLAPPLET_PROC AppletProc;
+    int idIcon;
+    int idName;
+    int idDescription;
+    CPLAPPLET_PROC AppletProc;
 } APPLET, *PAPPLET;
 
 extern HINSTANCE hApplet;

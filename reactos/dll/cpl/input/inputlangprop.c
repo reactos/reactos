@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/inputlangprop.c
- * PURPOSE:         			input.dll
- * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/inputlangprop.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -43,12 +43,12 @@ static
 VOID
 SelectKeyboardLayout(HWND hWnd)
 {
-	TCHAR Layout[256];
+    TCHAR Layout[256];
 
-	SendMessage(hWnd,
-			    CB_SELECTSTRING,
-				(WPARAM) -1,
-				(LPARAM)Layout);
+    SendMessage(hWnd,
+                CB_SELECTSTRING,
+                (WPARAM) -1,
+                (LPARAM)Layout);
 }
 
 INT_PTR CALLBACK
@@ -62,23 +62,21 @@ InputLangPropDlgProc(HWND hDlg,
     switch (message)
     {
         case WM_INITDIALOG:
-        {
-			CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
-			SelectKeyboardLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
-        }
-        case WM_COMMAND:
-        {
-		    switch (LOWORD(wParam))
-			{
-				case IDOK:
+            CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
+            SelectKeyboardLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_IME_COMBO));
+            break;
 
-				break;
-				case IDCANCEL:
-					EndDialog(hDlg,LOWORD(wParam));
-				break;
-			}
-        }
-        break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hDlg,LOWORD(wParam));
+                    break;
+            }
+            break;
     }
 
     return FALSE;

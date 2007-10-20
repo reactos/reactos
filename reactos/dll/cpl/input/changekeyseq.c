@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/changekeyseq.c
- * PURPOSE:         			input.dll
- * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/changekeyseq.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -41,31 +41,28 @@
 
 INT_PTR CALLBACK
 ChangeKeySeqDlgProc(HWND hDlg,
-               UINT message,
-               WPARAM wParam,
-               LPARAM lParam)
+                    UINT message,
+                    WPARAM wParam,
+                    LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
     switch (message)
     {
         case WM_INITDIALOG:
-        {
+            break;
 
-        }
         case WM_COMMAND:
-        {
-		    switch (LOWORD(wParam))
-			{
-				case IDOK:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    break;
 
-				break;
-				case IDCANCEL:
-					EndDialog(hDlg,LOWORD(wParam));
-				break;
-			}
-        }
-        break;
+                case IDCANCEL:
+                    EndDialog(hDlg, LOWORD(wParam));
+                    break;
+            }
+            break;
     }
 
     return FALSE;

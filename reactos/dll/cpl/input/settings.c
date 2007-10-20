@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         		input.dll
- * FILE:            		dll/win32/input/settings.c
- * PURPOSE:         		input.dll
- * PROGRAMMER:      	Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/settings.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -48,98 +48,104 @@ CreateDefaultLangList(HWND hWnd)
     HKEY hKey;
     char szPreload[BUFSIZE],szCount[BUFSIZE],Lang[BUFSIZE];
     DWORD dwBufLen = BUFSIZE, dwBufCLen = BUFSIZE, cValues;
-	LONG lRet;
-	int Count;
-	LCID Lcid;
+    LONG lRet;
+    int Count;
+    LCID Lcid;
 
     if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
-	{
-		return FALSE;
-	}
+    {
+        return FALSE;
+    }
+
     RegQueryInfoKey(hKey,NULL,NULL,NULL,NULL,NULL,NULL,&cValues,NULL,NULL,NULL,NULL);
 
-	if (cValues)
-	{
-	    for (Count = 0; Count < cValues; Count++)
+    if (cValues)
+    {
+        for (Count = 0; Count < cValues; Count++)
         {
             szCount[0] = '\0';
             lRet = RegEnumValue(hKey,Count,(LPTSTR)szCount,&dwBufCLen,NULL,NULL,NULL,NULL);
 
-			sprintf(szCount,"%d",Count + 1);
-			RegQueryValueEx(hKey,(LPTSTR)szCount,NULL,NULL,(LPBYTE)szPreload,&dwBufLen);
+            sprintf(szCount,"%d",Count + 1);
+            RegQueryValueEx(hKey,(LPTSTR)szCount,NULL,NULL,(LPBYTE)szPreload,&dwBufLen);
 
-			Lcid = wcstoul((LPTSTR)szPreload, NULL, 16);
-			GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
+            Lcid = wcstoul((LPTSTR)szPreload, NULL, 16);
+            GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
 
-			SendMessage(hWnd,
-						CB_INSERTSTRING,
-						0,
-						(LPARAM)Lang);
-			if (Count == 0)
-			{
-				SendMessage(hWnd,
-							CB_SELECTSTRING,
-							(WPARAM) -1,
-							(LPARAM)Lang);
-			}
+            SendMessage(hWnd,
+                        CB_INSERTSTRING,
+                        0,
+                        (LPARAM)Lang);
+            if (Count == 0)
+            {
+                SendMessage(hWnd,
+                            CB_SELECTSTRING,
+                            (WPARAM) -1,
+                            (LPARAM)Lang);
+            }
         }
 
-	}
+    }
 
-	RegCloseKey(hKey);
+    RegCloseKey(hKey);
 
-	return TRUE;
+    return TRUE;
 }
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
 SettingPageProc(HWND hwndDlg,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
-  UNREFERENCED_PARAMETER(lParam);
-  switch (uMsg)
-  {
-    case WM_INITDIALOG:
-		CreateDefaultLangList(GetDlgItem(hwndDlg, IDC_DEFAULT_INPUT_LANG));
-    break;
+    UNREFERENCED_PARAMETER(lParam);
 
-    case WM_COMMAND:
-        switch (LOWORD(wParam))
-        {
-            case IDC_LANG_BAR_BUTTON:
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_LANGBAR),
-                          hwndDlg,
-                          LangBarDlgProc);
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            CreateDefaultLangList(GetDlgItem(hwndDlg, IDC_DEFAULT_INPUT_LANG));
             break;
-            case IDC_KEY_SETTINGS_BUTTON:
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_KEYSETTINGS),
-                          hwndDlg,
-                          KeySettingsDlgProc);
-            break;
-            case IDC_ADD_BUTTON:
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_ADD),
-                          hwndDlg,
-                          AddDlgProc);
-            break;
-            case IDC_PROP_BUTTON:
-                DialogBox(hApplet,
-                          MAKEINTRESOURCE(IDD_INPUT_LANG_PROP),
-                          hwndDlg,
-                          InputLangPropDlgProc);
-            break;
-			case IDC_DEFAULT_INPUT_LANG:
-				if (HIWORD(wParam) == CBN_SELCHANGE)
-				{
-					PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-				}
-			break;
-        }
-      break;
-  }
 
-  return FALSE;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_LANG_BAR_BUTTON:
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_LANGBAR),
+                              hwndDlg,
+                              LangBarDlgProc);
+                    break;
+
+                case IDC_KEY_SETTINGS_BUTTON:
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_KEYSETTINGS),
+                              hwndDlg,
+                              KeySettingsDlgProc);
+                    break;
+
+                case IDC_ADD_BUTTON:
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_ADD),
+                              hwndDlg,
+                              AddDlgProc);
+                    break;
+
+                case IDC_PROP_BUTTON:
+                    DialogBox(hApplet,
+                              MAKEINTRESOURCE(IDD_INPUT_LANG_PROP),
+                              hwndDlg,
+                              InputLangPropDlgProc);
+                    break;
+
+                case IDC_DEFAULT_INPUT_LANG:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+                    }
+                    break;
+            }
+            break;
+    }
+
+    return FALSE;
 }
 
 /* EOF */

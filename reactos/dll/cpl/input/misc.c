@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         			input.dll
- * FILE:            			dll/win32/input/misc.c
- * PURPOSE:         			input.dll
- * PROGRAMMER:      		Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/misc.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -44,26 +44,28 @@ CreateKeyboardLayoutList(HWND hWnd)
 {
     TCHAR Layout[256];
     int Index;
-	UINT loIndex;
+    UINT loIndex;
 
-    for ( loIndex = BEGIN_LAYOUT; loIndex <= END_LAYOUT; loIndex++ )
-	{
-		LoadString(hApplet,
-				   loIndex,
-				   Layout,
-				   sizeof(Layout) / sizeof(TCHAR));
-		if (strlen((char*)Layout) > 0)
-		{
-			Index = (int) SendMessage(hWnd,
-									  CB_INSERTSTRING,
-									  0,
-									  (LPARAM)Layout);
-			SendMessage(hWnd,
-						CB_SETITEMDATA,
-						Index,
-						(LPARAM)loIndex);
-		}
-	}
+    for (loIndex = BEGIN_LAYOUT; loIndex <= END_LAYOUT; loIndex++)
+    {
+        LoadString(hApplet,
+                   loIndex,
+                   Layout,
+                   sizeof(Layout) / sizeof(TCHAR));
+
+        if (strlen((char*)Layout) > 0)
+        {
+            Index = (int) SendMessage(hWnd,
+                                      CB_INSERTSTRING,
+                                      0,
+                                      (LPARAM)Layout);
+
+            SendMessage(hWnd,
+                        CB_SETITEMDATA,
+                        Index,
+                        (LPARAM)loIndex);
+        }
+    }
 }
 
 /* EOF */

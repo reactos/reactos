@@ -18,10 +18,10 @@
  */
 /*
  *
- * PROJECT:         		input.dll
- * FILE:                 		dll/win32/input/add.c
- * PURPOSE:         		input.dll
- * PROGRAMMER:      	Dmitry Chapyshev (lentind@yandex.ru)
+ * PROJECT:         input.dll
+ * FILE:            dll/win32/input/add.c
+ * PURPOSE:         input.dll
+ * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:
  *      06-09-2007  Created
  */
@@ -99,10 +99,10 @@ CreateLanguagesList(HWND hWnd)
     hLanguageList = hWnd;
     EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);
 
-	LoadString(hApplet,
-			   IDS_SELECTED_LANGUAGE,
-			   LangSel,
-			   sizeof(LangSel) / sizeof(TCHAR));
+    LoadString(hApplet,
+               IDS_SELECTED_LANGUAGE,
+               LangSel,
+               sizeof(LangSel) / sizeof(TCHAR));
 
     SendMessage(hLanguageList,
                 CB_SELECTSTRING,
@@ -114,54 +114,52 @@ static
 VOID
 SelectCurrentLayout(HWND hWnd)
 {
-	TCHAR Layout[256];
+    TCHAR Layout[256];
 
-	LoadString(hApplet,
-			   IDS_SELECTED_LAYOUT,
-			   Layout,
-			   sizeof(Layout) / sizeof(TCHAR));
-	SendMessage(hWnd,
-			    CB_SELECTSTRING,
-				(WPARAM) -1,
-				(LPARAM)Layout);
+    LoadString(hApplet,
+               IDS_SELECTED_LAYOUT,
+               Layout,
+               sizeof(Layout) / sizeof(TCHAR));
+    SendMessage(hWnd,
+                CB_SELECTSTRING,
+                (WPARAM) -1,
+                (LPARAM)Layout);
 }
 
 INT_PTR CALLBACK
 AddDlgProc(HWND hDlg,
-               UINT message,
-               WPARAM wParam,
-               LPARAM lParam)
+           UINT message,
+           WPARAM wParam,
+           LPARAM lParam)
 {
     UNREFERENCED_PARAMETER(lParam);
 
     switch (message)
     {
         case WM_INITDIALOG:
-        {
-			CreateLanguagesList(GetDlgItem(hDlg, IDC_INPUT_LANGUAGE_COMBO));
-			CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
-			SelectCurrentLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
-        }
-        case WM_COMMAND:
-        {
-			switch (LOWORD(wParam))
-			{
-				case IDC_INPUT_LANGUAGE_COMBO:
-					if (HIWORD(wParam) == CBN_SELCHANGE)
-					{
-						SelectCurrentLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
-					}
-				break;
-				case IDOK:
+            CreateLanguagesList(GetDlgItem(hDlg, IDC_INPUT_LANGUAGE_COMBO));
+            CreateKeyboardLayoutList(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
+            SelectCurrentLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
+            break;
 
-				break;
-				case IDCANCEL:
-					EndDialog(hDlg,LOWORD(wParam));
-					return TRUE;
-				break;
-			}
-        }
-        break;
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_INPUT_LANGUAGE_COMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        SelectCurrentLayout(GetDlgItem(hDlg, IDC_KEYBOARD_LAYOUT_COMBO));
+                    }
+                    break;
+
+                case IDOK:
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hDlg, LOWORD(wParam));
+                    return TRUE;
+            }
+            break;
     }
 
     return FALSE;
