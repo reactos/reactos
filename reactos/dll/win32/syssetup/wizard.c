@@ -1106,7 +1106,6 @@ DestroyTimeZoneList(PSETUPDATA SetupData)
   SetupData->TimeZoneListTail = NULL;
 }
 
-#if 0
 static BOOL
 GetTimeZoneListIndex(LPDWORD lpIndex)
 {
@@ -1207,7 +1206,6 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
 
   return FALSE;
 }
-#endif
 
 
 static VOID
@@ -1217,9 +1215,7 @@ ShowTimeZoneList(HWND hwnd, PSETUPDATA SetupData, DWORD dwEntryIndex)
   DWORD dwIndex = 0;
   DWORD dwCount;
 
-#if 0
   GetTimeZoneListIndex(&dwEntryIndex);
-#endif
 
   Entry = SetupData->TimeZoneListHead;
   while (Entry != NULL)
