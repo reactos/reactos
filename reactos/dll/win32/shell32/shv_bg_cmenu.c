@@ -23,14 +23,14 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
+//#define YDEBUG
 #include "wine/debug.h"
 
 #include "windef.h"
 #include "wingdi.h"
 #include "pidl.h"
 #include "shlobj.h"
-
+#include "shtypes.h"
 #include "shell32_main.h"
 #include "shellfolder.h"
 #include "undocshell.h"
@@ -46,6 +46,8 @@ typedef struct
 	IShellFolder*	pSFParent;
 	LONG		ref;
 	BOOL		bDesktop;
+    UINT iIdShellNewFirst;
+    UINT iIdShellNewLast;
 } BgCmImpl;
 
 typedef enum
@@ -60,6 +62,7 @@ typedef enum
 typedef struct __SHELLNEW_ITEM__
 {
   SHELLNEW_TYPE Type;
+  LPWSTR szExt;
   LPWSTR szTarget;
   LPWSTR szDesc;
   LPWSTR szIcon;
@@ -165,6 +168,7 @@ PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
 
             pNewItem->szDesc = wcsdup(szDesc);
             pNewItem->szIcon = wcsdup(szIcon);
+            pNewItem->szExt = wcsdup(szKeyName);
             pNewItem->Next = NULL;
             break;
          }
@@ -214,11 +218,11 @@ LoadShellNewItems()
       return TRUE;
 }
 VOID
-InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
+InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, BgCmImpl * This)
 {
   MENUITEMINFOW mii;
   PSHELLNEW_ITEM pCurItem;
-
+  UINT i;
   if (s_SnHead == NULL)
   {
     if (!LoadShellNewItems())
@@ -234,21 +238,148 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu)
   mii.fState = MFS_ENABLED;
 
   pCurItem = s_SnHead;
+  i = 0;
 
   while(pCurItem)
   {
     mii.dwTypeData = pCurItem->szDesc;
     mii.cch = strlenW(mii.dwTypeData);
-    mii.wID = idFirst;
+    mii.wID = idFirst + i;
     if (InsertMenuItemW(hMenu, idMenu, TRUE, &mii))
     {
         idMenu++;
-        idFirst++;
+        i++;
     }
     pCurItem = pCurItem->Next;
   }
+  This->iIdShellNewFirst = idFirst;
+  This->iIdShellNewLast = idFirst + i;
 }
+VOID
+DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
+{
+  PSHELLNEW_ITEM pCurItem = s_SnHead;
+  IPersistFolder3 * psf;
+  LPITEMIDLIST pidl;
+  STRRET strTemp;
+  WCHAR szTemp[MAX_PATH];
+  WCHAR szBuffer[MAX_PATH];
+  WCHAR szPath[MAX_PATH];
+  STARTUPINFOW sInfo;
+  PROCESS_INFORMATION pi;
+  UINT i, target;
 
+  static const WCHAR szNew[] = { 'N','e','w',' ',0 }; //FIXME
+  static const WCHAR szP1[] = { '%', '1', 0 };
+  static const WCHAR szFormat[] = {'%','s',' ','(','%','u',')','%','s',0 };
+  
+
+  i = This->iIdShellNewFirst;
+  target = LOWORD(lpcmi->lpVerb);
+
+  while(pCurItem)
+  {
+    if (i == target)
+        break;
+
+    pCurItem = pCurItem->Next;
+    i++;
+  }
+
+  if (!pCurItem)
+      return;
+
+  if (IShellFolder2_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+  {
+     ERR("Failed to get interface IID_IPersistFolder2\n");
+     return;
+  }
+  if (IPersistFolder2_GetCurFolder(psf, &pidl) != S_OK)
+  {
+     ERR("IPersistFolder2_GetCurFolder failed\n");
+     return;
+  }
+
+  if (IShellFolder2_GetDisplayNameOf(This->pSFParent, pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
+  {
+     ERR("IShellFolder_GetDisplayNameOf failed\n");
+     return;
+  }
+  
+  switch(pCurItem->Type)
+  {
+     case SHELLNEW_TYPE_COMMAND:
+     {
+         LPWSTR ptr;
+         LPWSTR szCmd;
+
+         if (!ExpandEnvironmentStringsW(pCurItem->szTarget, szBuffer, MAX_PATH))
+         {
+             TRACE("ExpandEnvironmentStrings failed\n");
+             break;
+         }
+
+         ptr = wcsstr(szBuffer, szP1);
+         if (ptr)
+         {
+            ptr[1] = 's';
+            //StrRetToBufW(strTemp, pidl, szPath, MAX_PATH);
+            //TRACE("szPath %s\n", debugstr_w(szPath));
+            swprintf(szTemp, szBuffer, strTemp.u.pOleStr);
+            ptr = szTemp;
+         }
+         else
+         {
+            ptr = szBuffer;
+         }
+
+         ZeroMemory(&sInfo, sizeof(sInfo));
+         sInfo.cb = sizeof(sizeof(sInfo));
+         szCmd = wcsdup(ptr);
+         if (!szCmd)
+             break;
+         if (CreateProcessW(NULL, szCmd, NULL, NULL,FALSE,0,NULL,NULL,&sInfo, &pi))
+         {
+           CloseHandle( pi.hProcess );
+           CloseHandle( pi.hThread );
+         }
+         free(szCmd);
+        break;
+     }
+     case SHELLNEW_TYPE_DATA:
+     {
+
+        break;
+     }
+     case SHELLNEW_TYPE_FILENAME:
+     {
+
+        break;
+     }
+     case SHELLNEW_TYPE_NULLFILE:
+     {
+        HANDLE hFile;
+        i = 2;
+
+        wcscpy(szBuffer, strTemp.u.pOleStr);
+        PathAddBackslashW(szBuffer);
+        wcscat(szBuffer, szNew);
+        wcscat(szBuffer, pCurItem->szDesc);
+        wcscpy(szPath, szBuffer);
+        wcscat(szPath, pCurItem->szExt);
+        do
+        {
+            TRACE("FileName %s szBuffer %s i %d \n", debugstr_w(szPath), debugstr_w(szBuffer), i);
+            hFile = CreateFileW(szPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            swprintf(szPath, szFormat, szBuffer, i, pCurItem->szExt);
+            i++;
+        }while(hFile == INVALID_HANDLE_VALUE);
+        break;
+        CloseHandle(hFile);
+        break;
+     }
+  }
+}
 
 
 /**************************************************************************
@@ -384,7 +515,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
     mii.fMask = MIIM_SUBMENU;
     if (GetMenuItemInfoW(hMenu, 10, TRUE, &mii))
     {
-      InsertShellNewItems(mii.hSubMenu, 0x6000, 0x6000);
+      InsertShellNewItems(mii.hSubMenu, 0x6000, 0x6000, This);
     }
 
     TRACE("(%p)->returning 0x%x\n",This,hr);
@@ -589,6 +720,12 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 		break;
 
 	      default:
+            if (LOWORD(lpcmi->lpVerb) >= This->iIdShellNewFirst && LOWORD(lpcmi->lpVerb) <= This->iIdShellNewLast)
+            {
+                DoShellNewCmd(This, lpcmi);
+                break;
+            }
+
 	        /* if it's an id just pass it to the parent shv */
 	        if (hWndSV) SendMessageA(hWndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0),0 );
 		break;
