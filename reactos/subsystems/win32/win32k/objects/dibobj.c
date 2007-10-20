@@ -454,6 +454,13 @@ NtGdiGetDIBits(HDC hDC,
             BitmapFormat(Info->bmiHeader.biBitCount, Info->bmiHeader.biCompression),
             0 < Info->bmiHeader.biHeight ? 0 : BMF_TOPDOWN,
             Bits);
+         
+         if(DestBitmap == NULL)
+         {
+            BITMAPOBJ_UnlockBitmap(BitmapObj);
+            return 0;
+         }
+         
          DestSurfObj = EngLockSurface((HSURF)DestBitmap);
 
          SourcePalette = PALETTE_LockPalette(hSourcePalette);

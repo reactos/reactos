@@ -744,15 +744,17 @@ BOOL FASTCALL
 IntSetMenuItemInfo(PMENU_OBJECT MenuObject, PMENU_ITEM MenuItem, PROSMENUITEMINFO lpmii)
 {
    PMENU_OBJECT SubMenuObject;
+   UINT fTypeMask = (MFT_BITMAP | MFT_MENUBARBREAK | MFT_MENUBREAK | MFT_OWNERDRAW | MFT_RADIOCHECK | MFT_RIGHTJUSTIFY | MFT_SEPARATOR | MF_POPUP);
 
    if(!MenuItem || !MenuObject || !lpmii)
    {
       return FALSE;
    }
-
-   MenuItem->fType &= ~MENU_ITEM_TYPE(MenuItem->fType);
-   MenuItem->fType |= MENU_ITEM_TYPE(lpmii->fType);
-
+   if( lpmii->fType & ~fTypeMask)
+   {
+     DPRINT("IntSetMenuItemInfo invalid fType flags %x\n", lpmii->fType & ~fTypeMask);
+     lpmii->fMask &= ~(MIIM_TYPE | MIIM_FTYPE);
+   }
    if(lpmii->fMask & MIIM_BITMAP)
    {
       MenuItem->hbmpItem = lpmii->hbmpItem;

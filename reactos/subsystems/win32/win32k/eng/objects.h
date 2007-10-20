@@ -158,9 +158,6 @@ typedef struct _XLATEGDI {
       INT GreenShift;
       INT BlueShift;
 //    };
-//    struct {            /* For Table Translations */
-      ULONG *translationTable;
-//    };
 //    struct {            /* For Color -> Mono Translations */
       ULONG BackgroundColor;
 //    };

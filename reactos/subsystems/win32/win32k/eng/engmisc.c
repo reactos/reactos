@@ -68,6 +68,13 @@ IntEngEnter(PINTENG_ENTER_LEAVE EnterLeave,
     EnterLeave->OutputBitmap = EngCreateBitmap(BitmapSize, Width,
                                                DestObj->iBitmapFormat,
                                                BMF_TOPDOWN | BMF_NOZEROINIT, NULL);
+                                               
+    if (!EnterLeave->OutputBitmap)
+      {
+      DPRINT1("EngCreateBitmap() failed\n");
+      return FALSE;
+      }
+      
     *OutputObj = EngLockSurface((HSURF)EnterLeave->OutputBitmap);
 
     EnterLeave->DestRect.left = 0;
