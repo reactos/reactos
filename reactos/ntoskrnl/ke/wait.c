@@ -544,6 +544,12 @@ KeWaitForMultipleObjects(IN ULONG Count,
 
     /*  Otherwise, we already have the lock, so initialize the wait */
     Thread->WaitNext = FALSE;
+    /*  Note that KxMultiThreadWait is a macro, defined in ke_x.h, that  */
+    /*  uses  (and modifies some of) the following local                 */
+    /*  variables:                                                       */
+    /*  Thread, Index, WaitBlock, Timer, Timeout, Hand and Swappable.    */
+    /*  If it looks like this code doesn't actually wait for any objects */
+    /*  at all, it's because the setup is done by that macro.            */
     KxMultiThreadWait();
 
     /* Start wait loop */
