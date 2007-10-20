@@ -531,3 +531,6 @@ modules\rostests\winetests\user32\user32_winetest.exe       7   optional
 modules\rostests\winetests\usp10\usp10_winetest.exe         7   optional
 modules\rostests\winetests\version\version_winetest.exe     7   optional
 modules\wallpaper\lake.bmp                                  4   optional
+
+; Native libraries
+modules\windows\mfc42.dll                                   1   optional
