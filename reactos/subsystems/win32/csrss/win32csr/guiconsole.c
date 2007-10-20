@@ -1246,6 +1246,20 @@ GuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
   return TRUE;
 }
 
+static BOOL STDCALL
+GuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
+{
+    PGUI_CONSOLE_DATA GuiData = (PGUI_CONSOLE_DATA) Console->PrivateData;
+
+    if (Console->ActiveBuffer == Buff)
+    {
+        GuiData->ScreenText = GuiConsoleRGBFromAttribute(Buff->DefaultAttrib & 0x0f);
+        GuiData->ScreenBackground = GuiConsoleRGBFromAttribute((Buff->DefaultAttrib & 0xf0) >> 4);
+    }
+
+    return TRUE;
+}
+
 static VOID FASTCALL
 GuiConsoleHandleTimer(HWND hWnd)
 {
@@ -2124,6 +2138,7 @@ static CSRSS_CONSOLE_VTBL GuiVtbl =
   GuiDrawRegion,
   GuiSetCursorInfo,
   GuiSetScreenInfo,
+  GuiUpdateScreenInfo,
   GuiChangeTitle,
   GuiCleanupConsole,
   GuiChangeIcon

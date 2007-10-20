@@ -214,6 +214,12 @@ TuiSetScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff, UINT OldCurs
 }
 
 static BOOL STDCALL
+TuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
+{
+    return TRUE;
+}
+
+static BOOL STDCALL
 TuiChangeTitle(PCSRSS_CONSOLE Console)
 {
   return TRUE;
@@ -293,6 +299,7 @@ static CSRSS_CONSOLE_VTBL TuiVtbl =
   TuiDrawRegion,
   TuiSetCursorInfo,
   TuiSetScreenInfo,
+  TuiUpdateScreenInfo,
   TuiChangeTitle,
   TuiCleanupConsole
 };

@@ -56,6 +56,7 @@ typedef struct tagCSRSS_CONSOLE_VTBL
   BOOL (STDCALL *SetCursorInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
   BOOL (STDCALL *SetScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer,
                                 UINT OldCursorX, UINT OldCursorY);
+  BOOL (STDCALL *UpdateScreenInfo)(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER ScreenBuffer);
   BOOL (STDCALL *ChangeTitle)(PCSRSS_CONSOLE Console);
   VOID (STDCALL *CleanupConsole)(PCSRSS_CONSOLE Console);
   BOOL (STDCALL *ChangeIcon)(PCSRSS_CONSOLE Console);
@@ -152,6 +153,8 @@ CSR_API(CsrGetProcessList);
 #define ConioSetCursorInfo(Console, Buff) (Console)->Vtbl->SetCursorInfo((Console), (Buff))
 #define ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY) \
           (Console)->Vtbl->SetScreenInfo((Console), (Buff), (OldCursorX), (OldCursorY))
+#define ConioUpdateScreenInfo(Console, Buff) \
+          (Console)->Vtbl->UpdateScreenInfo(Console, Buff)
 #define ConioChangeTitle(Console) (Console)->Vtbl->ChangeTitle(Console)
 #define ConioCleanupConsole(Console) (Console)->Vtbl->CleanupConsole(Console)
 

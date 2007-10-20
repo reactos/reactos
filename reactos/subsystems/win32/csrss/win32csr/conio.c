@@ -2049,7 +2049,6 @@ CSR_API(CsrSetTextAttrib)
   NTSTATUS Status;
   PCSRSS_CONSOLE Console;
   PCSRSS_SCREEN_BUFFER Buff;
-  LONG OldCursorX, OldCursorY;
 
   DPRINT("CsrSetTextAttrib\n");
 
@@ -2069,12 +2068,10 @@ CSR_API(CsrSetTextAttrib)
       return Request->Status = Status;
     }
 
-  ConioPhysicalToLogical(Buff, Buff->CurrentX, Buff->CurrentY, &OldCursorX, &OldCursorY);
-
   Buff->DefaultAttrib = Request->Data.SetAttribRequest.Attrib;
   if (NULL != Console && Buff == Console->ActiveBuffer)
     {
-      if (! ConioSetScreenInfo(Console, Buff, OldCursorX, OldCursorY))
+      if (! ConioUpdateScreenInfo(Console, Buff))
         {
           ConioUnlockScreenBuffer(Buff);
           ConioUnlockConsole(Console);
