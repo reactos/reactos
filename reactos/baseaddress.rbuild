@@ -7,6 +7,7 @@
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
   <property name="BASEADDRESS_PWRCFG" value="0x587e0000" />
   <property name="BASEADDRESS_MMSYS" value="0x588a0000" />
+  <property name="BASEADDRESS_JOY" value="0x589b0000" />
   <property name="BASEADDRESS_UXTHEME" value="0x5ad70000" />
   <property name="BASEADDRESS_VDMDBG" value="0x5b0d0000" />
   <property name="BASEADDRESS_OBJSEL" value="0x5b400000" />

@@ -1,0 +1,6 @@
+LIBRARY joy.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF

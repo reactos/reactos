@@ -19,6 +19,9 @@
 <directory name="intl">
 	<xi:include href="intl/intl.rbuild" />
 </directory>
+<directory name="joy">
+	<xi:include href="joy/joy.rbuild" />
+</directory>
 <directory name="main">
 	<xi:include href="main/main.rbuild" />
 </directory>
