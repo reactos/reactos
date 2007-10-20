@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="devenum" type="win32dll" entrypoint="0" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" allowwarnings="true">
+<module name="devenum" type="win32dll" baseaddress="${BASEADDRESS_DEVENUM}" installbase="system32" installname="devenum.dll" allowwarnings="true">
 	<!-- Won't load correctly in ReactOS yet autoregister infsection="OleControlDlls" type="DllRegisterServer" -->
 	<importlibrary definition="devenum.spec.def" />
 	<include base="devenum">.</include>

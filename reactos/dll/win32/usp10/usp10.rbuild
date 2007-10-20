@@ -1,4 +1,4 @@
-<module name="usp10" type="win32dll" entrypoint="0"  installbase="system32" installname="usp10.dll" allowwarnings ="true">
+<module name="usp10" type="win32dll" installbase="system32" installname="usp10.dll" allowwarnings ="true">
 	<importlibrary definition="usp10.spec.def" />
 	<include base="usp10">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
