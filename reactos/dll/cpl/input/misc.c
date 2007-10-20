@@ -43,7 +43,7 @@ VOID
 CreateKeyboardLayoutList(HWND hWnd)
 {
     TCHAR Layout[256];
-    int Index;
+    INT Index;
     UINT loIndex;
 
     for (loIndex = BEGIN_LAYOUT; loIndex <= END_LAYOUT; loIndex++)
@@ -51,12 +51,12 @@ CreateKeyboardLayoutList(HWND hWnd)
         LoadString(hApplet,
                    loIndex,
                    Layout,
-                   sizeof(Layout) / sizeof(TCHAR));
+                   256);
 
-        if (strlen((char*)Layout) > 0)
+        if (_tcslen(Layout) > 0)
         {
             Index = (int) SendMessage(hWnd,
-                                      CB_INSERTSTRING,
+                                      CB_ADDSTRING,
                                       0,
                                       (LPARAM)Layout);
 

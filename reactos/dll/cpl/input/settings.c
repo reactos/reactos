@@ -46,10 +46,14 @@ BOOL
 CreateDefaultLangList(HWND hWnd)
 {
     HKEY hKey;
-    char szPreload[BUFSIZE],szCount[BUFSIZE],Lang[BUFSIZE];
-    DWORD dwBufLen = BUFSIZE, dwBufCLen = BUFSIZE, cValues;
+    TCHAR szPreload[BUFSIZE];
+    TCHAR szCount[BUFSIZE];
+    TCHAR Lang[BUFSIZE];
+    DWORD dwBufLen;
+    DWORD dwBufCLen;
+    DWORD cValues;
     LONG lRet;
-    int Count;
+    INT Count;
     LCID Lcid;
 
     if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
@@ -63,13 +67,17 @@ CreateDefaultLangList(HWND hWnd)
     {
         for (Count = 0; Count < cValues; Count++)
         {
-            szCount[0] = '\0';
+            szCount[0] = TEXT('\0');
+
+            dwBufCLen = BUFSIZE;
             lRet = RegEnumValue(hKey,Count,(LPTSTR)szCount,&dwBufCLen,NULL,NULL,NULL,NULL);
 
-            sprintf(szCount,"%d",Count + 1);
+            _stprintf(szCount,TEXT("%d"),Count + 1);
+
+            dwBufLen = BUFSIZE;
             RegQueryValueEx(hKey,(LPTSTR)szCount,NULL,NULL,(LPBYTE)szPreload,&dwBufLen);
 
-            Lcid = wcstoul((LPTSTR)szPreload, NULL, 16);
+            Lcid = _tcstoul(szPreload, NULL, 16);
             GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
 
             SendMessage(hWnd,

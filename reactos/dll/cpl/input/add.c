@@ -72,20 +72,20 @@ LanguagesEnumProc(LPTSTR lpLanguage)
 {
     LCID Lcid;
     TCHAR Lang[1024];
-    int Index;
+    INT Index;
 
-    Lcid = wcstoul(lpLanguage, NULL, 16);
+    Lcid = _tcstoul(lpLanguage, NULL, 16);
 
     GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, Lang, sizeof(Lang));
-    Index = (int) SendMessage(hLanguageList,
-                              CB_ADDSTRING,
-                              0,
-                              (LPARAM)Lang);
+    Index = (INT)SendMessage(hLanguageList,
+                             CB_ADDSTRING,
+                             0,
+                             (LPARAM)Lang);
 
     SendMessage(hLanguageList,
-                 CB_SETITEMDATA,
-                 Index,
-                 (LPARAM)Lcid);
+                CB_SETITEMDATA,
+                Index,
+                (LPARAM)Lcid);
 
     return TRUE;
 }
@@ -96,13 +96,14 @@ VOID
 CreateLanguagesList(HWND hWnd)
 {
     TCHAR LangSel[256];
+
     hLanguageList = hWnd;
     EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);
 
     LoadString(hApplet,
                IDS_SELECTED_LANGUAGE,
                LangSel,
-               sizeof(LangSel) / sizeof(TCHAR));
+               256);
 
     SendMessage(hLanguageList,
                 CB_SELECTSTRING,
@@ -119,7 +120,7 @@ SelectCurrentLayout(HWND hWnd)
     LoadString(hApplet,
                IDS_SELECTED_LAYOUT,
                Layout,
-               sizeof(Layout) / sizeof(TCHAR));
+               256);
     SendMessage(hWnd,
                 CB_SELECTSTRING,
                 (WPARAM) -1,

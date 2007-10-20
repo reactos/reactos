@@ -21,6 +21,4 @@ IDI_MIC_ICO        ICON "resources/microphone.ico"
 IDI_KEY_SHORT_ICO  ICON "resources/keyboard-shortcuts.ico"
 IDI_INFO_ICO       ICON "resources/information.ico"
 
-LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
-
 #include "rsrc.rc"
