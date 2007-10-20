@@ -268,6 +268,8 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
   STARTUPINFOW sInfo;
   PROCESS_INFORMATION pi;
   UINT i, target;
+  HANDLE hFile;
+  DWORD dwWritten;
 
   static const WCHAR szNew[] = { 'N','e','w',' ',0 }; //FIXME
   static const WCHAR szP1[] = { '%', '1', 0 };
@@ -347,18 +349,9 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
         break;
      }
      case SHELLNEW_TYPE_DATA:
-     {
-
-        break;
-     }
      case SHELLNEW_TYPE_FILENAME:
-     {
-
-        break;
-     }
      case SHELLNEW_TYPE_NULLFILE:
      {
-        HANDLE hFile;
         i = 2;
 
         wcscpy(szBuffer, strTemp.u.pOleStr);
@@ -374,8 +367,20 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
             swprintf(szPath, szFormat, szBuffer, i, pCurItem->szExt);
             i++;
         }while(hFile == INVALID_HANDLE_VALUE);
-        break;
+
+        if (pCurItem->Type == SHELLNEW_TYPE_DATA)
+        {
+            i = WideCharToMultiByte(CP_ACP, 0, pCurItem->szTarget, -1, (LPSTR)szBuffer, MAX_PATH*2, NULL, NULL);
+            if (i)
+            {
+                WriteFile(hFile, (LPCVOID)szBuffer, i, &dwWritten, NULL);
+            }
+        }
         CloseHandle(hFile);
+        if (pCurItem->Type == SHELLNEW_TYPE_FILENAME)
+        {
+            CopyFileW(pCurItem->szTarget, szPath, FALSE);
+        }
         break;
      }
   }
