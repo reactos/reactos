@@ -14,11 +14,14 @@
 PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
 PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
 
-DRVFN gaEngFuncs;
+/* export from dxeng.c */
+extern DRVFN gaEngFuncs;
+extern ULONG gcEngFuncs;
+
 PDRVFN gpDxFuncs;
 HANDLE ghDxGraphics;
 ULONG gdwDirectDrawContext;
-ULONG gcEngFuncs;
+
 
 /************************************************************************/
 /* DirectX graphic/video driver loading and cleanup start here          */

@@ -11,6 +11,90 @@
 #include <w32k.h>
 #include <debug.h>
 
+ULONG gcEngFuncs = DXENG_INDEX_DxEngLoadImage + 1;
+DRVFN gaEngFuncs [] =
+{
+    {0, (PFN) NULL},
+    {DXENG_INDEX_DxEngNUIsTermSrv, (PFN)DxEngNUIsTermSrv},
+//    {DXENG_INDEX_DxEngScreenAccessCheck, (PFN)DxEngScreenAccessCheck},
+    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngRedrawDesktop, (PFN)DxEngRedrawDesktop},
+    {DXENG_INDEX_DxEngDispUniq, (PFN)DxEngDispUniq},
+//    {DXENG_INDEX_DxEngIncDispUniq, (PFN)DxEngIncDispUniq},
+    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngVisRgnUniq, (PFN)DxEngVisRgnUniq},
+//    {DXENG_INDEX_DxEngLockShareSem, (PFN)DxEngLockShareSem},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngUnlockShareSem, (PFN)DxEngUnlockShareSem},
+    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngEnumerateHdev, (PFN)DxEngEnumerateHdev},
+//    {DXENG_INDEX_DxEngLockHdev, (PFN)DxEngLockHdev},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngUnlockHdev, (PFN)DxEngUnlockHdev},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngIsHdevLockedByCurrentThread, (PFN)DxEngIsHdevLockedByCurrentThread},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngReferenceHdev, (PFN)DxEngReferenceHdev},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngUnreferenceHdev, (PFN)DxEngUnreferenceHdev},
+    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngGetDeviceGammaRamp, (PFN)DxEngGetDeviceGammaRamp},
+//    {DXENG_INDEX_DxEngSetDeviceGammaRamp, (PFN)DxEngSetDeviceGammaRamp},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSpTearDownSprites, (PFN)DxEngSpTearDownSprites},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSpUnTearDownSprites, (PFN)DxEngSpUnTearDownSprites},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSpSpritesVisible, (PFN)DxEngSpSpritesVisible},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngGetHdevData, (PFN)DxEngGetHdevData},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSetHdevData, (PFN)DxEngSetHdevData},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngCreateMemoryDC, (PFN)DxEngCreateMemoryDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngGetDesktopDC, (PFN)DxEngGetDesktopDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngDeleteDC, (PFN)DxEngDeleteDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngCleanDC, (PFN)DxEngCleanDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSetDCOwner, (PFN)DxEngSetDCOwner},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngLockDC, (PFN)DxEngLockDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngUnlockDC, (PFN)DxEngUnlockDC},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngGetDCState},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngGetDCState, (PFN)DxEngGetDCState},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSelectBitmap, (PFN)DxEngSelectBitmap},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSetBitmapOwner, (PFN)DxEngSetBitmapOwner},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngDeleteSurface, (PFN)DxEngDeleteSurface},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngGetSurfaceData, (PFN)DxEngGetSurfaceData},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngAltLockSurface, (PFN)DxEngAltLockSurface},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngUploadPaletteEntryToSurface, (PFN)DxEngUploadPaletteEntryToSurface},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngMarkSurfaceAsDirectDraw, (PFN)DxEngMarkSurfaceAsDirectDraw},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSelectPaletteToSurface, (PFN)DxEngSelectPaletteToSurface},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSyncPaletteTableWithDevice, (PFN)DxEngSyncPaletteTableWithDevice},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngSetPaletteState, (PFN)DxEngSetPaletteState},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngGetRedirectionBitmap, (PFN)DxEngGetRedirectionBitmap},
+    {0, (PFN) NULL}, // hack for now 
+//    {DXENG_INDEX_DxEngLoadImage, (PFN)DxEngLoadImage}
+    {0, (PFN) NULL} // hack for now
+};
+
 /************************************************************************/
 /* DxEngNUIsTermSrv                                                     */
 /************************************************************************/
