@@ -76,6 +76,58 @@ static const IContextMenu2Vtbl cmvt;
 
 static PSHELLNEW_ITEM s_SnHead = NULL;
 
+static
+BOOL
+GetKeyDescription(LPWSTR szKeyName, LPWSTR szResult)
+{
+  HKEY hKey;
+  DWORD dwDesc, dwError;
+  WCHAR szDesc[100];
+
+  static const WCHAR szFriendlyTypeName[] = { '\\','F','r','i','e','n','d','l','y','T','y','p','e','N','a','m','e',0 };
+
+  TRACE("GetKeyDescription: keyname %s\n", debugstr_w(szKeyName));
+
+  if (RegOpenKeyExW(HKEY_CLASSES_ROOT,szKeyName,0, KEY_READ | KEY_QUERY_VALUE,&hKey) != ERROR_SUCCESS)
+      return FALSE;
+
+  if (RegLoadMUIStringW(hKey,szFriendlyTypeName,szResult,MAX_PATH,&dwDesc,0,NULL) == ERROR_SUCCESS)
+  {
+      TRACE("result %s\n", debugstr_w(szResult));
+      RegCloseKey(hKey);
+      return TRUE;
+  }
+  /* fetch default value */
+  dwDesc = sizeof(szDesc);
+  dwError = RegGetValueW(hKey,NULL,NULL, RRF_RT_REG_SZ,NULL,szDesc,&dwDesc);
+  if(dwError == ERROR_SUCCESS)
+  {
+     if (wcsncmp(szDesc, szKeyName, dwDesc / sizeof(WCHAR)))
+     {
+        /* recurse for to a linked key */
+        if (!GetKeyDescription(szDesc, szResult))
+        {
+           /* use description */
+           wcscpy(szResult, szDesc);
+        }
+     }
+     else
+     {
+        /* use default value as description */
+        wcscpy(szResult, szDesc);
+     }
+  }
+  else
+  {
+     /* registry key w/o default key?? */
+     TRACE("RegGetValue failed with %x\n", dwError);
+     wcscpy(szResult, szKeyName);
+  }
+
+  RegCloseKey(hKey);
+  return TRUE;
+}
+
 
 PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
 {
@@ -83,9 +135,9 @@ PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
   DWORD dwIndex;
   WCHAR szName[MAX_PATH];
   WCHAR szCommand[MAX_PATH];
-  WCHAR szDesc[MAX_PATH];
-  WCHAR szIcon[MAX_PATH];
-  DWORD dwName, dwCommand, dwDesc;
+  WCHAR szDesc[MAX_PATH] = {0};
+  WCHAR szIcon[MAX_PATH] = {0};
+  DWORD dwName, dwCommand;
   LONG result;
   PSHELLNEW_ITEM pNewItem;
   
@@ -94,40 +146,17 @@ PSHELLNEW_ITEM LoadItem(LPWSTR szKeyName)
   static const WCHAR szData[] = { 'D','a','t','a',0 };
   static const WCHAR szFileName[] = { 'F','i','l','e','N','a','m','e', 0 };
   static const WCHAR szNullFile[] = { 'N','u','l','l','F','i','l','e', 0 };
-  static const WCHAR szDefaultIcon[] ={ '\\','D','e','f','a','u','l','t','I','c','o','n',0 };
 
-  result = RegOpenKeyExW(HKEY_CLASSES_ROOT,szKeyName,0,KEY_READ,&hKey);
-
-  if (result != ERROR_SUCCESS)
-  {
-    return NULL;
-  }
-  
-  dwName = MAX_PATH;
-  result = RegGetValueW(hKey,NULL,NULL,RRF_RT_REG_SZ,NULL,szName, &dwName);
-
-  RegCloseKey(hKey);
-  szDesc[0] = L'\0';
-  szIcon[0] = L'\0';
-  if (result == ERROR_SUCCESS)
-  {
-     dwDesc = MAX_PATH;
-     RegGetValueW(HKEY_CLASSES_ROOT,szName,NULL,RRF_RT_REG_SZ,NULL,szDesc,&dwDesc);
-     dwDesc = MAX_PATH;
-     wcscat(szName, szDefaultIcon);
-     RegGetValueW(HKEY_CLASSES_ROOT,szName,NULL,RRF_RT_REG_SZ,NULL,szIcon,&dwDesc);
-  }
-  
   wcscpy(szName, szKeyName);
+  GetKeyDescription(szKeyName, szDesc);
   wcscat(szName, szShellNew);
   result = RegOpenKeyExW(HKEY_CLASSES_ROOT,szName,0,KEY_READ,&hKey);
 
-  //TRACE("LoadItem keyname %s szName %s szDesc %s szIcon %s\n", debugstr_w(szKeyName), debugstr_w(szName), debugstr_w(szDesc), debugstr_w(szIcon));
-
+  //TRACE("LoadItem dwName %d keyname %s szName %s szDesc %s szIcon %s\n", dwName, debugstr_w(szKeyName), debugstr_w(szName), debugstr_w(szDesc), debugstr_w(szIcon));
 
   if (result != ERROR_SUCCESS)
   {
-    return NULL;
+     return NULL;
   }
 
   dwIndex = 0;
@@ -190,6 +219,7 @@ LoadShellNewItems()
   LONG result;
   PSHELLNEW_ITEM pNewItem;
   PSHELLNEW_ITEM pCurItem = NULL;
+  static WCHAR szLnk[] = { '.','l','n','k',0 };
 
   dwIndex = 0;
   do
@@ -200,14 +230,29 @@ LoadShellNewItems()
         pNewItem = LoadItem(szName);
         if (pNewItem)
         {
-            if (pCurItem)
+            if (!wcsicmp(pNewItem->szExt, szLnk))
             {
-                pCurItem->Next = pNewItem;
-                pCurItem = pNewItem;
+                if (s_SnHead)
+                {
+                    pNewItem->Next = s_SnHead;
+                    s_SnHead = pNewItem;
+                }
+                else
+                {
+                   s_SnHead = pCurItem = pNewItem;
+                }
             }
             else
             {
-                pCurItem = s_SnHead = pNewItem;
+                if (pCurItem)
+                {
+                   pCurItem->Next = pNewItem;
+                   pCurItem = pNewItem;
+                }
+                else
+                {
+                   pCurItem = s_SnHead = pNewItem;
+                }
             }
         }
      }
@@ -232,8 +277,26 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, BgCmImpl * This)
 
   }
 
+
   ZeroMemory(&mii, sizeof(mii));
   mii.cbSize = sizeof(mii);
+
+  This->iIdShellNewFirst = idFirst;
+  
+  /*
+   * FIXME: small hack for new shortcut
+   */
+
+  mii.fMask = MIIM_ID;
+  mii.wID = idFirst;
+  SetMenuItemInfoW(hMenu, 1, TRUE, &mii);
+  idFirst++;
+
+  mii.fMask = MIIM_TYPE | MIIM_ID;
+  mii.fType = MFT_SEPARATOR;
+  mii.wID = -1;
+  InsertMenuItemW(hMenu, -1, TRUE, &mii);
+
 
   mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA; //MIIM_BITMAP;
   mii.fType = MFT_STRING;
@@ -244,18 +307,19 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, BgCmImpl * This)
 
   while(pCurItem)
   {
-    mii.dwTypeData = pCurItem->szDesc;
-    mii.cch = strlenW(mii.dwTypeData);
-    mii.wID = idFirst + i;
-    if (InsertMenuItemW(hMenu, idMenu, TRUE, &mii))
+    if (i >= 1)
     {
-        idMenu++;
-        i++;
+       mii.dwTypeData = pCurItem->szDesc;
+       mii.cch = strlenW(mii.dwTypeData);
+       mii.wID = idFirst;
+       InsertMenuItemW(hMenu, idMenu, TRUE, &mii);
+       idMenu++;
+       idFirst++;
     }
     pCurItem = pCurItem->Next;
+    i++;
   }
-  This->iIdShellNewFirst = idFirst;
-  This->iIdShellNewLast = idFirst + i;
+  This->iIdShellNewLast = idFirst;
 }
 VOID
 DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
@@ -276,7 +340,6 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
   static const WCHAR szNew[] = { 'N','e','w',' ',0 }; //FIXME
   static const WCHAR szP1[] = { '%', '1', 0 };
   static const WCHAR szFormat[] = {'%','s',' ','(','%','d',')','%','s',0 };
-  
 
   i = This->iIdShellNewFirst;
   target = LOWORD(lpcmi->lpVerb);
