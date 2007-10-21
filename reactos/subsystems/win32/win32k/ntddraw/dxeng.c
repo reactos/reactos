@@ -483,4 +483,13 @@ DWORD DxEngLoadImage(DWORD x1,DWORD x2)
     return FALSE;
 }
 
+/************************************************************************/
+/* DxEngIncDispUniq                                                       */
+/************************************************************************/
+DWORD DxEngIncDispUniq()
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 

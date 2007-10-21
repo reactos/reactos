@@ -115,6 +115,7 @@ DWORD DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
 DWORD DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngGetRedirectionBitmap(DWORD x1);
 DWORD DxEngLoadImage(DWORD x1,DWORD x2);
+DWORD DxEngIncDispUniq();
 
 
 
