@@ -1,11 +1,4 @@
-; $Id: vgaddi.def 26978 2007-06-03 16:45:34Z greatlrd $
-;
 ; vgaddi.def
-;
-; ReactOS Operating System
-;
-; From Anders Norlander's w32api-0.1.5 vgaddi.def.
-;
 LIBRARY vgaddi.dll
 EXPORTS
 DrvEnableDriver@12
