@@ -18,81 +18,47 @@ DRVFN gaEngFuncs [] =
 {
     {0, (PFN) NULL},
     {DXENG_INDEX_DxEngNUIsTermSrv, (PFN)DxEngNUIsTermSrv},
-//    {DXENG_INDEX_DxEngScreenAccessCheck, (PFN)DxEngScreenAccessCheck},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngScreenAccessCheck, (PFN)DxEngScreenAccessCheck},
     {DXENG_INDEX_DxEngRedrawDesktop, (PFN)DxEngRedrawDesktop},
     {DXENG_INDEX_DxEngDispUniq, (PFN)DxEngDispUniq},
-//    {DXENG_INDEX_DxEngIncDispUniq, (PFN)DxEngIncDispUniq},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngIncDispUniq, (PFN)DxEngIncDispUniq},
     {DXENG_INDEX_DxEngVisRgnUniq, (PFN)DxEngVisRgnUniq},
-//    {DXENG_INDEX_DxEngLockShareSem, (PFN)DxEngLockShareSem},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngUnlockShareSem, (PFN)DxEngUnlockShareSem},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngLockShareSem, (PFN)DxEngLockShareSem},
+    {DXENG_INDEX_DxEngUnlockShareSem, (PFN)DxEngUnlockShareSem},
     {DXENG_INDEX_DxEngEnumerateHdev, (PFN)DxEngEnumerateHdev},
-//    {DXENG_INDEX_DxEngLockHdev, (PFN)DxEngLockHdev},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngUnlockHdev, (PFN)DxEngUnlockHdev},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngIsHdevLockedByCurrentThread, (PFN)DxEngIsHdevLockedByCurrentThread},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngReferenceHdev, (PFN)DxEngReferenceHdev},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngUnreferenceHdev, (PFN)DxEngUnreferenceHdev},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngLockHdev, (PFN)DxEngLockHdev},
+    {DXENG_INDEX_DxEngUnlockHdev, (PFN)DxEngUnlockHdev},
+    {DXENG_INDEX_DxEngIsHdevLockedByCurrentThread, (PFN)DxEngIsHdevLockedByCurrentThread},
+    {DXENG_INDEX_DxEngReferenceHdev, (PFN)DxEngReferenceHdev},
+    {DXENG_INDEX_DxEngUnreferenceHdev, (PFN)DxEngUnreferenceHdev},
     {DXENG_INDEX_DxEngGetDeviceGammaRamp, (PFN)DxEngGetDeviceGammaRamp},
-//    {DXENG_INDEX_DxEngSetDeviceGammaRamp, (PFN)DxEngSetDeviceGammaRamp},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSpTearDownSprites, (PFN)DxEngSpTearDownSprites},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSpUnTearDownSprites, (PFN)DxEngSpUnTearDownSprites},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSpSpritesVisible, (PFN)DxEngSpSpritesVisible},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngGetHdevData, (PFN)DxEngGetHdevData},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSetHdevData, (PFN)DxEngSetHdevData},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngCreateMemoryDC, (PFN)DxEngCreateMemoryDC},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngGetDesktopDC, (PFN)DxEngGetDesktopDC},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngDeleteDC, (PFN)DxEngDeleteDC},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngCleanDC, (PFN)DxEngCleanDC},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSetDCOwner, (PFN)DxEngSetDCOwner},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngSetDeviceGammaRamp, (PFN)DxEngSetDeviceGammaRamp},
+    {DXENG_INDEX_DxEngSpTearDownSprites, (PFN)DxEngSpTearDownSprites},
+    {DXENG_INDEX_DxEngSpUnTearDownSprites, (PFN)DxEngSpUnTearDownSprites},
+    {DXENG_INDEX_DxEngSpSpritesVisible, (PFN)DxEngSpSpritesVisible},
+    {DXENG_INDEX_DxEngGetHdevData, (PFN)DxEngGetHdevData},
+    {DXENG_INDEX_DxEngSetHdevData, (PFN)DxEngSetHdevData},
+    {DXENG_INDEX_DxEngCreateMemoryDC, (PFN)DxEngCreateMemoryDC},
+    {DXENG_INDEX_DxEngGetDesktopDC, (PFN)DxEngGetDesktopDC},
+    {DXENG_INDEX_DxEngDeleteDC, (PFN)DxEngDeleteDC},
+    {DXENG_INDEX_DxEngCleanDC, (PFN)DxEngCleanDC},
+    {DXENG_INDEX_DxEngSetDCOwner, (PFN)DxEngSetDCOwner},
     {DXENG_INDEX_DxEngLockDC, (PFN)DxEngLockDC},
     {DXENG_INDEX_DxEngUnlockDC, (PFN)DxEngUnlockDC},
-//    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngGetDCState},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngGetDCState, (PFN)DxEngGetDCState},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSelectBitmap, (PFN)DxEngSelectBitmap},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSetBitmapOwner, (PFN)DxEngSetBitmapOwner},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngDeleteSurface, (PFN)DxEngDeleteSurface},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngGetSurfaceData, (PFN)DxEngGetSurfaceData},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngAltLockSurface, (PFN)DxEngAltLockSurface},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngUploadPaletteEntryToSurface, (PFN)DxEngUploadPaletteEntryToSurface},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngMarkSurfaceAsDirectDraw, (PFN)DxEngMarkSurfaceAsDirectDraw},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSelectPaletteToSurface, (PFN)DxEngSelectPaletteToSurface},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSyncPaletteTableWithDevice, (PFN)DxEngSyncPaletteTableWithDevice},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngSetPaletteState, (PFN)DxEngSetPaletteState},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngGetRedirectionBitmap, (PFN)DxEngGetRedirectionBitmap},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngLoadImage, (PFN)DxEngLoadImage}
-    {0, (PFN) NULL} // hack for now
+    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngGetDCState},
+    {DXENG_INDEX_DxEngGetDCState, (PFN)DxEngGetDCState},
+    {DXENG_INDEX_DxEngSelectBitmap, (PFN)DxEngSelectBitmap},
+    {DXENG_INDEX_DxEngSetBitmapOwner, (PFN)DxEngSetBitmapOwner},
+    {DXENG_INDEX_DxEngDeleteSurface, (PFN)DxEngDeleteSurface},
+    {DXENG_INDEX_DxEngGetSurfaceData, (PFN)DxEngGetSurfaceData},
+    {DXENG_INDEX_DxEngAltLockSurface, (PFN)DxEngAltLockSurface},
+    {DXENG_INDEX_DxEngUploadPaletteEntryToSurface, (PFN)DxEngUploadPaletteEntryToSurface},
+    {DXENG_INDEX_DxEngMarkSurfaceAsDirectDraw, (PFN)DxEngMarkSurfaceAsDirectDraw},
+    {DXENG_INDEX_DxEngSelectPaletteToSurface, (PFN)DxEngSelectPaletteToSurface},
+    {DXENG_INDEX_DxEngSyncPaletteTableWithDevice, (PFN)DxEngSyncPaletteTableWithDevice},
+    {DXENG_INDEX_DxEngSetPaletteState, (PFN)DxEngSetPaletteState},
+    {DXENG_INDEX_DxEngGetRedirectionBitmap, (PFN)DxEngGetRedirectionBitmap},
+    {DXENG_INDEX_DxEngLoadImage, (PFN)DxEngLoadImage}
 };
 
 /************************************************************************/
