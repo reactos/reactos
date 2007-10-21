@@ -12,6 +12,7 @@
 
 typedef struct _VARIABLE_DATA
 {
+    DWORD dwType;
     LPTSTR lpName;
     LPTSTR lpRawValue;
     LPTSTR lpCookedValue;
@@ -53,7 +54,7 @@ EditVariableDlgProc(HWND hwndDlg,
                 case IDOK:
                     dwNameLength = (DWORD)SendDlgItemMessage(hwndDlg, IDC_VARIABLE_NAME, WM_GETTEXTLENGTH, 0, 0);
                     dwValueLength = (DWORD)SendDlgItemMessage(hwndDlg, IDC_VARIABLE_VALUE, WM_GETTEXTLENGTH, 0, 0);
-                    if (dwNameLength != 0 && dwValueLength != 0)
+                    if (dwNameLength > 0 && dwValueLength > 0)
                     {
                         if (VarData->lpName == NULL)
                         {
@@ -77,20 +78,26 @@ EditVariableDlgProc(HWND hwndDlg,
                         }
                         SendDlgItemMessage(hwndDlg, IDC_VARIABLE_VALUE, WM_GETTEXT, dwValueLength + 1, (LPARAM)VarData->lpRawValue);
 
+                        if (VarData->lpCookedValue != NULL)
+                        {
+                            GlobalFree(VarData->lpCookedValue);
+                            VarData->lpCookedValue = NULL;
+                        }
+
                         if (_tcschr(VarData->lpRawValue, _T('%')))
                         {
-                            if (VarData->lpCookedValue == NULL)
-                            {
-                                VarData->lpCookedValue = GlobalAlloc(GPTR, 2 * MAX_PATH * sizeof(TCHAR));
-                            }
+                            VarData->dwType = REG_EXPAND_SZ;
+                            VarData->lpCookedValue = GlobalAlloc(GPTR, 2 * MAX_PATH * sizeof(TCHAR));
 
                             ExpandEnvironmentStrings(VarData->lpRawValue,
                                                      VarData->lpCookedValue,
                                                      2 * MAX_PATH);
                         }
-                        else if (VarData->lpCookedValue)
+                        else
                         {
-                            GlobalFree(VarData->lpCookedValue);
+                            VarData->dwType = REG_SZ;
+                            VarData->lpCookedValue = GlobalAlloc(GPTR, (dwValueLength + 1) * sizeof(TCHAR));
+                            _tcscpy(VarData->lpCookedValue, VarData->lpRawValue);
                         }
                     }
                     EndDialog(hwndDlg, 1);
@@ -119,7 +126,7 @@ SetEnvironmentVariables(HWND hwndListView,
     DWORD i;
     LPTSTR lpName;
     LPTSTR lpData;
-    LPTSTR lpExpandData = NULL;
+    LPTSTR lpExpandData;
     DWORD dwNameLength;
     DWORD dwDataLength;
     DWORD dwType;
@@ -167,19 +174,28 @@ SetEnvironmentVariables(HWND hwndListView,
         return;
     }
 
+    lpExpandData = GlobalAlloc(GPTR, 2048 * sizeof(TCHAR));
+    if (lpExpandData == NULL)
+    {
+        GlobalFree(lpName);
+        GlobalFree(lpData);
+        RegCloseKey(hKey);
+        return;
+    }
+
     for (i = 0; i < dwValues; i++)
     {
         dwNameLength = dwMaxValueNameLength + 1;
         dwDataLength = dwMaxValueDataLength + 1;
 
         if (RegEnumValue(hKey,
-                 i,
-                 lpName,
-                 &dwNameLength,
-                 NULL,
-                 &dwType,
-                 (LPBYTE)lpData,
-                 &dwDataLength))
+                         i,
+                         lpName,
+                         &dwNameLength,
+                         NULL,
+                         &dwType,
+                         (LPBYTE)lpData,
+                         &dwDataLength))
         {
             GlobalFree(lpName);
             GlobalFree(lpData);
@@ -187,7 +203,12 @@ SetEnvironmentVariables(HWND hwndListView,
             return;
         }
 
+        if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+            continue;
+
         VarData = GlobalAlloc(GPTR, sizeof(VARIABLE_DATA));
+
+        VarData->dwType = dwType;
 
         VarData->lpName = GlobalAlloc(GPTR, (dwNameLength + 1) * sizeof(TCHAR));
         _tcscpy(VarData->lpName, lpName);
@@ -195,25 +216,10 @@ SetEnvironmentVariables(HWND hwndListView,
         VarData->lpRawValue = GlobalAlloc(GPTR, (dwDataLength + 1) * sizeof(TCHAR));
         _tcscpy(VarData->lpRawValue, lpData);
 
-        if (dwType == REG_EXPAND_SZ)
-        {
-            lpExpandData = GlobalAlloc(GPTR, MAX_PATH * 2* sizeof(TCHAR));
-            if (lpExpandData == NULL)
-            {
-                GlobalFree(lpName);
-                GlobalFree(lpData);
-                RegCloseKey(hKey);
-                return;
-            }
+        ExpandEnvironmentStrings(lpData, lpExpandData, 2048);
 
-            ExpandEnvironmentStrings(lpData,
-                                     lpExpandData,
-                                     2 * MAX_PATH);
-
-            VarData->lpCookedValue = GlobalAlloc(GPTR, (_tcslen(lpExpandData) + 1) * sizeof(TCHAR));
-            _tcscpy(VarData->lpCookedValue, lpExpandData);
-            GlobalFree(lpExpandData);
-        }
+        VarData->lpCookedValue = GlobalAlloc(GPTR, (_tcslen(lpExpandData) + 1) * sizeof(TCHAR));
+        _tcscpy(VarData->lpCookedValue, lpExpandData);
 
         memset(&lvi, 0x00, sizeof(lvi));
         lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
@@ -222,10 +228,10 @@ SetEnvironmentVariables(HWND hwndListView,
         lvi.state = (i == 0) ? LVIS_SELECTED : 0;
         iItem = ListView_InsertItem(hwndListView, &lvi);
 
-        ListView_SetItemText(hwndListView, iItem, 1,
-                             (VarData->lpCookedValue) ? VarData->lpCookedValue : VarData->lpRawValue);
+        ListView_SetItemText(hwndListView, iItem, 1, VarData->lpCookedValue);
     }
 
+    GlobalFree(lpExpandData);
     GlobalFree(lpName);
     GlobalFree(lpData);
     RegCloseKey(hKey);
@@ -316,7 +322,7 @@ OnNewVariable(HWND hwndDlg,
     if (!DialogBoxParam(hApplet,
                         MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                         hwndDlg,
-                        (DLGPROC) EditVariableDlgProc,
+                        (DLGPROC)EditVariableDlgProc,
                         (LPARAM)VarData) > 0)
     {
         if (VarData->lpName != NULL)
@@ -332,7 +338,7 @@ OnNewVariable(HWND hwndDlg,
     }
     else
     {
-        if(VarData->lpName != NULL && (VarData->lpCookedValue || VarData->lpRawValue))
+        if (VarData->lpName != NULL && (VarData->lpCookedValue || VarData->lpRawValue))
         {
             memset(&lvi, 0x00, sizeof(lvi));
             lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_PARAM;
@@ -341,8 +347,7 @@ OnNewVariable(HWND hwndDlg,
             lvi.state = 0;
             iItem = ListView_InsertItem(hwndListView, &lvi);
 
-            ListView_SetItemText(hwndListView, iItem, 1,
-                         (VarData->lpCookedValue) ? VarData->lpCookedValue : VarData->lpRawValue);
+            ListView_SetItemText(hwndListView, iItem, 1, VarData->lpCookedValue);
         }
     }
 }
@@ -373,12 +378,11 @@ OnEditVariable(HWND hwndDlg,
             if (DialogBoxParam(hApplet,
                                MAKEINTRESOURCE(IDD_EDIT_VARIABLE),
                                hwndDlg,
-                               (DLGPROC) EditVariableDlgProc,
+                               (DLGPROC)EditVariableDlgProc,
                                (LPARAM)VarData) > 0)
             {
                 ListView_SetItemText(hwndListView, iItem, 0, VarData->lpName);
-                ListView_SetItemText(hwndListView, iItem, 1,
-                                     (VarData->lpCookedValue) ? VarData->lpCookedValue : VarData->lpRawValue);
+                ListView_SetItemText(hwndListView, iItem, 1, VarData->lpCookedValue);
             }
         }
     }
@@ -468,6 +472,7 @@ ReleaseListViewItems(HWND hwndDlg,
     }
 }
 
+
 VOID
 SetAllVars(HWND hwndDlg,
            INT iDlgItem)
@@ -477,7 +482,6 @@ SetAllVars(HWND hwndDlg,
     LV_ITEM lvi;
     INT iItem;
     HKEY hk;
-    DWORD Type = 0;
 
     memset(&lvi, 0x00, sizeof(lvi));
 
@@ -503,28 +507,26 @@ SetAllVars(HWND hwndDlg,
         return;
     }
 
-    /* loop through all system variables */
+    /* Loop through all variables */
     while(ListView_GetItem(hwndListView, &lvi))
     {
         /* Get the data in each item */
         VarData = (PVARIABLE_DATA)lvi.lParam;
         if (VarData != NULL)
         {
-            /* Get the type */
-            RegQueryValueEx(hk,VarData->lpName,NULL,&Type,NULL,NULL);
-
             /* Set the new value */
             if (RegSetValueEx(hk,
                               VarData->lpName,
                               0,
-                              Type,
-                              (LPBYTE) VarData->lpRawValue,
+                              VarData->dwType,
+                              (LPBYTE)VarData->lpRawValue,
                               (DWORD)(_tcslen(VarData->lpRawValue) + 1) * sizeof(TCHAR)))
             {
                 RegCloseKey(hk);
                 return;
             }
         }
+
         /* Fill struct for next item */
         lvi.mask = LVIF_PARAM;
         lvi.iItem = ++iItem;
@@ -532,6 +534,7 @@ SetAllVars(HWND hwndDlg,
 
     RegCloseKey(hk);
 }
+
 
 /* Environment dialog procedure */
 INT_PTR CALLBACK
@@ -576,13 +579,18 @@ EnvironmentDlgProc(HWND hwndDlg,
                 case IDOK:
                     SetAllVars(hwndDlg, IDC_USER_VARIABLE_LIST);
                     SetAllVars(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
+                    EndDialog(hwndDlg, 0);
+                    return TRUE;
 
                 case IDCANCEL:
-                    ReleaseListViewItems(hwndDlg, IDC_USER_VARIABLE_LIST);
-                    ReleaseListViewItems(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
                     EndDialog(hwndDlg, 0);
                     return TRUE;
             }
+            break;
+
+        case WM_DESTROY:
+            ReleaseListViewItems(hwndDlg, IDC_USER_VARIABLE_LIST);
+            ReleaseListViewItems(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
             break;
 
         case WM_NOTIFY:
