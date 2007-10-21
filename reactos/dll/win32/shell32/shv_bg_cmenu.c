@@ -291,23 +291,34 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
   if (!pCurItem)
       return;
 
-  if (IShellFolder2_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+  if (This->bDesktop)
   {
-     ERR("Failed to get interface IID_IPersistFolder2\n");
-     return;
+     if (!SHGetSpecialFolderPathW(0, szPath, CSIDL_DESKTOPDIRECTORY, FALSE))
+     {
+        ERR("Failed to get desktop folder location");
+        return;
+     }
   }
-  if (IPersistFolder2_GetCurFolder(psf, &pidl) != S_OK)
+  else
   {
-     ERR("IPersistFolder2_GetCurFolder failed\n");
-     return;
-  }
+     if (IShellFolder2_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+     {
+        ERR("Failed to get interface IID_IPersistFolder2\n");
+        return;
+     }
+     if (IPersistFolder2_GetCurFolder(psf, &pidl) != S_OK)
+     {
+        ERR("IPersistFolder2_GetCurFolder failed\n");
+        return;
+     }
 
-  if (IShellFolder2_GetDisplayNameOf(This->pSFParent, pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
-  {
-     ERR("IShellFolder_GetDisplayNameOf failed\n");
-     return;
+     if (IShellFolder2_GetDisplayNameOf(This->pSFParent, pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
+     {
+        ERR("IShellFolder_GetDisplayNameOf failed\n");
+        return;
+     }
+     StrRetToBufW(strTemp, pidl, szPath, MAX_PATH);
   }
-  
   switch(pCurItem->Type)
   {
      case SHELLNEW_TYPE_COMMAND:
@@ -325,9 +336,7 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
          if (ptr)
          {
             ptr[1] = 's';
-            //StrRetToBufW(strTemp, pidl, szPath, MAX_PATH);
-            //TRACE("szPath %s\n", debugstr_w(szPath));
-            swprintf(szTemp, szBuffer, strTemp.u.pOleStr);
+            swprintf(szTemp, szBuffer, szPath);
             ptr = szTemp;
          }
          else
@@ -354,17 +363,16 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
      {
         i = 2;
 
-        wcscpy(szBuffer, strTemp.u.pOleStr);
-        PathAddBackslashW(szBuffer);
-        wcscat(szBuffer, szNew);
-        wcscat(szBuffer, pCurItem->szDesc);
-        wcscpy(szPath, szBuffer);
-        wcscat(szPath, pCurItem->szExt);
+        PathAddBackslashW(szPath);
+        wcscat(szPath, szNew);
+        wcscat(szPath, pCurItem->szDesc);
+        wcscpy(szBuffer, szPath);
+        wcscat(szBuffer, pCurItem->szExt);
         do
         {
-            TRACE("FileName %s szBuffer %s i %d \n", debugstr_w(szPath), debugstr_w(szBuffer), i);
-            hFile = CreateFileW(szPath, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-            swprintf(szPath, szFormat, szBuffer, i, pCurItem->szExt);
+            TRACE("FileName %s szBuffer %s i %d \n", debugstr_w(szBuffer), debugstr_w(szPath), i);
+            hFile = CreateFileW(szBuffer, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+            swprintf(szBuffer, szFormat, szPath, i, pCurItem->szExt);
             i++;
         }while(hFile == INVALID_HANDLE_VALUE);
 
