@@ -48,6 +48,7 @@
 * for the ddRVal will other wise be unchange if some error happen inside the driver. 
 * puCanCreateSurfaceData->lpDD  is pointer to DDRAWI_DIRECTDRAW_GBL, MSDN say it is PDD_DIRECTDRAW_GLOBAL it is not.
 * puCanCreateSurfaceData->lpDD->hDD need also be fill in with the handle we got from NtGdiDdCreateDirectDrawObject
+* puCreateSurfaceData->CanCreateSurface pointer to the real functions the HAL or HEL, that u need fill in
 *
 *--*/
 
@@ -195,9 +196,57 @@ NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
     return pfnD3dContextDestroyAll(pdcad);
 }
 
-/************************************************************************/
-/* NtGdiDdCreateD3DBuffer                                               */
-/************************************************************************/
+/*++
+* @name NtGdiDdCreateD3DBuffer
+* @implemented
+*
+* The function NtGdiDdCreateD3DBuffer create a 
+* surface for DirectX. It is redirected to dxg.sys.
+*
+* @param HANDLE hDirectDraw
+* The handle we got from NtGdiDdCreateDirectDrawObject
+*
+* @param  HANDLE *hSurface
+* <FILMEIN>
+*
+* @param DDSURFACEDESC puSurfaceDescription
+* surface desc what kind of surface it should be, example rgb, compress, deep, and more,
+* see DDSURFACEDESC for more infomations
+*
+* @param DD_SURFACE_GLOBAL *puSurfaceGlobalData
+* <FILMEIN>
+*
+* @param DD_SURFACE_LOCAL *puSurfaceLocalData
+* <FILMEIN>
+*
+* @param DD_SURFACE_MORE *puSurfaceMoreData
+* <FILMEIN>
+*
+* @param PDD_CREATESURFACEDATA puCreateSurfaceData
+* <FILMEIN>
+*
+* @param HANDLE *puhSurface
+* <FILMEIN>
+*
+* @return 
+* Depending on if the driver supports this API or not, DDHAL_DRIVER_HANDLED 
+* or DDHAL_DRIVER_NOTHANDLED is returned.
+* To check if the function has been successful, do a full check. 
+* A full check is done by checking if the return value is DDHAL_DRIVER_HANDLED 
+* and puCanCreateSurfaceData->ddRVal is set to DD_OK.
+*
+* @remarks.
+* dxg.sys NtGdiDdCreateD3DBuffer and NtGdiDdCreateSurface call are redirect to dxg.sys
+* inside the dxg.sys they ar redirect to same functions. examine the driver list functions
+* table, the memory address you will see they are pointed to same memory address.
+*
+* Before call to this api please set the puCreateSurfaceData->ddRVal to a error value example DDERR_NOTUSPORTED.
+* for the ddRVal will other wise be unchange if some error happen inside the driver. 
+* puCreateSurfaceData->lpDD  is pointer to DDRAWI_DIRECTDRAW_GBL, MSDN say it is PDD_DIRECTDRAW_GLOBAL it is not.
+* puCreateSurfaceData->lpDD->hDD need also be fill in with the handle we got from NtGdiDdCreateDirectDrawObject
+* puCreateSurfaceData->CreateSurface pointer to the real functions the HAL or HEL, that u need fill in
+*
+*--*/
 DWORD
 STDCALL
 NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
@@ -209,10 +258,7 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
                        PDD_CREATESURFACEDATA puCreateSurfaceData,
                        HANDLE *puhSurface)
 {
-    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateD3DBuffer, pfnDdCreateD3DBuffer);
+    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DxDdCreateD3DBuffer].pfn;
 
     if (pfnDdCreateD3DBuffer == NULL)
     {
