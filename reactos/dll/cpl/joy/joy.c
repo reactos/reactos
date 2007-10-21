@@ -16,7 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* 
+/*
  *
  * PROJECT:         ReactOS Software Control Panel
  * FILE:            dll/cpl/joy/joy.c
@@ -36,7 +36,7 @@ HWND MainDlg;
 
 /* Applets */
 
-APPLET Applets[NUM_APPLETS] = 
+APPLET Applets[NUM_APPLETS] =
 {
     {IDI_CPLSYSTEM, IDS_CPLSYSTEMNAME, IDS_CPLSYSTEMDESCRIPTION, SystemApplet}
 };

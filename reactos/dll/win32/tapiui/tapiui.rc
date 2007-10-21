@@ -16,5 +16,6 @@ IDI_SEC         ICON "res/504.ico"
 IDB_RADIO       BITMAP "res/301.bmp"
 IDB_WIZARD      BITMAP "res/302.bmp"
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/ru-RU.rc"

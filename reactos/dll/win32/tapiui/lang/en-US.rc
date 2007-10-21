@@ -406,7 +406,7 @@ STRINGTABLE
 	80 "Are you sure you want to delete this area code rule?"
 	81 "You must enter the digits to dial."
 	82 "The calling card name you have entered is already in use.  Please enter a unique name."
-	83 "Windows needs telephone information about the location from which you will be dialing. If you cancel without providing this information, this program may not function correctly when dialing. In addition, some applications respond to your canceling this dialog box by immediately re-posting it.\nAre you sure you want to cancel?"
+	83 "ReactOS needs telephone information about the location from which you will be dialing. If you cancel without providing this information, this program may not function correctly when dialing. In addition, some applications respond to your canceling this dialog box by immediately re-posting it.\nAre you sure you want to cancel?"
 	84 "Confirm Cancel"
 	85 "My Location"
 	86 "<no service providers are available for installation>"
