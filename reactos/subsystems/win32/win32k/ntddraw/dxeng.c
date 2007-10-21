@@ -61,10 +61,8 @@ DRVFN gaEngFuncs [] =
     {0, (PFN) NULL}, // hack for now 
 //    {DXENG_INDEX_DxEngSetDCOwner, (PFN)DxEngSetDCOwner},
     {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngLockDC, (PFN)DxEngLockDC},
-    {0, (PFN) NULL}, // hack for now 
-//    {DXENG_INDEX_DxEngUnlockDC, (PFN)DxEngUnlockDC},
-    {0, (PFN) NULL}, // hack for now 
+    {DXENG_INDEX_DxEngLockDC, (PFN)DxEngLockDC},
+    {DXENG_INDEX_DxEngUnlockDC, (PFN)DxEngUnlockDC},
 //    {DXENG_INDEX_DxEngSetDCState, (PFN)DxEngGetDCState},
     {0, (PFN) NULL}, // hack for now 
 //    {DXENG_INDEX_DxEngGetDCState, (PFN)DxEngGetDCState},
@@ -169,6 +167,52 @@ DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp)
     /* FIXME redirect it to NtGdiEngGetDeviceGammaRamp internal call  */
     DPRINT1("redirect it to NtGdiEngGetDeviceGammaRamp internal call ");
     return FALSE;
+}
+
+
+/*++
+* @name DxEngLockDC
+* @implemented
+*
+* The function DxEngLockDC lock a hdc from dxg.sys 
+*
+* @param HDC hDC
+* The handle we need want lock
+*
+* @return 
+* This api return PDC or NULL depns if it sussess lock the hdc or not
+* @remarks.
+* none
+*
+*--*/
+PDC
+DxEngLockDC(HDC hDC)
+{
+    return DC_LockDc(hdc);
+}
+
+
+/*++
+* @name DxEngUnlockDC
+* @implemented
+*
+* The function DxEngUnlockDC Unlock a pDC (hdc) from dxg.sys 
+
+* @param PDC pDC
+* The handle we need unlock
+*
+* @return 
+* This api always return TRUE if it sussess or not 
+
+* @remarks.
+* none
+*
+*--*/
+BOOL
+DxEngUnlockDC(PDC pDC)
+{
+    DC_UnlockDc(pDC);
+    return TRUE;
 }
 
 
