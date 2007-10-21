@@ -157,17 +157,33 @@ NtGdiD3dContextDestroy(LPD3DNTHAL_CONTEXTDESTROYDATA pContextDestroyData)
     return pfnD3dContextDestroy(pContextDestroyData);
 }
 
-/************************************************************************/
-/* NtGdiD3dContextDestroyAll                                            */
-/************************************************************************/
+/*++
+* @name NtGdiD3dContextDestroyAll
+* @implemented
+*
+* The Function NtGdiD3dContextDestroyAll Destory the all context data we got in a process
+* The data have been alloc with NtGdiD3dContextCreate
+*
+* @param LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad
+* The context data we want to destory
+*
+* @remarks.
+* dxg.sys NtGdiD3dContextDestroyAll call are redirect to 
+* same functions in the dxg.sys. So they are working exacly same. everthing else is lying if they
+* are diffent.
+*
+* Before call to this api please set the pdcad->ddRVal to a error value example DDERR_NOTUSPORTED.
+* for the ddRVal will other wise be unchange if some error happen inside the driver.
+* pdcad->dwPID need also be fill in with the Process ID we need destore the data for
+*
+* Waring MSDN is wrong about this api. it say it queare free memory and it does not accpect
+* any parama, last time checked in msdn 19/10-2007
+*--*/
 DWORD
 STDCALL
 NtGdiD3dContextDestroyAll(LPD3DNTHAL_CONTEXTDESTROYALLDATA pdcad)
 {
-    PGD_D3DCONTEXTDESTROYALL pfnD3dContextDestroyAll = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxD3dContextDestroyAll, pfnD3dContextDestroyAll);
+    PGD_D3DCONTEXTDESTROYALL pfnD3dContextDestroyAll = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DxD3dContextDestroyAll].pfn;
 
     if (pfnD3dContextDestroyAll == NULL)
     {
