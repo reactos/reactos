@@ -56,19 +56,24 @@ BOOL DxEngNUIsTermSrv();
 /* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
 BOOL DxEngRedrawDesktop();
 
-/*  Notes : return the DisplayUniqVisrgn counter from gdishare memory */
+/* Notes : return the DisplayUniqVisrgn counter from gdishare memory */
 ULONG DxEngDispUniq();
 
 /* Notes :  return the VisRgnUniq counter for win32k */
 ULONG DxEngVisRgnUniq();
 
-/* Enumate all drivers in win32k */
-HDEV *
-DxEngEnumerateHdev(HDEV *hdev);
+/* Notes : Enumate all drivers in win32k */
+HDEV *DxEngEnumerateHdev(HDEV *hdev);
 
-/* same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
+/* Notes : same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
 BOOL
 DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp);
+
+/* Notes : Lock the hDC */
+PDC DxEngLockDC(HDC hDC);
+
+/* Notes : Unlock the hDC */
+BOOL DxEngUnlockDC(PDC pDC);
 
 
 /* prototypes are not done yet, I need gather all my notes 
@@ -138,11 +143,9 @@ DxEngCleanDC(x);
 DWORD
 DxEngSetDCOwner(x,x)
 
-DWORD
-DxEngLockDC(x);
 
-DWORD
-DxEngUnlockDC(x);
+
+
 
 DWORD
 DxEngSetDCState(x,x,x);
