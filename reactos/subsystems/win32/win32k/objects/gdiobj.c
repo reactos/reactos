@@ -70,8 +70,8 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
 {
   {0, 0,                     0,                       NULL},             /* 00 reserved entry */
   {1, sizeof(DC),            GDI_OBJECT_TAG_DC,       DC_Cleanup},       /* 01 DC */
-  {1, sizeof(DD_DIRECTDRAW), GDI_OBJECT_TAG_DDRAW,    DD_Cleanup},       /* 02 DD_DDRAW, should be moved away from gdi objects */
-  {1, sizeof(DD_SURFACE),    GDI_OBJECT_TAG_DDSURF,   DDSURF_Cleanup},   /* 03 DD_SURFACE, should be moved away from gdi objects */
+  {0, 0,                     0,                       NULL},             /* 02 DD_DDRAW, unused, should it be here ? */
+  {0, 0,                     0,                       NULL},             /* 03 DD_SURFACE, unused, should it be here ? */
   {1, sizeof(ROSRGNDATA),    GDI_OBJECT_TAG_REGION,   RGNDATA_Cleanup},  /* 04 REGION */
   {1, sizeof(BITMAPOBJ),     GDI_OBJECT_TAG_BITMAP,   BITMAP_Cleanup},   /* 05 BITMAP */
   {0, sizeof(DC),            GDI_OBJECT_TAG_CLIOBJ,   GDI_CleanupDummy}, /* 06 CLIOBJ: METADC,... FIXME: don't use DC struct */
@@ -85,10 +85,10 @@ OBJ_TYPE_INFO ObjTypeInfo[] =
   {0, 0,                     0,                       NULL},             /* 0e ICMCXF, unused */
   {0, 0,                     0,                       NULL},             /* 0f ICMDLL, unused */
   {1, sizeof(GDIBRUSHOBJ),   GDI_OBJECT_TAG_BRUSH,    BRUSH_Cleanup},    /* 10 BRUSH, PEN, EXTPEN */
-  {0, 0,                     0,                       NULL},             /* 11 D3D_HANDLE, unused */
-  {0, 0,                     0,                       NULL},             /* 12 DD_VPORT, unused */
+  {0, 0,                     0,                       NULL},             /* 11 D3D_HANDLE, unused, should it be here ? */
+  {0, 0,                     0,                       NULL},             /* 12 DD_VPORT, unused, should it be here ? */
   {0, 0,                     0,                       NULL},             /* 13 SPACE, unused */
-  {0, 0,                     0,                       NULL},             /* 14 DD_MOTION, unused */
+  {0, 0,                     0,                       NULL},             /* 14 DD_MOTION, unused, should it be here ? */
   {0, 0,                     0,                       NULL},             /* 15 META, unused */
   {0, 0,                     0,                       NULL},             /* 16 ENUMFONT, unused */
   {0, 0,                     0,                       NULL},             /* 17 BMFD, unused */

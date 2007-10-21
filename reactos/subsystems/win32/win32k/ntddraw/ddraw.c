@@ -105,28 +105,6 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     return Status;
 }
 
-BOOL
-INTERNAL_CALL
-DD_Cleanup(PVOID ObjectBody)
-{
-    // FIXME remove this line PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
-    DPRINT1("DD_Cleanup\n");
-
-    /* Do not known what the new cleanup code should do at moment */
-    return TRUE;
-}
-
-BOOL
-INTERNAL_CALL
-DDSURF_Cleanup(PVOID pDDSurf)
-{
-    DPRINT1("DDSURF_Cleanup\n");
-    /* Do not known what the new cleanup code should do at moment */
-    return TRUE;
-}
-
-
-
 /************************************************************************/
 /* DirectX graphic/video driver loading cleanup ends here               */
 /************************************************************************/

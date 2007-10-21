@@ -921,17 +921,6 @@ EngHangNotification(
 /*
  * @unimplemented
  */
-PDD_SURFACE_LOCAL STDCALL
-EngLockDirectDrawSurface(
-   IN HANDLE Surface)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
 BOOL STDCALL
 EngLpkInstalled()
 {
@@ -1014,17 +1003,6 @@ EngStretchBltROP(
    IN ULONG Mode,
    IN BRUSHOBJ *BrushObj,
    IN DWORD ROP4)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngUnlockDirectDrawSurface(
-   IN PDD_SURFACE_LOCAL Surface)
 {
    UNIMPLEMENTED;
    return FALSE;
