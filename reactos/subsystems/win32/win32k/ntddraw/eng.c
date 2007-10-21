@@ -33,7 +33,7 @@ HeapVidMemAllocAligned(LPVIDMEM lpVidMem,
     if (pfnHeapVidMemAllocAligned == NULL)
     {
         DPRINT1("Warring no pfnHeapVidMemAllocAligned");
-        return NULL;
+        return 0;
     }
 
     DPRINT1("Calling on dxg.sys pfnHeapVidMemAllocAligned");
@@ -104,11 +104,12 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
     if (pfnEngFreePrivateUserMem == NULL)
     {
         DPRINT1("Warring no pfnEngFreePrivateUserMem");
-        return DDHAL_DRIVER_NOTHANDLED;
     }
-
-    DPRINT1("Calling on dxg.sys pfnEngFreePrivateUserMem");
-    return pfnEngFreePrivateUserMem(psl, pv);
+    else
+    {
+        DPRINT1("Calling on dxg.sys pfnEngFreePrivateUserMem");
+        pfnEngFreePrivateUserMem(psl, pv);
+    }
 }
 
 /************************************************************************/
@@ -132,7 +133,7 @@ EngDxIoctl(ULONG ulIoctl,
     }
 
     DPRINT1("Calling on dxg.sys pfnEngDxIoctl");
-    return pfnEngFreePrivateUserMem(psl, pv);
+    return pfnEngDxIoctl(ulIoctl, pBuffer, ulBufferSize);
 }
 
 /************************************************************************/

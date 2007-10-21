@@ -68,7 +68,7 @@ DxEngVisRgnUniq()
 /************************************************************************/
 /* Enumate all drivers in win32k */
 HDEV *
-DxEngEnumerateHdev(HDEV *hdev);
+DxEngEnumerateHdev(HDEV *hdev)
 {
     /* FIXME Enumate all drivers in win32k */
     DPRINT1("We do not enumate any device from win32k ");

@@ -258,7 +258,7 @@ NtGdiDdCreateD3DBuffer(HANDLE hDirectDraw,
                        PDD_CREATESURFACEDATA puCreateSurfaceData,
                        HANDLE *puhSurface)
 {
-    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = (PGD_D3DCONTEXTDESTROYALL)gpDxFuncs[DXG_INDEX_DxDdCreateD3DBuffer].pfn;
+    PGD_DDCREATED3DBUFFER pfnDdCreateD3DBuffer = (PGD_DDCREATED3DBUFFER)gpDxFuncs[DXG_INDEX_DxDdCreateD3DBuffer].pfn;
 
     if (pfnDdCreateD3DBuffer == NULL)
     {
