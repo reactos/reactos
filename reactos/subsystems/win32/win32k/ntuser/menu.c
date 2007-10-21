@@ -248,7 +248,7 @@ IntRemoveMenuItem(PMENU_OBJECT Menu, UINT uPosition, UINT uFlags,
                   BOOL bRecurse)
 {
    PMENU_ITEM PrevMenuItem, MenuItem;
-   if(IntGetMenuItemByFlag(Menu, uPosition, uFlags, &MenuItem,
+   if(IntGetMenuItemByFlag(Menu, uPosition, uFlags, NULL, &MenuItem,
                            &PrevMenuItem) > -1)
    {
       if(MenuItem)
@@ -566,7 +566,8 @@ IntSetMenuInfo(PMENU_OBJECT Menu, PROSMENUINFO lpmi)
 
 int FASTCALL
 IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
-                     PMENU_ITEM *MenuItem, PMENU_ITEM *PrevMenuItem)
+                     PMENU_OBJECT *SubMenu, PMENU_ITEM *MenuItem,
+                     PMENU_ITEM *PrevMenuItem)
 {
    PMENU_ITEM PrevItem = NULL;
    PMENU_ITEM CurItem = Menu->MenuItemList;
@@ -611,18 +612,24 @@ IntGetMenuItemByFlag(PMENU_OBJECT Menu, UINT uSearchBy, UINT fFlag,
                *MenuItem = CurItem;
             if(PrevMenuItem)
                *PrevMenuItem = PrevItem;
+            if(SubMenu)
+                *SubMenu = Menu;
+
             return p;
          }
-         else if (0 != (CurItem->fType & MF_POPUP))
+         else
          {
-            Menu = UserGetMenuObject(CurItem->hSubMenu);
-            if (NULL != Menu)
+            if(CurItem->fType & MF_POPUP)
             {
-               ret = IntGetMenuItemByFlag(Menu, uSearchBy, fFlag,
-                                          MenuItem, PrevMenuItem);
-               if (-1 != ret)
+               PMENU_OBJECT NewMenu = UserGetMenuObject(CurItem->hSubMenu);
+               if(Menu)
                {
-                  return ret;
+                   ret = IntGetMenuItemByFlag(NewMenu, uSearchBy, fFlag,
+                                              SubMenu, MenuItem, PrevMenuItem);
+                   if(ret != -1)
+                   {
+                      return ret;
+                   }
                }
             }
          }
@@ -922,6 +929,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 {
    int pos = (int)uItem;
    PMENU_ITEM MenuItem;
+   PMENU_OBJECT SubMenu;
 
    if (MAX_MENU_ITEMS <= MenuObject->MenuInfo.MenuItemCount)
    {
@@ -931,6 +939,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
 
    if (fByPosition)
    {
+      SubMenu = MenuObject;
       /* calculate position */
       if(MenuObject->MenuInfo.MenuItemCount < pos)
       {
@@ -939,7 +948,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    }
    else
    {
-      pos = IntGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, NULL, NULL);
+      pos = IntGetMenuItemByFlag(MenuObject, uItem, MF_BYCOMMAND, &SubMenu, NULL, NULL);
    }
    if (pos < -1)
    {
@@ -963,7 +972,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    RtlInitUnicodeString(&MenuItem->Text, NULL);
    MenuItem->hbmpItem = (HBITMAP)0;
 
-   if (! IntSetMenuItemInfo(MenuObject, MenuItem, ItemInfo))
+   if(!IntSetMenuItemInfo(SubMenu, MenuItem, ItemInfo))
    {
       ExFreePool(MenuItem);
       return FALSE;
@@ -972,7 +981,7 @@ IntInsertMenuItem(PMENU_OBJECT MenuObject, UINT uItem, BOOL fByPosition,
    /* Force size recalculation! */
    MenuObject->MenuInfo.Height = 0;
 
-   pos = IntInsertMenuItemToList(MenuObject, MenuItem, pos);
+   pos = IntInsertMenuItemToList(SubMenu, MenuItem, pos);
 
    DPRINT("IntInsertMenuItemToList = %i\n", pos);
 
@@ -983,7 +992,7 @@ UINT FASTCALL
 IntEnableMenuItem(PMENU_OBJECT MenuObject, UINT uIDEnableItem, UINT uEnable)
 {
    PMENU_ITEM MenuItem;
-   UINT res = IntGetMenuItemByFlag(MenuObject, uIDEnableItem, uEnable, &MenuItem, NULL);
+   UINT res = IntGetMenuItemByFlag(MenuObject, uIDEnableItem, uEnable, NULL, &MenuItem, NULL);
    if(!MenuItem || (res == (UINT)-1))
    {
       return (UINT)-1;
@@ -1129,7 +1138,7 @@ IntCheckMenuItem(PMENU_OBJECT MenuObject, UINT uIDCheckItem, UINT uCheck)
    PMENU_ITEM MenuItem;
    int res = -1;
 
-   if((IntGetMenuItemByFlag(MenuObject, uIDCheckItem, uCheck, &MenuItem, NULL) < 0) || !MenuItem)
+   if((IntGetMenuItemByFlag(MenuObject, uIDCheckItem, uCheck, NULL, &MenuItem, NULL) < 0) || !MenuItem)
    {
       return -1;
    }
@@ -1154,7 +1163,7 @@ IntHiliteMenuItem(PWINDOW_OBJECT WindowObject, PMENU_OBJECT MenuObject,
                   UINT uItemHilite, UINT uHilite)
 {
    PMENU_ITEM MenuItem;
-   BOOL res = IntGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, &MenuItem, NULL);
+   BOOL res = IntGetMenuItemByFlag(MenuObject, uItemHilite, uHilite, NULL, &MenuItem, NULL);
    if(!MenuItem || !res)
    {
       return FALSE;
@@ -1331,7 +1340,7 @@ IntSetMenuItemRect(PMENU_OBJECT Menu, UINT Item, BOOL fByPos, RECT *rcRect)
 {
    PMENU_ITEM mi;
    if(IntGetMenuItemByFlag(Menu, Item, (fByPos ? MF_BYPOSITION : MF_BYCOMMAND),
-                           &mi, NULL) > -1)
+                           NULL, &mi, NULL) > -1)
    {
       mi->Rect = *rcRect;
       return TRUE;
@@ -1753,7 +1762,7 @@ NtUserGetMenuBarInfo(
          kmbi.hMenu = hMenu;
          if (idItem) /* Non-Zero-Based. */
            {
-              if (IntGetMenuItemByFlag(MenuObject, idItem-1, MF_BYPOSITION, &mi, NULL) > -1)
+              if (IntGetMenuItemByFlag(MenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
                    kmbi.rcBar = mi->Rect;
               else
                 {
@@ -1802,7 +1811,7 @@ NtUserGetMenuBarInfo(
            }
          if (idItem)
            {
-              if (IntGetMenuItemByFlag(SubMenuObject, idItem-1, MF_BYPOSITION, &mi, NULL) > -1)
+              if (IntGetMenuItemByFlag(SubMenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
                    kmbi.rcBar = mi->Rect;
               else
                 {
@@ -1852,7 +1861,7 @@ NtUserGetMenuBarInfo(
          kmbi.hMenu = SysMenuObject->MenuInfo.Self;
          if (idItem)
            {
-              if (IntGetMenuItemByFlag(SysMenuObject, idItem-1, MF_BYPOSITION, &mi, NULL) > -1)
+              if (IntGetMenuItemByFlag(SysMenuObject, idItem-1, MF_BYPOSITION, NULL, &mi, NULL) > -1)
                    kmbi.rcBar = mi->Rect;
               else
                 {
@@ -1953,7 +1962,7 @@ NtUserGetMenuItemRect(
       RETURN(FALSE);
    }
 
-   if (IntGetMenuItemByFlag(Menu, uItem, MF_BYPOSITION, &MenuItem, NULL) > -1)
+   if (IntGetMenuItemByFlag(Menu, uItem, MF_BYPOSITION, NULL, &MenuItem, NULL) > -1)
         Rect = MenuItem->Rect;
    else
       RETURN(FALSE);
@@ -2213,7 +2222,7 @@ UserMenuItemInfo(
 
    if (IntGetMenuItemByFlag(Menu, Item,
                             (ByPosition ? MF_BYPOSITION : MF_BYCOMMAND),
-                            &MenuItem, NULL) < 0)
+                            NULL, &MenuItem, NULL) < 0)
    {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return( FALSE);
