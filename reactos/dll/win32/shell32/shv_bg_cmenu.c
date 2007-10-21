@@ -34,6 +34,8 @@
 #include "shell32_main.h"
 #include "shellfolder.h"
 #include "undocshell.h"
+#include "shlwapi.h"
+#include "stdio.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -269,11 +271,11 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
   PROCESS_INFORMATION pi;
   UINT i, target;
   HANDLE hFile;
-  DWORD dwWritten;
+  DWORD dwWritten, dwError;
 
   static const WCHAR szNew[] = { 'N','e','w',' ',0 }; //FIXME
   static const WCHAR szP1[] = { '%', '1', 0 };
-  static const WCHAR szFormat[] = {'%','s',' ','(','%','u',')','%','s',0 };
+  static const WCHAR szFormat[] = {'%','s',' ','(','%','d',')','%','s',0 };
   
 
   i = This->iIdShellNewFirst;
@@ -317,7 +319,7 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
         ERR("IShellFolder_GetDisplayNameOf failed\n");
         return;
      }
-     StrRetToBufW(strTemp, pidl, szPath, MAX_PATH);
+     StrRetToBufW(&strTemp, pidl, szPath, MAX_PATH);
   }
   switch(pCurItem->Type)
   {
@@ -336,7 +338,7 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
          if (ptr)
          {
             ptr[1] = 's';
-            swprintf(szTemp, szBuffer, szPath);
+            sprintfW(szTemp, szBuffer, szPath);
             ptr = szTemp;
          }
          else
@@ -370,25 +372,35 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
         wcscat(szBuffer, pCurItem->szExt);
         do
         {
-            TRACE("FileName %s szBuffer %s i %d \n", debugstr_w(szBuffer), debugstr_w(szPath), i);
             hFile = CreateFileW(szBuffer, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-            swprintf(szBuffer, szFormat, szPath, i, pCurItem->szExt);
+            if (hFile != INVALID_HANDLE_VALUE)
+                break;
+            dwError = GetLastError();
+
+            TRACE("FileName %s szBuffer %s i %u error %x\n", debugstr_w(szBuffer), debugstr_w(szPath), i, dwError);
+            sprintfW(szBuffer, szFormat, szPath, i, pCurItem->szExt);
             i++;
-        }while(hFile == INVALID_HANDLE_VALUE);
+        }while(hFile == INVALID_HANDLE_VALUE && dwError == ERROR_FILE_EXISTS);
+
+        if (hFile == INVALID_HANDLE_VALUE)
+            return;
 
         if (pCurItem->Type == SHELLNEW_TYPE_DATA)
         {
-            i = WideCharToMultiByte(CP_ACP, 0, pCurItem->szTarget, -1, (LPSTR)szBuffer, MAX_PATH*2, NULL, NULL);
+            i = WideCharToMultiByte(CP_ACP, 0, pCurItem->szTarget, -1, (LPSTR)szTemp, MAX_PATH*2, NULL, NULL);
             if (i)
             {
-                WriteFile(hFile, (LPCVOID)szBuffer, i, &dwWritten, NULL);
+                WriteFile(hFile, (LPCVOID)szTemp, i, &dwWritten, NULL);
             }
         }
         CloseHandle(hFile);
         if (pCurItem->Type == SHELLNEW_TYPE_FILENAME)
         {
-            CopyFileW(pCurItem->szTarget, szPath, FALSE);
+            if (!CopyFileW(pCurItem->szTarget, szBuffer, FALSE))
+                break;
         }
+        TRACE("Notifying fs %s\n", debugstr_w(szBuffer));
+        SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, (LPCVOID)szBuffer, NULL);
         break;
      }
   }
