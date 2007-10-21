@@ -4967,7 +4967,7 @@ RegLoadMUIStringW(IN HKEY hKey,
         uiStringId = _wtoi(pComma+2);
         *pComma = L'\0';
 
-        hModule = LoadLibraryW(pwszExpandedBuffer + 1);
+        hModule = LoadLibraryExW(pwszExpandedBuffer + 1, NULL, LOAD_LIBRARY_AS_DATAFILE);
         if (!hModule || !load_string(hModule, uiStringId, pszOutBuf, cbOutBuf / sizeof(WCHAR)))
             result = ERROR_BADKEY;
         FreeLibrary(hModule);
