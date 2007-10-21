@@ -76,119 +76,46 @@ PDC DxEngLockDC(HDC hDC);
 BOOL DxEngUnlockDC(PDC pDC);
 
 
+
 /* prototypes are not done yet, I need gather all my notes 
  * to make them correct 
  */
 
-/*
-DWORD
-DxEngScreenAccessCheck();
 
-DWORD
-DxEngLockShareSem();
+DWORD DxEngCreateMemoryDC(DWORD x1);
+DWORD DxEngScreenAccessCheck();
+DWORD DxEngLockShareSem();
+DWORD DxEngUnlockShareSem();
+DWORD DxEngLockHdev(DWORD x1);
+DWORD DxEngUnlockHdev(DWORD x1);
+DWORD DxEngReferenceHdev(DWORD x1);
+DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
+DWORD DxEngUnreferenceHdev(DWORD x1);
+DWORD DxEngSetDeviceGammaRamp(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngSpSpritesVisible(DWORD x1);
+DWORD DxEngGetHdevData(DWORD x1, DWORD x2);
+DWORD DxEngSetHdevData(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
+DWORD DxEngCleanDC(DWORD x1);
+DWORD DxEngSetDCOwner(DWORD x1, DWORD x2);
+DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngGetDCState(DWORD x1, DWORD x2);
+DWORD DxEngSelectBitmap(DWORD x1, DWORD x2);
+DWORD DxEngSetBitmapOwner(DWORD x1, DWORD x2);
+DWORD DxEngDeleteSurface(DWORD x1);
+DWORD DxEngGetSurfaceData(DWORD x1, DWORD x2);
+DWORD DxEngAltLockSurface(DWORD x1);
+DWORD DxEngUploadPaletteEntryToSurface(DWORD x1, DWORD x2,DWORD x3, DWORD x4);
+DWORD DxEngMarkSurfaceAsDirectDraw(DWORD x1, DWORD x2);
+DWORD DxEngSelectPaletteToSurface(DWORD x1, DWORD x2);
+DWORD DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
+DWORD DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
+DWORD DxEngGetRedirectionBitmap(DWORD x1);
+DWORD DxEngLoadImage(DWORD x1,DWORD x2);
 
-DWORD
-DxEngUnlockShareSem();
-
-DWORD
-DxEngLockHdev(x);
-
-DWORD
-DxEngUnlockHdev(x);
-
-DWORD
-DxEngReferenceHdev(x);
-
-DWORD
-DxEngIsHdevLockedByCurrentThread(x);
-
-DWORD
-DxEngReferenceHdev(x);
-
-DWORD
-DxEngUnreferenceHdev(x);
-
-
-
-DWORD
-DxEngSetDeviceGammaRamp(x,x,x);
-
-DWORD
-DxEngSpTearDownSprites(x,x,x);
-
-DWORD
-DxEngSpUnTearDownSprites(x,x,x);
-
-DWORD
-DxEngSpSpritesVisible(x);
-
-DWORD
-DxEngGetHdevData(x,x);
-
-DWORD
-DxEngSetHdevData(x,x,x);
-
-DWORD
-DxEngCreateMemoryDC(x);
-
-DWORD
-DxEngGetDesktopDC(x,x,x);
-
-DWORD
-DxEngDeleteDC(x,x);
-
-DWORD
-DxEngCleanDC(x);
-
-DWORD
-DxEngSetDCOwner(x,x)
-
-
-
-
-
-DWORD
-DxEngSetDCState(x,x,x);
-
-DWORD
-DxEngGetDCState(x,x);
-
-DWORD
-DxEngSelectBitmap(x,x);
-
-DWORD
-DxEngSetBitmapOwner(x,x);
-
-DWORD
-DxEngDeleteSurface(x);
-
-DWORD
-DxEngGetSurfaceData(x,x);
-
-DWORD
-DxEngAltLockSurface(x);
-
-DWORD
-DxEngUploadPaletteEntryToSurface(x,x,x,x);
-
-DWORD
-DxEngMarkSurfaceAsDirectDraw(x,x);
-
-DWORD
-DxEngSelectPaletteToSurface(x,x)
-
-DWORD
-DxEngSyncPaletteTableWithDevice(x,x)
-
-DWORD
-DxEngSetPaletteState(x,x,x)
-
-DWORD
-DxEngGetRedirectionBitmap(x)
-
-DWORD
-DxEngLoadImage(x,x);
-*/
 
 
 
