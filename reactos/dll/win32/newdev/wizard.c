@@ -587,7 +587,7 @@ CHSourceDlgProc(
 
 				case IDC_BROWSE:
 				{
-					BROWSEINFO bi = { 0, };
+					BROWSEINFO bi = { 0 };
 					LPITEMIDLIST pidl;
 
 					bi.hwndOwner = hwndDlg;
