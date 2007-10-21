@@ -64,7 +64,7 @@
 	<file>shv_bg_cmenu.c</file>
 	<file>shv_item_cmenu.c</file>
 	<file>ros-systray.c</file>
-	<file>shres.rc</file>
+	<file>shell32.rc</file>
 	<file>shell32.spec</file>
 	<file>fprop.c</file>
 	<file>drive.c</file>

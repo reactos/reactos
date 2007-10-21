@@ -35,18 +35,6 @@ BEGIN
 	VK_F5, FCIDM_SHVIEW_REFRESH, VIRTKEY
 END
 
-
-/*
- * Everything that does not depend on language,
- * like textless bitmaps etc, go into the
- * neutral language. This will prevent them from
- * being duplicated for each language.
- */
-#include "shell32_xx.rc"
-
-
-
-
 /*
  * This include a set of Shell32 icons,
  * bitmaps and avi files. Licence's can be
@@ -56,7 +44,6 @@ END
 //#include "bitmap_res.rc"
 #include "avi_res.rc"
 
-
 /*
  * Everything specific to any language goes
  * in one of the specific files.
@@ -64,30 +51,30 @@ END
  * which also have a neutral version. This is to
  * get localized bitmaps for example.
  */
-#include "shell32_Bg.rc"
-#include "shell32_Ca.rc"
-#include "shell32_Cn.rc"
-#include "shell32_Cs.rc"
-#include "shell32_Da.rc"
-#include "shell32_De.rc"
-#include "shell32_En.rc"
-#include "shell32_Eo.rc"
-#include "shell32_Es.rc"
-#include "shell32_Fi.rc"
-#include "shell32_Fr.rc"
-#include "shell32_Hu.rc"
-#include "shell32_It.rc"
-#include "shell32_Ja.rc"
-#include "shell32_Ko.rc"
-#include "shell32_Nl.rc"
-#include "shell32_No.rc"
-#include "shell32_Pl.rc"
-#include "shell32_Pt.rc"
-#include "shell32_Ru.rc"
-#include "shell32_Si.rc"
-#include "shell32_Sk.rc"
-#include "shell32_Sv.rc"
-#include "shell32_Tr.rc"
-#include "shell32_Uk.rc"
-#include "shell32_Wa.rc"
-#include "shell32_Zh.rc"
+#include "lang/bg-BG.rc"
+#include "lang/ca-ES.rc"
+#include "lang/cs-CZ.rc"
+#include "lang/da-DK.rc"
+#include "lang/de-DE.rc"
+#include "lang/en-US.rc"
+#include "lang/eo-EO.rc"
+#include "lang/es-ES.rc"
+#include "lang/fi-FI.rc"
+#include "lang/fr-FR.rc"
+#include "lang/hu-HU.rc"
+#include "lang/it-IT.rc"
+#include "lang/ja-JP.rc"
+#include "lang/ko-KO.rc"
+#include "lang/nl-NL.rc"
+#include "lang/nb-NO.rc"
+#include "lang/pl-PL.rc"
+#include "lang/pt-PT.rc"
+#include "lang/ru-RU.rc"
+#include "lang/sl-SI.rc"
+#include "lang/sk-SK.rc"
+#include "lang/sv-SE.rc"
+#include "lang/tr-TR.rc"
+#include "lang/uk-UA.rc"
+#include "lang/wa-WA.rc"
+#include "lang/zh-TW.rc"
+#include "lang/zh-CN.rc"
