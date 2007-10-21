@@ -6,7 +6,7 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvTransparentBlt(SURFOBJ* Dest,
 		  SURFOBJ* Source,
 		  CLIPOBJ* Clip,

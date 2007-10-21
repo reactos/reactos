@@ -170,7 +170,7 @@ BOOL VGADDIPaintRgn(SURFOBJ *Surface, CLIPOBJ *ClipRegion, ULONG iColor, MIX Mix
 
 
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvPaint(IN SURFOBJ *Surface,
 	 IN CLIPOBJ *ClipRegion,
 	 IN BRUSHOBJ *Brush,

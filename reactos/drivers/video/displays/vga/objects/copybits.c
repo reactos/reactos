@@ -2,7 +2,7 @@
 #include "../vgavideo/vgavideo.h"
 #include <debug.h>
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvCopyBits(OUT SURFOBJ*  DestObj,
             IN  SURFOBJ*  SourceObj,
             IN  CLIPOBJ*  ClipObj,

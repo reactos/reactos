@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS VGA16 display driver
  * FILE:            drivers/dd/vga/display/objects/pointer.c
  * PURPOSE:         Draws the mouse pointer.
@@ -190,7 +189,7 @@ BOOL InitPointer(PPDEV ppdev)
   return(TRUE);
 }
 
-VOID STDCALL
+VOID APIENTRY
 DrvMovePointer(IN SURFOBJ* pso,
 	       IN LONG x,
 	       IN LONG y,
@@ -210,7 +209,7 @@ DrvMovePointer(IN SURFOBJ* pso,
 }
 
 
-ULONG STDCALL
+ULONG APIENTRY
 DrvSetPointerShape(SURFOBJ* pso,
 		   SURFOBJ* psoMask,
 		   SURFOBJ* psoColor,

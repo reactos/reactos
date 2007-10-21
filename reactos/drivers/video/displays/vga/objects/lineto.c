@@ -16,7 +16,6 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id$
  */
 
 #include "../vgaddi.h"
@@ -290,7 +289,7 @@ vgaSEtoNW(CLIPOBJ* Clip, BRUSHOBJ* Brush, LONG x, LONG y, LONG deltax, LONG delt
  * FIXME: Use Mix to perform ROPs
  * FIXME: Non-solid Brush
  */
-BOOL STDCALL
+BOOL APIENTRY
 DrvLineTo(SURFOBJ *DestObj,
 	  CLIPOBJ *Clip,
 	  BRUSHOBJ *Brush,

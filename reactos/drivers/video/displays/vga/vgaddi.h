@@ -1,3 +1,6 @@
+#ifndef _VGADDI_H_
+#define _VGADDI_H_
+
 #define _WINBASE_
 #define _WINDOWS_H
 #include <stdarg.h>
@@ -275,8 +278,10 @@ DWORD getAvailableModes(HANDLE Driver,
                         PVIDEO_MODE_INFORMATION *modeInformation,
                         DWORD *ModeSize);
 
-void FASTCALL
-vgaReadScan ( int x, int y, int w, void *b );
+VOID FASTCALL
+vgaReadScan(int x, int y, int w, void *b);
 
-void FASTCALL
-vgaWriteScan ( int x, int y, int w, void *b );
+VOID FASTCALL
+vgaWriteScan(int x, int y, int w, void *b);
+
+#endif /* _VGADDI_H_ */

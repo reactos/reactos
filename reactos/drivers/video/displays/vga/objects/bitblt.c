@@ -7,16 +7,16 @@
 #include <debug.h>
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
-typedef BOOL  (STDCALL *PBLTRECTFUNC)(SURFOBJ* OutputObj,
-                                     SURFOBJ* InputObj,
-                                     SURFOBJ* Mask,
-                                     XLATEOBJ* ColorTranslation,
-                                     RECTL* OutputRect,
-                                     POINTL* InputPoint,
-                                     POINTL* MaskOrigin,
-                                     BRUSHOBJ* Brush,
-                                     POINTL* BrushOrigin,
-                                     ROP4 Rop4);
+typedef BOOL  (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,
+                                       SURFOBJ* InputObj,
+                                       SURFOBJ* Mask,
+                                       XLATEOBJ* ColorTranslation,
+                                       RECTL* OutputRect,
+                                       POINTL* InputPoint,
+                                       POINTL* MaskOrigin,
+                                       BRUSHOBJ* Brush,
+                                       POINTL* BrushOrigin,
+                                       ROP4 Rop4);
 
 static BOOL FASTCALL VGADDI_IntersectRect(RECTL* prcDst, RECTL* prcSrc1, RECTL* prcSrc2)
 {
@@ -167,7 +167,7 @@ VGAtoVGA(SURFOBJ *Dest, SURFOBJ *Source, XLATEOBJ *ColorTranslation,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
                 XLATEOBJ* ColorTranslation, RECTL* DestRect,
                 POINTL* SourcePoint, POINTL* MaskPoint,
@@ -298,7 +298,7 @@ VGADDI_BltBrush(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* MaskSurf,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 VGADDI_BltSrc(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
               XLATEOBJ* ColorTranslation, RECTL* DestRect, POINTL* SourcePoint,
               POINTL* MaskOrigin, BRUSHOBJ* Brush, POINTL* BrushOrigin, ROP4 Rop4)
@@ -338,7 +338,7 @@ VGADDI_BltSrc(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
   return(TRUE);
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 VGADDI_BltMask(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
                XLATEOBJ* ColorTranslation, RECTL* DestRect,
                POINTL* SourcePoint, POINTL* MaskPoint, BRUSHOBJ* Brush,
@@ -375,7 +375,7 @@ VGADDI_BltMask(SURFOBJ* Dest, SURFOBJ* Source, SURFOBJ* Mask,
   return TRUE;
 }
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvBitBlt(SURFOBJ *Dest,
 	  SURFOBJ *Source,
 	  SURFOBJ *Mask,

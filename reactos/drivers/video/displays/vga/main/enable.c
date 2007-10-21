@@ -1,10 +1,5 @@
 /*
  * entry.c
- *
- * $Revision: 1.5 $
- * $Author$
- * $Date$
- *
  */
 
 #include "../vgaddi.h"
@@ -180,7 +175,7 @@ DEVINFO devinfoVGA =
 };
 
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvEnableDriver(IN ULONG EngineVersion,
 		IN ULONG SizeOfDED,
 		OUT PDRVENABLEDATA DriveEnableData)
@@ -206,7 +201,7 @@ DrvEnableDriver(IN ULONG EngineVersion,
 //  RETURNS:
 //    NONE
 
-VOID STDCALL
+VOID APIENTRY
 DrvDisableDriver(VOID)
 {
   return;
@@ -235,7 +230,7 @@ DrvDisableDriver(VOID)
 //  RETURNS:
 //    DHPDEV  a handle to a DPev object
 
-DHPDEV STDCALL
+DHPDEV APIENTRY
 DrvEnablePDEV(IN DEVMODEW *DM,
 	      IN LPWSTR LogAddress,
 	      IN ULONG PatternCount,
@@ -286,7 +281,7 @@ DrvEnablePDEV(IN DEVMODEW *DM,
 //    Called after initialization of PDEV is complete.  Supplies
 //    a reference to the GDI handle for the PDEV.
 
-VOID STDCALL
+VOID APIENTRY
 DrvCompletePDEV(IN DHPDEV PDev,
 		IN HDEV Dev)
 {
@@ -294,7 +289,7 @@ DrvCompletePDEV(IN DHPDEV PDev,
 }
 
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvAssertMode(IN DHPDEV DPev,
 	      IN BOOL Enable)
 {
@@ -334,7 +329,7 @@ DrvAssertMode(IN DHPDEV DPev,
 }
 
 
-VOID STDCALL
+VOID APIENTRY
 DrvDisablePDEV(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
@@ -354,7 +349,7 @@ DrvDisablePDEV(IN DHPDEV PDev)
 }
 
 
-VOID STDCALL
+VOID APIENTRY
 DrvDisableSurface(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
@@ -442,7 +437,7 @@ InitSavedBits(PPDEV ppdev)
 }
 
 
-HSURF STDCALL
+HSURF APIENTRY
 DrvEnableSurface(IN DHPDEV PDev)
 {
   PPDEV ppdev = (PPDEV)PDev;
@@ -531,7 +526,7 @@ error_done:
 }
 
 
-ULONG STDCALL
+ULONG APIENTRY
 DrvGetModes(IN HANDLE Driver,
 	    IN ULONG DataSize,
 	    OUT PDEVMODEW DM)
