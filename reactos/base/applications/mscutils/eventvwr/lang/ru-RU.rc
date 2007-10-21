@@ -2,31 +2,31 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
 IDC_EVENTVWR MENU
 BEGIN
-    POPUP "&Логи"
-    BEGIN
-        MENUITEM "&Приложений",                ID_LOG_APPLICATION, CHECKED
-        MENUITEM "&Безопасности",                   ID_LOG_SECURITY
-        MENUITEM "&Системы",                     ID_LOG_SYSTEM
-        MENUITEM SEPARATOR
-        MENUITEM "В&ыход",                       IDM_EXIT
-    END
-    POPUP "&Вид"
-    BEGIN
-        MENUITEM "&Обновить",                    IDM_REFRESH
-    END
-    MENUITEM "&Настройки",                        ID_OPTIONS
-    POPUP "&Справка"
-    BEGIN
-        MENUITEM "&Помощь",                       IDM_HELP
-        MENUITEM SEPARATOR
-        MENUITEM "&О программе",                   IDM_ABOUT
-    END
+	POPUP "&Логи"
+	BEGIN
+		MENUITEM "&Приложений",               ID_LOG_APPLICATION, CHECKED
+		MENUITEM "&Безопасности",             ID_LOG_SECURITY
+		MENUITEM "&Системы",                  ID_LOG_SYSTEM
+		MENUITEM SEPARATOR
+		MENUITEM "В&ыход",                    IDM_EXIT
+	END
+	POPUP "&Вид"
+	BEGIN
+		MENUITEM "&Обновить",                 IDM_REFRESH
+	END
+	MENUITEM "&Настройки",                  ID_OPTIONS
+	POPUP "&Справка"
+	BEGIN
+		MENUITEM "&Помощь",                   IDM_HELP
+		MENUITEM SEPARATOR
+		MENUITEM "&О программе",              IDM_ABOUT
+	END
 END
 
 IDC_EVENTVWR ACCELERATORS
 BEGIN
-    "?",            IDM_ABOUT,              ASCII,  ALT
-    "/",            IDM_ABOUT,              ASCII,  ALT
+	"?",            IDM_ABOUT,              ASCII,  ALT
+	"/",            IDM_ABOUT,              ASCII,  ALT
 END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 200, 75
@@ -34,10 +34,10 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYS
 CAPTION "О программе"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-    LTEXT           "Просмотр событий ReactOS. Версия 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
-    LTEXT           "Авторские права (С) 2007 Марк Пиулачс (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,140,22
-    DEFPUSHBUTTON   "OK",IDOK,80,48,42,16,WS_GROUP
+	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+	LTEXT           "Просмотр событий ReactOS. Версия 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "Авторские права (С) 2007 Марк Пиулачс (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,140,22
+	DEFPUSHBUTTON   "OK",IDOK,80,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
@@ -45,7 +45,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER
 CAPTION "Подождите.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT           "Идет загрузка. Подождите ...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
+	LTEXT           "Идет загрузка. Подождите ...",IDC_STATIC,0,15,230,8,SS_CENTER | SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
@@ -54,43 +54,43 @@ EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Свойства события"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "&Закрыть",IDOK,14,258,55,14
-    PUSHBUTTON      "&Предыдущее",IDPREVIOUS,78,258,55,14
-    PUSHBUTTON      "С&ледующее",IDNEXT,142,258,55,14
-    PUSHBUTTON      "П&омощь",IDHELP,206,258,55,14
-    EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-    LTEXT           "Описание:",IDC_STATIC,15,70,39,8
-    LTEXT           "Дата:",IDC_STATIC,14,14,36,8
-    LTEXT           "",IDC_EVENTDATESTATIC,68,14,72,8
-    LTEXT           "Время:",IDC_STATIC,14,27,36,8
-    LTEXT           "",IDC_EVENTTIMESTATIC,68,27,72,8
-    LTEXT           "Пользователь:",IDC_STATIC,14,41,50,8
-    LTEXT           "",IDC_EVENTUSERSTATIC,68,41,72,8
-    LTEXT           "Компьютер:",IDC_STATIC,14,54,45,8
-    LTEXT           "",IDC_EVENTCOMPUTERSTATIC,68,54,72,8
-    LTEXT           "Код (ID):",IDC_STATIC,143,15,45,8
-    LTEXT           "",IDC_EVENTIDSTATIC,190,15,87,8
-    LTEXT           "Источник:",IDC_STATIC,143,28,36,8
-    LTEXT           "",IDC_EVENTSOURCESTATIC,190,28,127,8
-    LTEXT           "Тип:",IDC_STATIC,143,42,36,8
-    LTEXT           "",IDC_EVENTTYPESTATIC,190,42,87,8
-    LTEXT           "Категория:",IDC_STATIC,143,55,38,8
-    LTEXT           "",IDC_EVENTCATEGORYSTATIC,190,55,87,8
-    EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
-    LTEXT           "Данные:",IDC_STATIC,14,192,30,8
-    CONTROL         "&Байты",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,49,192,34,10
-    CONTROL         "&Слова",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,87,192,33,10
+	DEFPUSHBUTTON   "&Закрыть",IDOK,14,258,55,14
+	PUSHBUTTON      "&Предыдущее",IDPREVIOUS,78,258,55,14
+	PUSHBUTTON      "С&ледующее",IDNEXT,142,258,55,14
+	PUSHBUTTON      "П&омощь",IDHELP,206,258,55,14
+	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+	LTEXT           "Описание:",IDC_STATIC,15,70,39,8
+	LTEXT           "Дата:",IDC_STATIC,14,14,36,8
+	LTEXT           "",IDC_EVENTDATESTATIC,68,14,72,8
+	LTEXT           "Время:",IDC_STATIC,14,27,36,8
+	LTEXT           "",IDC_EVENTTIMESTATIC,68,27,72,8
+	LTEXT           "Пользователь:",IDC_STATIC,14,41,50,8
+	LTEXT           "",IDC_EVENTUSERSTATIC,68,41,72,8
+	LTEXT           "Компьютер:",IDC_STATIC,14,54,45,8
+	LTEXT           "",IDC_EVENTCOMPUTERSTATIC,68,54,72,8
+	LTEXT           "Код (ID):",IDC_STATIC,143,15,45,8
+	LTEXT           "",IDC_EVENTIDSTATIC,190,15,87,8
+	LTEXT           "Источник:",IDC_STATIC,143,28,36,8
+	LTEXT           "",IDC_EVENTSOURCESTATIC,190,28,127,8
+	LTEXT           "Тип:",IDC_STATIC,143,42,36,8
+	LTEXT           "",IDC_EVENTTYPESTATIC,190,42,87,8
+	LTEXT           "Категория:",IDC_STATIC,143,55,38,8
+	LTEXT           "",IDC_EVENTCATEGORYSTATIC,190,55,87,8
+	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+	LTEXT           "Данные:",IDC_STATIC,14,192,30,8
+	CONTROL         "&Байты",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,49,192,34,10
+	CONTROL         "&Слова",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,87,192,33,10
 END
 
 STRINGTABLE
 BEGIN
-    IDS_APP_TITLE                                     "Просмотр событий"
-    IDC_EVENTSTRINGIDNOTFOUND       "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
-	IDC_EVENTLOG_ERROR_TYPE 	"Error"
-	IDC_EVENTLOG_WARNING_TYPE  	"Warning"
-	IDC_EVENTLOG_INFORMATION_TYPE  	"Information"
-	IDC_EVENTLOG_AUDIT_SUCCESS  	"Audit Success"
-	IDC_EVENTLOG_AUDIT_FAILURE  	"Audit Failure"
-	IDC_EVENTLOG_SUCCESS  		"Success"
-	IDC_EVENTLOG_UNKNOWN_TYPE  	"Unknown Event"
+	IDS_APP_TITLE                  "Просмотр событий"
+	IDC_EVENTSTRINGIDNOTFOUND      "The description for Event ID ( %lu ) in Source ( %s ) cannot be found. The local computer may not have the necessary registry information or message DLL files to display messages from a remote computer."
+	IDC_EVENTLOG_ERROR_TYPE        "Error"
+	IDC_EVENTLOG_WARNING_TYPE      "Warning"
+	IDC_EVENTLOG_INFORMATION_TYPE  "Information"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
+	IDC_EVENTLOG_SUCCESS           "Success"
+	IDC_EVENTLOG_UNKNOWN_TYPE      "Unknown Event"
 END

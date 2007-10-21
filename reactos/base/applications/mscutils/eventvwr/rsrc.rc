@@ -3,6 +3,8 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+1 24 DISCARDABLE "manifest.xml"
+
 // Shared icons
 IDI_EVENTVWR            ICON  "res/eventvwr.ico"
 IDI_WARNINGICON         ICON  "res/warning.ico"
