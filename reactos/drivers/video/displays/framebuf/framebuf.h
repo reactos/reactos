@@ -29,10 +29,6 @@
 #include <winioctl.h>
 #include <ntddvdeo.h>
 
-#define DDKAPI __stdcall
-#define DDKFASTAPI __fastcall
-#define FASTCALL __fastcall
-#define DDKCDECLAPI __cdecl
 //#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
 
 typedef struct _PDEV
@@ -78,7 +74,7 @@ typedef struct _PDEV
 #define ALLOC_TAG	TAG('F','B','U','F')
 
 
-DHPDEV STDCALL
+DHPDEV APIENTRY
 DrvEnablePDEV(
    IN DEVMODEW *pdm,
    IN LPWSTR pwszLogAddress,
@@ -92,35 +88,35 @@ DrvEnablePDEV(
    IN LPWSTR pwszDeviceName,
    IN HANDLE hDriver);
 
-VOID STDCALL
+VOID APIENTRY
 DrvCompletePDEV(
    IN DHPDEV dhpdev,
    IN HDEV hdev);
 
-VOID STDCALL
+VOID APIENTRY
 DrvDisablePDEV(
    IN DHPDEV dhpdev);
 
-HSURF STDCALL
+HSURF APIENTRY
 DrvEnableSurface(
    IN DHPDEV dhpdev);
 
-VOID STDCALL
+VOID APIENTRY
 DrvDisableSurface(
    IN DHPDEV dhpdev);
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvAssertMode(
    IN DHPDEV dhpdev,
    IN BOOL bEnable);
 
-ULONG STDCALL
+ULONG APIENTRY
 DrvGetModes(
    IN HANDLE hDriver,
    IN ULONG cjSize,
    OUT DEVMODEW *pdm);
 
-BOOL STDCALL
+BOOL APIENTRY
 DrvSetPalette(
    IN DHPDEV dhpdev,
    IN PALOBJ *ppalo,
@@ -128,7 +124,7 @@ DrvSetPalette(
    IN ULONG iStart,
    IN ULONG cColors);
 
-ULONG STDCALL
+ULONG APIENTRY
 DrvSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
@@ -141,33 +137,30 @@ DrvSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl);
 
-VOID STDCALL
+VOID APIENTRY
 DrvMovePointer(
    IN SURFOBJ *pso,
    IN LONG x,
    IN LONG y,
    IN RECTL *prcl);
 
-BOOL FASTCALL
+BOOL
 IntInitScreenInfo(
    PPDEV ppdev,
    LPDEVMODEW pDevMode,
    PGDIINFO pGdiInfo,
    PDEVINFO pDevInfo);
 
-BOOL FASTCALL
+BOOL
 IntInitDefaultPalette(
    PPDEV ppdev,
    PDEVINFO pDevInfo);
 
-BOOL DDKAPI
+BOOL APIENTRY
 IntSetPalette(
    IN DHPDEV dhpdev,
    IN PPALETTEENTRY ppalent,
    IN ULONG iStart,
    IN ULONG cColors);
 
-
-
 #endif /* FRAMEBUF_H */
-

@@ -27,7 +27,7 @@
  * and returns the list of modes supported by the display driver.
  */
 
-DWORD FASTCALL
+DWORD
 GetAvailableModes(
    HANDLE hDriver,
    PVIDEO_MODE_INFORMATION *ModeInfo,
@@ -107,7 +107,7 @@ GetAvailableModes(
    return Modes.NumModes;
 }
 
-BOOL FASTCALL
+BOOL
 IntInitScreenInfo(
    PPDEV ppdev,
    LPDEVMODEW pDevMode,
@@ -352,7 +352,7 @@ IntInitScreenInfo(
  *    @implemented
  */
 
-ULONG DDKAPI
+ULONG APIENTRY
 DrvGetModes(
    IN HANDLE hDriver,
    IN ULONG cjSize,

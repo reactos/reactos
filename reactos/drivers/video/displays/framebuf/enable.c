@@ -46,7 +46,7 @@ static DRVFN DrvFunctionTable[] =
  *    @implemented
  */
 
-BOOL DDKAPI
+BOOL APIENTRY
 DrvEnableDriver(
    ULONG iEngineVersion,
    ULONG cj,
@@ -74,7 +74,7 @@ DrvEnableDriver(
  *    @implemented
  */
 
-DHPDEV DDKAPI
+DHPDEV APIENTRY
 DrvEnablePDEV(
    IN DEVMODEW *pdm,
    IN LPWSTR pwszLogAddress,
@@ -128,7 +128,7 @@ DrvEnablePDEV(
  *    @implemented
  */
 
-VOID DDKAPI
+VOID APIENTRY
 DrvCompletePDEV(
    IN DHPDEV dhpdev,
    IN HDEV hdev)
@@ -146,7 +146,7 @@ DrvCompletePDEV(
  *    @implemented
  */
 
-VOID DDKAPI
+VOID APIENTRY
 DrvDisablePDEV(
    IN DHPDEV dhpdev)
 {

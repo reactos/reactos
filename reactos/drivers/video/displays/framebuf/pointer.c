@@ -31,7 +31,7 @@
  *    @unimplemented
  */
 
-ULONG DDKAPI
+ULONG APIENTRY
 DrvSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
@@ -58,7 +58,7 @@ DrvSetPointerShape(
  *    @unimplemented
  */
 
-VOID DDKAPI
+VOID APIENTRY
 DrvMovePointer(
    IN SURFOBJ *pso,
    IN LONG x,
@@ -197,7 +197,7 @@ IntShowMousePointer(PPDEV ppdev, SURFOBJ *DestSurface)
  *    @implemented
  */
 
-ULONG DDKAPI
+ULONG APIENTRY
 DrvSetPointerShape(
    IN SURFOBJ *pso,
    IN SURFOBJ *psoMask,
@@ -337,7 +337,7 @@ DrvSetPointerShape(
  *    @implemented
  */
 
-VOID DDKAPI
+VOID APIENTRY
 DrvMovePointer(
    IN SURFOBJ *pso,
    IN LONG x,

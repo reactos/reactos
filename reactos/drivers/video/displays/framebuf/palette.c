@@ -56,7 +56,7 @@ const PALETTEENTRY BASEPALETTE[20] =
  * by the GDI standard.
  */
 
-BOOL FASTCALL
+BOOL
 IntInitDefaultPalette(
    PPDEV ppdev,
    PDEVINFO pDevInfo)
@@ -106,7 +106,7 @@ IntInitDefaultPalette(
  * as closely as possible.
  */
 
-BOOL DDKAPI
+BOOL APIENTRY
 IntSetPalette(
    IN DHPDEV dhpdev,
    IN PPALETTEENTRY ppalent,
@@ -166,7 +166,7 @@ IntSetPalette(
  *    @implemented
  */
 
-BOOL DDKAPI
+BOOL APIENTRY
 DrvSetPalette(
    IN DHPDEV dhpdev,
    IN PALOBJ *ppalo,
