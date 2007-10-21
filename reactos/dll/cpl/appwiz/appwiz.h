@@ -1,6 +1,7 @@
 #ifndef __CPL_APPWIZ_H
 #define __CPL_APPWIZ_H
 
+#define COBJMACROS
 #include <windows.h>
 #include <windowsx.h> /* GET_X/Y_LPARAM */
 #include <commctrl.h>

@@ -61,6 +61,7 @@ WelcomeDlgProc(HWND hwndDlg,
     WCHAR szDesc[100];
     BROWSEINFOW brws;
     LPITEMIDLIST pidllist;
+    IMalloc* malloc;
 
     switch(uMsg)
     {
@@ -98,6 +99,13 @@ WelcomeDlgProc(HWND hwndDlg,
 
                     if (SHGetPathFromIDList(pidllist, szPath))
                         SendDlgItemMessage(hwndDlg, IDC_SHORTCUT_LOCATION, WM_SETTEXT, 0, (LPARAM)szPath);
+
+                    /* Free memory, if possible */
+                    if (SUCCEEDED(SHGetMalloc(&malloc)))
+                    {
+                        IMalloc_Free(malloc, pidllist);
+                        IMalloc_Release(malloc);
+                    }
 
                     break;
             }
