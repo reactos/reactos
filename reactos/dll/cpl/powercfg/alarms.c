@@ -64,33 +64,31 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 
 	if (gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable)
 	{
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARM1),
-			BM_SETCHECK,
-			(gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable ? BST_CHECKED : BST_UNCHECKED),
-			(LPARAM)0);
+		CheckDlgButton(hwndDlg, IDC_ALARM1,
+			gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].Enable ? BST_CHECKED : BST_UNCHECKED);
 
 		if (LoadString(hApplet, IDS_PROCENT, szTemp, MAX_PATH))
 		{
-			_stprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
-			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMVALUE1),szBatteryLevel);
+			_stprintf(szBatteryLevel, szTemp, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
+			SetDlgItemText(hwndDlg, IDC_ALARMVALUE1, szBatteryLevel);
 		}
 
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
 			TBM_SETRANGE,
 			(WPARAM)TRUE,
 			(LPARAM)MAKELONG(0, 100));
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
 			TBM_SETTICFREQ,
 			(WPARAM)TRUE,
 			(LPARAM)20);
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR1),
+		SendDlgItemMessage(hwndDlg, IDC_ALARMBAR1,
 			TBM_SETPOS,
 			(WPARAM)TRUE,
 			(LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].BatteryLevel);
 
 		if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_LOW].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
 		{
-			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMAKTION1),szAction);
+			SetDlgItemText(hwndDlg, IDC_ALARMAKTION1, szAction);
 		}
 
 		memset(szMessage, 0x0, sizeof(szMessage));
@@ -124,40 +122,37 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			}
 		}
 
-		SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMMSG1),szMessage);
+		SetDlgItemText(hwndDlg, IDC_ALARMMSG1, szMessage);
 
 		if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
 		{
-			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMPROG1),szProgram);
+			SetDlgItemText(hwndDlg, IDC_ALARMPROG1, szProgram);
 		}
 	}
+
 	if (gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable)
 	{
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARM2),
-			BM_SETCHECK,
-			(gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable ? BST_CHECKED : BST_UNCHECKED),
-			(LPARAM)0);
+		CheckDlgButton(hwndDlg, IDC_ALARM2,
+			gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].Enable ? BST_CHECKED : BST_UNCHECKED);
+
 		if (LoadString(hApplet, IDS_PROCENT, szTemp, MAX_PATH))
 		{
-			_stprintf(szBatteryLevel,szTemp,gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
-			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMVALUE2),szBatteryLevel);
+			_stprintf(szBatteryLevel, szTemp, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
+			SetDlgItemText(hwndDlg, IDC_ALARMVALUE2, szBatteryLevel);
 		}
 
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
+		SendDlgItemMessage(hwndDlg, IDC_ALARMBAR2,
 			TBM_SETRANGE,
 			(WPARAM)TRUE,
 			(LPARAM)MAKELONG(0, 100));
-		SendMessage(GetDlgItem(hwndDlg, IDC_ALARMBAR2),
+		SendDlgItemMessage(hwndDlg, IDC_ALARMBAR2,
 			TBM_SETPOS,
 			(WPARAM)TRUE,
 			(LPARAM)gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].BatteryLevel);
 
 		if (LoadString(hApplet, gGPP.user.DischargePolicy[DISCHARGE_POLICY_CRITICAL].PowerPolicy.Action+IDS_PowerActionNone1, szAction, MAX_PATH))
 		{
-			SendMessage(GetDlgItem(hwndDlg, IDC_ALARMAKTION2),
-									WM_SETTEXT,
-									(WPARAM)0,
-									(LPARAM)szAction);
+			SetDlgItemText(hwndDlg, IDC_ALARMAKTION2, szAction);
 		}
 
 		memset(szMessage, 0x0, sizeof(szMessage));
@@ -191,12 +186,13 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 			}
 		}
 
-		SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMMSG2),szMessage);
+		SetDlgItemText(hwndDlg, IDC_ALARMMSG2, szMessage);
 
 		if (LoadString(hApplet, IDS_PowerActionNone2, szProgram, MAX_PATH))
 		{
-			SetWindowText(GetDlgItem(hwndDlg, IDC_ALARMPROG2),szProgram);
+			SetDlgItemText(hwndDlg, IDC_ALARMPROG2, szProgram);
 		}
 	}
+
 	return TRUE;
 }
