@@ -12,14 +12,18 @@
 
 #include <dxg_int.h>
 
-ULONG gcDxgFuncs = 0x5C;
+
 ULONG gcMaxDdHmgr = 0;
 ULONG gcSizeDdHmgr = 0; 
-gcDummyPageRefCnt = 0;
+LONG gcDummyPageRefCnt = 0;
+HSEMAPHORE ghsemHmgr = NULL;
+HSEMAPHORE ghsemDummyPage = NULL;
+VOID *gpDummyPage = NULL;
+PEPROCESS gpepSession = NULL;
 
-HSEMAPHORE *ghsemHmgr = NULL;
-VOID * gpDummyPage;
+PDRVFN gpEngFuncs;
 
+const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
 DRVFN gaDxgFuncs [] = 
 {
     {0, (PFN) NULL}
@@ -46,6 +50,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 {
 
     PDRVFN drv_func;
+    INT i;
 
     /* Test see if the data is vaild we got from win32k.sys */
     if ((SizeEngDrv != sizeof(DRVENABLEDATA)) ||
@@ -55,9 +60,9 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     }
 
     /* rest static value */
-    gpDummyPage = 0;
+    gpDummyPage = NULL;
     gcDummyPageRefCnt = 0;
-    ghsemDummyPage = 0;
+    ghsemDummyPage = NULL;
 
     /* 
      * Setup internal driver functions list we got from dxg driver functions list
@@ -71,7 +76,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     {
         return STATUS_INTERNAL_ERROR;
     }
-#if 0
+
     /*
      * Check if all drv functions are sorted right 
      * and if it really are exported 
@@ -79,7 +84,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 
     for (i=1 ; i < DXENG_INDEX_DxEngLoadImage + 1; i++)
     {
-        drv_func = &EngDrv->pdrvfn[i];
+        drv_func = &pDxEngDrv->pdrvfn[i];
 
         if ((drv_func->iFunc != i) ||
             (drv_func->pfn == 0))
@@ -93,6 +98,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     /* Note 12/1-2004 : Why is this set to 0x618 */
     *DirectDrawContext = 0x618;
 
+#if 0
     if (DdHmgCreate())
     {
         ghsemDummyPage = EngCreateSemaphore();
@@ -103,6 +109,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
             return STATUS_SUCCESS;
         }
     }
+#endif 
 
     DdHmgDestroy();
 
@@ -111,37 +118,39 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
         EngDeleteSemaphore(ghsemDummyPage);
         ghsemDummyPage = 0;
     }
-#endif
+
     return STATUS_NO_MEMORY;
 }
 
 NTSTATUS
 DxDdCleanupDxGraphics()
 {
-#if 0
+
     DdHmgDestroy();
 
     if (!ghsemDummyPage)
     {
         if (!gpDummyPage)
         {
+#if 0
             ExFreePoolWithTag(gpDummyPage,0);
-            gpDummyPage = 0;
+#endif
+            gpDummyPage = NULL;
             gcDummyPageRefCnt = 0;
         }
-        EngDeleteSemaphore(ghsemDummyPage)
+        EngDeleteSemaphore(ghsemDummyPage);
     }
-#endif
+
     return 0;
 }
 
 BOOL
 DdHmgDestroy()
 {
-#if 0
-    ghFreeDdHmgr = 0;
     gcMaxDdHmgr = 0;
     gcSizeDdHmgr = 0;
+#if 0
+    ghFreeDdHmgr = 0;
     gpentDdHmgrLast = 0;
 
     if (gpentDdHmgr)
@@ -149,12 +158,13 @@ DdHmgDestroy()
         EngFreeMem(gpentDdHmgr);
         gpentDdHmgr = 0; 
     }
-
+#endif
     if (ghsemHmgr)
     {
         EngDeleteSemaphore(ghsemHmgr);
+        ghsemHmgr = NULL;
     }
-#endif
+
     return TRUE;
 }
 

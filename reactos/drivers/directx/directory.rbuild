@@ -4,4 +4,7 @@
 <directory name="dxg">
 	<xi:include href="dxg/dxg.rbuild" />
 </directory>
+<directory name="dxgthk">
+	<xi:include href="dxgthk/dxgthk.rbuild" />
+</directory>
 </group>
