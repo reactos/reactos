@@ -35,7 +35,7 @@ CAPTION "About"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
-	LTEXT           "ReactOS Visor de sucesos Version 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
+	LTEXT           "ReactOS Visor de sucesos Versión 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
 	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
 	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
 END
@@ -85,11 +85,11 @@ END
 STRINGTABLE 
 BEGIN
 	IDS_APP_TITLE                  "Visor de sucesos"
-	IDC_EVENTSTRINGIDNOTFOUND      "La descripción para el evento con ID ( %lu ) con origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
+	IDC_EVENTSTRINGIDNOTFOUND      "La descripción para el evento con ID ( %lu ) y origen ( %s ) no pudo ser recuperada.El equipo local puede no tener la información necesaria en el registro o las DLLs requeridas para mostrar los mensajes de un equipo remoto."
 	IDC_EVENTLOG_ERROR_TYPE        "Error"
 	IDC_EVENTLOG_WARNING_TYPE      "Advertencia"
 	IDC_EVENTLOG_INFORMATION_TYPE  "Información"
-	IDC_EVENTLOG_AUDIT_SUCCES      "Audit Success"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
 	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
 	IDC_EVENTLOG_SUCCESS           "Acierto"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Evento Desconocido"
