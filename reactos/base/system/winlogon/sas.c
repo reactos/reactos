@@ -26,9 +26,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(winlogon);
 #define HK_CTRL_ALT_DEL   0
 #define HK_CTRL_SHIFT_ESC 1
 
-#ifdef __USE_W32API
-extern BOOL STDCALL SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
-#endif
+extern BOOL WINAPI SetLogonNotifyWindow(HWND Wnd, HWINSTA WinSta);
 
 /* FUNCTIONS ****************************************************************/
 
@@ -322,7 +320,7 @@ CreateLogoffSecurityAttributes(
 	OUT PSECURITY_ATTRIBUTES* ppsa)
 {
 #if 1
-	DPRINT1("CreateLogoffSecurityAttributes needs implementation!\n");
+	ERR("CreateLogoffSecurityAttributes needs implementation!\n");
 	*ppsa = 0;
 	return STATUS_UNSUCCESSFUL;
 #else
@@ -453,11 +451,11 @@ HandleLogoff(
 	Status = CreateLogoffSecurityAttributes(&psa);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("Failed to create a required security descriptor. Error 0x%08x\n", Status);
+		WARN("Failed to create a required security descriptor. Status 0x%08x\n", Status);
 #if 1
-		DPRINT("Attempting to continue without it.\n");
+		WARN("Attempting to continue without it.\n");
 #else
-		DPRINT("Aborting logoff\n");
+		ERR("Aborting logoff\n");
 		HeapFree(GetProcessHeap(), 0, LSData);
 		return Status;
 #endif
