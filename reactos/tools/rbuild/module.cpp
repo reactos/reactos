@@ -307,6 +307,56 @@ Module::Module ( const Project& project,
 	else
 		isUnicode = false;
 
+	att = moduleNode.GetAttribute ( "generatemanifest", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			generateManifestFile = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			generateManifestFile = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"generatemanifest",
+				att->value );
+		}
+	}
+	else
+		generateManifestFile = false;
+
+	att = moduleNode.GetAttribute ( "generateresource", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		{
+			generateResourceFile = true;
+/*
+			File* resFile = new File ( IntermediateDirectory,
+									 output->relative_path,
+									 "auto.rc",
+									 false,
+									 "",
+									 false );
+
+			non_if_data.files.push_back ( resFile );
+*/
+		}
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			generateResourceFile = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				moduleNode.location,
+				"generateResourceFile",
+				att->value );
+		}
+	}
+	else
+		generateResourceFile = false;
+
 	if (isUnicode)
 	{
 		// Always define UNICODE and _UNICODE
@@ -557,6 +607,23 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 					"attribute 'first' of <file> element can only be 'true' or 'false'" );
 			}
 		}
+#if 0 /* Should we allow module root files to be on intermediate? */
+		att = e.GetAttribute ( "root", false );
+		if ( att != NULL )
+		{
+			if ( att->value == "intermediate" )
+				directory = IntermediateDirectory;
+			else if ( att->value == "output" )
+				directory = OutputDirectory;
+			else
+			{
+				throw InvalidAttributeValueException (
+					e.location,
+					"root",
+					att->value );
+			}
+		}
+#endif
 		string switches = "";
 		att = e.GetAttribute ( "switches", false );
 		if ( att != NULL )
@@ -744,6 +811,32 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 	else if ( e.name == "linkerflag" )
 	{
 		linkerFlags.push_back ( new LinkerFlag ( project, this, e ) );
+		subs_invalid = true;
+	}
+	else if ( e.name == "localization" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<localization> is not a valid sub-element of <if>" );
+		}
+		Localization* localization;
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			localization = new Localization (
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			localization = new Localization (
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+		}
+
+		localizations.push_back ( localization );
 		subs_invalid = true;
 	}
 	else if ( e.name == "linkerscript" )
@@ -1482,6 +1575,53 @@ InvokeFile::InvokeFile ( const XMLElement& _node,
 
 void
 InvokeFile::ProcessXML()
+{
+}
+
+Language::Language ( const XMLElement& _node)
+	: node (_node)
+{
+	const XMLAttribute* att = _node.GetAttribute ( "isoname", true );
+	assert(att);
+	isoname = att->value;
+}
+
+void
+Language::ProcessXML()
+{
+}
+
+Localization::Localization ( const XMLElement& node_,
+                             const Module& module_,
+                             const FileLocation& file_)
+	: node(node_), module(module_), file(file_) , isoname("")
+{
+	const XMLAttribute* att = node.GetAttribute ( "isoname", true );
+	assert(att);
+	isoname = att->value;
+
+	att = node.GetAttribute ( "dirty", false );
+	if ( att != NULL )
+	{
+		const char* p = att->value.c_str();
+		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+			dirty = true;
+		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+			dirty = false;
+		else
+		{
+			throw InvalidAttributeValueException (
+				node.location,
+				"dirty",
+				att->value );
+		}
+	}
+	else
+		dirty = false;
+}
+
+void
+Localization::ProcessXML()
 {
 }
 

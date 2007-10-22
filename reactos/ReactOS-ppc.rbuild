@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile.ppc" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile.ppc" architecture="powerpc" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config-ppc.rbuild">
 		<xi:fallback>
 			<xi:include href="config-ppc.template.rbuild" />
@@ -13,9 +13,6 @@
 	<property name="OFWLDR_LINKFORMAT" value="-L$(INTERMEDIATE)/lib/ppcmmu -lppcmmu_code -nostdlib -nostartfiles -lgcc -Wl,-e,__start -Wl,-Ttext,0xe00000 -N"/>
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles"/>
 
-	<define name="_M_PPC" />
-	<define name="_PPC_" />
-	<define name="__PowerPC__" />
 	<define name="stdcall"/>
 	<define name="__stdcall__"/>
 	<define name="fastcall"/>

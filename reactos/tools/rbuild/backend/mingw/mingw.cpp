@@ -343,6 +343,8 @@ MingwBackend::ProcessNormal ()
 	GenerateTestSupportCode ();
 	GenerateCompilationUnitSupportCode ();
 	GenerateSysSetup ();
+	GenerateModulesResources();
+	GenerateModulesManifests();
 	GenerateProxyMakefiles ();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
@@ -720,6 +722,24 @@ MingwBackend::GenerateSysSetup ()
 	printf ( "Generating syssetup.inf..." );
 	SysSetupGenerator sysSetupGenerator ( ProjectNode );
 	sysSetupGenerator.Generate ();
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateModulesResources ()
+{
+	printf ( "Generating modules resources..." );
+	ModulesResourceGenerator moduleResourceGenerator ( ProjectNode );
+	moduleResourceGenerator.Generate ();
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateModulesManifests ()
+{
+	printf ( "Generating modules manifests...." );
+	ModulesManifestGenerator moduleManifestGenerator ( ProjectNode );
+	moduleManifestGenerator.Generate ();
 	printf ( "done\n" );
 }
 

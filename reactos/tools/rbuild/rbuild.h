@@ -100,9 +100,12 @@ class StubbedSymbol;
 class CompilationUnit;
 class FileLocation;
 class AutoRegister;
-
+class ModulesResourceGenerator;
+class ModulesResourceGenerator;
 class SourceFileTest;
 class Metadata;
+class Language;
+class Localization;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -222,6 +225,12 @@ public:
 	void ExtractModules( std::vector<Module*> &modules );
 };
 
+enum ArchitectureType
+{
+	I386,
+	PowerPC
+};
+
 class Project
 {
 	std::string xmlfile;
@@ -236,8 +245,10 @@ public:
 	std::vector<CDFile*> cdfiles;
 	std::vector<InstallFile*> installfiles;
 	std::vector<Module*> modules;
+	std::vector<Language*> languages;
 	IfableData non_if_data;
-
+	ArchitectureType GetArchitectureType ( const std::string& location,
+	                           const XMLAttribute& attribute );
 	Project ( const Configuration& configuration,
 	          const std::string& filename,
 	          const std::map<std::string, std::string>* properties = NULL );
@@ -246,7 +257,7 @@ public:
 	Backend& GetBackend() { return *_backend; }
 	void WriteConfigurationFile ();
 	void ExecuteInvocations ();
-
+	ArchitectureType architectureType;
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
 	const Module* LocateModule ( const std::string& name ) const;
@@ -343,10 +354,13 @@ public:
 	bool underscoreSymbols;
 	bool isUnicode;
 	bool isDefaultEntryPoint;
+	bool generateManifestFile;
+	bool generateResourceFile;
 	Bootstrap* bootstrap;
 	AutoRegister* autoRegister; // <autoregister> node
 	IfableData non_if_data;
 	std::vector<Invoke*> invocations;
+	std::vector<Localization*> localizations;
 	std::vector<Dependency*> dependencies;
 	std::vector<CompilerFlag*> compilerFlags;
 	std::vector<LinkerFlag*> linkerFlags;
@@ -428,6 +442,9 @@ public:
 	std::string backend;
 	bool overridable;
 
+	Define ( const Project& project,
+	         const std::string name_,
+	         const std::string backend_ = "" );
 	Define ( const Project& project,
 	         const XMLElement& defineNode );
 	Define ( const Project& project,
@@ -517,7 +534,6 @@ public:
 	void ProcessXML ();
 };
 
-
 class Dependency
 {
 public:
@@ -562,6 +578,32 @@ public:
 	                const Module& module );
 };
 
+class Language
+{
+public:
+	const XMLElement& node;
+	std::string isoname;
+
+	Language ( const XMLElement& _node );
+
+	void ProcessXML ();
+};
+
+class Localization
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	FileLocation file;
+	std::string isoname;
+	bool dirty;
+
+	Localization ( const XMLElement& node,
+	               const Module& module,
+	               const FileLocation& file);
+
+	void ProcessXML ();
+};
 
 class If
 {
@@ -957,7 +999,6 @@ private:
 	void Initialize ();
 };
 
-
 class SysSetupGenerator
 {
 public:
@@ -972,6 +1013,27 @@ private:
 	                const Module& module );
 };
 
+class ModulesResourceGenerator
+{
+public:
+	const Project& project;
+	ModulesResourceGenerator ( const Project& project );
+	~ModulesResourceGenerator ();
+	void Generate ();
+private:
+	void WriteResourceFile ( Module& module );
+};
+
+class ModulesManifestGenerator
+{
+public:
+	const Project& project;
+	ModulesManifestGenerator ( const Project& project );
+	~ModulesManifestGenerator ();
+	void Generate ();
+private:
+	void WriteManifestFile ( Module& module );
+};
 
 extern void
 InitializeEnvironment ();

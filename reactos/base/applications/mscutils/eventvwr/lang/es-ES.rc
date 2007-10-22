@@ -89,7 +89,7 @@ BEGIN
 	IDC_EVENTLOG_ERROR_TYPE        "Error"
 	IDC_EVENTLOG_WARNING_TYPE      "Advertencia"
 	IDC_EVENTLOG_INFORMATION_TYPE  "Información"
-	IDC_EVENTLOG_AUDIT_SUCCES      "Audit Success"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
 	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
 	IDC_EVENTLOG_SUCCESS           "Acierto"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Evento Desconocido"

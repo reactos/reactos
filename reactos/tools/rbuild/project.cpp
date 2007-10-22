@@ -357,6 +357,10 @@ Project::ProcessXML ( const string& path )
 	else
 		name = att->value;
 
+	att = node->GetAttribute ( "architecture", true );
+	assert(att);
+	architectureType = GetArchitectureType ( node->location, *att );
+
 	att = node->GetAttribute ( "makefile", true );
 	assert(att);
 	makefile = Environment::GetAutomakeFile ( att->value );
@@ -401,6 +405,46 @@ Project::ProcessXML ( const string& path )
 		cdfiles[i]->ProcessXML ();
 	for ( i = 0; i < installfiles.size (); i++ )
 		installfiles[i]->ProcessXML ();
+
+	switch (architectureType)
+	{
+		case I386:
+		{
+			Define* pDefine = new Define (*this, "_M_IX86" );
+			non_if_data.defines.push_back ( pDefine );
+
+			pDefine = new Define (*this, "_X86_" );
+			non_if_data.defines.push_back ( pDefine );
+			
+			pDefine = new Define (*this, "__i386__" );
+			non_if_data.defines.push_back ( pDefine );
+		}
+		break;
+		case PowerPC:
+		{
+			Define* pDefine = new Define (*this, "_M_PPC" );
+			non_if_data.defines.push_back ( pDefine );
+
+			pDefine = new Define (*this, "_PPC_" );
+			non_if_data.defines.push_back ( pDefine );
+
+			pDefine = new Define (*this, "__PowerPC__" );
+			non_if_data.defines.push_back ( pDefine );
+		}
+		break;
+	}
+}
+
+ArchitectureType
+Project::GetArchitectureType ( const string& location, const XMLAttribute& attribute )
+{
+	if ( attribute.value == "i386" )
+		return I386;
+	if ( attribute.value == "powerpc" )
+		return PowerPC;
+	throw InvalidAttributeValueException ( location,
+	                                       attribute.name,
+	                                       attribute.value );
 }
 
 void
@@ -437,6 +481,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		InstallFile* installfile = new InstallFile ( *this, e, path );
 		installfiles.push_back ( installfile );
+		subs_invalid = true;
+	}
+	else if ( e.name == "language" )
+	{
+		Language* language = new Language ( e );
+		languages.push_back ( language );
 		subs_invalid = true;
 	}
 	else if ( e.name == "directory" )

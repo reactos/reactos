@@ -84,6 +84,8 @@ private:
 	void GenerateTestSupportCode ();
 	void GenerateCompilationUnitSupportCode ();
 	void GenerateSysSetup ();
+	void GenerateModulesResources();
+	void GenerateModulesManifests();
 	std::string GetProxyMakefileTree () const;
 	void GenerateProxyMakefiles ();
 	void CheckAutomaticDependencies ();

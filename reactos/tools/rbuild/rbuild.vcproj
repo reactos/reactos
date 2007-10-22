@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="8,00"
+	Version="8.00"
 	Name="rbuild"
 	ProjectGUID="{D9305AFB-499E-49F1-A865-99DD7E19E762}"
 	RootNamespace="rbuild"
@@ -922,6 +922,14 @@
 						BasicRuntimeChecks="3"
 					/>
 				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\modulesmanifestgenerator.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\modulesresourcegenerator.cpp"
+				>
 			</File>
 			<File
 				RelativePath="project.cpp"

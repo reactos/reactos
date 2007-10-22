@@ -24,7 +24,7 @@ Configuration::Configuration ()
 {
 	Verbose = false;
 	CleanAsYouGo = false;
-	AutomaticDependencies = true;
+	AutomaticDependencies = false;
 	CheckDependenciesForModuleOnly = false;
 	CompilationUnitsEnabled = true;
 	MakeHandlesInstallDirectories = false;

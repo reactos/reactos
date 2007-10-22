@@ -55,6 +55,18 @@ Define::Define ( const Project& project,
 	backend = backend_;
 }
 
+Define::Define ( const Project& project,
+	             const std::string name_,
+	             const std::string backend_)
+	: project(project),
+	  module(NULL),
+	  node(NULL)
+{
+	name = name_;
+	value = "";
+    backend = backend_;
+}
+
 Define::~Define ()
 {
 }
@@ -84,3 +96,4 @@ void
 Define::ProcessXML()
 {
 }
+

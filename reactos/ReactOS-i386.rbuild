@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE project SYSTEM "tools/rbuild/project.dtd">
-<project name="ReactOS" makefile="makefile.auto" xmlns:xi="http://www.w3.org/2001/XInclude">
+<project name="ReactOS" makefile="makefile.auto" architecture="i386" xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="config.rbuild">
 		<xi:fallback>
 			<xi:include href="config.template.rbuild" />
@@ -8,10 +8,6 @@
 	</xi:include>
 
 	<xi:include href="ReactOS-generic.rbuild" />
-
-	<define name="_M_IX86" />
-	<define name="_X86_" />
-	<define name="__i386__" />
 
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
 
