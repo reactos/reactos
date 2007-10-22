@@ -106,10 +106,11 @@ CallUninstall(HWND hwndDlg, UINT Control, UINT RemBtn, UINT InfoBtn, BOOL isUpda
     PROCESS_INFORMATION pi;
     INT nIndex;
     HKEY hKey;
-    DWORD dwType;
+    DWORD dwType, dwRet;
     TCHAR pszUninstallString[MAX_PATH];
     DWORD dwSize;
 	TCHAR Buf[256],Title[256];
+    MSG msg;
 
 	nIndex = (INT)SendMessage(GetDlgItem(hwndDlg, Control),LVM_GETNEXTITEM,-1,LVNI_FOCUSED);
     if (nIndex != -1)
@@ -136,10 +137,28 @@ CallUninstall(HWND hwndDlg, UINT Control, UINT RemBtn, UINT InfoBtn, BOOL isUpda
             si.wShowWindow = SW_SHOW;
             if (CreateProcess(NULL,pszUninstallString,NULL,NULL,FALSE,0,NULL,NULL,&si,&pi))
             {
-				ButtonStatus(hwndDlg, FALSE, RemBtn, InfoBtn);
-				WaitForSingleObject(pi.hProcess, INFINITE);
-                CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
+                EnableWindow(GetParent(hwndDlg), FALSE);
+                ButtonStatus(hwndDlg, FALSE, RemBtn, InfoBtn);
+
+                for (;;)
+                {
+                    dwRet = MsgWaitForMultipleObjects(1, &pi.hProcess, FALSE, INFINITE, QS_ALLEVENTS);
+                    if (dwRet == WAIT_OBJECT_0 + 1)
+                    {
+                        while (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+                        {
+                            TranslateMessage(&msg);
+                            DispatchMessage(&msg);
+                        }
+                    }
+                    else if (dwRet == WAIT_OBJECT_0 || dwRet == WAIT_FAILED)
+                        break;
+
+                }
+                CloseHandle(pi.hProcess);
+                EnableWindow(GetParent(hwndDlg), TRUE);
+
 				// Update software list
 				(void)ListView_DeleteAllItems(GetDlgItem(hwndDlg, Control));
 				FillSoftwareList(hwndDlg, isUpdate, Control);
