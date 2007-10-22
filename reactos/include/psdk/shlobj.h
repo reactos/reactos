@@ -1394,6 +1394,15 @@ HRESULT WINAPI SHCreateDefaultContextMenu(const DEFCONTEXTMENU *,REFIID,void **p
 typedef HRESULT (CALLBACK * LPFNDFMCALLBACK)(IShellFolder*,HWND,IDataObject*,UINT,WPARAM,LPARAM);
 INT CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,HKEY *,IContextMenu **);
 
+/****************************************************************************
+ * SHCreateDefaultContextMenu API
+ */
+
+HRESULT WINAPI
+SHCreateDefaultExtractIcon(
+  REFIID riid,
+  void **ppv);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

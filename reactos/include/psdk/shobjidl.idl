@@ -1345,5 +1345,33 @@ interface IContextMenuCB : IUnknown
                 [in] UINT uMsg,
                 [in] WPARAM wParam,
                 [in] LPARAM lParam);
+}
 
+/*****************************************************************************
+ * IDefaultExtractIconInit interface
+ */
+
+[
+    object,
+    uuid(800AB0B8-F5FA-4e72-8FF3-B1A243B87BD9), /* FIXME: wrong value! */
+    pointer_default(unique)
+]
+interface IDefaultExtractIconInit : IUnknown
+{
+    HRESULT SetDefaultIcon(
+                       [in] LPCWSTR pszFile,
+                       [in] int iIcon);
+    HRESULT SetFlags(
+                       [in] UINT uFlags);
+    HRESULT SetKey(
+                       [in] HKEY hkey);
+    HRESULT SetNormalIcon(
+                       [in] LPCWSTR pszFile,
+                       [in] int iIcon);
+    HRESULT SetOpenIcon(
+                       [in] LPCWSTR pszFile,
+                       [in] int iIcon);
+    HRESULT SetShortcutIcon(
+                       [in] LPCWSTR pszFile,
+                       [in] int iIcon);
 }
