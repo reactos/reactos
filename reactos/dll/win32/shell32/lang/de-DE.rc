@@ -317,16 +317,16 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Papierkorb Einstellungen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 80, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10
-	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	GROUPBOX "Einstellungen für gewählten Ort", -1, 10, 80, 220, 70
+	RADIOBUTTON "&Benutzerdefinierte Größe:", 14001, 20, 90, 100, 10
+	EDITTEXT 14002, 120, 90, 50, 10, WS_TABSTOP | ES_NUMBER
+	LTEXT "M&aximale Größe (MB):", -1, 32, 100, 70, 10
+	RADIOBUTTON "Dateien nicht in den Papie&rkorb verschieben, sondern sofort löschen.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 10, 155, 220, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
