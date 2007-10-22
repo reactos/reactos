@@ -1160,8 +1160,8 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    ULONG QuotaUsage[3];
-    ULONG QuotaPeak[3];
+    ULONG QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
+    ULONG QuotaPeak[3];  /* ditto */
     ULONG CommitCharge;
     ULONG PeakVirtualSize;
     ULONG VirtualSize;
