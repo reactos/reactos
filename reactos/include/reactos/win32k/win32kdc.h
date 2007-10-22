@@ -2,7 +2,7 @@
 #ifndef __WIN32K_DC_H
 #define __WIN32K_DC_H
 
-#include "driver.h"
+#include <reactos/win32k/win32kdriver.h>
 
 typedef enum tagGdiPathState
 {

@@ -12,6 +12,21 @@
 
 #include <dxg_int.h>
 
+ULONG gcDxgFuncs = 0x5C;
+ULONG gcMaxDdHmgr = 0;
+ULONG gcSizeDdHmgr = 0; 
+gcDummyPageRefCnt = 0;
+
+HSEMAPHORE *ghsemHmgr = NULL;
+VOID * gpDummyPage;
+
+DRVFN gaDxgFuncs [] = 
+{
+    {0, (PFN) NULL}
+};
+
+
+
 
 NTSTATUS
 DriverEntry(IN PVOID Context1,
@@ -29,12 +44,12 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
                        PULONG DirectDrawContext,
                        PEPROCESS Proc )
 {
-#if 0
+
     PDRVFN drv_func;
 
     /* Test see if the data is vaild we got from win32k.sys */
-    if (size_EngDrv != sizeof(DRVENABLEDATA)) ||
-       (size_DXG_INDEX_API != sizeof(DRVENABLEDATA))
+    if ((SizeEngDrv != sizeof(DRVENABLEDATA)) ||
+        (SizeDxgDrv != sizeof(DRVENABLEDATA)))
     {
         return STATUS_BUFFER_TOO_SMALL;
     }
@@ -56,7 +71,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     {
         return STATUS_INTERNAL_ERROR;
     }
-
+#if 0
     /*
      * Check if all drv functions are sorted right 
      * and if it really are exported 
