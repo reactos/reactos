@@ -9,10 +9,17 @@
  *       15/10-2007   Magnus Olsen
  */
 
+/* DDK/NDK/SDK Headers */
+#include <ddk/ntddk.h>
+
 NTSTATUS
 DriverEntry(IN PVOID Context1,
             IN PVOID Context2)
 {
+    /* 
+     * NOTE this driver will never be load, it only contain export list
+     * to win32k eng functions
+     */
     return 0;
 }
 
