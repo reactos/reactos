@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-
+//#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -32,6 +32,7 @@
 #include "pidl.h"
 #include "undocshell.h"
 #include "shlobj.h"
+#include "objbase.h"
 
 #include "shell32_main.h"
 #include "shellfolder.h"
@@ -242,12 +243,19 @@ SH_EnlargeContextMenuArray(ItemCmImpl *This, UINT newsize)
 }
 
 VOID
-SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj)
+SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu, UINT indexMenu )
 {
     UINT i;
     WCHAR buffer[111];
     char ebuf[10];
     HRESULT hr;
+    IContextMenu * cmenu;
+    HRESULT hResult;
+    UINT idCmdFirst = 0x5000;
+    UINT idCmdLast = 0xFFF0;
+    static const WCHAR szAny[] = { '*',0};
+
+    SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj);
 
     for (i = 0; i < This->cidl; i++)
     {
@@ -265,13 +273,26 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj)
             }
         }
 
-        if (_ILGetExtension(This->apidl[i], ebuf, sizeof(ebuf) / sizeof(char)))
+        if (_ILGetExtension(This->apidl[i], &ebuf[1], sizeof(ebuf) / sizeof(char)))
         {
+            ebuf[0] = L'.';
             buffer[0] = L'\0';
             if (MultiByteToWideChar(CP_ACP, 0, ebuf, -1, buffer, 111))
                 SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
         }
     }
+
+    TRACE("SH_LoadContextMenuHandlers num extensions %u\n", This->ecount);
+
+    for (i = 0; i < This->ecount; i++)
+    {
+       cmenu = This->ecmenu[i];
+       TRACE("Invoking menu %p\n", cmenu);
+       hResult = cmenu->lpVtbl->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, idCmdLast, CMF_NORMAL);
+       TRACE("result %x\n",hResult);
+    }
+
+
 
 }
 
@@ -331,14 +352,13 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 
       lastindex = FCIDM_SHVIEWLAST;
 	}
-#if 0
     pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
     if (pDataObj)
     {
-        SH_LoadContextMenuHandlers(This, pDataObj);
-        pDataObj->Release ();
+        SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
+        IDataObject_Release(pDataObj);
     }
-#endif
+
 
 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, lastindex);
 }
@@ -679,16 +699,18 @@ static const IContextMenu2Vtbl cmvt =
 };
 
 HRESULT
-SH_LoadDynamicContextMenuHandler(HKEY hKey, LPCWSTR szClass, IContextMenu** ppv, IDataObject * pDataObj)
+SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu** ppv, IDataObject * pDataObj)
 {
   HRESULT hr;
   IContextMenu * cmobj;
   IShellExtInit *shext;
 
-  hr = SHCoCreateInstance(szClass, NULL, NULL, &IID_IContextMenu, (void**)&cmobj);
+  TRACE("SH_LoadDynamicContextMenuHandler entered with %s\n",wine_dbgstr_guid(szClass));
+
+  hr = SHCoCreateInstance(NULL, szClass, NULL, &IID_IContextMenu, (void**)&cmobj);
   if (hr != S_OK)
   {
-      TRACE("SHCoCreateInstance failed\n");
+      TRACE("SHCoCreateInstance failed %x\n", GetLastError());
       return hr;
   }
 
@@ -716,20 +738,23 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, LPCWSTR szClass, IContextMenu** ppv,
 }
 
 UINT
-SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj)
+SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj)
 {
    HKEY hKey;
-   WCHAR szKey[MAX_PATH];
-   WCHAR szName[MAX_PATH];
+   WCHAR szKey[MAX_PATH] = {0};
+   WCHAR szName[MAX_PATH] = {0};
    DWORD dwIndex, dwName;
    LONG res;
    HRESULT hResult;
    IContextMenu * cmobj;
    UINT index;
+   CLSID clsid;
    static const WCHAR szShellEx[] = { '\\','s','h','e','l','l','e','x','\\','C','o','n','t','e','x','t','M','e','n','u','H','a','n','d','l','e','r','s',0 };
 
    wcscpy(szKey, szFileClass);
    wcscat(szKey, szShellEx);
+
+   TRACE("SH_EnumerateDynamicContextHandlerForKey key %s\n", debugstr_w(szFileClass));
 
    if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szKey, 0, KEY_READ, &hKey) != ERROR_SUCCESS)
    {
@@ -745,7 +770,20 @@ SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, ID
       res = RegEnumKeyExW(hKey, dwIndex, szName, &dwName, NULL, NULL, NULL, NULL);
       if (res == ERROR_SUCCESS)
       {
-         hResult = SH_LoadDynamicContextMenuHandler(hKey, szName, &cmobj, pDataObj);
+         hResult = CLSIDFromString(szName, &clsid);
+         if (hResult != NOERROR)
+         {
+             dwName = MAX_PATH;
+             if (RegGetValueW(hKey, szName, NULL, RRF_RT_REG_SZ, NULL, szKey, &dwName) == ERROR_SUCCESS)
+             {
+                 hResult = CLSIDFromString(szKey, &clsid);
+             }
+         }
+         TRACE("hResult %x szKey %s name %s\n",hResult, debugstr_w(szKey), debugstr_w(szName));
+         if (hResult == S_OK)
+         {
+             hResult = SH_LoadDynamicContextMenuHandler(hKey, &clsid, &cmobj, pDataObj);
+         }
          if (hResult == S_OK)
          {
             if (This->ecount + 1 > This->esize)
