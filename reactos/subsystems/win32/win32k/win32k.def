@@ -1,5 +1,3 @@
-; $Id$
-;
 ; win32k.def
 ;
 ; ReactOS win32k.sys
@@ -33,7 +31,7 @@ EngCreatePalette@24
 EngCreatePath@0
 EngCreateSemaphore@0
 EngCreateWnd@20
-EngDebugBreak@12=NTOSKRNL.DbgBreakPoint
+EngDebugBreak@0=NTOSKRNL.DbgBreakPoint
 EngDebugPrint@12
 EngDeleteClip@4
 EngDeleteDriverObj@12
