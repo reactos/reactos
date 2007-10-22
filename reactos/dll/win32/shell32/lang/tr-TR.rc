@@ -20,72 +20,68 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "Bü&yük Simgeler",	FCIDM_SHVIEW_BIGICON
-	MENUITEM "Kü&çük Simgeler",	FCIDM_SHVIEW_SMALLICON
-	MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
-	MENUITEM "&Ayrýntýlý",		FCIDM_SHVIEW_REPORTVIEW
+	MENUITEM "Bü&yük Simgeler",    FCIDM_SHVIEW_BIGICON
+	MENUITEM "Kü&çük Simgeler",    FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Liste",             FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Ayrýntýlý",         FCIDM_SHVIEW_REPORTVIEW
 END
 
-/*
- shellview background menu
-*/
+/* shellview background menu */
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-	  POPUP "&Görünüm"
-	  BEGIN
-            MENUITEM "Bü&yük Simgeler",	FCIDM_SHVIEW_BIGICON
-            MENUITEM "Kü&çük Simgeler",	FCIDM_SHVIEW_SMALLICON
-	    MENUITEM "&Liste",		FCIDM_SHVIEW_LISTVIEW
-	    MENUITEM "&Ayrýntýlý",	FCIDM_SHVIEW_REPORTVIEW
-	  END
-	  MENUITEM SEPARATOR
-	  POPUP "&Simgeleri Düzenle"
-	  BEGIN
-	    MENUITEM "&Ada Göre",	0x30	/* column 0 */
-	    MENUITEM "&Türe Göre",	0x32	/* column 2 */
-	    MENUITEM "&Boyuta Göre",	0x31	/* ... */
-	    MENUITEM "&Zamana Göre",	0x33
-	    MENUITEM SEPARATOR
-	    MENUITEM "&Otomatik Düzenle",	FCIDM_SHVIEW_AUTOARRANGE
-	  END
-	  MENUITEM "Izgaraya Uydur",	FCIDM_SHVIEW_SNAPTOGRID
-	  MENUITEM SEPARATOR
-	  MENUITEM "Yenile",		FCIDM_SHVIEW_REFRESH
-	  MENUITEM SEPARATOR
-	  MENUITEM "Yapýþtýr",		FCIDM_SHVIEW_INSERT
-	  MENUITEM "Kýsayol Yapýþtýr",	FCIDM_SHVIEW_INSERTLINK
-	  MENUITEM SEPARATOR
-	  POPUP "Yeni"
-	  BEGIN
-	    MENUITEM "Yeni &Dizin",	FCIDM_SHVIEW_NEWFOLDER
-	    MENUITEM "Yeni &Kýsayol",	FCIDM_SHVIEW_NEWLINK
-	    MENUITEM SEPARATOR
-	  END
-	  MENUITEM SEPARATOR
-	  MENUITEM "Özellikler",	FCIDM_SHVIEW_PROPERTIES
+		POPUP "&Görünüm"
+		BEGIN
+			MENUITEM "Bü&yük Simgeler",   FCIDM_SHVIEW_BIGICON
+			MENUITEM "Kü&çük Simgeler",   FCIDM_SHVIEW_SMALLICON
+			MENUITEM "&Liste",            FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "&Ayrýntýlý",        FCIDM_SHVIEW_REPORTVIEW
+		END
+		MENUITEM SEPARATOR
+		POPUP "&Simgeleri Düzenle"
+		BEGIN
+			MENUITEM "&Ada Göre",         0x30  /* column 0 */
+			MENUITEM "&Türe Göre",        0x32  /* column 2 */
+			MENUITEM "&Boyuta Göre",      0x31  /* ... */
+			MENUITEM "&Zamana Göre",      0x33
+			MENUITEM SEPARATOR
+			MENUITEM "&Otomatik Düzenle", FCIDM_SHVIEW_AUTOARRANGE
+		END
+		MENUITEM "Izgaraya Uydur",      FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM SEPARATOR
+		MENUITEM "Yenile",              FCIDM_SHVIEW_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Yapýþtýr",            FCIDM_SHVIEW_INSERT
+		MENUITEM "Kýsayol Yapýþtýr",    FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
+		POPUP "Yeni"
+		BEGIN
+			MENUITEM "Yeni &Dizin",       FCIDM_SHVIEW_NEWFOLDER
+			MENUITEM "Yeni &Kýsayol",     FCIDM_SHVIEW_NEWLINK
+			MENUITEM SEPARATOR
+		END
+		MENUITEM SEPARATOR
+		MENUITEM "Özellikler",          FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
-/*
- shellview item menu
-*/
+/* shellview item menu */
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
 	BEGIN
-	  MENUITEM "A&raþtýr",		FCIDM_SHVIEW_EXPLORE
-	  MENUITEM "&Aç",		FCIDM_SHVIEW_OPEN
-	  MENUITEM SEPARATOR
-	  MENUITEM "&Kes",		FCIDM_SHVIEW_CUT
-	  MENUITEM "K&opyala",		FCIDM_SHVIEW_COPY
-	  MENUITEM SEPARATOR
-	  MENUITEM "Kýsayol O&luþtur",	FCIDM_SHVIEW_CREATELINK
-	  MENUITEM "&Sil",		FCIDM_SHVIEW_DELETE
-	  MENUITEM "&Yeniden Adlandýr",	FCIDM_SHVIEW_RENAME
-	  MENUITEM SEPARATOR
-	  MENUITEM "&Özellikler",	FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "A&raþtýr",            FCIDM_SHVIEW_EXPLORE
+		MENUITEM "&Aç",                 FCIDM_SHVIEW_OPEN
+		MENUITEM SEPARATOR
+		MENUITEM "&Kes",                FCIDM_SHVIEW_CUT
+		MENUITEM "K&opyala",            FCIDM_SHVIEW_COPY
+		MENUITEM SEPARATOR
+		MENUITEM "Kýsayol O&luþtur",    FCIDM_SHVIEW_CREATELINK
+		MENUITEM "&Sil",                FCIDM_SHVIEW_DELETE
+		MENUITEM "&Yeniden Adlandýr",   FCIDM_SHVIEW_RENAME
+		MENUITEM SEPARATOR
+		MENUITEM "&Özellikler",         FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
@@ -93,99 +89,299 @@ SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
 CAPTION "Dizine Gözat"
 FONT 8, "MS Shell Dlg"
-{
- DEFPUSHBUTTON "Tamam", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Ýptal", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
- LTEXT "", IDD_TITLE, 4, 4, 180, 12
- LTEXT "", IDD_STATUS, 4, 25, 180, 12
- CONTROL "", IDD_TREEVIEW, "SysTreeView32",
- 	TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT |
-	WS_BORDER | WS_TABSTOP,
-	4, 40, 180, 120
-}
+BEGIN
+	DEFPUSHBUTTON "Tamam", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ýptal", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+	LTEXT "", IDD_TITLE, 4, 4, 180, 12
+	LTEXT "", IDD_STATUS, 4, 25, 180, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+END
+
+SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Dizine Gözat"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDD_TITLE, 10, 8, 198, 24
+	LTEXT "", IDD_STATUS, 10, 25, 198, 12
+	LTEXT "Folder:", IDD_FOLDER, 10, 156, 40, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "Tamam", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ýptal", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Message"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Yes to &all", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	ICON "", IDD_ICON, 10, 10, 16, 16
+	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
+END
 
 SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "%s Hakkýnda"
 FONT 10, "MS Shell Dlg"
-{
- DEFPUSHBUTTON "Tamam", IDOK, 153, 133, 50, 12, WS_TABSTOP
- LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
- ICON "", 1088, 10, 10, 14, 16
- LTEXT "", 100, 30, 10, 137, 10
- LTEXT "", 101, 30, 22, 137, 10
- LTEXT "Wine'ý size sunan geliþtiriciler:", 98, 8, 55, 137, 10
-}
+BEGIN
+	DEFPUSHBUTTON "Tamam", IDOK, 153, 133, 50, 12, WS_TABSTOP
+	LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
+	ICON "", 1088, 10, 10, 14, 16
+	LTEXT "", 100, 30, 10, 137, 10
+	LTEXT "", 101, 30, 22, 137, 10
+	LTEXT "ReactOS'ý size sunan geliþtiriciler:", 98, 8, 55, 137, 10
+END
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION ""
 FONT 8, "MS Shell Dlg"
-{
- ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
- LTEXT "Herhangi bir program, dizin, belge veya Internet kaynaðý seçin ve Wine sizin için açsýn.", 12289, 36, 11, 182, 18
- LTEXT "&Aç:", 12305, 7, 39, 24, 10
- CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
- DEFPUSHBUTTON "Tamam", IDOK, 62, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "Ýptal", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
- PUSHBUTTON "&Gözat...", 12288, 170, 63, 50, 14, WS_TABSTOP
-}
+BEGIN
+	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+	LTEXT "Herhangi bir program, dizin, belge veya Internet kaynaðý seçin ve Wine sizin için açsýn.", 12289, 36, 11, 182, 18
+	LTEXT "&Aç:", 12305, 7, 39, 24, 10
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	DEFPUSHBUTTON "Tamam", IDOK, 62, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "Ýptal", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "&Gözat...", 12288, 170, 63, 50, 14, WS_TABSTOP
+END
+
+SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Shortcut"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
+	LTEXT "Target type:", 14004, 10, 30, 50, 10
+	LTEXT "", 14005, 70, 30, 150, 10
+	LTEXT "Target location:", 14006, 10, 40, 70, 10
+	LTEXT "", 14007, 70, 40, 150, 10
+	LTEXT "Target:", 14008, 10, 55, 45, 10
+	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "&Start in:",14010, 10, 65, 57, 10
+	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "Shortcut &key:", 14014, 10, 80, 57, 10
+	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
+	LTEXT "Run:", 14016, 10, 90, 57, 10
+	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
+	LTEXT "C&omment:", 14018, 10, 100, 57, 10
+	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	PUSHBUTTON "&Find Target...", 14020, 10, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "&Change Icon...", 14021, 83, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "A&dvanced...", 14022, 156, 115, 63, 14, ES_LEFT
+END
+
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Extended Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
+	CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
+	LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
+	CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+	PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Abort", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
+END
+
+SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
+	LTEXT "Type of file:", 14004, 10, 30, 50, 10
+	LTEXT "File", 14005, 70, 30, 150, 10
+	LTEXT "Opens with:", 14006, 10, 40, 50, 10
+	LTEXT "", 14007, 70, 40, 150, 10
+	LTEXT "Location:", 14008, 10, 55, 45, 10
+	LTEXT "", 14009, 70, 55, 200, 10
+	LTEXT "Size:",14010, 10, 65, 45, 10
+	LTEXT "", 14011, 70, 65, 150, 10
+	LTEXT "Created:", 14014, 10, 80, 45, 10
+	LTEXT "", 14015, 70, 80, 150, 10
+	LTEXT "Modified:", 14016, 10, 90, 45, 10
+	LTEXT "", 14017, 70, 90, 150, 10
+	LTEXT "Accessed:", 14018, 10, 100, 45, 10
+	LTEXT "", 14019, 70, 100, 150, 10
+	LTEXT "Attributes:", 14020, 10, 115, 45, 10
+	CHECKBOX "&Read-only", 14021, 70, 115, 67, 10
+	CHECKBOX "&Hidden", 14022, 140, 115, 50, 10
+	CHECKBOX "&Archive", 14023, 190, 115, 45, 10
+END
+
+SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Version"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "File version: ", 14000, 10, 10, 45, 10
+	LTEXT "", 14001, 70, 10, 150, 10
+	LTEXT "Description: ", 14002, 10, 20, 45, 10
+	LTEXT "", 14003, 70, 20, 150, 10
+	LTEXT "Copyright: ", 14004, 10, 30, 45, 10
+	LTEXT "", 14005, 70, 30, 150, 10
+	GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
+	LTEXT "Item name: ", 14007, 20, 55, 50, 10
+	LTEXT "Value: ", 14008, 130, 55, 45, 10
+	LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
+	EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
+END
+
+DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
+	LTEXT "Type:", -1, 15, 55, 40, 10
+	LTEXT "", 14002, 110, 55, 100, 10
+
+	LTEXT "File system:", -1, 15, 70, 100, 10
+	LTEXT "", 14003, 110, 70, 100, 10
+
+	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+	LTEXT "Used space:", -1, 25, 90, 120, 10
+	LTEXT "", 14004, 110, 90, 120, 10
+	LTEXT "", 14005, 200, 90, 40, 10
+
+	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+	LTEXT "Free space:", -1, 25, 105, 70, 10
+	LTEXT "", 14006, 110, 105, 120, 10
+	LTEXT "", 14007, 200, 105, 40, 10
+
+	LTEXT "Capacity:", -1, 25, 125, 80, 10
+	LTEXT "", 14008, 110, 125, 120, 10
+	LTEXT "", 14009, 200, 125, 40, 10
+
+	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+
+	LTEXT "Drive %s", 14010, 100, 170, 40, 10
+	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
+END
+
+DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tools"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	GROUPBOX "Error-checking", -1, 5, 5, 230, 60
+	LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
+	GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
+	LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
+	PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	GROUPBOX "Backup", -1, 5, 130, 230, 60
+	LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+END
+
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Hardware"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+END
+
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Run As"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+	CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
+	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "The following user:", 14002, 10, 100, 90, 10
+	LTEXT "User name:", -1, 20, 115, 60, 10
+	COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+	PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
+	LTEXT "Password:", -1, 20, 140, 60, 10
+	EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
+	PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
+	PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
+	PUSHBUTTON "Cancel", 14008, 140, 170, 60, 15, WS_TABSTOP
+END
+
+BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Recycle Bin Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+	GROUPBOX "Settings for selected location", -1, 10, 80, 220, 70
+	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10
+	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
+	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
+	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+END
 
 STRINGTABLE DISCARDABLE
-{
-        /* columns in the shellview */
-	IDS_SHV_COLUMN1		"Dosya"
-	IDS_SHV_COLUMN2		"Boyut"
-	IDS_SHV_COLUMN3		"Tür"
-	IDS_SHV_COLUMN4		"Düzenlenme"
-	IDS_SHV_COLUMN5		"Öznitelikler"
-	IDS_SHV_COLUMN6		"Boyut"
-	IDS_SHV_COLUMN7		"Kullanýlabilir Alan"
-	IDS_SHV_COLUMN8		"Ad"
-	IDS_SHV_COLUMN9		"Açýklamalar"
-	IDS_SHV_COLUMN10	"Sahip"
-	IDS_SHV_COLUMN11	"Grup"
-        IDS_SHV_COLUMN_DELFROM  "Özgün konum"
-        IDS_SHV_COLUMN_DELDATE  "Silinme tarihi"
+BEGIN
+	/* columns in the shellview */
+	IDS_SHV_COLUMN1             "Dosya"
+	IDS_SHV_COLUMN2             "Boyut"
+	IDS_SHV_COLUMN3             "Tür"
+	IDS_SHV_COLUMN4             "Düzenlenme"
+	IDS_SHV_COLUMN5             "Öznitelikler"
+	IDS_SHV_COLUMN6             "Boyut"
+	IDS_SHV_COLUMN7             "Kullanýlabilir Alan"
+	IDS_SHV_COLUMN8             "Ad"
+	IDS_SHV_COLUMN9             "Açýklamalar"
+	IDS_SHV_COLUMN10            "Sahip"
+	IDS_SHV_COLUMN11            "Grup"
+	IDS_SHV_COLUMN_DELFROM      "Özgün konum"
+	IDS_SHV_COLUMN_DELDATE      "Silinme tarihi"
 
-        /* special folders */
-	IDS_DESKTOP		"Masaüstü"
-	IDS_MYCOMPUTER		"Bilgisayarým"
-        IDS_RECYCLEBIN_FOLDER_NAME      "Çöp"
+	/* special folders */
+	IDS_DESKTOP                 "Masaüstü"
+	IDS_MYCOMPUTER              "Bilgisayarým"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Çöp"
 
-        /* context menus */
-	IDS_VIEW_LARGE		"Bü&yük Simgeler"
-	IDS_VIEW_SMALL		"Kü&çük Simgeler"
-	IDS_VIEW_LIST		"&Liste"
-	IDS_VIEW_DETAILS	"&Ayrýntýlý"
-	IDS_SELECT		"Seç"
-	IDS_OPEN		"Aç"
+	/* context menus */
+	IDS_VIEW_LARGE              "Bü&yük Simgeler"
+	IDS_VIEW_SMALL              "Kü&çük Simgeler"
+	IDS_VIEW_LIST               "&Liste"
+	IDS_VIEW_DETAILS            "&Ayrýntýlý"
+	IDS_SELECT                  "Seç"
+	IDS_OPEN                    "Aç"
 
-	IDS_CREATEFOLDER_DENIED "Yeni dizin oluþturulamýyor: Eriþim engellendi."
-	IDS_CREATEFOLDER_CAPTION "Dizin oluþturma sýrasýnda hata"
-	IDS_DELETEITEM_CAPTION "Dosya silmeyi onayla"
-	IDS_DELETEFOLDER_CAPTION "Dizin silmeyi onayla"
-	IDS_DELETEITEM_TEXT "'%1' öðesini silmek istediðinizden emin misiniz?"
-	IDS_DELETEMULTIPLE_TEXT "Bu %1 öðeyi silmek istediðinizden emin misiniz?"
-        IDS_DELETESELECTED_TEXT "Seçili öðeleri silmek istediðinizden emin misiniz?"
-        IDS_TRASHITEM_TEXT "'%1' adlý öðeyi çöpe göndermek istediðinizden emin misiniz?"
-        IDS_TRASHFOLDER_TEXT "'%1' adlý öðeyi ve tüm içeriðini çöpe göndermek istediðinizden emin misiniz?"
-        IDS_TRASHMULTIPLE_TEXT "Bu %1 öðeyi çöpe göndermek istediðinizden emin misiniz?"
-        IDS_CANTTRASH_TEXT "'%1' adlý öðe çöpe gönderilemiyor. Tamamen silmek ister misiniz?"
-	IDS_OVERWRITEFILE_TEXT "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-	IDS_OVERWRITEFILE_CAPTION "Dosya Üzerine Yazmayý Onayla"
-	IDS_OVERWRITEFOLDER_TEXT "This folder already contains a folder named '%1'.\n\n"\
-	    "If the files in the destination folder have the same names as files in the\n"\
-	    "selected folder they will be replaced. Do you still want to move or copy\n"\
-	    "the folder?"
+	IDS_CREATEFOLDER_DENIED     "Yeni dizin oluþturulamýyor: Eriþim engellendi."
+	IDS_CREATEFOLDER_CAPTION    "Dizin oluþturma sýrasýnda hata"
+	IDS_DELETEITEM_CAPTION      "Dosya silmeyi onayla"
+	IDS_DELETEFOLDER_CAPTION    "Dizin silmeyi onayla"
+	IDS_DELETEITEM_TEXT         "'%1' öðesini silmek istediðinizden emin misiniz?"
+	IDS_DELETEMULTIPLE_TEXT     "Bu %1 öðeyi silmek istediðinizden emin misiniz?"
+	IDS_DELETESELECTED_TEXT     "Seçili öðeleri silmek istediðinizden emin misiniz?"
+	IDS_TRASHITEM_TEXT          "'%1' adlý öðeyi çöpe göndermek istediðinizden emin misiniz?"
+	IDS_TRASHFOLDER_TEXT        "'%1' adlý öðeyi ve tüm içeriðini çöpe göndermek istediðinizden emin misiniz?"
+	IDS_TRASHMULTIPLE_TEXT      "Bu %1 öðeyi çöpe göndermek istediðinizden emin misiniz?"
+	IDS_CANTTRASH_TEXT          "'%1' adlý öðe çöpe gönderilemiyor. Tamamen silmek ister misiniz?"
+	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_OVERWRITEFILE_CAPTION   "Dosya Üzerine Yazmayý Onayla"
+	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
+		"If the files in the destination folder have the same names as files in the\n"\
+		"selected folder they will be replaced. Do you still want to move or copy\n"\
+		"the folder?"
 
-        /* message box strings */
-        IDS_RESTART_TITLE       "Yeniden Baþlat"
-        IDS_RESTART_PROMPT      "Windows Yeniden Baþlatma taklit edilsin mi?"
-        IDS_SHUTDOWN_TITLE      "Oturumu Kapat"
-        IDS_SHUTDOWN_PROMPT     "Wine oturumunuzu kapatmak istediðinizden emin misiniz?"
+	/* message box strings */
+	IDS_RESTART_TITLE           "Yeniden Baþlat"
+	IDS_RESTART_PROMPT          "Do you want to restart the system?"
+	IDS_SHUTDOWN_TITLE          "Oturumu Kapat"
+	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
 
-        /* shell folder path default values */
+	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programlar"
 	IDS_PERSONAL                "Belgelerim"
 	IDS_FAVORITES               "Sýk Kullanýlanlar"
@@ -213,4 +409,7 @@ STRINGTABLE DISCARDABLE
 	IDS_COMMON_PICTURES         "Belgeler\\Resimlerim"
 	IDS_COMMON_VIDEO            "Belgeler\\Videolarým"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
-}
+	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_CDROM             "CDROM"
+	IDS_DRIVE_NETWORK           "Network Disk"
+END

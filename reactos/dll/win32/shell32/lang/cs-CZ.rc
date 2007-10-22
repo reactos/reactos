@@ -27,9 +27,7 @@ BEGIN
 	MENUITEM "&Podrobnosti",     FCIDM_SHVIEW_REPORTVIEW
 END
 
-/*
- shellview background menu
-*/
+/* shellview background menu */
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -69,9 +67,7 @@ BEGIN
 	END
 END
 
-/*
- shellview item menu
-*/
+/* shellview item menu */
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -168,18 +164,18 @@ BEGIN
 	LTEXT "Target location:", 14006, 10, 40, 70, 10
 	LTEXT "", 14007, 70, 40, 150, 10
 	LTEXT "Target:", 14008, 10, 55, 45, 10
-	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
-	LTEXT "&Start in:",14010, 10, 65, 45, 10
-	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
-	LTEXT "Shortcut &key:", 14014, 10, 80, 45, 10
+	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "&Start in:",14010, 10, 65, 57, 10
+	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "Shortcut &key:", 14014, 10, 80, 57, 10
 	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
-	LTEXT "Run:", 14016, 10, 90, 45, 10
-	EDITTEXT 14017, 70, 90, 150, 10
-	LTEXT "C&omment:", 14018, 10, 100, 45, 10
-	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
-	PUSHBUTTON "&Find Target...", 14020, 10, 115, 60, 14, ES_LEFT
-	PUSHBUTTON "&Change Icon...", 14021, 80, 115, 60, 14, ES_LEFT
-	PUSHBUTTON "A&dvanced...", 14022, 150, 115, 60, 14, ES_LEFT
+	LTEXT "Run:", 14016, 10, 90, 57, 10
+	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
+	LTEXT "C&omment:", 14018, 10, 100, 57, 10
+	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	PUSHBUTTON "&Find Target...", 14020, 10, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "&Change Icon...", 14021, 83, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "A&dvanced...", 14022, 156, 115, 63, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
@@ -217,9 +213,9 @@ BEGIN
 	LTEXT "Accessed:", 14018, 10, 100, 45, 10
 	LTEXT "", 14019, 70, 100, 150, 10
 	LTEXT "Attributes:", 14020, 10, 115, 45, 10
-	CHECKBOX "&Read-only", 14021, 70, 115, 45, 10
-	CHECKBOX "&Hidden", 14022, 130, 115, 50, 10
-	CHECKBOX "&Archive", 14023, 180, 115, 45, 10
+	CHECKBOX "&Read-only", 14021, 70, 115, 67, 10
+	CHECKBOX "&Hidden", 14022, 140, 115, 50, 10
+	CHECKBOX "&Archive", 14023, 190, 115, 45, 10
 END
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
@@ -270,7 +266,7 @@ BEGIN
 
 	LTEXT "Drive %s", 14010, 100, 170, 40, 10
 	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 165, 10, WS_DISABLED
+	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
 	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
@@ -290,7 +286,7 @@ BEGIN
 	PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
-DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 130
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Hardware"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
@@ -329,7 +325,7 @@ BEGIN
 	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
 	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
 	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON"&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
@@ -366,7 +362,6 @@ BEGIN
 	IDS_CREATEFOLDER_CAPTION    "Chyba pøi pokusu vytvoøit nový adresáø"
 	IDS_DELETEITEM_CAPTION      "Potvrdit odstranìní souboru"
 	IDS_DELETEFOLDER_CAPTION    "Potvrdit odstranìní adresáøe"
-
 	IDS_DELETEITEM_TEXT         "Opravdu chcete odstranit '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Opravdu chcete odstranit tìchto %1 položek?"
 	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"

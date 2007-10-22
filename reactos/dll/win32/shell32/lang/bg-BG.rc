@@ -26,9 +26,7 @@ BEGIN
 	MENUITEM "&Подробен",          FCIDM_SHVIEW_REPORTVIEW
 END
 
-/*
- shellview background menu
-*/
+/* shellview background menu */
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -68,9 +66,7 @@ BEGIN
 	END
 END
 
-/*
- shellview item menu
-*/
+/* shellview item menu */
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -167,15 +163,15 @@ BEGIN
 	LTEXT "Местоположение на целта:", 14006, 10, 40, 70, 10
 	LTEXT "", 14007, 70, 40, 150, 10
 	LTEXT "Цел:", 14008, 10, 55, 45, 10
-	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT
+	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
 	LTEXT "Изпълняване в:",14010, 10, 65, 45, 10
-	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT
+	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
 	LTEXT "Бърз &клавиш:", 14014, 10, 80, 45, 10
 	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
 	LTEXT "Изпълняване:", 14016, 10, 90, 45, 10
-	EDITTEXT 14017, 70, 90, 150, 10
+	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
 	LTEXT "Забележка:", 14018, 10, 100, 45, 10
-	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT
+	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
 	PUSHBUTTON "&Намиране на целта", 14020, 10, 115, 70, 14, ES_LEFT
 	PUSHBUTTON "&Смяна на значето:", 14021, 80, 115, 67, 14, ES_LEFT
 	PUSHBUTTON "Раз&ширени...", 14022, 150, 115, 60, 14, ES_LEFT
@@ -328,7 +324,7 @@ BEGIN
 	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
 	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
 	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON"&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE

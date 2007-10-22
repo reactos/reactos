@@ -26,9 +26,7 @@ BEGIN
 	MENUITEM "&Details",      FCIDM_SHVIEW_REPORTVIEW
 END
 
-/*
- shellview background menu
-*/
+/* shellview background menu */
 MENU_002 MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -68,9 +66,7 @@ BEGIN
 	END
 END
 
-/*
- shellview item menu
-*/
+/* shellview item menu */
 MENU_SHV_FILE MENU DISCARDABLE
 BEGIN
 	POPUP ""
@@ -328,7 +324,7 @@ BEGIN
 	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
 	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
 	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON"&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
