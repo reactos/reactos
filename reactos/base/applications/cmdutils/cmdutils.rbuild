@@ -10,4 +10,7 @@
 	<directory name="more">
 		<xi:include href="more/more.rbuild" />
 	</directory>
+	<directory name="xcopy">
+		<xi:include href="xcopy/xcopy.rbuild" />
+	</directory>
 </group>

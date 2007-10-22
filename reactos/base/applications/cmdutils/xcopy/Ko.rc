@@ -1,0 +1,80 @@
+/*
+ * XCOPY - Wine-compatible xcopy program
+ * Korean language support
+ *
+ * Copyright (C) 2007 J. Edmeades
+ * Copyright (C) 2007 YunSong Hwang(hys545@dreamwiz.com)
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "올바르지 않은 매개변수의 갯수 - xcopy /?로 도움말을 보시오\n"
+    STRING_INVPARM,  "올바르지 않은 매개변수 '%s' -  xcopy /?로 도움말을 보시오\n"
+    STRING_PAUSE,    "<enter> 를 누르면 복사가 시작될 것입니다\n"
+    STRING_SIMCOPY,  "%d 파일이 복사될 것입니다\n"
+    STRING_COPY,     "%d 파일이 복사되었습니다\n"
+    STRING_QISDIR,   "'%s'이 복사할 파일이나 디렉토리?\n" \
+                     "입니까?\n" \
+                     "(F - 파일, D - 디렉토리)\n"
+    STRING_SRCPROMPT,"%s? (예|아니오)\n"
+    STRING_OVERWRITE,"%s를 덮어쓰겠습니까? (예|아니오|모두)\n"
+    STRING_COPYFAIL, "Copying of '%s' to '%s' failed with r/c %d\n"
+    STRING_OPENFAIL, "'%s' 열기 실패\n"
+    STRING_READFAIL, "'%s를 읽지 못했습니다'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - 원본 파일이나 디렉토리 구조를 목적지로 복사\n\
+\n\
+문법:\n\
+XCOPY 원본 [대상] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Where:\n\
+\n\
+[/I]  Assume directory if destination does not exist and copying 2 or \n\
+\tmore files\n\
+[/S]  디렉토리하고 하위 디렉토리 복사\n\
+[/E]  빈 디렉토리를 포함해서 디렉토리와 하위 디렉토리 복사\n\
+[/Q]  조용하게 복사되는 파일이나 디렉토리를 표시하지 않고 복사.\n\
+[/F]  복사하는 동안 완전한 원본과 대상 보여주기\n\
+[/L]  복사될 것을 보여주면서 가상으로 작업\n\
+[/W]  복사시작 하기 전에 확인하기\n\
+[/T]  파일은 복사하지 않고 빈 디렉토리 구조만 복사\n\
+[/Y]  파일 덮어 쓸 때 확인하지 않기\n\
+[/-Y] 파일을 덮어 쓸 때 확인하기\n\
+[/P]  복사하는 동안에 각가의 원본 파일마다 확인\n\
+[/N]  짧은 이름을 사용해서 복사\n\
+[/U]  이미 대상 디렉토리에 존재하는 파일만 복사\n\
+[/R]  읽기 전용 파일도 덮어 쓰기\n\
+[/H]  숨은 파일이나 시스템 파일도 포함해서 복사\n\
+[/C]  복사하는 동안에 에러가 발생해도 계속 진행\n\
+[/A]  오직 압축 속성이 설정되어있는 파일만 복사\n\
+[/M]  오직 압축 속성을 제거하면서  압축 속성이 설정되어있는  \n\
+\파일만 복사 \n\
+[/D | /D:m-d-y] Copy new files or those modified after the supplied date.\n\
+\t\tIf no date is supplied, only copy if destination is older\n\
+\t\tthan source\n\n"
+
+}

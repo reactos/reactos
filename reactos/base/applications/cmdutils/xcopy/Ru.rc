@@ -1,0 +1,82 @@
+/*
+ * XCOPY - Wine-compatible xcopy program
+ * Russian language support
+ *
+ * Copyright (C) 2007 J. Edmeades
+ * Copyright (C) 2007 Kirill K. Smirnov
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS,
+"Недопустимое число параметров - попробуйте 'xcopy /?' для получения\n\
+подробного описания.\n"
+    STRING_INVPARM,
+"Недопустимый параметр '%s' - попробуйте 'xcopy /?' для получения подробного\n\
+описания.\n"
+    STRING_PAUSE,    "Нажмите клавишу <enter>, чтобы начать копирование.\n"
+    STRING_SIMCOPY,  "%d файл(ов) было бы скопировано.\n"
+    STRING_COPY,     "%d файл(ов) скопировано.\n"
+    STRING_QISDIR,   "'%s' является файлом или папкой?\n" \
+                     "(F - Файл, D - Папка)\n"
+    STRING_SRCPROMPT,"%s? (Yes|No)\n"
+    STRING_OVERWRITE,"Переписать %s? (Yes|No|All)\n"
+    STRING_COPYFAIL, "При копировании '%s' в '%s' произошла ошибка: %d\n"
+    STRING_OPENFAIL, "Невозможно открыть '%s'\n"
+    STRING_READFAIL, "При чтении '%s' произошла ошибка\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Копирует файлы и деревья папок\n\
+\n\
+Синтаксис:\n\
+XCOPY source [dest] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Где:\n\
+\n\
+[/I]  Если конечная папка отсутствует и копируется более одного файла, \n\
+      то предполагается папка в качестве места назначения.\n\
+[/S]  Копирует папки и подпапки.\n\
+[/E]  Копирует папки и подпапки, включая пустые.\n\
+[/Q]  Не отображает имена копируемых файлов.\n\
+[/F]  Отображает полные имена исходных и конечных файлов.\n\
+[/L]  Выводит список файлов, которые будут скопированы.\n\
+[/W]  Запрашивает подтверждение перед началом копирования.\n\
+[/T]  Создает структуру папок, но не копирует файлы.\n\
+[/Y]  Подавляет запрос на подтверждение перезаписи файлов.\n\
+[/-Y] Запрашивает подтверждение на перезапись файлов.\n\
+[/P]  Запрашивает подтверждение для каждого копируемого файла.\n\
+[/N]  Использует короткие имена файлов при копировании.\n\
+[/U]  Копирует только те файлы, которые уже существуют в конечной папке.\n\
+[/R]  Перезаписывает файлы, доступные только для чтения.\n\
+[/H]  Копирует скрытые и системные файлы.\n\
+[/C]  Продолжает работу, даже если произошла ошибка.\n\
+[/A]  Копирует только те файлы, для которых установлен атрибут \"архивный\". \n\
+[/M]  Копирует только те файлы, для которых установлен атрибут \"архивный\",\n\
+      при этом атрибут удаляется.\n\
+[/D | /D:m-d-y] Копирует только новые файлы или те, которые были изменены\n\
+                после указанной даты. Если дата не указана, копирует только\n\
+                те файлы, которые новее в исходной папке.\n"
+}
