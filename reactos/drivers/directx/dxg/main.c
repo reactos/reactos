@@ -9,7 +9,7 @@
  *       15/10-2007   Magnus Olsen
  */
 
-#include <ntddk.h>
+
 #include <dxg_int.h>
 
 
