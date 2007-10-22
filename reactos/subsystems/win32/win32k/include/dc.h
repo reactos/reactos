@@ -4,50 +4,9 @@
 
 #include "driver.h"
 
-typedef enum tagGdiPathState
-{
-   PATH_Null,
-   PATH_Open,
-   PATH_Closed
-} GdiPathState;
 
-typedef struct tagGdiPath
-{
-   GdiPathState state;
-   POINT      *pPoints;
-   BYTE         *pFlags;
-   int          numEntriesUsed, numEntriesAllocated;
-   BOOL       newStroke;
-} GdiPath;
 
-typedef struct _WIN_DC_INFO
-{
-  int  flags;
-  HRGN  hClipRgn;     /* Clip region (may be 0) */
-  HRGN  hVisRgn;      /* Visible region (must never be 0) */
-  HRGN  hGCClipRgn;   /* GC clip region (ClipRgn AND VisRgn) */
-  HBITMAP  hBitmap;
-  HBITMAP  hFirstBitmap; /* Bitmap selected at creation of the DC */
 
-/* #if 0 */
-    HANDLE      hDevice;
-    HPALETTE    hPalette;
-
-    GdiPath       path;
-/* #endif */
-
-  RECT   totalExtent;
-  BYTE   bitsPerPixel;
-
-  INT  DCOrgX;            /* DC origin */
-  INT  DCOrgY;
-  INT  ArcDirection;
-
-  XFORM  xformWorld2Wnd;    /* World-to-window transformation */
-  XFORM  xformWorld2Vport;  /* World-to-viewport transformation */
-  XFORM  xformVport2World;  /* Inverse of the above transformation */
-  BOOL  vport2WorldValid;  /* Is xformVport2World valid? */
-} WIN_DC_INFO;
 
   /* DC flags */
 #define DC_MEMORY     0x0001   /* It is a memory DC */
@@ -57,45 +16,7 @@ typedef struct _WIN_DC_INFO
 
 #define  GDI_DC_TYPE  (1)
 
-typedef struct _DC
-{
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
 
-  DHPDEV      PDev;
-  INT         DC_Type;
-  INT         DC_Flags;
-  PDC_ATTR    pDc_Attr;
-  DC_ATTR     Dc_Attr;
-
-  HDC         hSelf;
-  HDC         hNext;
-  HSURF       FillPatternSurfaces[HS_DDI_MAX];
-  PGDIINFO    GDIInfo;
-  PDEVINFO    DevInfo;
-  HDEV        GDIDevice;
-
-  DRIVER_FUNCTIONS  DriverFunctions;
-  UNICODE_STRING    DriverName;
-  HANDLE      DeviceDriver;
-
-  CLIPOBJ     *CombinedClip;
-
-  XLATEOBJ    *XlateBrush;
-  XLATEOBJ    *XlatePen;
-
-  INT         saveLevel;
-  BOOL        IsIC;
-
-  HPALETTE    PalIndexed;
-
-  WIN_DC_INFO w;
-  
-  HANDLE      hFile;  
-  LPENHMETAHEADER emh;
-} DC, *PDC;
 
 typedef struct _GDIPOINTER /* should stay private to ENG */
 {
