@@ -139,7 +139,7 @@ BOOL PrepareService(LPCTSTR ServiceName)
 	return TRUE;
 }
 
-BOOL FreeServices()
+VOID FreeServices()
 {
 	while (FirstService)
 	{
@@ -151,11 +151,12 @@ BOOL FreeServices()
 		HeapFree(GetProcessHeap(), 0, Service->Name);
 		HeapFree(GetProcessHeap(), 0, Service);
 	}
-
-	return TRUE;
 }
 
-BOOL LoadServiceCategory(LPCTSTR ServiceCategory)
+/*
+ * Returns the number of services successfully loaded from the category
+ */
+DWORD LoadServiceCategory(LPCTSTR ServiceCategory)
 {
 	HKEY hServicesKey;
 	DWORD KeyType;
@@ -163,19 +164,20 @@ BOOL LoadServiceCategory(LPCTSTR ServiceCategory)
 	TCHAR Buffer[REG_MAX_DATA_SIZE];
 	LPCTSTR ServiceName;
 	DWORD BufferIndex = 0;
+	DWORD NrOfServices = 0;
 
 	/* Get all the services in this category */
 	if (ERROR_SUCCESS != RegOpenKeyEx(HKEY_LOCAL_MACHINE, SVCHOST_REG_KEY, 0, KEY_READ, &hServicesKey))
 	{
 		DPRINT1("Could not open service category: %s\n", ServiceCategory);
-		return FALSE;
+		return 0;
 	}
 
 	if (ERROR_SUCCESS != RegQueryValueEx(hServicesKey, ServiceCategory, NULL, &KeyType, (LPBYTE)Buffer, &BufferSize))
 	{
 		DPRINT1("Could not open service category (2): %s\n", ServiceCategory);
 		RegCloseKey(hServicesKey);
-		return FALSE;
+		return 0;
 	}
 
 	/* Clean up */
@@ -191,18 +193,23 @@ BOOL LoadServiceCategory(LPCTSTR ServiceCategory)
 		if (0 == Length)
 			break;
 
-		PrepareService(ServiceName);
+		if (TRUE == PrepareService(ServiceName))
+			++NrOfServices;
 
 		BufferIndex += (Length + 1) * sizeof(TCHAR);
 
 		ServiceName = &Buffer[BufferIndex];
 	}
 
-	return TRUE;
+	return NrOfServices;
 }
 
 int _tmain (int argc, LPTSTR argv [])
 {
+	DWORD NrOfServices;
+	LPSERVICE_TABLE_ENTRY ServiceTable;
+	DWORD i;
+
 	if (argc < 3)
 	{
 		/* MS svchost.exe doesn't seem to print help, should we? */
@@ -215,7 +222,32 @@ int _tmain (int argc, LPTSTR argv [])
 		return 1;
 	}
 
-	LoadServiceCategory(argv[2]);
+	NrOfServices = LoadServiceCategory(argv[2]);
+
+	if (0 == NrOfServices)
+		return 1;
+
+	ServiceTable = HeapAlloc(GetProcessHeap(), 0, sizeof(SERVICE_TABLE_ENTRY) * (NrOfServices + 1));
+
+	if (NULL != ServiceTable)
+	{
+		PSERVICE Service = FirstService;
+
+		for (i = 0; i < NrOfServices; ++i)
+		{
+			ServiceTable[i].lpServiceName = Service->Name;
+			ServiceTable[i].lpServiceProc = Service->ServiceMainFunc;
+			Service = Service->Next;
+		}
+
+		StartServiceCtrlDispatcher(ServiceTable);
+
+		HeapFree(GetProcessHeap(), 0, ServiceTable);
+	}
+	else
+	{
+		DPRINT1("Not enough memory for the service table, trying to allocate %u bytes\n", sizeof(SERVICE_TABLE_ENTRY) * (NrOfServices + 1));
+	}
 
 	FreeServices();
 
