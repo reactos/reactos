@@ -36,6 +36,7 @@ base\applications\charmap\charmap.exe                   1
 base\applications\cmdutils\dbgprint\dbgprint.exe        1
 base\applications\cmdutils\find\find.exe                1
 base\applications\cmdutils\more\more.exe                1
+base\applications\cmdutils\xcopy\xcopy.exe              1
 base\applications\control\control.exe                   1
 base\applications\mscutils\devmgmt\devmgmt.exe          1
 base\applications\games\solitaire\sol.exe               1
@@ -480,6 +481,7 @@ modules\rosapps\net\ncftp\ncftp.exe                 1   optional
 modules\rosapps\net\netreg\netreg.exe               1   optional
 modules\rosapps\net\niclist\niclist.exe             1   optional
 modules\rosapps\notevil\notevil.exe                 1   optional
+modules\rosapps\magnify\magnify.exe                 1   optional
 modules\rosapps\packmgr\cmd-line\rosget.exe         1   optional
 modules\rosapps\packmgr\gui\packmgr.exe             1   optional
 modules\rosapps\packmgr\lib\package.dll             1   optional
