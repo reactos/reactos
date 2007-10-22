@@ -1,7 +1,7 @@
 #ifndef _WIN32K_DIB_H
 #define _WIN32K_DIB_H
 
-#include <reactos/win32k/win32kdc.h>
+#include "dc.h"
 
 INT FASTCALL
 DIB_BitmapInfoSize (const BITMAPINFO * info, WORD coloruse);
