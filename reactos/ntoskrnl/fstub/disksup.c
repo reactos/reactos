@@ -481,7 +481,7 @@ xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
             NULL);
 
         Status = ZwOpenFile(&FileHandle,
-            FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+            FILE_READ_DATA | SYNCHRONIZE,
             &ObjectAttributes,
             &StatusBlock,
             FILE_SHARE_READ,

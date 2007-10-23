@@ -404,9 +404,6 @@ IopParseDevice(IN PVOID ParseObject,
 
     /* FIXME: Small hack still exists, have to check why...
      * This is triggered multiple times by usetup and then once per boot.
-     * TMN: NOTE: It might have been fixed now, by changing the requested
-     * openmode in xHalIoAssignDriveLetters from FILE_READ_DATA to
-     * FILE_READ_ATTRIBUTES. If verified, this hack should be removed.
      */
     if (!(DirectOpen) &&
         !(RemainingName->Length) &&
