@@ -182,7 +182,10 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
                          IN ULONG Amount)
 {
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     INT PoolIndex;
+#endif
+
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
@@ -220,7 +223,10 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN POOL_TYPE PoolType,
                   IN ULONG_PTR Amount)
 {
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
     INT PoolIndex;
+#endif
+
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
