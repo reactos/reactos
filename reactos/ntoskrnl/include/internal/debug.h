@@ -55,41 +55,6 @@
 
 #ifdef DBG
 
-#ifndef __USE_W32API
-/* Assert only on "checked" version */
-#ifndef NASSERT
-#ifdef CONFIG_SMP
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber()), DbgBreakPoint(); }
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d for CPU%d\n", __FILE__,__LINE__, KeGetCurrentProcessorNumber()), DbgBreakPoint(); }
-#else
-#define assert(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
-#define ASSERT(x) if (!(x)) {DbgPrint("Assertion "#x" failed at %s:%d\n", __FILE__,__LINE__); DbgBreakPoint(); }
-#endif
-
-#define assertmsg(_c_, _m_) \
-  if (!(_c_)) { \
-      DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
-      DbgPrint _m_ ; \
-      KeBugCheck(0); \
-  }
-
-#define ASSERTMSG(_c_, _m_) \
-  if (!(_c_)) { \
-      DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
-      DbgPrint _m_ ; \
-      KeBugCheck(0); \
-  }
-
-#else
-
-#define assert(x)
-#define ASSERT(x)
-#define assertmsg(_c_, _m_)
-#define ASSERTMSG(_c_, _m_)
-
-#endif
-#endif /* !__USE_W32API */
-
 /* Print if using a "checked" version */
 #ifdef __GNUC__ /* using GNU C/C99 macro ellipsis */
 #define CPRINT(args...) do { DbgPrint("(%s:%d) ",__FILE__,__LINE__); DbgPrint(args); } while(0)
@@ -112,12 +77,6 @@
 #define CPRINT
 #define DPRINT1
 #endif
-#ifndef __USE_W32API
-#define assert(x)
-#define ASSERT(x)
-#define assertmsg(_c_, _m_)
-#define ASSERTMSG(_c_, _m_)
-#endif /* !__USE_W32API */
 
 #endif /* DBG */
 
