@@ -4,7 +4,6 @@
 	<importlibrary definition="videoprt.def" />
 	<include base="videoprt">.</include>
 	<include base="ntoskrnl">include</include>
-	<define name="__USE_W32API" />
 	<define name="_VIDEOPORT_" />
 	<library>ntoskrnl</library>
 	<library>hal</library>

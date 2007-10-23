@@ -6,7 +6,6 @@
 	<importlibrary definition="sb16_nt4.def" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<define name="__USE_W32API" />
 	<file>main.c</file>
 	<file>control.c</file>
 	<file>interrupt.c</file>

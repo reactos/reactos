@@ -5,7 +5,6 @@
 	<include base="eventlog_server">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>advapi32</library>

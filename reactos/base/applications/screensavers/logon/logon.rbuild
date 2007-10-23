@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="logon" type="win32scr" installbase="system32" installname="logon.scr">
 	<include base="logon">.</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 

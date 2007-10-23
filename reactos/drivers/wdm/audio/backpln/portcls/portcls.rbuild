@@ -10,7 +10,6 @@
 
 	<importlibrary definition="portcls.def" />
 
-	<define name="__USE_W32API" />
 	<define name="_NTDDK_" />
 	<define name="PC_NO_IMPORTS" />
 

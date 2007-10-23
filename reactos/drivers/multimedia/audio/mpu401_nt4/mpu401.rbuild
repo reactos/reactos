@@ -8,7 +8,6 @@
 
 <module name="mpu401" type="kernelmodedriver">
 	<include base="mpu401_nt4">.</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>mpu401.c</file>

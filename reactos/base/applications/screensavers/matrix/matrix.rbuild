@@ -3,7 +3,6 @@
 <module name="matrix" type="win32scr" installbase="system32" installname="matrix2.scr" allowwarnings="true">
 	<include base="matrix">.</include>
 
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="UNICODE" />

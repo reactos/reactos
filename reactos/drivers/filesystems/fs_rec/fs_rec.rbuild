@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="fs_rec" type="kernelmodedriver" installbase="system32/drivers" installname="fs_rec.sys">
 	<include base="fs_rec">.</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>blockdev.c</file>

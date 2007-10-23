@@ -14,7 +14,6 @@
 	<include base="mpu401">..</include>
 	<library>ntoskrnl</library>
 	<library>portcls</library>
-	<define name="__USE_W32API" />
 	<!--file>mpu401.rc</file-->
 	<file>adapter.cpp</file>
 </module>

@@ -3,7 +3,6 @@
 <module name="acpi" type="kernelmodedriver" installbase="system32/drivers" installname="acpi.sys" allowwarnings="true">
 	<include base="acpi">include</include>
 	<include base="acpi">ospm/include</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="dispatcher">

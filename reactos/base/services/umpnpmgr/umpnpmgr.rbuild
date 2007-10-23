@@ -4,7 +4,6 @@
 	<include base="umpnpmgr">.</include>
 	<include base="pnp_server">.</include>
 	<include base="pnp_client">.</include>
-	<define name="__USE_W32API" />
 	<define name="WINVER">0x600</define>
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>

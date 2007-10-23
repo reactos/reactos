@@ -3,7 +3,6 @@
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="i8042prt">.</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>i8042prt.c</file>

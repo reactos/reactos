@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="ntvdm" type="win32cui" installbase="system32" installname="ntvdm.exe">
 	<include base="ntvdm">.</include>
-	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>kernel32</library>

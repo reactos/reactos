@@ -6,7 +6,6 @@
 	<include base="drmk">../include</include>
 	<importlibrary definition="drmk.def" />
 	<library>ntoskrnl</library>
-	<define name="__USE_W32API" />
 	<define name="BUILDING_DRMK" />
 	<file>drmk.rc</file>
 	<file>stubs.cpp</file>

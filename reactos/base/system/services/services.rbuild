@@ -4,7 +4,6 @@
 	<include base="services">.</include>
 	<include base="scm_server">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<library>scm_server</library>

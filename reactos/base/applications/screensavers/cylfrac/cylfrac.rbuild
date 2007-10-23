@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="cylfrac" type="win32scr" installbase="system32" installname="cylfrac.scr">
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 

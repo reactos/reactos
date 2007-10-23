@@ -5,7 +5,6 @@
 	<include base="tcpip">include</include>
 	<include base="oskittcp">include</include>
 	<define name="NDIS40" />
-	<define name="__USE_W32API" />
 	<define name="_NTDRIVER_" />
 	<library>ip</library>
 	<library>oskittcp</library>

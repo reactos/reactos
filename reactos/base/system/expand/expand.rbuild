@@ -3,7 +3,6 @@
 <module name="expand" type="win32cui" installbase="system32" installname="expand.exe" >
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="expand">.</include>
-	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>lz32</library>

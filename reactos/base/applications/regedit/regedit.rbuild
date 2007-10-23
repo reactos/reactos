@@ -3,7 +3,6 @@
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 <module name="regedit" type="win32gui" installname="regedit.exe">
 	<include base="regedit">.</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<define name="_WIN32_IE">0x0501</define>

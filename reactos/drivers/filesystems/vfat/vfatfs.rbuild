@@ -3,7 +3,6 @@
 <module name="vfatfs" type="kernelmodedriver" installbase="system32/drivers" installname="vfatfs.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="vfatfs">.</include>
-	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>

@@ -4,7 +4,6 @@
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<define name="HAVE_CONFIG_H" />
-	<define name="__USE_W32API" />
 	<define name="WIN32" />
 	<define name="_WINDOWS" />
 	<define name="_MBCS" />

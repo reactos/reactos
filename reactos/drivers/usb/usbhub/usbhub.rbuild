@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="usbhub" type="kernelmodedriver" installbase="system32/drivers" installname="usbhub.sys">
-	<define name="__USE_W32API" />
 	<include>../miniport/linux</include>
 	<library>sys_base</library>
 	<library>ntoskrnl</library>

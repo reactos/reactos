@@ -3,7 +3,6 @@
 <module name="diskdump" type="kernelmodedriver" installbase="system32/drivers" installname="diskdump.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="diskdump.def" />
-	<define name="__USE_W32API" />
 	<include base="ReactOS">include/reactos/drivers</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>

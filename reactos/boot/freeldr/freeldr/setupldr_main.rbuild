@@ -3,7 +3,6 @@
 <module name="setupldr_main" type="objectlibrary">
 	<include base="setupldr_main">include</include>
 	<include base="ntoskrnl">include</include>
-	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
 	<compilerflag>-ffreestanding</compilerflag>
 	<compilerflag>-fno-builtin</compilerflag>

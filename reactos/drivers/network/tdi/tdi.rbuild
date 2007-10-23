@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="tdi" type="kernelmodedriver" installbase="system32/drivers" installname="tdi.sys">
 	<importlibrary definition="misc/tdi.def"></importlibrary>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<directory name="cte">

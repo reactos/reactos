@@ -6,7 +6,6 @@
 	<include base="ks">../include</include>
 	<importlibrary definition="ks.def" />
 	<library>ntoskrnl</library>
-	<define name="__USE_W32API" />
 	<define name="BUILDING_KS" />
 	<define name="_NTDDK_" />
 	<define name="_COMDDK_" />

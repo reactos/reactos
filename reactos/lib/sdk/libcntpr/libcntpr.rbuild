@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libcntpr" type="staticlibrary">
-	<define name="__USE_W32API" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="NO_RTL_INLINES" />
 	<define name="_NTSYSTEM_" />

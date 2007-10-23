@@ -4,7 +4,6 @@
 <module name="explorer" type="win32gui" installname="explorer.exe" allowwarnings="true">
 	<linkerflag>-fexceptions</linkerflag>
 	<include base="explorer">.</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="WIN32" />
 	<define name="_ROS_" />

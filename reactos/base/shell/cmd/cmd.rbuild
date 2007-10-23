@@ -4,7 +4,6 @@
 <module name="cmd_base" type="objectlibrary">
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd_base">.</include>
-	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="_DEBUG_MEM" />
@@ -72,7 +71,6 @@
 <module name="cmd" type="win32cui" installbase="system32" installname="cmd.exe" unicode="yes">
 	<include base="ReactOS">include/reactos/wine</include>
 	<include base="cmd">.</include>
-	<define name="__USE_W32API" />
 	<define name="ANONYMOUSUNIONS" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>cmd_base</library>

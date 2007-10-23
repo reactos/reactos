@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="notepad" type="win32gui" installbase="system32" installname="notepad.exe" unicode="yes">
 	<include base="notepad">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<library>kernel32</library>
 	<library>user32</library>

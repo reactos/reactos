@@ -4,7 +4,6 @@
 	<importlibrary definition="winsrv.def" />
 	<include base="winsrv">.</include>
 	<include base="csr">include</include>
-	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>csrsrv</library>
 	<library>kernel32</library>

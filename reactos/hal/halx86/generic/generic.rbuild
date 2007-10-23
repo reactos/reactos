@@ -5,7 +5,6 @@
 		<include base="hal_generic">../include</include>
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />
-		<define name="__USE_W32API" />
 		<define name="_NTHAL_" />
 		<file>beep.c</file>
 		<file>bus.c</file>
@@ -27,7 +26,6 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
-		<define name="__USE_W32API" />
 		<file>irq.S</file>
 		<file>halinit.c</file>
 		<file>processor.c</file>
@@ -38,7 +36,6 @@
 		<include base="ntoskrnl">include</include>
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
-		<define name="__USE_W32API" />
 		<file>display.c</file>
 	</module>
 </group>

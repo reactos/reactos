@@ -3,7 +3,6 @@
 <module name="cdfs" type="kernelmodedriver" installbase="system32/drivers" installname="cdfs.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="cdfs">.</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>cdfs.c</file>

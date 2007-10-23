@@ -6,7 +6,6 @@
 	<define name="NDIS_MINIPORT_DRIVER" />
 	<define name="NDIS_LEGACY_MINIPORT" />
 	<define name="NDIS51_MINIPORT" />
-	<define name="__USE_W32API" />
 	<library>ndis</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>

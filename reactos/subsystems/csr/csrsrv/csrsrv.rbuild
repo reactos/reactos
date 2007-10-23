@@ -5,7 +5,6 @@
 	<include base="csrsrv">.</include>
 	<include base="csr">.</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>pseh</library>
 	<library>intrlck</library>

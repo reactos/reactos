@@ -3,7 +3,6 @@
 <module name="regsvr32" type="win32gui" installbase="system32" installname="regsvr32.exe">
 	<include base="regsvr32">.</include>
 	<define name="UNICODE" />
-	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>shell32</library>

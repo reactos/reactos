@@ -3,7 +3,6 @@
 <module name="afd" type="kernelmodedriver" installbase="system32/drivers" installname="afd.sys">
 	<include base="afd">include</include>
 	<include base="ReactOS">include/reactos/drivers</include>
-	<define name="__USE_W32API" />
 	<library>pseh</library>
 	<library>ntoskrnl</library>
 	<library>hal</library>

@@ -5,7 +5,6 @@
 	<include base="freeldr_base">cache</include>
 	<include base="cmlib">.</include>
 	<include base="ntoskrnl">include</include>
-	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
 	<define name="_NTSYSTEM_" />
 	<compilerflag>-ffreestanding</compilerflag>

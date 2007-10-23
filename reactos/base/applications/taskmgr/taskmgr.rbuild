@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="taskmgr" type="win32gui" installbase="system32" installname="taskmgr.exe">
 	<include base="taskmgr">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 	<define name="UNICODE" />

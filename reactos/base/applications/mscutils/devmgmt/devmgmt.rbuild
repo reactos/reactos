@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="devmgmt" type="win32gui" installbase="system32" installname="devmgmt.exe" unicode="yes">
 <include base="devmgmt">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>ntdll</library>

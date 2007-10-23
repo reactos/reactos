@@ -6,7 +6,6 @@
 	<include base="halppc_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
 	<library>halppc_generic</library>
 	<library>ntoskrnl</library>

@@ -6,7 +6,6 @@
 	<importlibrary definition="sb16_ks.def" />
 	<library>ntoskrnl</library>
 	<library>portcls</library>
-	<define name="__USE_W32API" />
 	<file>stdunk.cpp</file>
 	<file>adapter.cpp</file>
 	<file>main.cpp</file>

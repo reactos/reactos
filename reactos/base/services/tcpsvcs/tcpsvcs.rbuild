@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="tcpsvcs" type="win32cui" installbase="system32" installname="tcpsvcs.exe">
 	<include base="arp">.</include>
-	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>iphlpapi</library>
 	<library>ws2_32</library>

@@ -4,7 +4,6 @@
 	<importlibrary definition="wshtcpip.def"></importlibrary>
 	<include base="wshtcpip">.</include>
 	<define name="UNICODE" />
-	<define name="__USE_W32API" />
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>ws2_32</library>

@@ -8,7 +8,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="CONFIG_SMP" />
 	<define name="_NTHAL_" />
-	<define name="__USE_W32API" />
 	<library>hal_generic</library>
 	<library>hal_generic_pc</library>
 	<library>ntoskrnl</library>

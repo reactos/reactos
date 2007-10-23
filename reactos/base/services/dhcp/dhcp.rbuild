@@ -3,7 +3,6 @@
 <module name="dhcp" type="win32cui" installbase="system32" installname="dhcp.exe" allowwarnings="true">
 	<include base="dhcp">.</include>
 	<include base="dhcp">include</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0501</define>
 	<library>ntdll</library>
 	<library>kernel32</library>

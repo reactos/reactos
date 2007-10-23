@@ -6,7 +6,6 @@
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="_NTHAL_" />
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<library>hal_generic</library>

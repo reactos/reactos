@@ -3,7 +3,6 @@
 <module name="ntfs" type="kernelmodedriver" installbase="system32/drivers" installname="ntfs.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<include base="ntfs">.</include>
-	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>attrib.c</file>

@@ -8,7 +8,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UP" />
 	<define name="_NTHAL_" />
-	<define name="__USE_W32API" />
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
 	<library>ntoskrnl</library>

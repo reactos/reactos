@@ -4,7 +4,6 @@
 	<importlibrary definition="unbzip2.def" />
 	<define name="BZ_NO_STDIO" />
 	<define name="BZ_DECOMPRESS_ONLY" />
-	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>
 	<library>hal</library>

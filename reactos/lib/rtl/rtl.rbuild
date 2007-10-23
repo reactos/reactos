@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../tools/rbuild/project.dtd">
 <module name="rtl" type="staticlibrary">
-	<define name="__USE_W32API" />
 	<define name="_NTOSKRNL_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<define name="NO_RTL_INLINES" />
