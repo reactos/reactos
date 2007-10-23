@@ -58,6 +58,7 @@ typedef struct
     UINT           ecount;
     UINT           iIdSHEFirst;
     UINT           iIdSHELast;
+    SFGAOF         rfg;
 } ItemCmImpl;
 
 UINT
@@ -98,7 +99,15 @@ IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl
 	cm->pidl = ILClone(pidl);
 	cm->pSFParent = pSFParent;
 
-	if(pSFParent) IShellFolder_AddRef(pSFParent);
+	if(pSFParent)
+	{
+	    HRESULT hr;
+	    IShellFolder_AddRef(pSFParent);
+	    cm->rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET;
+	    hr = IShellFolder_GetAttributesOf(pSFParent, cidl, apidl, &cm->rfg);
+	    if (!SUCCEEDED(hr))
+	        cm->rfg = 0; /* No action available */
+	}
 
 	cm->apidl = _ILCopyaPidl(apidl, cidl);
 	cm->cidl = cidl;
@@ -369,31 +378,45 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  if(!(uFlags & CMF_EXPLORE))
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
-	  if(This->bAllValues)
+	  if (This->rfg & SFGAO_BROWSABLE)
 	  {
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	  }
-	  else
-	  {
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	      if(This->bAllValues)
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
+	      }
+	      else
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	      }
 	  }
 
 	  SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, "&Copy", MFS_ENABLED);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, "&Cut", MFS_ENABLED);
+	  if (This->rfg & (SFGAO_CANCOPY | SFGAO_CANMOVE))
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      if (This->rfg & SFGAO_CANCOPY)
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, "&Copy", MFS_ENABLED);
+	      if (This->rfg & SFGAO_CANMOVE)
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, "&Cut", MFS_ENABLED);
+	  }
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
+	  if (This->rfg & SFGAO_CANDELETE)
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
+	  }
 
-	  if(uFlags & CMF_CANRENAME)
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
+	  if ((uFlags & CMF_CANRENAME) && (This->rfg & SFGAO_CANRENAME))
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
+	  if (This->rfg & SFGAO_HASPROPSHEET)
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
+	  }
 
       lastindex = FCIDM_SHVIEWLAST;
 	}
