@@ -11,7 +11,7 @@
 
 
 #include <dxg_int.h>
-
+#include "dxg_driver.h"
 
 ULONG gcMaxDdHmgr = 0;
 ULONG gcSizeDdHmgr = 0; 
@@ -22,13 +22,7 @@ VOID *gpDummyPage = NULL;
 PEPROCESS gpepSession = NULL;
 
 PDRVFN gpEngFuncs;
-
 const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
-DRVFN gaDxgFuncs [] = 
-{
-    {0, (PFN) NULL}
-};
-
 
 
 
