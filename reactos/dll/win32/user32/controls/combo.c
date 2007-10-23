@@ -53,6 +53,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(combo);
 #define CB_OWNERDRAWN( lphc ) ((lphc)->dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE))
 #define CB_HASSTRINGS( lphc ) ((lphc)->dwStyle & CBS_HASSTRINGS)
 #define CB_HWND( lphc )       ((lphc)->self)
+// ReactOS already define in include/controls.h We have it here as a sync note.
+//#define CB_GETTYPE( lphc )    ((lphc)->dwStyle & (CBS_DROPDOWNLIST))
 
 #define ISWIN31 (LOWORD(GetVersion()) == 0x0a03)
 
@@ -199,8 +201,9 @@ static LRESULT COMBO_NCDestroy( LPHEADCOMBO lphc )
  * The height of the text area is set in two ways.
  * It can be set explicitly through a combobox message or through a
  * WM_MEASUREITEM callback.
- * If this is not the case, the height is set to 13 dialog units.
+ * If this is not the case, the height is set to font height + 4px
  * This height was determined through experimentation.
+ * CBCalcPlacement will add 2*COMBO_YBORDERSIZE pixels for the border
  */
 static INT CBGetTextAreaHeight(
   HWND        hwnd,
@@ -231,14 +234,7 @@ static INT CBGetTextAreaHeight(
 
     ReleaseDC(hwnd, hDC);
 
-    iTextItemHeight = ((13 * baseUnitY) / 8);
-
-    /*
-     * This "formula" calculates the height of the complete control.
-     * To calculate the height of the text area, we have to remove the
-     * borders.
-     */
-    iTextItemHeight -= 2*COMBO_YBORDERSIZE();
+    iTextItemHeight = baseUnitY + 4;
   }
 
   /*
@@ -990,8 +986,7 @@ static INT CBUpdateLBox( LPHEADCOMBO lphc, BOOL bSelect )
 
    if( pText )
    {
-       if( length ) GetWindowTextW( lphc->hWndEdit, pText, length + 1);
-       else pText[0] = '\0';
+       GetWindowTextW( lphc->hWndEdit, pText, length + 1);
        idx = SendMessageW(lphc->hWndLBox, LB_FINDSTRING,
 			     (WPARAM)(-1), (LPARAM)pText );
        HeapFree( GetProcessHeap(), 0, pText );
@@ -1049,6 +1044,8 @@ static void CBUpdateEdit( LPHEADCOMBO lphc , INT index )
  */
 static void CBDropDown( LPHEADCOMBO lphc )
 {
+   HMONITOR monitor;
+   MONITORINFO mon_info;
    RECT rect,r;
    int nItems = 0;
    int nDroppedHeight;
@@ -1120,6 +1117,10 @@ static void CBDropDown( LPHEADCOMBO lphc )
    }
 
    /*If height of dropped rectangle gets beyond a screen size it should go up, otherwise down.*/
+   monitor = MonitorFromRect( &rect, MONITOR_DEFAULTTOPRIMARY );
+   mon_info.cbSize = sizeof(mon_info);
+   GetMonitorInfoW( monitor, &mon_info );
+
    if( (rect.bottom + nDroppedHeight) >= GetSystemMetrics( SM_CYSCREEN ) )
       rect.bottom = rect.top - nDroppedHeight;
 
@@ -1348,6 +1349,8 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
 
                TRACE("[%p]: lbox selection change [%x]\n", lphc->self, lphc->wState );
 
+                CB_NOTIFY( lphc, CBN_SELCHANGE );
+
 		if( HIWORD(wParam) == LBN_SELCHANGE)
 		{
 		   if( lphc->wState & CBF_EDIT )
@@ -1370,9 +1373,7 @@ static LRESULT COMBO_Command( LPHEADCOMBO lphc, WPARAM wParam, HWND hWnd )
                 }
 		else lphc->wState &= ~CBF_NOROLLUP;
 
-		CB_NOTIFY( lphc, CBN_SELCHANGE );
-
-		/* fall through */
+                break;
 
 	   case LBN_SETFOCUS:
 	   case LBN_KILLFOCUS:
@@ -1639,7 +1640,7 @@ static LRESULT COMBO_SetItemHeight( LPHEADCOMBO lphc, INT index, INT height )
    {
        if( height < 32768 )
        {
-           lphc->editHeight = height;
+           lphc->editHeight = height + 2;  /* Is the 2 for 2*EDIT_CONTROL_PADDING? */
 
 	 /*
 	  * Redo the layout of the control.
@@ -2081,11 +2082,13 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                         string = strdupA((LPSTR)lParam);
                         CharLowerA(string);
                     }
+
                     else if( lphc->dwStyle & CBS_UPPERCASE )
                     {
                         string = strdupA((LPSTR)lParam);
                         CharUpperA(string);
                     }
+
                     ret = SendMessageA(lphc->hWndLBox, LB_ADDSTRING, 0, string ? (LPARAM)string : lParam);
                     HeapFree(GetProcessHeap(), 0, string);
                     return ret;
@@ -2371,5 +2374,6 @@ static LRESULT WINAPI ComboWndProcW( HWND hwnd, UINT message, WPARAM wParam, LPA
 BOOL WINAPI GetComboBoxInfo(HWND hwndCombo,      /* [in] handle to combo box */
 			    PCOMBOBOXINFO pcbi   /* [in/out] combo box information */)
 {
+    TRACE("(%p, %p)\n", hwndCombo, pcbi);
     return SendMessageW(hwndCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
 }
