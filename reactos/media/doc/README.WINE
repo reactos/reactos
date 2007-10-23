@@ -123,7 +123,7 @@ msvcrt -
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced at 20060621
   reactos/dll/win32/user32/controls/combo.c     # Synced at 20060904
-  reactos/dll/win32/user32/controls/edit.c      # Synced at 20060710
+  reactos/dll/win32/user32/controls/edit.c      # Synced at 20071022
   reactos/dll/win32/user32/controls/icontitle.c # Synced at 20060617
   reactos/dll/win32/user32/controls/listbox.c   # Synced at 20060616
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
