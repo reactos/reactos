@@ -1241,6 +1241,8 @@ UserUnregisterClass(IN PUNICODE_STRING ClassName,
         return FALSE;
     }
 
+    TRACE("UserUnregisterClass(%wZ)\n", ClassName);
+
     /* NOTE: Accessing the buffer in ClassName may raise an exception! */
     ClassAtom = IntGetClassAtom(ClassName,
                                 hInstance,
@@ -1405,6 +1407,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
     {
         PULONG_PTR Data;
 
+        TRACE("GetClassLong(%d)\n", Index);
         if (Index + sizeof(ULONG_PTR) < Index ||
             Index + sizeof(ULONG_PTR) > Class->ClsExtra)
         {
@@ -1417,6 +1420,8 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
         /* FIXME - Data might be a unaligned pointer! Might be a problem on
                    certain architectures, maybe using RtlCopyMemory is a
                    better choice for those architectures! */
+
+        TRACE("Result: %x\n", Ret);
         return *Data;
     }
 
@@ -1604,6 +1609,8 @@ UserSetClassLongPtr(IN PWINDOWCLASS Class,
     if (Index >= 0)
     {
         PULONG_PTR Data;
+
+        TRACE("SetClassLong(%d, %x)\n", Index, NewLong);
 
         if (Index + sizeof(ULONG_PTR) < Index ||
             Index + sizeof(ULONG_PTR) > Class->ClsExtra)
