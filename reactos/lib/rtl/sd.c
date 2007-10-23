@@ -169,25 +169,25 @@ RtlCopySecurityDescriptor(IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
     destSD->Group = srcSD->Group;
     RtlCopySid(GroupLength, (LPBYTE)destSD + (DWORD_PTR)destSD->Group, Group);
 
-	if (srcSD->Control & SE_DACL_PRESENT)
+    if (srcSD->Control & SE_DACL_PRESENT)
     {
-	  destSD->Dacl = srcSD->Dacl;
+      destSD->Dacl = srcSD->Dacl;
 
       if(srcSD->Dacl != NULL && RtlValidAcl(srcSD->Dacl))
-	  {
+      {
         RtlCopyMemory(((LPBYTE)destSD + (DWORD_PTR)destSD->Dacl), Dacl, Dacl->AclSize);
-	  }
+      }
     }
 
-	if (srcSD->Control & SE_SACL_PRESENT)
+    if (srcSD->Control & SE_SACL_PRESENT)
     {
       destSD->Sacl = srcSD->Sacl;
 
       if(srcSD->Sacl != NULL && RtlValidAcl(srcSD->Sacl))
-	  {
+      {
         RtlCopyMemory(((LPBYTE)destSD + (DWORD_PTR)destSD->Sacl), Sacl, Sacl->AclSize);
-	  }
-	}
+      }
+    }
   }
   else
   {
@@ -199,20 +199,20 @@ RtlCopySecurityDescriptor(IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
       destSD->Dacl = RtlAllocateHeap(RtlGetProcessHeap(), 0, Dacl->AclSize);
 
       if(srcSD->Dacl != NULL && RtlValidAcl(srcSD->Dacl))
-	  {
+      {
         RtlCopyMemory(destSD->Dacl, Dacl, Dacl->AclSize);
-	  }
-	}
+      }
+    }
 
     if (srcSD->Control & SE_SACL_PRESENT)
     {
       destSD->Sacl = RtlAllocateHeap(RtlGetProcessHeap(), 0, Sacl->AclSize);
 
       if(srcSD->Sacl != NULL && RtlValidAcl(srcSD->Sacl))
-	  {
+      {
         RtlCopyMemory(destSD->Sacl, Sacl, Sacl->AclSize);
-	  }
-	}
+      }
+    }
   }
 
   return STATUS_SUCCESS;
