@@ -2172,7 +2172,7 @@ typedef struct _VPB {
 #define FILE_DEVICE_SERENUM               0x00000037
 #define FILE_DEVICE_TERMSRV               0x00000038
 #define FILE_DEVICE_KSEC                  0x00000039
-#define FILE_DEVICE_FIPS		              0x0000003a
+#define FILE_DEVICE_FIPS                  0x0000003a
 
 typedef struct _DEVICE_OBJECT {
   CSHORT  Type;
@@ -4195,14 +4195,14 @@ typedef enum _POOL_TYPE {
   NonPagedPoolCacheAligned,
   PagedPoolCacheAligned,
   NonPagedPoolCacheAlignedMustS,
-	MaxPoolType,
-	NonPagedPoolSession = 32,
-	PagedPoolSession,
-	NonPagedPoolMustSucceedSession,
-	DontUseThisTypeSession,
-	NonPagedPoolCacheAlignedSession,
-	PagedPoolCacheAlignedSession,
-	NonPagedPoolCacheAlignedMustSSession
+  MaxPoolType,
+  NonPagedPoolSession = 32,
+  PagedPoolSession,
+  NonPagedPoolMustSucceedSession,
+  DontUseThisTypeSession,
+  NonPagedPoolCacheAlignedSession,
+  PagedPoolCacheAlignedSession,
+  NonPagedPoolCacheAlignedMustSSession
 } POOL_TYPE;
 
 #define POOL_COLD_ALLOCATION                256
@@ -8181,7 +8181,7 @@ IoIs32bitProcess(
  *   IN NTSTATUS  Status);
  */
 #define IoIsErrorUserInduced(Status) \
-	((BOOLEAN)(((Status) == STATUS_DEVICE_NOT_READY) || \
+   ((BOOLEAN)(((Status) == STATUS_DEVICE_NOT_READY) || \
    ((Status) == STATUS_IO_TIMEOUT) || \
    ((Status) == STATUS_MEDIA_WRITE_PROTECTED) || \
    ((Status) == STATUS_NO_MEDIA_IN_DEVICE) || \
@@ -8496,7 +8496,7 @@ IoReuseIrp(
     _CompletionRoutine != NULL : TRUE); \
   _IrpSp = IoGetNextIrpStackLocation(_Irp); \
   _IrpSp->CompletionRoutine = (PIO_COMPLETION_ROUTINE)(_CompletionRoutine); \
-	_IrpSp->Context = (_Context); \
+  _IrpSp->Context = (_Context); \
   _IrpSp->Control = 0; \
   if (_InvokeOnSuccess) _IrpSp->Control = SL_INVOKE_ON_SUCCESS; \
   if (_InvokeOnError) _IrpSp->Control |= SL_INVOKE_ON_ERROR; \
