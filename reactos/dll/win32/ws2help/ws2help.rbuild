@@ -2,7 +2,6 @@
 	<importlibrary definition="ws2help.def" />
 	<include base="ws2help">.</include>
 	<define name="UNICODE" />
-	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>kernel32</library>

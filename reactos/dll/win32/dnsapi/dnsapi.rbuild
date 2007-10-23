@@ -5,7 +5,6 @@
 	<include base="adns">adns_win32</include>
 	<define name="_DISABLE_TIDENTS" />
 	<define name="ADNS_JGAA_WIN32" />
-	<define name="__USE_W32API" />
 	<library>adns</library>
 	<library>ntdll</library>
 	<library>kernel32</library>

@@ -2,7 +2,6 @@
 	<importlibrary definition="wshirda.def" />
 	<include base="wshirda">.</include>
 	<define name="UNICODE" />
-	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>kernel32</library>

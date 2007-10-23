@@ -6,7 +6,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTDRIVER__" />
 	<define name="__NO_CTYPE_INLINES" />
-	<define name="__USE_W32API" />
 	<define name="FT2_BUILD_LIBRARY"  />
 	<if property="NSWPAT" value="0">
 		<define name="TT_CONFIG_OPTION_UNPATENTED_HINTING" />

@@ -1,7 +1,6 @@
 <module name="deskadp" type="win32dll" baseaddress="${BASEADDRESS_DESKADP}" installbase="system32" installname="deskadp.dll" unicode="yes">
 	<importlibrary definition="deskadp.spec.def" />
 	<include base="deskadp">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0500</define>
 	<define name="_WIN32_WINNT">0x0600</define>
 	<define name="WINVER">0x0600</define>

@@ -2,7 +2,6 @@
 	<importlibrary definition="smdll.def" />
 	<include base="smdll">.</include>
 	<include base="ReactOS">include/reactos/subsys</include>
-	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
 	<library>smlib</library>
 	<library>ntdll</library>

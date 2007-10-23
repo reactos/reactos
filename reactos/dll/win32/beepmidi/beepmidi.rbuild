@@ -1,7 +1,6 @@
 <module name="beepmidi" type="win32dll" installbase="system32" installname="beepmidi.dll">
 	<importlibrary definition="beepmidi.def" />
 	<include base="beepmidi">.</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<library>ntdll</library>

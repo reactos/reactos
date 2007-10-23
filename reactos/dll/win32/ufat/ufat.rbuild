@@ -2,7 +2,6 @@
 	<importlibrary definition="ufat.def" />
 	<include base="ufat">.</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0600</define>
 	<library>vfatlib</library>
 	<library>ntdll</library>

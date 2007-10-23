@@ -1,7 +1,6 @@
 <module name="twain_32" type="win32dll" baseaddress="${BASEADDRESS_TWAIN_32}" installbase="system32" installname="twain_32.dll" allowwarnings="true">
 	<importlibrary definition="twain_32.def" />
 	<include base="twain_32">.</include>
-	<define name="__USE_W32API" />
 	<define name="_DISABLE_TIDENTS" />
 	<library>wine</library>
 	<library>ntdll</library>

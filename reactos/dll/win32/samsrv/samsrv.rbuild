@@ -5,7 +5,6 @@
 	<include base="samsrv">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__USE_W32API" />
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
 	<library>ntdll</library>

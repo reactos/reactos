@@ -1,7 +1,6 @@
 <module name="serialui" type="win32dll" baseaddress="${BASEADDRESS_SERIALUI}" installbase="system32" installname="serialui.dll">
 	<importlibrary definition="serialui.def" />
 	<include base="serialui">.</include>
-	<define name="__USE_W32API" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
 	<library>kernel32</library>

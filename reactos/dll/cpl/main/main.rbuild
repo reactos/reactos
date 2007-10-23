@@ -3,7 +3,6 @@
 <module name="main" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_MAIN}" installbase="system32" installname="main.cpl" unicode="yes">
 	<importlibrary definition="main.def" />
 	<include base="main">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<library>kernel32</library>

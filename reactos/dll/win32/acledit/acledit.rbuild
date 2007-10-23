@@ -3,7 +3,6 @@
 	<include base="acledit">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__USE_W32API" />
 
 	<metadata description = "Access Control List Editor" />
 

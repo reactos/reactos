@@ -3,7 +3,6 @@
 <module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl" unicode="yes">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="WINVER">0x501</define>

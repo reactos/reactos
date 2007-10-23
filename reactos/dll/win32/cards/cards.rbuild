@@ -3,7 +3,6 @@
 	<include base="cards">.</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__USE_W32API" />
 
 	<!-- Possible definitions: CARDSTYLE_DEFAULT or CARDSTYLE_BAVARIAN -->
 	<define name="CARDSTYLE_DEFAULT" />

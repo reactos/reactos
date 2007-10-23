@@ -5,7 +5,6 @@
 	<include base="ReactOS">include/reactos/drivers</include>
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
-	<define name="__USE_W32API" />
 	<pch>msafd.h</pch>
 	<library>ntdll</library>
 	<library>kernel32</library>

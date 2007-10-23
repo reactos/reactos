@@ -5,7 +5,6 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="UNICODE" />
 	<define name="LE" />
-	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0500</define>
 	<library>wine</library>
 	<library>ntdll</library>

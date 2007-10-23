@@ -4,7 +4,6 @@
 	<importlibrary definition="kbdit.def" />
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="_WIN32_WINNT">0x0500</define>
 	<file>kbdit.c</file>
 	<file>kbdit.rc</file>

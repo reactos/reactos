@@ -3,7 +3,6 @@
 	<include base="psapi">.</include>
 	<include base="psapi">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<library>epsapi</library>
 	<library>pseh</library>
 	<library>ntdll</library>

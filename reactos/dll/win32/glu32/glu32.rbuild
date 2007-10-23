@@ -6,7 +6,6 @@
 	<include base="glu32">libnurbs/nurbtess</include>
 	<include base="glu32">libtess</include>
 	<include base="glu32">libutil</include>
-	<define name="__USE_W32API" />
 	<define name="RESOLVE_3D_TEXTURE_SUPPORT" />
 	<define name="BUILD_GL32" />
 	<define name="LIBRARYBUILD" />

@@ -2,7 +2,6 @@
 	<importlibrary definition="msvcrt20.def" />
 	<include base="msvcrt20">.</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="__REACTOS__" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>

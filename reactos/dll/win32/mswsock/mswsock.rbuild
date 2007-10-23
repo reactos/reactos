@@ -2,7 +2,6 @@
 	<importlibrary definition="mswsock.def" />
 	<define name="UNICODE" />
 	<define name="LE" />
-	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>ws2_32</library>
 	<file>extensions.c</file>

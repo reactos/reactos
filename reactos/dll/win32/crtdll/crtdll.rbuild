@@ -5,7 +5,6 @@
 	<include base="crtdll">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
-	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
 	<define name="USE_MSVCRT_PREFIX" />
