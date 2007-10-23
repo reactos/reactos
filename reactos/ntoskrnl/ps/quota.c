@@ -15,6 +15,12 @@
 
 EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 
+
+/* Define this macro to enable quota code testing. Once quota code is */
+/* stable and verified, remove this macro and checks for it. */
+/*#define PS_QUOTA_ENABLE_QUOTA_CODE*/
+
+
 /* FUNCTIONS ***************************************************************/
 
 VOID
@@ -66,9 +72,29 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
 {
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
-    
+
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    if (Process)
+    {
+        /* TODO: Check with Process->QuotaBlock if this can be satisfied, */
+        /* assuming this indeed is the place to check it. */
+        /* Probably something like:
+        if (Process->QuotaUsage[2] + Amount >
+            Process->QuotaBlock->QuotaEntry[2].Limit)
+        {
+            refuse
+        }
+        */
+        Process->QuotaUsage[2] += Amount;
+        if (Process->QuotaPeak[2] < Process->QuotaUsage[2])
+        {
+            Process->QuotaPeak[2] = Process->QuotaUsage[2];
+        }
+    }
+#else
     /* Otherwise, not implemented */
     UNIMPLEMENTED;
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -115,6 +141,38 @@ PsChargeProcessPagedPoolQuota(IN PEPROCESS Process,
     return PsChargeProcessPoolQuota(Process, PagedPool, Amount);
 }
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+/*
+ * Internal helper function.
+ * Returns the index of the Quota* member in EPROCESS for
+ * a specified pool type, or -1 on failure.
+ */
+static
+INT
+PspPoolQuotaIndexFromPoolType(POOL_TYPE PoolType)
+{
+    switch (PoolType)
+    {
+        case NonPagedPool:
+        case NonPagedPoolMustSucceed:
+        case NonPagedPoolCacheAligned:
+        case NonPagedPoolCacheAlignedMustS:
+        case NonPagedPoolSession:
+        case NonPagedPoolMustSucceedSession:
+        case NonPagedPoolCacheAlignedSession:
+        case NonPagedPoolCacheAlignedMustSSession:
+            return 1;
+        case PagedPool:
+        case PagedPoolCacheAligned:
+        case PagedPoolSession:
+        case PagedPoolCacheAlignedSession:
+            return 0;
+        default:
+            return -1;
+    }
+}
+#endif
+
 /*
  * @implemented
  */
@@ -124,10 +182,32 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
                          IN ULONG Amount)
 {
+    INT PoolIndex;
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    PoolIndex = PspPoolQuotaIndexFromPoolType(PoolType);
+    if (Process && PoolIndex != -1)
+    {
+        /* TODO: Check with Process->QuotaBlock if this can be satisfied, */
+        /* assuming this indeed is the place to check it. */
+        /* Probably something like:
+        if (Process->QuotaUsage[PoolIndex] + Amount >
+            Process->QuotaBlock->QuotaEntry[PoolIndex].Limit)
+        {
+            refuse
+        }
+        */
+        Process->QuotaUsage[PoolIndex] += Amount;
+        if (Process->QuotaPeak[PoolIndex] < Process->QuotaUsage[PoolIndex])
+        {
+            Process->QuotaPeak[PoolIndex] = Process->QuotaUsage[PoolIndex];
+        }
+    }
+#else
     UNIMPLEMENTED;
+#endif
     return STATUS_SUCCESS;
 }
 
@@ -140,10 +220,26 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN POOL_TYPE PoolType,
                   IN ULONG_PTR Amount)
 {
+    INT PoolIndex;
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    PoolIndex = PspPoolQuotaIndexFromPoolType(PoolType);
+    if (Process && PoolIndex != -1)
+    {
+        if (Process->QuotaUsage[PoolIndex] < Amount)
+        {
+            DPRINT1("WARNING: Process->QuotaUsage sanity check failed.\n");
+        }
+        else
+        {
+            Process->QuotaUsage[PoolIndex] -= Amount;
+        }
+    }
+#else
     UNIMPLEMENTED;
+#endif
 }
 
 /*
@@ -157,7 +253,11 @@ PsReturnProcessNonPagedPoolQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    PsReturnPoolQuota(Process, NonPagedPool, Amount);
+#else
     UNIMPLEMENTED;
+#endif
 }
 
 /*
@@ -171,7 +271,11 @@ PsReturnProcessPagedPoolQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    PsReturnPoolQuota(Process, PagedPool, Amount);
+#else
     UNIMPLEMENTED;
+#endif
 }
 
 NTSTATUS
@@ -182,8 +286,22 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
     
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    if (Process)
+    {
+        if (Process->QuotaUsage[2] < Amount)
+        {
+            DPRINT1("WARNING: Process PageFileQuotaUsage sanity check failed.\n");
+        }
+        else
+        {
+            Process->QuotaUsage[2] -= Amount;
+        }
+    }
+#else
     /* Otherwise, not implemented */
     UNIMPLEMENTED;
+#endif
     return STATUS_SUCCESS;
 }
 
