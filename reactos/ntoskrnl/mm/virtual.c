@@ -33,241 +33,248 @@ NtFlushVirtualMemory(IN HANDLE ProcessHandle,
  * RETURNS: Status
  */
 {
-  /* This should be implemented once we support network filesystems */
-  DPRINT("NtFlushVirtualMemory is UNIMPLEMENTED\n");
-  return(STATUS_SUCCESS);
+    /* This should be implemented once we support network filesystems */
+    DPRINT("NtFlushVirtualMemory is UNIMPLEMENTED\n");
+    return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
 MiLockVirtualMemory(HANDLE ProcessHandle,
-  PVOID BaseAddress,
-  ULONG NumberOfBytesToLock,
-  PULONG NumberOfBytesLocked,
-  PObReferenceObjectByHandle pObReferenceObjectByHandle,
-  PMmCreateMdl pMmCreateMdl,
-  PObDereferenceObject pObDereferenceObject,
-  PMmProbeAndLockPages pMmProbeAndLockPages,
-  PExFreePool pExFreePool)
+                    PVOID BaseAddress,
+                    ULONG NumberOfBytesToLock,
+                    PULONG NumberOfBytesLocked,
+                    PObReferenceObjectByHandle pObReferenceObjectByHandle,
+                    PMmCreateMdl pMmCreateMdl,
+                    PObDereferenceObject pObDereferenceObject,
+                    PMmProbeAndLockPages pMmProbeAndLockPages,
+                    PExFreePool pExFreePool)
 {
-  PEPROCESS Process;
-  NTSTATUS Status;
-  PMDL Mdl;
+    PEPROCESS Process;
+    NTSTATUS Status;
+    PMDL Mdl;
 
-  Status = pObReferenceObjectByHandle(ProcessHandle,
-    PROCESS_VM_WRITE,
-    NULL,
-    UserMode,
-    (PVOID*)(&Process),
-    NULL);
-  if (!NT_SUCCESS(Status))
-    return(Status);
+    Status = pObReferenceObjectByHandle(ProcessHandle,
+                                        PROCESS_VM_WRITE,
+                                        NULL,
+                                        UserMode,
+                                        (PVOID*)(&Process),
+                                        NULL);
+    if (!NT_SUCCESS(Status))
+        return(Status);
 
-  Mdl = pMmCreateMdl(NULL,
-    BaseAddress,
-    NumberOfBytesToLock);
-  if (Mdl == NULL)
+    Mdl = pMmCreateMdl(NULL,
+                       BaseAddress,
+                       NumberOfBytesToLock);
+    if (Mdl == NULL)
     {
-      pObDereferenceObject(Process);
-      return(STATUS_NO_MEMORY);
+        pObDereferenceObject(Process);
+        return(STATUS_NO_MEMORY);
     }
 
-  pMmProbeAndLockPages(Mdl,
-    UserMode,
-    IoWriteAccess);
+    pMmProbeAndLockPages(Mdl,
+                         UserMode,
+                         IoWriteAccess);
 
-  pExFreePool(Mdl);
+    pExFreePool(Mdl);
 
-  pObDereferenceObject(Process);
+    pObDereferenceObject(Process);
 
-  *NumberOfBytesLocked = NumberOfBytesToLock;
-  return(STATUS_SUCCESS);
+    *NumberOfBytesLocked = NumberOfBytesToLock;
+    return(STATUS_SUCCESS);
 }
 
 
 NTSTATUS STDCALL
 NtLockVirtualMemory(HANDLE ProcessHandle,
-  PVOID BaseAddress,
-  ULONG NumberOfBytesToLock,
-  PULONG NumberOfBytesLocked)
+                    PVOID BaseAddress,
+                    ULONG NumberOfBytesToLock,
+                    PULONG NumberOfBytesLocked)
 {
-  DPRINT("NtLockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-    "NumberOfBytesToLock %d, NumberOfBytesLocked %x)\n",
-    ProcessHandle,
-    BaseAddress,
-    NumberOfBytesToLock,
-    NumberOfBytesLocked);
+    DPRINT("NtLockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+        "NumberOfBytesToLock %d, NumberOfBytesLocked %x)\n",
+        ProcessHandle,
+        BaseAddress,
+        NumberOfBytesToLock,
+        NumberOfBytesLocked);
 
-  return MiLockVirtualMemory(ProcessHandle,
-    BaseAddress,
-    NumberOfBytesToLock,
-    NumberOfBytesLocked,
-    ObReferenceObjectByHandle,
-    MmCreateMdl,
-    (PVOID)ObfDereferenceObject,
-    MmProbeAndLockPages,
-    ExFreePool);
+    return MiLockVirtualMemory(ProcessHandle,
+                               BaseAddress,
+                               NumberOfBytesToLock,
+                               NumberOfBytesLocked,
+                               ObReferenceObjectByHandle,
+                               MmCreateMdl,
+                               (PVOID)ObfDereferenceObject,
+                               MmProbeAndLockPages,
+                               ExFreePool);
 }
 
 
 NTSTATUS FASTCALL
-MiQueryVirtualMemory (IN HANDLE ProcessHandle,
-                      IN PVOID Address,
-                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
-                      OUT PVOID VirtualMemoryInformation,
-                      IN ULONG Length,
-                      OUT PULONG ResultLength)
+MiQueryVirtualMemory(IN HANDLE ProcessHandle,
+                     IN PVOID Address,
+                     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
+                     OUT PVOID VirtualMemoryInformation,
+                     IN ULONG Length,
+                     OUT PULONG ResultLength)
 {
-   NTSTATUS Status;
-   PEPROCESS Process;
-   MEMORY_AREA* MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
+    NTSTATUS Status;
+    PEPROCESS Process;
+    MEMORY_AREA* MemoryArea;
+    PMADDRESS_SPACE AddressSpace;
 
-   if (Address < MmSystemRangeStart)
-   {
-      Status = ObReferenceObjectByHandle(ProcessHandle,
-                                         PROCESS_QUERY_INFORMATION,
-                                         NULL,
-                                         UserMode,
-                                         (PVOID*)(&Process),
-                                         NULL);
+    if (Address < MmSystemRangeStart)
+    {
+        Status = ObReferenceObjectByHandle(ProcessHandle,
+                                           PROCESS_QUERY_INFORMATION,
+                                           NULL,
+                                           UserMode,
+                                           (PVOID*)(&Process),
+                                           NULL);
 
-      if (!NT_SUCCESS(Status))
-      {
-         DPRINT("NtQueryVirtualMemory() = %x\n",Status);
-         return(Status);
-      }
-      AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
-   }
-   else
-   {
-      AddressSpace = MmGetKernelAddressSpace();
-   }
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-   switch(VirtualMemoryInformationClass)
-   {
-      case MemoryBasicInformation:
-         {
-	    PMEMORY_BASIC_INFORMATION Info =
-		(PMEMORY_BASIC_INFORMATION)VirtualMemoryInformation;
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("NtQueryVirtualMemory() = %x\n",Status);
+            return(Status);
+        }
+        AddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    }
+    else
+    {
+        AddressSpace = MmGetKernelAddressSpace();
+    }
+    MmLockAddressSpace(AddressSpace);
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
+    switch(VirtualMemoryInformationClass)
+    {
+        case MemoryBasicInformation:
+        {
+            PMEMORY_BASIC_INFORMATION Info =
+                (PMEMORY_BASIC_INFORMATION)VirtualMemoryInformation;
             if (Length != sizeof(MEMORY_BASIC_INFORMATION))
             {
-               MmUnlockAddressSpace(AddressSpace);
-               ObDereferenceObject(Process);
-               return(STATUS_INFO_LENGTH_MISMATCH);
+                MmUnlockAddressSpace(AddressSpace);
+                ObDereferenceObject(Process);
+                return(STATUS_INFO_LENGTH_MISMATCH);
             }
 
             if (MemoryArea == NULL)
             {
-	       Info->Type = 0;
-               Info->State = MEM_FREE;
-	       Info->Protect = PAGE_NOACCESS;
-	       Info->AllocationProtect = 0;
-               Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
-	       Info->AllocationBase = NULL;
-	       Info->RegionSize = MmFindGapAtAddress(AddressSpace, Info->BaseAddress);
-               Status = STATUS_SUCCESS;
-               *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-	    }
+                Info->Type = 0;
+                Info->State = MEM_FREE;
+                Info->Protect = PAGE_NOACCESS;
+                Info->AllocationProtect = 0;
+                Info->BaseAddress = (PVOID)PAGE_ROUND_DOWN(Address);
+                Info->AllocationBase = NULL;
+                Info->RegionSize = MmFindGapAtAddress(AddressSpace, Info->BaseAddress);
+                Status = STATUS_SUCCESS;
+                *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+            }
             else
-	    {
-	       switch(MemoryArea->Type)
-	       {
-		  case MEMORY_AREA_VIRTUAL_MEMORY:
-                  case MEMORY_AREA_PEB_OR_TEB:
-                     Status = MmQueryAnonMem(MemoryArea, Address, Info,
-                                             ResultLength);
-		     break;
-	          case MEMORY_AREA_SECTION_VIEW:
-                     Status = MmQuerySectionView(MemoryArea, Address, Info,
-                                                 ResultLength);
-                     break;
-		  case MEMORY_AREA_NO_ACCESS:
-	             Info->Type = MEM_PRIVATE;
-                     Info->State = MEM_RESERVE;
-	             Info->Protect = MemoryArea->Protect;
-		     Info->AllocationProtect = MemoryArea->Protect;
-	             Info->BaseAddress = MemoryArea->StartingAddress;
-	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
-	                                (ULONG_PTR)MemoryArea->StartingAddress;
-                     Status = STATUS_SUCCESS;
-                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-	             break;
-		  case MEMORY_AREA_SHARED_DATA:
-	             Info->Type = MEM_PRIVATE;
-                     Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Protect;
-		     Info->AllocationProtect = MemoryArea->Protect;
-	             Info->BaseAddress = MemoryArea->StartingAddress;
-	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
-	                                (ULONG_PTR)MemoryArea->StartingAddress;
-                     Status = STATUS_SUCCESS;
-                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-		     break;
-		  case MEMORY_AREA_SYSTEM:
-	             Info->Type = 0;
-                     Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Protect;
-		     Info->AllocationProtect = MemoryArea->Protect;
-	             Info->BaseAddress = MemoryArea->StartingAddress;
-	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
-	                                (ULONG_PTR)MemoryArea->StartingAddress;
-                     Status = STATUS_SUCCESS;
-                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-		     break;
-		  case MEMORY_AREA_KERNEL_STACK:
-	             Info->Type = 0;
-                     Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Protect;
-		     Info->AllocationProtect = MemoryArea->Protect;
-	             Info->BaseAddress = MemoryArea->StartingAddress;
-	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
-	                                (ULONG_PTR)MemoryArea->StartingAddress;
-                     Status = STATUS_SUCCESS;
-                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-		     break;
-                  case MEMORY_AREA_PAGED_POOL:
-	             Info->Type = 0;
-                     Info->State = MEM_COMMIT;
-	             Info->Protect = MemoryArea->Protect;
-		     Info->AllocationProtect = MemoryArea->Protect;
-	             Info->BaseAddress = MemoryArea->StartingAddress;
-	             Info->AllocationBase = MemoryArea->StartingAddress;
-	             Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
-	                                (ULONG_PTR)MemoryArea->StartingAddress;
-                     Status = STATUS_SUCCESS;
-                     *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
-		     break;
-		  default:
-		     DPRINT1("unhandled memory area type: 0x%x\n", MemoryArea->Type);
-	             Status = STATUS_UNSUCCESSFUL;
-                     *ResultLength = 0;
-	       }
-	    }
-            break;
-         }
+            {
+                switch(MemoryArea->Type)
+                {
+                    case MEMORY_AREA_VIRTUAL_MEMORY:
+                    case MEMORY_AREA_PEB_OR_TEB:
+                        Status = MmQueryAnonMem(MemoryArea, Address, Info,
+                                                ResultLength);
+                        break;
 
-      default:
-         {
+                    case MEMORY_AREA_SECTION_VIEW:
+                        Status = MmQuerySectionView(MemoryArea, Address, Info,
+                                                    ResultLength);
+                        break;
+
+                    case MEMORY_AREA_NO_ACCESS:
+                        Info->Type = MEM_PRIVATE;
+                        Info->State = MEM_RESERVE;
+                        Info->Protect = MemoryArea->Protect;
+                        Info->AllocationProtect = MemoryArea->Protect;
+                        Info->BaseAddress = MemoryArea->StartingAddress;
+                        Info->AllocationBase = MemoryArea->StartingAddress;
+                        Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                                           (ULONG_PTR)MemoryArea->StartingAddress;
+                        Status = STATUS_SUCCESS;
+                        *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                        break;
+
+                    case MEMORY_AREA_SHARED_DATA:
+                        Info->Type = MEM_PRIVATE;
+                        Info->State = MEM_COMMIT;
+                        Info->Protect = MemoryArea->Protect;
+                        Info->AllocationProtect = MemoryArea->Protect;
+                        Info->BaseAddress = MemoryArea->StartingAddress;
+                        Info->AllocationBase = MemoryArea->StartingAddress;
+                        Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                                           (ULONG_PTR)MemoryArea->StartingAddress;
+                        Status = STATUS_SUCCESS;
+                        *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                        break;
+
+                    case MEMORY_AREA_SYSTEM:
+                        Info->Type = 0;
+                        Info->State = MEM_COMMIT;
+                        Info->Protect = MemoryArea->Protect;
+                        Info->AllocationProtect = MemoryArea->Protect;
+                        Info->BaseAddress = MemoryArea->StartingAddress;
+                        Info->AllocationBase = MemoryArea->StartingAddress;
+                        Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                                           (ULONG_PTR)MemoryArea->StartingAddress;
+                        Status = STATUS_SUCCESS;
+                        *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                        break;
+
+                    case MEMORY_AREA_KERNEL_STACK:
+                        Info->Type = 0;
+                        Info->State = MEM_COMMIT;
+                        Info->Protect = MemoryArea->Protect;
+                        Info->AllocationProtect = MemoryArea->Protect;
+                        Info->BaseAddress = MemoryArea->StartingAddress;
+                        Info->AllocationBase = MemoryArea->StartingAddress;
+                        Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                                           (ULONG_PTR)MemoryArea->StartingAddress;
+                        Status = STATUS_SUCCESS;
+                        *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                        break;
+
+                    case MEMORY_AREA_PAGED_POOL:
+                        Info->Type = 0;
+                        Info->State = MEM_COMMIT;
+                        Info->Protect = MemoryArea->Protect;
+                        Info->AllocationProtect = MemoryArea->Protect;
+                        Info->BaseAddress = MemoryArea->StartingAddress;
+                        Info->AllocationBase = MemoryArea->StartingAddress;
+                        Info->RegionSize = (ULONG_PTR)MemoryArea->EndingAddress -
+                                           (ULONG_PTR)MemoryArea->StartingAddress;
+                        Status = STATUS_SUCCESS;
+                        *ResultLength = sizeof(MEMORY_BASIC_INFORMATION);
+                        break;
+
+                    default:
+                        DPRINT1("unhandled memory area type: 0x%x\n", MemoryArea->Type);
+                        Status = STATUS_UNSUCCESSFUL;
+                        *ResultLength = 0;
+                }
+            }
+            break;
+        }
+
+        default:
+        {
             Status = STATUS_INVALID_INFO_CLASS;
             *ResultLength = 0;
             break;
-         }
-   }
+        }
+    }
 
-   MmUnlockAddressSpace(AddressSpace);
-   if (Address < MmSystemRangeStart)
-   {
-       ASSERT(Process);
-      ObDereferenceObject(Process);
-   }
+    MmUnlockAddressSpace(AddressSpace);
+    if (Address < MmSystemRangeStart)
+    {
+        ASSERT(Process);
+        ObDereferenceObject(Process);
+    }
 
-   return Status;
+    return Status;
 }
 
 /* (tMk 2004.II.4)
@@ -276,102 +283,102 @@ MiQueryVirtualMemory (IN HANDLE ProcessHandle,
  *
  */
 NTSTATUS STDCALL
-NtQueryVirtualMemory (IN HANDLE ProcessHandle,
-                      IN PVOID Address,
-                      IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
-                      OUT PVOID VirtualMemoryInformation,
-                      IN ULONG Length,
-                      OUT PULONG UnsafeResultLength)
+NtQueryVirtualMemory(IN HANDLE ProcessHandle,
+                     IN PVOID Address,
+                     IN MEMORY_INFORMATION_CLASS VirtualMemoryInformationClass,
+                     OUT PVOID VirtualMemoryInformation,
+                     IN ULONG Length,
+                     OUT PULONG UnsafeResultLength)
 {
-   NTSTATUS Status = STATUS_SUCCESS;
-   ULONG ResultLength = 0;
-   KPROCESSOR_MODE PreviousMode;
-   union
-   {
-      MEMORY_BASIC_INFORMATION BasicInfo;
-   }
-   VirtualMemoryInfo;
+    NTSTATUS Status = STATUS_SUCCESS;
+    ULONG ResultLength = 0;
+    KPROCESSOR_MODE PreviousMode;
+    union
+    {
+        MEMORY_BASIC_INFORMATION BasicInfo;
+    }
+    VirtualMemoryInfo;
 
-   DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
-          "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
-          "Length %lu ResultLength %x)\n",ProcessHandle,Address,
-          VirtualMemoryInformationClass,VirtualMemoryInformation,
-          Length,ResultLength);
+    DPRINT("NtQueryVirtualMemory(ProcessHandle %x, Address %x, "
+           "VirtualMemoryInformationClass %d, VirtualMemoryInformation %x, "
+           "Length %lu ResultLength %x)\n",ProcessHandle,Address,
+           VirtualMemoryInformationClass,VirtualMemoryInformation,
+           Length,ResultLength);
 
-   PreviousMode =  ExGetPreviousMode();
+    PreviousMode =  ExGetPreviousMode();
 
-   if (PreviousMode != KernelMode && UnsafeResultLength != NULL)
-     {
-       _SEH_TRY
-         {
-           ProbeForWriteUlong(UnsafeResultLength);
-         }
-       _SEH_HANDLE
-         {
-           Status = _SEH_GetExceptionCode();
-         }
-       _SEH_END;
-
-       if (!NT_SUCCESS(Status))
-         {
-           return Status;
-         }
-     }
-
-   if (Address >= MmSystemRangeStart)
-   {
-      DPRINT1("Invalid parameter\n");
-      return STATUS_INVALID_PARAMETER;
-   }
-
-   Status = MiQueryVirtualMemory ( ProcessHandle,
-       Address,
-       VirtualMemoryInformationClass,
-       &VirtualMemoryInfo,
-       Length,
-       &ResultLength );
-
-   if (NT_SUCCESS(Status))
-   {
-      if (PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode && UnsafeResultLength != NULL)
+    {
+        _SEH_TRY
         {
-          _SEH_TRY
-            {
-              if (ResultLength > 0)
-                {
-                  ProbeForWrite(VirtualMemoryInformation,
-                                ResultLength,
-                                1);
-                  RtlCopyMemory(VirtualMemoryInformation,
-                                &VirtualMemoryInfo,
-                                ResultLength);
-                }
-              if (UnsafeResultLength != NULL)
-                {
-                  *UnsafeResultLength = ResultLength;
-                }
-            }
-          _SEH_HANDLE
-            {
-              Status = _SEH_GetExceptionCode();
-            }
-          _SEH_END;
+            ProbeForWriteUlong(UnsafeResultLength);
         }
-      else
+        _SEH_HANDLE
         {
-          if (ResultLength > 0)
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+    if (Address >= MmSystemRangeStart)
+    {
+        DPRINT1("Invalid parameter\n");
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Status = MiQueryVirtualMemory(ProcessHandle,
+                                  Address,
+                                  VirtualMemoryInformationClass,
+                                  &VirtualMemoryInfo,
+                                  Length,
+                                  &ResultLength );
+
+    if (NT_SUCCESS(Status))
+    {
+        if (PreviousMode != KernelMode)
+        {
+            _SEH_TRY
             {
-              RtlCopyMemory(VirtualMemoryInformation,
-                            &VirtualMemoryInfo,
-                            ResultLength);
+                if (ResultLength > 0)
+                {
+                    ProbeForWrite(VirtualMemoryInformation,
+                                  ResultLength,
+                                  1);
+                    RtlCopyMemory(VirtualMemoryInformation,
+                                  &VirtualMemoryInfo,
+                                  ResultLength);
+                }
+                if (UnsafeResultLength != NULL)
+                {
+                    *UnsafeResultLength = ResultLength;
+                }
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+        else
+        {
+            if (ResultLength > 0)
+            {
+                RtlCopyMemory(VirtualMemoryInformation,
+                              &VirtualMemoryInfo,
+                              ResultLength);
             }
 
-          if (UnsafeResultLength != NULL)
+            if (UnsafeResultLength != NULL)
             {
-              *UnsafeResultLength = ResultLength;
+                *UnsafeResultLength = ResultLength;
             }
         }
-   }
+    }
 
    return(Status);
 }
@@ -384,51 +391,51 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                        IN ULONG NewAccessProtection,
                        OUT PULONG OldAccessProtection  OPTIONAL)
 {
-   PMEMORY_AREA MemoryArea;
-   PMADDRESS_SPACE AddressSpace;
-   ULONG OldAccessProtection_;
-   NTSTATUS Status;
+    PMEMORY_AREA MemoryArea;
+    PMADDRESS_SPACE AddressSpace;
+    ULONG OldAccessProtection_;
+    NTSTATUS Status;
 
-   *NumberOfBytesToProtect =
-      PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
-      PAGE_ROUND_DOWN(*BaseAddress);
-   *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
+    *NumberOfBytesToProtect =
+        PAGE_ROUND_UP((ULONG_PTR)(*BaseAddress) + (*NumberOfBytesToProtect)) -
+        PAGE_ROUND_DOWN(*BaseAddress);
+    *BaseAddress = (PVOID)PAGE_ROUND_DOWN(*BaseAddress);
 
-   AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
+    AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
 
-   MmLockAddressSpace(AddressSpace);
-   MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
-   if (MemoryArea == NULL)
-   {
-      MmUnlockAddressSpace(AddressSpace);
-      return STATUS_UNSUCCESSFUL;
-   }
+    MmLockAddressSpace(AddressSpace);
+    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, *BaseAddress);
+    if (MemoryArea == NULL)
+    {
+        MmUnlockAddressSpace(AddressSpace);
+        return STATUS_UNSUCCESSFUL;
+    }
 
-   if (OldAccessProtection == NULL)
-      OldAccessProtection = &OldAccessProtection_;
+    if (OldAccessProtection == NULL)
+        OldAccessProtection = &OldAccessProtection_;
 
-   if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
-   {
-      Status = MmProtectAnonMem(AddressSpace, MemoryArea, *BaseAddress,
-                                *NumberOfBytesToProtect, NewAccessProtection,
-                                OldAccessProtection);
-   }
-   else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
-   {
-      Status = MmProtectSectionView(AddressSpace, MemoryArea, *BaseAddress,
-                                    *NumberOfBytesToProtect,
-                                    NewAccessProtection,
-                                    OldAccessProtection);
-   }
-   else
-   {
-      /* FIXME: Should we return failure or success in this case? */
-      Status = STATUS_CONFLICTING_ADDRESSES;
-   }
+    if (MemoryArea->Type == MEMORY_AREA_VIRTUAL_MEMORY)
+    {
+        Status = MmProtectAnonMem(AddressSpace, MemoryArea, *BaseAddress,
+                                  *NumberOfBytesToProtect, NewAccessProtection,
+                                  OldAccessProtection);
+    }
+    else if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
+    {
+        Status = MmProtectSectionView(AddressSpace, MemoryArea, *BaseAddress,
+                                      *NumberOfBytesToProtect,
+                                      NewAccessProtection,
+                                      OldAccessProtection);
+    }
+    else
+    {
+        /* FIXME: Should we return failure or success in this case? */
+        Status = STATUS_CONFLICTING_ADDRESSES;
+    }
 
-   MmUnlockAddressSpace(AddressSpace);
+    MmUnlockAddressSpace(AddressSpace);
 
-   return Status;
+    return Status;
 }
 
 
@@ -444,100 +451,100 @@ NtProtectVirtualMemory(IN HANDLE ProcessHandle,
                        IN ULONG NewAccessProtection,
                        OUT PULONG UnsafeOldAccessProtection)
 {
-   PEPROCESS Process;
-   ULONG OldAccessProtection;
-   PVOID BaseAddress = NULL;
-   ULONG NumberOfBytesToProtect = 0;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS Status = STATUS_SUCCESS;
+    PEPROCESS Process;
+    ULONG OldAccessProtection;
+    PVOID BaseAddress = NULL;
+    ULONG NumberOfBytesToProtect = 0;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   PreviousMode = ExGetPreviousMode();
+    PreviousMode = ExGetPreviousMode();
 
-   if (PreviousMode != KernelMode)
-     {
-       _SEH_TRY
-         {
-           ProbeForWritePointer(UnsafeBaseAddress);
-           ProbeForWriteUlong(UnsafeNumberOfBytesToProtect);
-           ProbeForWriteUlong(UnsafeOldAccessProtection);
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            ProbeForWritePointer(UnsafeBaseAddress);
+            ProbeForWriteUlong(UnsafeNumberOfBytesToProtect);
+            ProbeForWriteUlong(UnsafeOldAccessProtection);
 
-           BaseAddress = *UnsafeBaseAddress;
-           NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
-         }
-       _SEH_HANDLE
-         {
-           Status = _SEH_GetExceptionCode();
-         }
-       _SEH_END;
+            BaseAddress = *UnsafeBaseAddress;
+            NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
 
-       if (!NT_SUCCESS(Status))
-         {
-           return Status;
-         }
-     }
-   else
-     {
-       BaseAddress = *UnsafeBaseAddress;
-       NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
-     }
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+    else
+    {
+        BaseAddress = *UnsafeBaseAddress;
+        NumberOfBytesToProtect = *UnsafeNumberOfBytesToProtect;
+    }
 
-   if ((ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 < (ULONG_PTR)BaseAddress ||
-       (ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 >= MmUserProbeAddress)
-     {
-       /* Don't allow to change the protection of a kernel mode address */
-       return STATUS_INVALID_PARAMETER_2;
-     }
+    if ((ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 < (ULONG_PTR)BaseAddress ||
+        (ULONG_PTR)BaseAddress + NumberOfBytesToProtect - 1 >= MmUserProbeAddress)
+    {
+        /* Don't allow to change the protection of a kernel mode address */
+        return STATUS_INVALID_PARAMETER_2;
+    }
 
-   /* (tMk 2004.II.5) in Microsoft SDK I read:
-    * 'if this parameter is NULL or does not point to a valid variable, the function fails'
-    */
-   if(UnsafeOldAccessProtection == NULL)
-   {
-      return(STATUS_INVALID_PARAMETER);
-   }
+    /* (tMk 2004.II.5) in Microsoft SDK I read:
+     * 'if this parameter is NULL or does not point to a valid variable, the function fails'
+     */
+    if(UnsafeOldAccessProtection == NULL)
+    {
+        return(STATUS_INVALID_PARAMETER);
+    }
 
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_OPERATION,
-                                      PsProcessType,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("NtProtectVirtualMemory() = %x\n",Status);
-      return(Status);
-   }
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_VM_OPERATION,
+                                       PsProcessType,
+                                       UserMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("NtProtectVirtualMemory() = %x\n",Status);
+        return(Status);
+    }
 
-   Status = MiProtectVirtualMemory(Process,
-                                   &BaseAddress,
-                                   &NumberOfBytesToProtect,
-                                   NewAccessProtection,
-                                   &OldAccessProtection);
+    Status = MiProtectVirtualMemory(Process,
+                                    &BaseAddress,
+                                    &NumberOfBytesToProtect,
+                                    NewAccessProtection,
+                                    &OldAccessProtection);
 
-   ObDereferenceObject(Process);
+    ObDereferenceObject(Process);
 
-   if (PreviousMode != KernelMode)
-     {
-       _SEH_TRY
-         {
-           *UnsafeOldAccessProtection = OldAccessProtection;
-           *UnsafeBaseAddress = BaseAddress;
-           *UnsafeNumberOfBytesToProtect = NumberOfBytesToProtect;
-         }
-       _SEH_HANDLE
-         {
-           Status = _SEH_GetExceptionCode();
-         }
-       _SEH_END;
-     }
-   else
-     {
-       *UnsafeOldAccessProtection = OldAccessProtection;
-       *UnsafeBaseAddress = BaseAddress;
-       *UnsafeNumberOfBytesToProtect = NumberOfBytesToProtect;
-     }
+    if (PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            *UnsafeOldAccessProtection = OldAccessProtection;
+            *UnsafeBaseAddress = BaseAddress;
+            *UnsafeNumberOfBytesToProtect = NumberOfBytesToProtect;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+    else
+    {
+        *UnsafeOldAccessProtection = OldAccessProtection;
+        *UnsafeBaseAddress = BaseAddress;
+        *UnsafeNumberOfBytesToProtect = NumberOfBytesToProtect;
+    }
 
-   return(Status);
+    return(Status);
 }
 
 
@@ -554,150 +561,153 @@ NtReadVirtualMemory(IN HANDLE ProcessHandle,
                     IN ULONG NumberOfBytesToRead,
                     OUT PULONG NumberOfBytesRead OPTIONAL)
 {
-   PMDL Mdl;
-   PVOID SystemAddress;
-   KPROCESSOR_MODE PreviousMode;
-   PEPROCESS Process, CurrentProcess;
-   NTSTATUS Status = STATUS_SUCCESS;
+    PMDL Mdl;
+    PVOID SystemAddress;
+    KPROCESSOR_MODE PreviousMode;
+    PEPROCESS Process, CurrentProcess;
+    NTSTATUS Status = STATUS_SUCCESS;
 
-   PAGED_CODE();
+    PAGED_CODE();
 
-   DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-          "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
-          Buffer,NumberOfBytesToRead);
+    DPRINT("NtReadVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+           "Buffer %x, NumberOfBytesToRead %d)\n",ProcessHandle,BaseAddress,
+           Buffer,NumberOfBytesToRead);
 
-   if ((ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 < (ULONG_PTR)BaseAddress ||
-       (ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
-     {
-       /* Don't allow to read from kernel space */
-       return STATUS_ACCESS_VIOLATION;
-     }
+    if ((ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 < (ULONG_PTR)BaseAddress ||
+        (ULONG_PTR)BaseAddress + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
+    {
+        /* Don't allow to read from kernel space */
+        return STATUS_ACCESS_VIOLATION;
+    }
 
-   PreviousMode = ExGetPreviousMode();
+    PreviousMode = ExGetPreviousMode();
 
-   if (PreviousMode != KernelMode)
-     {
-       if ((ULONG_PTR)Buffer + NumberOfBytesToRead - 1 < (ULONG_PTR)Buffer ||
-           (ULONG_PTR)Buffer + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
-         {
-           /* Don't allow to write into kernel space */
-           return STATUS_ACCESS_VIOLATION;
-         }
-     }
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_READ,
-                                      NULL,
-                                      PreviousMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
-
-   CurrentProcess = PsGetCurrentProcess();
-
-   if(PreviousMode != KernelMode)
-   {
-     _SEH_TRY
-     {
-       if(NumberOfBytesRead != NULL)
-       {
-         ProbeForWriteUlong(NumberOfBytesRead);
-       }
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-
-     if(!NT_SUCCESS(Status))
-     {
-       return Status;
-     }
-   }
-
-
-   if (Process == CurrentProcess)
-   {
-      _SEH_TRY
-      {
-        RtlCopyMemory(Buffer, BaseAddress, NumberOfBytesToRead);
-      }
-      _SEH_HANDLE
-      {
-        Status = _SEH_GetExceptionCode();
-      }
-      _SEH_END;
-   }
-   else
-   {
-      Mdl = MmCreateMdl(NULL,
-                        Buffer,
-                        NumberOfBytesToRead);
-      if(Mdl == NULL)
-      {
-         ObDereferenceObject(Process);
-         return(STATUS_NO_MEMORY);
-      }
-      _SEH_TRY
-      {
-        MmProbeAndLockPages(Mdl,
-                            PreviousMode,
-                            IoWriteAccess);
-      }
-      _SEH_HANDLE
-      {
-        Status = _SEH_GetExceptionCode();
-      }
-      _SEH_END;
-
-      if(NT_SUCCESS(Status))
-      {
-        KeAttachProcess(&Process->Pcb);
-
-        SystemAddress = MmGetSystemAddressForMdl(Mdl);
-
-          Status = STATUS_SUCCESS;
-          _SEH_TRY {
-              Status = STATUS_PARTIAL_COPY;
-              RtlCopyMemory(SystemAddress, BaseAddress, NumberOfBytesToRead);
-              Status = STATUS_SUCCESS;
-          } _SEH_HANDLE {
-              if(Status != STATUS_PARTIAL_COPY)
-                  Status = _SEH_GetExceptionCode();
-          } _SEH_END;
-
-        KeDetachProcess();
-
-        if (Mdl->MappedSystemVa != NULL)
+    if (PreviousMode != KernelMode)
+    {
+        if ((ULONG_PTR)Buffer + NumberOfBytesToRead - 1 < (ULONG_PTR)Buffer ||
+            (ULONG_PTR)Buffer + NumberOfBytesToRead - 1 >= MmUserProbeAddress)
         {
-           MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+            /* Don't allow to write into kernel space */
+            return STATUS_ACCESS_VIOLATION;
         }
-        MmUnlockPages(Mdl);
-      }
-      ExFreePool(Mdl);
-   }
+    }
 
-   ObDereferenceObject(Process);
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_VM_READ,
+                                       NULL,
+                                       PreviousMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
 
-   if((NT_SUCCESS(Status) || Status == STATUS_PARTIAL_COPY) &&
-      NumberOfBytesRead != NULL)
-   {
-     _SEH_TRY
-     {
-       *NumberOfBytesRead = NumberOfBytesToRead;
-     }
-     _SEH_HANDLE
-     {
-       Status = _SEH_GetExceptionCode();
-     }
-     _SEH_END;
-   }
+    CurrentProcess = PsGetCurrentProcess();
 
-   return(Status);
+    if(PreviousMode != KernelMode)
+    {
+        _SEH_TRY
+        {
+            if(NumberOfBytesRead != NULL)
+            {
+                ProbeForWriteUlong(NumberOfBytesRead);
+            }
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if(!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+    }
+
+
+    if (Process == CurrentProcess)
+    {
+        _SEH_TRY
+        {
+            RtlCopyMemory(Buffer, BaseAddress, NumberOfBytesToRead);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+    else
+    {
+        Mdl = MmCreateMdl(NULL,
+                          Buffer,
+                          NumberOfBytesToRead);
+        if(Mdl == NULL)
+        {
+            ObDereferenceObject(Process);
+            return(STATUS_NO_MEMORY);
+        }
+
+        _SEH_TRY
+        {
+            MmProbeAndLockPages(Mdl, PreviousMode, IoWriteAccess);
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if(NT_SUCCESS(Status))
+        {
+            KeAttachProcess(&Process->Pcb);
+
+            SystemAddress = MmGetSystemAddressForMdl(Mdl);
+
+            Status = STATUS_SUCCESS;
+            _SEH_TRY
+            {
+                Status = STATUS_PARTIAL_COPY;
+                RtlCopyMemory(SystemAddress, BaseAddress, NumberOfBytesToRead);
+                Status = STATUS_SUCCESS;
+            }
+            _SEH_HANDLE
+            {
+                if(Status != STATUS_PARTIAL_COPY)
+                    Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+
+            KeDetachProcess();
+
+            if (Mdl->MappedSystemVa != NULL)
+            {
+                MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+            }
+            MmUnlockPages(Mdl);
+        }
+        ExFreePool(Mdl);
+    }
+
+    ObDereferenceObject(Process);
+
+    if ((NT_SUCCESS(Status) || Status == STATUS_PARTIAL_COPY) &&
+        NumberOfBytesRead != NULL)
+    {
+        _SEH_TRY
+        {
+            *NumberOfBytesRead = NumberOfBytesToRead;
+        }
+        _SEH_HANDLE
+        {
+            Status = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+    }
+
+    return(Status);
 }
 
 /* (tMk 2004.II.05)
@@ -710,49 +720,49 @@ NtUnlockVirtualMemory(HANDLE ProcessHandle,
                       ULONG NumberOfBytesToUnlock,
                       PULONG NumberOfBytesUnlocked OPTIONAL)
 {
-   // AG [08-20-03] : I have *no* idea if this is correct, I just used the
-   // other functions as a template and made a few intelligent guesses...
+    // AG [08-20-03] : I have *no* idea if this is correct, I just used the
+    // other functions as a template and made a few intelligent guesses...
 
-   NTSTATUS Status;
-   PMDL Mdl;
-   PEPROCESS Process;
+    NTSTATUS Status;
+    PMDL Mdl;
+    PEPROCESS Process;
 
-   DPRINT("NtUnlockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-          "NumberOfBytesToUnlock %d), NumberOfBytesUnlocked %x\n",ProcessHandle,BaseAddress,
-          NumberOfBytesToUnlock, NumberOfBytesUnlocked);
+    DPRINT("NtUnlockVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+           "NumberOfBytesToUnlock %d), NumberOfBytesUnlocked %x\n",ProcessHandle,BaseAddress,
+           NumberOfBytesToUnlock, NumberOfBytesUnlocked);
 
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_WRITE,
-                                      NULL,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_VM_WRITE,
+                                       NULL,
+                                       UserMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
 
-   Mdl = MmCreateMdl(NULL,
-                     BaseAddress,
-                     NumberOfBytesToUnlock);
-   if(Mdl == NULL)
-   {
-      ObDereferenceObject(Process);
-      return(STATUS_NO_MEMORY);
-   }
+    Mdl = MmCreateMdl(NULL,
+                      BaseAddress,
+                      NumberOfBytesToUnlock);
+    if(Mdl == NULL)
+    {
+        ObDereferenceObject(Process);
+        return(STATUS_NO_MEMORY);
+    }
 
-   ObDereferenceObject(Process);
+    ObDereferenceObject(Process);
 
-   if (Mdl->MappedSystemVa != NULL)
-   {
-      MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-   }
-   MmUnlockPages(Mdl);
-   ExFreePool(Mdl);
+    if (Mdl->MappedSystemVa != NULL)
+    {
+        MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+    }
+    MmUnlockPages(Mdl);
+    ExFreePool(Mdl);
 
-   *NumberOfBytesUnlocked = NumberOfBytesToUnlock;
+    *NumberOfBytesUnlocked = NumberOfBytesToUnlock;
 
-   return(STATUS_SUCCESS);
+    return(STATUS_SUCCESS);
 }
 
 
@@ -769,166 +779,164 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
                      IN ULONG NumberOfBytesToWrite,
                      OUT PULONG NumberOfBytesWritten  OPTIONAL)
 {
-   PMDL Mdl;
-   PVOID SystemAddress;
-   PEPROCESS Process;
-   KPROCESSOR_MODE PreviousMode;
-   NTSTATUS CopyStatus, Status = STATUS_SUCCESS;
+    PMDL Mdl;
+    PVOID SystemAddress;
+    PEPROCESS Process;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS CopyStatus, Status = STATUS_SUCCESS;
 
-   DPRINT("NtWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
-          "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
-          Buffer,NumberOfBytesToWrite);
+    DPRINT("NtWriteVirtualMemory(ProcessHandle %x, BaseAddress %x, "
+           "Buffer %x, NumberOfBytesToWrite %d)\n",ProcessHandle,BaseAddress,
+           Buffer,NumberOfBytesToWrite);
 
-   if ((ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 < (ULONG_PTR)BaseAddress ||
-       (ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
-     {
-       /* Don't allow to write into kernel space */
-       return STATUS_ACCESS_VIOLATION;
-     }
+    if ((ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 < (ULONG_PTR)BaseAddress ||
+        (ULONG_PTR)BaseAddress + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
+    {
+        /* Don't allow to write into kernel space */
+        return STATUS_ACCESS_VIOLATION;
+    }
 
-   PreviousMode = ExGetPreviousMode();
+    PreviousMode = ExGetPreviousMode();
 
-   if (PreviousMode != KernelMode)
-     {
-       if ((ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 < (ULONG_PTR)Buffer ||
-           (ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
-         {
-           /* Don't allow to read from kernel space */
-           return STATUS_ACCESS_VIOLATION;
-         }
-       if (NumberOfBytesWritten != NULL)
-         {
-           _SEH_TRY
-             {
-               ProbeForWriteUlong(NumberOfBytesWritten);
-             }
-           _SEH_HANDLE
-             {
-               Status = _SEH_GetExceptionCode();
-             }
-           _SEH_END;
-
-           if (!NT_SUCCESS(Status))
-             {
-               return Status;
-             }
-          }
-     }
-
-   Status = ObReferenceObjectByHandle(ProcessHandle,
-                                      PROCESS_VM_WRITE,
-                                      NULL,
-                                      UserMode,
-                                      (PVOID*)(&Process),
-                                      NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      return(Status);
-   }
-
-   CopyStatus = STATUS_SUCCESS;
-
-   /* Write memory */
-   if (Process == PsGetCurrentProcess())
-   {
-      if (PreviousMode != KernelMode)
+    if (PreviousMode != KernelMode)
+    {
+        if ((ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 < (ULONG_PTR)Buffer ||
+            (ULONG_PTR)Buffer + NumberOfBytesToWrite - 1 >= MmUserProbeAddress)
         {
-	  _SEH_TRY
+            /* Don't allow to read from kernel space */
+            return STATUS_ACCESS_VIOLATION;
+        }
+        if (NumberOfBytesWritten != NULL)
+        {
+            _SEH_TRY
             {
-              memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
+                ProbeForWriteUlong(NumberOfBytesWritten);
             }
-          _SEH_HANDLE
+            _SEH_HANDLE
             {
-              CopyStatus = _SEH_GetExceptionCode();
+                Status = _SEH_GetExceptionCode();
             }
-          _SEH_END;
-        }
-      else
-        {
-          memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
-        }
-   }
-   else
-   {
-      /* Create MDL describing the source buffer. */
-      Mdl = MmCreateMdl(NULL,
-                        Buffer,
-                        NumberOfBytesToWrite);
-      if(Mdl == NULL)
-        {
-          ObDereferenceObject(Process);
-          return(STATUS_NO_MEMORY);
-        }
-      _SEH_TRY
-        {
-          /* Map the MDL. */
-          MmProbeAndLockPages(Mdl,
-                              UserMode,
-                              IoReadAccess);
-	}
-      _SEH_HANDLE
-        {
-	  CopyStatus = _SEH_GetExceptionCode();
-        }
-      _SEH_END;
+            _SEH_END;
 
-      if (NT_SUCCESS(CopyStatus))
-        {
-          /* Copy memory from the mapped MDL into the target buffer. */
-          KeAttachProcess(&Process->Pcb);
-
-          SystemAddress = MmGetSystemAddressForMdl(Mdl);
-          if (PreviousMode != KernelMode)
+            if (!NT_SUCCESS(Status))
             {
-              _SEH_TRY
+                return Status;
+            }
+        }
+    }
+
+    Status = ObReferenceObjectByHandle(ProcessHandle,
+                                       PROCESS_VM_WRITE,
+                                       NULL,
+                                       UserMode,
+                                       (PVOID*)(&Process),
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        return(Status);
+    }
+
+    CopyStatus = STATUS_SUCCESS;
+
+    /* Write memory */
+    if (Process == PsGetCurrentProcess())
+    {
+        if (PreviousMode != KernelMode)
+        {
+            _SEH_TRY
+            {
+                memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
+            }
+            _SEH_HANDLE
+            {
+                CopyStatus = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+        else
+        {
+            memcpy(BaseAddress, Buffer, NumberOfBytesToWrite);
+        }
+    }
+    else
+    {
+        /* Create MDL describing the source buffer. */
+        Mdl = MmCreateMdl(NULL,
+                          Buffer,
+                          NumberOfBytesToWrite);
+        if (Mdl == NULL)
+        {
+            ObDereferenceObject(Process);
+            return(STATUS_NO_MEMORY);
+        }
+        _SEH_TRY
+        {
+            /* Map the MDL. */
+            MmProbeAndLockPages(Mdl, UserMode, IoReadAccess);
+        }
+        _SEH_HANDLE
+        {
+            CopyStatus = _SEH_GetExceptionCode();
+        }
+        _SEH_END;
+
+        if (NT_SUCCESS(CopyStatus))
+        {
+            /* Copy memory from the mapped MDL into the target buffer. */
+            KeAttachProcess(&Process->Pcb);
+
+            SystemAddress = MmGetSystemAddressForMdl(Mdl);
+            if (PreviousMode != KernelMode)
+            {
+                _SEH_TRY
                 {
-                  memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+                    memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
                 }
-              _SEH_HANDLE
+                _SEH_HANDLE
                 {
-                  CopyStatus = _SEH_GetExceptionCode();
+                    CopyStatus = _SEH_GetExceptionCode();
                 }
-              _SEH_END;
+                _SEH_END;
             }
-          else
+            else
             {
-              memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
+                memcpy(BaseAddress, SystemAddress, NumberOfBytesToWrite);
             }
 
-          KeDetachProcess();
-	}
+            KeDetachProcess();
+        }
 
-      /* Free the MDL. */
-      if (Mdl->MappedSystemVa != NULL)
-      {
-         MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
-      }
-      MmUnlockPages(Mdl);
-      ExFreePool(Mdl);
-   }
-   ObDereferenceObject(Process);
+        /* Free the MDL. */
+        if (Mdl->MappedSystemVa != NULL)
+        {
+            MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+        }
+        MmUnlockPages(Mdl);
+        ExFreePool(Mdl);
+    }
+    ObDereferenceObject(Process);
 
-   if (NT_SUCCESS(CopyStatus) && NumberOfBytesWritten != NULL)
-     {
-       if (PreviousMode != KernelMode)
-         {
-           _SEH_TRY
-             {
-               *NumberOfBytesWritten = NumberOfBytesToWrite;
-             }
-           _SEH_HANDLE
-             {
-               Status = _SEH_GetExceptionCode();
-             }
-           _SEH_END;
-         }
-       else
-         {
-           *NumberOfBytesWritten = NumberOfBytesToWrite;
-         }
-     }
+    if (NT_SUCCESS(CopyStatus) && NumberOfBytesWritten != NULL)
+    {
+        if (PreviousMode != KernelMode)
+        {
+            _SEH_TRY
+            {
+                *NumberOfBytesWritten = NumberOfBytesToWrite;
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
+        }
+        else
+        {
+            *NumberOfBytesWritten = NumberOfBytesToWrite;
+        }
+    }
 
-   return(NT_SUCCESS(CopyStatus) ? Status : CopyStatus);
+    return(NT_SUCCESS(CopyStatus) ? Status : CopyStatus);
 }
 
 /*
@@ -937,12 +945,12 @@ NtWriteVirtualMemory(IN HANDLE ProcessHandle,
 
 PVOID
 STDCALL
-MmGetVirtualForPhysical (
+MmGetVirtualForPhysical(
     IN PHYSICAL_ADDRESS PhysicalAddress
     )
 {
-	UNIMPLEMENTED;
-	return 0;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 /* FUNCTION:
@@ -950,19 +958,19 @@ MmGetVirtualForPhysical (
  * @unimplemented
  */
 PVOID STDCALL
-MmSecureVirtualMemory (PVOID  Address,
-                       SIZE_T Length,
-                       ULONG  Mode)
+MmSecureVirtualMemory(PVOID  Address,
+                      SIZE_T Length,
+                      ULONG  Mode)
 {
-   /* Only works for user space */
-   if (MmHighestUserAddress < Address)
-   {
-      return NULL;
-   }
+    /* Only works for user space */
+    if (MmHighestUserAddress < Address)
+    {
+        return NULL;
+    }
 
-   UNIMPLEMENTED;
+    UNIMPLEMENTED;
 
-   return 0;
+    return 0;
 }
 
 
@@ -973,12 +981,12 @@ MmSecureVirtualMemory (PVOID  Address,
 VOID STDCALL
 MmUnsecureVirtualMemory(PVOID SecureMem)
 {
-   if (NULL == SecureMem)
-   {
-      return;
-   }
+    if (NULL == SecureMem)
+    {
+        return;
+    }
 
-   UNIMPLEMENTED;
+    UNIMPLEMENTED;
 }
 
 
@@ -986,9 +994,9 @@ MmUnsecureVirtualMemory(PVOID SecureMem)
  * @implemented
  */
 VOID STDCALL
-ProbeForRead (IN CONST VOID *Address,
-              IN ULONG Length,
-              IN ULONG Alignment)
+ProbeForRead(IN CONST VOID *Address,
+             IN ULONG Length,
+             IN ULONG Alignment)
 {
     if (Length != 0)
     {
@@ -1011,9 +1019,9 @@ ProbeForRead (IN CONST VOID *Address,
  * @implemented
  */
 VOID STDCALL
-ProbeForWrite (IN PVOID Address,
-               IN ULONG Length,
-               IN ULONG Alignment)
+ProbeForWrite(IN PVOID Address,
+              IN ULONG Length,
+              IN ULONG Alignment)
 {
     volatile CHAR *Current;
     PCHAR Last;
