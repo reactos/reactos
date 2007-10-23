@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "wine/debug.h"
 
 #include "windef.h"
@@ -36,6 +36,7 @@
 #include "undocshell.h"
 #include "shlwapi.h"
 #include "stdio.h"
+#include "winuser.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -277,7 +278,6 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, BgCmImpl * This)
 
   }
 
-
   ZeroMemory(&mii, sizeof(mii));
   mii.cbSize = sizeof(mii);
 
@@ -298,8 +298,8 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, BgCmImpl * This)
   InsertMenuItemW(hMenu, -1, TRUE, &mii);
 
 
-  mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA; //MIIM_BITMAP;
-  mii.fType = MFT_STRING;
+  mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
+  mii.fType = MFT_OWNERDRAW;
   mii.fState = MFS_ENABLED;
 
   pCurItem = s_SnHead;
@@ -467,6 +467,74 @@ DoShellNewCmd(BgCmImpl * This, LPCMINVOKECOMMANDINFO lpcmi)
         break;
      }
   }
+}
+HRESULT
+DoMeasureItem(BgCmImpl *This, HWND hWnd, MEASUREITEMSTRUCT * lpmis)
+{
+   PSHELLNEW_ITEM pCurItem;
+   PSHELLNEW_ITEM pItem;
+   UINT i;
+   HDC hDC;
+   SIZE size;
+   
+   TRACE("DoMeasureItem entered with id %x\n", lpmis->itemID);
+   
+   pCurItem = s_SnHead;
+
+   i = This->iIdShellNewFirst;
+   pItem = NULL;
+   while(pCurItem)
+   {
+      if (i == lpmis->itemID)
+      {
+         pItem = pCurItem;
+         break;
+      }
+      pCurItem = pCurItem->Next;
+      i++;
+   }
+
+   if (!pItem)
+      return E_FAIL;
+
+   hDC = GetDC(hWnd);
+   GetTextExtentPoint32W(hDC, pCurItem->szDesc, strlenW(pCurItem->szDesc), &size);
+   lpmis->itemWidth = size.cx + 32;
+   lpmis->itemHeight = max(size.cy, 20);
+   ReleaseDC (hWnd, hDC);
+   return S_OK;
+}
+
+HRESULT
+DoDrawItem(BgCmImpl *This, HWND hWnd, DRAWITEMSTRUCT * drawItem)
+{
+   PSHELLNEW_ITEM pCurItem;
+   PSHELLNEW_ITEM pItem;
+   UINT i;
+   pCurItem = s_SnHead;
+
+   TRACE("DoDrawItem entered with id %x\n", drawItem->itemID);
+
+   i = This->iIdShellNewFirst;
+   pItem = NULL;
+   while(pCurItem)
+   {
+      if (i == drawItem->itemID)
+      {
+         pItem = pCurItem;
+         break;
+      }
+      pCurItem = pCurItem->Next;
+      i++;
+   }
+
+   if (!pItem)
+      return E_FAIL;
+   
+   drawItem->rcItem.left += 20;
+   
+   DrawTextW(drawItem->hDC, pCurItem->szDesc, wcslen(pCurItem->szDesc), &drawItem->rcItem, 0);
+   return S_OK;
 }
 
 
@@ -870,9 +938,23 @@ static HRESULT WINAPI ISVBgCm_fnHandleMenuMsg(
 	WPARAM wParam,
 	LPARAM lParam)
 {
-	BgCmImpl *This = (BgCmImpl *)iface;
+    BgCmImpl *This = (BgCmImpl *)iface;
+    DRAWITEMSTRUCT * lpids = (DRAWITEMSTRUCT*) lParam;
+    MEASUREITEMSTRUCT *lpmis = (MEASUREITEMSTRUCT*) lParam;
 
-	FIXME("(%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+	TRACE("ISVBgCm_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    switch(uMsg)
+    {
+       case WM_MEASUREITEM:
+          if (lpmis->itemID >= This->iIdShellNewFirst && lpmis->itemID <= This->iIdShellNewLast)
+             return DoMeasureItem(This, (HWND)wParam, lpmis);
+          break;
+       case WM_DRAWITEM:
+          if (lpmis->itemID >= This->iIdShellNewFirst && lpmis->itemID <= This->iIdShellNewLast)
+             return DoDrawItem(This, (HWND)wParam, lpids);
+          break;
+    }
 
 	return E_NOTIMPL;
 }

@@ -109,6 +109,7 @@ typedef struct
         LONG            iDragOverItem;  /* Dragged over item's index, iff pCurDropTarget != NULL */
         UINT            cScrollDelay;   /* Send a WM_*SCROLL msg every 250 ms during drag-scroll */
         POINT           ptLastMousePos; /* Mouse position at last DragOver call */
+    IContextMenu2   *pCM;
 } IShellViewImpl;
 
 static const IShellViewVtbl svvt;
@@ -948,7 +949,6 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	BOOL	fExplore = FALSE;
 	HWND	hwndTree = 0;
 	LPCONTEXTMENU	pContextMenu = NULL;
-	IContextMenu2 *pCM = NULL;
 	CMINVOKECOMMANDINFO	cmi;
 
 	TRACE("(%p)->(0x%08x 0x%08x 0x%08x) stub\n",This, x, y, bDefault);
@@ -957,9 +957,9 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	if( ShellView_GetSelections(This) )
 	{
 	  IShellFolder_GetUIObjectOf( This->pSFParent, This->hWndParent, This->cidl, (LPCITEMIDLIST*)This->apidl,
-					(REFIID)&IID_IContextMenu, NULL, (LPVOID *)&pContextMenu);
+					(REFIID)&IID_IContextMenu, NULL, (LPVOID *)&This->pCM);
 
-	  if(pContextMenu)
+	  if(This->pCM)
 	  {
 	    TRACE("-- pContextMenu\n");
 	    hMenu = CreatePopupMenu();
@@ -977,7 +977,7 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	      wFlags = CMF_NORMAL | (This->cidl != 1 ? 0 : CMF_CANRENAME) | (fExplore ? CMF_EXPLORE : 0);
 
 	      /* let the ContextMenu merge its items in */
-	      if (SUCCEEDED(IContextMenu_QueryContextMenu( pContextMenu, hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, wFlags )))
+	      if (SUCCEEDED(IContextMenu_QueryContextMenu( This->pCM, hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, wFlags )))
 	      {
 	        if (This->FolderSettings.fFlags & FWF_DESKTOP)
 		  SetMenuDefaultItem(hMenu, FCIDM_SHVIEW_OPEN, MF_BYCOMMAND);
@@ -1017,16 +1017,19 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 		DestroyMenu(hMenu);
 	      }
 	    }
-	    if (pContextMenu)
-	      IContextMenu_Release(pContextMenu);
+	    if (This->pCM)
+        {
+	      IContextMenu_Release(This->pCM);
+          This->pCM = NULL;
+        }
 	  }
 	}
 	else	/* background context menu */
 	{
 	  hMenu = CreatePopupMenu();
 
-	  pCM = ISvBgCm_Constructor(This->pSFParent, FALSE);
-	  IContextMenu2_QueryContextMenu(pCM, hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
+	  This->pCM = ISvBgCm_Constructor(This->pSFParent, FALSE);
+	  IContextMenu2_QueryContextMenu(This->pCM, hMenu, 0, FCIDM_SHVIEWFIRST, FCIDM_SHVIEWLAST, 0);
 
 	  uCommand = TrackPopupMenu( hMenu, TPM_LEFTALIGN | TPM_RETURNCMD,x,y,0,This->hWnd,NULL);
 	  DestroyMenu(hMenu);
@@ -1037,9 +1040,10 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	  cmi.cbSize = sizeof(cmi);
 	  cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
 	  cmi.hwnd = This->hWndParent;
-	  IContextMenu2_InvokeCommand(pCM, &cmi);
+	  IContextMenu2_InvokeCommand(This->pCM, &cmi);
 
-	  IContextMenu2_Release(pCM);
+	  IContextMenu2_Release(This->pCM);
+      This->pCM = NULL;
 	}
 }
 
@@ -1582,6 +1586,26 @@ static LRESULT ShellView_OnChange(IShellViewImpl * This, LPITEMIDLIST * Pidls, L
 	}
 	return TRUE;
 }
+
+/**********************************************************
+*  ShellView_DoMeasureItem
+*/
+
+static LRESULT ShellView_DoCustomItem(IShellViewImpl * pThis, HWND hWnd, UINT uMsg, LPARAM lParam)
+{
+    if (!pThis->pCM)
+    {
+      /* no menu */
+      ERR("no menu!!!\n");
+      return FALSE;
+    }
+
+    if (pThis->pCM->lpVtbl->HandleMenuMsg(pThis->pCM, uMsg, (WPARAM)hWnd, lParam) == S_OK)
+        return TRUE;
+    else
+        return FALSE;
+}
+
 /**********************************************************
 *  ShellView_WndProc
 */
@@ -1616,6 +1640,9 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 
 	  case WM_CONTEXTMENU:  ShellView_DoContextMenu(pThis, LOWORD(lParam), HIWORD(lParam), FALSE);
 	                        return 0;
+      case WM_DRAWITEM:
+      case WM_MEASUREITEM:  
+                           return ShellView_DoCustomItem(pThis, hWnd, uMessage, lParam);
 
 	  case WM_SHOWWINDOW:	UpdateWindow(pThis->hWndList);
 				break;
@@ -1726,6 +1753,9 @@ static ULONG WINAPI IShellView_fnRelease(IShellView * iface)
 
 	  if(This->pAdvSink)
 	    IAdviseSink_Release(This->pAdvSink);
+
+      if (This->pCM)
+        IContextMenu_Release(This->pCM);
 
 	  HeapFree(GetProcessHeap(),0,This);
 	}
