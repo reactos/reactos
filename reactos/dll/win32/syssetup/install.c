@@ -617,6 +617,12 @@ CreateShortcuts(VOID)
         CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_CHARMAP, _T("%SystemRoot%\\system32\\charmap.exe"), IDS_CMT_CHARMAP, FALSE);
     }
 
+    /* Creacte Accessibility subfolder and fill if the exe is available */
+    if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ACCESSIBILITY, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
+    {
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, FALSE);
+    }
+
     /* Create Games subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_GAMES, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {

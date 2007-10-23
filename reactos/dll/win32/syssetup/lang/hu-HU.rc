@@ -233,6 +233,13 @@ BEGIN
 	IDS_CMT_CHARMAP      "CharMap"
 END
 
+
+STRINGTABLE
+BEGIN
+	IDS_SYS_ACCESSIBILITY        "Accessibility"
+	IDS_CMT_MAGNIFY      	     "Magnify"
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP           "ReactOS Telepítõ"
@@ -261,6 +268,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
+	IDS_SHORT_MAGNIFY    "Magnify.lnk"
 END
 
 STRINGTABLE

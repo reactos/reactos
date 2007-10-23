@@ -202,6 +202,13 @@ BEGIN
 	IDS_CMT_CHARMAP      "Таблица символов"
 END
 
+
+STRINGTABLE
+BEGIN
+	IDS_SYS_ACCESSIBILITY        "Accessibility"
+	IDS_CMT_MAGNIFY      	     "Magnify"
+END
+
 STRINGTABLE
 BEGIN
     IDS_REACTOS_SETUP		"Установка ReactOS"
@@ -230,6 +237,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Пасьянс.lnk"
     IDS_SHORT_WINEMINE   "Сапер.lnk"
 	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
+	IDS_SHORT_MAGNIFY    "Magnify.lnk"
 END
 
 STRINGTABLE

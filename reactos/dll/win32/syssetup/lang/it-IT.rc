@@ -214,6 +214,12 @@ END
 
 STRINGTABLE
 BEGIN
+	IDS_SYS_ACCESSIBILITY        "Accessibility"
+	IDS_CMT_MAGNIFY      	     "Magnify"
+END
+
+STRINGTABLE
+BEGIN
 IDS_REACTOS_SETUP               "Installazione di ReactOS"
     IDS_UNKNOWN_ERROR           "Errore sconosciuto"
     IDS_REGISTERING_COMPONENTS  "Registrazione dei componenti..."
@@ -240,6 +246,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
+	IDS_SHORT_MAGNIFY    "Magnify.lnk"
 END
 
 STRINGTABLE

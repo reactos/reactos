@@ -211,6 +211,13 @@ BEGIN
    IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
 END
 
+
+STRINGTABLE
+BEGIN
+	IDS_SYS_ACCESSIBILITY        "Accessibility"
+	IDS_CMT_MAGNIFY      	     "Magnify"
+END
+
 STRINGTABLE
 BEGIN
    IDS_GAMES           "Gry"
@@ -245,6 +252,7 @@ BEGIN
     IDS_SHORT_SNAP       "Zrzut ekranu.lnk"
     IDS_SHORT_SOLITAIRE  "Pasjans.lnk"
     IDS_SHORT_WINEMINE   "Saper.lnk"
+	IDS_SHORT_MAGNIFY    "Magnify.lnk"
 END
 
 STRINGTABLE
