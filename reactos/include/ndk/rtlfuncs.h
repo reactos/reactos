@@ -911,6 +911,14 @@ RtlCreateSecurityDescriptorRelative(
 NTSYSAPI
 NTSTATUS
 NTAPI
+RtlCopySecurityDescriptor(
+    IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
+    OUT PSECURITY_DESCRIPTOR pDestinationSecurityDescriptor
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
 RtlDeleteAce(
     PACL Acl,
     ULONG AceIndex

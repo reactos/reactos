@@ -361,7 +361,7 @@ RtlConvertUlongToLargeInteger@4
 RtlCopyLuid@8
 RtlCopyLuidAndAttributesArray@12
 RtlCopyRangeList@8
-;RtlCopySecurityDescriptor
+RtlCopySecurityDescriptor@8
 RtlCopySid@12
 RtlCopySidAndAttributesArray@28
 RtlCopyString@8
