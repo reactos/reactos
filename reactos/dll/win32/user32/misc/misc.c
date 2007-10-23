@@ -16,8 +16,7 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * PROJECT:         ReactOS user32.dll
  * FILE:            lib/user32/misc/misc.c
  * PURPOSE:         Misc
@@ -31,6 +30,8 @@
 #include <user32.h>
 
 #include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -316,7 +317,7 @@ GetUser32Handle(HANDLE handle)
   PUSER_HANDLE_TABLE ht = gHandleTable;
   USHORT generation;
 
-  DPRINT1("Main Handle Table %x\n", ht);
+  TRACE("Main Handle Table %x\n", ht);
 
   INT Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
