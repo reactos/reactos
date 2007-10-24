@@ -45,7 +45,7 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER
 CAPTION "Подождите.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT           "Идет загрузка. Подождите ...",IDC_STATIC,0,15,230,8,SS_CENTER | SS_NOPREFIX
+	CTEXT           "Идет загрузка. Подождите ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
 END
 
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
