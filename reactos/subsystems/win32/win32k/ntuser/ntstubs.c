@@ -272,17 +272,6 @@ NtUserGetAltTabInfo(
    return 0;
 }
 
-BOOL
-STDCALL
-NtUserGetComboBoxInfo(
-   HWND hWnd,
-   PCOMBOBOXINFO pcbi)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
 DWORD
 STDCALL
 NtUserGetControlBrush(

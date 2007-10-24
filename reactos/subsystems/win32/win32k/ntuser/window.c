@@ -2809,6 +2809,48 @@ CLEANUP:
 }
 
 
+BOOL
+STDCALL
+NtUserGetComboBoxInfo(
+   HWND hWnd,
+   PCOMBOBOXINFO pcbi)
+{
+   PWINDOW_OBJECT Wnd;
+   DECLARE_RETURN(BOOL);
+
+   DPRINT("Enter NtUserGetComboBoxInfo\n");
+   UserEnterShared();
+
+   if (!(Wnd = UserGetWindowObject(hWnd)))
+   {
+      RETURN( FALSE );
+   }   
+   _SEH_TRY
+   {
+       if(pcbi)
+       {
+          ProbeForWrite(pcbi,
+                        sizeof(COMBOBOXINFO),
+                        1);
+       }
+   }
+   _SEH_HANDLE
+   {
+       SetLastNtError(_SEH_GetExceptionCode());
+       _SEH_YIELD(RETURN(FALSE));
+   }
+   _SEH_END;
+
+   // Pass the user pointer, it was already probed.
+   RETURN( (BOOL) co_IntSendMessage( Wnd->hSelf, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi));
+
+CLEANUP:
+   DPRINT("Leave NtUserGetComboBoxInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
+}
+
+
 /*
  * @implemented
  */
@@ -2882,7 +2924,7 @@ NtUserGetListBoxInfo(
    DECLARE_RETURN(DWORD);
    
    DPRINT("Enter NtUserGetListBoxInfo\n");
-   UserEnterExclusive();
+   UserEnterShared();
 
    if (!(Wnd = UserGetWindowObject(hWnd)))
    {

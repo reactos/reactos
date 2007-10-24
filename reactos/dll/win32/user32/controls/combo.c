@@ -2375,5 +2375,9 @@ BOOL WINAPI GetComboBoxInfo(HWND hwndCombo,      /* [in] handle to combo box */
 			    PCOMBOBOXINFO pcbi   /* [in/out] combo box information */)
 {
     TRACE("(%p, %p)\n", hwndCombo, pcbi);
+#ifndef __REACTOS__
     return SendMessageW(hwndCombo, CB_GETCOMBOBOXINFO, 0, (LPARAM)pcbi);
+#else
+    return NtUserGetComboBoxInfo(hwndCombo, pcbi);
+#endif
 }
