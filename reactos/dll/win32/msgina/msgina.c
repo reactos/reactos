@@ -207,6 +207,13 @@ WlxStartApplication(
 	UINT len;
 	BOOL ret;
 
+	len = GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
+	if (len == 0 || len > MAX_PATH)
+	{
+		WARN("GetWindowsDirectoryW() failed\n");
+		return FALSE;
+	}
+
 	ret = DuplicateTokenEx(pgContext->UserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hAppToken);
 	if (!ret)
 	{
@@ -222,13 +229,6 @@ WlxStartApplication(
 	StartupInfo.wShowWindow = SW_SHOW;
 	StartupInfo.lpDesktop = pszDesktopName;
 
-	len = GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
-	if (len > MAX_PATH)
-	{
-		WARN("GetWindowsDirectoryW() failed\n");
-		CloseHandle(hAppToken);
-		return FALSE;
-	}
 	ret = CreateProcessAsUserW(
 		hAppToken,
 		pszCmdLine,
