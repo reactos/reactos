@@ -118,6 +118,42 @@ DWORD DxEngLoadImage(DWORD x1,DWORD x2);
 DWORD DxEngIncDispUniq();
 
 
+/******************************************************/
+/* DxEngGetHdevData define value for the Index param  */
+/* This value are not document in msdn or ddk, they   */
+/* optain with blackbox win32k and reading the BOOK   */
+/* "Windows Graphics Programming Win32 Gdi And        */
+/* Directdraw of Feng Yuan" and use you head          */
+/******************************************************/
+
+/* Unknown */
+#define HDEVGETDATA_UNK_54C_8                   0
+
+/* resverd in msdn for internal use in win32k */
+#define HDEVGETDATA_DWRESERVED19                1
+
+/* Get the destory palette functions */
+#define HDEVGETDATA_PFN_DESTORYPALETTE          2
+
+/* resverd in msdn for internal use in win32k */
+#define HDEVGETDATA_DWRESERVED24                3
+
+/* Unknown */
+#define HDEVGETDATA_UNK_54C_20                  4
+
+/* Get the DD_CALLBACKS dwSize member value */
+#define DEVGETDATA_PALETTECALLBACKS_DWSIZE      5
+
+/* Unknown */
+#define HDEVGETDATA_UNK_70C                     6
+
+/* Get if the driver is refens or not */
+#define HDEVGETDATA_CDRIVERREF                 16
+
+/* Get the Set palette functions */
+#define HDEVGETDATA_PFN_SETPALETTE             18
+
+
 
 
 

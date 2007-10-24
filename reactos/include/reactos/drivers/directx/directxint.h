@@ -84,42 +84,47 @@ typedef struct _EDD_SURFACE
 
 typedef struct _EDD_DIRECTDRAW_GLOBAL
 {
-    PVOID dhpdev;
-    DWORD dwReserved1;
-    DWORD dwReserved2;
-    ULONG unk_000c[3];
-    LONG cDriverReferences;
-    ULONG unk_01c[3];
-    LONGLONG llAssertModeTimeout;
-    DWORD dwNumHeaps;
-    VIDEOMEMORY *pvmList;
-    DWORD dwNumFourCC;
-    PDWORD pdwFourCC;
-    DD_HHALINFO ddHalInfo;
-    ULONG unk_1e0[44];
-    DD_CALLBACKS ddCallbacks;
-    DD_SURFACECALLBACKS ddSurfaceCallbacks;
-    DD_PALETTE_CALLBACKS ddPaletteCallbacks;
-    ULONG unk_314[48];
-    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
-    ULONG unk_460[7];
-    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
-    ULONG unk_498[18];
-    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;
-    ULONG unk_4ec[18];
-    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
-    ULONG unk_54c[23];
-    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;
-    EDD_SURFACE* peSurface_LockList;
-    FLONG fl;
-    ULONG cSurfaceLocks;
-    PKEVENT pAssertModeEvent;
-    EDD_SURFACE *peSurfaceCurrent;
-    EDD_SURFACE *peSurfacePrimary;
-    BOOL bSuspended;
-    ULONG unk_5c8[12];
-    RECTL rcbounds;
-    HDEV hDev;
-    ULONG unk_60c;
+/* 0x000 */    PVOID dhpdev;           /* The assign pdev */
+/* 0x004 */    DWORD dwReserved1;
+/* 0x008 */    DWORD dwReserved2;
+/* 0x00C */    ULONG unk_000c[3];
+/* 0x018 */    LONG cDriverReferences;
+/* 0x01C */    ULONG unk_01c[3];        /* CallBackFlags ? */
+/* 0x028 */    LONGLONG llAssertModeTimeout;
+/* 0x030 */    DWORD dwNumHeaps;
+/* 0x034 */    VIDEOMEMORY *pvmList;
+/* 0x038 */    DWORD dwNumFourCC;
+/* 0x03C */    PDWORD pdwFourCC;
+/* 0x040 */    DD_HHALINFO ddHalInfo;
+/* 0x1E0 */    ULONG unk_1e0[44];
+/* 0x290 */    DD_CALLBACKS ddCallbacks;
+/* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;
+/* 0x304 */    DD_PALETTE_CALLBACKS ddPaletteCallbacks;
+/* 0x314 */    ULONG unk_314[48];
+/* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
+/* 0x460 */    ULONG unk_460[7];
+/* 0x47C */    D3DNTHAL_CALLBACKS2 d3dNtHalCallbacks2;
+/* 0x498 */    ULONG unk_498[18];
+/* 0x4E0 */    DD_MISCELLANEOUSCALLBACKS ddMiscellanousCallbacks;
+/* 0x4EC */    ULONG unk_4ec[18];
+/* 0x534 */    D3DNTHAL_CALLBACKS3 d3dNtHalCallbacks3;
+/* 0x54C */    ULONG unk_54c[23];
+/* 0x5A8 */    EDD_DIRECTDRAW_LOCAL* peDirectDrawLocalList;
+/* 0x5ac */    EDD_SURFACE* peSurface_LockList;
+/* 0x5B0 */    FLONG fl;
+/* 0x5B4 */    ULONG cSurfaceLocks;
+/* 0x5B8 */    PKEVENT pAssertModeEvent;
+/* 0x5Bc */    EDD_SURFACE *peSurfaceCurrent;
+/* 0x5C0 */    EDD_SURFACE *peSurfacePrimary;
+/* 0x5C4 */    BOOL bSuspended;
+/* 0x5C8 */    ULONG unk_5c8[12];
+/* 0x5F8 */    RECTL rcbounds;
+/* 0x608 */    HDEV hDev;
+/* 0x60c */    PVOID hPDev;  /* The real Pdev */
+
+/* Windows XP and higher */
+/* 0x610 */    ULONG unk_610[63];
+/* 0x70C */    ULONG unk_70C;
 } EDD_DIRECTDRAW_GLOBAL, *PEDD_DIRECTDRAW_GLOBAL;
+
 
