@@ -1,20 +1,31 @@
-//
-// Surface Object Flags
-//
-#define DDPF_ALPHAPIXELS        0x0001
-#define DDPF_ALPHA              0x0002
-#define DDPF_FOURCC             0x0004
-#define DDPF_PALETTEINDEXED4    0x0008
-#define DDPF_PALETTEINDEXEDTO8  0x0010
-#define DDPF_PALETTEINDEXED8    0x0020
-#define DDPF_RGB                0x0040
-#define DDPF_COMPRESSED         0x0080
-#define DDPF_RGBTOYUV           0x0100
-#define DDPF_YUV                0x0200
-#define DDPF_ZBUFFER            0x0400
-#define DDPF_PALETTEINDEXED1    0x0800
-#define DDPF_PALETTEINDEXED2    0x1000
-#define DDPF_ZPIXELS            0x2000
+
+#ifndef _DXINTERNEL_
+#define _DXINTERNEL_
+
+typedef struct _EDD_DIRECTDRAW_LOCAL
+{
+    //
+    // GDI Object Header
+    //
+    HANDLE hHmgr;
+    PVOID pEntry;
+    INT cExcLock;
+    HANDLE Tid;
+
+    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;
+    struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;
+    struct _EDD_SURFACE * peSurface_DdList;
+    ULONG unk_01c[2];
+    struct _EDD_DIRECTDRAW_LOCAL * peDirectDrawLocalNext;
+    FLATPTR fpProcess;
+    FLONG fl;
+    HANDLE UniqueProcess;
+    PEPROCESS Process;
+    ULONG unk_038[2];
+    VOID *unk_040;
+    VOID *unk_044;
+} EDD_DIRECTDRAW_LOCAL, PEDD_DIRECTDRAW_LOCAL;
+
 
 //
 // Surface Object
@@ -33,7 +44,7 @@ typedef struct _EDD_SURFACE
     // Direct Draw Surface Data
     //
     DD_SURFACE_LOCAL ddsSurfaceLocal;
-    DD_SURCFACE_MORE ddsSurfaceMore;
+    DD_SURFACE_MORE ddsSurfaceMore;
     DD_SURFACE_GLOBAL ddsSurfaceGlobal;
     DD_SURFACE_INT ddsSurfaceInt;
 
@@ -77,7 +88,7 @@ typedef struct _EDD_SURFACE
     //
     // Surface Lock
     //
-    ERECTL rclLock;
+    RECTL rclLock;
     ULONG field_FC[2];
 } EDD_SURFACE, *PEDD_SURFACE;
 
@@ -89,17 +100,17 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x008 */    DWORD dwReserved2;
 /* 0x00C */    ULONG unk_000c[3];
 /* 0x018 */    LONG cDriverReferences;
-/* 0x01C */    ULONG unk_01c[3];        /* CallBackFlags ? */
+/* 0x01C */    ULONG unk_01c[3];
 /* 0x028 */    LONGLONG llAssertModeTimeout;
 /* 0x030 */    DWORD dwNumHeaps;
 /* 0x034 */    VIDEOMEMORY *pvmList;
 /* 0x038 */    DWORD dwNumFourCC;
 /* 0x03C */    PDWORD pdwFourCC;
-/* 0x040 */    DD_HHALINFO ddHalInfo;
+/* 0x040 */    DD_HALINFO ddHalInfo;
 /* 0x1E0 */    ULONG unk_1e0[44];
 /* 0x290 */    DD_CALLBACKS ddCallbacks;
 /* 0x2C4 */    DD_SURFACECALLBACKS ddSurfaceCallbacks;
-/* 0x304 */    DD_PALETTE_CALLBACKS ddPaletteCallbacks;
+/* 0x304 */    DD_PALETTECALLBACKS ddPaletteCallbacks;
 /* 0x314 */    ULONG unk_314[48];
 /* 0x3D4 */    D3DNTHAL_CALLBACKS d3dNtHalCallbacks;
 /* 0x460 */    ULONG unk_460[7];
@@ -127,4 +138,4 @@ typedef struct _EDD_DIRECTDRAW_GLOBAL
 /* 0x70C */    ULONG unk_70C;
 } EDD_DIRECTDRAW_GLOBAL, *PEDD_DIRECTDRAW_GLOBAL;
 
-
+#endif

@@ -95,14 +95,14 @@ DWORD DxEngSetDeviceGammaRamp(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpSpritesVisible(DWORD x1);
-DWORD DxEngGetHdevData(DWORD x1, DWORD x2);
+DWORD DxEngGetHdevData(PEDD_DIRECTDRAW_GLOBAL pEDDgpl, DWORD Index);
 DWORD DxEngSetHdevData(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
 DWORD DxEngCleanDC(DWORD x1);
 DWORD DxEngSetDCOwner(DWORD x1, DWORD x2);
 DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
-DWORD DxEngGetDCState(DWORD x1, DWORD x2);
+DWORD DxEngGetDCState(HDC hDC, DWORD type);
 DWORD DxEngSelectBitmap(DWORD x1, DWORD x2);
 DWORD DxEngSetBitmapOwner(DWORD x1, DWORD x2);
 DWORD DxEngDeleteSurface(DWORD x1);
@@ -146,6 +146,18 @@ DWORD DxEngIncDispUniq();
 
 /* Unknown */
 #define HDEVGETDATA_UNK_70C                     6
+
+/* Get the DD_SURFACECALLBACKS dwFlag member value */
+#define HDEVGETDATA_SURFACECALLBACK_DWFLAGS     7
+
+/* Unknown */
+#define HDEVGETDATA_UNK_588                     8
+
+/* Unknown */
+#define HDEVGETDATA_UNK_01C_F400                9
+
+/* Unknown */
+#define HDEVGETDATA_UNK_01C_F20000             10
 
 /* Get if the driver is refens or not */
 #define HDEVGETDATA_CDRIVERREF                 16

@@ -120,7 +120,7 @@
 /***********************************************************************************/
 /* Driver Functions Protypes                                                       */
 /***********************************************************************************/
-typedef DWORD (NTAPI *PGD_DXDXGGENERICTHUNK)(ULONG_PTR, ULONG_PTR, SIZE_T *, PVOID, SIZE_T *, PVOID);
+typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, SIZE_T*, PVOID);
 //typedef x (NTAPI *PGD_DxD3dContextCreate)(
 //typedef x (NTAPI *PGD_DxD3dContextDestroy)(
 //typedef x (NTAPI *PGD_DxD3dContextDestroyAll)(

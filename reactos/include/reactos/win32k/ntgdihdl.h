@@ -473,6 +473,9 @@ typedef struct _DC
   DHPDEV      PDev;
   INT         DC_Type;
   INT         DC_Flags;
+
+  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
+
   PDC_ATTR    pDc_Attr;
   DC_ATTR     Dc_Attr;
 
