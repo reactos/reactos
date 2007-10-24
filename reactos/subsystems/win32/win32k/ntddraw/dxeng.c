@@ -318,8 +318,8 @@ DxEngGetHdevData(PEDD_DIRECTDRAW_GLOBAL pEDDgpl,
         case HDEVGETDATA_DWRESERVED19:
             return (DWORD)pEDDgpl->d3dNtHalCallbacks.dwReserved19;
 
-        case HDEVGETDATA_PFN_DESTORYPALETTE:
-            return (DWORD)pEDDgpl->ddPaletteCallbacks.DestroyPalette;
+        case HDEVGETDATA_PALETTECALLBACKS_DWFLAGS:
+            return (DWORD)pEDDgpl->ddPaletteCallbacks.dwFlags;
 
         case HDEVGETDATA_DWRESERVED24:
             return (DWORD)pEDDgpl->d3dNtHalCallbacks.dwReserved24;

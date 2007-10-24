@@ -132,8 +132,7 @@ DWORD DxEngIncDispUniq();
 /* resverd in msdn for internal use in win32k */
 #define HDEVGETDATA_DWRESERVED19                1
 
-/* Get the destory palette functions */
-#define HDEVGETDATA_PFN_DESTORYPALETTE          2
+#define HDEVGETDATA_PALETTECALLBACKS_DWFLAGS    2
 
 /* resverd in msdn for internal use in win32k */
 #define HDEVGETDATA_DWRESERVED24                3
@@ -141,7 +140,6 @@ DWORD DxEngIncDispUniq();
 /* Unknown */
 #define HDEVGETDATA_UNK_54C_20                  4
 
-/* Get the DD_CALLBACKS dwSize member value */
 #define DEVGETDATA_PALETTECALLBACKS_DWSIZE      5
 
 /* Unknown */

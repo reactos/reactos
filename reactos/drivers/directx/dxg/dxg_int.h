@@ -21,6 +21,8 @@
 #include <dde.h>
 #include <wincon.h>
 
+#include <reactos/drivers/directx/directxint.h>
+
 #include <reactos/win32k/ntgdityp.h>
 #include <reactos/win32k/ntgdihdl.h>
 
@@ -44,3 +46,10 @@ DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 BOOL DdHmgCreate();
 BOOL DdHmgDestroy();
 
+/* define stuff */
+#define drvDxEngLockDC          gpEngFuncs[DXENG_INDEX_DxEngLockDC]
+#define drvDxEngGetDCState      gpEngFuncs[DXENG_INDEX_DxEngGetDCState]
+#define drvDxEngGetHdevData     gpEngFuncs[DXENG_INDEX_DxEngGetHdevData]
+#define drvDxEngUnlockDC        gpEngFuncs[DXENG_INDEX_DxEngUnlockDC]
+#define drvDxEngUnlockHdev      gpEngFuncs[DXENG_INDEX_DxEngUnlockHdev]
+#define drvDxEngLockHdev        gpEngFuncs[DXENG_INDEX_DxEngLockHdev]
