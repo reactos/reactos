@@ -85,7 +85,8 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
             refuse
         }
         */
-        Process->QuotaUsage[2] += Amount;
+        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[2], Amount);
+        /* Note: possibility for race. */
         if (Process->QuotaPeak[2] < Process->QuotaUsage[2])
         {
             Process->QuotaPeak[2] = Process->QuotaUsage[2];
@@ -202,7 +203,8 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
             refuse
         }
         */
-        Process->QuotaUsage[PoolIndex] += Amount;
+        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], Amount);
+        /* Note: possibility for race. */
         if (Process->QuotaPeak[PoolIndex] < Process->QuotaUsage[PoolIndex])
         {
             Process->QuotaPeak[PoolIndex] = Process->QuotaUsage[PoolIndex];
@@ -240,7 +242,7 @@ PsReturnPoolQuota(IN PEPROCESS Process,
         }
         else
         {
-            Process->QuotaUsage[PoolIndex] -= Amount;
+            InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], -Amount);
         }
     }
 #else
@@ -301,7 +303,7 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
         }
         else
         {
-            Process->QuotaUsage[2] -= Amount;
+            InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[2], -Amount);
         }
     }
 #else
