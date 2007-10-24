@@ -336,16 +336,6 @@ NtUserGetImeHotKey(
 
 DWORD
 STDCALL
-NtUserGetListBoxInfo(
-   DWORD Unknown0)
-{
-   UNIMPLEMENTED
-
-   return 0;
-}
-
-DWORD
-STDCALL
 NtUserGetMouseMovePointsEx(
    UINT cbSize,
    LPMOUSEMOVEPOINT lppt,

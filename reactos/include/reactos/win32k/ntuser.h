@@ -1161,7 +1161,7 @@ NtUserGetLayeredWindowAttributes(
 DWORD
 NTAPI
 NtUserGetListBoxInfo(
-  DWORD Unknown0);
+  HWND hWnd);
 
 typedef struct tagNTUSERGETMESSAGEINFO
 {

@@ -2872,6 +2872,32 @@ NtUserGetLastActivePopup(HWND hWnd)
 #endif
 }
 
+
+DWORD
+STDCALL
+NtUserGetListBoxInfo(
+   HWND hWnd)
+{
+   PWINDOW_OBJECT Wnd;
+   DECLARE_RETURN(DWORD);
+   
+   DPRINT("Enter NtUserGetListBoxInfo\n");
+   UserEnterExclusive();
+
+   if (!(Wnd = UserGetWindowObject(hWnd)))
+   {
+      RETURN( 0 );
+   }   
+
+   RETURN( (DWORD) co_IntSendMessage( Wnd->hSelf, LB_GETLISTBOXINFO, 0, 0 ));
+
+CLEANUP:
+   DPRINT("Leave NtUserGetListBoxInfo, ret=%i\n",_ret_);
+   UserLeave();
+   END_CLEANUP;   
+}
+
+
 /*
  * NtUserGetParent
  *
