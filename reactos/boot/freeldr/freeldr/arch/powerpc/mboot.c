@@ -473,7 +473,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     /* Handle relocation sections */
     for (i = 0; i < shnum; i++) {
 	Elf32_Rela reloc = { };
-	ULONG *Target32, x;
+	ULONG *Target32;
 	USHORT *Target16;
 	int numreloc, relstart, targetSection;
 	Elf32_Sym symbol;
@@ -531,7 +531,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 
 	    Target32 = (ULONG*)(((PCHAR)MemLoadAddr) + (P - KernelAddr));
 	    Target16 = (USHORT *)Target32;
-	    x = *Target32;
 
 	    switch (ELF32_R_TYPE(reloc.r_info))
 	    {
