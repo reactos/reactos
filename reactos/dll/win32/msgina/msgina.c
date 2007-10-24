@@ -203,8 +203,16 @@ WlxStartApplication(
 	STARTUPINFOW StartupInfo;
 	PROCESS_INFORMATION ProcessInformation;
 	WCHAR CurrentDirectory[MAX_PATH];
+	HANDLE hAppToken;
 	UINT len;
 	BOOL ret;
+
+	ret = DuplicateTokenEx(pgContext->UserToken, MAXIMUM_ALLOWED, NULL, SecurityImpersonation, TokenPrimary, &hAppToken);
+	if (!ret)
+	{
+		WARN("DuplicateTokenEx() failed with error %lu\n", GetLastError());
+		return FALSE;
+	}
 
 	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
 	StartupInfo.cb = sizeof(STARTUPINFOW);
@@ -218,10 +226,11 @@ WlxStartApplication(
 	if (len > MAX_PATH)
 	{
 		WARN("GetWindowsDirectoryW() failed\n");
+		CloseHandle(hAppToken);
 		return FALSE;
 	}
 	ret = CreateProcessAsUserW(
-		pgContext->UserToken,
+		hAppToken,
 		pszCmdLine,
 		NULL,
 		NULL,
@@ -232,6 +241,7 @@ WlxStartApplication(
 		CurrentDirectory,
 		&StartupInfo,
 		&ProcessInformation);
+	CloseHandle(hAppToken);
 	if (!ret)
 		WARN("CreateProcessAsUserW() failed with error %lu\n", GetLastError());
 	return ret;
