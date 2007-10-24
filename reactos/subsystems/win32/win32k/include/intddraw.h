@@ -3,6 +3,7 @@
 
 #include <ddrawint.h>
 #include <ddkernel.h>
+#include <reactos/drivers/directx/directxint.h>
 #include <reactos/drivers/directx/dxg.h>
 #include <reactos/drivers/directx/dxeng.h>
 

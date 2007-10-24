@@ -306,10 +306,70 @@ DWORD DxEngSpSpritesVisible(DWORD x1)
 /************************************************************************/
 /* DxEngGetHdevData                                                     */
 /************************************************************************/
-DWORD DxEngGetHdevData(DWORD x1, DWORD x2)
+DWORD
+DxEngGetHdevData(PEDD_DIRECTDRAW_GLOBAL pEDDgpl,
+                 DWORD Index)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    switch (Index)
+    {
+        case HDEVGETDATA_UNK_54C_8:
+            return (DWORD)pEDDgpl->unk_54c[8];
+
+        case HDEVGETDATA_DWRESERVED19:
+            return (DWORD)pEDDgpl->d3dNtHalCallbacks.dwReserved19;
+
+        case HDEVGETDATA_PFN_DESTORYPALETTE:
+            return (DWORD)pEDDgpl->ddPaletteCallbacks.DestroyPalette;
+
+        case HDEVGETDATA_DWRESERVED24:
+            return (DWORD)pEDDgpl->d3dNtHalCallbacks.dwReserved24;
+
+        case HDEVGETDATA_UNK_54C_20:
+            return (DWORD)pEDDgpl->unk_54c[20];
+
+        case DEVGETDATA_PALETTECALLBACKS_DWSIZE:
+            return (DWORD)pEDDgpl->ddPaletteCallbacks.dwSize;
+
+        case HDEVGETDATA_UNK_70C:
+            return (DWORD)pEDDgpl->unk_70C;
+
+        case HDEVGETDATA_SURFACECALLBACK_DWFLAGS:
+            return (DWORD)pEDDgpl->ddSurfaceCallbacks.dwFlags;
+
+        case HDEVGETDATA_UNK_588:
+            return (DWORD)pEDDgpl->unk_54c[15];
+
+        case HDEVGETDATA_UNK_01C_F400:
+            return (DWORD)pEDDgpl->unk_01c[1] & 0x400;
+
+        case HDEVGETDATA_UNK_01C_F20000: 
+            return (DWORD)pEDDgpl->unk_01c[1] & 0x20000;
+
+        case 0x0B:
+            return (DWORD)pEDDgpl->unk_01c[1] & 0x1;
+
+        case 0x0C:
+            return (DWORD)pEDDgpl->unk_01c[0];
+
+        case HDEVGETDATA_CDRIVERREF:
+            return (DWORD) (pEDDgpl->cDriverReferences) ? TRUE : FALSE ;
+
+        case 0x11:
+            return (DWORD)pEDDgpl->d3dNtHalCallbacks.dwReserved8 & 0x100;
+
+        case HDEVGETDATA_PFN_SETPALETTE:
+            return (DWORD)pEDDgpl->ddSurfaceCallbacks.SetPalette;
+
+        case 0x13:
+            return (DWORD)pEDDgpl->unk_54c[0x0A];
+
+        case 0x14:
+            return (DWORD)pEDDgpl->unk_01c[1] & 0x80000;
+
+        default:
+            break;
+    }
+    return 0;
 }
 
 /************************************************************************/
@@ -369,10 +429,34 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 /************************************************************************/
 /* DxEngGetDCState                                                      */
 /************************************************************************/
-DWORD DxEngGetDCState(DWORD x1, DWORD x2)
+DWORD
+DxEngGetDCState(HDC hDC,
+                DWORD type)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    PEDD_DIRECTDRAW_GLOBAL pEDDgpl = NULL;
+    PDC pDC = DC_LockDc(hDC);
+    if (pDC)
+    {
+        switch (type)
+        {
+            case 1:
+                UNIMPLEMENTED;
+                return 0;
+            case 2:
+                UNIMPLEMENTED;
+                return 0;
+            case 3:
+                pEDDgpl = pDC->pEDDgpl;
+                DC_UnlockDc(pDC);
+                return (DWORD)pEDDgpl;
+
+            default:
+                UNIMPLEMENTED;
+                break;
+        }
+    }
+
+    return 0;
 }
 
 /************************************************************************/
