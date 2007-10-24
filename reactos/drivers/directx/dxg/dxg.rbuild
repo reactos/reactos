@@ -7,5 +7,6 @@ installbase="system32/drivers" installname="dxg.sys">
 	<define name="__USE_W32API" />
 	<library>dxgthk</library>
 	<file>main.c</file>
+	<file>historic.c</file>
 	<file>dxg.rc</file>
 </module>

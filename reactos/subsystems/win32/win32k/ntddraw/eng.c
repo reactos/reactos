@@ -112,24 +112,42 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
     }
 }
 
-/************************************************************************/
-/* EngDxIoctl                                                           */
-/************************************************************************/
+/*++
+* @name EngDxIoctl
+* @implemented
+*
+* The function EngDxIoctl is the ioctl call to diffent dx functions 
+* to the driver dxg.sys
+*
+* @param ULONG ulIoctl
+* The ioctl code that we want call to
+*
+* @param PVOID pBuffer
+* Our in or out buffer with data to the ioctl code we are using
+*
+* @param ULONG ulBufferSize
+* The buffer size in bytes
+*
+* @return 
+* always return DDERR_UNSUPPORTED
+*
+* @remarks.
+* dxg.sys EngDxIoctl call are redirect to dxg.sys
+* This api are not longer use in Windows NT 2000/XP/2003
+*
+*--*/
 DWORD
 STDCALL
 EngDxIoctl(ULONG ulIoctl,
            PVOID pBuffer,
            ULONG ulBufferSize)
 {
-    PGD_ENGDXIOCTL pfnEngDxIoctl = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdIoctl, pfnEngDxIoctl);
+    PGD_ENGDXIOCTL pfnEngDxIoctl = (PGD_ENGDXIOCTL)gpDxFuncs[DXG_INDEX_DxDdIoctl].pfn;
 
     if (pfnEngDxIoctl == NULL)
     {
         DPRINT1("Warring no pfnEngDxIoctl");
-        return DDHAL_DRIVER_NOTHANDLED;
+        return DDERR_UNSUPPORTED;
     }
 
     DPRINT1("Calling on dxg.sys pfnEngDxIoctl");

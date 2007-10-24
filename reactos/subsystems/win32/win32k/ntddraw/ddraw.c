@@ -150,11 +150,39 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
 }
 
-
-
-/************************************************************************/
-/* NtGdiDxgGenericThunk                                                 */
-/************************************************************************/
+/*++
+* @name NtGdiDxgGenericThunk
+* @implemented
+*
+* The function NtGdiDxgGenericThunk redirect dx call to other thing.
+* from dxg.sys
+*
+* @param ULONG_PTR ulIndex
+* The functions we want redirct
+*
+* @param ULONG_PTR ulHandle
+* Unknown
+*
+* @param SIZE_T *pdwSizeOfPtr1
+* Unknown
+*
+* @param PVOID pvPtr1
+* Unknown
+*
+* @param SIZE_T *pdwSizeOfPtr2
+* Unknown
+*
+* @param PVOID pvPtr2
+* Unknown
+*
+* @return 
+* always return DDHAL_DRIVER_NOTHANDLED
+*
+* @remarks.
+* dxg.sys NtGdiDxgGenericThunk call are redirect to dxg.sys
+* This api are not longer use in Windows NT 2000/XP/2003
+*
+*--*/
 DWORD
 STDCALL
 NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
@@ -164,10 +192,7 @@ NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
                      SIZE_T *pdwSizeOfPtr2,
                      PVOID pvPtr2)
 {
-    PGD_DXGENERICTRUNK pfnDxgGenericThunk = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDxgGenericThunk, pfnDxgGenericThunk);
+    PGD_DXGENERICTRUNK pfnDxgGenericThunk = (PGD_DXGENERICTRUNK)gpDxFuncs[DXG_INDEX_DxDxgGenericThunk].pfn;
 
     if (pfnDxgGenericThunk == NULL)
     {

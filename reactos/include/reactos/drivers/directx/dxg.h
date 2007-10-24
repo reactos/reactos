@@ -116,3 +116,102 @@
 #define DXG_INDEX_DxDdGetSurfaceLock              0x59
 #define DXG_INDEX_DxDdEnumLockedSurfaceRect       0x5A
 
+
+/***********************************************************************************/
+/* Driver Functions Protypes                                                       */
+/***********************************************************************************/
+typedef DWORD (NTAPI *PGD_DXDXGGENERICTHUNK)(ULONG_PTR, ULONG_PTR, SIZE_T *, PVOID, SIZE_T *, PVOID);
+//typedef x (NTAPI *PGD_DxD3dContextCreate)(
+//typedef x (NTAPI *PGD_DxD3dContextDestroy)(
+//typedef x (NTAPI *PGD_DxD3dContextDestroyAll)(
+//typedef x (NTAPI *PGD_DxD3dValidateTextureStageState)(
+//typedef x (NTAPI *PGD_DxD3dDrawPrimitives2)(
+//typedef x (NTAPI *PGD_DxDdGetDriverState)(
+//typedef x (NTAPI *PGD_DxDdAddAttachedSurface)(
+//typedef x (NTAPI *PGD_DxDdAlphaBlt)(
+//typedef x (NTAPI *PGD_DxDdAttachSurface)(
+//typedef x (NTAPI *PGD_DxDdBeginMoCompFrame)(
+//typedef x (NTAPI *PGD_DxDdBlt)(
+//typedef x (NTAPI *PGD_DxDdCanCreateSurface)(
+//typedef x (NTAPI *PGD_DxDdCanCreateD3DBuffer)(
+//typedef x (NTAPI *PGD_DxDdColorControl)(
+//typedef x (NTAPI *PGD_DxDdCreateDirectDrawObject)(
+//typedef x (NTAPI *PGD_DxDdCreateSurface)(
+//typedef x (NTAPI *PGD_DxDdCreateD3DBuffer)(
+//typedef x (NTAPI *PGD_DxDdCreateMoComp)(
+//typedef x (NTAPI *PGD_DxDdCreateSurfaceObject)(
+//typedef x (NTAPI *PGD_DxDdDeleteDirectDrawObject)(
+//typedef x (NTAPI *PGD_DxDdDeleteSurfaceObject)(
+//typedef x (NTAPI *PGD_DxDdDestroyMoComp)(
+//typedef x (NTAPI *PGD_DxDdDestroySurface)(
+//typedef x (NTAPI *PGD_DxDdDestroyD3DBuffer)(
+//typedef x (NTAPI *PGD_DxDdEndMoCompFrame)(
+//typedef x (NTAPI *PGD_DxDdFlip)(
+//typedef x (NTAPI *PGD_DxDdFlipToGDISurface)(
+//typedef x (NTAPI *PGD_DxDdGetAvailDriverMemory)(
+//typedef x (NTAPI *PGD_DxDdGetBltStatus)(
+//typedef x (NTAPI *PGD_DxDdGetDC)(
+//typedef x (NTAPI *PGD_DxDdGetDriverInfo)(
+//typedef x (NTAPI *PGD_DxDdGetDxHandle)(
+//typedef x (NTAPI *PGD_DxDdGetFlipStatus)(
+//typedef x (NTAPI *PGD_DxDdGetInternalMoCompInfo)(
+//typedef x (NTAPI *PGD_DxDdGetMoCompBuffInfo)(
+//typedef x (NTAPI *PGD_DxDdGetMoCompGuids)(
+//typedef x (NTAPI *PGD_DxDdGetMoCompFormats)(
+//typedef x (NTAPI *PGD_DxDdGetScanLine)(
+//typedef x (NTAPI *PGD_DxDdLock)(
+//typedef x (NTAPI *PGD_DxDdLockD3D)(
+//typedef x (NTAPI *PGD_DxDdQueryDirectDrawObject)(
+//typedef x (NTAPI *PGD_DxDdQueryMoCompStatus)(
+//typedef x (NTAPI *PGD_DxDdReenableDirectDrawObject)(
+//typedef x (NTAPI *PGD_DxDdReleaseDC)(
+//typedef x (NTAPI *PGD_DxDdRenderMoComp)(
+//typedef x (NTAPI *PGD_DxDdResetVisrgn)(
+//typedef x (NTAPI *PGD_DxDdSetColorKey)(
+//typedef x (NTAPI *PGD_DxDdSetExclusiveMode)(
+//typedef x (NTAPI *PGD_DxDdSetGammaRamp)(
+//typedef x (NTAPI *PGD_DxDdCreateSurfaceEx)(
+//typedef x (NTAPI *PGD_DxDdSetOverlayPosition)(
+//typedef x (NTAPI *PGD_DxDdUnattachSurface)(
+//typedef x (NTAPI *PGD_DxDdUnlock)(
+//typedef x (NTAPI *PGD_DxDdUnlockD3D)(
+//typedef x (NTAPI *PGD_DxDdUpdateOverlay)(
+//typedef x (NTAPI *PGD_DxDdWaitForVerticalBlank)(
+//typedef x (NTAPI *PGD_DxDvpCanCreateVideoPort)(
+//typedef x (NTAPI *PGD_DxDvpColorControl)(
+//typedef x (NTAPI *PGD_DxDvpCreateVideoPort)(
+//typedef x (NTAPI *PGD_DxDvpDestroyVideoPort)(
+//typedef x (NTAPI *PGD_DxDvpFlipVideoPort)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortBandwidth)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortField)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortFlipStatus)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortInputFormats)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortLine)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortOutputFormats)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoPortConnectInfo)(
+//typedef x (NTAPI *PGD_DxDvpGetVideoSignalStatus)(
+//typedef x (NTAPI *PGD_DxDvpUpdateVideoPort)(
+//typedef x (NTAPI *PGD_DxDvpWaitForVideoPortSync)(
+//typedef x (NTAPI *PGD_DxDvpAcquireNotification)(
+//typedef x (NTAPI *PGD_DxDvpReleaseNotification)(
+//typedef x (NTAPI *PGD_DxDdHeapVidMemAllocAligned)(
+//typedef x (NTAPI *PGD_DxDdHeapVidMemFree)(
+//typedef x (NTAPI *PGD_DxDdEnableDirectDraw)(
+//typedef x (NTAPI *PGD_DxDdDisableDirectDraw)(
+//typedef x (NTAPI *PGD_DxDdSuspendDirectDraw)(
+//typedef x (NTAPI *PGD_DxDdResumeDirectDraw)(
+//typedef x (NTAPI *PGD_DxDdDynamicModeChange)(
+//typedef x (NTAPI *PGD_DxDdCloseProcess)(
+//typedef x (NTAPI *PGD_DxDdGetDirectDrawBound)(
+//typedef x (NTAPI *PGD_DxDdEnableDirectDrawRedirection)(
+//typedef x (NTAPI *PGD_DxDdAllocPrivateUserMem)(
+//typedef x (NTAPI *PGD_DxDdFreePrivateUserMem)(
+//typedef x (NTAPI *PGD_DxDdLockDirectDrawSurface)(
+//typedef x (NTAPI *PGD_DxDdUnlockDirectDrawSurface)(
+//typedef x (NTAPI *PGD_DxDdSetAccelLevel)(
+//typedef x (NTAPI *PGD_DxDdGetSurfaceLock)(
+//typedef x (NTAPI *PGD_DxDdEnumLockedSurfaceRect)(
+typedef DWORD (NTAPI *PGD_ENGDXIOCTL)(ULONG, PVOID, ULONG);
+
+
+

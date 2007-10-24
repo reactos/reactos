@@ -23,7 +23,7 @@
 
 #include <reactos/win32k/ntgdityp.h>
 #include <reactos/win32k/ntgdihdl.h>
-#include <reactos/win32k/win32kdc.h>
+
 #include <reactos/drivers/directx/dxg.h>
 #include <reactos/drivers/directx/dxeng.h>
 
@@ -35,6 +35,8 @@ NTSTATUS DxDdCleanupDxGraphics();
 
 
 /* Driver list export functions */
+DWORD STDCALL DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *pdwSizeOfPtr1, PVOID pvPtr1, SIZE_T *pdwSizeOfPtr2, PVOID pvPtr2);
+DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 
 /* Internel functions */
 BOOL DdHmgDestroy();
