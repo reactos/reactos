@@ -13,22 +13,7 @@
 	<property name="OFWLDR_LINKFORMAT" value="-L$(INTERMEDIATE)/lib/ppcmmu -lppcmmu_code -nostdlib -nostartfiles -lgcc -Wl,-e,__start -Wl,-Ttext,0xe00000 -N"/>
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles"/>
 
-	<define name="_M_PPC" />
-	<define name="_PPC_" />
-	<define name="__PowerPC__" />
-	<define name="stdcall"/>
-	<define name="__stdcall__"/>
-	<define name="fastcall"/>
-	<define name="cdecl"/>
-	<define name="__cdecl__"/>
-	<define name="dllimport"/>
-	<define name="WORDS_BIGENDIAN"/>
 	<define name="__MSVCRT__"/>
-	<define name="__NO_CTYPE_INLINES" />
-	<!-- <define name="__DECLSPEC_SUPPORTED" /> -->
-	<define name="__MINGW_IMPORT">extern</define>
-	<define name="_CRTIMP"/>
-	<define name="'__declspec(x)'"/>
 	<compilerflag>-fshort-wchar</compilerflag>
 	<compilerflag>-fsigned-char</compilerflag>
 	<compilerflag>-mfull-toc</compilerflag>
