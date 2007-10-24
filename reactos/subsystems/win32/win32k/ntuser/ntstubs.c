@@ -272,11 +272,11 @@ NtUserGetAltTabInfo(
    return 0;
 }
 
-DWORD
+BOOL
 STDCALL
 NtUserGetComboBoxInfo(
-   DWORD Unknown0,
-   DWORD Unknown1)
+   HWND hWnd,
+   PCOMBOBOXINFO pcbi)
 {
    UNIMPLEMENTED
 
