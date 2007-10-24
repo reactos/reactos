@@ -27,6 +27,8 @@
 #include <reactos/drivers/directx/dxg.h>
 #include <reactos/drivers/directx/dxeng.h>
 
+#include "tags.h"
+
 
 /* exported functions */
 NTSTATUS DriverEntry(IN PVOID Context1, IN PVOID Context2);
@@ -39,5 +41,6 @@ DWORD STDCALL DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *p
 DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 
 /* Internel functions */
+BOOL DdHmgCreate();
 BOOL DdHmgDestroy();
 

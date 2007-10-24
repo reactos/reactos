@@ -20,6 +20,11 @@ HSEMAPHORE ghsemHmgr = NULL;
 HSEMAPHORE ghsemDummyPage = NULL;
 VOID *gpDummyPage = NULL;
 PEPROCESS gpepSession = NULL;
+PLARGE_INTEGER gpLockShortDelay = NULL;
+HANDLE ghFreeDdHmgr = 0;
+VOID *gpentDdHmgr = NULL;
+VOID *gpentDdHmgrLast = NULL;
+
 
 PDRVFN gpEngFuncs;
 const ULONG gcDxgFuncs = DXG_INDEX_DxDdIoctl + 1;
@@ -92,7 +97,6 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     /* Note 12/1-2004 : Why is this set to 0x618 */
     *DirectDrawContext = 0x618;
 
-#if 0
     if (DdHmgCreate())
     {
         ghsemDummyPage = EngCreateSemaphore();
@@ -103,7 +107,6 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
             return STATUS_SUCCESS;
         }
     }
-#endif 
 
     DdHmgDestroy();
 
@@ -119,16 +122,13 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
 NTSTATUS
 DxDdCleanupDxGraphics()
 {
-
     DdHmgDestroy();
 
     if (!ghsemDummyPage)
     {
         if (!gpDummyPage)
         {
-#if 0
             ExFreePoolWithTag(gpDummyPage,0);
-#endif
             gpDummyPage = NULL;
             gcDummyPageRefCnt = 0;
         }
@@ -143,16 +143,15 @@ DdHmgDestroy()
 {
     gcMaxDdHmgr = 0;
     gcSizeDdHmgr = 0;
-#if 0
     ghFreeDdHmgr = 0;
-    gpentDdHmgrLast = 0;
+    gpentDdHmgrLast = NULL;
 
     if (gpentDdHmgr)
     {
         EngFreeMem(gpentDdHmgr);
-        gpentDdHmgr = 0; 
+        gpentDdHmgr = NULL; 
     }
-#endif
+
     if (ghsemHmgr)
     {
         EngDeleteSemaphore(ghsemHmgr);
@@ -162,3 +161,35 @@ DdHmgDestroy()
     return TRUE;
 }
 
+
+BOOL
+DdHmgCreate()
+{
+    gpentDdHmgr = EngAllocMem(FL_ZERO_MEMORY, gcSizeDdHmgr, TAG_THDD);
+    ghFreeDdHmgr = 0;
+    gcMaxDdHmgr = 1;
+
+    if (gpentDdHmgr)
+    {
+        ghsemHmgr = EngCreateSemaphore();
+
+        if (ghsemHmgr)
+        {
+            gpLockShortDelay = EngAllocMem(FL_ZERO_MEMORY | FL_NONPAGED_MEMORY, sizeof(LARGE_INTEGER), TAG_GINI);
+
+            if (gpLockShortDelay)
+            {
+                gpLockShortDelay->QuadPart = ((LONGLONG)-100000);
+                return TRUE;
+            }
+
+            EngDeleteSemaphore(ghsemHmgr);
+            ghsemHmgr = NULL;
+        }
+
+        EngFreeMem(gpentDdHmgr);
+        gpentDdHmgr = NULL;
+    }
+
+    return FALSE;
+}
