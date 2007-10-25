@@ -15,5 +15,6 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDC_DESK_ICON ICON "resources/applet.ico"
 IDC_DESK_ICON2 ICON "resources/applet.ico"
 IDC_MONITOR BITMAP "resources/monitor.bmp"
+IDB_SPECTRUM BITMAP "resources/spectrum.bmp"
 
 #include "rsrc.rc"

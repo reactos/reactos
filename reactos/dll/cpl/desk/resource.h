@@ -65,6 +65,8 @@
 #define IDC_SETTINGS_RESOLUTION_TEXT 204
 #define IDC_SETTINGS_ADVANCED        205
 #define IDC_SETTINGS_MONSEL          206
+#define IDC_SETTINGS_SPECTRUM        207
+#define IDB_SPECTRUM                 208
 
 #define IDR_PREVIEW_MENU     2100
 #define ID_MENU_NORMAL       2101
@@ -158,4 +160,5 @@
 #define IDS_ADVANCEDTITLEFMT	3302
 
 #endif /* __CPL_DESK_RESOURCE_H__ */
+
 

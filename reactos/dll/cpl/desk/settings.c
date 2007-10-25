@@ -17,6 +17,9 @@ typedef struct _GLOBAL_DATA
 	PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
+static HBITMAP hBitmap = NULL;
+static int cxSource, cySource;
+
 static VOID
 UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
 {
@@ -558,11 +561,43 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
+	BITMAP bitmap;
+
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
+		{
 			OnInitDialog(hwndDlg);
+			
+			hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+			if (hBitmap != NULL)
+			{
+				GetObjectW(hBitmap, sizeof(BITMAP), &bitmap);
+
+				cxSource = bitmap.bmWidth;
+				cySource = bitmap.bmHeight;
+			}
 			break;
+		}
+		case WM_DRAWITEM:
+		{
+			LPDRAWITEMSTRUCT lpDrawItem;
+			lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+			if(lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
+			{
+				HDC hdcMem;
+				hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
+				if (hdcMem != NULL)
+				{
+					SelectObject(hdcMem, hBitmap);
+					StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
+								lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
+								lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
+								hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
+					DeleteDC(hdcMem);
+				}
+			}
+		}
 		case WM_COMMAND:
 		{
 			DWORD controlId = LOWORD(wParam);
@@ -762,6 +797,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 			}
 
 			HeapFree(GetProcessHeap(), 0, pGlobalData);
+
+			DeleteObject(hBitmap);
 		}
 	}
 	return FALSE;
