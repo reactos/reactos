@@ -285,7 +285,7 @@ CheckVolume(
 
     /* Load the provider which will do the chkdsk */
     Provider = LoadProvider(FileSystem);
-    if (!NT_SUCCESS(Status))
+    if (Provider == NULL)
     {
         DPRINT1("LoadProvider() failed\n");
         PrintString("  Unable to verify a %S volume\n", FileSystem);
