@@ -1131,40 +1131,31 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
              const RECT *prcClip, HRGN hrgnUpdate, LPRECT prcUpdate)
 {
    PDC pDC;
-   RECT rcScroll, rcSrc, rcDst;
-   SIZE szSrcOrg;
+   RECT rcClip, rcSrc, rcDst;
    INT Result;
 
-   IntGdiGetClipBox(hDC, &rcScroll);
+   IntGdiGetClipBox(hDC, &rcClip);
    if (prcClip)
    {
-      IntGdiIntersectRect(&rcScroll, &rcScroll, prcClip);
+      IntGdiIntersectRect(&rcClip, &rcClip, prcClip);
    }
 
    if (prcScroll)
    {
-      IntGdiIntersectRect(&rcSrc, &rcScroll, prcScroll);
+      IntGdiIntersectRect(&rcSrc, &rcClip, prcScroll);
    }
    else
    {
-      rcSrc = rcScroll;
+      rcSrc = rcClip;
    }
 
    rcDst = rcSrc;
    IntGdiOffsetRect(&rcDst, dx, dy);
-   if (rcDst.left < rcScroll.left)
-       szSrcOrg.cx = rcScroll.left - rcDst.left;
-   else
-       szSrcOrg.cx = 0;
-   if (rcDst.top < rcScroll.top)
-       szSrcOrg.cy = rcScroll.top - rcDst.top;
-   else
-       szSrcOrg.cy = 0;
-   IntGdiIntersectRect(&rcDst, &rcDst, &rcScroll);
+   IntGdiIntersectRect(&rcDst, &rcDst, &rcClip);
 
    if (!NtGdiBitBlt(hDC, rcDst.left, rcDst.top,
                     rcDst.right - rcDst.left, rcDst.bottom - rcDst.top,
-                    hDC, rcSrc.left + szSrcOrg.cx, rcSrc.top + szSrcOrg.cy, SRCCOPY, 0, 0))
+                    hDC, rcDst.left - dx, rcDst.top - dy, SRCCOPY, 0, 0))
    {
       return ERROR;
    }
@@ -1173,7 +1164,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
       could not be copied, because it was not visible */
    if (hrgnUpdate || prcUpdate)
    {
-      HRGN hrgnOwn, hrgnVisible, hrgnDst;
+      HRGN hrgnOwn, hrgnVisible, hrgnTmp;
 
       pDC = DC_LockDc(hDC);
       if (!pDC)
@@ -1183,24 +1174,34 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
       hrgnVisible = pDC->w.hVisRgn;  // pDC->w.hGCClipRgn?
       DC_UnlockDc(pDC);
 
+      /* Begin with the source rect */
       if (hrgnUpdate)
       {
          hrgnOwn = hrgnUpdate;
-         if (!NtGdiSetRectRgn(hrgnOwn, rcScroll.left, rcScroll.top, rcScroll.right, rcScroll.bottom))
+         if (!NtGdiSetRectRgn(hrgnOwn, rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom))
          {
             return ERROR;
          }
       }
       else
       {
-         hrgnOwn = UnsafeIntCreateRectRgnIndirect(&rcScroll);
+         hrgnOwn = UnsafeIntCreateRectRgnIndirect(&rcSrc);
       }
 
-      hrgnDst = UnsafeIntCreateRectRgnIndirect(&rcSrc);
-      NtGdiCombineRgn(hrgnDst, hrgnDst, hrgnVisible, RGN_AND);
-      NtGdiOffsetRgn(hrgnDst, dx, dy);
-      Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnDst, RGN_DIFF);
-      NtGdiDeleteObject(hrgnDst);
+      /* Substract the dest rect */
+      hrgnTmp = UnsafeIntCreateRectRgnIndirect(&rcDst);
+      NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
+
+      /* Add the part of the dest that wasn't visible in source */
+      NtGdiSetRectRgn(hrgnTmp, rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
+      Result = NtGdiCombineRgn(hrgnTmp, hrgnTmp, hrgnVisible, RGN_DIFF);
+      if (Result != NULLREGION && Result != ERROR)
+      {
+         NtGdiOffsetRgn(hrgnTmp, dx, dy);
+         NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_OR);
+      }
+
+      NtGdiDeleteObject(hrgnTmp);
 
       if (prcUpdate)
       {
