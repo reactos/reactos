@@ -157,7 +157,6 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
 
 /*
  * @implemented
- * Publically documented and exported.
  */
 VOID
 STDCALL
@@ -229,7 +228,6 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
 
 /*
  * @unimplemented
- * Publically documented and exported.
  */
 VOID
 STDCALL
