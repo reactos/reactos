@@ -5,6 +5,7 @@
  * PURPOSE:         Process Pool Quotas
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
+ *                  Mike Nordell
  */
 
 /* INCLUDES **************************************************************/
@@ -19,6 +20,78 @@ EPROCESS_QUOTA_BLOCK PspDefaultQuotaBlock;
 /* Define this macro to enable quota code testing. Once quota code is */
 /* stable and verified, remove this macro and checks for it. */
 /*#define PS_QUOTA_ENABLE_QUOTA_CODE*/
+
+
+/* PRIVATE FUNCTIONS *******************************************************/
+
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+
+/*
+ * Private helper to charge the specified process quota.
+ * ReturnsSTATUS_QUOTA_EXCEEDED on quota limit check failure.
+ * Updates QuotaPeak as needed for specified PoolIndex.
+ * TODO: Research and possibly add (the undocumented) enum type PS_QUOTA_TYPE
+ *       to replace UCHAR for 'PoolIndex'.
+ * Notes: Conceptually translation unit local/private.
+ */
+NTSTATUS
+NTAPI
+PspChargeProcessQuotaSpecifiedPool(IN PEPROCESS Process,
+                                   IN UCHAR     PoolIndex,
+                                   IN ULONG     Amount)
+{
+    ASSERT(Process);
+    ASSERT(Process != PsInitialSystemProcess);
+    ASSERT(PoolIndex <= 2);
+    ASSERT(Process->QuotaBlock);
+
+    /* Note: Race warning. TODO: Needs to add/use lock for this */
+    if (Process->QuotaUsage[PoolIndex] + Amount >
+        Process->QuotaBlock->QuotaEntry[PoolIndex].Limit)
+    {
+        return STATUS_QUOTA_EXCEEDED; /* caller raises the exception */
+    }
+
+    InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], Amount);
+
+    /* Note: Race warning. TODO: Needs to add/use lock for this */
+    if (Process->QuotaPeak[PoolIndex] < Process->QuotaUsage[PoolIndex])
+    {
+        Process->QuotaPeak[PoolIndex] = Process->QuotaUsage[PoolIndex];
+    }
+
+    return STATUS_SUCCESS;
+}
+
+
+/*
+ * Private helper to remove quota charge from the specified process quota.
+ * TODO: Research and possibly add (the undocumented) enum type PS_QUOTA_TYPE
+ *       to replace UCHAR for 'PoolIndex'.
+ * Notes: Conceptually translation unit local/private.
+ */
+VOID
+NTAPI
+PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
+                                   IN UCHAR     PoolIndex,
+                                   IN ULONG     Amount)
+{
+    ASSERT(Process);
+    ASSERT(Process != PsInitialSystemProcess);
+    ASSERT(PoolIndex <= 2);
+    ASSERT(!(Amount & 0x80000000)); /* we need to be able to negate it */
+    if (Process->QuotaUsage[PoolIndex] < Amount)
+    {
+        DPRINT1("WARNING: Process->QuotaUsage sanity check failed.\n");
+    }
+    else
+    {
+        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex],
+                               -(LONG)Amount);
+    }
+}
+
+#endif /* PS_QUOTA_ENABLE_QUOTA_CODE */
 
 
 /* FUNCTIONS ***************************************************************/
@@ -74,33 +147,17 @@ PsChargeProcessPageFileQuota(IN PEPROCESS Process,
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
 #ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    if (Process)
-    {
-        /* TODO: Check with Process->QuotaBlock if this can be satisfied, */
-        /* assuming this indeed is the place to check it. */
-        /* Probably something like:
-        if (Process->QuotaUsage[2] + Amount >
-            Process->QuotaBlock->QuotaEntry[2].Limit)
-        {
-            refuse
-        }
-        */
-        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[2], Amount);
-        /* Note: possibility for race. */
-        if (Process->QuotaPeak[2] < Process->QuotaUsage[2])
-        {
-            Process->QuotaPeak[2] = Process->QuotaUsage[2];
-        }
-    }
+    return PspChargeProcessQuotaSpecifiedPool(Process, 2, Amount);
 #else
     /* Otherwise, not implemented */
     UNIMPLEMENTED;
-#endif
     return STATUS_SUCCESS;
+#endif
 }
 
 /*
  * @implemented
+ * Publically documented and exported.
  */
 VOID
 STDCALL
@@ -110,9 +167,15 @@ PsChargePoolQuota(IN PEPROCESS Process,
 {
     NTSTATUS Status;
 
+#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
+    /* MS-documented IRQL requirement. Not yet enabled as it */
+    /* needs verification that it does not break ReactOS, */
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
+#endif
+
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
-    
+
     /* Charge the usage */
     Status = PsChargeProcessPoolQuota(Process, PoolType, Amount);
     if (!NT_SUCCESS(Status)) ExRaiseStatus(Status);
@@ -142,38 +205,6 @@ PsChargeProcessPagedPoolQuota(IN PEPROCESS Process,
     return PsChargeProcessPoolQuota(Process, PagedPool, Amount);
 }
 
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-/*
- * Internal helper function.
- * Returns the index of the Quota* member in EPROCESS for
- * a specified pool type, or -1 on failure.
- */
-static
-INT
-PspPoolQuotaIndexFromPoolType(POOL_TYPE PoolType)
-{
-    switch (PoolType)
-    {
-        case NonPagedPool:
-        case NonPagedPoolMustSucceed:
-        case NonPagedPoolCacheAligned:
-        case NonPagedPoolCacheAlignedMustS:
-        case NonPagedPoolSession:
-        case NonPagedPoolMustSucceedSession:
-        case NonPagedPoolCacheAlignedSession:
-        case NonPagedPoolCacheAlignedMustSSession:
-            return 1;
-        case PagedPool:
-        case PagedPoolCacheAligned:
-        case PagedPoolSession:
-        case PagedPoolCacheAlignedSession:
-            return 0;
-        default:
-            return -1;
-    }
-}
-#endif
-
 /*
  * @implemented
  */
@@ -183,41 +214,22 @@ PsChargeProcessPoolQuota(IN PEPROCESS Process,
                          IN POOL_TYPE PoolType,
                          IN ULONG Amount)
 {
-#ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    INT PoolIndex;
-#endif
-
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
 
 #ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    PoolIndex = PspPoolQuotaIndexFromPoolType(PoolType);
-    if (Process && PoolIndex != -1)
-    {
-        /* TODO: Check with Process->QuotaBlock if this can be satisfied, */
-        /* assuming this indeed is the place to check it. */
-        /* Probably something like:
-        if (Process->QuotaUsage[PoolIndex] + Amount >
-            Process->QuotaBlock->QuotaEntry[PoolIndex].Limit)
-        {
-            refuse
-        }
-        */
-        InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], Amount);
-        /* Note: possibility for race. */
-        if (Process->QuotaPeak[PoolIndex] < Process->QuotaUsage[PoolIndex])
-        {
-            Process->QuotaPeak[PoolIndex] = Process->QuotaUsage[PoolIndex];
-        }
-    }
+    return PspChargeProcessQuotaSpecifiedPool(Process,
+                                              (PoolType & PAGED_POOL_MASK),
+                                              Amount);
 #else
     UNIMPLEMENTED;
-#endif
     return STATUS_SUCCESS;
+#endif
 }
 
 /*
  * @unimplemented
+ * Publically documented and exported.
  */
 VOID
 STDCALL
@@ -226,25 +238,18 @@ PsReturnPoolQuota(IN PEPROCESS Process,
                   IN ULONG_PTR Amount)
 {
 #ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    INT PoolIndex;
+    /* MS-documented IRQL requirement. Not yet enabled as it */
+    /* needs verification that it does not break ReactOS, */
+    ASSERT(KeGetCurrentIrql() < DISPATCH_LEVEL);
 #endif
 
     /* Don't do anything for the system process */
     if (Process == PsInitialSystemProcess) return;
 
 #ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    PoolIndex = PspPoolQuotaIndexFromPoolType(PoolType);
-    if (Process && PoolIndex != -1)
-    {
-        if (Process->QuotaUsage[PoolIndex] < Amount)
-        {
-            DPRINT1("WARNING: Process->QuotaUsage sanity check failed.\n");
-        }
-        else
-        {
-            InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[PoolIndex], -Amount);
-        }
-    }
+    PspReturnProcessQuotaSpecifiedPool(Process,
+                                       (PoolType & PAGED_POOL_MASK),
+                                       Amount);
 #else
     UNIMPLEMENTED;
 #endif
@@ -295,17 +300,7 @@ PsReturnProcessPageFileQuota(IN PEPROCESS Process,
     if (Process == PsInitialSystemProcess) return STATUS_SUCCESS;
     
 #ifdef PS_QUOTA_ENABLE_QUOTA_CODE
-    if (Process)
-    {
-        if (Process->QuotaUsage[2] < Amount)
-        {
-            DPRINT1("WARNING: Process PageFileQuotaUsage sanity check failed.\n");
-        }
-        else
-        {
-            InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[2], -Amount);
-        }
-    }
+    PspReturnProcessQuotaSpecifiedPool(Process, 2, Amount);
 #else
     /* Otherwise, not implemented */
     UNIMPLEMENTED;
