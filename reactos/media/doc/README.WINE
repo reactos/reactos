@@ -127,7 +127,7 @@ User32 -
   reactos/dll/win32/user32/controls/icontitle.c # Synced at 20060617
   reactos/dll/win32/user32/controls/listbox.c   # Synced at 20071023
   reactos/dll/win32/user32/controls/scrollbar.c # Forked
-  reactos/dll/win32/user32/controls/static.c    # Synced at 20060908
+  reactos/dll/win32/user32/controls/static.c    # Synced at 20071024
 
   reactos/dll/win32/user32/misc/dde.c           # Synced at 20060623 (dde_misc.c)
   reactos/dll/win32/user32/misc/ddeclient.c     # Synced at 20060623

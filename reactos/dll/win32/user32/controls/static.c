@@ -115,6 +115,33 @@ const struct builtin_class_descr STATIC_builtin_class =
 #endif
 };
 
+static void setup_clipping(HWND hwnd, HDC hdc, HRGN *orig)
+{
+    RECT rc;
+    HRGN hrgn;
+
+    /* Native control has always a clipping region set (this may be because
+     * builtin controls uses CS_PARENTDC) and an application depends on it
+     */
+    hrgn = CreateRectRgn(0, 0, 1, 1);
+    if (GetClipRgn(hdc, hrgn) != 1)
+    {
+        DeleteObject(hrgn);
+        *orig = NULL;
+    } else
+        *orig = hrgn;
+
+    GetClientRect(hwnd, &rc);
+    DPtoLP(hdc, (POINT *)&rc, 2);
+    IntersectClipRect(hdc, rc.left, rc.top, rc.right, rc.bottom);
+}
+
+static void restore_clipping(HDC hdc, HRGN hrgn)
+{
+    SelectClipRgn(hdc, hrgn);
+    if (hrgn != NULL)
+        DeleteObject(hrgn);
+}
 
 /***********************************************************************
  *           STATIC_SetIcon
@@ -140,8 +167,21 @@ static HICON STATIC_SetIcon( HWND hwnd, HICON hicon, DWORD style )
         {
             return 0;
         }
-        SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
-                      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+
+        /* Windows currently doesn't implement SS_RIGHTJUST */
+        /*
+        if ((style & SS_RIGHTJUST) != 0)
+        {
+            RECT wr;
+            GetWindowRect(hwnd, &wr);
+            SetWindowPos( hwnd, 0, wr.right - info->nWidth, wr.bottom - info->nHeight,
+                          info->nWidth, info->nHeight, SWP_NOACTIVATE | SWP_NOZORDER );
+        }
+        else */
+        {
+             SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
+                           SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+        }
     }
     return prevIcon;
 }
@@ -157,7 +197,7 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
 
     if ((style & SS_TYPEMASK) != SS_BITMAP) return 0;
     if (hBitmap && GetObjectType(hBitmap) != OBJ_BITMAP) {
-        ERR("huh? hBitmap!=0, but not bitmap\n");
+        WARN("hBitmap != 0, but it's not a bitmap\n");
         return 0;
     }
     hOldBitmap = (HBITMAP)SetWindowLongPtrW( hwnd, HICON_GWL_OFFSET, (LONG_PTR)hBitmap );
@@ -165,8 +205,20 @@ static HBITMAP STATIC_SetBitmap( HWND hwnd, HBITMAP hBitmap, DWORD style )
     {
         BITMAP bm;
         GetObjectW(hBitmap, sizeof(bm), &bm);
-        SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
-		      SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+        /* Windows currently doesn't implement SS_RIGHTJUST */
+        /*
+        if ((style & SS_RIGHTJUST) != 0)
+        {
+            RECT wr;
+            GetWindowRect(hwnd, &wr);
+            SetWindowPos( hwnd, 0, wr.right - bm.bmWidth, wr.bottom - bm.bmHeight,
+                          bm.bmWidth, bm.bmHeight, SWP_NOACTIVATE | SWP_NOZORDER );
+        }
+        else */
+        {
+            SetWindowPos( hwnd, 0, 0, 0, bm.bmWidth, bm.bmHeight,
+                          SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER );
+        }
     }
     return hOldBitmap;
 }
@@ -298,15 +350,23 @@ static VOID STATIC_TryPaintFcn(HWND hwnd, LONG full_style)
     if (!IsRectEmpty(&rc) && IsWindowVisible(hwnd) && staticPaintFunc[style])
     {
 	HDC hdc;
+        HRGN hOrigClipping;
+         
 	hdc = GetDC( hwnd );
+        setup_clipping(hwnd, hdc, &hOrigClipping);
 	(staticPaintFunc[style])( hwnd, hdc, full_style );
+	restore_clipping(hdc, hOrigClipping);
 	ReleaseDC( hwnd, hdc );
     }
 }
 
 static HBRUSH STATIC_SendWmCtlColorStatic(HWND hwnd, HDC hdc)
 {
-    HBRUSH hBrush = (HBRUSH) SendMessageW( GetParent(hwnd),
+    HBRUSH hBrush;
+    HWND parent = GetParent(hwnd);
+
+    if(!parent) parent = hwnd;
+    hBrush = (HBRUSH) SendMessageW( GetParent(hwnd),
                     WM_CTLCOLORSTATIC, (WPARAM)hdc, (LPARAM)hwnd );
     if (!hBrush) /* did the app forget to call DefWindowProc ? */
     {
@@ -382,13 +442,22 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         else return unicode ? DefWindowProcW(hwnd, uMsg, wParam, lParam) :
                               DefWindowProcA(hwnd, uMsg, wParam, lParam);
 
+    case WM_ERASEBKGND:
+         /* do all painting in WM_PAINT like Windows does */
+         return 1;
+
     case WM_PRINTCLIENT:
     case WM_PAINT:
         {
             PAINTSTRUCT ps;
             HDC hdc = wParam ? (HDC)wParam : BeginPaint(hwnd, &ps);
             if (staticPaintFunc[style])
+            {
+                HRGN hOrigClipping;
+                setup_clipping(hwnd, hdc, &hOrigClipping);
                 (staticPaintFunc[style])( hwnd, hdc, full_style );
+                restore_clipping(hdc, hOrigClipping);
+            }
             if (!wParam) EndPaint(hwnd, &ps);
         }
         break;
@@ -479,7 +548,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         {
             SetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET, wParam );
         if (LOWORD(lParam))
-                STATIC_TryPaintFcn( hwnd, full_style );
+            RedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
         }
         break;
 
@@ -598,7 +667,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     HBRUSH hBrush;
     HFONT hFont, hOldFont = NULL;
     WORD wFormat;
-    INT len;
+    INT len, buf_size;
     WCHAR *text;
 
     GetClientRect( hwnd, &rc);
@@ -656,12 +725,21 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     if ((style & SS_TYPEMASK) != SS_SIMPLE)
     {
         FillRect( hdc, &rc, hBrush );
-    if (!IsWindowEnabled(hwnd)) SetTextColor(hdc, GetSysColor(COLOR_GRAYTEXT));
+        if (!IsWindowEnabled(hwnd)) SetTextColor(hdc, GetSysColor(COLOR_GRAYTEXT));
     }
 
-    if (!(len = SendMessageW( hwnd, WM_GETTEXTLENGTH, 0, 0 ))) return;
-    if (!(text = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) ))) return;
-    SendMessageW( hwnd, WM_GETTEXT, len + 1, (LPARAM)text );
+    buf_size = 256;
+    if (!(text = HeapAlloc( GetProcessHeap(), 0, buf_size * sizeof(WCHAR) )))
+        goto no_TextOut;
+
+    while ((len = InternalGetWindowText( hwnd, text, buf_size )) == buf_size - 1)
+    {
+       buf_size *= 2;
+       if (!(text = HeapReAlloc( GetProcessHeap(), 0, text, buf_size * sizeof(WCHAR) )))
+           goto no_TextOut;
+    }
+
+    if (!len) goto no_TextOut;
 
     if (((style & SS_TYPEMASK) == SS_SIMPLE) && (style & SS_NOPREFIX))
     {
@@ -673,9 +751,10 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     }
     else
     {
-    DrawTextW( hdc, text, -1, &rc, wFormat );
+        DrawTextW( hdc, text, -1, &rc, wFormat );
     }
 
+no_TextOut:
     HeapFree( GetProcessHeap(), 0, text );
 
     if (hFont)
@@ -689,6 +768,7 @@ static void STATIC_PaintRectfn( HWND hwnd, HDC hdc, DWORD style )
 
     GetClientRect( hwnd, &rc);
 
+    /* FIXME: send WM_CTLCOLORSTATIC */
     switch (style & SS_TYPEMASK)
     {
     case SS_BLACKRECT:
@@ -833,6 +913,7 @@ static void STATIC_PaintEtchedfn( HWND hwnd, HDC hdc, DWORD style )
 {
     RECT rc;
 
+    /* FIXME: sometimes (not always) sends WM_CTLCOLORSTATIC */
     GetClientRect( hwnd, &rc );
     switch (style & SS_TYPEMASK)
     {
