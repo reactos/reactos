@@ -12,6 +12,8 @@
 #include <shlobj.h>
 #include <debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
 struct IconLocation
 {
     LPWSTR file;
@@ -58,6 +60,8 @@ IconExtraction_DefaultExtractIconInit_QueryInterface(
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
 
+    TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+
     if (!ppvObject)
         return E_POINTER;
 
@@ -89,6 +93,7 @@ IconExtraction_DefaultExtractIconInit_AddRef(
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
     ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+    TRACE("(%p)\n", This);
     return refCount;
 }
 
@@ -98,9 +103,8 @@ IconExtraction_DefaultExtractIconInit_Release(
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
     ULONG refCount;
-    
-    if (!This)
-        return E_POINTER;
+
+    TRACE("(%p)\n", This);
 
     refCount = InterlockedDecrement((PLONG)&s->ref);
     if (refCount == 0)
@@ -122,6 +126,9 @@ IconExtraction_DefaultExtractIconInit_SetDefaultIcon(
     int iIcon)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
+
+    TRACE("(%p, %s, %d)\n", This, debugstr_w(pszFile), iIcon);
+
     DuplicateString(pszFile, &s->defaultIcon.file);
     if (!s->defaultIcon.file)
         return E_OUTOFMEMORY;
@@ -135,6 +142,9 @@ IconExtraction_DefaultExtractIconInit_SetFlags(
     UINT uFlags)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
+
+    TRACE("(%p, 0x%x)\n", This, uFlags);
+
     s->flags = uFlags;
     return S_OK;
 }
@@ -144,6 +154,7 @@ IconExtraction_DefaultExtractIconInit_SetKey(
     IDefaultExtractIconInit *This,
     HKEY hkey)
 {
+    FIXME("(%p, %p)\n", This, hkey);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -155,6 +166,9 @@ IconExtraction_DefaultExtractIconInit_SetNormalIcon(
     int iIcon)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
+
+    TRACE("(%p, %s, %d)\n", This, debugstr_w(pszFile), iIcon);
+
     DuplicateString(pszFile, &s->normalIcon.file);
     if (!s->normalIcon.file)
         return E_OUTOFMEMORY;
@@ -169,6 +183,9 @@ IconExtraction_DefaultExtractIconInit_SetOpenIcon(
     int iIcon)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
+
+    TRACE("(%p, %s, %d)\n", This, debugstr_w(pszFile), iIcon);
+
     DuplicateString(pszFile, &s->openIcon.file);
     if (!s->openIcon.file)
         return E_OUTOFMEMORY;
@@ -183,6 +200,9 @@ IconExtraction_DefaultExtractIconInit_SetShortcutIcon(
     int iIcon)
 {
     struct IconExtraction *s = CONTAINING_RECORD(This, struct IconExtraction, defaultExtractIconInitImpl);
+
+    TRACE("(%p, %s, %d)\n", This, debugstr_w(pszFile), iIcon);
+
     DuplicateString(pszFile, &s->shortcutIcon.file);
     if (!s->shortcutIcon.file)
         return E_OUTOFMEMORY;
@@ -229,6 +249,11 @@ IconExtraction_ExtractIconW_GetIconLocation(
     const struct IconLocation *icon = NULL;
     SIZE_T cb;
 
+    TRACE("(%p, 0x%x, %s, 0x%x, %p, %p)\n", This, uFlags, debugstr_w(szIconFile), cchMax, piIndex, pwFlags);
+
+    if (!piIndex || !pwFlags)
+        return E_POINTER;
+
     if (uFlags & GIL_DEFAULTICON)
         icon = s->defaultIcon.file ? &s->defaultIcon : &s->normalIcon;
     else if (uFlags & GIL_FORSHORTCUT)
@@ -259,6 +284,9 @@ IconExtraction_ExtractIconW_Extract(
     HICON *phiconSmall,
     UINT nIconSize)
 {
+    TRACE("(%p, %s, %u, %p, %p, %u)\n", This, debugstr_w(pszFile),
+        nIconIndex, phiconLarge, phiconSmall, nIconSize);
+
     /* Nothing to do, ExtractIconW::GetIconLocation should be enough */
     return S_FALSE;
 }
@@ -308,7 +336,7 @@ IconExtraction_ExtractIconA_GetIconLocation(
         if (!szIconFileW)
             return E_OUTOFMEMORY;
     }
-    
+
     hr = IconExtraction_ExtractIconW_GetIconLocation(
         &s->extractIconWImpl, uFlags, szIconFileW, cchMax, piIndex, pwFlags);
     if (SUCCEEDED(hr) && cchMax > 0)
@@ -388,6 +416,8 @@ IconExtraction_PersistFile_GetClassID(
     IPersistFile *This,
     CLSID *pClassID)
 {
+    TRACE("(%p, %p)\n", This, pClassID);
+
     if (!pClassID)
         return E_POINTER;
 
@@ -399,6 +429,7 @@ static HRESULT STDMETHODCALLTYPE
 IconExtraction_PersistFile_IsDirty(
     IPersistFile *This)
 {
+    FIXME("(%p)\n", This);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -409,6 +440,7 @@ IconExtraction_PersistFile_Load(
     LPCOLESTR pszFileName,
     DWORD dwMode)
 {
+    FIXME("(%p, %s, %u)\n", This, debugstr_w(pszFileName), dwMode);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -419,6 +451,7 @@ IconExtraction_PersistFile_Save(
     LPCOLESTR pszFileName,
     BOOL fRemember)
 {
+    FIXME("(%p, %s, %d)\n", This, debugstr_w(pszFileName), fRemember);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -428,6 +461,7 @@ IconExtraction_PersistFile_SaveCompleted(
     IPersistFile *This,
     LPCOLESTR pszFileName)
 {
+    FIXME("(%p, %s)\n", This, debugstr_w(pszFileName));
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
@@ -437,6 +471,7 @@ IconExtraction_PersistFile_GetCurFile(
     IPersistFile *This,
     LPOLESTR *ppszFileName)
 {
+    FIXME("(%p, %p)\n", This, ppszFileName);
     UNIMPLEMENTED;
     return E_NOTIMPL;
 }
