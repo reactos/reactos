@@ -8,20 +8,62 @@
 #ifndef CMLIB_HIVEDATA_H
 #define CMLIB_HIVEDATA_H
 
+//
+// Hive operations
+//
+#define HINIT_CREATE                                    0
+#define HINIT_MEMORY                                    1
+#define HINIT_FILE                                      2
+#define HINIT_MEMORY_INPLACE                            3
+#define HINIT_FLAT                                      4
+#define HINIT_MAPFILE                                   5
+
+//
+// Hive flags
+//
+#define HIVE_VOLATILE                                   1
+#define HIVE_NOLAZYFLUSH                                2
+#define HIVE_HAS_BEEN_REPLACED                          4
+
+//
+// Hive types
+//
+#define HFILE_TYPE_PRIMARY                              0
+#define HFILE_TYPE_ALTERNATE                            1
+#define HFILE_TYPE_LOG                                  2
+#define HFILE_TYPE_EXTERNAL                             3
+#define HFILE_TYPE_MAX                                  4
+
+//
+// Hive sizes
+//
+#define HBLOCK_SIZE                                     0x1000
+#define HSECTOR_SIZE                                    0x200
+#define HSECTOR_COUNT                                   8
+
 #define HV_BLOCK_SIZE                  4096
 #define HV_LOG_HEADER_SIZE             FIELD_OFFSET(HBASE_BLOCK, Reserved2)
 #define HV_SIGNATURE                   0x66676572
 #define HV_BIN_SIGNATURE               0x6e696268
 
-#define HV_MAJOR_VER                   1
-#define HV_MINOR_VER                   3
-#define HV_FORMAT_MEMORY               1
+//
+// Hive versions
+//
+#define HSYS_MAJOR                                      1
+#define HSYS_MINOR                                      3
+#define HSYS_WHISTLER_BETA1                             4
+#define HSYS_WHISTLER                                   5
+#define HSYS_MINOR_SUPPORTED                            HSYS_WHISTLER
 
-#define HV_TYPE_PRIMARY                0
-#define HV_TYPE_ALTERNATE              1
-#define HV_TYPE_LOG                    2
-#define HV_TYPE_EXTERNAL               3
-#define HV_TYPE_MAX                    4
+//
+// Hive formats
+//
+#define HBASE_FORMAT_MEMORY                             1
+
+//
+// Hive storage
+//
+#define HTYPE_COUNT 2
 
 /**
  * @name HCELL_INDEX
@@ -32,7 +74,12 @@
  */
 typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 
-#define HCELL_NULL                     ((HCELL_INDEX)-1)
+//
+// Cell Magic Values
+//
+#define HCELL_NIL                                       -1
+#define HCELL_CACHED                                    1
+
 #define HCELL_TYPE_MASK                0x80000000
 #define HCELL_BLOCK_MASK               0x7ffff000
 #define HCELL_OFFSET_MASK              0x00000fff
@@ -42,6 +89,12 @@ typedef ULONG HCELL_INDEX, *PHCELL_INDEX;
 
 #define HvGetCellType(Cell)             \
     ((ULONG)((Cell & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT))
+
+typedef enum
+{
+    Stable = 0,
+    Volatile = 1
+} HSTORAGE_TYPE;
 
 #ifdef CMLIB_HOST
 #include <host/pshpack1.h>
@@ -98,7 +151,7 @@ typedef struct _HBASE_BLOCK
    ULONG Reserved1[99];
 
    /* Checksum of first 0x200 bytes */
-   ULONG Checksum;
+   ULONG CheckSum;
 
    ULONG Reserved2[0x37E];
    ULONG BootType;
@@ -122,7 +175,7 @@ typedef struct _HBIN
    LARGE_INTEGER TimeStamp;
 
    /* ? (In-memory only) */
-   ULONG MemAlloc;
+   ULONG Spare;
 } HBIN, *PHBIN;
 
 typedef struct _HCELL
@@ -139,12 +192,5 @@ typedef struct _HCELL
 
 #define IsFreeCell(Cell)(Cell->Size >= 0)
 #define IsUsedCell(Cell)(Cell->Size < 0)
-
-typedef enum _HV_STORAGE_TYPE
-{
-   HvStable = 0,
-   HvVolatile,
-   HvMaxStorageType
-} HV_STORAGE_TYPE;
 
 #endif /* CMLIB_HIVEDATA_H */

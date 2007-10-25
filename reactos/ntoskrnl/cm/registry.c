@@ -357,8 +357,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewKey->KeyCellOffset = RegistryHive->Hive.HiveHeader->RootCell;
-    NewKey->KeyCell = HvGetCell (&RegistryHive->Hive, NewKey->KeyCellOffset);
+    NewKey->KeyCellOffset = RegistryHive->Hive.BaseBlock->RootCell;
+    NewKey->KeyCell = (PVOID)HvGetCell(&RegistryHive->Hive, NewKey->KeyCellOffset);
     NewKey->RegistryHive = RegistryHive;
 
     Status = RtlpCreateUnicodeString(&NewKey->Name,

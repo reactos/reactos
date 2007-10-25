@@ -122,17 +122,17 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
 
     /* Initialize the Hive */
     Status = HvInitialize(SystemHive,
-                          HINIT_MEMORY_INPLACE, /* FIXME: Should be flat */
+                          HINIT_FLAT,
                           HIVE_VOLATILE,
                           HFILE_TYPE_PRIMARY,
-                          (ULONG_PTR)SystemHiveData,
+                          SystemHiveData,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
+                          NULL,
                           1,
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL,
-                          NULL,
                           NULL);
     if (!NT_SUCCESS(Status)) KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO, 1, 1, 0, 0);
 

@@ -60,10 +60,10 @@ typedef struct _CM_KEY_NODE
    HCELL_INDEX Parent;
 
    /* Count of sub keys for the key in this key cell (stable & volatile) */
-   ULONG SubKeyCounts[HvMaxStorageType];
+   ULONG SubKeyCounts[HTYPE_COUNT];
 
    /* BlockAddress offset of has table for FIXME: subkeys/values? (stable & volatile) */
-   HCELL_INDEX SubKeyLists[HvMaxStorageType];
+   HCELL_INDEX SubKeyLists[HTYPE_COUNT];
 
    CHILD_LIST ValueList;
 

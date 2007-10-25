@@ -33,6 +33,7 @@
 
 #define UNIMPLEMENTED { printf("%s unimplemented\n", __FUNCTION__); exit(1); }
 #define ASSERT(x) assert(x)
+#define ASSERTMSG(x, m) assert(x)
 #define DPRINT if (0) printf
 #define DPRINT1 printf
 
@@ -94,7 +95,7 @@ typedef union _LARGE_INTEGER
     {
         DWORD LowPart;
         LONG  HighPart;
-    } u;
+    };
     LONGLONG QuadPart;
 } LARGE_INTEGER, *PLARGE_INTEGER;
 
@@ -124,6 +125,7 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 #define NT_SUCCESS(x) ((x)>=0)
 #define FIELD_OFFSET(t,f) ((LONG_PTR)&(((t*)0)->f))
 #define RTL_CONSTANT_STRING(s) { sizeof(s)-sizeof((s)[0]), sizeof(s), s }
+#define CONTAINING_RECORD(address, type, field) ((type *)(((ULONG_PTR)address) - (ULONG_PTR)(&(((type *)0)->field))))
 #define RtlZeroMemory(Destination, Length) memset(Destination, 0, Length)
 #define RtlCopyMemory(Destination, Source, Length) memcpy(Destination, Source, Length)
 #define RtlMoveMemory(Destination, Source, Length) memmove(Destination, Source, Length)

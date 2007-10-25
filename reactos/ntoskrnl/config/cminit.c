@@ -183,17 +183,17 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     /* Initialize it */
     Status = HvInitialize(&Hive->Hive,
                           OperationType,
-                          HiveFlags,
                           FileType,
-                          (ULONG_PTR)HiveData,
-                          Cluster,
+                          HiveFlags,
+                          HiveData,
                           CmpAllocate,
                           CmpFree,
-                          CmpFileRead,
-                          CmpFileWrite,
                           CmpFileSetSize,
+                          CmpFileWrite,
+                          CmpFileRead,
                           CmpFileFlush,
-                          FileName);
+                          Cluster,
+                          (PUNICODE_STRING)FileName);
     if (!NT_SUCCESS(Status))
     {
         /* Clear allocations and fail */

@@ -352,6 +352,13 @@ typedef struct _MMSUBSECTION_FLAGS
     ULONG SectorEndOffset:12;
 } MMSUBSECTION_FLAGS, *PMMSUBSECTION_FLAGS;
 
+typedef struct _MMSUBSECTION_FLAGS2
+{
+    ULONG SubsectionAccessed:1;
+    ULONG SubsectionConverted:1;
+    ULONG Reserved:30;
+} MMSUBSECTION_FLAGS2;
+
 //
 // Control Area Structures
 //
@@ -403,7 +410,7 @@ typedef struct _LARGE_CONTROL_AREA
 } LARGE_CONTROL_AREA, *PLARGE_CONTROL_AREA;
 
 //
-// Subsection
+// Subsection and Mapped Subsection
 //
 typedef struct _SUBSECTION
 {
@@ -418,8 +425,31 @@ typedef struct _SUBSECTION
     PMMPTE SubsectionBase;
     ULONG UnusedPtes;
     ULONG PtesInSubsection;
-    struct _SUBSECTION *NextSubSection;
+    struct _SUBSECTION *NextSubsection;
 } SUBSECTION, *PSUBSECTION;
+
+typedef struct _MSUBSECTION
+{
+    PCONTROL_AREA ControlArea;
+    union
+    {
+        ULONG LongFlags;
+        MMSUBSECTION_FLAGS SubsectionFlags;
+    } u;
+    ULONG StartingSector;
+    ULONG NumberOfFullSectors;
+    PMMPTE SubsectionBase;
+    ULONG UnusedPtes;
+    ULONG PtesInSubsection;
+    struct _SUBSECTION *NextSubsection;
+    LIST_ENTRY DereferenceList;
+    ULONG_PTR NumberOfMappedViews;
+    union
+    {
+        ULONG LongFlags2;
+        MMSUBSECTION_FLAGS2 SubsectionFlags2;
+    } u2;
+} MSUBSECTION, *PMSUBSECTION;
 
 //
 // Segment Object

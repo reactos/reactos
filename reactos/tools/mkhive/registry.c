@@ -76,7 +76,7 @@ CreateInMemoryStructure(
 
 	Key->RegistryHive = RegistryHive;
 	Key->KeyCellOffset = KeyCellOffset;
-	Key->KeyCell = HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
+	Key->KeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, Key->KeyCellOffset);
 	if (!Key->KeyCell)
 	{
 		free(Key);
@@ -386,7 +386,7 @@ RegSetValueExW(
 		RtlCopyMemory(&ValueCell->DataOffset, lpData, cbData);
 		ValueCell->DataSize = (ULONG)(cbData | REG_DATA_IN_OFFSET);
 		ValueCell->DataType = dwType;
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset);
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 	else
 	{
@@ -398,8 +398,8 @@ RegSetValueExW(
 
 			DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
 
-			NewOffset = HvAllocateCell(&Key->RegistryHive->Hive, cbData, HvStable);
-			if (NewOffset == HCELL_NULL)
+			NewOffset = HvAllocateCell(&Key->RegistryHive->Hive, cbData, Stable, HCELL_NIL);
+			if (NewOffset == HCELL_NIL)
 			{
 				DPRINT("HvAllocateCell() failed with status 0x%08lx\n", Status);
 				return ERROR_UNSUCCESSFUL;
@@ -409,18 +409,18 @@ RegSetValueExW(
 				HvFreeCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
 
 			ValueCell->DataOffset = NewOffset;
-			DataCell = HvGetCell(&Key->RegistryHive->Hive, NewOffset);
+			DataCell = (PVOID)HvGetCell(&Key->RegistryHive->Hive, NewOffset);
 		}
 
 		/* Copy new contents to cellule */
 		RtlCopyMemory(DataCell, lpData, cbData);
 		ValueCell->DataSize = (ULONG)(cbData & REG_DATA_SIZE_MASK);
 		ValueCell->DataType = dwType;
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->DataOffset);
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset);
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->DataOffset, FALSE);
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 
-	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset);
+	HvMarkCellDirty(&Key->RegistryHive->Hive, Key->KeyCellOffset, FALSE);
 
 	DPRINT("Return status 0x%08lx\n", Status);
 	return Status;
@@ -589,8 +589,8 @@ ConnectRegistry(
 		return FALSE;
 
 	NewKey->RegistryHive = HiveToConnect;
-	NewKey->KeyCellOffset = HiveToConnect->Hive.HiveHeader->RootCell;
-	NewKey->KeyCell = HvGetCell (&HiveToConnect->Hive, NewKey->KeyCellOffset);
+	NewKey->KeyCellOffset = HiveToConnect->Hive.BaseBlock->RootCell;
+	NewKey->KeyCell = (PCM_KEY_NODE)HvGetCell (&HiveToConnect->Hive, NewKey->KeyCellOffset);
 	return TRUE;
 }
 
@@ -637,7 +637,7 @@ RegInitializeRegistry(VOID)
 
 	RootKey = CreateInMemoryStructure(
 		&RootHive,
-		RootHive.Hive.HiveHeader->RootCell,
+		RootHive.Hive.BaseBlock->RootCell,
 		&RootKeyName);
 
 	/* Create DEFAULT key */

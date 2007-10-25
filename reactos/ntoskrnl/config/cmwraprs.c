@@ -53,16 +53,18 @@ CmpCreateEvent(IN EVENT_TYPE EventType,
 PVOID
 NTAPI
 CmpAllocate(IN ULONG Size,
-            IN BOOLEAN Paged)
+            IN BOOLEAN Paged,
+            IN ULONG Tag)
 {
     return ExAllocatePoolWithTag(Paged ? PagedPool : NonPagedPool,
                                  Size,
-                                 TAG('R','E','G',' '));
+                                 Tag);
 }
 
 VOID
 NTAPI
-CmpFree(IN PVOID Ptr)
+CmpFree(IN PVOID Ptr,
+        IN ULONG Quota)
 {
     ExFreePool(Ptr);
 }
@@ -71,17 +73,17 @@ BOOLEAN
 NTAPI
 CmpFileRead(IN PHHIVE RegistryHive,
             IN ULONG FileType,
-            IN ULONGLONG FileOffset,
+            IN PULONG FileOffset,
             OUT PVOID Buffer,
             IN SIZE_T BufferLength)
 {
     PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
     LARGE_INTEGER _FileOffset;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
-    _FileOffset.QuadPart = FileOffset;
+    _FileOffset.QuadPart = *FileOffset;
     Status = ZwReadFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
                        Buffer, BufferLength, &_FileOffset, 0);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
@@ -91,17 +93,17 @@ BOOLEAN
 NTAPI
 CmpFileWrite(IN PHHIVE RegistryHive,
              IN ULONG FileType,
-             IN ULONGLONG FileOffset,
+             IN PULONG FileOffset,
              IN PVOID Buffer,
              IN SIZE_T BufferLength)
 {
     PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
     LARGE_INTEGER _FileOffset;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
-    _FileOffset.QuadPart = FileOffset;
+    _FileOffset.QuadPart = *FileOffset;
     Status = ZwWriteFile(HiveHandle, 0, 0, 0, &IoStatusBlock,
                        Buffer, BufferLength, &_FileOffset, 0);
     return NT_SUCCESS(Status) ? TRUE : FALSE;
@@ -111,10 +113,11 @@ BOOLEAN
 NTAPI
 CmpFileSetSize(IN PHHIVE RegistryHive,
                IN ULONG FileType,
-               IN ULONGLONG FileSize)
+               IN ULONG FileSize,
+               IN ULONG OldFileSize)
 {
     PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
     FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
     FILE_ALLOCATION_INFORMATION FileAllocationInfo;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -142,10 +145,12 @@ CmpFileSetSize(IN PHHIVE RegistryHive,
 BOOLEAN
 NTAPI
 CmpFileFlush(IN PHHIVE RegistryHive,
-             IN ULONG FileType)
+             IN ULONG FileType,
+             IN OUT PLARGE_INTEGER FileOffset,
+             IN ULONG Length)
 {
     PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HV_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 

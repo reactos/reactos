@@ -509,7 +509,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Save the boot type */
-    if (SystemHive) CmpBootType = SystemHive->Hive.HiveHeader->BootType;
+    if (SystemHive) CmpBootType = SystemHive->Hive.BaseBlock->BootType;
 
     /* Are we in self-healing mode? */
     if (!CmSelfHeal)
@@ -597,11 +597,12 @@ CmpCreateRootNode(IN PHHIVE Hive,
     *Index = HvAllocateCell(Hive,
                             FIELD_OFFSET(CM_KEY_NODE, Name) +
                             CmpNameSize(Hive, &KeyName),
-                            HvStable); // FIXME: , HCELL_NIL);
+                            Stable,
+                            HCELL_NIL);
     if (*Index == HCELL_NIL) return FALSE;
 
     /* Set the cell index and get the data */
-    Hive->HiveHeader->RootCell = *Index;
+    Hive->BaseBlock->RootCell = *Index;
     KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, *Index);
     if (!KeyCell) return FALSE;
 
@@ -611,10 +612,10 @@ CmpCreateRootNode(IN PHHIVE Hive,
     KeQuerySystemTime(&SystemTime);
     KeyCell->LastWriteTime = SystemTime;
     KeyCell->Parent = HCELL_NIL;
-    KeyCell->SubKeyCounts[HvStable] = 0;
-    KeyCell->SubKeyCounts[HvVolatile] = 0;
-    KeyCell->SubKeyLists[HvStable] = HCELL_NIL;
-    KeyCell->SubKeyLists[HvVolatile] = HCELL_NIL;
+    KeyCell->SubKeyCounts[Stable] = 0;
+    KeyCell->SubKeyCounts[Volatile] = 0;
+    KeyCell->SubKeyLists[Stable] = HCELL_NIL;
+    KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
     KeyCell->ValueList.Count = 0;
     KeyCell->ValueList.List = HCELL_NIL;
     KeyCell->Security = HCELL_NIL;
@@ -662,6 +663,7 @@ CmpCreateRegistryRoot(VOID)
     if (!CmpCreateRootNode(&CmiVolatileHive->Hive, L"REGISTRY", &RootIndex))
     {
         /* We failed */
+        DPRINT1("Fail\n");
         return FALSE;
     }
 

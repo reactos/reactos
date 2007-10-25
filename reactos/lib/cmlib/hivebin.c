@@ -12,7 +12,7 @@ PHBIN CMAPI
 HvpAddBin(
    PHHIVE RegistryHive,
    ULONG Size,
-   HV_STORAGE_TYPE Storage)
+   HSTORAGE_TYPE Storage)
 {
    PHMAP_ENTRY BlockList;
    PHBIN Bin;
@@ -26,7 +26,7 @@ HvpAddBin(
    BinSize = ROUND_UP(Size + sizeof(HBIN), HV_BLOCK_SIZE);
    BlockCount = (ULONG)(BinSize / HV_BLOCK_SIZE);
 
-   Bin = RegistryHive->Allocate(BinSize, TRUE);
+   Bin = RegistryHive->Allocate(BinSize, TRUE, TAG_CM);
    if (Bin == NULL)
       return NULL;
    RtlZeroMemory(Bin, BinSize);
@@ -39,10 +39,12 @@ HvpAddBin(
    /* Allocate new block list */
    OldBlockListSize = RegistryHive->Storage[Storage].Length;
    BlockList = RegistryHive->Allocate(sizeof(HMAP_ENTRY) *
-                                      (OldBlockListSize + BlockCount), TRUE);
+                                      (OldBlockListSize + BlockCount),
+                                      TRUE,
+                                      TAG_CM);
    if (BlockList == NULL)
    {
-      RegistryHive->Free(Bin);
+      RegistryHive->Free(Bin, 0);
       return NULL;
    }
 
@@ -50,7 +52,7 @@ HvpAddBin(
    {
       RtlCopyMemory(BlockList, RegistryHive->Storage[Storage].BlockList,
                     OldBlockListSize * sizeof(HMAP_ENTRY));
-      RegistryHive->Free(RegistryHive->Storage[Storage].BlockList);
+      RegistryHive->Free(RegistryHive->Storage[Storage].BlockList, 0);
    }
 
    RegistryHive->Storage[Storage].BlockList = BlockList;
@@ -58,19 +60,19 @@ HvpAddBin(
 
    for (i = 0; i < BlockCount; i++)
    {
-      RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].Block =
+      RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].BlockAddress =
          ((ULONG_PTR)Bin + (i * HV_BLOCK_SIZE));
-      RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].Bin = (ULONG_PTR)Bin;
+      RegistryHive->Storage[Storage].BlockList[OldBlockListSize + i].BinAddress = (ULONG_PTR)Bin;
    }
 
    /* Initialize a free block in this heap. */
    Block = (PHCELL)(Bin + 1);
    Block->Size = (LONG)(BinSize - sizeof(HBIN));
 
-   if (Storage == HvStable)
+   if (Storage == Stable)
    {
       /* Calculate bitmap size in bytes (always a multiple of 32 bits). */
-      BitmapSize = ROUND_UP(RegistryHive->Storage[HvStable].Length,
+      BitmapSize = ROUND_UP(RegistryHive->Storage[Stable].Length,
                             sizeof(ULONG) * 8) / 8;
 
       /* Grow bitmap if necessary. */
@@ -78,7 +80,7 @@ HvpAddBin(
       {
          PULONG BitmapBuffer;
 
-         BitmapBuffer = RegistryHive->Allocate(BitmapSize, TRUE);
+         BitmapBuffer = RegistryHive->Allocate(BitmapSize, TRUE, TAG_CM);
          RtlZeroMemory(BitmapBuffer, BitmapSize);
          if (RegistryHive->DirtyVector.SizeOfBitMap > 0)
          {
@@ -86,7 +88,7 @@ HvpAddBin(
             RtlCopyMemory(BitmapBuffer,
    		       RegistryHive->DirtyVector.Buffer,
    		       RegistryHive->DirtyVector.SizeOfBitMap / 8);
-            RegistryHive->Free(RegistryHive->DirtyVector.Buffer);
+            RegistryHive->Free(RegistryHive->DirtyVector.Buffer, 0);
          }
          RtlInitializeBitMap(&RegistryHive->DirtyVector, BitmapBuffer,
                              BitmapSize * 8);

@@ -27,7 +27,7 @@ ULONG CmpMaxIndexPerHblock =
 
 /* FUNCTIONS *****************************************************************/
 
-static LONG
+LONG
 NTAPI
 CmpDoCompareKeyName(IN PHHIVE Hive,
                     IN PCUNICODE_STRING SearchName,
@@ -63,7 +63,7 @@ CmpDoCompareKeyName(IN PHHIVE Hive,
     return (Result == 0) ? Result : ((Result > 0) ? 1 : -1);
 }
 
-static LONG
+LONG
 NTAPI
 CmpCompareInIndex(IN PHHIVE Hive,
                   IN PCUNICODE_STRING SearchName,
@@ -139,7 +139,7 @@ CmpCompareInIndex(IN PHHIVE Hive,
     return Result;
 }
 
-static ULONG
+ULONG
 NTAPI
 CmpFindSubKeyInRoot(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
@@ -355,7 +355,7 @@ Return:
     return ReturnIndex;
 }
 
-static ULONG
+ULONG
 NTAPI
 CmpFindSubKeyInLeaf(IN PHHIVE Hive,
                     IN PCM_KEY_INDEX Index,
@@ -620,35 +620,35 @@ CmpFindSubKeyByNumber(IN PHHIVE Hive,
     HCELL_INDEX Result = HCELL_NIL;
 
     /* Check if it's in the stable list */
-    if (Number < Node->SubKeyCounts[HvStable])
+    if (Number < Node->SubKeyCounts[Stable])
     {
         /* Get the actual key index */
-        Index = (PCM_KEY_INDEX)HvGetCell(Hive, Node->SubKeyLists[HvStable]);
+        Index = (PCM_KEY_INDEX)HvGetCell(Hive, Node->SubKeyLists[Stable]);
         if (!Index) return HCELL_NIL;
 
         /* Do a search inside it */
         Result = CmpDoFindSubKeyByNumber(Hive, Index, Number);
 
         /* Release the cell and return the result */
-        HvReleaseCell(Hive, Node->SubKeyLists[HvStable]);
+        HvReleaseCell(Hive, Node->SubKeyLists[Stable]);
         return Result;
     }
-    else if (Hive->StorageTypeCount > HvVolatile)
+    else if (Hive->StorageTypeCount > Volatile)
     {
         /* It's in the volatile list */
-        Number = Number - Node->SubKeyCounts[HvStable];
-        if (Number < Node->SubKeyCounts[HvVolatile])
+        Number = Number - Node->SubKeyCounts[Stable];
+        if (Number < Node->SubKeyCounts[Volatile])
         {
             /* Get the actual key index */
             Index = (PCM_KEY_INDEX)HvGetCell(Hive,
-                                             Node->SubKeyLists[HvVolatile]);
+                                             Node->SubKeyLists[Volatile]);
             if (!Index) return HCELL_NIL;
 
             /* Do a search inside it */
             Result = CmpDoFindSubKeyByNumber(Hive, Index, Number);
 
             /* Release the cell and return the result */
-            HvReleaseCell(Hive, Node->SubKeyLists[HvVolatile]);
+            HvReleaseCell(Hive, Node->SubKeyLists[Volatile]);
             return Result;
         }
     }
@@ -875,7 +875,7 @@ CmpMarkIndexDirty(IN PHHIVE Hive,
                 if (Child == HCELL_NIL) continue;
 
                 /* We found it, mark the cell dirty */
-                HvMarkCellDirty(Hive, IndexCell);
+                HvMarkCellDirty(Hive, IndexCell, FALSE);
 
                 /* Check if we had anything to release from before */
                 if (CellToRelease != HCELL_NIL)
@@ -918,7 +918,7 @@ CmpMarkIndexDirty(IN PHHIVE Hive,
                 }
 
                 /* And mark the index cell dirty */
-                HvMarkCellDirty(Hive, IndexCell);
+                HvMarkCellDirty(Hive, IndexCell, FALSE);
                 return TRUE;
             }
         }
@@ -948,7 +948,7 @@ CmpAddToLeaf(IN PHHIVE Hive,
     LONG Result;
 
     /* Mark the leaf dirty */
-    HvMarkCellDirty(Hive, LeafCell);
+    HvMarkCellDirty(Hive, LeafCell, FALSE);
 
     /* Get the leaf cell */
     Leaf = (PCM_KEY_INDEX)HvGetCell(Hive, LeafCell);
@@ -1151,7 +1151,7 @@ CmpAddSubKey(IN PHHIVE Hive,
         /* Create the compressed name and allocate it */
         Name.Length = CmpCompressedNameSize(KeyNode->Name, KeyNode->NameLength);
         Name.MaximumLength = Name.Length;
-        Name.Buffer = Hive->Allocate(Name.Length, TRUE);
+        Name.Buffer = Hive->Allocate(Name.Length, TRUE, TAG_CM);
         if (!Name.Buffer)
         {
             /* Release the cell and fail */
@@ -1193,7 +1193,7 @@ CmpAddSubKey(IN PHHIVE Hive,
     if (!KeyNode->SubKeyCounts[Type])
     {
         /* Allocate a fast leaf */
-        IndexCell = HvAllocateCell(Hive, sizeof(CM_KEY_FAST_INDEX), Type);
+        IndexCell = HvAllocateCell(Hive, sizeof(CM_KEY_FAST_INDEX), Type, HCELL_NIL);
         if (IndexCell == HCELL_NIL)
         {
             /* Not handled */
@@ -1249,7 +1249,7 @@ CmpAddSubKey(IN PHHIVE Hive,
             DPRINT("Doing Fast->Slow Leaf conversion\n");
 
             /* Mark this cell as dirty */
-            HvMarkCellDirty(Hive, CellToRelease);
+            HvMarkCellDirty(Hive, CellToRelease, FALSE);
 
             /* Convert */
             OldIndex = (PCM_KEY_FAST_INDEX)Index;
@@ -1270,7 +1270,8 @@ CmpAddSubKey(IN PHHIVE Hive,
             IndexCell = HvAllocateCell(Hive,
                                       sizeof(CM_KEY_INDEX) +
                                       sizeof(HCELL_INDEX),
-                                      Type);
+                                      Type,
+                                      HCELL_NIL);
             if (IndexCell == HCELL_NIL)
             {
                 /* Not handled */
@@ -1328,7 +1329,7 @@ CmpAddSubKey(IN PHHIVE Hive,
     }
 
     /* If the name was compressed, free our copy */
-    if (IsCompressed) Hive->Free(Name.Buffer);
+    if (IsCompressed) Hive->Free(Name.Buffer, 0);
 
     /* Release all our cells */
     if (IndexCell != HCELL_NIL) HvReleaseCell(Hive, IndexCell);

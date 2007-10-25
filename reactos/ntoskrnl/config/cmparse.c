@@ -108,14 +108,15 @@ CmpDoCreateChild(IN PHHIVE Hive,
     }
 
     /* Get the storage type */
-    StorageType = HvStable;
-    if (CreateOptions & REG_OPTION_VOLATILE) StorageType = HvVolatile;
+    StorageType = Stable;
+    if (CreateOptions & REG_OPTION_VOLATILE) StorageType = Volatile;
 
     /* Allocate the child */
     *KeyCell = HvAllocateCell(Hive,
                               FIELD_OFFSET(CM_KEY_NODE, Name) +
                               CmpNameSize(Hive, Name),
-                              StorageType);
+                              StorageType,
+                              HCELL_NIL);
     if (*KeyCell == HCELL_NIL)
     {
         /* Fail */
@@ -140,7 +141,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     if (Class->Length > 0)
     {
         /* Allocate a class cell */
-        ClassCell = HvAllocateCell(Hive, Class->Length, StorageType);
+        ClassCell = HvAllocateCell(Hive, Class->Length, StorageType, HCELL_NIL);
         if (ClassCell == HCELL_NIL)
         {
             /* Fail */
@@ -192,10 +193,10 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyNode->LastWriteTime = SystemTime;
     KeyNode->Spare = 0;
     KeyNode->Parent = ParentCell;
-    KeyNode->SubKeyCounts[HvStable] = 0;
-    KeyNode->SubKeyCounts[HvVolatile] = 0;
-    KeyNode->SubKeyLists[HvStable] = HCELL_NIL;
-    KeyNode->SubKeyLists[HvVolatile] = HCELL_NIL;
+    KeyNode->SubKeyCounts[Stable] = 0;
+    KeyNode->SubKeyCounts[Volatile] = 0;
+    KeyNode->SubKeyLists[Stable] = HCELL_NIL;
+    KeyNode->SubKeyLists[Volatile] = HCELL_NIL;
     KeyNode->ValueList.Count = 0;
     KeyNode->ValueList.List = HCELL_NIL;
     KeyNode->Security = HCELL_NIL;
@@ -302,7 +303,7 @@ CmpDoCreate(IN PHHIVE Hive,
 
     /* Get the parent type */
     ParentType = HvGetCellType(Cell);
-    if ((ParentType == HvVolatile) && !(CreateOptions & REG_OPTION_VOLATILE))
+    if ((ParentType == Volatile) && !(CreateOptions & REG_OPTION_VOLATILE))
     {
         /* Children of volatile parents must also be volatile */
         ASSERT(FALSE);
@@ -320,7 +321,7 @@ CmpDoCreate(IN PHHIVE Hive,
     }
 
     /* Make the cell dirty for now */
-    HvMarkCellDirty(Hive, Cell);
+    HvMarkCellDirty(Hive, Cell, FALSE);
 
     /* Do the actual create operation */
     Status = CmpDoCreateChild(Hive,

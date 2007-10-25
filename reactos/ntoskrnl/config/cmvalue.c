@@ -33,7 +33,7 @@ CmpMarkValueDataDirty(IN PHHIVE Hive,
         ASSERT_VALUE_BIG(Hive, KeySize);
 
         /* Normal value, just mark it dirty */
-        HvMarkCellDirty(Hive, Value->Data);
+        HvMarkCellDirty(Hive, Value->Data, FALSE);
     }
 
     /* Operation complete */
@@ -244,11 +244,11 @@ CmpAddValueToList(IN PHHIVE Hive,
     else
     {
         /* This is our first child, so allocate a single cell */
-        ListCell = HvAllocateCell(Hive, sizeof(HCELL_INDEX), Type);
+        ListCell = HvAllocateCell(Hive, sizeof(HCELL_INDEX), Type, HCELL_NIL);
     }
 
     /* Fail if we couldn't get a cell */
-    if (ListCell == HCELL_NULL) return STATUS_INSUFFICIENT_RESOURCES;
+    if (ListCell == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Set this cell as the child list's list cell */
     ChildList->List = ListCell;
@@ -293,7 +293,7 @@ CmpSetValueDataNew(IN PHHIVE Hive,
     ASSERT_VALUE_BIG(Hive, DataSize);
 
     /* Allocate a data cell */
-    *DataCell = HvAllocateCell(Hive, DataSize, StorageType);
+    *DataCell = HvAllocateCell(Hive, DataSize, StorageType, HCELL_NIL);
     if (*DataCell == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the actual data */

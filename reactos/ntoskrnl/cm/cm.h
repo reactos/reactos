@@ -277,13 +277,13 @@ CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
 			 OUT PHASH_TABLE_CELL *HashBlock,
 			 OUT HCELL_INDEX *HBOffset,
 			 IN ULONG HashTableSize,
-			 IN HV_STORAGE_TYPE Storage);
+			 IN HSTORAGE_TYPE Storage);
 
 NTSTATUS
 CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
 		     PHASH_TABLE_CELL HashCell,
 		     PCM_KEY_NODE KeyCell,
-		     HV_STORAGE_TYPE StorageType,
+		     HSTORAGE_TYPE StorageType,
 		     PCM_KEY_NODE NewKeyCell,
 		     HCELL_INDEX NKBOffset);
 

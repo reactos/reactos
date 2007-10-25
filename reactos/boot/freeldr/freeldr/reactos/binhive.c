@@ -27,7 +27,7 @@
 
 static PVOID
 NTAPI
-CmpAllocate (SIZE_T Size, BOOLEAN Paged)
+CmpAllocate (SIZE_T Size, BOOLEAN Paged, ULONG Tag)
 {
   return MmAllocateMemory(Size);
 }
@@ -35,7 +35,7 @@ CmpAllocate (SIZE_T Size, BOOLEAN Paged)
 
 static VOID
 NTAPI
-CmpFree (PVOID Ptr)
+CmpFree (PVOID Ptr, IN ULONG Quota)
 {
   return MmFreeMemory(Ptr);
 }
@@ -51,13 +51,13 @@ CmiAllocateHashTableCell (PHHIVE Hive,
 
   NewHashSize = sizeof(HASH_TABLE_CELL) +
 		(SubKeyCount * sizeof(HASH_RECORD));
-  *HBOffset = HvAllocateCell (Hive, NewHashSize, HvStable);
-  if (*HBOffset == HCELL_NULL)
+  *HBOffset = HvAllocateCell (Hive, NewHashSize, Stable, HCELL_NIL);
+  if (*HBOffset == HCELL_NIL)
     {
       return FALSE;
     }
 
-  HashCell = HvGetCell (Hive, *HBOffset);
+  HashCell = (PHASH_TABLE_CELL)HvGetCell (Hive, *HBOffset);
   HashCell->Id = REG_HASH_TABLE_CELL_ID;
   HashCell->HashTableSize = SubKeyCount;
 
@@ -75,8 +75,8 @@ CmiAddKeyToParentHashTable (PHHIVE Hive,
   PCM_KEY_NODE ParentKeyCell;
   ULONG i;
 
-  ParentKeyCell = HvGetCell (Hive, Parent);
-  HashBlock = HvGetCell (Hive, ParentKeyCell->SubKeyLists[HvStable]);
+  ParentKeyCell = (PVOID)HvGetCell (Hive, Parent);
+  HashBlock = (PVOID)HvGetCell (Hive, ParentKeyCell->SubKeyLists[Stable]);
 
   for (i = 0; i < HashBlock->HashTableSize; i++)
     {
@@ -86,7 +86,7 @@ CmiAddKeyToParentHashTable (PHHIVE Hive,
 	  memcpy (&HashBlock->Table[i].HashValue,
 		  NewKeyCell->Name,
 		  min(NewKeyCell->NameSize, sizeof(ULONG)));
-	  ParentKeyCell->SubKeyCounts[HvStable]++;
+	  ParentKeyCell->SubKeyCounts[Stable]++;
 	  return TRUE;
 	}
     }
@@ -104,8 +104,8 @@ CmiAllocateValueListCell (PHHIVE Hive,
 
   ValueListSize = sizeof(VALUE_LIST_CELL) +
 		  (ValueCount * sizeof(HCELL_INDEX));
-  *ValueListOffset = HvAllocateCell (Hive, ValueListSize, HvStable);
-  if (*ValueListOffset == HCELL_NULL)
+  *ValueListOffset = HvAllocateCell (Hive, ValueListSize, Stable, HCELL_NIL);
+  if (*ValueListOffset == HCELL_NIL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvAllocateCell() failed\n"));
       return FALSE;
@@ -136,8 +136,8 @@ CmiAllocateValueCell(PHHIVE Hive,
           break;
         }
     }
-  *ValueCellOffset = HvAllocateCell (Hive, sizeof(CM_KEY_VALUE) + NameSize, HvStable);
-  if (*ValueCellOffset == HCELL_NULL)
+  *ValueCellOffset = HvAllocateCell (Hive, sizeof(CM_KEY_VALUE) + NameSize, Stable, HCELL_NIL);
+  if (*ValueCellOffset == HCELL_NIL)
     {
       DbgPrint((DPRINT_REGISTRY, "CmiAllocateCell() failed\n"));
       return FALSE;
@@ -182,14 +182,14 @@ CmiAddValueToKeyValueList(PHHIVE Hive,
   PVALUE_LIST_CELL ValueListCell;
   PCM_KEY_NODE KeyCell;
 
-  KeyCell = HvGetCell (Hive, KeyCellOffset);
+  KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, KeyCellOffset);
   if (KeyCell == NULL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvGetCell() failed\n"));
       return FALSE;
     }
 
-  ValueListCell = HvGetCell (Hive, KeyCell->ValueList.List);
+  ValueListCell = (PVALUE_LIST_CELL)HvGetCell (Hive, KeyCell->ValueList.List);
   if (ValueListCell == NULL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvGetCell() failed\n"));
@@ -256,8 +256,8 @@ CmiExportValue (PHHIVE Hive,
   else
     {
       /* Allocate data cell */
-      DataCellOffset = HvAllocateCell (Hive, DataSize, HvStable);
-      if (DataCellOffset == HCELL_NULL)
+      DataCellOffset = HvAllocateCell (Hive, DataSize, Stable, HCELL_NIL);
+      if (DataCellOffset == HCELL_NIL)
 	{
 	  return FALSE;
 	}
@@ -266,7 +266,7 @@ CmiExportValue (PHHIVE Hive,
       ValueCell->DataSize = DataSize;
       ValueCell->DataType = DataType;
 
-      DataCell = HvGetCell (Hive, DataCellOffset);
+      DataCell = (PVOID)HvGetCell (Hive, DataCellOffset);
       memcpy (DataCell,
 	      Data,
 	      DataSize);
@@ -313,8 +313,8 @@ CmiExportSubKey (PHHIVE Hive,
 
   /* Allocate key cell */
   KeyCellSize = sizeof(CM_KEY_NODE) + NameSize;
-  NKBOffset = HvAllocateCell (Hive, KeyCellSize, HvStable);
-  if (NKBOffset == HCELL_NULL)
+  NKBOffset = HvAllocateCell (Hive, KeyCellSize, Stable, HCELL_NIL);
+  if (NKBOffset == HCELL_NIL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvAllocateCell() failed\n"));
       return FALSE;
@@ -326,8 +326,8 @@ CmiExportSubKey (PHHIVE Hive,
   NewKeyCell->Flags = 0;
   NewKeyCell->LastWriteTime.QuadPart = 0ULL;
   NewKeyCell->Parent = Parent;
-  NewKeyCell->SubKeyCounts[HvStable] = 0;
-  NewKeyCell->SubKeyLists[HvStable] = -1;
+  NewKeyCell->SubKeyCounts[Stable] = 0;
+  NewKeyCell->SubKeyLists[Stable] = -1;
   NewKeyCell->ValueList.Count = 0;
   NewKeyCell->ValueList.List = -1;
   NewKeyCell->SecurityKeyOffset = -1;
@@ -400,7 +400,7 @@ CmiExportSubKey (PHHIVE Hive,
     {
       /* Allocate hash table cell */
       if (!CmiAllocateHashTableCell (Hive,
-				     &NewKeyCell->SubKeyLists[HvStable],
+				     &NewKeyCell->SubKeyLists[Stable],
 				     SubKeyCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateHashTableCell() failed\n"));
@@ -446,7 +446,7 @@ CmiExportHive (PHHIVE Hive,
       return FALSE;
     }
 
-  KeyCell = HvGetCell (Hive, Hive->HiveHeader->RootCell);
+  KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, Hive->BaseBlock->RootCell);
   if (KeyCell == NULL)
     {
       DbgPrint((DPRINT_REGISTRY, "HvGetCell() failed\n"));
@@ -468,7 +468,7 @@ CmiExportHive (PHHIVE Hive,
 
       if (Key->DataSize != 0)
 	{
-	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootCell, Key, NULL))
+	  if (!CmiExportValue (Hive, Hive->BaseBlock->RootCell, Key, NULL))
 	    return FALSE;
 	}
 
@@ -480,7 +480,7 @@ CmiExportHive (PHHIVE Hive,
 				    VALUE,
 				    ValueList);
 
-	  if (!CmiExportValue (Hive, Hive->HiveHeader->RootCell, Key, Value))
+	  if (!CmiExportValue (Hive, Hive->BaseBlock->RootCell, Key, Value))
 	    return FALSE;
 
 	  Entry = Entry->Flink;
@@ -493,7 +493,7 @@ CmiExportHive (PHHIVE Hive,
     {
       /* Allocate hash table cell */
       if (!CmiAllocateHashTableCell (Hive,
-				     &KeyCell->SubKeyLists[HvStable],
+				     &KeyCell->SubKeyLists[Stable],
 				     SubKeyCount))
 	{
 	  DbgPrint((DPRINT_REGISTRY, "CmiAllocateHashTableCell() failed\n"));
@@ -508,7 +508,7 @@ CmiExportHive (PHHIVE Hive,
 				     KEY,
 				     KeyList);
 
-	  if (!CmiExportSubKey (Hive, Hive->HiveHeader->RootCell, Key, SubKey))
+	  if (!CmiExportSubKey (Hive, Hive->BaseBlock->RootCell, Key, SubKey))
 	    return FALSE;
 
 	  Entry = Entry->Flink;
@@ -575,7 +575,7 @@ RegImportValue (PHHIVE Hive,
     }
   else
     {
-      DataCell = HvGetCell (Hive, ValueCell->DataOffset);
+      DataCell = (PVOID)HvGetCell (Hive, ValueCell->DataOffset);
       DbgPrint((DPRINT_REGISTRY, "DataCell: %x\n", DataCell));
 
       Error = RegSetValue (Key,
@@ -674,13 +674,13 @@ RegImportSubKey(PHHIVE Hive,
     }
 
   /* Enumerate and add subkeys */
-  if (KeyCell->SubKeyCounts[HvStable] > 0)
+  if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->SubKeyLists[HvStable]);
+      HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
       DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts));
 
-      for (i = 0; i < KeyCell->SubKeyCounts[HvStable]; i++)
+      for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
 
@@ -713,11 +713,20 @@ RegImportBinaryHive(PCHAR ChunkBase,
 
   DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
 
-  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
-  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_MEMORY_INPLACE, 0, 0,
-                         (ULONG_PTR)ChunkBase, 0,
-                         CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL);
+  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE, 0);
+  Status = HvInitialize (&CmHive->Hive,
+                         HINIT_FLAT,
+                         0,
+                         0,
+                         ChunkBase, 
+                         CmpAllocate,
+                         CmpFree,
+                         NULL,
+                         NULL,
+                         NULL,
+                         NULL,
+                         1,
+                         NULL);
   if (!NT_SUCCESS(Status))
     {
       DbgPrint((DPRINT_REGISTRY, "Invalid hive id!\n"));
@@ -725,7 +734,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
     }
 
   Hive = &CmHive->Hive;
-  KeyCell = HvGetCell (Hive, Hive->HiveHeader->RootCell);
+  KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, Hive->BaseBlock->RootCell);
   DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
   DbgPrint((DPRINT_REGISTRY, "KeyCell->Id: %x\n", KeyCell->Id));
   if (KeyCell->Id != REG_KEY_CELL_ID)
@@ -748,17 +757,17 @@ RegImportBinaryHive(PCHAR ChunkBase,
     }
 
   /* Enumerate and add subkeys */
-  if (KeyCell->SubKeyCounts[HvStable] > 0)
+  if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = HvGetCell (Hive, KeyCell->SubKeyLists[HvStable]);
+      HashCell = (PHASH_TABLE_CELL)HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
-      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[HvStable]));
+      DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]));
 
-      for (i = 0; i < KeyCell->SubKeyCounts[HvStable]; i++)
+      for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
 
-	  SubKeyCell = HvGetCell (Hive, HashCell->Table[i].KeyOffset);
+	  SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->Table[i].KeyOffset);
 
 	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
 
@@ -780,15 +789,15 @@ CmiWriteHive(PHHIVE Hive,
   ULONG i, Size;
 
   /* Write hive header */
-  memcpy (ChunkBase, Hive->HiveHeader, HV_BLOCK_SIZE);
+  memcpy (ChunkBase, Hive->BaseBlock, HV_BLOCK_SIZE);
   Size = HV_BLOCK_SIZE;
 
   Bin = NULL;
-  for (i = 0; i < Hive->Storage[HvStable].Length; i++)
+  for (i = 0; i < Hive->Storage[Stable].Length; i++)
     {
-      if (Hive->Storage[HvStable].BlockList[i].Bin != (ULONG_PTR)Bin)
+      if (Hive->Storage[Stable].BlockList[i].BinAddress != (ULONG_PTR)Bin)
 	{
-	  Bin = (PHBIN)Hive->Storage[HvStable].BlockList[i].Bin;
+	  Bin = (PHBIN)Hive->Storage[Stable].BlockList[i].BinAddress;
 	  memcpy (ChunkBase + (i + 1) * HV_BLOCK_SIZE,
 	          Bin, Bin->Size);
 	  Size += Bin->Size;
@@ -812,10 +821,20 @@ RegExportBinaryHive(PCWSTR KeyName,
 
   DbgPrint((DPRINT_REGISTRY, "Creating binary hardware hive\n"));
 
-  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE);
-  Status = HvInitialize (&CmHive->Hive, HV_OPERATION_CREATE_HIVE, 0, 0, 0, 0,
-                         CmpAllocate, CmpFree,
-                         NULL, NULL, NULL, NULL, NULL);
+  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE, 0);
+  Status = HvInitialize (&CmHive->Hive,
+                         HINIT_CREATE,
+                         0,
+                         0,
+                         0,
+                         CmpAllocate,
+                         CmpFree,
+                         NULL,
+                         NULL,
+                         NULL,
+                         NULL,
+                         0,
+                         NULL);
   Hive = &CmHive->Hive;
   if (!NT_SUCCESS(Status))
     {

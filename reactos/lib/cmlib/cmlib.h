@@ -71,11 +71,13 @@ RtlClearAllBits(
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
 #endif
 
+#define TAG_CM 0x68742020
+
 #define CMAPI NTAPI
 
 struct _HHIVE;
 
-typedef PVOID (CMAPI *PGET_CELL_ROUTINE)(
+typedef struct _CELL_DATA* (CMAPI *PGET_CELL_ROUTINE)(
    struct _HHIVE *Hive,
    HCELL_INDEX Cell);
 
@@ -85,39 +87,44 @@ typedef VOID (CMAPI *PRELEASE_CELL_ROUTINE)(
 
 typedef PVOID (CMAPI *PALLOCATE_ROUTINE)(
    SIZE_T Size,
-   BOOLEAN Paged);
+   BOOLEAN Paged,
+   ULONG Tag);
 
 typedef VOID (CMAPI *PFREE_ROUTINE)(
-   PVOID Ptr);
+   PVOID Ptr,
+   ULONG Quota);
 
 typedef BOOLEAN (CMAPI *PFILE_READ_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONGLONG FileOffset,
+   PULONG FileOffset,
    PVOID Buffer,
    SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_WRITE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONGLONG FileOffset,
+   PULONG FileOffset,
    PVOID Buffer,
    SIZE_T BufferLength);
 
 typedef BOOLEAN (CMAPI *PFILE_SET_SIZE_ROUTINE)(
    struct _HHIVE *RegistryHive,
    ULONG FileType,
-   ULONGLONG FileSize);
+   ULONG FileSize,
+   ULONG OldfileSize);
 
 typedef BOOLEAN (CMAPI *PFILE_FLUSH_ROUTINE)(
    struct _HHIVE *RegistryHive,
-   ULONG FileType);
+   ULONG FileType,
+   PLARGE_INTEGER FileOffset,
+   ULONG Length);
 
 typedef struct _HMAP_ENTRY
 {
-    ULONG_PTR Bin;
-    ULONG_PTR Block;
-    struct _CM_VIEW_OF_FILE *CmHive;
+    ULONG_PTR BlockAddress;
+    ULONG_PTR BinAddress;
+    struct _CM_VIEW_OF_FILE *CmView;
     ULONG MemAlloc;
 } HMAP_ENTRY, *PHMAP_ENTRY;
 
@@ -153,7 +160,7 @@ typedef struct _HHIVE
     PFILE_WRITE_ROUTINE FileWrite;
     PFILE_SET_SIZE_ROUTINE FileSetSize;
     PFILE_FLUSH_ROUTINE FileFlush;
-    PHBASE_BLOCK HiveHeader;
+    PHBASE_BLOCK BaseBlock;
     RTL_BITMAP DirtyVector;
     ULONG DirtyCount;
     ULONG DirtyAlloc;
@@ -172,7 +179,7 @@ typedef struct _HHIVE
     ULONG RefreshCount;
     ULONG StorageTypeCount;
     ULONG Version;
-    DUAL Storage[HvMaxStorageType];
+    DUAL Storage[HTYPE_COUNT];
 } HHIVE, *PHHIVE;
 
 #ifndef _CM_
@@ -192,27 +199,21 @@ typedef struct _EREGISTRY_HIVE
 /*
  * Public functions.
  */
-
-#define HV_OPERATION_CREATE_HIVE    0
-#define HV_OPERATION_MEMORY         1
-#define HV_OPERATION_MEMORY_INPLACE 3
-
 NTSTATUS CMAPI
 HvInitialize(
    PHHIVE RegistryHive,
    ULONG Operation,
    ULONG HiveType,
    ULONG HiveFlags,
-   ULONG_PTR HiveData OPTIONAL,
-   ULONG Cluster OPTIONAL,
+   PVOID HiveData OPTIONAL,
    PALLOCATE_ROUTINE Allocate,
    PFREE_ROUTINE Free,
-   PFILE_READ_ROUTINE FileRead,
-   PFILE_WRITE_ROUTINE FileWrite,
    PFILE_SET_SIZE_ROUTINE FileSetSize,
+   PFILE_WRITE_ROUTINE FileWrite,
+   PFILE_READ_ROUTINE FileRead,
    PFILE_FLUSH_ROUTINE FileFlush,
-   IN const /*CONST*/ UNICODE_STRING* FileName);
-/* NOTE: Can not use CONST here, as this file is used from user-mode too */
+   ULONG Cluster OPTIONAL,
+   PUNICODE_STRING FileName);
 
 VOID CMAPI
 HvFree(
@@ -235,7 +236,8 @@ HCELL_INDEX CMAPI
 HvAllocateCell(
    PHHIVE RegistryHive,
    SIZE_T Size,
-   HV_STORAGE_TYPE Storage);
+   HSTORAGE_TYPE Storage,
+   IN HCELL_INDEX Vicinity);
 
 BOOLEAN CMAPI
 HvIsCellAllocated(
@@ -254,10 +256,11 @@ HvFreeCell(
    PHHIVE RegistryHive,
    HCELL_INDEX CellOffset);
 
-VOID CMAPI
+BOOLEAN CMAPI
 HvMarkCellDirty(
    PHHIVE RegistryHive,
-   HCELL_INDEX CellOffset);
+   HCELL_INDEX CellOffset,
+   BOOLEAN HoldingLock);
 
 BOOLEAN CMAPI
 HvIsCellDirty(
@@ -290,7 +293,7 @@ PHBIN CMAPI
 HvpAddBin(
    PHHIVE RegistryHive,
    ULONG Size,
-   HV_STORAGE_TYPE Storage);
+   HSTORAGE_TYPE Storage);
 
 NTSTATUS CMAPI
 HvpCreateHiveFreeCellList(

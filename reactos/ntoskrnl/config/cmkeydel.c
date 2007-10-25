@@ -32,8 +32,8 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
     if (CheckNoSubkeys)
     {
         /* Do them */
-        ASSERT(CellData->u.KeyNode.SubKeyCounts[HvStable] == 0);
-        ASSERT(CellData->u.KeyNode.SubKeyCounts[HvVolatile] == 0);
+        ASSERT(CellData->u.KeyNode.SubKeyCounts[Stable] == 0);
+        ASSERT(CellData->u.KeyNode.SubKeyCounts[Volatile] == 0);
     }
 
     /* If this is an exit hive, there's nothing to do */
@@ -45,21 +45,21 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
     }
 
     /* Otherwise, mark it dirty and release it */
-    HvMarkCellDirty(Hive, Cell);
+    HvMarkCellDirty(Hive, Cell, FALSE);
     HvReleaseCell(Hive, Cell);
 
     /* Check if we have a class */
     if (CellData->u.KeyNode.Class != HCELL_NIL)
     {
         /* Mark it dirty */
-        HvMarkCellDirty(Hive, CellData->u.KeyNode.Class);
+        HvMarkCellDirty(Hive, CellData->u.KeyNode.Class, FALSE);
     }
 
     /* Check if we have security */
     if (CellData->u.KeyNode.Security != HCELL_NIL)
     {
         /* Mark it dirty */
-        HvMarkCellDirty(Hive, CellData->u.KeyNode.Security);
+        HvMarkCellDirty(Hive, CellData->u.KeyNode.Security, FALSE);
 
         /* Get the security data and release it */
         SecurityData = HvGetCell(Hive, CellData->u.KeyNode.Security);
@@ -67,15 +67,15 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
         HvReleaseCell(Hive, CellData->u.KeyNode.Security);
 
         /* Mark the security links dirty too */
-        HvMarkCellDirty(Hive, SecurityData->u.KeySecurity.Flink);
-        HvMarkCellDirty(Hive, SecurityData->u.KeySecurity.Blink);
+        HvMarkCellDirty(Hive, SecurityData->u.KeySecurity.Flink, FALSE);
+        HvMarkCellDirty(Hive, SecurityData->u.KeySecurity.Blink, FALSE);
     }
 
     /* Check if we have any values */
     if (CellData->u.KeyNode.ValueList.Count > 0)
     {
         /* Dirty the value list */
-        HvMarkCellDirty(Hive, CellData->u.KeyNode.ValueList.List);
+        HvMarkCellDirty(Hive, CellData->u.KeyNode.ValueList.List, FALSE);
 
         /* Get the list data itself, and release it */
         ListData = HvGetCell(Hive, CellData->u.KeyNode.ValueList.List);
@@ -86,7 +86,7 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
         for (i = 0; i < CellData->u.KeyNode.ValueList.Count; i++)
         {
             /* Dirty each value */
-            HvMarkCellDirty(Hive, ListData->u.KeyList[i]);
+            HvMarkCellDirty(Hive, ListData->u.KeyList[i], FALSE);
 
             /* Get the value data and release it */
             ValueData = HvGetCell(Hive, ListData->u.KeyList[i]);
@@ -113,7 +113,7 @@ CmpMarkKeyDirty(IN PHHIVE Hive,
     }
 
     /* Finally, mark the parent dirty */
-    HvMarkCellDirty(Hive, CellData->u.KeyNode.Parent);
+    HvMarkCellDirty(Hive, CellData->u.KeyNode.Parent, FALSE);
     return TRUE;
 }
 
@@ -171,8 +171,8 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
     HvReleaseCell(Hive, Cell);
 
     /* Make sure we don't have subkeys */
-    ASSERT((CellData->u.KeyNode.SubKeyCounts[HvStable] +
-            CellData->u.KeyNode.SubKeyCounts[HvVolatile]) == 0);
+    ASSERT((CellData->u.KeyNode.SubKeyCounts[Stable] +
+            CellData->u.KeyNode.SubKeyCounts[Volatile]) == 0);
 
     /* Check if we have to unlink */
     if (Unlink)
@@ -187,8 +187,8 @@ CmpFreeKeyByCell(IN PHHIVE Hive,
         HvReleaseCell(Hive, CellData->u.KeyNode.Parent);
 
         /* Check if the parent node has no more subkeys */
-        if (!(ParentData->u.KeyNode.SubKeyCounts[HvStable] +
-              ParentData->u.KeyNode.SubKeyCounts[HvVolatile]))
+        if (!(ParentData->u.KeyNode.SubKeyCounts[Stable] +
+              ParentData->u.KeyNode.SubKeyCounts[Volatile]))
         {
             /* Then free the cached name/class lengths */
             ParentData->u.KeyNode.MaxNameLen = 0;

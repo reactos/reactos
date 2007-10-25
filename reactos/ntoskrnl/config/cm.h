@@ -44,57 +44,6 @@
     ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
 
 //
-// Tag for all registry allocations
-//
-#define TAG_CM                                          \
-    TAG('C', 'm', ' ', ' ')
-
-//
-// Hive operations
-//
-#define HINIT_CREATE                                    0
-#define HINIT_MEMORY                                    1
-#define HINIT_FILE                                      2
-#define HINIT_MEMORY_INPLACE                            3
-#define HINIT_FLAT                                      4
-#define HINIT_MAPFILE                                   5
-
-//
-// Hive flags
-//
-#define HIVE_VOLATILE                                   1
-#define HIVE_NOLAZYFLUSH                                2
-
-//
-// Hive types
-//
-#define HFILE_TYPE_PRIMARY                              0
-#define HFILE_TYPE_ALTERNATE                            1
-#define HFILE_TYPE_LOG                                  2
-#define HFILE_TYPE_EXTERNAL                             3
-#define HFILE_TYPE_MAX                                  4
-
-//
-// Hive sizes
-//
-#define HBLOCK_SIZE                                     0x1000
-#define HSECTOR_SIZE                                    0x200
-#define HSECTOR_COUNT                                   8
-
-//
-// Hive versions
-//
-#define HSYS_MAJOR                                      1
-#define HSYS_MINOR                                      3
-#define HSYS_WHISTLER_BETA1                             4
-
-//
-// Cell Masks
-//
-#define HCELL_NIL                                       -1
-#define HCELL_CACHED                                    1
-
-//
 // Key Types
 //
 #define CM_KEY_INDEX_ROOT                               0x6972
@@ -496,8 +445,8 @@ typedef struct _CM_KEY_NODE
     LARGE_INTEGER LastWriteTime;
     ULONG Spare;
     HCELL_INDEX Parent;
-    ULONG SubKeyCounts[HvMaxStorageType];
-    HCELL_INDEX SubKeyLists[HvMaxStorageType];
+    ULONG SubKeyCounts[HTYPE_COUNT];
+    HCELL_INDEX SubKeyLists[HTYPE_COUNT];
     CHILD_LIST ValueList;
     HCELL_INDEX Security;
     HCELL_INDEX Class;
@@ -1303,13 +1252,15 @@ PVOID
 NTAPI
 CmpAllocate(
     IN ULONG Size,
-    IN BOOLEAN Paged
+    IN BOOLEAN Paged,
+    IN ULONG Tag
 );
 
 VOID
 NTAPI
 CmpFree(
-    IN PVOID Ptr
+    IN PVOID Ptr,
+    IN ULONG Quota
 );
 
 BOOLEAN
@@ -1317,7 +1268,7 @@ NTAPI
 CmpFileRead(
     IN PHHIVE RegistryHive,
     IN ULONG FileType,
-    IN ULONGLONG FileOffset,
+    IN OUT PULONG FileOffset,
     OUT PVOID Buffer,
     IN SIZE_T BufferLength
 );
@@ -1327,7 +1278,7 @@ NTAPI
 CmpFileWrite(
     IN PHHIVE RegistryHive,
     IN ULONG FileType,
-    IN ULONGLONG FileOffset,
+    IN OUT PULONG FileOffset,
     IN PVOID Buffer,
     IN SIZE_T BufferLength
 );
@@ -1337,14 +1288,17 @@ NTAPI
 CmpFileSetSize(
     IN PHHIVE RegistryHive,
     IN ULONG FileType,
-    IN ULONGLONG FileSize
+    IN ULONG FileSize,
+    IN ULONG OldFileSize
 );
 
 BOOLEAN
 NTAPI
 CmpFileFlush(
    IN PHHIVE RegistryHive,
-   IN ULONG FileType
+   IN ULONG FileType,
+   IN OUT PLARGE_INTEGER FileOffset,
+   IN ULONG Length
 );
 
 //

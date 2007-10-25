@@ -13,7 +13,7 @@ static BOOLEAN CMAPI
 HvpWriteLog(
    PHHIVE RegistryHive)
 {
-   ULONGLONG FileOffset;
+   ULONG FileOffset;
    SIZE_T BufferSize;
    SIZE_T BitmapSize;
    PUCHAR Buffer;
@@ -30,8 +30,8 @@ HvpWriteLog(
 
    DPRINT("HvpWriteLog called\n");
 
-   if (RegistryHive->HiveHeader->Sequence1 !=
-       RegistryHive->HiveHeader->Sequence2)
+   if (RegistryHive->BaseBlock->Sequence1 !=
+       RegistryHive->BaseBlock->Sequence2)
    {
       return FALSE;
    }
@@ -42,29 +42,30 @@ HvpWriteLog(
 
    DPRINT("Bitmap size %lu  buffer size: %lu\n", BitmapSize, BufferSize);
 
-   Buffer = RegistryHive->Allocate(BufferSize, TRUE);
+   Buffer = RegistryHive->Allocate(BufferSize, TRUE, TAG_CM);
    if (Buffer == NULL)
    {
       return FALSE;
    }
 
-   /* Update first update counter and checksum */
-   RegistryHive->HiveHeader->Type = HV_TYPE_LOG;
-   RegistryHive->HiveHeader->Sequence1++;
-   RegistryHive->HiveHeader->Checksum =
-      HvpHiveHeaderChecksum(RegistryHive->HiveHeader);
+   /* Update first update counter and CheckSum */
+   RegistryHive->BaseBlock->Type = HFILE_TYPE_LOG;
+   RegistryHive->BaseBlock->Sequence1++;
+   RegistryHive->BaseBlock->CheckSum =
+      HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
    /* Copy hive header */
-   RtlCopyMemory(Buffer, RegistryHive->HiveHeader, HV_LOG_HEADER_SIZE);
+   RtlCopyMemory(Buffer, RegistryHive->BaseBlock, HV_LOG_HEADER_SIZE);
    Ptr = Buffer + HV_LOG_HEADER_SIZE;
    RtlCopyMemory(Ptr, "DIRT", 4);
    Ptr += 4;
    RtlCopyMemory(Ptr, RegistryHive->DirtyVector.Buffer, BitmapSize);
 
    /* Write hive block and block bitmap */
-   Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
-                                     0, Buffer, BufferSize);
-   RegistryHive->Free(Buffer);
+   FileOffset = 0;
+   Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_LOG,
+                                     &FileOffset, Buffer, BufferSize);
+   RegistryHive->Free(Buffer, 0);
 
    if (!Success)
    {
@@ -74,7 +75,7 @@ HvpWriteLog(
    /* Write dirty blocks */
    FileOffset = BufferSize;
    BlockIndex = 0;
-   while (BlockIndex < RegistryHive->Storage[HvStable].Length)
+   while (BlockIndex < RegistryHive->Storage[Stable].Length)
    {
       LastIndex = BlockIndex;
       BlockIndex = RtlFindSetBits(&RegistryHive->DirtyVector, 1, BlockIndex);
@@ -83,11 +84,11 @@ HvpWriteLog(
          break;
       }
 
-      BlockPtr = (PVOID)RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
+      BlockPtr = (PVOID)RegistryHive->Storage[Stable].BlockList[BlockIndex].BlockAddress;
 
       /* Write hive block */
-      Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
-                                        FileOffset, BlockPtr,
+      Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_LOG,
+                                        &FileOffset, BlockPtr,
                                         HV_BLOCK_SIZE);
       if (!Success)
       {
@@ -98,7 +99,7 @@ HvpWriteLog(
       FileOffset += HV_BLOCK_SIZE;
     }
 
-   Success = RegistryHive->FileSetSize(RegistryHive, HV_TYPE_LOG, FileOffset);
+   Success = RegistryHive->FileSetSize(RegistryHive, HFILE_TYPE_LOG, FileOffset, FileOffset);
    if (!Success)
    {
       DPRINT("FileSetSize failed\n");
@@ -106,20 +107,21 @@ HvpWriteLog(
     }
 
    /* Flush the log file */
-   Success = RegistryHive->FileFlush(RegistryHive, HV_TYPE_LOG);
+   Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_LOG, NULL, 0);
    if (!Success)
    {
       DPRINT("FileFlush failed\n");
    }
 
-   /* Update first and second update counter and checksum. */
-   RegistryHive->HiveHeader->Sequence2++;
-   RegistryHive->HiveHeader->Checksum =
-      HvpHiveHeaderChecksum(RegistryHive->HiveHeader);
+   /* Update first and second update counter and CheckSum. */
+   RegistryHive->BaseBlock->Sequence2++;
+   RegistryHive->BaseBlock->CheckSum =
+      HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
    /* Write hive header again with updated sequence counter. */
-   Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_LOG,
-                                     0, RegistryHive->HiveHeader,
+   FileOffset = 0;
+   Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_LOG,
+                                     &FileOffset, RegistryHive->BaseBlock,
                                      HV_LOG_HEADER_SIZE);
    if (!Success)
    {
@@ -127,7 +129,7 @@ HvpWriteLog(
    }
 
    /* Flush the log file */
-   Success = RegistryHive->FileFlush(RegistryHive, HV_TYPE_LOG);
+   Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_LOG, NULL, 0);
    if (!Success)
    {
       DPRINT("FileFlush failed\n");
@@ -141,7 +143,7 @@ HvpWriteHive(
    PHHIVE RegistryHive,
    BOOLEAN OnlyDirty)
 {
-   ULONGLONG FileOffset;
+   ULONG FileOffset;
    ULONG BlockIndex;
    ULONG LastIndex;
    PVOID BlockPtr;
@@ -151,21 +153,22 @@ HvpWriteHive(
 
    DPRINT("HvpWriteHive called\n");
 
-   if (RegistryHive->HiveHeader->Sequence1 !=
-       RegistryHive->HiveHeader->Sequence2)
+   if (RegistryHive->BaseBlock->Sequence1 !=
+       RegistryHive->BaseBlock->Sequence2)
    {
       return FALSE;
    }
 
-   /* Update first update counter and checksum */
-   RegistryHive->HiveHeader->Type = HV_TYPE_PRIMARY;
-   RegistryHive->HiveHeader->Sequence1++;
-   RegistryHive->HiveHeader->Checksum =
-      HvpHiveHeaderChecksum(RegistryHive->HiveHeader);
+   /* Update first update counter and CheckSum */
+   RegistryHive->BaseBlock->Type = HFILE_TYPE_PRIMARY;
+   RegistryHive->BaseBlock->Sequence1++;
+   RegistryHive->BaseBlock->CheckSum =
+      HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
    /* Write hive block */
-   Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_PRIMARY,
-                                     0, RegistryHive->HiveHeader,
+   FileOffset = 0;
+   Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+                                     &FileOffset, RegistryHive->BaseBlock,
                                      sizeof(HBASE_BLOCK));
    if (!Success)
    {
@@ -173,7 +176,7 @@ HvpWriteHive(
    }
 
    BlockIndex = 0;
-   while (BlockIndex < RegistryHive->Storage[HvStable].Length)
+   while (BlockIndex < RegistryHive->Storage[Stable].Length)
    {
       if (OnlyDirty)
       {
@@ -185,12 +188,12 @@ HvpWriteHive(
          }
       }
 
-      BlockPtr = (PVOID)RegistryHive->Storage[HvStable].BlockList[BlockIndex].Block;
+      BlockPtr = (PVOID)RegistryHive->Storage[Stable].BlockList[BlockIndex].BlockAddress;
       FileOffset = (ULONGLONG)(BlockIndex + 1) * (ULONGLONG)HV_BLOCK_SIZE;
 
       /* Write hive block */
-      Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_PRIMARY,
-                                        FileOffset, BlockPtr,
+      Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+                                        &FileOffset, BlockPtr,
                                         HV_BLOCK_SIZE);
       if (!Success)
       {
@@ -200,27 +203,28 @@ HvpWriteHive(
       BlockIndex++;
    }
 
-   Success = RegistryHive->FileFlush(RegistryHive, HV_TYPE_PRIMARY);
+   Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_PRIMARY, NULL, 0);
    if (!Success)
    {
       DPRINT("FileFlush failed\n");
    }
 
-   /* Update second update counter and checksum */
-   RegistryHive->HiveHeader->Sequence2++;
-   RegistryHive->HiveHeader->Checksum =
-      HvpHiveHeaderChecksum(RegistryHive->HiveHeader);
+   /* Update second update counter and CheckSum */
+   RegistryHive->BaseBlock->Sequence2++;
+   RegistryHive->BaseBlock->CheckSum =
+      HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
    /* Write hive block */
-   Success = RegistryHive->FileWrite(RegistryHive, HV_TYPE_PRIMARY,
-                                     0, RegistryHive->HiveHeader,
+   FileOffset = 0;
+   Success = RegistryHive->FileWrite(RegistryHive, HFILE_TYPE_PRIMARY,
+                                     &FileOffset, RegistryHive->BaseBlock,
                                      sizeof(HBASE_BLOCK));
    if (!Success)
    {
       return FALSE;
    }
 
-   Success = RegistryHive->FileFlush(RegistryHive, HV_TYPE_PRIMARY);
+   Success = RegistryHive->FileFlush(RegistryHive, HFILE_TYPE_PRIMARY, NULL, 0);
    if (!Success)
    {
       DPRINT("FileFlush failed\n");
@@ -241,7 +245,7 @@ HvSyncHive(
    }
 
    /* Update hive header modification time */
-   KeQuerySystemTime(&RegistryHive->HiveHeader->TimeStamp);
+   KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
 
    /* Update log file */
    if (!HvpWriteLog(RegistryHive))
@@ -268,7 +272,7 @@ HvWriteHive(
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
    /* Update hive header modification time */
-   KeQuerySystemTime(&RegistryHive->HiveHeader->TimeStamp);
+   KeQuerySystemTime(&RegistryHive->BaseBlock->TimeStamp);
 
    /* Update hive file */
    if (!HvpWriteHive(RegistryHive, FALSE))

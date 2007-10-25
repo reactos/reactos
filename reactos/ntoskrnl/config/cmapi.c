@@ -36,14 +36,15 @@ CmpSetValueKeyNew(IN PHHIVE Hive,
     {
         /* Then make sure it's valid and dirty it */
         ASSERT(Parent->ValueList.List != HCELL_NIL);
-        HvMarkCellDirty(Hive, Parent->ValueList.List);
+        HvMarkCellDirty(Hive, Parent->ValueList.List, FALSE);
     }
 
     /* Allocate  avalue cell */
     ValueCell = HvAllocateCell(Hive,
                                FIELD_OFFSET(CM_KEY_VALUE, Name) +
                                CmpNameSize(Hive, ValueName),
-                               StorageType);
+                               StorageType,
+                               HCELL_NIL);
     if (ValueCell == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Get the actual data for it */
@@ -126,7 +127,7 @@ CmpSetValueKeyExisting(IN PHHIVE Hive,
     BOOLEAN WasSmall, IsSmall;
 
     /* Mark the old child cell dirty */
-    HvMarkCellDirty(Hive, OldChild);
+    HvMarkCellDirty(Hive, OldChild, FALSE);
 
     /* See if this is a small or normal key */
     WasSmall = CmpIsKeyValueSmall(&Length, Value->DataLength);
@@ -190,7 +191,7 @@ CmpSetValueKeyExisting(IN PHHIVE Hive,
         else
         {
             /* This was a small key, or a key with no data, allocate a cell */
-            NewCell = HvAllocateCell(Hive, DataSize, StorageType);
+            NewCell = HvAllocateCell(Hive, DataSize, StorageType, HCELL_NIL);
             if (NewCell == HCELL_NIL) return STATUS_INSUFFICIENT_RESOURCES;
         }
 
@@ -279,7 +280,7 @@ CmSetValueKey(IN PKEY_OBJECT KeyObject,
     }
 
     /* Mark the cell dirty */
-    HvMarkCellDirty(Hive, Cell);
+    HvMarkCellDirty(Hive, Cell, FALSE);
 
     /* Get the storage type */
     Storage = HvGetCellType(Cell);
@@ -392,9 +393,9 @@ CmDeleteValueKey(IN PKEY_OBJECT KeyObject,
         if (ChildCell == HCELL_NIL) goto Quickie;
 
         /* We found the value, mark all relevant cells dirty */
-        HvMarkCellDirty(Hive, Cell);
-        HvMarkCellDirty(Hive, Parent->ValueList.List);
-        HvMarkCellDirty(Hive, ChildCell);
+        HvMarkCellDirty(Hive, Cell, FALSE);
+        HvMarkCellDirty(Hive, Parent->ValueList.List, FALSE);
+        HvMarkCellDirty(Hive, ChildCell, FALSE);
 
         /* Get the key value */
         Value = (PCM_KEY_VALUE)HvGetCell(Hive,ChildCell);
@@ -807,8 +808,8 @@ CmpQueryKeyData(IN PHHIVE Hive,
             Info->KeyFullInformation.LastWriteTime = Node->LastWriteTime;
             Info->KeyFullInformation.TitleIndex = 0;
             Info->KeyFullInformation.ClassLength = Node->ClassLength;
-            Info->KeyFullInformation.SubKeys = Node->SubKeyCounts[HvStable] +
-                                               Node->SubKeyCounts[HvVolatile];
+            Info->KeyFullInformation.SubKeys = Node->SubKeyCounts[Stable] +
+                                               Node->SubKeyCounts[Volatile];
             Info->KeyFullInformation.Values = Node->ValueList.Count;
             Info->KeyFullInformation.MaxNameLen = CmiGetMaxNameLength(Hive, Node);
             Info->KeyFullInformation.MaxClassLen = CmiGetMaxClassLength(Hive, Node);
@@ -1019,7 +1020,7 @@ CmDeleteKey(IN PKEY_OBJECT KeyObject)
     }
 
     /* Check if we don't have any children */
-    if (!(Node->SubKeyCounts[HvStable] + Node->SubKeyCounts[HvVolatile]))
+    if (!(Node->SubKeyCounts[Stable] + Node->SubKeyCounts[Volatile]))
     {
         /* Get the parent and free the cell */
         ParentCell = Node->Parent;
