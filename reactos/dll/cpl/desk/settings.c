@@ -15,10 +15,11 @@ typedef struct _GLOBAL_DATA
 {
 	PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
 	PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
+	HBITMAP hBitmap;
+	int cxSource;
+	int cySource;
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
-static HBITMAP hBitmap = NULL;
-static int cxSource, cySource;
 
 static VOID
 UpdateDisplay(IN HWND hwndDlg, PGLOBAL_DATA pGlobalData, IN BOOL bUpdateThumb)
@@ -281,6 +282,7 @@ OnDisplayDeviceChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData, IN PDISPLAY
 static VOID
 OnInitDialog(IN HWND hwndDlg)
 {
+	BITMAP bitmap;
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
 	DISPLAY_DEVICE displayDevice;
@@ -358,6 +360,16 @@ OnInitDialog(IN HWND hwndDlg)
 
 			HeapFree(GetProcessHeap(), 0, pMonitors);
 		}
+	}
+
+	/* init the color spectrum*/
+	pGlobalData->hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+	if (pGlobalData->hBitmap != NULL)
+	{
+		GetObjectW(pGlobalData->hBitmap, sizeof(BITMAP), &bitmap);
+
+		pGlobalData->cxSource = bitmap.bmWidth;
+		pGlobalData->cySource = bitmap.bmHeight;
 	}
 }
 
@@ -561,22 +573,12 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 	pGlobalData = (PGLOBAL_DATA)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
-	BITMAP bitmap;
-
+	
 	switch(uMsg)
 	{
 		case WM_INITDIALOG:
 		{
 			OnInitDialog(hwndDlg);
-			
-			hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-			if (hBitmap != NULL)
-			{
-				GetObjectW(hBitmap, sizeof(BITMAP), &bitmap);
-
-				cxSource = bitmap.bmWidth;
-				cySource = bitmap.bmHeight;
-			}
 			break;
 		}
 		case WM_DRAWITEM:
@@ -589,11 +591,11 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 				hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
 				if (hdcMem != NULL)
 				{
-					SelectObject(hdcMem, hBitmap);
+					SelectObject(hdcMem, pGlobalData->hBitmap);
 					StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
 								lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
 								lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-								hdcMem, 0, 0, cxSource, cySource, SRCCOPY);
+								hdcMem, 0, 0, pGlobalData->cxSource, pGlobalData->cySource, SRCCOPY);
 					DeleteDC(hdcMem);
 				}
 			}
@@ -798,7 +800,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			HeapFree(GetProcessHeap(), 0, pGlobalData);
 
-			DeleteObject(hBitmap);
+			if (pGlobalData->hBitmap)
+				DeleteObject(pGlobalData->hBitmap);
 		}
 	}
 	return FALSE;
