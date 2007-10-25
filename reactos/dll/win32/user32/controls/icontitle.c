@@ -37,6 +37,15 @@ static LRESULT WINAPI IconTitleWndProc( HWND hWnd, UINT msg, WPARAM wParam, LPAR
  */
 const struct builtin_class_descr ICONTITLE_builtin_class =
 {
+#ifdef __REACTOS__
+    ICONTITLE_CLASS_ATOM, /* name */
+    0,                    /* style */
+    IconTitleWndProc,     /* procW */
+    NULL,                 /* procA (winproc is Unicode only) */
+    0,                    /* extra */
+    IDC_ARROW,            /* cursor */
+    0                     /* brush */
+#else
     ICONTITLE_CLASS_ATOM, /* name */
     0,                    /* style */
     NULL,                 /* procA (winproc is Unicode only) */
@@ -44,6 +53,7 @@ const struct builtin_class_descr ICONTITLE_builtin_class =
     0,                    /* extra */
     IDC_ARROW,            /* cursor */
     0                     /* brush */
+#endif
 };
 
 
