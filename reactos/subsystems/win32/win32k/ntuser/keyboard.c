@@ -437,22 +437,6 @@ int STDCALL ToUnicodeEx( UINT wVirtKey,
    return ToUnicodeResult;
 }
 
-int STDCALL ToUnicode( UINT wVirtKey,
-                       UINT wScanCode,
-                       PBYTE lpKeyState,
-                       LPWSTR pwszBuff,
-                       int cchBuff,
-                       UINT wFlags )
-{
-   return ToUnicodeEx( wVirtKey,
-                       wScanCode,
-                       gQueueKeyStateTable,
-                       pwszBuff,
-                       cchBuff,
-                       wFlags,
-                       0 );
-}
-
 
 BOOL FASTCALL
 IntTranslateKbdMessage(LPMSG lpMsg,
