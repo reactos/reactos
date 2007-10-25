@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS Event Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        base/applications/mscutils/eventvwr/lang/es-ES.rc
+ * PURPOSE:     Spanish Language File for ReactOS Event Viewer
+ * TRANSLATORS: Marc Piulachs
+ */
+
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDC_EVENTVWR MENU 
