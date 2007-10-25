@@ -39,7 +39,11 @@
 	</directory>
 
 	<directory name="tcat">
-		<xi:include href="tcat/cat.rbuild" />
+		<xi:include href="tcat/tcat.rbuild" />
+	</directory>
+
+	<directory name="utils">
+		<xi:include href="utils/utils.rbuild" />
 	</directory>
 
 	<directory name="tlist">

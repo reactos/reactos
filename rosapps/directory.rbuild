@@ -26,11 +26,19 @@
 	<directory name="downloader">
 		<xi:include href="downloader/downloader.rbuild" />
 	</directory>
-
+<!--
+	<directory name="ext2">
+		<xi:include href="ext2/ext2.rbuild" />
+	</directory>
+-->
 	<directory name="fontview">
 		<xi:include href="fontview/fontview.rbuild" />
 	</directory>
-
+<!--
+	<directory name="fraginator">
+		<xi:include href="fraginator/fraginator.rbuild" />
+	</directory>
+-->
 	<directory name="gettype">
 		<xi:include href="gettype/gettype.rbuild" />
 	</directory>

@@ -18,4 +18,7 @@
 	<directory name="y">
 		<xi:include href="y/y.rbuild" />
 	</directory>
+	<directory name="uptime">
+		<xi:include href="uptime/uptime.rbuild" />
+	</directory>
 </group>
