@@ -448,28 +448,6 @@ for(;;);
       return;
     }
 
-#if 0
-  /* Load acpi.sys */
-  if (!LoadDriver(SourcePath, "acpi.sys"))
-    return;
-#endif
-
-#if 0
-  /* Load isapnp.sys */
-  if (!LoadDriver(SourcePath, "isapnp.sys"))
-    return;
-#endif
-
-#if 0
-  /* Load pci.sys */
-  if (!LoadDriver(SourcePath, "pci.sys"))
-    return;
-#endif
-
-  /* Load scsiport.sys */
-  if (!LoadDriver(SourcePath, "scsiport.sys"))
-    return;
-
   /* Load atapi.sys (depends on hardware detection) */
   if (!LoadDriver(SourcePath, "atapi.sys"))
     return;
@@ -478,40 +456,30 @@ for(;;);
   if (!LoadDriver(SourcePath, "buslogic.sys"))
     return;
 
-  /* Load class2.sys */
-  if (!LoadDriver(SourcePath, "class2.sys"))
-    return;
-
-  /* Load cdrom.sys */
-  if (!LoadDriver(SourcePath, "cdrom.sys"))
-    return;
-
-  /* Load cdfs.sys */
-  if (!LoadDriver(SourcePath, "cdfs.sys"))
-    return;
-
-  /* Load disk.sys */
-  if (!LoadDriver(SourcePath, "disk.sys"))
-    return;
-
-  /* Load floppy.sys */
-  if (!LoadDriver(SourcePath, "floppy.sys"))
-    return;
-
   /* Load vfatfs.sys (could be loaded by the setup prog!) */
   if (!LoadDriver(SourcePath, "vfatfs.sys"))
     return;
 
-
-  /* Load keyboard driver */
-  if (!LoadDriver(SourcePath, "i8042prt.sys"))
-    return;
-  if (!LoadDriver(SourcePath, "kbdclass.sys"))
-    return;
-
-  /* Load screen driver */
-  if (!LoadDriver(SourcePath, "blue.sys"))
-    return;
+    /* Load additional files specified in txtsetup.inf */
+    if (InfFindFirstLine(InfHandle,
+                         "SourceDiskFiles",
+                         NULL,
+                         &InfContext))
+    {
+        do
+        {
+            LPCSTR Media, DriverName;
+            if (InfGetDataField(&InfContext, 7, &Media) &&
+                InfGetDataField(&InfContext, 0, &DriverName))
+            {
+                if (strcmp(Media, "x") == 0)
+                {
+                    if (!LoadDriver(SourcePath, DriverName))
+                        return;
+                }
+            }
+        } while (InfFindNextLine(&InfContext, &InfContext));
+    }
 
 #ifdef USE_UI
   UiUnInitialize("Booting ReactOS...");

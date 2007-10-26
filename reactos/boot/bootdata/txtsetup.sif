@@ -11,6 +11,20 @@ Signature = "$ReactOS$"
 6 = media\fonts
 7 = bin
 
+[SourceDiskFiles]
+;acpi.sys=,,,,,,x
+;isapnp.sys=,,,,,,x
+;pci.sys=,,,,,,x
+scsiport.sys=,,,,,,x
+class2.sys=,,,,,,x
+cdrom.sys=,,,,,,x
+cdfs.sys=,,,,,,x
+disk.sys=,,,,,,x
+floppy.sys=,,,,,,x
+i8042prt.sys=,,,,,,x
+kbdclass.sys=,,,,,,x
+blue.sys=,,,,,,x
+
 [SourceFiles]
 ; <filename> = <directory_id>
 atapi.sys     = 3
