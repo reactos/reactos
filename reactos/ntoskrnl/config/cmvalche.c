@@ -42,7 +42,7 @@ CmpSetValueCached(IN PHCELL_INDEX CellIndex)
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
-CmpGetValueListFromCache(IN PKEY_OBJECT KeyObject,
+CmpGetValueListFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                          OUT PCELL_DATA *CellData,
                          OUT BOOLEAN *IndexIsCached,
                          OUT PHCELL_INDEX ValueListToRelease)
@@ -50,17 +50,19 @@ CmpGetValueListFromCache(IN PKEY_OBJECT KeyObject,
     PHHIVE Hive;
     PCACHED_CHILD_LIST ChildList;
     HCELL_INDEX CellToRelease;
+    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *ValueListToRelease = HCELL_NIL;
     *IndexIsCached = FALSE;
 
     /* Get the hive */
-    Hive = &KeyObject->RegistryHive->Hive;
+    Hive = Kcb->KeyHive;
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
 
     /* Get the child value cache */
-    //ChildList = &KeyObject->ValueCache;
-    ChildList = (PCACHED_CHILD_LIST)&KeyObject->KeyCell->ValueList;
+    //ChildList = &Kcb->ValueCache;
+    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the value is cached */
     if (CmpIsValueCached(ChildList->ValueList))
@@ -87,7 +89,7 @@ CmpGetValueListFromCache(IN PKEY_OBJECT KeyObject,
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
-CmpGetValueKeyFromCache(IN PKEY_OBJECT KeyObject,
+CmpGetValueKeyFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                         IN PCELL_DATA CellData,
                         IN ULONG Index,
                         OUT PCM_CACHED_VALUE **CachedValue,
@@ -106,7 +108,7 @@ CmpGetValueKeyFromCache(IN PKEY_OBJECT KeyObject,
     *ValueIsCached = FALSE;
 
     /* Get the hive */
-    Hive = &KeyObject->RegistryHive->Hive;
+    Hive = Kcb->KeyHive;
 
     /* Check if the index was cached */
     if (IndexIsCached)
@@ -133,7 +135,7 @@ CmpGetValueKeyFromCache(IN PKEY_OBJECT KeyObject,
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
-CmpGetValueDataFromCache(IN PKEY_OBJECT KeyObject,
+CmpGetValueDataFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                          IN PCM_CACHED_VALUE *CachedValue,
                          IN PCELL_DATA ValueKey,
                          IN BOOLEAN ValueIsCached,
@@ -154,7 +156,7 @@ CmpGetValueDataFromCache(IN PKEY_OBJECT KeyObject,
     *CellToRelease = HCELL_NIL;
 
     /* Get the hive */
-    Hive = &KeyObject->RegistryHive->Hive;
+    Hive = Kcb->KeyHive;
 
     /* Check it the value is cached */
     if (ValueIsCached)
@@ -185,7 +187,7 @@ CmpGetValueDataFromCache(IN PKEY_OBJECT KeyObject,
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
-CmpFindValueByNameFromCache(IN PKEY_OBJECT KeyObject,
+CmpFindValueByNameFromCache(IN PCM_KEY_CONTROL_BLOCK Kcb,
                             IN PCUNICODE_STRING Name,
                             OUT PCM_CACHED_VALUE **CachedValue,
                             OUT ULONG *Index,
@@ -203,21 +205,25 @@ CmpFindValueByNameFromCache(IN PKEY_OBJECT KeyObject,
     BOOLEAN IndexIsCached;
     ULONG i = 0;
     HCELL_INDEX Cell = HCELL_NIL;
+    PCM_KEY_NODE KeyNode;
 
     /* Set defaults */
     *CellToRelease = HCELL_NIL;
     *Value = NULL;
 
-    /* Get the hive and child list */
-    Hive = &KeyObject->RegistryHive->Hive;
-    //ChildList = &KeyObject->ValueCache;
-    ChildList = (PCACHED_CHILD_LIST)&KeyObject->KeyCell->ValueList;
+    /* Get the hive */
+    Hive = Kcb->KeyHive;
+    KeyNode = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
+    
+    /* Get the child value cache */
+    //ChildList = &Kcb->ValueCache;
+    ChildList = (PCACHED_CHILD_LIST)&KeyNode->ValueList;
 
     /* Check if the child list has any entries */
     if (ChildList->Count != 0)
     {
         /* Get the value list associated to this child list */
-        SearchResult = CmpGetValueListFromCache(KeyObject,
+        SearchResult = CmpGetValueListFromCache(Kcb,
                                                 &CellData,
                                                 &IndexIsCached,
                                                 &Cell);
@@ -238,7 +244,7 @@ CmpFindValueByNameFromCache(IN PKEY_OBJECT KeyObject,
             }
 
             /* Get the key value for this index */
-            SearchResult =  CmpGetValueKeyFromCache(KeyObject,
+            SearchResult =  CmpGetValueKeyFromCache(Kcb,
                                                     CellData,
                                                     i,
                                                     CachedValue,
@@ -307,7 +313,7 @@ Quickie:
 
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
-CmpQueryKeyValueData(IN PKEY_OBJECT KeyObject,
+CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                      IN PCM_CACHED_VALUE *CachedValue,
                      IN PCM_KEY_VALUE ValueKey,
                      IN BOOLEAN ValueIsCached,
@@ -328,7 +334,7 @@ CmpQueryKeyValueData(IN PKEY_OBJECT KeyObject,
     VALUE_SEARCH_RETURN_TYPE Result = SearchSuccess;
 
     /* Get the hive and cell data */
-    Hive = &KeyObject->RegistryHive->Hive;
+    Hive = Kcb->KeyHive;
     CellData = (PCELL_DATA)ValueKey;
 
     /* Check if the value is compressed */
@@ -492,7 +498,7 @@ CmpQueryKeyValueData(IN PKEY_OBJECT KeyObject,
                 else
                 {
                     /* Otherwise, we must retrieve it from the value cache */
-                    Result = CmpGetValueDataFromCache(KeyObject,
+                    Result = CmpGetValueDataFromCache(Kcb,
                                                       CachedValue,
                                                       CellData,
                                                       ValueIsCached,
@@ -587,7 +593,7 @@ CmpQueryKeyValueData(IN PKEY_OBJECT KeyObject,
                 else
                 {
                     /* Otherwise, we must retrieve it from the value cache */
-                    Result = CmpGetValueDataFromCache(KeyObject,
+                    Result = CmpGetValueDataFromCache(Kcb,
                                                       CachedValue,
                                                       CellData,
                                                       ValueIsCached,

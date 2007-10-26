@@ -24,7 +24,6 @@
 /* GLOBALS ******************************************************************/
 
 extern POBJECT_TYPE  CmpKeyObjectType;
-
 static BOOLEAN CmiRegistryInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
@@ -709,8 +708,13 @@ NtDeleteKey(IN HANDLE KeyHandle)
     Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmDeleteKey(KeyObject);
+        Status = CmDeleteKey(&DummyKcb);
 
         /* Remove the keep-alive reference */
         ObDereferenceObject(KeyObject);
@@ -773,8 +777,13 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateKey, &EnumerateKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmEnumerateKey(KeyObject,
+        Status = CmEnumerateKey(&DummyKcb,
                                 Index,
                                 KeyInformationClass,
                                 KeyInformation,
@@ -836,8 +845,13 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                                         &EnumerateValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmEnumerateValueKey(KeyObject,
+        Status = CmEnumerateValueKey(&DummyKcb,
                                      Index,
                                      KeyValueInformationClass,
                                      KeyValueInformation,
@@ -897,8 +911,13 @@ NtQueryKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreQueryKey, &QueryKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmQueryKey(KeyObject,
+        Status = CmQueryKey(&DummyKcb,
                             KeyInformationClass,
                             KeyInformation,
                             Length,
@@ -957,8 +976,13 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreQueryValueKey, &QueryValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmQueryValueKey(KeyObject,
+        Status = CmQueryValueKey(&DummyKcb,
                                  *ValueName,
                                  KeyValueInformationClass,
                                  KeyValueInformation,
@@ -1021,8 +1045,13 @@ NtSetValueKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+        
         /* Call the internal API */
-        Status = CmSetValueKey(KeyObject,
+        Status = CmSetValueKey(&DummyKcb,
                                ValueName,
                                Type,
                                Data,
@@ -1071,8 +1100,13 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                         &DeleteValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
+        /* HACK: Setup the Dummy KCB */
+        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
+        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
+        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
+
         /* Call the internal API */
-        Status = CmDeleteValueKey(KeyObject, *ValueName);
+        Status = CmDeleteValueKey(&DummyKcb, *ValueName);
 
         /* Do the post callback */
         PostOperationInfo.Object = (PVOID)KeyObject;

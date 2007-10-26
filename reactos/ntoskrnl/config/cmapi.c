@@ -216,7 +216,7 @@ CmpSetValueKeyExisting(IN PHHIVE Hive,
 
 NTSTATUS
 NTAPI
-CmSetValueKey(IN PKEY_OBJECT KeyObject,
+CmSetValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
               IN PUNICODE_STRING ValueName,
               IN ULONG Type,
               IN PVOID Data,
@@ -235,11 +235,11 @@ CmSetValueKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get pointer to key cell */
-    Parent = KeyObject->KeyCell;
-    Hive = &KeyObject->RegistryHive->Hive;
-    Cell = KeyObject->KeyCellOffset;
+    Hive = Kcb->KeyHive;
+    Cell = Kcb->KeyCell;
 
     /* Prepare to scan the key node */
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     Count = Parent->ValueList.Count;
     Found = FALSE;
     if (Count > 0)
@@ -343,7 +343,7 @@ Quickie:
 
 NTSTATUS
 NTAPI
-CmDeleteValueKey(IN PKEY_OBJECT KeyObject,
+CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                  IN UNICODE_STRING ValueName)
 {
     NTSTATUS Status = STATUS_OBJECT_NAME_NOT_FOUND;
@@ -360,8 +360,8 @@ CmDeleteValueKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive and the cell index */
-    Hive = &KeyObject->RegistryHive->Hive;
-    Cell = KeyObject->KeyCellOffset;
+    Hive = Kcb->KeyHive;
+    Cell = Kcb->KeyCell;
 
     /* Get the parent key node */
     Parent = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
@@ -458,7 +458,7 @@ Quickie:
 
 NTSTATUS
 NTAPI
-CmQueryValueKey(IN PKEY_OBJECT KeyObject,
+CmQueryValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 IN UNICODE_STRING ValueName,
                 IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
                 IN PVOID KeyValueInformation,
@@ -480,10 +480,10 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive */
-    Hive = &KeyObject->RegistryHive->Hive;
+    Hive = Kcb->KeyHive;
 
     /* Find the key value */
-    Result = CmpFindValueByNameFromCache(KeyObject,
+    Result = CmpFindValueByNameFromCache(Kcb,
                                          &ValueName,
                                          &CachedValue,
                                          &Index,
@@ -496,7 +496,7 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
         ASSERT(ValueData != NULL);
 
         /* Query the information requested */
-        Result = CmpQueryKeyValueData(KeyObject,
+        Result = CmpQueryKeyValueData(Kcb,
                                       CachedValue,
                                       ValueData,
                                       ValueCached,
@@ -523,7 +523,7 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
+CmEnumerateValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                     IN ULONG Index,
                     IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
                     IN PVOID KeyValueInformation,
@@ -546,8 +546,8 @@ CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive and parent */
-    Hive = &KeyObject->RegistryHive->Hive;
-    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    Hive = Kcb->KeyHive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
     if (!Parent)
     {
         /* Fail */
@@ -556,17 +556,17 @@ CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
     }
 
     /* Make sure the index is valid */
-    //if (Index >= KeyObject->ValueCache.Count)
-    if (Index >= KeyObject->KeyCell->ValueList.Count)
+    //if (Index >= Kcb->ValueCache.Count)
+    if (Index >= Parent->ValueList.Count)
     {
         /* Release the cell and fail */
-        HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+        HvReleaseCell(Hive, Kcb->KeyCell);
         Status = STATUS_NO_MORE_ENTRIES;
         goto Quickie;
     }
 
     /* Find the value list */
-    Result = CmpGetValueListFromCache(KeyObject,
+    Result = CmpGetValueListFromCache(Kcb,
                                       &CellData,
                                       &IndexIsCached,
                                       &CellToRelease);
@@ -581,7 +581,7 @@ CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
     }
 
     /* Now get the key value */
-    Result = CmpGetValueKeyFromCache(KeyObject,
+    Result = CmpGetValueKeyFromCache(Kcb,
                                      CellData,
                                      Index,
                                      &CachedValue,
@@ -600,7 +600,7 @@ CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
     }
 
     /* Query the information requested */
-    Result = CmpQueryKeyValueData(KeyObject,
+    Result = CmpQueryKeyValueData(Kcb,
                                   CachedValue,
                                   ValueData,
                                   ValueIsCached,
@@ -615,7 +615,7 @@ Quickie:
     if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
 
     /* Release the parent cell */
-    HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+    HvReleaseCell(Hive, Kcb->KeyCell);
 
     /* If we have a cell to release, do so */
     if (CellToRelease2 != HCELL_NIL) HvReleaseCell(Hive, CellToRelease2);
@@ -852,7 +852,7 @@ CmpQueryKeyData(IN PHHIVE Hive,
 
 NTSTATUS
 NTAPI
-CmQueryKey(IN PKEY_OBJECT KeyObject,
+CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
            IN KEY_INFORMATION_CLASS KeyInformationClass,
            IN PVOID KeyInformation,
            IN ULONG Length,
@@ -867,8 +867,8 @@ CmQueryKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive and parent */
-    Hive = &KeyObject->RegistryHive->Hive;
-    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    Hive = Kcb->KeyHive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
     if (!Parent)
     {
         /* Fail */
@@ -921,7 +921,7 @@ Quickie:
 
 NTSTATUS
 NTAPI
-CmEnumerateKey(IN PKEY_OBJECT KeyObject,
+CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                IN ULONG Index,
                IN KEY_INFORMATION_CLASS KeyInformationClass,
                IN PVOID KeyInformation,
@@ -938,8 +938,8 @@ CmEnumerateKey(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive and parent */
-    Hive = &KeyObject->RegistryHive->Hive;
-    Parent = (PCM_KEY_NODE)HvGetCell(Hive, KeyObject->KeyCellOffset);
+    Hive = Kcb->KeyHive;
+    Parent = (PCM_KEY_NODE)HvGetCell(Hive, Kcb->KeyCell);
     if (!Parent)
     {
         /* Fail */
@@ -951,7 +951,7 @@ CmEnumerateKey(IN PKEY_OBJECT KeyObject,
     ChildCell = CmpFindSubKeyByNumber(Hive, Parent, Index);
 
     /* Release the parent cell */
-    HvReleaseCell(Hive, KeyObject->KeyCellOffset);
+    HvReleaseCell(Hive, Kcb->KeyCell);
 
     /* Check if we found the child */
     if (ChildCell == HCELL_NIL)
@@ -987,7 +987,7 @@ Quickie:
 
 NTSTATUS
 NTAPI
-CmDeleteKey(IN PKEY_OBJECT KeyObject)
+CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     NTSTATUS Status;
     PHHIVE Hive;
@@ -999,23 +999,23 @@ CmDeleteKey(IN PKEY_OBJECT KeyObject)
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Get the hive and node */
-    Hive = &KeyObject->RegistryHive->Hive;
-    Cell = KeyObject->KeyCellOffset;
-
-    /* Check if we have no parent */
-    if (!KeyObject->ParentKey)
-    {
-        /* This is an attempt to delete \Registry itself! */
-        Status = STATUS_CANNOT_DELETE;
-        goto Quickie;
-    }
-
+    Hive = Kcb->KeyHive;
+    Cell = Kcb->KeyCell;
+    
     /* Get the key node */
     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     if (!Node)
     {
         /* Fail */
         Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+
+    /* Check if we have no parent */
+    if (!Node->Parent)
+    {
+        /* This is an attempt to delete \Registry itself! */
+        Status = STATUS_CANNOT_DELETE;
         goto Quickie;
     }
 
@@ -1042,7 +1042,7 @@ CmDeleteKey(IN PKEY_OBJECT KeyObject)
             }
 
             /* Clear the cell */
-            KeyObject->KeyCellOffset = HCELL_NIL;
+            Kcb->KeyCell = HCELL_NIL;
         }
     }
     else
@@ -1050,18 +1050,18 @@ CmDeleteKey(IN PKEY_OBJECT KeyObject)
         /* Fail */
         Status = STATUS_CANNOT_DELETE;
     }
-
-Quickie:
-    /* Release the cell */
-    HvReleaseCell(Hive, Cell);
-
+    
     /* Make sure we're file-backed */
-    if (!(IsNoFileHive(KeyObject->RegistryHive)) ||
-        !(IsNoFileHive(KeyObject->ParentKey->RegistryHive)))
+    if (!(IsNoFileHive((PEREGISTRY_HIVE)Kcb->KeyHive)) ||
+        !(IsNoFileHive((PEREGISTRY_HIVE)Kcb->ParentKcb->KeyHive)))
     {
         /* Sync up the hives */
         CmiSyncHives();
     }
+
+Quickie:
+    /* Release the cell */
+    HvReleaseCell(Hive, Cell);
 
     /* Release hive lock */
     ExReleaseResourceLite(&CmpRegistryLock);

@@ -710,7 +710,7 @@ CmpInitSecurityCache(
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpFindValueByNameFromCache(
-    IN PKEY_OBJECT KeyObject,
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN PCUNICODE_STRING Name,
     OUT PCM_CACHED_VALUE **CachedValue,
     OUT ULONG *Index,
@@ -722,7 +722,7 @@ CmpFindValueByNameFromCache(
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpQueryKeyValueData(
-    IN PKEY_OBJECT KeyObject,
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN PCM_CACHED_VALUE *CachedValue,
     IN PCM_KEY_VALUE ValueKey,
     IN BOOLEAN ValueIsCached,
@@ -736,7 +736,7 @@ CmpQueryKeyValueData(
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpGetValueListFromCache(
-    IN PKEY_OBJECT KeyObject,
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     OUT PCELL_DATA *CellData,
     OUT BOOLEAN *IndexIsCached,
     OUT PHCELL_INDEX ValueListToRelease
@@ -745,7 +745,7 @@ CmpGetValueListFromCache(
 VALUE_SEARCH_RETURN_TYPE
 NTAPI
 CmpGetValueKeyFromCache(
-    IN PKEY_OBJECT KeyObject,
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN PCELL_DATA CellData,
     IN ULONG Index,
     OUT PCM_CACHED_VALUE **CachedValue,
@@ -979,7 +979,7 @@ EnlistKeyBodyWithKCB(
 #if 0
     IN PCM_KEY_BODY KeyObject,
 #else
-    IN PKEY_OBJECT KeyObject,
+    IN PVOID KeyObject,
 #endif
     IN ULONG Flags
 );

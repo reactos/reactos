@@ -114,6 +114,51 @@ typedef struct _KEY_OBJECT
   CACHED_CHILD_LIST ValueCache;
 } KEY_OBJECT, *PKEY_OBJECT;
 
+//
+// Key Control Block (KCB) for old Cm (just so it can talk to New CM)
+//
+typedef struct _CM_KEY_CONTROL_BLOCK
+{
+    USHORT RefCount;
+    USHORT Flags;
+    ULONG ExtFlags:8;
+    ULONG PrivateAlloc:1;
+    ULONG Delete:1;
+    ULONG DelayedCloseIndex:12;
+    ULONG TotalLevels:10;
+    union
+    {
+        //CM_KEY_HASH KeyHash;
+        struct
+        {
+            ULONG ConvKey;
+            PVOID NextHash;
+            PHHIVE KeyHive;
+            HCELL_INDEX KeyCell;
+        };
+    };
+    struct _CM_KEY_CONTROL_BLOCK *ParentKcb;
+    PVOID NameBlock;
+    PVOID CachedSecurity;
+    CACHED_CHILD_LIST ValueCache;
+    PVOID IndexHint;
+    ULONG HashKey;
+    ULONG SubKeyCount;
+    union
+    {
+        LIST_ENTRY KeyBodyListHead;
+        LIST_ENTRY FreeListEntry;
+    };
+    PVOID KeyBodyArray[4];
+    PVOID DelayCloseEntry;
+    LARGE_INTEGER KcbLastWriteTime;
+    USHORT KcbMaxNameLen;
+    USHORT KcbMaxValueNameLen;
+    ULONG KcbMaxValueDataLen;
+    ULONG InDelayClose;
+} CM_KEY_CONTROL_BLOCK, *PCM_KEY_CONTROL_BLOCK;
+
+
 /* Bits 31-22 (top 10 bits) of the cell index is the directory index */
 #define CmiDirectoryIndex(CellIndex)(CellIndex & 0xffc000000)
 /* Bits 21-12 (middle 10 bits) of the cell index is the table index */
@@ -222,12 +267,12 @@ CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
 
 NTSTATUS
 NTAPI
-CmDeleteValueKey(IN PKEY_OBJECT KeyControlBlock,
+CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                  IN UNICODE_STRING ValueName);
 
 NTSTATUS
 NTAPI
-CmQueryValueKey(IN PKEY_OBJECT KeyObject,
+CmQueryValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 IN UNICODE_STRING ValueName,
                 IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
                 IN PVOID KeyValueInformation,
@@ -236,7 +281,7 @@ CmQueryValueKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
+CmEnumerateValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                     IN ULONG Index,
                     IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
                     IN PVOID KeyValueInformation,
@@ -245,7 +290,7 @@ CmEnumerateValueKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmSetValueKey(IN PKEY_OBJECT KeyObject,
+CmSetValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
               IN PUNICODE_STRING ValueName,
               IN ULONG Type,
               IN PVOID Data,
@@ -253,7 +298,7 @@ CmSetValueKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmQueryKey(IN PKEY_OBJECT KeyObject,
+CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
            IN KEY_INFORMATION_CLASS KeyInformationClass,
            IN PVOID KeyInformation,
            IN ULONG Length,
@@ -261,7 +306,7 @@ CmQueryKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmEnumerateKey(IN PKEY_OBJECT KeyObject,
+CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
                IN ULONG Index,
                IN KEY_INFORMATION_CLASS KeyInformationClass,
                IN PVOID KeyInformation,
@@ -270,7 +315,7 @@ CmEnumerateKey(IN PKEY_OBJECT KeyObject,
 
 NTSTATUS
 NTAPI
-CmDeleteKey(IN PKEY_OBJECT KeyObject);
+CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb);
 
 NTSTATUS
 CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
@@ -317,8 +362,6 @@ CmpFindValueByName(
     IN PUNICODE_STRING Name
 );
 
-/* NOTE: This function declaration is currently duplicated in both     */
-/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(
@@ -342,8 +385,6 @@ CmFindObject(
     IN PVOID ParseContext
 );
 
-/* NOTE: This function declaration is currently duplicated in both     */
-/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 NTSTATUS
 NTAPI
 CmpOpenHiveFiles(IN PCUNICODE_STRING BaseName,
