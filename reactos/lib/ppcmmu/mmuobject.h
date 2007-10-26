@@ -12,5 +12,6 @@ void mmuallocvsid(int vsid, int mask);
 void freevsid(int);
 void mmufreevsid(int vsid, int mask);
 int mmunitest();
+void callkernel(void *fun_ptr, void *arg);
 
 #endif/*_LIBMMU_MMUOBJECT_H*/

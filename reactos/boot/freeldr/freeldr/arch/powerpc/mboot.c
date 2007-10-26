@@ -127,14 +127,14 @@ VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
-    KernelEntryFn KernelEntryAddress =
-	(KernelEntryFn)(KernelEntryPoint + KernelBase);
     ULONG_PTR i, j, page, count;
     PCHAR ModHeader;
     boot_infos_t *LocalBootInfo = &BootInfo;
     LocalBootInfo->dispFont = (font_char *)&LocalBootInfo[1];
     LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
     ppc_map_info_t *info = MmAllocateMemory(0x80 * sizeof(*info));
+
+    printf("FrLdrStartup(KernelEntry = %x)\n", KernelEntryPoint);
 
     for(i = 0; i < LoaderBlock.ModsCount; i++)
     {
@@ -145,19 +145,28 @@ FrLdrStartup(ULONG Magic)
 		 (PCHAR)reactos_modules[i].String);
     }
 
+    printf("PpcInitializeMmu\n");
     PpcInitializeMmu(0);
+    printf("PpcInitializeMmu done\n");
 
     /* We'll use vsid 1 for freeldr (expendable) */
     MmuAllocVsid(1, 0xff);
+    printf("(1)\n");
     MmuSetVsid(0, 8, 1);
+    printf("(2)\n");
 
     MmuAllocVsid(0, 0xff00);
+    printf("(3)\n");
     MmuSetVsid(8, 16, 0);
+    printf("(4)\n");
 
+    printf("MmuSetTrapHandler\n");
     MmuSetTrapHandler(3, MmuPageMiss);
     MmuSetTrapHandler(4, MmuPageMiss);
+    printf("MmuSetTrapHandler done\n");
 
     info = MmAllocateMemory((KernelMemorySize >> PAGE_SHIFT) * sizeof(*info));
+    printf("page info at %x\n", info);
 
     /* Map kernel space 0x80000000 ... */
     for( i = (ULONG)KernelMemory, page = 0;
@@ -169,11 +178,14 @@ FrLdrStartup(ULONG Magic)
 	info[page].flags = MMU_ALL_RW;
     }
 
+    printf("Adding page info (%d pages)\n", page);
     MmuMapPage(info, page);
+    printf("Adding page info (%d pages) ... done\n", page);
 
     /* Map module name strings */
     for( count = 0, i = 0; i < LoaderBlock.ModsCount; i++ )
     {
+        printf("Checking string %s\n", reactos_modules[i].String);
 	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
 	for( j = 0; j < count; j++ )
 	{
@@ -181,6 +193,8 @@ FrLdrStartup(ULONG Magic)
 	}
 	if( j != count )
 	{
+            printf("Mapping page %x containing string %s\n",
+                   page, reactos_modules[i].String);
 	    info[count].flags = MMU_ALL_RW;
 	    info[count].proc = 1;
 	    info[count].addr = page;
@@ -194,6 +208,7 @@ FrLdrStartup(ULONG Magic)
     {
 	if(info[j].addr == page) break;
     }
+
     if( j != count )
     {
 	info[count].flags = MMU_ALL_RW;
@@ -202,9 +217,13 @@ FrLdrStartup(ULONG Magic)
 	info[count].phys = page; // PpcVirt2phys(page, 0);
 	count++;
     }
+    printf("Mapping module name strings\n");
     MmuMapPage(info, count);
+    printf("Module name strings mapped\n");
 
-    MmuTurnOn(KernelEntryAddress, (void*)&LoaderBlock);
+    printf("MmuTurnOn(KernelEntry = %x)\n", KernelEntryPoint);
+    MmuTurnOn((KernelEntryFn)KernelEntryPoint, (void*)&LoaderBlock);
+    printf("MAED OF FALE!!1\n");
 
     /* Nothing more */
     while(1);
@@ -467,7 +486,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     }
 
     ImageSize = SWAPD(NtHeader->OptionalHeader.SizeOfImage);
-    KernelEntryPoint = SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
     printf("Total image size is %x\n", ImageSize);
 
     /* Handle relocation sections */
@@ -689,17 +707,21 @@ PVOID
 NTAPI
 FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
 {
-    PVOID Result;
+    PVOID Result = NULL;
+
+    printf("Loading image %s (type %d)\n", ShortName, ImageType);
 
     if (ImageType == 1)
     {
         if(FrLdrMapKernel(Image))
-            return (PVOID)KernelMemory;
-        else
-            return NULL;
+            Result = (PVOID)KernelMemory;
     }
     else
-        Result = (PVOID)FrLdrLoadModule(Image, ShortName, NULL);
+    {
+        PVOID ModuleBase = (PVOID)NextModuleBase;
+        if(FrLdrMapModule(Image, ShortName, 0, 0))
+            Result = ModuleBase;
+    }
     return Result;
 }
 

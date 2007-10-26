@@ -73,7 +73,6 @@ void TakeException(int n, ppc_trap_frame_t *tf);
 
 int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 {
-    void (*fun)(void *) = arg1;
     ppc_trap_frame_t *trap_frame = (action >= 0x100) ? tf : arg1;
     int ret = 0;
 
@@ -84,14 +83,14 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 	if(!ptegreload(trap_frame, trap_frame->dar))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,trap_frame)) hang(action, trap_frame);
+	    if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
 	}
 	break;
     case 4:
 	if(!ptegreload(trap_frame, trap_frame->srr0))
 	{
 	    __asm__("mfmsr 3\n\tori 3,3,0x30\n\tmtmsr 3\n\t");
-	    if (!callback[action](action,trap_frame)) hang(action, trap_frame);
+	    if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
 	}
 	break;
 
@@ -141,16 +140,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 	ret = mmunitest();
 	break;
     case 0x107:
-	__asm__("mfmsr 3\n\t"
-		"ori 3,3,0x30\n\t"
-		"mtmsr 3\n\t"
-		"mtsdr1 %0\n\t" 
-		"mr 0,%2\n\t"
-		"mtctr 0\n\t"
-		"mr 3,%1\n\t"
-		"bctrl\n\t"
-		: : "r" (HTABORG), "r" (arg2), "r" (fun));
-	/* BYE ! */
+        callkernel(arg1, arg2);
 	break;
     case 0x108:
 	mmusetramsize((paddr_t)arg1);
@@ -423,7 +413,7 @@ void mmufreevsid(int vsid, int mask)
     for(i = 0; i < 16; i++)
     {
 	if(mask & (1 << i))
-	    allocvsid((vsid << 4) + i);
+	    freevsid((vsid << 4) + i);
     }    
 }
 
@@ -601,4 +591,19 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
     Clock++;
     __asm__("tlbie %0\n\tsync\n\tisync" : : "r" (addr));
     return 1;
+}
+
+void callkernel(void *fun_ptr, void *arg)
+{
+    void (*fun)(void *) = fun_ptr;
+    __asm__("mfmsr 3\n\t"
+            "ori 3,3,0x30\n\t"
+            "mtmsr 3\n\t"
+            "mtsdr1 %0\n\t" 
+            "mr 0,%2\n\t"
+            "mtctr 0\n\t"
+            "mr 3,%1\n\t"
+            "bctrl\n\t"
+            : : "r" (HTABORG), "r" (arg), "r" (fun));
+    /* BYE ! */
 }
