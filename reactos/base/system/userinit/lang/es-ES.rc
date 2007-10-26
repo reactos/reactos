@@ -7,6 +7,6 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 
-STRING_USERINIT_FAIL, "Userinit falló al empezar la capa(shell)!\n"
+STRING_USERINIT_FAIL, "Userinit no pudo iniciar el shell con éxito!\n"
 
 }
