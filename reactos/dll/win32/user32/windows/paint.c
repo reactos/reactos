@@ -185,6 +185,16 @@ BOOL STDCALL
 ScrollDC(HDC hDC, int dx, int dy, CONST RECT *lprcScroll, CONST RECT *lprcClip,
    HRGN hrgnUpdate, LPRECT lprcUpdate)
 {
+   if (hDC == NULL) return FALSE;
+
+   if (dx == 0 && dy == 0)
+   {
+      if (hrgnUpdate) SetRectRgn(hrgnUpdate, 0, 0, 0, 0);
+      if (lprcUpdate) lprcUpdate->left = lprcUpdate->right =
+                      lprcUpdate->top = lprcUpdate->bottom = 0;
+      return TRUE;
+   }
+
    return NtUserScrollDC(hDC, dx, dy, lprcScroll, lprcClip, hrgnUpdate,
       lprcUpdate);
 }
