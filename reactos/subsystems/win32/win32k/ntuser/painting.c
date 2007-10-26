@@ -1131,10 +1131,11 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
              const RECT *prcClip, HRGN hrgnUpdate, LPRECT prcUpdate)
 {
    PDC pDC;
-   RECT rcClip, rcSrc, rcDst;
+   RECT rcScroll, rcClip, rcSrc, rcDst;
    INT Result;
 
    IntGdiGetClipBox(hDC, &rcClip);
+   rcScroll = rcClip;
    if (prcClip)
    {
       IntGdiIntersectRect(&rcClip, &rcClip, prcClip);
@@ -1142,6 +1143,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
 
    if (prcScroll)
    {
+      rcScroll = *prcScroll;
       IntGdiIntersectRect(&rcSrc, &rcClip, prcScroll);
    }
    else
@@ -1174,38 +1176,37 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
       hrgnVisible = pDC->w.hVisRgn;  // pDC->w.hGCClipRgn?
       DC_UnlockDc(pDC);
 
-      /* Begin with the source rect */
+      /* Begin with the shifted and then clipped scroll rect */
+      rcDst = rcScroll;
+      IntGdiOffsetRect(&rcDst, dx, dy);
+      IntGdiIntersectRect(&rcDst, &rcDst, &rcClip);
       if (hrgnUpdate)
       {
          hrgnOwn = hrgnUpdate;
-         if (!NtGdiSetRectRgn(hrgnOwn, rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom))
+         if (!NtGdiSetRectRgn(hrgnOwn, rcDst.left, rcDst.top, rcDst.right, rcDst.bottom))
          {
             return ERROR;
          }
       }
       else
       {
-         hrgnOwn = UnsafeIntCreateRectRgnIndirect(&rcSrc);
+         hrgnOwn = UnsafeIntCreateRectRgnIndirect(&rcDst);
       }
 
-      /* Substract the dest rect */
-      hrgnTmp = UnsafeIntCreateRectRgnIndirect(&rcDst);
-      NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
+      /* Add the source rect */
+      hrgnTmp = UnsafeIntCreateRectRgnIndirect(&rcSrc);
+      NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_OR);
 
-      /* Add the part of the dest that wasn't visible in source */
-      NtGdiSetRectRgn(hrgnTmp, rcSrc.left, rcSrc.top, rcSrc.right, rcSrc.bottom);
-      Result = NtGdiCombineRgn(hrgnTmp, hrgnTmp, hrgnVisible, RGN_DIFF);
-      if (Result != NULLREGION && Result != ERROR)
-      {
-         NtGdiOffsetRgn(hrgnTmp, dx, dy);
-         NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_OR);
-      }
+      /* Substract the part of the dest that was visible in source */
+      NtGdiCombineRgn(hrgnTmp, hrgnTmp, hrgnVisible, RGN_AND);
+      NtGdiOffsetRgn(hrgnTmp, dx, dy);
+      Result = NtGdiCombineRgn(hrgnOwn, hrgnOwn, hrgnTmp, RGN_DIFF);
 
       NtGdiDeleteObject(hrgnTmp);
 
       if (prcUpdate)
       {
-         NtGdiGetRgnBox(hrgnOwn, prcUpdate);
+         IntGdiGetRgnBox(hrgnOwn, prcUpdate);
       }
 
       if (!hrgnUpdate)
@@ -1236,6 +1237,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
    DECLARE_RETURN(DWORD);
    RECT rcScroll, rcClip, rcUpdate;
    NTSTATUS Status = STATUS_SUCCESS;
+   DWORD Result;
 
    DPRINT("Enter NtUserScrollDC\n");
    UserEnterExclusive();
@@ -1268,13 +1270,14 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
       RETURN(FALSE);
    }
 
-   if (UserScrollDC(hDC, dx, dy,
-                    prcUnsafeScroll? &rcScroll : 0,
-                    prcUnsafeClip? &rcClip : 0, hrgnUpdate,
-                    prcUnsafeUpdate? &rcUpdate : NULL) == ERROR)
+   Result = UserScrollDC(hDC, dx, dy,
+                         prcUnsafeScroll? &rcScroll : 0,
+                         prcUnsafeClip? &rcClip : 0, hrgnUpdate,
+                         prcUnsafeUpdate? &rcUpdate : NULL);
+   if(Result == ERROR)
    {
       /* FIXME: SetLastError? */
-      RETURN(FALSE);
+      RETURN(Result);
    }
 
    if (prcUnsafeUpdate)
@@ -1296,7 +1299,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
       }
    }
 
-   RETURN(TRUE);
+   RETURN(Result);
 
 CLEANUP:
    DPRINT("Leave NtUserScrollDC, ret=%i\n",_ret_);
@@ -1336,23 +1339,23 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
    }
    UserRefObjectCo(Window, &Ref);
 
-   IntGetClientRect(Window, &rcScroll);
+   IntGetClientRect(Window, &rcClip);
 
    _SEH_TRY
    {
       if (prcUnsafeScroll)
       {
          ProbeForRead(prcUnsafeScroll, sizeof(*prcUnsafeScroll), 1);
-         IntGdiIntersectRect(&rcScroll, &rcScroll, prcUnsafeScroll);
+         IntGdiIntersectRect(&rcScroll, &rcClip, prcUnsafeScroll);
       }
+      else
+         rcScroll = rcClip;
 
       if (prcUnsafeClip)
       {
          ProbeForRead(prcUnsafeClip, sizeof(*prcUnsafeClip), 1);
-         IntGdiIntersectRect(&rcClip, &rcScroll, prcUnsafeClip);
+         IntGdiIntersectRect(&rcClip, &rcClip, prcUnsafeClip);
       }
-      else
-         rcClip = rcScroll;
    }
    _SEH_HANDLE
    {

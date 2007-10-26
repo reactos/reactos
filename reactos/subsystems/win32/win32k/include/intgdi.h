@@ -141,6 +141,7 @@ HRGN FASTCALL REGION_CropRgn(HRGN hDst, HRGN hSrc, const PRECT lpRect, PPOINT lp
 void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn);
 INT FASTCALL UnsafeIntGetRgnBox(PROSRGNDATA Rgn, LPRECT pRect);
 BOOL FASTCALL UnsafeIntRectInRegion(PROSRGNDATA Rgn, CONST LPRECT rc);
+INT STDCALL IntGdiGetRgnBox(HRGN, LPRECT);
 
 #define UnsafeIntCreateRectRgnIndirect(prc) \
   NtGdiCreateRectRgn((prc)->left, (prc)->top, (prc)->right, (prc)->bottom)

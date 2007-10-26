@@ -540,7 +540,7 @@ static void FASTCALL REGION_SetExtents (ROSRGNDATA *pReg)
     pReg->rdh.iType = (1 == pReg->rdh.nCount ? SIMPLEREGION : COMPLEXREGION);
 }
 
-
+// FIXME: This seems to be wrong
 /***********************************************************************
  *           REGION_CropAndOffsetRegion
  */
@@ -2408,6 +2408,25 @@ NtGdiGetRandomRgn(HDC hDC, HRGN hDest, INT iCode)
 
     return ret;
 }
+
+INT STDCALL
+IntGdiGetRgnBox(HRGN hRgn,
+                LPRECT pRect)
+{
+  PROSRGNDATA Rgn;
+  DWORD ret;
+
+  if (!(Rgn = RGNDATA_LockRgn(hRgn)))
+  {
+    return ERROR;
+  }
+
+  ret = UnsafeIntGetRgnBox(Rgn, pRect);
+  RGNDATA_UnlockRgn(Rgn);
+
+  return ret;
+}
+
 
 INT STDCALL
 NtGdiGetRgnBox(HRGN  hRgn,
