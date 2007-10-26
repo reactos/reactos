@@ -1230,7 +1230,7 @@ LdrPerformRelocations(PIMAGE_NT_HEADERS NTHeaders,
 
   if (NTHeaders->FileHeader.Characteristics & IMAGE_FILE_RELOCS_STRIPPED)
     {
-      return STATUS_UNSUCCESSFUL;
+      return STATUS_SUCCESS;
     }
 
   RelocationDDir =
