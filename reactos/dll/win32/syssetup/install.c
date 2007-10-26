@@ -358,7 +358,7 @@ CreateTempDir(
 
 
 BOOL
-ProcessSysSetupInf(VOID)
+InstallSysSetupInfDevices(VOID)
 {
     INFCONTEXT InfContext;
     TCHAR LineBuffer[256];
@@ -392,7 +392,67 @@ ProcessSysSetupInf(VOID)
 
     return TRUE;
 }
+BOOL
+InstallSysSetupInfComponents(VOID)
+{
+    INFCONTEXT InfContext;
+    TCHAR NameBuffer[256];
+    TCHAR SectionBuffer[256];
 
+    if (!SetupFindFirstLine(hSysSetupInf,
+                            _T("Infs.Always"),
+                            NULL,
+                            &InfContext))
+    {
+        DPRINT("No Inf.Always section found\n");
+    }
+    else
+    {
+        do
+        {
+            if (!SetupGetStringField(&InfContext,
+                                     1, // Get the component name
+                                     NameBuffer,
+                                     sizeof(NameBuffer)/sizeof(NameBuffer[0]),
+                                     NULL))
+            {
+                DebugPrint("Error while trying to get component name \n");
+                return FALSE;
+            }
+
+            if (!SetupGetStringField(&InfContext,
+                                     2, // Get the component install section
+                                     SectionBuffer,
+                                     sizeof(SectionBuffer)/sizeof(SectionBuffer[0]),
+                                     NULL))
+            {
+                DebugPrint("Error while trying to get component install section \n");
+                return FALSE;
+            }
+
+            DPRINT("Trying to execute install section '%S' from '%S' \n", SectionBuffer , NameBuffer);
+
+            if (!SetupInstallFromInfSection(NULL,
+                                           hSysSetupInf,
+                                           SectionBuffer,
+                                           SPINST_ALL,
+                                           NULL,
+                                           NULL,
+                                           SP_COPY_NEWER,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           NULL))
+            {
+                DebugPrint("Error while trying to install : %S (Error: %lu) \n", NameBuffer, GetLastError());
+                return FALSE;
+            }
+        }
+        while (SetupFindNextLine(&InfContext, &InfContext));
+    }
+
+    return TRUE;
+}
 
 static BOOL
 EnableUserModePnpManager(VOID)
@@ -502,9 +562,16 @@ CommonInstall(VOID)
         return FALSE;
     }
 
-    if (!ProcessSysSetupInf())
+    if (!InstallSysSetupInfDevices())
     {
-        DebugPrint("ProcessSysSetupInf() failed!\n");
+        DebugPrint("InstallSysSetupInfDevices() failed!\n");
+        SetupCloseInfFile(hSysSetupInf);
+        return FALSE;
+    }
+
+    if(!InstallSysSetupInfComponents())
+    {
+        DebugPrint("InstallSysSetupInfComponents() failed!\n");
         SetupCloseInfFile(hSysSetupInf);
         return FALSE;
     }
