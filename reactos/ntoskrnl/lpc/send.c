@@ -434,11 +434,19 @@ NtRequestWaitReplyPort(IN HANDLE PortHandle,
                      (&Message->Request) + 1);
 
             /* Move the message */
-            LpcpMoveMessage(LpcReply,
-                            &Message->Request,
-                            (&Message->Request) + 1,
-                            0,
-                            NULL);
+            _SEH_TRY
+            {
+                LpcpMoveMessage(LpcReply,
+                                &Message->Request,
+                                (&Message->Request) + 1,
+                                0,
+                                NULL);
+            }
+            _SEH_HANDLE
+            {
+                Status = _SEH_GetExceptionCode();
+            }
+            _SEH_END;
 
             /* Check if this is an LPC request with data information */
             if ((LpcpGetMessageType(&Message->Request) == LPC_REQUEST) &&
