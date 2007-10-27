@@ -779,3 +779,14 @@ BOOL STDCALL DdeGetQualityOfService(HWND hWnd, DWORD Reserved, PSECURITY_QUALITY
   UNIMPLEMENTED;
   return FALSE;
 }
+
+
+/*
+ * @unimplemented
+ */
+DWORD STDCALL User32InitializeImmEntryTable(PVOID p)
+{
+  UNIMPLEMENTED;
+  return 0;
+}
+

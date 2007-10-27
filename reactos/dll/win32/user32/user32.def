@@ -709,7 +709,7 @@ UnregisterUserApiHook@0
 UpdateLayeredWindow@36
 UpdatePerUserSystemParameters@8
 UpdateWindow@4
-;User32InitializeImmEntryTable
+User32InitializeImmEntryTable
 UserClientDllInitialize=DllMain@12
 UserHandleGrantAccess@12
 ;UserLpkPSMTextOut

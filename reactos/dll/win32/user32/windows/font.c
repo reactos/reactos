@@ -34,6 +34,14 @@
 
 /* FUNCTIONS *****************************************************************/
 
+void _assert(const char *msg, const char *file, int line)
+{
+  /* Assertion failed at foo.c line 45: x<y */
+  DbgPrint("Assertion failed at %s line %d: %s\n", file, line, msg);
+  ExitProcess(3);
+  for(;;); /* eliminate warning by mingw */
+}
+
 /*
  * @implemented
  */
