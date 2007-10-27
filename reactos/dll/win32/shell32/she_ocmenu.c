@@ -1,7 +1,7 @@
 /*
- *	IContextMenu for items in the shellview
+ *	Open With  Context Menu extension
  *
- * Copyright 1998, 2000 Juergen Schmied <juergen.schmied@debitel.net>
+ * Copyright 2007 Johannes Anderwald <janderwald@reactos.org>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -161,7 +161,7 @@ AddItems(SHEOWImpl *This, HMENU hMenu, UINT idCmdFirst)
        wcscpy(szBuffer, szChoose);
     }
 
-    mii.dwItemData = (LPWSTR)szBuffer;
+    mii.dwTypeData = (LPWSTR)szBuffer;
     if (InsertMenuItemW(hMenu, 0, TRUE, &mii))
         count++;
 
