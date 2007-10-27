@@ -236,7 +236,7 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 	if (pExt != NULL)
 	{
 		LPTSTR pszBuffer2;
-		pszBuffer2 = _tcsdup(pszBuffer);
+		pszBuffer2 = cmd_dup(pszBuffer);
 		if (pszBuffer2)
 		{
 			pCh = _tcstok(pszBuffer2, _T(";"));
@@ -245,12 +245,12 @@ SearchForExecutable (LPCTSTR pFileName, LPTSTR pFullName)
 				if (0 == _tcsicmp(pCh, pExt))
 				{
 					cmd_free(pszBuffer);
-					LocalFree(pszBuffer2);
+					cmd_free(pszBuffer2);
 					return SearchForExecutableSingle(pFileName, pFullName, NULL);
 				}
 				pCh = _tcstok(NULL, _T(";"));
 			}
-			LocalFree(pszBuffer2);
+			cmd_free(pszBuffer2);
 		}
 	}
 

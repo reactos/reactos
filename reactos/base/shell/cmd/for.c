@@ -135,7 +135,7 @@ INT cmd_for (LPTSTR cmd, LPTSTR param)
 	bc->params = BatchParams (_T(""), param); /* Split out list */
 	bc->shiftlevel = 0;
 	bc->forvar = var;
-	bc->forproto = _tcsdup (pp);
+	bc->forproto = cmd_dup (pp);
 	if (bc->prev)
 		bc->bEcho = bc->prev->bEcho;
 	else

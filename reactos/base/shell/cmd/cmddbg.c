@@ -146,6 +146,23 @@ cmd_free_dbg(void *ptr, const char *file, int line)
     free(ptr);
 }
 
+TCHAR *
+cmd_dup_dbg(const TCHAR *str, const char *file, int line)
+{
+    TCHAR *ptr = NULL;
+
+    if (str != NULL)
+    {
+        ptr = (TCHAR *)cmd_alloc_dbg((_tcslen(str) + 1) * sizeof(TCHAR), file, line);
+        if (ptr != NULL)
+        {
+            _tcscpy(ptr, str);
+        }
+    }
+
+    return ptr;
+}
+
 void
 cmd_checkbuffer_dbg(void *ptr, const char *file, int line)
 {
