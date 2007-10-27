@@ -198,12 +198,32 @@ SetProcNameString(HWND hwnd,
     return Ret;
 }
 
-static  VOID
+static VOID
+MakeFloatValueString(double* dFloatValue,
+                     LPTSTR szOutput,
+                     LPTSTR szAppend)
+{
+    TCHAR szDecimalSeparator[4];
+
+    // Get the decimal separator for the current locale
+    if( GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSeparator, sizeof(szDecimalSeparator) / sizeof(TCHAR)) > 0)
+    {
+        UCHAR uDecimals;
+        UINT uIntegral;
+
+        // Show the value with two decimals
+        uIntegral = (UINT)*dFloatValue;
+        uDecimals = (UCHAR)((UINT)(*dFloatValue * 100) - uIntegral * 100);
+
+        wsprintf(szOutput, _T("%u%s%02u %s"), uIntegral, szDecimalSeparator, uDecimals, szAppend);
+    }
+}
+
+static VOID
 SetProcSpeed(HWND hwnd,
              HKEY hKey,
              LPTSTR Value,
              UINT uID)
-
 {
     TCHAR szBuf[64];
     DWORD BufSize = sizeof(DWORD);
@@ -228,12 +248,12 @@ SetProcSpeed(HWND hwnd,
     {
         if (ppi.CurrentMhz < 1000)
         {
-            _stprintf(szBuf, _T("%lu MHz"), ppi.CurrentMhz);
+            wsprintf(szBuf, _T("%lu MHz"), ppi.CurrentMhz);
         }
         else
         {
             double flt = ppi.CurrentMhz / 1000.0;
-            _stprintf(szBuf, _T("%.2f GHz"), flt);
+            MakeFloatValueString(&flt, szBuf, _T("GHz"));
         }
 
         SetDlgItemText(hwnd,
@@ -289,29 +309,28 @@ GetSystemInformation(HWND hwnd)
     {
         TCHAR szStr[32];
         double dTotalPhys;
-        UINT i = 0;
-        static const UINT uStrId[] = {
-            IDS_MEGABYTE,
-            IDS_GIGABYTE,
-            IDS_TERABYTE,
-            IDS_PETABYTE
-        };
 
         if (MemStat.ullTotalPhys > 1024 * 1024 * 1024)
         {
-            /* We're dealing with GBs or more */
+            UINT i = 0;
+            static const UINT uStrId[] = {
+                IDS_GIGABYTE,
+                IDS_TERABYTE,
+                IDS_PETABYTE
+            };
+
+            // We're dealing with GBs or more
             MemStat.ullTotalPhys /= 1024 * 1024;
-            i++;
 
             if (MemStat.ullTotalPhys > 1024 * 1024)
             {
-                /* We're dealing with TBs or more */
+                // We're dealing with TBs or more
                 MemStat.ullTotalPhys /= 1024;
                 i++;
 
                 if (MemStat.ullTotalPhys > 1024 * 1024)
                 {
-                    /* We're dealing with PBs or more */
+                    // We're dealing with PBs or more
                     MemStat.ullTotalPhys /= 1024;
                     i++;
 
@@ -322,22 +341,18 @@ GetSystemInformation(HWND hwnd)
             }
             else
                 dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+
+            LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(TCHAR));
+            MakeFloatValueString(&dTotalPhys, Buf, szStr);
         }
         else
         {
-            /* We're daling with MBs */
-            dTotalPhys = (double)MemStat.ullTotalPhys / 1024 / 1024;
+            // We're dealing with MBs, don't show any decimals
+            LoadString(hApplet, IDS_MEGABYTE, szStr, sizeof(szStr) / sizeof(TCHAR));
+            wsprintf(Buf, _T("%u %s"), (UINT)MemStat.ullTotalPhys / 1024 / 1024, szStr);
         }
 
-        if (LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(szStr[0])))
-        {
-            if( _stprintf(Buf, _T("%.2f %s"), dTotalPhys, szStr) )
-            {
-                SetDlgItemText(hwnd,
-                               CurMachineLine,
-                               Buf);
-            }
-        }
+        SetDlgItemText(hwnd, CurMachineLine, Buf);
     }
 }
 
