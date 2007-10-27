@@ -1,6 +1,6 @@
 /*
  * PROJECT:     Matrix ScreenSaver
- * FILE:        base/applications/screensavers\matrix\lang\
+ * FILE:        base/applications/screensavers/matrix/lang/
  * PURPOSE:     Slovak Language File Matrix ScreenSaver
  * TRANSLATOR:  Kario (kario@szm.sk)
  * DATE OF TR:  25-07-2007
@@ -42,17 +42,17 @@ BEGIN
                     SS_CENTERIMAGE | WS_GROUP,154,39,116,72
     PUSHBUTTON      "Prid&aù",IDC_ADD,280,41,44,18
     PUSHBUTTON      "O&dstr·niù",IDC_REMOVE,280,66,44,18
-    CONTROL         "&N·hodnÈ poradie spr·v",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,151,134,85,10
-    DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
-    PUSHBUTTON      "Zruöiù",IDCANCEL,283,162,50,14
     LTEXT           "Typ &pÌsma:",IDC_STATIC,151,118,40,8
     COMBOBOX        IDC_COMBO2,195,116,130,71,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
+    CONTROL         "&N·hodnÈ poradie spr·v",IDC_RANDOM,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,151,134,90,10
     CONTROL         "&TuËnÈ pÌsmo",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,55,10
     CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,140,
                     158,75,18
+    DEFPUSHBUTTON   "OK",IDOK,222,162,50,14
+    PUSHBUTTON      "Zruöiù",IDCANCEL,283,162,50,14
 END
 
 STRINGTABLE DISCARDABLE

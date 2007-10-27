@@ -8,5 +8,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "Logon - šetriè obrazovky"
     IDS_TITLE       "Èo je ..."
-    IDS_TEXT        "Nie sú potrebné žiadné nastavenia."
+    IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
 END
