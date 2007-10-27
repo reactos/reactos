@@ -91,9 +91,7 @@ RtlComputeCrc32 (IN USHORT Initial,
 {
   ULONG CrcValue;
 
-#ifdef DBG
-  DbgPrint("(%lu,%p,%lu)\n", Initial, Data, Length);
-#endif
+  DPRINT("(%lu,%p,%lu)\n", Initial, Data, Length);
 
   CrcValue = ~Initial;
   while (Length > 0)
