@@ -413,4 +413,6 @@ BEGIN
 	IDS_DRIVE_FIXED             "Lokaler Datenträger"
 	IDS_DRIVE_CDROM             "CD-Laufwerk"
 	IDS_DRIVE_NETWORK           "Netzlaufwerk"
+        IDS_OPEN_WITH               "Open With"
+        IDS_OPEN_WITH_CHOOSE        "Choose Program..."
 END

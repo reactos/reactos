@@ -69,4 +69,5 @@
 	<file>fprop.c</file>
 	<file>drive.c</file>
 	<file>recyclebin.c</file>
+	<file>she_ocmenu.c</file>
 </module>

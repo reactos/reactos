@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -378,9 +378,10 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  if(!(uFlags & CMF_EXPLORE))
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
+      TRACE("rfg %x\n", This->rfg);
 	  if (This->rfg & SFGAO_BROWSABLE)
 	  {
-	      if(This->bAllValues)
+   	      if(This->bAllValues)
 	      {
 	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
 	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);

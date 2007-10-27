@@ -415,4 +415,6 @@ BEGIN
 	IDS_DRIVE_FIXED             "Local Disk"
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"
+        IDS_OPEN_WITH               "Open With"
+        IDS_OPEN_WITH_CHOOSE        "Choose Program..."
 END
