@@ -20,8 +20,8 @@
 
 #include <windows.h>	// Header File For Windows
 #include <math.h>		// Header File For Windows Math Library
-#include <gl\gl.h>		// Header File For The OpenGL32 Library
-#include <gl\glu.h>		// Header File For The GLu32 Library
+#include <gl/gl.h>		// Header File For The OpenGL32 Library
+#include <gl/glu.h>		// Header File For The GLu32 Library
 #include <tchar.h>
 
 #include "resource.h"
