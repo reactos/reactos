@@ -37,7 +37,7 @@ ModulesResourceGenerator::Generate ()
 	{
 		Module& module = *project.modules[i];
 
-		if (module.generateResourceFile)
+		if (module.autoResource != NULL)
 		{
 			WriteResourceFile (module);
 		}
@@ -78,7 +78,7 @@ ModulesResourceGenerator::WriteResourceFile ( Module& module )
 	s = s + sprintf ( s, "#include <reactos/version.rc>\n");
 	s = s + sprintf ( s, "\n" );
 
-	if (module.generateManifestFile)
+	if (module.autoManifest != NULL)
 	{
 		s = s + sprintf ( s, "1 24 DISCARDABLE \"manifest.xml\"\n");
 		s = s + sprintf ( s, "\n" );

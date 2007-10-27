@@ -87,7 +87,7 @@ Define::Initialize()
 
 	att = node->GetAttribute ( "overridable", false );
 	if ( att )
-		overridable = ( att->value == "true" || att->value == "yes" );
+		overridable = ( att->value == TRUE_STRING || att->value == YES_STRING );
 	else
 		overridable = false;
 }

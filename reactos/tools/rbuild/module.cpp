@@ -247,7 +247,9 @@ Module::Module ( const Project& project,
 	  linkerScript (NULL),
 	  pch (NULL),
 	  cplusplus (false),
-	  host (HostDefault)
+	  host (HostDefault),
+	  autoManifest (NULL),
+	  autoResource (NULL)
 {
 	if ( node.name != "module" )
 		throw InvalidOperationException ( __FILE__,
@@ -292,9 +294,9 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			isUnicode = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			isUnicode = false;
 		else
 		{
@@ -306,14 +308,14 @@ Module::Module ( const Project& project,
 	}
 	else
 		isUnicode = false;
-
+/*
 	att = moduleNode.GetAttribute ( "generatemanifest", false );
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			generateManifestFile = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			generateManifestFile = false;
 		else
 		{
@@ -330,10 +332,10 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 		{
 			generateResourceFile = true;
-/*
+
 			File* resFile = new File ( IntermediateDirectory,
 									 output->relative_path,
 									 "auto.rc",
@@ -342,9 +344,9 @@ Module::Module ( const Project& project,
 									 false );
 
 			non_if_data.files.push_back ( resFile );
-*/
+
 		}
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			generateResourceFile = false;
 		else
 		{
@@ -356,7 +358,7 @@ Module::Module ( const Project& project,
 	}
 	else
 		generateResourceFile = false;
-
+*/
 	if (isUnicode)
 	{
 		// Always define UNICODE and _UNICODE
@@ -397,9 +399,9 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			mangledSymbols = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			mangledSymbols = false;
 		else
 		{
@@ -414,7 +416,7 @@ Module::Module ( const Project& project,
 
 	att = moduleNode.GetAttribute ( "underscoresymbols", false );
 	if ( att != NULL )
-		underscoreSymbols = att->value == "true";
+		underscoreSymbols = att->value == TRUE_STRING;
 	else
 		underscoreSymbols = false;
 
@@ -422,9 +424,9 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			host = HostTrue;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			host = HostFalse;
 		else
 		{
@@ -439,9 +441,9 @@ Module::Module ( const Project& project,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			isStartupLib = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
 			isStartupLib = false;
 		else
 		{
@@ -481,7 +483,7 @@ Module::Module ( const Project& project,
 		}
 	}
 	if ( att != NULL )
-		allowWarnings = att->value == "true";
+		allowWarnings = att->value == TRUE_STRING;
 	else
 		allowWarnings = false;
 
@@ -598,9 +600,9 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		const XMLAttribute* att = e.GetAttribute ( "first", false );
 		if ( att != NULL )
 		{
-			if ( !stricmp ( att->value.c_str(), "true" ) )
+			if ( !stricmp ( att->value.c_str(), TRUE_STRING ) )
 				first = true;
-			else if ( stricmp ( att->value.c_str(), "false" ) )
+			else if ( stricmp ( att->value.c_str(), FALSE_STRING ) )
 			{
 				throw XMLInvalidBuildFileException (
 					e.location,
@@ -764,6 +766,64 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		dependencies.push_back ( new Dependency ( e, *this ) );
 		subs_invalid = true;
 	}
+	else if ( e.name == "autoresource" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<autoresource> is not a valid sub-element of <if>" );
+		}
+		if ( autoResource )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"Only one <autoresource> is valid per module" );
+		}
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			autoResource = new AutoResource (
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			autoResource = new AutoResource (
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+		}
+		subs_invalid = true;
+	}
+	else if ( e.name == "automanifest" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<automanifest> is not a valid sub-element of <if>" );
+		}
+		if ( autoManifest )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"Only one <automanifest> is valid per module" );
+		}
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			autoManifest = new AutoManifest (
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			autoManifest = new AutoManifest (
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+		}
+		subs_invalid = true;
+	}
 	else if ( e.name == "importlibrary" )
 	{
 		if ( parseContext.ifData )
@@ -866,6 +926,26 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			linkerScript = new LinkerScript (
 				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
 		}
+		subs_invalid = true;
+	}
+	else if ( e.name == "developer" )
+	{
+		authors.push_back ( new Author ( e, *this , Developer) );
+		subs_invalid = true;
+	}
+	else if ( e.name == "mantainer" )
+	{
+		authors.push_back ( new Author ( e, *this , Mantainer ) );
+		subs_invalid = true;
+	}
+	//else if ( e.name == "contributor" )
+	//{
+	//	authors.push_back ( new Author ( e, *this , Contributor ) );
+	//	subs_invalid = false;
+	//}
+	else if ( e.name == "translator" )
+	{
+		authors.push_back ( new Author ( e, *this , Translator ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "component" )
@@ -1591,6 +1671,46 @@ Language::ProcessXML()
 {
 }
 
+/*
+AuthorRole
+Author::GetAuthorRole ( const string& location, const XMLAttribute& attribute )
+{
+	if ( attribute.value == "developer" )
+		return Developer;
+	if ( attribute.value == "mantainer" )
+		return Mantainer;
+	if ( attribute.value == "contributor" )
+		return Contributor;
+	if ( attribute.value == "translator" )
+		return Translator;
+	throw InvalidAttributeValueException ( location,
+	                                       attribute.name,
+	                                       attribute.value );
+}
+*/
+
+Author::Author ( const XMLElement& _node , const Module& module_ , AuthorRole role_)
+	: node (_node), module(module_) , role(role_)
+{
+	ProcessXML ();
+}
+
+Author::Author ( const XMLElement& _node , const Module& module_)
+	: node (_node), module(module_) , role (Developer)
+{
+	//const XMLAttribute* att = _node.GetAttribute ( "role", true );
+	//assert(att);
+	//role = GetAuthorRole(_node.location , *att);
+
+	ProcessXML ();
+}
+
+void
+Author::ProcessXML()
+{
+	alias = node.value;
+}
+
 Localization::Localization ( const XMLElement& node_,
                              const Module& module_,
                              const FileLocation& file_)
@@ -1604,9 +1724,9 @@ Localization::Localization ( const XMLElement& node_,
 	if ( att != NULL )
 	{
 		const char* p = att->value.c_str();
-		if ( !stricmp ( p, "true" ) || !stricmp ( p, "yes" ) )
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
 			dirty = true;
-		else if ( !stricmp ( p, "false" ) || !stricmp ( p, "no" ) )
+		else if ( !stricmp ( p, FALSE_STRING) || !stricmp ( p, NO_STRING ) )
 			dirty = false;
 		else
 		{

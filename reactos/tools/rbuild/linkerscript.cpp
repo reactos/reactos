@@ -35,3 +35,27 @@ void
 LinkerScript::ProcessXML()
 {
 }
+
+AutoResource::AutoResource ( const XMLElement& node_,
+                             const Module& module_,
+                             const FileLocation& file_ )
+	: node(node_), module(module_), file(file_)
+{
+}
+
+void
+AutoResource::ProcessXML()
+{
+}
+
+AutoManifest::AutoManifest ( const XMLElement& node_,
+                             const Module& module_,
+                             const FileLocation& file_ )
+	: node(node_), module(module_), file(file_)
+{
+}
+
+void
+AutoManifest::ProcessXML()
+{
+}

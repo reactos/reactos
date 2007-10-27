@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl" unicode="true" generatemanifest="true" generateresource="true">
+<module name="desk" type="win32dll" extension=".cpl" baseaddress="${BASEADDRESS_DESK}" installbase="system32" installname="desk.cpl" unicode="true">
 	<importlibrary definition="desk.def" />
 	<include base="desk">.</include>
 	<include base="desk" root="intermediate">.</include>
@@ -36,6 +36,13 @@
 	<file>settings.c</file>
 	<file>monslctl.c</file>
 	<file>desk.rc</file>
+
+	<!-- Auto generated stuff -->
+	<automanifest>manifest.xml</automanifest>
+	<autoresource>auto.rc</autoresource>
+
+	<!-- Authors -->
+	<developer>ekohl</developer>
 
 	<metadata description="ReactOS Display ControlPanel Applet" />
 

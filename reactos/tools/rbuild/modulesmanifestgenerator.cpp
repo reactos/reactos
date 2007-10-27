@@ -37,7 +37,7 @@ ModulesManifestGenerator::Generate ()
 	{
 		Module& module = *project.modules[i];
 
-		if (module.generateManifestFile)
+		if (module.autoManifest != NULL)
 		{
 			WriteManifestFile (module);
 		}

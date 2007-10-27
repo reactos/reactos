@@ -52,6 +52,11 @@ extern std::string sBadSep;
 extern char cSep;
 extern char cBadSep;
 
+#define TRUE_STRING		"true"
+#define FALSE_STRING	"false"
+#define YES_STRING		"yes"
+#define NO_STRING		"no"
+
 #ifdef WIN32
 #define DEF_EXEPREFIX ""
 #define DEF_EXEPOSTFIX ".exe"
@@ -106,6 +111,9 @@ class SourceFileTest;
 class Metadata;
 class Language;
 class Localization;
+class Author;
+class AutoManifest;
+class AutoResource;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -130,6 +138,14 @@ enum DirectoryLocation
 	OutputDirectory,
 	InstallDirectory,
 	TemporaryDirectory,
+};
+
+enum AuthorRole
+{
+	Developer,
+	Mantainer,
+//	Contributor,
+	Translator
 };
 
 class Directory
@@ -349,16 +365,15 @@ public:
 	std::string buildtype;
 	ModuleType type;
 	ImportLibrary* importLibrary;
-	Metadata* metadata;
+	Metadata* metadata;	
 	bool mangledSymbols;
 	bool underscoreSymbols;
 	bool isUnicode;
 	bool isDefaultEntryPoint;
-	bool generateManifestFile;
-	bool generateResourceFile;
 	Bootstrap* bootstrap;
 	AutoRegister* autoRegister; // <autoregister> node
 	IfableData non_if_data;
+	std::vector<Author*> authors;
 	std::vector<Invoke*> invocations;
 	std::vector<Localization*> localizations;
 	std::vector<Dependency*> dependencies;
@@ -377,6 +392,8 @@ public:
 	FileLocation *output; // "path/foo.exe"
 	FileLocation *dependency; // "path/foo.exe" or "path/libfoo.a"
 	FileLocation *install;
+	AutoManifest* autoManifest;	
+	AutoResource* autoResource;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -566,6 +583,34 @@ public:
 	void ProcessXML();
 };
 
+class AutoManifest
+{
+	const XMLElement& node;
+public:
+	const Module& module;
+	FileLocation file;
+
+	AutoManifest ( const XMLElement& node,
+	               const Module& module,
+	               const FileLocation& file );
+
+	void ProcessXML();
+};
+
+class AutoResource
+{
+	const XMLElement& node;
+public:
+	const Module& module;
+	FileLocation file;
+
+	AutoResource ( const XMLElement& node,
+	               const Module& module,
+	               const FileLocation& file );
+
+	void ProcessXML();
+};
+
 class ImportLibrary : public XmlNode
 {
 public:
@@ -587,6 +632,23 @@ public:
 	Language ( const XMLElement& _node );
 
 	void ProcessXML ();
+};
+
+class Author
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	std::string alias;
+	AuthorRole role;
+
+	Author ( const XMLElement& _node, const Module& module  );
+	Author ( const XMLElement& _node, const Module& module, AuthorRole role  );
+
+	void ProcessXML ();
+//private:
+//	AuthorRole GetAuthorRole ( const std::string& location,
+//	                           const XMLAttribute& attribute );
 };
 
 class Localization
