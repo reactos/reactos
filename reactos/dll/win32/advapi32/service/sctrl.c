@@ -5,6 +5,7 @@
  * PURPOSE:     Service control manager functions
  * COPYRIGHT:   Copyright 1999 Emanuele Aliberti
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
+ *                             Gregor Brunmar <gregor.brunmar@home.se>
  *
  */
 
@@ -197,14 +198,40 @@ ScConnectControlPipe(HANDLE *hPipe)
 {
     DWORD dwBytesWritten;
     DWORD dwState;
+    DWORD dwServiceCurrent = 0;
+    NTSTATUS Status;
+    WCHAR NtControlPipeName[MAX_PATH + 1];
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
 
-    if (!WaitNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe", 15000))
+    /* Get the service number and create the named pipe */
+    RtlZeroMemory(&QueryTable,
+                  sizeof(QueryTable));
+
+    QueryTable[0].Name = L"";
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[0].EntryContext = &dwServiceCurrent;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"ServiceCurrent",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("WaitNamedPipe() failed (Error %lu)\n", GetLastError());
+        DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", dwServiceCurrent);
+
+    if (!WaitNamedPipeW(NtControlPipeName, 15000))
+    {
+        DPRINT1("WaitNamedPipe(%S) failed (Error %lu)\n", NtControlPipeName, GetLastError());
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
 
-    *hPipe = CreateFileW(L"\\\\.\\pipe\\net\\NtControlPipe",
+    *hPipe = CreateFileW(NtControlPipeName,
                          GENERIC_READ | GENERIC_WRITE,
                          0,
                          NULL,

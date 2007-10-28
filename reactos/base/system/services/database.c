@@ -6,6 +6,7 @@
  * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
  *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>
  *              Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
+ *                             Gregor Brunmar <gregor.brunmar@home.se>
  *
  */
 
@@ -692,9 +693,11 @@ ScmStartUserModeService(PSERVICE Service,
     STARTUPINFOW StartupInfo;
     UNICODE_STRING ImagePath;
     ULONG Type;
+    DWORD ServiceCurrent = 0;
     BOOL Result;
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
+    WCHAR NtControlPipeName[MAX_PATH + 1];
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -723,8 +726,45 @@ ScmStartUserModeService(PSERVICE Service,
     DPRINT("ImagePath: '%S'\n", ImagePath.Buffer);
     DPRINT("Type: %lx\n", Type);
 
-    /* Create '\\.\pipe\net\NtControlPipe' instance */
-    Service->ControlPipeHandle = CreateNamedPipeW(L"\\\\.\\pipe\\net\\NtControlPipe",
+    /* Get the service number */
+    RtlZeroMemory(&QueryTable,
+                  sizeof(QueryTable));
+
+    QueryTable[0].Name = L"";
+    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+    QueryTable[0].EntryContext = &ServiceCurrent;
+
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"ServiceCurrent",
+                                    QueryTable,
+                                    NULL,
+                                    NULL);
+
+    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        /* TODO: Create registry entry with correct write access */
+    }
+    else if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+    else
+    {
+        ServiceCurrent++;
+    }
+
+    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL, L"ServiceCurrent", L"", REG_DWORD, &ServiceCurrent, sizeof(ServiceCurrent));
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
+        return RtlNtStatusToDosError(Status);
+    }
+
+    /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
+    swprintf(NtControlPipeName, L"\\\\.\\pipe\\net\\NtControlPipe%u", ServiceCurrent);
+    Service->ControlPipeHandle = CreateNamedPipeW(NtControlPipeName,
                                                   PIPE_ACCESS_DUPLEX,
                                                   PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE | PIPE_WAIT,
                                                   100,
@@ -732,7 +772,7 @@ ScmStartUserModeService(PSERVICE Service,
                                                   4,
                                                   30000,
                                                   NULL);
-    DPRINT("CreateNamedPipeW() done\n");
+    DPRINT1("CreateNamedPipeW(%S) done\n", NtControlPipeName);
     if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
     {
         DPRINT1("Failed to create control pipe!\n");
