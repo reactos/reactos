@@ -59,10 +59,10 @@ typedef struct _WIN_DC_INFO
 
 typedef struct _DC
 {
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
+  HGDIOBJ     hHmgr;  // Handle for this DC object.
+//  PVOID       pvEntry;
+//  ULONG       lucExcLock;
+//  ULONG       Tid;
 
   DHPDEV      PDev;
   INT         DC_Type;
@@ -70,7 +70,7 @@ typedef struct _DC
   PDC_ATTR    pDc_Attr;
   DC_ATTR     Dc_Attr;
 
-  HDC         hSelf;
+  HDC         hSelf;  // Used only for MemoryDC & SaveDC.
   HDC         hNext;
   HSURF       FillPatternSurfaces[HS_DDI_MAX];
   PGDIINFO    GDIInfo;

@@ -87,7 +87,7 @@ ReadWriteVMDcAttr(PDC dc, FLONG Dirty, BOOL Write)
   BOOL Ret = FALSE;
   KeEnterCriticalRegion();
     {
-      INT Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)dc->hSelf);
+      INT Index = GDI_HANDLE_GET_INDEX(dc->hHmgr);
       PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
       HANDLE ProcessId = (HANDLE)(((ULONG_PTR)(Entry->ProcessId)) & ~1);
       DC_ATTR lDc_AttrData;

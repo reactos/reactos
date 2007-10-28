@@ -2409,6 +2409,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
     NewDC->DriverName.Buffer = Buf;
   }
 
+  NewDC->hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
   NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
   NewDC->w.xformWorld2Wnd.eM21 = 0.0f;
