@@ -1181,6 +1181,10 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
 }
 
 VOID
+NTAPI
+KiSetupSyscallHandler();
+
+VOID
 FASTCALL
 KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1204,6 +1208,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
     TssEntry->BaseLow = (USHORT)((ULONG_PTR)Tss & 0xFFFF);
     TssEntry->HighWord.Bytes.BaseMid = (UCHAR)((ULONG_PTR)Tss >> 16);
     TssEntry->HighWord.Bytes.BaseHi = (UCHAR)((ULONG_PTR)Tss >> 24);
+#endif
+
+#if defined(_M_PPC)
+    KiSetupSyscallHandler();
 #endif
 
     /* Save pointer to ROS Block */

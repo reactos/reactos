@@ -226,7 +226,7 @@ NTAPI
 KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG Cpu;
-    ppc_map_info_t info[3];
+    ppc_map_info_t info[4];
     PKIPCR Pcr = (PKIPCR)KPCR_BASE;
     PKPRCB Prcb;
 
@@ -259,7 +259,11 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 	info[2].proc = 2;
 	info[2].addr = (vaddr_t)KI_USER_SHARED_DATA;
 	info[2].flags = MMU_KRW_UR;
-	MmuMapPage(info, 3);
+        info[3].phys = 0;
+        info[3].proc = 2;
+        info[3].addr = (vaddr_t)KIP0PCRADDRESS;
+        info[3].flags = MMU_KRW_UR;
+	MmuMapPage(info, 4);
     }
 
     /* Skip initial setup if this isn't the Boot CPU */

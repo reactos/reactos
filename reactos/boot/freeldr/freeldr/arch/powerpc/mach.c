@@ -301,6 +301,9 @@ VOID PpcInitializeMmu(int max_mem)
     }
 }
 
+ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
+                           ULONG MaxMemoryMapSize );
+
 /*
  * Get memory the proper openfirmware way
  */
@@ -319,7 +322,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     printf("Returned data: %d\n", returned);
     if( returned == -1 ) {
 	printf("getprop /memory[@reg] failed\n");
-	return 0;
+        return PpcPrepGetMemoryMap( BiosMemoryMap, MaxMemoryMapSize );
     }
 
     for( i = 0; i < returned; i++ ) {
@@ -328,7 +331,7 @@ ULONG PpcGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     printf("\n");
 
     for( i = 0; i < returned / 2; i++ ) {
-	BiosMemoryMap[slots].Type = 1/*MEMTYPE_USABLE*/;
+	BiosMemoryMap[slots].Type = BiosMemoryUsable;
 	BiosMemoryMap[slots].BaseAddress = memdata[i*2];
 	BiosMemoryMap[slots].Length = memdata[i*2+1];
 	printf("MemoryMap[%d] = (%x:%x)\n",

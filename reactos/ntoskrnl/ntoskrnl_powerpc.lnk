@@ -50,20 +50,8 @@ SECTIONS
   {
     *(.rsrc)
   }
-  .rela.text :
+  .rela :
   {
-    *(.rela.text)
-  }
-  .rela.data :
-  {
-    *(.rela.data)
-  }
-  .rela.rodata :
-  {
-    *(.rela.rodata)
-  }
-  .rela.got2 :
-  {
-    *(.rela.got2)
+    *(.rela.*)
   }
 }

@@ -123,18 +123,59 @@ int MmuPageMiss(int trapCode, ppc_trap_frame_t *trap)
     while(1);
 }
 
+typedef struct _ppc_map_set_t {
+    int mapsize;
+    int usecount;
+    ppc_map_info_t *info;
+} ppc_map_set_t;
+
+VOID
+NTAPI
+FrLdrAddPageMapping(ppc_map_set_t *set, int proc, paddr_t phys, vaddr_t virt)
+{
+    int j;
+    paddr_t page = ROUND_DOWN(phys, (1<<PFN_SHIFT));
+    if (virt == 0)
+        virt = page;
+    else
+        virt = ROUND_DOWN(virt, (1<<PFN_SHIFT));
+
+    for( j = 0; j < set->usecount; j++ )
+    {
+        if(set->info[j].addr == page) return;
+    }
+
+    if (!set->mapsize)
+    {
+        set->mapsize = 0x80;
+        set->info = MmAllocateMemory(0x80 * sizeof(*set->info));
+    }
+    else if (set->mapsize <= set->usecount)
+    {
+        ppc_map_info_t *newinfo = MmAllocateMemory(set->mapsize * 2 * sizeof(*set->info));
+        memcpy(newinfo, set->info, set->mapsize * sizeof(*set->info));
+        MmFreeMemory(set->info);
+        set->info = newinfo;
+        set->mapsize *= 2;
+    }
+    
+    set->info[set->usecount].flags = MMU_ALL_RW;
+    set->info[set->usecount].proc = proc;
+    set->info[set->usecount].addr = virt;
+    set->info[set->usecount].phys = page;
+    set->usecount++;
+}
+
 VOID
 NTAPI
 FrLdrStartup(ULONG Magic)
 {
-    ULONG_PTR i, j, page, count;
+    ULONG_PTR i, tmp;
     PCHAR ModHeader;
     boot_infos_t *LocalBootInfo = &BootInfo;
     LocalBootInfo->dispFont = (font_char *)&LocalBootInfo[1];
     LoaderBlock.ArchExtra = (ULONG)LocalBootInfo;
-    ppc_map_info_t *info = MmAllocateMemory(0x80 * sizeof(*info));
-
-    printf("FrLdrStartup(KernelEntry = %x)\n", KernelEntryPoint);
+    ppc_map_set_t memmap = { };
 
     for(i = 0; i < LoaderBlock.ModsCount; i++)
     {
@@ -145,85 +186,52 @@ FrLdrStartup(ULONG Magic)
 		 (PCHAR)reactos_modules[i].String);
     }
 
-    printf("PpcInitializeMmu\n");
+    /* We don't use long longs, but longs for the addresses in the 
+     * ADDRESS_RANGE structure.  Swap the quad halves of our memory
+     * map.
+     */
+    for( i = 0; 
+         i < reactos_memory_map_descriptor_size / sizeof(reactos_memory_map[0]); 
+         i++ )
+    {
+        tmp = reactos_memory_map[i].base_addr_high;
+        reactos_memory_map[i].base_addr_high = reactos_memory_map[i].base_addr_low;
+        reactos_memory_map[i].base_addr_low = tmp;
+        tmp = reactos_memory_map[i].length_high;
+        reactos_memory_map[i].length_high = reactos_memory_map[i].length_low;
+        reactos_memory_map[i].length_low = tmp;
+    }
+
     PpcInitializeMmu(0);
-    printf("PpcInitializeMmu done\n");
 
     /* We'll use vsid 1 for freeldr (expendable) */
     MmuAllocVsid(1, 0xff);
-    printf("(1)\n");
     MmuSetVsid(0, 8, 1);
-    printf("(2)\n");
 
     MmuAllocVsid(0, 0xff00);
-    printf("(3)\n");
     MmuSetVsid(8, 16, 0);
-    printf("(4)\n");
-
-    printf("MmuSetTrapHandler\n");
-    MmuSetTrapHandler(3, MmuPageMiss);
-    MmuSetTrapHandler(4, MmuPageMiss);
-    printf("MmuSetTrapHandler done\n");
-
-    info = MmAllocateMemory((KernelMemorySize >> PAGE_SHIFT) * sizeof(*info));
-    printf("page info at %x\n", info);
 
     /* Map kernel space 0x80000000 ... */
-    for( i = (ULONG)KernelMemory, page = 0;
+    for( i = (ULONG)KernelMemory;
 	 i < (ULONG)KernelMemory + KernelMemorySize;
-	 i += (1<<PFN_SHIFT), page++ ) {
-	info[page].proc = 0;
-	info[page].addr = KernelBase + (page << PAGE_SHIFT);
-	info[page].phys = i; //PpcVirt2phys(i, 1);
-	info[page].flags = MMU_ALL_RW;
+	 i += (1<<PFN_SHIFT) ) {
+        
+        FrLdrAddPageMapping(&memmap, 0, i, KernelBase + i - (ULONG)KernelMemory);
     }
-
-    printf("Adding page info (%d pages)\n", page);
-    MmuMapPage(info, page);
-    printf("Adding page info (%d pages) ... done\n", page);
 
     /* Map module name strings */
-    for( count = 0, i = 0; i < LoaderBlock.ModsCount; i++ )
+    for( i = 0; i < LoaderBlock.ModsCount; i++ )
     {
-        printf("Checking string %s\n", reactos_modules[i].String);
-	page = ROUND_DOWN(((ULONG)reactos_modules[i].String), (1<<PFN_SHIFT));
-	for( j = 0; j < count; j++ )
-	{
-	    if(info[j].addr == page) break;
-	}
-	if( j != count )
-	{
-            printf("Mapping page %x containing string %s\n",
-                   page, reactos_modules[i].String);
-	    info[count].flags = MMU_ALL_RW;
-	    info[count].proc = 1;
-	    info[count].addr = page;
-	    info[count].phys = page; // PpcVirt2phys(page, 0);
-	    count++;
-	}
+        FrLdrAddPageMapping(&memmap, 1, (ULONG)reactos_modules[i].String, 0);
     }
 
-    page = ROUND_DOWN((vaddr_t)&LoaderBlock, (1 << PAGE_SHIFT));
-    for( j = 0; j < count; j++ )
-    {
-	if(info[j].addr == page) break;
-    }
+    /* Map memory zones */
+    FrLdrAddPageMapping(&memmap, 1, (vaddr_t)&reactos_memory_map_descriptor_size, 0);
+    FrLdrAddPageMapping(&memmap, 1, (vaddr_t)&LoaderBlock, 0);
 
-    if( j != count )
-    {
-	info[count].flags = MMU_ALL_RW;
-	info[count].proc = 1;
-	info[count].addr = page;
-	info[count].phys = page; // PpcVirt2phys(page, 0);
-	count++;
-    }
-    printf("Mapping module name strings\n");
-    MmuMapPage(info, count);
-    printf("Module name strings mapped\n");
+    MmuMapPage(memmap.info, memmap.usecount);
 
-    printf("MmuTurnOn(KernelEntry = %x)\n", KernelEntryPoint);
     MmuTurnOn((KernelEntryFn)KernelEntryPoint, (void*)&LoaderBlock);
-    printf("MAED OF FALE!!1\n");
 
     /* Nothing more */
     while(1);
@@ -393,7 +401,7 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	MemLoadAddr = (PCHAR)NextModuleBase;
 
     ModuleData = &reactos_modules[LoaderBlock.ModsCount];
-    printf("Loading file (elf at %x)\n", KernelAddr);
+    //printf("Loading file (elf at %x)\n", KernelAddr);
 
     /* Load the first 1024 bytes of the kernel image so we can read the PE header */
     if (!FsReadFile(KernelImage, sizeof(ehdr), NULL, &ehdr)) {
@@ -414,8 +422,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     FsSetFilePointer(KernelImage,  ehdr.e_shoff);
     FsReadFile(KernelImage, shsize * shnum, NULL, sptr);
 
-    printf("Loaded section headers\n");
-
     /* Now we'll get the PE Header */
     for( i = 0; i < shnum; i++ )
     {
@@ -429,12 +435,14 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	    FsReadFile(KernelImage, shdr->sh_size, NULL, MemLoadAddr);
 	    ImageHeader = (PIMAGE_DOS_HEADER)MemLoadAddr;
 	    NtHeader = (PIMAGE_NT_HEADERS)((PCHAR)MemLoadAddr + SWAPD(ImageHeader->e_lfanew));
+#if 0
 	    printf("NtHeader at %x\n", SWAPD(ImageHeader->e_lfanew));
 	    printf("SectionAlignment %x\n",
 		   SWAPD(NtHeader->OptionalHeader.SectionAlignment));
 	    SectionAddr = ROUND_UP
 		(shdr->sh_size, SWAPD(NtHeader->OptionalHeader.SectionAlignment));
 	    printf("Header ends at %x\n", SectionAddr);
+#endif
 	    break;
 	}
     }
@@ -444,10 +452,12 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
 	printf("No peheader section encountered :-(\n");
 	return 0;
     }
+#if 0
     else
     {
         printf("DOS SIG: %s\n", (PCHAR)MemLoadAddr);
     }
+#endif
 
     /* Save the Image Base */
     NtHeader->OptionalHeader.ImageBase = SWAPD(KernelAddr);
@@ -455,8 +465,6 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     /* Load the file image */
     Section = COFF_FIRST_SECTION(NtHeader);
     SectionCount = SWAPW(NtHeader->FileHeader.NumberOfSections);
-
-    printf("Section headers at %x\n", Section);
 
     /* Walk each section */
     for (i=0; i < SectionCount; i++, Section++)
@@ -603,11 +611,13 @@ FrLdrMapModule(FILE *KernelImage, PCHAR ImageName, PCHAR MemLoadAddr, ULONG Kern
     ModuleData->ModEnd = NextModuleBase;
     ModuleData->String = (ULONG)MmAllocateMemory(strlen(ImageName)+1);
     strcpy((PCHAR)ModuleData->String, ImageName);
+#if 0
     printf("Module %s (%x-%x) next at %x\n",
 	   ModuleData->String,
 	   ModuleData->ModStart,
 	   ModuleData->ModEnd,
 	   NextModuleBase);
+#endif
     LoaderBlock.ModsCount++;
 
     /* Return Success */
@@ -640,7 +650,6 @@ FrLdrMapKernel(FILE *KernelImage)
 
     /* Allocate kernel memory */
     KernelMemory = MmAllocateMemory(KernelMemorySize);
-    printf("Kernel Memory @%x\n", (int)KernelMemory);
 
     return FrLdrMapModule(KernelImage, "ntoskrnl.exe", KernelMemory, KernelBase);
 }
@@ -678,11 +687,6 @@ FrLdrLoadModule(FILE *ModuleImage,
     /* Fill out Module Data Structure */
     ModuleData->ModStart = NextModuleBase;
     ModuleData->ModEnd = NextModuleBase + LocalModuleSize;
-
-    printf("Module size %x len %x name %s\n",
-	   ModuleData->ModStart,
-	   ModuleData->ModEnd - ModuleData->ModStart,
-	   ModuleName);
 
     /* Save name */
     strcpy(NameBuffer, ModuleName);

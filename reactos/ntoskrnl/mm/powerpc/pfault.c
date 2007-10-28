@@ -17,6 +17,11 @@
 
 /* EXTERNS *******************************************************************/
 
+NTSTATUS
+NTAPI
+MmNotPresentFault(KPROCESSOR_MODE Mode,
+                  ULONG_PTR Address,
+                  BOOLEAN FromMdl);
 extern ULONG KiKernelTrapHandler(PKTRAP_FRAME Tf, ULONG ExceptionNr, PVOID Cr2);
 
 /* FUNCTIONS *****************************************************************/
@@ -61,8 +66,7 @@ int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame)
     }
     else
     {
-	KeBugCheck(0);
-	//Status = MmNotPresentFault(Mode, (PVOID)VirtualAddr, FALSE, TrapInfo);
+	Status = MmNotPresentFault(Mode, VirtualAddr, FALSE);
     }
 
     if (NT_SUCCESS(Status))

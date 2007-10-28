@@ -294,8 +294,12 @@ KdPortInitializeEx (
 	ULONG	Unknown2
 	)
 {
+#ifdef _M_IX86
         ULONG BaseArray[5] = {0, 0x3F8, 0x2F8, 0x3E8, 0x2E8};
-		PUCHAR ComPortBase;
+#elif defined(_M_PPC)
+        ULONG BaseArray[5] = {0, 0x800003f8};
+#endif
+        PUCHAR ComPortBase;
         char buffer[80];
         ULONG divisor;
         UCHAR lcr;

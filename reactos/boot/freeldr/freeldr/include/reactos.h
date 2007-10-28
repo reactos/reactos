@@ -84,8 +84,13 @@ extern ROS_LOADER_PARAMETER_BLOCK LoaderBlock; /* Multiboot info structure passe
 extern char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 extern LOADER_MODULE		reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 extern char					reactos_module_strings[64][256];	// Array to hold module names
-extern unsigned long		reactos_memory_map_descriptor_size;
-extern memory_map_t			reactos_memory_map[32];		// Memory map
+typedef struct _reactos_mem_data {
+    unsigned long			memory_map_descriptor_size;
+    memory_map_t			memory_map[32];		// Memory map
+} reactos_mem_data_t;
+extern reactos_mem_data_t reactos_mem_data;
+#define reactos_memory_map_descriptor_size reactos_mem_data.memory_map_descriptor_size
+#define reactos_memory_map reactos_mem_data.memory_map
 
 VOID FASTCALL FrLdrSetupPae(ULONG Magic);
 VOID FASTCALL FrLdrSetupPageDirectory(VOID);

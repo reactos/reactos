@@ -29,8 +29,9 @@ ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 char					reactos_module_strings[64][256];	// Array to hold module names
-unsigned long			reactos_memory_map_descriptor_size;
-memory_map_t			reactos_memory_map[32];		// Memory map
+// Make this a single struct to guarantee that these elements are nearby in
+// memory.  
+reactos_mem_data_t reactos_mem_data;
 ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
 char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
@@ -409,7 +410,7 @@ FrLdrLoadBootDrivers(PCHAR szSystemRoot,
         if (rc != ERROR_SUCCESS) OrderList[0] = 0;
 
         /* enumerate all drivers */
-        for (TagIndex = 1; TagIndex <= OrderList[0]; TagIndex++) {
+        for (TagIndex = 1; TagIndex <= SWAPD(OrderList[0]); TagIndex++) {
 
             Index = 0;
 
@@ -603,10 +604,13 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {
+#ifdef _M_IX86
         ULONG i;
+#endif
         LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
         LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
         reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
+#ifdef _M_IX86
         for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
         {
             if (BiosMemoryUsable == reactos_memory_map[i].type &&
@@ -625,6 +629,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
                 LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
             }
         }
+#endif
     }
 
 	/*
@@ -761,10 +766,13 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
     if (!LoadBase) return;
 
+    printf("Kernel loaded at %x\n", LoadBase);
+
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
-    KernelBase = NtHeader->OptionalHeader.ImageBase;
-    KernelEntryPoint = KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint;
+    KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
+    KernelEntryPoint = KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
+    printf("KernelEntryPoint is %x (base %x)\n", KernelEntryPoint, KernelBase);
     LoaderBlock.KernelBase = KernelBase;
 
 	/*
@@ -836,14 +844,18 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Load boot drivers
 	 */
+        printf("FrLdrLoadBootDrivers\n");
 	FrLdrLoadBootDrivers(szBootPath, 40);
+        printf("FrLdrLoadBootDrivers end\n");
 	//UiUnInitialize("Booting ReactOS...");
 
 	/*
 	 * Now boot the kernel
 	 */
 	DiskStopFloppyMotor();
+        printf("MachVideoPrepareForReactOS\n");
     MachVideoPrepareForReactOS(FALSE);
+    printf("FrLdrStartup\n");
     FrLdrStartup(0x2badb002);
 }
 

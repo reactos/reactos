@@ -29,8 +29,7 @@ ROS_LOADER_PARAMETER_BLOCK LoaderBlock;
 char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 char					reactos_module_strings[64][256];	// Array to hold module names
-unsigned long			reactos_memory_map_descriptor_size;
-memory_map_t			reactos_memory_map[32];		// Memory map
+reactos_mem_data_t reactos_mem_data;
 char szBootPath[256];
 char szHalName[256];
 CHAR SystemRoot[255];
