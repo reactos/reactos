@@ -11,6 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "cm.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -45,6 +46,7 @@ CmpFlushEntireRegistry(IN BOOLEAN ForceFlush)
 }
 
 VOID
+NTAPI
 CmpReportNotify(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 IN PHHIVE Hive,
                 IN HCELL_INDEX Cell,

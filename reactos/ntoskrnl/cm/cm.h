@@ -36,49 +36,20 @@
 #define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
-//
-// Tag for all registry allocations
-//
-#define TAG_CM                                          \
-    TAG('C', 'm', ' ', ' ')
 
 //
-// Hive operations
+// Hack since bigkeys are not yet supported
 //
-#define HINIT_CREATE                                    0
-#define HINIT_MEMORY                                    1
-#define HINIT_FILE                                      2
-#define HINIT_MEMORY_INPLACE                            3
-#define HINIT_FLAT                                      4
-#define HINIT_MAPFILE                                   5
+#define ASSERT_VALUE_BIG(h, s)                          \
+    ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
 
 //
-// Hive flags
+// Key Types
 //
-#define HIVE_VOLATILE                                   1
-#define HIVE_NOLAZYFLUSH                                2
-
-//
-// Hive types
-//
-#define HFILE_TYPE_PRIMARY                              0
-#define HFILE_TYPE_ALTERNATE                            1
-#define HFILE_TYPE_LOG                                  2
-#define HFILE_TYPE_EXTERNAL                             3
-#define HFILE_TYPE_MAX                                  4
-
-//
-// Hive sizes
-//
-#define HBLOCK_SIZE                                     0x1000
-#define HSECTOR_SIZE                                    0x200
-#define HSECTOR_COUNT                                   8
-
-//
-// Cell Masks
-//
-#define HCELL_NIL                                       0
-#define HCELL_CACHED                                    1
+#define CM_KEY_INDEX_ROOT                               0x6972
+#define CM_KEY_INDEX_LEAF                               0x696c
+#define CM_KEY_FAST_LEAF                                0x666c
+#define CM_KEY_HASH_LEAF                                0x686c
 
 //
 // CM_KEY_CONTROL_BLOCK Flags
@@ -95,8 +66,8 @@
 //
 // CM_KEY_NODE Signature and Flags
 //
-#define CM_KEY_NODE_SIGNATURE                           \
-    TAG('k', 'n', ' ', ' ')
+#define CM_KEY_NODE_SIGNATURE                           0x6B6E
+#define CM_LINK_NODE_SIGNATURE                          0x6B6C
 #define KEY_IS_VOLATILE                                 0x01
 #define KEY_HIVE_EXIT                                   0x02
 #define KEY_HIVE_ENTRY                                  0x04
@@ -107,6 +78,15 @@
 #define KEY_VIRT_MIRRORED                               0x80
 #define KEY_VIRT_TARGET                                 0x100
 #define KEY_VIRTUAL_STORE                               0x200
+
+//
+// CM_KEY_VALUE Signature and Flags
+//
+#define CM_KEY_VALUE_SIGNATURE                          0x6b76
+#define CM_KEY_VALUE_SMALL                              0x4
+#define CM_KEY_VALUE_BIG                                0x3FD8
+#define CM_KEY_VALUE_SPECIAL_SIZE                       0x80000000
+#define VALUE_COMP_NAME                                 0x0001
 
 //
 // Number of various lists and hashes
@@ -121,10 +101,16 @@
 #define CMP_HASH_PRIME                                  1000000007
 
 //
-// CmpCreateKcb Flags
+// CmpCreateKeyControlBlock Flags and Signature
 //
 #define CMP_CREATE_FAKE_KCB                             0x1
 #define CMP_LOCK_HASHES_FOR_KCB                         0x2
+#define KEY_BODY_TYPE                                   0x6b793032
+
+//
+// Maximum size of Value Cache
+//
+#define MAXIMUM_CACHED_DATA                             2 * PAGE_SIZE
 
 //
 // Number of items that can fit inside an Allocation Page
@@ -134,24 +120,17 @@
 #define CM_DELAYS_PER_PAGE                       \
     PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
 
-//
-// A Cell Index is just a ULONG
-//
-typedef ULONG HCELL_INDEX;
+#ifndef __INCLUDE_CM_H
 
 //
-// Mapped View of a Hive
+// Value Search Results
 //
-typedef struct _CM_VIEW_OF_FILE
+typedef enum _VALUE_SEARCH_RETURN_TYPE
 {
-    LIST_ENTRY LRUViewList;
-    LIST_ENTRY PinViewList;
-    ULONG FileOffset;
-    ULONG Size;
-    PULONG ViewAddress;
-    PVOID Bcb;
-    ULONG UseCount;
-} CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
+    SearchSuccess,
+    SearchNeedExclusiveLock,
+    SearchFail
+} VALUE_SEARCH_RETURN_TYPE;
 
 //
 // Key Hash
@@ -214,15 +193,6 @@ typedef struct _CM_KEY_SECURITY_CACHE_ENTRY
     HCELL_INDEX Cell;
     PCM_KEY_SECURITY_CACHE CachedSecurity;
 } CM_KEY_SECURITY_CACHE_ENTRY, *PCM_KEY_SECURITY_CACHE_ENTRY;
-
-//
-// Child List
-//
-typedef struct _CHILD_LIST
-{
-    ULONG Count;
-    HCELL_INDEX List;
-} CHILD_LIST, *PCHILD_LIST;
 
 //
 // Cached Child List
@@ -316,9 +286,12 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     PCM_NAME_CONTROL_BLOCK NameBlock;
     PCM_KEY_SECURITY_CACHE CachedSecurity;
     CACHED_CHILD_LIST ValueCache;
-    PCM_INDEX_HINT_BLOCK IndexHint;
-    ULONG HashKey;
-    ULONG SubKeyCount;
+    union
+    {
+        PCM_INDEX_HINT_BLOCK IndexHint;
+        ULONG HashKey;
+        ULONG SubKeyCount;
+    };
     union
     {
         LIST_ENTRY KeyBodyListHead;
@@ -449,9 +422,25 @@ typedef struct _CMHIVE
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
 
-//
-// Key Node
-//
+#include <pshpack1.h>
+
+typedef struct _CM_VIEW_OF_FILE
+{
+    LIST_ENTRY LRUViewList;
+    LIST_ENTRY PinViewList;
+    ULONG FileOffset;
+    ULONG Size;
+    PULONG ViewAddress;
+    PVOID Bcb;
+    ULONG UseCount;
+} CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
+
+typedef struct _CHILD_LIST
+{
+    ULONG Count;
+    HCELL_INDEX List;
+} CHILD_LIST, *PCHILD_LIST;
+
 typedef struct _CM_KEY_NODE
 {
     USHORT Signature;
@@ -459,16 +448,9 @@ typedef struct _CM_KEY_NODE
     LARGE_INTEGER LastWriteTime;
     ULONG Spare;
     HCELL_INDEX Parent;
-    ULONG SubKeyCounts[2];
-    union
-    {
-        struct
-        {
-            HCELL_INDEX SubKeyLists[2];
-            CHILD_LIST ValueList;
-        };
-        CM_KEY_REFERENCE ChildHiveReference;
-    };
+    ULONG SubKeyCounts[HTYPE_COUNT];
+    HCELL_INDEX SubKeyLists[HTYPE_COUNT];
+    CHILD_LIST ValueList;
     HCELL_INDEX Security;
     HCELL_INDEX Class;
     ULONG MaxNameLen;
@@ -478,37 +460,52 @@ typedef struct _CM_KEY_NODE
     ULONG WorkVar;
     USHORT NameLength;
     USHORT ClassLength;
-    WCHAR Name[ANYSIZE_ARRAY];
+    WCHAR Name[0];
 } CM_KEY_NODE, *PCM_KEY_NODE;
 
-//
-// Key Value
-//
+typedef struct _VALUE_LIST_CELL
+{
+    HCELL_INDEX  ValueOffset[0];
+} VALUE_LIST_CELL, *PVALUE_LIST_CELL;
+
 typedef struct _CM_KEY_VALUE
 {
-    USHORT Signature;
-    USHORT NameLenght;
-    ULONG DataLength;
-    HCELL_INDEX Data;
-    ULONG Type;
+    USHORT Signature;	// "kv"
+    USHORT NameLength;	// length of Name
+    ULONG  DataLength;	// length of datas in the cell pointed by DataOffset
+    HCELL_INDEX  Data;// datas are here if high bit of DataSize is set
+    ULONG  Type;
     USHORT Flags;
-    USHORT Spare;
-    WCHAR Name[ANYSIZE_ARRAY];
+    USHORT Unused1;
+    WCHAR  Name[0]; /* warning : not zero terminated */
 } CM_KEY_VALUE, *PCM_KEY_VALUE;
 
-//
-// Key Security
-//
 typedef struct _CM_KEY_SECURITY
 {
-    USHORT Signature;
+    USHORT Signature; // "sk"
     USHORT Reserved;
     HCELL_INDEX Flink;
     HCELL_INDEX Blink;
     ULONG ReferenceCount;
     ULONG DescriptorLength;
-    SECURITY_DESCRIPTOR_RELATIVE Descriptor;
+    //SECURITY_DESCRIPTOR_RELATIVE Descriptor;
+    UCHAR Data[0];
 } CM_KEY_SECURITY, *PCM_KEY_SECURITY;
+
+#include <poppack.h>
+
+//
+// Generic Index Entry
+//
+typedef struct _CM_INDEX
+{
+    HCELL_INDEX Cell;
+    union
+    {
+        UCHAR NameHint[4];
+        ULONG HashKey;
+    };
+} CM_INDEX, *PCM_INDEX;
 
 //
 // Key Index
@@ -519,6 +516,16 @@ typedef struct _CM_KEY_INDEX
     USHORT Count;
     HCELL_INDEX List[ANYSIZE_ARRAY];
 } CM_KEY_INDEX, *PCM_KEY_INDEX;
+
+//
+// Fast/Hash Key Index
+//
+typedef struct _CM_KEY_FAST_INDEX
+{
+    USHORT Signature;
+    USHORT Count;
+    CM_INDEX List[ANYSIZE_ARRAY];
+} CM_KEY_FAST_INDEX, *PCM_KEY_FAST_INDEX;
 
 //
 // Cell Data
@@ -556,6 +563,7 @@ typedef struct _CM_CACHED_VALUE
 {
     USHORT DataCacheType;
     USHORT ValueKeySize;
+    ULONG HashKey;
     CM_KEY_VALUE KeyValue;
 } CM_CACHED_VALUE, *PCM_CACHED_VALUE;
 
@@ -594,24 +602,136 @@ typedef struct _CM_PARSE_CONTEXT
 } CM_PARSE_CONTEXT, *PCM_PARSE_CONTEXT;
 
 //
+// System Control Vector
+//
+typedef struct _CM_SYSTEM_CONTROL_VECTOR
+{
+    PWCHAR KeyPath;
+    PWCHAR ValueName;
+    PVOID Buffer;
+    PULONG BufferLength;
+    PULONG Type;
+} CM_SYSTEM_CONTROL_VECTOR, *PCM_SYSTEM_CONTROL_VECTOR;
+
+//
+// Structure for CmpQueryValueDataFromCache
+//
+typedef struct _KEY_VALUE_INFORMATION
+{
+    union
+    {
+        KEY_VALUE_BASIC_INFORMATION KeyValueBasicInformation;
+        KEY_VALUE_FULL_INFORMATION KeyValueFullInformation;
+        KEY_VALUE_PARTIAL_INFORMATION KeyValuePartialInformation;
+        KEY_VALUE_PARTIAL_INFORMATION_ALIGN64 KeyValuePartialInformationAlign64;
+    };
+} KEY_VALUE_INFORMATION, *PKEY_VALUE_INFORMATION;
+
+typedef struct _KEY_INFORMATION
+{
+    union
+    {
+        KEY_BASIC_INFORMATION KeyBasicInformation;
+        KEY_FULL_INFORMATION KeyFullInformation;
+        KEY_NODE_INFORMATION KeyNodeInformation;
+    };
+} KEY_INFORMATION, *PKEY_INFORMATION;
+
+//
+// Mapped View Hive Functions
+//
+VOID
+NTAPI
+CmpInitHiveViewList(
+    IN PCMHIVE Hive
+);
+
+//
+// Security Cache Functions
+//
+VOID
+NTAPI
+CmpInitSecurityCache(
+    IN PCMHIVE Hive
+);
+
+//
+// Value Cache Functions
+//
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpFindValueByNameFromCache(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PCUNICODE_STRING Name,
+    OUT PCM_CACHED_VALUE **CachedValue,
+    OUT ULONG *Index,
+    OUT PCM_KEY_VALUE *Value,
+    OUT BOOLEAN *ValueIsCached,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpQueryKeyValueData(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PCM_CACHED_VALUE *CachedValue,
+    IN PCM_KEY_VALUE ValueKey,
+    IN BOOLEAN ValueIsCached,
+    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    IN PVOID KeyValueInformation,
+    IN ULONG Length,
+    OUT PULONG ResultLength,
+    OUT PNTSTATUS Status
+);
+
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpGetValueListFromCache(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    OUT PCELL_DATA *CellData,
+    OUT BOOLEAN *IndexIsCached,
+    OUT PHCELL_INDEX ValueListToRelease
+);
+
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpGetValueKeyFromCache(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PCELL_DATA CellData,
+    IN ULONG Index,
+    OUT PCM_CACHED_VALUE **CachedValue,
+    OUT PCM_KEY_VALUE *Value,
+    IN BOOLEAN IndexIsCached,
+    OUT BOOLEAN *ValueIsCached,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+//
 // Registry Validation Functions
 //
-BOOLEAN
+ULONG
 NTAPI
 CmCheckRegistry(
     IN PCMHIVE Hive,
-    IN BOOLEAN CleanFlag
+    IN ULONG Flags
 );
 
 //
 // Notification Routines
 //
 VOID
+NTAPI
 CmpReportNotify(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN ULONG Filter
+);
+
+VOID
+NTAPI
+CmpInitCallback(
+    VOID
 );
 
 //
@@ -625,13 +745,19 @@ CmpInitializeCache(
 
 VOID
 NTAPI
-CmpInitializeCmAllocations(
+CmpInitCmPrivateDelayAlloc(
     VOID
 );
 
 VOID
 NTAPI
-CmpInitializeKcbDelayedDeref(
+CmpInitCmPrivateAlloc(
+    VOID
+);
+
+VOID
+NTAPI
+CmpInitDelayDerefKCBEngine(
     VOID
 );
 
@@ -674,7 +800,7 @@ NTAPI
 CmpSecurityMethod(
     IN PVOID Object,
     IN SECURITY_OPERATION_CODE OperationType,
-    IN SECURITY_INFORMATION SecurityInformation, // FIXME: <= should be a pointer
+    IN PSECURITY_INFORMATION SecurityInformation,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor,
     IN OUT PULONG CapturedLength,
     IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
@@ -703,12 +829,12 @@ CmpInitializeHive(
     IN ULONG Operation,
     IN ULONG Flags,
     IN ULONG FileType,
-    IN PVOID HiveData,
+    IN PVOID HiveData OPTIONAL,
     IN HANDLE Primary,
-    IN HANDLE Alternate,
     IN HANDLE Log,
     IN HANDLE External,
-    IN PUNICODE_STRING FileName
+    IN PCUNICODE_STRING FileName OPTIONAL,
+    IN ULONG CheckFlags
 );
 
 PSECURITY_DESCRIPTOR
@@ -725,6 +851,23 @@ CmpLinkHiveToMaster(
     IN PCMHIVE CmHive,
     IN BOOLEAN Allocate,
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
+);
+
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
+NTSTATUS
+NTAPI
+CmpOpenHiveFiles(
+    IN PCUNICODE_STRING BaseName,
+    IN PCWSTR Extension OPTIONAL,
+    IN PHANDLE Primary,
+    IN PHANDLE Log,
+    IN PULONG PrimaryDisposition,
+    IN PULONG LogDisposition,
+    IN BOOLEAN CreateAllowed,
+    IN BOOLEAN MarkAsSystemHive,
+    IN BOOLEAN NoBuffering,
+    OUT PULONG ClusterSize OPTIONAL
 );
 
 //
@@ -765,7 +908,7 @@ CmpFreeDelayItem(
 //
 PCM_KEY_CONTROL_BLOCK
 NTAPI
-CmpCreateKcb(
+CmpCreateKeyControlBlock(
     IN PHHIVE Hive,
     IN HCELL_INDEX Index,
     IN PCM_KEY_NODE Node,
@@ -781,13 +924,28 @@ CmpDereferenceKcbWithLock(
     IN BOOLEAN LockHeldExclusively
 );
 
+VOID
+NTAPI
+EnlistKeyBodyWithKCB(
+    IN PCM_KEY_BODY KeyObject,
+    IN ULONG Flags
+);
+
+NTSTATUS
+NTAPI
+CmpFreeKeyByCell(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN BOOLEAN Unlink
+);
+
 //
 // Name Functions
 //
 LONG
 NTAPI
 CmpCompareCompressedName(
-    IN PUNICODE_STRING SearchName,
+    IN PCUNICODE_STRING SearchName,
     IN PWCHAR CompressedName,
     IN ULONG NameLength
 );
@@ -801,10 +959,47 @@ CmpNameSize(
 
 USHORT
 NTAPI
+CmpCompressedNameSize(
+    IN PWCHAR Name,
+    IN ULONG Length
+);
+
+VOID
+NTAPI
+CmpCopyCompressedName(
+    IN PWCHAR Destination,
+    IN ULONG DestinationLength,
+    IN PWCHAR Source,
+    IN ULONG SourceLength
+);
+
+USHORT
+NTAPI
 CmpCopyName(
     IN PHHIVE Hive,
     IN PWCHAR Destination,
     IN PUNICODE_STRING Source
+);
+
+BOOLEAN
+NTAPI
+CmpFindNameInList(
+    IN PHHIVE Hive,
+    IN PCHILD_LIST ChildList,
+    IN PUNICODE_STRING Name,
+    IN PULONG ChildIndex,
+    IN PHCELL_INDEX CellIndex
+);
+
+//
+// Parse Routines
+//
+BOOLEAN
+NTAPI
+CmpGetNextName(
+    IN OUT PUNICODE_STRING RemainingName,
+    OUT PUNICODE_STRING NextName,
+    OUT PBOOLEAN LastName
 );
 
 //
@@ -817,19 +1012,294 @@ CmpFlushEntireRegistry(
 );
 
 //
+// Cell Index Routines
+//
+
+/* NOTE: This function declaration is currently duplicated in both     */
+/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Parent,
+    IN PCUNICODE_STRING SearchName
+);
+
+HCELL_INDEX
+NTAPI
+CmpFindSubKeyByNumber(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE Node,
+    IN ULONG Number
+);
+
+ULONG
+NTAPI
+CmpComputeHashKey(
+    IN ULONG Hash,
+    IN PCUNICODE_STRING Name,
+    IN BOOLEAN AllowSeparators
+);
+
+BOOLEAN
+NTAPI
+CmpAddSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Parent,
+    IN HCELL_INDEX Child
+);
+
+BOOLEAN
+NTAPI
+CmpRemoveSubKey(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ParentKey,
+    IN HCELL_INDEX TargetKey
+);
+
+BOOLEAN
+NTAPI
+CmpMarkIndexDirty(
+    IN PHHIVE Hive,
+    HCELL_INDEX ParentKey,
+    HCELL_INDEX TargetKey
+);
+
+//
+// Cell Value Routines
+//
+HCELL_INDEX
+NTAPI
+CmpFindValueByName(
+    IN PHHIVE Hive,
+    IN PCM_KEY_NODE KeyNode,
+    IN PUNICODE_STRING Name
+);
+
+PCELL_DATA
+NTAPI
+CmpValueToData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    OUT PULONG Length
+);
+
+NTSTATUS
+NTAPI
+CmpSetValueDataNew(
+    IN PHHIVE Hive,
+    IN PVOID Data,
+    IN ULONG DataSize,
+    IN ULONG StorageType,
+    IN HCELL_INDEX ValueCell,
+    OUT PHCELL_INDEX DataCell
+);
+
+NTSTATUS
+NTAPI
+CmpAddValueToList(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX ValueCell,
+    IN ULONG Index,
+    IN ULONG Type,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValue(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell
+);
+
+BOOLEAN
+NTAPI
+CmpMarkValueDataDirty(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value
+);
+
+BOOLEAN
+NTAPI
+CmpFreeValueData(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX DataCell,
+    IN ULONG DataLength
+);
+
+NTSTATUS
+NTAPI
+CmpRemoveValueFromList(
+    IN PHHIVE Hive,
+    IN ULONG Index,
+    IN OUT PCHILD_LIST ChildList
+);
+
+BOOLEAN
+NTAPI
+CmpGetValueData(
+    IN PHHIVE Hive,
+    IN PCM_KEY_VALUE Value,
+    IN PULONG Length,
+    OUT PVOID *Buffer,
+    OUT PBOOLEAN BufferAllocated,
+    OUT PHCELL_INDEX CellToRelease
+);
+
+//
+// Boot Routines
+//
+HCELL_INDEX
+NTAPI
+CmpFindControlSet(
+    IN PHHIVE SystemHive,
+    IN HCELL_INDEX RootCell,
+    IN PUNICODE_STRING SelectKeyName,
+    OUT PBOOLEAN AutoSelect
+);
+
+//
+// Hardware Configuration Routines
+//
+NTSTATUS
+NTAPI
+CmpInitializeRegistryNode(
+    IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
+    IN HANDLE NodeHandle,
+    OUT PHANDLE NewHandle,
+    IN INTERFACE_TYPE InterfaceType,
+    IN ULONG BusNumber,
+    IN PUSHORT DeviceIndexTable
+);
+
+NTSTATUS
+NTAPI
+CmpInitializeMachineDependentConfiguration(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+NTSTATUS
+NTAPI
+CmpInitializeHardwareConfiguration(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+//
+// Wrapper Routines
+//
+NTSTATUS
+NTAPI
+CmpCreateEvent(
+    IN EVENT_TYPE EventType,
+    OUT PHANDLE EventHandle,
+    OUT PKEVENT *Event
+);
+
+PVOID
+NTAPI
+CmpAllocate(
+    IN ULONG Size,
+    IN BOOLEAN Paged,
+    IN ULONG Tag
+);
+
+VOID
+NTAPI
+CmpFree(
+    IN PVOID Ptr,
+    IN ULONG Quota
+);
+
+BOOLEAN
+NTAPI
+CmpFileRead(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN OUT PULONG FileOffset,
+    OUT PVOID Buffer,
+    IN SIZE_T BufferLength
+);
+
+BOOLEAN
+NTAPI
+CmpFileWrite(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN OUT PULONG FileOffset,
+    IN PVOID Buffer,
+    IN SIZE_T BufferLength
+);
+
+BOOLEAN
+NTAPI
+CmpFileSetSize(
+    IN PHHIVE RegistryHive,
+    IN ULONG FileType,
+    IN ULONG FileSize,
+    IN ULONG OldFileSize
+);
+
+BOOLEAN
+NTAPI
+CmpFileFlush(
+   IN PHHIVE RegistryHive,
+   IN ULONG FileType,
+   IN OUT PLARGE_INTEGER FileOffset,
+   IN ULONG Length
+);
+
+//
+// System Control Vector
+//
+VOID
+NTAPI
+CmGetSystemControlValues(
+    IN PVOID SystemHiveData,
+    IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
+);
+
+//
 // Global variables accessible from all of Cm
 //
 extern BOOLEAN CmpSpecialBootCondition;
 extern BOOLEAN CmpFlushOnLockRelease;
-extern EX_PUSH_LOCK CmpHiveListHeadLock;
+extern BOOLEAN CmpShareSystemHives;
+extern BOOLEAN CmpMiniNTBoot;
+extern EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 extern LIST_ENTRY CmpHiveListHead;
 extern POBJECT_TYPE CmpKeyObjectType;
 extern ERESOURCE CmpRegistryLock;
-extern PCM_KEY_HASH_TABLE_ENTRY *CmpCacheTable;
-extern PCM_NAME_HASH_TABLE_ENTRY *CmpNameCacheTable;
+extern PCM_KEY_HASH_TABLE_ENTRY CmpCacheTable;
+extern PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 extern KGUARDED_MUTEX CmpDelayedCloseTableLock;
+extern CMHIVE CmControlHive;
+extern WCHAR CmDefaultLanguageId[];
+extern ULONG CmDefaultLanguageIdLength;
+extern ULONG CmDefaultLanguageIdType;
+extern WCHAR CmInstallUILanguageId[];
+extern ULONG CmInstallUILanguageIdLength;
+extern ULONG CmInstallUILanguageIdType;
+extern LANGID PsInstallUILanguageId;
+extern LANGID PsDefaultUILanguageId;
+extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
+extern ULONG CmpConfigurationAreaSize;
+extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
+extern UNICODE_STRING CmTypeName[];
+extern HIVE_LIST_ENTRY CmpMachineHiveList[5];
+extern UNICODE_STRING CmSymbolicLinkValueName;
+extern UNICODE_STRING CmpSystemStartOptions;
+extern UNICODE_STRING CmpLoadOptions;
+extern BOOLEAN CmSelfHeal;
+extern BOOLEAN CmpSelfHeal;
+extern ULONG CmpBootType;
+extern HANDLE CmpRegistryRootHandle;
+extern BOOLEAN ExpInTextModeSetup;
+extern BOOLEAN InitIsWinPEMode;
+extern ULONG CmpHashTableSize;
 
 //
 // Inlined functions
 //
 #include "cm_x.h"
+
+#endif

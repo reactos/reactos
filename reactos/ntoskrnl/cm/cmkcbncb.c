@@ -11,12 +11,13 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "cm.h"
 
 /* GLOBALS *******************************************************************/
 
-ULONG CmpHashTableSize;
-PCM_KEY_HASH_TABLE_ENTRY *CmpCacheTable;
-PCM_NAME_HASH_TABLE_ENTRY *CmpNameCacheTable;
+ULONG CmpHashTableSize = 2048;
+PCM_KEY_HASH_TABLE_ENTRY CmpCacheTable;
+PCM_NAME_HASH_TABLE_ENTRY CmpNameCacheTable;
 
 LIST_ENTRY CmpFreeKCBListHead;
 
@@ -77,29 +78,29 @@ NTAPI
 CmpInitializeCache(VOID)
 {
     ULONG Length;
-
+    
     /* Calculate length for the table */
     Length = CmpHashTableSize * sizeof(PCM_KEY_HASH);
-
+    
     /* Allocate it */
     CmpCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
     if (!CmpCacheTable) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
     RtlZeroMemory(CmpCacheTable, Length);
-
+    
     /* Calculate length for the name cache */
     Length = CmpHashTableSize * sizeof(PCM_NAME_HASH);
-
+    
     /* Now allocate the name cache table */
     CmpNameCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
     if (!CmpCacheTable) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
     RtlZeroMemory(CmpNameCacheTable, Length);
-
+    
     /* Setup the delayed close lock */
     KeInitializeGuardedMutex(&CmpDelayedCloseTableLock);
-
+    
     /* Setup the work item */
     ExInitializeWorkItem(&CmpDelayCloseWorkItem, CmpDelayCloseWorker, NULL);
-
+    
     /* Setup the DPC and its timer */
     KeInitializeDpc(&CmpDelayCloseDpc, CmpDelayCloseDpcRoutine, NULL);
     KeInitializeTimer(&CmpDelayCloseTimer);
@@ -107,7 +108,7 @@ CmpInitializeCache(VOID)
 
 VOID
 NTAPI
-CmpInitializeCmAllocations(VOID)
+CmpInitCmPrivateAlloc(VOID)
 {
     /* Make sure we didn't already do this */
     if (!CmpAllocInited)
@@ -117,8 +118,13 @@ CmpInitializeCmAllocations(VOID)
         InitializeListHead(&CmpFreeKCBListHead);
         CmpAllocInited = TRUE;
     }
+}
 
-    /* Initialize the delay one too */
+VOID
+NTAPI
+CmpInitCmPrivateDelayAlloc(VOID)
+{
+    /* Initialize the delay allocation list and lock */
     KeInitializeGuardedMutex(&CmpDelayAllocBucketLock);
     InitializeListHead(&CmpFreeDelayItemsListHead);
 }
@@ -151,7 +157,7 @@ CmpDelayDerefKCBWorker(IN PVOID Context)
 
 VOID
 NTAPI
-CmpInitializeKcbDelayedDeref(VOID)
+CmpInitDelayDerefKCBEngine(VOID)
 {
     /* Initialize lock and list */
     KeInitializeGuardedMutex(&CmpDelayDerefKCBLock);
@@ -210,7 +216,7 @@ CmpInsertKeyHash(IN PCM_KEY_HASH KeyHash,
     if (IsFake) KeyHash->KeyCell++;
 
     /* Loop the hash table */
-    Entry = CmpCacheTable[i]->Entry;
+    Entry = CmpCacheTable[i].Entry;
     while (Entry)
     {
         /* Check if this matches */
@@ -227,8 +233,8 @@ CmpInsertKeyHash(IN PCM_KEY_HASH KeyHash,
     }
 
     /* No entry found, add this one and return NULL since none existed */
-    KeyHash->NextHash = CmpCacheTable[i]->Entry;
-    CmpCacheTable[i]->Entry = KeyHash;
+    KeyHash->NextHash = CmpCacheTable[i].Entry;
+    CmpCacheTable[i].Entry = KeyHash;
     return NULL;
 }
 
@@ -237,7 +243,7 @@ PCM_NAME_CONTROL_BLOCK
 NTAPI
 CmpGetNcb(IN PUNICODE_STRING NodeName)
 {
-    PCM_NAME_CONTROL_BLOCK Ncb;
+    PCM_NAME_CONTROL_BLOCK Ncb = NULL;
     ULONG ConvKey = 0;
     PWCHAR p, pp;
     ULONG i;
@@ -312,8 +318,8 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
                     }
 
                     /* Next chars */
-                    *p++;
-                    *pp++;
+                    //*p++;
+                    //*pp++;
                 }
             }
 
@@ -330,24 +336,6 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
 
     /* Return the NCB found */
     return Ncb;
-}
-
-BOOLEAN
-NTAPI
-CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK Kcb)
-{
-    /* Convert the lock */
-    ASSERT(CmpIsKcbLockedExclusive(Kcb) == FALSE);
-    if (ExConvertPushLockSharedToExclusive(&GET_HASH_ENTRY(CmpCacheTable,
-                                                           Kcb->ConvKey).Lock))
-    {
-        /* Set the lock owner */
-        GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner = KeGetCurrentThread();
-        return TRUE;
-    }
-
-    /* We failed */
-    return FALSE;
 }
 
 VOID
@@ -419,6 +407,7 @@ CmpFreeKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 }
 
 VOID
+NTAPI
 CmpDereferenceNcbWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
 {
     PCM_NAME_HASH Current, Next;
@@ -478,7 +467,7 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     CmpFreeDelayItem(Entry);
 
     /* Reduce the number of elements */
-    InterlockedDecrement(&CmpDelayedCloseElements);
+    InterlockedDecrement((PLONG)&CmpDelayedCloseElements);
 
     /* Sanity check */
     if (!Kcb->InDelayClose) ASSERT(FALSE);
@@ -488,7 +477,7 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     ASSERT(OldRefCount == 1);
 
     /* Set it to 0 */
-    NewRefCount = InterlockedCompareExchange(&Kcb->InDelayClose,
+    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
                                              0,
                                              OldRefCount);
     if (NewRefCount != OldRefCount) ASSERT(FALSE);
@@ -754,7 +743,7 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
     ASSERT(OldRefCount == 0);
 
     /* Write the new one */
-    NewRefCount = InterlockedCompareExchange(&Kcb->InDelayClose,
+    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
                                              1,
                                              OldRefCount);
     if (NewRefCount != OldRefCount) ASSERT(FALSE);
@@ -767,7 +756,7 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
     Entry->KeyControlBlock = Kcb;
 
     /* Increase the number of elements */
-    InterlockedIncrement(&CmpDelayedCloseElements);
+    InterlockedIncrement((PLONG)&CmpDelayedCloseElements);
 
     /* Acquire the delayed close table lock */
     KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
@@ -936,12 +925,12 @@ CmpInitializeKcbKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
 PCM_KEY_CONTROL_BLOCK
 NTAPI
-CmpCreateKcb(IN PHHIVE Hive,
-             IN HCELL_INDEX Index,
-             IN PCM_KEY_NODE Node,
-             IN PCM_KEY_CONTROL_BLOCK Parent,
-             IN ULONG Flags,
-             IN PUNICODE_STRING KeyName)
+CmpCreateKeyControlBlock(IN PHHIVE Hive,
+                         IN HCELL_INDEX Index,
+                         IN PCM_KEY_NODE Node,
+                         IN PCM_KEY_CONTROL_BLOCK Parent,
+                         IN ULONG Flags,
+                         IN PUNICODE_STRING KeyName)
 {
     PCM_KEY_CONTROL_BLOCK Kcb, FoundKcb = NULL;
     UNICODE_STRING NodeName;
@@ -1133,5 +1122,13 @@ CmpCreateKcb(IN PHHIVE Hive,
 
     /* Return the KCB */
     return Kcb;
+}
+
+VOID
+NTAPI
+EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
+                     IN ULONG Flags)
+{
+    ASSERT(FALSE);
 }
 

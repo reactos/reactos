@@ -58,22 +58,6 @@ CmpParseKey(IN PVOID ParseObject,
 
 NTSTATUS
 NTAPI
-CmpSecurityMethod(IN PVOID Object,
-                  IN SECURITY_OPERATION_CODE OperationType,
-                  IN SECURITY_INFORMATION SecurityInformation, // FIXME: <= should be a pointer
-                  IN PSECURITY_DESCRIPTOR SecurityDescriptor,
-                  IN OUT PULONG CapturedLength,
-                  IN OUT PSECURITY_DESCRIPTOR *ObjectSecurityDescriptor,
-                  IN POOL_TYPE PoolType,
-                  IN PGENERIC_MAPPING GenericMapping)
-{
-    /* FIXME: TODO */
-    ASSERT(FALSE);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 CmpQueryKeyName(IN PVOID Object,
                 IN BOOLEAN HasObjectName,
                 OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
@@ -85,4 +69,5 @@ CmpQueryKeyName(IN PVOID Object,
     ASSERT(FALSE);
     return STATUS_SUCCESS;
 }
+
 

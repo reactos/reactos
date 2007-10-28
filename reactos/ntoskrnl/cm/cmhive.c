@@ -11,6 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "cm.h"
 
 /* GLOBALS *******************************************************************/
 
@@ -19,95 +20,9 @@ LIST_ENTRY CmpHiveListHead;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-NTAPI
-CmpAllocate(IN SIZE_T Size,
-            IN BOOLEAN Paged)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-    return NULL;
-}
-
 VOID
 NTAPI
-CmpFree(IN PVOID Block)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-}
-
-BOOLEAN
-NTAPI
-CmpFileRead(IN PHHIVE Hive,
-            IN ULONG FileType,
-            IN ULONGLONG FileOffset,
-            IN PVOID Buffer,
-            IN SIZE_T BufferLength)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-    return FALSE;
-}
-
-BOOLEAN
-NTAPI
-CmpFileWrite(IN PHHIVE Hive,
-             IN ULONG FileType,
-             IN ULONGLONG FileOffset,
-             IN PVOID Buffer,
-             IN SIZE_T BufferLength)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-    return FALSE;
-}
-
-BOOLEAN
-NTAPI
-CmpFileSetSize(IN PHHIVE Hive,
-               IN ULONG FileType,
-               IN ULONGLONG FileSize)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-    return FALSE;
-}
-
-BOOLEAN
-NTAPI
-CmpFileFlush(IN PHHIVE Hive,
-             IN ULONG FileType)
-{
-    /* FIXME: TODO */
-    DbgBreakPoint();
-    return FALSE;
-}
-
-VOID
-NTAPI
-CmpInitializeSecurityCache(IN PCMHIVE Hive)
-{
-    ULONG i;
-    PAGED_CODE();
-
-    /* Initialize defaults */
-    Hive->SecurityCache = NULL;
-    Hive->SecurityCount = 0;
-    Hive->SecurityHitHint = -1;
-    Hive->SecurityCacheSize = 0;
-
-    /* Loop the lists */
-    for (i = 0; i < CMP_SECURITY_HASH_LISTS; i++)
-    {
-        /* Initialize this list */
-        InitializeListHead(&Hive->SecurityHash[i]);
-    }
-}
-
-VOID
-NTAPI
-CmpInitializeHiveViewList(IN PCMHIVE Hive)
+CmpInitHiveViewList(IN PCMHIVE Hive)
 {
     PAGED_CODE();
 
@@ -127,37 +42,33 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
                   IN ULONG Operation,
                   IN ULONG Flags,
                   IN ULONG FileType,
-                  IN PVOID HiveData,
+                  IN PVOID HiveData OPTIONAL,
                   IN HANDLE Primary,
-                  IN HANDLE Alternate,
                   IN HANDLE Log,
                   IN HANDLE External,
-                  IN PUNICODE_STRING FileName)
+                  IN PCUNICODE_STRING FileName,
+                  IN ULONG CheckFlags)
 {
     PCMHIVE Hive;
     IO_STATUS_BLOCK IoStatusBlock;
     FILE_FS_SIZE_INFORMATION FileSizeInformation;
     NTSTATUS Status;
     ULONG Cluster;
+    FILE_STANDARD_INFORMATION FileInformation;
 
     /*
      * The following are invalid:
-     * An alternate hive that's also a log file.
      * An external hive that is also internal.
-     * An alternate hive or a log hive that's not a primary hive too.
+     * A log hive that's not a primary hive too.
      * A volatile hive that's linked to permanent storage.
-     * An in-memory initailization without hive data.
-     * A log hive or alternative hive that's not linked to a correct file type.
+     * An in-memory initialization without hive data.
+     * A log hive that's not linked to a correct file type.
      */
-    if ((Alternate && Log) ||
-        (External && (Primary || Alternate || Log)) ||
-        (Alternate && !Primary) ||
-        (Log && !Primary) ||
-        ((Flags & HIVE_VOLATILE) &&
-         (Alternate || Primary || External || Log)) ||
+    if (((External) && ((Primary) || (Log))) ||
+        ((Log) && !(Primary)) ||
+        ((Flags & HIVE_VOLATILE) && ((Primary) || (External) || (Log))) ||
         ((Operation == HINIT_MEMORY) && (!HiveData)) ||
-        (Log && (FileType != HFILE_TYPE_LOG)) ||
-        (Alternate && (FileType != HFILE_TYPE_ALTERNATE)))
+        ((Log) && (FileType != HFILE_TYPE_LOG)))
     {
         /* Fail the request */
         return STATUS_INVALID_PARAMETER;
@@ -236,7 +147,6 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
 
     /* Setup the handles */
     Hive->FileHandles[HFILE_TYPE_PRIMARY] = Primary;
-    Hive->FileHandles[HFILE_TYPE_ALTERNATE] = Alternate;
     Hive->FileHandles[HFILE_TYPE_LOG] = Log;
     Hive->FileHandles[HFILE_TYPE_EXTERNAL] = External;
 
@@ -248,11 +158,11 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     ExInitializeResourceLite(Hive->FlusherLock);
 
     /* Setup hive locks */
-    ExInitializePushLock(&Hive->HiveLock);
+    ExInitializePushLock((PULONG_PTR)&Hive->HiveLock);
     Hive->HiveLockOwner = NULL;
-    ExInitializePushLock(&Hive->WriterLock);
+    ExInitializePushLock((PULONG_PTR)&Hive->WriterLock);
     Hive->WriterLockOwner = NULL;
-    ExInitializePushLock(&Hive->SecurityLock);
+    ExInitializePushLock((PULONG_PTR)&Hive->SecurityLock);
     Hive->HiveSecurityLockOwner = NULL;
 
     /* Clear file names */
@@ -260,30 +170,38 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     RtlInitEmptyUnicodeString(&Hive->FileFullPath, NULL, 0);
 
     /* Initialize the view list */
-    CmpInitializeHiveViewList(Hive);
+    CmpInitHiveViewList(Hive);
 
     /* Initailize the security cache */
-    CmpInitializeSecurityCache(Hive);
+    CmpInitSecurityCache(Hive);
 
     /* Setup flags */
     Hive->Flags = 0;
     Hive->FlushCount = 0;
+    
+    /* REACTOS: Check how large the file is */
+    ZwQueryInformationFile(Primary,
+                           &IoStatusBlock,
+                           &FileInformation,
+                           sizeof(FileInformation),
+                           FileStandardInformation);
+    Cluster = FileInformation.EndOfFile.LowPart;
 
     /* Initialize the hive */
     Status = HvInitialize(&Hive->Hive,
                           Operation,
-                          (ULONG_PTR)HiveData,
-                          Cluster,
-                          Flags,
                           FileType,
+                          Flags,
+                          HiveData,
                           CmpAllocate,
                           CmpFree,
-                          CmpFileRead,
-                          CmpFileWrite,
                           CmpFileSetSize,
+                          CmpFileWrite,
+                          CmpFileRead,
                           CmpFileFlush,
-                          FileName);
-    if (NT_SUCCESS(Status))
+                          Cluster,
+                          (PUNICODE_STRING)FileName);
+    if (!NT_SUCCESS(Status))
     {
         /* Free all allocations */
         ExFreePool(Hive->ViewLock);
@@ -323,173 +241,6 @@ CmpInitializeHive(OUT PCMHIVE *CmHive,
     return STATUS_SUCCESS;
 }
 
-PSECURITY_DESCRIPTOR
-NTAPI
-CmpHiveRootSecurityDescriptor(VOID)
-{
-    SID_IDENTIFIER_AUTHORITY WorldAuthority = SECURITY_WORLD_SID_AUTHORITY;
-    SID_IDENTIFIER_AUTHORITY NtAuthority = SECURITY_NT_AUTHORITY;
-    PSID WorldSid;
-    PSID RestrictedSid;
-    PSID SystemSid;
-    PSID AdminSid;
-    NTSTATUS Status;
-    ULONG AceSize, AclSize;
-    PACL Acl, SdAcl;
-    PACE_HEADER AceHeader;
-    PSECURITY_DESCRIPTOR HiveSd;
-    PAGED_CODE();
-
-    /* Allocate all the SIDs */
-    WorldSid  = ExAllocatePoolWithTag(PagedPool,
-                                      RtlLengthRequiredSid(1),
-                                      TAG_CM);
-    RestrictedSid  = ExAllocatePoolWithTag(PagedPool,
-                                           RtlLengthRequiredSid(1),
-                                           TAG_CM);
-    SystemSid = ExAllocatePoolWithTag(PagedPool,
-                                      RtlLengthRequiredSid(1),
-                                      TAG_CM);
-    AdminSid  = ExAllocatePoolWithTag(PagedPool,
-                                      RtlLengthRequiredSid(2),
-                                      TAG_CM);
-
-    /* Make sure that all were allocated */
-    if (!(WorldSid) || !(RestrictedSid) || !(SystemSid) || !(AdminSid))
-    {
-        /* Fail */
-        KeBugCheckEx(REGISTRY_ERROR, 10, 0, 0, 0);
-    }
-
-    /* Now initialize all the SIDs */
-    Status = RtlInitializeSid(WorldSid, &WorldAuthority, 1);
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlInitializeSid(RestrictedSid, &NtAuthority, 1);
-    }
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlInitializeSid(SystemSid, &NtAuthority, 1);
-    }
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlInitializeSid(AdminSid, &NtAuthority, 2);
-    }
-    if (NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 1, 0, 0);
-
-    /* Setup the sub-authority SIDs */
-    *(RtlSubAuthoritySid(WorldSid, 0)) = SECURITY_WORLD_RID;
-    *(RtlSubAuthoritySid(RestrictedSid, 0)) = SECURITY_RESTRICTED_CODE_RID;
-    *(RtlSubAuthoritySid(SystemSid, 0)) = SECURITY_LOCAL_SYSTEM_RID;
-    *(RtlSubAuthoritySid(AdminSid, 0)) = SECURITY_BUILTIN_DOMAIN_RID;
-    *(RtlSubAuthoritySid(AdminSid, 1)) = DOMAIN_ALIAS_RID_ADMINS;
-
-    /* Sanity checks */
-    ASSERT(RtlValidSid(WorldSid));
-    ASSERT(RtlValidSid(RestrictedSid));
-    ASSERT(RtlValidSid(SystemSid));
-    ASSERT(RtlValidSid(AdminSid));
-
-    /* Calculate length of the ACE */
-    AceSize = (SeLengthSid(WorldSid) -
-               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE)) +
-              (SeLengthSid(RestrictedSid) -
-               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE))+
-              (SeLengthSid(SystemSid) -
-               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE)) +
-              (SeLengthSid(AdminSid) -
-               sizeof(ULONG) + sizeof(ACCESS_ALLOWED_ACE));
-
-    /* Calculate the ACL length and allocate it */
-    AclSize = AceSize + sizeof(ACL);
-    Acl = ExAllocatePoolWithTag(PagedPool, AclSize, TAG_CM);
-    if (!Acl) KeBugCheckEx(REGISTRY_ERROR, 10, 2, 0, 0);
-
-    /* Create it */
-    Status = RtlCreateAcl(Acl, AclSize, ACL_REVISION);
-    if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 3, 0, 0);
-
-    /* Add our ACEs */
-    Status = RtlAddAccessAllowedAce(Acl,
-                                    ACL_REVISION,
-                                    KEY_ALL_ACCESS,
-                                    SystemSid);
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlAddAccessAllowedAce(Acl,
-                                        ACL_REVISION,
-                                        KEY_ALL_ACCESS,
-                                        AdminSid);
-    }
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlAddAccessAllowedAce(Acl,
-                                        ACL_REVISION,
-                                        KEY_READ,
-                                        WorldSid);
-    }
-    if (NT_SUCCESS(Status))
-    {
-        Status = RtlAddAccessAllowedAce(Acl,
-                                        ACL_REVISION,
-                                        KEY_READ,
-                                        RestrictedSid);
-    }
-    if (!NT_SUCCESS(Status)) KeBugCheckEx(REGISTRY_ERROR, 10, 4, 0, 0);
-
-    /* Get every ACE and turn on the inherit flag */
-    Status = RtlGetAce(Acl,0,&AceHeader);
-    ASSERT(NT_SUCCESS(Status));
-    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
-    Status = RtlGetAce(Acl,1,&AceHeader);
-    ASSERT(NT_SUCCESS(Status));
-    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
-    Status = RtlGetAce(Acl,2,&AceHeader);
-    ASSERT(NT_SUCCESS(Status));
-    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
-    Status = RtlGetAce(Acl,3,&AceHeader);
-    ASSERT(NT_SUCCESS(Status));
-    AceHeader->AceFlags |= CONTAINER_INHERIT_ACE;
-
-    /* Allocate the SD */
-    HiveSd = ExAllocatePoolWithTag(PagedPool,
-                                   AclSize + sizeof(SECURITY_DESCRIPTOR),
-                                   TAG_CM);
-    if (!HiveSd) KeBugCheckEx(REGISTRY_ERROR, 10, 5, 0, 0);
-
-    /* Copy the ACL into it */
-    SdAcl = (PACL)((PISECURITY_DESCRIPTOR)HiveSd + 1);
-    RtlMoveMemory(SdAcl, Acl, AclSize);
-
-    /* Create the SD */
-    Status = RtlCreateSecurityDescriptor(HiveSd, SECURITY_DESCRIPTOR_REVISION);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, free the descriptor and bugcheck */
-        ExFreePool(HiveSd);
-        KeBugCheckEx(REGISTRY_ERROR, 10, 6, 0, 0);
-    }
-
-    /* Set the DACL */
-    Status = RtlSetDaclSecurityDescriptor(HiveSd, TRUE, SdAcl, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed, free the descriptor and bugcheck */
-        ExFreePool(HiveSd);
-        KeBugCheckEx(REGISTRY_ERROR, 10, 7, 0, 0);
-    }
-
-    /* Free all allocations */
-    ExFreePool(WorldSid);
-    ExFreePool(RestrictedSid);
-    ExFreePool(SystemSid);
-    ExFreePool(AdminSid);
-    ExFreePool(Acl);
-
-    /* Return the SD */
-    return HiveSd;
-}
-
 NTSTATUS
 NTAPI
 CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
@@ -525,7 +276,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     else
     {
         /* Otherwise, set the root cell */
-        ParseContext.ChildHive.KeyCell = CmHive->Hive.HiveHeader->RootCell;
+        ParseContext.ChildHive.KeyCell = CmHive->Hive.BaseBlock->RootCell;
     }
 
     /* Open the key */
@@ -548,11 +299,12 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                                        0,
                                        CmpKeyObjectType,
                                        KernelMode,
-                                       &KeyBody,
+                                       (PVOID*)&KeyBody,
                                        NULL);
     ASSERT(NT_SUCCESS(Status));
 
     /* Send a notification */
+#define REG_NOTIFY_CHANGE_NAME 1 /* DDK! */
     CmpReportNotify(KeyBody->KeyControlBlock,
                     KeyBody->KeyControlBlock->KeyHive,
                     KeyBody->KeyControlBlock->KeyCell,

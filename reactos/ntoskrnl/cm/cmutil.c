@@ -11,6 +11,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
+#include "cm.h"
 
 ERESOURCE CmpRegistryLock;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
