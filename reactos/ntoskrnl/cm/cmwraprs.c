@@ -77,8 +77,8 @@ CmpFileRead(IN PHHIVE RegistryHive,
             OUT PVOID Buffer,
             IN SIZE_T BufferLength)
 {
-    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+    HANDLE HiveHandle = CmHive->FileHandles[FileType];
     LARGE_INTEGER _FileOffset;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
@@ -97,8 +97,8 @@ CmpFileWrite(IN PHHIVE RegistryHive,
              IN PVOID Buffer,
              IN SIZE_T BufferLength)
 {
-    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+    HANDLE HiveHandle = CmHive->FileHandles[FileType];
     LARGE_INTEGER _FileOffset;
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
@@ -116,8 +116,8 @@ CmpFileSetSize(IN PHHIVE RegistryHive,
                IN ULONG FileSize,
                IN ULONG OldFileSize)
 {
-    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+    HANDLE HiveHandle = CmHive->FileHandles[FileType];
     FILE_END_OF_FILE_INFORMATION EndOfFileInfo;
     FILE_ALLOCATION_INFORMATION FileAllocationInfo;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -149,8 +149,8 @@ CmpFileFlush(IN PHHIVE RegistryHive,
              IN OUT PLARGE_INTEGER FileOffset,
              IN ULONG Length)
 {
-    PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-    HANDLE HiveHandle = FileType == HFILE_TYPE_PRIMARY ? CmHive->HiveHandle : CmHive->LogHandle;
+    PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+    HANDLE HiveHandle = CmHive->FileHandles[FileType];
     IO_STATUS_BLOCK IoStatusBlock;
     NTSTATUS Status;
 
