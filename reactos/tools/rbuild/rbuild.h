@@ -572,10 +572,9 @@ public:
 	std::string name;
 	std::string description;
 	std::string version;
-	std::string copyright;
+	std::string license;
 	std::string url;
 	std::string date;
-	std::string owner;
 
 	Metadata ( const XMLElement& _node,
 	          const Module& _module );

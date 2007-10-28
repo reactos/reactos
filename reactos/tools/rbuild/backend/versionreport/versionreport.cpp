@@ -111,7 +111,7 @@ VReportBackend::GenerateReport ( FILE* OUT )
 					fprintf ( m_VReportFile, "\t\t<base>%s</base>\r\n", module.output->relative_path.c_str () );
 					fprintf ( m_VReportFile, "\t\t<version>%s</version>\r\n", module.metadata->version.c_str () );
 					fprintf ( m_VReportFile, "\t\t<date>%s</date>\r\n", module.metadata->date.c_str () );
-					fprintf ( m_VReportFile, "\t\t<owner>%s</owner>\r\n", module.metadata->owner.c_str () );
+                    fprintf ( m_VReportFile, "\t\t<license>%s</license>\r\n", module.metadata->license.c_str () );
 					fprintf ( m_VReportFile, "\t</component>\r\n" );
 				}
 			}

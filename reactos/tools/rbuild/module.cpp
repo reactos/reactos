@@ -1795,12 +1795,12 @@ Metadata::Metadata ( const XMLElement& _node,
 	else
 		version = "";
 
-	/* The module copyright */
-	att = _node.GetAttribute ( "copyright", false );
+	/* The module license */
+	att = _node.GetAttribute ( "license", false );
 	if (att != NULL)
-		copyright = att->value;
+		license = att->value;
 	else
-		copyright = "";
+		license = "";
 
 	att = _node.GetAttribute ( "url", false );
 	if (att != NULL)
@@ -1814,13 +1814,6 @@ Metadata::Metadata ( const XMLElement& _node,
 		date = att->value;
 	else
 		date = "?";
-
-	/* When was this module updated */
-	att = _node.GetAttribute ( "owner", false );
-	if (att != NULL)
-		owner = att->value;
-	else
-		owner = "ReactOS";
 }
 
 
