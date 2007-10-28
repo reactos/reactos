@@ -61,7 +61,7 @@ typedef struct GUI_CONSOLE_DATA_TAG
 #define PM_DESTROY_CONSOLE (WM_APP + 2)
 
 #define CURSOR_BLINK_TIME 500
-#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED | FOREGROUND_INTENSITY)
+#define DEFAULT_ATTRIB (FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED)
 
 static BOOL ConsInitialized = FALSE;
 static HWND NotifyWnd;
@@ -114,6 +114,8 @@ static const COLORREF s_Colors[] =
     RGB(255, 255, 0),
     RGB(255, 255, 255)
 };
+
+#define GuiConsoleRGBFromAttribute(GuiData, Attribute) ((GuiData)->Colors[(Attribute) & 0xF])
 
 /* FUNCTIONS *****************************************************************/
 
@@ -777,31 +779,6 @@ GuiConsoleHandleNcCreate(HWND hWnd, CREATESTRUCTW *Create)
   return (BOOL) DefWindowProcW(hWnd, WM_NCCREATE, 0, (LPARAM) Create);
 }
 
-static COLORREF FASTCALL
-GuiConsoleRGBFromAttribute(BYTE Attribute)
-{
-  int Red = (Attribute & 0x04 ? (Attribute & 0x08 ? 0xff : 0x80) : 0x00);
-  int Green = (Attribute & 0x02 ? (Attribute & 0x08 ? 0xff : 0x80) : 0x00);
-  int Blue = (Attribute & 0x01 ? (Attribute & 0x08 ? 0xff : 0x80) : 0x00);
-
-  return RGB(Red, Green, Blue);
-}
-
-static VOID FASTCALL
-GuiConsoleSetTextColors(HDC Dc, BYTE Attribute, PCSRSS_SCREEN_BUFFER Buff, COLORREF TextColor, COLORREF BkColor)
-{
-  if (Attribute != Buff->DefaultAttrib)
-    {
-      SetTextColor(Dc, GuiConsoleRGBFromAttribute(Attribute & 0x0f));
-      SetBkColor(Dc, GuiConsoleRGBFromAttribute((Attribute & 0xf0) >> 4));
-    }
-  else
-    {
-      SetTextColor(Dc, TextColor);
-      SetBkColor(Dc, BkColor);
-    }
-}
-
 static VOID FASTCALL
 GuiConsoleGetLogicalCursorPos(PCSRSS_SCREEN_BUFFER Buff, ULONG *CursorX, ULONG *CursorY)
 {
@@ -905,11 +882,8 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
     RightChar = (rc->right + (GuiData->CharWidth - 1)) / GuiData->CharWidth - 1;
     LastAttribute = Buff->Buffer[(TopLine * Buff->MaxX + LeftChar) * 2 + 1];
 
-    GuiConsoleSetTextColors(hDC,
-                            LastAttribute,
-                            Buff,
-                            GuiData->ScreenText,
-                            GuiData->ScreenBackground);
+    SetTextColor(hDC, GuiConsoleRGBFromAttribute(GuiData, LastAttribute));
+    SetBkColor(hDC, GuiConsoleRGBFromAttribute(GuiData, LastAttribute >> 4));
 
     EnterCriticalSection(&Buff->Header.Lock);
 
@@ -948,11 +922,8 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
                 Attribute = *(From + 1);
                 if (Attribute != LastAttribute)
                 {
-                    GuiConsoleSetTextColors(hDC,
-                                            Attribute,
-                                            Buff,
-                                            GuiData->ScreenText,
-                                            GuiData->ScreenBackground);
+                    SetTextColor(hDC, GuiConsoleRGBFromAttribute(GuiData, Attribute));
+                    SetBkColor(hDC, GuiConsoleRGBFromAttribute(GuiData, Attribute >> 4));
                     LastAttribute = Attribute;
                 }
             }
@@ -992,7 +963,7 @@ GuiConsolePaint(PCSRSS_CONSOLE Console,
 
             if (*From != DEFAULT_ATTRIB)
             {
-                CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(*From));
+                CursorBrush = CreateSolidBrush(GuiConsoleRGBFromAttribute(GuiData, *From));
             }
             else
             {
@@ -1253,8 +1224,8 @@ GuiUpdateScreenInfo(PCSRSS_CONSOLE Console, PCSRSS_SCREEN_BUFFER Buff)
 
     if (Console->ActiveBuffer == Buff)
     {
-        GuiData->ScreenText = GuiConsoleRGBFromAttribute(Buff->DefaultAttrib & 0x0f);
-        GuiData->ScreenBackground = GuiConsoleRGBFromAttribute((Buff->DefaultAttrib & 0xf0) >> 4);
+        GuiData->ScreenText = GuiConsoleRGBFromAttribute(GuiData, Buff->DefaultAttrib);
+        GuiData->ScreenBackground = GuiConsoleRGBFromAttribute(GuiData, Buff->DefaultAttrib >> 4);
     }
 
     return TRUE;
