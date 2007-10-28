@@ -1755,6 +1755,77 @@ void FASTCALL REGION_UnionRectWithRegion(const RECT *rect, ROSRGNDATA *rgn)
     REGION_UnionRegion(rgn, rgn, &region);
 }
 
+BOOL FASTCALL REGION_CreateSimpleFrameRgn(PROSRGNDATA rgn, INT x, INT y)
+{
+    RECT rc[4];
+    PRECT prc;
+
+    if (x != 0 || y != 0)
+    {
+        prc = rc;
+
+        if (rgn->rdh.rcBound.bottom - rgn->rdh.rcBound.top > y * 2 &&
+            rgn->rdh.rcBound.right - rgn->rdh.rcBound.left > x * 2)
+        {
+            if (y != 0)
+            {
+                /* top rectangle */
+                prc->left = rgn->rdh.rcBound.left;
+                prc->top = rgn->rdh.rcBound.top;
+                prc->right = rgn->rdh.rcBound.right;
+                prc->bottom = prc->top + y;
+                prc++;
+            }
+
+            if (x != 0)
+            {
+                /* left rectangle */
+                prc->left = rgn->rdh.rcBound.left;
+                prc->top = rgn->rdh.rcBound.top + y;
+                prc->right = prc->left + x;
+                prc->bottom = rgn->rdh.rcBound.bottom - y;
+                prc++;
+
+                /* right rectangle */
+                prc->left = rgn->rdh.rcBound.right - x;
+                prc->top = rgn->rdh.rcBound.top + y;
+                prc->right = rgn->rdh.rcBound.right;
+                prc->bottom = rgn->rdh.rcBound.bottom - y;
+                prc++;
+            }
+
+            if (y != 0)
+            {
+                /* bottom rectangle */
+                prc->left = rgn->rdh.rcBound.left;
+                prc->top = rgn->rdh.rcBound.bottom - y;
+                prc->right = rgn->rdh.rcBound.right;
+                prc->bottom = rgn->rdh.rcBound.bottom;
+                prc++;
+            }
+        }
+
+        if (prc != rc)
+        {
+            /* The frame results in a complex region. rcBounds remains
+               the same, though. */
+            rgn->rdh.nCount = (DWORD)(prc - rc);
+            ASSERT(rgn->rdh.nCount > 1);
+            rgn->rdh.nRgnSize = rgn->rdh.nCount * sizeof(RECT);
+            rgn->Buffer = ExAllocatePoolWithTag( PagedPool, rgn->rdh.nRgnSize, TAG_REGION);
+            if (!rgn->Buffer)
+            {
+                rgn->rdh.nRgnSize = 0;
+                return FALSE;
+            }
+
+            COPY_RECTS(rgn->Buffer, rc, rgn->rdh.nCount);
+        }
+    }
+
+    return TRUE;
+}
+
 BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
 {
    PROSRGNDATA srcObj, destObj;
@@ -1784,57 +1855,70 @@ BOOL FASTCALL REGION_CreateFrameRgn(HRGN hDest, HRGN hSrc, INT x, INT y)
       return FALSE;
    }
 
-   /* Original region moved to right */
-   rc = (PRECT)srcObj->Buffer;
-   for (i = 0; i < srcObj->rdh.nCount; i++)
+   if (srcObj->rdh.iType == SIMPLEREGION)
    {
-      rc->left += x;
-      rc->right += x;
-      rc++;
+       if (!REGION_CreateSimpleFrameRgn(destObj, x, y))
+       {
+           EMPTY_REGION(destObj);
+           RGNDATA_UnlockRgn(destObj);
+           RGNDATA_UnlockRgn(srcObj);
+           return FALSE;
+       }
    }
-   REGION_IntersectRegion(destObj, destObj, srcObj);
+   else
+   {
+       /* Original region moved to right */
+       rc = (PRECT)srcObj->Buffer;
+       for (i = 0; i < srcObj->rdh.nCount; i++)
+       {
+          rc->left += x;
+          rc->right += x;
+          rc++;
+       }
+       REGION_IntersectRegion(destObj, destObj, srcObj);
 
-   /* Original region moved to left */
-   rc = (PRECT)srcObj->Buffer;
-   for (i = 0; i < srcObj->rdh.nCount; i++)
-   {
-      rc->left -= 2 * x;
-      rc->right -= 2 * x;
-      rc++;
-   }
-   REGION_IntersectRegion(destObj, destObj, srcObj);
+       /* Original region moved to left */
+       rc = (PRECT)srcObj->Buffer;
+       for (i = 0; i < srcObj->rdh.nCount; i++)
+       {
+          rc->left -= 2 * x;
+          rc->right -= 2 * x;
+          rc++;
+       }
+       REGION_IntersectRegion(destObj, destObj, srcObj);
 
-   /* Original region moved down */
-   rc = (PRECT)srcObj->Buffer;
-   for (i = 0; i < srcObj->rdh.nCount; i++)
-   {
-      rc->left += x;
-      rc->right += x;
-      rc->top += y;
-      rc->bottom += y;
-      rc++;
-   }
-   REGION_IntersectRegion(destObj, destObj, srcObj);
+       /* Original region moved down */
+       rc = (PRECT)srcObj->Buffer;
+       for (i = 0; i < srcObj->rdh.nCount; i++)
+       {
+          rc->left += x;
+          rc->right += x;
+          rc->top += y;
+          rc->bottom += y;
+          rc++;
+       }
+       REGION_IntersectRegion(destObj, destObj, srcObj);
 
-   /* Original region moved up */
-   rc = (PRECT)srcObj->Buffer;
-   for (i = 0; i < srcObj->rdh.nCount; i++)
-   {
-      rc->top -= 2 * y;
-      rc->bottom -= 2 * y;
-      rc++;
-   }
-   REGION_IntersectRegion(destObj, destObj, srcObj);
+       /* Original region moved up */
+       rc = (PRECT)srcObj->Buffer;
+       for (i = 0; i < srcObj->rdh.nCount; i++)
+       {
+          rc->top -= 2 * y;
+          rc->bottom -= 2 * y;
+          rc++;
+       }
+       REGION_IntersectRegion(destObj, destObj, srcObj);
 
-   /* Restore the original region */
-   rc = (PRECT)srcObj->Buffer;
-   for (i = 0; i < srcObj->rdh.nCount; i++)
-   {
-      rc->top += y;
-      rc->bottom += y;
-      rc++;
+       /* Restore the original region */
+       rc = (PRECT)srcObj->Buffer;
+       for (i = 0; i < srcObj->rdh.nCount; i++)
+       {
+          rc->top += y;
+          rc->bottom += y;
+          rc++;
+       }
+       REGION_SubtractRegion(destObj, srcObj, destObj);
    }
-   REGION_SubtractRegion(destObj, srcObj, destObj);
 
    RGNDATA_UnlockRgn(destObj);
    RGNDATA_UnlockRgn(srcObj);
