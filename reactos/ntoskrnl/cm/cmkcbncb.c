@@ -110,6 +110,9 @@ CmpInitializeCache(VOID)
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 1, 0, 0);
     }
     
+    /* Zero out the table */
+    RtlZeroMemory(CmpCacheTable, Length);
+    
     /* Initialize the locks */
     for (i = 0;i < CmpHashTableSize; i++)
     {
@@ -128,6 +131,9 @@ CmpInitializeCache(VOID)
         KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 3, 0, 0);
     }
     
+    /* Zero out the table */
+    RtlZeroMemory(CmpNameCacheTable, Length);
+
     /* Initialize the locks */
     for (i = 0;i < CmpHashTableSize; i++)
     {
@@ -272,18 +278,17 @@ CmpInsertKeyHash(IN PCM_KEY_HASH KeyHash,
     return NULL;
 }
 
-// FIXME: NEEDS COMPLETION
 PCM_NAME_CONTROL_BLOCK
 NTAPI
-CmpGetNcb(IN PUNICODE_STRING NodeName)
+CmpGetNameControlBlock(IN PUNICODE_STRING NodeName)
 {
     PCM_NAME_CONTROL_BLOCK Ncb = NULL;
     ULONG ConvKey = 0;
     PWCHAR p, pp;
     ULONG i;
-    BOOLEAN IsCompressed = TRUE, Found;
+    BOOLEAN IsCompressed = TRUE, Found = FALSE;
     PCM_NAME_HASH HashEntry;
-    ULONG Length;
+    ULONG Length, NcbSize;
 
     /* Loop the name */
     p = NodeName->Buffer;
@@ -312,6 +317,9 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
             IsCompressed = FALSE;
         }
     }
+    
+    /* Lock the NCB entry */
+    CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
     /* Get the hash entry */
     HashEntry = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry;
@@ -352,21 +360,74 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
                     }
 
                     /* Next chars */
-                    //*p++;
-                    //*pp++;
+                    p++;
+                    pp++;
                 }
             }
 
             /* Check if we found a name */
             if (Found)
             {
-
+                /* Reference it */
+                Ncb->RefCount++;
             }
         }
 
         /* Go to the next hash */
         HashEntry = HashEntry->NextHash;
     }
+    
+    /* Check if we didn't find it */
+    if (!Found)
+    {
+        /* Allocate one */
+        NcbSize = FIELD_OFFSET(CM_NAME_CONTROL_BLOCK, Name) + Length;
+        Ncb = ExAllocatePoolWithTag(PagedPool, NcbSize, TAG_CM);
+        if (!Ncb)
+        {
+            /* Release the lock and fail */
+            CmpReleaseNcbLockByKey(ConvKey);
+            return NULL;
+        }
+        
+        /* Clear it out */
+        RtlZeroMemory(Ncb, NcbSize);
+        
+        /* Check if the name was compressed */
+        if (IsCompressed)
+        {
+            /* Copy the compressed name */
+            Ncb->Compressed = TRUE;
+            for (i = 0; i < Length; i++)
+            {
+                /* Copy Unicode to ANSI */
+                ((PCHAR)Ncb->Name)[i] = (CHAR)RtlUpcaseUnicodeChar(NodeName->Buffer[i]);
+            }
+        }
+        else
+        {
+            /* Copy the name directly */
+            Ncb->Compressed = FALSE;
+            for (i = 0; i < Length; i++)
+            {
+                /* Copy each unicode character */
+                Ncb->Name[i] = RtlUpcaseUnicodeChar(NodeName->Buffer[i]);
+            }
+        }
+            
+        /* Setup the rest of the NCB */
+        Ncb->ConvKey = ConvKey;
+        Ncb->RefCount++;
+        Ncb->NameLength = Length;
+        
+        /* Insert the name in the hash table */
+        HashEntry = &Ncb->NameHash;
+        HashEntry->NextHash = GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry;
+        GET_HASH_ENTRY(CmpNameCacheTable, ConvKey).Entry = HashEntry;
+    }
+    
+    /* Release NCB lock */
+    CmpReleaseNcbLockByKey(ConvKey);
 
     /* Return the NCB found */
     return Ncb;
@@ -446,9 +507,9 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
 VOID
 NTAPI
-CmpDereferenceNcbWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
+CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
 {
-    PCM_NAME_HASH Current, Next;
+    PCM_NAME_HASH Current, *Next;
 
     /* Lock the NCB */
     CmpAcquireNcbLockExclusive(Ncb);
@@ -457,20 +518,24 @@ CmpDereferenceNcbWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
     if (!(--Ncb->RefCount))
     {
         /* Find the NCB in the table */
-        Next = GET_HASH_ENTRY(CmpNameCacheTable, Ncb->ConvKey).Entry;
+        Next = &GET_HASH_ENTRY(CmpNameCacheTable, Ncb->ConvKey).Entry;
         while (TRUE)
         {
             /* Check the current entry */
-            Current = Next;
+            Current = *Next;
             ASSERT(Current != NULL);
-            if (Current == &Ncb->NameHash) break;
+            if (Current == &Ncb->NameHash)
+            {
+                /* Unlink it */
+                *Next = Current->NextHash;
+                break;
+            }
 
             /* Get to the next one */
-            Next = Current->NextHash;
+            Next = &Current->NextHash;
         }
 
-        /* Found it, now unlink it and free it */
-        Current->NextHash = Next->NextHash;
+        /* Found it, now free it */
         ExFreePool(Ncb);
     }
 
@@ -705,7 +770,7 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     CmpCleanUpKcbValueCache(Kcb);
 
     /* Reference the NCB */
-    CmpDereferenceNcbWithLock(Kcb->NameBlock);
+    CmpDereferenceNameControlBlockWithLock(Kcb->NameBlock);
 
     /* Check if we have an index hint block and free it */
     if (Kcb->ExtFlags & CM_KCB_SUBKEY_HINT) ExFreePool(Kcb->IndexHint);
@@ -957,12 +1022,16 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     BOOLEAN IsFake, HashLock;
     PWCHAR p;
 
-    /* Make sure we own this hive */
-    ASSERT(FALSE);
-    if (((PCMHIVE)Hive)->CreatorOwner != KeGetCurrentThread()) return NULL;
+    /* Make sure we own this hive in case it's being unloaded */
+    if ((Hive->HiveFlags & HIVE_IS_UNLOADING) &&
+        (((PCMHIVE)Hive)->CreatorOwner != KeGetCurrentThread()))
+    {
+        /* Fail */
+        return NULL;
+    }
 
     /* Check if this is a fake KCB */
-    IsFake = (BOOLEAN)(Flags & CMP_CREATE_FAKE_KCB);
+    IsFake = Flags & CMP_CREATE_FAKE_KCB ? TRUE : FALSE;
 
     /* If we have a parent, use its ConvKey */
     if (Parent) ConvKey = Parent->ConvKey;
@@ -986,7 +1055,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     for (i = 0; i < NodeName.Length; i += sizeof(WCHAR))
     {
         /* Make sure it's a valid character */
-        if ((*p != OBJ_NAME_PATH_SEPARATOR) && (*p))
+        if (*p != OBJ_NAME_PATH_SEPARATOR)
         {
             /* Add this key to the hash */
             ConvKey = 37 * ConvKey + RtlUpcaseUnicodeChar(*p);
@@ -1010,9 +1079,10 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     Kcb->KeyCell = Index;
     Kcb->ConvKey = ConvKey;
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
+    Kcb->InDelayClose = 0;
 
     /* Check if we have two hash entires */
-    HashLock = (BOOLEAN)(Flags & CMP_LOCK_HASHES_FOR_KCB);
+    HashLock = Flags & CMP_LOCK_HASHES_FOR_KCB ? TRUE : FALSE;
     if (HashLock)
     {
         /* Not yet implemented */
@@ -1054,8 +1124,8 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
                                    CM_KCB_SUBKEY_HINT)))
             {
                 /* Calculate the index hint */
-                Kcb->SubKeyCount = Node->SubKeyCounts[0] +
-                                   Node->SubKeyCounts[1];
+                Kcb->SubKeyCount = Node->SubKeyCounts[Stable] +
+                                   Node->SubKeyCounts[Volatile];
 
                 /* Cached information is now valid */
                 Kcb->ExtFlags &= ~CM_KCB_INVALID_CACHED_INFO;
@@ -1100,7 +1170,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         if (Kcb)
         {
             /* Get the NCB */
-            Kcb->NameBlock = CmpGetNcb(&NodeName);
+            Kcb->NameBlock = CmpGetNameControlBlock(&NodeName);
             if (Kcb->NameBlock)
             {
                 /* Fill it out */
@@ -1114,8 +1184,8 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
                 if (IsFake) Kcb->ExtFlags |= CM_KCB_KEY_NON_EXIST;
 
                 /* Setup the other data */
-                Kcb->SubKeyCount = Node->SubKeyCounts[0] +
-                                   Node->SubKeyCounts[1];
+                Kcb->SubKeyCount = Node->SubKeyCounts[Stable] +
+                                   Node->SubKeyCounts[Volatile];
                 Kcb->KcbLastWriteTime = Node->LastWriteTime;
                 Kcb->KcbMaxNameLen = (USHORT)Node->MaxNameLen;
                 Kcb->KcbMaxValueNameLen = (USHORT)Node->MaxValueNameLen;
@@ -1133,6 +1203,9 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
             }
         }
     }
+    
+    /* Sanity check */
+    ASSERT((!Kcb) || (Kcb->Delete == FALSE));
 
     /* Check if we had locked the hashes */
     if (HashLock)
