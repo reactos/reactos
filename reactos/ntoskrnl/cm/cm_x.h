@@ -200,6 +200,18 @@ CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 }
 
 //
+// Converts a KCB lock
+//
+FORCEINLINE
+VOID
+CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
+{
+    ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);  
+    CmpReleaseKcbLock(k);
+    CmpAcquireKcbLockExclusive(k);
+}
+
+//
 // Exclusively acquires an NCB
 //
 #define CmpAcquireNcbLockExclusive(n)                               \

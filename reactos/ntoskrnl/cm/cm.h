@@ -340,6 +340,15 @@ typedef struct _CM_ALLOC_PAGE
 } CM_ALLOC_PAGE, *PCM_ALLOC_PAGE;
 
 //
+// Allocation Page Entry
+//
+typedef struct _CM_DELAY_ALLOC
+{
+    LIST_ENTRY ListEntry;
+    PCM_KEY_CONTROL_BLOCK Kcb;
+} CM_DELAY_ALLOC, *PCM_DELAY_ALLOC;
+
+//
 // Delayed Close Entry
 //
 typedef struct _CM_DELAYED_CLOSE_ENTRY
@@ -574,7 +583,6 @@ typedef struct _HIVE_LIST_ENTRY
 {
     PWCHAR FileName;
     PWCHAR BaseName;
-    PWCHAR RegRootName;
     PCMHIVE CmHive;
     ULONG HHiveFlags;
     ULONG CmHiveFlags;
@@ -582,7 +590,6 @@ typedef struct _HIVE_LIST_ENTRY
     BOOLEAN ThreadFinished;
     BOOLEAN ThreadStarted;
     BOOLEAN Allocate;
-    BOOLEAN WinPERequired;
 } HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
 
 //
@@ -853,8 +860,6 @@ CmpLinkHiveToMaster(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
-/* NOTE: This function declaration is currently duplicated in both     */
-/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 NTSTATUS
 NTAPI
 CmpOpenHiveFiles(
@@ -919,7 +924,7 @@ CmpCreateKeyControlBlock(
 
 VOID
 NTAPI
-CmpDereferenceKcbWithLock(
+CmpDereferenceKeyControlBlockWithLock(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeldExclusively
 );
@@ -1285,7 +1290,7 @@ extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
 extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
-extern HIVE_LIST_ENTRY CmpMachineHiveList[5];
+extern HIVE_LIST_ENTRY CmpMachineHiveList[];
 extern UNICODE_STRING CmSymbolicLinkValueName;
 extern UNICODE_STRING CmpSystemStartOptions;
 extern UNICODE_STRING CmpLoadOptions;

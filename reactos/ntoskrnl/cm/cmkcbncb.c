@@ -71,29 +71,13 @@ CmpDelayCloseWorker(IN PVOID Context)
     ASSERT(CmpDelayCloseWorkItemActive);
 
     /* FIXME: TODO */
+    ASSERT(FALSE);
 }
 
 VOID
 NTAPI
-CmpInitializeCache(VOID)
+CmpInitializeDelayedCloseTable(VOID)
 {
-    ULONG Length;
-    
-    /* Calculate length for the table */
-    Length = CmpHashTableSize * sizeof(PCM_KEY_HASH);
-    
-    /* Allocate it */
-    CmpCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
-    if (!CmpCacheTable) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
-    RtlZeroMemory(CmpCacheTable, Length);
-    
-    /* Calculate length for the name cache */
-    Length = CmpHashTableSize * sizeof(PCM_NAME_HASH);
-    
-    /* Now allocate the name cache table */
-    CmpNameCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
-    if (!CmpCacheTable) KeBugCheck(CONFIG_INITIALIZATION_FAILED);
-    RtlZeroMemory(CmpNameCacheTable, Length);
     
     /* Setup the delayed close lock */
     KeInitializeGuardedMutex(&CmpDelayedCloseTableLock);
@@ -101,9 +85,58 @@ CmpInitializeCache(VOID)
     /* Setup the work item */
     ExInitializeWorkItem(&CmpDelayCloseWorkItem, CmpDelayCloseWorker, NULL);
     
+    /* Setup the list head */
+    InitializeListHead(&CmpDelayedLRUListHead);
+    
     /* Setup the DPC and its timer */
     KeInitializeDpc(&CmpDelayCloseDpc, CmpDelayCloseDpcRoutine, NULL);
     KeInitializeTimer(&CmpDelayCloseTimer);
+}
+
+VOID
+NTAPI
+CmpInitializeCache(VOID)
+{
+    ULONG Length, i;
+    
+    /* Calculate length for the table */
+    Length = CmpHashTableSize * sizeof(CM_KEY_HASH_TABLE_ENTRY);
+    
+    /* Allocate it */
+    CmpCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
+    if (!CmpCacheTable)
+    {
+        /* Take the system down */
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 1, 0, 0);
+    }
+    
+    /* Initialize the locks */
+    for (i = 0;i < CmpHashTableSize; i++)
+    {
+        /* Setup the pushlock */
+        ExInitializePushLock((PULONG_PTR)&CmpCacheTable[i].Lock);
+    }
+    
+    /* Calculate length for the name cache */
+    Length = CmpHashTableSize * sizeof(CM_NAME_HASH_TABLE_ENTRY);
+    
+    /* Now allocate the name cache table */
+    CmpNameCacheTable = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
+    if (!CmpNameCacheTable)
+    {
+        /* Take the system down */
+        KeBugCheckEx(CONFIG_INITIALIZATION_FAILED, 3, 3, 0, 0);
+    }
+    
+    /* Initialize the locks */
+    for (i = 0;i < CmpHashTableSize; i++)
+    {
+        /* Setup the pushlock */
+        ExInitializePushLock((PULONG_PTR)&CmpNameCacheTable[i].Lock);
+    }
+    
+    /* Setup the delayed close table */
+    CmpInitializeDelayedCloseTable();
 }
 
 VOID
@@ -153,6 +186,7 @@ CmpDelayDerefKCBWorker(IN PVOID Context)
     ASSERT(CmpDelayDerefKCBWorkItemActive);
 
     /* FIXME: TODO */
+    ASSERT(FALSE);
 }
 
 VOID
@@ -340,7 +374,7 @@ CmpGetNcb(IN PUNICODE_STRING NodeName)
 
 VOID
 NTAPI
-CmpRemoveKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
+CmpRemoveKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     /* Make sure that the registry and KCB are utterly locked */
     ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
@@ -352,7 +386,7 @@ CmpRemoveKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
 VOID
 NTAPI
-CmpFreeKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
+CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     ULONG i;
     PCM_ALLOC_PAGE AllocPage;
@@ -367,43 +401,47 @@ CmpFreeKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
     {
         /* Free it from the pool */
         ExFreePool(Kcb);
+        return;
     }
-    else
+    
+    /* Acquire the private allocation lock */
+    KeAcquireGuardedMutex(&CmpAllocBucketLock);
+    
+    /* Sanity check on lock ownership */
+    ASSERT((GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner ==
+            KeGetCurrentThread()) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+    
+    /* Add us to the free list */
+    InsertTailList(&CmpFreeKCBListHead, &Kcb->FreeListEntry);
+    
+    /* Get the allocation page */
+    AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Kcb & 0xFFFFF000);
+    
+    /* Sanity check */
+    ASSERT(AllocPage->FreeCount != CM_KCBS_PER_PAGE);
+    
+    /* Increase free count */
+    if (++AllocPage->FreeCount == CM_KCBS_PER_PAGE)
     {
-        /* Acquire the private allocation lock */
-        KeAcquireGuardedMutex(&CmpAllocBucketLock);
-
-        /* Sanity check on lock ownership */
-        ASSERT((GET_HASH_ENTRY(CmpCacheTable, Kcb->ConvKey).Owner ==
-                KeGetCurrentThread()) ||
-               (CmpTestRegistryLockExclusive() == TRUE));
-
-        /* Remove us from the list */
-        RemoveEntryList(&CmpFreeKCBListHead);
-
-        /* Get the allocation page */
-        AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)Kcb & 0xFFFFF000);
-
-        /* Sanity check */
-        ASSERT(AllocPage->FreeCount != CM_KCBS_PER_PAGE);
-
-        /* Increase free count */
-        if (++AllocPage->FreeCount == CM_KCBS_PER_PAGE)
+        /* Loop all the entries */
+        for (i = CM_KCBS_PER_PAGE; i; i--)
         {
-            /* Loop all the entries */
-            for (i = CM_KCBS_PER_PAGE; i; i--)
-            {
-                /* Remove the entry 
-                RemoveEntryList(& */
-            }
-
-            /* Free the page */
-            ExFreePool(AllocPage);
+            /* Get the KCB */
+            Kcb = (PVOID)((ULONG_PTR)AllocPage +
+                          FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage) +
+                          i * sizeof(CM_KEY_CONTROL_BLOCK));
+            
+            /* Remove the entry */ 
+            RemoveEntryList(&Kcb->FreeListEntry);
         }
-
-        /* Release the lock */
-        KeReleaseGuardedMutex(&CmpAllocBucketLock);
+        
+        /* Free the page */
+        ExFreePool(AllocPage);
     }
+    
+    /* Release the lock */
+    KeReleaseGuardedMutex(&CmpAllocBucketLock);
 }
 
 VOID
@@ -455,6 +493,7 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
     /* Get the entry and lock the table */
     Entry = Kcb->DelayCloseEntry;
+    ASSERT(Entry);
     KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
 
     /* Remove the entry */
@@ -487,12 +526,11 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
-    Kcb->Delete = FALSE;
 }
 
 BOOLEAN
 NTAPI
-CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
+CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     /* Check if this is the KCB's first reference */
     if (Kcb->RefCount == 0)
@@ -503,36 +541,36 @@ CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
             /* Convert it to exclusive */
             if (!CmpTryToConvertKcbSharedToExclusive(Kcb))
             {
-                /* Set the delete flag */
-                Kcb->Delete = TRUE;
+                /* Set the delayed close index so that we can be ignored */
+                Kcb->DelayedCloseIndex = 1;
 
                 /* Increase the reference count while we release the lock */
                 InterlockedIncrement((PLONG)&Kcb->RefCount);
-
-                /* Sanity check, KCB should still be shared */
-                ASSERT(CmpIsKcbLockedExclusive(Kcb) == FALSE);
-
-                /* Release the current lock */
-                CmpReleaseKcbLock(Kcb);
-
-                /* Now acquire the lock in exclusive mode */
-                CmpAcquireKcbLockExclusive(Kcb);
+                
+                /* Go from shared to exclusive */
+                CmpConvertKcbSharedToExclusive(Kcb);
 
                 /* Decrement the reference count; the lock is now held again */
                 InterlockedDecrement((PLONG)&Kcb->RefCount);
-
-                /* Sanity check */
-                ASSERT((Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ||
-                       (Kcb->DelayedCloseIndex == 0));
-
-                /* Remove the delete flag */
-                Kcb->Delete = FALSE;
+                
+                /* Check if we still control the index */
+                if (Kcb->DelayedCloseIndex == 1)
+                {
+                    /* Reset it */
+                    Kcb->DelayedCloseIndex = 0;
+                }
+                else
+                {
+                    /* Sanity check */
+                    ASSERT((Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ||
+                           (Kcb->DelayedCloseIndex == 0));
+                }
             }
         }
     }
 
     /* Increase the reference count */
-    if ((InterlockedIncrement((PLONG)&Kcb->RefCount) + 1) == 0)
+    if (InterlockedIncrement((PLONG)&Kcb->RefCount) == 0)
     {
         /* We've overflown to 64K references, bail out */
         InterlockedDecrement((PLONG)&Kcb->RefCount);
@@ -548,14 +586,8 @@ CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
             /* Convert it to exclusive */
             if (!CmpTryToConvertKcbSharedToExclusive(Kcb))
             {
-                /* Sanity check, KCB should still be shared */
-                ASSERT(CmpIsKcbLockedExclusive(Kcb) == FALSE);
-
-                /* Release the current lock */
-                CmpReleaseKcbLock(Kcb);
-
-                /* Now acquire the lock in exclusive mode */
-                CmpAcquireKcbLockExclusive(Kcb);
+                /* Go from shared to exclusive */
+                CmpConvertKcbSharedToExclusive(Kcb);
             }
         }
 
@@ -569,7 +601,7 @@ CmpReferenceKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
 VOID
 NTAPI
-CmpDelayDerefKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
+CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     USHORT OldRefCount, NewRefCount;
     LARGE_INTEGER Timeout;
@@ -596,10 +628,10 @@ CmpDelayDerefKcb(IN PCM_KEY_CONTROL_BLOCK Kcb)
     KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
 
     /* Insert the entry into the list */
-    InsertHeadList(&CmpDelayDerefKCBListHead, &Entry->ListEntry);
+    InsertTailList(&CmpDelayDerefKCBListHead, &Entry->ListEntry);
 
     /* Check if we need to enable anything */
-    if (CmpDelayDerefKCBWorkItemActive)
+    if (!CmpDelayDerefKCBWorkItemActive)
     {
         /* Yes, we have no work item, setup the interval */
         Timeout.QuadPart = CmpDelayDerefKCBIntervalInSeconds * -10000000;
@@ -651,7 +683,7 @@ CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
         }
 
         /* Dereference the KCB */
-        CmpDelayDerefKcb(Kcb->ValueCache.RealKcb);
+        CmpDelayDerefKeyControlBlock(Kcb->ValueCache.RealKcb);
         Kcb->ExtFlags &= ~ CM_KCB_SYM_LINK_FOUND;
     }
 }
@@ -680,15 +712,18 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
     /* Check if we were already deleted */
     Parent = Kcb->ParentKcb;
-    if (!Kcb->Delete) CmpFreeKcb(Kcb);
+    if (!Kcb->Delete) CmpRemoveKeyControlBlock(Kcb);
+    
+    /* Free the KCB as well */
+    CmpFreeKeyControlBlock(Kcb);
 
     /* Check if we have a parent */
     if (Parent)
     {
         /* Dereference the parent */
-        LockHeldExclusively ? CmpDereferenceKcbWithLock(Kcb,
-                              LockHeldExclusively) :
-                              CmpDelayDerefKcb(Kcb);
+        LockHeldExclusively ?
+            CmpDereferenceKeyControlBlockWithLock(Kcb,LockHeldExclusively) :
+            CmpDelayDerefKeyControlBlock(Kcb);
     }
 }
 
@@ -748,8 +783,8 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                              OldRefCount);
     if (NewRefCount != OldRefCount) ASSERT(FALSE);
 
-    /* Remove the delete flag */
-    Kcb->Delete = FALSE;
+    /* Reset the delayed close index */
+    Kcb->DelayedCloseIndex = 0;
 
     /* Set up the close entry */
     Kcb->DelayCloseEntry = Entry;
@@ -778,9 +813,9 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
 PCM_KEY_CONTROL_BLOCK
 NTAPI
-CmpAllocateKcb(VOID)
+CmpAllocateKeyControlBlock(VOID)
 {
-    PLIST_ENTRY ListHead, NextEntry;
+    PLIST_ENTRY NextEntry;
     PCM_KEY_CONTROL_BLOCK CurrentKcb;
     PCM_ALLOC_PAGE AllocPage;
     ULONG i;
@@ -792,13 +827,12 @@ CmpAllocateKcb(VOID)
         /* They are, acquire the bucket lock */
         KeAcquireGuardedMutex(&CmpAllocBucketLock);
 
-        /* Loop the free KCB list */
-        ListHead = &CmpFreeKCBListHead;
-        NextEntry = ListHead->Flink;
-        while (NextEntry != ListHead)
+        /* See if there's something on the free KCB list */
+SearchKcbList:
+        if (!IsListEmpty(&CmpFreeKCBListHead))
         {
             /* Remove the entry */
-            RemoveEntryList(NextEntry);
+            NextEntry = RemoveHeadList(&CmpFreeKCBListHead);
 
             /* Get the KCB */
             CurrentKcb = CONTAINING_RECORD(NextEntry,
@@ -833,39 +867,20 @@ CmpAllocateKcb(VOID)
             for (i = 0; i < CM_KCBS_PER_PAGE; i++)
             {
                 /* Get this entry */
-                CurrentKcb = (PCM_KEY_CONTROL_BLOCK)(AllocPage + 1);
+                CurrentKcb = (PVOID)((ULONG_PTR)AllocPage +
+                                     FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage) +
+                                     i * sizeof(CM_KEY_CONTROL_BLOCK));
 
                 /* Set it up */
                 CurrentKcb->PrivateAlloc = TRUE;
                 CurrentKcb->DelayCloseEntry = NULL;
-                InsertHeadList(&CurrentKcb->FreeListEntry,
-                               &CmpFreeKCBListHead);
+                InsertHeadList(&CmpFreeKCBListHead,
+                               &CurrentKcb->FreeListEntry);
             }
-
-            /* Get the KCB */
-            CurrentKcb = CONTAINING_RECORD(NextEntry,
-                                           CM_KEY_CONTROL_BLOCK,
-                                           FreeListEntry);
-
-            /* Get the allocation page */
-            AllocPage = (PCM_ALLOC_PAGE)((ULONG_PTR)CurrentKcb & 0xFFFFF000);
-
-            /* Decrease the free count */
-            ASSERT(AllocPage->FreeCount != 0);
-            AllocPage->FreeCount--;
-
-            /* Make sure this KCB is privately allocated */
-            ASSERT(CurrentKcb->PrivateAlloc == 1);
-
-            /* Release the allocation lock */
-            KeReleaseGuardedMutex(&CmpAllocBucketLock);
-
-            /* Return the KCB */
-            return CurrentKcb;
+            
+            /* Now go back and search the list */
+            goto SearchKcbList;
         }
-
-        /* Release the lock */
-        KeReleaseGuardedMutex(&CmpAllocBucketLock);
     }
 
     /* Allocate a KCB only */
@@ -885,33 +900,37 @@ CmpAllocateKcb(VOID)
 
 VOID
 NTAPI
-CmpDereferenceKcbWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
-                          IN BOOLEAN LockHeldExclusively)
+CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                                      IN BOOLEAN LockHeldExclusively)
 {
     /* Sanity check */
     ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
            (CmpTestRegistryLockExclusive() == TRUE));
 
-    /* Check if we should do a direct delete */
-    if (((CmpHoldLazyFlush) &&
-         !(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND) &&
-         !(Kcb->Flags & KEY_SYM_LINK)) ||
-        (Kcb->ExtFlags & CM_KCB_NO_DELAY_CLOSE) ||
-        (Kcb->PrivateAlloc))
+    /* Check if this is the last reference */
+    if (InterlockedDecrement((PLONG)&Kcb->RefCount) == 0)
     {
-        /* Clean up the KCB*/
-        CmpCleanUpKcbCacheWithLock(Kcb, LockHeldExclusively);
-    }
-    else
-    {
-        /* Otherwise, use delayed close */
-        CmpAddToDelayedClose(Kcb, LockHeldExclusively);
+        /* Check if we should do a direct delete */
+        if (((CmpHoldLazyFlush) &&
+             !(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND) &&
+             !(Kcb->Flags & KEY_SYM_LINK)) ||
+            (Kcb->ExtFlags & CM_KCB_NO_DELAY_CLOSE) ||
+            (Kcb->Delete))
+        {
+            /* Clean up the KCB*/
+            CmpCleanUpKcbCacheWithLock(Kcb, LockHeldExclusively);
+        }
+        else
+        {
+            /* Otherwise, use delayed close */
+            CmpAddToDelayedClose(Kcb, LockHeldExclusively);
+        }
     }
 }
 
 VOID
 NTAPI
-CmpInitializeKcbKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb)
+InitializeKCBKeyBodyList(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
     /* Initialize the list */
     InitializeListHead(&Kcb->KeyBodyListHead);
@@ -939,6 +958,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     PWCHAR p;
 
     /* Make sure we own this hive */
+    ASSERT(FALSE);
     if (((PCMHIVE)Hive)->CreatorOwner != KeGetCurrentThread()) return NULL;
 
     /* Check if this is a fake KCB */
@@ -977,11 +997,11 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     }
 
     /* Allocate the KCB */
-    Kcb = CmpAllocateKcb();
+    Kcb = CmpAllocateKeyControlBlock();
     if (!Kcb) return NULL;
 
     /* Initailize the key list */
-    CmpInitializeKcbKeyBodyList(Kcb);
+    InitializeKCBKeyBodyList(Kcb);
 
     /* Set it up */
     Kcb->Delete = FALSE;
@@ -1007,9 +1027,9 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         ASSERT(!FoundKcb->Delete);
 
         /* Free the one we allocated and reference this one */
-        CmpFreeKcb(Kcb);
+        CmpFreeKeyControlBlock(Kcb);
         Kcb = FoundKcb;
-        if (!CmpReferenceKcb(Kcb))
+        if (!CmpReferenceKeyControlBlock(Kcb))
         {
             /* We got too many handles */
             ASSERT(Kcb->RefCount + 1 != 0);
@@ -1054,7 +1074,8 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         if (Parent)
         {
             /* Reference the parent */
-            if (((Parent->TotalLevels + 1) < 512) && (CmpReferenceKcb(Parent)))
+            if (((Parent->TotalLevels + 1) < 512) &&
+                (CmpReferenceKeyControlBlock(Parent)))
             {
                 /* Link it */
                 Kcb->ParentKcb = Parent;
@@ -1063,8 +1084,8 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
             else
             {
                 /* Remove the KCB and free it */
-                CmpRemoveKcb(Kcb);
-                CmpFreeKcb(Kcb);
+                CmpRemoveKeyControlBlock(Kcb);
+                CmpFreeKeyControlBlock(Kcb);
                 Kcb = NULL;
             }
         }
@@ -1103,11 +1124,11 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
             else
             {
                 /* Dereference the KCB */
-                CmpDereferenceKcbWithLock(Parent, FALSE);
+                CmpDereferenceKeyControlBlockWithLock(Parent, FALSE);
 
                 /* Remove the KCB and free it */
-                CmpRemoveKcb(Kcb);
-                CmpFreeKcb(Kcb);
+                CmpRemoveKeyControlBlock(Kcb);
+                CmpFreeKeyControlBlock(Kcb);
                 Kcb = NULL;
             }
         }

@@ -32,8 +32,6 @@ BOOLEAN CmSelfHeal, CmpSelfHeal;
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 
-HIVE_LIST_ENTRY CmpMachineHiveList[];
-
 EX_PUSH_LOCK CmpLoadHiveLock;
 
 UNICODE_STRING CmpSystemStartOptions;
@@ -335,8 +333,8 @@ CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                            ValueName.Length);
     
 Quickie:
-        /* Free the buffers */
-        RtlFreeUnicodeString(&ValueName);
+    /* Free the buffers */
+    RtlFreeUnicodeString(&ValueName);
     
     /* Close the key and return */
     NtClose(KeyHandle);

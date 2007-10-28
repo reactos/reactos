@@ -38,7 +38,30 @@ PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 
 EX_PUSH_LOCK CmpHiveListHeadLock, CmpLoadHiveLock;
 
-HIVE_LIST_ENTRY CmpMachineHiveList[5];
+HIVE_LIST_ENTRY CmpMachineHiveList[] =
+{
+    { 
+        L"HARDWARE", L"MACHINE\\", NULL, HIVE_VOLATILE, 0, NULL, FALSE, FALSE, FALSE
+    },
+    {
+        L"SECURITY", L"MACHINE\\", NULL, 0, 0, NULL, FALSE, FALSE, FALSE
+    },
+    { 
+        L"SOFTWARE", L"MACHINE\\", NULL, 0, 0, NULL, FALSE, FALSE, FALSE
+    },
+    {
+        L"SYSTEM", L"MACHINE\\", NULL, 0, 0, NULL, FALSE, FALSE, FALSE
+    },
+    {
+        L"DEFAULT", L"USER\\.DEFAULT", NULL, 0, 1, NULL, FALSE, FALSE, FALSE
+    },
+    {
+        L"SAM", L"MACHINE\\", NULL, HIVE_NOLAZYFLUSH, 0, NULL, FALSE, FALSE, FALSE
+    },
+    {
+        NULL, NULL, 0, 0, 0, NULL, FALSE, FALSE, FALSE
+    }
+};
 
 UNICODE_STRING CmSymbolicLinkValueName =
     RTL_CONSTANT_STRING(L"SymbolicLinkValue");
