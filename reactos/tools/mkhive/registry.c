@@ -40,17 +40,17 @@
 #define REG_DATA_SIZE_MASK                 0x7FFFFFFF
 #define REG_DATA_IN_OFFSET                 0x80000000
 
-static EREGISTRY_HIVE RootHive;
+static CMHIVE RootHive;
 static MEMKEY RootKey;
-EREGISTRY_HIVE DefaultHive;  /* \Registry\User\.DEFAULT */
-EREGISTRY_HIVE SamHive;      /* \Registry\Machine\SAM */
-EREGISTRY_HIVE SecurityHive; /* \Registry\Machine\SECURITY */
-EREGISTRY_HIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
-EREGISTRY_HIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
+CMHIVE SamHive;      /* \Registry\Machine\SAM */
+CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
+CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
+CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 
 static MEMKEY
 CreateInMemoryStructure(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING KeyName)
 {
@@ -569,7 +569,7 @@ RegDeleteValueA(
 static BOOL
 ConnectRegistry(
 	IN HKEY RootKey,
-	IN PEREGISTRY_HIVE HiveToConnect,
+	IN PCMHIVE HiveToConnect,
 	IN LPCWSTR Path)
 {
 	NTSTATUS Status;
@@ -599,7 +599,7 @@ ConnectRegistry(
 
 static BOOL
 MyExportBinaryHive (PCHAR FileName,
-		  PEREGISTRY_HIVE RootHive)
+		  PCMHIVE RootHive)
 {
 	FILE *File;
 	BOOL ret;
@@ -614,7 +614,7 @@ MyExportBinaryHive (PCHAR FileName,
 
 	fseek (File, 0, SEEK_SET);
 
-	RootHive->HiveHandle = (HANDLE)File;
+	RootHive->FileHandles[HFILE_TYPE_PRIMARY] = (HANDLE)File;
 	ret = HvWriteHive(&RootHive->Hive);
 	fclose (File);
 	return ret;

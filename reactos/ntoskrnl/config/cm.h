@@ -93,8 +93,6 @@
 #define CM_DELAYS_PER_PAGE                       \
     PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
 
-#ifndef __INCLUDE_CM_H
-
 //
 // Value Search Results
 //
@@ -496,24 +494,13 @@ typedef struct _KEY_INFORMATION
 #define REG_SYSTEM_KEY_NAME     L"\\Registry\\Machine\\SYSTEM"
 #define REG_HARDWARE_KEY_NAME   L"\\Registry\\Machine\\HARDWARE"
 #define IsNoFileHive(Hive)      ((Hive)->Flags & HIVE_NO_FILE)
-typedef struct _EREGISTRY_HIVE
-{
-    HHIVE Hive;
-    LIST_ENTRY HiveList;
-    UNICODE_STRING HiveFileName;
-    UNICODE_STRING LogFileName;
-    PCM_KEY_SECURITY RootSecurityCell;
-    ULONG Flags;
-    HANDLE HiveHandle;
-    HANDLE LogHandle;
-} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
 typedef struct _KEY_OBJECT
 {
     CSHORT Type;
     CSHORT Size;
     ULONG Flags;
     UNICODE_STRING Name;
-    PEREGISTRY_HIVE RegistryHive;
+    PCMHIVE RegistryHive;
     HCELL_INDEX KeyCellOffset;
     PCM_KEY_NODE KeyCell;
     struct _KEY_OBJECT *ParentKey;
@@ -525,7 +512,7 @@ typedef struct _KEY_OBJECT
     LIST_ENTRY HiveList;
     CACHED_CHILD_LIST ValueCache;
 } KEY_OBJECT, *PKEY_OBJECT;
-extern PEREGISTRY_HIVE CmiVolatileHive;
+extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
 extern KTIMER CmiWorkerTimer;
 VOID NTAPI CmiWorkerThread(IN PVOID Param);
@@ -755,8 +742,6 @@ CmpLinkHiveToMaster(
     IN PSECURITY_DESCRIPTOR SecurityDescriptor
 );
 
-/* NOTE: This function declaration is currently duplicated in both     */
-/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 NTSTATUS
 NTAPI
 CmpOpenHiveFiles(
@@ -770,6 +755,16 @@ CmpOpenHiveFiles(
     IN BOOLEAN MarkAsSystemHive,
     IN BOOLEAN NoBuffering,
     OUT PULONG ClusterSize OPTIONAL
+);
+
+NTSTATUS
+NTAPI
+CmpInitHiveFromFile(
+    IN PCUNICODE_STRING HiveName,
+    IN ULONG HiveFlags,
+    OUT PCMHIVE *Hive,
+    IN OUT PBOOLEAN New,
+    IN ULONG CheckFlags
 );
 
 //
@@ -832,7 +827,7 @@ EnlistKeyBodyWithKCB(
 #if 0
     IN PCM_KEY_BODY KeyObject,
 #else
-    IN PVOID KeyObject,
+    IN PKEY_OBJECT KeyObject,
 #endif
     IN ULONG Flags
 );
@@ -918,11 +913,27 @@ CmpFlushEntireRegistry(
 );
 
 //
+// Open/Create Routines
+//
+NTSTATUS
+NTAPI
+CmpDoCreate(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN PACCESS_STATE AccessState,
+    IN PUNICODE_STRING Name,
+    IN KPROCESSOR_MODE AccessMode,
+    IN PUNICODE_STRING Class,
+    IN ULONG CreateOptions,
+    IN PKEY_OBJECT Parent,
+    IN PCMHIVE OriginatingHive OPTIONAL,
+    OUT PVOID *Object
+);
+
+//
 // Cell Index Routines
 //
 
-/* NOTE: This function declaration is currently duplicated in both     */
-/* cm/cm.h and config/cm.h. TODO: Pick one single place to declare it. */
 HCELL_INDEX
 NTAPI
 CmpFindSubKeyByName(
@@ -1064,6 +1075,14 @@ CmpFindControlSet(
     OUT PBOOLEAN AutoSelect
 );
 
+VOID
+NTAPI
+CmGetSystemControlValues(
+    IN PVOID SystemHiveData,
+    IN PCM_SYSTEM_CONTROL_VECTOR ControlVector
+);
+
+
 //
 // Hardware Configuration Routines
 //
@@ -1155,6 +1174,71 @@ CmpFileFlush(
 );
 
 //
+// Configuration Manager side of Registry System Calls
+//
+NTSTATUS
+NTAPI
+CmEnumerateValueKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN ULONG Index,
+    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    IN PVOID KeyValueInformation,
+    IN ULONG Length,
+    IN PULONG ResultLength);
+
+NTSTATUS
+NTAPI
+CmSetValueKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PUNICODE_STRING ValueName,
+    IN ULONG Type,
+    IN PVOID Data,
+    IN ULONG DataSize);
+
+NTSTATUS
+NTAPI
+CmQueryKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN KEY_INFORMATION_CLASS KeyInformationClass,
+    IN PVOID KeyInformation,
+    IN ULONG Length,
+    IN PULONG ResultLength
+);
+
+NTSTATUS
+NTAPI
+CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN ULONG Index,
+    IN KEY_INFORMATION_CLASS KeyInformationClass,
+    IN PVOID KeyInformation,
+    IN ULONG Length,
+    IN PULONG ResultLength
+);
+
+NTSTATUS
+NTAPI
+CmDeleteKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+NTSTATUS
+NTAPI
+CmDeleteValueKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN UNICODE_STRING ValueName
+);
+
+NTSTATUS
+NTAPI
+CmQueryValueKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN UNICODE_STRING ValueName,
+    IN KEY_VALUE_INFORMATION_CLASS KeyValueInformationClass,
+    IN PVOID KeyValueInformation,
+    IN ULONG Length,
+    IN PULONG ResultLength
+);
+
+//
 // Global variables accessible from all of Cm
 //
 extern BOOLEAN CmpSpecialBootCondition;
@@ -1197,5 +1281,3 @@ extern ULONG CmpHashTableSize;
 // Inlined functions
 //
 #include "cm_x.h"
-
-#endif

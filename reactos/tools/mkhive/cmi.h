@@ -28,11 +28,11 @@
 
 NTSTATUS
 CmiInitializeTempHive(
-	IN OUT PEREGISTRY_HIVE Hive);
+	IN OUT PCMHIVE Hive);
 
 NTSTATUS
 CmiAddSubKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE ParentKeyCell,
 	IN HCELL_INDEX ParentKeyCellOffset,
 	IN PCUNICODE_STRING SubKeyName,
@@ -42,7 +42,7 @@ CmiAddSubKey(
 
 NTSTATUS
 CmiScanForSubKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN PCUNICODE_STRING SubKeyName,
 	IN ULONG Attributes,
@@ -51,7 +51,7 @@ CmiScanForSubKey(
 
 NTSTATUS
 CmiAddValueKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING ValueName,
@@ -60,7 +60,7 @@ CmiAddValueKey(
 
 NTSTATUS
 CmiScanForValueKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN PCUNICODE_STRING ValueName,
 	OUT PCM_KEY_VALUE *pValueCell,

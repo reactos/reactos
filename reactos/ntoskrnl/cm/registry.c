@@ -18,7 +18,6 @@
 #include <internal/debug.h>
 
 #include "cm.h"
-#include "../config/cm.h"
 
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, CmInitSystem1)
@@ -29,7 +28,7 @@
 extern BOOLEAN ExpInTextModeSetup;
 
 POBJECT_TYPE  CmpKeyObjectType = NULL;
-PEREGISTRY_HIVE  CmiVolatileHive = NULL;
+PCMHIVE  CmiVolatileHive = NULL;
 
 LIST_ENTRY CmpHiveListHead;
 
@@ -245,7 +244,7 @@ NTSTATUS
 NTAPI
 CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                     IN HANDLE RootDirectory,
-                    IN PEREGISTRY_HIVE RegistryHive,
+                    IN PCMHIVE RegistryHive,
                     IN BOOLEAN Allocate,
                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
@@ -267,7 +266,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 
 NTSTATUS
 CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-               IN PEREGISTRY_HIVE RegistryHive)
+               IN PCMHIVE RegistryHive)
 {
     UNICODE_STRING RemainingPath;
     PKEY_OBJECT ParentKey;
@@ -671,7 +670,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 VOID
 CmShutdownRegistry(VOID)
 {
-    PEREGISTRY_HIVE Hive;
+    PCMHIVE Hive;
     PLIST_ENTRY Entry;
 
     DPRINT("CmShutdownRegistry() called\n");
@@ -692,7 +691,7 @@ CmShutdownRegistry(VOID)
     Entry = CmpHiveListHead.Flink;
     while (Entry != &CmpHiveListHead)
     {
-        Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
+        Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
 
         if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
         {
@@ -713,7 +712,7 @@ VOID
 NTAPI
 CmiHiveSyncRoutine(PVOID DeferredContext)
 {
-    PEREGISTRY_HIVE Hive;
+    PCMHIVE Hive;
     PLIST_ENTRY Entry;
 
     DPRINT("CmiHiveSyncRoutine() called\n");
@@ -726,7 +725,7 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
     Entry = CmpHiveListHead.Flink;
     while (Entry != &CmpHiveListHead)
     {
-        Hive = CONTAINING_RECORD(Entry, EREGISTRY_HIVE, HiveList);
+        Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
 
         if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
         {

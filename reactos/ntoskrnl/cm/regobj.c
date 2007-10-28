@@ -21,7 +21,7 @@ extern LIST_ENTRY CmiKeyObjectListHead;
 extern ULONG CmiTimer;
 
 static NTSTATUS
-CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
+CmiGetLinkTarget(PCMHIVE RegistryHive,
                  PCM_KEY_NODE KeyCell,
                  PUNICODE_STRING TargetPath);
 
@@ -809,7 +809,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 }
 
 static NTSTATUS
-CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
+CmiGetLinkTarget(PCMHIVE RegistryHive,
                  PCM_KEY_NODE KeyCell,
                  PUNICODE_STRING TargetPath)
 {

@@ -27,6 +27,7 @@
 
 #ifndef _TYPEDEFS_HOST_H
  #include <ntddk.h>
+
 #else
  #define REG_OPTION_VOLATILE 1
  #define OBJ_CASE_INSENSITIVE 0x00000040L
@@ -60,6 +61,14 @@ RtlClearAllBits(
 
 #define RtlCheckBit(BMH,BP) (((((PLONG)(BMH)->Buffer)[(BP) / 32]) >> ((BP) % 32)) & 0x1)
 
+#define PKTHREAD PVOID
+#define PKGUARDED_MUTEX PVOID
+#define PERESOURCE PVOID
+#define PFILE_OBJECT PVOID
+#define PKEVENT PVOID
+#define PWORK_QUEUE_ITEM PVOID
+#define EX_PUSH_LOCK PULONG_PTR
+
 #endif
 
 #ifndef ROUND_UP
@@ -75,26 +84,87 @@ RtlClearAllBits(
 #include "hivedata.h"
 #include "cmdata.h"
 
-#ifndef _CM_
-typedef struct _EREGISTRY_HIVE
+#if defined(_TYPEDEFS_HOST_H) || defined(__FREELDR_H)
+
+#define PCM_KEY_SECURITY_CACHE_ENTRY PVOID
+#define PCM_KEY_CONTROL_BLOCK PVOID
+#define CMP_SECURITY_HASH_LISTS                         64
+#define PCM_CELL_REMAP_BLOCK PVOID
+
+//
+// Use Count Log and Entry
+//
+typedef struct _CM_USE_COUNT_LOG_ENTRY
 {
-  HHIVE Hive;
-  LIST_ENTRY  HiveList;
-  UNICODE_STRING  HiveFileName;
-  UNICODE_STRING  LogFileName;
-  PCM_KEY_SECURITY  RootSecurityCell;
-  ULONG  Flags;
-  HANDLE  HiveHandle;
-  HANDLE  LogHandle;
-} EREGISTRY_HIVE, *PEREGISTRY_HIVE;
+    HCELL_INDEX Cell;
+    PVOID Stack[7];
+} CM_USE_COUNT_LOG_ENTRY, *PCM_USE_COUNT_LOG_ENTRY;
+
+typedef struct _CM_USE_COUNT_LOG
+{
+    USHORT Next;
+    USHORT Size;
+    CM_USE_COUNT_LOG_ENTRY Log[32];
+} CM_USE_COUNT_LOG, *PCM_USE_COUNT_LOG;
+
+//
+// Configuration Manager Hive Structure
+//
+typedef struct _CMHIVE
+{
+    HHIVE Hive;
+    HANDLE FileHandles[3];
+    LIST_ENTRY NotifyList;
+    LIST_ENTRY HiveList;
+    EX_PUSH_LOCK HiveLock;
+    PKTHREAD HiveLockOwner;
+    PKGUARDED_MUTEX ViewLock;
+    PKTHREAD ViewLockOwner;
+    EX_PUSH_LOCK WriterLock;
+    PKTHREAD WriterLockOwner;
+    PERESOURCE FlusherLock;
+    EX_PUSH_LOCK SecurityLock;
+    PKTHREAD HiveSecurityLockOwner;
+    LIST_ENTRY LRUViewListHead;
+    LIST_ENTRY PinViewListHead;
+    PFILE_OBJECT FileObject;
+    UNICODE_STRING FileFullPath;
+    UNICODE_STRING FileUserName;
+    USHORT MappedViews;
+    USHORT PinnedViews;
+    ULONG UseCount;
+    ULONG SecurityCount;
+    ULONG SecurityCacheSize;
+    LONG SecurityHitHint;
+    PCM_KEY_SECURITY_CACHE_ENTRY SecurityCache;
+    LIST_ENTRY SecurityHash[CMP_SECURITY_HASH_LISTS];
+    PKEVENT UnloadEvent;
+    PCM_KEY_CONTROL_BLOCK RootKcb;
+    BOOLEAN Frozen;
+    PWORK_QUEUE_ITEM UnloadWorkItem;
+    BOOLEAN GrowOnlyMode;
+    ULONG GrowOffset;
+    LIST_ENTRY KcbConvertListHead;
+    LIST_ENTRY KnodeConvertListHead;
+    PCM_CELL_REMAP_BLOCK CellRemapArray;
+    CM_USE_COUNT_LOG UseCountLog;
+    CM_USE_COUNT_LOG LockHiveLog;
+    ULONG Flags;
+    LIST_ENTRY TrustClassEntry;
+    ULONG FlushCount;
+    BOOLEAN HiveIsLoading;
+    PKTHREAD CreatorOwner;
+} CMHIVE, *PCMHIVE;
+
 #endif
+
 
 /*
  * Public functions.
  */
 NTSTATUS CMAPI
 HvInitialize(
-   PHHIVE RegistryHive,
+             PHHIVE RegistryHive,
    ULONG Operation,
    ULONG HiveType,
    ULONG HiveFlags,

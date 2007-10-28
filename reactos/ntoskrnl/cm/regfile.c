@@ -12,9 +12,7 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <internal/debug.h>
-
 #include "cm.h"
-#include "../config/cm.h"
 
 /* LOCAL MACROS *************************************************************/
 
@@ -29,7 +27,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
             IN PCUNICODE_STRING FileName,
             IN ULONG Flags)
 {
-    PEREGISTRY_HIVE Hive = NULL;
+    PCMHIVE Hive = NULL;
     NTSTATUS Status;
     BOOLEAN Allocate = TRUE;
 
@@ -61,14 +59,14 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 }
 
 VOID
-CmCloseHiveFiles(PEREGISTRY_HIVE RegistryHive)
+CmCloseHiveFiles(PCMHIVE RegistryHive)
 {
-    ZwClose(RegistryHive->HiveHandle);
-    ZwClose(RegistryHive->LogHandle);
+    ZwClose(RegistryHive->FileHandles[HFILE_TYPE_PRIMARY]);
+    ZwClose(RegistryHive->FileHandles[HFILE_TYPE_LOG]);
 }
 
 NTSTATUS
-CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
+CmiFlushRegistryHive(PCMHIVE RegistryHive)
 {
     BOOLEAN Success;
     NTSTATUS Status;
@@ -81,10 +79,10 @@ CmiFlushRegistryHive(PEREGISTRY_HIVE RegistryHive)
         return(STATUS_SUCCESS);
     }
 
-    Status = CmpOpenHiveFiles(&RegistryHive->HiveFileName,
+    Status = CmpOpenHiveFiles(&RegistryHive->FileFullPath,
                               L".LOG",
-                              &RegistryHive->HiveHandle,
-                              &RegistryHive->LogHandle,
+                              &RegistryHive->FileHandles[HFILE_TYPE_PRIMARY],
+                              &RegistryHive->FileHandles[HFILE_TYPE_LOG],
                               &Disposition,
                               &Disposition,
                               FALSE,
@@ -255,7 +253,7 @@ CmiGetMaxValueDataLength(PHHIVE Hive,
 }
 
 NTSTATUS
-CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
+CmiScanKeyForValue(IN PCMHIVE RegistryHive,
                    IN PCM_KEY_NODE KeyCell,
                    IN PUNICODE_STRING ValueName,
                    OUT PCM_KEY_VALUE *ValueCell,
@@ -278,7 +276,7 @@ CmiScanKeyForValue(IN PEREGISTRY_HIVE RegistryHive,
 }
 
 NTSTATUS
-CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
+CmiScanForSubKey(IN PCMHIVE RegistryHive,
                  IN PCM_KEY_NODE KeyCell,
                  OUT PCM_KEY_NODE *SubKeyCell,
                  OUT HCELL_INDEX *BlockOffset,

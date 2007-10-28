@@ -41,7 +41,7 @@ typedef struct _REG_KEY
   /* Information on hard disk structure */
   HCELL_INDEX KeyCellOffset;
   PCM_KEY_NODE KeyCell;
-  PEREGISTRY_HIVE RegistryHive;
+  PCMHIVE RegistryHive;
 
   /* Used when linking to another key */
   struct _REG_KEY* LinkedKey;
@@ -50,11 +50,11 @@ typedef struct _REG_KEY
 #define HKEY_TO_MEMKEY(hKey) ((MEMKEY)(hKey))
 #define MEMKEY_TO_HKEY(memKey) ((HKEY)(memKey))
 
-extern EREGISTRY_HIVE DefaultHive;  /* \Registry\User\.DEFAULT */
-extern EREGISTRY_HIVE SamHive;      /* \Registry\Machine\SAM */
-extern EREGISTRY_HIVE SecurityHive; /* \Registry\Machine\SECURITY */
-extern EREGISTRY_HIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
-extern EREGISTRY_HIVE SystemHive;   /* \Registry\Machine\SYSTEM */
+extern CMHIVE DefaultHive;  /* \Registry\User\.DEFAULT */
+extern CMHIVE SamHive;      /* \Registry\Machine\SAM */
+extern CMHIVE SecurityHive; /* \Registry\Machine\SECURITY */
+extern CMHIVE SoftwareHive; /* \Registry\Machine\SOFTWARE */
+extern CMHIVE SystemHive;   /* \Registry\Machine\SYSTEM */
 
 #define ERROR_SUCCESS                    0L
 #define ERROR_UNSUCCESSFUL               1L
@@ -125,5 +125,6 @@ RegInitializeRegistry(VOID);
 #endif /* __REGISTRY_H__ */
 
 /* EOF */
+
 
 

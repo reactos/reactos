@@ -267,7 +267,7 @@ CmpDoCreate(IN PHHIVE Hive,
     if (!Class) Class = &LocalClass;
 
     /* Acquire the flusher lock */
-    //ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
+    ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
 
     /* Check if the parent is being deleted */
     #define KO_MARKED_FOR_DELETE 0x00000001
@@ -397,6 +397,6 @@ CmpDoCreate(IN PHHIVE Hive,
 
 Exit:
     /* Release the flusher lock and return status */
-    //ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
+    ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
 }

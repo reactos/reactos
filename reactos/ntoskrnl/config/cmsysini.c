@@ -32,7 +32,7 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     HANDLE FileHandle = NULL, LogHandle = NULL;
     NTSTATUS Status;
     ULONG Operation, FileType;
-    PEREGISTRY_HIVE NewHive;
+    PCMHIVE NewHive;
     PAGED_CODE();
 
     /* Assume failure */
@@ -110,24 +110,24 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
     }
 
     /* Success, return hive */
-    *Hive = (PCMHIVE)NewHive;
+    *Hive = NewHive;
 
     /* ROS: Init root key cell and prepare the hive */
     if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
     CmPrepareHive(&NewHive->Hive);
 
     /* Duplicate the hive name */
-    NewHive->HiveFileName.Buffer = ExAllocatePoolWithTag(PagedPool,
+    NewHive->FileFullPath.Buffer = ExAllocatePoolWithTag(PagedPool,
                                                          HiveName->Length,
                                                          TAG_CM);
-    if (NewHive->HiveFileName.Buffer)
+    if (NewHive->FileFullPath.Buffer)
     {
         /* Copy the string */
-        RtlCopyMemory(NewHive->HiveFileName.Buffer,
+        RtlCopyMemory(NewHive->FileFullPath.Buffer,
                       HiveName->Buffer,
                       HiveName->Length);
-        NewHive->HiveFileName.Length = HiveName->Length;
-        NewHive->HiveFileName.MaximumLength = HiveName->MaximumLength;
+        NewHive->FileFullPath.Length = HiveName->Length;
+        NewHive->FileFullPath.MaximumLength = HiveName->MaximumLength;
     }
 
     /* ROS: Close the hive files */
@@ -434,7 +434,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     BOOLEAN Allocate;
     UNICODE_STRING KeyName;
-    PEREGISTRY_HIVE SystemHive = NULL;
+    PCMHIVE SystemHive = NULL;
     UNICODE_STRING HiveName = RTL_CONSTANT_STRING(L"SYSTEM");
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
@@ -479,7 +479,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         CmPrepareHive(&SystemHive->Hive);
 
         /* Set the hive filename */
-        RtlCreateUnicodeString(&SystemHive->HiveFileName, SYSTEM_REG_FILE);
+        RtlCreateUnicodeString(&SystemHive->FileFullPath, SYSTEM_REG_FILE);
 
         /* We imported, no need to create a new hive */
         Allocate = FALSE;
@@ -756,7 +756,7 @@ CmInitSystem1(VOID)
     LARGE_INTEGER DueTime;
     HANDLE ThreadHandle;
     CLIENT_ID ThreadId;
-    PEREGISTRY_HIVE HardwareHive;
+    PCMHIVE HardwareHive;
     PVOID BaseAddress;
     ULONG Length;
     PSECURITY_DESCRIPTOR SecurityDescriptor;

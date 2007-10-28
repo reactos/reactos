@@ -412,7 +412,7 @@ NtFlushKey(IN HANDLE KeyHandle)
 {
     NTSTATUS Status;
     PKEY_OBJECT  KeyObject;
-    PEREGISTRY_HIVE  RegistryHive;
+    PCMHIVE  RegistryHive;
     KPROCESSOR_MODE  PreviousMode;
 
     PAGED_CODE();

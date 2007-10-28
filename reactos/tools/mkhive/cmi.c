@@ -67,8 +67,8 @@ CmpFileWrite(
 	IN PVOID Buffer,
 	IN SIZE_T BufferLength)
 {
-	PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-	FILE *File = CmHive->HiveHandle;
+	PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+	FILE *File = CmHive->FileHandles[HFILE_TYPE_PRIMARY];
 	if (0 != fseek (File, *FileOffset, SEEK_SET))
 		return FALSE;
 	return BufferLength == fwrite (Buffer, 1, BufferLength, File);
@@ -94,20 +94,20 @@ CmpFileFlush(
     PLARGE_INTEGER FileOffset,
     ULONG Length)
 {
-	PEREGISTRY_HIVE CmHive = (PEREGISTRY_HIVE)RegistryHive;
-	FILE *File = CmHive->HiveHandle;
+	PCMHIVE CmHive = (PCMHIVE)RegistryHive;
+	FILE *File = CmHive->FileHandles[HFILE_TYPE_PRIMARY];
 	return 0 == fflush (File);
 }
 
 NTSTATUS
 CmiInitializeTempHive(
-	IN OUT PEREGISTRY_HIVE Hive)
+	IN OUT PCMHIVE Hive)
 {
 	NTSTATUS Status;
 
 	RtlZeroMemory (
 		Hive,
-		sizeof(EREGISTRY_HIVE));
+		sizeof(CMHIVE));
 
 	DPRINT("Hive 0x%p\n", Hive);
 
@@ -149,7 +149,7 @@ CmiInitializeTempHive(
 
 static NTSTATUS
 CmiAddKeyToHashTable(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN OUT PCM_KEY_FAST_INDEX HashCell,
 	IN PCM_KEY_NODE KeyCell,
 	IN HSTORAGE_TYPE StorageType,
@@ -189,7 +189,7 @@ CmiAddKeyToHashTable(
 
 static NTSTATUS
 CmiAllocateHashTableCell (
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	OUT PCM_KEY_FAST_INDEX *HashBlock,
 	OUT HCELL_INDEX *HBOffset,
 	IN USHORT SubKeyCount,
@@ -223,7 +223,7 @@ CmiAllocateHashTableCell (
 
 NTSTATUS
 CmiAddSubKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE ParentKeyCell,
 	IN HCELL_INDEX ParentKeyCellOffset,
 	IN PCUNICODE_STRING SubKeyName,
@@ -513,7 +513,7 @@ CmiCompareKeyNamesI(
 
 NTSTATUS
 CmiScanForSubKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN PCUNICODE_STRING SubKeyName,
 	IN ULONG Attributes,
@@ -611,7 +611,7 @@ CmiGetPackedNameLength(
 
 static NTSTATUS
 CmiAllocateValueCell(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	OUT PCM_KEY_VALUE *ValueCell,
 	OUT HCELL_INDEX *VBOffset,
 	IN PCUNICODE_STRING ValueName,
@@ -666,7 +666,7 @@ CmiAllocateValueCell(
 
 NTSTATUS
 CmiAddValueKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN HCELL_INDEX KeyCellOffset,
 	IN PCUNICODE_STRING ValueName,
@@ -780,7 +780,7 @@ CmiComparePackedNames(
 
 NTSTATUS
 CmiScanForValueKey(
-	IN PEREGISTRY_HIVE RegistryHive,
+	IN PCMHIVE RegistryHive,
 	IN PCM_KEY_NODE KeyCell,
 	IN PCUNICODE_STRING ValueName,
 	OUT PCM_KEY_VALUE *pValueCell,

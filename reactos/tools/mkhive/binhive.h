@@ -29,7 +29,7 @@
 BOOL
 ExportBinaryHive(
 	IN PCSTR FileName,
-	IN PEREGISTRY_HIVE Hive);
+	IN PCMHIVE Hive);
 
 #endif /* __BINHIVE_H__ */
 

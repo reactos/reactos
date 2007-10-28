@@ -710,13 +710,13 @@ RegImportBinaryHive(PCHAR ChunkBase,
   FRLDRHKEY SystemKey;
   ULONG i;
   LONG Error;
-  PEREGISTRY_HIVE CmHive;
+  PCMHIVE CmHive;
   PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "RegImportBinaryHive(%x, %u) called\n",ChunkBase,ChunkSize));
 
-  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE, 0);
+  CmHive = CmpAllocate(sizeof(CMHIVE), TRUE, 0);
   Status = HvInitialize (&CmHive->Hive,
                          HINIT_FLAT,
                          0,
@@ -818,13 +818,13 @@ RegExportBinaryHive(PCWSTR KeyName,
 		    PCHAR ChunkBase,
 		    ULONG* ChunkSize)
 {
-  PEREGISTRY_HIVE CmHive;
+  PCMHIVE CmHive;
   PHHIVE Hive;
   NTSTATUS Status;
 
   DbgPrint((DPRINT_REGISTRY, "Creating binary hardware hive\n"));
 
-  CmHive = CmpAllocate(sizeof(EREGISTRY_HIVE), TRUE, 0);
+  CmHive = CmpAllocate(sizeof(CMHIVE), TRUE, 0);
   Status = HvInitialize (&CmHive->Hive,
                          HINIT_CREATE,
                          0,

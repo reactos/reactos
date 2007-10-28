@@ -1052,8 +1052,8 @@ CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
     
     /* Make sure we're file-backed */
-    if (!(IsNoFileHive((PEREGISTRY_HIVE)Kcb->KeyHive)) ||
-        !(IsNoFileHive((PEREGISTRY_HIVE)Kcb->ParentKcb->KeyHive)))
+    if (!(IsNoFileHive((PCMHIVE)Kcb->KeyHive)) ||
+        !(IsNoFileHive((PCMHIVE)Kcb->ParentKcb->KeyHive)))
     {
         /* Sync up the hives */
         CmiSyncHives();
