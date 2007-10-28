@@ -141,6 +141,9 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
         /* Set the current MP Master KPRCB to the Boot PRCB */
         Prcb->MultiThreadSetMaster = Prcb;
 
+        /* Lower to APC_LEVEL */
+        KeLowerIrql(APC_LEVEL);
+
         /* Initialize portable parts of the OS */
         KiInitSystem();
 
