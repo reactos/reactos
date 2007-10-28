@@ -333,7 +333,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     RtlCreateUnicodeString(&KeyObject->Name, Start);
 
     KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;
-    KeyObject->KeyCell->SecurityKeyOffset = KeyObject->ParentKey->KeyCell->SecurityKeyOffset;
+    KeyObject->KeyCell->Security = KeyObject->ParentKey->KeyCell->Security;
     KeyObject->ValueCache.ValueList = KeyObject->KeyCell->ValueList.List;
     KeyObject->ValueCache.Count = KeyObject->KeyCell->ValueList.Count;
 

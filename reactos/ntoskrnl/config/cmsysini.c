@@ -607,7 +607,7 @@ CmpCreateRootNode(IN PHHIVE Hive,
     if (!KeyCell) return FALSE;
 
     /* Setup the cell */
-    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;;
+    KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
     KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
     KeQuerySystemTime(&SystemTime);
     KeyCell->LastWriteTime = SystemTime;

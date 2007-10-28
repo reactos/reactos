@@ -62,10 +62,6 @@ RtlClearAllBits(
 
 #endif
 
-#include <wchar.h>
-#include "hivedata.h"
-#include "cmdata.h"
-
 #ifndef ROUND_UP
 #define ROUND_UP(a,b)        ((((a)+(b)-1)/(b))*(b))
 #define ROUND_DOWN(a,b)      (((a)/(b))*(b))
@@ -75,112 +71,9 @@ RtlClearAllBits(
 
 #define CMAPI NTAPI
 
-struct _HHIVE;
-
-typedef struct _CELL_DATA* (CMAPI *PGET_CELL_ROUTINE)(
-   struct _HHIVE *Hive,
-   HCELL_INDEX Cell);
-
-typedef VOID (CMAPI *PRELEASE_CELL_ROUTINE)(
-   struct _HHIVE *Hive,
-   HCELL_INDEX Cell);
-
-typedef PVOID (CMAPI *PALLOCATE_ROUTINE)(
-   SIZE_T Size,
-   BOOLEAN Paged,
-   ULONG Tag);
-
-typedef VOID (CMAPI *PFREE_ROUTINE)(
-   PVOID Ptr,
-   ULONG Quota);
-
-typedef BOOLEAN (CMAPI *PFILE_READ_ROUTINE)(
-   struct _HHIVE *RegistryHive,
-   ULONG FileType,
-   PULONG FileOffset,
-   PVOID Buffer,
-   SIZE_T BufferLength);
-
-typedef BOOLEAN (CMAPI *PFILE_WRITE_ROUTINE)(
-   struct _HHIVE *RegistryHive,
-   ULONG FileType,
-   PULONG FileOffset,
-   PVOID Buffer,
-   SIZE_T BufferLength);
-
-typedef BOOLEAN (CMAPI *PFILE_SET_SIZE_ROUTINE)(
-   struct _HHIVE *RegistryHive,
-   ULONG FileType,
-   ULONG FileSize,
-   ULONG OldfileSize);
-
-typedef BOOLEAN (CMAPI *PFILE_FLUSH_ROUTINE)(
-   struct _HHIVE *RegistryHive,
-   ULONG FileType,
-   PLARGE_INTEGER FileOffset,
-   ULONG Length);
-
-typedef struct _HMAP_ENTRY
-{
-    ULONG_PTR BlockAddress;
-    ULONG_PTR BinAddress;
-    struct _CM_VIEW_OF_FILE *CmView;
-    ULONG MemAlloc;
-} HMAP_ENTRY, *PHMAP_ENTRY;
-
-typedef struct _HMAP_TABLE
-{
-    HMAP_ENTRY Table[512];
-} HMAP_TABLE, *PHMAP_TABLE;
-
-typedef struct _HMAP_DIRECTORY
-{
-    PHMAP_TABLE Directory[2048];
-} HMAP_DIRECTORY, *PHMAP_DIRECTORY;
-
-typedef struct _DUAL
-{
-    ULONG Length;
-    PHMAP_DIRECTORY Map;
-    PHMAP_ENTRY BlockList; // PHMAP_TABLE SmallDir;
-    ULONG Guard;
-    HCELL_INDEX FreeDisplay[24]; //FREE_DISPLAY FreeDisplay[24];
-    ULONG FreeSummary;
-    LIST_ENTRY FreeBins;
-} DUAL, *PDUAL;
-
-typedef struct _HHIVE
-{
-    ULONG Signature;
-    PGET_CELL_ROUTINE GetCellRoutine;
-    PRELEASE_CELL_ROUTINE ReleaseCellRoutine;
-    PALLOCATE_ROUTINE Allocate;
-    PFREE_ROUTINE Free;
-    PFILE_READ_ROUTINE FileRead;
-    PFILE_WRITE_ROUTINE FileWrite;
-    PFILE_SET_SIZE_ROUTINE FileSetSize;
-    PFILE_FLUSH_ROUTINE FileFlush;
-    PHBASE_BLOCK BaseBlock;
-    RTL_BITMAP DirtyVector;
-    ULONG DirtyCount;
-    ULONG DirtyAlloc;
-    ULONG BaseBlockAlloc;
-    ULONG Cluster;
-    BOOLEAN Flat;
-    BOOLEAN ReadOnly;
-    BOOLEAN Log;
-    BOOLEAN DirtyFlag;
-    ULONG HvBinHeadersUse;
-    ULONG HvFreeCellsUse;
-    ULONG HvUsedcellsUse;
-    ULONG CmUsedCellsUse;
-    ULONG HiveFlags;
-    ULONG LogSize;
-    ULONG RefreshCount;
-    ULONG StorageTypeCount;
-    ULONG Version;
-    DUAL Storage[HTYPE_COUNT];
-} HHIVE, *PHHIVE;
+#include <wchar.h>
+#include "hivedata.h"
+#include "cmdata.h"
 
 #ifndef _CM_
 typedef struct _EREGISTRY_HIVE

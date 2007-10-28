@@ -432,7 +432,7 @@ CmpParseKey(IN PVOID ParsedObject,
             return(STATUS_UNSUCCESSFUL);
         }
 
-        if ((SubKeyCell->Flags & REG_KEY_LINK_CELL) &&
+        if ((SubKeyCell->Flags & KEY_SYM_LINK) &&
             !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
         {
             RtlInitUnicodeString(&LinkPath, NULL);
@@ -526,7 +526,7 @@ CmpParseKey(IN PVOID ParsedObject,
     }
     else
     {
-        if ((FoundObject->KeyCell->Flags & REG_KEY_LINK_CELL) &&
+        if ((FoundObject->KeyCell->Flags & KEY_SYM_LINK) &&
             !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
         {
             DPRINT("Found link\n");
@@ -832,7 +832,7 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
         return(Status);
     }
 
-    if (ValueCell->DataType != REG_LINK)
+    if (ValueCell->Type != REG_LINK)
     {
         DPRINT1("Type != REG_LINK\n!");
         return(STATUS_UNSUCCESSFUL);
@@ -841,17 +841,17 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
     if (TargetPath->Buffer == NULL && TargetPath->MaximumLength == 0)
     {
         TargetPath->Length = 0;
-        TargetPath->MaximumLength = (USHORT)ValueCell->DataSize + sizeof(WCHAR);
+        TargetPath->MaximumLength = (USHORT)ValueCell->DataLength + sizeof(WCHAR);
         TargetPath->Buffer = ExAllocatePool(NonPagedPool,
                                             TargetPath->MaximumLength);
     }
 
     TargetPath->Length = min((USHORT)TargetPath->MaximumLength - sizeof(WCHAR),
-                         (USHORT)ValueCell->DataSize);
+                         (USHORT)ValueCell->DataLength);
 
-    if (ValueCell->DataSize > 0)
+    if (ValueCell->DataLength > 0)
     {
-        DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->DataOffset);
+        DataCell = HvGetCell (&RegistryHive->Hive, ValueCell->Data);
         RtlCopyMemory(TargetPath->Buffer,
                       DataCell,
                       TargetPath->Length);
@@ -860,7 +860,7 @@ CmiGetLinkTarget(PEREGISTRY_HIVE RegistryHive,
     else
     {
         RtlCopyMemory(TargetPath->Buffer,
-                      &ValueCell->DataOffset,
+                      &ValueCell->Data,
                       TargetPath->Length);
         TargetPath->Buffer[TargetPath->Length / sizeof(WCHAR)] = 0;
     }

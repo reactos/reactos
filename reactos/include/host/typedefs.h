@@ -51,6 +51,8 @@
  * and this line has to be removed */
 #define PAGE_SIZE 4096
 
+#define ANYSIZE_ARRAY 1
+
 typedef void VOID, *PVOID, *HANDLE;
 typedef HANDLE HKEY, *PHKEY;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE;

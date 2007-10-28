@@ -37,6 +37,9 @@
 #define NDEBUG
 #include "mkhive.h"
 
+#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
+#define REG_DATA_IN_OFFSET                 0x80000000
+
 static EREGISTRY_HIVE RootHive;
 static MEMKEY RootKey;
 EREGISTRY_HIVE DefaultHive;  /* \Registry\User\.DEFAULT */
@@ -362,10 +365,10 @@ RegSetValueExW(
 		return ERROR_UNSUCCESSFUL;
 
 	/* Get size of the allocated cellule (if any) */
-	if (!(ValueCell->DataSize & REG_DATA_IN_OFFSET) &&
-		(ValueCell->DataSize & REG_DATA_SIZE_MASK) != 0)
+	if (!(ValueCell->DataLength & REG_DATA_IN_OFFSET) &&
+		(ValueCell->DataLength & REG_DATA_SIZE_MASK) != 0)
 	{
-		DataCell = HvGetCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+		DataCell = HvGetCell(&Key->RegistryHive->Hive, ValueCell->Data);
 		if (!DataCell)
 			return ERROR_UNSUCCESSFUL;
 		DataCellSize = -HvGetCellSize(&Key->RegistryHive->Hive, DataCell);
@@ -379,13 +382,13 @@ RegSetValueExW(
 	if (cbData <= sizeof(HCELL_INDEX))
 	{
 		/* If data size <= sizeof(HCELL_INDEX) then store data in the data offset */
-		DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+		DPRINT("ValueCell->DataLength %lu\n", ValueCell->DataLength);
 		if (DataCell)
-			HvFreeCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+			HvFreeCell(&Key->RegistryHive->Hive, ValueCell->Data);
 
-		RtlCopyMemory(&ValueCell->DataOffset, lpData, cbData);
-		ValueCell->DataSize = (ULONG)(cbData | REG_DATA_IN_OFFSET);
-		ValueCell->DataType = dwType;
+		RtlCopyMemory(&ValueCell->Data, lpData, cbData);
+		ValueCell->DataLength = (ULONG)(cbData | REG_DATA_IN_OFFSET);
+		ValueCell->Type = dwType;
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 	else
@@ -396,7 +399,7 @@ RegSetValueExW(
 			 * data block and allocate a new one. */
 			HCELL_INDEX NewOffset;
 
-			DPRINT("ValueCell->DataSize %lu\n", ValueCell->DataSize);
+			DPRINT("ValueCell->DataLength %lu\n", ValueCell->DataLength);
 
 			NewOffset = HvAllocateCell(&Key->RegistryHive->Hive, cbData, Stable, HCELL_NIL);
 			if (NewOffset == HCELL_NIL)
@@ -406,17 +409,17 @@ RegSetValueExW(
 			}
 
 			if (DataCell)
-				HvFreeCell(&Key->RegistryHive->Hive, ValueCell->DataOffset);
+				HvFreeCell(&Key->RegistryHive->Hive, ValueCell->Data);
 
-			ValueCell->DataOffset = NewOffset;
+			ValueCell->Data = NewOffset;
 			DataCell = (PVOID)HvGetCell(&Key->RegistryHive->Hive, NewOffset);
 		}
 
 		/* Copy new contents to cellule */
 		RtlCopyMemory(DataCell, lpData, cbData);
-		ValueCell->DataSize = (ULONG)(cbData & REG_DATA_SIZE_MASK);
-		ValueCell->DataType = dwType;
-		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->DataOffset, FALSE);
+		ValueCell->DataLength = (ULONG)(cbData & REG_DATA_SIZE_MASK);
+		ValueCell->Type = dwType;
+		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCell->Data, FALSE);
 		HvMarkCellDirty(&Key->RegistryHive->Hive, ValueCellOffset, FALSE);
 	}
 

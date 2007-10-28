@@ -19,6 +19,8 @@
 /* LOCAL MACROS *************************************************************/
 
 #define ABS_VALUE(V) (((V) < 0) ? -(V) : (V))
+#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
+#define REG_DATA_IN_OFFSET                 0x80000000
 
 /* FUNCTIONS ****************************************************************/
 
@@ -105,10 +107,10 @@ ULONG
 CmiGetMaxNameLength(PHHIVE Hive,
                     PCM_KEY_NODE KeyCell)
 {
-    PHASH_TABLE_CELL HashBlock;
+    PCM_KEY_FAST_INDEX HashBlock;
     PCM_KEY_NODE CurSubKeyCell;
     ULONG MaxName;
-    ULONG NameSize;
+    ULONG NameLength;
     ULONG i;
     ULONG Storage;
 
@@ -117,18 +119,18 @@ CmiGetMaxNameLength(PHHIVE Hive,
     {
         if (KeyCell->SubKeyLists[Storage] != HCELL_NIL)
         {
-            HashBlock = (PHASH_TABLE_CELL)HvGetCell (Hive, KeyCell->SubKeyLists[Storage]);
-            ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
+            HashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (Hive, KeyCell->SubKeyLists[Storage]);
+            ASSERT(HashBlock->Signature == CM_KEY_FAST_LEAF);
 
             for (i = 0; i < KeyCell->SubKeyCounts[Storage]; i++)
             {
                 CurSubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive,
-                                           HashBlock->Table[i].KeyOffset);
-                NameSize = CurSubKeyCell->NameSize;
-                if (CurSubKeyCell->Flags & REG_KEY_NAME_PACKED)
-                    NameSize *= sizeof(WCHAR);
-                if (NameSize > MaxName)
-                    MaxName = NameSize;
+                                           HashBlock->List[i].Cell);
+                NameLength = CurSubKeyCell->NameLength;
+                if (CurSubKeyCell->Flags & KEY_COMP_NAME)
+                    NameLength *= sizeof(WCHAR);
+                if (NameLength > MaxName)
+                    MaxName = NameLength;
             }
         }
     }
@@ -142,7 +144,7 @@ ULONG
 CmiGetMaxClassLength(PHHIVE Hive,
                      PCM_KEY_NODE KeyCell)
 {
-    PHASH_TABLE_CELL HashBlock;
+    PCM_KEY_FAST_INDEX HashBlock;
     PCM_KEY_NODE CurSubKeyCell;
     ULONG MaxClass;
     ULONG i;
@@ -153,18 +155,18 @@ CmiGetMaxClassLength(PHHIVE Hive,
     {
         if (KeyCell->SubKeyLists[Storage] != HCELL_NIL)
         {
-            HashBlock = (PHASH_TABLE_CELL)HvGetCell (Hive,
+            HashBlock = (PCM_KEY_FAST_INDEX)HvGetCell (Hive,
                                    KeyCell->SubKeyLists[Storage]);
-            ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
+            ASSERT(HashBlock->Signature == CM_KEY_FAST_LEAF);
 
             for (i = 0; i < KeyCell->SubKeyCounts[Storage]; i++)
             {
                 CurSubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive,
-                                           HashBlock->Table[i].KeyOffset);
+                                           HashBlock->List[i].Cell);
 
-                if (MaxClass < CurSubKeyCell->ClassSize)
+                if (MaxClass < CurSubKeyCell->ClassLength)
                 {
-                    MaxClass = CurSubKeyCell->ClassSize;
+                    MaxClass = CurSubKeyCell->ClassLength;
                 }
             }
         }
@@ -205,8 +207,8 @@ CmiGetMaxValueNameLength(PHHIVE Hive,
 
         if (CurValueCell != NULL)
         {
-            Size = CurValueCell->NameSize;
-            if (CurValueCell->Flags & REG_VALUE_NAME_PACKED)
+            Size = CurValueCell->NameLength;
+            if (CurValueCell->Flags & VALUE_COMP_NAME)
             {
                 Size *= sizeof(WCHAR);
             }
@@ -243,9 +245,9 @@ CmiGetMaxValueDataLength(PHHIVE Hive,
     {
         CurValueCell = (PCM_KEY_VALUE)HvGetCell (Hive,
                                   ValueListCell->ValueOffset[i]);
-        if ((MaxValueData < (LONG)(CurValueCell->DataSize & REG_DATA_SIZE_MASK)))
+        if ((MaxValueData < (LONG)(CurValueCell->DataLength & REG_DATA_SIZE_MASK)))
         {
-            MaxValueData = CurValueCell->DataSize & REG_DATA_SIZE_MASK;
+            MaxValueData = CurValueCell->DataLength & REG_DATA_SIZE_MASK;
         }
     }
 
@@ -296,254 +298,6 @@ CmiScanForSubKey(IN PEREGISTRY_HIVE RegistryHive,
     /* Otherwise, get the cell data back too */
     *BlockOffset = CellIndex;
     *SubKeyCell = (PCM_KEY_NODE)HvGetCell(&RegistryHive->Hive, CellIndex);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-CmiAddSubKey(PEREGISTRY_HIVE RegistryHive,
-             PKEY_OBJECT ParentKey,
-             PKEY_OBJECT SubKey,
-             PUNICODE_STRING SubKeyName,
-             ULONG TitleIndex,
-             PUNICODE_STRING Class,
-             ULONG CreateOptions)
-{
-    PHASH_TABLE_CELL HashBlock;
-    HCELL_INDEX NKBOffset;
-    PCM_KEY_NODE NewKeyCell;
-    ULONG NewBlockSize;
-    PCM_KEY_NODE ParentKeyCell;
-    PVOID ClassCell;
-    NTSTATUS Status;
-    USHORT NameSize;
-    PWSTR NamePtr;
-    BOOLEAN Packable;
-    HSTORAGE_TYPE Storage;
-    ULONG i;
-
-    ParentKeyCell = ParentKey->KeyCell;
-
-    VERIFY_KEY_CELL(ParentKeyCell);
-
-    /* Skip leading backslash */
-    if (SubKeyName->Buffer[0] == L'\\')
-    {
-        NamePtr = &SubKeyName->Buffer[1];
-        NameSize = SubKeyName->Length - sizeof(WCHAR);
-    }
-    else
-    {
-        NamePtr = SubKeyName->Buffer;
-        NameSize = SubKeyName->Length;
-    }
-
-    /* Check whether key name can be packed */
-    Packable = TRUE;
-    for (i = 0; i < NameSize / sizeof(WCHAR); i++)
-    {
-        if (NamePtr[i] & 0xFF00)
-        {
-            Packable = FALSE;
-            break;
-        }
-    }
-
-    /* Adjust name size */
-    if (Packable)
-    {
-        NameSize = NameSize / sizeof(WCHAR);
-    }
-
-    DPRINT("Key %S  Length %lu  %s\n", NamePtr, NameSize, (Packable)?"True":"False");
-
-    Status = STATUS_SUCCESS;
-
-    Storage = (CreateOptions & REG_OPTION_VOLATILE) ? Volatile : Stable;
-    NewBlockSize = sizeof(CM_KEY_NODE) + NameSize;
-    NKBOffset = HvAllocateCell (&RegistryHive->Hive, NewBlockSize, Storage, HCELL_NIL);
-    if (NKBOffset == HCELL_NIL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-    else
-    {
-        NewKeyCell = (PCM_KEY_NODE)HvGetCell (&RegistryHive->Hive, NKBOffset);
-        NewKeyCell->Id = REG_KEY_CELL_ID;
-        if (CreateOptions & REG_OPTION_VOLATILE)
-        {
-            NewKeyCell->Flags = REG_KEY_VOLATILE_CELL;
-        }
-        else
-        {
-            NewKeyCell->Flags = 0;
-        }
-        KeQuerySystemTime(&NewKeyCell->LastWriteTime);
-        NewKeyCell->Parent = HCELL_NIL;
-        NewKeyCell->SubKeyCounts[Stable] = 0;
-        NewKeyCell->SubKeyCounts[Volatile] = 0;
-        NewKeyCell->SubKeyLists[Stable] = HCELL_NIL;
-        NewKeyCell->SubKeyLists[Volatile] = HCELL_NIL;
-        NewKeyCell->ValueList.Count = 0;
-        NewKeyCell->ValueList.List = HCELL_NIL;
-        NewKeyCell->SecurityKeyOffset = HCELL_NIL;
-        NewKeyCell->ClassNameOffset = HCELL_NIL;
-
-        /* Pack the key name */
-        NewKeyCell->NameSize = NameSize;
-        if (Packable)
-        {
-            NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
-            for (i = 0; i < NameSize; i++)
-            {
-                NewKeyCell->Name[i] = (CHAR)(NamePtr[i] & 0x00FF);
-            }
-        }
-        else
-        {
-            RtlCopyMemory(NewKeyCell->Name,
-                          NamePtr,
-                          NameSize);
-        }
-
-        VERIFY_KEY_CELL(NewKeyCell);
-
-        if (Class != NULL && Class->Length)
-        {
-            NewKeyCell->ClassSize = Class->Length;
-            NewKeyCell->ClassNameOffset = HvAllocateCell(
-                &RegistryHive->Hive, NewKeyCell->ClassSize, Stable, HCELL_NIL);
-            ASSERT(NewKeyCell->ClassNameOffset != HCELL_NIL); /* FIXME */
-
-            ClassCell = (PVOID)HvGetCell(&RegistryHive->Hive, NewKeyCell->ClassNameOffset);
-            RtlCopyMemory (ClassCell,
-                           Class->Buffer,
-                           Class->Length);
-        }
-    }
-
-    if (!NT_SUCCESS(Status))
-    {
-      return Status;
-    }
-
-    SubKey->KeyCell = NewKeyCell;
-    SubKey->KeyCellOffset = NKBOffset;
-
-    if (ParentKeyCell->SubKeyLists[Storage] == HCELL_NIL)
-    {
-        Status = CmiAllocateHashTableCell (RegistryHive,
-                                           &HashBlock,
-                                           &ParentKeyCell->SubKeyLists[Storage],
-                                           REG_INIT_HASH_TABLE_SIZE,
-                                           Storage);
-        if (!NT_SUCCESS(Status))
-        {
-            return(Status);
-        }
-    }
-    else
-    {
-        HashBlock = (PHASH_TABLE_CELL)HvGetCell (&RegistryHive->Hive,
-                               ParentKeyCell->SubKeyLists[Storage]);
-        ASSERT(HashBlock->Id == REG_HASH_TABLE_CELL_ID);
-
-        if (((ParentKeyCell->SubKeyCounts[Storage] + 1) >= HashBlock->HashTableSize))
-        {
-            PHASH_TABLE_CELL NewHashBlock;
-            HCELL_INDEX HTOffset;
-
-            /* Reallocate the hash table cell */
-            Status = CmiAllocateHashTableCell (RegistryHive,
-                                               &NewHashBlock,
-                                               &HTOffset,
-                                               HashBlock->HashTableSize +
-                                               REG_EXTEND_HASH_TABLE_SIZE,
-                                               Storage);
-            if (!NT_SUCCESS(Status))
-            {
-                return Status;
-            }
-
-            RtlZeroMemory(&NewHashBlock->Table[0],
-                sizeof(NewHashBlock->Table[0]) * NewHashBlock->HashTableSize);
-            RtlCopyMemory(&NewHashBlock->Table[0],
-                &HashBlock->Table[0],
-                sizeof(NewHashBlock->Table[0]) * HashBlock->HashTableSize);
-            HvFreeCell (&RegistryHive->Hive, ParentKeyCell->SubKeyLists[Storage]);
-                ParentKeyCell->SubKeyLists[Storage] = HTOffset;
-            HashBlock = NewHashBlock;
-        }
-    }
-
-    Status = CmiAddKeyToHashTable(RegistryHive,
-                                  HashBlock,
-                                  ParentKeyCell,
-                                  Storage,
-                                  NewKeyCell,
-                                  NKBOffset);
-    if (NT_SUCCESS(Status))
-    {
-        ParentKeyCell->SubKeyCounts[Storage]++;
-    }
-
-    KeQuerySystemTime (&ParentKeyCell->LastWriteTime);
-    HvMarkCellDirty (&RegistryHive->Hive, ParentKey->KeyCellOffset, FALSE);
-
-    return(Status);
-}
-
-NTSTATUS
-CmiAllocateHashTableCell (IN PEREGISTRY_HIVE RegistryHive,
-                          OUT PHASH_TABLE_CELL *HashBlock,
-                          OUT HCELL_INDEX *HBOffset,
-                          IN ULONG SubKeyCount,
-                          IN HSTORAGE_TYPE Storage)
-{
-    PHASH_TABLE_CELL NewHashBlock;
-    ULONG NewHashSize;
-    NTSTATUS Status;
-
-    Status = STATUS_SUCCESS;
-    *HashBlock = NULL;
-    NewHashSize = sizeof(HASH_TABLE_CELL) +
-        (SubKeyCount * sizeof(HASH_RECORD));
-    *HBOffset = HvAllocateCell (&RegistryHive->Hive, NewHashSize, Storage, HCELL_NIL);
-
-    if (*HBOffset == HCELL_NIL)
-    {
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-    }
-    else
-    {
-        ASSERT(SubKeyCount <= 0xffff); /* should really be USHORT_MAX or similar */
-        NewHashBlock = (PHASH_TABLE_CELL)HvGetCell (&RegistryHive->Hive, *HBOffset);
-        NewHashBlock->Id = REG_HASH_TABLE_CELL_ID;
-        NewHashBlock->HashTableSize = (USHORT)SubKeyCount;
-        *HashBlock = NewHashBlock;
-    }
-
-    return Status;
-}
-
-NTSTATUS
-CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
-                     PHASH_TABLE_CELL HashCell,
-                     PCM_KEY_NODE KeyCell,
-                     HSTORAGE_TYPE StorageType,
-                     PCM_KEY_NODE NewKeyCell,
-                     HCELL_INDEX NKBOffset)
-{
-    ULONG i = KeyCell->SubKeyCounts[StorageType];
-
-    HashCell->Table[i].KeyOffset = NKBOffset;
-    HashCell->Table[i].HashValue = 0;
-    if (NewKeyCell->Flags & REG_KEY_NAME_PACKED)
-    {
-        RtlCopyMemory(&HashCell->Table[i].HashValue,
-                      NewKeyCell->Name,
-                      min(NewKeyCell->NameSize, sizeof(ULONG)));
-    }
-    HvMarkCellDirty(&RegistryHive->Hive, KeyCell->SubKeyLists[StorageType], FALSE);
     return STATUS_SUCCESS;
 }
 

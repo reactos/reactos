@@ -13,12 +13,39 @@
 #define  REG_EXTEND_HASH_TABLE_SIZE    4
 #define  REG_VALUE_LIST_CELL_MULTIPLE  4
 
-#define  REG_KEY_CELL_ID               0x6b6e
-#define  REG_HASH_TABLE_CELL_ID        0x666c
-#define  REG_VALUE_CELL_ID             0x6b76
-#define  REG_SECURITY_CELL_ID          0x6b73
+//
+// Key Types
+//
+#define CM_KEY_INDEX_ROOT                               0x6972
+#define CM_KEY_INDEX_LEAF                               0x696c
+#define CM_KEY_FAST_LEAF                                0x666c
+#define CM_KEY_HASH_LEAF                                0x686c
 
-#ifndef _CM_
+//
+// Key Signatures
+//
+#define CM_KEY_NODE_SIGNATURE                           0x6B6E
+#define CM_LINK_NODE_SIGNATURE                          0x6B6C
+#define CM_KEY_VALUE_SIGNATURE                          0x6B76
+
+//
+// CM_KEY_NODE Flags
+//
+#define KEY_IS_VOLATILE                                 0x01
+#define KEY_HIVE_EXIT                                   0x02
+#define KEY_HIVE_ENTRY                                  0x04
+#define KEY_NO_DELETE                                   0x08
+#define KEY_SYM_LINK                                    0x10
+#define KEY_COMP_NAME                                   0x20
+#define KEY_PREFEF_HANDLE                               0x40
+#define KEY_VIRT_MIRRORED                               0x80
+#define KEY_VIRT_TARGET                                 0x100
+#define KEY_VIRTUAL_STORE                               0x200
+
+//
+// CM_KEY_VALUE Flags
+//
+#define VALUE_COMP_NAME                                 0x0001
 
 #ifdef CMLIB_HOST
 #include <host/pshpack1.h>
@@ -26,6 +53,9 @@
 #include <pshpack1.h>
 #endif
 
+//
+// For memory-mapped Hives
+//
 typedef struct _CM_VIEW_OF_FILE
 {
     LIST_ENTRY LRUViewList;
@@ -37,111 +67,69 @@ typedef struct _CM_VIEW_OF_FILE
     ULONG UseCount;
 } CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
 
+//
+// Children of Key Notes
+//
 typedef struct _CHILD_LIST
 {
     ULONG Count;
     HCELL_INDEX List;
 } CHILD_LIST, *PCHILD_LIST;
 
+//
+// Node Key
+//
 typedef struct _CM_KEY_NODE
 {
-   /* Key cell identifier "kn" (0x6b6e) */
-   USHORT Id;
-
-   /* Flags */
-   USHORT Flags;
-
-   /* Time of last flush */
-   LARGE_INTEGER LastWriteTime;
-
-   ULONG Spare;
-
-   /* BlockAddress offset of parent key cell */
-   HCELL_INDEX Parent;
-
-   /* Count of sub keys for the key in this key cell (stable & volatile) */
-   ULONG SubKeyCounts[HTYPE_COUNT];
-
-   /* BlockAddress offset of has table for FIXME: subkeys/values? (stable & volatile) */
-   HCELL_INDEX SubKeyLists[HTYPE_COUNT];
-
-   CHILD_LIST ValueList;
-
-   /* BlockAddress offset of security cell */
-   HCELL_INDEX SecurityKeyOffset;
-
-   /* BlockAddress offset of registry key class */
-   HCELL_INDEX ClassNameOffset;
-
-   ULONG MaxNameLen;
-   ULONG MaxClassLen;
-   ULONG MaxValueNameLen;
-   ULONG MaxValueDataLen;
-   ULONG WorkVar;
-
-   /* Size in bytes of key name */
-   USHORT NameSize;
-
-   /* Size of class name in bytes */
-   USHORT ClassSize;
-
-   /* Name of key (not zero terminated) */
-   UCHAR Name[0];
+    USHORT Signature;
+    USHORT Flags;
+    LARGE_INTEGER LastWriteTime;
+    ULONG Spare;
+    HCELL_INDEX Parent;
+    ULONG SubKeyCounts[HTYPE_COUNT];
+    HCELL_INDEX SubKeyLists[HTYPE_COUNT];
+    CHILD_LIST ValueList;
+    HCELL_INDEX Security;
+    HCELL_INDEX Class;
+    ULONG MaxNameLen;
+    ULONG MaxClassLen;
+    ULONG MaxValueNameLen;
+    ULONG MaxValueDataLen;
+    ULONG WorkVar;
+    USHORT NameLength;
+    USHORT ClassLength;
+    WCHAR Name[0];
 } CM_KEY_NODE, *PCM_KEY_NODE;
 
-/* CM_KEY_NODE.Flags constants */
-#define  REG_KEY_VOLATILE_CELL             0x01
-#define  REG_KEY_ROOT_CELL                 0x0C
-#define  REG_KEY_LINK_CELL                 0x10
-#define  REG_KEY_NAME_PACKED               0x20
-
-/*
- * Hash record
- *
- * HashValue:
- *	packed name: four letters of value's name
- *	otherwise: Zero!
- */
-typedef struct _HASH_RECORD
-{
-  HCELL_INDEX  KeyOffset;
-  ULONG  HashValue;
-} HASH_RECORD, *PHASH_RECORD;
-
-typedef struct _HASH_TABLE_CELL
-{
-  USHORT  Id;
-  USHORT  HashTableSize;
-  HASH_RECORD  Table[0];
-} HASH_TABLE_CELL, *PHASH_TABLE_CELL;
-
+//
+// Value List
+//
 typedef struct _VALUE_LIST_CELL
 {
-  HCELL_INDEX  ValueOffset[0];
+    HCELL_INDEX ValueOffset[0];
 } VALUE_LIST_CELL, *PVALUE_LIST_CELL;
 
+//
+// Value Key
+//
 typedef struct _CM_KEY_VALUE
 {
-  USHORT Id;	// "kv"
-  USHORT NameSize;	// length of Name
-  ULONG  DataSize;	// length of datas in the cell pointed by DataOffset
-  HCELL_INDEX  DataOffset;// datas are here if high bit of DataSize is set
-  ULONG  DataType;
-  USHORT Flags;
-  USHORT Unused1;
-  UCHAR  Name[0]; /* warning : not zero terminated */
+    USHORT Signature;
+    USHORT NameLength;
+    ULONG DataLength;
+    HCELL_INDEX Data;
+    ULONG Type;
+    USHORT Flags;
+    USHORT Unused1;
+    WCHAR Name[0];
 } CM_KEY_VALUE, *PCM_KEY_VALUE;
 
-/* CM_KEY_VALUE.Flags constants */
-#define REG_VALUE_NAME_PACKED             0x0001
-
-/* CM_KEY_VALUE.DataSize mask constants */
-#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
-#define REG_DATA_IN_OFFSET                 0x80000000
-
+//
+// Security Key
+//
 typedef struct _CM_KEY_SECURITY
 {
-    USHORT Signature; // "sk"
+    USHORT Signature;
     USHORT Reserved;
     HCELL_INDEX Flink;
     HCELL_INDEX Blink;
@@ -157,6 +145,53 @@ typedef struct _CM_KEY_SECURITY
 #include <poppack.h>
 #endif
 
-#endif
+//
+// Generic Index Entry
+//
+typedef struct _CM_INDEX
+{
+    HCELL_INDEX Cell;
+    union
+    {
+        UCHAR NameHint[4];
+        ULONG HashKey;
+    };
+} CM_INDEX, *PCM_INDEX;
+
+//
+// Key Index
+//
+typedef struct _CM_KEY_INDEX
+{
+    USHORT Signature;
+    USHORT Count;
+    HCELL_INDEX List[ANYSIZE_ARRAY];
+} CM_KEY_INDEX, *PCM_KEY_INDEX;
+
+//
+// Fast/Hash Key Index
+//
+typedef struct _CM_KEY_FAST_INDEX
+{
+    USHORT Signature;
+    USHORT Count;
+    CM_INDEX List[ANYSIZE_ARRAY];
+} CM_KEY_FAST_INDEX, *PCM_KEY_FAST_INDEX;
+
+//
+// Cell Data
+//
+typedef struct _CELL_DATA
+{
+    union
+    {
+        CM_KEY_NODE KeyNode;
+        CM_KEY_VALUE KeyValue;
+        CM_KEY_SECURITY KeySecurity;
+        CM_KEY_INDEX KeyIndex;
+        HCELL_INDEX KeyList[ANYSIZE_ARRAY];
+        WCHAR KeyString[ANYSIZE_ARRAY];
+    } u;
+} CELL_DATA, *PCELL_DATA;
 
 #endif /* CMLIB_CMDATA_H */

@@ -23,6 +23,9 @@
 #include <cmlib.h>
 #include <debug.h>
 
+#define REG_DATA_SIZE_MASK                 0x7FFFFFFF
+#define REG_DATA_IN_OFFSET                 0x80000000
+
 /* FUNCTIONS ****************************************************************/
 
 static PVOID
@@ -46,20 +49,20 @@ CmiAllocateHashTableCell (PHHIVE Hive,
 			  PHCELL_INDEX HBOffset,
 			  ULONG SubKeyCount)
 {
-  PHASH_TABLE_CELL HashCell;
+  PCM_KEY_FAST_INDEX HashCell;
   ULONG NewHashSize;
 
-  NewHashSize = sizeof(HASH_TABLE_CELL) +
-		(SubKeyCount * sizeof(HASH_RECORD));
+  NewHashSize = sizeof(CM_KEY_FAST_INDEX) +
+		(SubKeyCount * sizeof(CM_INDEX));
   *HBOffset = HvAllocateCell (Hive, NewHashSize, Stable, HCELL_NIL);
   if (*HBOffset == HCELL_NIL)
     {
       return FALSE;
     }
 
-  HashCell = (PHASH_TABLE_CELL)HvGetCell (Hive, *HBOffset);
-  HashCell->Id = REG_HASH_TABLE_CELL_ID;
-  HashCell->HashTableSize = SubKeyCount;
+  HashCell = (PCM_KEY_FAST_INDEX)HvGetCell (Hive, *HBOffset);
+  HashCell->Signature = CM_KEY_FAST_LEAF;
+  HashCell->Count = SubKeyCount;
 
   return TRUE;
 }
@@ -71,21 +74,21 @@ CmiAddKeyToParentHashTable (PHHIVE Hive,
 			    PCM_KEY_NODE NewKeyCell,
 			    HCELL_INDEX NKBOffset)
 {
-  PHASH_TABLE_CELL HashBlock;
+  PCM_KEY_FAST_INDEX HashBlock;
   PCM_KEY_NODE ParentKeyCell;
   ULONG i;
 
   ParentKeyCell = (PVOID)HvGetCell (Hive, Parent);
   HashBlock = (PVOID)HvGetCell (Hive, ParentKeyCell->SubKeyLists[Stable]);
 
-  for (i = 0; i < HashBlock->HashTableSize; i++)
+  for (i = 0; i < HashBlock->Count; i++)
     {
-      if (HashBlock->Table[i].KeyOffset == 0)
+      if (HashBlock->List[i].Cell == 0)
 	{
-	  HashBlock->Table[i].KeyOffset = NKBOffset;
-	  memcpy (&HashBlock->Table[i].HashValue,
+	  HashBlock->List[i].Cell = NKBOffset;
+	  memcpy (&HashBlock->List[i].HashKey,
 		  NewKeyCell->Name,
-		  min(NewKeyCell->NameSize, sizeof(ULONG)));
+		  min(NewKeyCell->NameLength, sizeof(ULONG)));
 	  ParentKeyCell->SubKeyCounts[Stable]++;
 	  return TRUE;
 	}
@@ -122,21 +125,21 @@ CmiAllocateValueCell(PHHIVE Hive,
 		     PWCHAR ValueName)
 {
   PCM_KEY_VALUE NewValueCell;
-  ULONG NameSize;
+  ULONG NameLength;
   BOOLEAN Packable = TRUE;
   ULONG i;
 
-  NameSize = (ValueName == NULL) ? 0 : wcslen (ValueName);
-  for (i = 0; i < NameSize; i++)
+  NameLength = (ValueName == NULL) ? 0 : wcslen (ValueName);
+  for (i = 0; i < NameLength; i++)
     {
       if (ValueName[i] & 0xFF00)
         {
-          NameSize *= sizeof(WCHAR);
+          NameLength *= sizeof(WCHAR);
           Packable = FALSE;
           break;
         }
     }
-  *ValueCellOffset = HvAllocateCell (Hive, sizeof(CM_KEY_VALUE) + NameSize, Stable, HCELL_NIL);
+  *ValueCellOffset = HvAllocateCell (Hive, sizeof(CM_KEY_VALUE) + NameLength, Stable, HCELL_NIL);
   if (*ValueCellOffset == HCELL_NIL)
     {
       DbgPrint((DPRINT_REGISTRY, "CmiAllocateCell() failed\n"));
@@ -144,29 +147,29 @@ CmiAllocateValueCell(PHHIVE Hive,
     }
 
   NewValueCell = (PCM_KEY_VALUE) HvGetCell (Hive, *ValueCellOffset);
-  NewValueCell->Id = REG_VALUE_CELL_ID;
-  NewValueCell->NameSize = NameSize;
+  NewValueCell->Signature = CM_KEY_VALUE_SIGNATURE;
+  NewValueCell->NameLength = NameLength;
   NewValueCell->Flags = 0;
-  if (NameSize > 0)
+  if (NameLength > 0)
     {
       if (Packable)
         {
-          for (i = 0; i < NameSize; i++)
+          for (i = 0; i < NameLength; i++)
             {
               ((PCHAR)NewValueCell->Name)[i] = (CHAR)ValueName[i];
             }
-          NewValueCell->Flags |= REG_VALUE_NAME_PACKED;
+          NewValueCell->Flags |= VALUE_COMP_NAME;
         }
       else
         {
           memcpy (NewValueCell->Name,
 	          ValueName,
-	          NameSize);
+	          NameLength);
         }
     }
-  NewValueCell->DataType = 0;
-  NewValueCell->DataSize = 0;
-  NewValueCell->DataOffset = -1;
+  NewValueCell->Type = 0;
+  NewValueCell->DataLength = 0;
+  NewValueCell->Data = -1;
 
   *ValueCell = NewValueCell;
 
@@ -212,13 +215,13 @@ CmiExportValue (PHHIVE Hive,
   HCELL_INDEX DataCellOffset;
   PCM_KEY_VALUE ValueCell;
   PVOID DataCell;
-  ULONG DataSize;
-  ULONG DataType;
+  ULONG DataLength;
+  ULONG Type;
   PCHAR Data;
 
   DbgPrint((DPRINT_REGISTRY, "CmiExportValue('%S') called\n",
 	   (Value == NULL) ? "<default>" : (PCHAR)Value->Name));
-  DbgPrint((DPRINT_REGISTRY, "DataSize %lu\n",
+  DbgPrint((DPRINT_REGISTRY, "DataLength %lu\n",
 	   (Value == NULL) ? Key->DataSize : Value->DataSize));
 
   /* Allocate value cell */
@@ -234,42 +237,42 @@ CmiExportValue (PHHIVE Hive,
 
   if (Value == NULL)
     {
-      DataType = Key->DataType;
-      DataSize = Key->DataSize;
+      Type = Key->DataType;
+      DataLength = Key->DataSize;
       Data = Key->Data;
     }
   else
     {
-      DataType = Value->DataType;
-      DataSize = Value->DataSize;
+      Type = Value->DataType;
+      DataLength = Value->DataSize;
       Data = Value->Data;
     }
 
-  if (DataSize <= sizeof(HCELL_INDEX))
+  if (DataLength <= sizeof(HCELL_INDEX))
     {
-      ValueCell->DataSize = DataSize | REG_DATA_IN_OFFSET;
-      ValueCell->DataType = DataType;
-      memcpy (&ValueCell->DataOffset,
+      ValueCell->DataLength = DataLength | REG_DATA_IN_OFFSET;
+      ValueCell->Type = Type;
+      memcpy (&ValueCell->Data,
 	      &Data,
-	      DataSize);
+	      DataLength);
     }
   else
     {
       /* Allocate data cell */
-      DataCellOffset = HvAllocateCell (Hive, DataSize, Stable, HCELL_NIL);
+      DataCellOffset = HvAllocateCell (Hive, DataLength, Stable, HCELL_NIL);
       if (DataCellOffset == HCELL_NIL)
 	{
 	  return FALSE;
 	}
 
-      ValueCell->DataOffset = DataCellOffset;
-      ValueCell->DataSize = DataSize;
-      ValueCell->DataType = DataType;
+      ValueCell->Data = DataCellOffset;
+      ValueCell->DataLength = DataLength;
+      ValueCell->Type = Type;
 
       DataCell = (PVOID)HvGetCell (Hive, DataCellOffset);
       memcpy (DataCell,
 	      Data,
-	      DataSize);
+	      DataLength);
     }
 
   return TRUE;
@@ -292,7 +295,7 @@ CmiExportSubKey (PHHIVE Hive,
   PVALUE Value;
   BOOLEAN Packable = TRUE;
   ULONG i;
-  ULONG NameSize;
+  ULONG NameLength;
 
   DbgPrint((DPRINT_REGISTRY, "CmiExportSubKey('%S') called\n", Key->Name));
 
@@ -300,19 +303,19 @@ CmiExportSubKey (PHHIVE Hive,
   if (Key->DataType == REG_LINK)
     return TRUE;
 
-  NameSize = (Key->NameSize - sizeof(WCHAR)) / sizeof(WCHAR);
-  for (i = 0; i < NameSize; i++)
+  NameLength = (Key->NameSize - sizeof(WCHAR)) / sizeof(WCHAR);
+  for (i = 0; i < NameLength; i++)
     {
       if (Key->Name[i] & 0xFF00)
         {
           Packable = FALSE;
-          NameSize *= sizeof(WCHAR);
+          NameLength *= sizeof(WCHAR);
           break;
         }
     }
 
   /* Allocate key cell */
-  KeyCellSize = sizeof(CM_KEY_NODE) + NameSize;
+  KeyCellSize = sizeof(CM_KEY_NODE) + NameLength;
   NKBOffset = HvAllocateCell (Hive, KeyCellSize, Stable, HCELL_NIL);
   if (NKBOffset == HCELL_NIL)
     {
@@ -322,7 +325,7 @@ CmiExportSubKey (PHHIVE Hive,
 
   /* Initialize key cell */
   NewKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, NKBOffset);
-  NewKeyCell->Id = REG_KEY_CELL_ID;
+  NewKeyCell->Signature = CM_KEY_NODE_SIGNATURE;
   NewKeyCell->Flags = 0;
   NewKeyCell->LastWriteTime.QuadPart = 0ULL;
   NewKeyCell->Parent = Parent;
@@ -330,24 +333,24 @@ CmiExportSubKey (PHHIVE Hive,
   NewKeyCell->SubKeyLists[Stable] = -1;
   NewKeyCell->ValueList.Count = 0;
   NewKeyCell->ValueList.List = -1;
-  NewKeyCell->SecurityKeyOffset = -1;
-  NewKeyCell->ClassNameOffset = -1;
-  NewKeyCell->NameSize = NameSize;
-  NewKeyCell->ClassSize = 0;
+  NewKeyCell->Security = -1;
+  NewKeyCell->Class = -1;
+  NewKeyCell->NameLength = NameLength;
+  NewKeyCell->ClassLength = 0;
   if (Packable)
     {
-      for (i = 0; i < NameSize; i++)
+      for (i = 0; i < NameLength; i++)
         {
           ((PCHAR)NewKeyCell->Name)[i] = (CHAR)Key->Name[i];
         }
-      NewKeyCell->Flags |= REG_KEY_NAME_PACKED;
+      NewKeyCell->Flags |= KEY_COMP_NAME;
 
     }
   else
     {
       memcpy (NewKeyCell->Name,
 	      Key->Name,
-	      NameSize);
+	      NameLength);
     }
 
   /* Add key cell to the parent key's hash table */
@@ -527,45 +530,45 @@ RegImportValue (PHHIVE Hive,
   PVOID DataCell;
   PWCHAR wName;
   LONG Error;
-  ULONG DataSize;
+  ULONG DataLength;
   ULONG i;
 
-  if (ValueCell->Id != REG_VALUE_CELL_ID)
+  if (ValueCell->Signature != CM_KEY_VALUE_SIGNATURE)
     {
       DbgPrint((DPRINT_REGISTRY, "Invalid key cell!\n"));
       return FALSE;
     }
 
-  if (ValueCell->Flags & REG_VALUE_NAME_PACKED)
+  if (ValueCell->Flags & VALUE_COMP_NAME)
     {
-      wName = MmAllocateMemory ((ValueCell->NameSize + 1)*sizeof(WCHAR));
-      for (i = 0; i < ValueCell->NameSize; i++)
+      wName = MmAllocateMemory ((ValueCell->NameLength + 1)*sizeof(WCHAR));
+      for (i = 0; i < ValueCell->NameLength; i++)
         {
           wName[i] = ((PCHAR)ValueCell->Name)[i];
         }
-      wName[ValueCell->NameSize] = 0;
+      wName[ValueCell->NameLength] = 0;
     }
   else
     {
-      wName = MmAllocateMemory (ValueCell->NameSize + sizeof(WCHAR));
+      wName = MmAllocateMemory (ValueCell->NameLength + sizeof(WCHAR));
       memcpy (wName,
 	      ValueCell->Name,
-	      ValueCell->NameSize);
-      wName[ValueCell->NameSize / sizeof(WCHAR)] = 0;
+	      ValueCell->NameLength);
+      wName[ValueCell->NameLength / sizeof(WCHAR)] = 0;
     }
 
-  DataSize = ValueCell->DataSize & REG_DATA_SIZE_MASK;
+  DataLength = ValueCell->DataLength & REG_DATA_SIZE_MASK;
 
   DbgPrint((DPRINT_REGISTRY, "ValueName: '%S'\n", wName));
-  DbgPrint((DPRINT_REGISTRY, "DataSize: %u\n", DataSize));
+  DbgPrint((DPRINT_REGISTRY, "DataLength: %u\n", DataLength));
 
-  if (DataSize <= sizeof(HCELL_INDEX) && (ValueCell->DataSize & REG_DATA_IN_OFFSET))
+  if (DataLength <= sizeof(HCELL_INDEX) && (ValueCell->DataLength & REG_DATA_IN_OFFSET))
     {
       Error = RegSetValue(Key,
 			  wName,
-			  ValueCell->DataType,
-			  (PCHAR)&ValueCell->DataOffset,
-			  DataSize);
+			  ValueCell->Type,
+			  (PCHAR)&ValueCell->Data,
+			  DataLength);
       if (Error != ERROR_SUCCESS)
 	{
 	  DbgPrint((DPRINT_REGISTRY, "RegSetValue() failed!\n"));
@@ -575,14 +578,14 @@ RegImportValue (PHHIVE Hive,
     }
   else
     {
-      DataCell = (PVOID)HvGetCell (Hive, ValueCell->DataOffset);
+      DataCell = (PVOID)HvGetCell (Hive, ValueCell->Data);
       DbgPrint((DPRINT_REGISTRY, "DataCell: %x\n", DataCell));
 
       Error = RegSetValue (Key,
 			   wName,
-			   ValueCell->DataType,
+			   ValueCell->Type,
 			   DataCell,
-			   DataSize);
+			   DataLength);
 
       if (Error != ERROR_SUCCESS)
 	{
@@ -603,7 +606,7 @@ RegImportSubKey(PHHIVE Hive,
 		PCM_KEY_NODE KeyCell,
 		FRLDRHKEY ParentKey)
 {
-  PHASH_TABLE_CELL HashCell;
+  PCM_KEY_FAST_INDEX HashCell;
   PCM_KEY_NODE SubKeyCell;
   PVALUE_LIST_CELL ValueListCell;
   PCM_KEY_VALUE ValueCell = NULL;
@@ -614,29 +617,29 @@ RegImportSubKey(PHHIVE Hive,
 
 
   DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
-  DbgPrint((DPRINT_REGISTRY, "KeyCell->Id: %x\n", KeyCell->Id));
-  if (KeyCell->Id != REG_KEY_CELL_ID)
+  DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
+  if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid key cell id!\n"));
+      DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
       return FALSE;
     }
 
-  if (KeyCell->Flags & REG_KEY_NAME_PACKED)
+  if (KeyCell->Flags & KEY_COMP_NAME)
     {
-      wName = MmAllocateMemory ((KeyCell->NameSize + 1) * sizeof(WCHAR));
-      for (i = 0; i < KeyCell->NameSize; i++)
+      wName = MmAllocateMemory ((KeyCell->NameLength + 1) * sizeof(WCHAR));
+      for (i = 0; i < KeyCell->NameLength; i++)
         {
           wName[i] = ((PCHAR)KeyCell->Name)[i];
         }
-      wName[KeyCell->NameSize] = 0;
+      wName[KeyCell->NameLength] = 0;
     }
   else
     {
-      wName = MmAllocateMemory (KeyCell->NameSize + sizeof(WCHAR));
+      wName = MmAllocateMemory (KeyCell->NameLength + sizeof(WCHAR));
       memcpy (wName,
 	      KeyCell->Name,
-	      KeyCell->NameSize);
-      wName[KeyCell->NameSize/sizeof(WCHAR)] = 0;
+	      KeyCell->NameLength);
+      wName[KeyCell->NameLength/sizeof(WCHAR)] = 0;
     }
 
   DbgPrint((DPRINT_REGISTRY, "KeyName: '%S'\n", wName));
@@ -676,15 +679,15 @@ RegImportSubKey(PHHIVE Hive,
   /* Enumerate and add subkeys */
   if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = (PHASH_TABLE_CELL) HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
+      HashCell = (PCM_KEY_FAST_INDEX) HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
       DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts));
 
       for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
 	{
-	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
+	  DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
 
-	  SubKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, HashCell->Table[i].KeyOffset);
+	  SubKeyCell = (PCM_KEY_NODE) HvGetCell (Hive, HashCell->List[i].Cell);
 
 	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
 
@@ -702,7 +705,7 @@ RegImportBinaryHive(PCHAR ChunkBase,
 		    ULONG ChunkSize)
 {
   PCM_KEY_NODE KeyCell;
-  PHASH_TABLE_CELL HashCell;
+  PCM_KEY_FAST_INDEX HashCell;
   PCM_KEY_NODE SubKeyCell;
   FRLDRHKEY SystemKey;
   ULONG i;
@@ -729,17 +732,17 @@ RegImportBinaryHive(PCHAR ChunkBase,
                          NULL);
   if (!NT_SUCCESS(Status))
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid hive id!\n"));
+      DbgPrint((DPRINT_REGISTRY, "Invalid hive Signature!\n"));
       return FALSE;
     }
 
   Hive = &CmHive->Hive;
   KeyCell = (PCM_KEY_NODE)HvGetCell (Hive, Hive->BaseBlock->RootCell);
   DbgPrint((DPRINT_REGISTRY, "KeyCell: %x\n", KeyCell));
-  DbgPrint((DPRINT_REGISTRY, "KeyCell->Id: %x\n", KeyCell->Id));
-  if (KeyCell->Id != REG_KEY_CELL_ID)
+  DbgPrint((DPRINT_REGISTRY, "KeyCell->Signature: %x\n", KeyCell->Signature));
+  if (KeyCell->Signature != CM_KEY_NODE_SIGNATURE)
     {
-      DbgPrint((DPRINT_REGISTRY, "Invalid key cell id!\n"));
+      DbgPrint((DPRINT_REGISTRY, "Invalid key cell Signature!\n"));
       return FALSE;
     }
 
@@ -759,15 +762,15 @@ RegImportBinaryHive(PCHAR ChunkBase,
   /* Enumerate and add subkeys */
   if (KeyCell->SubKeyCounts[Stable] > 0)
     {
-      HashCell = (PHASH_TABLE_CELL)HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
+      HashCell = (PCM_KEY_FAST_INDEX)HvGetCell (Hive, KeyCell->SubKeyLists[Stable]);
       DbgPrint((DPRINT_REGISTRY, "HashCell: %x\n", HashCell));
       DbgPrint((DPRINT_REGISTRY, "SubKeyCounts: %x\n", KeyCell->SubKeyCounts[Stable]));
 
       for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
 	{
-	  DbgPrint((DPRINT_REGISTRY, "KeyOffset[%d]: %x\n", i, HashCell->Table[i].KeyOffset));
+	  DbgPrint((DPRINT_REGISTRY, "Cell[%d]: %x\n", i, HashCell->List[i].Cell));
 
-	  SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->Table[i].KeyOffset);
+	  SubKeyCell = (PCM_KEY_NODE)HvGetCell (Hive, HashCell->List[i].Cell);
 
 	  DbgPrint((DPRINT_REGISTRY, "SubKeyCell[%d]: %x\n", i, SubKeyCell));
 

@@ -44,14 +44,6 @@
     ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
 
 //
-// Key Types
-//
-#define CM_KEY_INDEX_ROOT                               0x6972
-#define CM_KEY_INDEX_LEAF                               0x696c
-#define CM_KEY_FAST_LEAF                                0x666c
-#define CM_KEY_HASH_LEAF                                0x686c
-
-//
 // CM_KEY_CONTROL_BLOCK Flags
 //
 #define CM_KCB_NO_SUBKEY                                0x01
@@ -64,29 +56,11 @@
 #define CM_KEY_READ_ONLY_KEY                            0x80
 
 //
-// CM_KEY_NODE Signature and Flags
+// CM_KEY_VALUE Types
 //
-#define CM_KEY_NODE_SIGNATURE                           0x6B6E
-#define CM_LINK_NODE_SIGNATURE                          0x6B6C
-#define KEY_IS_VOLATILE                                 0x01
-#define KEY_HIVE_EXIT                                   0x02
-#define KEY_HIVE_ENTRY                                  0x04
-#define KEY_NO_DELETE                                   0x08
-#define KEY_SYM_LINK                                    0x10
-#define KEY_COMP_NAME                                   0x20
-#define KEY_PREFEF_HANDLE                               0x40
-#define KEY_VIRT_MIRRORED                               0x80
-#define KEY_VIRT_TARGET                                 0x100
-#define KEY_VIRTUAL_STORE                               0x200
-
-//
-// CM_KEY_VALUE Signature and Flags
-//
-#define CM_KEY_VALUE_SIGNATURE                          0x6b76
 #define CM_KEY_VALUE_SMALL                              0x4
 #define CM_KEY_VALUE_BIG                                0x3FD8
 #define CM_KEY_VALUE_SPECIAL_SIZE                       0x80000000
-#define VALUE_COMP_NAME                                 0x0001
 
 //
 // Number of various lists and hashes
@@ -418,127 +392,6 @@ typedef struct _CMHIVE
     BOOLEAN HiveIsLoading;
     PKTHREAD CreatorOwner;
 } CMHIVE, *PCMHIVE;
-
-#include <pshpack1.h>
-
-typedef struct _CM_VIEW_OF_FILE
-{
-    LIST_ENTRY LRUViewList;
-    LIST_ENTRY PinViewList;
-    ULONG FileOffset;
-    ULONG Size;
-    PULONG ViewAddress;
-    PVOID Bcb;
-    ULONG UseCount;
-} CM_VIEW_OF_FILE, *PCM_VIEW_OF_FILE;
-
-typedef struct _CHILD_LIST
-{
-    ULONG Count;
-    HCELL_INDEX List;
-} CHILD_LIST, *PCHILD_LIST;
-
-typedef struct _CM_KEY_NODE
-{
-    USHORT Signature;
-    USHORT Flags;
-    LARGE_INTEGER LastWriteTime;
-    ULONG Spare;
-    HCELL_INDEX Parent;
-    ULONG SubKeyCounts[HTYPE_COUNT];
-    HCELL_INDEX SubKeyLists[HTYPE_COUNT];
-    CHILD_LIST ValueList;
-    HCELL_INDEX Security;
-    HCELL_INDEX Class;
-    ULONG MaxNameLen;
-    ULONG MaxClassLen;
-    ULONG MaxValueNameLen;
-    ULONG MaxValueDataLen;
-    ULONG WorkVar;
-    USHORT NameLength;
-    USHORT ClassLength;
-    WCHAR Name[0];
-} CM_KEY_NODE, *PCM_KEY_NODE;
-
-typedef struct _VALUE_LIST_CELL
-{
-    HCELL_INDEX  ValueOffset[0];
-} VALUE_LIST_CELL, *PVALUE_LIST_CELL;
-
-typedef struct _CM_KEY_VALUE
-{
-    USHORT Signature;	// "kv"
-    USHORT NameLength;	// length of Name
-    ULONG  DataLength;	// length of datas in the cell pointed by DataOffset
-    HCELL_INDEX  Data;// datas are here if high bit of DataSize is set
-    ULONG  Type;
-    USHORT Flags;
-    USHORT Unused1;
-    WCHAR  Name[0]; /* warning : not zero terminated */
-} CM_KEY_VALUE, *PCM_KEY_VALUE;
-
-typedef struct _CM_KEY_SECURITY
-{
-    USHORT Signature; // "sk"
-    USHORT Reserved;
-    HCELL_INDEX Flink;
-    HCELL_INDEX Blink;
-    ULONG ReferenceCount;
-    ULONG DescriptorLength;
-    //SECURITY_DESCRIPTOR_RELATIVE Descriptor;
-    UCHAR Data[0];
-} CM_KEY_SECURITY, *PCM_KEY_SECURITY;
-
-#include <poppack.h>
-
-//
-// Generic Index Entry
-//
-typedef struct _CM_INDEX
-{
-    HCELL_INDEX Cell;
-    union
-    {
-        UCHAR NameHint[4];
-        ULONG HashKey;
-    };
-} CM_INDEX, *PCM_INDEX;
-
-//
-// Key Index
-//
-typedef struct _CM_KEY_INDEX
-{
-    USHORT Signature;
-    USHORT Count;
-    HCELL_INDEX List[ANYSIZE_ARRAY];
-} CM_KEY_INDEX, *PCM_KEY_INDEX;
-
-//
-// Fast/Hash Key Index
-//
-typedef struct _CM_KEY_FAST_INDEX
-{
-    USHORT Signature;
-    USHORT Count;
-    CM_INDEX List[ANYSIZE_ARRAY];
-} CM_KEY_FAST_INDEX, *PCM_KEY_FAST_INDEX;
-
-//
-// Cell Data
-//
-typedef struct _CELL_DATA
-{
-    union
-    {
-        CM_KEY_NODE KeyNode;
-        CM_KEY_VALUE KeyValue;
-        CM_KEY_SECURITY KeySecurity;
-        CM_KEY_INDEX KeyIndex;
-        HCELL_INDEX KeyList[ANYSIZE_ARRAY];
-        WCHAR KeyString[ANYSIZE_ARRAY];
-    } u;
-} CELL_DATA, *PCELL_DATA;
 
 //
 // Cached Value Index

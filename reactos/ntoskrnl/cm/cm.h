@@ -192,9 +192,9 @@ CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1,
                            IN PVOID Argument2);
 
 #define VERIFY_BIN_HEADER(x) ASSERT(x->HeaderId == REG_BIN_ID)
-#define VERIFY_KEY_CELL(x) ASSERT(x->Id == REG_KEY_CELL_ID)
-#define VERIFY_ROOT_KEY_CELL(x) ASSERT(x->Id == REG_KEY_CELL_ID)
-#define VERIFY_VALUE_CELL(x) ASSERT(x->Id == REG_VALUE_CELL_ID)
+#define VERIFY_KEY_CELL(x) ASSERT(x->Signature == CM_KEY_NODE_SIGNATURE)
+#define VERIFY_ROOT_KEY_CELL(x) ASSERT(x->Signature == CM_KEY_NODE_SIGNATURE)
+#define VERIFY_VALUE_CELL(x) ASSERT(x->Signature == CM_KEY_VALUE_SIGNATURE)
 #define VERIFY_VALUE_LIST_CELL(x)
 #define VERIFY_KEY_OBJECT(x)
 #define VERIFY_REGISTRY_HIVE(x)
@@ -316,21 +316,6 @@ CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 NTSTATUS
 NTAPI
 CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb);
-
-NTSTATUS
-CmiAllocateHashTableCell(IN PEREGISTRY_HIVE RegistryHive,
-			 OUT PHASH_TABLE_CELL *HashBlock,
-			 OUT HCELL_INDEX *HBOffset,
-			 IN ULONG HashTableSize,
-			 IN HSTORAGE_TYPE Storage);
-
-NTSTATUS
-CmiAddKeyToHashTable(PEREGISTRY_HIVE RegistryHive,
-		     PHASH_TABLE_CELL HashCell,
-		     PCM_KEY_NODE KeyCell,
-		     HSTORAGE_TYPE StorageType,
-		     PCM_KEY_NODE NewKeyCell,
-		     HCELL_INDEX NKBOffset);
 
 NTSTATUS
 CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,

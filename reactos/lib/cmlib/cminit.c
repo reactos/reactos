@@ -16,34 +16,47 @@ CmCreateRootNode(
    HCELL_INDEX RootCellIndex;
    SIZE_T NameSize;
 
+   /* Allocate the cell */
    NameSize = wcslen(Name) * sizeof(WCHAR);
    RootCellIndex = HvAllocateCell(Hive,
-                                  sizeof(CM_KEY_NODE) + NameSize,
+                                  FIELD_OFFSET(CM_KEY_NODE, Name) + NameSize,
                                   Stable,
                                   HCELL_NIL);
-   if (RootCellIndex == HCELL_NIL)
-      return FALSE;
+   if (RootCellIndex == HCELL_NIL) return FALSE;
 
+   /* Seutp the base block */
    Hive->BaseBlock->RootCell = RootCellIndex;
    Hive->BaseBlock->CheckSum = HvpHiveHeaderChecksum(Hive->BaseBlock);
 
+   /* Get the key cell */
    KeyCell = (PCM_KEY_NODE)HvGetCell(Hive, RootCellIndex);
-   KeyCell->Id = REG_KEY_CELL_ID;
-   KeyCell->Flags = REG_KEY_ROOT_CELL;
+   if (!KeyCell) return FALSE;
+
+   /* Setup the cell */
+   KeyCell->Signature = (USHORT)CM_KEY_NODE_SIGNATURE;
+   KeyCell->Flags = KEY_HIVE_ENTRY | KEY_NO_DELETE;
    KeyCell->LastWriteTime.QuadPart = 0;
    KeyCell->Parent = HCELL_NIL;
-   KeyCell->SubKeyCounts[0] = 0;
-   KeyCell->SubKeyCounts[1] = 0;
-   KeyCell->SubKeyLists[0] = HCELL_NIL;
-   KeyCell->SubKeyLists[1] = HCELL_NIL;
+   KeyCell->SubKeyCounts[Stable] = 0;
+   KeyCell->SubKeyCounts[Volatile] = 0;
+   KeyCell->SubKeyLists[Stable] = HCELL_NIL;
+   KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
    KeyCell->ValueList.Count = 0;
    KeyCell->ValueList.List = HCELL_NIL;
-   KeyCell->SecurityKeyOffset = HCELL_NIL;
-   KeyCell->ClassNameOffset = HCELL_NIL; 
-   KeyCell->NameSize = (USHORT)NameSize;
-   KeyCell->ClassSize = 0;
+   KeyCell->Security = HCELL_NIL;
+   KeyCell->Class = HCELL_NIL;
+   KeyCell->ClassLength = 0;
+   KeyCell->MaxNameLen = 0;
+   KeyCell->MaxClassLen = 0;
+   KeyCell->MaxValueNameLen = 0;
+   KeyCell->MaxValueDataLen = 0;
+   
+   /* Write the name */
+   KeyCell->NameLength = (USHORT)NameSize;
    memcpy(KeyCell->Name, Name, NameSize);
 
+   /* Return success */
+   HvReleaseCell(Hive, RootCellIndex);
    return TRUE;
 }
 
@@ -53,10 +66,10 @@ CmpPrepareKey(
    PCM_KEY_NODE KeyCell)
 {
    PCM_KEY_NODE SubKeyCell;
-   PHASH_TABLE_CELL HashCell;
+   PCM_KEY_FAST_INDEX HashCell;
    ULONG i;
 
-   ASSERT(KeyCell->Id == REG_KEY_CELL_ID);
+   ASSERT(KeyCell->Signature == CM_KEY_NODE_SIGNATURE);
 
    KeyCell->SubKeyLists[Volatile] = HCELL_NIL;
    KeyCell->SubKeyCounts[Volatile] = 0;
@@ -68,7 +81,7 @@ CmpPrepareKey(
 
       for (i = 0; i < KeyCell->SubKeyCounts[Stable]; i++)
       {
-         SubKeyCell = HvGetCell(RegistryHive, HashCell->Table[i].KeyOffset);
+         SubKeyCell = HvGetCell(RegistryHive, HashCell->List[i].Cell);
          CmpPrepareKey(RegistryHive, SubKeyCell);
       }
    }
