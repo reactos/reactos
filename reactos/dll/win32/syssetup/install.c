@@ -546,6 +546,85 @@ ShowStatusMessageThread(
     return 0;
 }
 
+static LONG
+ReadRegSzKey(
+    IN HKEY hKey,
+    IN LPCWSTR pszKey,
+    OUT LPWSTR* pValue)
+{
+    LONG rc;
+    DWORD dwType;
+    DWORD cbData = 0;
+    LPWSTR Value;
+
+    if (!pValue)
+        return ERROR_INVALID_PARAMETER;
+
+    *pValue = NULL;
+    rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
+    if (rc != ERROR_SUCCESS)
+        return rc;
+    if (dwType != REG_SZ)
+        return ERROR_FILE_NOT_FOUND;
+    Value = HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
+    if (!Value)
+        return ERROR_NOT_ENOUGH_MEMORY;
+    rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
+    if (rc != ERROR_SUCCESS)
+    {
+        HeapFree(GetProcessHeap(), 0, Value);
+        return rc;
+    }
+    /* NULL-terminate the string */
+    Value[cbData / sizeof(WCHAR)] = '\0';
+
+    *pValue = Value;
+    return ERROR_SUCCESS;
+}
+
+static BOOL
+IsConsoleBoot(VOID)
+{
+    HKEY ControlKey = NULL;
+    LPWSTR SystemStartOptions = NULL;
+    LPWSTR CurrentOption, NextOption; /* Pointers into SystemStartOptions */
+    BOOL ConsoleBoot = FALSE;
+    LONG rc;
+
+    rc = RegOpenKeyExW(
+        HKEY_LOCAL_MACHINE,
+        L"SYSTEM\\CurrentControlSet\\Control",
+        0,
+        KEY_QUERY_VALUE,
+        &ControlKey);
+
+    rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
+    if (rc != ERROR_SUCCESS)
+        goto cleanup;
+
+    /* Check for CMDCONS in SystemStartOptions */
+    CurrentOption = SystemStartOptions;
+    while (CurrentOption)
+    {
+        NextOption = wcschr(CurrentOption, L' ');
+        if (NextOption)
+            *NextOption = L'\0';
+        if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
+        {
+            DPRINT("Found %S. Switching to console boot\n", CurrentOption);
+            ConsoleBoot = TRUE;
+            goto cleanup;
+        }
+        CurrentOption = NextOption ? NextOption + 1 : NULL;
+    }
+
+cleanup:
+    if (ControlKey != NULL)
+        RegCloseKey(ControlKey);
+    HeapFree(GetProcessHeap(), 0, SystemStartOptions);
+    return ConsoleBoot;
+}
+
 static BOOL
 CommonInstall(VOID)
 {
@@ -576,13 +655,16 @@ CommonInstall(VOID)
         return FALSE;
     }
 
-    CreateThread(
-        NULL,
-        0,
-        ShowStatusMessageThread,
-        (LPVOID)&hWnd,
-        0,
-        NULL);
+    if (!IsConsoleBoot())
+    {
+        CreateThread(
+            NULL,
+            0,
+            ShowStatusMessageThread,
+            (LPVOID)&hWnd,
+            0,
+            NULL);
+    }
 
     if (!EnableUserModePnpManager())
     {
