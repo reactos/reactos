@@ -55,6 +55,8 @@
 	</directory>
 	<directory name="ui">
 		<file>gui.c</file>
+		<file>minitui.c</file>
+		<file>noui.c</file>
 		<file>tui.c</file>
 		<file>tuimenu.c</file>
 		<file>ui.c</file>

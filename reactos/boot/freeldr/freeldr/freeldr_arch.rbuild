@@ -84,6 +84,7 @@
 				<file>hardware.c</file>
 				<file>loader.c</file>
 				<file>mach.c</file>
+				<file>portio.c</file>
 				<file>video.c</file>
 			</module>
 		</if>

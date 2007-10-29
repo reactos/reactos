@@ -59,7 +59,7 @@ VOID	TuiFadeOut(VOID);										// Fades the screen out
 //
 ///////////////////////////////////////////////////////////////////////////////////////
 
-typedef struct
+struct tagUI_MENU_INFO
 {
 	PCSTR		*MenuItemList;
 	ULONG		MenuItemCount;
@@ -71,59 +71,20 @@ typedef struct
 	ULONG		Right;
 	ULONG		Bottom;
 
-} TUI_MENU_INFO, *PTUI_MENU_INFO;
+};
 
-VOID	NTAPI TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo);
-VOID	NTAPI TuiDrawMenu(PTUI_MENU_INFO MenuInfo);
-VOID	NTAPI TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo);
-VOID	NTAPI TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
-ULONG	NTAPI TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
-BOOLEAN	NTAPI TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
+VOID	NTAPI TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo);
+VOID	TuiDrawMenu(PUI_MENU_INFO MenuInfo);
+VOID	NTAPI TuiDrawMenuBox(PUI_MENU_INFO MenuInfo);
+VOID	NTAPI TuiDrawMenuItem(PUI_MENU_INFO MenuInfo, ULONG MenuItemNumber);
+ULONG	NTAPI TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo, UiMenuKeyPressFilterCallback KeyPressFilter);
+BOOLEAN TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter);
 
 
-/*
- * Combines the foreground and background colors into a single attribute byte
- */
-#define	ATTR(cFore, cBack)	((cBack << 4)|cFore)
 
-/*
- * Fill styles for DrawBackdrop()
- */
-#define LIGHT_FILL			0xB0
-#define MEDIUM_FILL			0xB1
-#define DARK_FILL			0xB2
 
-/*
- * Screen colors
- */
-#define COLOR_BLACK			0
-#define COLOR_BLUE			1
-#define COLOR_GREEN			2
-#define COLOR_CYAN			3
-#define COLOR_RED			4
-#define COLOR_MAGENTA		5
-#define COLOR_BROWN			6
-#define COLOR_GRAY			7
 
-#define COLOR_DARKGRAY		8
-#define COLOR_LIGHTBLUE		9
-#define COLOR_LIGHTGREEN	10
-#define COLOR_LIGHTCYAN		11
-#define COLOR_LIGHTRED		12
-#define COLOR_LIGHTMAGENTA	13
-#define COLOR_YELLOW		14
-#define COLOR_WHITE			15
 
-/* Add COLOR_BLINK to a background to cause blinking */
-#define COLOR_BLINK			8
-
-/*
- * Defines for IBM box drawing characters
- */
-#define HORZ	(0xc4)  /* Single horizontal line */
-#define D_HORZ	(0xcd)  /* Double horizontal line.*/
-#define VERT    (0xb3)  /* Single vertical line   */
-#define D_VERT  (0xba)  /* Double vertical line.  */
 
 /* Definitions for corners, depending on HORIZ and VERT */
 #define UL		(0xda)
@@ -146,5 +107,6 @@ BOOLEAN	NTAPI TuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG De
 #define VD_LL	(0xd3)
 #define VD_LR	(0xbd)
 
+extern const UIVTBL TuiVtbl;
 
 #endif // #defined __TUI_H

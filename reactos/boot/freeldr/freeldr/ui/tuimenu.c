@@ -14,7 +14,6 @@
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
-NTAPI
 TuiDisplayMenu(PCSTR MenuItemList[],
                ULONG MenuItemCount,
                ULONG DefaultMenuItem,
@@ -23,7 +22,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
                BOOLEAN CanEscape,
                UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-    TUI_MENU_INFO MenuInformation;
+    UI_MENU_INFO MenuInformation;
     ULONG LastClockSecond;
     ULONG CurrentClockSecond;
     ULONG KeyPress;
@@ -55,7 +54,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
     //
     // Draw the menu
     //
-    TuiDrawMenu(&MenuInformation);
+    UiVtbl.DrawMenu(&MenuInformation);
 
     //
     // Get the current second of time
@@ -136,7 +135,7 @@ TuiDisplayMenu(PCSTR MenuItemList[],
 
 VOID
 NTAPI
-TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
+TuiCalcMenuBoxSize(PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
     ULONG Width = 0;
@@ -195,8 +194,7 @@ TuiCalcMenuBoxSize(PTUI_MENU_INFO MenuInfo)
 }
 
 VOID
-NTAPI
-TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
+TuiDrawMenu(PUI_MENU_INFO MenuInfo)
 {
     ULONG i;
 
@@ -206,48 +204,9 @@ TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
     UiDrawBackdrop();
 
     //
-    // Check if this is the minimal (console) UI
+    // Update the status bar
     //
-    if (UiMinimal)
-    {
-        //
-        // No GUI status bar text, just minimal text. first to tell the user to
-        // choose.
-        //
-        TuiDrawText(0,
-                    MenuInfo->Top - 2,
-                    "Please select the operating system to start:",
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
-
-        //
-        // Now tell him how to choose
-        //
-        TuiDrawText(0,
-                    MenuInfo->Bottom + 1,
-                    "Use the up and down arrow keys to move the highlight to "
-                    "your choice.",
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
-        TuiDrawText(0,
-                    MenuInfo->Bottom + 2,
-                    "Press ENTER to choose.",
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
-
-        //
-        // And offer F8 options
-        //
-        TuiDrawText(0,
-                    UiScreenHeight - 4,
-                    "For troubleshooting and advanced startup options for "
-                    "ReactOS, press F8.",
-                    ATTR(UiMenuFgColor, UiMenuBgColor));
-    }
-    else
-    {
-        //
-        // Update the status bar
-        //
-        UiDrawStatusText("Use \x18\x19 to select, then press ENTER.");
-    }
+    UiVtbl.DrawStatusText("Use \x18\x19 to select, then press ENTER.");
 
     //
     // Draw the menu box
@@ -263,7 +222,7 @@ TuiDrawMenu(PTUI_MENU_INFO MenuInfo)
 
 VOID
 NTAPI
-TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
+TuiDrawMenuBox(PUI_MENU_INFO MenuInfo)
 {
     CHAR MenuLineText[80];
     CHAR TempString[80];
@@ -361,7 +320,7 @@ TuiDrawMenuBox(PTUI_MENU_INFO MenuInfo)
 
 VOID
 NTAPI
-TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo,
+TuiDrawMenuItem(PUI_MENU_INFO MenuInfo,
                 ULONG MenuItemNumber)
 {
     ULONG i;
@@ -441,7 +400,7 @@ TuiDrawMenuItem(PTUI_MENU_INFO MenuInfo,
 
 ULONG
 NTAPI
-TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo,
+TuiProcessMenuKeyboardEvent(PUI_MENU_INFO MenuInfo,
                             UiMenuKeyPressFilterCallback KeyPressFilter)
 {
     ULONG KeyEvent = 0;
@@ -483,7 +442,7 @@ TuiProcessMenuKeyboardEvent(PTUI_MENU_INFO MenuInfo,
             //
             // It processed the key character, so redraw and exit
             //
-            TuiDrawMenu(MenuInfo);
+            UiVtbl.DrawMenu(MenuInfo);
             return 0;
         }
 

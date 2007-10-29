@@ -51,6 +51,6 @@ UCHAR	GuiTextToFillStyle(PCSTR FillStyleText);				// Converts the text fill into
 ///////////////////////////////////////////////////////////////////////////////////////
 BOOLEAN	GuiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem);
 
-
+extern const UIVTBL GuiVtbl;
 
 #endif // #defined __GUI_H

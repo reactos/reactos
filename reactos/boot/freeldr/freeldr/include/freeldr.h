@@ -57,8 +57,10 @@
 #include <fs/ntfs.h>
 #include <fs/iso.h>
 /* ui support */
-#include <ui/tui.h>
 #include <ui/gui.h>
+#include <ui/minitui.h>
+#include <ui/noui.h>
+#include <ui/tui.h>
 /* arch files */
 #ifdef _X86_
 #include <arch/i386/hardware.h>
@@ -94,8 +96,6 @@
 #ifdef _X86_
 #define Ke386EraseFlags(x)     __asm__ __volatile__("pushl $0 ; popfl\n")
 #endif
-
-extern BOOLEAN UserInterfaceUp;	/* Tells us if the user interface is displayed */
 
 VOID BootMain(LPSTR CmdLine);
 VOID RunLoader(VOID);

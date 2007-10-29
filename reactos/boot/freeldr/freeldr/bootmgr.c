@@ -83,12 +83,6 @@ VOID RunLoader(VOID)
 	for (;;)
 	{
 
-		/* If Timeout is 0, don't even bother loading any gui */
-		if (!UserInterfaceUp) {
-			SelectedOperatingSystem = DefaultOperatingSystem;
-			goto NoGui;
-		}
-
 		// Redraw the backdrop
 		UiDrawBackdrop();
 
@@ -99,7 +93,6 @@ VOID RunLoader(VOID)
 			goto reboot;
 		}
 
-NoGui:
 		TimeOut = -1;
 
 		// Try to open the operating system section in the .ini file

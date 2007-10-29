@@ -21,8 +21,8 @@
 #include <debug.h>
 
 
-ULONG	UiScreenWidth = 80;							// Screen Width
-ULONG	UiScreenHeight = 25;							// Screen Height
+ULONG	UiScreenWidth;							// Screen Width
+ULONG	UiScreenHeight;							// Screen Height
 
 UCHAR	UiStatusBarFgColor			= COLOR_BLACK;			// Status bar foreground color
 UCHAR	UiStatusBarBgColor			= COLOR_CYAN;			// Status bar background color
@@ -43,34 +43,54 @@ UCHAR	UiEditBoxBgColor			= COLOR_BLACK;			// Edit box text background color
 
 CHAR	UiTitleBoxTitleText[260]	= "Boot Menu";			// Title box's title text
 
-BOOLEAN	UserInterfaceUp				= FALSE;				// Tells us if the user interface is displayed
-
-VIDEODISPLAYMODE	UiDisplayMode		= VideoTextMode;		// Tells us if we are in text or graphics mode
-
 BOOLEAN	UiUseSpecialEffects			= FALSE;				// Tells us if we should use fade effects
 BOOLEAN	UiDrawTime					= TRUE;					// Tells us if we should draw the time
-BOOLEAN	UiMinimal					= FALSE;				// Tells us if we should use a minimal console-like UI
 BOOLEAN	UiCenterMenu				= TRUE;					// Tells us if we should use a centered or left-aligned menu
 BOOLEAN	UiMenuBox					= TRUE;					// Tells us if we shuld draw a box around the menu
 CHAR	UiTimeText[260] = "[Time Remaining: ] ";
 
 const CHAR	UiMonthNames[12][15] = { "January ", "February ", "March ", "April ", "May ", "June ", "July ", "August ", "September ", "October ", "November ", "December " };
 
+UIVTBL UiVtbl =
+{
+	NoUiInitialize,
+	NoUiUnInitialize,
+	NoUiDrawBackdrop,
+	NoUiFillArea,
+	NoUiDrawShadow,
+	NoUiDrawBox,
+	NoUiDrawText,
+	NoUiDrawCenteredText,
+	NoUiDrawStatusText,
+	NoUiUpdateDateTime,
+	NoUiMessageBox,
+	NoUiMessageBoxCritical,
+	NoUiDrawProgressBarCenter,
+	NoUiDrawProgressBar,
+	NoUiEditBox,
+	NoUiTextToColor,
+	NoUiTextToFillStyle,
+	NoUiFadeInBackdrop,
+	NoUiFadeOut,
+	NoUiDisplayMenu,
+	NoUiDrawMenu,
+};
 
 BOOLEAN UiInitialize(BOOLEAN ShowGui)
 {
+	VIDEODISPLAYMODE	UiDisplayMode; // Tells us if we are in text or graphics mode
+	BOOLEAN	UiMinimal = FALSE; // Tells us if we should use a minimal console-like UI
 	ULONG	SectionId;
 	CHAR	DisplayModeText[260];
 	CHAR	SettingText[260];
 	ULONG	Depth;
 
 	if (!ShowGui) {
-		if (!TuiInitialize())
+		if (!UiVtbl.Initialize())
 		{
 			MachVideoSetDisplayMode(NULL, FALSE);
 			return FALSE;
 		}
-		UserInterfaceUp = FALSE;
 		return TRUE;
 	}
 
@@ -85,7 +105,35 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		{
 			DisplayModeText[0] = '\0';
 		}
+		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
+		{
+			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
+			{
+				UiMinimal = TRUE;
+			}
+			else
+			{
+				UiMinimal = FALSE;
+			}
+		}
+	}
 
+	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
+	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
+
+	if (VideoTextMode == UiDisplayMode)
+		UiVtbl = UiMinimal ? MiniTuiVtbl : TuiVtbl;
+	else
+		UiVtbl = GuiVtbl;
+
+	if (!UiVtbl.Initialize())
+	{
+		MachVideoSetDisplayMode(NULL, FALSE);
+		return FALSE;
+	}
+
+	if (IniOpenSection("Display", &SectionId))
+	{
 		if (IniReadSettingByName(SectionId, "TitleText", SettingText, sizeof(SettingText)))
 		{
 			strcpy(UiTitleBoxTitleText, SettingText);
@@ -180,17 +228,6 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 				UiDrawTime = FALSE;
 			}
 		}
-		if (IniReadSettingByName(SectionId, "MinimalUI", SettingText, sizeof(SettingText)))
-		{
-			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
-			{
-				UiMinimal = TRUE;
-			}
-			else
-			{
-				UiMinimal = FALSE;
-			}
-		}
 		if (IniReadSettingByName(SectionId, "MenuBox", SettingText, sizeof(SettingText)))
 		{
 			if (_stricmp(SettingText, "Yes") == 0 && strlen(SettingText) == 3)
@@ -215,32 +252,8 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 		}
 	}
 
-	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
-	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
-
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		if (!TuiInitialize())
-		{
-			MachVideoSetDisplayMode(NULL, FALSE);
-			return FALSE;
-		}
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//if (!GuiInitialize())
-		//{
-		//	MachSetDisplayMode(NULL, FALSE);
-		//	return FALSE;
-		//}
-	}
-
 	// Draw the backdrop and fade it in if special effects are enabled
 	UiFadeInBackdrop();
-
-	UserInterfaceUp = TRUE;
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
 	return TRUE;
@@ -248,7 +261,7 @@ BOOLEAN UiInitialize(BOOLEAN ShowGui)
 
 BOOLEAN SetupUiInitialize(VOID)
 {
-
+	VIDEODISPLAYMODE	UiDisplayMode;
 	CHAR	DisplayModeText[260];
 	ULONG	Depth;
 
@@ -259,10 +272,11 @@ BOOLEAN SetupUiInitialize(VOID)
 	UiDisplayMode = MachVideoSetDisplayMode(DisplayModeText, TRUE);
 	MachVideoGetDisplaySize(&UiScreenWidth, &UiScreenHeight, &Depth);
 
-	TuiInitialize();
+	UiVtbl = TuiVtbl;
+	UiVtbl.Initialize();
 
 	// Draw the backdrop and fade it in if special effects are enabled
-	TuiFillArea(0,
+	UiVtbl.FillArea(0,
 			0,
 			UiScreenWidth - 1,
 			UiScreenHeight - 2,
@@ -271,10 +285,9 @@ BOOLEAN SetupUiInitialize(VOID)
 
     UiDrawTime = FALSE;
     UiStatusBarBgColor = 7;
-	UserInterfaceUp = TRUE;
 
-    TuiDrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
-    TuiDrawText(3, 2, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD", ATTR(COLOR_GRAY, UiBackdropBgColor));
+    UiVtbl.DrawText(4, 1, "ReactOS " KERNEL_VERSION_STR " Setup", ATTR(COLOR_GRAY, UiBackdropBgColor));
+    UiVtbl.DrawText(3, 2, "\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD\xCD", ATTR(COLOR_GRAY, UiBackdropBgColor));
 
 	DbgPrint((DPRINT_UI, "UiInitialize() returning TRUE.\n"));
 
@@ -287,123 +300,47 @@ VOID UiUnInitialize(PCSTR BootText)
 	UiDrawStatusText("Booting...");
 	UiInfoBox(BootText);
 
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiUnInitialize();
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiUnInitialize();
-	}
+	UiVtbl.UnInitialize();
 }
 
 VOID UiDrawBackdrop(VOID)
 {
-	if (!UserInterfaceUp) return;
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawBackdrop();
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawBackdrop();
-	}
+	UiVtbl.DrawBackdrop();
 }
 
 VOID UiFillArea(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, CHAR FillChar, UCHAR Attr /* Color Attributes */)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiFillArea(Left, Top, Right, Bottom, FillChar, Attr);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiFillArea(Left, Top, Right, Bottom, FillChar, Attr);
-	}
+	UiVtbl.FillArea(Left, Top, Right, Bottom, FillChar, Attr);
 }
 
 VOID UiDrawShadow(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawShadow(Left, Top, Right, Bottom);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawShadow(Left, Top, Right, Bottom);
-	}
+	UiVtbl.DrawShadow(Left, Top, Right, Bottom);
 }
 
 VOID UiDrawBox(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, UCHAR VertStyle, UCHAR HorzStyle, BOOLEAN Fill, BOOLEAN Shadow, UCHAR Attr)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
-	}
+	UiVtbl.DrawBox(Left, Top, Right, Bottom, VertStyle, HorzStyle, Fill, Shadow, Attr);
 }
 
 VOID UiDrawText(ULONG X, ULONG Y, PCSTR Text, UCHAR Attr)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawText(X, Y, Text, Attr);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawText(X, Y, Text, Attr);
-	}
+	UiVtbl.DrawText(X, Y, Text, Attr);
 }
 
 VOID UiDrawCenteredText(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, PCSTR TextString, UCHAR Attr)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
-	}
+	UiVtbl.DrawCenteredText(Left, Top, Right, Bottom, TextString, Attr);
 }
 
 VOID UiDrawStatusText(PCSTR StatusText)
 {
-	if (!UserInterfaceUp) return;
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawStatusText(StatusText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawStatusText(StatusText);
-	}
+	UiVtbl.DrawStatusText(StatusText);
 }
 
 VOID UiUpdateDateTime(VOID)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiUpdateDateTime();
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiUpdateDateTime();
-	}
+	UiVtbl.UpdateDateTime();
 }
 
 VOID UiInfoBox(PCSTR MessageText)
@@ -469,108 +406,32 @@ VOID UiInfoBox(PCSTR MessageText)
 
 VOID UiMessageBox(PCSTR MessageText)
 {
-	// We have not yet displayed the user interface
-	// We are probably still reading the .ini file
-	// and have encountered an error. Just use printf()
-	// and return.
-	if (!UserInterfaceUp)
-	{
-		printf("%s\n", MessageText);
-		printf("Press any key\n");
-		MachConsGetCh();
-		return;
-	}
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiMessageBox(MessageText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiMessageBox(MessageText);
-	}
+	UiVtbl.MessageBox(MessageText);
 }
 
 VOID UiMessageBoxCritical(PCSTR MessageText)
 {
-	// We have not yet displayed the user interface
-	// We are probably still reading the .ini file
-	// and have encountered an error. Just use printf()
-	// and return.
-	if (!UserInterfaceUp)
-	{
-		printf("%s\n", MessageText);
-		printf("Press any key\n");
-		MachConsGetCh();
-		return;
-	}
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiMessageBoxCritical(MessageText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiMessageBoxCritical(MessageText);
-	}
+	UiVtbl.MessageBoxCritical(MessageText);
 }
 
 UCHAR UiTextToColor(PCSTR ColorText)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		return TuiTextToColor(ColorText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		return 0;
-		//return GuiTextToColor(ColorText);
-	}
+	return UiVtbl.TextToColor(ColorText);
 }
 
 UCHAR UiTextToFillStyle(PCSTR FillStyleText)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		return TuiTextToFillStyle(FillStyleText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		return 0;
-		//return GuiTextToFillStyle(FillStyleText);
-	}
+	return UiVtbl.TextToFillStyle(FillStyleText);
 }
 
 VOID UiDrawProgressBarCenter(ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	if (!UserInterfaceUp) return;
-
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawProgressBarCenter(Position, Range, ProgressText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawProgressBarCenter(Position, Range, ProgressText);
-	}
+	UiVtbl.DrawProgressBarCenter(Position, Range, ProgressText);
 }
 
 VOID UiDrawProgressBar(ULONG Left, ULONG Top, ULONG Right, ULONG Bottom, ULONG Position, ULONG Range, PCHAR ProgressText)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiDrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
-	}
+	UiVtbl.DrawProgressBar(Left, Top, Right, Bottom, Position, Range, ProgressText);
 }
 
 VOID UiShowMessageBoxesInSection(PCSTR SectionName)
@@ -653,54 +514,20 @@ VOID UiTruncateStringEllipsis(PCHAR StringText, ULONG MaxChars)
 
 BOOLEAN UiDisplayMenu(PCSTR MenuItemList[], ULONG MenuItemCount, ULONG DefaultMenuItem, LONG MenuTimeOut, ULONG* SelectedMenuItem, BOOLEAN CanEscape, UiMenuKeyPressFilterCallback KeyPressFilter)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		return TuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		return FALSE;
-		//return GuiDisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
-	}
+	return UiVtbl.DisplayMenu(MenuItemList, MenuItemCount, DefaultMenuItem, MenuTimeOut, SelectedMenuItem, CanEscape, KeyPressFilter);
 }
 
 VOID UiFadeInBackdrop(VOID)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiFadeInBackdrop();
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiFadeInBackdrop();
-	}
+	UiVtbl.FadeInBackdrop();
 }
 
 VOID UiFadeOut(VOID)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		TuiFadeOut();
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		//GuiFadeInOut();
-	}
+	UiVtbl.FadeOut();
 }
 
 BOOLEAN UiEditBox(PCSTR MessageText, PCHAR EditTextBuffer, ULONG Length)
 {
-	if (VideoTextMode == UiDisplayMode)
-	{
-		return TuiEditBox(MessageText, EditTextBuffer, Length);
-	}
-	else
-	{
-		UNIMPLEMENTED();
-		return FALSE;
-		//return GuiEditBox(MessageText, EditTextBuffer, Length);
-	}
+	return UiVtbl.EditBox(MessageText, EditTextBuffer, Length);
 }

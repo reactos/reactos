@@ -103,9 +103,7 @@ static BOOLEAN
 LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 {
   CHAR szFullName[256];
-#ifdef USE_UI
   CHAR szBuffer[80];
-#endif
   PFILE FilePointer;
   PCSTR szShortName;
 
@@ -150,12 +148,8 @@ LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
   /*
    * Update the status bar with the current file
    */
-#ifdef USE_UI
   sprintf(szBuffer, "Setup is loading files (%s)", szShortName);
   UiDrawStatusText(szBuffer);
-#else
-  printf("Reading %s\n", szShortName);
-#endif
 
   /* Load the driver */
   FrLdrLoadModule(FilePointer, szModuleName, NULL);
@@ -221,8 +215,8 @@ VOID RunLoader(VOID)
 
 #ifdef USE_UI
   SetupUiInitialize();
-  UiDrawStatusText("");
 #endif
+  UiDrawStatusText("");
 
     extern BOOLEAN FrLdrBootType;
     FrLdrBootType = TRUE;
@@ -231,15 +225,9 @@ VOID RunLoader(VOID)
   RegInitializeRegistry();
 
   /* Detect hardware */
-#ifdef USE_UI
   UiDrawStatusText("Detecting hardware...");
-#else
-  printf("Detecting hardware...\n\n");
-#endif
   MachHwDetect();
-#ifdef USE_UI
   UiDrawStatusText("");
-#endif
 
   /* set boot device */
   MachDiskGetBootDevice(&LoaderBlock.BootDevice);
@@ -247,11 +235,7 @@ VOID RunLoader(VOID)
   /* Open boot drive */
   if (!FsOpenBootVolume())
     {
-#ifdef USE_UI
       UiMessageBox("Failed to open boot drive.");
-#else
-      printf("Failed to open boot drive.");
-#endif
       return;
     }
 
@@ -338,21 +322,12 @@ for(;;);
   /* Insert boot disk 2 */
   if (MachDiskBootingFromFloppy())
     {
-#ifdef USE_UI
       UiMessageBox("Please insert \"ReactOS Boot Disk 2\" and press ENTER");
-#else
-      printf("\n\n Please insert \"ReactOS Boot Disk 2\" and press ENTER\n");
-      MachConsGetCh();
-#endif
 
       /* Open boot drive */
       if (!FsOpenBootVolume())
 	{
-#ifdef USE_UI
 	  UiMessageBox("Failed to open boot drive.");
-#else
-	  printf("Failed to open boot drive.");
-#endif
 	  return;
 	}
 
@@ -381,11 +356,7 @@ for(;;);
   /* Load ANSI codepage file */
   if (!LoadNlsFile(SourcePath, LoadOptions, "ansi.nls"))
     {
-#ifdef USE_UI
       UiMessageBox("Failed to load the ANSI codepage file.");
-#else
-      printf("Failed to load the ANSI codepage file.");
-#endif
       return;
     }
 
@@ -410,11 +381,7 @@ for(;;);
   /* Load OEM codepage file */
   if (!LoadNlsFile(SourcePath, LoadOptions, "oem.nls"))
     {
-#ifdef USE_UI
       UiMessageBox("Failed to load the OEM codepage file.");
-#else
-      printf("Failed to load the OEM codepage file.");
-#endif
       return;
     }
 
@@ -439,11 +406,7 @@ for(;;);
   /* Load Unicode casemap file */
   if (!LoadNlsFile(SourcePath, LoadOptions, "casemap.nls"))
     {
-#ifdef USE_UI
       UiMessageBox("Failed to load the Unicode casemap file.");
-#else
-      printf("Failed to load the Unicode casemap file.");
-#endif
       return;
     }
 
@@ -480,9 +443,7 @@ for(;;);
         } while (InfFindNextLine(&InfContext, &InfContext));
     }
 
-#ifdef USE_UI
   UiUnInitialize("Booting ReactOS...");
-#endif
 
   /* Now boot the kernel */
   DiskStopFloppyMotor();
