@@ -222,6 +222,7 @@ WlxStartApplication(
 	}
 
 	ZeroMemory(&StartupInfo, sizeof(STARTUPINFOW));
+	ZeroMemory(&ProcessInformation, sizeof(PROCESS_INFORMATION));
 	StartupInfo.cb = sizeof(STARTUPINFOW);
 	StartupInfo.lpTitle = pszCmdLine;
 	StartupInfo.dwX = StartupInfo.dwY = StartupInfo.dwXSize = StartupInfo.dwYSize = 0L;
@@ -229,6 +230,12 @@ WlxStartApplication(
 	StartupInfo.wShowWindow = SW_SHOW;
 	StartupInfo.lpDesktop = pszDesktopName;
 
+	len = GetWindowsDirectoryW(CurrentDirectory, MAX_PATH);
+	if (len == 0 || len > MAX_PATH)
+	{
+		WARN("GetWindowsDirectoryW() failed\n");
+		return FALSE;
+	}
 	ret = CreateProcessAsUserW(
 		hAppToken,
 		pszCmdLine,
@@ -413,7 +420,7 @@ DoLoginTasks(
 	BOOL bResult;
 
 	if (!LogonUserW(UserName, Domain, Password,
-		LOGON32_LOGON_INTERACTIVE, /* FIXME - use LOGON32_LOGON_UNLOCK instead! */
+		LOGON32_LOGON_INTERACTIVE,
 		LOGON32_PROVIDER_DEFAULT,
 		&pgContext->UserToken))
 	{
