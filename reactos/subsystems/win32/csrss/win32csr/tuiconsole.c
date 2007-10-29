@@ -284,7 +284,6 @@ TuiConsoleThread (PVOID Data)
           msg.message == WM_KEYDOWN || msg.message == WM_KEYUP ||
           msg.message == WM_SYSKEYDOWN || msg.message == WM_SYSKEYUP)
         {
-          CHECKPOINT1;
           ConioProcessKey(&msg, Console, TRUE);
         }
     }
