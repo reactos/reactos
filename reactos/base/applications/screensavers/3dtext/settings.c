@@ -36,7 +36,7 @@ void LoadSettings()
 
 	if(RegQueryValueEx(hkey, _T("DisplayString"),  0, 0, (LPBYTE)m_Text, &len) != ERROR_SUCCESS)
 	{
-		strcpy(m_Text  , "ReactOS Rocks!");
+		_tcscpy(m_Text  , _TEXT("ReactOS Rocks!"));
 	}
 
 	RegCloseKey(hkey);

@@ -53,12 +53,12 @@ GLvoid BuildFont(GLvoid)								// Build Our Bitmap Font
 						FALSE,							// Italic
 						FALSE,							// Underline
 						FALSE,							// Strikeout
-						ANSI_CHARSET,					// Character Set Identifier
+						DEFAULT_CHARSET,				// Character Set Identifier
 						OUT_TT_PRECIS,					// Output Precision
 						CLIP_DEFAULT_PRECIS,			// Clipping Precision
 						ANTIALIASED_QUALITY,			// Output Quality
 						FF_DONTCARE|DEFAULT_PITCH,		// Family And Pitch
-						"Tahoma");				// Font Name
+						_T("Tahoma"));				// Font Name
 
 	SelectObject(hDC, font);							// Selects The Font We Created
 
@@ -77,14 +77,14 @@ GLvoid KillFont(GLvoid)									// Delete The Font
   glDeleteLists(base, 256);								// Delete All 256 Characters
 }
 
-GLvoid glPrint(char *text)								// Custom GL "Print" Routine
+GLvoid glPrint(LPWSTR text)								// Custom GL "Print" Routine
 {
   if (text == NULL)										// If There's No Text
     return;												// Do Nothing
 
   glPushAttrib(GL_LIST_BIT);							// Pushes The Display List Bits
   glListBase(base);										// Sets The Base Character to 32
-  glCallLists(strlen(text), GL_UNSIGNED_BYTE, text);	// Draws The Display List Text
+  glCallLists(wcslen(text), GL_UNSIGNED_SHORT, text);	// Draws The Display List Text
   glPopAttrib();										// Pops The Display List Bits
 }
 
@@ -185,14 +185,14 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,
 
 			if (!PixelFormat)								// No Matching Pixel Format?
 			{
-				MessageBox(0,"Can't Find A Suitable PixelFormat.","Error",MB_OK|MB_ICONERROR);
+				MessageBox(0,_TEXT("Can't Find A Suitable PixelFormat."),_TEXT("Error"),MB_OK|MB_ICONERROR);
 				PostQuitMessage(0);			// This Sends A 'Message' Telling The Program To Quit
 				break;						// Prevents The Rest Of The Code From Running
 			}
 
 			if(!SetPixelFormat(hDC,PixelFormat,&pfd))		// Can We Set The Pixel Mode?
 			{
-				MessageBox(0,"Can't Set The PixelFormat.","Error",MB_OK|MB_ICONERROR);
+				MessageBox(0,_TEXT("Can't Set The PixelFormat."),_TEXT("Error"),MB_OK|MB_ICONERROR);
 				PostQuitMessage(0);			// This Sends A 'Message' Telling The Program To Quit
 				break;						// Prevents The Rest Of The Code From Running
 			}
@@ -200,14 +200,14 @@ LRESULT CALLBACK WndProc(	HWND	hWnd,
 			hRC = wglCreateContext(hDC);					// Grab A Rendering Context
 			if(!hRC)										// Did We Get One?
 			{
-				MessageBox(0,"Can't Create A GL Rendering Context.","Error",MB_OK|MB_ICONERROR);
+				MessageBox(0,_TEXT("Can't Create A GL Rendering Context."),_TEXT("Error"),MB_OK|MB_ICONERROR);
 				PostQuitMessage(0);			// This Sends A 'Message' Telling The Program To Quit
 				break;						// Prevents The Rest Of The Code From Running
 			}
 
 			if(!wglMakeCurrent(hDC, hRC))					// Can We Make The RC Active?
 			{
-				MessageBox(0,"Can't Activate GLRC.","Error",MB_OK|MB_ICONERROR);
+				MessageBox(0,_TEXT("Can't Activate GLRC."),_TEXT("Error"),MB_OK|MB_ICONERROR);
 				PostQuitMessage(0);			// This Sends A 'Message' Telling The Program To Quit
 				break;						// Prevents The Rest Of The Code From Running
 			}
@@ -312,26 +312,25 @@ void InitSaver(HWND hwndParent)
 	}
 }
 
-void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
+//
+//	Look for any options Windows has passed to us:
+//
+//	-a <hwnd>		(set password)
+//  -s				(screensave)
+//  -p <hwnd>		(preview)
+//  -c <hwnd>		(configure)
+//
+VOID ParseCommandLine(LPWSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 {
-	int ch;
-	
-	if (!strlen(szCmdLine))
-		return;
-
-	ch = *szCmdLine++;
+	UCHAR ch = *szCmdLine++;
 
 	if(ch == '-' || ch == '/')
 		ch = *szCmdLine++;
 
 	if(ch >= 'A' && ch <= 'Z')
-		ch += 'a' - 'A';
+		ch += 'a' - 'A';		//convert to lower case
 
 	*chOption = ch;
-
-	if (ch == 's' || ch == 'c')
-		return;
-
 	ch = *szCmdLine++;
 
 	if(ch == ':')
@@ -342,11 +341,11 @@ void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
 
 	if(isdigit(ch))
 	{
-		unsigned int i = atoi(szCmdLine - 1);
+		unsigned int i = _wtoi(szCmdLine - 1);
 		*hwndParent = (HWND)i;
 	}
 	else
-		*hwndParent = 0;
+		*hwndParent = NULL;
 }
 
 //
@@ -387,13 +386,13 @@ void Configure(void)
 	DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL , (DLGPROC)ConfigDlgProc);	
 }
 
-int WINAPI WinMain (HINSTANCE hInst,
+int CALLBACK wWinMain (HINSTANCE hInst,
                     HINSTANCE hPrev,
-                    LPSTR lpCmdLine,
+                    LPWSTR lpCmdLine,
                     int iCmdShow)
 {
 	HWND	hwndParent = 0;
-	int	chOption = 0;
+	UCHAR	chOption;
 	MSG	Message;
 
 	hInstance = hInst;
