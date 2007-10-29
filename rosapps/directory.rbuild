@@ -7,6 +7,10 @@
 	</directory>
 	-->
 
+	<directory name="applications">
+		<xi:include href="applications/applications.rbuild" />
+	</directory>
+	
 	<directory name="cmdutils">
 		<xi:include href="cmdutils/cmdutils.rbuild" />
 	</directory>
