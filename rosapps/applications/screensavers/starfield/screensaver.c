@@ -287,15 +287,23 @@ void InitSaver(HWND hwndParent)
     SetUpStars(250);
 }
 
-void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
+//
+//	Look for any options Windows has passed to us:
+//
+//	-a <hwnd>		(set password)
+//  -s				(screensave)
+//  -p <hwnd>		(preview)
+//  -c <hwnd>		(configure)
+//
+VOID ParseCommandLine(LPWSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 {
-	int ch = *szCmdLine++;
+	UCHAR ch = *szCmdLine++;
 
 	if(ch == '-' || ch == '/')
 		ch = *szCmdLine++;
 
 	if(ch >= 'A' && ch <= 'Z')
-		ch += 'a' - 'A';
+		ch += 'a' - 'A';		//convert to lower case
 
 	*chOption = ch;
 	ch = *szCmdLine++;
@@ -308,11 +316,11 @@ void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
 
 	if(isdigit(ch))
 	{
-		unsigned int i = atoi(szCmdLine - 1);
+		unsigned int i = _wtoi(szCmdLine - 1);
 		*hwndParent = (HWND)i;
 	}
 	else
-		*hwndParent = 0;
+		*hwndParent = NULL;
 }
 
 void Configure(void)
@@ -336,14 +344,14 @@ void Configure(void)
 	           MB_OK | MB_ICONWARNING);
 }
 
-int WINAPI WinMain (HINSTANCE hInst,
+int CALLBACK wWinMain (HINSTANCE hInst,
                     HINSTANCE hPrev,
-                    LPSTR lpCmdLine,
+                    LPWSTR lpCmdLine,
                     int iCmdShow)
 {
 	HWND	hwndParent;
 	UINT	nPreviousState;
-	int	chOption;
+	UCHAR	chOption;
 	MSG	Message;
 
 	hInstance = hInst;

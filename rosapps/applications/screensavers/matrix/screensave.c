@@ -100,7 +100,7 @@ BOOL ScreenSaver(HWND hwndParent)
 //  -p <hwnd>		(preview)
 //  -c <hwnd>		(configure)
 //
-VOID ParseCommandLine(LPSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
+VOID ParseCommandLine(LPWSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 {
 	UCHAR ch = *szCmdLine++;
 
@@ -121,7 +121,7 @@ VOID ParseCommandLine(LPSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 
 	if(isdigit(ch))
 	{
-		unsigned int i = atoi(szCmdLine - 1);
+		unsigned int i = _wtoi(szCmdLine - 1);
 		*hwndParent = (HWND)i;
 	}
 	else
@@ -131,7 +131,7 @@ VOID ParseCommandLine(LPSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 //
 //	Entrypoint for screen-saver: it's just a normal win32 app!
 //
-int WINAPI WinMain (HINSTANCE hInst, HINSTANCE hPrev, LPSTR lpCmdLine, int iCmdShow)
+int CALLBACK wWinMain (HINSTANCE hInst, HINSTANCE hPrev, LPWSTR lpCmdLine, int iCmdShow)
 {
 	HWND   hwndParent;
 	UCHAR  chOption;

@@ -1,13 +1,9 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="matrix" type="win32scr" installbase="system32" installname="matrix2.scr" allowwarnings="true">
+<module name="matrix" type="win32scr" installbase="system32" installname="matrix2.scr" allowwarnings="true" unicode="true">
 	<include base="matrix">.</include>
-
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
-	<define name="UNICODE" />
-	<define name="_UNICODE" />
-
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>
