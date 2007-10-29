@@ -365,6 +365,7 @@ CmpParseKey(IN PVOID ParsedObject,
     UNICODE_STRING TargetPath;
     UNICODE_STRING KeyName;
     PWSTR *Path = &RemainingName->Buffer;
+    PCM_KEY_CONTROL_BLOCK ParentKcb = NULL, Kcb;
 
     ParsedKey = ParsedObject;
 
@@ -415,22 +416,25 @@ CmpParseKey(IN PVOID ParsedObject,
         RtlFreeUnicodeString(&KeyName);
         return Status;
     }
+
+    ParentKcb = ParsedKey->KeyControlBlock;
+
     if (FoundObject == NULL)
     {
-        Status = CmiScanForSubKey(ParsedKey->RegistryHive,
-                                  ParsedKey->KeyCell,
-                                  &SubKeyCell,
-                                  &BlockOffset,
-                                  &KeyName,
-                                  0,
-                                  Attributes);
-        if (!NT_SUCCESS(Status))
+        /* Search for the subkey */
+        BlockOffset = CmpFindSubKeyByName(&ParsedKey->RegistryHive->Hive,
+                                          ParsedKey->KeyCell,
+                                          &KeyName);
+        if (BlockOffset == HCELL_NIL)
         {
             ExReleaseResourceLite(&CmpRegistryLock);
             KeLeaveCriticalRegion();
             RtlFreeUnicodeString(&KeyName);
             return(STATUS_UNSUCCESSFUL);
         }
+        
+        /* Get the node */
+        SubKeyCell = (PCM_KEY_NODE)HvGetCell(&ParsedKey->RegistryHive->Hive, BlockOffset);
 
         if ((SubKeyCell->Flags & KEY_SYM_LINK) &&
             !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
@@ -514,7 +518,23 @@ CmpParseKey(IN PVOID ParsedObject,
 
         /* Add the keep-alive reference */
         ObReferenceObject(FoundObject);
-
+        
+        /* Create the KCB */
+        Kcb = CmpCreateKeyControlBlock(&ParsedKey->RegistryHive->Hive,
+                                       BlockOffset,
+                                       SubKeyCell,
+                                       ParentKcb,
+                                       0,
+                                       &KeyName);
+        if (!Kcb)
+        {
+            ExReleaseResourceLite(&CmpRegistryLock);
+            KeLeaveCriticalRegion();
+            RtlFreeUnicodeString(&KeyName);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+                                  
+        FoundObject->KeyControlBlock = Kcb;
         FoundObject->Flags = 0;
         FoundObject->KeyCell = SubKeyCell;
         FoundObject->KeyCellOffset = BlockOffset;

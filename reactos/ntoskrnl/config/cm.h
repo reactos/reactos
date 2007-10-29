@@ -520,6 +520,7 @@ typedef struct _KEY_OBJECT
     ULONG TimeStamp;
     LIST_ENTRY HiveList;
     CACHED_CHILD_LIST ValueCache;
+    PCM_KEY_CONTROL_BLOCK KeyControlBlock;
 } KEY_OBJECT, *PKEY_OBJECT;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;

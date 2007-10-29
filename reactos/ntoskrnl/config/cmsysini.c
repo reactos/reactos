@@ -669,7 +669,6 @@ CmpCreateRegistryRoot(VOID)
     if (!CmpCreateRootNode(&CmiVolatileHive->Hive, L"REGISTRY", &RootIndex))
     {
         /* We failed */
-        DPRINT1("Fail\n");
         return FALSE;
     }
 
@@ -716,6 +715,7 @@ CmpCreateRegistryRoot(VOID)
     RootKey->ProcessID = PsGetCurrentProcessId();
 #else
     RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
+    RootKey->KeyControlBlock = Kcb;
     RootKey->RegistryHive = CmiVolatileHive;
     RootKey->KeyCellOffset = RootIndex;
     RootKey->KeyCell = KeyCell;

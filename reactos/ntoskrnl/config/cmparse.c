@@ -96,6 +96,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     ULONG StorageType;
     LARGE_INTEGER SystemTime;
     BOOLEAN Hack = FALSE;
+    PCM_KEY_CONTROL_BLOCK Kcb;
 
     /* ReactOS Hack */
     if (Name->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
@@ -208,8 +209,27 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyNode->MaxClassLen = 0;
     KeyNode->NameLength = CmpCopyName(Hive, KeyNode->Name, Name);
     if (KeyNode->NameLength < Name->Length) KeyNode->Flags |= KEY_COMP_NAME;
+    
+    /* Create the KCB */
+    Kcb = CmpCreateKeyControlBlock(Hive,
+                                   *KeyCell,
+                                   KeyNode,
+                                   Parent->KeyControlBlock,
+                                   0,
+                                   Name);
+    if (!Kcb)
+    {
+        /* Fail */
+        ObDereferenceObjectDeferDelete(*Object);
+        Status = STATUS_INSUFFICIENT_RESOURCES;
+        goto Quickie;
+    }
+    
+    /* Sanity check */
+    ASSERT(Kcb->RefCount == 1);
 
     /* Now fill out the Cm object */
+    KeyBody->KeyControlBlock = Kcb;
     KeyBody->KeyCell = KeyNode;
     KeyBody->KeyCellOffset = *KeyCell;
     KeyBody->Flags = 0;
