@@ -118,7 +118,7 @@ ChooseGinaUI(VOID)
 		NextOption = wcschr(CurrentOption, L' ');
 		if (NextOption)
 			*NextOption = L'\0';
-		if (wcsicmp(CurrentOption, L"CMDCONS") == 0)
+		if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
 		{
 			TRACE("Found %S. Switching to console boot\n", CurrentOption);
 			ConsoleBoot = TRUE;

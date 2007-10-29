@@ -88,14 +88,14 @@ BOOL IsConsoleShell(void)
 	if (rc != ERROR_SUCCESS)
 		goto cleanup;
 
-	/* Check for CMDCONS in SystemStartOptions */
+	/* Check for CONSOLE in SystemStartOptions */
 	CurrentOption = SystemStartOptions;
 	while (CurrentOption)
 	{
 		NextOption = wcschr(CurrentOption, L' ');
 		if (NextOption)
 			*NextOption = L'\0';
-		if (wcsicmp(CurrentOption, L"CMDCONS") == 0)
+		if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
 		{
 			ret = TRUE;
 			goto cleanup;
