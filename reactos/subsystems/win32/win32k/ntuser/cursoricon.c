@@ -1520,6 +1520,7 @@ UserDrawIconEx(
         BITMAPOBJ *BitmapObj = NULL;
         PBYTE pBits = NULL;
         BLENDFUNCTION  BlendFunc;
+        DWORD Pixel;
         BYTE Red, Green, Blue, Alpha;
         DWORD Count = 0;
         INT i, j;
@@ -1548,23 +1549,16 @@ UserDrawIconEx(
         {
             for (j = 0; j < cxWidth; j++)
             {
-                DWORD OrigPixel = 0;
-                DWORD AlphaPixel = 0;
+                Pixel = *(DWORD *)(pBits + Count);
 
-                OrigPixel = *(DWORD *)(pBits + Count);
+                Alpha = ((BYTE)(Pixel >> 24) & 0xff);
 
-                Red   = (BYTE)((OrigPixel >>  0) & 0xff);
-                Green = (BYTE)((OrigPixel >>  8) & 0xff);
-                Blue  = (BYTE)((OrigPixel >> 16) & 0xff);
-                Alpha = (BYTE)((OrigPixel >> 24) & 0xff);
+                Red   = (((BYTE)(Pixel >>  0) & 0xff) * Alpha) / 0xff;
+                Green = (((BYTE)(Pixel >>  8) & 0xff) * Alpha) / 0xff;
+                Blue  = (((BYTE)(Pixel >> 16) & 0xff) * Alpha) / 0xff;
 
-                Red = (Red * Alpha) / 0xff;
-                Green = (Green * Alpha) / 0xff;
-                Blue = (Blue * Alpha) / 0xff;
+                *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
 
-                AlphaPixel = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
-
-                *(DWORD *)(pBits + Count) = AlphaPixel;
                 Count += sizeof (DWORD);
             }
         }
