@@ -1553,9 +1553,9 @@ UserDrawIconEx(
 
                 Alpha = ((BYTE)(Pixel >> 24) & 0xff);
 
-                Red   = (((BYTE)(Pixel >>  0) & 0xff) * Alpha) / 0xff;
-                Green = (((BYTE)(Pixel >>  8) & 0xff) * Alpha) / 0xff;
-                Blue  = (((BYTE)(Pixel >> 16) & 0xff) * Alpha) / 0xff;
+                Red   = (((BYTE)(Pixel >>  0)) * Alpha) / 0xff;
+                Green = (((BYTE)(Pixel >>  8)) * Alpha) / 0xff;
+                Blue  = (((BYTE)(Pixel >> 16)) * Alpha) / 0xff;
 
                 *(DWORD *)(pBits + Count) = (DWORD)(Red | (Green << 8) | (Blue << 16) | (Alpha << 24));
 
