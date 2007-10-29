@@ -1,0 +1,307 @@
+/*
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * FILE:            ntoskrnl/config/cmdelay.c
+ * PURPOSE:         Routines for handling delay close and allocate.
+ * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ */
+
+/* INCLUDES ******************************************************************/
+
+#include <ntoskrnl.h>
+#define NDEBUG
+#include <debug.h>
+#include "cm.h"
+
+/* GLOBALS *******************************************************************/
+
+WORK_QUEUE_ITEM CmpDelayDerefKCBWorkItem;
+LIST_ENTRY CmpFreeDelayItemsListHead;
+
+ULONG CmpDelayedCloseSize = 2048;
+ULONG CmpDelayedCloseElements;
+KGUARDED_MUTEX CmpDelayedCloseTableLock;
+BOOLEAN CmpDelayCloseWorkItemActive;
+WORK_QUEUE_ITEM CmpDelayCloseWorkItem;
+LIST_ENTRY CmpDelayedLRUListHead;
+ULONG CmpDelayCloseIntervalInSeconds = 5;
+KDPC CmpDelayCloseDpc;
+KTIMER CmpDelayCloseTimer;
+
+KGUARDED_MUTEX CmpDelayDerefKCBLock;
+BOOLEAN CmpDelayDerefKCBWorkItemActive;
+LIST_ENTRY CmpDelayDerefKCBListHead;
+ULONG CmpDelayDerefKCBIntervalInSeconds = 5;
+KDPC CmpDelayDerefKCBDpc;
+KTIMER CmpDelayDerefKCBTimer;
+
+/* FUNCTIONS *****************************************************************/
+
+VOID
+NTAPI
+CmpDelayCloseDpcRoutine(IN PKDPC Dpc,
+                        IN PVOID DeferredContext,
+                        IN PVOID SystemArgument1,
+                        IN PVOID SystemArgument2)
+{
+    /* Sanity check */
+    ASSERT(CmpDelayCloseWorkItemActive);
+
+    /* Queue the work item */
+    ExQueueWorkItem(&CmpDelayCloseWorkItem, DelayedWorkQueue);
+}
+
+VOID
+NTAPI
+CmpDelayCloseWorker(IN PVOID Context)
+{
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT(CmpDelayCloseWorkItemActive);
+
+    /* FIXME: TODO */
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+CmpInitializeDelayedCloseTable(VOID)
+{
+    
+    /* Setup the delayed close lock */
+    KeInitializeGuardedMutex(&CmpDelayedCloseTableLock);
+    
+    /* Setup the work item */
+    ExInitializeWorkItem(&CmpDelayCloseWorkItem, CmpDelayCloseWorker, NULL);
+    
+    /* Setup the list head */
+    InitializeListHead(&CmpDelayedLRUListHead);
+    
+    /* Setup the DPC and its timer */
+    KeInitializeDpc(&CmpDelayCloseDpc, CmpDelayCloseDpcRoutine, NULL);
+    KeInitializeTimer(&CmpDelayCloseTimer);
+}
+
+VOID
+NTAPI
+CmpDelayDerefKCBDpcRoutine(IN PKDPC Dpc,
+                           IN PVOID DeferredContext,
+                           IN PVOID SystemArgument1,
+                           IN PVOID SystemArgument2)
+{
+    /* Sanity check */
+    ASSERT(CmpDelayDerefKCBWorkItemActive);
+
+    /* Queue the work item */
+    ExQueueWorkItem(&CmpDelayDerefKCBWorkItem, DelayedWorkQueue);
+}
+
+VOID
+NTAPI
+CmpDelayDerefKCBWorker(IN PVOID Context)
+{
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT(CmpDelayDerefKCBWorkItemActive);
+
+    /* FIXME: TODO */
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+CmpInitDelayDerefKCBEngine(VOID)
+{
+    /* Initialize lock and list */
+    KeInitializeGuardedMutex(&CmpDelayDerefKCBLock);
+    InitializeListHead(&CmpDelayDerefKCBListHead);
+
+    /* Setup the work item */
+    ExInitializeWorkItem(&CmpDelayDerefKCBWorkItem,
+                         CmpDelayDerefKCBWorker,
+                         NULL);
+
+    /* Setup the DPC and timer for it */
+    KeInitializeDpc(&CmpDelayDerefKCBDpc, CmpDelayDerefKCBDpcRoutine, NULL);
+    KeInitializeTimer(&CmpDelayDerefKCBTimer);
+}
+
+VOID
+NTAPI
+CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    USHORT OldRefCount, NewRefCount;
+    LARGE_INTEGER Timeout;
+    PCM_DELAY_DEREF_KCB_ITEM Entry;
+    PAGED_CODE();
+
+    /* Get the previous reference count */
+    OldRefCount = Kcb->RefCount;
+
+    /* Write the new one */
+    NewRefCount = (USHORT)InterlockedCompareExchange((PLONG)&Kcb->RefCount,
+                                                     OldRefCount - 1,
+                                                     OldRefCount);
+    if (NewRefCount != OldRefCount) return;
+
+    /* Allocate a delay item */
+    Entry = CmpAllocateDelayItem();
+    if (!Entry) return;
+
+    /* Set the KCB */
+    Entry->Kcb = Kcb;
+
+    /* Acquire the delayed deref table lock */
+    KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
+
+    /* Insert the entry into the list */
+    InsertTailList(&CmpDelayDerefKCBListHead, &Entry->ListEntry);
+
+    /* Check if we need to enable anything */
+    if (!CmpDelayDerefKCBWorkItemActive)
+    {
+        /* Yes, we have no work item, setup the interval */
+        Timeout.QuadPart = CmpDelayDerefKCBIntervalInSeconds * -10000000;
+        KeSetTimer(&CmpDelayDerefKCBTimer, Timeout, &CmpDelayDerefKCBDpc);
+    }
+
+    /* Release the table lock */
+    KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
+}
+
+VOID
+NTAPI
+CmpArmDelayedCloseTimer(VOID)
+{
+    LARGE_INTEGER Timeout;
+    PAGED_CODE();
+
+    /* Setup the interval */
+    Timeout.QuadPart = CmpDelayCloseIntervalInSeconds * -10000000;
+    KeSetTimer(&CmpDelayCloseTimer, Timeout, &CmpDelayCloseDpc);
+}
+
+VOID
+NTAPI
+CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
+                     IN BOOLEAN LockHeldExclusively)
+{
+    ULONG i;
+    ULONG OldRefCount, NewRefCount;
+    PCM_DELAYED_CLOSE_ENTRY Entry;
+    PAGED_CODE();
+
+    /* Sanity check */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+
+    /* Make sure it's valid */
+    if (Kcb->DelayedCloseIndex != CmpDelayedCloseSize) ASSERT(FALSE);
+
+    /* Sanity checks */
+    ASSERT(Kcb->RefCount == 0);
+    ASSERT(IsListEmpty(&Kcb->KeyBodyListHead) == TRUE);
+    for (i = 0; i < 4; i++) ASSERT(Kcb->KeyBodyArray[i] == NULL);
+
+    /* Allocate a delay item */
+    Entry = CmpAllocateDelayItem();
+    if (!Entry)
+    {
+        /* Cleanup immediately */
+        CmpCleanUpKcbCacheWithLock(Kcb, LockHeldExclusively);
+        return;
+    }
+
+    /* Sanity check */
+    if (Kcb->InDelayClose) ASSERT(FALSE);
+
+    /* Get the previous reference count */
+    OldRefCount = Kcb->InDelayClose;
+    ASSERT(OldRefCount == 0);
+
+    /* Write the new one */
+    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
+                                             1,
+                                             OldRefCount);
+    if (NewRefCount != OldRefCount) ASSERT(FALSE);
+
+    /* Reset the delayed close index */
+    Kcb->DelayedCloseIndex = 0;
+
+    /* Set up the close entry */
+    Kcb->DelayCloseEntry = Entry;
+    Entry->KeyControlBlock = Kcb;
+
+    /* Increase the number of elements */
+    InterlockedIncrement((PLONG)&CmpDelayedCloseElements);
+
+    /* Acquire the delayed close table lock */
+    KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+
+    /* Insert the entry into the list */
+    InsertHeadList(&CmpDelayedLRUListHead, &Entry->DelayedLRUList);
+
+    /* Check if we need to enable anything */
+    if ((CmpDelayedCloseElements > CmpDelayedCloseSize) &&
+        !(CmpDelayCloseWorkItemActive))
+    {
+        /* Yes, we have too many elements to close, and no work item */
+        CmpArmDelayedCloseTimer();
+    }
+
+    /* Release the table lock */
+    KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+}
+
+VOID
+NTAPI
+CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    PCM_DELAYED_CLOSE_ENTRY Entry;
+    ULONG NewRefCount, OldRefCount;
+    PAGED_CODE();
+    
+    /* Sanity checks */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+    if (Kcb->DelayedCloseIndex == CmpDelayedCloseSize) ASSERT(FALSE);
+    
+    /* Get the entry and lock the table */
+    Entry = Kcb->DelayCloseEntry;
+    ASSERT(Entry);
+    KeAcquireGuardedMutex(&CmpDelayedCloseTableLock);
+    
+    /* Remove the entry */
+    RemoveEntryList(&Entry->DelayedLRUList);
+    
+    /* Release the lock */
+    KeReleaseGuardedMutex(&CmpDelayedCloseTableLock);
+    
+    /* Free the entry */
+    CmpFreeDelayItem(Entry);
+    
+    /* Reduce the number of elements */
+    InterlockedDecrement((PLONG)&CmpDelayedCloseElements);
+    
+    /* Sanity check */
+    if (!Kcb->InDelayClose) ASSERT(FALSE);
+    
+    /* Get the old reference count */
+    OldRefCount = Kcb->InDelayClose;
+    ASSERT(OldRefCount == 1);
+    
+    /* Set it to 0 */
+    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
+                                             0,
+                                             OldRefCount);
+    if (NewRefCount != OldRefCount) ASSERT(FALSE);
+    
+    /* Remove the link to the entry */
+    Kcb->DelayCloseEntry = NULL;
+    
+    /* Set new delay size and remove the delete flag */
+    Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
+}
+

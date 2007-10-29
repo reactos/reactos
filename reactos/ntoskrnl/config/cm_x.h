@@ -200,6 +200,18 @@ CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 }
 
 //
+// Converts a KCB lock
+//
+FORCEINLINE
+VOID
+CmpConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
+{
+    ASSERT(CmpIsKcbLockedExclusive(k) == FALSE);  
+    CmpReleaseKcbLock(k);
+    CmpAcquireKcbLockExclusive(k);
+}
+
+//
 // Exclusively acquires an NCB
 //
 #define CmpAcquireNcbLockExclusive(n)                               \
@@ -209,10 +221,28 @@ CmpTryToConvertKcbSharedToExclusive(IN PCM_KEY_CONTROL_BLOCK k)
 }
 
 //
+// Exclusively acquires an NCB by key
+//
+#define CmpAcquireNcbLockExclusiveByKey(k)                          \
+{                                                                   \
+    ExAcquirePushLockExclusive(&GET_HASH_ENTRY(CmpNameCacheTable,   \
+                                               (k)).Lock);          \
+}
+
+//
 // Releases an exlusively or shared acquired NCB
 //
 #define CmpReleaseNcbLock(k)                                        \
 {                                                                   \
     ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
                                      (k)->ConvKey).Lock);           \
+}
+
+//
+// Releases an exlusively or shared acquired NCB by key
+//
+#define CmpReleaseNcbLockByKey(k)                                   \
+{                                                                   \
+    ExReleasePushLock(&GET_HASH_ENTRY(CmpNameCacheTable,            \
+                                      (k)).Lock);                   \
 }

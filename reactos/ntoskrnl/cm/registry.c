@@ -226,8 +226,8 @@ CmpRosGetHardwareHive(OUT PULONG Length)
 /* Precondition: Must not hold the hive lock CmpRegistryLock */
 VOID
 NTAPI
-EnlistKeyBodyWithKCB(IN PKEY_OBJECT KeyObject,
-                     IN ULONG Flags)
+EnlistKeyBodyWithKeyObject(IN PKEY_OBJECT KeyObject,
+                           IN ULONG Flags)
 {
     /* Acquire hive lock */
     KeEnterCriticalRegion();

@@ -110,12 +110,14 @@
 				<file>cmhardwr.c</file>
 			</directory>
 		</if>
+		<file>cmalloc.c</file>
 		<file>cmapi.c</file>
 		<file>cmboot.c</file>
 		<file>cmcheck.c</file>
 		<file>cmcontrl.c</file>
 		<file>cmconfig.c</file>
 		<file>cmdata.c</file>
+		<file>cmdelay.c</file>
 		<file>cmindex.c</file>
 		<file>cminit.c</file>
 		<file>cmhook.c</file>

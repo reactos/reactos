@@ -309,6 +309,15 @@ typedef struct _CM_ALLOC_PAGE
 } CM_ALLOC_PAGE, *PCM_ALLOC_PAGE;
 
 //
+// Allocation Page Entry
+//
+typedef struct _CM_DELAY_ALLOC
+{
+    LIST_ENTRY ListEntry;
+    PCM_KEY_CONTROL_BLOCK Kcb;
+} CM_DELAY_ALLOC, *PCM_DELAY_ALLOC;
+
+//
 // Delayed Close Entry
 //
 typedef struct _CM_DELAYED_CLOSE_ENTRY
@@ -788,6 +797,9 @@ CmpUnlockRegistry(
     VOID
 );
 
+//
+// Delay Functions
+//
 PVOID
 NTAPI
 CmpAllocateDelayItem(
@@ -798,6 +810,29 @@ VOID
 NTAPI
 CmpFreeDelayItem(
     PVOID Entry
+);
+
+VOID
+NTAPI
+CmpDelayDerefKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+VOID
+NTAPI
+CmpAddToDelayedClose(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN LockHeldExclusively
+);
+
+VOID
+NTAPI
+CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb);
+
+VOID
+NTAPI
+CmpInitializeDelayedCloseTable(
+    VOID
 );
 
 //
@@ -814,9 +849,28 @@ CmpCreateKeyControlBlock(
     IN PUNICODE_STRING KeyName
 );
 
+PCM_KEY_CONTROL_BLOCK
+NTAPI
+CmpAllocateKeyControlBlock(
+    VOID
+);
+
 VOID
 NTAPI
-CmpDereferenceKcbWithLock(
+CmpFreeKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+VOID
+NTAPI
+CmpCleanUpKcbCacheWithLock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN LockHeldExclusively
+);
+
+VOID
+NTAPI
+CmpDereferenceKeyControlBlockWithLock(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeldExclusively
 );
@@ -824,12 +878,15 @@ CmpDereferenceKcbWithLock(
 VOID
 NTAPI
 EnlistKeyBodyWithKCB(
-#if 0
     IN PCM_KEY_BODY KeyObject,
-#else
-    IN PKEY_OBJECT KeyObject,
-#endif
     IN ULONG Flags
+);
+
+VOID
+NTAPI
+EnlistKeyBodyWithKeyObject(
+   IN PKEY_OBJECT KeyObject,
+   IN ULONG Flags
 );
 
 NTSTATUS
@@ -1276,6 +1333,7 @@ extern HANDLE CmpRegistryRootHandle;
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN InitIsWinPEMode;
 extern ULONG CmpHashTableSize;
+extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
 
 //
 // Inlined functions

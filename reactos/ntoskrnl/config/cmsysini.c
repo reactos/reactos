@@ -17,6 +17,12 @@ KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 PEPROCESS CmpSystemProcess;
 BOOLEAN HvShutdownComplete;
+PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
+BOOLEAN CmpFlushStarveWriters;
+BOOLEAN CmpFlushOnLockRelease;
+BOOLEAN CmpSpecialBootCondition;
+BOOLEAN CmpNoWrite;
+BOOLEAN CmpForceForceFlush;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -704,7 +710,7 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
 #if 0
-    RootKey->Type = TAG('k', 'v', '0', '2';
+    RootKey->Type = TAG('k', 'v', '0', '2');
     RootKey->KeyControlBlock = Kcb;
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
@@ -721,7 +727,7 @@ CmpCreateRegistryRoot(VOID)
 #endif
 
     /* Insert it into the object list head */
-    EnlistKeyBodyWithKCB(RootKey, 0);
+    EnlistKeyBodyWithKeyObject(RootKey, 0);
 
     /* Insert the key into the namespace */
     Status = ObInsertObject(RootKey,
@@ -977,4 +983,81 @@ CmInitSystem1(VOID)
 
     /* If we got here, all went well */
     return TRUE;
+}
+
+VOID
+NTAPI
+CmpLockRegistryExclusive(VOID)
+{
+    /* Enter a critical region and lock the registry */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+    
+    /* Sanity check */
+    ASSERT(CmpFlushStarveWriters == 0);
+    RtlGetCallersAddress(&CmpRegistryLockCaller, &CmpRegistryLockCallerCaller);
+}
+
+BOOLEAN
+NTAPI
+CmpTestRegistryLock(VOID)
+{
+    /* Test the lock */
+    return (BOOLEAN)ExIsResourceAcquiredSharedLite(&CmpRegistryLock);
+}
+
+BOOLEAN
+NTAPI
+CmpTestRegistryLockExclusive(VOID)
+{
+    /* Test the lock */
+    return ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock);
+}
+
+VOID
+NTAPI
+CmpUnlockRegistry(VOID)
+{
+    /* Sanity check */
+    CMP_ASSERT_REGISTRY_LOCK();
+    
+    /* Check if we should flush the registry */
+    if (CmpFlushOnLockRelease)
+    {
+        /* The registry should be exclusively locked for this */
+        CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
+        
+        /* Flush the registry */
+        CmpFlushEntireRegistry(TRUE);
+        CmpFlushOnLockRelease = FALSE;
+    }
+    
+    /* Release the lock and leave the critical region */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+}
+
+BOOLEAN
+NTAPI
+CmpFlushEntireRegistry(IN BOOLEAN ForceFlush)
+{
+    BOOLEAN Flushed = TRUE;
+    
+    /* Make sure that the registry isn't read-only now */
+    if (CmpNoWrite) return TRUE;
+    
+    /* Otherwise, acquire the hive list lock and disable force flush */
+    CmpForceForceFlush = FALSE;
+    ExAcquirePushLockShared(&CmpHiveListHeadLock);
+    
+    /* Check if the hive list isn't empty */
+    if (!IsListEmpty(&CmpHiveListHead))
+    {
+        /* FIXME: TODO */
+        ASSERT(FALSE);
+    }
+    
+    /* Release the lock and return the flush state */
+    ExReleasePushLock(&CmpHiveListHeadLock);
+    return Flushed;
 }
