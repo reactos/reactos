@@ -195,7 +195,7 @@ BEGIN
     IDS_ELEMENT_4 "Caption of active windows"
     IDS_ELEMENT_5 "Border of active windows"
     IDS_ELEMENT_6 "Menu"
-    IDS_ELEMENT_7 "Hilited elements"
+    IDS_ELEMENT_7 "Selected Items"
     IDS_ELEMENT_8 "Windows"
     IDS_ELEMENT_9 "Scrollbars"
     IDS_ELEMENT_10 "3D objects"
