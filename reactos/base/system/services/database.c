@@ -775,7 +775,7 @@ ScmStartUserModeService(PSERVICE Service,
     DPRINT1("CreateNamedPipeW(%S) done\n", NtControlPipeName);
     if (Service->ControlPipeHandle == INVALID_HANDLE_VALUE)
     {
-        DPRINT1("Failed to create control pipe!\n");
+        DPRINT("Failed to create control pipe!\n");
         return GetLastError();
     }
 
