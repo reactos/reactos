@@ -293,12 +293,11 @@ IntGetWindowStationObject(PWINSTATION_OBJECT Object)
 BOOL FASTCALL
 co_IntInitializeDesktopGraphics(VOID)
 {
-   UNICODE_STRING DriverName;
+   UNICODE_STRING DriverName = RTL_CONSTANT_STRING(L"DISPLAY");
    if (! IntCreatePrimarySurface())
    {
       return FALSE;
    }
-   RtlInitUnicodeString(&DriverName, L"DISPLAY");
    ScreenDeviceContext = IntGdiCreateDC(&DriverName, NULL, NULL, NULL, FALSE);
    if (NULL == ScreenDeviceContext)
    {

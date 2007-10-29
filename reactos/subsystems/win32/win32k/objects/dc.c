@@ -530,16 +530,17 @@ IntPrepareDriver()
          }
       }
 
-      RtlFreeUnicodeString(&DriverFileNames);
-
       if (!GotDriver)
       {
          ObDereferenceObject(PrimarySurface.VideoFileObject);
+         RtlFreeUnicodeString(&DriverFileNames);
          DPRINT1("No suitable DDI driver found\n");
          continue;
       }
 
       DPRINT("Display driver %S loaded\n", CurrentName);
+
+      RtlFreeUnicodeString(&DriverFileNames);
 
       DPRINT("Building DDI Functions\n");
 
@@ -800,6 +801,8 @@ IntDestroyPrimarySurface()
     PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
     PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
     PrimarySurface.PreparedDriver = FALSE;
+    KeSetEvent(&VideoDriverNeedsPreparation, 1, FALSE);
+    KeResetEvent(&VideoDriverPrepared);
 
     DceEmptyCache();
 
