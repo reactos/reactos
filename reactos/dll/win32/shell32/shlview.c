@@ -948,7 +948,6 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 	HMENU	hMenu;
 	BOOL	fExplore = FALSE;
 	HWND	hwndTree = 0;
-	LPCONTEXTMENU	pContextMenu = NULL;
 	CMINVOKECOMMANDINFO	cmi;
 
 	TRACE("(%p)->(0x%08x 0x%08x 0x%08x) stub\n",This, x, y, bDefault);
@@ -1011,7 +1010,7 @@ static void ShellView_DoContextMenu(IShellViewImpl * This, WORD x, WORD y, BOOL 
 		    cmi.cbSize = sizeof(cmi);
 		    cmi.hwnd = This->hWndParent; /* this window has to answer CWM_GETISHELLBROWSER */
 		    cmi.lpVerb = (LPCSTR)MAKEINTRESOURCEA(uCommand);
-		    IContextMenu_InvokeCommand(pContextMenu, &cmi);
+		    IContextMenu_InvokeCommand(This->pCM, &cmi);
 		  }
 		}
 		DestroyMenu(hMenu);

@@ -62,7 +62,7 @@ typedef struct
 } ItemCmImpl;
 
 UINT
-SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj);
+SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, LPITEMIDLIST pidlFolder);
 
 static const IContextMenu2Vtbl cmvt;
 
@@ -310,7 +310,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     UINT idCmdLast = 0xFFF0;
     static WCHAR szAny[] = { '*',0};
 
-    SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj);
+    SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj, This->pidl);
 
     for (i = 0; i < This->cidl; i++)
     {
@@ -324,7 +324,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             if (hr == S_OK)
             {
                 memcpy(&buffer[6], pwszCLSID, 38 * sizeof(WCHAR));
-                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, This->pidl);
             }
         }
 
@@ -333,7 +333,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             ebuf[0] = L'.';
             buffer[0] = L'\0';
             if (MultiByteToWideChar(CP_ACP, 0, ebuf, -1, buffer, 111))
-                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, This->pidl);
         }
     }
 
@@ -778,12 +778,12 @@ static const IContextMenu2Vtbl cmvt =
 };
 
 HRESULT
-SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu** ppv, IDataObject * pDataObj)
+SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu** ppv, IDataObject * pDataObj, LPITEMIDLIST pidlFolder)
 {
   HRESULT hr;
   IContextMenu * cmobj;
   IShellExtInit *shext;
-
+  
   TRACE("SH_LoadDynamicContextMenuHandler entered with %s\n",wine_dbgstr_guid(szClass));
 
   hr = SHCoCreateInstance(NULL, szClass, NULL, &IID_IContextMenu, (void**)&cmobj);
@@ -800,8 +800,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
       cmobj->lpVtbl->Release(cmobj);
       return FALSE;
   }
-
-  hr = shext->lpVtbl->Initialize(shext, NULL, pDataObj, hKey);
+  hr = shext->lpVtbl->Initialize(shext, pidlFolder, pDataObj, hKey);
   if (hr != S_OK)
   {
       TRACE("Failed to initialize shell extension\n");
@@ -817,7 +816,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
 }
 
 UINT
-SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj)
+SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, LPITEMIDLIST pidlFolder)
 {
    HKEY hKey;
    WCHAR szKey[MAX_PATH] = {0};
@@ -861,7 +860,7 @@ SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *Th
          TRACE("hResult %x szKey %s name %s\n",hResult, debugstr_w(szKey), debugstr_w(szName));
          if (hResult == S_OK)
          {
-             hResult = SH_LoadDynamicContextMenuHandler(hKey, &clsid, &cmobj, pDataObj);
+             hResult = SH_LoadDynamicContextMenuHandler(hKey, &clsid, &cmobj, pDataObj, pidlFolder);
          }
          if (hResult == S_OK)
          {
