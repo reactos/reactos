@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-#define YDEBUG
+//#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -45,6 +45,7 @@ BOOL fileMoving = FALSE;
 /**************************************************************************
 *  IContextMenu Implementation
 */
+
 typedef struct
 {	const IContextMenu2Vtbl *lpVtbl;
 	LONG		ref;
@@ -615,6 +616,24 @@ static void DoProperties(
 	   SHFree(pidlFQ);
     }
 }
+HRESULT
+DoShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
+{
+    HRESULT hResult;
+    UINT i;
+
+    TRACE("DoShellExtensions %p verb %x count %u\n",This, LOWORD(lpcmi->lpVerb), This->ecount);
+    for(i = 0; i < This->ecount; i++)
+    {
+        IContextMenu * cmenu = This->ecmenu[i];
+
+        hResult = cmenu->lpVtbl->InvokeCommand(cmenu, lpcmi);
+        if (SUCCEEDED(hResult))
+            return hResult;
+    }
+    return NOERROR;
+}
+
 
 /**************************************************************************
 * ISvItemCm_fnInvokeCommand()
@@ -669,6 +688,10 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
             DoProperties(iface, lpcmi->hwnd);
             break;
         default:
+            if (LOWORD(lpcmi->lpVerb) >= This->iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSHELast)
+            {
+                return DoShellExtensions(iface, lpcmi);
+            }
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
         }
     }
