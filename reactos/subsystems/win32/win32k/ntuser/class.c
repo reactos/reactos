@@ -545,7 +545,6 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
 
         if (!Class->System)
             Clone->CallProc = Class->CallProc;
-        Clone->CallProc2 = Class->CallProc2;
 
         Clone = Clone->Next;
     }

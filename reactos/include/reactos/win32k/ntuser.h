@@ -36,7 +36,6 @@ typedef struct _WINDOWCLASS
         WNDPROC WndProcExtra;
         PCALLPROC CallProc;
     };
-    PCALLPROC CallProc2;
     PCALLPROC CallProcList;
     INT ClsExtra;
     INT WndExtra;
