@@ -137,7 +137,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     RECT            rcText;
     COLORREF        crPrevForeground;
     TCHAR            Text[260];
-    HFONT           hFont, hOldFont;
+    HFONT           hOldFont;
     ULONG            CpuUsage;
     ULONG            CpuKernelUsage;
     int                nBars;
@@ -174,8 +174,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     rcText = rcClient;
     InflateRect(&rcText, -2, -2);
     crPrevForeground = SetTextColor(hDC, RGB(0, 255, 0));
-    hFont = GetStockObject(DEFAULT_GUI_FONT);
-    hOldFont = SelectObject(hDC, hFont);
+    hOldFont = SelectObject(hDC, GetStockObject(DEFAULT_GUI_FONT));
     DrawText(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
     SelectObject(hDC, hOldFont);
     SetTextColor(hDC, crPrevForeground);
@@ -297,6 +296,8 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
         rcBarRight.bottom -=3;
 
     }
+    
+    SelectObject(hDC, hOldFont);
 }
 
 void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
@@ -403,6 +404,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
         rcBarRight.top += 3;
         rcBarRight.bottom += 3;
     }
+    
+    SelectObject(hDC, hOldFont);
+    DeleteObject(hFont);
 }
 
 void Graph_DrawMemUsageHistoryGraph(HDC hDC, HWND hWnd)

@@ -74,6 +74,7 @@ int APIENTRY WinMain(HINSTANCE hInstance,
 
         /* Get the debug privilege for this process. */
         AdjustTokenPrivileges(hToken, FALSE, &tkp, 0, (PTOKEN_PRIVILEGES)NULL, 0);
+        CloseHandle(hToken);
     }
 
     /* Load our settings from the registry */
