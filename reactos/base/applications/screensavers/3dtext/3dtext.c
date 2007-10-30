@@ -394,7 +394,7 @@ void Configure(void)
 	DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL , (DLGPROC)ConfigDlgProc);	
 }
 
-int CALLBACK WinMain (HINSTANCE hInst,
+int CALLBACK tWinMain (HINSTANCE hInst,
                       HINSTANCE hPrev,
                       LPTSTR lpCmdLine,
                       int iCmdShow)
