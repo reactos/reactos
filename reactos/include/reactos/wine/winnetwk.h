@@ -1,4 +1,4 @@
-/* $Id$
+/* $Id: winnetwk.h 20909 2006-01-15 22:25:16Z gvg $
  *
  * Compatibility header
  *
