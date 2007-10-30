@@ -201,7 +201,7 @@ CmiAllocateHashTableCell (
 
 	Status = STATUS_SUCCESS;
 	*HashBlock = NULL;
-	NewHashSize = sizeof(CM_KEY_FAST_INDEX) +
+	NewHashSize = FIELD_OFFSET(CM_KEY_FAST_INDEX, List) +
 		(SubKeyCount * sizeof(CM_INDEX));
 	*HBOffset = HvAllocateCell(&RegistryHive->Hive, NewHashSize, Storage, HCELL_NIL);
 
