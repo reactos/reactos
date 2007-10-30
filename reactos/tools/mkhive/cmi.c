@@ -278,7 +278,7 @@ CmiAddSubKey(
 	Status = STATUS_SUCCESS;
 
 	Storage = (CreateOptions & REG_OPTION_VOLATILE) ? Volatile : Stable;
-	NewBlockSize = sizeof(CM_KEY_NODE) + NameLength;
+	NewBlockSize = FIELD_OFFSET(CM_KEY_NODE, Name) + NameLength;
 	NKBOffset = HvAllocateCell(&RegistryHive->Hive, NewBlockSize, Storage, HCELL_NIL);
 	if (NKBOffset == HCELL_NIL)
 	{
@@ -450,7 +450,7 @@ CmiCompareKeyNames(
 
 		for (i = 0; i < KeyCell->NameLength; i++)
 		{
-			if (((PCHAR)KeyName->Buffer)[i] != (WCHAR)KeyCell->Name[i])
+			if (KeyName->Buffer[i] != ((PCHAR)KeyCell->Name)[i])
 				return FALSE;
 		}
 	}
@@ -488,8 +488,8 @@ CmiCompareKeyNamesI(
 		/* FIXME: use _strnicmp */
 		for (i = 0; i < KeyCell->NameLength; i++)
 		{
-			if (RtlUpcaseUnicodeChar(((PCHAR)KeyName->Buffer)[i]) !=
-				RtlUpcaseUnicodeChar((WCHAR)KeyCell->Name[i]))
+			if (RtlUpcaseUnicodeChar(KeyName->Buffer[i]) !=
+				RtlUpcaseUnicodeChar(((PCHAR)KeyCell->Name)[i]))
 			return FALSE;
 		}
 	}
