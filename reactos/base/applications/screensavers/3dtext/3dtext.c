@@ -77,14 +77,14 @@ GLvoid KillFont(GLvoid)									// Delete The Font
   glDeleteLists(base, 256);								// Delete All 256 Characters
 }
 
-GLvoid glPrint(LPWSTR text)								// Custom GL "Print" Routine
+GLvoid glPrint(LPTSTR text)								// Custom GL "Print" Routine
 {
   if (text == NULL)										// If There's No Text
     return;												// Do Nothing
 
   glPushAttrib(GL_LIST_BIT);							// Pushes The Display List Bits
   glListBase(base);										// Sets The Base Character to 32
-  glCallLists(wcslen(text), GL_UNSIGNED_SHORT, text);	// Draws The Display List Text
+  glCallLists(_tcslen(text), GL_UNSIGNED_SHORT, text);	// Draws The Display List Text
   glPopAttrib();										// Pops The Display List Bits
 }
 
@@ -140,7 +140,7 @@ GLvoid DrawGLScene(GLvoid)									// Handles Rendering
 		(1.0f*(cos(rot/20.0f))),
 		(1.0f*(sin(rot/25.0f))),
 		(1.0f-0.5f*(cos(rot/17.0f))));
- 	glPrint(m_Text);							// Print GL Text To The Screen
+	glPrint(m_Text);							// Print GL Text To The Screen
 	glColor3f(0.0f,0.0f,1.0f);								// Make The Text Blue
 	rot+=0.1f;												// Increase The Rotation Variable
 }
