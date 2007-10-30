@@ -69,6 +69,15 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                 OUT PWINDOWCLASS *BaseClass  OPTIONAL,
                 OUT PWINDOWCLASS **Link  OPTIONAL);
 
+PCALLPROC
+UserFindCallProc(IN PWINDOWCLASS Class,
+                 IN WNDPROC WndProc,
+                 IN BOOL bUnicode);
+
+VOID
+UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
+                       IN PCALLPROC CallProc);
+
 BOOL
 IntGetAtomFromStringOrAtom(IN PUNICODE_STRING ClassName,
                            OUT RTL_ATOM *Atom);

@@ -37,9 +37,6 @@ typedef struct _WINDOW_OBJECT
     /* Extra Wnd proc (windows of system classes) */
     WNDPROC WndProcExtra;
   };
-  /* Pointer to another call procedure handle (used for returning the previous
-     window proc in SetWindowLongPtr) */
-  PCALLPROC CallProc2;
   /* Indicates whether the window is derived from a system class */
   BOOL IsSystem;
   /* Pointer to the window class. */

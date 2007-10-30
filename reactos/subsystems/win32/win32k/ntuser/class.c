@@ -59,17 +59,19 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
 
     if (Class->Base == Class)
     {
-        /* destruct resources shared with clones */
-        if (!Class->System && Class->CallProc != NULL)
-        {
-            DestroyCallProc(Class->GlobalCallProc ? NULL : Class->Desktop,
-                            Class->CallProc);
-        }
+        PCALLPROC CallProc, NextCallProc;
 
-        if (Class->CallProc2 != NULL)
+        /* Destroy allocated callproc handles */
+        CallProc = Class->CallProcList;
+        while (CallProc != NULL)
         {
-            DestroyCallProc(Class->GlobalCallProc2 ? NULL : Class->Desktop,
-                            Class->CallProc2);
+            NextCallProc = CallProc->Next;
+
+            CallProc->Next = NULL;
+            DestroyCallProc(NULL,
+                            Class->CallProc);
+
+            CallProc = NextCallProc;
         }
 
         IntFreeClassMenuName(Class);
@@ -180,6 +182,50 @@ IntDeregisterClassAtom(IN RTL_ATOM Atom)
                                       Atom);
 }
 
+PCALLPROC
+UserFindCallProc(IN PWINDOWCLASS Class,
+                 IN WNDPROC WndProc,
+                 IN BOOL bUnicode)
+{
+    PCALLPROC CallProc;
+
+    CallProc = Class->CallProcList;
+    while (CallProc != NULL)
+    {
+        if (CallProc->WndProc == WndProc &&
+            CallProc->Unicode == (UINT)bUnicode)
+        {
+            return CallProc;
+        }
+
+        CallProc = CallProc->Next;
+    }
+
+    return NULL;
+}
+
+VOID
+UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
+                       IN PCALLPROC CallProc)
+{
+    PWINDOWCLASS BaseClass;
+
+    ASSERT(CallProc->Next == NULL);
+
+    BaseClass = Class->Base;
+    ASSERT(CallProc->Next == NULL);
+    CallProc->Next = BaseClass->CallProcList;
+    BaseClass->CallProcList = CallProc;
+
+    /* Update all clones */
+    Class = Class->Clone;
+    while (Class != NULL)
+    {
+        Class->CallProcList = BaseClass->CallProcList;
+        Class = Class->Next;
+    }
+}
+
 static BOOL
 IntSetClassAtom(IN OUT PWINDOWCLASS Class,
                 IN PUNICODE_STRING ClassName)
@@ -214,8 +260,7 @@ IntSetClassAtom(IN OUT PWINDOWCLASS Class,
 static WNDPROC
 IntGetClassWndProc(IN PWINDOWCLASS Class,
                    IN PW32PROCESSINFO pi,
-                   IN BOOL Ansi,
-                   IN BOOL UseCallProc2)
+                   IN BOOL Ansi)
 {
     ASSERT(UserIsEnteredExclusive() == TRUE);
 
@@ -231,7 +276,6 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
         }
         else
         {
-            PCALLPROC *CallProcPtr;
             PWINDOWCLASS BaseClass;
 
             /* make sure the call procedures are located on the desktop
@@ -239,11 +283,9 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
             BaseClass = Class->Base;
             Class = BaseClass;
 
-            CallProcPtr = (UseCallProc2 ? &Class->CallProc2 : &Class->CallProc);
-
-            if (*CallProcPtr != NULL)
+            if (Class->CallProc != NULL)
             {
-                return GetCallProcHandle(*CallProcPtr);
+                return GetCallProcHandle(Class->CallProc);
             }
             else
             {
@@ -252,40 +294,32 @@ IntGetClassWndProc(IN PWINDOWCLASS Class,
                 if (pi == NULL)
                     return NULL;
 
-                NewCallProc = CreateCallProc(Class->Desktop,
-                                             Class->WndProc,
-                                             Class->Unicode,
-                                             pi);
+                NewCallProc = UserFindCallProc(Class,
+                                               Class->WndProc,
+                                               Class->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    return NULL;
+                    NewCallProc = CreateCallProc(NULL,
+                                                 Class->WndProc,
+                                                 Class->Unicode,
+                                                 pi);
+                    if (NewCallProc == NULL)
+                    {
+                        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                        return NULL;
+                    }
+
+                    UserAddCallProcToClass(Class,
+                                           NewCallProc);
                 }
 
-                *CallProcPtr = NewCallProc;
-
-                if (Class->Desktop == NULL)
-                {
-                    if (UseCallProc2)
-                        Class->GlobalCallProc2 = TRUE;
-                    else
-                        Class->GlobalCallProc = TRUE;
-                }
+                Class->CallProc = NewCallProc;
 
                 /* update the clones */
                 Class = Class->Clone;
                 while (Class != NULL)
                 {
-                    if (UseCallProc2)
-                    {
-                        Class->CallProc2 = NewCallProc;
-                        Class->GlobalCallProc2 = BaseClass->GlobalCallProc2;
-                    }
-                    else
-                    {
-                        Class->CallProc = NewCallProc;
-                        Class->GlobalCallProc = BaseClass->GlobalCallProc;
-                    }
+                    Class->CallProc = NewCallProc;
 
                     Class = Class->Next;
                 }
@@ -328,8 +362,7 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
 
     Ret = IntGetClassWndProc(Class,
                              GetW32ProcessInfo(),
-                             Ansi,
-                             TRUE);
+                             Ansi);
     if (Ret == NULL)
     {
         return NULL;
@@ -338,11 +371,6 @@ IntSetClassWndProc(IN OUT PWINDOWCLASS Class,
     /* update the class info */
     Class->Unicode = !Ansi;
     Class->WndProc = WndProc;
-    if (Class->CallProc != NULL)
-    {
-        Class->CallProc->WndProc = WndProc;
-        Class->CallProc->Unicode = !Ansi;
-    }
 
     /* update the clones */
     Class = Class->Clone;
@@ -436,11 +464,6 @@ IntGetClassForDesktop(IN OUT PWINDOWCLASS BaseClass,
                 Class->Base = Class;
                 Class->Next = BaseClass->Next;
 
-                if (!BaseClass->System && BaseClass->CallProc != NULL)
-                    Class->GlobalCallProc = TRUE;
-                if (BaseClass->CallProc2 != NULL)
-                    Class->GlobalCallProc2 = TRUE;
-
                 /* replace the base class */
                 (void)InterlockedExchangePointer(ClassLink,
                                                  Class);
@@ -495,7 +518,6 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
                       IN OUT PWINDOWCLASS *CloneLink)
 {
     PWINDOWCLASS Clone, BaseClass;
-    PCALLPROC CallProc;
 
     ASSERT(Class->Base != Class);
     ASSERT(Class->Base->Clone != NULL);
@@ -509,28 +531,6 @@ IntMakeCloneBaseClass(IN OUT PWINDOWCLASS Class,
     Class->Clone = Class->Base->Clone;
 
     BaseClass = Class->Base;
-
-    if (!BaseClass->System && BaseClass->CallProc != NULL &&
-        !BaseClass->GlobalCallProc)
-    {
-        /* we need to move the allocated call procedure */
-        CallProc = BaseClass->CallProc;
-        Class->CallProc = CloneCallProc(Class->Desktop,
-                                        CallProc);
-        DestroyCallProc(BaseClass->Desktop,
-                        CallProc);
-    }
-
-    if (BaseClass->CallProc2 != NULL &&
-        !BaseClass->GlobalCallProc2)
-    {
-        /* we need to move the allocated call procedure */
-        CallProc = BaseClass->CallProc2;
-        Class->CallProc2 = CloneCallProc(Class->Desktop,
-                                         CallProc);
-        DestroyCallProc(BaseClass->Desktop,
-                        CallProc);
-    }
 
     /* update the class information to make it a base class */
     Class->Base = Class;
@@ -636,7 +636,6 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
                          IN OUT PWINDOWCLASS **ClassLinkPtr)
 {
     PWINDOWCLASS NewClass;
-    PCALLPROC CallProc;
     SIZE_T ClassSize;
 
     ASSERT(Class->Base == Class);
@@ -656,32 +655,6 @@ IntMoveClassToSharedHeap(IN OUT PWINDOWCLASS Class,
 
         NewClass->Desktop = NULL;
         NewClass->Base = NewClass;
-
-        if (!NewClass->System && NewClass->CallProc != NULL &&
-            !NewClass->GlobalCallProc)
-        {
-            /* we need to move the allocated call procedure to the shared heap */
-            CallProc = NewClass->CallProc;
-            NewClass->CallProc = CloneCallProc(NULL,
-                                               CallProc);
-            DestroyCallProc(Class->Desktop,
-                            CallProc);
-
-            NewClass->GlobalCallProc = TRUE;
-        }
-
-        if (NewClass->CallProc2 != NULL &&
-            !NewClass->GlobalCallProc2)
-        {
-            /* we need to move the allocated call procedure to the shared heap */
-            CallProc = NewClass->CallProc2;
-            NewClass->CallProc2 = CloneCallProc(NULL,
-                                                CallProc);
-            DestroyCallProc(Class->Desktop,
-                            CallProc);
-
-            NewClass->GlobalCallProc2 = TRUE;
-        }
 
         /* replace the class in the list */
         (void)InterlockedExchangePointer(*ClassLinkPtr,
@@ -1473,8 +1446,7 @@ UserGetClassLongPtr(IN PWINDOWCLASS Class,
         case GCLP_WNDPROC:
             Ret = (ULONG_PTR)IntGetClassWndProc(Class,
                                                 GetW32ProcessInfo(),
-                                                Ansi,
-                                                FALSE);
+                                                Ansi);
             break;
 
         case GCW_ATOM:
@@ -1798,8 +1770,7 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
     pi = GetW32ProcessInfo();
     lpwcx->lpfnWndProc = IntGetClassWndProc(Class,
                                             pi,
-                                            Ansi,
-                                            FALSE);
+                                            Ansi);
 
     lpwcx->cbClsExtra = Class->ClsExtra;
     lpwcx->cbWndExtra = Class->WndExtra;

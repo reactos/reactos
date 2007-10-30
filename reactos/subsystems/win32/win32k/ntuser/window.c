@@ -434,18 +434,6 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    IntDestroyScrollBars(Window);
 
-   if (!Window->Class->System && Window->CallProc != NULL)
-   {
-       DestroyCallProc(Window->ti->Desktop,
-                       Window->CallProc);
-   }
-
-   if (Window->CallProc2 != NULL)
-   {
-       DestroyCallProc(Window->ti->Desktop,
-                       Window->CallProc2);
-   }
-
    /* dereference the class */
    IntDereferenceClass(Window->Class,
                        Window->ti->Desktop,
@@ -497,6 +485,8 @@ static WNDPROC
 IntGetWindowProc(IN PWINDOW_OBJECT Window,
                  IN BOOL Ansi)
 {
+    ASSERT(UserIsEnteredExclusive() == TRUE);
+
     if (Window->IsSystem)
     {
         return (Ansi ? Window->WndProcExtra : Window->WndProc);
@@ -517,26 +507,27 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
             {
                 PCALLPROC NewCallProc, CallProc;
 
-                /* NOTE: use the interlocked functions, as this operation may be done even
-                         when only the shared lock is held! */
-                NewCallProc = CreateCallProc(Window->ti->Desktop,
-                                             Window->WndProc,
-                                             Window->Unicode,
-                                             Window->ti->kpi);
+                NewCallProc = UserFindCallProc(Window->Class,
+                                               Window->WndProc,
+                                               Window->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-                    return NULL;
+                    NewCallProc = CreateCallProc(Window->ti->Desktop,
+                                                 Window->WndProc,
+                                                 Window->Unicode,
+                                                 Window->ti->kpi);
+                    if (NewCallProc == NULL)
+                    {
+                        SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                        return NULL;
+                    }
+
+                    UserAddCallProcToClass(Window->Class,
+                                           NewCallProc);
                 }
 
-                CallProc = InterlockedCompareExchangePointer(&Window->CallProc,
-                                                             NewCallProc,
-                                                             NULL);
-                if (CallProc != NULL)
-                {
-                    DestroyCallProc(Window->ti->Desktop,
-                                    NewCallProc);
-                }
+                CallProc = Window->CallProc;
+                Window->CallProc = NewCallProc;
 
                 return GetCallProcHandle((CallProc == NULL ? NewCallProc : CallProc));
             }
@@ -3533,6 +3524,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                  BOOL Ansi)
 {
     WNDPROC Ret;
+    PCALLPROC CallProc;
 
     /* resolve any callproc handle if possible */
     if (IsCallProcHandle(NewWndProc))
@@ -3560,49 +3552,37 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         }
         else
         {
-            /* allocate or update an existing call procedure handle to return
-               the old window proc */
-            if (Window->CallProc2 != NULL)
+            CallProc = UserFindCallProc(Window->Class,
+                                        Window->WndProc,
+                                        Window->Unicode);
+            if (CallProc == NULL)
             {
-                Window->CallProc2->WndProc = Window->WndProc;
-                Window->CallProc2->Unicode = Window->Unicode;
-            }
-            else
-            {
-                Window->CallProc2 = CreateCallProc(Window->ti->Desktop,
-                                                   Window->WndProc,
-                                                   Window->Unicode,
-                                                   Window->ti->kpi);
-                if (Window->CallProc2 == NULL)
+                CallProc = CreateCallProc(NULL,
+                                          Window->WndProc,
+                                          Window->Unicode,
+                                          Window->ti->kpi);
+                if (CallProc == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                     return NULL;
                 }
+
+                UserAddCallProcToClass(Window->Class,
+                                       CallProc);
             }
 
-            Ret = GetCallProcHandle(Window->CallProc2);
+            Window->CallProc = CallProc;
+
+            Ret = GetCallProcHandle(Window->CallProc);
         }
     }
 
     if (Window->Class->System)
     {
-        BOOL SysWnd = Window->IsSystem;
-
         /* check if the new procedure matches with the one in the
            window class. If so, we need to restore both procedures! */
         Window->IsSystem = (NewWndProc == Window->Class->WndProc ||
                             NewWndProc == Window->Class->WndProcExtra);
-
-        if (Window->IsSystem != SysWnd)
-        {
-            if (!Window->IsSystem && Window->CallProc != NULL)
-            {
-                /* destroy the callproc, we don't need it anymore */
-                DestroyCallProc(Window->ti->Desktop,
-                                Window->CallProc);
-                Window->CallProc = NULL;
-            }
-        }
 
         if (Window->IsSystem)
         {
@@ -3617,11 +3597,6 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
 
     /* update the window procedure */
     Window->WndProc = NewWndProc;
-    if (Window->CallProc != NULL)
-    {
-        Window->CallProc->WndProc = NewWndProc;
-        Window->CallProc->Unicode = !Ansi;
-    }
     Window->Unicode = !Ansi;
 
     return Ret;

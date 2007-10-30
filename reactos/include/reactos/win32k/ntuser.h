@@ -16,6 +16,7 @@ typedef struct _CALLPROC
 {
     struct _W32PROCESSINFO *pi;
     WNDPROC WndProc;
+    struct _CALLPROC *Next;
     UINT Unicode : 1;
 } CALLPROC, *PCALLPROC;
 
@@ -36,6 +37,7 @@ typedef struct _WINDOWCLASS
         PCALLPROC CallProc;
     };
     PCALLPROC CallProc2;
+    PCALLPROC CallProcList;
     INT ClsExtra;
     INT WndExtra;
     HINSTANCE hInstance;
@@ -51,8 +53,6 @@ typedef struct _WINDOWCLASS
     UINT Unicode : 1;
     UINT System : 1;
     UINT Global : 1;
-    UINT GlobalCallProc : 1;
-    UINT GlobalCallProc2 : 1;
     UINT MenuNameIsString : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 

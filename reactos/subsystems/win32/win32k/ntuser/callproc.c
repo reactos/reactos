@@ -70,6 +70,7 @@ CloneCallProc(IN PDESKTOP Desktop,
         NewCallProc->pi = CallProc->pi;
         NewCallProc->WndProc = CallProc->WndProc;
         NewCallProc->Unicode = CallProc->Unicode;
+        NewCallProc->Next = NULL;
     }
 
     return NewCallProc;
@@ -94,6 +95,7 @@ CreateCallProc(IN PDESKTOP Desktop,
         NewCallProc->pi = pi;
         NewCallProc->WndProc = WndProc;
         NewCallProc->Unicode = Unicode;
+        NewCallProc->Next = NULL;
     }
 
     return NewCallProc;
