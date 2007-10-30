@@ -77,6 +77,19 @@ typedef enum _GETDCPOINT
     GdiGetDCOrg = 6,
 } GETDCPOINT, *PGETDCPOINT;
 
+typedef enum _GDIBATCHCMD
+{
+    GdiBCPatBlt,
+    GdiBCPolyPatBlt,
+    GdiBCTextOut,
+    GdiBCExtTextOut,
+    GdiBCSetBrushOrg,
+    GdiBCExtSelClipRgn,
+    GdiBCSelObj,
+    GdiBCDelObj,
+    GdiBCDelRgn,
+} GDIBATCHCMD, *PGDIBATCHCMD;
+
 typedef enum _TRANSFORMTYPE
 {
     GdiDpToLp,
