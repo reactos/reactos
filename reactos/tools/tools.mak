@@ -5,8 +5,8 @@ TOOLS_INT_ = $(TOOLS_INT)$(SEP)
 TOOLS_OUT = $(OUTPUT_)$(TOOLS_BASE)
 TOOLS_OUT_ = $(TOOLS_OUT)$(SEP)
 
-TOOLS_CFLAGS = -Wall -Wpointer-arith -Wno-strict-aliasing $(HOST_CFLAGS)
-TOOLS_CPPFLAGS = -Wall -Wpointer-arith $(HOST_CPPFLAGS)
+TOOLS_CFLAGS = -Wall -Wpointer-arith -Wno-strict-aliasing -D__REACTOS__ $(HOST_CFLAGS)
+TOOLS_CPPFLAGS = -Wall -Wpointer-arith -D__REACTOS__ $(HOST_CPPFLAGS)
 TOOLS_LFLAGS = $(HOST_LFLAGS)
 
 # HACK: Remove those lines once host tools don't use target headers anymore
