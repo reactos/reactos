@@ -295,7 +295,7 @@ LsaLookupSids(
     PLSA_REFERENCED_DOMAIN_LIST LocalDomains;
     PLSA_TRANSLATED_NAME LocalNames;
 
-    DPRINT1("LsaLookupSids(): stub. Always returning 'Administrator'\n");
+    DPRINT("LsaLookupSids(): stub. Always returning 'Administrator'\n");
     if (Count != 1)
         return STATUS_NONE_MAPPED;
     LocalDomains = RtlAllocateHeap(RtlGetProcessHeap(), 0, sizeof(LSA_TRANSLATED_SID));
@@ -354,7 +354,7 @@ LsaOpenPolicy(PLSA_UNICODE_STRING lsaucs,
   static int count = 0;
   if (count++ < 20)
   {
-     DPRINT1("LsaOpenPolicy - stub\n");
+     DPRINT("LsaOpenPolicy - stub\n");
   }
   return STATUS_SUCCESS;
 }
