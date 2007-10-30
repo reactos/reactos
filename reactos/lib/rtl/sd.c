@@ -138,8 +138,8 @@ NTSTATUS NTAPI
 RtlCopySecurityDescriptor(IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
                           OUT PSECURITY_DESCRIPTOR pDestinationSecurityDescriptor)
 {
-  PSID Owner, Group;
-  PACL Dacl, Sacl;
+  PSID Owner = NULL, Group = NULL;
+  PACL Dacl = NULL, Sacl = NULL;
   BOOLEAN Defaulted, Present;
   DWORD OwnerLength, GroupLength;
   PSECURITY_DESCRIPTOR srcSD = pSourceSecurityDescriptor;
