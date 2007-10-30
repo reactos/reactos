@@ -84,7 +84,15 @@ GLvoid glPrint(LPTSTR text)								// Custom GL "Print" Routine
 
   glPushAttrib(GL_LIST_BIT);							// Pushes The Display List Bits
   glListBase(base);										// Sets The Base Character to 32
-  glCallLists(_tcslen(text), GL_UNSIGNED_SHORT, text);	// Draws The Display List Text
+
+  glCallLists(_tcslen(text),
+#ifdef UNICODE 
+      GL_UNSIGNED_SHORT
+#else
+      GL_UNSIGNED_BYTE
+#endif
+          , text); // Draws The Display List Text
+
   glPopAttrib();										// Pops The Display List Bits
 }
 
@@ -320,28 +328,28 @@ void InitSaver(HWND hwndParent)
 //  -p <hwnd>		(preview)
 //  -c <hwnd>		(configure)
 //
-VOID ParseCommandLine(LPWSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
+VOID ParseCommandLine(LPTSTR szCmdLine, UCHAR *chOption, HWND *hwndParent)
 {
-	UCHAR ch = *szCmdLine++;
+	TCHAR ch = *szCmdLine++;
 
-	if(ch == '-' || ch == '/')
+	if(ch == _T('-') || ch == _T('/'))
 		ch = *szCmdLine++;
 
-	if(ch >= 'A' && ch <= 'Z')
-		ch += 'a' - 'A';		//convert to lower case
+	if(ch >= _T('A') && ch <= _T('Z'))
+		ch += _T('a') - _T('A');		//convert to lower case
 
 	*chOption = ch;
 	ch = *szCmdLine++;
 
-	if(ch == ':')
+	if(ch == _T(':'))
 		ch = *szCmdLine++;
 
-	while(ch == ' ' || ch == '\t')
+	while(ch == _T(' ') || ch == _T('\t'))
 		ch = *szCmdLine++;
 
 	if(isdigit(ch))
 	{
-		unsigned int i = _wtoi(szCmdLine - 1);
+		unsigned int i = _ttoi(szCmdLine - 1);
 		*hwndParent = (HWND)i;
 	}
 	else
@@ -386,10 +394,10 @@ void Configure(void)
 	DialogBox(hInstance, MAKEINTRESOURCE(IDD_CONFIG), NULL , (DLGPROC)ConfigDlgProc);	
 }
 
-int CALLBACK wWinMain (HINSTANCE hInst,
-                    HINSTANCE hPrev,
-                    LPWSTR lpCmdLine,
-                    int iCmdShow)
+int CALLBACK WinMain (HINSTANCE hInst,
+                      HINSTANCE hPrev,
+                      LPTSTR lpCmdLine,
+                      int iCmdShow)
 {
 	HWND	hwndParent = 0;
 	UCHAR	chOption;
