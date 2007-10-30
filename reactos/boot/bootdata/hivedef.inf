@@ -47,6 +47,7 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
+;HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts",,0x00000012
 
 
 HKCU,"SOFTWARE\Microsoft\Windows NT",,0x00000012
