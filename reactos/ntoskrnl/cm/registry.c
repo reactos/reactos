@@ -34,10 +34,8 @@ LIST_ENTRY CmpHiveListHead;
 
 ERESOURCE CmpRegistryLock;
 
-KTIMER CmiWorkerTimer;
 LIST_ENTRY CmiKeyObjectListHead;
 LIST_ENTRY CmiConnectedHiveList;
-ULONG CmiTimer = 0; /* gets incremented every 5 seconds (CmiWorkerTimer) */
 
 volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
 volatile BOOLEAN CmiHiveSyncPending = FALSE;
@@ -53,136 +51,6 @@ CmiHiveSyncDpcRoutine(PKDPC Dpc,
 
 extern LIST_ENTRY CmiCallbackHead;
 extern FAST_MUTEX CmiCallbackLock;
-
-/* FUNCTIONS ****************************************************************/
-
-/* Debugging helper functions:                                             */
-/*   CmiVerifyHiveListIntegrity                                            */
-/*   CmiVerifyHiveListIntegrityWhileLocked                                 */
-/* These functions are normally unused. However, should any of the asserts */
-/* checking for registry loops in CmiWorkerThread start to trigger, it is  */
-/* recommended to add liberal amounts of calls to this function throughout */
-/* suspect code. This function is due to its iterative nature not intended */
-/* to be called during normal circumstances, but as a debugging aid.       */
-static
-VOID
-NTAPI
-CmipVerifyHiveListIntegrity(BOOLEAN IsLocked)
-{
-    PLIST_ENTRY CurrentEntry;
-    if (!IsLocked)
-    {
-        /* Acquire hive lock */
-        KeEnterCriticalRegion();
-        ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-    }
-
-    if (IsListEmpty(&CmiKeyObjectListHead))
-    {
-        ASSERT(CmiKeyObjectListHead.Blink == CmiKeyObjectListHead.Flink);
-    }
-    /* walk the list both forwards and backwards */
-    CurrentEntry = CmiKeyObjectListHead.Flink;
-    while (CurrentEntry != &CmiKeyObjectListHead)
-    {
-        ASSERT(CurrentEntry->Blink != CurrentEntry);
-        ASSERT(CurrentEntry->Flink != CurrentEntry);
-        CurrentEntry = CurrentEntry->Flink;
-    }
-
-    CurrentEntry = CmiKeyObjectListHead.Blink;
-    while (CurrentEntry != &CmiKeyObjectListHead)
-    {
-        ASSERT(CurrentEntry->Blink != CurrentEntry);
-        ASSERT(CurrentEntry->Flink != CurrentEntry);
-        CurrentEntry = CurrentEntry->Blink;
-    }
-
-    if (!IsLocked)
-    {
-        ExReleaseResourceLite(&CmpRegistryLock);
-        KeLeaveCriticalRegion();
-    }
-}
-
-VOID NTAPI CmiVerifyHiveListIntegrity()            { CmipVerifyHiveListIntegrity(FALSE); }
-VOID NTAPI CmiVerifyHiveListIntegrityWhileLocked() { CmipVerifyHiveListIntegrity(TRUE); }
-
-
-
-VOID
-NTAPI
-CmiWorkerThread(PVOID Param)
-{
-    NTSTATUS Status;
-    PLIST_ENTRY CurrentEntry;
-    PKEY_OBJECT CurrentKey;
-    ULONG Count; /* how many objects have been dereferenced each pass */
-
-    /* Loop forever, getting woken up every 5 seconds by CmiWorkerTimer */
-
-    while (1)
-    {
-        Status = KeWaitForSingleObject(&CmiWorkerTimer,
-                                       Executive,
-                                       KernelMode,
-                                       FALSE,
-                                       NULL);
-        if (Status == STATUS_SUCCESS)
-        {
-            DPRINT("CmiWorkerThread\n");
-
-            /* Acquire hive lock */
-            KeEnterCriticalRegion();
-            ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-            CmiTimer++;
-
-            Count = 0;
-            CurrentEntry = CmiKeyObjectListHead.Blink;
-            while (CurrentEntry != &CmiKeyObjectListHead)
-            {
-                CurrentKey = CONTAINING_RECORD(CurrentEntry, KEY_OBJECT, ListEntry);
-                if (CurrentKey->TimeStamp + 120 > CmiTimer)
-                {
-                    /* The object was accessed in the last 10min */
-                    break;
-                }
-                if (1 == ObGetObjectPointerCount(CurrentKey) &&
-                    !(CurrentKey->Flags & KO_MARKED_FOR_DELETE))
-                {
-                    /* PointerCount is 1, and it's not marked for delete */
-                    ObDereferenceObject(CurrentKey);
-                    if (CurrentEntry == CmiKeyObjectListHead.Blink)
-                    {
-                        DPRINT("Registry loop detected! Crashing\n");
-                        KEBUGCHECK(0);
-                    }
-                    CurrentEntry = CmiKeyObjectListHead.Blink;
-                    Count++;
-                }
-                else
-                {
-                    /* PointerCount was not 1, or it was marked for delete */
-                    if (CurrentEntry == CurrentEntry->Blink)
-                    {
-                        DPRINT("Registry loop detected! Crashing\n");
-                        KEBUGCHECK(0);
-                    }
-                    CurrentEntry = CurrentEntry->Blink;
-                }
-            }
-            ExReleaseResourceLite(&CmpRegistryLock);
-            KeLeaveCriticalRegion();
-
-            DPRINT("Removed %d key objects\n", Count);
-        }
-        else
-        {
-            KEBUGCHECK(0);
-        }
-    }
-}
 
 PVOID
 NTAPI
@@ -234,7 +102,7 @@ EnlistKeyBodyWithKeyObject(IN PKEY_OBJECT KeyObject,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Insert it into the global list (we don't have KCBs here) */
-    InsertTailList(&CmiKeyObjectListHead, &KeyObject->ListEntry);
+    InsertTailList(&CmiKeyObjectListHead, &KeyObject->KeyBodyList);
 
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
@@ -338,8 +206,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     DPRINT ("SubName %S\n", SubName);
 
     /* Create the key */
-    Status = CmpDoCreate(&ParentKey->RegistryHive->Hive,
-                         ParentKey->KeyCellOffset,
+    Status = CmpDoCreate(ParentKey->KeyControlBlock->KeyHive,
+                         ParentKey->KeyControlBlock->KeyCell,
                          NULL,
                          &RemainingPath,
                          KernelMode,
@@ -356,9 +224,8 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    NewKey->KeyCellOffset = RegistryHive->Hive.BaseBlock->RootCell;
-    NewKey->KeyCell = (PVOID)HvGetCell(&RegistryHive->Hive, NewKey->KeyCellOffset);
-    NewKey->RegistryHive = RegistryHive;
+    NewKey->KeyControlBlock->KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
+    NewKey->KeyControlBlock->KeyHive = &RegistryHive->Hive;
 
     Status = RtlpCreateUnicodeString(&NewKey->Name,
         SubName, NonPagedPool);

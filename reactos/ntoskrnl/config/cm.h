@@ -505,21 +505,13 @@ typedef struct _KEY_INFORMATION
 #define IsNoFileHive(Hive)      ((Hive)->Flags & HIVE_NO_FILE)
 typedef struct _KEY_OBJECT
 {
-    CSHORT Type;
-    CSHORT Size;
-    ULONG Flags;
+    ULONG Type;
     UNICODE_STRING Name;
-    PCMHIVE RegistryHive;
-    HCELL_INDEX KeyCellOffset;
-    PCM_KEY_NODE KeyCell;
     struct _KEY_OBJECT *ParentKey;
-    LIST_ENTRY ListEntry;
+    LIST_ENTRY KeyBodyList;
     ULONG SubKeyCounts;
     ULONG SizeOfSubKeys;
     struct _KEY_OBJECT **SubKeys;
-    ULONG TimeStamp;
-    LIST_ENTRY HiveList;
-    CACHED_CHILD_LIST ValueCache;
     PCM_KEY_CONTROL_BLOCK KeyControlBlock;
 } KEY_OBJECT, *PKEY_OBJECT;
 extern PCMHIVE CmiVolatileHive;

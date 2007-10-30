@@ -708,19 +708,14 @@ CmpCreateRegistryRoot(VOID)
     if (!Kcb) return FALSE;
 
     /* Initialize the object */
-#if 0
     RootKey->Type = TAG('k', 'v', '0', '2');
     RootKey->KeyControlBlock = Kcb;
+#if 0
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
 #else
     RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
-    RootKey->KeyControlBlock = Kcb;
-    RootKey->RegistryHive = CmiVolatileHive;
-    RootKey->KeyCellOffset = RootIndex;
-    RootKey->KeyCell = KeyCell;
     RootKey->ParentKey = RootKey;
-    RootKey->Flags = 0;
     RootKey->SubKeyCounts = 0;
     RootKey->SubKeys = NULL;
     RootKey->SizeOfSubKeys = 0;
@@ -759,9 +754,6 @@ CmInitSystem1(VOID)
     UNICODE_STRING KeyName;
     HANDLE KeyHandle;
     NTSTATUS Status;
-    LARGE_INTEGER DueTime;
-    HANDLE ThreadHandle;
-    CLIENT_ID ThreadId;
     PCMHIVE HardwareHive;
     PVOID BaseAddress;
     ULONG Length;
@@ -806,23 +798,6 @@ CmInitSystem1(VOID)
     /* OLD CM: Initialize the key object list */
     InitializeListHead(&CmiKeyObjectListHead);
     InitializeListHead(&CmiConnectedHiveList);
-
-    /* OLD CM: Initialize the worker timer */
-    KeInitializeTimerEx(&CmiWorkerTimer, SynchronizationTimer);
-
-    /* OLD CM: Initialize the worker thread */
-    Status = PsCreateSystemThread(&ThreadHandle,
-                                  THREAD_ALL_ACCESS,
-                                  NULL,
-                                  NULL,
-                                  &ThreadId,
-                                  CmiWorkerThread,
-                                  NULL);
-    if (!NT_SUCCESS(Status)) return FALSE;
-
-    /* OLD CM: Start the timer */
-    DueTime.QuadPart = -1;
-    KeSetTimerEx(&CmiWorkerTimer, DueTime, 5000, NULL); /* 5sec */
 #endif
 
     /* Create the key object types */

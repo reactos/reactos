@@ -230,15 +230,11 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Now fill out the Cm object */
     KeyBody->KeyControlBlock = Kcb;
-    KeyBody->KeyCell = KeyNode;
-    KeyBody->KeyCellOffset = *KeyCell;
-    KeyBody->Flags = 0;
     KeyBody->SubKeyCounts = 0;
     KeyBody->SubKeys = NULL;
     KeyBody->SizeOfSubKeys = 0;
     KeyBody->ParentKey = Parent;
-    KeyBody->RegistryHive = KeyBody->ParentKey->RegistryHive;
-    InsertTailList(&CmiKeyObjectListHead, &KeyBody->ListEntry);
+    InsertTailList(&CmiKeyObjectListHead, &KeyBody->KeyBodyList);
 
 Quickie:
     /* Check if we got here because of failure */
@@ -290,8 +286,7 @@ CmpDoCreate(IN PHHIVE Hive,
     ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
 
     /* Check if the parent is being deleted */
-    #define KO_MARKED_FOR_DELETE 0x00000001
-    if (Parent->Flags & KO_MARKED_FOR_DELETE)
+    if (Parent->KeyControlBlock->Delete)
     {
         /* It has, quit */
         ASSERT(FALSE);
@@ -319,7 +314,7 @@ CmpDoCreate(IN PHHIVE Hive,
     }
 
     /* Sanity check */
-    ASSERT(Cell == Parent->KeyCellOffset);
+    ASSERT(Cell == Parent->KeyControlBlock->KeyCell);
 
     /* Get the parent type */
     ParentType = HvGetCellType(Cell);
@@ -332,7 +327,7 @@ CmpDoCreate(IN PHHIVE Hive,
     }
 
     /* Don't allow children under symlinks */
-    if (Parent->Flags & KEY_SYM_LINK)
+    if (Parent->KeyControlBlock->Flags & KEY_SYM_LINK)
     {
         /* Fail */
         ASSERT(FALSE);
@@ -376,8 +371,8 @@ CmpDoCreate(IN PHHIVE Hive,
         }
 
         /* Sanity checks */
-        ASSERT(KeyBody->ParentKey->KeyCellOffset == Cell);
-        ASSERT(&KeyBody->ParentKey->RegistryHive->Hive == Hive);
+        ASSERT(KeyBody->ParentKey->KeyControlBlock->KeyCell == Cell);
+        ASSERT(KeyBody->ParentKey->KeyControlBlock->KeyHive == Hive);
         ASSERT(KeyBody->ParentKey == Parent);
 
         /* Update the timestamp */

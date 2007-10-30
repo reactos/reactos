@@ -366,7 +366,8 @@ CmpParseKey(IN PVOID ParsedObject,
     UNICODE_STRING KeyName;
     PWSTR *Path = &RemainingName->Buffer;
     PCM_KEY_CONTROL_BLOCK ParentKcb = NULL, Kcb;
-
+    PCM_KEY_NODE Node;
+    
     ParsedKey = ParsedObject;
 
     VERIFY_KEY_OBJECT(ParsedKey);
@@ -422,8 +423,11 @@ CmpParseKey(IN PVOID ParsedObject,
     if (FoundObject == NULL)
     {
         /* Search for the subkey */
-        BlockOffset = CmpFindSubKeyByName(&ParsedKey->RegistryHive->Hive,
-                                          ParsedKey->KeyCell,
+        Node = (PCM_KEY_NODE)HvGetCell(ParsedKey->KeyControlBlock->KeyHive,
+                                       ParsedKey->KeyControlBlock->KeyCell);
+        
+        BlockOffset = CmpFindSubKeyByName(ParsedKey->KeyControlBlock->KeyHive,
+                                          Node,
                                           &KeyName);
         if (BlockOffset == HCELL_NIL)
         {
@@ -434,13 +438,13 @@ CmpParseKey(IN PVOID ParsedObject,
         }
         
         /* Get the node */
-        SubKeyCell = (PCM_KEY_NODE)HvGetCell(&ParsedKey->RegistryHive->Hive, BlockOffset);
+        SubKeyCell = (PCM_KEY_NODE)HvGetCell(ParsedKey->KeyControlBlock->KeyHive, BlockOffset);
 
         if ((SubKeyCell->Flags & KEY_SYM_LINK) &&
             !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
         {
             RtlInitUnicodeString(&LinkPath, NULL);
-            Status = CmiGetLinkTarget(ParsedKey->RegistryHive,
+            Status = CmiGetLinkTarget((PCMHIVE)ParsedKey->KeyControlBlock->KeyHive,
                                       SubKeyCell,
                                       &LinkPath);
             if (NT_SUCCESS(Status))
@@ -520,7 +524,7 @@ CmpParseKey(IN PVOID ParsedObject,
         ObReferenceObject(FoundObject);
         
         /* Create the KCB */
-        Kcb = CmpCreateKeyControlBlock(&ParsedKey->RegistryHive->Hive,
+        Kcb = CmpCreateKeyControlBlock(ParsedKey->KeyControlBlock->KeyHive,
                                        BlockOffset,
                                        SubKeyCell,
                                        ParentKcb,
@@ -535,25 +539,25 @@ CmpParseKey(IN PVOID ParsedObject,
         }
                                   
         FoundObject->KeyControlBlock = Kcb;
-        FoundObject->Flags = 0;
-        FoundObject->KeyCell = SubKeyCell;
-        FoundObject->KeyCellOffset = BlockOffset;
-        FoundObject->RegistryHive = ParsedKey->RegistryHive;
-        InsertTailList(&CmiKeyObjectListHead, &FoundObject->ListEntry);
+        ASSERT(FoundObject->KeyControlBlock->KeyHive == ParsedKey->KeyControlBlock->KeyHive);
+        InsertTailList(&CmiKeyObjectListHead, &FoundObject->KeyBodyList);
         RtlpCreateUnicodeString(&FoundObject->Name, KeyName.Buffer, NonPagedPool);
         CmiAddKeyToList(ParsedKey, FoundObject);
         DPRINT("Created object 0x%p\n", FoundObject);
     }
     else
     {
-        if ((FoundObject->KeyCell->Flags & KEY_SYM_LINK) &&
+        Node = (PCM_KEY_NODE)HvGetCell(FoundObject->KeyControlBlock->KeyHive,
+                                       FoundObject->KeyControlBlock->KeyCell);
+        
+        if ((Node->Flags & KEY_SYM_LINK) &&
             !((Attributes & OBJ_OPENLINK) && (EndPtr == NULL)))
         {
             DPRINT("Found link\n");
 
             RtlInitUnicodeString(&LinkPath, NULL);
-            Status = CmiGetLinkTarget(FoundObject->RegistryHive,
-                                      FoundObject->KeyCell,
+            Status = CmiGetLinkTarget((PCMHIVE)FoundObject->KeyControlBlock->KeyHive,
+                                      Node,
                                       &LinkPath);
             if (NT_SUCCESS(Status))
             {
@@ -598,9 +602,8 @@ CmpParseKey(IN PVOID ParsedObject,
         }
     }
 
-    RemoveEntryList(&FoundObject->ListEntry);
-    InsertHeadList(&CmiKeyObjectListHead, &FoundObject->ListEntry);
-    FoundObject->TimeStamp = CmiTimer;
+    RemoveEntryList(&FoundObject->KeyBodyList);
+    InsertHeadList(&CmiKeyObjectListHead, &FoundObject->KeyBodyList);
 
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
@@ -650,10 +653,10 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-    RemoveEntryList(&KeyObject->ListEntry);
+    RemoveEntryList(&KeyObject->KeyBodyList);
     RtlFreeUnicodeString(&KeyObject->Name);
 
-    ASSERT((KeyObject->Flags & KO_MARKED_FOR_DELETE) == FALSE);
+    ASSERT((KeyObject->KeyControlBlock->Delete) == FALSE);
 
     ObDereferenceObject (ParentKeyObject);
 
@@ -812,7 +815,7 @@ CmiScanKeyList(PKEY_OBJECT Parent,
 
     if (Index < Parent->SubKeyCounts)
     {
-        if (CurKey->Flags & KO_MARKED_FOR_DELETE)
+        if (CurKey->KeyControlBlock->Delete)
         {
             CHECKPOINT;
             *ReturnedObject = NULL;

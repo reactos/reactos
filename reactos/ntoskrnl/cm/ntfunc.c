@@ -149,6 +149,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     KPROCESSOR_MODE PreviousMode;
     UNICODE_STRING CapturedClass = {0};
     HANDLE hKey;
+    PCM_KEY_NODE Node, ParentNode;
 
     PAGED_CODE();
 
@@ -237,7 +238,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     if (RemainingPath.Length == 0)
     {
         /* Fail if the key has been deleted */
-        if (((PKEY_OBJECT) Object)->Flags & KO_MARKED_FOR_DELETE)
+        if (((PKEY_OBJECT) Object)->KeyControlBlock->Delete)
         {
             PostCreateKeyInfo.Object = NULL;
             PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
@@ -305,8 +306,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Create the key */
-    Status = CmpDoCreate(&((PKEY_OBJECT)Object)->RegistryHive->Hive,
-                         ((PKEY_OBJECT)Object)->KeyCellOffset,
+    Status = CmpDoCreate(((PKEY_OBJECT)Object)->KeyControlBlock->KeyHive,
+                         ((PKEY_OBJECT)Object)->KeyControlBlock->KeyCell,
                          NULL,
                          &RemainingPath,
                          KernelMode,
@@ -332,10 +333,17 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     RtlCreateUnicodeString(&KeyObject->Name, Start);
 
-    KeyObject->KeyCell->Parent = KeyObject->ParentKey->KeyCellOffset;
-    KeyObject->KeyCell->Security = KeyObject->ParentKey->KeyCell->Security;
-    KeyObject->ValueCache.ValueList = KeyObject->KeyCell->ValueList.List;
-    KeyObject->ValueCache.Count = KeyObject->KeyCell->ValueList.Count;
+    ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->ParentKey->KeyControlBlock->KeyHive,
+                                         KeyObject->ParentKey->KeyControlBlock->KeyCell);
+
+    Node = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->KeyHive,
+                                   KeyObject->KeyControlBlock->KeyCell);
+    
+    Node->Parent = KeyObject->ParentKey->KeyControlBlock->KeyCell;
+    Node->Security = ParentNode->Security;
+    
+    KeyObject->KeyControlBlock->ValueCache.ValueList = Node->ValueList.List;
+    KeyObject->KeyControlBlock->ValueCache.Count = Node->ValueList.Count;
 
     DPRINT("RemainingPath: %wZ\n", &RemainingPath);
 
@@ -435,7 +443,7 @@ NtFlushKey(IN HANDLE KeyHandle)
 
     VERIFY_KEY_OBJECT(KeyObject);
 
-    RegistryHive = KeyObject->RegistryHive;
+    RegistryHive = (PCMHIVE)KeyObject->KeyControlBlock->KeyHive;
 
     /* Acquire hive lock */
     KeEnterCriticalRegion();
@@ -576,7 +584,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     RtlFreeUnicodeString(&RemainingPath);
 
     /* Fail if the key has been deleted */
-    if (((PKEY_OBJECT)Object)->Flags & KO_MARKED_FOR_DELETE)
+    if (((PKEY_OBJECT)Object)->KeyControlBlock->Delete)
     {
         Status = STATUS_UNSUCCESSFUL;
         goto openkey_cleanup;
@@ -708,17 +716,13 @@ NtDeleteKey(IN HANDLE KeyHandle)
     Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmDeleteKey(&DummyKcb);
+        Status = CmDeleteKey(KeyObject->KeyControlBlock);
 
         /* Remove the keep-alive reference */
         ObDereferenceObject(KeyObject);
-        if (KeyObject->RegistryHive != KeyObject->ParentKey->RegistryHive)
+        if (KeyObject->KeyControlBlock->KeyHive !=
+            KeyObject->ParentKey->KeyControlBlock->KeyHive)
         {
             /* Dereference again */
             ObDereferenceObject(KeyObject);
@@ -777,13 +781,8 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreEnumerateKey, &EnumerateKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmEnumerateKey(&DummyKcb,
+        Status = CmEnumerateKey(KeyObject->KeyControlBlock,
                                 Index,
                                 KeyInformationClass,
                                 KeyInformation,
@@ -845,13 +844,8 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                                         &EnumerateValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmEnumerateValueKey(&DummyKcb,
+        Status = CmEnumerateValueKey(KeyObject->KeyControlBlock,
                                      Index,
                                      KeyValueInformationClass,
                                      KeyValueInformation,
@@ -911,13 +905,8 @@ NtQueryKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreQueryKey, &QueryKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmQueryKey(&DummyKcb,
+        Status = CmQueryKey(KeyObject->KeyControlBlock,
                             KeyInformationClass,
                             KeyInformation,
                             Length,
@@ -976,13 +965,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     Status = CmiCallRegisteredCallbacks(RegNtPreQueryValueKey, &QueryValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmQueryValueKey(&DummyKcb,
+        Status = CmQueryValueKey(KeyObject->KeyControlBlock,
                                  *ValueName,
                                  KeyValueInformationClass,
                                  KeyValueInformation,
@@ -1044,14 +1028,9 @@ NtSetValueKey(IN HANDLE KeyHandle,
     /* Do the callback */
     Status = CmiCallRegisteredCallbacks(RegNtPreSetValueKey, &SetValueKeyInfo);
     if (NT_SUCCESS(Status))
-    {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-        
+    {        
         /* Call the internal API */
-        Status = CmSetValueKey(&DummyKcb,
+        Status = CmSetValueKey(KeyObject->KeyControlBlock,
                                ValueName,
                                Type,
                                Data,
@@ -1100,13 +1079,8 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                         &DeleteValueKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* HACK: Setup the Dummy KCB */
-        CM_KEY_CONTROL_BLOCK DummyKcb = {0};
-        DummyKcb.KeyHive = &KeyObject->RegistryHive->Hive;
-        DummyKcb.KeyCell = KeyObject->KeyCellOffset;
-
         /* Call the internal API */
-        Status = CmDeleteValueKey(&DummyKcb, *ValueName);
+        Status = CmDeleteValueKey(KeyObject->KeyControlBlock, *ValueName);
 
         /* Do the post callback */
         PostOperationInfo.Object = (PVOID)KeyObject;
