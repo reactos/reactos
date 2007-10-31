@@ -18,11 +18,11 @@ DefaultDestDir = 12
 %GenericMfg% = GenericMfg
 
 [GenericMfg]
-%*PNP80D6.DeviceDesc% = NE2000_Inst,*PNP80D6
+%*PNP80D6.DeviceDesc% = NE2000_Inst.ndi,*PNP80D6
 
 ;---------------------------- NE2000 DRIVER -----------------------------
 
-[NE2000_Inst.NT]
+[NE2000_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 14 ; PNPIsaBus
 AddReg = NE2000_AddReg.NT
@@ -36,7 +36,7 @@ HKR,,NetworkAddress,0x00000000,"001122334455"
 [NE2000_CopyFiles.NT]
 ne2000.sys
 
-[NE2000_Inst.NT.Services]
+[NE2000_Inst.ndi.NT.Services]
 AddService = ne2000, 0x00000002, ne2000_Service_Inst
 
 [ne2000_Service_Inst]

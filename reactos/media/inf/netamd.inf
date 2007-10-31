@@ -18,11 +18,11 @@ DefaultDestDir = 12
 %AMDMfg% = AMDMfg
 
 [AMDMfg]
-%PCNET.DeviceDesc% = PCNet_Inst,PCI\VEN_1022&DEV_2000
+%PCNET.DeviceDesc% = PCNet_Inst.ndi,PCI\VEN_1022&DEV_2000
 
 ;----------------------------- PCNET DRIVER -----------------------------
 
-[PCNet_Inst.NT]
+[PCNet_Inst.ndi.NT]
 Characteristics = 0x4 ; NCF_PHYSICAL
 BusType = 5 ; PCIBus
 AddReg = PCNet_AddReg.NT
@@ -43,7 +43,7 @@ HKR,,TP,,"1"
 [PCNet_CopyFiles.NT]
 pcnet.sys
 
-[PCNet_Inst.NT.Services]
+[PCNet_Inst.ndi.NT.Services]
 AddService = PCNet, 0x00000002, PCNet_Service_Inst
 
 [PCNet_Service_Inst]

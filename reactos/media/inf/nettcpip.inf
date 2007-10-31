@@ -14,9 +14,9 @@ DriverVer  = 04/12/2006,1.00
 ;----------------------------- TCP/IP DRIVER ----------------------------
 
 [MS_TCPIP.PrimaryInstall]
-AddReg = TCPIP_AddReg.NT
+AddReg = TCPIP_AddReg_Global.NT
 
-[TCPIP_AddReg.NT]
+[TCPIP_AddReg_Global.NT]
 ; The following entries should be generated from .inf files during installation
 ; TCPIP Protocol
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}","Characteristics",0x00010001,0x00000080
@@ -29,24 +29,10 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE1
 HKLM,"SYSTEM\CurrentControlSet\Control\Network\{4D36E975-E325-11CE-BFC1-08002BE10318}\{RandomProtocolGUID_TCPIP}\Ndi","Service",0x00000000,"Tcpip"
 
 ; TCP/IP driver
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ErrorControl",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Group",0x00000000,"PNP_TDI"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","ImagePath",0x00020000,"system32\drivers\tcpip.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip","Type",0x00010001,0x00000001
 ; NOTE: These settings should be added by the network setup
 ; These bindings are of the windows 2000 type, and will probably need to be
 ; twiddled to get 3rd-party network-related software to work.
 ; NT4 puts additional stuff in the Bind, Export, and Route values.
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","DataBasePath",0x00010000,"DataBasePath"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Domain",0x00010000,""
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","Hostname",0x00010000,"ROSHost"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","NameServer",0x00010000,"0.0.0.0"
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","ForwardBroadcasts",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","IPEnableRouter",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","SearchList",0x00010000,""
-HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters","EnableSecurityFilters",0x00010001,0x00000000
-;HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\PersistentRoutes",,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","UseDelayedAcceptance",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MaxSockAddrLength",0x00010001,0x00000010
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","MinSockAddrLength",0x00010001,0x00000010
@@ -54,8 +40,29 @@ HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","HelperDllName
 HKLM,"SYSTEM\CurrentControlSet\Services\Tcpip\Parameters\WinSock","Mapping",0x00000001,0c,00,00,00,03,00,00,00,02,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,01,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,00,00,00,00,06,00,00,00,00,00,00,00,01,00,00,00,06,00,00,00,02,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,02,00,00,00,00,00,00,00,02,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,00,00,00,00,11,00,00,00,00,00,00,00,02,00,00,00,11,00,00,00,02,00,00,00,03,00,00,00,00,00,00,00,02,00,00,00,03,00,00,00,01,00,00,00
 HKLM,"SYSTEM\CurrentControlSet\Services\Winsock\Parameters","Transports",0x00010000,"Tcpip"
 
+[MS_TCPIP.PrimaryInstall.Services]
+AddService = Tcpip, , tcpip_Service_Inst
+
+[tcpip_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 1
+ServiceBinary = %12%\tcpip.sys
+LoadOrderGroup = PNP_TDI
+AddReg = tcpip_AddReg
+
+[tcpip_AddReg]
+HKR,"Parameters","DataBasePath",0x00010000,"DataBasePath"
+HKR,"Parameters","Domain",0x00010000,""
+HKR,"Parameters","Hostname",0x00010000,"ROSHost"
+HKR,"Parameters","NameServer",0x00010000,"0.0.0.0"
+HKR,"Parameters","ForwardBroadcasts",0x00010001,0x00000000
+HKR,"Parameters","IPEnableRouter",0x00010001,0x00000000
+HKR,"Parameters","SearchList",0x00010000,""
+HKR,"Parameters","EnableSecurityFilters",0x00010001,0x00000000
+;HKR,"Parameters","PersistentRoutes",,0x00000010
+
 ;-------------------------------- STRINGS -------------------------------
 
 [Strings]
 ReactOS = "ReactOS Team"
-
