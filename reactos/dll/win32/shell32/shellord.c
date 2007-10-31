@@ -45,6 +45,7 @@
 #include "pidl.h"
 #include "shlwapi.h"
 #include "commdlg.h"
+#include "recyclebin.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 WINE_DECLARE_DEBUG_CHANNEL(pidl);
@@ -1971,15 +1972,45 @@ HRESULT WINAPI SHStartNetConnectionDialog(HWND hwnd, LPCSTR pszRemoteName, DWORD
 
 HRESULT WINAPI SHEmptyRecycleBinA(HWND hwnd, LPCSTR pszRootPath, DWORD dwFlags)
 {
-    FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_a(pszRootPath), dwFlags);
+    LPWSTR szRootPathW = NULL;
+    int len;
+    HRESULT hr;
 
-    return S_OK;
+    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_a(pszRootPath), dwFlags);
+
+    if (pszRootPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
+        if (len == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
+        szRootPathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!szRootPathW)
+            return E_OUTOFMEMORY;
+        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, szRootPathW);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
+    hr = SHEmptyRecycleBinW(hwnd, szRootPathW, dwFlags);
+    HeapFree(GetProcessHeap(), 0, szRootPathW);
+
+    return hr;
 }
 
 HRESULT WINAPI SHEmptyRecycleBinW(HWND hwnd, LPCWSTR pszRootPath, DWORD dwFlags)
 {
-    FIXME("%p, %s, 0x%08x - stub\n", hwnd, debugstr_w(pszRootPath), dwFlags);
+    BOOL ret;
 
+    TRACE("%p, %s, 0x%08x\n", hwnd, debugstr_w(pszRootPath), dwFlags);
+    FIXME("0x%08x flags ignored\n", dwFlags);
+
+    ret = EmptyRecycleBinW(pszRootPath);
+    if (!ret)
+        return HRESULT_FROM_WIN32(GetLastError());
+
+    /* FIXME: update icon? */
     return S_OK;
 }
 
@@ -1992,12 +2023,31 @@ DWORD WINAPI SHFormatDrive(HWND hwnd, UINT drive, UINT fmtID, UINT options)
 
 HRESULT WINAPI SHQueryRecycleBinA(LPCSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)
 {
-    FIXME("%s, %p - stub\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
+    LPWSTR szRootPathW = NULL;
+    int len;
+    HRESULT hr;
 
-    pSHQueryRBInfo->i64Size = 0;
-    pSHQueryRBInfo->i64NumItems = 0;
+    TRACE("%s, %p\n", debugstr_a(pszRootPath), pSHQueryRBInfo);
 
-    return S_OK;
+    if (pszRootPath)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, NULL, 0);
+        if (len == 0)
+            return HRESULT_FROM_WIN32(GetLastError());
+        szRootPathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        if (!szRootPathW)
+            return E_OUTOFMEMORY;
+        if (MultiByteToWideChar(CP_ACP, 0, pszRootPath, -1, szRootPathW, len) == 0)
+        {
+            HeapFree(GetProcessHeap(), 0, szRootPathW);
+            return HRESULT_FROM_WIN32(GetLastError());
+        }
+    }
+
+    hr = SHQueryRecycleBinW(szRootPathW, pSHQueryRBInfo);
+    HeapFree(GetProcessHeap(), 0, szRootPathW);
+
+    return hr;
 }
 
 HRESULT WINAPI SHQueryRecycleBinW(LPCWSTR pszRootPath, LPSHQUERYRBINFO pSHQueryRBInfo)

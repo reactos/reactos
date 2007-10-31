@@ -38,6 +38,8 @@
 #include "shellfolder.h"
 #include "shresdef.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL (shell);
+
 const GUID CLSID_OpenWith = { 0x09799AFB, 0xAD67, 0x11d1, {0xAB,0xCD,0x00,0xC0,0x4F,0xC3,0x09,0x36} };
 
 typedef struct
