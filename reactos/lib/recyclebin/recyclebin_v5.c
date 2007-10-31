@@ -10,6 +10,8 @@
 #include "recyclebin_v5.h"
 #include <stdio.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+
 static BOOL
 IntDeleteRecursive(
 	IN LPCWSTR FullName)
@@ -72,6 +74,8 @@ RecycleBin5_RecycleBin5_QueryInterface(
 {
 	struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
 
+	TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+
 	if (!ppvObject)
 		return E_POINTER;
 
@@ -97,6 +101,7 @@ RecycleBin5_RecycleBin5_AddRef(
 {
 	struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
 	ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+	TRACE("(%p)\n", This);
 	return refCount;
 }
 
@@ -107,8 +112,7 @@ RecycleBin5_RecycleBin5_Release(
 	struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
 	ULONG refCount;
 
-	if (!This)
-		return E_POINTER;
+	TRACE("(%p)\n", This);
 
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
@@ -142,6 +146,8 @@ RecycleBin5_RecycleBin5_DeleteFile(
 	SYSTEMTIME SystemTime;
 	DWORD ClusterSize, BytesPerSector, SectorsPerCluster;
 	HRESULT hr;
+
+	TRACE("(%p, %s)\n", This, debugstr_w(szFileName));
 
 	if (s->EnumeratorCount != 0)
 		return E_FAIL;
@@ -287,6 +293,8 @@ RecycleBin5_RecycleBin5_EmptyRecycleBin(
 	IRecycleBinFile *prbf;
 	HRESULT hr;
 
+	TRACE("(%p)\n", This);
+
 	while (TRUE)
 	{
 		hr = IRecycleBin5_EnumObjects(This, &prbel);
@@ -313,6 +321,8 @@ RecycleBin5_RecycleBin5_EnumObjects(
 	HRESULT hr;
 	IUnknown *pUnk;
 
+	TRACE("(%p, %p)\n", This, ppEnumList);
+
 	hr = RecycleBin5_Enumerator_Constructor(This, s->hInfo, s->hInfoMapped, s->Folder, &pUnk);
 	if (!SUCCEEDED(hr))
 		return hr;
@@ -338,6 +348,8 @@ RecycleBin5_RecycleBin5_Delete(
 	PINFO2_HEADER pHeader;
 	DELETED_FILE_RECORD *pRecord, *pLast;
 	DWORD dwEntries, i;
+
+	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
 
 	if (s->EnumeratorCount != 0)
 		return E_FAIL;
@@ -399,6 +411,8 @@ RecycleBin5_RecycleBin5_Restore(
 	DELETED_FILE_RECORD *pRecord, *pLast;
 	DWORD dwEntries, i;
 
+	TRACE("(%p, %s, %p)\n", This, debugstr_w(pDeletedFileName), pDeletedFile);
+
 	if (s->EnumeratorCount != 0)
 		return E_FAIL;
 
@@ -451,9 +465,10 @@ RecycleBin5_RecycleBin5_Restore(
 static HRESULT STDMETHODCALLTYPE
 RecycleBin5_RecycleBin5_OnClosing(
 	IN IRecycleBin5 *This,
-	IN IRecycleBinEnumList *prb5el)
+	IN IRecycleBinEnumList *prbel)
 {
 	struct RecycleBin5 *s = CONTAINING_RECORD(This, struct RecycleBin5, recycleBinImpl);
+	TRACE("(%p, %p)\n", This, prbel);
 	s->EnumeratorCount--;
 	return S_OK;
 }

@@ -7,8 +7,10 @@
  */
 
 #define COBJMACROS
-#include "recyclebin.h"
+#include "recyclebin_private.h"
 #include <stdio.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
 
 struct RecycleBinGenericEnum
 {
@@ -26,6 +28,8 @@ RecycleBinGenericEnum_RecycleBinEnumList_QueryInterface(
 	OUT void **ppvObject)
 {
 	struct RecycleBinGenericEnum *s = CONTAINING_RECORD(This, struct RecycleBinGenericEnum, recycleBinEnumImpl);
+
+	TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
 	if (!ppvObject)
 		return E_POINTER;
@@ -50,6 +54,7 @@ RecycleBinGenericEnum_RecycleBinEnumList_AddRef(
 {
 	struct RecycleBinGenericEnum *s = CONTAINING_RECORD(This, struct RecycleBinGenericEnum, recycleBinEnumImpl);
 	ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+	TRACE("(%p)\n", This);
 	return refCount;
 }
 
@@ -60,8 +65,7 @@ RecycleBinGenericEnum_RecycleBinEnumList_Release(
 	struct RecycleBinGenericEnum *s = CONTAINING_RECORD(This, struct RecycleBinGenericEnum, recycleBinEnumImpl);
 	ULONG refCount;
 
-	if (!This)
-		return E_POINTER;
+	TRACE("(%p)\n", This);
 
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
@@ -87,6 +91,8 @@ RecycleBinGenericEnum_RecycleBinEnumList_Next(
 	DWORD i;
 	DWORD fetched = 0, newFetched;
 	HRESULT hr;
+
+	TRACE("(%p, %u, %p, %p)\n", This, celt, rgelt, pceltFetched);
 
 	if (!rgelt)
 		return E_POINTER;
@@ -173,6 +179,7 @@ RecycleBinGenericEnum_RecycleBinEnumList_Skip(
 	IN DWORD celt)
 {
 	struct RecycleBinGenericEnum *s = CONTAINING_RECORD(This, struct RecycleBinGenericEnum, recycleBinEnumImpl);
+	TRACE("(%p, %u)\n", This, celt);
 	s->skip += celt;
 	return S_OK;
 }
@@ -182,6 +189,8 @@ RecycleBinGenericEnum_RecycleBinEnumList_Reset(
 	IN IRecycleBinEnumList *This)
 {
 	struct RecycleBinGenericEnum *s = CONTAINING_RECORD(This, struct RecycleBinGenericEnum, recycleBinEnumImpl);
+
+	TRACE("(%p)\n", This);
 
 	if (s->current)
 	{

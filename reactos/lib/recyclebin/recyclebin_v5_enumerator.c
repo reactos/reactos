@@ -9,6 +9,8 @@
 #define COBJMACROS
 #include "recyclebin_v5.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+
 struct RecycleBin5File
 {
 	ULONG ref;
@@ -25,6 +27,8 @@ RecycleBin5File_RecycleBinFile_QueryInterface(
 	OUT void **ppvObject)
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+
+	TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
 	if (!ppvObject)
 		return E_POINTER;
@@ -49,6 +53,7 @@ RecycleBin5File_RecycleBinFile_AddRef(
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
 	ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+	TRACE("(%p)\n", This);
 	return refCount;
 }
 
@@ -59,8 +64,7 @@ RecycleBin5File_RecycleBinFile_Release(
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
 	ULONG refCount;
 
-	if (!This)
-		return E_POINTER;
+	TRACE("(%p)\n", This);
 
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
@@ -82,6 +86,8 @@ RecycleBin5File_RecycleBinFile_GetLastModificationTime(
 	HRESULT hr;
 	DWORD dwAttributes;
 	HANDLE hFile;
+
+	TRACE("(%p, %p)\n", This, pLastModificationTime);
 
 	dwAttributes = GetFileAttributesW(s->FullName);
 	if (dwAttributes == INVALID_FILE_ATTRIBUTES)
@@ -107,6 +113,7 @@ RecycleBin5File_RecycleBinFile_GetDeletionTime(
 	OUT FILETIME *pDeletionTime)
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+	TRACE("(%p, %p)\n", This, pDeletionTime);
 	*pDeletionTime = s->deletedFile.DeletionTime;
 	return S_OK;
 }
@@ -120,6 +127,8 @@ RecycleBin5File_RecycleBinFile_GetFileSize(
 	HRESULT hr;
 	DWORD dwAttributes;
 	HANDLE hFile;
+
+	TRACE("(%p, %p)\n", This, pFileSize);
 
 	dwAttributes = GetFileAttributesW(s->FullName);
 	if (dwAttributes == INVALID_FILE_ATTRIBUTES)
@@ -148,6 +157,7 @@ RecycleBin5File_RecycleBinFile_GetPhysicalFileSize(
 	OUT ULARGE_INTEGER *pPhysicalFileSize)
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+	TRACE("(%p, %p)\n", This, pPhysicalFileSize);
 	pPhysicalFileSize->u.HighPart = 0;
 	pPhysicalFileSize->u.LowPart = s->deletedFile.dwPhysicalFileSize;
 	return S_OK;
@@ -160,6 +170,8 @@ RecycleBin5File_RecycleBinFile_GetAttributes(
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
 	DWORD dwAttributes;
+
+	TRACE("(%p, %p)\n", This, pAttributes);
 
 	dwAttributes = GetFileAttributesW(s->FullName);
 	if (dwAttributes == INVALID_FILE_ATTRIBUTES)
@@ -179,6 +191,8 @@ RecycleBin5File_RecycleBinFile_GetFileName(
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
 	DWORD dwRequired;
 
+	TRACE("(%p, %u, %p, %p)\n", This, BufferSize, Buffer, RequiredSize);
+
 	dwRequired = (DWORD)(wcslen(s->deletedFile.FileNameW) + 1) * sizeof(WCHAR);
 	if (RequiredSize)
 		*RequiredSize = dwRequired;
@@ -197,6 +211,7 @@ RecycleBin5File_RecycleBinFile_Delete(
 	IN IRecycleBinFile *This)
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+	TRACE("(%p)\n", This);
 	return IRecycleBin5_Delete(s->recycleBin, s->FullName, &s->deletedFile);
 }
 
@@ -205,6 +220,7 @@ RecycleBin5File_RecycleBinFile_Restore(
 	IN IRecycleBinFile *This)
 {
 	struct RecycleBin5File *s = CONTAINING_RECORD(This, struct RecycleBin5File, recycleBinFileImpl);
+	TRACE("(%p)\n", This);
 	return IRecycleBin5_Restore(s->recycleBin, s->FullName, &s->deletedFile);
 }
 
@@ -279,6 +295,8 @@ RecycleBin5Enum_RecycleBinEnumList_QueryInterface(
 {
 	struct RecycleBin5Enum *s = CONTAINING_RECORD(This, struct RecycleBin5Enum, recycleBinEnumImpl);
 
+	TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
+
 	if (!ppvObject)
 		return E_POINTER;
 
@@ -302,6 +320,7 @@ RecycleBin5Enum_RecycleBinEnumList_AddRef(
 {
 	struct RecycleBin5Enum *s = CONTAINING_RECORD(This, struct RecycleBin5Enum, recycleBinEnumImpl);
 	ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+	TRACE("(%p)\n", This);
 	return refCount;
 }
 
@@ -312,8 +331,7 @@ RecycleBin5Enum_RecycleBinEnumList_Release(
 	struct RecycleBin5Enum *s = CONTAINING_RECORD(This, struct RecycleBin5Enum, recycleBinEnumImpl);
 	ULONG refCount;
 
-	if (!This)
-		return E_POINTER;
+	TRACE("(%p)\n", This);
 
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
@@ -342,6 +360,8 @@ RecycleBin5Enum_RecycleBinEnumList_Next(
 	DWORD fetched = 0, i;
 	DWORD dwEntries;
 	HRESULT hr;
+
+	TRACE("(%p, %u, %p, %p)\n", This, celt, rgelt, pceltFetched);
 
 	if (!rgelt)
 		return E_POINTER;
@@ -383,6 +403,7 @@ RecycleBin5Enum_RecycleBinEnumList_Skip(
 	IN DWORD celt)
 {
 	struct RecycleBin5Enum *s = CONTAINING_RECORD(This, struct RecycleBin5Enum, recycleBinEnumImpl);
+	TRACE("(%p, %u)\n", This, celt);
 	s->dwCurrent += celt;
 	return S_OK;
 }
@@ -392,6 +413,7 @@ RecycleBin5Enum_RecycleBinEnumList_Reset(
 	IN IRecycleBinEnumList *This)
 {
 	struct RecycleBin5Enum *s = CONTAINING_RECORD(This, struct RecycleBin5Enum, recycleBinEnumImpl);
+	TRACE("(%p)\n", This);
 	s->dwCurrent = 0;
 	return S_OK;
 }

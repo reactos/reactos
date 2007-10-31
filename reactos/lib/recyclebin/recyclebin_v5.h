@@ -67,7 +67,7 @@ typedef struct IRecycleBin5Vtbl
 
 	HRESULT (STDMETHODCALLTYPE *OnClosing)(
 		IN IRecycleBin5 *This,
-		IN IRecycleBinEnumList *prb5el);
+		IN IRecycleBinEnumList *prbel);
 } IRecycleBin5Vtbl;
 
 interface IRecycleBin5

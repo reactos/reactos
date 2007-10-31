@@ -204,14 +204,13 @@ EnumerateRecycleBinW(
 			hr = HRESULT_FROM_WIN32(GetLastError());
 			goto cleanup;
 		}
-		IRecycleBinFile_Release(prbf);
 	}
 
 cleanup:
 	if (prb)
 		IRecycleBin_Release(prb);
 	if (prbel)
-		IRecycleBinEnumList_Release(prb);
+		IRecycleBinEnumList_Release(prbel);
 	if (SUCCEEDED(hr))
 		return TRUE;
 	if (HRESULT_FACILITY(hr) == FACILITY_WIN32)

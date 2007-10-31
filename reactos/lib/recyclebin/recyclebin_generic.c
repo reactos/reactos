@@ -10,6 +10,8 @@
 #include "recyclebin_private.h"
 #include <stdio.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+
 struct RecycleBinGeneric
 {
 	ULONG ref;
@@ -23,6 +25,8 @@ RecycleBinGenericVtbl_RecycleBin_QueryInterface(
 	void **ppvObject)
 {
 	struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
+
+	TRACE("(%p, %s, %p)\n", This, debugstr_guid(riid), ppvObject);
 
 	if (!ppvObject)
 		return E_POINTER;
@@ -47,6 +51,7 @@ RecycleBinGenericVtbl_RecycleBin_AddRef(
 {
 	struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
 	ULONG refCount = InterlockedIncrement((PLONG)&s->ref);
+	TRACE("(%p)\n", This);
 	return refCount;
 }
 
@@ -57,8 +62,7 @@ RecycleBinGenericVtbl_RecycleBin_Release(
 	struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
 	ULONG refCount;
 
-	if (!This)
-		return E_POINTER;
+	TRACE("(%p)\n", This);
 
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
@@ -79,6 +83,8 @@ RecycleBinGenericVtbl_RecycleBin_DeleteFile(
 	DWORD len;
 	WCHAR szVolume[MAX_PATH];
 	HRESULT hr;
+
+	TRACE("(%p, %s)\n", This, debugstr_w(szFileName));
 
 	/* Get full file name */
 	while (TRUE)
@@ -142,6 +148,8 @@ RecycleBinGenericVtbl_RecycleBin_EmptyRecycleBin(
 	IRecycleBin *prb;
 	HRESULT hr;
 
+	TRACE("(%p)\n", This);
+
 	dwLogicalDrives = GetLogicalDrives();
 	if (dwLogicalDrives == 0)
 		return HRESULT_FROM_WIN32(GetLastError());
@@ -170,6 +178,7 @@ RecycleBinGenericVtbl_RecycleBin_EnumObjects(
 	IN IRecycleBin *This,
 	OUT IRecycleBinEnumList **ppEnumList)
 {
+	TRACE("(%p, %p)\n", This, ppEnumList);
 	return RecycleBinGeneric_Enumerator_Constructor(ppEnumList);
 }
 

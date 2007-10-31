@@ -1,5 +1,6 @@
 #include "recyclebin.h"
 #include "sddl.h"
+#include <wine/debug.h>
 
 /* Defines */
 #define RECYCLEBIN_MAGIC  0x6e694252
