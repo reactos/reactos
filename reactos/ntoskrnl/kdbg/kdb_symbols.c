@@ -442,7 +442,7 @@ KdbpSymLoadModuleSymbols(IN PUNICODE_STRING FileName,
                       FILE_SYNCHRONOUS_IO_NONALERT);
   if (!NT_SUCCESS(Status))
     {
-      DPRINT("Could not open image file: %wZ\n", &FileName);
+      DPRINT("Could not open image file: %wZ\n", FileName);
       return;
     }
 
@@ -577,6 +577,54 @@ KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
   ModuleObject->PatchInformation = NULL;
 }
 
+VOID
+KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName)
+{
+    ANSI_STRING SystemPrefix, RealPathPrefix, ProperName;
+    CHAR Buffer[MAX_PATH], RealPathBuffer[MAX_PATH];
+
+    /* Init our strings for compare operations */
+    RtlInitAnsiString(&SystemPrefix, "\\SystemRoot");
+
+    /* Convert system root to ansi */
+    sprintf(RealPathBuffer, "%S", (PWCHAR)&SharedUserData->NtSystemRoot[2]);
+    RtlInitAnsiString(&RealPathPrefix, RealPathBuffer);
+    RealPathPrefix.MaximumLength = MAX_PATH;
+
+    /* There are 3 cases:
+       1) \SystemRoot\System32\ -> no change
+       2) \ReactOS\System32 -> \SystemRoot\System32
+       3) module.dll -> \??\C:\ReactOS\system32\module.dll
+     */
+    if (RtlPrefixString(&SystemPrefix, AnsiFileName, FALSE))
+    {
+        /* Case: \SystemRoot\System32\ , just directly load it */
+        KdbSymProcessBootSymbols(AnsiFileName, TRUE, FALSE);
+    }
+    else if (RtlPrefixString(&RealPathPrefix, AnsiFileName, FALSE))
+    {
+        /* It's prefixed with a real path, instead of a \SystemRoot.
+           So build a new, proper name. */
+        RtlZeroMemory(Buffer, MAX_PATH);
+        strcpy(Buffer, "\\SystemRoot");
+        strncat(Buffer,
+            AnsiFileName->Buffer + RealPathPrefix.Length,
+            AnsiFileName->Length - RealPathPrefix.Length);
+
+        /* Convert it to ANSI_STRING */
+        RtlInitAnsiString(&ProperName, Buffer);
+
+        /* Process symbols */
+        KdbSymProcessBootSymbols(&ProperName, TRUE, TRUE);
+    }
+    else
+    {
+        /* Just a bare filename, nothing else. Why? Who knows... */
+        KdbSymProcessBootSymbols(AnsiFileName, FALSE, TRUE);
+    }
+}
+
+
 /*! \brief Called when a symbol file is loaded by the loader?
  *
  * Tries to find a driver (.sys) or executable (.exe) with the same base name
@@ -587,7 +635,9 @@ KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
  * \param FileName        Filename for which the symbols are loaded.
  */
 VOID
-KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName)
+KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName,
+                         IN BOOLEAN FullName,
+                         IN BOOLEAN LoadFromFile)
 {
     BOOLEAN Found = FALSE;
     PLIST_ENTRY ListHead, NextEntry;
@@ -624,10 +674,21 @@ KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName)
                                      LDR_DATA_TABLE_ENTRY,
                                      InLoadOrderLinks);
 
-        if (RtlEqualUnicodeString(&ModuleName, &LdrEntry->FullDllName, TRUE))
+        if (FullName)
         {
-            Found = TRUE;
-            break;
+            if (RtlEqualUnicodeString(&ModuleName, &LdrEntry->FullDllName, TRUE))
+            {
+                Found = TRUE;
+                break;
+            }
+        }
+        else
+        {
+            if (RtlEqualUnicodeString(&ModuleName, &LdrEntry->BaseDllName, TRUE))
+            {
+                Found = TRUE;
+                break;
+            }
         }
 
         /* Go to the next one */
@@ -651,17 +712,26 @@ KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName)
         KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
     }
 
-    /* Load new symbol information */
-    if (! RosSymCreateFromMem(LdrEntry->DllBase,
-                              LdrEntry->SizeOfImage,
-                              (PROSSYM_INFO*)&LdrEntry->PatchInformation))
+    if (LoadFromFile)
     {
-        /* Error loading symbol info, exit */
-        return;
+        /* Load symbol info from file */
+        KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
+            (PROSSYM_INFO*)&LdrEntry->PatchInformation);
     }
+    else
+    {
+        /* Load new symbol information */
+        if (! RosSymCreateFromMem(LdrEntry->DllBase,
+            LdrEntry->SizeOfImage,
+            (PROSSYM_INFO*)&LdrEntry->PatchInformation))
+        {
+            /* Error loading symbol info, exit */
+            return;
+        }
 
-    /* Add file to cache */
-    KdbpSymAddCachedFile(&ModuleName, LdrEntry->PatchInformation);
+        /* Add file to cache */
+        KdbpSymAddCachedFile(&ModuleName, LdrEntry->PatchInformation);
+    }
 
     DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
            &ModuleName,
@@ -767,9 +837,9 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
         /* FIXME: Load as 1st and 2nd entries of InLoadOrderList instead
                   of hardcoding them here! */
         RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\NTOSKRNL.EXE");
-        KdbSymProcessBootSymbols(&FileName);
+        KdbSymProcessBootSymbols(&FileName, TRUE, FALSE);
         RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\HAL.DLL");
-        KdbSymProcessBootSymbols(&FileName);
+        KdbSymProcessBootSymbols(&FileName, TRUE, FALSE);
     }
 }
 

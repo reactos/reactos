@@ -1860,7 +1860,12 @@ LoaderScan:
     }
 
     /* Check if there's symbols */
+#ifdef KDBG
+    /* If KDBG is defined, then we always have symbols */
+    if (TRUE)
+#else
     if (MiCacheImageSymbols(LdrEntry->DllBase))
+#endif
     {
         /* Check if the system root is present */
         if ((PrefixName.Length > (11 * sizeof(WCHAR))) &&

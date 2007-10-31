@@ -290,8 +290,14 @@ KeRosDumpStackFrames(IN PULONG Frame OPTIONAL,
         if (KiRosPcToUserFileHeader((PVOID)Addr, &LdrEntry))
         {
             /* Print out the module name */
-            Addr -= (ULONG_PTR)LdrEntry->DllBase;
-            DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
+#ifdef KDBG
+            if (!KdbSymPrintAddress((PVOID)Addr))
+#endif
+            {
+                /* Fall back to usual printing */
+                Addr -= (ULONG_PTR)LdrEntry->DllBase;
+                DbgPrint("<%wZ: %x>", &LdrEntry->FullDllName, Addr);
+            }
         }
         else if (Addr)
         {
