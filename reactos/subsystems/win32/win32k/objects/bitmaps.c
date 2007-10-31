@@ -111,7 +111,7 @@ NtGdiCreateBitmap(
          UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * Height;
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
-      DPRINT1("calling IntGdiCreateBitmap 1\n");
+
       if (0 == Width || 0 == Height)
       {
          hBitmap = IntGdiCreateBitmap (1, 1, 1, 1, NULL);
