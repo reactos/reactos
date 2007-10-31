@@ -1,7 +1,8 @@
 /*
- * ReactOS Generic Framebuffer display driver
+ * ReactOS Generic Framebuffer acclations display driver
  *
  * Copyright (C) 2004 Filip Navara
+ * Copyright (C) 2007 Magnus Olsen
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -19,6 +20,79 @@
  */
 
 #include "framebuf.h"
+
+BOOL 
+InitSurface(PPDEV ppdev,
+            BOOL bForcemapping)
+{
+   VIDEO_MEMORY VideoMemory;
+   VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
+   ULONG returnedDataLength;
+   ULONG RemappingNeeded = 0;
+
+   /*
+    * Set video mode of our adapter.
+    */
+
+   if (EngDeviceIoControl(ppdev->hDriver,
+                          IOCTL_VIDEO_SET_CURRENT_MODE,
+                          &(ppdev->ModeIndex),
+                          sizeof(ULONG),
+                          &RemappingNeeded,
+                          sizeof(ULONG),
+                          &returnedDataLength))
+   {
+      return FALSE;
+   }
+
+   /* Check if mapping is need it */
+   if ((!bForcemapping) && 
+       (!RemappingNeeded))
+   {
+       return TRUE;
+   }
+   
+
+   /*
+    * Map the framebuffer into our memory.
+    */
+
+   VideoMemory.RequestedVirtualAddress = NULL;
+   if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_MAP_VIDEO_MEMORY,
+                          &VideoMemory, sizeof(VIDEO_MEMORY),
+                          &VideoMemoryInfo, sizeof(VIDEO_MEMORY_INFORMATION),
+                          &returnedDataLength))
+   {
+      return FALSE;
+   }
+
+   /*
+    * Save the real video memory
+    */
+    ppdev->pRealVideoMem = VideoMemoryInfo.FrameBufferBase;
+    ppdev->VideoMemSize = VideoMemoryInfo.VideoRamLength;
+
+   /*
+    * Video memory cached
+    *
+    * We maby should only ask max 8MB as cached ?, think of the video ram length is 256MB 
+    */
+   ppdev->pVideoMemCache = EngAllocMem(0, (ULONG)VideoMemoryInfo.VideoRamLength, ALLOC_TAG);
+   if (ppdev->pVideoMemCache == NULL)
+   {
+        /* cached off for no avail system memory */
+        ppdev->ScreenPtr = VideoMemoryInfo.FrameBufferBase;
+   }
+   else
+   {
+        /* cached on, system memory is avail */
+        ppdev->ScreenPtr = ppdev->pRealVideoMem;
+   }
+
+   /* FIXME  hw mouse pointer */
+
+   return TRUE;
+}
 
 /*
  * DrvEnableSurface
@@ -38,35 +112,14 @@ DrvEnableSurface(
    HSURF hSurface;
    ULONG BitmapType;
    SIZEL ScreenSize;
-   VIDEO_MEMORY VideoMemory;
-   VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
-   ULONG ulTemp;
 
-   /*
-    * Set video mode of our adapter.
-    */
 
-   if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
-                          &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
-                          &ulTemp))
+   /* Setup surface and force the mapping */
+   if (!InitSurface(ppdev, TRUE))
    {
-      return FALSE;
+       return FALSE;
    }
 
-   /*
-    * Map the framebuffer into our memory.
-    */
-
-   VideoMemory.RequestedVirtualAddress = NULL;
-   if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_MAP_VIDEO_MEMORY,
-                          &VideoMemory, sizeof(VIDEO_MEMORY),
-                          &VideoMemoryInfo, sizeof(VIDEO_MEMORY_INFORMATION),
-                          &ulTemp))
-   {
-      return FALSE;
-   }
-
-   ppdev->ScreenPtr = VideoMemoryInfo.FrameBufferBase;
 
    switch (ppdev->BitsPerPixel)
    {
@@ -108,7 +161,9 @@ DrvEnableSurface(
     * Associate the surface with our device.
     */
 
-   if (!EngAssociateSurface(hSurface, ppdev->hDevEng, 0))
+   if (!EngAssociateSurface(hSurface, ppdev->hDevEng, HOOK_BITBLT | HOOK_COPYBITS |
+                                                      HOOK_FILLPATH | HOOK_TEXTOUT |
+                                                      HOOK_STROKEPATH | HOOK_LINETO))
    {
       EngDeleteSurface(hSurface);
       return FALSE;
@@ -140,18 +195,24 @@ DrvDisableSurface(
    EngDeleteSurface(ppdev->hSurfEng);
    ppdev->hSurfEng = NULL;
 
-#ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
-   /* Clear all mouse pointer surfaces. */
-   DrvSetPointerShape(NULL, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0);
-#endif
+
+   /* Free the video memory cache */
+   if (ppdev->pVideoMemCache)
+   {
+        EngFreeMem(ppdev->pVideoMemCache);
+   }
 
    /*
     * Unmap the framebuffer.
     */
 
-   VideoMemory.RequestedVirtualAddress = ((PPDEV)dhpdev)->ScreenPtr;
+   VideoMemory.RequestedVirtualAddress = ppdev->pRealVideoMem;
    EngDeviceIoControl(((PPDEV)dhpdev)->hDriver, IOCTL_VIDEO_UNMAP_VIDEO_MEMORY,
                       &VideoMemory, sizeof(VIDEO_MEMORY), NULL, 0, &ulTemp);
+
+   ppdev->pRealVideoMem  = NULL;
+   ppdev->pVideoMemCache = NULL;
+
 }
 
 /*
@@ -175,18 +236,48 @@ DrvAssertMode(
    if (bEnable)
    {
       BOOLEAN Result;
-      /*
-       * Reinitialize the device to a clean state.
-       */
-      Result = EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_CURRENT_MODE,
-                                  &(ppdev->ModeIndex), sizeof(ULONG), NULL, 0,
-                                  &ulTemp);
-      if (ppdev->BitsPerPixel == 8)
+      PBYTE   pRealVideoMem = ppdev->pRealVideoMem;
+
+      /* Setup surface and remapping if it need it */
+      if (!InitSurface(ppdev, FALSE))
       {
-	     IntSetPalette(dhpdev, ppdev->PaletteEntries, 0, 256);
+            return FALSE;
       }
 
-      return Result;
+      /* Check if we got same surface or not */
+      if (pRealVideoMem != ppdev->pRealVideoMem)
+      {
+             if (ppdev->pVideoMemCache == NULL)
+             {
+                if ( !EngModifySurface(ppdev->hsurfEng,
+                                   ppdev->hdevEng,
+                                   ppdev->flHooks | HOOK_SYNCHRONIZE,
+                                   MS_NOTSYSTEMMEMORY,
+                                   (DHSURF)ppdev,
+                                   ppdev->pRealVideoMem,
+                                   ppdev->lDeltaScreen,
+                                   NULL))
+                {
+                    return FALSE;
+                }
+             }
+             else
+             {
+                if ( !EngModifySurface(ppdev->hsurfEng,
+                                   ppdev->hdevEng,
+                                   ppdev->flHooks | HOOK_SYNCHRONIZE,
+                                   0,
+                                   (DHSURF)ppdev,
+                                   ppdev->pVideoMemCache,
+                                   ppdev->lDeltaScreen,
+                                   NULL))
+                {
+                    return FALSE;
+                }
+             }
+      }
+
+      return TRUE;
 
    }
    else

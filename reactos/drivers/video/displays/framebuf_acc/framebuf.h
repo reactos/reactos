@@ -66,6 +66,14 @@ typedef struct _PDEV
    VIDEOMEMORY* pvmList;
    BOOL bDDInitialized;
    DDPIXELFORMAT ddpfDisplay;
+
+    /* System Cached data */
+    PVOID pVideoMemCache;
+    PVOID pRealVideoMem;
+
+    /* Avail Video memory from Current Screen and the end range */
+    ULONG VideoMemSize;
+
 } PDEV, *PPDEV;
 
 #define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
