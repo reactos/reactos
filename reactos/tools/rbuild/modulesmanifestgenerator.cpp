@@ -91,3 +91,52 @@ ModulesManifestGenerator::WriteManifestFile ( Module& module )
 
 	free ( buf );
 }
+
+
+CreditsGenerator::CreditsGenerator ( const Project& project )
+	: project ( project )
+{
+}
+
+CreditsGenerator::~CreditsGenerator ()
+{
+}
+
+void
+CreditsGenerator::Generate ()
+{
+	char* buf;
+	char* s;
+
+	buf = (char*) malloc ( 512*1024 );
+	if ( buf == NULL )
+		throw OutOfMemoryException ();
+	
+	s = buf;
+	s = s + sprintf ( s, "ReactOS is available thanks to the work of:\n\n");
+
+    for ( size_t i = 0; i < project.contributors.size (); i++ )
+	{
+        Contributor& contributor = *project.contributors[i];
+
+	    s = s + sprintf ( s, "\t%s %s (%s)\n" , 
+            contributor.firstName.c_str() , 
+            contributor.lastName.c_str() , 
+            contributor.alias.c_str());
+        
+        s = s + sprintf ( s, "\t\t%s\n" , contributor.mail.c_str());
+        
+        if (strlen(contributor.city.c_str()) > 0 &&
+            strlen(contributor.country.c_str()) > 0)
+        {
+            s = s + sprintf ( s, "\t\t%s,%s\n\n" , 
+                contributor.city.c_str() , 
+                contributor.country.c_str());
+        }
+	}
+
+
+	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "CREDITS" ) );
+
+	free ( buf );
+}

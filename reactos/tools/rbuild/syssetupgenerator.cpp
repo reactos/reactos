@@ -48,7 +48,14 @@ SysSetupGenerator::Generate ()
 	{
 		const Module& module = *project.modules[i];
 		if ( module.autoRegister != NULL )
-			Generate ( inf, module );
+			GenerateAutoRegister ( inf, module );
+	}
+
+    for ( size_t i = 0; i < project.modules.size (); i++ )
+	{
+		const Module& module = *project.modules[i];
+        if ( module.installComponent != NULL )
+			GenerateInstallComponent ( inf, module );
 	}
 
 	if ( 0 != InfHostWriteFile ( inf, syssetup.c_str (), "" ) )
@@ -89,7 +96,7 @@ SysSetupGenerator::GetFlags ( const Module& module )
 }
 
 void
-SysSetupGenerator::Generate ( HINF inf,
+SysSetupGenerator::GenerateAutoRegister ( HINF inf,
                               const Module& module )
 {
 	PINFCONTEXT context;
@@ -114,4 +121,30 @@ SysSetupGenerator::Generate ( HINF inf,
 	}
 
 	InfHostFreeContext ( context );
+}
+
+
+void
+SysSetupGenerator::GenerateInstallComponent ( HINF inf,
+                              const Module& module )
+{
+	PINFCONTEXT context;
+
+	if ( 0 != InfHostFindOrAddSection ( inf, "Infs.Always", &context ) )
+	{
+		throw new Exception ( ".inf section 'Infs.Always' not found" );
+		InfHostCloseFile ( inf );
+	}
+
+    if (  0 != InfHostAddLine ( context, NULL ) ||
+          0 != InfHostAddField ( context, module.installComponent->file.name.c_str()) ||
+          0 != InfHostAddField ( context, module.installComponent->section.c_str()))
+	{
+		InfHostFreeContext ( context );
+		InfHostCloseFile ( inf );
+		throw InvalidOperationException ( __FILE__,
+		                                  __LINE__ );
+	}
+
+    InfHostFreeContext ( context );
 }

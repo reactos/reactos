@@ -249,7 +249,8 @@ Module::Module ( const Project& project,
 	  cplusplus (false),
 	  host (HostDefault),
 	  autoManifest (NULL),
-	  autoResource (NULL)
+	  autoResource (NULL),
+      installComponent (NULL)
 {
 	if ( node.name != "module" )
 		throw InvalidOperationException ( __FILE__,
@@ -528,6 +529,8 @@ Module::~Module ()
 		delete linkerFlags[i];
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		delete stubbedComponents[i];
+	//if ( installComponent )
+	//	delete installComponent;
 	if ( linkerScript )
 		delete linkerScript;
 	if ( pch )
@@ -575,6 +578,8 @@ Module::ProcessXML()
 	for ( i = 0; i < stubbedComponents.size(); i++ )
 		stubbedComponents[i]->ProcessXML();
 	non_if_data.ProcessXML();
+    if ( installComponent )
+		installComponent->ProcessXML();
 	if ( linkerScript )
 		linkerScript->ProcessXML();
 	if ( pch )
@@ -898,6 +903,30 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 
 		localizations.push_back ( localization );
 		subs_invalid = true;
+	}
+	else if ( e.name == "installcomponent" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<installcomponent> is not a valid sub-element of <if>" );
+		}
+		size_t pos = e.value.find_last_of ( "/\\" );
+		if ( pos == string::npos )
+		{
+			installComponent = new InstallComponent (
+				e, *this, FileLocation ( SourceDirectory, relative_path, e.value, &e ) );
+		}
+		else
+		{
+			string dir = e.value.substr ( 0, pos );
+			string name = e.value.substr ( pos + 1);
+			installComponent = new InstallComponent (
+				e, *this, FileLocation ( SourceDirectory, relative_path + sSep + dir, name, &e ) );
+		}
+
+		subs_invalid = false;
 	}
 	else if ( e.name == "linkerscript" )
 	{
@@ -1671,6 +1700,50 @@ Language::ProcessXML()
 {
 }
 
+Contributor::Contributor ( const XMLElement& _node)
+	: node (_node)
+{
+	ProcessXML();
+}
+
+void
+Contributor::ProcessXML()
+{
+	const XMLAttribute* att = node.GetAttribute ( "alias", true );
+	assert(att);
+	alias = att->value;
+
+    att = node.GetAttribute ( "firstname", true );
+	if (att != NULL)
+		firstName = att->value;
+	else
+		firstName = "";
+
+    att = node.GetAttribute ( "lastname", true );
+	if (att != NULL)
+		lastName = att->value;
+	else
+		lastName = "";
+
+    att = node.GetAttribute ( "mail", false );
+	if (att != NULL)
+		mail = att->value;
+	else
+		mail = "";
+
+    att = node.GetAttribute ( "city", false );
+	if (att != NULL)
+		city = att->value;
+	else
+		city = "";
+
+    att = node.GetAttribute ( "country", false );
+	if (att != NULL)
+		country = att->value;
+	else
+		country = "";
+}
+
 /*
 AuthorRole
 Author::GetAuthorRole ( const string& location, const XMLAttribute& attribute )
@@ -1695,6 +1768,7 @@ Author::Author ( const XMLElement& _node , const Module& module_ , AuthorRole ro
 	ProcessXML ();
 }
 
+/*
 Author::Author ( const XMLElement& _node , const Module& module_)
 	: node (_node), module(module_) , role (Developer)
 {
@@ -1703,7 +1777,7 @@ Author::Author ( const XMLElement& _node , const Module& module_)
 	//role = GetAuthorRole(_node.location , *att);
 
 	ProcessXML ();
-}
+}*/
 
 void
 Author::ProcessXML()

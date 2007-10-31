@@ -1,0 +1,123 @@
+;Sample INF file to create a desktop shortcut to the notepad.exe file
+
+[Version]
+Signature  = "$Windows NT$"
+
+[DefaultInstall]
+ProfileItems = NotepadDesktopItemAdd
+
+[NotepadDesktopItemAdd]
+Name       = %NOTEPAD_NAME%, 0x0000008, 16409
+CmdLine    = 24,"%SystemRoot%\system32\","notepad.exe"
+InfoTip    = %NOTEPAD_DESC%
+WorkingDir = 24,"%HOMEDRIVE%%HOMEPATH%"
+
+; Localizable Strings
+
+[Strings]		
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0401]      ; Arabic
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0403]      ; Catalan
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Permet crear i editar documents de text simples."
+
+[Strings.0404]      ; Chinese (Traditional)
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0804]      ; Chinese (Simplified)
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0405]      ; Czech
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0406]      ; Danish
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0413]      ; Dutch
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0409]      ; English
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.040B]      ; Finnish
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.040C]      ; French
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0407]      ; German
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0408]      ; Greek
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.040D]      ; Hebrew
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.040E]      ; Hungerian 
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0410]      ; Italian
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0411]      ; Japanese
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0412]      ; Korean
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0814]      ; Norwegian
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0415]      ; Polish
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0416]      ; Portugese
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.0419]      ; Russian
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.041B]      ; Slovak 
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.040A]      ; Spanish
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Crea y editar documents de texto con formateo básico."
+
+[Strings.041D]      ; Swedish
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.041E]      ; Thai
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."
+
+[Strings.041F]      ; Turkish (Turkce)
+NOTEPAD_NAME = "Notepad"
+NOTEPAD_DESC = "Creates and edits text files using basic text formatting."

@@ -107,13 +107,16 @@ class FileLocation;
 class AutoRegister;
 class ModulesResourceGenerator;
 class ModulesResourceGenerator;
+class CreditsGenerator;
 class SourceFileTest;
 class Metadata;
 class Language;
+class Contributor;
 class Localization;
 class Author;
 class AutoManifest;
 class AutoResource;
+class InstallComponent;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -262,6 +265,7 @@ public:
 	std::vector<InstallFile*> installfiles;
 	std::vector<Module*> modules;
 	std::vector<Language*> languages;
+    std::vector<Contributor*> contributors;
 	IfableData non_if_data;
 	ArchitectureType GetArchitectureType ( const std::string& location,
 	                           const XMLAttribute& attribute );
@@ -394,6 +398,7 @@ public:
 	FileLocation *install;
 	AutoManifest* autoManifest;	
 	AutoResource* autoResource;
+    InstallComponent* installComponent;
 
 	Module ( const Project& project,
 	         const XMLElement& moduleNode,
@@ -633,6 +638,22 @@ public:
 	void ProcessXML ();
 };
 
+class Contributor
+{
+public:
+	const XMLElement& node;
+	std::string alias;
+    std::string firstName;
+    std::string lastName;
+    std::string mail;
+    std::string city;
+    std::string country;
+
+    Contributor ( const XMLElement& _node);
+
+	void ProcessXML ();
+};
+
 class Author
 {
 public:
@@ -641,13 +662,10 @@ public:
 	std::string alias;
 	AuthorRole role;
 
-	Author ( const XMLElement& _node, const Module& module  );
+	//Author ( const XMLElement& _node, const Module& module);
 	Author ( const XMLElement& _node, const Module& module, AuthorRole role  );
 
 	void ProcessXML ();
-//private:
-//	AuthorRole GetAuthorRole ( const std::string& location,
-//	                           const XMLAttribute& attribute );
 };
 
 class Localization
@@ -737,6 +755,21 @@ public:
 	               const Module& module,
 	               const FileLocation& file );
 	~LinkerScript ();
+	void ProcessXML();
+};
+
+class InstallComponent
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+	FileLocation file;
+    std::string section;
+
+	InstallComponent ( const XMLElement& node,
+	               const Module& module,
+	               const FileLocation& file );
+	~InstallComponent ();
 	void ProcessXML();
 };
 
@@ -1070,7 +1103,9 @@ public:
 private:
 	std::string GetDirectoryId ( const Module& module );
 	std::string GetFlags ( const Module& module );
-	void Generate ( HINF inf,
+	void GenerateAutoRegister ( HINF inf,
+	                const Module& module );
+    void GenerateInstallComponent ( HINF inf,
 	                const Module& module );
 };
 
@@ -1094,6 +1129,16 @@ public:
 	void Generate ();
 private:
 	void WriteManifestFile ( Module& module );
+};
+
+class CreditsGenerator
+{
+public:
+	const Project& project;
+	CreditsGenerator ( const Project& project );
+	~CreditsGenerator ();
+	void Generate ();
+private:
 };
 
 extern void

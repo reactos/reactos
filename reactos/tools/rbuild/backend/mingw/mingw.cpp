@@ -346,6 +346,7 @@ MingwBackend::ProcessNormal ()
 	GenerateModulesResources();
 	GenerateModulesManifests();
 	GenerateProxyMakefiles ();
+    GenerateCreditsFile();
 	CheckAutomaticDependencies ();
 	CloseMakefile ();
 }
@@ -740,6 +741,15 @@ MingwBackend::GenerateModulesManifests ()
 	printf ( "Generating modules manifests...." );
 	ModulesManifestGenerator moduleManifestGenerator ( ProjectNode );
 	moduleManifestGenerator.Generate ();
+	printf ( "done\n" );
+}
+
+void
+MingwBackend::GenerateCreditsFile ()
+{
+	printf ( "Generating credits...." );
+	CreditsGenerator creditsGenerator ( ProjectNode );
+	creditsGenerator.Generate ();
 	printf ( "done\n" );
 }
 

@@ -17,4 +17,5 @@
 	<file>settings.c</file>
 	<file>rsrc.rc</file>
 	<pch>notepad.h</pch>
+	<installcomponent>setup/notepad.inf</installcomponent>
 </module>

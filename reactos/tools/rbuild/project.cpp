@@ -489,6 +489,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		languages.push_back ( language );
 		subs_invalid = true;
 	}
+	else if ( e.name == "contributor" )
+	{
+		Contributor* contributor = new Contributor ( e );
+		contributors.push_back ( contributor );
+		subs_invalid = true;
+	}
 	else if ( e.name == "directory" )
 	{
 		const XMLAttribute* att = e.GetAttribute ( "name", true );

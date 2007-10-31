@@ -59,3 +59,20 @@ void
 AutoManifest::ProcessXML()
 {
 }
+
+InstallComponent::InstallComponent ( const XMLElement& node_,
+                             const Module& module_,
+                             const FileLocation& file_ )
+	: node(node_), module(module_), file(file_)
+{
+}
+
+void
+InstallComponent::ProcessXML()
+{
+    const XMLAttribute* att = node.GetAttribute ( "section", false );
+	if ( att != NULL )
+		section = att->value;
+    else
+        section = "DefaultInstall";
+}
