@@ -176,5 +176,110 @@ typedef union
   ULONG l;
 } gxf_long;
 
+//
+// GDI Batch structures.
+//
+typedef struct _GDIBATCHHDR
+{
+  SHORT Size;
+  SHORT Cmd;
+} GDIBATCHHDR, *PGDIBATCHHDR;
+
+typedef struct _GDIBSPATBLT
+{
+  GDIBATCHHDR gbHdr;
+  int nXLeft;
+  int nYLeft;
+  int nWidth;
+  int nHeight;
+  HANDLE hbrush;
+  DWORD dwRop;
+  COLORREF crForegroundClr;
+  COLORREF crBackgroundClr;
+  COLORREF crBrushClr;
+  INT IcmBrushColor;
+  POINTL ptlViewportOrg;
+  ULONG ulForegroundClr;
+  ULONG ulBackgroundClr;
+  ULONG ulBrushClr;
+} GDIBSPATBLT, *PGDIBSPATBLT;
+
+#ifndef _NTUSRTYP_
+typedef struct _PATRECT
+{
+  RECT r;
+  HBRUSH hBrush;
+} PATRECT, * PPATRECT;
+#endif
+
+typedef struct _GDIBSPPATBLT
+{
+  GDIBATCHHDR gbHdr;
+  DWORD rop4;
+  DWORD Mode;
+  DWORD Count;
+  COLORREF crForegroundClr;
+  COLORREF crBackgroundClr;
+  COLORREF crBrushClr;
+  ULONG ulForegroundClr;
+  ULONG ulBackgroundClr;
+  ULONG ulBrushClr;
+  POINTL ptlViewportOrg;
+  PATRECT pRect; // POLYPATBLT
+} GDIBSPPATBLT, *PGDIBSPPATBLT;
+
+typedef struct _GDIBSTEXTOUT
+{
+  GDIBATCHHDR gbHdr;
+  COLORREF crForegroundClr;
+  COLORREF crBackgroundClr;
+  LONG lmBkMode;
+  ULONG ulForegroundClr;
+  ULONG ulBackgroundClr;
+  int x;
+  int y;  
+  UINT Options;
+  RECT Rect;
+  DWORD iCS_CP;
+  UINT cbCount;
+  UINT Size;
+  HANDLE hlfntNew;
+  FLONG flTextAlign;
+  POINTL ptlViewportOrg;
+  CHAR String[1];
+} GDIBSTEXTOUT, *PGDIBSTEXTOUT;
+
+typedef struct _GDIBSEXTTEXTOUT
+{
+  GDIBATCHHDR gbHdr;
+  UINT Count;
+  UINT Options;
+  RECT Rect;
+  POINTL ptlViewportOrg;
+  ULONG ulBackgroundClr;
+} GDIBSEXTTEXTOUT, *PGDIBSEXTTEXTOUT;
+
+typedef struct _GDIBSSETBRHORG
+{
+  GDIBATCHHDR gbHdr;
+  POINTL ptlBrushOrigin;
+} GDIBSSETBRHORG, *PGDIBSSETBRHORG;
+
+typedef struct _GDIBSEXTSELCLPRGN
+{
+  GDIBATCHHDR gbHdr;
+  int fnMode;
+  HANDLE hbrush;
+  HANDLE hpen;
+  COLORREF crBackgroundClr;
+  ULONG ulBackgroundClr;
+} GDIBSEXTSELCLPRGN, *PGDIBSEXTSELCLPRGN;
+//
+//   Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn.
+typedef struct _GDIBSOBJECT
+{
+  GDIBATCHHDR gbHdr;
+  HGDIOBJ hgdiobj;
+} GDIBSOBJJECT, *PGDIBSOBJECT;
 
 #endif

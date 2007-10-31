@@ -281,6 +281,11 @@ typedef struct _DC_ATTR
     SIZEL szlVirtualDeviceSize;
     POINTL ptlBrushOrigin;
     RGNATTR VisRectRegion;
+    FLONG RgnFlags;
+    COLORREF crRgnBgndClr;
+    ULONG ulRgnBgndClr;
+    HANDLE hRgnbrush;
+    HANDLE hRgnpen;
 } DC_ATTR, *PDC_ATTR;
 
 #endif
