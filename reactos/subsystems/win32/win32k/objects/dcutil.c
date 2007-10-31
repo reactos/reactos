@@ -51,7 +51,11 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
       Dc_Attr->szlViewportExt.cx = dc->Dc_Attr.szlViewportExt.cx;
       Dc_Attr->szlViewportExt.cy = dc->Dc_Attr.szlViewportExt.cy;
 
-      Dc_Attr->ulDirty_ = 0; // Force to Zero!
+      Dc_Attr->ulDirty_          = dc->Dc_Attr.ulDirty_; //Copy flags! We may have set them.
+      
+      XForm2MatrixS( &Dc_Attr->mxWorldToDevice, &dc->w.xformWorld2Vport);
+      XForm2MatrixS( &Dc_Attr->mxDevicetoWorld, &dc->w.xformVport2World);
+      XForm2MatrixS( &Dc_Attr->mxWorldToPage, &dc->w.xformWorld2Wnd);
 }
 
 static
@@ -77,6 +81,17 @@ CopyFromUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
         dc->Dc_Attr.crForegroundClr = Dc_Attr->crForegroundClr;
         dc->Dc_Attr.ulForegroundClr = Dc_Attr->ulForegroundClr;
         Dc_Attr->ulDirty_ &= ~DIRTY_TEXT;
+      }
+
+      if ( Dirty & (DC_MODE_DIRTY|DC_FONTTEXT_DIRTY) ||
+          (Dc_Attr->ulDirty_ & (DC_MODE_DIRTY|DC_FONTTEXT_DIRTY)))
+      {
+        dc->Dc_Attr.jROP2         = Dc_Attr->jROP2;
+        dc->Dc_Attr.iGraphicsMode = Dc_Attr->iGraphicsMode;
+        dc->Dc_Attr.lFillMode     = Dc_Attr->lFillMode;
+        dc->Dc_Attr.flFontMapper  = Dc_Attr->flFontMapper;
+        dc->Dc_Attr.lBreakExtra   = Dc_Attr->lBreakExtra;
+        dc->Dc_Attr.cBreak        = Dc_Attr->cBreak;
       }
 }
 
@@ -131,7 +146,6 @@ BOOL
 FASTCALL
 DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
 {
-#if 0
   PDC_ATTR DC_Attr = pDC->pDc_Attr;
 
   if (!uMask) return FALSE;
@@ -167,7 +181,6 @@ DCU_UpdateUserXForms(PDC pDC, ULONG uMask)
       return FALSE;
     }
   }
-#endif
   return TRUE;
 }
 
@@ -207,6 +220,7 @@ FASTCALL
 DCU_SynchDcAttrtoUser(HDC hDC, FLONG Dirty)
 {
   PDC pDC = DC_LockDc ( hDC );
+  if (!pDC) return FALSE;
   BOOL Ret = DCU_SyncDcAttrtoUser(pDC, Dirty);
   DC_UnlockDc( pDC );
   return Ret;
@@ -248,13 +262,47 @@ FASTCALL
 DCU_SynchDcAttrtoW32k(HDC hDC, FLONG Dirty)
 {
   PDC pDC = DC_LockDc ( hDC );
+  if (!pDC) return FALSE;
   BOOL Ret = DCU_SyncDcAttrtoW32k(pDC, Dirty);
   DC_UnlockDc( pDC );
   return Ret;
 }
 
+//
+//
+// Gdi Batch Flush support functions.
+//
 
 
+//
+// Process the batch.
+//
+ULONG
+FASTCALL
+GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
+{
+  switch(pHdr->Cmd)
+  {
+     case GdiBCPatBlt: // Highest pri first!
+     case GdiBCPolyPatBlt:
+     case GdiBCTextOut:
+     case GdiBCExtTextOut:
+     case GdiBCSetBrushOrg:
+     case GdiBCExtSelClipRgn:
+     case GdiBCSelObj:
+     case GdiBCDelObj:
+     case GdiBCDelRgn:
+     default:
+       return 0;
+  }
+  return pHdr->Size; // Return the full size of the structure.
+}
+
+/*
+ * NtGdiFlush
+ *
+ * Flushes the calling thread's current batch.
+ */
 VOID
 APIENTRY
 NtGdiFlush(VOID)
@@ -262,12 +310,38 @@ NtGdiFlush(VOID)
   UNIMPLEMENTED;
 }
 
+/*
+ * NtGdiFlushUserBatch
+ *
+ * Callback for thread batch flush routine.
+ *
+ * Think small & fast!
+ */
 NTSTATUS
 APIENTRY
 NtGdiFlushUserBatch(VOID)
 {
-  NTSTATUS Status = STATUS_SUCCESS;
-//  UNIMPLEMENTED;
-  return Status;
+  PTEB pTeb = NtCurrentTeb();
+  ULONG GdiBatchCount = pTeb->GdiBatchCount;
+  
+  if( (GdiBatchCount > 0) && (GdiBatchCount <= 310))  // 310 UL size of Buffer in TEB.
+  {
+    HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
+    if (hDC)
+    {
+       PULONG pHdr = &pTeb->GdiTebBatch.Buffer[0];
+       // No need to init anything, just go!
+       for (; GdiBatchCount > 0; GdiBatchCount--)
+       {
+           // Process Gdi Batch!
+           pHdr += GdiFlushUserBatch( hDC, (PGDIBATCHHDR) pHdr );
+       }
+       // Exit and clear out for the next round.
+       pTeb->GdiTebBatch.Offset = 0;
+       pTeb->GdiBatchCount = 0;
+       pTeb->GdiTebBatch.HDC = 0;
+    }
+  }
+  return STATUS_SUCCESS;
 }
 
