@@ -1724,7 +1724,7 @@ PnpEventThread(LPVOID lpParameter)
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("NtPlugPlayEvent() failed (Status %lx)\n", Status);
+            DPRINT("NtGetPlugPlayEvent() failed (Status %lx)\n", Status);
             break;
         }
 
