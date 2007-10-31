@@ -313,7 +313,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                          KernelMode,
                          Class,
                          CreateOptions,
-                         (PKEY_OBJECT)Object,
+                         ((PKEY_OBJECT)Object)->KeyControlBlock,
                          NULL,
                          (PVOID*)&KeyObject);
     if (!NT_SUCCESS(Status))
@@ -333,13 +333,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     RtlCreateUnicodeString(&KeyObject->Name, Start);
 
-    ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->ParentKey->KeyControlBlock->KeyHive,
-                                         KeyObject->ParentKey->KeyControlBlock->KeyCell);
+    ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->ParentKcb->KeyHive,
+                                         KeyObject->KeyControlBlock->ParentKcb->KeyCell);
 
     Node = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->KeyHive,
                                    KeyObject->KeyControlBlock->KeyCell);
     
-    Node->Parent = KeyObject->ParentKey->KeyControlBlock->KeyCell;
+    Node->Parent = KeyObject->KeyControlBlock->ParentKcb->KeyCell;
     Node->Security = ParentNode->Security;
     
     KeyObject->KeyControlBlock->ValueCache.ValueList = Node->ValueList.List;
@@ -347,7 +347,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     DPRINT("RemainingPath: %wZ\n", &RemainingPath);
 
-    CmiAddKeyToList(KeyObject->ParentKey, KeyObject);
+    CmiAddKeyToList(((PKEY_OBJECT)Object), KeyObject);
 
     VERIFY_KEY_OBJECT(KeyObject);
 
@@ -722,7 +722,7 @@ NtDeleteKey(IN HANDLE KeyHandle)
         /* Remove the keep-alive reference */
         ObDereferenceObject(KeyObject);
         if (KeyObject->KeyControlBlock->KeyHive !=
-            KeyObject->ParentKey->KeyControlBlock->KeyHive)
+            KeyObject->KeyControlBlock->ParentKcb->KeyHive)
         {
             /* Dereference again */
             ObDereferenceObject(KeyObject);

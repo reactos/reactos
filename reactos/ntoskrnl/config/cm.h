@@ -507,7 +507,6 @@ typedef struct _KEY_OBJECT
 {
     ULONG Type;
     UNICODE_STRING Name;
-    struct _KEY_OBJECT *ParentKey;
     LIST_ENTRY KeyBodyList;
     ULONG SubKeyCounts;
     ULONG SizeOfSubKeys;
@@ -975,7 +974,7 @@ CmpDoCreate(
     IN KPROCESSOR_MODE AccessMode,
     IN PUNICODE_STRING Class,
     IN ULONG CreateOptions,
-    IN PKEY_OBJECT Parent,
+    IN PCM_KEY_CONTROL_BLOCK ParentKcb,
     IN PCMHIVE OriginatingHive OPTIONAL,
     OUT PVOID *Object
 );

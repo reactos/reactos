@@ -625,7 +625,6 @@ VOID
 NTAPI
 CmpDeleteKeyObject(PVOID DeletedObject)
 {
-    PKEY_OBJECT ParentKeyObject;
     PKEY_OBJECT KeyObject;
     REG_KEY_HANDLE_CLOSE_INFORMATION KeyHandleCloseInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
@@ -634,9 +633,7 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     DPRINT("Delete key object (%p)\n", DeletedObject);
 
     KeyObject = (PKEY_OBJECT) DeletedObject;
-    ParentKeyObject = KeyObject->ParentKey;
 
-    ObReferenceObject (ParentKeyObject);
 
     PostOperationInfo.Object = (PVOID)KeyObject;
     KeyHandleCloseInfo.Object = (PVOID)KeyObject;
@@ -645,7 +642,6 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     {
         PostOperationInfo.Status = Status;
         CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
-        ObDereferenceObject (ParentKeyObject);
         return;
     }
 
@@ -657,8 +653,6 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     RtlFreeUnicodeString(&KeyObject->Name);
 
     ASSERT((KeyObject->KeyControlBlock->Delete) == FALSE);
-
-    ObDereferenceObject (ParentKeyObject);
 
     if (KeyObject->SizeOfSubKeys)
     {
@@ -680,14 +674,15 @@ CmpQueryKeyName(PVOID ObjectBody,
                 PULONG ReturnLength,
                 IN KPROCESSOR_MODE PreviousMode)
 {
+    DPRINT1("CmpQueryKeyName() called\n");
+    while (TRUE);
+#if 0
     PKEY_OBJECT KeyObject;
     NTSTATUS Status;
 
-    DPRINT ("CmpQueryKeyName() called\n");
-
     KeyObject = (PKEY_OBJECT)ObjectBody;
 
-    if (KeyObject->ParentKey != KeyObject)
+    if (KeyObject->KeyControlBlock->ParentKcb != KeyObject->KeyControlBlock)
     {
         Status = ObQueryNameString (KeyObject->ParentKey,
                                     ObjectNameInfo,
@@ -734,8 +729,9 @@ CmpQueryKeyName(PVOID ObjectBody,
     {
         DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
     }
+#endif
 
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -773,7 +769,7 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
                                STANDARD_RIGHTS_REQUIRED,
                                CmpKeyObjectType,
                                KernelMode);
-    NewKey->ParentKey = ParentKey;
+    //NewKey->ParentKey = ParentKey;
 }
 
 /* Preconditions: Must be called with CmpRegistryLock held. */

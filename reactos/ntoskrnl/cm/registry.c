@@ -213,7 +213,7 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                          KernelMode,
                          NULL,
                          REG_OPTION_VOLATILE,
-                         ParentKey,
+                         ParentKey->KeyControlBlock,
                          NULL,
                          (PVOID*)&NewKey);
     if (!NT_SUCCESS(Status))

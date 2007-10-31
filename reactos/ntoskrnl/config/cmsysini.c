@@ -715,7 +715,6 @@ CmpCreateRegistryRoot(VOID)
     RootKey->ProcessID = PsGetCurrentProcessId();
 #else
     RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
-    RootKey->ParentKey = RootKey;
     RootKey->SubKeyCounts = 0;
     RootKey->SubKeys = NULL;
     RootKey->SizeOfSubKeys = 0;

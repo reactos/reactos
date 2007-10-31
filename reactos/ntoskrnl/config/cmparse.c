@@ -83,7 +83,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
                  IN PUNICODE_STRING Name,
                  IN KPROCESSOR_MODE AccessMode,
                  IN PUNICODE_STRING Class,
-                 IN PKEY_OBJECT Parent,
+                 IN PCM_KEY_CONTROL_BLOCK ParentKcb,
                  IN ULONG CreateOptions,
                  OUT PHCELL_INDEX KeyCell,
                  OUT PVOID *Object)
@@ -214,7 +214,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     Kcb = CmpCreateKeyControlBlock(Hive,
                                    *KeyCell,
                                    KeyNode,
-                                   Parent->KeyControlBlock,
+                                   ParentKcb,
                                    0,
                                    Name);
     if (!Kcb)
@@ -233,7 +233,6 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody->SubKeyCounts = 0;
     KeyBody->SubKeys = NULL;
     KeyBody->SizeOfSubKeys = 0;
-    KeyBody->ParentKey = Parent;
     InsertTailList(&CmiKeyObjectListHead, &KeyBody->KeyBodyList);
 
 Quickie:
@@ -267,7 +266,7 @@ CmpDoCreate(IN PHHIVE Hive,
             IN KPROCESSOR_MODE AccessMode,
             IN PUNICODE_STRING Class OPTIONAL,
             IN ULONG CreateOptions,
-            IN PKEY_OBJECT Parent,
+            IN PCM_KEY_CONTROL_BLOCK ParentKcb,
             IN PCMHIVE OriginatingHive OPTIONAL,
             OUT PVOID *Object)
 {
@@ -286,7 +285,7 @@ CmpDoCreate(IN PHHIVE Hive,
     ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
 
     /* Check if the parent is being deleted */
-    if (Parent->KeyControlBlock->Delete)
+    if (ParentKcb->Delete)
     {
         /* It has, quit */
         ASSERT(FALSE);
@@ -314,7 +313,7 @@ CmpDoCreate(IN PHHIVE Hive,
     }
 
     /* Sanity check */
-    ASSERT(Cell == Parent->KeyControlBlock->KeyCell);
+    ASSERT(Cell == ParentKcb->KeyCell);
 
     /* Get the parent type */
     ParentType = HvGetCellType(Cell);
@@ -327,7 +326,7 @@ CmpDoCreate(IN PHHIVE Hive,
     }
 
     /* Don't allow children under symlinks */
-    if (Parent->KeyControlBlock->Flags & KEY_SYM_LINK)
+    if (ParentKcb->Flags & KEY_SYM_LINK)
     {
         /* Fail */
         ASSERT(FALSE);
@@ -346,7 +345,7 @@ CmpDoCreate(IN PHHIVE Hive,
                               Name,
                               AccessMode,
                               Class,
-                              Parent,
+                              ParentKcb,
                               CreateOptions,
                               &KeyCell,
                               Object);
@@ -371,9 +370,10 @@ CmpDoCreate(IN PHHIVE Hive,
         }
 
         /* Sanity checks */
-        ASSERT(KeyBody->ParentKey->KeyControlBlock->KeyCell == Cell);
-        ASSERT(KeyBody->ParentKey->KeyControlBlock->KeyHive == Hive);
-        ASSERT(KeyBody->ParentKey == Parent);
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb == ParentKcb);
+        //ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
 
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
@@ -384,6 +384,7 @@ CmpDoCreate(IN PHHIVE Hive,
         {
             /* Do it */
             KeyNode->MaxNameLen = Name->Length;
+            KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen = Name->Length;
         }
 
         /* Check if we need toupdate class length maximum */
