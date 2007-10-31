@@ -6,13 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
-#include "brush.h"
-#include "bitblt.h"
-
-#define NDEBUG
-#include <debug.h>
+#include <vgaddi.h>
 
 typedef BOOL (*PFN_VGABlt)(SURFOBJ*, SURFOBJ*, XLATEOBJ*, RECTL*, POINTL*);
 typedef BOOL  (APIENTRY *PBLTRECTFUNC)(SURFOBJ* OutputObj,

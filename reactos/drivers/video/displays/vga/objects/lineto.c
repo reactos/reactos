@@ -6,8 +6,7 @@
  * PROGRAMMERS:     Copyright (C) 1998-2003 ReactOS Team
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
+#include <vgaddi.h>
 
 /*
  * Draw a line from top-left to bottom-right

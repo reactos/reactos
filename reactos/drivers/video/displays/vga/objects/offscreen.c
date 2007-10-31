@@ -8,9 +8,7 @@
 
 /* INCLUDES ******************************************************************/
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
-#include <debug.h>
+#include <vgaddi.h>
 
 /* GLOBALS *******************************************************************/
 

@@ -6,11 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
-#include "brush.h"
-
-#include <debug.h>
+#include <vgaddi.h>
 
 BOOL VGADDIFillSolid(SURFOBJ *Surface, RECTL Dimensions, ULONG iColor)
 {

@@ -6,9 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
-#include <debug.h>
+#include <vgaddi.h>
 
 BOOL APIENTRY
 DrvCopyBits(

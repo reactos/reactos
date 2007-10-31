@@ -6,12 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
-#define NDEBUG
-#include <debug.h>
-
-#define  DBG_PREFIX  "VGADDI: "
+#include <vgaddi.h>
 
 static BOOL VGAInitialized = FALSE;
 
@@ -183,7 +178,7 @@ DrvEnableDriver(IN ULONG EngineVersion,
                 IN ULONG SizeOfDED,
                 OUT PDRVENABLEDATA DriveEnableData)
 {
-    /* EngDebugPrint("VGADDI", "DrvEnableDriver called...\n", 0); */
+    DPRINT("DrvEnableDriver called...\n");
 
     vgaPreCalc();
 
@@ -251,7 +246,7 @@ DrvEnablePDEV(IN DEVMODEW *DM,
     PDev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
     if (PDev == NULL)
     {
-        EngDebugPrint(DBG_PREFIX, "EngAllocMem failed for PDEV\n", 0);
+        DPRINT1("EngAllocMem failed for PDEV\n");
         return NULL;
     }
     PDev->KMDriver = Driver;
@@ -577,6 +572,15 @@ DrvGetModes(IN HANDLE Driver,
         } while (--NumModes);
     }
     return OutputSize;
+}
+
+ULONG DbgPrint(PCCH Format,...)
+{
+    va_list ap;
+    va_start(ap, Format);
+    EngDebugPrint("VGADDI", (PCHAR)Format, ap);
+    va_end(ap);
+    return 0;
 }
 
 /* EOF */

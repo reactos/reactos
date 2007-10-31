@@ -6,8 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#include "../vgaddi.h"
-#include "../vgavideo/vgavideo.h"
+#include <vgaddi.h>
 
 static WORD PaletteBuffer[] = {
     16, 0, // 16 entries, start with 0
@@ -125,8 +124,8 @@ BOOL DeinitVGA(PPDEV ppdev)
                            0,
                            &ReturnedDataLength))
     {
-        //DPRINT1("Failed to unmap video memory.\n");
-        DbgBreakPoint();
+        DPRINT1("Failed to unmap video memory.\n");
+        EngDebugBreak();
         return FALSE;
     }
     return TRUE;

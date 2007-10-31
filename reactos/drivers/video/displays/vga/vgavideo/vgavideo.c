@@ -6,25 +6,7 @@
  * PROGRAMMERS:     
  */
 
-#define _WINBASE_
-#define _WINDOWS_H
-#include <stdarg.h>
-#include <windef.h>
-#include <guiddef.h>
-#include <wingdi.h>
-#include <winddi.h>
-#include <winioctl.h>
-#include <ntddvdeo.h>
-#include <stdlib.h>
-#include "vgavideo.h"
-
-#define DDKAPI __stdcall
-#define DDKFASTAPI __fastcall
-#define FASTCALL __fastcall
-#define DDKCDECLAPI __cdecl
-
-VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR  Port, IN UCHAR  Value);
-VOID DDKAPI WRITE_PORT_USHORT(IN PUSHORT  Port, IN USHORT  Value);
+#include <vgaddi.h>
 
 UCHAR PreCalcReverseByte[256];
 int maskbit[640];
@@ -39,9 +21,6 @@ static ULONG UnpackPixel[256];
 static unsigned char leftMask;
 static int byteCounter;
 static unsigned char rightMask;
-
-#define READ_REGISTER_UCHAR(p) (*((volatile UCHAR *)(p)))
-#define WRITE_REGISTER_UCHAR(p,c) (*((volatile CHAR *)(p))) = (c)
 
 UCHAR bytesPerPixel(ULONG Format)
 {
@@ -460,7 +439,7 @@ void DIB_BltFromVGA(int x, int y, int w, int h, void *b, int Dest_lDelta)
             c1 = (vgaGetPixel(x + i, y + j) << 4) | (vgaGetPixel(x + i + 1, y + j));
             c2 = ((PUCHAR)b)[(j * Dest_lDelta) + (i >> 1)];
             if ((c1 & mask) != (c2 & mask))
-                DbgBreakPoint();
+                EngDebugBreak();
         }
     }
 #endif /* VGA_VERIFY */

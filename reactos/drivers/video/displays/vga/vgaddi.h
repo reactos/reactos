@@ -11,6 +11,17 @@
 #include <winioctl.h>
 #include <ntddvdeo.h>
 
+#include "vgavideo/vgavideo.h"
+#include "objects/brush.h"
+#include "objects/bitblt.h"
+
+#ifndef NDEBUG
+#define DPRINT DbgPrint
+#else
+#define DPRINT
+#endif
+#define DPRINT1 DbgPrint
+
 /* FIXME - what a headers mess.... */
 
 #define DDKAPI __stdcall
@@ -19,10 +30,10 @@
 #define DDKCDECLAPI __cdecl
 
 ULONG DbgPrint(PCCH Format,...);
-VOID DDKAPI DbgBreakPoint(VOID);
-VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR  Port, IN UCHAR  Value);
-VOID DDKAPI WRITE_REGISTER_UCHAR(IN PUCHAR  Register, IN UCHAR  Value);
-UCHAR DDKAPI READ_REGISTER_UCHAR(IN PUCHAR  Register);
+VOID DDKAPI WRITE_PORT_UCHAR(IN PUCHAR Port, IN UCHAR Value);
+VOID DDKAPI WRITE_PORT_USHORT(IN PUSHORT Port, IN USHORT Value);
+VOID DDKAPI WRITE_REGISTER_UCHAR(IN PUCHAR Register, IN UCHAR Value);
+UCHAR DDKAPI READ_REGISTER_UCHAR(IN PUCHAR Register);
 
 static __inline BOOLEAN
 RemoveEntryList(
