@@ -627,7 +627,7 @@ typedef struct _PEB
     PVOID* ProcessHeaps;
     PVOID GdiSharedHandleTable;
     PVOID ProcessStarterHelper;
-    PVOID GdiDCAttributeList;
+    ULONG GdiDCAttributeList;
 #if (NTDDI_VERSION >= NTDDI_LONGHORN)
     struct _RTL_CRITICAL_SECTION *LoaderLock;
 #else

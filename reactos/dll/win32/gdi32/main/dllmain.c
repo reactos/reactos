@@ -37,7 +37,7 @@ GdiProcessSetup (VOID)
         /* map the gdi handle table to user space */
 	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
 	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
-	GDI_BatchLimit = NtCurrentTeb()->GdiBatchCount;
+	GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
 }
 
 
@@ -59,23 +59,21 @@ GdiDllInitialize (
 			break;
 
 		case DLL_THREAD_ATTACH:
+                        NtCurrentTeb()->GdiTebBatch.Offset = 0;
+                        NtCurrentTeb()->GdiBatchCount = 0;
 			break;
 
 		default:
 			return FALSE;
 	}
 
-#if 0
-	/* FIXME: working teb handling needed */
-	NtCurrentTeb()->GdiTebBatch.Offset = 0;
-	NtCurrentTeb()->GdiBatchCount = 0;
-#endif
   // Very simple, the list will fill itself as it is needed.
         if(!SetStockObjects)
         {
           RtlZeroMemory( &stock_objects, NB_STOCK_OBJECTS); //Assume Ros is dirty.
           SetStockObjects = TRUE;
         }
+
 	return TRUE;
 }
 
