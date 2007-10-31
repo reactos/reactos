@@ -17,55 +17,6 @@
 #define RemoveEntryList(Entry)  { PLIST_ENTRY _EX_Blink, _EX_Flink; _EX_Flink = (Entry)->Flink; _EX_Blink = (Entry)->Blink; _EX_Blink->Flink = _EX_Flink; _EX_Flink->Blink = _EX_Blink; }
 
 /* Typedefs */
-struct _RECYCLE_BIN;
-typedef struct _RECYCLE_BIN *PRECYCLE_BIN;
-struct _REFCOUNT_DATA;
-typedef struct _REFCOUNT_DATA *PREFCOUNT_DATA;
-
-typedef BOOL (*PINT_ENUMERATE_RECYCLEBIN_CALLBACK)(IN PVOID Context OPTIONAL, IN HANDLE hDeletedFile);
-typedef BOOL (*PDESTROY_DATA)    (IN PREFCOUNT_DATA pData);
-
-typedef BOOL (*PCLOSE_HANDLE)    (IN HANDLE hHandle);
-typedef BOOL (*PDELETE_FILE)     (IN PRECYCLE_BIN bin, IN LPCWSTR FullPath, IN LPCWSTR FileName);
-typedef BOOL (*PEMPTY_RECYCLEBIN)(IN PRECYCLE_BIN* bin);
-typedef BOOL (*PENUMERATE_FILES) (IN PRECYCLE_BIN bin, IN PINT_ENUMERATE_RECYCLEBIN_CALLBACK pFnCallback, IN PVOID Context OPTIONAL);
-typedef BOOL (*PGET_DETAILS)     (IN PRECYCLE_BIN bin, IN HANDLE hDeletedFile, IN DWORD BufferSize, IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL, OUT LPDWORD RequiredSize OPTIONAL);
-typedef BOOL (*PRESTORE_FILE)    (IN PRECYCLE_BIN bin, IN HANDLE hDeletedFile);
-
-typedef struct _RECYCLEBIN_CALLBACKS
-{
-	PCLOSE_HANDLE     CloseHandle;
-	PDELETE_FILE      DeleteFile;
-	PEMPTY_RECYCLEBIN EmptyRecycleBin;
-	PENUMERATE_FILES  EnumerateFiles;
-	PGET_DETAILS      GetDetails;
-	PRESTORE_FILE     RestoreFile;
-} RECYCLEBIN_CALLBACKS, *PRECYCLEBIN_CALLBACKS;
-
-typedef struct _REFCOUNT_DATA
-{
-	DWORD ReferenceCount;
-	PDESTROY_DATA Close;
-} REFCOUNT_DATA;
-
-typedef struct _RECYCLE_BIN
-{
-	DWORD magic; /* RECYCLEBIN_MAGIC */
-	LIST_ENTRY ListEntry;
-	REFCOUNT_DATA refCount;
-	HANDLE hInfo;
-	RECYCLEBIN_CALLBACKS Callbacks;
-	LPWSTR InfoFile;
-	WCHAR Folder[ANY_SIZE]; /* [drive]:\[RECYCLE_BIN_DIRECTORY]\{SID} */
-} RECYCLE_BIN;
-
-typedef struct _DELETED_FILE_HANDLE
-{
-	DWORD magic; /* DELETEDFILE_MAGIC */
-	REFCOUNT_DATA refCount;
-	PRECYCLE_BIN bin;
-	HANDLE hDeletedFile; /* specific to recycle bin format */
-} DELETED_FILE_HANDLE, *PDELETED_FILE_HANDLE;
 
 /* Structures on disk */
 
@@ -84,33 +35,14 @@ typedef struct _INFO2_HEADER
 
 /* Prototypes */
 
-/* openclose.c */
+/* recyclebin_generic.c */
 
-BOOL
-IntCheckDeletedFileHandle(
-	IN HANDLE hDeletedFile);
+HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown);
 
-PRECYCLE_BIN
-IntReferenceRecycleBin(
-	IN WCHAR driveLetter);
+/* recyclebin_generic_enumerator.c */
+
+HRESULT RecycleBinGeneric_Enumerator_Constructor(OUT IRecycleBinEnumList **pprbel);
 
 /* recyclebin_v5.c */
 
-VOID
-InitializeCallbacks5(
-	IN OUT PRECYCLEBIN_CALLBACKS Callbacks);
-
-/* refcount.c */
-
-BOOL
-InitializeHandle(
-	IN PREFCOUNT_DATA pData,
-	IN PDESTROY_DATA pFnClose OPTIONAL);
-
-BOOL
-ReferenceHandle(
-	IN PREFCOUNT_DATA pData);
-
-BOOL
-DereferenceHandle(
-	IN PREFCOUNT_DATA pData);
+HRESULT RecycleBin5_Constructor(IN LPCWSTR VolumePath, OUT IUnknown **ppUnknown);

@@ -5,6 +5,10 @@
 
 #include "recyclebin_private.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <pshpack1.h>
 
 /* MS Windows 2000/XP/2003 */
@@ -20,57 +24,86 @@ typedef struct _DELETED_FILE_RECORD
 
 #include <poppack.h>
 
-static BOOL
-CloseHandle5(
-	IN HANDLE hDeletedFile);
+/* COM interface */
 
-static BOOL
-DeleteFile5(
-	IN PRECYCLE_BIN bin,
-	IN LPCWSTR FullPath,
-	IN LPCWSTR FileName);
+typedef interface IRecycleBin5 IRecycleBin5;
+EXTERN_C const IID IID_IRecycleBin5;
 
-static BOOL
-EmptyRecycleBin5(
-	IN PRECYCLE_BIN* bin);
+typedef struct IRecycleBin5Vtbl
+{
+	/* IRecycleBin interface */
+	HRESULT (STDMETHODCALLTYPE *QueryInterface)(
+		IN IRecycleBin5 *This,
+		IN REFIID riid,
+		OUT void **ppvObject);
 
-static BOOL
-EnumerateFiles5(
-	IN PRECYCLE_BIN bin,
-	IN PINT_ENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
-	IN PVOID Context OPTIONAL);
+	ULONG (STDMETHODCALLTYPE *AddRef)(
+		IN IRecycleBin5 *This);
 
-static BOOL
-GetDetails5(
-	IN PRECYCLE_BIN bin,
-	IN HANDLE hDeletedFile,
-	IN DWORD BufferSize,
-	IN OUT PDELETED_FILE_DETAILS_W FileDetails OPTIONAL,
-	OUT LPDWORD RequiredSize OPTIONAL);
+	ULONG (STDMETHODCALLTYPE *Release)(
+		IN IRecycleBin5 *This);
 
-static BOOL
-RestoreFile5(
-	IN PRECYCLE_BIN bin,
-	IN HANDLE hDeletedFile);
+	HRESULT (STDMETHODCALLTYPE *DeleteFile)(
+		IN IRecycleBin5 *This,
+		IN LPCWSTR szFileName);
 
-static BOOL
-IntDeleteRecursive(
-	IN LPCWSTR FullName);
+	HRESULT (STDMETHODCALLTYPE *EmptyRecycleBin)(
+		IN IRecycleBin5 *This);
 
-static BOOL
-IntEmptyRecycleBinCallback(
-	IN PVOID Context,
-	IN HANDLE hDeletedFile);
+	HRESULT (STDMETHODCALLTYPE *EnumObjects)(
+		IN IRecycleBin5 *This,
+		OUT IRecycleBinEnumList **ppEnumList);
 
-static BOOL
-IntGetFullName(
-	IN PRECYCLE_BIN bin,
-	IN PDELETED_FILE_RECORD pDeletedFile,
-	OUT LPWSTR* pFullName);
+	/* IRecycleBin5 interface */
+	HRESULT (STDMETHODCALLTYPE *Delete)(
+		IN IRecycleBin5 *This,
+		IN LPCWSTR pDeletedFileName,
+		IN DELETED_FILE_RECORD *pDeletedFile);
 
-static BOOL
-IntSearchRecord(
-	IN PRECYCLE_BIN bin,
-	IN HANDLE hDeletedFile,
-	OUT PDELETED_FILE_RECORD DeletedFile,
-	OUT PLARGE_INTEGER Position OPTIONAL);
+	HRESULT (STDMETHODCALLTYPE *Restore)(
+		IN IRecycleBin5 *This,
+		IN LPCWSTR pDeletedFileName,
+		IN DELETED_FILE_RECORD *pDeletedFile);
+
+	HRESULT (STDMETHODCALLTYPE *OnClosing)(
+		IN IRecycleBin5 *This,
+		IN IRecycleBinEnumList *prb5el);
+} IRecycleBin5Vtbl;
+
+interface IRecycleBin5
+{
+	CONST_VTBL struct IRecycleBin5Vtbl *lpVtbl;
+};
+
+#ifdef COBJMACROS
+#define IRecycleBin5_QueryInterface(This, riid, ppvObject) \
+	(This)->lpVtbl->QueryInterface(This, riid, ppvObject)
+#define IRecycleBin5_AddRef(This) \
+	(This)->lpVtbl->AddRef(This)
+#define IRecycleBin5_Release(This) \
+	(This)->lpVtbl->Release(This)
+#define IRecycleBin5_DeleteFile(This, szFileName) \
+	(This)->lpVtbl->DeleteFile(This, szFileName)
+#define IRecycleBin5_EmptyRecycleBin(This) \
+	(This)->lpVtbl->EmptyRecycleBin(This)
+#define IRecycleBin5_EnumObjects(This, ppEnumList) \
+	(This)->lpVtbl->EnumObjects(This, ppEnumList)
+#define IRecycleBin5_Delete(This, pDeletedFileName, pDeletedFile) \
+	(This)->lpVtbl->Delete(This, pDeletedFileName, pDeletedFile)
+#define IRecycleBin5_Restore(This, pDeletedFileName, pDeletedFile) \
+	(This)->lpVtbl->Restore(This, pDeletedFileName, pDeletedFile)
+#define IRecycleBin5_OnClosing(This, prb5el) \
+	(This)->lpVtbl->OnClosing(This, prb5el)
+#endif
+
+HRESULT
+RecycleBin5_Enumerator_Constructor(
+	IN IRecycleBin5 *prb,
+	IN HANDLE hInfo,
+	IN HANDLE hInfoMapped,
+	IN LPCWSTR szPrefix,
+	OUT IUnknown **ppUnknown);
+
+#ifdef __cplusplus
+}
+#endif
