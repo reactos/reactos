@@ -54,10 +54,10 @@ DeleteFileToRecycleBinW(
 
 BOOL WINAPI
 EmptyRecycleBinA(
-	IN LPCSTR pszRoot);
+	IN LPCSTR pszRoot OPTIONAL);
 BOOL WINAPI
 EmptyRecycleBinW(
-	IN LPCWSTR pszRoot);
+	IN LPCWSTR pszRoot OPTIONAL);
 #ifdef UNICODE
 #define EmptyRecycleBin EmptyRecycleBinW
 #else
@@ -66,12 +66,12 @@ EmptyRecycleBinW(
 
 BOOL WINAPI
 EnumerateRecycleBinA(
-	IN CHAR driveLetter,
+	IN LPCSTR pszRoot OPTIONAL,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
 	IN PVOID Context OPTIONAL);
 BOOL WINAPI
 EnumerateRecycleBinW(
-	IN WCHAR driveLetter,
+	IN LPCWSTR pszRoot OPTIONAL,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
 	IN PVOID Context OPTIONAL);
 #ifdef UNICODE

@@ -141,16 +141,39 @@ cleanup:
 
 BOOL WINAPI
 EnumerateRecycleBinA(
-	IN CHAR driveLetter,
+	IN LPCSTR pszRoot OPTIONAL,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
 	IN PVOID Context OPTIONAL)
 {
-	return EnumerateRecycleBinW((WCHAR)driveLetter, pFnCallback, Context);
+	int len;
+	LPWSTR szRootW = NULL;
+	BOOL ret = FALSE;
+
+	if (pszRoot)
+	{
+		len = MultiByteToWideChar(CP_ACP, 0, pszRoot, -1, NULL, 0);
+		if (len == 0)
+			goto cleanup;
+		szRootW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+		if (!szRootW)
+		{
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			goto cleanup;
+		}
+		if (MultiByteToWideChar(CP_ACP, 0, pszRoot, -1, szRootW, len) == 0)
+			goto cleanup;
+	}
+
+	ret = EnumerateRecycleBinW(szRootW, pFnCallback, Context);
+
+cleanup:
+	HeapFree(GetProcessHeap(), 0, szRootW);
+	return ret;
 }
 
 BOOL WINAPI
 EnumerateRecycleBinW(
-	IN WCHAR driveLetter,
+	IN LPCWSTR pszRoot OPTIONAL,
 	IN PENUMERATE_RECYCLEBIN_CALLBACK pFnCallback,
 	IN PVOID Context OPTIONAL)
 {

@@ -273,7 +273,7 @@ static HRESULT WINAPI RecycleBin_EnumObjects(IShellFolder2 *iface, HWND hwnd, SH
 {
     RecycleBin *This = (RecycleBin *)iface;
     IEnumIDList *list;
-    static const WCHAR szDrive = L'C';
+    static LPCWSTR szDrive = L"C:\\";
 
     TRACE("(%p, %p, %x, %p)\n", This, hwnd, (unsigned int)grfFlags, ppenumIDList);
 
