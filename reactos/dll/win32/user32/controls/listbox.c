@@ -37,6 +37,7 @@
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(listbox);
+WINE_DECLARE_DEBUG_CHANNEL(combo);
 
 /* Start of hack section -------------------------------- */
 
