@@ -1,39 +1,50 @@
-#ifndef _I8042DRV_H
-#define _I8042DRV_H
+#ifndef _I8042PRT_H_
+#define _I8042PRT_H_
 
-#include <ntddk.h>
+#include <ntifs.h>
 #include <kbdmou.h>
 #include <ntdd8042.h>
-
-#ifdef _MSC_VER
-  #define STDCALL
-  #define DDKAPI
-#endif
-
-#define KEYBOARD_IRQ       1
-#define MOUSE_IRQ          12
-#define KBD_BUFFER_SIZE    32
-
-#define WHEEL_DELTA 120
+#include <ntddkbd.h>
+#include <bugcodes.h>
+#include <poclass.h>
+#include <kdfuncs.h>
+#include <debug.h>
 
 /*-----------------------------------------------------
- *  DeviceExtension
+ * Structures
  * --------------------------------------------------*/
-typedef struct _COMMAND_CONTEXT
+
+#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
+#define I8042PRT_TAG TAG('8', '0', '4', '2')
+
+typedef enum
 {
-	int NumInput;
-	int CurInput;
-	UCHAR * Input;
-	int NumOutput;
-	int CurOutput;
-	UCHAR * Output;
-	NTSTATUS Status;
+	dsStopped,
+	dsStarted,
+	dsPaused,
+	dsRemoved,
+	dsSurpriseRemoved
+} DEVICE_STATE;
 
-	BOOLEAN GotAck;
-	KEVENT Event;
-
-	PVOID DevExt;
-} COMMAND_CONTEXT, *PCOMMAND_CONTEXT;
+typedef struct _I8042_SETTINGS
+{
+	/* Registry settings */
+	ULONG KeyboardDataQueueSize;           /* done */
+	UNICODE_STRING KeyboardDeviceBaseName;
+	ULONG MouseDataQueueSize;              /* done */
+	ULONG MouseResolution;
+	ULONG MouseSynchIn100ns;
+	ULONG NumberOfButtons;
+	UNICODE_STRING PointerDeviceBaseName;
+	ULONG PollStatusIterations;            /* done */
+	ULONG OverrideKeyboardType;
+	ULONG OverrideKeyboardSubtype;
+	ULONG PollingIterations;               /* done */
+	ULONG PollingIterationsMaximum;
+	ULONG ResendIterations;                /* done */
+	ULONG SampleRate;
+	ULONG CrashOnCtrlScroll;               /* done */
+} I8042_SETTINGS, *PI8042_SETTINGS;
 
 typedef enum _MOUSE_TIMEOUT_STATE
 {
@@ -42,108 +53,47 @@ typedef enum _MOUSE_TIMEOUT_STATE
 	TimeoutCancel
 } MOUSE_TIMEOUT_STATE, *PMOUSE_TIMEOUT_STATE;
 
-/* TODO: part of this should be in the _ATTRIBUTES structs instead */
-typedef struct _I8042_SETTINGS
+typedef struct _INTERRUPT_DATA
 {
-	ULONG Headless;               /* done */
-	ULONG CrashScroll;
-	ULONG CrashSysRq;             /* done */
-	ULONG ReportResetErrors;
-	ULONG PollStatusIterations;   /* done */
-	ULONG ResendIterations;       /* done */
-	ULONG PollingIterations;
-	ULONG PollingIterationsMaximum;
-	ULONG OverrideKeyboardType;
-	ULONG OverrideKeyboardSubtype;
-	ULONG MouseResendStallTime;
-	ULONG MouseSynchIn100ns;      /* done */
-	ULONG MouseResolution;        /* done */
-	ULONG NumberOfButtons;
-	ULONG EnableWheelDetection;
-} I8042_SETTINGS, *PI8042_SETTINGS;
+	PKINTERRUPT Object;
+	ULONG Vector;
+	KIRQL Dirql;
+	KINTERRUPT_MODE InterruptMode;
+	BOOLEAN ShareInterrupt;
+	KAFFINITY Affinity;
+} INTERRUPT_DATA, *PINTERRUPT_DATA;
 
-typedef enum _I8042_MOUSE_TYPE
+#define WHEEL_DELTA 120
+
+struct _I8042_KEYBOARD_EXTENSION;
+typedef struct _I8042_KEYBOARD_EXTENSION *PI8042_KEYBOARD_EXTENSION;
+struct _I8042_MOUSE_EXTENSION;
+typedef struct _I8042_MOUSE_EXTENSION *PI8042_MOUSE_EXTENSION;
+
+/* PORT_DEVICE_EXTENSION.Flags */
+#define KEYBOARD_PRESENT     0x01 /* A keyboard is attached */
+#define KEYBOARD_CONNECTED   0x02 /* Keyboard received IOCTL_INTERNAL_KEYBOARD_CONNECT */
+#define KEYBOARD_STARTED     0x04 /* Keyboard FDO received IRP_MN_START_DEVICE */
+#define KEYBOARD_INITIALIZED 0x08 /* Keyboard interrupt is connected */
+#define MOUSE_PRESENT        0x10 /* A mouse is attached */
+#define MOUSE_CONNECTED      0x20 /* Mouse received IOCTL_INTERNAL_MOUSE_CONNECT */
+#define MOUSE_STARTED        0x40 /* Mouse FDO received IRP_MN_START_DEVICE */
+#define MOUSE_INITIALIZED    0x80 /* Mouse interrupt is connected */
+
+typedef struct _PORT_DEVICE_EXTENSION
 {
-	GenericPS2,
-	Intellimouse,
-	IntellimouseExplorer,
-	Ps2pp
-} I8042_MOUSE_TYPE, *PI8042_MOUSE_TYPE;
+	PUCHAR DataPort;    /* Usually 0x60 */
+	PUCHAR ControlPort; /* Usually 0x64 */
+	I8042_SETTINGS Settings;
+	ULONG Flags;
 
-typedef enum _I8042_DEVICE_TYPE
-{
-	Keyboard,
-	Mouse
-} I8042_DEVICE_TYPE, *PI8042_DEVICE_TYPE;
-
-typedef struct _I8042_DEVICE
-{
-	LIST_ENTRY ListEntry;
-	PDEVICE_OBJECT Pdo;
-} I8042_DEVICE, *PI8042_DEVICE;
-
-typedef struct _DEVICE_EXTENSION
-{
-	PDEVICE_OBJECT KeyboardObject;
-	PDEVICE_OBJECT MouseObject;
-
-	CONNECT_DATA KeyboardData;
-	CONNECT_DATA MouseData;
-
-	BOOLEAN KeyboardExists;
-	BOOLEAN KeyboardIsAT;
-	BOOLEAN MouseExists;
-
-	BOOLEAN KeyboardClaimed;
-	BOOLEAN MouseClaimed;
-
-	ULONG BusNumber;
-	LIST_ENTRY BusDevices;
-
-	INTERNAL_I8042_START_INFORMATION KeyboardStartInformation;
-	INTERNAL_I8042_START_INFORMATION MouseStartInformation;
-
-	INTERNAL_I8042_HOOK_KEYBOARD KeyboardHook;
-	INTERNAL_I8042_HOOK_MOUSE MouseHook;
-
-	PKINTERRUPT KeyboardInterruptObject;
-	PKINTERRUPT MouseInterruptObject;
+	PI8042_KEYBOARD_EXTENSION KeyboardExtension;
+	INTERRUPT_DATA KeyboardInterrupt;
+	PI8042_MOUSE_EXTENSION MouseExtension;
+	INTERRUPT_DATA MouseInterrupt;
 	PKINTERRUPT HighestDIRQLInterrupt;
 	KSPIN_LOCK SpinLock;
-	KDPC DpcKbd;
-	KDPC DpcMouse;
-
-	KTIMER TimerMouseTimeout;
-	KDPC DpcMouseTimeout;
-	MOUSE_TIMEOUT_STATE MouseTimeoutState;
-	BOOLEAN MouseTimeoutActive;
-
-	KEYBOARD_ATTRIBUTES KeyboardAttributes;
-	KEYBOARD_INDICATOR_PARAMETERS KeyboardIndicators;
-	KEYBOARD_TYPEMATIC_PARAMETERS KeyboardTypematic;
-
-	BOOLEAN WantAck;
-	BOOLEAN WantOutput;
-	BOOLEAN SignalEvent;
-
-	KEYBOARD_SCAN_STATE KeyboardScanState;
-	BOOLEAN KeyComplete;
-	KEYBOARD_INPUT_DATA *KeyboardBuffer;
-	ULONG KeysInBuffer;
-
-	MOUSE_ATTRIBUTES MouseAttributes;
-
-	MOUSE_STATE MouseState;
-	BOOLEAN MouseComplete;
-	MOUSE_RESET_SUBSTATE MouseResetState;
-	MOUSE_INPUT_DATA *MouseBuffer;
-	ULONG MouseInBuffer;
-	USHORT MouseButtonState;
-	ULARGE_INTEGER MousePacketStartTime;
-
-	UCHAR MouseLogiBuffer[3];
-	UCHAR MouseLogitechID;
-	I8042_MOUSE_TYPE MouseType;
+	KIRQL HighestDirql;
 
 	OUTPUT_PACKET Packet;
 	ULONG PacketResends;
@@ -154,228 +104,351 @@ typedef struct _DEVICE_EXTENSION
 
 	PIRP CurrentIrp;
 	PDEVICE_OBJECT CurrentIrpDevice;
+} PORT_DEVICE_EXTENSION, *PPORT_DEVICE_EXTENSION;
 
-	/* registry config values */
-	I8042_SETTINGS Settings;
+typedef struct _I8042_DRIVER_EXTENSION
+{
+	UNICODE_STRING RegistryPath;
 
-	/* Debugger stuff */
-	BOOLEAN TabPressed;
-	ULONG DebugKey;
-	PIO_WORKITEM DebugWorkItem;
-} DEVICE_EXTENSION, *PDEVICE_EXTENSION;
+	PORT_DEVICE_EXTENSION Port;
+	LIST_ENTRY DeviceListHead;
+	KSPIN_LOCK DeviceListLock;
+} I8042_DRIVER_EXTENSION, *PI8042_DRIVER_EXTENSION;
+
+typedef enum _I8042_DEVICE_TYPE
+{
+	Unknown,
+	Keyboard,
+	Mouse,
+	PhysicalDeviceObject
+} I8042_DEVICE_TYPE, *PI8042_DEVICE_TYPE;
 
 typedef struct _FDO_DEVICE_EXTENSION
 {
-	PDEVICE_EXTENSION PortDevExt;
 	I8042_DEVICE_TYPE Type;
-	PDEVICE_OBJECT DeviceObject;
+	// Linkage in I8042_DRIVER_EXTENSION.DeviceListHead
+	LIST_ENTRY ListEntry;
+	// Associated device object (FDO)
+	PDEVICE_OBJECT Fdo;
+	// Associated device object (PDO)
+	PDEVICE_OBJECT Pdo;
+	// Lower device object
+	PDEVICE_OBJECT LowerDevice;
+	// Current state of the driver
+	DEVICE_STATE PnpState;
 
-	LIST_ENTRY BusDevices;
+	PPORT_DEVICE_EXTENSION PortDeviceExtension;
 } FDO_DEVICE_EXTENSION, *PFDO_DEVICE_EXTENSION;
+
+typedef struct _I8042_KEYBOARD_EXTENSION
+{
+	FDO_DEVICE_EXTENSION Common;
+	CONNECT_DATA KeyboardData;
+	INTERNAL_I8042_HOOK_KEYBOARD KeyboardHook; /* FIXME: IsrWritePort ignored */
+	KDPC DpcKeyboard;
+
+	KEYBOARD_INDICATOR_PARAMETERS KeyboardIndicators;
+
+	KEYBOARD_SCAN_STATE KeyboardScanState;
+	BOOLEAN KeyComplete;
+	PKEYBOARD_INPUT_DATA KeyboardBuffer;
+	ULONG KeysInBuffer;
+
+	/* Power keys items */
+	ULONG ReportedCaps;
+	ULONG NewCaps;
+	ULONG LastPowerKey;
+	UNICODE_STRING PowerInterfaceName;
+	PIO_WORKITEM PowerWorkItem;
+	PIRP PowerIrp;
+
+	/* Debug items */
+	ULONG ComboPosition;
+	PIO_WORKITEM DebugWorkItem;
+	BOOLEAN TabPressed;
+} I8042_KEYBOARD_EXTENSION;
+
+typedef enum _I8042_MOUSE_TYPE
+{
+	GenericPS2,
+	Intellimouse,
+	IntellimouseExplorer,
+	Ps2pp
+} I8042_MOUSE_TYPE, *PI8042_MOUSE_TYPE;
+
+typedef struct _I8042_MOUSE_EXTENSION
+{
+	FDO_DEVICE_EXTENSION Common;
+	CONNECT_DATA MouseData;
+	INTERNAL_I8042_HOOK_MOUSE MouseHook;
+	KDPC DpcMouse;
+
+	MOUSE_ATTRIBUTES MouseAttributes;
+
+	MOUSE_STATE MouseState;
+	BOOLEAN MouseComplete;
+	MOUSE_RESET_SUBSTATE MouseResetState;
+	PMOUSE_INPUT_DATA MouseBuffer;
+	ULONG MouseInBuffer;
+	USHORT MouseButtonState;
+	ULARGE_INTEGER MousePacketStartTime;
+
+	KTIMER TimerMouseTimeout;
+	KDPC DpcMouseTimeout;
+	MOUSE_TIMEOUT_STATE MouseTimeoutState;
+	BOOLEAN MouseTimeoutActive;
+
+	UCHAR MouseLogiBuffer[3];
+	I8042_MOUSE_TYPE MouseType;
+} I8042_MOUSE_EXTENSION;
 
 typedef struct _I8042_HOOK_WORKITEM
 {
 	PIO_WORKITEM WorkItem;
-	PDEVICE_OBJECT Target;
 	PIRP Irp;
 } I8042_HOOK_WORKITEM, *PI8042_HOOK_WORKITEM;
 
-/*
+/*-----------------------------------------------------
  * Some defines
- */
-#define TAG(A, B, C, D) (ULONG)(((A)<<0) + ((B)<<8) + ((C)<<16) + ((D)<<24))
-#define TAG_I8042 TAG('8', '0', '4', '2')
+ * --------------------------------------------------*/
 
-#define KBD_WRAP_MASK      0x1F
+#define MAX(a, b) ((a) >= (b) ? (a) : (b))
 
-#define ALT_PRESSED			(LEFT_ALT_PRESSED | RIGHT_ALT_PRESSED)
-#define CTRL_PRESSED			(LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)
+#define KEYBOARD_POWER_CODE 0x5E
+#define KEYBOARD_SLEEP_CODE 0x5F
+#define KEYBOARD_WAKE_CODE  0x63
 
-
-/*
- * Keyboard controller ports
- */
-
-#define I8042_DATA_PORT      ((PUCHAR)0x60)
-#define I8042_CTRL_PORT      ((PUCHAR)0x64)
-
-
-/*
+/*-----------------------------------------------------
  * Controller commands
- */
+ * --------------------------------------------------*/
 
 #define KBD_READ_MODE      0x20
 #define KBD_WRITE_MODE     0x60
-#define KBD_SELF_TEST      0xAA
 #define KBD_LINE_TEST      0xAB
-#define KBD_CTRL_ENABLE    0xAE
-
 #define MOUSE_LINE_TEST    0xA9
-#define MOUSE_CTRL_ENABLE  0xA8
+#define CTRL_SELF_TEST     0xAA
+#define CTRL_WRITE_MOUSE   0xD4
 
-#define KBD_READ_OUTPUT_PORT 0xD0
-#define KBD_WRITE_OUTPUT_PORT 0xD1
-
-/*
+/*-----------------------------------------------------
  * Keyboard commands
- */
+ * --------------------------------------------------*/
 
-#define KBD_SET_LEDS       0xED
-#define KBD_GET_ID         0xF2
-#define KBD_ENABLE         0xF4
-#define KBD_DISABLE        0xF5
-#define KBD_RESET          0xFF
+#define KBD_CMD_SET_LEDS   0xED
+#define KBD_CMD_GET_ID     0xF2
 
+/*-----------------------------------------------------
+ * Keyboard responses
+ * --------------------------------------------------*/
 
-/*
- * Keyboard responces
- */
-
-#define KBD_BATCC          0xAA
 #define KBD_ACK            0xFA
 #define KBD_NACK           0xFC
 #define KBD_RESEND         0xFE
 
-/*
+/*-----------------------------------------------------
  * Controller status register bits
- */
+ * --------------------------------------------------*/
 
 #define KBD_OBF            0x01
 #define KBD_IBF            0x02
-#define KBD_AUX            0x10
-#define KBD_GTO            0x40
+#define MOU_OBF            0x20
 #define KBD_PERR           0x80
 
-/*
+/*-----------------------------------------------------
  * Controller command byte bits
- */
+ * --------------------------------------------------*/
+
 #define CCB_KBD_INT_ENAB   0x01
 #define CCB_MOUSE_INT_ENAB 0x02
 #define CCB_SYSTEM_FLAG    0x04
-#define CCB_IGN_KEY_LOCK   0x08
 #define CCB_KBD_DISAB      0x10
 #define CCB_MOUSE_DISAB    0x20
 #define CCB_TRANSLATE      0x40
 
-
-/*
+/*-----------------------------------------------------
  * LED bits
- */
+ * --------------------------------------------------*/
 
 #define KBD_LED_SCROLL     0x01
 #define KBD_LED_NUM        0x02
 #define KBD_LED_CAPS       0x04
 
-/*
+/*-----------------------------------------------------
+ * Mouse commands
+ * --------------------------------------------------*/
+
+#define MOU_CMD_GET_ID     0xF2
+#define MOU_CMD_RESET      0xFF
+
+/*-----------------------------------------------------
  * Mouse responses
- */
+ * --------------------------------------------------*/
+
 #define MOUSE_ACK          0xFA
 #define MOUSE_ERROR        0xFC
 #define MOUSE_NACK         0xFE
 
-/* i8042prt.c */
-extern UNICODE_STRING I8042RegistryPath;
+/*-----------------------------------------------------
+ * Prototypes
+ * --------------------------------------------------*/
 
-NTSTATUS I8042ReadData(UCHAR *Data);
+/* createclose.c */
 
-NTSTATUS I8042ReadStatus(UCHAR *Status);
+IO_WORKITEM_ROUTINE i8042SendHookWorkItem;
 
-NTSTATUS I8042ReadDataWait(PDEVICE_EXTENSION DevExt, UCHAR *Data);
+DRIVER_DISPATCH i8042Create;
 
-VOID I8042Flush();
+DRIVER_DISPATCH i8042Cleanup;
 
-VOID STDCALL I8042IsrWritePort(PDEVICE_EXTENSION DevExt,
-                               UCHAR Value,
-                               UCHAR SelectCmd);
-
-NTSTATUS STDCALL I8042SynchWritePort(PDEVICE_EXTENSION DevExt,
-                                     UCHAR Port,
-                                     UCHAR Value,
-                                     BOOLEAN WaitForAck);
-
-NTSTATUS STDCALL I8042StartPacket(PDEVICE_EXTENSION DevExt,
-                                  PDEVICE_OBJECT Device,
-                                  PUCHAR Bytes,
-                                  ULONG ByteCount,
-                                  PIRP Irp);
-
-BOOLEAN STDCALL I8042PacketIsr(PDEVICE_EXTENSION DevExt,
-                            UCHAR Output);
-
-VOID I8042PacketDpc(PDEVICE_EXTENSION DevExt);
-
-IO_WORKITEM_ROUTINE I8042SendHookWorkItem;
-VOID STDCALL I8042SendHookWorkItem(PDEVICE_OBJECT DeviceObject,
-                                   PVOID Context);
-
-BOOLEAN I8042Write(PDEVICE_EXTENSION DevExt, PUCHAR addr, UCHAR data);
-
-NTSTATUS STDCALL DriverEntry(PDRIVER_OBJECT DriverObject,
-			     PUNICODE_STRING RegistryPath);
+DRIVER_DISPATCH i8042Close;
 
 /* keyboard.c */
-VOID STDCALL I8042IsrWritePortKbd(PVOID Context,
-                                  UCHAR Value);
 
-NTSTATUS STDCALL I8042SynchWritePortKbd(PVOID Context,
-                                        UCHAR Value,
-                                        BOOLEAN WaitForAck);
+NTSTATUS DDKAPI
+i8042SynchWritePortKbd(
+	IN PVOID Context,
+	IN UCHAR Value,
+	IN BOOLEAN WaitForAck);
 
-KSERVICE_ROUTINE I8042InterruptServiceKbd;
-BOOLEAN STDCALL I8042InterruptServiceKbd(struct _KINTERRUPT *Interrupt,
-                                         VOID * Context);
+DRIVER_STARTIO i8042KbdStartIo;
 
-VOID STDCALL I8042DpcRoutineKbd(PKDPC Dpc,
-                                PVOID DeferredContext,
-                                PVOID SystemArgument1,
-                                PVOID SystemArgument2);
+DRIVER_DISPATCH i8042KbdDeviceControl;
 
-BOOLEAN STDCALL I8042StartIoKbd(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+DRIVER_DISPATCH i8042KbdInternalDeviceControl;
 
-NTSTATUS STDCALL I8042InternalDeviceControlKbd(PDEVICE_OBJECT DeviceObject,
-                                               PIRP Irp);
+KSERVICE_ROUTINE i8042KbdInterruptService;
 
-BOOLEAN STDCALL I8042KeyboardEnable(PDEVICE_EXTENSION DevExt);
+/* i8042prt.c */
 
-BOOLEAN STDCALL I8042KeyboardEnableInterrupt(PDEVICE_EXTENSION DevExt);
+DRIVER_ADD_DEVICE i8042AddDevice;
 
-BOOLEAN STDCALL I8042DetectKeyboard(PDEVICE_EXTENSION DevExt);
+BOOLEAN
+i8042PacketIsr(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN UCHAR Output);
 
-/* registry.c */
-VOID STDCALL I8042ReadRegistry(PDRIVER_OBJECT DriverObject,
-                               PDEVICE_EXTENSION DevExt);
+NTSTATUS
+i8042StartPacket(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN PFDO_DEVICE_EXTENSION FdoDeviceExtension,
+	IN PUCHAR Bytes,
+	IN ULONG ByteCount,
+	IN PIRP Irp);
+
+/* misc.c */
+
+DRIVER_DISPATCH ForwardIrpAndForget;
+
+DRIVER_DISPATCH ForwardIrpAndWait;
+
+NTSTATUS
+DuplicateUnicodeString(
+	IN ULONG Flags,
+	IN PCUNICODE_STRING SourceString,
+	OUT PUNICODE_STRING DestinationString);
 
 /* mouse.c */
-VOID STDCALL I8042DpcRoutineMouse(PKDPC Dpc,
-                                  PVOID DeferredContext,
-                                  PVOID SystemArgument1,
-                                  PVOID SystemArgument2);
 
-VOID STDCALL I8042DpcRoutineMouseTimeout(PKDPC Dpc,
-                                         PVOID DeferredContext,
-                                         PVOID SystemArgument1,
-                                         PVOID SystemArgument2);
+VOID
+i8042MouHandle(
+	IN PI8042_MOUSE_EXTENSION DeviceExtension,
+	IN UCHAR Output);
 
-KSERVICE_ROUTINE I8042InterruptServiceMouse;
-BOOLEAN STDCALL I8042InterruptServiceMouse(struct _KINTERRUPT *Interrupt,
-                                           VOID *Context);
+VOID
+i8042MouHandleButtons(
+	IN PI8042_MOUSE_EXTENSION DeviceExtension,
+	IN USHORT Mask);
 
-NTSTATUS STDCALL I8042InternalDeviceControlMouse(PDEVICE_OBJECT DeviceObject,
-                                                 PIRP Irp);
+NTSTATUS
+i8042MouInitialize(
+	IN PI8042_MOUSE_EXTENSION DeviceExtension);
 
-VOID STDCALL I8042QueueMousePacket(PVOID Context);
+DRIVER_DISPATCH i8042MouInternalDeviceControl;
 
-VOID STDCALL I8042MouseHandleButtons(PDEVICE_EXTENSION DevExt,
-                                     USHORT Mask);
+KSERVICE_ROUTINE i8042MouInterruptService;
 
-VOID STDCALL I8042MouseHandle(PDEVICE_EXTENSION DevExt,
-                              UCHAR Output);
+/* pnp.c */
 
-BOOLEAN STDCALL I8042MouseEnable(PDEVICE_EXTENSION DevExt);
-BOOLEAN STDCALL I8042MouseDisable(PDEVICE_EXTENSION DevExt);
-BOOLEAN STDCALL I8042DetectMouse(PDEVICE_EXTENSION DevExt);
+BOOLEAN
+i8042ChangeMode(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN UCHAR FlagsToDisable,
+	IN UCHAR FlagsToEnable);
+
+DRIVER_DISPATCH i8042Pnp;
 
 /* ps2pp.c */
-VOID I8042MouseHandlePs2pp(PDEVICE_EXTENSION DevExt, UCHAR Input);
+VOID
+i8042MouHandlePs2pp(
+	IN PI8042_MOUSE_EXTENSION DeviceExtension,
+	IN UCHAR Input);
 
-#endif // _KEYBOARD_H_
+/* readwrite.c */
+
+VOID
+i8042Flush(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension);
+
+VOID
+i8042IsrWritePort(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN UCHAR Value,
+	IN UCHAR SelectCmd OPTIONAL);
+
+NTSTATUS
+i8042ReadData(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN UCHAR StatusFlags,
+	OUT PUCHAR Data);
+#define i8042ReadKeyboardData(DeviceExtension, Data) \
+	i8042ReadData(DeviceExtension, KBD_OBF, Data)
+#define i8042ReadMouseData(DeviceExtension, Data) \
+	i8042ReadData(DeviceExtension, MOU_OBF, Data)
+
+NTSTATUS
+i8042ReadDataWait(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	OUT PUCHAR Data);
+
+NTSTATUS
+i8042ReadStatus(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	OUT PUCHAR Status);
+
+NTSTATUS DDKAPI
+i8042SynchReadPort(
+	IN PVOID Context,
+	OUT PUCHAR Value,
+	IN BOOLEAN WaitForAck);
+
+NTSTATUS NTAPI
+i8042SynchWritePort(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN UCHAR Port,
+	IN UCHAR Value,
+	IN BOOLEAN WaitForAck);
+
+BOOLEAN
+i8042Write(
+	IN PPORT_DEVICE_EXTENSION DeviceExtension,
+	IN PUCHAR addr,
+	IN UCHAR data);
+
+/* registry.c */
+
+NTSTATUS
+ReadRegistryEntries(
+	IN PUNICODE_STRING RegistryPath,
+	OUT PI8042_SETTINGS Settings);
+
+/* setup.c */
+
+BOOLEAN
+IsFirstStageSetup(
+	VOID);
+
+NTSTATUS
+i8042AddLegacyKeyboard(
+	IN PDRIVER_OBJECT DriverObject,
+	IN PUNICODE_STRING RegistryPath);
+
+#endif // _I8042PRT_H_
