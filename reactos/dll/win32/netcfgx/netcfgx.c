@@ -101,7 +101,8 @@ static BOOL
 InstallInfSection(
 	IN HWND hWnd,
 	IN LPCWSTR InfFile,
-	IN LPCWSTR InfSection)
+	IN LPCWSTR InfSection OPTIONAL,
+	IN LPCWSTR InfService OPTIONAL)
 {
 	WCHAR Buffer[MAX_PATH];
 	HINF hInf = INVALID_HANDLE_VALUE;
@@ -132,12 +133,21 @@ InstallInfSection(
 	if (Context == NULL)
 		goto cleanup;
 
-	ret = SetupInstallFromInfSectionW(
-		hWnd, hInf,
-		InfSection, SPINST_ALL,
-		NULL, NULL, SP_COPY_NEWER,
-		SetupDefaultQueueCallbackW, Context,
-		NULL, NULL);
+	ret = TRUE;
+	if (ret && InfSection)
+	{
+		ret = SetupInstallFromInfSectionW(
+			hWnd, hInf,
+			InfSection, SPINST_ALL,
+			NULL, NULL, SP_COPY_NEWER,
+			SetupDefaultQueueCallbackW, Context,
+			NULL, NULL);
+	}
+	if (ret && InfService)
+	{
+		ret = SetupInstallServicesFromInfSectionW(
+			hInf, InfService, 0);
+	}
 
 cleanup:
 	if (Context)
@@ -158,7 +168,8 @@ InstallAdditionalServices(
 	ret = InstallInfSection(
 		hWnd,
 		L"nettcpip.inf",
-		L"MS_TCPIP.PrimaryInstall");
+		L"MS_TCPIP.PrimaryInstall",
+		L"MS_TCPIP.PrimaryInstall.Services");
 	if (!ret && GetLastError() != ERROR_FILE_NOT_FOUND)
 	{
 		DPRINT("InstallInfSection() failed with error 0x%lx\n", GetLastError());
