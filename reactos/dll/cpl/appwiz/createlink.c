@@ -88,6 +88,7 @@ WelcomeDlgProc(HWND hwndDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_SHORTCUT_BROWSE:
+                    ZeroMemory(&brws, sizeof(brws));
                     brws.hwndOwner = hwndDlg;
                     brws.pidlRoot = NULL;
                     brws.pszDisplayName = szPath;
