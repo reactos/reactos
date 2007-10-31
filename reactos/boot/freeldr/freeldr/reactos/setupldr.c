@@ -283,9 +283,6 @@ VOID RunLoader(VOID)
       printf("Failed to get load options\n");
       return;
     }
-#if 0
-  printf("LoadOptions: '%s'\n", LoadOptions);
-#endif
 
   /* Set kernel command line */
   MachDiskGetBootPath(reactos_kernel_cmdline, sizeof(reactos_kernel_cmdline));
@@ -311,13 +308,6 @@ VOID RunLoader(VOID)
   Base = FrLdrCreateModule ("HARDWARE");
   RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
   FrLdrCloseModule (Base, Size);
-
-#if 0
-  printf("Base: %x\n", Base);
-  printf("Size: %u\n", Size);
-  printf("*** System stopped ***\n");
-for(;;);
-#endif
 
   /* Insert boot disk 2 */
   if (MachDiskBootingFromFloppy())
@@ -410,21 +400,13 @@ for(;;);
       return;
     }
 
-  /* Load atapi.sys (depends on hardware detection) */
-  if (!LoadDriver(SourcePath, "atapi.sys"))
-    return;
-
-  /* Load buslogic.sys (depends on hardware detection) */
-  if (!LoadDriver(SourcePath, "buslogic.sys"))
-    return;
-
   /* Load vfatfs.sys (could be loaded by the setup prog!) */
   if (!LoadDriver(SourcePath, "vfatfs.sys"))
     return;
 
     /* Load additional files specified in txtsetup.inf */
     if (InfFindFirstLine(InfHandle,
-                         "SourceDiskFiles",
+                         "SourceDisksFiles",
                          NULL,
                          &InfContext))
     {

@@ -11,7 +11,9 @@ Signature = "$ReactOS$"
 6 = media\fonts
 7 = bin
 
-[SourceDiskFiles]
+[SourceDisksFiles]
+atapi.sys=,,,,,,x
+buslogic.sys=,,,,,,x
 ;acpi.sys=,,,,,,x
 ;isapnp.sys=,,,,,,x
 ;pci.sys=,,,,,,x
