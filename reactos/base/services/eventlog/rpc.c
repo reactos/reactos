@@ -151,7 +151,8 @@ NTSTATUS ElfrRegisterEventSourceW(
     /* [out] */ PLOGHANDLE Handle)
 {
     UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    *Handle = 1;
+    return STATUS_SUCCESS;
 }
 
 
@@ -203,8 +204,43 @@ NTSTATUS ElfrReportEventW(
     /* [unique][out][in] */     long __RPC_FAR * unknown1,
     /* [unique][out][in] */     long __RPC_FAR * unknown2)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    short i;
+
+    /* partial stub */
+
+    if (NumStrings == 0)
+        return STATUS_SUCCESS;
+
+    if (Strings == NULL)
+        return STATUS_SUCCESS;
+
+    for (i = 0; i < NumStrings; i++)
+    {
+        switch (Type)
+        {
+            case EVENTLOG_SUCCESS:
+                DPRINT1("Success: %S\n", Strings[i]);
+                break;
+
+            case EVENTLOG_ERROR_TYPE:
+                DPRINT1("Error: %S\n", Strings[i]);
+                break;
+
+            case EVENTLOG_WARNING_TYPE:
+                DPRINT1("Warning: %S\n", Strings[i]);
+                break;
+
+            case EVENTLOG_INFORMATION_TYPE:
+                DPRINT1("Info: %S\n", Strings[i]);
+                break;
+
+            default:
+                DPRINT1("Type %hu: %S\n", Type, Strings[i]);
+                break;
+        }
+    }
+
+    return STATUS_SUCCESS;
 }
 
 
