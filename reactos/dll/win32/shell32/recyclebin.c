@@ -217,37 +217,43 @@ static HRESULT WINAPI RecycleBin_ParseDisplayName(IShellFolder2 *This, HWND hwnd
     return E_NOTIMPL;
 }
 
+
+PDELETED_FILE_DETAILS_W
+UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
+{
+    return (PDELETED_FILE_DETAILS_W)&pidl->mkid.abID;
+}
+
 BOOL
 WINAPI
 CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
 {
     PDELETED_FILE_DETAILS_W pFileDetails;
-    DWORD dwSize = 0;
+    DWORD dwSize, dwTotalSize;
     LPITEMIDLIST pidl = NULL;
     BOOL ret;
 
     TRACE("CBEnumBitBucket entered\n");
-    GetDeletedFileDetailsW(hDeletedFile,
-                               0,
-                               NULL,
-                               &dwSize);
-
-    if (!dwSize)
+    if (!GetDeletedFileDetailsW(hDeletedFile,
+                                0,
+                                NULL,
+                                &dwSize) &&
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
     {
         ERR("GetDeletedFileDetailsW failed\n");
         return FALSE;
     }
+    dwTotalSize = FIELD_OFFSET(ITEMIDLIST, mkid.abID) + dwSize;
 
-    pidl = SHAlloc(dwSize);
+    pidl = SHAlloc(dwTotalSize);
     if (!pidl)
     {
         ERR("No memory\n");
         return FALSE;
     }
 
-    pidl->mkid.cb = dwSize;
-    pidl->mkid.abID[0] = 0;
-    pFileDetails = (PDELETED_FILE_DETAILS_W) &pidl->mkid.abID[1];
+    pidl->mkid.cb = dwTotalSize;
+    pFileDetails = UnpackDetailsFromPidl(pidl);
 
     if (!GetDeletedFileDetailsW(hDeletedFile,
                                 dwSize,
@@ -260,13 +266,9 @@ CBEnumBitBucket(IN PVOID Context, IN HANDLE hDeletedFile)
     }
 
     ret = AddToEnumList((IEnumIDList*)Context, pidl);
+    TRACE("Returning %d\n", ret);
+    CloseRecycleBinHandle(hDeletedFile);
     return ret;
-}
-
-PDELETED_FILE_DETAILS_W
-UnpackDetailsFromPidl(LPCITEMIDLIST pidl)
-{
-    return (PDELETED_FILE_DETAILS_W)&pidl->mkid.abID[1];
 }
 
 static HRESULT WINAPI RecycleBin_EnumObjects(IShellFolder2 *iface, HWND hwnd, SHCONTF grfFlags, IEnumIDList **ppenumIDList)
