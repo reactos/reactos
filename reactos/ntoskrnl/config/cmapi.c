@@ -331,8 +331,23 @@ CmSetValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 Quickie:
     if (NT_SUCCESS(Status))
     {
+        ASSERT(Parent->MaxValueNameLen == Kcb->KcbMaxValueNameLen);
+        if (Parent->MaxValueNameLen < ValueName->Length)
+        {
+            Parent->MaxValueNameLen = ValueName->Length;
+            Kcb->KcbMaxValueNameLen = ValueName->Length;
+        }
+        
+        ASSERT(Parent->MaxValueDataLen == Kcb->KcbMaxValueDataLen);
+        if (Parent->MaxValueDataLen < DataLength)
+        {
+            Parent->MaxValueDataLen = DataLength;
+            Kcb->KcbMaxValueDataLen = Parent->MaxValueDataLen;
+        }
+        
         /* Save the write time */
         KeQuerySystemTime(&Parent->LastWriteTime);
+        KeQuerySystemTime(&Kcb->KcbLastWriteTime);
     }
 
     /* Release the lock */
@@ -422,8 +437,11 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
         /* Set the last write time */
         KeQuerySystemTime(&Parent->LastWriteTime);
+        KeQuerySystemTime(&Kcb->KcbLastWriteTime);
 
         /* Sanity check */
+        ASSERT(Parent->MaxValueNameLen == Kcb->KcbMaxValueNameLen);
+        ASSERT(Parent->MaxValueDataLen == Kcb->KcbMaxValueDataLen);
         ASSERT(HvIsCellDirty(Hive, Cell));
 
         /* Check if the value list is empty now */
@@ -432,6 +450,8 @@ CmDeleteValueKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
             /* Then clear key node data */
             Parent->MaxValueNameLen = 0;
             Parent->MaxValueDataLen = 0;
+            Kcb->KcbMaxValueNameLen = 0;
+            Kcb->KcbMaxValueDataLen = 0;
         }
 
         /* Change default Status to success */
@@ -811,19 +831,10 @@ CmpQueryKeyData(IN PHHIVE Hive,
             Info->KeyFullInformation.SubKeys = Node->SubKeyCounts[Stable] +
                                                Node->SubKeyCounts[Volatile];
             Info->KeyFullInformation.Values = Node->ValueList.Count;
-            Info->KeyFullInformation.MaxNameLen = CmiGetMaxNameLength(Hive, Node);
-            Info->KeyFullInformation.MaxClassLen = CmiGetMaxClassLength(Hive, Node);
-            Info->KeyFullInformation.MaxValueNameLen = CmiGetMaxValueNameLength(Hive, Node);
-            Info->KeyFullInformation.MaxValueDataLen = CmiGetMaxValueDataLength(Hive, Node);
-            DPRINT("%d %d %d %d\n",
-                   CmiGetMaxNameLength(Hive, Node),
-                   CmiGetMaxValueDataLength(Hive, Node),
-                   CmiGetMaxValueNameLength(Hive, Node),
-                   CmiGetMaxClassLength(Hive, Node));
-            //Info->KeyFullInformation.MaxNameLen = Node->MaxNameLen;
-            //Info->KeyFullInformation.MaxClassLen = Node->MaxClassLen;
-            //Info->KeyFullInformation.MaxValueNameLen = Node->MaxValueNameLen;
-            //Info->KeyFullInformation.MaxValueDataLen = Node->MaxValueDataLen;
+            Info->KeyFullInformation.MaxNameLen = Node->MaxNameLen;
+            Info->KeyFullInformation.MaxClassLen = Node->MaxClassLen;
+            Info->KeyFullInformation.MaxValueNameLen = Node->MaxValueNameLen;
+            Info->KeyFullInformation.MaxValueDataLen = Node->MaxValueDataLen;            
 
             /* Check if we have a class */
             if (Node->ClassLength > 0)
