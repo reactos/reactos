@@ -20,7 +20,8 @@
 #include <freeldr.h>
 #include <debug.h>
 
-PINI_SECTION		IniFileSectionListHead = NULL;
+LIST_ENTRY		IniFileSectionListHead;
+BOOLEAN			IniFileSectionInitialized = FALSE;
 ULONG					IniFileSectionCount = 0;
 ULONG					IniFileSettingCount = 0;
 
@@ -36,6 +37,12 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 	PINI_SECTION_ITEM	CurrentItem = NULL;
 
 	DbgPrint((DPRINT_INIFILE, "IniParseFile() IniFileSize: %d\n", IniFileSize));
+
+	if (!IniFileSectionInitialized)
+	{
+		InitializeListHead(&IniFileSectionListHead);
+		IniFileSectionInitialized = TRUE;
+	}
 
 	// Start with an 80-byte buffer
 	IniFileLineSize = 80;
@@ -97,17 +104,11 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 
 			// Get the section name
 			IniExtractSectionName(CurrentSection->SectionName, IniFileLine, LineLength);
+			InitializeListHead(&CurrentSection->SectionItemList);
 
 			// Add it to the section list head
 			IniFileSectionCount++;
-			if (IniFileSectionListHead == NULL)
-			{
-				IniFileSectionListHead = CurrentSection;
-			}
-			else
-			{
-				RtlListInsertTail((PLIST_ITEM)IniFileSectionListHead, (PLIST_ITEM)CurrentSection);
-			}
+			InsertTailList(&IniFileSectionListHead, &CurrentSection->ListEntry);
 
 			CurrentLineNumber++;
 			continue;
@@ -162,14 +163,7 @@ BOOLEAN IniParseFile(PCHAR IniFileData, ULONG IniFileSize)
 			// Add it to the current section
 			IniFileSettingCount++;
 			CurrentSection->SectionItemCount++;
-			if (CurrentSection->SectionItemList == NULL)
-			{
-				CurrentSection->SectionItemList = CurrentItem;
-			}
-			else
-			{
-				RtlListInsertTail((PLIST_ITEM)CurrentSection->SectionItemList, (PLIST_ITEM)CurrentItem);
-			}
+			InsertTailList(&CurrentSection->SectionItemList, &CurrentItem->ListEntry);
 
 			CurrentLineNumber++;
 			continue;

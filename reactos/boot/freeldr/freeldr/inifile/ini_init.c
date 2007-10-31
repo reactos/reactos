@@ -31,8 +31,7 @@ BOOLEAN IniFileInitialize(VOID)
 
 	if (Freeldr_Ini == NULL)
 	{
-		printf("Error opening freeldr.ini or file not found.\n");
-		printf("You need to re-install FreeLoader.\n");
+		UiMessageBoxCritical("Error opening freeldr.ini or file not found.\nYou need to re-install FreeLoader.");
 		return FALSE;
 	}
 
@@ -43,7 +42,7 @@ BOOLEAN IniFileInitialize(VOID)
 	// If we are out of memory then return FALSE
 	if (FreeLoaderIniFileData == NULL)
 	{
-		printf("Out of memory while loading freeldr.ini.\n");
+		UiMessageBoxCritical("Out of memory while loading freeldr.ini.");
 		FsCloseFile(Freeldr_Ini);
 		return FALSE;
 	}

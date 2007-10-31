@@ -33,37 +33,33 @@ VOID RunLoader(VOID)
 
 	if (!FsOpenBootVolume())
 	{
-		printf("Error opening boot partition for file access.\n");
-		MachConsGetCh();
+		UiMessageBoxCritical("Error opening boot partition for file access.");
 		return;
 	}
 
 	if (!IniFileInitialize())
 	{
-		printf("Press any key to reboot.\n");
-		MachConsGetCh();
+		UiMessageBoxCritical("Error initializing .ini file");
 		return;
 	}
 
 	if (!IniOpenSection("FreeLoader", &SectionId))
 	{
-		printf("Section [FreeLoader] not found in freeldr.ini.\n");
-		MachConsGetCh();
+		UiMessageBoxCritical("Section [FreeLoader] not found in freeldr.ini.");
 		return;
 	}
 	TimeOut = GetTimeOut();
 
 	if (!UiInitialize(TimeOut))
 	{
-		printf("Press any key to reboot.\n");
-		MachConsGetCh();
+		UiMessageBoxCritical("Unable to initialize UI.");
 		return;
 	}
 
 
 	if (!InitOperatingSystemList(&OperatingSystemSectionNames, &OperatingSystemDisplayNames, &OperatingSystemCount))
 	{
-		UiMessageBox("Press ENTER to reboot.\n");
+		UiMessageBox("Press ENTER to reboot.");
 		goto reboot;
 	}
 
@@ -89,7 +85,7 @@ VOID RunLoader(VOID)
 		// Show the operating system list menu
 		if (!UiDisplayMenu(OperatingSystemDisplayNames, OperatingSystemCount, DefaultOperatingSystem, TimeOut, &SelectedOperatingSystem, FALSE, MainBootMenuKeyPressFilter))
 		{
-			UiMessageBox("Press ENTER to reboot.\n");
+			UiMessageBox("Press ENTER to reboot.");
 			goto reboot;
 		}
 
@@ -98,7 +94,7 @@ VOID RunLoader(VOID)
 		// Try to open the operating system section in the .ini file
 		if (!IniOpenSection(OperatingSystemSectionNames[SelectedOperatingSystem], &SectionId))
 		{
-			sprintf(SettingName, "Section [%s] not found in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
+			sprintf(SettingName, "Section [%s] not found in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
 			UiMessageBox(SettingName);
 			continue;
 		}
@@ -106,7 +102,7 @@ VOID RunLoader(VOID)
 		// Try to read the boot type
 		if (!IniReadSettingByName(SectionId, "BootType", SettingValue, sizeof(SettingValue)))
 		{
-			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.\n", OperatingSystemSectionNames[SelectedOperatingSystem]);
+			sprintf(SettingName, "BootType= line not found in section [%s] in freeldr.ini.", OperatingSystemSectionNames[SelectedOperatingSystem]);
 			UiMessageBox(SettingName);
 			continue;
 		}

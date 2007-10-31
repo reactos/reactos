@@ -32,7 +32,7 @@
 ///////////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
-	LIST_ITEM	ListEntry;					// Doubly linked list synchronization member
+	LIST_ENTRY	ListEntry;					// Doubly linked list synchronization member
 
 	ULONG			BlockNumber;				// Track index for CHS, 64k block index for LBA
 	BOOLEAN		LockedInCache;				// Indicates that this block is locked in cache memory
@@ -55,7 +55,7 @@ typedef struct
 	ULONG			BytesPerSector;
 
 	ULONG			BlockSize;			// Block size (in sectors)
-	PCACHE_BLOCK		CacheBlockHead;
+	LIST_ENTRY		CacheBlockHead;			// Contains CACHE_BLOCK structures
 
 } CACHE_DRIVE, *PCACHE_DRIVE;
 
