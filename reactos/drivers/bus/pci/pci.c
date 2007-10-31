@@ -452,7 +452,7 @@ PciCreateDeviceDescriptionString(PUNICODE_STRING DeviceDescription,
           Description = L"XGA display controller";
           break;
 
-        case PCI_SUBLCASS_VID_3D_CTLR:
+        case PCI_SUBCLASS_VID_3D_CTLR:
           Description = L"Multimedia display controller";
           break;
 

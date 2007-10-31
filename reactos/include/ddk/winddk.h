@@ -4123,7 +4123,7 @@ typedef struct _PCI_COMMON_CONFIG {
 
 #define PCI_SUBCLASS_VID_VGA_CTLR           0x00
 #define PCI_SUBCLASS_VID_XGA_CTLR           0x01
-#define PCI_SUBLCASS_VID_3D_CTLR            0x02
+#define PCI_SUBCLASS_VID_3D_CTLR            0x02
 #define PCI_SUBCLASS_VID_OTHER              0x80
 
 /* PCI device subclasses for class 4 (multimedia device)*/
@@ -9365,7 +9365,7 @@ KeLowerIrql(
   IN KIRQL  NewIrql);
 
 NTKERNELAPI
-KIRQL
+VOID
 NTAPI
 KeRaiseIrql(
   IN KIRQL  NewIrql,
