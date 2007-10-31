@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="xcopy" type="win32cui" installbase="system32" installname="xcopy.exe" allowwarnings="true" unicode="true">
 	<include base="xcopy">.</include>
+	<library>wine</library>
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>user32</library>
