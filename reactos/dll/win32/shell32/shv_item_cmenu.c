@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -64,6 +64,7 @@ typedef struct
 
 UINT
 SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, LPITEMIDLIST pidlFolder);
+WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
 
 static const IContextMenu2Vtbl cmvt;
 
@@ -510,17 +511,61 @@ static void DoRename(
  *
  * deletes the currently selected items
  */
-static void DoDelete(IContextMenu2 *iface)
+static void DoDelete(IContextMenu2 *iface, HWND hwnd)
 {
 	ItemCmImpl *This = (ItemCmImpl *)iface;
-	ISFHelper * psfhlp;
+    WCHAR szPath[MAX_PATH];
+    WCHAR * szTarget;
+    SHFILEOPSTRUCTW op;
+	LPSHELLBROWSER	lpSB;
+	LPSHELLVIEW	lpSV;
+    IPersistFolder3 * psf;
+    LPITEMIDLIST pidl;
+    STRRET strTemp;
+    
+    if (IShellFolder2_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
+    {
+      ERR("Failed to get interface IID_IPersistFolder2\n");
+      return;
+    }
+    if (IPersistFolder2_GetCurFolder(psf, &pidl) != S_OK)
+    {
+      ERR("IPersistFolder2_GetCurFolder failed\n");
+      IShellFolder2_Release(psf);
+      return;
+    }
 
-	IShellFolder_QueryInterface(This->pSFParent, &IID_ISFHelper, (LPVOID*)&psfhlp);
-	if (psfhlp)
+     if (IShellFolder2_GetDisplayNameOf(This->pSFParent, pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
+     {
+       ERR("IShellFolder_GetDisplayNameOf failed\n");
+       IShellFolder2_Release(psf);
+       return;
+     }
+     StrRetToBufW(&strTemp, pidl, szPath, MAX_PATH);
+     IShellFolder2_Release(psf);
+
+     szTarget = build_paths_list(szPath, This->cidl, This->apidl);
+
+     if (pidl)
+     {
+       if (SHGetPathFromIDListW(pidl, szPath))
+       {
+         ZeroMemory(&op, sizeof(op));
+         op.hwnd = GetActiveWindow();
+         op.wFunc = FO_DELETE;
+         op.pFrom = szTarget;
+         op.fFlags = FOF_ALLOWUNDO;
+         SHFileOperationW(&op);
+       }
+     }
+
+    if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER,0,0)))
 	{
-	  ISFHelper_DeleteItems(psfhlp, This->cidl, (LPCITEMIDLIST *)This->apidl);
-	  ISFHelper_Release(psfhlp);
-	}
+	  if (SUCCEEDED(IShellBrowser_QueryActiveShellView(lpSB, &lpSV)))
+	  {
+        IShellView_Refresh(lpSV);
+      }
+    }
 }
 
 /**************************************************************************
@@ -673,7 +718,7 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
             break;
         case FCIDM_SHVIEW_DELETE:
             TRACE("Verb FCIDM_SHVIEW_DELETE\n");
-            DoDelete(iface);
+            DoDelete(iface, lpcmi->hwnd);
             break;
         case FCIDM_SHVIEW_COPY:
             TRACE("Verb FCIDM_SHVIEW_COPY\n");
@@ -690,7 +735,7 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
         default:
             if (LOWORD(lpcmi->lpVerb) >= This->iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSHELast)
             {
-                return DoShellExtensions(iface, lpcmi);
+                return DoShellExtensions(This, lpcmi);
             }
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
         }
@@ -699,7 +744,7 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
     {
         TRACE("Verb is %s\n",debugstr_a(lpcmi->lpVerb));
         if (strcmp(lpcmi->lpVerb,"delete")==0)
-            DoDelete(iface);
+            DoDelete(iface, lpcmi->hwnd);
         else
             FIXME("Unhandled string verb %s\n",debugstr_a(lpcmi->lpVerb));
     }
