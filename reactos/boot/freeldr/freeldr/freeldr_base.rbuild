@@ -62,10 +62,8 @@
 		<file>ui.c</file>
 	</directory>
 	<directory name="video">
-		<file>bank.c</file>
 		<file>fade.c</file>
 		<file>palette.c</file>
-		<file>pixel.c</file>
 		<file>video.c</file>
 	</directory>
 	<if property="ARCH" value="i386">

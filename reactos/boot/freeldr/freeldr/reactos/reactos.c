@@ -762,18 +762,15 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 		strcat(szHalName, value);
 	}
 
-    /* Load the kernel */
-    LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
-    if (!LoadBase) return;
+	/* Load the kernel */
+	LoadBase = FrLdrLoadImage(szKernelName, 5, 1);
+	if (!LoadBase) return;
 
-    printf("Kernel loaded at %x\n", LoadBase);
-
-    /* Get the NT header, kernel base and kernel entry */
-    NtHeader = RtlImageNtHeader(LoadBase);
-    KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
-    KernelEntryPoint = KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
-    printf("KernelEntryPoint is %x (base %x)\n", KernelEntryPoint, KernelBase);
-    LoaderBlock.KernelBase = KernelBase;
+	/* Get the NT header, kernel base and kernel entry */
+	NtHeader = RtlImageNtHeader(LoadBase);
+	KernelBase = SWAPD(NtHeader->OptionalHeader.ImageBase);
+	KernelEntryPoint = KernelBase + SWAPD(NtHeader->OptionalHeader.AddressOfEntryPoint);
+	LoaderBlock.KernelBase = KernelBase;
 
 	/*
 	 * Load the System hive from disk
@@ -836,7 +833,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 */
 	if (!FrLdrLoadNlsFiles(szBootPath, MsgBuffer))
 	{
-	        UiMessageBox(MsgBuffer);
+		UiMessageBox(MsgBuffer);
 		return;
 	}
 	UiDrawProgressBarCenter(30, 100, szLoadingMsg);
@@ -844,19 +841,15 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	/*
 	 * Load boot drivers
 	 */
-        printf("FrLdrLoadBootDrivers\n");
 	FrLdrLoadBootDrivers(szBootPath, 40);
-        printf("FrLdrLoadBootDrivers end\n");
 	//UiUnInitialize("Booting ReactOS...");
 
 	/*
 	 * Now boot the kernel
 	 */
 	DiskStopFloppyMotor();
-        printf("MachVideoPrepareForReactOS\n");
-    MachVideoPrepareForReactOS(FALSE);
-    printf("FrLdrStartup\n");
-    FrLdrStartup(0x2badb002);
+	MachVideoPrepareForReactOS(FALSE);
+	FrLdrStartup(0x2badb002);
 }
 
 #undef DbgPrint

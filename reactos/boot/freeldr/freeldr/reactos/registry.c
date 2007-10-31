@@ -27,11 +27,6 @@ static FRLDRHKEY RootKey;
 VOID
 RegInitializeRegistry (VOID)
 {
-#if 0
-  FRLDRHKEY TestKey;
-  WCHAR szTestString[] = L"TestString";
-#endif
-
   /* Create root key */
   RootKey = (FRLDRHKEY) MmAllocateMemory (sizeof(KEY));
 
@@ -74,19 +69,6 @@ RegInitializeRegistry (VOID)
   RegCreateKey (RootKey,
 		L"Registry\\Machine\\HARDWARE\\RESOURCEMAP",
 		NULL);
-
-/* Testcode */
-#if 0
-  RegCreateKey (RootKey,
-		L"Registry\\Machine\\HARDWARE\\DESCRIPTION\\TestKey",
-		&TestKey);
-
-  RegSetValue (TestKey,
-	       L"TestValue",
-	       REG_SZ,
-	       szTestString,
-	       sizeof(szTestString));
-#endif
 }
 
 

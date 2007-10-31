@@ -2292,11 +2292,6 @@ PcHwDetect(VOID)
   DetectAcpiBios(SystemKey, &BusNumber);
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
-
-#if 0
-  printf("*** System stopped ***\n");
-  for (;;);
-#endif
 }
 
 /* EOF */
