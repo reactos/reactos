@@ -879,6 +879,10 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
             if (LOWORD(lpcmi->lpVerb) >= This->iIdShellNewFirst && LOWORD(lpcmi->lpVerb) <= This->iIdShellNewLast)
             {
                 DoShellNewCmd(This, lpcmi);
+	            if (lpSV) 
+                {
+                    IShellView_Refresh(lpSV);
+                }
                 break;
             }
 

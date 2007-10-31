@@ -1658,8 +1658,9 @@ static LRESULT CALLBACK ShellView_WndProc(HWND hWnd, UINT uMessage, WPARAM wPara
 	        (pThis->FolderSettings.fFlags & FWF_TRANSPARENT))
 	      return 1;
 	    break;
+      case CWM_GETISHELLBROWSER:
+          return pThis->pShellBrowser;
 	}
-
 	return DefWindowProcW(hWnd, uMessage, wParam, lParam);
 }
 /**********************************************************
