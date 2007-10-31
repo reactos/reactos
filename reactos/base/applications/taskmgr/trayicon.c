@@ -25,17 +25,17 @@
 
 HICON TrayIcon_GetProcessorUsageIcon(void)
 {
-    HICON        hTrayIcon = NULL;
-    HDC            hScreenDC = NULL;
-    HDC            hDC = NULL;
-    HBITMAP        hBitmap = NULL;
-    HBITMAP        hOldBitmap = NULL;
-    HBITMAP        hBitmapMask = NULL;
-    ICONINFO    iconInfo;
-    ULONG        ProcessorUsage;
-    int            nLinesToDraw;
-    HBRUSH        hBitmapBrush = NULL;
-    RECT        rc;
+    HICON     hTrayIcon = NULL;
+    HDC       hScreenDC = NULL;
+    HDC       hDC = NULL;
+    HBITMAP   hBitmap = NULL;
+    HBITMAP   hOldBitmap = NULL;
+    HBITMAP   hBitmapMask = NULL;
+    ICONINFO  iconInfo;
+    ULONG     ProcessorUsage;
+    int       nLinesToDraw;
+    HBRUSH    hBitmapBrush = NULL;
+    RECT      rc;
 
     /*
      * Get a handle to the screen DC
@@ -132,10 +132,10 @@ done:
 
 BOOL TrayIcon_ShellAddTrayIcon(void)
 {
-    NOTIFYICONDATA    nid;
-    HICON            hIcon = NULL;
+    NOTIFYICONDATA  nid;
+    HICON           hIcon = NULL;
     BOOL            bRetVal;
-    TCHAR szMsg[256];
+    WCHAR           szMsg[256];
 
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
 
@@ -162,7 +162,7 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
 
 BOOL TrayIcon_ShellRemoveTrayIcon(void)
 {
-    NOTIFYICONDATA    nid;
+    NOTIFYICONDATA  nid;
     BOOL            bRetVal;
 
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
@@ -183,7 +183,7 @@ BOOL TrayIcon_ShellUpdateTrayIcon(void)
     NOTIFYICONDATA  nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
-    TCHAR           szTemp[256];
+    WCHAR           szTemp[256];
 
     memset(&nid, 0, sizeof(NOTIFYICONDATA));
 

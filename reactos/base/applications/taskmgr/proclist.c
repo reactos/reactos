@@ -31,11 +31,11 @@ WNDPROC             OldProcessListWndProc;
 INT_PTR CALLBACK
 ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HBRUSH    hbrBackground;
+    HBRUSH  hbrBackground;
     RECT    rcItem;
     RECT    rcClip;
-    HDC        hDC;
-    int        DcSave;
+    HDC     hDC;
+    int     DcSave;
 
     switch (message)
     {
@@ -72,13 +72,13 @@ ProcessListWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
          * subtract it from our clip rect because we don't
          * use icons in this list control.
          */
-	rcClip.left = LVIR_BOUNDS;
-	SendMessage(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcClip);
-	rcClip.left = LVIR_BOUNDS;
-	SendMessage(hWnd, LVM_GETITEMRECT, ListView_GetItemCount(hWnd) - 1, (LPARAM)&rcItem);
-	rcClip.bottom = rcItem.bottom;
-	rcClip.left = LVIR_ICON;
-	SendMessage(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcItem);
+        rcClip.left = LVIR_BOUNDS;
+        SendMessage(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcClip);
+        rcClip.left = LVIR_BOUNDS;
+        SendMessage(hWnd, LVM_GETITEMRECT, ListView_GetItemCount(hWnd) - 1, (LPARAM)&rcItem);
+        rcClip.bottom = rcItem.bottom;
+        rcClip.left = LVIR_ICON;
+        SendMessage(hWnd, LVM_GETITEMRECT, 0, (LPARAM)&rcItem);
         rcClip.left = rcItem.right;
 
         /*

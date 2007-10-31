@@ -23,16 +23,16 @@
 
 #include <precomp.h>
 
-TCHAR                szTemp[256];
-TCHAR                szTempA[256];
+WCHAR  szTemp[256];
+WCHAR  szTempA[256];
 
 void ProcessPage_OnSetPriorityRealTime(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -80,11 +80,11 @@ void ProcessPage_OnSetPriorityRealTime(void)
 
 void ProcessPage_OnSetPriorityHigh(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -132,11 +132,11 @@ void ProcessPage_OnSetPriorityHigh(void)
 
 void ProcessPage_OnSetPriorityAboveNormal(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -184,11 +184,11 @@ void ProcessPage_OnSetPriorityAboveNormal(void)
 
 void ProcessPage_OnSetPriorityNormal(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -236,11 +236,11 @@ void ProcessPage_OnSetPriorityNormal(void)
 
 void ProcessPage_OnSetPriorityBelowNormal(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -288,11 +288,11 @@ void ProcessPage_OnSetPriorityBelowNormal(void)
 
 void ProcessPage_OnSetPriorityLow(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {

@@ -1,6 +1,10 @@
 #ifndef __PRECOMP_H
 #define __PRECOMP_H
 
+#ifndef UNICODE
+#error Task-Manager uses NDK functions, so it can only be compiled with Unicode support enabled!
+#endif
+
 #define WIN32_NO_STATUS
 #include <windows.h>
 #define NTOS_MODE_USER
@@ -10,7 +14,6 @@
 #include <aclapi.h>
 #include <stdlib.h>
 #include <math.h>
-#include <tchar.h>
 #include <stdio.h>
 #include <ctype.h>
 

@@ -32,8 +32,8 @@ void OnAbout(void)
 INT_PTR CALLBACK
 AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND    hLicenseEditWnd;
-    TCHAR    strLicense[0x1000];
+    HWND   hLicenseEditWnd;
+    WCHAR  strLicense[0x1000];
 
     switch (message)
     {

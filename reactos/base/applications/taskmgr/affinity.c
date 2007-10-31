@@ -24,8 +24,8 @@
 #include <precomp.h>
 
 HANDLE        hProcessAffinityHandle;
-TCHAR         szTemp[256];
-TCHAR         szTempA[256];
+WCHAR         szTemp[256];
+WCHAR         szTempA[256];
 
 static const DWORD dwCpuTable[] = {
     IDC_CPU0,   IDC_CPU1,   IDC_CPU2,   IDC_CPU3,
@@ -42,10 +42,10 @@ static INT_PTR CALLBACK AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wP
 
 void ProcessPage_OnSetAffinity(void)
 {
-    LV_ITEM          lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    TCHAR            strErrorText[260];
+    LV_ITEM  lvitem;
+    ULONG    Index;
+    DWORD    dwProcessId;
+    WCHAR    strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++) {
         memset(&lvitem, 0, sizeof(LV_ITEM));
@@ -61,8 +61,8 @@ void ProcessPage_OnSetAffinity(void)
         return;
     hProcessAffinityHandle = OpenProcess(PROCESS_QUERY_INFORMATION|PROCESS_SET_INFORMATION, FALSE, dwProcessId);
     if (!hProcessAffinityHandle) {
-        GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(TCHAR));
-        LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(TCHAR));
+        GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
+        LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(WCHAR));
         MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         return;
     }
@@ -76,10 +76,10 @@ void ProcessPage_OnSetAffinity(void)
 INT_PTR CALLBACK
 AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    DWORD    dwProcessAffinityMask = 0;
-    DWORD    dwSystemAffinityMask = 0;
-    TCHAR    strErrorText[260];
-    BYTE     nCpu;
+    DWORD  dwProcessAffinityMask = 0;
+    DWORD  dwSystemAffinityMask = 0;
+    WCHAR  strErrorText[260];
+    BYTE   nCpu;
 
     switch (message) {
     case WM_INITDIALOG:
@@ -89,9 +89,9 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
          * the number of CPUs present in the system
          */
         if (!GetProcessAffinityMask(hProcessAffinityHandle, &dwProcessAffinityMask, &dwSystemAffinityMask))    {
-            GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(TCHAR));
+            GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
             EndDialog(hDlg, 0);
-            LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(TCHAR));
+            LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(WCHAR));
             MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
         }
 
@@ -143,8 +143,8 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * of it's cpu time.
              */
             if (!dwProcessAffinityMask) {
-                LoadString(hInst, IDS_MSG_PROCESSONEPRO, szTemp, sizeof(szTemp) / sizeof(TCHAR));
-                LoadString(hInst, IDS_MSG_INVALIDOPTION, szTempA, sizeof(szTempA) / sizeof(TCHAR));
+                LoadString(hInst, IDS_MSG_PROCESSONEPRO, szTemp, sizeof(szTemp) / sizeof(WCHAR));
+                LoadString(hInst, IDS_MSG_INVALIDOPTION, szTempA, sizeof(szTempA) / sizeof(WCHAR));
                 MessageBox(hDlg, szTemp, szTempA, MB_OK|MB_ICONSTOP);
                 return TRUE;
             }
@@ -153,9 +153,9 @@ AffinityDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
              * Try to set the process affinity
              */
             if (!SetProcessAffinityMask(hProcessAffinityHandle, dwProcessAffinityMask)) {
-                GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(TCHAR));
+                GetLastErrorText(strErrorText, sizeof(strErrorText) / sizeof(WCHAR));
                 EndDialog(hDlg, LOWORD(wParam));
-                LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(TCHAR));
+                LoadString(hInst, IDS_MSG_ACCESSPROCESSAFF, szTemp, sizeof(szTemp) / sizeof(WCHAR));
                 MessageBox(hMainWnd, strErrorText, szTemp, MB_OK|MB_ICONSTOP);
             }
 

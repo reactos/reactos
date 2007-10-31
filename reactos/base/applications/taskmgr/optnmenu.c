@@ -30,8 +30,8 @@
 
 void TaskManager_OnOptionsAlwaysOnTop(void)
 {
-    HMENU    hMenu;
-    HMENU    hOptionsMenu;
+    HMENU  hMenu;
+    HMENU  hOptionsMenu;
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
@@ -56,8 +56,8 @@ void TaskManager_OnOptionsAlwaysOnTop(void)
 
 void TaskManager_OnOptionsMinimizeOnUse(void)
 {
-    HMENU    hMenu;
-    HMENU    hOptionsMenu;
+    HMENU  hMenu;
+    HMENU  hOptionsMenu;
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
@@ -79,8 +79,8 @@ void TaskManager_OnOptionsMinimizeOnUse(void)
 
 void TaskManager_OnOptionsHideWhenMinimized(void)
 {
-    HMENU    hMenu;
-    HMENU    hOptionsMenu;
+    HMENU  hMenu;
+    HMENU  hOptionsMenu;
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);
@@ -102,8 +102,8 @@ void TaskManager_OnOptionsHideWhenMinimized(void)
 
 void TaskManager_OnOptionsShow16BitTasks(void)
 {
-    HMENU    hMenu;
-    HMENU    hOptionsMenu;
+    HMENU  hMenu;
+    HMENU  hOptionsMenu;
 
     hMenu = GetMenu(hMainWnd);
     hOptionsMenu = GetSubMenu(hMenu, OPTIONS_MENU_INDEX);

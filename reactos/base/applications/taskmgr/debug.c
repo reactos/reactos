@@ -28,16 +28,16 @@ void ProcessPage_OnDebug(void)
     LVITEM               lvitem;
     ULONG                Index;
     DWORD                dwProcessId;
-    TCHAR                strErrorText[260];
+    WCHAR                strErrorText[260];
     HKEY                 hKey;
-    TCHAR                strDebugPath[260];
-    TCHAR                strDebugger[260];
+    WCHAR                strDebugPath[260];
+    WCHAR                strDebugger[260];
     DWORD                dwDebuggerSize;
     PROCESS_INFORMATION  pi;
     STARTUPINFO          si;
     HANDLE               hDebugEvent;
-    TCHAR                szTemp[256];
-    TCHAR                szTempA[256];
+    WCHAR                szTemp[256];
+    WCHAR                szTempA[256];
 
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
@@ -70,7 +70,7 @@ void ProcessPage_OnDebug(void)
         return;
     }
 
-    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug"), 0, KEY_READ, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AeDebug", 0, KEY_READ, &hKey) != ERROR_SUCCESS)
     {
         GetLastErrorText(strErrorText, 260);
         LoadString(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, 256);
@@ -79,7 +79,7 @@ void ProcessPage_OnDebug(void)
     }
 
     dwDebuggerSize = 260;
-    if (RegQueryValueEx(hKey, _T("Debugger"), NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) != ERROR_SUCCESS)
+    if (RegQueryValueEx(hKey, L"Debugger", NULL, NULL, (LPBYTE)strDebugger, &dwDebuggerSize) != ERROR_SUCCESS)
     {
         GetLastErrorText(strErrorText, 260);
         LoadString(hInst, IDS_MSG_UNABLEDEBUGPROCESS, szTemp, 256);

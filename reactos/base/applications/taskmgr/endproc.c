@@ -23,16 +23,16 @@
 
 #include <precomp.h>
 
-TCHAR                szTemp[256];
-TCHAR                szTempA[256];
+WCHAR  szTemp[256];
+WCHAR  szTempA[256];
 
 void ProcessPage_OnEndProcess(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {
@@ -80,11 +80,11 @@ void ProcessPage_OnEndProcess(void)
 
 void ProcessPage_OnEndProcessTree(void)
 {
-    LVITEM            lvitem;
-    ULONG            Index;
-    DWORD            dwProcessId;
-    HANDLE            hProcess;
-    TCHAR            strErrorText[260];
+    LVITEM  lvitem;
+    ULONG   Index;
+    DWORD   dwProcessId;
+    HANDLE  hProcess;
+    WCHAR   strErrorText[260];
 
     for (Index=0; Index<(ULONG)ListView_GetItemCount(hProcessPageListCtrl); Index++)
     {

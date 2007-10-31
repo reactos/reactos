@@ -301,12 +301,12 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     SetTextColor(m_dcGrid, m_crGridColor);
     SetTextAlign(m_dcGrid, TA_RIGHT|TA_TOP);
     sprintf(strTemp, "%.*lf", m_nYDecimals, m_dUpperLimit);
-    TextOut(m_dcGrid, m_rectPlot.left-4, m_rectPlot.top, strTemp, _tcslen(strTemp));
+    TextOut(m_dcGrid, m_rectPlot.left-4, m_rectPlot.top, strTemp, wcslen(strTemp));
 
     /*  y min */
     SetTextAlign(m_dcGrid, TA_RIGHT|TA_BASELINE);
     sprintf(strTemp, "%.*lf", m_nYDecimals, m_dLowerLimit);
-    TextOut(m_dcGrid, m_rectPlot.left-4, m_rectPlot.bottom, strTemp, _tcslen(strTemp));
+    TextOut(m_dcGrid, m_rectPlot.left-4, m_rectPlot.bottom, strTemp, wcslen(strTemp));
 
     /*  x min */
     SetTextAlign(m_dcGrid, TA_LEFT|TA_TOP);
@@ -315,12 +315,12 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     /*  x max */
     SetTextAlign(m_dcGrid, TA_RIGHT|TA_TOP);
     sprintf(strTemp, "%d", m_nPlotWidth/m_nShiftPixels);
-    TextOut(m_dcGrid, m_rectPlot.right, m_rectPlot.bottom+4, strTemp, _tcslen(strTemp));
+    TextOut(m_dcGrid, m_rectPlot.right, m_rectPlot.bottom+4, strTemp, wcslen(strTemp));
 
     /*  x units */
     SetTextAlign(m_dcGrid, TA_CENTER|TA_TOP);
     TextOut(m_dcGrid, (m_rectPlot.left+m_rectPlot.right)/2,
-            m_rectPlot.bottom+4, m_strXUnitsString, _tcslen(m_strXUnitsString));
+            m_rectPlot.bottom+4, m_strXUnitsString, wcslen(m_strXUnitsString));
 
     /*  restore the font */
     SelectObject(m_dcGrid, oldFont);
@@ -329,7 +329,7 @@ void GraphCtrl_InvalidateCtrl(TGraphCtrl* this, BOOL bResize)
     oldFont = (HFONT)SelectObject(m_dcGrid, yUnitFont);
     SetTextAlign(m_dcGrid, TA_CENTER|TA_BASELINE);
     TextOut(m_dcGrid, (m_rectClient.left+m_rectPlot.left)/2,
-            (m_rectPlot.bottom+m_rectPlot.top)/2, m_strYUnitsString, _tcslen(m_strYUnitsString));
+            (m_rectPlot.bottom+m_rectPlot.top)/2, m_strYUnitsString, wcslen(m_strYUnitsString));
     SelectObject(m_dcGrid, oldFont);
 #endif
     /*  at this point we are done filling the the grid bitmap,  */
