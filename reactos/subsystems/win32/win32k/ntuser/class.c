@@ -69,7 +69,7 @@ IntDestroyClass(IN OUT PWINDOWCLASS Class)
 
             CallProc->Next = NULL;
             DestroyCallProc(NULL,
-                            Class->CallProc);
+                            CallProc);
 
             CallProc = NextCallProc;
         }
