@@ -392,7 +392,7 @@ static HRESULT WINAPI IPersistFile_fnLoad(IPersistFile* iface, LPCOLESTR pszFile
         if( SUCCEEDED( r ) )
         {
             HeapFree(GetProcessHeap(), 0, This->sLinkPath);
-            This->sLinkPath = _wcsdup(pszFileName);
+            This->sLinkPath = strdupW(pszFileName);
             r = IPersistStream_Load(StreamThis, stm);
             ShellLink_UpdatePath(This->sPathRel, pszFileName, This->sWorkDir, &This->sPath);
             IStream_Release( stm );
