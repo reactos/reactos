@@ -404,164 +404,175 @@ AppendRidToSid(PSID SrcSid,
 
 
 static PTOKEN_GROUPS
-AllocateGroupSids(PSID *PrimaryGroupSid,
-		  PSID *OwnerSid)
+AllocateGroupSids(
+    OUT PSID *PrimaryGroupSid,
+    OUT PSID *OwnerSid)
 {
-  SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
-  SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
-  SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
-  PTOKEN_GROUPS TokenGroups;
-  PSID DomainSid;
-  PSID Sid;
-  LUID Luid;
-  NTSTATUS Status;
+    SID_IDENTIFIER_AUTHORITY WorldAuthority = {SECURITY_WORLD_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY LocalAuthority = {SECURITY_LOCAL_SID_AUTHORITY};
+    SID_IDENTIFIER_AUTHORITY SystemAuthority = {SECURITY_NT_AUTHORITY};
+    PTOKEN_GROUPS TokenGroups;
+#define MAX_GROUPS 8
+    DWORD GroupCount = 0;
+    PSID DomainSid;
+    PSID Sid;
+    LUID Luid;
+    NTSTATUS Status;
 
-  Status = NtAllocateLocallyUniqueId(&Luid);
-  if (!NT_SUCCESS(Status))
+    Status = NtAllocateLocallyUniqueId(&Luid);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    if (!SamGetDomainSid(&DomainSid))
+        return NULL;
+
+    TokenGroups = RtlAllocateHeap(
+        GetProcessHeap(), 0,
+        sizeof(TOKEN_GROUPS) +
+        MAX_GROUPS * sizeof(SID_AND_ATTRIBUTES));
+    if (TokenGroups == NULL)
     {
-      return NULL;
+        RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
+        return NULL;
     }
 
-  if (!SamGetDomainSid(&DomainSid))
-    {
-      return NULL;
-    }
+    Sid = AppendRidToSid(DomainSid, DOMAIN_GROUP_RID_USERS);
+    RtlFreeHeap(RtlGetProcessHeap(), 0, DomainSid);
 
-  TokenGroups = RtlAllocateHeap(GetProcessHeap(), 0,
-                                sizeof(TOKEN_GROUPS) +
-                                8 * sizeof(SID_AND_ATTRIBUTES));
-  if (TokenGroups == NULL)
-    {
-      RtlFreeHeap (RtlGetProcessHeap (),
-		   0,
-		   DomainSid);
-      return NULL;
-    }
+    /* Member of the domain */
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    *PrimaryGroupSid = Sid;
+    GroupCount++;
 
-  TokenGroups->GroupCount = 8;
+    /* Member of 'Everyone' */
+    RtlAllocateAndInitializeSid(
+        &WorldAuthority,
+        1,
+        SECURITY_WORLD_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
 
-  Sid = AppendRidToSid(DomainSid,
-                       DOMAIN_GROUP_RID_USERS);
+#if 1
+    /* Member of 'Administrators' */
+    RtlAllocateAndInitializeSid(
+        &SystemAuthority,
+        2,
+        SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_ADMINS,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
+#else
+    DPRINT1("Not adding user to Administrators group\n");
+#endif
 
-  RtlFreeHeap(RtlGetProcessHeap(),
-	      0,
-	      DomainSid);
+    /* Member of 'Users' */
+    RtlAllocateAndInitializeSid(
+        &SystemAuthority,
+        2,
+        SECURITY_BUILTIN_DOMAIN_RID,
+        DOMAIN_ALIAS_RID_USERS,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
 
-  TokenGroups->Groups[0].Sid = Sid;
-  TokenGroups->Groups[0].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-  *PrimaryGroupSid = Sid;
+    /* Logon SID */
+    RtlAllocateAndInitializeSid(
+        &SystemAuthority,
+        SECURITY_LOGON_IDS_RID_COUNT,
+        SECURITY_LOGON_IDS_RID,
+        Luid.HighPart,
+        Luid.LowPart,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
+    GroupCount++;
+    *OwnerSid = Sid;
 
+    /* Member of 'Local users */
+    RtlAllocateAndInitializeSid(
+        &LocalAuthority,
+        1,
+        SECURITY_LOCAL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
 
-  RtlAllocateAndInitializeSid(&WorldAuthority,
-			      1,
-			      SECURITY_WORLD_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
+    /* Member of 'Interactive users' */
+    RtlAllocateAndInitializeSid(
+        &SystemAuthority,
+        1,
+        SECURITY_INTERACTIVE_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
 
-  TokenGroups->Groups[1].Sid = Sid;
-  TokenGroups->Groups[1].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    /* Member of 'Authenticated users' */
+    RtlAllocateAndInitializeSid(
+        &SystemAuthority,
+        1,
+        SECURITY_AUTHENTICATED_USER_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        SECURITY_NULL_RID,
+        &Sid);
+    TokenGroups->Groups[GroupCount].Sid = Sid;
+    TokenGroups->Groups[GroupCount].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
+    GroupCount++;
 
+    TokenGroups->GroupCount = GroupCount;
+    ASSERT(TokenGroups->GroupCount <= MAX_GROUPS);
 
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-			      2,
-			      SECURITY_BUILTIN_DOMAIN_RID,
-			      DOMAIN_ALIAS_RID_ADMINS,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[2].Sid = Sid;
-  TokenGroups->Groups[2].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-
-  *OwnerSid = Sid;
-
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-			      2,
-			      SECURITY_BUILTIN_DOMAIN_RID,
-			      DOMAIN_ALIAS_RID_USERS,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[3].Sid = Sid;
-  TokenGroups->Groups[3].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-
-  /* Logon SID */
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-			      SECURITY_LOGON_IDS_RID_COUNT,
-			      SECURITY_LOGON_IDS_RID,
-			      Luid.HighPart,
-			      Luid.LowPart,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[4].Sid = Sid;
-  TokenGroups->Groups[4].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY | SE_GROUP_LOGON_ID;
-
-  RtlAllocateAndInitializeSid(&LocalAuthority,
-			      1,
-			      SECURITY_LOCAL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[5].Sid = Sid;
-  TokenGroups->Groups[5].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-			      1,
-			      SECURITY_INTERACTIVE_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[6].Sid = Sid;
-  TokenGroups->Groups[6].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-
-  RtlAllocateAndInitializeSid(&SystemAuthority,
-			      1,
-			      SECURITY_AUTHENTICATED_USER_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      SECURITY_NULL_RID,
-			      &Sid);
-
-  TokenGroups->Groups[7].Sid = Sid;
-  TokenGroups->Groups[7].Attributes = SE_GROUP_ENABLED | SE_GROUP_ENABLED_BY_DEFAULT | SE_GROUP_MANDATORY;
-
-  return TokenGroups;
+    return TokenGroups;
 }
 
 
@@ -663,18 +674,8 @@ LogonUserW (LPWSTR lpszUsername,
   /* Get the user SID from the registry */
   if (!SamGetUserSid (lpszUsername, &UserSid))
     {
-      DPRINT ("SamGetUserSid() failed\n");
-      RtlAllocateAndInitializeSid (&SystemAuthority,
-				   5,
-				   SECURITY_NT_NON_UNIQUE,
-				   0x12345678,
-				   0x12345678,
-				   0x12345678,
-				   DOMAIN_USER_RID_ADMIN,
-				   SECURITY_NULL_RID,
-				   SECURITY_NULL_RID,
-				   SECURITY_NULL_RID,
-				   &UserSid);
+      DPRINT1 ("SamGetUserSid() failed\n");
+      return FALSE;
     }
 
   TokenUser.User.Sid = UserSid;
