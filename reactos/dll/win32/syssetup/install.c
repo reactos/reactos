@@ -49,6 +49,7 @@
 #include "globals.h"
 #include "resource.h"
 
+#define NDEBUG
 #include <debug.h>
 
 DWORD WINAPI
