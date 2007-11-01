@@ -43,6 +43,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 /* ugly hack for cut&paste files */
 BOOL fileMoving = FALSE;
 
+typedef struct _StaticShellEntry_
+{
+   LPWSTR szVerb;
+   LPWSTR szCmd;
+   struct _StaticShellEntry_ * Next;
+}StaticShellEntry, *PStaticShellEntry;
+
 /**************************************************************************
 *  IContextMenu Implementation
 */
@@ -58,6 +65,9 @@ typedef struct
     IContextMenu ** ecmenu;
     UINT           esize;
     UINT           ecount;
+    PStaticShellEntry head;
+    UINT           iIdSCMFirst;
+    UINT           iIdSCMLast;
     UINT           iIdSHEFirst;
     UINT           iIdSHELast;
     SFGAOF         rfg;
@@ -66,7 +76,7 @@ typedef struct
 UINT
 SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, LPITEMIDLIST pidlFolder);
 WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
-
+WCHAR *strdupW(LPWSTR str);
 static const IContextMenu2Vtbl cmvt;
 
 /**************************************************************************
@@ -353,6 +363,179 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     TRACE("SH_LoadContextMenuHandlers first %x last %x\n", This->iIdSHEFirst, This->iIdSHELast);
 }
 
+void
+SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb)
+{
+  WCHAR szBuffer[50];
+  WCHAR szCmd[100];
+  DWORD dwCmd, dwBuffer;
+  LONG result;
+  HKEY hSubKey;
+  PStaticShellEntry curEntry;
+  PStaticShellEntry lastEntry = NULL;
+
+  wcscpy(szBuffer, szVerb);
+  wcscat(szBuffer, L"\\command");
+
+  TRACE("szBuffer %s\n", debugstr_w(szBuffer));
+
+  result = RegOpenKeyExW(hKey, szBuffer, 0, KEY_READ, &hSubKey);
+  if (result != ERROR_SUCCESS)
+  {
+      TRACE("RegOpenKeyEx failed with 0x%x\n", result);
+      return;
+  }
+  dwCmd = sizeof(szCmd);
+  dwBuffer = 50;
+  result = RegEnumValueW(hSubKey, 0, szBuffer, &dwBuffer, 0, NULL, (LPBYTE)szCmd, &dwCmd);
+  RegCloseKey(hSubKey);
+  if (result != ERROR_SUCCESS)
+  {
+      TRACE("RegGetValueW failed with 0x%x\n", result);
+      return;
+  }
+  TRACE("SH_AddStaticEntry szBuffer %s szCmd %s\n", debugstr_w(szBuffer), debugstr_w(szCmd));
+
+  curEntry = This->head;
+
+  while(curEntry)
+  {
+    if (!wcsicmp(curEntry->szVerb, szVerb))
+    {
+       /* entry already exists */
+       return;
+    }
+    lastEntry = curEntry;
+    curEntry->Next = curEntry;
+  }
+  
+  curEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(StaticShellEntry));
+  if (curEntry)
+  {
+      curEntry->Next = NULL;
+      curEntry->szCmd = StrDupW(szCmd);
+      curEntry->szVerb = StrDupW(szVerb);
+  }
+
+  if (lastEntry)
+  {
+    lastEntry->Next = curEntry;
+  }
+  else
+  {
+    This->head = curEntry;
+  }
+}
+
+void
+SH_AddStaticEntryForKey(ItemCmImpl * This, HKEY hKey)
+{
+    LONG result;
+    DWORD dwIndex;
+    WCHAR szName[40];
+    DWORD dwName;
+
+    TRACE("SH_AddStaticEntryForKey entered\n");
+
+    dwIndex = 0;
+    do
+    {
+        szName[0] = 0;
+        dwName = sizeof(szName) / sizeof(WCHAR);
+        result = RegEnumKeyExW(hKey, dwIndex, szName, &dwName, NULL, NULL, NULL, NULL);
+        szName[39] = 0;   
+        if (result == ERROR_SUCCESS)
+        {
+            TRACE("szVerb %s\n", debugstr_w(szName));
+            SH_AddStaticEntry(This, hKey, szName);
+        }
+        dwIndex++;
+    }while(result == ERROR_SUCCESS);
+}
+
+void
+SH_AddStaticEntryForFileClass(ItemCmImpl * This, WCHAR * szExt)
+{
+    WCHAR szBuffer[100];
+    HKEY hKey;
+    LONG result;
+    DWORD dwBuffer;
+
+    TRACE("SH_AddStaticEntryForFileClass entered with %s\n", debugstr_w(szExt));
+
+    wcscpy(szBuffer, szExt);
+    wcscat(szBuffer, L"\\shell");
+    result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
+    if (result == ERROR_SUCCESS)
+    {
+        SH_AddStaticEntryForKey(This, hKey);
+        RegCloseKey(hKey);
+    }
+
+    dwBuffer = sizeof(szBuffer);
+    result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, (LPBYTE)szBuffer, &dwBuffer);
+    if (result == ERROR_SUCCESS)
+    {
+        wcscat(szBuffer, L"\\shell");
+        TRACE("szBuffer %s\n", debugstr_w(szBuffer));
+
+        result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
+        if (result == ERROR_SUCCESS)
+        {
+           SH_AddStaticEntryForKey(This, hKey);
+           RegCloseKey(hKey);
+        }
+    }
+
+    strcpyW(szBuffer, "SystemFileAssociations\\");
+    dwBuffer = sizeof(szBuffer) - strlenW(szBuffer) * sizeof(WCHAR);
+    result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, L"PerceivedType", RRF_RT_REG_SZ, NULL, (LPBYTE)&szBuffer[23], &dwBuffer);
+    if (result == ERROR_SUCCESS)
+    {
+        wcscat(szBuffer, L"\\shell");
+        TRACE("szBuffer %s\n", debugstr_w(szBuffer));
+
+        result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
+        if (result == ERROR_SUCCESS)
+        {
+           SH_AddStaticEntryForKey(This, hKey);
+           RegCloseKey(hKey);
+        }
+    }
+    RegCloseKey(hKey);
+}
+UINT
+SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
+{
+    MENUITEMINFOW mii;
+    PStaticShellEntry curEntry;
+
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
+    mii.fType = MFT_STRING;
+    mii.fState = MFS_ENABLED | MFS_DEFAULT;
+    mii.wID = 0x4000;
+    This->iIdSCMFirst = mii.wID;
+
+    curEntry = This->head;
+
+    while(curEntry)
+    {
+       /* FIXME
+        * load localized verbs if its an open edit find print printto openas properties verb
+        */
+
+       mii.dwTypeData = curEntry->szVerb;
+       mii.cch = strlenW(mii.dwTypeData);
+       InsertMenuItemW(hMenu, indexMenu++, TRUE, &mii);
+       mii.fState = MFS_ENABLED;
+       mii.wID++;
+       curEntry = curEntry->Next;
+    }
+    This->iIdSCMLast = mii.wID - 1;
+    return indexMenu;
+}
+
 const char * GetLocalizedString(HMENU hMenu, UINT wID, const char * sDefault, char * sResult)
 {
    MENUITEMINFOA mii;
@@ -395,6 +578,7 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
     USHORT lastindex = 0;
     HMENU hLocalMenu;
     char sBuffer[100];
+    WCHAR szExt[10];
 
     static const char sExplore[] = { '&','E','x','p','l','o','r','e',0 };
     static const char sCopy[] = { '&','C','o','p','y',0 };
@@ -408,6 +592,22 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",This, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     hLocalMenu = LoadMenuW(shell32_hInstance, szSHVFile);
+
+    if (_ILGetExtension(This->apidl[0], &sBuffer[1], sizeof(sBuffer)-1))
+    {
+        sBuffer[0] = '.';
+        MultiByteToWideChar( CP_ACP, 0, sBuffer, -1, (LPWSTR)szExt, 10);
+        SH_AddStaticEntryForFileClass(This, szExt);
+        indexMenu = SH_AddStaticEntryToMenu(hmenu, indexMenu, This);
+    }
+
+    pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
+    if (pDataObj)
+    {
+        SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
+        IDataObject_Release(pDataObj);
+    }
+
 
 	if (idCmdFirst != 0)
 	  FIXME("We should use idCmdFirst=%d and idCmdLast=%d for command ids\n", idCmdFirst, idCmdLast);
@@ -460,12 +660,7 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 
       lastindex = FCIDM_SHVIEWLAST;
 	}
-    pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
-    if (pDataObj)
-    {
-        SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
-        IDataObject_Release(pDataObj);
-    }
+
     if (hLocalMenu)
     {
         DestroyMenu(hLocalMenu);
@@ -706,7 +901,84 @@ static void DoProperties(
     }
 }
 HRESULT
-DoShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
+DoStaticShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
+{
+  UINT i;
+  WCHAR szTarget[MAX_PATH];
+  WCHAR szTemp[MAX_PATH];
+  WCHAR *ptr, *szCmd;
+  PStaticShellEntry curEntry;
+  LPITEMIDLIST pidl;
+  STARTUPINFOW sInfo;
+  PROCESS_INFORMATION pi;
+
+  static const WCHAR szP1[] = { '%', '1', 0 };
+
+  TRACE("DoStaticShellExtensions entered with lpVerb %x first %x last %x\n", LOWORD(lpcmi->lpVerb), This->iIdSCMFirst, This->iIdSCMLast);
+
+  i = This->iIdSCMFirst;
+  curEntry = This->head;
+
+  while(curEntry)
+  {
+    if (i == LOWORD(lpcmi->lpVerb))
+        break;
+
+    i++;
+    curEntry = curEntry->Next;
+  }
+  
+  if (!curEntry)
+  {
+      ERR("unexpected\n");
+      return E_UNEXPECTED;
+  }
+
+  ExpandEnvironmentStringsW(curEntry->szCmd, szTarget, MAX_PATH);
+  
+  ptr = wcsstr(szTarget, szP1);
+  if (ptr)
+  {
+     ptr[1] = 's';
+     pidl = ILCombine(This->pidl, This->apidl[0]);
+     if (pidl)
+     {
+        WCHAR szPath[MAX_PATH];
+        if (SHGetPathFromIDListW(pidl, szPath))
+        {
+            sprintfW(szTemp, szTarget, szPath);
+        }
+        SHFree(pidl);
+     }
+     else
+     {
+         ptr[0] = 0;
+     }
+     ptr = szTemp;
+   }
+   else
+   {
+      ptr = szTarget;
+   }
+
+   ZeroMemory(&sInfo, sizeof(sInfo));
+   sInfo.cb = sizeof(sizeof(sInfo));
+   szCmd = wcsdup(ptr);
+
+   if (!szCmd)
+       return E_OUTOFMEMORY;
+
+   if (CreateProcessW(NULL, szCmd, NULL, NULL,FALSE,0,NULL,NULL,&sInfo, &pi))
+   {
+      CloseHandle( pi.hProcess );
+      CloseHandle( pi.hThread );
+   }
+   free(szCmd);
+   return S_OK;
+}
+
+HRESULT
+DoDynamicShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
 {
     HRESULT hResult = NOERROR;
     UINT i;
@@ -739,7 +1011,7 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
     if (lpcmi->cbSize != sizeof(CMINVOKECOMMANDINFO))
         FIXME("Is an EX structure\n");
 
-    TRACE("(%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
+    TRACE("ISvItemCm_fnInvokeCommand (%p)->(invcom=%p verb=%p wnd=%p)\n",This,lpcmi,lpcmi->lpVerb, lpcmi->hwnd);
 
     if( HIWORD(lpcmi->lpVerb)==0 && LOWORD(lpcmi->lpVerb) > FCIDM_SHVIEWLAST)
     {
@@ -782,8 +1054,14 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
         default:
             if (LOWORD(lpcmi->lpVerb) >= This->iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSHELast)
             {
-                return DoShellExtensions(This, lpcmi);
+                return DoDynamicShellExtensions(This, lpcmi);
             }
+
+            if (LOWORD(lpcmi->lpVerb) >= This->iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSCMLast)
+            {
+                return DoStaticShellExtensions(This, lpcmi);
+            }
+
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
         }
     }
