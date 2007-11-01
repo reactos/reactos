@@ -310,7 +310,7 @@ SH_EnlargeContextMenuArray(ItemCmImpl *This, UINT newsize)
     return ret;
 }
 
-VOID
+UINT
 SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu, UINT indexMenu )
 {
     UINT i;
@@ -356,11 +356,15 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     {
        cmenu = This->ecmenu[i];
        hResult = cmenu->lpVtbl->QueryContextMenu(cmenu, hMenu, indexMenu, idCmdFirst, idCmdLast, CMF_NORMAL);
-       idCmdFirst += (hResult & 0xFFFF);
+       if (SUCCEEDED(hResult))
+       {
+           idCmdFirst += (hResult & 0xFFFF);
+           indexMenu +=(hResult & 0xFFFF);
+       }
     }
     This->iIdSHELast = idCmdFirst;
-
     TRACE("SH_LoadContextMenuHandlers first %x last %x\n", This->iIdSHEFirst, This->iIdSHELast);
+    return indexMenu;
 }
 
 void
@@ -599,18 +603,15 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
         MultiByteToWideChar( CP_ACP, 0, sBuffer, -1, (LPWSTR)szExt, 10);
         SH_AddStaticEntryForFileClass(This, szExt);
         indexMenu = SH_AddStaticEntryToMenu(hmenu, indexMenu, This);
+        _InsertMenuItem(hmenu, ++indexMenu, TRUE, 0, MFT_SEPARATOR, NULL, 0);
     }
 
     pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
     if (pDataObj)
     {
-        SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
+        indexMenu = SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
         IDataObject_Release(pDataObj);
     }
-
-
-	if (idCmdFirst != 0)
-	  FIXME("We should use idCmdFirst=%d and idCmdLast=%d for command ids\n", idCmdFirst, idCmdLast);
 
 	if(!(CMF_DEFAULTONLY & uFlags) && This->cidl>0)
 	{
@@ -1193,7 +1194,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
       cmobj->lpVtbl->Release(cmobj);
       return FALSE;
   }
-  hr = shext->lpVtbl->Initialize(shext, pidlFolder, pDataObj, hKey);
+  hr = shext->lpVtbl->Initialize(shext, NULL, pDataObj, hKey);
   if (hr != S_OK)
   {
       TRACE("Failed to initialize shell extension\n");
