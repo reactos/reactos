@@ -1262,7 +1262,7 @@ IntGetMenuDefaultItem(PMENU_OBJECT MenuObject, UINT fByPos, UINT gmdiFlags,
          if(!(gmdiFlags & GMDI_USEDISABLED) && (MenuItem->fState & MFS_DISABLED))
             break;
 
-         if(fByPos & MF_BYPOSITION)
+         if(fByPos)
             res = x;
          else
             res = MenuItem->wID;
