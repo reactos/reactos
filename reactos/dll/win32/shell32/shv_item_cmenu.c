@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -188,12 +188,30 @@ static ULONG WINAPI ISvItemCm_fnRelease(IContextMenu2 *iface)
 {
 	ItemCmImpl *This = (ItemCmImpl *)iface;
 	ULONG refCount = InterlockedDecrement(&This->ref);
+    PStaticShellEntry curEntry;
+    PStaticShellEntry nextEntry;
+    UINT i;
 
 	TRACE("(%p)->(count=%i)\n", This, refCount + 1);
 
 	if (!refCount)
 	{
 	  TRACE(" destroying IContextMenu(%p)\n",This);
+
+      curEntry = nextEntry = This->head;
+      while(nextEntry)
+      {
+        nextEntry = nextEntry->Next;
+        free(curEntry->szCmd);
+        free(curEntry->szVerb);
+        free(curEntry);
+        curEntry = nextEntry;
+      }
+      for(i = 0; i < This->ecount; i++)
+      {
+        IContextMenu_Release(This->ecmenu[i]);
+      }
+      HeapFree(GetProcessHeap(), 0, This->ecmenu);
 
 	  if(This->pSFParent)
 	    IShellFolder_Release(This->pSFParent);
@@ -410,15 +428,15 @@ SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb)
        return;
     }
     lastEntry = curEntry;
-    curEntry->Next = curEntry;
+    curEntry = curEntry->Next;
   }
   
-  curEntry = HeapAlloc(GetProcessHeap(), 0, sizeof(StaticShellEntry));
+  curEntry = malloc(sizeof(StaticShellEntry));
   if (curEntry)
   {
       curEntry->Next = NULL;
-      curEntry->szCmd = StrDupW(szCmd);
-      curEntry->szVerb = StrDupW(szVerb);
+      curEntry->szCmd = wcsdup(szCmd);
+      curEntry->szVerb = wcsdup(szVerb);
   }
 
   if (lastEntry)
@@ -984,7 +1002,7 @@ DoDynamicShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
     HRESULT hResult = NOERROR;
     UINT i;
 
-    TRACE("DoShellExtensions %p verb %x count %u\n",This, LOWORD(lpcmi->lpVerb), This->ecount);
+    TRACE("DoDynamicShellExtensions %p verb %x count %u\n",This, LOWORD(lpcmi->lpVerb), This->ecount);
     for(i = 0; i < This->ecount; i++)
     {
         IContextMenu * cmenu = This->ecmenu[i];
@@ -1203,6 +1221,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
   }
   else
   {
+      shext->lpVtbl->Release(shext);
       *ppv = cmobj;
   }
 
