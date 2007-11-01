@@ -4,6 +4,9 @@
 	<directory name="framebuf">
 		<xi:include href="framebuf/framebuf.rbuild" />
 	</directory>
+	<directory name="framebufacc">
+		<xi:include href="framebufacc/framebuf_acc.rbuild" />
+	</directory>
 	<directory name="vga">
 		<xi:include href="vga/vgaddi.rbuild" />
 	</directory>
