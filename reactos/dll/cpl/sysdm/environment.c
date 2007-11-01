@@ -56,6 +56,8 @@ EditVariableDlgProc(HWND hwndDlg,
                     dwValueLength = (DWORD)SendDlgItemMessage(hwndDlg, IDC_VARIABLE_VALUE, WM_GETTEXTLENGTH, 0, 0);
                     if (dwNameLength > 0 && dwValueLength > 0)
                     {
+                        LPTSTR p;
+
                         if (VarData->lpName == NULL)
                         {
                             VarData->lpName = GlobalAlloc(GPTR, (dwNameLength + 1) * sizeof(TCHAR));
@@ -84,7 +86,8 @@ EditVariableDlgProc(HWND hwndDlg,
                             VarData->lpCookedValue = NULL;
                         }
 
-                        if (_tcschr(VarData->lpRawValue, _T('%')))
+                        p = _tcschr(VarData->lpRawValue, _T('%'));
+                        if (p && _tcschr(++p, _T('%')))
                         {
                             VarData->dwType = REG_EXPAND_SZ;
                             VarData->lpCookedValue = GlobalAlloc(GPTR, 2 * MAX_PATH * sizeof(TCHAR));
@@ -115,7 +118,7 @@ EditVariableDlgProc(HWND hwndDlg,
 
 
 static VOID
-SetEnvironmentVariables(HWND hwndListView,
+GetEnvironmentVariables(HWND hwndListView,
                         HKEY hRootKey,
                         LPTSTR lpSubKeyName)
 {
@@ -276,7 +279,7 @@ OnInitDialog(HWND hwndDlg)
 
     SetListViewColumns(hwndListView);
 
-    SetEnvironmentVariables(hwndListView,
+    GetEnvironmentVariables(hwndListView,
                             HKEY_CURRENT_USER,
                             _T("Environment"));
 
@@ -294,7 +297,7 @@ OnInitDialog(HWND hwndDlg)
 
     SetListViewColumns(hwndListView);
 
-    SetEnvironmentVariables(hwndListView,
+    GetEnvironmentVariables(hwndListView,
                             HKEY_LOCAL_MACHINE,
                             _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"));
 
