@@ -542,7 +542,20 @@ MonthCalPaint(IN PMONTHCALWND infoPtr,
 
                         if (Day == infoPtr->Day)
                         {
-                            rcHighlight = rcText;
+                            SIZE TextSel;
+
+                            TextSel.cx = (infoPtr->CellSize.cx * 2) / 3;
+                            TextSel.cy = (infoPtr->CellSize.cy * 3) / 4;
+
+                            if (TextSel.cx < rcText.right - rcText.left)
+                                TextSel.cx = rcText.right - rcText.left;
+                            if (TextSel.cy < rcText.bottom - rcText.top)
+                                TextSel.cy = rcText.bottom - rcText.top;
+
+                            rcHighlight.left = rcCell.left + (infoPtr->CellSize.cx / 2) - (TextSel.cx / 2);
+                            rcHighlight.right = rcHighlight.left + TextSel.cx;
+                            rcHighlight.top = rcCell.top + (infoPtr->CellSize.cy / 2) - (TextSel.cy / 2);
+                            rcHighlight.bottom = rcHighlight.top + TextSel.cy;
 
                             InflateRect(&rcHighlight,
                                         GetSystemMetrics(SM_CXFOCUSBORDER),
