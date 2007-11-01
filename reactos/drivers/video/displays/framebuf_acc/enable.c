@@ -18,20 +18,20 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "framebuf.h"
+#include "framebuf_acc.h"
 
 static DRVFN DrvFunctionTable[] =
 {
-   {INDEX_DrvEnablePDEV, (PFN)DrvEnablePDEV},
-   {INDEX_DrvCompletePDEV, (PFN)DrvCompletePDEV},
-   {INDEX_DrvDisablePDEV, (PFN)DrvDisablePDEV},
-   {INDEX_DrvEnableSurface, (PFN)DrvEnableSurface},
-   {INDEX_DrvDisableSurface, (PFN)DrvDisableSurface},
-   {INDEX_DrvAssertMode, (PFN)DrvAssertMode},
-   {INDEX_DrvGetModes, (PFN)DrvGetModes},
-   {INDEX_DrvSetPalette, (PFN)DrvSetPalette},
-   {INDEX_DrvSetPointerShape, (PFN)DrvSetPointerShape},
-   {INDEX_DrvMovePointer, (PFN)DrvMovePointer}
+   {INDEX_DrvEnablePDEV,            (PFN)DrvEnablePDEV},
+   {INDEX_DrvCompletePDEV,          (PFN)DrvCompletePDEV},
+   {INDEX_DrvDisablePDEV,           (PFN)DrvDisablePDEV},
+   {INDEX_DrvEnableSurface,         (PFN)DrvEnableSurface},
+   {INDEX_DrvDisableSurface,        (PFN)DrvDisableSurface},
+   {INDEX_DrvAssertMode,            (PFN)DrvAssertMode},
+   {INDEX_DrvGetModes,              (PFN)DrvGetModes},
+   {INDEX_DrvSetPalette,            (PFN)DrvSetPalette},
+   {INDEX_DrvSetPointerShape,   (PFN)DrvSetPointerShape},
+   {INDEX_DrvMovePointer,       (PFN)DrvMovePointer}
 
 };
 
@@ -91,6 +91,7 @@ DrvEnablePDEV(
    PPDEV ppdev;
    GDIINFO GdiInfo;
    DEVINFO DevInfo;
+   ULONG returnedDataLength = 0;
 
    ppdev = EngAllocMem(FL_ZERO_MEMORY, sizeof(PDEV), ALLOC_TAG);
    if (ppdev == NULL)
@@ -106,6 +107,35 @@ DrvEnablePDEV(
       return NULL;
    }
 
+   /* hw mouse pointer */
+   
+    ppdev->pPointerAttributes = NULL;
+    ppdev->PointerAttributesSize = 0;
+
+    /* Test see if the driver support hw mouse or not */
+    if (!EngDeviceIoControl(ppdev->hDriver,IOCTL_VIDEO_QUERY_POINTER_CAPABILITIES,
+                            &ppdev->ModeIndex, sizeof(PVIDEO_MODE),
+                            &ppdev->PointerCapabilities,
+                            sizeof(VIDEO_POINTER_CAPABILITIES),
+                            &returnedDataLength))
+    {
+        /* Test see if we got a hw mouse or not */
+        if ( (ppdev->PointerCapabilities.Flags & VIDEO_MODE_MONO_POINTER) ||
+             (ppdev->PointerCapabilities.Flags & VIDEO_MODE_COLOR_POINTER) )
+        {
+            /* determent the hw mouse mode */
+            if (!(ppdev->PointerCapabilities.Flags & VIDEO_MODE_ASYNC_POINTER))
+            {
+                DevInfo.flGraphicsCaps &= ~GCAPS_ASYNCMOVE;
+            }
+            else
+            {
+                DevInfo.flGraphicsCaps |= GCAPS_ASYNCMOVE;
+            }
+        }
+    }
+
+   /* setup paletted */
    if (!IntInitDefaultPalette(ppdev, &DevInfo))
    {
       EngFreeMem(ppdev);

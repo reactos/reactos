@@ -29,13 +29,18 @@
 #include <winioctl.h>
 #include <ntddvdeo.h>
 
-//#define EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
+
+//#define EXPERIMENTAL_ACC_SUPPORT
 
 typedef struct _PDEV
 {
+   /* Driver stuff */
    HANDLE hDriver;
    HDEV hDevEng;
    HSURF hSurfEng;
+   ULONG dwHooks;
+
+   /* Screen Data */
    ULONG ModeIndex;
    ULONG ScreenWidth;
    ULONG ScreenHeight;
@@ -46,16 +51,24 @@ typedef struct _PDEV
    ULONG BlueMask;
    BYTE PaletteShift;
    PVOID ScreenPtr;
+
+   /* Palette data */
    HPALETTE DefaultPalette;
    PALETTEENTRY *PaletteEntries;
 
+    /* hw mouse acclartions support */
+    VIDEO_POINTER_CAPABILITIES PointerCapabilities;
+    PVIDEO_POINTER_ATTRIBUTES pPointerAttributes;
+    ULONG  PointerAttributesSize;
+    POINTL PointerHotSpot;
+    BOOL HwMouseActive;
+
 #ifdef EXPERIMENTAL_MOUSE_CURSOR_SUPPORT
-   VIDEO_POINTER_ATTRIBUTES PointerAttributes;
    XLATEOBJ *PointerXlateObject;
    HSURF PointerColorSurface;
    HSURF PointerMaskSurface;
    HSURF PointerSaveSurface;
-   POINTL PointerHotSpot;
+
 #endif
 
    /* DirectX Support */

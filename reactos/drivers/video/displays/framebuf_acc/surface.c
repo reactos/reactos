@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "framebuf.h"
+#include "framebuf_acc.h"
 
 BOOL 
 InitSurface(PPDEV ppdev,
@@ -29,6 +29,8 @@ InitSurface(PPDEV ppdev,
    VIDEO_MEMORY_INFORMATION VideoMemoryInfo;
    ULONG returnedDataLength;
    ULONG RemappingNeeded = 0;
+   ULONG PointerMaxWidth = 0;
+   ULONG PointerMaxHeight = 0;
 
    /*
     * Set video mode of our adapter.
@@ -72,11 +74,16 @@ InitSurface(PPDEV ppdev,
     ppdev->pRealVideoMem = VideoMemoryInfo.FrameBufferBase;
     ppdev->VideoMemSize = VideoMemoryInfo.VideoRamLength;
 
+
    /*
     * Video memory cached
     *
     * We maby should only ask max 8MB as cached ?, think of the video ram length is 256MB 
     */
+
+    ppdev->pVideoMemCache = NULL;
+#ifdef EXPERIMENTAL_ACC_SUPPORT
+
    ppdev->pVideoMemCache = EngAllocMem(0, (ULONG)VideoMemoryInfo.VideoRamLength, ALLOC_TAG);
    if (ppdev->pVideoMemCache == NULL)
    {
@@ -84,12 +91,40 @@ InitSurface(PPDEV ppdev,
         ppdev->ScreenPtr = VideoMemoryInfo.FrameBufferBase;
    }
    else
+
+#endif
    {
         /* cached on, system memory is avail */
         ppdev->ScreenPtr = ppdev->pRealVideoMem;
    }
 
-   /* FIXME  hw mouse pointer */
+   /* hw mouse pointer support */
+   PointerMaxHeight = ppdev->PointerCapabilities.MaxHeight;
+   PointerMaxWidth = ppdev->PointerCapabilities.MaxWidth * sizeof(ULONG);
+   if (ppdev->PointerCapabilities.Flags & VIDEO_MODE_COLOR_POINTER)
+   {
+        PointerMaxWidth = (ppdev->PointerCapabilities.MaxWidth + 7) / 8;
+   }
+
+   ppdev->PointerAttributesSize = sizeof(VIDEO_POINTER_ATTRIBUTES) + ((sizeof(UCHAR) * PointerMaxWidth * PointerMaxHeight) << 1);
+
+   ppdev->pPointerAttributes = EngAllocMem(0, ppdev->PointerAttributesSize, ALLOC_TAG);
+
+   if (ppdev->pPointerAttributes != NULL)
+   {
+        ppdev->pPointerAttributes->Flags = ppdev->PointerCapabilities.Flags;
+        ppdev->pPointerAttributes->WidthInBytes = PointerMaxWidth;
+        ppdev->pPointerAttributes->Width = ppdev->PointerCapabilities.MaxWidth;
+        ppdev->pPointerAttributes->Height = PointerMaxHeight;
+        ppdev->pPointerAttributes->Column = 0;
+        ppdev->pPointerAttributes->Row = 0;
+        ppdev->pPointerAttributes->Enable = 0;
+   }
+   else
+   {
+       /* no hw mouse was avail */
+       ppdev->PointerAttributesSize = 0;
+   }
 
    return TRUE;
 }
@@ -157,13 +192,15 @@ DrvEnableSurface(
       return FALSE;
    }
 
+   /* Which api we hooking to */
+   ppdev->dwHooks = HOOK_BITBLT | HOOK_COPYBITS | HOOK_FILLPATH | HOOK_TEXTOUT | HOOK_STROKEPATH | HOOK_LINETO ;
+
    /*
     * Associate the surface with our device.
     */
 
-   if (!EngAssociateSurface(hSurface, ppdev->hDevEng, HOOK_BITBLT | HOOK_COPYBITS |
-                                                      HOOK_FILLPATH | HOOK_TEXTOUT |
-                                                      HOOK_STROKEPATH | HOOK_LINETO))
+                
+   if (!EngAssociateSurface(hSurface, ppdev->hDevEng, ppdev->dwHooks))
    {
       EngDeleteSurface(hSurface);
       return FALSE;
@@ -232,52 +269,43 @@ DrvAssertMode(
 {
    PPDEV ppdev = (PPDEV)dhpdev;
    ULONG ulTemp;
+   BOOLEAN Result = TRUE;
 
    if (bEnable)
    {
-      BOOLEAN Result;
-      PBYTE   pRealVideoMem = ppdev->pRealVideoMem;
+      PVOID pRealVideoMem = ppdev->pRealVideoMem;
 
       /* Setup surface and remapping if it need it */
       if (!InitSurface(ppdev, FALSE))
       {
-            return FALSE;
+            Result = FALSE;
       }
-
-      /* Check if we got same surface or not */
-      if (pRealVideoMem != ppdev->pRealVideoMem)
+      else
       {
-             if (ppdev->pVideoMemCache == NULL)
-             {
-                if ( !EngModifySurface(ppdev->hsurfEng,
-                                   ppdev->hdevEng,
-                                   ppdev->flHooks | HOOK_SYNCHRONIZE,
-                                   MS_NOTSYSTEMMEMORY,
-                                   (DHSURF)ppdev,
-                                   ppdev->pRealVideoMem,
-                                   ppdev->lDeltaScreen,
-                                   NULL))
-                {
-                    return FALSE;
-                }
-             }
-             else
-             {
-                if ( !EngModifySurface(ppdev->hsurfEng,
-                                   ppdev->hdevEng,
-                                   ppdev->flHooks | HOOK_SYNCHRONIZE,
-                                   0,
-                                   (DHSURF)ppdev,
-                                   ppdev->pVideoMemCache,
-                                   ppdev->lDeltaScreen,
-                                   NULL))
-                {
-                    return FALSE;
-                }
-             }
-      }
+            /* Check if we got same surface or not */
+            if (pRealVideoMem != ppdev->pRealVideoMem)
+            {
+                PVOID pVideoMem= NULL;
 
-      return TRUE;
+                if (ppdev->pVideoMemCache == NULL)
+                {
+                    pVideoMem = ppdev->pRealVideoMem;
+                }
+                else
+                {
+                    pVideoMem = ppdev->pVideoMemCache;
+                }
+
+                Result = !EngModifySurface(ppdev->hSurfEng, ppdev->hDevEng,
+                                           ppdev->dwHooks | HOOK_SYNCHRONIZE,
+                                           0, (DHSURF)ppdev, pVideoMem,
+                                           ppdev->ScreenDelta, NULL);
+            }
+
+            /* if the pRealVideoMem == ppdev->pRealVideoMem are 
+             * the Result is then TRUE
+             */
+      }
 
    }
    else
@@ -286,7 +314,9 @@ DrvAssertMode(
        * Call the miniport driver to reset the device to a known state.
        */
 
-      return !EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_RESET_DEVICE,
+      Result = !EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_RESET_DEVICE,
                                  NULL, 0, NULL, 0, &ulTemp);
    }
+
+   return Result;
 }
