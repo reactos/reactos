@@ -39,7 +39,6 @@ IntGdiCreateBitmap(
     UINT  BitsPixel,
     IN OPTIONAL LPBYTE pBits)
 {
-   PBITMAPOBJ bmp;
    HBITMAP hBitmap;
    SIZEL Size;
    LONG WidthBytes;
@@ -71,24 +70,25 @@ IntGdiCreateBitmap(
       return 0;
    }
 
-   DPRINT("IntGdiCreateBitmap:%dx%d, %d BPP colors returning %08x\n",
-          Size.cx, Size.cy, BitsPixel, hBitmap);
-
-   bmp = BITMAPOBJ_LockBitmap( hBitmap );
-   if (bmp == NULL)
-   {
-      /* FIXME should we free the hBitmap or return it ?? */
-      return 0;
-   }
-
-   bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
-
    if (NULL != pBits)
    {
-      IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pBits);
+       PBITMAPOBJ bmp = BITMAPOBJ_LockBitmap( hBitmap );
+       if (bmp == NULL)
+       {
+          NtGdiDeleteObject(hBitmap);
+          return NULL;
+       }
+
+       bmp->flFlags = BITMAPOBJ_IS_APIBITMAP;
+
+       IntSetBitmapBits(bmp, bmp->SurfObj.cjBits, pBits);
+
+
+       BITMAPOBJ_UnlockBitmap( bmp );
    }
 
-   BITMAPOBJ_UnlockBitmap( bmp );
+   DPRINT("IntGdiCreateBitmap : %dx%d, %d BPP colors, topdown %d, returning %08x\n",
+          Size.cx, Size.cy, BitsPixel, (Height < 0 ? 1 : 0), hBitmap);
 
    return hBitmap;
 }
