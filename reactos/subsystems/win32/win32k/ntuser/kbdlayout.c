@@ -308,7 +308,7 @@ PKBL W32kGetDefaultKeyLayout(VOID)
    return pKbl;
 }
 
-static PKBL UserHklToKbl(HKL hKl)
+PKBL UserHklToKbl(HKL hKl)
 {
    PKBL pKbl = KBLList;
    do

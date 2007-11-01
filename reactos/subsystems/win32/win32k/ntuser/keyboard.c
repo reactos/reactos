@@ -1007,12 +1007,11 @@ UserGetKeyboardType(
 DWORD
 STDCALL
 NtUserVkKeyScanEx(
-   DWORD wChar,
-   DWORD KeyboardLayout,
+   WCHAR wChar,
+   ULONG_PTR KeyboardLayout,
    DWORD Unknown2)
 {
-/* FAXME: currently, this routine doesnt seem to need any locking */
-
+/* FIXME: currently, this routine doesnt seem to need any locking */
    PKBDTABLES KeyLayout;
    PVK_TO_WCHAR_TABLE vtwTbl;
    PVK_TO_WCHARS10 vkPtr;
@@ -1020,9 +1019,11 @@ NtUserVkKeyScanEx(
    int nMod;
    DWORD CapsMod = 0, CapsState = 0;
 
+   DPRINT("NtUserVkKeyScanEx() wChar %d, KbdLayout 0x%p\n", wChar, KeyboardLayout);
+
    if(!KeyboardLayout)
       return -1;
-   KeyLayout = (PKBDTABLES) KeyboardLayout;
+   KeyLayout = UserHklToKbl((HKL)KeyboardLayout)->KBTables;
 
    for (nMod = 0; KeyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
    {

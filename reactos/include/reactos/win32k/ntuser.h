@@ -2356,8 +2356,8 @@ NtUserValidateTimerCallback(
 DWORD
 NTAPI
 NtUserVkKeyScanEx(
-  DWORD Unknown0,
-  DWORD Unknown1,
+  WCHAR wChar,
+  ULONG_PTR KeyboardLayout,
   DWORD Unknown2);
 
 DWORD

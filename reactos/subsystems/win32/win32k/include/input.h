@@ -32,6 +32,7 @@ BOOL FASTCALL IntMouseInput(MOUSEINPUT *mi);
 BOOL FASTCALL IntKeyboardInput(KEYBDINPUT *ki);
 
 BOOL UserInitDefaultKeyboardLayout();
+PKBL UserHklToKbl(HKL hKl);
 
 #define ThreadHasInputAccess(W32Thread) \
   (TRUE)
