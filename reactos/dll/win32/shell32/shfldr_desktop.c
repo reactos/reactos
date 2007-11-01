@@ -61,6 +61,7 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 typedef struct {
     const IShellFolder2Vtbl *lpVtbl;
+    const IPersistFolder2Vtbl *lpPF2;
     LONG ref;
 
     /* both paths are parsible from the desktop */
@@ -104,7 +105,11 @@ static HRESULT WINAPI ISF_Desktop_fnQueryInterface(
     {
         *ppvObj = This;
     }
-
+    else if (IsEqualIID (riid, &IID_IPersistFolder) ||
+             IsEqualIID (riid, &IID_IPersistFolder2))
+    {
+        *ppvObj = &This->lpPF2;
+    }
     if (*ppvObj)
     {
         IUnknown_AddRef ((IUnknown *) (*ppvObj));
@@ -843,6 +848,93 @@ static const IShellFolder2Vtbl vt_MCFldr_ShellFolder2 =
     ISF_Desktop_fnMapColumnToSCID
 };
 
+static inline IGenericSFImpl *impl_from_IPersistFolder2( IPersistFolder2 *iface )
+{
+    return (IGenericSFImpl *)((char*)iface - FIELD_OFFSET(IGenericSFImpl, lpPF2));
+}
+
+static HRESULT WINAPI
+ISF_Desktop_PersistFolder2_fnQueryInterface (IPersistFolder2 * iface, REFIID iid,
+                                       LPVOID * ppvObj)
+{
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)\n", This);
+
+    return ISF_Desktop_fnQueryInterface ((IShellFolder2*)This, iid, ppvObj);
+}
+
+static ULONG WINAPI
+ISF_Desktop_PersistFolder2_fnAddRef (IPersistFolder2 * iface)
+{
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)->(count=%u)\n", This, This->ref);
+
+    return ISF_Desktop_fnAddRef((IShellFolder2*)This);
+}
+
+static ULONG WINAPI
+ISF_Desktop_PersistFolder2_fnRelease (IPersistFolder2 * iface)
+{
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)->(count=%u)\n", This, This->ref);
+
+    return ISF_Desktop_fnRelease ((IShellFolder2*)This);
+}
+
+static HRESULT WINAPI
+ISF_Desktop_PersistFolder2_fnGetClassID (IPersistFolder2 * iface, CLSID * lpClassId)
+{
+    static GUID const CLSID_Desktop = 
+    { 0x00021400, 0x0000, 0x0000, {0xC0,0x00,0x00,0x00,0x00,0x00,0x00,0x46} };
+
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)\n", This);
+
+    if (!lpClassId)
+        return E_POINTER;
+
+    memcpy(lpClassId, &CLSID_Desktop, sizeof(GUID));
+
+    return S_OK;
+}
+static HRESULT WINAPI
+ISF_Desktop_PersistFolder2_fnInitialize (IPersistFolder2 * iface, LPCITEMIDLIST pidl)
+{
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)->(%p)\n", This, pidl);
+
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI
+ISF_Desktop_PersistFolder2_fnGetCurFolder (IPersistFolder2 * iface,
+                                       LPITEMIDLIST * pidl)
+{
+    IGenericSFImpl *This = impl_from_IPersistFolder2(iface);
+
+    TRACE ("(%p)->(%p)\n", This, pidl);
+
+    if (!pidl) return E_POINTER;
+    *pidl = ILClone (This->pidlRoot);
+    return S_OK;
+}
+
+static const IPersistFolder2Vtbl vt_FSFldr_PersistFolder2 =
+{
+    ISF_Desktop_PersistFolder2_fnQueryInterface,
+    ISF_Desktop_PersistFolder2_fnAddRef,
+    ISF_Desktop_PersistFolder2_fnRelease,
+    ISF_Desktop_PersistFolder2_fnGetClassID,
+    ISF_Desktop_PersistFolder2_fnInitialize,
+    ISF_Desktop_PersistFolder2_fnGetCurFolder,
+};
+
+
 /**************************************************************************
  *    ISF_Desktop_Constructor
  */
@@ -872,6 +964,7 @@ HRESULT WINAPI ISF_Desktop_Constructor (
 
         sf->ref = 1;
         sf->lpVtbl = &vt_MCFldr_ShellFolder2;
+        sf->lpPF2 = &vt_FSFldr_PersistFolder2;
         sf->pidlRoot = _ILCreateDesktop();    /* my qualified pidl */
         sf->sPathTarget = SHAlloc( (lstrlenW(szMyPath) + 1)*sizeof(WCHAR) );
         lstrcpyW( sf->sPathTarget, szMyPath );

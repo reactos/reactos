@@ -34,6 +34,7 @@
 #include "shlobj.h"
 #include "objbase.h"
 
+#include "shlwapi.h"
 #include "shell32_main.h"
 #include "shellfolder.h"
 #include "debughlp.h"
@@ -513,36 +514,39 @@ static void DoRename(
  */
 static void DoDelete(IContextMenu2 *iface, HWND hwnd)
 {
-	ItemCmImpl *This = (ItemCmImpl *)iface;
     WCHAR szPath[MAX_PATH];
     WCHAR * szTarget;
     SHFILEOPSTRUCTW op;
-	LPSHELLBROWSER	lpSB;
-	LPSHELLVIEW	lpSV;
-    IPersistFolder3 * psf;
+    LPSHELLBROWSER	lpSB;
+    LPSHELLVIEW	lpSV;
+    IPersistFolder2 * psf;
     LPITEMIDLIST pidl;
     STRRET strTemp;
-    
+    ItemCmImpl *This = (ItemCmImpl *)iface;
+
     if (IShellFolder2_QueryInterface(This->pSFParent, &IID_IPersistFolder2, (LPVOID*)&psf) != S_OK)
     {
       ERR("Failed to get interface IID_IPersistFolder2\n");
       return;
     }
+
     if (IPersistFolder2_GetCurFolder(psf, &pidl) != S_OK)
     {
       ERR("IPersistFolder2_GetCurFolder failed\n");
-      IShellFolder2_Release(psf);
+      IPersistFolder2_Release(psf);
       return;
     }
 
      if (IShellFolder2_GetDisplayNameOf(This->pSFParent, pidl, SHGDN_FORPARSING, &strTemp) != S_OK)
      {
        ERR("IShellFolder_GetDisplayNameOf failed\n");
-       IShellFolder2_Release(psf);
+       IPersistFolder2_Release(psf);
        return;
      }
+     szPath[MAX_PATH-1] = 0;
      StrRetToBufW(&strTemp, pidl, szPath, MAX_PATH);
-     IShellFolder2_Release(psf);
+     PathAddBackslashW(szPath);
+     IPersistFolder2_Release(psf);
 
      szTarget = build_paths_list(szPath, This->cidl, This->apidl);
 
@@ -557,6 +561,7 @@ static void DoDelete(IContextMenu2 *iface, HWND hwnd)
          op.fFlags = FOF_ALLOWUNDO;
          SHFileOperationW(&op);
        }
+       ILFree(pidl);
      }
 
     if ((lpSB = (LPSHELLBROWSER)SendMessageA(hwnd, CWM_GETISHELLBROWSER,0,0)))
