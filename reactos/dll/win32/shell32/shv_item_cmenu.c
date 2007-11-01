@@ -353,6 +353,30 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     TRACE("SH_LoadContextMenuHandlers first %x last %x\n", This->iIdSHEFirst, This->iIdSHELast);
 }
 
+const char * GetLocalizedString(HMENU hMenu, UINT wID, const char * sDefault, char * sResult)
+{
+   MENUITEMINFOA mii;
+   if (!hMenu)
+   {
+       return sDefault;
+   }
+
+   mii.cbSize = sizeof(mii);
+   mii.fMask = MIIM_TYPE;
+   mii.fType = MFT_STRING;
+   mii.dwTypeData = sResult;
+   mii.cch = 100;
+
+   if (GetMenuItemInfoA(hMenu, wID, FALSE, &mii))
+   {
+        return sResult;
+   }
+   else
+   {
+       return sDefault;
+   }
+}
+
 /**************************************************************************
 * ISvItemCm_fnQueryContextMenu()
 * FIXME: load menu MENU_SHV_FILE out of resources instead if creating
@@ -369,9 +393,21 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
     IDataObject * pDataObj;
 	ItemCmImpl *This = (ItemCmImpl *)iface;
     USHORT lastindex = 0;
+    HMENU hLocalMenu;
+    char sBuffer[100];
+
+    static const char sExplore[] = { '&','E','x','p','l','o','r','e',0 };
+    static const char sCopy[] = { '&','C','o','p','y',0 };
+    static const char sCut[] = { '&','C','u','t',0 };
+    static const char sDelete[] = { '&','D','e','l','e','t','e',0 };
+    static const char sRename[] = { '&','R','e','n','a','m','e',0 };
+    static const char sProperties[] = { '&','P','r','o','p','e','r','t','i','e','s',0 };
+    static const WCHAR szSHVFile[] = { 'M','E','N','U','_','S','H','V','_','F','I','L','E',0 };
 
 
 	TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",This, hmenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
+    hLocalMenu = LoadMenuW(shell32_hInstance, szSHVFile);
 
 	if (idCmdFirst != 0)
 	  FIXME("We should use idCmdFirst=%d and idCmdLast=%d for command ids\n", idCmdFirst, idCmdLast);
@@ -382,18 +418,19 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
       TRACE("rfg %x\n", This->rfg);
-
-	  if (This->rfg & SFGAO_HASSUBFOLDER)
+	  if (This->rfg & SFGAO_BROWSABLE)
 	  {
-          /* FIXME 
-           * check if folder hasnt already been extended
-           * use reduce verb then
-           */
-
-          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
+   	      if(This->bAllValues)
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_EXPLORE, sExplore, sBuffer), MFS_ENABLED);
+	      }
+	      else
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_EXPLORE, sExplore, sBuffer), MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	      }
 	  }
-
-      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
 
 	  SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
 
@@ -401,24 +438,24 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  {
 	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
 	      if (This->rfg & SFGAO_CANCOPY)
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, "&Copy", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_COPY, sCopy, sBuffer), MFS_ENABLED);
 	      if (This->rfg & SFGAO_CANMOVE)
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, "&Cut", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_CUT, sCut, sBuffer), MFS_ENABLED);
 	  }
 
 	  if (This->rfg & SFGAO_CANDELETE)
 	  {
 	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_DELETE, sDelete, sBuffer), MFS_ENABLED);
 	  }
 
 	  if ((uFlags & CMF_CANRENAME) && (This->rfg & SFGAO_CANRENAME))
-	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_RENAME, sRename, sBuffer), ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
 
 	  if (This->rfg & SFGAO_HASPROPSHEET)
 	  {
 	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_PROPERTIES, sProperties, sBuffer), MFS_ENABLED);
 	  }
 
       lastindex = FCIDM_SHVIEWLAST;
@@ -429,7 +466,10 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
         SH_LoadContextMenuHandlers(This, pDataObj, hmenu, indexMenu);
         IDataObject_Release(pDataObj);
     }
-
+    if (hLocalMenu)
+    {
+        DestroyMenu(hLocalMenu);
+    }
 
 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, lastindex);
 }
@@ -875,7 +915,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
       cmobj->lpVtbl->Release(cmobj);
       return FALSE;
   }
-  hr = shext->lpVtbl->Initialize(shext, NULL, pDataObj, hKey);
+  hr = shext->lpVtbl->Initialize(shext, pidlFolder, pDataObj, hKey);
   if (hr != S_OK)
   {
       TRACE("Failed to initialize shell extension\n");
