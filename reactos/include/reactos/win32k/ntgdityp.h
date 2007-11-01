@@ -225,7 +225,7 @@ typedef struct _GDIBSPPATBLT
   ULONG ulBackgroundClr;
   ULONG ulBrushClr;
   POINTL ptlViewportOrg;
-  PATRECT pRect; // POLYPATBLT
+  PATRECT pRect[1]; // POLYPATBLT
 } GDIBSPPATBLT, *PGDIBSPPATBLT;
 
 typedef struct _GDIBSTEXTOUT
@@ -246,7 +246,7 @@ typedef struct _GDIBSTEXTOUT
   HANDLE hlfntNew;
   FLONG flTextAlign;
   POINTL ptlViewportOrg;
-  CHAR String[1];
+  WCHAR String[2];
 } GDIBSTEXTOUT, *PGDIBSTEXTOUT;
 
 typedef struct _GDIBSEXTTEXTOUT
