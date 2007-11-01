@@ -54,9 +54,9 @@ IntGdiCreateBitmap(
       return 0;
    }
 
-   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, BitsPixel);
+   WidthBytes = BITMAPOBJ_GetWidthBytes(Width, Planes * BitsPixel);
 
-   Size.cx = Width;
+   Size.cx = abs(Width);
    Size.cy = abs(Height);
 
    /* Create the bitmap object. */
@@ -108,7 +108,7 @@ NtGdiCreateBitmap(
    {
       if (pUnsafeBits)
       {
-         UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * Height;
+         UINT cjBits = BITMAPOBJ_GetWidthBytes(Width, BitsPixel) * abs(Height);
          ProbeForRead(pUnsafeBits, cjBits, 1);
       }
 
@@ -186,7 +186,7 @@ IntCreateCompatibleBitmap(
 	}
 	else
 	{
-		Bmp = IntGdiCreateBitmap(Width, Height, 1, Dc->w.bitsPerPixel, NULL);
+		Bmp = IntGdiCreateBitmap(abs(Width), abs(Height), 1, Dc->w.bitsPerPixel, NULL);
 	}
 
 	return Bmp;
