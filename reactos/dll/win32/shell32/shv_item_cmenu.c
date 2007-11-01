@@ -382,19 +382,18 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
       TRACE("rfg %x\n", This->rfg);
-	  if (This->rfg & SFGAO_BROWSABLE)
+
+	  if (This->rfg & SFGAO_HASSUBFOLDER)
 	  {
-   	      if(This->bAllValues)
-	      {
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	      }
-	      else
-	      {
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	      }
+          /* FIXME 
+           * check if folder hasnt already been extended
+           * use reduce verb then
+           */
+
+          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
 	  }
+
+      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
 
 	  SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
 
@@ -669,7 +668,7 @@ static void DoProperties(
 HRESULT
 DoShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
 {
-    HRESULT hResult;
+    HRESULT hResult = NOERROR;
     UINT i;
 
     TRACE("DoShellExtensions %p verb %x count %u\n",This, LOWORD(lpcmi->lpVerb), This->ecount);
@@ -679,9 +678,12 @@ DoShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
 
         hResult = cmenu->lpVtbl->InvokeCommand(cmenu, lpcmi);
         if (SUCCEEDED(hResult))
-            return hResult;
+        {
+            break;
+        }
     }
-    return NOERROR;
+    TRACE("DoShellExtensions result %x\n", hResult);
+    return hResult;
 }
 
 
@@ -873,7 +875,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, IContextMenu*
       cmobj->lpVtbl->Release(cmobj);
       return FALSE;
   }
-  hr = shext->lpVtbl->Initialize(shext, pidlFolder, pDataObj, hKey);
+  hr = shext->lpVtbl->Initialize(shext, NULL, pDataObj, hKey);
   if (hr != S_OK)
   {
       TRACE("Failed to initialize shell extension\n");

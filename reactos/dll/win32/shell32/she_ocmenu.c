@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -588,6 +588,7 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     LPCITEMIDLIST pidl; 
     WCHAR szPath[MAX_PATH];
     LPWSTR szPtr;
+    static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
 
     fmt.cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
     fmt.ptd = NULL;
@@ -619,11 +620,18 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
         ERR("no mem\n");
         return E_OUTOFMEMORY;
     }
+    if (_ILIsFolder(pidl_child))
+    {
+        TRACE("pidl is a folder\n");
+        SHFree(pidl);
+        return E_FAIL;
+    }
+
     if (!SHGetPathFromIDListW(pidl, szPath))
     {
         SHFree(pidl);
         ERR("SHGetPathFromIDListW failed\n");
-        return FALSE;
+        return E_FAIL;
     }
     
     SHFree(pidl);    
@@ -632,6 +640,12 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     szPtr = wcschr(szPath, '.');
     if (szPtr)
     {
+        if (!_wcsicmp(szPtr, szShortCut))
+        {
+            TRACE("pidl is a shortcut\n");
+            return E_FAIL;
+        }
+
         SHEOW_LoadItemFromHKCU(This, szPtr);
         SHEOW_LoadItemFromHKCR(This, szPtr);
     }
