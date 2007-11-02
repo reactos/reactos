@@ -1709,9 +1709,11 @@ Contributor::Contributor ( const XMLElement& _node)
 void
 Contributor::ProcessXML()
 {
-	const XMLAttribute* att = node.GetAttribute ( "alias", true );
-	assert(att);
-	alias = att->value;
+	const XMLAttribute* att = node.GetAttribute ( "alias", false );
+    if (att != NULL)
+	    alias = att->value;
+    else
+        alias = "";
 
     att = node.GetAttribute ( "firstname", true );
 	if (att != NULL)
@@ -1719,7 +1721,7 @@ Contributor::ProcessXML()
 	else
 		firstName = "";
 
-    att = node.GetAttribute ( "lastname", true );
+    att = node.GetAttribute ( "lastname", false );
 	if (att != NULL)
 		lastName = att->value;
 	else
