@@ -684,6 +684,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\creditsgeneratorenerator.cpp"
+				>
+			</File>
+			<File
 				RelativePath="define.cpp"
 				>
 				<FileConfiguration

@@ -266,6 +266,7 @@ RBUILD_COMMON_SOURCES = \
 		testsupportcode.cpp \
 		modulesmanifestgenerator.cpp \
 		modulesresourcegenerator.cpp \
+		creditsgeneratorenerator.cpp \
 		wineresource.cpp \
 		xmlnode.cpp \
 		)
@@ -455,6 +456,10 @@ $(RBUILD_INT_)stubbedcomponent.o: $(RBUILD_BASE_)stubbedcomponent.cpp $(RBUILD_H
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
 $(RBUILD_INT_)syssetupgenerator.o: $(RBUILD_BASE_)syssetupgenerator.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
+	$(ECHO_CC)
+	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
+
+$(RBUILD_INT_)creditsgeneratorenerator.o: $(RBUILD_BASE_)creditsgeneratorenerator.cpp $(RBUILD_HEADERS) | $(RBUILD_INT)
 	$(ECHO_CC)
 	${host_gpp} $(RBUILD_HOST_CXXFLAGS) -c $< -o $@
 
