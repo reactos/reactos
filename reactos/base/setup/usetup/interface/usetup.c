@@ -3582,6 +3582,8 @@ RunUSetup(VOID)
 
       CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
 
+      CONSOLE_Flush();
+
       switch (Page)
 	{
 	  /* Start page */

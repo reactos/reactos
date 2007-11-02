@@ -128,6 +128,12 @@ CONSOLE_ConOutPrintf(
 		NULL);
 }
 
+BOOL
+CONSOLE_Flush(VOID)
+{
+	return FlushConsoleInputBuffer(StdInput);
+}
+
 SHORT
 CONSOLE_GetCursorX(VOID)
 {
