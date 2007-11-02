@@ -46,7 +46,7 @@ BOOL fileMoving = FALSE;
 typedef struct _StaticShellEntry_
 {
    LPWSTR szVerb;
-   LPWSTR szCmd;
+   LPWSTR szClass;
    struct _StaticShellEntry_ * Next;
 }StaticShellEntry, *PStaticShellEntry;
 
@@ -208,8 +208,8 @@ static ULONG WINAPI ISvItemCm_fnRelease(IContextMenu2 *iface)
       while(nextEntry)
       {
         nextEntry = nextEntry->Next;
-        free(curEntry->szCmd);
         free(curEntry->szVerb);
+        free(curEntry->szClass);
         free(curEntry);
         curEntry = nextEntry;
       }
@@ -368,37 +368,10 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
 }
 
 void
-SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb)
+SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb, WCHAR * szClass)
 {
-  WCHAR szBuffer[50];
-  WCHAR szCmd[100];
-  DWORD dwCmd, dwBuffer;
-  LONG result;
-  HKEY hSubKey;
   PStaticShellEntry curEntry;
   PStaticShellEntry lastEntry = NULL;
-
-  wcscpy(szBuffer, szVerb);
-  wcscat(szBuffer, L"\\command");
-
-  TRACE("szBuffer %s\n", debugstr_w(szBuffer));
-
-  result = RegOpenKeyExW(hKey, szBuffer, 0, KEY_READ, &hSubKey);
-  if (result != ERROR_SUCCESS)
-  {
-      TRACE("RegOpenKeyEx failed with 0x%x\n", result);
-      return;
-  }
-  dwCmd = sizeof(szCmd);
-  dwBuffer = 50;
-  result = RegEnumValueW(hSubKey, 0, szBuffer, &dwBuffer, 0, NULL, (LPBYTE)szCmd, &dwCmd);
-  RegCloseKey(hSubKey);
-  if (result != ERROR_SUCCESS)
-  {
-      TRACE("RegGetValueW failed with 0x%x\n", result);
-      return;
-  }
-  TRACE("SH_AddStaticEntry szBuffer %s szCmd %s\n", debugstr_w(szBuffer), debugstr_w(szCmd));
 
   curEntry = This->head;
 
@@ -413,12 +386,14 @@ SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb)
     curEntry = curEntry->Next;
   }
   
+  TRACE("adding verb %s szClass %s\n", debugstr_w(szVerb), debugstr_w(szClass));
+
   curEntry = malloc(sizeof(StaticShellEntry));
   if (curEntry)
   {
       curEntry->Next = NULL;
-      curEntry->szCmd = wcsdup(szCmd);
       curEntry->szVerb = wcsdup(szVerb);
+      curEntry->szClass = wcsdup(szClass);
   }
 
   if (lastEntry)
@@ -432,14 +407,12 @@ SH_AddStaticEntry(ItemCmImpl * This, HKEY hKey, WCHAR *szVerb)
 }
 
 void
-SH_AddStaticEntryForKey(ItemCmImpl * This, HKEY hKey)
+SH_AddStaticEntryForKey(ItemCmImpl * This, HKEY hKey, WCHAR * szClass)
 {
     LONG result;
     DWORD dwIndex;
     WCHAR szName[40];
     DWORD dwName;
-
-    TRACE("SH_AddStaticEntryForKey entered\n");
 
     dwIndex = 0;
     do
@@ -450,8 +423,7 @@ SH_AddStaticEntryForKey(ItemCmImpl * This, HKEY hKey)
         szName[39] = 0;   
         if (result == ERROR_SUCCESS)
         {
-            TRACE("szVerb %s\n", debugstr_w(szName));
-            SH_AddStaticEntry(This, hKey, szName);
+            SH_AddStaticEntry(This, hKey, szName, szClass);
         }
         dwIndex++;
     }while(result == ERROR_SUCCESS);
@@ -472,7 +444,7 @@ SH_AddStaticEntryForFileClass(ItemCmImpl * This, WCHAR * szExt)
     result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
     if (result == ERROR_SUCCESS)
     {
-        SH_AddStaticEntryForKey(This, hKey);
+        SH_AddStaticEntryForKey(This, hKey, szExt);
         RegCloseKey(hKey);
     }
 
@@ -480,13 +452,15 @@ SH_AddStaticEntryForFileClass(ItemCmImpl * This, WCHAR * szExt)
     result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, NULL, RRF_RT_REG_SZ, NULL, (LPBYTE)szBuffer, &dwBuffer);
     if (result == ERROR_SUCCESS)
     {
+        UINT length = strlenW(szBuffer);
         wcscat(szBuffer, L"\\shell");
         TRACE("szBuffer %s\n", debugstr_w(szBuffer));
 
         result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
         if (result == ERROR_SUCCESS)
         {
-           SH_AddStaticEntryForKey(This, hKey);
+           szBuffer[length] = 0;
+           SH_AddStaticEntryForKey(This, hKey, szBuffer);
            RegCloseKey(hKey);
         }
     }
@@ -496,18 +470,31 @@ SH_AddStaticEntryForFileClass(ItemCmImpl * This, WCHAR * szExt)
     result = RegGetValueW(HKEY_CLASSES_ROOT, szExt, L"PerceivedType", RRF_RT_REG_SZ, NULL, (LPBYTE)&szBuffer[23], &dwBuffer);
     if (result == ERROR_SUCCESS)
     {
+        UINT length = strlenW(szBuffer);
         wcscat(szBuffer, L"\\shell");
         TRACE("szBuffer %s\n", debugstr_w(szBuffer));
 
         result = RegOpenKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
         if (result == ERROR_SUCCESS)
         {
-           SH_AddStaticEntryForKey(This, hKey);
+           szBuffer[length] = 0;
+           SH_AddStaticEntryForKey(This, hKey, szBuffer);
            RegCloseKey(hKey);
         }
     }
     RegCloseKey(hKey);
 }
+
+void
+SH_AddStaticEntrySpecial(ItemCmImpl * This)
+{
+    if (_ILIsFolder(This->apidl[0])) // && (This->rfg & SFGAO_BROWSABLE))
+    {
+        SH_AddStaticEntryForFileClass(This, L"Folder");
+    }
+}
+
+
 UINT
 SH_AddStaticEntryToMenu(HMENU hMenu, UINT indexMenu, ItemCmImpl * This)
 {
@@ -584,7 +571,6 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
     char sBuffer[100];
     WCHAR szExt[10];
 
-    static const char sExplore[] = { '&','E','x','p','l','o','r','e',0 };
     static const char sCopy[] = { '&','C','o','p','y',0 };
     static const char sCut[] = { '&','C','u','t',0 };
     static const char sDelete[] = { '&','D','e','l','e','t','e',0 };
@@ -602,10 +588,15 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
         sBuffer[0] = '.';
         MultiByteToWideChar( CP_ACP, 0, sBuffer, -1, (LPWSTR)szExt, 10);
         SH_AddStaticEntryForFileClass(This, szExt);
-        indexMenu = SH_AddStaticEntryToMenu(hmenu, indexMenu, This);
-        _InsertMenuItem(hmenu, ++indexMenu, TRUE, 0, MFT_SEPARATOR, NULL, 0);
     }
+    else
+    {
+        SH_AddStaticEntrySpecial(This);
 
+    }
+    indexMenu = SH_AddStaticEntryToMenu(hmenu, indexMenu, This);
+
+    SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
     pDataObj = IDataObject_Constructor(NULL, This->pidl, This->apidl, This->cidl);
     if (pDataObj)
     {
@@ -619,21 +610,7 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
       TRACE("rfg %x\n", This->rfg);
-	  if (This->rfg & SFGAO_BROWSABLE)
-	  {
-   	      if(This->bAllValues)
-	      {
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_EXPLORE, sExplore, sBuffer), MFS_ENABLED);
-	      }
-	      else
-	      {
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, GetLocalizedString(hLocalMenu, FCIDM_SHVIEW_EXPLORE, sExplore, sBuffer), MFS_ENABLED);
-	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	      }
-	  }
 
-	  SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
 
 	  if (This->rfg & (SFGAO_CANCOPY | SFGAO_CANMOVE))
 	  {
@@ -668,51 +645,6 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
     }
 
 	return MAKE_HRESULT(SEVERITY_SUCCESS, 0, lastindex);
-}
-
-/**************************************************************************
-* DoOpenExplore
-*
-*  for folders only
-*/
-
-static void DoOpenExplore(
-	IContextMenu2 *iface,
-	HWND hwnd,
-	LPCSTR verb)
-{
-	ItemCmImpl *This = (ItemCmImpl *)iface;
-
-	UINT i, bFolderFound = FALSE;
-	LPITEMIDLIST	pidlFQ;
-	SHELLEXECUTEINFOA	sei;
-
-	/* Find the first item in the list that is not a value. These commands
-	    should never be invoked if there isn't at least one folder item in the list.*/
-
-	for(i = 0; i<This->cidl; i++)
-	{
-	  if(!_ILIsValue(This->apidl[i]))
-	  {
-	    bFolderFound = TRUE;
-	    break;
-	  }
-	}
-
-	if (!bFolderFound) return;
-
-	pidlFQ = ILCombine(This->pidl, This->apidl[i]);
-
-	ZeroMemory(&sei, sizeof(sei));
-	sei.cbSize = sizeof(sei);
-	sei.fMask = SEE_MASK_INVOKEIDLIST | SEE_MASK_CLASSNAME;
-	sei.lpIDList = pidlFQ;
-	sei.lpClass = "Folder";
-	sei.hwnd = hwnd;
-	sei.nShow = SW_SHOWNORMAL;
-	sei.lpVerb = verb;
-	ShellExecuteExA(&sei);
-	SHFree(pidlFQ);
 }
 
 /**************************************************************************
@@ -905,15 +837,10 @@ HRESULT
 DoStaticShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
 {
   UINT i;
-  WCHAR szTarget[MAX_PATH];
-  WCHAR szTemp[MAX_PATH];
-  WCHAR *ptr, *szCmd;
   PStaticShellEntry curEntry;
   LPITEMIDLIST pidl;
-  STARTUPINFOW sInfo;
-  PROCESS_INFORMATION pi;
-
-  static const WCHAR szP1[] = { '%', '1', 0 };
+  UINT bFolderFound = FALSE;
+  SHELLEXECUTEINFOW	sei;
 
   TRACE("DoStaticShellExtensions entered with lpVerb %x first %x last %x\n", LOWORD(lpcmi->lpVerb), This->iIdSCMFirst, This->iIdSCMLast);
 
@@ -935,47 +862,38 @@ DoStaticShellExtensions(ItemCmImpl *This, LPCMINVOKECOMMANDINFO lpcmi)
       return E_UNEXPECTED;
   }
 
-  ExpandEnvironmentStringsW(curEntry->szCmd, szTarget, MAX_PATH);
-  
-  ptr = wcsstr(szTarget, szP1);
-  if (ptr)
-  {
-     ptr[1] = 's';
-     pidl = ILCombine(This->pidl, This->apidl[0]);
-     if (pidl)
-     {
-        WCHAR szPath[MAX_PATH];
-        if (SHGetPathFromIDListW(pidl, szPath))
-        {
-            sprintfW(szTemp, szTarget, szPath);
-        }
-        SHFree(pidl);
-     }
-     else
-     {
-         ptr[0] = 0;
-     }
-     ptr = szTemp;
-   }
-   else
-   {
-      ptr = szTarget;
-   }
+	for(i = 0; i<This->cidl; i++)
+	{
+	  if(!_ILIsValue(This->apidl[i]))
+	  {
+	    bFolderFound = TRUE;
+	    break;
+	  }
+	}
 
-   ZeroMemory(&sInfo, sizeof(sInfo));
-   sInfo.cb = sizeof(sizeof(sInfo));
-   szCmd = wcsdup(ptr);
+	if (bFolderFound && wcsicmp(curEntry->szClass, L"Folder")) 
+    {
+        /* when there is a folder with item selected 
+         * do nothing
+         */
+        return S_OK;
+    }
 
-   if (!szCmd)
-       return E_OUTOFMEMORY;
+    TRACE("curEntry %p verb %s szClass %s\n", curEntry, debugstr_w(curEntry->szVerb), debugstr_w(curEntry->szClass));
 
-   if (CreateProcessW(NULL, szCmd, NULL, NULL,FALSE,0,NULL,NULL,&sInfo, &pi))
-   {
-      CloseHandle( pi.hProcess );
-      CloseHandle( pi.hThread );
-   }
-   free(szCmd);
-   return S_OK;
+	pidl = ILCombine(This->pidl, This->apidl[0]);
+
+	ZeroMemory(&sei, sizeof(sei));
+	sei.cbSize = sizeof(sei);
+	sei.fMask = SEE_MASK_CLASSNAME | SEE_MASK_IDLIST;
+	sei.lpIDList = pidl;
+	sei.lpClass = curEntry->szClass;
+	sei.hwnd = lpcmi->hwnd;
+	sei.nShow = SW_SHOWNORMAL;
+	sei.lpVerb = curEntry->szVerb;
+	ShellExecuteExW(&sei);
+	SHFree(pidl);
+    return S_OK;
 }
 
 HRESULT
@@ -1032,14 +950,6 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
     {
         switch(LOWORD(lpcmi->lpVerb))
         {
-        case FCIDM_SHVIEW_EXPLORE:
-            TRACE("Verb FCIDM_SHVIEW_EXPLORE\n");
-            DoOpenExplore(iface, lpcmi->hwnd, "explore");
-            break;
-        case FCIDM_SHVIEW_OPEN:
-            TRACE("Verb FCIDM_SHVIEW_OPEN\n");
-            DoOpenExplore(iface, lpcmi->hwnd, "open");
-            break;
         case FCIDM_SHVIEW_RENAME:
             TRACE("Verb FCIDM_SHVIEW_RENAME\n");
             DoRename(iface, lpcmi->hwnd);
@@ -1061,16 +971,21 @@ static HRESULT WINAPI ISvItemCm_fnInvokeCommand(
             DoProperties(iface, lpcmi->hwnd);
             break;
         default:
-            if (LOWORD(lpcmi->lpVerb) >= This->iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSHELast)
+            TRACE("iIdSHEFirst %x iIdSHELast %x iIdSCMFirst %x iIdSCMLast %x\n", This->iIdSHEFirst, This->iIdSHELast, This->iIdSCMFirst, This->iIdSCMLast);
+            if (This->iIdSHEFirst && This->iIdSHELast)
             {
-                return DoDynamicShellExtensions(This, lpcmi);
+                if (LOWORD(lpcmi->lpVerb) >= This->iIdSHEFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSHELast)
+                {
+                    return DoDynamicShellExtensions(This, lpcmi);
+                }
             }
-
-            if (LOWORD(lpcmi->lpVerb) >= This->iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSCMLast)
+            if (This->iIdSCMFirst && This->iIdSCMLast)
             {
-                return DoStaticShellExtensions(This, lpcmi);
+                if (LOWORD(lpcmi->lpVerb) >= This->iIdSCMFirst && LOWORD(lpcmi->lpVerb) <= This->iIdSCMLast)
+                {
+                    return DoStaticShellExtensions(This, lpcmi);
+                }
             }
-
             FIXME("Unhandled Verb %xl\n",LOWORD(lpcmi->lpVerb));
         }
     }
