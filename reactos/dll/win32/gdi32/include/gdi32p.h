@@ -6,7 +6,6 @@
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */
 
-#define GDI_BATCH_LIMIT 20
 
 /* DATA **********************************************************************/
 

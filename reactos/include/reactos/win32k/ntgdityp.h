@@ -78,6 +78,7 @@ typedef enum _GETDCPOINT
 } GETDCPOINT, *PGETDCPOINT;
 
 #define GDIBATCHBUFSIZE 0x136
+#define GDI_BATCH_LIMIT 20
 
 typedef enum _GDIBATCHCMD
 {

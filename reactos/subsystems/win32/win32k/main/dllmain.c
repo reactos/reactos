@@ -117,7 +117,7 @@ Win32kProcessCallback(struct _EPROCESS *Process,
       {
         /* map the gdi handle table to user land */
         Process->Peb->GdiSharedHandleTable = GDI_MapHandleTable(GdiTableSection, Process);
-        Process->Peb->GdiDCAttributeList = 5;
+        Process->Peb->GdiDCAttributeList = GDI_BATCH_LIMIT;
       }
 
       /* setup process flags */
