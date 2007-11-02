@@ -34,6 +34,13 @@ CreditsGenerator::~CreditsGenerator ()
 void
 CreditsGenerator::Generate ()
 {
+    GenerateTxt ();
+    GenerateHeader ();
+}
+
+void
+CreditsGenerator::GenerateTxt ()
+{
 	char* buf;
 	char* s;
 
@@ -66,6 +73,38 @@ CreditsGenerator::Generate ()
 
 
 	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "CREDITS" ) );
+
+	free ( buf );
+}
+
+void
+CreditsGenerator::GenerateHeader ()
+{
+	char* buf;
+	char* s;
+
+	buf = (char*) malloc ( 512*1024 );
+	if ( buf == NULL )
+		throw OutOfMemoryException ();
+	
+	s = buf;
+	s = s + sprintf ( s, "/* Auto generated */\n");
+	s = s + sprintf ( s, "\n" );
+    s = s + sprintf ( s, "const char* szAutoContributors[]= {\n" );
+
+    for ( size_t i = 0; i < project.contributors.size (); i++ )
+	{
+        Contributor& contributor = *project.contributors[i];
+
+	    s = s + sprintf ( s, "\t\"%s %s\",\n" , 
+            contributor.firstName.c_str() , 
+            contributor.lastName.c_str());
+	}
+
+    s = s + sprintf ( s, "\t0\n");
+    s = s + sprintf ( s, "                                   };" );
+
+	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "include" + sSep + "reactos" + sSep + "autocontributors.h" ) );
 
 	free ( buf );
 }

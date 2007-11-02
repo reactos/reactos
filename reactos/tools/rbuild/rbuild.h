@@ -1182,7 +1182,9 @@ public:
 	const Project& project;
 	CreditsGenerator ( const Project& project );
 	~CreditsGenerator ();
-	void Generate ();
+    void Generate();
+	void GenerateTxt();
+    void GenerateHeader ();
 private:
 };
 
