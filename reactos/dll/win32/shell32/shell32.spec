@@ -320,6 +320,8 @@
 @ stdcall SHBrowseForFolderW(ptr)
 @ stdcall SHChangeNotify (long long ptr ptr)
 @ stub SHChangeNotifySuspendResume
+@ stdcall SHCreateDefaultContextMenu(ptr ptr ptr)
+@ stdcall SHCreateDefaultExtractIcon(ptr ptr)
 @ stdcall SHCreateDirectoryExA(long str ptr)
 @ stdcall SHCreateDirectoryExW(long wstr ptr)
 @ stub SHCreateProcessAsUserW

@@ -126,17 +126,33 @@ BEGIN
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
 
-SHELL_ABOUT_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 210, 152
-STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
+STYLE DS_FIXEDSYS | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Acerca de %s"
-FONT 10, "MS Shell Dlg"
+FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "Aceptar", IDOK, 153, 133, 50, 12, WS_TABSTOP
-	LISTBOX 99, 8, 65, 137, 82, LBS_NOTIFY | WS_VSCROLL | WS_BORDER
-	ICON "", 1088, 10, 10, 14, 16
-	LTEXT "", 100, 30, 10, 137, 10
-	LTEXT "", 101, 30, 22, 137, 10
-	LTEXT "ReactOS está disponible gracias a:", 98, 8, 55, 137, 10
+	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
+	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
+	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
+	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
+	DEFPUSHBUTTON "Aceptar", IDOK, 220, 178, 50, 14
+	
+	PUSHBUTTON "", IDC_SHELL_ABOUT_AUTHORS, 5, 178, 70, 14
+END
+
+IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
+STYLE DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS está disponible gracias a:", IDC_STATIC, 0, 0, 180, 10
+	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
 SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
@@ -155,7 +171,7 @@ END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Accesso directo"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
@@ -220,7 +236,7 @@ END
 
 SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Version"
+CAPTION "Versión"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "File version: ", 14000, 10, 10, 45, 10
@@ -242,23 +258,23 @@ CAPTION "General"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
-	LTEXT "Type:", -1, 15, 55, 40, 10
+	LTEXT "Tipo:", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
 	LTEXT "File system:", -1, 15, 70, 100, 10
 	LTEXT "", 14003, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-	LTEXT "Used space:", -1, 25, 90, 120, 10
+	LTEXT "Espacio ocupado:", -1, 25, 90, 120, 10
 	LTEXT "", 14004, 110, 90, 120, 10
 	LTEXT "", 14005, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-	LTEXT "Free space:", -1, 25, 105, 70, 10
+	LTEXT "Espacio libre:", -1, 25, 105, 70, 10
 	LTEXT "", 14006, 110, 105, 120, 10
 	LTEXT "", 14007, 200, 105, 40, 10
 
-	LTEXT "Capacity:", -1, 25, 125, 80, 10
+	LTEXT "Capacidad:", -1, 25, 125, 80, 10
 	LTEXT "", 14008, 110, 125, 120, 10
 	LTEXT "", 14009, 200, 125, 40, 10
 
@@ -272,7 +288,7 @@ END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Tools"
+CAPTION "Herramientas"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Error-checking", -1, 5, 5, 230, 60
@@ -295,7 +311,7 @@ END
 
 RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Run As"
+CAPTION "Ejecutar como"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
@@ -316,7 +332,7 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Propiedades de la papelera de reciclaje"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
@@ -340,15 +356,15 @@ BEGIN
 	IDS_SHV_COLUMN7             "Tamaño disponible"
 	IDS_SHV_COLUMN8             "Nombre"
 	IDS_SHV_COLUMN9             "Comentarios"
-	IDS_SHV_COLUMN10            "Owner"
-	IDS_SHV_COLUMN11            "Group"
-	IDS_SHV_COLUMN_DELFROM      "Original location"
-	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN10            "Propietario"
+	IDS_SHV_COLUMN11            "Groupo"
+	IDS_SHV_COLUMN_DELFROM      "Ubicación original"
+	IDS_SHV_COLUMN_DELDATE      "Fecha de eliminación"
 
 	/* special folders */
 	IDS_DESKTOP                 "Escritorio"
 	IDS_MYCOMPUTER              "Mi PC"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Papelera de reciclaje"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Iconos &grandes"
@@ -378,9 +394,9 @@ BEGIN
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Reiniciar"
-	IDS_RESTART_PROMPT          "¿Desea simular un reinicio de Windows?"
+	IDS_RESTART_PROMPT          "¿Desea reiniciar el equipo?"
 	IDS_SHUTDOWN_TITLE          "Apagar"
-	IDS_SHUTDOWN_PROMPT         "¿Desea terminar su sesión ReactOS?"
+	IDS_SHUTDOWN_PROMPT         "¿Desea apagar el equipo?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Menú Inicio\\Programas"
@@ -410,7 +426,14 @@ BEGIN
 	IDS_COMMON_PICTURES         "Documentos\\Mis imágenes"
 	IDS_COMMON_VIDEO            "Documentos\\Mis vídeos"
 	IDS_CDBURN_AREA             "Configuración local\\Datos de programa\\Microsoft\\CD Burning"
-	IDS_DRIVE_FIXED             "Local Disk"
+
+	IDS_DRIVE_FIXED             "Disco Local"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_DRIVE_NETWORK           "Unidad de red"
+
+	IDS_OPEN_WITH               "Abrir con"
+	IDS_OPEN_WITH_CHOOSE        "Elegir programa..."
+
+	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
+	IDS_SHELL_ABOUT_BACK        "< &Back"
 END

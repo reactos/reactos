@@ -852,30 +852,10 @@ typedef struct
     LPCWSTR  szApp;
     LPCWSTR  szOtherStuff;
     HICON hIcon;
-    HFONT hFont;
 } ABOUT_INFO;
-
-#define IDC_STATIC_TEXT1   100
-#define IDC_STATIC_TEXT2   101
-#define IDC_LISTBOX        99
-#define IDC_WINE_TEXT      98
 
 #define DROP_FIELD_TOP    (-15)
 #define DROP_FIELD_HEIGHT  15
-
-static BOOL __get_dropline( HWND hWnd, LPRECT lprect )
-{
-    HWND hWndCtl = GetDlgItem(hWnd, IDC_WINE_TEXT);
-
-    if( hWndCtl )
-    {
-        GetWindowRect( hWndCtl, lprect );
-        MapWindowPoints( 0, hWnd, (LPPOINT)lprect, 2 );
-        lprect->bottom = (lprect->top += DROP_FIELD_TOP);
-        return TRUE;
-    }
-    return FALSE;
-}
 
 /*************************************************************************
  * SHAppBarMessage            [SHELL32.@]
@@ -968,77 +948,250 @@ HRESULT WINAPI SHLoadInProc (REFCLSID rclsid)
     return DISP_E_MEMBERNOTFOUND;
 }
 
+static VOID SetRegTextData(HWND hWnd, HKEY hKey, LPWSTR Value, UINT uID)
+{
+    DWORD dwBufferSize;
+    DWORD dwType;
+    LPWSTR lpBuffer;
+
+    if( RegQueryValueExW(hKey, Value, NULL, &dwType, NULL, &dwBufferSize) == ERROR_SUCCESS )
+    {
+        if(dwType == REG_SZ)
+        {
+            lpBuffer = HeapAlloc(GetProcessHeap(), 0, dwBufferSize);
+
+            if(lpBuffer)
+            {
+                if( RegQueryValueExW(hKey, Value, NULL, &dwType, (LPBYTE)lpBuffer, &dwBufferSize) == ERROR_SUCCESS )
+                {
+                    SetDlgItemTextW(hWnd, uID, lpBuffer);
+                }
+
+                HeapFree(GetProcessHeap(), 0, lpBuffer);
+            }
+        }
+    }
+}
+
+INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
+{
+    switch(msg)
+    {
+        case WM_INITDIALOG:
+        {
+            const char* const *pstr = SHELL_Authors;
+
+            // Add the authors to the list
+            SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, FALSE, 0 );
+
+            while (*pstr)
+            {
+                WCHAR name[64];
+
+                /* authors list is in utf-8 format */
+                MultiByteToWideChar( CP_UTF8, 0, *pstr, -1, name, sizeof(name)/sizeof(WCHAR) );
+                SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, LB_ADDSTRING, (WPARAM)-1, (LPARAM)name );
+                pstr++;
+            }
+
+            SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, WM_SETREDRAW, TRUE, 0 );
+
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
 /*************************************************************************
  * AboutDlgProc            (internal)
  */
-INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
-                              LPARAM lParam )
+INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
 {
-    HWND hWndCtl;
-
-    TRACE("\n");
+    static DWORD   cxLogoBmp;
+    static DWORD   cyLogoBmp;
+    static HBITMAP hLogoBmp;
+    static HWND    hWndAuthors;
 
     switch(msg)
     {
-    case WM_INITDIALOG:
+        case WM_INITDIALOG:
         {
             ABOUT_INFO *info = (ABOUT_INFO *)lParam;
-            WCHAR Template[512], AppTitle[512];
 
             if (info)
             {
-                const char* const *pstr = SHELL_Authors;
-                SendDlgItemMessageW(hWnd, stc1, STM_SETICON,(WPARAM)info->hIcon, 0);
-                GetWindowTextW( hWnd, Template, sizeof(Template)/sizeof(WCHAR) );
-                sprintfW( AppTitle, Template, info->szApp );
-                SetWindowTextW( hWnd, AppTitle );
-                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT1), info->szApp );
-                SetWindowTextW( GetDlgItem(hWnd, IDC_STATIC_TEXT2), info->szOtherStuff );
-                hWndCtl = GetDlgItem(hWnd, IDC_LISTBOX);
-                SendMessageW( hWndCtl, WM_SETREDRAW, 0, 0 );
-                SendMessageW( hWndCtl, WM_SETFONT, (WPARAM)info->hFont, 0 );
-                while (*pstr)
+                const WCHAR szRegKey[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
+                HKEY hRegKey;
+                MEMORYSTATUSEX MemStat;
+                WCHAR szAppTitle[512];
+                WCHAR szAppTitleTemplate[512];
+                WCHAR szAuthorsText[20];
+
+                // Preload the ROS bitmap
+                hLogoBmp = LoadImage(shell32_hInstance, MAKEINTRESOURCE(IDB_SHELL_ABOUT_LOGO_24BPP), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+
+                if(hLogoBmp)
                 {
-                    WCHAR name[64];
-                    /* authors list is in utf-8 format */
-                    MultiByteToWideChar( CP_UTF8, 0, *pstr, -1, name, sizeof(name)/sizeof(WCHAR) );
-                    SendMessageW( hWndCtl, LB_ADDSTRING, (WPARAM)-1, (LPARAM)name );
-                    pstr++;
+                    BITMAP bmpLogo;
+
+                    GetObject( hLogoBmp, sizeof(BITMAP), &bmpLogo );
+
+                    cxLogoBmp = bmpLogo.bmWidth;
+                    cyLogoBmp = bmpLogo.bmHeight;
                 }
-                SendMessageW( hWndCtl, WM_SETREDRAW, 1, 0 );
+
+                // Set App-specific stuff (icon, app name, szOtherStuff string)
+                SendDlgItemMessageW(hWnd, IDC_SHELL_ABOUT_ICON, STM_SETICON, (WPARAM)info->hIcon, 0);
+
+                GetWindowTextW( hWnd, szAppTitleTemplate, sizeof(szAppTitleTemplate) / sizeof(WCHAR) );
+                wsprintfW( szAppTitle, szAppTitleTemplate, info->szApp );
+                SetWindowTextW( hWnd, szAppTitle );
+
+                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_APPNAME, info->szApp );
+                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_OTHERSTUFF, info->szOtherStuff );
+
+                // Set the registered user and organization name
+                if(RegOpenKeyExW( HKEY_LOCAL_MACHINE, szRegKey, 0, KEY_QUERY_VALUE, &hRegKey ) == ERROR_SUCCESS)
+                {
+                    SetRegTextData( hWnd, hRegKey, L"RegisteredOwner", IDC_SHELL_ABOUT_REG_USERNAME );
+                    SetRegTextData( hWnd, hRegKey, L"RegisteredOrganization", IDC_SHELL_ABOUT_REG_ORGNAME );
+
+                    RegCloseKey( hRegKey );
+                }
+
+                // Set the value for the installed physical memory
+                MemStat.dwLength = sizeof(MemStat);
+                if( GlobalMemoryStatusEx(&MemStat) )
+                {
+                    WCHAR szBuf[12];
+
+                    if (MemStat.ullTotalPhys > 1024 * 1024 * 1024)
+                    {
+                        double dTotalPhys;
+                        WCHAR szDecimalSeparator[4];
+                        WCHAR szUnits[3];
+
+                        // We're dealing with GBs or more
+                        MemStat.ullTotalPhys /= 1024 * 1024;
+
+                        if (MemStat.ullTotalPhys > 1024 * 1024)
+                        {
+                            // We're dealing with TBs or more
+                            MemStat.ullTotalPhys /= 1024;
+
+                            if (MemStat.ullTotalPhys > 1024 * 1024)
+                            {
+                                // We're dealing with PBs or more
+                                MemStat.ullTotalPhys /= 1024;
+
+                                dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+                                wcscpy( szUnits, L"PB" );
+                            }
+                            else
+                            {
+                                dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+                                wcscpy( szUnits, L"TB" );
+                            }
+                        }
+                        else
+                        {
+                            dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+                            wcscpy( szUnits, L"GB" );
+                        }
+
+                        // We need the decimal point of the current locale to display the RAM size correctly
+                        if( GetLocaleInfoW(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSeparator, sizeof(szDecimalSeparator) / sizeof(WCHAR)) > 0)
+                        {
+                            UCHAR uDecimals;
+                            UINT uIntegral;
+
+                            uIntegral = (UINT)dTotalPhys;
+                            uDecimals = (UCHAR)((UINT)(dTotalPhys * 100) - uIntegral * 100);
+
+                            // Display the RAM size with 2 decimals
+                            wsprintfW(szBuf, L"%u%s%02u %s", uIntegral, szDecimalSeparator, uDecimals, szUnits);
+                        }
+                    }
+                    else
+                    {
+                        // We're dealing with MBs, don't show any decimals
+                        wsprintfW( szBuf, L"%u MB", (UINT)MemStat.ullTotalPhys / 1024 / 1024 );
+                    }
+
+                    SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_PHYSMEM, szBuf);
+                }
+
+                // Add the Authors dialog
+                hWndAuthors = CreateDialogW( shell32_hInstance, MAKEINTRESOURCEW(IDD_SHELL_ABOUT_AUTHORS), hWnd, AboutAuthorsDlgProc );
+                LoadStringW( shell32_hInstance, IDS_SHELL_ABOUT_AUTHORS, szAuthorsText, sizeof(szAuthorsText) / sizeof(WCHAR) );
+                SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_AUTHORS, szAuthorsText );
             }
-        }
-        return 1;
 
-    case WM_PAINT:
-        {
-            RECT rect;
-            PAINTSTRUCT ps;
-            HDC hDC = BeginPaint( hWnd, &ps );
-
-            if (__get_dropline( hWnd, &rect ))
-            {
-                SelectObject( hDC, GetStockObject( BLACK_PEN ) );
-                MoveToEx( hDC, rect.left, rect.top, NULL );
-                LineTo( hDC, rect.right, rect.bottom );
-            }
-            EndPaint( hWnd, &ps );
-        }
-    break;
-
-    case WM_COMMAND:
-        if (wParam == IDOK || wParam == IDCANCEL)
-        {
-            EndDialog(hWnd, TRUE);
             return TRUE;
         }
-        break;
-    case WM_CLOSE:
-      EndDialog(hWnd, TRUE);
-      break;
+
+        case WM_PAINT:
+        {
+            if(hLogoBmp)
+            {
+                PAINTSTRUCT ps;
+                HDC hdc;
+                HDC hdcMem;
+                
+                hdc = BeginPaint(hWnd, &ps);
+                hdcMem = CreateCompatibleDC(hdc);
+
+                if(hdcMem)
+                {
+                    SelectObject(hdcMem, hLogoBmp);
+                    BitBlt(hdc, 0, 0, cxLogoBmp, cyLogoBmp, hdcMem, 0, 0, SRCCOPY);
+
+                    DeleteDC(hdcMem);
+                }
+
+                EndPaint(hWnd, &ps);
+            }
+
+            break;
+        }
+
+        case WM_COMMAND:
+            switch(wParam)
+            {
+                case IDOK:
+                case IDCANCEL:
+                    EndDialog(hWnd, TRUE);
+                    return TRUE;
+
+                case IDC_SHELL_ABOUT_AUTHORS:
+                {
+                    static BOOL bShowingAuthors = FALSE;
+                    WCHAR szAuthorsText[20];
+
+                    if(bShowingAuthors)
+                    {
+                        LoadStringW( shell32_hInstance, IDS_SHELL_ABOUT_AUTHORS, szAuthorsText, sizeof(szAuthorsText) / sizeof(WCHAR) );
+                        ShowWindow( hWndAuthors, SW_HIDE );
+                    }
+                    else
+                    {
+                        LoadStringW( shell32_hInstance, IDS_SHELL_ABOUT_BACK, szAuthorsText, sizeof(szAuthorsText) / sizeof(WCHAR) );
+                        ShowWindow( hWndAuthors, SW_SHOW );
+                    }
+
+                    SetDlgItemTextW( hWnd, IDC_SHELL_ABOUT_AUTHORS, szAuthorsText );
+                    bShowingAuthors = !bShowingAuthors;
+                    return TRUE;
+                }
+            }
+            break;
+
+        case WM_CLOSE:
+            EndDialog(hWnd, TRUE);
+            break;
     }
 
-    return 0;
+    return FALSE;
 }
 
 
@@ -1076,32 +1229,27 @@ BOOL WINAPI ShellAboutA( HWND hWnd, LPCSTR szApp, LPCSTR szOtherStuff, HICON hIc
  * ShellAboutW                [SHELL32.289]
  */
 BOOL WINAPI ShellAboutW( HWND hWnd, LPCWSTR szApp, LPCWSTR szOtherStuff,
-                             HICON hIcon )
+                         HICON hIcon )
 {
     ABOUT_INFO info;
-    LOGFONTW logFont;
     HRSRC hRes;
-    LPVOID template;
+    LPVOID DlgTemplate;
     BOOL bRet;
-    static const WCHAR wszSHELL_ABOUT_MSGBOX[] =
-        {'S','H','E','L','L','_','A','B','O','U','T','_','M','S','G','B','O','X',0};
 
     TRACE("\n");
 
-    if(!(hRes = FindResourceW(shell32_hInstance, wszSHELL_ABOUT_MSGBOX, (LPWSTR)RT_DIALOG)))
+    // DialogBoxIndirectParamW will be called with the hInstance of the calling application, so we have to preload the dialog template
+    if(!(hRes = FindResourceW(shell32_hInstance, MAKEINTRESOURCEW(IDD_SHELL_ABOUT), (LPWSTR)RT_DIALOG)))
         return FALSE;
-    if(!(template = (LPVOID)LoadResource(shell32_hInstance, hRes)))
+    if(!(DlgTemplate = (LPVOID)LoadResource(shell32_hInstance, hRes)))
         return FALSE;
+
     info.szApp        = szApp;
     info.szOtherStuff = szOtherStuff;
     info.hIcon        = hIcon ? hIcon : LoadIconW( 0, (LPWSTR)IDI_WINLOGO );
 
-    SystemParametersInfoW( SPI_GETICONTITLELOGFONT, 0, &logFont, 0 );
-    info.hFont = CreateFontIndirectW( &logFont );
-
     bRet = DialogBoxIndirectParamW((HINSTANCE)GetWindowLongPtrW( hWnd, GWLP_HINSTANCE ),
-                                   template, hWnd, AboutDlgProc, (LPARAM)&info );
-    DeleteObject(info.hFont);
+                                   DlgTemplate, hWnd, AboutDlgProc, (LPARAM)&info );
     return bRet;
 }
 

@@ -19,37 +19,42 @@
 #ifndef __WINE_SHELL_RES_H
 #define __WINE_SHELL_RES_H
 
+#define IDC_STATIC                  -1
+
+/* Bitmap ID's */
+#define IDB_SHELL_ABOUT_LOGO_24BPP  131
+
 /*
 	columntitles for the shellview
 */
-#define IDS_SHV_COLUMN1		7
-#define IDS_SHV_COLUMN2		8
-#define IDS_SHV_COLUMN3		9
-#define IDS_SHV_COLUMN4		10
-#define IDS_SHV_COLUMN5		11
-#define IDS_SHV_COLUMN6		12
-#define IDS_SHV_COLUMN7		13
-#define IDS_SHV_COLUMN8		14
-#define IDS_SHV_COLUMN9		15
-#define IDS_SHV_COLUMN10	16
-#define IDS_SHV_COLUMN11	17
-#define IDS_SHV_COLUMN_DELFROM  18
-#define IDS_SHV_COLUMN_DELDATE  19
+#define IDS_SHV_COLUMN1             7
+#define IDS_SHV_COLUMN2             8
+#define IDS_SHV_COLUMN3             9
+#define IDS_SHV_COLUMN4             10
+#define IDS_SHV_COLUMN5             11
+#define IDS_SHV_COLUMN6             12
+#define IDS_SHV_COLUMN7             13
+#define IDS_SHV_COLUMN8             14
+#define IDS_SHV_COLUMN9             15
+#define IDS_SHV_COLUMN10            16
+#define IDS_SHV_COLUMN11            17
+#define IDS_SHV_COLUMN_DELFROM      18
+#define IDS_SHV_COLUMN_DELDATE      19
 
-#define IDS_DESKTOP		20
-#define IDS_MYCOMPUTER		21
+#define IDS_DESKTOP                 20
+#define IDS_MYCOMPUTER              21
 
-#define IDS_SELECT		22
-#define IDS_OPEN		23
-#define IDS_VIEW_LARGE		24
-#define IDS_VIEW_SMALL		25
-#define IDS_VIEW_LIST		26
-#define IDS_VIEW_DETAILS	27
+#define IDS_SELECT                  22
+#define IDS_OPEN                    23
+#define IDS_VIEW_LARGE              24
+#define IDS_VIEW_SMALL              25
+#define IDS_VIEW_LIST               26
+#define IDS_VIEW_DETAILS            27
 
-#define IDS_RESTART_TITLE      40
-#define IDS_RESTART_PROMPT     41
-#define IDS_SHUTDOWN_TITLE     42
-#define IDS_SHUTDOWN_PROMPT    43
+#define IDS_RESTART_TITLE           40
+#define IDS_RESTART_PROMPT          41
+#define IDS_SHUTDOWN_TITLE          42
+#define IDS_SHUTDOWN_PROMPT         43
 
 #define IDS_PROGRAMS                45
 #define IDS_PERSONAL                46
@@ -84,35 +89,55 @@
 
 #define IDS_CREATEFOLDER_DENIED     128
 #define IDS_CREATEFOLDER_CAPTION    129
-#define IDS_DELETEITEM_CAPTION	    130
+#define IDS_DELETEITEM_CAPTION      130
 #define IDS_DELETEFOLDER_CAPTION    131
-#define IDS_DELETEITEM_TEXT	    132
-#define IDS_DELETEMULTIPLE_TEXT	    133
+#define IDS_DELETEITEM_TEXT         132
+#define IDS_DELETEMULTIPLE_TEXT     133
 #define IDS_OVERWRITEFILE_CAPTION   134
-#define IDS_OVERWRITEFILE_TEXT	    135
+#define IDS_OVERWRITEFILE_TEXT      135
 #define IDS_DELETESELECTED_TEXT     136
 #define IDS_TRASHFOLDER_TEXT        137
 #define IDS_TRASHITEM_TEXT          138
 #define IDS_TRASHMULTIPLE_TEXT      139
 #define IDS_CANTTRASH_TEXT          140
 #define IDS_OVERWRITEFOLDER_TEXT    141
+#define IDS_OPEN_WITH               142
+#define IDS_OPEN_WITH_CHOOSE        143
+#define IDS_SHELL_ABOUT_AUTHORS     144
+#define IDS_SHELL_ABOUT_BACK        145
 
-/* Note: this string is referenced from the registry*/
+/* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
 
-#define IDD_ICON                0x4300
-#define IDD_MESSAGE             0x4301
+#define IDD_ICON                    0x4300
+#define IDD_MESSAGE                 0x4301
 
 /* these IDs are the same as on native */
-#define IDD_YESTOALL            0x3207
+#define IDD_YESTOALL                0x3207
+
 /* browse for folder dialog box */
-#define IDD_MAKENEWFOLDER       0x3746
-#define IDD_FOLDERTEXT          0x3745
-#define IDD_FOLDER              0x3744
-#define IDD_STATUS		0x3743
-#define IDD_TITLE		0x3742
-#define IDD_TREEVIEW		0x3741
+#define IDD_MAKENEWFOLDER           0x3746
+#define IDD_FOLDERTEXT              0x3745
+#define IDD_FOLDER                  0x3744
+#define IDD_STATUS                  0x3743
+#define IDD_TITLE                   0x3742
+#define IDD_TREEVIEW                0x3741
 #define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
+
+/* ID's of the ShellAbout controls */
+// Part 1 - ID's identical to Windows Server 2003 SP1's shell32.dll
+#define IDD_SHELL_ABOUT                   0x3810
+#define IDC_SHELL_ABOUT_ICON              0x3009
+#define IDC_SHELL_ABOUT_APPNAME           0x3500
+#define IDC_SHELL_ABOUT_OTHERSTUFF        0x350D
+#define IDC_SHELL_ABOUT_REG_USERNAME      0x3507
+#define IDC_SHELL_ABOUT_REG_ORGNAME       0x3508
+#define IDC_SHELL_ABOUT_PHYSMEM           0x3503
+
+// Part 2 - ReactOS-specific ID's
+#define IDD_SHELL_ABOUT_AUTHORS           0x4100
+#define IDC_SHELL_ABOUT_AUTHORS           0x4101
+#define IDC_SHELL_ABOUT_AUTHORS_LISTBOX   0x4102
 
 #define IDI_SHELL_DOCUMENT           1
 #define IDI_SHELL_FOLDER             4

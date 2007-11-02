@@ -37,7 +37,7 @@ END
  * found in the corresponding directorys
  */
 #include "icon_res.rc"
-//#include "bitmap_res.rc"
+#include "bitmap_res.rc"
 #include "avi_res.rc"
 
 /*

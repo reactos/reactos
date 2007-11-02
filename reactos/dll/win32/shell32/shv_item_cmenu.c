@@ -23,7 +23,7 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
+#define YDEBUG
 #include "winerror.h"
 #include "wine/debug.h"
 
@@ -56,6 +56,9 @@ typedef struct
     IContextMenu ** ecmenu;
     UINT           esize;
     UINT           ecount;
+    UINT           iIdSHEFirst;
+    UINT           iIdSHELast;
+    SFGAOF         rfg;
 } ItemCmImpl;
 
 UINT
@@ -96,7 +99,15 @@ IContextMenu2 *ISvItemCm_Constructor(LPSHELLFOLDER pSFParent, LPCITEMIDLIST pidl
 	cm->pidl = ILClone(pidl);
 	cm->pSFParent = pSFParent;
 
-	if(pSFParent) IShellFolder_AddRef(pSFParent);
+	if(pSFParent)
+	{
+	    HRESULT hr;
+	    IShellFolder_AddRef(pSFParent);
+	    cm->rfg = SFGAO_BROWSABLE | SFGAO_CANCOPY | SFGAO_CANMOVE | SFGAO_CANDELETE | SFGAO_CANRENAME | SFGAO_HASPROPSHEET;
+	    hr = IShellFolder_GetAttributesOf(pSFParent, cidl, apidl, &cm->rfg);
+	    if (!SUCCEEDED(hr))
+	        cm->rfg = 0; /* No action available */
+	}
 
 	cm->apidl = _ILCopyaPidl(apidl, cidl);
 	cm->cidl = cidl;
@@ -215,6 +226,50 @@ void WINAPI _InsertMenuItem (
 	InsertMenuItemA( hmenu, indexMenu, fByPosition, &mii);
 }
 
+HRESULT
+DoCustomItemAction(ItemCmImpl *This, LPARAM lParam, UINT uMsg)
+{
+   IContextMenu2 * cmenu;
+   IContextMenu * menu;
+   MEASUREITEMSTRUCT * lpmis = (MEASUREITEMSTRUCT *)lParam;
+   DRAWITEMSTRUCT * drawItem = (DRAWITEMSTRUCT *)lParam;
+   HRESULT hResult;
+
+
+   TRACE("DoCustomItemAction entered with uMsg %x lParam %p\n", uMsg, lParam);
+
+   if (uMsg == WM_MEASUREITEM)
+   {
+       menu = This->ecmenu[lpmis->itemID - This->iIdSHEFirst];
+   }
+   else if (uMsg == WM_DRAWITEM)
+   {
+       menu = This->ecmenu[drawItem->itemID - This->iIdSHEFirst];
+   }
+   else
+   {
+      ERR("unexpected message\n");
+      return E_FAIL;
+   }
+
+   if (!menu)
+   {
+     ERR("item is not valid\n");
+     return E_FAIL;
+   }
+  
+   hResult = menu->lpVtbl->QueryInterface(menu, &IID_IContextMenu2, (void**)&cmenu);
+   if (hResult != S_OK)
+   {
+     ERR("failed to get IID_IContextMenu2 interface\n");
+     return hResult;
+   }
+
+   hResult = cmenu->lpVtbl->HandleMenuMsg(cmenu, uMsg, (WPARAM)0, lParam);
+   TRACE("returning hResult %x\n", hResult);
+   return hResult;
+}
+
 BOOL
 SH_EnlargeContextMenuArray(ItemCmImpl *This, UINT newsize)
 {
@@ -253,7 +308,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     HRESULT hResult;
     UINT idCmdFirst = 0x5000;
     UINT idCmdLast = 0xFFF0;
-    static const WCHAR szAny[] = { '*',0};
+    static WCHAR szAny[] = { '*',0};
 
     SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj);
 
@@ -283,17 +338,16 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     }
 
     TRACE("SH_LoadContextMenuHandlers num extensions %u\n", This->ecount);
-
+    This->iIdSHEFirst = idCmdFirst;
     for (i = 0; i < This->ecount; i++)
     {
        cmenu = This->ecmenu[i];
-       TRACE("Invoking menu %p\n", cmenu);
-       hResult = cmenu->lpVtbl->QueryContextMenu(hMenu, indexMenu, idCmdFirst, idCmdLast, idCmdLast, CMF_NORMAL);
-       TRACE("result %x\n",hResult);
+       hResult = cmenu->lpVtbl->QueryContextMenu(cmenu, hMenu, indexMenu, idCmdFirst, idCmdLast, CMF_NORMAL);
+       idCmdFirst += (hResult & 0xFFFF);
     }
+    This->iIdSHELast = idCmdFirst;
 
-
-
+    TRACE("SH_LoadContextMenuHandlers first %x last %x\n", This->iIdSHEFirst, This->iIdSHELast);
 }
 
 /**************************************************************************
@@ -324,31 +378,46 @@ static HRESULT WINAPI ISvItemCm_fnQueryContextMenu(
 	  if(!(uFlags & CMF_EXPLORE))
 	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Select", MFS_ENABLED);
 
-	  if(This->bAllValues)
+      TRACE("rfg %x\n", This->rfg);
+	  if (This->rfg & SFGAO_BROWSABLE)
 	  {
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	  }
-	  else
-	  {
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+   	      if(This->bAllValues)
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
+	      }
+	      else
+	      {
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_EXPLORE, MFT_STRING, "&Explore", MFS_ENABLED);
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_OPEN, MFT_STRING, "&Open", MFS_ENABLED);
+	      }
 	  }
 
 	  SetMenuDefaultItem(hmenu, 0, MF_BYPOSITION);
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, "&Copy", MFS_ENABLED);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, "&Cut", MFS_ENABLED);
+	  if (This->rfg & (SFGAO_CANCOPY | SFGAO_CANMOVE))
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      if (This->rfg & SFGAO_CANCOPY)
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_COPY, MFT_STRING, "&Copy", MFS_ENABLED);
+	      if (This->rfg & SFGAO_CANMOVE)
+	          _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_CUT, MFT_STRING, "&Cut", MFS_ENABLED);
+	  }
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
+	  if (This->rfg & SFGAO_CANDELETE)
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_DELETE, MFT_STRING, "&Delete", MFS_ENABLED);
+	  }
 
-	  if(uFlags & CMF_CANRENAME)
-	    _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
+	  if ((uFlags & CMF_CANRENAME) && (This->rfg & SFGAO_CANRENAME))
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_RENAME, MFT_STRING, "&Rename", ISvItemCm_CanRenameItems(This) ? MFS_ENABLED : MFS_DISABLED);
 
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
-	  _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
+	  if (This->rfg & SFGAO_HASPROPSHEET)
+	  {
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, 0, MFT_SEPARATOR, NULL, 0);
+	      _InsertMenuItem(hmenu, indexMenu++, TRUE, FCIDM_SHVIEW_PROPERTIES, MFT_STRING, "&Properties", MFS_ENABLED);
+	  }
 
       lastindex = FCIDM_SHVIEWLAST;
 	}
@@ -681,10 +750,20 @@ static HRESULT WINAPI ISvItemCm_fnHandleMenuMsg(
 	LPARAM lParam)
 {
 	ItemCmImpl *This = (ItemCmImpl *)iface;
-
+    LPMEASUREITEMSTRUCT lpmis = (LPMEASUREITEMSTRUCT) lParam;
 	TRACE("(%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
 
-	return E_NOTIMPL;
+    switch(uMsg)
+    {
+       case WM_MEASUREITEM:
+       case WM_DRAWITEM:
+          if (lpmis->itemID >= This->iIdSHEFirst && lpmis->itemID <= This->iIdSHELast)
+             return DoCustomItemAction(This, lParam, uMsg);
+          break;
+
+    }
+   
+    return E_NOTIMPL;
 }
 
 static const IContextMenu2Vtbl cmvt =

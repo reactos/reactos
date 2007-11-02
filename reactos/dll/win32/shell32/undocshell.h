@@ -560,6 +560,8 @@ DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);
 
+DEFINE_GUID(CLSID_OpenWith, 0x09799AFB, 0xAD67, 0x11d1, 0xAB,0xCD,0x00,0xC0,0x4F,0xC3,0x09,0x36);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

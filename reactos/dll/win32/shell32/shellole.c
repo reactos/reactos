@@ -77,6 +77,7 @@ static const struct {
 #endif
     {&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
+    {&CLSID_OpenWith,       &SHEOW_Constructor},
 	{NULL,NULL}
 };
 
