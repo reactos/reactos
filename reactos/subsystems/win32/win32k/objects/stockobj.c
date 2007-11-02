@@ -107,7 +107,7 @@ static LOGFONTW DefaultGuiFont =
 { 11, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE, ANSI_CHARSET,
   0, 0, DEFAULT_QUALITY, VARIABLE_PITCH | FF_SWISS, L"MS Sans Serif" }; //Bitstream Vera Sans
 
-#define NB_STOCK_OBJECTS (DEFAULT_GUI_FONT + 1)
+#define NB_STOCK_OBJECTS (STOCK_LAST + 1)
 
 static HGDIOBJ StockObjects[NB_STOCK_OBJECTS];
 
@@ -124,6 +124,7 @@ CreateStockObjects(void)
   /* Create GDI Stock Objects from the logical structures we've defined */
 
   StockObjects[WHITE_BRUSH] =  IntGdiCreateSolidBrush(RGB(255,255,255));
+  StockObjects[DC_BRUSH]    =  IntGdiCreateSolidBrush(RGB(255,255,255));
   StockObjects[LTGRAY_BRUSH] = IntGdiCreateSolidBrush(RGB(192,192,192));
   StockObjects[GRAY_BRUSH] =   IntGdiCreateSolidBrush(RGB(128,128,128));
   StockObjects[DKGRAY_BRUSH] = IntGdiCreateSolidBrush(RGB(64,64,64));
@@ -132,6 +133,7 @@ CreateStockObjects(void)
 
   StockObjects[WHITE_PEN] = IntGdiExtCreatePen(WhitePen.lopnStyle, WhitePen.lopnWidth.x, BS_SOLID, WhitePen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
   StockObjects[BLACK_PEN] = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
+  StockObjects[DC_PEN]    = IntGdiExtCreatePen(BlackPen.lopnStyle, BlackPen.lopnWidth.x, BS_SOLID, BlackPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
   StockObjects[NULL_PEN] = IntGdiExtCreatePen(NullPen.lopnStyle, NullPen.lopnWidth.x, BS_SOLID, NullPen.lopnColor, 0, 0, 0, NULL, 0, TRUE, NULL);
 
   (void) TextIntCreateFontIndirect(&OEMFixedFont, (HFONT*)&StockObjects[OEM_FIXED_FONT]);

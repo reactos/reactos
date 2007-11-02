@@ -816,6 +816,13 @@ extern "C" {
 #define DC_BRUSH	18
 #define DC_PEN	19
 #endif
+#if (_WIN32_WINNT >= 0x0500)
+#define STOCK_LAST          19
+#elif (WINVER >= 0x0400)
+#define STOCK_LAST          17
+#else
+#define STOCK_LAST          16
+#endif
 #define SYSPAL_NOSTATIC 2
 #define SYSPAL_STATIC 1
 #define SYSPAL_ERROR 0
