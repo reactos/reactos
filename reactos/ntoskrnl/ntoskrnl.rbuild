@@ -123,6 +123,7 @@
 		<file>cmhook.c</file>
 		<file>cmkcbncb.c</file>
 		<file>cmkeydel.c</file>
+		<file>cmlazy.c</file>
 		<file>cmmapvw.c</file>
 		<file>cmname.c</file>
 		<file>cmparse.c</file>
@@ -132,6 +133,7 @@
 		<file>cmvalue.c</file>
 		<file>cmvalche.c</file>
 		<file>cmwraprs.c</file>
+		<file>ntapi.c</file>
 	</directory>
 	<directory name="cm">
 		<file>ntfunc.c</file>

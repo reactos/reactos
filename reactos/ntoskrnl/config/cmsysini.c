@@ -23,6 +23,7 @@ BOOLEAN CmpFlushOnLockRelease;
 BOOLEAN CmpSpecialBootCondition;
 BOOLEAN CmpNoWrite;
 BOOLEAN CmpForceForceFlush;
+BOOLEAN CmpWasSetupBoot;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -810,7 +811,7 @@ CmInitSystem1(VOID)
     /* Build the master hive */
     Status = CmpInitializeHive((PCMHIVE*)&CmiVolatileHive,
                                HINIT_CREATE,
-                               HIVE_VOLATILE | HIVE_NO_FILE,
+                               HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
                                NULL,
                                NULL,
@@ -900,7 +901,7 @@ CmInitSystem1(VOID)
     ((PHBASE_BLOCK)BaseAddress)->Length = Length;
     Status = CmpInitializeHive((PCMHIVE*)&HardwareHive,
                                HINIT_MEMORY, //HINIT_CREATE,
-                               HIVE_NO_FILE, //HIVE_VOLATILE,
+                               HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
                                BaseAddress, // NULL,
                                NULL,
@@ -972,6 +973,26 @@ CmpLockRegistryExclusive(VOID)
     RtlGetCallersAddress(&CmpRegistryLockCaller, &CmpRegistryLockCallerCaller);
 }
 
+VOID
+NTAPI
+CmpLockRegistry(VOID)
+{
+    /* Enter a critical region */
+    KeEnterCriticalRegion();
+    
+    /* Check if we have to starve writers */
+    if (CmpFlushStarveWriters)
+    {
+        /* Starve exlusive waiters */
+        ExAcquireSharedStarveExclusive(&CmpRegistryLock, TRUE);
+    }
+    else
+    {
+        /* Just grab the lock */
+        ExAcquireResourceSharedLite(&CmpRegistryLock, TRUE);
+    }
+}
+
 BOOLEAN
 NTAPI
 CmpTestRegistryLock(VOID)
@@ -1002,7 +1023,7 @@ CmpUnlockRegistry(VOID)
         CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK();
         
         /* Flush the registry */
-        CmpFlushEntireRegistry(TRUE);
+        CmpDoFlushAll(TRUE);
         CmpFlushOnLockRelease = FALSE;
     }
     
@@ -1011,27 +1032,11 @@ CmpUnlockRegistry(VOID)
     KeLeaveCriticalRegion();
 }
 
-BOOLEAN
+VOID
 NTAPI
-CmpFlushEntireRegistry(IN BOOLEAN ForceFlush)
+CmShutdownSystem(VOID)
 {
-    BOOLEAN Flushed = TRUE;
-    
-    /* Make sure that the registry isn't read-only now */
-    if (CmpNoWrite) return TRUE;
-    
-    /* Otherwise, acquire the hive list lock and disable force flush */
-    CmpForceForceFlush = FALSE;
-    ExAcquirePushLockShared(&CmpHiveListHeadLock);
-    
-    /* Check if the hive list isn't empty */
-    if (!IsListEmpty(&CmpHiveListHead))
-    {
-        /* FIXME: TODO */
-        ASSERT(FALSE);
-    }
-    
-    /* Release the lock and return the flush state */
-    ExReleasePushLock(&CmpHiveListHeadLock);
-    return Flushed;
+    /* Kill the workers and fush all hives */
+    CmpShutdownWorkers();
+    CmpDoFlushAll(TRUE);
 }

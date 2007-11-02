@@ -15,6 +15,59 @@
 
 /* FUNCTIONS *****************************************************************/
 
+BOOLEAN
+NTAPI
+CmpDoFlushAll(IN BOOLEAN ForceFlush)
+{
+    NTSTATUS Status;
+    PLIST_ENTRY NextEntry;
+    PCMHIVE Hive;
+    BOOLEAN Result = TRUE;    
+
+    /* Make sure that the registry isn't read-only now */
+    if (CmpNoWrite) return TRUE;
+    
+    /* Otherwise, acquire the hive list lock and disable force flush */
+    CmpForceForceFlush = FALSE;
+    ExAcquirePushLockShared(&CmpHiveListHeadLock);
+    
+    /* Loop the hive list */
+    NextEntry = CmpHiveListHead.Flink;
+    while (NextEntry != &CmpHiveListHead)
+    {
+        /* Get the hive */
+        Hive = CONTAINING_RECORD(NextEntry, CMHIVE, HiveList);
+        if (!(Hive->Hive.HiveFlags & HIVE_NOLAZYFLUSH))
+        {
+            /* Find out why this is needed? [Aleksey] */
+            ULONG Disposition;
+            Status = CmpOpenHiveFiles(&Hive->FileFullPath,
+                                      L".LOG",
+                                      &Hive->FileHandles[HFILE_TYPE_PRIMARY],
+                                      &Hive->FileHandles[HFILE_TYPE_LOG],
+                                      &Disposition,
+                                      &Disposition,
+                                      FALSE,
+                                      FALSE,
+                                      TRUE,
+                                      NULL);
+
+            /* Do the sync */
+            DPRINT1("Flushing: %wZ\n", &Hive->FileFullPath);
+            DPRINT1("Handle: %lx\n", Hive->FileHandles[HFILE_TYPE_PRIMARY]);
+            Status = HvSyncHive(&Hive->Hive);
+            if (!NT_SUCCESS(Status)) Result = FALSE;
+        }
+
+        /* Try the next entry */
+        NextEntry = NextEntry->Flink;
+    }
+    
+    /* Release lock and return */
+    ExReleasePushLock(&CmpHiveListHeadLock);
+    return Result;
+}
+
 NTSTATUS
 NTAPI
 CmpSetValueKeyNew(IN PHHIVE Hive,
@@ -1029,6 +1082,17 @@ CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
         Status = STATUS_CANNOT_DELETE;
         goto Quickie;
     }
+    
+    /* Check if we're already being deleted */
+    if (Kcb->Delete)
+    {
+        /* Don't do it twice */
+        Status = STATUS_SUCCESS;
+        goto Quickie;
+    }
+    
+    /* Sanity check */
+    ASSERT(Node->Flags == Kcb->Flags);
 
     /* Check if we don't have any children */
     if (!(Node->SubKeyCounts[Stable] + Node->SubKeyCounts[Volatile]))
@@ -1042,15 +1106,23 @@ CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
             Parent = (PCM_KEY_NODE)HvGetCell(Hive, ParentCell);
             if (Parent)
             {
+                /* Update the maximum name length */
+                Kcb->ParentKcb->KcbMaxNameLen = Parent->MaxNameLen;
+                
                 /* Make sure we're dirty */
                 ASSERT(HvIsCellDirty(Hive, ParentCell));
 
                 /* Update the write time */
                 KeQuerySystemTime(&Parent->LastWriteTime);
+                KeQuerySystemTime(&Kcb->ParentKcb->KcbLastWriteTime);
 
                 /* Release the cell */
                 HvReleaseCell(Hive, ParentCell);
             }
+            
+            /* Set the KCB in delete mode and remove it */
+            Kcb->Delete = TRUE;
+            CmpRemoveKeyControlBlock(Kcb);
 
             /* Clear the cell */
             Kcb->KeyCell = HCELL_NIL;
@@ -1062,14 +1134,9 @@ CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
         Status = STATUS_CANNOT_DELETE;
     }
     
-    /* Make sure we're file-backed */
-    if (!(IsNoFileHive((PCMHIVE)Kcb->KeyHive)) ||
-        !(IsNoFileHive((PCMHIVE)Kcb->ParentKcb->KeyHive)))
-    {
-        /* Sync up the hives */
-        CmiSyncHives();
-    }
-
+    /* Flush the registry */
+    CmiSyncHives();    
+    
 Quickie:
     /* Release the cell */
     HvReleaseCell(Hive, Cell);
@@ -1077,5 +1144,38 @@ Quickie:
     /* Release hive lock */
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
+           IN BOOLEAN EclusiveLock)
+{
+    PCMHIVE CmHive;
+    NTSTATUS Status;
+    PHHIVE Hive;
+    
+    /* Get the hives */
+    Hive = Kcb->KeyHive;
+    CmHive = (PCMHIVE)Hive;
+    
+    /* Check if this is the master hive */
+    if (CmHive == CmiVolatileHive)
+    {
+        /* Flush all the hives instead */
+        CmpDoFlushAll(FALSE);
+    }
+    else
+    {
+        /* Flush only this hive */
+        if (!HvSyncHive(Hive))
+        {
+            /* Fail */
+            Status = STATUS_REGISTRY_IO_FAILED;
+        }
+    }
+    
+    /* Return the status */
     return Status;
 }

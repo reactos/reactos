@@ -502,7 +502,6 @@ typedef struct _KEY_INFORMATION
 #define SYSTEM_LOG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
 #define REG_SYSTEM_KEY_NAME     L"\\Registry\\Machine\\SYSTEM"
 #define REG_HARDWARE_KEY_NAME   L"\\Registry\\Machine\\HARDWARE"
-#define IsNoFileHive(Hive)      ((Hive)->Flags & HIVE_NO_FILE)
 typedef struct _KEY_OBJECT
 {
     ULONG Type;
@@ -515,16 +514,9 @@ typedef struct _KEY_OBJECT
 } KEY_OBJECT, *PKEY_OBJECT;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
-extern KTIMER CmiWorkerTimer;
-VOID NTAPI CmiWorkerThread(IN PVOID Param);
 PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
-ULONG CmiGetMaxNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
-ULONG CmiGetMaxClassLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
-ULONG CmiGetMaxValueNameLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
-ULONG CmiGetMaxValueDataLength(IN PHHIVE RegistryHive, IN PCM_KEY_NODE KeyCell);
 VOID CmiSyncHives(VOID);
-#define HIVE_NO_FILE    0x00000002
 ///////////////////////////////////////////////////////////////////////////////
 
 //
@@ -785,6 +777,12 @@ CmpLockRegistryExclusive(
 
 VOID
 NTAPI
+CmpLockRegistry(
+    VOID
+);
+
+VOID
+NTAPI
 CmpUnlockRegistry(
     VOID
 );
@@ -850,6 +848,12 @@ CmpAllocateKeyControlBlock(
 VOID
 NTAPI
 CmpFreeKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+VOID
+NTAPI
+CmpRemoveKeyControlBlock(
     IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
@@ -957,8 +961,26 @@ CmpGetNextName(
 //
 BOOLEAN
 NTAPI
-CmpFlushEntireRegistry(
+CmpDoFlushAll(
     IN BOOLEAN ForceFlush
+);
+
+VOID
+NTAPI
+CmpShutdownWorkers(
+    VOID
+);
+
+VOID
+NTAPI
+CmpCmdInit(
+    IN BOOLEAN SetupBoot
+);
+
+VOID
+NTAPI
+CmpLazyFlush(
+    VOID
 );
 
 //
@@ -1271,6 +1293,13 @@ CmDeleteKey(
 
 NTSTATUS
 NTAPI
+CmFlushKey(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN BOOLEAN EclusiveLock
+);
+
+NTSTATUS
+NTAPI
 CmDeleteValueKey(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN UNICODE_STRING ValueName
@@ -1326,6 +1355,9 @@ extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN InitIsWinPEMode;
 extern ULONG CmpHashTableSize;
 extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
+extern BOOLEAN CmpNoWrite;
+extern BOOLEAN CmpForceForceFlush;
+extern BOOLEAN CmpWasSetupBoot;
 
 //
 // Inlined functions

@@ -535,6 +535,7 @@ CmiInitHives(BOOLEAN SetupBoot)
 }
 
 VOID
+NTAPI
 CmShutdownRegistry(VOID)
 {
     PCMHIVE Hive;

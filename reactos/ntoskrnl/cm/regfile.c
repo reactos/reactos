@@ -36,7 +36,7 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     if (Flags & ~REG_NO_LAZY_FLUSH) return STATUS_INVALID_PARAMETER;
 
     Status = CmpInitHiveFromFile(FileName,
-                                 (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NO_SYNCH : 0,
+                                 (Flags & REG_NO_LAZY_FLUSH) ? HIVE_NOLAZYFLUSH : 0,
                                  &Hive,
                                  &Allocate,
                                  0);
@@ -72,7 +72,7 @@ CmiFlushRegistryHive(PCMHIVE RegistryHive)
     NTSTATUS Status;
     ULONG Disposition;
 
-    ASSERT(!IsNoFileHive(RegistryHive));
+    ASSERT(!RegistryHive->Hive.HiveFlags & HIVE_VOLATILE);
 
     if (RtlFindSetBits(&RegistryHive->Hive.DirtyVector, 1, 0) == ~0)
     {
