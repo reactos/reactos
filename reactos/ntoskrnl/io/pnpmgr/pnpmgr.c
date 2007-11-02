@@ -2516,7 +2516,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
          {
             /* STATUS_IMAGE_ALREADY_LOADED means this driver
                was loaded by the bootloader */
-            if (Status != STATUS_IMAGE_ALREADY_LOADED)
+            if ((Status != STATUS_IMAGE_ALREADY_LOADED) ||
+                (Status == STATUS_IMAGE_ALREADY_LOADED && !DriverObject))
             {
                /* Initialize the driver */
                Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
