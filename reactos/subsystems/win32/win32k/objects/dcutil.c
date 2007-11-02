@@ -30,8 +30,7 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
       Dc_Attr->ulPenClr          = dc->Dc_Attr.ulPenClr;
       Dc_Attr->crPenClr          = dc->Dc_Attr.crPenClr;
 
-      Dc_Attr->ptlBrushOrigin.x  = dc->Dc_Attr.ptlBrushOrigin.x;
-      Dc_Attr->ptlBrushOrigin.y  = dc->Dc_Attr.ptlBrushOrigin.y;
+      Dc_Attr->ptlBrushOrigin    = dc->Dc_Attr.ptlBrushOrigin;
 
       Dc_Attr->lTextAlign        = dc->Dc_Attr.lTextAlign;
       Dc_Attr->lTextExtra        = dc->Dc_Attr.lTextExtra;
@@ -40,16 +39,11 @@ CopytoUserDcAttr(PDC dc, PDC_ATTR Dc_Attr, FLONG Dirty)
       Dc_Attr->iMapMode          = dc->Dc_Attr.iMapMode;
       Dc_Attr->iGraphicsMode     = dc->Dc_Attr.iGraphicsMode;
 
-      Dc_Attr->ptlCurrent.x      = dc->Dc_Attr.ptlCurrent.x;
-      Dc_Attr->ptlCurrent.y      = dc->Dc_Attr.ptlCurrent.y;
-      Dc_Attr->ptlWindowOrg.x    = dc->Dc_Attr.ptlWindowOrg.x;
-      Dc_Attr->ptlWindowOrg.y    = dc->Dc_Attr.ptlWindowOrg.y;
-      Dc_Attr->szlWindowExt.cx   = dc->Dc_Attr.szlWindowExt.cx;
-      Dc_Attr->szlWindowExt.cy   = dc->Dc_Attr.szlWindowExt.cy;
-      Dc_Attr->ptlViewportOrg.x  = dc->Dc_Attr.ptlViewportOrg.x;
-      Dc_Attr->ptlViewportOrg.y  = dc->Dc_Attr.ptlViewportOrg.y;
-      Dc_Attr->szlViewportExt.cx = dc->Dc_Attr.szlViewportExt.cx;
-      Dc_Attr->szlViewportExt.cy = dc->Dc_Attr.szlViewportExt.cy;
+      Dc_Attr->ptlCurrent        = dc->Dc_Attr.ptlCurrent;
+      Dc_Attr->ptlWindowOrg      = dc->Dc_Attr.ptlWindowOrg;
+      Dc_Attr->szlWindowExt      = dc->Dc_Attr.szlWindowExt;
+      Dc_Attr->ptlViewportOrg    = dc->Dc_Attr.ptlViewportOrg;
+      Dc_Attr->szlViewportExt    = dc->Dc_Attr.szlViewportExt;
 
       Dc_Attr->ulDirty_          = dc->Dc_Attr.ulDirty_; //Copy flags! We may have set them.
       
@@ -266,82 +260,5 @@ DCU_SynchDcAttrtoW32k(HDC hDC, FLONG Dirty)
   BOOL Ret = DCU_SyncDcAttrtoW32k(pDC, Dirty);
   DC_UnlockDc( pDC );
   return Ret;
-}
-
-//
-//
-// Gdi Batch Flush support functions.
-//
-
-
-//
-// Process the batch.
-//
-ULONG
-FASTCALL
-GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
-{
-  switch(pHdr->Cmd)
-  {
-     case GdiBCPatBlt: // Highest pri first!
-     case GdiBCPolyPatBlt:
-     case GdiBCTextOut:
-     case GdiBCExtTextOut:
-     case GdiBCSetBrushOrg:
-     case GdiBCExtSelClipRgn:
-     case GdiBCSelObj:
-     case GdiBCDelObj:
-     case GdiBCDelRgn:
-     default:
-       return 0;
-  }
-  return pHdr->Size; // Return the full size of the structure.
-}
-
-/*
- * NtGdiFlush
- *
- * Flushes the calling thread's current batch.
- */
-VOID
-APIENTRY
-NtGdiFlush(VOID)
-{
-  UNIMPLEMENTED;
-}
-
-/*
- * NtGdiFlushUserBatch
- *
- * Callback for thread batch flush routine.
- *
- * Think small & fast!
- */
-NTSTATUS
-APIENTRY
-NtGdiFlushUserBatch(VOID)
-{
-  PTEB pTeb = NtCurrentTeb();
-  ULONG GdiBatchCount = pTeb->GdiBatchCount;
-  
-  if( (GdiBatchCount > 0) && (GdiBatchCount <= GDIBATCHBUFSIZE))
-  {
-    HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
-    if (hDC)
-    {
-       PULONG pHdr = &pTeb->GdiTebBatch.Buffer[0];
-       // No need to init anything, just go!
-       for (; GdiBatchCount > 0; GdiBatchCount--)
-       {
-           // Process Gdi Batch!
-           pHdr += GdiFlushUserBatch( hDC, (PGDIBATCHHDR) pHdr );
-       }
-       // Exit and clear out for the next round.
-       pTeb->GdiTebBatch.Offset = 0;
-       pTeb->GdiBatchCount = 0;
-       pTeb->GdiTebBatch.HDC = 0;
-    }
-  }
-  return STATUS_SUCCESS;
 }
 

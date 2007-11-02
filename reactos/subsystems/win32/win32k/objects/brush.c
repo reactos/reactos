@@ -624,6 +624,31 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 
    dc->Dc_Attr.ptlBrushOrigin.x = XOrg;
    dc->Dc_Attr.ptlBrushOrigin.y = YOrg;
+
+   if (dc->pDc_Attr)
+   {
+      PDC_ATTR Dc_Attr = dc->pDc_Attr;
+      NTSTATUS Status = STATUS_SUCCESS;
+      _SEH_TRY
+      {
+         ProbeForWrite(Dc_Attr,
+                       sizeof(DC_ATTR),
+                       1);
+         Dc_Attr->ptlBrushOrigin = dc->Dc_Attr.ptlBrushOrigin;
+      }
+      _SEH_HANDLE
+      {
+         Status = _SEH_GetExceptionCode();
+      }
+      _SEH_END;
+
+      if(!NT_SUCCESS(Status))
+      {
+        DC_UnlockDc(dc);
+        SetLastNtError(Status);
+        return FALSE;
+      }
+   }
    DC_UnlockDc(dc);
 
    return TRUE;
