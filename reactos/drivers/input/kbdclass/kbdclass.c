@@ -120,7 +120,7 @@ ClassDeviceControl(
 	IN PIRP Irp)
 {
 	PCLASS_DEVICE_EXTENSION DeviceExtension;
-	NTSTATUS Status = Irp->IoStatus.Status;
+	NTSTATUS Status = STATUS_NOT_SUPPORTED;
 
 	DPRINT("IRP_MJ_DEVICE_CONTROL\n");
 
@@ -203,7 +203,6 @@ IrpStub(
 				DPRINT1("Port DO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 				ASSERT(FALSE);
-				Status = Irp->IoStatus.Status;
 			}
 		}
 	}
@@ -212,7 +211,6 @@ IrpStub(
 		DPRINT1("Class DO stub for major function 0x%lx\n",
 			IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 		ASSERT(FALSE);
-		Status = Irp->IoStatus.Status;
 	}
 
 	Irp->IoStatus.Status = Status;
