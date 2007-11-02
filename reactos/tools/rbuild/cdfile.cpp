@@ -34,7 +34,43 @@ CDFile::ReplaceVariable ( const string& name,
 		return path;
 }
 
+string
+BootstrapFile::ReplaceVariable ( const string& name,
+                          const string& value,
+                          string path )
+{
+	size_t i = path.find ( name );
+	if ( i != string::npos )
+		return path.replace ( i, name.length (), value );
+	else
+		return path;
+}
+
 CDFile::CDFile ( const Project& project,
+                 const XMLElement& cdfileNode,
+                 const string& path )
+	: XmlNode ( project, cdfileNode )
+{
+	const XMLAttribute* att = cdfileNode.GetAttribute ( "installbase", false );
+	string target_relative_directory;
+	if ( att != NULL )
+		target_relative_directory = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
+	else
+		target_relative_directory = "";
+
+	const XMLAttribute* nameoncd = cdfileNode.GetAttribute ( "nameoncd", false );
+
+	source = new FileLocation ( SourceDirectory,
+	                            path,
+	                            cdfileNode.value,
+	                            &cdfileNode );
+	target = new FileLocation ( OutputDirectory,
+	                            target_relative_directory,
+	                            nameoncd ? att->value : cdfileNode.value,
+	                            &cdfileNode );
+}
+
+BootstrapFile::BootstrapFile ( const Project& project,
                  const XMLElement& cdfileNode,
                  const string& path )
 	: XmlNode ( project, cdfileNode )

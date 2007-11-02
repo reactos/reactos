@@ -99,6 +99,7 @@ class AutomaticDependency;
 class Bootstrap;
 class CDFile;
 class InstallFile;
+class BootstrapFile;
 class PchFile;
 class StubbedComponent;
 class StubbedSymbol;
@@ -117,6 +118,7 @@ class Author;
 class AutoManifest;
 class AutoResource;
 class InstallComponent;
+class InstallFolder;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -199,6 +201,7 @@ public:
 	static std::string GetIntermediatePath ();
 	static std::string GetOutputPath ();
 	static std::string GetCdOutputPath ();
+    static std::string GetBootstrapCdOutputPath ();
 	static std::string GetInstallPath ();
 	static std::string GetAutomakeFile ( const std::string& defaultFile );
 	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
@@ -262,10 +265,12 @@ public:
 	XMLIncludes xmlbuildfiles;
 	std::vector<LinkerFlag*> linkerFlags;
 	std::vector<CDFile*> cdfiles;
+    std::vector<BootstrapFile*> bootstrapfiles;
 	std::vector<InstallFile*> installfiles;
 	std::vector<Module*> modules;
 	std::vector<Language*> languages;
     std::vector<Contributor*> contributors;
+    std::vector<InstallFolder*> installFolders;
 	IfableData non_if_data;
 	ArchitectureType GetArchitectureType ( const std::string& location,
 	                           const XMLAttribute& attribute );
@@ -280,6 +285,7 @@ public:
 	ArchitectureType architectureType;
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
+    const Contributor* LocateContributor ( const std::string& alias ) const;
 	const Module* LocateModule ( const std::string& name ) const;
 	const std::string& GetProjectFilename () const;
 	std::string ResolveProperties ( const std::string& s ) const;
@@ -339,6 +345,19 @@ enum HostType
 	HostDefault,
 	HostTrue
 };
+
+// reference : http://www.msfn.org/board/lofiversion/index.php/t29964.html
+
+#define	SETUPAPI_SOURCEDRIVE    "1"   //(the directory from which the INF file was installed) 
+#define	SETUPAPI_OS             "10"  //(%SystemRoot%) 
+#define	SETUPAPI_SYSTEM         "11"  //(%SystemRoot%\system32) 
+#define SETUPAPI_DRIVERS        "12"  //(%SystemRoot%\system32\drivers)
+#define SETUPAPI_INF            "17"  //(%SystemRoot%\inf)
+#define SETUPAPI_HELP           "18"  //(%SystemRoot%\Help)
+#define SETUPAPI_FONTS          "20"  //(%SystemRoot%\Fonts)
+#define SETUPAPI_ROOT           "24"  //(%SystemDrive%)
+#define SETUPAPI_SHARED         "25"  //(%ALLUSERSPROFILE%\Shared Documents)
+#define SETUPAPI_USERPROFILE    "53"  //(%USERPROFILE%)
 
 class FileLocation
 {
@@ -773,6 +792,17 @@ public:
 	void ProcessXML();
 };
 
+class InstallFolder
+{
+public:
+	const XMLElement& node;
+    std::string id;
+    std::string name;
+
+	InstallFolder ( const XMLElement& node);
+	~InstallFolder ();
+	void ProcessXML();
+};
 
 class Property
 {
@@ -938,6 +968,7 @@ public:
 	const XMLElement& node;
 	std::string base;
 	std::string nameoncd;
+    bool archDependent;
 
 	Bootstrap ( const Project& project,
 	            const Module* module,
@@ -968,6 +999,20 @@ private:
 	                                     std::string path );
 };
 
+class BootstrapFile : public XmlNode
+{
+public:
+	FileLocation *source;
+	FileLocation *target;
+
+	BootstrapFile ( const Project& project,
+	         const XMLElement& bootstrapNode,
+	         const std::string& path );
+private:
+	static std::string ReplaceVariable ( const std::string& name,
+	                                     const std::string& value,
+	                                     std::string path );
+};
 
 class InstallFile : public XmlNode
 {

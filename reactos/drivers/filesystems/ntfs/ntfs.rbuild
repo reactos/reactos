@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="ntfs" type="kernelmodedriver" installbase="system32/drivers" installname="ntfs.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<include base="ntfs">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

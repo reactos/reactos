@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="buslogic" type="kernelmodedriver" installbase="system32/drivers" installname="buslogic.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<define name="__USE_W32API" />
 	<include base="buslogic">.</include>
 	<library>ntoskrnl</library>

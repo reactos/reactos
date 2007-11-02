@@ -3329,7 +3329,8 @@ MingwIsoModuleHandler::Process ()
 }
 
 void
-MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
+MingwIsoModuleHandler::OutputBootstrapModuleTargetCopyCommands (
+    const string& bootcdstrapDirectory ,
 	const string& bootcdDirectory )
 {
 	for ( size_t i = 0; i < module.project.modules.size (); i++ )
@@ -3339,12 +3340,26 @@ MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
 			continue;
 		if ( m.bootstrap != NULL )
 		{
-			FileLocation targetFile ( OutputDirectory,
-			                          m.bootstrap->base.length () > 0
-			                                   ? bootcdDirectory + sSep + m.bootstrap->base
-			                                   : bootcdDirectory,
-			                          m.bootstrap->nameoncd );
-			OutputCopyCommand ( *m.output, targetFile );
+            if (m.bootstrap->archDependent == true)
+            {
+			    FileLocation targetFile ( OutputDirectory,
+			                              m.bootstrap->base.length () > 0
+			                                       ? bootcdstrapDirectory + sSep + m.bootstrap->base
+			                                       : bootcdstrapDirectory,
+			                              m.bootstrap->nameoncd );
+
+			    OutputCopyCommand ( *m.output, targetFile );
+            }
+            else
+            {
+                FileLocation targetFile ( OutputDirectory,
+                          m.bootstrap->base.length () > 0
+                                   ? bootcdDirectory + sSep + m.bootstrap->base
+                                   : bootcdDirectory,
+                          m.bootstrap->nameoncd );
+
+                OutputCopyCommand ( *m.output, targetFile );
+            }
 		}
 	}
 }
@@ -3362,6 +3377,22 @@ MingwIsoModuleHandler::OutputCdfileCopyCommands (
 		                              : bootcdDirectory,
 		                          cdfile.target->name );
 		OutputCopyCommand ( *cdfile.source, targetFile );
+	}
+}
+
+void
+MingwIsoModuleHandler::OutputBootstrapfileCopyCommands (
+	const string& bootcdDirectory )
+{
+    for ( size_t i = 0; i < module.project.bootstrapfiles.size (); i++ )
+	{
+		const BootstrapFile& bootfile = *module.project.bootstrapfiles[i];
+		FileLocation targetFile ( OutputDirectory,
+		                          bootfile.target->relative_path.length () > 0
+		                              ? bootcdDirectory + sSep + bootfile.target->relative_path
+		                              : bootcdDirectory,
+		                          bootfile.target->name );
+		OutputCopyCommand ( *bootfile.source, targetFile );
 	}
 }
 
@@ -3449,11 +3480,13 @@ void
 MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 {
 	string bootcdDirectory = "cd";
+    string bootcdStrapDirectory = bootcdDirectory + sSep + Environment::GetBootstrapCdOutputPath();
+
 	FileLocation bootcd ( OutputDirectory,
 	                      bootcdDirectory,
 	                      "" );
 	FileLocation bootcdReactos ( OutputDirectory,
-	                             bootcdDirectory + sSep + Environment::GetCdOutputPath (),
+                                 bootcdStrapDirectory,
 	                             "" );
 	vector<FileLocation> vSourceFiles, vCdFiles;
 	vector<FileLocation> vCdDirectories;
@@ -3523,7 +3556,9 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile,
 	          "\t-@${rm} %s 2>$(NUL)\n",
 	          backend->GetFullName ( reactosInf ).c_str () );
-	OutputBootstrapfileCopyCommands ( bootcdDirectory );
+
+    OutputBootstrapfileCopyCommands ( bootcdStrapDirectory );
+	OutputBootstrapModuleTargetCopyCommands ( bootcdStrapDirectory , bootcdDirectory);
 	OutputCdfileCopyCommands ( bootcdDirectory );
 
 	if (module.type == IsoRegTest)
@@ -3670,7 +3705,7 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	FileLocation isoboot ( OutputDirectory, "boot" + sSep + "freeldr" + sSep + "bootsect", bootloader );
 
-	string reactosDirectory = "reactos";
+    string reactosDirectory = Environment::GetArch();// "reactos";
 	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
 	FileLocation livecdReactos ( OutputDirectory,
 	                             livecdReactosNoFixup,

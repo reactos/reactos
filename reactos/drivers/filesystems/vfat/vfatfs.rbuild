@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="vfatfs" type="kernelmodedriver" installbase="system32/drivers" installname="vfatfs.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<include base="vfatfs">.</include>
 	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>

@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="disk" type="kernelmodedriver" installbase="system32/drivers" installname="disk.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<define name="__USE_W32API" />
 	<linkerflag>-lgcc</linkerflag>
 	<library>ntoskrnl</library>

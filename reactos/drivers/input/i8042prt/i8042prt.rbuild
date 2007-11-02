@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<include base="i8042prt">.</include>
 	<define name="__USE_W32API" />
 	<library>ntoskrnl</library>

@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halppc_up" type="kernelmodedll">
 	<importlibrary definition="../../hal/hal.def" />
-	<bootstrap installbase="$(CDOUTPUT)" nameoncd="hal.dll" />
+	<bootstrap nameoncd="hal.dll" />
 	<include base="halppc_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

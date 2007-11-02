@@ -2,7 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="halmp" type="kernelmodedll" entrypoint="0">
 	<importlibrary definition="../../hal/hal.def" />
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<include base="hal_generic">../include</include>
 	<include base="ntoskrnl">include</include>
 	<define name="_DISABLE_TIDENTS" />

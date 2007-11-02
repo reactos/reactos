@@ -103,6 +103,24 @@ Bootstrap::Initialize ()
 	else
 		base = "";
 
+    archDependent = true;
+
+    att = node.GetAttribute ( "archDependent", false );
+	if ( att != NULL )
+	{
+        const char* p = att->value.c_str();
+		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
+			archDependent = true;
+		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
+			archDependent = false;
+		else
+		{
+			throw XMLInvalidBuildFileException (
+				node.location,
+				"attribute 'archDependent' of <bootstrap> element can only be 'true' or 'false'" );
+		}
+	}
+
 	att = node.GetAttribute ( "nameoncd", false );
 	if ( att != NULL )
 		nameoncd = att->value;

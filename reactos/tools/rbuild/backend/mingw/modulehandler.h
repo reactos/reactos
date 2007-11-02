@@ -434,8 +434,9 @@ private:
 	void GetBootstrapCdFiles ( std::vector<FileLocation>& out ) const;
 	void GetNonModuleCdFiles ( std::vector<FileLocation>& out ) const;
 	void GetCdFiles ( std::vector<FileLocation>& out ) const;
-	void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory );
+	void OutputBootstrapModuleTargetCopyCommands ( const std::string& bootcdstrapDirectory , const std::string& bootcdDirectory );
 	void OutputCdfileCopyCommands ( const std::string& bootcdDirectory );
+    void OutputBootstrapfileCopyCommands ( const std::string& bootcdDirectory );
 };
 
 

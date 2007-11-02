@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
 <module name="uniata" type="kernelmodedriver" installbase="system32/drivers" allowwarnings="true" installname="uniata.sys">
-	<bootstrap installbase="$(CDOUTPUT)" />
+	<bootstrap />
 	<define name="__USE_W32API" />
 	<define name="_DEBUG" />
 	<include base="uniata">.</include>

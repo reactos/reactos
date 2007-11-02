@@ -4,12 +4,23 @@
 	<cdfile>autorun.inf</cdfile>
 	<cdfile>icon.ico</cdfile>
 	<cdfile>readme.txt</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivecls.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivedef.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivesft.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">hivesys.inf</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">txtsetup.sif</cdfile>
-	<cdfile installbase="$(CDOUTPUT)">unattend.inf</cdfile>
+
+	<bootstrapfile>hivecls.inf</bootstrapfile>
+	<bootstrapfile>hivedef.inf</bootstrapfile>
+	<bootstrapfile>hivesft.inf</bootstrapfile>
+	<bootstrapfile>hivesys.inf</bootstrapfile>
+	<bootstrapfile>txtsetup.sif</bootstrapfile>
+	<bootstrapfile>unattend.inf</bootstrapfile>
+	
+	<!--
+	<cdfile installbase="reactos">hivecls.inf</cdfile>
+	<cdfile installbase="reactos">hivedef.inf</cdfile>
+	<cdfile installbase="reactos">hivesft.inf</cdfile>
+	<cdfile installbase="reactos">hivesys.inf</cdfile>
+	<cdfile installbase="reactos">txtsetup.sif</cdfile>
+	<cdfile installbase="reactos">unattend.inf</cdfile>
+	-->
+
 	<directory name="bootcd">
 		<xi:include href="bootcd/bootcd.rbuild" />
 	</directory>

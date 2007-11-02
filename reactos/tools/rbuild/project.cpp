@@ -73,16 +73,23 @@ Environment::GetOutputPath ()
 /* static */ string
 Environment::GetInstallPath ()
 {
-	string defaultInstall = GetCdOutputPath ();
+	//string defaultInstall = GetCdOutputPath ();
 	return GetEnvironmentVariablePathOrDefault ( "ROS_INSTALL",
-	                                             defaultInstall );
+	                                             /*defaultInstall*/ "reactos" );
 }
 
 /* static */ string
 Environment::GetCdOutputPath ()
 {
 	return GetEnvironmentVariablePathOrDefault ( "ROS_CDOUTPUT",
-	                                             "reactos" );
+	                                             "");
+}
+
+/* static */ string
+Environment::GetBootstrapCdOutputPath ()
+{
+	return GetEnvironmentVariablePathOrDefault ( "ROS_CDBOOTSTRAPOUTPUT",
+	                                             GetArch());
 }
 
 /* static */ string
@@ -193,6 +200,8 @@ Project::~Project ()
 		delete linkerFlags[i];
 	for ( i = 0; i < cdfiles.size (); i++ )
 		delete cdfiles[i];
+    for ( i = 0; i < bootstrapfiles.size (); i++ )
+		delete bootstrapfiles[i];
 	for ( i = 0; i < installfiles.size (); i++ )
 		delete installfiles[i];
 	delete head;
@@ -401,6 +410,8 @@ Project::ProcessXML ( const string& path )
 		linkerFlags[i]->ProcessXML ();
 	for ( i = 0; i < modules.size (); i++ )
 		modules[i]->ProcessXML ();
+    for ( i = 0; i < bootstrapfiles.size (); i++ )
+		bootstrapfiles[i]->ProcessXML ();
 	for ( i = 0; i < cdfiles.size (); i++ )
 		cdfiles[i]->ProcessXML ();
 	for ( i = 0; i < installfiles.size (); i++ )
@@ -477,6 +488,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		cdfiles.push_back ( cdfile );
 		subs_invalid = true;
 	}
+    else if ( e.name == "bootstrapfile" )
+	{
+		BootstrapFile* bootstrapfile = new BootstrapFile ( *this, e, path );
+		bootstrapfiles.push_back ( bootstrapfile );
+		subs_invalid = true;
+	}
 	else if ( e.name == "installfile" )
 	{
 		InstallFile* installfile = new InstallFile ( *this, e, path );
@@ -493,7 +510,13 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 	{
 		Contributor* contributor = new Contributor ( e );
 		contributors.push_back ( contributor );
-		subs_invalid = true;
+		subs_invalid = false;
+	}
+    else if ( e.name == "installfolder" )
+	{
+		InstallFolder* installFolder = new InstallFolder ( e );
+		installFolders.push_back ( installFolder );
+		subs_invalid = false;
 	}
 	else if ( e.name == "directory" )
 	{
@@ -591,6 +614,18 @@ Project::LocateModule ( const string& name ) const
 	{
 		if ( modules[i]->name == name )
 			return modules[i];
+	}
+
+	return NULL;
+}
+
+const Contributor*
+Project::LocateContributor ( const string& alias ) const
+{
+	for ( size_t i = 0; i < contributors.size (); i++ )
+	{
+		if ( contributors[i]->alias == alias )
+			return contributors[i];
 	}
 
 	return NULL;

@@ -67,13 +67,11 @@ SysSetupGenerator::Generate ()
 	InfHostCloseFile ( inf );
 }
 
-#define DIRECTORYID_SYSTEM32	"11"
-
 string
 SysSetupGenerator::GetDirectoryId ( const Module& module )
 {
 	if ( module.install && ToLower ( module.install->relative_path ) == "system32" )
-		return DIRECTORYID_SYSTEM32;
+		return SETUPAPI_SYSTEM;
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
 }

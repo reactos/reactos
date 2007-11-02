@@ -76,3 +76,18 @@ InstallComponent::ProcessXML()
     else
         section = "DefaultInstall";
 }
+
+InstallFolder::InstallFolder ( const XMLElement& node_)
+	: node(node_)
+{
+    ProcessXML ();
+}
+
+void
+InstallFolder::ProcessXML()
+{
+    const XMLAttribute* att = node.GetAttribute ( "id", true );
+	assert(att);
+	id = att->value;
+    name = node.value;
+}

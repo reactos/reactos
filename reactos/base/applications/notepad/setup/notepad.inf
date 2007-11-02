@@ -8,9 +8,9 @@ ProfileItems = NotepadDesktopItemAdd
 
 [NotepadDesktopItemAdd]
 Name       = %NOTEPAD_NAME%, 0x0000008, 16409
-CmdLine    = 24,"%SystemRoot%\system32\","notepad.exe"
+CmdLine    = 11,,"notepad.exe"
 InfoTip    = %NOTEPAD_DESC%
-WorkingDir = 24,"%HOMEDRIVE%%HOMEPATH%"
+WorkingDir = "%HOMEDRIVE%%HOMEPATH%"
 
 ; Localizable Strings
 
