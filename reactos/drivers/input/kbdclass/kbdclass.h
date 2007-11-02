@@ -59,7 +59,7 @@ typedef struct _CLASS_DEVICE_EXTENSION
 	LIST_ENTRY ListHead;
 	KSPIN_LOCK ListSpinLock;
 	KSPIN_LOCK SpinLock;
-	BOOLEAN ReadIsPending;
+	PIRP PendingIrp;
 	SIZE_T InputCount;
 	PKEYBOARD_INPUT_DATA PortData;
 	LPCWSTR DeviceName;
