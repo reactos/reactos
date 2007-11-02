@@ -599,6 +599,7 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 					DeleteDC(hdcMem);
 				}
 			}
+			break;
 		}
 		case WM_COMMAND:
 		{
