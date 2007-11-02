@@ -57,7 +57,7 @@ AllocConsole(VOID)
 		FILE_ALL_ACCESS,
 		&ObjectAttributes,
 		&IoStatusBlock,
-		0,
+		FILE_OPEN,
 		FILE_SYNCHRONOUS_IO_ALERT);
 	if (!NT_SUCCESS(Status))
 		return FALSE;
@@ -74,8 +74,8 @@ AllocConsole(VOID)
 		FILE_ALL_ACCESS,
 		&ObjectAttributes,
 		&IoStatusBlock,
-		0,
-		FILE_SYNCHRONOUS_IO_ALERT);
+		FILE_OPEN,
+		0);
 	if (!NT_SUCCESS(Status))
 		return FALSE;
 
@@ -92,15 +92,12 @@ AttachConsole(
 BOOL WINAPI
 FreeConsole(VOID)
 {
-	DPRINT("FreeConsole() called\n");
-
 	if (StdInput != INVALID_HANDLE_VALUE)
 		NtClose(StdInput);
 
 	if (StdOutput != INVALID_HANDLE_VALUE)
 		NtClose(StdOutput);
 
-	DPRINT("FreeConsole() done\n");
 	return TRUE;
 }
 
@@ -148,17 +145,54 @@ GetStdHandle(
 }
 
 BOOL WINAPI
+FlushConsoleInputBuffer(
+	IN HANDLE hConsoleInput)
+{
+	LARGE_INTEGER Offset, Timeout;
+	IO_STATUS_BLOCK IoStatusBlock;
+	KEYBOARD_INPUT_DATA InputData;
+	NTSTATUS Status;
+
+	do
+	{
+		Offset.QuadPart = 0;
+		Status = NtReadFile(
+			hConsoleInput,
+			NULL,
+			NULL,
+			NULL,
+			&IoStatusBlock,
+			&InputData,
+			sizeof(KEYBOARD_INPUT_DATA),
+			&Offset,
+			0);
+		if (Status == STATUS_PENDING)
+		{
+			Timeout.QuadPart = -100;
+			Status = NtWaitForSingleObject(hConsoleInput, FALSE, &Timeout);
+			if (Status == STATUS_TIMEOUT)
+			{
+				NtCancelIoFile(hConsoleInput, &IoStatusBlock);
+				return TRUE;
+			}
+		}
+	} while (NT_SUCCESS(Status));
+	return FALSE;
+}
+
+BOOL WINAPI
 ReadConsoleInput(
 	IN HANDLE hConsoleInput,
 	OUT PINPUT_RECORD lpBuffer,
 	IN DWORD nLength,
 	OUT LPDWORD lpNumberOfEventsRead)
 {
+	LARGE_INTEGER Offset;
 	IO_STATUS_BLOCK IoStatusBlock;
 	KEYBOARD_INPUT_DATA InputData;
 	NTSTATUS Status;
 
-	lpBuffer->EventType = KEY_EVENT;
+	Offset.QuadPart = 0;
 	Status = NtReadFile(
 		hConsoleInput,
 		NULL,
@@ -167,11 +201,17 @@ ReadConsoleInput(
 		&IoStatusBlock,
 		&InputData,
 		sizeof(KEYBOARD_INPUT_DATA),
-		NULL,
+		&Offset,
 		0);
+	if (Status == STATUS_PENDING)
+	{
+		Status = NtWaitForSingleObject(hConsoleInput, FALSE, NULL);
+		Status = IoStatusBlock.Status;
+	}
 	if (!NT_SUCCESS(Status))
 		return FALSE;
 
+	lpBuffer->EventType = KEY_EVENT;
 	Status = IntTranslateKey(&InputData, &lpBuffer->Event.KeyEvent);
 	if (!NT_SUCCESS(Status))
 		return FALSE;
