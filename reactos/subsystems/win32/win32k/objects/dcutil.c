@@ -324,7 +324,7 @@ NtGdiFlushUserBatch(VOID)
   PTEB pTeb = NtCurrentTeb();
   ULONG GdiBatchCount = pTeb->GdiBatchCount;
   
-  if( (GdiBatchCount > 0) && (GdiBatchCount <= 310))  // 310 UL size of Buffer in TEB.
+  if( (GdiBatchCount > 0) && (GdiBatchCount <= GDIBATCHBUFSIZE))
   {
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
     if (hDC)

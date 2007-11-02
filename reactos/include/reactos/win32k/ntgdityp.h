@@ -77,6 +77,8 @@ typedef enum _GETDCPOINT
     GdiGetDCOrg = 6,
 } GETDCPOINT, *PGETDCPOINT;
 
+#define GDIBATCHBUFSIZE 0x136
+
 typedef enum _GDIBATCHCMD
 {
     GdiBCPatBlt,
