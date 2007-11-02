@@ -18,7 +18,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "framebuf_acc.h"
+#include "framebufacc.h"
 
 static DRVFN DrvFunctionTable[] =
 {

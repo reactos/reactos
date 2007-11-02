@@ -18,7 +18,8 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "framebuf_acc.h"
+#include "framebufacc.h"
+
 
 
 /*
@@ -75,7 +76,7 @@ DrvMovePointer(IN SURFOBJ *pso,
  * Sets the new pointer shape.
  *
  * Status
- *    @unimplemented
+ *    @implemented
  */
 
 ULONG APIENTRY
@@ -91,10 +92,135 @@ DrvSetPointerShape(
    IN RECTL *prcl,
    IN FLONG fl)
 {
-/*   return SPS_DECLINE;*/
-   return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+    PPDEV   ppdev = (PPDEV) pso->dhpdev;
+    ULONG returnedDataLength = 0;
+
+    if (ppdev->pPointerAttributes == NULL)
+    {
+        /* hw did not support hw mouse pointer, we try then with software */
+        return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+    }
+
+    /* check see if the apps ask to hide the mouse or not */
+    if (psoMask == (SURFOBJ *) NULL)
+    {
+        if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_DISABLE_POINTER, NULL, 0, NULL, 0, &returnedDataLength))
+        {
+            /* no hw support found for the mouse we try then the software version */
+            return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+        }
+
+        return TRUE;
+    }
+
+    /* set our hotspot */
+    ppdev->PointerHotSpot.x = xHot;
+    ppdev->PointerHotSpot.y = yHot;
+
+    /* Set the hw mouse shape */
+
+    if (psoColor != (SURFOBJ *) NULL)
+    {
+        /* We got a color mouse pointer */
+        if ((ppdev->PointerCapabilities.Flags & VIDEO_MODE_COLOR_POINTER) &&
+            (CopyColorPointer(ppdev, psoMask, psoColor, pxlo)) )
+        {
+            ppdev->pPointerAttributes->Flags |= VIDEO_MODE_COLOR_POINTER;
+        }
+        else
+        {
+            /* No color mouse pointer being set, so we need try the software version then */
+            if (ppdev->HwMouseActive)
+            {
+                ppdev->HwMouseActive = FALSE;
+                if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_DISABLE_POINTER, NULL, 0, NULL, 0, &returnedDataLength))
+                {
+                    /* hw did not support hw mouse pointer, we try then with software */
+                    return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+                }
+            }
+            return SPS_DECLINE ;
+        }
+    }
+    else
+    {
+        /* We got a mono mouse pointer */
+        if ( (ppdev->PointerCapabilities.Flags & VIDEO_MODE_MONO_POINTER) &&
+              (CopyMonoPointer(ppdev, psoMask)))
+        {
+            ppdev->pPointerAttributes->Flags |= VIDEO_MODE_MONO_POINTER;
+        }
+        else
+        {
+            /* No mono mouse pointer being set, so we need try the software version then */
+            if (ppdev->HwMouseActive)
+            {
+                ppdev->HwMouseActive = FALSE;
+                if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_DISABLE_POINTER, NULL, 0, NULL, 0, &returnedDataLength))
+                {
+                    /* hw did not support hw mouse pointer, we try then with software */
+                    return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+                }
+            }
+            return SPS_DECLINE ;
+        }
+    }
+
+    /* we goto hw mouse pointer then we contnue filling in more info */
+
+    /* calc the mouse point positions */
+    if ((x != -1) || (y != -1))
+    {
+        ppdev->pPointerAttributes->Column -= (SHORT)(ppdev->PointerHotSpot.x);
+        ppdev->pPointerAttributes->Row -= (SHORT)(ppdev->PointerHotSpot.y);
+    }
+
+    /* set correct flags if it animated or need be updated anime or no flags at all */
+    if (fl & SPS_ANIMATESTART)
+    {
+        ppdev->pPointerAttributes->Flags |= VIDEO_MODE_ANIMATE_START;
+    }
+    else if (fl & SPS_ANIMATEUPDATE)
+    {
+        ppdev->pPointerAttributes->Flags |= VIDEO_MODE_ANIMATE_UPDATE;
+    }
+
+    ppdev->pPointerAttributes->Enable = 1;
+    ppdev->pPointerAttributes->Column = (SHORT)(x);
+    ppdev->pPointerAttributes->Row    = (SHORT)(y);
+
+    /* Set the new mouse pointer shape */
+    if (EngDeviceIoControl(ppdev->hDriver, IOCTL_VIDEO_SET_POINTER_ATTR, ppdev->pPointerAttributes,
+                           ppdev->PointerAttributesSize, NULL, 0, &returnedDataLength))
+    {
+            /* no hw support found for the mouse we try then the software version */
+            return EngSetPointerShape(pso, psoMask, psoColor, pxlo, xHot, yHot, x, y, prcl, fl);
+    }
+
+    /* we got real hw support */
+    ppdev->HwMouseActive = TRUE;
+    return SPS_ACCEPT_NOEXCLUDE;
 }
 
 
+/* Internal api that are only use in DrvSetPointerShape */
+
+BOOL
+CopyColorPointer(PPDEV ppdev,
+                SURFOBJ *psoMask,
+                SURFOBJ *psoColor,
+                XLATEOBJ *pxlo)
+{
+    /* FIXME unimplement */
+    return FALSE;
+}
+
+BOOL
+CopyMonoPointer(PPDEV ppdev,
+                SURFOBJ *pso)
+{
+    /* FIXME unimplement */
+    return FALSE;
+}
 
 

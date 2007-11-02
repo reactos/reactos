@@ -19,7 +19,7 @@
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 
-#include "framebuf_acc.h"
+#include "framebufacc.h"
 
 BOOL 
 InitSurface(PPDEV ppdev,
@@ -156,7 +156,8 @@ DrvEnableSurface(
    }
 
    /* Rest the desktop vitual position */
-   ppdev->ScreenOffsetXY = {0,0};
+   ppdev->ScreenOffsetXY.x = 0;
+   ppdev->ScreenOffsetXY.y = 0;
 
 
    switch (ppdev->BitsPerPixel)
