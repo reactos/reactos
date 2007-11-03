@@ -3172,12 +3172,75 @@ NtGdiGetRasterizerCaps(
   return FALSE;
 }
 
+
 DWORD
-NtGdiGetCharSet(HDC  hDC)
+FASTCALL
+IntGdiGetCharSet(HDC  hDC)
 {
-  UNIMPLEMENTED;
-  return 0;
+  UINT cp = 0;
+  CHARSETINFO csi;
+  DWORD charset = NtGdiGetTextCharsetInfo(hDC,NULL,0);
+  if (IntTranslateCharsetInfo(&charset, &csi, TCI_SRCCHARSET))
+      cp = csi.ciACP;
+  else
+  {
+      switch(charset)
+      {
+         case OEM_CHARSET:
+           cp = 1;
+           break;
+         case DEFAULT_CHARSET:
+           cp = 0;
+           break;
+         default:
+           DPRINT1("Can't find codepage for charset %d\n", charset);
+           break;
+       }
+  }
+  DPRINT("charset %d => cp %d\n", charset, LOWORD(cp));
+  return (MAKELONG(cp, charset));
 }
+
+
+DWORD
+NtGdiGetCharSet(HDC hDC)
+{
+  PDC Dc;
+  DWORD cscp = IntGdiGetCharSet(hDC);
+  // If here, update everything!  
+  Dc = DC_LockDc(hDC);
+  if (!Dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+
+  Dc->Dc_Attr.iCS_CP = cscp;
+  Dc->Dc_Attr.ulDirty_ &= ~DIRTY_CHARSET;
+
+  if (Dc->pDc_Attr)
+  {
+    PDC_ATTR Dc_Attr = Dc->pDc_Attr;
+    NTSTATUS Status = STATUS_SUCCESS;
+    _SEH_TRY
+    {
+         ProbeForWrite(Dc_Attr,
+                       sizeof(DC_ATTR),
+                       1);
+          Dc_Attr->iCS_CP = cscp;
+          Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
+    }
+    _SEH_HANDLE
+    {
+       Status = _SEH_GetExceptionCode();
+    }
+    _SEH_END;
+    if(!NT_SUCCESS(Status)) SetLastNtError(Status);
+  }
+  DC_UnlockDc( Dc );
+  return cscp;
+}
+
 
 INT
 APIENTRY
