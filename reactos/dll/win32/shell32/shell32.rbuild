@@ -22,7 +22,6 @@
 	<library>ole32</library>
 	<library>version</library>
 	<library>devmgr</library>
-	<library>rtl</library>
 	<library>winspool</library>
 	<file>authors.c</file>
 	<file>autocomplete.c</file>

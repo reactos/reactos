@@ -806,6 +806,6 @@ TRASH_CanTrashFile(LPCWSTR wszPath)
 BOOL
 TRASH_TrashFile(LPCWSTR wszPath)
 {
-   FIXME("(%s)\n", debugstr_w(wszPath));
-   return FALSE;
+   TRACE("(%s)\n", debugstr_w(wszPath));
+   return DeleteFileToRecycleBinW(wszPath);
 }
