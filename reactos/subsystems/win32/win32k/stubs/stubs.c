@@ -3347,14 +3347,13 @@ NtGdiIcmBrushInfo(
 }
 
  /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 NtGdiInit()
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    return TRUE;
 }
 
  /*
