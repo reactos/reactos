@@ -311,12 +311,13 @@ OnInitDialog(HWND hwndDlg)
                             HKEY_CURRENT_USER,
                             _T("Environment"));
 
-    (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+    (void)ListView_SetColumnWidth(hwndListView, 2, LVSCW_AUTOSIZE_USEHEADER);
 
-    ListView_SetItemState(hwndListView,0,LVIS_FOCUSED,LVIS_FOCUSED);
+    ListView_SetItemState(hwndListView, 0,
+                          LVIS_FOCUSED | LVIS_SELECTED,
+                          LVIS_FOCUSED | LVIS_SELECTED);
 
     (void)ListView_Update(hwndListView,0);
-
 
     /* Set system environment variables */
     hwndListView = GetDlgItem(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
@@ -329,11 +330,13 @@ OnInitDialog(HWND hwndDlg)
                             HKEY_LOCAL_MACHINE,
                             _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Environment"));
 
-    (void)ListView_SetColumnWidth(hwndListView,2,LVSCW_AUTOSIZE_USEHEADER);
+    (void)ListView_SetColumnWidth(hwndListView, 2, LVSCW_AUTOSIZE_USEHEADER);
 
-    ListView_SetItemState(hwndListView,0,LVIS_FOCUSED,LVIS_FOCUSED);
+    ListView_SetItemState(hwndListView, 0,
+                          LVIS_FOCUSED | LVIS_SELECTED,
+                          LVIS_FOCUSED | LVIS_SELECTED);
 
-    (void)ListView_Update(hwndListView,0);
+    (void)ListView_Update(hwndListView, 0);
 }
 
 
