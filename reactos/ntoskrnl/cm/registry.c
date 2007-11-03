@@ -561,7 +561,9 @@ CmShutdownRegistry(VOID)
     {
         Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
 
-        if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
+        if (!(IsNoFileHive(Hive) ||
+            IsNoSynchHive(Hive) ||
+            (Hive->Hive.HiveFlags & HIVE_VOLATILE)))
         {
             /* Flush non-volatile hive */
             CmiFlushRegistryHive(Hive);
@@ -595,7 +597,9 @@ CmiHiveSyncRoutine(PVOID DeferredContext)
     {
         Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
 
-        if (!(IsNoFileHive(Hive) || IsNoSynchHive(Hive)))
+        if (!(IsNoFileHive(Hive) ||
+            IsNoSynchHive(Hive) ||
+            (Hive->Hive.HiveFlags & HIVE_VOLATILE)))
         {
             /* Flush non-volatile hive */
             CmiFlushRegistryHive(Hive);
