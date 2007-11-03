@@ -23,7 +23,7 @@ using std::vector;
 
 
 CreditsGenerator::CreditsGenerator ( const Project& project )
-	: project ( project )
+    : project ( project )
 {
 }
 
@@ -41,21 +41,21 @@ CreditsGenerator::Generate ()
 void
 CreditsGenerator::GenerateTxt ()
 {
-	char* buf;
-	char* s;
+    char* buf;
+    char* s;
 
-	buf = (char*) malloc ( 512*1024 );
-	if ( buf == NULL )
-		throw OutOfMemoryException ();
-	
-	s = buf;
-	s = s + sprintf ( s, "ReactOS is available thanks to the work of:\n\n");
+    buf = (char*) malloc ( 512*1024 );
+    if ( buf == NULL )
+        throw OutOfMemoryException ();
+    
+    s = buf;
+    s = s + sprintf ( s, "ReactOS is available thanks to the work of:\n\n");
 
     for ( size_t i = 0; i < project.contributors.size (); i++ )
-	{
+    {
         Contributor& contributor = *project.contributors[i];
 
-	    s = s + sprintf ( s, "\t%s %s (%s)\n" , 
+        s = s + sprintf ( s, "\t%s %s (%s)\n" , 
             contributor.firstName.c_str() , 
             contributor.lastName.c_str() , 
             contributor.alias.c_str());
@@ -69,42 +69,42 @@ CreditsGenerator::GenerateTxt ()
                 contributor.city.c_str() , 
                 contributor.country.c_str());
         }
-	}
+    }
 
 
-	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "CREDITS" ) );
+    FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "CREDITS" ) );
 
-	free ( buf );
+    free ( buf );
 }
 
 void
 CreditsGenerator::GenerateHeader ()
 {
-	char* buf;
-	char* s;
+    char* buf;
+    char* s;
 
-	buf = (char*) malloc ( 512*1024 );
-	if ( buf == NULL )
-		throw OutOfMemoryException ();
-	
-	s = buf;
-	s = s + sprintf ( s, "/* Auto generated */\n");
-	s = s + sprintf ( s, "\n" );
+    buf = (char*) malloc ( 512*1024 );
+    if ( buf == NULL )
+        throw OutOfMemoryException ();
+    
+    s = buf;
+    s = s + sprintf ( s, "/* Auto generated */\n");
+    s = s + sprintf ( s, "\n" );
     s = s + sprintf ( s, "const char* szAutoContributors[]= {\n" );
 
     for ( size_t i = 0; i < project.contributors.size (); i++ )
-	{
+    {
         Contributor& contributor = *project.contributors[i];
 
-	    s = s + sprintf ( s, "\t\"%s %s\",\n" , 
+        s = s + sprintf ( s, "\t\"%s %s\",\n" , 
             contributor.firstName.c_str() , 
             contributor.lastName.c_str());
-	}
+    }
 
     s = s + sprintf ( s, "\t0\n");
-    s = s + sprintf ( s, "                                   };" );
+    s = s + sprintf ( s, "};\n" );
 
-	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "include" + sSep + "reactos" + sSep + "autocontributors.h" ) );
+    FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "include" + sSep + "reactos" + sSep + "autocontributors.h" ) );
 
-	free ( buf );
+    free ( buf );
 }

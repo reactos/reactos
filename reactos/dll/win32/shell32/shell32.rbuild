@@ -24,7 +24,6 @@
 	<library>devmgr</library>
 	<library>rtl</library>
 	<library>winspool</library>
-	<file>authors.c</file>
 	<file>autocomplete.c</file>
 	<file>brsfolder.c</file>
 	<file>changenotify.c</file>
