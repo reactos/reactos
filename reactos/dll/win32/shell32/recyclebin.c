@@ -796,3 +796,16 @@ BOOL SH_ShowRecycleBinProperties(WCHAR sDrive)
        return TRUE;
 }
 
+BOOL
+TRASH_CanTrashFile(LPCWSTR wszPath)
+{
+   FIXME("(%s)\n", debugstr_w(wszPath));
+   return TRUE;
+}
+
+BOOL
+TRASH_TrashFile(LPCWSTR wszPath)
+{
+   FIXME("(%s)\n", debugstr_w(wszPath));
+   return FALSE;
+}

@@ -1235,29 +1235,7 @@ Index: shlfileop.c
 ===================================================================
 --- shlfileop.c	(revision 29513)
 +++ shlfileop.c	(working copy)
-@@ -1303,8 +1303,8 @@
-         return ERROR_SUCCESS;
- 
-     /* Windows also checks only the first item */
--    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO)
--        && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
-+    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO);
-+        //&& TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
- 
-     if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (!bTrash && lpFileOp->fFlags & FOF_WANTNUKEWARNING))
-         if (!confirm_delete_list(lpFileOp->hwnd, lpFileOp->fFlags, bTrash, flFrom))
-@@ -1325,8 +1325,10 @@
-         if (bTrash)
-         {
-             BOOL bDelete;
-+#if 0
-             if (TRASH_TrashFile(fileEntry->szFullPath))
-                 continue;
-+#endif
- 
-             /* Note: Windows silently deletes the file in such a situation, we show a dialog */
-             if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (lpFileOp->fFlags & FOF_WANTNUKEWARNING))
-@@ -1696,16 +1698,6 @@
+@@ -1696,16 +1696,6 @@
  }
  
  /***********************************************************************
@@ -1274,7 +1252,7 @@ Index: shlfileop.c
   *              SHPathPrepareForWriteW (SHELL32.@)
   */
  HRESULT WINAPI SHPathPrepareForWriteW(HWND hwnd, IUnknown *modless, LPCWSTR path, DWORD flags)
-@@ -1767,3 +1759,13 @@
+@@ -1767,3 +1757,13 @@
      else
          return HRESULT_FROM_WIN32(ERROR_DIRECTORY);
  }

@@ -1303,10 +1303,8 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
         return ERROR_SUCCESS;
 
     /* Windows also checks only the first item */
-    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO);
-#if 0
+    bTrash = (lpFileOp->fFlags & FOF_ALLOWUNDO)
         && TRASH_CanTrashFile(flFrom->feFiles[0].szFullPath);
-#endif
 
     if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (!bTrash && lpFileOp->fFlags & FOF_WANTNUKEWARNING))
         if (!confirm_delete_list(lpFileOp->hwnd, lpFileOp->fFlags, bTrash, flFrom))
@@ -1327,10 +1325,8 @@ static HRESULT delete_files(LPSHFILEOPSTRUCTW lpFileOp, FILE_LIST *flFrom)
         if (bTrash)
         {
             BOOL bDelete;
-#if 0
             if (TRASH_TrashFile(fileEntry->szFullPath))
                 continue;
-#endif
 
             /* Note: Windows silently deletes the file in such a situation, we show a dialog */
             if (!(lpFileOp->fFlags & FOF_NOCONFIRMATION) || (lpFileOp->fFlags & FOF_WANTNUKEWARNING))
