@@ -1,0 +1,16 @@
+#include <windows.h>
+#include "resource.h"
+
+LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
+
+//1 24 DISCARDABLE "manifest.xml"
+
+IDI_LOGON   ICON   "res/logon.ico"
+IDI_CONN    ICON   "res/connection.ico"
+IDI_REMOTE  ICON   "res/remote.ico"
+IDI_COLORS  ICON   "res/colors.ico"
+
+IDB_HEADER  BITMAP "res/header.bmp"
+IDB_SPECT   BITMAP "res/spectrum.bmp"
+
+#include "lang/en-US.rc"

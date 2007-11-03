@@ -1,0 +1,9 @@
+#include <windows.h>
+#include "resource.h"
+
+#define REACTOS_STR_FILE_DESCRIPTION  "ReactOS Remote Desktop Client\0"
+#define REACTOS_STR_INTERNAL_NAME     "mstsc\0"
+#define REACTOS_STR_ORIGINAL_FILENAME "mstsc.exe\0"
+//#include <reactos/version.rc>
+
+#include "rsrc.rc"
