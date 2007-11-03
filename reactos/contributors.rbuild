@@ -7,7 +7,7 @@
 	<contributor firstname="Andrew" lastname="Munger" mail="waxdragon@gmail.com" alias="amunger" />
 	<contributor firstname="Arindam" lastname="Das" />
 	<contributor firstname="Art" lastname="Yerkes" mail="ayerkes@speakeasy.net" alias="arty" />
-	<contributor firstname="Ariadne" alias="ariadne" />
+	<contributor firstname="Boudewijn" lastname="Dekker" alias="ariadne" />
 	<contributor firstname="Brandon" lastname="Turner" mail="turnerb7@msu.edu" alias="turner" />
 	<contributor firstname="Brian" lastname="Palmer" mail="brianp@sginet.com" alias="bpalmer" />
 	<contributor firstname="Casper S." lastname="Hornstrup" mail="chorns@users.sourceforge.net" alias="chorns" />
@@ -20,7 +20,7 @@
 	<contributor firstname="Eugene" lastname="Ingerman" mail="geneing@myrealbox.com" />
 	<contributor firstname="Filip" lastname="Navara" mail="xnavara@volny.cz" alias="navaraf" />
 	<contributor firstname="Frederik" lastname="Leemans" />
-	<contributor firstname="Ge" lastname="van Geldorp" mail="ge@gse.nl" alias="gvg" />
+	<contributor firstname="Gé" lastname="van Geldorp" mail="ge@gse.nl" alias="gvg" />
 	<contributor firstname="Ged" lastname="Murphy" mail="gedmurphy@reactos.org" alias="gedmurphy" />
 	<contributor firstname="Gregor" lastname="Brunmar" alias="gbrunmar" />
 	<contributor firstname="Guido" lastname="de Jong" />
