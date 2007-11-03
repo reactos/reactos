@@ -148,57 +148,56 @@ SystemApplet(VOID)
 
 /* Control Panel Callback */
 LONG CALLBACK
-CPlApplet(
-    HWND hwndCPl,
-    UINT uMsg,
-    LPARAM lParam1,
-    LPARAM lParam2)
+CPlApplet(HWND hwndCPl,
+          UINT uMsg,
+          LPARAM lParam1,
+          LPARAM lParam2)
 {
-    int i = (int)lParam1;
+    INT i = (INT)lParam1;
+
     UNREFERENCED_PARAMETER(hwndCPl);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case CPL_INIT:
-        {
             return TRUE;
-        }
+
         case CPL_GETCOUNT:
-        {
             return NUM_APPLETS;
-        }
+
         case CPL_INQUIRE:
-        {
-            CPLINFO *CPlInfo = (CPLINFO*)lParam2;
-            CPlInfo->lData = 0;
-            CPlInfo->idIcon = Applets[i].idIcon;
-            CPlInfo->idName = Applets[i].idName;
-            CPlInfo->idInfo = Applets[i].idDescription;
+            {
+                 CPLINFO *CPlInfo = (CPLINFO*)lParam2;
+                 CPlInfo->lData = 0;
+                 CPlInfo->idIcon = Applets[i].idIcon;
+                 CPlInfo->idName = Applets[i].idName;
+                 CPlInfo->idInfo = Applets[i].idDescription;
+            }
             break;
-        }
+
         case CPL_DBLCLK:
-        {
             Applets[i].AppletProc();
             break;
-        }
     }
+
     return FALSE;
 }
 
 
 BOOL STDCALL
-DllMain(
-    HINSTANCE hinstDLL,
-    DWORD     dwReason,
-    LPVOID    lpvReserved)
+DllMain(HINSTANCE hinstDLL,
+        DWORD dwReason,
+        LPVOID lpvReserved)
 {
     UNREFERENCED_PARAMETER(lpvReserved);
-    switch(dwReason)
+
+    switch (dwReason)
     {
         case DLL_PROCESS_ATTACH:
         case DLL_THREAD_ATTACH:
             hApplet = hinstDLL;
             break;
     }
+
     return TRUE;
 }

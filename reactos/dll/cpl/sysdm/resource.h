@@ -40,10 +40,10 @@
 
 /* propsheet - hardware */
 #define IDD_PROPPAGEHARDWARE            300
-#define IDC_HARDWARE_WIZARD	            207
+#define IDC_HARDWARE_WIZARD             207
 #define IDC_HARDWARE_PROFILE            209
 #define IDC_HARDWARE_DRIVER_SIGN        210
-#define IDC_HARDWARE_DEVICE_MANAGER	    211
+#define IDC_HARDWARE_DEVICE_MANAGER     211
 
 
 /* propsheet - advanced */

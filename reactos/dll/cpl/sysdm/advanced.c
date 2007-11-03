@@ -28,58 +28,49 @@ AdvancedPageProc(HWND hwndDlg,
 
         case WM_COMMAND:
         {
-            switch(LOWORD(wParam))
+            switch (LOWORD(wParam))
             {
                 case IDC_PERFOR:
-                {
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_VIRTMEM),
                               hwndDlg,
                               (DLGPROC)VirtMemDlgProc);
-                }
-                break;
+                    break;
 
                 case IDC_USERPROFILE:
-                {
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_USERPROFILE),
                               hwndDlg,
                               (DLGPROC)UserProfileDlgProc);
-                }
-                break;
+                    break;
 
                 case IDC_STAREC:
-                {
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_STARTUPRECOVERY),
                               hwndDlg,
                               (DLGPROC)StartRecDlgProc);
-                }
-                break;
+                    break;
 
                 case IDC_ENVVAR:
-                {
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_ENVIRONMENT_VARIABLES),
                               hwndDlg,
                               (DLGPROC)EnvironmentDlgProc);
-                }
-                break;
+                    break;
 
                 case IDC_ERRORREPORT:
-                {
                     ShellExecute(NULL,
                                  _T("open"),
                                  BugLink,
                                  NULL,
                                  NULL,
                                  SW_SHOWNORMAL);
-                }
-                break;
+                    break;
             }
         }
 
         break;
     }
+
     return FALSE;
 }

@@ -17,28 +17,20 @@ UserProfileDlgProc(HWND hwndDlg,
                    WPARAM wParam,
                    LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(lParam);
-    UNREFERENCED_PARAMETER(wParam);
-    UNREFERENCED_PARAMETER(hwndDlg);
-
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
             {
                 EndDialog(hwndDlg,
                           LOWORD(wParam));
                 return TRUE;
             }
-        }
-        break;
+            break;
 
         case WM_NOTIFY:
         {
@@ -56,5 +48,6 @@ UserProfileDlgProc(HWND hwndDlg,
             break;
         }
     }
+
     return FALSE;
 }

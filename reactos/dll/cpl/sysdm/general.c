@@ -28,15 +28,15 @@ ShowLastWin32Error(HWND hWndOwner)
 
     LastError = GetLastError();
 
-    if((LastError == 0) ||
-        !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                       FORMAT_MESSAGE_FROM_SYSTEM,
-                       NULL,
-                       LastError,
-                       MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                       (LPTSTR)&lpMsg,
-                       0,
-                       NULL))
+    if ((LastError == 0) ||
+         !FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                        FORMAT_MESSAGE_FROM_SYSTEM,
+                        NULL,
+                        LastError,
+                        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                        (LPTSTR)&lpMsg,
+                        0,
+                        NULL))
     {
         return;
     }
@@ -91,7 +91,8 @@ SetRegTextData(HWND hwnd,
         lpBuf = HeapAlloc(GetProcessHeap(),
                           0,
                           BufSize);
-        if (!lpBuf) return;
+        if (!lpBuf)
+            return;
 
         if (RegQueryValueEx(hKey,
                             Value,
@@ -136,7 +137,8 @@ SetProcNameString(HWND hwnd,
         lpBuf = HeapAlloc(GetProcessHeap(),
                           0,
                           BufSize);
-        if (!lpBuf) return 0;
+        if (!lpBuf)
+            return 0;
 
         if (RegQueryValueEx(hKey,
                             Value,
@@ -145,7 +147,7 @@ SetProcNameString(HWND hwnd,
                             (PBYTE)lpBuf,
                             &BufSize) == ERROR_SUCCESS)
         {
-            if(BufSize > ((30 + 1) * sizeof(TCHAR)))
+            if (BufSize > ((30 + 1) * sizeof(TCHAR)))
             {
                 /* Wrap the Processor Name String like XP does:                           *
                 *   - Take the first 30 characters and look for the last space.          *
@@ -159,8 +161,10 @@ SetProcNameString(HWND hwnd,
                 szBuf[30] = 0;
                 szLastSpace = _tcsrchr(szBuf, ' ');
 
-                if(szLastSpace == 0)
+                if (szLastSpace == 0)
+                {
                     LastSpace = 30;
+                }
                 else
                 {
                     LastSpace = (szLastSpace - szBuf);
@@ -205,13 +209,13 @@ MakeFloatValueString(double* dFloatValue,
 {
     TCHAR szDecimalSeparator[4];
 
-    // Get the decimal separator for the current locale
-    if( GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSeparator, sizeof(szDecimalSeparator) / sizeof(TCHAR)) > 0)
+    /* Get the decimal separator for the current locale */
+    if (GetLocaleInfo(LOCALE_USER_DEFAULT, LOCALE_SDECIMAL, szDecimalSeparator, sizeof(szDecimalSeparator) / sizeof(TCHAR)) > 0)
     {
         UCHAR uDecimals;
         UINT uIntegral;
 
-        // Show the value with two decimals
+        /* Show the value with two decimals */
         uIntegral = (UINT)*dFloatValue;
         uDecimals = (UCHAR)((UINT)(*dFloatValue * 100) - uIntegral * 100);
 
@@ -337,10 +341,14 @@ GetSystemInformation(HWND hwnd)
                     dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
                 }
                 else
+                {
                     dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+                }
             }
             else
+            {
                 dTotalPhys = (double)MemStat.ullTotalPhys / 1024;
+            }
 
             LoadString(hApplet, uStrId[i], szStr, sizeof(szStr) / sizeof(TCHAR));
             MakeFloatValueString(&dTotalPhys, Buf, szStr);
@@ -369,17 +377,14 @@ GeneralPageProc(HWND hwndDlg,
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
 
-    switch(uMsg)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             InitImageInfo(&ImgInfo);
             GetSystemInformation(hwndDlg);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             if (LOWORD(wParam) == IDC_LICENCE)
             {
                 DialogBox(hApplet,
@@ -389,14 +394,13 @@ GeneralPageProc(HWND hwndDlg,
 
                 return TRUE;
             }
-        }
-        break;
+            break;
 
         case WM_DRAWITEM:
         {
             LPDRAWITEMSTRUCT lpDrawItem;
             lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
-            if(lpDrawItem->CtlID == IDC_ROSIMG)
+            if (lpDrawItem->CtlID == IDC_ROSIMG)
             {
                 HDC hdcMem;
                 LONG left;

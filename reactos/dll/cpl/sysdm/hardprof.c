@@ -19,24 +19,21 @@ RenameProfDlgProc(HWND hwndDlg,
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
-    switch(uMsg)
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
             {
                 EndDialog(hwndDlg,
                           LOWORD(wParam));
                 return TRUE;
             }
-        }
-        break;
+            break;
     }
     return FALSE;
 }
@@ -52,36 +49,31 @@ HardProfDlgProc(HWND hwndDlg,
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
     UNREFERENCED_PARAMETER(hwndDlg);
-    switch(uMsg)
+
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-        }
-        break;
+            break;
 
         case WM_COMMAND:
-        {
             switch (LOWORD(wParam))
             {
                 case IDC_HRDPROFRENAME:
-                {
                     DialogBox(hApplet,
                               MAKEINTRESOURCE(IDD_RENAMEPROFILE),
                               hwndDlg,
                               (DLGPROC)RenameProfDlgProc);
-                }
+                    break;
 
                 case IDOK:
                 case IDCANCEL:
-                {
                     EndDialog(hwndDlg,
                               LOWORD(wParam));
                     return TRUE;
-                }
             }
-        }
-        break;
+            break;
     }
+
     return FALSE;
 }

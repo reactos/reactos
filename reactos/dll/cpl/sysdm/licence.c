@@ -12,7 +12,7 @@
 
 INT_PTR CALLBACK
 LicenceDlgProc(HWND hDlg,
-               UINT message,
+               UINT uMsg,
                WPARAM wParam,
                LPARAM lParam)
 {
@@ -23,10 +23,9 @@ LicenceDlgProc(HWND hDlg,
 
     UNREFERENCED_PARAMETER(lParam);
 
-    switch (message)
+    switch (uMsg)
     {
         case WM_INITDIALOG:
-        {
             hIcon = LoadImage(hApplet,
                               MAKEINTRESOURCE(IDI_CPLSYSTEM),
                               IMAGE_ICON,
@@ -61,10 +60,8 @@ LicenceDlgProc(HWND hDlg,
                         0);
 
             return TRUE;
-        }
 
         case WM_COMMAND:
-        {
             if ((LOWORD(wParam) == IDOK) || (LOWORD(wParam) == IDCANCEL))
             {
                 DestroyIcon(hIcon);
@@ -72,8 +69,7 @@ LicenceDlgProc(HWND hDlg,
                           LOWORD(wParam));
                 return TRUE;
             }
-        }
-        break;
+            break;
     }
 
     return FALSE;
