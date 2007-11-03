@@ -223,8 +223,8 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Accessibilité"
+	IDS_CMT_MAGNIFY      	     "Loupe"
 END
 
 STRINGTABLE
@@ -254,8 +254,8 @@ BEGIN
     IDS_SHORT_SNAP       "Capture d'écran.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
+    IDS_SHORT_MAGNIFY    "Loupe.lnk"
 END
 
 STRINGTABLE

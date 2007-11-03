@@ -3,6 +3,7 @@
  * French language support
  *
  * Copyright 1998 Juergen Schmied
+ *           2007 Pierre Schweitzer 
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,8 +24,8 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "&Grands icônes",   FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Petits icônes",   FCIDM_SHVIEW_SMALLICON
+	MENUITEM "&Grandes icônes",   FCIDM_SHVIEW_BIGICON
+	MENUITEM "&Petites icônes",   FCIDM_SHVIEW_SMALLICON
 	MENUITEM "&Liste",           FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Détails",         FCIDM_SHVIEW_REPORTVIEW
 END
@@ -36,8 +37,8 @@ BEGIN
 	BEGIN
 		POPUP "&Affichage"
 		BEGIN
-			MENUITEM "&Grands icônes",      FCIDM_SHVIEW_BIGICON
-			MENUITEM "&Petits icônes",      FCIDM_SHVIEW_SMALLICON
+			MENUITEM "&Grandes icônes",      FCIDM_SHVIEW_BIGICON
+			MENUITEM "&Petites icônes",      FCIDM_SHVIEW_SMALLICON
 			MENUITEM "&Liste",              FCIDM_SHVIEW_LISTVIEW
 			MENUITEM "&Détails",            FCIDM_SHVIEW_REPORTVIEW
 		END
@@ -102,17 +103,17 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Browse for Folder"
+CAPTION "Parcourir pour un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 156, 40, 12
+	LTEXT "Dossier:", IDD_FOLDER, 10, 156, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Créer un nouveau dossier", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Annuler", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
@@ -120,10 +121,10 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Message"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Yes to &all", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "Oui", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Oui pour tous", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Non", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Annuler", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -173,66 +174,66 @@ END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Raccourci"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
-	LTEXT "Target type:", 14004, 10, 30, 50, 10
+	LTEXT "Type de la cible:", 14004, 10, 30, 50, 10
 	LTEXT "", 14005, 70, 30, 150, 10
-	LTEXT "Target location:", 14006, 10, 40, 70, 10
+	LTEXT "Localisation de la cible:", 14006, 10, 40, 70, 10
 	LTEXT "", 14007, 70, 40, 150, 10
-	LTEXT "Target:", 14008, 10, 55, 45, 10
+	LTEXT "Cible:", 14008, 10, 55, 45, 10
 	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	LTEXT "&Start in:",14010, 10, 65, 57, 10
+	LTEXT "Démarrer dans:",14010, 10, 65, 57, 10
 	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	LTEXT "Shortcut &key:", 14014, 10, 80, 57, 10
+	LTEXT "Touche de raccourci:", 14014, 10, 80, 57, 10
 	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
-	LTEXT "Run:", 14016, 10, 90, 57, 10
+	LTEXT "Exécuter:", 14016, 10, 90, 57, 10
 	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
-	LTEXT "C&omment:", 14018, 10, 100, 57, 10
+	LTEXT "C&ommentaire:", 14018, 10, 100, 57, 10
 	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	PUSHBUTTON "&Find Target...", 14020, 10, 115, 63, 14, ES_LEFT
-	PUSHBUTTON "&Change Icon...", 14021, 83, 115, 63, 14, ES_LEFT
-	PUSHBUTTON "A&dvanced...", 14022, 156, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "Trouver la cible...", 14020, 10, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "&Changer d'icône...", 14021, 83, 115, 63, 14, ES_LEFT
+	PUSHBUTTON "A&vancé...", 14022, 156, 115, 63, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "Extended Properties"
+CAPTION "Propriétés étendues"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
-	CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
-	LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
-	CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+	LTEXT "Choisissez la propriété étendue que vous voulez pour ce raccourci.", -1, 5, 30, 210, 10
+	CHECKBOX "Exécuter avec des droits différents", 14000, 25, 50, 150, 10
+	LTEXT "Cette option peut vous permettre d'utiliser ce raccourci en tant qu'autre utilisateur ou de continuer vous-même en protégeant votre ordinateur et vos données des activés de programme non autorisées.", -1, 50, 60, 175, 40
+	CHECKBOX "Lancer dans un espace mémoire séparé", 14001, 25, 100, 90, 10, WS_DISABLED
 	PUSHBUTTON "OK", IDOK, 25, 120, 50, 15, WS_VISIBLE
-	PUSHBUTTON "Abort", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Annuler", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
 END
 
 SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Général"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
-	LTEXT "Type of file:", 14004, 10, 30, 50, 10
-	LTEXT "File", 14005, 70, 30, 150, 10
-	LTEXT "Opens with:", 14006, 10, 40, 50, 10
+	LTEXT "Type de fichier:", 14004, 10, 30, 50, 10
+	LTEXT "Fichier", 14005, 70, 30, 150, 10
+	LTEXT "Ouvrir avec:", 14006, 10, 40, 50, 10
 	LTEXT "", 14007, 70, 40, 150, 10
-	LTEXT "Location:", 14008, 10, 55, 45, 10
+	LTEXT "Localisation:", 14008, 10, 55, 45, 10
 	LTEXT "", 14009, 70, 55, 200, 10
-	LTEXT "Size:",14010, 10, 65, 45, 10
+	LTEXT "Taille:",14010, 10, 65, 45, 10
 	LTEXT "", 14011, 70, 65, 150, 10
-	LTEXT "Created:", 14014, 10, 80, 45, 10
+	LTEXT "Créé:", 14014, 10, 80, 45, 10
 	LTEXT "", 14015, 70, 80, 150, 10
-	LTEXT "Modified:", 14016, 10, 90, 45, 10
+	LTEXT "Modifié:", 14016, 10, 90, 45, 10
 	LTEXT "", 14017, 70, 90, 150, 10
-	LTEXT "Accessed:", 14018, 10, 100, 45, 10
+	LTEXT "Accédé:", 14018, 10, 100, 45, 10
 	LTEXT "", 14019, 70, 100, 150, 10
-	LTEXT "Attributes:", 14020, 10, 115, 45, 10
-	CHECKBOX "&Read-only", 14021, 70, 115, 67, 10
-	CHECKBOX "&Hidden", 14022, 140, 115, 50, 10
+	LTEXT "Attributs:", 14020, 10, 115, 45, 10
+	CHECKBOX "Lectu&re-seule", 14021, 70, 115, 67, 10
+	CHECKBOX "Cac&hé", 14022, 140, 115, 50, 10
 	CHECKBOX "&Archive", 14023, 190, 115, 45, 10
 END
 
@@ -241,109 +242,109 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Version"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "File version: ", 14000, 10, 10, 45, 10
+	LTEXT "Version du fichier: ", 14000, 10, 10, 45, 10
 	LTEXT "", 14001, 70, 10, 150, 10
 	LTEXT "Description: ", 14002, 10, 20, 45, 10
 	LTEXT "", 14003, 70, 20, 150, 10
 	LTEXT "Copyright: ", 14004, 10, 30, 45, 10
 	LTEXT "", 14005, 70, 30, 150, 10
-	GROUPBOX "Other version information: ", 14006, 10, 45, 220, 90
-	LTEXT "Item name: ", 14007, 20, 55, 50, 10
-	LTEXT "Value: ", 14008, 130, 55, 45, 10
+	GROUPBOX "Autres informations de version: ", 14006, 10, 45, 220, 90
+	LTEXT "Nom de l'élément: ", 14007, 20, 55, 50, 10
+	LTEXT "Valeur: ", 14008, 130, 55, 45, 10
 	LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
 	EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Général"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Type:", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
-	LTEXT "File system:", -1, 15, 70, 100, 10
+	LTEXT "Système de fichier:", -1, 15, 70, 100, 10
 	LTEXT "", 14003, 110, 70, 100, 10
 
 	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
-	LTEXT "Used space:", -1, 25, 90, 120, 10
+	LTEXT "Espace utilisé:", -1, 25, 90, 120, 10
 	LTEXT "", 14004, 110, 90, 120, 10
 	LTEXT "", 14005, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-	LTEXT "Free space:", -1, 25, 105, 70, 10
+	LTEXT "Espace libre:", -1, 25, 105, 70, 10
 	LTEXT "", 14006, 110, 105, 120, 10
 	LTEXT "", 14007, 200, 105, 40, 10
 
-	LTEXT "Capacity:", -1, 25, 125, 80, 10
+	LTEXT "Capacité:", -1, 25, 125, 80, 10
 	LTEXT "", 14008, 110, 125, 120, 10
 	LTEXT "", 14009, 200, 125, 40, 10
 
 	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
 
-	LTEXT "Drive %s", 14010, 100, 170, 40, 10
-	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
-	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
-	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
+	LTEXT "Lecteur %s", 14010, 100, 170, 40, 10
+	PUSHBUTTON "Nettoyage de disque", 14011, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Compresser le lecteur pour gagner de l'espace disque", 14012, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Autoriser le service d'indexation à indexer ce disque pour une recherche rapide de fichiers", 14012, 15, 220, 200, 10, WS_DISABLED
 END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Tools"
+CAPTION "Outils"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	GROUPBOX "Error-checking", -1, 5, 5, 230, 60
-	LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
-	PUSHBUTTON "Check Now...", 14000, 130, 45, 90, 15, WS_TABSTOP
-	GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
-	LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
-	PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
-	GROUPBOX "Backup", -1, 5, 130, 230, 60
-	LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
-	PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+	GROUPBOX "Vérifcation-d'erreurs", -1, 5, 5, 230, 60
+	LTEXT "Cette option vérifiera le volume pour éviter les\nerreurs.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Vérifier maintenant...", 14000, 130, 45, 90, 15, WS_TABSTOP
+	GROUPBOX "Défragmentation", -1, 5, 65, 230, 60
+	LTEXT "Cette option va défragmenter les fichiers sur ce volume", -1, 40, 85, 160, 20
+	PUSHBUTTON "Défragmenter maintenant...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	GROUPBOX "Sauvegarde", -1, 5, 130, 230, 60
+	LTEXT "Cette option va sauvegarder les fichiers sur le volume.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Sauvegarder maintenant...", 14002, 130, 170, 90, 15, WS_TABSTOP
 END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Hardware"
+CAPTION "Matériel"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
 
 RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Run As"
+CAPTION "Lancer en tant que"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
-	CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
-	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
-	CHECKBOX "The following user:", 14002, 10, 100, 90, 10
-	LTEXT "User name:", -1, 20, 115, 60, 10
+	LTEXT "Quel compte d'utilisateur désirez-vous utiliser pour lancer ce programme?", -1, 10, 20, 220, 20
+	CHECKBOX "Utilisateur actuel %s", 14000, 10, 45, 150, 10
+	LTEXT "Protéger mon ordinateur et mes données de l'activé de programme non autorisés", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "Cette option peut empêcher les virus d'ordinateur d'endommager votre ordinateur ou vos données personnelles, néanmoins sélectionner cette option pourrait empêcher le programme de fonctionner correctement.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "L'utilisateur suivant:", 14002, 10, 100, 90, 10
+	LTEXT "Nom d'utilisateur:", -1, 20, 115, 60, 10
 	COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
 	PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
-	LTEXT "Password:", -1, 20, 140, 60, 10
+	LTEXT "Mot de passe:", -1, 20, 140, 60, 10
 	EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
 	PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
 	PUSHBUTTON "OK", 14007, 70, 170, 60, 15, WS_TABSTOP
-	PUSHBUTTON "Cancel", 14008, 140, 170, 60, 15, WS_TABSTOP
+	PUSHBUTTON "Annuler", 14008, 140, 170, 60, 15, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Propriétés de la corbeille"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 80, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10
+	GROUPBOX "Paramètres pour la localisation sélectionnée", -1, 10, 80, 220, 70
+	RADIOBUTTON "Taille personnalisée:", 14001, 20, 90, 80, 10
 	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	LTEXT "T&aille maximale(Mo):", -1, 20, 100, 70, 10
+	RADIOBUTTON "Ne pas déplace&r les fichiers vers la corbeille. Immédiatement effacer les fichiers quand ils sont supprimés.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "Afficher la fenêtre &de confirmation de suppression", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
@@ -358,19 +359,19 @@ BEGIN
 	IDS_SHV_COLUMN7             "Espace disponible"
 	IDS_SHV_COLUMN8             "Nom"
 	IDS_SHV_COLUMN9             "Commentaires"
-	IDS_SHV_COLUMN10            "Owner"
-	IDS_SHV_COLUMN11            "Group"
-	IDS_SHV_COLUMN_DELFROM      "Original location"
-	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN10            "Propriétaire"
+	IDS_SHV_COLUMN11            "Groupe"
+	IDS_SHV_COLUMN_DELFROM      "Localisation d'origine"
+	IDS_SHV_COLUMN_DELDATE      "Date de suppression"
 
 	/* special folders */
 	IDS_DESKTOP                 "Bureau"
 	IDS_MYCOMPUTER              "Poste de travail"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "&Grands icônes"
-	IDS_VIEW_SMALL              "&Petits icônes"
+	IDS_VIEW_LARGE              "&Grandes icônes"
+	IDS_VIEW_SMALL              "&Petites icônes"
 	IDS_VIEW_LIST               "&Liste"
 	IDS_VIEW_DETAILS            "&Détails"
 	IDS_SELECT                  "Sélectionner"
@@ -381,22 +382,22 @@ BEGIN
 	IDS_DELETEITEM_CAPTION      "Confirmer la suppression du fichier"
 	IDS_DELETEFOLDER_CAPTION    "Confirmer la suppression du dossier"
 	IDS_DELETEITEM_TEXT         "Êtes-vous sûr de vouloir supprimer '%1'?"
-	IDS_DELETEMULTIPLE_TEXT     "Êtes-vous sût de vouloir supprimer ces %1 items ?"
-	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
-	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
-	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
-	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
-	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_DELETEMULTIPLE_TEXT     "Êtes-vous sûr de vouloir supprimer ces %1 éléments ?"
+	IDS_DELETESELECTED_TEXT     "Êtes-vous sûr de vouloir supprimer l(es) élement(s) sélectionné(s)?"
+	IDS_TRASHITEM_TEXT          "Êtes-vous sûr de vouloir envoyer '%1' à la Corbeille?"
+	IDS_TRASHFOLDER_TEXT        "Êtes-vous sûr de vouloir envoyer '%1' et tout ce qu'il contient à la Corbeille?"
+	IDS_TRASHMULTIPLE_TEXT      "Êtes-vous sûr de vouloir envoyer ces %1 éléments à la Corbeille?"
+	IDS_CANTTRASH_TEXT          "L'élément '%1' ne peut être envoyé à la Corbeille. Voulez-vous le supprimer?"
+	IDS_OVERWRITEFILE_TEXT      "Ce dossier contient déjà un fichier nommé '%1'.\n\nVoulez-vous le remplacer?"
 	IDS_OVERWRITEFILE_CAPTION   "Confirmer l'écrasement du fichier"
-	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ce dossier contient déjà un dossier nommé '%1'.\n\n"\
+		"Si les fichiers dans le dossier de destination ont les mêmes noms que ceux dans le\n"\
+		"dossier sélectionné, ils seront remplacés. Voulez-vous toujours déplacer ou copier\n"\
+		"le dossier?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Redémarrer"
-	IDS_RESTART_PROMPT          "Voulez-vous simuler le redémarrage de Windows?"
+	IDS_RESTART_PROMPT          "Voulez-vous redémarrer votre ordinateur?"
 	IDS_SHUTDOWN_TITLE          "Arrêter"
 	IDS_SHUTDOWN_PROMPT         "Voulez-vous fermer la session ReactOS?"
 
@@ -429,9 +430,9 @@ BEGIN
 	IDS_COMMON_VIDEO            "Documents\\Mes vidéos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
-	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_FIXED             "Disque local"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_DRIVE_NETWORK           "Disque réseau"
 
 	IDS_OPEN_WITH               "Open With"
 	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
