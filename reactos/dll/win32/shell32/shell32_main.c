@@ -997,8 +997,8 @@ INT_PTR CALLBACK AboutAuthorsDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
             {
                 WCHAR name[64];
 
-                /* authors list is in utf-8 format */
-                MultiByteToWideChar( CP_UTF8, 0, *pstr, -1, name, sizeof(name) / sizeof(WCHAR) );
+                /* authors list is in ANSI format */
+                MultiByteToWideChar( CP_ACP, 0, *pstr, -1, name, sizeof(name) / sizeof(WCHAR) );
                 SendDlgItemMessageW( hWnd, IDC_SHELL_ABOUT_AUTHORS_LISTBOX, LB_ADDSTRING, 0, (LPARAM)name );
                 pstr++;
             }
