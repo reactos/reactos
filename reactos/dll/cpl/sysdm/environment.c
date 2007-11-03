@@ -458,6 +458,14 @@ OnDeleteVariable(HWND hwndDlg,
         }
 
         (void)ListView_DeleteItem(hwndListView, iItem);
+
+        /* Select the previous item */
+        if (iItem > 0)
+            iItem--;
+
+        ListView_SetItemState(hwndListView, iItem,
+                              LVIS_FOCUSED | LVIS_SELECTED,
+                              LVIS_FOCUSED | LVIS_SELECTED);
     }
 }
 
