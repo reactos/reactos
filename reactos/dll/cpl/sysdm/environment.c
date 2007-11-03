@@ -484,7 +484,14 @@ SetAllVars(HWND hwndDlg,
     PVARIABLE_DATA VarData;
     LV_ITEM lvi;
     INT iItem;
-    HKEY hk;
+    HKEY hKey;
+    DWORD dwValueCount;
+    DWORD dwMaxValueNameLength;
+    LPTSTR *aValueArray;
+    DWORD dwNameLength;
+    DWORD i;
+    TCHAR szBuffer[256];
+    LPTSTR lpBuffer;
 
     memset(&lvi, 0x00, sizeof(lvi));
 
@@ -504,10 +511,76 @@ SetAllVars(HWND hwndDlg,
                        REG_OPTION_NON_VOLATILE,
                        KEY_WRITE | KEY_READ,
                        NULL,
-                       &hk,
+                       &hKey,
                        NULL))
     {
         return;
+    }
+
+    /* Get the number of values and the maximum value name length */
+    if (RegQueryInfoKey(hKey,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        NULL,
+                        &dwValueCount,
+                        &dwMaxValueNameLength,
+                        NULL,
+                        NULL,
+                        NULL))
+    {
+        RegCloseKey(hKey);
+        return;
+    }
+
+    if (dwValueCount > 0)
+    {
+        /* Allocate the value array */
+        aValueArray = GlobalAlloc(GPTR, dwValueCount * sizeof(LPTSTR));
+        if (aValueArray != NULL)
+        {
+            /* Get all value names */
+            for (i = 0; i < dwValueCount; i++)
+            {
+                dwNameLength = 256;
+                if (!RegEnumValue(hKey,
+                                  i,
+                                  szBuffer,
+                                  &dwNameLength,
+                                  NULL,
+                                  NULL,
+                                  NULL,
+                                  NULL))
+                {
+                    /* Allocate a value name buffer, fill it and attach it to the array */
+                    lpBuffer = (LPTSTR)GlobalAlloc(GPTR, (dwNameLength + 1) * sizeof(TCHAR));
+                    if (lpBuffer != NULL)
+                    {
+                        _tcscpy(lpBuffer, szBuffer);
+                        aValueArray[i] = lpBuffer;
+                    }
+                }
+            }
+
+            /* Delete all values */
+            for (i = 0; i < dwValueCount; i++)
+            {
+                if (aValueArray[i] != NULL)
+                {
+                    /* Delete the value*/
+                    RegDeleteValue(hKey,
+                                   aValueArray[i]);
+
+                    /* Free the value name */
+                    GlobalFree(aValueArray[i]);
+                }
+            }
+
+            /* Free the value array */
+            GlobalFree(aValueArray);
+        }
     }
 
     /* Loop through all variables */
@@ -518,14 +591,14 @@ SetAllVars(HWND hwndDlg,
         if (VarData != NULL)
         {
             /* Set the new value */
-            if (RegSetValueEx(hk,
+            if (RegSetValueEx(hKey,
                               VarData->lpName,
                               0,
                               VarData->dwType,
                               (LPBYTE)VarData->lpRawValue,
                               (DWORD)(_tcslen(VarData->lpRawValue) + 1) * sizeof(TCHAR)))
             {
-                RegCloseKey(hk);
+                RegCloseKey(hKey);
                 return;
             }
         }
@@ -535,7 +608,7 @@ SetAllVars(HWND hwndDlg,
         lvi.iItem = ++iItem;
     }
 
-    RegCloseKey(hk);
+    RegCloseKey(hKey);
 }
 
 
