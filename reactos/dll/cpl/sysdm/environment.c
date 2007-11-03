@@ -19,6 +19,34 @@ typedef struct _VARIABLE_DATA
 } VARIABLE_DATA, *PVARIABLE_DATA;
 
 
+static INT
+GetSelectedListViewItem(HWND hwndListView)
+{
+    INT iCount;
+    INT iItem;
+
+    iCount = SendMessage(hwndListView,
+                         LVM_GETITEMCOUNT,
+                         0,
+                         0);
+    if (iCount != LB_ERR)
+    {
+        for (iItem = 0; iItem < iCount; iItem++)
+        {
+            if (SendMessage(hwndListView,
+                            LVM_GETITEMSTATE,
+                            iItem,
+                            (LPARAM) LVIS_SELECTED) == LVIS_SELECTED)
+            {
+                return iItem;
+            }
+        }
+    }
+
+    return -1;
+}
+
+
 INT_PTR CALLBACK
 EditVariableDlgProc(HWND hwndDlg,
                     UINT uMsg,
@@ -311,12 +339,12 @@ OnInitDialog(HWND hwndDlg)
 
 VOID
 OnNewVariable(HWND hwndDlg,
-              int iDlgItem)
+              INT iDlgItem)
 {
     HWND hwndListView;
     PVARIABLE_DATA VarData;
     LV_ITEM lvi;
-    int iItem;
+    INT iItem;
 
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
 
@@ -358,16 +386,16 @@ OnNewVariable(HWND hwndDlg,
 
 VOID
 OnEditVariable(HWND hwndDlg,
-               int iDlgItem)
+               INT iDlgItem)
 {
     HWND hwndListView;
     PVARIABLE_DATA VarData;
     LV_ITEM lvi;
-    int iItem;
+    INT iItem;
 
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
 
-    iItem = ListView_GetSelectionMark(hwndListView);
+    iItem = GetSelectedListViewItem(hwndListView);
     if (iItem != -1)
     {
         memset(&lvi, 0x00, sizeof(lvi));
@@ -394,16 +422,16 @@ OnEditVariable(HWND hwndDlg,
 
 VOID
 OnDeleteVariable(HWND hwndDlg,
-                 int iDlgItem)
+                 INT iDlgItem)
 {
     HWND hwndListView;
     PVARIABLE_DATA VarData;
     LV_ITEM lvi;
-    int iItem;
+    INT iItem;
 
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
 
-    iItem = ListView_GetSelectionMark(hwndListView);
+    iItem = GetSelectedListViewItem(hwndListView);
     if (iItem != -1)
     {
         memset(&lvi, 0x00, sizeof(lvi));
@@ -436,13 +464,13 @@ OnDeleteVariable(HWND hwndDlg,
 
 VOID
 ReleaseListViewItems(HWND hwndDlg,
-                     int iDlgItem)
+                     INT iDlgItem)
 {
     HWND hwndListView;
     PVARIABLE_DATA VarData;
-    int nItemCount;
     LV_ITEM lvi;
-    int i;
+    INT nItemCount;
+    INT i;
 
     hwndListView = GetDlgItem(hwndDlg, iDlgItem);
 
@@ -584,7 +612,7 @@ SetAllVars(HWND hwndDlg,
     }
 
     /* Loop through all variables */
-    while(ListView_GetItem(hwndListView, &lvi))
+    while (ListView_GetItem(hwndListView, &lvi))
     {
         /* Get the data in each item */
         VarData = (PVARIABLE_DATA)lvi.lParam;
