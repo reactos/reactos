@@ -272,10 +272,10 @@ typedef struct _GDIBSEXTSELCLPRGN
 {
   GDIBATCHHDR gbHdr;
   int fnMode;
-  HANDLE hbrush;
-  HANDLE hpen;
-  COLORREF crBackgroundClr;
-  ULONG ulBackgroundClr;
+  LONG right;
+  LONG bottom;
+  LONG left;
+  LONG top;  
 } GDIBSEXTSELCLPRGN, *PGDIBSEXTSELCLPRGN;
 //
 //   Use with GdiBCSelObj, GdiBCDelObj and GdiBCDelRgn.
