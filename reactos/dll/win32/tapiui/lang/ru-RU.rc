@@ -4,7 +4,7 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Набор номера"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON 201, 2000, 7, 7, 21, 20
 	LTEXT "&Размещение:", -1, 7, 43, 210, 8
 	LTEXT "В списке содержатся указанные местоположения. Выберите место, из которого производится набор номера.", -1, 35, 12, 210, 24
@@ -14,13 +14,13 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "&Удалить", 1032, 195, 163, 50, 14
 	LTEXT "Номер телефона будет набран как:", 1052, 7, 189, 121, 8
 	LTEXT "", 1053, 14, 203, 224, 16
-}
+END
 
 102 DIALOG 0, 0, 252, 255
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON 202, 2000, 7, 7, 21, 20
 	LTEXT "&Имя местоположения:", -1, 35, 12, 79, 8, SS_CENTERIMAGE
 	EDITTEXT 1038, 118, 9, 127, 14, ES_AUTOHSCROLL
@@ -46,13 +46,13 @@ FONT 8, "MS Shell Dlg"
 	AUTORADIOBUTTON "им&пульсный", 1037, 177, 192, 54, 10, NOT WS_TABSTOP
 	LTEXT "Номер телефона будет набран как:", 1052, 7, 219, 126, 8
 	LTEXT "", 1053, 14, 232, 224, 16
-}
+END
 
 103 DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Код города"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "Правило набора номера определяет способ набора номеров с таким же или другим кодом города.", 2000, 7, 7, 238, 16
 	LTEXT "&Правила набора номера:", -1, 7, 31, 238, 8
 	CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000801D, 7, 42, 238, 99, WS_EX_CLIENTEDGE
@@ -61,13 +61,13 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "&Удалить", 1032, 195, 145, 50, 14
 	GROUPBOX "Описание", 2006, 7, 166, 238, 45
 	LTEXT "", 1039, 14, 180, 224, 24
-}
+END
 
 104 DIALOGEX 0, 0, 252, 234
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Телефонная карточка"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "Выберите используемую телефонную карточку или нажмите кнопку ""Создать"" для добавления другой карточки.", 2000, 7, 7, 238, 8
 	LTEXT "&Типы карточек:", -1, 7, 31, 238, 8
 	CONTROL "", 1033, "SysListView32", WS_BORDER | WS_TABSTOP | 0x0000400D, 7, 42, 238, 63, WS_EX_CLIENTEDGE
@@ -85,13 +85,13 @@ FONT 8, "MS Shell Dlg"
 	LTEXT "", 1043, 106, 192, 132, 8
 	LTEXT "местных звонков:", -1, 14, 204, 84, 8
 	LTEXT "", 1051, 106, 204, 132, 8
-}
+END
 
 105 DIALOG 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON 203, 2000, 7, 7, 21, 20
 	LTEXT "&Имя карточки:", -1, 35, 12, 64, 8, SS_CENTERIMAGE
 	EDITTEXT 1047, 105, 9, 140, 14, ES_AUTOHSCROLL
@@ -104,13 +104,13 @@ FONT 8, "MS Shell Dlg"
 	LTEXT "", 1000, 22, 131, 216, 8
 	LTEXT "", 1001, 22, 143, 216, 8
 	LTEXT "", 1002, 22, 155, 216, 8
-}
+END
 
 106 DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Междугородные звонки"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "&Номер для выхода на междугородную линию:", -1, 7, 7, 238, 8
 	EDITTEXT 1044, 7, 18, 116, 14, ES_AUTOHSCROLL
 	LTEXT "Укажите последовательность выхода на междугородную линию. Последовательность шагов должна совпадать с приведенной на карточке.", 2000, 7, 40, 238, 24
@@ -125,13 +125,13 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "В&ызываемый номер...", 1020, 101, 179, 90, 14
 	PUSHBUTTON "О&жидание...", 1017, 7, 197, 90, 14
 	PUSHBUTTON "Вв&едите цифры...", 1021, 101, 197, 90, 14
-}
+END
 
 107 DIALOGEX 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Международная связь"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "&Номер для выхода на международную линию:", -1, 7, 7, 238, 8
 	EDITTEXT 1045, 7, 18, 116, 14, ES_AUTOHSCROLL
 	LTEXT "Укажите последовательность выхода на международную линию. Последовательность шагов должна совпадать с приведенной на карточке.", 2000, 7, 40, 244, 24
@@ -146,13 +146,13 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "В&ызываемый номер...", 1020, 101, 179, 90, 14
 	PUSHBUTTON "О&жидание...", 1017, 7, 197, 90, 14
 	PUSHBUTTON "Вв&едите цифры...", 1021, 101, 197, 90, 14
-}
+END
 
 108 DIALOGEX 0, 0, 252, 226
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Местные звонки"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "&Номер для выхода на внешнюю линию:", -1, 7, 7, 238, 8
 	EDITTEXT 1008, 7, 18, 132, 14, ES_AUTOHSCROLL
 	LTEXT "Укажите последовательность выхода на местную линию. Последовательность шагов должна совпадать с приведенной на карточке. Для выполнения звонков без использования телефонной карточки оставьте поля пустыми.", 2000, 7, 40, 238, 32
@@ -167,14 +167,14 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "В&ызываемый номер...", 1020, 101, 187, 90, 14
 	PUSHBUTTON "О&жидание...", 1017, 7, 205, 90, 14
 	PUSHBUTTON "Вв&едите цифры...", 1021, 101, 205, 90, 14
-}
+END
 
 109 DIALOGEX 0, 0, 252, 257
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Новое правило набора номера"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "Это правило будет применяться только к звонкам с указанными кодом города и префиксом.", 2000, 7, 7, 238, 16
 	LTEXT "Используемый код города:", -1, 7, 31, 122, 8
 	LTEXT "Код &города:", -1, 7, 45, 41, 8
@@ -199,26 +199,26 @@ FONT 8, "MS Shell Dlg"
 	RTEXT "X - X X X - X X X - X X X X", 2005, 133, 48, 112, 8
 	GROUPBOX "Префиксы", -1, 7, 64, 238, 102
 	GROUPBOX "Правила", -1, 7, 170, 238, 60
-}
+END
 
 110 DIALOGEX 0, 0, 227, 82
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "", 1003, 7, 7, 213, 8
 	LTEXT "", 1039, 7, 23, 213, 8
 	EDITTEXT 1031, 7, 34, 213, 14, ES_AUTOHSCROLL
 	DEFPUSHBUTTON "OK", 1, 116, 61, 50, 14
 	PUSHBUTTON "Отмена", 2, 170, 61, 50, 14
-}
+END
 
 111 DIALOGEX 0, 0, 252, 124
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Ожидание"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "Выберите тип ожидаемого сигнала перед продолжением набора номера.", 2000, 7, 7, 238, 16
 	AUTORADIOBUTTON "Ждать &гудка", 1009, 7, 31, 238, 10, WS_GROUP
 	AUTORADIOBUTTON "Ждать &завершения голосового сообщения", 1016, 7, 47, 238, 10, NOT WS_TABSTOP
@@ -228,27 +228,27 @@ FONT 8, "MS Shell Dlg"
 	CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 77, 11, 14
 	DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
 	PUSHBUTTON "Отмена", 2, 195, 103, 50, 14
-}
+END
 
 112 DIALOGEX 0, 0, 252, 111
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Вызываемый номер"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "На этом шаге требуется указать способ набора номера при использовании телефонной карточки. Набор каких частей номера требуется производить?", 2000, 7, 7, 238, 24
 	AUTOCHECKBOX "Набрать код &страны/региона", 1027, 7, 39, 238, 10
 	AUTOCHECKBOX "Набрать код &города", 1034, 7, 55, 238, 10
 	AUTOCHECKBOX "Набрать &номер", 1008, 7, 71, 238, 10, WS_DISABLED
 	DEFPUSHBUTTON "OK", 1, 141, 91, 50, 14
 	PUSHBUTTON "Отмена", 2, 195, 91, 50, 14
-}
+END
 
 113 DIALOG 0, 0, 252, 218
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Дополнительно"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON 201, 2000, 7, 7, 20, 20
 	LTEXT "На компьютере установлены следующие службы доступа к телефонии:", -1, 40, 12, 205, 16
 	LTEXT "С&лужбы доступа:", -1, 7, 35, 238, 8
@@ -256,26 +256,26 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON "До&бавить...", 1005, 87, 197, 50, 14
 	PUSHBUTTON "&Удалить", 1024, 141, 197, 50, 14
 	PUSHBUTTON "&Настроить...", 1031, 195, 197, 50, 14
-}
+END
 
 114 DIALOG 20, 15, 252, 135
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Установка службы доступа"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	LTEXT "Выберите устанавливаемую службу доступа из списка и нажмите кнопку ""Добавить"".", 2000, 7, 7, 241, 16
 	LTEXT "С&лужбы доступа к телефонии:", -1, 7, 31, 155, 10
 	LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
 	PUSHBUTTON "&Добавить", 1005, 141, 114, 50, 14
 	DEFPUSHBUTTON "Отмена", 2, 195, 114, 50, 14
-}
+END
 
 115 DIALOGEX 10, 10, 303, 228
 STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 EXSTYLE WS_EX_CONTEXTHELP
 CAPTION "Сведения о местонахождении"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	CONTROL 302, 302, "STATIC", SS_BITMAP, 10, 10, 88, 155
 	LTEXT "Перед созданием телефонного или модемного подключения требуется ввести сведения о вашем текущем нахождении.", 2000, 107, 15, 188, 25
 	LTEXT "&Страна, где вы сейчас находитесь:", -1, 107, 43, 189, 10
@@ -291,12 +291,12 @@ FONT 8, "MS Shell Dlg"
 	AUTORADIOBUTTON "&импульсный набор", 1037, 192, 178, 80, 14, NOT WS_TABSTOP
 	DEFPUSHBUTTON "OK", 1, 192, 204, 50, 14
 	PUSHBUTTON "Отмена", 2, 246, 204, 50, 14
-}
+END
 
 400 DIALOG 0, 0, 290, 151
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	CONTROL 302, 302, "STATIC", SS_BITMAP, 0, 0, 88, 155
 	LTEXT "Перед созданием телефонного или модемного подключения требуется ввести сведения в вашем текущем нахождении.", 2000, 95, 0, 188, 25
 	LTEXT "&Страна, где вы сейчас находитесь:", -1, 95, 30, 188, 10
@@ -308,22 +308,22 @@ FONT 8, "MS Shell Dlg"
 	LTEXT "Тип набора номера:", -1, 95, 129, 159, 10
 	AUTORADIOBUTTON "&тоновый набор", 1036, 95, 139, 67, 12, WS_GROUP | NOT WS_TABSTOP
 	AUTORADIOBUTTON "&импульсный набор", 1037, 167, 139, 79, 12, NOT WS_TABSTOP
-}
+END
 
 500 DIALOG 0, 0, 235, 88
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Обозреватель ReactOS"
 FONT 8, "MS Shell Dlg"
-{
+BEGIN
 	ICON 504, 501, 13, 14, 21, 20
 	LTEXT "", 502, 47, 15, 180, 32
 	AUTOCHECKBOX "&Всегда доверять содержимому этой страницы", 503, 47, 47, 180, 12
 	DEFPUSHBUTTON "&OK", 505, 110, 65, 50, 14
 	PUSHBUTTON "&Отмена", 506, 164, 65, 50, 14
-}
+END
 
 STRINGTABLE
-{
+BEGIN
 	1 "Телефон и модем"
 	2 "Настройка правил набора номера и иных параметров при работе с модемом."
 	3 "Размещение"
@@ -443,4 +443,4 @@ STRINGTABLE
 	15821 "20,\"Telstra (Австралия) через 1818 (факс)\",\"\",\"J$TH,FG#\",\"J$TH,FG#\",\"J$TH,0015EFG#\",\"\",\"1818\",\"1818\",\"1818\",1"
 	15822 "21,\"Optus (Австралия) через 1812\",\"\",\"FG\",\"FG\",\"J@TH,0011EFG\",\"\",\"\",\"\",\"1812\",1"
 	15823 "22,\"Optus (Австралия) через 008551812\",\"\",\"FG\",\"FG\",\"J@TH,0011EFG\",\"\",\"\",\"\",\"008551812\",1"
-}
+END
