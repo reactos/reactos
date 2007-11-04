@@ -342,6 +342,7 @@ typedef struct _I386_LOADER_BLOCK
 typedef struct _PPC_LOADER_BLOCK
 {
     PVOID BootInfo;
+    ULONG MachineType;
 } PPC_LOADER_BLOCK, *PPPC_LOADER_BLOCK;
 
 //

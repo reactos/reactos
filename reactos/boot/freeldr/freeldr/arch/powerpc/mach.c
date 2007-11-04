@@ -476,6 +476,8 @@ VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day,
 
 VOID PpcHwDetect() {
     printf("PpcHwDetect\n");
+    /* Almost all PowerPC boxen use PCI */
+    BootInfo.machineType = PCIBus;
 }
 
 BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {

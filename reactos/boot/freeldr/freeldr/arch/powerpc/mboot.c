@@ -184,6 +184,11 @@ FrLdrStartup(ULONG Magic)
 	    LdrPEFixupImports
 		((PVOID)reactos_modules[i].ModStart,
 		 (PCHAR)reactos_modules[i].String);
+        else /* Make RVA */
+        {
+            reactos_modules[i].ModStart -= (ULONG_PTR)KernelMemory;
+            reactos_modules[i].ModEnd   -= (ULONG_PTR)KernelMemory;
+        }
     }
 
     /* We don't use long longs, but longs for the addresses in the 
@@ -680,6 +685,7 @@ FrLdrLoadModule(FILE *ModuleImage,
 
     } while(TempName);
     NameBuffer = reactos_module_strings[LoaderBlock.ModsCount];
+    
 
     /* Get Module Size */
     LocalModuleSize = FsGetFileSize(ModuleImage);
@@ -723,8 +729,9 @@ FrLdrMapImage(IN FILE *Image, IN PCHAR ShortName, IN ULONG ImageType)
     else
     {
         PVOID ModuleBase = (PVOID)NextModuleBase;
+
         if(FrLdrMapModule(Image, ShortName, 0, 0))
-            Result = ModuleBase;
+            Result = ModuleBase;   
     }
     return Result;
 }

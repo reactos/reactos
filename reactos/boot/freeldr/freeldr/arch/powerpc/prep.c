@@ -1,8 +1,10 @@
 #include "freeldr.h"
 #include "machine.h"
+#include "ppcboot.h"
 #include "ppcmmu/mmu.h"
 #include "prep.h"
 
+extern boot_infos_t BootInfo;
 int prep_serial = 0x800003f8;
 
 void sync() { __asm__("eieio\n\tsync"); }
@@ -63,6 +65,8 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
 
 void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
 {
+    /* Prep boxen are PCI */
+    BootInfo.machineType = PCIBus;
     pci_setup(&pci1_desc);
 }
 
