@@ -383,6 +383,21 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
 #define KSSTREAM_HEADER_OPTIONSF_LOOPEDDATA                 0x80000000
 
 #define KSMEDIUM_TYPE_ANYINSTANCE                           0
+#define KSMEDIUM_STANDARD_DEVIO                             KSMEDIUM_TYPE_ANYINSTANCE
+#define KSFILTER_NODE                                       ((ULONG)-1)
+#define KSALL_NODES                                         ((ULONG)-1)
+#define KSINSTANCE_INDETERMINATE                            ((ULONG)-1)
+#define KSDATAFORMAT_BIT_TEMPORAL_COMPRESSION               0
+#define KSDATAFORMAT_TEMPORAL_COMPRESSION                   (1 << KSDATAFORMAT_BIT_TEMPORAL_COMPRESSION)
+#define KSDATAFORMAT_BIT_ATTRIBUTES                         1
+#define KSDATAFORMAT_ATTRIBUTES                             (1 << KSDATAFORMAT_BIT_ATTRIBUTES)
+#define KSDATARANGE_BIT_ATTRIBUTES                          1
+#define KSDATARANGE_ATTRIBUTES                              (1 << KSDATARANGE_BIT_ATTRIBUTES)
+#define KSDATARANGE_BIT_REQUIRED_ATTRIBUTES                 2
+#define KSDATARANGE_REQUIRED_ATTRIBUTES                     (1 << KSDATARANGE_BIT_REQUIRED_ATTRIBUTES)
+#define KSATTRIBUTE_REQUIRED                                0x00000001
+
+
 
 #if defined(_NTDDK_)
 
@@ -433,7 +448,123 @@ DEFINE_GUIDSTRUCT("9F564180-704C-11D0-A5D6-28DB04C10000", KSDEGRADESETID_Standar
     #define STATIC_REFERENCE_BUS_INTERFACE                      STATIC_KSMEDIUMSETID_Standard
     #define REFERENCE_BUS_INTERFACE                             KSMEDIUMSETID_Standard
 
-#endif
+    typedef enum
+    {
+        KsInvokeOnSuccess = 1,
+        KsInvokeOnError = 2,
+        KsInvokeOnCancel = 4
+    } KSCOMPLETION_INVOCATION;
+
+    typedef enum
+    {
+        KsListEntryTail,
+        KsListEntryHead
+    } KSLIST_ENTRY_LOCATION;
+
+    typedef enum
+    {
+        KsAcquireOnly,
+        KsAcquireAndRemove,
+        KsAcquireOnlySingleItem,
+        KsAcquireAndRemoveOnlySingleItem
+    } KSIRP_REMOVAL_OPERATION;
+
+    typedef enum
+    {
+        KsStackCopyToNewLocation,
+        KsStackReuseCurrentLocation,
+        KsStackUseNewLocation
+    } KSSTACK_USE;
+
+    typedef enum
+    {
+        KSTARGET_STATE_DISABLED,
+        KSTARGET_STATE_ENABLED
+    } KSTARGET_STATE;
+
+    typedef enum
+    {
+        KSPROPERTY_GM_GRAPHMANAGER,
+        KSPROPERTY_GM_TIMESTAMP_CLOCK,
+        KSPROPERTY_GM_RATEMATCH,
+        KSPROPERTY_GM_RENDER_CLOCK,
+    } KSPROPERTY_GM;
+
+    #if !defined(__wtypes_h__)
+        enum VARENUM
+        {
+            VT_EMPTY = 0,
+            VT_NULL = 1,
+            VT_I2 = 2,
+            VT_I4 = 3,
+            VT_R4 = 4,
+            VT_R8 = 5,
+            VT_CY = 6,
+            VT_DATE = 7,
+            VT_BSTR = 8,
+            VT_DISPATCH = 9,
+            VT_ERROR = 10,
+            VT_BOOL = 11,
+            VT_VARIANT = 12,
+            VT_UNKNOWN = 13,
+            VT_DECIMAL = 14,
+            VT_I1 = 16,
+            VT_UI1 = 17,
+            VT_UI2 = 18,
+            VT_UI4 = 19,
+            VT_I8 = 20,
+            VT_UI8 = 21,
+            VT_INT = 22,
+            VT_UINT = 23,
+            VT_VOID = 24,
+            VT_HRESULT  = 25,
+            VT_PTR = 26,
+            VT_SAFEARRAY = 27,
+            VT_CARRAY = 28,
+            VT_USERDEFINED = 29,
+            VT_LPSTR = 30,
+            VT_LPWSTR = 31,
+            VT_FILETIME = 64,
+            VT_BLOB = 65,
+            VT_STREAM = 66,
+            VT_STORAGE = 67,
+            VT_STREAMED_OBJECT = 68,
+            VT_STORED_OBJECT = 69,
+            VT_BLOB_OBJECT = 70,
+            VT_CF = 71,
+            VT_CLSID = 72,
+            VT_VECTOR = 0x1000,
+            VT_ARRAY = 0x2000,
+            VT_BYREF = 0x4000,
+            VT_RESERVED = 0x8000,
+            VT_ILLEGAL = 0xffff,
+            VT_ILLEGALMASKED = 0xfff,
+            VT_TYPEMASK = 0xfff
+        };
+    #endif
+
+    typedef struct _KSDEVICE KSDEVICE, *PKSDEVICE;
+    typedef PVOID KSDEVICE_HEADER, KSOBJECT_HEADER;
+    typedef struct _KSDEVICE_DESCRIPTOR KSDEVICE_DESCRIPTOR, *PKSDEVICE_DESCRIPTOR;
+    typedef struct _KSDEVICE_DISPATCH KSDEVICE_DISPATCH, *PKSDEVICE_DISPATCH;    
+    typedef struct _KSFILTERFACTORY  KSFILTERFACTORY, *PKSFILTERFACTORY;
+    typedef struct _KSFILTER_DESCRIPTOR KSFILTER_DESCRIPTOR, *PKSFILTER_DESCRIPTOR;
+    typedef struct _KSFILTER_DISPATCH KSFILTER_DISPATCH, *PKSFILTER_DISPATCH;
+    typedef struct _KSFILTER  KSFILTER, *PKSFILTER;
+    typedef struct _KSPIN_DESCRIPTOR_EX KSPIN_DESCRIPTOR_EX, *PKSPIN_DESCRIPTOR_EX;
+    typedef struct _KSPIN_DISPATCH KSPIN_DISPATCH, *PKSPIN_DISPATCH;
+    typedef struct _KSCLOCK_DISPATCH KSCLOCK_DISPATCH, *PKSCLOCK_DISPATCH;
+    typedef struct _KSALLOCATOR_DISPATCH KSALLOCATOR_DISPATCH, *PKSALLOCATOR_DISPATCH;
+    typedef struct _KSPIN KSPIN, *PKSPIN;
+    typedef struct _KSNODE_DESCRIPTOR KSNODE_DESCRIPTOR, *PKSNODE_DESCRIPTOR;
+    typedef struct _KSSTREAM_POINTER_OFFSET KSSTREAM_POINTER_OFFSET, *PKSSTREAM_POINTER_OFFSET;
+    typedef struct _KSSTREAM_POINTER KSSTREAM_POINTER, *PKSSTREAM_POINTER;
+    typedef struct _KSMAPPING KSMAPPING, *PKSMAPPING;
+    typedef struct _KSPROCESSPIN KSPROCESSPIN, *PKSPROCESSPIN;
+    typedef struct _KSPROCESSPIN_INDEXENTRY KSPROCESSPIN_INDEXENTRY, *PKSPROCESSPIN_INDEXENTRY;
+#endif // DDK
+
+typedef PVOID PKSWORKER;
 
 typedef enum
 {
@@ -449,63 +580,731 @@ typedef enum
     KSSTATE_RUN
 } KSSTATE, *PKSSTATE;
 
-#if defined(_NTDDK_) && !defined(__wtypes_h__)
-enum VARENUM
-{
-    VT_EMPTY = 0,
-    VT_NULL = 1,
-    VT_I2 = 2,
-    VT_I4 = 3,
-    VT_R4 = 4,
-    VT_R8 = 5,
-    VT_CY = 6,
-    VT_DATE = 7,
-    VT_BSTR = 8,
-    VT_DISPATCH = 9,
-    VT_ERROR = 10,
-    VT_BOOL = 11,
-    VT_VARIANT = 12,
-    VT_UNKNOWN = 13,
-    VT_DECIMAL = 14,
-    VT_I1 = 16,
-    VT_UI1 = 17,
-    VT_UI2 = 18,
-    VT_UI4 = 19,
-    VT_I8 = 20,
-    VT_UI8 = 21,
-    VT_INT = 22,
-    VT_UINT = 23,
-    VT_VOID = 24,
-    VT_HRESULT  = 25,
-    VT_PTR = 26,
-    VT_SAFEARRAY = 27,
-    VT_CARRAY = 28,
-    VT_USERDEFINED = 29,
-    VT_LPSTR = 30,
-    VT_LPWSTR = 31,
-    VT_FILETIME = 64,
-    VT_BLOB = 65,
-    VT_STREAM = 66,
-    VT_STORAGE = 67,
-    VT_STREAMED_OBJECT = 68,
-    VT_STORED_OBJECT = 69,
-    VT_BLOB_OBJECT = 70,
-    VT_CF = 71,
-    VT_CLSID = 72,
-    VT_VECTOR = 0x1000,
-    VT_ARRAY = 0x2000,
-    VT_BYREF = 0x4000,
-    VT_RESERVED = 0x8000,
-    VT_ILLEGAL = 0xffff,
-    VT_ILLEGALMASKED = 0xfff,
-    VT_TYPEMASK = 0xfff
-};
-#endif
 
 typedef enum
 {
     KSPROPERTY_GENERAL_COMPONENTID
 } KSPROPERTY_GENERAL;
+
+typedef enum
+{
+    KSDEGRADE_STANDARD_SAMPLE,
+    KSDEGRADE_STANDARD_QUALITY,
+    KSDEGRADE_STANDARD_COMPUTATION,
+    KSDEGRADE_STANDARD_SKIP
+} KSDEGRADE_STANDARD;
+
+
+typedef struct
+{
+    ULONG PriorityClass;
+    ULONG PrioritySubClass;
+} KSPRIORITY, *PKSPRIORITY;
+
+
+typedef enum
+{
+    KSEVENT_CLOCK_INTERVAL_MARK,
+    KSEVENT_CLOCK_POSITION_MARK
+} KSEVENT_CLOCK_POSITION;
+
+
+typedef enum
+{
+    KSEVENT_CONNECTION_POSITIONUPDATE,
+    KSEVENT_CONNECTION_DATADISCONTINUITY,
+    KSEVENT_CONNECTION_TIMEDISCONTINUITY,
+    KSEVENT_CONNECTION_PRIORITY,
+    KSEVENT_CONNECTION_ENDOFSTREAM
+} KSEVENT_CONNECTION;
+
+typedef enum
+{
+    KSMETHOD_STREAMIO_READ,
+    KSMETHOD_STREAMIO_WRITE
+} KSMETHOD_STREAMIO;
+
+typedef enum
+{
+    KSPROPERTY_MEDIASEEKING_CAPABILITIES,
+    KSPROPERTY_MEDIASEEKING_FORMATS,
+    KSPROPERTY_MEDIASEEKING_TIMEFORMAT,
+    KSPROPERTY_MEDIASEEKING_POSITION,
+    KSPROPERTY_MEDIASEEKING_STOPPOSITION,
+    KSPROPERTY_MEDIASEEKING_POSITIONS,
+    KSPROPERTY_MEDIASEEKING_DURATION,
+    KSPROPERTY_MEDIASEEKING_AVAILABLE,
+    KSPROPERTY_MEDIASEEKING_PREROLL,
+    KSPROPERTY_MEDIASEEKING_CONVERTTIMEFORMAT
+} KSPROPERTY_MEDIASEEKING;
+
+typedef enum
+{
+    KS_SEEKING_NoPositioning,
+    KS_SEEKING_AbsolutePositioning,
+    KS_SEEKING_RelativePositioning,
+    KS_SEEKING_IncrementalPositioning,
+    KS_SEEKING_PositioningBitsMask = 0x3,
+    KS_SEEKING_SeekToKeyFrame,
+    KS_SEEKING_ReturnTime = 0x8
+} KS_SEEKING_FLAGS;
+
+typedef enum 
+{
+    KS_SEEKING_CanSeekAbsolute = 0x1,
+    KS_SEEKING_CanSeekForwards = 0x2,
+    KS_SEEKING_CanSeekBackwards = 0x4,
+    KS_SEEKING_CanGetCurrentPos = 0x8,
+    KS_SEEKING_CanGetStopPos = 0x10,
+    KS_SEEKING_CanGetDuration = 0x20,
+    KS_SEEKING_CanPlayBackwards = 0x40
+} KS_SEEKING_CAPABILITIES;
+
+typedef enum
+{
+    KSPROPERTY_TOPOLOGY_CATEGORIES,
+    KSPROPERTY_TOPOLOGY_NODES,
+    KSPROPERTY_TOPOLOGY_CONNECTIONS,
+    KSPROPERTY_TOPOLOGY_NAME
+} KSPROPERTY_TOPOLOGY;
+
+
+typedef enum
+{
+    KSINTERFACE_STANDARD_STREAMING,
+    KSINTERFACE_STANDARD_LOOPED_STREAMING,
+    KSINTERFACE_STANDARD_CONTROL
+} KSINTERFACE_STANDARD;
+
+
+
+typedef enum
+{
+    KSINTERFACE_FILEIO_STREAMING
+} KSINTERFACE_FILEIO;
+
+typedef enum
+{
+    KSPROPERTY_PIN_CINSTANCES,
+    KSPROPERTY_PIN_CTYPES,
+    KSPROPERTY_PIN_DATAFLOW,
+    KSPROPERTY_PIN_DATARANGES,
+    KSPROPERTY_PIN_DATAINTERSECTION,
+    KSPROPERTY_PIN_INTERFACES,
+    KSPROPERTY_PIN_MEDIUMS,
+    KSPROPERTY_PIN_COMMUNICATION,
+    KSPROPERTY_PIN_GLOBALCINSTANCES,
+    KSPROPERTY_PIN_NECESSARYINSTANCES,
+    KSPROPERTY_PIN_PHYSICALCONNECTION,
+    KSPROPERTY_PIN_CATEGORY,
+    KSPROPERTY_PIN_NAME,
+    KSPROPERTY_PIN_CONSTRAINEDDATARANGES,
+    KSPROPERTY_PIN_PROPOSEDATAFORMAT
+} KSPROPERTY_PIN;
+
+typedef enum
+{
+    KSPIN_DATAFLOW_IN = 1,
+    KSPIN_DATAFLOW_OUT
+} KSPIN_DATAFLOW, *PKSPIN_DATAFLOW;
+
+typedef enum
+{
+    KSPIN_COMMUNICATION_NONE,
+    KSPIN_COMMUNICATION_SINK,
+    KSPIN_COMMUNICATION_SOURCE,
+    KSPIN_COMMUNICATION_BOTH,
+    KSPIN_COMMUNICATION_BRIDGE
+} KSPIN_COMMUNICATION, *PKSPIN_COMMUNICATION;
+
+typedef enum
+{
+    KSPROPERTY_QUALITY_REPORT,
+    KSPROPERTY_QUALITY_ERROR
+} KSPROPERTY_QUALITY;
+
+
+typedef enum
+{
+    KSPROPERTY_CONNECTION_STATE,
+    KSPROPERTY_CONNECTION_PRIORITY,
+    KSPROPERTY_CONNECTION_DATAFORMAT,
+    KSPROPERTY_CONNECTION_ALLOCATORFRAMING,
+    KSPROPERTY_CONNECTION_PROPOSEDATAFORMAT,
+    KSPROPERTY_CONNECTION_ACQUIREORDERING,
+    KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX,
+    KSPROPERTY_CONNECTION_STARTAT
+} KSPROPERTY_CONNECTION;
+
+typedef enum
+{
+    KSEVENT_STREAMALLOCATOR_INTERNAL_FREEFRAME,
+    KSEVENT_STREAMALLOCATOR_FREEFRAME
+} KSEVENT_STREAMALLOCATOR;
+
+
+typedef enum
+{
+    KSMETHOD_STREAMALLOCATOR_ALLOC,
+    KSMETHOD_STREAMALLOCATOR_FREE
+} KSMETHOD_STREAMALLOCATOR;
+
+
+
+typedef struct
+{
+    union
+    {
+        #if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+            struct _IDENTIFIER
+            {
+        #else
+            struct
+            {
+        #endif
+                GUID Set;
+                ULONG Id;
+                ULONG Flags;
+            };
+    LONGLONG Alignment;
+    };
+} KSIDENTIFIER, *PKSIDENTIFIER, KSPROPERTY, *PKSPROPERTY, KSPIN_INTERFACE, *PKSPIN_INTERFACE
+  KSMETHOD,     *PKSMETHOD,     KSEVENT,    *PKSEVENT,    KSDEGRADE,       *PKSDEGRADE,
+  KSPIN_MEDIUM, *PKSPIN_MEDIUM;
+
+#define DEFINE_KSPIN_INTERFACE_TABLE(tablename)             const KSPIN_INTERFACE tablename[] =
+
+typedef struct
+{
+    PVOID Context;
+    ULONG Proportion;
+    LONGLONG DeltaTime;
+} KSQUALITY, *PKSQUALITY;
+
+typedef struct
+{
+    PVOID Context;
+    ULONG Status;
+} KSERROR, *PKSERROR;
+
+typedef struct
+{
+    ULONG AccessFlags;
+    ULONG DescriptionSize;
+    KSIDENTIFIER PropTypeSet;
+    ULONG MembersListCount;
+    ULONG Reserved;
+} KSPROPERTY_DESCRIPTION, *PKSPROPERTY_DESCRIPTION;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG NodeId;
+    ULONG Reserved;
+} KSP_NODE, *PKSP_NODE;
+
+
+typedef struct
+{
+    ULONG Size;
+    ULONG Count;
+} KSMULTIPLE_ITEM, *PKSMULTIPLE_ITEM;
+
+typedef struct
+{
+    KSEVENT Event;
+    ULONG NodeId;
+    ULONG Reserved;
+} KSE_NODE, *PKSE_NODE;
+
+typedef struct
+{
+    KSMETHOD Method;
+    ULONG NodeId;
+    ULONG Reserved;
+} KSM_NODE, *PKSM_NODE;
+
+typedef struct
+{
+    ULONG MembersFlags;
+    ULONG MembersSize;
+    ULONG MembersCount;
+    ULONG Flags;
+} KSPROPERTY_MEMBERSHEADER, *PKSPROPERTY_MEMBERSHEADER;
+
+
+#if defined( _KS_NO_ANONYMOUS_STRUCTURES_ )
+{
+    typedef union
+    {
+        struct _SIGNED
+        {
+            LONG SignedMinimum;
+            LONG SignedMaximum;
+        };
+        struct _UNSIGNED
+        {
+            ULONG   UnsignedMinimum;
+            ULONG   UnsignedMaximum;
+        };
+    } KSPROPERTY_BOUNDS_LONG, *PKSPROPERTY_BOUNDS_LONG;
+
+typedef union
+{
+        struct _SIGNED64
+        {
+            LONGLONG SignedMinimum;
+            LONGLONG SignedMaximum;
+        };
+        struct _UNSIGNED64
+        {
+            #if defined(_NTDDK_)
+                ULONGLONG   UnsignedMinimum;
+                ULONGLONG   UnsignedMaximum;
+            #else
+                DWORDLONG   UnsignedMinimum;
+                DWORDLONG   UnsignedMaximum;
+            #endif
+        };
+} KSPROPERTY_BOUNDS_LONGLONG, *PKSPROPERTY_BOUNDS_LONGLONG;
+
+#else
+    typedef union
+    {
+        struct
+        {
+            LONG SignedMinimum;
+            LONG SignedMaximum;
+        };
+        struct
+        {
+            ULONG UnsignedMinimum;
+            ULONG UnsignedMaximum;
+        };
+} KSPROPERTY_BOUNDS_LONG, *PKSPROPERTY_BOUNDS_LONG;
+
+typedef union
+{
+        struct
+        {
+            LONGLONG SignedMinimum;
+            LONGLONG SignedMaximum;
+        };
+        struct
+        {
+            #if defined(_NTDDK_)
+                ULONGLONG UnsignedMinimum;
+                ULONGLONG UnsignedMaximum;
+            #else
+                DWORDLONG UnsignedMinimum;
+                DWORDLONG UnsignedMaximum;
+            #endif
+        };
+} KSPROPERTY_BOUNDS_LONGLONG, *PKSPROPERTY_BOUNDS_LONGLONG;
+
+#endif
+
+
+typedef struct 
+{
+    ULONG SteppingDelta;
+    ULONG Reserved;
+    KSPROPERTY_BOUNDS_LONG Bounds;
+} KSPROPERTY_STEPPING_LONG, *PKSPROPERTY_STEPPING_LONG;
+
+typedef struct
+{
+    #if defined(_NTDDK_)
+        ULONGLONG SteppingDelta;
+    #else
+        DWORDLONG SteppingDelta;
+    #endif
+    KSPROPERTY_BOUNDS_LONGLONG  Bounds;
+} KSPROPERTY_STEPPING_LONGLONG, *PKSPROPERTY_STEPPING_LONGLONG;
+
+
+typedef struct
+{
+    ULONG NotificationType;
+    union
+    {
+        struct
+        {
+            HANDLE Event;
+            ULONG_PTR Reserved[2];
+        } EventHandle;
+        struct
+        {
+            HANDLE Semaphore;
+            ULONG Reserved;
+            LONG Adjustment;
+        } SemaphoreHandle;
+#if defined(_NTDDK_)
+        struct
+        {
+            PVOID Event;
+            KPRIORITY Increment;
+            ULONG_PTR Reserved;
+        } EventObject;
+        struct
+        {
+            PVOID Semaphore;
+            KPRIORITY Increment;
+            LONG Adjustment;
+        } SemaphoreObject;
+        struct
+        {
+            PKDPC Dpc;
+            ULONG ReferenceCount;
+            ULONG_PTR Reserved;
+        } Dpc;
+        struct
+        {
+            PWORK_QUEUE_ITEM WorkQueueItem;
+            WORK_QUEUE_TYPE WorkQueueType;
+            ULONG_PTR Reserved;
+        } WorkItem;
+        struct
+        {
+            PWORK_QUEUE_ITEM WorkQueueItem;
+            PKSWORKER KsWorkerObject;
+            ULONG_PTR Reserved;
+        } KsWorkItem;
+        struct
+        {
+            PKSFILTER Filter;
+            ULONG_PTR Reserved[2];
+        } KsFilterProcessing;
+        struct
+        {
+            PKSPIN Pin;
+            ULONG_PTR Reserved[2];
+        } KsPinProcessing;
+#endif
+        struct
+        {
+            PVOID Unused;
+            LONG_PTR Alignment[2];
+        } Alignment;
+    };
+} KSEVENTDATA, *PKSEVENTDATA;
+
+typedef struct
+{
+    LONGLONG TimeBase;
+    LONGLONG Interval;
+} KSINTERVAL, *PKSINTERVAL;
+
+typedef struct
+{
+    KSEVENTDATA EventData;
+    LONGLONG MarkTime;
+} KSEVENT_TIME_MARK, *PKSEVENT_TIME_MARK;
+
+typedef struct
+{
+    KSEVENTDATA EventData;
+    LONGLONG TimeBase;
+    LONGLONG Interval;
+} KSEVENT_TIME_INTERVAL, *PKSEVENT_TIME_INTERVAL;
+
+typedef struct
+{
+    KSEVENT Event;
+    PKSEVENTDATA EventData;
+    PVOID Reserved;
+} KSQUERYBUFFER, *PKSQUERYBUFFER;
+
+typedef struct
+{
+    ULONG Size;
+    ULONG Flags;
+    union
+    {
+        HANDLE ObjectHandle;
+        PVOID ObjectPointer;
+    };
+    PVOID Reserved;
+    KSEVENT Event;
+    KSEVENTDATA EventData;
+} KSRELATIVEEVENT;
+
+typedef struct
+{
+    GUID Manufacturer;
+    GUID Product;
+    GUID Component;
+    GUID Name;
+    ULONG Version;
+    ULONG Revision;
+} KSCOMPONENTID, *PKSCOMPONENTID;
+
+typedef struct
+{
+    LONGLONG Current;
+    LONGLONG Stop;
+    KS_SEEKING_FLAGS CurrentFlags;
+    KS_SEEKING_FLAGS StopFlags;
+} KSPROPERTY_POSITIONS, *PKSPROPERTY_POSITIONS;
+
+typedef struct
+{
+    LONGLONG Earliest;
+    LONGLONG Latest;
+} KSPROPERTY_MEDIAAVAILABLE, *PKSPROPERTY_MEDIAAVAILABLE;
+
+typedef struct
+{
+    KSPROPERTY  Property;
+    GUID SourceFormat;
+    GUID TargetFormat;
+    LONGLONG Time;
+} KSP_TIMEFORMAT, *PKSP_TIMEFORMAT;
+
+typedef struct
+{
+    ULONG FromNode;
+    ULONG FromNodePin;
+    ULONG ToNode;
+    ULONG ToNodePin;
+} KSTOPOLOGY_CONNECTION, *PKSTOPOLOGY_CONNECTION;
+
+typedef struct
+{
+    ULONG CategoriesCount;
+    const GUID* Categories;
+    ULONG TopologyNodesCount;
+    const GUID* TopologyNodes;
+    ULONG TopologyConnectionsCount;
+    const KSTOPOLOGY_CONNECTION* TopologyConnections;
+    const GUID* TopologyNodesNames;
+    ULONG Reserved;
+} KSTOPOLOGY, *PKSTOPOLOGY;
+
+typedef struct
+{
+    ULONG CreateFlags;
+    ULONG Node;
+} KSNODE_CREATE, *PKSNODE_CREATE;
+
+typedef struct
+{
+    KSPROPERTY Property;
+    ULONG PinId;
+    ULONG Reserved;
+} KSP_PIN, *PKSP_PIN;
+
+typedef struct
+{
+    ULONG PossibleCount;
+    ULONG CurrentCount;
+} KSPIN_CINSTANCES, *PKSPIN_CINSTANCES;
+
+typedef struct
+{
+    ULONG Size;
+    ULONG Flags;
+    GUID Attribute;
+} KSATTRIBUTE, *PKSATTRIBUTE;
+
+typedef struct
+{
+    KSPIN_INTERFACE Interface;
+    KSPIN_MEDIUM Medium;
+    ULONG PinId;
+    HANDLE PinToHandle;
+    KSPRIORITY Priority;
+} KSPIN_CONNECT, *PKSPIN_CONNECT;
+
+typedef struct {
+    ULONG Size;
+    ULONG Pin;
+    WCHAR SymbolicLinkName[1];
+} KSPIN_PHYSICALCONNECTION, *PKSPIN_PHYSICALCONNECTION;
+
+typedef struct
+{
+    ULONG   FormatSize;
+    ULONG   Flags;
+    ULONG   SampleSize;
+    ULONG   Reserved;
+    GUID    MajorFormat;
+    GUID    SubFormat;
+    GUID    Specifier;
+} KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
+
+
+#define DEFINE_KSPROPERTY_ITEM_GENERAL_COMPONENTID(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_GENERAL_COMPONENTID, (Handler), sizeof(KSPROPERTY), sizeof(KSCOMPONENTID), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSMETHOD_ITEM_STREAMIO_READ(Handler)\
+    DEFINE_KSMETHOD_ITEM(KSMETHOD_STREAMIO_READ, KSMETHOD_TYPE_WRITE, (Handler), sizeof(KSMETHOD),\ 0,\ NULL)
+
+#define DEFINE_KSMETHOD_ITEM_STREAMIO_WRITE(Handler)\
+    DEFINE_KSMETHOD_ITEM(KSMETHOD_STREAMIO_WRITE, KSMETHOD_TYPE_READ, (Handler), sizeof(KSMETHOD), 0, NULL)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_CAPABILITIES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_CAPABILITIES, (Handler), sizeof(KSPROPERTY), sizeof(KS_SEEKING_CAPABILITIES), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_FORMATS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_FORMATS, (Handler), sizeof(KSPROPERTY), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_TIMEFORMAT(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_TIMEFORMAT, (GetHandler), sizeof(KSPROPERTY), sizeof(GUID), (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_POSITION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_POSITION, (Handler), sizeof(KSPROPERTY), sizeof(LONGLONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_STOPPOSITION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_STOPPOSITION, (Handler), sizeof(KSPROPERTY), sizeof(LONGLONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_POSITIONS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_POSITIONS, NULL, sizeof(KSPROPERTY), sizeof(KSPROPERTY_POSITIONS), (Handler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_DURATION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_DURATION, (Handler), sizeof(KSPROPERTY), sizeof(LONGLONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_AVAILABLE(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_AVAILABLE, (Handler), sizeof(KSPROPERTY), sizeof(KSPROPERTY_MEDIAAVAILABLE), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_PREROLL(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_PREROLL, (Handler), sizeof(KSPROPERTY), sizeof(LONGLONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_MEDIASEEKING_CONVERTTIMEFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_MEDIASEEKING_CONVERTTIMEFORMAT, (Handler), sizeof(KSP_TIMEFORMAT), sizeof(LONGLONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CATEGORIES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_TOPOLOGY_CATEGORIES, (Handler), sizeof(KSPROPERTY), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NODES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_TOPOLOGY_NODES, (Handler), sizeof(KSPROPERTY), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CONNECTIONS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_TOPOLOGY_CONNECTIONS, (Handler), sizeof(KSPROPERTY), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NAME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_TOPOLOGY_NAME, (Handler), sizeof(KSP_NODE), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_TOPOLOGYSET(TopologySet, Handler)\
+DEFINE_KSPROPERTY_TABLE(TopologySet) {\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CATEGORIES(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NODES(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_CONNECTIONS(Handler),\
+    DEFINE_KSPROPERTY_ITEM_TOPOLOGY_NAME(Handler)
+}
+
+
+#define DEFINE_KSPIN_INTERFACE_ITEM(guid, interface) { STATICGUIDOF(guid), (interface), 0 }
+
+#define DEFINE_KSPIN_MEDIUM_TABLE( tablename ) const KSPIN_MEDIUM tablename[] =
+
+#define DEFINE_KSPIN_MEDIUM_ITEM(guid, medium) DEFINE_KSPIN_INTERFACE_ITEM(guid, medium)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_CINSTANCES, (Handler), sizeof(KSP_PIN), sizeof(KSPIN_CINSTANCES), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(Handler)\
+    DEFINE_KSPROPERTY_ITEM( KSPROPERTY_PIN_CTYPES, (Handler), sizeof(KSPROPERTY), sizeof(ULONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_DATAFLOW, (Handler), sizeof(KSP_PIN), sizeof(KSPIN_DATAFLOW), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_DATARANGES, (Handler), sizeof(KSP_PIN), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_DATAINTERSECTION, (Handler), sizeof(KSP_PIN) + sizeof(KSMULTIPLE_ITEM), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_INTERFACES, (Handler), sizeof(KSP_PIN), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_MEDIUMS, (Handler), sizeof(KSP_PIN), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_COMMUNICATION, (Handler), sizeof(KSP_PIN), sizeof(KSPIN_COMMUNICATION), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_GLOBALCINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_GLOBALCINSTANCES, (Handler), sizeof(KSP_PIN), sizeof(KSPIN_CINSTANCES), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_NECESSARYINSTANCES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_NECESSARYINSTANCES, (Handler), sizeof(KSP_PIN), sizeof(ULONG), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_PHYSICALCONNECTION(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_PHYSICALCONNECTION,(Handler),sizeof(KSP_PIN),0,NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_CATEGORY,(Handler),sizeof(KSP_PIN),sizeof(GUID),NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_NAME(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_NAME,(Handler),sizeof(KSP_PIN),0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_CONSTRAINEDDATARANGES, (Handler), sizeof(KSP_PIN), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_PIN_PROPOSEDATAFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_PIN_PROPOSEDATAFORMAT, NULL, sizeof(KSP_PIN), sizeof(KSDATAFORMAT), (Handler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_PINSET(PinSet,\
+    PropGeneral, PropInstances, PropIntersection)\
+DEFINE_KSPROPERTY_TABLE(PinSet) {\
+        DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(PropInstances),\
+        DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(PropIntersection),\
+        DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_NAME(PropGeneral)\
+    }
+
+#define DEFINE_KSPROPERTY_PINSETCONSTRAINED(PinSet,\
+    PropGeneral, PropInstances, PropIntersection)\
+    DEFINE_KSPROPERTY_TABLE(PinSet) {\
+        DEFINE_KSPROPERTY_ITEM_PIN_CINSTANCES(PropInstances),\
+        DEFINE_KSPROPERTY_ITEM_PIN_CTYPES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATAFLOW(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATARANGES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_DATAINTERSECTION(PropIntersection),\
+        DEFINE_KSPROPERTY_ITEM_PIN_INTERFACES(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_MEDIUMS(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_COMMUNICATION(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_CATEGORY(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_NAME(PropGeneral),\
+        DEFINE_KSPROPERTY_ITEM_PIN_CONSTRAINEDDATARANGES(PropGeneral)\
+    }
+
+#define DEFINE_KSPROPERTY_ITEM_QUALITY_REPORT(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_QUALITY_REPORT, (GetHandler), sizeof(KSPROPERTY), sizeof(KSQUALITY), (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_QUALITY_ERROR(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_QUALITY_ERROR, (GetHandler), sizeof(KSPROPERTY), sizeof(KSERROR), (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_STATE(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_STATE, (GetHandler), sizeof(KSPROPERTY), sizeof(KSSTATE), (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_PRIORITY(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_PRIORITY, (GetHandler), sizeof(KSPROPERTY), sizeof(KSPRIORITY), (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_DATAFORMAT(GetHandler, SetHandler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_DATAFORMAT, (GetHandler), sizeof(KSPROPERTY), 0, (SetHandler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_ALLOCATORFRAMING, (Handler), sizeof(KSPROPERTY), sizeof(KSALLOCATOR_FRAMING), NULL, NULL, 0, NULL, NULL, 0)
+        
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ALLOCATORFRAMING_EX(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_ALLOCATORFRAMING_EX, (Handler), sizeof(KSPROPERTY), 0, NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_PROPOSEDATAFORMAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_PROPOSEDATAFORMAT, NULL, sizeof(KSPROPERTY), sizeof(KSDATAFORMAT), (Handler), NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_ACQUIREORDERING(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_ACQUIREORDERING, (Handler), sizeof(KSPROPERTY), sizeof(int), NULL, NULL, 0, NULL, NULL, 0)
+
+#define DEFINE_KSPROPERTY_ITEM_CONNECTION_STARTAT(Handler)\
+    DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_STARTAT, NULL, sizeof(KSPROPERTY), sizeof(KSRELATIVEEVENT), (Handler), NULL, 0, NULL, NULL, 0)
 
 
 
