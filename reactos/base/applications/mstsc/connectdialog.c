@@ -30,9 +30,16 @@ typedef struct _INFO
     HWND hDisplayPage;
     HBITMAP hHeader;
     BITMAP headerbitmap;
+    HICON hLogon;
+    HICON hConn;
+    HICON hRemote;
+    HICON hColor;
+    HBITMAP hSpectrum;
+    BITMAP bitmap;
 } INFO, *PINFO;
 
 HINSTANCE hInst;
+extern char g_servername[];
 
 void OnTabWndSelChange(PINFO pInfo)
 {
@@ -52,75 +59,138 @@ void OnTabWndSelChange(PINFO pInfo)
 }
 
 
+static VOID
+GeneralOnInit(PINFO pInfo)
+{
+    SetWindowPos(pInfo->hGeneralPage,
+                 NULL, 
+                 15, 
+                 122, 
+                 0, 
+                 0, 
+                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+
+    pInfo->hLogon = LoadImage(hInst,
+                       MAKEINTRESOURCE(IDI_LOGON),
+                       IMAGE_ICON,
+                       32,
+                       32,
+                       LR_DEFAULTCOLOR);
+    if (pInfo->hLogon)
+    {
+        SendDlgItemMessage(pInfo->hGeneralPage,
+                           IDC_LOGONICON,
+                           STM_SETICON,
+                           (WPARAM)pInfo->hLogon,
+                           0);
+    }
+
+    pInfo->hConn = LoadImage(hInst,
+                      MAKEINTRESOURCE(IDI_CONN),
+                      IMAGE_ICON,
+                      32,
+                      32,
+                      LR_DEFAULTCOLOR);
+    if (pInfo->hConn)
+    {
+        SendDlgItemMessage(pInfo->hGeneralPage,
+                           IDC_CONNICON,
+                           STM_SETICON,
+                           (WPARAM)pInfo->hConn,
+                           0);
+    }
+
+    SetDlgItemText(pInfo->hGeneralPage,
+                   IDC_SERVERCOMBO,
+                   g_servername);
+}
+
+
 INT_PTR CALLBACK
 GeneralDlgProc(HWND hDlg,
                UINT message,
                WPARAM wParam,
                LPARAM lParam)
 {
-    static HICON hLogon, hConn;
-    HWND hParent = GetParent(hDlg);
-    PINFO pInfo = (PINFO)GetWindowLongPtr(hParent,
+    PINFO pInfo = (PINFO)GetWindowLongPtr(GetParent(hDlg),
                                           GWLP_USERDATA);
 
     switch (message)
     {
         case WM_INITDIALOG:
-            {
-                SetWindowPos(hDlg,
-                             NULL, 
-                             15, 
-                             122, 
-                             0, 
-                             0, 
-                             SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+            pInfo->hGeneralPage = hDlg;
+            GeneralOnInit(pInfo);
+            return TRUE;
 
-                hLogon = LoadImage(hInst,
-                                   MAKEINTRESOURCE(IDI_LOGON),
+        case WM_CLOSE:
+        {
+            if (pInfo->hLogon)
+                DestroyIcon(pInfo->hLogon);
+
+            if (pInfo->hConn)
+                DestroyIcon(pInfo->hConn);
+
+            break;
+        }
+    }
+
+    return 0;
+}
+
+
+static VOID
+DisplayOnInit(PINFO pInfo)
+{
+    SetWindowPos(pInfo->hDisplayPage,
+                 NULL,
+                 15,
+                 122,
+                 0,
+                 0,
+                 SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+
+        pInfo->hRemote = LoadImage(hInst,
+                                   MAKEINTRESOURCE(IDI_REMOTE),
                                    IMAGE_ICON,
                                    32,
                                    32,
                                    LR_DEFAULTCOLOR);
-                if (hLogon)
-                {
-                    SendDlgItemMessage(hDlg,
-                                       IDC_LOGONICON,
-                                       STM_SETICON,
-                                       (WPARAM)hLogon,
-                                       0);
-                }
+        if (pInfo->hRemote)
+        {
+            SendDlgItemMessage(pInfo->hDisplayPage,
+                               IDC_REMICON,
+                               STM_SETICON,
+                               (WPARAM)pInfo->hRemote,
+                               0);
+        }
 
-                hConn = LoadImage(hInst,
-                                  MAKEINTRESOURCE(IDI_CONN),
+        pInfo->hColor = LoadImage(hInst,
+                                  MAKEINTRESOURCE(IDI_COLORS),
                                   IMAGE_ICON,
                                   32,
                                   32,
                                   LR_DEFAULTCOLOR);
-                if (hConn)
-                {
-                    SendDlgItemMessage(hDlg,
-                                       IDC_CONNICON,
-                                       STM_SETICON,
-                                       (WPARAM)hConn,
-                                       0);
-                }
+        if (pInfo->hColor)
+        {
+            SendDlgItemMessage(pInfo->hDisplayPage,
+                               IDC_COLORSICON,
+                               STM_SETICON,
+                               (WPARAM)pInfo->hColor,
+                               0);
+        }
 
-                return TRUE;
-            }
-
-            case WM_CLOSE:
-            {
-                if (hLogon)
-                    DestroyIcon(hLogon);
-
-                if (hConn)
-                    DestroyIcon(hConn);
-
-                break;
-            }
-    }
-
-    return 0;
+        pInfo->hSpectrum = LoadImage(hInst,
+                                     MAKEINTRESOURCE(IDB_SPECT),
+                                     IMAGE_BITMAP,
+                                     0,
+                                     0,
+                                     LR_DEFAULTCOLOR);
+        if (pInfo->hSpectrum)
+        {
+            GetObject(pInfo->hSpectrum,
+                      sizeof(BITMAP),
+                      &pInfo->bitmap);
+        }
 }
 
 
@@ -130,67 +200,15 @@ DisplayDlgProc(HWND hDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
-    static HICON hRemote, hColor;
-    static HBITMAP hSpectrum;
-    static BITMAP bitmap;
     PINFO pInfo = (PINFO)GetWindowLongPtr(GetParent(hDlg),
                                           GWLP_USERDATA);
 
     switch (message)
     {
         case WM_INITDIALOG:
-        {
-            SetWindowPos(hDlg,
-                         NULL,
-                         15,
-                         122,
-                         0,
-                         0,
-                         SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-
-                hRemote = LoadImage(hInst,
-                                    MAKEINTRESOURCE(IDI_REMOTE),
-                                    IMAGE_ICON,
-                                    32,
-                                    32,
-                                    LR_DEFAULTCOLOR);
-                if (hRemote)
-                {
-                    SendDlgItemMessage(hDlg,
-                                       IDC_REMICON,
-                                       STM_SETICON,
-                                       (WPARAM)hRemote,
-                                       0);
-                }
-
-                hColor = LoadImage(hInst,
-                                   MAKEINTRESOURCE(IDI_COLORS),
-                                   IMAGE_ICON,
-                                   32,
-                                   32,
-                                   LR_DEFAULTCOLOR);
-                if (hColor)
-                {
-                    SendDlgItemMessage(hDlg,
-                                       IDC_COLORSICON,
-                                       STM_SETICON,
-                                       (WPARAM)hColor,
-                                       0);
-                }
-
-                hSpectrum = LoadImage(hInst,
-                                      MAKEINTRESOURCE(IDB_SPECT),
-                                      IMAGE_BITMAP,
-                                      0,
-                                      0,
-                                      LR_DEFAULTCOLOR);
-                if (hSpectrum)
-                {
-                    GetObject(hSpectrum, sizeof(BITMAP), &bitmap);
-                }
-
+            pInfo->hDisplayPage = hDlg;
+            DisplayOnInit(pInfo);
             return TRUE;
-        }
 
         case WM_DRAWITEM:
         {
@@ -202,7 +220,7 @@ DisplayDlgProc(HWND hDlg,
                 hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
                 if (hdcMem != NULL)
                 {
-                    SelectObject(hdcMem, hSpectrum);
+                    SelectObject(hdcMem, pInfo->hSpectrum);
                     StretchBlt(lpDrawItem->hDC,
                                lpDrawItem->rcItem.left,
                                lpDrawItem->rcItem.top,
@@ -211,8 +229,8 @@ DisplayDlgProc(HWND hDlg,
                                hdcMem,
                                0,
                                0,
-                               bitmap.bmWidth,
-                               bitmap.bmHeight,
+                               pInfo->bitmap.bmWidth,
+                               pInfo->bitmap.bmHeight,
                                SRCCOPY);
                     DeleteDC(hdcMem);
                 }
@@ -222,14 +240,14 @@ DisplayDlgProc(HWND hDlg,
 
             case WM_CLOSE:
             {
-                if (hRemote)
-                    DestroyIcon(hRemote);
+                if (pInfo->hRemote)
+                    DestroyIcon(pInfo->hRemote);
 
-                if (hColor)
-                    DestroyIcon(hColor);
+                if (pInfo->hColor)
+                    DestroyIcon(pInfo->hColor);
 
-                if (hSpectrum)
-                    DeleteObject(hSpectrum);
+                if (pInfo->hSpectrum)
+                    DeleteObject(pInfo->hSpectrum);
 
                 break;
             }
@@ -242,7 +260,7 @@ DisplayDlgProc(HWND hDlg,
 
 
 static BOOL
-OnCreate(HWND hwnd)
+OnMainCreate(HWND hwnd)
 {
     PINFO pInfo;
     TCITEM item;
@@ -271,11 +289,10 @@ OnCreate(HWND hwnd)
         pInfo->hTab = GetDlgItem(hwnd, IDC_TAB);
         if (pInfo->hTab)
         {
-            pInfo->hGeneralPage = CreateDialog(hInst,
-                                               MAKEINTRESOURCE(IDD_GENERAL),
-                                               hwnd,
-                                               (DLGPROC)GeneralDlgProc);
-            if (pInfo->hGeneralPage)
+            if (CreateDialog(hInst,
+                             MAKEINTRESOURCE(IDD_GENERAL),
+                             hwnd,
+                             (DLGPROC)GeneralDlgProc))
             {
                 char str[256];
                 LoadString(hInst, IDS_TAB_GENERAL, str, 256);
@@ -286,11 +303,10 @@ OnCreate(HWND hwnd)
                 (void)TabCtrl_InsertItem(pInfo->hTab, 0, &item);
             }
 
-            pInfo->hDisplayPage = CreateDialog(hInst,
-                                               MAKEINTRESOURCE(IDD_DISPLAY),
-                                               hwnd,
-                                               (DLGPROC)DisplayDlgProc);
-            if (pInfo->hDisplayPage)
+            if (CreateDialog(hInst,
+                             MAKEINTRESOURCE(IDD_DISPLAY),
+                             hwnd,
+                             (DLGPROC)DisplayDlgProc))
             {
                 char str[256];
                 LoadString(hInst, IDS_TAB_DISPLAY, str, 256);
@@ -330,7 +346,7 @@ DlgProc(HWND hDlg,
     switch(Message)
     {
         case WM_INITDIALOG:
-            OnCreate(hDlg);
+            OnMainCreate(hDlg);
         break;
 
         case WM_COMMAND:
