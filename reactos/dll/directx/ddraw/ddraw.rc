@@ -5,9 +5,6 @@
 #define REACTOS_STR_INTERNAL_NAME	"ddraw\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"ddraw.dll\0"
 
-#define REACTOS_FILEVERSION 5,3,0,900
-#define REACTOS_STR_FILE_VERSION "5.3.0.900"
-#define REACTOS_PRODUCTVERSION 5,3,0,900
-#define REACTOS_STR_PRODUCT_VERSION "5.3"
+#include <reactos/reactx.h>
 
 #include <reactos/version.rc>
