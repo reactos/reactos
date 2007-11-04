@@ -36,15 +36,14 @@
 #define _MB_CP_ANSI (-3)
 #define _MB_CP_LOCALE (-4)
 
-/* TODO: bit masks */
-/*
-#define _MS
-#define _MP
-#define _M1
-#define _M2
-#define _SBUP
-#define _SBLOW
-*/
+#define _MS     0x01
+#define _MP     0x02
+#define _M1     0x04
+#define _M2     0x08
+
+#define _SBUP   0x10
+#define _SBLOW  0x20
+
 
 #ifndef RC_INVOKED
 
