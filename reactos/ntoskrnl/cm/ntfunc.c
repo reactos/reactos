@@ -135,12 +135,11 @@ NtCreateKey(OUT PHANDLE KeyHandle,
             IN ULONG CreateOptions,
             OUT PULONG Disposition)
 {
-    UNICODE_STRING RemainingPath = {0};
+    UNICODE_STRING RemainingPath = {0}, ReturnedPath = {0};
     ULONG LocalDisposition;
     PKEY_OBJECT KeyObject;
     NTSTATUS Status = STATUS_SUCCESS;
     PVOID Object = NULL;
-    PWSTR Start;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     unsigned int i;
@@ -219,7 +218,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     Status = CmFindObject(&ObjectCreateInfo,
                           &ObjectName,
                           (PVOID*)&Object,
-                          &RemainingPath,
+                          &ReturnedPath,
                           CmpKeyObjectType,
                           NULL,
                           NULL);
@@ -232,8 +231,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         DPRINT1("CmpFindObject failed, Status: 0x%x\n", Status);
         goto Cleanup;
     }
-
-    DPRINT("RemainingPath %wZ\n", &RemainingPath);
+    
+    RemainingPath = ReturnedPath;
+    DPRINT("RemainingPath (preparse) %wZ\n", &RemainingPath);
 
     if (RemainingPath.Length == 0)
     {
@@ -267,24 +267,21 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     /* If RemainingPath contains \ we must return error
        because NtCreateKey doesn't create trees */
-    Start = RemainingPath.Buffer;
-    if (*Start == L'\\')
+    while (RemainingPath.Length && *RemainingPath.Buffer == L'\\')
     {
-        Start++;
-        //RemainingPath.Length -= sizeof(WCHAR);
-        //RemainingPath.MaximumLength -= sizeof(WCHAR);
-        //RemainingPath.Buffer++;
-        //DPRINT1("String: %wZ\n", &RemainingPath);
+        RemainingPath.Length -= sizeof(WCHAR);
+        RemainingPath.MaximumLength -= sizeof(WCHAR);
+        RemainingPath.Buffer++;
     }
 
-    if (RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == '\\')
+    while (RemainingPath.Length && 
+           RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == '\\')
     {
-        RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
         RemainingPath.Length -= sizeof(WCHAR);
         RemainingPath.MaximumLength -= sizeof(WCHAR);
     }
 
-    for (i = 1; i < RemainingPath.Length / sizeof(WCHAR); i++)
+    for (i = 0; i < RemainingPath.Length / sizeof(WCHAR); i++)
     {
         if (L'\\' == RemainingPath.Buffer[i])
         {
@@ -299,7 +296,15 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         }
     }
 
-    DPRINT("RemainingPath %S  ParentObject 0x%p\n", RemainingPath.Buffer, Object);
+    DPRINT("RemainingPath %wZ ParentObject 0x%p\n", &RemainingPath, Object);
+
+    // 
+    if (RemainingPath.Length == 0 || RemainingPath.Buffer[0] == UNICODE_NULL)
+    {
+        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        goto Cleanup;
+    }
+        
 
     /* Acquire hive lock */
     KeEnterCriticalRegion();
@@ -331,7 +336,10 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         goto Cleanup;
     }
 
-    RtlCreateUnicodeString(&KeyObject->Name, Start);
+    RtlDuplicateUnicodeString
+        (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
+         &RemainingPath, &KeyObject->Name);
+    DPRINT("Key Name: %wZ\n", &KeyObject->Name);
 
     ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->ParentKcb->KeyHive,
                                          KeyObject->KeyControlBlock->ParentKcb->KeyCell);
@@ -408,7 +416,7 @@ Cleanup:
                                      PreviousMode);
     }
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    RtlFreeUnicodeString(&RemainingPath);
+    RtlFreeUnicodeString(&ReturnedPath);
     if (Object != NULL) ObDereferenceObject(Object);
 
     return Status;
