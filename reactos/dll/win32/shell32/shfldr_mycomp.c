@@ -61,6 +61,7 @@ typedef struct {
 
     /* both paths are parsible from the desktop */
     LPITEMIDLIST pidlRoot;    /* absolute pidl */
+    LPWSTR sName;
 } IGenericSFImpl;
 
 static const IShellFolder2Vtbl vt_ShellFolder2;
@@ -102,7 +103,8 @@ static const shvheader MyComputerSFHeader[] = {
 HRESULT WINAPI ISF_MyComputer_Constructor (IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv)
 {
     IGenericSFImpl *sf;
-
+    DWORD dwSize;
+    WCHAR szName[100];
     TRACE ("unkOut=%p %s\n", pUnkOuter, shdebugstr_guid (riid));
 
     if (!ppv)
@@ -123,6 +125,24 @@ HRESULT WINAPI ISF_MyComputer_Constructor (IUnknown * pUnkOuter, REFIID riid, LP
     {
         IUnknown_Release (_IUnknown_ (sf));
         return E_NOINTERFACE;
+    }
+
+    dwSize = sizeof(szName);
+    if (RegGetValueW(HKEY_CURRENT_USER,
+                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+                     NULL,
+                     RRF_RT_REG_SZ,
+                     NULL,
+                     szName,
+                    &dwSize) == ERROR_SUCCESS)
+    {
+        szName[MAX_PATH-1] = 0;
+        sf->sName = SHAlloc((strlenW(szName)+1) * sizeof(WCHAR));
+        if (sf->sName)
+        {
+            lstrcpyW( sf->sName, szName );
+        }
+        TRACE("sName %s\n", debugstr_w(sf->sName));
     }
 
     TRACE ("--(%p)\n", sf);
@@ -649,7 +669,13 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
                 else
                 {
                     /* user friendly name */
-                    HCR_GetClassNameW (clsid, pszPath, MAX_PATH);
+
+                    if (_ILIsMyComputer(pidl) && This->sName)
+                        strcpyW(pszPath, This->sName);
+                    else
+                        HCR_GetClassNameW (clsid, pszPath, MAX_PATH);
+
+                    TRACE("pszPath %s\n", debugstr_w(pszPath));
                 }
             }
             else
@@ -722,9 +748,45 @@ static HRESULT WINAPI ISF_MyComputer_fnSetNameOf (
                LPCOLESTR lpName, DWORD dwFlags, LPITEMIDLIST * pPidlOut)
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
-    FIXME ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", This,
+    LPWSTR sName;
+    HKEY hKey;
+    UINT length;
+
+    TRACE ("(%p)->(%p,pidl=%p,%s,%u,%p)\n", This,
            hwndOwner, pidl, debugstr_w (lpName), dwFlags, pPidlOut);
-    return E_FAIL;
+
+    if (pPidlOut != NULL)
+    {
+        *pPidlOut = _ILCreateMyComputer();
+    }
+
+    length = (strlenW(lpName)+1) * sizeof(WCHAR);
+    sName = SHAlloc(length);
+
+    if (!sName)
+    {
+        return E_OUTOFMEMORY;
+    }
+    
+    if (RegOpenKeyExW(HKEY_CURRENT_USER,
+                      L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\CLSID\\{20D04FE0-3AEA-1069-A2D8-08002B30309D}",
+                      0,
+                      KEY_WRITE,
+                      &hKey) != ERROR_SUCCESS)
+    {
+        WARN("Error: failed to open registry key\n");
+    }
+    else
+    {
+        RegSetValueExW(hKey, NULL, 0, REG_SZ, (const LPBYTE)lpName, length);
+        RegCloseKey(hKey);
+    }
+
+    lstrcpyW(sName, lpName);
+    SHFree(This->sName);
+    This->sName = sName;
+    TRACE("result %s\n", debugstr_w(This->sName));
+    return S_OK;
 }
 
 static HRESULT WINAPI ISF_MyComputer_fnGetDefaultSearchGUID (
