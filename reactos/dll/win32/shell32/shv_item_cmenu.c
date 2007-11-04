@@ -492,6 +492,10 @@ SH_AddStaticEntrySpecial(ItemCmImpl * This)
     {
         SH_AddStaticEntryForFileClass(This, L"Folder");
     }
+    else if (_ILIsDrive(This->apidl[0]))
+    {
+        SH_AddStaticEntryForFileClass(This, L"Drive");
+    }
 }
 
 
