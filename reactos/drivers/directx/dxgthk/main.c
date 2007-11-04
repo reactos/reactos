@@ -20,7 +20,7 @@ DriverEntry(IN PVOID Context1,
      * NOTE this driver will never be load, it only contain export list
      * to win32k eng functions
      */
-    return 0;
+    return STATUS_SUCCESS;
 }
 
 
