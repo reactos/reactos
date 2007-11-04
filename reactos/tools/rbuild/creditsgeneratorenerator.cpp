@@ -55,20 +55,34 @@ CreditsGenerator::GenerateTxt ()
     {
         Contributor& contributor = *project.contributors[i];
 
-        s = s + sprintf ( s, "\t%s %s (%s)\n" , 
-            contributor.firstName.c_str() , 
-            contributor.lastName.c_str() , 
-            contributor.alias.c_str());
-        
-        s = s + sprintf ( s, "\t\t%s\n" , contributor.mail.c_str());
-        
+        if (strlen(contributor.alias.c_str()))
+        {
+            s = s + sprintf ( s, "\t%s %s (%s)\n" , 
+                contributor.firstName.c_str() , 
+                contributor.lastName.c_str() , 
+                contributor.alias.c_str());
+        }
+        else
+        {
+            s = s + sprintf ( s, "\t%s %s\n" , 
+                contributor.firstName.c_str() , 
+                contributor.lastName.c_str());
+        }
+
+        if (strlen(contributor.mail.c_str()))
+        {
+            s = s + sprintf ( s, "\t\t%s\n" , contributor.mail.c_str());
+        }
+
         if (strlen(contributor.city.c_str()) > 0 &&
             strlen(contributor.country.c_str()) > 0)
         {
-            s = s + sprintf ( s, "\t\t%s,%s\n\n" , 
+            s = s + sprintf ( s, "\t\t%s,%s\n" , 
                 contributor.city.c_str() , 
                 contributor.country.c_str());
         }
+
+        s = s + sprintf ( s, "\n");
     }
 
 
@@ -90,7 +104,8 @@ CreditsGenerator::GenerateHeader ()
     s = buf;
     s = s + sprintf ( s, "/* Auto generated */\n");
     s = s + sprintf ( s, "\n" );
-    s = s + sprintf ( s, "const char* szAutoContributors[]= {\n" );
+    s = s + sprintf ( s, "const char* szAutoContributors[]= \n" );
+    s = s + sprintf ( s, "{\n" );
 
     for ( size_t i = 0; i < project.contributors.size (); i++ )
     {

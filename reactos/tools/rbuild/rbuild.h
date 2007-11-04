@@ -667,6 +667,8 @@ public:
     std::string mail;
     std::string city;
     std::string country;
+    std::string website;
+    bool active;
 
     Contributor ( const XMLElement& _node);
 
@@ -676,13 +678,12 @@ public:
 class Author
 {
 public:
-	const XMLElement& node;
+	const XMLElement* node;
 	const Module& module;
-	std::string alias;
 	AuthorRole role;
+	std::string alias;
 
-	//Author ( const XMLElement& _node, const Module& module);
-	Author ( const XMLElement& _node, const Module& module, AuthorRole role  );
+	Author ( const XMLElement& _node, const Module& module, AuthorRole role , const std::string& alias);
 
 	void ProcessXML ();
 };

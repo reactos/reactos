@@ -309,57 +309,7 @@ Module::Module ( const Project& project,
 	}
 	else
 		isUnicode = false;
-/*
-	att = moduleNode.GetAttribute ( "generatemanifest", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
-			generateManifestFile = true;
-		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
-			generateManifestFile = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"generatemanifest",
-				att->value );
-		}
-	}
-	else
-		generateManifestFile = false;
 
-	att = moduleNode.GetAttribute ( "generateresource", false );
-	if ( att != NULL )
-	{
-		const char* p = att->value.c_str();
-		if ( !stricmp ( p, TRUE_STRING ) || !stricmp ( p, YES_STRING ) )
-		{
-			generateResourceFile = true;
-
-			File* resFile = new File ( IntermediateDirectory,
-									 output->relative_path,
-									 "auto.rc",
-									 false,
-									 "",
-									 false );
-
-			non_if_data.files.push_back ( resFile );
-
-		}
-		else if ( !stricmp ( p, FALSE_STRING ) || !stricmp ( p, NO_STRING ) )
-			generateResourceFile = false;
-		else
-		{
-			throw InvalidAttributeValueException (
-				moduleNode.location,
-				"generateResourceFile",
-				att->value );
-		}
-	}
-	else
-		generateResourceFile = false;
-*/
 	if (isUnicode)
 	{
 		// Always define UNICODE and _UNICODE
@@ -957,24 +907,19 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 		}
 		subs_invalid = true;
 	}
-	else if ( e.name == "developer" )
+	else if ( e.name == "developer" && e.value.size ())
 	{
-		authors.push_back ( new Author ( e, *this , Developer) );
+        authors.push_back ( new Author ( e, *this , Developer, e.value) );
 		subs_invalid = true;
 	}
-	else if ( e.name == "mantainer" )
+	else if ( e.name == "mantainer" && e.value.size ())
 	{
-		authors.push_back ( new Author ( e, *this , Mantainer ) );
+		authors.push_back ( new Author ( e, *this , Mantainer, e.value ) );
 		subs_invalid = true;
 	}
-	//else if ( e.name == "contributor" )
-	//{
-	//	authors.push_back ( new Author ( e, *this , Contributor ) );
-	//	subs_invalid = false;
-	//}
-	else if ( e.name == "translator" )
+	else if ( e.name == "translator" && e.value.size ())
 	{
-		authors.push_back ( new Author ( e, *this , Translator ) );
+		authors.push_back ( new Author ( e, *this , Translator, e.value ) );
 		subs_invalid = true;
 	}
 	else if ( e.name == "component" )
@@ -1744,47 +1689,31 @@ Contributor::ProcessXML()
 		country = att->value;
 	else
 		country = "";
+
+    att = node.GetAttribute ( "website", false );
+	if (att != NULL)
+		website = att->value;
+	else
+		website = "";
 }
 
-/*
-AuthorRole
-Author::GetAuthorRole ( const string& location, const XMLAttribute& attribute )
-{
-	if ( attribute.value == "developer" )
-		return Developer;
-	if ( attribute.value == "mantainer" )
-		return Mantainer;
-	if ( attribute.value == "contributor" )
-		return Contributor;
-	if ( attribute.value == "translator" )
-		return Translator;
-	throw InvalidAttributeValueException ( location,
-	                                       attribute.name,
-	                                       attribute.value );
-}
-*/
-
-Author::Author ( const XMLElement& _node , const Module& module_ , AuthorRole role_)
-	: node (_node), module(module_) , role(role_)
+Author::Author ( const XMLElement& _node , const Module& module_ , AuthorRole role_ , const string& alias_)
+	: node (&_node), module(module_) , role(role_) , alias (alias_)
 {
 	ProcessXML ();
 }
-
-/*
-Author::Author ( const XMLElement& _node , const Module& module_)
-	: node (_node), module(module_) , role (Developer)
-{
-	//const XMLAttribute* att = _node.GetAttribute ( "role", true );
-	//assert(att);
-	//role = GetAuthorRole(_node.location , *att);
-
-	ProcessXML ();
-}*/
 
 void
 Author::ProcessXML()
 {
-	alias = node.value;
+    if ( node && !module.project.LocateContributor ( alias ) )
+	{
+		throw XMLInvalidBuildFileException (
+			node->location,
+			"module '%s' references a non-existant contributor '%s'",
+			module.name.c_str(),
+			alias.c_str() );
+	}
 }
 
 Localization::Localization ( const XMLElement& node_,
