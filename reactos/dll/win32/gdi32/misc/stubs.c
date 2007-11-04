@@ -24,19 +24,6 @@
 /*
  * @unimplemented
  */
-BOOL
-STDCALL
-TranslateCharsetInfo(DWORD * lpSrc,
-                     LPCHARSETINFO lpCs,
-                     DWORD dwFlags)
-{
-    /* FIXME share memory */
-    return NtGdiTranslateCharsetInfo(lpSrc, lpCs, dwFlags );
-}
-
-/*
- * @unimplemented
- */
 int
 STDCALL
 StretchDIBits(HDC hdc,

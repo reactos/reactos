@@ -59,15 +59,6 @@ NtGdiGetFontFamilyInfo(
     DWORD Size
 );
 
-/* Should be using NtGdiEnumFontChunk */
-BOOL
-NTAPI
-NtGdiTranslateCharsetInfo(
-    PDWORD Src,
-    LPCHARSETINFO CSI,
-    DWORD Flags
-);
-
 /* The gdi32 call does all the work in user-mode, save for NtGdiMakeFontDir */
 BOOL
 NTAPI

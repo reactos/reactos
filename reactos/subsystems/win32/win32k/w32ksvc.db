@@ -696,7 +696,6 @@ NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
 NtGdiStretchDIBits                      13
-NtGdiTranslateCharsetInfo               3
 NtGdiUpdateICMRegKey                    4
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2

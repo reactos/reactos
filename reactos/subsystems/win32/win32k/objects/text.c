@@ -646,28 +646,6 @@ IntTranslateCharsetInfo(PDWORD Src, /* [in]
   return TRUE;
 }
 
-BOOL STDCALL
-NtGdiTranslateCharsetInfo(PDWORD Src,
-                          LPCHARSETINFO UnsafeCs,
-                          DWORD Flags)
-{
-  CHARSETINFO Cs;
-  BOOLEAN Ret;
-  NTSTATUS Status;
-
-  Ret = IntTranslateCharsetInfo(Src, &Cs, Flags);
-  if (Ret)
-    {
-      Status = MmCopyToCaller(UnsafeCs, &Cs, sizeof(CHARSETINFO));
-      if (! NT_SUCCESS(Status))
-        {
-          SetLastWin32Error(ERROR_INVALID_PARAMETER);
-          return FALSE;
-        }
-    }
-
-  return (BOOL) Ret;
-}
 
 static void FASTCALL
 FillTM(TEXTMETRICW *TM, FT_Face Face, TT_OS2 *pOS2, TT_HoriHeader *pHori)
