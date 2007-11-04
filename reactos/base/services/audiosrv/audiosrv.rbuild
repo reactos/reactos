@@ -9,6 +9,7 @@
 	<library>advapi32</library>
 	<library>user32</library>
 	<library>setupapi</library>
+	<library>ksguid</library>
 	<file>main.c</file>
 	<file>pnp_list_manager.c</file>
 	<file>pnp_list_lock.c</file>

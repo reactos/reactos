@@ -8,7 +8,7 @@ installbase="system32/drivers" installname="dxapi.sys">
 	<define name="_DXAPI_" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
-	<library>videoport</library>
+	<library>videoprt</library>
 	<file>main.c</file>
 	<file>dxapi.rc</file>
 </module>
