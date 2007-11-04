@@ -48,6 +48,20 @@ TextOutW(
 
 
 /*
+ * @implemented
+ */
+DWORD
+STDCALL
+GdiGetCodePage(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (Dc_Attr->ulDirty_ & DIRTY_CHARSET) return LOWORD(NtGdiGetCharSet(hdc));
+  return LOWORD(Dc_Attr->iCS_CP);
+}
+
+
+/*
  * @unimplemented
  */
 int

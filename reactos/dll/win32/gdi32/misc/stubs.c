@@ -105,19 +105,6 @@ SetPolyFillMode(HDC hdc,
  */
 int
 STDCALL
-SetROP2(HDC hdc,
-        int fnDrawMode)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
 SetStretchBltMode(HDC hdc, int iStretchMode)
 {
     /* FIXME share memory */
@@ -205,20 +192,6 @@ SetViewportOrgEx(HDC hdc,
 {
     /* FIXME share memory */
     return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetBrushOrgEx(HDC hdc,
-              int nXOrg,
-              int nYOrg,
-              LPPOINT lppt)
-{
-    /* FIXME share memory */
-    return NtGdiSetBrushOrg(hdc,nXOrg,nYOrg,lppt);
 }
 
 /*
@@ -1522,18 +1495,6 @@ GdiDrawStream(HDC dc, ULONG l, VOID *v)
 /*
  * @unimplemented
  */
-DWORD
-STDCALL
-GdiGetCodePage(HDC hdc)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 GdiIsMetaFileDC(HDC hdc)
@@ -2678,32 +2639,6 @@ NamedEscape(HDC hdc,
      * when it calls to NtGdiExtEscape from NamedEscape
      */
     return NtGdiExtEscape(NULL,pDriver,wcslen(pDriver),iEsc,cjIn,pjIn,cjOut,pjOut);
-}
-
-
-BOOL
-STDCALL
-PatBlt(HDC hdc,
-       int nXLeft,
-       int nYLeft,
-       int nWidth,
-       int nHeight,
-       DWORD dwRop)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiPatBlt( hdc,  nXLeft,  nYLeft,  nWidth,  nHeight,  dwRop);
-}
-
-BOOL
-STDCALL
-PolyPatBlt(IN HDC hdc,
-           IN DWORD rop4,
-           IN PPOLYPATBLT pPoly,
-           IN DWORD Count,
-           IN DWORD Mode)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiPolyPatBlt(hdc, rop4, pPoly,Count,Mode);
 }
 
 
