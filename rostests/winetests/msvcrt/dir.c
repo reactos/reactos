@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "wine/test.h"
@@ -31,10 +31,26 @@
 #include <process.h>
 #include <errno.h>
 
-void test_fullpath(void)
+static void test_makepath(void)
+{
+    char buffer[MAX_PATH];
+
+    _makepath(buffer, "C", "\\foo", "dummy", "txt");
+    ok( strcmp(buffer, "C:\\foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
+    _makepath(buffer, "C:", "\\foo\\", "dummy", ".txt");
+    ok( strcmp(buffer, "C:\\foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
+
+    /* this works with native and e.g. Freelancer depends on it */
+    strcpy(buffer, "foo");
+    _makepath(buffer, NULL, buffer, "dummy.txt", NULL);
+    ok( strcmp(buffer, "foo\\dummy.txt") == 0, "unexpected result: %s\n", buffer);
+}
+
+static void test_fullpath(void)
 {
     char full[MAX_PATH];
     char tmppath[MAX_PATH];
+    char prevpath[MAX_PATH];
     char level1[MAX_PATH];
     char level2[MAX_PATH];
     char teststring[MAX_PATH];
@@ -42,6 +58,7 @@ void test_fullpath(void)
     BOOL rc,free1,free2;
 
     free1=free2=TRUE;
+    GetCurrentDirectory(MAX_PATH, prevpath);
     GetTempPath(MAX_PATH,tmppath);
     strcpy(level1,tmppath);
     strcat(level1,"msvcrt-test\\");
@@ -79,6 +96,7 @@ void test_fullpath(void)
     ok(strcmp(freeme,teststring)==0,"Invalid Path returned %s\n",freeme);
     free(freeme);
 
+    SetCurrentDirectory(prevpath);
     if (free2)
         RemoveDirectory(level2);
     if (free1)
@@ -88,4 +106,5 @@ void test_fullpath(void)
 START_TEST(dir)
 {
     test_fullpath();
+    test_makepath();
 }

@@ -14,7 +14,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
  * This tests is only valid for ix86 platforms, on others it's a no-op.
@@ -126,7 +126,7 @@ static void* bAncientVersion;
 
 /* Emulate a __thiscall */
 #ifdef _MSC_VER
-_inline static void* do_call_func1(void *func, void *_this)
+static inline void* do_call_func1(void *func, void *_this)
 {
   volatile void* retval = 0;
   __asm
@@ -140,7 +140,7 @@ _inline static void* do_call_func1(void *func, void *_this)
   return (void*)retval;
 }
 
-_inline static void* do_call_func2(void *func, void *_this, void* arg)
+static inline void* do_call_func2(void *func, void *_this, const void* arg)
 {
   volatile void* retval = 0;
   __asm
@@ -164,7 +164,7 @@ static void* do_call_func1(void *func, void *_this)
                         : "memory" );
   return ret;
 }
-static void* do_call_func2(void *func, void *_this, void* arg)
+static void* do_call_func2(void *func, void *_this, const void* arg)
 {
   void* ret;
   __asm__ __volatile__ ("pushl %2\n\tcall *%1"
@@ -176,7 +176,7 @@ static void* do_call_func2(void *func, void *_this, void* arg)
 #endif
 
 #define call_func1(x,y)   do_call_func1((void*)x,(void*)y)
-#define call_func2(x,y,z) do_call_func2((void*)x,(void*)y,(void*)z)
+#define call_func2(x,y,z) do_call_func2((void*)x,(void*)y,(const void*)z)
 
 /* Some exports are only available in later versions */
 #define SETNOFAIL(x,y) x = (void*)GetProcAddress(hMsvcrt,y)
@@ -184,8 +184,10 @@ static void* do_call_func2(void *func, void *_this, void* arg)
 
 static void InitFunctionPtrs(void)
 {
-  hMsvcrt = LoadLibraryA("msvcrt.dll");
-  ok(hMsvcrt != 0, "LoadLibraryA failed\n");
+  hMsvcrt = GetModuleHandleA("msvcrt.dll");
+  if (!hMsvcrt)
+    hMsvcrt = GetModuleHandleA("msvcrtd.dll");
+  ok(hMsvcrt != 0, "GetModuleHandleA failed\n");
   if (hMsvcrt)
   {
     SETNOFAIL(poperator_new, "??_U@YAPAXI@Z");
@@ -871,7 +873,7 @@ static int strcmp_space(const char *s1, const char *s2)
 
 static void test_demangle(void)
 {
-    static struct {const char* in; const char* out;} test[] = {
+    static struct {const char* in; const char* out; unsigned int flags;} test[] = {
 {"??0bad_alloc@std@@QAE@ABV01@@Z", "public: __thiscall std::bad_alloc::bad_alloc(class std::bad_alloc const &)"},
 {"??0bad_alloc@std@@QAE@PBD@Z", "public: __thiscall std::bad_alloc::bad_alloc(char const *)"},
 {"??0bad_cast@@AAE@PBQBD@Z", "private: __thiscall bad_cast::bad_cast(char const * const *)"},
@@ -973,15 +975,23 @@ static void test_demangle(void)
 {"??0aa$_3a@@QAE@XZ", "public: __thiscall aa$_3a::aa$_3a(void)"},
 {"??2?$aaa@AAUbbb@@AAUccc@@AAU2@@ddd@1eee@2@QAEHXZ", "public: int __thiscall eee::eee::ddd::ddd::aaa<struct bbb &,struct ccc &,struct ccc &>::operator new(void)"},
 {"?pSW@@3P6GHKPAX0PAU_tagSTACKFRAME@@0P6GH0K0KPAK@ZP6GPAX0K@ZP6GK0K@ZP6GK00PAU_tagADDRESS@@@Z@ZA", "int (__stdcall* pSW)(unsigned long,void *,void *,struct _tagSTACKFRAME *,void *,int (__stdcall*)(void *,unsigned long,void *,unsigned long,unsigned long *),void * (__stdcall*)(void *,unsigned long),unsigned long (__stdcall*)(void *,unsigned long),unsigned long (__stdcall*)(void *,void *,struct _tagADDRESS *))"},
+{"?$_aaa@Vbbb@@", "_aaa<class bbb>"},
+{"?$aaa@Vbbb@ccc@@Vddd@2@", "aaa<class ccc::bbb,class ccc::ddd>"},
+{ "??0?$Foo@P6GHPAX0@Z@@QAE@PAD@Z", "public: __thiscall Foo<int (__stdcall*)(void *,void *)>::Foo<int (__stdcall*)(void *,void *)>(char *)"},
+{ "??0?$Foo@P6GHPAX0@Z@@QAE@PAD@Z", "__thiscall Foo<int (__stdcall*)(void *,void *)>::Foo<int (__stdcall*)(void *,void *)>(char *)", 0x880},
+{ "?Qux@Bar@@0PAP6AHPAV1@AAH1PAH@ZA", "private: static int (__cdecl** Bar::Qux)(class Bar *,int &,int &,int *)" },
+{ "?Qux@Bar@@0PAP6AHPAV1@AAH1PAH@ZA", "Bar::Qux", 0x1800},
     };
     int i, num_test = (sizeof(test)/sizeof(test[0]));
     char* name;
 
     for (i = 0; i < num_test; i++)
     {
-	name = p__unDName(0, test[i].in, 0, pmalloc, pfree, 0);
+	name = p__unDName(0, test[i].in, 0, pmalloc, pfree, test[i].flags);
         ok(name != NULL && !strcmp_space(test[i].out, name),
-                "Got name \"%s\" for %d\n", name, i);
+           "Got name \"%s\" for %d\n", name, i );
+        ok(name != NULL && !strcmp_space(test[i].out, name),
+           "Expected \"%s\"\n", test[i].out );
         pfree(name);
     }
 }
@@ -998,8 +1008,5 @@ START_TEST(cpp)
   test_rtti();
   test_demangle_datatype();
   test_demangle();
-
-  if (hMsvcrt)
-    FreeLibrary(hMsvcrt);
 }
 #endif /* __i386__ */

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "wine/test.h"
@@ -44,10 +44,10 @@ static void test_gmtime(void)
 	(gmt_tm->tm_mday ==  1) && (gmt_tm->tm_wday == 4) && (gmt_tm->tm_hour  == 0) &&
 	(gmt_tm->tm_min  ==  0) && (gmt_tm->tm_sec  == 0) && (gmt_tm->tm_isdst == 0)),
        "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday,
-       gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst);
-
+       gmt_tm->tm_year, gmt_tm->tm_mon, gmt_tm->tm_yday, gmt_tm->tm_mday, gmt_tm->tm_wday, 
+       gmt_tm->tm_hour, gmt_tm->tm_min, gmt_tm->tm_sec, gmt_tm->tm_isdst); 
 }
+
 static void test_mktime(void)
 {
     TIME_ZONE_INFORMATION tzinfo;
@@ -59,9 +59,7 @@ static void test_mktime(void)
 
     ok (res != TIME_ZONE_ID_INVALID, "GetTimeZoneInformation failed\n");
     /* Bias may be positive or negative, to use offset of one day */
-    secs= SECSPERDAY - (tzinfo.Bias +
-      ( res == TIME_ZONE_ID_STANDARD ? tzinfo.StandardBias :
-      ( res == TIME_ZONE_ID_DAYLIGHT ? tzinfo.DaylightBias : 0 ))) * SECSPERMIN;
+    secs= SECSPERDAY - tzinfo.Bias * SECSPERMIN;
     my_tm.tm_mday = 1 + secs/SECSPERDAY;
     secs = secs % SECSPERDAY;
     my_tm.tm_hour = secs / SECSPERHOUR;
@@ -77,17 +75,19 @@ static void test_mktime(void)
     sav_tm = my_tm;
 
     local_time = mktime(&my_tm);
-    ok(((DWORD)local_time == SECSPERDAY), "mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok(((DWORD)local_time == SECSPERDAY), "mktime returned %u, expected %u\n",
+        (DWORD)local_time, SECSPERDAY);
     /* now test some unnormalized struct tm's */
     my_tm = sav_tm;
     my_tm.tm_sec += 60;
     my_tm.tm_min -= 1;
     local_time = mktime(&my_tm);
-    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned %u, expected %u\n",
+        (DWORD)local_time, SECSPERDAY);
     ok( my_tm.tm_year == sav_tm.tm_year && my_tm.tm_mon == sav_tm.tm_mon &&
         my_tm.tm_mday == sav_tm.tm_mday && my_tm.tm_hour == sav_tm.tm_hour &&
-        my_tm.tm_sec == sav_tm.tm_sec
-            , "mktime returned %3d-%02d-%02d %02d:%02d expected  %3d-%02d-%02d %02d:%02d.\n",
+        my_tm.tm_sec == sav_tm.tm_sec,
+            "mktime returned %2d-%02d-%02d %02d:%02d expected %2d-%02d-%02d %02d:%02d\n",
             my_tm.tm_year,my_tm.tm_mon,my_tm.tm_mday,
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
@@ -96,11 +96,12 @@ static void test_mktime(void)
     my_tm.tm_min -= 60;
     my_tm.tm_hour += 1;
     local_time = mktime(&my_tm);
-    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned %u, expected %u\n",
+        (DWORD)local_time, SECSPERDAY);
     ok( my_tm.tm_year == sav_tm.tm_year && my_tm.tm_mon == sav_tm.tm_mon &&
         my_tm.tm_mday == sav_tm.tm_mday && my_tm.tm_hour == sav_tm.tm_hour &&
-        my_tm.tm_sec == sav_tm.tm_sec
-            , "mktime returned %3d-%02d-%02d %02d:%02d expected  %3d-%02d-%02d %02d:%02d.\n",
+        my_tm.tm_sec == sav_tm.tm_sec,
+            "mktime returned %2d-%02d-%02d %02d:%02d expected %2d-%02d-%02d %02d:%02d\n",
             my_tm.tm_year,my_tm.tm_mon,my_tm.tm_mday,
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
@@ -109,11 +110,12 @@ static void test_mktime(void)
     my_tm.tm_mon -= 12;
     my_tm.tm_year += 1;
     local_time = mktime(&my_tm);
-    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned %u, expected %u\n",
+        (DWORD)local_time, SECSPERDAY);
     ok( my_tm.tm_year == sav_tm.tm_year && my_tm.tm_mon == sav_tm.tm_mon &&
         my_tm.tm_mday == sav_tm.tm_mday && my_tm.tm_hour == sav_tm.tm_hour &&
-        my_tm.tm_sec == sav_tm.tm_sec
-            , "mktime returned %3d-%02d-%02d %02d:%02d expected  %3d-%02d-%02d %02d:%02d.\n",
+        my_tm.tm_sec == sav_tm.tm_sec,
+            "mktime returned %2d-%02d-%02d %02d:%02d expected %2d-%02d-%02d %02d:%02d\n",
             my_tm.tm_year,my_tm.tm_mon,my_tm.tm_mday,
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
@@ -122,11 +124,12 @@ static void test_mktime(void)
     my_tm.tm_mon += 12;
     my_tm.tm_year -= 1;
     local_time = mktime(&my_tm);
-    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok(((DWORD)local_time == SECSPERDAY), "Unnormalized mktime returned %u, expected %u\n",
+        (DWORD)local_time, SECSPERDAY);
     ok( my_tm.tm_year == sav_tm.tm_year && my_tm.tm_mon == sav_tm.tm_mon &&
         my_tm.tm_mday == sav_tm.tm_mday && my_tm.tm_hour == sav_tm.tm_hour &&
-        my_tm.tm_sec == sav_tm.tm_sec
-            , "mktime returned %3d-%02d-%02d %02d:%02d expected  %3d-%02d-%02d %02d:%02d.\n",
+        my_tm.tm_sec == sav_tm.tm_sec,
+            "mktime returned %2d-%02d-%02d %02d:%02d expected %2d-%02d-%02d %02d:%02d\n",
             my_tm.tm_year,my_tm.tm_mon,my_tm.tm_mday,
             my_tm.tm_hour,my_tm.tm_sec,
             sav_tm.tm_year,sav_tm.tm_mon,sav_tm.tm_mday,
@@ -135,7 +138,7 @@ static void test_mktime(void)
     my_tm = sav_tm;
     my_tm.tm_year -= 1;
     local_time = mktime(&my_tm);
-    ok((local_time == -1), "(bad time) mktime returned 0x%08lx\n",(DWORD)local_time);
+    ok((local_time == -1), "(bad time) mktime returned %d, expected -1\n", (int)local_time);
 
     my_tm = sav_tm;
     /* TEST that we are independent from the TZ variable */
@@ -143,16 +146,15 @@ static void test_mktime(void)
     _snprintf(TZ_env,255,"TZ=%s",(getenv("TZ")?getenv("TZ"):""));
     putenv("TZ=GMT");
     nulltime = mktime(&my_tm);
-    ok(((DWORD)nulltime == SECSPERDAY),"mktime returned 0x%08lx\n",(DWORD)nulltime);
+    ok(((DWORD)nulltime == SECSPERDAY),"mktime returned 0x%08x\n",(DWORD)nulltime);
     putenv(TZ_env);
 }
+
 static void test_localtime(void)
 {
     TIME_ZONE_INFORMATION tzinfo;
     DWORD res =  GetTimeZoneInformation(&tzinfo);
-    time_t gmt = (time_t)(SECSPERDAY + (tzinfo.Bias +
-      ( res == TIME_ZONE_ID_STANDARD ? tzinfo.StandardBias :
-      ( res == TIME_ZONE_ID_DAYLIGHT ? tzinfo.DaylightBias : 0 ))) * SECSPERMIN);
+    time_t gmt = (time_t)(SECSPERDAY + tzinfo.Bias * SECSPERMIN);
 
     char TZ_env[256];
     struct tm* lt;
@@ -161,24 +163,35 @@ static void test_localtime(void)
     lt = localtime(&gmt);
     ok(((lt->tm_year == 70) && (lt->tm_mon  == 0) && (lt->tm_yday  == 1) &&
 	(lt->tm_mday ==  2) && (lt->tm_wday == 5) && (lt->tm_hour  == 0) &&
-	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst ==
-                                                      (res == TIME_ZONE_ID_DAYLIGHT))),
-       "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour,
-       lt->tm_min, lt->tm_sec, lt->tm_isdst);
+	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst == 0)),
+       "Wrong date:Year %d mon %d yday %d mday %d wday %d hour %d min %d sec %d dst %d\n",
+       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour, 
+       lt->tm_min, lt->tm_sec, lt->tm_isdst); 
 
     _snprintf(TZ_env,255,"TZ=%s",(getenv("TZ")?getenv("TZ"):""));
     putenv("TZ=GMT");
     lt = localtime(&gmt);
     ok(((lt->tm_year == 70) && (lt->tm_mon  == 0) && (lt->tm_yday  == 1) &&
 	(lt->tm_mday ==  2) && (lt->tm_wday == 5) && (lt->tm_hour  == 0) &&
-	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst ==
-                                                      (res == TIME_ZONE_ID_DAYLIGHT))),
-       "Wrong date:Year %4d mon %2d yday %3d mday %2d wday %1d hour%2d min %2d sec %2d dst %2d\n",
-       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour,
-       lt->tm_min, lt->tm_sec, lt->tm_isdst);
+	(lt->tm_min  ==  0) && (lt->tm_sec  == 0) && (lt->tm_isdst == 0)),
+       "Wrong date:Year %d mon %d yday %d mday %d wday %d hour %d min %d sec %d dst %d\n",
+       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour, 
+       lt->tm_min, lt->tm_sec, lt->tm_isdst); 
     putenv(TZ_env);
+
+    /* June 22 */
+    gmt += 201 * SECSPERDAY;
+    lt = localtime(&gmt);
+    gmt += (lt->tm_isdst ? tzinfo.DaylightBias : tzinfo.StandardBias) * SECSPERMIN;
+    lt = localtime(&gmt);
+    ok(((lt->tm_year == 70) && (lt->tm_mon  == 6) && (lt->tm_yday  == 202) &&
+	(lt->tm_mday == 22) && (lt->tm_wday == 3) && (lt->tm_hour  == 0) &&
+	(lt->tm_min  ==  0) && (lt->tm_sec  == 0)),
+       "Wrong date:Year %d mon %d yday %d mday %d wday %d hour %d min %d sec %d dst %d\n",
+       lt->tm_year, lt->tm_mon, lt->tm_yday, lt->tm_mday, lt->tm_wday, lt->tm_hour, 
+       lt->tm_min, lt->tm_sec, lt->tm_isdst); 
 }
+
 static void test_strdate(void)
 {
     char date[16], * result;
@@ -191,6 +204,7 @@ static void test_strdate(void)
     count = sscanf(date, "%02d/%02d/%02d", &month, &day, &year);
     ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
 }
+
 static void test_strtime(void)
 {
     char time[16], * result;
@@ -203,6 +217,7 @@ static void test_strtime(void)
     count = sscanf(time, "%02d:%02d:%02d", &hour, &minute, &second);
     ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
 }
+
 static void test_wstrdate(void)
 {
     wchar_t date[16], * result;
@@ -216,6 +231,7 @@ static void test_wstrdate(void)
     count = swscanf(date, format, &month, &day, &year);
     ok(count == 3, "Wrong format: count = %d, should be 3\n", count);
 }
+
 static void test_wstrtime(void)
 {
     wchar_t time[16], * result;

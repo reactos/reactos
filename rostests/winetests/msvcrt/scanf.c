@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include <stdio.h>
@@ -51,6 +51,11 @@ static void test_sscanf( void )
     strcpy(buffer,"0x51g");
     ok( sscanf(buffer, "%x", &result) == 1, "sscanf failed\n" );
     ok( result == 0x51, "sscanf reads %x instead of %x\n", result, 0x51 );
+
+    result = 0;
+    ret = sscanf("-1", "%x", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d (expected 1)\n", ret);
+    ok(result == -1, "Read %d, expected -1\n", result);
 
     /* check % followed by any char */
     strcpy(buffer,"\"%12@");
@@ -93,9 +98,41 @@ static void test_sscanf( void )
     ret = sscanf(buffer, "%i", &result);
     ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ok(result == 123, "Wrong number read\n");
+    result = 0;
+    ret = sscanf("-1", "%i", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d (expected 1)\n", ret);
+    ok(result == -1, "Read %d, expected -1\n", result);
     ret = sscanf(buffer, "%d", &result);
     ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
     ok(result == 123, "Wrong number read\n");
+    result = 0;
+    ret = sscanf("-1", "%d", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d (expected 1)\n", ret);
+    ok(result == -1, "Read %d, expected -1\n", result);
+
+    /* Check %i for octal and hexadecimal input */
+    result = 0;
+    strcpy(buffer,"017");
+    ret = sscanf(buffer, "%i", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 15, "Wrong number read\n");
+    result = 0;
+    strcpy(buffer,"0x17");
+    ret = sscanf(buffer, "%i", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d\n", ret);
+    ok(result == 23, "Wrong number read\n");
+
+    /* %o */
+    result = 0;
+    ret = sscanf("-1", "%o", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d (expected 1)\n", ret);
+    ok(result == -1, "Read %d, expected -1\n", result);
+
+    /* %u */
+    result = 0;
+    ret = sscanf("-1", "%u", &result);
+    ok(ret == 1, "Wrong number of arguments read: %d (expected 1)\n", ret);
+    ok(result == -1, "Read %d, expected -1\n", result);
 
     /* Check %c */
     strcpy(buffer,"a");
@@ -125,6 +162,12 @@ static void test_sscanf( void )
     ok(strcmp(buffer1,"def")==0, "Second %%s read incorrectly: %s\n", buffer1);
     ok(number_so_far==6, "%%n yielded wrong result: %d\n", number_so_far);
     ok(ret == 2, "%%n shouldn't count as a conversion: %d\n", ret);
+
+    /* Check where %n matches to EOF in buffer */
+    strcpy(buffer, "3:45");
+    ret = sscanf(buffer, "%d:%d%n", &hour, &min, &number_so_far);
+    ok(ret == 2, "Wrong number of arguments read: %d\n", ret);
+    ok(number_so_far == 4, "%%n yielded wrong result: %d\n", number_so_far);
 }
 
 START_TEST(scanf)
