@@ -9,11 +9,16 @@
  */
 
 #include "precomp.h"
-static TCHAR m_szFreeldrIni[MAX_PATH + 15];
-static int m_FreeLdrIni = 0;
-static TCHAR m_szDumpFile[MAX_PATH];
-static TCHAR m_szMinidumpDir[MAX_PATH];
-static DWORD m_dwCrashDumpEnabled = 0;
+
+typedef struct _STARTINFO
+{
+    TCHAR szFreeldrIni[MAX_PATH + 15];
+    TCHAR szDumpFile[MAX_PATH];
+    TCHAR szMinidumpDir[MAX_PATH];
+    DWORD dwCrashDumpEnabled;
+    INT iFreeLdrIni;
+} STARTINFO, *PSTARTINFO;
+
 
 static VOID
 SetTimeout(HWND hwndDlg, INT Timeout)
@@ -422,7 +427,7 @@ DeleteBootRecords(HWND hwndDlg)
 }
 
 static LRESULT
-LoadOSList(HWND hwndDlg)
+LoadOSList(HWND hwndDlg, PSTARTINFO pStartInfo)
 {
     DWORD dwBufSize;
     TCHAR *szSystemDrive;
@@ -432,13 +437,13 @@ LoadOSList(HWND hwndDlg)
     if (!dwBufSize)
         return FALSE;
 
-    _tcscpy(m_szFreeldrIni, szSystemDrive);
-    _tcscat(m_szFreeldrIni, _T("\\freeldr.ini"));
+    _tcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
+    _tcscat(pStartInfo->szFreeldrIni, _T("\\freeldr.ini"));
 
-    if (PathFileExists(m_szFreeldrIni))
+    if (PathFileExists(pStartInfo->szFreeldrIni))
     {
         /* freeldr.ini exists */
-        hInf = SetupOpenInfFile(m_szFreeldrIni,
+        hInf = SetupOpenInfFile(pStartInfo->szFreeldrIni,
                                 NULL,
                                 INF_STYLE_OLDNT,
                                 NULL);
@@ -447,20 +452,20 @@ LoadOSList(HWND hwndDlg)
         {
             LoadFreeldrSettings(hInf, hwndDlg);
             SetupCloseInfFile(hInf);
-            m_FreeLdrIni = 1;
+            pStartInfo->iFreeLdrIni = 1;
             return TRUE;
         }
         return FALSE;
     }
 
     /* try load boot.ini settings */
-    _tcscpy(m_szFreeldrIni, szSystemDrive);
-    _tcscat(m_szFreeldrIni, _T("\\boot.ini"));
+    _tcscpy(pStartInfo->szFreeldrIni, szSystemDrive);
+    _tcscat(pStartInfo->szFreeldrIni, _T("\\boot.ini"));
 
-    if (PathFileExists(m_szFreeldrIni))
+    if (PathFileExists(pStartInfo->szFreeldrIni))
     {
         /* load boot.ini settings */
-        hInf = SetupOpenInfFile(m_szFreeldrIni,
+        hInf = SetupOpenInfFile(pStartInfo->szFreeldrIni,
                                 NULL,
                                 INF_STYLE_OLDNT,
                                 NULL);
@@ -469,7 +474,7 @@ LoadOSList(HWND hwndDlg)
         {
             LoadBootSettings(hInf, hwndDlg);
             SetupCloseInfFile(hInf);
-            m_FreeLdrIni = 2;
+            pStartInfo->iFreeLdrIni = 2;
             return TRUE;
         }
 
@@ -480,36 +485,37 @@ LoadOSList(HWND hwndDlg)
 }
 
 static VOID
-SetCrashDlgItems(HWND hwnd)
+SetCrashDlgItems(HWND hwnd, PSTARTINFO pStartInfo)
 {
-    if (m_dwCrashDumpEnabled == 0)
+    if (pStartInfo->dwCrashDumpEnabled == 0)
     {
         /* no crash information required */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), FALSE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), FALSE);
     }
-    else if (m_dwCrashDumpEnabled == 3)
+    else if (pStartInfo->dwCrashDumpEnabled == 3)
     {
         /* minidump type */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), TRUE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), FALSE);
-        SendMessage(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)m_szMinidumpDir);
+        SendMessage(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)pStartInfo->szMinidumpDir);
     }
-    else if (m_dwCrashDumpEnabled == 1 || m_dwCrashDumpEnabled == 2)
+    else if (pStartInfo->dwCrashDumpEnabled == 1 || pStartInfo->dwCrashDumpEnabled == 2)
     {
         /* kernel or complete dump */
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), TRUE);
         EnableWindow(GetDlgItem(hwnd, IDC_STRRECOVERWRITE), TRUE);
-        SendMessage(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)m_szDumpFile);
+        SendMessage(GetDlgItem(hwnd, IDC_STRRECDUMPFILE), WM_SETTEXT, (WPARAM)0, (LPARAM)pStartInfo->szDumpFile);
     }
-    SendDlgItemMessage(hwnd, IDC_STRRECDEBUGCOMBO, CB_SETCURSEL, (WPARAM)m_dwCrashDumpEnabled, (LPARAM)0);
+    SendDlgItemMessage(hwnd, IDC_STRRECDEBUGCOMBO, CB_SETCURSEL, (WPARAM)pStartInfo->dwCrashDumpEnabled, (LPARAM)0);
 }
 
 static VOID
-WriteStartupRecoveryOptions(HWND hwndDlg)
+WriteStartupRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
 {
     HKEY hKey;
     DWORD lResult;
+
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
                      _T("System\\CurrentControlSet\\Control\\CrashControl"),
                      0,
@@ -533,23 +539,23 @@ WriteStartupRecoveryOptions(HWND hwndDlg)
     RegSetValueEx(hKey, _T("Overwrite"), 0, REG_DWORD, (LPBYTE)&lResult, sizeof(lResult));
 
 
-    if (m_dwCrashDumpEnabled == 1 || m_dwCrashDumpEnabled == 2)
+    if (pStartInfo->dwCrashDumpEnabled == 1 || pStartInfo->dwCrashDumpEnabled == 2)
     {
-        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szDumpFile) / sizeof(TCHAR), (LPARAM)m_szDumpFile);
-        RegSetValueEx(hKey, _T("DumpFile"), 0, REG_EXPAND_SZ, (LPBYTE)&m_szDumpFile, (_tcslen(m_szDumpFile) + 1) * sizeof(TCHAR));
+        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(pStartInfo->szDumpFile) / sizeof(TCHAR), (LPARAM)pStartInfo->szDumpFile);
+        RegSetValueEx(hKey, _T("DumpFile"), 0, REG_EXPAND_SZ, (LPBYTE)pStartInfo->szDumpFile, (_tcslen(pStartInfo->szDumpFile) + 1) * sizeof(TCHAR));
     }
-    else if (m_dwCrashDumpEnabled == 3)
+    else if (pStartInfo->dwCrashDumpEnabled == 3)
     {
-        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szDumpFile) / sizeof(TCHAR), (LPARAM)m_szDumpFile);
-        RegSetValueEx(hKey, _T("MinidumpDir"), 0, REG_EXPAND_SZ, (LPBYTE)&m_szDumpFile, (_tcslen(m_szDumpFile) + 1) * sizeof(TCHAR));
+        SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(pStartInfo->szDumpFile) / sizeof(TCHAR), (LPARAM)pStartInfo->szDumpFile);
+        RegSetValueEx(hKey, _T("MinidumpDir"), 0, REG_EXPAND_SZ, (LPBYTE)pStartInfo->szDumpFile, (_tcslen(pStartInfo->szDumpFile) + 1) * sizeof(TCHAR));
     }
 
-    RegSetValueEx(hKey, _T("CrashDumpEnabled"), 0, REG_DWORD, (LPBYTE)&m_dwCrashDumpEnabled, sizeof(m_dwCrashDumpEnabled));
+    RegSetValueEx(hKey, _T("CrashDumpEnabled"), 0, REG_DWORD, (LPBYTE)pStartInfo->dwCrashDumpEnabled, sizeof(pStartInfo->dwCrashDumpEnabled));
     RegCloseKey(hKey);
 }
 
 static VOID
-LoadRecoveryOptions(HWND hwndDlg)
+LoadRecoveryOptions(HWND hwndDlg, PSTARTINFO pStartInfo)
 {
     HKEY hKey;
     DWORD dwValues;
@@ -626,15 +632,15 @@ LoadRecoveryOptions(HWND hwndDlg)
         }
         else if (!_tcscmp(szName, _T("DumpFile")))
         {
-            _tcscpy(m_szDumpFile, szValue);
+            _tcscpy(pStartInfo->szDumpFile, szValue);
         }
         else if (!_tcscmp(szName, _T("MinidumpDir")))
         {
-            _tcscpy(m_szMinidumpDir, szValue);
+            _tcscpy(pStartInfo->szMinidumpDir, szValue);
         }
         else if (!_tcscmp(szName, _T("CrashDumpEnabled")))
         {
-            m_dwCrashDumpEnabled = dwValue;
+            pStartInfo->dwCrashDumpEnabled = dwValue;
         }
     }
 
@@ -650,7 +656,7 @@ LoadRecoveryOptions(HWND hwndDlg)
     if (LoadString(hApplet, IDS_MINI_DUMP, szValue, sizeof(szValue) / sizeof(TCHAR)) < sizeof(szValue) / sizeof(TCHAR))
         SendDlgItemMessage(hwndDlg, IDC_STRRECDEBUGCOMBO, CB_ADDSTRING, (WPARAM)0, (LPARAM) szValue);
 
-    SetCrashDlgItems(hwndDlg);
+    SetCrashDlgItems(hwndDlg, pStartInfo);
     RegCloseKey(hKey);
 }
 
@@ -662,6 +668,7 @@ StartRecDlgProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
+    PSTARTINFO pStartInfo;
     PBOOTRECORD pRecord;
     int iTimeout;
     LRESULT lResult;
@@ -669,17 +676,27 @@ StartRecDlgProc(HWND hwndDlg,
 
     UNREFERENCED_PARAMETER(lParam);
 
+    pStartInfo = (PSTARTINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch(uMsg)
     {
         case WM_INITDIALOG:
-            LoadRecoveryOptions(hwndDlg);
-            return LoadOSList(hwndDlg);
+            pStartInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(STARTINFO));
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pStartInfo);
+
+            LoadRecoveryOptions(hwndDlg, pStartInfo);
+            return LoadOSList(hwndDlg, pStartInfo);
+
+        case WM_DESTROY:
+            DeleteBootRecords(hwndDlg);
+            HeapFree(GetProcessHeap(), 0, pStartInfo);
+            break;
 
         case WM_COMMAND:
             switch(LOWORD(wParam))
             {
                 case IDC_STRRECEDIT:
-                    ShellExecute(0, _T("open"), _T("notepad"), m_szFreeldrIni, NULL, SW_SHOWNORMAL);
+                    ShellExecute(0, _T("open"), _T("notepad"), pStartInfo->szFreeldrIni, NULL, SW_SHOWNORMAL);
                     // FIXME use CreateProcess and wait untill finished
                     //  DeleteBootRecords(hwndDlg);
                     //  LoadOSList(hwndDlg);
@@ -705,44 +722,42 @@ StartRecDlgProc(HWND hwndDlg,
 
                     if ((INT)pRecord != CB_ERR)
                     {
-                        if (m_FreeLdrIni == 1) // FreeLdrIni style
+                        if (pStartInfo->iFreeLdrIni == 1) // FreeLdrIni style
                         {
                             /* set default timeout */
                             WritePrivateProfileString(_T("FREELOADER"),
                                                       _T("TimeOut"),
                                                       szTimeout,
-                                                      m_szFreeldrIni);
+                                                      pStartInfo->szFreeldrIni);
                             /* set default os */
                             WritePrivateProfileString(_T("FREELOADER"),
                                                       _T("DefaultOS"),
                                                       pRecord->szSectionName,
-                                                      m_szFreeldrIni);
+                                                      pStartInfo->szFreeldrIni);
 
                         }
-                        else if (m_FreeLdrIni == 2) // BootIni style
+                        else if (pStartInfo->iFreeLdrIni == 2) // BootIni style
                         {
                             /* set default timeout */
                             WritePrivateProfileString(_T("boot loader"),
                                                       _T("timeout"),
                                                       szTimeout,
-                                                      m_szFreeldrIni);
+                                                      pStartInfo->szFreeldrIni);
                             /* set default os */
                             WritePrivateProfileString(_T("boot loader"),
                                                       _T("default"),
                                                       pRecord->szBootPath,
-                                                      m_szFreeldrIni);
+                                                      pStartInfo->szFreeldrIni);
 
                         }
                     }
 
-                    WriteStartupRecoveryOptions(hwndDlg);
-                    DeleteBootRecords(hwndDlg);
+                    WriteStartupRecoveryOptions(hwndDlg, pStartInfo);
                     EndDialog(hwndDlg,
                               LOWORD(wParam));
                     return TRUE;
 
                 case IDCANCEL:
-                    DeleteBootRecords(hwndDlg);
                     EndDialog(hwndDlg,
                               LOWORD(wParam));
                     return TRUE;
@@ -760,19 +775,19 @@ StartRecDlgProc(HWND hwndDlg,
                         LRESULT lResult;
 
                         lResult = SendDlgItemMessage(hwndDlg, IDC_STRRECDEBUGCOMBO, CB_GETCURSEL, (WPARAM)0, (LPARAM)0);
-                        if (lResult != CB_ERR && lResult != m_dwCrashDumpEnabled)
+                        if (lResult != CB_ERR && lResult != pStartInfo->dwCrashDumpEnabled)
                         {
-                            if (m_dwCrashDumpEnabled == 1 || m_dwCrashDumpEnabled == 2)
+                            if (pStartInfo->dwCrashDumpEnabled == 1 || pStartInfo->dwCrashDumpEnabled == 2)
                             {
-                                SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szDumpFile) / sizeof(TCHAR), (LPARAM)m_szDumpFile);
+                                SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(pStartInfo->szDumpFile) / sizeof(TCHAR), (LPARAM)pStartInfo->szDumpFile);
                             }
-                            else if (m_dwCrashDumpEnabled == 3)
+                            else if (pStartInfo->dwCrashDumpEnabled == 3)
                             {
-                                SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(m_szMinidumpDir) / sizeof(TCHAR), (LPARAM)m_szMinidumpDir);
+                                SendDlgItemMessage(hwndDlg, IDC_STRRECDUMPFILE, WM_GETTEXT, (WPARAM)sizeof(pStartInfo->szMinidumpDir) / sizeof(TCHAR), (LPARAM)pStartInfo->szMinidumpDir);
                             }
 
-                            m_dwCrashDumpEnabled = lResult;
-                            SetCrashDlgItems(hwndDlg);
+                            pStartInfo->dwCrashDumpEnabled = lResult;
+                            SetCrashDlgItems(hwndDlg, pStartInfo);
                         }
                     }
                     break;

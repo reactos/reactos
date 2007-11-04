@@ -422,43 +422,12 @@ OnOk(PVIRTMEM pVirtMem)
     {
         WritePageFileSettings(pVirtMem);
     }
-
-    if (pVirtMem->szPagingFiles)
-        HeapFree(GetProcessHeap(),
-                 0,
-                 pVirtMem->szPagingFiles);
-
-    HeapFree(GetProcessHeap(),
-             0,
-             pVirtMem);
 }
 
 
 static VOID
-OnCancel(PVIRTMEM pVirtMem)
+OnInitDialog(HWND hwnd, PVIRTMEM pVirtMem)
 {
-    if (pVirtMem->szPagingFiles)
-        HeapFree(GetProcessHeap(),
-                 0,
-                 pVirtMem->szPagingFiles);
-
-    HeapFree(GetProcessHeap(),
-             0,
-             pVirtMem);
-}
-
-
-static PVIRTMEM
-OnInitDialog(HWND hwnd)
-{
-    PVIRTMEM pVirtMem = (PVIRTMEM)HeapAlloc(GetProcessHeap(),
-                                            HEAP_ZERO_MEMORY,
-                                            sizeof(VIRTMEM));
-    if (pVirtMem == NULL)
-    {
-        EndDialog(hwnd, 0);
-    }
-
     pVirtMem->hSelf = hwnd;
     pVirtMem->hListBox = GetDlgItem(hwnd, IDC_PAGEFILELIST);
     pVirtMem->bSave = FALSE;
@@ -471,8 +440,6 @@ OnInitDialog(HWND hwnd)
         /* Parse our settings and set up dialog */
         ParseMemSettings(pVirtMem);
     }
-
-    return pVirtMem;
 }
 
 
@@ -482,22 +449,38 @@ VirtMemDlgProc(HWND hwndDlg,
                WPARAM wParam,
                LPARAM lParam)
 {
-    /* there can only be one instance of this dialog */
-    static PVIRTMEM pVirtMem = NULL;
+    PVIRTMEM pVirtMem;
 
     UNREFERENCED_PARAMETER(lParam);
+
+    pVirtMem = (PVIRTMEM)GetWindowLongPtr(hwndDlg, DWLP_USER);
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            pVirtMem = OnInitDialog(hwndDlg);
+            pVirtMem = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(VIRTMEM));
+            if (pVirtMem == NULL)
+            {
+                EndDialog(hwndDlg, 0);
+                return FALSE;
+            }
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pVirtMem);
+
+            OnInitDialog(hwndDlg, pVirtMem);
+            break;
+
+        case WM_DESTROY:
+            if (pVirtMem->szPagingFiles)
+                HeapFree(GetProcessHeap(), 0,
+                         pVirtMem->szPagingFiles);
+            HeapFree(GetProcessHeap(), 0, pVirtMem);
             break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
                 case IDCANCEL:
-                    OnCancel(pVirtMem);
                     EndDialog(hwndDlg, 0);
                     return TRUE;
 

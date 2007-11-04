@@ -275,8 +275,8 @@ GetSystemInformation(HWND hwnd)
     TCHAR Buf[32];
     INT CurMachineLine = IDC_MACHINELINE1;
 
-
-    /* Get Processor information *
+    /*
+     * Get Processor information
      * although undocumented, this information is being pulled
      * directly out of the registry instead of via setupapi as it
      * contains all the info we need, and should remain static
@@ -372,16 +372,31 @@ GeneralPageProc(HWND hwndDlg,
                 WPARAM wParam,
                 LPARAM lParam)
 {
-    static IMGINFO ImgInfo;
+    PIMGINFO pImgInfo;
 
     UNREFERENCED_PARAMETER(lParam);
     UNREFERENCED_PARAMETER(wParam);
 
+    pImgInfo = (PIMGINFO)GetWindowLongPtr(hwndDlg, DWLP_USER);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
-            InitImageInfo(&ImgInfo);
+            pImgInfo = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IMGINFO));
+            if (pImgInfo == NULL)
+            {
+                EndDialog(hwndDlg, 0);
+                return FALSE;
+            }
+
+            SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pImgInfo);
+
+            InitImageInfo(pImgInfo);
             GetSystemInformation(hwndDlg);
+            break;
+
+        case WM_DESTROY:
+            HeapFree(GetProcessHeap(), 0, pImgInfo);
             break;
 
         case WM_COMMAND:
@@ -406,12 +421,12 @@ GeneralPageProc(HWND hwndDlg,
                 LONG left;
 
                 /* position image in centre of dialog */
-                left = (lpDrawItem->rcItem.right - ImgInfo.cxSource) / 2;
+                left = (lpDrawItem->rcItem.right - pImgInfo->cxSource) / 2;
 
                 hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
                 if (hdcMem != NULL)
                 {
-                    SelectObject(hdcMem, ImgInfo.hBitmap);
+                    SelectObject(hdcMem, pImgInfo->hBitmap);
                     BitBlt(lpDrawItem->hDC,
                            left,
                            lpDrawItem->rcItem.top,
