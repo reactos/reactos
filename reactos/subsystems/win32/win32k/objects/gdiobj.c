@@ -663,7 +663,8 @@ LockHandle:
  * \param	hObject object handle
  * \return	if the function fails the returned value is FALSE.
 */
-BOOL STDCALL
+BOOL
+FASTCALL
 NtGdiDeleteObject(HGDIOBJ hObject)
 {
   DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);

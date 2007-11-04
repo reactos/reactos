@@ -738,7 +738,6 @@ NtGdiCreateDIBitmap                     6
 NtGdiCreateEnhMetaFile                  4
 NtGdiCreateScalableFontResource         4
 NtGdiDeleteEnhMetaFile                  1
-NtGdiDeleteObject                       1
 NtGdiEnumEnhMetaFile                    5
 NtGdiEnumFonts                          4
 NtGdiEnumICMProfiles                    3

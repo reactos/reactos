@@ -152,9 +152,6 @@ NtGdiDeleteEnhMetaFile (
 	HENHMETAFILE	emf
 	);
 
-/* Should be done in user-mode. */
-BOOL STDCALL  NtGdiDeleteObject(HGDIOBJ hObject);
-
 /* Meta are user-mode. */
 BOOL
 STDCALL

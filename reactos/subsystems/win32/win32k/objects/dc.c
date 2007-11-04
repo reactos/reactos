@@ -1023,10 +1023,14 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
 
 }
 
-BOOL STDCALL
+BOOL
+STDCALL
 NtGdiDeleteObjectApp(HANDLE  DCHandle)
 {
   PDC  DCToDelete;
+
+  if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
+     return NtGdiDeleteObject((HGDIOBJ) DCHandle);
 
   if (!GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, DCHandle))
     {

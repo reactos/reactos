@@ -276,29 +276,58 @@ DeleteDC(HDC hDC)
   return Ret;
 }
 
-
 /*
-
  * @implemented
  */
 BOOL
 STDCALL
 DeleteObject(HGDIOBJ hObject)
 {
+  UINT Type = 0;
+  
   /* From Wine: DeleteObject does not SetLastError() on a null object */
   if(!hObject) return FALSE;
 
   if (0 != ((DWORD) hObject & GDI_HANDLE_STOCK_MASK))
-    {
-      DPRINT1("Trying to delete system object 0x%x\n", hObject);
-      return TRUE;
-    }
+  { // Relax! This is a normal return!
+     DPRINT("Trying to delete system object 0x%x\n", hObject);
+     return TRUE;
+  }
+  // If you dont own it?! Get OUT!
+  if(!GdiIsHandleValid(hObject)) return FALSE;
 
-  /* deleting a handle that doesn't belong to the caller should be rather rarely
-     so for the sake of speed just try to delete it without checking validity */
-  return NtGdiDeleteObject(hObject);
+  Type = GDI_HANDLE_GET_TYPE(hObject);
+
+  if ((Type == GDI_OBJECT_TYPE_METAFILE) || 
+      (Type == GDI_OBJECT_TYPE_ENHMETAFILE))
+     return FALSE;
+
+  switch (Type)
+  {
+     case GDI_OBJECT_TYPE_DC:
+       return DeleteDC((HDC) hObject);
+     case GDI_OBJECT_TYPE_COLORSPACE:
+       return NtGdiDeleteColorSpace((HCOLORSPACE) hObject);
+#if 0
+     case GDI_OBJECT_TYPE_METADC:
+       return MFDRV_DeleteObject( hObject );
+     case GDI_OBJECT_TYPE_EMF:
+     {          
+       PLDC pLDC = GdiGetLDC(hObject);
+       if ( !pLDC ) return FALSE;
+       return EMFDRV_DeleteObject( hObject );
+     }
+#endif
+     case GDI_OBJECT_TYPE_REGION:
+     case GDI_OBJECT_TYPE_BRUSH:
+     case GDI_OBJECT_TYPE_EXTPEN:
+     case GDI_OBJECT_TYPE_PEN:
+     case GDI_OBJECT_TYPE_FONT:
+     case GDI_OBJECT_TYPE_BITMAP:
+       break;
+  }
+  return NtGdiDeleteObjectApp(hObject);
 }
-
 
 INT
 STDCALL
