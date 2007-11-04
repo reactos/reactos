@@ -47,7 +47,7 @@ GetSelectedListViewItem(HWND hwndListView)
 }
 
 
-INT_PTR CALLBACK
+static INT_PTR CALLBACK
 EditVariableDlgProc(HWND hwndDlg,
                     UINT uMsg,
                     WPARAM wParam,
@@ -340,7 +340,7 @@ OnInitDialog(HWND hwndDlg)
 }
 
 
-VOID
+static VOID
 OnNewVariable(HWND hwndDlg,
               INT iDlgItem)
 {
@@ -387,7 +387,7 @@ OnNewVariable(HWND hwndDlg,
 }
 
 
-VOID
+static VOID
 OnEditVariable(HWND hwndDlg,
                INT iDlgItem)
 {
@@ -423,7 +423,7 @@ OnEditVariable(HWND hwndDlg,
 }
 
 
-VOID
+static VOID
 OnDeleteVariable(HWND hwndDlg,
                  INT iDlgItem)
 {
@@ -473,7 +473,7 @@ OnDeleteVariable(HWND hwndDlg,
 }
 
 
-VOID
+static VOID
 ReleaseListViewItems(HWND hwndDlg,
                      INT iDlgItem)
 {
@@ -515,7 +515,7 @@ ReleaseListViewItems(HWND hwndDlg,
 }
 
 
-VOID
+static VOID
 SetAllVars(HWND hwndDlg,
            INT iDlgItem)
 {
@@ -651,6 +651,35 @@ SetAllVars(HWND hwndDlg,
 }
 
 
+static BOOL
+OnNotify(HWND hwndDlg, NMHDR *phdr)
+{
+    switch(phdr->code)
+    {
+        case NM_DBLCLK:
+            if (phdr->idFrom == IDC_USER_VARIABLE_LIST ||
+                phdr->idFrom == IDC_SYSTEM_VARIABLE_LIST)
+            {
+                OnEditVariable(hwndDlg, (INT)phdr->idFrom);
+                return TRUE;
+            }
+            break;
+
+        case LVN_KEYDOWN:
+            if (((LPNMLVKEYDOWN)phdr)->wVKey == VK_DELETE &&
+                (phdr->idFrom == IDC_USER_VARIABLE_LIST ||
+                 phdr->idFrom == IDC_SYSTEM_VARIABLE_LIST))
+            {
+                OnDeleteVariable(hwndDlg, (INT)phdr->idFrom);
+                return TRUE;
+            }
+            break;
+    }
+
+    return FALSE;
+}
+
+
 /* Environment dialog procedure */
 INT_PTR CALLBACK
 EnvironmentDlgProc(HWND hwndDlg,
@@ -709,24 +738,7 @@ EnvironmentDlgProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-        {
-            NMHDR *phdr;
-
-            phdr = (NMHDR*)lParam;
-            switch(phdr->code)
-            {
-                case NM_DBLCLK:
-                {
-                    if (phdr->idFrom == IDC_USER_VARIABLE_LIST ||
-                        phdr->idFrom == IDC_SYSTEM_VARIABLE_LIST)
-                    {
-                        OnEditVariable(hwndDlg, (INT)phdr->idFrom);
-                        return TRUE;
-                    }
-                }
-            }
-        }
-        break;
+            return OnNotify(hwndDlg, (NMHDR*)lParam);
     }
 
     return FALSE;
