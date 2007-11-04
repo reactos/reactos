@@ -10,32 +10,7 @@
  */
 
 
-
-/* DDK/NDK/SDK Headers */
-/* DDK/NDK/SDK Headers */
-#include <ddk/ntddk.h>
-#include <ddk/ntddmou.h>
-#include <ddk/ntifs.h>
-#include <ddk/tvout.h>
-#include <ndk/ntndk.h>
-
-
-
-#include <stdarg.h>
-#include <windef.h>
-#include <winerror.h>
-#include <wingdi.h>
-#include <winddi.h>
-#include <winuser.h>
-#include <prntfont.h>
-#include <dde.h>
-#include <wincon.h>
-
-#include <ddk/ddkmapi.h>
 #include "dxapi_driver.h"
-
-
-
 
 NTSTATUS
 DriverEntry(IN PVOID Context1,
@@ -57,6 +32,19 @@ GsDriverEntry(IN PVOID Context1,
 
 
 
+/*++
+* @name DxApiGetVersion
+* @implemented
+*
+* The function DxApiGetVersion return the dsound version, and it always return 4.02
+*
+* @return 
+* Always return 4.02
+*
+* @remarks.
+* none
+*
+*--*/
 ULONG
 DxApiGetVersion()
 {
@@ -65,11 +53,49 @@ DxApiGetVersion()
 }
 
 
-/* protype from dxapi.h and ddkmapi.h from ddk, MSDN does not provide protype for this api, only which
- * functions it support, if u search in msdn you found full documations for each function 
- * for each functions. 
- */
 
+/*++
+* @name DxApi
+* @implemented
+*
+* The function DxApi calls to diffent functions, follow functions 
+* are supported
+* DxGetVersionNumber, DxCloseHandle, DxOpenDirectDraw, DxOpenSurface,
+* DxOpenVideoPort, DxGetKernelCaps, DxGetFieldNumber, DxSetFieldNumber,
+* DxSetSkipPattern, DxGetSurfaceState, DxSetSurfaceState, DxLock,
+* DxFlipOverlay, DxFlipVideoPort, DxGetCurrentAutoflip, DxGetPreviousAutoflip,
+* DxRegisterEvent, DxUnregisterEvent, DxGetPolarity, DxOpenVpCatureDevice,
+* DxAddVpCaptureBuffer, DxFlushVpCaptureBuffs 
+*
+* See ddkmapi.h as well
+
+*
+* @param ULONG dwFunctionNum
+* The function id we want call on in the dxapi.sys see ddkmapi.h for the id
+*
+* @param PVOID lpvInBuffer
+* Our input buffer to the functions we call to, This param can be NULL
+*
+* @param ULONG cbInBuffer
+* Our size in bytes of the input buffer, rember wrong size will result in the function
+* does not being call.
+*
+* @param PVOID lpvOutBuffer
+* Our Output buffer, there the function fill in the info, this param can not
+* be null. if it null the functions we trying call on will not be call
+*
+* @param ULONG cbOutBuffer
+* Our size in bytes of the output buffer, rember wrong size will result in the function
+* does not being call.
+*
+* @return 
+* Return Always 0. 
+*
+* @remarks.
+* before call to any of this functions, do not forget set lpvOutBuffer->ddRVal = DDERR_GEN*,
+* if that member exists in the outbuffer ;
+*
+*--*/
 DWORD
 DxApi(ULONG dwFunctionNum,
       PVOID lpvInBuffer,
@@ -92,14 +118,28 @@ DxApi(ULONG dwFunctionNum,
     }
 
     gDxApiEntryPoint[dwFunctionNum].pfn(lpvInBuffer, lpvOutBuffer);
-
     return 0;
 }
 
+/*++
+* @name DxGetVersionNumber
+* @implemented
+*
+* The function DxGetVersionNumber return dxapi interface version, that is 1.0
+*
+* @return 
+* Always return 1.0
+*
+* @remarks.
+* none
+*
+*--*/
 VOID
-DxGetVersionNumber(PVOID lpvInBuffer, PVOID lpvOutBuffer)
+DxGetVersionNumber(PVOID lpvInBuffer, LPDDGETVERSIONNUMBER lpvOutBuffer)
 {
-    /* FIXME Unimplement */
+    lpvOutBuffer->ddRVal = DD_OK;
+    lpvOutBuffer->dwMajorVersion = 1;
+    lpvOutBuffer->dwMinorVersion = 0;
 }
 
 VOID

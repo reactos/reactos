@@ -24,7 +24,7 @@
 #include <ddk/ddkmapi.h>
 
 /* Prototypes */
-VOID DxGetVersionNumber(PVOID lpvInBuffer, PVOID lpvOutBuffer);
+VOID DxGetVersionNumber(PVOID lpvInBuffer, LPDDGETVERSIONNUMBER lpvOutBuffer);
 VOID DxCloseHandle(PVOID lpvInBuffer, PVOID lpvOutBuffer);
 VOID DxOpenDirectDraw(PVOID lpvInBuffer, PVOID lpvOutBuffer);
 VOID DxOpenSurface(PVOID lpvInBuffer, PVOID lpvOutBuffer);
