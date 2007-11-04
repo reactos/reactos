@@ -181,6 +181,8 @@ KiSaveProcessorControlState(OUT PKPROCESSOR_STATE ProcessorState);
 
 #define KeArchFnInit() KePPCFnInit()
 #define KeArchHaltProcessor() KePPCHaltProcessor()
+#define KeArchInitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context) \
+  KePPCInitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context)
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_POWERPC_KE_H */
 

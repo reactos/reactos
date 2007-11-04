@@ -754,76 +754,13 @@ ULONG
 NTAPI
 KdpServiceDispatcher(ULONG Service, PCHAR Buffer, ULONG Length);
 
-__asm__(".globl KiSystemService\n\t"
-	".globl KiSystemService1\n\t"
-	".globl kiss_proceed\n\t"
-	".globl kiss_end\n"
-	"KiSystemService1:\n\t"
-	"stw 2,4(1)\n\t" // r1
-	"stw 3,12(1)\n\t"
-	"stw 4,16(1)\n\t"
-	"stw 5,20(1)\n\t"
-	"stw 6,24(1)\n\t"
-	"stw 7,28(1)\n\t"
-	"stw 8,32(1)\n\t"
-	"stw 9,36(1)\n\t"
-	"stw 10,40(1)\n\t"
-	"stw 11,44(1)\n\t"
-	"stw 12,48(1)\n\t"
-	"stw 13,52(1)\n\t"
-	"stw 14,56(1)\n\t"
-	"stw 15,60(1)\n\t"
-	"stw 16,64(1)\n\t"
-	"stw 17,68(1)\n\t"
-	"stw 18,72(1)\n\t"
-	"stw 19,76(1)\n\t"
-	"stw 20,80(1)\n\t"
-	"stw 21,84(1)\n\t"
-	"stw 22,88(1)\n\t"
-	"stw 23,92(1)\n\t"
-	"stw 24,96(1)\n\t"
-	"stw 25,100(1)\n\t"
-	"stw 26,104(1)\n\t"
-	"stw 27,108(1)\n\t"
-	"stw 28,112(1)\n\t"
-	"stw 29,116(1)\n\t"
-	"stw 30,120(1)\n\t"
-	"stw 31,124(1)\n\t"
-	/* This save is important */
-	"stw 0,140(1)\n\t" // srr0
-	"mflr 0\n\t"
-	"stw 0,128(1)\n\t"
-	"mfctr 0\n\t"
-	"stw 0,136(1)\n\t"
-	"mfsrr1 0\n\t"
-	"stw 0,144(1)\n\t"
-	"mfdsisr 0\n\t"
-	"stw 0,148(1)\n\t"
-	"mfdar 0\n\t"
-	"stw 0,152(1)\n\t"
-	"lis 3,KiSystemService@ha\n\t"
-	"addi 3,3,KiSystemService@l\n\t"
-	"mtctr 3\n\t"
-	"mr 3,1\n\t"
-	"subi 1,1,0x100\n\t"
-	"bctrl\n\t"
-	"addi 1,1,0x100\n\t"
-	/* Return from kernel */
-	"lwz 3,12(1)\n\t" /* Result */
-	"lwz 0,128(1)\n\t"
-	"mtlr 0\n\t"
-	"lwz 0,140(1)\n\t"
-	"mtsrr0 0\n\t"
-	"lwz 0,144(1)\n\t"
-	"mtsrr1 0\n\t"
-	"lwz 1,4(1)\n"    /* Stack */
-	"rfi\n");
-
 VOID
 NTAPI
 KiSystemService(ppc_trap_frame_t *trap_frame)
 {
     int i;
+    PKSYSTEM_ROUTINE SystemRoutine;
+
     switch(trap_frame->gpr[8])
     {
     case 0x10000: /* DebugService */
@@ -835,6 +772,12 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
 	     (PCHAR)trap_frame->gpr[4],
 	     trap_frame->gpr[5]);
 	break;
+    case 0xf0000: /* Thread startup */
+        /* XXX how to use UserThread (gpr[6]) */
+        SystemRoutine = (PKSYSTEM_ROUTINE)trap_frame->gpr[3];
+        SystemRoutine((PKSTART_ROUTINE)trap_frame->gpr[4], 
+                      (PVOID)trap_frame->gpr[5]);
+        break;
     }
 }
 

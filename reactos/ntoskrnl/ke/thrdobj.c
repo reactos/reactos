@@ -816,17 +816,16 @@ KeInitThread(IN OUT PKTHREAD Thread,
                              KERNEL_STACK_SIZE);
     MiSyncThreadProcessViews(Process, Thread, sizeof(ETHREAD));
 
-#if defined(_M_IX86)
     /* Enter SEH to avoid crashes due to user mode */
     Status = STATUS_SUCCESS;
     _SEH_TRY
     {
         /* Initalize the Thread Context */
-        Ke386InitThreadWithContext(Thread,
-                                   SystemRoutine,
-                                   StartRoutine,
-                                   StartContext,
-                                   Context);
+        KeArchInitThreadWithContext(Thread,
+                                    SystemRoutine,
+                                    StartRoutine,
+                                    StartContext,
+                                    Context);
     }
     _SEH_HANDLE
     {
@@ -842,9 +841,6 @@ KeInitThread(IN OUT PKTHREAD Thread,
         }
     }
     _SEH_END;
-#else
-    Status = STATUS_SUCCESS;
-#endif
 
     /* Set the Thread to initalized */
     Thread->State = Initialized;

@@ -52,7 +52,8 @@ __asm__(".text\n\t"
 	"syscall_end:\n\t"
 	".space 4");
 
-extern int syscall_start[], syscall_end;
+extern int syscall_start[], syscall_end, KiDecrementerTrapHandler[],
+    KiDecrementerTrapHandlerEnd;
 
 VOID
 NTAPI
@@ -64,6 +65,28 @@ KiSetupSyscallHandler()
 	source < &syscall_end;
 	source++, handler_target += sizeof(int))
 	SetPhys(handler_target, *source);
+}
+
+VOID
+NTAPI
+KiSetupDecrementerTrap()
+{
+    paddr_t handler_target;
+    int *source;
+
+    /* Turn off EE bit while redefining dec trap */
+    _disable();
+
+    for(source = KiDecrementerTrapHandler, handler_target = 0x900;
+        source != &KiDecrementerTrapHandlerEnd;
+        source++, handler_target += sizeof(int))
+        SetPhys(handler_target, *source);
+
+    /* Enable interrupts! */
+    _enable();
+
+    /* Kick decmrenter! */
+    __asm__("mtdec %0" : : "r" (0));
 }
 
 VOID
@@ -106,6 +129,12 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     ULONG FeatureBits;
     LARGE_INTEGER PageDirectory;
     PVOID DpcStack;
+    boot_infos_t *BootInfo = ((boot_infos_t *)LoaderBlock->ArchExtra);
+
+#ifdef _M_PPC
+    /* Set the machine type in LoaderBlock for HAL */
+    KeLoaderBlock->u.PowerPC.MachineType = BootInfo->machineType;
+#endif
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -209,16 +238,15 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Free Initial Memory */
     // MiFreeInitMemory();
 
+    /* Setup decrementer exception */
+    KiSetupDecrementerTrap();
+
     while (1)
     {
         LARGE_INTEGER Timeout;
         Timeout.QuadPart = 0x7fffffffffffffffLL;
         KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
     }
-
-    /* Bug Check and loop forever if anything failed */
-    KEBUGCHECK(0);
-    for(;;);
 }
 
 extern int KiPageFaultHandler(int trap, ppc_trap_frame_t *frame);

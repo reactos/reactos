@@ -133,6 +133,8 @@ Ke386InitThreadWithContext(PKTHREAD Thread,
                            PKSTART_ROUTINE StartRoutine,
                            PVOID StartContext,
                            PCONTEXT Context);
+#define KeArchInitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context) \
+  Ke386InitThreadWithContext(Thread,SystemRoutine,StartRoutine,StartContext,Context)
 
 #ifdef _NTOSKRNL_ /* FIXME: Move flags above to NDK instead of here */
 VOID

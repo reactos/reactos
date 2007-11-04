@@ -64,6 +64,9 @@
 				<file>ppc_irq.c</file>
 				<file>stubs.c</file>
 				<file>systimer.c</file>
+				<file>thrdini.c</file>
+                                <file>ctxswitch.c</file>
+                                <file>ctxhelp.S</file>
 			</directory>
 		</if>
 		<file>apc.c</file>

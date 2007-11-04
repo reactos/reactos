@@ -199,16 +199,6 @@ NtRaiseException
     return STATUS_UNSUCCESSFUL;
 }
 
-VOID
-STDCALL
-KiThreadStartup(PKSYSTEM_ROUTINE SystemRoutine,
-                PKSTART_ROUTINE StartRoutine,
-                PVOID StartContext,
-                BOOLEAN UserThread,
-                KTRAP_FRAME TrapFrame)
-{
-}
-
 void _alldiv() { }
 
 void _alldvrm() { }
