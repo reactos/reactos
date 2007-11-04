@@ -20,41 +20,28 @@
 
 .text
 
-__readfsdword:
-        add 7,13,3
-        lwz 3,0(7)
-        blr
-
-__writefsdword:
-        add 7,13,3
-        stw 3,0(7)
-        blr
-        
 .globl _SEHCleanHandlerEnvironment
 _SEHCleanHandlerEnvironment:
         blr
 
 .globl _SEHCurrentRegistration
 _SEHCurrentRegistration:
-        xor 3,0,0
-        bl __readfsdword
+        lwz 3,0(13)
         blr
 
+        // R3:  Frame to store in
 .globl _SEHRegisterFrame
 _SEHRegisterFrame:
-        xor 3,0,0
-        bl __readfsdword        # Get [fs:0]
-        lwz 4,0(1)              # Get next stack frame into r4
-        stw 3,0(1)              # put [fs:0] into old stack pos
-        xor 3,0,0
-        bl __writefsdword       # put old stack frame into [fs:0] completing
-        blr                     # the chain and return
+        lwz 4,0(13)
+        stw 3,0(13)
+        stw 4,0(3)
+        blr
 
 .globl _SEHUnregisterFrame
 _SEHUnregisterFrame:
-        xor 3,0,0
-        bl __readfsdword        # Get old next frame ptr
-        stw 3,0(1)              # Reset old stack frame
+        lwz 3,0(13)
+        lwz 3,0(3)
+        stw 3,0(13)
         blr
 
 .globl _SEHGlobalUnwind
