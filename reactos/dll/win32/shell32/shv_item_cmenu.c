@@ -80,7 +80,7 @@ typedef struct
 } ItemCmImpl;
 
 UINT
-SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj);
+SH_EnumerateDynamicContextHandlerForKey(LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, DWORD bGroupPolicyActive);
 WCHAR *build_paths_list(LPCWSTR wszBasePath, int cidl, LPCITEMIDLIST *pidls);
 WCHAR *strdupW(LPWSTR str);
 static const IContextMenu2Vtbl cmvt;
@@ -310,9 +310,22 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     UINT idCmdFirst = 0x6000;
     UINT idCmdLast = 0xFFF0;
     PDynamicShellEntry curEntry;
+    DWORD bGroupPolicyActive = FALSE;
+    DWORD dwSize;
     static WCHAR szAny[] = { '*',0};
 
-    SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj);
+    dwSize = sizeof(DWORD);
+    RegGetValueW(HKEY_CURRENT_USER, 
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\Explorer",
+                L"EnforceShellExtensionSecurity",
+                RRF_RT_DWORD,
+                NULL,
+                &bGroupPolicyActive,
+                &dwSize);
+    
+
+
+    SH_EnumerateDynamicContextHandlerForKey(szAny, This, pDataObj, bGroupPolicyActive);
 
     for (i = 0; i < This->cidl; i++)
     {
@@ -326,7 +339,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             if (hr == S_OK)
             {
                 memcpy(&buffer[6], pwszCLSID, 38 * sizeof(WCHAR));
-                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, bGroupPolicyActive);
             }
         }
 
@@ -335,7 +348,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             ebuf[0] = L'.';
             buffer[0] = L'\0';
             if (MultiByteToWideChar(CP_ACP, 0, ebuf, -1, buffer, 111))
-                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj);
+                SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, bGroupPolicyActive);
         }
     }
     TRACE("-- done loading\n");
@@ -1159,7 +1172,7 @@ SH_LoadDynamicContextMenuHandler(HKEY hKey, const CLSID * szClass, ItemCmImpl *T
 }
 
 UINT
-SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj)
+SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *This, IDataObject * pDataObj, DWORD bGroupPolicyActive)
 {
    HKEY hKey;
    WCHAR szKey[MAX_PATH] = {0};
@@ -1191,18 +1204,53 @@ SH_EnumerateDynamicContextHandlerForKey(const LPWSTR szFileClass, ItemCmImpl *Th
       if (res == ERROR_SUCCESS)
       {
          hResult = CLSIDFromString(szName, &clsid);
-         if (hResult != NOERROR)
+         if (hResult != S_OK)
          {
              dwName = MAX_PATH;
              if (RegGetValueW(hKey, szName, NULL, RRF_RT_REG_SZ, NULL, szKey, &dwName) == ERROR_SUCCESS)
              {
-                 hResult = CLSIDFromString(szKey, &clsid);
+                if (CLSIDFromString(szKey, &clsid) == S_OK)
+                {
+                    if (bGroupPolicyActive)
+                    {
+                        if (RegGetValueW(HKEY_LOCAL_MACHINE,
+                                         L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                                         szKey,
+                                         RRF_RT_REG_SZ,
+                                         NULL,
+                                         NULL,
+                                         &dwName) == ERROR_SUCCESS)
+                        {
+                            SH_LoadDynamicContextMenuHandler(hKey, &clsid, This, pDataObj);
+                        }
+
+                    }
+                    else
+                    {
+                        SH_LoadDynamicContextMenuHandler(hKey, &clsid, This, pDataObj);
+                    }
+                }
              }
          }
-         TRACE("hResult %x szKey %s name %s\n",hResult, debugstr_w(szKey), debugstr_w(szName));
          if (hResult == S_OK)
          {
-            SH_LoadDynamicContextMenuHandler(hKey, &clsid, This, pDataObj);
+            if (bGroupPolicyActive)
+            {
+                if (RegGetValueW(HKEY_LOCAL_MACHINE,
+                                 L"Software\\Microsoft\\Windows\\CurrentVersion\\Shell Extensions\\Approved",
+                                 szKey,
+                                 RRF_RT_REG_SZ,
+                                 NULL,
+                                NULL,
+                                &dwName) == ERROR_SUCCESS)
+                {
+                    SH_LoadDynamicContextMenuHandler(hKey, &clsid, This, pDataObj);
+                }
+            }
+            else
+            {
+                SH_LoadDynamicContextMenuHandler(hKey, &clsid, This, pDataObj);
+            }
          }
       }
       dwIndex++;
