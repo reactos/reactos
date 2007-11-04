@@ -13,5 +13,6 @@ IDI_COLORS  ICON   "res/colors.ico"
 IDB_HEADER  BITMAP "res/header.bmp"
 IDB_SPECT   BITMAP "res/spectrum.bmp"
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/ru-RU.rc"
