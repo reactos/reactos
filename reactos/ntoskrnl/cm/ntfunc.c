@@ -275,7 +275,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     }
 
     while (RemainingPath.Length && 
-           RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == '\\')
+           RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == L'\\')
     {
         RemainingPath.Length -= sizeof(WCHAR);
         RemainingPath.MaximumLength -= sizeof(WCHAR);
