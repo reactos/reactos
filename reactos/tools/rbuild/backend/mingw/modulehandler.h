@@ -137,12 +137,12 @@ private:
 	void GenerateMacro ( const char* assignmentOperation,
 	                     const std::string& macro,
 	                     const IfableData& data,
-	                     std::set<std::string>* used_defs,
+	                     std::set<const Define *>* used_defs,
 	                     bool generatingCompilerMacro );
 	void GenerateMacros ( const char* op,
 	                      const IfableData& data,
 	                      const std::vector<LinkerFlag*>* linkerFlags,
-	                      std::set<std::string>& used_defs );
+	                      std::set<const Define *>& used_defs );
 	void GenerateSourceMacros ( const char* assignmentOperation,
 	                            const IfableData& data );
 	void GenerateObjectMacros ( const char* assignmentOperation,

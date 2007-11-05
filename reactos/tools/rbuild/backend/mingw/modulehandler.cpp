@@ -644,11 +644,8 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 			parameters += "$(QT)";
 		parameters += "-D";
 		parameters += define.name;
-		if (define.value.length () > 0)
-		{
-			parameters += "=";
-			parameters += define.value;
-		}
+		parameters += "=";
+		parameters += define.value;
 		if (define.name.find('(') != string::npos)
 			parameters += "$(QT)";
 		used_defs.insert(used_defs.begin(),define.name);
@@ -766,7 +763,7 @@ MingwModuleHandler::GenerateMacro (
 	const char* assignmentOperation,
 	const string& macro,
 	const IfableData& data,
-	set<string> *used_defs,
+	set<const Define *> *used_defs,
 	bool generatingCompilerMacro )
 {
 	size_t i;
@@ -814,32 +811,42 @@ MingwModuleHandler::GenerateMacro (
 	for ( i = 0; i < data.defines.size(); i++ )
 	{
 		const Define& define = *data.defines[i];
-		if ( used_defs && used_defs->find ( define.name ) != used_defs->end () )
+		if ( used_defs )
 		{
-			if ( !define.overridable )
+			set<const Define *>::const_iterator last_define;
+			for (last_define = used_defs->begin ();
+			     last_define != used_defs->end ();
+			     last_define++)
 			{
-				throw InvalidOperationException ( __FILE__,
-				                                  __LINE__,
-				                                  "Invalid override of define '%s' in module '%s'",
-				                                  define.name.c_str (),
-				                                  module.name.c_str () );
+				if ( (*last_define)->name != define.name )
+					continue;
+				if ( !define.overridable )
+				{
+					throw InvalidOperationException ( define.node->location.c_str (),
+					                                  0,
+					                                  "Invalid override of define '%s', already defined at %s",
+					                                  define.name.c_str (),
+					                                  (*last_define)->node->location.c_str () );
+				}
+				if ( backend->configuration.Verbose )
+					printf("%s: Overriding '%s' already defined at %s\n",
+						(*last_define)->node->location.c_str (), define.name.c_str (),
+						define.node->location.c_str () );
+				break;
 			}
-			if ( backend->configuration.Verbose )
-				printf("Define '%s' overridden in module '%s'\n",
-					define.name.c_str (), module.name.c_str () );
-			continue;
+			if ( last_define != used_defs->end () )
+				continue;
 		}
 		fprintf (
 			fMakefile,
 			" -D%s",
 			define.name.c_str() );
-		if ( define.value.size() )
-			fprintf (
-				fMakefile,
-				"=%s",
-				define.value.c_str() );
+		fprintf (
+			fMakefile,
+			"=%s",
+			define.value.c_str() );
 		if ( used_defs )
-			used_defs->insert(used_defs->begin(), define.name);
+			used_defs->insert( used_defs->begin (), &define );
 	}
 	if ( generateAssignment )
 	{
@@ -852,7 +859,7 @@ MingwModuleHandler::GenerateMacros (
 	const char* assignmentOperation,
 	const IfableData& data,
 	const vector<LinkerFlag*>* linkerFlags,
-	set<string>& used_defs )
+	set<const Define *>& used_defs )
 {
 	size_t i;
 
@@ -2050,7 +2057,7 @@ MingwModuleHandler::GetRpcHeaderDependencies (
 void
 MingwModuleHandler::GenerateOtherMacros ()
 {
-	set<string> used_defs;
+	set<const Define *> used_defs;
 
 	cflagsMacro = ssprintf ("%s_CFLAGS", module.name.c_str ());
 	nasmflagsMacro = ssprintf ("%s_NASMFLAGS", module.name.c_str ());
