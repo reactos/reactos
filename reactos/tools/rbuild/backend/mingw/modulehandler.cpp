@@ -644,8 +644,11 @@ MingwModuleHandler::GenerateGccDefineParametersFromVector (
 			parameters += "$(QT)";
 		parameters += "-D";
 		parameters += define.name;
-		parameters += "=";
-		parameters += define.value;
+		if (define.value.length () > 0)
+		{
+			parameters += "=";
+			parameters += define.value;
+		}
 		if (define.name.find('(') != string::npos)
 			parameters += "$(QT)";
 		used_defs.insert(used_defs.begin(),define.name);
@@ -841,10 +844,11 @@ MingwModuleHandler::GenerateMacro (
 			fMakefile,
 			" -D%s",
 			define.name.c_str() );
-		fprintf (
-			fMakefile,
-			"=%s",
-			define.value.c_str() );
+		if (define.value.length () > 0)
+			fprintf (
+				fMakefile,
+				"=%s",
+				define.value.c_str() );
 		if ( used_defs )
 			used_defs->insert( used_defs->begin (), &define );
 	}
