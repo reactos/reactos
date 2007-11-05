@@ -12,7 +12,7 @@ BEGIN
     LTEXT           "Enter the server address",IDC_STATIC,47,24,81,8
     LTEXT           "Server:",IDC_STATIC,47,41,25,8
     LTEXT           "User name:",IDC_STATIC,47,58,38,8
-    COMBOBOX        IDC_SERVERCOMBO,79,39,141,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Save",IDC_SAVE,67,139,50,14
     PUSHBUTTON      "SaveAs...",IDC_SAVEAS,123,139,50,14
     PUSHBUTTON      "Open...",IDC_OPEN,177,139,50,14
@@ -59,4 +59,5 @@ BEGIN
     IDS_HIGHCOLOR24         "True Color (24 bit)"
     IDS_PIXEL               "%lux%lu Pixels"
     IDS_FULLSCREEN          "Full Screen"
+    IDS_BROWSESERVER        "<Browse for more...>"
 END

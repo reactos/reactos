@@ -32,6 +32,7 @@
 #define IDS_TAB_GENERAL                 3001
 #define IDS_PIXEL                       3006
 #define IDS_FULLSCREEN                  3007
+#define IDS_BROWSESERVER                3008
 
 #define IDS_256COLORS                   4000
 #define IDS_HIGHCOLOR15                 4001

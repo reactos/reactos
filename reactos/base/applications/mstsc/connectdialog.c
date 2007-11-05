@@ -24,6 +24,8 @@
 #include <tchar.h>
 #include "resource.h"
 
+#define MAX_KEY_NAME 255
+
 /* As slider control can't contain user data, we have to keep an
  * array of RESOLUTION_INFO to have our own associated data.
  */
@@ -96,6 +98,84 @@ void OnTabWndSelChange(PINFO pInfo)
     }
 }
 
+static VOID
+FillServerAddesssCombo(PINFO pInfo)
+{
+    HKEY hKey;
+    TCHAR KeyName[] = _T("Software\\Microsoft\\Terminal Server Client\\Default");
+    TCHAR Name[MAX_KEY_NAME];
+    LONG ret = ERROR_SUCCESS;
+    DWORD size;
+    INT i = 0;
+
+    if (RegOpenKeyEx(HKEY_CURRENT_USER,
+                     KeyName,
+                     0,
+                     KEY_READ,
+                     &hKey) == ERROR_SUCCESS)
+    {
+        while (ret == ERROR_SUCCESS)
+        {
+            size = MAX_KEY_NAME;
+            ret = RegEnumValue(hKey,
+                               i,
+                               Name,
+                               &size,
+                               NULL,
+                               NULL,
+                               NULL,
+                               NULL);
+            if (ret == ERROR_SUCCESS)
+            {
+                size = MAX_KEY_NAME;
+                if (RegQueryValueEx(hKey,
+                                    Name,
+                                    0,
+                                    NULL,
+                                    NULL,
+                                    &size) == ERROR_SUCCESS)
+                {
+                    LPTSTR lpAddress = HeapAlloc(GetProcessHeap(),
+                                                 0,
+                                                 size);
+                    if (lpAddress)
+                    {
+                        if (RegQueryValueEx(hKey,
+                                            Name,
+                                            0,
+                                            NULL,
+                                            lpAddress,
+                                            &size) == ERROR_SUCCESS)
+                        {
+                            SendDlgItemMessage(pInfo->hGeneralPage,
+                                               IDC_SERVERCOMBO,
+                                               CB_ADDSTRING,
+                                               0,
+                                               lpAddress);
+                        }
+
+                        HeapFree(GetProcessHeap(),
+                                 0,
+                                 lpAddress);
+                    }
+                }
+            }
+
+            i++;
+        }
+    }
+
+    if (LoadString(hInst,
+                   IDS_BROWSESERVER,
+                   Name,
+                   sizeof(Name) / sizeof(TCHAR)))
+    {
+        SendDlgItemMessage(pInfo->hGeneralPage, IDC_SERVERCOMBO, CB_ADDSTRING, 0, Name);
+    }
+}
+
+
+
 
 static VOID
 GeneralOnInit(PINFO pInfo)
@@ -109,11 +189,11 @@ GeneralOnInit(PINFO pInfo)
                  SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
 
     pInfo->hLogon = LoadImage(hInst,
-                       MAKEINTRESOURCE(IDI_LOGON),
-                       IMAGE_ICON,
-                       32,
-                       32,
-                       LR_DEFAULTCOLOR);
+                              MAKEINTRESOURCE(IDI_LOGON),
+                              IMAGE_ICON,
+                              32,
+                              32,
+                              LR_DEFAULTCOLOR);
     if (pInfo->hLogon)
     {
         SendDlgItemMessage(pInfo->hGeneralPage,
@@ -138,9 +218,7 @@ GeneralOnInit(PINFO pInfo)
                            0);
     }
 
-    SetDlgItemText(pInfo->hGeneralPage,
-                   IDC_SERVERCOMBO,
-                   g_servername);
+    FillServerAddesssCombo(pInfo);
 }
 
 
