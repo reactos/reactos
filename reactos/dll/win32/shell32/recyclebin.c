@@ -722,19 +722,36 @@ RecycleBin_IContextMenu_QueryContextMenu( IContextMenu* iface, HMENU hmenu, UINT
 static HRESULT WINAPI
 RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
 {
+    HRESULT hr;
+    LPSHELLBROWSER	lpSB;
+    LPSHELLVIEW lpSV = NULL;
+
     RecycleBin * This = impl_from_IContextMenu(iface);
 
     TRACE("%p %p verb %p\n", This, lpici, lpici->lpVerb);
 
-    if ( LOWORD(lpici->lpVerb) == MAKEINTRESOURCEA(This->iIdEmpty))
+    if ( LOWORD(lpici->lpVerb) == This->iIdEmpty)
     {
-        // FIXME
-        // path & flags
-        return SHEmptyRecycleBinW(lpici->hwnd, L"C:\\", 0);
+       // FIXME
+       // path & flags
+       hr = SHEmptyRecycleBinW(lpici->hwnd, L"C:\\", 0);
+       TRACE("result %x\n", hr);
+       if (hr != S_OK)
+       {
+          return hr;
+       }
+
+       if((lpSB = (LPSHELLBROWSER)SendMessageA(lpici->hwnd, CWM_GETISHELLBROWSER,0,0)))
+       {
+          if(SUCCEEDED(IShellBrowser_QueryActiveShellView(lpSB, &lpSV)))
+          {
+             IShellView_Refresh(lpSV);
+          }
+       }
     }
 
 
-    if ( LOWORD(lpici->lpVerb) == MAKEINTRESOURCEA(This->iIdProperties))
+    if ( LOWORD(lpici->lpVerb) == This->iIdProperties)
     {
        WCHAR szDrive = 'C';
        SH_ShowRecycleBinProperties(szDrive);
