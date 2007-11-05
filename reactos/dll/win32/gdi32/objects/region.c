@@ -99,10 +99,9 @@ DeleteRegion( HRGN hRgn )
                                                       pTeb->GdiTebBatch.Offset);
            pgO->gbHdr.Cmd = GdiBCDelRgn;
            pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
-
            pgO->hgdiobj = (HGDIOBJ)hRgn;
 
-           pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
+           pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
            pTeb->GdiBatchCount++;
            if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
            return TRUE;

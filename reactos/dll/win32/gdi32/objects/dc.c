@@ -346,7 +346,7 @@ DeleteObject(HGDIOBJ hObject)
              pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
              pgO->hgdiobj = hObject;
 
-             pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
+             pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
              pTeb->GdiBatchCount++;
              if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
              return TRUE;
