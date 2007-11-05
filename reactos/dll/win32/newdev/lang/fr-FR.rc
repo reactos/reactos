@@ -11,7 +11,7 @@ BEGIN
                     IDC_STATIC,115,21,195,16
     LTEXT           "Cliquer sur Suivant pour continuer.",IDC_STATIC,115,169,195,17
     LTEXT           "MATERIEL INCONNU",IDC_DEVICE,129,36,164,11
-    LTEXT           "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !",IDC_STATIC,105,59,210,16
+    LTEXT           "ATTENTION ! L'INSTALLATION D'UN PILOTE PEUT ENTRAINER LE BLOCAGE DE VOTRE ORDINATEUR OU LE RENDRE INDEMARRABLE !",IDC_STATIC,105,59,210,25
     CONTROL         "Installer le pilote automatiquement",IDC_RADIO_AUTO,"Button",
                     BS_AUTORADIOBUTTON,115,112,178,13
     CONTROL         "Installer le pilote depuis un endroit spécifié",IDC_RADIO_MANUAL,
@@ -42,7 +42,7 @@ BEGIN
     LTEXT           "L'installation a échoué",IDC_FINISHTITLE,120,8,195,24
     LTEXT           "Le matériel n'a pu etre installé en raison d'une erreur inattendue.",
                     IDC_STATIC,120,40,195,19
-    LTEXT           "Matériel inconnu",IDC_DEVICE,134,55,164,11
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,134,55,164,11
 END
 
 IDD_CHSOURCE DIALOGEX DISCARDABLE  0, 0, 317, 143
@@ -90,7 +90,7 @@ BEGIN
                     IDC_STATIC,120,32,195,19
     LTEXT           "Cliquer sur Terminer pour fermer l'assistant.",IDC_STATIC,120,174,
                     179,11
-    LTEXT           "UNKNOWN DEVICE",IDC_DEVICE,148,53,147,12
+    LTEXT           "MATERIEL INCONNU",IDC_DEVICE,148,53,147,12
 END
 
 IDD_FINISHPAGE DIALOGEX DISCARDABLE  0, 0, 317, 193
