@@ -165,7 +165,7 @@ STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе Диспетчер задач"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL         "Диспетчер задач v1.0\nCopyright (C) 1999 - 2001\nот Brian Palmer (brianp@reactos.org)",
+    CONTROL         "Диспетчер задач v1.0\nАвторские права (C) 1999 - 2001\nБриан Палмер (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -367,7 +367,7 @@ BEGIN
     CONTROL         "PID (иденти&ф. процесса)",IDC_PID,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,7,39,95,10
     CONTROL         "&Загрузка ЦП",IDC_CPUUSAGE,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,50,53,10
+                    WS_TABSTOP,7,50,55,10
     CONTROL         "&Время ЦП",IDC_CPUTIME,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,61,48,10
     CONTROL         "&Память - использование",IDC_MEMORYUSAGE,"Button",BS_AUTOCHECKBOX |
@@ -379,7 +379,7 @@ BEGIN
     CONTROL         "&Ошибок страницы",IDC_PAGEFAULTS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,105,90,10
     CONTROL         "Об&ъекты USER",IDC_USEROBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,116,62,10
+                    WS_TABSTOP,7,116,65,10
     CONTROL         "Число чтений",IDC_IOREADS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,7,127,60,10
     CONTROL         "Прочитано байт",IDC_IOREADBYTES,"Button",
@@ -401,9 +401,9 @@ BEGIN
     CONTROL         "Счетчик &дискрипторов",IDC_HANDLECOUNT,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,83,90,10
     CONTROL         "С&четчик потоков",IDC_THREADCOUNT,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,94,67,10
+                    WS_TABSTOP,107,94,69,10
     CONTROL         "Объ&екты GDI",IDC_GDIOBJECTS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,107,105,55,10
+                    WS_TABSTOP,107,105,58,10
     CONTROL         "Число записей",IDC_IOWRITES,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,107,116,65,10
     CONTROL         "Записано байт",IDC_IOWRITEBYTES,"Button",
@@ -611,7 +611,7 @@ BEGIN
     IDS_TAB_PROCESSES             "Процессы"
     IDS_TAB_PERFORMANCE           "Производительность"
     IDS_TAB_TASK                  "Задача"
-    IDS_TAB_STATUS                "Статут"
+    IDS_TAB_STATUS                "Статус"
     IDS_TAB_IMAGENAME             "Имя образа"
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Имя пользователя"
@@ -682,5 +682,6 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
 
