@@ -113,6 +113,10 @@ NewTextMetricExW2A(
 );
 
 BOOL
+FASTCALL
+DeleteRegion( HRGN );
+
+BOOL
 GdiIsHandleValid(HGDIOBJ hGdiObj);
 
 BOOL

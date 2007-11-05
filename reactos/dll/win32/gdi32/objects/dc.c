@@ -284,7 +284,7 @@ STDCALL
 DeleteObject(HGDIOBJ hObject)
 {
   UINT Type = 0;
-  
+    
   /* From Wine: DeleteObject does not SetLastError() on a null object */
   if(!hObject) return FALSE;
 
@@ -308,6 +308,8 @@ DeleteObject(HGDIOBJ hObject)
        return DeleteDC((HDC) hObject);
      case GDI_OBJECT_TYPE_COLORSPACE:
        return NtGdiDeleteColorSpace((HCOLORSPACE) hObject);
+     case GDI_OBJECT_TYPE_REGION:
+       return DeleteRegion((HRGN) hObject);
 #if 0
      case GDI_OBJECT_TYPE_METADC:
        return MFDRV_DeleteObject( hObject );
@@ -318,12 +320,42 @@ DeleteObject(HGDIOBJ hObject)
        return EMFDRV_DeleteObject( hObject );
      }
 #endif
-     case GDI_OBJECT_TYPE_REGION:
+     case GDI_OBJECT_TYPE_FONT:
+       break;
+
      case GDI_OBJECT_TYPE_BRUSH:
      case GDI_OBJECT_TYPE_EXTPEN:
      case GDI_OBJECT_TYPE_PEN:
-     case GDI_OBJECT_TYPE_FONT:
+       {
+#if 0
+          PBRUSH_ATTR Brh_Attr;
+          PTEB pTeb;
+
+          if ((!GdiGetHandleUserData(hObject, (PVOID) &Brh_Attr)) ||
+              (Brh_Attr == NULL) ) break;
+
+          pTeb = NtCurrentTeb();
+
+          if (pTeb->Win32ThreadInfo == NULL) break;
+
+          if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE)
+          {
+             PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
+                                                      pTeb->GdiTebBatch.Offset);
+             pgO->gbHdr.Cmd = GdiBCDelObj;
+             pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
+             pgO->hgdiobj = hObject;
+
+             pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
+             pTeb->GdiBatchCount++;
+             if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+             return TRUE;
+          }
+#endif
+       break;
+       }
      case GDI_OBJECT_TYPE_BITMAP:
+     default:
        break;
   }
   return NtGdiDeleteObjectApp(hObject);

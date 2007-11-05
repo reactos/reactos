@@ -42,9 +42,12 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      case GdiBCSelObj:
         break;
      case GdiBCDelObj:
-        break;
      case GdiBCDelRgn:
+     {
+        PGDIBSOBJECT pgO = (PGDIBSOBJECT) pHdr;
+        NtGdiDeleteObject( pgO->hgdiobj );
         break;
+     }
      default:
        DC_UnlockDc(dc);
        return 0;
@@ -62,6 +65,8 @@ VOID
 APIENTRY
 NtGdiFlush(VOID)
 {
+  // Hack! FIXME!
+  NtYieldExecution(); // Force thread to sunset and run the flush.
   UNIMPLEMENTED;
 }
 
@@ -82,7 +87,11 @@ NtGdiFlushUserBatch(VOID)
   if( (GdiBatchCount > 0) && (GdiBatchCount <= GDIBATCHBUFSIZE))
   {
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
-    if (hDC)
+//
+//  If hDC is zero and the buffer fills up with delete objects we need to run
+//  anyway. So, hard code to the system batch limit.
+//
+    if ((hDC) || (GdiBatchCount >= GDI_BATCH_LIMIT))
     {
        PULONG pHdr = &pTeb->GdiTebBatch.Buffer[0];
        // No need to init anything, just go!

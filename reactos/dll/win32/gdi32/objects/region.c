@@ -76,3 +76,40 @@ CreateRectRgnIndirect(
     return CreateRectRgn(prc->left, prc->top, prc->right, prc->bottom);
 
 }
+
+/*
+ * I thought it was okay to have this in DeleteObject but~ Speed. (jt)
+ */
+BOOL
+FASTCALL
+DeleteRegion( HRGN hRgn )
+{
+#if 0
+  PREGION_ATTR Rgn_Attr;
+
+  if ((GdiGetHandleUserData((HGDIOBJ) hRgn, (PVOID) &Rgn_Attr)) &&
+      ( Rgn_Attr != NULL ))
+  {
+     PTEB pTeb = NtCurrentTeb();
+     if (pTeb->Win32ThreadInfo != NULL)
+     {
+        if ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE)
+        {
+           PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
+                                                      pTeb->GdiTebBatch.Offset);
+           pgO->gbHdr.Cmd = GdiBCDelRgn;
+           pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
+
+           pgO->hgdiobj = (HGDIOBJ)hRgn;
+
+           pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
+           pTeb->GdiBatchCount++;
+           if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+           return TRUE;
+        }
+     }
+  }
+#endif
+  return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
+}
+
