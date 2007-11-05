@@ -4,10 +4,10 @@ STRINGTABLE DISCARDABLE
 {
 
 IDS_USAGE, "FIND: Affiche toutes les lignes d'un fichier qui contiennent un morceau de texte.\n\n\
-  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"texte\" [ fichier... ]\n\
     /C  Compte le nombre de lignes qui contiennent le texte\n\
     /I  Insensible à la casse\n\
-    /N  Number the displayed lines, starting at 1\n\
+    /N  Numérote les lignes affichées en commençant à 1\n\
     /V  Affiche les lignes qui ne contiennent pas le texte"
 
 IDS_NO_SUCH_FILE, "FIND: %s : fichier inexistant\n"
