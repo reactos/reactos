@@ -231,6 +231,5 @@ typedef const UNICODE_STRING *PCUNICODE_STRING;
 /* Prevent inclusion of some other headers */
 #define __INTERNAL_DEBUG
 #define RTL_H
-#define _TYPEDEFS64_H
 
 #endif
