@@ -18,18 +18,12 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifdef _WIN32_WCE
-#define MYWINCE
-#endif
-
 #include <winsock2.h> /* winsock2.h first */
 #include <windows.h>
-#ifdef MYWINCE
-#include <aygshell.h> /* aygshell.lib */
-#endif /* MYWINCE */
 #include <winuser.h>
 #include <stdio.h>
 #include "uimain.h"
+#include "resource.h"
 
 extern char g_username[];
 extern char g_hostname[];
@@ -69,9 +63,6 @@ static int g_clip_right = 800;
 static int g_clip_bottom = 600;
 static RECT g_wnd_clip; /* this client area of whats actually visable */
                         /* set from WM_SIZE */
-#ifdef MYWINCE
-static int g_sip_up = 0;
-#endif
 
 /*****************************************************************************/
 static void
@@ -665,79 +656,6 @@ handle_WM_VSCROLL(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
   return 0;
 }
 
-#ifdef MYWINCE
-/*****************************************************************************/
-static LRESULT
-handle_WM_SETTINGCHANGE(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-  SIPINFO si;
-  SHMENUBARINFO mb;
-  int x;
-  int y;
-  int w;
-  int h;
-  int style;
-
-  ZeroMemory(&si, sizeof(SIPINFO));
-  si.cbSize = sizeof(SIPINFO);
-  SHSipInfo(SPI_GETSIPINFO, lParam, &si, 0);
-  x = si.rcVisibleDesktop.left;
-  y = si.rcVisibleDesktop.top;
-  w = si.rcVisibleDesktop.right - x;
-  h = si.rcVisibleDesktop.bottom - y;
-  /* get rid of menu */
-  DestroyWindow(SHFindMenuBar(g_Wnd));
-  if (si.fdwFlags & SIPF_ON)
-  {
-    g_sip_up = 1; /* used for WM_SETFOCUS */
-    ZeroMemory(&mb, sizeof(SHMENUBARINFO));
-    mb.cbSize = sizeof(SHMENUBARINFO);
-    mb.hwndParent = g_Wnd;
-    mb.dwFlags = SHCMBF_EMPTYBAR;
-    SHCreateMenuBar(&mb);
-    MoveWindow(g_Wnd, x, y, w, h, FALSE);
-    SHFullScreen(g_Wnd, SHFS_SHOWTASKBAR | SHFS_SHOWSIPBUTTON |
-                 SHFS_SHOWSTARTICON);
-  }
-  else
-  {
-    g_sip_up = 0;
-    if (g_fullscreen)
-    {
-      MoveWindow(g_Wnd, 0, 0, g_screen_width, g_screen_height, FALSE);
-    }
-    else
-    {
-      MoveWindow(g_Wnd, x, y, w, h, FALSE);
-    }
-    if ((g_fullscreen && g_width <= g_screen_width &&
-         g_height <= g_screen_height) ||
-        (!g_fullscreen && g_width <= w && g_height <= h))
-    {
-      style = GetWindowLong(g_Wnd, GWL_STYLE);
-      if (style & WS_HSCROLL)
-      {
-        style &= ~WS_HSCROLL;
-        style &= ~WS_VSCROLL;
-        SetWindowLong(g_Wnd, GWL_STYLE, style);
-        g_xscroll = 0;
-        g_yscroll = 0;
-      }
-    }
-    if (g_fullscreen)
-    {
-      SHFullScreen(g_Wnd, SHFS_HIDETASKBAR | SHFS_SHOWSIPBUTTON |
-                   SHFS_SHOWSTARTICON);
-    }
-    else
-    {
-      SHFullScreen(g_Wnd, SHFS_SHOWTASKBAR | SHFS_SHOWSIPBUTTON |
-                   SHFS_SHOWSTARTICON);
-    }
-  }
-  return 0;
-}
-#endif /* MYWINCE */
 
 /*****************************************************************************/
 LRESULT CALLBACK
@@ -793,18 +711,8 @@ WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
       return handle_WM_HSCROLL(hWnd, message, wParam, lParam);
     case WM_VSCROLL:
       return handle_WM_VSCROLL(hWnd, message, wParam, lParam);
-#ifdef MYWINCE
-    case WM_SETTINGCHANGE:
-      return handle_WM_SETTINGCHANGE(hWnd, message, wParam, lParam);
-#endif /* MYWINCE */
     case WM_SETFOCUS:
       mi_check_modifier();
-#ifdef MYWINCE
-      if (g_sip_up)
-      {
-        SHSipPreference(hWnd, SIP_UP);
-      }
-#endif
       return DefWindowProc(hWnd, message, wParam, lParam);
     default:
       return DefWindowProc(hWnd, message, wParam, lParam);
@@ -854,6 +762,8 @@ mi_create_window(void)
   str_to_uni(classname, "rdesktop");
   wc.lpszClassName = classname;
   str_to_uni(caption, "ReactOS Remote Desktop");
+  wc.hIcon = LoadIcon(g_Instance,
+                      MAKEINTRESOURCE(IDI_MSTSC));
   /* Register the window class. */
   if (!RegisterClass(&wc))
   {
@@ -863,21 +773,7 @@ mi_create_window(void)
   rc.right = rc.left + UI_MIN(g_width, g_screen_width);
   rc.top = 0;
   rc.bottom = rc.top + UI_MIN(g_height, g_screen_height);
-#ifdef MYWINCE
-  SHInitExtraControls();
-  x = CW_USEDEFAULT;
-  y = CW_USEDEFAULT;
-  w = CW_USEDEFAULT;
-  h = CW_USEDEFAULT;
-  style = WS_VISIBLE;
-  if (g_fullscreen)
-  {
-    x = 0;
-    y = 0;
-    w = g_screen_width;
-    h = g_screen_height;
-  }
-#else /* MYWINCE */
+
   if (g_fullscreen)
   {
     style = WS_POPUP;
@@ -896,7 +792,7 @@ mi_create_window(void)
   y = CW_USEDEFAULT;
   w = rc.right - rc.left;
   h = rc.bottom - rc.top;
-#endif /* MYWINCE */
+
   g_Wnd = CreateWindow(wc.lpszClassName, caption,
                        style, x, y, w, h,
                        (HWND) NULL, (HMENU) NULL, g_Instance,
@@ -915,26 +811,9 @@ mi_create_window(void)
   }
   UpdateWindow(g_Wnd);
 
-#ifdef MYWINCE
-  if (g_fullscreen)
-  {
-    SHFullScreen(g_Wnd, SHFS_HIDETASKBAR | SHFS_SHOWSIPBUTTON |
-                 SHFS_SHOWSTARTICON);
-  }
-  else
-  {
-    SHFullScreen(g_Wnd, SHFS_SHOWTASKBAR | SHFS_SHOWSIPBUTTON |
-                 SHFS_SHOWSTARTICON);
-  }
-#endif /* MYWINCE */
-
-  /* WinCE doesn't have WSAAsyncSelect */
-#ifdef MYWINCE
-  SetTimer(g_Wnd, 1, 1000 / 60, 0); /* 60 per second */
-#else /* MYWINCE */
   WSAAsyncSelect(g_tcp_sck, g_Wnd, WM_APP + 1, FD_READ);
   SetTimer(g_Wnd, 1, 333, 0);
-#endif /* MYWINCE */
+
   return 1;
 }
 
@@ -1151,7 +1030,7 @@ mi_process_a_param(char * param1, int state)
     {
       state = 0;
       g_server_depth = atol(param1);
-      if (g_server_depth != 8 && g_server_depth != 15 && g_server_depth != 16)
+      if (g_server_depth != 8 && g_server_depth != 15 && g_server_depth != 16 && g_server_depth != 24)
       {
         mi_error("invalid server bpp\r\n");
       }
@@ -1207,31 +1086,19 @@ mi_post_param(void)
   }
   else if (g_workarea)
   {
-#ifdef MYWINCE
-    g_xoff = 0;
-    g_yoff = 0;
-    g_width = g_screen_width;
-    g_height = g_screen_height - 26; /* start menu size is 26 */
-#else /* MYWINCE */
     g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
     g_yoff = GetSystemMetrics(SM_CYCAPTION) +
              GetSystemMetrics(SM_CYEDGE) * 2;
     g_width = g_screen_width;
     g_height = g_screen_height;
     g_height = (g_height - g_yoff) - g_xoff - 20; /* todo */
-#endif /* MYWINCE */
     g_width_height_set = 1;
   }
   else
   {
-#ifdef MYWINCE
-    g_xoff = 0;
-    g_yoff = 0;
-#else /* MYWINCE */
     g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
     g_yoff = GetSystemMetrics(SM_CYCAPTION) +
              GetSystemMetrics(SM_CYEDGE) * 2;
-#endif /* MYWINCE */
   }
   g_width = g_width & (~3);
   return 1;
@@ -1260,11 +1127,8 @@ mi_check_config_file(void)
   valueindex = 0;
   vname[vnameindex] = 0;
   value[valueindex] = 0;
-#ifdef MYWINCE
-  str_to_uni(filename, "\\My Documents\\winrdesktop.ini");
-#else /* MYWINCE */
   str_to_uni(filename, ".\\winrdesktop.ini");
-#endif /* MYWINCE */
+
   fd = CreateFile(filename, GENERIC_READ,
                   FILE_SHARE_READ | FILE_SHARE_WRITE,
                   NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -1334,9 +1198,7 @@ mi_process_cl(LPTSTR lpCmdLine)
 {
   char param[256];
   char param1[256];
-#ifndef MYWINCE
   TCHAR l_username[256];
-#endif
   DWORD size;
   int len;
   int i;
@@ -1347,8 +1209,7 @@ mi_process_cl(LPTSTR lpCmdLine)
   strcpy(g_username, "pda");
   /* get username and convert it from unicode */
   size = 255;
-#ifndef MYWINCE
-  /* WinCE doesn't have GetUserName */
+
   if (GetUserName(l_username, &size))
   {
     for (i = size; i >= 0; i--)
@@ -1361,7 +1222,7 @@ mi_process_cl(LPTSTR lpCmdLine)
   {
     mi_show_error("GetUserName");
   }
-#endif /* MYWINCE */
+
   /* get computer name */
   if (gethostname(g_hostname, 255) != 0)
   {
@@ -1605,12 +1466,8 @@ mi_screen_copy(int x, int y, int cx, int cy, int srcx, int srcy)
   HRGN rgn;
   int ok_to_ScrollWindowEx;
 
-  /* WinCE can't scroll in 2 directions at once */
-#ifdef MYWINCE
-  ok_to_ScrollWindowEx = cx == 0 || cy == 0;
-#else /* MYWINCE */
   ok_to_ScrollWindowEx = 1;
-#endif /* MYWINCE */
+
   if (!ok_to_ScrollWindowEx)
   {
     rgn = CreateRectRgn(x - g_xscroll, y - g_yscroll,
@@ -1667,9 +1524,6 @@ mi_create_cursor(unsigned int x, unsigned int y,
                  int width, int height,
                  unsigned char * andmask, unsigned char * xormask)
 {
-#ifdef MYWINCE
-  return (void *) 1;
-#else /* MYWINCE */
   HCURSOR hCur;
 
   hCur = CreateCursor(g_Instance, x, y, width, height, andmask, xormask);
@@ -1678,32 +1532,25 @@ mi_create_cursor(unsigned int x, unsigned int y,
     hCur = LoadCursor(NULL, IDC_ARROW);
   }
   return hCur;
-#endif /* MYWINCE */
 }
 
 /*****************************************************************************/
 void
 mi_destroy_cursor(void * cursor)
 {
-#ifdef MYWINCE
-#else /* MYWINCE */
   if (g_cursor == cursor)
   {
     g_cursor = 0;
   }
   DestroyCursor(cursor);
-#endif /* MYWINCE */
 }
 
 /*****************************************************************************/
 void
 mi_set_cursor(void * cursor)
 {
-#ifdef MYWINCE
-#else /* MYWINCE */
   g_cursor = cursor;
   SetCursor(g_cursor);
-#endif /* MYWINCE */
 }
 
 /*****************************************************************************/
