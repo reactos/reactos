@@ -47,12 +47,6 @@
 
 
 <!--
-	Whether to compile for an uniprocessor or multiprocessor machine.
--->
-<property name="MP" value="0" />
-
-
-<!--
 	Whether to compile in the integrated kernel debugger.
 -->
 <property name="KDBG" value="0" />
