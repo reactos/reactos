@@ -3484,8 +3484,8 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	FileLocation isoboot ( OutputDirectory,
 	                       "boot" + sSep + "freeldr" + sSep + "bootsect",
 	                       module.type == IsoRegTest
-	                           ? "isobtrt.o"
-	                           : "isoboot.o" );
+	                           ? "isobtrt_isobtrt.o"
+	                           : "isoboot_isoboot.o" );
 	vSourceFiles.push_back ( isoboot );
 
 	// prepare reactos.dff and reactos.inf
@@ -3671,12 +3671,12 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 
 	if (module.name == "livecdregtest")
 	{
-		bootloader = "isobtrt.o";
+		bootloader = "isobtrt_isobtrt.o";
 		IsoName = "ReactOS-LiveCD-RegTest.iso";
 	}
 	else
 	{
-		bootloader = "isoboot.o";
+		bootloader = "isoboot_isoboot.o";
 		IsoName = "ReactOS-LiveCD.iso";
 	}
 
