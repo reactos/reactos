@@ -673,6 +673,12 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
     {
       InsertShellNewItems(mii.hSubMenu, 0x6000, 0x6000, This);
     }
+    if (This->bDesktop)
+    {
+      /* desktop menu has no view option */
+      DeleteMenu(hMenu, 0, MF_BYPOSITION);
+      DeleteMenu(hMenu, 0, MF_BYPOSITION);
+    }
 
     TRACE("(%p)->returning 0x%x\n",This,hr);
     return hr;
