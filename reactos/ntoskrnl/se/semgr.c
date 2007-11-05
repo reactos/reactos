@@ -1362,6 +1362,8 @@ VOID STDCALL
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess)
 {
+    *DesiredAccess = 0;
+
     if (SecurityInformation & (OWNER_SECURITY_INFORMATION |
                                GROUP_SECURITY_INFORMATION | DACL_SECURITY_INFORMATION))
     {
@@ -1377,6 +1379,8 @@ VOID STDCALL
 SeSetSecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                         OUT PACCESS_MASK DesiredAccess)
 {
+    *DesiredAccess = 0;
+
     if (SecurityInformation & (OWNER_SECURITY_INFORMATION | GROUP_SECURITY_INFORMATION))
     {
         *DesiredAccess |= WRITE_OWNER;
