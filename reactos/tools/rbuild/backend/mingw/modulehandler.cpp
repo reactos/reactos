@@ -513,9 +513,9 @@ MingwModuleHandler::GetObjectFilename (
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( module.type == RpcServer )
-			newExtension = "_s.o";
+			newExtension = "_s_" + module.name + ".o";
 		else if ( module.type == RpcClient )
-			newExtension = "_c.o";
+			newExtension = "_c_" + module.name + ".o";
 		else
 			newExtension = ".h";
 	}
