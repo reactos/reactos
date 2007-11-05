@@ -698,6 +698,8 @@ ScmStartUserModeService(PSERVICE Service,
     NTSTATUS Status;
     DWORD dwError = ERROR_SUCCESS;
     WCHAR NtControlPipeName[MAX_PATH + 1];
+    HKEY hServiceCurrentKey = INVALID_HANDLE_VALUE;
+    DWORD KeyDisposition;
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -727,39 +729,44 @@ ScmStartUserModeService(PSERVICE Service,
     DPRINT("Type: %lx\n", Type);
 
     /* Get the service number */
-    RtlZeroMemory(&QueryTable,
-                  sizeof(QueryTable));
+    /* TODO: Create registry entry with correct write access */
+    Status = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                            L"SYSTEM\\CurrentControlSet\\Control\\ServiceCurrent", 0, NULL,
+                            REG_OPTION_VOLATILE,
+                            KEY_WRITE | KEY_READ,
+                            NULL,
+                            &hServiceCurrentKey,
+                            &KeyDisposition);
 
-    QueryTable[0].Name = L"";
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-    QueryTable[0].EntryContext = &ServiceCurrent;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-                                    L"ServiceCurrent",
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-
-    if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+    if (ERROR_SUCCESS != Status)
     {
-        /* TODO: Create registry entry with correct write access */
+        DPRINT1("RegCreateKeyEx() failed with status %u\n", Status);
+        return Status;
     }
-    else if (!NT_SUCCESS(Status))
+
+    if (REG_OPENED_EXISTING_KEY == KeyDisposition)
     {
-        DPRINT1("RtlQueryRegistryValues() failed (Status %lx)\n", Status);
-        return RtlNtStatusToDosError(Status);
-    }
-    else
-    {
+        DWORD KeySize = sizeof(ServiceCurrent);
+        Status = RegQueryValueExW(hServiceCurrentKey, L"", 0, NULL, (BYTE*)&ServiceCurrent, &KeySize);
+
+        if (ERROR_SUCCESS != Status)
+        {
+            RegCloseKey(hServiceCurrentKey);
+            DPRINT1("RegQueryValueEx() failed with status %u\n", Status);
+            return Status;
+        }
+
         ServiceCurrent++;
     }
 
-    Status = RtlWriteRegistryValue(RTL_REGISTRY_CONTROL, L"ServiceCurrent", L"", REG_DWORD, &ServiceCurrent, sizeof(ServiceCurrent));
+    Status = RegSetValueExW(hServiceCurrentKey, L"", 0, REG_DWORD, (BYTE*)&ServiceCurrent, sizeof(ServiceCurrent));
 
-    if (!NT_SUCCESS(Status))
+    RegCloseKey(hServiceCurrentKey);
+
+    if (ERROR_SUCCESS != Status)
     {
-        DPRINT1("RtlWriteRegistryValue() failed (Status %lx)\n", Status);
-        return RtlNtStatusToDosError(Status);
+        DPRINT1("RegSetValueExW() failed (Status %lx)\n", Status);
+        return Status;
     }
 
     /* Create '\\.\pipe\net\NtControlPipeXXX' instance */
