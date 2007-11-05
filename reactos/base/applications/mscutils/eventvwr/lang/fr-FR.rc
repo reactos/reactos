@@ -67,22 +67,22 @@ BEGIN
 	PUSHBUTTON      "Suiva&nt",IDNEXT,144,258,50,14
 	PUSHBUTTON      "Aide",IDHELP,210,258,50,14
 	EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
-	LTEXT           "&Description:",IDC_STATIC,15,70,39,8
-	LTEXT           "Date:",IDC_STATIC,14,14,36,8
+	LTEXT           "&Description :",IDC_STATIC,15,70,39,8
+	LTEXT           "Date :",IDC_STATIC,14,14,36,8
 	LTEXT           "Static",IDC_EVENTDATESTATIC,56,14,72,8
-	LTEXT           "Heure:",IDC_STATIC,14,27,36,8
+	LTEXT           "Heure :",IDC_STATIC,14,27,36,8
 	LTEXT           "Static",IDC_EVENTTIMESTATIC,56,27,72,8
-	LTEXT           "&Utilisateur:",IDC_STATIC,14,41,36,8
+	LTEXT           "&Utilisateur :",IDC_STATIC,14,41,36,8
 	LTEXT           "Static",IDC_EVENTUSERSTATIC,56,41,72,8
-	LTEXT           "Ordinateur:",IDC_STATIC,14,54,36,8
+	LTEXT           "Ordinateur :",IDC_STATIC,14,54,36,8
 	LTEXT           "Static",IDC_EVENTCOMPUTERSTATIC,56,54,72,8
-	LTEXT           "EventID:",IDC_STATIC,133,15,36,8
+	LTEXT           "EventID :",IDC_STATIC,133,15,36,8
 	LTEXT           "Static",IDC_EVENTIDSTATIC,175,15,87,8
-	LTEXT           "Source:",IDC_STATIC,133,28,36,8
+	LTEXT           "Source :",IDC_STATIC,133,28,36,8
 	LTEXT           "Static",IDC_EVENTSOURCESTATIC,175,28,87,8
-	LTEXT           "Type:",IDC_STATIC,133,42,36,8
+	LTEXT           "Type :",IDC_STATIC,133,42,36,8
 	LTEXT           "Static",IDC_EVENTTYPESTATIC,175,42,87,8
-	LTEXT           "Catégorie:",IDC_STATIC,133,55,36,8
+	LTEXT           "Catégorie :",IDC_STATIC,133,55,36,8
 	LTEXT           "Static",IDC_EVENTCATEGORYSTATIC,175,55,87,8
 	EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
 	LTEXT           "Données",IDC_STATIC,14,194,16,8

@@ -126,9 +126,9 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Encodage"
 {
 COMBOBOX        ID_ENCODING,54,0,156,80,CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Encodage:",0x155,5,2,41,12
+LTEXT           "Encodage :",0x155,5,2,41,12
 COMBOBOX        ID_EOLN,54,18,156,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-LTEXT           "Fin de lignes:",0x156,5,20,41,12
+LTEXT           "Fin de lignes :",0x156,5,20,41,12
 }
 
 /* Dialog 'Go To' */
@@ -138,7 +138,7 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Atteindre..."
 {
 EDITTEXT        ID_LINENUMBER,54,10,106,12,WS_CHILD | WS_BORDER | WS_TABSTOP
-LTEXT           "Numéro de ligne:",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
+LTEXT           "Numéro de ligne :",0x155,5,12,41,12,WS_CHILD | WS_TABSTOP | ES_NUMBER
 DEFPUSHBUTTON   "OK", IDOK, 75, 30, 40, 15, WS_CHILD | WS_TABSTOP
 PUSHBUTTON      "Annuler", IDCANCEL, 120, 30, 40, 15, WS_CHILD | WS_TABSTOP
 }

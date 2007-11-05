@@ -53,7 +53,7 @@ FONT 8, "MS Shell Dlg"
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Félicitations!"
+CAPTION "Félicitations !"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT           "Veuillez entrer votre nom :", IDNONE,  10,  10, 150,  10

@@ -12,17 +12,17 @@ CACLS nomfichier [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
    /E            Édite les ACL au lieu de les remplacer.\n\
    /C            Continuer en cas de refus d'accès.\n\
    /G user:perm  Accorder des droit d'accès à l'utilisateur spécifié.\n\
-                 Perm peut valoir: R  Lecture\n\
-                                   W  Écriture\n\
-                                   C  Modification (Écriture)\n\
-                                   F  Contrôle total\n\
+                 Perm peut valoir : R  Lecture\n\
+                                    W  Écriture\n\
+                                    C  Modification (Écriture)\n\
+                                    F  Contrôle total\n\
    /R user       Supprime les droits d'accès de l'utilisateur spécifié (valide uniquement avec /E).\n\
    /P user:perm  Remplace les droits d'accès de l'utilisateur specifié.\n\
-                 Perm peut valoir: N  Aucun \n\
-                                   R  Lecture\n\
-                                   W  Écriture\n\
-                                   C  Modification (Écriture)\n\
-                                   F  Contrôle total\n\
+                 Perm peut valoir : N  Aucun \n\
+                                    R  Lecture\n\
+                                    W  Écriture\n\
+                                    C  Modification (Écriture)\n\
+                                    F  Contrôle total\n\
    /D user       Interdit l'accès à l'utilisateur spécifié.\n\
 Il est possible d'utiliser des caractères joker pour sélectionner plus d'un fichier avec une commande.\n\
 Il est possible de spécifier plus d'un utilisateur dans une commande.\n\n\

@@ -1,0 +1,17 @@
+LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "FIND: Affiche toutes les lignes d'un fichier qui contiennent un morceau de texte.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"string\" [ file... ]\n\
+    /C  Compte le nombre de lignes qui contiennent le texte\n\
+    /I  Insensible à la casse\n\
+    /N  Number the displayed lines, starting at 1\n\
+    /V  Affiche les lignes qui ne contiennent pas le texte"
+
+IDS_NO_SUCH_FILE, "FIND: %s : fichier inexistant\n"
+
+IDS_CANNOT_OPEN, "FIND: %s : impossible d'ouvrir le fichier\n"
+
+}

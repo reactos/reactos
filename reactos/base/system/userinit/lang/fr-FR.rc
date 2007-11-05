@@ -7,6 +7,6 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE DISCARDABLE
 {
 
-STRING_USERINIT_FAIL, "Userinit a échoué lors du chargement de l'interface (shell)!\n"
+STRING_USERINIT_FAIL, "Userinit a échoué lors du chargement de l'interface (shell) !\n"
 
 }

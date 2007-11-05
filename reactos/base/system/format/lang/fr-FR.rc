@@ -63,7 +63,7 @@ STRING_FMT_COMPLETE    "Formatage terminé.\n"
 
 STRING_VOL_COMPRESS    "Le disque ne supporte pas la compression.\n"
 
-STRING_ENTER_LABEL     "Nom du disque (11 caractères, Entrée si aucun)? "
+STRING_ENTER_LABEL     "Nom du disque (11 caractères, Entrée si aucun) ? "
 
 STRING_NO_LABEL        "Impossible de donner un nom au disque"
 

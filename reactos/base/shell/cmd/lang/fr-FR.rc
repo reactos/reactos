@@ -114,7 +114,7 @@ déc  hex  nom           déc  hex  nom\n\
 6    6    Yellow(Jaune) 14   E    Bright Yellow\n\
 7    7    White(Blanc)  15   F    Bright White"
 
-STRING_COPY_HELP1,  "Ecraser %s (Oui/Non/Tous)? "
+STRING_COPY_HELP1,  "Ecraser %s (Oui/Non/Tous) ? "
 
 STRING_COPY_HELP2, "Copie un ou plusieurs fichiers vers une autre destination.\n\n\
 COPY [/V][/Y|/-Y][/A|/B] source [/A|/B]\n\
@@ -166,7 +166,7 @@ ERASE [/N /P /T /Q /W /Y /Z] fichier ...\n\n\
         -     préfixe signifiant ne pas\n"
 
 STRING_DEL_HELP2, "Tous les fichiers du répertoire seront effacés!\n\
-Etes vous sûr(e) (O/N)?"
+Etes vous sûr(e) (O/N) ?"
 STRING_DEL_HELP3, "    %lu fichier effacé\n"
 STRING_DEL_HELP4, "    %lu fichiers effacés\n"
 
@@ -298,7 +298,7 @@ STRING_LABEL_HELP1, "Affiche ou change le nom de volume du disque.\n\nLABEL [dis
 STRING_LABEL_HELP2, "Le nom de volume du disque %c: est %s\n"
 STRING_LABEL_HELP3, "Le disque %c: n'a pas de nom de volume\n"
 STRING_LABEL_HELP4, "Le numéro de serie du volume est %04X-%04X\n"
-STRING_LABEL_HELP5, "Nom de volume (11 Caractères, ENTREE si aucun)? "
+STRING_LABEL_HELP5, "Nom de volume (11 Caractères, ENTREE si aucun) ? "
 
 STRING_LOCALE_HELP1, "L'heure actuelle est "
 
@@ -317,7 +317,7 @@ STRING_MEMMORY_HELP2, "\n  %12s%% de charge mémoire.\n\n\
 
 STRING_MISC_HELP1, "Appuyer sur une touche pour continuer...\n"
 
-STRING_MOVE_HELP1, "Ecraser %s (Oui/Non/Tous)? "
+STRING_MOVE_HELP1, "Ecraser %s (Oui/Non/Tous) ? "
 
 STRING_MOVE_HELP2, "Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
 Pouur déplacer un ou plusieurs fichiers:\n\
@@ -410,38 +410,37 @@ REPLACE [lecteur1:][chemin1]nomdefichier [lecteur2:][chemin2] [/P] [/R] [/S] [/W
   [lecteur1:][chemin1]nomdefichier Spécifie le ou les fichier(s) source.\n\
   [lecteur2:][chemin2]             Spécifie le répertoire où les fichiers doivent être\n\
                                    remplacés.\n\
-  /A                               Adds new files to destination directory. Cannot\n\
-                                   use with /S or /U switches.\n\
-  /P                               Prompts for confirmation before replacing a file or\n\
-                                   adding a source file.\n\
-  /R                               Replaces read-only files as well as unprotected\n\
-                                   files.\n\
-  /S                               Replaces files in all subdirectories of the\n\
-                                   destination directory. Cannot use with the /A\n\
-                                   switch.\n\
-  /W                               Waits for you to insert a disk before beginning.\n\
-  /U                               Replaces (updates) only files that are older than\n\
-                                   source files. Cannot use with the /A switch.\n"
+  /A                               Ajoute les nouveaux fichiers dans le répertoire de destination. Ne peut\n\
+                                   être utilisé avec /S ou /U.\n\
+  /P                               Demande une confirmation avant de remplacer un fichier ou\n\
+                                   d'ajouter un fichier source.\n\
+  /R                               Remplace les fichiers en lecture-seule aussi bien que les\n\
+                                   fichiers sans protection.\n\
+  /S                               Remplaces les fichiers dans tous les sous-répertoires du\n\
+                                   répertoire de destination. Ne peut être utilisé avec /A\n\
+  /W                               Attend que vous insériez un disque avant de commencer.\n\
+  /U                               Remplace (met à jour) uniquement les fichiers qui sont plus anciens que\n\
+                                   les fichiers sources. Ne peut être utilisé avec /A.\n"
 
-STRING_REPLACE_HELP2, "Source path required\n"
+STRING_REPLACE_HELP2, "Chemin source requis\n"
 
-STRING_REPLACE_HELP3, "No files replaced\n"
+STRING_REPLACE_HELP3, "Aucun fichier remplacé\n"
 
-STRING_REPLACE_HELP4, "%lu file(s) replaced\n"
+STRING_REPLACE_HELP4, "%lu fichier(s) remplacé(s)\n"
 
-STRING_REPLACE_HELP5, "Replacing %s\n"
+STRING_REPLACE_HELP5, "Remplace %s\n"
 
-STRING_REPLACE_HELP6, "Replace %s\n"
+STRING_REPLACE_HELP6, "Remplace %s\n"
 
-STRING_REPLACE_HELP7, "No files added\n"
+STRING_REPLACE_HELP7, "Aucun fichier ajouté\n"
 
-STRING_REPLACE_HELP8, "%lu file(s) added\n"
+STRING_REPLACE_HELP8, "%lu fichier(s) ajouté(s)\n"
 
-STRING_REPLACE_HELP9, "Add %s (Y/N) "
+STRING_REPLACE_HELP9, "Ajouter %s (Y/N) "
 
-STRING_REPLACE_HELP10, "Replace %s (Y/N) "
+STRING_REPLACE_HELP10, "Remplacer %s (Y/N) "
 
-STRING_REPLACE_HELP11, "Adding %s\n"
+STRING_REPLACE_HELP11, "Ajoute %s\n"
 
 
 STRING_SHIFT_HELP, "Change la position de paramètres remplaçables dans un fichier batch.\n\n\
@@ -473,7 +472,7 @@ TIME [/T][heure]\n\n\
 Taper TIME sans paramètres pour afficher l'heure courante et une invite\n\
 pour la modifier.  Presser la touche ENTREE pour garder la même heure."
 
-STRING_TIME_HELP2, "Entrer la nouvelle heure: "
+STRING_TIME_HELP2, "Entrer la nouvelle heure : "
 
 STRING_TIMER_HELP1, "Ecoulé %d msecs\n"
 
@@ -496,9 +495,9 @@ Si aucun de ON, OFF or /S n'est spécifié la commande\n\
 changera l'état du chronomètre sélectionné\n\n"
 
 STRING_TYPE_HELP1, "Affiche le contenu de fichiers textes.\n\nTYPE [lecteur:][chemin]nomfich \n\
-  /P 		  Shows one screen of output at a time.\n"
+  /P 		  Ne montre qu'un écran de contenu à la fois.\n"
 
-STRING_VERIFY_HELP1, "Cette commande ne fait rien!!\n\
+STRING_VERIFY_HELP1, "Cette commande ne fait rien !!\n\
 Spécifie s'il faut verifier que vos fichiers sont écrits correctement.\
 \n\n\
 VERIFY [ON | OFF]\n\n\
@@ -510,9 +509,9 @@ STRING_VERIFY_HELP3, "Vous devez indiquer ON ou OFF."
 
 STRING_VERSION_HELP1, "Affiche les information de version du shell\n\n\
 VER [/C][/R][/W]\n\n\
-  /C  Displays credits.\n\
-  /R  Displays redistribution information.\n\
-  /W  Displays warranty information."
+  /C  Affiche les crédits.\n\
+  /R  Affiche les informations sur la redistribution.\n\
+  /W  Affiche les informations de garantie."
 
 STRING_VERSION_HELP2, " comes with ABSOLUTELY NO WARRANTY; for details\n\
 type: `ver /w'. This is free software, and you are welcome to redistribute\n\
@@ -627,8 +626,8 @@ STRING_ALIAS_ERROR,          "Ligne de commande trop longue après remplacement d
 STRING_BATCH_ERROR,          "Erreur à l'ouverture du fichier batch\n"
 STRING_CHCP_ERROR1,          "Page de codes actuelle : %u\n"
 STRING_CHCP_ERROR4,          "Page de code invalide \n"
-STRING_CHOICE_ERROR,         "Option invalide. Format attendu: /C[:]options"
-STRING_CHOICE_ERROR_TXT,     "Option invalide. Format attendu: /T[:]c,nn"
+STRING_CHOICE_ERROR,         "Option invalide. Format attendu : /C[:]options"
+STRING_CHOICE_ERROR_TXT,     "Option invalide. Format attendu : /T[:]c,nn"
 STRING_CHOICE_ERROR_OPTION,  "Option invalide : %s"
 STRING_MD_ERROR,             "Un sous répertoire ou un fichier est déjà existant.\n"
 STRING_MD_ERROR2,            "Le chemin vers le nouveau répertoire n'existe pas.\n"
@@ -640,15 +639,15 @@ STRING_CMD_ERROR5,           "Lance cmdexit.bat...\n"
 STRING_COLOR_ERROR1,         "L'arrière plan et l'avant plan ne peuvent être de la même couleur"
 STRING_COLOR_ERROR2,         "Erreur dans la spécification des couleurs"
 STRING_COLOR_ERROR3,         "Couleur %x\n"
-STRING_COLOR_ERROR4,         "Erreur: même couleur!"
-STRING_CONSOLE_ERROR,        "Erreur inconnue: %d\n"
-STRING_COPY_ERROR1,          "Erreur: Ne peut ouvrir la source - %s!\n"
-STRING_COPY_ERROR2,          "Erreur: Ne peut copier le fichier sur lui-même!\n"
-STRING_COPY_ERROR3,          "Erreur à l'écriture de la destination!\n"
-STRING_COPY_ERROR4,          "Erreur: Non implémenté actuellement!\n"
+STRING_COLOR_ERROR4,         "Erreur : même couleur!"
+STRING_CONSOLE_ERROR,        "Erreur inconnue : %d\n"
+STRING_COPY_ERROR1,          "Erreur : Ne peut ouvrir la source - %s !\n"
+STRING_COPY_ERROR2,          "Erreur : Ne peut copier le fichier sur lui-même !\n"
+STRING_COPY_ERROR3,          "Erreur à l'écriture de la destination !\n"
+STRING_COPY_ERROR4,          "Erreur : Non implémenté actuellement !\n"
 STRING_DATE_ERROR,           "Date invalide."
 STRING_DEL_ERROR5,           "Le fichier %s va être effacé ! "
-STRING_DEL_ERROR6,           "Etes vous sûr (O/N)?"
+STRING_DEL_ERROR6,           "Etes vous sûr (O/N) ?"
 STRING_DEL_ERROR7,           "Efface : %s\n"
 STRING_ERROR_ERROR1,         "Erreur inconnue! Code d'erreur : 0x%lx\n"
 STRING_ERROR_ERROR2,         "Erreur de syntaxe"
@@ -664,9 +663,9 @@ STRING_GOTO_ERROR2,          "Label '%s' non trouvé\n"
 STRING_MOVE_ERROR1,          "[OK]\n"
 STRING_MOVE_ERROR2,          "[Erreur]\n"
 
-STRING_REN_ERROR1,           "MoveFile() a échoué. Erreur: %lu\n"
+STRING_REN_ERROR1,           "MoveFile() a échoué. Erreur : %lu\n"
 
-STRING_START_ERROR1,         "No batch support at the moment!"
+STRING_START_ERROR1,         "No batch support at the moment !"
 
 STRING_TIME_ERROR1,          "Heure invalide."
 
@@ -685,11 +684,11 @@ STRING_ERROR_INVALID_DRIVE,        "Lecteur spécifié introuvable\n"
 STRING_ERROR_INVALID_PARAM_FORMAT, "Format de paramètre incorrect - %s\n"
 STRING_ERROR_BADCOMMAND,           "Commande ou nom de fichier inconnu\n"
 STRING_ERROR_OUT_OF_MEMORY,        "Pas assez de mémoire.\n"
-STRING_ERROR_CANNOTPIPE,           "Erreur!  Impossible de chaîner!  Échec à l'ouverture du fichier temporaire!\n"
+STRING_ERROR_CANNOTPIPE,           "Erreur !  Impossible de chaîner !  Échec à l'ouverture du fichier temporaire!\n"
 STRING_ERROR_D_PAUSEMSG,           "Appuyez sur une touche pour continuer . . ."
 STRING_ERROR_DRIVER_NOT_READY,     "Lecteur non prêt"
 
-STRING_PATH_ERROR,                 "CMD: Pas dans l'environnement '%s'\n"
+STRING_PATH_ERROR,                 "CMD : Pas dans l'environnement '%s'\n"
 
 STRING_REPLACE_ERROR1, "Commutateur invalide - %s\n"
 STRING_REPLACE_ERROR2, "Chemin non trouvé - %s\n"
@@ -706,7 +705,7 @@ STRING_DELETE_WIPE,                "effacé(s)"
 STRING_FOR_ERROR,                  "mauvaise variable spécifiée."
 STRING_SCREEN_COL,                 "valeur invalide pour col"
 STRING_SCREEN_ROW,                 "valeur invalide pour lig"
-STRING_TIMER_TIME                  "Le timer n°%d est %s: "
+STRING_TIMER_TIME                  "Le timer n°%d est %s : "
 
 STRING_INVALID_OPERAND,            "Opérande invalide."
 STRING_EXPECTED_CLOSE_PAREN,       "Attendu ')'."

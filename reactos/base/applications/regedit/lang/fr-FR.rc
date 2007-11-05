@@ -168,9 +168,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
 CAPTION "Éditer la chaîne"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nom de la valeur :",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    LTEXT           "Données de la &valeur :",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,12,ES_AUTOHSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,64,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,196,64,50,14
@@ -182,9 +182,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
 CAPTION "Éditer la chaîne multiple"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nom de la valeur :",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    LTEXT           "Données de la &valeur :",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,240,102,ES_AUTOHSCROLL | ES_MULTILINE | ES_WANTRETURN | ES_AUTOVSCROLL | WS_VSCROLL
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,196,154,50,14
@@ -196,9 +196,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
 CAPTION "Éditer la valeur binaire"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nom de la valeur :",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    LTEXT           "Données de la &valeur :",IDC_STATIC,6,35,161,8
     CONTROL         "",IDC_VALUE_DATA,"HexEdit32",WS_VSCROLL | WS_BORDER | WS_TABSTOP,6,46,240,102
     DEFPUSHBUTTON   "OK",IDOK,142,154,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,196,154,50,14
@@ -211,9 +211,9 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP |
 CAPTION "Éditer le mot double"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "&Nom de la valeur:",IDC_STATIC,6,6,134,8
+    LTEXT           "&Nom de la valeur :",IDC_STATIC,6,6,134,8
     EDITTEXT        IDC_VALUE_NAME,6,17,240,12,ES_AUTOHSCROLL | ES_READONLY
-    LTEXT           "Données de la &valeur:",IDC_STATIC,6,35,161,8
+    LTEXT           "Données de la &valeur :",IDC_STATIC,6,35,161,8
     EDITTEXT        IDC_VALUE_DATA,6,46,116,12,ES_AUTOHSCROLL
     GROUPBOX        "Base",IDC_STATIC,130,35,116,39
     AUTORADIOBUTTON "&Hexadécimal",IDC_FORMAT_HEX,141,46,60,10,WS_GROUP
@@ -385,7 +385,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,129,7,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,129,24,50,14
-    LTEXT           "Nom du &favori:",IDC_STATIC,7,7,70,10
+    LTEXT           "Nom du &favori :",IDC_STATIC,7,7,70,10
     EDITTEXT        IDC_FAVORITENAME,7,26,110,13,ES_AUTOHSCROLL
 END
 
@@ -409,7 +409,7 @@ BEGIN
     DEFPUSHBUTTON   "Chercher le suivant",IDOK,197,7,50,14
     PUSHBUTTON      "Annuler",IDCANCEL,197,24,50,14
     GROUPBOX        "Rechercher",IDC_STATIC,7,25,63,51
-    LTEXT           "Rechercher:",IDC_STATIC,7,8,37,10
+    LTEXT           "Rechercher :",IDC_STATIC,7,8,37,10
     EDITTEXT        IDC_FINDWHAT,47,7,142,13,ES_AUTOHSCROLL
     CONTROL         "Clés",IDC_LOOKAT_KEYS,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,14,36,35,8
@@ -419,7 +419,7 @@ BEGIN
                     WS_TABSTOP,14,60,42,8
     CONTROL         "Chaîne complète seulement",IDC_MATCHSTRING,"Button",
                     BS_AUTOCHECKBOX | WS_TABSTOP,83,32,94,13
-    CONTROL         "Sensible à la case",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Sensible à la casse",IDC_MATCHCASE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,83,48,90,12
 END
 

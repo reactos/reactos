@@ -142,7 +142,7 @@ CAPTION "Exécuter"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
-    CONTROL         "&Commande:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
+    CONTROL         "&Commande :",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
                     18,60,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
     CONTROL         "Comme &Symbole",214,"Button",BS_AUTOCHECKBOX |
@@ -159,7 +159,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Rechercher un programme dans le menu démarrer"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "&Filtre:",IDC_STATIC,7,9,18,8
+    LTEXT           "&Filtre :",IDC_STATIC,7,9,18,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
     CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
                     LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
@@ -172,7 +172,7 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Propriétés du bureau"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Veuillez sélectionner votre algorithme d'alignement des icônes:",
+    LTEXT           "Veuillez sélectionner votre algorithme d'alignement des icônes :",
                     IDC_STATIC,7,7,166,8
     CONTROL         "gauche/haut bas",IDC_ICON_ALIGN_0,"Button",
                     BS_OWNERDRAW | BS_BOTTOM | WS_TABSTOP,7,25,46,44
@@ -231,11 +231,11 @@ FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
                     TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Texte conseil:",IDC_LABEL1,7,44,70,8
+    LTEXT           "&Texte conseil :",IDC_LABEL1,7,44,70,8
     EDITTEXT        IDC_NOTIFY_TOOLTIP,79,42,122,14,ES_AUTOHSCROLL
-    LTEXT           "Titre de la &fenêtre:",IDC_LABEL2,7,63,61,8
+    LTEXT           "Titre de la &fenêtre :",IDC_LABEL2,7,63,61,8
     EDITTEXT        IDC_NOTIFY_TITLE,79,60,123,14,ES_AUTOHSCROLL
-    LTEXT           "&Repertoire du module:",IDC_LABEL3,7,81,71,8
+    LTEXT           "&Repertoire du module :",IDC_LABEL3,7,81,71,8
     EDITTEXT        IDC_NOTIFY_MODULE,79,78,123,14,ES_AUTOHSCROLL
     GROUPBOX        "&Mode d'affichage",IDC_LABEL4,7,96,174,28
     CONTROL         "&afficher",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
@@ -244,7 +244,7 @@ BEGIN
     CONTROL         "&cacher automatiquement",IDC_NOTIFY_AUTOHIDE,"Button",
                     BS_AUTORADIOBUTTON,89,108,91,10
     ICON            "",IDC_PICTURE,183,101,21,20
-    LTEXT           "&Dernier changement:",IDC_LABEL6,7,132,69,8
+    LTEXT           "&Dernier changement :",IDC_LABEL6,7,132,69,8
     EDITTEXT        IDC_LAST_CHANGE,77,129,105,14,ES_AUTOHSCROLL |
                     ES_READONLY
     CONTROL         "Afficher les cac&hés",ID_SHOW_HIDDEN_ICONS,"Button",
@@ -259,7 +259,7 @@ EXSTYLE WS_EX_APPWINDOW
 CAPTION "Veuillez choisir un mode de fenêtres pour l'explorateur"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Veuillez sélectionner l'interface que vous préférez pour l'explorateur:",
+    LTEXT           "Veuillez sélectionner l'interface que vous préférez pour l'explorateur :",
                     IDC_STATIC,7,7,160,8
     CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
                     BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
@@ -376,7 +376,7 @@ BEGIN
     IDS_SEARCH              "Rechercher"
     IDS_ABOUT_EXPLORER      "&À propos de l'explorateur..."
     IDS_LAUNCH_MANY_PROGRAMS
-                            "Vous avez sélectionné plus d'un programme.\nÊtes-vous sûr de vouloir tous les lancer?"
+                            "Vous avez sélectionné plus d'un programme.\nÊtes-vous sûr de vouloir tous les lancer ?"
     IDS_DESKTOPBAR_SETTINGS "Paramètres du bureau"
     IDS_DESKTOP             "Bureau"
     IDS_TASKBAR             "Barre de tâches"

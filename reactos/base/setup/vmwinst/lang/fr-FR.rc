@@ -91,7 +91,7 @@ BEGIN
   IDS_WIZARD_NAME "VMware(r) détecté"
   IDS_FAILEDTOLOCATEDRIVERS "L'installateur de ReactOS n'a pu trouver les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien inséré."
   IDS_FAILEDTOCOPYFILES "L'installateur de ReactOS n'a pu copier les fichiers requis.\nVeuillez vous assurer que le CD-ROM d'outils de VMware(r) est bien inséré.\n"
-  IDS_FAILEDTOACTIVATEDRIVER "Échec lors de l'activation du pilote SVGA de VMware(r)!"
+  IDS_FAILEDTOACTIVATEDRIVER "Échec lors de l'activation du pilote SVGA de VMware(r) !"
   IDS_FAILEDTOSELVGADRIVER "Échec lors de l'activation du pilote VGA de ReactOS!"
   IDS_FAILEDTOSELVBEDRIVER "Échec lors de l'activation du pilote VBE de ReactOS!"
   IDS_UNINSTNOTICE "Le fichiers du pilote SVGA de VMware(r) n'ont pas encore été supprimés.\nVeuillez les supprimer manuellement après avoir redémarré."

@@ -15,8 +15,8 @@ IDS_UsageMessage, "%s\n\nUtilisation : regsvr32 [/u] [/s] [/c] [/n] [/i[:lignede
 /u -	Serveur non enregistré\n\
 /s -	Silence; ne pas afficher les messages\n\
 /c -	Sortie sur la console\n\
-/i -	Installe la DLL avec des options dans la [:lignedecommande]; si /u est présent, cela provoque la désinstallation de la DLL\n\
-/n -	Ne pas faire d'appel au serveur d'enregistrement; cette option doit être utilisé avec l'option /i"
+/i -	Installe la DLL avec des options dans la [:lignedecommande] ; si /u est présent, cela provoque la désinstallation de la DLL\n\
+/n -	Ne pas faire d'appel au serveur d'enregistrement ; cette option doit être utilisé avec l'option /i"
 
 IDS_NoDllSpecified,  "Pas de DLL indiqué."
 
