@@ -395,7 +395,7 @@ MingwModuleHandler::GetImportLibraryDependency (
 		for ( i = 0; i < compilationUnits.size (); i++ )
 		{
 			CompilationUnit& compilationUnit = *compilationUnits[i];
-			const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+			const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), importedModule, NULL );
 			if ( GetExtension ( *objectFilename ) == ".h" )
 			{
 				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
@@ -500,6 +500,7 @@ MingwModuleHandler::GetSourceFilenamesWithoutGeneratedFiles (
 const FileLocation*
 MingwModuleHandler::GetObjectFilename (
 	const FileLocation* sourceFile,
+	const Module& module,
 	string_list* pclean_files ) const
 {
 	DirectoryLocation destination_directory;
@@ -621,7 +622,7 @@ MingwModuleHandler::GetObjectFilenames ()
 	{
 		if ( objectFilenames.size () > 0 )
 			objectFilenames += " ";
-		objectFilenames += backend->GetFullName ( *GetObjectFilename ( compilationUnits[i]->GetFilename (), NULL ) );
+		objectFilenames += backend->GetFullName ( *GetObjectFilename ( compilationUnits[i]->GetFilename (), module, NULL ) );
 	}
 	return objectFilenames;
 }
@@ -825,11 +826,11 @@ MingwModuleHandler::GenerateMacro (
 					continue;
 				if ( !define.overridable )
 				{
-					throw InvalidOperationException ( define.node->location.c_str (),
+					throw InvalidOperationException ( (*last_define)->node->location.c_str (),
 					                                  0,
 					                                  "Invalid override of define '%s', already defined at %s",
 					                                  define.name.c_str (),
-					                                  (*last_define)->node->location.c_str () );
+					                                  define.node->location.c_str () );
 				}
 				if ( backend->configuration.Verbose )
 					printf("%s: Overriding '%s' already defined at %s\n",
@@ -1033,7 +1034,7 @@ MingwModuleHandler::GenerateObjectMacros (
 				fprintf ( fMakefile,
 					"%s := %s $(%s)\n",
 					objectsMacro.c_str(),
-					backend->GetFullName ( *GetObjectFilename ( compilationUnit.GetFilename (), NULL ) ).c_str (),
+					backend->GetFullName ( *GetObjectFilename ( compilationUnit.GetFilename (), module, NULL ) ).c_str (),
 					objectsMacro.c_str() );
 			}
 		}
@@ -1047,7 +1048,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			CompilationUnit& compilationUnit = *compilationUnits[i];
 			if ( !compilationUnit.IsFirstFile () )
 			{
-				const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+				const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), module, NULL );
 				if ( GetExtension ( *objectFilename ) == ".h" )
 					headers.push_back ( objectFilename );
 				else
@@ -1110,7 +1111,7 @@ MingwModuleHandler::GenerateObjectMacros (
 			fMakefile,
 			"%s += %s\n",
 			objectsMacro.c_str(),
-			backend->GetFullName ( *GetObjectFilename ( sourceCompilationUnits[i]->GetFilename (), NULL ) ).c_str () );
+			backend->GetFullName ( *GetObjectFilename ( sourceCompilationUnits[i]->GetFilename (), module, NULL ) ).c_str () );
 	}
 	CleanupCompilationUnitVector ( sourceCompilationUnits );
 }
@@ -1144,7 +1145,7 @@ MingwModuleHandler::GenerateGccCommand (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, &clean_files );
+		sourceFile, module, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          backend->GetFullName ( *objectFilename ).c_str (),
@@ -1167,7 +1168,7 @@ MingwModuleHandler::GenerateGccAssemblerCommand (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, &clean_files );
+		sourceFile, module, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          backend->GetFullName ( *objectFilename ).c_str (),
@@ -1189,7 +1190,7 @@ MingwModuleHandler::GenerateNasmCommand (
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
 	const FileLocation *objectFilename = GetObjectFilename (
-		sourceFile, &clean_files );
+		sourceFile, module, &clean_files );
 	fprintf ( fMakefile,
 	          "%s: %s | %s\n",
 	          backend->GetFullName ( *objectFilename ).c_str (),
@@ -1210,7 +1211,7 @@ MingwModuleHandler::GenerateWindresCommand (
 	string dependencies = backend->GetFullName ( *sourceFile );
 	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
 
-	const FileLocation *objectFilename = GetObjectFilename ( sourceFile, &clean_files );
+	const FileLocation *objectFilename = GetObjectFilename ( sourceFile, module, &clean_files );
 
 	string sourceFilenamePart = module.name + "." + ReplaceExtension ( sourceFile->name, "" );
 	FileLocation rciFilename ( TemporaryDirectory,
@@ -1642,7 +1643,7 @@ MingwModuleHandler::GetObjectsVector ( const IfableData& data,
 	for ( size_t i = 0; i < data.compilationUnits.size (); i++ )
 	{
 		CompilationUnit& compilationUnit = *data.compilationUnits[i];
-		objectFiles.push_back ( *GetObjectFilename ( compilationUnit.GetFilename (), NULL ) );
+		objectFiles.push_back ( *GetObjectFilename ( compilationUnit.GetFilename (), module, NULL ) );
 	}
 }
 
@@ -1819,7 +1820,7 @@ MingwModuleHandler::GenerateObjectFileTargets (
 	for ( i = 0; i < compilationUnits.size (); i++ )
 	{
 		CompilationUnit& compilationUnit = *compilationUnits[i];
-		const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), NULL );
+		const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), module, NULL );
 		if ( GetExtension ( *objectFilename ) == ".h" )
 		{
 			moduleDependencies = ssprintf ( " $(%s_HEADERS)", module.name.c_str () );
