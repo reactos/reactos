@@ -106,6 +106,7 @@ typedef struct tagRecycleBin
     const IShellFolder2Vtbl *lpVtbl;
     const IPersistFolder2Vtbl *lpPersistFolderVtbl;
     const IContextMenuVtbl *lpCmt;
+	const IShellExtInitVtbl *lpSEI;
     LONG refCount;
 
     INT iIdOpen;
@@ -118,6 +119,7 @@ typedef struct tagRecycleBin
 static const IContextMenuVtbl recycleBincmVtbl;
 static const IShellFolder2Vtbl recycleBinVtbl;
 static const IPersistFolder2Vtbl recycleBinPersistVtbl;
+static const IShellExtInitVtbl eivt;
 
 static RecycleBin *impl_from_IContextMenu(IContextMenu *iface)
 {
@@ -127,6 +129,11 @@ static RecycleBin *impl_from_IContextMenu(IContextMenu *iface)
 static RecycleBin *impl_from_IPersistFolder(IPersistFolder2 *iface)
 {
     return (RecycleBin *)((char *)iface - FIELD_OFFSET(RecycleBin, lpPersistFolderVtbl));
+}
+
+static inline RecycleBin *impl_from_IShellExtInit( IShellExtInit *iface )
+{
+    return (RecycleBin *)((char*)iface - FIELD_OFFSET(RecycleBin, lpSEI));
 }
 
 static void RecycleBin_Destructor(RecycleBin *This);
@@ -143,6 +150,7 @@ HRESULT WINAPI RecycleBin_Constructor(IUnknown *pUnkOuter, REFIID riid, LPVOID *
         return E_OUTOFMEMORY;
     ZeroMemory(obj, sizeof(RecycleBin));
     obj->lpVtbl = &recycleBinVtbl;
+	obj->lpSEI = &eivt;
     obj->lpPersistFolderVtbl = &recycleBinPersistVtbl;
     obj->lpCmt = &recycleBincmVtbl;
     if (FAILED(ret = IUnknown_QueryInterface((IUnknown *)obj, riid, ppOutput)))
@@ -177,6 +185,11 @@ static HRESULT WINAPI RecycleBin_QueryInterface(IShellFolder2 *iface, REFIID rii
 
     if (IsEqualIID(riid, &IID_IContextMenu))
         *ppvObject = &This->lpCmt;
+    
+    if(IsEqualIID(riid, &IID_IShellExtInit))
+    {
+        *ppvObject = &(This->lpSEI);
+    }
 
     if (*ppvObject != NULL)
     {
@@ -588,6 +601,47 @@ HRESULT WINAPI SHUpdateRecycleBinIcon(void)
     FIXME("stub\n");
     return S_OK;
 }
+/*************************************************************************
+ * BitBucket IShellExtInit interface
+ */
+
+static HRESULT WINAPI
+RecycleBin_ExtInit_QueryInterface( IShellExtInit* iface, REFIID riid, void** ppvObject )
+{
+    return RecycleBin_QueryInterface((IShellFolder2 *)impl_from_IShellExtInit(iface), riid, ppvObject);
+}
+
+static ULONG WINAPI
+RecycleBin_ExtInit_AddRef( IShellExtInit* iface )
+{
+    return RecycleBin_AddRef((IShellFolder2 *)impl_from_IShellExtInit(iface));
+}
+
+static ULONG WINAPI
+RecycleBin_ExtInit_Release( IShellExtInit* iface )
+{
+    return RecycleBin_Release((IShellFolder2 *)impl_from_IShellExtInit(iface));
+}
+
+static HRESULT WINAPI
+RecycleBin_ExtInit_Initialize( IShellExtInit* iface, LPCITEMIDLIST pidlFolder,
+                              IDataObject *pdtobj, HKEY hkeyProgID )
+{
+    RecycleBin *This = impl_from_IShellExtInit(iface);
+
+    TRACE("%p %p %p %p\n", This, pidlFolder, pdtobj, hkeyProgID );
+    return S_OK;
+}
+
+
+static const IShellExtInitVtbl eivt =
+{
+    RecycleBin_ExtInit_QueryInterface,
+    RecycleBin_ExtInit_AddRef,
+    RecycleBin_ExtInit_Release,
+    RecycleBin_ExtInit_Initialize
+};
+
 
 /*************************************************************************
  * BitBucket context menu

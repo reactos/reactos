@@ -338,7 +338,8 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
             hr = StringFromCLSID(guid, &pwszCLSID);
             if (hr == S_OK)
             {
-                memcpy(&buffer[6], pwszCLSID, 38 * sizeof(WCHAR));
+                wcscpy(&buffer[6], pwszCLSID);
+                TRACE("buffer %s\n", debugstr_w(buffer));
                 SH_EnumerateDynamicContextHandlerForKey(buffer, This, pDataObj, bGroupPolicyActive);
             }
         }
