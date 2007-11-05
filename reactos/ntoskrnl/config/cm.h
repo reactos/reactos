@@ -516,7 +516,6 @@ extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
 PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
-VOID CmiSyncHives(VOID);
 ///////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1314,6 +1313,15 @@ CmQueryValueKey(
     IN PVOID KeyValueInformation,
     IN ULONG Length,
     IN PULONG ResultLength
+);
+
+//
+// Startup and Shutdown
+//
+VOID
+NTAPI
+CmShutdownSystem(
+    VOID
 );
 
 //

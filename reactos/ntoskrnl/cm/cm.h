@@ -37,24 +37,6 @@
 #define  REG_SAM_FILE_NAME		L"\\sam"
 #define  REG_SEC_FILE_NAME		L"\\security"
 
-/* When set, the hive is not backed by a file.
-   Therefore, it can not be flushed to disk. */
-#define HIVE_NO_FILE    0x00000002
-
-/* When set, a modified (dirty) hive is not synchronized automatically.
-   Explicit synchronization (save/flush) works. */
-#define HIVE_NO_SYNCH   0x00000004
-
-#define IsNoFileHive(Hive)  ((Hive)->Flags & HIVE_NO_FILE)
-#define IsNoSynchHive(Hive)  ((Hive)->Flags & HIVE_NO_SYNCH)
-
-
-/* KEY_OBJECT.Flags */
-
-/* When set, the key is scheduled for deletion, and all
-   attempts to access the key must not succeed */
-#define KO_MARKED_FOR_DELETE              0x00000001
-
 /* Bits 31-22 (top 10 bits) of the cell index is the directory index */
 #define CmiDirectoryIndex(CellIndex)(CellIndex & 0xffc000000)
 /* Bits 21-12 (middle 10 bits) of the cell index is the table index */
@@ -106,27 +88,9 @@ CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 		IN PKEY_OBJECT NewKey);
 
 NTSTATUS
-CmiScanKeyList(IN PKEY_OBJECT Parent,
-	       IN PCUNICODE_STRING KeyName,
-	       IN ULONG Attributes,
-	       PKEY_OBJECT* ReturnedObject);
-
-NTSTATUS
 CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 	    PCUNICODE_STRING FileName,
 	    ULONG Flags);
-
-NTSTATUS
-CmiFlushRegistryHive(PCMHIVE RegistryHive);
-
-NTSTATUS
-CmiScanForSubKey(IN PCMHIVE RegistryHive,
-		 IN PCM_KEY_NODE KeyCell,
-		 OUT PCM_KEY_NODE *SubKeyCell,
-		 OUT HCELL_INDEX *BlockOffset,
-		 IN PCUNICODE_STRING KeyName,
-		 IN ACCESS_MASK DesiredAccess,
-		 IN ULONG Attributes);
 
 NTSTATUS
 CmiScanKeyForValue(IN PCMHIVE RegistryHive,
@@ -135,6 +99,9 @@ CmiScanKeyForValue(IN PCMHIVE RegistryHive,
 		   OUT PCM_KEY_VALUE *ValueCell,
 		   OUT HCELL_INDEX *VBOffset);
 
+VOID
+NTAPI
+CmpLazyFlush(VOID);
 
 NTSTATUS
 CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
@@ -142,9 +109,6 @@ CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);
-
-VOID
-CmiSyncHives(VOID);
 
 NTSTATUS
 NTAPI

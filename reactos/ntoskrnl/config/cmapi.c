@@ -13,6 +13,9 @@
 #define NDEBUG
 #include "debug.h"
 
+NTSTATUS
+CmiFlushRegistryHive(PCMHIVE RegistryHive);
+
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -41,22 +44,24 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
         {
             /* Find out why this is needed? [Aleksey] */
             ULONG Disposition;
-            Status = CmpOpenHiveFiles(&Hive->FileFullPath,
-                                      L".LOG",
-                                      &Hive->FileHandles[HFILE_TYPE_PRIMARY],
-                                      &Hive->FileHandles[HFILE_TYPE_LOG],
-                                      &Disposition,
-                                      &Disposition,
-                                      FALSE,
-                                      FALSE,
-                                      TRUE,
-                                      NULL);
-
+            CmpOpenHiveFiles(&Hive->FileFullPath,
+                             L".LOG",
+                             &Hive->FileHandles[HFILE_TYPE_PRIMARY],
+                             &Hive->FileHandles[HFILE_TYPE_LOG],
+                             &Disposition,
+                             &Disposition,
+                             FALSE,
+                             FALSE,
+                             TRUE,
+                             NULL);
+            
             /* Do the sync */
-            DPRINT1("Flushing: %wZ\n", &Hive->FileFullPath);
-            DPRINT1("Handle: %lx\n", Hive->FileHandles[HFILE_TYPE_PRIMARY]);
             Status = HvSyncHive(&Hive->Hive);
             if (!NT_SUCCESS(Status)) Result = FALSE;
+            
+            /* ReactOS requires this */
+            ZwClose(Hive->FileHandles[HFILE_TYPE_PRIMARY]);
+            ZwClose(Hive->FileHandles[HFILE_TYPE_LOG]);
         }
 
         /* Try the next entry */
@@ -1135,7 +1140,7 @@ CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
     
     /* Flush the registry */
-    CmiSyncHives();    
+    CmpLazyFlush();
     
 Quickie:
     /* Release the cell */
@@ -1150,16 +1155,16 @@ Quickie:
 NTSTATUS
 NTAPI
 CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
-           IN BOOLEAN EclusiveLock)
+           IN BOOLEAN ExclusiveLock)
 {
     PCMHIVE CmHive;
-    NTSTATUS Status;
+    NTSTATUS Status = STATUS_SUCCESS;
     PHHIVE Hive;
     
     /* Get the hives */
     Hive = Kcb->KeyHive;
     CmHive = (PCMHIVE)Hive;
-    
+          
     /* Check if this is the master hive */
     if (CmHive == CmiVolatileHive)
     {
@@ -1168,14 +1173,32 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     }
     else
     {
+        ULONG Disposition;
+
+        /* ReactOS Requires this */
+        CmpOpenHiveFiles(&CmHive->FileFullPath,
+                         L".LOG",
+                         &CmHive->FileHandles[HFILE_TYPE_PRIMARY],
+                         &CmHive->FileHandles[HFILE_TYPE_LOG],
+                         &Disposition,
+                         &Disposition,
+                         FALSE,
+                         FALSE,
+                         TRUE,
+                         NULL);
+
         /* Flush only this hive */
         if (!HvSyncHive(Hive))
         {
             /* Fail */
             Status = STATUS_REGISTRY_IO_FAILED;
         }
+        
+        /* ReactOS requires this */
+        ZwClose(CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
+        ZwClose(CmHive->FileHandles[HFILE_TYPE_LOG]);
     }
-    
+
     /* Return the status */
     return Status;
 }

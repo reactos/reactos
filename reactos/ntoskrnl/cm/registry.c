@@ -37,18 +37,6 @@ ERESOURCE CmpRegistryLock;
 LIST_ENTRY CmiKeyObjectListHead;
 LIST_ENTRY CmiConnectedHiveList;
 
-volatile BOOLEAN CmiHiveSyncEnabled = FALSE;
-volatile BOOLEAN CmiHiveSyncPending = FALSE;
-KDPC CmiHiveSyncDpc;
-KTIMER CmiHiveSyncTimer;
-
-static VOID
-NTAPI
-CmiHiveSyncDpcRoutine(PKDPC Dpc,
-                      PVOID DeferredContext,
-                      PVOID SystemArgument1,
-                      PVOID SystemArgument2);
-
 extern LIST_ENTRY CmiCallbackHead;
 extern FAST_MUTEX CmiCallbackLock;
 
@@ -520,15 +508,6 @@ CmiInitHives(BOOLEAN SetupBoot)
         return(Status);
     }
 
-    //CmiCheckRegistry(TRUE);
-
-    /* Start automatic hive synchronization */
-    KeInitializeDpc(&CmiHiveSyncDpc,
-                    CmiHiveSyncDpcRoutine,
-                    NULL);
-    KeInitializeTimer(&CmiHiveSyncTimer);
-    CmiHiveSyncEnabled = TRUE;
-
     DPRINT("CmiInitHives() done\n");
 
     return(STATUS_SUCCESS);
@@ -538,128 +517,7 @@ VOID
 NTAPI
 CmShutdownRegistry(VOID)
 {
-    PCMHIVE Hive;
-    PLIST_ENTRY Entry;
-
-    DPRINT("CmShutdownRegistry() called\n");
-
-    /* Stop automatic hive synchronization */
-    CmiHiveSyncEnabled = FALSE;
-
-    /* Cancel pending hive synchronization */
-    if (CmiHiveSyncPending == TRUE)
-    {
-        KeCancelTimer(&CmiHiveSyncTimer);
-        CmiHiveSyncPending = FALSE;
-    }
-
-    /* Lock the hive list */
-    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
-
-    Entry = CmpHiveListHead.Flink;
-    while (Entry != &CmpHiveListHead)
-    {
-        Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
-
-        if (!(IsNoFileHive(Hive) ||
-            IsNoSynchHive(Hive) ||
-            (Hive->Hive.HiveFlags & HIVE_VOLATILE)))
-        {
-            /* Flush non-volatile hive */
-            CmiFlushRegistryHive(Hive);
-        }
-
-        Entry = Entry->Flink;
-    }
-
-    /* Release the lock */
-    ExReleasePushLock(&CmpHiveListHeadLock);
-
-    DPRINT("CmShutdownRegistry() done\n");
-}
-
-VOID
-NTAPI
-CmiHiveSyncRoutine(PVOID DeferredContext)
-{
-    PCMHIVE Hive;
-    PLIST_ENTRY Entry;
-
-    DPRINT("CmiHiveSyncRoutine() called\n");
-
-    CmiHiveSyncPending = FALSE;
-
-    /* Lock the hive list */
-    ExAcquirePushLockExclusive(&CmpHiveListHeadLock);
-
-    Entry = CmpHiveListHead.Flink;
-    while (Entry != &CmpHiveListHead)
-    {
-        Hive = CONTAINING_RECORD(Entry, CMHIVE, HiveList);
-
-        if (!(IsNoFileHive(Hive) ||
-            IsNoSynchHive(Hive) ||
-            (Hive->Hive.HiveFlags & HIVE_VOLATILE)))
-        {
-            /* Flush non-volatile hive */
-            CmiFlushRegistryHive(Hive);
-        }
-
-        Entry = Entry->Flink;
-    }
-
-    /* Release the lock */
-    ExReleasePushLock(&CmpHiveListHeadLock);
-
-    DPRINT("DeferredContext 0x%p\n", DeferredContext);
-    ExFreePool(DeferredContext);
-
-    DPRINT("CmiHiveSyncRoutine() done\n");
-}
-
-static VOID
-NTAPI
-CmiHiveSyncDpcRoutine(PKDPC Dpc,
-                      PVOID DeferredContext,
-                      PVOID SystemArgument1,
-                      PVOID SystemArgument2)
-{
-    PWORK_QUEUE_ITEM WorkQueueItem;
-
-    WorkQueueItem = ExAllocatePool(NonPagedPool,
-                                   sizeof(WORK_QUEUE_ITEM));
-    if (WorkQueueItem == NULL)
-    {
-        DPRINT1("Failed to allocate work item\n");
-        return;
-    }
-
-    ExInitializeWorkItem(WorkQueueItem,
-                         CmiHiveSyncRoutine,
-                         WorkQueueItem);
-
-    DPRINT("DeferredContext 0x%p\n", WorkQueueItem);
-    ExQueueWorkItem(WorkQueueItem,
-                    CriticalWorkQueue);
-}
-
-VOID
-CmiSyncHives(VOID)
-{
-    LARGE_INTEGER Timeout;
-
-    DPRINT("CmiSyncHives() called\n");
-
-  if (CmiHiveSyncEnabled == FALSE ||
-        CmiHiveSyncPending == TRUE)
-        return;
-
-    CmiHiveSyncPending = TRUE;
-
-    Timeout.QuadPart = (LONGLONG)-50000000;
-    KeSetTimer(&CmiHiveSyncTimer,
-               Timeout,
-               &CmiHiveSyncDpc);
+    CmShutdownSystem();
 }
 
 /* EOF */

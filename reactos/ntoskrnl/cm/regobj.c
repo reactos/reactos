@@ -340,6 +340,64 @@ Next:
     return STATUS_SUCCESS;
 }
 
+
+/* Preconditions: Must be called with CmpRegistryLock held. */
+NTSTATUS
+CmiScanKeyList(PKEY_OBJECT Parent,
+               PCUNICODE_STRING KeyName,
+               ULONG Attributes,
+               PKEY_OBJECT* ReturnedObject)
+{
+    PKEY_OBJECT CurKey = NULL;
+    ULONG Index;
+    
+    DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
+           KeyName, &Parent->Name);
+    
+    /* FIXME: if list maintained in alphabetic order, use dichotomic search */
+    /* (a binary search) */
+    for (Index=0; Index < Parent->SubKeyCounts; Index++)
+    {
+        CurKey = Parent->SubKeys[Index];
+        if (Attributes & OBJ_CASE_INSENSITIVE)
+        {
+            DPRINT("Comparing %wZ and %wZ\n", KeyName, &CurKey->Name);
+            if ((KeyName->Length == CurKey->Name.Length)
+                && (_wcsicmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
+            {
+                break;
+            }
+        }
+        else
+        {
+            if ((KeyName->Length == CurKey->Name.Length)
+                && (wcscmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
+            {
+                break;
+            }
+        }
+    }
+    
+    if (Index < Parent->SubKeyCounts)
+    {
+        if (CurKey->KeyControlBlock->Delete)
+        {
+            CHECKPOINT;
+            *ReturnedObject = NULL;
+            return STATUS_UNSUCCESSFUL;
+        }
+        ObReferenceObject(CurKey);
+        *ReturnedObject = CurKey;
+    }
+    else
+    {
+        *ReturnedObject = NULL;
+    }
+    return STATUS_SUCCESS;
+}
+
+
+
 NTSTATUS
 NTAPI
 CmpParseKey(IN PVOID ParsedObject,
@@ -770,61 +828,6 @@ CmiAddKeyToList(PKEY_OBJECT ParentKey,
                                CmpKeyObjectType,
                                KernelMode);
     //NewKey->ParentKey = ParentKey;
-}
-
-/* Preconditions: Must be called with CmpRegistryLock held. */
-NTSTATUS
-CmiScanKeyList(PKEY_OBJECT Parent,
-               PCUNICODE_STRING KeyName,
-               ULONG Attributes,
-               PKEY_OBJECT* ReturnedObject)
-{
-    PKEY_OBJECT CurKey = NULL;
-    ULONG Index;
-
-    DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
-        KeyName, &Parent->Name);
-
-    /* FIXME: if list maintained in alphabetic order, use dichotomic search */
-    /* (a binary search) */
-    for (Index=0; Index < Parent->SubKeyCounts; Index++)
-    {
-        CurKey = Parent->SubKeys[Index];
-        if (Attributes & OBJ_CASE_INSENSITIVE)
-        {
-            DPRINT("Comparing %wZ and %wZ\n", KeyName, &CurKey->Name);
-            if ((KeyName->Length == CurKey->Name.Length)
-                && (_wcsicmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
-            {
-                break;
-            }
-        }
-        else
-        {
-            if ((KeyName->Length == CurKey->Name.Length)
-                && (wcscmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
-            {
-                break;
-            }
-        }
-    }
-
-    if (Index < Parent->SubKeyCounts)
-    {
-        if (CurKey->KeyControlBlock->Delete)
-        {
-            CHECKPOINT;
-            *ReturnedObject = NULL;
-            return STATUS_UNSUCCESSFUL;
-        }
-        ObReferenceObject(CurKey);
-        *ReturnedObject = CurKey;
-    }
-    else
-    {
-        *ReturnedObject = NULL;
-    }
-    return STATUS_SUCCESS;
 }
 
 static NTSTATUS

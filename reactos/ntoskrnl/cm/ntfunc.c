@@ -389,7 +389,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     PostCreateKeyInfo.Status = Status;
     CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
 
-    CmiSyncHives();
+    CmpLazyFlush();
     
     LocalDisposition = REG_CREATED_NEW_KEY;
 
@@ -420,59 +420,6 @@ Cleanup:
     if (Object != NULL) ObDereferenceObject(Object);
 
     return Status;
-}
-
-NTSTATUS
-NTAPI
-NtFlushKey(IN HANDLE KeyHandle)
-{
-    NTSTATUS Status;
-    PKEY_OBJECT  KeyObject;
-    PCMHIVE  RegistryHive;
-    KPROCESSOR_MODE  PreviousMode;
-    
-    PAGED_CODE();
-    
-    DPRINT("NtFlushKey (KeyHandle %lx) called\n", KeyHandle);
-    
-    PreviousMode = ExGetPreviousMode();
-    
-    /* Verify that the handle is valid and is a registry key */
-    Status = ObReferenceObjectByHandle(KeyHandle,
-                                       0,
-                                       CmpKeyObjectType,
-                                       PreviousMode,
-                                       (PVOID *)&KeyObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        return(Status);
-    }
-    
-    VERIFY_KEY_OBJECT(KeyObject);
-    
-    RegistryHive = (PCMHIVE)KeyObject->KeyControlBlock->KeyHive;
-    
-    /* Acquire hive lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-    
-    if (IsNoFileHive(RegistryHive))
-    {
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        /* Flush non-volatile hive */
-        Status = CmiFlushRegistryHive(RegistryHive);
-    }
-    
-    ExReleaseResourceLite(&CmpRegistryLock);
-    KeLeaveCriticalRegion();
-    
-    ObDereferenceObject(KeyObject);
-    
-    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -687,6 +634,7 @@ NtInitializeRegistry (IN USHORT Flag)
 
     Status = CmiInitHives (Flag);
 
+    CmpCmdInit(Flag);
     CmiRegistryInitialized = TRUE;
 
     return Status;

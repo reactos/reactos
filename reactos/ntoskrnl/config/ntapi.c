@@ -373,7 +373,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
     ObDereferenceObject(KeyObject);
 
     /* Synchronize the hives and return */
-    CmiSyncHives();
+    CmpLazyFlush();
     return Status;
 }
 
@@ -421,7 +421,49 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
 
     /* Dereference the key body and synchronize the hives */
     ObDereferenceObject(KeyObject);
-    CmiSyncHives();
+    CmpLazyFlush();
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+NtFlushKey(IN HANDLE KeyHandle)
+{
+    NTSTATUS Status;
+    PKEY_OBJECT KeyObject;
+    PAGED_CODE();
+    
+    /* Get the key object */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       0,
+                                       CmpKeyObjectType,
+                                       ExGetPreviousMode(),
+                                       (PVOID*)&KeyObject,
+                                       NULL);
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Lock the registry */
+    KeEnterCriticalRegion();
+    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+    
+    /* Make sure KCB isn't deleted */
+    if (KeyObject->KeyControlBlock->Delete)
+    {
+        /* Fail */
+        Status = STATUS_KEY_DELETED;
+    }
+    else
+    {
+        /* Call the internal API */
+        Status = CmFlushKey(KeyObject->KeyControlBlock, FALSE);
+    }
+    
+    /* Release the lock */
+    ExReleaseResourceLite(&CmpRegistryLock);
+    KeLeaveCriticalRegion();
+    
+    /* Dereference the object and return status */
+    ObDereferenceObject(KeyObject);
     return Status;
 }
 

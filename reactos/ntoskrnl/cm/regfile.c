@@ -58,49 +58,6 @@ CmiLoadHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
     return Status;
 }
 
-VOID
-CmCloseHiveFiles(PCMHIVE RegistryHive)
-{
-    ZwClose(RegistryHive->FileHandles[HFILE_TYPE_PRIMARY]);
-    ZwClose(RegistryHive->FileHandles[HFILE_TYPE_LOG]);
-}
-
-NTSTATUS
-CmiFlushRegistryHive(PCMHIVE RegistryHive)
-{
-    BOOLEAN Success;
-    NTSTATUS Status;
-    ULONG Disposition;
-
-    ASSERT(!RegistryHive->Hive.HiveFlags & HIVE_VOLATILE);
-
-    if (RtlFindSetBits(&RegistryHive->Hive.DirtyVector, 1, 0) == ~0)
-    {
-        return(STATUS_SUCCESS);
-    }
-
-    Status = CmpOpenHiveFiles(&RegistryHive->FileFullPath,
-                              L".LOG",
-                              &RegistryHive->FileHandles[HFILE_TYPE_PRIMARY],
-                              &RegistryHive->FileHandles[HFILE_TYPE_LOG],
-                              &Disposition,
-                              &Disposition,
-                              FALSE,
-                              FALSE,
-                              TRUE,
-                              NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        return Status;
-    }
-
-    Success = HvSyncHive(&RegistryHive->Hive);
-
-    CmCloseHiveFiles(RegistryHive);
-
-    return Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL;
-}
-
 NTSTATUS
 CmiScanKeyForValue(IN PCMHIVE RegistryHive,
                    IN PCM_KEY_NODE KeyCell,
