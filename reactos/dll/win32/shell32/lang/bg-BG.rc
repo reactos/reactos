@@ -104,7 +104,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 156, 40, 12
+	LTEXT "Folder:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
 	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
@@ -168,29 +168,29 @@ BEGIN
 	PUSHBUTTON "&Обзор...", 12288, 170, 63, 50, 14, WS_TABSTOP
 END
 
-SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 240, 130
+SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Shortcut"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
-	LTEXT "Вид на целта:", 14004, 10, 30, 50, 10
-	LTEXT "", 14005, 70, 30, 150, 10
-	LTEXT "Местоположение на целта:", 14006, 10, 40, 70, 10
-	LTEXT "", 14007, 70, 40, 150, 10
-	LTEXT "Цел:", 14008, 10, 55, 45, 10
-	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	LTEXT "Изпълняване в:",14010, 10, 65, 45, 10
-	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	LTEXT "Бърз &клавиш:", 14014, 10, 80, 45, 10
-	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
-	LTEXT "Изпълняване:", 14016, 10, 90, 45, 10
-	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
-	LTEXT "Забележка:", 14018, 10, 100, 45, 10
-	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
-	PUSHBUTTON "&Намиране на целта", 14020, 10, 115, 70, 14, ES_LEFT
-	PUSHBUTTON "&Смяна на значето:", 14021, 80, 115, 67, 14, ES_LEFT
-	PUSHBUTTON "Раз&ширени...", 14022, 150, 115, 60, 14, ES_LEFT
+	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
+	LTEXT "Вид на целта:", 14004, 8, 38, 64, 10
+	LTEXT "", 14005, 78, 38, 142, 10
+	LTEXT "Местоположение на целта:", 14006, 8, 58, 64, 10
+	LTEXT "", 14007, 79, 58, 141, 10
+	LTEXT "Цел:", 14008, 8, 77, 45, 10
+	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
+	LTEXT "Изпълняване в:", 14010, 8, 96, 57, 10
+	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
+	LTEXT "Бърз &клавиш:", 14014, 8, 115, 57, 10
+	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
+	LTEXT "Изпълняване:", 14016, 8, 134, 57, 10
+	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
+	LTEXT "Забележка:", 14018, 8, 152, 57, 10
+	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Намиране на целта", 14020, 9, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&Смяна на значето:", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "Раз&ширени...", 14022, 159, 172, 70, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
@@ -202,53 +202,53 @@ BEGIN
 	CHECKBOX "Изпълняване с различни правомощия", 14000, 30, 50, 150, 10
 	LTEXT "Тази възможност ви позволява да изпълните препратката като друг потребител или да продължите като себе си, като предпазвате компютъра и данните от неупълномощена дейност на приложенията.", -1, 50, 60, 200, 40
 	CHECKBOX "Изпълняване в отделен дял от паметта", 14001, 30, 100, 170, 10, WS_DISABLED
-	PUSHBUTTON "Добре", IDOK, 25, 120, 40, 15, WS_VISIBLE
-	PUSHBUTTON "Прекъсване", IDCANCEL, 120, 120, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Добре", 1, 63, 124, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Прекъсване", 2, 120, 124, 50, 15, WS_VISIBLE
 END
 
-SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 130
+SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
-	EDITTEXT 14001, 70, 5, 100, 10, ES_LEFT | ES_READONLY
-	LTEXT "Вид файл:", 14004, 10, 30, 50, 10
-	LTEXT "Файл:", 14005, 70, 30, 150, 10
-	LTEXT "Отваряне с:", 14006, 10, 40, 50, 10
-	LTEXT "", 14007, 70, 40, 150, 10
-	LTEXT "Местоположение:", 14008, 10, 55, 60, 10
-	LTEXT "", 14009, 70, 55, 200, 10
-	LTEXT "Размер:",14010, 10, 65, 45, 10
-	LTEXT "", 14011, 70, 65, 150, 10
-	LTEXT "Създаден", 14014, 10, 80, 45, 10
-	LTEXT "", 14015, 70, 80, 150, 10
-	LTEXT "Променен:", 14016, 10, 90, 45, 10
-	LTEXT "", 14017, 70, 90, 150, 10
-	LTEXT "Използван", 14018, 10, 100, 45, 10
-	LTEXT "", 14019, 70, 100, 150, 10
-	LTEXT "Принадлежности", 14020, 10, 115, 60, 10
-	CHECKBOX "Само за &четене", 14021, 70, 115, 65, 10
-	CHECKBOX "С&крит", 14022, 140, 115, 40, 10
-	CHECKBOX "&Сбит", 14023, 180, 115, 45, 10
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Вид файл:", 14004, 8, 35, 50, 10
+	LTEXT "File", 14005, 68, 35, 160, 10
+	LTEXT "Отваряне с:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 160, 10
+	LTEXT "Местоположение:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Размер:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Създаден", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	LTEXT "Променен:", 14016, 8, 140, 45, 10
+	LTEXT "", 14017, 68, 140, 160, 10
+	LTEXT "Използван:", 14018, 8, 160, 45, 10
+	LTEXT "", 14019, 68, 160, 160, 10
+	LTEXT "Принадлежности", 14020, 8, 190, 45, 10
+	CHECKBOX "Само за &четене", 14021, 58, 190, 67, 10
+	CHECKBOX "С&крит", 14022, 126, 189, 50, 10
+	CHECKBOX "&Сбит", 14023, 181, 189, 49, 10
 END
 
-SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 240, 136
+SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Издание"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Издание на файла:", 14000, 10, 10, 67, 10
-	LTEXT "", 14001, 80, 10, 150, 10
-	LTEXT "Описание:", 14002, 10, 20, 45, 10
-	LTEXT "", 14003, 70, 20, 150, 10
-	LTEXT "Възпроизводствено право", 14004, 10, 30, 93, 10
-	LTEXT "", 14005, 105, 30, 150, 10
-	GROUPBOX "Други сведения за изданието", 14006, 10, 45, 220, 90
-	LTEXT "Име на предмета", 14007, 20, 55, 90, 10
-	LTEXT "Стойност:", 14008, 130, 55, 45, 10
-	LISTBOX 14009,20,65,95,60, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
-	EDITTEXT 14010, 130, 65, 95, 60, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
+	LTEXT "Издание на файла: ", 14000, 10, 10, 55, 10
+	LTEXT "", 14001, 77, 10, 152, 10
+	LTEXT "Описание: ", 14002, 10, 27, 45, 10
+	LTEXT "", 14003, 77, 27, 152, 10
+	LTEXT "Възпроизводствено право: ", 14004, 10, 46, 66, 10
+	LTEXT "", 14005, 77, 46, 152, 10
+	GROUPBOX "Други сведения за изданието", 14006, 6, 70, 222, 115
+	LTEXT "Име на предмета: ", 14007, 13, 82, 50, 10
+	LTEXT "Стойност: ", 14008, 112, 82, 45, 10
+	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
+	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
 END
 
 DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
@@ -256,7 +256,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общи"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	EDITTEXT 14001, 40, 20, 190, 10, ES_LEFT|WS_BORDER|WS_GROUP
+	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
 	LTEXT "Вид:", -1, 15, 55, 40, 10
 	LTEXT "", 14002, 110, 55, 100, 10
 
@@ -318,15 +318,15 @@ BEGIN
 	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
 	CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Следният потребител:", 14002, 10, 100, 90, 10
-	LTEXT "Потребителско име:", -1, 20, 115, 60, 10
-	COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+	LTEXT "Потребителско име:", -1, 20, 118, 54, 10
+	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 
-	PUSHBUTTON "...", 14004, 180, 115, 30, 10, WS_TABSTOP
-	LTEXT "Парола:", -1, 20, 140, 60, 10
-	EDITTEXT 14005, 70, 140, 100, 10, ES_LEFT | WS_BORDER | WS_GROUP
-	PUSHBUTTON "...", 14006, 180, 140, 30, 10, WS_TABSTOP
-	PUSHBUTTON "Добре", 14007, 70, 170, 60, 15, WS_TABSTOP
-	PUSHBUTTON "Отказ", 14008, 140, 170, 60, 15, WS_TABSTOP
+	PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+	LTEXT "Парола:", -1, 20, 143, 53, 10
+	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
+	PUSHBUTTON "Добре", 14007, 57, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "Отказ", 14008, 122, 170, 60, 14, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
@@ -335,11 +335,11 @@ CAPTION "Recycle Bin Properties"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 80, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10
-	EDITTEXT 14002, 90, 90, 50, 10, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 100, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 115, 170, 20, BS_MULTILINE | WS_TABSTOP
+	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
+	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
+	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
 	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
