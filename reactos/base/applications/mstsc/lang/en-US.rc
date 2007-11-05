@@ -35,7 +35,7 @@ BEGIN
     LTEXT           "Note: Settings on the remote computer might override this setting.",IDC_STATIC,56,143,165,18
     LTEXT           "Less",IDC_STATIC,35,42,15,8
     LTEXT           "More",IDC_STATIC,189,42,17,8
-    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 124, 10, SS_CENTER
+    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
 IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 267

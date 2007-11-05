@@ -387,17 +387,9 @@ ByeBye:
 static VOID
 UpdateDisplay(IN HWND hwndDlg, PINFO pGlobalData, IN BOOL bUpdateThumb)
 {
-    TCHAR Buffer[64];
-    TCHAR Pixel[64];
-    DWORD index;
 
-    LoadString(hInst, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
-    _stprintf(Buffer, Pixel, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
-    //SendDlgItemMessage(pGlobalData->hDisplayPage, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
-    SetDlgItemText(pGlobalData->hDisplayPage, pGlobalData->hDisplayPage, Buffer);
 
-    if (LoadString(hInst, (2900 + pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel), Buffer, sizeof(Buffer) / sizeof(TCHAR)))
-        SendDlgItemMessage(hwndDlg, IDC_GEOSLIDER, CB_SELECTSTRING, (WPARAM)-1, (LPARAM)Buffer);
+
 }
 
 
@@ -405,6 +397,8 @@ static VOID
 FillResolutionsAndColors(PINFO pInfo)
 {
     PSETTINGS_ENTRY Current;
+    TCHAR Buffer[64];
+    TCHAR Pixel[64];
     DWORD index, i, num;
     DWORD MaxBpp = 0;
     UINT HighBpp;
@@ -481,7 +475,21 @@ FillResolutionsAndColors(PINFO pInfo)
                        TRUE,
                        MAKELONG(0, pInfo->DisplayDeviceList->ResolutionsCount)); //extra 1 for full screen
 
-    UpdateDisplay(pInfo->hDisplayPage, pInfo, TRUE);
+    LoadString(hInst, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
+    _stprintf(Buffer, Pixel, pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
+    SendDlgItemMessage(pInfo->hDisplayPage, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
+
+    for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
+    {
+        if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
+            pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
+        {
+            SendDlgItemMessage(pInfo->hDisplayPage, IDC_GEOSLIDER, TBM_SETPOS, TRUE, index);
+            break;
+        }
+    }
+
+    //UpdateDisplay(pInfo->hDisplayPage, pInfo, TRUE);
 }
 
 

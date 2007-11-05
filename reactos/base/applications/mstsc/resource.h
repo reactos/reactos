@@ -14,8 +14,8 @@
 
 #define IDC_LOGONICON                   1016
 #define IDC_CONNICON                    1017
-#define IDC_REMICON                     1014
-#define IDC_COLORSICON                  1015
+#define IDC_REMICON                     1018
+#define IDC_COLORSICON                  1019
 
 #define IDB_HEADER                      1016
 #define IDB_SPECT                       1017
