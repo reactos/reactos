@@ -507,7 +507,7 @@ MingwModuleHandler::GetObjectFilename (
 	string newExtension;
 	string extension = GetExtension ( *sourceFile );
 	if ( extension == ".rc" || extension == ".RC" )
-		newExtension = ".coff";
+		newExtension = "_" + module.name + ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
 		newExtension = ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
@@ -520,7 +520,7 @@ MingwModuleHandler::GetObjectFilename (
 			newExtension = ".h";
 	}
 	else
-		newExtension = ".o";
+		newExtension = "_" + module.name + ".o";
 
 	if ( module.type == BootSector )
 		destination_directory = OutputDirectory;
@@ -1119,7 +1119,7 @@ MingwModuleHandler::GenerateObjectMacros (
 const FileLocation*
 MingwModuleHandler::GetPrecompiledHeaderFilename () const
 {
-	const string& basePchFilename = module.pch->file.name + ".gch";
+	const string& basePchFilename = module.pch->file.name + "_" + module.name + ".gch";
 	return new FileLocation ( IntermediateDirectory,
 	                          module.pch->file.relative_path,
 	                          basePchFilename );
