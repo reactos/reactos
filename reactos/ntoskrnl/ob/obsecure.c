@@ -714,7 +714,7 @@ NtSetSecurityObject(IN HANDLE Handle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     PVOID Object;
     SECURITY_DESCRIPTOR_RELATIVE *CapturedDescriptor;
-    ACCESS_MASK DesiredAccess;
+    ACCESS_MASK DesiredAccess = 0;
     NTSTATUS Status;
     PAGED_CODE();
 
