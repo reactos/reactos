@@ -14,8 +14,7 @@
 #include <fcntl.h>
 #include <sys/types.h>
 #include <time.h>
-#include <typedefs64.h>
-typedef unsigned short USHORT, *PUSHORT;
+#include <host/typedefs.h>
 #include <unistd.h>
 #ifndef MAX_PATH
 #define MAX_PATH 260
