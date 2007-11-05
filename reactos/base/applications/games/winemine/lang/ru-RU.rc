@@ -4,9 +4,9 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-STRINGTABLE {
-     IDS_APPNAME, "Сапер"
-
+STRINGTABLE
+{
+    IDS_APPNAME, "Сапер"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
@@ -44,7 +44,7 @@ FONT 8, "MS Shell Dlg"
     LTEXT           "",             IDC_NAME1,  94,  20,  55,   8
     LTEXT           "",             IDC_NAME2,  94,  30,  55,   8
     LTEXT           "",             IDC_NAME3,  94,  40,  55,   8
-    DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
+    DEFPUSHBUTTON   "OK",           IDOK,       55,  60,  50,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
@@ -53,8 +53,8 @@ CAPTION "Поздравляем!"
 FONT 8, "MS Shell Dlg"
 {
     LTEXT           "Пожалуйства введите ваше имя", IDIGNORE,  10,  10, 150,  10
-    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "OK",                         IDOK,  60,  40,  40,  15
+    EDITTEXT        IDC_EDITNAME,  25,  20, 110,  12
+    DEFPUSHBUTTON   "OK", IDOK,    60,  40,  40,  15
 }
 
 DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
@@ -62,12 +62,12 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Особая игра"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "Высота",   IDNONE,   5,   5,  30,  10
-    LTEXT           "Ширина",   IDNONE,   5,  35,  30,  10
-    LTEXT           "Число мин",  IDNONE,   5,  65,  36,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
+    LTEXT           "Высота",    IDNONE, 5,   5,  30,  10
+    LTEXT           "Ширина",    IDNONE, 5,  35,  30,  10
+    LTEXT           "Число мин", IDNONE, 5,  65,  36,  10
+    EDITTEXT        IDC_EDITROWS,        5,  15,  20,  12, ES_NUMBER
+    EDITTEXT        IDC_EDITCOLS,        5,  45,  20,  12, ES_NUMBER
+    EDITTEXT        IDC_EDITMINES,       5,  75,  20,  12, ES_NUMBER
     DEFPUSHBUTTON   "OK",     IDOK,      45,  30,  50,  15
     PUSHBUTTON      "Отмена", IDCANCEL,  45,  50,  50,  15
 }
@@ -77,9 +77,9 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "О программе"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT                               "Сапер", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
-    LTEXT                 "под лицензией Wine", IDNONE,  35,  35, 100,  10
-    ICON                                IDI_WINEMINE, IDNONE,  10,  25,  20,  20
-    DEFPUSHBUTTON                             "OK", IDOK,      50,  60,  55,  15
+    LTEXT         "Сапер", IDNONE,  10,  10,  35,  10
+    LTEXT         "Авторские права (с) 2000,\nДжошуа Сейлен.", IDNONE,  35,  25, 110,  17
+    LTEXT         "под лицензией Wine", IDNONE,  35,  42, 100,  10
+    ICON          IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+    DEFPUSHBUTTON "OK", IDOK,      50,  60,  55,  15
 }
