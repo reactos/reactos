@@ -18,9 +18,9 @@ ULONG
 FASTCALL
 GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
 {
-  PDC dc = DC_LockDc(hDC);
-  if (!dc) return 0;
-  // The thread is on the end of sunset.
+  PDC dc = NULL;
+  if (hDC) dc = DC_LockDc(hDC);
+  // The thread is approaching the end of sunset.
   switch(pHdr->Cmd)
   {
      case GdiBCPatBlt: // Highest pri first!
@@ -33,6 +33,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
         break;
      case GdiBCSetBrushOrg:
      {
+        if (!dc) break;
         PGDIBSSETBRHORG pgSBO = (PGDIBSSETBRHORG) pHdr;
         dc->Dc_Attr.ptlBrushOrigin = pgSBO->ptlBrushOrigin;
         break;
@@ -49,10 +50,9 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
         break;
      }
      default:
-       DC_UnlockDc(dc);
-       return 0;
+        break;
   }
-  DC_UnlockDc(dc);
+  if (dc) DC_UnlockDc(dc);
   return pHdr->Size; // Return the full size of the structure.
 }
 
