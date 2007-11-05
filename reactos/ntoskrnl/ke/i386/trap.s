@@ -192,8 +192,7 @@ ReadBatch:
     /* Flush it */
     push edx
     push eax
-// <-- Remove these once it is working!
-//    call [_KeGdiFlushUserBatch]
+    call [_KeGdiFlushUserBatch]
     pop eax
     pop edx
 
