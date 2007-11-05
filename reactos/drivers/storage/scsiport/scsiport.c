@@ -1097,7 +1097,10 @@ CreatePortConfig:
                                      FirstConfigCall);
 
         if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
             break;
+        }
 
         /* Allocate and initialize port configuration info */
         PortConfigSize = (sizeof(PORT_CONFIGURATION_INFORMATION) +
@@ -5600,8 +5603,13 @@ TryNextAd:
             else
             {
                 /* Info was not found, exit */
+                DPRINT1("ZwOpenKey() failed with Status=0x%08X\n", Status);
                 return STATUS_DEVICE_DOES_NOT_EXIST;
             }
+        }
+        else
+        {
+            DPRINT1("ZwOpenKey() failed with Status=0x%08X\n", Status);
         }
     }
 
