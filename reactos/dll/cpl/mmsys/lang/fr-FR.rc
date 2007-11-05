@@ -28,14 +28,14 @@ CAPTION "Sons"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Un schéma sons est un ensemble de sons appliqués aux évènements de ReactOS et aux programmes. Vous pouvez sélectionner un schéma existant ou en enregistrer que vous avez modifié.",-1,8,7,230,40
-    LTEXT "S&chéma son:",-1,8,42,150,17
+    LTEXT "S&chéma son :",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Enregistrer sous...", -1, 134,70,50,15
     PUSHBUTTON "Supprimer", -1, 188,70,50,15
     LTEXT "Pour changer les sons, cliquez sur un évènement de programme dans la liste suivante, puis sélectionnez un son à appliquer. Vous pouvez enregistrer les changements en tant que nouveau schéma son.",-1,8,90,230,40
-    LTEXT "Évènements des programmes:",-1,8,118,150,17
+    LTEXT "Évènements des programmes :",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sons:",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "&Sons :",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED
     PUSHBUTTON "Parcourir...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
@@ -48,19 +48,19 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Lecture sonore", -1, 7,7,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "Périphérique par &défaut:",-1,50,20,80,17
+    LTEXT "Périphérique par &défaut :",-1,50,20,80,17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Volume...", -1, 85,47,70,15
     PUSHBUTTON "Ava&ncé...", -1, 160,47,70,15
     GROUPBOX "Enregistrement sonore", -1, 7,75,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "Périphérique par d&éfaut:",-1,50,88,80,17
+    LTEXT "Périphérique par d&éfaut :",-1,50,88,80,17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "V&olume...", -1, 85,115,70,15
     PUSHBUTTON "Avan&cé...", -1, 160,115,70,15
     GROUPBOX "Lecture de la musique MIDI", -1, 7,145,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,158,32,32
-    LTEXT "Périphérique par dé&faut:",-1,50,158,80,17
+    LTEXT "Périphérique par dé&faut :",-1,50,158,80,17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "Volu&me...", -1, 85,185,70,15
     PUSHBUTTON "À propos de...", -1, 160,185,70,15
@@ -75,13 +75,13 @@ BEGIN
     LTEXT "Ces paramètres contrôlent le volume et les options avancées pour le périphérique de lecture ou d'enregistrement de la voix que vous avez sélectionné.",-1,8,7,230,40
     GROUPBOX "Lecture de la voix", -1, 7,37,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "Périphérique par &défaut:",-1,50,50,80,17
+    LTEXT "Périphérique par &défaut :",-1,50,50,80,17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "&Volume...", -1, 85,77,70,15
     PUSHBUTTON "Ava&ncé...", -1, 160,77,70,15
     GROUPBOX "Enregistrement de la voix", -1, 7,105,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "Périphérique par d&éfaut:",-1,50,118,80,17
+    LTEXT "Périphérique par d&éfaut :",-1,50,118,80,17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
     PUSHBUTTON "V&olume...", -1, 85,145,70,15
     PUSHBUTTON "Avan&cé...", -1, 160,145,70,15

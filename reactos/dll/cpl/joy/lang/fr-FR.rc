@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
 	LTEXT "Sélectionnez un contrôleur de jeu dans la liste suivante, puis cliquez sur OK.  Si votre contrôleur de jeu n'apparaît pas dans la liste, cliquez sur Personnaliser.", -1, 35, 7, 210, 33
-	LTEXT "Contrôleurs de jeu:", -1, 8, 45, 126, 8
+	LTEXT "Contrôleurs de jeu :", -1, 8, 45, 126, 8
 	LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
 	AUTOCHECKBOX "Activ&er les palonniers et les pédales", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
 	LTEXT "Port de jeu:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
@@ -55,7 +55,7 @@ BEGIN
 	GROUPBOX "&Boutons", -1, 137, 67, 116, 44
 	COMBOBOX IDC_BUTTONS_COMBO, 178, 79, 48, 50, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL, WS_EX_CLIENTEDGE
 	AUTOCHECKBOX "Inclue un contrôle de &point de vue", IDC_INC_POINT_CHECKBOX, 7, 123, 115, 10
-	LTEXT "N&om du contrôleur:", -1, 7, 139, 200, 9
+	LTEXT "N&om du contrôleur :", -1, 7, 139, 200, 9
 	EDITTEXT IDC_CONTROLLER_NAME_EDIT, 7, 150, 116, 15, ES_AUTOHSCROLL, WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
 	DEFPUSHBUTTON "OK", IDOK, 137, 150, 50, 14
 	PUSHBUTTON "Annuler", IDCANCEL, 203, 150, 50, 14

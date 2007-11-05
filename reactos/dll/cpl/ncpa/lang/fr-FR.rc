@@ -17,10 +17,10 @@ STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
- LTEXT "Se connecter en utilisant:", -1, 9,9,217,8
+ LTEXT "Se connecter en utilisant :", -1, 9,9,217,8
  EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_DISABLED | WS_BORDER | WS_TABSTOP
  PUSHBUTTON "&Configurer", IDC_CONFIGURE, 189, 38, 50, 14
- LTEXT "Les composants cochés sont utilisés par cette connexion:", -1, 9, 59, 217, 8
+ LTEXT "Les composants cochés sont utilisés par cette connexion :", -1, 9, 59, 217, 8
  LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_STANDARD | LBS_NOINTEGRALHEIGHT
  PUSHBUTTON "&Installer", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
  PUSHBUTTON "&Désinstaller", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
@@ -37,16 +37,16 @@ CAPTION "Général"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Connexion", -1, 9, 8, 182, 58, BS_GROUPBOX
- LTEXT "État:", -1, 19, 20, 60, 8
- LTEXT "Durée:", -1, 19, 34, 60, 8
- LTEXT "Vitesse:", -1, 19, 48, 60, 8
+ LTEXT "État :", -1, 19, 20, 60, 8
+ LTEXT "Durée :", -1, 19, 34, 60, 8
+ LTEXT "Vitesse :", -1, 19, 48, 60, 8
  GROUPBOX "Activité", -1, 9, 74, 182, 70, BS_GROUPBOX
  RTEXT "Envoyés", -1, 26, 90, 60, 8
  ICON IDI_HORIZONTAL, -1, 90, 85, 18, 20
  ICON IDI_NETSTAT, -1, 110, 85, 18, 20
  ICON IDI_HORIZONTAL, -1, 130, 85, 18, 20
  LTEXT "Reçus", -1, 149, 90, 37, 8
- LTEXT "Paquets:", -1, 17, 115, 32, 8
+ LTEXT "Paquets :", -1, 17, 115, 32, 8
  RTEXT "000.000.000", IDC_SEND, 63, 115, 44, 8
  ICON IDI_VERTICAL, -1, 110, 108, 18, 20
  RTEXT "000.000.000", IDC_RECEIVED, 139, 115, 44, 8
@@ -63,10 +63,10 @@ CAPTION "Support"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Status de la connexion", -1, 9, 8, 200, 88, BS_GROUPBOX
- LTEXT "Type d'adresse:", -1, 22, 20, 80, 8
- LTEXT "Adresse IP:", -1, 22, 34, 80, 8
- LTEXT "Masque sous-réseau:", -1, 22, 48, 80, 8
- LTEXT "Passerelle par défaut:", -1, 22, 62, 80, 8
+ LTEXT "Type d'adresse :", -1, 22, 20, 80, 8
+ LTEXT "Adresse IP :", -1, 22, 34, 80, 8
+ LTEXT "Masque sous-réseau :", -1, 22, 48, 80, 8
+ LTEXT "Passerelle par défaut :", -1, 22, 62, 80, 8
 
  RTEXT "N/A", IDC_DETAILSTYPE, 122, 20, 80, 8
  RTEXT "000.000.000.000", IDC_DETAILSIP, 122, 34, 80, 8
@@ -84,19 +84,19 @@ BEGIN
  LTEXT "Vous pouvez automatiquement régler les paramètres si votre réseau supporte cette possibilité. Sinon, vous devez demander les réglages IP nécessaires à votre administrateur réseau.", -1, 9, 9, 228, 27
  CONTROL "Obtenir automatiquement l'adresse IP", IDC_USEDHCP, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 43, 210, 12
  GROUPBOX "", -1, 9, 61, 228, 70, BS_GROUPBOX
- CONTROL "&Utiliser l'adresse IP suivante:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
+ CONTROL "&Utiliser l'adresse IP suivante :", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
  LTEXT "Adresse IP :", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",WS_TABSTOP,150,75-2,80,12
- LTEXT "Masque de sous réseau:", -1, 14, 90, 135, 8
+ LTEXT "Masque de sous réseau :", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",WS_TABSTOP,150,90-2,80,12
- LTEXT "Passerelle par défaut:", -1, 14, 105, 135, 8
+ LTEXT "Passerelle par défaut :", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",WS_TABSTOP,150,105-2,80,12
  CONTROL "Obtenir automatiquement l'adresse du serveur DNS", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
  CONTROL "&Utiliser les adresses de serveur DNS suivantes", IDC_FIXEDDNS, "BUTTON", BS_AUTORADIOBUTTON, 14, 155, 142, 12
- LTEXT "Serveur DNS primaire:", -1, 14, 171, 135, 8
+ LTEXT "Serveur DNS primaire :", -1, 14, 171, 135, 8
  CONTROL "",IDC_DNS1,"SysIPAddress32",WS_TABSTOP,150,171-2,80,12
- LTEXT "Serveur DNS secondaire:", -1, 14, 186, 135, 8
+ LTEXT "Serveur DNS secondaire :", -1, 14, 186, 135, 8
  CONTROL "",IDC_DNS2,"SysIPAddress32",WS_TABSTOP,150,186-2,80,12
  PUSHBUTTON "&Avancé", IDC_ADVANCED, 186, 209, 50, 14, WS_DISABLED | WS_TABSTOP
 END

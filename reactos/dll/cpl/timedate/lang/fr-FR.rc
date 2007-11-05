@@ -33,7 +33,7 @@ BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Ajuster automatiquement l'heure lors du &passage à l'heure d'été"
+    AUTOCHECKBOX "Ajuster automatiquement l'heure lors du &passage à l'heure d'été"
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
@@ -46,7 +46,7 @@ BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     CONTROL         "Synchroniser automatiquement avec un serveur d'heure Internet", IDC_AUTOSYNC,
                     "Button", BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP,11,7,241,10
-    LTEXT           "Serveur:", -1, 34, 22, 28, 13
+    LTEXT           "Serveur :", -1, 34, 22, 28, 13
     PUSHBUTTON      "Mettre à jour maintenant", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
@@ -58,7 +58,7 @@ STRINGTABLE
 BEGIN
     IDS_CPLNAME "Date/Heure"
     IDS_CPLDESCRIPTION "Change la date, l'heure et le fuseau horaire."
-    IDS_TIMEZONETEXT "Fuseau horaire actuel: %s"
+    IDS_TIMEZONETEXT "Fuseau horaire actuel : %s"
     IDS_TIMEZONEINVALID "Invalide"
     IDS_TIMEZONEUNKNOWN "Inconnu"
     IDS_INETTIMESUCSYNC "L'heure a été synchronisée avec %s le %s à %s"

@@ -16,9 +16,9 @@ BEGIN
   LTEXT "Lent", -1, 40, 85, 20, 10
   LTEXT "Rapide", -1, 200, 85, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "Cliquer ici et enfoncer une touche pour &tester le délai de répétition:", -1, 15, 105, 150, 10
+  LTEXT "Cliquer ici et enfoncer une touche pour &tester le délai de répétition :", -1, 15, 105, 150, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "Taux de &clignotement du curseur:", -1, 5, 145, 230, 50
+  GROUPBOX "Taux de &clignotement du curseur :", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
   LTEXT "Aucun", -1, 40, 165, 30, 10
   LTEXT "Rapide", -1, 200, 165, 30, 10
@@ -57,7 +57,7 @@ BEGIN
   LTEXT "Cochez cette case pour faire du bouton droit le bouton principal pour les fonctions telles que la sélection et le déplacement.", -1, 10, 30, 150, 30
   GROUPBOX "Vitesse du double-click ", -1, 5, 75, 230, 70
   LTEXT "Double-cliquer le dossier pour tester le paramètre. Si le dossier ne s'ouvre pas ou se ferme, essayez un réglage plus lent.", -1, 10, 85, 150, 30
-  LTEXT "Vite&sse:   Lente", -1, 10, 120, 90, 8
+  LTEXT "Vite&sse :   Lente", -1, 10, 120, 90, 8
   LTEXT "Rapide", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
@@ -89,7 +89,7 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
 CAPTION "Sauver Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Sauver ce profil de curseur comme:", -1, 5, 5, 100, 10
+  LTEXT "Sauver ce profil de curseur comme :", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
   PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
   PUSHBUTTON "&Annuler", IDCANCEL, 115, 45, 50, 15
@@ -163,10 +163,10 @@ BEGIN
   IDS_HAND "Sélection de lien"
   IDS_NONE "(Aucun)"
   IDS_SYSTEM_SCHEME "(Arrangement système)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
+  IDS_BROWSE_FILTER "Curseurs (*.ani, *.cur)\0*.ani;*.cur\0Curseurs animés (*.ani)\0*.ani\0Curseurs statiques (*.cur)\0*.cur\0Tous les fichiers\0*.*\0\0"
+  IDS_BROWSE_TITLE "Parcourir"
+  IDS_REMOVE_TITLE "Confirmation de suppression du profil"
+  IDS_REMOVE_TEXT "Êtes-vous sûr de vouloir supprimer le profil de curseur  '%s' ?"
+  IDS_OVERWRITE_TITLE "Confirmation de remplacement du profil"
+  IDS_OVERWRITE_TEXT "Le nom du profil de curseur que vous avez choisi est déjà utilisé. Voulez-vous écraser le profil de curseur déjà existant ?"
 END

@@ -87,7 +87,7 @@ BEGIN
     PUSHBUTTON  "&Effacer", IDC_HRDPROFDEL, 173, 106, 50, 14
 
     GROUPBOX    "Sélection de Profils Matériels ", IDC_STATIC, 7, 130, 240, 75
-    LTEXT       "Quand ReactOS démarre:", IDC_STATIC, 14, 142, 210, 8
+    LTEXT       "Quand ReactOS démarre :", IDC_STATIC, 14, 142, 210, 8
     //RADIOBUTTON "&Wait until I select a hardware profile", IDC_HRDPROFWAIT, 14, 158, 133, 8
     //RADIOBUTTON "&Select the first profile listed if I don't select a profile in", IDC_HRDPROFSELECT, 14, 173, 190, 8
     CONTROL     "&Attendre la sélection d'un profil matériel", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 145, 8
@@ -106,9 +106,9 @@ STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_
 CAPTION "Renommer Profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT        "De:", IDC_STATIC, 5, 10, 20, 8
+   LTEXT        "De :", IDC_STATIC, 5, 10, 20, 8
    LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-   LTEXT        "Vers:", IDC_STATIC, 5, 30, 20, 8
+   LTEXT        "Vers :", IDC_STATIC, 5, 30, 20, 8
    EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
@@ -124,7 +124,7 @@ BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
     LTEXT       "Les Profils Utilisateurs contiennent les réglages et autres informations liées à votre compte. Un profil différent peut être créé sur chaque ordinateur utilisé, ou vous pouvez sélectionner un profil mobile qui sera le même sur chaque ordinateur.",
                     IDC_STATIC, 40, 11, 204, 35
-    LTEXT       "Profils enregistrés sur cet ordinateur:", IDC_STATIC, 16, 51, 204, 9
+    LTEXT       "Profils enregistrés sur cet ordinateur :", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON  "Chan&ger le type", IDC_USERPROFILE_CHANGE, 80, 156, 60, 13
@@ -145,14 +145,14 @@ CAPTION "Démarrage et Récupération"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX    "Démarrage du système", IDC_STATIC, 7, 12, 238, 95
-    LTEXT       "Système d'exploitation par défaut:", IDC_STATIC, 14, 26, 110, 8
+    LTEXT       "Système d'exploitation par défaut :", IDC_STATIC, 14, 26, 110, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
     //CHECKBOX    "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
-    CONTROL     "&Affiche la liste des systèmes pendant:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
+    CONTROL     "&Affiche la liste des systèmes pendant :", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondes", IDC_STATIC, 210, 56, 30, 8
-    CONTROL     "Affiche les options de récupération pendant:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
+    CONTROL     "Affiche les options de récupération pendant :", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondes", IDC_STATIC, 210, 70, 30, 8
@@ -188,8 +188,8 @@ BEGIN
     LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
     LTEXT       "Espace disponible :", IDC_STATIC, 20, 92, 66, 9
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT       "Taille &Initiale (Mo):", -1, 22, 118, 72, 9
-    LTEXT       "Taille Ma&ximum (Mo):", -1, 22, 131, 72, 9
+    LTEXT       "Taille &Initiale (Mo) :", -1, 22, 118, 72, 9
+    LTEXT       "Taille Ma&ximum (Mo) :", -1, 22, 131, 72, 9
     CONTROL     "&Taille personnalisée", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 75, 9
     CONTROL     "&Taille &gérée par le système", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 100, 9
     CONTROL     "&Pas de mémoire virtuelle", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 100,9
@@ -198,11 +198,11 @@ BEGIN
     PUSHBUTTON  "Régler", IDC_SET, 158, 155, 50, 13
 
     GROUPBOX    "Mémoire virtuelle totale pour tous les lecteurs", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT       "Minimum alloué:", IDC_STATIC, 18, 188, 58, 9
+    LTEXT       "Minimum alloué :", IDC_STATIC, 18, 188, 58, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
-    LTEXT       "Recommandé:", IDC_STATIC, 18, 199, 52, 9
+    LTEXT       "Recommandé :", IDC_STATIC, 18, 199, 52, 9
     LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
-    LTEXT       "Alloué actuellement:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT       "Alloué actuellement :", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
