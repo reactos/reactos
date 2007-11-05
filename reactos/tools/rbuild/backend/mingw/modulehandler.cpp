@@ -509,7 +509,7 @@ MingwModuleHandler::GetObjectFilename (
 	if ( extension == ".rc" || extension == ".RC" )
 		newExtension = "_" + module.name + ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
-		newExtension = ".stubs.o";
+		newExtension = ".stubs_" + module.name + ".o";
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( module.type == RpcServer )
