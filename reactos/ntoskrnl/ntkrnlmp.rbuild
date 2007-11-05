@@ -1,8 +1,12 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../tools/rbuild/project.dtd">
-<module name="ntoskrnl" type="kernel" installbase="system32" installname="ntoskrnl.exe">
+<module name="ntkrnlmp" type="kernel" installbase="system32" installname="ntkrnlmp.exe">
 	<bootstrap installbase="$(CDOUTPUT)" />
 	<importlibrary definition="ntoskrnl.def" />
+
+	<!-- this define should be the only difference with ntoskrnl.rbuild -->
+	<define name="CONFIG_SMP" />
+
 	<define name="_DISABLE_TIDENTS" />
 	<define name="__NTOSKRNL__" />
 	<define name="_NTOSKRNL_" />
