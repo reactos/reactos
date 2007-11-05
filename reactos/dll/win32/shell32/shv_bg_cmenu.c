@@ -536,6 +536,32 @@ DoDrawItem(BgCmImpl *This, HWND hWnd, DRAWITEMSTRUCT * drawItem)
    DrawTextW(drawItem->hDC, pCurItem->szDesc, wcslen(pCurItem->szDesc), &drawItem->rcItem, 0);
    return S_OK;
 }
+BOOL
+HasClipboardData()
+{
+    BOOL ret = FALSE;
+    IDataObject * pda;
+
+    if(SUCCEEDED(OleGetClipboard(&pda)))
+    {
+      STGMEDIUM medium;
+      FORMATETC formatetc;
+
+      TRACE("pda=%p\n", pda);
+
+      /* Set the FORMATETC structure*/
+      InitFormatEtc(formatetc, RegisterClipboardFormatA(CFSTR_SHELLIDLIST), TYMED_HGLOBAL);
+      if(SUCCEEDED(IDataObject_GetData(pda,&formatetc,&medium)))
+      {
+          ret = TRUE;
+      }
+
+      IDataObject_Release(pda);
+      ReleaseStgMedium(&medium);
+    }
+
+    return ret;
+}
 
 
 /**************************************************************************
@@ -673,13 +699,23 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
     {
       InsertShellNewItems(mii.hSubMenu, 0x6000, 0x6000, This);
     }
+
+    if (!HasClipboardData())
+    {
+      mii.cbSize = sizeof(mii);
+      mii.fMask = MIIM_STATE;
+      mii.fState = MFS_DISABLED;
+      mii.fType = 0;
+      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii));
+      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii));
+    }
+
     if (This->bDesktop)
     {
       /* desktop menu has no view option */
       DeleteMenu(hMenu, 0, MF_BYPOSITION);
       DeleteMenu(hMenu, 0, MF_BYPOSITION);
     }
-
     TRACE("(%p)->returning 0x%x\n",This,hr);
     return hr;
 }
