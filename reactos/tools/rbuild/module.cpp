@@ -991,7 +991,7 @@ Module::GetDefaultModuleExtension () const
 		case BootLoader:
 			return ".sys";
 		case BootSector:
-			return ".o";
+			return "_" + this->name + ".o";
 		case Iso:
 		case LiveIso:
 		case IsoRegTest:
