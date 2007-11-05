@@ -105,8 +105,8 @@ BEGIN
   LTEXT "Cet assistant vous aider à créer des raccourcis vers des programmes, des fichiers, des dossiers, des ordinateurs,\nou des adresses Internet locaux ou sur le réseau.", -1, 120, 15, 200, 30
   LTEXT "Entrez la localisation de l'élément:", -1, 120, 50, 120, 10
   EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
-  PUSHBUTTON "Parcourir...", IDC_SHORTCUT_BROWSE, 280, 60, 70, 15, ES_LEFT
-  LTEXT "Cliquez sur Suivant pour continuer.", -1, 120, 100, 90, 10
+  PUSHBUTTON "Parcourir...", IDC_SHORTCUT_BROWSE, 272, 65, 60, 15, ES_LEFT
+  LTEXT "Cliquez sur Suivant pour continuer.", -1, 120, 97, 162, 10
 END
 
 IDD_SHORTCUT_FINISH DIALOGEX 0, 0, 340, 200
@@ -116,7 +116,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   LTEXT "En&trez un nom pour ce raccourci:", -1, 120, 15, 150, 10
   EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
-  LTEXT "Cliquez sur Terminer pour créer le raccourci.", -1, 120, 50, 150, 10
+  LTEXT "Cliquez sur Terminer pour créer le raccourci.", -1, 118, 97, 178, 17
 END
 
 IDD_INFORMATION DIALOG 5, 100, 269, 218
