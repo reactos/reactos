@@ -726,7 +726,15 @@ RecycleBin_IContextMenu_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINF
 
     TRACE("%p %p verb %p\n", This, lpici, lpici->lpVerb);
 
-    if ( lpici->lpVerb == MAKEINTRESOURCEA(This->iIdProperties))
+    if ( LOWORD(lpici->lpVerb) == MAKEINTRESOURCEA(This->iIdEmpty))
+    {
+        // FIXME
+        // path & flags
+        return SHEmptyRecycleBinW(lpici->hwnd, L"C:\\", 0);
+    }
+
+
+    if ( LOWORD(lpici->lpVerb) == MAKEINTRESOURCEA(This->iIdProperties))
     {
        WCHAR szDrive = 'C';
        SH_ShowRecycleBinProperties(szDrive);

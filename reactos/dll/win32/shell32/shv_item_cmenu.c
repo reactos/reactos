@@ -361,6 +361,7 @@ SH_LoadContextMenuHandlers(ItemCmImpl *This, IDataObject * pDataObj, HMENU hMenu
     }
 
     curEntry = This->dhead;
+    This->iIdSHEFirst = idCmdFirst;
     do
     {
 
