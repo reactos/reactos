@@ -706,8 +706,8 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
       mii.fMask = MIIM_STATE;
       mii.fState = MFS_DISABLED;
       mii.fType = 0;
-      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii));
-      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii));
+      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii);
+      SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii);
     }
 
     if (This->bDesktop)
