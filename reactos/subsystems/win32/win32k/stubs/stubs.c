@@ -2658,23 +2658,6 @@ NtGdiGetSpoolMessage( DWORD u1,
     return 0;
 }
 
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiGetGlyphIndicesW(
-    IN HDC hdc,
-    IN OPTIONAL LPWSTR pwc,
-    IN INT cwc,
-    OUT OPTIONAL LPWORD pgi,
-    IN DWORD iMode)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
  /*
  * @unimplemented
  */

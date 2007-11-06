@@ -90,15 +90,18 @@ static void FONT_TextMetricWToA(const TEXTMETRICW *ptmW, LPTEXTMETRICA ptmA )
 /***********************************************************************
  *           FONT_mbtowc
  *
- * Returns a Unicode translation of str. If count is -1 then str is
- * assumed to be '\0' terminated, otherwise it contains the number of
- * bytes to convert.  If plenW is non-NULL, on return it will point to
- * the number of WCHARs that have been written.  The caller should free
- * the returned LPWSTR from the process heap itself.
+ * Returns a Unicode translation of str using the charset of the
+ * currently selected font in hdc.  If count is -1 then str is assumed
+ * to be '\0' terminated, otherwise it contains the number of bytes to
+ * convert.  If plenW is non-NULL, on return it will point to the
+ * number of WCHARs that have been written.  If pCP is non-NULL, on
+ * return it will point to the codepage used in the conversion.  The
+ * caller should free the returned LPWSTR from the process heap
+ * itself.
  */
-static LPWSTR FONT_mbtowc(LPCSTR str, INT count, INT *plenW)
+static LPWSTR FONT_mbtowc(HDC hdc, LPCSTR str, INT count, INT *plenW, UINT *pCP)
 {
-    UINT cp = CP_ACP;
+    UINT cp = CP_ACP; // GdiGetCodePage( hdc );
     INT lenW;
     LPWSTR strW;
 
@@ -108,6 +111,7 @@ static LPWSTR FONT_mbtowc(LPCSTR str, INT count, INT *plenW)
     MultiByteToWideChar(cp, 0, str, count, strW, lenW);
     DPRINT1("mapped %s -> %s  \n", str, strW);
     if(plenW) *plenW = lenW;
+    if(pCP) *pCP = cp;
     return strW;
 }
 
@@ -458,7 +462,7 @@ DPRINT1("GCW32A iFirstChar %x\n",iFirstChar);
     for(i = 0; i < count; i++)
 	str[i] = (BYTE)(iFirstChar + i);
 
-    wstr = FONT_mbtowc(str, count, &wlen);
+    wstr = FONT_mbtowc(NULL, str, count, &wlen, NULL);
 
     for(i = 0; i < wlen; i++)
     {
@@ -570,7 +574,7 @@ GetCharacterPlacementW(
   }
 
   /*if(lpResults->lpGlyphs)
-    GetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
+    NtGdiGetGlyphIndicesW(hdc, lpString, nSet, lpResults->lpGlyphs, 0);*/
 
   if (GetTextExtentPoint32W(hdc, lpString, uCount, &size))
     ret = MAKELONG(size.cx, size.cy);
@@ -632,6 +636,28 @@ DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
   return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
 }
 
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetGlyphIndicesA(
+        HDC hdc,
+        LPCSTR lpstr,
+        INT count,
+        LPWORD pgi,
+        DWORD flags
+        )
+{
+    DWORD Ret;
+    WCHAR *lpstrW;
+    INT countW;
+
+    lpstrW = FONT_mbtowc(hdc, lpstr, count, &countW, NULL);
+    Ret = NtGdiGetGlyphIndicesW(hdc, lpstrW, countW, pgi, flags);
+    HeapFree(GetProcessHeap(), 0, lpstrW);
+    return Ret;
+}
 
 /*
  * @implemented
@@ -664,7 +690,7 @@ GetGlyphOutlineA(
             len = 1;
             mbchs[0] = (uChar & 0xff);
         }
-        p = FONT_mbtowc(mbchs, len, NULL);
+        p = FONT_mbtowc(NULL, mbchs, len, NULL, NULL);
 	c = p[0];
     } else
         c = uChar;

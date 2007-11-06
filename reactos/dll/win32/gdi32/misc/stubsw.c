@@ -298,24 +298,6 @@ bMakePathNameW(LPWSTR lpBuffer,LPCWSTR lpFileName,LPWSTR *lpFilePart,DWORD unkno
 }
 
 /*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetGlyphIndicesW(
-	HDC hdc,
-	LPCWSTR lpstr,
-	int c,
-	LPWORD pgi,
-	DWORD fl
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
  * @implemented
  */
 UINT

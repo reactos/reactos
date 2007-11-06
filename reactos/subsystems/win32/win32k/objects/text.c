@@ -2391,6 +2391,121 @@ NtGdiGetFontLanguageInfo(HDC  hDC)
   return 0;
 }
 
+ /*
+ * @implemented
+ */
+DWORD
+STDCALL
+NtGdiGetGlyphIndicesW(
+    IN HDC hdc,
+    IN OPTIONAL LPWSTR UnSafepwc,
+    IN INT cwc,
+    OUT OPTIONAL LPWORD UnSafepgi,
+    IN DWORD iMode)
+{
+  PDC dc;
+  PTEXTOBJ TextObj;
+  PFONTGDI FontGDI;
+  HFONT hFont = 0;
+  NTSTATUS Status = STATUS_SUCCESS;
+  OUTLINETEXTMETRICW *potm;
+  INT i;
+  FT_Face face;
+  WCHAR DefChar = 0, tmDefaultChar;
+  PWSTR Buffer = NULL;
+  ULONG Size;
+  
+  if ((!UnSafepwc) && (!UnSafepgi)) return cwc;
+
+  dc = DC_LockDc(hdc);
+  if (!dc)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+  hFont = dc->Dc_Attr.hlfntNew;
+  TextObj = TEXTOBJ_LockText(hFont);
+  DC_UnlockDc(dc);
+  if (!TextObj)
+   {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+   }
+
+  FontGDI = ObjToGDI(TextObj->Font, FONT);
+  TEXTOBJ_UnlockText(TextObj);
+
+  Buffer = ExAllocatePoolWithTag(PagedPool, cwc*sizeof(WORD), TAG_GDITEXT);
+  if (!Buffer)
+  {
+     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+     return GDI_ERROR;
+  }
+
+  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+  if (!potm)
+  {
+     Status = ERROR_NOT_ENOUGH_MEMORY;
+     goto ErrorRet;
+  }
+  IntGetOutlineTextMetrics(FontGDI, Size, potm);
+  tmDefaultChar = potm->otmTextMetrics.tmDefaultChar; // May need this.  
+  ExFreePool(potm);
+
+  if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
+
+  _SEH_TRY
+  {
+    ProbeForRead(UnSafepwc,
+             sizeof(PWSTR),
+                         1);
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+  if (!NT_SUCCESS(Status)) goto ErrorRet;
+
+  IntLockFreeType;
+  face = FontGDI->face;
+    
+  for (i = 0; i < cwc; i++)
+  {
+     Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
+     if (Buffer[i] == 0)
+     {
+        if (!DefChar) DefChar = tmDefaultChar;
+        Buffer[i] = DefChar;
+     }
+  }
+
+  IntUnLockFreeType;
+
+  _SEH_TRY
+  {
+    ProbeForWrite(UnSafepgi,
+               sizeof(WORD),
+                          1);
+    RtlCopyMemory(UnSafepgi,
+                     Buffer,
+            cwc*sizeof(WORD));
+  }
+  _SEH_HANDLE
+  {
+    Status = _SEH_GetExceptionCode();
+  }
+  _SEH_END;
+
+ErrorRet:
+  ExFreePool(Buffer);
+  if (NT_SUCCESS(Status)) return cwc;
+  SetLastWin32Error(Status);
+  return GDI_ERROR;
+}
+
 static
 void
 FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)

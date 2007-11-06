@@ -236,24 +236,6 @@ UpdateICMRegKeyA(
 }
 
 /*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetGlyphIndicesA(
-	HDC hdc,
-	LPCSTR lpstr,
-	int c,
-	LPWORD pgi,
-	DWORD fl
-)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-/*
  * @implemented
  */
 UINT
