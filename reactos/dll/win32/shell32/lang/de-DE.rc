@@ -229,8 +229,8 @@ BEGIN
 	LTEXT "", 14017, 68, 140, 160, 10
 	LTEXT "Zugegriffen:", 14018, 8, 160, 45, 10
 	LTEXT "", 14019, 68, 160, 160, 10
-	LTEXT "Attribute:", 14020, 8, 190, 45, 10
-	CHECKBOX "&Schreibgeschützt", 14021, 58, 190, 67, 10
+	LTEXT "Attribute:", 14020, 8, 189, 45, 10
+	CHECKBOX "&Schreibgeschützt", 14021, 45, 189, 67, 10
 	CHECKBOX "&Versteckt", 14022, 126, 189, 50, 10
 	CHECKBOX "&Archiv", 14023, 181, 189, 49, 10
 END
