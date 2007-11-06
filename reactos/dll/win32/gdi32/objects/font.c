@@ -596,7 +596,7 @@ GetCharWidthFloatA(
 	)
 {
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharWidthFloat ( hdc, iFirstChar, iLastChar, pxBuffer );
+  return FALSE;
 }
 
 
@@ -633,7 +633,7 @@ GetCharABCWidthsFloatA(
 DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
 
   /* FIXME what to do with iFirstChar and iLastChar ??? */
-  return NtGdiGetCharABCWidthsFloat ( hdc, iFirstChar, iLastChar, lpABCF );
+  return FALSE;
 }
 
 /*

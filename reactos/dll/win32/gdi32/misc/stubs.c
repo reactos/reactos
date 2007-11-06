@@ -2401,8 +2401,8 @@ BOOL
 STDCALL
 GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
 {
-    /* FIXME some part are done in user mode */
-    return NtGdiGetCharABCWidthsFloat(hdc, FirstChar, LastChar, abcF);
+    
+    return FALSE;
 }
 
 /*
@@ -2456,8 +2456,8 @@ GetCharWidthFloatW(HDC hdc,
                    UINT iLastChar,
                    PFLOAT pxBuffer)
 {
-    /* FIXME some part need be done in user mode */
-    return NtGdiGetCharWidthFloat(hdc, iFirstChar, iLastChar, pxBuffer);
+
+    return FALSE;
 }
 
 /*

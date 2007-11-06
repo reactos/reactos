@@ -222,32 +222,6 @@ NtGdiGetCharABCWidths(HDC  hDC,
                            UINT  LastChar,
                            LPABC  abc);
 
-/* Should be done in user mode. */
-BOOL
-STDCALL
-NtGdiGetCharABCWidthsFloat(HDC  hDC,
-                                UINT  FirstChar,
-                                UINT  LastChar,
-                                LPABCFLOAT  abcF);
-
-/* Should be done in user mode. */
-DWORD
-STDCALL
-NtGdiGetCharacterPlacement(HDC  hDC,
-                                 LPCWSTR  String,
-                                 int  Count,
-                                 int  MaxExtent,
-                                 LPGCP_RESULTSW Results,
-                                 DWORD  Flags);
-
-/* Should be done in user mode. */
-BOOL
-STDCALL
-NtGdiGetCharWidthFloat(HDC  hDC,
-                            UINT  FirstChar,
-                            UINT  LastChar,
-                            PFLOAT  Buffer);
-
 /* Use NtGdiGetAppClipBox. */
 int
 STDCALL

@@ -2251,28 +2251,21 @@ NtGdiGetCharABCWidths(HDC  hDC,
    return TRUE;
 }
 
+ /*
+ * @unimplemented
+ */
 BOOL
 STDCALL
-NtGdiGetCharABCWidthsFloat(HDC  hDC,
-                                UINT  FirstChar,
-                                UINT  LastChar,
-                                LPABCFLOAT  abcF)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-DWORD
-STDCALL
-NtGdiGetCharacterPlacement(HDC  hDC,
-                                 LPCWSTR  String,
-                                 int  Count,
-                                 int  MaxExtent,
-                                 LPGCP_RESULTSW  Results,
-                                 DWORD  Flags)
-{
-  UNIMPLEMENTED;
-  return 0;
+NtGdiGetCharABCWidthsW(
+    IN HDC hdc,
+    IN UINT wchFirst,
+    IN ULONG cwch,
+    IN OPTIONAL PWCHAR pwch,
+    IN FLONG fl,
+    OUT PVOID pvBuf)
+ {
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 BOOL
@@ -2370,17 +2363,6 @@ NtGdiGetCharWidth32(HDC  hDC,
    MmCopyToCaller(Buffer, SafeBuffer, BufferSize);
    ExFreePool(SafeBuffer);
    return TRUE;
-}
-
-BOOL
-STDCALL
-NtGdiGetCharWidthFloat(HDC  hDC,
-                            UINT  FirstChar,
-                            UINT  LastChar,
-                            PFLOAT  Buffer)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 DWORD

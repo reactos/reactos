@@ -748,10 +748,7 @@ NtGdiGetBkColor                         1
 NtGdiGetBkMode                          1
 NtGdiGetBrushOrgEx                      2
 NtGdiGetCharABCWidths                   4
-NtGdiGetCharABCWidthsFloat              4
-NtGdiGetCharacterPlacement              6
 NtGdiGetCharWidth32                     4
-NtGdiGetCharWidthFloat                  4
 NtGdiGetClipBox                         2
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentPositionEx               2

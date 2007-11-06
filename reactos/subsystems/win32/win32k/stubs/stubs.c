@@ -2478,23 +2478,6 @@ NtGdiGetAppClipBox(
  /*
  * @unimplemented
  */
-BOOL
-STDCALL
-NtGdiGetCharABCWidthsW(
-    IN HDC hdc,
-    IN UINT wchFirst,
-    IN ULONG cwch,
-    IN OPTIONAL PWCHAR pwch,
-    IN FLONG fl,
-    OUT PVOID pvBuf)
- {
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
 DWORD
 STDCALL
 NtGdiGetCharacterPlacementW(
