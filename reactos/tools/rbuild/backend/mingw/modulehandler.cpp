@@ -497,7 +497,10 @@ MingwModuleHandler::GetObjectFilename (
 	DirectoryLocation destination_directory;
 	string newExtension;
 	string extension = GetExtension ( *sourceFile );
-	if ( extension == ".rc" || extension == ".RC" )
+
+	if ( module.type == BootSector )
+		return new FileLocation ( *module.output );
+	else if ( extension == ".rc" || extension == ".RC" )
 		newExtension = "_" + module.name + ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
 		newExtension = ".stubs.o";
@@ -3655,21 +3658,17 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	string livecdDirectory = module.name;
 	FileLocation livecd ( OutputDirectory, livecdDirectory, "" );
 
-	string bootloader;
 	string IsoName;
 
+	const Module* bootModule;
+	bootModule = module.project.LocateModule ( module.name == "livecdregtest"
+	                                               ? "isobtrt"
+	                                               : "isoboot" );
+	const FileLocation *isoboot = bootModule->output;
 	if (module.name == "livecdregtest")
-	{
-		bootloader = "isobtrt_isobtrt.o";
 		IsoName = "ReactOS-LiveCD-RegTest.iso";
-	}
 	else
-	{
-		bootloader = "isoboot_isoboot.o";
 		IsoName = "ReactOS-LiveCD.iso";
-	}
-
-	FileLocation isoboot ( OutputDirectory, "boot" + sSep + "freeldr" + sSep + "bootsect", bootloader );
 
 	string reactosDirectory = "reactos";
 	string livecdReactosNoFixup = livecdDirectory + sSep + reactosDirectory;
@@ -3683,7 +3682,7 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	fprintf ( fMakefile,
 	          "%s: all %s %s $(MKHIVE_TARGET) $(CDMAKE_TARGET)\n",
 	          module.name.c_str (),
-	          backend->GetFullName ( isoboot) .c_str (),
+	          backend->GetFullName ( *isoboot) .c_str (),
 	          backend->GetFullPath ( livecdReactos ).c_str () );
 	OutputModuleCopyCommands ( livecdDirectory,
 	                           reactosDirectory );
@@ -3695,7 +3694,7 @@ MingwLiveIsoModuleHandler::GenerateLiveIsoModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -m -j -b %s %s REACTOS %s\n",
-	          backend->GetFullName( isoboot ).c_str (),
+	          backend->GetFullName( *isoboot ).c_str (),
 	          backend->GetFullPath ( livecd ).c_str (),
 	          IsoName.c_str() );
 	fprintf ( fMakefile,
