@@ -75,22 +75,23 @@ extern BOOLEAN Ke386NoExecute;
 
 BOOLEAN MmUnmapPageTable(PULONG Pt);
 
-VOID
-STDCALL
-MiFlushTlbIpiRoutine(PVOID Address)
+ULONG_PTR
+NTAPI
+MiFlushTlbIpiRoutine(ULONG_PTR Address)
 {
-   if (Address == (PVOID)0xffffffff)
+   if (Address == (ULONG_PTR)-1)
    {
       KeFlushCurrentTb();
    }
-   else if (Address == (PVOID)0xfffffffe)
+   else if (Address == (ULONG_PTR)-2)
    {
       KeFlushCurrentTb();
    }
    else
    {
-       __invlpg(Address);
+       __invlpg((PVOID)Address);
    }
+   return 0;
 }
 
 VOID
@@ -101,13 +102,13 @@ MiFlushTlb(PULONG Pt, PVOID Address)
    {
       MmUnmapPageTable(Pt);
    }
-   if (KeNumberProcessors>1)
+   if (KeNumberProcessors > 1)
    {
-      KeIpiGenericCall(MiFlushTlbIpiRoutine, Address);
+      KeIpiGenericCall(MiFlushTlbIpiRoutine, (ULONG_PTR)Address);
    }
    else
    {
-      MiFlushTlbIpiRoutine(Address);
+      MiFlushTlbIpiRoutine((ULONG_PTR)Address);
    }
 #else
    if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)

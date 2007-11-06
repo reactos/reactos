@@ -24,17 +24,18 @@ KiIpiSendRequest(IN KAFFINITY TargetSet,
                  IN ULONG IpiRequest)
 {
 #ifdef CONFIG_SMP
-#error VerifyMe!
     LONG i;
-    PKPCR Pcr;
+    PKPRCB Prcb;
     KAFFINITY Current;
 
     for (i = 0, Current = 1; i < KeNumberProcessors; i++, Current <<= 1)
     {
         if (TargetSet & Current)
         {
-            Pcr = (PKPCR)(KPCR_BASE + i * PAGE_SIZE);
-            Ke386TestAndSetBit(IpiRequest, (PULONG)&Pcr->Prcb->IpiFrozen);
+            /* Get the PRCB for this CPU */
+            Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+
+            InterlockedBitTestAndSet((PLONG)&Prcb->IpiFrozen, IpiRequest);
             HalRequestIpi(i);
         }
     }
@@ -50,12 +51,10 @@ KiIpiSendPacket(IN KAFFINITY TargetSet,
                 IN BOOLEAN Synchronize)
 {
 #ifdef CONFIG_SMP
-#error VerifyMe!
     KAFFINITY Processor;
     LONG i;
     PKPRCB Prcb, CurrentPrcb;
     KIRQL oldIrql;
-
 
     ASSERT(KeGetCurrentIrql() == SYNCH_LEVEL);
 
@@ -70,9 +69,9 @@ KiIpiSendPacket(IN KAFFINITY TargetSet,
     {
         if (TargetSet & Processor)
         {
-            Prcb = ((PKPCR)(KPCR_BASE + i * PAGE_SIZE))->Prcb;
-            while(0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
-            Ke386TestAndSetBit(IPI_SYNCH_REQUEST, (PULONG)&Prcb->IpiFrozen);
+            Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+            while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
+            InterlockedBitTestAndSet((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST);
             if (Processor != CurrentPrcb->SetMember)
             {
                 HalRequestIpi(i);
@@ -99,32 +98,31 @@ KiIpiServiceRoutine(IN PKTRAP_FRAME TrapFrame,
                     IN PVOID ExceptionFrame)
 {
 #ifdef CONFIG_SMP
-#error VerifyMe!
     PKPRCB Prcb;
     ASSERT(KeGetCurrentIrql() == IPI_LEVEL);
 
     Prcb = KeGetCurrentPrcb();
 
-    if (Ke386TestAndClearBit(IPI_APC, (PULONG)&Prcb->IpiFrozen))
+    if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_APC))
     {
         HalRequestSoftwareInterrupt(APC_LEVEL);
     }
 
-    if (Ke386TestAndClearBit(IPI_DPC, (PULONG)&Prcb->IpiFrozen))
+    if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_DPC))
     {
         Prcb->DpcInterruptRequested = TRUE;
         HalRequestSoftwareInterrupt(DISPATCH_LEVEL);
     }
 
-    if (Ke386TestAndClearBit(IPI_SYNCH_REQUEST, (PULONG)&Prcb->IpiFrozen))
+    if (InterlockedBitTestAndReset((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST))
     {
         (void)InterlockedDecrementUL(&Prcb->SignalDone->CurrentPacket[1]);
         if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
         {
             while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[1], 0, 0));
         }
-        ((VOID (STDCALL*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
-        Ke386TestAndClearBit(KeGetCurrentProcessorNumber(), (PULONG)&Prcb->SignalDone->TargetSet);
+        ((VOID (NTAPI*)(PVOID))(Prcb->SignalDone->WorkerRoutine))(Prcb->SignalDone->CurrentPacket[0]);
+        InterlockedBitTestAndReset((PLONG)&Prcb->SignalDone->TargetSet, KeGetCurrentProcessorNumber());
         if (InterlockedCompareExchangeUL(&Prcb->SignalDone->CurrentPacket[2], 0, 0))
         {
             while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone->TargetSet, 0, 0));

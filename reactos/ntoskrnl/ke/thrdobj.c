@@ -480,7 +480,7 @@ KeStartThread(IN OUT PKTHREAD Thread)
 #ifdef CONFIG_SMP
     /* Get the KNODE and its PRCB */
     Node = KeNodeBlock[Process->IdealNode];
-    NodePrcb = (PKPRCB)(KPCR_BASE + (Process->ThreadSeed * PAGE_SIZE));
+    NodePrcb = ((PKPCR)(KIP0PCRADDRESS + Process->ThreadSeed * PAGE_SIZE))->Prcb;
 
     /* Calculate affinity mask */
     Set = ~NodePrcb->MultiThreadProcessorSet;
