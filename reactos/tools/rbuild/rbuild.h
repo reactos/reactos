@@ -119,6 +119,7 @@ class AutoManifest;
 class AutoResource;
 class InstallComponent;
 class InstallFolder;
+class BaseAdress;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -808,6 +809,7 @@ public:
 class Property
 {
 public:
+    const XMLElement* node;
 	const Project& project;
 	const Module* module;
 	std::string name, value;
@@ -824,6 +826,13 @@ public:
 	void ProcessXML();
 };
 
+class BaseAdress : public Property
+{
+public:
+	BaseAdress ( const XMLElement& node_,
+	           const Project& project_,
+	           const Module* module_ );
+};
 
 class TestSupportCode
 {

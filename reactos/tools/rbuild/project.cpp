@@ -582,6 +582,14 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		else
 			non_if_data.properties.push_back ( property );
 	}
+	else if ( e.name == "baseadress" )
+	{
+		BaseAdress* baseadress = new BaseAdress ( e, *this, NULL );
+		if ( parseContext.ifData )
+			parseContext.ifData->data.properties.push_back ( baseadress );
+		else
+			non_if_data.properties.push_back ( baseadress );
+	}
 	if ( subs_invalid && e.subElements.size() )
 	{
 		throw XMLInvalidBuildFileException (

@@ -1895,15 +1895,13 @@ If::ProcessXML()
 Property::Property ( const XMLElement& node_,
                      const Project& project_,
                      const Module* module_ )
-	: project(project_), module(module_)
+	: node (&node_) , project(project_), module(module_)
 {
-	const XMLAttribute* att;
-
-	att = node_.GetAttribute ( "name", true );
+	const XMLAttribute* att = node->GetAttribute ( "name", true );
 	assert(att);
 	name = project.ResolveProperties ( att->value );
 
-	att = node_.GetAttribute ( "value", true );
+	att = node->GetAttribute ( "value", true );
 	assert(att);
 	value = att->value;
 }
@@ -1921,6 +1919,13 @@ Property::ProcessXML()
 {
 }
 
+BaseAdress::BaseAdress ( const XMLElement& node_,
+                     const Project& project_,
+                     const Module* module_ )
+	: Property( node_ , project_,  module_)
+{
+    //TODO: Add code to validate baseadress
+}
 
 PchFile::PchFile (
 	const XMLElement& node_,
