@@ -605,6 +605,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\rdpfile.c"
+				>
+			</File>
+			<File
 				RelativePath=".\secure.c"
 				>
 			</File>
