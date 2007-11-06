@@ -33,7 +33,7 @@ KiIpiSendRequest(IN KAFFINITY TargetSet,
         if (TargetSet & Current)
         {
             /* Get the PRCB for this CPU */
-            Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+            Prcb = KiProcessorBlock[i];
 
             InterlockedBitTestAndSet((PLONG)&Prcb->IpiFrozen, IpiRequest);
             HalRequestIpi(i);
@@ -69,7 +69,7 @@ KiIpiSendPacket(IN KAFFINITY TargetSet,
     {
         if (TargetSet & Processor)
         {
-            Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+            Prcb = KiProcessorBlock[i];
             while (0 != InterlockedCompareExchangeUL(&Prcb->SignalDone, (LONG)CurrentPrcb, 0));
             InterlockedBitTestAndSet((PLONG)&Prcb->IpiFrozen, IPI_SYNCH_REQUEST);
             if (Processor != CurrentPrcb->SetMember)

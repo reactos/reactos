@@ -67,7 +67,7 @@ ObInit2(VOID)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         /* Get the PRCB for this CPU */
-        Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+        Prcb = KiProcessorBlock[(int)i];
 
         /* Set the OBJECT_CREATE_INFORMATION List */
         Prcb->PPLookasideList[LookasideCreateInfoList].L = &ObpCiLookasideList.L;

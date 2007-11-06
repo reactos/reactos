@@ -149,7 +149,7 @@ IopInitLookasideLists(VOID)
     for (i = 0; i < KeNumberProcessors; i++)
     {
         /* Get the PRCB for this CPU */
-        Prcb = ((PKPCR)(KIP0PCRADDRESS + i * PAGE_SIZE))->Prcb;
+        Prcb = KiProcessorBlock[i];
         DPRINT("Setting up lookaside for CPU: %x, PRCB: %p\n", i, Prcb);
 
         /* Set the Large IRP List */
