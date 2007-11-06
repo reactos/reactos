@@ -2,6 +2,7 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <shlobj.h>
 #include "resource.h"
 
 #define MAXKEY 256
@@ -47,11 +48,7 @@ ParseSettings(LPWSTR lpBuffer)
     INT NumSettings = 0;
     INT s;
 
-    /* move past unicode byte order */
-    if (lpBuffer[0] == 0xFEFF || lpBuffer[0] == 0xFFFE)
-        lpBuffer += 1;
-
-    if (lpBuffer)
+    if (lpStr)
     {
         /* get number of settings */
         while (*lpStr)
@@ -62,8 +59,12 @@ ParseSettings(LPWSTR lpBuffer)
         }
         lpStr = lpBuffer;
 
-        if (!NumSettings)
+        if (NumSettings == 0)
             return NULL;
+
+        /* move past unicode byte order */
+        if (lpStr[0] == 0xFEFF || lpStr[0] == 0xFFFE)
+            lpStr += 1;
 
         pSettings = HeapAlloc(GetProcessHeap(),
                               0,
@@ -105,9 +106,11 @@ ParseSettings(LPWSTR lpBuffer)
                         if (pSettings[s].Type == L'i')
                         {
                             pSettings[s].Value.i = _wtoi(lpValue);
+                            pSettings[s].Value.s[0] = 0;
                         }
                         else if (pSettings[s].Type == L's')
                         {
+                            pSettings[s].Value.i = 0;
                             wcscpy(pSettings[s].Value.s, lpValue);
                         }
                         else
@@ -115,7 +118,7 @@ ParseSettings(LPWSTR lpBuffer)
                     }
                 }
 
-                // move onto next setting
+                /* move onto next setting */
                 while (*lpStr != L'\n')
                 {
                     lpStr++;
@@ -142,7 +145,7 @@ ReadRdpFile(HANDLE hFile)
         {
             lpBuffer = HeapAlloc(GetProcessHeap(),
                                  0,
-                                 BytesToRead + 1);
+                                 BytesToRead + 2);
             if (lpBuffer)
             {
                 bRes = ReadFile(hFile,
@@ -170,19 +173,19 @@ ReadRdpFile(HANDLE hFile)
 }
 
 static HANDLE
-OpenRdpFile(LPTSTR path, BOOL bWrite)
+OpenRdpFile(LPWSTR path, BOOL bWrite)
 {
     HANDLE hFile;
 
     if (path)
     {
-        hFile = CreateFile(path,
-                           bWrite ? GENERIC_WRITE : GENERIC_READ,
-                           0,
-                           NULL,
-                           bWrite ? CREATE_ALWAYS : OPEN_EXISTING,
-                           FILE_ATTRIBUTE_NORMAL,
-                           NULL);
+        hFile = CreateFileW(path,
+                            bWrite ? GENERIC_WRITE : GENERIC_READ,
+                            0,
+                            NULL,
+                            bWrite ? CREATE_ALWAYS : OPEN_EXISTING,
+                            FILE_ATTRIBUTE_NORMAL,
+                            NULL);
     }
 
     return hFile;
@@ -196,3 +199,55 @@ CloseRdpFile(HANDLE hFile)
         CloseHandle(hFile);
 }
 
+
+PSETTINGS
+LoadRdpSettingsFromFile(LPWSTR lpFile)
+{
+    PSETTINGS pSettings = NULL;
+    WCHAR pszPath[MAX_PATH];
+    HANDLE hFile;
+
+    /* use default file */
+    if (lpFile == NULL)
+    {
+        HRESULT hr;
+        LPITEMIDLIST lpidl= NULL;
+
+        hr = SHGetFolderLocation(NULL,
+                                 CSIDL_PERSONAL,
+                                 NULL,
+                                 0,
+                                 &lpidl);
+        if (hr == S_OK)
+        {
+            if (SHGetPathFromIDListW(lpidl, pszPath))
+            {
+                wcscat(pszPath, L"\\Default.rdp");
+                lpFile = pszPath;
+            }
+        }
+    }
+
+    if (lpFile)
+    {
+        LPWSTR lpBuffer = NULL;
+
+        hFile = OpenRdpFile(lpFile, FALSE);
+        if (hFile)
+        {
+            lpBuffer = ReadRdpFile(hFile);
+            if (lpBuffer)
+            {
+                pSettings = ParseSettings(lpBuffer);
+
+                HeapFree(GetProcessHeap(),
+                         0,
+                         lpBuffer);
+            }
+
+            CloseRdpFile(hFile);
+        }
+    }
+
+    return pSettings;
+}
