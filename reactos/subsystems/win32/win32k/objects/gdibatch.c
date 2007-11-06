@@ -65,8 +65,6 @@ VOID
 APIENTRY
 NtGdiFlush(VOID)
 {
-  // Hack! FIXME!
-  NtYieldExecution(); // Force thread to sunset and run the flush.
   UNIMPLEMENTED;
 }
 
@@ -83,15 +81,15 @@ NtGdiFlushUserBatch(VOID)
 {
   PTEB pTeb = NtCurrentTeb();
   ULONG GdiBatchCount = pTeb->GdiBatchCount;
-  
-  if( (GdiBatchCount > 0) && (GdiBatchCount <= GDIBATCHBUFSIZE))
+
+  if( (GdiBatchCount > 0) && (GdiBatchCount <= (GDIBATCHBUFSIZE/4)))
   {
     HDC hDC = (HDC) pTeb->GdiTebBatch.HDC;
 //
 //  If hDC is zero and the buffer fills up with delete objects we need to run
 //  anyway. So, hard code to the system batch limit.
 //
-    if ((hDC) || (GdiBatchCount >= GDI_BATCH_LIMIT))
+    if ((hDC) || ((!hDC) && (GdiBatchCount >= GDI_BATCH_LIMIT)))
     {
        PULONG pHdr = &pTeb->GdiTebBatch.Buffer[0];
        // No need to init anything, just go!
