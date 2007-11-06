@@ -1338,14 +1338,14 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   WSAStartup(MAKEWORD(2, 0), &d);
 
-  if (mi_process_cl(lpCmdLine))
-  {
+  //if (mi_process_cl(lpCmdLine))
+  //{
      if (OpenRDPConnectDialog(hInstance))
      {
          ui_main();
          ret = 0;
      }
-  }
+  //}
   else
       mi_show_params();
 

@@ -16,11 +16,10 @@
 #define IDC_CONNICON                    1017
 #define IDC_REMICON                     1018
 #define IDC_COLORSICON                  1019
+#define IDC_COLORIMAGE                  1020
 
-#define IDB_HEADER                      1016
-#define IDB_SPECT                       1017
-
-#define IDC_COLORIMAGE                  1018
+#define IDB_HEADER                      1100
+#define IDB_SPECT                       1101
 
 #define IDI_LOGON                       2000
 #define IDI_CONN                        2001

@@ -22,7 +22,9 @@
 #include <commctrl.h>
 #include <stdio.h>
 #include <tchar.h>
+#include <todo.h>
 #include "resource.h"
+
 
 #define MAX_KEY_NAME 255
 
@@ -62,6 +64,7 @@ typedef struct _DISPLAY_DEVICE_ENTRY
 
 typedef struct _INFO
 {
+    PRDPSETTINGS pRdpSettings;
     PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
     PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
     HWND hSelf;
@@ -206,11 +209,11 @@ GeneralOnInit(PINFO pInfo)
     }
 
     pInfo->hConn = LoadImage(hInst,
-                      MAKEINTRESOURCE(IDI_CONN),
-                      IMAGE_ICON,
-                      32,
-                      32,
-                      LR_DEFAULTCOLOR);
+                             MAKEINTRESOURCE(IDI_CONN),
+                             IMAGE_ICON,
+                             32,
+                             32,
+                             LR_DEFAULTCOLOR);
     if (pInfo->hConn)
     {
         SendDlgItemMessage(pInfo->hGeneralPage,
@@ -221,6 +224,10 @@ GeneralOnInit(PINFO pInfo)
     }
 
     FillServerAddesssCombo(pInfo);
+
+    /* add address */
+    //GetStringFromSettings(pInfo->pRdpSettings, L"full address");
+
 }
 
 
@@ -239,6 +246,18 @@ GeneralDlgProc(HWND hDlg,
             pInfo->hGeneralPage = hDlg;
             GeneralOnInit(pInfo);
             return TRUE;
+
+        case WM_COMMAND:
+        {
+            switch(LOWORD(wParam))
+            {
+                case IDC_SAVE:
+                    
+                break;
+            }
+
+            break;
+        }
 
         case WM_CLOSE:
         {
@@ -789,7 +808,7 @@ OnMainCreate(HWND hwnd)
     BOOL bRet = FALSE;
 
     pInfo = HeapAlloc(GetProcessHeap(),
-                      0,
+                      HEAP_ZERO_MEMORY,
                       sizeof(INFO));
     if (pInfo)
     {
@@ -797,12 +816,17 @@ OnMainCreate(HWND hwnd)
                          GWLP_USERDATA,
                          (LONG_PTR)pInfo);
 
-        pInfo->hHeader = LoadImage(hInst,
-                                   MAKEINTRESOURCE(IDB_HEADER),
-                                   IMAGE_BITMAP,
-                                   0,
-                                   0,
-                                   LR_DEFAULTCOLOR);
+        /* read the default .rdp file */
+        pInfo->pRdpSettings = LoadRdpSettingsFromFile(NULL);
+        if (!pInfo->pRdpSettings)
+            return FALSE;
+
+        pInfo->hHeader = (HBITMAP)LoadImage(hInst,
+                                            MAKEINTRESOURCE(IDB_HEADER),
+                                            IMAGE_BITMAP,
+                                            0,
+                                            0,
+                                            LR_DEFAULTCOLOR);
         if (pInfo->hHeader)
         {
             GetObject(pInfo->hHeader, sizeof(BITMAP), &pInfo->headerbitmap);
@@ -840,8 +864,6 @@ OnMainCreate(HWND hwnd)
             }
 
             OnTabWndSelChange(pInfo);
-
-            bRet = TRUE;
         }
     }
 
@@ -888,7 +910,6 @@ DlgProc(HWND hDlg,
             switch(LOWORD(wParam))
             {
 
-                break;
             }
 
             break;
@@ -943,9 +964,25 @@ DlgProc(HWND hDlg,
         case WM_CLOSE:
         {
             if (pInfo)
+            {
+                if (pInfo->pRdpSettings)
+                {
+                    if (pInfo->pRdpSettings->pSettings)
+                    {
+                        HeapFree(GetProcessHeap(),
+                                 0,
+                                 pInfo->pRdpSettings->pSettings);
+                    }
+
+                    HeapFree(GetProcessHeap(),
+                             0,
+                             pInfo->pRdpSettings);
+                }
+
                 HeapFree(GetProcessHeap(),
                          0,
                          pInfo);
+            }
 
             EndDialog(hDlg, 0);
         }

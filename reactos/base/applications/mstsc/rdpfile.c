@@ -1,22 +1,9 @@
 #include <windows.h>
-#include <commctrl.h>
 #include <stdio.h>
 #include <tchar.h>
 #include <shlobj.h>
+#include <todo.h>
 #include "resource.h"
-
-#define MAXKEY 256
-#define MAXVALUE 256
-
-typedef struct _Settings
-{
-    WCHAR Key[MAXKEY];
-    WCHAR Type; // holds 'i' or 's'
-    union {
-        INT i;
-        WCHAR s[MAXVALUE];
-    } Value;
-} SETTINGS, *PSETTINGS;
 
 #define NUM_SETTINGS 6
 LPWSTR lpSettings[NUM_SETTINGS] = 
@@ -30,6 +17,61 @@ LPWSTR lpSettings[NUM_SETTINGS] =
 };
 
 
+
+INT
+GetIntegerFromSettings(PRDPSETTINGS pRdpSettings,
+                       LPWSTR lpKey)
+{
+    INT Value = -1;
+
+    if (pRdpSettings)
+    {
+        INT i;
+
+        for (i = 0; i < pRdpSettings->NumSettings; i++)
+        {
+            if (wcscmp(pRdpSettings->pSettings[i].Key, lpKey) == 0)
+            {
+                if (pRdpSettings->pSettings[i].Type == L'i')
+                {
+                    Value = pRdpSettings->pSettings[i].Value.i;
+                    break;
+                }
+            }
+        }
+    }
+
+    return Value;
+}
+
+
+LPWSTR
+GetStringFromSettings(PRDPSETTINGS pRdpSettings,
+                      LPWSTR lpKey)
+{
+    LPWSTR lpValue = NULL;
+
+    if (pRdpSettings)
+    {
+        INT i;
+
+        for (i = 0; i < pRdpSettings->NumSettings; i++)
+        {
+            if (wcscmp(pRdpSettings->pSettings[i].Key, lpKey) == 0)
+            {
+                if (pRdpSettings->pSettings[i].Type == L's')
+                {
+                    lpValue = pRdpSettings->pSettings[i].Value.s;
+                    break;
+                }
+            }
+        }
+    }
+
+    return lpValue;
+}
+
+
 static BOOL
 WriteRdpFile(HANDLE hFile,
              PSETTINGS pSettings)
@@ -38,15 +80,15 @@ WriteRdpFile(HANDLE hFile,
 }
 
 
-static PSETTINGS
-ParseSettings(LPWSTR lpBuffer)
+static VOID
+ParseSettings(PRDPSETTINGS pRdpSettings,
+              LPWSTR lpBuffer)
 {
-    PSETTINGS pSettings;
     LPWSTR lpStr = lpBuffer;
     WCHAR lpKey[MAXKEY];
     WCHAR lpValue[MAXVALUE];
     INT NumSettings = 0;
-    INT s;
+    INT s, structsize;
 
     if (lpStr)
     {
@@ -60,17 +102,19 @@ ParseSettings(LPWSTR lpBuffer)
         lpStr = lpBuffer;
 
         if (NumSettings == 0)
-            return NULL;
+            return;
 
         /* move past unicode byte order */
         if (lpStr[0] == 0xFEFF || lpStr[0] == 0xFFFE)
             lpStr += 1;
 
-        pSettings = HeapAlloc(GetProcessHeap(),
-                              0,
-                              sizeof(SETTINGS) * NumSettings);
-        if (pSettings)
+        pRdpSettings->pSettings = HeapAlloc(GetProcessHeap(),
+                                            0,
+                                            sizeof(SETTINGS) * NumSettings);
+        if (pRdpSettings->pSettings)
         {
+            pRdpSettings->NumSettings = NumSettings;
+
             for (s = 0; s < NumSettings; s++)
             {
                 INT i = 0, k, temp;
@@ -86,12 +130,12 @@ ParseSettings(LPWSTR lpBuffer)
                 {
                     if (wcscmp(lpSettings[k], lpKey) == 0)
                     {
-                        wcscpy(pSettings[s].Key, lpKey);
+                        wcscpy(pRdpSettings->pSettings[s].Key, lpKey);
 
                         /* get the type */
                         lpStr++;
                         if (*lpStr == L'i' || *lpStr == L's')
-                            pSettings[s].Type = *lpStr;
+                            pRdpSettings->pSettings[s].Type = *lpStr;
 
                         lpStr += 2;
 
@@ -103,18 +147,16 @@ ParseSettings(LPWSTR lpBuffer)
                         }
                         lpValue[i] = 0;
 
-                        if (pSettings[s].Type == L'i')
+                        if (pRdpSettings->pSettings[s].Type == L'i')
                         {
-                            pSettings[s].Value.i = _wtoi(lpValue);
-                            pSettings[s].Value.s[0] = 0;
+                            pRdpSettings->pSettings[s].Value.i = _wtoi(lpValue);
                         }
-                        else if (pSettings[s].Type == L's')
+                        else if (pRdpSettings->pSettings[s].Type == L's')
                         {
-                            pSettings[s].Value.i = 0;
-                            wcscpy(pSettings[s].Value.s, lpValue);
+                            wcscpy(pRdpSettings->pSettings[s].Value.s, lpValue);
                         }
                         else
-                            pSettings[s].Type = 0;
+                            pRdpSettings->pSettings[s].Type = 0;
                     }
                 }
 
@@ -127,9 +169,8 @@ ParseSettings(LPWSTR lpBuffer)
             }
         }
     }
-
-    return pSettings;
 }
+
 
 static LPWSTR
 ReadRdpFile(HANDLE hFile)
@@ -172,6 +213,7 @@ ReadRdpFile(HANDLE hFile)
     return lpBuffer;
 }
 
+
 static HANDLE
 OpenRdpFile(LPWSTR path, BOOL bWrite)
 {
@@ -200,10 +242,10 @@ CloseRdpFile(HANDLE hFile)
 }
 
 
-PSETTINGS
+PRDPSETTINGS
 LoadRdpSettingsFromFile(LPWSTR lpFile)
 {
-    PSETTINGS pSettings = NULL;
+    PRDPSETTINGS pRdpSettings;
     WCHAR pszPath[MAX_PATH];
     HANDLE hFile;
 
@@ -224,6 +266,7 @@ LoadRdpSettingsFromFile(LPWSTR lpFile)
             {
                 wcscat(pszPath, L"\\Default.rdp");
                 lpFile = pszPath;
+                CoTaskMemFree(lpidl);
             }
         }
     }
@@ -232,22 +275,28 @@ LoadRdpSettingsFromFile(LPWSTR lpFile)
     {
         LPWSTR lpBuffer = NULL;
 
-        hFile = OpenRdpFile(lpFile, FALSE);
-        if (hFile)
+        pRdpSettings = HeapAlloc(GetProcessHeap(),
+                                 0,
+                                 sizeof(RDPSETTINGS));
+        if (pRdpSettings)
         {
-            lpBuffer = ReadRdpFile(hFile);
-            if (lpBuffer)
+            hFile = OpenRdpFile(lpFile, FALSE);
+            if (hFile)
             {
-                pSettings = ParseSettings(lpBuffer);
+                lpBuffer = ReadRdpFile(hFile);
+                if (lpBuffer)
+                {
+                    ParseSettings(pRdpSettings, lpBuffer);
 
-                HeapFree(GetProcessHeap(),
-                         0,
-                         lpBuffer);
+                    HeapFree(GetProcessHeap(),
+                             0,
+                             lpBuffer);
+                }
+
+                CloseRdpFile(hFile);
             }
-
-            CloseRdpFile(hFile);
         }
     }
 
-    return pSettings;
+    return pRdpSettings;
 }
