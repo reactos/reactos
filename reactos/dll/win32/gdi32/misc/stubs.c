@@ -1556,23 +1556,6 @@ GetBrushAttributes(HBRUSH hbr)
  */
 BOOL
 STDCALL
-GetCharABCWidthsI(HDC hdc,
-                  UINT giFirst,
-                  UINT cgi,
-                  LPWORD pgi,
-                  LPABC lpabc
-)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 GetCharWidthI(HDC hdc,
               UINT giFirst,
               UINT cgi,

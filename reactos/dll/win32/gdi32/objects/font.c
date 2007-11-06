@@ -639,6 +639,21 @@ DPRINT1("GCABCWFA iFirstChar %x\n",iFirstChar);
 /*
  * @implemented
  */
+BOOL
+STDCALL
+GetCharABCWidthsI(HDC hdc,
+                  UINT giFirst,
+                  UINT cgi,
+                  LPWORD pgi,
+                  LPABC lpabc
+)
+{
+ return NtGdiGetCharABCWidthsW( hdc, giFirst, (ULONG) cgi, (PWCHAR) pgi, 3, (PVOID)lpabc);
+}
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetGlyphIndicesA(
