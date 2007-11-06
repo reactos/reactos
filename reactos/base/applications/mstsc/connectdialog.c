@@ -151,7 +151,7 @@ FillServerAddesssCombo(PINFO pInfo)
                                                IDC_SERVERCOMBO,
                                                CB_ADDSTRING,
                                                0,
-                                               lpAddress);
+                                               (LPARAM)lpAddress);
                         }
 
                         HeapFree(GetProcessHeap(),
@@ -170,11 +170,13 @@ FillServerAddesssCombo(PINFO pInfo)
                    Name,
                    sizeof(Name) / sizeof(TCHAR)))
     {
-        SendDlgItemMessage(pInfo->hGeneralPage, IDC_SERVERCOMBO, CB_ADDSTRING, 0, Name);
+        SendDlgItemMessage(pInfo->hGeneralPage,
+                           IDC_SERVERCOMBO,
+                           CB_ADDSTRING,
+                           0,
+                           (LPARAM)Name);
     }
 }
-
-
 
 
 static VOID
@@ -266,7 +268,6 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
     PSETTINGS_ENTRY Current;
     DWORD bpp, xres, yres, checkbpp;
     DWORD curDispFreq;
-
 
     /* Get current settings */
     *CurrentSettings = NULL;
@@ -463,10 +464,39 @@ ByeBye:
 }
 
 static VOID
-UpdateDisplay(IN HWND hwndDlg, PINFO pGlobalData, IN BOOL bUpdateThumb)
+OnResolutionChanged(PINFO pInfo, DWORD position)
 {
+    TCHAR Buffer[64];
 
+    if (position == 4)
+    {
+        LoadString(hInst,
+                   IDS_FULLSCREEN,
+                   Buffer,
+                   sizeof(Buffer) / sizeof(TCHAR));
+    }
+    else
+    {
+        TCHAR Pixel[64];
 
+        if (LoadString(hInst,
+                       IDS_PIXEL,
+                       Pixel,
+                       sizeof(Pixel) / sizeof(TCHAR)))
+        {
+            _stprintf(Buffer,
+                      Pixel,
+                      pInfo->DisplayDeviceList->Resolutions[position].dmPelsWidth,
+                      pInfo->DisplayDeviceList->Resolutions[position].dmPelsHeight,
+                      Pixel);
+        }
+    }
+
+    SendDlgItemMessage(pInfo->hDisplayPage,
+                   IDC_SETTINGS_RESOLUTION_TEXT,
+                   WM_SETTEXT,
+                   0,
+                   (LPARAM)Buffer);
 
 }
 
@@ -553,21 +583,37 @@ FillResolutionsAndColors(PINFO pInfo)
                        TRUE,
                        MAKELONG(0, pInfo->DisplayDeviceList->ResolutionsCount)); //extra 1 for full screen
 
-    LoadString(hInst, IDS_PIXEL, Pixel, sizeof(Pixel) / sizeof(TCHAR));
-    _stprintf(Buffer, Pixel, pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth, pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight, Pixel);
-    SendDlgItemMessage(pInfo->hDisplayPage, IDC_SETTINGS_RESOLUTION_TEXT, WM_SETTEXT, 0, (LPARAM)Buffer);
+    if (LoadString(hInst,
+                   IDS_PIXEL,
+                   Pixel,
+                   sizeof(Pixel) / sizeof(TCHAR)))
+    {
+        _stprintf(Buffer,
+                  Pixel,
+                  pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth,
+                  pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight,
+                  Pixel);
+        SendDlgItemMessage(pInfo->hDisplayPage,
+                           IDC_SETTINGS_RESOLUTION_TEXT,
+                           WM_SETTEXT,
+                           0,
+                           (LPARAM)Buffer);
+    }
 
+    /* FIXME: read from file */
     for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
     {
         if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
             pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
         {
-            SendDlgItemMessage(pInfo->hDisplayPage, IDC_GEOSLIDER, TBM_SETPOS, TRUE, index);
+            SendDlgItemMessage(pInfo->hDisplayPage,
+                               IDC_GEOSLIDER,
+                               TBM_SETPOS,
+                               TRUE,
+                               index);
             break;
         }
     }
-
-    //UpdateDisplay(pInfo->hDisplayPage, pInfo, TRUE);
 }
 
 
@@ -703,14 +749,12 @@ DisplayDlgProc(HWND hDlg,
                 case TB_ENDTRACK:
                 {
                     DWORD newPosition = (DWORD)SendDlgItemMessage(hDlg, IDC_GEOSLIDER, TBM_GETPOS, 0, 0);
-                    //OnResolutionChanged(hwndDlg, pGlobalData, newPosition, TRUE);
-                    UpdateDisplay(hDlg, pInfo, TRUE);
+                    OnResolutionChanged(pInfo, newPosition);
                     break;
                 }
 
                 case TB_THUMBTRACK:
-                    //OnResolutionChanged(hDlg, pInfo, HIWORD(wParam), FALSE);
-                    UpdateDisplay(hDlg, pInfo, TRUE);
+                    OnResolutionChanged(pInfo, HIWORD(wParam));
                     break;
             }
             break;
