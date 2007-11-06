@@ -84,7 +84,8 @@ typedef struct _INFO
 HINSTANCE hInst;
 extern char g_servername[];
 
-void OnTabWndSelChange(PINFO pInfo)
+static VOID
+OnTabWndSelChange(PINFO pInfo)
 {
     switch (TabCtrl_GetCurSel(pInfo->hTab))
     {
@@ -100,6 +101,7 @@ void OnTabWndSelChange(PINFO pInfo)
             break;
     }
 }
+
 
 static VOID
 FillServerAddesssCombo(PINFO pInfo)
@@ -185,6 +187,8 @@ FillServerAddesssCombo(PINFO pInfo)
 static VOID
 GeneralOnInit(PINFO pInfo)
 {
+    LPWSTR lpText;
+
     SetWindowPos(pInfo->hGeneralPage,
                  NULL, 
                  15, 
@@ -225,8 +229,15 @@ GeneralOnInit(PINFO pInfo)
 
     FillServerAddesssCombo(pInfo);
 
-    /* add address */
-    //GetStringFromSettings(pInfo->pRdpSettings, L"full address");
+    /* add file address */
+    lpText = GetStringFromSettings(pInfo->pRdpSettings,
+                                   L"full address");
+    if (lpText)
+    {
+        SetDlgItemTextW(pInfo->hGeneralPage,
+                        IDC_SERVERCOMBO,
+                        lpText);
+    }
 
 }
 
@@ -252,7 +263,7 @@ GeneralDlgProc(HWND hDlg,
             switch(LOWORD(wParam))
             {
                 case IDC_SAVE:
-                    
+                    SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
                 break;
             }
 
@@ -276,7 +287,9 @@ GeneralDlgProc(HWND hDlg,
 
 
 static PSETTINGS_ENTRY
-GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTINGS_ENTRY* CurrentSettings)
+GetPossibleSettings(IN LPCTSTR DeviceName,
+                    OUT DWORD* pSettingsCount,
+                    OUT PSETTINGS_ENTRY* CurrentSettings)
 {
     DEVMODE devmode;
     DWORD NbSettings = 0;
@@ -286,7 +299,6 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
     HDC hDC;
     PSETTINGS_ENTRY Current;
     DWORD bpp, xres, yres, checkbpp;
-    DWORD curDispFreq;
 
     /* Get current settings */
     *CurrentSettings = NULL;
@@ -304,15 +316,12 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
     if (!EnumDisplaySettingsEx(DeviceName, ENUM_CURRENT_SETTINGS, &devmode, dwFlags))
         return NULL;
 
-    curDispFreq = devmode.dmDisplayFrequency;
-
     while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
     {
-        if ((devmode.dmBitsPerPel==8 ||
-             devmode.dmBitsPerPel==16 ||
-             devmode.dmBitsPerPel==24 ||
-             devmode.dmBitsPerPel==32) &&
-             devmode.dmDisplayFrequency==curDispFreq)
+        if (devmode.dmBitsPerPel==8 ||
+            devmode.dmBitsPerPel==16 ||
+            devmode.dmBitsPerPel==24 ||
+            devmode.dmBitsPerPel==32)
         {
             checkbpp=1;
         }
@@ -335,12 +344,12 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
             Current->dmPelsWidth = devmode.dmPelsWidth;
             Current->dmPelsHeight = devmode.dmPelsHeight;
             Current->dmBitsPerPel = devmode.dmBitsPerPel;
-            while (Next != NULL && (
-                   Next->dmPelsWidth < Current->dmPelsWidth ||
-                   (Next->dmPelsWidth == Current->dmPelsWidth && Next->dmPelsHeight < Current->dmPelsHeight) ||
-                   (Next->dmPelsHeight == Current->dmPelsHeight &&
-                    Next->dmPelsWidth == Current->dmPelsWidth &&
-                    Next->dmBitsPerPel < Current->dmBitsPerPel )))
+            while (Next != NULL &&
+                   (Next->dmPelsWidth < Current->dmPelsWidth ||
+                    (Next->dmPelsWidth == Current->dmPelsWidth && Next->dmPelsHeight < Current->dmPelsHeight) ||
+                    (Next->dmPelsHeight == Current->dmPelsHeight &&
+                     Next->dmPelsWidth == Current->dmPelsWidth &&
+                     Next->dmBitsPerPel < Current->dmBitsPerPel )))
             {
                 Previous = Next;
                 Next = Next->Flink;
@@ -367,6 +376,7 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 }
 
 
+static BOOL
 AddDisplayDevice(PINFO pInfo, PDISPLAY_DEVICE DisplayDevice)
 {
     PDISPLAY_DEVICE_ENTRY newEntry = NULL;
@@ -482,12 +492,20 @@ ByeBye:
     return FALSE;
 }
 
+
 static VOID
 OnResolutionChanged(PINFO pInfo, DWORD position)
 {
     TCHAR Buffer[64];
+    INT MaxSlider;
 
-    if (position == 4)
+    MaxSlider = SendDlgItemMessageW(pInfo->hDisplayPage,
+                                    IDC_GEOSLIDER,
+                                    TBM_GETRANGEMAX,
+                                    0,
+                                    0);
+
+    if (position == MaxSlider)
     {
         LoadString(hInst,
                    IDS_FULLSCREEN,
@@ -512,10 +530,10 @@ OnResolutionChanged(PINFO pInfo, DWORD position)
     }
 
     SendDlgItemMessage(pInfo->hDisplayPage,
-                   IDC_SETTINGS_RESOLUTION_TEXT,
-                   WM_SETTEXT,
-                   0,
-                   (LPARAM)Buffer);
+                       IDC_SETTINGS_RESOLUTION_TEXT,
+                       WM_SETTEXT,
+                       0,
+                       (LPARAM)Buffer);
 
 }
 
@@ -529,6 +547,7 @@ FillResolutionsAndColors(PINFO pInfo)
     DWORD index, i, num;
     DWORD MaxBpp = 0;
     UINT HighBpp;
+    DWORD width, height;
 
     pInfo->CurrentDisplayDevice = pInfo->DisplayDeviceList; /* Update global variable */
 
@@ -619,18 +638,23 @@ FillResolutionsAndColors(PINFO pInfo)
                            (LPARAM)Buffer);
     }
 
-    /* FIXME: read from file */
-    for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
+    width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
+    height = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopheight");
+
+    if (width && height)
     {
-        if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth &&
-            pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight)
+        for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
         {
-            SendDlgItemMessage(pInfo->hDisplayPage,
-                               IDC_GEOSLIDER,
-                               TBM_SETPOS,
-                               TRUE,
-                               index);
-            break;
+            if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
+                pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
+            {
+                SendDlgItemMessage(pInfo->hDisplayPage,
+                                   IDC_GEOSLIDER,
+                                   TBM_SETPOS,
+                                   TRUE,
+                                   index);
+                break;
+            }
         }
     }
 }

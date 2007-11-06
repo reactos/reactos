@@ -74,9 +74,40 @@ GetStringFromSettings(PRDPSETTINGS pRdpSettings,
 
 static BOOL
 WriteRdpFile(HANDLE hFile,
-             PSETTINGS pSettings)
+             PRDPSETTINGS pRdpSettings)
 {
+    WCHAR line[MAXKEY + MAXVALUE + 4];
+    DWORD BytesToWrite, BytesWritten;
+    BOOL bRet;
+    INT i;
 
+    for (i = 0; i < pRdpSettings->NumSettings; i++)
+    {
+        if (pRdpSettings->pSettings[i].Type == L'i')
+        {
+            _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:i:%d\r\n",
+                       pRdpSettings->pSettings[i].Key,
+                       pRdpSettings->pSettings[i].Value.i);
+        }
+        else
+        {
+            _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:s:%s\r\n",
+                       pRdpSettings->pSettings[i].Key,
+                       pRdpSettings->pSettings[i].Value.s);
+        }
+
+        BytesToWrite = wcslen(line) * sizeof(WCHAR);
+
+        bRet = WriteFile(hFile,
+                          line,
+                          BytesToWrite,
+                          &BytesWritten,
+                          NULL);
+        if (!bRet || BytesWritten == 0)
+            return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -239,6 +270,54 @@ CloseRdpFile(HANDLE hFile)
 {
     if (hFile)
         CloseHandle(hFile);
+}
+
+
+BOOL
+SaveRdpSettingsToFile(LPWSTR lpFile,
+                      PRDPSETTINGS pRdpSettings)
+{
+    WCHAR pszPath[MAX_PATH];
+    HANDLE hFile;
+    BOOL bRet = FALSE;
+
+    /* use default file */
+    if (lpFile == NULL)
+    {
+        HRESULT hr;
+        LPITEMIDLIST lpidl= NULL;
+
+        hr = SHGetFolderLocation(NULL,
+                                 CSIDL_PERSONAL,
+                                 NULL,
+                                 0,
+                                 &lpidl);
+        if (hr == S_OK)
+        {
+            if (SHGetPathFromIDListW(lpidl, pszPath))
+            {
+                wcscat(pszPath, L"\\Default.rdp");
+                lpFile = pszPath;
+                CoTaskMemFree(lpidl);
+            }
+        }
+    }
+
+    if (lpFile)
+    {
+        hFile = OpenRdpFile(lpFile, TRUE);
+        if (hFile)
+        {
+            if (WriteRdpFile(hFile, pRdpSettings))
+            {
+                bRet = TRUE;
+            }
+
+            CloseRdpFile(hFile);
+        }
+    }
+
+    return bRet;
 }
 
 

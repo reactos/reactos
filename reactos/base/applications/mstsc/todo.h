@@ -19,5 +19,6 @@ typedef struct _RDPSETTINGS
 
 
 PRDPSETTINGS LoadRdpSettingsFromFile(LPWSTR lpFile);
+BOOL SaveRdpSettingsToFile(LPWSTR lpFile, PRDPSETTINGS pRdpSettings);
 INT GetIntegerFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
 LPWSTR GetStringFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
