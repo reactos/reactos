@@ -18,8 +18,6 @@ BEGIN
   BEGIN
     MENUITEM "Устройствата според вид",         IDC_DEVBYTYPE, CHECKED
     MENUITEM "Устройствата според свързването",   IDC_STATIC, GRAYED
-/*    MENUITEM "Resources by type",       IDC_STATIC, GRAYED */
-/*    MENUITEM "Resources by connection", IDC_STATIC, GRAYED */
     MENUITEM "Средствата според вида",       IDC_STATIC, GRAYED
     MENUITEM "Средствата според свързването", IDC_STATIC, GRAYED
   END
@@ -72,7 +70,6 @@ BEGIN
   IDS_HINT_EXIT         " Излиза от приложението."
   IDS_HINT_REFRESH      " Опреснява списъка на услугите."
   IDS_HINT_PROP         " Отваря лист за свойства за текущия избор."
-
   IDS_HINT_HELP         " Показва помощен прозорец."
   IDS_HINT_ABOUT        " За управителя на устрйствата на РеактОС."
 
