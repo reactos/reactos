@@ -154,7 +154,7 @@ IopStartDevice(
       &IoStatusBlock,
       IRP_MN_FILTER_RESOURCE_REQUIREMENTS,
       &Stack);
-   if (!NT_SUCCESS(Status))
+   if (!NT_SUCCESS(Status) && Status != STATUS_NOT_SUPPORTED)
    {
       DPRINT("IopInitiatePnpIrp(IRP_MN_FILTER_RESOURCE_REQUIREMENTS) failed\n");
       return Status;
@@ -205,7 +205,7 @@ IopStartDevice(
    }
    else
    {
-	  if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
+      if (IopDeviceNodeHasFlag(DeviceNode, DNF_NEED_ENUMERATION_ONLY))
       {
          DPRINT("Device needs enumeration, invalidating bus relations\n");
          /* Invalidate device relations synchronously
@@ -969,12 +969,8 @@ IopInitiatePnpIrp(PDEVICE_OBJECT DeviceObject,
       &Event,
       IoStatusBlock);
 
-   /* Most of PNP IRPs are initialized with a status code of
-   STATUS_NOT_IMPLEMENTED */
-   if (MinorFunction == IRP_MN_FILTER_RESOURCE_REQUIREMENTS)
-      Irp->IoStatus.Status = STATUS_SUCCESS;
-   else
-      Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
+   /* PNP IRPs are initialized with a status code of STATUS_NOT_SUPPORTED */
+   Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
    Irp->IoStatus.Information = 0;
 
    IrpSp = IoGetNextIrpStackLocation(Irp);

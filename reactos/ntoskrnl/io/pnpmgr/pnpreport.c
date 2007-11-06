@@ -63,10 +63,6 @@ IoReportDetectedDevice(
 
   /* we don't need to call AddDevice and send IRP_MN_START_DEVICE */
 
-  /* FIXME: save this device into the root-enumerated list, so this
-   * device would be detected as a PnP device during next startups.
-   */
-
   return Status;
 }
 
