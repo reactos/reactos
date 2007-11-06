@@ -270,33 +270,24 @@ MingwModuleHandler::GetActualSourceFilename (
 	string extension = GetExtension ( *file );
 	if ( extension == ".spec" || extension == ".SPEC" )
 	{
-		string basename = GetBasename ( filename );
-		return new FileLocation (
-			IntermediateDirectory,
-			file->relative_path,
-			basename + ".stubs.c" );
+		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		FileLocation *sourceFile = new FileLocation (
+			objectFile->directory,
+			objectFile->relative_path,
+			ReplaceExtension ( objectFile->name, ".c" ) );
+		delete objectFile;
+		return sourceFile;
 	}
-	else if ( extension == ".idl" || extension == ".IDL" )
+	else if ( ( extension == ".idl" || extension == ".IDL" ) &&
+	          ( module.type == RpcServer || module.type == RpcClient ) )
 	{
-		string basename = GetBasename ( filename );
-		if ( module.type == RpcServer )
-		{
-			return new FileLocation (
-				IntermediateDirectory,
-				file->relative_path,
-				basename + "_s.c" );
-		}
-		else if ( module.type == RpcClient )
-		{
-			return new FileLocation (
-				IntermediateDirectory,
-				file->relative_path,
-				basename + "_c.c" );
-		}
-		else
-		{
-			return new FileLocation ( *file );
-		}
+		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		FileLocation *sourceFile = new FileLocation (
+			objectFile->directory,
+			objectFile->relative_path,
+			ReplaceExtension ( objectFile->name, ".c" ) );
+		delete objectFile;
+		return sourceFile;
 	}
 	else
 		return new FileLocation ( *file );
@@ -509,13 +500,13 @@ MingwModuleHandler::GetObjectFilename (
 	if ( extension == ".rc" || extension == ".RC" )
 		newExtension = "_" + module.name + ".coff";
 	else if ( extension == ".spec" || extension == ".SPEC" )
-		newExtension = ".stubs_" + module.name + ".o";
+		newExtension = ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
 	{
 		if ( module.type == RpcServer )
-			newExtension = "_s_" + module.name + ".o";
+			newExtension = "_s.o";
 		else if ( module.type == RpcClient )
-			newExtension = "_c_" + module.name + ".o";
+			newExtension = "_c.o";
 		else
 			newExtension = ".h";
 	}
@@ -1119,10 +1110,9 @@ MingwModuleHandler::GenerateObjectMacros (
 const FileLocation*
 MingwModuleHandler::GetPrecompiledHeaderFilename () const
 {
-	const string& basePchFilename = module.pch->file.name + "_" + module.name + ".gch";
 	return new FileLocation ( IntermediateDirectory,
 	                          module.pch->file.relative_path,
-	                          basePchFilename );
+	                          ReplaceExtension ( module.pch->file.name, "_" + module.name + ".gch" ) );
 }
 
 void
@@ -1132,7 +1122,8 @@ MingwModuleHandler::GenerateGccCommand (
 	const string& cc,
 	const string& cflagsMacro )
 {
-	string dependencies = backend->GetFullName ( *sourceFile );
+	const FileLocation *generatedSourceFileName = GetActualSourceFilename ( sourceFile );
+	string dependencies = backend->GetFullName ( *generatedSourceFileName );
 	if ( extraDependencies != "" )
 		dependencies += " " + extraDependencies;
 	if ( module.pch && use_pch )
@@ -1261,9 +1252,7 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	                        basename + ".spec.def" );
 	CLEAN_FILE ( def_file );
 
-	FileLocation stub_file ( IntermediateDirectory,
-	                        sourceFile->relative_path,
-	                        basename + ".stubs.c" );
+	FileLocation stub_file ( *GetActualSourceFilename ( sourceFile ) );
 	CLEAN_FILE ( stub_file );
 
 	fprintf ( fMakefile,
@@ -1472,7 +1461,7 @@ MingwModuleHandler::GenerateWidlCommands (
 		                             widlflagsMacro );
 	else if ( module.type == EmbeddedTypeLib )
 		GenerateWidlCommandsEmbeddedTypeLib ( compilationUnit,
-										widlflagsMacro );
+		                                      widlflagsMacro );
 	else // applies also for other module.types which include idl files
 		GenerateWidlCommandsIdlHeader ( compilationUnit,
 		                                widlflagsMacro );
@@ -1531,7 +1520,7 @@ MingwModuleHandler::GenerateCommands (
 	else if ( extension == ".spec" || extension == ".SPEC" )
 	{
 		GenerateWinebuildCommands ( sourceFile );
-		GenerateGccCommand ( GetActualSourceFilename ( sourceFile ),
+		GenerateGccCommand ( sourceFile,
 		                     extraDependencies,
 		                     cc,
 		                     cflagsMacro );
@@ -1543,7 +1532,7 @@ MingwModuleHandler::GenerateCommands (
 		                       widlflagsMacro );
 		if ( (module.type == RpcServer) || (module.type == RpcClient) )
 		{
-			GenerateGccCommand ( GetActualSourceFilename ( sourceFile ),
+			GenerateGccCommand ( sourceFile,
 			                     GetExtraDependencies ( sourceFile ),
 			                     cc,
 			                     cflagsMacro );
@@ -3481,12 +3470,12 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 		vSourceFiles.push_back ( srcunattend );
 
 	// bootsector
-	FileLocation isoboot ( OutputDirectory,
-	                       "boot" + sSep + "freeldr" + sSep + "bootsect",
-	                       module.type == IsoRegTest
-	                           ? "isobtrt_isobtrt.o"
-	                           : "isoboot_isoboot.o" );
-	vSourceFiles.push_back ( isoboot );
+	const Module* bootModule;
+	bootModule = module.project.LocateModule ( module.type == IsoRegTest
+	                                               ? "isobtrt"
+	                                               : "isoboot" );
+	const FileLocation *isoboot = bootModule->output;
+	vSourceFiles.push_back ( *isoboot );
 
 	// prepare reactos.dff and reactos.inf
 	FileLocation reactosDff ( SourceDirectory,
@@ -3518,7 +3507,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile,
 	          "%s: all %s %s %s $(CABMAN_TARGET) $(CDMAKE_TARGET) %s\n",
 	          module.name.c_str (),
-	          backend->GetFullName ( isoboot ).c_str (),
+	          backend->GetFullName ( *isoboot ).c_str (),
 	          sourceFiles.c_str (),
 	          cdFiles.c_str (),
 	          cdDirectories.c_str () );
@@ -3544,7 +3533,7 @@ MingwIsoModuleHandler::GenerateIsoModuleTarget ()
 	fprintf ( fMakefile, "\t$(ECHO_CDMAKE)\n" );
 	fprintf ( fMakefile,
 	          "\t$(Q)$(CDMAKE_TARGET) -v -j -m -b %s %s REACTOS %s\n",
-	          backend->GetFullName ( isoboot ).c_str (),
+	          backend->GetFullName ( *isoboot ).c_str (),
 	          backend->GetFullPath ( bootcd ).c_str (),
 	          IsoName.c_str() );
 	fprintf ( fMakefile,
