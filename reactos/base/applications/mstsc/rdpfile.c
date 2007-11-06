@@ -47,6 +47,10 @@ ParseSettings(LPWSTR lpBuffer)
     INT NumSettings = 0;
     INT s;
 
+    /* move past unicode byte order */
+    if (lpBuffer[0] == 0xFEFF || lpBuffer[0] == 0xFFFE)
+        lpBuffer += 1;
+
     if (lpBuffer)
     {
         /* get number of settings */
@@ -149,7 +153,6 @@ ReadRdpFile(HANDLE hFile)
                 if (bRes)
                 {
                     lpBuffer[BytesRead / 2] = 0;
-                    lpBuffer += 1;
                 }
                 else
                 {
@@ -192,3 +195,4 @@ CloseRdpFile(HANDLE hFile)
     if (hFile)
         CloseHandle(hFile);
 }
+
