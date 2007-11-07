@@ -22,3 +22,5 @@ PRDPSETTINGS LoadRdpSettingsFromFile(LPWSTR lpFile);
 BOOL SaveRdpSettingsToFile(LPWSTR lpFile, PRDPSETTINGS pRdpSettings);
 INT GetIntegerFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
 LPWSTR GetStringFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
+BOOL SetIntegerToSettings(PRDPSETTINGS pRdpSettings, LPWSTR lpKey, INT Value);
+BOOL SetStringToSettings(PRDPSETTINGS pRdpSettings, LPWSTR lpKey, LPWSTR lpValue);

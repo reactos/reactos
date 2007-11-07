@@ -18,6 +18,64 @@ LPWSTR lpSettings[NUM_SETTINGS] =
 
 
 
+BOOL
+SetIntegerToSettings(PRDPSETTINGS pRdpSettings,
+                     LPWSTR lpKey,
+                     INT Value)
+{
+    BOOL bRet = FALSE;
+
+    if (pRdpSettings)
+    {
+        INT i;
+
+        for (i = 0; i < pRdpSettings->NumSettings; i++)
+        {
+            if (wcscmp(pRdpSettings->pSettings[i].Key, lpKey) == 0)
+            {
+                if (pRdpSettings->pSettings[i].Type == L'i')
+                {
+                    pRdpSettings->pSettings[i].Value.i = Value;
+                    bRet = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+
+    return bRet;
+}
+
+
+BOOL
+SetStringToSettings(PRDPSETTINGS pRdpSettings,
+                    LPWSTR lpKey,
+                    LPWSTR lpValue)
+{
+    BOOL bRet = FALSE;
+
+    if (pRdpSettings)
+    {
+        INT i;
+
+        for (i = 0; i < pRdpSettings->NumSettings; i++)
+        {
+            if (wcscmp(pRdpSettings->pSettings[i].Key, lpKey) == 0)
+            {
+                if (pRdpSettings->pSettings[i].Type == L's')
+                {
+                    wcscpy(pRdpSettings->pSettings[i].Value.i, lpValue);
+                    bRet = TRUE;
+                    break;
+                }
+            }
+        }
+    }
+
+    return bRet;
+}
+
+
 INT
 GetIntegerFromSettings(PRDPSETTINGS pRdpSettings,
                        LPWSTR lpKey)

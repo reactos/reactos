@@ -557,6 +557,14 @@ OnResolutionChanged(PINFO pInfo, DWORD position)
                        0,
                        (LPARAM)Buffer);
 
+    /* save new settings */
+    SetIntegerToSettings(pInfo->pRdpSettings,
+                         L"desktopwidth",
+                         pInfo->DisplayDeviceList->Resolutions[position].dmPelsWidth);
+    SetIntegerToSettings(pInfo->pRdpSettings,
+                         L"desktopheight",
+                         pInfo->DisplayDeviceList->Resolutions[position].dmPelsHeight);
+
 }
 
 
@@ -568,7 +576,6 @@ FillResolutionsAndColors(PINFO pInfo)
     TCHAR Pixel[64];
     DWORD index, i, num;
     DWORD MaxBpp = 0;
-    UINT HighBpp;
     DWORD width, height;
     UINT types[4];
 
@@ -588,20 +595,9 @@ FillResolutionsAndColors(PINFO pInfo)
     switch (MaxBpp)
     {
         case 32:
-        case 24: 
-            HighBpp = IDS_HIGHCOLOR24;
-            num = 4;
-            break;
-
-        case 16: 
-            HighBpp = IDS_HIGHCOLOR16;
-            num = 3;
-            break;
-
-        case 8:
-            HighBpp = IDS_256COLORS;
-            num = 1;
-            break;
+        case 24: num = 4; break;
+        case 16: num = 3; break;
+        case 8:  num = 1; break;
     }
 
     types[0] = IDS_256COLORS;
@@ -659,23 +655,6 @@ FillResolutionsAndColors(PINFO pInfo)
                        TRUE,
                        MAKELONG(0, pInfo->DisplayDeviceList->ResolutionsCount)); //extra 1 for full screen
 
-    if (LoadString(hInst,
-                   IDS_PIXEL,
-                   Pixel,
-                   sizeof(Pixel) / sizeof(TCHAR)))
-    {
-        _stprintf(Buffer,
-                  Pixel,
-                  pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsWidth,
-                  pInfo->CurrentDisplayDevice->CurrentSettings->dmPelsHeight,
-                  Pixel);
-        SendDlgItemMessage(pInfo->hDisplayPage,
-                           IDC_SETTINGS_RESOLUTION_TEXT,
-                           WM_SETTEXT,
-                           0,
-                           (LPARAM)Buffer);
-    }
-
     width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
     height = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopheight");
 
@@ -693,6 +672,23 @@ FillResolutionsAndColors(PINFO pInfo)
                                    index);
                 break;
             }
+        }
+
+        if (LoadString(hInst,
+                       IDS_PIXEL,
+                       Pixel,
+                       sizeof(Pixel) / sizeof(TCHAR)))
+        {
+            _stprintf(Buffer,
+                      Pixel,
+                      width,
+                      height,
+                      Pixel);
+            SendDlgItemMessage(pInfo->hDisplayPage,
+                               IDC_SETTINGS_RESOLUTION_TEXT,
+                               WM_SETTEXT,
+                               0,
+                               (LPARAM)Buffer);
         }
     }
 }
