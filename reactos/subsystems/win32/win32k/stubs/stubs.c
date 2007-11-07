@@ -2497,23 +2497,6 @@ NtGdiGetCharacterPlacementW(
  */
 BOOL
 STDCALL
-NtGdiGetCharWidthW(
-    IN HDC hdc,
-    IN UINT wcFirst,
-    IN UINT cwc,
-    IN OPTIONAL PWCHAR pwc,
-    IN FLONG fl,
-    OUT PVOID pvBuf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-STDCALL
 NtGdiGetCharWidthInfo(
     IN HDC hdc,
     OUT PCHWIDTHINFO pChWidthInfo)

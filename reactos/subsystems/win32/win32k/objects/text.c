@@ -2268,6 +2268,23 @@ NtGdiGetCharABCWidthsW(
     return FALSE;
 }
 
+ /*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+NtGdiGetCharWidthW(
+    IN HDC hdc,
+    IN UINT wcFirst,
+    IN UINT cwc,
+    IN OPTIONAL PWCHAR pwc,
+    IN FLONG fl,
+    OUT PVOID pvBuf)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
 BOOL
 STDCALL
 NtGdiGetCharWidth32(HDC  hDC,
