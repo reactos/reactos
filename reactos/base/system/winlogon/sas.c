@@ -319,21 +319,16 @@ static NTSTATUS
 CreateLogoffSecurityAttributes(
 	OUT PSECURITY_ATTRIBUTES* ppsa)
 {
-#if 1
-	ERR("CreateLogoffSecurityAttributes needs implementation!\n");
-	*ppsa = 0;
-	return STATUS_UNSUCCESSFUL;
-#else
 	/* The following code is no only incomplete, it's a mess and uncompilable */
 	/* Still, it gives some ideas about data types and functions involved and */
 	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */
 	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
 	/* Specifically THREAD_SET_THREAD_TOKEN is required. */
-	PSECURITY_DESCRIPTOR psd = 0;
+	PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
 	PSECURITY_ATTRIBUTES psa = 0;
 	BYTE* pMem;
 	PACL pACL;
-	EXPLICIT_ACCESS ea[2];
+	//EXPLICIT_ACCESS ea[2];
 
 	*ppsa = NULL;
 
@@ -374,10 +369,10 @@ CreateLogoffSecurityAttributes(
 	/* meaning its members must be pointers to other structures, rather */
 	/* than the relative format using offsets */
 	psa = (PSECURITY_ATTRIBUTES)pMem;
-	psd = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
-	pACL = (PACL)(((PBYTE)psd) + SECURITY_DESCRIPTOR_MIN_LENGTH);
+	SecurityDescriptor = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
+	pACL = (PACL)(((PBYTE)SecurityDescriptor) + SECURITY_DESCRIPTOR_MIN_LENGTH);
 
-	if (!InitializeSecurityDescriptor(psd, SECURITY_DESCRIPTOR_REVISION))
+	if (!InitializeSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
 	{
 		HeapFree(GetProcessHeap(), 0, pMem);
 		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
@@ -386,6 +381,7 @@ CreateLogoffSecurityAttributes(
 
 	// Initialize an EXPLICIT_ACCESS structure for an ACE.
 	// The ACE will allow this thread to log off (and shut down the system, currently).
+#if 0
 	ZeroMemory(ea, sizeof(ea));
 	ea[0].grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
 	ea[0].grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
@@ -403,15 +399,15 @@ CreateLogoffSecurityAttributes(
 		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
 	}
+#endif
 
-	psa->nLength = sizeof(sa);
-	psa->lpSecurityDescriptor = psd;
+	psa->nLength = sizeof(SECURITY_ATTRIBUTES);
+	psa->lpSecurityDescriptor = SecurityDescriptor;
 	psa->bInheritHandle = FALSE;
 
 	*ppsa = psa;
 
 	return STATUS_SUCCESS;
-#endif
 }
 
 static VOID
