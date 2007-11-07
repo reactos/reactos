@@ -13,6 +13,7 @@
 #include <internal/debug.h>
 
 extern ULONG ExpInitializationPhase;
+extern BOOLEAN SysThreadCreated;
 
 GENERIC_MAPPING PspProcessMapping =
 {
@@ -581,6 +582,7 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                               (PVOID*)&SysThread,
                               NULL);
     ZwClose(SysThreadHandle);
+    SysThreadCreated = TRUE;
 
     /* Return success */
     return TRUE;
