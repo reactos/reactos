@@ -79,32 +79,39 @@ WriteRdpFile(HANDLE hFile,
     WCHAR line[MAXKEY + MAXVALUE + 4];
     DWORD BytesToWrite, BytesWritten;
     BOOL bRet;
-    INT i;
+    INT i, k;
 
     for (i = 0; i < pRdpSettings->NumSettings; i++)
     {
-        if (pRdpSettings->pSettings[i].Type == L'i')
+        /* only write out values in the lpSettings struct */
+        for (k = 0; k < NUM_SETTINGS; k++)
         {
-            _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:i:%d\r\n",
-                       pRdpSettings->pSettings[i].Key,
-                       pRdpSettings->pSettings[i].Value.i);
-        }
-        else
-        {
-            _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:s:%s\r\n",
-                       pRdpSettings->pSettings[i].Key,
-                       pRdpSettings->pSettings[i].Value.s);
-        }
+            if (wcscmp(lpSettings[k], pRdpSettings->pSettings[i].Key) == 0)
+            {
+                if (pRdpSettings->pSettings[i].Type == L'i')
+                {
+                    _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:i:%d\r\n",
+                               pRdpSettings->pSettings[i].Key,
+                               pRdpSettings->pSettings[i].Value.i);
+                }
+                else
+                {
+                    _snwprintf(line, MAXKEY + MAXVALUE + 4, L"%s:s:%s\r\n",
+                               pRdpSettings->pSettings[i].Key,
+                               pRdpSettings->pSettings[i].Value.s);
+                }
 
-        BytesToWrite = wcslen(line) * sizeof(WCHAR);
+                BytesToWrite = wcslen(line) * sizeof(WCHAR);
 
-        bRet = WriteFile(hFile,
-                          line,
-                          BytesToWrite,
-                          &BytesWritten,
-                          NULL);
-        if (!bRet || BytesWritten == 0)
-            return FALSE;
+                bRet = WriteFile(hFile,
+                                 line,
+                                 BytesToWrite,
+                                 &BytesWritten,
+                                 NULL);
+                if (!bRet || BytesWritten == 0)
+                    return FALSE;
+            }
+        }
     }
 
     return TRUE;
