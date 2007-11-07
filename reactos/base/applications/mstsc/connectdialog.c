@@ -900,7 +900,8 @@ DisplayDlgProc(HWND hDlg,
 
 
 static BOOL
-OnMainCreate(HWND hwnd)
+OnMainCreate(HWND hwnd,
+             PRDPSETTINGS pRdpSettings)
 {
     PINFO pInfo;
     TCITEM item;
@@ -915,10 +916,8 @@ OnMainCreate(HWND hwnd)
                          GWLP_USERDATA,
                          (LONG_PTR)pInfo);
 
-        /* read the default .rdp file */
-        pInfo->pRdpSettings = LoadRdpSettingsFromFile(NULL);
-        if (!pInfo->pRdpSettings)
-            return FALSE;
+        /* add main settings pointer */
+        pInfo->pRdpSettings = pRdpSettings;
 
         pInfo->hHeader = (HBITMAP)LoadImage(hInst,
                                             MAKEINTRESOURCE(IDB_HEADER),
@@ -989,7 +988,7 @@ DlgProc(HWND hDlg,
     switch(Message)
     {
         case WM_INITDIALOG:
-            OnMainCreate(hDlg);
+            OnMainCreate(hDlg, (PRDPSETTINGS)lParam);
         break;
 
         case WM_COMMAND:
@@ -1064,20 +1063,6 @@ DlgProc(HWND hDlg,
         {
             if (pInfo)
             {
-                if (pInfo->pRdpSettings)
-                {
-                    if (pInfo->pRdpSettings->pSettings)
-                    {
-                        HeapFree(GetProcessHeap(),
-                                 0,
-                                 pInfo->pRdpSettings->pSettings);
-                    }
-
-                    HeapFree(GetProcessHeap(),
-                             0,
-                             pInfo->pRdpSettings);
-                }
-
                 HeapFree(GetProcessHeap(),
                          0,
                          pInfo);
@@ -1096,7 +1081,8 @@ HandleDefaultMessage:
 }
 
 BOOL
-OpenRDPConnectDialog(HINSTANCE hInstance)
+OpenRDPConnectDialog(HINSTANCE hInstance,
+                     PRDPSETTINGS pRdpSettings)
 {
     INITCOMMONCONTROLSEX iccx;
 
@@ -1106,8 +1092,9 @@ OpenRDPConnectDialog(HINSTANCE hInstance)
     iccx.dwICC = ICC_TAB_CLASSES;
     InitCommonControlsEx(&iccx);
 
-    return (DialogBox(hInst,
-                      MAKEINTRESOURCE(IDD_CONNECTDIALOG),
-                      NULL,
-                      (DLGPROC)DlgProc) == IDOK);
+    return (DialogBoxParam(hInst,
+                           MAKEINTRESOURCE(IDD_CONNECTDIALOG),
+                           NULL,
+                           (DLGPROC)DlgProc,
+                           pRdpSettings) == IDOK);
 }

@@ -17,7 +17,7 @@ typedef struct _RDPSETTINGS
     INT NumSettings;
 } RDPSETTINGS, *PRDPSETTINGS;
 
-
+BOOL OpenRDPConnectDialog(HINSTANCE hInstance, PRDPSETTINGS pRdpSettings);
 PRDPSETTINGS LoadRdpSettingsFromFile(LPWSTR lpFile);
 BOOL SaveRdpSettingsToFile(LPWSTR lpFile, PRDPSETTINGS pRdpSettings);
 INT GetIntegerFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);

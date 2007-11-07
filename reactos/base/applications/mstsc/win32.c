@@ -23,6 +23,7 @@
 #include <winuser.h>
 #include <stdio.h>
 #include "uimain.h"
+#include "todo.h"
 #include "resource.h"
 
 extern char g_username[];
@@ -1290,24 +1291,40 @@ main(int argc, char ** argv)
 #else /* WITH_DEBUG */
 /*****************************************************************************/
 int WINAPI
-WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
-        LPTSTR lpCmdLine, int nCmdShow)
+WinMain(HINSTANCE hInstance,
+        HINSTANCE hPrevInstance,
+        LPTSTR lpCmdLine,
+        int nCmdShow)
 {
-  WSADATA d;
-  int ret = 1;
+    PRDPSETTINGS pRdpSettings;
+    WSADATA d;
+    int ret = 1;
 
-  WSAStartup(MAKEWORD(2, 0), &d);
+    if (WSAStartup(MAKEWORD(2, 0), &d) == 0)
+    {
+        pRdpSettings = LoadRdpSettingsFromFile(NULL);
 
-  //if (mi_process_cl(lpCmdLine))
-  //{
-     if (OpenRDPConnectDialog(hInstance))
-     {
-         ui_main();
-         ret = 0;
-     }
-  //}
+        if (pRdpSettings)
+        {
+            //mi_process_cl(lpCmdLine)
+            if (OpenRDPConnectDialog(hInstance,
+                                     pRdpSettings))
+            {
+                ui_main();
+                ret = 0;
+            }
 
-  WSACleanup();
+            HeapFree(GetProcessHeap(),
+                     0,
+                     pRdpSettings->pSettings);
+
+            HeapFree(GetProcessHeap(),
+                     0,
+                     pRdpSettings);
+      }
+
+        WSACleanup();
+    }
 
   return ret;
 }

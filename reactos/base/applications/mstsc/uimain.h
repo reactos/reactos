@@ -74,7 +74,3 @@ ui_set_modifier_state(int code);
 #define UI_MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #undef UI_MIN
 #define UI_MIN(a, b)  (((a) < (b)) ? (a) : (b))
-
-/* in connectdialog.c */
-BOOL OpenRDPConnectDialog();
-
