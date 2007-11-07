@@ -1,5 +1,10 @@
 #define IDC_STATIC                      -1
 
+#define IDS_256COLORS                   8
+#define IDS_HIGHCOLOR15                 15
+#define IDS_HIGHCOLOR16                 16
+#define IDS_HIGHCOLOR24                 24
+
 #define IDD_CONNECTDIALOG               101
 #define IDD_GENERAL                     105
 #define IDD_DISPLAY                     107
@@ -32,8 +37,3 @@
 #define IDS_PIXEL                       3006
 #define IDS_FULLSCREEN                  3007
 #define IDS_BROWSESERVER                3008
-
-#define IDS_256COLORS                   4000
-#define IDS_HIGHCOLOR15                 4001
-#define IDS_HIGHCOLOR16                 4002
-#define IDS_HIGHCOLOR24                 4003

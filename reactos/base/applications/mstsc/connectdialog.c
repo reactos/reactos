@@ -262,6 +262,28 @@ GeneralDlgProc(HWND hDlg,
         {
             switch(LOWORD(wParam))
             {
+                case IDC_SERVERCOMBO:
+                    if (HIWORD(wParam) == CBN_SELCHANGE)
+                    {
+                        INT last, cur;
+                        
+                        cur = SendDlgItemMessage(hDlg,
+                                                 IDC_SERVERCOMBO,
+                                                 CB_GETCURSEL,
+                                                 0,
+                                                 0);
+                        cur++;
+
+                        last = SendDlgItemMessage(hDlg,
+                                                  IDC_SERVERCOMBO,
+                                                  CB_GETCOUNT,
+                                                  0,
+                                                  0);
+                        if (cur == last)
+                            MessageBox(hDlg, _T("SMB is not yet supported"), _T("RDP error"), MB_ICONERROR);
+                    }
+                    break;
+
                 case IDC_SAVE:
                     SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
                 break;
@@ -548,6 +570,7 @@ FillResolutionsAndColors(PINFO pInfo)
     DWORD MaxBpp = 0;
     UINT HighBpp;
     DWORD width, height;
+    UINT types[4];
 
     pInfo->CurrentDisplayDevice = pInfo->DisplayDeviceList; /* Update global variable */
 
@@ -565,10 +588,26 @@ FillResolutionsAndColors(PINFO pInfo)
     switch (MaxBpp)
     {
         case 32:
-        case 24: HighBpp = IDS_HIGHCOLOR24; break;
-        case 16: HighBpp = IDS_HIGHCOLOR16; break;
-        case 8:  HighBpp = IDS_256COLORS;   break;
+        case 24: 
+            HighBpp = IDS_HIGHCOLOR24;
+            num = 4;
+            break;
+
+        case 16: 
+            HighBpp = IDS_HIGHCOLOR16;
+            num = 3;
+            break;
+
+        case 8:
+            HighBpp = IDS_256COLORS;
+            num = 1;
+            break;
     }
+
+    types[0] = IDS_256COLORS;
+    types[1] = IDS_HIGHCOLOR15;
+    types[2] = IDS_HIGHCOLOR16;
+    types[3] = IDS_HIGHCOLOR24;
 
     /* Fill color depths combo box */
     SendDlgItemMessage(pInfo->hDisplayPage,
@@ -576,7 +615,6 @@ FillResolutionsAndColors(PINFO pInfo)
                       CB_RESETCONTENT,
                       0,
                       0);
-    num = HighBpp - IDS_256COLORS;
 
     for (i = 0, Current = pInfo->DisplayDeviceList->Settings;
          i <= num && Current != NULL;
@@ -584,7 +622,7 @@ FillResolutionsAndColors(PINFO pInfo)
     {
         TCHAR Buffer[64];
         if (LoadString(hInst,
-                       (IDS_256COLORS + i),
+                       types[i],
                        Buffer,
                        sizeof(Buffer) / sizeof(TCHAR)))
         {
@@ -604,7 +642,7 @@ FillResolutionsAndColors(PINFO pInfo)
                                    IDC_BPPCOMBO,
                                    CB_SETITEMDATA,
                                    index,
-                                   Current->dmBitsPerPel);
+                                   types[i]);
             }
         }
     }
@@ -731,7 +769,48 @@ DisplayOnInit(PINFO pInfo)
         }
 
         if (GotDev)
+        {
+            INT bpp, num, i;
+            BOOL bSet = FALSE;
+
             FillResolutionsAndColors(pInfo);
+
+             /* set color combo */
+            bpp = GetIntegerFromSettings(pInfo->pRdpSettings, L"session bpp");
+
+            num = SendDlgItemMessage(pInfo->hDisplayPage,
+                                     IDC_BPPCOMBO,
+                                     CB_GETCOUNT,
+                                     0,
+                                     0);
+            for (i = 0; i < num; i++)
+            {
+                INT data = SendDlgItemMessage(pInfo->hDisplayPage,
+                                              IDC_BPPCOMBO,
+                                              CB_GETITEMDATA,
+                                              i,
+                                              0);
+                if (data == bpp)
+                {
+                    SendDlgItemMessage(pInfo->hDisplayPage,
+                                       IDC_BPPCOMBO,
+                                       CB_SETCURSEL,
+                                       i,
+                                       0);
+                    bSet = TRUE;
+                    break;
+                }
+            }
+
+            if (!bSet)
+            {
+                SendDlgItemMessage(pInfo->hDisplayPage,
+                                   IDC_BPPCOMBO,
+                                   CB_SETCURSEL,
+                                   num - 1,
+                                   0);
+            }
+        }
 }
 
 

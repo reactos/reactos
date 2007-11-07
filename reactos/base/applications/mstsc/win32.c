@@ -1271,46 +1271,6 @@ mi_process_cl(LPTSTR lpCmdLine)
   return (state == 0);
 }
 
-/*****************************************************************************/
-/* display the command line options available */
-static void
-mi_show_params(void)
-{
-  char text1[512 * 4];
-  TCHAR textx[512 * 4];
-  TCHAR lcaption[64];
-
-  strcpy(text1, "");
-  strcat(text1, "WinRDesktop - an RDP client based on rdesktop\r\n");
-  strcat(text1, "You can't run this application without " );
-  strcat(text1, "correct parameters\r\n");
-  strcat(text1, "\r\n");
-  strcat(text1, "command line options\r\n");
-  strcat(text1, "\r\n");
-  strcat(text1, "WinRDesktop [-g widthxheight] [-t port] [-a bpp]\r\n");
-  strcat(text1, "    [-f] [-u username] [-p password] [-d domain]\r\n");
-  strcat(text1, "    [-s shell] [-c working directory] [-n host name]\r\n");
-  strcat(text1, "    server-name-or-ip\r\n");
-  strcat(text1, "\r\n");
-  strcat(text1, "You can use a config file in the current directory\r\n");
-  strcat(text1, "called WinRDesktop.ini\r\n");
-  strcat(text1, "The file should look like this...\r\n");
-  strcat(text1, "[main]\r\n");
-  strcat(text1, "server=192.168.1.1\r\n");
-  strcat(text1, "port=3389\r\n");
-  strcat(text1, "username=user1\r\n");
-  strcat(text1, "password=password1\r\n");
-  strcat(text1, "bpp=16\r\n");
-  strcat(text1, "geometry=800x600\r\n");
-#ifdef WITH_DEBUG
-  printf(text1);
-#else /* WITH_DEBUG */
-  str_to_uni(lcaption, "WinRDesktop");
-  str_to_uni(textx, text1);
-  MessageBox(g_Wnd, textx, lcaption, MB_OK);
-#endif /* WITH_DEBUG */
-}
-
 #ifdef WITH_DEBUG
 /*****************************************************************************/
 int
@@ -1346,8 +1306,6 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
          ret = 0;
      }
   //}
-  else
-      mi_show_params();
 
   WSACleanup();
 
