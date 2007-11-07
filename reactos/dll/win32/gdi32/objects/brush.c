@@ -257,6 +257,25 @@ SetROP2(HDC hdc,
 
 /*
  * @implemented
+ *
+ */
+BOOL
+STDCALL
+GetBrushOrgEx(HDC hdc,LPPOINT pt)
+{
+  PDC_ATTR Dc_Attr;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (pt)
+  {
+     pt->x = Dc_Attr->ptlBrushOrigin.x;
+     pt->y = Dc_Attr->ptlBrushOrigin.y;
+  }
+  return TRUE;
+}
+
+/*
+ * @implemented
  */
 BOOL
 STDCALL
@@ -265,6 +284,7 @@ SetBrushOrgEx(HDC hdc,
               int nYOrg,
               LPPOINT lppt)
 {
+  PDC_ATTR Dc_Attr;
 #if 0
 // Handle something other than a normal dc object.
  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
@@ -282,9 +302,6 @@ SetBrushOrgEx(HDC hdc,
     return FALSE;
  }
 #endif
-#if 0
-  PDC_ATTR Dc_Attr;
-
  if (GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr))
  {
     PTEB pTeb = NtCurrentTeb();
@@ -313,12 +330,17 @@ SetBrushOrgEx(HDC hdc,
        pTeb->GdiTebBatch.Offset += sizeof(GDIBSSETBRHORG);
        pTeb->GdiTebBatch.HDC = (ULONG)hdc;
        pTeb->GdiBatchCount++;
-       if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+       DPRINT("Loading the Flush!! COUNT-> %d\n", pTeb->GdiBatchCount);
 
+       if (pTeb->GdiBatchCount >= GDI_BatchLimit)
+       {
+       DPRINT("Call GdiFlush!!\n");
+       NtGdiFlush();
+       DPRINT("Exit GdiFlush!!\n");
+       }
        return TRUE;
     }
  }
-#endif
  return NtGdiSetBrushOrg(hdc,nXOrg,nYOrg,lppt);
 }
 

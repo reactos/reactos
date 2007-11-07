@@ -283,4 +283,26 @@ typedef struct _DC_ATTR
     RGNATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
 
+typedef struct _BRUSH_ATTR
+{
+    LOGBRUSH logbrush;
+    DWORD    dwUnused[3];
+} BRUSH_ATTR, *PBRUSH_ATTR;
+
+typedef struct _REGION_ATTR
+{
+    DWORD dwUnknown1; 
+    DWORD dwUnknown2; 
+    LONG right; 
+    LONG bottom;
+    LONG left; 
+    LONG top; 
+} REGION_ATTR, *PREGION_ATTR;
+
+typedef struct _FONT_ATTR
+{
+    DWORD dwUnknown;
+    void *pCharWidthData;
+} FONT_ATTR, *PFONT_ATTR;
+
 #endif

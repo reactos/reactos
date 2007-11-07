@@ -77,8 +77,6 @@ typedef enum _GETDCPOINT
     GdiGetDCOrg = 6,
 } GETDCPOINT, *PGETDCPOINT;
 
-#define GDIBATCHBUFSIZE 0x136*4
-#define GDI_BATCH_LIMIT 20
 
 typedef enum _GDIBATCHCMD
 {
@@ -104,6 +102,21 @@ typedef enum _TRANSFORMTYPE
 /* FIXME: Unknown */
 typedef DWORD FULLSCREENCONTROL;
 typedef DWORD LFTYPE;
+
+/* DEFINES *******************************************************************/
+
+#define GDIBATCHBUFSIZE 0x136*4
+#define GDI_BATCH_LIMIT 20
+
+// NtGdiGetCharWidthW Flags
+#define GCW_WIN32   0x0001
+#define GCW_NOFLOAT 0x0002
+#define GCW_INDICES 0x0008
+
+// NtGdiGetCharABCWidthW Flags
+#define GCABCW_NOFLOAT 0x0001
+#define GCABCW_INDICES 0x0002
+
 
 /* TYPES *********************************************************************/
 

@@ -79,15 +79,6 @@ NtGdiGetTextExtentPoint32(
     LPSIZE
 );
 
-BOOL
-STDCALL
-NtGdiGetCharWidth32(
-    HDC hDC,
-    UINT FirstChar,
-    UINT LastChar,
-    LPINT Buffer
-);
-
 /* Use NtGdiAddFontResourceW */
 int
 STDCALL
@@ -210,9 +201,6 @@ COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetBkMode(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
-BOOL STDCALL  NtGdiGetBrushOrgEx(HDC  hDC, LPPOINT brushOrg);
 
 /* Use NtGdiGetCharABCWidthsW */
 BOOL

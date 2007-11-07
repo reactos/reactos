@@ -2130,12 +2130,18 @@ fail:
    return FALSE;
 }
 
+ /*
+ * @implemented
+ */
 BOOL
 STDCALL
-NtGdiGetCharABCWidths(HDC  hDC,
-                           UINT  FirstChar,
-                           UINT  LastChar,
-                           LPABC  abc)
+NtGdiGetCharABCWidthsW(
+    IN HDC hDC,
+    IN UINT FirstChar,
+    IN ULONG Count,
+    IN OPTIONAL PWCHAR pwch,
+    IN FLONG fl,
+    OUT PVOID Buffer)
 {
    LPABC SafeBuffer;
    PDC dc;
@@ -2146,14 +2152,21 @@ NtGdiGetCharABCWidths(HDC  hDC,
    UINT i, glyph_index, BufferSize;
    HFONT hFont = 0;
    NTSTATUS Status;
+   LPABC abc = NULL;
+   LPABCFLOAT abcf = NULL;
 
-   if (LastChar < FirstChar)
+   if (!fl)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      abcf = (LPABCFLOAT) Buffer;
+      // Not supported yet!
       return FALSE;
    }
+   else
+      abc = (LPABC) Buffer;
 
-   BufferSize = (LastChar - FirstChar + 1) * sizeof(ABC);
+   if (fl & GCABCW_INDICES) return FALSE; // Not supported yet!
+   
+   BufferSize = Count * sizeof(ABC);
    SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
    if (SafeBuffer == NULL)
    {
@@ -2214,7 +2227,7 @@ NtGdiGetCharABCWidths(HDC  hDC,
                       (TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight < 0 ? - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
 
-   for (i = FirstChar; i <= LastChar; i++)
+   for (i = FirstChar; i < FirstChar+Count; i++)
    {
       int adv, lsb, bbx, left, right;
 
@@ -2252,45 +2265,17 @@ NtGdiGetCharABCWidths(HDC  hDC,
 }
 
  /*
- * @unimplemented
- */
-BOOL
-STDCALL
-NtGdiGetCharABCWidthsW(
-    IN HDC hdc,
-    IN UINT wchFirst,
-    IN ULONG cwch,
-    IN OPTIONAL PWCHAR pwch,
-    IN FLONG fl,
-    OUT PVOID pvBuf)
- {
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 NtGdiGetCharWidthW(
-    IN HDC hdc,
-    IN UINT wcFirst,
-    IN UINT cwc,
+    IN HDC hDC,
+    IN UINT FirstChar,
+    IN UINT Count,
     IN OPTIONAL PWCHAR pwc,
     IN FLONG fl,
-    OUT PVOID pvBuf)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiGetCharWidth32(HDC  hDC,
-                         UINT  FirstChar,
-                         UINT  LastChar,
-                         LPINT  Buffer)
+    OUT PVOID Buffer)
 {
    LPINT SafeBuffer;
    PDC dc;
@@ -2300,14 +2285,20 @@ NtGdiGetCharWidth32(HDC  hDC,
    FT_CharMap charmap, found = NULL;
    UINT i, glyph_index, BufferSize;
    HFONT hFont = 0;
+   PFLOAT BufF = NULL;
+   LPINT Buf = NULL;
 
-   if (LastChar < FirstChar)
+   if (fl == 0)
    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
+      BufF = (PFLOAT) Buffer;
       return FALSE;
    }
+   else
+      Buf = (LPINT) Buffer;
 
-   BufferSize = (LastChar - FirstChar + 1) * sizeof(INT);
+   if (fl & GCW_INDICES) return FALSE;
+     
+   BufferSize = Count * sizeof(INT);
    SafeBuffer = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_GDITEXT);
    if (SafeBuffer == NULL)
    {
@@ -2369,7 +2360,7 @@ NtGdiGetCharWidth32(HDC  hDC,
                        - TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight :
                        TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight == 0 ? 11 : TextObj->logfont.elfEnumLogfontEx.elfLogFont.lfHeight));
 
-   for (i = FirstChar; i <= LastChar; i++)
+   for (i = FirstChar; i < FirstChar+Count; i++)
    {
       glyph_index = FT_Get_Char_Index(face, i);
       FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
@@ -2410,7 +2401,7 @@ NtGdiGetGlyphIndicesW(
   OUTLINETEXTMETRICW *potm;
   INT i;
   FT_Face face;
-  WCHAR DefChar = 0, tmDefaultChar;
+  WCHAR DefChar = 0;
   PWSTR Buffer = NULL;
   ULONG Size;
   
@@ -2441,18 +2432,20 @@ NtGdiGetGlyphIndicesW(
      return GDI_ERROR;
   }
 
-  Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
-  potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
-  if (!potm)
-  {
-     Status = ERROR_NOT_ENOUGH_MEMORY;
-     goto ErrorRet;
-  }
-  IntGetOutlineTextMetrics(FontGDI, Size, potm);
-  tmDefaultChar = potm->otmTextMetrics.tmDefaultChar; // May need this.  
-  ExFreePool(potm);
-
   if (iMode & GGI_MARK_NONEXISTING_GLYPHS) DefChar = 0x001f;  /* Indicate non existence */
+  else
+  {
+     Size = IntGetOutlineTextMetrics(FontGDI, 0, NULL);
+     potm = ExAllocatePoolWithTag(PagedPool, Size, TAG_GDITEXT);
+     if (!potm)
+     {
+        Status = ERROR_NOT_ENOUGH_MEMORY;
+        goto ErrorRet;
+     }
+     IntGetOutlineTextMetrics(FontGDI, Size, potm);
+     DefChar = potm->otmTextMetrics.tmDefaultChar; // May need this.  
+     ExFreePool(potm);
+  }
 
   _SEH_TRY
   {
@@ -2474,11 +2467,7 @@ NtGdiGetGlyphIndicesW(
   for (i = 0; i < cwc; i++)
   {
      Buffer[i] = FT_Get_Char_Index(face, UnSafepwc[i]);
-     if (Buffer[i] == 0)
-     {
-        if (!DefChar) DefChar = tmDefaultChar;
-        Buffer[i] = DefChar;
-     }
+     if (Buffer[i] == 0) Buffer[i] = DefChar;
   }
 
   IntUnLockFreeType;

@@ -678,7 +678,18 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
    if(Force && !GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, pdce->hDC))
      {
       DPRINT1("Change ownership for DCE!\n");
-      DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
+      INT Index = GDI_HANDLE_GET_INDEX(pdce->hDC);
+      PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+
+      // Must take control of handles that are not in the process of going away.
+      if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+      {
+         DC_SetOwnership( pdce->hDC, PsGetCurrentProcess());
+      }
+      else
+      {
+         DPRINT1("Attempted to change ownership of an DCEhDC 0x%x currently being destroyed!!!\n",pdce->hDC);
+      }
      }
 
    NtGdiDeleteObjectApp(pdce->hDC);

@@ -746,9 +746,6 @@ NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetBkColor                         1
 NtGdiGetBkMode                          1
-NtGdiGetBrushOrgEx                      2
-NtGdiGetCharABCWidths                   4
-NtGdiGetCharWidth32                     4
 NtGdiGetClipBox                         2
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentPositionEx               2

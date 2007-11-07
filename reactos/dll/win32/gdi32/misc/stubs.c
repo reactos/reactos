@@ -1552,25 +1552,6 @@ GetBrushAttributes(HBRUSH hbr)
 }
 
 /*
- * @unimplemented
- */
-BOOL
-STDCALL
-GetCharWidthI(HDC hdc,
-              UINT giFirst,
-              UINT cgi,
-              LPWORD pgi,
-              LPINT lpBuffer
-)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
-
-/*
  * @implemented
  */
 ULONG
@@ -2385,30 +2366,6 @@ GetBkMode(HDC hdc)
  * @implemented
  *
  */
-BOOL
-STDCALL
-GetBrushOrgEx(HDC hdc,LPPOINT pt)
-{
-    /* FIXME some part are done in user mode */
-    return NtGdiGetBrushOrgEx(hdc,pt);
-}
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-GetCharABCWidthsFloatW(HDC hdc,UINT FirstChar,UINT LastChar,LPABCFLOAT abcF)
-{
-    
-    return FALSE;
-}
-
-/*
- * @implemented
- *
- */
 int
 STDCALL
 GetDeviceCaps(HDC hdc,
@@ -2444,52 +2401,6 @@ GetClipBox(HDC hdc,
     /* FIXME some part need be done in user mode */
     return  NtGdiGetClipBox(hdc, lprc);
 }
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-GetCharWidthFloatW(HDC hdc,
-                   UINT iFirstChar,
-                   UINT iLastChar,
-                   PFLOAT pxBuffer)
-{
-
-    return FALSE;
-}
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-GetCharWidth32W(HDC hdc,
-               UINT iFirstChar,
-               UINT iLastChar,
-               LPINT lpBuffer)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiGetCharWidth32(hdc, iFirstChar, iLastChar, lpBuffer);
-}
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-GetCharABCWidths(HDC hdc,
-                 UINT uFirstChar,
-                 UINT uLastChar,
-                 LPABC lpabc)
-{
-    /* FIXME some part need be done in user mode */
-    return NtGdiGetCharABCWidths(hdc, uFirstChar, uLastChar, lpabc);
-}
-
 
 /*
  * @implemented
