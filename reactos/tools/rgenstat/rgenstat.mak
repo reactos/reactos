@@ -16,7 +16,7 @@ $(RGENSTAT_OUT): | $(TOOLS_OUT)
 endif
 
 RGENSTAT_TARGET = \
-	$(EXEPREFIX)$(RGENSTAT_OUT_)rgenstat$(EXEPOSTFIX)
+	$(RGENSTAT_OUT_)rgenstat$(EXEPOSTFIX)
 
 RGENSTAT_SOURCES = $(addprefix $(RGENSTAT_BASE_), \
 	rgenstat.c \

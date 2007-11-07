@@ -16,7 +16,7 @@ $(NCI_OUT): | $(TOOLS_OUT)
 endif
 
 NCI_TARGET = \
-	$(EXEPREFIX)$(NCI_OUT_)nci$(EXEPOSTFIX)
+	$(NCI_OUT_)nci$(EXEPOSTFIX)
 
 NCI_SOURCES = \
 	$(NCI_BASE_)ncitool.c

@@ -16,7 +16,7 @@ $(CABMAN_OUT): | $(TOOLS_OUT)
 endif
 
 CABMAN_TARGET = \
-	$(EXEPREFIX)$(CABMAN_OUT_)cabman$(EXEPOSTFIX)
+	$(CABMAN_OUT_)cabman$(EXEPOSTFIX)
 
 CABMAN_SOURCES = $(addprefix $(CABMAN_BASE_), \
 	cabinet.cxx \

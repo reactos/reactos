@@ -25,7 +25,7 @@ $(OFW_INTERFACE_OUT): | $(TOOLS_OUT)
 endif
 
 OFW_INTERFACE_TARGET = \
-	$(EXEPREFIX)$(OFW_INTERFACE_OUT_)ofw_interface$(EXEPOSTFIX)
+	$(OFW_INTERFACE_OUT_)ofw_interface$(EXEPOSTFIX)
 
 OFW_INTERFACE_SOURCES = $(addprefix $(OFW_INTERFACE_BASE_), \
 	ofw_interface.cpp \

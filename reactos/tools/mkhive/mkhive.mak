@@ -16,7 +16,7 @@ $(MKHIVE_OUT): | $(TOOLS_OUT)
 endif
 
 MKHIVE_TARGET = \
-	$(EXEPREFIX)$(MKHIVE_OUT_)mkhive$(EXEPOSTFIX)
+	$(MKHIVE_OUT_)mkhive$(EXEPOSTFIX)
 
 MKHIVE_SOURCES = $(addprefix $(MKHIVE_BASE_), \
 	binhive.c \

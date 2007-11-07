@@ -16,7 +16,7 @@ $(CDMAKE_OUT): | $(TOOLS_OUT)
 endif
 
 CDMAKE_TARGET = \
-	$(EXEPREFIX)$(CDMAKE_OUT_)cdmake$(EXEPOSTFIX)
+	$(CDMAKE_OUT_)cdmake$(EXEPOSTFIX)
 
 CDMAKE_SOURCES = $(addprefix $(CDMAKE_BASE_), \
 	cdmake.c \

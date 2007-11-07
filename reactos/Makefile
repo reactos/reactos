@@ -305,7 +305,6 @@ ifeq ($(OSTYPE),msys)
   HOST=mingw32-linux
 endif
 ifeq ($(HOST),mingw32-linux)
-	export EXEPREFIX = ./
 	ifeq ($(OSTYPE),msys)
 		export EXEPOSTFIX = .exe
 	else
@@ -317,7 +316,6 @@ ifeq ($(HOST),mingw32-linux)
 	cp = $(Q)cp
 	NUL = /dev/null
 else # mingw32-windows
-	export EXEPREFIX =
 	export EXEPOSTFIX = .exe
 	ROS_EMPTY =
 	export SEP = \$(ROS_EMPTY)

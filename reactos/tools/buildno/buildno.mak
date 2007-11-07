@@ -16,7 +16,7 @@ $(BUILDNO_OUT): | $(TOOLS_OUT)
 endif
 
 BUILDNO_TARGET = \
-	$(EXEPREFIX)$(BUILDNO_OUT_)buildno$(EXEPOSTFIX)
+	$(BUILDNO_OUT_)buildno$(EXEPOSTFIX)
 
 BUILDNO_SOURCES = $(addprefix $(BUILDNO_BASE_), \
 	buildno.cpp \
