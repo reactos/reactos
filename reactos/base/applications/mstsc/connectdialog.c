@@ -1048,6 +1048,8 @@ DlgProc(HWND hDlg,
 
                 EndDialog(hDlg, LOWORD(wParam));
             }
+
+            break;
         }
 
         case WM_NOTIFY:
