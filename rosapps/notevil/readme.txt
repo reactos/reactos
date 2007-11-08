@@ -1,4 +1,4 @@
-$Id: readme.txt,v 1.1 1999/05/15 07:23:34 ea Exp $
+$Id$
 
 ReactOS Coders Console Parade
 -----------------------------
@@ -9,9 +9,7 @@ displays the NT programmers' names if one writes
 "not evil" in the text box.
 
 To add a new name, add a new string in the
-resource script notevil.rc (string index numbers must be
-unique) and edit resource.h to update minimum and 
-maximum indices.
+contributors.rbuild file
 
 Eventually run make.
 

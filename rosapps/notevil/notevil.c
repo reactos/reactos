@@ -30,7 +30,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <tchar.h>
-#include "resource.h"
 #include "autocontributors.h"
 
 LPCTSTR app_name = _TEXT("notevil");
@@ -87,31 +86,6 @@ WriteCoord(COORD c)
         );
 }
 #endif /* def DISPLAY_COORD */
-
-
-INT
-GetNextString(
-    LPTSTR  Buffer,
-    INT     BufferSize,
-    DWORD   *Index)
-{
-    if (RES_LAST_INDEX == *Index)
-    {
-        *Index = RES_FIRST_INDEX;
-    }
-    else
-    {
-        ++*Index;
-    }
-    LoadString(
-        myself,
-        *Index,
-        Buffer,
-        BufferSize);
-
-    return 0;
-}
-
 
 VOID
 DisplayTitle(VOID)
