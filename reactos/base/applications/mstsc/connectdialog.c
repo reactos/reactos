@@ -225,6 +225,7 @@ GeneralDlgProc(HWND hDlg,
                     break;
 
                 case IDC_SAVE:
+                    SaveAllSettings(pInfo);
                     SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
                 break;
             }

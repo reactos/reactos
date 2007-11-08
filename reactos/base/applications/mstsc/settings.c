@@ -372,8 +372,8 @@ OpenRdpFile(LPWSTR path, BOOL bWrite)
                             bWrite ? GENERIC_WRITE : GENERIC_READ,
                             0,
                             NULL,
-                            bWrite ? CREATE_ALWAYS : OPEN_EXISTING,
-                            FILE_ATTRIBUTE_NORMAL,
+                            bWrite ? OPEN_EXISTING: CREATE_ALWAYS,
+                            FILE_ATTRIBUTE_NORMAL | FILE_ATTRIBUTE_HIDDEN,
                             NULL);
     }
 
@@ -400,6 +400,7 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
     /* use default file */
     if (lpFile == NULL)
     {
+#ifndef __REACTOS__
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -417,6 +418,10 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
                 CoTaskMemFree(lpidl);
             }
         }
+#else
+        wcscpy(pszPath, L"C:\\Default.rdp");
+        lpFile = pszPath;
+#endif
     }
 
     if (lpFile)
@@ -447,6 +452,7 @@ LoadRdpSettingsFromFile(LPWSTR lpFile)
     /* use default file */
     if (lpFile == NULL)
     {
+#ifndef __REACTOS__
         HRESULT hr;
         LPITEMIDLIST lpidl= NULL;
 
@@ -464,6 +470,10 @@ LoadRdpSettingsFromFile(LPWSTR lpFile)
                 CoTaskMemFree(lpidl);
             }
         }
+#else
+        wcscpy(pszPath, L"C:\\Default.rdp");
+        lpFile = pszPath;
+#endif
     }
 
     if (lpFile)
