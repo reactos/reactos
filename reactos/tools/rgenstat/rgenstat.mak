@@ -46,6 +46,6 @@ $(RGENSTAT_INT_)llmosrt.o: $(RGENSTAT_BASE_)llmosrt.c | $(RGENSTAT_INT)
 rgenstat: $(RGENSTAT_TARGET)
 
 .PHONY: rgenstat_clean
-rgenstat_clean: $(RGENSTAT_TARGET)
+rgenstat_clean:
 	-@$(rm) $(RGENSTAT_TARGET) $(RGENSTAT_OBJECTS) 2>$(NUL)
 clean: rgenstat_clean
