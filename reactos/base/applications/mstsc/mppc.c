@@ -18,7 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "todo.h"
+#include <precomp.h>
 
 /* mppc decompression                       */
 /* http://www.faqs.org/rfcs/rfc2118.html    */

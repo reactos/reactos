@@ -21,7 +21,7 @@
 //#include <stdlib.h>
 //#include <string.h>
 //#include "bsops.h"
-#include "todo.h"
+#include <precomp.h>
 
 /* globals */
 static char * g_bs = 0;

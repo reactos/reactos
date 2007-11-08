@@ -34,4 +34,5 @@
 		<file>win32.c</file>
 	</compilationunit>
 	<file>rdc.rc</file>
+	<pch>precomp.h</pch>
 </module>

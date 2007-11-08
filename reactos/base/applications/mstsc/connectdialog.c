@@ -18,7 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "todo.h"
+#include <precomp.h>
 
 
 #define MAX_KEY_NAME 255
@@ -186,11 +186,11 @@ GeneralOnInit(PINFO pInfo)
     LPWSTR lpText;
 
     SetWindowPos(pInfo->hGeneralPage,
-                 NULL, 
-                 15, 
-                 110, 
-                 0, 
-                 0, 
+                 NULL,
+                 13,
+                 110,
+                 0,
+                 0,
                  SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
 
     pInfo->hLogon = LoadImageW(hInst,
@@ -717,7 +717,7 @@ DisplayOnInit(PINFO pInfo)
 
     SetWindowPos(pInfo->hDisplayPage,
                  NULL,
-                 15,
+                 13,
                  110,
                  0,
                  0,
