@@ -1,5 +1,5 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <precomp.h>
+
 
 /*
  * Convert a unicode string to an unsigned long integer.
@@ -23,7 +23,7 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
    */
   do {
     c = *s++;
-  } while (iswspace(c));
+  } while (iswctype(c, _SPACE));
   if (c == L'-')
   {
     neg = 1;
@@ -44,10 +44,10 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
   cutlim = (unsigned long)ULONG_MAX % (unsigned long)base;
   for (acc = 0, any = 0;; c = *s++)
   {
-    if (iswdigit(c))
+    if (iswctype(c, _DIGIT))
       c -= L'0';
-    else if (iswalpha(c))
-      c -= iswupper(c) ? L'A' - 10 : L'a' - 10;
+    else if (iswctype(c, _ALPHA))
+      c -= iswctype(c, _UPPER) ? L'A' - 10 : L'a' - 10;
     else
       break;
     if (c >= base)
@@ -63,38 +63,10 @@ wcstoul(const wchar_t *nptr, wchar_t **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
-    __set_errno(ERANGE);
   }
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? (wchar_t *)s - 1 : (wchar_t *)nptr;
+    *endptr = any ? (wchar_t *)((size_t)s - 1) : (wchar_t *)((size_t)nptr);
   return acc;
 }
-
-#if 0
-unsigned long wcstoul(const wchar_t *cp,wchar_t **endp,int base)
-{
-	unsigned long result = 0,value;
-
-	if (!base) {
-		base = 10;
-		if (*cp == L'0') {
-			base = 8;
-			cp++;
-			if ((*cp == L'x') && iswxdigit(cp[1])) {
-				cp++;
-				base = 16;
-			}
-		}
-	}
-	while (iswxdigit(*cp) && (value = iswdigit(*cp) ? *cp-L'0' : (iswlower(*cp)
-	    ? towupper(*cp) : *cp)-L'A'+10) < base) {
-		result = result*base + value;
-		cp++;
-	}
-	if (endp)
-		*endp = (wchar_t *)cp;
-	return result;
-}
-#endif

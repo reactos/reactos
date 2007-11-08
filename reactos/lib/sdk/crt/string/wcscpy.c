@@ -3,6 +3,6 @@
 
 #define _UNICODE
 #include <wchar.h>
-#include "internal/tcscpy.h"
+#include "tcscpy.h"
 
 /* EOF */

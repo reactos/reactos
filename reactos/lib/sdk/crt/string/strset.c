@@ -13,11 +13,11 @@
 /*
  * @implemented
  */
-char* _strnset (char* szToFill, int szFill, size_t sizeMaxFill)
+char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 {
 	char *t = szToFill;
-	size_t i = 0;
-	while( *szToFill != 0 && i < sizeMaxFill)
+	int i = 0;
+	while (*szToFill != 0 && i < (int) sizeMaxFill)
 	{
 		*szToFill = szFill;
 		szToFill++;
@@ -30,10 +30,10 @@ char* _strnset (char* szToFill, int szFill, size_t sizeMaxFill)
 /*
  * @implemented
  */
-char* _strset (char* szToFill, int szFill)
+char* _strset(char* szToFill, int szFill)
 {
 	char *t = szToFill;
-	while( *szToFill != 0 )
+	while (*szToFill != 0)
 	{
 		*szToFill = szFill;
 		szToFill++;

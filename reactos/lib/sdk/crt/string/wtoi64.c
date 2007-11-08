@@ -13,27 +13,33 @@
 /*
  * @implemented
  */
-__int64 _wtoi64(const wchar_t* nptr)
+__int64
+_wtoi64 (const wchar_t *nptr)
 {
-    wchar_t* s = (wchar_t*)nptr;
-    __int64 acc = 0;
-    int neg = 0;
+   int c;
+   __int64 value;
+   int sign;
 
-    while (iswspace((int)*s))
-        s++;
-    if (*s == '-') {
-        neg = 1;
-        s++;
-    }
-    else if (*s == '+')
-        s++;
+   while (iswctype((int)*nptr, _SPACE))
+        ++nptr;
 
-    while (iswdigit((int)*s)) {
-        acc = 10 * acc + ((int)*s - '0');
-        s++;
-    }
+   c = (int)*nptr++;
+   sign = c;
+   if (c == L'-' || c == L'+')
+        c = (int)*nptr++;
 
-    if (neg)
-        acc *= -1;
-    return acc;
+   value = 0;
+
+   while (iswctype(c, _DIGIT))
+     {
+        value = 10 * value + (c - L'0');
+        c = (int)*nptr++;
+     }
+
+   if (sign == L'-')
+       return -value;
+   else
+       return value;
 }
+
+/* EOF */

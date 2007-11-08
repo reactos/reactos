@@ -1,24 +1,12 @@
-/* Copyright (C) 1996 DJ Delorie, see COPYING.DJ for details */
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <precomp.h>
 
-#if defined (_MSC_VER)
-#define UINT64_MAX	0xffffffffffffffff
-#endif
-
-/*
- * Convert a string to an unsigned long integer.
- *
- * Ignores `locale' stuff.  Assumes that the upper and lower case
- * alphabets and digits are each contiguous.
- */
-UINT64
+unsigned long long
 strtoull(const char *nptr, char **endptr, int base)
 {
   const char *s = nptr;
-  UINT64 acc;
+  unsigned long long acc;
   int c;
-  UINT64 cutoff;
+  unsigned long long cutoff;
   int neg = 0, any, cutlim;
 
   /*
@@ -43,8 +31,8 @@ strtoull(const char *nptr, char **endptr, int base)
   }
   if (base == 0)
     base = c == '0' ? 8 : 10;
-  cutoff = UINT64_MAX / base;
-  cutlim = (int)(UINT64_MAX % base);
+  cutoff = (unsigned long long)ULLONG_MAX / (unsigned long long)base;
+  cutlim = (unsigned long long)ULLONG_MAX % (unsigned long long)base;
   for (acc = 0, any = 0;; c = *s++)
   {
     if (isdigit(c))
@@ -65,12 +53,11 @@ strtoull(const char *nptr, char **endptr, int base)
   }
   if (any < 0)
   {
-    acc = UINT64_MAX;
-    __set_errno ( ERANGE );
+    acc = ULLONG_MAX;
   }
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? (char *)s - 1 : (char *)nptr;
+    *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;
 }

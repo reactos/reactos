@@ -2,6 +2,6 @@
  */
 
 #include <string.h>
-#include "internal/tcscpy.h"
+#include "tcscpy.h"
 
 /* EOF */

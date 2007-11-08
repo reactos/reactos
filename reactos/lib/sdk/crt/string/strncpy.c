@@ -1,6 +1,6 @@
 /* $Id$
  */
 #include <string.h>
-#include "internal/tcsncpy.h"
+#include "tcsncpy.h"
 
 /* EOF */

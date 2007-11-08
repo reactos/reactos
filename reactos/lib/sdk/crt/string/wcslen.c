@@ -3,6 +3,6 @@
 
 #define _UNICODE
 #include <wchar.h>
-#include "internal/tcslen.h"
+#include "tcslen.h"
 
 /* EOF */

@@ -1,4 +1,3 @@
-/* Copyright (C) 1994 DJ Delorie, see COPYING.DJ for details */
 #include <precomp.h>
 #include <ctype.h>
 
@@ -64,11 +63,10 @@ strtoul(const char *nptr, char **endptr, int base)
   if (any < 0)
   {
     acc = ULONG_MAX;
-    __set_errno(ERANGE);
   }
   else if (neg)
     acc = -acc;
   if (endptr != 0)
-    *endptr = any ? (char *)s - 1 : (char *)nptr;
+    *endptr = any ? (char *)((size_t)(s - 1)) : (char *)((size_t)nptr);
   return acc;
 }
