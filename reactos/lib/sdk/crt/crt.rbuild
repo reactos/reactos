@@ -23,9 +23,6 @@
 		<file>putch.c</file>
 		<file>ungetch.c</file>
 	</directory>
-	<directory name="ctype">
-		<file>ctype.c</file>
-	</directory>
 	<directory name="direct">
 		<file>chdir.c</file>
 		<file>chdrive.c</file>
@@ -47,6 +44,7 @@
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
+				<file>prolog.s</file>
 				<file>seh.s</file>
 				<file>unwind.c</file>
 			</directory>
@@ -413,6 +411,7 @@
 			<file>wcsrchr.c</file>
 		</ifnot>
 		<file>atof.c</file>
+		<file>ctype.c</file>
 		<file>lasttok.c</file>
 		<file>strcoll.c</file>
 		<file>strdup.c</file>

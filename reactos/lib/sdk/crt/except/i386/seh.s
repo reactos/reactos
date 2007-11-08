@@ -56,7 +56,6 @@
 
 .globl __local_unwind2
 .globl __except_handler3
-.globl __EH_prolog
 
 // EAX = value to print
 _do_debug:
@@ -365,16 +364,4 @@ _except_finish:
     call    *%eax
 
     // We should never get here
-    ret
-
-// Copied from Wine.
-__EH_prolog:
-    pushl    $-1
-    pushl    %eax
-    pushl    %fs:0
-    movl     %esp, %fs:0
-    movl     12(%esp), %eax
-    movl     %ebp, 12(%esp)
-    leal     12(%esp), %ebp
-    pushl    %eax
     ret
