@@ -229,6 +229,7 @@ ifeq ($(HALFVERBOSEECHO),yes)
   ECHO_TEST    =@echo $(QUOTE)[TEST]     $@$(QUOTE)
   ECHO_GENDIB  =@echo $(QUOTE)[GENDIB]   $@$(QUOTE)
   ECHO_STRIP   =@echo $(QUOTE)[STRIP]    $@$(QUOTE)
+  ECHO_RGENSTAT=@echo $(QUOTE)[RGENSTAT] $@$(QUOTE)
 else
   ECHO_CP      =
   ECHO_MKDIR   =
@@ -258,6 +259,7 @@ else
   ECHO_TEST    =
   ECHO_GENDIB  =
   ECHO_STRIP   =
+  ECHO_RGENSTAT=
 endif
 
 # Set host compiler/linker
@@ -429,6 +431,10 @@ universe:
 sysregtest:
 	$(OUTPUT_)tools$(SEP)sysreg$(SEP)sysreg$(EXEPOSTFIX) tools$(SEP)sysreg$(SEP)txtmode.cfg
 
+.PHONY: rgenstat
+rgenstat: $(RGENSTAT_TARGET)
+	$(ECHO_RGENSTAT)
+	$(Q)$(RGENSTAT_TARGET) apistatus.lst apistatus.xml
 
 .PHONY: cb
 cb: $(RBUILD_TARGET)
