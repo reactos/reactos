@@ -5,12 +5,16 @@
 #if !defined(_KS_)
 #define _KS_
 
+#ifndef _NTDDK_
+#define NTSTATUS
+#endif
+
 #if defined(__TCS__)
-#define _KS_NO_ANONYMOUS_STRUCTURES_ 1
+    #define _KS_NO_ANONYMOUS_STRUCTURES_ 1
 #endif
 
 #ifndef SIZEOF_ARRAY
-    #define SIZEOF_ARRAY(ar) (sizeof(ar)/sizeof((ar)[0]))
+    #define SIZEOF_ARRAY(ar) (sizeof(ar)/sizeof((ar[0])))
 #endif
 
 #if !defined(_NTRTL_)
@@ -1168,6 +1172,25 @@ typedef struct
 } KSDATAFORMAT, *PKSDATAFORMAT, KSDATARANGE, *PKSDATARANGE;
 
 
+typedef struct
+{
+    union
+    {
+        ULONG OptionsFlags;
+        ULONG RequirementsFlags;
+    };
+#if defined(_NTDDK_)
+    POOL_TYPE   PoolType;
+#else 
+    ULONG PoolType;
+#endif
+    ULONG Frames;
+    ULONG FrameSize;
+    ULONG FileAlignment;
+    ULONG Reserved;
+} KSALLOCATOR_FRAMING, *PKSALLOCATOR_FRAMING;
+
+
 #define DEFINE_KSPROPERTY_ITEM_GENERAL_COMPONENTID(Handler)\
     DEFINE_KSPROPERTY_ITEM(KSPROPERTY_GENERAL_COMPONENTID, (Handler), sizeof(KSPROPERTY), sizeof(KSCOMPONENTID), NULL, NULL, 0, NULL, NULL, 0)
 
@@ -1343,5 +1366,26 @@ DEFINE_KSPROPERTY_TABLE(PinSet) {\
     DEFINE_KSPROPERTY_ITEM(KSPROPERTY_CONNECTION_STARTAT, NULL, sizeof(KSPROPERTY), sizeof(KSRELATIVEEVENT), (Handler), NULL, 0, NULL, NULL, 0)
 
 
+#if defined(__cplusplus)
+extern "C" {
+#endif 
+
+#ifdef _KSDDK_
+    #define KSDDKAPI    DECLSPEC_EXPORT
+#else
+    #define KSDDKAPI    DECLSPEC_IMPORT
+#endif
+
+KSDDKAPI
+NTSTATUS
+NTAPI
+KsCreateAllocator(IN HANDLE ConnectionHandle,
+                  IN PKSALLOCATOR_FRAMING AllocatorFraming,
+                  OUT PHANDLE AllocatorHandle);
+
+
+#if defined(__cplusplus)
+}
+#endif
 
 #endif // _KS_
