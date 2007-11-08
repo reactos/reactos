@@ -1,6 +1,5 @@
 #include <windows.h>
 #include <stdio.h>
-#include <tchar.h>
 #include <shlobj.h>
 #include <todo.h>
 #include "resource.h"
@@ -64,7 +63,7 @@ SetStringToSettings(PRDPSETTINGS pRdpSettings,
             {
                 if (pRdpSettings->pSettings[i].Type == L's')
                 {
-                    wcscpy(pRdpSettings->pSettings[i].Value.i, lpValue);
+                    wcscpy(pRdpSettings->pSettings[i].Value.s, lpValue);
                     bRet = TRUE;
                     break;
                 }
@@ -184,7 +183,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
     WCHAR lpKey[MAXKEY];
     WCHAR lpValue[MAXVALUE];
     INT NumSettings = 0;
-    INT s, structsize;
+    INT s;
 
     if (lpStr)
     {
@@ -213,7 +212,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 
             for (s = 0; s < NumSettings; s++)
             {
-                INT i = 0, k, temp;
+                INT i = 0, k;
 
                 /* get a key */
                 while (*lpStr != L':')
@@ -271,7 +270,7 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
 static LPWSTR
 ReadRdpFile(HANDLE hFile)
 {
-    LPWSTR lpBuffer;
+    LPWSTR lpBuffer = NULL;
     DWORD BytesToRead, BytesRead;
     BOOL bRes;
 
@@ -313,7 +312,7 @@ ReadRdpFile(HANDLE hFile)
 static HANDLE
 OpenRdpFile(LPWSTR path, BOOL bWrite)
 {
-    HANDLE hFile;
+    HANDLE hFile = NULL;
 
     if (path)
     {
@@ -389,7 +388,7 @@ SaveRdpSettingsToFile(LPWSTR lpFile,
 PRDPSETTINGS
 LoadRdpSettingsFromFile(LPWSTR lpFile)
 {
-    PRDPSETTINGS pRdpSettings;
+    PRDPSETTINGS pRdpSettings = NULL;
     WCHAR pszPath[MAX_PATH];
     HANDLE hFile;
 
