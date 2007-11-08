@@ -292,6 +292,9 @@ BOOL FASTCALL ObmDereferenceObject2(PVOID obj)
 
    hdr->RefCount--;
 
+   // You can not have a zero here!
+   if (!hdr->destroyed && hdr->RefCount == 0) hdr->RefCount++; // BOUNCE!!!!!
+
    if (hdr->RefCount == 0 && hdr->destroyed)
    {
 //      DPRINT1("info: something destroyed bcaise of deref, in use=%i\n",usedHandles);
