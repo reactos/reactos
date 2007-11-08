@@ -20,63 +20,7 @@
 
 #include <precomp.h>
 
-
 #define MAX_KEY_NAME 255
-
-/* As slider control can't contain user data, we have to keep an
- * array of RESOLUTION_INFO to have our own associated data.
- */
-typedef struct _RESOLUTION_INFO
-{
-    DWORD dmPelsWidth;
-    DWORD dmPelsHeight;
-} RESOLUTION_INFO, *PRESOLUTION_INFO;
-
-typedef struct _SETTINGS_ENTRY
-{
-    struct _SETTINGS_ENTRY *Blink;
-    struct _SETTINGS_ENTRY *Flink;
-    DWORD dmBitsPerPel;
-    DWORD dmPelsWidth;
-    DWORD dmPelsHeight;
-} SETTINGS_ENTRY, *PSETTINGS_ENTRY;
-
-typedef struct _DISPLAY_DEVICE_ENTRY
-{
-    struct _DISPLAY_DEVICE_ENTRY *Flink;
-    LPWSTR DeviceDescription;
-    LPWSTR DeviceName;
-    LPWSTR DeviceKey;
-    LPWSTR DeviceID;
-    DWORD DeviceStateFlags;
-    PSETTINGS_ENTRY Settings; /* sorted by increasing dmPelsHeight, BPP */
-    DWORD SettingsCount;
-    PRESOLUTION_INFO Resolutions;
-    DWORD ResolutionsCount;
-    PSETTINGS_ENTRY CurrentSettings; /* Points into Settings list */
-    SETTINGS_ENTRY InitialSettings;
-} DISPLAY_DEVICE_ENTRY, *PDISPLAY_DEVICE_ENTRY;
-
-typedef struct _INFO
-{
-    PRDPSETTINGS pRdpSettings;
-    PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
-    PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
-    HWND hSelf;
-    HWND hTab;
-    HWND hGeneralPage;
-    HWND hDisplayPage;
-    HBITMAP hHeader;
-    BITMAP headerbitmap;
-    HICON hMstscSm;
-    HICON hMstscLg;
-    HICON hLogon;
-    HICON hConn;
-    HICON hRemote;
-    HICON hColor;
-    HBITMAP hSpectrum;
-    BITMAP bitmap;
-} INFO, *PINFO;
 
 HINSTANCE hInst;
 
@@ -560,15 +504,6 @@ OnResolutionChanged(PINFO pInfo, INT position)
                         WM_SETTEXT,
                         0,
                         (LPARAM)Buffer);
-
-    /* save new settings */
-    SetIntegerToSettings(pInfo->pRdpSettings,
-                         L"desktopwidth",
-                         pInfo->DisplayDeviceList->Resolutions[position].dmPelsWidth);
-    SetIntegerToSettings(pInfo->pRdpSettings,
-                         L"desktopheight",
-                         pInfo->DisplayDeviceList->Resolutions[position].dmPelsHeight);
-
 }
 
 
@@ -1039,6 +974,11 @@ DlgProc(HWND hDlg,
         {
             if (LOWORD(wParam) == IDOK || LOWORD(wParam) == IDCANCEL)
             {
+                if (LOWORD(wParam) == IDOK )
+                {
+                    SaveAllSettings(pInfo);
+                }
+
                 if (pInfo)
                 {
                     HeapFree(GetProcessHeap(),

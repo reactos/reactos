@@ -48,7 +48,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
 				UsePrecompiledHeader="0"
-				WarningLevel="4"
+				WarningLevel="3"
 				Detect64BitPortabilityProblems="false"
 				DebugInformationFormat="4"
 				CallingConvention="0"
@@ -605,11 +605,11 @@
 				>
 			</File>
 			<File
-				RelativePath=".\rdpfile.c"
+				RelativePath=".\secure.c"
 				>
 			</File>
 			<File
-				RelativePath=".\secure.c"
+				RelativePath=".\settings.c"
 				>
 			</File>
 			<File
@@ -633,10 +633,6 @@
 			Name="Header Files"
 			Filter="h;hpp;hxx;hm;inl"
 			>
-			<File
-				RelativePath=".\todo.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

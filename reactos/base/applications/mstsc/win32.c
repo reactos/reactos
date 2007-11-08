@@ -21,6 +21,10 @@
 #include <winsock2.h> /* winsock2.h first */
 #include <precomp.h>
 
+//FIXME: remove eventually
+#define _UNICODE
+#include <tchar.h>
+
 
 extern char g_username[];
 extern char g_hostname[];
@@ -69,6 +73,21 @@ str_to_uni(TCHAR * sizex, char * size1)
   int i;
 
   len = strlen(size1);
+  for (i = 0; i < len; i++)
+  {
+    sizex[i] = size1[i];
+  }
+  sizex[len] = 0;
+}
+
+/*****************************************************************************/
+static void
+uni_to_str(char * sizex, TCHAR * size1)
+{
+  int len;
+  int i;
+
+  len = _tcslen(size1);
   for (i = 0; i < len; i++)
   {
     sizex[i] = size1[i];
@@ -1290,13 +1309,18 @@ wWinMain(HINSTANCE hInstance,
             if (OpenRDPConnectDialog(hInstance,
                                      pRdpSettings))
             {
-                strcpy(g_servername, "192.168.40.50");
+                char szValue[MAXVALUE];
+
+                uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
+
+                strcpy(g_servername, szValue);
                 //g_port = 3389;
-                strcpy(g_username, "buildbot");
-                strcpy(g_password, "P4ssw0rd");
-                g_server_depth = 16;
-                g_width = 800;
-                g_height = 600;
+                strcpy(g_username, "");
+                strcpy(g_password, "");
+                g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
+                if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
+                g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
+                g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
                 g_screen_width = GetSystemMetrics(SM_CXSCREEN);
                 g_screen_height = GetSystemMetrics(SM_CYSCREEN);
                 g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;

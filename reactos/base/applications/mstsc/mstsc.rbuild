@@ -26,8 +26,8 @@
 		<file>pstcache.c</file>
 		<file>rdp5.c</file>
 		<file>rdp.c</file>
-		<file>rdpfile.c</file>
 		<file>secure.c</file>
+		<file>settings.c</file>
 		<file>ssl_calls.c</file>
 		<file>tcp.c</file>
 		<file>uimain.c</file>

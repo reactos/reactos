@@ -2,7 +2,7 @@
 #include <precomp.h>
 
 #define NUM_SETTINGS 6
-LPWSTR lpSettings[NUM_SETTINGS] = 
+LPWSTR lpSettings[NUM_SETTINGS] =
 {
     L"screen mode id",
     L"desktopwidth",
@@ -12,6 +12,61 @@ LPWSTR lpSettings[NUM_SETTINGS] =
     L"compression",
 };
 
+VOID
+SaveAllSettings(PINFO pInfo)
+{
+    INT ret;
+    WCHAR szKey[MAXKEY];
+    WCHAR szValue[MAXVALUE];
+
+    /* server */
+    if (GetDlgItemText(pInfo->hGeneralPage,
+                       IDC_SERVERCOMBO,
+                       szValue,
+                       MAXVALUE))
+    {
+        SetStringToSettings(pInfo->pRdpSettings,
+                            L"full address",
+                            szValue);
+    }
+
+    /* resolution */
+    ret = SendDlgItemMessage(pInfo->hDisplayPage,
+                             IDC_GEOSLIDER,
+                             TBM_GETPOS,
+                             0,
+                             0);
+    if (ret != -1)
+    {
+        SetIntegerToSettings(pInfo->pRdpSettings,
+                             L"desktopwidth",
+                             pInfo->DisplayDeviceList->Resolutions[ret].dmPelsWidth);
+        SetIntegerToSettings(pInfo->pRdpSettings,
+                             L"desktopheight",
+                             pInfo->DisplayDeviceList->Resolutions[ret].dmPelsHeight);
+    }
+
+    /* bpp */
+    ret = SendDlgItemMessage(pInfo->hDisplayPage,
+                             IDC_BPPCOMBO,
+                             CB_GETCURSEL,
+                             0,
+                             0);
+    if (ret != CB_ERR)
+    {
+        ret = SendDlgItemMessage(pInfo->hDisplayPage,
+                                 IDC_BPPCOMBO,
+                                 CB_GETITEMDATA,
+                                 ret,
+                                 0);
+        if (ret != CB_ERR)
+        {
+            SetIntegerToSettings(pInfo->pRdpSettings,
+                                 L"session bpp",
+                                 ret);
+        }
+    }
+}
 
 
 BOOL
