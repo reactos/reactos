@@ -18,7 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "rdesktop.h"
+#include "todo.h"
 
 #define MAX_CELL_SIZE		0x1000	/* pixels */
 

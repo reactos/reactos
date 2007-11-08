@@ -18,26 +18,12 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-//#include <time.h>
-#ifndef _WIN32
-#include <errno.h>
-#include <unistd.h>
-#endif
-#include "rdesktop.h"
+#include "todo.h"
 
-#ifdef HAVE_ICONV
-#ifdef HAVE_ICONV_H
-#include <iconv.h>
-#endif
-
-#ifndef ICONV_CONST
-#define ICONV_CONST ""
-#endif
-#endif
 
 extern uint16 g_mcs_userid;
-extern char g_username[64];
-extern char g_codepage[16];
+extern char g_username[];
+extern char g_codepage[];
 extern BOOL g_bitmap_compression;
 extern BOOL g_orders;
 extern BOOL g_encryption;

@@ -18,11 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include <windows.h>
-#include <commctrl.h>
-#include <stdio.h>
-#include <todo.h>
-#include "resource.h"
+#include "todo.h"
 
 
 #define MAX_KEY_NAME 255
@@ -72,6 +68,8 @@ typedef struct _INFO
     HWND hDisplayPage;
     HBITMAP hHeader;
     BITMAP headerbitmap;
+    HICON hMstscSm;
+    HICON hMstscLg;
     HICON hLogon;
     HICON hConn;
     HICON hRemote;
@@ -541,11 +539,19 @@ OnResolutionChanged(PINFO pInfo, INT position)
                         Pixel,
                         sizeof(Pixel) / sizeof(WCHAR)))
         {
+#ifdef _MSC_VER
              _swprintf(Buffer,
                        Pixel,
                        pInfo->DisplayDeviceList->Resolutions[position].dmPelsWidth,
                        pInfo->DisplayDeviceList->Resolutions[position].dmPelsHeight,
                        Pixel);
+#else
+             swprintf(Buffer,
+                      Pixel,
+                      pInfo->DisplayDeviceList->Resolutions[position].dmPelsWidth,
+                      pInfo->DisplayDeviceList->Resolutions[position].dmPelsHeight,
+                      Pixel);
+#endif
         }
     }
 
@@ -678,11 +684,20 @@ FillResolutionsAndColors(PINFO pInfo)
                         Pixel,
                         sizeof(Pixel) / sizeof(WCHAR)))
         {
+#ifdef _MSC_VER
             _swprintf(Buffer,
                       Pixel,
                       width,
                       height,
                       Pixel);
+#else
+            swprintf(Buffer,
+                      Pixel,
+                      width,
+                      height,
+                      Pixel);
+#endif
+
             SendDlgItemMessageW(pInfo->hDisplayPage,
                                 IDC_SETTINGS_RESOLUTION_TEXT,
                                 WM_SETTEXT,
@@ -918,6 +933,34 @@ OnMainCreate(HWND hwnd,
         /* add main settings pointer */
         pInfo->pRdpSettings = pRdpSettings;
 
+        /* set the dialog icons */
+        pInfo->hMstscSm = LoadImageW(hInst,
+                                   MAKEINTRESOURCEW(IDI_MSTSC),
+                                   IMAGE_ICON,
+                                   16,
+                                   16,
+                                   LR_DEFAULTCOLOR);
+        if (pInfo->hMstscSm)
+        {
+            SendMessageW(hwnd,
+                         WM_SETICON,
+                         ICON_SMALL,
+                        (WPARAM)pInfo->hMstscSm);
+        }
+        pInfo->hMstscLg = LoadImageW(hInst,
+                                   MAKEINTRESOURCEW(IDI_MSTSC),
+                                   IMAGE_ICON,
+                                   32,
+                                   32,
+                                   LR_DEFAULTCOLOR);
+        if (pInfo->hMstscLg)
+        {
+            SendMessageW(hwnd,
+                         WM_SETICON,
+                         ICON_BIG,
+                        (WPARAM)pInfo->hMstscLg);
+        }
+
         pInfo->hHeader = (HBITMAP)LoadImageW(hInst,
                                              MAKEINTRESOURCEW(IDB_HEADER),
                                              IMAGE_BITMAP,
@@ -940,10 +983,10 @@ OnMainCreate(HWND hwnd,
                               (DLGPROC)GeneralDlgProc))
             {
                 WCHAR str[256];
-                LoadStringW(hInst, IDS_TAB_GENERAL, str, 256);
                 ZeroMemory(&item, sizeof(TCITEM));
                 item.mask = TCIF_TEXT;
-                item.pszText = str;
+                if (LoadStringW(hInst, IDS_TAB_GENERAL, str, 256))
+                    item.pszText = str;
                 item.cchTextMax = 256;
                 (void)TabCtrl_InsertItem(pInfo->hTab, 0, &item);
             }
@@ -954,10 +997,10 @@ OnMainCreate(HWND hwnd,
                               (DLGPROC)DisplayDlgProc))
             {
                 WCHAR str[256];
-                LoadStringW(hInst, IDS_TAB_DISPLAY, str, 256);
                 ZeroMemory(&item, sizeof(TCITEM));
                 item.mask = TCIF_TEXT;
-                item.pszText = str;
+                if (LoadStringW(hInst, IDS_TAB_DISPLAY, str, 256))
+                    item.pszText = str;
                 item.cchTextMax = 256;
                 (void)TabCtrl_InsertItem(pInfo->hTab, 1, &item);
             }
@@ -1057,6 +1100,13 @@ DlgProc(HWND hDlg,
         {
             if (pInfo)
             {
+                if (pInfo->hMstscSm)
+                    DestroyIcon(pInfo->hMstscSm);
+                if (pInfo->hMstscLg)
+                    DestroyIcon(pInfo->hMstscLg);
+                if (pInfo->hHeader)
+                    DeleteObject(pInfo->hHeader);
+
                 HeapFree(GetProcessHeap(),
                          0,
                          pInfo);

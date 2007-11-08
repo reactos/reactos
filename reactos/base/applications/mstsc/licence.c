@@ -18,7 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "rdesktop.h"
+#include "todo.h"
 //#include <openssl/rc4.h>
 
 void *
@@ -33,8 +33,8 @@ int
 ssl_mod_exp(char* out, int out_len, char* in, int in_len,
             char* mod, int mod_len, char* exp, int exp_len);
 
-extern char g_username[64];
-extern char g_hostname[16];
+extern char g_username[];
+extern char g_hostname[];
 
 static uint8 g_licence_key[16];
 static uint8 g_licence_sign_key[16];

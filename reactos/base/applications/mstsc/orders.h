@@ -18,6 +18,9 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#ifndef __ORDERS_MSTSC_H
+#define __ORDERS_MSTSC_H
+
 #define RDP_ORDER_STANDARD   0x01
 #define RDP_ORDER_SECONDARY  0x02
 #define RDP_ORDER_BOUNDS     0x04
@@ -366,3 +369,5 @@ typedef struct _RDP_COLCACHE_ORDER
 
 }
 RDP_COLCACHE_ORDER;
+
+#endif /* __ORDERS_MSTSC_H */

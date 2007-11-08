@@ -18,6 +18,9 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#ifndef __UIMAIN_MSTSC_H
+#define __UIMAIN_MSTSC_H
+
 /* in uimain.c */
 int
 ui_main(void);
@@ -74,3 +77,5 @@ ui_set_modifier_state(int code);
 #define UI_MAX(a, b)  (((a) > (b)) ? (a) : (b))
 #undef UI_MIN
 #define UI_MIN(a, b)  (((a) < (b)) ? (a) : (b))
+
+#endif /* __UIMAIN_MSTSC_H */

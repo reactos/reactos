@@ -18,11 +18,14 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
+#ifndef __RDESKTOP_MSTSC_H
+#define __RDESKTOP_MSTSC_H
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #ifdef _WIN32
-#include <winsock2.h> /* winsock2.h first */
+//#include <winsock2.h> /* winsock2.h first */
 #include <windows.h>
 #include <time.h>
 #else /* WIN32 */
@@ -124,3 +127,5 @@
 #ifndef MAKE_PROTO
 #include "proto.h"
 #endif
+
+#endif /* __RDESKTOP_MSTSC_H */

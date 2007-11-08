@@ -18,8 +18,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "rdesktop.h"
-#include "orders.h"
+#include "todo.h"
+
 
 extern uint8 *g_next_packet;
 static RDP_ORDER_STATE g_order_state;

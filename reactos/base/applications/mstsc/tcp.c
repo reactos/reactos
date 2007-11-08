@@ -18,18 +18,8 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#ifndef _WIN32
-#include <unistd.h>		/* select read write close */
-#include <sys/socket.h>		/* socket connect setsockopt */
-#include <sys/time.h>		/* timeval */
-#include <netdb.h>		/* gethostbyname */
-#include <netinet/in.h>		/* sockaddr_in */
-#include <netinet/tcp.h>	/* TCP_NODELAY */
-#include <arpa/inet.h>		/* inet_addr */
-#include <errno.h>		/* errno */
-#endif /* _WIN32 */
 
-#include "rdesktop.h"
+#include "todo.h"
 
 #ifdef _WIN32
 #define socklen_t int

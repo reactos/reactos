@@ -18,8 +18,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "rdesktop.h"
-#include "bsops.h"
+#include "todo.h"
 
 char g_username[256] = "";
 char g_hostname[256] = "";
@@ -97,9 +96,12 @@ void
 mi_reset_clip(void);
 void
 mi_line(int x1, int y1, int x2, int y2, int colour);
+void*
 mi_create_cursor(unsigned int x, unsigned int y,
                  int width, int height,
                  unsigned char * andmask, unsigned char * xormask);
+
+
 void
 mi_destroy_cursor(void * cursor);
 void

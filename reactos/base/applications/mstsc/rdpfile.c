@@ -1,8 +1,5 @@
-#include <windows.h>
-#include <stdio.h>
-#include <shlobj.h>
-#include <todo.h>
-#include "resource.h"
+
+#include "todo.h"
 
 #define NUM_SETTINGS 6
 LPWSTR lpSettings[NUM_SETTINGS] = 

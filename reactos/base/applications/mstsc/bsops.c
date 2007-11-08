@@ -18,23 +18,24 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include <stdlib.h>
-#include <string.h>
-#include "bsops.h"
+//#include <stdlib.h>
+//#include <string.h>
+//#include "bsops.h"
+#include "todo.h"
 
 /* globals */
 static char * g_bs = 0;
 static int g_bs_size = 0;
 
-static int g_width = 800;
-static int g_height = 600;
+static int g_width1 = 800;
+static int g_height1 = 600;
 static int g_bpp = 8;
 static int g_Bpp = 1;
 
-static int g_clip_left = 0;
-static int g_clip_top = 0;
-static int g_clip_right = 800;
-static int g_clip_bottom = 600;
+static int g_clip_left1 = 0;
+static int g_clip_top1 = 0;
+static int g_clip_right1 = 800;
+static int g_clip_bottom1 = 600;
 
 /* for bs_patblt */
 static unsigned char g_hatch_patterns[] =
@@ -82,9 +83,9 @@ bs_get_pixel(int x, int y)
 {
   char * p;
 
-  if (x >= 0 && x < g_width && y >= 0 && y < g_height)
+  if (x >= 0 && x < g_width1 && y >= 0 && y < g_height1)
   {
-    p = g_bs + (y * g_width * g_Bpp) + (x * g_Bpp);
+    p = g_bs + (y * g_width1 * g_Bpp) + (x * g_Bpp);
     if (g_Bpp == 1)
     {
       return *((unsigned char *) p);
@@ -112,12 +113,12 @@ bs_set_pixel(int x, int y, int pixel, int rop, int use_clip)
   char * p;
 
   if (!use_clip ||
-        (x >= g_clip_left && x < g_clip_right &&
-         y >= g_clip_top && y < g_clip_bottom))
+        (x >= g_clip_left1 && x < g_clip_right1 &&
+         y >= g_clip_top1 && y < g_clip_bottom1))
   {
-    if (x >= 0 && x < g_width && y >= 0 && y < g_height)
+    if (x >= 0 && x < g_width1 && y >= 0 && y < g_height1)
     {
-      p = g_bs + (y * g_width * g_Bpp) + (x * g_Bpp);
+      p = g_bs + (y * g_width1 * g_Bpp) + (x * g_Bpp);
       if (rop != 12)
       {
         pixel = bs_do_rop(rop, pixel, bs_get_pixel(x, y));
@@ -144,9 +145,9 @@ get_bs_ptr(int x, int y)
 {
   char * p;
 
-  if (x >= 0 && x < g_width && y >= 0 && y < g_height)
+  if (x >= 0 && x < g_width1 && y >= 0 && y < g_height1)
   {
-    p = g_bs + (y * g_width * g_Bpp) + (x * g_Bpp);
+    p = g_bs + (y * g_width1 * g_Bpp) + (x * g_Bpp);
     return p;
   }
   else
@@ -163,17 +164,17 @@ bs_init(int width, int height, int bpp)
   {
     free(g_bs);
   }
-  g_width = width;
-  g_height = height;
+  g_width1 = width;
+  g_height1 = height;
   g_bpp = bpp;
   g_Bpp = (bpp + 7) / 8;
   g_bs_size = width * height * g_Bpp;
   g_bs = malloc(g_bs_size);
   memset(g_bs, 0, g_bs_size);
-  g_clip_left = 0;
-  g_clip_top = 0;
-  g_clip_right = width;
-  g_clip_bottom = height;
+  g_clip_left1 = 0;
+  g_clip_top1 = 0;
+  g_clip_right1 = width;
+  g_clip_bottom1 = height;
 }
 
 /*****************************************************************************/
@@ -190,20 +191,20 @@ bs_exit(void)
 void
 bs_set_clip(int x, int y, int cx, int cy)
 {
-  g_clip_left = x;
-  g_clip_top = y;
-  g_clip_right = x + cx;
-  g_clip_bottom = y + cy;
+  g_clip_left1 = x;
+  g_clip_top1 = y;
+  g_clip_right1 = x + cx;
+  g_clip_bottom1 = y + cy;
 }
 
 /*****************************************************************************/
 void
 bs_reset_clip(void)
 {
-  g_clip_left = 0;
-  g_clip_top = 0;
-  g_clip_right = g_width;
-  g_clip_bottom = g_height;
+  g_clip_left1 = 0;
+  g_clip_top1 = 0;
+  g_clip_right1 = g_width1;
+  g_clip_bottom1 = g_height1;
 }
 
 /*****************************************************************************/
@@ -326,29 +327,29 @@ bs_warp_coords(int * x, int * y, int * cx, int * cy,
   int dx;
   int dy;
 
-  if (g_clip_left > *x)
+  if (g_clip_left1 > *x)
   {
-    dx = g_clip_left - *x;
+    dx = g_clip_left1 - *x;
   }
   else
   {
     dx = 0;
   }
-  if (g_clip_top > *y)
+  if (g_clip_top1 > *y)
   {
-    dy = g_clip_top - *y;
+    dy = g_clip_top1 - *y;
   }
   else
   {
     dy = 0;
   }
-  if (*x + *cx > g_clip_right)
+  if (*x + *cx > g_clip_right1)
   {
-    *cx = (*cx - ((*x + *cx) - g_clip_right));
+    *cx = (*cx - ((*x + *cx) - g_clip_right1));
   }
-  if (*y + *cy > g_clip_bottom)
+  if (*y + *cy > g_clip_bottom1)
   {
-    *cy = (*cy - ((*y + *cy) - g_clip_bottom));
+    *cy = (*cy - ((*y + *cy) - g_clip_bottom1));
   }
   *cx = *cx - dx;
   *cy = *cy - dy;
@@ -793,13 +794,13 @@ bs_copy_box(char * dst, int x, int y, int cx, int cy, int line_size)
     return;
   }
   /* nothing to draw, memset and leave */
-  if (x + cx < 0 || y + cy < 0 || x >= g_width || y >= g_height)
+  if (x + cx < 0 || y + cy < 0 || x >= g_width1 || y >= g_height1)
   {
     memset(dst, 0, cx * cy * g_Bpp);
     return;
   }
   /* check if it goes over an edge */
-  if (x < 0 || y < 0 || x + cx > g_width || y + cy > g_height)
+  if (x < 0 || y < 0 || x + cx > g_width1 || y + cy > g_height1)
   {
     memset(dst, 0, cx * cy * g_Bpp);
     if (x < 0)
@@ -808,9 +809,9 @@ bs_copy_box(char * dst, int x, int y, int cx, int cy, int line_size)
       dst += -x * g_Bpp;
       x = 0;
     }
-    if (x + cx > g_width)
+    if (x + cx > g_width1)
     {
-      cx = g_width - x;
+      cx = g_width1 - x;
     }
     for (i = 0; i < cy; i++)
     {

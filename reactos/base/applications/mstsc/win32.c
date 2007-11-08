@@ -19,12 +19,8 @@
 */
 
 #include <winsock2.h> /* winsock2.h first */
-#include <windows.h>
-#include <winuser.h>
-#include <stdio.h>
-#include "uimain.h"
 #include "todo.h"
-#include "resource.h"
+
 
 extern char g_username[];
 extern char g_hostname[];
@@ -999,7 +995,7 @@ mi_process_a_param(char * param1, int state)
   }
   else
   {
-    if (state == 1) /* -g */
+    if (state == 1) /* -g widthxheight*/
     {
       state = 0;
       if (strcmp(param1, "workarea") == 0)
@@ -1022,12 +1018,12 @@ mi_process_a_param(char * param1, int state)
       }
       g_width_height_set = 1;
     }
-    if (state == 2) /* -t */
+    if (state == 2) /* -t port */
     {
       state = 0;
       g_tcp_port_rdp = atol(param1);
     }
-    if (state == 3) /* -a */
+    if (state == 3) /* -a bpp */
     {
       state = 0;
       g_server_depth = atol(param1);
@@ -1036,32 +1032,32 @@ mi_process_a_param(char * param1, int state)
         mi_error("invalid server bpp\r\n");
       }
     }
-    if (state == 5) /* -u */
+    if (state == 5) /* -u username */
     {
       state = 0;
       strcpy(g_username, param1);
     }
-    if (state == 6) /* -p */
+    if (state == 6) /* -p password */
     {
       state = 0;
       strcpy(g_password, param1);
     }
-    if (state == 7) /* -d */
+    if (state == 7) /* -d domain */
     {
       state = 0;
       strcpy(g_domain, param1);
     }
-    if (state == 8) /* -s */
+    if (state == 8) /* -s shell */
     {
       state = 0;
       strcpy(g_shell, param1);
     }
-    if (state == 9) /* -c */
+    if (state == 9) /* -c workin directory*/
     {
       state = 0;
       strcpy(g_directory, param1);
     }
-    if (state == 10) /* -n */
+    if (state == 10) /* -n host name*/
     {
       state = 0;
       strcpy(g_hostname, param1);
@@ -1272,28 +1268,12 @@ mi_process_cl(LPTSTR lpCmdLine)
   return (state == 0);
 }
 
-#ifdef WITH_DEBUG
-/*****************************************************************************/
-int
-main(int argc, char ** argv)
-{
-  WSADATA d;
 
-  WSAStartup(MAKEWORD(2, 0), &d);
-  if (!mi_process_cl(argv[0]))
-  {
-    mi_show_params();
-    WSACleanup();
-    return 0;
-  }
-  return ui_main();
-}
-#else /* WITH_DEBUG */
 /*****************************************************************************/
 int WINAPI
-WinMain(HINSTANCE hInstance,
+wWinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
-        LPTSTR lpCmdLine,
+        LPWSTR lpCmdLine,
         int nCmdShow)
 {
     PRDPSETTINGS pRdpSettings;
@@ -1310,6 +1290,18 @@ WinMain(HINSTANCE hInstance,
             if (OpenRDPConnectDialog(hInstance,
                                      pRdpSettings))
             {
+                strcpy(g_servername, "192.168.40.50");
+                //g_port = 3389;
+                strcpy(g_username, "buildbot");
+                strcpy(g_password, "P4ssw0rd");
+                g_server_depth = 16;
+                g_width = 800;
+                g_height = 600;
+                g_screen_width = GetSystemMetrics(SM_CXSCREEN);
+                g_screen_height = GetSystemMetrics(SM_CYSCREEN);
+                g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
+                g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+
                 ui_main();
                 ret = 0;
             }
@@ -1328,7 +1320,7 @@ WinMain(HINSTANCE hInstance,
 
   return ret;
 }
-#endif /* WITH_DEBUG */
+
 
 /*****************************************************************************/
 void

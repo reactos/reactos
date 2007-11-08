@@ -19,7 +19,7 @@
    Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 */
 
-#include "rdesktop.h"
+#include "todo.h"
 
 #define MAX_CHANNELS			6
 #define CHANNEL_CHUNK_LENGTH		1600

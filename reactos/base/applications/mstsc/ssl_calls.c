@@ -20,7 +20,7 @@
 
 */
 
-#include "rdesktop.h"
+#include "todo.h"
 
 #define APP_CC
 
