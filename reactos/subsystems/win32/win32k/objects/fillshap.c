@@ -104,9 +104,11 @@ IntGdiPolygon(PDC    dc,
         // Draw the Polygon Edges with the current pen ( if not a NULL pen )
         if (PenBrushObj && !(PenBrushObj->flAttrs & GDIBRUSH_IS_NULL))
         {
+            int i;
+
             IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
 
-            while (Count-- >1)
+            for (i = 0; i < Count-1; i++)
             {
 
 // DPRINT1("Polygon Making line from (%d,%d) to (%d,%d)\n",
@@ -116,14 +118,26 @@ IntGdiPolygon(PDC    dc,
                 ret = IntEngLineTo(&BitmapObj->SurfObj,
                                    dc->CombinedClip,
                                    &PenBrushInst.BrushObject,
-                                   UnsafePoints[0].x,          /* From */
-                                   UnsafePoints[0].y,
-                                   UnsafePoints[1].x,          /* To */
-                                   UnsafePoints[1].y,
+                                   UnsafePoints[i].x,          /* From */
+                                   UnsafePoints[i].y,
+                                   UnsafePoints[i+1].x,          /* To */
+                                   UnsafePoints[i+1].y,
                                    &DestRect,
                                    ROP2_TO_MIX(dc->Dc_Attr.jROP2)); /* MIX */
                 if (!ret) break;
-                UnsafePoints++;
+            }
+            /* Close the polygon */
+            if (ret)
+            {
+                ret = IntEngLineTo(&BitmapObj->SurfObj,
+                                   dc->CombinedClip,
+                                   &PenBrushInst.BrushObject,
+                                   UnsafePoints[Count-1].x,          /* From */
+                                   UnsafePoints[Count-1].y,
+                                   UnsafePoints[0].x,          /* To */
+                                   UnsafePoints[0].y,
+                                   &DestRect,
+                                   ROP2_TO_MIX(dc->Dc_Attr.jROP2)); /* MIX */
             }
         }
         PENOBJ_UnlockPen(PenBrushObj);
