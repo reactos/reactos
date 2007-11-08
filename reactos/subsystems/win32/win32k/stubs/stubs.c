@@ -2465,19 +2465,6 @@ NtGdiFullscreenControl(
  /*
  * @unimplemented
  */
-INT
-STDCALL
-NtGdiGetAppClipBox(
-    IN HDC hdc,
-    OUT LPRECT prc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
 DWORD
 STDCALL
 NtGdiGetCharacterPlacementW(

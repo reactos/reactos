@@ -196,10 +196,10 @@ IntGdiGetClipBox(HDC hDC, LPRECT rc)
    return retval;
 }
 
-int STDCALL NtGdiGetClipBox(HDC  hDC,
-			   LPRECT  rc)
+INT STDCALL
+NtGdiGetAppClipBox(HDC hDC, LPRECT rc)
 {
-  int Ret;
+  INT Ret;
   NTSTATUS Status = STATUS_SUCCESS;
   RECT Saferect;
 
@@ -220,7 +220,6 @@ int STDCALL NtGdiGetClipBox(HDC  hDC,
 
   if(!NT_SUCCESS(Status))
   {
-
     SetLastNtError(Status);
     return ERROR;
   }

@@ -210,14 +210,6 @@ NtGdiGetCharABCWidths(HDC  hDC,
                            UINT  LastChar,
                            LPABC  abc);
 
-/* Use NtGdiGetAppClipBox. */
-int
-STDCALL
-NtGdiGetClipBox (
-	HDC	hDC,
-	LPRECT	rc
-	);
-
 /* Use NtGdiGetColorSpaceforBitmap. */
 HCOLORSPACE
 STDCALL

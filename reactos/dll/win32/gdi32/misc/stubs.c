@@ -2399,7 +2399,7 @@ GetClipBox(HDC hdc,
            LPRECT lprc)
 {
     /* FIXME some part need be done in user mode */
-    return  NtGdiGetClipBox(hdc, lprc);
+    return  NtGdiGetAppClipBox(hdc, lprc);
 }
 
 /*
