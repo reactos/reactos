@@ -2,7 +2,6 @@
 #define __CHARMAP_PRECOMP_H
 #include <windows.h>
 #include <stdio.h>
-#include <tchar.h>
 #include <commctrl.h>
 #include "resource.h"
 

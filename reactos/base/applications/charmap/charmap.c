@@ -107,7 +107,7 @@ ChangeMapFont(HWND hDlg)
     {
         lpFontName = HeapAlloc(GetProcessHeap(),
                                0,
-                               (Len + 1) * sizeof(TCHAR));
+                               (Len + 1) * sizeof(WCHAR));
 
         if (lpFontName)
         {
@@ -138,7 +138,7 @@ AddCharToSelection(HWND hText,
     {
         lpText = HeapAlloc(GetProcessHeap(),
                            0,
-                           (Len + 2) * sizeof(TCHAR));
+                           (Len + 2) * sizeof(WCHAR));
 
         if (lpText)
         {
@@ -267,10 +267,10 @@ DlgProc(HWND hDlg,
 
                 case IDC_SELECT:
                 {
-                    TCHAR ch;
+                    WCHAR ch;
                     HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
 
-                    ch = (TCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
+                    ch = (WCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
 
                     if (ch)
                     {
@@ -343,10 +343,10 @@ DlgProc(HWND hDlg,
 
 
 INT WINAPI
-_tWinMain(HINSTANCE hInst,
-          HINSTANCE hPrev,
-          LPTSTR Cmd,
-          int iCmd)
+wWinMain(HINSTANCE hInst,
+         HINSTANCE hPrev,
+         LPWSTR Cmd,
+         int iCmd)
 {
     INITCOMMONCONTROLSEX iccx;
     INT Ret = 1;

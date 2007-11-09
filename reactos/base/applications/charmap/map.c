@@ -220,10 +220,10 @@ NotifyParentOfSelection(PMAP infoPtr,
 
         mnmh.ch = ch;
 
-        Ret = SendMessage(infoPtr->hParent,
-                          WM_NOTIFY,
-                          (WPARAM)mnmh.hdr.idFrom,
-                          (LPARAM)&mnmh);
+        Ret = SendMessageW(infoPtr->hParent,
+                           WM_NOTIFY,
+                           (WPARAM)mnmh.hdr.idFrom,
+                           (LPARAM)&mnmh);
     }
 
     return Ret;

@@ -29,7 +29,7 @@ SetLrgFont(PMAP infoPtr)
     {
         lpFontName = HeapAlloc(GetProcessHeap(),
                                0,
-                               (Len + 1) * sizeof(TCHAR));
+                               (Len + 1) * sizeof(WCHAR));
 
         if (lpFontName)
         {

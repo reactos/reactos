@@ -34,10 +34,10 @@ AboutDialogProc(HWND hDlg,
                                0);
             if (hIcon)
             {
-                SendMessage(hDlg,
-                            WM_SETICON,
-                            ICON_SMALL,
-                            (LPARAM)hIcon);
+                SendMessageW(hDlg,
+                             WM_SETICON,
+                             ICON_SMALL,
+                             (LPARAM)hIcon);
             }
 
             hLicenseEditWnd = GetDlgItem(hDlg,
