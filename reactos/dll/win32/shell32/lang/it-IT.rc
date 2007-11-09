@@ -55,6 +55,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Incolla",                      FCIDM_SHVIEW_INSERT
 		MENUITEM "Crea Collegamento",            FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
 		MENUITEM "Proprietà",                    FCIDM_SHVIEW_PROPERTIES
 	END
 END

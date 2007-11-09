@@ -54,6 +54,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Liitä",                        FCIDM_SHVIEW_INSERT
 		MENUITEM "Liitä Linkiksi",               FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
 		MENUITEM "Ominaisuudet",                 FCIDM_SHVIEW_PROPERTIES
 	END
 END

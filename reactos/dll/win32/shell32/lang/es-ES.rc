@@ -55,6 +55,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Pegar",                       FCIDM_SHVIEW_INSERT
 		MENUITEM "Pegar acceso directo",        FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
 		MENUITEM "Propiedades",                 FCIDM_SHVIEW_PROPERTIES
 	END
 END

@@ -49,6 +49,7 @@ typedef struct
 	IShellFolder*	pSFParent;
 	LONG		ref;
 	BOOL		bDesktop;
+    IContextMenu2 * icm_new;
 } BgCmImpl;
 
 static const IContextMenu2Vtbl cmvt;
@@ -183,6 +184,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
     MENUITEMINFOW mii;
     HRESULT hr;
 
+    IContextMenu2 * icm;
     BgCmImpl *This = (BgCmImpl *)iface;
 
     TRACE("(%p)->(hmenu=%p indexmenu=%x cmdfirst=%x cmdlast=%x flags=%x )\n",
@@ -218,6 +220,24 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
       mii.fType = 0;
       SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERT, FALSE, &mii);
       SetMenuItemInfoW(hMenu, FCIDM_SHVIEW_INSERTLINK, FALSE, &mii);
+    }
+
+    /*
+     * FIXME
+     * load other shell extensions
+     */
+    
+    if (SUCCEEDED(INewItem_Constructor(This->pSFParent, &IID_IContextMenu2, (LPVOID*)&icm)))
+    {
+        if (SUCCEEDED(IContextMenu_QueryContextMenu(icm, hMenu, 10, idCmdFirst, idCmdLast, uFlags)))
+        {
+            This->icm_new = icm;
+            _InsertMenuItem(hMenu, 11, TRUE, -1, MFT_SEPARATOR, NULL, MFS_ENABLED);
+        }
+        else
+        {
+            This->icm_new = NULL;
+        }
     }
 
     if (This->bDesktop)
@@ -389,6 +409,10 @@ static HRESULT WINAPI ISVBgCm_fnInvokeCommand(
 		break;
 
 	      default:
+
+              if (This->icm_new && SUCCEEDED(IContextMenu2_InvokeCommand(This->icm_new, lpcmi)))
+                  return S_OK;
+
 	        /* if it's an id just pass it to the parent shv */
 	        if (hWndSV) SendMessageA(hWndSV, WM_COMMAND, MAKEWPARAM(LOWORD(lpcmi->lpVerb), 0),0 );
 		break;
@@ -447,6 +471,11 @@ static HRESULT WINAPI ISVBgCm_fnHandleMenuMsg(
     BgCmImpl *This = (BgCmImpl *)iface;
 
 	TRACE("ISVBgCm_fnHandleMenuMsg (%p)->(msg=%x wp=%lx lp=%lx)\n",This, uMsg, wParam, lParam);
+
+    if (This->icm_new)
+    {
+        IContextMenu2_HandleMenuMsg(This->icm_new, uMsg, wParam, lParam);
+    }
 
 	return E_NOTIMPL;
 }

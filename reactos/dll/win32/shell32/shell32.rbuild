@@ -69,4 +69,5 @@
 	<file>drive.c</file>
 	<file>recyclebin.c</file>
 	<file>she_ocmenu.c</file>
+	<file>shv_item_new.c</file>
 </module>
