@@ -644,5 +644,5 @@ GraphCtrl_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     /*
      *  We pass on all non-handled messages
      */
-    return CallWindowProc((WNDPROC)OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
+    return CallWindowProcW((WNDPROC)OldGraphCtrlWndProc, hWnd, message, wParam, lParam);
 }

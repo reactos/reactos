@@ -96,7 +96,7 @@ static int     list_channel_CB(HANDLE hProcess, void* addr, WCHAR* buffer, void*
 
 struct cce_user
 {
-    LPCTSTR   name;           /* channel to look for */
+    LPCWSTR   name;           /* channel to look for */
     unsigned  value, mask;    /* how to change channel */
     unsigned  done;           /* number of successful changes */
     unsigned  notdone;        /* number of unsuccessful changes */
@@ -292,9 +292,9 @@ static void DebugChannels_FillList(HWND hChannelLV)
 
     hProcess = OpenProcess(PROCESS_VM_OPERATION | PROCESS_VM_READ, FALSE, get_selected_pid());
     if (!hProcess) return; /* FIXME messagebox */
-    SendMessage(hChannelLV, WM_SETREDRAW, FALSE, 0);
+    SendMessageW(hChannelLV, WM_SETREDRAW, FALSE, 0);
     enum_channel(hProcess, list_channel_CB, (void*)hChannelLV, TRUE);
-    SendMessage(hChannelLV, WM_SETREDRAW, TRUE, 0);
+    SendMessageW(hChannelLV, WM_SETREDRAW, TRUE, 0);
     CloseHandle(hProcess);
 }
 
@@ -354,7 +354,7 @@ static void DebugChannels_OnNotify(HWND hDlg, LPARAM lParam)
             if (!hProcess) return; /* FIXME message box */
             lhti.pt = nmia->ptAction;
             hChannelLV = GetDlgItem(hDlg, IDC_DEBUG_CHANNELS_LIST);
-            SendMessage(hChannelLV, LVM_SUBITEMHITTEST, 0, (LPARAM)&lhti);
+            SendMessageW(hChannelLV, LVM_SUBITEMHITTEST, 0, (LPARAM)&lhti);
             if (nmia->iSubItem >= 1 && nmia->iSubItem <= 4)
             {
                 WCHAR            val[2];
@@ -405,5 +405,5 @@ static INT_PTR CALLBACK DebugChannelsDlgProc(HWND hDlg, UINT message, WPARAM wPa
 
 void ProcessPage_OnDebugChannels(void)
 {
-    DialogBox(hInst, (LPCTSTR)IDD_DEBUG_CHANNELS_DIALOG, hMainWnd, DebugChannelsDlgProc);
+    DialogBoxW(hInst, (LPCWSTR)IDD_DEBUG_CHANNELS_DIALOG, hMainWnd, DebugChannelsDlgProc);
 }

@@ -76,14 +76,14 @@ void PerfDataUninitialize(void)
     }
 }
 
-static void SidToUserName(PSID Sid, LPTSTR szBuffer, DWORD BufferSize)
+static void SidToUserName(PSID Sid, LPWSTR szBuffer, DWORD BufferSize)
 {
     static WCHAR szDomainNameUnused[255];
     DWORD DomainNameLen = sizeof(szDomainNameUnused) / sizeof(szDomainNameUnused[0]);
     SID_NAME_USE Use;
 
     if (Sid != NULL)
-        LookupAccountSid(NULL, Sid, szBuffer, &BufferSize, szDomainNameUnused, &DomainNameLen, &Use);
+        LookupAccountSidW(NULL, Sid, szBuffer, &BufferSize, szDomainNameUnused, &DomainNameLen, &Use);
 }
 
 void PerfDataRefresh(void)
@@ -260,7 +260,7 @@ void PerfDataRefresh(void)
         if (pSPI->ImageName.Buffer)
             wcscpy(pPerfData[Idx].ImageName, pSPI->ImageName.Buffer);
         else
-            LoadString(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
+            LoadStringW(hInst, IDS_IDLE_PROCESS, pPerfData[Idx].ImageName,
                        sizeof(pPerfData[Idx].ImageName) / sizeof(pPerfData[Idx].ImageName[0]));
 
         pPerfData[Idx].ProcessId = pSPI->UniqueProcessId;
@@ -368,7 +368,7 @@ ULONG PerfDataGetProcessorSystemUsage(void)
     return (ULONG)dbKernelTime;
 }
 
-BOOL PerfDataGetImageName(ULONG Index, LPTSTR lpImageName, int nMaxCount)
+BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, int nMaxCount)
 {
     BOOL  bSuccessful;
 
@@ -420,7 +420,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     return ProcessId;
 }
 
-BOOL PerfDataGetUserName(ULONG Index, LPTSTR lpUserName, int nMaxCount)
+BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, int nMaxCount)
 {
     BOOL  bSuccessful;
 

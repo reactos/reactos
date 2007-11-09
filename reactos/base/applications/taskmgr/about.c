@@ -26,7 +26,7 @@ INT_PTR CALLBACK AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPAR
 
 void OnAbout(void)
 {
-    DialogBox(hInst, MAKEINTRESOURCE(IDD_ABOUTBOX), hMainWnd, AboutDialogWndProc);
+    DialogBoxW(hInst, MAKEINTRESOURCEW(IDD_ABOUTBOX), hMainWnd, AboutDialogWndProc);
 }
 
 INT_PTR CALLBACK
@@ -41,9 +41,9 @@ AboutDialogWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 
         hLicenseEditWnd = GetDlgItem(hDlg, IDC_LICENSE_EDIT);
 
-        LoadString(hInst, IDS_LICENSE, strLicense, 0x1000);
+        LoadStringW(hInst, IDS_LICENSE, strLicense, 0x1000);
 
-        SetWindowText(hLicenseEditWnd, strLicense);
+        SetWindowTextW(hLicenseEditWnd, strLicense);
 
         return TRUE;
 

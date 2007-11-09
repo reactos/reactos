@@ -54,8 +54,8 @@ HICON TrayIcon_GetProcessorUsageIcon(void)
     /*
      * Load the bitmaps
      */
-    hBitmap = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYICON));
-    hBitmapMask = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_TRAYMASK));
+    hBitmap = LoadBitmapW(hInst, MAKEINTRESOURCEW(IDB_TRAYICON));
+    hBitmapMask = LoadBitmapW(hInst, MAKEINTRESOURCEW(IDB_TRAYMASK));
     if (!hBitmap || !hBitmapMask)
         goto done;
 
@@ -132,16 +132,16 @@ done:
 
 BOOL TrayIcon_ShellAddTrayIcon(void)
 {
-    NOTIFYICONDATA  nid;
+    NOTIFYICONDATAW nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
     WCHAR           szMsg[256];
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
 
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
@@ -149,10 +149,10 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
     nid.hIcon = hIcon;
 
 
-    LoadString( GetModuleHandle(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
-    wsprintf(nid.szTip, szMsg, PerfDataGetProcessorUsage());
+    LoadStringW( GetModuleHandleW(NULL), IDS_MSG_TRAYICONCPUUSAGE, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
+    wsprintfW(nid.szTip, szMsg, PerfDataGetProcessorUsage());
 
-    bRetVal = Shell_NotifyIcon(NIM_ADD, &nid);
+    bRetVal = Shell_NotifyIconW(NIM_ADD, &nid);
 
     if (hIcon)
         DestroyIcon(hIcon);
@@ -162,43 +162,43 @@ BOOL TrayIcon_ShellAddTrayIcon(void)
 
 BOOL TrayIcon_ShellRemoveTrayIcon(void)
 {
-    NOTIFYICONDATA  nid;
+    NOTIFYICONDATAW nid;
     BOOL            bRetVal;
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
 
-    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = 0;
     nid.uCallbackMessage = WM_ONTRAYICON;
 
-    bRetVal = Shell_NotifyIcon(NIM_DELETE, &nid);
+    bRetVal = Shell_NotifyIconW(NIM_DELETE, &nid);
 
     return bRetVal;
 }
 
 BOOL TrayIcon_ShellUpdateTrayIcon(void)
 {
-    NOTIFYICONDATA  nid;
+    NOTIFYICONDATAW nid;
     HICON           hIcon = NULL;
     BOOL            bRetVal;
     WCHAR           szTemp[256];
 
-    memset(&nid, 0, sizeof(NOTIFYICONDATA));
+    memset(&nid, 0, sizeof(NOTIFYICONDATAW));
 
     hIcon = TrayIcon_GetProcessorUsageIcon();
 
-    nid.cbSize = sizeof(NOTIFYICONDATA);
+    nid.cbSize = sizeof(NOTIFYICONDATAW);
     nid.hWnd = hMainWnd;
     nid.uID = 0;
     nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_TIP;
     nid.uCallbackMessage = WM_ONTRAYICON;
     nid.hIcon = hIcon;
-    LoadString(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, 256);
-    wsprintf(nid.szTip, szTemp, PerfDataGetProcessorUsage());
+    LoadStringW(hInst, IDS_MSG_TRAYICONCPUUSAGE, szTemp, 256);
+    wsprintfW(nid.szTip, szTemp, PerfDataGetProcessorUsage());
 
-    bRetVal = Shell_NotifyIcon(NIM_MODIFY, &nid);
+    bRetVal = Shell_NotifyIconW(NIM_MODIFY, &nid);
 
     if (hIcon)
         DestroyIcon(hIcon);

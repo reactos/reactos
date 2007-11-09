@@ -102,7 +102,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
         hdc = BeginPaint(hWnd, &ps);
 
-        WindowId = GetWindowLong(hWnd, GWL_ID);
+        WindowId = GetWindowLongW(hWnd, GWL_ID);
 
         switch (WindowId)
         {
@@ -126,7 +126,7 @@ Graph_WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
     /*
      * We pass on all non-handled messages
      */
-    return CallWindowProc((WNDPROC)OldGraphWndProc, hWnd, message, wParam, lParam);
+    return CallWindowProcW((WNDPROC)OldGraphWndProc, hWnd, message, wParam, lParam);
 }
 
 void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
@@ -166,7 +166,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     if (CpuUsage <= 0)   CpuUsage = 0;
     if (CpuUsage > 100)  CpuUsage = 100;
 
-    wsprintf(Text, L"%d%%", (int)CpuUsage);
+    wsprintfW(Text, L"%d%%", (int)CpuUsage);
 
     /*
      * Draw the font text onto the graph
@@ -175,7 +175,7 @@ void Graph_DrawCpuUsageGraph(HDC hDC, HWND hWnd)
     InflateRect(&rcText, -2, -2);
     crPrevForeground = SetTextColor(hDC, RGB(0, 255, 0));
     hOldFont = SelectObject(hDC, GetStockObject(DEFAULT_GUI_FONT));
-    DrawText(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+    DrawTextW(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
     SelectObject(hDC, hOldFont);
     SetTextColor(hDC, crPrevForeground);
 
@@ -335,9 +335,9 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
 
     if (CommitChargeTotal > 1024)
-        wsprintf(Text, L"%d MB", (int)(CommitChargeTotal / 1024));
+        wsprintfW(Text, L"%d MB", (int)(CommitChargeTotal / 1024));
     else
-        wsprintf(Text, L"%d K", (int)CommitChargeTotal);
+        wsprintfW(Text, L"%d K", (int)CommitChargeTotal);
     /*
      * Draw the font text onto the graph
      */
@@ -345,7 +345,7 @@ void Graph_DrawMemUsageGraph(HDC hDC, HWND hWnd)
     InflateRect(&rcText, -2, -2);
     crPrevForeground = SetTextColor(hDC, RGB(0, 255, 0));
     hOldFont = SelectObject(hDC, GetStockObject(DEFAULT_GUI_FONT));
-    DrawText(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
+    DrawTextW(hDC, Text, -1, &rcText, DT_BOTTOM | DT_CENTER | DT_NOPREFIX | DT_SINGLELINE);
     SelectObject(hDC, hOldFont);
     SetTextColor(hDC, crPrevForeground);
 

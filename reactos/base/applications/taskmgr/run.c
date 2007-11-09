@@ -31,11 +31,11 @@ void TaskManager_OnFileNew(void)
     WCHAR       szText[256];
 
     /* Load language strings from resource file */
-    LoadString(hInst, IDS_CREATENEWTASK, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
-    LoadString(hInst, IDS_CREATENEWTASK_DESC, szText, sizeof(szText) / sizeof(szText[0]));
+    LoadStringW(hInst, IDS_CREATENEWTASK, szTitle, sizeof(szTitle) / sizeof(szTitle[0]));
+    LoadStringW(hInst, IDS_CREATENEWTASK_DESC, szText, sizeof(szText) / sizeof(szText[0]));
 
 
-    hShell32 = LoadLibrary(L"SHELL32.DLL");
+    hShell32 = LoadLibraryW(L"SHELL32.DLL");
     RunFileDlg = (RUNFILEDLG)(FARPROC)GetProcAddress(hShell32, (LPCSTR)0x3D);
 
     /* Show "Run..." dialog */
