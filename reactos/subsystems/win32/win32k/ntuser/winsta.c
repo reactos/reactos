@@ -304,7 +304,8 @@ co_IntInitializeDesktopGraphics(VOID)
       IntDestroyPrimarySurface();
       return FALSE;
    }
-   DC_SetOwnership(ScreenDeviceContext, NULL);
+   DC_FreeDcAttr(ScreenDeviceContext);         // Free the dcattr!
+   DC_SetOwnership(ScreenDeviceContext, NULL); // This hDC is inaccessible!
 
    /* Setup the cursor */
    co_IntLoadDefaultCursors();
@@ -316,7 +317,7 @@ VOID FASTCALL
 IntEndDesktopGraphics(VOID)
 {
    if (NULL != ScreenDeviceContext)
-   {
+   {  // No need to allocate a new dcattr.
       DC_SetOwnership(ScreenDeviceContext, PsGetCurrentProcess());
       NtGdiDeleteObjectApp(ScreenDeviceContext);
       ScreenDeviceContext = NULL;
