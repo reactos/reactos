@@ -24,30 +24,34 @@ AboutDialogProc(HWND hDlg,
         case WM_INITDIALOG:
         {
             HWND  hLicenseEditWnd;
-            TCHAR strLicense[700];
+            WCHAR strLicense[700];
 
-            hIcon = LoadImage(hInstance,
-                              MAKEINTRESOURCE(IDI_ICON),
-                              IMAGE_ICON,
-                              16,
-                              16,
-                              0);
-
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hIcon);
+            hIcon = LoadImageW(hInstance,
+                               MAKEINTRESOURCEW(IDI_ICON),
+                               IMAGE_ICON,
+                               16,
+                               16,
+                               0);
+            if (hIcon)
+            {
+                SendMessage(hDlg,
+                            WM_SETICON,
+                            ICON_SMALL,
+                            (LPARAM)hIcon);
+            }
 
             hLicenseEditWnd = GetDlgItem(hDlg,
                                          IDC_LICENSE_EDIT);
 
-            LoadString(hInstance,
-                       IDS_LICENSE,
-                       strLicense,
-                       sizeof(strLicense) / sizeof(TCHAR));
+            if (LoadStringW(hInstance,
+                            IDS_LICENSE,
+                            strLicense,
+                            sizeof(strLicense) / sizeof(WCHAR)))
+            {
+                SetWindowTextW(hLicenseEditWnd,
+                               strLicense);
+            }
 
-            SetWindowText(hLicenseEditWnd,
-                          strLicense);
             return TRUE;
         }
 
@@ -72,8 +76,8 @@ AboutDialogProc(HWND hDlg,
 VOID
 ShowAboutDlg(HWND hWndParent)
 {
-    DialogBox(hInstance,
-              MAKEINTRESOURCE(IDD_ABOUTBOX),
-              hWndParent,
-              AboutDialogProc);
+    DialogBoxW(hInstance,
+               MAKEINTRESOURCEW(IDD_ABOUTBOX),
+               hWndParent,
+               AboutDialogProc);
 }

@@ -13,17 +13,17 @@
 static HFONT
 SetLrgFont(PMAP infoPtr)
 {
-    LOGFONT lf;
+    LOGFONTW lf;
     HFONT hFont = NULL;
     HDC hdc;
     HWND hCombo;
-    LPTSTR lpFontName;
+    LPWSTR lpFontName;
     INT Len;
 
     hCombo = GetDlgItem(infoPtr->hParent,
                         IDC_FONTCOMBO);
 
-    Len = GetWindowTextLength(hCombo);
+    Len = GetWindowTextLengthW(hCombo);
 
     if (Len != 0)
     {
@@ -33,10 +33,10 @@ SetLrgFont(PMAP infoPtr)
 
         if (lpFontName)
         {
-            SendMessage(hCombo,
-                        WM_GETTEXT,
-                        31,
-                        (LPARAM)lpFontName);
+            SendMessageW(hCombo,
+                         WM_GETTEXT,
+                         31,
+                         (LPARAM)lpFontName);
 
             ZeroMemory(&lf,
                        sizeof(lf));
@@ -48,10 +48,10 @@ SetLrgFont(PMAP infoPtr)
                       hdc);
 
             lf.lfCharSet =  DEFAULT_CHARSET;
-            lstrcpy(lf.lfFaceName,
-                    lpFontName);
+            wcscpy(lf.lfFaceName,
+                   lpFontName);
 
-            hFont = CreateFontIndirect(&lf);
+            hFont = CreateFontIndirectW(&lf);
 
             HeapFree(GetProcessHeap(),
                      0,
@@ -75,7 +75,7 @@ LrgCellWndProc(HWND hwnd,
     static RECT rc;
     static HFONT hFont = NULL;
 
-    infoPtr = (PMAP)GetWindowLongPtr(hwnd,
+    infoPtr = (PMAP)GetWindowLongPtrW(hwnd,
                                      GWLP_USERDATA);
 
     if (infoPtr == NULL && uMsg != WM_CREATE)
@@ -87,11 +87,11 @@ LrgCellWndProc(HWND hwnd,
     {
         case WM_CREATE:
         {
-            infoPtr = (PMAP)(((LPCREATESTRUCT)lParam)->lpCreateParams);
+            infoPtr = (PMAP)(((LPCREATESTRUCTW)lParam)->lpCreateParams);
 
-            SetWindowLongPtr(hwnd,
-                             GWLP_USERDATA,
-                             (LONG_PTR)infoPtr);
+            SetWindowLongPtrW(hwnd,
+                              GWLP_USERDATA,
+                              (LONG_PTR)infoPtr);
 
             hFont = SetLrgFont(infoPtr);
 
@@ -128,11 +128,11 @@ LrgCellWndProc(HWND hwnd,
 
             hOldFont = SelectObject(hdc, hFont);
 
-            DrawText(hdc,
-                     &infoPtr->pActiveCell->ch,
-                     1,
-                     &rc,
-                     DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawTextW(hdc,
+                      &infoPtr->pActiveCell->ch,
+                      1,
+                      &rc,
+                      DT_CENTER | DT_VCENTER | DT_SINGLELINE);
 
             SelectObject(hdc, hOldFont);
 
@@ -152,10 +152,10 @@ LrgCellWndProc(HWND hwnd,
         default:
         {
 HandleDefaultMessage:
-            Ret = DefWindowProc(hwnd,
-                                uMsg,
-                                wParam,
-                                lParam);
+            Ret = DefWindowProcW(hwnd,
+                                 uMsg,
+                                 wParam,
+                                 lParam);
             break;
         }
     }

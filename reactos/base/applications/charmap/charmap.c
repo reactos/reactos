@@ -15,39 +15,39 @@ HINSTANCE hInstance;
 
 /* Font-enumeration callback */
 static int CALLBACK
-EnumFontNames(ENUMLOGFONTEX *lpelfe,
-              NEWTEXTMETRICEX *lpntme,
+EnumFontNames(ENUMLOGFONTEXW *lpelfe,
+              NEWTEXTMETRICEXW *lpntme,
               DWORD FontType,
               LPARAM lParam)
 {
     HWND hwndCombo = (HWND)lParam;
-    TCHAR *pszName  = lpelfe->elfLogFont.lfFaceName;
+    LPWSTR pszName  = lpelfe->elfLogFont.lfFaceName;
 
     /* make sure font doesn't already exist in our list */
-    if(SendMessage(hwndCombo,
-                   CB_FINDSTRING,
-                   0,
-                   (LPARAM)pszName) == CB_ERR)
+    if(SendMessageW(hwndCombo,
+                    CB_FINDSTRING,
+                    0,
+                    (LPARAM)pszName) == CB_ERR)
     {
         INT idx;
         BOOL fFixed;
         BOOL fTrueType;
 
         /* add the font */
-        idx = (INT)SendMessage(hwndCombo,
-                               CB_ADDSTRING,
-                               0,
-                               (LPARAM)pszName);
+        idx = (INT)SendMessageW(hwndCombo,
+                                CB_ADDSTRING,
+                                0,
+                                (LPARAM)pszName);
 
         /* record the font's attributes (Fixedwidth and Truetype) */
         fFixed = (lpelfe->elfLogFont.lfPitchAndFamily & FIXED_PITCH) ? TRUE : FALSE;
         fTrueType = (lpelfe->elfLogFont.lfOutPrecision == OUT_STROKE_PRECIS) ? TRUE : FALSE;
 
         /* store this information in the list-item's userdata area */
-        SendMessage(hwndCombo,
-                    CB_SETITEMDATA,
-                    idx,
-                    MAKEWPARAM(fFixed, fTrueType));
+        SendMessageW(hwndCombo,
+                     CB_SETITEMDATA,
+                     idx,
+                     MAKEWPARAM(fFixed, fTrueType));
     }
 
     return 1;
@@ -59,35 +59,35 @@ static VOID
 FillFontStyleComboList(HWND hwndCombo)
 {
     HDC hdc;
-    LOGFONT lf;
+    LOGFONTW lf;
 
     /* FIXME: for fun, draw each font in its own style */
     HFONT hFont = GetStockObject(DEFAULT_GUI_FONT);
-    SendMessage(hwndCombo,
-                WM_SETFONT,
-                (WPARAM)hFont,
-                0);
+    SendMessageW(hwndCombo,
+                 WM_SETFONT,
+                 (WPARAM)hFont,
+                 0);
 
     lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfFaceName[0] = _T('\0');   // all fonts
+    lf.lfFaceName[0] = L'\0';   // all fonts
     lf.lfPitchAndFamily = 0;
 
     hdc = GetDC(hwndCombo);
 
     /* store the list of fonts in the combo */
-    EnumFontFamiliesEx(hdc,
-                       &lf,
-                       (FONTENUMPROC)EnumFontNames,
-                       (LPARAM)hwndCombo,
-                       0);
+    EnumFontFamiliesExW(hdc,
+                        &lf,
+                        (FONTENUMPROCW)EnumFontNames,
+                        (LPARAM)hwndCombo,
+                        0);
 
     ReleaseDC(hwndCombo,
               hdc);
 
-    SendMessage(hwndCombo,
-                CB_SETCURSEL,
-                0,
-                0);
+    SendMessageW(hwndCombo,
+                 CB_SETCURSEL,
+                 0,
+                 0);
 }
 
 
@@ -96,12 +96,12 @@ ChangeMapFont(HWND hDlg)
 {
     HWND hCombo;
     HWND hMap;
-    LPTSTR lpFontName;
+    LPWSTR lpFontName;
     INT Len;
 
     hCombo = GetDlgItem(hDlg, IDC_FONTCOMBO);
 
-    Len = GetWindowTextLength(hCombo);
+    Len = GetWindowTextLengthW(hCombo);
 
     if (Len != 0)
     {
@@ -111,17 +111,17 @@ ChangeMapFont(HWND hDlg)
 
         if (lpFontName)
         {
-            SendMessage(hCombo,
-                        WM_GETTEXT,
-                        Len + 1,
-                        (LPARAM)lpFontName);
+            SendMessageW(hCombo,
+                         WM_GETTEXT,
+                         Len + 1,
+                         (LPARAM)lpFontName);
 
             hMap = GetDlgItem(hDlg, IDC_FONTMAP);
 
-            SendMessage(hMap,
-                        FM_SETFONT,
-                        0,
-                        (LPARAM)lpFontName);
+            SendMessageW(hMap,
+                         FM_SETFONT,
+                         0,
+                         (LPARAM)lpFontName);
         }
     }
 }
@@ -129,9 +129,9 @@ ChangeMapFont(HWND hDlg)
 
 static VOID
 AddCharToSelection(HWND hText,
-                   TCHAR ch)
+                   WCHAR ch)
 {
-    LPTSTR lpText;
+    LPWSTR lpText;
     INT Len = GetWindowTextLength(hText);
 
     if (Len != 0)
@@ -142,22 +142,22 @@ AddCharToSelection(HWND hText,
 
         if (lpText)
         {
-            LPTSTR lpStr = lpText;
+            LPWSTR lpStr = lpText;
 
-            SendMessage(hText,
-                        WM_GETTEXT,
-                        Len + 1,
-                        (LPARAM)lpStr);
+            SendMessageW(hText,
+                         WM_GETTEXT,
+                         Len + 1,
+                         (LPARAM)lpStr);
 
             lpStr += Len;
             *lpStr = ch;
             lpStr++;
-            *lpStr = _T('\0');
+            *lpStr = L'\0';
 
-            SendMessage(hText,
-                        WM_SETTEXT,
-                        0,
-                        (LPARAM)lpText);
+            SendMessageW(hText,
+                         WM_SETTEXT,
+                         0,
+                         (LPARAM)lpText);
 
             HeapFree(GetProcessHeap(),
                      0,
@@ -166,15 +166,15 @@ AddCharToSelection(HWND hText,
     }
     else
     {
-        TCHAR szText[2];
+        WCHAR szText[2];
 
         szText[0] = ch;
-        szText[1] = _T('\0');
+        szText[1] = L'\0';
 
-        SendMessage(hText,
-                    WM_SETTEXT,
-                    0,
-                    (LPARAM)szText);
+        SendMessageW(hText,
+                     WM_SETTEXT,
+                     0,
+                     (LPARAM)szText);
     }
 }
 
@@ -185,35 +185,42 @@ DlgProc(HWND hDlg,
         WPARAM wParam,
         LPARAM lParam)
 {
+    static HICON hSmIcon;
+    static HICON hBgIcon;
+
     switch(Message)
     {
         case WM_INITDIALOG:
         {
-            HICON hSmIcon;
-            HICON hBgIcon;
             HMENU hSysMenu;
 
-            hSmIcon = LoadImage(hInstance,
-                                MAKEINTRESOURCE(IDI_ICON),
-                                IMAGE_ICON,
-                                16,
-                                16,
-                                0);
-            hBgIcon = LoadImage(hInstance,
-                                MAKEINTRESOURCE(IDI_ICON),
-                                IMAGE_ICON,
-                                32,
-                                32,
-                                0);
+            hSmIcon = LoadImageW(hInstance,
+                                 MAKEINTRESOURCEW(IDI_ICON),
+                                 IMAGE_ICON,
+                                 16,
+                                 16,
+                                 0);
+            if (hSmIcon)
+            {
+                 SendMessageW(hDlg,
+                              WM_SETICON,
+                              ICON_SMALL,
+                              (LPARAM)hSmIcon);
+            }
 
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_SMALL,
-                        (LPARAM)hSmIcon);
-            SendMessage(hDlg,
-                        WM_SETICON,
-                        ICON_BIG,
-                        (LPARAM)hBgIcon);
+            hBgIcon = LoadImageW(hInstance,
+                                 MAKEINTRESOURCEW(IDI_ICON),
+                                 IMAGE_ICON,
+                                 32,
+                                 32,
+                                 0);
+            if (hBgIcon)
+            {
+                SendMessageW(hDlg,
+                             WM_SETICON,
+                             ICON_BIG,
+                             (LPARAM)hBgIcon);
+            }
 
             FillFontStyleComboList(GetDlgItem(hDlg,
                                               IDC_FONTCOMBO));
@@ -224,30 +231,24 @@ DlgProc(HWND hDlg,
                                      FALSE);
             if (hSysMenu != NULL)
             {
-                LPCTSTR lpAboutText = NULL;
+                LPCWSTR lpAboutText = NULL;
 
-                if (LoadString(hInstance,
-                               IDS_ABOUT,
-                               (LPTSTR)&lpAboutText,
-                               0))
+                if (LoadStringW(hInstance,
+                                IDS_ABOUT,
+                                (LPWSTR)&lpAboutText,
+                                0))
                 {
-                    AppendMenu(hSysMenu,
-                               MF_SEPARATOR,
-                               0,
-                               NULL);
-                    AppendMenu(hSysMenu,
-                               MF_STRING,
-                               ID_ABOUT,
-                               lpAboutText);
+                    AppendMenuW(hSysMenu,
+                                MF_SEPARATOR,
+                                0,
+                                NULL);
+                    AppendMenuW(hSysMenu,
+                                MF_STRING,
+                                ID_ABOUT,
+                                lpAboutText);
                 }
             }
             return TRUE;
-        }
-        break;
-
-        case WM_CLOSE:
-        {
-            EndDialog(hDlg, 0);
         }
         break;
 
@@ -269,7 +270,7 @@ DlgProc(HWND hDlg,
                     TCHAR ch;
                     HWND hMap = GetDlgItem(hDlg, IDC_FONTMAP);
 
-                    ch = (TCHAR) SendMessage(hMap, FM_GETCHAR, 0, 0);
+                    ch = (TCHAR) SendMessageW(hMap, FM_GETCHAR, 0, 0);
 
                     if (ch)
                     {
@@ -281,6 +282,10 @@ DlgProc(HWND hDlg,
                 }
 
                 case IDOK:
+                    if (hSmIcon)
+                        DestroyIcon(hSmIcon);
+                    if (hBgIcon)
+                        DestroyIcon(hBgIcon);
                     EndDialog(hDlg, 0);
                 break;
             }
@@ -321,6 +326,14 @@ DlgProc(HWND hDlg,
         }
         break;
 
+        case WM_CLOSE:
+            if (hSmIcon)
+                DestroyIcon(hSmIcon);
+            if (hBgIcon)
+                DestroyIcon(hBgIcon);
+            EndDialog(hDlg, 0);
+            break;
+
         default:
             return FALSE;
     }
@@ -346,10 +359,10 @@ _tWinMain(HINSTANCE hInst,
 
     if (RegisterMapClasses(hInstance))
     {
-        Ret = DialogBox(hInstance,
-                        MAKEINTRESOURCE(IDD_CHARMAP),
-                        NULL,
-                        (DLGPROC)DlgProc) >= 0;
+        Ret = DialogBoxW(hInstance,
+                         MAKEINTRESOURCEW(IDD_CHARMAP),
+                         NULL,
+                         (DLGPROC)DlgProc) >= 0;
 
         UnregisterMapClasses(hInstance);
     }

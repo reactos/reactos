@@ -9,12 +9,12 @@
 
 #include <precomp.h>
 
-static const TCHAR szMapWndClass[] = TEXT("FontMapWnd");
-static const TCHAR szLrgCellWndClass[] = TEXT("LrgCellWnd");
+static const WCHAR szMapWndClass[] = L"FontMapWnd";
+static const WCHAR szLrgCellWndClass[] = L"LrgCellWnd";
 
 static VOID
 TagFontToCell(PCELL pCell,
-              TCHAR ch)
+              WCHAR ch)
 {
     pCell->ch = ch;
 }
@@ -82,7 +82,7 @@ FillGrid(PMAP infoPtr,
          HDC hdc)
 {
     HFONT hOldFont;
-    TCHAR ch;
+    WCHAR ch;
     INT x, y;
 
     hOldFont = SelectObject(hdc,
@@ -91,15 +91,15 @@ FillGrid(PMAP infoPtr,
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
-        ch = (TCHAR)((256 * infoPtr->iPage) + (XCELLS * y) + x);
+        ch = (WCHAR)((256 * infoPtr->iPage) + (XCELLS * y) + x);
 
         TagFontToCell(&infoPtr->Cells[y][x], ch);
 
-        DrawText(hdc,
-                 &ch,
-                 1,
-                 &infoPtr->Cells[y][x].CellInt,
-                 DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+        DrawTextW(hdc,
+                  &ch,
+                  1,
+                  &infoPtr->Cells[y][x].CellInt,
+                  DT_CENTER | DT_VCENTER | DT_SINGLELINE);
     }
 
     SelectObject(hdc,
@@ -124,18 +124,18 @@ CreateLargeCell(PMAP infoPtr)
                 XLARGE - XCELLS,
                 YLARGE - YCELLS);
 
-    infoPtr->hLrgWnd = CreateWindowEx(0,
-                                      szLrgCellWndClass,
-                                      NULL,
-                                      WS_CHILDWINDOW | WS_VISIBLE,
-                                      rLarge.left,
-                                      rLarge.top,
-                                      rLarge.right - rLarge.left,
-                                      rLarge.bottom - rLarge.top,
-                                      infoPtr->hParent,
-                                      NULL,
-                                      hInstance,
-                                      infoPtr);
+    infoPtr->hLrgWnd = CreateWindowExW(0,
+                                       szLrgCellWndClass,
+                                       NULL,
+                                       WS_CHILDWINDOW | WS_VISIBLE,
+                                       rLarge.left,
+                                       rLarge.top,
+                                       rLarge.right - rLarge.left,
+                                       rLarge.bottom - rLarge.top,
+                                       infoPtr->hParent,
+                                       NULL,
+                                       hInstance,
+                                       infoPtr);
     if (!infoPtr->hLrgWnd)
         return FALSE;
 
@@ -175,7 +175,7 @@ MoveLargeCell(PMAP infoPtr)
 
 static VOID
 SetFont(PMAP infoPtr,
-        LPTSTR lpFontName)
+        LPWSTR lpFontName)
 {
     HDC hdc;
 
@@ -183,7 +183,7 @@ SetFont(PMAP infoPtr,
         DeleteObject(infoPtr->hFont);
 
     ZeroMemory(&infoPtr->CurrentFont,
-               sizeof(LOGFONT));
+               sizeof(LOGFONTW));
 
     hdc = GetDC(infoPtr->hMapWnd);
     infoPtr->CurrentFont.lfHeight = GetDeviceCaps(hdc,
@@ -191,10 +191,10 @@ SetFont(PMAP infoPtr,
     ReleaseDC(infoPtr->hMapWnd, hdc);
 
     infoPtr->CurrentFont.lfCharSet =  DEFAULT_CHARSET;
-    lstrcpy(infoPtr->CurrentFont.lfFaceName,
-            lpFontName);
+    wcscpy(infoPtr->CurrentFont.lfFaceName,
+           lpFontName);
 
-    infoPtr->hFont = CreateFontIndirect(&infoPtr->CurrentFont);
+    infoPtr->hFont = CreateFontIndirectW(&infoPtr->CurrentFont);
 
     InvalidateRect(infoPtr->hMapWnd,
                    NULL,
@@ -205,7 +205,7 @@ SetFont(PMAP infoPtr,
 static LRESULT
 NotifyParentOfSelection(PMAP infoPtr,
                         UINT code,
-                        TCHAR ch)
+                        WCHAR ch)
 {
     LRESULT Ret = 0;
 
@@ -311,9 +311,9 @@ OnCreate(PMAP infoPtr,
     if (infoPtr)
     {
         SetLastError(0);
-        SetWindowLongPtr(hwnd,
-                         0,
-                         (DWORD_PTR)infoPtr);
+        SetWindowLongPtrW(hwnd,
+                          0,
+                          (DWORD_PTR)infoPtr);
         if (GetLastError() == 0)
         {
             ZeroMemory(infoPtr,
@@ -375,8 +375,7 @@ OnVScroll(PMAP infoPtr,
        }
 
     infoPtr->iPage = max(0,
-                         min(infoPtr->iPage,
-                             255));
+                         min(infoPtr->iPage, 255));
 
     SetScrollPos(infoPtr->hMapWnd,
                  SB_VERT,
@@ -440,8 +439,8 @@ MapWndProc(HWND hwnd,
     PMAP infoPtr;
     LRESULT Ret = 0;
 
-    infoPtr = (PMAP)GetWindowLongPtr(hwnd,
-                                     0);
+    infoPtr = (PMAP)GetWindowLongPtrW(hwnd,
+                                      0);
 
     switch (uMsg)
     {
@@ -487,7 +486,7 @@ MapWndProc(HWND hwnd,
 
         case FM_SETFONT:
         {
-            LPTSTR lpFontName = (LPTSTR)lParam;
+            LPWSTR lpFontName = (LPWSTR)lParam;
 
             SetFont(infoPtr,
                     lpFontName);
@@ -518,18 +517,18 @@ MapWndProc(HWND hwnd,
             HeapFree(GetProcessHeap(),
                      0,
                      infoPtr);
-            SetWindowLongPtr(hwnd,
-                             0,
-                             (DWORD_PTR)NULL);
+            SetWindowLongPtrW(hwnd,
+                              0,
+                              (DWORD_PTR)NULL);
             break;
         }
 
         default:
         {
-            Ret = DefWindowProc(hwnd,
-                                uMsg,
-                                wParam,
-                                lParam);
+            Ret = DefWindowProcW(hwnd,
+                                 uMsg,
+                                 wParam,
+                                 lParam);
             break;
         }
     }
@@ -541,24 +540,24 @@ MapWndProc(HWND hwnd,
 BOOL
 RegisterMapClasses(HINSTANCE hInstance)
 {
-    WNDCLASS wc = {0};
+    WNDCLASSW wc = {0};
 
     wc.style = CS_DBLCLKS;
     wc.lpfnWndProc = MapWndProc;
     wc.cbWndExtra = sizeof(PMAP);
     wc.hInstance = hInstance;
-    wc.hCursor = LoadCursor(NULL,
-                            (LPTSTR)IDC_ARROW);
+    wc.hCursor = LoadCursorW(NULL,
+                            (LPWSTR)IDC_ARROW);
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
     wc.lpszClassName = szMapWndClass;
 
-    if (RegisterClass(&wc))
+    if (RegisterClassW(&wc))
     {
         wc.lpfnWndProc = LrgCellWndProc;
         wc.cbWndExtra = 0;
         wc.lpszClassName = szLrgCellWndClass;
 
-        return RegisterClass(&wc) != 0;
+        return RegisterClassW(&wc) != 0;
     }
 
     return FALSE;
@@ -567,9 +566,9 @@ RegisterMapClasses(HINSTANCE hInstance)
 VOID
 UnregisterMapClasses(HINSTANCE hInstance)
 {
-    UnregisterClass(szMapWndClass,
+    UnregisterClassW(szMapWndClass,
                     hInstance);
 
-    UnregisterClass(szLrgCellWndClass,
+    UnregisterClassW(szLrgCellWndClass,
                     hInstance);
 }

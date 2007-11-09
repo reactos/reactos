@@ -23,7 +23,7 @@ typedef struct _CELL
     RECT CellInt;
     BOOL bActive;
     BOOL bLarge;
-    TCHAR ch;
+    WCHAR ch;
 } CELL, *PCELL;
 
 typedef struct _MAP
@@ -36,13 +36,13 @@ typedef struct _MAP
     CELL Cells[YCELLS][XCELLS];
     PCELL pActiveCell;
     HFONT hFont;
-    LOGFONT CurrentFont;
+    LOGFONTW CurrentFont;
     INT iPage;
 } MAP, *PMAP;
 
 typedef struct {
     NMHDR hdr;
-    TCHAR ch;
+    WCHAR ch;
 } MAPNOTIFY, *LPMAPNOTIFY;
 
 
