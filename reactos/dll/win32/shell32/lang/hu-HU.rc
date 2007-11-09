@@ -57,14 +57,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Beillesztés",                  FCIDM_SHVIEW_INSERT
 		MENUITEM "Parancsikon beillesztése",     FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Ú&j"
-		BEGIN
-			MENUITEM "&Mappa",                     FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "&Parancsikon",               FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "Beállítások",                  FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -438,4 +430,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Ú&j"
+	FCIDM_SHVIEW_NEWFOLDER 	    "&Mappa"
+	FCIDM_SHVIEW_NEWLINK 	    "&Parancsikon"
 END

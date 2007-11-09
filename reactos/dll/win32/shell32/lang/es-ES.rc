@@ -55,14 +55,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Pegar",                       FCIDM_SHVIEW_INSERT
 		MENUITEM "Pegar acceso directo",        FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Nuevo"
-		BEGIN
-			MENUITEM "Nueva &carpeta",            FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "Nuevo &acceso directo",     FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "Propiedades",                 FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -436,4 +428,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Nuevo"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Nueva &carpeta"
+	FCIDM_SHVIEW_NEWLINK 	    "Nuevo &acceso directo"
 END

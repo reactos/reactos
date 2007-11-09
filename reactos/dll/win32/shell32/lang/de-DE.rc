@@ -56,14 +56,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Einfügen",                  FCIDM_SHVIEW_INSERT
 		MENUITEM "Einfügen als Verweis",      FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Neu"
-		BEGIN
-			MENUITEM "Neues Ver&zeichnis",      FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "Neuer Ver&weis",          FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "&Eigenschaften",            FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -436,4 +428,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Autoren"
 	IDS_SHELL_ABOUT_BACK        "< &Zurück"
+	FCIDM_SHVIEW_NEW 	    "Neu"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Neues Ver&zeichnis"
+	FCIDM_SHVIEW_NEWLINK        "Neuer Ver&weis"
 END

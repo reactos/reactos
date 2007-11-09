@@ -55,14 +55,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Incolla",                      FCIDM_SHVIEW_INSERT
 		MENUITEM "Crea Collegamento",            FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Nuovo"
-		BEGIN
-			MENUITEM "Nuova &Cartella",            FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "Nuovo &Collegamento",        FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "Proprietà",                    FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -436,4 +428,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Nuovo"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Nuova &Cartella"
+	FCIDM_SHVIEW_NEWLINK 	    "Nuovo &Collegamento"
 END

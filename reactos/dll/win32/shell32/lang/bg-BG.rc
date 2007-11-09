@@ -54,14 +54,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Поставяне",             FCIDM_SHVIEW_INSERT
 		MENUITEM "Поставяне като връзка", FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Нови"
-		BEGIN
-			MENUITEM "Нова &папка",         FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "Нова &връзка",        FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "Свойства",              FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -435,4 +427,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Нови"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Нова &папка"
+	FCIDM_SHVIEW_NEWLINK        "Нова &връзка"
 END

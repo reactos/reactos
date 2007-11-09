@@ -105,6 +105,7 @@
 #define IDS_OPEN_WITH_CHOOSE        143
 #define IDS_SHELL_ABOUT_AUTHORS     144
 #define IDS_SHELL_ABOUT_BACK        145
+#define FCIDM_SHVIEW_NEW            146
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

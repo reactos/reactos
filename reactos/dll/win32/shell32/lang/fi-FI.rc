@@ -54,14 +54,6 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "Liitä",                        FCIDM_SHVIEW_INSERT
 		MENUITEM "Liitä Linkiksi",               FCIDM_SHVIEW_INSERTLINK
-		MENUITEM SEPARATOR
-		POPUP "Uusi"
-		BEGIN
-			MENUITEM "Uusi &Kansio",               FCIDM_SHVIEW_NEWFOLDER
-			MENUITEM "Uusi &Linkki",               FCIDM_SHVIEW_NEWLINK
-			MENUITEM SEPARATOR
-		END
-		MENUITEM SEPARATOR
 		MENUITEM "Ominaisuudet",                 FCIDM_SHVIEW_PROPERTIES
 	END
 END
@@ -435,4 +427,7 @@ BEGIN
 
 	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
 	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Uusi"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Uusi &Kansio"
+	FCIDM_SHVIEW_NEWLINK 	    "Uusi &Linkki"
 END
