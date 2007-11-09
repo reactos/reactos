@@ -5,10 +5,6 @@
 #if !defined(_KS_)
 #define _KS_
 
-#ifndef _NTDDK_
-#define NTSTATUS
-#endif
-
 #if defined(__TCS__)
     #define _KS_NO_ANONYMOUS_STRUCTURES_ 1
 #endif
@@ -1190,6 +1186,11 @@ typedef struct
     ULONG Reserved;
 } KSALLOCATOR_FRAMING, *PKSALLOCATOR_FRAMING;
 
+typedef struct
+{
+    ULONG CreateFlags;
+} KSCLOCK_CREATE, *PKSCLOCK_CREATE;
+
 
 #define DEFINE_KSPROPERTY_ITEM_GENERAL_COMPONENTID(Handler)\
     DEFINE_KSPROPERTY_ITEM(KSPROPERTY_GENERAL_COMPONENTID, (Handler), sizeof(KSPROPERTY), sizeof(KSCOMPONENTID), NULL, NULL, 0, NULL, NULL, 0)
@@ -1376,12 +1377,9 @@ extern "C" {
     #define KSDDKAPI    DECLSPEC_IMPORT
 #endif
 
-KSDDKAPI
-NTSTATUS
-NTAPI
-KsCreateAllocator(IN HANDLE ConnectionHandle,
-                  IN PKSALLOCATOR_FRAMING AllocatorFraming,
-                  OUT PHANDLE AllocatorHandle);
+
+
+
 
 
 #if defined(__cplusplus)
