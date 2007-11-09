@@ -460,7 +460,11 @@ _FUNCTION_ {
           int invert = 0; /* Set if we are NOT to find the chars */
 
           /* Init our bitmap */
+#ifdef _LIBCNT_
+          Mask = RtlAllocateHeap(RtlGetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#else
           Mask = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, _BITMAPSIZE_/8);
+#endif
           RtlInitializeBitMap(&bitMask, Mask, _BITMAPSIZE_);
 
           /* Read the format */
@@ -506,7 +510,11 @@ _FUNCTION_ {
                     }
                     /* terminate */
                     if (!suppress) *sptr = 0;
+#ifdef _LIBCNT_
+                    RtlFreeHeap(RtlGetProcessHeap(), 0, Mask);
+#else
           HeapFree(GetProcessHeap(), 0, Mask);
+#endif
                 }
                 break;
             default:

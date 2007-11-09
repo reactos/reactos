@@ -1,4 +1,5 @@
 #include <precomp.h>
+#include <tchar.h>
 
 /*
  * @implemented

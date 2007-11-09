@@ -7,7 +7,7 @@ If you update a function in the ~/wine directory please send a patch to wine-pat
 TODO List:
 Implement the remaining functions that are commented out in the .def file
 Update source code headers for the license information.
-Compleate the W32API conversion for all source files.
+Complete the W32API conversion for all source files.
 Write a decent regression test suite.
 Convert all C++ style comments to C style comments.
 ????

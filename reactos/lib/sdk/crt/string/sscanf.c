@@ -1,10 +1,13 @@
-/**/
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/umtypes.h>
-#include <ndk/rtlfuncs.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#include <precomp.h>
+
+#include <wchar.h>
+#include <ctype.h>
+
+#define NDEBUG
+#include <internal/debug.h>
+
+#define WARN DPRINT1
+
 
 #define EOF		(-1)
 
@@ -23,7 +26,7 @@ static int char2digit(char c, int base) {
 #undef WIDE_SCANF
 #undef CONSOLE
 #define STRING 1
-#include "scanf.h"
+#include "wine/scanf.h"
 
 int sscanf(const char *str, const char *format, ...)
 {
