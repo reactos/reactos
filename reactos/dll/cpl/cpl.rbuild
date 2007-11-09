@@ -40,6 +40,9 @@
 <directory name="sysdm">
 	<xi:include href="sysdm/sysdm.rbuild" />
 </directory>
+<directory name="telephon">
+	<xi:include href="telephon/telephon.rbuild" />
+</directory>
 <directory name="timedate">
 	<xi:include href="timedate/timedate.rbuild" />
 </directory>

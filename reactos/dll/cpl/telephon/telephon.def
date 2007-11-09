@@ -1,0 +1,6 @@
+LIBRARY telephon.cpl
+
+EXPORTS
+CPlApplet
+
+; EOF
