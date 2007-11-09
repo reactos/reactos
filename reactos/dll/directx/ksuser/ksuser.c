@@ -20,17 +20,16 @@ KsiCreateObjectType( HANDLE hHandle,
 /*++
 * @name KsCreateAllocator
 * @implemented
+* The function KsCreateAllocator creates a handle to an allocator for the given sink connection handle
 *
-* The function KsCreateAllocator
+* @param HANDLE ConnectionHandle
+* Handle to the sink connection on which to create the allocator
 *
-* @param 
+* @param PKSALLOCATOR_FRAMING AllocatorFraming
+* the input param we using to alloc our framing
 *
-* @param 
-*
-* @param ACCESS_MASK  DesiredAccess
-* Desrided access
-*
-* @param 
+* @param PHANDLE AllocatorHandle
+* Our new handle that we have alloc
 *
 * @return 
 * Return NTSTATUS error code or sussess code.
@@ -59,16 +58,16 @@ KsCreateAllocator(HANDLE ConnectionHandle,
 * @name KsCreateClock
 * @implemented
 *
-* The function KsCreateClock
+* The function KsCreateClock  creates handle to clock instance
 *
-* @param 
+* @param HANDLE ConnectionHandle
+* Handle to use to create the clock 
 *
-* @param 
+* @param PKSCLOCK_CREATE ClockCreate
+* paramenter to use to create the clock
 *
-* @param ACCESS_MASK  DesiredAccess
-* Desrided access
-*
-* @param 
+* @param PHANDLE  ClockHandle
+* The new handle
 *
 * @return 
 * Return NTSTATUS error code or sussess code.
@@ -92,42 +91,58 @@ KsCreateClock(HANDLE ConnectionHandle,
                                 ClockHandle);
 }
 
-
-
 /*++
 * @name KsCreatePin
 * @implemented
 *
-* The function KsCreatePin
+* The function KsCreatePin passes a connection request to device and create pin instance
 *
-* @param 
+* @param HANDLE FilterHandle
+* handle of the filter initiating the create request
 *
-* @param 
-*
+* @param PKSPIN_CONNECT Connect
+* Pointer to a KSPIN_CONNECT structure that contains parameters for the requested connection. 
+* This should be followed in memory by a KSDATAFORMAT data structure, describing the data format
+* requested for the connection. 
+
 * @param ACCESS_MASK  DesiredAccess
 * Desrided access
 *
-* @param 
+* @param PHANDLE ConnectionHandle
+* connection handle passed
 *
 * @return 
 * Return NTSTATUS error code or sussess code.
 *
 * @remarks.
-* none
+* The flag in PKSDATAFORMAT is not really document, 
+* to find it u need api mointor allot api and figout
+* how it works, only flag I have found is the 
+* KSDATAFORMAT_ATTRIBUTES flag, it doing a Align
+* of LONLONG size, it also round up it.
 *
 *--*/
+
 KSDDKAPI
 NTSTATUS
 NTAPI
 KsCreatePin(HANDLE FilterHandle,
             PKSPIN_CONNECT Connect,
             ACCESS_MASK DesiredAccess,
-            OUT PHANDLE  ConnectionHandle)
+            PHANDLE  ConnectionHandle)
 {
+    ULONG BufferSize = sizeof(KSPIN_CONNECT);
+    PKSDATAFORMAT DataFormat = ((PKSDATAFORMAT) ( ((ULONG)Connect) + ((ULONG)sizeof(KSPIN_CONNECT)) ) );
+
+    if (DataFormat->Flags &  KSDATAFORMAT_ATTRIBUTES)
+    {
+        BufferSize += (ROUND_UP(DataFormat->FormatSize,sizeof(LONGLONG)) + DataFormat->FormatSize);
+    }
+
     return KsiCreateObjectType(FilterHandle,
                                KSSTRING_Pin,
                                Connect,
-                               sizeof(KSPIN_CONNECT),
+                               BufferSize,
                                DesiredAccess,
                                ConnectionHandle);
 
