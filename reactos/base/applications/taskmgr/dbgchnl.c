@@ -237,7 +237,7 @@ static int enum_channel(HANDLE hProcess, EnumChannelCB ce, void* user, unsigned 
     void*                     buf_addr;
     WCHAR                     buffer[32];
     void*                     addr;
-    const WCHAR**             cache = NULL;
+    WCHAR**                   cache = NULL;
     unsigned                  i, j, num_cache, used_cache;
 
     addr = get_symbol(hProcess, "first_dll", "libwine.so");

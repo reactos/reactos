@@ -386,7 +386,8 @@ BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, int nMaxCount)
 
 int PerfGetIndexByProcessId(DWORD dwProcessId)
 {
-    int Index, FoundIndex = -1;
+    int FoundIndex = -1;
+    ULONG Index;
 
     EnterCriticalSection(&PerfDataCriticalSection);
 

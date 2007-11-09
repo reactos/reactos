@@ -105,7 +105,7 @@ int InsertColumn(int nCol, LPCWSTR lpszColumnHeading, int nFormat, int nWidth, i
 void SaveColumnSettings(void)
 {
     HDITEM        hditem;
-    unsigned int  i, n;
+    int           i, n;
     WCHAR         text[260];
     LRESULT       size;
 
@@ -121,7 +121,7 @@ void SaveColumnSettings(void)
     SendMessageW(hProcessPageHeaderCtrl, HDM_GETORDERARRAY, (WPARAM) size, (LPARAM) &TaskManagerSettings.ColumnOrderArray);
 
     /* Get visible columns */
-    for (i=0; i<SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); i++) {
+    for (i = 0; i < SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEMCOUNT, 0, 0); i++) {
         memset(&hditem, 0, sizeof(HDITEM));
 
         hditem.mask = HDI_TEXT|HDI_WIDTH;
@@ -130,7 +130,7 @@ void SaveColumnSettings(void)
 
         SendMessageW(hProcessPageHeaderCtrl, HDM_GETITEM, i, (LPARAM) &hditem);
 
-        for (n=0; n<COLUMN_NMAX; n++) {
+        for (n = 0; n < COLUMN_NMAX; n++) {
             LoadStringW(hInst, ColumnPresets[n].dwIdsName, szTemp, sizeof(szTemp)/sizeof(WCHAR));
             if (_wcsicmp(text, szTemp) == 0)
             {

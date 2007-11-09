@@ -441,8 +441,8 @@ DWORD WINAPI PerformancePageRefreshThread(void *lpParameter)
             /*
              *  Get the memory usage
              */
-            CommitChargeTotal = (ULONGLONG)PerfDataGetCommitChargeTotalK();
-            CommitChargeLimit = (ULONGLONG)PerfDataGetCommitChargeLimitK();
+            CommitChargeTotal = PerfDataGetCommitChargeTotalK();
+            CommitChargeLimit = PerfDataGetCommitChargeLimitK();
             nBarsUsed1 = CommitChargeLimit ? ((CommitChargeTotal * 100) / CommitChargeLimit) : 0;
 
             PhysicalMemoryTotal = PerfDataGetPhysicalMemoryTotalK();
