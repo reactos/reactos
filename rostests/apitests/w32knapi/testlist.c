@@ -22,6 +22,7 @@
 #include "ntuser/NtUserCountClipboardFormats.c"
 #include "ntuser/NtUserFindExistingCursorIcon.c"
 #include "ntuser/NtUserRedrawWindow.c"
+#include "ntuser/NtUserScrollDC.c"
 #include "ntuser/NtUserToUnicodeEx.c"
 
 /* The List of tests */
@@ -50,6 +51,7 @@ TESTENTRY TestList[] =
 	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats },
 	{ L"NtUserFindExistingCursorIcon", Test_NtUserFindExistingCursoricon },
 	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow },
+	{ L"NtUserScrollDC", Test_NtUserScrollDC },
 	{ L"NtUserToUnicodeEx", Test_NtUserToUnicodeEx }
 };
 
