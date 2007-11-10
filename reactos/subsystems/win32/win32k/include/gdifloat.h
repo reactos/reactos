@@ -1,6 +1,9 @@
 #ifndef __WIN32K_FLOAT_H
 #define __WIN32K_FLOAT_H
 
+
+#include <reactos/win32k/ntgdityp.h>
+#include <reactos/win32k/ntgdihdl.h>
 #include "dc.h"
 #include "math.h"
 #include <ft2build.h>

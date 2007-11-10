@@ -1,0 +1,26 @@
+; $Id: videoprt.def 27062 2007-06-07 21:13:06Z greatlrd $
+;
+; dxg.def - export definition file for ReactOS
+;
+EXPORTS
+DriverEntry@8
+EngAcquireSemaphore@4=win32k.EngAcquireSemaphore@4
+EngAllocMem@12=win32k.EngAllocMem@12
+EngAllocUserMem@8=win32k.EngAllocUserMem@8
+EngCopyBits@24=win32k.EngCopyBits@24
+EngCreateBitmap@24=win32k.EngCreateBitmap@24
+EngCreatePalette@24=win32k.EngCreatePalette@24
+EngCreateSemaphore@0=win32k.EngCreateSemaphore@0
+EngDeletePalette@4=win32k.EngDeletePalette@4
+EngDeleteSemaphore@4=win32k.EngDeleteSemaphore@4
+EngDeleteSurface@4=win32k.EngDeleteSurface@4
+EngFindImageProcAddress@8=win32k.EngFindImageProcAddress@8
+EngFreeMem@4=win32k.EngFreeMem@4
+EngFreeUserMem@4=win32k.EngFreeUserMem@4
+EngLoadImage@4=win32k.EngLoadImage@4
+EngLockSurface@4=win32k.EngLockSurface@4
+EngReleaseSemaphore@4=win32k.EngReleaseSemaphore@4
+EngSetLastError@4=win32k.EngSetLastError@4
+EngUnloadImage@4=win32k.EngUnloadImage@4
+EngUnlockSurface@4=win32k.EngUnlockSurface@4
+

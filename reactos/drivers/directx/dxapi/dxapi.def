@@ -1,0 +1,15 @@
+; $Id: videoprt.def 27062 2007-06-07 21:13:06Z greatlrd $
+;
+; dxapi.def - export definition file for ReactOS
+;
+EXPORTS
+DxApi@20
+DxApiGetVersion@0
+;DxApiInitialize@32
+;DxAutoflipUpdate@20
+;DxEnableIRQ@8
+;DxLoseObject@8
+;DxUpdateCapture@12
+GsDriverEntry@8
+
+

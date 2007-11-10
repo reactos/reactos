@@ -851,31 +851,6 @@ EngQuerySystemAttribute(
    return FALSE;
 }
 
-/*
- * @unimplemented
- */
-FLATPTR STDCALL
-HeapVidMemAllocAligned(
-   IN LPVIDMEM lpVidMem,
-   IN DWORD dwWidth,
-   IN DWORD dwHeight,
-   IN LPSURFACEALIGNMENT lpAlignment,
-   OUT LPLONG lpNewPitch)
-{
-   UNIMPLEMENTED;
-   return 0;
-}
-
-/*
- * @unimplemented
- */
-VOID STDCALL
-VidMemFree(
-   IN LPVMEMHEAP pvmh,
-   IN FLATPTR ptr)
-{
-   UNIMPLEMENTED;
-}
 
 /*
  * @unimplemented
@@ -883,19 +858,6 @@ VidMemFree(
 HANDLE STDCALL
 BRUSHOBJ_hGetColorTransform(
    IN BRUSHOBJ *Brush)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
-
-/*
- * @unimplemented
- */
-PVOID STDCALL
-EngAllocPrivateUserMem(
-   IN PDD_SURFACE_LOCAL  psl,
-   IN SIZE_T  cj,
-   IN ULONG  tag)
 {
    UNIMPLEMENTED;
    return NULL;
@@ -922,16 +884,7 @@ EngDeleteFile(
    return FALSE;
 }
 
-/*
- * @unimplemented
- */
-VOID STDCALL
-EngFreePrivateUserMem(
-   IN PDD_SURFACE_LOCAL  psl,
-   IN PVOID  pv)
-{
-   UNIMPLEMENTED;
-}
+
 
 /*
  * @unimplemented
@@ -961,16 +914,7 @@ EngHangNotification(
    return EHN_ERROR;
 }
 
-/*
- * @unimplemented
- */
-PDD_SURFACE_LOCAL STDCALL
-EngLockDirectDrawSurface(
-   IN HANDLE Surface)
-{
-   UNIMPLEMENTED;
-   return NULL;
-}
+
 
 /*
  * @unimplemented
@@ -1062,16 +1006,6 @@ EngStretchBltROP(
    return FALSE;
 }
 
-/*
- * @unimplemented
- */
-BOOL STDCALL
-EngUnlockDirectDrawSurface(
-   IN PDD_SURFACE_LOCAL Surface)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
 
 /*
  * @unimplemented
@@ -1973,88 +1907,6 @@ NtGdiFONTOBJ_pxoGetXform(IN FONTOBJ *pfo)
  /*
  * @unimplemented
  */
-DWORD
-STDCALL
-NtGdiDvpCanCreateVideoPort(
-    IN HANDLE hDirectDraw,
-    IN OUT PDD_CANCREATEVPORTDATA puCanCreateVPortData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpColorControl(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_VPORTCOLORDATA puVPortColorData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-HANDLE
-STDCALL
-NtGdiDvpCreateVideoPort(
-    IN HANDLE hDirectDraw,
-    IN OUT PDD_CREATEVPORTDATA puCreateVPortData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpDestroyVideoPort(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_DESTROYVPORTDATA puDestroyVPortData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpFlipVideoPort(
-    IN HANDLE hVideoPort,
-    IN HANDLE hDDSurfaceCurrent,
-    IN HANDLE hDDSurfaceTarget,
-    IN OUT PDD_FLIPVPORTDATA puFlipVPortData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortBandwidth(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTBANDWIDTHDATA puGetVPortBandwidthData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
 HBRUSH
 STDCALL
 NtGdiClearBrushAttributes(
@@ -2140,170 +1992,6 @@ NtGdiConvertMetafileRect(
     UNIMPLEMENTED;
     return 0;
 }
-
-
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortFlipStatus(
-    IN HANDLE hDirectDraw,
-    IN OUT PDD_GETVPORTFLIPSTATUSDATA puGetVPortFlipStatusData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortInputFormats(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTINPUTFORMATDATA puGetVPortInputFormatData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortLine(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTLINEDATA puGetVPortLineData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortOutputFormats(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTOUTPUTFORMATDATA puGetVPortOutputFormatData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoPortConnectInfo(
-    IN HANDLE hDirectDraw,
-    IN OUT PDD_GETVPORTCONNECTDATA puGetVPortConnectData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpGetVideoSignalStatus(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTSIGNALDATA puGetVPortSignalData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpUpdateVideoPort(
-    IN HANDLE hVideoPort,
-    IN HANDLE* phSurfaceVideo,
-    IN HANDLE* phSurfaceVbi,
-    IN OUT PDD_UPDATEVPORTDATA puUpdateVPortData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpWaitForVideoPortSync(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_WAITFORVPORTSYNCDATA puWaitForVPortSyncData)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpAcquireNotification(
-    IN HANDLE hVideoPort,
-    IN OUT HANDLE* hEvent,
-    IN LPDDVIDEOPORTNOTIFY pNotify)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDvpReleaseNotification(
-    IN HANDLE hVideoPort,
-    IN HANDLE hEvent)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
-
-
- /*
- * @unimplemented
- */
-DWORD
-STDCALL
-NtGdiDxgGenericThunk(
-    IN ULONG_PTR ulIndex,
-    IN ULONG_PTR ulHandle,
-    IN OUT SIZE_T *pdwSizeOfPtr1,
-    IN OUT  PVOID pvPtr1,
-    IN OUT SIZE_T *pdwSizeOfPtr2,
-    IN OUT  PVOID pvPtr2)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
 
  /*
  * @unimplemented
@@ -2552,19 +2240,6 @@ NtGdiGetEudcTimeStampEx(
     IN OPTIONAL LPWSTR lpBaseFaceName,
     IN ULONG cwcBaseFaceName,
     IN BOOL bSystemTimeStamp)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
- DWORD
-STDCALL
-NtGdiDvpGetVideoPortField(
-    IN HANDLE hVideoPort,
-    IN OUT PDD_GETVPORTFIELDDATA puGetVPortFieldData)
 {
     UNIMPLEMENTED;
     return 0;

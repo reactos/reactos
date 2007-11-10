@@ -3,1035 +3,598 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native DirectDraw implementation
  * FILE:             subsys/win32k/ntddraw/ddraw.c
- * PROGRAMER:        Peter Bajusz (hyp-x@stormregion.com)
  * PROGRAMER:        Magnus olsen (magnus@greatlord.com)
  * REVISION HISTORY:
- *       25-10-2003  PB  Created
-         from 2003 to year 2007
- *       rewrote almost all code Peter did.
- *       only few line are left from him
+ *       19/1-2006   Magnus Olsen
  */
 
 #include <w32k.h>
-
-//#define NDEBUG
 #include <debug.h>
 
-/* swtich this off to get rid of all dx debug msg */
-#define DX_DEBUG
+PGD_DXDDSTARTUPDXGRAPHICS gpfnStartupDxGraphics = NULL;
+PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
 
-#define DdHandleTable GdiHandleTable
+/* export from dxeng.c */
+extern DRVFN gaEngFuncs;
+extern ULONG gcEngFuncs;
 
-
+PDRVFN gpDxFuncs;
+HANDLE ghDxGraphics;
+ULONG gdwDirectDrawContext;
 
 
 /************************************************************************/
-/* DIRECT DRAW OBJECT                                                   */
+/* DirectX graphic/video driver loading and cleanup start here          */
 /************************************************************************/
-
-BOOL INTERNAL_CALL
-DD_Cleanup(PVOID ObjectBody)
+NTSTATUS
+STDCALL
+DxDdStartupDxGraphics(  ULONG ulc1,
+                        PDRVENABLEDATA DxEngDrvOld,
+                        ULONG ulc2,
+                        PDRVENABLEDATA DxgDrvOld,
+                        PULONG DirectDrawContext,
+                        PEPROCESS Proc)
 {
-    PDD_DIRECTDRAW pDirectDraw = (PDD_DIRECTDRAW) ObjectBody;
+    DRVENABLEDATA DxEngDrv;
+    DRVENABLEDATA DxgDrv;
 
-    DPRINT1("DD_Cleanup\n");
+    NTSTATUS Status = STATUS_PROCEDURE_NOT_FOUND;
 
-    if (!pDirectDraw)
-    {
-        return FALSE;
-    }
-
-    if (pDirectDraw->Global.dhpdev == NULL)
-    {
-        return FALSE;
-    }
-
-    if (pDirectDraw->DrvDisableDirectDraw == NULL)
-    {
-        return FALSE;
-    }
-
-    pDirectDraw->DrvDisableDirectDraw(pDirectDraw->Global.dhpdev);
-    return TRUE;
-}
-
-/* code for enable and reanble the drv */
-BOOL
-intEnableDriver(PDD_DIRECTDRAW pDirectDraw)
-{
-     BOOL success;
-     DD_HALINFO HalInfo;
-
-    /*clean up some of the cache entry */
-    RtlZeroMemory(&pDirectDraw->DD,   sizeof(DD_CALLBACKS));
-    RtlZeroMemory(&pDirectDraw->Surf, sizeof(DD_SURFACECALLBACKS));
-    RtlZeroMemory(&pDirectDraw->Pal,  sizeof(DD_PALETTECALLBACKS));
-    RtlZeroMemory(&pDirectDraw->Hal,  sizeof(DD_HALINFO));
-    RtlZeroMemory(&HalInfo,  sizeof(DD_HALINFO));
-    pDirectDraw->dwNumHeaps =0;
-    pDirectDraw->dwNumFourCC = 0;
-    pDirectDraw->pdwFourCC = NULL;
-    pDirectDraw->pvmList = NULL;
-
-    /* Get DirectDraw infomations form the driver
-     * DDK say pvmList, pdwFourCC is always NULL in frist call here
-     * but we get back how many pvmList it whant we should alloc, same
-     * with pdwFourCC.
+    /* FIXME setup of gaEngFuncs driver export list
+     * but not in this api, we can add it here tempary until we figout where 
+     * no code have been writen for it yet
      */
-    if (pDirectDraw->DrvGetDirectDrawInfo)
+
+
+    /* FIXME ReactOS does not loading the dxapi.sys or import functions from it yet */
+    // DxApiGetVersion()
+
+    /* Loading the kernel interface of directx for win32k */
+    ghDxGraphics = EngLoadImage(L"drivers\\dxg.sys");
+    if (!ghDxGraphics)
     {
-        success = pDirectDraw->DrvGetDirectDrawInfo( pDirectDraw->Global.dhpdev,
-                                                     &HalInfo,
-                                                     &pDirectDraw->dwNumHeaps,
-                                                     NULL,
-                                                     &pDirectDraw->dwNumFourCC,
-                                                     NULL);
-        if (!success)
+        DPRINT1("Warring no dxg.sys in ReactOS");
+        Status = STATUS_DLL_NOT_FOUND;
+    }
+    else
+    {
+        /* import DxDdStartupDxGraphics and  DxDdCleanupDxGraphics */
+        gpfnStartupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdStartupDxGraphics");
+        gpfnCleanupDxGraphics = EngFindImageProcAddress(ghDxGraphics,"DxDdCleanupDxGraphics");
+
+        if ((gpfnStartupDxGraphics) &&
+            (gpfnCleanupDxGraphics))
         {
-            DPRINT1("DrvGetDirectDrawInfo  frist call fail\n");
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
+            /* Setup driver data for activate the dx interface */
+            DxEngDrv.iDriverVersion = DDI_DRIVER_VERSION_NT5_01;
+            DxEngDrv.pdrvfn = &gaEngFuncs;
+            DxEngDrv.c = gcEngFuncs;
+
+            Status = gpfnStartupDxGraphics ( sizeof(DRVENABLEDATA),
+                                             &DxEngDrv,
+                                             sizeof(DRVENABLEDATA),
+                                             &DxgDrv,
+                                             &gdwDirectDrawContext,
+                                             Proc );
         }
 
-
-        /* The driver are not respnose to alloc the memory for pvmList
-         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-         */
-        if (pDirectDraw->dwNumHeaps != 0)
+        /* check if we manger loading the data and execute the dxStartupDxGraphics and it susscess */
+        if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Setup pvmList\n");
-            pDirectDraw->pvmList = (PVIDEOMEMORY) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumHeaps * sizeof(VIDEOMEMORY), TAG_DXPVMLIST);
-            if (pDirectDraw->pvmList == NULL)
+            gpfnStartupDxGraphics = NULL;
+            gpfnCleanupDxGraphics = NULL;
+            EngUnloadImage( ghDxGraphics);
+            ghDxGraphics = NULL;
+            DPRINT1("Warring no init of DirectX graphic interface");
+        }
+        else
+        {
+            /* Sort the drv functions list in index order, this allown us doing, smaller optimze
+             * in api that are redirect to dx.sys
+             */
+
+            PDRVFN lstDrvFN = DxgDrv.pdrvfn;
+            INT t;
+            for (t=0;t<=DXG_INDEX_DxDdIoctl;t++)
             {
-                DPRINT1("pvmList memmery alloc fail\n");
-                return FALSE;
+                gpDxFuncs[lstDrvFN[t].iFunc].iFunc =lstDrvFN[t].iFunc;
+                gpDxFuncs[lstDrvFN[t].iFunc].pfn =lstDrvFN[t].pfn;
             }
+            DPRINT1("DirectX interface is Activated");
         }
-
-        /* The driver are not respnose to alloc the memory for pdwFourCC
-         * but it is win32k responsible todo, Windows 9x it is gdi32.dll
-         */
-
-        if (pDirectDraw->dwNumFourCC != 0)
-        {
-            DPRINT1("Setup pdwFourCC\n");
-            pDirectDraw->pdwFourCC = (LPDWORD) ExAllocatePoolWithTag(PagedPool, pDirectDraw->dwNumFourCC * sizeof(DWORD), TAG_DXFOURCC);
-
-            if (pDirectDraw->pdwFourCC == NULL)
-            {
-                DPRINT1("pdwFourCC memmery alloc fail\n");
-                return FALSE;
-            }
-        }
-        success = pDirectDraw->DrvGetDirectDrawInfo( pDirectDraw->Global.dhpdev,
-                                                     &HalInfo,
-                                                     &pDirectDraw->dwNumHeaps,
-                                                     pDirectDraw->pvmList,
-                                                     &pDirectDraw->dwNumFourCC,
-                                                     pDirectDraw->pdwFourCC);
-        if (!success)
-        {
-            DPRINT1("DrvGetDirectDrawInfo  second call fail\n");
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-
-
-        /* We need now convert the DD_HALINFO we got, it can be NT4 driver we
-         * loading ReactOS supporting NT4 and higher to be loading.so we make
-         * the HALInfo compatible here so we can easy pass it to gdi32.dll
-         * without converting it later
-        */
-
-        if ((HalInfo.dwSize != sizeof(DD_HALINFO)) &&
-            (HalInfo.dwSize != sizeof(DD_HALINFO_V4)))
-        {
-            DPRINT1(" Fail not vaild driver DD_HALINFO struct found\n");
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-
-        if (HalInfo.dwSize != sizeof(DD_HALINFO))
-        {
-            if (HalInfo.dwSize == sizeof(DD_HALINFO_V4))
-            {
-                /* NT4 Compatible */
-                DPRINT1("Got DD_HALINFO_V4 sturct we convert it to DD_HALINFO \n");
-                HalInfo.dwSize = sizeof(DD_HALINFO);
-                HalInfo.lpD3DGlobalDriverData = NULL;
-                HalInfo.lpD3DHALCallbacks = NULL;
-                HalInfo.lpD3DBufCallbacks = NULL;
-            }
-            else
-            {
-                /* Unknown version found */
-                DPRINT1(" Fail : did not get DD_HALINFO size \n");
-                GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return FALSE;
-            }
-        }
-        /* Copy it to user mode pointer the data */
-        RtlCopyMemory(&pDirectDraw->Hal, &HalInfo, sizeof(DD_HALINFO));
+        /* return the status */
     }
 
-    DPRINT1("Trying EnableDirectDraw the driver\n");
-
-    success = pDirectDraw->EnableDirectDraw( pDirectDraw->Global.dhpdev,
-                                             &pDirectDraw->DD,
-                                             &pDirectDraw->Surf,
-                                             &pDirectDraw->Pal);
-
-    if (!success)
-    {
-        DPRINT1("EnableDirectDraw call fail\n");
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    return TRUE;
+    return Status;
 }
 
+/************************************************************************/
+/* DirectX graphic/video driver loading cleanup ends here               */
+/************************************************************************/
 
-/* NtGdiDdCreateDirectDrawObject is finish and works as it should
- * it maybe have some memory leack or handler leack in this code
- * if you found any case you maybe think it leacks the handler
- * or memory please tell me, before you start fixing the code
- * Magnus Olsen
- */
-HANDLE STDCALL
+
+
+/************************************************************************/
+/* NtGdiDdCreateDirectDrawObject                                        */
+/************************************************************************/
+HANDLE
+STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
-    DC *pDC;
-    HANDLE hDirectDraw;
-    PDD_DIRECTDRAW pDirectDraw;
 
-    /* Create a hdc if we do not have one */
-    if (hdc == NULL)
+    PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject = NULL;
+    NTSTATUS Status;
+    PEPROCESS Proc = NULL;
+    INT i=0;
+
+    /* FIXME get the process data */
+    /* FIXME this code should be add where the driver being load */
+    Status = DxDdStartupDxGraphics(0,NULL,0,NULL,NULL, Proc);
+    if (!NT_SUCCESS(Status))
     {
-       return NULL;
+        DPRINT1("Warring : Fail to statup the directx interface");
+        return 0;
     }
 
-    /* Look the hdc to gain the internal struct */
-    pDC = DC_LockDc(hdc);
-    if (!pDC)
+    /* This is in correct place */
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateDirectDrawObject, pfnDdCreateDirectDrawObject);
+
+    if (pfnDdCreateDirectDrawObject == NULL)
     {
-        return NULL;
-    }
-
-    /* test see if drv got a dx interface or not */
-    if  ( ( pDC->DriverFunctions.DisableDirectDraw == NULL) ||
-          ( pDC->DriverFunctions.EnableDirectDraw == NULL))
-    {
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    /* alloc and lock  the stucrt */
-    hDirectDraw = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DIRECTDRAW);
-    if (!hDirectDraw)
-    {
-        /* No more memmory */
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
-    if (!pDirectDraw)
-    {
-        /* invalid handle */
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    /* setup the internal stuff */
-    pDirectDraw->Global.dhpdev = pDC->PDev;
-    pDirectDraw->Local.lpGbl = &pDirectDraw->Global;
-
-    pDirectDraw->DrvGetDirectDrawInfo = pDC->DriverFunctions.GetDirectDrawInfo;
-    pDirectDraw->DrvDisableDirectDraw = pDC->DriverFunctions.DisableDirectDraw;
-    pDirectDraw->EnableDirectDraw = pDC->DriverFunctions.EnableDirectDraw;
-
-    if (intEnableDriver(pDirectDraw) == FALSE)
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        DC_UnlockDc(pDC);
-        return NULL;
-    }
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    DC_UnlockDc(pDC);
-    return hDirectDraw;
-}
-
-
-/* NtGdiDdCreateDirectDrawObject is finish and works as it should
- * it maybe have some memory leack or handler leack in this code
- * if you found any case you maybe think it leacks the handler
- * or memory please tell me, before you start fixing the code
- * Magnus Olsen
- */
-
-BOOL STDCALL
-NtGdiDdQueryDirectDrawObject(
-    HANDLE hDirectDrawLocal,
-    DD_HALINFO  *pHalInfo,
-    DWORD *pCallBackFlags,
-    LPD3DNTHAL_CALLBACKS puD3dCallbacks,
-    LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
-    PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
-    LPDDSURFACEDESC puD3dTextureFormats,
-    DWORD *puNumHeaps,
-    VIDEOMEMORY *puvmList,
-    DWORD *puNumFourCC,
-    DWORD *puFourCC
-)
-{
-    PDD_DIRECTDRAW pDirectDraw;
-    NTSTATUS Status = FALSE;
-    BOOL Ret=FALSE;
-    LPD3DNTHAL_GLOBALDRIVERDATA pD3dDriverData;
-
-    if (hDirectDrawLocal == NULL)
-    {
-       return FALSE;
-    }
-
-    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
-                                 GDI_OBJECT_TYPE_DIRECTDRAW);
-    if (!pDirectDraw)
-    {
-        return FALSE;
-    }
-
-    /*
-     * Get pHalInfo
-     */
-    if (pHalInfo != NULL)
-    {
-        _SEH_TRY
-        {
-            ProbeForWrite(pHalInfo,  sizeof(DD_HALINFO), 1);
-            RtlCopyMemory(pHalInfo,&pDirectDraw->Hal, sizeof(DD_HALINFO));
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-    }
-    else
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    /*
-     * Get pCallBackFlags
-     */
-    if (pCallBackFlags != NULL)
-    {
-        _SEH_TRY
-        {
-            ProbeForWrite(pCallBackFlags,  sizeof(DWORD)*3, 1);
-            pCallBackFlags[0]=pDirectDraw->DD.dwFlags;
-            pCallBackFlags[1]=pDirectDraw->Surf.dwFlags;
-            pCallBackFlags[2]=pDirectDraw->Pal.dwFlags;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-    }
-    else
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    /*
-     * Get puD3dCallbacks
-     */
-    if ((puD3dCallbacks) &&
-        (pDirectDraw->Hal.lpD3DHALCallbacks))
-    {
-        _SEH_TRY
-        {
-            ProbeForWrite(puD3dCallbacks,  sizeof(D3DNTHAL_CALLBACKS), 1);
-            RtlCopyMemory( puD3dCallbacks, pDirectDraw->Hal.lpD3DHALCallbacks, sizeof( D3DNTHAL_CALLBACKS ) );
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-    }
-    else
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    /*
-     * Get lpD3DGlobalDriverData
-     */
-    if ((puD3dDriverData) &&
-        (pDirectDraw->Hal.lpD3DGlobalDriverData != NULL))
-    {
-        /* Get D3dDriverData */
-        _SEH_TRY
-        {
-            ProbeForWrite(puD3dDriverData,  sizeof(D3DNTHAL_GLOBALDRIVERDATA), 1);
-            RtlCopyMemory( puD3dDriverData, pDirectDraw->Hal.lpD3DGlobalDriverData, sizeof(D3DNTHAL_GLOBALDRIVERDATA));
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-
-        /* Get TextureFormats */
-        pD3dDriverData =pDirectDraw->Hal.lpD3DGlobalDriverData;
-        if ((puD3dTextureFormats) &&
-            (pD3dDriverData->dwNumTextureFormats>0) &&
-            (pD3dDriverData->lpTextureFormats))
-        {
-            DWORD Size = sizeof(DDSURFACEDESC) * pD3dDriverData->dwNumTextureFormats;
-            _SEH_TRY
-            {
-                ProbeForWrite(puD3dTextureFormats, Size, 1);
-                RtlCopyMemory( puD3dTextureFormats, pD3dDriverData->lpTextureFormats, Size);
-            }
-            _SEH_HANDLE
-            {
-                Status = _SEH_GetExceptionCode();
-            }
-            _SEH_END;
-
-            if(!NT_SUCCESS(Status))
-            {
-                SetLastNtError(Status);
-                GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-                return FALSE;
-            }
-        }
-    }
-    else
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    /*Get D3dBufferCallbacks */
-    if ( (puD3dBufferCallbacks) &&
-         (pDirectDraw->Hal.lpD3DBufCallbacks))
-    {
-        _SEH_TRY
-        {
-            ProbeForWrite(puD3dBufferCallbacks,  sizeof(DD_D3DBUFCALLBACKS), 1);
-            RtlCopyMemory( puD3dBufferCallbacks, pDirectDraw->Hal.lpD3DBufCallbacks, sizeof(DD_D3DBUFCALLBACKS));
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-        if(!NT_SUCCESS(Status))
-        {
-            SetLastNtError(Status);
-            GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-            return FALSE;
-        }
-    }
-    else
-    {
-        GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-        return FALSE;
-    }
-
-    /* Get puNumFourCC and dwNumFourCC */
-    _SEH_TRY
-    {
-        ProbeForWrite(puNumFourCC, sizeof(DWORD), 1);
-        *puNumFourCC = pDirectDraw->dwNumFourCC;
-
-        if ((pDirectDraw->pdwFourCC) &&
-            (puFourCC))
-        {
-            ProbeForWrite(puFourCC, sizeof(DWORD) * pDirectDraw->dwNumFourCC, 1);
-            RtlCopyMemory( puFourCC, pDirectDraw->pdwFourCC, sizeof(DWORD) * pDirectDraw->dwNumFourCC);
-        }
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-    }
-    else
-    {
-        Ret = TRUE;
-    }
-    return Ret;
-}
-
-
-BOOL STDCALL
-NtGdiDdDeleteDirectDrawObject( HANDLE hDirectDrawLocal)
-{
-    DPRINT1("NtGdiDdDeleteDirectDrawObject\n");
-    if (hDirectDrawLocal == NULL)
-    {
-        return FALSE;
-    }
-
-    return GDIOBJ_FreeObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-}
-
-
-BOOL STDCALL NtGdiDdReenableDirectDrawObject(
-    HANDLE hDirectDrawLocal,
-    BOOL *pubNewMode
-)
-{
-    BOOL Ret=FALSE;
-    NTSTATUS Status = FALSE;
-    PDD_DIRECTDRAW pDirectDraw;
-
-    if (hDirectDrawLocal == NULL)
-    {
-       return Ret;
-    }
-
-    pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
-                                 GDI_OBJECT_TYPE_DIRECTDRAW);
-
-    if (!pDirectDraw)
-    {
-        return Ret;
-    }
-
-    /*
-     * FIXME detect mode change thic code maybe are not correct
-     * if we call on intEnableDriver it will cause some memory leak
-     * we need free the alloc memory before we call on it
-     */
-    Ret = intEnableDriver(pDirectDraw);
-
-    _SEH_TRY
-    {
-        ProbeForWrite(pubNewMode, sizeof(BOOL), 1);
-        *pubNewMode = Ret;
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if(!NT_SUCCESS(Status))
-    {
-        SetLastNtError(Status);
-        return Ret;
-    }
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-    return Ret;
-
-}
-
-
-
-DWORD STDCALL NtGdiDdGetDriverInfo(
-    HANDLE hDirectDrawLocal,
-    PDD_GETDRIVERINFODATA puGetDriverInfoData)
-
-{
-    DWORD  ddRVal = 0;
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal,
-                                                GDI_OBJECT_TYPE_DIRECTDRAW);
-
-    DPRINT1("NtGdiDdGetDriverInfo\n");
-
-    if (pDirectDraw == NULL)
-    {
+        DPRINT1("Warring no pfnDdCreateDirectDrawObject");
         return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    /* it exsist two version of NtGdiDdGetDriverInfo we need check for both flags */
-    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFOSET))
-         ddRVal++;
+    DPRINT1("Calling on dxg.sys DdCreateDirectDrawObject");
+    return pfnDdCreateDirectDrawObject(hdc);
 
-    if (!(pDirectDraw->Hal.dwFlags & DDHALINFO_GETDRIVERINFO2))
-         ddRVal++;
+}
 
-    /* Now we are doing the call to drv DrvGetDriverInfo */
-    if   (ddRVal == 2)
+/*++
+* @name NtGdiDxgGenericThunk
+* @implemented
+*
+* The function NtGdiDxgGenericThunk redirect dx call to other thing.
+* from dxg.sys
+*
+* @param ULONG_PTR ulIndex
+* The functions we want redirct
+*
+* @param ULONG_PTR ulHandle
+* Unknown
+*
+* @param SIZE_T *pdwSizeOfPtr1
+* Unknown
+*
+* @param PVOID pvPtr1
+* Unknown
+*
+* @param SIZE_T *pdwSizeOfPtr2
+* Unknown
+*
+* @param PVOID pvPtr2
+* Unknown
+*
+* @return 
+* always return DDHAL_DRIVER_NOTHANDLED
+*
+* @remarks.
+* dxg.sys NtGdiDxgGenericThunk call are redirect to dxg.sys
+* This api are not longer use in Windows NT 2000/XP/2003
+*
+*--*/
+DWORD
+STDCALL
+NtGdiDxgGenericThunk(ULONG_PTR ulIndex,
+                     ULONG_PTR ulHandle,
+                     SIZE_T *pdwSizeOfPtr1,
+                     PVOID pvPtr1,
+                     SIZE_T *pdwSizeOfPtr2,
+                     PVOID pvPtr2)
+{
+    PGD_DXGENERICTRUNK pfnDxgGenericThunk = (PGD_DXGENERICTRUNK)gpDxFuncs[DXG_INDEX_DxDxgGenericThunk].pfn;
+
+    if (pfnDxgGenericThunk == NULL)
     {
-        DPRINT1("NtGdiDdGetDriverInfo DDHAL_DRIVER_NOTHANDLED");
-        ddRVal = DDHAL_DRIVER_NOTHANDLED;
+        DPRINT1("Warring no pfnDxgGenericThunk");
+        return DDHAL_DRIVER_NOTHANDLED;
     }
-    else
+
+    DPRINT1("Calling on dxg.sys pfnDxgGenericThunk");
+    return pfnDxgGenericThunk(ulIndex, ulHandle, pdwSizeOfPtr1, pvPtr1, pdwSizeOfPtr2, pvPtr2);
+}
+
+/************************************************************************/
+/* NtGdiDdGetDriverState                                                */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdGetDriverState(PDD_GETDRIVERSTATEDATA pdata)
+{
+    PGD_DDGETDRIVERSTATE pfnDdGetDriverState = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverState, pfnDdGetDriverState);
+
+    if (pfnDdGetDriverState == NULL)
     {
-        ddRVal = pDirectDraw->Hal.GetDriverInfo(puGetDriverInfoData);
+        DPRINT1("Warring no pfnDdGetDriverState");
+        return DDHAL_DRIVER_NOTHANDLED;
     }
 
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys DdGetDriverState");
+    return pfnDdGetDriverState(pdata);
 }
 
-
-
-
-DWORD STDCALL NtGdiDdUnlock(
-    HANDLE hSurface,
-    PDD_UNLOCKDATA puUnlockData
-)
+/************************************************************************/
+/* NtGdiDdColorControl                                                  */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdColorControl(HANDLE hSurface,
+                    PDD_COLORCONTROLDATA puColorControlData)
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DDCOLORCONTROL pfnDdColorControl = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdUnlock\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdColorControl, pfnDdColorControl);
 
-	/* backup the orignal PDev and info */
-	lgpl = puUnlockData->lpDD;
+    if (pfnDdColorControl == NULL)
+    {
+        DPRINT1("Warring no pfnDdColorControl");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puUnlockData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_UNLOCK))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.Unlock(puUnlockData);
-
-	/* But back the orignal PDev */
-	puUnlockData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-	return ddRVal;
+    DPRINT1("Calling on dxg.sys DdColorControl");
+    return pfnDdColorControl(hSurface,puColorControlData);
 }
 
-
-
-DWORD STDCALL NtGdiDdSetColorKey(
-    HANDLE hSurface,
-    PDD_SETCOLORKEYDATA puSetColorKeyData
+/************************************************************************/
+/* NtGdiDdCreateSurfaceObject                                           */
+/************************************************************************/
+HANDLE
+STDCALL
+NtGdiDdCreateSurfaceObject(HANDLE hDirectDrawLocal,
+                           HANDLE hSurface,
+                           PDD_SURFACE_LOCAL puSurfaceLocal,
+                           PDD_SURFACE_MORE puSurfaceMore,
+                           PDD_SURFACE_GLOBAL puSurfaceGlobal,
+                           BOOL bComplete
 )
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDCREATESURFACEOBJECT pfnDdCreateSurfaceObject = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdSetColorKey\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdCreateSurfaceObject, pfnDdCreateSurfaceObject);
 
-	/* backup the orignal PDev and info */
-	lgpl = puSetColorKeyData->lpDD;
+    if (pfnDdCreateSurfaceObject == NULL)
+    {
+        DPRINT1("Warring no pfnDdCreateSurfaceObject");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puSetColorKeyData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_SETCOLORKEY))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.SetColorKey(puSetColorKeyData);
-
-	/* But back the orignal PDev */
-	puSetColorKeyData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys pfnDdCreateSurfaceObject");
+    return pfnDdCreateSurfaceObject(hDirectDrawLocal, hSurface, puSurfaceLocal, puSurfaceMore, puSurfaceGlobal, bComplete);
 }
 
-
-DWORD STDCALL NtGdiDdAddAttachedSurface(
-    HANDLE hSurface,
-    HANDLE hSurfaceAttached,
-    PDD_ADDATTACHEDSURFACEDATA puAddAttachedSurfaceData
-)
+/************************************************************************/
+/* NtGdiDdDeleteDirectDrawObject                                        */
+/************************************************************************/
+BOOL
+STDCALL 
+NtGdiDdDeleteDirectDrawObject(HANDLE hDirectDrawLocal)
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDDELETEDIRECTDRAWOBJECT pfnDdDeleteDirectDrawObject = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceAttached, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdAddAttachedSurface\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDeleteDirectDrawObject, pfnDdDeleteDirectDrawObject);
 
-	/* backup the orignal PDev and info */
-	lgpl = puAddAttachedSurfaceData->lpDD;
+    if (pfnDdDeleteDirectDrawObject == NULL)
+    {
+        DPRINT1("Warring no pfnDdDeleteDirectDrawObject");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puAddAttachedSurfaceData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_ADDATTACHEDSURFACE))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.AddAttachedSurface(puAddAttachedSurfaceData);
-
-	/* But back the orignal PDev */
-	puAddAttachedSurfaceData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys pfnDdDeleteDirectDrawObject");
+    return pfnDdDeleteDirectDrawObject(hDirectDrawLocal);
 }
 
-DWORD STDCALL NtGdiDdGetBltStatus(
-    HANDLE hSurface,
-    PDD_GETBLTSTATUSDATA puGetBltStatusData
-)
+/************************************************************************/
+/* NtGdiDdDeleteSurfaceObject                                           */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdDeleteSurfaceObject(HANDLE hSurface)
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDDELETESURFACEOBJECT pfnDdDeleteSurfaceObject = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdGetBltStatus\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdDeleteSurfaceObject, pfnDdDeleteSurfaceObject);
 
-	/* backup the orignal PDev and info */
-	lgpl = puGetBltStatusData->lpDD;
+    if (pfnDdDeleteSurfaceObject == NULL)
+    {
+        DPRINT1("Warring no pfnDdDeleteSurfaceObject");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puGetBltStatusData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_GETBLTSTATUS))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.GetBltStatus(puGetBltStatusData);
-
-	/* But back the orignal PDev */
-	puGetBltStatusData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys DdDeleteSurfaceObject");
+    return pfnDdDeleteSurfaceObject(hSurface);
 }
 
-DWORD STDCALL NtGdiDdGetFlipStatus(
-    HANDLE hSurface,
-    PDD_GETFLIPSTATUSDATA puGetFlipStatusData
-)
+/************************************************************************/
+/* NtGdiDdDeleteSurfaceObject                                           */
+/************************************************************************/
+BOOL
+STDCALL 
+NtGdiDdQueryDirectDrawObject(HANDLE hDirectDrawLocal,
+                             DD_HALINFO  *pHalInfo,
+                             DWORD *pCallBackFlags,
+                             LPD3DNTHAL_CALLBACKS puD3dCallbacks,
+                             LPD3DNTHAL_GLOBALDRIVERDATA puD3dDriverData,
+                             PDD_D3DBUFCALLBACKS puD3dBufferCallbacks,
+                             LPDDSURFACEDESC puD3dTextureFormats,
+                             DWORD *puNumHeaps,
+                             VIDEOMEMORY *puvmList,
+                             DWORD *puNumFourCC,
+                             DWORD *puFourCC)
 {
-    DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDQUERYDIRECTDRAWOBJECT pfnDdQueryDirectDrawObject = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdGetFlipStatus\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdQueryDirectDrawObject, pfnDdQueryDirectDrawObject);
 
-	/* backup the orignal PDev and info */
-	lgpl = puGetFlipStatusData->lpDD;
+    if (pfnDdQueryDirectDrawObject == NULL)
+    {
+        DPRINT1("Warring no pfnDdQueryDirectDrawObject");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* use our cache version instead */
-	puGetFlipStatusData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_GETFLIPSTATUS))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.GetFlipStatus(puGetFlipStatusData);
-
-	/* But back the orignal PDev */
-	puGetFlipStatusData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
-}
-
-DWORD STDCALL NtGdiDdUpdateOverlay(
-    HANDLE hSurfaceDestination,
-    HANDLE hSurfaceSource,
-    PDD_UPDATEOVERLAYDATA puUpdateOverlayData
-)
-{
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
-
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-    DPRINT1("NtGdiDdUpdateOverlay\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
-
-	/* backup the orignal PDev and info */
-	lgpl = puUpdateOverlayData->lpDD;
-
-	/* use our cache version instead */
-	puUpdateOverlayData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_UPDATEOVERLAY))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.UpdateOverlay(puUpdateOverlayData);
-
-	/* But back the orignal PDev */
-	puUpdateOverlayData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
-}
-
-DWORD STDCALL NtGdiDdSetOverlayPosition(
-    HANDLE hSurfaceSource,
-    HANDLE hSurfaceDestination,
-    PDD_SETOVERLAYPOSITIONDATA puSetOverlayPositionData
-)
-{
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
-
-    PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hSurfaceDestination, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-    DPRINT1("NtGdiDdSetOverlayPosition\n");
-#endif
-	if (pDirectDraw == NULL)
-		return DDHAL_DRIVER_NOTHANDLED;
-
-	/* backup the orignal PDev and info */
-	lgpl = puSetOverlayPositionData->lpDD;
-
-	/* use our cache version instead */
-	puSetOverlayPositionData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-	if (!(pDirectDraw->Surf.dwFlags & DDHAL_SURFCB32_SETOVERLAYPOSITION))
-		ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	else
-        ddRVal = pDirectDraw->Surf.SetOverlayPosition(puSetOverlayPositionData);
-
-	/* But back the orignal PDev */
-	puSetOverlayPositionData->lpDD = lgpl;
-
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-    return ddRVal;
+    DPRINT1("Calling on dxg.sys pfnDdQueryDirectDrawObject");
+    return pfnDdQueryDirectDrawObject(hDirectDrawLocal, pHalInfo, pCallBackFlags, puD3dCallbacks, puD3dDriverData, 
+                                      puD3dBufferCallbacks, puD3dTextureFormats, puNumHeaps, puvmList, puNumFourCC, puFourCC);
 }
 
 
 /************************************************************************/
-/* SURFACE OBJECT                                                       */
+/* NtGdiDdReenableDirectDrawObject                                      */
 /************************************************************************/
-
-BOOL INTERNAL_CALL
-DDSURF_Cleanup(PVOID pDDSurf)
+BOOL
+STDCALL
+NtGdiDdReenableDirectDrawObject(HANDLE hDirectDrawLocal,
+                                BOOL *pubNewMode)
 {
-	/* FIXME: implement
-	 * PDD_SURFACE pDDSurf = PVOID pDDSurf
-	 */
-#ifdef DX_DEBUG
-    DPRINT1("DDSURF_Cleanup\n");
-#endif
-	return TRUE;
+    PGD_DXDDREENABLEDIRECTDRAWOBJECT pfnDdReenableDirectDrawObject = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReenableDirectDrawObject, pfnDdReenableDirectDrawObject);
+
+    if (pfnDdReenableDirectDrawObject == NULL)
+    {
+        DPRINT1("Warring no pfnDdReenableDirectDrawObject");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdReenableDirectDrawObject");
+    return pfnDdReenableDirectDrawObject(hDirectDrawLocal, pubNewMode);
 }
-
-HANDLE STDCALL NtGdiDdCreateSurfaceObject(
-    HANDLE hDirectDrawLocal,
-    HANDLE hSurface,
-    PDD_SURFACE_LOCAL puSurfaceLocal,
-    PDD_SURFACE_MORE puSurfaceMore,
-    PDD_SURFACE_GLOBAL puSurfaceGlobal,
-    BOOL bComplete
-)
-{
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-    PDD_SURFACE pSurface;
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdCreateSurfaceObject\n");
-#endif
-	if (!pDirectDraw)
-		return NULL;
-
-	if (!hSurface)
-		hSurface = GDIOBJ_AllocObj(DdHandleTable, GDI_OBJECT_TYPE_DD_SURFACE);
-
-	pSurface = GDIOBJ_LockObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
-
-	if (!pSurface)
-	{
-		GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-		return NULL;
-	}
-
-	pSurface->hDirectDrawLocal = hDirectDrawLocal;
-
-	RtlMoveMemory(&pSurface->Local, puSurfaceLocal, sizeof(DD_SURFACE_LOCAL));
-	RtlMoveMemory(&pSurface->More, puSurfaceMore, sizeof(DD_SURFACE_MORE));
-	RtlMoveMemory(&pSurface->Global, puSurfaceGlobal, sizeof(DD_SURFACE_GLOBAL));
-	pSurface->Local.lpGbl = &pSurface->Global;
-	pSurface->Local.lpSurfMore = &pSurface->More;
-	pSurface->Local.lpAttachList = NULL;
-	pSurface->Local.lpAttachListFrom = NULL;
-	pSurface->More.lpVideoPort = NULL;
-	// FIXME: figure out how to use this
-	pSurface->bComplete = bComplete;
-
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pSurface);
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-	return hSurface;
-}
-
-BOOL STDCALL NtGdiDdDeleteSurfaceObject(
-    HANDLE hSurface
-)
-{
-#ifdef DX_DEBUG
-    DPRINT1("NtGdiDdDeleteSurfaceObject\n");
-#endif
-    /* FIXME add right GDI_OBJECT_TYPE_ for everthing for now
-       we are using same type */
-	/* return GDIOBJ_FreeObj(hSurface, GDI_OBJECT_TYPE_DD_SURFACE); */
-	return GDIOBJ_FreeObj(DdHandleTable, hSurface, GDI_OBJECT_TYPE_DD_SURFACE);
-
-}
-
 
 
 /************************************************************************/
-/* DIRECT DRAW SURFACR END                                                   */
+/* NtGdiDdGetDriverInfo                                                 */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdGetDriverInfo(HANDLE hDirectDrawLocal,
+                     PDD_GETDRIVERINFODATA puGetDriverInfoData)
+
+{
+    PGD_DXDDGETDRIVERINFO pfnDdGetDriverInfo = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDriverInfo, pfnDdGetDriverInfo);
+
+    if (pfnDdGetDriverInfo == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDriverInfo");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdGetDriverInfo");
+    return pfnDdGetDriverInfo(hDirectDrawLocal, puGetDriverInfoData);
+}
+
+
+/************************************************************************/
+/* NtGdiDdGetAvailDriverMemory                                          */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdGetAvailDriverMemory(HANDLE hDirectDrawLocal,
+                            PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData)
+{
+    PGD_DXDDGETAVAILDRIVERMEMORY pfnDdGetAvailDriverMemory = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetAvailDriverMemory, pfnDdGetAvailDriverMemory);
+
+    if (pfnDdGetAvailDriverMemory == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetAvailDriverMemory");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdGetAvailDriverMemory");
+    return pfnDdGetAvailDriverMemory(hDirectDrawLocal, puGetAvailDriverMemoryData);
+}
+
+
+/************************************************************************/
+/* NtGdiDdSetExclusiveMode                                              */
 /************************************************************************/
 
-
-/*
-BOOL STDCALL NtGdiDdAttachSurface(
-    HANDLE hSurfaceFrom,
-    HANDLE hSurfaceTo
-)
+DWORD
+STDCALL
+NtGdiDdSetExclusiveMode(HANDLE hDirectDraw,
+                        PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData)
 {
-	PDD_SURFACE pSurfaceFrom = GDIOBJ_LockObj(hSurfaceFrom, GDI_OBJECT_TYPE_DD_SURFACE);
-	if (!pSurfaceFrom)
-		return FALSE;
-	PDD_SURFACE pSurfaceTo = GDIOBJ_LockObj(hSurfaceTo, GDI_OBJECT_TYPE_DD_SURFACE);
-	if (!pSurfaceTo)
-	{
-		GDIOBJ_UnlockObjByPtr(pSurfaceFrom);
-		return FALSE;
-	}
+    PGD_DXDDSETEXCLUSIVEMODE pfnDdSetExclusiveMode = NULL;
+    INT i;
 
-	if (pSurfaceFrom->Local.lpAttachListFrom)
-	{
-		pSurfaceFrom->Local.lpAttachListFrom = pSurfaceFrom->AttachListFrom;
-	}
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetExclusiveMode, pfnDdSetExclusiveMode);
 
-	GDIOBJ_UnlockObjByPtr(pSurfaceFrom);
-	GDIOBJ_UnlockObjByPtr(pSurfaceTo);
-	return TRUE;
-}
-*/
+    if (pfnDdSetExclusiveMode == NULL)
+    {
+        DPRINT1("Warring no pfnDdSetExclusiveMode");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-DWORD STDCALL NtGdiDdGetAvailDriverMemory(
-    HANDLE hDirectDrawLocal,
-    PDD_GETAVAILDRIVERMEMORYDATA puGetAvailDriverMemoryData
-)
-{
-	DWORD  ddRVal = DDHAL_DRIVER_NOTHANDLED;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    DPRINT1("Calling on dxg.sys pfnDdSetExclusiveMode");
+    return pfnDdSetExclusiveMode(hDirectDraw, puSetExclusiveModeData);
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDrawLocal, GDI_OBJECT_TYPE_DIRECTDRAW);
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdGetAvailDriverMemory\n");
-#endif
-
-	/* backup the orignal PDev and info */
-	lgpl = puGetAvailDriverMemoryData->lpDD;
-
-	/* use our cache version instead */
-	puGetAvailDriverMemoryData->lpDD = &pDirectDraw->Global;
-
-	/* make the call */
-   // ddRVal = pDirectDraw->DdGetAvailDriverMemory(puGetAvailDriverMemoryData);
-
-	GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
-
-
-	/* But back the orignal PDev */
-	puGetAvailDriverMemoryData->lpDD = lgpl;
-
-	return ddRVal;
 }
 
 
-
-
-DWORD STDCALL NtGdiDdSetExclusiveMode(
-    HANDLE hDirectDraw,
-    PDD_SETEXCLUSIVEMODEDATA puSetExclusiveModeData
-)
+/************************************************************************/
+/* NtGdiDdFlipToGDISurface                                              */
+/************************************************************************/
+DWORD
+STDCALL
+NtGdiDdFlipToGDISurface(HANDLE hDirectDraw,
+                        PDD_FLIPTOGDISURFACEDATA puFlipToGDISurfaceData)
 {
-	DWORD  ddRVal;
-	PDD_DIRECTDRAW_GLOBAL lgpl;
+    PGD_DXDDFLIPTOGDISURFACE pfnDdFlipToGDISurface = NULL;
+    INT i;
 
-	PDD_DIRECTDRAW pDirectDraw = GDIOBJ_LockObj(DdHandleTable, hDirectDraw, GDI_OBJECT_TYPE_DIRECTDRAW);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdFlipToGDISurface, pfnDdFlipToGDISurface);
 
-#ifdef DX_DEBUG
-	DPRINT1("NtGdiDdSetExclusiveMode\n");
-#endif
+    if (pfnDdFlipToGDISurface == NULL)
+    {
+        DPRINT1("Warring no pfnDdFlipToGDISurface");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	/* backup the orignal PDev and info */
-	lgpl = puSetExclusiveModeData->lpDD;
+    DPRINT1("Calling on dxg.sys pfnDdFlipToGDISurface");
+    return pfnDdFlipToGDISurface(hDirectDraw, puFlipToGDISurfaceData);
 
-	/* use our cache version instead */
-	puSetExclusiveModeData->lpDD = &pDirectDraw->Global;
+}
 
-	/* make the call */
-    ddRVal = pDirectDraw->DdSetExclusiveMode(puSetExclusiveModeData);
+/************************************************************************/
+/* NtGdiDdGetDC                                                         */
+/************************************************************************/
+HDC
+STDCALL
+NtGdiDdGetDC(HANDLE hSurface,
+             PALETTEENTRY *puColorTable)
+{
+    PGD_DDGETDC pfnDdGetDC  = NULL;
+    INT i;
 
-    GDIOBJ_UnlockObjByPtr(DdHandleTable, pDirectDraw);
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDC, pfnDdGetDC);
 
-	/* But back the orignal PDev */
-	puSetExclusiveModeData->lpDD = lgpl;
+    if (pfnDdGetDC == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDC");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
 
-	return ddRVal;
+    DPRINT1("Calling on dxg.sys pfnDdGetDC");
+    return pfnDdGetDC(hSurface, puColorTable);
+}
+
+/************************************************************************/
+/* NtGdiDdGetDxHandle                                                   */
+/************************************************************************/
+HANDLE
+STDCALL
+NtGdiDdGetDxHandle(HANDLE hDirectDraw,
+                   HANDLE hSurface,
+                   BOOL bRelease)
+{
+    
+    PGD_DDGETDXHANDLE pfnDdGetDxHandle = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdGetDxHandle, pfnDdGetDxHandle);
+
+    if (pfnDdGetDxHandle == NULL)
+    {
+        DPRINT1("Warring no pfnDdGetDxHandle");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdGetDxHandle");
+    return pfnDdGetDxHandle(hDirectDraw, hSurface, bRelease);
+}
+
+
+/************************************************************************/
+/* NtGdiDdReleaseDC                                                     */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdReleaseDC(HANDLE hSurface)
+{
+    PGD_DDRELEASEDC pfnDdReleaseDC = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdReleaseDC, pfnDdReleaseDC);
+
+    if (pfnDdReleaseDC == NULL)
+    {
+        DPRINT1("Warring no pfnDdReleaseDC");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdReleaseDC");
+    return pfnDdReleaseDC(hSurface);
+}
+
+/************************************************************************/
+/* NtGdiDdResetVisrgn                                                   */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdResetVisrgn(HANDLE hSurface,
+                   HWND hwnd)
+{
+
+    PGD_DDRESTVISRGN pfnDdResetVisrgn = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdResetVisrgn, pfnDdResetVisrgn);
+
+    if (pfnDdResetVisrgn == NULL)
+    {
+        DPRINT1("Warring no pfnDdResetVisrgn");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdResetVisrgn");
+    return pfnDdResetVisrgn(hSurface, hwnd);
+}
+
+/************************************************************************/
+/* NtGdiDdSetGammaRamp                                                  */
+/************************************************************************/
+BOOL
+STDCALL
+NtGdiDdSetGammaRamp(HANDLE hDirectDraw,
+                    HDC hdc,
+                    LPVOID lpGammaRamp)
+{
+    PGD_DDSETGAMMARAMP pfnDdSetGammaRamp = NULL;
+    INT i;
+
+    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdSetGammaRamp, pfnDdSetGammaRamp);
+
+    if (pfnDdSetGammaRamp == NULL)
+    {
+        DPRINT1("Warring no pfnDdSetGammaRamp");
+        return DDHAL_DRIVER_NOTHANDLED;
+    }
+
+    DPRINT1("Calling on dxg.sys pfnDdSetGammaRamp");
+    return pfnDdSetGammaRamp(hDirectDraw, hdc, lpGammaRamp);
 }
 
 
