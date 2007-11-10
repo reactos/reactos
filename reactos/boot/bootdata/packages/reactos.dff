@@ -272,9 +272,9 @@ drivers\bus\acpi\acpi.sys                           2
 drivers\bus\isapnp\isapnp.sys                       2
 drivers\bus\pci\pci.sys                             2
 
-\drivers\directx\dxapi\dxapi.sys                    2
-drivers\directx\dxeng\dxeng.sys                     2
+drivers\directx\dxapi\dxapi.sys                     2
 drivers\directx\dxg\dxg.sys                         2
+drivers\directx\dxgthk\dxgthk.sys                   2
 
 drivers\filesystems\fs_rec\fs_rec.sys               2
 drivers\filesystems\msfs\msfs.sys                   2
