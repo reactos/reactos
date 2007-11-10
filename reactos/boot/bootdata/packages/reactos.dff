@@ -74,7 +74,7 @@ base\services\rpcss\rpcss.exe                       1
 base\services\tcpsvcs\tcpsvcs.exe                   1
 base\services\tcpsvcs\quotes                        5
 base\services\umpnpmgr\umpnpmgr.exe                 1
-base\services\audiosrv\audiosrv.exe			1
+base\services\audiosrv\audiosrv.exe                 1
 
 base\setup\setup\setup.exe                          1
 base\setup\vmwinst\vmwinst.exe                      1
@@ -101,6 +101,7 @@ base\system\smss\smss.exe                           1
 ; Dynamic Link Libraries
 dll\3rdparty\freetype\freetype.dll                  1
 dll\3rdparty\mesa32\mesa32.dll                      1
+dll\3rdparty\mesa32\dxtn.dll                        1   optional
 
 dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1
