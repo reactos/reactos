@@ -176,7 +176,7 @@ SetupDiCreateDeviceInfoListExW(
     DWORD size;
     DWORD rc;
     CONFIGRET cr;
-    HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;;
+    HDEVINFO ret = (HDEVINFO)INVALID_HANDLE_VALUE;
 
     TRACE("%s %p %s %p\n", debugstr_guid(ClassGuid), hwndParent,
         debugstr_w(MachineName), Reserved);
@@ -189,7 +189,15 @@ SetupDiCreateDeviceInfoListExW(
 
     size = FIELD_OFFSET(struct DeviceInfoSet, szData);
     if (MachineName)
-        size += (strlenW(MachineName) + 3) * sizeof(WCHAR);
+    {
+        SIZE_T len = strlenW(MachineName);
+        if (len >= SP_MAX_MACHINENAME_LENGTH - 4)
+        {
+            SetLastError(ERROR_INVALID_MACHINENAME);
+            goto cleanup;
+        }
+        size += (len + 3) * sizeof(WCHAR);
+    }
     list = MyMalloc(size);
     if (!list)
     {
@@ -893,6 +901,90 @@ DestroyDeviceInfoSet(struct DeviceInfoSet* list)
     CM_Disconnect_Machine(list->hMachine);
     DestroyClassInstallParams(&list->ClassInstallParams);
     return HeapFree(GetProcessHeap(), 0, list);
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInfoListDetailA  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInfoListDetailA(
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_LIST_DETAIL_DATA_A DevInfoData )
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+
+    TRACE("%p %p\n", DeviceInfoSet, DevInfoData);
+
+    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DevInfoData ||
+            DevInfoData->cbSize != sizeof(SP_DEVINFO_LIST_DETAIL_DATA_A))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    memcpy(
+        &DeviceInfoListDetailData->ClassGuid,
+        &list->ClassGuid,
+        sizeof(GUID));
+    DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
+    if (list->MachineName)
+    {
+        FIXME("Stub\n");
+        SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+        return FALSE;
+    }
+    else
+        DeviceInfoListDetailData->RemoteMachineName[0] = 0;
+
+    return TRUE;
+}
+
+/***********************************************************************
+ *		SetupDiGetDeviceInfoListDetailW  (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
+        HDEVINFO DeviceInfoSet,
+        PSP_DEVINFO_LIST_DETAIL_DATA_W DevInfoData )
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+
+    TRACE("%p %p\n", DeviceInfoSet, DevInfoData);
+
+    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DevInfoData ||
+            DevInfoData->cbSize != sizeof(SP_DEVINFO_LIST_DETAIL_DATA_W))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    memcpy(
+        &DeviceInfoListDetailData->ClassGuid,
+        &list->ClassGuid,
+        sizeof(GUID));
+    DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
+    if (list->MachineName)
+        strcpyW(DeviceInfoListDetailData->RemoteMachineName, list->MachineName + 2);
+    else
+        DeviceInfoListDetailData->RemoteMachineName[0] = 0;
+
+    return TRUE;
 }
 
 /***********************************************************************
@@ -1745,46 +1837,6 @@ SetupDiGetDeviceInfoListClass(
     else
     {
         memcpy(&ClassGuid, &list->ClassGuid, sizeof(GUID));
-
-        ret = TRUE;
-    }
-
-    TRACE("Returning %d\n", ret);
-    return ret;
-}
-
-/***********************************************************************
- *		SetupDiGetDeviceInfoListDetailW  (SETUPAPI.@)
- */
-BOOL WINAPI
-SetupDiGetDeviceInfoListDetailW(
-    IN HDEVINFO DeviceInfoSet,
-    OUT PSP_DEVINFO_LIST_DETAIL_DATA_W DeviceInfoListDetailData)
-{
-    struct DeviceInfoSet *list;
-    BOOL ret = FALSE;
-
-    TRACE("%p %p\n", DeviceInfoSet, DeviceInfoListDetailData);
-
-    if (!DeviceInfoSet)
-        SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
-        SetLastError(ERROR_INVALID_HANDLE);
-    else if (!DeviceInfoListDetailData)
-        SetLastError(ERROR_INVALID_PARAMETER);
-    else if (DeviceInfoListDetailData->cbSize != sizeof(SP_DEVINFO_LIST_DETAIL_DATA_W))
-        SetLastError(ERROR_INVALID_USER_BUFFER);
-    else
-    {
-        memcpy(
-            &DeviceInfoListDetailData->ClassGuid,
-            &list->ClassGuid,
-            sizeof(GUID));
-        DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
-        if (list->MachineName)
-            strcpyW(DeviceInfoListDetailData->RemoteMachineName, list->MachineName + 2);
-        else
-            DeviceInfoListDetailData->RemoteMachineName[0] = 0;
 
         ret = TRUE;
     }

@@ -39,7 +39,7 @@ static const WCHAR DeviceClasses[] = {'S','y','s','t','e','m','\\',
 
 typedef struct _MACHINE_INFO
 {
-    WCHAR szMachineName[MAX_PATH];
+    WCHAR szMachineName[SP_MAX_MACHINENAME_LENGTH];
     RPC_BINDING_HANDLE BindingHandle;
     HSTRING_TABLE StringTable;
     BOOL bLocal;
@@ -397,6 +397,11 @@ CONFIGRET WINAPI CM_Connect_MachineW(
     else
     {
         pMachine->bLocal = FALSE;
+        if (wcslen(UNCServerName) >= SP_MAX_MACHINENAME_LENGTH - 1)
+        {
+            HeapFree(GetProcessHeap(), 0, pMachine);
+            return CR_INVALID_MACHINENAME;
+        }
         lstrcpyW(pMachine->szMachineName, UNCServerName);
 
         pMachine->StringTable = StringTableInitialize();
