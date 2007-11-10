@@ -180,7 +180,7 @@ ROSDATA VK_TO_WCHARS2 key_to_chars_2mod[] = {
   /* The numbers */
   { '1',         NOCAPS, {'&', '1'} },
   /* Specials */
-  /* Ctrl-_ generates US */
+  /* Ctrl-_ generates FR */
   { VK_OEM_5       ,NOCAPS, {'*',0xb5} }, /* œ */
   { VK_OEM_3       ,NOCAPS, {0xf9, '%'} }, /* ù */
   { VK_OEM_COMMA   ,NOCAPS, {',', '?'} },
@@ -257,10 +257,6 @@ ROSDATA VK_TO_WCHARS4 key_to_chars_4mod[] = {
 ROSDATA VK_TO_WCHARS5 key_to_chars_5mod[] = {
   /* x,x,      Normal, Shifted, Ctrl, Alt, C-S-x */
   /* Legacy Ascii generators */
-  //{ '2', NOCAPS, {'2', '@', WCH_NONE, 0} },
-  //{ '6', NOCAPS, {'6', '^', WCH_NONE, 0x1e /* RS */} },
-  //{ VK_OEM_MINUS, NOCAPS, {')', '°', WCH_NONE, 0x1f /* US */} },
-  //{ '5'  | KEXT , NOCAPS, {')', '°', '#' , 0x1f /* US */} },
   { '5' , 1  ,  {'(', '5', WCH_NONE , '[' , 0x1b} },
   { '6' , 1  ,  {'-', '6', WCH_NONE , '|' , 0x1f} },
   { '8' , 1  ,  {'_', '8', WCH_NONE , '\\' , 0x1c} },
@@ -437,6 +433,13 @@ ROSDATA VSC_LPWSTR extended_key_names[] = {
   { 0, NULL },
 };
 
+ROSDATA DEADKEY_LPWSTR dead_key_names[] = {
+    L"\x005e"	L"Circumflex",
+    L"\x007e"	L"Tilde",
+    L"\x0060"	L"Grave",
+    NULL
+};
+
 /* Finally, the master table */
 ROSDATA KBDTABLES keyboard_layout_table = {
   /* modifier assignments */
@@ -451,7 +454,7 @@ ROSDATA KBDTABLES keyboard_layout_table = {
   /* Key names */
   (VSC_LPWSTR *)key_names,
   (VSC_LPWSTR *)extended_key_names,
-  NULL, /* Dead key names */
+  dead_key_names, /* Dead key names */
 
   /* scan code to virtual key maps */
   scancode_to_vk,
