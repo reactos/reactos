@@ -278,7 +278,7 @@ InsertShellNewItems(HMENU hMenu, UINT idFirst, UINT idMenu, INewMenuImpl * This)
   szBuffer[199] = 0;
   mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STATE | MIIM_DATA;
   mii.fType = MFT_STRING;
-  mii.dwTypeData = szNew;
+  mii.dwTypeData = szBuffer;
   mii.cch = strlenW(mii.dwTypeData);
   mii.wID = idFirst++;
   InsertMenuItemW(hMenu, idMenu++, TRUE, &mii);
