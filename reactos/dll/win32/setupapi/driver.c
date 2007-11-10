@@ -737,7 +737,7 @@ SetupDiBuildDriverInfoList(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (list->HKLM != HKEY_LOCAL_MACHINE)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -759,7 +759,7 @@ SetupDiBuildDriverInfoList(
 
         if (DeviceInfoData)
         {
-            struct DeviceInfoElement *devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            struct DeviceInfo *devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
             if (!(devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
                 pDriverListHead = &devInfo->DriverListHead;
         }
@@ -789,7 +789,7 @@ SetupDiBuildDriverInfoList(
             WCHAR InfFileName[MAX_PATH];
             WCHAR InfFileSection[MAX_PATH];
             ULONG RequiredSize;
-            struct DeviceInfoElement *devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            struct DeviceInfo *devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
             struct InfFileDetails *infFileDetails = NULL;
             FILETIME DriverDate;
             LONG rc;
@@ -1217,7 +1217,7 @@ SetupDiDestroyDriverInfoList(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DriverType != SPDIT_CLASSDRIVER && DriverType != SPDIT_COMPATDRIVER)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1255,12 +1255,12 @@ SetupDiDestroyDriverInfoList(
         else
         {
             SP_DEVINSTALL_PARAMS_W InstallParamsSet;
-            struct DeviceInfoElement *deviceInfo;
+            struct DeviceInfo *deviceInfo;
 
             InstallParamsSet.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
             if (!SetupDiGetDeviceInstallParamsW(DeviceInfoSet, NULL, &InstallParamsSet))
                 goto done;
-            deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
             while (!IsListEmpty(&deviceInfo->DriverListHead))
             {
                  ListEntry = RemoveHeadList(&deviceInfo->DriverListHead);
@@ -1369,7 +1369,7 @@ SetupDiEnumDriverInfoW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DriverType != SPDIT_CLASSDRIVER && DriverType != SPDIT_COMPATDRIVER)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1379,10 +1379,10 @@ SetupDiEnumDriverInfoW(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        struct DeviceInfoElement *devInfo = NULL;
+        struct DeviceInfo *devInfo = NULL;
         PLIST_ENTRY ItemList;
         if (DeviceInfoData)
-            devInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
         if (!devInfo || (devInfo->CreationFlags & DICD_INHERIT_CLASSDRVS))
         {
             ListHead = &((struct DeviceInfoSet *)DeviceInfoSet)->DriverListHead;
@@ -1489,7 +1489,7 @@ SetupDiGetSelectedDriverW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -1600,7 +1600,7 @@ SetupDiSetSelectedDriverW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -1613,8 +1613,8 @@ SetupDiSetSelectedDriverW(
 
         if (DeviceInfoData)
         {
-            pDriverInfo = (struct DriverInfoElement **)&((struct DeviceInfoElement *)DeviceInfoData->Reserved)->InstallParams.Reserved;
-            ListHead = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->DriverListHead;
+            pDriverInfo = (struct DriverInfoElement **)&((struct DeviceInfo *)DeviceInfoData->Reserved)->InstallParams.Reserved;
+            ListHead = &((struct DeviceInfo *)DeviceInfoData->Reserved)->DriverListHead;
         }
         else
         {
@@ -1893,7 +1893,7 @@ SetupDiGetDriverInfoDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -2016,7 +2016,7 @@ SetupDiGetDriverInstallParamsW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -2102,11 +2102,11 @@ SetupDiInstallDriverFiles(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
-    else if (DeviceInfoData && ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->InstallParams.Reserved == 0)
+    else if (DeviceInfoData && ((struct DeviceInfo *)DeviceInfoData->Reserved)->InstallParams.Reserved == 0)
         SetLastError(ERROR_NO_DRIVER_SELECTED);
     else if (!DeviceInfoData && ((struct DeviceInfoSet *)DeviceInfoSet)->InstallParams.Reserved == 0)
         SetLastError(ERROR_NO_DRIVER_SELECTED);

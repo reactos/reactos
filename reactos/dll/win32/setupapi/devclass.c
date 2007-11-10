@@ -941,7 +941,7 @@ SETUP_CreateDevicesListFromEnumerator(
     WCHAR KeyBuffer[MAX_PATH];
     WCHAR InstancePath[MAX_PATH];
     LPWSTR pEndOfInstancePath; /* Pointer into InstancePath buffer */
-    struct DeviceInfoElement *deviceInfo;
+    struct DeviceInfo *deviceInfo;
     DWORD i = 0, j;
     DWORD dwLength, dwRegType;
     DWORD rc;
@@ -1026,7 +1026,7 @@ SETUP_CreateDevicesListFromEnumerator(
             }
 
             /* Add the entry to the list */
-            if (!CreateDeviceInfoElement(list, InstancePath, &KeyGuid, &deviceInfo))
+            if (!CreateDeviceInfo(list, InstancePath, &KeyGuid, &deviceInfo))
             {
                 rc = GetLastError();
                 goto cleanup;
@@ -1164,7 +1164,7 @@ SetupDiGetClassDevsExW(
     if (DeviceInfoSet)
     {
         list = (struct DeviceInfoSet *)DeviceInfoSet;
-        if (list->magic != SETUP_DEV_INFO_SET_MAGIC)
+        if (list->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         {
             SetLastError(ERROR_INVALID_HANDLE);
             goto cleanup;
@@ -2137,7 +2137,7 @@ SETUP_PropertyChangeHandler(
     else
     {
         PSP_PROPCHANGE_PARAMS *CurrentPropChangeParams;
-        struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
         CurrentPropChangeParams = &deviceInfo->ClassInstallParams.PropChangeParams;
 
         if (*CurrentPropChangeParams)
@@ -2188,7 +2188,7 @@ SETUP_PropertyAddPropertyAdvancedHandler(
         }
         else
         {
-            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
             CurrentAddPropertyPageData = &deviceInfo->ClassInstallParams.AddPropertyPageData;
         }
         if (*CurrentAddPropertyPageData)
@@ -2233,7 +2233,7 @@ SetupDiSetClassInstallParamsW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -2372,9 +2372,9 @@ SetupDiGetClassDevPropertySheetsW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!PropertySheetHeader)
         SetLastError(ERROR_INVALID_PARAMETER);

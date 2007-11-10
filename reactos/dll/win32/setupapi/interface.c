@@ -34,7 +34,7 @@ static const WCHAR SymbolicLink[]  = {'S','y','m','b','o','l','i','c','L','i','n
 
 static BOOL
 CreateDeviceInterface(
-    IN struct DeviceInfoElement* deviceInfo,
+    IN struct DeviceInfo* deviceInfo,
     IN LPCWSTR SymbolicLink,
     IN LPCGUID pInterfaceGuid,
     OUT struct DeviceInterface **pDeviceInterface)
@@ -89,7 +89,7 @@ SETUP_CreateInterfaceList(
     DWORD dwRegType;
     DWORD LinkedValue;
     GUID ClassGuid;
-    struct DeviceInfoElement *deviceInfo;
+    struct DeviceInfo *deviceInfo;
 
     hInterfaceKey = INVALID_HANDLE_VALUE;
     hDeviceInstanceKey = NULL;
@@ -223,7 +223,7 @@ SETUP_CreateInterfaceList(
 
             /* We have found a device */
             /* Step 1. Create a device info element */
-            if (!CreateDeviceInfoElement(list, InstancePath, &ClassGuid, &deviceInfo))
+            if (!CreateDeviceInfo(list, InstancePath, &ClassGuid, &deviceInfo))
             {
                 rc = GetLastError();
                 goto cleanup;
@@ -314,15 +314,15 @@ SetupDiEnumDeviceInterfaces(
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
 
-        if (list->magic == SETUP_DEV_INFO_SET_MAGIC)
+        if (list->magic == SETUP_DEVICE_INFO_SET_MAGIC)
         {
             PLIST_ENTRY ItemList = list->ListHead.Flink;
             BOOL Found = FALSE;
             while (ItemList != &list->ListHead && !Found)
             {
                 PLIST_ENTRY InterfaceListEntry;
-                struct DeviceInfoElement *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfoElement, ListEntry);
-                if (DeviceInfoData && (struct DeviceInfoElement *)DeviceInfoData->Reserved != DevInfo)
+                struct DeviceInfo *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
+                if (DeviceInfoData && (struct DeviceInfo *)DeviceInfoData->Reserved != DevInfo)
                 {
                     /* We are not searching for this element */
                     ItemList = ItemList->Flink;
@@ -386,7 +386,7 @@ SetupDiGetDeviceInterfaceDetailW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInterfaceData->cbSize != sizeof(SP_DEVICE_INTERFACE_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -579,7 +579,7 @@ SetupDiInstallDeviceInterfaces(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);

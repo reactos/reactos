@@ -50,15 +50,15 @@
 #undef __WINESRC__
 #endif
 
-#define SETUP_DEV_INFO_SET_MAGIC 0xd00ff057
+#define SETUP_DEVICE_INFO_SET_MAGIC 0xd00ff057
 #define SETUP_CLASS_IMAGE_LIST_MAGIC 0xd00ff058
 
-struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
+struct DeviceInterface /* Element of DeviceInfo.InterfaceListHead */
 {
     LIST_ENTRY ListEntry;
 
     /* Link to is parent device */
-    struct DeviceInfoElement* DeviceInfo;
+    struct DeviceInfo *DeviceInfo;
     GUID InterfaceClassGuid;
 
 
@@ -68,8 +68,8 @@ struct DeviceInterface /* Element of DeviceInfoElement.InterfaceListHead */
      */
     DWORD Flags;
 
-	/* Contains the symbolic link of this interface, for example
-	 * \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
+    /* Contains the symbolic link of this interface, for example
+     * \\?\ACPI#PNP0501#4&2658d0a0&0#{GUID} */
     WCHAR SymbolicLink[ANYSIZE_ARRAY];
 };
 
@@ -90,11 +90,11 @@ struct InfFileDetails
      * Points into szData at then end of the structure */
     PCWSTR FileName;
 
-	/* Variable size array (contains data for DirectoryName and FileName) */
+    /* Variable size array (contains data for DirectoryName and FileName) */
     WCHAR szData[ANYSIZE_ARRAY];
 };
 
-struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfoElement.DriverListHead */
+struct DriverInfoElement /* Element of DeviceInfoSet.DriverListHead and DeviceInfo.DriverListHead */
 {
     LIST_ENTRY ListEntry;
 
@@ -113,11 +113,14 @@ struct ClassInstallParams
     PSP_ADDPROPERTYPAGE_DATA AddPropertyPageData;
 };
 
-struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
+struct DeviceInfo /* Element of DeviceInfoSet.ListHead */
 {
     LIST_ENTRY ListEntry;
     /* Used when dealing with CM_* functions */
     DEVINST dnDevInst;
+
+    /* Link to parent DeviceInfoSet */
+    struct DeviceInfoSet *set;
 
     /* Reserved Field of SP_DEVINSTALL_PARAMS_W structure
      * points to a struct DriverInfoElement */
@@ -164,13 +167,13 @@ struct DeviceInfoElement /* Element of DeviceInfoSet.ListHead */
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
 
-	/* Variable size array (contains data for DeviceName, UniqueId, DeviceDescription) */
+    /* Variable size array (contains data for DeviceName, UniqueId, DeviceDescription) */
     WCHAR Data[ANYSIZE_ARRAY];
 };
 
 struct DeviceInfoSet /* HDEVINFO */
 {
-    DWORD magic; /* SETUP_DEV_INFO_SET_MAGIC */
+    DWORD magic; /* SETUP_DEVICE_INFO_SET_MAGIC */
     /* If != GUID_NULL, only devices of this class can be in the device info set */
     GUID ClassGuid;
     /* Local or distant HKEY_LOCAL_MACHINE registry key */
@@ -185,9 +188,9 @@ struct DeviceInfoSet /* HDEVINFO */
      * searched/detected, this list is empty) */
     LIST_ENTRY DriverListHead;
 
-	/* List of struct DeviceInfoElement */
+    /* List of struct DeviceInfo */
     LIST_ENTRY ListHead;
-    struct DeviceInfoElement *SelectedDevice;
+    struct DeviceInfo *SelectedDevice;
 
     /* Used by SetupDiGetClassInstallParamsW/SetupDiSetClassInstallParamsW */
     struct ClassInstallParams ClassInstallParams;
@@ -266,11 +269,11 @@ extern OSVERSIONINFOW OsVersionInfo;
 /* devinst.c */
 
 BOOL
-CreateDeviceInfoElement(
+CreateDeviceInfo(
     IN struct DeviceInfoSet *list,
     IN LPCWSTR InstancePath,
     IN LPCGUID pClassGuid,
-    OUT struct DeviceInfoElement **pDeviceInfo);
+    OUT struct DeviceInfo **pDeviceInfo);
 
 /* driver.c */
 

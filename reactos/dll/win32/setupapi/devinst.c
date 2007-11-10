@@ -198,7 +198,7 @@ SetupDiCreateDeviceInfoListExW(
     }
     ZeroMemory(list, FIELD_OFFSET(struct DeviceInfoSet, szData));
 
-    list->magic = SETUP_DEV_INFO_SET_MAGIC;
+    list->magic = SETUP_DEVICE_INFO_SET_MAGIC;
     memcpy(
         &list->ClassGuid,
         ClassGuid ? ClassGuid : &GUID_NULL,
@@ -266,7 +266,7 @@ SetupDiEnumDeviceInfo(
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
 
-        if (list->magic != SETUP_DEV_INFO_SET_MAGIC)
+        if (list->magic != SETUP_DEVICE_INFO_SET_MAGIC)
             SetLastError(ERROR_INVALID_HANDLE);
         else if (DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
             SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -279,7 +279,7 @@ SetupDiEnumDeviceInfo(
                 SetLastError(ERROR_NO_MORE_ITEMS);
             else
             {
-                struct DeviceInfoElement *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfoElement, ListEntry);
+                struct DeviceInfo *DevInfo = CONTAINING_RECORD(ItemList, struct DeviceInfo, ListEntry);
                 memcpy(&DeviceInfoData->ClassGuid,
                     &DevInfo->ClassGuid,
                     sizeof(GUID));
@@ -798,19 +798,19 @@ done:
 
 
 BOOL
-CreateDeviceInfoElement(
+CreateDeviceInfo(
     IN struct DeviceInfoSet *list,
     IN LPCWSTR InstancePath,
     IN LPCGUID pClassGuid,
-    OUT struct DeviceInfoElement **pDeviceInfo)
+    OUT struct DeviceInfo **pDeviceInfo)
 {
     DWORD size;
     CONFIGRET cr;
-    struct DeviceInfoElement *deviceInfo;
+    struct DeviceInfo *deviceInfo;
 
     *pDeviceInfo = NULL;
 
-    size = FIELD_OFFSET(struct DeviceInfoElement, Data) + (strlenW(InstancePath) + 1) * sizeof(WCHAR);
+    size = FIELD_OFFSET(struct DeviceInfo, Data) + (strlenW(InstancePath) + 1) * sizeof(WCHAR);
     deviceInfo = HeapAlloc(GetProcessHeap(), 0, size);
     if (!deviceInfo)
     {
@@ -826,6 +826,7 @@ CreateDeviceInfoElement(
         return FALSE;
     }
 
+    deviceInfo->set = list;
     deviceInfo->InstallParams.cbSize = sizeof(SP_DEVINSTALL_PARAMS_W);
     strcpyW(deviceInfo->Data, InstancePath);
     deviceInfo->DeviceName = deviceInfo->Data;
@@ -850,7 +851,7 @@ DestroyClassInstallParams(struct ClassInstallParams* installParams)
 }
 
 static BOOL
-DestroyDeviceInfoElement(struct DeviceInfoElement* deviceInfo)
+DestroyDeviceInfo(struct DeviceInfo *deviceInfo)
 {
     PLIST_ENTRY ListEntry;
     struct DriverInfoElement *driverInfo;
@@ -878,13 +879,13 @@ static BOOL
 DestroyDeviceInfoSet(struct DeviceInfoSet* list)
 {
     PLIST_ENTRY ListEntry;
-    struct DeviceInfoElement *deviceInfo;
+    struct DeviceInfo *deviceInfo;
 
     while (!IsListEmpty(&list->ListHead))
     {
         ListEntry = RemoveHeadList(&list->ListHead);
-        deviceInfo = CONTAINING_RECORD(ListEntry, struct DeviceInfoElement, ListEntry);
-        if (!DestroyDeviceInfoElement(deviceInfo))
+        deviceInfo = CONTAINING_RECORD(ListEntry, struct DeviceInfo, ListEntry);
+        if (!DestroyDeviceInfo(deviceInfo))
             return FALSE;
     }
     if (list->HKLM != HKEY_LOCAL_MACHINE)
@@ -908,7 +909,7 @@ SetupDiDestroyDeviceInfoList(
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
 
-        if (list->magic == SETUP_DEV_INFO_SET_MAGIC)
+        if (list->magic == SETUP_DEVICE_INFO_SET_MAGIC)
             ret = DestroyDeviceInfoSet(list);
         else
             SetLastError(ERROR_INVALID_HANDLE);
@@ -1030,7 +1031,7 @@ SetupDiGetDeviceRegistryPropertyW(
 
     if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1041,7 +1042,7 @@ SetupDiGetDeviceRegistryPropertyW(
     else
     {
         struct DeviceInfoSet *list = (struct DeviceInfoSet *)DeviceInfoSet;
-        struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        struct DeviceInfo *DevInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
 
         switch (Property)
         {
@@ -1242,7 +1243,7 @@ SetupDiSetDeviceRegistryPropertyW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1383,7 +1384,7 @@ SetupDiCallClassInstaller(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (((struct DeviceInfoSet *)DeviceInfoSet)->HKLM != HKEY_LOCAL_MACHINE)
         SetLastError(ERROR_INVALID_HANDLE);
@@ -1737,7 +1738,7 @@ SetupDiGetDeviceInfoListClass(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (IsEqualIID(&list->ClassGuid, &GUID_NULL))
         SetLastError(ERROR_NO_ASSOCIATED_CLASS);
@@ -1767,7 +1768,7 @@ SetupDiGetDeviceInfoListDetailW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoListDetailData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -1851,7 +1852,7 @@ SetupDiGetDeviceInstallParamsW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -1864,7 +1865,7 @@ SetupDiGetDeviceInstallParamsW(
         PSP_DEVINSTALL_PARAMS_W Source;
 
         if (DeviceInfoData)
-            Source = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->InstallParams;
+            Source = &((struct DeviceInfo *)DeviceInfoData->Reserved)->InstallParams;
         else
             Source = &list->InstallParams;
         memcpy(DeviceInstallParams, Source, Source->cbSize);
@@ -1947,7 +1948,7 @@ SetupDiSetDeviceInstallParamsW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
@@ -1960,7 +1961,7 @@ SetupDiSetDeviceInstallParamsW(
         PSP_DEVINSTALL_PARAMS_W Destination;
 
         if (DeviceInfoData)
-            Destination = &((struct DeviceInfoElement *)DeviceInfoData->Reserved)->InstallParams;
+            Destination = &((struct DeviceInfo *)DeviceInfoData->Reserved)->InstallParams;
         else
             Destination = &list->InstallParams;
         memcpy(Destination, DeviceInstallParams, DeviceInstallParams->cbSize);
@@ -2036,7 +2037,7 @@ SetupDiGetDeviceInstanceIdW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2048,7 +2049,7 @@ SetupDiGetDeviceInstanceIdW(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-        struct DeviceInfoElement *DevInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        struct DeviceInfo *DevInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
         DWORD required;
 
         required = (strlenW(DevInfo->DeviceName) + 1) * sizeof(WCHAR);
@@ -2183,7 +2184,7 @@ SetupDiCreateDevRegKeyW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2223,7 +2224,7 @@ SetupDiCreateDevRegKeyW(
 
         if (KeyType == DIREG_DEV)
         {
-            struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+            struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
 
             rc = RegCreateKeyExW(
                 RootKey,
@@ -2384,7 +2385,7 @@ SetupDiOpenDevRegKey(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2396,7 +2397,7 @@ SetupDiOpenDevRegKey(
         SetLastError(ERROR_INVALID_PARAMETER);
     else
     {
-        struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
         LPWSTR DriverKey = NULL;
         DWORD dwLength = 0;
         DWORD dwRegType;
@@ -2577,7 +2578,7 @@ SetupDiCreateDeviceInfoW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!ClassGuid)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2620,9 +2621,9 @@ SetupDiCreateDeviceInfoW(
             }
             else if (GetLastError() == ERROR_FILE_NOT_FOUND)
             {
-                struct DeviceInfoElement *deviceInfo;
+                struct DeviceInfo *deviceInfo;
 
-                if (CreateDeviceInfoElement(list, DeviceName, ClassGuid, &deviceInfo))
+                if (CreateDeviceInfo(list, DeviceName, ClassGuid, &deviceInfo))
                 {
                     InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
 
@@ -2722,7 +2723,7 @@ SetupDiOpenDeviceInfoW(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInstanceId)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2735,7 +2736,7 @@ SetupDiOpenDeviceInfoW(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        struct DeviceInfoElement *deviceInfo = NULL;
+        struct DeviceInfo *deviceInfo = NULL;
         /* Search if device already exists in DeviceInfoSet.
          *    If yes, return the existing element
          *    If no, create a new element using information in registry
@@ -2803,7 +2804,7 @@ SetupDiOpenDeviceInfoW(
                 UuidFromStringW(&szClassGuid[1], &ClassGUID);
             }
 
-            if (!CreateDeviceInfoElement(list, DeviceInstanceId, &ClassGUID, &deviceInfo))
+            if (!CreateDeviceInfo(list, DeviceInstanceId, &ClassGUID, &deviceInfo))
                 goto cleanup;
 
             InsertTailList(&list->ListHead, &deviceInfo->ListEntry);
@@ -2841,7 +2842,7 @@ SetupDiGetSelectedDevice(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (list->SelectedDevice == NULL)
         SetLastError(ERROR_NO_DEVICE_SELECTED);
@@ -2879,7 +2880,7 @@ SetupDiSetSelectedDevice(
 
     if (!DeviceInfoSet)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if ((list = (struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -2889,7 +2890,7 @@ SetupDiSetSelectedDevice(
         SetLastError(ERROR_INVALID_USER_BUFFER);
     else
     {
-        list->SelectedDevice = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+        list->SelectedDevice = (struct DeviceInfo *)DeviceInfoData->Reserved;
         ret = TRUE;
     }
 
@@ -2955,7 +2956,7 @@ ResetDevice(
 {
 #ifndef __WINESRC__
     PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
-    struct DeviceInfoElement *deviceInfo = (struct DeviceInfoElement *)DeviceInfoData->Reserved;
+    struct DeviceInfo *deviceInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
     NTSTATUS Status;
 
     if (((struct DeviceInfoSet *)DeviceInfoSet)->HKLM != HKEY_LOCAL_MACHINE)
@@ -3003,7 +3004,7 @@ SetupDiChangeState(
     if (!DeviceInfoData)
         PropChange = ((struct DeviceInfoSet *)DeviceInfoSet)->ClassInstallParams.PropChangeParams;
     else
-        PropChange = ((struct DeviceInfoElement *)DeviceInfoData->Reserved)->ClassInstallParams.PropChangeParams;
+        PropChange = ((struct DeviceInfo *)DeviceInfoData->Reserved)->ClassInstallParams.PropChangeParams;
     if (!PropChange)
     {
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3125,7 +3126,7 @@ SetupDiRegisterCoDeviceInstallers(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (!DeviceInfoData)
         SetLastError(ERROR_INVALID_PARAMETER);
@@ -3290,7 +3291,7 @@ SetupDiInstallDevice(
         SetLastError(ERROR_INVALID_PARAMETER);
     else if (DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
         SetLastError(ERROR_INVALID_HANDLE);
-    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEV_INFO_SET_MAGIC)
+    else if (((struct DeviceInfoSet *)DeviceInfoSet)->magic != SETUP_DEVICE_INFO_SET_MAGIC)
         SetLastError(ERROR_INVALID_HANDLE);
     else if (DeviceInfoData && DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA))
         SetLastError(ERROR_INVALID_USER_BUFFER);
