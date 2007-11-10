@@ -79,8 +79,8 @@ __global_unwind2:
 glu_return:
     /* Restore registers and return */
     pop ebp
-    pop esi
     pop edi
+    pop esi
     pop ebx
     mov esp, ebp
     pop ebp
