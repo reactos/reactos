@@ -723,6 +723,8 @@ EnvironmentDlgProc(HWND hwndDlg,
                 case IDOK:
                     SetAllVars(hwndDlg, IDC_USER_VARIABLE_LIST);
                     SetAllVars(hwndDlg, IDC_SYSTEM_VARIABLE_LIST);
+                    SendMessage(HWND_BROADCAST, WM_WININICHANGE,
+                                0, (LPARAM)_T("Environment"));
                     EndDialog(hwndDlg, 0);
                     return TRUE;
 

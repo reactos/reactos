@@ -67,21 +67,37 @@ ReadPageFileSettings(PVIRTMEM pVirtMem)
 }
 
 
-static INT
-GetPageFileSizes(LPTSTR lpPageFiles)
+static VOID
+GetPageFileSizes(LPTSTR lpPageFiles,
+                 LPINT lpInitialSize,
+                 LPINT lpMaximumSize)
 {
+    INT i = 0;
+
+    *lpInitialSize = -1;
+    *lpMaximumSize = -1;
+
     while (*lpPageFiles != _T('\0'))
     {
         if (*lpPageFiles == _T(' '))
         {
             lpPageFiles++;
-            return (INT)_ttoi(lpPageFiles);
+
+            switch (i)
+            {
+                case 0:
+                    *lpInitialSize = (INT)_ttoi(lpPageFiles);
+                    i = 1;
+                    break;
+
+                case 1:
+                    *lpMaximumSize = (INT)_ttoi(lpPageFiles);
+                    return;
+            }
         }
 
         lpPageFiles++;
     }
-
-    return -1;
 }
 
 
@@ -123,8 +139,9 @@ ParseMemSettings(PVIRTMEM pVirtMem)
             if (!_tcsncmp(pVirtMem->szPagingFiles, szDrive, 2))
             {
                 /* FIXME: we only check the first available pagefile in the reg */
-                InitialSize = GetPageFileSizes(pVirtMem->szPagingFiles);
-                MaxSize = GetPageFileSizes(pVirtMem->szPagingFiles);
+                GetPageFileSizes(pVirtMem->szPagingFiles,
+                                 &InitialSize,
+                                 &MaxSize);
 
                 pVirtMem->Pagefile[PgCnt].InitialValue = InitialSize;
                 pVirtMem->Pagefile[PgCnt].MaxValue = MaxSize;
@@ -245,7 +262,7 @@ WritePageFileSettings(PVIRTMEM pVirtMem)
 static VOID
 SetListBoxColumns(HWND hwndListBox)
 {
-    const INT tabs[2] = {30, 170};
+    const INT tabs[2] = {30, 120};
 
     SendMessage(hwndListBox, LB_SETTABSTOPS, (WPARAM)2, (LPARAM)&tabs[0]);
 }
