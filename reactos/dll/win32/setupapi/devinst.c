@@ -931,18 +931,18 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailA(
         return FALSE;
     }
     memcpy(
-        &DeviceInfoListDetailData->ClassGuid,
-        &list->ClassGuid,
+        &DevInfoData->ClassGuid,
+        &set->ClassGuid,
         sizeof(GUID));
-    DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
-    if (list->MachineName)
+    DevInfoData->RemoteMachineHandle = set->hMachine;
+    if (set->MachineName)
     {
         FIXME("Stub\n");
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return FALSE;
     }
     else
-        DeviceInfoListDetailData->RemoteMachineName[0] = 0;
+        DevInfoData->RemoteMachineName[0] = 0;
 
     return TRUE;
 }
@@ -975,14 +975,14 @@ BOOL WINAPI SetupDiGetDeviceInfoListDetailW(
         return FALSE;
     }
     memcpy(
-        &DeviceInfoListDetailData->ClassGuid,
-        &list->ClassGuid,
+        &DevInfoData->ClassGuid,
+        &set->ClassGuid,
         sizeof(GUID));
-    DeviceInfoListDetailData->RemoteMachineHandle = list->hMachine;
-    if (list->MachineName)
-        strcpyW(DeviceInfoListDetailData->RemoteMachineName, list->MachineName + 2);
+    DevInfoData->RemoteMachineHandle = set->hMachine;
+    if (set->MachineName)
+        strcpyW(DevInfoData->RemoteMachineName, set->MachineName + 2);
     else
-        DeviceInfoListDetailData->RemoteMachineName[0] = 0;
+        DevInfoData->RemoteMachineName[0] = 0;
 
     return TRUE;
 }
