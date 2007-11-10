@@ -354,12 +354,12 @@ CreateLogoffSecurityAttributes(
 	// Might as well store it when the user logs on?
 
 	if(!AllocateAndInitializeSid(&WorldAuthority, 
-				     1,
-				     SECURITY_WORLD_RID,
-				     0, 0, 0, 0, 0, 0, 0,
-				     &pEveryoneSID))	 
+	                             1,
+	                             SECURITY_WORLD_RID,
+	                             0, 0, 0, 0, 0, 0, 0,
+	                             &pEveryoneSID))
 	{
-		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
+		ERR("Failed to initialize security descriptor for logoff thread!\n");
 		return STATUS_UNSUCCESSFUL;
 	}
 
@@ -373,7 +373,7 @@ CreateLogoffSecurityAttributes(
 	                 sizeof(ACL));
 	if (!pMem)
 	{
-		DPRINT("Failed to allocate memory for logoff security descriptor!\n");
+		ERR("Failed to allocate memory for logoff security descriptor!\n");
 		return STATUS_NO_MEMORY;
 	}
 
@@ -396,8 +396,8 @@ CreateLogoffSecurityAttributes(
 
 	if (SetEntriesInAcl(1, &Access, NULL, &pACL) != ERROR_SUCCESS) 
 	{
-        // SetEntriesInAcl is not implemented yet
-        DPRINT1 ("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
+		// SetEntriesInAcl is not implemented yet
+		ERR("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
 
 		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
@@ -405,17 +405,17 @@ CreateLogoffSecurityAttributes(
 
 	if (!InitializeSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
 	{
+		ERR("Failed to initialize security descriptor for logoff thread!\n");
 		HeapFree(GetProcessHeap(), 0, pMem);
-		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
 		return STATUS_UNSUCCESSFUL;
 	}
 
 	if (!SetSecurityDescriptorDacl(SecurityDescriptor,
-	        TRUE,     // bDaclPresent flag
-	        pACL,
-	        FALSE))   // not a default DACL
+	                               TRUE,     // bDaclPresent flag
+	                               pACL,
+	                               FALSE))   // not a default DACL
 	{
-		DPRINT("SetSecurityDescriptorDacl Error %u\n", GetLastError());
+		ERR("SetSecurityDescriptorDacl Error %u\n", GetLastError());
 		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
 	}
