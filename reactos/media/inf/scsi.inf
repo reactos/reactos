@@ -1,25 +1,62 @@
 ; SCSI.INF
 ;
-; Installation file for the SCSI class
+; Installation file for SCSI class and SCSI hardware
 ;
 [Version]
 Signature  = "$Windows NT$"
 ;Signature  = "$ReactOS$"
 LayoutFile = layout.inf
-
+ 
 Class      = SCSIAdapter
 ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 10/19/1999,5.00.2157.1
-
-[ClassInstall32.NT]
-AddReg = SCSIClass.NT.AddReg
-
-[SCSIClass.NT.AddReg]
-HKR, , ,            0, %SCSIClassName%
-HKR, , Icon,        0, "-10"
-;HKR, , Installer32, 0, "syssetup.dll,ScsiClassInstaller"
-
+DriverVer  = 11/2/2007,1.0
+ 
+[DestinationDirs]
+DefaultDestDir = 12
+ 
+[Manufacturer]
+%GenericMfg% = GenericMfg
+ 
+[GenericMfg]
+%PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
+ 
+;----------------------------- ScsiPort Driver ----------------------------
+ 
+[Scsiport_CopyFiles.NT]
+scsiport.sys
+ 
+[Scsiport_Service_Inst]
+ServiceType   = 4
+StartType     = 0
+ErrorControl  = 0
+ServiceBinary = %12%\scsiport.sys
+LoadOrderGroup = SCSI Port
+ 
+;----------------------------- BusLogic Driver ----------------------------
+ 
+[BusLogic_Inst.NT]
+CopyFiles = BusLogic_CopyFiles.NT, Scsiport_CopyFiles.NT
+ 
+[BusLogic_CopyFiles.NT]
+buslogic.sys
+ 
+[BusLogic_Inst.NT.Services]
+AddService = BusLogic, 0x00000002, BusLogic_Service_Inst
+AddService = Scsiport, , Scsiport_Service_Inst
+ 
+[BusLogic_Service_Inst]
+ServiceType   = 0
+StartType     = 0
+ErrorControl  = 0
+ServiceBinary = %12%\buslogic.sys
+LoadOrderGroup = SCSI Miniport
+ 
+;--------------------------------- Strings ---------------------------------
+ 
 [Strings]
 ReactOS = "ReactOS Team"
-SCSIClassName = "SCSI- and RAID-Controller"
+SCSIClassName = "SCSI and RAID Controllers"
+ 
+GenericMfg = "(Standard SCSI and RAID controllers)"
+PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Controller"
