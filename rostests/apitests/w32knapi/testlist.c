@@ -22,6 +22,7 @@
 #include "ntuser/NtUserCountClipboardFormats.c"
 #include "ntuser/NtUserFindExistingCursorIcon.c"
 #include "ntuser/NtUserRedrawWindow.c"
+#include "ntuser/NtUserToUnicodeEx.c"
 
 /* The List of tests */
 TESTENTRY TestList[] =
@@ -48,7 +49,8 @@ TESTENTRY TestList[] =
 	/* ntuser */
 	{ L"NtUserCountClipboardFormats", Test_NtUserCountClipboardFormats },
 	{ L"NtUserFindExistingCursorIcon", Test_NtUserFindExistingCursoricon },
-	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow }
+	{ L"NtUserRedrawWindow", Test_NtUserRedrawWindow },
+	{ L"NtUserToUnicodeEx", Test_NtUserToUnicodeEx }
 };
 
 /* The function that gives us the number of tests */

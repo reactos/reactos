@@ -59,7 +59,7 @@ WinMain(HINSTANCE hInstance,
         int       nCmdShow)
 {
 	g_hInstance = hInstance;
-	GDIQUERYPROC GdiQueryHandleTable;
+	GDIQUERYPROC GdiQueryTable;
 
 	printf("Win32k native API test\n");
 
@@ -73,12 +73,12 @@ WinMain(HINSTANCE hInstance,
 		return -1;
 	}
 
-	GdiQueryHandleTable = (GDIQUERYPROC)GetProcAddress(GetModuleHandleW(L"GDI32.DLL"), "GdiQueryTable");
-	if(!GdiQueryHandleTable)
+	GdiQueryTable = (GDIQUERYPROC)GetProcAddress(GetModuleHandleW(L"GDI32.DLL"), "GdiQueryTable");
+	if(!GdiQueryTable)
 	{
 		return -1;
 	}
-	GdiHandleTable = GdiQueryHandleTable();
+	GdiHandleTable = GdiQueryTable();
 	if(!GdiHandleTable)
 	{
 		return -1;
