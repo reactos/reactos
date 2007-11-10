@@ -1,4 +1,4 @@
-/*
+/* 
  * Setupapi cabinet routines
  *
  * Copyright 2003 Gregory M. Turner
@@ -20,7 +20,7 @@
  *
  * Many useful traces are commented in code, uncomment them if you have
  * trouble and run with WINEDEBUG=+setupapi
- *
+ * 
  */
 
 #include "setupapi_private.h"
@@ -87,12 +87,12 @@ static void UnloadCABINETDll(void)
 
 static void *sc_cb_alloc(ULONG cb)
 {
-  return malloc(cb);
+  return HeapAlloc(GetProcessHeap(), 0, cb);
 }
 
 static void sc_cb_free(void *pv)
 {
-  free(pv);
+  HeapFree(GetProcessHeap(), 0, pv);
 }
 
 static INT_PTR sc_cb_open(char *pszFile, int oflag, int pmode)
@@ -523,10 +523,10 @@ BOOL WINAPI SetupIterateCabinetA(PCSTR CabinetFile, DWORD Reserved,
   BOOL ret;
 
 
-  TRACE("(CabinetFile == %s, Reserved == %lu, MsgHandler == ^%p, Context == ^%p)\n",
+  TRACE("(CabinetFile == %s, Reserved == %u, MsgHandler == ^%p, Context == ^%p)\n",
         debugstr_a(CabinetFile), Reserved, MsgHandler, Context);
 
-  if (! LoadCABINETDll())
+  if (! LoadCABINETDll()) 
     return FALSE;
 
   memset(&my_hsc, 0, sizeof(SC_HSC_A));
@@ -588,7 +588,7 @@ BOOL WINAPI SetupIterateCabinetW(PCWSTR CabinetFile, DWORD Reserved,
   DWORD fpnsize;
   BOOL ret;
 
-  TRACE("(CabinetFile == %s, Reserved == %lu, MsgHandler == ^%p, Context == ^%p)\n",
+  TRACE("(CabinetFile == %s, Reserved == %u, MsgHandler == ^%p, Context == ^%p)\n",
         debugstr_w(CabinetFile), Reserved, MsgHandler, Context);
 
   if (!LoadCABINETDll())

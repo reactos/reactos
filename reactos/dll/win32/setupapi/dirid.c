@@ -142,7 +142,7 @@ static const WCHAR *get_csidl_dir( DWORD csidl )
 
     if (!SHGetSpecialFolderPathW( NULL, buffer, csidl, TRUE ))
     {
-        FIXME( "CSIDL %lx not found\n", csidl );
+        FIXME( "CSIDL %x not found\n", csidl );
         return get_unknown_dirid();
     }
     len = (strlenW(buffer) + 1) * sizeof(WCHAR);
@@ -199,7 +199,7 @@ static BOOL store_user_dirid( HINF hinf, int id, WCHAR *str )
                 new = HeapReAlloc( GetProcessHeap(), 0, user_dirids,
                                                   new_size * sizeof(*new) );
 	    else
-                new = HeapAlloc( GetProcessHeap(), 0,
+                new = HeapAlloc( GetProcessHeap(), 0, 
                                                   new_size * sizeof(*new) );
 
             if (!new) return FALSE;

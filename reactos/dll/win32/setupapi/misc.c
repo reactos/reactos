@@ -757,8 +757,7 @@ DWORD WINAPI TakeOwnershipOfFile(LPCWSTR lpFileName)
 fail:;
     dwError = GetLastError();
 
-    if (pOwner != NULL)
-        MyFree(pOwner);
+    MyFree(pOwner);
 
     if (hToken != NULL)
         CloseHandle(hToken);
@@ -826,18 +825,36 @@ DWORD WINAPI RetreiveFileSecurity(LPCWSTR lpFileName,
 }
 
 
-/**************************************************************************
- * AssertFail [SETUPAPI.@]
+static DWORD global_flags = 0;  /* FIXME: what should be in here? */
+
+/***********************************************************************
+ *		pSetupGetGlobalFlags  (SETUPAPI.@)
+ */
+DWORD WINAPI pSetupGetGlobalFlags(void)
+{
+    FIXME( "stub\n" );
+    return global_flags;
+}
+
+
+/***********************************************************************
+ *		pSetupSetGlobalFlags  (SETUPAPI.@)
+ */
+void WINAPI pSetupSetGlobalFlags( DWORD flags )
+{
+    global_flags = flags;
+}
+
+/***********************************************************************
+ *              AssertFail  (SETUPAPI.@)
  *
- * Display an assertion message.
+ * Shows an assert fail error messagebox
  *
  * PARAMS
- *     lpFile    [I] File name
- *     uLine     [I] Line number
- *     lpMessage [I] Assertion message
+ *   lpFile [I]         file where assert failed
+ *   uLine [I]          line number in file
+ *   lpMessage [I]      assert message
  *
- * RETURNS
- *     Nothing
  */
 VOID WINAPI AssertFail(LPSTR lpFile, UINT uLine, LPSTR lpMessage)
 {
@@ -1280,7 +1297,7 @@ BOOL WINAPI SetupGetFileCompressionInfoExA( PCSTR source, PSTR name, DWORD len, 
     DWORD nb_chars = 0;
     LPSTR nameA;
 
-    TRACE("%s, %p, %lu, %p, %p, %p, %p\n", debugstr_a(source), name, len, required,
+    TRACE("%s, %p, %d, %p, %p, %p, %p\n", debugstr_a(source), name, len, required,
           source_size, target_size, type);
 
     if (!source || !(sourceW = MultiByteToUnicode( source, CP_ACP ))) return FALSE;
@@ -1340,7 +1357,7 @@ BOOL WINAPI SetupGetFileCompressionInfoExW( PCWSTR source, PWSTR name, DWORD len
     BOOL ret = FALSE;
     DWORD source_len;
 
-    TRACE("%s, %p, %lu, %p, %p, %p, %p\n", debugstr_w(source), name, len, required,
+    TRACE("%s, %p, %d, %p, %p, %p, %p\n", debugstr_w(source), name, len, required,
           source_size, target_size, type);
 
     if (!source) return FALSE;
@@ -1464,7 +1481,7 @@ static DWORD decompress_file_lz( LPCWSTR source, LPCWSTR target )
     if ((error = LZCopy( src, dst )) >= 0) ret = ERROR_SUCCESS;
     else
     {
-        WARN("failed to decompress file %ld\n", error);
+        WARN("failed to decompress file %d\n", error);
         ret = ERROR_INVALID_DATA;
     }
 

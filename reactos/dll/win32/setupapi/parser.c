@@ -162,7 +162,7 @@ static void *grow_array( void *array, unsigned int *count, size_t elem )
 
 
 /* get the directory of the inf file (as counted string, not null-terminated) */
-static const WCHAR *get_inf_dir( struct inf_file *file, unsigned int *len )
+static const WCHAR *get_inf_dir( const struct inf_file *file, unsigned int *len )
 {
     const WCHAR *p = strrchrW( file->filename, '\\' );
     *len = p ? (p + 1 - file->filename) : 0;
@@ -171,7 +171,7 @@ static const WCHAR *get_inf_dir( struct inf_file *file, unsigned int *len )
 
 
 /* find a section by name */
-static int find_section( struct inf_file *file, const WCHAR *name )
+static int find_section( const struct inf_file *file, const WCHAR *name )
 {
     unsigned int i;
 
@@ -290,7 +290,7 @@ static struct field *add_field( struct inf_file *file, const WCHAR *text )
 
 
 /* retrieve the string substitution for a directory id */
-static const WCHAR *get_dirid_subst( struct inf_file *file, int dirid, unsigned int *len )
+static const WCHAR *get_dirid_subst( const struct inf_file *file, int dirid, unsigned int *len )
 {
     const WCHAR *ret;
 
@@ -303,7 +303,8 @@ static const WCHAR *get_dirid_subst( struct inf_file *file, int dirid, unsigned 
 
 /* retrieve the string substitution for a given string, or NULL if not found */
 /* if found, len is set to the substitution length */
-static const WCHAR *get_string_subst( struct inf_file *file, const WCHAR *str, unsigned int *len )
+static const WCHAR *get_string_subst( const struct inf_file *file, const WCHAR *str, unsigned int *len,
+                                      BOOL no_trailing_slash )
 {
     static const WCHAR percent = '%';
 
@@ -340,6 +341,7 @@ static const WCHAR *get_string_subst( struct inf_file *file, const WCHAR *str, u
         dirid_str[*len] = 0;
         dirid = strtolW( dirid_str, &end, 10 );
         if (!*end) ret = get_dirid_subst( file, dirid, len );
+        if (no_trailing_slash && ret && *len && ret[*len - 1] == '\\') *len -= 1;
         HeapFree( GetProcessHeap(), 0, dirid_str );
         return ret;
     }
@@ -350,7 +352,7 @@ static const WCHAR *get_string_subst( struct inf_file *file, const WCHAR *str, u
 /* do string substitutions on the specified text */
 /* the buffer is assumed to be large enough */
 /* returns necessary length not including terminating null */
-unsigned int PARSER_string_substW( struct inf_file *file, const WCHAR *text, WCHAR *buffer,
+unsigned int PARSER_string_substW( const struct inf_file *file, const WCHAR *text, WCHAR *buffer,
                                    unsigned int size )
 {
     const WCHAR *start, *subst, *p;
@@ -374,7 +376,7 @@ unsigned int PARSER_string_substW( struct inf_file *file, const WCHAR *text, WCH
         else /* end of the %xx% string, find substitution */
         {
             len = p - start - 1;
-            subst = get_string_subst( file, start + 1, &len );
+            subst = get_string_subst( file, start + 1, &len, p[1] == '\\' );
             if (!subst)
             {
                 subst = start;
@@ -403,7 +405,7 @@ unsigned int PARSER_string_substW( struct inf_file *file, const WCHAR *text, WCH
 /* do string substitutions on the specified text */
 /* the buffer is assumed to be large enough */
 /* returns necessary length not including terminating null */
-unsigned int PARSER_string_substA( struct inf_file *file, const WCHAR *text, char *buffer,
+unsigned int PARSER_string_substA( const struct inf_file *file, const WCHAR *text, char *buffer,
                                    unsigned int size )
 {
     WCHAR buffW[MAX_STRING_LEN+1];
@@ -456,14 +458,14 @@ inline static enum parser_state set_state( struct parser *parser, enum parser_st
 
 
 /* check if the pointer points to an end of file */
-inline static int is_eof( struct parser *parser, const WCHAR *ptr )
+inline static int is_eof( const struct parser *parser, const WCHAR *ptr )
 {
     return (ptr >= parser->end || *ptr == CONTROL_Z);
 }
 
 
 /* check if the pointer points to an end of line */
-inline static int is_eol( struct parser *parser, const WCHAR *ptr )
+inline static int is_eol( const struct parser *parser, const WCHAR *ptr )
 {
     return (ptr >= parser->end || *ptr == CONTROL_Z || *ptr == '\n');
 }
@@ -1044,7 +1046,7 @@ WCHAR *PARSER_get_dest_dir( INFCONTEXT *context )
     const WCHAR *dir;
     WCHAR *ptr, *ret;
     INT dirid;
-    unsigned int len1 = 0;
+    unsigned int len1;
     DWORD len2;
 
     if (!SetupGetIntField( context, 1, &dirid )) return NULL;
@@ -1321,16 +1323,14 @@ void WINAPI SetupCloseInfFile( HINF hinf )
     struct inf_file *file = hinf;
     unsigned int i;
 
-    if (file != NULL && file != INVALID_HANDLE_VALUE)
-    {
-        for (i = 0; i < file->nb_sections; i++)
-            HeapFree( GetProcessHeap(), 0, file->sections[i] );
-        HeapFree( GetProcessHeap(), 0, file->filename );
-        HeapFree( GetProcessHeap(), 0, file->sections );
-        HeapFree( GetProcessHeap(), 0, file->fields );
-        HeapFree( GetProcessHeap(), 0, file->strings );
-        HeapFree( GetProcessHeap(), 0, file );
-    }
+    if (!hinf || (hinf == INVALID_HANDLE_VALUE)) return;
+
+    for (i = 0; i < file->nb_sections; i++) HeapFree( GetProcessHeap(), 0, file->sections[i] );
+    HeapFree( GetProcessHeap(), 0, file->filename );
+    HeapFree( GetProcessHeap(), 0, file->sections );
+    HeapFree( GetProcessHeap(), 0, file->fields );
+    HeapFree( GetProcessHeap(), 0, file->strings );
+    HeapFree( GetProcessHeap(), 0, file );
 }
 
 
@@ -1362,16 +1362,13 @@ LONG WINAPI SetupGetLineCountW( HINF hinf, PCWSTR section )
     int section_index;
     LONG ret = -1;
 
-    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
-        return ERROR_INVALID_PARAMETER;
-
     for (file = hinf; file; file = file->next)
     {
         if ((section_index = find_section( file, section )) == -1) continue;
         if (ret == -1) ret = 0;
         ret += file->sections[section_index]->nb_lines;
     }
-    TRACE( "(%p,%s) returning %ld\n", hinf, debugstr_w(section), ret );
+    TRACE( "(%p,%s) returning %d\n", hinf, debugstr_w(section), ret );
     SetLastError( (ret == -1) ? ERROR_SECTION_NOT_FOUND : 0 );
     return ret;
 }
@@ -1404,12 +1401,6 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
     struct inf_file *file = hinf;
     int section_index;
 
-    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
-
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
     {
@@ -1422,7 +1413,7 @@ BOOL WINAPI SetupGetLineByIndexW( HINF hinf, PCWSTR section, DWORD index, INFCON
             context->Section    = section_index;
             context->Line       = index;
             SetLastError( 0 );
-            TRACE( "(%p,%s): returning %d/%ld\n",
+            TRACE( "(%p,%s): returning %d/%d\n",
                    hinf, debugstr_w(section), section_index, index );
             return TRUE;
         }
@@ -1469,12 +1460,6 @@ BOOL WINAPI SetupFindFirstLineW( HINF hinf, PCWSTR section, PCWSTR key, INFCONTE
 {
     struct inf_file *file;
     int section_index;
-
-    if (hinf == NULL || hinf == INVALID_HANDLE_VALUE)
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return FALSE;
-    }
 
     SetLastError( ERROR_SECTION_NOT_FOUND );
     for (file = hinf; file; file = file->next)
@@ -1770,7 +1755,7 @@ BOOL WINAPI SetupGetStringFieldA( PINFCONTEXT context, DWORD index, PSTR buffer,
         }
         PARSER_string_substA( file, field->text, buffer, size );
 
-        TRACE( "context %p/%p/%d/%d index %ld returning %s\n",
+        TRACE( "context %p/%p/%d/%d index %d returning %s\n",
                context->Inf, context->CurrentInf, context->Section, context->Line,
                index, debugstr_a(buffer) );
     }
@@ -1801,7 +1786,7 @@ BOOL WINAPI SetupGetStringFieldW( PINFCONTEXT context, DWORD index, PWSTR buffer
         }
         PARSER_string_substW( file, field->text, buffer, size );
 
-        TRACE( "context %p/%p/%d/%d index %ld returning %s\n",
+        TRACE( "context %p/%p/%d/%d index %d returning %s\n",
                context->Inf, context->CurrentInf, context->Section, context->Line,
                index, debugstr_w(buffer) );
     }
@@ -1888,7 +1873,7 @@ BOOL WINAPI SetupGetBinaryField( PINFCONTEXT context, DWORD index, BYTE *buffer,
     }
     if (TRACE_ON(setupapi))
     {
-        TRACE( "%p/%p/%d/%d index %ld returning",
+        TRACE( "%p/%p/%d/%d index %d returning",
                context->Inf, context->CurrentInf, context->Section, context->Line, index );
         for (i = index; i < line->nb_fields; i++) TRACE( " %02x", buffer[i - index] );
         TRACE( "\n" );

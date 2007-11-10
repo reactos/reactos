@@ -156,9 +156,9 @@ static BOOL copy_files_callback( HINF hinf, PCWSTR field, void *arg )
     struct files_callback_info *info = arg;
 
     if (field[0] == '@')  /* special case: copy single file */
-        SetupQueueDefaultCopyW( info->queue, info->layout, info->src_root, NULL, &field[1], info->copy_flags );
+        SetupQueueDefaultCopyW( info->queue, info->layout ? info->layout : hinf, info->src_root, NULL, field+1, info->copy_flags );
     else
-        SetupQueueCopySectionW( info->queue, info->src_root, info->layout, hinf, field, info->copy_flags );
+        SetupQueueCopySectionW( info->queue, info->src_root, info->layout ? info->layout : hinf, hinf, field, info->copy_flags );
     return TRUE;
 }
 
@@ -319,7 +319,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
             }
             else RegDeleteValueW( hkey, value );
         }
-        else RegDeleteKeyW( hkey, NULL );
+        else NtDeleteKey( hkey );
         return TRUE;
     }
 
@@ -379,7 +379,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
         if (type == REG_DWORD)
         {
             DWORD dw = str ? strtoulW( str, NULL, 0 ) : 0;
-            TRACE( "setting dword %s to %lx\n", debugstr_w(value), dw );
+            TRACE( "setting dword %s to %x\n", debugstr_w(value), dw );
             RegSetValueExW( hkey, value, 0, type, (BYTE *)&dw, sizeof(dw) );
         }
         else
@@ -399,7 +399,7 @@ static BOOL do_reg_operation( HKEY hkey, const WCHAR *value, INFCONTEXT *context
         if (size)
         {
             if (!(data = HeapAlloc( GetProcessHeap(), 0, size ))) return FALSE;
-            TRACE( "setting binary data %s len %ld\n", debugstr_w(value), size );
+            TRACE( "setting binary data %s len %d\n", debugstr_w(value), size );
             SetupGetBinaryField( context, 5, data, size, NULL );
         }
         RegSetValueExW( hkey, value, 0, type, data, size );
@@ -618,7 +618,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
 
         if (FAILED(res))
         {
-            WARN( "calling %s in %s returned error %lx\n", entry_point, debugstr_w(path), res );
+            WARN( "calling %s in %s returned error %x\n", entry_point, debugstr_w(path), res );
             status.FailureCode = SPREG_REGSVR;
             status.Win32Error = res;
             goto done;
@@ -642,7 +642,7 @@ static BOOL do_register_dll( const struct register_dll_info *info, const WCHAR *
 
         if (FAILED(res))
         {
-            WARN( "calling DllInstall in %s returned error %lx\n", debugstr_w(path), res );
+            WARN( "calling DllInstall in %s returned error %x\n", debugstr_w(path), res );
             status.FailureCode = SPREG_REGSVR;
             status.Win32Error = res;
             goto done;
@@ -1163,7 +1163,7 @@ static BOOL iterate_section_fields( HINF hinf, PCWSTR section, PCWSTR key,
                 goto done;
             if (!callback( hinf, buffer, arg ))
             {
-                WARN("callback failed for %s %s err %ld\n",
+                WARN("callback failed for %s %s err %d\n",
                      debugstr_w(section), debugstr_w(buffer), GetLastError() );
                 goto done;
             }
@@ -1440,23 +1440,24 @@ BOOL WINAPI SetupInstallFromInfSectionW( HWND owner, HINF hinf, PCWSTR section, 
  */
 void WINAPI InstallHinfSectionW( HWND hwnd, HINSTANCE handle, LPCWSTR cmdline, INT show )
 {
-    WCHAR *p, *path, section[MAX_PATH];
+    WCHAR *s, *path, section[MAX_PATH];
     void *callback_context;
     UINT mode;
     HINF hinf;
 
     TRACE("hwnd %p, handle %p, cmdline %s\n", hwnd, handle, debugstr_w(cmdline));
 
-    lstrcpynW( section, cmdline, sizeof(section)/sizeof(WCHAR) );
+    lstrcpynW( section, cmdline, MAX_PATH );
 
-    if (!(p = strchrW( section, ' ' ))) return;
-    *p++ = 0;
-    while (*p == ' ') p++;
-    mode = atoiW( p );
+    if (!(s = strchrW( section, ' ' ))) return;
+    *s++ = 0;
+    while (*s == ' ') s++;
+    mode = atoiW( s );
 
-    if (!(p = strchrW( p, ' ' ))) return;
-    path = p + 1;
-    while (*path == ' ') path++;
+    /* quoted paths are not allowed on native, the rest of the command line is taken as the path */
+    if (!(s = strchrW( s, ' ' ))) return;
+    while (*s == ' ') s++;
+    path = s;
 
     hinf = SetupOpenInfFileW( path, NULL, INF_STYLE_WIN4, NULL );
     if (hinf == INVALID_HANDLE_VALUE) return;
@@ -1492,26 +1493,23 @@ void WINAPI InstallHinfSectionA( HWND hwnd, HINSTANCE handle, LPCSTR cmdline, IN
     }
 }
 
-
 /***********************************************************************
- *		SetupInstallServicesFromInfSectionA  (SETUPAPI.@)
+ *              SetupInstallServicesFromInfSectionW  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionA( HINF hinf, PCSTR sectionname, DWORD flags )
+BOOL WINAPI SetupInstallServicesFromInfSectionW( HINF Inf, PCWSTR SectionName, DWORD Flags)
 {
-    return SetupInstallServicesFromInfSectionExA( hinf, sectionname, flags,
+    return SetupInstallServicesFromInfSectionExW( Inf, SectionName, Flags,
                                                   NULL, NULL, NULL, NULL );
 }
 
-
 /***********************************************************************
- *		SetupInstallServicesFromInfSectionW  (SETUPAPI.@)
+ *              SetupInstallServicesFromInfSectionA  (SETUPAPI.@)
  */
-BOOL WINAPI SetupInstallServicesFromInfSectionW( HINF hinf, PCWSTR sectionname, DWORD flags )
+BOOL WINAPI SetupInstallServicesFromInfSectionA( HINF Inf, PCSTR SectionName, DWORD Flags)
 {
-    return SetupInstallServicesFromInfSectionExW( hinf, sectionname, flags,
+    return SetupInstallServicesFromInfSectionExA( Inf, SectionName, Flags,
                                                   NULL, NULL, NULL, NULL );
 }
-
 
 /***********************************************************************
  *		SetupInstallServicesFromInfSectionExA  (SETUPAPI.@)

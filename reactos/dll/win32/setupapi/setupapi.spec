@@ -285,10 +285,14 @@
 @ stdcall SetupDiCreateDevRegKeyA(ptr ptr long long long ptr str)
 @ stdcall SetupDiCreateDevRegKeyW(ptr ptr long long long ptr wstr)
 @ stdcall SetupDiCreateDeviceInfoA(ptr str ptr str ptr long ptr)
-@ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
 @ stdcall SetupDiCreateDeviceInfoList(ptr ptr)
 @ stdcall SetupDiCreateDeviceInfoListExA(ptr long str ptr)
 @ stdcall SetupDiCreateDeviceInfoListExW(ptr long wstr ptr)
+@ stdcall SetupDiCreateDeviceInfoW(ptr wstr ptr wstr ptr long ptr)
+@ stub SetupDiCreateDeviceInterfaceA
+@ stub SetupDiCreateDeviceInterfaceW
+@ stub SetupDiCreateDeviceInterfaceRegKeyA
+@ stub SetupDiCreateDeviceInterfaceRegKeyW
 @ stdcall SetupDiDeleteDevRegKey(ptr ptr long long long)
 @ stdcall SetupDiDeleteDeviceInfo(long ptr)
 @ stub SetupDiDeleteDeviceInterfaceData
@@ -328,15 +332,15 @@
 @ stdcall SetupDiGetDeviceInstallParamsW(ptr ptr ptr)
 @ stdcall SetupDiGetDeviceInstanceIdA(ptr ptr str long ptr)
 @ stdcall SetupDiGetDeviceInstanceIdW(ptr ptr wstr long ptr)
+@ stub SetupDiGetDeviceInterfaceAlias
+@ stdcall SetupDiGetDeviceInterfaceDetailA(long ptr ptr long ptr ptr)
+@ stdcall SetupDiGetDeviceInterfaceDetailW(long ptr ptr long ptr ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyA(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDeviceRegistryPropertyW(long ptr long ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailA(ptr ptr ptr ptr long ptr)
 @ stdcall SetupDiGetDriverInfoDetailW(ptr ptr ptr ptr long ptr)
 @ stub SetupDiGetDriverInstallParamsA
 @ stdcall SetupDiGetDriverInstallParamsW(ptr ptr ptr ptr)
-@ stub SetupDiGetDeviceInterfaceAlias
-@ stdcall SetupDiGetDeviceInterfaceDetailA(long ptr ptr long ptr ptr)
-@ stdcall SetupDiGetDeviceInterfaceDetailW(long ptr ptr long ptr ptr)
 @ stub SetupDiGetHwProfileFriendlyNameA
 @ stub SetupDiGetHwProfileFriendlyNameExA
 @ stub SetupDiGetHwProfileFriendlyNameExW
@@ -548,15 +552,15 @@
 @ stub pSetupDestroyRunOnceNodeList
 @ stub pSetupDirectoryIdToPath
 @ stdcall pSetupGetField(ptr long)
-@ stub pSetupGetGlobalFlags
+@ stdcall pSetupGetGlobalFlags()
 @ stub pSetupGetOsLoaderDriveAndPath
-@ stub pSetupGetQueueFlags
+@ stdcall pSetupGetQueueFlags(ptr)
 @ stub pSetupGetVersionDatum
 @ stub pSetupGuidFromString
 @ stub pSetupIsGuidNull
 @ stub pSetupMakeSurePathExists
-@ stub pSetupSetGlobalFlags
-@ stub pSetupSetQueueFlags
+@ stdcall pSetupSetGlobalFlags(long)
+@ stdcall pSetupSetQueueFlags(ptr long)
 @ stub pSetupSetSystemSourceFlags
 @ stub pSetupStringFromGuid
 @ stub pSetupVerifyQueuedCatalogs
