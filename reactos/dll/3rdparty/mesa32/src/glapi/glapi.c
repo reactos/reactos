@@ -877,6 +877,12 @@ _glapi_get_proc_address(const char *funcName)
    struct _glapi_function * entry;
    GLuint i;
 
+/* 
+ * ReactOS fix, the ICDs interface should export all wgl, gl and few other
+ * functions, some ICDs interface even export mgl functions 
+ * so limit it to only gl is wrong 
+ *
+
 #ifdef MANGLE
    if (funcName[0] != 'm' || funcName[1] != 'g' || funcName[2] != 'l')
       return NULL;
@@ -884,7 +890,7 @@ _glapi_get_proc_address(const char *funcName)
    if (funcName[0] != 'g' || funcName[1] != 'l')
       return NULL;
 #endif
-
+*/
    /* search extension functions first */
    for (i = 0; i < NumExtEntryPoints; i++) {
       if (strcmp(ExtEntryTable[i].name, funcName) == 0) {
