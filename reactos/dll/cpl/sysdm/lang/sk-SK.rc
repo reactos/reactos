@@ -27,7 +27,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
     CONTROL     "NavötÌvte <A HREF=""http://www.reactos.org/"">domovsk˙ str·nku systÈmu ReactOS</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 165, 8
-    PUSHBUTTON  "Zobraziù &licenciu...", IDC_LICENCE, 170, 199, 78, 13
+    PUSHBUTTON  "Zobraziù &licenciu...", IDC_LICENCE, 170, 199, 78, 14
 END
 
 
@@ -39,17 +39,17 @@ BEGIN
     GROUPBOX    "Spr·vca zariadenÌ", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT       "Spr·vca zariadenÌ zobrazÌ zoznam vöetk˝ch hardvÈrov˝ch zariadenÌ, ktorÈ s˙ nainötalovanÈ na poËÌtaËi. MÙûete ho pouûiù na zmenu vlastnostÌ ktorÈhokoævek zariadenia.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "Spr·&vca zariadenÌ...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 15
+    PUSHBUTTON  "Spr·&vca zariadenÌ...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 14
 
     GROUPBOX    "Sprievodca pridanÌm hardvÈru", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT       "Sprievodca pridanÌm hardvÈru pom·ha pri inötal·cii, odinötalovanÌ, oprave, odpojenÌ, vysunutÌ, a konfigur·ciÌ hardvÈru.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Sprievodca pridanÌm hardvÈru...", IDC_HARDWARE_WIZARD, 134, 120, 110, 15
+    PUSHBUTTON  "&Sprievodca pridanÌm hardvÈru...", IDC_HARDWARE_WIZARD, 134, 120, 110, 14
 
     GROUPBOX    "HardvÈrovÈ profily", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT       "HardvÈrovÈ profily poskytuj˙ moûnosù nastavenia a uloûenia rÙznych konfigur·ciÌ hardvÈru.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&HardvÈrovÈ profily...", IDC_HARDWARE_PROFILE, 134, 190, 110, 15
+    PUSHBUTTON  "&HardvÈrovÈ profily...", IDC_HARDWARE_PROFILE, 134, 190, 110, 14
 END
 
 
@@ -61,18 +61,18 @@ BEGIN
     LTEXT       "Na vykonanie v‰Ëöiny z t˝chto zmien s˙ potrebnÈ privilÈgia spr·vcu.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "V˝kon", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Performance options control how applications use memory, which affects the speed of your computer.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON  "&Nastavenie", IDC_PERFOR, 194, 48, 50, 15
+    PUSHBUTTON  "&Nastavenie", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "PouûÌvateæskÈ profily", IDC_STATIC, 6,75,244,48
     LTEXT       "Nastavenie pracovnej plochy s˙visiace s prihl·senÌm", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 15
+    PUSHBUTTON  "Nastav&enie", IDC_USERPROFILE, 194, 103, 50, 14
 
     GROUPBOX    "Sp˙öùanie a obnovovanie", IDC_STATIC, 6, 131, 244, 52
     LTEXT       "Startup and recovery options tell your computer how to start and what to do if an error causes your computer to stop.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON  "Na&stavenie", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON  "Na&stavenie", IDC_STAREC, 194, 162, 50, 14
 
-    PUSHBUTTON  "&PremennÈ prostredia", IDC_ENVVAR, 84, 192, 80, 15
-    PUSHBUTTON  "&Hl·senie ch˝b", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON  "&PremennÈ prostredia", IDC_ENVVAR, 84, 192, 80, 14
+    PUSHBUTTON  "&Hl·senie ch˝b", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
 
@@ -85,8 +85,8 @@ BEGIN
     LTEXT       "Pre rÙzne hardvÈrovÈ konfigur·cie mÙûete nastaviù hardvÈrovÈ profily. Pri spustenÌ je moûnÈ vybraù profil, ktor˝ chcete pouûÌvaù.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "&DostupnÈ hardvÈrovÈ profily:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
     PUSHBUTTON  "Vl&astnosti", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&KopÌrovaù", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "Pr&emenovaù", IDC_HRDPROFRENAME, 118, 106, 50, 14
@@ -94,10 +94,8 @@ BEGIN
 
     GROUPBOX    "V˝ber hardvÈrovÈho profilu", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "Pri ötarte systÈmu ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    //RADIOBUTTON "&PoËkaù na v˝ber hardvÈrovÈho profilu", IDC_HRDPROFWAIT, 14, 158, 133, 8
-    //RADIOBUTTON "&Vybraù prv˝ profil v zozname, ak sa profil nevyberie do", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    CONTROL     "&PoËkaù na v˝ber hardvÈrovÈho profilu", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 133, 8
-    CONTROL     "&Vybraù prv˝ profil v zozname, ak sa profil nevyberie do", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 190, 8
+    AUTORADIOBUTTON "&PoËkaù na v˝ber hardvÈrovÈho profilu", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Vybraù prv˝ profil v zozname, ak sa profil nevyberie do", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT       "sek˙nd", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -112,13 +110,13 @@ STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_
 CAPTION "Premenovaù profil"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT        "Z:", IDC_STATIC, 5, 10, 20, 8
-   LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-   LTEXT        "Na:", IDC_STATIC, 5, 30, 20, 8
-   EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
+    LTEXT        "Z:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
+    LTEXT        "Na:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
-   DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-   PUSHBUTTON   "Zruöiù", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
+    PUSHBUTTON   "Zruöiù", IDCANCEL, 196, 24, 50, 14
 END
 
 
@@ -133,14 +131,14 @@ BEGIN
     LTEXT       "&Profily uloûenÈ na tomto poËÌtaËi:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Zmeniù typ", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
-    PUSHBUTTON  "&Odstr·niù", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
-    PUSHBUTTON  "KopÌrovaù do", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+    PUSHBUTTON  "&Zmeniù typ", IDC_USERPROFILE_CHANGE, 90, 156, 50, 14
+    PUSHBUTTON  "&Odstr·niù", IDC_USERPROFILE_DELETE, 145, 156, 50, 14
+    PUSHBUTTON  "KopÌrovaù do", IDC_USERPROFILE_COPY, 200, 156, 50, 14
 
-    CONTROL     "Ak chcete vytvoriù novÈ pouûÌvateæskÈ konto, kliknite na poloûku <A>PouûÌvateæskÈ kont·</A> v ovl·dacom paneli.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 228, 8
+    CONTROL     "Ak chcete vytvoriù novÈ pouûÌvateæskÈ konto, kliknite na poloûku <A>PouûÌvateæskÈ kont·</A> v ovl·dacom paneli.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
 
-    DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
-    PUSHBUTTON  "Zruöiù", IDCANCEL, 196, 200, 54, 13
+    DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 14
+    PUSHBUTTON  "Zruöiù", IDCANCEL, 196, 200, 54, 14
 END
 
 
@@ -152,12 +150,11 @@ BEGIN
     GROUPBOX    "System startup", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "Default operating &system:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    //CHECKBOX    "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
-    CONTROL     "&Time to display list of operating systems:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
+    AUTOCHECKBOX "&Time to display list of operating systems:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "seconds", IDC_STATIC, 215, 56, 25, 8
-    CONTROL     "Time to &display recovery options when needed:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
+    AUTOCHECKBOX "Time to &display recovery options when needed:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "seconds", IDC_STATIC, 215, 70, 25, 8
@@ -165,15 +162,15 @@ BEGIN
     PUSHBUTTON  "&Edit", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "System failure", IDC_STATIC, 7, 111, 238, 140
-    CONTROL     "&Write an event to the system log", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 148, 10
-    CONTROL     "Se&nd an administrative alert", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
-    CONTROL     "Automatically &restart", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
+    AUTOCHECKBOX "&Write an event to the system log", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "Se&nd an administrative alert", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "Automatically &restart", IDC_STRRECRESTART, 14, 152, 145, 10
 
     GROUPBOX    "Write debugging information", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "Dump &file:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    CONTROL     "&Overwrite any existing file", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
+    AUTOCHECKBOX "&Overwrite any existing file", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Zruöiù", IDCANCEL, 195, 259, 50, 14
@@ -195,12 +192,12 @@ BEGIN
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT       "&PoËiatoËn· veækosù (v MB):", -1, 22, 118, 54, 9
     LTEXT       "Ma&xim·lna veækosù (v MB):", -1, 22, 131, 64, 9
-    CONTROL     "&Vlastn· veækosù:", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
-    CONTROL     "Veækosù urËovan· &systÈmom", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 88, 9
-    CONTROL     "N&epouûÌvaù str·nkovacÌ s˙bor", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 78,9
+    AUTORADIOBUTTON "&Vlastn· veækosù:", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "Veækosù urËovan· &systÈmom", IDC_SYSMANSIZE, 20, 145, 88, 9
+    AUTORADIOBUTTON "N&epouûÌvaù str·nkovacÌ s˙bor", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "&Nastaviù", IDC_SET, 158, 155, 50, 13
+    PUSHBUTTON  "&Nastaviù", IDC_SET, 158, 155, 50, 14
 
     GROUPBOX    "Celkov· veækosù str·nkovacieho s˙boru pre vöetky jednotky", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Najmenöia povolen·:", IDC_STATIC, 18, 188, 58, 9
@@ -210,8 +207,8 @@ BEGIN
     LTEXT       "Aktu·lne vyhraden·:", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
 
-    DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
-    PUSHBUTTON  "Zruöiù", IDCANCEL, 168, 232, 48, 13
+    DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 14
+    PUSHBUTTON  "Zruöiù", IDCANCEL, 168, 232, 48, 14
 END
 
 
@@ -261,7 +258,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT    IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
-    DEFPUSHBUTTON  "OK", IDOK, 106, 142, 54, 13
+    DEFPUSHBUTTON  "OK", IDOK, 106, 142, 54, 14
 END
 
 

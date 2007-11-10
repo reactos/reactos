@@ -18,7 +18,7 @@ BEGIN
     LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
     LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
     LTEXT       "Visita ReactOS su internet", IDC_ROSHOMEPAGE_LINK, 20, 200, 93, 8
-    PUSHBUTTON  "Vedi la licenza...", IDC_LICENCE, 170, 199, 78, 13
+    PUSHBUTTON  "Vedi la licenza...", IDC_LICENCE, 170, 199, 78, 14
 END
 
 
@@ -30,17 +30,17 @@ BEGIN
     GROUPBOX    "Gestione dispositivi", IDC_STATIC, 6, 7, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
     LTEXT       "Gestione dispositivi elenca tutti i dispositivi installati nel computer. Usate la gestione dispositivi per modificare le impostazioni di un dispositivo.", IDC_STATIC, 42, 18, 204, 24
-    PUSHBUTTON  "&Gestione dispositivi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
+    PUSHBUTTON  "&Gestione dispositivi...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 14
 
     GROUPBOX    "Hardware Wizard", IDC_STATIC, 6, 79, 244, 61
     ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
     LTEXT       "Hardware wizard aiuta ad installare, disinstallare, ripristinare, scollegare, estrarre e configurare l'hardware.", IDC_STATIC, 42, 90, 204, 24
-    PUSHBUTTON  "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
+    PUSHBUTTON  "&Hardware Wizard...", IDC_HARDWARE_WIZARD, 154, 120, 90, 14
 
     GROUPBOX    "Profili Hardware", IDC_STATIC, 6, 149, 244, 61
     ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
     LTEXT       "Profili Hardware mette a disposizione un modo per definire e memorizzare diverse configurazioni hardware.", IDC_STATIC, 42, 160, 204, 24
-    PUSHBUTTON  "&Profili Hardware...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
+    PUSHBUTTON  "&Profili Hardware...", IDC_HARDWARE_PROFILE, 154, 190, 90, 14
 END
 
 
@@ -52,18 +52,18 @@ BEGIN
     LTEXT       "I privilegi di amministrazione sono necessari per la maggior parte delle impostazioni seguenti.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Prestazioni", IDC_STATIC, 6, 18, 244, 50
     LTEXT       "Le opzioni di controllo delle prestazioni definiscono come è usata lamemoria dalle applicazioni, ha un effetto sulla velocità del computer.", IDC_STATIC, 16, 29, 210, 17
-    PUSHBUTTON  "Impostazioni", IDC_PERFOR, 194, 48, 50, 15
+    PUSHBUTTON  "Impostazioni", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "Profili utente", IDC_STATIC, 6,75,244,48
     LTEXT       "Impostazioni del desktop relative al login", IDC_STATIC, 16, 88, 210, 20
-    PUSHBUTTON  "Impostazioni", IDC_USERPROFILE, 194, 103, 50, 15
+    PUSHBUTTON  "Impostazioni", IDC_USERPROFILE, 194, 103, 50, 14
 
     GROUPBOX    "Avvio e recupero", IDC_STATIC, 6, 131, 244, 52
     LTEXT       "Le opzioni di Avvio e recupero informano il computer su come partire e cosa fare nel caso che un errore fermi il computer.", IDC_STATIC, 16, 144, 210, 19
-    PUSHBUTTON  "Impostazioni", IDC_STAREC, 194, 162, 50, 15
+    PUSHBUTTON  "Impostazioni", IDC_STAREC, 194, 162, 50, 14
 
-    PUSHBUTTON  "Variabili di ambiente", IDC_ENVVAR, 84, 192, 80, 15
-    PUSHBUTTON  "Registrazione errori", IDC_ERRORREPORT, 170, 192, 80, 15
+    PUSHBUTTON  "Variabili di ambiente", IDC_ENVVAR, 84, 192, 80, 14
+    PUSHBUTTON  "Registrazione errori", IDC_ERRORREPORT, 170, 192, 80, 14
 END
 
 
@@ -76,8 +76,8 @@ BEGIN
     LTEXT       "Profili Hardware mette a disposizione un modo per definire e memorizzare diverse configurazioni hardware. All'avvio del computer è possibile scegliere quale usare.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Profili Hardware disponibili:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
     PUSHBUTTON  "&Proprietà", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&Copia", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "&Rinomina", IDC_HRDPROFRENAME, 118, 106, 50, 14
@@ -85,10 +85,8 @@ BEGIN
 
     GROUPBOX    "Selezione dei Profili Hardware", IDC_STATIC, 7, 130, 240, 75
     LTEXT       "All'avvio di ReactOS:", IDC_STATIC, 14, 142, 210, 8
-    //RADIOBUTTON "&Aspetta finche non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8
-    //RADIOBUTTON "&Scegli il primo profilo in elenco se non avviene una scelta in ", IDC_HRDPROFSELECT, 14, 173, 190, 8
-    CONTROL     "&Aspetta finche non viene scelto un profilo", IDC_HRDPROFWAIT, "button", BS_AUTORADIOBUTTON, 14, 158, 133, 8
-    CONTROL     "&Scegli il primo profilo in elenco se non avviene una scelta in ", IDC_HRDPROFSELECT, "button", BS_AUTORADIOBUTTON, 14, 173, 190, 8
+    AUTORADIOBUTTON "&Aspetta finche non viene scelto un profilo", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    AUTORADIOBUTTON "&Scegli il primo profilo in elenco se non avviene una scelta in ", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT       "Secondi", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
     CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
@@ -103,13 +101,13 @@ STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_
 CAPTION "Rinomina profilo"
 FONT 8, "MS Shell Dlg"
 BEGIN
-   LTEXT        "Da:", IDC_STATIC, 5, 10, 20, 8
-   LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
-   LTEXT        "A:", IDC_STATIC, 5, 30, 20, 8
-   EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
+    LTEXT        "Da:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
+    LTEXT        "A:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
 
-   DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
-   PUSHBUTTON   "Annulla", IDCANCEL, 196, 24, 50, 14
+    DEFPUSHBUTTON "OK", IDOK, 196, 6, 50, 14
+    PUSHBUTTON   "Annulla", IDCANCEL, 196, 24, 50, 14
 END
 
 
@@ -124,14 +122,14 @@ BEGIN
     LTEXT       "Profili memorizzati su questo computer:", IDC_STATIC, 16, 51, 204, 9
     CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
                     6, 66, 244, 85, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Cambia il tipo", IDC_USERPROFILE_CHANGE, 90, 156, 50, 13
-    PUSHBUTTON  "Cancella", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
-    PUSHBUTTON  "Copia a", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+    PUSHBUTTON  "Cambia il tipo", IDC_USERPROFILE_CHANGE, 90, 156, 50, 14
+    PUSHBUTTON  "Cancella", IDC_USERPROFILE_DELETE, 145, 156, 50, 14
+    PUSHBUTTON  "Copia a", IDC_USERPROFILE_COPY, 200, 156, 50, 14
 
-    LTEXT       "Per creare nuovi utenti aprire <A>Utenti</A> el pannello di controllo", IDC_STATIC, 7, 175, 116, 8
+    CONTROL     "Per creare nuovi utenti aprire <A>Utenti</A> el pannello di controllo", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
 
-    DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 13
-    PUSHBUTTON  "Annulla", IDCANCEL, 196, 200, 54, 13
+    DEFPUSHBUTTON  "OK", IDOK, 134, 200, 54, 14
+    PUSHBUTTON  "Annulla", IDCANCEL, 196, 200, 54, 14
 END
 
 
@@ -143,12 +141,11 @@ BEGIN
     GROUPBOX    "Avvio del sistema", IDC_STATIC, 7, 12, 238, 95
     LTEXT       "Sistema operativo predefinito:", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
-    //CHECKBOX    "&Tempo per la visualizzazione dell'elenco dei sistemi operativi:", IDC_STRECLIST, 14, 56, 150, 8
-    CONTROL     "&Tempo per la visualizzazione dell'elenco dei sistemi operativi:", IDC_STRECLIST, "button", BS_AUTOCHECKBOX, 14, 56, 150, 8
+    AUTOCHECKBOX "&Tempo per la visualizzazione dell'elenco dei sistemi operativi:", IDC_STRECLIST, 14, 56, 150, 8
     EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
     CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondi", IDC_STATIC, 215, 56, 25, 8
-    CONTROL     "Tempo per la visualizzazione delle opzioni di recupero disponibili quando è necessario:", IDC_STRRECREC, "button", BS_AUTOCHECKBOX, 14, 70, 163, 8
+    AUTOCHECKBOX "Tempo per la visualizzazione delle opzioni di recupero disponibili quando è necessario:", IDC_STRRECREC, 14, 70, 163, 8
     EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
     CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT       "secondi", IDC_STATIC, 215, 70, 25, 8
@@ -156,15 +153,15 @@ BEGIN
     PUSHBUTTON  "&Modifica", IDC_STRRECEDIT, 188, 87, 50, 14
 
     GROUPBOX    "Blocco del sistema", IDC_STATIC, 7, 111, 238, 140
-    CONTROL     "&Scrivi un evento nella registrazione di sistema", IDC_STRRECWRITEEVENT, "button", BS_AUTOCHECKBOX, 14, 124, 148, 10
-    CONTROL     "Invia una segnalazione di amministrazione", IDC_STRRECSENDALERT, "button", BS_AUTOCHECKBOX, 14, 138, 148, 10
-    CONTROL     "Riavvia automaticamente", IDC_STRRECRESTART, "button", BS_AUTOCHECKBOX, 14, 152, 145, 10
+    AUTOCHECKBOX "&Scrivi un evento nella registrazione di sistema", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
+    AUTOCHECKBOX "Invia una segnalazione di amministrazione", IDC_STRRECSENDALERT, 14, 138, 148, 10
+    AUTOCHECKBOX "Riavvia automaticamente", IDC_STRRECRESTART, 14, 152, 145, 10
 
     GROUPBOX    "Scrivi le informazioni di debug", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
     LTEXT       "&File di Dump:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
-    CONTROL     "&Sovrascrivi i file se esistenti", IDC_STRRECOVERWRITE, "button", BS_AUTOCHECKBOX, 17, 228, 125, 10
+    AUTOCHECKBOX "&Sovrascrivi i file se esistenti", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 
     DEFPUSHBUTTON  "OK", IDOK, 141, 259, 50, 14
     PUSHBUTTON  "Annulla", IDCANCEL, 195, 259, 50, 14
@@ -186,12 +183,12 @@ BEGIN
     LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT       "&Dimensione iniziale (MB):", -1, 22, 118, 54, 9
     LTEXT       "Dimensione massima (MB):", -1, 22, 131, 64, 9
-    CONTROL     "&Dimensione personalizzata", IDC_CUSTOM, "Button", BS_AUTORADIOBUTTON, 20, 105, 54, 9
-    CONTROL     "Dimensione gestita dal sistema", IDC_SYSMANSIZE, "Button", BS_AUTORADIOBUTTON, 20, 145, 88, 9
-    CONTROL     "&Nessun file di paginazione", IDC_NOPAGEFILE, "Button", BS_AUTORADIOBUTTON, 20, 158, 78,9
+    AUTORADIOBUTTON "&Dimensione personalizzata", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "Dimensione gestita dal sistema", IDC_SYSMANSIZE, 20, 145, 88, 9
+    AUTORADIOBUTTON "&Nessun file di paginazione", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON  "Conferma", IDC_SET, 158, 155, 50, 13
+    PUSHBUTTON  "Conferma", IDC_SET, 158, 155, 50, 14
 
     GROUPBOX    "Dimensione totale del file di paginazione per tutti i dischi", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT       "Minimo ammesso:", IDC_STATIC, 18, 188, 58, 9
@@ -201,8 +198,8 @@ BEGIN
     LTEXT       "Attualmente allocato:", IDC_STATIC, 18, 210, 66, 9
     LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
 
-    DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 13
-    PUSHBUTTON  "Annulla", IDCANCEL, 168, 232, 48, 13
+    DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 14
+    PUSHBUTTON  "Annulla", IDCANCEL, 168, 232, 48, 14
 END
 
 
@@ -252,7 +249,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 BEGIN
     EDITTEXT    IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
-    DEFPUSHBUTTON  "OK", IDOK, 106, 142, 54, 13
+    DEFPUSHBUTTON  "OK", IDOK, 106, 142, 54, 14
 END
 
 
@@ -270,5 +267,4 @@ BEGIN
     IDS_MINI_DUMP "Minidump(64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Complete dump"
-
 END
