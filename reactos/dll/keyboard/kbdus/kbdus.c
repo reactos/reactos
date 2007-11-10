@@ -81,7 +81,7 @@ ROSDATA USHORT scancode_to_vk[] = {
   VK_SNAPSHOT,
   /* - 55 - */
   /* Oddities, and the remaining standard F-Keys */
-  VK_EMPTY,     VK_EMPTY,     VK_F11,       VK_F12,
+  VK_EMPTY,     VK_OEM_102,     VK_F11,       VK_F12,
   /* - 59 - */
   VK_CLEAR,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* EREOF */
   VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY,     VK_EMPTY, /* ZOOM */
@@ -170,6 +170,7 @@ ROSDATA VK_TO_WCHARS3 key_to_chars_3mod[] = {
   { VK_OEM_4, 0, {'[', '{', 0x1b /* ESC */} },
   { VK_OEM_6, 0, {']', '}', 0x1d /* GS */} },
   { VK_OEM_5, 0, {'\\','|', 0x1c /* FS */} },
+  { VK_OEM_102,0,{'\\','|', 0x1c /* FS */} },
   { VK_RETURN,0, {'\r', '\r', '\n'} },
   { 0,0 }
 };
