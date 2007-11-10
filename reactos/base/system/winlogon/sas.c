@@ -319,7 +319,7 @@ static NTSTATUS
 CreateLogoffSecurityAttributes(
 	OUT PSECURITY_ATTRIBUTES* ppsa)
 {
-	/* The following code is no only incomplete, it's a mess and uncompilable */
+	/* The following code is not working yet and messy */
 	/* Still, it gives some ideas about data types and functions involved and */
 	/* required to set up a SECURITY_DESCRIPTOR for a SECURITY_ATTRIBUTES */
 	/* instance for a thread, to allow that  thread to ImpersonateLoggedOnUser(). */
@@ -328,7 +328,9 @@ CreateLogoffSecurityAttributes(
 	PSECURITY_ATTRIBUTES psa = 0;
 	BYTE* pMem;
 	PACL pACL;
-	//EXPLICIT_ACCESS ea[2];
+	EXPLICIT_ACCESS Access;
+	PSID pEveryoneSID = NULL;
+	static SID_IDENTIFIER_AUTHORITY WorldAuthority = { SECURITY_WORLD_SID_AUTHORITY };
 
 	*ppsa = NULL;
 
@@ -351,6 +353,16 @@ CreateLogoffSecurityAttributes(
 	// while the user's SID obviously must be created for each new user.
 	// Might as well store it when the user logs on?
 
+	if(!AllocateAndInitializeSid(&WorldAuthority, 
+				     1,
+				     SECURITY_WORLD_RID,
+				     0, 0, 0, 0, 0, 0, 0,
+				     &pEveryoneSID))	 
+	{
+		DPRINT("Failed to initialize security descriptor for logoff thread!\n");
+		return STATUS_UNSUCCESSFUL;
+	}
+
 	/* set up the required security attributes to be able to shut down */
 	/* To save space and time, allocate a single block of memory holding */
 	/* both SECURITY_ATTRIBUTES and SECURITY_DESCRIPTOR */
@@ -372,6 +384,25 @@ CreateLogoffSecurityAttributes(
 	SecurityDescriptor = (PSECURITY_DESCRIPTOR)(pMem + sizeof(SECURITY_ATTRIBUTES));
 	pACL = (PACL)(((PBYTE)SecurityDescriptor) + SECURITY_DESCRIPTOR_MIN_LENGTH);
 
+	// Initialize an EXPLICIT_ACCESS structure for an ACE.
+	// The ACE will allow this thread to log off (and shut down the system, currently).
+	ZeroMemory(&Access, sizeof(Access));
+	Access.grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
+	Access.grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
+	Access.grfInheritance = NO_INHERITANCE;
+	Access.Trustee.TrusteeForm = TRUSTEE_IS_SID;
+	Access.Trustee.TrusteeType = TRUSTEE_IS_WELL_KNOWN_GROUP;
+	Access.Trustee.ptstrName = pEveryoneSID;
+
+	if (SetEntriesInAcl(1, &Access, NULL, &pACL) != ERROR_SUCCESS) 
+	{
+        // SetEntriesInAcl is not implemented yet
+        DPRINT1 ("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
+
+		HeapFree(GetProcessHeap(), 0, pMem);
+		return STATUS_UNSUCCESSFUL;
+	}
+
 	if (!InitializeSecurityDescriptor(SecurityDescriptor, SECURITY_DESCRIPTOR_REVISION))
 	{
 		HeapFree(GetProcessHeap(), 0, pMem);
@@ -379,18 +410,7 @@ CreateLogoffSecurityAttributes(
 		return STATUS_UNSUCCESSFUL;
 	}
 
-	// Initialize an EXPLICIT_ACCESS structure for an ACE.
-	// The ACE will allow this thread to log off (and shut down the system, currently).
-#if 0
-	ZeroMemory(ea, sizeof(ea));
-	ea[0].grfAccessPermissions = THREAD_SET_THREAD_TOKEN;
-	ea[0].grfAccessMode = SET_ACCESS; // GRANT_ACCESS?
-	ea[0].grfInheritance= NO_INHERITANCE;
-	ea[0].Trustee.TrusteeForm = TRUSTEE_IS_SID;
-	ea[0].Trustee.TrusteeType = TRUSTEE_IS_USER;
-	ea[0].Trustee.ptstrName  = (LPTSTR) pEveryoneSID;
-
-	if (!SetSecurityDescriptorDacl(pSD,
+	if (!SetSecurityDescriptorDacl(SecurityDescriptor,
 	        TRUE,     // bDaclPresent flag
 	        pACL,
 	        FALSE))   // not a default DACL
@@ -399,7 +419,6 @@ CreateLogoffSecurityAttributes(
 		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
 	}
-#endif
 
 	psa->nLength = sizeof(SECURITY_ATTRIBUTES);
 	psa->lpSecurityDescriptor = SecurityDescriptor;
@@ -447,14 +466,9 @@ HandleLogoff(
 	Status = CreateLogoffSecurityAttributes(&psa);
 	if (!NT_SUCCESS(Status))
 	{
-		WARN("Failed to create a required security descriptor. Status 0x%08x\n", Status);
-#if 1
-		WARN("Attempting to continue without it.\n");
-#else
-		ERR("Aborting logoff\n");
+		ERR("Failed to create a required security descriptor. Status 0x%08x\n", Status);
 		HeapFree(GetProcessHeap(), 0, LSData);
 		return Status;
-#endif
 	}
 
 	/* Run logoff thread */

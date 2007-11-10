@@ -36,6 +36,8 @@
 #include <exfuncs.h>
 #include <setypes.h>
 #include <ntsecapi.h>
+#include <accctrl.h>
+#include <aclapi.h>
 
 #include <reactos/winlogon.h>
 
