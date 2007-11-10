@@ -196,7 +196,15 @@ static DWORD ModBits( PKBDTABLES pkKT, PBYTE KeyState )
          KS_DOWN_BIT)
       ModBits |= GetShiftBit( pkKT, VK_SHIFT );
 
+   if (KeysSet( pkKT, KeyState, VK_SHIFT, 0 ) &
+         KS_DOWN_BIT)
+      ModBits |= GetShiftBit( pkKT, VK_SHIFT );
+
    if (KeysSet( pkKT, KeyState, VK_LCONTROL, VK_RCONTROL ) &
+         KS_DOWN_BIT )
+      ModBits |= GetShiftBit( pkKT, VK_CONTROL );
+
+   if (KeysSet( pkKT, KeyState, VK_CONTROL, 0 ) &
          KS_DOWN_BIT )
       ModBits |= GetShiftBit( pkKT, VK_CONTROL );
 
@@ -406,36 +414,6 @@ CLEANUP:
    END_CLEANUP;
 }
 
-
-
-int STDCALL ToUnicodeEx( UINT wVirtKey,
-                         UINT wScanCode,
-                         PBYTE lpKeyState,
-                         LPWSTR pwszBuff,
-                         int cchBuff,
-                         UINT wFlags,
-                         HKL dwhkl )
-{
-   int ToUnicodeResult = 0;
-
-   if (0 == (lpKeyState[wVirtKey] & KS_DOWN_BIT))
-   {
-      ToUnicodeResult = 0;
-   }
-   else
-   {
-      ToUnicodeResult = ToUnicodeInner( wVirtKey,
-                                        wScanCode,
-                                        lpKeyState,
-                                        pwszBuff,
-                                        cchBuff,
-                                        wFlags,
-                                        PsGetCurrentThreadWin32Thread() ?
-                                        PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0 );
-   }
-
-   return ToUnicodeResult;
-}
 
 
 BOOL FASTCALL
@@ -741,13 +719,14 @@ NtUserToUnicodeEx(
    }
    RtlZeroMemory( OutPwszBuff, sizeof( WCHAR ) * cchBuff );
 
-   ret = ToUnicodeEx( wVirtKey,
-                      wScanCode,
-                      KeyStateBuf,
-                      OutPwszBuff,
-                      cchBuff,
-                      wFlags,
-                      dwhkl );
+   ret = ToUnicodeInner( wVirtKey,
+                         wScanCode,
+                         KeyStateBuf,
+                         OutPwszBuff,
+                         cchBuff,
+                         wFlags,
+                         PsGetCurrentThreadWin32Thread() ?
+                            PsGetCurrentThreadWin32Thread()->KeyboardLayout->KBTables : 0 );
 
    MmCopyToCaller(pwszBuff,OutPwszBuff,sizeof(WCHAR)*cchBuff);
    ExFreePool(OutPwszBuff);
@@ -1008,7 +987,7 @@ DWORD
 STDCALL
 NtUserVkKeyScanEx(
    WCHAR wChar,
-   ULONG_PTR KeyboardLayout,
+   HKL KeyboardLayout,
    DWORD Unknown2)
 {
 /* FIXME: currently, this routine doesnt seem to need any locking */
@@ -1023,7 +1002,7 @@ NtUserVkKeyScanEx(
 
    if(!KeyboardLayout)
       return -1;
-   KeyLayout = UserHklToKbl((HKL)KeyboardLayout)->KBTables;
+   KeyLayout = UserHklToKbl(KeyboardLayout)->KBTables;
 
    for (nMod = 0; KeyLayout->pVkToWcharTable[nMod].nModifications; nMod++)
    {

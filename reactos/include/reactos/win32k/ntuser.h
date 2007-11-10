@@ -2357,7 +2357,7 @@ DWORD
 NTAPI
 NtUserVkKeyScanEx(
   WCHAR wChar,
-  ULONG_PTR KeyboardLayout,
+  HKL KeyboardLayout,
   DWORD Unknown2);
 
 DWORD
