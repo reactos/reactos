@@ -233,7 +233,7 @@ except_loop2:
     mov ebx, [ebp+12]
     or eax, eax
     jz except_continue2
-    jz except_dismiss2
+    js except_dismiss2
 
     /* So this is an accept, call the termination handlers */
     mov edi, [ebx+8]
@@ -365,7 +365,7 @@ except_loop3:
     mov ebx, [ebp+12]
     or eax, eax
     jz except_continue3
-    jz except_dismiss3
+    js except_dismiss3
 
     /* So this is an accept, call the termination handlers */
     mov edi, [ebx+8]
