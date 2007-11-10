@@ -3553,3 +3553,60 @@ cleanup:
     TRACE("Returning %d\n", ret);
     return ret;
 }
+
+/***********************************************************************
+ *		SetupDiDeleteDevRegKey (SETUPAPI.@)
+ */
+BOOL WINAPI SetupDiDeleteDevRegKey(
+       HDEVINFO DeviceInfoSet,
+       PSP_DEVINFO_DATA DeviceInfoData,
+       DWORD Scope,
+       DWORD HwProfile,
+       DWORD KeyType)
+{
+    struct DeviceInfoSet *set = (struct DeviceInfoSet *)DeviceInfoSet;
+    struct DeviceInfo *devInfo;
+    BOOL ret = FALSE;
+
+    TRACE("%p %p %d %d %d\n", DeviceInfoSet, DeviceInfoData, Scope, HwProfile,
+            KeyType);
+
+    if (!DeviceInfoSet || DeviceInfoSet == (HDEVINFO)INVALID_HANDLE_VALUE)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (set->magic != SETUP_DEVICE_INFO_SET_MAGIC)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return FALSE;
+    }
+    if (!DeviceInfoData || DeviceInfoData->cbSize != sizeof(SP_DEVINFO_DATA)
+            || !DeviceInfoData->Reserved)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    if (Scope != DICS_FLAG_GLOBAL && Scope != DICS_FLAG_CONFIGSPECIFIC)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+    if (KeyType != DIREG_DEV && KeyType != DIREG_DRV)
+    {
+        SetLastError(ERROR_INVALID_FLAGS);
+        return FALSE;
+    }
+    devInfo = (struct DeviceInfo *)DeviceInfoData->Reserved;
+    if (devInfo->set != set)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+    switch (KeyType)
+    {
+        default:
+            WARN("unknown KeyType %d\n", KeyType);
+    }
+    return ret;
+}
