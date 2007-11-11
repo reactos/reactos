@@ -29,35 +29,79 @@ Test_NtUserScrollDC(PTESTINFO pti)
 
 	hRgn = CreateRectRgn(0,0,10,10);
 
+
+	/* Test inverted clip rect */
+	rcScroll.left = 0;
+	rcScroll.top = 25;
+	rcScroll.right = 100;
+	rcScroll.bottom = 40;
+	rcClip.left = 0;
+	rcClip.top = 35;
+	rcClip.right = -70;
+	rcClip.bottom = -1000;
+	SetLastError(ERROR_SUCCESS);
+	Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
+	RTEST(Result == 1);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+
+	/* Test inverted scroll rect */
+	rcScroll.left = 0;
+	rcScroll.top = 25;
+	rcScroll.right = -100;
+	rcScroll.bottom = -40;
+	rcClip.left = 0;
+	rcClip.top = 35;
+	rcClip.right = 70;
+	rcClip.bottom = 1000;
+	SetLastError(ERROR_SUCCESS);
+	Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
+	RTEST(Result == 1);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+
 	rcScroll.left = 0;
 	rcScroll.top = 25;
 	rcScroll.right = 100;
 	rcScroll.bottom = 40;
 
-	rcClip.left = 0;
-	rcClip.top = 35;
-	rcClip.right = 70;
-	rcClip.bottom = 1000;
+	/* Test invalid update region */
+	SetLastError(ERROR_SUCCESS);
+	Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, (HRGN)0x123456, &rcUpdate);
+	RTEST(Result == 0);
+	TEST(GetLastError() == ERROR_INVALID_HANDLE);
+
+	/* Test invalid dc */
+	SetLastError(ERROR_SUCCESS);
+	Result = NtUserScrollDC((HDC)0x123456, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
+	RTEST(Result == 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+	printf("%ld\n", GetLastError());
+
+	/* Test invalid update rect */
+	SetLastError(ERROR_SUCCESS);
+	Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, (PVOID)0x80001000);
+	RTEST(Result == 0);
+	RTEST(GetLastError() == ERROR_NOACCESS);
 
 	Result = NtUserScrollDC(hDC, 10, 20, &rcScroll, &rcClip, hRgn, &rcUpdate);
 
-	TEST(Result == TRUE);
-	TEST(rcUpdate.left == 0);
-	TEST(rcUpdate.top == 35);
-	TEST(rcUpdate.right == 70);
-	TEST(rcUpdate.bottom == 55);
+	RTEST(Result == TRUE);
+	RTEST(rcUpdate.left == 0);
+	RTEST(rcUpdate.top == 35);
+	RTEST(rcUpdate.right == 70);
+	RTEST(rcUpdate.bottom == 55);
 
 	hTmpRgn = CreateRectRgn(10,45,70,55);
 	Result = CombineRgn(hRgn, hRgn, hTmpRgn, RGN_XOR);
-	TEST(Result == SIMPLEREGION);
+	RTEST(Result == SIMPLEREGION);
 
 	SetRectRgn(hTmpRgn,0,35,70,40);
 	Result = CombineRgn(hRgn, hRgn, hTmpRgn, RGN_XOR);
-	TEST(Result == NULLREGION);
+	RTEST(Result == NULLREGION);
 
 	DeleteObject(hTmpRgn);
 
 	/* TODO: Test with another window in front */
+	/* TODO: Test with different viewport extension */
 
 	ReleaseDC(hWnd, hDC);
 	DestroyWindow(hWnd);

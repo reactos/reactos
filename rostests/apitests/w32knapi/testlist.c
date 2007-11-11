@@ -7,6 +7,7 @@
 #include "ntdd/NtGdiDdQueryDirectDrawObject.c"
 
 #include "ntgdi/NtGdiArcInternal.c"
+#include "ntgdi/NtGdiBitBlt.c"
 #include "ntgdi/NtGdiCreateBitmap.c"
 #include "ntgdi/NtGdiCreateCompatibleBitmap.c"
 #include "ntgdi/NtGdiDoPalette.c"
@@ -35,6 +36,7 @@ TESTENTRY TestList[] =
 
 	/* ntgdi */
 	{ L"NtGdiArcInternal", Test_NtGdiArcInternal },
+	{ L"NtGdiBitBlt", Test_NtGdiBitBlt },
 	{ L"NtGdiCreateBitmap", Test_NtGdiCreateBitmap },
 	{ L"NtGdiCreateCompatibleBitmap", Test_NtGdiCreateCompatibleBitmap },
 	{ L"NtGdiDoPalette", Test_NtGdiDoPalette },
