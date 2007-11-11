@@ -1291,7 +1291,9 @@ HRESULT WINAPI SHCreateDefaultContextMenu(
  *
  */
 
-INT CDefFolderMenu_Create2(
+INT 
+WINAPI
+CDefFolderMenu_Create2(
 	LPCITEMIDLIST pidlFolder,
 	HWND hwnd,
 	UINT cidl,

@@ -55,7 +55,7 @@ typedef struct
     PSHELLNEW_ITEM s_SnHead;
 }INewMenuImpl;
 
-static const GUID CLSID_NewMenu = {0xD969A300, 0xE7FF, 0x11d0, {0xA9, 0x3B, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19} };
+const GUID CLSID_NewMenu = {0xD969A300, 0xE7FF, 0x11d0, {0xA9, 0x3B, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19} };
 static const IContextMenu2Vtbl cmvt;
 static WCHAR szNew[100];
 
@@ -791,7 +791,7 @@ static const IContextMenu2Vtbl cmvt =
 	INewItem_IContextMenu_fnHandleMenuMsg
 };
 
-HRESULT WINAPI INewItem_Constructor(LPSHELLFOLDER pSFParent, REFIID riid, LPVOID *ppv)
+HRESULT WINAPI INewItem_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID *ppv)
 {
     INewMenuImpl * ow;
     HRESULT res;
@@ -820,8 +820,8 @@ HRESULT WINAPI INewItem_Constructor(LPSHELLFOLDER pSFParent, REFIID riid, LPVOID
     {
         IShellFolder_Release(cached_ow->pSFParent);
     }
-    cached_ow->pSFParent = pSFParent;
-    IShellFolder_AddRef(pSFParent);
+ //   cached_ow->pSFParent = pSFParent;
+ //   IShellFolder_AddRef(pSFParent);
 
     res = INewItem_fnQueryInterface( cached_ow, riid, ppv );
     return res;

@@ -226,7 +226,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
      * FIXME
      * load other shell extensions
      */
-    
+#if 0    
     if (SUCCEEDED(INewItem_Constructor(This->pSFParent, &IID_IContextMenu2, (LPVOID*)&icm)))
     {
         if (SUCCEEDED(IContextMenu_QueryContextMenu(icm, hMenu, 10, idCmdFirst, idCmdLast, uFlags)))
@@ -239,6 +239,7 @@ static HRESULT WINAPI ISVBgCm_fnQueryContextMenu(
             This->icm_new = NULL;
         }
     }
+#endif
 
     if (This->bDesktop)
     {

@@ -78,6 +78,7 @@ static const struct {
     {&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
     {&CLSID_OpenWith,       &SHEOW_Constructor},
+    {&CLSID_NewMenu,        &INewItem_Constructor},
 	{NULL,NULL}
 };
 
