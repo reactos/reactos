@@ -559,6 +559,11 @@ AfdPacketSocketReadData(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 					RecvReq->AddressLength,
 					TRUE, TRUE );
 
+    if( !RecvReq->BufferArray ) { /* access violation in userspace */
+	return UnlockAndMaybeComplete
+	    ( FCB, STATUS_ACCESS_VIOLATION, Irp, 0, NULL, FALSE );
+    }
+
     if( !IsListEmpty( &FCB->DatagramList ) ) {
 	ListEntry = RemoveHeadList( &FCB->DatagramList );
 	DatagramRecv = CONTAINING_RECORD
