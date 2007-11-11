@@ -561,7 +561,7 @@ void mmusetvsid(int start, int end, int vsid)
 	if (Booted)
             SetSR(i, sr);
 	Segs[i] = findvsid(s_vsid);
-        Vsid[i] = s_vsid;
+        Vsid[i] = vsid;
     }
 }
 
