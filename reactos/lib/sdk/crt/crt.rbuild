@@ -40,13 +40,20 @@
 	</directory>
 	<directory name="except">
 		<file>abnorter.c</file>
-		<file>exhand2.c</file>
+		<file>cpp.c</file>
+		<file>cppexcept.c</file>
 		<file>matherr.c</file>
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>prolog.s</file>
 				<file>seh.s</file>
 				<file>unwind.c</file>
+			</directory>
+		</if>
+		<if property="ARCH" value="powerpc">
+			<directory name="powerpc">
+				<file>seh.s</file>
+				<file>chkstk_asm.s</file>
 			</directory>
 		</if>
 		<file>xcptfil.c</file>
@@ -475,8 +482,6 @@
 		<file>wlasttok.c</file>
 	</directory>
 	<directory name="wine">
-		<file>cpp.c</file>
-		<file>cppexcept.c</file>
 		<file>heap.c</file>
 		<file>scanf.c</file>
 		<file>thread.c</file>

@@ -119,6 +119,8 @@ kernel32 -
 
 msvcrt -
   reactos/dll/win32/msvcrt/wine/*.c             # Out of sync
+  reactos/lib/sdk/crt/except                    # Synced at XXXXXXXX
+  reactos/lib/sdk/crt/wine                      # Synced at XXXXXXXX
 
 User32 -
   reactos/dll/win32/user32/controls/button.c    # Synced at 20071022

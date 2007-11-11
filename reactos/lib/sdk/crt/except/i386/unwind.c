@@ -6,22 +6,6 @@
 #include <ndk/extypes.h>
 #include <ndk/rtlfuncs.h>
 
-/*
- * @implemented
- */
-void __cdecl
-_global_unwind2(PEXCEPTION_REGISTRATION_RECORD RegistrationFrame)
-{
-#ifdef __GNUC__
-   RtlUnwind(RegistrationFrame, &&__ret_label, NULL, 0);
-__ret_label:
-   // return is important
-   return;
-#else
-#endif
-}
-
-
 /* VC++ extensions to Win32 SEH */
 typedef struct _SCOPETABLE
 {

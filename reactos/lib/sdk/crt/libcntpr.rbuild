@@ -13,7 +13,7 @@
 		<define name="__MINGW_IMPORT">"extern __attribute__ ((dllexport))"</define>
 	</if>
 
-	<directory name="except_nt">
+	<directory name="except">
 		<if property="ARCH" value="i386">
 			<directory name="i386">
 				<file>chkstk_asm.s</file>
