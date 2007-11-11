@@ -474,10 +474,71 @@ VOID PpcRTCGetCurrentDateTime( PULONG Hear, PULONG Month, PULONG Day,
     //printf("RTCGeturrentDateTime\n");
 }
 
+/* Recursively copy the device tree into our representation
+ * It'll be passed to HAL.
+ * 
+ * When NT was first done on PPC, it was on PReP hardware, which is very 
+ * like PC hardware (really, just a PPC on a PC motherboard).  HAL can guess
+ * the addresses of needed resources in this scheme as it can on x86.  
+ *
+ * Most PPC hardware doesn't assign fixed addresses to hardware, which is
+ * the problem that open firmware partially solves.  It allows hardware makers
+ * much more leeway in building PPC systems.  Unfortunately, because
+ * openfirmware as originally specified neither captures nor standardizes
+ * all possible information, and also because of bugs, most OSs use a hybrid
+ * configuration scheme that relies both on verification of devices and
+ * recording information from openfirmware to be treated as hints.
+ */
+VOID OfwCopyDeviceTree(PPPC_DEVICE_TREE tree, int innode)
+{
+    int proplen = 0, node = innode;
+    char *prev_name, cur_name[64], data[256], *slash;
+
+    /* Add properties */
+    for (prev_name = ""; ofw_nextprop(node, prev_name, cur_name) == 1; )
+    {
+        proplen = ofw_getproplen(node, cur_name);
+        if (proplen > 256 || proplen < 0)
+        {
+            printf("Warning: not getting prop %s (too long: %d)\n", 
+                   cur_name, proplen);
+            continue;
+        }
+        ofw_getprop(node, cur_name, data, sizeof(data));
+        PpcDevTreeAddProperty(tree, 0, cur_name, data, proplen);
+        strcpy(data, cur_name);
+        prev_name = data;
+    }
+
+    /* Subdevices */
+    for (node = ofw_child(node); node; node = ofw_peer(node))
+    {
+        ofw_package_to_path(node, data, sizeof(data));
+        slash = strrchr(data, '/');
+        if (slash) slash++; else continue;
+        PpcDevTreeAddDevice(tree, 0, slash);
+        OfwCopyDeviceTree(tree, node);
+        PpcDevTreeCloseDevice(tree);
+    }
+}
+
 VOID PpcHwDetect() {
-    printf("PpcHwDetect\n");
-    /* Almost all PowerPC boxen use PCI */
-    BootInfo.machineType = PCIBus;
+    PPC_DEVICE_TREE tree;
+    int node = ofw_finddevice("/");
+
+    /* Start the tree */
+    if(!PpcDevTreeInitialize
+       (&tree,
+        PAGE_SIZE, sizeof(long long), 
+        (PPC_DEVICE_ALLOC)MmAllocateMemory, 
+        (PPC_DEVICE_FREE)MmFreeMemory))
+        return;
+
+    OfwCopyDeviceTree(&tree,node);
+    
+    PpcDevTreeCloseDevice(&tree);
+
+    BootInfo.machine = tree.head;
 }
 
 BOOLEAN PpcDiskNormalizeSystemPath(char *SystemPath, unsigned Size) {

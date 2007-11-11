@@ -46,11 +46,13 @@ PPPC_DEVICE_NODE PpcDevTreeGrow(PPPC_DEVICE_TREE tree, int newEntry)
     if (tree->alloc_size >= newSize) return tree->head;
     newArea = tree->allocFn(newSize);
     if (!newArea) return NULL;
-    memcpy(newArea, tree->head, tree->alloc_size);
+    memcpy(newArea, tree->head, tree->used_bytes);
     tree->alloc_size = newSize;
     if (tree->active)
         tree->active = 
-            (((char *)tree->active) - ((char *)tree->head)) + newArea;
+            (PPPC_DEVICE_NODE)
+            (((char *)tree->active) - ((char *)tree->head) + 
+             ((char *)newArea));
     if (tree->head) tree->freeFn(tree->head);
     tree->head = newArea;
     return tree->head;
@@ -125,6 +127,9 @@ PPPC_DEVICE_NODE PpcDevTreeAllocChild(PPPC_DEVICE_TREE tree, int size)
     newHead = (PPPC_DEVICE_NODE)
         (((char *)tree->active) + tree->active->total_size);
     memset(newHead, 0, size);
+    tree->used_bytes = 
+        (((char *)newHead) + DT_ROUND_UP(newHead->this_size, tree->align)) - 
+        ((char *)tree->head);
     return newHead;
 }
 
@@ -145,6 +150,9 @@ PPC_DT_BOOLEAN PpcDevTreeAddProperty
     tree->active->total_size = 
         (((char *)newprop) + DT_ROUND_UP(newprop->this_size, tree->align)) - 
         ((char *)tree->active);
+    tree->used_bytes = 
+        (((char *)newprop) + DT_ROUND_UP(newprop->this_size, tree->align)) - 
+        ((char *)tree->head);
     return PPC_DT_TRUE;
 }
 

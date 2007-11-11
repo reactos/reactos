@@ -28,6 +28,9 @@
 	<directory name="ppcmmu">
 		<xi:include href="ppcmmu/ppcmmu.rbuild" />
 	</directory>
+	<directory name="ppcdevtree">
+		<xi:include href="ppcdevtree/ppcdevtree.rbuild" />
+	</directory>
 	<directory name="pseh">
 		<xi:include href="pseh/pseh.rbuild" />
 	</directory>

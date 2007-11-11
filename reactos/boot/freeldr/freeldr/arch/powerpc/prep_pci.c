@@ -93,7 +93,7 @@ void print_bar( struct _pci_bar *bar ) {
 #define PCI_HEADER_TYPE 0xe
 #define PCI_BASECLASS   0xb
 
-void pci_setup( pci_desc *desc ) {
+void pci_setup( PPC_DEVICE_TREE *tree, pci_desc *desc ) {
     unsigned char type;
     unsigned short vendor, device, devclass;
     int funcs, bus, dev, fn;
@@ -117,7 +117,7 @@ void pci_setup( pci_desc *desc ) {
 
                 if( devclass == 3 ) {
 		    printf("Setting up vga...\n");
-                    vga_setup(desc,&vga1_desc,bus,dev,fn);
+                    vga_setup(tree,desc,&vga1_desc,bus,dev,fn);
 		    printf("Done with vga\n");
                 }
             }

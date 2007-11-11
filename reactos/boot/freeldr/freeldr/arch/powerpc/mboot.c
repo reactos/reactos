@@ -207,7 +207,9 @@ FrLdrStartup(ULONG Magic)
         reactos_memory_map[i].length_low = tmp;
     }
 
+    printf("PpcInitializeMmu\n");
     PpcInitializeMmu(0);
+    printf("PpcInitializeMmu done\n");
 
     /* We'll use vsid 1 for freeldr (expendable) */
     MmuAllocVsid(1, 0xff);
@@ -222,6 +224,14 @@ FrLdrStartup(ULONG Magic)
 	 i += (1<<PFN_SHIFT) ) {
         
         FrLdrAddPageMapping(&memmap, 0, i, KernelBase + i - (ULONG)KernelMemory);
+    }
+
+    /* Map device data */
+    for (i = (ULONG)BootInfo.machine; 
+         i < (ULONG)PpcDevTreeSiblingNode(BootInfo.machine);
+         i += (1<<PFN_SHIFT) )
+    {
+        FrLdrAddPageMapping(&memmap, 0, i, 0);
     }
 
     /* Map module name strings */

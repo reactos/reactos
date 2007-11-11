@@ -65,9 +65,6 @@ void PpcPrepVideoGetDisplaySize( PULONG Width, PULONG Height, PULONG Depth )
 
 void PpcPrepVideoPrepareForReactOS(BOOLEAN setup)
 {
-    /* Prep boxen are PCI */
-    BootInfo.machineType = PCIBus;
-    pci_setup(&pci1_desc);
 }
 
 VOID PpcInitializeMmu(int max);
@@ -109,6 +106,83 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     return 1;
 }
 
+/* Most PReP hardware is in standard locations, based on the corresponding 
+ * hardware on PCs. */
+VOID PpcPrepHwDetect() {
+    PPC_DEVICE_TREE tree;
+    PPC_DEVICE_RANGE range;
+    int interrupt;
+
+    /* Start the tree */
+    if(!PpcDevTreeInitialize
+       (&tree,
+        PAGE_SIZE, sizeof(long long), 
+        (PPC_DEVICE_ALLOC)MmAllocateMemory, 
+        (PPC_DEVICE_FREE)MmFreeMemory))
+        return;
+
+    /* PCI Bus */
+    PpcDevTreeAddDevice(&tree, PPC_DEVICE_PCI_EAGLE, "pci");
+
+    /* Check out the devices on the bus */
+    pci_setup(&tree, &pci1_desc);
+    
+    /* End PCI Bus */
+    PpcDevTreeCloseDevice(&tree);
+
+    /* ISA Bus */
+    PpcDevTreeAddDevice(&tree, PPC_DEVICE_ISA_BUS, "isa");
+
+    /* Serial port */
+    PpcDevTreeAddDevice(&tree, PPC_DEVICE_SERIAL_8250, "com1");
+    range.start = (PVOID)0x800003f8;
+    range.len = 8;
+    range.type = PPC_DEVICE_IO_RANGE;
+    interrupt = 4;
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_INTERRUPT, "interrupt", 
+         (char *)&interrupt, sizeof(interrupt));
+    PpcDevTreeCloseDevice(&tree);
+
+    /* We probably have an ISA IDE controller */
+    PpcDevTreeAddDevice(&tree, PPC_DEVICE_IDE_DISK, "ide0");
+    range.start = (PVOID)0x800001f8;
+    range.len = 8;
+    range.type = PPC_DEVICE_IO_RANGE;
+    interrupt = 14;
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_INTERRUPT, "interrupt", 
+         (char *)&interrupt, sizeof(interrupt));
+    PpcDevTreeCloseDevice(&tree);
+
+    /* Describe VGA */
+    PpcDevTreeAddDevice(&tree, PPC_DEVICE_VGA, "vga");
+    range.start = (PVOID)0x800003c0;
+    range.len = 0x20;
+    range.type = PPC_DEVICE_IO_RANGE;
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
+    range.start = BootInfo.dispDeviceBase;
+    range.len = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
+    range.type = PPC_DEVICE_MEM_RANGE;
+    PpcDevTreeAddProperty
+        (&tree, PPC_DEVICE_SPACE_RANGE, "mem", (char *)&range, sizeof(range));
+    PpcDevTreeCloseDevice(&tree);
+
+    /* End ISA Bus */
+    PpcDevTreeCloseDevice(&tree);
+
+    /* And finish by closing the root node */
+    PpcDevTreeCloseDevice(&tree);
+
+    /* Now fish out the root node.  The dev tree is a slab of memory */
+    BootInfo.machine = PpcDevTreeGetRootNode(&tree);
+}
+
 void PpcPrepInit()
 {
     MachVtbl.ConsPutChar = PpcPrepPutChar;
@@ -129,6 +203,7 @@ void PpcPrepInit()
     MachVtbl.VideoPrepareForReactOS = PpcPrepVideoPrepareForReactOS;
 
     MachVtbl.GetMemoryMap = PpcPrepGetMemoryMap;
+    MachVtbl.HwDetect = PpcPrepHwDetect;
 
     printf( "FreeLDR version [%s]\n", GetFreeLoaderVersionString() );
 
