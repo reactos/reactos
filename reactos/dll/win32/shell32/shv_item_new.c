@@ -55,7 +55,6 @@ typedef struct
     PSHELLNEW_ITEM s_SnHead;
 }INewMenuImpl;
 
-const GUID CLSID_NewMenu = {0xD969A300, 0xE7FF, 0x11d0, {0xA9, 0x3B, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19} };
 static const IContextMenu2Vtbl cmvt;
 static WCHAR szNew[100];
 

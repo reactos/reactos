@@ -50,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 extern HRESULT WINAPI IFSFolder_Constructor(IUnknown * pUnkOuter, REFIID riid, LPVOID * ppv);
 
 static const WCHAR sShell32[12] = {'S','H','E','L','L','3','2','.','D','L','L','\0'};
-
+static const GUID dummy1 = {0xD969A300, 0xE7FF, 0x11d0, {0xA9, 0x3B, 0x00, 0xA0, 0xC9, 0x0F, 0x27, 0x19} };
 /**************************************************************************
  * Default ClassFactory types
  */
@@ -78,7 +78,7 @@ static const struct {
     {&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
     {&CLSID_OpenWith,       &SHEOW_Constructor},
-    {&CLSID_NewMenu,        &INewItem_Constructor},
+    {&dummy1,        &INewItem_Constructor},
 	{NULL,NULL}
 };
 
