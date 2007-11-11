@@ -196,8 +196,7 @@ NtGdiBitBlt(
 	DCDest = DC_LockDc(hDCDest);
 	if (NULL == DCDest)
 	{
-		DPRINT1("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
-		SetLastWin32Error(ERROR_INVALID_HANDLE);
+		DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
 		return FALSE;
 	}
 	if (DCDest->IsIC)
@@ -215,8 +214,7 @@ NtGdiBitBlt(
 			if (NULL == DCSrc)
 			{
 				DC_UnlockDc(DCDest);
-				DPRINT1("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
-				SetLastWin32Error(ERROR_INVALID_HANDLE);
+				DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
 				return FALSE;
 			}
 			if (DCSrc->IsIC)

@@ -1791,7 +1791,7 @@ NtUserSBGetParms(
   DWORD Unknown2,
   DWORD Unknown3);
 
-DWORD
+BOOL
 NTAPI
 NtUserScrollDC(
   HDC hDC,

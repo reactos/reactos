@@ -178,14 +178,12 @@ IntGdiGetClipBox(HDC hDC, LPRECT rc)
 
    if (!(dc = DC_LockDc(hDC)))
    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return ERROR;
    }
 
    if (!(Rgn = RGNDATA_LockRgn(dc->w.hGCClipRgn)))
    {
       DC_UnlockDc(dc);
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
       return ERROR;
    }
    retval = UnsafeIntGetRgnBox(Rgn, rc);

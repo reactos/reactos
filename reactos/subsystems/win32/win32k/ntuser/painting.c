@@ -1230,7 +1230,7 @@ UserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcScroll,
  *    @implemented
  */
 
-DWORD STDCALL
+BOOL STDCALL
 NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
                const RECT *prcUnsafeClip, HRGN hrgnUpdate, LPRECT prcUnsafeUpdate)
 {
@@ -1276,8 +1276,8 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
                          prcUnsafeUpdate? &rcUpdate : NULL);
    if(Result == ERROR)
    {
-      /* FIXME: SetLastError? */
-      RETURN(Result);
+   	  /* FIXME: Only if hRgnUpdate is invalid we should SetLastError(ERROR_INVALID_HANDLE) */
+      RETURN(FALSE);
    }
 
    if (prcUnsafeUpdate)
@@ -1299,7 +1299,7 @@ NtUserScrollDC(HDC hDC, INT dx, INT dy, const RECT *prcUnsafeScroll,
       }
    }
 
-   RETURN(Result);
+   RETURN(TRUE);
 
 CLEANUP:
    DPRINT("Leave NtUserScrollDC, ret=%i\n",_ret_);
