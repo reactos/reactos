@@ -1372,6 +1372,15 @@ HRESULT      WINAPI ILSaveToStream(LPSTREAM,LPCITEMIDLIST);
 
 #include <poppack.h>
 
+
+/* menu merging */
+#define MM_ADDSEPARATOR         0x00000001L
+#define MM_SUBMENUSHAVEIDS      0x00000002L
+#define MM_DONTREMOVESEPS       0x00000004L
+
+HRESULT WINAPI Shell_MergeMenus (HMENU hmDst, HMENU hmSrc, UINT uInsert, UINT uIDAdjust, UINT uIDAdjustMax, ULONG uFlags);
+
+
 /****************************************************************************
  * SHCreateDefaultContextMenu API
  */
