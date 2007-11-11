@@ -121,7 +121,7 @@ typedef struct __cxx_type_info_table
 
 typedef DWORD (*cxx_exc_custom_handler)( PEXCEPTION_RECORD, cxx_exception_frame*,
                                          PCONTEXT, EXCEPTION_REGISTRATION_RECORD**,
-                                         cxx_function_descr*, int nested_trylevel,
+                                         const cxx_function_descr*, int nested_trylevel,
                                          EXCEPTION_REGISTRATION_RECORD *nested_frame, DWORD unknown3 );
 
 /* type information for an exception object */
@@ -133,7 +133,7 @@ typedef struct __cxx_exception_type
     const cxx_type_info_table *type_info_table;  /* list of types for this exception object */
 } cxx_exception_type;
 
-void _CxxThrowException(void*,const cxx_exception_type*);
+void _CxxThrowException(exception*,const cxx_exception_type*);
 
 static inline const char *dbgstr_type_info( const type_info *info )
 {

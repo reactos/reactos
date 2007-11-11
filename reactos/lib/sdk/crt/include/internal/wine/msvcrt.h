@@ -166,6 +166,23 @@ extern void msvcrt_free_args(void);
 #define _RT_CRNL        252
 #define _RT_BANNER      255
 
+#ifdef __i386__
+struct MSVCRT___JUMP_BUFFER {
+    unsigned long Ebp;
+    unsigned long Ebx;
+    unsigned long Edi;
+    unsigned long Esi;
+    unsigned long Esp;
+    unsigned long Eip;
+    unsigned long Registration;
+    unsigned long TryLevel;
+    /* Start of new struct members */
+    unsigned long Cookie;
+    unsigned long UnwindFunc;
+    unsigned long UnwindData[6];
+};
+#endif /* __i386__ */
+
 typedef void* (*malloc_func_t)(size_t);
 typedef void  (*free_func_t)(void*);
 #define MSVCRT_malloc malloc
