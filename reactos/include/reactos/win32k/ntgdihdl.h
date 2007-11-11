@@ -500,9 +500,6 @@ typedef struct _DC
   INT         DC_Flags;
   PDC_ATTR    pDc_Attr;
   DC_ATTR     Dc_Attr;
-
-  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
-
   HDC         hSelf;  // Used only for MemoryDC & SaveDC.
   HDC         hNext;
   HSURF       FillPatternSurfaces[HS_DDI_MAX];
@@ -510,7 +507,6 @@ typedef struct _DC
   PDEVINFO    DevInfo;
   HDEV        GDIDevice;
 
-  DRIVER_FUNCTIONS  DriverFunctions;
   UNICODE_STRING    DriverName;
   HANDLE      DeviceDriver;
 
@@ -528,6 +524,13 @@ typedef struct _DC
 
   HANDLE      hFile;
   LPENHMETAHEADER emh;
+  // This belongs in DHPDEV not in DC. 8^(
+  // So I'm putting it down here with the rest of misfits.
+  // DRIVER_FUNCTIONS does not belong in DC. It should go PVOID in dpdev.
+  DRIVER_FUNCTIONS  DriverFunctions;
+  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
+  //
+
 } DC, *PDC;
 
 #endif
