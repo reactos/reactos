@@ -1401,7 +1401,7 @@ typedef struct
 HRESULT WINAPI SHCreateDefaultContextMenu(const DEFCONTEXTMENU *,REFIID,void **ppv);
 
 typedef HRESULT (CALLBACK * LPFNDFMCALLBACK)(IShellFolder*,HWND,IDataObject*,UINT,WPARAM,LPARAM);
-INT CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,HKEY *,IContextMenu **);
+INT WINAPI CDefFolderMenu_Create2(LPCITEMIDLIST,HWND,UINT,LPCITEMIDLIST*,IShellFolder*,LPFNDFMCALLBACK,UINT,HKEY *,IContextMenu **);
 
 /****************************************************************************
  * SHCreateDefaultContextMenu API
