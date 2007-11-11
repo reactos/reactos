@@ -2,7 +2,7 @@
  * msvcrt.dll C++ objects
  *
  * Copyright 2000 Jon Griffiths
- * Copyright 2003 Alexandre Julliard
+ * Copyright 2003, 2004 Alexandre Julliard
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "wine/config.h"
@@ -41,34 +41,16 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(msvcrt);
 
-/*
- * exception object: base for exception, bad_cast, bad_typeid, __non_rtti_object
- */
-typedef struct
-{
-  void* pfn_vector_dtor;
-  void* pfn_what;
-} exception_vtable;
-
-typedef struct __exception
-{
-  const exception_vtable *vtable;
-  char *name;    /* Name of this exception, always a new copy for each object */
-  int   do_free; /* Whether to free 'name' in our dtor */
-} exception;
-
 typedef exception bad_cast;
 typedef exception bad_typeid;
 typedef exception __non_rtti_object;
 
 typedef struct _rtti_base_descriptor
 {
-  type_info *type_descriptor;
+  const type_info *type_descriptor;
   int num_base_classes;
-  int base_class_offset;
-  unsigned int flags;
-  int unknown1;
-  int unknown2;
+  this_ptr_offsets offsets;    /* offsets for computing the this pointer */
+  unsigned int attributes;
 } rtti_base_descriptor;
 
 typedef struct _rtti_base_array
@@ -76,46 +58,84 @@ typedef struct _rtti_base_array
   const rtti_base_descriptor *bases[3]; /* First element is the class itself */
 } rtti_base_array;
 
-typedef struct _rtti_object_hierachy
+typedef struct _rtti_object_hierarchy
 {
-  int unknown1;
-  int unknown2;
+  unsigned int signature;
+  unsigned int attributes;
   int array_len; /* Size of the array pointed to by 'base_classes' */
   const rtti_base_array *base_classes;
-} rtti_object_hierachy;
+} rtti_object_hierarchy;
 
 typedef struct _rtti_object_locator
 {
-  int unknown1;
+  unsigned int signature;
   int base_class_offset;
   unsigned int flags;
-  type_info *type_descriptor;
-  const rtti_object_hierachy *type_hierachy;
+  const type_info *type_descriptor;
+  const rtti_object_hierarchy *type_hierarchy;
 } rtti_object_locator;
 
 
 #ifdef __i386__  /* thiscall functions are i386-specific */
 
-#define DEFINE_THISCALL_WRAPPER0(func) \
-    extern void __thiscall_ ## func(); \
+#define THISCALL(func) __thiscall_ ## func
+#define THISCALL_NAME(func) __ASM_NAME("__thiscall_" #func)
+#define DEFINE_THISCALL_WRAPPER(func) \
+    extern void THISCALL(func)(); \
     __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
                       "popl %eax\n\t" \
                       "pushl %ecx\n\t" \
                       "pushl %eax\n\t" \
-                      "jmp " __ASM_NAME(#func) "@4" )
-#define DEFINE_THISCALL_WRAPPER1(func) \
-    extern void __thiscall_ ## func(); \
-    __ASM_GLOBAL_FUNC(__thiscall_ ## func, \
-                      "popl %eax\n\t" \
-                      "pushl %ecx\n\t" \
-                      "pushl %eax\n\t" \
-                      "jmp " __ASM_NAME(#func) "@8" )
+                      "jmp " __ASM_NAME(#func) )
+#else /* __i386__ */
 
-const exception_vtable MSVCRT_exception_vtable;
-const exception_vtable MSVCRT_bad_typeid_vtable;
-const exception_vtable MSVCRT_bad_cast_vtable;
-const exception_vtable MSVCRT___non_rtti_object_vtable;
-static const exception_vtable MSVCRT_type_info_vtable;
+#define THISCALL(func) func
+#define THISCALL_NAME(func) __ASM_NAME(#func)
+#define DEFINE_THISCALL_WRAPPER(func) /* nothing */
+
+#endif /* __i386__ */
+
+extern const vtable_ptr MSVCRT_exception_vtable;
+extern const vtable_ptr MSVCRT_bad_typeid_vtable;
+extern const vtable_ptr MSVCRT_bad_cast_vtable;
+extern const vtable_ptr MSVCRT___non_rtti_object_vtable;
+extern const vtable_ptr MSVCRT_type_info_vtable;
+
+/* get the vtable pointer for a C++ object */
+static inline const vtable_ptr *get_vtable( void *obj )
+{
+    return *(const vtable_ptr **)obj;
+}
+
+static inline const rtti_object_locator *get_obj_locator( void *cppobj )
+{
+    const vtable_ptr *vtable = get_vtable( cppobj );
+    return (const rtti_object_locator *)vtable[-1];
+}
+
+static void dump_obj_locator( const rtti_object_locator *ptr )
+{
+    int i;
+    const rtti_object_hierarchy *h = ptr->type_hierarchy;
+
+    TRACE( "%p: sig=%08x base_offset=%08x flags=%08x type=%p %s hierarchy=%p\n",
+           ptr, ptr->signature, ptr->base_class_offset, ptr->flags,
+           ptr->type_descriptor, dbgstr_type_info(ptr->type_descriptor), ptr->type_hierarchy );
+    TRACE( "  hierarchy: sig=%08x attr=%08x len=%d base classes=%p\n",
+           h->signature, h->attributes, h->array_len, h->base_classes );
+    for (i = 0; i < h->array_len; i++)
+    {
+        TRACE( "    base class %p: num %d off %d,%d,%d attr %08x type %p %s\n",
+               h->base_classes->bases[i],
+               h->base_classes->bases[i]->num_base_classes,
+               h->base_classes->bases[i]->offsets.this_offset,
+               h->base_classes->bases[i]->offsets.vbase_descr,
+               h->base_classes->bases[i]->offsets.vbase_offset,
+               h->base_classes->bases[i]->attributes,
+               h->base_classes->bases[i]->type_descriptor,
+               dbgstr_type_info(h->base_classes->bases[i]->type_descriptor) );
+    }
+}
 
 /* Internal common ctor for exception */
 static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
@@ -125,7 +145,7 @@ static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
   {
     size_t name_len = strlen(*name) + 1;
     _this->name = MSVCRT_malloc(name_len);
-	memcpy(_this->name, *name, name_len);
+    memcpy(_this->name, *name, name_len);
     _this->do_free = TRUE;
   }
   else
@@ -138,7 +158,7 @@ static void WINAPI EXCEPTION_ctor(exception *_this, const char** name)
 /******************************************************************
  *		??0exception@@QAE@ABQBD@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_exception_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_ctor)
 exception * __stdcall MSVCRT_exception_ctor(exception * _this, const char ** name)
 {
   TRACE("(%p,%s)\n", _this, *name);
@@ -149,7 +169,7 @@ exception * __stdcall MSVCRT_exception_ctor(exception * _this, const char ** nam
 /******************************************************************
  *		??0exception@@QAE@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_exception_copy_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_copy_ctor)
 exception * __stdcall MSVCRT_exception_copy_ctor(exception * _this, const exception * rhs)
 {
   TRACE("(%p,%p)\n", _this, rhs);
@@ -169,7 +189,7 @@ exception * __stdcall MSVCRT_exception_copy_ctor(exception * _this, const except
 /******************************************************************
  *		??0exception@@QAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_exception_default_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_default_ctor)
 exception * __stdcall MSVCRT_exception_default_ctor(exception * _this)
 {
   static const char* empty = NULL;
@@ -182,7 +202,7 @@ exception * __stdcall MSVCRT_exception_default_ctor(exception * _this)
 /******************************************************************
  *		??1exception@@UAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_exception_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_dtor)
 void __stdcall MSVCRT_exception_dtor(exception * _this)
 {
   TRACE("(%p)\n", _this);
@@ -193,7 +213,7 @@ void __stdcall MSVCRT_exception_dtor(exception * _this)
 /******************************************************************
  *		??4exception@@QAEAAV0@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_exception_opequals);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_opequals)
 exception * __stdcall MSVCRT_exception_opequals(exception * _this, const exception * rhs)
 {
   TRACE("(%p %p)\n", _this, rhs);
@@ -209,7 +229,7 @@ exception * __stdcall MSVCRT_exception_opequals(exception * _this, const excepti
 /******************************************************************
  *		??_Eexception@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_exception_vector_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_vector_dtor)
 void * __stdcall MSVCRT_exception_vector_dtor(exception * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -232,7 +252,7 @@ void * __stdcall MSVCRT_exception_vector_dtor(exception * _this, unsigned int fl
 /******************************************************************
  *		??_Gexception@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_exception_scalar_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_exception_scalar_dtor)
 void * __stdcall MSVCRT_exception_scalar_dtor(exception * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -244,7 +264,7 @@ void * __stdcall MSVCRT_exception_scalar_dtor(exception * _this, unsigned int fl
 /******************************************************************
  *		?what@exception@@UBEPBDXZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_what_exception);
+DEFINE_THISCALL_WRAPPER(MSVCRT_what_exception)
 const char * __stdcall MSVCRT_what_exception(exception * _this)
 {
   TRACE("(%p) returning %s\n", _this, _this->name);
@@ -254,7 +274,7 @@ const char * __stdcall MSVCRT_what_exception(exception * _this)
 /******************************************************************
  *		??0bad_typeid@@QAE@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_typeid_copy_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_copy_ctor)
 bad_typeid * __stdcall MSVCRT_bad_typeid_copy_ctor(bad_typeid * _this, const bad_typeid * rhs)
 {
   TRACE("(%p %p)\n", _this, rhs);
@@ -266,7 +286,7 @@ bad_typeid * __stdcall MSVCRT_bad_typeid_copy_ctor(bad_typeid * _this, const bad
 /******************************************************************
  *		??0bad_typeid@@QAE@PBD@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_typeid_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_ctor)
 bad_typeid * __stdcall MSVCRT_bad_typeid_ctor(bad_typeid * _this, const char * name)
 {
   TRACE("(%p %s)\n", _this, name);
@@ -278,7 +298,7 @@ bad_typeid * __stdcall MSVCRT_bad_typeid_ctor(bad_typeid * _this, const char * n
 /******************************************************************
  *		??1bad_typeid@@UAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_bad_typeid_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_dtor)
 void __stdcall MSVCRT_bad_typeid_dtor(bad_typeid * _this)
 {
   TRACE("(%p)\n", _this);
@@ -288,7 +308,7 @@ void __stdcall MSVCRT_bad_typeid_dtor(bad_typeid * _this)
 /******************************************************************
  *		??4bad_typeid@@QAEAAV0@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_typeid_opequals);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_opequals)
 bad_typeid * __stdcall MSVCRT_bad_typeid_opequals(bad_typeid * _this, const bad_typeid * rhs)
 {
   TRACE("(%p %p)\n", _this, rhs);
@@ -299,7 +319,7 @@ bad_typeid * __stdcall MSVCRT_bad_typeid_opequals(bad_typeid * _this, const bad_
 /******************************************************************
  *              ??_Ebad_typeid@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_typeid_vector_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_vector_dtor)
 void * __stdcall MSVCRT_bad_typeid_vector_dtor(bad_typeid * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -322,7 +342,7 @@ void * __stdcall MSVCRT_bad_typeid_vector_dtor(bad_typeid * _this, unsigned int 
 /******************************************************************
  *		??_Gbad_typeid@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_typeid_scalar_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_typeid_scalar_dtor)
 void * __stdcall MSVCRT_bad_typeid_scalar_dtor(bad_typeid * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -334,7 +354,7 @@ void * __stdcall MSVCRT_bad_typeid_scalar_dtor(bad_typeid * _this, unsigned int 
 /******************************************************************
  *		??0__non_rtti_object@@QAE@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT___non_rtti_object_copy_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_copy_ctor)
 __non_rtti_object * __stdcall MSVCRT___non_rtti_object_copy_ctor(__non_rtti_object * _this,
                                                                  const __non_rtti_object * rhs)
 {
@@ -347,7 +367,7 @@ __non_rtti_object * __stdcall MSVCRT___non_rtti_object_copy_ctor(__non_rtti_obje
 /******************************************************************
  *		??0__non_rtti_object@@QAE@PBD@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT___non_rtti_object_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_ctor)
 __non_rtti_object * __stdcall MSVCRT___non_rtti_object_ctor(__non_rtti_object * _this,
                                                             const char * name)
 {
@@ -360,7 +380,7 @@ __non_rtti_object * __stdcall MSVCRT___non_rtti_object_ctor(__non_rtti_object * 
 /******************************************************************
  *		??1__non_rtti_object@@UAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT___non_rtti_object_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_dtor)
 void __stdcall MSVCRT___non_rtti_object_dtor(__non_rtti_object * _this)
 {
   TRACE("(%p)\n", _this);
@@ -370,7 +390,7 @@ void __stdcall MSVCRT___non_rtti_object_dtor(__non_rtti_object * _this)
 /******************************************************************
  *		??4__non_rtti_object@@QAEAAV0@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT___non_rtti_object_opequals);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_opequals)
 __non_rtti_object * __stdcall MSVCRT___non_rtti_object_opequals(__non_rtti_object * _this,
                                                                 const __non_rtti_object *rhs)
 {
@@ -382,7 +402,7 @@ __non_rtti_object * __stdcall MSVCRT___non_rtti_object_opequals(__non_rtti_objec
 /******************************************************************
  *		??_E__non_rtti_object@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT___non_rtti_object_vector_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_vector_dtor)
 void * __stdcall MSVCRT___non_rtti_object_vector_dtor(__non_rtti_object * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -405,7 +425,7 @@ void * __stdcall MSVCRT___non_rtti_object_vector_dtor(__non_rtti_object * _this,
 /******************************************************************
  *		??_G__non_rtti_object@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT___non_rtti_object_scalar_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT___non_rtti_object_scalar_dtor)
 void * __stdcall MSVCRT___non_rtti_object_scalar_dtor(__non_rtti_object * _this, unsigned int flags)
 {
   TRACE("(%p %x)\n", _this, flags);
@@ -417,7 +437,7 @@ void * __stdcall MSVCRT___non_rtti_object_scalar_dtor(__non_rtti_object * _this,
 /******************************************************************
  *		??0bad_cast@@QAE@ABQBD@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_cast_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_ctor)
 bad_cast * __stdcall MSVCRT_bad_cast_ctor(bad_cast * _this, const char ** name)
 {
   TRACE("(%p %s)\n", _this, *name);
@@ -429,7 +449,7 @@ bad_cast * __stdcall MSVCRT_bad_cast_ctor(bad_cast * _this, const char ** name)
 /******************************************************************
  *		??0bad_cast@@QAE@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_cast_copy_ctor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_copy_ctor)
 bad_cast * __stdcall MSVCRT_bad_cast_copy_ctor(bad_cast * _this, const bad_cast * rhs)
 {
   TRACE("(%p %p)\n", _this, rhs);
@@ -441,7 +461,7 @@ bad_cast * __stdcall MSVCRT_bad_cast_copy_ctor(bad_cast * _this, const bad_cast 
 /******************************************************************
  *		??1bad_cast@@UAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_bad_cast_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_dtor)
 void __stdcall MSVCRT_bad_cast_dtor(bad_cast * _this)
 {
   TRACE("(%p)\n", _this);
@@ -451,7 +471,7 @@ void __stdcall MSVCRT_bad_cast_dtor(bad_cast * _this)
 /******************************************************************
  *		??4bad_cast@@QAEAAV0@ABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_cast_opequals);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_opequals)
 bad_cast * __stdcall MSVCRT_bad_cast_opequals(bad_cast * _this, const bad_cast * rhs)
 {
   TRACE("(%p %p)\n", _this, rhs);
@@ -462,7 +482,7 @@ bad_cast * __stdcall MSVCRT_bad_cast_opequals(bad_cast * _this, const bad_cast *
 /******************************************************************
  *              ??_Ebad_cast@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_cast_vector_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_vector_dtor)
 void * __stdcall MSVCRT_bad_cast_vector_dtor(bad_cast * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -485,7 +505,7 @@ void * __stdcall MSVCRT_bad_cast_vector_dtor(bad_cast * _this, unsigned int flag
 /******************************************************************
  *		??_Gbad_cast@@UAEPAXI@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_bad_cast_scalar_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_bad_cast_scalar_dtor)
 void * __stdcall MSVCRT_bad_cast_scalar_dtor(bad_cast * _this, unsigned int flags)
 {
   TRACE("(%p %x)\n", _this, flags);
@@ -497,7 +517,7 @@ void * __stdcall MSVCRT_bad_cast_scalar_dtor(bad_cast * _this, unsigned int flag
 /******************************************************************
  *		??8type_info@@QBEHABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_type_info_opequals_equals);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_opequals_equals)
 int __stdcall MSVCRT_type_info_opequals_equals(type_info * _this, const type_info * rhs)
 {
     int ret = !strcmp(_this->mangled + 1, rhs->mangled + 1);
@@ -508,7 +528,7 @@ int __stdcall MSVCRT_type_info_opequals_equals(type_info * _this, const type_inf
 /******************************************************************
  *		??9type_info@@QBEHABV0@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_type_info_opnot_equals);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_opnot_equals)
 int __stdcall MSVCRT_type_info_opnot_equals(type_info * _this, const type_info * rhs)
 {
     int ret = !!strcmp(_this->mangled + 1, rhs->mangled + 1);
@@ -519,7 +539,7 @@ int __stdcall MSVCRT_type_info_opnot_equals(type_info * _this, const type_info *
 /******************************************************************
  *		?before@type_info@@QBEHABV1@@Z (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_type_info_before);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_before)
 int __stdcall MSVCRT_type_info_before(type_info * _this, const type_info * rhs)
 {
     int ret = strcmp(_this->mangled + 1, rhs->mangled + 1) < 0;
@@ -530,18 +550,17 @@ int __stdcall MSVCRT_type_info_before(type_info * _this, const type_info * rhs)
 /******************************************************************
  *		??1type_info@@UAE@XZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_type_info_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_dtor)
 void __stdcall MSVCRT_type_info_dtor(type_info * _this)
 {
   TRACE("(%p)\n", _this);
-  if (_this->name)
-    MSVCRT_free(_this->name);
+  MSVCRT_free(_this->name);
 }
 
 /******************************************************************
  *		?name@type_info@@QBEPBDXZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_type_info_name);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_name)
 const char * __stdcall MSVCRT_type_info_name(type_info * _this)
 {
   if (!_this->name)
@@ -582,7 +601,7 @@ const char * __stdcall MSVCRT_type_info_name(type_info * _this)
 /******************************************************************
  *		?raw_name@type_info@@QBEPBDXZ (MSVCRT.@)
  */
-DEFINE_THISCALL_WRAPPER0(MSVCRT_type_info_raw_name);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_raw_name)
 const char * __stdcall MSVCRT_type_info_raw_name(type_info * _this)
 {
   TRACE("(%p) returning %s\n", _this, _this->mangled);
@@ -590,7 +609,7 @@ const char * __stdcall MSVCRT_type_info_raw_name(type_info * _this)
 }
 
 /* Unexported */
-DEFINE_THISCALL_WRAPPER1(MSVCRT_type_info_vector_dtor);
+DEFINE_THISCALL_WRAPPER(MSVCRT_type_info_vector_dtor)
 void * __stdcall MSVCRT_type_info_vector_dtor(type_info * _this, unsigned int flags)
 {
     TRACE("(%p %x)\n", _this, flags);
@@ -612,41 +631,37 @@ void * __stdcall MSVCRT_type_info_vector_dtor(type_info * _this, unsigned int fl
 
 /* vtables */
 
-const exception_vtable MSVCRT_exception_vtable =
-{
-    __thiscall_MSVCRT_exception_vector_dtor,
-    __thiscall_MSVCRT_what_exception
-};
+#define __ASM_VTABLE(name,funcs) \
+    __asm__(".data\n" \
+            "\t.align 4\n" \
+            "\t.long " __ASM_NAME(#name "_rtti") "\n" \
+            "\t.globl " __ASM_NAME("MSVCRT_" #name "_vtable") "\n" \
+            __ASM_NAME("MSVCRT_" #name "_vtable") ":\n" \
+            "\t.long " THISCALL_NAME(MSVCRT_ ## name ## _vector_dtor) "\n" \
+            funcs "\n\t.text");
 
-const exception_vtable MSVCRT_bad_typeid_vtable =
-{
-    __thiscall_MSVCRT_bad_typeid_vector_dtor,
-    __thiscall_MSVCRT_what_exception
-};
+#define __ASM_EXCEPTION_VTABLE(name) \
+    __ASM_VTABLE(name, "\t.long " THISCALL_NAME(MSVCRT_what_exception) )
 
-const exception_vtable MSVCRT_bad_cast_vtable =
-{
-    __thiscall_MSVCRT_bad_cast_vector_dtor,
-    __thiscall_MSVCRT_what_exception
-};
+#ifndef __GNUC__
+void __asm_dummy_vtables(void) {
+#endif
 
-const exception_vtable MSVCRT___non_rtti_object_vtable =
-{
-    __thiscall_MSVCRT___non_rtti_object_vector_dtor,
-    __thiscall_MSVCRT_what_exception
-};
+__ASM_VTABLE(type_info,"")
+__ASM_EXCEPTION_VTABLE(exception)
+__ASM_EXCEPTION_VTABLE(bad_typeid)
+__ASM_EXCEPTION_VTABLE(bad_cast)
+__ASM_EXCEPTION_VTABLE(__non_rtti_object)
 
-static const exception_vtable MSVCRT_type_info_vtable =
-{
-    __thiscall_MSVCRT_type_info_vector_dtor,
-    NULL
-};
+#ifndef __GNUC__
+}
+#endif
 
 /* Static RTTI for exported objects */
 
-static type_info exception_type_info =
+static const type_info exception_type_info =
 {
-  (void*)&MSVCRT_type_info_vtable,
+  &MSVCRT_type_info_vtable,
   NULL,
   ".?AVexception@@"
 };
@@ -655,9 +670,7 @@ static const rtti_base_descriptor exception_rtti_base_descriptor =
 {
   &exception_type_info,
   0,
-  0,
-  0,
-  0,
+  { 0, -1, 0 },
   0
 };
 
@@ -670,7 +683,7 @@ static const rtti_base_array exception_rtti_base_array =
   }
 };
 
-static const rtti_object_hierachy exception_type_hierachy =
+static const rtti_object_hierarchy exception_type_hierarchy =
 {
   0,
   0,
@@ -678,29 +691,27 @@ static const rtti_object_hierachy exception_type_hierachy =
   &exception_rtti_base_array
 };
 
-static const rtti_object_locator exception_rtti =
+const rtti_object_locator exception_rtti =
 {
   0,
   0,
   0,
   &exception_type_info,
-  &exception_type_hierachy
+  &exception_type_hierarchy
 };
 
 static const cxx_type_info exception_cxx_type_info =
 {
   0,
   &exception_type_info,
-  0,
-  -1,
-  0,
+  { 0, -1, 0 },
   sizeof(exception),
-  (cxx_copy_ctor)__thiscall_MSVCRT_exception_copy_ctor
+  (cxx_copy_ctor)THISCALL(MSVCRT_exception_copy_ctor)
 };
 
-static type_info bad_typeid_type_info =
+static const type_info bad_typeid_type_info =
 {
-  (void*)&MSVCRT_type_info_vtable,
+  &MSVCRT_type_info_vtable,
   NULL,
   ".?AVbad_typeid@@"
 };
@@ -709,9 +720,7 @@ static const rtti_base_descriptor bad_typeid_rtti_base_descriptor =
 {
   &bad_typeid_type_info,
   1,
-  0,
-  0xffffffff,
-  0,
+  { 0, -1, 0 },
   0
 };
 
@@ -724,7 +733,7 @@ static const rtti_base_array bad_typeid_rtti_base_array =
   }
 };
 
-static const rtti_object_hierachy bad_typeid_type_hierachy =
+static const rtti_object_hierarchy bad_typeid_type_hierarchy =
 {
   0,
   0,
@@ -732,29 +741,27 @@ static const rtti_object_hierachy bad_typeid_type_hierachy =
   &bad_typeid_rtti_base_array
 };
 
-static const rtti_object_locator bad_typeid_rtti =
+const rtti_object_locator bad_typeid_rtti =
 {
   0,
   0,
   0,
   &bad_typeid_type_info,
-  &bad_typeid_type_hierachy
+  &bad_typeid_type_hierarchy
 };
 
 static const cxx_type_info bad_typeid_cxx_type_info =
 {
   0,
   &bad_typeid_type_info,
-  0,
-  -1,
-  0,
+  { 0, -1, 0 },
   sizeof(exception),
-  (cxx_copy_ctor)__thiscall_MSVCRT_bad_typeid_copy_ctor
+  (cxx_copy_ctor)THISCALL(MSVCRT_bad_typeid_copy_ctor)
 };
 
-static type_info bad_cast_type_info =
+static const type_info bad_cast_type_info =
 {
-  (void*)&MSVCRT_type_info_vtable,
+  &MSVCRT_type_info_vtable,
   NULL,
   ".?AVbad_cast@@"
 };
@@ -763,9 +770,7 @@ static const rtti_base_descriptor bad_cast_rtti_base_descriptor =
 {
   &bad_cast_type_info,
   1,
-  0,
-  0xffffffff,
-  0,
+  { 0, -1, 0 },
   0
 };
 
@@ -778,7 +783,7 @@ static const rtti_base_array bad_cast_rtti_base_array =
   }
 };
 
-static const rtti_object_hierachy bad_cast_type_hierachy =
+static const rtti_object_hierarchy bad_cast_type_hierarchy =
 {
   0,
   0,
@@ -786,29 +791,27 @@ static const rtti_object_hierachy bad_cast_type_hierachy =
   &bad_cast_rtti_base_array
 };
 
-static const rtti_object_locator bad_cast_rtti =
+const rtti_object_locator bad_cast_rtti =
 {
   0,
   0,
   0,
   &bad_cast_type_info,
-  &bad_cast_type_hierachy
+  &bad_cast_type_hierarchy
 };
 
 static const cxx_type_info bad_cast_cxx_type_info =
 {
   0,
   &bad_cast_type_info,
-  0,
-  -1,
-  0,
+  { 0, -1, 0 },
   sizeof(exception),
-  (cxx_copy_ctor)__thiscall_MSVCRT_bad_cast_copy_ctor
+  (cxx_copy_ctor)THISCALL(MSVCRT_bad_cast_copy_ctor)
 };
 
-static type_info __non_rtti_object_type_info =
+static const type_info __non_rtti_object_type_info =
 {
-  (void*)&MSVCRT_type_info_vtable,
+  &MSVCRT_type_info_vtable,
   NULL,
   ".?AV__non_rtti_object@@"
 };
@@ -817,9 +820,7 @@ static const rtti_base_descriptor __non_rtti_object_rtti_base_descriptor =
 {
   &__non_rtti_object_type_info,
   2,
-  0,
-  0xffffffff,
-  0,
+  { 0, -1, 0 },
   0
 };
 
@@ -832,7 +833,7 @@ static const rtti_base_array __non_rtti_object_rtti_base_array =
   }
 };
 
-static const rtti_object_hierachy __non_rtti_object_type_hierachy =
+static const rtti_object_hierarchy __non_rtti_object_type_hierarchy =
 {
   0,
   0,
@@ -840,29 +841,27 @@ static const rtti_object_hierachy __non_rtti_object_type_hierachy =
   &__non_rtti_object_rtti_base_array
 };
 
-static const rtti_object_locator __non_rtti_object_rtti =
+const rtti_object_locator __non_rtti_object_rtti =
 {
   0,
   0,
   0,
   &__non_rtti_object_type_info,
-  &__non_rtti_object_type_hierachy
+  &__non_rtti_object_type_hierarchy
 };
 
 static const cxx_type_info __non_rtti_object_cxx_type_info =
 {
   0,
   &__non_rtti_object_type_info,
-  0,
-  -1,
-  0,
+  { 0, -1, 0 },
   sizeof(exception),
-  (cxx_copy_ctor)__thiscall_MSVCRT___non_rtti_object_copy_ctor
+  (cxx_copy_ctor)THISCALL(MSVCRT___non_rtti_object_copy_ctor)
 };
 
-static type_info type_info_type_info =
+static const type_info type_info_type_info =
 {
-  (void*)&MSVCRT_type_info_vtable,
+  &MSVCRT_type_info_vtable,
   NULL,
   ".?AVtype_info@@"
 };
@@ -871,9 +870,7 @@ static const rtti_base_descriptor type_info_rtti_base_descriptor =
 {
   &type_info_type_info,
   0,
-  0,
-  0xffffffff,
-  0,
+  { 0, -1, 0 },
   0
 };
 
@@ -886,7 +883,7 @@ static const rtti_base_array type_info_rtti_base_array =
   }
 };
 
-static const rtti_object_hierachy type_info_type_hierachy =
+static const rtti_object_hierarchy type_info_type_hierarchy =
 {
   0,
   0,
@@ -894,13 +891,13 @@ static const rtti_object_hierachy type_info_type_hierachy =
   &type_info_rtti_base_array
 };
 
-static const rtti_object_locator type_info_rtti =
+const rtti_object_locator type_info_rtti =
 {
   0,
   0,
   0,
   &type_info_type_info,
-  &type_info_type_hierachy
+  &type_info_type_hierarchy
 };
 
 /*
@@ -919,7 +916,7 @@ static const cxx_type_info_table bad_cast_type_info_table =
 static const cxx_exception_type bad_cast_exception_type =
 {
   0,
-  (void*)__thiscall_MSVCRT_bad_cast_dtor,
+  (void*)THISCALL(MSVCRT_bad_cast_dtor),
   NULL,
   &bad_cast_type_info_table
 };
@@ -937,7 +934,7 @@ static const cxx_type_info_table bad_typeid_type_info_table =
 static const cxx_exception_type bad_typeid_exception_type =
 {
   0,
-  (void*)__thiscall_MSVCRT_bad_typeid_dtor,
+  (void*)THISCALL(MSVCRT_bad_typeid_dtor),
   NULL,
   &bad_cast_type_info_table
 };
@@ -945,12 +942,10 @@ static const cxx_exception_type bad_typeid_exception_type =
 static const cxx_exception_type __non_rtti_object_exception_type =
 {
   0,
-  (void*)__thiscall_MSVCRT___non_rtti_object_dtor,
+  (void*)THISCALL(MSVCRT___non_rtti_object_dtor),
   NULL,
   &bad_typeid_type_info_table
 };
-
-#endif  /* __i386__ */
 
 
 /******************************************************************
@@ -964,7 +959,7 @@ static const cxx_exception_type __non_rtti_object_exception_type =
  * RETURNS
  *  The previously installed handler function, if any.
  */
-terminate_function MSVCRT_set_terminate(terminate_function func)
+terminate_function CDECL MSVCRT_set_terminate(terminate_function func)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     terminate_function previous = data->terminate_handler;
@@ -984,7 +979,7 @@ terminate_function MSVCRT_set_terminate(terminate_function func)
  * RETURNS
  *  The previously installed handler function, if any.
  */
-unexpected_function MSVCRT_set_unexpected(unexpected_function func)
+unexpected_function CDECL MSVCRT_set_unexpected(unexpected_function func)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     unexpected_function previous = data->unexpected_handler;
@@ -996,7 +991,7 @@ unexpected_function MSVCRT_set_unexpected(unexpected_function func)
 /******************************************************************
  *              ?_set_se_translator@@YAP6AXIPAU_EXCEPTION_POINTERS@@@ZP6AXI0@Z@Z  (MSVCRT.@)
  */
-_se_translator_function MSVCRT__set_se_translator(_se_translator_function func)
+_se_translator_function CDECL MSVCRT__set_se_translator(_se_translator_function func)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     _se_translator_function previous = data->se_translator;
@@ -1018,7 +1013,7 @@ _se_translator_function MSVCRT__set_se_translator(_se_translator_function func)
  *  handler installed by calling set_terminate(), or (by default) abort()
  *  is called.
  */
-void MSVCRT_terminate(void)
+void CDECL MSVCRT_terminate(void)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     if (data->terminate_handler) data->terminate_handler();
@@ -1028,59 +1023,13 @@ void MSVCRT_terminate(void)
 /******************************************************************
  *		?unexpected@@YAXXZ (MSVCRT.@)
  */
-void MSVCRT_unexpected(void)
+void CDECL MSVCRT_unexpected(void)
 {
     MSVCRT_thread_data *data = msvcrt_get_thread_data();
     if (data->unexpected_handler) data->unexpected_handler();
     MSVCRT_terminate();
 }
 
-/* Get type info from an object (internal) */
-static const rtti_object_locator* RTTI_GetObjectLocator(type_info *cppobj)
-{
-  const rtti_object_locator *obj_locator = NULL;
-
-#ifdef __i386__
-  const exception_vtable* vtable = (const exception_vtable*)cppobj->vtable;
-
-  /* Perhaps this is one of classes we export? */
-  if (vtable == &MSVCRT_exception_vtable)
-  {
-    TRACE("returning exception_rtti\n");
-    return &exception_rtti;
-  }
-  else if (vtable == &MSVCRT_bad_typeid_vtable)
-  {
-    TRACE("returning bad_typeid_rtti\n");
-    return &bad_typeid_rtti;
-  }
-  else if (vtable == &MSVCRT_bad_cast_vtable)
-  {
-    TRACE("returning bad_cast_rtti\n");
-    return &bad_cast_rtti;
-  }
-  else if (vtable == &MSVCRT___non_rtti_object_vtable)
-  {
-    TRACE("returning __non_rtti_object_rtti\n");
-    return &__non_rtti_object_rtti;
-  }
-  else if (vtable == &MSVCRT_type_info_vtable)
-  {
-    TRACE("returning type_info_rtti\n");
-    return &type_info_rtti;
-  }
-#endif
-
-  if (!IsBadReadPtr(cppobj, sizeof(void *)) &&
-      !IsBadReadPtr(cppobj->vtable - 1,sizeof(void *)) &&
-      !IsBadReadPtr((void*)cppobj->vtable[-1], sizeof(rtti_object_locator)))
-  {
-    obj_locator = (rtti_object_locator *)cppobj->vtable[-1];
-    TRACE("returning type_info from vtable (%p)\n", obj_locator);
-  }
-
-  return obj_locator;
-}
 
 /******************************************************************
  *		__RTtypeid (MSVCRT.@)
@@ -1100,39 +1049,32 @@ static const rtti_object_locator* RTTI_GetObjectLocator(type_info *cppobj)
  *  This function is usually called by compiler generated code as a result
  *  of using one of the C++ dynamic cast statements.
  */
-type_info* MSVCRT___RTtypeid(type_info *cppobj)
+const type_info* CDECL MSVCRT___RTtypeid(void *cppobj)
 {
-  const rtti_object_locator *obj_locator = RTTI_GetObjectLocator(cppobj);
+    const type_info *ret;
 
-#ifdef __i386__
-  if (!obj_locator)
-  {
-    static const char* szNullPtr = "Attempted a typeid of NULL pointer!";
-    static const char* szBadPtr = "Bad read pointer - no RTTI data!";
-    const cxx_exception_type *e_type;
-    exception e;
-
-    /* Throw a bad_typeid or __non_rtti_object exception */
     if (!cppobj)
     {
-      EXCEPTION_ctor(&e, &szNullPtr);
-      e.vtable = &MSVCRT_bad_typeid_vtable;
-      e_type = &bad_typeid_exception_type;
-    }
-    else
-    {
-      EXCEPTION_ctor(&e, &szBadPtr);
-      e.vtable = &MSVCRT___non_rtti_object_vtable;
-      e_type = &__non_rtti_object_exception_type;
+        bad_typeid e;
+        MSVCRT_bad_typeid_ctor( &e, "Attempted a typeid of NULL pointer!" );
+        _CxxThrowException( &e, &bad_typeid_exception_type );
+        return NULL;
     }
 
-    _CxxThrowException(&e, e_type);
-    DebugBreak();
-  }
-  return obj_locator->type_descriptor;
-#else
-  return NULL;
-#endif
+    __TRY
+    {
+        const rtti_object_locator *obj_locator = get_obj_locator( cppobj );
+        ret = obj_locator->type_descriptor;
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        __non_rtti_object e;
+        MSVCRT___non_rtti_object_ctor( &e, "Bad read pointer - no RTTI data!" );
+        _CxxThrowException( &e, &bad_typeid_exception_type );
+        return NULL;
+    }
+    __ENDTRY
+    return ret;
 }
 
 /******************************************************************
@@ -1157,66 +1099,67 @@ type_info* MSVCRT___RTtypeid(type_info *cppobj)
  *  This function is usually called by compiler generated code as a result
  *  of using one of the C++ dynamic cast statements.
  */
-void* MSVCRT___RTDynamicCast(type_info *cppobj, int unknown,
-                             type_info *src, type_info *dst,
-                             int do_throw)
+void* CDECL MSVCRT___RTDynamicCast(void *cppobj, int unknown,
+                                   type_info *src, type_info *dst,
+                                   int do_throw)
 {
-  const rtti_object_locator *obj_locator;
+    void *ret;
 
-  /* Note: cppobj _isn't_ a type_info, we use that struct for its vtable ptr */
-  TRACE("(%p,%d,%p,%p,%d)\n", cppobj, unknown, src, dst, do_throw);
-  if (!cppobj)
-    return 0;
-  obj_locator= RTTI_GetObjectLocator(cppobj);
-  if (unknown)
-    FIXME("Unknown parameter is non-zero: please report\n");
+    if (!cppobj) return NULL;
 
-  /* To cast an object at runtime:
-   * 1.Find out the true type of the object from the typeinfo at vtable[-1]
-   * 2.Search for the destination type in the class heirachy
-   * 3.If destination type is found, return base object address + dest offset
-   *   Otherwise, fail the cast
-   */
-  if (obj_locator)
-  {
-    int count = 0;
-    const rtti_object_hierachy *obj_bases = obj_locator->type_hierachy;
-    const rtti_base_descriptor* const *base_desc = obj_bases->base_classes->bases;
-    int src_offset = obj_locator->base_class_offset, dst_offset = -1;
+    TRACE("obj: %p unknown: %d src: %p %s dst: %p %s do_throw: %d)\n",
+          cppobj, unknown, src, dbgstr_type_info(src), dst, dbgstr_type_info(dst), do_throw);
 
-    while (count < obj_bases->array_len)
+    /* To cast an object at runtime:
+     * 1.Find out the true type of the object from the typeinfo at vtable[-1]
+     * 2.Search for the destination type in the class hierarchy
+     * 3.If destination type is found, return base object address + dest offset
+     *   Otherwise, fail the cast
+     *
+     * FIXME: the unknown parameter doesn't seem to be used for anything
+     */
+    __TRY
     {
-      const type_info *typ = (*base_desc)->type_descriptor;
+        int i;
+        const rtti_object_locator *obj_locator = get_obj_locator( cppobj );
+        const rtti_object_hierarchy *obj_bases = obj_locator->type_hierarchy;
+        const rtti_base_descriptor * const* base_desc = obj_bases->base_classes->bases;
 
-      if (!strcmp(typ->mangled, dst->mangled))
-      {
-        dst_offset = (*base_desc)->base_class_offset;
-        break;
-      }
-      base_desc++;
-      count++;
+        if (TRACE_ON(msvcrt)) dump_obj_locator(obj_locator);
+
+        ret = NULL;
+        for (i = 0; i < obj_bases->array_len; i++)
+        {
+            const type_info *typ = base_desc[i]->type_descriptor;
+
+            if (!strcmp(typ->mangled, dst->mangled))
+            {
+                /* compute the correct this pointer for that base class */
+                void *this_ptr = (char *)cppobj - obj_locator->base_class_offset;
+                ret = get_this_pointer( &base_desc[i]->offsets, this_ptr );
+                break;
+            }
+        }
+        /* VC++ sets do_throw to 1 when the result of a dynamic_cast is assigned
+         * to a reference, since references cannot be NULL.
+         */
+        if (!ret && do_throw)
+        {
+            const char *msg = "Bad dynamic_cast!";
+            bad_cast e;
+            MSVCRT_bad_cast_ctor( &e, &msg );
+            _CxxThrowException( &e, &bad_cast_exception_type );
+        }
     }
-    if (dst_offset >= 0)
-      return (void*)((unsigned long)cppobj - src_offset + dst_offset);
-  }
-
-#ifdef __i386__
-  /* VC++ sets do_throw to 1 when the result of a dynamic_cast is assigned
-   * to a reference, since references cannot be NULL.
-   */
-  if (do_throw)
-  {
-    static const char* exception_text = "Bad dynamic_cast!";
-    exception e;
-
-    /* Throw a bad_cast exception */
-    EXCEPTION_ctor(&e, &exception_text);
-    e.vtable = &MSVCRT_bad_cast_vtable;
-    _CxxThrowException(&e, &bad_cast_exception_type);
-    DebugBreak();
-  }
-#endif
-  return NULL;
+    __EXCEPT_PAGE_FAULT
+    {
+        __non_rtti_object e;
+        MSVCRT___non_rtti_object_ctor( &e, "Access violation - no RTTI data!" );
+        _CxxThrowException( &e, &bad_typeid_exception_type );
+        return NULL;
+    }
+    __ENDTRY
+    return ret;
 }
 
 
@@ -1236,15 +1179,24 @@ void* MSVCRT___RTDynamicCast(type_info *cppobj, int unknown,
  *  This function is usually called by compiler generated code as a result
  *  of using one of the C++ dynamic cast statements.
  */
-void* MSVCRT___RTCastToVoid(type_info *cppobj)
+void* CDECL MSVCRT___RTCastToVoid(void *cppobj)
 {
-  const rtti_object_locator *obj_locator = RTTI_GetObjectLocator(cppobj);
+    void *ret;
 
-  /* Note: cppobj _isn't_ a type_info, we use that struct for its vtable ptr */
-  TRACE("(%p)\n", cppobj);
+    if (!cppobj) return NULL;
 
-  /* Casts to void* simply cast to the base object */
-  if (obj_locator)
-    return (void*)((unsigned long)cppobj - obj_locator->base_class_offset);
-  return NULL;
+    __TRY
+    {
+        const rtti_object_locator *obj_locator = get_obj_locator( cppobj );
+        ret = (char *)cppobj - obj_locator->base_class_offset;
+    }
+    __EXCEPT_PAGE_FAULT
+    {
+        __non_rtti_object e;
+        MSVCRT___non_rtti_object_ctor( &e, "Access violation - no RTTI data!" );
+        _CxxThrowException( &e, &bad_typeid_exception_type );
+        return NULL;
+    }
+    __ENDTRY
+    return ret;
 }
