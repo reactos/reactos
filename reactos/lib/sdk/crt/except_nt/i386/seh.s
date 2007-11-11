@@ -209,7 +209,7 @@ __except_handler2:
 
     /* Get the try level and scope table */
     mov esi, [ebx+12]
-    mov esi, [ebx+8]
+    mov edi, [ebx+8]
 
 except_loop2:
     /* Validate try level */
@@ -331,7 +331,7 @@ __except_handler3:
 
     /* Get the try level and scope table */
     mov esi, [ebx+12]
-    mov esi, [ebx+8]
+    mov edi, [ebx+8]
 
     /* FIXME: Validate the SEH exception */
 
