@@ -59,7 +59,7 @@ typedef struct _MmuVsidInfo {
 MmuFreePage *FreeList;
 // Pages are allocated one by one until NextPage == RamSize >> PPC_PAGE_SHIFT
 // Then we take only from the free list
-int Clock = 0, TreeAlloc = 0, GdbAttach = 0;
+int Clock = 0, TreeAlloc = 0, GdbAttach = 0, Booted = 0, Vsid[16];
 paddr_t RamSize, FirstUsablePage, NextPage;
 MmuVsidTree *NextTreePage = 0;
 MmuFreeTree *FreeTree;
@@ -112,7 +112,7 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
     case 0xa:
     case 0xc:
     case 0x20:
-        if (!callback[action](action,trap_frame)) hang(action, trap_frame);
+        if (!callback[action](action,trap_frame)) TakeException(action, trap_frame);
         break;
 
         /* MMU Functions */
@@ -241,21 +241,10 @@ int ignore(int trapCode, ppc_trap_frame_t *trap)
     return 1;
 }
 
-int hang(int trapCode, ppc_trap_frame_t *trap)
-{
-    if (!GdbAttach)
-    {
-        GdbAttach = 1;
-        SerialSetUp(0, (void *)0x800003f8, 9600);
-    }
-    while(1) SerialInterrupt(trapCode, trap);
-    return 1;
-}
-
 int fpenable(int trapCode, ppc_trap_frame_t *trap)
 {
         /* Turn on FP */
-        trap->srr0 |= 8192;
+        trap->srr1 |= 8192;
         return 1;
 }
 
@@ -286,7 +275,7 @@ void initme()
     /* Default to hang on unknown exception */
     for(i = 0; i < 30; i++)
     {
-        callback[i] = hang;
+        callback[i] = TakeException;
         if (i != 1) /* Preserve reset handler */
             copy_trap_handler(i);
     }
@@ -569,8 +558,10 @@ void mmusetvsid(int start, int end, int vsid)
     {
 	s_vsid = (vsid << 4) | (i & 15);
 	sr = (GetSR(i) & ~PPC_VSID_MASK) | s_vsid;
-	SetSR(i, sr);
+	if (Booted)
+            SetSR(i, sr);
 	Segs[i] = findvsid(s_vsid);
+        Vsid[i] = s_vsid;
     }
 }
 
@@ -595,6 +586,17 @@ int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
 
 void callkernel(void *fun_ptr, void *arg)
 {
+    int i;
+
+    Booted = 1;
+
+    for (i = 0; i < 16; i++)
+    {
+        // Patch up the vsid map.  We shouldn't muck with these until we're
+        // booted.
+        mmusetvsid(i, i+1, Vsid[i]);
+    }
+
     void (*fun)(void *) = fun_ptr;
     __asm__("mfmsr 3\n\t"
             "ori 3,3,0x30\n\t"
