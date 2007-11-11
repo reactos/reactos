@@ -9,7 +9,7 @@
 
 #include "precomp.h"
 
-static BOOL OnSelChange(PVIRTMEM pVirtMem);
+static BOOL OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem);
 static LPCTSTR lpKey = _T("SYSTEM\\CurrentControlSet\\Control\\Session Manager\\Memory Management");
 
 static BOOL
@@ -196,7 +196,7 @@ ParseMemSettings(PVIRTMEM pVirtMem)
     SendMessage(pVirtMem->hListBox, LB_SETCURSEL, (WPARAM)0, (LPARAM)0);
     HeapFree(GetProcessHeap(), 0, szDisplayString);
     pVirtMem->Count = PgCnt;
-    OnSelChange(pVirtMem);
+    OnSelChange(pVirtMem->hSelf, pVirtMem);
 }
 
 
@@ -372,18 +372,34 @@ OnSet(PVIRTMEM pVirtMem)
 
 
 static BOOL
-OnSelChange(PVIRTMEM pVirtMem)
+OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 {
+    TCHAR szBuffer[64];
+    MEMORYSTATUSEX MemoryStatus;
+    ULARGE_INTEGER FreeBytes;
+    DWORDLONG FreeMemory;
     INT Index;
+    INT i;
+    INT FileSize;
 
-    Index = (INT)SendDlgItemMessage(pVirtMem->hSelf,
+    Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
                                     LB_GETCURSEL,
                                     0,
                                     0);
-
     if (Index < pVirtMem->Count)
     {
+        /* Set drive letter */
+        SetDlgItemText(hwndDlg, IDC_DRIVE,
+                       pVirtMem->Pagefile[Index].szDrive);
+
+        /* Set available disk space */
+        if (GetDiskFreeSpaceEx(pVirtMem->Pagefile[Index].szDrive,
+                               NULL, NULL, &FreeBytes))
+        {
+            _stprintf(szBuffer, _T("%I64u MB"), FreeBytes.QuadPart / (1024 * 1024));
+            SetDlgItemText(hwndDlg, IDC_SPACEAVAIL, szBuffer);
+        }
 
         if (pVirtMem->Pagefile[Index].InitialValue  != 0 &&
             pVirtMem->Pagefile[Index].MaxValue != 0)
@@ -426,6 +442,27 @@ OnSelChange(PVIRTMEM pVirtMem)
                                BST_CHECKED);
             }
         }
+
+        /* Set minimum pagefile size */
+        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("2 MB"));
+
+        /* Set recommended pagefile size */
+        MemoryStatus.dwLength = sizeof(MEMORYSTATUSEX);
+        if (GlobalMemoryStatusEx(&MemoryStatus))
+        {
+            FreeMemory = MemoryStatus.ullTotalPhys / (1024 * 1024);
+            _stprintf(szBuffer, _T("%I64u MB"), FreeMemory + (FreeMemory / 2));
+            SetDlgItemText(hwndDlg, IDC_RECOMMENDED, szBuffer);
+        }
+
+        /* Set current pagefile size */
+        FileSize = 0;
+        for (i = 0; i < 26; i++)
+        {
+            FileSize += pVirtMem->Pagefile[i].InitialValue;
+        }
+        _stprintf(szBuffer, _T("%u MB"), FileSize);
+        SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
     }
 
     return TRUE;
@@ -526,7 +563,7 @@ VirtMemDlgProc(HWND hwndDlg,
                     switch HIWORD(wParam)
                     {
                         case LBN_SELCHANGE:
-                            OnSelChange(pVirtMem);
+                            OnSelChange(hwndDlg, pVirtMem);
                             return TRUE;
                     }
                     break;
