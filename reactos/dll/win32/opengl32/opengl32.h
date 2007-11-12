@@ -141,7 +141,7 @@ typedef struct tagGLDRIVERDATA
 	BOOL      WINAPI (*DrvRealizeLayerPalette)( HDC, int, BOOL );
 	PICDTable WINAPI (*DrvSetContext)( HDC hdc, HGLRC hglrc, SetContextCallBack callback );
 	int       WINAPI (*DrvSetLayerPaletteEntries)( HDC, int, int, int, CONST COLORREF * );
-	BOOL      WINAPI (*DrvSetPixelFormat)( IN HDC, IN int ); /*, IN CONST PIXELFORMATDESCRIPTOR * );*/
+	BOOL      WINAPI (*DrvSetPixelFormat)( IN HDC, IN int, const PIXELFORMATDESCRIPTOR * );
 	BOOL      WINAPI (*DrvShareLists)( HGLRC, HGLRC );
 	BOOL      WINAPI (*DrvSwapBuffers)( HDC );
 	BOOL      WINAPI (*DrvSwapLayerBuffers)( HDC, UINT );
