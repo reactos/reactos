@@ -32,8 +32,7 @@ VOID BootMain(LPSTR CmdLine)
 
 	if (!UiInitialize(FALSE))
 	{
-		printf("Press any key to reboot.\n");
-		MachConsGetCh();
+		UiMessageBoxCritical("Unable to initialize UI.\n");
 		return;
 	}
 

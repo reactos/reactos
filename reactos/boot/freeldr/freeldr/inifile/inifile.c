@@ -26,9 +26,6 @@ BOOLEAN IniOpenSection(PCSTR SectionName, ULONG* SectionId)
 
 	DbgPrint((DPRINT_INIFILE, "IniOpenSection() SectionName = %s\n", SectionName));
 
-	if (!IniFileSectionInitialized)
-		return FALSE;
-
 	// Loop through each section and find the one they want
 	Section = CONTAINING_RECORD(IniFileSectionListHead.Flink, INI_SECTION, ListEntry);
 	while (&Section->ListEntry != &IniFileSectionListHead)
