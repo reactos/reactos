@@ -513,7 +513,6 @@ typedef struct _DC
   HDEV        GDIDevice; // Should be PDev or pPDev?
   DRIVER_FUNCTIONS  DriverFunctions; // In GDIDEVICE
   UNICODE_STRING    DriverName;
-  HANDLE      DeviceDriver; // ?DHPDEV?
 
   CLIPOBJ     *CombinedClip;
 

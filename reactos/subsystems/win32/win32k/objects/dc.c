@@ -218,7 +218,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
-  NewDC->DeviceDriver = OrigDC->DeviceDriver;
   NewDC->Dc_Attr.ptlWindowOrg.x = OrigDC->Dc_Attr.ptlWindowOrg.x;
   NewDC->Dc_Attr.ptlWindowOrg.y = OrigDC->Dc_Attr.ptlWindowOrg.y;
   NewDC->Dc_Attr.szlWindowExt.cx = OrigDC->Dc_Attr.szlWindowExt.cx;
@@ -2534,6 +2533,7 @@ DC_FreeDcAttr(HDC  DCToFree )
   PDC pDC = DC_LockDc(DCToFree);
   if (pDC->pDc_Attr == &pDC->Dc_Attr) return; // Internal DC object!
   pDC->pDc_Attr = NULL;
+//  pDC->pDc_Attr = &pDC->Dc_Attr; // Correct behavior.
   DC_UnlockDc(pDC);
 
   KeEnterCriticalRegion();
