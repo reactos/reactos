@@ -1,8 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="libxml2" type="staticlibrary" allowwarnings="true">
-	<library>ntdll</library>
-	<library>kernel32</library>
 	<define name="HAVE_CONFIG_H" />
 	<define name="WIN32" />
 	<define name="_WINDOWS" />

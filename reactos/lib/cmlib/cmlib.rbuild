@@ -7,7 +7,6 @@
 	<define name="_NTSYSTEM_" />
 	<define name="NASSERT" />
 	<pch>cmlib.h</pch>
-	<library>rtl</library>
 	<file>cminit.c</file>
 	<file>hivebin.c</file>
 	<file>hivecell.c</file>
