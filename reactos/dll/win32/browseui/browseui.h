@@ -24,5 +24,6 @@
 extern LONG BROWSEUI_refCount;
 
 HRESULT WINAPI ACLMulti_Constructor(IUnknown *punkOuter, IUnknown **ppOut);
+HRESULT WINAPI BandSite_Constructor(IUnknown *punkOuter, IUnknown **ppOut);
 
 #endif /* __WINE_SHDOCVW_H */

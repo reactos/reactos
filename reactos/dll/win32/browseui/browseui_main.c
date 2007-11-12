@@ -33,9 +33,9 @@
 #include "shlwapi.h"
 #include "shlguid.h"
 
-#include "initguid.h"
-
 #include "browseui.h"
+#include "shobjidl.h" /* for IShellFolder used in undoc.h */
+#include "undoc.h" /* for CLSID_RebarBandSite */
 
 WINE_DEFAULT_DEBUG_CHANNEL(browseui);
 
@@ -50,6 +50,7 @@ static const struct {
     LPFNCONSTRUCTOR ctor;
 } ClassesTable[] = {
     {&CLSID_ACLMulti, ACLMulti_Constructor},
+    {&CLSID_RebarBandSite, BandSite_Constructor},
     {NULL, NULL}
 };
 

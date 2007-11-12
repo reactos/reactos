@@ -30,6 +30,8 @@
 
 #include "ole2.h"
 #include "shlguid.h"
+#include "shobjidl.h" /* for IShellFolder used in undoc.h */
+#include "undoc.h" /* for CLSID_RebarBandSite */
 
 #include "wine/debug.h"
 
@@ -443,6 +445,13 @@ static struct regsvr_coclass const coclass_list[] = {
     {
         &CLSID_ACLMulti,
         "Multiple AutoComplete List Container",
+        NULL,
+        "browseui.dll",
+        "Apartment"
+    },
+    {
+        &CLSID_RebarBandSite,
+        "Shell Rebar Band Site",
         NULL,
         "browseui.dll",
         "Apartment"

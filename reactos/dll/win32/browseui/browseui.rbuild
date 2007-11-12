@@ -5,6 +5,7 @@
 	<importlibrary definition="browseui.spec.def" />
 	<include base="browseui">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
+	<include base="explorer_new">.</include>
 	<define name="__REACTOS__" />
 	<define name="__WINESRC__" />
 	<define name="__USE_W32API" />
@@ -19,6 +20,7 @@
 	<library>uuid</library>
 	<library>ntdll</library>
 	<file>aclmulti.c</file>
+	<file>bandsite.c</file>
 	<file>browseui_main.c</file>
 	<file>regsvr.c</file>
 	<file>version.rc</file>
