@@ -957,6 +957,7 @@ DlgProc(HWND hDlg,
                 if (LOWORD(wParam) == IDOK )
                 {
                     SaveAllSettings(pInfo);
+                    SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
                 }
 
                 if (pInfo)
