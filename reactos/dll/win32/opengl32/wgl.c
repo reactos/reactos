@@ -1011,7 +1011,7 @@ rosglSetPixelFormat( HDC hdc, int iFormat, CONST PIXELFORMATDESCRIPTOR *pfd )
 	}
 
 	/* call ICD */
-	if (!icd->DrvSetPixelFormat( hdc, iFormat/*, pfd*/ ))
+	if (!icd->DrvSetPixelFormat( hdc, iFormat, pfd ))
 	{
 		DBGPRINT( "Warning: DrvSetPixelFormat(format=%d) failed (%d)",
 		          iFormat, GetLastError() );
