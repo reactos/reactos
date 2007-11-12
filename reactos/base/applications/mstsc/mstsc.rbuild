@@ -12,6 +12,7 @@
 	<library>advapi32</library>
 	<library>shell32</library>
 	<library>ole32</library>
+	<library>comdlg32</library>
 	<compilationunit name="unit.c">
 		<file>bitmap.c</file>
 		<file>bsops.c</file>
