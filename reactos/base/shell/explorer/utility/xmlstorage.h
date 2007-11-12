@@ -39,6 +39,9 @@
 
 #ifndef _XMLSTORAGE_H
 
+#ifndef __REACTOS__
+#include <strstream>
+#endif
 
 #ifdef UNICODE
 #ifndef _UNICODE
@@ -2242,7 +2245,7 @@ struct fast_ostringbuffer : public std::streambuf
 	typedef std::char_traits<_E> _Tr;
 
 	explicit fast_ostringbuffer()
-		{_Init(0, 0, std::_Noread);}	// optimized for ios::out mode
+		{_Init(0, 0, /*std::_Noread*/4);}	// optimized for ios::out mode
 
 	virtual ~fast_ostringbuffer()
 		{_Tidy();}
@@ -2271,10 +2274,10 @@ protected:
 			else if (_ALSIZE < _Alsize)
 				_Alsize = _ALSIZE;
 
-			if (_Strmode & std::_Allocated)
+			if (_Strmode & std::strstreambuf::_Allocated)
 				_Al.deallocate(eback(), _Os);
 
-			_Strmode |= std::_Allocated;
+			_Strmode |= std::strstreambuf::_Allocated;
 
 			if (_Os == 0)
 				{_Seekhigh = _P;
@@ -2288,24 +2291,24 @@ protected:
 
 			return _C;}}
 
-	void _Init(const _E *_S, size_t _N, std::_Strstate _M)
+	void _Init(const _E *_S, size_t _N, std::strstreambuf::_Strstate _M)
 		{_Pendsave = 0, _Seekhigh = 0;
 		_Alsize = _MINSIZE, _Strmode = _M;
 		setg(0, 0, 0);
 		setp(0, 0);}
 
 	void _Tidy()
-		{if (_Strmode & std::_Allocated)
+		{if (_Strmode & std::strstreambuf::_Allocated)
 			_Al.deallocate(eback(), (pptr() != 0 ? epptr() : egptr()) - eback());
 		_Seekhigh = 0;
-		_Strmode &= ~std::_Allocated;}
+		_Strmode &= ~std::strstreambuf::_Allocated;}
 
 private:
 	enum {_ALSIZE = 65536/*512*/, _MINSIZE = 32768/*32*/};	// bigger buffer sizes
 
 	_E *_Pendsave, *_Seekhigh;
 	int _Alsize;
-	std::_Strstate _Strmode;
+	std::strstreambuf::_Strstate _Strmode;
 	std::allocator<_E> _Al;
 };
 

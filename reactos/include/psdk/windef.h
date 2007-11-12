@@ -166,7 +166,7 @@ extern "C" {
 #define min __min
 #define max __max
 
-#elif !defined(NOMINMAX)
+#elif !defined(_MSC_VER) && !defined(NOMINMAX)
 
 #ifndef max
 #define max(a,b) ((a)>(b)?(a):(b))
