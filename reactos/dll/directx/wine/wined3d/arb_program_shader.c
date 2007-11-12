@@ -41,10 +41,10 @@ WINE_DECLARE_DEBUG_CHANNEL(d3d_constants);
  * ARB_[vertex/fragment]_program helper functions follow
  ********************************************************/
 
-/**
+/** 
  * Loads floating point constants into the currently set ARB_vertex/fragment_program.
  * When constant_list == NULL, it will load all the constants.
- *
+ *  
  * @target_type should be either GL_VERTEX_PROGRAM_ARB (for vertex shaders)
  *  or GL_FRAGMENT_PROGRAM_ARB (for pixel shaders)
  */
@@ -93,16 +93,16 @@ static void shader_arb_load_constantsF(IWineD3DBaseShaderImpl* This, WineD3D_GL_
 
 /**
  * Loads the app-supplied constants into the currently set ARB_[vertex/fragment]_programs.
- *
- * We only support float constants in ARB at the moment, so don't
+ * 
+ * We only support float constants in ARB at the moment, so don't 
  * worry about the Integers or Booleans
  */
 void shader_arb_load_constants(
     IWineD3DDevice* device,
     char usePixelShader,
     char useVertexShader) {
-
-    IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) device;
+   
+    IWineD3DDeviceImpl* deviceImpl = (IWineD3DDeviceImpl*) device; 
     IWineD3DStateBlockImpl* stateBlock = deviceImpl->stateBlock;
     WineD3D_GL_Info *gl_info = &deviceImpl->adapter->gl_info;
 
@@ -124,7 +124,7 @@ void shader_arb_load_constants(
         IWineD3DBaseShaderImpl* pshader = (IWineD3DBaseShaderImpl*) stateBlock->pixelShader;
 
         /* Load DirectX 9 float constants for pixel shader */
-        shader_arb_load_constantsF(pshader, gl_info, GL_FRAGMENT_PROGRAM_ARB,
+        shader_arb_load_constantsF(pshader, gl_info, GL_FRAGMENT_PROGRAM_ARB, 
                                    GL_LIMITS(pshader_constantsF),
                                    stateBlock->pixelShaderConstantF,
                                    &stateBlock->set_pconstantsF);
@@ -150,7 +150,7 @@ void shader_generate_arb_declarations(
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
     DWORD i;
     char pshader = shader_is_pshader_version(This->baseShader.hex_version);
-    unsigned max_constantsF = min(This->baseShader.limits.constant_float,
+    unsigned max_constantsF = min(This->baseShader.limits.constant_float, 
             (pshader ? GL_LIMITS(pshader_constantsF) : GL_LIMITS(vshader_constantsF)));
 
     /* Temporary Output register */

@@ -47,7 +47,7 @@ ULONG WINAPI IWineD3DResourceImpl_AddRef(IWineD3DResource *iface) {
     IWineD3DResourceImpl *This = (IWineD3DResourceImpl *)iface;
     ULONG ref = InterlockedIncrement(&This->resource.ref);
     TRACE("(%p) : AddRef increasing from %d\n", This, ref - 1);
-    return ref;
+    return ref; 
 }
 
 ULONG WINAPI IWineD3DResourceImpl_Release(IWineD3DResource *iface) {

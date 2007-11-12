@@ -227,8 +227,8 @@ static UINT WINAPI IWineD3DCubeTextureImpl_GetTextureDimensions(IWineD3DCubeText
     return GL_TEXTURE_CUBE_MAP_ARB;
 }
 
-static void WINAPI IWineD3DCubeTextureImpl_ApplyStateChanges(IWineD3DCubeTexture *iface,
-                                                        const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1],
+static void WINAPI IWineD3DCubeTextureImpl_ApplyStateChanges(IWineD3DCubeTexture *iface, 
+                                                        const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1], 
                                                         const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1]) {
     IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
     float matrix[16];

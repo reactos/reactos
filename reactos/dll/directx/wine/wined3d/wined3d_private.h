@@ -158,7 +158,7 @@ static WINED3DGLTYPE const glTypeLookup[WINED3DDECLTYPE_UNUSED] = {
 #define WINED3D_ATR_TYPESIZE(type)      glTypeLookup[type].typesize
 
 /**
- * Settings
+ * Settings 
  */
 #define VS_NONE    0
 #define VS_HW      1
@@ -270,7 +270,7 @@ extern int num_lock;
 #define MAX_STREAMS  16  /* Maximum possible streams - used for fixed size arrays
                             See MaxStreams in MSDN under GetDeviceCaps */
                          /* Maximum number of constants provided to the shaders */
-#define HIGHEST_TRANSFORMSTATE 512
+#define HIGHEST_TRANSFORMSTATE 512 
                          /* Highest value in WINED3DTRANSFORMSTATETYPE */
 #define MAX_PALETTES      256
 
@@ -287,7 +287,7 @@ extern int num_lock;
             debug_glerror(err), err, A, __FILE__, __LINE__);    \
        err = glGetError();                                      \
     } while (err != GL_NO_ERROR);                               \
-}
+} 
 
 /* Trace routines / diagnostics */
 /* ---------------------------- */
@@ -356,8 +356,8 @@ extern const float identity[16];
 /* Trace information per-vertex: (extremely high amount of trace) */
 #if 0 /* NOTE: Must be 0 in cvs */
 # define VTRACE(A) TRACE A
-#else
-# define VTRACE(A)
+#else 
+# define VTRACE(A) 
 #endif
 
 /* Checking of per-vertex related GL calls */
@@ -385,21 +385,21 @@ extern const float identity[16];
       the file is deleted                                                                            */
 # if 1 /* NOTE: Must be 1 in cvs, as this is mostly more useful than a trace from program start */
 #  define SINGLE_FRAME_DEBUGGING
-# endif
+# endif  
   /* The following, when enabled, lets you see the makeup of the frame, by drawprimitive calls.
-     It can only be enabled when FRAME_DEBUGGING is also enabled
-     The contents of the back buffer are written into /tmp/backbuffer_* after each primitive
+     It can only be enabled when FRAME_DEBUGGING is also enabled                               
+     The contents of the back buffer are written into /tmp/backbuffer_* after each primitive 
      array is drawn.                                                                            */
-# if 0 /* NOTE: Must be 0 in cvs, as this give a lot of ppm files when compiled in */
+# if 0 /* NOTE: Must be 0 in cvs, as this give a lot of ppm files when compiled in */                                                                                       
 #  define SHOW_FRAME_MAKEUP 1
-# endif
+# endif  
   /* The following, when enabled, lets you see the makeup of the all the textures used during each
      of the drawprimitive calls. It can only be enabled when SHOW_FRAME_MAKEUP is also enabled.
-     The contents of the textures assigned to each stage are written into
+     The contents of the textures assigned to each stage are written into 
      /tmp/texture_*_<Stage>.ppm after each primitive array is drawn.                            */
 # if 0 /* NOTE: Must be 0 in cvs, as this give a lot of ppm files when compiled in */
 #  define SHOW_TEXTURE_MAKEUP 0
-# endif
+# endif  
 extern BOOL isOn;
 extern BOOL isDumpingFrames;
 extern LONG primCounter;
@@ -954,7 +954,7 @@ typedef struct IWineD3DTextureImpl
 
     /* IWineD3DTexture */
     IWineD3DSurface          *surfaces[MAX_LEVELS];
-
+    
     UINT                      width;
     UINT                      height;
     float                     pow2scalingFactorX;
@@ -1443,7 +1443,7 @@ typedef struct IWineD3DQueryImpl
 {
     const IWineD3DQueryVtbl  *lpVtbl;
     LONG                      ref;     /* Note: Ref counting not required */
-
+    
     IUnknown                 *parent;
     /*TODO: replace with iface usage */
 #if 0
@@ -1456,8 +1456,8 @@ typedef struct IWineD3DQueryImpl
     WINED3DQUERYTYPE         type;
     /* TODO: Think about using a IUnknown instead of a void* */
     void                     *extendedData;
-
-
+    
+  
 } IWineD3DQueryImpl;
 
 extern const IWineD3DQueryVtbl IWineD3DQuery_Vtbl;
@@ -1506,7 +1506,7 @@ extern const IWineD3DSwapChainVtbl IWineD3DSwapChain_Vtbl;
 WineD3DContext *IWineD3DSwapChainImpl_CreateContextForThread(IWineD3DSwapChain *iface);
 
 /*****************************************************************************
- * Utility function prototypes
+ * Utility function prototypes 
  */
 
 /* Trace routines */
@@ -1547,9 +1547,9 @@ BOOL getDepthStencilBits(WINED3DFORMAT fmt, short *depthSize, short *stencilSize
 void multiply_matrix(WINED3DMATRIX *dest, const WINED3DMATRIX *src1, const WINED3DMATRIX *src2);
 
 /*****************************************************************************
- * To enable calling of inherited functions, requires prototypes
+ * To enable calling of inherited functions, requires prototypes 
  *
- * Note: Only require classes which are subclassed, ie resource, basetexture,
+ * Note: Only require classes which are subclassed, ie resource, basetexture, 
  */
     /*** IUnknown methods ***/
     extern HRESULT WINAPI IWineD3DResourceImpl_QueryInterface(IWineD3DResource *iface, REFIID riid, void** ppvObject);
@@ -1656,7 +1656,7 @@ typedef struct shader_reg_maps {
     char attributes[MAX_ATTRIBS];           /* vertex */
     char labels[MAX_LABELS];                /* pixel, vertex */
 
-    /* Sampler usage tokens
+    /* Sampler usage tokens 
      * Use 0 as default (bit 31 is always 1 on a valid token) */
     DWORD samplers[max(MAX_FRAGMENT_SAMPLERS, MAX_VERTEX_SAMPLERS)];
     char bumpmat;
@@ -1729,21 +1729,21 @@ typedef struct SHADER_LIMITS {
     unsigned int label;
 } SHADER_LIMITS;
 
-/** Keeps track of details for TEX_M#x# shader opcodes which need to
+/** Keeps track of details for TEX_M#x# shader opcodes which need to 
     maintain state information between multiple codes */
 typedef struct SHADER_PARSE_STATE {
     unsigned int current_row;
     DWORD texcoord_w[2];
 } SHADER_PARSE_STATE;
 
-/* Base Shader utility functions.
+/* Base Shader utility functions. 
  * (may move callers into the same file in the future) */
 extern int shader_addline(
     SHADER_BUFFER* buffer,
     const char* fmt, ...);
 
 extern const SHADER_OPCODE* shader_get_opcode(
-    IWineD3DBaseShader *iface,
+    IWineD3DBaseShader *iface, 
     const DWORD code);
 
 extern void shader_delete_constant_list(
@@ -2012,7 +2012,7 @@ static inline BOOL shader_is_scalar(DWORD param) {
  * IDirect3DVertexShader implementation structure
  */
 typedef struct IWineD3DVertexShaderImpl {
-    /* IUnknown parts*/
+    /* IUnknown parts*/   
     const IWineD3DVertexShaderVtbl *lpVtbl;
     LONG                        ref;     /* Note: Ref counting not required */
 

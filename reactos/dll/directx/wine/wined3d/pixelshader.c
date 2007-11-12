@@ -262,7 +262,7 @@ CONST SHADER_OPCODE IWineD3DPixelShaderImpl_shader_ins[] = {
 };
 
 static void pshader_set_limits(
-      IWineD3DPixelShaderImpl *This) {
+      IWineD3DPixelShaderImpl *This) { 
 
       This->baseShader.limits.attributes = 0;
       This->baseShader.limits.address = 0;
@@ -272,7 +272,7 @@ static void pshader_set_limits(
           case WINED3DPS_VERSION(1,0):
           case WINED3DPS_VERSION(1,1):
           case WINED3DPS_VERSION(1,2):
-          case WINED3DPS_VERSION(1,3):
+          case WINED3DPS_VERSION(1,3): 
                    This->baseShader.limits.temporary = 2;
                    This->baseShader.limits.constant_float = 8;
                    This->baseShader.limits.constant_int = 0;
@@ -293,8 +293,8 @@ static void pshader_set_limits(
                    This->baseShader.limits.packed_input = 0;
                    This->baseShader.limits.label = 0;
                    break;
-
-          /* FIXME: temporaries must match D3DPSHADERCAPS2_0.NumTemps */
+               
+          /* FIXME: temporaries must match D3DPSHADERCAPS2_0.NumTemps */ 
           case WINED3DPS_VERSION(2,0):
                    This->baseShader.limits.temporary = 32;
                    This->baseShader.limits.constant_float = 32;
@@ -335,7 +335,7 @@ static void pshader_set_limits(
                    This->baseShader.limits.sampler = 16;
                    This->baseShader.limits.packed_input = 0;
                    This->baseShader.limits.label = 0;
-                   FIXME("Unrecognized pixel shader version %#x\n",
+                   FIXME("Unrecognized pixel shader version %#x\n", 
                        This->baseShader.hex_version);
       }
 }
@@ -360,7 +360,7 @@ static inline VOID IWineD3DPixelShaderImpl_GenerateShader(
     }
     buffer.buffer = This->device->fixupVertexBuffer;
 #else
-    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE);
+    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE); 
 #endif
     buffer.bsize = 0;
     buffer.lineNo = 0;
@@ -456,7 +456,7 @@ static inline VOID IWineD3DPixelShaderImpl_GenerateShader(
             shader_addline(&buffer, "MOV result.color.a, TMP_COLOR.a;\n");
         }
 
-        shader_addline(&buffer, "END\n");
+        shader_addline(&buffer, "END\n"); 
 
         /* TODO: change to resource.glObjectHandle or something like that */
         GL_EXTCALL(glGenProgramsARB(1, &This->baseShader.prgId));

@@ -181,7 +181,7 @@ static void vshader_set_limits(
                    This->baseShader.limits.sampler = 0;
                    This->baseShader.limits.label = 0;
                    break;
-
+      
           case WINED3DVS_VERSION(2,0):
           case WINED3DVS_VERSION(2,1):
                    This->baseShader.limits.temporary = 12;
@@ -315,7 +315,7 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
     }
     buffer.buffer = This->device->fixupVertexBuffer;
 #else
-    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE);
+    buffer.buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, SHADER_PGMSIZE); 
 #endif
     buffer.bsize = 0;
     buffer.lineNo = 0;
@@ -339,7 +339,7 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
         /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
         if (!reg_maps->fog)
             shader_addline(&buffer, "gl_FogFragCoord = gl_Position.z;\n");
-
+        
         /* Write the final position.
          *
          * OpenGL coordinates specify the center of the pixel while d3d coords specify
@@ -371,7 +371,7 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
 
         /* Mesa supports only 95 constants */
         if (GL_VEND(MESA) || GL_VEND(WINE))
-            This->baseShader.limits.constant_float =
+            This->baseShader.limits.constant_float = 
                 min(95, This->baseShader.limits.constant_float);
 
         /* Base Declarations */
@@ -401,8 +401,8 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
         shader_addline(&buffer, "MUL TMP_OUT.y, TMP_OUT.y, posFixup.y;\n");
 
         shader_addline(&buffer, "MOV result.position, TMP_OUT;\n");
-
-        shader_addline(&buffer, "END\n");
+        
+        shader_addline(&buffer, "END\n"); 
 
         /* TODO: change to resource.glObjectHandle or something like that */
         GL_EXTCALL(glGenProgramsARB(1, &This->baseShader.prgId));
@@ -436,7 +436,7 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_QueryInterface(IWineD3DVertexShad
 {
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
     TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
+    if (IsEqualGUID(riid, &IID_IUnknown) 
         || IsEqualGUID(riid, &IID_IWineD3DBase)
         || IsEqualGUID(riid, &IID_IWineD3DBaseShader)
         || IsEqualGUID(riid, &IID_IWineD3DVertexShader)) {
@@ -495,7 +495,7 @@ static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface
 
 static HRESULT WINAPI IWineD3DVertexShaderImpl_GetParent(IWineD3DVertexShader *iface, IUnknown** parent){
     IWineD3DVertexShaderImpl *This = (IWineD3DVertexShaderImpl *)iface;
-
+    
     *parent = This->parent;
     IUnknown_AddRef(*parent);
     TRACE("(%p) : returning %p\n", This, *parent);

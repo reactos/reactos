@@ -37,7 +37,7 @@ static inline BOOL shader_is_version_token(DWORD token) {
 }
 
 int shader_addline(
-    SHADER_BUFFER* buffer,
+    SHADER_BUFFER* buffer,  
     const char *format, ...) {
 
     char* base = buffer->buffer + buffer->bsize;
@@ -48,7 +48,7 @@ int shader_addline(
     rc = vsnprintf(base, SHADER_PGMSIZE - 1 - buffer->bsize, format, args);
     va_end(args);
 
-    if (rc < 0 ||                                   /* C89 */
+    if (rc < 0 ||                                   /* C89 */ 
         rc > SHADER_PGMSIZE - 1 - buffer->bsize) {  /* C99 */
 
         ERR("The buffer allocated for the shader program string "
@@ -90,7 +90,7 @@ const SHADER_OPCODE* shader_get_opcode(
         }
         ++i;
     }
-    FIXME("Unsupported opcode %#x(%d) masked %#x, shader version %#x\n",
+    FIXME("Unsupported opcode %#x(%d) masked %#x, shader version %#x\n", 
        code, code, code & WINED3DSI_OPCODE_MASK, hex_version);
     return NULL;
 }
@@ -133,10 +133,10 @@ static inline int shader_skip_opcode(
 }
 
 /* Read the parameters of an unrecognized opcode from the input stream
- * Return the number of tokens read.
- *
+ * Return the number of tokens read. 
+ * 
  * Note: This function assumes source or destination token format.
- * It will not work with specially-formatted tokens like DEF or DCL,
+ * It will not work with specially-formatted tokens like DEF or DCL, 
  * but hopefully those would be recognized */
 
 int shader_skip_unrecognized(
@@ -292,11 +292,11 @@ HRESULT shader_get_registers_used(
                    WINED3DSIO_REP == curOpcode->opcode) {
             reg_maps->loop = 1;
             pToken += curOpcode->num_params;
-
+   
         /* For subroutine prototypes */
         } else if (WINED3DSIO_LABEL == curOpcode->opcode) {
 
-            DWORD snum = *pToken & WINED3DSP_REGNUM_MASK;
+            DWORD snum = *pToken & WINED3DSP_REGNUM_MASK; 
             reg_maps->labels[snum] = 1;
             pToken += curOpcode->num_params;
 
@@ -313,7 +313,7 @@ HRESULT shader_get_registers_used(
             int i, limit;
 
             /* Declare 1.X samplers implicitly, based on the destination reg. number */
-            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 &&
+            if (WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 && 
                 (WINED3DSIO_TEX == curOpcode->opcode ||
                  WINED3DSIO_TEXBEM == curOpcode->opcode ||
                  WINED3DSIO_TEXBEML == curOpcode->opcode ||
@@ -364,10 +364,10 @@ HRESULT shader_get_registers_used(
             }
 
             /* This will loop over all the registers and try to
-             * make a bitmask of the ones we're interested in.
+             * make a bitmask of the ones we're interested in. 
              *
-             * Relative addressing tokens are ignored, but that's
-             * okay, since we'll catch any address registers when
+             * Relative addressing tokens are ignored, but that's 
+             * okay, since we'll catch any address registers when 
              * they are initialized (required by spec) */
 
             limit = (opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED)?
@@ -406,7 +406,7 @@ HRESULT shader_get_registers_used(
 
 static void shader_dump_decl_usage(
     IWineD3DBaseShaderImpl* This,
-    DWORD decl,
+    DWORD decl, 
     DWORD param) {
 
     DWORD regtype = shader_get_regtype(param);
@@ -420,10 +420,10 @@ static void shader_dump_decl_usage(
             case WINED3DSTT_2D: TRACE("_2d"); break;
             case WINED3DSTT_CUBE: TRACE("_cube"); break;
             case WINED3DSTT_VOLUME: TRACE("_volume"); break;
-            default: TRACE("_unknown_ttype(%08x)", ttype);
+            default: TRACE("_unknown_ttype(%08x)", ttype); 
        }
 
-    } else {
+    } else { 
 
         DWORD usage = decl & WINED3DSP_DCL_USAGE_MASK;
         DWORD idx = (decl & WINED3DSP_DCL_USAGEINDEX_MASK) >> WINED3DSP_DCL_USAGEINDEX_SHIFT;
@@ -513,7 +513,7 @@ static void shader_dump_arr_entry(
 
 void shader_dump_param(
     IWineD3DBaseShader *iface,
-    const DWORD param,
+    const DWORD param, 
     const DWORD addr_token,
     int input) {
 
@@ -549,7 +549,7 @@ void shader_dump_param(
         else if (modifier == WINED3DSPSM_NOT)
             TRACE("!");
 
-        if (modifier == WINED3DSPSM_ABS || modifier == WINED3DSPSM_ABSNEG)
+        if (modifier == WINED3DSPSM_ABS || modifier == WINED3DSPSM_ABSNEG) 
             TRACE("abs(");
     }
 
@@ -570,7 +570,7 @@ void shader_dump_param(
             break;
         case WINED3DSPR_TEXTURE: /* vs: case D3DSPR_ADDR */
             TRACE("%c%u", (pshader? 't':'a'), reg);
-            break;
+            break;        
         case WINED3DSPR_RASTOUT:
             TRACE("%s", rastout_reg_names[reg]);
             break;
@@ -583,7 +583,7 @@ void shader_dump_param(
         case WINED3DSPR_ATTROUT:
             TRACE("oD%u", reg);
             break;
-        case WINED3DSPR_TEXCRDOUT:
+        case WINED3DSPR_TEXCRDOUT: 
 
             /* Vertex shaders >= 3.0 use general purpose output registers
              * (WINED3DSPR_OUTPUT), which can include an address token */
@@ -592,7 +592,7 @@ void shader_dump_param(
                 TRACE("o");
                 shader_dump_arr_entry(iface, param, addr_token, reg, input);
             }
-            else
+            else 
                TRACE("oT%u", reg);
             break;
         case WINED3DSPR_CONSTINT:
@@ -745,7 +745,7 @@ void shader_generate_main(
             /* Unknown opcode and its parameters */
             if (NULL == curOpcode) {
                 FIXME("Unrecognized opcode: token=%08x\n", hw_arg.opcode_token);
-                pToken += shader_skip_unrecognized(iface, pToken);
+                pToken += shader_skip_unrecognized(iface, pToken); 
 
             /* Nothing to do */
             } else if (WINED3DSIO_DCL == curOpcode->opcode ||
@@ -773,13 +773,13 @@ void shader_generate_main(
                 }
 
                 /* Predication token */
-                if (hw_arg.opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED)
+                if (hw_arg.opcode_token & WINED3DSHADER_INSTRUCTION_PREDICATED) 
                     hw_arg.predicate = *pToken++;
 
                 /* Other source tokens */
                 for (i = 0; i < (curOpcode->num_params - curOpcode->dst_token); i++) {
 
-                    DWORD param, addr_token = 0;
+                    DWORD param, addr_token = 0; 
                     pToken += shader_get_param(iface, pToken, &param, &addr_token);
                     hw_arg.src[i] = param;
                     hw_arg.src_addr[i] = addr_token;
