@@ -495,10 +495,10 @@ typedef struct _DC
   ULONG       lucExcLock;
   ULONG       Tid;
 
-  DHPDEV      PDev;  // Handle GDIDEVICE?
+  DHPDEV      PDev;  // GDIDEVICE PDev
   INT         DC_Type;
   INT         DC_Flags;
-  PVOID       pPDev;  // PGDIDEVICE?
+  PVOID       pPDev;  // PGDIDEVICE
   FLONG       flGraphics;
   FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
@@ -507,11 +507,7 @@ typedef struct _DC
   HDC         hPrev;
 // Old tymerz! Cant code? So just Haxzorcise it! 
 // How many pointers to devices do we need?
-  HSURF       FillPatternSurfaces[HS_DDI_MAX]; // In GDIDEVICE
   PGDIINFO    GDIInfo;   // In GDIDEVICE
-  PDEVINFO    DevInfo;   // In GDIDEVICE
-  HDEV        GDIDevice; // Should be PDev or pPDev?
-  DRIVER_FUNCTIONS  DriverFunctions; // In GDIDEVICE
   UNICODE_STRING    DriverName;
 
   CLIPOBJ     *CombinedClip;

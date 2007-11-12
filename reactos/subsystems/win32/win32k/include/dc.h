@@ -4,10 +4,6 @@
 
 #include "driver.h"
 
-
-
-
-
   /* DC flags */
 #define DC_MEMORY     0x0001   /* It is a memory DC */
 #define DC_SAVED      0x0002   /* It is a saved DC */
@@ -43,9 +39,9 @@ typedef struct
   DHPDEV PDev;
   DEVMODEW DMW;
   HSURF FillPatterns[HS_DDI_MAX];
-  GDIINFO GDIInfo;
   DEVINFO DevInfo;
-  DRIVER_FUNCTIONS DriverFunctions;
+  GDIINFO GDIInfo;
+
   PFILE_OBJECT VideoFileObject;
   BOOLEAN PreparedDriver;
   ULONG DisplayNumber;
@@ -59,6 +55,7 @@ typedef struct
 
   struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 
+  DRIVER_FUNCTIONS DriverFunctions;
 } GDIDEVICE, *PGDIDEVICE;
 
 /*  Internal functions  */

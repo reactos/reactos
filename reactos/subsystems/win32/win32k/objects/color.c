@@ -552,14 +552,14 @@ UINT STDCALL NtGdiRealizePalette(HDC hDC)
   {
     // Memory managed DC
 	ASSERT(sysGDI->NumColors <= 256);
-	success = ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette(
+	success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
 		dc->PDev, sysPtr, 0, 0, sysGDI->NumColors);
 
   } else {
-    if( ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette)
+    if( ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette)
     {
       ASSERT(palGDI->NumColors <= 256);
-      success = ((GDIDEVICE *)dc->GDIDevice)->DriverFunctions.SetPalette(
+      success = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.SetPalette(
         dc->PDev, palPtr, 0, 0, palGDI->NumColors);
     }
   }

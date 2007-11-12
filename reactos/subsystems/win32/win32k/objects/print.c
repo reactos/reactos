@@ -119,7 +119,7 @@ IntGdiExtEscape(
 
    /* FIXME - Handle BitmapObj == NULL !!!!!! */
 
-   if ( NULL == dc->DriverFunctions.Escape )
+   if ( NULL == ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape )
    {
       Result = IntEngExtEscape(
          &BitmapObj->SurfObj,
@@ -131,7 +131,7 @@ IntGdiExtEscape(
    }
    else
    {
-      Result = dc->DriverFunctions.Escape(
+      Result = ((GDIDEVICE *)dc->pPDev)->DriverFunctions.Escape(
          &BitmapObj->SurfObj,
          Escape,
          InSize,

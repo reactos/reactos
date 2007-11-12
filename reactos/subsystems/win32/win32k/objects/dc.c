@@ -210,11 +210,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DC_Type = DC_Type;
 
   NewDC->PDev = OrigDC->PDev;
-  memcpy(NewDC->FillPatternSurfaces,
-         OrigDC->FillPatternSurfaces,
-         sizeof OrigDC->FillPatternSurfaces);
   NewDC->GDIInfo = OrigDC->GDIInfo;
-  NewDC->DevInfo = OrigDC->DevInfo;
   NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
@@ -242,7 +238,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.flags        = DC_MEMORY;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
-  NewDC->GDIDevice      = OrigDC->GDIDevice;
+  NewDC->pPDev      = OrigDC->pPDev;
 
   NewDC->PalIndexed = OrigDC->PalIndexed;
   NewDC->w.hPalette = OrigDC->w.hPalette;
@@ -906,14 +902,11 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   NewDC->DC_Type = DC_TYPE_DIRECT;
   NewDC->IsIC = CreateAsIC;
-  NewDC->DevInfo = &PrimarySurface.DevInfo;
+
   NewDC->GDIInfo = &PrimarySurface.GDIInfo;
-  memcpy(NewDC->FillPatternSurfaces, PrimarySurface.FillPatterns,
-  sizeof(NewDC->FillPatternSurfaces));
   NewDC->PDev = PrimarySurface.PDev;
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev;
-  NewDC->GDIDevice = (HDEV)&PrimarySurface;
-  NewDC->DriverFunctions = PrimarySurface.DriverFunctions;
+  NewDC->pPDev = (PVOID)&PrimarySurface;
   NewDC->w.hBitmap = PrimarySurface.Handle;
 
   NewDC->w.bitsPerPixel = NewDC->GDIInfo->cBitsPixel * NewDC->GDIInfo->cPlanes;
@@ -922,7 +915,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if (! CreateAsIC)
   {
     NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
-    NewDC->w.hPalette = NewDC->DevInfo->hpalDefault;
+    NewDC->w.hPalette = PrimarySurface.DevInfo.hpalDefault;
     NewDC->Dc_Attr.jROP2 = R2_COPYPEN;
 
     DC_UnlockDc( NewDC );
@@ -2119,7 +2112,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       else
       {
         dc->w.bitsPerPixel = BitsPerFormat(pb->SurfObj.iBitmapFormat);
-        dc->w.hPalette = dc->DevInfo->hpalDefault;
+        dc->w.hPalette = ((DEVINFO)((GDIDEVICE *)dc->pPDev)->DevInfo).hpalDefault;
       }
 
       /* Reselect brush and pen to regenerate the XLATEOBJs. */
@@ -2735,7 +2728,7 @@ GetDisplayNumberFromDeviceName(
     DesktopHDC = (HDC)UserGetWindowDC(DesktopObject);
     pDC = DC_LockDc(DesktopHDC);
 
-    *DisplayNumber = ((GDIDEVICE *)pDC->GDIDevice)->DisplayNumber;
+    *DisplayNumber = ((GDIDEVICE *)pDC->pPDev)->DisplayNumber;
 
     DC_UnlockDc(pDC);
     UserReleaseDC(DesktopObject, DesktopHDC, FALSE);
@@ -3259,7 +3252,7 @@ IntChangeDisplaySettings(
       {
          return FALSE;
       }
-      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->GDIDevice)->DisplayNumber);
+      swprintf (szBuffer, L"\\\\.\\DISPLAY%lu", ((GDIDEVICE *)DC->pPDev)->DisplayNumber);
       DC_UnlockDc(DC);
 
       RtlInitUnicodeString(&InDeviceName, szBuffer);

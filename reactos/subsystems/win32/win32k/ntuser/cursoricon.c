@@ -62,7 +62,7 @@ IntGetCursorLocation(PWINSTATION_OBJECT WinSta, POINT *loc)
 
    if (!(dc = DC_LockDc(hDC)))
       return FALSE;
-   GDIDevice = (GDIDEVICE *)dc->GDIDevice;
+   GDIDevice = (GDIDEVICE *)dc->pPDev;
    DC_UnlockDc(dc);
 
    loc->x = GDIDevice->Pointer.Pos.x;
@@ -139,7 +139,7 @@ IntSetCursor(PWINSTATION_OBJECT WinSta, PCURICON_OBJECT NewCursor,
          return Ret;
       }
       dcbmp = dc->w.hBitmap;
-      DevInfo = dc->DevInfo;
+      DevInfo = (PDEVINFO)&((GDIDEVICE *)dc->pPDev)->DevInfo;
       DC_UnlockDc(dc);
 
       BitmapObj = BITMAPOBJ_LockBitmap(dcbmp);

@@ -389,8 +389,7 @@ DxEngGetDCState(HDC hDC,
                 return 0;
             case 3:
             {
-/*                PGDIDEVICE GDIDevice = (PGDIDEVICE)pDC->PDev; //This one is right,, we have two.*/
-                PGDIDEVICE GDIDevice = (PGDIDEVICE)pDC->GDIDevice; //Until now noone noticed.
+                PGDIDEVICE GDIDevice = (PGDIDEVICE)pDC->pPDev;
                 pEDDgpl = GDIDevice->pEDDgpl;
                 DC_UnlockDc(pDC);
                 return (DWORD)pEDDgpl;
