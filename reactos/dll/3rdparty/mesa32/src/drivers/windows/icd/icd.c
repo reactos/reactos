@@ -283,19 +283,23 @@ WGLAPI BOOL GLAPIENTRY DrvSwapLayerBuffers(HDC hdc,UINT fuPlanes)
 WGLAPI int GLAPIENTRY DrvDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nBytes,
                                     LPPIXELFORMATDESCRIPTOR ppfd)
 {
-    int	qt_valid_pix;
-    (void) hdc;
+   int qt_valid_pix;
 
-    qt_valid_pix = qt_pix;
+   qt_valid_pix = qt_pix;
+
     if(ppfd == NULL)
-	return(qt_valid_pix);
-    if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix || nBytes != sizeof(PIXELFORMATDESCRIPTOR))
-    {
-        SetLastError(0);
-        return(0);
-    }
-    *ppfd = pix[iPixelFormat - 1].pfd;
-    return(qt_valid_pix);
+        return(qt_valid_pix);
+
+   if (iPixelFormat < 1 || iPixelFormat > qt_valid_pix ||
+       ((nBytes != sizeof(PIXELFORMATDESCRIPTOR)) && (nBytes != 0))) {
+      SetLastError(0);
+      return qt_valid_pix;
+   }
+
+   if (nBytes != 0)
+      *ppfd = pix[iPixelFormat - 1].pfd;
+
+   return qt_valid_pix;
 }
 
 /*
@@ -311,19 +315,27 @@ WGLAPI PROC GLAPIENTRY DrvGetProcAddress(LPCSTR lpszProc)
    return(NULL);
 }
 
-WGLAPI BOOL GLAPIENTRY DrvSetPixelFormat(HDC hdc,int iPixelFormat)
+WGLAPI BOOL GLAPIENTRY DrvSetPixelFormat(HDC hdc,int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd)
 {
-    int qt_valid_pix;
-    (void) hdc;
+   int qt_valid_pix;
 
-    qt_valid_pix = qt_pix;
-    if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix)
-    {
-        SetLastError(0);
-        return(FALSE);
-    }
-    curPFD = iPixelFormat;
-    return(TRUE);
+   qt_valid_pix = qt_pix;
+
+   if (iPixelFormat < 1 || iPixelFormat > qt_valid_pix) {
+      if (ppfd == NULL) {
+         PIXELFORMATDESCRIPTOR my_pfd;
+         if (!DrvDescribePixelFormat(hdc, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &my_pfd)) {
+            SetLastError(0);
+            return FALSE;
+         }
+      } else if (ppfd->nSize != sizeof(PIXELFORMATDESCRIPTOR)) {
+         SetLastError(0);
+         return FALSE;
+      }
+   }
+   curPFD = iPixelFormat;
+
+   return TRUE;
 }
 
 WGLAPI BOOL GLAPIENTRY DrvSwapBuffers(HDC hdc)
