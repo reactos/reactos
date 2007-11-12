@@ -56,7 +56,10 @@ typedef struct
   UINT SafetyRemoveLevel; /* at what level was the cursor removed?
 			     0 for not removed */
   UINT SafetyRemoveCount;
-} GDIDEVICE;
+
+  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
+
+} GDIDEVICE, *PGDIDEVICE;
 
 /*  Internal functions  */
 

@@ -495,28 +495,34 @@ typedef struct _DC
   ULONG       lucExcLock;
   ULONG       Tid;
 
-  DHPDEV      PDev;
+  DHPDEV      PDev;  // Handle GDIDEVICE?
   INT         DC_Type;
   INT         DC_Flags;
+  PVOID       pPDev;  // PGDIDEVICE?
+  FLONG       flGraphics;
+  FLONG       flGraphics2;
   PDC_ATTR    pDc_Attr;
   DC_ATTR     Dc_Attr;
-  HDC         hSelf;  // Used only for MemoryDC & SaveDC.
   HDC         hNext;
-  HSURF       FillPatternSurfaces[HS_DDI_MAX];
-  PGDIINFO    GDIInfo;
-  PDEVINFO    DevInfo;
-  HDEV        GDIDevice;
-
+  HDC         hPrev;
+// Old tymerz! Cant code? So just Haxzorcise it! 
+// How many pointers to devices do we need?
+  HSURF       FillPatternSurfaces[HS_DDI_MAX]; // In GDIDEVICE
+  PGDIINFO    GDIInfo;   // In GDIDEVICE
+  PDEVINFO    DevInfo;   // In GDIDEVICE
+  HDEV        GDIDevice; // Should be PDev or pPDev?
+  DRIVER_FUNCTIONS  DriverFunctions; // In GDIDEVICE
   UNICODE_STRING    DriverName;
-  HANDLE      DeviceDriver;
+  HANDLE      DeviceDriver; // ?DHPDEV?
 
   CLIPOBJ     *CombinedClip;
 
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;
 
-  INT         saveLevel;
-  BOOL        IsIC;
+  INT         saveLevel; // DCLEVEL lSaveDepth
+  HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
+  BOOL        IsIC;      // Use DC_Type
 
   HPALETTE    PalIndexed;
 
@@ -524,13 +530,6 @@ typedef struct _DC
 
   HANDLE      hFile;
   LPENHMETAHEADER emh;
-  // This belongs in DHPDEV not in DC. 8^(
-  // So I'm putting it down here with the rest of misfits.
-  // DRIVER_FUNCTIONS does not belong in DC. It should go PVOID in dpdev.
-  DRIVER_FUNCTIONS  DriverFunctions;
-  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
-  //
-
 } DC, *PDC;
 
 #endif
