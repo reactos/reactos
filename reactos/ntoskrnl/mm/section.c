@@ -55,6 +55,17 @@
 #pragma alloc_text(INIT, MmInitSectionImplementation)
 #endif
 
+FORCEINLINE
+VOID
+sprintf_nt(IN PCHAR Buffer,
+           IN PCHAR Format,
+           IN ...)
+{
+    va_list ap;
+    va_start(ap, Format);
+    vsprintf(Buffer, Format, ap);
+    va_end(ap);
+}
 
 /* TYPES *********************************************************************/
 
@@ -4506,6 +4517,9 @@ MmMapViewOfSection(IN PVOID SectionObject,
    PROS_SECTION_OBJECT Section;
    PMADDRESS_SPACE AddressSpace;
    ULONG ViewOffset;
+   //ANSI_STRING AnsiTemp;
+   //PCHAR Buffer;
+
    NTSTATUS Status = STATUS_SUCCESS;
 
    ASSERT(Process);
@@ -4608,6 +4622,41 @@ MmMapViewOfSection(IN PVOID SectionObject,
       }
 
       *BaseAddress = (PVOID)ImageBase;
+
+      /* Notify debugger about image being loaded */
+      if (NtGlobalFlag & FLG_ENABLE_KDEBUG_SYMBOL_LOAD)
+      {
+#ifdef KDBG
+          /* If KDBG is defined, then we always have symbols */
+          if (TRUE)
+#else
+          if (MiCacheImageSymbols(ImageBase))
+#endif
+          {
+#if 0
+              MmUnlockAddressSpace(AddressSpace);
+
+              /* Allocate a buffer we'll use for names */
+              Buffer = ExAllocatePoolWithTag(NonPagedPool, MAX_PATH, TAG_LDR_WSTR);
+              if (Buffer)
+              {
+                  /* Build the name */
+                  sprintf_nt(Buffer, "%wZ", &Section->FileObject->FileName);
+
+                  /* Setup the ansi string */
+                  RtlInitString(&AnsiTemp, Buffer);
+
+                  /* Notify the debugger */
+                  DbgLoadImageSymbols(&AnsiTemp, (PVOID)ImageBase, (ULONG_PTR)Process);
+
+                  /* Free allocated buffer */
+                  ExFreePool(Buffer);
+              }
+
+              MmLockAddressSpace(AddressSpace);
+#endif
+          }
+      }
    }
    else
    {

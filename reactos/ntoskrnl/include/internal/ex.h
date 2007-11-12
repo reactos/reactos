@@ -720,6 +720,40 @@ ExAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
 }
 
 /*++
+* @name ExTryToAcquirePushLockExclusive
+* INTERNAL MACRO
+*
+*     The ExAcquirePushLockExclusive macro exclusively acquires a PushLock.
+*
+* @params PushLock
+*         Pointer to the pushlock which is to be acquired.
+*
+* @return None.
+*
+* @remarks The function attempts the quickest route to acquire the lock, which is
+*          to simply set the lock bit.
+*          However, if the pushlock is already shared, the slower path is taken.
+*
+*          Callers of ExAcquirePushLockShared must be running at IRQL <= APC_LEVEL.
+*          This macro should usually be paired up with KeAcquireCriticalRegion.
+*
+*--*/
+BOOLEAN
+FORCEINLINE
+ExTryToAcquirePushLockExclusive(PEX_PUSH_LOCK PushLock)
+{
+    /* Try acquiring the lock */
+    if (InterlockedBitTestAndSet((PLONG)PushLock, EX_PUSH_LOCK_LOCK_V))
+    {
+        /* Can't acquire */
+        return FALSE;
+    }
+
+    /* Got acquired */
+    return TRUE;
+}
+
+/*++
  * @name ExAcquirePushLockShared
  * INTERNAL MACRO
  *

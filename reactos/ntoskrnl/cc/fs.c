@@ -20,7 +20,7 @@
 
 /* GLOBALS   *****************************************************************/
 
-extern FAST_MUTEX ViewLock;
+extern KGUARDED_MUTEX ViewLock;
 extern ULONG DirtyPageCount;
 
 NTSTATUS CcRosInternalFreeCacheSegment(PCACHE_SEGMENT CacheSeg);
@@ -153,7 +153,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
   if (FileSizes->AllocationSize.QuadPart < Bcb->AllocationSize.QuadPart)
   {
      InitializeListHead(&FreeListHead);
-     ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&ViewLock);
+     KeAcquireGuardedMutex(&ViewLock);
      KeAcquireSpinLock(&Bcb->BcbLock, &oldirql);
 
      current_entry = Bcb->BcbSegmentListHead.Flink;
@@ -186,7 +186,7 @@ CcSetFileSizes (IN PFILE_OBJECT FileObject,
      Bcb->AllocationSize = FileSizes->AllocationSize;
      Bcb->FileSize = FileSizes->FileSize;
      KeReleaseSpinLock(&Bcb->BcbLock, oldirql);
-     ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&ViewLock);
+     KeReleaseGuardedMutex(&ViewLock);
 
      current_entry = FreeListHead.Flink;
      while(current_entry != &FreeListHead)

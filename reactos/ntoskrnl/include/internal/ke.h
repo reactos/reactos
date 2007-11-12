@@ -118,7 +118,7 @@ extern KTSS KiBootTss;
 #endif
 extern UCHAR P0BootStack[];
 extern UCHAR KiDoubleFaultStack[];
-extern FAST_MUTEX KernelAddressSpaceLock;
+extern EX_PUSH_LOCK KernelAddressSpaceLock;
 extern ULONG KiMaximumDpcQueueDepth;
 extern ULONG KiMinimumDpcRate;
 extern ULONG KiAdjustDpcThreshold;

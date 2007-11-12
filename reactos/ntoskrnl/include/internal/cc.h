@@ -145,7 +145,7 @@ typedef struct _CACHE_SEGMENT
     /* Offset in the file which this cache segment maps. */
     ULONG FileOffset;
     /* Lock. */
-    FAST_MUTEX Lock;
+    EX_PUSH_LOCK Lock;
     /* Number of references. */
     ULONG ReferenceCount;
     /* Pointer to the BCB for the file which this cache segment maps data for. */

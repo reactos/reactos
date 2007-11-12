@@ -236,7 +236,7 @@ CcUnpinRepinnedBcb (
       IoStatus->Information = 0;
       if (WriteThrough)
         {
-          ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&iBcb->CacheSegment->Lock);
+          ExAcquirePushLockExclusive(&iBcb->CacheSegment->Lock);
           if (iBcb->CacheSegment->Dirty)
             {
               IoStatus->Status = CcRosFlushCacheSegment(iBcb->CacheSegment);
@@ -245,7 +245,7 @@ CcUnpinRepinnedBcb (
             {
               IoStatus->Status = STATUS_SUCCESS;
             }
-          ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&iBcb->CacheSegment->Lock);
+          ExReleasePushLockExclusive(&iBcb->CacheSegment->Lock);
         }
       else
         {
