@@ -456,6 +456,13 @@ static struct regsvr_coclass const coclass_list[] = {
         "browseui.dll",
         "Apartment"
     },
+    {
+        &CLSID_IShellBandSiteMenu,
+        "Band Site Menu",
+        NULL,
+        "browseui.dll",
+        "Apartment"
+    },
     { NULL }			/* list terminator */
 };
 

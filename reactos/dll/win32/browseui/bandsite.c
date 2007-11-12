@@ -33,6 +33,7 @@
 #include "winerror.h"
 #include "objbase.h"
 
+#include "docobj.h"
 #include "shlguid.h"
 #include "shlobj.h"
 #include "shobjidl.h"
@@ -54,14 +55,17 @@ typedef struct tagBandSite {
     const IBandSiteVtbl *vtbl;
     const IWindowEventHandlerVtbl *eventhandlerVtbl;
     const IDeskBarClientVtbl *deskbarVtbl;
+    const IOleCommandTargetVtbl *oletargetVtbl;
     LONG refCount;
     INT nObjs;
     struct SubBand *objs;
+    IUnknown *pUnkOuter;
 } BandSite;
 
 static const IBandSiteVtbl BandSiteVtbl;
 static const IWindowEventHandlerVtbl BandSite_EventHandlerVtbl;
 static const IDeskBarClientVtbl BandSite_DeskBarVtbl;
+static const IOleCommandTargetVtbl BandSite_OleTargetVtbl;
 
 static inline BandSite *impl_from_IWindowEventHandler(IWindowEventHandler *iface)
 {
@@ -71,6 +75,11 @@ static inline BandSite *impl_from_IWindowEventHandler(IWindowEventHandler *iface
 static inline BandSite *impl_from_IDeskBarClient(IDeskBarClient *iface)
 {
     return (BandSite *)((char *)iface - FIELD_OFFSET(BandSite, deskbarVtbl));
+}
+
+static inline BandSite *impl_from_IOleCommandTarget(IOleCommandTarget *iface)
+{
+    return (BandSite *)((char *)iface - FIELD_OFFSET(BandSite, oletargetVtbl));
 }
 
 static struct SubBand *get_band(BandSite *This, DWORD dwBandID)
@@ -91,15 +100,20 @@ static void release_obj(struct SubBand *obj)
 HRESULT WINAPI BandSite_Constructor(IUnknown *pUnkOuter, IUnknown **ppOut)
 {
     BandSite *This;
-    if (pUnkOuter)
-        return CLASS_E_NOAGGREGATION;
+
+    if (!pUnkOuter)
+        return E_POINTER;
 
     This = CoTaskMemAlloc(sizeof(BandSite));
     if (This == NULL)
         return E_OUTOFMEMORY;
     ZeroMemory(This, sizeof(*This));
+    This->pUnkOuter = pUnkOuter;
+    IUnknown_AddRef(pUnkOuter);
     This->vtbl = &BandSiteVtbl;
     This->eventhandlerVtbl = &BandSite_EventHandlerVtbl;
+    This->deskbarVtbl = &BandSite_DeskBarVtbl;
+    This->oletargetVtbl = &BandSite_OleTargetVtbl;
     This->refCount = 1;
 
     TRACE("returning %p\n", This);
@@ -112,6 +126,7 @@ static void WINAPI BandSite_Destructor(BandSite *This)
 {
     int i;
     TRACE("destroying %p\n", This);
+    IUnknown_Release(This->pUnkOuter);
     for (i = 0; i < This->nObjs; i++)
         release_obj(&This->objs[i]);
     CoTaskMemFree(This->objs);
@@ -124,9 +139,11 @@ static HRESULT WINAPI BandSite_QueryInterface(IBandSite *iface, REFIID iid, LPVO
     BandSite *This = (BandSite *)iface;
     *ppvOut = NULL;
 
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
+
     if (IsEqualIID(iid, &IID_IUnknown) || IsEqualIID(iid, &IID_IBandSite))
     {
-        *ppvOut = This;
+        *ppvOut = &This->vtbl;
     }
     else if (IsEqualIID(iid, &IID_IWindowEventHandler))
     {
@@ -135,6 +152,10 @@ static HRESULT WINAPI BandSite_QueryInterface(IBandSite *iface, REFIID iid, LPVO
     else if (IsEqualIID(iid, &IID_IOleWindow) || IsEqualIID(iid, &IID_IDeskBarClient))
     {
         *ppvOut = &This->deskbarVtbl;
+    }
+    else if (IsEqualIID(iid, &IID_IOleCommandTarget))
+    {
+        *ppvOut = &This->oletargetVtbl;
     }
 
     if (*ppvOut)
@@ -150,6 +171,7 @@ static HRESULT WINAPI BandSite_QueryInterface(IBandSite *iface, REFIID iid, LPVO
 static ULONG WINAPI BandSite_AddRef(IBandSite *iface)
 {
     BandSite *This = (BandSite *)iface;
+    TRACE("(%p)\n", iface);
     return InterlockedIncrement(&This->refCount);
 }
 
@@ -157,6 +179,8 @@ static ULONG WINAPI BandSite_Release(IBandSite *iface)
 {
     BandSite *This = (BandSite *)iface;
     ULONG ret;
+
+    TRACE("(%p)\n", iface);
 
     ret = InterlockedDecrement(&This->refCount);
     if (ret == 0)
@@ -169,6 +193,8 @@ static HRESULT WINAPI BandSite_AddBand(IBandSite *iface, IUnknown *punk)
     BandSite *This = (BandSite *)iface;
     struct SubBand *newObjs, *current;
     DWORD freeID;
+
+    TRACE("(%p, %p)\n", iface, punk);
 
     newObjs = CoTaskMemAlloc((This->nObjs + 1) * sizeof(struct SubBand));
     if (!newObjs)
@@ -193,6 +219,8 @@ static HRESULT WINAPI BandSite_EnumBands(IBandSite *iface, UINT uBand, DWORD *pd
 {
     BandSite *This = (BandSite *)iface;
 
+    TRACE("(%p, %u, %p)\n", iface, uBand, pdwBandID);
+
     if (uBand >= This->nObjs)
         return E_FAIL;
 
@@ -205,10 +233,13 @@ static HRESULT WINAPI BandSite_QueryBand(IBandSite *iface, DWORD dwBandID, IDesk
     BandSite *This = (BandSite *)iface;
     struct SubBand *band;
 
+    TRACE("(%p, %u, %p, %p, %p, %d)\n", iface, dwBandID, ppstb, pdwState, pszName, cchName);
+
     band = get_band(This, dwBandID);
     if (!band)
         return E_FAIL;
 
+    FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
@@ -217,10 +248,13 @@ static HRESULT WINAPI BandSite_SetBandState(IBandSite *iface, DWORD dwBandID, DW
     BandSite *This = (BandSite *)iface;
     struct SubBand *band;
 
+    TRACE("(%p, %u, %x, %x)\n", iface, dwBandID, dwMask, dwState);
+
     band = get_band(This, dwBandID);
     if (!band)
         return E_FAIL;
 
+    FIXME("Stub\n");
     return E_NOTIMPL;
 }
 
@@ -228,6 +262,8 @@ static HRESULT WINAPI BandSite_RemoveBand(IBandSite *iface, DWORD dwBandID)
 {
     BandSite *This = (BandSite *)iface;
     struct SubBand *band;
+
+    TRACE("(%p, %u)\n", iface, dwBandID);
 
     band = get_band(This, dwBandID);
     if (!band)
@@ -243,6 +279,8 @@ static HRESULT WINAPI BandSite_GetBandObject(IBandSite *iface, DWORD dwBandID, R
     BandSite *This = (BandSite *)iface;
     struct SubBand *band;
 
+    TRACE("(%p, %u, %s, %p)\n", iface, dwBandID, debugstr_guid(riid), ppv);
+
     band = get_band(This, dwBandID);
     if (!band)
         return E_FAIL;
@@ -252,11 +290,13 @@ static HRESULT WINAPI BandSite_GetBandObject(IBandSite *iface, DWORD dwBandID, R
 
 static HRESULT WINAPI BandSite_SetBandSiteInfo(IBandSite *iface, const BANDSITEINFO *pbsinfo)
 {
+    FIXME("(%p, %p)\n", iface, pbsinfo);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI BandSite_GetBandSiteInfo(IBandSite *iface, BANDSITEINFO *pbsinfo)
 {
+    FIXME("(%p, %p)\n", iface, pbsinfo);
     return E_NOTIMPL;
 }
 
@@ -279,28 +319,33 @@ static const IBandSiteVtbl BandSiteVtbl =
 static HRESULT WINAPI BandSite_IWindowEventHandler_QueryInterface(IWindowEventHandler *iface, REFIID iid, LPVOID *ppvOut)
 {
     BandSite *This = impl_from_IWindowEventHandler(iface);
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
     return BandSite_QueryInterface((IBandSite *)This, iid, ppvOut);
 }
 
 static ULONG WINAPI BandSite_IWindowEventHandler_AddRef(IWindowEventHandler *iface)
 {
     BandSite *This = impl_from_IWindowEventHandler(iface);
+    TRACE("(%p)\n", iface);
     return BandSite_AddRef((IBandSite *)This);
 }
 
 static ULONG WINAPI BandSite_IWindowEventHandler_Release(IWindowEventHandler *iface)
 {
     BandSite *This = impl_from_IWindowEventHandler(iface);
+    TRACE("(%p)\n", iface);
     return BandSite_Release((IBandSite *)This);
 }
 
 static HRESULT WINAPI BandSite_ProcessMessage(IWindowEventHandler *iface, HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam, LRESULT *plrResult)
 {
+    FIXME("(%p, %p, %u, %p, %p, %p)\n", iface, hWnd, uMsg, wParam, lParam, plrResult);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI BandSite_ContainsWindow(IWindowEventHandler *iface, HWND hWnd)
 {
+    FIXME("(%p, %p)\n", iface, hWnd);
     return E_NOTIMPL;
 }
 
@@ -317,48 +362,57 @@ static const IWindowEventHandlerVtbl BandSite_EventHandlerVtbl =
 static HRESULT WINAPI BandSite_IDeskBarClient_QueryInterface(IDeskBarClient *iface, REFIID iid, LPVOID *ppvOut)
 {
     BandSite *This = impl_from_IDeskBarClient(iface);
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
     return BandSite_QueryInterface((IBandSite *)This, iid, ppvOut);
 }
 
 static ULONG WINAPI BandSite_IDeskBarClient_AddRef(IDeskBarClient *iface)
 {
     BandSite *This = impl_from_IDeskBarClient(iface);
+    TRACE("(%p)\n", iface);
     return BandSite_AddRef((IBandSite *)This);
 }
 
 static ULONG WINAPI BandSite_IDeskBarClient_Release(IDeskBarClient *iface)
 {
     BandSite *This = impl_from_IDeskBarClient(iface);
+    TRACE("(%p)\n", iface);
     return BandSite_Release((IBandSite *)This);
 }
 
 static HRESULT WINAPI BandSite_IDeskBarClient_GetWindow(IDeskBarClient *iface, HWND *phWnd)
 {
+    FIXME("(%p, %p)\n", iface, phWnd);
     return E_NOTIMPL;
 }
 
 static HRESULT WINAPI BandSite_IDeskBarClient_ContextSensitiveHelp(IDeskBarClient *iface, BOOL fEnterMode)
 {
+    FIXME("(%p, %d)\n", iface, fEnterMode);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BandSite_SetDeskBarSite(IDeskBarClient *iface, IUnknown *pUnk)
+static HRESULT WINAPI BandSite_IDeskBarClient_SetDeskBarSite(IDeskBarClient *iface, IUnknown *pUnk)
 {
+    FIXME("(%p, %p)\n", iface, pUnk);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BandSite_SetModeDBC(IDeskBarClient *iface, DWORD unknown)
+static HRESULT WINAPI BandSite_IDeskBarClient_SetModeDBC(IDeskBarClient *iface, DWORD unknown)
 {
+    FIXME("(%p, %x)\n", iface, unknown);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BandSite_UIActivateDBC(IDeskBarClient *iface, DWORD unknown)
+static HRESULT WINAPI BandSite_IDeskBarClient_UIActivateDBC(IDeskBarClient *iface, DWORD unknown)
 {
+    FIXME("(%p, %x)\n", iface, unknown);
     return E_NOTIMPL;
 }
 
-static HRESULT WINAPI BandSite_GetSize(IDeskBarClient *iface, DWORD unknown1, LPRECT unknown2)
+static HRESULT WINAPI BandSite_IDeskBarClient_GetSize(IDeskBarClient *iface, DWORD unknown1, LPRECT unknown2)
 {
+    FIXME("(%p, %x, %p)\n", iface, unknown1, unknown2);
     return E_NOTIMPL;
 }
 
@@ -371,8 +425,51 @@ static const IDeskBarClientVtbl BandSite_DeskBarVtbl =
     BandSite_IDeskBarClient_GetWindow,
     BandSite_IDeskBarClient_ContextSensitiveHelp,
 
-    BandSite_SetDeskBarSite,
-    BandSite_SetModeDBC,
-    BandSite_UIActivateDBC,
-    BandSite_GetSize,
+    BandSite_IDeskBarClient_SetDeskBarSite,
+    BandSite_IDeskBarClient_SetModeDBC,
+    BandSite_IDeskBarClient_UIActivateDBC,
+    BandSite_IDeskBarClient_GetSize,
+};
+
+static HRESULT WINAPI BandSite_IOleCommandTarget_QueryInterface(IOleCommandTarget *iface, REFIID iid, LPVOID *ppvOut)
+{
+    BandSite *This = impl_from_IOleCommandTarget(iface);
+    TRACE("(%p, %s, %p)\n", iface, debugstr_guid(iid), ppvOut);
+    return BandSite_QueryInterface((IBandSite *)This, iid, ppvOut);
+}
+
+static ULONG WINAPI BandSite_IOleCommandTarget_AddRef(IOleCommandTarget *iface)
+{
+    BandSite *This = impl_from_IOleCommandTarget(iface);
+    TRACE("(%p)\n", iface);
+    return BandSite_AddRef((IBandSite *)This);
+}
+
+static ULONG WINAPI BandSite_IOleCommandTarget_Release(IOleCommandTarget *iface)
+{
+    BandSite *This = impl_from_IOleCommandTarget(iface);
+    TRACE("(%p)\n", iface);
+    return BandSite_Release((IBandSite *)This);
+}
+
+static HRESULT WINAPI BandSite_IOleCommandTarget_QueryStatus(IOleCommandTarget *iface, const GUID *pguidCmdGroup, DWORD cCmds, OLECMD *prgCmds, OLECMDTEXT *pCmdText)
+{
+    FIXME("(%p, %p, %u, %p, %p)\n", iface, pguidCmdGroup, cCmds, prgCmds, pCmdText);
+    return E_NOTIMPL;
+}
+
+static HRESULT WINAPI BandSite_IOleCommandTarget_Exec(IOleCommandTarget *iface, const GUID *pguidCmdGroup, DWORD nCmdID, DWORD nCmdExecOpt, VARIANTARG *pvaIn, VARIANTARG *pvaOut)
+{
+    FIXME("(%p, %p, %u, %u, %p, %p)\n", iface, pguidCmdGroup, nCmdID, nCmdExecOpt, pvaIn, pvaOut);
+    return E_NOTIMPL;
+}
+
+static const IOleCommandTargetVtbl BandSite_OleTargetVtbl =
+{
+    BandSite_IOleCommandTarget_QueryInterface,
+    BandSite_IOleCommandTarget_AddRef,
+    BandSite_IOleCommandTarget_Release,
+
+    BandSite_IOleCommandTarget_QueryStatus,
+    BandSite_IOleCommandTarget_Exec,
 };

@@ -21,6 +21,7 @@
 	<library>ntdll</library>
 	<file>aclmulti.c</file>
 	<file>bandsite.c</file>
+	<file>bandsitemenu.c</file>
 	<file>browseui_main.c</file>
 	<file>regsvr.c</file>
 	<file>version.rc</file>

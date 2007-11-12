@@ -51,6 +51,7 @@ static const struct {
 } ClassesTable[] = {
     {&CLSID_ACLMulti, ACLMulti_Constructor},
     {&CLSID_RebarBandSite, BandSite_Constructor},
+    {&CLSID_IShellBandSiteMenu, BandSiteMenu_Constructor},
     {NULL, NULL}
 };
 
