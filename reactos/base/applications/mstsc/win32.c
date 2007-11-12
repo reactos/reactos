@@ -1301,38 +1301,47 @@ wWinMain(HINSTANCE hInstance,
 
     if (WSAStartup(MAKEWORD(2, 0), &d) == 0)
     {
-        pRdpSettings = LoadRdpSettingsFromFile(NULL);
-
+        pRdpSettings = HeapAlloc(GetProcessHeap(),
+                                 0,
+                                 sizeof(RDPSETTINGS));
         if (pRdpSettings)
         {
-            //mi_process_cl(lpCmdLine)
-            if (OpenRDPConnectDialog(hInstance,
-                                     pRdpSettings))
+            pRdpSettings->pSettings = NULL;
+            pRdpSettings->NumSettings = 0;
+
+            if (InitRdpSettings(pRdpSettings))
             {
-                char szValue[MAXVALUE];
+                LoadRdpSettingsFromFile(pRdpSettings, NULL);
 
-                uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
+                //mi_process_cl(lpCmdLine)
+                if (OpenRDPConnectDialog(hInstance,
+                                         pRdpSettings))
+                {
+                    char szValue[MAXVALUE];
 
-                strcpy(g_servername, szValue);
-                //g_port = 3389;
-                strcpy(g_username, "");
-                strcpy(g_password, "");
-                g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
-                if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
-                g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
-                g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
-                g_screen_width = GetSystemMetrics(SM_CXSCREEN);
-                g_screen_height = GetSystemMetrics(SM_CYSCREEN);
-                g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
-                g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+                    uni_to_str(szValue, GetStringFromSettings(pRdpSettings, L"full address"));
 
-                ui_main();
-                ret = 0;
+                    strcpy(g_servername, szValue);
+                    //g_port = 3389;
+                    strcpy(g_username, "");
+                    strcpy(g_password, "");
+                    g_server_depth = GetIntegerFromSettings(pRdpSettings, L"session bpp");
+                    if (g_server_depth > 16) g_server_depth = 16;  /* hack, we don't support 24bpp yet */
+                    g_width = GetIntegerFromSettings(pRdpSettings, L"desktopwidth");
+                    g_height = GetIntegerFromSettings(pRdpSettings, L"desktopheight");
+                    g_screen_width = GetSystemMetrics(SM_CXSCREEN);
+                    g_screen_height = GetSystemMetrics(SM_CYSCREEN);
+                    g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
+                    g_yoff = GetSystemMetrics(SM_CYCAPTION) + GetSystemMetrics(SM_CYEDGE) * 2;
+
+                    ui_main();
+                    ret = 0;
+                }
+
+                HeapFree(GetProcessHeap(),
+                         0,
+                         pRdpSettings->pSettings);
             }
-
-            HeapFree(GetProcessHeap(),
-                     0,
-                     pRdpSettings->pSettings);
 
             HeapFree(GetProcessHeap(),
                      0,

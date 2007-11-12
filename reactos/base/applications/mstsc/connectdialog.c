@@ -516,7 +516,7 @@ FillResolutionsAndColors(PINFO pInfo)
     WCHAR Pixel[64];
     DWORD index, i, num;
     DWORD MaxBpp = 0;
-    DWORD width, height;
+    INT width, height, pos = 0;
     UINT types[4];
 
     pInfo->CurrentDisplayDevice = pInfo->DisplayDeviceList; /* Update global variable */
@@ -599,48 +599,27 @@ FillResolutionsAndColors(PINFO pInfo)
     width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
     height = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopheight");
 
-    if (width && height)
+    if (width != -1 && height != -1)
     {
         for (index = 0; index < pInfo->CurrentDisplayDevice->ResolutionsCount; index++)
         {
             if (pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsWidth == width &&
                 pInfo->CurrentDisplayDevice->Resolutions[index].dmPelsHeight == height)
             {
-                SendDlgItemMessageW(pInfo->hDisplayPage,
-                                    IDC_GEOSLIDER,
-                                    TBM_SETPOS,
-                                    TRUE,
-                                    index);
+                pos = index;
                 break;
             }
         }
-
-        if (LoadStringW(hInst,
-                        IDS_PIXEL,
-                        Pixel,
-                        sizeof(Pixel) / sizeof(WCHAR)))
-        {
-#ifdef _MSC_VER
-            _swprintf(Buffer,
-                      Pixel,
-                      width,
-                      height,
-                      Pixel);
-#else
-            swprintf(Buffer,
-                      Pixel,
-                      width,
-                      height,
-                      Pixel);
-#endif
-
-            SendDlgItemMessageW(pInfo->hDisplayPage,
-                                IDC_SETTINGS_RESOLUTION_TEXT,
-                                WM_SETTEXT,
-                                0,
-                                (LPARAM)Buffer);
-        }
     }
+
+    /* set slider position */
+    SendDlgItemMessageW(pInfo->hDisplayPage,
+                        IDC_GEOSLIDER,
+                        TBM_SETPOS,
+                        TRUE,
+                        pos);
+
+    OnResolutionChanged(pInfo, pos);
 }
 
 

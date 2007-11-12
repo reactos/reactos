@@ -16,7 +16,7 @@
 
 #define MAXKEY 256
 #define MAXVALUE 256
-
+#define NUM_SETTINGS 4
 extern LPWSTR lpSettings[];
 
 typedef struct _SETTINGS
@@ -90,8 +90,9 @@ typedef struct _INFO
     BITMAP bitmap;
 } INFO, *PINFO;
 
+BOOL InitRdpSettings(PRDPSETTINGS pRdpSettings);
 BOOL OpenRDPConnectDialog(HINSTANCE hInstance, PRDPSETTINGS pRdpSettings);
-PRDPSETTINGS LoadRdpSettingsFromFile(LPWSTR lpFile);
+BOOL LoadRdpSettingsFromFile(PRDPSETTINGS pRdpSettings, LPWSTR lpFile);
 BOOL SaveRdpSettingsToFile(LPWSTR lpFile, PRDPSETTINGS pRdpSettings);
 INT GetIntegerFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
 LPWSTR GetStringFromSettings(PRDPSETTINGS pSettings, LPWSTR lpValue);
