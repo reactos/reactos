@@ -22,7 +22,9 @@
 #include <precomp.h>
 
 //FIXME: remove eventually
+#ifndef _UNICODE
 #define _UNICODE
+#endif
 #include <tchar.h>
 
 

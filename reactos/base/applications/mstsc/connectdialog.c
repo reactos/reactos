@@ -24,8 +24,8 @@
 
 HINSTANCE hInst;
 
-VOID ReLoadGeneralPage(PINFO pInfo);
-VOID ReLoadDisplayPage(PINFO pInfo);
+static VOID ReLoadGeneralPage(PINFO pInfo);
+static VOID ReLoadDisplayPage(PINFO pInfo);
 
 
 static VOID
