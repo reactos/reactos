@@ -25,6 +25,30 @@
 HINSTANCE hInst;
 
 static VOID
+DoSaveAs(PINFO pInfo)
+{
+    OPENFILENAME ofn;
+    WCHAR szFileName[MAX_PATH] = L"";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize   = sizeof(OPENFILENAME);
+    ofn.hwndOwner     = pInfo->hGeneralPage;
+    ofn.nMaxFile      = MAX_PATH;
+    ofn.nMaxFileTitle = MAX_PATH;
+    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrFilter   = szFilter;
+    ofn.lpstrFile     = szFileName;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
+
+    if (GetSaveFileName(&ofn))
+    {
+        SaveAllSettings(pInfo);
+        SaveRdpSettingsToFile(szFileName, pInfo->pRdpSettings);
+    }
+}
+
+static VOID
 OnTabWndSelChange(PINFO pInfo)
 {
     switch (TabCtrl_GetCurSel(pInfo->hTab))
@@ -227,6 +251,10 @@ GeneralDlgProc(HWND hDlg,
                 case IDC_SAVE:
                     SaveAllSettings(pInfo);
                     SaveRdpSettingsToFile(NULL, pInfo->pRdpSettings);
+                break;
+
+                case IDC_SAVEAS:
+                    DoSaveAs(pInfo);
                 break;
             }
 
@@ -827,7 +855,6 @@ DisplayDlgProc(HWND hDlg,
 }
 
 
-
 static BOOL
 OnMainCreate(HWND hwnd,
              PRDPSETTINGS pRdpSettings)
@@ -835,6 +862,7 @@ OnMainCreate(HWND hwnd,
     PINFO pInfo;
     TCITEMW item;
     BOOL bRet = FALSE;
+    HWND hUnderGry, hUnderWht;
 
     pInfo = HeapAlloc(GetProcessHeap(),
                       HEAP_ZERO_MEMORY,
@@ -889,6 +917,7 @@ OnMainCreate(HWND hwnd,
                        &pInfo->headerbitmap);
         }
 
+        /* setup the tabs */
         pInfo->hTab = GetDlgItem(hwnd, IDC_TAB);
         if (pInfo->hTab)
         {

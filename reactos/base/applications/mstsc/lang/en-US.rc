@@ -14,7 +14,7 @@ BEGIN
     LTEXT           "User name:",IDC_STATIC,47,58,38,8
     COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Save",IDC_SAVE,67,139,50,14
-    PUSHBUTTON      "SaveAs...",IDC_SAVEAS,123,139,50,14
+    PUSHBUTTON      "Save As...",IDC_SAVEAS,123,139,50,14
     PUSHBUTTON      "Open...",IDC_OPEN,177,139,50,14
     ICON            "", IDC_CONNICON, 16,114,20,20
     LTEXT           "Save the current connection settings or open an existing config",IDC_STATIC,50,115,172,20
