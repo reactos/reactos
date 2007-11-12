@@ -24,10 +24,39 @@
 
 HINSTANCE hInst;
 
+VOID ReLoadGeneralPage(PINFO pInfo);
+VOID ReLoadDisplayPage(PINFO pInfo);
+
+
+static VOID
+DoOpenFile(PINFO pInfo)
+{
+    OPENFILENAMEW ofn;
+    WCHAR szFileName[MAX_PATH] = L"";
+    static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
+
+    ZeroMemory(&ofn, sizeof(ofn));
+    ofn.lStructSize   = sizeof(OPENFILENAME);
+    ofn.hwndOwner     = pInfo->hGeneralPage;
+    ofn.nMaxFile      = MAX_PATH;
+    ofn.nMaxFileTitle = MAX_PATH;
+    ofn.lpstrDefExt   = L"rdp";
+    ofn.lpstrFilter   = szFilter;
+    ofn.lpstrFile     = szFileName;
+    ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST;
+
+    if (GetOpenFileNameW(&ofn))
+    {
+        LoadRdpSettingsFromFile(pInfo->pRdpSettings, szFileName);
+        ReLoadGeneralPage(pInfo);
+        ReLoadDisplayPage(pInfo);
+    }
+}
+
 static VOID
 DoSaveAs(PINFO pInfo)
 {
-    OPENFILENAME ofn;
+    OPENFILENAMEW ofn;
     WCHAR szFileName[MAX_PATH] = L"";
     static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
 
@@ -41,12 +70,13 @@ DoSaveAs(PINFO pInfo)
     ofn.lpstrFile     = szFileName;
     ofn.Flags = OFN_EXPLORER | OFN_PATHMUSTEXIST | OFN_OVERWRITEPROMPT;
 
-    if (GetSaveFileName(&ofn))
+    if (GetSaveFileNameW(&ofn))
     {
         SaveAllSettings(pInfo);
         SaveRdpSettingsToFile(szFileName, pInfo->pRdpSettings);
     }
 }
+
 
 static VOID
 OnTabWndSelChange(PINFO pInfo)
@@ -149,10 +179,25 @@ FillServerAddesssCombo(PINFO pInfo)
 
 
 static VOID
-GeneralOnInit(PINFO pInfo)
+ReLoadGeneralPage(PINFO pInfo)
 {
     LPWSTR lpText;
 
+    /* add file address */
+    lpText = GetStringFromSettings(pInfo->pRdpSettings,
+                                   L"full address");
+    if (lpText)
+    {
+        SetDlgItemTextW(pInfo->hGeneralPage,
+                        IDC_SERVERCOMBO,
+                        lpText);
+    }
+}
+
+
+static VOID
+GeneralOnInit(PINFO pInfo)
+{
     SetWindowPos(pInfo->hGeneralPage,
                  NULL,
                  13,
@@ -192,17 +237,7 @@ GeneralOnInit(PINFO pInfo)
     }
 
     FillServerAddesssCombo(pInfo);
-
-    /* add file address */
-    lpText = GetStringFromSettings(pInfo->pRdpSettings,
-                                   L"full address");
-    if (lpText)
-    {
-        SetDlgItemTextW(pInfo->hGeneralPage,
-                        IDC_SERVERCOMBO,
-                        lpText);
-    }
-
+    ReLoadGeneralPage(pInfo);
 }
 
 
@@ -255,6 +290,10 @@ GeneralDlgProc(HWND hDlg,
 
                 case IDC_SAVEAS:
                     DoSaveAs(pInfo);
+                break;
+
+                case IDC_OPEN:
+                    DoOpenFile(pInfo);
                 break;
             }
 
@@ -540,11 +579,8 @@ static VOID
 FillResolutionsAndColors(PINFO pInfo)
 {
     PSETTINGS_ENTRY Current;
-    WCHAR Buffer[64];
-    WCHAR Pixel[64];
     DWORD index, i, num;
     DWORD MaxBpp = 0;
-    INT width, height, pos = 0;
     UINT types[4];
 
     pInfo->CurrentDisplayDevice = pInfo->DisplayDeviceList; /* Update global variable */
@@ -624,6 +660,19 @@ FillResolutionsAndColors(PINFO pInfo)
                         TRUE,
                         MAKELONG(0, pInfo->DisplayDeviceList->ResolutionsCount)); //extra 1 for full screen
 
+
+}
+
+
+static VOID
+ReLoadDisplayPage(PINFO pInfo)
+{
+    DWORD index;
+    INT width, height, pos = 0;
+    INT bpp, num, i;
+    BOOL bSet = FALSE;
+
+    /* set trackbar position */
     width = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopwidth");
     height = GetIntegerFromSettings(pInfo->pRdpSettings, L"desktopheight");
 
@@ -648,6 +697,43 @@ FillResolutionsAndColors(PINFO pInfo)
                         pos);
 
     OnResolutionChanged(pInfo, pos);
+
+
+     /* set color combo */
+    bpp = GetIntegerFromSettings(pInfo->pRdpSettings, L"session bpp");
+
+    num = SendDlgItemMessageW(pInfo->hDisplayPage,
+                              IDC_BPPCOMBO,
+                              CB_GETCOUNT,
+                              0,
+                              0);
+    for (i = 0; i < num; i++)
+    {
+        INT data = SendDlgItemMessageW(pInfo->hDisplayPage,
+                                       IDC_BPPCOMBO,
+                                       CB_GETITEMDATA,
+                                       i,
+                                       0);
+        if (data == bpp)
+        {
+            SendDlgItemMessageW(pInfo->hDisplayPage,
+                                IDC_BPPCOMBO,
+                                CB_SETCURSEL,
+                                i,
+                                0);
+            bSet = TRUE;
+            break;
+        }
+    }
+
+    if (!bSet)
+    {
+        SendDlgItemMessageW(pInfo->hDisplayPage,
+                            IDC_BPPCOMBO,
+                            CB_SETCURSEL,
+                            num - 1,
+                            0);
+    }
 }
 
 
@@ -723,46 +809,8 @@ DisplayOnInit(PINFO pInfo)
 
         if (GotDev)
         {
-            INT bpp, num, i;
-            BOOL bSet = FALSE;
-
             FillResolutionsAndColors(pInfo);
-
-             /* set color combo */
-            bpp = GetIntegerFromSettings(pInfo->pRdpSettings, L"session bpp");
-
-            num = SendDlgItemMessageW(pInfo->hDisplayPage,
-                                      IDC_BPPCOMBO,
-                                      CB_GETCOUNT,
-                                      0,
-                                      0);
-            for (i = 0; i < num; i++)
-            {
-                INT data = SendDlgItemMessageW(pInfo->hDisplayPage,
-                                               IDC_BPPCOMBO,
-                                               CB_GETITEMDATA,
-                                               i,
-                                               0);
-                if (data == bpp)
-                {
-                    SendDlgItemMessageW(pInfo->hDisplayPage,
-                                        IDC_BPPCOMBO,
-                                        CB_SETCURSEL,
-                                        i,
-                                        0);
-                    bSet = TRUE;
-                    break;
-                }
-            }
-
-            if (!bSet)
-            {
-                SendDlgItemMessageW(pInfo->hDisplayPage,
-                                    IDC_BPPCOMBO,
-                                    CB_SETCURSEL,
-                                    num - 1,
-                                    0);
-            }
+            ReLoadDisplayPage(pInfo);
         }
 }
 
@@ -862,7 +910,6 @@ OnMainCreate(HWND hwnd,
     PINFO pInfo;
     TCITEMW item;
     BOOL bRet = FALSE;
-    HWND hUnderGry, hUnderWht;
 
     pInfo = HeapAlloc(GetProcessHeap(),
                       HEAP_ZERO_MEMORY,
