@@ -1137,6 +1137,7 @@ void (WINE_GLAPI *glVertex4s) (GLshort x, GLshort y, GLshort z, GLshort w);
 void (WINE_GLAPI *glVertex4sv) (const GLshort* v);
 void (WINE_GLAPI *glVertexPointer) (GLint size, GLenum type, GLsizei stride, const GLvoid* pointer);
 void (WINE_GLAPI *glViewport) (GLint x, GLint y, GLsizei width, GLsizei height);
+void (WINE_GLAPI *glPointParameterfv) (GLenum pname, const GLfloat *params);
 
 /* WGL functions */
 HGLRC   (WINAPI *pwglCreateContext)(HDC);
@@ -1483,7 +1484,8 @@ BOOL    (WINAPI *pwglShareLists)(HGLRC,HGLRC);
     USE_GL_FUNC(glVertex4s) \
     USE_GL_FUNC(glVertex4sv) \
     USE_GL_FUNC(glVertexPointer) \
-    USE_GL_FUNC(glViewport)
+    USE_GL_FUNC(glViewport) \
+    USE_GL_FUNC(glPointParameterfv) \
 
 #define WGL_FUNCS_GEN \
     USE_WGL_FUNC(wglCreateContext) \
@@ -2353,6 +2355,13 @@ typedef GLhandleARB (WINE_GLAPI * WINED3D_PFNGLGETHANDLEARBPROC) (GLenum pname);
 typedef void (WINE_GLAPI * WINED3D_PFNGLGETSHADERSOURCEARBPROC) (GLhandleARB obj, GLsizei maxLength, GLsizei *length, GLcharARB *source);
 typedef void (WINE_GLAPI * WINED3D_PFNGLBINDATTRIBLOCATIONARBPROC) (GLhandleARB programObj, GLuint index, const GLcharARB *name);
 typedef GLint (WINE_GLAPI * WINED3D_PFNGLGETATTRIBLOCATIONARBPROC) (GLhandleARB programObj, const GLcharARB *name);
+/* GL_ARB_pixel_buffer_object */
+#ifndef GL_ARB_pixel_buffer_object
+#define GL_PIXEL_PACK_BUFFER_ARB          0x88EB
+#define GL_PIXEL_UNPACK_BUFFER_ARB        0x88EC
+#define GL_PIXEL_PACK_BUFFER_BINDING_ARB  0x88ED
+#define GL_PIXEL_UNPACK_BUFFER_BINDING_ARB 0x88EF
+#endif
 /* GL_EXT_texture */
 #ifndef GL_EXT_texture
 #define GL_EXT_texture 1
@@ -2709,7 +2718,7 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #endif
 
 /**
- * Point sprites
+ * Point sprites 
  */
 /* GL_ARB_point_sprite */
 #ifndef GL_ARB_point_sprite
@@ -2718,11 +2727,11 @@ typedef void (WINE_GLAPI * PGLFNGETCOMBINERSTAGEPARAMETERFVNVPROC) (GLenum stage
 #define GL_COORD_REPLACE_ARB              0x8862
 #endif
 /**
- * @TODO: GL_NV_point_sprite
+ * @TODO: GL_NV_point_sprite 
  */
 
 /**
- * Occlusion Queries
+ * Occlusion Queries 
  */
 /* GL_ARB_occlusion_query */
 #ifndef GL_ARB_occlusion_query
@@ -2832,6 +2841,30 @@ typedef void (WINE_GLAPI * PGLFNGETTEXBUMPPARAMETERFVATIPROC) (GLenum, GLfloat *
 /* GLX_SGI_video_sync */
 typedef int (WINE_GLAPI * PGLXFNGETVIDEOSYNCSGIPROC) (unsigned int *);
 typedef int (WINE_GLAPI * PGLXFNWAITVIDEOSYNCSGIPROC) (int, int, unsigned int *);
+
+/* GL_SGIS_generate_mipmap */
+#ifndef GLX_SGIS_generate_mipmap
+#define GL_GENERATE_MIPMAP_SGIS             0x8191
+#define GL_GENERATE_MIPMAP_HINT_SGIS        0x8192
+#define GLX_SGIS_generate_mipmap
+#endif
+
+/* GL_NV_depth_clamp */
+#ifndef GL_NV_depth_clamp
+#define GL_DEPTH_CLAMP_NV                   0x864F
+#endif
+
+/* GL_APPLE_flush_render */
+typedef void (WINE_GLAPI * PGLFNFLUSHRENDERAPPLEPROC) (void);
+typedef void (WINE_GLAPI * PGLFNFINISHRENDERAPPLEPROC) (void);
+
+/* GL_APPLE_ycbcr_422 */
+#ifndef GL_APPLE_ycbcr_422
+#define GL_APPLE_ycbcr_422
+#define GL_YCBCR_422_APPLE                  0x85B9
+#define UNSIGNED_SHORT_8_8_APPLE            0x85BA
+#define UNSIGNED_SHORT_8_8_REV_APPLE        0x85BB
+#endif
 
 /* GL_VERSION_2_0 */
 #ifndef GL_VERSION_2_0
@@ -3018,8 +3051,8 @@ typedef void (WINE_GLAPI * PGLFNVERTEXATTRIBPOINTERPROC) (GLuint index, GLint si
 
 
 /****************************************************
- * OpenGL Official Version
- *  defines
+ * OpenGL Official Version 
+ *  defines 
  ****************************************************/
 /* GL_VERSION_1_3 */
 #if !defined(GL_DOT3_RGBA)
@@ -3050,6 +3083,9 @@ typedef enum _GL_Cards {
   CARD_ATI_RADEON_9500            = 0x4144,
   CARD_ATI_RADEON_X700            = 0x5e4c,
   CARD_ATI_RADEON_X1600           = 0x71c2,
+  CARD_ATI_RADEON_HD2300          = 0x7210,
+  CARD_ATI_RADEON_HD2600          = 0x9581,
+  CARD_ATI_RADEON_HD2900          = 0x9400,
 
   CARD_NVIDIA_RIVA_128            = 0x0018,
   CARD_NVIDIA_RIVA_TNT            = 0x0020,
@@ -3067,6 +3103,9 @@ typedef enum _GL_Cards {
   CARD_NVIDIA_GEFORCE_6600GT      = 0x0140,
   CARD_NVIDIA_GEFORCE_6800        = 0x0041,
   CARD_NVIDIA_GEFORCE_7800GT      = 0x0092,
+  CARD_NVIDIA_GEFORCE_8300GS      = 0x0423,
+  CARD_NVIDIA_GEFORCE_8600GT      = 0x0402,
+  CARD_NVIDIA_GEFORCE_8800GTS     = 0x0193,
 
   CARD_INTEL_845G                 = 0x2562,
   CARD_INTEL_I830G                = 0x3577,
@@ -3075,6 +3114,8 @@ typedef enum _GL_Cards {
   CARD_INTEL_I915G                = 0x2582,
   CARD_INTEL_I915GM               = 0x2592
 } GL_Cards;
+
+#define WINE_DEFAULT_VIDMEM 64*1024*1024
 
 typedef enum _GL_VSVersion {
   VS_VERSION_NOT_SUPPORTED = 0x0,
@@ -3167,6 +3208,7 @@ typedef enum _GL_SupportedExt {
   NV_VERTEX_PROGRAM2,
   NV_VERTEX_PROGRAM3,
   NV_FENCE,
+  NV_DEPTH_CLAMP,
   /* ATI */
   ATI_SEPARATE_STENCIL,
   ATI_TEXTURE_ENV_COMBINE3,
@@ -3176,8 +3218,11 @@ typedef enum _GL_SupportedExt {
   /* APPLE */
   APPLE_FENCE,
   APPLE_CLIENT_STORAGE,
+  APPLE_FLUSH_RENDER,
+  APPLE_YCBCR_422,
   /* SGI */
   SGI_VIDEO_SYNC,
+  SGIS_GENERATE_MIPMAP,
 
   /* WGL extensions */
   WGL_ARB_PBUFFER,
@@ -3187,15 +3232,15 @@ typedef enum _GL_SupportedExt {
 
 
 /****************************************************
- * #Defines
+ * #Defines       
  ****************************************************/
 #define GL_EXT_FUNCS_GEN \
     /** ARB Extensions **/ \
     /* GL_ARB_draw_buffers */ \
     USE_GL_FUNC(PGLFNDRAWBUFFERSARBPROC, glDrawBuffersARB); \
-    /* GL_ARB_imaging */ \
-    USE_GL_FUNC(PGLFNBLENDCOLORPROC,                 glBlendColor); \
-    USE_GL_FUNC(PGLFNBLENDEQUATIONPROC,              glBlendEquation); \
+    /* GL_ARB_imaging, GL_EXT_blend_minmax */ \
+    USE_GL_FUNC(PGLFNBLENDCOLORPROC,                 glBlendColorEXT); \
+    USE_GL_FUNC(PGLFNBLENDEQUATIONPROC,              glBlendEquationEXT); \
     /* GL_ARB_multisample */ \
     USE_GL_FUNC(WINED3D_PFNGLSAMPLECOVERAGEARBPROC,  glSampleCoverageARB); \
     /* GL_ARB_multitexture */ \
@@ -3343,9 +3388,9 @@ typedef enum _GL_SupportedExt {
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM2FARBPROC,                glUniform2fARB); \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM3FARBPROC,                glUniform3fARB); \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM4FARBPROC,                glUniform4fARB); \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1IVARBPROC,               glUniform1fvARB); \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2IVARBPROC,               glUniform2fvARB); \
-    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3IVARBPROC,               glUniform3fvARB); \
+    USE_GL_FUNC(WINED3D_PFNGLUNIFORM1FVARBPROC,               glUniform1fvARB); \
+    USE_GL_FUNC(WINED3D_PFNGLUNIFORM2FVARBPROC,               glUniform2fvARB); \
+    USE_GL_FUNC(WINED3D_PFNGLUNIFORM3FVARBPROC,               glUniform3fvARB); \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM4FVARBPROC,               glUniform4fvARB); \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM1IVARBPROC,               glUniform1ivARB); \
     USE_GL_FUNC(WINED3D_PFNGLUNIFORM2IVARBPROC,               glUniform2ivARB); \
@@ -3457,6 +3502,9 @@ typedef enum _GL_SupportedExt {
     /* GLX_SGI_video_sync */ \
     USE_GL_FUNC(PGLXFNGETVIDEOSYNCSGIPROC,                      glXGetVideoSyncSGI); \
     USE_GL_FUNC(PGLXFNWAITVIDEOSYNCSGIPROC,                     glXWaitVideoSyncSGI); \
+    /* GL_APPLE_flush_render */ \
+    USE_GL_FUNC(PGLFNFLUSHRENDERAPPLEPROC,                      glFlushRenderApple); \
+    USE_GL_FUNC(PGLFNFINISHRENDERAPPLEPROC,                     glFinishRenderApple); \
 
 /* OpenGL 2.0 functions */
 #define GL2_FUNCS_GEN \
@@ -3657,11 +3705,12 @@ typedef BOOL (WINAPI * WINED3D_PFNWGLQUERYPBUFFERARBPROC) (HPBUFFERARB hPbuffer,
 
 
 /****************************************************
- * Structures
+ * Structures       
  ****************************************************/
 
 typedef struct {
     GLint                   glInternal, glGammaInternal, glFormat, glType;
+    WINED3DFORMAT           conversion_group;
 } GlPixelFormatDesc;
 
 #define USE_GL_FUNC(type, pfn) type pfn;
@@ -3672,10 +3721,11 @@ typedef struct _WineD3D_GL_Info {
 
   GL_Vendors gl_vendor;
   GL_Cards   gl_card;
+  UINT   vidmem;
   DWORD  gl_driver_version;
   CHAR   gl_renderer[255];
   /**
-   * CAPS Constants
+   * CAPS Constants 
    */
   UINT   max_buffers;
   UINT   max_lights;
@@ -3688,10 +3738,11 @@ typedef struct _WineD3D_GL_Info {
   UINT   max_clipplanes;
   UINT   max_texture_size;
   UINT   max_texture3d_size;
-  float  max_pointsize;
+  float  max_pointsize, max_pointsizemin;
   UINT   max_blends;
   UINT   max_anisotropy;
   UINT   max_aux_buffers;
+  UINT   max_glsl_varyings;
 
   unsigned max_vshader_constantsF;
   unsigned max_pshader_constantsF;
@@ -3711,6 +3762,8 @@ typedef struct _WineD3D_GL_Info {
   GL_VSVersion vs_arb_version;
   GL_VSVersion vs_nv_version;
   GL_VSVersion vs_ati_version;
+
+  BOOL arb_vs_offset_limit;
 
   BOOL supported[OPENGL_SUPPORTED_EXT_END + 1];
 

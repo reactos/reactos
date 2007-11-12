@@ -103,6 +103,7 @@ static void WINAPI IWineD3DSwapChainImpl_Destroy(IWineD3DSwapChain *iface, D3DCB
                 FIXME("(%p) Something's still holding the back buffer\n",This);
             }
         }
+        HeapFree(GetProcessHeap(), 0, This->backBuffer);
     }
 
     /* Restore the screen resolution if we rendered in fullscreen
@@ -132,7 +133,6 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
 
 
     ActivateContext(This->wineD3DDevice, This->backBuffer[0], CTXUSAGE_RESOURCELOAD);
-    ENTER_GL();
 
     /* Render the cursor onto the back buffer, using our nifty directdraw blitting code :-) */
     if(This->wineD3DDevice->bCursorVisible && This->wineD3DDevice->cursorTexture) {
@@ -174,6 +174,10 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
             MapWindowPoints(NULL, This->win_handle, (LPPOINT)&destRect, 2);
         }
         IWineD3DSurface_Blt(This->backBuffer[0], &destRect, (IWineD3DSurface *) &cursor, NULL, WINEDDBLT_KEYSRC, NULL, WINED3DTEXF_NONE);
+    }
+    if(This->wineD3DDevice->logo_surface) {
+        /* Blit the logo into the upper left corner of the drawable */
+        IWineD3DSurface_BltFast(This->backBuffer[0], 0, 0, This->wineD3DDevice->logo_surface, NULL, WINEDDBLTFAST_SRCCOLORKEY);
     }
 
     if (pSourceRect || pDestRect) FIXME("Unhandled present options %p/%p\n", pSourceRect, pDestRect);
@@ -240,7 +244,9 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
 #if defined(SHOW_FRAME_MAKEUP)
             FIXME("Singe Frame snapshots Starting\n");
             isDumpingFrames = TRUE;
+            ENTER_GL();
             glClear(GL_COLOR_BUFFER_BIT);
+            LEAVE_GL();
 #endif
 
 #if defined(SINGLE_FRAME_DEBUGGING)
@@ -267,8 +273,6 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
     }
 }
 #endif
-
-    LEAVE_GL();
 
     if (This->presentParms.SwapEffect == WINED3DSWAPEFFECT_DISCARD) {
         TRACE("Clearing the color buffer with pink color\n");
@@ -319,6 +323,29 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
                 tmp = front->resource.allocatedMemory;
                 front->resource.allocatedMemory = back->resource.allocatedMemory;
                 back->resource.allocatedMemory = tmp;
+
+                tmp = front->resource.heapMemory;
+                front->resource.heapMemory = back->resource.heapMemory;
+                back->resource.heapMemory = tmp;
+            }
+
+            /* Flip the PBO */
+            {
+                DWORD tmp_flags = front->Flags;
+
+                GLuint tmp_pbo = front->pbo;
+                front->pbo = back->pbo;
+                back->pbo = tmp_pbo;
+
+                if(back->Flags & SFLAG_PBO)
+                    front->Flags |= SFLAG_PBO;
+                else
+                    front->Flags &= ~SFLAG_PBO;
+
+                if(tmp_flags & SFLAG_PBO)
+                    back->Flags |= SFLAG_PBO;
+                else
+                    back->Flags &= ~SFLAG_PBO;
             }
 
             /* client_memory should not be different, but just in case */
@@ -333,8 +360,8 @@ static HRESULT WINAPI IWineD3DSwapChainImpl_Present(IWineD3DSwapChain *iface, CO
             if(backuptodate) front->Flags |= SFLAG_INSYSMEM;
             else front->Flags &= ~SFLAG_INSYSMEM;
         } else {
-            back->Flags &= ~SFLAG_INSYSMEM;
-            front->Flags &= ~SFLAG_INSYSMEM;
+            IWineD3DSurface_ModifyLocation((IWineD3DSurface *) front, SFLAG_INDRAWABLE, TRUE);
+            IWineD3DSurface_ModifyLocation((IWineD3DSurface *) back, SFLAG_INDRAWABLE, TRUE);
         }
     }
 

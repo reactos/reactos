@@ -161,10 +161,38 @@ DWORD WINAPI IWineD3DBaseTextureImpl_GetLevelCount(IWineD3DBaseTexture *iface) {
 
 HRESULT WINAPI IWineD3DBaseTextureImpl_SetAutoGenFilterType(IWineD3DBaseTexture *iface, WINED3DTEXTUREFILTERTYPE FilterType) {
   IWineD3DBaseTextureImpl *This = (IWineD3DBaseTextureImpl *)iface;
+  IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+  UINT textureDimensions = IWineD3DBaseTexture_GetTextureDimensions(iface);
 
   if (!(This->resource.usage & WINED3DUSAGE_AUTOGENMIPMAP)) {
       TRACE("(%p) : returning invalid call\n", This);
       return WINED3DERR_INVALIDCALL;
+  }
+  if(This->baseTexture.filterType != FilterType) {
+      /* What about multithreading? Do we want all the context overhead just to set this value?
+       * Or should we delay the applying until the texture is used for drawing? For now, apply
+       * immediately.
+       */
+      ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+      ENTER_GL();
+      glBindTexture(textureDimensions, This->baseTexture.textureName);
+      checkGLcall("glBindTexture");
+      switch(FilterType) {
+          case WINED3DTEXF_NONE:
+          case WINED3DTEXF_POINT:
+              glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);
+              checkGLcall("glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST)");
+
+          case WINED3DTEXF_LINEAR:
+              glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);
+              checkGLcall("glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST)");
+
+          default:
+              WARN("Unexpected filter type %d, setting to GL_NICEST\n", FilterType);
+              glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);
+              checkGLcall("glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST)");
+      }
+      LEAVE_GL();
   }
   This->baseTexture.filterType = FilterType;
   TRACE("(%p) :\n", This);
@@ -239,6 +267,16 @@ HRESULT WINAPI IWineD3DBaseTextureImpl_BindTexture(IWineD3DBaseTexture *iface) {
         This->baseTexture.states[WINED3DTEXSTA_TSSADDRESSW]   = WINED3DTADDRESS_WRAP;
         IWineD3DBaseTexture_SetDirty(iface, TRUE);
         isNewTexture = TRUE;
+
+        if(This->resource.usage & WINED3DUSAGE_AUTOGENMIPMAP) {
+            /* This means double binding the texture at creation, but keeps the code simpler all
+             * in all, and the run-time path free from additional checks
+             */
+            glBindTexture(textureDimensions, This->baseTexture.textureName);
+            checkGLcall("glBindTexture");
+            glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_SGIS, GL_TRUE);
+            checkGLcall("glTexParameteri(textureDimensions, GL_GENERATE_MIPMAP_SGIS, GL_TRUE)");
+        }
     }
 
     /* Bind the texture */

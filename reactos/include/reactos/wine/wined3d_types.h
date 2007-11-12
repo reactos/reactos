@@ -219,7 +219,7 @@ typedef enum _WINED3DDEGREETYPE {
     WINED3DDEGREE_QUADRATIC   = 2,
     WINED3DDEGREE_CUBIC       = 3,
     WINED3DDEGREE_QUINTIC     = 5,
-
+    
     WINED3DDEGREE_FORCE_DWORD   = 0x7fffffff
 } WINED3DDEGREETYPE;
 
@@ -247,7 +247,7 @@ typedef enum _WINED3DFORMAT {
     WINED3DFMT_G16R16               =  34,
     WINED3DFMT_A2R10G10B10          =  35,
     WINED3DFMT_A16B16G16R16         =  36,
-
+  
 
     WINED3DFMT_A8P8                 =  40,
     WINED3DFMT_P8                   =  41,
@@ -294,12 +294,12 @@ typedef enum _WINED3DFORMAT {
     WINED3DFMT_R16F                 = 111,
     WINED3DFMT_G16R16F              = 112,
     WINED3DFMT_A16B16G16R16F        = 113,
-
+    
     /* IEEE formats */
     WINED3DFMT_R32F                 = 114,
     WINED3DFMT_G32R32F              = 115,
     WINED3DFMT_A32B32G32R32F        = 116,
-
+    
     WINED3DFMT_CxV8U8               = 117,
 
 
@@ -422,7 +422,7 @@ typedef enum _WINED3DRENDERSTATETYPE {
     WINED3DRS_AMBIENTMATERIALSOURCE     = 147,
     WINED3DRS_EMISSIVEMATERIALSOURCE    = 148,
     WINED3DRS_VERTEXBLEND               = 151,
-    WINED3DRS_CLIPPLANEENABLE           = 152,
+    WINED3DRS_CLIPPLANEENABLE           = 152,  
     WINED3DRS_SOFTWAREVERTEXPROCESSING  = 153, /* d3d8 */
     WINED3DRS_POINTSIZE                 = 154,
     WINED3DRS_POINTSIZE_MIN             = 155,
@@ -857,7 +857,7 @@ typedef struct _WINED3DADAPTER_IDENTIFIER {
     char           *Driver;
     char           *Description;
     char           *DeviceName;
-    LARGE_INTEGER  *DriverVersion;
+    LARGE_INTEGER  *DriverVersion; 
     DWORD          *VendorId;
     DWORD          *DeviceId;
     DWORD          *SubSysId;
@@ -1064,13 +1064,13 @@ typedef struct _WINED3DBOX {
 /*Vertex cache optimization hints.*/
 typedef struct WINED3DDEVINFO_VCACHE {
     /*Must be a 4 char code FOURCC (e.g. CACH)*/
-    DWORD         Pattern;
+    DWORD         Pattern; 
     /*0 to get the longest  strips, 1 vertex cache*/
-    DWORD         OptMethod;
+    DWORD         OptMethod; 
      /*Cache size to use (only valid if OptMethod==1) */
     DWORD         CacheSize;
     /*internal for deciding when to restart strips, non user modifyable (only valid if OptMethod==1)*/
-    DWORD         MagicNumber;
+    DWORD         MagicNumber; 
 } WINED3DDEVINFO_VCACHE;
 
 typedef struct _WINED3DVERTEXBUFFER_DESC {
@@ -1196,7 +1196,7 @@ typedef struct _WINED3DCAPS {
   DWORD               *VertexTextureFilterCaps;
   DWORD               *MaxVShaderInstructionsExecuted;
   DWORD               *MaxPShaderInstructionsExecuted;
-  DWORD               *MaxVertexShader30InstructionSlots;
+  DWORD               *MaxVertexShader30InstructionSlots; 
   DWORD               *MaxPixelShader30InstructionSlots;
   DWORD               *Reserved2;/* Not in the microsoft headers but documented */
   DWORD               *Reserved3;
@@ -1267,6 +1267,13 @@ typedef struct WineDirect3DStridedData {
 } WineDirect3DStridedData;
 
 typedef struct WineDirect3DVertexStridedData {
+    /* IMPORTANT:
+     *
+     * This structure can be accessed in two ways: Named access, and array
+     * access. Please note that named access is only valid with the fixed
+     * function vertex pipeline, and the arrays are only valid with the
+     * programmable vertex pipeline(vertex shaders)
+     */
     union {
         struct {
 
@@ -1323,7 +1330,7 @@ typedef enum {
 #define WINED3DUSAGE_RTPATCHES                        0x00000080L
 #define WINED3DUSAGE_NPATCHES                         0x00000100L
 #define WINED3DUSAGE_DYNAMIC                          0x00000200L
-#define WINED3DUSAGE_AUTOGENMIPMAP                    0x00000400L
+#define WINED3DUSAGE_AUTOGENMIPMAP                    0x00000400L 
 #define WINED3DUSAGE_DMAP                             0x00004000L
 #define WINED3DUSAGE_MASK                             0x00004FFFL
 #define WINED3DUSAGE_OVERLAY                          0x00010000L
@@ -1378,7 +1385,7 @@ typedef enum _WINED3DSURFTYPE {
 #define WINED3DPRASTERCAPS_COLORPERSPECTIVE           0x00400000L
 #define WINED3DPRASTERCAPS_SCISSORTEST                0x01000000L
 #define WINED3DPRASTERCAPS_SLOPESCALEDEPTHBIAS        0x02000000L
-#define WINED3DPRASTERCAPS_DEPTHBIAS                  0x04000000L
+#define WINED3DPRASTERCAPS_DEPTHBIAS                  0x04000000L 
 #define WINED3DPRASTERCAPS_MULTISAMPLE_TOGGLE         0x08000000L
 
 #define WINED3DPSHADECAPS_COLORFLATMONO               0x000001

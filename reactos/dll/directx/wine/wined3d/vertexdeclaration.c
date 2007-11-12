@@ -136,7 +136,7 @@ static HRESULT WINAPI IWineD3DVertexDeclarationImpl_SetDeclaration(IWineD3DVerte
     This->pDeclarationWine = HeapAlloc(GetProcessHeap(), 0, sizeof(WINED3DVERTEXELEMENT) * element_count);
     if (!This->pDeclarationWine) {
         ERR("Memory allocation failed\n");
-        hr = WINED3DERR_OUTOFVIDEOMEMORY;
+        return WINED3DERR_OUTOFVIDEOMEMORY;
     } else {
         CopyMemory(This->pDeclarationWine, elements, sizeof(WINED3DVERTEXELEMENT) * element_count);
     }

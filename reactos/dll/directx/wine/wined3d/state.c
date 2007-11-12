@@ -132,11 +132,9 @@ static void state_zenable(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD
 }
 
 static void state_cullmode(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
-    /* TODO: Put this into the offscreen / onscreen rendering block due to device->render_offscreen */
-
-    /* If we are culling "back faces with clockwise vertices" then
-       set front faces to be counter clockwise and enable culling
-       of back faces                                               */
+    /* glFrontFace() is set in context.c at context init and on an offscreen / onscreen rendering
+     * switch
+     */
     switch ((WINED3DCULL) stateblock->renderState[WINED3DRS_CULLMODE]) {
         case WINED3DCULL_NONE:
             glDisable(GL_CULL_FACE);
@@ -145,26 +143,14 @@ static void state_cullmode(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
         case WINED3DCULL_CW:
             glEnable(GL_CULL_FACE);
             checkGLcall("glEnable GL_CULL_FACE");
-            if (stateblock->wineD3DDevice->render_offscreen) {
-                glFrontFace(GL_CW);
-                checkGLcall("glFrontFace GL_CW");
-            } else {
-                glFrontFace(GL_CCW);
-                checkGLcall("glFrontFace GL_CCW");
-            }
-            glCullFace(GL_BACK);
+            glCullFace(GL_FRONT);
+            checkGLcall("glCullFace(GL_FRONT)");
             break;
         case WINED3DCULL_CCW:
             glEnable(GL_CULL_FACE);
             checkGLcall("glEnable GL_CULL_FACE");
-            if (stateblock->wineD3DDevice->render_offscreen) {
-                glFrontFace(GL_CCW);
-                checkGLcall("glFrontFace GL_CCW");
-            } else {
-                glFrontFace(GL_CW);
-                checkGLcall("glFrontFace GL_CW");
-            }
             glCullFace(GL_BACK);
+            checkGLcall("glCullFace(GL_BACK)");
             break;
         default:
             FIXME("Unrecognized/Unhandled WINED3DCULL value %d\n", stateblock->renderState[WINED3DRS_CULLMODE]);
@@ -216,6 +202,20 @@ static void state_zfunc(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
     int glParm = CompareFunc(stateblock->renderState[WINED3DRS_ZFUNC]);
 
     if(glParm) {
+        if(glParm == GL_EQUAL || glParm == GL_NOTEQUAL) {
+            static BOOL once = FALSE;
+            /* There are a few issues with this: First, our inability to
+             * select a proper Z depth, most of the time we're stuck with
+             * D24S8, even if the app selects D32 or D16. There seem to be
+             * some other precision problems which have to be debugged to
+             * make NOTEQUAL and EQUAL work properly
+             */
+            if(!once) {
+                once = TRUE;
+                FIXME("D3DCMP_NOTEQUAL and D3DCMP_EQUAL do not work correctly yet\n");
+            }
+        }
+
         glDepthFunc(glParm);
         checkGLcall("glDepthFunc");
     }
@@ -247,33 +247,6 @@ static void state_blend(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
         return;
     };
 
-    switch (stateblock->renderState[WINED3DRS_SRCBLEND]) {
-        case WINED3DBLEND_ZERO               : srcBlend = GL_ZERO;  break;
-        case WINED3DBLEND_ONE                : srcBlend = GL_ONE;  break;
-        case WINED3DBLEND_SRCCOLOR           : srcBlend = GL_SRC_COLOR;  break;
-        case WINED3DBLEND_INVSRCCOLOR        : srcBlend = GL_ONE_MINUS_SRC_COLOR;  break;
-        case WINED3DBLEND_SRCALPHA           : srcBlend = GL_SRC_ALPHA;  break;
-        case WINED3DBLEND_INVSRCALPHA        : srcBlend = GL_ONE_MINUS_SRC_ALPHA;  break;
-        case WINED3DBLEND_DESTALPHA          : srcBlend = GL_DST_ALPHA;  break;
-        case WINED3DBLEND_INVDESTALPHA       : srcBlend = GL_ONE_MINUS_DST_ALPHA;  break;
-        case WINED3DBLEND_DESTCOLOR          : srcBlend = GL_DST_COLOR;  break;
-        case WINED3DBLEND_INVDESTCOLOR       : srcBlend = GL_ONE_MINUS_DST_COLOR;  break;
-        case WINED3DBLEND_SRCALPHASAT        : srcBlend = GL_SRC_ALPHA_SATURATE;  break;
-
-        case WINED3DBLEND_BOTHSRCALPHA       : srcBlend = GL_SRC_ALPHA;
-            dstBlend = GL_SRC_ALPHA;
-            break;
-
-        case WINED3DBLEND_BOTHINVSRCALPHA    : srcBlend = GL_ONE_MINUS_SRC_ALPHA;
-            dstBlend = GL_ONE_MINUS_SRC_ALPHA;
-            break;
-
-        case WINED3DBLEND_BLENDFACTOR        : srcBlend = GL_CONSTANT_COLOR;   break;
-        case WINED3DBLEND_INVBLENDFACTOR     : srcBlend = GL_ONE_MINUS_CONSTANT_COLOR;  break;
-        default:
-            FIXME("Unrecognized src blend value %d\n", stateblock->renderState[WINED3DRS_SRCBLEND]);
-    }
-
     switch (stateblock->renderState[WINED3DRS_DESTBLEND]) {
         case WINED3DBLEND_ZERO               : dstBlend = GL_ZERO;  break;
         case WINED3DBLEND_ONE                : dstBlend = GL_ONE;  break;
@@ -291,12 +264,17 @@ static void state_blend(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
             WARN("Application uses SRCALPHASAT as dest blend factor, expect problems\n");
             break;
 
+        /* WINED3DBLEND_BOTHSRCALPHA and WINED3DBLEND_BOTHINVSRCALPHA are legacy source blending
+         * values which are still valid up to d3d9. They should not occur as dest blend values
+         */
         case WINED3DBLEND_BOTHSRCALPHA       : dstBlend = GL_SRC_ALPHA;
             srcBlend = GL_SRC_ALPHA;
+            FIXME("WINED3DRS_DESTBLEND = WINED3DBLEND_BOTHSRCALPHA, what to do?\n");
             break;
 
         case WINED3DBLEND_BOTHINVSRCALPHA    : dstBlend = GL_ONE_MINUS_SRC_ALPHA;
             srcBlend = GL_ONE_MINUS_SRC_ALPHA;
+            FIXME("WINED3DRS_DESTBLEND = WINED3DBLEND_BOTHINVSRCALPHA, what to do?\n");
             break;
 
         case WINED3DBLEND_BLENDFACTOR        : dstBlend = GL_CONSTANT_COLOR;   break;
@@ -304,6 +282,34 @@ static void state_blend(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
         default:
             FIXME("Unrecognized dst blend value %d\n", stateblock->renderState[WINED3DRS_DESTBLEND]);
     }
+
+    switch (stateblock->renderState[WINED3DRS_SRCBLEND]) {
+        case WINED3DBLEND_ZERO               : srcBlend = GL_ZERO;  break;
+        case WINED3DBLEND_ONE                : srcBlend = GL_ONE;  break;
+        case WINED3DBLEND_SRCCOLOR           : srcBlend = GL_SRC_COLOR;  break;
+        case WINED3DBLEND_INVSRCCOLOR        : srcBlend = GL_ONE_MINUS_SRC_COLOR;  break;
+        case WINED3DBLEND_SRCALPHA           : srcBlend = GL_SRC_ALPHA;  break;
+        case WINED3DBLEND_INVSRCALPHA        : srcBlend = GL_ONE_MINUS_SRC_ALPHA;  break;
+        case WINED3DBLEND_DESTALPHA          : srcBlend = GL_DST_ALPHA;  break;
+        case WINED3DBLEND_INVDESTALPHA       : srcBlend = GL_ONE_MINUS_DST_ALPHA;  break;
+        case WINED3DBLEND_DESTCOLOR          : srcBlend = GL_DST_COLOR;  break;
+        case WINED3DBLEND_INVDESTCOLOR       : srcBlend = GL_ONE_MINUS_DST_COLOR;  break;
+        case WINED3DBLEND_SRCALPHASAT        : srcBlend = GL_SRC_ALPHA_SATURATE;  break;
+
+        case WINED3DBLEND_BOTHSRCALPHA       : srcBlend = GL_SRC_ALPHA;
+            dstBlend = GL_ONE_MINUS_SRC_ALPHA;
+            break;
+
+        case WINED3DBLEND_BOTHINVSRCALPHA    : srcBlend = GL_ONE_MINUS_SRC_ALPHA;
+            dstBlend = GL_SRC_ALPHA;
+            break;
+
+        case WINED3DBLEND_BLENDFACTOR        : srcBlend = GL_CONSTANT_COLOR;   break;
+        case WINED3DBLEND_INVBLENDFACTOR     : srcBlend = GL_ONE_MINUS_CONSTANT_COLOR;  break;
+        default:
+            FIXME("Unrecognized src blend value %d\n", stateblock->renderState[WINED3DRS_SRCBLEND]);
+    }
+
 
     if(stateblock->renderState[WINED3DRS_EDGEANTIALIAS] ||
        stateblock->renderState[WINED3DRS_ANTIALIASEDLINEENABLE]) {
@@ -330,7 +336,7 @@ static void state_blendfactor(DWORD state, IWineD3DStateBlockImpl *stateblock, W
 
     TRACE("Setting BlendFactor to %d\n", stateblock->renderState[WINED3DRS_BLENDFACTOR]);
     D3DCOLORTOGLFLOAT4(stateblock->renderState[WINED3DRS_BLENDFACTOR], col);
-    GL_EXTCALL(glBlendColor (col[0],col[1],col[2],col[3]));
+    GL_EXTCALL(glBlendColorEXT (col[0],col[1],col[2],col[3]));
     checkGLcall("glBlendColor");
 }
 
@@ -423,9 +429,17 @@ static void state_clipping(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
     if (stateblock->renderState[WINED3DRS_CLIPPING]) {
         enable  = stateblock->renderState[WINED3DRS_CLIPPLANEENABLE];
         disable = ~stateblock->renderState[WINED3DRS_CLIPPLANEENABLE];
+        if(GL_SUPPORT(NV_DEPTH_CLAMP)) {
+            glDisable(GL_DEPTH_CLAMP_NV);
+            checkGLcall("glDisable(GL_DEPTH_CLAMP_NV)");
+        }
     } else {
         disable = 0xffffffff;
         enable  = 0x00;
+        if(GL_SUPPORT(NV_DEPTH_CLAMP)) {
+            glEnable(GL_DEPTH_CLAMP_NV);
+            checkGLcall("glEnable(GL_DEPTH_CLAMP_NV)");
+        }
     }
 
     if (enable & WINED3DCLIPPLANE0)  { glEnable(GL_CLIP_PLANE0);  checkGLcall("glEnable(clip plane 0)"); }
@@ -471,7 +485,7 @@ static void state_blendop(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD
     }
 
     TRACE("glBlendEquation(%x)\n", glParm);
-    GL_EXTCALL(glBlendEquation(glParm));
+    GL_EXTCALL(glBlendEquationEXT(glParm));
     checkGLcall("glBlendEquation");
 }
 
@@ -661,7 +675,7 @@ state_stencil(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *c
     if( !( func = CompareFunc(stateblock->renderState[WINED3DRS_STENCILFUNC]) ) )
         func = GL_ALWAYS;
     if( !( func_ccw = CompareFunc(stateblock->renderState[WINED3DRS_CCW_STENCILFUNC]) ) )
-        func = GL_ALWAYS;
+        func_ccw = GL_ALWAYS;
     ref = stateblock->renderState[WINED3DRS_STENCILREF];
     mask = stateblock->renderState[WINED3DRS_STENCILMASK];
     stencilFail = StencilOp(stateblock->renderState[WINED3DRS_STENCILFAIL]);
@@ -678,29 +692,55 @@ state_stencil(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *c
     func, stencilFail, depthFail, stencilPass,
     func_ccw, stencilFail_ccw, depthFail_ccw, stencilPass_ccw);
 
-    if (twosided_enable) {
-        renderstate_stencil_twosided(stateblock, GL_FRONT, func, ref, mask, stencilFail, depthFail, stencilPass);
+    if (twosided_enable && onesided_enable) {
+        glEnable(GL_STENCIL_TEST);
+        checkGLcall("glEnable GL_STENCIL_TEST");
+
+        /* Apply back first, then front. This function calls glActiveStencilFaceEXT,
+         * which has an effect on the code below too. If we apply the front face
+         * afterwards, we are sure that the active stencil face is set to front,
+         * and other stencil functions which do not use two sided stencil do not have
+         * to set it back
+         */
         renderstate_stencil_twosided(stateblock, GL_BACK, func_ccw, ref, mask, stencilFail_ccw, depthFail_ccw, stencilPass_ccw);
-    } else {
-        if (onesided_enable) {
-            glEnable(GL_STENCIL_TEST);
-            checkGLcall("glEnable GL_STENCIL_TEST");
-            glStencilFunc(func, ref, mask);
-            checkGLcall("glStencilFunc(...)");
-            glStencilOp(stencilFail, depthFail, stencilPass);
-            checkGLcall("glStencilOp(...)");
-        } else {
-            glDisable(GL_STENCIL_TEST);
-            checkGLcall("glDisable GL_STENCIL_TEST");
+        renderstate_stencil_twosided(stateblock, GL_FRONT, func, ref, mask, stencilFail, depthFail, stencilPass);
+    } else if(onesided_enable) {
+        if(GL_SUPPORT(EXT_STENCIL_TWO_SIDE)) {
+            glDisable(GL_STENCIL_TEST_TWO_SIDE_EXT);
+            checkGLcall("glDisable(GL_STENCIL_TEST_TWO_SIDE_EXT)");
         }
+
+        glEnable(GL_STENCIL_TEST);
+        checkGLcall("glEnable GL_STENCIL_TEST");
+        glStencilFunc(func, ref, mask);
+        checkGLcall("glStencilFunc(...)");
+        glStencilOp(stencilFail, depthFail, stencilPass);
+        checkGLcall("glStencilOp(...)");
+    } else {
+        glDisable(GL_STENCIL_TEST);
+        checkGLcall("glDisable GL_STENCIL_TEST");
     }
 }
 
 static void state_stencilwrite(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+    DWORD mask;
+
     if(stateblock->wineD3DDevice->stencilBufferTarget) {
-        glStencilMask(stateblock->renderState[WINED3DRS_STENCILWRITEMASK]);
+        mask = stateblock->renderState[WINED3DRS_STENCILWRITEMASK];
     } else {
-        glStencilMask(0);
+        mask = 0;
+    }
+
+    if(GL_SUPPORT(EXT_STENCIL_TWO_SIDE)) {
+        GL_EXTCALL(glActiveStencilFaceEXT(GL_BACK));
+        checkGLcall("glActiveStencilFaceEXT(GL_BACK)");
+        glStencilMask(mask);
+        checkGLcall("glStencilMask");
+        GL_EXTCALL(glActiveStencilFaceEXT(GL_FRONT));
+        checkGLcall("glActiveStencilFaceEXT(GL_FRONT)");
+        glStencilMask(mask);
+    } else {
+        glStencilMask(mask);
     }
     checkGLcall("glStencilMask");
 }
@@ -796,6 +836,12 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
             fogstart = 1.0;
             fogend = 0.0;
         }
+
+        if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
+            glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
+            checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+            context->fog_coord = FALSE;
+        }
         context->last_was_foggy_shader = TRUE;
     }
     else if( use_ps(stateblock->wineD3DDevice) ) {
@@ -831,6 +877,12 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
                 break;
             default: FIXME("Unexpected WINED3DRS_FOGVERTEXMODE %d\n", stateblock->renderState[WINED3DRS_FOGVERTEXMODE]);
         }
+
+        if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
+            glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
+            checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+            context->fog_coord = FALSE;
+        }
     }
     /* DX 7 sdk: "If both render states(vertex and table fog) are set to valid modes,
      * the system will apply only pixel(=table) fog effects."
@@ -846,9 +898,10 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
                 if(!context->last_was_rhw) {
                     glFogi(GL_FOG_MODE, GL_EXP);
                     checkGLcall("glFogi(GL_FOG_MODE, GL_EXP");
-                    if(GL_SUPPORT(EXT_FOG_COORD)) {
+                    if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                         glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                         checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                        context->fog_coord = FALSE;
                     }
                     break;
                 }
@@ -857,9 +910,10 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
                 if(!context->last_was_rhw) {
                     glFogi(GL_FOG_MODE, GL_EXP2);
                     checkGLcall("glFogi(GL_FOG_MODE, GL_EXP2");
-                    if(GL_SUPPORT(EXT_FOG_COORD)) {
+                    if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                         glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                         checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                        context->fog_coord = FALSE;
                     }
                     break;
                 }
@@ -868,9 +922,10 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
                 if(!context->last_was_rhw) {
                     glFogi(GL_FOG_MODE, GL_LINEAR);
                     checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR");
-                    if(GL_SUPPORT(EXT_FOG_COORD)) {
+                    if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                         glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                         checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                        context->fog_coord = FALSE;
                     }
                     break;
                 }
@@ -881,8 +936,11 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
                  * Same happens with Vertexfog on transformed vertices
                  */
                 if(GL_SUPPORT(EXT_FOG_COORD)) {
-                    glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FOG_COORDINATE_EXT);
-                    checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FOG_COORDINATE_EXT)\n");
+                    if(context->fog_coord == FALSE) {
+                        glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FOG_COORDINATE_EXT);
+                        checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FOG_COORDINATE_EXT)\n");
+                        context->fog_coord = TRUE;
+                    }
                     glFogi(GL_FOG_MODE, GL_LINEAR);
                     checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR)");
                     fogstart = 0xff;
@@ -904,27 +962,30 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
             case WINED3DFOG_EXP:
                 glFogi(GL_FOG_MODE, GL_EXP);
                 checkGLcall("glFogi(GL_FOG_MODE, GL_EXP");
-                if(GL_SUPPORT(EXT_FOG_COORD)) {
+                if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                     glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                     checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                    context->fog_coord = FALSE;
                 }
                 break;
 
             case WINED3DFOG_EXP2:
                 glFogi(GL_FOG_MODE, GL_EXP2);
                 checkGLcall("glFogi(GL_FOG_MODE, GL_EXP2");
-                if(GL_SUPPORT(EXT_FOG_COORD)) {
+                if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                     glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                     checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                    context->fog_coord = FALSE;
                 }
                 break;
 
             case WINED3DFOG_LINEAR:
                 glFogi(GL_FOG_MODE, GL_LINEAR);
                 checkGLcall("glFogi(GL_FOG_MODE, GL_LINEAR");
-                if(GL_SUPPORT(EXT_FOG_COORD)) {
+                if(GL_SUPPORT(EXT_FOG_COORD) && context->fog_coord) {
                     glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT);
                     checkGLcall("glFogi(GL_FOG_COORDINATE_SOURCE_EXT, GL_FRAGMENT_DEPTH_EXT");
+                    context->fog_coord = FALSE;
                 }
                 break;
 
@@ -938,13 +999,26 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
         glEnable(GL_FOG);
         checkGLcall("glEnable GL_FOG");
 
-        glFogfv(GL_FOG_START, &fogstart);
-        checkGLcall("glFogf(GL_FOG_START, fogstart");
-        TRACE("Fog Start == %f\n", fogstart);
+        if(fogstart != fogend)
+        {
+            glFogfv(GL_FOG_START, &fogstart);
+            checkGLcall("glFogf(GL_FOG_START, fogstart");
+            TRACE("Fog Start == %f\n", fogstart);
 
-        glFogfv(GL_FOG_END, &fogend);
-        checkGLcall("glFogf(GL_FOG_END, fogend");
-        TRACE("Fog End == %f\n", fogend);
+            glFogfv(GL_FOG_END, &fogend);
+            checkGLcall("glFogf(GL_FOG_END, fogend");
+            TRACE("Fog End == %f\n", fogend);
+        }
+        else
+        {
+            glFogf(GL_FOG_START, -1.0 / 0.0);
+            checkGLcall("glFogf(GL_FOG_START, fogstart");
+            TRACE("Fog Start == %f\n", fogstart);
+
+            glFogf(GL_FOG_END, 0.0);
+            checkGLcall("glFogf(GL_FOG_END, fogend");
+            TRACE("Fog End == %f\n", fogend);
+        }
     } else {
         glDisable(GL_FOG);
         checkGLcall("glDisable GL_FOG");
@@ -959,9 +1033,21 @@ static void state_fog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCo
             checkGLcall("glFogf(GL_FOG_END, fogend");
         }
     }
+}
 
-    if (GL_SUPPORT(NV_FOG_DISTANCE)) {
-        glFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV);
+static void state_rangefog(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+    if(stateblock->renderState[WINED3DRS_RANGEFOGENABLE]) {
+        if (GL_SUPPORT(NV_FOG_DISTANCE)) {
+            glFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV);
+            checkGLcall("glFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_RADIAL_NV)");
+        } else {
+            WARN("Range fog enabled, but not supported by this opengl implementation\n");
+        }
+    } else {
+        if (GL_SUPPORT(NV_FOG_DISTANCE)) {
+            glFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV);
+            checkGLcall("glFogi(GL_FOG_DISTANCE_MODE_NV, GL_EYE_PLANE_ABSOLUTE_NV)");
+        }
     }
 }
 
@@ -1144,26 +1230,22 @@ static void state_zbias(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
 
 
 static void state_normalize(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
-    if (stateblock->renderState[WINED3DRS_NORMALIZENORMALS]) {
+    if(isStateDirty(context, STATE_VDECL)) {
+        return;
+    }
+    /* Without vertex normals, we set the current normal to 0/0/0 to remove the diffuse factor
+     * from the opengl lighting equation, as d3d does. Normalization of 0/0/0 can lead to a division
+     * by zero and is not properly defined in opengl, so avoid it
+     */
+    if (stateblock->renderState[WINED3DRS_NORMALIZENORMALS] && (
+        stateblock->wineD3DDevice->strided_streams.u.s.normal.lpData ||
+        stateblock->wineD3DDevice->strided_streams.u.s.normal.VBO)) {
         glEnable(GL_NORMALIZE);
         checkGLcall("glEnable(GL_NORMALIZE);");
     } else {
         glDisable(GL_NORMALIZE);
         checkGLcall("glDisable(GL_NORMALIZE);");
     }
-}
-
-static void state_psize(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
-    union {
-        DWORD d;
-        float f;
-    } tmpvalue;
-
-    /* FIXME: check that pointSize isn't outside glGetFloatv( GL_POINT_SIZE_MAX_ARB, &maxSize ); or -ve */
-    tmpvalue.d = stateblock->renderState[WINED3DRS_POINTSIZE];
-    TRACE("Set point size to %f\n", tmpvalue.f);
-    glPointSize(tmpvalue.f);
-    checkGLcall("glPointSize(...);");
 }
 
 static void state_psizemin(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -1216,31 +1298,49 @@ static void state_pscale(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3
 
     /* Default values */
     GLfloat att[3] = {1.0f, 0.0f, 0.0f};
+    union {
+        DWORD d;
+        float f;
+    } pointSize, A, B, C;
 
-    /*
-     * Minimum valid point size for OpenGL is 1.0f. For Direct3D it is 0.0f.
-     * This means that OpenGL will clamp really small point sizes to 1.0f.
-     * To correct for this we need to multiply by the scale factor when sizes
-     * are less than 1.0f. scale_factor =  1.0f / point_size.
-     */
-    GLfloat pointSize = *((float*)&stateblock->renderState[WINED3DRS_POINTSIZE]);
-    if(pointSize > 0.0f) {
+    pointSize.d = stateblock->renderState[WINED3DRS_POINTSIZE];
+    A.d = stateblock->renderState[WINED3DRS_POINTSCALE_A];
+    B.d = stateblock->renderState[WINED3DRS_POINTSCALE_B];
+    C.d = stateblock->renderState[WINED3DRS_POINTSCALE_C];
+
+    if(stateblock->renderState[WINED3DRS_POINTSCALEENABLE]) {
         GLfloat scaleFactor;
+        float h = stateblock->viewport.Height;
 
-        if(pointSize < 1.0f) {
-            scaleFactor = pointSize * pointSize;
+        if(pointSize.f < GL_LIMITS(pointsizemin)) {
+            /*
+             * Minimum valid point size for OpenGL is driver specific. For Direct3D it is
+             * 0.0f. This means that OpenGL will clamp really small point sizes to the
+             * driver minimum. To correct for this we need to multiply by the scale factor when sizes
+             * are less than 1.0f. scale_factor =  1.0f / point_size.
+             */
+            scaleFactor = pointSize.f / GL_LIMITS(pointsizemin);
+            /* Clamp the point size, don't rely on the driver to do it. MacOS says min point size
+             * is 1.0, but then accepts points below that and draws too small points
+             */
+            pointSize.f = GL_LIMITS(pointsizemin);
+        } else if(pointSize.f > GL_LIMITS(pointsize)) {
+            /* gl already scales the input to glPointSize,
+             * d3d scales the result after the point size scale.
+             * If the point size is bigger than the max size, use the
+             * scaling to scale it bigger, and set the gl point size to max
+             */
+            scaleFactor = pointSize.f / GL_LIMITS(pointsize);
+            TRACE("scale: %f\n", scaleFactor);
+            pointSize.f = GL_LIMITS(pointsize);
         } else {
             scaleFactor = 1.0f;
         }
+        scaleFactor = pow(h * scaleFactor, 2);
 
-        if(stateblock->renderState[WINED3DRS_POINTSCALEENABLE]) {
-            att[0] = *((float*)&stateblock->renderState[WINED3DRS_POINTSCALE_A]) /
-                    (stateblock->viewport.Height * stateblock->viewport.Height * scaleFactor);
-            att[1] = *((float*)&stateblock->renderState[WINED3DRS_POINTSCALE_B]) /
-                    (stateblock->viewport.Height * stateblock->viewport.Height * scaleFactor);
-            att[2] = *((float*)&stateblock->renderState[WINED3DRS_POINTSCALE_C]) /
-                    (stateblock->viewport.Height * stateblock->viewport.Height * scaleFactor);
-        }
+        att[0] = A.f / scaleFactor;
+        att[1] = B.f / scaleFactor;
+        att[2] = C.f / scaleFactor;
     }
 
     if(GL_SUPPORT(ARB_POINT_PARAMETERS)) {
@@ -1250,9 +1350,12 @@ static void state_pscale(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3
     else if(GL_SUPPORT(EXT_POINT_PARAMETERS)) {
         GL_EXTCALL(glPointParameterfvEXT)(GL_DISTANCE_ATTENUATION_EXT, att);
         checkGLcall("glPointParameterfvEXT(GL_DISTANCE_ATTENUATION_EXT, ...");
-    } else {
-        TRACE("POINT_PARAMETERS not supported in this version of opengl\n");
+    } else if(stateblock->renderState[WINED3DRS_POINTSCALEENABLE]) {
+        WARN("POINT_PARAMETERS not supported in this version of opengl\n");
     }
+
+    glPointSize(pointSize.f);
+    checkGLcall("glPointSize(...);");
 }
 
 static void state_colorwrite(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -1466,12 +1569,6 @@ static void state_tessellation(DWORD state, IWineD3DStateBlockImpl *stateblock, 
     TRACE("Stub\n");
     if(stateblock->renderState[WINED3DRS_ENABLEADAPTIVETESSELLATION])
         FIXME("(WINED3DRS_ENABLEADAPTIVETESSELLATION,%d) not yet implemented\n", stateblock->renderState[WINED3DRS_ENABLEADAPTIVETESSELLATION]);
-}
-
-
-static void state_srgbwrite(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
-    if(stateblock->renderState[WINED3DRS_SRGBWRITEENABLE])
-        FIXME("Render state WINED3DRS_SRGBWRITEENABLE not yet implemented\n");
 }
 
 static void state_separateblend(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -1807,6 +1904,13 @@ static void transform_texture(DWORD state, IWineD3DStateBlockImpl *stateblock, W
     DWORD texUnit = state - STATE_TRANSFORM(WINED3DTS_TEXTURE0);
     DWORD mapped_stage = stateblock->wineD3DDevice->texUnitMap[texUnit];
 
+    /* Ignore this when a vertex shader is used, or if the streams aren't sorted out yet */
+    if(use_vs(stateblock->wineD3DDevice) ||
+       isStateDirty(context, STATE_VDECL)) {
+        TRACE("Using a vertex shader, or stream sources not sorted out yet, skipping\n");
+        return;
+    }
+
     if (mapped_stage < 0) return;
 
     if (GL_SUPPORT(ARB_MULTITEXTURE)) {
@@ -1823,7 +1927,11 @@ static void transform_texture(DWORD state, IWineD3DStateBlockImpl *stateblock, W
 
     set_texture_matrix((float *)&stateblock->transforms[WINED3DTS_TEXTURE0 + texUnit].u.m[0][0],
                         stateblock->textureState[texUnit][WINED3DTSS_TEXTURETRANSFORMFLAGS],
-                        (stateblock->textureState[texUnit][WINED3DTSS_TEXCOORDINDEX] & 0xFFFF0000) != WINED3DTSS_TCI_PASSTHRU);
+                        (stateblock->textureState[texUnit][WINED3DTSS_TEXCOORDINDEX] & 0xFFFF0000) != WINED3DTSS_TCI_PASSTHRU,
+                        context->last_was_rhw,
+                        stateblock->wineD3DDevice->strided_streams.u.s.texCoords[texUnit].dwStride ?
+                            stateblock->wineD3DDevice->strided_streams.u.s.texCoords[texUnit].dwType:
+                            WINED3DDECLTYPE_UNUSED);
 
 }
 
@@ -2067,12 +2175,37 @@ static void tex_coordindex(DWORD state, IWineD3DStateBlockImpl *stateblock, Wine
     }
 }
 
+static void shaderconstant(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+    IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
+
+    /* Vertex and pixel shader states will call a shader upload, don't do anything as long one of them
+     * has an update pending
+     */
+    if(isStateDirty(context, STATE_VDECL) ||
+       isStateDirty(context, STATE_PIXELSHADER)) {
+       return;
+    }
+
+    device->shader_backend->shader_load_constants((IWineD3DDevice *) device, use_ps(device), use_vs(device));
+}
+
 static void tex_bumpenvlscale(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
     DWORD stage = (state - STATE_TEXTURESTAGE(0, 0)) / WINED3D_HIGHEST_TEXTURE_STATE;
     union {
         DWORD d;
         float f;
     } tmpvalue;
+
+    if(stateblock->pixelShader && stage != 0 &&
+       ((IWineD3DPixelShaderImpl *) stateblock->pixelShader)->baseShader.reg_maps.luminanceparams == stage) {
+        /* The pixel shader has to know the luminance scale. Do a constants update if it
+         * isn't scheduled anyway
+         */
+        if(!isStateDirty(context, STATE_PIXELSHADERCONSTANT) &&
+           !isStateDirty(context, STATE_PIXELSHADER)) {
+            shaderconstant(STATE_PIXELSHADERCONSTANT, stateblock, context);
+        }
+    }
 
     tmpvalue.d = stateblock->textureState[stage][WINED3DTSS_BUMPENVLSCALE];
     if(tmpvalue.f != 0.0) {
@@ -2086,6 +2219,17 @@ static void tex_bumpenvloffset(DWORD state, IWineD3DStateBlockImpl *stateblock, 
         DWORD d;
         float f;
     } tmpvalue;
+
+    if(stateblock->pixelShader && stage != 0 &&
+       ((IWineD3DPixelShaderImpl *) stateblock->pixelShader)->baseShader.reg_maps.luminanceparams == stage) {
+        /* The pixel shader has to know the luminance offset. Do a constants update if it
+         * isn't scheduled anyway
+         */
+        if(!isStateDirty(context, STATE_PIXELSHADERCONSTANT) &&
+           !isStateDirty(context, STATE_PIXELSHADER)) {
+            shaderconstant(STATE_PIXELSHADERCONSTANT, stateblock, context);
+        }
+    }
 
     tmpvalue.d = stateblock->textureState[stage][WINED3DTSS_BUMPENVLOFFSET];
     if(tmpvalue.f != 0.0) {
@@ -2204,20 +2348,6 @@ static void sampler(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCont
         glBindTexture(GL_TEXTURE_2D, stateblock->wineD3DDevice->dummyTextureName[sampler]);
         checkGLcall("glBindTexture(GL_TEXTURE_2D, stateblock->wineD3DDevice->dummyTextureName[sampler])");
     }
-}
-
-static void shaderconstant(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
-    IWineD3DDeviceImpl *device = stateblock->wineD3DDevice;
-
-    /* Vertex and pixel shader states will call a shader upload, don't do anything as long one of them
-     * has an update pending
-     */
-    if(isStateDirty(context, STATE_VDECL) ||
-       isStateDirty(context, STATE_PIXELSHADER)) {
-       return;
-    }
-    
-    device->shader_backend->shader_load_constants((IWineD3DDevice *) device, use_ps(device), use_vs(device));
 }
 
 static void pixelshader(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -2435,8 +2565,12 @@ static void state_vertexblend(DWORD state, IWineD3DStateBlockImpl *stateblock, W
                     stateblock->wineD3DDevice->vertexBlendUsed = TRUE;
                 }
             } else {
-                /* TODO: Implement vertex blending in drawStridedSlow */
-                FIXME("Vertex blending enabled, but not supported by hardware\n");
+                static BOOL once = FALSE;
+                if(!once) {
+                    once = TRUE;
+                    /* TODO: Implement vertex blending in drawStridedSlow */
+                    FIXME("Vertex blending enabled, but not supported by hardware\n");
+                }
             }
             break;
 
@@ -2543,7 +2677,23 @@ static void transform_projection(DWORD state, IWineD3DStateBlockImpl *stateblock
             /* Transformed vertices are supposed to bypass the whole transform pipeline including
              * frustum clipping. This can't be done in opengl, so this code adjusts the Z range to
              * suppress depth clipping. This can be done because it is an orthogonal projection and
-             * the Z coordinate does not affect the size of the primitives
+             * the Z coordinate does not affect the size of the primitives. Half Life 1 and Prince of
+             * Persia 3D need this.
+             *
+             * Note that using minZ and maxZ here doesn't entirely fix the problem, since view frustum
+             * clipping is still enabled, but it seems to fix it for all apps tested so far. A minor
+             * problem can be witnessed in half-life 1 engine based games, the weapon is clipped close
+             * to the viewer.
+             *
+             * Also note that this breaks z comparison against z values filled in with clear,
+             * but no app depending on that and disabled clipping has been found yet. Comparing
+             * primitives against themselves works, so the Z buffer is still intact for normal hidden
+             * surface removal.
+             *
+             * We could disable clipping entirely by setting the near to infinity and far to -infinity,
+             * but this would break Z buffer operation. Raising the range to something less than
+             * infinity would help a bit at the cost of Z precision, but it wouldn't eliminate the
+             * problem either.
              */
             TRACE("Calling glOrtho with %f, %f, %f, %f\n", width, height, -minZ, -maxZ);
             if(stateblock->wineD3DDevice->render_offscreen) {
@@ -2561,16 +2711,16 @@ static void transform_projection(DWORD state, IWineD3DStateBlockImpl *stateblock
              */
             TRACE("Calling glOrtho with %f, %f, %f, %f\n", width, height, 1.0, -1.0);
             if(stateblock->wineD3DDevice->render_offscreen) {
-                glOrtho(X, X + width, -Y, -Y - height, 1.0, -1.0);
+                glOrtho(X, X + width, -Y, -Y - height, 0.0, -1.0);
             } else {
-                glOrtho(X, X + width, Y + height, Y, 1.0, -1.0);
+                glOrtho(X, X + width, Y + height, Y, 0.0, -1.0);
             }
         }
         checkGLcall("glOrtho");
 
-        /* Window Coord 0 is the middle of the first pixel, so translate by 3/8 pixels */
-        glTranslatef(0.375, 0.375, 0);
-        checkGLcall("glTranslatef(0.375, 0.375, 0)");
+        /* Window Coord 0 is the middle of the first pixel, so translate by 1/2 pixels */
+        glTranslatef(0.5, 0.5, 0);
+        checkGLcall("glTranslatef(0.5, 0.5, 0)");
         /* D3D texture coordinates are flipped compared to OpenGL ones, so
          * render everything upside down when rendering offscreen. */
         if (stateblock->wineD3DDevice->render_offscreen) {
@@ -2584,9 +2734,21 @@ static void transform_projection(DWORD state, IWineD3DStateBlockImpl *stateblock
             the left to the right end of the viewport (with all matrices set to
             be identity), the x coords of both ends of the line would be not
             -1 and 1 respectively but (-1-1/viewport_widh) and (1-1/viewport_width)
-            instead.                                                               */
-        glTranslatef(0.9 / stateblock->viewport.Width, -0.9 / stateblock->viewport.Height, 0);
-        checkGLcall("glTranslatef (0.9 / width, -0.9 / height, 0)");
+            instead.
+
+            1.0 / Width is used because the coord range goes from -1.0 to 1.0, then we
+            divide by the Width/Height, so we need the half range(1.0) to translate by
+            half a pixel.
+
+            The other fun is that d3d's output z range after the transformation is [0;1],
+            but opengl's is [-1;1]. Since the z buffer is in range [0;1] for both, gl
+            scales [-1;1] to [0;1]. This would mean that we end up in [0.5;1] and loose a lot
+            of Z buffer precision and the clear values do not match in the z test. Thus scale
+            [0;1] to [-1;1], so when gl undoes that we utilize the full z range
+         */
+        glTranslatef(1.0 / stateblock->viewport.Width, -1.0/ stateblock->viewport.Height, -1.0);
+        checkGLcall("glTranslatef (1.0 / width, -1.0 / height, -1.0)");
+        glScalef(1.0, 1.0, 2.0);
 
         /* D3D texture coordinates are flipped compared to OpenGL ones, so
             * render everything upside down when rendering offscreen. */
@@ -2963,8 +3125,8 @@ static void loadVertexData(IWineD3DStateBlockImpl *stateblock, WineDirect3DVerte
         checkGLcall("glEnableClientState(GL_NORMAL_ARRAY)");
 
     } else {
-        glNormal3f(0, 0, 1);
-        checkGLcall("glNormal3f(0, 0, 1)");
+        glNormal3f(0, 0, 0);
+        checkGLcall("glNormal3f(0, 0, 0)");
     }
 
     /* Diffuse Colour --------------------------------------------*/
@@ -3239,6 +3401,9 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
         if(context->last_was_vshader && !isStateDirty(context, STATE_RENDER(WINED3DRS_CLIPPLANEENABLE))) {
             state_clipping(STATE_RENDER(WINED3DRS_CLIPPLANEENABLE), stateblock, context);
         }
+        if(!isStateDirty(context, STATE_RENDER(WINED3DRS_NORMALIZENORMALS))) {
+            state_normalize(STATE_RENDER(WINED3DRS_NORMALIZENORMALS), stateblock, context);
+        }
     } else {
         /* We compile the shader here because we need the vertex declaration
          * in order to determine if we need to do any swizzling for D3DCOLOR
@@ -3279,6 +3444,14 @@ static void vertexdeclaration(DWORD state, IWineD3DStateBlockImpl *stateblock, W
     if(updateFog) {
         state_fog(STATE_RENDER(WINED3DRS_FOGENABLE), stateblock, context);
     }
+    if(!useVertexShaderFunction) {
+        int i;
+        for(i = 0; i < MAX_TEXTURES; i++) {
+            if(!isStateDirty(context, STATE_TRANSFORM(WINED3DTS_TEXTURE0 + i))) {
+                transform_texture(STATE_TRANSFORM(WINED3DTS_TEXTURE0 + i), stateblock, context);
+            }
+        }
+    }
 }
 
 static void viewport(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -3298,12 +3471,14 @@ static void viewport(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DCon
 
     checkGLcall("glViewport");
 
-    stateblock->wineD3DDevice->posFixup[2] = 0.9 / stateblock->viewport.Width;
-    stateblock->wineD3DDevice->posFixup[3] = -0.9 / stateblock->viewport.Height;
+    stateblock->wineD3DDevice->posFixup[2] = 1.0 / stateblock->viewport.Width;
+    stateblock->wineD3DDevice->posFixup[3] = -1.0 / stateblock->viewport.Height;
     if(!isStateDirty(context, STATE_TRANSFORM(WINED3DTS_PROJECTION))) {
         transform_projection(STATE_TRANSFORM(WINED3DTS_PROJECTION), stateblock, context);
     }
-
+    if(!isStateDirty(context, STATE_RENDER(WINED3DRS_POINTSCALEENABLE))) {
+        state_pscale(STATE_RENDER(WINED3DRS_POINTSCALEENABLE), stateblock, context);
+    }
 }
 
 static void light(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
@@ -3454,6 +3629,16 @@ static void indexbuffer(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3D
     }
 }
 
+static void frontface(DWORD state, IWineD3DStateBlockImpl *stateblock, WineD3DContext *context) {
+    if(stateblock->wineD3DDevice->render_offscreen) {
+        glFrontFace(GL_CCW);
+        checkGLcall("glFrontFace(GL_CCW)");
+    } else {
+        glFrontFace(GL_CW);
+        checkGLcall("glFrontFace(GL_CW)");
+    }
+}
+
 const struct StateEntry StateTable[] =
 {
       /* State name                                         representative,                                     apply function */
@@ -3505,7 +3690,7 @@ const struct StateEntry StateTable[] =
     { /* 45, WINED3DRS_TEXTUREADDRESSV              */      0, /* Handled in ddraw */                           state_undefined     },
     { /* 46, WINED3DRS_MIPMAPLODBIAS                */      STATE_RENDER(WINED3DRS_MIPMAPLODBIAS),              state_mipmaplodbias },
     { /* 47, WINED3DRS_ZBIAS                        */      STATE_RENDER(WINED3DRS_ZBIAS),                      state_zbias         },
-    { /* 48, WINED3DRS_RANGEFOGENABLE               */      0,                                                  state_nogl          },
+    { /* 48, WINED3DRS_RANGEFOGENABLE               */      STATE_RENDER(WINED3DRS_RANGEFOGENABLE),             state_rangefog      },
     { /* 49, WINED3DRS_ANISOTROPY                   */      STATE_RENDER(WINED3DRS_ANISOTROPY),                 state_anisotropy    },
     { /* 50, WINED3DRS_FLUSHBATCH                   */      STATE_RENDER(WINED3DRS_FLUSHBATCH),                 state_flushbatch    },
     { /* 51, WINED3DRS_TRANSLUCENTSORTINDEPENDENT   */      STATE_RENDER(WINED3DRS_TRANSLUCENTSORTINDEPENDENT), state_translucentsi },
@@ -3612,7 +3797,7 @@ const struct StateEntry StateTable[] =
     { /*151, WINED3DRS_VERTEXBLEND                  */      STATE_RENDER(WINED3DRS_VERTEXBLEND),                state_vertexblend   },
     { /*152, WINED3DRS_CLIPPLANEENABLE              */      STATE_RENDER(WINED3DRS_CLIPPING),                   state_clipping      },
     { /*153, WINED3DRS_SOFTWAREVERTEXPROCESSING     */      0,                                                  state_nogl          },
-    { /*154, WINED3DRS_POINTSIZE                    */      STATE_RENDER(WINED3DRS_POINTSIZE),                  state_psize         },
+    { /*154, WINED3DRS_POINTSIZE                    */      STATE_RENDER(WINED3DRS_POINTSCALEENABLE),           state_pscale        },
     { /*155, WINED3DRS_POINTSIZE_MIN                */      STATE_RENDER(WINED3DRS_POINTSIZE_MIN),              state_psizemin      },
     { /*156, WINED3DRS_POINTSPRITEENABLE            */      STATE_RENDER(WINED3DRS_POINTSPRITEENABLE),          state_pointsprite   },
     { /*157, WINED3DRS_POINTSCALEENABLE             */      STATE_RENDER(WINED3DRS_POINTSCALEENABLE),           state_pscale        },
@@ -3654,7 +3839,7 @@ const struct StateEntry StateTable[] =
     { /*191, WINED3DRS_COLORWRITEENABLE2            */      STATE_RENDER(WINED3DRS_COLORWRITEENABLE),           state_colorwrite    },
     { /*192, WINED3DRS_COLORWRITEENABLE3            */      STATE_RENDER(WINED3DRS_COLORWRITEENABLE),           state_colorwrite    },
     { /*193, WINED3DRS_BLENDFACTOR                  */      STATE_RENDER(WINED3DRS_BLENDFACTOR),                state_blendfactor   },
-    { /*194, WINED3DRS_SRGBWRITEENABLE              */      STATE_RENDER(WINED3DRS_SRGBWRITEENABLE),            state_srgbwrite     },
+    { /*194, WINED3DRS_SRGBWRITEENABLE              */      STATE_PIXELSHADER,                                  pixelshader         },
     { /*195, WINED3DRS_DEPTHBIAS                    */      STATE_RENDER(WINED3DRS_DEPTHBIAS),                  state_depthbias     },
     { /*196, undefined                              */      0,                                                  state_undefined     },
     { /*197, undefined                              */      0,                                                  state_undefined     },
@@ -4525,4 +4710,5 @@ const struct StateEntry StateTable[] =
     { /* STATE_CLIPPLANE(31)                        */      STATE_CLIPPLANE(31),                                clipplane           },
 
     { /* STATE_MATERIAL                             */      STATE_RENDER(WINED3DRS_SPECULARENABLE),             state_specularenable},
+    { /* STATE_FRONTFACE                            */      STATE_FRONTFACE,                                    frontface           },
 };

@@ -132,7 +132,7 @@ static void WINAPI IWineD3DTextureImpl_PreLoad(IWineD3DTexture *iface) {
             FIXME("Texture (%p) has been reloaded at least 20 times due to WINED3DSAMP_SRGBTEXTURE changes on it\'s sampler\n", This);
 
         for (i = 0; i < This->baseTexture.levels; i++) {
-            IWineD3DSurfaceImpl_AddDirtyRect(This->surfaces[i], NULL);
+            IWineD3DSurface_AddDirtyRect(This->surfaces[i], NULL);
             IWineD3DSurface_SetGlTextureDesc(This->surfaces[i], This->baseTexture.textureName, IWineD3DTexture_GetTextureDimensions(iface));
             IWineD3DSurface_LoadTexture(This->surfaces[i], srgb_mode);
         }

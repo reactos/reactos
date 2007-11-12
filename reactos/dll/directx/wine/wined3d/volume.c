@@ -270,9 +270,18 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
 
     TRACE("(%p) : level %u, format %s (0x%08x)\n", This, gl_level, debug_d3dformat(format), format);
 
-    if(GL_SUPPORT(EXT_TEXTURE3D)) {
-        TRACE("Calling glTexImage3D %x level=%d, intfmt=%x, w=%d, h=%d,d=%d, 0=%d, glFmt=%x, glType=%x, Mem=%p\n",
-                GL_TEXTURE_3D,
+    TRACE("Calling glTexImage3D %x level=%d, intfmt=%x, w=%d, h=%d,d=%d, 0=%d, glFmt=%x, glType=%x, Mem=%p\n",
+            GL_TEXTURE_3D,
+            gl_level,
+            glDesc->glInternal,
+            This->currentDesc.Width,
+            This->currentDesc.Height,
+            This->currentDesc.Depth,
+            0,
+            glDesc->glFormat,
+            glDesc->glType,
+            This->resource.allocatedMemory);
+    GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D,
                 gl_level,
                 glDesc->glInternal,
                 This->currentDesc.Width,
@@ -281,20 +290,8 @@ static HRESULT WINAPI IWineD3DVolumeImpl_LoadTexture(IWineD3DVolume *iface, int 
                 0,
                 glDesc->glFormat,
                 glDesc->glType,
-                This->resource.allocatedMemory);
-        GL_EXTCALL(glTexImage3DEXT(GL_TEXTURE_3D,
-                    gl_level,
-                    glDesc->glInternal,
-                    This->currentDesc.Width,
-                    This->currentDesc.Height,
-                    This->currentDesc.Depth,
-                    0,
-                    glDesc->glFormat,
-                    glDesc->glType,
-                    This->resource.allocatedMemory));
-        checkGLcall("glTexImage3D");
-    } else
-        WARN("This OpenGL implementation doesn't support 3D textures\n");
+                This->resource.allocatedMemory));
+    checkGLcall("glTexImage3D");
 
     /* When adding code releasing This->resource.allocatedMemory to save data keep in mind that
      * GL_UNPACK_CLIENT_STORAGE_APPLE is enabled by default if supported(GL_APPLE_client_storage).

@@ -71,7 +71,7 @@ void IWineD3DResourceImpl_CleanUp(IWineD3DResource *iface){
     TRACE("(%p) Cleaning up resource\n", This);
     if (This->resource.pool == WINED3DPOOL_DEFAULT) {
         TRACE("Decrementing device memory pool by %u\n", This->resource.size);
-        globalChangeGlRam(-This->resource.size);
+        WineD3DAdapterChangeGLRam(This->resource.wineD3DDevice, -This->resource.size);
     }
 
     LIST_FOR_EACH_SAFE(e1, e2, &This->resource.privateData) {
@@ -82,8 +82,9 @@ void IWineD3DResourceImpl_CleanUp(IWineD3DResource *iface){
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, This->resource.allocatedMemory);
+    HeapFree(GetProcessHeap(), 0, This->resource.heapMemory);
     This->resource.allocatedMemory = 0;
+    This->resource.heapMemory = 0;
 
     if (This->resource.wineD3DDevice != NULL) {
         IWineD3DDevice_ResourceReleased((IWineD3DDevice *)This->resource.wineD3DDevice, iface);
@@ -137,6 +138,7 @@ HRESULT WINAPI IWineD3DResourceImpl_SetPrivateData(IWineD3DResource *iface, REFG
     if (Flags & WINED3DSPD_IUNKNOWN) {
         if(SizeOfData != sizeof(IUnknown *)) {
             WARN("IUnknown data with size %d, returning WINED3DERR_INVALIDCALL\n", SizeOfData);
+            HeapFree(GetProcessHeap(), 0, data);
             return WINED3DERR_INVALIDCALL;
         }
         data->ptr.object = (LPUNKNOWN)pData;

@@ -193,11 +193,13 @@ HRESULT shader_get_registers_used(
     IWineD3DStateBlockImpl *stateBlock) {
 
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
+    unsigned int cur_loop_depth = 0, max_loop_depth = 0;
 
     /* There are some minor differences between pixel and vertex shaders */
     char pshader = shader_is_pshader_version(This->baseShader.hex_version);
 
     reg_maps->bumpmat = -1;
+    reg_maps->luminanceparams = -1;
 
     if (pToken == NULL)
         return WINED3D_OK;
@@ -266,6 +268,20 @@ HRESULT shader_get_registers_used(
             if (!lconst) return E_OUTOFMEMORY;
             lconst->idx = *pToken & WINED3DSP_REGNUM_MASK;
             memcpy(&lconst->value, pToken + 1, 4 * sizeof(DWORD));
+
+            /* In pixel shader 1.X shaders, the constants are clamped between [-1;1] */
+            if(WINED3DSHADER_VERSION_MAJOR(This->baseShader.hex_version) == 1 && pshader) {
+                float *value = (float *) lconst->value;
+                if(value[0] < -1.0) value[0] = -1.0;
+                else if(value[0] >  1.0) value[0] =  1.0;
+                if(value[1] < -1.0) value[1] = -1.0;
+                else if(value[1] >  1.0) value[1] =  1.0;
+                if(value[2] < -1.0) value[2] = -1.0;
+                else if(value[2] >  1.0) value[2] =  1.0;
+                if(value[3] < -1.0) value[3] = -1.0;
+                else if(value[3] >  1.0) value[3] =  1.0;
+            }
+
             list_add_head(&This->baseShader.constantsF, &lconst->entry);
             pToken += curOpcode->num_params;
 
@@ -290,23 +306,21 @@ HRESULT shader_get_registers_used(
         /* If there's a loop in the shader */
         } else if (WINED3DSIO_LOOP == curOpcode->opcode ||
                    WINED3DSIO_REP == curOpcode->opcode) {
-            reg_maps->loop = 1;
+            cur_loop_depth++;
+            if(cur_loop_depth > max_loop_depth)
+                max_loop_depth = cur_loop_depth;
             pToken += curOpcode->num_params;
-   
+
+        } else if (WINED3DSIO_ENDLOOP == curOpcode->opcode ||
+                   WINED3DSIO_ENDREP == curOpcode->opcode) {
+            cur_loop_depth--;
+
         /* For subroutine prototypes */
         } else if (WINED3DSIO_LABEL == curOpcode->opcode) {
 
             DWORD snum = *pToken & WINED3DSP_REGNUM_MASK; 
             reg_maps->labels[snum] = 1;
             pToken += curOpcode->num_params;
-
-        } else if(WINED3DSIO_BEM == curOpcode->opcode) {
-            DWORD regnum = *pToken & WINED3DSP_REGNUM_MASK;
-            if(reg_maps->bumpmat != -1 && reg_maps->bumpmat != regnum) {
-                FIXME("Pixel shader uses bem or texbem instruction on more than 1 sampler\n");
-            } else {
-                reg_maps->bumpmat = regnum;
-            }
 
         /* Set texture, address, temporary registers */
         } else {
@@ -354,13 +368,29 @@ HRESULT shader_get_registers_used(
                 }
 
                 /* texbem is only valid with < 1.4 pixel shaders */
-                if(WINED3DSIO_TEXBEM == curOpcode->opcode) {
+                if(WINED3DSIO_TEXBEM  == curOpcode->opcode ||
+                    WINED3DSIO_TEXBEML == curOpcode->opcode) {
                     if(reg_maps->bumpmat != -1 && reg_maps->bumpmat != sampler_code) {
                         FIXME("Pixel shader uses texbem instruction on more than 1 sampler\n");
                     } else {
                         reg_maps->bumpmat = sampler_code;
+                        if(WINED3DSIO_TEXBEML == curOpcode->opcode) {
+                            reg_maps->luminanceparams = sampler_code;
+                        }
                     }
                 }
+            }
+            if(WINED3DSIO_NRM  == curOpcode->opcode) {
+                reg_maps->usesnrm = 1;
+            } else if(WINED3DSIO_BEM == curOpcode->opcode) {
+                DWORD regnum = *pToken & WINED3DSP_REGNUM_MASK;
+                if(reg_maps->bumpmat != -1 && reg_maps->bumpmat != regnum) {
+                    FIXME("Pixel shader uses bem or texbem instruction on more than 1 sampler\n");
+                } else {
+                    reg_maps->bumpmat = regnum;
+                }
+            } else if(WINED3DSIO_DSY  == curOpcode->opcode) {
+                reg_maps->usesdsy = 1;
             }
 
             /* This will loop over all the registers and try to
@@ -392,14 +422,43 @@ HRESULT shader_get_registers_used(
                 else if (WINED3DSPR_TEMP == regtype)
                     reg_maps->temporary[reg] = 1;
 
-                else if (WINED3DSPR_INPUT == regtype && !pshader)
-                    reg_maps->attributes[reg] = 1;
+                else if (WINED3DSPR_INPUT == regtype) {
+                    if( !pshader)
+                        reg_maps->attributes[reg] = 1;
+                    else {
+                        if(param & WINED3DSHADER_ADDRMODE_RELATIVE) {
+                            /* If relative addressing is used, we must assume that all registers
+                             * are used. Even if it is a construct like v3[aL], we can't assume
+                             * that v0, v1 and v2 aren't read because aL can be negative
+                             */
+                            unsigned int i;
+                            for(i = 0; i < MAX_REG_INPUT; i++) {
+                                ((IWineD3DPixelShaderImpl *) This)->input_reg_used[i] = TRUE;
+                            }
+                        } else {
+                            ((IWineD3DPixelShaderImpl *) This)->input_reg_used[reg] = TRUE;
+                        }
+                    }
+                }
 
                 else if (WINED3DSPR_RASTOUT == regtype && reg == 1)
                     reg_maps->fog = 1;
-             }
+
+                else if (WINED3DSPR_MISCTYPE == regtype && reg == 0 && pshader)
+                    reg_maps->vpos = 1;
+
+                else if(WINED3DSPR_CONST == regtype && !pshader &&
+                        param & WINED3DSHADER_ADDRMODE_RELATIVE) {
+                    if(reg <= ((IWineD3DVertexShaderImpl *) This)->min_rel_offset) {
+                        ((IWineD3DVertexShaderImpl *) This)->min_rel_offset = reg;
+                    } else if(reg >= ((IWineD3DVertexShaderImpl *) This)->max_rel_offset) {
+                        ((IWineD3DVertexShaderImpl *) This)->max_rel_offset = reg;
+                    }
+                }
+            }
         }
     }
+    reg_maps->loop_depth = max_loop_depth;
 
     return WINED3D_OK;
 }
@@ -699,6 +758,7 @@ void shader_generate_main(
     CONST DWORD* pFunction) {
 
     IWineD3DBaseShaderImpl* This = (IWineD3DBaseShaderImpl*) iface;
+    IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) This->baseShader.device; /* To access shader backend callbacks */
     const DWORD *pToken = pFunction;
     const SHADER_OPCODE *curOpcode = NULL;
     SHADER_HANDLER hw_fct = NULL;
@@ -787,6 +847,9 @@ void shader_generate_main(
 
                 /* Call appropriate function for output target */
                 hw_fct(&hw_arg);
+
+                /* Add color correction if needed */
+                device->shader_backend->shader_color_correction(&hw_arg);
 
                 /* Process instruction modifiers for GLSL apps ( _sat, etc. ) */
                 if (This->baseShader.shader_mode == SHADER_GLSL)
@@ -929,6 +992,10 @@ void shader_trace_init(
                         TRACE("(");
                         shader_dump_param(iface, *(pToken + 2), 0, 1);
                         TRACE(") ");
+                    }
+                    if (opcode_token & WINED3DSI_COISSUE) {
+                        /* PixWin marks instructions with the coissue flag with a '+' */
+                        TRACE("+");
                     }
 
                     TRACE("%s", curOpcode->name);

@@ -108,30 +108,21 @@ CONST SHADER_OPCODE IWineD3DVertexShaderImpl_shader_ins[] = {
     {WINED3DSIO_DST,    "dst",  "DST", 1, 3, vshader_hw_map2gl,   shader_glsl_dst, 0, 0},
     {WINED3DSIO_LRP,    "lrp",  "LRP", 1, 4, NULL,                shader_glsl_lrp, 0, 0},
     {WINED3DSIO_FRC,    "frc",  "FRC", 1, 2, vshader_hw_map2gl,   shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_POW,    "pow",  "POW", 1, 3, NULL,                shader_glsl_pow, 0, 0},
-    {WINED3DSIO_CRS,    "crs",  "XPS", 1, 3, NULL,                shader_glsl_cross, 0, 0},
+    {WINED3DSIO_POW,    "pow",  "POW", 1, 3, vshader_hw_map2gl,   shader_glsl_pow, 0, 0},
+    {WINED3DSIO_CRS,    "crs",  "XPD", 1, 3, vshader_hw_map2gl,   shader_glsl_cross, 0, 0},
     /* TODO: sng can possibly be performed a  s
         RCP tmp, vec
         MUL out, tmp, vec*/
     {WINED3DSIO_SGN,  "sgn",  NULL,  1, 2, NULL,                shader_glsl_map2gl, 0, 0},
-    /* TODO: xyz normalise can be performed as VS_ARB using one temporary register,
-        DP3 tmp , vec, vec;
-        RSQ tmp, tmp.x;
-        MUL vec.xyz, vec, tmp;
-    but I think this is better because it accounts for w properly.
-        DP3 tmp , vec, vec;
-        RSQ tmp, tmp.x;
-        MUL vec, vec, tmp;
-    */
-    {WINED3DSIO_NRM,    "nrm",      NULL, 1, 2, NULL, shader_glsl_map2gl, 0, 0},
-    {WINED3DSIO_SINCOS, "sincos",   NULL, 1, 4, NULL, shader_glsl_sincos, WINED3DVS_VERSION(2,0), WINED3DVS_VERSION(2,1)},
-    {WINED3DSIO_SINCOS, "sincos",   NULL, 1, 2, NULL, shader_glsl_sincos, WINED3DVS_VERSION(3,0), -1},
+    {WINED3DSIO_NRM,    "nrm",      NULL, 1, 2, shader_hw_nrm, shader_glsl_map2gl, 0, 0},
+    {WINED3DSIO_SINCOS, "sincos",   NULL, 1, 4, shader_hw_sincos, shader_glsl_sincos, WINED3DVS_VERSION(2,0), WINED3DVS_VERSION(2,1)},
+    {WINED3DSIO_SINCOS, "sincos",  "SCS", 1, 2, shader_hw_sincos, shader_glsl_sincos, WINED3DVS_VERSION(3,0), -1},
     /* Matrix */
-    {WINED3DSIO_M4x4,   "m4x4", "undefined", 1, 3, vshader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M4x3,   "m4x3", "undefined", 1, 3, vshader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x4,   "m3x4", "undefined", 1, 3, vshader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x3,   "m3x3", "undefined", 1, 3, vshader_hw_mnxn, shader_glsl_mnxn, 0, 0},
-    {WINED3DSIO_M3x2,   "m3x2", "undefined", 1, 3, vshader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M4x4,   "m4x4", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M4x3,   "m4x3", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M3x4,   "m3x4", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M3x3,   "m3x3", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
+    {WINED3DSIO_M3x2,   "m3x2", "undefined", 1, 3, shader_hw_mnxn, shader_glsl_mnxn, 0, 0},
     /* Declare registers */
     {WINED3DSIO_DCL,    "dcl",      NULL,                0, 2, NULL, NULL, 0, 0},
     /* Constant definitions */
@@ -333,26 +324,34 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
         shader_generate_main( (IWineD3DBaseShader*) This, &buffer, reg_maps, pFunction);
 
         /* Unpack 3.0 outputs */
-        if (This->baseShader.hex_version >= WINED3DVS_VERSION(3,0))
-            vshader_glsl_output_unpack(&buffer, This->semantics_out);
+        if (This->baseShader.hex_version >= WINED3DVS_VERSION(3,0)) {
+            shader_addline(&buffer, "order_ps_input(OUT);\n");
+        } else {
+            shader_addline(&buffer, "order_ps_input();\n");
+        }
 
         /* If this shader doesn't use fog copy the z coord to the fog coord so that we can use table fog */
         if (!reg_maps->fog)
             shader_addline(&buffer, "gl_FogFragCoord = gl_Position.z;\n");
-        
+
         /* Write the final position.
          *
          * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in z and w in the 2nd row of the projection
-         * matrix to avoid wasting a free shader constant. Add them to the w and z coord
-         * of the 2nd row
+         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
+         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
+         * contains 1.0 to allow a mad.
          */
-        shader_addline(&buffer, "gl_Position.x = gl_Position.x + posFixup[2];\n");
-        shader_addline(&buffer, "gl_Position.y = gl_Position.y + posFixup[3];\n");
-        /* Account for any inverted textures (render to texture case) by reversing the y coordinate
-         *  (this is handled in drawPrim() when it sets the MODELVIEW and PROJECTION matrices)
+        shader_addline(&buffer, "gl_Position.xy = gl_Position.xy * posFixup.xy + posFixup.zw;\n");
+
+        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
+         *
+         * Basically we want(in homogenous coordinates) z = z * 2 - 1. However, shaders are run
+         * before the homogenous divide, so we have to take the w into account: z = ((z / w) * 2 - 1) * w,
+         * which is the same as z = z / 2 - w.
          */
-        shader_addline(&buffer, "gl_Position.y = gl_Position.y * posFixup[1];\n");
+        shader_addline(&buffer, "tmp0 = gl_Position;\n");
+        shader_addline(&buffer, "gl_Position.z = tmp0.z * 2.0;\n");
+        shader_addline(&buffer, "gl_Position.z = gl_Position.z - gl_Position.w;\n");
 
         shader_addline(&buffer, "}\n");
 
@@ -368,11 +367,17 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
 
         /*  Create the hw ARB shader */
         shader_addline(&buffer, "!!ARBvp1.0\n");
+        shader_addline(&buffer, "PARAM helper_const = { 2.0, -1.0, %d.0, 0.0 };\n", This->rel_offset);
 
         /* Mesa supports only 95 constants */
         if (GL_VEND(MESA) || GL_VEND(WINE))
             This->baseShader.limits.constant_float = 
                 min(95, This->baseShader.limits.constant_float);
+
+        /* Some instructions need a temporary register. Add it if needed, but only if it is really needed */
+        if(reg_maps->usesnrm || This->rel_offset) {
+            shader_addline(&buffer, "TEMP TMP;\n");
+        }
 
         /* Base Declarations */
         shader_generate_arb_declarations( (IWineD3DBaseShader*) This, reg_maps, &buffer, &GLINFO_LOCATION);
@@ -390,15 +395,17 @@ static VOID IWineD3DVertexShaderImpl_GenerateShader(
         /* Write the final position.
          *
          * OpenGL coordinates specify the center of the pixel while d3d coords specify
-         * the corner. The offsets are stored in the 2nd row of the projection matrix,
-         * the x offset in z and the y offset in w. Add them to the resulting position
+         * the corner. The offsets are stored in z and w in posFixup. posFixup.y contains
+         * 1.0 or -1.0 to turn the rendering upside down for offscreen rendering. PosFixup.x
+         * contains 1.0 to allow a mad, but arb vs swizzles are too restricted for that.
          */
-        shader_addline(&buffer, "ADD TMP_OUT.x, TMP_OUT.x, posFixup.z;\n");
-        shader_addline(&buffer, "ADD TMP_OUT.y, TMP_OUT.y, posFixup.w;\n");
-        /* Account for any inverted textures (render to texture case) by reversing the y coordinate
-         *  (this is handled in drawPrim() when it sets the MODELVIEW and PROJECTION matrices)
+        shader_addline(&buffer, "ADD TMP_OUT.x, TMP_OUT.x, posFixup.z;");
+        shader_addline(&buffer, "MAD TMP_OUT.y, TMP_OUT.y, posFixup.y, posFixup.w;");
+
+        /* Z coord [0;1]->[-1;1] mapping, see comment in transform_projection in state.c
+         * and the glsl equivalent
          */
-        shader_addline(&buffer, "MUL TMP_OUT.y, TMP_OUT.y, posFixup.y;\n");
+        shader_addline(&buffer, "MAD TMP_OUT.z, TMP_OUT.z, helper_const.x, -TMP_OUT.w;\n");
 
         shader_addline(&buffer, "MOV result.position, TMP_OUT;\n");
         
@@ -460,11 +467,6 @@ static ULONG WINAPI IWineD3DVertexShaderImpl_Release(IWineD3DVertexShader *iface
     TRACE("(%p) : Releasing from %d\n", This, This->ref);
     ref = InterlockedDecrement(&This->ref);
     if (ref == 0) {
-        if(iface == ((IWineD3DDeviceImpl *) This->baseShader.device)->stateBlock->vertexShader) {
-            /* See comment in PixelShader::Release */
-            IWineD3DDeviceImpl_MarkStateDirty((IWineD3DDeviceImpl *) This->baseShader.device, STATE_VSHADER);
-        }
-
         if (This->baseShader.shader_mode == SHADER_GLSL && This->baseShader.prgId != 0) {
             struct list *linked_programs = &This->baseShader.linked_programs;
 
@@ -560,12 +562,31 @@ static HRESULT WINAPI IWineD3DVertexShaderImpl_SetFunction(IWineD3DVertexShader 
     list_init(&This->baseShader.constantsI);
 
     /* Second pass: figure out registers used, semantics, etc.. */
+    This->min_rel_offset = GL_LIMITS(vshader_constantsF);
+    This->max_rel_offset = 0;
     memset(reg_maps, 0, sizeof(shader_reg_maps));
     hr = shader_get_registers_used((IWineD3DBaseShader*) This, reg_maps,
        This->semantics_in, This->semantics_out, pFunction, NULL);
     if (hr != WINED3D_OK) return hr;
 
     This->baseShader.shader_mode = deviceImpl->vs_selected_mode;
+
+    if(deviceImpl->vs_selected_mode == SHADER_ARB &&
+       (GLINFO_LOCATION).arb_vs_offset_limit      &&
+       This->min_rel_offset <= This->max_rel_offset) {
+
+        if(This->max_rel_offset - This->min_rel_offset > 127) {
+            FIXME("The difference between the minimum and maximum relative offset is > 127\n");
+            FIXME("Which this OpenGL implementation does not support. Try using GLSL\n");
+            FIXME("Min: %d, Max: %d\n", This->min_rel_offset, This->max_rel_offset);
+        } else if(This->max_rel_offset - This->min_rel_offset > 63) {
+            This->rel_offset = This->min_rel_offset + 63;
+        } else if(This->max_rel_offset > 63) {
+            This->rel_offset = This->min_rel_offset;
+        } else {
+            This->rel_offset = 0;
+        }
+    }
 
     /* copy the function ... because it will certainly be released by application */
     if (NULL != pFunction) {

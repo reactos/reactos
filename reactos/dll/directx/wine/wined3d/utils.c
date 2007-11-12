@@ -27,8 +27,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3d);
 
-#define GLINFO_LOCATION This->adapter->gl_info
-
 /*****************************************************************************
  * Pixel format array
  */
@@ -150,14 +148,14 @@ static const GlPixelFormatDescTemplate gl_formats_template[] = {
     {WINED3DFMT_A8R8G8B8       ,GL_RGBA8                         ,GL_SRGB8_ALPHA8_EXT                    ,GL_BGRA                   ,GL_UNSIGNED_INT_8_8_8_8_REV    },
     {WINED3DFMT_X8R8G8B8       ,GL_RGB8                          ,GL_SRGB8_EXT                           ,GL_BGRA                   ,GL_UNSIGNED_INT_8_8_8_8_REV    },
     {WINED3DFMT_R5G6B5         ,GL_RGB5                          ,GL_RGB5                                ,GL_RGB                    ,GL_UNSIGNED_SHORT_5_6_5        },
-    {WINED3DFMT_X1R5G5B5       ,GL_RGB5_A1                       ,GL_RGB5_A1                             ,GL_BGRA                   ,GL_UNSIGNED_SHORT_1_5_5_5_REV  },
+    {WINED3DFMT_X1R5G5B5       ,GL_RGB5                          ,GL_RGB5_A1                             ,GL_BGRA                   ,GL_UNSIGNED_SHORT_1_5_5_5_REV  },
     {WINED3DFMT_A1R5G5B5       ,GL_RGB5_A1                       ,GL_RGB5_A1                             ,GL_BGRA                   ,GL_UNSIGNED_SHORT_1_5_5_5_REV  },
     {WINED3DFMT_A4R4G4B4       ,GL_RGBA4                         ,GL_SRGB8_ALPHA8_EXT                    ,GL_BGRA                   ,GL_UNSIGNED_SHORT_4_4_4_4_REV  },
     {WINED3DFMT_R3G3B2         ,GL_R3_G3_B2                      ,GL_R3_G3_B2                            ,GL_RGB                    ,GL_UNSIGNED_BYTE_3_3_2         },
     {WINED3DFMT_A8             ,GL_ALPHA8                        ,GL_ALPHA8                              ,GL_ALPHA                  ,GL_UNSIGNED_BYTE               },
     {WINED3DFMT_A8R3G3B2       ,0                                ,0                                      ,0                         ,0                              },
     {WINED3DFMT_X4R4G4B4       ,GL_RGB4                          ,GL_RGB4                                ,GL_BGRA                   ,GL_UNSIGNED_SHORT_4_4_4_4_REV  },
-    {WINED3DFMT_A2B10G10R10    ,GL_RGB                           ,GL_RGB                                 ,GL_RGBA                   ,GL_UNSIGNED_INT_2_10_10_10_REV },
+    {WINED3DFMT_A2B10G10R10    ,GL_RGBA                          ,GL_RGBA                                ,GL_RGBA                   ,GL_UNSIGNED_INT_2_10_10_10_REV },
     {WINED3DFMT_A8B8G8R8       ,GL_RGBA8                         ,GL_RGBA8                               ,GL_RGBA                   ,GL_UNSIGNED_INT_8_8_8_8_REV    },
     {WINED3DFMT_X8B8G8R8       ,GL_RGB8                          ,GL_RGB8                                ,GL_RGBA                   ,GL_UNSIGNED_INT_8_8_8_8_REV    },
     {WINED3DFMT_G16R16         ,0                                ,0                                      ,0                         ,0                              },
@@ -169,8 +167,8 @@ static const GlPixelFormatDescTemplate gl_formats_template[] = {
     {WINED3DFMT_A4L4           ,GL_LUMINANCE4_ALPHA4             ,GL_LUMINANCE4_ALPHA4                   ,GL_LUMINANCE_ALPHA        ,GL_UNSIGNED_BYTE               },
     /* Bump mapping stuff */
     {WINED3DFMT_V8U8           ,GL_DSDT8_NV                      ,GL_DSDT8_NV                            ,GL_DSDT_NV                ,GL_BYTE                        },
-    {WINED3DFMT_L6V5U5         ,GL_COLOR_INDEX8_EXT              ,GL_COLOR_INDEX8_EXT                    ,GL_COLOR_INDEX            ,GL_UNSIGNED_SHORT_5_5_5_1      },
-    {WINED3DFMT_X8L8V8U8       ,GL_DSDT8_MAG8_INTENSITY8_NV      ,GL_DSDT8_MAG8_INTENSITY8_NV            ,GL_DSDT_MAG_INTENSITY_NV  ,GL_BYTE                        },
+    {WINED3DFMT_L6V5U5         ,GL_DSDT8_MAG8_NV                 ,GL_DSDT8_MAG8_NV                       ,GL_DSDT_MAG_NV            ,GL_BYTE                        },
+    {WINED3DFMT_X8L8V8U8       ,GL_DSDT8_MAG8_INTENSITY8_NV      ,GL_DSDT8_MAG8_INTENSITY8_NV            ,GL_DSDT_MAG_VIB_NV       ,GL_UNSIGNED_INT_8_8_S8_S8_REV_NV},
     {WINED3DFMT_Q8W8V8U8       ,GL_SIGNED_RGBA8_NV               ,GL_SIGNED_RGBA8_NV                     ,GL_RGBA                   ,GL_BYTE                        },
     {WINED3DFMT_V16U16         ,GL_SIGNED_HILO16_NV              ,GL_SIGNED_HILO16_NV                    ,GL_HILO_NV                ,GL_SHORT                       },
     {WINED3DFMT_W11V11U10      ,0                                ,0                                      ,0                         ,0                              },
@@ -210,9 +208,11 @@ static inline int getFmtIdx(WINED3DFORMAT fmt) {
     return -1;
 }
 
+#define GLINFO_LOCATION (*gl_info)
 BOOL initPixelFormats(WineD3D_GL_Info *gl_info)
 {
     unsigned int src;
+    int dst;
 
     gl_info->gl_formats = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
                                     sizeof(formats) / sizeof(formats[0]) * sizeof(gl_info->gl_formats[0]));
@@ -222,15 +222,66 @@ BOOL initPixelFormats(WineD3D_GL_Info *gl_info)
      * after this loop
      */
     for(src = 0; src < sizeof(gl_formats_template) / sizeof(gl_formats_template[0]); src++) {
-        int dst = getFmtIdx(gl_formats_template[src].fmt);
+        dst = getFmtIdx(gl_formats_template[src].fmt);
         gl_info->gl_formats[dst].glInternal      = gl_formats_template[src].glInternal;
         gl_info->gl_formats[dst].glGammaInternal = gl_formats_template[src].glGammaInternal;
         gl_info->gl_formats[dst].glFormat        = gl_formats_template[src].glFormat;
         gl_info->gl_formats[dst].glType          = gl_formats_template[src].glType;
+        gl_info->gl_formats[dst].conversion_group= WINED3DFMT_UNKNOWN;
+    }
+
+    /* V8U8 is supported natively by GL_ATI_envmap_bumpmap and GL_NV_texture_shader.
+     * V16U16 is only supported by GL_NV_texture_shader. The formats need fixup if
+     * their extensions are not available.
+     *
+     * In theory, V8U8 and V16U16 need a fixup of the undefined blue channel. OpenGL
+     * returns 0.0 when sampling from it, DirectX 1.0. This is disabled until we find
+     * an application that needs this because it causes performance problems due to
+     * shader recompiling in some games.
+     */
+    if(!GL_SUPPORT(ATI_ENVMAP_BUMPMAP) && !GL_SUPPORT(NV_TEXTURE_SHADER2)) {
+        /* signed -> unsigned fixup */
+        dst = getFmtIdx(WINED3DFMT_V8U8);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
+        dst = getFmtIdx(WINED3DFMT_V16U16);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
+    } else if(GL_SUPPORT(ATI_ENVMAP_BUMPMAP)) {
+        /* signed -> unsigned fixup */
+        dst = getFmtIdx(WINED3DFMT_V16U16);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V16U16;
+    } else {
+        /* Blue = 1.0 fixup, disabled for now */
+#if 0
+        dst = getFmtIdx(WINED3DFMT_V8U8);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
+        dst = getFmtIdx(WINED3DFMT_V16U16);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_V8U8;
+#endif
+    }
+
+    if(!GL_SUPPORT(NV_TEXTURE_SHADER)) {
+        /* If GL_NV_texture_shader is not supported, those formats are converted, incompatibly
+         * with each other
+         */
+        dst = getFmtIdx(WINED3DFMT_L6V5U5);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_L6V5U5;
+        dst = getFmtIdx(WINED3DFMT_X8L8V8U8);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_X8L8V8U8;
+        dst = getFmtIdx(WINED3DFMT_Q8W8V8U8);
+        gl_info->gl_formats[dst].conversion_group = WINED3DFMT_Q8W8V8U8;
+    } else {
+        /* If GL_NV_texture_shader is supported, WINED3DFMT_L6V5U5 and WINED3DFMT_X8L8V8U8
+         * are converted at surface loading time, but they do not need any modification in
+         * the shader, thus they are compatible with all WINED3DFMT_UNKNOWN group formats.
+         * WINED3DFMT_Q8W8V8U8 doesn't even need load-time conversion
+         */
     }
 
     return TRUE;
 }
+#undef GLINFO_LOCATION
+
+#define GLINFO_LOCATION This->adapter->gl_info
 
 const StaticPixelFormatDesc *getFormatDescEntry(WINED3DFORMAT fmt, WineD3D_GL_Info *gl_info, const GlPixelFormatDesc **glDesc)
 {
@@ -2418,14 +2469,14 @@ void set_tex_op(IWineD3DDevice *iface, BOOL isAlpha, int Stage, WINED3DTEXTUREOP
 #endif
 
 /* Setup this textures matrix according to the texture flags*/
-void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords)
+void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords, BOOL transformed, DWORD coordtype)
 {
     float mat[16];
 
     glMatrixMode(GL_TEXTURE);
     checkGLcall("glMatrixMode(GL_TEXTURE)");
 
-    if (flags == WINED3DTTFF_DISABLE) {
+    if (flags == WINED3DTTFF_DISABLE || flags == WINED3DTTFF_COUNT1 || transformed) {
         glLoadIdentity();
         checkGLcall("glLoadIdentity()");
         return;
@@ -2438,12 +2489,6 @@ void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords)
 
     memcpy(mat, smat, 16 * sizeof(float));
 
-    switch (flags & ~WINED3DTTFF_PROJECTED) {
-    case WINED3DTTFF_COUNT1: mat[1] = mat[5] = mat[13] = 0;
-    case WINED3DTTFF_COUNT2: mat[2] = mat[6] = mat[10] = mat[14] = 0;
-    default: mat[3] = mat[7] = mat[11] = 0, mat[15] = 1;
-    }
-
     if (flags & WINED3DTTFF_PROJECTED) {
         switch (flags & ~WINED3DTTFF_PROJECTED) {
         case WINED3DTTFF_COUNT2:
@@ -2455,9 +2500,58 @@ void set_texture_matrix(const float *smat, DWORD flags, BOOL calculatedCoords)
             mat[2] = mat[6] = mat[10] = mat[14] = 0;
             break;
         }
-    } else if(!calculatedCoords) { /* under directx the R/Z coord can be used for translation, under opengl we use the Q coord instead */
-        mat[12] = mat[8];
-        mat[13] = mat[9];
+    } else { /* under directx the R/Z coord can be used for translation, under opengl we use the Q coord instead */
+        if(!calculatedCoords) {
+            switch(coordtype) {
+                case WINED3DDECLTYPE_FLOAT1:
+                    /* Direct3D passes the default 1.0 in the 2nd coord, while gl passes it in the 4th.
+                     * swap 2nd and 4th coord. No need to store the value of mat[12] in mat[4] because
+                     * the input value to the transformation will be 0, so the matrix value is irrelevant
+                     */
+                    mat[12] = mat[4];
+                    mat[13] = mat[5];
+                    mat[14] = mat[6];
+                    mat[15] = mat[7];
+                    break;
+                case WINED3DDECLTYPE_FLOAT2:
+                    /* See above, just 3rd and 4th coord
+                    */
+                    mat[12] = mat[8];
+                    mat[13] = mat[9];
+                    mat[14] = mat[10];
+                    mat[15] = mat[11];
+                    break;
+                case WINED3DDECLTYPE_FLOAT3: /* Opengl defaults match dx defaults */
+                case WINED3DDECLTYPE_FLOAT4: /* No defaults apply, all app defined */
+
+                /* This is to prevent swaping the matrix lines and put the default 4th coord = 1.0
+                 * into a bad place. The division elimination below will apply to make sure the
+                 * 1.0 doesn't do anything bad. The caller will set this value if the stride is 0
+                 */
+                case WINED3DDECLTYPE_UNUSED: /* No texture coords, 0/0/0/1 defaults are passed */
+                    break;
+                default:
+                    FIXME("Unexpected fixed function texture coord input\n");
+            }
+        }
+        switch (flags & ~WINED3DTTFF_PROJECTED) {
+            /* case WINED3DTTFF_COUNT1: Won't ever get here */
+            case WINED3DTTFF_COUNT2: mat[2] = mat[6] = mat[10] = mat[14] = 0;
+            /* OpenGL divides the first 3 vertex coord by the 4th by default,
+             * which is essentially the same as D3DTTFF_PROJECTED. Make sure that
+             * the 4th coord evaluates to 1.0 to eliminate that.
+             *
+             * If the fixed function pipeline is used, the 4th value remains unused,
+             * so there is no danger in doing this. With vertex shaders we have a
+             * problem. Should an app hit that problem, the code here would have to
+             * check for pixel shaders, and the shader has to undo the default gl divide.
+             *
+             * A more serious problem occurs if the app passes 4 coordinates in, and the
+             * 4th is != 1.0(opengl default). This would have to be fixed in drawStridedSlow
+             * or a replacement shader
+             */
+            default: mat[3] = mat[7] = mat[11] = 0; mat[15] = 1;
+        }
     }
 
     glLoadMatrixf(mat);
@@ -2493,6 +2587,8 @@ BOOL getColorBits(WINED3DFORMAT fmt, short *redSize, short *greenSize, short *bl
         case WINED3DFMT_X1R5G5B5:
         case WINED3DFMT_A1R5G5B5:
         case WINED3DFMT_R5G6B5:
+        case WINED3DFMT_X4R4G4B4:
+        case WINED3DFMT_A4R4G4B4:
         case WINED3DFMT_R3G3B2:
         case WINED3DFMT_A8P8:
         case WINED3DFMT_P8:
