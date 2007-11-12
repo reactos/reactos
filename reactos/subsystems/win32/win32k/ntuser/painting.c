@@ -1821,7 +1821,7 @@ BOOL UserDrawCaption(
             ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
          else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
 
-         if(pWnd->Style & WS_SYSMENU)
+         if ((pWnd != NULL) && (pWnd->Style & WS_SYSMENU))
          {
             r.right -= 3 + ButtonWidth;
             if(! (uFlags & DC_SMALLCAP))
