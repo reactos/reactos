@@ -93,6 +93,7 @@ DECLARE_INTERFACE_(IWindowEventHandler,IUnknown)
 #define IWindowEventHandler_AddRef(T) (T)->lpVtbl->AddRef(T)
 #define IWindowEventHandler_Release(T) (T)->lpVtbl->Release(T)
 #define IWindowEventHandler_ProcessMessage(T,a,b,c,d,e) (T)->lpVtbl->ProcessMessage(T,a,b,c,d,e)
+#define IWindowEventHandler_ContainsWindow(T,a) (T)->lpVtbl->ContainsWindow(T,a)
 #endif
 
 #if USE_API_SHCREATEDESKTOP != 0
