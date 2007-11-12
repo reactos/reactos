@@ -209,7 +209,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
         break;
       }
     }
-    resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
+    resource = NEXT_RESOURCE(resource);
   }
 
   /* Allocate memory */
@@ -350,7 +350,7 @@ AcpiCreateResourceList(PCM_RESOURCE_LIST* pResourceList,
         break;
       }
     }
-    resource = (RESOURCE *) ((NATIVE_UINT) resource + (NATIVE_UINT) resource->length);
+    resource = NEXT_RESOURCE(resource);
   }
 
   acpi_rs_dump_resource_list(resource);

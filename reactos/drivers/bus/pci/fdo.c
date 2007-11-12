@@ -368,16 +368,6 @@ FdoStartDevice(
   DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
   AllocatedResources = IoGetCurrentIrpStackLocation(Irp)->Parameters.StartDevice.AllocatedResources;
-  /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
-  if (!FoundBuggyAllocatedResourcesList &&
-      (!AllocatedResources || AllocatedResources->Count == 0))
-  {
-    FoundBuggyAllocatedResourcesList = TRUE;
-    DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
-    DeviceExtension->BusNumber = 0;
-    goto next;
-  }
-  /* END HACK */
   if (!AllocatedResources)
   {
     DPRINT("No allocated resources sent to driver\n");
@@ -412,6 +402,15 @@ FdoStartDevice(
         DPRINT1("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
     }
   }
+  /* HACK due to a bug in ACPI driver, which doesn't report the bus number */
+  if (!FoundBuggyAllocatedResourcesList && !FoundBusNumber)
+  {
+    FoundBuggyAllocatedResourcesList = TRUE;
+    DPRINT1("No bus number resource found (bug in acpi.sys?), assuming bus number #0\n");
+    DeviceExtension->BusNumber = 0;
+    goto next;
+  }
+  /* END HACK */
   if (!FoundBusNumber)
   {
     DPRINT("Some required resources were not found in allocated resources list\n");
