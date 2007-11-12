@@ -505,9 +505,7 @@ typedef struct _DC
   DC_ATTR     Dc_Attr;
   HDC         hNext;
   HDC         hPrev;
-// Old tymerz! Cant code? So just Haxzorcise it! 
-// How many pointers to devices do we need?
-  PGDIINFO    GDIInfo;   // In GDIDEVICE
+
   UNICODE_STRING    DriverName;
 
   CLIPOBJ     *CombinedClip;

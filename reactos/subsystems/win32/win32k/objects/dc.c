@@ -210,7 +210,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->DC_Type = DC_Type;
 
   NewDC->PDev = OrigDC->PDev;
-  NewDC->GDIInfo = OrigDC->GDIInfo;
+
   NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
@@ -903,13 +903,13 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->DC_Type = DC_TYPE_DIRECT;
   NewDC->IsIC = CreateAsIC;
 
-  NewDC->GDIInfo = &PrimarySurface.GDIInfo;
   NewDC->PDev = PrimarySurface.PDev;
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev;
   NewDC->pPDev = (PVOID)&PrimarySurface;
   NewDC->w.hBitmap = PrimarySurface.Handle;
 
-  NewDC->w.bitsPerPixel = NewDC->GDIInfo->cBitsPixel * NewDC->GDIInfo->cPlanes;
+  NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel * 
+                                     ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
   if (! CreateAsIC)
@@ -920,8 +920,8 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
     DC_UnlockDc( NewDC );
 
-    hVisRgn = NtGdiCreateRectRgn(0, 0, NewDC->GDIInfo->ulHorzRes,
-                                 NewDC->GDIInfo->ulVertRes);
+    hVisRgn = NtGdiCreateRectRgn(0, 0, ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes,
+                                 ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes);
     IntGdiSelectVisRgn(hNewDC, hVisRgn);
     NtGdiDeleteObject(hVisRgn);
 
@@ -1536,43 +1536,43 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
   switch (Index)
   {
     case DRIVERVERSION:
-      ret = dc->GDIInfo->ulVersion;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVersion;
       break;
 
     case TECHNOLOGY:
-      ret = dc->GDIInfo->ulTechnology;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulTechnology;
       break;
 
     case HORZSIZE:
-      ret = dc->GDIInfo->ulHorzSize;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize;
       break;
 
     case VERTSIZE:
-      ret = dc->GDIInfo->ulVertSize;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize;
       break;
 
     case HORZRES:
-      ret = dc->GDIInfo->ulHorzRes;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
       break;
 
     case VERTRES:
-      ret = dc->GDIInfo->ulVertRes;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
       break;
 
     case LOGPIXELSX:
-      ret = dc->GDIInfo->ulLogPixelsX;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulLogPixelsX;
       break;
 
     case LOGPIXELSY:
-      ret = dc->GDIInfo->ulLogPixelsY;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulLogPixelsY;
       break;
 
     case BITSPIXEL:
-      ret = dc->GDIInfo->cBitsPixel;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.cBitsPixel;
       break;
 
     case PLANES:
-      ret = dc->GDIInfo->cPlanes;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.cPlanes;
       break;
 
     case NUMBRUSHES:
@@ -1588,19 +1588,19 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case NUMCOLORS:
-      ret = dc->GDIInfo->ulNumColors;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulNumColors;
       break;
 
     case ASPECTX:
-      ret = dc->GDIInfo->ulAspectX;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectX;
       break;
 
     case ASPECTY:
-      ret = dc->GDIInfo->ulAspectY;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectY;
       break;
 
     case ASPECTXY:
-      ret = dc->GDIInfo->ulAspectXY;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulAspectXY;
       break;
 
     case PDEVICESIZE:
@@ -1612,7 +1612,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case SIZEPALETTE:
-      ret = dc->GDIInfo->ulNumPalReg; /* FIXME not sure */
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulNumPalReg; /* FIXME not sure */
       break;
 
     case NUMRESERVED:
@@ -1694,7 +1694,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case RASTERCAPS:
-      ret = dc->GDIInfo->flRaster;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.flRaster;
       break;
 
     case CURVECAPS:
@@ -1710,7 +1710,7 @@ IntGdiGetDeviceCaps(PDC dc, INT Index)
       break;
 
     case TEXTCAPS:
-      ret = dc->GDIInfo->flTextCaps;
+      ret = ((PGDIDEVICE)dc->pPDev)->GDIInfo.flTextCaps;
       break;
 
     default:

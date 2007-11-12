@@ -36,16 +36,25 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
 typedef struct
 {
   HANDLE Handle;
+  PVOID  pvEntry;
+  ULONG  lucExcLock;
+  ULONG  Tid;
+
+  PERESOURCE_XP hsemDevLock;
+
+  PVOID  pfnSync;
+
   DHPDEV PDev;
   DEVMODEW DMW;
   HSURF FillPatterns[HS_DDI_MAX];
   DEVINFO DevInfo;
   GDIINFO GDIInfo;
 
-  PFILE_OBJECT VideoFileObject;
-  BOOLEAN PreparedDriver;
+  HANDLE hSpooler;
   ULONG DisplayNumber;
 
+  PFILE_OBJECT VideoFileObject;
+  BOOLEAN PreparedDriver;
   GDIPOINTER Pointer;
 
   /* Stuff to keep track of software cursors; win32k gdi part */
