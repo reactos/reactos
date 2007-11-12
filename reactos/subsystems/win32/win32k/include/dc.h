@@ -40,7 +40,7 @@ typedef struct
   ULONG  lucExcLock;
   ULONG  Tid;
 
-  PERESOURCE_XP hsemDevLock;
+  PERESOURCE hsemDevLock;
 
   PVOID  pfnSync;
 
@@ -86,6 +86,8 @@ BOOL INTERNAL_CALL DC_Cleanup(PVOID ObjectBody);
 HDC  FASTCALL DC_GetNextDC (PDC pDC);
 VOID FASTCALL DC_SetNextDC (PDC pDC, HDC hNextDC);
 VOID FASTCALL DC_SetOwnership(HDC DC, PEPROCESS Owner);
+VOID FASTCALL DC_LockDisplay(PERESOURCE);
+VOID FASTCALL DC_UnlockDisplay(PERESOURCE);
 VOID FASTCALL IntGdiCopyFromSaveState(PDC, PDC, HDC);
 VOID FASTCALL IntGdiCopyToSaveState(PDC, PDC);
 

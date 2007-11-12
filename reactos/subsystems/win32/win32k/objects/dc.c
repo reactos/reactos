@@ -633,6 +633,8 @@ IntPrepareDriver()
       PrimarySurface.PreparedDriver = TRUE;
       PrimarySurface.DisplayNumber = DisplayNumber;
 
+      PrimarySurface.hsemDevLock = (PERESOURCE)EngCreateSemaphore();
+
       ret = TRUE;
       goto cleanup;
    }
@@ -2649,6 +2651,27 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
         }
       DC_UnlockDc(DC);
     }
+}
+
+//
+// Support multi display/device locks.
+// Here, it is PrimarySurface.hsemDevLock
+// or ((PGDIDEVICE)PDC->pPDev)->hsemDevLock
+//
+VOID
+FASTCALL
+DC_LockDisplay(PERESOURCE Resource)
+{
+  KeEnterCriticalRegion();
+  ExAcquireResourceExclusiveLite( Resource , TRUE);  
+}
+
+VOID
+FASTCALL
+DC_UnlockDisplay(PERESOURCE Resource)
+{
+  ExReleaseResourceLite( Resource );
+  KeLeaveCriticalRegion();
 }
 
 BOOL FASTCALL
