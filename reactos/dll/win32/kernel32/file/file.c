@@ -876,7 +876,7 @@ GetFileAttributesExW(LPCWSTR lpFileName,
 				     NULL,
 				     NULL))
     {
-      DPRINT1 ("Invalid path\n");
+      DPRINT1 ("Invalid path '%S'\n", lpFileName);
       SetLastError (ERROR_BAD_PATHNAME);
       return FALSE;
     }
