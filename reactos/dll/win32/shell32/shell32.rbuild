@@ -62,6 +62,7 @@
 	<file>shpolicy.c</file>
 	<file>shv_bg_cmenu.c</file>
 	<file>shv_item_cmenu.c</file>
+	<file>startmenu.c</file>
 	<file>ros-systray.c</file>
 	<file>shell32.rc</file>
 	<file>shell32.spec</file>
