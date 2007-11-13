@@ -155,27 +155,27 @@ OPENGL32_ProcessDetach()
 	{
 		dcdata2 = dcdata;
 		dcdata = dcdata->next;
-		if (!HeapFree( GetProcessHeap(), 0, dcdata ))
+		if (!HeapFree( GetProcessHeap(), 0, dcdata2 ))
 			DBGPRINT( "Warning: HeapFree() on DCDATA 0x%08x failed (%d)",
-			          dcdata, GetLastError() );
+			          dcdata2, GetLastError() );
 	}
 
 	for (glrc = OPENGL32_processdata.glrc_list; glrc != NULL;)
 	{
 		glrc2 = glrc;
 		glrc = glrc->next;
-		if (!HeapFree( GetProcessHeap(), 0, glrc ))
+		if (!HeapFree( GetProcessHeap(), 0, glrc2 ))
 			DBGPRINT( "Warning: HeapFree() on GLRC 0x%08x failed (%d)",
-			          glrc, GetLastError() );
+			          glrc2, GetLastError() );
 	}
 
 	for (icd = OPENGL32_processdata.driver_list; icd != NULL;)
 	{
 		icd2 = icd;
 		icd = icd->next;
-		if (!HeapFree( GetProcessHeap(), 0, icd ))
+		if (!HeapFree( GetProcessHeap(), 0, icd2 ))
 			DBGPRINT( "Warning: HeapFree() on DRIVERDATA 0x%08x failed (%d)",
-			          icd, GetLastError() );
+			          icd2, GetLastError() );
 	}
 
 	/* free mutexes */
