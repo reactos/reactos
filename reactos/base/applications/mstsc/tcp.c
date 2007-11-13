@@ -67,7 +67,7 @@ tcp_send(STREAM s)
 
 	while (total < length)
 	{
-		sent = send(sock, s->data + total, length - total, 0);
+		sent = send(sock, (char *)s->data + total, length - total, 0);
 		if (sent <= 0)
 		{
 			if (sent == -1 && TCP_BLOCKS)
@@ -124,7 +124,7 @@ tcp_recv(STREAM s, uint32 length)
 			/* User quit */
 			return NULL;
 
-		rcvd = recv(sock, s->end, length, 0);
+		rcvd = recv(sock, (char *)s->end, length, 0);
 		if (rcvd < 0)
 		{
 			if (rcvd == -1 && TCP_BLOCKS)

@@ -38,7 +38,7 @@ static int g_clip_right1 = 800;
 static int g_clip_bottom1 = 600;
 
 /* for bs_patblt */
-static unsigned char g_hatch_patterns[] =
+static char g_hatch_patterns[] =
 {
   0x00, 0x00, 0x00, 0xff, 0x00, 0x00, 0x00, 0x00,  /* 0 - bsHorizontal */
   0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,  /* 1 - bsVertical */

@@ -174,8 +174,8 @@ licence_process_demand(STREAM s)
 
 		/* Now encrypt the HWID */
 		crypt_key = ssl_rc4_info_create();
-		ssl_rc4_set_key(crypt_key, g_licence_key, 16);
-		ssl_rc4_crypt(crypt_key, hwid, hwid, sizeof(hwid));
+		ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+		ssl_rc4_crypt(crypt_key, (char *)hwid, (char *)hwid, sizeof(hwid));
 		ssl_rc4_info_delete(crypt_key);
 
 		licence_present(null_data, null_data, licence_data, licence_size, hwid, signature);
@@ -239,7 +239,7 @@ licence_parse_authreq(STREAM s, uint8 ** token, uint8 ** signature)
 static void
 licence_process_authreq(STREAM s)
 {
-	uint8 *in_token, *in_sig;
+	uint8 *in_token = NULL, *in_sig;
 	uint8 out_token[LICENCE_TOKEN_SIZE], decrypt_token[LICENCE_TOKEN_SIZE];
 	uint8 hwid[LICENCE_HWID_SIZE], crypt_hwid[LICENCE_HWID_SIZE];
 	uint8 sealed_buffer[LICENCE_TOKEN_SIZE + LICENCE_HWID_SIZE];
@@ -252,8 +252,8 @@ licence_process_authreq(STREAM s)
 
 	/* Decrypt the token. It should read TEST in Unicode. */
 	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, in_token, decrypt_token, LICENCE_TOKEN_SIZE);
+	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	ssl_rc4_crypt(crypt_key, (char *)in_token, (char *)decrypt_token, LICENCE_TOKEN_SIZE);
 	ssl_rc4_info_delete(crypt_key);
 	
 	/* Generate a signature for a buffer of token and HWID */
@@ -264,8 +264,8 @@ licence_process_authreq(STREAM s)
 
 	/* Now encrypt the HWID */
 	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, hwid, crypt_hwid, LICENCE_HWID_SIZE);
+	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	ssl_rc4_crypt(crypt_key, (char *)hwid, (char *)crypt_hwid, LICENCE_HWID_SIZE);
 	ssl_rc4_info_delete(crypt_key);
 
 	licence_send_authresp(out_token, crypt_hwid, out_sig);
@@ -286,8 +286,8 @@ licence_process_issue(STREAM s)
 		return;
 
 	crypt_key = ssl_rc4_info_create();
-	ssl_rc4_set_key(crypt_key, g_licence_key, 16);
-	ssl_rc4_crypt(crypt_key, s->p, s->p, length);
+	ssl_rc4_set_key(crypt_key, (char *)g_licence_key, 16);
+	ssl_rc4_crypt(crypt_key, (char *)s->p, (char *)s->p, length);
 	ssl_rc4_info_delete(crypt_key);
 
 	in_uint16(s, check);

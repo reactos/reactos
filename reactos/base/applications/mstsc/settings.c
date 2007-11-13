@@ -14,7 +14,6 @@ VOID
 SaveAllSettings(PINFO pInfo)
 {
     INT ret;
-    WCHAR szKey[MAXKEY];
     WCHAR szValue[MAXVALUE];
 
     /* server */

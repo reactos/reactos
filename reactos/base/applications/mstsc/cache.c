@@ -25,7 +25,7 @@
 extern int g_pstcache_fd[];
 
 #define NUM_ELEMENTS(array) (sizeof(array) / sizeof(array[0]))
-#define IS_PERSISTENT(id) (g_pstcache_fd[id] > 0)
+//#define IS_PERSISTENT(id) (g_pstcache_fd[id] > 0)
 #define TO_TOP -1
 #define NOT_SET -1
 #define IS_SET(idx) (idx >= 0)

@@ -984,7 +984,7 @@ OnMainCreate(HWND hwnd,
                                    MAKEINTRESOURCEW(IDD_GENERAL),
                                    pInfo->hTab,
                                    (DLGPROC)GeneralDlgProc,
-                                   pInfo))
+                                   (LPARAM)pInfo))
             {
                 WCHAR str[256];
                 ZeroMemory(&item, sizeof(TCITEM));
@@ -999,7 +999,7 @@ OnMainCreate(HWND hwnd,
                                    MAKEINTRESOURCEW(IDD_DISPLAY),
                                    pInfo->hTab,
                                    (DLGPROC)DisplayDlgProc,
-                                   pInfo))
+                                   (LPARAM)pInfo))
             {
                 WCHAR str[256];
                 ZeroMemory(&item, sizeof(TCITEM));

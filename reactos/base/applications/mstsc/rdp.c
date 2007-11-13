@@ -120,7 +120,7 @@ rdp_recv(uint8 * type)
 static STREAM
 rdp_init_data(int maxlen)
 {
-	STREAM s;
+	STREAM s = NULL;
 
 	s = sec_init(g_encryption ? SEC_ENCRYPT : 0, maxlen + 18);
 	s_push_layer(s, rdp_hdr, 18);
@@ -285,17 +285,17 @@ static void
 rdp_send_logon_info(uint32 flags, char *domain, char *user,
 		    char *password, char *program, char *directory)
 {
-	char *ipaddr = tcp_get_address();
+	//char *ipaddr = tcp_get_address();
 	int len_domain = 2 * strlen(domain);
 	int len_user = 2 * strlen(user);
 	int len_password = 2 * strlen(password);
 	int len_program = 2 * strlen(program);
 	int len_directory = 2 * strlen(directory);
-	int len_ip = 2 * strlen(ipaddr);
-	int len_dll = 2 * strlen("C:\\WINNT\\System32\\mstscax.dll");
-	int packetlen = 0;
+	//int len_ip = 2 * strlen(ipaddr);
+	//int len_dll = 2 * strlen("C:\\WINNT\\System32\\mstscax.dll");
+	//int packetlen = 0;
 	uint32 sec_flags = g_encryption ? (SEC_LOGON_INFO | SEC_ENCRYPT) : SEC_LOGON_INFO;
-	STREAM s;
+	STREAM s = NULL;
 	//time_t t = time(NULL);
 	//time_t tzone;
 

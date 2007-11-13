@@ -125,17 +125,17 @@ sec_hash_48(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2, uint8 salt)
 		memset(pad, salt + i, i + 1);
 		sha = ssl_sha1_info_create();
 		ssl_sha1_clear(sha);
-		ssl_sha1_transform(sha, pad, i + 1);
-		ssl_sha1_transform(sha, in, 48);
-		ssl_sha1_transform(sha, salt1, 32);
-		ssl_sha1_transform(sha, salt2, 32);
-		ssl_sha1_complete(sha, shasig);
+		ssl_sha1_transform(sha, (char *)pad, i + 1);
+		ssl_sha1_transform(sha, (char *)in, 48);
+		ssl_sha1_transform(sha, (char *)salt1, 32);
+		ssl_sha1_transform(sha, (char *)salt2, 32);
+		ssl_sha1_complete(sha, (char *)shasig);
 		ssl_sha1_info_delete(sha);
 		md5 = ssl_md5_info_create();
 		ssl_md5_clear(md5);
-        ssl_md5_transform(md5, in, 48);
-        ssl_md5_transform(md5, shasig, 20);
-		ssl_md5_complete(md5, out + i * 16);
+        ssl_md5_transform(md5, (char *)in, 48);
+        ssl_md5_transform(md5, (char *)shasig, 20);
+		ssl_md5_complete(md5, (char *)out + i * 16);
 		ssl_md5_info_delete(md5);
 	}
 }
@@ -150,10 +150,10 @@ sec_hash_16(uint8 * out, uint8 * in, uint8 * salt1, uint8 * salt2)
 	
 	md5 = ssl_md5_info_create();
 	ssl_md5_clear(md5);
-	ssl_md5_transform(md5, in, 16);
-	ssl_md5_transform(md5, salt1, 32);
-	ssl_md5_transform(md5, salt2, 32);
-    ssl_md5_complete(md5, out);
+	ssl_md5_transform(md5, (char *)in, 16);
+	ssl_md5_transform(md5, (char *)salt1, 32);
+	ssl_md5_transform(md5, (char *)salt2, 32);
+    ssl_md5_complete(md5, (char *)out);
 	ssl_md5_info_delete(md5);
 }
 
@@ -211,11 +211,11 @@ sec_generate_keys(uint8 * client_random, uint8 * server_random, int rc4_key_size
 
     ssl_rc4_info_delete(rc4_decrypt_key);
 	rc4_decrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(rc4_decrypt_key, sec_decrypt_key, rc4_key_len); 
+	ssl_rc4_set_key(rc4_decrypt_key, (char *)sec_decrypt_key, rc4_key_len); 
 
     ssl_rc4_info_delete(rc4_encrypt_key);
 	rc4_encrypt_key = ssl_rc4_info_create(); 
-	ssl_rc4_set_key(rc4_encrypt_key, sec_encrypt_key, rc4_key_len); 
+	ssl_rc4_set_key(rc4_encrypt_key, (char *)sec_encrypt_key, rc4_key_len); 
 }
 
 static uint8 pad_54[40] = {
@@ -256,20 +256,20 @@ sec_sign(uint8 * signature, int siglen, uint8 * session_key, int keylen, uint8 *
 
 	sha = ssl_sha1_info_create();
 	ssl_sha1_clear(sha);
-    ssl_sha1_transform(sha, session_key, keylen);
-	ssl_sha1_transform(sha, pad_54, 40);
-	ssl_sha1_transform(sha, lenhdr, 4);
-	ssl_sha1_transform(sha, data, datalen);
-	ssl_sha1_complete(sha, shasig);
+    ssl_sha1_transform(sha, (char *)session_key, keylen);
+	ssl_sha1_transform(sha, (char *)pad_54, 40);
+	ssl_sha1_transform(sha, (char *)lenhdr, 4);
+	ssl_sha1_transform(sha, (char *)data, datalen);
+	ssl_sha1_complete(sha, (char *)shasig);
 	ssl_sha1_info_delete(sha);
 
 	md5 = ssl_md5_info_create();
 	ssl_md5_clear(md5);
-    ssl_md5_transform(md5, session_key, keylen);
-	ssl_md5_transform(md5, pad_92, 48);
-	ssl_md5_transform(md5, shasig, 20);
-	ssl_md5_complete(md5, md5sig);
-	ssl_md5_info_delete(md5);	
+    ssl_md5_transform(md5, (char *)session_key, keylen);
+	ssl_md5_transform(md5, (char *)pad_92, 48);
+	ssl_md5_transform(md5, (char *)shasig, 20);
+	ssl_md5_complete(md5, (char *)md5sig);
+	ssl_md5_info_delete(md5);
 
 	memcpy(signature, md5sig, siglen);
 }
@@ -285,24 +285,24 @@ sec_update(uint8 * key, uint8 * update_key)
 
 	sha = ssl_sha1_info_create();
 	ssl_sha1_clear(sha);
-	ssl_sha1_transform(sha, update_key, rc4_key_len);
-	ssl_sha1_transform(sha, pad_54, 40);
-	ssl_sha1_transform(sha, key, rc4_key_len);
-	ssl_sha1_complete(sha, shasig);
+	ssl_sha1_transform(sha, (char *)update_key, rc4_key_len);
+	ssl_sha1_transform(sha, (char *)pad_54, 40);
+	ssl_sha1_transform(sha, (char *)key, rc4_key_len);
+	ssl_sha1_complete(sha, (char *)shasig);
 	ssl_sha1_info_delete(sha);
 
 	md5 = ssl_md5_info_create();
 	ssl_md5_clear(md5);
-    ssl_md5_transform(md5, update_key, rc4_key_len);
-	ssl_md5_transform(md5, pad_92, 48);
-	ssl_md5_transform(md5, shasig, 20);
-	ssl_md5_complete(md5, key);
+    ssl_md5_transform(md5, (char *)update_key, rc4_key_len);
+	ssl_md5_transform(md5, (char *)pad_92, 48);
+	ssl_md5_transform(md5, (char *)shasig, 20);
+	ssl_md5_complete(md5, (char *)key);
 	ssl_md5_info_delete(md5);
 
 
 	update = ssl_rc4_info_create();
-	ssl_rc4_set_key(update, key, rc4_key_len);
-	ssl_rc4_crypt(update, key, key, rc4_key_len);	
+	ssl_rc4_set_key(update, (char *)key, rc4_key_len);
+	ssl_rc4_crypt(update, (char *)key, (char *)key, rc4_key_len);
 	ssl_rc4_info_delete(update);
 	
 	if (rc4_key_len == 8)
@@ -316,10 +316,10 @@ sec_encrypt(uint8 * data, int length)
 	if (sec_encrypt_use_count == 4096)
 	{
 		sec_update(sec_encrypt_key, sec_encrypt_update_key);
-		ssl_rc4_set_key(rc4_encrypt_key, sec_encrypt_key, rc4_key_len);
+		ssl_rc4_set_key(rc4_encrypt_key, (char *)sec_encrypt_key, rc4_key_len);
 		sec_encrypt_use_count = 0;
 	}
-	ssl_rc4_crypt(rc4_encrypt_key, data, data, length);
+	ssl_rc4_crypt(rc4_encrypt_key, (char *)data, (char *)data, length);
 	sec_encrypt_use_count++;
 }
 
@@ -330,10 +330,10 @@ sec_decrypt(uint8 * data, int length)
 	if (sec_decrypt_use_count == 4096)
 	{
 		sec_update(sec_decrypt_key, sec_decrypt_update_key);
-		ssl_rc4_set_key(rc4_decrypt_key, sec_decrypt_key, rc4_key_len);
+		ssl_rc4_set_key(rc4_decrypt_key, (char *)sec_decrypt_key, rc4_key_len);
 		sec_decrypt_use_count = 0;
 	}
-	ssl_rc4_crypt(rc4_decrypt_key, data, data, length);
+	ssl_rc4_crypt(rc4_decrypt_key, (char *)data, (char *)data, length);
 	sec_decrypt_use_count++;
 }
 
@@ -355,7 +355,7 @@ reverse(uint8 * p, int len)
 static void
 sec_rsa_encrypt(uint8 * out, uint8 * in, int len, uint8 * modulus, uint8 * exponent)
 {
-	ssl_mod_exp(out, 64, in, 32, modulus, 64, exponent, 4);
+	ssl_mod_exp((char *)out, 64, (char *)in, 32, (char *)modulus, 64, (char *)exponent, 4);
 /*
 	BN_CTX *ctx;
 	BIGNUM mod, exp, x, y;
@@ -746,7 +746,7 @@ sec_parse_crypt_info(STREAM s, uint32 * rc4_key_size,
 static void
 sec_process_crypt_info(STREAM s)
 {
-	uint8 *server_random, *modulus, *exponent;
+	uint8 *server_random, *modulus = NULL, *exponent = NULL;
 	uint8 client_random[SEC_RANDOM_SIZE];
 	uint32 rc4_key_size;
 	uint8 inr[SEC_MODULUS_SIZE];

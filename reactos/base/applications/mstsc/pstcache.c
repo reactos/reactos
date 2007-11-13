@@ -22,8 +22,6 @@
 
 #define MAX_CELL_SIZE		0x1000	/* pixels */
 
-#define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
-
 extern int g_server_depth;
 extern BOOL g_bitmap_cache;
 extern BOOL g_bitmap_cache_persist_enable;
@@ -55,7 +53,7 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 {
 	uint8 *celldata;
 	int fd;
-	CELLHEADER cellhdr;
+    CELLHEADER cellhdr = {0,};
 	HBITMAP bitmap;
 
 	if (!g_bitmap_cache_persist_enable)

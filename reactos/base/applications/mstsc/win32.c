@@ -58,7 +58,7 @@ static int g_fullscreen = 0;
 static int g_workarea = 0;
 static int g_mousex = 0; /* in client coords */
 static int g_mousey = 0;
-static int g_width_height_set = 0;
+//static int g_width_height_set = 0;
 
 static int g_clip_left = 0;
 static int g_clip_top = 0;
@@ -92,7 +92,7 @@ uni_to_str(char * sizex, TCHAR * size1)
   len = _tcslen(size1);
   for (i = 0; i < len; i++)
   {
-    sizex[i] = size1[i];
+    sizex[i] = (char *)size1[i];
   }
   sizex[len] = 0;
 }
@@ -965,6 +965,7 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
 
 }
 
+#if 0
 /*****************************************************************************/
 static int
 mi_process_a_param(char * param1, int state)
@@ -1122,6 +1123,7 @@ mi_post_param(void)
   return 1;
 }
 
+
 /*****************************************************************************/
 static int
 mi_check_config_file(void)
@@ -1208,6 +1210,7 @@ mi_check_config_file(void)
   return rv;
 }
 
+
 /*****************************************************************************/
 /* process the command line parameters */
 /* returns boolean, non zero is ok */
@@ -1288,7 +1291,7 @@ mi_process_cl(LPTSTR lpCmdLine)
   }
   return (state == 0);
 }
-
+#endif
 
 /*****************************************************************************/
 int WINAPI

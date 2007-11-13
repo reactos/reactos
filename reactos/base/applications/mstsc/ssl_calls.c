@@ -435,7 +435,7 @@ ssl_sha1_complete(void* sha1_info, char* data)
   PUT_UINT32(low, msglen, 4);
   last = ctx->total[0] & 0x3F;
   padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_sha1_transform(ctx, sha1_padding, padn);
+  ssl_sha1_transform(ctx, (char *)sha1_padding, padn);
   ssl_sha1_transform(ctx, msglen, 8);
   PUT_UINT32(ctx->state[0], data, 0);
   PUT_UINT32(ctx->state[1], data, 4);
@@ -705,7 +705,7 @@ ssl_md5_complete(void* md5_info, char* data)
   PUT_UINT32(high, msglen, 4);
   last = ctx->total[0] & 0x3F;
   padn = (last < 56) ? (56 - last) : (120 - last);
-  ssl_md5_transform(ctx, md5_padding, padn);
+  ssl_md5_transform(ctx, (char *)md5_padding, padn);
   ssl_md5_transform(ctx, msglen, 8);
   PUT_UINT32(ctx->state[0], data, 0);
   PUT_UINT32(ctx->state[1], data, 4);

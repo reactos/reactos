@@ -170,17 +170,17 @@ ui_create_cursor(uint32 x, uint32 y,
   {
     for (j = 0; j < 32; j++)
     {
-      if (bs_is_pixel_on(andmask, j, i, 32, 1))
+      if (bs_is_pixel_on((char *)andmask, j, i, 32, 1))
       {
         bs_set_pixel_on(am, j, 31 - i, 32, 1, 1);
       }
-      if (bs_is_pixel_on(xormask, j, i, 32, 24))
+      if (bs_is_pixel_on((char *)xormask, j, i, 32, 24))
       {
         bs_set_pixel_on(xm, j, 31 - i, 32, 1, 1);
       }
     }
   }
-  return (void *) mi_create_cursor(x, y, width, height, am, xm);
+  return (void *) mi_create_cursor(x, y, width, height, (unsigned char *)am, (unsigned char *)xm);
 }
 
 /*****************************************************************************/
@@ -219,12 +219,12 @@ ui_create_glyph(int width, int height, uint8 * data)
   memset(the_glyph, 0, sizeof(struct bitmap));
   the_glyph->width = width;
   the_glyph->height = height;
-  the_glyph->data = glyph_data;
+  the_glyph->data = (uint8 *)glyph_data;
   for (i = 0; i < height; i++)
   {
     for (j = 0; j < width; j++)
     {
-      if (bs_is_pixel_on(data, j, i, width, 1))
+      if (bs_is_pixel_on((char *)data, j, i, width, 1))
       {
         bs_set_pixel_on(glyph_data, j, i, width, 8, 255);
       }
@@ -337,7 +337,7 @@ draw_glyph(int x, int y, void * glyph, int fgcolor)
   struct bitmap * b;
 
   b = glyph;
-  bs_draw_glyph(x, y, b->data, b->width, b->height, fgcolor);
+  bs_draw_glyph(x, y, (char *)b->data, b->width, b->height, fgcolor);
 }
 
 /*****************************************************************************/
@@ -572,7 +572,7 @@ void
 ui_patblt(uint8 opcode, int x, int y, int cx, int cy,
           BRUSH * brush, int bgcolour, int fgcolour)
 {
-  bs_patblt(opcode, x, y, cx, cy, brush->style, brush->pattern,
+  bs_patblt(opcode, x, y, cx, cy, brush->style, (char *)brush->pattern,
             brush->xorigin, brush->yorigin, bgcolour, fgcolour);
   ui_invalidate(x, y, cx, cy);
 }

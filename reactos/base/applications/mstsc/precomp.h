@@ -13,6 +13,7 @@
 #ifndef __TODO_MSTSC_H
 #define __TODO_MSTSC_H
 
+#define IS_PERSISTENT(id) (id < 8 && g_pstcache_fd[id] > 0)
 
 #define MAXKEY 256
 #define MAXVALUE 256
