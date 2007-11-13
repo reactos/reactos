@@ -91,7 +91,7 @@ FillGrid(PMAP infoPtr,
     for (y = 0; y < YCELLS; y++)
     for (x = 0; x < XCELLS; x++)
     {
-        ch = (WCHAR)((256 * infoPtr->iPage) + (XCELLS * y) + x);
+        ch = (WCHAR)((XCELLS * (y + infoPtr->iYStart)) + x);
 
         TagFontToCell(&infoPtr->Cells[y][x], ch);
 
@@ -348,43 +348,67 @@ OnVScroll(PMAP infoPtr,
           INT Value,
           INT Pos)
 {
+    INT iYDiff, iOldYStart = infoPtr->iYStart;
+
     switch (Value)
     {
         case SB_LINEUP:
-            infoPtr->iPage -=  1;
+            infoPtr->iYStart -=  1;
             break;
 
         case SB_LINEDOWN:
-            infoPtr->iPage +=  1;
+            infoPtr->iYStart +=  1;
             break;
 
         case SB_PAGEUP:
-            infoPtr->iPage -= 16;
+            infoPtr->iYStart -= YCELLS;
             break;
 
         case SB_PAGEDOWN:
-            infoPtr->iPage += 16;
+            infoPtr->iYStart += YCELLS;
             break;
 
-        case SB_THUMBPOSITION:
-            infoPtr->iPage = Pos;
+        case SB_THUMBTRACK:
+            infoPtr->iYStart = Pos;
             break;
 
        default:
             break;
        }
 
-    infoPtr->iPage = max(0,
-                         min(infoPtr->iPage, 255));
+    infoPtr->iYStart = max(0,
+                         min(infoPtr->iYStart, 255*16));
 
-    SetScrollPos(infoPtr->hMapWnd,
-                 SB_VERT,
-                 infoPtr->iPage,
-                 TRUE);
+    iYDiff = iOldYStart - infoPtr->iYStart;
+    if (iYDiff)
+    {
+        SetScrollPos(infoPtr->hMapWnd,
+                     SB_VERT,
+                     infoPtr->iYStart,
+                     TRUE);
 
-    InvalidateRect(infoPtr->hMapWnd,
-                   NULL,
-                   TRUE);
+        if (abs(iYDiff) < YCELLS)
+        {
+            RECT rect;
+            GetClientRect(infoPtr->hMapWnd, &rect);
+            rect.top += 2;
+            rect.bottom -= 2;
+            ScrollWindowEx(infoPtr->hMapWnd,
+                           0,
+                           iYDiff * infoPtr->CellSize.cy,
+                           &rect,
+                           &rect,
+                           NULL,
+                           NULL,
+                           SW_INVALIDATE);
+        }
+        else
+        {
+            InvalidateRect(infoPtr->hMapWnd,
+                           NULL,
+                           TRUE);
+        }
+    }
 }
 
 

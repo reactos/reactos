@@ -36,7 +36,7 @@ typedef struct _MAP
     PCELL pActiveCell;
     HFONT hFont;
     LOGFONTW CurrentFont;
-    INT iPage;
+    INT iYStart;
 } MAP, *PMAP;
 
 typedef struct {
