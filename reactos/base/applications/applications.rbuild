@@ -34,6 +34,9 @@
 <directory name="mscutils">
 	<xi:include href="mscutils/directory.rbuild" />
 </directory>
+<directory name="mstsc">
+	<xi:include href="mstsc/mstsc.rbuild" />
+</directory>
 <directory name="network">
 	<xi:include href="network/network.rbuild" />
 </directory>

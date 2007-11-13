@@ -92,7 +92,7 @@ uni_to_str(char * sizex, TCHAR * size1)
   len = _tcslen(size1);
   for (i = 0; i < len; i++)
   {
-    sizex[i] = (char *)size1[i];
+    sizex[i] = (char)size1[i];
   }
   sizex[len] = 0;
 }

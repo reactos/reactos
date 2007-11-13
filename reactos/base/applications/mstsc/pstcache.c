@@ -53,7 +53,7 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 {
 	uint8 *celldata;
 	int fd;
-    CELLHEADER cellhdr = {0,};
+	CELLHEADER cellhdr;
 	HBITMAP bitmap;
 
 	if (!g_bitmap_cache_persist_enable)
@@ -61,6 +61,8 @@ pstcache_load_bitmap(uint8 cache_id, uint16 cache_idx)
 
 	if (!IS_PERSISTENT(cache_id) || cache_idx >= BMPCACHE2_NUM_PSTCELLS)
 		return False;
+
+	memset(&cellhdr, 0, sizeof(CELLHEADER));
 
 	fd = g_pstcache_fd[cache_id];
 	rd_lseek_file(fd, cache_idx * (g_pstcache_Bpp * MAX_CELL_SIZE + sizeof(CELLHEADER)));
