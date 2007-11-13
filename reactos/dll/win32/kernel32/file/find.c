@@ -618,6 +618,7 @@ FindClose (
 			CloseHandle (IData->DirectoryHandle);
 			if (IData->LockInitialized)
 				RtlDeleteCriticalSection(&IData->Lock);
+			IData->LockInitialized = FALSE;
 			break;
 		}
 
