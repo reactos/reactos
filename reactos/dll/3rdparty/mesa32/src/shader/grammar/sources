@@ -1,0 +1,8 @@
+MESA_SHADER_GRAMMAR_SOURCES = \
+grammar_mesa.c
+
+MESA_SHADER_GRAMMAR_HEADERS = \
+grammar.c \
+grammar.h \
+grammar_mesa.h \
+grammar_syn.h

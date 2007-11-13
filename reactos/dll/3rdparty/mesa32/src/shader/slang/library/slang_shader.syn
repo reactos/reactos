@@ -1,0 +1,1549 @@
+/*
+ * Mesa 3-D graphics library
+ * Version:  6.5
+ *
+ * Copyright (C) 2004-2006  Brian Paul   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/*
+ * \file slang_shader.syn
+ * slang vertex/fragment shader syntax
+ * \author Michal Krol
+ */
+
+/*
+ * usage:
+ *   syn2c slang_shader.syn > slang_shader_syn.h
+ *
+ * when modifying or extending this file, several things must be taken into consideration:
+ * - when adding new operators that were marked as reserved in the initial specification,
+ *   one must only uncomment particular lines of code that refer to operators being added;
+ * - when adding new shader target, one must reserve new value for shader_type register and
+ *   use it in .if constructs for symbols that are exclusive for that shader;
+ * - some symbols mimic output of other symbols - the best example is the "for" construct:
+ *   expression "for (foo(); ; bar())" is seen as "for (foo(); true; bar())" by the output
+ *   processor - hence, special care must be taken when rearranging output of essential symbols;
+ * - order of single-quoted tokens does matter in alternatives - so do not parse "<" operator
+ *   before "<<" and "<<" before "<<=";
+ * - all double-quoted tokens are internally preprocessed to eliminate problems with parsing
+ *   strings that are prefixes of other strings, like "sampler1D" and "sampler1DShadow";
+ */
+
+.syntax translation_unit;
+
+/* revision number - increment after each change affecting emitted output */
+.emtcode REVISION                                   3
+
+/* external declaration */
+.emtcode EXTERNAL_NULL                              0
+.emtcode EXTERNAL_FUNCTION_DEFINITION               1
+.emtcode EXTERNAL_DECLARATION                       2
+
+/* declaration */
+.emtcode DECLARATION_FUNCTION_PROTOTYPE             1
+.emtcode DECLARATION_INIT_DECLARATOR_LIST           2
+
+/* function type */
+.emtcode FUNCTION_ORDINARY                          0
+.emtcode FUNCTION_CONSTRUCTOR                       1
+.emtcode FUNCTION_OPERATOR                          2
+
+/* operator type */
+.emtcode OPERATOR_ADDASSIGN                         1
+.emtcode OPERATOR_SUBASSIGN                         2
+.emtcode OPERATOR_MULASSIGN                         3
+.emtcode OPERATOR_DIVASSIGN                         4
+/*.emtcode OPERATOR_MODASSIGN                         5*/
+/*.emtcode OPERATOR_LSHASSIGN                         6*/
+/*.emtcode OPERATOR_RSHASSIGN                         7*/
+/*.emtcode OPERATOR_ORASSIGN                          8*/
+/*.emtcode OPERATOR_XORASSIGN                         9*/
+/*.emtcode OPERATOR_ANDASSIGN                         10*/
+.emtcode OPERATOR_LOGICALXOR                        11
+/*.emtcode OPERATOR_BITOR                             12*/
+/*.emtcode OPERATOR_BITXOR                            13*/
+/*.emtcode OPERATOR_BITAND                            14*/
+.emtcode OPERATOR_LESS                              15
+.emtcode OPERATOR_GREATER                           16
+.emtcode OPERATOR_LESSEQUAL                         17
+.emtcode OPERATOR_GREATEREQUAL                      18
+/*.emtcode OPERATOR_LSHIFT                            19*/
+/*.emtcode OPERATOR_RSHIFT                            20*/
+.emtcode OPERATOR_MULTIPLY                          21
+.emtcode OPERATOR_DIVIDE                            22
+/*.emtcode OPERATOR_MODULUS                           23*/
+.emtcode OPERATOR_INCREMENT                         24
+.emtcode OPERATOR_DECREMENT                         25
+.emtcode OPERATOR_PLUS                              26
+.emtcode OPERATOR_MINUS                             27
+/*.emtcode OPERATOR_COMPLEMENT                        28*/
+.emtcode OPERATOR_NOT                               29
+
+/* init declarator list */
+.emtcode DECLARATOR_NONE                            0
+.emtcode DECLARATOR_NEXT                            1
+
+/* variable declaration */
+.emtcode VARIABLE_NONE                              0
+.emtcode VARIABLE_IDENTIFIER                        1
+.emtcode VARIABLE_INITIALIZER                       2
+.emtcode VARIABLE_ARRAY_EXPLICIT                    3
+.emtcode VARIABLE_ARRAY_UNKNOWN                     4
+
+/* type qualifier */
+.emtcode TYPE_QUALIFIER_NONE                        0
+.emtcode TYPE_QUALIFIER_CONST                       1
+.emtcode TYPE_QUALIFIER_ATTRIBUTE                   2
+.emtcode TYPE_QUALIFIER_VARYING                     3
+.emtcode TYPE_QUALIFIER_UNIFORM                     4
+.emtcode TYPE_QUALIFIER_FIXEDOUTPUT                 5
+.emtcode TYPE_QUALIFIER_FIXEDINPUT                  6
+
+/* type specifier */
+.emtcode TYPE_SPECIFIER_VOID                        0
+.emtcode TYPE_SPECIFIER_BOOL                        1
+.emtcode TYPE_SPECIFIER_BVEC2                       2
+.emtcode TYPE_SPECIFIER_BVEC3                       3
+.emtcode TYPE_SPECIFIER_BVEC4                       4
+.emtcode TYPE_SPECIFIER_INT                         5
+.emtcode TYPE_SPECIFIER_IVEC2                       6
+.emtcode TYPE_SPECIFIER_IVEC3                       7
+.emtcode TYPE_SPECIFIER_IVEC4                       8
+.emtcode TYPE_SPECIFIER_FLOAT                       9
+.emtcode TYPE_SPECIFIER_VEC2                        10
+.emtcode TYPE_SPECIFIER_VEC3                        11
+.emtcode TYPE_SPECIFIER_VEC4                        12
+.emtcode TYPE_SPECIFIER_MAT2                        13
+.emtcode TYPE_SPECIFIER_MAT3                        14
+.emtcode TYPE_SPECIFIER_MAT4                        15
+.emtcode TYPE_SPECIFIER_SAMPLER1D                   16
+.emtcode TYPE_SPECIFIER_SAMPLER2D                   17
+.emtcode TYPE_SPECIFIER_SAMPLER3D                   18
+.emtcode TYPE_SPECIFIER_SAMPLERCUBE                 19
+.emtcode TYPE_SPECIFIER_SAMPLER1DSHADOW             20
+.emtcode TYPE_SPECIFIER_SAMPLER2DSHADOW             21
+.emtcode TYPE_SPECIFIER_SAMPLER2DRECT               22
+.emtcode TYPE_SPECIFIER_SAMPLER2DRECTSHADOW         23
+.emtcode TYPE_SPECIFIER_STRUCT                      24
+.emtcode TYPE_SPECIFIER_TYPENAME                    25
+
+/* OpenGL 2.1 */
+.emtcode TYPE_SPECIFIER_MAT23                       26
+.emtcode TYPE_SPECIFIER_MAT32                       27
+.emtcode TYPE_SPECIFIER_MAT24                       28
+.emtcode TYPE_SPECIFIER_MAT42                       29
+.emtcode TYPE_SPECIFIER_MAT34                       30
+.emtcode TYPE_SPECIFIER_MAT43                       31
+
+
+/* structure field */
+.emtcode FIELD_NONE                                 0
+.emtcode FIELD_NEXT                                 1
+.emtcode FIELD_ARRAY                                2
+
+/* operation */
+.emtcode OP_END                                     0
+.emtcode OP_BLOCK_BEGIN_NO_NEW_SCOPE                1
+.emtcode OP_BLOCK_BEGIN_NEW_SCOPE                   2
+.emtcode OP_DECLARE                                 3
+.emtcode OP_ASM                                     4
+.emtcode OP_BREAK                                   5
+.emtcode OP_CONTINUE                                6
+.emtcode OP_DISCARD                                 7
+.emtcode OP_RETURN                                  8
+.emtcode OP_EXPRESSION                              9
+.emtcode OP_IF                                      10
+.emtcode OP_WHILE                                   11
+.emtcode OP_DO                                      12
+.emtcode OP_FOR                                     13
+.emtcode OP_PUSH_VOID                               14
+.emtcode OP_PUSH_BOOL                               15
+.emtcode OP_PUSH_INT                                16
+.emtcode OP_PUSH_FLOAT                              17
+.emtcode OP_PUSH_IDENTIFIER                         18
+.emtcode OP_SEQUENCE                                19
+.emtcode OP_ASSIGN                                  20
+.emtcode OP_ADDASSIGN                               21
+.emtcode OP_SUBASSIGN                               22
+.emtcode OP_MULASSIGN                               23
+.emtcode OP_DIVASSIGN                               24
+/*.emtcode OP_MODASSIGN                               25*/
+/*.emtcode OP_LSHASSIGN                               26*/
+/*.emtcode OP_RSHASSIGN                               27*/
+/*.emtcode OP_ORASSIGN                                28*/
+/*.emtcode OP_XORASSIGN                               29*/
+/*.emtcode OP_ANDASSIGN                               30*/
+.emtcode OP_SELECT                                  31
+.emtcode OP_LOGICALOR                               32
+.emtcode OP_LOGICALXOR                              33
+.emtcode OP_LOGICALAND                              34
+/*.emtcode OP_BITOR                                   35*/
+/*.emtcode OP_BITXOR                                  36*/
+/*.emtcode OP_BITAND                                  37*/
+.emtcode OP_EQUAL                                   38
+.emtcode OP_NOTEQUAL                                39
+.emtcode OP_LESS                                    40
+.emtcode OP_GREATER                                 41
+.emtcode OP_LESSEQUAL                               42
+.emtcode OP_GREATEREQUAL                            43
+/*.emtcode OP_LSHIFT                                  44*/
+/*.emtcode OP_RSHIFT                                  45*/
+.emtcode OP_ADD                                     46
+.emtcode OP_SUBTRACT                                47
+.emtcode OP_MULTIPLY                                48
+.emtcode OP_DIVIDE                                  49
+/*.emtcode OP_MODULUS                                 50*/
+.emtcode OP_PREINCREMENT                            51
+.emtcode OP_PREDECREMENT                            52
+.emtcode OP_PLUS                                    53
+.emtcode OP_MINUS                                   54
+/*.emtcode OP_COMPLEMENT                              55*/
+.emtcode OP_NOT                                     56
+.emtcode OP_SUBSCRIPT                               57
+.emtcode OP_CALL                                    58
+.emtcode OP_FIELD                                   59
+.emtcode OP_POSTINCREMENT                           60
+.emtcode OP_POSTDECREMENT                           61
+
+/* parameter qualifier */
+.emtcode PARAM_QUALIFIER_IN                         0
+.emtcode PARAM_QUALIFIER_OUT                        1
+.emtcode PARAM_QUALIFIER_INOUT                      2
+
+/* function parameter */
+.emtcode PARAMETER_NONE                             0
+.emtcode PARAMETER_NEXT                             1
+
+/* function parameter array presence */
+.emtcode PARAMETER_ARRAY_NOT_PRESENT                0
+.emtcode PARAMETER_ARRAY_PRESENT                    1
+
+.errtext INVALID_EXTERNAL_DECLARATION               "2001: Invalid external declaration."
+.errtext INVALID_OPERATOR_OVERRIDE                  "2002: Invalid operator override."
+.errtext LBRACE_EXPECTED                            "2003: '{' expected but '$err_token$' found."
+.errtext LPAREN_EXPECTED                            "2004: '(' expected but '$err_token$' found."
+.errtext RPAREN_EXPECTED                            "2005: ')' expected but '$err_token$' found."
+
+/* tells whether the shader that is being parsed is a built-in shader or not */
+/*   0 - normal behaviour */
+/*   1 - accepts constructor and operator definitions and __asm statements */
+/* the implementation will set it to 1 when compiling internal built-in shaders */
+.regbyte parsing_builtin                            0
+
+/* holds the type of the shader being parsed; possible values are listed below */
+/*   FRAGMENT_SHADER            1 */
+/*   VERTEX_SHADER              2 */
+/* shader type is set by the caller before parsing */
+.regbyte shader_type                                0
+
+/*
+    <variable_identifier>               ::= <identifier>
+*/
+variable_identifier
+    identifier .emit OP_PUSH_IDENTIFIER;
+
+/*
+    <primary_expression>                ::= <variable_identifier>
+                                          | <intconstant>
+                                          | <floatconstant>
+                                          | <boolconstant>
+                                          | "(" <expression> ")"
+*/
+primary_expression
+    floatconstant .or boolconstant .or intconstant .or variable_identifier .or primary_expression_1;
+primary_expression_1
+    lparen .and expression .and rparen;
+
+/*
+    <postfix_expression>                ::= <primary_expression>
+                                          | <postfix_expression> "[" <integer_expression> "]"
+                                          | <function_call>
+                                          | <postfix_expression> "." <field_selection>
+                                          | <postfix_expression> "++"
+                                          | <postfix_expression> "--"
+*/
+postfix_expression
+    postfix_expression_1 .and .loop postfix_expression_2;
+postfix_expression_1
+    function_call .or primary_expression;
+postfix_expression_2
+    postfix_expression_3 .or postfix_expression_4 .or
+    plusplus .emit OP_POSTINCREMENT .or
+    minusminus .emit OP_POSTDECREMENT;
+postfix_expression_3
+    lbracket .and integer_expression .and rbracket .emit OP_SUBSCRIPT;
+postfix_expression_4
+    dot .and field_selection .emit OP_FIELD;
+
+/*
+    <integer_expression>                ::= <expression>
+*/
+integer_expression
+    expression;
+
+/*
+    <function_call>                     ::= <function_call_generic>
+*/
+function_call
+    function_call_generic .emit OP_CALL .and .true .emit OP_END;
+
+/*
+    <function_call_generic>             ::= <function_call_header_with_parameters> ")"
+                                          | <function_call_header_no_parameters> ")"
+*/
+function_call_generic
+    function_call_generic_1 .or function_call_generic_2;
+function_call_generic_1
+    function_call_header_with_parameters .and rparen .error RPAREN_EXPECTED;
+function_call_generic_2
+    function_call_header_no_parameters .and rparen .error RPAREN_EXPECTED;
+
+/*
+    <function_call_header_no_parameters>::= <function_call_header> "void"
+                                          | <function_call_header>
+*/
+function_call_header_no_parameters
+    function_call_header .and function_call_header_no_parameters_1;
+function_call_header_no_parameters_1
+    "void" .or .true;
+
+/*
+    <function_call_header_with_parameters>::= <function_call_header> <assignment_expression>
+                                            | <function_call_header_with_parameters> ","
+                                              <assignment_expression>
+*/
+function_call_header_with_parameters
+    function_call_header .and assignment_expression .and .true .emit OP_END .and
+    .loop function_call_header_with_parameters_1;
+function_call_header_with_parameters_1
+    comma .and assignment_expression .and .true .emit OP_END;
+
+/*
+    <function_call_header>              ::= <function_identifier> "("
+*/
+function_call_header
+    function_identifier .and lparen;
+
+/*
+    <function_identifier>               ::= <constructor_identifier>
+                                          | <identifier>
+
+note: <constructor_identifier> has been deleted
+*/
+function_identifier
+    identifier;
+
+/*
+    <unary_expression>                  ::= <postfix_expression>
+                                          | "++" <unary_expression>
+                                          | "--" <unary_expression>
+                                          | <unary_operator> <unary_expression>
+
+    <unary_operator>                    ::= "+"
+                                          | "-"
+                                          | "!"
+                                          | "~" // reserved
+*/
+unary_expression
+    postfix_expression .or unary_expression_1 .or unary_expression_2 .or unary_expression_3 .or
+    unary_expression_4 .or unary_expression_5/* .or unary_expression_6*/;
+unary_expression_1
+    plusplus .and unary_expression .and .true .emit OP_PREINCREMENT;
+unary_expression_2
+    minusminus .and unary_expression .and .true .emit OP_PREDECREMENT;
+unary_expression_3
+    plus .and unary_expression .and .true .emit OP_PLUS;
+unary_expression_4
+    minus .and unary_expression .and .true .emit OP_MINUS;
+unary_expression_5
+    bang .and unary_expression .and .true .emit OP_NOT;
+/*unary_expression_6
+    tilde .and unary_expression .and .true .emit OP_COMPLEMENT;*/
+
+/*
+    <multiplicative_expression>         ::= <unary_expression>
+                                          | <multiplicative_expression> "*" <unary_expression>
+                                          | <multiplicative_expression> "/" <unary_expression>
+                                          | <multiplicative_expression> "%" <unary_expression> // reserved
+*/
+multiplicative_expression
+    unary_expression .and .loop multiplicative_expression_1;
+multiplicative_expression_1
+    multiplicative_expression_2 .or multiplicative_expression_3/* .or multiplicative_expression_4*/;
+multiplicative_expression_2
+    star .and unary_expression .and .true .emit OP_MULTIPLY;
+multiplicative_expression_3
+    slash .and unary_expression .and .true .emit OP_DIVIDE;
+/*multiplicative_expression_4
+    percent .and unary_expression .and .true .emit OP_MODULUS;*/
+
+/*
+    <additive_expression>               ::= <multiplicative_expression>
+                                          | <additive_expression> "+" <multiplicative_expression>
+                                          | <additive_expression> "-" <multiplicative_expression>
+*/
+additive_expression
+    multiplicative_expression .and .loop additive_expression_1;
+additive_expression_1
+    additive_expression_2 .or additive_expression_3;
+additive_expression_2
+    plus .and multiplicative_expression .and .true .emit OP_ADD;
+additive_expression_3
+    minus .and multiplicative_expression .and .true .emit OP_SUBTRACT;
+
+/*
+    <shift_expression>                  ::= <additive_expression>
+                                          | <shift_expression> "<<" <additive_expression> // reserved
+                                          | <shift_expression> ">>" <additive_expression> // reserved
+*/
+shift_expression
+    additive_expression/* .and .loop shift_expression_1*/;
+/*shift_expression_1
+    shift_expression_2 .or shift_expression_3;*/
+/*shift_expression_2
+    lessless .and additive_expression .and .true .emit OP_LSHIFT;*/
+/*shift_expression_3
+    greatergreater .and additive_expression .and .true .emit OP_RSHIFT;*/
+
+/*
+    <relational_expression>             ::= <shift_expression>
+                                          | <relational_expression> "<" <shift_expression>
+                                          | <relational_expression> ">" <shift_expression>
+                                          | <relational_expression> "<=" <shift_expression>
+                                          | <relational_expression> ">=" <shift_expression>
+*/
+relational_expression
+    shift_expression .and .loop relational_expression_1;
+relational_expression_1
+    relational_expression_2 .or relational_expression_3 .or relational_expression_4 .or
+    relational_expression_5;
+relational_expression_2
+    lessequals .and shift_expression .and .true .emit OP_LESSEQUAL;
+relational_expression_3
+    greaterequals .and shift_expression .and .true .emit OP_GREATEREQUAL;
+relational_expression_4
+    less .and shift_expression .and .true .emit OP_LESS;
+relational_expression_5
+    greater .and shift_expression .and .true .emit OP_GREATER;
+
+/*
+    <equality_expression>               ::= <relational_expression>
+                                          | <equality_expression> "==" <relational_expression>
+                                          | <equality_expression> "!=" <relational_expression>
+*/
+equality_expression
+    relational_expression .and .loop equality_expression_1;
+equality_expression_1
+    equality_expression_2 .or equality_expression_3;
+equality_expression_2
+    equalsequals .and relational_expression .and .true .emit OP_EQUAL;
+equality_expression_3
+    bangequals .and relational_expression .and .true .emit OP_NOTEQUAL;
+
+/*
+    <and_expression>                    ::= <equality_expression>
+                                          | <and_expression> "&" <equality_expression> // reserved
+*/
+and_expression
+    equality_expression/* .and .loop and_expression_1*/;
+/*and_expression_1
+    ampersand .and equality_expression .and .true .emit OP_BITAND;*/
+
+/*
+    <exclusive_or_expression>           ::= <and_expression>
+                                          | <exclusive_or_expression> "^" <and_expression> // reserved
+*/
+exclusive_or_expression
+    and_expression/* .and .loop exclusive_or_expression_1*/;
+/*exclusive_or_expression_1
+    caret .and and_expression .and .true .emit OP_BITXOR;*/
+
+/*
+    <inclusive_or_expression>           ::= <exclusive_or_expression>
+                                          | <inclusive_or_expression> "|" <exclusive_or_expression> // reserved
+*/
+inclusive_or_expression
+    exclusive_or_expression/* .and .loop inclusive_or_expression_1*/;
+/*inclusive_or_expression_1
+    bar .and exclusive_or_expression .and .true .emit OP_BITOR;*/
+
+/*
+    <logical_and_expression>            ::= <inclusive_or_expression>
+                                          | <logical_and_expression> "&&" <inclusive_or_expression>
+*/
+logical_and_expression
+    inclusive_or_expression .and .loop logical_and_expression_1;
+logical_and_expression_1
+    ampersandampersand .and inclusive_or_expression .and .true .emit OP_LOGICALAND;
+
+/*
+    <logical_xor_expression>            ::= <logical_and_expression>
+                                          | <logical_xor_expression> "^^" <logical_and_expression>
+*/
+logical_xor_expression
+    logical_and_expression .and .loop logical_xor_expression_1;
+logical_xor_expression_1
+    caretcaret .and logical_and_expression .and .true .emit OP_LOGICALXOR;
+
+/*
+    <logical_or_expression>             ::= <logical_xor_expression>
+                                          | <logical_or_expression> "||" <logical_xor_expression>
+*/
+logical_or_expression
+    logical_xor_expression .and .loop logical_or_expression_1;
+logical_or_expression_1
+    barbar .and logical_xor_expression .and .true .emit OP_LOGICALOR;
+
+/*
+    <conditional_expression>            ::= <logical_or_expression>
+                                          | <logical_or_expression> "?" <expression> ":"
+                                            <conditional_expression>
+*/
+conditional_expression
+    logical_or_expression .and .loop conditional_expression_1;
+conditional_expression_1
+    question .and expression .and colon .and conditional_expression .and .true .emit OP_SELECT;
+
+/*
+    <assignment_expression>             ::= <conditional_expression>
+                                          | <unary_expression> <assignment_operator>
+                                            <assignment_expression>
+
+    <assignment_operator>               ::= "="
+                                          | "*="
+                                          | "/="
+                                          | "+="
+                                          | "-="
+                                          | "%=" // reserved
+                                          | "<<=" // reserved
+                                          | ">>=" // reserved
+                                          | "&=" // reserved
+                                          | "^=" // reserved
+                                          | "|=" // reserved
+*/
+assignment_expression
+    assignment_expression_1 .or assignment_expression_2 .or assignment_expression_3 .or
+    assignment_expression_4 .or assignment_expression_5/* .or assignment_expression_6 .or
+    assignment_expression_7 .or assignment_expression_8 .or assignment_expression_9 .or
+    assignment_expression_10 .or assignment_expression_11*/ .or conditional_expression;
+assignment_expression_1
+    unary_expression .and equals .and assignment_expression .and .true .emit OP_ASSIGN;
+assignment_expression_2
+    unary_expression .and starequals .and assignment_expression .and .true .emit OP_MULASSIGN;
+assignment_expression_3
+    unary_expression .and slashequals .and assignment_expression .and .true .emit OP_DIVASSIGN;
+assignment_expression_4
+    unary_expression .and plusequals .and assignment_expression .and .true .emit OP_ADDASSIGN;
+assignment_expression_5
+    unary_expression .and minusequals .and assignment_expression .and .true .emit OP_SUBASSIGN;
+/*assignment_expression_6
+    unary_expression .and percentequals .and assignment_expression .and .true .emit OP_MODASSIGN;*/
+/*assignment_expression_7
+    unary_expression .and lesslessequals .and assignment_expression .and .true .emit OP_LSHASSIGN;*/
+/*assignment_expression_8
+    unary_expression .and greatergreaterequals .and assignment_expression .and
+    .true .emit OP_RSHASSIGN;*/
+/*assignment_expression_9
+    unary_expression .and ampersandequals .and assignment_expression .and .true .emit OP_ANDASSIGN;*/
+/*assignment_expression_10
+    unary_expression .and caretequals .and assignment_expression .and .true .emit OP_XORASSIGN;*/
+/*assignment_expression_11
+    unary_expression .and barequals .and assignment_expression .and .true .emit OP_ORASSIGN;*/
+
+/*
+    <expression>                        ::= <assignment_expression>
+                                          | <expression> "," <assignment_expression>
+*/
+expression
+    assignment_expression .and .loop expression_1;
+expression_1
+    comma .and assignment_expression .and .true .emit OP_SEQUENCE;
+
+/*
+    <constant_expression>               ::= <conditional_expression>
+*/
+constant_expression
+    conditional_expression .and .true .emit OP_END;
+
+/*
+    <declaration>                       ::= <function_prototype> ";"
+                                          | <init_declarator_list> ";"
+*/
+declaration
+    declaration_1 .or declaration_2;
+declaration_1
+    function_prototype .emit DECLARATION_FUNCTION_PROTOTYPE .and semicolon;
+declaration_2
+    init_declarator_list .emit DECLARATION_INIT_DECLARATOR_LIST .and semicolon;
+
+/*
+    <function_prototype>                ::= <function_header> "void" ")"
+                                          | <function_declarator> ")"
+*/
+function_prototype
+    function_prototype_1 .or function_prototype_2;
+function_prototype_1
+    function_header .and "void" .and rparen .error RPAREN_EXPECTED .emit PARAMETER_NONE;
+function_prototype_2
+    function_declarator .and rparen .error RPAREN_EXPECTED .emit PARAMETER_NONE;
+
+/*
+    <function_declarator>               ::= <function_header>
+                                          | <function_header_with_parameters>
+*/
+function_declarator
+    function_header_with_parameters .or function_header;
+
+/*
+    <function_header_with_parameters>   ::= <function_header> <parameter_declaration>
+                                          | <function_header_with_parameters> ","
+                                            <parameter_declaration>
+*/
+function_header_with_parameters
+    function_header .and parameter_declaration .and .loop function_header_with_parameters_1;
+function_header_with_parameters_1
+    comma .and parameter_declaration;
+
+/*
+    <function_header>                   ::= <fully_specified_type> <identifier> "("
+*/
+function_header
+    function_header_nospace .or function_header_space;
+function_header_space
+    fully_specified_type_space .and space .and function_decl_identifier .and lparen;
+function_header_nospace
+    fully_specified_type_nospace .and function_decl_identifier .and lparen;
+
+/*
+    <function_decl_identifier>          ::= "__constructor"
+                                          | <__operator>
+                                          | <identifier>
+
+note: this is an extension to the standard language specification - normally slang disallows
+      operator and constructor prototypes and definitions
+*/
+function_decl_identifier
+    .if (parsing_builtin != 0) __operator .emit FUNCTION_OPERATOR .or
+    .if (parsing_builtin != 0) "__constructor" .emit FUNCTION_CONSTRUCTOR .or
+    identifier .emit FUNCTION_ORDINARY;
+
+/*
+    <__operator>                        ::= "__operator" <overriden_op>
+
+note: this is an extension to the standard language specification - normally slang disallows
+      operator prototypes and definitions
+*/
+__operator
+    "__operator" .and overriden_operator .error INVALID_OPERATOR_OVERRIDE;
+
+/*
+    <overriden_op>                      ::= "="
+                                          | "+="
+                                          | "-="
+                                          | "*="
+                                          | "/="
+                                          | "%=" // reserved
+                                          | "<<=" // reserved
+                                          | ">>=" // reserved
+                                          | "&=" // reserved
+                                          | "^=" // reserved
+                                          | "|=" // reserved
+                                          | "^^"
+                                          | "|" // reserved
+                                          | "^" // reserved
+                                          | "&" // reserved
+                                          | "=="
+                                          | "!="
+                                          | "<"
+                                          | ">"
+                                          | "<="
+                                          | ">="
+                                          | "<<" // reserved
+                                          | ">>" // reserved
+                                          | "*"
+                                          | "/"
+                                          | "%" // reserved
+                                          | "++"
+                                          | "--"
+                                          | "+"
+                                          | "-"
+                                          | "~" // reserved
+                                          | "!"
+
+note: this is an extension to the standard language specification - normally slang disallows
+      operator prototypes and definitions
+*/
+overriden_operator
+    plusplus .emit OPERATOR_INCREMENT .or
+    plusequals .emit OPERATOR_ADDASSIGN .or
+    plus .emit OPERATOR_PLUS .or
+    minusminus .emit OPERATOR_DECREMENT .or
+    minusequals .emit OPERATOR_SUBASSIGN .or
+    minus .emit OPERATOR_MINUS .or
+    bang .emit OPERATOR_NOT .or
+    starequals .emit OPERATOR_MULASSIGN .or
+    star .emit OPERATOR_MULTIPLY .or
+    slashequals .emit OPERATOR_DIVASSIGN .or
+    slash .emit OPERATOR_DIVIDE .or
+    lessequals .emit OPERATOR_LESSEQUAL .or
+    /*lesslessequals .emit OPERATOR_LSHASSIGN .or*/
+    /*lessless .emit OPERATOR_LSHIFT .or*/
+    less .emit OPERATOR_LESS .or
+    greaterequals .emit OPERATOR_GREATEREQUAL .or
+    /*greatergreaterequals .emit OPERATOR_RSHASSIGN .or*/
+    /*greatergreater .emit OPERATOR_RSHIFT .or*/
+    greater .emit OPERATOR_GREATER .or
+    /*percentequals .emit OPERATOR_MODASSIGN .or*/
+    /*percent .emit OPERATOR_MODULUS .or*/
+    /*ampersandequals .emit OPERATOR_ANDASSIGN */
+    /*ampersand .emit OPERATOR_BITAND .or*/
+    /*barequals .emit OPERATOR_ORASSIGN .or*/
+    /*bar .emit OPERATOR_BITOR .or*/
+    /*tilde .emit OPERATOR_COMPLEMENT .or*/
+    /*caretequals .emit OPERATOR_XORASSIGN .or*/
+    caretcaret .emit OPERATOR_LOGICALXOR /*.or
+    caret .emit OPERATOR_BITXOR*/;
+
+/*
+    <parameter_declarator>              ::= <type_specifier> <identifier>
+                                          | <type_specifier> <identifier> "[" <constant_expression>
+                                            "]"
+*/
+parameter_declarator
+    parameter_declarator_nospace .or parameter_declarator_space;
+parameter_declarator_nospace
+    type_specifier_nospace .and identifier .and parameter_declarator_1;
+parameter_declarator_space
+    type_specifier_space .and space .and identifier .and parameter_declarator_1;
+parameter_declarator_1
+    parameter_declarator_2 .emit PARAMETER_ARRAY_PRESENT .or
+    .true .emit PARAMETER_ARRAY_NOT_PRESENT;
+parameter_declarator_2
+    lbracket .and constant_expression .and rbracket;
+
+/*
+    <parameter_declaration>             ::= <type_qualifier> <parameter_qualifier>
+                                            <parameter_declarator>
+                                          | <type_qualifier> <parameter_qualifier>
+                                            <parameter_type_specifier>
+                                          | <parameter_qualifier> <parameter_declarator>
+                                          | <parameter_qualifier> <parameter_type_specifier>
+*/
+parameter_declaration
+    parameter_declaration_1 .emit PARAMETER_NEXT;
+parameter_declaration_1
+    parameter_declaration_2 .or parameter_declaration_3;
+parameter_declaration_2
+    type_qualifier .and space .and parameter_qualifier .and parameter_declaration_4;
+parameter_declaration_3
+    parameter_qualifier .emit TYPE_QUALIFIER_NONE .and parameter_declaration_4;
+parameter_declaration_4
+    parameter_declarator .or parameter_type_specifier;
+
+/*
+    <parameter_qualifier>               ::= "in"
+                                          | "out"
+                                          | "inout"
+                                          | ""
+*/
+parameter_qualifier
+    parameter_qualifier_1 .or .true .emit PARAM_QUALIFIER_IN;
+parameter_qualifier_1
+    parameter_qualifier_2 .and space;
+parameter_qualifier_2
+    "in" .emit PARAM_QUALIFIER_IN .or
+    "out" .emit PARAM_QUALIFIER_OUT .or
+    "inout" .emit PARAM_QUALIFIER_INOUT;
+
+/*
+    <parameter_type_specifier>          ::= <type_specifier>
+                                          | <type_specifier> "[" <constant_expression> "]"
+*/
+parameter_type_specifier
+    parameter_type_specifier_1 .and .true .emit '\0' .and parameter_type_specifier_2;
+parameter_type_specifier_1
+    type_specifier_nospace .or type_specifier_space;
+parameter_type_specifier_2
+    parameter_type_specifier_3 .emit PARAMETER_ARRAY_PRESENT .or
+    .true .emit PARAMETER_ARRAY_NOT_PRESENT;
+parameter_type_specifier_3
+    lbracket .and constant_expression .and rbracket;
+
+/*
+    <init_declarator_list>              ::= <single_declaration>
+                                          | <init_declarator_list> "," <identifier>
+                                          | <init_declarator_list> "," <identifier> "[" "]"
+                                          | <init_declarator_list> "," <identifier> "["
+                                            <constant_expression> "]"
+                                          | <init_declarator_list> "," <identifier> "="
+                                            <initializer>
+*/
+init_declarator_list
+    single_declaration .and .loop init_declarator_list_1 .emit DECLARATOR_NEXT .and
+    .true .emit DECLARATOR_NONE;
+init_declarator_list_1
+    comma .and identifier .emit VARIABLE_IDENTIFIER .and init_declarator_list_2;
+init_declarator_list_2
+    init_declarator_list_3 .or init_declarator_list_4 .or .true .emit VARIABLE_NONE;
+init_declarator_list_3
+    equals .and initializer .emit VARIABLE_INITIALIZER;
+init_declarator_list_4
+    lbracket .and init_declarator_list_5 .and rbracket;
+init_declarator_list_5
+    constant_expression .emit VARIABLE_ARRAY_EXPLICIT .or .true .emit VARIABLE_ARRAY_UNKNOWN;
+
+/*
+    <single_declaration>                ::= <fully_specified_type>
+                                          | <fully_specified_type> <identifier>
+                                          | <fully_specified_type> <identifier> "[" "]"
+                                          | <fully_specified_type> <identifier> "["
+                                            <constant_expression> "]"
+                                          | <fully_specified_type> <identifier> "=" <initializer>
+*/
+single_declaration
+    single_declaration_nospace .or single_declaration_space;
+single_declaration_space
+    fully_specified_type_space .and single_declaration_space_1;
+single_declaration_nospace
+    fully_specified_type_nospace .and single_declaration_nospace_1;
+single_declaration_space_1
+    single_declaration_space_2 .emit VARIABLE_IDENTIFIER .or .true .emit VARIABLE_NONE;
+single_declaration_nospace_1
+    single_declaration_nospace_2 .emit VARIABLE_IDENTIFIER .or .true .emit VARIABLE_NONE;
+single_declaration_space_2
+    space .and identifier .and single_declaration_3;
+single_declaration_nospace_2
+    identifier .and single_declaration_3;
+single_declaration_3
+    single_declaration_4 .or single_declaration_5 .or .true .emit VARIABLE_NONE;
+single_declaration_4
+    equals .and initializer .emit VARIABLE_INITIALIZER;
+single_declaration_5
+    lbracket .and single_declaration_6 .and rbracket;
+single_declaration_6
+    constant_expression .emit VARIABLE_ARRAY_EXPLICIT .or .true .emit VARIABLE_ARRAY_UNKNOWN;
+
+/*
+    <fully_specified_type>              ::= <type_specifier>
+                                          | <type_qualifier> <type_specifier>
+*/
+fully_specified_type_space
+    fully_specified_type_1 .and type_specifier_space;
+fully_specified_type_nospace
+    fully_specified_type_1 .and type_specifier_nospace;
+fully_specified_type_1
+    fully_specified_type_2 .or .true .emit TYPE_QUALIFIER_NONE;
+fully_specified_type_2
+    type_qualifier .and space;
+
+/*
+    <type_qualifier>                    ::= "const"
+                                          | "attribute" // Vertex only.
+                                          | "varying"
+                                          | "uniform"
+										  | "__fixed_output"
+										  | "__fixed_input"
+
+note: this is an extension to the standard language specification - normally slang disallows
+      __fixed_output and __fixed_input type qualifiers
+*/
+type_qualifier
+    "const" .emit TYPE_QUALIFIER_CONST .or
+    .if (shader_type == 2) "attribute" .emit TYPE_QUALIFIER_ATTRIBUTE .or
+    "varying" .emit TYPE_QUALIFIER_VARYING .or
+    "uniform" .emit TYPE_QUALIFIER_UNIFORM .or
+	.if (parsing_builtin != 0) "__fixed_output" .emit TYPE_QUALIFIER_FIXEDOUTPUT .or
+	.if (parsing_builtin != 0) "__fixed_input" .emit TYPE_QUALIFIER_FIXEDINPUT;
+
+/*
+    <type_specifier>                    ::= "void"
+                                          | "float"
+                                          | "int"
+                                          | "bool"
+                                          | "vec2"
+                                          | "vec3"
+                                          | "vec4"
+                                          | "bvec2"
+                                          | "bvec3"
+                                          | "bvec4"
+                                          | "ivec2"
+                                          | "ivec3"
+                                          | "ivec4"
+                                          | "mat2"
+                                          | "mat3"
+                                          | "mat4"
+                                          | "mat2x3"
+                                          | "mat3x2"
+                                          | "mat2x4"
+                                          | "mat4x2"
+                                          | "mat3x4"
+                                          | "mat4x3"
+                                          | "sampler1D"
+                                          | "sampler2D"
+                                          | "sampler3D"
+                                          | "samplerCube"
+                                          | "sampler1DShadow"
+                                          | "sampler2DShadow"
+					  | "sampler2DRect"
+					  | "sampler2DRectShadow"
+                                          | <struct_specifier>
+                                          | <type_name>
+*/
+type_specifier_space
+    "void" .emit TYPE_SPECIFIER_VOID .or
+    "float" .emit TYPE_SPECIFIER_FLOAT .or
+    "int" .emit TYPE_SPECIFIER_INT .or
+    "bool" .emit TYPE_SPECIFIER_BOOL .or
+    "vec2" .emit TYPE_SPECIFIER_VEC2 .or
+    "vec3" .emit TYPE_SPECIFIER_VEC3 .or
+    "vec4" .emit TYPE_SPECIFIER_VEC4 .or
+    "bvec2" .emit TYPE_SPECIFIER_BVEC2 .or
+    "bvec3" .emit TYPE_SPECIFIER_BVEC3 .or
+    "bvec4" .emit TYPE_SPECIFIER_BVEC4 .or
+    "ivec2" .emit TYPE_SPECIFIER_IVEC2 .or
+    "ivec3" .emit TYPE_SPECIFIER_IVEC3 .or
+    "ivec4" .emit TYPE_SPECIFIER_IVEC4 .or
+    "mat2" .emit TYPE_SPECIFIER_MAT2 .or
+    "mat3" .emit TYPE_SPECIFIER_MAT3 .or
+    "mat4" .emit TYPE_SPECIFIER_MAT4 .or
+    "mat2x3" .emit TYPE_SPECIFIER_MAT23 .or
+    "mat3x2" .emit TYPE_SPECIFIER_MAT32 .or
+    "mat2x4" .emit TYPE_SPECIFIER_MAT24 .or
+    "mat4x2" .emit TYPE_SPECIFIER_MAT42 .or
+    "mat3x4" .emit TYPE_SPECIFIER_MAT34 .or
+    "mat4x3" .emit TYPE_SPECIFIER_MAT43 .or
+    "sampler1D" .emit TYPE_SPECIFIER_SAMPLER1D .or
+    "sampler2D" .emit TYPE_SPECIFIER_SAMPLER2D .or
+    "sampler3D" .emit TYPE_SPECIFIER_SAMPLER3D .or
+    "samplerCube" .emit TYPE_SPECIFIER_SAMPLERCUBE .or
+    "sampler1DShadow" .emit TYPE_SPECIFIER_SAMPLER1DSHADOW .or
+    "sampler2DShadow" .emit TYPE_SPECIFIER_SAMPLER2DSHADOW .or
+    "sampler2DRect" .emit TYPE_SPECIFIER_SAMPLER2DRECT .or
+    "sampler2DRectShadow" .emit TYPE_SPECIFIER_SAMPLER2DRECTSHADOW .or
+    type_name .emit TYPE_SPECIFIER_TYPENAME;
+type_specifier_nospace
+    struct_specifier .emit TYPE_SPECIFIER_STRUCT;
+
+/*
+    <struct_specifier>                  ::= "struct" <identifier> "{" <struct_declaration_list> "}"
+                                          | "struct" "{" <struct_declaration_list> "}"
+*/
+struct_specifier
+    "struct" .and struct_specifier_1 .and optional_space .and lbrace .error LBRACE_EXPECTED .and
+    struct_declaration_list .and rbrace .emit FIELD_NONE;
+struct_specifier_1
+    struct_specifier_2 .or .true .emit '\0';
+struct_specifier_2
+    space .and identifier;
+
+/*
+    <struct_declaration_list>           ::= <struct_declaration>
+                                          | <struct_declaration_list> <struct_declaration>
+*/
+struct_declaration_list
+    struct_declaration .and .loop struct_declaration .emit FIELD_NEXT;
+
+/*
+    <struct_declaration>                ::= <type_specifier> <struct_declarator_list> ";"
+*/
+struct_declaration
+    struct_declaration_nospace .or struct_declaration_space;
+struct_declaration_space
+    type_specifier_space .and space .and struct_declarator_list .and semicolon .emit FIELD_NONE;
+struct_declaration_nospace
+    type_specifier_nospace .and struct_declarator_list .and semicolon .emit FIELD_NONE;
+
+/*
+    <struct_declarator_list>            ::= <struct_declarator>
+                                          | <struct_declarator_list> "," <struct_declarator>
+*/
+struct_declarator_list
+    struct_declarator .and .loop struct_declarator_list_1 .emit FIELD_NEXT;
+struct_declarator_list_1
+    comma .and struct_declarator;
+
+/*
+    <struct_declarator>                 ::= <identifier>
+                                          | <identifier> "[" <constant_expression> "]"
+*/
+struct_declarator
+    identifier .and struct_declarator_1;
+struct_declarator_1
+    struct_declarator_2 .emit FIELD_ARRAY .or .true .emit FIELD_NONE;
+struct_declarator_2
+    lbracket .and constant_expression .and rbracket;
+
+/*
+    <initializer>                       ::= <assignment_expression>
+*/
+initializer
+    assignment_expression .and .true .emit OP_END;
+
+/*
+    <declaration_statement>             ::= <declaration>
+*/
+declaration_statement
+    declaration;
+
+/*
+    <statement>                         ::= <compound_statement>
+                                          | <simple_statement>
+*/
+statement
+    compound_statement .or simple_statement;
+statement_space
+    compound_statement .or statement_space_1;
+statement_space_1
+    space .and simple_statement;
+
+/*
+    <simple_statement>                  ::= <__asm_statement>
+                                          | <selection_statement>
+                                          | <iteration_statement>
+                                          | <jump_statement>
+                                          | <expression_statement>
+                                          | <declaration_statement>
+
+note: this is an extension to the standard language specification - normally slang disallows
+      use of __asm statements
+*/
+simple_statement
+    .if (parsing_builtin != 0) __asm_statement .emit OP_ASM .or
+    selection_statement .or
+    iteration_statement .or
+    jump_statement .or
+    expression_statement .emit OP_EXPRESSION .or
+    declaration_statement .emit OP_DECLARE;
+
+/*
+    <compound_statement>                ::= "{" "}"
+                                          | "{" <statement_list> "}"
+*/
+compound_statement
+    compound_statement_1 .emit OP_BLOCK_BEGIN_NEW_SCOPE .and .true .emit OP_END;
+compound_statement_1
+    compound_statement_2 .or compound_statement_3;
+compound_statement_2
+    lbrace .and rbrace;
+compound_statement_3
+    lbrace .and statement_list .and rbrace;
+
+/*
+    <statement_no_new_scope>            ::= <compound_statement_no_new_scope>
+                                          | <simple_statement>
+*/
+statement_no_new_scope
+    compound_statement_no_new_scope .or simple_statement;
+
+/*
+    <compound_statement_no_new_scope>   ::= "{" "}"
+                                          | "{" <statement_list> "}"
+*/
+compound_statement_no_new_scope
+    compound_statement_no_new_scope_1 .emit OP_BLOCK_BEGIN_NO_NEW_SCOPE .and .true .emit OP_END;
+compound_statement_no_new_scope_1
+    compound_statement_no_new_scope_2 .or compound_statement_no_new_scope_3;
+compound_statement_no_new_scope_2
+    lbrace .and rbrace;
+compound_statement_no_new_scope_3
+    lbrace .and statement_list .and rbrace;
+
+/*
+    <statement_list>                    ::= <statement>
+                                          | <statement_list> <statement>
+*/
+statement_list
+    statement .and .loop statement;
+
+/*
+    <expression_statement>              ::= ";"
+                                          | <expression> ";"
+*/
+expression_statement
+    expression_statement_1 .or expression_statement_2;
+expression_statement_1
+    semicolon .emit OP_PUSH_VOID .emit OP_END;
+expression_statement_2
+    expression .and semicolon .emit OP_END;
+
+/*
+    <selection_statement>               ::= "if" "(" <expression> ")" <selection_rest_statement>
+*/
+selection_statement
+    "if" .emit OP_IF .and lparen .error LPAREN_EXPECTED .and expression .and
+    rparen .error RPAREN_EXPECTED .emit OP_END .and selection_rest_statement;
+
+/*
+    <selection_rest_statement>          ::= <statement> "else" <statement>
+                                          | <statement>
+*/
+selection_rest_statement
+    statement .and selection_rest_statement_1;
+selection_rest_statement_1
+    selection_rest_statement_2 .or .true .emit OP_EXPRESSION .emit OP_PUSH_VOID .emit OP_END;
+selection_rest_statement_2
+    "else" .and optional_space .and statement;
+
+/*
+    <condition>                         ::= <expression>
+                                          | <fully_specified_type> <identifier> "=" <initializer>
+
+note: if <condition_1> is executed, the emit format must match <declaration> emit format
+*/
+condition
+    condition_1 .emit OP_DECLARE .emit DECLARATION_INIT_DECLARATOR_LIST .or
+    condition_3 .emit OP_EXPRESSION;
+condition_1
+    condition_1_nospace .or condition_1_space;
+condition_1_nospace
+    fully_specified_type_nospace .and condition_2;
+condition_1_space
+    fully_specified_type_space .and space .and condition_2;
+condition_2
+    identifier .emit VARIABLE_IDENTIFIER .and equals .emit VARIABLE_INITIALIZER .and
+    initializer .and .true .emit DECLARATOR_NONE;
+condition_3
+    expression .and .true .emit OP_END;
+
+/*
+    <iteration_statement>               ::= "while" "(" <condition> ")" <statement>
+                                          | "do" <statement> "while" "(" <expression> ")" ";"
+                                          | "for" "(" <for_init_statement> <for_rest_statement> ")"
+                                            <statement_no_new_scope>
+*/
+iteration_statement
+    iteration_statement_1 .or iteration_statement_2 .or iteration_statement_3;
+iteration_statement_1
+    "while" .emit OP_WHILE .and lparen .error LPAREN_EXPECTED .and condition .and
+    rparen .error RPAREN_EXPECTED .and statement;
+iteration_statement_2
+    "do" .emit OP_DO .and statement_space .and "while" .and lparen .error LPAREN_EXPECTED .and
+    expression .and rparen .error RPAREN_EXPECTED .emit OP_END .and semicolon;
+iteration_statement_3
+    "for" .emit OP_FOR .and lparen .error LPAREN_EXPECTED .and for_init_statement .and
+    for_rest_statement .and rparen .error RPAREN_EXPECTED .and statement_no_new_scope;
+
+/*
+    <for_init_statement>                ::= <expression_statement>
+                                          | <declaration_statement>
+*/
+for_init_statement
+    expression_statement .emit OP_EXPRESSION .or declaration_statement .emit OP_DECLARE;
+
+/*
+    <conditionopt>                      ::= <condition>
+                                          | ""
+
+note: <conditionopt> is used only by "for" statement - if <condition> is ommitted, parser
+      simulates default behaviour, that is simulates "true" expression
+*/
+conditionopt
+    condition .or
+    .true .emit OP_EXPRESSION .emit OP_PUSH_BOOL .emit 2 .emit '1' .emit '\0' .emit OP_END;
+
+/*
+    <for_rest_statement>                ::= <conditionopt> ";"
+                                          | <conditionopt> ";" <expression>
+*/
+for_rest_statement
+    conditionopt .and semicolon .and for_rest_statement_1;
+for_rest_statement_1
+    for_rest_statement_2 .or .true .emit OP_PUSH_VOID .emit OP_END;
+for_rest_statement_2
+    expression .and .true .emit OP_END;
+
+/*
+    <jump_statement>                    ::= "continue" ";"
+                                          | "break" ";"
+                                          | "return" ";"
+                                          | "return" <expression> ";"
+                                          | "discard" ";" // Fragment shader only.
+*/
+jump_statement
+    jump_statement_1 .or jump_statement_2 .or jump_statement_3 .or jump_statement_4 .or
+    .if (shader_type == 1) jump_statement_5;
+jump_statement_1
+    "continue" .and semicolon .emit OP_CONTINUE;
+jump_statement_2
+    "break" .and semicolon .emit OP_BREAK;
+jump_statement_3
+    "return" .emit OP_RETURN .and optional_space .and expression .and semicolon .emit OP_END;
+jump_statement_4
+    "return" .emit OP_RETURN .and semicolon .emit OP_PUSH_VOID .emit OP_END;
+jump_statement_5
+    "discard" .and semicolon .emit OP_DISCARD;
+
+/*
+    <__asm_statement>                   ::= "__asm" <identifier> <asm_arguments> ";"
+
+note: this is an extension to the standard language specification - normally slang disallows
+      __asm statements
+*/
+__asm_statement
+    "__asm" .and space .and identifier .and space .and asm_arguments .and semicolon .emit OP_END;
+
+/*
+    <asm_arguments>                     ::= <asm_argument>
+                                          | <asm_arguments> "," <asm_argument>
+
+note: this is an extension to the standard language specification - normally slang disallows
+      __asm statements
+*/
+asm_arguments
+    asm_argument .and .true .emit OP_END .and .loop asm_arguments_1;
+asm_arguments_1
+    comma .and asm_argument .and .true .emit OP_END;
+
+/*
+    <asm_argument>                      ::= <variable_identifier>
+                                          | <floatconstant>
+
+note: this is an extension to the standard language specification - normally slang disallows
+      __asm statements
+*/
+asm_argument
+    var_with_field .or
+    variable_identifier .or
+    floatconstant;
+
+var_with_field
+    variable_identifier .and dot .and field_selection .emit OP_FIELD;
+
+/*
+    <translation_unit>                  ::= <external_declaration>
+                                          | <translation_unit> <external_declaration>
+*/
+translation_unit
+    optional_space .emit REVISION .and external_declaration .error INVALID_EXTERNAL_DECLARATION .and
+    .loop external_declaration .and optional_space .and
+    '\0' .error INVALID_EXTERNAL_DECLARATION .emit EXTERNAL_NULL;
+
+/*
+    <external_declaration>              ::= <function_definition>
+                                          | <declaration>
+*/
+external_declaration
+    function_definition .emit EXTERNAL_FUNCTION_DEFINITION .or
+    declaration .emit EXTERNAL_DECLARATION;
+
+/*
+    <function_definition>               :: <function_prototype> <compound_statement_no_new_scope>
+*/
+function_definition
+    function_prototype .and compound_statement_no_new_scope;
+
+/* helper rulez, not part of the official language syntax */
+
+digit_oct
+    '0'-'7';
+
+digit_dec
+    '0'-'9';
+
+digit_hex
+    '0'-'9' .or 'A'-'F' .or 'a'-'f';
+
+id_character_first
+    'a'-'z' .or 'A'-'Z' .or '_';
+
+id_character_next
+    id_character_first .or digit_dec;
+
+identifier
+    id_character_first .emit * .and .loop id_character_next .emit * .and .true .emit '\0';
+
+float
+    float_1 .or float_2;
+float_1
+    float_fractional_constant .and float_optional_exponent_part;
+float_2
+    float_digit_sequence .and .true .emit '\0' .and float_exponent_part;
+
+float_fractional_constant
+    float_fractional_constant_1 .or float_fractional_constant_2 .or float_fractional_constant_3;
+float_fractional_constant_1
+    float_digit_sequence .and '.' .and float_digit_sequence;
+float_fractional_constant_2
+    float_digit_sequence .and '.' .and .true .emit '\0';
+float_fractional_constant_3
+    '.' .emit '\0' .and float_digit_sequence;
+
+float_optional_exponent_part
+    float_exponent_part .or .true .emit '\0';
+
+float_digit_sequence
+    digit_dec .emit * .and .loop digit_dec .emit * .and .true .emit '\0';
+
+float_exponent_part
+    float_exponent_part_1 .or float_exponent_part_2;
+float_exponent_part_1
+    'e' .and float_optional_sign .and float_digit_sequence;
+float_exponent_part_2
+    'E' .and float_optional_sign .and float_digit_sequence;
+
+float_optional_sign
+    float_sign .or .true;
+
+float_sign
+    '+' .or '-' .emit '-';
+
+integer
+    integer_hex .or integer_oct .or integer_dec;
+
+integer_hex
+    '0' .and integer_hex_1 .emit 0x10 .and digit_hex .emit * .and .loop digit_hex .emit * .and
+    .true .emit '\0';
+integer_hex_1
+    'x' .or 'X';
+
+integer_oct
+    '0' .emit 8 .emit * .and .loop digit_oct .emit * .and .true .emit '\0';
+
+integer_dec
+    digit_dec .emit 10 .emit * .and .loop digit_dec .emit * .and .true .emit '\0';
+
+boolean
+    "true" .emit 2 .emit '1' .emit '\0' .or
+    "false" .emit 2 .emit '0' .emit '\0';
+
+type_name
+    identifier;
+
+field_selection
+    identifier;
+
+floatconstant
+    float .emit OP_PUSH_FLOAT;
+
+intconstant
+    integer .emit OP_PUSH_INT;
+
+boolconstant
+    boolean .emit OP_PUSH_BOOL;
+
+optional_space
+    .loop single_space;
+
+space
+    single_space .and .loop single_space;
+
+single_space
+    white_char .or c_style_comment_block .or cpp_style_comment_block;
+
+white_char
+    ' ' .or '\t' .or new_line .or '\v' .or '\f';
+
+new_line
+    cr_lf .or lf_cr .or '\n' .or '\r';
+
+cr_lf
+    '\r' .and '\n';
+
+lf_cr
+    '\n' .and '\r';
+
+c_style_comment_block
+    '/' .and '*' .and c_style_comment_rest;
+
+c_style_comment_rest
+    .loop c_style_comment_char_no_star .and c_style_comment_rest_1;
+c_style_comment_rest_1
+    c_style_comment_end .or c_style_comment_rest_2;
+c_style_comment_rest_2
+    '*' .and c_style_comment_rest;
+
+c_style_comment_char_no_star
+    '\x2B'-'\xFF' .or '\x01'-'\x29';
+
+c_style_comment_end
+    '*' .and '/';
+
+cpp_style_comment_block
+    '/' .and '/' .and cpp_style_comment_block_1;
+cpp_style_comment_block_1
+    cpp_style_comment_block_2 .or cpp_style_comment_block_3;
+cpp_style_comment_block_2
+    .loop cpp_style_comment_char .and new_line;
+cpp_style_comment_block_3
+    .loop cpp_style_comment_char;
+
+cpp_style_comment_char
+    '\x0E'-'\xFF' .or '\x01'-'\x09' .or '\x0B'-'\x0C';
+
+/* lexical rulez */
+
+/*ampersand
+    optional_space .and '&' .and optional_space;*/
+
+ampersandampersand
+    optional_space .and '&' .and '&' .and optional_space;
+
+/*ampersandequals
+    optional_space .and '&' .and '=' .and optional_space;*/
+
+/*bar
+    optional_space .and '|' .and optional_space;*/
+
+barbar
+    optional_space .and '|' .and '|' .and optional_space;
+
+/*barequals
+    optional_space .and '|' .and '=' .and optional_space;*/
+
+bang
+    optional_space .and '!' .and optional_space;
+
+bangequals
+    optional_space .and '!' .and '=' .and optional_space;
+
+/*caret
+    optional_space .and '^' .and optional_space;*/
+
+caretcaret
+    optional_space .and '^' .and '^' .and optional_space;
+
+/*caretequals
+    optional_space .and '^' .and '=' .and optional_space;*/
+
+colon
+    optional_space .and ':' .and optional_space;
+
+comma
+    optional_space .and ',' .and optional_space;
+
+dot
+    optional_space .and '.' .and optional_space;
+
+equals
+    optional_space .and '=' .and optional_space;
+
+equalsequals
+    optional_space .and '=' .and '=' .and optional_space;
+
+greater
+    optional_space .and '>' .and optional_space;
+
+greaterequals
+    optional_space .and '>' .and '=' .and optional_space;
+
+/*greatergreater
+    optional_space .and '>' .and '>' .and optional_space;*/
+
+/*greatergreaterequals
+    optional_space .and '>' .and '>' .and '=' .and optional_space;*/
+
+lbrace
+    optional_space .and '{' .and optional_space;
+
+lbracket
+    optional_space .and '[' .and optional_space;
+
+less
+    optional_space .and '<' .and optional_space;
+
+lessequals
+    optional_space .and '<' .and '=' .and optional_space;
+
+/*lessless
+    optional_space .and '<' .and '<' .and optional_space;*/
+
+/*lesslessequals
+    optional_space .and '<' .and '<' .and '=' .and optional_space;*/
+
+lparen
+    optional_space .and '(' .and optional_space;
+
+minus
+    optional_space .and '-' .and optional_space;
+
+minusequals
+    optional_space .and '-' .and '=' .and optional_space;
+
+minusminus
+    optional_space .and '-' .and '-' .and optional_space;
+
+/*percent
+    optional_space .and '%' .and optional_space;*/
+
+/*percentequals
+    optional_space .and '%' .and '=' .and optional_space;*/
+
+plus
+    optional_space .and '+' .and optional_space;
+
+plusequals
+    optional_space .and '+' .and '=' .and optional_space;
+
+plusplus
+    optional_space .and '+' .and '+' .and optional_space;
+
+question
+    optional_space .and '?' .and optional_space;
+
+rbrace
+    optional_space .and '}' .and optional_space;
+
+rbracket
+    optional_space .and ']' .and optional_space;
+
+rparen
+    optional_space .and ')' .and optional_space;
+
+semicolon
+    optional_space .and ';' .and optional_space;
+
+slash
+    optional_space .and '/' .and optional_space;
+
+slashequals
+    optional_space .and '/' .and '=' .and optional_space;
+
+star
+    optional_space .and '*' .and optional_space;
+
+starequals
+    optional_space .and '*' .and '=' .and optional_space;
+
+/*tilde
+    optional_space .and '~' .and optional_space;*/
+
+/* string rulez - these are used internally by the parser when parsing quoted strings */
+
+.string string_lexer;
+
+string_lexer
+    lex_first_identifier_character .and .loop lex_next_identifier_character;
+
+lex_first_identifier_character
+    'a'-'z' .or 'A'-'Z' .or '_';
+
+lex_next_identifier_character
+    'a'-'z' .or 'A'-'Z' .or '0'-'9' .or '_';
+
+/* error rulez - these are used by error messages */
+
+err_token
+    '~' .or '`' .or '!' .or '@' .or '#' .or '$' .or '%' .or '^' .or '&' .or '*' .or '(' .or ')' .or
+    '-' .or '+' .or '=' .or '|' .or '\\' .or '[' .or ']' .or '{' .or '}' .or ':' .or ';' .or '"' .or
+    '\'' .or '<' .or ',' .or '>' .or '.' .or '/' .or '?' .or err_identifier;
+
+err_identifier
+    id_character_first .and .loop id_character_next;
+

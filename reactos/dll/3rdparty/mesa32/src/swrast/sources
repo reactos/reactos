@@ -1,0 +1,65 @@
+# List of source files in this directory used for X.org xserver build
+MESA_SWRAST_SOURCES = \
+s_aaline.c \
+s_aatriangle.c \
+s_accum.c \
+s_alpha.c \
+s_arbshader.c \
+s_atifragshader.c \
+s_bitmap.c \
+s_blend.c \
+s_blit.c \
+s_buffers.c \
+s_context.c \
+s_copypix.c \
+s_depth.c \
+s_drawpix.c \
+s_feedback.c \
+s_fog.c \
+s_imaging.c \
+s_lines.c \
+s_logic.c \
+s_masking.c \
+s_nvfragprog.c \
+s_points.c \
+s_readpix.c \
+s_span.c \
+s_stencil.c \
+s_texcombine.c \
+s_texfilter.c \
+s_texstore.c \
+s_triangle.c \
+s_zoom.c
+
+MESA_SWRAST_HEADERS = \
+s_aaline.h \
+s_aalinetemp.h \
+s_aatriangle.h \
+s_aatritemp.h \
+s_accum.h \
+s_alpha.h \
+s_arbshader.h \
+s_atifragshader.h \
+s_blend.h \
+s_context.h \
+s_depth.h \
+s_drawpix.h \
+s_feedback.h \
+s_fog.h \
+s_lines.h \
+s_linetemp.h \
+s_logic.h \
+s_masking.h \
+s_nvfragprog.h \
+s_points.h \
+s_pointtemp.h \
+s_span.h \
+s_spantemp.h \
+s_stencil.h \
+s_texcombine.h \
+s_texfilter.h \
+s_triangle.h \
+s_trispan.h \
+s_tritemp.h \
+s_zoom.h \
+swrast.h

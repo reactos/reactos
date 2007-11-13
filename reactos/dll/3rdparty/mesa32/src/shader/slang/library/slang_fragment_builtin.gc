@@ -1,0 +1,239 @@
+/*
+ * Mesa 3-D graphics library
+ * Version:  6.5
+ *
+ * Copyright (C) 2006  Brian Paul   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+//
+// From Shader Spec, ver. 1.10, rev. 59
+//
+
+__fixed_input vec4 gl_FragCoord;
+__fixed_input bool gl_FrontFacing;
+__fixed_output vec4 gl_FragColor;
+__fixed_output vec4 gl_FragData[gl_MaxDrawBuffers];
+__fixed_output float gl_FragDepth;
+
+varying vec4 gl_Color;
+varying vec4 gl_SecondaryColor;
+varying vec4 gl_TexCoord[gl_MaxTextureCoords];
+varying float gl_FogFragCoord;
+
+
+
+//// 8.7 Texture Lookup Functions (with bias)
+
+vec4 texture1D(const sampler1D sampler, const float coord, const float bias)
+{
+   vec4 coord4;
+   coord4.x = coord;
+   coord4.w = bias;
+   __asm vec4_texb1d __retVal, sampler, coord4;
+}
+
+vec4 texture1DProj(const sampler1D sampler, const vec2 coord, const float bias)
+{
+   // do projection here (there's no vec4_texbp1d instruction)
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.y;
+   pcoord.w = bias;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+vec4 texture1DProj(const sampler1D sampler, const vec4 coord, const float bias)
+{
+   // do projection here (there's no vec4_texbp1d instruction)
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.z;
+   pcoord.w = bias;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+
+
+
+vec4 texture2D(const sampler2D sampler, const vec2 coord, const float bias)
+{
+   vec4 coord4;
+   coord4.xy = coord.xy;
+   coord4.w = bias;
+   __asm vec4_texb2d __retVal, sampler, coord4;
+}
+
+vec4 texture2DProj(const sampler2D sampler, const vec3 coord, const float bias)
+{
+   // do projection here (there's no vec4_texbp2d instruction)
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.z;
+   pcoord.w = bias;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
+vec4 texture2DProj(const sampler2D sampler, const vec4 coord, const float bias)
+{
+   // do projection here (there's no vec4_texbp2d instruction)
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.w;
+   pcoord.w = bias;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
+
+
+
+vec4 texture3D(const sampler3D sampler, const vec3 coord, const float bias)
+{
+   vec4 coord4;
+   coord4.xyz = coord.xyz;
+   coord4.w = bias;
+   __asm vec4_texb3d __retVal, sampler, coord4;
+}
+
+vec4 texture3DProj(const sampler3D sampler, const vec4 coord, const float bias)
+{
+   // do projection here (there's no vec4_texbp3d instruction)
+   vec4 pcoord;
+   pcoord.xyz = coord.xyz / coord.w;
+   pcoord.w = bias;
+   __asm vec4_texb3d __retVal, sampler, pcoord;
+}
+
+
+
+
+vec4 textureCube(const samplerCube sampler, const vec3 coord, const float bias)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = bias;
+   __asm vec4_texcube __retVal, sampler, coord4;
+}
+
+
+
+
+// For shadow textures, we use the regular tex instructions since they should
+// do the depth comparison step.
+
+vec4 shadow1D(const sampler1DShadow sampler, const vec3 coord, const float bias)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = bias;
+   __asm vec4_texb1d __retVal, sampler, coord4;
+}
+
+vec4 shadow1DProj(const sampler1DShadow sampler, const vec4 coord, const float bias)
+{
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.w;
+   pcoord.z = coord.z;
+   pcoord.w = bias;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+vec4 shadow2D(const sampler2DShadow sampler, const vec3 coord, const float bias)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = bias;
+   __asm vec4_texb2d __retVal, sampler, coord4;
+}
+
+vec4 shadow2DProj(const sampler2DShadow sampler, const vec4 coord, const float bias)
+{
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.w;
+   pcoord.z = coord.z;
+   pcoord.w = bias;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
+
+
+//
+// 8.8 Fragment Processing Functions
+//
+
+float dFdx(const float p)
+{
+   __asm vec4_ddx __retVal.x, p.xxxx;
+}
+
+vec2 dFdx(const vec2 p)
+{
+   __asm vec4_ddx __retVal.xy, p.xyyy;
+}
+
+vec3 dFdx(const vec3 p)
+{
+   __asm vec4_ddx __retVal.xyz, p.xyzz;
+}
+
+vec4 dFdx(const vec4 p)
+{
+   __asm vec4_ddx __retVal, p;
+}
+
+float dFdy(const float p)
+{
+   __asm vec4_ddy __retVal.x, p.xxxx;
+}
+
+vec2 dFdy(const vec2 p)
+{
+   __asm vec4_ddy __retVal.xy, p.xyyy;
+}
+
+vec3 dFdy(const vec3 p)
+{
+   __asm vec4_ddy __retVal.xyz, p.xyzz;
+}
+
+vec4 dFdy(const vec4 p)
+{
+   __asm vec4_ddy __retVal, p;
+}
+
+float fwidth (const float p)
+{
+   // XXX hand-write with __asm
+   return abs(dFdx(p)) + abs(dFdy(p));
+}
+
+vec2 fwidth(const vec2 p)
+{
+   // XXX hand-write with __asm
+   return abs(dFdx(p)) + abs(dFdy(p));
+}
+
+vec3 fwidth(const vec3 p)
+{
+   // XXX hand-write with __asm
+   return abs(dFdx(p)) + abs(dFdy(p));
+}
+
+vec4 fwidth(const vec4 p)
+{
+   // XXX hand-write with __asm
+   return abs(dFdx(p)) + abs(dFdy(p));
+}
+

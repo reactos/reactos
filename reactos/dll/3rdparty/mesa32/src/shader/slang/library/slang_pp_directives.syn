@@ -1,0 +1,385 @@
+/*
+ * Mesa 3-D graphics library
+ * Version:  6.6
+ *
+ * Copyright (C) 2006  Brian Paul   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+/**
+ * \file slang_pp_directives.syn
+ * slang preprocessor directives parser
+ * \author Michal Krol
+ */
+
+.syntax source;
+
+/*
+ * This syntax script preprocesses a GLSL shader.
+ * It is assumed, that the #version directive has been parsed. Separate pass for parsing
+ * version gives better control on behavior depending on the version number given.
+ *
+ * The output is a source string with comments and directives removed. White spaces and comments
+ * are replaced with on or more spaces. All new-lines are preserved and converted to Linux format.
+ * Directives are escaped with a null character. The end of the source string is marked by
+ * two consecutive null characters. The consumer is responsible for executing the escaped
+ * directives, removing dead portions of code and expanding macros.
+ */
+
+.emtcode ESCAPE_TOKEN 0
+
+/*
+ * The TOKEN_* symbols follow the ESCAPE_TOKEN.
+ *
+ * NOTE:
+ * There is no TOKEN_IFDEF and neither is TOKEN_IFNDEF. They are handled with TOKEN_IF and
+ * operator defined.
+ * The "#ifdef SYMBOL" is replaced with "#if defined SYMBOL"
+ * The "#ifndef SYMBOL" is replaced with "#if !defined SYMBOL"
+ */
+.emtcode TOKEN_END       0
+.emtcode TOKEN_DEFINE    1
+.emtcode TOKEN_UNDEF     2
+.emtcode TOKEN_IF        3
+.emtcode TOKEN_ELSE      4
+.emtcode TOKEN_ELIF      5
+.emtcode TOKEN_ENDIF     6
+.emtcode TOKEN_ERROR     7
+.emtcode TOKEN_PRAGMA    8
+.emtcode TOKEN_EXTENSION 9
+.emtcode TOKEN_LINE      10
+
+/*
+ * The PARAM_* symbols follow the TOKEN_DEFINE.
+ */
+.emtcode PARAM_END       0
+.emtcode PARAM_PARAMETER 1
+
+/*
+ * The BEHAVIOR_* symbols follow the TOKEN_EXTENSION.
+ */
+.emtcode BEHAVIOR_REQUIRE 1
+.emtcode BEHAVIOR_ENABLE  2
+.emtcode BEHAVIOR_WARN    3
+.emtcode BEHAVIOR_DISABLE 4
+
+source
+   optional_directive .and .loop source_element .and '\0' .emit ESCAPE_TOKEN .emit TOKEN_END;
+
+source_element
+   c_style_comment_block .or cpp_style_comment_block .or new_line_directive .or source_token;
+
+c_style_comment_block
+   '/' .and '*' .and c_style_comment_rest .and .true .emit ' ';
+
+c_style_comment_rest
+   .loop c_style_comment_body .and c_style_comment_end;
+
+c_style_comment_body
+   c_style_comment_char_nostar .or c_style_comment_char_star_noslashstar;
+
+c_style_comment_char_nostar
+   new_line .or '\x2B'-'\xFF' .or '\x01'-'\x29';
+
+c_style_comment_char_star_noslashstar
+   '*' .and c_style_comment_char_star_noslashstar_1;
+c_style_comment_char_star_noslashstar_1
+   c_style_comment_char_noslashstar .or c_style_comment_char_star_noslashstar;
+
+c_style_comment_char_noslashstar
+   new_line .or '\x30'-'\xFF' .or '\x01'-'\x29' .or '\x2B'-'\x2E';
+
+c_style_comment_end
+   '*' .and .loop c_style_comment_char_star .and '/';
+
+c_style_comment_char_star
+   '*';
+
+cpp_style_comment_block
+   '/' .and '/' .and cpp_style_comment_block_1;
+cpp_style_comment_block_1
+   cpp_style_comment_block_2 .or cpp_style_comment_block_3;
+cpp_style_comment_block_2
+   .loop cpp_style_comment_char .and new_line_directive;
+cpp_style_comment_block_3
+   .loop cpp_style_comment_char;
+
+cpp_style_comment_char
+   '\x0E'-'\xFF' .or '\x01'-'\x09' .or '\x0B'-'\x0C';
+
+new_line_directive
+   new_line .and optional_directive;
+
+new_line
+   generic_new_line .emit '\n';
+
+generic_new_line
+   carriage_return_line_feed .or line_feed_carriage_return .or '\n' .or '\r';
+
+carriage_return_line_feed
+   '\r' .and '\n';
+
+line_feed_carriage_return
+   '\n' .and '\r';
+
+optional_directive
+   directive .emit ESCAPE_TOKEN .or .true;
+
+directive
+   dir_define .emit TOKEN_DEFINE .or
+   dir_undef .emit TOKEN_UNDEF .or
+   dir_if .emit TOKEN_IF .or
+   dir_ifdef .emit TOKEN_IF .emit 'd' .emit 'e' .emit 'f' .emit 'i' .emit 'n' .emit 'e' .emit 'd'
+             .emit ' ' .or
+   dir_ifndef .emit TOKEN_IF .emit '!' .emit 'd' .emit 'e' .emit 'f' .emit 'i' .emit 'n' .emit 'e'
+              .emit 'd' .emit ' ' .or
+   dir_else .emit TOKEN_ELSE .or
+   dir_elif .emit TOKEN_ELIF .or
+   dir_endif .emit TOKEN_ENDIF .or
+   dir_ext .emit TOKEN_EXTENSION .or
+   dir_line .emit TOKEN_LINE;
+
+dir_define
+   optional_space .and '#' .and optional_space .and "define" .and symbol .and opt_parameters .and
+   definition;
+
+dir_undef
+   optional_space .and '#' .and optional_space .and "undef" .and symbol;
+
+dir_if
+   optional_space .and '#' .and optional_space .and "if" .and expression;
+
+dir_ifdef
+   optional_space .and '#' .and optional_space .and "ifdef" .and symbol;
+
+dir_ifndef
+   optional_space .and '#' .and optional_space .and "ifndef" .and symbol;
+
+dir_else
+   optional_space .and '#' .and optional_space .and "else";
+
+dir_elif
+   optional_space .and '#' .and optional_space .and "elif" .and expression;
+
+dir_endif
+   optional_space .and '#' .and optional_space .and "endif";
+
+dir_ext
+   optional_space .and '#' .and optional_space .and "extension" .and space .and extension_name .and
+   optional_space .and ':' .and optional_space .and extension_behavior;
+
+dir_line
+   optional_space .and '#' .and optional_space .and "line" .and expression;
+
+symbol
+   space .and symbol_character .emit * .and .loop symbol_character2 .emit * .and .true .emit '\0';
+
+opt_parameters
+   parameters .or .true .emit PARAM_END;
+
+parameters
+   '(' .and parameters_1 .and optional_space .and ')' .emit PARAM_END;
+parameters_1
+   parameters_2 .or .true;
+parameters_2
+   parameter .emit PARAM_PARAMETER .and .loop parameters_3;
+parameters_3
+   optional_space .and ',' .and parameter .emit PARAM_PARAMETER;
+
+parameter
+   optional_space .and symbol_character .emit * .and .loop symbol_character2 .emit * .and
+   .true .emit '\0';
+
+definition
+   .loop definition_character .emit * .and .true .emit '\0';
+
+definition_character
+   '\x0E'-'\xFF' .or '\x01'-'\x09' .or '\x0B'-'\x0C';
+
+expression
+   expression_element .and .loop expression_element .and .true .emit '\0';
+
+expression_element
+   expression_character .emit *;
+
+expression_character
+   '\x0E'-'\xFF' .or '\x01'-'\x09' .or '\x0B'-'\x0C';
+
+extension_name
+   symbol_character .emit * .and .loop symbol_character2 .emit * .and .true .emit '\0';
+
+extension_behavior
+   "require" .emit BEHAVIOR_REQUIRE .or
+   "enable" .emit BEHAVIOR_ENABLE .or
+   "warn" .emit BEHAVIOR_WARN .or
+   "disable" .emit BEHAVIOR_DISABLE;
+
+optional_space
+   .loop single_space;
+
+space
+   single_space .and .loop single_space;
+
+single_space
+   ' ' .or '\t';
+
+source_token
+   space .emit ' ' .or complex_token .or source_token_1;
+source_token_1
+   simple_token .emit ' ' .and .true .emit ' ';
+
+/*
+ * All possible tokens.
+ */
+
+complex_token
+   identifier .or number;
+
+simple_token
+   increment .or decrement .or lequal .or gequal .or equal .or nequal .or and .or xor .or or .or
+   addto .or subtractfrom .or multiplyto .or divideto .or other;
+
+identifier
+   identifier_char1 .emit * .and .loop identifier_char2 .emit *;
+identifier_char1
+   'a'-'z' .or 'A'-'Z' .or '_';
+identifier_char2
+   'a'-'z' .or 'A'-'Z' .or '0'-'9' .or '_';
+
+number
+   float .or integer;
+
+digit_oct
+   '0'-'7';
+
+digit_dec
+   '0'-'9';
+
+digit_hex
+   '0'-'9' .or 'A'-'F' .or 'a'-'f';
+
+float
+   float_1 .or float_2;
+float_1
+   float_fractional_constant .and float_optional_exponent_part;
+float_2
+   float_digit_sequence .and float_exponent_part;
+
+float_fractional_constant
+   float_fractional_constant_1 .or float_fractional_constant_2 .or float_fractional_constant_3;
+float_fractional_constant_1
+   float_digit_sequence .and '.' .emit '.' .and float_digit_sequence;
+float_fractional_constant_2
+   float_digit_sequence .and '.' .emit '.';
+float_fractional_constant_3
+   '.' .emit '.' .and float_digit_sequence;
+
+float_optional_exponent_part
+   float_exponent_part .or .true;
+
+float_digit_sequence
+   digit_dec .emit * .and .loop digit_dec .emit *;
+
+float_exponent_part
+   float_exponent_part_1 .or float_exponent_part_2;
+float_exponent_part_1
+   'e' .emit 'e' .and float_optional_sign .and float_digit_sequence;
+float_exponent_part_2
+   'E' .emit 'E' .and float_optional_sign .and float_digit_sequence;
+
+float_optional_sign
+   '+' .emit '+' .or '-' .emit '-' .or .true;
+
+integer
+   integer_hex .or integer_oct .or integer_dec;
+
+integer_hex
+   '0' .emit '0' .and integer_hex_1 .emit * .and digit_hex .emit * .and
+   .loop digit_hex .emit *;
+integer_hex_1
+   'x' .or 'X';
+
+integer_oct
+   '0' .emit '0' .and .loop digit_oct .emit *;
+
+integer_dec
+   digit_dec .emit * .and .loop digit_dec .emit *;
+
+increment
+   '+' .emit * .and '+' .emit *;
+
+decrement
+   '-' .emit * .and '-' .emit *;
+
+lequal
+   '<' .emit * .and '=' .emit *;
+
+gequal
+   '>' .emit * .and '=' .emit *;
+
+equal
+   '=' .emit * .and '=' .emit *;
+
+nequal
+   '!' .emit * .and '=' .emit *;
+
+and
+   '&' .emit * .and '&' .emit *;
+
+xor
+   '^' .emit * .and '^' .emit *;
+
+or
+   '|' .emit * .and '|' .emit *;
+
+addto
+   '+' .emit * .and '=' .emit *;
+
+subtractfrom
+   '-' .emit * .and '=' .emit *;
+
+multiplyto
+   '*' .emit * .and '=' .emit *;
+
+divideto
+   '/' .emit * .and '=' .emit *;
+
+/*
+ * All characters except '\0' and '#'.
+ */
+other
+   '\x24'-'\xFF' .emit * .or '\x01'-'\x22' .emit *;
+
+symbol_character
+   'A'-'Z' .or 'a'-'z' .or '_';
+
+symbol_character2
+   'A'-'Z' .or 'a'-'z' .or '0'-'9' .or '_';
+
+.string string_lexer;
+
+string_lexer
+   lex_first_identifier_character .and .loop lex_next_identifier_character;
+
+lex_first_identifier_character
+   'a'-'z' .or 'A'-'Z' .or '_';
+
+lex_next_identifier_character
+   'a'-'z' .or 'A'-'Z' .or '0'-'9' .or '_';
+

@@ -1,0 +1,200 @@
+/*
+ * Mesa 3-D graphics library
+ * Version:  6.6
+ *
+ * Copyright (C) 2006  Brian Paul   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+//
+// From Shader Spec, ver. 1.20, rev. 6
+//
+
+//
+// 8.5 Matrix Functions
+//
+
+mat2x3 matrixCompMult (mat2x3 m, mat2x3 n) {
+    return mat2x3 (m[0] * n[0], m[1] * n[1]);
+}
+
+mat2x4 matrixCompMult (mat2x4 m, mat2x4 n) {
+    return mat2x4 (m[0] * n[0], m[1] * n[1]);
+}
+
+mat3x2 matrixCompMult (mat3x2 m, mat3x2 n) {
+    return mat3x2 (m[0] * n[0], m[1] * n[1], m[2] * n[2]);
+}
+
+mat3x4 matrixCompMult (mat3x4 m, mat3x4 n) {
+    return mat3x4 (m[0] * n[0], m[1] * n[1], m[2] * n[2]);
+}
+
+mat4x2 matrixCompMult (mat4x2 m, mat4x2 n) {
+    return mat4x2 (m[0] * n[0], m[1] * n[1], m[2] * n[2], m[3] * n[3]);
+}
+
+mat4x3 matrixCompMult (mat4x3 m, mat4x3 n) {
+    return mat4x3 (m[0] * n[0], m[1] * n[1], m[2] * n[2], m[3] * n[3]);
+}
+
+mat2 outerProduct (vec2 c, vec2 r) {
+    return mat2 (
+        c.x * r.x, c.y * r.x,
+        c.x * r.y, c.y * r.y
+    );
+}
+
+mat3 outerProduct (vec3 c, vec3 r) {
+    return mat3 (
+        c.x * r.x, c.y * r.x, c.z * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y,
+        c.x * r.z, c.y * r.z, c.z * r.z
+    );
+}
+
+mat4 outerProduct (vec4 c, vec4 r) {
+    return mat4 (
+        c.x * r.x, c.y * r.x, c.z * r.x, c.w * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y, c.w * r.y,
+        c.x * r.z, c.y * r.z, c.z * r.z, c.w * r.z,
+        c.x * r.w, c.y * r.w, c.z * r.w, c.w * r.w
+    );
+}
+
+mat2x3 outerProduct (vec3 c, vec2 r) {
+    return mat2x3 (
+        c.x * r.x, c.y * r.x, c.z * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y
+    );
+}
+
+mat3x2 outerProduct (vec2 c, vec3 r) {
+    return mat3x2 (
+        c.x * r.x, c.y * r.x,
+        c.x * r.y, c.y * r.y,
+        c.x * r.z, c.y * r.z
+    );
+}
+
+mat2x4 outerProduct (vec4 c, vec2 r) {
+    return mat2x4 (
+        c.x * r.x, c.y * r.x, c.z * r.x, c.w * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y, c.w * r.y
+    );
+}
+
+mat4x2 outerProduct (vec2 c, vec4 r) {
+    return mat4x2 (
+        c.x * r.x, c.y * r.x,
+        c.x * r.y, c.y * r.y,
+        c.x * r.z, c.y * r.z,
+        c.x * r.w, c.y * r.w
+    );
+}
+
+mat3x4 outerProduct (vec4 c, vec3 r) {
+    return mat3x4 (
+        c.x * r.x, c.y * r.x, c.z * r.x, c.w * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y, c.w * r.y,
+        c.x * r.z, c.y * r.z, c.z * r.z, c.w * r.z
+    );
+}
+
+mat4x3 outerProduct (vec3 c, vec4 r) {
+    return mat4x3 (
+        c.x * r.x, c.y * r.x, c.z * r.x,
+        c.x * r.y, c.y * r.y, c.z * r.y,
+        c.x * r.z, c.y * r.z, c.z * r.z,
+        c.x * r.w, c.y * r.w, c.z * r.w
+    );
+}
+
+mat2 transpose (mat2 m) {
+    return mat2 (
+        m[0].x, m[1].x,
+        m[0].y, m[1].y
+    );
+}
+
+mat3 transpose (mat3 m) {
+    return mat3 (
+        m[0].x, m[1].x, m[2].x,
+        m[0].y, m[1].y, m[2].y,
+        m[0].z, m[1].z, m[2].z
+    );
+}
+
+mat4 transpose (mat4 m) {
+    return mat4 (
+        m[0].x, m[1].x, m[2].x, m[3].x,
+        m[0].y, m[1].y, m[2].y, m[3].y,
+        m[0].z, m[1].z, m[2].z, m[3].z,
+        m[0].w, m[1].w, m[2].w, m[3].w
+    );
+}
+
+mat2x3 transpose (mat3x2 m) {
+    return mat2x3 (
+        m[0].x, m[1].x, m[2].x,
+        m[0].y, m[1].y, m[2].y
+    );
+}
+
+mat3x2 transpose (mat2x3 m) {
+    return mat3x2 (
+        m[0].x, m[1].x,
+        m[0].y, m[1].y,
+        m[0].z, m[1].z
+    );
+}
+
+mat2x4 transpose (mat4x2 m) {
+    return mat2x4 (
+        m[0].x, m[1].x, m[2].x, m[3].x,
+        m[0].y, m[1].y, m[2].y, m[3].y
+    );
+}
+
+mat4x2 transpose (mat2x4 m) {
+    return mat4x2 (
+        m[0].x, m[1].x,
+        m[0].y, m[1].y,
+        m[0].z, m[1].z,
+        m[0].w, m[1].w
+    );
+}
+
+mat3x4 transpose (mat4x3 m) {
+    return mat3x4 (
+        m[0].x, m[1].x, m[2].x, m[3].x,
+        m[0].y, m[1].y, m[2].y, m[3].y,
+        m[0].z, m[1].z, m[2].z, m[3].z
+    );
+}
+
+mat4x3 transpose (mat3x4 m) {
+    return mat4x3 (
+        m[0].x, m[1].x, m[2].x,
+        m[0].y, m[1].y, m[2].y,
+        m[0].z, m[1].z, m[2].z,
+        m[0].w, m[1].w, m[2].w
+    );
+}
+

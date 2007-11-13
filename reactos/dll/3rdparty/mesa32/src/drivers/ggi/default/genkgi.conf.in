@@ -1,0 +1,4 @@
+# GGIMesa genkgi helper configuration
+.root: @ggi_libdir@/ggi/mesa/default
+
+tgt-fbdev-kgicon-d3dim-mesa	d3dim.so

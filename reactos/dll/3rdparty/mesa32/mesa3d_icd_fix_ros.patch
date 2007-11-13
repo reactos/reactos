@@ -1,0 +1,243 @@
+Index: drivers/windows/gdi/wmesa.c
+===================================================================
+--- drivers/windows/gdi/wmesa.c	(revision 30408)
++++ drivers/windows/gdi/wmesa.c	(working copy)
+@@ -1401,76 +1401,3 @@
+     }
+ }
+ 
+-/* This is hopefully a temporary hack to define some needed dispatch
+- * table entries.  Hopefully, I'll find a better solution.  The
+- * dispatch table generation scripts ought to be making these dummy
+- * stubs as well. */
+-#if !defined(__MINGW32__) || !defined(GL_NO_STDCALL)
+-void gl_dispatch_stub_543(void){}
+-void gl_dispatch_stub_544(void){}
+-void gl_dispatch_stub_545(void){}
+-void gl_dispatch_stub_546(void){}
+-void gl_dispatch_stub_547(void){}
+-void gl_dispatch_stub_548(void){}
+-void gl_dispatch_stub_549(void){}
+-void gl_dispatch_stub_550(void){}
+-void gl_dispatch_stub_551(void){}
+-void gl_dispatch_stub_552(void){}
+-void gl_dispatch_stub_553(void){}
+-void gl_dispatch_stub_554(void){}
+-void gl_dispatch_stub_555(void){}
+-void gl_dispatch_stub_556(void){}
+-void gl_dispatch_stub_557(void){}
+-void gl_dispatch_stub_558(void){}
+-void gl_dispatch_stub_559(void){}
+-void gl_dispatch_stub_560(void){}
+-void gl_dispatch_stub_561(void){}
+-void gl_dispatch_stub_565(void){}
+-void gl_dispatch_stub_566(void){}
+-void gl_dispatch_stub_577(void){}
+-void gl_dispatch_stub_578(void){}
+-void gl_dispatch_stub_603(void){}
+-void gl_dispatch_stub_645(void){}
+-void gl_dispatch_stub_646(void){}
+-void gl_dispatch_stub_647(void){}
+-void gl_dispatch_stub_648(void){}
+-void gl_dispatch_stub_649(void){}
+-void gl_dispatch_stub_650(void){}
+-void gl_dispatch_stub_651(void){}
+-void gl_dispatch_stub_652(void){}
+-void gl_dispatch_stub_653(void){}
+-void gl_dispatch_stub_734(void){}
+-void gl_dispatch_stub_735(void){}
+-void gl_dispatch_stub_736(void){}
+-void gl_dispatch_stub_737(void){}
+-void gl_dispatch_stub_738(void){}
+-void gl_dispatch_stub_745(void){}
+-void gl_dispatch_stub_746(void){}
+-void gl_dispatch_stub_760(void){}
+-void gl_dispatch_stub_761(void){}
+-void gl_dispatch_stub_766(void){}
+-void gl_dispatch_stub_767(void){}
+-void gl_dispatch_stub_768(void){}
+-
+-void gl_dispatch_stub_562(void){}
+-void gl_dispatch_stub_563(void){}
+-void gl_dispatch_stub_564(void){}
+-void gl_dispatch_stub_567(void){}
+-void gl_dispatch_stub_568(void){}
+-void gl_dispatch_stub_569(void){}
+-void gl_dispatch_stub_580(void){}
+-void gl_dispatch_stub_581(void){}
+-void gl_dispatch_stub_606(void){}
+-void gl_dispatch_stub_654(void){}
+-void gl_dispatch_stub_655(void){}
+-void gl_dispatch_stub_656(void){}
+-void gl_dispatch_stub_739(void){}
+-void gl_dispatch_stub_740(void){}
+-void gl_dispatch_stub_741(void){}
+-void gl_dispatch_stub_748(void){}
+-void gl_dispatch_stub_749(void){}
+-void gl_dispatch_stub_769(void){}
+-void gl_dispatch_stub_770(void){}
+-void gl_dispatch_stub_771(void){}
+-
+-#endif
+Index: drivers/windows/icd/icd.c
+===================================================================
+--- drivers/windows/icd/icd.c	(revision 30408)
++++ drivers/windows/icd/icd.c	(working copy)
+@@ -155,7 +155,7 @@
+     {
+         if ( wgl_ctx[i].ctx == NULL )
+         {
+-            wgl_ctx[i].ctx = WMesaCreateContext( hWnd, NULL, GL_TRUE,
++            wgl_ctx[i].ctx = WMesaCreateContext( hdc, NULL, GL_TRUE,
+                 pix[curPFD-1].doubleBuffered, 
+                 pix[curPFD-1].pfd.cAlphaBits ? GL_TRUE : GL_FALSE);
+             if (wgl_ctx[i].ctx == NULL)
+@@ -176,8 +176,8 @@
+     {
+     	if ( wgl_ctx[i].ctx == (PWMC) hglrc )
+     	{
+-            WMesaMakeCurrent((PWMC) hglrc);
+-            WMesaDestroyContext();
++            WMesaMakeCurrent((PWMC) hglrc, NULL);
++            WMesaDestroyContext(wgl_ctx[i].ctx);
+             wgl_ctx[i].ctx = NULL;
+             wgl_ctx[i].hdc = NULL;
+             ctx_count--;
+@@ -203,7 +203,7 @@
+ 
+     /* new code suggested by Andy Sy */
+     if (!hdc || !hglrc) {
+-       WMesaMakeCurrent(NULL);
++       WMesaMakeCurrent(NULL, NULL);
+        ctx_current = -1;
+        return NULL;
+     }
+@@ -213,7 +213,7 @@
+         if ( wgl_ctx[i].ctx == (PWMC) hglrc )
+         {
+             wgl_ctx[i].hdc = hdc;
+-            WMesaMakeCurrent( (PWMC) hglrc );
++            WMesaMakeCurrent( (PWMC) hglrc , hdc);
+             ctx_current = i;
+             return &icdTable;
+         }
+@@ -224,7 +224,7 @@
+ WGLAPI void GLAPIENTRY DrvReleaseContext(HGLRC hglrc)
+ {
+     (void) hglrc;
+-    WMesaMakeCurrent(NULL);
++    WMesaMakeCurrent(NULL, NULL);
+     ctx_current = -1;
+ }
+ 
+@@ -273,7 +273,7 @@
+     (void) fuPlanes;
+     if( !hdc )
+     {
+-        WMesaSwapBuffers();
++        WMesaSwapBuffers(hdc);
+         return(TRUE);
+     }
+     SetLastError(0);
+@@ -287,7 +287,7 @@
+     (void) hdc;
+ 
+     qt_valid_pix = qt_pix;
+-    if(ppfd == NULL)
++    if(ppfd==NULL)
+ 	return(qt_valid_pix);
+     if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix || nBytes != sizeof(PIXELFORMATDESCRIPTOR))
+     {
+@@ -311,19 +311,27 @@
+    return(NULL);
+ }
+ 
+-WGLAPI BOOL GLAPIENTRY DrvSetPixelFormat(HDC hdc,int iPixelFormat)
++WGLAPI BOOL GLAPIENTRY DrvSetPixelFormat(HDC hdc,int iPixelFormat, const PIXELFORMATDESCRIPTOR *ppfd)
+ {
+-    int qt_valid_pix;
+-    (void) hdc;
++   int qt_valid_pix;
+ 
+-    qt_valid_pix = qt_pix;
+-    if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix)
+-    {
+-        SetLastError(0);
+-        return(FALSE);
+-    }
+-    curPFD = iPixelFormat;
+-    return(TRUE);
++   qt_valid_pix = qt_pix;
++
++   if (iPixelFormat < 1 || iPixelFormat > qt_valid_pix) {
++      if (ppfd == NULL) {
++         PIXELFORMATDESCRIPTOR my_pfd;
++         if (!DrvDescribePixelFormat(hdc, iPixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &my_pfd)) {
++            SetLastError(0);
++            return FALSE;
++         }
++      } else if (ppfd->nSize != sizeof(PIXELFORMATDESCRIPTOR)) {
++         SetLastError(0);
++         return FALSE;
++      }
++   }
++   curPFD = iPixelFormat;
++
++   return TRUE;
+ }
+ 
+ WGLAPI BOOL GLAPIENTRY DrvSwapBuffers(HDC hdc)
+@@ -336,7 +344,7 @@
+         SetLastError(0);
+         return(FALSE);
+     }
+-    WMesaSwapBuffers();
++    WMesaSwapBuffers(hdc);
+     return(TRUE);
+ }
+ 
+Index: drivers/windows/icd/mesa.def
+===================================================================
+--- drivers/windows/icd/mesa.def	(revision 30408)
++++ drivers/windows/icd/mesa.def	(working copy)
+@@ -50,7 +50,6 @@
+ 	_mesa_free
+ 	_mesa_free_context_data
+ 	_mesa_get_current_context
+-	_mesa_init_default_imports
+ 	_mesa_init_driver_functions
+ 	_mesa_initialize_context
+ 	_mesa_make_current
+@@ -78,7 +77,6 @@
+ 	_swrast_Accum
+ 	_swrast_Bitmap
+ 	_swrast_CopyPixels
+-	_swrast_DrawBuffer
+ 	_swrast_DrawPixels
+ 	_swrast_GetDeviceDriverReference
+ 	_swrast_Clear
+@@ -104,5 +102,4 @@
+ 	_tnl_CreateContext
+ 	_tnl_DestroyContext
+ 	_tnl_InvalidateState
+-	_tnl_MakeCurrent
+ 	_tnl_run_pipeline
+Index: glapi/glapi.c
+===================================================================
+--- glapi/glapi.c	(revision 30408)
++++ glapi/glapi.c	(working copy)
+@@ -876,14 +876,6 @@
+    struct _glapi_function * entry;
+    GLuint i;
+ 
+-#ifdef MANGLE
+-   if (funcName[0] != 'm' || funcName[1] != 'g' || funcName[2] != 'l')
+-      return NULL;
+-#else
+-   if (funcName[0] != 'g' || funcName[1] != 'l')
+-      return NULL;
+-#endif
+-
+    /* search extension functions first */
+    for (i = 0; i < NumExtEntryPoints; i++) {
+       if (strcmp(ExtEntryTable[i].name, funcName) == 0) {

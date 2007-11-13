@@ -1,0 +1,28 @@
+# List of source files in this directory used for X.org xserver build
+MESA_SHADER_SOURCES = \
+arbprogparse.c \
+arbprogram.c \
+atifragshader.c \
+nvfragparse.c \
+nvprogram.c \
+nvvertexec.c \
+nvvertparse.c \
+program.c \
+programopt.c \
+shaderobjects.c \
+shaderobjects_3dlabs.c
+
+MESA_SHADER_HEADERS = \
+arbprogparse.h \
+arbprogram.h \
+arbprogram_syn.h \
+atifragshader.h \
+nvfragparse.h \
+nvprogram.h \
+nvvertexec.h \
+nvvertparse.h \
+programopt.h \
+program.h \
+program_instruction.h \
+shaderobjects.h \
+shaderobjects_3dlabs.h

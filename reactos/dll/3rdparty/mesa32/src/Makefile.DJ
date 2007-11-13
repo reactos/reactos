@@ -1,0 +1,166 @@
+# Mesa 3-D graphics library
+# Version:  5.1
+# 
+# Copyright (C) 1999-2003  Brian Paul   All Rights Reserved.
+# 
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+# BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+# AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+# CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# DOS/DJGPP core makefile v1.7 for Mesa
+#
+#  Copyright (C) 2002 - Daniel Borca
+#  Email : dborca@users.sourceforge.net
+#  Web   : http://www.geocities.com/dborca
+
+
+#
+#  Available options:
+#
+#    Environment variables:
+#	CFLAGS
+#
+#	GLIDE		path to Glide3 SDK; used with FX.
+#			default = $(TOP)/glide3
+#	FX=1		build for 3dfx Glide3. Note that this disables
+#			compilation of most DMesa code and requires fxMesa.
+#			As a consequence, you'll need the DJGPP Glide3
+#			library to build any application.
+#			default = no
+#	X86=1		optimize for x86 (if possible, use MMX, SSE, 3DNow).
+#			default = no
+#
+#    Targets:
+#	all:		build GL
+#	clean:		remove object files
+#
+
+
+
+.PHONY: all clean
+.INTERMEDIATE: x86/gen_matypes.exe
+
+TOP = ../..
+GLIDE ?= $(TOP)/glide3
+LIBDIR = $(TOP)/lib
+GL_LIB = libgl.a
+GL_DXE = gl.dxe
+GL_IMP = libigl.a
+
+export LD_LIBRARY_PATH := $(LD_LIBRARY_PATH);$(LIBDIR);$(GLIDE)/lib
+
+CC = gcc
+CFLAGS += $(INCLUDE_DIRS)
+CFLAGS += -DUSE_EXTERNAL_DXTN_LIB=1
+ifeq ($(FX),1)
+CFLAGS += -D__DOS__
+CFLAGS += -I$(GLIDE)/include -DFX
+LIBNAME = "Mesa/FX DJGPP"
+else
+LIBNAME = "Mesa DJGPP"
+endif
+
+AR = ar
+ARFLAGS = crus
+
+HAVEDXE3 = $(wildcard $(DJDIR)/bin/dxe3gen.exe)
+
+ifeq ($(wildcard $(addsuffix /rm.exe,$(subst ;, ,$(PATH)))),)
+UNLINK = del $(subst /,\,$(1))
+else
+UNLINK = $(RM) $(1)
+endif
+
+include sources
+
+ifeq ($(X86),1)
+CFLAGS += -DUSE_X86_ASM
+CFLAGS += -DUSE_MMX_ASM
+CFLAGS += -DUSE_SSE_ASM
+CFLAGS += -DUSE_3DNOW_ASM
+X86_SOURCES += $(X86_API)
+else
+X86_SOURCES =
+endif
+
+DRIVER_SOURCES = \
+	drivers/dos/dmesa.c
+ifeq ($(FX),1)
+DRIVER_SOURCES += \
+	$(GLIDE_DRIVER_SOURCES)
+else
+DRIVER_SOURCES += \
+	$(OSMESA_DRIVER_SOURCES) \
+	drivers/dos/video.c \
+	drivers/dos/vesa.c \
+	drivers/dos/blit.S \
+	drivers/dos/vga.c \
+	drivers/dos/null.c \
+	drivers/dos/dpmi.c
+endif
+
+SOURCES = $(CORE_SOURCES) $(X86_SOURCES) $(COMMON_DRIVER_SOURCES) $(DRIVER_SOURCES)
+
+OBJECTS = $(addsuffix .o,$(basename $(SOURCES)))
+
+X86_OBJECTS = $(addsuffix .o,$(basename $(X86_SOURCES)))
+
+.c.o:
+	$(CC) -o $@ $(CFLAGS) -c $<
+.S.o:
+	$(CC) -o $@ $(CFLAGS) -c $<
+.s.o:
+	$(CC) -o $@ $(CFLAGS) -x assembler-with-cpp -c $<
+
+all: $(LIBDIR)/$(GL_LIB) $(LIBDIR)/$(GL_DXE) $(LIBDIR)/$(GL_IMP)
+
+$(LIBDIR)/$(GL_LIB): $(OBJECTS)
+	$(AR) $(ARFLAGS) $@ $^
+
+$(LIBDIR)/$(GL_DXE) $(LIBDIR)/$(GL_IMP): $(OBJECTS)
+ifeq ($(HAVEDXE3),)
+	$(warning Missing DXE3 package... Skipping $(GL_DXE))
+else
+ifeq ($(FX),1)
+	-dxe3gen -o $(LIBDIR)/$(GL_DXE) -Y $(LIBDIR)/$(GL_IMP) -D $(LIBNAME) -E _gl -E _DMesa -P glide3x.dxe -U $^
+else
+	-dxe3gen -o $(LIBDIR)/$(GL_DXE) -Y $(LIBDIR)/$(GL_IMP) -D $(LIBNAME) -E _gl -E _DMesa -U $^
+endif
+endif
+
+$(X86_OBJECTS): x86/matypes.h
+
+x86/matypes.h: x86/gen_matypes.exe
+	$< > $@
+
+x86/gen_matypes.exe: x86/gen_matypes.c
+	$(CC) -o $@ $(CFLAGS) -s $<
+
+clean:
+	-$(call UNLINK,array_cache/*.o)
+	-$(call UNLINK,glapi/*.o)
+	-$(call UNLINK,main/*.o)
+	-$(call UNLINK,math/*.o)
+	-$(call UNLINK,shader/*.o)
+	-$(call UNLINK,sparc/*.o)
+	-$(call UNLINK,ppc/*.o)
+	-$(call UNLINK,swrast/*.o)
+	-$(call UNLINK,swrast_setup/*.o)
+	-$(call UNLINK,tnl/*.o)
+	-$(call UNLINK,x86/*.o)
+	-$(call UNLINK,drivers/common/*.o)
+	-$(call UNLINK,drivers/dos/*.o)
+	-$(call UNLINK,drivers/glide/*.o)

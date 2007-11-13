@@ -1,0 +1,12 @@
+MESA_GLAPI_SOURCES = \
+glapi.c \
+glthread.c
+
+MESA_GLAPI_HEADERS = \
+dispatch.h \
+glapi.h \
+glapioffsets.h \
+glapitable.h \
+glapitemp.h \
+glprocs.h \
+glthread.h

@@ -1,0 +1,187 @@
+/*
+ * Mesa 3-D graphics library
+ * Version:  6.5
+ *
+ * Copyright (C) 2006  Brian Paul   All Rights Reserved.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included
+ * in all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+ * OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * BRIAN PAUL BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+ * AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+ * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+//
+// From Shader Spec, ver. 1.10, rev. 59
+//
+
+__fixed_output vec4 gl_Position;
+__fixed_output float gl_PointSize;
+__fixed_output vec4 gl_ClipVertex;
+
+attribute vec4 gl_Color;
+attribute vec4 gl_SecondaryColor;
+attribute vec3 gl_Normal;
+attribute vec4 gl_Vertex;
+attribute vec4 gl_MultiTexCoord0;
+attribute vec4 gl_MultiTexCoord1;
+attribute vec4 gl_MultiTexCoord2;
+attribute vec4 gl_MultiTexCoord3;
+attribute vec4 gl_MultiTexCoord4;
+attribute vec4 gl_MultiTexCoord5;
+attribute vec4 gl_MultiTexCoord6;
+attribute vec4 gl_MultiTexCoord7;
+attribute float gl_FogCoord;
+
+varying vec4 gl_FrontColor;
+varying vec4 gl_BackColor;
+varying vec4 gl_FrontSecondaryColor;
+varying vec4 gl_BackSecondaryColor;
+varying vec4 gl_TexCoord[gl_MaxTextureCoords];
+varying float gl_FogFragCoord;
+
+//
+// Geometric Functions
+//
+
+vec4 ftransform()
+{
+   __retVal = gl_Vertex * gl_ModelViewProjectionMatrixTranspose;
+}
+
+
+
+//
+// 8.7 Texture Lookup Functions
+// These are pretty much identical to the ones in slang_fragment_builtin.gc
+// When used in a vertex program, the texture sample instructions should not
+// be using a LOD term so it's effectively zero.  Adding 'lod' to that does
+// what we want.
+//
+
+vec4 texture1DLod(const sampler1D sampler, const float coord, const float lod)
+{
+   vec4 coord4;
+   coord4.x = coord;
+   coord4.w = lod;
+   __asm vec4_texb1d __retVal, sampler, coord4;
+}
+
+vec4 texture1DProjLod(const sampler1D sampler, const vec2 coord, const float lod)
+{
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.y;
+   pcoord.w = lod;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+vec4 texture1DProjLod(const sampler1D sampler, const vec4 coord, const float lod)
+{
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.z;
+   pcoord.w = lod;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+
+
+vec4 texture2DLod(const sampler2D sampler, const vec2 coord, const float lod)
+{
+   vec4 coord4;
+   coord4.xy = coord.xy;
+   coord4.w = lod;
+   __asm vec4_texb2d __retVal, sampler, coord4;
+}
+
+vec4 texture2DProjLod(const sampler2D sampler, const vec3 coord, const float lod)
+{
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.z;
+   pcoord.w = lod;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
+vec4 texture2DProjLod(const sampler2D sampler, const vec4 coord, const float lod)
+{
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.z;
+   pcoord.w = lod;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
+
+vec4 texture3DLod(const sampler3D sampler, const vec3 coord, const float lod)
+{
+   vec4 coord4;
+   coord4.xyz = coord.xyz;
+   coord4.w = lod;
+   __asm vec4_texb3d __retVal, sampler, coord4;
+}
+
+vec4 texture3DProjLod(const sampler3D sampler, const vec4 coord, const float lod)
+{
+   // do projection here (there's no vec4_texbp3d instruction)
+   vec4 pcoord;
+   pcoord.xyz = coord.xyz / coord.w;
+   pcoord.w = lod;
+   __asm vec4_texb3d __retVal, sampler, pcoord;
+}
+
+
+vec4 textureCubeLod(const samplerCube sampler, const vec3 coord, const float lod)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = lod;
+   __asm vec4_texcube __retVal, sampler, coord4;
+}
+
+
+vec4 shadow1DLod(const sampler1DShadow sampler, const vec3 coord, const float lod)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = lod;
+   __asm vec4_texb1d __retVal, sampler, coord4;
+}
+
+vec4 shadow1DProjLod(const sampler1DShadow sampler, const vec4 coord,
+                     const float lod)
+{
+   vec4 pcoord;
+   pcoord.x = coord.x / coord.w;
+   pcoord.z = coord.z;
+   pcoord.w = lod;
+   __asm vec4_texb1d __retVal, sampler, pcoord;
+}
+
+
+vec4 shadow2DLod(const sampler2DShadow sampler, const vec3 coord, const float lod)
+{
+   vec4 coord4;
+   coord4.xyz = coord;
+   coord4.w = lod;
+   __asm vec4_texb2d __retVal, sampler, coord4;
+}
+
+vec4 shadow2DProjLod(const sampler2DShadow sampler, const vec4 coord,
+                     const float lod)
+{
+   vec4 pcoord;
+   pcoord.xy = coord.xy / coord.w;
+   pcoord.z = coord.z;
+   pcoord.w = lod;
+   __asm vec4_texb2d __retVal, sampler, pcoord;
+}
+
