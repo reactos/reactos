@@ -611,8 +611,7 @@ ISF_ControlPanel_fnGetUIObjectOf(IShellFolder2 * iface,
 	*ppvOut = NULL;
 
 	if (IsEqualIID(riid, &IID_IContextMenu) &&(cidl >= 1)) {
-	    pObj = (LPUNKNOWN) ISvItemCm_Constructor((IShellFolder *) iface, This->pidlRoot, apidl, cidl);
-	    hr = S_OK;
+        hr = CDefFolderMenu_Create2(This->pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)iface, NULL, 0, NULL, (IContextMenu**)&pObj);
 	} else if (IsEqualIID(riid, &IID_IDataObject) &&(cidl >= 1)) {
 	    pObj = (LPUNKNOWN) IDataObject_Constructor(hwndOwner, This->pidlRoot, apidl, cidl);
 	    hr = S_OK;
