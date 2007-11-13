@@ -209,6 +209,7 @@ BEGIN
    IDS_CMT_SCREENSHOT  "Zrzut ekranu"
    IDS_CMT_DEVMGMT     "Uruchom Mened¿er urz¹dzeñ"
    IDS_CMT_SERVMAN     "Uruchom Mened¿er us³ug"
+   IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 
@@ -253,6 +254,7 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Pasjans.lnk"
     IDS_SHORT_WINEMINE   "Saper.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

@@ -209,6 +209,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Ta skjermbilde"
     IDS_CMT_DEVMGMT     "Start Enhetsbehandler"
     IDS_CMT_SERVMAN     "Start Tjenestebehandler"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 STRINGTABLE
@@ -259,6 +260,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

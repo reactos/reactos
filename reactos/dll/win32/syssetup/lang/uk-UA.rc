@@ -195,6 +195,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Зробити знімок екрана"
     IDS_CMT_DEVMGMT     "Запустити Диспетчер пристроїв"
     IDS_CMT_SERVMAN     "Запустити Диспетчер керування службами"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 STRINGTABLE
@@ -246,6 +247,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

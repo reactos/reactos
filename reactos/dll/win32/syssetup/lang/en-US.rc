@@ -206,6 +206,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Take screenshot"
     IDS_CMT_DEVMGMT     "Launch Device Manager"
     IDS_CMT_SERVMAN     "Launch Service Manager"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 STRINGTABLE
@@ -254,8 +255,9 @@ BEGIN
     IDS_SHORT_SNAP       "SnapShot.lnk"
     IDS_SHORT_SOLITAIRE  "Solitaire.lnk"
     IDS_SHORT_WINEMINE   "WineMine.lnk"
-	IDS_SHORT_CHARMAP    "Character Map.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_CHARMAP    "Character Map.lnk"
+    IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

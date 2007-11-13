@@ -206,6 +206,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Faire une capture d'écran"
     IDS_CMT_DEVMGMT     "Lancer le gestionnaire de périphériques"
     IDS_CMT_SERVMAN     "Lancer le gestionnaire de services"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 STRINGTABLE
@@ -256,6 +257,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "WineMine.lnk"
     IDS_SHORT_CHARMAP    "Table des Caractères.lnk"
     IDS_SHORT_MAGNIFY    "Loupe.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

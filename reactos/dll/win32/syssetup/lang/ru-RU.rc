@@ -187,6 +187,8 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Сделать снимок экрана"
     IDS_CMT_DEVMGMT     "Запустить диспетчер устройств"
     IDS_CMT_SERVMAN     "Запустить диспетчер служб"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+
 END
 
 STRINGTABLE
@@ -238,6 +240,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "Сапер.lnk"
 	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE

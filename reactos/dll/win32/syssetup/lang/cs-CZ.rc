@@ -204,6 +204,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Sejmout obrazovku"
     IDS_CMT_DEVMGMT     "Spustit Správce zaøízení"
     IDS_CMT_SERVMAN     "Spustit Správce služeb"
+    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
 END
 
 STRINGTABLE
@@ -255,6 +256,7 @@ BEGIN
     IDS_SHORT_WINEMINE   "WineMine.lnk"
 	IDS_SHORT_CHARMAP    "CharMap.lnk"
 	IDS_SHORT_MAGNIFY    "Magnify.lnk"
+    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
 END
 
 STRINGTABLE
