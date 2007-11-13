@@ -101,7 +101,7 @@ base\system\smss\smss.exe                           1
 ; Dynamic Link Libraries
 dll\3rdparty\freetype\freetype.dll                  1
 dll\3rdparty\mesa32\mesa32.dll                      1
-dll\3rdparty\mesa32\dxtn.dll                        1   optional
+dll\3rdparty\dxtn.dll                               1   optional
 
 dll\cpl\access\access.cpl                           1
 dll\cpl\appwiz\appwiz.cpl                           1
