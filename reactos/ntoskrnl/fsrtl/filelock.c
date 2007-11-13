@@ -77,8 +77,34 @@ FsRtlPrivateLock(IN PFILE_LOCK FileLock,
                  IN PVOID Context OPTIONAL,
                  IN BOOLEAN AlreadySynchronized)
 {
-    KEBUGCHECK(0);
-    return FALSE;
+    NTSTATUS Status;
+
+    DPRINT1("FsRtlPrivateLock() is stubplemented!\n");
+
+    /* Initialize the lock, if necessary */
+    if (!FileLock->LockInformation)
+    {
+        DPRINT("LockInformation is uninitialized!\n");
+    }
+
+    /* Assume all is cool, and lock is set */
+    IoStatus->Status = STATUS_SUCCESS;
+
+    if (Irp)
+    {
+        /* Complete the request */
+        FsRtlCompleteLockIrpReal(FileLock->CompleteLockIrpRoutine,
+                                 Context,
+                                 Irp,
+                                 IoStatus->Status,
+                                 &Status,
+                                 FileObject);
+
+        /* Update the status */
+        IoStatus->Status = Status;
+    }
+
+    return TRUE;
 }
 
 /*
@@ -151,8 +177,9 @@ FsRtlFastUnlockSingle(IN PFILE_LOCK FileLock,
                       IN PVOID Context OPTIONAL,
                       IN BOOLEAN AlreadySynchronized)
 {
-    KEBUGCHECK(0);
-    return STATUS_UNSUCCESSFUL;
+    DPRINT1("FsRtlFastUnlockSingle() is stubplemented!\n");
+
+    return STATUS_SUCCESS;
 }
 
 /*
