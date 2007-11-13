@@ -29,7 +29,8 @@ static DWORD OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd );
 
 
 /* global vars */
-DWORD OPENGL32_tls;
+/* Do not assume it have the free value -1 set, any value can be in here */
+DWORD OPENGL32_tls = -1;
 GLPROCESSDATA OPENGL32_processdata;
 
 
@@ -110,7 +111,7 @@ OPENGL32_ProcessAttach()
 	                               TRUE /* bInheritHandle */ };
 
 	OPENGL32_tls = TlsAlloc();
-	if (0xFFFFFFFF == OPENGL32_tls)
+	if (-1 == OPENGL32_tls)
 		return FALSE;
 
 	memset( &OPENGL32_processdata, 0, sizeof (OPENGL32_processdata) );
@@ -186,7 +187,7 @@ OPENGL32_ProcessDetach()
 		CloseHandle( OPENGL32_processdata.dcdata_mutex );
 
 	/* free TLS */
-	if (OPENGL32_tls != 0xffffffff)
+	if (OPENGL32_tls != -1)
 		TlsFree(OPENGL32_tls);
 }
 
