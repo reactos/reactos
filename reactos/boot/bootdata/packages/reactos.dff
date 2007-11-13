@@ -45,6 +45,7 @@ base\applications\hh\hh.exe                             1
 base\applications\hostname\hostname.exe                 1
 base\applications\logoff\logoff.exe                     1
 base\applications\msconfig\msconfig.exe                 1
+base\applications\mstsc\mstsc.exe                       1
 base\applications\network\arp\arp.exe                   1
 base\applications\network\dwnl\dwnl.exe                 1
 base\applications\network\route\route.exe               1
