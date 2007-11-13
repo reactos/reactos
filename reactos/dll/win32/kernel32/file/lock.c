@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/kernel32/file/file.c
+ * FILE:            dll/win32/kernel32/file/lock.c
  * PURPOSE:         Directory functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  * UPDATE HISTORY:
@@ -15,8 +15,8 @@
 
 #include <k32.h>
 
-#define NDEBUG
-#include <debug.h>
+//#define YDEBUG
+#include <wine/debug.h>
 
 /* FUNCTIONS ****************************************************************/
 
@@ -25,24 +25,27 @@
  */
 BOOL
 STDCALL
-LockFile(
-	 HANDLE hFile,
-	 DWORD dwFileOffsetLow,
-	 DWORD dwFileOffsetHigh,
-	 DWORD nNumberOfBytesToLockLow,
-	 DWORD nNumberOfBytesToLockHigh
-	 )
+LockFile(HANDLE hFile,
+         DWORD dwFileOffsetLow,
+         DWORD dwFileOffsetHigh,
+         DWORD nNumberOfBytesToLockLow,
+         DWORD nNumberOfBytesToLockHigh)
 {
-	DWORD dwReserved;
-	OVERLAPPED Overlapped;
+    DWORD dwReserved;
+    OVERLAPPED Overlapped;
 
-	Overlapped.Offset = dwFileOffsetLow;
-	Overlapped.OffsetHigh = dwFileOffsetHigh;
-   Overlapped.hEvent = NULL;
-	dwReserved = 0;
+    Overlapped.Offset = dwFileOffsetLow;
+    Overlapped.OffsetHigh = dwFileOffsetHigh;
+    Overlapped.hEvent = NULL;
+    dwReserved = 0;
 
-  	return LockFileEx(hFile, LOCKFILE_FAIL_IMMEDIATELY|LOCKFILE_EXCLUSIVE_LOCK,dwReserved,nNumberOfBytesToLockLow, nNumberOfBytesToLockHigh, &Overlapped ) ;
-
+    return LockFileEx(hFile,
+                      LOCKFILE_FAIL_IMMEDIATELY |
+                      LOCKFILE_EXCLUSIVE_LOCK,
+                      dwReserved,
+                      nNumberOfBytesToLockLow,
+                      nNumberOfBytesToLockHigh,
+                      &Overlapped ) ;
 }
 
 
@@ -51,63 +54,65 @@ LockFile(
  */
 BOOL
 STDCALL
-LockFileEx(
-	   HANDLE hFile,
-	   DWORD dwFlags,
-	   DWORD dwReserved,
-	   DWORD nNumberOfBytesToLockLow,
-	   DWORD nNumberOfBytesToLockHigh,
-	   LPOVERLAPPED lpOverlapped /* required! */
-	   )
+LockFileEx(HANDLE hFile,
+           DWORD dwFlags,
+           DWORD dwReserved,
+           DWORD nNumberOfBytesToLockLow,
+           DWORD nNumberOfBytesToLockHigh,
+           LPOVERLAPPED lpOverlapped /* required! */)
 {
-   LARGE_INTEGER BytesToLock;
-   BOOL LockImmediate;
-   BOOL LockExclusive;
-   NTSTATUS errCode;
-   LARGE_INTEGER Offset;
+    LARGE_INTEGER BytesToLock;
+    BOOL LockImmediate;
+    BOOL LockExclusive;
+    NTSTATUS errCode;
+    LARGE_INTEGER Offset;
 
-   if(dwReserved != 0 || lpOverlapped==NULL)
-     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-     }
+    if(dwReserved != 0 || lpOverlapped==NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-   lpOverlapped->Internal = STATUS_PENDING;
+    TRACE( "%p %x%08x %x%08x flags %x\n",
+        hFile, lpOverlapped->OffsetHigh, lpOverlapped->Offset, 
+        nNumberOfBytesToLockHigh, nNumberOfBytesToLockLow, dwFlags );
 
-   Offset.u.LowPart = lpOverlapped->Offset;
-   Offset.u.HighPart = lpOverlapped->OffsetHigh;
+    lpOverlapped->Internal = STATUS_PENDING;
 
-   if ( (dwFlags & LOCKFILE_FAIL_IMMEDIATELY) == LOCKFILE_FAIL_IMMEDIATELY )
-     LockImmediate = TRUE;
-   else
-     LockImmediate = FALSE;
+    Offset.u.LowPart = lpOverlapped->Offset;
+    Offset.u.HighPart = lpOverlapped->OffsetHigh;
 
-   if ( (dwFlags & LOCKFILE_EXCLUSIVE_LOCK) == LOCKFILE_EXCLUSIVE_LOCK )
-     LockExclusive = TRUE;
-   else
-     LockExclusive = FALSE;
+    if ( (dwFlags & LOCKFILE_FAIL_IMMEDIATELY) == LOCKFILE_FAIL_IMMEDIATELY )
+        LockImmediate = TRUE;
+    else
+        LockImmediate = FALSE;
 
-   BytesToLock.u.LowPart = nNumberOfBytesToLockLow;
-   BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
+    if ( (dwFlags & LOCKFILE_EXCLUSIVE_LOCK) == LOCKFILE_EXCLUSIVE_LOCK )
+        LockExclusive = TRUE;
+    else
+        LockExclusive = FALSE;
 
-   errCode = NtLockFile(hFile,
-         lpOverlapped->hEvent,
-			NULL,
-			NULL,
-			(PIO_STATUS_BLOCK)lpOverlapped,
-			&Offset,
-			&BytesToLock,
-			0,
-			(BOOLEAN)LockImmediate,
-			(BOOLEAN)LockExclusive);
-   if ( !NT_SUCCESS(errCode) )
-     {
-      SetLastErrorByStatus (errCode);
-      return FALSE;
-     }
+    BytesToLock.u.LowPart = nNumberOfBytesToLockLow;
+    BytesToLock.u.HighPart = nNumberOfBytesToLockHigh;
 
-   return TRUE;
+    errCode = NtLockFile(hFile,
+                         lpOverlapped->hEvent,
+                         NULL,
+                         NULL,
+                         (PIO_STATUS_BLOCK)lpOverlapped,
+                         &Offset,
+                         &BytesToLock,
+                         0,
+                         (BOOLEAN)LockImmediate,
+                         (BOOLEAN)LockExclusive);
 
+    if ( !NT_SUCCESS(errCode) )
+    {
+        SetLastErrorByStatus(errCode);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -116,21 +121,23 @@ LockFileEx(
  */
 BOOL
 STDCALL
-UnlockFile(
-	   HANDLE hFile,
-	   DWORD dwFileOffsetLow,
-	   DWORD dwFileOffsetHigh,
-	   DWORD nNumberOfBytesToUnlockLow,
-	   DWORD nNumberOfBytesToUnlockHigh
-	   )
+UnlockFile(HANDLE hFile,
+           DWORD dwFileOffsetLow,
+           DWORD dwFileOffsetHigh,
+           DWORD nNumberOfBytesToUnlockLow,
+           DWORD nNumberOfBytesToUnlockHigh)
 {
-	OVERLAPPED Overlapped;
-   DWORD dwReserved;
-	Overlapped.Offset = dwFileOffsetLow;
-	Overlapped.OffsetHigh = dwFileOffsetHigh;
-   dwReserved = 0;
+    OVERLAPPED Overlapped;
+    DWORD dwReserved;
+    Overlapped.Offset = dwFileOffsetLow;
+    Overlapped.OffsetHigh = dwFileOffsetHigh;
+    dwReserved = 0;
 
-   return UnlockFileEx(hFile, dwReserved, nNumberOfBytesToUnlockLow, nNumberOfBytesToUnlockHigh, &Overlapped);
+    return UnlockFileEx(hFile,
+                        dwReserved,
+                        nNumberOfBytesToUnlockLow,
+                        nNumberOfBytesToUnlockHigh,
+                        &Overlapped);
 }
 
 
@@ -139,41 +146,45 @@ UnlockFile(
  */
 BOOL
 STDCALL
-UnlockFileEx(
-	HANDLE hFile,
-	DWORD dwReserved,
-	DWORD nNumberOfBytesToUnLockLow,
-	DWORD nNumberOfBytesToUnLockHigh,
-	LPOVERLAPPED lpOverlapped /* required! */
-	)
+UnlockFileEx(HANDLE hFile,
+             DWORD dwReserved,
+             DWORD nNumberOfBytesToUnLockLow,
+             DWORD nNumberOfBytesToUnLockHigh,
+             LPOVERLAPPED lpOverlapped /* required! */)
 {
-   LARGE_INTEGER BytesToUnLock;
-   LARGE_INTEGER StartAddress;
-   NTSTATUS errCode;
+    LARGE_INTEGER BytesToUnLock;
+    LARGE_INTEGER StartAddress;
+    NTSTATUS errCode;
 
-   if(dwReserved != 0 || lpOverlapped == NULL)
-     {
-	SetLastError(ERROR_INVALID_PARAMETER);
-	return FALSE;
-     }
+    if(dwReserved != 0 || lpOverlapped == NULL)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
 
-   BytesToUnLock.u.LowPart = nNumberOfBytesToUnLockLow;
-   BytesToUnLock.u.HighPart = nNumberOfBytesToUnLockHigh;
+    TRACE( "%p %x%08x %x%08x\n",
+        hFile, lpOverlapped->OffsetHigh, lpOverlapped->Offset, 
+        nNumberOfBytesToUnLockHigh, nNumberOfBytesToUnLockLow);
 
-   StartAddress.u.LowPart = lpOverlapped->Offset;
-   StartAddress.u.HighPart = lpOverlapped->OffsetHigh;
+    BytesToUnLock.u.LowPart = nNumberOfBytesToUnLockLow;
+    BytesToUnLock.u.HighPart = nNumberOfBytesToUnLockHigh;
 
-   errCode = NtUnlockFile(hFile,
-			  (PIO_STATUS_BLOCK)lpOverlapped,
-			  &StartAddress,
-			  &BytesToUnLock,
-			  0);
-   if ( !NT_SUCCESS(errCode) ) {
-      SetLastErrorByStatus (errCode);
-      return FALSE;
-   }
+    StartAddress.u.LowPart = lpOverlapped->Offset;
+    StartAddress.u.HighPart = lpOverlapped->OffsetHigh;
 
-   return TRUE;
+    errCode = NtUnlockFile(hFile,
+                           (PIO_STATUS_BLOCK)lpOverlapped,
+                           &StartAddress,
+                           &BytesToUnLock,
+                           0);
+
+    if ( !NT_SUCCESS(errCode) )
+    {
+        SetLastErrorByStatus(errCode);
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 /* EOF */
