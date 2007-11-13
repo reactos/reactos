@@ -46,46 +46,61 @@ static GETPIXELFMT       glGetPixelFormat      = NULL;
 */
 HINSTANCE                hOpenGL               = NULL;
 
+static BOOL OpenGLInitFunction(PCSTR name,
+                               FARPROC *funcptr)
+{
+    PVOID func;
+
+    func = (PVOID)GetProcAddress(hOpenGL, name);
+    if (func != NULL)
+    {
+        (void)InterlockedCompareExchangePointer((PVOID*)funcptr,
+                                                func,
+                                                NULL);
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
 static BOOL OpenGLEnable(void)
 {
-  if(hOpenGL == NULL)
-  {
-     hOpenGL = LoadLibraryA("OPENGL32.DLL");
-     if(hOpenGL == NULL)
-       return(FALSE);
-  }
+    HMODULE hModOpengl32;
+    BOOL Ret = TRUE;
 
-  if(glChoosePixelFormat == NULL) {
-        glChoosePixelFormat = (CHOOSEPIXELFMT)GetProcAddress(hOpenGL, "wglChoosePixelFormat");
-        if(glChoosePixelFormat == NULL)
-                return(FALSE);
-  }
+    hModOpengl32 = LoadLibraryW(L"OPENGL32.DLL");
+    if (hModOpengl32 == NULL)
+        return FALSE;
 
-  if(glSetPixelFormat == NULL) {
-        glSetPixelFormat = (SETPIXELFMT)GetProcAddress(hOpenGL, "wglSetPixelFormat");
-        if(glSetPixelFormat == NULL)
-                return(FALSE);
-  }
+    if (InterlockedCompareExchangePointer((PVOID*)&hOpenGL,
+                                          (PVOID)hModOpengl32,
+                                          NULL) != NULL)
+    {
+        FreeLibrary(hModOpengl32);
 
-  if(glSwapBuffers == NULL) {
-        glSwapBuffers = (SWAPBUFFERS)GetProcAddress(hOpenGL, "wglSwapBuffers");
-        if(glSwapBuffers == NULL)
-                return(FALSE);
-  }
+        /* NOTE: Even though another thread was faster loading the
+                 library we can't just bail out here. We really need
+                 to *try* to locate every function. This is slow but
+                 thread-safe */
+    }
 
-  if(glDescribePixelFormat == NULL) {
-        glDescribePixelFormat = (DESCRIBEPIXELFMT)GetProcAddress(hOpenGL, "wglDescribePixelFormat");
-        if(glDescribePixelFormat == NULL)
-                return(FALSE);
-  }
 
-  if(glGetPixelFormat == NULL) {
-        glGetPixelFormat = (GETPIXELFMT)GetProcAddress(hOpenGL, "wglGetPixelFormat");
-        if(glGetPixelFormat == NULL)
-                return(FALSE);
-  }
+    if (!OpenGLInitFunction("wglChoosePixelFormat", &glChoosePixelFormat))
+        Ret = FALSE;
 
-  return(TRUE);	/* OpenGL is initialized and enabled*/
+    if (!OpenGLInitFunction("wglSetPixelFormat", &glSetPixelFormat))
+        Ret = FALSE;
+
+    if (!OpenGLInitFunction("wglSwapBuffers", &glSwapBuffers))
+        Ret = FALSE;
+
+    if (!OpenGLInitFunction("wglDescribePixelFormat", &glDescribePixelFormat))
+        Ret = FALSE;
+
+    if (!OpenGLInitFunction("wglGetPixelFormat", &glGetPixelFormat))
+        Ret = FALSE;
+
+    return Ret;
 }
 
 
