@@ -14,6 +14,9 @@
 	<define name="_OPENGL32_" />
 	<define name="USE_EXTERNAL_DXTN_LIB=1" />
 	<define name="USE_X86_ASM" />
+	<define name="USE_MMX_ASM" />
+	<define name="USE_SSE_ASM" />
+	<define name="USE_3DNOW_ASM" />
 	<include base="mesa32">include</include>
 	<include base="mesa32">src</include>
 	<include base="mesa32">src/main</include>
@@ -26,19 +29,27 @@
 	<include base="mesa32">src/shader/slang/OSDependent/Linux</include>
 	<include base="mesa32">src/shader/slang/OGLCompilersDLL</include>
         <directory name="src">
+
+                <directory name="glapi">
+                        <file>glapi.c</file>
+                        <file>glthread.c</file>
+                </directory>
+                <directory name="math">
+			<file>m_debug_clip.c</file>
+                        <file>m_debug_norm.c</file>
+                        <file>m_debug_xform.c</file>
+                        <file>m_eval.c</file>
+                        <file>m_matrix.c</file>
+                        <file>m_translate.c</file>
+                        <file>m_vector.c</file>
+                        <file>m_xform.c</file>
+                </directory>
                 <directory name="main">
                         <file>accum.c</file>
                         <file>api_arrayelt.c</file>
                         <file>api_loopback.c</file>
                         <file>api_noop.c</file>
                         <file>api_validate.c</file>
-                </directory>
-                <directory name="shader">
-                        <file>arbprogparse.c</file>
-                        <file>arbprogram.c</file>
-			<file>atifragshader.c</file>
-                </directory>
-                <directory name="main">
                         <file>arrayobj.c</file>
                         <file>attrib.c</file>
                         <file>blend.c</file>
@@ -65,19 +76,6 @@
                         <file>framebuffer.c</file>
                         <file>get.c</file>
                         <file>getstring.c</file>
-                </directory>
- 
-                <directory name="glapi">
-                        <file>glapi.c</file>
-                        <file>glthread.c</file>
-                </directory>
- 
-                <directory name="shader">
-                        <directory name="grammar">
-                                <file>grammar_mesa.c</file>
-                        </directory>
-                </directory>
-                <directory name="main">
                         <file>hash.c</file>
                         <file>hint.c</file>
                         <file>histogram.c</file>
@@ -85,33 +83,35 @@
                         <file>imports.c</file>
                         <file>light.c</file>
                         <file>lines.c</file>
-                </directory>
-                <directory name="math">
-			<file>m_debug_clip.c</file>
-                        <file>m_debug_norm.c</file>
-                        <file>m_debug_xform.c</file>
-                        <file>m_eval.c</file>
-                        <file>m_matrix.c</file>
-                        <file>m_translate.c</file>
-                        <file>m_vector.c</file>
-                        <file>m_xform.c</file>
-                </directory>
-                <directory name="main">
                         <file>matrix.c</file>
                         <file>mipmap.c</file>
                         <file>mm.c</file>
-                </directory>
-                <directory name="shader">
-                        <file>nvfragparse.c</file>
-                        <file>nvprogram.c</file>
-                         <file>nvvertparse.c</file>
-                </directory>
-                <directory name="main">
                         <file>pixel.c</file>
                         <file>points.c</file>
                         <file>polygon.c</file>
+                        <file>queryobj.c</file>
+                        <file>rastpos.c</file>
+                        <file>rbadaptors.c</file>
+                        <file>renderbuffer.c</file>
+                        <file>texcompress.c</file>
+                        <file>texcompress_fxt1.c</file>
+                        <file>texcompress_s3tc.c</file>
+                        <file>texenvprogram.c</file>
+                        <file>texformat.c</file>
+                        <file>teximage.c</file>
+                        <file>texobj.c</file>
+                        <file>texrender.c</file>
+                        <file>texstate.c</file>
+                        <file>texstore.c</file>
+                        <file>varray.c</file>
                 </directory>
                 <directory name="shader">
+				<file>arbprogparse.c</file>
+				<file>arbprogram.c</file>
+				<file>atifragshader.c</file> 
+                        <file>nvfragparse.c</file>
+                        <file>nvprogram.c</file>
+                        <file>nvvertparse.c</file>
                         <file>prog_debug.c</file>
                         <file>prog_execute.c</file>
                         <file>prog_instruction.c</file>
@@ -120,12 +120,9 @@
                         <file>prog_statevars.c</file>
                         <file>program.c</file>
                         <file>programopt.c</file>
-                </directory>
-                <directory name="main">
-                        <file>queryobj.c</file>
-                        <file>rastpos.c</file>
-                        <file>rbadaptors.c</file>
-                        <file>renderbuffer.c</file>
+                        <directory name="grammar">
+                                <file>grammar_mesa.c</file>
+                        </directory>
                 </directory>
                 <directory name="swrast">
                         <file>s_aaline.c</file>
@@ -212,19 +209,7 @@
                         <file>t_vertex.c</file>
                         <file>t_vertex_generic.c</file>
                         <file>t_vp_build.c</file>
-                </directory>
-                <directory name="main">
-                        <file>texcompress.c</file>
-                        <file>texcompress_fxt1.c</file>
-                        <file>texcompress_s3tc.c</file>
-                        <file>texenvprogram.c</file>
-                        <file>texformat.c</file>
-                        <file>teximage.c</file>
-                        <file>texobj.c</file>
-                        <file>texrender.c</file>
-                        <file>texstate.c</file>
-                        <file>texstore.c</file>
-                        <file>varray.c</file>
+                        <file>t_vertex_sse.c</file>
                 </directory>
                 <directory name="vbo">
                         <file>vbo_context.c</file>
