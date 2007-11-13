@@ -876,6 +876,14 @@ _glapi_get_proc_address(const char *funcName)
    struct _glapi_function * entry;
    GLuint i;
 
+#ifdef MANGLE
+   if (funcName[0] != 'm' || funcName[1] != 'g' || funcName[2] != 'l')
+      return NULL;
+-#else
+   if (funcName[0] != 'g' || funcName[1] != 'l')
+      return NULL;
+#endif
+
    /* search extension functions first */
    for (i = 0; i < NumExtEntryPoints; i++) {
       if (strcmp(ExtEntryTable[i].name, funcName) == 0) {

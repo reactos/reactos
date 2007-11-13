@@ -222,22 +222,4 @@ Index: drivers/windows/icd/mesa.def
  	_tnl_InvalidateState
 -	_tnl_MakeCurrent
  	_tnl_run_pipeline
-Index: glapi/glapi.c
-===================================================================
---- glapi/glapi.c	(revision 30408)
-+++ glapi/glapi.c	(working copy)
-@@ -876,14 +876,6 @@
-    struct _glapi_function * entry;
-    GLuint i;
- 
--#ifdef MANGLE
--   if (funcName[0] != 'm' || funcName[1] != 'g' || funcName[2] != 'l')
--      return NULL;
--#else
--   if (funcName[0] != 'g' || funcName[1] != 'l')
--      return NULL;
--#endif
--
-    /* search extension functions first */
-    for (i = 0; i < NumExtEntryPoints; i++) {
-       if (strcmp(ExtEntryTable[i].name, funcName) == 0) {
+
