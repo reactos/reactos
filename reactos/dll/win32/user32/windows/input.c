@@ -547,7 +547,7 @@ SHORT STDCALL
 VkKeyScanExW(WCHAR ch,
 	     HKL dwhkl)
 {
-  return (SHORT) NtUserVkKeyScanEx((DWORD) ch,(DWORD) dwhkl,(DWORD)NULL);
+  return (SHORT) NtUserVkKeyScanEx(ch, dwhkl, 0);
 }
 
 
