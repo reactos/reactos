@@ -73,8 +73,8 @@ static const struct {
 	{&CLSID_UnixFolder,     &UnixFolder_Constructor},
 	{&CLSID_UnixDosFolder,  &UnixDosFolder_Constructor},
 	{&CLSID_FolderShortcut, &FolderShortcut_Constructor},
-	{&CLSID_MyDocuments,    &MyDocuments_Constructor},
 #endif
+	{&CLSID_MyDocuments,    &ISF_MyDocuments_Constructor},
 	{&CLSID_Printers,       &ISF_Printers_Constructor},
 	{&CLSID_RecycleBin,     &RecycleBin_Constructor},
 	{&CLSID_OpenWith,       &SHEOW_Constructor},

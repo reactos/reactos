@@ -1623,6 +1623,17 @@ BOOL _ILIsDesktop(LPCITEMIDLIST pidl)
     return pidl && pidl->mkid.cb  ? 0 : 1;
 }
 
+BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_MyDocuments);
+    return FALSE;
+}
+
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {
     REFIID iid = _ILGetGUIDPointer(pidl);
@@ -1633,6 +1644,7 @@ BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
         return IsEqualIID(iid, &CLSID_MyComputer);
     return FALSE;
 }
+
 BOOL _ILIsBitBucket(LPCITEMIDLIST pidl)
 {
     REFIID iid = _ILGetGUIDPointer(pidl);
