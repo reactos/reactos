@@ -38,14 +38,14 @@ BEGIN
     LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
-IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 267
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Remote Desktop Connection"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Connect",IDOK,147,249,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,203,249,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,54,246,190
+    DEFPUSHBUTTON   "Connect",IDOK,147,245,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,203,245,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END
 
 
@@ -60,4 +60,6 @@ BEGIN
     IDS_PIXEL               "%lux%lu Pixels"
     IDS_FULLSCREEN          "Full Screen"
     IDS_BROWSESERVER        "<Browse for more...>"
+    IDS_HEADERTEXT1         "Remote Desktop"
+    IDS_HEADERTEXT2         "Connection"
 END

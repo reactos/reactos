@@ -26,14 +26,17 @@
 #define IDB_HEADER                      1100
 #define IDB_SPECT                       1101
 
-#define IDI_LOGON                       2000
-#define IDI_CONN                        2001
-#define IDI_REMOTE                      2002
-#define IDI_COLORS                      2003
-#define IDI_MSTSC                       2004
+#define IDI_MSTSC                       2000
+#define IDI_LOGON                       2001
+#define IDI_CONN                        2002
+#define IDI_REMOTE                      2003
+#define IDI_COLORS                      2004
+
 
 #define IDS_TAB_DISPLAY                 3000
 #define IDS_TAB_GENERAL                 3001
 #define IDS_PIXEL                       3006
 #define IDS_FULLSCREEN                  3007
 #define IDS_BROWSESERVER                3008
+#define IDS_HEADERTEXT1                 3009
+#define IDS_HEADERTEXT2                 3010

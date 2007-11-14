@@ -53,6 +53,7 @@ DoOpenFile(PINFO pInfo)
     }
 }
 
+
 static VOID
 DoSaveAs(PINFO pInfo)
 {
@@ -932,6 +933,8 @@ OnMainCreate(HWND hwnd,
                           GWLP_USERDATA,
                           (LONG_PTR)pInfo);
 
+        pInfo->hSelf = hwnd;
+
         /* add main settings pointer */
         pInfo->pRdpSettings = pRdpSettings;
 
@@ -1090,16 +1093,79 @@ DlgProc(HWND hDlg,
                 HDC hdcMem = CreateCompatibleDC(hdc);
                 if (hdcMem)
                 {
+                    WCHAR lpBuffer[32];
+                    RECT bmpRc, txtRc;
+                    LOGFONTW lf;
+                    HFONT hFont;
+
+                    GetClientRect(pInfo->hSelf, &bmpRc);
+
                     SelectObject(hdcMem, pInfo->hHeader);
-                    BitBlt(hdc,
-                           0,
-                           0,
-                           pInfo->headerbitmap.bmWidth,
-                           pInfo->headerbitmap.bmHeight,
-                           hdcMem,
-                           0,
-                           0,
-                           SRCCOPY);
+                    StretchBlt(hdc,
+                               0,
+                               0,
+                               bmpRc.right,
+                               pInfo->headerbitmap.bmHeight,
+                               hdcMem,
+                               0,
+                               0,
+                               pInfo->headerbitmap.bmWidth,
+                               pInfo->headerbitmap.bmHeight,
+                               SRCCOPY);
+
+                    txtRc.left = bmpRc.right * 0.25;
+                    txtRc.top = 10;
+                    txtRc.right = bmpRc.right * 0.75;
+                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.5;
+
+                    ZeroMemory(&lf, sizeof(LOGFONT));
+
+                    if (LoadStringW(hInst, IDS_HEADERTEXT1, lpBuffer, 32))
+                    {
+                        lf.lfHeight = 24;
+                        lf.lfCharSet = OEM_CHARSET;
+                        lf.lfQuality = DEFAULT_QUALITY;
+                        lf.lfWeight = FW_MEDIUM;
+                        wcscpy(lf.lfFaceName, L"Tahoma");
+
+                        hFont = CreateFontIndirectW(&lf);
+                        if (hFont)
+                        {
+                            SelectObject(hdc, hFont);
+
+                            DPtoLP(hdc, (PPOINT)&txtRc, 2);
+                            SetTextColor(hdc, RGB(255,255,255));
+                            SetBkMode(hdc, TRANSPARENT);
+                            DrawTextW(hdc, lpBuffer, -1, &txtRc, DT_BOTTOM | DT_SINGLELINE);
+                            DeleteObject(hFont);
+                        }
+                    }
+
+                    txtRc.left = bmpRc.right * 0.25;
+                    txtRc.top = txtRc.bottom - 5;
+                    txtRc.right = bmpRc.right * 0.75;
+                    txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.9;
+
+                    if (LoadStringW(hInst, IDS_HEADERTEXT2, lpBuffer, 32))
+                    {
+                        lf.lfHeight = 30;
+                        lf.lfCharSet = OEM_CHARSET;
+                        lf.lfQuality = DEFAULT_QUALITY;
+                        lf.lfWeight = FW_EXTRABOLD;
+                        wcscpy(lf.lfFaceName, L"Tahoma");
+
+                        hFont = CreateFontIndirectW(&lf);
+                        if (hFont)
+                        {
+                            SelectObject(hdc, hFont);
+
+                            DPtoLP(hdc, (PPOINT)&txtRc, 2);
+                            SetTextColor(hdc, RGB(255,255,255));
+                            SetBkMode(hdc, TRANSPARENT);
+                            DrawTextW(hdc, lpBuffer, -1, &txtRc, DT_TOP | DT_SINGLELINE);
+                        }
+                    }
+
                     DeleteDC(hdcMem);
                 }
 
