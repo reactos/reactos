@@ -1344,6 +1344,14 @@ NlsGetCacheUpdateCount(VOID)
 
 BOOL
 STDCALL
+Wow64EnableWow64FsRedirection (BOOL Wow64EnableWow64FsRedirection)
+{
+    STUB;
+    return FALSE;
+}
+
+BOOL
+STDCALL
 Wow64DisableWow64FsRedirection (VOID ** pv)
 {
     STUB;
