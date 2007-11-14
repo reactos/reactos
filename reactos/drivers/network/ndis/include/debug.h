@@ -59,21 +59,12 @@ extern ULONG DebugTraceLevel;
 #define assert_irql(x) ASSERT_IRQL(x)
 
 
-#ifdef _MSC_VER
-
 #define UNIMPLEMENTED \
-    NDIS_DbgPrint(MIN_TRACE, ("The function at (%s:%d) is unimplemented.\n", __FILE__, __LINE__));
-
-#else /* _MSC_VER */
-
-#define UNIMPLEMENTED \
-    NDIS_DbgPrint(MIN_TRACE, ("(%s) at (%s:%d) is unimplemented.\n", __FUNCTION__, __FILE__, __LINE__));
-
-#endif /* _MSC_VER */
+    NDIS_DbgPrint(MIN_TRACE, ("Unimplemented.\n", __FUNCTION__));
 
 
 #define CHECKPOINT \
-    do { NDIS_DbgPrint(MIN_TRACE, ("(%s:%d)\n", __FILE__, __LINE__)); } while(0);
+    do { NDIS_DbgPrint(MIN_TRACE, ("\n")); } while(0);
 
 #define CP CHECKPOINT
 
