@@ -117,21 +117,6 @@ RtlAssert(
 #define ASSERT_IRQL(x) assert(KeGetCurrentIrql()<=(x))
 #define assert_irql(x) assert(KeGetCurrentIrql()<=(x))
 
-/* Macros expanding to the appropriate inline assembly to raise a breakpoint */
-#if defined(_M_IX86)
-#define ASM_BREAKPOINT "\nint $3\n"
-#elif defined(_M_ALPHA)
-#define ASM_BREAKPOINT "\ncall_pal bpt\n"
-#elif defined(_M_MIPS)
-#define ASM_BREAKPOINT "\nbreak\n"
-#elif defined(__x86_64__)
-#define ASM_BREAKPOINT "\nint $3\n"
-#elif defined(_M_PPC)
-#define ASM_BREAKPOINT "\ntwi 1\n"
-#else
-#error Unsupported architecture.
-#endif
-
 #ifndef KEBUGCHECK
 #define KEBUGCHECK(a) DbgPrint("KeBugCheck (0x%X) at %s:%i\n", a, __FILE__,__LINE__), KeBugCheck(a)
 #define KEBUGCHECKEX(a,b,c,d,e) DbgPrint("KeBugCheckEx (0x%X, 0x%X, 0x%X, 0x%X, 0x%X) at %s:%i\n", a, b, c, d, e, __FILE__,__LINE__), KeBugCheckEx(a,b,c,d,e)

@@ -1,5 +1,6 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
+#include <debug.h>
 
 #define DDKAPI __stdcall
 #define _HIDPI_
@@ -17,10 +18,5 @@ typedef VOID
 
 extern HINSTANCE hDllInstance;
 extern const GUID HidClassGuid;
-
-#ifndef UNIMPLEMENTED
-#define UNIMPLEMENTED \
-  DbgPrint("HID:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__)
-#endif
 
 /* EOF */
