@@ -112,7 +112,7 @@ SetDefaultLanguage(
 	}
 	else if (dwType != REG_SZ)
 	{
-		TRACE("Wrong type for %S\\%S registry entry (got 0x%lx, expected 0x%lx)\n",
+		TRACE("Wrong type for %S\\%S registry entry (got 0x%lx, expected 0x%x)\n",
 			SubKey, ValueName, dwType, REG_SZ);
 		goto cleanup;
 	}
@@ -415,7 +415,7 @@ CreateLogoffSecurityAttributes(
 	                               pACL,
 	                               FALSE))   // not a default DACL
 	{
-		ERR("SetSecurityDescriptorDacl Error %u\n", GetLastError());
+		ERR("SetSecurityDescriptorDacl Error %lu\n", GetLastError());
 		HeapFree(GetProcessHeap(), 0, pMem);
 		return STATUS_UNSUCCESSFUL;
 	}
@@ -466,7 +466,7 @@ HandleLogoff(
 	Status = CreateLogoffSecurityAttributes(&psa);
 	if (!NT_SUCCESS(Status))
 	{
-		ERR("Failed to create a required security descriptor. Status 0x%08x\n", Status);
+		ERR("Failed to create a required security descriptor. Status 0x%08lx\n", Status);
 		HeapFree(GetProcessHeap(), 0, LSData);
 		return Status;
 	}

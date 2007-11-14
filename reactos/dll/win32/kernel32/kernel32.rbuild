@@ -126,6 +126,7 @@
 	<define name="_DISABLE_TIDENTS" />
 	<define name="WINVER">0x0500</define>
 	<library>kernel32_base</library>
+	<library>wine</library>
 	<library>pseh</library>
 	<library>ntdll</library>
 	<linkerflag>-lgcc</linkerflag>

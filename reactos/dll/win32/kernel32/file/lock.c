@@ -18,6 +18,8 @@
 //#define YDEBUG
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(kernel32);
+
 /* FUNCTIONS ****************************************************************/
 
 /*

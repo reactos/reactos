@@ -667,7 +667,7 @@ LoadGina(
 	}
 	else
 	{
-		TRACE("About to negociate with Gina %S. Winlogon uses version %lx\n",
+		TRACE("About to negociate with Gina %S. Winlogon uses version %x\n",
 			GinaDll, WLX_CURRENT_VERSION);
 		if (!Functions->WlxNegotiate(WLX_CURRENT_VERSION, DllVersion))
 			goto cleanup;

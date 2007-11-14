@@ -32,6 +32,8 @@
 
 #include <wine/debug.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(user32);
+
 /* GLOBALS *******************************************************************/
 
 #define DSS_DEFAULT 0x0040  /* Make it bold */
