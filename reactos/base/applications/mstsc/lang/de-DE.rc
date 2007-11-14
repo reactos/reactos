@@ -9,10 +9,10 @@ BEGIN
     ICON            "", IDC_LOGONICON, 15,19,20,20
     LTEXT           "Serveradresse eingeben",IDC_STATIC,47,24,81,8
     LTEXT           "Server:",IDC_STATIC,47,41,25,8
-    LTEXT           "Benutzername:",IDC_STATIC,47,58,38,8
-    COMBOBOX        IDC_SERVERCOMBO,79,39,141,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "Benutzername:",IDC_STATIC,47,58,50,8
+    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Speichern",IDC_SAVE,67,139,50,14
-    PUSHBUTTON      "Speichern unter...",IDC_SAVEAS,123,139,50,14
+    PUSHBUTTON      "Speichern unter",IDC_SAVEAS,120,139,55,14
     PUSHBUTTON      "Öffnen...",IDC_OPEN,177,139,50,14
     ICON            "", IDC_CONNICON, 16,114,20,20
     LTEXT           "Die derzeitigen Verbindungseinstellungen speichern oder vohandene Einstellungen laden.",IDC_STATIC,50,115,172,20
@@ -22,27 +22,28 @@ IDD_DISPLAY DIALOGEX 0, 0, 242, 175
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX        "RemoteDesktop Größe",IDC_STATIC,7,7,228,68
+    GROUPBOX        "Remotedesktop Größe",IDC_STATIC,7,7,228,68
     GROUPBOX        "Farben",IDC_STATIC,7,83,228,85
     ICON            "", IDC_REMICON, 15,19,20,20
     ICON            "", IDC_COLORSICON, 15,98,20,20
-    LTEXT           "Wählen Sie die Bildschirmgröße von Ihrem RemoteDesktop. Stellen Sie den Regler für Vollbild ganz nach rechts.",IDC_STATIC,53,22,175,21
-    CONTROL         "",IDC_GEOSLIDER,"msctls_trackbar32",WS_TABSTOP,56,49,124,15
-    COMBOBOX        IDC_BPPCOMBO,56,102,128,30,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW  | SS_SUNKEN, 56,121,127,13
+    LTEXT           "Wählen Sie die Bildschirmgröße von Ihrem Remote- desktop. Stellen Sie den Regler für Vollbild nach rechts",IDC_STATIC,53,22,175,21
+    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
     LTEXT           "Achtung: Die Einstellung auf dem Remotecomputer könnte diese Einstellung überschreiben.",IDC_STATIC,56,143,165,18
-    LTEXT           "Weniger",IDC_STATIC,35,52,15,8
-    LTEXT           "Mehr",IDC_STATIC,189,51,17,8
+    LTEXT           "Weniger",IDC_STATIC,28,42,27,8
+    LTEXT           "Mehr",IDC_STATIC,189,42,17,8
+    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
-IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 277
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "RemoteDesktop Verbindung"
+CAPTION "Remotedesktop Verbindung"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Verbinden",IDOK,147,256,50,14
-    PUSHBUTTON      "Abbrechen",IDCANCEL,203,256,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,54,246,198
+    DEFPUSHBUTTON   "Verbinden",IDOK,147,245,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,203,245,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END
 
 
@@ -50,4 +51,13 @@ STRINGTABLE
 BEGIN
     IDS_TAB_GENERAL         "Allgemein"
     IDS_TAB_DISPLAY         "Display"
+    IDS_256COLORS           "256 Farben"
+    IDS_HIGHCOLOR15         "High Color (15 bit)"
+    IDS_HIGHCOLOR16         "High Color (16 bit)"
+    IDS_HIGHCOLOR24         "True Color (24 bit)"
+    IDS_PIXEL               "%lux%lu Pixel"
+    IDS_FULLSCREEN          "Vollbild"
+    IDS_BROWSESERVER        "<Nach mehr suchen...>"
+    IDS_HEADERTEXT1         "Remote Desktop"
+    IDS_HEADERTEXT2         "Verbindung"
 END
