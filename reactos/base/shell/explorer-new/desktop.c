@@ -136,10 +136,38 @@ DesktopDestroyShellWindow(IN HANDLE hDesktop)
 /*
  ******************************************************************************
  * NOTE: This could may be reused in a shell implementation of                *
+ *       SHCreateShellFolderView().                                           *
+ ******************************************************************************
+ */
+
+HRESULT WINAPI
+SHCreateShellFolderView(
+    const SFV_CREATE *pcsfv,
+    IShellView **ppsv)
+{
+    CSFV csfv;
+
+    ZeroMemory(&csfv, sizeof(CSFV));
+    csfv.cbSize = sizeof(CSFV);
+    csfv.pshf = pcsfv->pshf;
+    csfv.psvOuter = pcsfv->psvOuter;
+    /* FIXME: handle pcsfv->psfvcb */
+    return SHCreateShellFolderViewEx(&csfv, ppsv);
+}
+
+
+/*
+ ******************************************************************************
+ * NOTE: This could may be reused in a shell implementation of                *
  *       SHCreateDesktop().                                                   *
  ******************************************************************************
  */
 
+#define IShellView2 IShellView
+#define IShellView2_Release(This) IShellView_Release((This))
+#define IShellView2_CreateViewWindow2(This, Params) IShellView_CreateViewWindow((This), (Params)->psvPrev, (Params)->pfs, (Params)->psbOwner, (Params)->prcView, &(Params)->hwndView)
+
+#include "undoc.h"
 #define WM_SHELL_ADDDRIVENOTIFY (WM_USER + 0x100)
 
 static const IShellBrowserVtbl IDesktopShellBrowserImpl_Vtbl;
@@ -590,7 +618,7 @@ Fail:
                                                         &cne);
 
     /* Create the tray window */
-    This->Tray = CreateTrayWindow(This->hWnd);
+    This->Tray = CreateTrayWindow();
     return This;
 }
 
@@ -1256,7 +1284,6 @@ DesktopThreadProc(IN OUT LPVOID lpParameter)
     volatile DESKCREATEINFO *DeskCreateInfo = (volatile DESKCREATEINFO *)lpParameter;
     HWND hwndDesktop;
     IDesktopShellBrowserImpl *pDesktop;
-    IShellDesktopTray *pSdt;
     MSG Msg;
     BOOL Ret;
 
@@ -1274,7 +1301,7 @@ DesktopThreadProc(IN OUT LPVOID lpParameter)
                                  hExplorerInstance,
                                  NULL);
 
-    DeskCreateInfo->hWndDesktop = hWndDesktop;
+    DeskCreateInfo->hWndDesktop = hwndDesktop;
     if (hwndDesktop == NULL)
         return 1;
 

@@ -96,7 +96,6 @@ DECLARE_INTERFACE_(IWindowEventHandler,IUnknown)
 #define IWindowEventHandler_ContainsWindow(T,a) (T)->lpVtbl->ContainsWindow(T,a)
 #endif
 
-#if USE_API_SHCREATEDESKTOP != 0
 #define INTERFACE IShellDesktopTray
 DECLARE_INTERFACE_(IShellDesktopTray,IUnknown)
 {
@@ -122,6 +121,7 @@ DECLARE_INTERFACE_(IShellDesktopTray,IUnknown)
 #define IShellDesktopTray_Unknown(T,a,b) (T)->lpVtbl->Unknown(T,a,b)
 #endif
 
+#if USE_API_SHCREATEDESKTOP != 0
 #if 0
 HANDLE WINAPI SHCreateDesktop(IShellDesktopTray*);
 BOOL WINAPI SHDesktopMessageLoop(HANDLE);
