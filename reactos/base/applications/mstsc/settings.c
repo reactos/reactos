@@ -252,13 +252,15 @@ ParseSettings(PRDPSETTINGS pRdpSettings,
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
                     lpToken = wcstok(NULL, szSeps);
-                    pRdpSettings->pSettings[i].Value.i = _wtoi(lpToken);
+                    if (lpToken != NULL)
+                        pRdpSettings->pSettings[i].Value.i = _wtoi(lpToken);
                 }
                 else if (lpToken[0] == L's')
                 {
                     pRdpSettings->pSettings[i].Type = lpToken[0];
                     lpToken = wcstok(NULL, szSeps);
-                    wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
+                    if (lpToken != NULL)
+                        wcscpy(pRdpSettings->pSettings[i].Value.s, lpToken);
                 }
                 bFound = TRUE;
             }

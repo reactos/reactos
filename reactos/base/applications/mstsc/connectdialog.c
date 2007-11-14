@@ -36,7 +36,7 @@ DoOpenFile(PINFO pInfo)
     static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize   = sizeof(OPENFILENAME);
+    ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
@@ -62,7 +62,7 @@ DoSaveAs(PINFO pInfo)
     static WCHAR szFilter[] = L"Remote Desktop Files (*rdp)\0*.rdp\0";
 
     ZeroMemory(&ofn, sizeof(ofn));
-    ofn.lStructSize   = sizeof(OPENFILENAME);
+    ofn.lStructSize   = sizeof(OPENFILENAMEW);
     ofn.hwndOwner     = pInfo->hGeneralPage;
     ofn.nMaxFile      = MAX_PATH;
     ofn.nMaxFileTitle = MAX_PATH;
@@ -1118,7 +1118,7 @@ DlgProc(HWND hDlg,
                     txtRc.right = bmpRc.right * 0.75;
                     txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.5;
 
-                    ZeroMemory(&lf, sizeof(LOGFONT));
+                    ZeroMemory(&lf, sizeof(LOGFONTW));
 
                     if (LoadStringW(hInst,
                                     IDS_HEADERTEXT1,
