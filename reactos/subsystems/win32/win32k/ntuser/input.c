@@ -586,8 +586,8 @@ KeyboardThreadMain(PVOID StartContext)
             return; //(Status);
          }
 
-		 /* Set LastInputTick */
-		 IntLastInputTick(TRUE);
+         /* Set LastInputTick */
+         IntLastInputTick(TRUE);
 
          /* Update modifier state */
          fsModifiers = IntKeyboardGetModifiers(&KeyInput);
@@ -597,6 +597,22 @@ KeyboardThreadMain(PVOID StartContext)
             if (KeyInput.Flags & KEY_BREAK)
             {
                ModifierState &= ~fsModifiers;
+               if(fsModifiers == MOD_ALT)
+               {
+                   if(KeyInput.Flags & KEY_E0)
+                   {
+                      gQueueKeyStateTable[VK_RMENU] = 0;
+                   }
+                   else
+                   {
+                      gQueueKeyStateTable[VK_LMENU] = 0;
+                   }
+                   if (gQueueKeyStateTable[VK_RMENU] == 0 &&
+                       gQueueKeyStateTable[VK_LMENU] == 0)
+                   {
+                      gQueueKeyStateTable[VK_MENU] = 0;
+                   }
+               }
             }
             else
             {
@@ -612,7 +628,7 @@ KeyboardThreadMain(PVOID StartContext)
                    bLeftAlt = FALSE;
                    if(fsModifiers == MOD_ALT)
                    {
-                      if(KeyInput.Flags & KEY_E1)
+                      if(KeyInput.Flags & KEY_E0)
                       {
                          gQueueKeyStateTable[VK_RMENU] = 0x80;
                       }
