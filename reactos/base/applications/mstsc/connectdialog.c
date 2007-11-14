@@ -1093,7 +1093,7 @@ DlgProc(HWND hDlg,
                 HDC hdcMem = CreateCompatibleDC(hdc);
                 if (hdcMem)
                 {
-                    WCHAR lpBuffer[32];
+                    WCHAR szBuffer[32];
                     RECT bmpRc, txtRc;
                     LOGFONTW lf;
                     HFONT hFont;
@@ -1120,7 +1120,10 @@ DlgProc(HWND hDlg,
 
                     ZeroMemory(&lf, sizeof(LOGFONT));
 
-                    if (LoadStringW(hInst, IDS_HEADERTEXT1, lpBuffer, 32))
+                    if (LoadStringW(hInst,
+                                    IDS_HEADERTEXT1,
+                                    szBuffer,
+                                    sizeof(szBuffer) / sizeof(WCHAR)))
                     {
                         lf.lfHeight = 24;
                         lf.lfCharSet = OEM_CHARSET;
@@ -1136,7 +1139,11 @@ DlgProc(HWND hDlg,
                             DPtoLP(hdc, (PPOINT)&txtRc, 2);
                             SetTextColor(hdc, RGB(255,255,255));
                             SetBkMode(hdc, TRANSPARENT);
-                            DrawTextW(hdc, lpBuffer, -1, &txtRc, DT_BOTTOM | DT_SINGLELINE);
+                            DrawTextW(hdc,
+                                      szBuffer,
+                                      -1,
+                                      &txtRc,
+                                      DT_BOTTOM | DT_SINGLELINE);
                             DeleteObject(hFont);
                         }
                     }
@@ -1146,7 +1153,10 @@ DlgProc(HWND hDlg,
                     txtRc.right = bmpRc.right * 0.75;
                     txtRc.bottom = pInfo->headerbitmap.bmHeight * 0.9;
 
-                    if (LoadStringW(hInst, IDS_HEADERTEXT2, lpBuffer, 32))
+                    if (LoadStringW(hInst,
+                                    IDS_HEADERTEXT2,
+                                    szBuffer,
+                                    sizeof(szBuffer) / sizeof(WCHAR)))
                     {
                         lf.lfHeight = 30;
                         lf.lfCharSet = OEM_CHARSET;
@@ -1162,7 +1172,11 @@ DlgProc(HWND hDlg,
                             DPtoLP(hdc, (PPOINT)&txtRc, 2);
                             SetTextColor(hdc, RGB(255,255,255));
                             SetBkMode(hdc, TRANSPARENT);
-                            DrawTextW(hdc, lpBuffer, -1, &txtRc, DT_TOP | DT_SINGLELINE);
+                            DrawTextW(hdc,
+                                      szBuffer,
+                                      -1,
+                                      &txtRc,
+                                      DT_TOP | DT_SINGLELINE);
                         }
                     }
 
