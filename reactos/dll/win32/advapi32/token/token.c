@@ -11,10 +11,7 @@
 #include <advapi32.h>
 
 #define NDEBUG
-#include <wine/debug.h>
 #include <debug.h>
-
-WINE_DEFAULT_DEBUG_CHANNEL(advapi32);
 
 /*
  * @implemented
@@ -591,7 +588,7 @@ CreateRestrictedToken(
             PHANDLE NewTokenHandle
 )
 {
-    FIXME("unimplemented!\n", __FUNCTION__);
+    UNIMPLEMENTED;
     return FALSE;
 }
 
