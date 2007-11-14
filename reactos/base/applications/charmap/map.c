@@ -211,19 +211,16 @@ NotifyParentOfSelection(PMAP infoPtr,
 
     if (infoPtr->hParent != NULL)
     {
-        MAPNOTIFY mnmh;
-
-        mnmh.hdr.hwndFrom = infoPtr->hMapWnd;
-        mnmh.hdr.idFrom = GetWindowLongPtr(infoPtr->hMapWnd,
-                                           GWLP_ID);
-        mnmh.hdr.code = code;
-
-        mnmh.ch = ch;
-
-        Ret = SendMessageW(infoPtr->hParent,
-                           WM_NOTIFY,
-                           (WPARAM)mnmh.hdr.idFrom,
-                           (LPARAM)&mnmh);
+        DWORD dwIdc = GetWindowLongPtr(infoPtr->hMapWnd, GWLP_ID);
+        /*
+         * Push directly into the event queue instead of waiting
+         * the parent to be unlocked.
+         * High word of LPARAM is still available for future needs...
+         */
+        Ret = PostMessage(infoPtr->hParent,
+                          WM_COMMAND,
+                          MAKELPARAM((WORD)dwIdc, (WORD)code),
+                          (LPARAM)LOWORD(ch));
     }
 
     return Ret;
@@ -509,18 +506,8 @@ MapWndProc(HWND hwnd,
         }
 
         case FM_SETFONT:
-        {
-            LPWSTR lpFontName = (LPWSTR)lParam;
-
-            SetFont(infoPtr,
-                    lpFontName);
-
-            HeapFree(GetProcessHeap(),
-                     0,
-                     lpFontName);
-
+            SetFont(infoPtr, (LPWSTR)lParam);
             break;
-        }
 
         case FM_GETCHAR:
         {

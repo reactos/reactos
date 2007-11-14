@@ -68,9 +68,8 @@ FillFontStyleComboList(HWND hwndCombo)
                  (WPARAM)hFont,
                  0);
 
+    ZeroMemory(&lf, sizeof(lf));
     lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfFaceName[0] = L'\0';   // all fonts
-    lf.lfPitchAndFamily = 0;
 
     hdc = GetDC(hwndCombo);
 
@@ -123,6 +122,10 @@ ChangeMapFont(HWND hDlg)
                          0,
                          (LPARAM)lpFontName);
         }
+
+        HeapFree(GetProcessHeap(),
+                 0,
+                 lpFontName);
     }
 }
 
@@ -250,12 +253,23 @@ DlgProc(HWND hDlg,
             }
             return TRUE;
         }
-        break;
 
         case WM_COMMAND:
         {
             switch(LOWORD(wParam))
             {
+                case IDC_FONTMAP:
+                {
+                    switch (HIWORD(wParam))
+                    {
+                        case FM_SETCHAR:
+                            AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
+                                               LOWORD(lParam));
+                            break;
+                    }
+                }
+                break;
+
                 case IDC_FONTCOMBO:
                 {
                     if (HIWORD(wParam) == CBN_SELCHANGE)
@@ -298,29 +312,6 @@ DlgProc(HWND hDlg,
             {
                 case ID_ABOUT:
                     ShowAboutDlg(hDlg);
-                break;
-            }
-        }
-        break;
-
-        case WM_NOTIFY:
-        {
-            LPMAPNOTIFY lpnm = (LPMAPNOTIFY)lParam;
-
-            switch (lpnm->hdr.idFrom)
-            {
-                case IDC_FONTMAP:
-                {
-                    switch (lpnm->hdr.code)
-                    {
-                        case FM_SETCHAR:
-                        {
-                            AddCharToSelection(GetDlgItem(hDlg, IDC_TEXTBOX),
-                                               lpnm->ch);
-                        }
-                        break;
-                    }
-                }
                 break;
             }
         }
