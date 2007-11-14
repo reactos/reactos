@@ -294,6 +294,7 @@ GLDRIVERDATA *
 ROSGL_ICDForHDC( HDC hdc )
 {
 	GLDCDATA *dcdata;
+	GLDRIVERDATA *drvdata;
 
 	dcdata = ROSGL_GetPrivateDCData( hdc );
 	if (dcdata == NULL)
@@ -303,6 +304,9 @@ ROSGL_ICDForHDC( HDC hdc )
 	{
 		LPCWSTR driverName;
 		OPENGL_INFO info;
+
+		/* NOTE: This might be done by multiple threads simultaneously, but only the fastest
+		         actually gets to set the ICD! */
 
 		driverName = _wgetenv( L"OPENGL32_DRIVER" );
 		if (driverName == NULL)
@@ -336,7 +340,7 @@ ROSGL_ICDForHDC( HDC hdc )
 				}
 
 				/* open registry key */
-				ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, OPENGL_DRIVERS_SUBKEY, 0, KEY_READ, &hKey );
+				ret = RegOpenKeyExW( HKEY_LOCAL_MACHINE, OPENGL_DRIVERS_SUBKEY, 0, KEY_QUERY_VALUE, &hKey );
 				if (ret != ERROR_SUCCESS)
 				{
 					DBGPRINT( "Error: Couldn't open registry key '%ws'", OPENGL_DRIVERS_SUBKEY );
@@ -361,8 +365,8 @@ ROSGL_ICDForHDC( HDC hdc )
 			wcsncpy( info.DriverName, driverName, sizeof (info.DriverName) / sizeof (info.DriverName[0]) );
 		}
 		/* load driver (or get a reference) */
-		dcdata->icd = OPENGL32_LoadICD( info.DriverName );
-		if (dcdata->icd == NULL)
+		drvdata = OPENGL32_LoadICD( info.DriverName );
+		if (drvdata == NULL)
 		{
 			WCHAR Buffer[256];
 			snwprintf(Buffer, sizeof(Buffer)/sizeof(WCHAR),
@@ -370,6 +374,17 @@ ROSGL_ICDForHDC( HDC hdc )
 			MessageBox(WindowFromDC( hdc ), Buffer,
 			           L"OPENGL32.dll: Warning",
 			           MB_OK | MB_ICONWARNING);
+		}
+		else
+		{
+			/* Atomically set the ICD!!! */
+			if (InterlockedCompareExchangePointer((PVOID*)&dcdata->icd,
+			                                      (PVOID)drvdata,
+			                                      NULL) != NULL)
+			{
+				/* Too bad, somebody else was faster... */
+				OPENGL32_UnloadICD(drvdata);
+			}
 		}
 	}
 
