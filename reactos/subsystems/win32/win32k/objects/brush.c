@@ -589,6 +589,8 @@ BOOL STDCALL
 NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
 {
    PDC dc = DC_LockDc(hDC);
+   PDC_ATTR Dc_Attr = dc->pDc_Attr;
+   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    if (dc == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
@@ -599,8 +601,8 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
    {
       NTSTATUS Status = STATUS_SUCCESS;
       POINT SafePoint;
-      SafePoint.x = dc->Dc_Attr.ptlBrushOrigin.x;
-      SafePoint.y = dc->Dc_Attr.ptlBrushOrigin.y;
+      SafePoint.x = Dc_Attr->ptlBrushOrigin.x;
+      SafePoint.y = Dc_Attr->ptlBrushOrigin.y;
       _SEH_TRY
       {
          ProbeForWrite(Point,
@@ -621,36 +623,9 @@ NtGdiSetBrushOrg(HDC hDC, INT XOrg, INT YOrg, LPPOINT Point)
         return FALSE;
       }
    }
-
-   dc->Dc_Attr.ptlBrushOrigin.x = XOrg;
-   dc->Dc_Attr.ptlBrushOrigin.y = YOrg;
-
-   if (dc->pDc_Attr)
-   {
-      PDC_ATTR Dc_Attr = dc->pDc_Attr;
-      NTSTATUS Status = STATUS_SUCCESS;
-      _SEH_TRY
-      {
-         ProbeForWrite(Dc_Attr,
-                       sizeof(DC_ATTR),
-                       1);
-         Dc_Attr->ptlBrushOrigin = dc->Dc_Attr.ptlBrushOrigin;
-      }
-      _SEH_HANDLE
-      {
-         Status = _SEH_GetExceptionCode();
-      }
-      _SEH_END;
-
-      if(!NT_SUCCESS(Status))
-      {
-        DC_UnlockDc(dc);
-        SetLastNtError(Status);
-        return FALSE;
-      }
-   }
+   Dc_Attr->ptlBrushOrigin.x = XOrg;
+   Dc_Attr->ptlBrushOrigin.y = YOrg;
    DC_UnlockDc(dc);
-
    return TRUE;
 }
 

@@ -2528,7 +2528,6 @@ DC_FreeDcAttr(HDC  DCToFree )
   PDC pDC = DC_LockDc(DCToFree);
   if (pDC->pDc_Attr == &pDC->Dc_Attr) return; // Internal DC object!
   pDC->pDc_Attr = NULL;
-//  pDC->pDc_Attr = &pDC->Dc_Attr; // Correct behavior.
   DC_UnlockDc(pDC);
 
   KeEnterCriticalRegion();
@@ -2556,10 +2555,18 @@ VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
   DC_FreeDcAttr(DCToFree);
-
-  if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
+  INT Index = GDI_HANDLE_GET_INDEX(DCToFree);
+  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+  if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
   {
-    DPRINT("DC_FreeDC failed\n");
+    if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
+    {
+       DPRINT1("DC_FreeDC failed\n");
+    }
+  }
+  else
+  {
+    DPRINT1("Attempted to Delete 0x%x currently being destroyed!!!\n",DCToFree);
   }
 }
 
@@ -2655,21 +2662,31 @@ DC_SetOwnership(HDC hDC, PEPROCESS Owner)
 
 //
 // Support multi display/device locks.
-// Here, it is PrimarySurface.hsemDevLock
-// or ((PGDIDEVICE)PDC->pPDev)->hsemDevLock
 //
 VOID
 FASTCALL
-DC_LockDisplay(PERESOURCE Resource)
+DC_LockDisplay(HDC hDC)
 {
+  PERESOURCE Resource;
+  PDC dc = DC_LockDc(hDC);
+  if (!dc) return;
+  Resource = ((PGDIDEVICE)dc->pPDev)->hsemDevLock;
+  DC_UnlockDc(dc);
+  if (!Resource) return;
   KeEnterCriticalRegion();
   ExAcquireResourceExclusiveLite( Resource , TRUE);  
 }
 
 VOID
 FASTCALL
-DC_UnlockDisplay(PERESOURCE Resource)
+DC_UnlockDisplay(HDC hDC)
 {
+  PERESOURCE Resource;
+  PDC dc = DC_LockDc(hDC);
+  if (!dc) return;
+  Resource = ((PGDIDEVICE)dc->pPDev)->hsemDevLock;
+  DC_UnlockDc(dc);
+  if (!Resource) return;
   ExReleaseResourceLite( Resource );
   KeLeaveCriticalRegion();
 }

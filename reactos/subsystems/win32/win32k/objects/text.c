@@ -3348,34 +3348,15 @@ NtGdiGetCharSet(HDC hDC)
   DWORD cscp = IntGdiGetCharSet(hDC);
   // If here, update everything!  
   Dc = DC_LockDc(hDC);
+  PDC_ATTR Dc_Attr = Dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   if (!Dc)
   {
      SetLastWin32Error(ERROR_INVALID_HANDLE);
      return 0;
   }
-
-  Dc->Dc_Attr.iCS_CP = cscp;
-  Dc->Dc_Attr.ulDirty_ &= ~DIRTY_CHARSET;
-
-  if (Dc->pDc_Attr)
-  {
-    PDC_ATTR Dc_Attr = Dc->pDc_Attr;
-    NTSTATUS Status = STATUS_SUCCESS;
-    _SEH_TRY
-    {
-         ProbeForWrite(Dc_Attr,
-                       sizeof(DC_ATTR),
-                       1);
-          Dc_Attr->iCS_CP = cscp;
-          Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
-    }
-    _SEH_HANDLE
-    {
-       Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-    if(!NT_SUCCESS(Status)) SetLastNtError(Status);
-  }
+  Dc_Attr->iCS_CP = cscp;
+  Dc_Attr->ulDirty_ &= ~DIRTY_CHARSET;
   DC_UnlockDc( Dc );
   return cscp;
 }
