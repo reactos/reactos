@@ -329,7 +329,49 @@ LONG
 STDCALL
 GetWindowLongA ( HWND hWnd, int nIndex )
 {
-  return NtUserGetWindowLong(hWnd, nIndex, TRUE);
+    PWINDOW Wnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (Wnd == NULL)
+        return 0;
+
+    if (nIndex >= 0)
+    {
+        if ((DWORD)nIndex + sizeof(LONG) > Wnd->ExtraDataSize)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+
+        return *((LONG *)((PCHAR)(Wnd + 1) + nIndex));
+    }
+    else
+    {
+        switch (nIndex)
+        {
+            case GWL_EXSTYLE:
+                return Wnd->ExStyle;
+            case GWL_STYLE:
+                return Wnd->Style;
+            case GWL_HINSTANCE:
+                return (LONG)Wnd->Instance;
+            case GWL_ID:
+                return Wnd->IDMenu;
+            case GWL_USERDATA:
+                return Wnd->UserData;
+
+            case GWL_HWNDPARENT:
+                /* FIXME: Implement in user32 */
+            case GWL_WNDPROC:
+                /* Call win32k for this as a callproc handle may need
+                   to be created */
+                return NtUserGetWindowLong(hWnd, nIndex, TRUE);
+
+            default:
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+        }
+    }
 }
 
 
@@ -340,7 +382,49 @@ LONG
 STDCALL
 GetWindowLongW(HWND hWnd, int nIndex)
 {
-  return NtUserGetWindowLong(hWnd, nIndex, FALSE);
+    PWINDOW Wnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (Wnd == NULL)
+        return 0;
+
+    if (nIndex >= 0)
+    {
+        if ((DWORD)nIndex + sizeof(LONG) > Wnd->ExtraDataSize)
+        {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+        }
+
+        return *((LONG *)((PCHAR)(Wnd + 1) + nIndex));
+    }
+    else
+    {
+        switch (nIndex)
+        {
+            case GWL_EXSTYLE:
+                return Wnd->ExStyle;
+            case GWL_STYLE:
+                return Wnd->Style;
+            case GWL_HINSTANCE:
+                return (LONG)Wnd->Instance;
+            case GWL_ID:
+                return Wnd->IDMenu;
+            case GWL_USERDATA:
+                return Wnd->UserData;
+
+            case GWL_HWNDPARENT:
+                /* FIXME: Implement in user32 */
+            case GWL_WNDPROC:
+                /* Call win32k for this as a callproc handle may need
+                   to be created */
+                return NtUserGetWindowLong(hWnd, nIndex, FALSE);
+
+            default:
+                SetLastError(ERROR_INVALID_PARAMETER);
+                return 0;
+        }
+    }
 }
 
 /*
@@ -350,7 +434,7 @@ WORD
 STDCALL
 GetWindowWord(HWND hWnd, int nIndex)
 {
-  return (WORD)NtUserGetWindowLong(hWnd, nIndex,  TRUE);
+  return (WORD)GetWindowLongW(hWnd, nIndex);
 }
 
 /*

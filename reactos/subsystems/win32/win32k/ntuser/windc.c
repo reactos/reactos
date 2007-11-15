@@ -115,6 +115,10 @@ PDCE FASTCALL
 DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
 {
     PDCE pDce;
+    PWINDOW Wnd = NULL;
+
+    if (Window)
+        Wnd = Window->Wnd;
 
     pDce = ExAllocatePoolWithTag(PagedPool, sizeof(DCE), TAG_PDCE);
     if(!pDce)
@@ -162,13 +166,13 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
      {
        pDce->DCXFlags = DCX_DCEBUSY;
 
-        if (Window)
+        if (Wnd)
         {
-           if (Window->Style & WS_CLIPCHILDREN)
+           if (Wnd->Style & WS_CLIPCHILDREN)
            {
              pDce->DCXFlags |= DCX_CLIPCHILDREN;
            }
-           if (Window->Style & WS_CLIPSIBLINGS)
+           if (Wnd->Style & WS_CLIPSIBLINGS)
            {
              pDce->DCXFlags |= DCX_CLIPSIBLINGS;
            }
@@ -186,6 +190,7 @@ VOID static STDCALL
 DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
                BOOL SetClipOrigin)
 {
+   PWINDOW Wnd;
    DC *dc = DC_LockDc(hDC);
    if(!dc)
       return;
@@ -197,15 +202,16 @@ DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
    }
    else
    {
+      Wnd = Window->Wnd;
       if (Flags & DCX_WINDOW)
       {
-         dc->w.DCOrgX = Window->Wnd->WindowRect.left;
-         dc->w.DCOrgY = Window->Wnd->WindowRect.top;
+         dc->w.DCOrgX = Wnd->WindowRect.left;
+         dc->w.DCOrgY = Wnd->WindowRect.top;
       }
       else
       {
-         dc->w.DCOrgX = Window->Wnd->ClientRect.left;
-         dc->w.DCOrgY = Window->Wnd->ClientRect.top;
+         dc->w.DCOrgX = Wnd->ClientRect.left;
+         dc->w.DCOrgY = Wnd->ClientRect.top;
       }
    }
    DC_UnlockDc(dc);
@@ -287,6 +293,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
    if (Flags & DCX_PARENTCLIP)
    {
       PWINDOW_OBJECT Parent;
+      PWINDOW ParentWnd;
 
       Parent = Window->Parent;
       if(!Parent)
@@ -295,7 +302,9 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
          goto noparent;
       }
 
-      if (Parent->Style & WS_CLIPSIBLINGS)
+      ParentWnd = Parent->Wnd;
+
+      if (ParentWnd->Style & WS_CLIPSIBLINGS)
       {
          DcxFlags = DCX_CLIPSIBLINGS |
                     (Flags & ~(DCX_CLIPCHILDREN | DCX_WINDOW));
@@ -367,11 +376,14 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    DCE* Dce;
    BOOL UpdateVisRgn = TRUE;
    BOOL UpdateClipOrigin = FALSE;
+   PWINDOW Wnd = NULL;
 
    if (NULL == Window)
    {
       Flags &= ~DCX_USESTYLE;
    }
+   else
+       Wnd = Window->Wnd;
 
    if (NULL == Window || NULL == Window->Dce)
    {
@@ -382,7 +394,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       Flags &= ~(DCX_CLIPCHILDREN | DCX_CLIPSIBLINGS | DCX_PARENTCLIP);
 
-      if (Window->Style & WS_CLIPSIBLINGS)
+      if (Wnd->Style & WS_CLIPSIBLINGS)
       {
          Flags |= DCX_CLIPSIBLINGS;
       }
@@ -394,8 +406,8 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
             Flags |= DCX_PARENTCLIP;
          }
 
-         if (Window->Style & WS_CLIPCHILDREN &&
-               !(Window->Style & WS_MINIMIZE))
+         if (Wnd->Style & WS_CLIPCHILDREN &&
+             !(Wnd->Style & WS_MINIMIZE))
          {
             Flags |= DCX_CLIPCHILDREN;
          }
@@ -419,18 +431,18 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    Parent = (Window ? Window->Parent : NULL);
 
-   if (NULL == Window || !(Window->Style & WS_CHILD) || NULL == Parent)
+   if (NULL == Window || !(Wnd->Style & WS_CHILD) || NULL == Parent)
    {
       Flags &= ~DCX_PARENTCLIP;
    }
    else if (Flags & DCX_PARENTCLIP)
    {
       Flags |= DCX_CACHE;
-      if ((Window->Style & WS_VISIBLE) &&
-            (Parent->Style & WS_VISIBLE))
+      if ((Wnd->Style & WS_VISIBLE) &&
+          (Parent->Wnd->Style & WS_VISIBLE))
       {
          Flags &= ~DCX_CLIPCHILDREN;
-         if (Parent->Style & WS_CLIPSIBLINGS)
+         if (Parent->Wnd->Style & WS_CLIPSIBLINGS)
          {
             Flags |= DCX_CLIPSIBLINGS;
          }

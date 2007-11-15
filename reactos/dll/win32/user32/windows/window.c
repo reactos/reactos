@@ -1168,7 +1168,14 @@ IsChild(HWND hWndParent,
 BOOL STDCALL
 IsIconic(HWND hWnd)
 {
-  return (NtUserGetWindowLong( hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE) != 0;
+    PWINDOW Wnd = ValidateHwnd(hWnd);
+
+    if (Wnd != NULL)
+    {
+        return (Wnd->Style & WS_MINIMIZE) != 0;
+    }
+
+    return FALSE;
 }
 
 
@@ -1199,15 +1206,17 @@ IsWindowUnicode(HWND hWnd)
 BOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
-  while (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_CHILD)
+    DWORD Style;
+
+    while ((Style = GetWindowLongW(hWnd, GWL_STYLE)) & WS_CHILD)
     {
-      if (!(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_VISIBLE))
-	{
-	  return(FALSE);
-	}
-      hWnd = GetAncestor(hWnd, GA_PARENT);
+        if (!(Style & WS_VISIBLE))
+            return FALSE;
+
+        hWnd = GetAncestor(hWnd, GA_PARENT);
     }
-  return(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_VISIBLE);
+
+    return (GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE) != 0;
 }
 
 
@@ -1223,7 +1232,7 @@ IsWindowEnabled(
     // disabled. I think they stop processing messages but stay appearing
     // as enabled.
 
-    return (! (NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_DISABLED));
+    return !(GetWindowLongW(hWnd, GWL_STYLE) & WS_DISABLED);
 }
 
 
@@ -1233,7 +1242,7 @@ IsWindowEnabled(
 BOOL STDCALL
 IsZoomed(HWND hWnd)
 {
-  return NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MAXIMIZE;
+    return (GetWindowLongW(hWnd, GWL_STYLE) & WS_MAXIMIZE) != 0;
 }
 
 
@@ -1299,10 +1308,8 @@ AnimateWindow(HWND hwnd,
 BOOL STDCALL
 OpenIcon(HWND hWnd)
 {
-    if (!(NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE) & WS_MINIMIZE))
-    {
+    if (!(GetWindowLongW(hWnd, GWL_STYLE) & WS_MINIMIZE))
         return FALSE;
-    }
 
     ShowWindow(hWnd,SW_RESTORE);
     return TRUE;

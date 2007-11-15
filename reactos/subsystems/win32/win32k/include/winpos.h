@@ -10,7 +10,7 @@
    (x) < (WndObject)->Wnd->WindowRect.right && \
    (y) >= (WndObject)->Wnd->WindowRect.top && \
    (y) < (WndObject)->Wnd->WindowRect.bottom && \
-   (!(WndObject)->WindowRegion || ((WndObject)->Style & WS_MINIMIZE) || \
+   (!(WndObject)->WindowRegion || ((WndObject)->Wnd->Style & WS_MINIMIZE) || \
     NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->WindowRect.left), \
                     (INT)((y) - (WndObject)->Wnd->WindowRect.top))))
 

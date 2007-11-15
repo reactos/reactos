@@ -66,6 +66,17 @@ typedef struct _WINDOW
     struct _W32THREADINFO *ti;
     RECT WindowRect;
     RECT ClientRect;
+    /* Size of the extra data associated with the window. */
+    ULONG ExtraDataSize;
+    /* Style. */
+    DWORD Style;
+    /* Extended style. */
+    DWORD ExStyle;
+    /* Handle of the module that created the window. */
+    HINSTANCE Instance;
+    /* Window menu handle or window id */
+    UINT IDMenu;
+    LONG UserData;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO

@@ -47,30 +47,18 @@ typedef struct _WINDOW_OBJECT
   BOOL IsSystem;
   /* Pointer to the window class. */
   PWINDOWCLASS Class;
-  /* Extended style. */
-  DWORD ExStyle;
   /* Window name. */
   UNICODE_STRING WindowName;
-  /* Style. */
-  DWORD Style;
   /* Context help id */
   DWORD ContextHelpId;
   /* system menu handle. */
   HMENU SystemMenu;
-  /* Handle of the module that created the window. */
-  HINSTANCE Instance;
   /* Entry in the thread's list of windows. */
   LIST_ENTRY ListEntry;
-  /* Pointer to the extra data associated with the window. */
-  PCHAR ExtraData;
-  /* Size of the extra data associated with the window. */
-  ULONG ExtraDataSize;
   /* Handle for the window. */
   HWND hSelf;
   /* Window flags. */
   ULONG Flags;
-  /* Window menu handle or window id */
-  UINT IDMenu;
   /* Handle of region of the window to be updated. */
   HANDLE UpdateRegion;
   /* Handle of the window region. */
@@ -94,7 +82,6 @@ typedef struct _WINDOW_OBJECT
   ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
-  LONG UserData;
   BOOL Unicode;
   WNDPROC WndProc;
   PETHREAD OwnerThread;

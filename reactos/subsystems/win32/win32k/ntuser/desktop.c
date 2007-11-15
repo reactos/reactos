@@ -653,13 +653,15 @@ IntHideDesktop(PDESKTOP_OBJECT Desktop)
 #else
 
    PWINDOW_OBJECT DesktopWindow;
+   PWINDOW DesktopWnd;
 
    DesktopWindow = IntGetWindowObject(Desktop->DesktopWindow);
    if (! DesktopWindow)
    {
       return ERROR_INVALID_WINDOW_HANDLE;
    }
-   DesktopWindow->Style &= ~WS_VISIBLE;
+   DesktopWnd = DesktopWindow->Wnd;
+   DesktopWnd->Style &= ~WS_VISIBLE;
 
    return STATUS_SUCCESS;
 #endif

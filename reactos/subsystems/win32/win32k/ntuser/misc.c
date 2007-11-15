@@ -268,7 +268,7 @@ NtUserCallOneParam(
                RETURN( FALSE);
             }
 
-            Result = (DWORD)Window->IDMenu;
+            Result = (DWORD)Window->Wnd->IDMenu;
 
             RETURN( Result);
          }
@@ -346,7 +346,7 @@ NtUserCallOneParam(
                RETURN( FALSE);
             }
 
-            Result = (DWORD)Window->Instance;
+            Result = (DWORD)Window->Wnd->Instance;
             RETURN( Result);
          }
 
@@ -789,6 +789,7 @@ NtUserCallHwndLock(
 {
    BOOL Ret = 0;
    PWINDOW_OBJECT Window;
+   PWINDOW Wnd;
    USER_REFERENCE_ENTRY Ref;
    DECLARE_RETURN(BOOLEAN);
 
@@ -800,6 +801,8 @@ NtUserCallHwndLock(
       RETURN( FALSE);
    }
    UserRefObjectCo(Window, &Ref);
+
+   Wnd = Window->Wnd;
 
    /* FIXME: Routine can be 0x53 - 0x5E */
    switch (Routine)
@@ -813,10 +816,10 @@ NtUserCallHwndLock(
             PMENU_OBJECT Menu;
             DPRINT("HWNDLOCK_ROUTINE_DRAWMENUBAR\n");
             Ret = FALSE;
-            if (!((Window->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
+            if (!((Wnd->Style & (WS_CHILD | WS_POPUP)) != WS_CHILD))
                break;
 
-            if(!(Menu = UserGetMenuObject((HMENU) Window->IDMenu)))
+            if(!(Menu = UserGetMenuObject((HMENU) Wnd->IDMenu)))
                break;
 
             Menu->MenuInfo.WndOwner = hWnd;

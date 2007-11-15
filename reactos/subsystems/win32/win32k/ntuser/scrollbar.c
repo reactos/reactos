@@ -60,6 +60,7 @@ BOOL FASTCALL
 IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
    BOOL vertical;
+   PWINDOW Wnd = Window->Wnd;
    RECT ClientRect = Window->Wnd->ClientRect;
    RECT WindowRect = Window->Wnd->WindowRect;
 
@@ -74,7 +75,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
          break;
 
       case SB_VERT:
-         if(Window->ExStyle & WS_EX_LEFTSCROLLBAR)
+         if(Wnd->ExStyle & WS_EX_LEFTSCROLLBAR)
          {
             lprect->right = ClientRect.left - WindowRect.left;
             lprect->left = lprect->right - UserGetSystemMetrics(SM_CXVSCROLL);
@@ -91,7 +92,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 
       case SB_CTL:
          IntGetClientRect (Window, lprect);
-         vertical = ((Window->Style & SBS_VERT) != 0);
+         vertical = ((Wnd->Style & SBS_VERT) != 0);
          break;
 
       default:
@@ -104,6 +105,7 @@ IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 BOOL FASTCALL
 IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPSCROLLINFO psi)
 {
+   PWINDOW Wnd = Window->Wnd;
    INT Thumb, ThumbBox, ThumbPos, cxy, mx;
    RECT ClientRect;
 
@@ -119,7 +121,7 @@ IntCalculateThumb(PWINDOW_OBJECT Window, LONG idObject, PSCROLLBARINFO psbi, LPS
          break;
       case SB_CTL:
          IntGetClientRect (Window, &ClientRect);
-         if(Window->Style & SBS_VERT)
+         if(Wnd->Style & SBS_VERT)
          {
             Thumb = UserGetSystemMetrics(SM_CYVSCROLL);
             cxy = ClientRect.bottom - ClientRect.top;
@@ -831,8 +833,11 @@ DWORD FASTCALL
 co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
 {
    DWORD Style, OldStyle;
+   PWINDOW Wnd;
 
    ASSERT_REFS_CO(Window);
+
+   Wnd = Window->Wnd;
 
    switch(wBar)
    {
@@ -866,20 +871,20 @@ co_UserShowScrollBar(PWINDOW_OBJECT Window, int wBar, DWORD bShow)
       return( TRUE);
    }
 
-   OldStyle = Window->Style;
+   OldStyle = Wnd->Style;
    if(bShow)
-      Window->Style |= Style;
+      Wnd->Style |= Style;
    else
-      Window->Style &= ~Style;
+      Wnd->Style &= ~Style;
 
-   if(Window->Style != OldStyle)
+   if(Wnd->Style != OldStyle)
    {
-      if(Window->Style & WS_HSCROLL)
+      if(Wnd->Style & WS_HSCROLL)
          IntUpdateSBInfo(Window, SB_HORZ);
-      if(Window->Style & WS_VSCROLL)
+      if(Wnd->Style & WS_VSCROLL)
          IntUpdateSBInfo(Window, SB_VERT);
 
-      if(Window->Style & WS_VISIBLE)
+      if(Wnd->Style & WS_VISIBLE)
       {
          /* Frame has been changed, let the window redraw itself */
          co_WinPosSetWindowPos(Window, 0, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE |

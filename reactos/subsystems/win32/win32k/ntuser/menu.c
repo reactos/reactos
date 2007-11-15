@@ -314,7 +314,7 @@ IntDestroyMenuObject(PMENU_OBJECT Menu,
             Window = UserGetWindowObject(Menu->MenuInfo.Wnd);
             if (Window)
             {
-               Window->IDMenu = 0;
+               Window->Wnd->IDMenu = 0;
             }
          }
          ObmDeleteObject(Menu->MenuInfo.Self, otMenu);
@@ -1735,7 +1735,7 @@ NtUserGetMenuBarInfo(
         RETURN(FALSE);
      }
 
-   hMenu = (HMENU)WindowObject->IDMenu;
+   hMenu = (HMENU)WindowObject->Wnd->IDMenu;
 
    if (!(MenuObject = UserGetMenuObject(hMenu)))
      {
@@ -2023,7 +2023,7 @@ NtUserHiliteMenuItem(
       RETURN(FALSE);
    }
 
-   if(Window->IDMenu == (UINT)hMenu)
+   if(Window->Wnd->IDMenu == (UINT)hMenu)
    {
       RETURN( IntHiliteMenuItem(Window, Menu, uItemHilite, uHilite));
    }

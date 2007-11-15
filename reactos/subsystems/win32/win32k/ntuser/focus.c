@@ -147,19 +147,22 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    HWND hWndFocus = FocusWindow->hSelf;
    HWND hWndFocusPrev = NULL;
    PUSER_MESSAGE_QUEUE PrevForegroundQueue;
+   PWINDOW Wnd;
 
    ASSERT_REFS_CO(Window);
 
    DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
    DPRINT("(%wZ)\n", &Window->WindowName);
 
-   if ((Window->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
+   Wnd = Window->Wnd;
+
+   if ((Wnd->Style & (WS_CHILD | WS_POPUP)) == WS_CHILD)
    {
       DPRINT("Failed - Child\n");
       return FALSE;
    }
 
-   if (0 == (Window->Style & WS_VISIBLE) &&
+   if (0 == (Wnd->Style & WS_VISIBLE) &&
        Window->OwnerThread->ThreadsProcess != CsrProcess)
    {
       DPRINT("Failed - Invisible\n");
@@ -223,10 +226,12 @@ co_IntMouseActivateWindow(PWINDOW_OBJECT Window)
    HWND Top;
    PWINDOW_OBJECT TopWindow;
    USER_REFERENCE_ENTRY Ref;
+   PWINDOW Wnd;
 
    ASSERT_REFS_CO(Window);
 
-   if(Window->Style & WS_DISABLED)
+   Wnd = Window->Wnd;
+   if(Wnd->Style & WS_DISABLED)
    {
       BOOL Ret;
       PWINDOW_OBJECT TopWnd;
@@ -266,6 +271,7 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
    PUSER_MESSAGE_QUEUE ThreadQueue;
    HWND hWndPrev;
    HWND hWnd = 0;
+   PWINDOW Wnd;
 
    if (Window)
       ASSERT_REFS_CO(Window);
@@ -275,9 +281,10 @@ co_IntSetActiveWindow(PWINDOW_OBJECT Window OPTIONAL)
 
    if (Window != 0)
    {
-      if ((!(Window->Style & WS_VISIBLE) &&
+      Wnd = Window->Wnd;
+      if ((!(Wnd->Style & WS_VISIBLE) &&
            Window->OwnerThread->ThreadsProcess != CsrProcess) ||
-          (Window->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
+          (Wnd->Style & (WS_POPUP | WS_CHILD)) == WS_CHILD)
       {
          return ThreadQueue ? 0 : ThreadQueue->ActiveWindow;
       }
@@ -521,12 +528,14 @@ HWND FASTCALL co_UserSetFocus(PWINDOW_OBJECT Window OPTIONAL)
       HWND hWndPrev;
       PWINDOW_OBJECT TopWnd;
       USER_REFERENCE_ENTRY Ref;
+      PWINDOW Wnd;
 
       ASSERT_REFS_CO(Window);
 
       ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 
-      if (Window->Style & (WS_MINIMIZE | WS_DISABLED))
+      Wnd = Window->Wnd;
+      if (Wnd->Style & (WS_MINIMIZE | WS_DISABLED))
       {
          return( (ThreadQueue ? ThreadQueue->FocusWindow : 0));
       }
