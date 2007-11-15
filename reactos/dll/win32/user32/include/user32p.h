@@ -120,6 +120,9 @@
 #define NtUserShowCursor(bShow) \
   NtUserCallOneParam((DWORD)bShow, ONEPARAM_ROUTINE_SHOWCURSOR)
 
+#define NtUserGetDesktopMapping(Ptr) \
+  (PVOID)NtUserCallOneParam((DWORD)Ptr, ONEPARAM_ROUTINE_GETDESKTOPMAPPING)
+
 #define ShowCaret(hwnd) \
   NtUserShowCaret(hwnd)
 

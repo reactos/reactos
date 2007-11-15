@@ -7,6 +7,7 @@ struct _W32THREADINFO;
 typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
+    ULONG_PTR HeapLimit;
     WCHAR szDesktopName[1];
     HWND hTaskManWindow;
     HWND hProgmanWindow;
@@ -55,6 +56,18 @@ typedef struct _WINDOWCLASS
     UINT MenuNameIsString : 1;
 } WINDOWCLASS, *PWINDOWCLASS;
 
+typedef struct _WINDOW
+{
+    /* NOTE: This structure is located in the desktop heap and will
+             eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
+             keeps a reference to this structure until all the information
+             is moved to this structure */
+    struct _W32PROCESSINFO *pi; /* FIXME: Move to object header some day */
+    struct _W32THREADINFO *ti;
+    RECT WindowRect;
+    RECT ClientRect;
+} WINDOW, *PWINDOW;
+
 typedef struct _W32PROCESSINFO
 {
     PVOID UserHandleTable;
@@ -71,6 +84,8 @@ typedef struct _W32THREADINFO
     PW32PROCESSINFO pi; /* [USER] */
     PW32PROCESSINFO kpi; /* [KERNEL] */
     PDESKTOP Desktop;
+    PVOID DesktopHeapBase;
+    ULONG_PTR DesktopHeapLimit;
     ULONG_PTR DesktopHeapDelta;
 } W32THREADINFO, *PW32THREADINFO;
 
@@ -496,6 +511,7 @@ NtUserCallNoParam(
 #define ONEPARAM_ROUTINE_GETCURSORPOSITION    0x0b
 #define ONEPARAM_ROUTINE_ISWINDOWINDESTROY    0x0c
 #define ONEPARAM_ROUTINE_ENABLEPROCWNDGHSTING 0x0d
+#define ONEPARAM_ROUTINE_GETDESKTOPMAPPING    0x0e
 #define ONEPARAM_ROUTINE_GETWINDOWINSTANCE    0x10
 #define ONEPARAM_ROUTINE_MSQSETWAKEMASK       0x27
 #define ONEPARAM_ROUTINE_GETKEYBOARDTYPE      0x28

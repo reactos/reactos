@@ -633,8 +633,8 @@ co_IntTranslateMouseMessage(PUSER_MESSAGE_QUEUE ThreadQueue, LPMSG Msg, USHORT *
       {
          /* NOTE: Msg->pt should remain in screen coordinates. -- FiN */
          Msg->lParam = MAKELONG(
-                          Msg->pt.x - (WORD)Window->ClientRect.left,
-                          Msg->pt.y - (WORD)Window->ClientRect.top);
+                          Msg->pt.x - (WORD)Window->Wnd->ClientRect.left,
+                          Msg->pt.y - (WORD)Window->Wnd->ClientRect.top);
       }
    }
 

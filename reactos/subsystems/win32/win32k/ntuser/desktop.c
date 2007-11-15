@@ -870,6 +870,7 @@ NtUserCreateDesktop(
    SIZE_T DesktopInfoSize;
    UNICODE_STRING SafeDesktopName;
    ULONG DummyContext;
+   ULONG_PTR HeapLimit = 4 * 1024 * 1024; /* FIXME */
    DECLARE_RETURN(HDESK);
 
 
@@ -955,7 +956,7 @@ NtUserCreateDesktop(
    DesktopObject->DesktopHeapSection = NULL;
    DesktopObject->hDesktopHeap = UserCreateHeap(&DesktopObject->DesktopHeapSection,
                                                 &DesktopHeapSystemBase,
-                                                4 * 1024 * 1024); /* FIXME */
+                                                HeapLimit);
    if (DesktopObject->hDesktopHeap == NULL)
    {
        ObDereferenceObject(DesktopObject);
@@ -981,6 +982,7 @@ NtUserCreateDesktop(
                  DesktopInfoSize);
 
    DesktopObject->DesktopInfo->hKernelHeap = DesktopObject->hDesktopHeap;
+   DesktopObject->DesktopInfo->HeapLimit = HeapLimit;
    RtlCopyMemory(DesktopObject->DesktopInfo->szDesktopName,
                  lpszDesktopName->Buffer,
                  lpszDesktopName->Length);
@@ -1372,8 +1374,8 @@ NtUserPaintDesktop(HDC hDC)
          int x, y;
          HDC hWallpaperDC;
 
-         sz.cx = DeskWin->WindowRect.right - DeskWin->WindowRect.left;
-         sz.cy = DeskWin->WindowRect.bottom - DeskWin->WindowRect.top;
+         sz.cx = DeskWin->Wnd->WindowRect.right - DeskWin->Wnd->WindowRect.left;
+         sz.cy = DeskWin->Wnd->WindowRect.bottom - DeskWin->Wnd->WindowRect.top;
 
          if (WinSta->WallpaperMode == wmStretch ||
              WinSta->WallpaperMode == wmTile)
@@ -1736,6 +1738,8 @@ IntUnmapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
         if (ti->Desktop == DesktopObject->DesktopInfo)
         {
             ti->Desktop = NULL;
+            ti->DesktopHeapBase = NULL;
+            ti->DesktopHeapLimit = 0;
             ti->DesktopHeapDelta = 0;
         }
     }
@@ -1799,6 +1803,7 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
     HeapMapping->Next = NULL;
     HeapMapping->KernelMapping = (PVOID)DesktopObject->hDesktopHeap;
     HeapMapping->UserMapping = UserBase;
+    HeapMapping->Limit = ViewSize;
     HeapMapping->Count = 1;
     *PrevLink = HeapMapping;
 
@@ -1811,6 +1816,8 @@ IntMapDesktopView(IN PDESKTOP_OBJECT DesktopObject)
         if (ti->Desktop == NULL)
         {
             ti->Desktop = DesktopObject->DesktopInfo;
+            ti->DesktopHeapBase = DesktopObject->hDesktopHeap;
+            ti->DesktopHeapLimit = ViewSize;
             ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
         }
     }
@@ -1854,6 +1861,16 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
             }
         }
 
+        if (W32Thread->Desktop == NULL)
+        {
+            PW32THREADINFO ti = GetW32ThreadInfo();
+            if (ti != NULL)
+            {
+                ti->Desktop = NULL;
+                ti->DesktopHeapDelta = 0;
+            }
+        }
+
         if (OldDesktop != NULL &&
             !IntCheckProcessDesktopClasses(OldDesktop->DesktopInfo,
                                            FreeOnFailure))
@@ -1881,22 +1898,6 @@ IntSetThreadDesktop(IN PDESKTOP_OBJECT DesktopObject,
             }
 
             ObDereferenceObject(OldDesktop);
-
-            /* update the thread info */
-            if (W32Thread != NULL && W32Thread->ThreadInfo != NULL &&
-                W32Thread->ThreadInfo->Desktop != (DesktopObject != NULL ? DesktopObject->DesktopInfo : NULL))
-            {
-                if (DesktopObject != NULL)
-                {
-                    W32Thread->ThreadInfo->Desktop = DesktopObject->DesktopInfo;
-                    W32Thread->ThreadInfo->DesktopHeapDelta = DesktopHeapGetUserDelta();
-                }
-                else
-                {
-                    W32Thread->ThreadInfo->Desktop = NULL;
-                    W32Thread->ThreadInfo->DesktopHeapDelta = 0;
-                }
-            }
         }
     }
 

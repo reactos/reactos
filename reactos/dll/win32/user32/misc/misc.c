@@ -339,7 +339,7 @@ GetUser32Handle(HANDLE handle)
 static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_MONITOR + 1] =
 {
     FALSE, /* VALIDATE_TYPE_FREE (not used) */
-    FALSE, /* VALIDATE_TYPE_WIN */
+    TRUE, /* VALIDATE_TYPE_WIN */ /* FIXME: FALSE once WINDOW_OBJECT is deleted! */
     TRUE, /* VALIDATE_TYPE_MENU */
     TRUE, /* VALIDATE_TYPE_CURSOR */
     TRUE, /* VALIDATE_TYPE_MWPOS */
@@ -362,16 +362,8 @@ ValidateHandle(HANDLE handle, UINT uType)
 {
   PVOID ret;
   PUSER_HANDLE_ENTRY pEntry;
-  PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ASSERT(uType <= VALIDATE_TYPE_MONITOR);
-  ASSERT(ClientInfo != NULL);
-
-  /* See if we have the handle cached still */
-  if (uType == VALIDATE_TYPE_WIN)
-  {
-     if (handle == ClientInfo->hWND) return ClientInfo->pvWND;
-  }
 
   pEntry = GetUser32Handle(handle);
 
@@ -413,22 +405,11 @@ ValidateHandle(HANDLE handle, UINT uType)
   else
     ret = DesktopPtrToUser(pEntry->ptr);
 
-  /* Update the cache */
-#if 0
-  /* FIXME: To enable this win32k needs to check this information when destroying
-            the window handle and clear it out of the ClientInfo structure! */
-  if (uType == VALIDATE_TYPE_WIN)
-  {
-    ClientInfo->hWND = handle;
-    ClientInfo->pvWND = ret;
-  }
-#endif
-
   return ret;
 }
 
 //
-// Validate callproc handle and return the pointer to the object.
+// Validate a callproc handle and return the pointer to the object.
 //
 PCALLPROC
 FASTCALL
@@ -437,6 +418,44 @@ ValidateCallProc(HANDLE hCallProc)
     PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
     if (CallProc != NULL && CallProc->pi == g_kpi)
         return CallProc;
+
+    return NULL;
+}
+
+//
+// Validate a window handle and return the pointer to the object.
+//
+PWINDOW
+FASTCALL
+ValidateHwnd(HWND hwnd)
+{
+    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    ASSERT(ClientInfo != NULL);
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->hWND)
+        return ClientInfo->pvWND;
+
+    PWINDOW Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
+    if (Wnd != NULL)
+    {
+        /* FIXME: Check if handle table entry is marked as deleting and
+                  return NULL in this case! */
+
+#if 0
+        return Wnd;
+#else
+        /* HACK HACK HACK! This needs to be done until WINDOW_OBJECT is completely
+           superseded by the WINDOW structure. We *ASSUME* a pointer to the WINDOW
+           structure to be at the beginning of the WINDOW_OBJECT structure!!!
+
+           !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
+         */
+
+        if (*((PVOID*)Wnd) != NULL)
+            return DesktopPtrToUser(*((PVOID*)Wnd));
+#endif
+    }
 
     return NULL;
 }

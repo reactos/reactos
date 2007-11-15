@@ -6,13 +6,13 @@
 #define SWP_NOCLIENTSIZE          0x1000
 
 #define IntPtInWindow(WndObject,x,y) \
-  ((x) >= (WndObject)->WindowRect.left && \
-   (x) < (WndObject)->WindowRect.right && \
-   (y) >= (WndObject)->WindowRect.top && \
-   (y) < (WndObject)->WindowRect.bottom && \
+  ((x) >= (WndObject)->Wnd->WindowRect.left && \
+   (x) < (WndObject)->Wnd->WindowRect.right && \
+   (y) >= (WndObject)->Wnd->WindowRect.top && \
+   (y) < (WndObject)->Wnd->WindowRect.bottom && \
    (!(WndObject)->WindowRegion || ((WndObject)->Style & WS_MINIMIZE) || \
-    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->WindowRect.left), \
-                    (INT)((y) - (WndObject)->WindowRect.top))))
+    NtGdiPtInRegion((WndObject)->WindowRegion, (INT)((x) - (WndObject)->Wnd->WindowRect.left), \
+                    (INT)((y) - (WndObject)->Wnd->WindowRect.top))))
 
 UINT
 FASTCALL co_WinPosArrangeIconicWindows(PWINDOW_OBJECT parent);

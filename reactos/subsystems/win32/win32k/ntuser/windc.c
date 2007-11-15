@@ -199,13 +199,13 @@ DceSetDrawable(PWINDOW_OBJECT Window OPTIONAL, HDC hDC, ULONG Flags,
    {
       if (Flags & DCX_WINDOW)
       {
-         dc->w.DCOrgX = Window->WindowRect.left;
-         dc->w.DCOrgY = Window->WindowRect.top;
+         dc->w.DCOrgX = Window->Wnd->WindowRect.left;
+         dc->w.DCOrgY = Window->Wnd->WindowRect.top;
       }
       else
       {
-         dc->w.DCOrgX = Window->ClientRect.left;
-         dc->w.DCOrgY = Window->ClientRect.top;
+         dc->w.DCOrgX = Window->Wnd->ClientRect.left;
+         dc->w.DCOrgY = Window->Wnd->ClientRect.top;
       }
    }
    DC_UnlockDc(dc);
@@ -311,7 +311,7 @@ DceUpdateVisRgn(DCE *Dce, PWINDOW_OBJECT Window, ULONG Flags)
       DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
       if (NULL != DesktopWindow)
       {
-         hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->WindowRect);
+         hRgnVisible = UnsafeIntCreateRectRgnIndirect(&DesktopWindow->Wnd->WindowRect);
       }
       else
       {
@@ -530,11 +530,11 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    {
       if (!(Flags & DCX_WINDOW))
       {
-         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->ClientRect);
       }
       else
       {
-         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+         Dce->hClipRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
       }
    }
    else if (ClipRegion != NULL)
@@ -819,17 +819,17 @@ DceResetActiveDCEs(PWINDOW_OBJECT Window)
          {
             if (pDCE->DCXFlags & DCX_WINDOW)
             {
-               DeltaX = CurrentWindow->WindowRect.left - dc->w.DCOrgX;
-               DeltaY = CurrentWindow->WindowRect.top - dc->w.DCOrgY;
-               dc->w.DCOrgX = CurrentWindow->WindowRect.left;
-               dc->w.DCOrgY = CurrentWindow->WindowRect.top;
+               DeltaX = CurrentWindow->Wnd->WindowRect.left - dc->w.DCOrgX;
+               DeltaY = CurrentWindow->Wnd->WindowRect.top - dc->w.DCOrgY;
+               dc->w.DCOrgX = CurrentWindow->Wnd->WindowRect.left;
+               dc->w.DCOrgY = CurrentWindow->Wnd->WindowRect.top;
             }
             else
             {
-               DeltaX = CurrentWindow->ClientRect.left - dc->w.DCOrgX;
-               DeltaY = CurrentWindow->ClientRect.top - dc->w.DCOrgY;
-               dc->w.DCOrgX = CurrentWindow->ClientRect.left;
-               dc->w.DCOrgY = CurrentWindow->ClientRect.top;
+               DeltaX = CurrentWindow->Wnd->ClientRect.left - dc->w.DCOrgX;
+               DeltaY = CurrentWindow->Wnd->ClientRect.top - dc->w.DCOrgY;
+               dc->w.DCOrgX = CurrentWindow->Wnd->ClientRect.left;
+               dc->w.DCOrgY = CurrentWindow->Wnd->ClientRect.top;
             }
             if (NULL != dc->w.hClipRgn)
             {

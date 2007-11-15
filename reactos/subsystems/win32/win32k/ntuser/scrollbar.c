@@ -60,8 +60,8 @@ BOOL FASTCALL
 IntGetScrollBarRect (PWINDOW_OBJECT Window, INT nBar, PRECT lprect)
 {
    BOOL vertical;
-   RECT ClientRect = Window->ClientRect;
-   RECT WindowRect = Window->WindowRect;
+   RECT ClientRect = Window->Wnd->ClientRect;
+   RECT WindowRect = Window->Wnd->WindowRect;
 
    switch (nBar)
    {
@@ -394,10 +394,10 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
    if (bRedraw)
    {
       RECT UpdateRect = psbi->rcScrollBar;
-      UpdateRect.left -= Window->ClientRect.left - Window->WindowRect.left;
-      UpdateRect.right -= Window->ClientRect.left - Window->WindowRect.left;
-      UpdateRect.top -= Window->ClientRect.top - Window->WindowRect.top;
-      UpdateRect.bottom -= Window->ClientRect.top - Window->WindowRect.top;
+      UpdateRect.left -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
+      UpdateRect.right -= Window->Wnd->ClientRect.left - Window->Wnd->WindowRect.left;
+      UpdateRect.top -= Window->Wnd->ClientRect.top - Window->Wnd->WindowRect.top;
+      UpdateRect.bottom -= Window->Wnd->ClientRect.top - Window->Wnd->WindowRect.top;
       co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
    }
 
@@ -467,8 +467,8 @@ co_IntCreateScrollBars(PWINDOW_OBJECT Window)
    RtlZeroMemory(Window->Scroll, Size);
 
    Result = co_WinPosGetNonClientSize(Window,
-                                      &Window->WindowRect,
-                                      &Window->ClientRect);
+                                      &Window->Wnd->WindowRect,
+                                      &Window->Wnd->ClientRect);
 
    for(s = SB_HORZ; s <= SB_VERT; s++)
    {

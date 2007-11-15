@@ -64,8 +64,8 @@ IntGetClientOrigin(PWINDOW_OBJECT Window OPTIONAL, LPPOINT Point)
       Point->x = Point->y = 0;
       return FALSE;
    }
-   Point->x = Window->ClientRect.left;
-   Point->y = Window->ClientRect.top;
+   Point->x = Window->Wnd->ClientRect.left;
+   Point->y = Window->Wnd->ClientRect.top;
 
    return TRUE;
 }
@@ -278,7 +278,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
          if(IntIsDesktopWindow(Parent))
             IntGetDesktopWorkArea(Desktop, &WorkArea);
          else
-            WorkArea = Parent->ClientRect;
+            WorkArea = Parent->Wnd->ClientRect;
       }
       else
          IntGetDesktopWorkArea(Desktop, &WorkArea);
@@ -289,7 +289,7 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
          DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", Window->hSelf);
          return NULL;
       }
-      Window->InternalPos->NormalRect = Window->WindowRect;
+      Window->InternalPos->NormalRect = Window->Wnd->WindowRect;
       IntGetWindowBorderMeasures(Window, &XInc, &YInc);
       Window->InternalPos->MaxPos.x = WorkArea.left - XInc;
       Window->InternalPos->MaxPos.y = WorkArea.top - YInc;
@@ -320,9 +320,9 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
    ASSERT_REFS_CO(Window);
 
-   Size.x = Window->WindowRect.left;
-   Size.y = Window->WindowRect.top;
-   InternalPos = WinPosInitInternalPos(Window, &Size, &Window->WindowRect);
+   Size.x = Window->Wnd->WindowRect.left;
+   Size.y = Window->Wnd->WindowRect.top;
+   InternalPos = WinPosInitInternalPos(Window, &Size, &Window->Wnd->WindowRect);
 
    if (InternalPos)
    {
@@ -533,17 +533,17 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
       WINDOWPOS winposCopy;
 
       params.rgrc[0] = *WindowRect;
-      params.rgrc[1] = Window->WindowRect;
-      params.rgrc[2] = Window->ClientRect;
+      params.rgrc[1] = Window->Wnd->WindowRect;
+      params.rgrc[2] = Window->Wnd->ClientRect;
       Parent = Window->Parent;
       if (0 != (Window->Style & WS_CHILD) && Parent)
       {
-         IntGdiOffsetRect(&(params.rgrc[0]), - Parent->ClientRect.left,
-                          - Parent->ClientRect.top);
-         IntGdiOffsetRect(&(params.rgrc[1]), - Parent->ClientRect.left,
-                          - Parent->ClientRect.top);
-         IntGdiOffsetRect(&(params.rgrc[2]), - Parent->ClientRect.left,
-                          - Parent->ClientRect.top);
+         IntGdiOffsetRect(&(params.rgrc[0]), - Parent->Wnd->ClientRect.left,
+                          - Parent->Wnd->ClientRect.top);
+         IntGdiOffsetRect(&(params.rgrc[1]), - Parent->Wnd->ClientRect.left,
+                          - Parent->Wnd->ClientRect.top);
+         IntGdiOffsetRect(&(params.rgrc[2]), - Parent->Wnd->ClientRect.left,
+                          - Parent->Wnd->ClientRect.top);
       }
       params.lppos = &winposCopy;
       winposCopy = *WinPos;
@@ -557,24 +557,24 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
          *ClientRect = params.rgrc[0];
          if ((Window->Style & WS_CHILD) && Parent)
          {
-            IntGdiOffsetRect(ClientRect, Parent->ClientRect.left,
-                             Parent->ClientRect.top);
+            IntGdiOffsetRect(ClientRect, Parent->Wnd->ClientRect.left,
+                             Parent->Wnd->ClientRect.top);
          }
          FixClientRect(ClientRect, WindowRect);
       }
 
       /* FIXME: WVR_ALIGNxxx */
 
-      if (ClientRect->left != Window->ClientRect.left ||
-            ClientRect->top != Window->ClientRect.top)
+      if (ClientRect->left != Window->Wnd->ClientRect.left ||
+            ClientRect->top != Window->Wnd->ClientRect.top)
       {
          WinPos->flags &= ~SWP_NOCLIENTMOVE;
       }
 
       if ((ClientRect->right - ClientRect->left !=
-            Window->ClientRect.right - Window->ClientRect.left) ||
+            Window->Wnd->ClientRect.right - Window->Wnd->ClientRect.left) ||
             (ClientRect->bottom - ClientRect->top !=
-             Window->ClientRect.bottom - Window->ClientRect.top))
+             Window->Wnd->ClientRect.bottom - Window->Wnd->ClientRect.top))
       {
          WinPos->flags &= ~SWP_NOCLIENTSIZE;
       }
@@ -582,8 +582,8 @@ co_WinPosDoNCCALCSize(PWINDOW_OBJECT Window, PWINDOWPOS WinPos,
    else
    {
       if (! (WinPos->flags & SWP_NOMOVE)
-            && (ClientRect->left != Window->ClientRect.left ||
-                ClientRect->top != Window->ClientRect.top))
+            && (ClientRect->left != Window->Wnd->ClientRect.left ||
+                ClientRect->top != Window->Wnd->ClientRect.top))
       {
          WinPos->flags &= ~SWP_NOCLIENTMOVE;
       }
@@ -608,8 +608,8 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
       co_IntPostOrSendMessage(Window->hSelf, WM_WINDOWPOSCHANGING, 0, (LPARAM) WinPos);
    }
 
-   *WindowRect = Window->WindowRect;
-   *ClientRect = Window->ClientRect;
+   *WindowRect = Window->Wnd->WindowRect;
+   *ClientRect = Window->Wnd->ClientRect;
 
    if (!(WinPos->flags & SWP_NOSIZE))
    {
@@ -625,17 +625,17 @@ co_WinPosDoWinPosChanging(PWINDOW_OBJECT Window,
       Parent = Window->Parent;
       if ((0 != (Window->Style & WS_CHILD)) && Parent)
       {
-         X += Parent->ClientRect.left;
-         Y += Parent->ClientRect.top;
+         X += Parent->Wnd->ClientRect.left;
+         Y += Parent->Wnd->ClientRect.top;
       }
 
       WindowRect->left = X;
       WindowRect->top = Y;
-      WindowRect->right += X - Window->WindowRect.left;
-      WindowRect->bottom += Y - Window->WindowRect.top;
+      WindowRect->right += X - Window->Wnd->WindowRect.left;
+      WindowRect->bottom += Y - Window->Wnd->WindowRect.top;
       IntGdiOffsetRect(ClientRect,
-                       X - Window->WindowRect.left,
-                       Y - Window->WindowRect.top);
+                       X - Window->Wnd->WindowRect.left,
+                       Y - Window->Wnd->WindowRect.top);
    }
 
    WinPos->flags |= SWP_NOCLIENTMOVE | SWP_NOCLIENTSIZE;
@@ -747,15 +747,15 @@ WinPosInternalMoveWindow(PWINDOW_OBJECT Window, INT MoveX, INT MoveY)
 {
    PWINDOW_OBJECT Child;
 
-   Window->WindowRect.left += MoveX;
-   Window->WindowRect.right += MoveX;
-   Window->WindowRect.top += MoveY;
-   Window->WindowRect.bottom += MoveY;
+   Window->Wnd->WindowRect.left += MoveX;
+   Window->Wnd->WindowRect.right += MoveX;
+   Window->Wnd->WindowRect.top += MoveY;
+   Window->Wnd->WindowRect.bottom += MoveY;
 
-   Window->ClientRect.left += MoveX;
-   Window->ClientRect.right += MoveX;
-   Window->ClientRect.top += MoveY;
-   Window->ClientRect.bottom += MoveY;
+   Window->Wnd->ClientRect.left += MoveX;
+   Window->Wnd->ClientRect.right += MoveX;
+   Window->Wnd->ClientRect.top += MoveY;
+   Window->Wnd->ClientRect.bottom += MoveY;
 
    for(Child = Window->FirstChild; Child; Child = Child->NextSibling)
    {
@@ -787,15 +787,15 @@ WinPosFixupFlags(WINDOWPOS *WinPos, PWINDOW_OBJECT Window)
    WinPos->cy = max(WinPos->cy, 0);
 
    /* Check for right size */
-   if (Window->WindowRect.right - Window->WindowRect.left == WinPos->cx &&
-         Window->WindowRect.bottom - Window->WindowRect.top == WinPos->cy)
+   if (Window->Wnd->WindowRect.right - Window->Wnd->WindowRect.left == WinPos->cx &&
+         Window->Wnd->WindowRect.bottom - Window->Wnd->WindowRect.top == WinPos->cy)
    {
       WinPos->flags |= SWP_NOSIZE;
    }
 
    /* Check for right position */
-   if (Window->WindowRect.left == WinPos->x &&
-         Window->WindowRect.top == WinPos->y)
+   if (Window->Wnd->WindowRect.left == WinPos->x &&
+         Window->Wnd->WindowRect.top == WinPos->y)
    {
       WinPos->flags |= SWP_NOMOVE;
    }
@@ -969,7 +969,7 @@ co_WinPosSetWindowPos(
          else if(VisRgn)
          {
             RGNDATA_UnlockRgn(VisRgn);
-            NtGdiOffsetRgn(VisBefore, -Window->WindowRect.left, -Window->WindowRect.top);
+            NtGdiOffsetRgn(VisBefore, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
          }
       }
    }
@@ -1044,8 +1044,8 @@ co_WinPosSetWindowPos(
       }
    }
 
-   OldWindowRect = Window->WindowRect;
-   OldClientRect = Window->ClientRect;
+   OldWindowRect = Window->Wnd->WindowRect;
+   OldClientRect = Window->Wnd->ClientRect;
 
    if (OldClientRect.bottom - OldClientRect.top ==
          NewClientRect.bottom - NewClientRect.top)
@@ -1069,8 +1069,8 @@ co_WinPosSetWindowPos(
                                NewClientRect.top - OldClientRect.top);
    }
 
-   Window->WindowRect = NewWindowRect;
-   Window->ClientRect = NewClientRect;
+   Window->Wnd->WindowRect = NewWindowRect;
+   Window->Wnd->ClientRect = NewClientRect;
 
    if (!(WinPos.flags & SWP_SHOWWINDOW) && (WinPos.flags & SWP_HIDEWINDOW))
    {
@@ -1119,7 +1119,7 @@ co_WinPosSetWindowPos(
       else if(VisRgn)
       {
          RGNDATA_UnlockRgn(VisRgn);
-         NtGdiOffsetRgn(VisAfter, -Window->WindowRect.left, -Window->WindowRect.top);
+         NtGdiOffsetRgn(VisAfter, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
       }
 
       /*
@@ -1241,8 +1241,8 @@ co_WinPosSetWindowPos(
             PWINDOW_OBJECT Parent = Window->Parent;
 
             NtGdiOffsetRgn(DirtyRgn,
-                           Window->WindowRect.left,
-                           Window->WindowRect.top);
+                           Window->Wnd->WindowRect.left,
+                           Window->Wnd->WindowRect.top);
             if ((Window->Style & WS_CHILD) &&
                 (Parent) &&
                 !(Parent->Style & WS_CLIPCHILDREN))
@@ -1490,13 +1490,13 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
       }
 
       co_IntSendMessage(Window->hSelf, WM_SIZE, wParam,
-                        MAKELONG(Window->ClientRect.right -
-                                 Window->ClientRect.left,
-                                 Window->ClientRect.bottom -
-                                 Window->ClientRect.top));
+                        MAKELONG(Window->Wnd->ClientRect.right -
+                                 Window->Wnd->ClientRect.left,
+                                 Window->Wnd->ClientRect.bottom -
+                                 Window->Wnd->ClientRect.top));
       co_IntSendMessage(Window->hSelf, WM_MOVE, 0,
-                        MAKELONG(Window->ClientRect.left,
-                                 Window->ClientRect.top));
+                        MAKELONG(Window->Wnd->ClientRect.left,
+                                 Window->Wnd->ClientRect.top));
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
 
    }
@@ -1612,10 +1612,10 @@ co_WinPosSearchChildren(
          else
             *HitTest = HTCLIENT;
 
-         if (Point->x >= Current->ClientRect.left &&
-               Point->x < Current->ClientRect.right &&
-               Point->y >= Current->ClientRect.top &&
-               Point->y < Current->ClientRect.bottom)
+         if (Point->x >= Current->Wnd->ClientRect.left &&
+               Point->x < Current->Wnd->ClientRect.right &&
+               Point->y >= Current->Wnd->ClientRect.top &&
+               Point->y < Current->Wnd->ClientRect.bottom)
          {
             co_WinPosSearchChildren(Current, OnlyHitTests, Point, Window, HitTest);
          }
@@ -1658,8 +1658,8 @@ co_WinPosWindowFromPoint(PWINDOW_OBJECT ScopeWin, PUSER_MESSAGE_QUEUE OnlyHitTes
    if((DesktopWindowHandle != ScopeWin->hSelf) &&
          (DesktopWindow = UserGetWindowObject(DesktopWindowHandle)))
    {
-      Point.x += ScopeWin->ClientRect.left - DesktopWindow->ClientRect.left;
-      Point.y += ScopeWin->ClientRect.top - DesktopWindow->ClientRect.top;
+      Point.x += ScopeWin->Wnd->ClientRect.left - DesktopWindow->Wnd->ClientRect.left;
+      Point.y += ScopeWin->Wnd->ClientRect.top - DesktopWindow->Wnd->ClientRect.top;
    }
 
    HitTest = HTNOWHERE;
@@ -1694,10 +1694,10 @@ NtUserGetMinMaxInfo(
 
    UserRefObjectCo(Window, &Ref);
 
-   Size.x = Window->WindowRect.left;
-   Size.y = Window->WindowRect.top;
+   Size.x = Window->Wnd->WindowRect.left;
+   Size.y = Window->Wnd->WindowRect.top;
    InternalPos = WinPosInitInternalPos(Window, &Size,
-                                       &Window->WindowRect);
+                                       &Window->Wnd->WindowRect);
    if(InternalPos)
    {
       if(SendMessage)

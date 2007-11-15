@@ -242,6 +242,22 @@ NtUserCallOneParam(
 
    switch(Routine)
    {
+      case ONEPARAM_ROUTINE_GETDESKTOPMAPPING:
+         {
+             PW32THREADINFO ti;
+             ti = GetW32ThreadInfo();
+             if (ti != NULL)
+             {
+                /* Try convert the pointer to a user mode pointer if the desktop is
+                   mapped into the process */
+                RETURN((DWORD)DesktopHeapAddressToUser((PVOID)Param));
+             }
+             else
+             {
+                RETURN(0);
+             }
+         }
+
       case ONEPARAM_ROUTINE_GETMENU:
          {
             PWINDOW_OBJECT Window;
@@ -2542,11 +2558,15 @@ GetW32ThreadInfo(VOID)
             if (W32Thread->Desktop != NULL)
             {
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;
+                ti->DesktopHeapBase = W32Thread->Desktop->DesktopInfo->hKernelHeap;
+                ti->DesktopHeapLimit = W32Thread->Desktop->DesktopInfo->HeapLimit;
                 ti->DesktopHeapDelta = DesktopHeapGetUserDelta();
             }
             else
             {
                 ti->Desktop = NULL;
+                ti->DesktopHeapBase = NULL;
+                ti->DesktopHeapLimit = 0;
                 ti->DesktopHeapDelta = 0;
             }
 

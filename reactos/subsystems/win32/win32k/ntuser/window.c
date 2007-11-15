@@ -292,6 +292,21 @@ static void IntSendDestroyMsg(HWND hWnd)
 #endif
 }
 
+static VOID
+UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
+{
+    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+
+    if (ClientInfo->pvWND == DesktopHeapAddressToUser(WindowObject->Wnd))
+    {
+        ClientInfo->hWND = NULL;
+        ClientInfo->pvWND = NULL;
+    }
+
+    DesktopHeapFree(ti->Desktop, WindowObject->Wnd);
+    WindowObject->Wnd = NULL;
+}
+
 /***********************************************************************
  *           IntDestroyWindow
  *
@@ -447,6 +462,9 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
 
    RtlFreeUnicodeString(&Window->WindowName);
 
+   ASSERT(Window->Wnd != NULL);
+   UserFreeWindowInfo(Window->ti, Window);
+
    UserDerefObject(Window);
 
    IntClipboardFreeWindow(Window);
@@ -539,8 +557,8 @@ BOOL FASTCALL
 IntGetWindowInfo(PWINDOW_OBJECT Window, PWINDOWINFO pwi)
 {
    pwi->cbSize = sizeof(WINDOWINFO);
-   pwi->rcWindow = Window->WindowRect;
-   pwi->rcClient = Window->ClientRect;
+   pwi->rcWindow = Window->Wnd->WindowRect;
+   pwi->rcClient = Window->Wnd->ClientRect;
    pwi->dwStyle = Window->Style;
    pwi->dwExStyle = Window->ExStyle;
    pwi->dwWindowStatus = (UserGetForegroundWindow() == Window->hSelf); /* WS_ACTIVECAPTION */
@@ -673,8 +691,8 @@ IntGetClientRect(PWINDOW_OBJECT Window, PRECT Rect)
    ASSERT( Rect );
 
    Rect->left = Rect->top = 0;
-   Rect->right = Window->ClientRect.right - Window->ClientRect.left;
-   Rect->bottom = Window->ClientRect.bottom - Window->ClientRect.top;
+   Rect->right = Window->Wnd->ClientRect.right - Window->Wnd->ClientRect.left;
+   Rect->bottom = Window->Wnd->ClientRect.bottom - Window->Wnd->ClientRect.top;
 }
 
 
@@ -1301,8 +1319,8 @@ NtUserChildWindowFromPointEx(HWND hwndParent,
 
    if(Parent->hSelf != IntGetDesktopWindow())
    {
-      Pt.x += Parent->ClientRect.left;
-      Pt.y += Parent->ClientRect.top;
+      Pt.x += Parent->Wnd->ClientRect.left;
+      Pt.y += Parent->Wnd->ClientRect.top;
    }
 
    if(!IntPtInWindow(Parent, Pt.x, Pt.y))
@@ -1355,7 +1373,7 @@ IntCalcDefPosSize(PWINDOW_OBJECT Parent, PWINDOW_OBJECT Window, RECT *rc, BOOL I
 
    if(Parent != NULL)
    {
-      IntGdiIntersectRect(rc, rc, &Parent->ClientRect);
+      IntGdiIntersectRect(rc, rc, &Parent->Wnd->ClientRect);
 
       if(IncPos)
       {
@@ -1528,10 +1546,21 @@ co_IntCreateWindowEx(DWORD dwExStyle,
             ObmCreateObject(gHandleTable, (PHANDLE)&hWnd,
                             otWindow, sizeof(WINDOW_OBJECT) + Class->WndExtra
                            );
+   if (Window)
+   {
+       Window->Wnd = DesktopHeapAlloc(ti->Desktop,
+                                      sizeof(WINDOW));
+       if (!Window->Wnd)
+           goto AllocErr;
+
+       Window->Wnd->ti = ti;
+       Window->Wnd->pi = ti->kpi;
+   }
 
    DPRINT("Created object with handle %X\n", hWnd);
    if (!Window)
    {
+AllocErr:
       ObDereferenceObject(WinSta);
       SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
       RETURN( (HWND)0);
@@ -1814,16 +1843,16 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
 
    /* Initialize the window dimensions. */
-   Window->WindowRect.left = Pos.x;
-   Window->WindowRect.top = Pos.y;
-   Window->WindowRect.right = Pos.x + Size.cx;
-   Window->WindowRect.bottom = Pos.y + Size.cy;
+   Window->Wnd->WindowRect.left = Pos.x;
+   Window->Wnd->WindowRect.top = Pos.y;
+   Window->Wnd->WindowRect.right = Pos.x + Size.cx;
+   Window->Wnd->WindowRect.bottom = Pos.y + Size.cy;
    if (0 != (Window->Style & WS_CHILD) && ParentWindow)
    {
-      IntGdiOffsetRect(&(Window->WindowRect), ParentWindow->ClientRect.left,
-                       ParentWindow->ClientRect.top);
+      IntGdiOffsetRect(&(Window->Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
+                       ParentWindow->Wnd->ClientRect.top);
    }
-   Window->ClientRect = Window->WindowRect;
+   Window->Wnd->ClientRect = Window->Wnd->WindowRect;
 
    /*
     * Get the size and position of the window.
@@ -1849,16 +1878,16 @@ co_IntCreateWindowEx(DWORD dwExStyle,
          Size.cy = 0;
    }
 
-   Window->WindowRect.left = Pos.x;
-   Window->WindowRect.top = Pos.y;
-   Window->WindowRect.right = Pos.x + Size.cx;
-   Window->WindowRect.bottom = Pos.y + Size.cy;
+   Window->Wnd->WindowRect.left = Pos.x;
+   Window->Wnd->WindowRect.top = Pos.y;
+   Window->Wnd->WindowRect.right = Pos.x + Size.cx;
+   Window->Wnd->WindowRect.bottom = Pos.y + Size.cy;
    if (0 != (Window->Style & WS_CHILD) && ParentWindow)
    {
-      IntGdiOffsetRect(&(Window->WindowRect), ParentWindow->ClientRect.left,
-                       ParentWindow->ClientRect.top);
+      IntGdiOffsetRect(&(Window->Wnd->WindowRect), ParentWindow->Wnd->ClientRect.left,
+                       ParentWindow->Wnd->ClientRect.top);
    }
-   Window->ClientRect = Window->WindowRect;
+   Window->Wnd->ClientRect = Window->Wnd->WindowRect;
 
    /* FIXME: Initialize the window menu. */
 
@@ -1880,19 +1909,19 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    }
 
    /* Calculate the non-client size. */
-   MaxPos.x = Window->WindowRect.left;
-   MaxPos.y = Window->WindowRect.top;
+   MaxPos.x = Window->Wnd->WindowRect.left;
+   MaxPos.y = Window->Wnd->WindowRect.top;
 
 
    DPRINT("IntCreateWindowEx(): About to get non-client size.\n");
    /* WinPosGetNonClientSize SENDS THE WM_NCCALCSIZE message */
    Result = co_WinPosGetNonClientSize(Window,
-                                      &Window->WindowRect,
-                                      &Window->ClientRect);
+                                      &Window->Wnd->WindowRect,
+                                      &Window->Wnd->ClientRect);
 
-   IntGdiOffsetRect(&Window->WindowRect,
-                    MaxPos.x - Window->WindowRect.left,
-                    MaxPos.y - Window->WindowRect.top);
+   IntGdiOffsetRect(&Window->Wnd->WindowRect,
+                    MaxPos.x - Window->Wnd->WindowRect.left,
+                    MaxPos.y - Window->Wnd->WindowRect.top);
 
 
    if (NULL != ParentWindow)
@@ -1951,17 +1980,17 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
       DPRINT("IntCreateWindow(): About to send WM_SIZE\n");
 
-      if ((Window->ClientRect.right - Window->ClientRect.left) < 0 ||
-            (Window->ClientRect.bottom - Window->ClientRect.top) < 0)
+      if ((Window->Wnd->ClientRect.right - Window->Wnd->ClientRect.left) < 0 ||
+            (Window->Wnd->ClientRect.bottom - Window->Wnd->ClientRect.top) < 0)
       {
          DPRINT("Sending bogus WM_SIZE\n");
       }
 
 
-      lParam = MAKE_LONG(Window->ClientRect.right -
-                         Window->ClientRect.left,
-                         Window->ClientRect.bottom -
-                         Window->ClientRect.top);
+      lParam = MAKE_LONG(Window->Wnd->ClientRect.right -
+                         Window->Wnd->ClientRect.left,
+                         Window->Wnd->ClientRect.bottom -
+                         Window->Wnd->ClientRect.top);
       co_IntSendMessage(Window->hSelf, WM_SIZE, SIZE_RESTORED,
                         lParam);
 
@@ -1970,13 +1999,13 @@ co_IntCreateWindowEx(DWORD dwExStyle,
 
       if (0 != (Window->Style & WS_CHILD) && ParentWindow)
       {
-         lParam = MAKE_LONG(Window->ClientRect.left - ParentWindow->ClientRect.left,
-                            Window->ClientRect.top - ParentWindow->ClientRect.top);
+         lParam = MAKE_LONG(Window->Wnd->ClientRect.left - ParentWindow->Wnd->ClientRect.left,
+                            Window->Wnd->ClientRect.top - ParentWindow->Wnd->ClientRect.top);
       }
       else
       {
-         lParam = MAKE_LONG(Window->ClientRect.left,
-                            Window->ClientRect.top);
+         lParam = MAKE_LONG(Window->Wnd->ClientRect.left,
+                            Window->Wnd->ClientRect.top);
       }
 
 
@@ -2050,6 +2079,8 @@ co_IntCreateWindowEx(DWORD dwExStyle,
    RETURN(hWnd);
 
 CLEANUP:
+   if (!_ret_ && Window && Window->Wnd && ti)
+       UserFreeWindowInfo(ti, Window);
    if (Window) UserDerefObjectCo(Window);
    if (ParentWindow) UserDerefObjectCo(ParentWindow);
    if (!_ret_ && ti != NULL)
@@ -3844,10 +3875,10 @@ NtUserGetWindowPlacement(HWND hWnd,
       Safepl.showCmd = SW_SHOWNORMAL;
    }
 
-   Size.x = Window->WindowRect.left;
-   Size.y = Window->WindowRect.top;
+   Size.x = Window->Wnd->WindowRect.left;
+   Size.y = Window->Wnd->WindowRect.top;
    InternalPos = WinPosInitInternalPos(Window, &Size,
-                                       &Window->WindowRect);
+                                       &Window->Wnd->WindowRect);
    if (InternalPos)
    {
       Safepl.rcNormalPosition = InternalPos->NormalRect;
@@ -3897,7 +3928,7 @@ NtUserGetWindowRect(HWND hWnd, LPRECT Rect)
    {
       RETURN(FALSE);
    }
-   Status = MmCopyToCaller(Rect, &Wnd->WindowRect, sizeof(RECT));
+   Status = MmCopyToCaller(Rect, &Wnd->Wnd->WindowRect, sizeof(RECT));
    if (!NT_SUCCESS(Status))
    {
       SetLastNtError(Status);
@@ -4319,8 +4350,8 @@ IntGetWindowRgn(PWINDOW_OBJECT Window, HRGN hRgn)
    }
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
-   NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
+   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
+   NtGdiOffsetRgn(VisRgn, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);
@@ -4357,8 +4388,8 @@ IntGetWindowRgnBox(PWINDOW_OBJECT Window, RECT *Rect)
    }
 
    /* Create a new window region using the window rectangle */
-   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
-   NtGdiOffsetRgn(VisRgn, -Window->WindowRect.left, -Window->WindowRect.top);
+   VisRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
+   NtGdiOffsetRgn(VisRgn, -Window->Wnd->WindowRect.left, -Window->Wnd->WindowRect.top);
    /* if there's a region assigned to the window, combine them both */
    if(Window->WindowRegion && !(Window->Style & WS_MINIMIZE))
       NtGdiCombineRgn(VisRgn, VisRgn, Window->WindowRegion, RGN_AND);

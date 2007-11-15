@@ -2154,8 +2154,8 @@ NtUserMenuItemFromPoint(
       RETURN( -1);
    }
 
-   X -= Window->WindowRect.left;
-   Y -= Window->WindowRect.top;
+   X -= Window->Wnd->WindowRect.left;
+   Y -= Window->Wnd->WindowRect.top;
 
    mi = Menu->MenuItemList;
    for (i = 0; NULL != mi; i++)

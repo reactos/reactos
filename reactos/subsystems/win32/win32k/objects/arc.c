@@ -47,15 +47,15 @@ IntGdiArcInternal(
     Window = UserGetWindowObject(hWnd);
     if(!Window) return FALSE;
 
-    rc.left += Window->ClientRect.left;
-    rc.top += Window->ClientRect.top;
-    rc.right += Window->ClientRect.left;
-    rc.bottom += Window->ClientRect.top;
+    rc.left += Window->Wnd->ClientRect.left;
+    rc.top += Window->Wnd->ClientRect.top;
+    rc.right += Window->Wnd->ClientRect.left;
+    rc.bottom += Window->Wnd->ClientRect.top;
 
-    rc1.left += Window->ClientRect.left;
-    rc1.top += Window->ClientRect.top;
-    rc1.right += Window->ClientRect.left;
-    rc1.bottom += Window->ClientRect.top;
+    rc1.left += Window->Wnd->ClientRect.left;
+    rc1.top += Window->Wnd->ClientRect.top;
+    rc1.right += Window->Wnd->ClientRect.left;
+    rc1.bottom += Window->Wnd->ClientRect.top;
   }
 
   rx = (rc.right - rc.left)/2 - 1;

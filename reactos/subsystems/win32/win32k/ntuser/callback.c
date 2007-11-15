@@ -122,7 +122,7 @@ IntSetTebWndCallback (HWND * hWnd, PVOID * pWnd)
   *pWnd = ClientInfo->pvWND;
 
   ClientInfo->hWND  = hWndS;
-  ClientInfo->pvWND = (PVOID) Window;
+  ClientInfo->pvWND = DesktopHeapAddressToUser(Window->Wnd);
 }
 
 static VOID

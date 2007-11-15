@@ -26,6 +26,12 @@ typedef struct _INTERNALPOS
 
 typedef struct _WINDOW_OBJECT
 {
+  /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This
+           is a pointer to the WINDOW structure that eventually replaces
+           the WINDOW_OBJECT structure! USER32 expects this pointer to
+           be here until WINDOW_OBJECT has completely been superseded! */
+  PWINDOW Wnd;
+
   /* Pointer to the thread information */
   PW32THREADINFO ti;
   /* Pointer to the desktop */
@@ -59,10 +65,6 @@ typedef struct _WINDOW_OBJECT
   PCHAR ExtraData;
   /* Size of the extra data associated with the window. */
   ULONG ExtraDataSize;
-  /* Position of the window. */
-  RECT WindowRect;
-  /* Position of the window's client area. */
-  RECT ClientRect;
   /* Handle for the window. */
   HWND hSelf;
   /* Window flags. */

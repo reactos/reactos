@@ -68,7 +68,7 @@ IntIntersectWithParents(PWINDOW_OBJECT Child, PRECT WindowRect)
          return FALSE;
       }
 
-      if (!IntGdiIntersectRect(WindowRect, WindowRect, &ParentWindow->ClientRect))
+      if (!IntGdiIntersectRect(WindowRect, WindowRect, &ParentWindow->Wnd->ClientRect))
       {
          return FALSE;
       }
@@ -119,19 +119,19 @@ IntCalcWindowRgn(PWINDOW_OBJECT Window, BOOL Client)
    UINT RgnType;
 
    if (Client)
-      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->ClientRect);
    else
-      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
 
    if (Window->WindowRegion != NULL && !(Window->Style & WS_MINIMIZE))
    {
       NtGdiOffsetRgn(hRgnWindow,
-         -Window->WindowRect.left,
-         -Window->WindowRect.top);
+         -Window->Wnd->WindowRect.left,
+         -Window->Wnd->WindowRect.top);
       RgnType = NtGdiCombineRgn(hRgnWindow, hRgnWindow, Window->WindowRegion, RGN_AND);
       NtGdiOffsetRgn(hRgnWindow,
-         Window->WindowRect.left,
-         Window->WindowRect.top);
+         Window->Wnd->WindowRect.left,
+         Window->Wnd->WindowRect.top);
    }
 
    return hRgnWindow;
@@ -340,7 +340,7 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    {
       HRGN hRgnClient;
 
-      hRgnClient = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+      hRgnClient = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->ClientRect);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnClient, RGN_AND);
       NtGdiDeleteObject(hRgnClient);
    }
@@ -353,19 +353,19 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags)
    {
       HRGN hRgnWindow;
 
-      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+      hRgnWindow = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, hRgnWindow, RGN_AND);
       NtGdiDeleteObject(hRgnWindow);
    }
    else
    {
       NtGdiOffsetRgn(hRgn,
-         -Window->WindowRect.left,
-         -Window->WindowRect.top);
+         -Window->Wnd->WindowRect.left,
+         -Window->Wnd->WindowRect.top);
       RgnType = NtGdiCombineRgn(hRgn, hRgn, Window->WindowRegion, RGN_AND);
       NtGdiOffsetRgn(hRgn,
-         Window->WindowRect.left,
-         Window->WindowRect.top);
+         Window->Wnd->WindowRect.left,
+         Window->Wnd->WindowRect.top);
    }
 
    /*
@@ -553,26 +553,26 @@ co_UserRedrawWindow(PWINDOW_OBJECT Window, const RECT* UpdateRect, HRGN UpdateRg
             hRgn = NULL;
          }
          else
-            NtGdiOffsetRgn(hRgn, Window->ClientRect.left, Window->ClientRect.top);
+            NtGdiOffsetRgn(hRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
       }
       else if (UpdateRect != NULL)
       {
          if (!IntGdiIsEmptyRect(UpdateRect))
          {
             hRgn = UnsafeIntCreateRectRgnIndirect((RECT *)UpdateRect);
-            NtGdiOffsetRgn(hRgn, Window->ClientRect.left, Window->ClientRect.top);
+            NtGdiOffsetRgn(hRgn, Window->Wnd->ClientRect.left, Window->Wnd->ClientRect.top);
          }
       }
       else if ((Flags & (RDW_INVALIDATE | RDW_FRAME)) == (RDW_INVALIDATE | RDW_FRAME) ||
                (Flags & (RDW_VALIDATE | RDW_NOFRAME)) == (RDW_VALIDATE | RDW_NOFRAME))
       {
-         if (!IntGdiIsEmptyRect(&Window->WindowRect))
-            hRgn = UnsafeIntCreateRectRgnIndirect(&Window->WindowRect);
+         if (!IntGdiIsEmptyRect(&Window->Wnd->WindowRect))
+            hRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->WindowRect);
       }
       else
       {
-         if (!IntGdiIsEmptyRect(&Window->ClientRect))
-            hRgn = UnsafeIntCreateRectRgnIndirect(&Window->ClientRect);
+         if (!IntGdiIsEmptyRect(&Window->Wnd->ClientRect))
+            hRgn = UnsafeIntCreateRectRgnIndirect(&Window->Wnd->ClientRect);
       }
    }
 
@@ -797,12 +797,12 @@ NtUserBeginPaint(HWND hWnd, PAINTSTRUCT* UnsafePs)
       {
          UnsafeIntGetRgnBox(Rgn, &Ps.rcPaint);
          RGNDATA_UnlockRgn(Rgn);
-         IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->ClientRect);
+         IntGdiIntersectRect(&Ps.rcPaint, &Ps.rcPaint, &Window->Wnd->ClientRect);
          if (! IntGdiIsEmptyRect(&Ps.rcPaint))
          {
             IntGdiOffsetRect(&Ps.rcPaint,
-                             -Window->ClientRect.left,
-                             -Window->ClientRect.top);
+                             -Window->Wnd->ClientRect.left,
+                             -Window->Wnd->ClientRect.top);
          }
       }
       else
@@ -930,11 +930,11 @@ co_UserGetUpdateRgn(PWINDOW_OBJECT Window, HRGN hRgn, BOOL bErase)
    }
    else
    {
-      Rect = Window->ClientRect;
+      Rect = Window->Wnd->ClientRect;
       IntIntersectWithParents(Window, &Rect);
       NtGdiSetRectRgn(hRgn, Rect.left, Rect.top, Rect.right, Rect.bottom);
       RegionType = NtGdiCombineRgn(hRgn, hRgn, Window->UpdateRegion, RGN_AND);
-      NtGdiOffsetRgn(hRgn, -Window->ClientRect.left, -Window->ClientRect.top);
+      NtGdiOffsetRgn(hRgn, -Window->Wnd->ClientRect.left, -Window->Wnd->ClientRect.top);
    }
 
    if (bErase && RegionType != NULLREGION && RegionType != ERROR)
@@ -1014,7 +1014,7 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
       /* Get the update region bounding box. */
       if (Window->UpdateRegion == (HRGN)1)
       {
-         Rect = Window->ClientRect;
+         Rect = Window->Wnd->ClientRect;
       }
       else
       {
@@ -1024,14 +1024,14 @@ NtUserGetUpdateRect(HWND hWnd, LPRECT UnsafeRect, BOOL bErase)
          RGNDATA_UnlockRgn(RgnData);
 
          if (RegionType != ERROR && RegionType != NULLREGION)
-            IntGdiIntersectRect(&Rect, &Rect, &Window->ClientRect);
+            IntGdiIntersectRect(&Rect, &Rect, &Window->Wnd->ClientRect);
       }
 
       if (IntIntersectWithParents(Window, &Rect))
       {
          IntGdiOffsetRect(&Rect,
-                          -Window->ClientRect.left,
-                          -Window->ClientRect.top);
+                          -Window->Wnd->ClientRect.left,
+                          -Window->Wnd->ClientRect.top);
       } else
       {
          Rect.left = Rect.top = Rect.right = Rect.bottom = 0;
@@ -1420,7 +1420,7 @@ NtUserScrollWindowEx(HWND hWnd, INT dx, INT dy, const RECT *prcUnsafeScroll,
       IntGetClientOrigin(Window, &ClientOrigin);
       for (Child = Window->FirstChild; Child; Child = Child->NextSibling)
       {
-         rcChild = Child->WindowRect;
+         rcChild = Child->Wnd->WindowRect;
          rcChild.left -= ClientOrigin.x;
          rcChild.top -= ClientOrigin.y;
          rcChild.right -= ClientOrigin.x;

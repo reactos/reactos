@@ -860,7 +860,17 @@ GetAncestor(HWND hwnd, UINT gaFlags)
 BOOL STDCALL
 GetClientRect(HWND hWnd, LPRECT lpRect)
 {
-  return(NtUserGetClientRect(hWnd, lpRect));
+    PWINDOW Wnd = ValidateHwnd(hWnd);
+
+    if (Wnd != NULL)
+    {
+        lpRect->left = lpRect->top = 0;
+        lpRect->right = Wnd->ClientRect.right - Wnd->ClientRect.left;
+        lpRect->bottom = Wnd->ClientRect.bottom - Wnd->ClientRect.top;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 
@@ -1007,7 +1017,15 @@ BOOL STDCALL
 GetWindowRect(HWND hWnd,
 	      LPRECT lpRect)
 {
-  return(NtUserGetWindowRect(hWnd, lpRect));
+    PWINDOW Wnd = ValidateHwnd(hWnd);
+
+    if (Wnd != NULL)
+    {
+        *lpRect = Wnd->WindowRect;
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 

@@ -25,6 +25,7 @@ typedef struct _W32HEAP_USER_MAPPING
     struct _W32HEAP_USER_MAPPING *Next;
     PVOID KernelMapping;
     PVOID UserMapping;
+    ULONG_PTR Limit;
     ULONG Count;
 } W32HEAP_USER_MAPPING, *PW32HEAP_USER_MAPPING;
 

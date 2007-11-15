@@ -205,7 +205,7 @@ DesktopHeapGetUserDelta(VOID)
     Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     while (Mapping != NULL)
     {
-        if (Mapping->UserMapping == (PVOID)hDesktopHeap)
+        if (Mapping->KernelMapping == (PVOID)hDesktopHeap)
         {
             Delta = (ULONG_PTR)Mapping->KernelMapping - (ULONG_PTR)Mapping->UserMapping;
             break;
@@ -218,17 +218,17 @@ DesktopHeapGetUserDelta(VOID)
 }
 
 static __inline PVOID
-DesktopHeapAddressToUser(IN PDESKTOP Desktop,
-                         PVOID lpMem)
+DesktopHeapAddressToUser(PVOID lpMem)
 {
     PW32HEAP_USER_MAPPING Mapping;
 
     Mapping = PsGetCurrentProcessWin32Process()->HeapMappings.Next;
     while (Mapping != NULL)
     {
-        if (Mapping->KernelMapping == (PVOID)Desktop->hKernelHeap)
+        if ((ULONG_PTR)lpMem >= (ULONG_PTR)Mapping->KernelMapping &&
+            (ULONG_PTR)lpMem < (ULONG_PTR)Mapping->KernelMapping + Mapping->Limit)
         {
-            return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)Desktop->hKernelHeap) +
+            return (PVOID)(((ULONG_PTR)lpMem - (ULONG_PTR)Mapping->KernelMapping) +
                            (ULONG_PTR)Mapping->UserMapping);
         }
 

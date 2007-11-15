@@ -62,8 +62,18 @@ DesktopPtrToUser(PVOID Ptr)
     PW32THREADINFO ti = GetW32ThreadInfo();
     ASSERT(Ptr != NULL);
     ASSERT(ti != NULL);
-    ASSERT(ti->DesktopHeapDelta != 0);
-    return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
+    if ((ULONG_PTR)Ptr >= (ULONG_PTR)ti->DesktopHeapBase &&
+        (ULONG_PTR)Ptr < (ULONG_PTR)ti->DesktopHeapBase + ti->DesktopHeapLimit)
+    {
+        return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
+    }
+    else
+    {
+        /* NOTE: This is slow as it requires a call to win32k. This should only be
+                 neccessary if a thread wants to access an object on a different
+                 desktop */
+        return NtUserGetDesktopMapping(Ptr);
+    }
 }
 
 static __inline PVOID
@@ -76,3 +86,4 @@ SharedPtrToKernel(PVOID Ptr)
 }
 
 PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
+PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
