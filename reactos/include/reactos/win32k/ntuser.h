@@ -113,7 +113,7 @@ typedef struct _W32CLIENTINFO
     HWND  hWND;  // Well be replaced with CALLBACKWND.
     PVOID pvWND; // " "
     DWORD dwHookCurrent;
-    ULONG Win32ClientInfo1
+    ULONG Win32ClientInfo1;
     PVOID pClientThreadInfo;
     DWORD dwHookData;
     ULONG Win32ClientInfo2[8];
