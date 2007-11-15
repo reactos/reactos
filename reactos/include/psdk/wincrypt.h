@@ -1767,6 +1767,11 @@ static const WCHAR MS_SCARD_PROV_W[] =           { 'M','i','c','r','o','s','o','
 #define PKCS_7_ASN_ENCODING 0x00010000
 #define PKCS_7_NDR_ENCODING 0x00020000
 
+/* Values returned by CryptGetProvParam of PP_KEYSTORAGE */
+#define CRYPT_SEC_DESCR         0x00000001
+#define CRYPT_PSTORE            0x00000002
+#define CRYPT_UI_PROMPT         0x00000004
+
 /* system store locations */
 #define CERT_SYSTEM_STORE_LOCATION_MASK  0x00ff0000
 #define CERT_SYSTEM_STORE_LOCATION_SHIFT 16
