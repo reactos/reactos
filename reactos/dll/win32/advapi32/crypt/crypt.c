@@ -1997,8 +1997,10 @@ BOOL WINAPI FileEncryptionStatusW (
 	)
 {
 	DPRINT1("%s(%S) not implemented!\n", __FUNCTION__, lpFileName);
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
+	if (!lpStatus)
+		return FALSE;
+	*lpStatus = FILE_SYSTEM_NOT_SUPPORT;
+	return TRUE;
 }
 
 
