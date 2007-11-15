@@ -14,6 +14,17 @@
 extern "C" {
 #endif
 
+#define FILE_ENCRYPTABLE         0
+#define FILE_IS_ENCRYPTED        1
+#define FILE_SYSTEM_ATTR         2
+#define FILE_ROOT_DIR            3
+#define FILE_SYSTEM_DIR          4
+#define FILE_UNKNOWN             5
+#define FILE_SYSTEM_NOT_SUPPORT  6
+#define FILE_USER_DISALLOWED     7
+#define FILE_READ_ONLY           8
+#define FILE_DIR_DISALOWED       9 
+
 #define COMMPROP_INITIALIZED 0xE73CF52E
 #define SP_SERIALCOMM 1
 #define PST_UNSPECIFIED	0
