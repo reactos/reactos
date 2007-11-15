@@ -2,6 +2,7 @@
 <!DOCTYPE group SYSTEM "tools/rbuild/project.dtd">
 <group xmlns:xi="http://www.w3.org/2001/XInclude">
 	<xi:include href="baseaddress.rbuild" />
+	<xi:include href="buildfamilies.rbuild" />
 	<xi:include href="contributors.rbuild" />
 	<xi:include href="installfolders.rbuild" />
 	<xi:include href="languages.rbuild" />

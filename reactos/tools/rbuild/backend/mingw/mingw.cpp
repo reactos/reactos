@@ -285,6 +285,7 @@ MingwBackend::ProcessModules ()
 		h.GenerateCleanTarget ();
 		h.GenerateInstallTarget ();
 		h.GenerateDependsTarget ();
+        h.GenerateFamiliesTarget ();
 		delete v[i];
 	}
 
@@ -576,7 +577,40 @@ MingwBackend::GenerateAllTarget ( const vector<MingwModuleHandler*>& handlers ) 
 	}
 	fprintf ( fMakefile, "\n\t\n\n" );
 }
+/*
+void
+MingwBackend::GenerateFamiliesTarget () const
+{
+	for ( size_t i = 0; i < ProjectNode.buildfamilies.size (); i++ )
+	{
+		BuildFamily& buildfamily = *ProjectNode.buildfamilies[i];
+			fprintf ( fMakefile,
+                "%s:",
+                      buildfamily.name.c_str () );
 
+	    for ( size_t i = 0; i < ProjectNode.modules.size (); i++ )
+	    {
+		    Module& module = *ProjectNode.modules[i];
+		    if ( !module.enabled )
+			    continue;
+
+            for ( size_t i = 0; i < module.families.size (); i++ )
+	        {
+		        Family& family = *module.families[i];
+
+                if (family.name == buildfamily.name)
+                {
+			        fprintf ( fMakefile,
+			                  " %s",
+			                  GetTargetMacro(module).c_str () );
+                }
+	        }
+	    }
+	}
+
+	fprintf ( fMakefile, "\n\t\n\n" );
+}
+*/
 string
 MingwBackend::GetBuildToolDependencies () const
 {

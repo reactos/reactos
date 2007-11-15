@@ -5,6 +5,8 @@
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x501</define>
+	<family>applications</family>
+	<family>guiapplications</family>
 	<library>ntdll</library>
 	<library>gdi32</library>
 	<library>kernel32</library>

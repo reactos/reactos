@@ -512,11 +512,17 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		installfiles.push_back ( installfile );
 		subs_invalid = true;
 	}
+	else if ( e.name == "buildfamily" )
+	{
+		BuildFamily* buildfamily = new BuildFamily ( e );
+		buildfamilies.push_back ( buildfamily );
+		subs_invalid = false;
+	}
 	else if ( e.name == "language" )
 	{
 		Language* language = new Language ( e );
 		languages.push_back ( language );
-		subs_invalid = true;
+		subs_invalid = false;
 	}
 	else if ( e.name == "contributor" )
 	{
@@ -634,6 +640,18 @@ Project::LocateModule ( const string& name ) const
 	{
 		if ( modules[i]->name == name )
 			return modules[i];
+	}
+
+	return NULL;
+}
+
+const BuildFamily*
+Project::LocateFamily ( const string& name ) const
+{
+	for ( size_t i = 0; i < buildfamilies.size (); i++ )
+	{
+		if ( buildfamilies[i]->name == name )
+			return buildfamilies[i];
 	}
 
 	return NULL;

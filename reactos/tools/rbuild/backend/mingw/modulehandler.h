@@ -74,6 +74,7 @@ public:
 	void GenerateCleanTarget () const;
 	void GenerateInstallTarget () const;
 	void GenerateDependsTarget () const;
+    void GenerateFamiliesTarget () const;
 	static bool ReferenceObjects ( const Module& module );
 	virtual void AddImplicitLibraries ( Module& module ) { return; }
 

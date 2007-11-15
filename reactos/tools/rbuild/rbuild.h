@@ -120,6 +120,8 @@ class AutoResource;
 class InstallComponent;
 class InstallFolder;
 class BaseAdress;
+class BuildFamily;
+class Family;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -271,6 +273,7 @@ public:
 	std::vector<CDFile*> cdfiles;
     std::vector<BootstrapFile*> bootstrapfiles;
 	std::vector<InstallFile*> installfiles;
+    std::vector<BuildFamily*> buildfamilies;
 	std::vector<Module*> modules;
 	std::vector<Language*> languages;
     std::vector<Contributor*> contributors;
@@ -289,6 +292,7 @@ public:
 	ArchitectureType architectureType;
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
+    const BuildFamily* LocateFamily ( const std::string& name ) const;
     const Contributor* LocateContributor ( const std::string& alias ) const;
 	const Module* LocateModule ( const std::string& name ) const;
 	const std::string& GetProjectFilename () const;
@@ -400,6 +404,7 @@ public:
 	Bootstrap* bootstrap;
 	AutoRegister* autoRegister; // <autoregister> node
 	IfableData non_if_data;
+    std::vector<Family*> families;
 	std::vector<Author*> authors;
 	std::vector<Invoke*> invocations;
 	std::vector<Localization*> localizations;
@@ -606,6 +611,30 @@ public:
 
 	Metadata ( const XMLElement& _node,
 	          const Module& _module );
+
+	void ProcessXML();
+};
+
+class BuildFamily
+{
+public:	
+    const XMLElement& node;
+    std::string name;
+
+	BuildFamily ( const XMLElement& node );
+
+	void ProcessXML();
+};
+
+class Family
+{
+public:
+	const XMLElement& node;
+	const Module& module;
+    std::string name;
+
+	Family ( const XMLElement& node ,
+	             const Module& _module );
 
 	void ProcessXML();
 };

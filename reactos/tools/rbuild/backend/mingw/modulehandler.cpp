@@ -557,6 +557,28 @@ MingwModuleHandler::GetReferencedObjectLibraryModuleCleanTargets ( vector<string
 }
 
 void
+MingwModuleHandler::GenerateFamiliesTarget () const
+{
+	if ( module.type == Alias )
+		return;
+
+    for ( size_t i = 0; i < module.families.size (); i++ )
+    {
+        Family& family = *module.families[i];
+
+        fprintf ( fMakefile,
+            "%s: %s\n",
+            family.name.c_str() , 
+            GetTargetMacro(module).c_str () );
+
+        fprintf ( fMakefile,
+            "%s_clean: %s_clean\n",
+            family.name.c_str() , 
+            module.name.c_str () );
+    }
+}
+
+void
 MingwModuleHandler::GenerateCleanTarget () const
 {
 	if ( module.type == Alias )

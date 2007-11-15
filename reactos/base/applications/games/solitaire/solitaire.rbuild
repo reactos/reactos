@@ -7,6 +7,9 @@
 	<define name="__USE_W32API" />
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
+	<family>applications</family>
+	<family>guiapplications</family>
+	<family>games</family>
 	<library>kernel32</library>
 	<library>user32</library>
 	<library>gdi32</library>

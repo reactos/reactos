@@ -688,6 +688,17 @@ Module::ProcessXMLSubElement ( const XMLElement& e,
 			non_if_data.defines.push_back ( pDefine );
 		subs_invalid = true;
 	}
+	else if ( e.name == "family" )
+	{
+		if ( parseContext.ifData )
+		{
+			throw XMLInvalidBuildFileException (
+				e.location,
+				"<family> is not a valid sub-element of <if>" );
+		}
+		families.push_back ( new Family ( e , *this) );
+		subs_invalid = false;
+	}
 	else if ( e.name == "metadata" )
 	{
 		if ( parseContext.ifData )
@@ -1632,6 +1643,19 @@ InvokeFile::ProcessXML()
 {
 }
 
+BuildFamily::BuildFamily ( const XMLElement& _node)
+	: node (_node)
+{
+	const XMLAttribute* att = _node.GetAttribute ( "name", true );
+	assert(att);
+	name = att->value;
+}
+
+void
+BuildFamily::ProcessXML()
+{
+}
+
 Language::Language ( const XMLElement& _node)
 	: node (_node)
 {
@@ -1643,6 +1667,30 @@ Language::Language ( const XMLElement& _node)
 void
 Language::ProcessXML()
 {
+}
+
+Family::Family ( const XMLElement& _node,
+                 const Module& _module )
+	: node (_node),
+	  module (_module)
+{
+    ProcessXML ();
+}
+
+void
+Family::ProcessXML()
+{
+	const BuildFamily* family = module.project.LocateFamily ( node.value );
+	if ( family == NULL )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"module '%s' references a no existant family '%s'",
+			module.name.c_str(),
+			node.value.c_str() );
+	}
+
+    name = node.value;
 }
 
 Contributor::Contributor ( const XMLElement& _node)
