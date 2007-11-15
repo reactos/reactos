@@ -190,6 +190,7 @@ MsConfigWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             DestroyWindow(hStartupPage);
             DestroyWindow(hFreeLdrPage);
             DestroyWindow(hSystemPage);
+			DestroyIcon(hIcon);
             return DefWindowProc(hDlg, message, wParam, lParam);
     }
 
