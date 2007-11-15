@@ -28,14 +28,14 @@ i8042MouIsrWritePort(
 
 	DeviceExtension = (PI8042_MOUSE_EXTENSION)Context;
 
-	if (DeviceExtension->MouseHook.IsrWritePort)
+	if (DeviceExtension->MouseHook.IsrWritePort != i8042MouIsrWritePort)
 	{
 		DeviceExtension->MouseHook.IsrWritePort(
 			DeviceExtension->MouseHook.CallContext,
 			Value);
 	}
 	else
-		i8042IsrWritePort(Context, Value, CTRL_WRITE_MOUSE);
+		i8042IsrWritePort(DeviceExtension->Common.PortDeviceExtension, Value, CTRL_WRITE_MOUSE);
 }
 
 static VOID NTAPI
@@ -429,6 +429,8 @@ i8042MouInternalDeviceControl(
 			DeviceExtension->Common.PortDeviceExtension->Flags |= MOUSE_CONNECTED;
 
 			IoMarkIrpPending(Irp);
+			DeviceExtension->MouseState = MouseResetting;
+			DeviceExtension->MouseResetState = 1100;
 			DeviceExtension->MouseHook.IsrWritePort = i8042MouIsrWritePort;
 			DeviceExtension->MouseHook.QueueMousePacket = i8042MouQueuePacket;
 			DeviceExtension->MouseHook.CallContext = DeviceExtension;

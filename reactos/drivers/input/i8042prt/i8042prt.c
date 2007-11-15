@@ -202,22 +202,6 @@ i8042SendHookWorkItem(
 			}
 		}
 	}
-#if 0
-	else
-	{
-		/* Mouse doesn't have this, but we need to send a
-		 * reset to start the detection.
-		 */
-		KIRQL Irql;
-
-		Irql = KeAcquireInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt);
-
-		i8042Write(PortDeviceExtension, PortDeviceExtension->ControlPort, CTRL_WRITE_MOUSE);
-		i8042Write(PortDeviceExtension, PortDeviceExtension->DataPort, MOU_CMD_RESET);
-
-		KeReleaseInterruptSpinLock(PortDeviceExtension->HighestDIRQLInterrupt, Irql);
-	}
-#endif
 
 	WorkItemData->Irp->IoStatus.Status = STATUS_SUCCESS;
 
