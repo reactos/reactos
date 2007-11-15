@@ -58,6 +58,8 @@ typedef struct _WINDOWCLASS
 typedef struct _W32PROCESSINFO
 {
     PVOID UserHandleTable;
+    HANDLE hUserHeap;
+    ULONG_PTR UserHeapDelta;
     HINSTANCE hModUser;
     PWINDOWCLASS LocalClassList;
     PWINDOWCLASS GlobalClassList;

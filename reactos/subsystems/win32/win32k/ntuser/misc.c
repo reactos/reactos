@@ -2494,6 +2494,9 @@ GetW32ProcessInfo(VOID)
 
             /* initialize it */
             pi->UserHandleTable = gHandleTable;
+            pi->hUserHeap = W32Process->HeapMappings.KernelMapping;
+            pi->UserHeapDelta = (ULONG_PTR)W32Process->HeapMappings.KernelMapping -
+                                (ULONG_PTR)W32Process->HeapMappings.UserMapping;
 
             if (InterlockedCompareExchangePointer(&W32Process->ProcessInfo,
                                                   pi,
