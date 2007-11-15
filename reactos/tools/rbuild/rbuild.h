@@ -620,6 +620,7 @@ class BuildFamily
 public:	
     const XMLElement& node;
     std::string name;
+    std::string description;
 
 	BuildFamily ( const XMLElement& node );
 
@@ -632,7 +633,7 @@ public:
 	const XMLElement& node;
 	const Module& module;
     std::string name;
-
+    bool IsSupportedModuleType ( ModuleType type );
 	Family ( const XMLElement& node ,
 	             const Module& _module );
 

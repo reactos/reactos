@@ -1649,6 +1649,11 @@ BuildFamily::BuildFamily ( const XMLElement& _node)
 	const XMLAttribute* att = _node.GetAttribute ( "name", true );
 	assert(att);
 	name = att->value;
+	att = _node.GetAttribute ( "description", false );
+    if (att != NULL)
+        description = att->value;
+    else
+        description = "";
 }
 
 void
@@ -1674,6 +1679,13 @@ Family::Family ( const XMLElement& _node,
 	: node (_node),
 	  module (_module)
 {
+	if ( !IsSupportedModuleType ( module.type ) )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"<Family> is not applicable for this module type." );
+	}
+
     ProcessXML ();
 }
 
@@ -1691,6 +1703,29 @@ Family::ProcessXML()
 	}
 
     name = node.value;
+}
+
+bool
+Family::IsSupportedModuleType ( ModuleType type )
+{
+	if (type == Win32DLL ||
+        type == Win32OCX ||
+        type == StaticLibrary ||
+        type == ObjectLibrary ||
+        type == Kernel ||
+        type == KernelModeDLL ||
+        type == KernelModeDriver ||
+        type == NativeDLL ||
+        type == NativeCUI ||
+        type == Win32CUI ||
+        type == Win32GUI ||
+        type == Win32SCR ||
+        type == EmbeddedTypeLib)
+	{
+		return true;
+    }
+	
+    return false;
 }
 
 Contributor::Contributor ( const XMLElement& _node)
