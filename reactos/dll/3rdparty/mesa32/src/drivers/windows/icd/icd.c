@@ -64,7 +64,8 @@ typedef struct _icdTable {
 # define GL_FUNC(func) gl##func
 #endif
 
-static ICDTABLE icdTable = { 336, {
+//static ICDTABLE icdTable = { 336, {
+static ICDTABLE icdTable = { 395, {
 #define ICD_ENTRY(func) (PROC)GL_FUNC(func),
 #include "icdlist.h"
 #undef ICD_ENTRY
