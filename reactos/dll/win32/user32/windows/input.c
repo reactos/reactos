@@ -109,7 +109,7 @@ BOOL STDCALL
 EnableWindow(HWND hWnd,
 	     BOOL bEnable)
 {
-    LONG Style = NtUserGetWindowLong(hWnd, GWL_STYLE, FALSE);
+    LONG Style = GetWindowLongW(hWnd, GWL_STYLE);
     /* check if updating is needed */
     UINT bIsDisabled = (Style & WS_DISABLED);
     if ( (bIsDisabled && bEnable) || (!bIsDisabled && !bEnable) )
