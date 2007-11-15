@@ -461,6 +461,7 @@ modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr       1   optional
 modules\rosapps\applications\screensavers\matrix\matrix.scr         1   optional
 modules\rosapps\applications\screensavers\scrnsave\scrnsave.scr     1   optional
 modules\rosapps\applications\screensavers\starfield\starfield.scr   1   optional
+modules\rosapps\applications\screensavers\mazescr\mazescr.scr       1   optional
 modules\rosapps\cmdutils\comp\comp.exe                              1   optional
 modules\rosapps\cmdutils\mode\mode.exe                              1   optional
 modules\rosapps\cmdutils\sort\sort.exe                              1   optional
