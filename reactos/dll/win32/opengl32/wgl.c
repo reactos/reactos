@@ -909,6 +909,37 @@ rosglGetProcAddress( LPCSTR proc )
 	PROC func;
 	GLDRIVERDATA *icd;
 
+	/* FIXME we should Flush the gl here */
+
+	if (OPENGL32_threaddata->glrc == NULL)
+	{
+		DBGPRINT( "Error: No current GLRC!" );
+		SetLastError( ERROR_INVALID_FUNCTION );
+		return NULL;
+	}
+
+	icd = OPENGL32_threaddata->glrc->icd;
+	func = icd->DrvGetProcAddress( proc );
+	if (func != NULL)
+	{
+		DBGPRINT( "Info: Proc \"%s\" loaded from ICD.", proc );
+		return func;
+	}
+
+	/* FIXME: Should we return wgl/gl 1.1 functions? */
+	SetLastError( ERROR_PROC_NOT_FOUND );
+	return NULL;
+}
+
+PROC
+APIENTRY
+rosglGetDefaultProcAddress( LPCSTR proc )
+{
+	PROC func;
+	GLDRIVERDATA *icd;
+
+	/*  wglGetDefaultProcAddress does not flush the gl */
+
 	if (OPENGL32_threaddata->glrc == NULL)
 	{
 		DBGPRINT( "Error: No current GLRC!" );
