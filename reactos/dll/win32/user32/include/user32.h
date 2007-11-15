@@ -44,3 +44,24 @@ BOOL STDCALL NtGdiPatBlt(HDC hdcDst, INT x, INT y, INT cx, INT cy, DWORD rop4);
 LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
+extern PW32PROCESSINFO g_pi;
+
+static PVOID __inline
+SharedPtrToUser(PVOID Ptr)
+{
+    ASSERT(Ptr != NULL);
+    ASSERT(g_pi != NULL);
+    ASSERT(g_pi->UserHeapDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - g_pi->UserHeapDelta);
+}
+
+static PVOID __inline
+DesktopPtrToUser(PVOID Ptr)
+{
+    PW32THREADINFO ti = GetW32ThreadInfo();
+    ASSERT(Ptr != NULL);
+    ASSERT(ti != NULL);
+    ASSERT(ti->DesktopHeapDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
+}
+
