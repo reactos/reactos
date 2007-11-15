@@ -13,4 +13,7 @@
 	<directory name="starfield">
 		<xi:include href="starfield/starfield.rbuild" />
 	</directory>
+	<directory name="mazescr">
+		<xi:include href="mazescr/mazescr.rbuild" />
+	</directory>
 </group>
