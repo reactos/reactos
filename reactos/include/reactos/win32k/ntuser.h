@@ -90,16 +90,37 @@ typedef struct _W32THREADINFO
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
+
+typedef struct _CALLBACKWND
+{
+     HWND hWnd;
+     PVOID pvWnd;
+} CALLBACKWND, *PCALLBACKWND;
+
+
 typedef struct _W32CLIENTINFO
 {
-    ULONG Win32ClientInfo0[2];
+    ULONG CI_flags;
+    ULONG cSpins;
     ULONG ulWindowsVersion;
     ULONG ulAppCompatFlags;
     ULONG ulAppCompatFlags2;
-    ULONG Win32ClientInfo1[5];
-    HWND  hWND;
-    PVOID pvWND;
-    ULONG Win32ClientInfo2[50];
+    DWORD dwTIFlags;
+    PVOID pDeskInfo;
+    ULONG_PTR ulClientDelta;
+    PVOID phkCurrent;
+    ULONG fsHooks;
+    HWND  hWND;  // Well be replaced with CALLBACKWND.
+    PVOID pvWND; // " "
+    DWORD dwHookCurrent;
+    ULONG Win32ClientInfo1
+    PVOID pClientThreadInfo;
+    DWORD dwHookData;
+    ULONG Win32ClientInfo2[8];
+    HANDLE hKL;
+    USHORT CodePage;
+    USHORT csCF;
+    ULONG Win32ClientInfo3[36];
 } W32CLIENTINFO, *PW32CLIENTINFO;
 
 #define GetWin32ClientInfo() (PW32CLIENTINFO)(NtCurrentTeb()->Win32ClientInfo)
