@@ -521,11 +521,8 @@ OPENGL32_UnloadICD( GLDRIVERDATA *icd )
 		return FALSE; /* FIXME: do we have to expect such an error and handle it? */
 	}
 
-	icd->refcount--;
-	if (icd->refcount == 0)
-//	if (0)
+	if (--icd->refcount == 0)
 		ret = OPENGL32_UnloadDriver( icd );
-	/* FIXME: InitializeICD crashes when called a second time */
 
 	/* release mutex */
 	if (!ReleaseMutex( OPENGL32_processdata.driver_mutex ))

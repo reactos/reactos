@@ -122,7 +122,7 @@ ROSGL_RemoveContext( GLRC *glrc )
  */
 static
 GLRC *
-ROSGL_NewContext()
+ROSGL_NewContext(void)
 {
 	GLRC *glrc;
 
@@ -134,6 +134,51 @@ ROSGL_NewContext()
 	ROSGL_AppendContext( glrc );
 
 	return glrc;
+}
+
+/*! \brief Delete all GLDCDATA with this IDC
+ *
+ * \param icd [IN] Pointer to a ICD
+ */
+static
+VOID
+ROSGL_DeleteDCDataForICD( GLDRIVERDATA *icd )
+{
+	GLDCDATA *p, **pptr;
+
+	/* synchronize */
+	if (WaitForSingleObject( OPENGL32_processdata.dcdata_mutex, INFINITE ) ==
+	    WAIT_FAILED)
+	{
+		DBGPRINT( "Error: WaitForSingleObject() failed (%d)", GetLastError() );
+		return;
+	}
+
+	p = OPENGL32_processdata.dcdata_list;
+	pptr = &OPENGL32_processdata.dcdata_list;
+	while (p != NULL)
+	{
+		if (p->icd == icd)
+		{
+			*pptr = p->next;
+			OPENGL32_UnloadICD( p->icd );
+
+			if (!HeapFree( GetProcessHeap(), 0, p ))
+				DBGPRINT( "Warning: HeapFree() on GLDCDATA failed (%d)",
+				          GetLastError() );
+
+			p = *pptr;
+		}
+		else
+		{
+			pptr = &p->next;
+			p = p->next;
+		}
+	}
+
+	/* release mutex */
+	if (!ReleaseMutex( OPENGL32_processdata.dcdata_mutex ))
+		DBGPRINT( "Error: ReleaseMutex() failed (%d)", GetLastError() );
 }
 
 
@@ -150,7 +195,7 @@ ROSGL_DeleteContext( GLRC *glrc )
 {
 	/* unload icd */
 	if (glrc->icd != NULL)
-		OPENGL32_UnloadICD( glrc->icd );
+		ROSGL_DeleteDCDataForICD( glrc->icd );
 
 	/* remove from list */
 	ROSGL_RemoveContext( glrc );
