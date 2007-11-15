@@ -10,6 +10,7 @@
 	<define name="_DEBUG_MEM" />
 	<define name="UNICODE" />
 	<define name="_UNICODE" />
+	<family>shells</family>
 	<pch>precomp.h</pch>
 	<compilationunit name="unit.c">
 		<file>alias.c</file>

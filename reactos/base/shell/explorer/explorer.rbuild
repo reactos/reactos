@@ -23,6 +23,7 @@
 	<library>shell32</library>
 	<library>uuid</library>
 	<library>notifyhook</library>
+	<family>shells</family>
 	<pch>precomp.h</pch>
 	<directory name="desktop">
 		<file>desktop.cpp</file>

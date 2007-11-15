@@ -17,6 +17,7 @@
 	<library>rpcrt4</library>
 	<library>pseh</library>
 	<library>wdmguid</library>
+	<family>services</family>
 	<file>umpnpmgr.c</file>
 	<file>umpnpmgr.rc</file>
 </module>

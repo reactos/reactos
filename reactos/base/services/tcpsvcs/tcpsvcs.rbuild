@@ -9,6 +9,7 @@
 	<library>shlwapi</library>
 	<library>advapi32</library>
 	<library>user32</library>
+	<family>services</family>
 	<file>tcpsvcs.c</file>
 	<file>skelserver.c</file>
 	<file>echo.c</file>

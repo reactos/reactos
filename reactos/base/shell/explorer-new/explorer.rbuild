@@ -19,6 +19,7 @@
 	<library>shell32</library>
 	<library>shlwapi</library>
 	<library>uuid</library>
+	<family>shells</family>
 	<pch>precomp.h</pch>
 	<file>desktop.c</file>
 	<file>dragdrop.c</file>

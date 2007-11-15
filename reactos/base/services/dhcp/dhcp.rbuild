@@ -10,6 +10,7 @@
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>advapi32</library>
+	<family>services</family>
 	<pch>include/rosdhcp.h</pch>
 	<file>adapter.c</file>
 	<file>alloc.c</file>

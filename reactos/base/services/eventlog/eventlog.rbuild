@@ -12,6 +12,7 @@
 	<library>eventlog_server</library>
 	<library>rpcrt4</library>
 	<library>pseh</library>
+	<family>services</family>
 	<file>eventlog.c</file>
 	<file>logport.c</file>
 	<file>eventlog.rc</file>

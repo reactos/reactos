@@ -5,6 +5,7 @@
 	<define name="__USE_W32API" />
 	<library>kernel32</library>
 	<library>advapi32</library>
+	<family>services</family>
 	<file>rpcss.c</file>
 	<file>endpoint.c</file>
 	<file>rpcss.rc</file>
