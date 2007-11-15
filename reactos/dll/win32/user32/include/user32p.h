@@ -200,7 +200,12 @@ extern int SPY_Init(void);
 typedef struct _USER_HANDLE_ENTRY
 {
     void          *ptr;          /* pointer to object */
-    PW32THREADINFO pti;          // pointer to Win32ThreadInfo
+    union
+    {
+        PVOID pi;
+        PW32THREADINFO pti;          // pointer to Win32ThreadInfo
+        PW32PROCESSINFO ppi;         // pointer to W32ProcessInfo
+    };
     unsigned short type;         /* object type (0 if free) */
     unsigned short generation;   /* generation counter */
 } USER_HANDLE_ENTRY, * PUSER_HANDLE_ENTRY;
@@ -214,6 +219,7 @@ typedef struct _USER_HANDLE_TABLE
 } USER_HANDLE_TABLE, * PUSER_HANDLE_TABLE;
 
 extern PUSER_HANDLE_TABLE gHandleTable;
+extern PUSER_HANDLE_ENTRY gHandleEntries;
 
 PUSER_HANDLE_ENTRY FASTCALL GetUser32Handle(HANDLE);
 PVOID FASTCALL ValidateHandle(HANDLE, UINT);

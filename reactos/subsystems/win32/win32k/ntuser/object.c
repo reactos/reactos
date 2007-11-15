@@ -108,12 +108,43 @@ __inline static void *free_user_entry(PUSER_HANDLE_TABLE ht, PUSER_HANDLE_ENTRY 
    ret = entry->ptr;
    entry->ptr  = ht->freelist;
    entry->type = 0;
-   entry->pti = 0;
+   entry->pi = NULL;
    ht->freelist  = entry;
 
    usedHandles--;
 
    return ret;
+}
+
+static __inline PVOID
+UserHandleOwnerByType(USER_OBJECT_TYPE type)
+{
+    PVOID pi;
+
+    switch (type)
+    {
+        case otWindow:
+            pi = GetW32ThreadInfo();
+            break;
+
+        case otMenu:
+        case otCursorIcon:
+        case otHook:
+        case otCallProc:
+        case otAccel:
+            pi = GetW32ProcessInfo();
+            break;
+
+        case otMonitor:
+            pi = NULL; /* System */
+            break;
+
+        default:
+            pi = NULL;
+            break;
+    }
+
+    return pi;
 }
 
 /* allocate a user handle for a given object */
@@ -124,8 +155,7 @@ HANDLE UserAllocHandle(PUSER_HANDLE_TABLE ht, PVOID object, USER_OBJECT_TYPE typ
       return 0;
    entry->ptr  = object;
    entry->type = type;
-   entry->pti = GetW32ThreadInfo();
-   if (entry->pti->pi->UserHandleTable == NULL) GetW32ProcessInfo();
+   entry->pi = UserHandleOwnerByType(type);
    if (++entry->generation >= 0xffff)
       entry->generation = 1;
    return entry_to_handle(ht, entry );

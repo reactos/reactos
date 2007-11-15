@@ -314,23 +314,23 @@ PUSER_HANDLE_ENTRY
 FASTCALL
 GetUser32Handle(HANDLE handle)
 {
-  PUSER_HANDLE_TABLE ht = gHandleTable;
-  USHORT generation;
+    INT Index;
+    USHORT generation;
 
-  TRACE("Main Handle Table %x\n", ht);
+    Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
 
-  INT Index = (((UINT)handle & 0xffff) - FIRST_USER_HANDLE) >> 1;
+    if (Index < 0 || Index >= gHandleTable->nb_handles)
+        return NULL;
 
-  if (Index < 0 || Index >= ht->nb_handles) return NULL;
+    if (!gHandleEntries[Index].type || !gHandleEntries[Index].ptr)
+        return NULL;
 
-  if (!ht->handles[Index].type) return NULL;
+    generation = (UINT)handle >> 16;
 
-  generation = (UINT)handle >> 16;
+    if (generation == gHandleEntries[Index].generation || !generation || generation == 0xffff)
+        return &gHandleEntries[Index];
 
-  if (generation == ht->handles[Index].generation || !generation || generation == 0xffff)
-     return &ht->handles[Index];
-
-  return NULL;
+    return NULL;
 }
 
 /*
@@ -345,8 +345,8 @@ static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_MONITOR + 1] =
     TRUE, /* VALIDATE_TYPE_MWPOS */
     TRUE, /* VALIDATE_TYPE_HOOK */
     FALSE, /* (not used) */
-    FALSE, /* VALIDATE_TYPE_CALLPROC */
-    FALSE, /* VALIDATE_TYPE_ACCEL */
+    TRUE, /* VALIDATE_TYPE_CALLPROC */
+    TRUE, /* VALIDATE_TYPE_ACCEL */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
     FALSE, /* (not used) */
@@ -361,6 +361,7 @@ FASTCALL
 ValidateHandle(HANDLE handle, UINT uType)
 {
   PVOID ret;
+  PUSER_HANDLE_ENTRY pEntry;
   PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
 
   ASSERT(uType <= VALIDATE_TYPE_MONITOR);
@@ -372,13 +373,13 @@ ValidateHandle(HANDLE handle, UINT uType)
      if (handle == ClientInfo->hWND) return ClientInfo->pvWND;
   }
 
-  PUSER_HANDLE_ENTRY pEntry = GetUser32Handle(handle);
+  pEntry = GetUser32Handle(handle);
 
   if (pEntry && uType == 0)
       uType = pEntry->type;
 
 // Must have an entry and must be the same type!
-  if ( (!pEntry) || (pEntry->type != uType) )
+  if ( (!pEntry) || (pEntry->type != uType) || !pEntry->ptr )
   {
      switch ( uType )
      {  // Test (with wine too) confirms these results!
@@ -407,8 +408,6 @@ ValidateHandle(HANDLE handle, UINT uType)
     return NULL;
   }
 
-  if (!(NtUserValidateHandleSecure(handle, FALSE))) return NULL;
-
   if (g_ObjectHeapTypeShared[uType])
     ret = SharedPtrToUser(pEntry->ptr);
   else
@@ -426,4 +425,18 @@ ValidateHandle(HANDLE handle, UINT uType)
 #endif
 
   return ret;
+}
+
+//
+// Validate callproc handle and return the pointer to the object.
+//
+PCALLPROC
+FASTCALL
+ValidateCallProc(HANDLE hCallProc)
+{
+    PCALLPROC CallProc = ValidateHandle(hCallProc, VALIDATE_TYPE_CALLPROC);
+    if (CallProc != NULL && CallProc->pi == g_kpi)
+        return CallProc;
+
+    return NULL;
 }

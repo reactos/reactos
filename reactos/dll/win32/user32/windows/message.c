@@ -1233,27 +1233,29 @@ CallWindowProcA(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  WNDPROC_INFO wpInfo;
+    PCALLPROC CallProc;
 
-  if (lpPrevWndFunc == NULL)
+    if (lpPrevWndFunc == NULL)
     {
-      WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
-      return 0;
+        WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
+        return 0;
     }
 
-  if (!IsCallProcHandle(lpPrevWndFunc))
-    return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
-  else
+    if (!IsCallProcHandle(lpPrevWndFunc))
+        return IntCallWindowProcA(TRUE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+    else
     {
-       if (NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
-                                      &wpInfo))
-         return IntCallWindowProcA(!wpInfo.IsUnicode, wpInfo.WindowProc,
-                                  hWnd, Msg, wParam, lParam);
-       else
-       {
-         WARN("CallWindowProcA: can not dereference WndProcHandle\n");
-         return 0;
-       }
+        CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
+        if (CallProc != NULL)
+        {
+            return IntCallWindowProcA(!CallProc->Unicode, CallProc->WndProc,
+                                      hWnd, Msg, wParam, lParam);
+        }
+        else
+        {
+            WARN("CallWindowProcA: can not dereference WndProcHandle\n");
+            return 0;
+        }
     }
 }
 
@@ -1268,29 +1270,31 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 		WPARAM wParam,
 		LPARAM lParam)
 {
-  WNDPROC_INFO wpInfo;
+    PCALLPROC CallProc;
 
-  /* FIXME - can the first parameter be NULL? */
-  if (lpPrevWndFunc == NULL)
+    /* FIXME - can the first parameter be NULL? */
+    if (lpPrevWndFunc == NULL)
     {
-      WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
-      return 0;
+        WARN("CallWindowProcA: lpPrevWndFunc == NULL!\n");
+        return 0;
     }
 
-  if (!IsCallProcHandle(lpPrevWndFunc))
-    return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
-  else
-  {
-    if (NtUserDereferenceWndProcHandle((HANDLE)lpPrevWndFunc,
-                                      &wpInfo))
-      return IntCallWindowProcW(!wpInfo.IsUnicode, wpInfo.WindowProc,
-                                hWnd, Msg, wParam, lParam);
-       else
-       {
-         WARN("CallWindowProcW: can not dereference WndProcHandle\n");
-         return 0;
-       }
-  }
+    if (!IsCallProcHandle(lpPrevWndFunc))
+        return IntCallWindowProcW(FALSE, lpPrevWndFunc, hWnd, Msg, wParam, lParam);
+    else
+    {
+        CallProc = ValidateCallProc((HANDLE)lpPrevWndFunc);
+        if (CallProc != NULL)
+        {
+            return IntCallWindowProcW(!CallProc->Unicode, CallProc->WndProc,
+                                      hWnd, Msg, wParam, lParam);
+        }
+        else
+        {
+            WARN("CallWindowProcW: can not dereference WndProcHandle\n");
+            return 0;
+        }
+    }
 }
 
 

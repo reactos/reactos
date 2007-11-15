@@ -45,8 +45,9 @@ LONG STDCALL GdiGetCharDimensions(HDC, LPTEXTMETRICW, LONG *);
 BOOL FASTCALL IsMetaFile(HDC);
 
 extern PW32PROCESSINFO g_pi;
+extern PW32PROCESSINFO g_kpi;
 
-static PVOID __inline
+static __inline PVOID
 SharedPtrToUser(PVOID Ptr)
 {
     ASSERT(Ptr != NULL);
@@ -55,7 +56,7 @@ SharedPtrToUser(PVOID Ptr)
     return (PVOID)((ULONG_PTR)Ptr - g_pi->UserHeapDelta);
 }
 
-static PVOID __inline
+static __inline PVOID
 DesktopPtrToUser(PVOID Ptr)
 {
     PW32THREADINFO ti = GetW32ThreadInfo();
@@ -65,3 +66,13 @@ DesktopPtrToUser(PVOID Ptr)
     return (PVOID)((ULONG_PTR)Ptr - ti->DesktopHeapDelta);
 }
 
+static __inline PVOID
+SharedPtrToKernel(PVOID Ptr)
+{
+    ASSERT(Ptr != NULL);
+    ASSERT(g_pi != NULL);
+    ASSERT(g_pi->UserHeapDelta != 0);
+    return (PVOID)((ULONG_PTR)Ptr + g_pi->UserHeapDelta);
+}
+
+PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);

@@ -5,7 +5,9 @@
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
-PW32PROCESSINFO g_pi = NULL;
+PUSER_HANDLE_ENTRY gHandleEntries = NULL;
+PW32PROCESSINFO g_pi = NULL; /* User Mode Pointer */
+PW32PROCESSINFO g_kpi = NULL; /* Kernel Mode Pointer */
 
 PW32PROCESSINFO
 GetW32ProcessInfo(VOID);
@@ -56,7 +58,9 @@ Init(VOID)
       (PVOID)User32CallHookProcFromKernel;
 
    g_pi = GetW32ProcessInfo();
+   g_kpi = SharedPtrToKernel(g_pi);
    gHandleTable = SharedPtrToUser(g_pi->UserHandleTable);
+   gHandleEntries = SharedPtrToUser(gHandleTable->handles);
 
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
