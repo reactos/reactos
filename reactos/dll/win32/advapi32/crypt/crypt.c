@@ -55,45 +55,56 @@ HWND crypt_hWindow = 0;
 #define CRYPT_Alloc(size) ((LPVOID)LocalAlloc(LMEM_ZEROINIT, size))
 #define CRYPT_Free(buffer) (LocalFree((HLOCAL)buffer))
 
-static inline PSTR CRYPT_GetProvKeyName(PCSTR pProvName)
+static inline PWSTR CRYPT_GetProvKeyName(PCWSTR pProvName)
 {
-	PCSTR KEYSTR = "Software\\Microsoft\\Cryptography\\Defaults\\Provider\\";
-	PSTR keyname;
+	static const WCHAR KEYSTR[] = {
+                'S','o','f','t','w','a','r','e','\\',
+                'M','i','c','r','o','s','o','f','t','\\',
+                'C','r','y','p','t','o','g','r','a','p','h','y','\\',
+                'D','e','f','a','u','l','t','s','\\',
+                'P','r','o','v','i','d','e','r','\\',0
+	};
+	PWSTR keyname;
 
-	keyname = CRYPT_Alloc(strlen(KEYSTR) + strlen(pProvName) +1);
+	keyname = CRYPT_Alloc((wcslen(KEYSTR) + wcslen(pProvName) +1)*sizeof(WCHAR));
 	if (keyname)
 	{
-		strcpy(keyname, KEYSTR);
-		strcpy(keyname + strlen(KEYSTR), pProvName);
-	}
-	else
-	{
+		wcscpy(keyname, KEYSTR);
+		wcscpy(keyname + wcslen(KEYSTR), pProvName);
+	} else
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	}
-
 	return keyname;
 }
 
-static inline PSTR CRYPT_GetTypeKeyName(DWORD dwType, BOOL user)
+static inline PWSTR CRYPT_GetTypeKeyName(DWORD dwType, BOOL user)
 {
-	PCSTR MACHINESTR = "Software\\Microsoft\\Cryptography\\Defaults\\Provider Types\\Type XXX";
-	PCSTR USERSTR = "Software\\Microsoft\\Cryptography\\Provider Type XXX";
-	PSTR keyname;
-	PSTR ptr;
+	static const WCHAR MACHINESTR[] = {
+                'S','o','f','t','w','a','r','e','\\',
+                'M','i','c','r','o','s','o','f','t','\\',
+                'C','r','y','p','t','o','g','r','a','p','h','y','\\',
+                'D','e','f','a','u','l','t','s','\\',
+                'P','r','o','v','i','d','e','r',' ','T','y','p','e','s','\\',
+                'T','y','p','e',' ','X','X','X',0
+	};
+	static const WCHAR USERSTR[] = {
+                'S','o','f','t','w','a','r','e','\\',
+                'M','i','c','r','o','s','o','f','t','\\',
+                'C','r','y','p','t','o','g','r','a','p','h','y','\\',
+                'P','r','o','v','i','d','e','r',' ','T','y','p','e',' ','X','X','X',0
+	};
+	PWSTR keyname;
+	PWSTR ptr;
 
-	keyname = CRYPT_Alloc( (user ? strlen(USERSTR) : strlen(MACHINESTR)) +1);
+	keyname = CRYPT_Alloc( ((user ? wcslen(USERSTR) : wcslen(MACHINESTR)) +1)*sizeof(WCHAR));
 	if (keyname)
 	{
-		user ? strcpy(keyname, USERSTR) : strcpy(keyname, MACHINESTR);
-		ptr = keyname + strlen(keyname);
+		user ? wcscpy(keyname, USERSTR) : wcscpy(keyname, MACHINESTR);
+		ptr = keyname + wcslen(keyname);
 		*(--ptr) = (dwType % 10) + '0';
 		*(--ptr) = ((dwType / 10) % 10) + '0';
 		*(--ptr) = (dwType / 100) + '0';
-	}
-	else
-	{
+	} else
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-	}
 	return keyname;
 }
 
@@ -178,26 +189,23 @@ static BOOL CALLBACK CRYPT_ReturnhWnd(HWND *phWnd)
 
 #define CRYPT_GetProvFunc(name) \
 	if ( !(provider->pFuncs->p##name = (void*)GetProcAddress(provider->hModule, #name)) ) goto error
-
 #define CRYPT_GetProvFuncOpt(name) \
 	provider->pFuncs->p##name = (void*)GetProcAddress(provider->hModule, #name)
-PCRYPTPROV CRYPT_LoadProvider(PSTR pImage)
+static PCRYPTPROV CRYPT_LoadProvider(PCWSTR pImage)
 {
 	PCRYPTPROV provider;
 	DWORD errorcode = ERROR_NOT_ENOUGH_MEMORY;
 
-	if (!(provider = CRYPT_Alloc(sizeof(CRYPTPROV))))
-		goto error;
-	if (!(provider->pFuncs = CRYPT_Alloc(sizeof(PROVFUNCS))))
-		goto error;
-	if (!(provider->pVTable = CRYPT_Alloc(sizeof(VTableProvStruc))))
-		goto error;
-	if (!(provider->hModule = LoadLibraryA(pImage)))
+	if ( !(provider = CRYPT_Alloc(sizeof(CRYPTPROV))) ) goto error;
+	if ( !(provider->pFuncs = CRYPT_Alloc(sizeof(PROVFUNCS))) ) goto error;
+	if ( !(provider->pVTable = CRYPT_Alloc(sizeof(VTableProvStruc))) ) goto error;
+	if ( !(provider->hModule = LoadLibraryW(pImage)) )
 	{
 		errorcode = (GetLastError() == ERROR_FILE_NOT_FOUND) ? NTE_PROV_DLL_NOT_FOUND : NTE_PROVIDER_DLL_FAIL;
-		DPRINT1("Failed to load dll %s\n", pImage);
+		DPRINT("Failed to load dll %S\n", pImage);
 		goto error;
 	}
+	provider->dwMagic = MAGIC_CRYPTPROV;
 	provider->refcount = 1;
 
 	errorcode = NTE_PROVIDER_DLL_FAIL;
@@ -243,6 +251,7 @@ error:
 	SetLastError(errorcode);
 	if (provider)
 	{
+		provider->dwMagic = 0;
 		if (provider->hModule)
 			FreeLibrary(provider->hModule);
 		CRYPT_Free(provider->pVTable);
@@ -256,30 +265,35 @@ error:
 
 
 /******************************************************************************
- * CryptAcquireContextA (ADVAPI32.@)
+ * CryptAcquireContextW (ADVAPI32.@)
+ *
  * Acquire a crypto provider context handle.
  *
  * PARAMS
- * phProv: Pointer to HCRYPTPROV for the output.
- * pszContainer: Key Container Name
- * pszProvider: Cryptographic Service Provider Name
- * dwProvType: Crypto provider type to get a handle.
- * dwFlags: flags for the operation
+ *  phProv       [O] Pointer to HCRYPTPROV for the output.
+ *  pszContainer [I] Key Container Name
+ *  pszProvider  [I] Cryptographic Service Provider Name
+ *  dwProvType   [I] Crypto provider type to get a handle.
+ *  dwFlags      [I] flags for the operation
  *
- * RETURNS TRUE on success, FALSE on failure.
+ * RETURNS 
+ *  TRUE on success, FALSE on failure.
  */
-BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
-		LPCSTR pszProvider, DWORD dwProvType, DWORD dwFlags)
+BOOL WINAPI CryptAcquireContextW (HCRYPTPROV *phProv, LPCWSTR pszContainer,
+		LPCWSTR pszProvider, DWORD dwProvType, DWORD dwFlags)
 {
 	PCRYPTPROV pProv = NULL;
 	HKEY key;
-	PSTR imagepath = NULL, keyname = NULL, provname = NULL, temp = NULL;
-	BYTE* signature;
+	PWSTR imagepath = NULL, keyname = NULL, provname = NULL, temp = NULL;
+	PSTR provnameA = NULL, pszContainerA = NULL;
 	DWORD keytype, type, len;
 	ULONG r;
+	static const WCHAR nameW[] = {'N','a','m','e',0};
+	static const WCHAR typeW[] = {'T','y','p','e',0};
+	static const WCHAR imagepathW[] = {'I','m','a','g','e',' ','P','a','t','h',0};
 
-	DPRINT("(%p, %s, %s, %ld, %08lx)\n", phProv, pszContainer,
-		pszProvider, dwProvType, dwFlags);
+	DPRINT("(%p, %S, %S, %d, %08x)\n", phProv, pszContainer,
+		pszProvider, dwProvType, dwFlags); 
 
 	if (dwProvType < 1 || dwProvType > MAXPROVTYPES)
 	{
@@ -298,26 +312,21 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		/* No CSP name specified so try the user default CSP first
 		 * then try the machine default CSP
 		 */
-		if (!(keyname = CRYPT_GetTypeKeyName(dwProvType, TRUE)))
-		{
-			DPRINT("No provider registered for crypto provider type %ld.\n", dwProvType);
+		if ( !(keyname = CRYPT_GetTypeKeyName(dwProvType, TRUE)) ) {
+			DPRINT("No provider registered for crypto provider type %d.\n", dwProvType);
 			SetLastError(NTE_PROV_TYPE_NOT_DEF);
 			return FALSE;
 		}
-
-		if (RegOpenKeyA(HKEY_CURRENT_USER, keyname, &key))
+		if (RegOpenKeyW(HKEY_CURRENT_USER, keyname, &key))
 		{
 			CRYPT_Free(keyname);
-			if (!(keyname = CRYPT_GetTypeKeyName(dwProvType, FALSE)))
-			{
-				DPRINT("No type registered for crypto provider type %ld.\n", dwProvType);
+			if ( !(keyname = CRYPT_GetTypeKeyName(dwProvType, FALSE)) ) {
+				DPRINT("No type registered for crypto provider type %d.\n", dwProvType);
 				RegCloseKey(key);
 				SetLastError(NTE_PROV_TYPE_NOT_DEF);
 				goto error;
 			}
-
-			if (RegOpenKeyA(HKEY_LOCAL_MACHINE, keyname, &key))
-			{
+			if (RegOpenKeyW(HKEY_LOCAL_MACHINE, keyname, &key)) {
 				DPRINT("Did not find registry entry of crypto provider for %S.\n", keyname);
 				CRYPT_Free(keyname);
 				RegCloseKey(key);
@@ -325,44 +334,41 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 				goto error;
 			}
 		}
-
 		CRYPT_Free(keyname);
-		r = RegQueryValueExA(key, "Name", NULL, &keytype, NULL, &len);
-		if (r != ERROR_SUCCESS || !len || keytype != REG_SZ)
+		r = RegQueryValueExW(key, nameW, NULL, &keytype, NULL, &len);
+		if( r != ERROR_SUCCESS || !len || keytype != REG_SZ)
 		{
-			DPRINT("error %ld reading size of 'Name' from registry\n", r );
+			DPRINT("error %d reading size of 'Name' from registry\n", r );
 			RegCloseKey(key);
 			SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
 			goto error;
 		}
-		if (!(provname = CRYPT_Alloc(len)))
+		if(!(provname = CRYPT_Alloc(len)))
 		{
 			RegCloseKey(key);
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			goto error;
 		}
-		r = RegQueryValueExA(key, "Name", NULL, NULL, (LPBYTE)provname, &len);
-		if (r != ERROR_SUCCESS)
+		r = RegQueryValueExW(key, nameW, NULL, NULL, (LPBYTE)provname, &len);
+		if( r != ERROR_SUCCESS )
 		{
-			DPRINT("error %ld reading 'Name' from registry\n", r );
+			DPRINT("error %d reading 'Name' from registry\n", r );
 			RegCloseKey(key);
 			SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
 			goto error;
 		}
 		RegCloseKey(key);
-	}
-	else
-	{
-		if (!(provname = CRYPT_Alloc(strlen(pszProvider) +1)))
+	} else {
+		if ( !(provname = CRYPT_Alloc((wcslen(pszProvider) +1)*sizeof(WCHAR))) )
 		{
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 			goto error;
 		}
-		strcpy(provname, pszProvider);
+		wcscpy(provname, pszProvider);
 	}
 
 	keyname = CRYPT_GetProvKeyName(provname);
-	r = RegOpenKeyA(HKEY_LOCAL_MACHINE, keyname, &key);
+	r = RegOpenKeyW(HKEY_LOCAL_MACHINE, keyname, &key);
 	CRYPT_Free(keyname);
 	if (r != ERROR_SUCCESS)
 	{
@@ -370,7 +376,7 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		goto error;
 	}
 	len = sizeof(DWORD);
-	r = RegQueryValueExA(key, "Type", NULL, NULL, (BYTE*)&type, &len);
+	r = RegQueryValueExW(key, typeW, NULL, NULL, (BYTE*)&type, &len);
 	if (r != ERROR_SUCCESS)
 	{
 		SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
@@ -378,15 +384,15 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 	}
 	if (type != dwProvType)
 	{
-		DPRINT("Crypto provider has wrong type (%ld vs expected %ld).\n", type, dwProvType);
+		DPRINT("Crypto provider has wrong type (%d vs expected %d).\n", type, dwProvType);
 		SetLastError(NTE_PROV_TYPE_NO_MATCH);
 		goto error;
 	}
 
-	r = RegQueryValueExA(key, "Image Path", NULL, &keytype, NULL, &len);
+	r = RegQueryValueExW(key, imagepathW, NULL, &keytype, NULL, &len);
 	if ( r != ERROR_SUCCESS || keytype != REG_SZ)
 	{
-		DPRINT("error %ld reading size of 'Image Path' from registry\n", r );
+		DPRINT("error %d reading size of 'Image Path' from registry\n", r );
 		RegCloseKey(key);
 		SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
 		goto error;
@@ -397,90 +403,44 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		goto error;
 	}
-	r = RegQueryValueExA(key, "Image Path", NULL, NULL, (LPBYTE)temp, &len);
-	if (r != ERROR_SUCCESS)
+	r = RegQueryValueExW(key, imagepathW, NULL, NULL, (LPBYTE)temp, &len);
+	if( r != ERROR_SUCCESS )
 	{
-		DPRINT("error %ld reading 'Image Path' from registry\n", r );
+		DPRINT("error %d reading 'Image Path' from registry\n", r );
 		RegCloseKey(key);
 		SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
 		goto error;
 	}
-
-	r = RegQueryValueExA(key, "Signature", NULL, &keytype, NULL, &len);
-	if (r == ERROR_SUCCESS && keytype == REG_BINARY)
-	{
-		if (!(signature = CRYPT_Alloc(len)))
-		{
-			RegCloseKey(key);
-			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-			goto error;
-		}
-		r = RegQueryValueExA(key, "Signature", NULL, NULL, signature, &len);
-		if (r != ERROR_SUCCESS)
-		{
-			DPRINT("error %ld reading 'Signature'\n", r );
-			CRYPT_Free(signature);
-			RegCloseKey(key);
-			SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
-			goto error;
-		}
-	}
-	else
-	{
-		r = RegQueryValueExA(key, "SigInFile", NULL, &keytype, NULL, &len);
-		if (r != ERROR_SUCCESS)
-		{
-			DPRINT("error %ld reading size of 'SigInFile'\n", r );
-			RegCloseKey(key);
-			SetLastError(NTE_PROV_TYPE_ENTRY_BAD);
-			goto error;
-		}
-		else
-		{
-			/* FIXME: The presence of the SigInFile value indicates the
-			 * provider's signature is in its resources, so need to read it.
-			 * But since CRYPT_VerifyImage is stubbed, provide any old thing
-			 * for now.
-			 */
-			if (!(signature = CRYPT_Alloc(1)))
-			{
-				RegCloseKey(key);
-				SetLastError(ERROR_NOT_ENOUGH_MEMORY);
-				goto error;
-			}
-		}
-	}
 	RegCloseKey(key);
-	len = ExpandEnvironmentStringsA(temp, NULL, 0);
-	if (!(imagepath = CRYPT_Alloc(len)))
+	len = ExpandEnvironmentStringsW(temp, NULL, 0);
+	if ( !(imagepath = CRYPT_Alloc(len*sizeof(WCHAR))) )
 	{
-		CRYPT_Free(signature);
 		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
 		goto error;
 	}
-	if (!ExpandEnvironmentStringsA(temp, imagepath, len))
+	if (!ExpandEnvironmentStringsW(temp, imagepath, len))
 	{
-		CRYPT_Free(signature);
 		/* ExpandEnvironmentStrings will call SetLastError */
 		goto error;
 	}
-
-	if (!CRYPT_VerifyImage(imagepath, signature))
-	{
-		CRYPT_Free(signature);
-		SetLastError(NTE_SIGNATURE_FILE_BAD);
-		goto error;
-	}
 	pProv = CRYPT_LoadProvider(imagepath);
-	CRYPT_Free(signature);
-	if (!pProv)
-	{
+	if (!pProv) {
 		/* CRYPT_LoadProvider calls SetLastError */
 		goto error;
 	}
 	pProv->pVTable->dwProvType = dwProvType;
-	pProv->pVTable->pszProvName = provname;
-	if (pProv->pFuncs->pCPAcquireContext(&pProv->hPrivate, (CHAR*)pszContainer, dwFlags, pProv->pVTable))
+	if(!CRYPT_UnicodeToANSI(provname, &provnameA, -1))
+	{
+		/* CRYPT_UnicodeToANSI calls SetLastError */
+		goto error;
+	}
+	pProv->pVTable->pszProvName = provnameA;
+	if(!CRYPT_UnicodeToANSI(pszContainer, &pszContainerA, -1))
+	{
+		/* CRYPT_UnicodeToANSI calls SetLastError */
+		goto error;
+	}
+	if (pProv->pFuncs->pCPAcquireContext(&pProv->hPrivate, pszContainerA, dwFlags, pProv->pVTable))
 	{
 		/* MSDN: When this flag is set, the value returned in phProv is undefined,
 		 *       and thus, the CryptReleaseContext function need not be called afterwards.
@@ -488,15 +448,17 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 		 */
 		if (dwFlags & CRYPT_DELETEKEYSET)
 		{
+			pProv->dwMagic = 0;
 			FreeLibrary(pProv->hModule);
-			CRYPT_Free(provname);
+			CRYPT_Free(provnameA);
+			CRYPT_Free(pProv->pVTable);
 			CRYPT_Free(pProv->pFuncs);
 			CRYPT_Free(pProv);
-		}
-		else
-		{
+		} else {
 			*phProv = (HCRYPTPROV)pProv;
 		}
+		CRYPT_Free(pszContainerA);
+		CRYPT_Free(provname);
 		CRYPT_Free(temp);
 		CRYPT_Free(imagepath);
 		return TRUE;
@@ -505,51 +467,51 @@ BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
 error:
 	if (pProv)
 	{
+		pProv->dwMagic = 0;
 		if (pProv->hModule)
 			FreeLibrary(pProv->hModule);
-		if (pProv->pVTable)
-			CRYPT_Free(pProv->pVTable);
-		if (pProv->pFuncs)
-			CRYPT_Free(pProv->pFuncs);
+		CRYPT_Free(pProv->pVTable);
+		CRYPT_Free(pProv->pFuncs);
 		CRYPT_Free(pProv);
 	}
-	if (provname)
-		CRYPT_Free(provname);
-	if (temp)
-		CRYPT_Free(temp);
-	if (imagepath)
-		CRYPT_Free(imagepath);
+	CRYPT_Free(pszContainerA);
+	CRYPT_Free(provnameA);
+	CRYPT_Free(provname);
+	CRYPT_Free(temp);
+	CRYPT_Free(imagepath);
 	return FALSE;
 }
 
 /******************************************************************************
- * CryptAcquireContextW (ADVAPI32.@)
+ * CryptAcquireContextA (ADVAPI32.@)
  *
- * see CryptAcquireContextA
+ * See CryptAcquireContextW.
  */
-BOOL WINAPI CryptAcquireContextW (HCRYPTPROV *phProv, LPCWSTR pszContainer,
-		LPCWSTR pszProvider, DWORD dwProvType, DWORD dwFlags)
+BOOL WINAPI CryptAcquireContextA (HCRYPTPROV *phProv, LPCSTR pszContainer,
+		LPCSTR pszProvider, DWORD dwProvType, DWORD dwFlags)
 {
-	PSTR pProvider = NULL, pContainer = NULL;
+	PWSTR pProvider = NULL, pContainer = NULL;
 	BOOL ret = FALSE;
 
-	DPRINT("(%p, %S, %S, %ld, %08lx)\n", phProv, pszContainer,
+	DPRINT("(%p, %s, %s, %d, %08x)\n", phProv, pszContainer,
 		pszProvider, dwProvType, dwFlags);
 
-	if (!CRYPT_UnicodeToANSI(pszContainer, &pContainer, -1))
-		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
-	if (!CRYPT_UnicodeToANSI(pszProvider, &pProvider, -1))
+	if ( !CRYPT_ANSIToUnicode(pszContainer, &pContainer, -1) )
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+	if ( !CRYPT_ANSIToUnicode(pszProvider, &pProvider, -1) )
 	{
 		CRYPT_Free(pContainer);
-		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
 	}
 
-	ret = CryptAcquireContextA(phProv, pContainer, pProvider, dwProvType, dwFlags);
+	ret = CryptAcquireContextW(phProv, pContainer, pProvider, dwProvType, dwFlags);
 
-	if (pContainer)
-		CRYPT_Free(pContainer);
-	if (pProvider)
-		CRYPT_Free(pProvider);
+	CRYPT_Free(pContainer);
+	CRYPT_Free(pProvider);
 
 	return ret;
 }
@@ -1256,7 +1218,7 @@ BOOL WINAPI CryptGenKey (HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYPTKE
 }
 
 /******************************************************************************
- * CryptGetDefaultProviderA (ADVAPI32.@)
+ * CryptGetDefaultProviderW (ADVAPI32.@)
  *
  * Finds the default CSP of a certain provider type.
  *
@@ -1275,29 +1237,43 @@ BOOL WINAPI CryptGenKey (HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYPTKE
  *  If pszProvName is NULL, pcbProvName will hold the size of the buffer for
  *  memory allocation purposes on return.
  */
-BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
-		DWORD dwFlags, LPSTR pszProvName, DWORD *pcbProvName)
+BOOL WINAPI CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
+		DWORD dwFlags, LPWSTR pszProvName, DWORD *pcbProvName)
 {
 	HKEY hKey;
-	PSTR keyname;
+	PWSTR keyname;
 	DWORD result;
+	static const WCHAR nameW[] = {'N','a','m','e',0};
 
 	if (pdwReserved || !pcbProvName)
-		CRYPT_ReturnLastError(ERROR_INVALID_PARAMETER);
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
 	if (dwFlags & ~(CRYPT_USER_DEFAULT | CRYPT_MACHINE_DEFAULT))
-		CRYPT_ReturnLastError(NTE_BAD_FLAGS);
+	{
+		SetLastError(NTE_BAD_FLAGS);
+		return FALSE;
+	}
 	if (dwProvType > 999)
-		CRYPT_ReturnLastError(NTE_BAD_PROV_TYPE);
-	if (!(keyname = CRYPT_GetTypeKeyName(dwProvType, dwFlags & CRYPT_USER_DEFAULT)))
-		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
-	if (RegOpenKeyA((dwFlags & CRYPT_USER_DEFAULT) ?  HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE ,keyname, &hKey))
+	{
+		SetLastError(NTE_BAD_PROV_TYPE);
+		return FALSE;
+	}
+	if ( !(keyname = CRYPT_GetTypeKeyName(dwProvType, dwFlags & CRYPT_USER_DEFAULT)) )
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+	if (RegOpenKeyW((dwFlags & CRYPT_USER_DEFAULT) ?  HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE ,keyname, &hKey))
 	{
 		CRYPT_Free(keyname);
-		CRYPT_ReturnLastError(NTE_PROV_TYPE_NOT_DEF);
+		SetLastError(NTE_PROV_TYPE_NOT_DEF);
+		return FALSE;
 	}
 	CRYPT_Free(keyname);
-
-	result = RegQueryValueExA(hKey, "Name", NULL, NULL, (LPBYTE)pszProvName, pcbProvName);
+	
+	result = RegQueryValueExW(hKey, nameW, NULL, NULL, (LPBYTE)pszProvName, pcbProvName); 
 	if (result)
 	{
 		if (result != ERROR_MORE_DATA)
@@ -1313,29 +1289,38 @@ BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
 }
 
 /******************************************************************************
- * CryptGetDefaultProviderW (ADVAPI32.@)
+ * CryptGetDefaultProviderA (ADVAPI32.@)
  *
- * see CryptGetDefaultProviderA
+ * See CryptGetDefaultProviderW.
  */
-BOOL WINAPI CryptGetDefaultProviderW (DWORD dwProvType, DWORD *pdwReserved,
-		DWORD dwFlags, LPWSTR pszProvName, DWORD *pcbProvName)
+BOOL WINAPI CryptGetDefaultProviderA (DWORD dwProvType, DWORD *pdwReserved,
+		DWORD dwFlags, LPSTR pszProvName, DWORD *pcbProvName)
 {
-	PSTR str = NULL;
+	PWSTR str = NULL;
 	DWORD strlen;
 	BOOL ret = FALSE;
 
-	DPRINT("(%ld, %p, %08ld, %p, %p)\n", dwProvType, pdwReserved, dwFlags, pszProvName, pcbProvName);
+	DPRINT("(%d, %p, %08x, %p, %p)\n", dwProvType, pdwReserved, dwFlags, pszProvName, pcbProvName);
 
-	strlen = *pcbProvName / sizeof(WCHAR);
-	if (pszProvName && !(str = CRYPT_Alloc(strlen)))
-		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
-	ret = CryptGetDefaultProviderA(dwProvType, pdwReserved, dwFlags, str, &strlen);
+	CryptGetDefaultProviderW(dwProvType, pdwReserved, dwFlags, NULL, &strlen);
+	if ( pszProvName && !(str = CRYPT_Alloc(strlen)) )
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+	ret = CryptGetDefaultProviderW(dwProvType, pdwReserved, dwFlags, str, &strlen);
+	if (str)
+		CRYPT_UnicodeToANSI(str, &pszProvName, *pcbProvName);
+	*pcbProvName = strlen / sizeof(WCHAR);
 	if (str)
 	{
-		CRYPT_ANSIToUnicode(str, &pszProvName, *pcbProvName);
 		CRYPT_Free(str);
+		if (GetLastError() == ERROR_INSUFFICIENT_BUFFER)
+		{
+			SetLastError(ERROR_MORE_DATA);
+			return FALSE;
+		}
 	}
-	*pcbProvName = strlen * sizeof(WCHAR);
 	return ret;
 }
 
@@ -1726,7 +1711,7 @@ BOOL WINAPI CryptSetProviderW (LPCWSTR pszProvName, DWORD dwProvType)
 }
 
 /******************************************************************************
- * CryptSetProviderExA (ADVAPI32.@)
+ * CryptSetProviderExW (ADVAPI32.@)
  *
  * Specifies the default CSP.
  *
@@ -1740,58 +1725,75 @@ BOOL WINAPI CryptSetProviderW (LPCWSTR pszProvName, DWORD dwProvType)
  *  Success: TRUE
  *  Failure: FALSE
  */
-BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
+BOOL WINAPI CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
 {
 	HKEY hProvKey, hTypeKey;
-	PSTR keyname;
+	PWSTR keyname;
+	static const WCHAR nameW[] = {'N','a','m','e',0};
 
-	DPRINT("(%s, %ld, %p, %08ld)\n", pszProvName, dwProvType, pdwReserved, dwFlags);
+	DPRINT("(%S, %d, %p, %08x)\n", pszProvName, dwProvType, pdwReserved, dwFlags);
 
 	if (!pszProvName || pdwReserved)
-		CRYPT_ReturnLastError(ERROR_INVALID_PARAMETER);
+	{
+		SetLastError(ERROR_INVALID_PARAMETER);
+		return FALSE;
+	}
 	if (dwProvType > MAXPROVTYPES)
-		CRYPT_ReturnLastError(NTE_BAD_PROV_TYPE);
+	{
+		SetLastError(NTE_BAD_PROV_TYPE);
+		return FALSE;
+	}
 	if (dwFlags & ~(CRYPT_MACHINE_DEFAULT | CRYPT_USER_DEFAULT | CRYPT_DELETE_DEFAULT)
 			|| dwFlags == CRYPT_DELETE_DEFAULT)
-		CRYPT_ReturnLastError(NTE_BAD_FLAGS);
+	{
+		SetLastError(NTE_BAD_FLAGS);
+		return FALSE;
+	}
 
 	if (!(keyname = CRYPT_GetTypeKeyName(dwProvType, dwFlags & CRYPT_USER_DEFAULT)))
-		CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
-	if (RegOpenKeyA((dwFlags & CRYPT_USER_DEFAULT) ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+	{
+		SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+		return FALSE;
+	}
+	if (RegOpenKeyW((dwFlags & CRYPT_USER_DEFAULT) ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
 		keyname, &hTypeKey))
 	{
 		CRYPT_Free(keyname);
-		CRYPT_ReturnLastError(NTE_BAD_PROVIDER);
+		SetLastError(NTE_BAD_PROVIDER);
+		return FALSE;
 	}
 	CRYPT_Free(keyname);
-
+	
 	if (dwFlags & CRYPT_DELETE_DEFAULT)
 	{
-		RegDeleteValueA(hTypeKey, "Name");
+		RegDeleteValueW(hTypeKey, nameW);
 	}
 	else
 	{
 		if (!(keyname = CRYPT_GetProvKeyName(pszProvName)))
 		{
 			RegCloseKey(hTypeKey);
-			CRYPT_ReturnLastError(ERROR_NOT_ENOUGH_MEMORY);
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			return FALSE;
 		}
-		if (RegOpenKeyA((dwFlags & CRYPT_USER_DEFAULT) ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
+		if (RegOpenKeyW((dwFlags & CRYPT_USER_DEFAULT) ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE,
 			keyname, &hProvKey))
 		{
 			CRYPT_Free(keyname);
 			RegCloseKey(hTypeKey);
-			CRYPT_ReturnLastError(NTE_BAD_PROVIDER);
+			SetLastError(NTE_BAD_PROVIDER);
+			return FALSE;
 		}
 		CRYPT_Free(keyname);
-
-		if (RegSetValueExA(hTypeKey, "Name", 0, REG_SZ, (LPBYTE)pszProvName, strlen(pszProvName) + 1))
+		
+		if (RegSetValueExW(hTypeKey, nameW, 0, REG_SZ, (const BYTE *)pszProvName,
+			(wcslen(pszProvName) + 1)*sizeof(WCHAR)))
 		{
 			RegCloseKey(hTypeKey);
 			RegCloseKey(hProvKey);
 			return FALSE;
 		}
-
+		
 		RegCloseKey(hProvKey);
 	}
 	RegCloseKey(hTypeKey);
@@ -1800,20 +1802,20 @@ BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pd
 }
 
 /******************************************************************************
- * CryptSetProviderExW (ADVAPI32.@)
+ * CryptSetProviderExA (ADVAPI32.@)
  *
- * See CryptSetProviderExA
+ * See CryptSetProviderExW.
  */
-BOOL WINAPI CryptSetProviderExW (LPCWSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
+BOOL WINAPI CryptSetProviderExA (LPCSTR pszProvName, DWORD dwProvType, DWORD *pdwReserved, DWORD dwFlags)
 {
 	BOOL ret = FALSE;
-	PSTR str = NULL;
+	PWSTR str = NULL;
 
-	DPRINT("(%S, %ld, %p, %08ld)\n", pszProvName, dwProvType, pdwReserved, dwFlags);
+	DPRINT("(%s, %d, %p, %08x)\n", pszProvName, dwProvType, pdwReserved, dwFlags);
 
-	if (CRYPT_UnicodeToANSI(pszProvName, &str, -1))
+	if (CRYPT_ANSIToUnicode(pszProvName, &str, -1))
 	{
-		ret = CryptSetProviderExA(str, dwProvType, pdwReserved, dwFlags);
+		ret = CryptSetProviderExW(str, dwProvType, pdwReserved, dwFlags);
 		CRYPT_Free(str);
 	}
 	return ret;
