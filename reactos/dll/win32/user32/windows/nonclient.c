@@ -258,6 +258,7 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
 }
 
+#define DCX_USESTYLE     0x00010000
 /*
  * FIXME:
  * - Drawing of WS_BORDER after scrollbars
@@ -276,7 +277,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 
    Style = GetWindowLongW(hWnd, GWL_STYLE);
 
-   hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | 0x10000);
+   hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE);
    if (hDC == 0)
    {
       return 0;
