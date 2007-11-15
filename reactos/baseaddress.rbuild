@@ -121,6 +121,7 @@
   <property name="BASEADDRESS_CLUSAPI" value="0x76d10000" />
   <property name="BASEADDRESS_DHCPCSVC" value="0x76d80000" />
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
+  <property name="BASEADDRESS_RASAPI32" value="0x76ee0000h" />
   <property name="BASEADDRESS_WTSAPI32" value="0x76f50000" />
   <property name="BASEADDRESS_MSVFW32" value="0x77400000" />
   <property name="BASEADDRESS_MSACM32" value="0x77400000" />
