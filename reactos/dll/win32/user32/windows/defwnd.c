@@ -148,18 +148,17 @@ SetSysColors(
 }
 
 void
-UserGetInsideRectNC(HWND hWnd, RECT *rect)
+UserGetInsideRectNC(PWINDOW Wnd, RECT *rect)
 {
-    RECT WindowRect;
     ULONG Style;
     ULONG ExStyle;
 
-    Style = GetWindowLongW(hWnd, GWL_STYLE);
-    ExStyle = GetWindowLongW(hWnd, GWL_EXSTYLE);
-    GetWindowRect(hWnd, &WindowRect);
+    Style = Wnd->Style;
+    ExStyle = Wnd->ExStyle;
+
     rect->top    = rect->left = 0;
-    rect->right  = WindowRect.right - WindowRect.left;
-    rect->bottom = WindowRect.bottom - WindowRect.top;
+    rect->right  = Wnd->WindowRect.right - Wnd->WindowRect.left;
+    rect->bottom = Wnd->WindowRect.bottom - Wnd->WindowRect.top;
 
     if (Style & WS_ICONIC)
     {
@@ -296,21 +295,21 @@ DefWndHandleSetCursor(HWND hWnd, WPARAM wParam, LPARAM lParam, ULONG Style)
 }
 
 static LONG
-DefWndStartSizeMove(HWND hWnd, WPARAM wParam, POINT *capturePoint)
+DefWndStartSizeMove(HWND hWnd, PWINDOW Wnd, WPARAM wParam, POINT *capturePoint)
 {
   LONG hittest = 0;
   POINT pt;
   MSG msg;
   RECT rectWindow;
-  ULONG Style = GetWindowLongW(hWnd, GWL_STYLE);
+  ULONG Style = Wnd->Style;
 
-  GetWindowRect(hWnd, &rectWindow);
+  rectWindow = Wnd->WindowRect;
 
   if ((wParam & 0xfff0) == SC_MOVE)
     {
       /* Move pointer at the center of the caption */
       RECT rect;
-      UserGetInsideRectNC(hWnd, &rect);
+      UserGetInsideRectNC(Wnd, &rect);
       if (Style & WS_SYSMENU)
 	rect.left += GetSystemMetrics(SM_CXSIZE) + 1;
       if (Style & WS_MINIMIZEBOX)
@@ -436,14 +435,22 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   HCURSOR hDragCursor = 0, hOldCursor = 0;
   POINT minTrack, maxTrack;
   POINT capturePoint, pt;
-  ULONG Style = GetWindowLongW(hwnd, GWL_STYLE);
-  ULONG ExStyle = GetWindowLongW(hwnd, GWL_EXSTYLE);
+  ULONG Style, ExStyle;
   BOOL thickframe;
-  BOOL iconic = Style & WS_MINIMIZE;
+  BOOL iconic;
   BOOL moved = FALSE;
   DWORD dwPoint = GetMessagePos();
   BOOL DragFullWindows = FALSE;
   HWND hWndParent = NULL;
+  PWINDOW Wnd;
+
+  Wnd = ValidateHwnd(hwnd);
+  if (!Wnd)
+      return;
+
+  Style = Wnd->Style;
+  ExStyle = Wnd->ExStyle;
+  iconic = (Style & WS_MINIMIZE) != 0;
 
   SystemParametersInfoA(SPI_GETDRAGFULLWINDOWS, 0, &DragFullWindows, 0);
 
@@ -451,7 +458,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   pt.y = GET_Y_LPARAM(dwPoint);
   capturePoint = pt;
 
-  if (IsZoomed(hwnd) || !IsWindowVisible(hwnd))
+  if ((Style & WS_MAXIMIZE) || !IsWindowVisible(hwnd))
     {
       return;
     }
@@ -461,7 +468,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
     {
       if (!hittest)
 	{
-	  hittest = DefWndStartSizeMove(hwnd, wParam, &capturePoint);
+	  hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
 	}
       if (!hittest)
 	{
@@ -481,7 +488,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
       else
 	{
 	  SetCapture(hwnd);
-	  hittest = DefWndStartSizeMove(hwnd, wParam, &capturePoint);
+	  hittest = DefWndStartSizeMove(hwnd, Wnd, wParam, &capturePoint);
 	  if (!hittest)
 	    {
 	      ReleaseCapture();
@@ -493,7 +500,7 @@ DefWndDoSizeMove(HWND hwnd, WORD wParam)
   /* Get min/max info */
 
   WinPosGetMinMaxInfo(hwnd, NULL, NULL, &minTrack, &maxTrack);
-  GetWindowRect(hwnd, &sizingRect);
+  sizingRect = Wnd->WindowRect;
   if (Style & WS_CHILD)
     {
       hWndParent = GetParent(hwnd);

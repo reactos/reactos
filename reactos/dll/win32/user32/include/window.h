@@ -40,7 +40,7 @@ BOOL UserDrawSysMenuButton( HWND hWnd, HDC hDC, LPRECT, BOOL down );
 void
 UserGetFrameSize(ULONG Style, ULONG ExStyle, SIZE *Size);
 void
-UserGetInsideRectNC(HWND hWnd, RECT *rect);
+UserGetInsideRectNC(PWINDOW Wnd, RECT *rect);
 
 DWORD
 SCROLL_HitTest( HWND hwnd, INT nBar, POINT pt, BOOL bDragging );

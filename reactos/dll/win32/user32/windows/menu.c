@@ -514,20 +514,24 @@ got_bitmap:
  * Draw a single menu item.
  */
 static void FASTCALL
-MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
+MenuDrawMenuItem(HWND hWnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
                  PROSMENUITEMINFO Item, UINT Height, BOOL MenuBar, UINT Action)
 {
   RECT Rect;
   PWCHAR Text;
   BOOL flat_menu = FALSE;
   int bkgnd;
+  PWINDOW Wnd = ValidateHwnd(hWnd);
+
+  if (!Wnd)
+      return;
 
   if (0 != (Item->fType & MF_SYSMENU))
     {
-      if (! IsIconic(Wnd))
+      if ( (Wnd->Style & WS_MINIMIZE))
         {
           UserGetInsideRectNC(Wnd, &Rect);
-          UserDrawSysMenuButton(Wnd, Dc, &Rect,
+          UserDrawSysMenuButton(hWnd, Dc, &Rect,
                                 Item->fState & (MF_HILITE | MF_MOUSESELECT));
 	}
       return;
@@ -608,7 +612,7 @@ MenuDrawMenuItem(HWND Wnd, PROSMENUINFO MenuInfo, HWND WndOwner, HDC Dc,
       dis.hDC        = Dc;
       dis.rcItem     = Rect;
       TRACE("Ownerdraw: owner=%p itemID=%d, itemState=%d, itemAction=%d, "
-	      "hwndItem=%p, hdc=%p, rcItem={%ld,%ld,%ld,%ld}\n", Wnd,
+	      "hwndItem=%p, hdc=%p, rcItem={%ld,%ld,%ld,%ld}\n", hWnd,
 	      dis.itemID, dis.itemState, dis.itemAction, dis.hwndItem,
 	      dis.hDC, dis.rcItem.left, dis.rcItem.top, dis.rcItem.right,
 	      dis.rcItem.bottom);
