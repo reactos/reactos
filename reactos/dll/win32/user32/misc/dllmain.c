@@ -5,7 +5,10 @@
 static ULONG User32TlsIndex;
 HINSTANCE User32Instance;
 PUSER_HANDLE_TABLE gHandleTable = NULL;
+PW32PROCESSINFO g_pi = NULL;
 
+PW32PROCESSINFO
+GetW32ProcessInfo(VOID);
 
 PUSER32_THREAD_DATA
 User32GetThreadData()
@@ -51,11 +54,10 @@ Init(VOID)
       (PVOID)User32SetupDefaultCursors;
    NtCurrentTeb()->ProcessEnvironmentBlock->KernelCallbackTable[USER32_CALLBACK_HOOKPROC] =
       (PVOID)User32CallHookProcFromKernel;
-   {
-     PW32THREADINFO ti = (PW32THREADINFO)NtCurrentTeb()->Win32ThreadInfo;
-     PW32PROCESSINFO pi = ti->pi;
-     gHandleTable = (PUSER_HANDLE_TABLE) pi->UserHandleTable;
-   }
+
+   g_pi = GetW32ProcessInfo();
+   gHandleTable = SharedPtrToUser(g_pi->UserHandleTable);
+
    /* Allocate an index for user32 thread local data. */
    User32TlsIndex = TlsAlloc();
    if (User32TlsIndex != TLS_OUT_OF_INDEXES)

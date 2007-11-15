@@ -333,6 +333,26 @@ GetUser32Handle(HANDLE handle)
   return NULL;
 }
 
+/*
+ * Decide whether an object is located on the desktop or shared heap
+ */
+static const BOOL g_ObjectHeapTypeShared[VALIDATE_TYPE_MONITOR + 1] =
+{
+    FALSE, /* VALIDATE_TYPE_FREE (not used) */
+    FALSE, /* VALIDATE_TYPE_WIN */
+    TRUE, /* VALIDATE_TYPE_MENU */
+    TRUE, /* VALIDATE_TYPE_CURSOR */
+    TRUE, /* VALIDATE_TYPE_MWPOS */
+    TRUE, /* VALIDATE_TYPE_HOOK */
+    FALSE, /* (not used) */
+    FALSE, /* VALIDATE_TYPE_CALLPROC */
+    FALSE, /* VALIDATE_TYPE_ACCEL */
+    FALSE, /* (not used) */
+    FALSE, /* (not used) */
+    FALSE, /* (not used) */
+    TRUE /* VALIDATE_TYPE_MONITOR */
+};
+
 //
 // Validate Handle and return the pointer to the object.
 //
@@ -340,14 +360,22 @@ PVOID
 FASTCALL
 ValidateHandle(HANDLE handle, UINT uType)
 {
+  PVOID ret;
   PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
 
+  ASSERT(uType <= VALIDATE_TYPE_MONITOR);
+  ASSERT(ClientInfo != NULL);
+
+  /* See if we have the handle cached still */
   if (uType == VALIDATE_TYPE_WIN)
   {
      if (handle == ClientInfo->hWND) return ClientInfo->pvWND;
   }
 
   PUSER_HANDLE_ENTRY pEntry = GetUser32Handle(handle);
+
+  if (pEntry && uType == 0)
+      uType = pEntry->type;
 
 // Must have an entry and must be the same type!
   if ( (!pEntry) || (pEntry->type != uType) )
@@ -374,13 +402,28 @@ ValidateHandle(HANDLE handle, UINT uType)
           break;
         default:
           SetLastError(ERROR_INVALID_HANDLE);
+          break;
     }
     return NULL;
   }
 
   if (!(NtUserValidateHandleSecure(handle, FALSE))) return NULL;
 
-  return pEntry->ptr;
+  if (g_ObjectHeapTypeShared[uType])
+    ret = SharedPtrToUser(pEntry->ptr);
+  else
+    ret = DesktopPtrToUser(pEntry->ptr);
+
+  /* Update the cache */
+#if 0
+  /* FIXME: To enable this win32k needs to check this information when destroying
+            the window handle and clear it out of the ClientInfo structure! */
+  if (uType == VALIDATE_TYPE_WIN)
+  {
+    ClientInfo->hWND = handle;
+    ClientInfo->pvWND = ret;
+  }
+#endif
+
+  return ret;
 }
-
-
