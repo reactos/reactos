@@ -61,6 +61,18 @@ Environment::GetIntermediatePath ()
 	                                             defaultIntermediate );
 }
 
+string
+Environment::ReplaceVariable ( const string& name,
+                                  const string& value,
+                                  string path )
+{
+	size_t i = path.find ( name );
+	if ( i != string::npos )
+		return path.replace ( i, name.length (), value );
+	else
+		return path;
+}
+
 /* static */ string
 Environment::GetOutputPath ()
 {

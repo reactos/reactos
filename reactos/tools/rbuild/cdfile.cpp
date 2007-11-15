@@ -22,29 +22,29 @@
 
 using std::string;
 
-string
-CDFile::ReplaceVariable ( const string& name,
-                          const string& value,
-                          string path )
-{
-	size_t i = path.find ( name );
-	if ( i != string::npos )
-		return path.replace ( i, name.length (), value );
-	else
-		return path;
-}
-
-string
-BootstrapFile::ReplaceVariable ( const string& name,
-                          const string& value,
-                          string path )
-{
-	size_t i = path.find ( name );
-	if ( i != string::npos )
-		return path.replace ( i, name.length (), value );
-	else
-		return path;
-}
+//string
+//CDFile::ReplaceVariable ( const string& name,
+//                          const string& value,
+//                          string path )
+//{
+//	size_t i = path.find ( name );
+//	if ( i != string::npos )
+//		return path.replace ( i, name.length (), value );
+//	else
+//		return path;
+//}
+//
+//string
+//BootstrapFile::ReplaceVariable ( const string& name,
+//                          const string& value,
+//                          string path )
+//{
+//	size_t i = path.find ( name );
+//	if ( i != string::npos )
+//		return path.replace ( i, name.length (), value );
+//	else
+//		return path;
+//}
 
 CDFile::CDFile ( const Project& project,
                  const XMLElement& cdfileNode,
@@ -54,7 +54,7 @@ CDFile::CDFile ( const Project& project,
 	const XMLAttribute* att = cdfileNode.GetAttribute ( "installbase", false );
 	string target_relative_directory;
 	if ( att != NULL )
-		target_relative_directory = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
+        target_relative_directory = Environment::ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
 	else
 		target_relative_directory = "";
 
@@ -78,7 +78,7 @@ BootstrapFile::BootstrapFile ( const Project& project,
 	const XMLAttribute* att = cdfileNode.GetAttribute ( "installbase", false );
 	string target_relative_directory;
 	if ( att != NULL )
-		target_relative_directory = ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
+		target_relative_directory = Environment::ReplaceVariable ( "$(CDOUTPUT)", Environment::GetCdOutputPath (), att->value );
 	else
 		target_relative_directory = "";
 

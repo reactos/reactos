@@ -207,6 +207,9 @@ public:
 	static std::string GetAutomakeFile ( const std::string& defaultFile );
 	static std::string GetEnvironmentVariablePathOrDefault ( const std::string& name,
 	                                                         const std::string& defaultValue );
+	static std::string ReplaceVariable ( const std::string& name,
+                                         const std::string& value,
+                                         std::string path );
 };
 
 
@@ -988,9 +991,9 @@ public:
 private:
 	bool IsSupportedModuleType ( ModuleType type );
 	void Initialize();
-	static std::string ReplaceVariable ( const std::string& name,
-	                                     const std::string& value,
-	                                     std::string path );
+	//static std::string ReplaceVariable ( const std::string& name,
+	//                                     const std::string& value,
+	//                                     std::string path );
 };
 
 
@@ -1003,10 +1006,10 @@ public:
 	CDFile ( const Project& project,
 	         const XMLElement& bootstrapNode,
 	         const std::string& path );
-private:
-	static std::string ReplaceVariable ( const std::string& name,
-	                                     const std::string& value,
-	                                     std::string path );
+//private:
+//	static std::string ReplaceVariable ( const std::string& name,
+//	                                     const std::string& value,
+//	                                     std::string path );
 };
 
 class BootstrapFile : public XmlNode
@@ -1018,10 +1021,10 @@ public:
 	BootstrapFile ( const Project& project,
 	         const XMLElement& bootstrapNode,
 	         const std::string& path );
-private:
-	static std::string ReplaceVariable ( const std::string& name,
-	                                     const std::string& value,
-	                                     std::string path );
+//private:
+//	static std::string ReplaceVariable ( const std::string& name,
+//	                                     const std::string& value,
+//	                                     std::string path );
 };
 
 class InstallFile : public XmlNode
