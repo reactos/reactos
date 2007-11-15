@@ -66,7 +66,10 @@
 #define IDC_SETTINGS_ADVANCED        205
 #define IDC_SETTINGS_MONSEL          206
 #define IDC_SETTINGS_SPECTRUM        207
-#define IDB_SPECTRUM                 208
+
+#define IDB_SPECTRUM_4               208
+#define IDB_SPECTRUM_8               209
+#define IDB_SPECTRUM_16              210
 
 #define IDR_PREVIEW_MENU     2100
 #define ID_MENU_NORMAL       2101

@@ -48,7 +48,8 @@ INT AllocAndLoadString(LPTSTR *lpTarget,
 
 ULONG __cdecl DbgPrint(PCCH Format,...);
 
-#define MAX_DESK_PAGES  32
+#define MAX_DESK_PAGES        32
+#define NUM_SPECTRUM_BITMAPS  3
 
 /* As slider control can't contain user data, we have to keep an
  * array of RESOLUTION_INFO to have our own associated data.

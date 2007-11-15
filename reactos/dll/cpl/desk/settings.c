@@ -15,9 +15,9 @@ typedef struct _GLOBAL_DATA
 {
 	PDISPLAY_DEVICE_ENTRY DisplayDeviceList;
 	PDISPLAY_DEVICE_ENTRY CurrentDisplayDevice;
-	HBITMAP hBitmap;
-	int cxSource;
-	int cySource;
+	HBITMAP hSpectrumBitmaps[NUM_SPECTRUM_BITMAPS];
+	int cxSource[NUM_SPECTRUM_BITMAPS];
+	int cySource[NUM_SPECTRUM_BITMAPS];
 } GLOBAL_DATA, *PGLOBAL_DATA;
 
 
@@ -80,7 +80,8 @@ GetPossibleSettings(IN LPCTSTR DeviceName, OUT DWORD* pSettingsCount, OUT PSETTI
 
 	while (EnumDisplaySettingsEx(DeviceName, iMode, &devmode, dwFlags))
 	{
-		if ((devmode.dmBitsPerPel==8 ||
+        if ((devmode.dmBitsPerPel==4 ||
+             devmode.dmBitsPerPel==8 ||
 			 devmode.dmBitsPerPel==16 ||
 			 devmode.dmBitsPerPel==24 ||
 			 devmode.dmBitsPerPel==32) &&
@@ -285,6 +286,7 @@ OnInitDialog(IN HWND hwndDlg)
 	BITMAP bitmap;
 	DWORD Result = 0;
 	DWORD iDevNum = 0;
+    INT i;
 	DISPLAY_DEVICE displayDevice;
 	PGLOBAL_DATA pGlobalData;
 
@@ -362,15 +364,45 @@ OnInitDialog(IN HWND hwndDlg)
 		}
 	}
 
-	/* init the color spectrum*/
-	pGlobalData->hBitmap = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-	if (pGlobalData->hBitmap != NULL)
-	{
-		GetObjectW(pGlobalData->hBitmap, sizeof(BITMAP), &bitmap);
+	/* Initialize the color spectrum bitmaps */
+    for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
+    {
+        pGlobalData->hSpectrumBitmaps[i] = LoadImageW(hApplet, MAKEINTRESOURCEW(IDB_SPECTRUM_4 + i), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
 
-		pGlobalData->cxSource = bitmap.bmWidth;
-		pGlobalData->cySource = bitmap.bmHeight;
-	}
+        if (pGlobalData->hSpectrumBitmaps[i] != NULL)
+        {
+            GetObjectW(pGlobalData->hSpectrumBitmaps[i], sizeof(BITMAP), &bitmap);
+
+            pGlobalData->cxSource[i] = bitmap.bmWidth;
+            pGlobalData->cySource[i] = bitmap.bmHeight;
+        }
+    }
+}
+
+/* Get the ID for GLOBAL_DATA::hSpectrumBitmaps */
+static VOID
+ShowColorSpectrum(IN HDC hDC, IN LPRECT client, IN DWORD BitsPerPel, IN PGLOBAL_DATA pGlobalData)
+{
+    HDC hdcMem;
+    hdcMem = CreateCompatibleDC(hDC);
+
+    if (hdcMem)
+    {
+        INT iBitmap;
+
+        switch(BitsPerPel)
+        {
+            case 4:  iBitmap = 0; break;
+            case 8:  iBitmap = 1; break;
+            default: iBitmap = 2;
+        }
+
+        SelectObject(hdcMem, pGlobalData->hSpectrumBitmaps[iBitmap]);
+        StretchBlt(hDC, client->left, client->top, client->right - client->left,
+                   client->bottom - client->top, hdcMem, 0, 0,
+                   pGlobalData->cxSource[iBitmap], pGlobalData->cySource[iBitmap], SRCCOPY);
+        DeleteDC(hdcMem);
+    }
 }
 
 static VOID
@@ -383,11 +415,18 @@ OnBPPChanged(IN HWND hwndDlg, IN PGLOBAL_DATA pGlobalData)
 	PSETTINGS_ENTRY Current;
 	DWORD dmNewBitsPerPel;
 	DWORD index;
-	TCHAR Buffer[64];
+    HDC  hSpectrumDC;
+    HWND hSpectrumControl;
+    RECT client;
 
-	SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, WM_GETTEXT, (WPARAM)(sizeof(Buffer) / sizeof(TCHAR)), (LPARAM)Buffer);
-	index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_FINDSTRINGEXACT, (WPARAM)-1, (LPARAM)Buffer);
+	index = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETCURSEL, 0, 0);
 	dmNewBitsPerPel = (DWORD) SendDlgItemMessage(hwndDlg, IDC_SETTINGS_BPP, CB_GETITEMDATA, index, 0);
+
+    /* Show a new spectrum bitmap */
+    hSpectrumControl = GetDlgItem(hwndDlg, IDC_SETTINGS_SPECTRUM);
+    hSpectrumDC = GetDC(hSpectrumControl);
+    GetClientRect(hSpectrumControl, &client);
+    ShowColorSpectrum(hSpectrumDC, &client, dmNewBitsPerPel, pGlobalData);
 
 	/* find if new parameters are valid */
 	Current = pGlobalData->CurrentDisplayDevice->CurrentSettings;
@@ -585,20 +624,10 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 		{
 			LPDRAWITEMSTRUCT lpDrawItem;
 			lpDrawItem = (LPDRAWITEMSTRUCT) lParam;
+
 			if(lpDrawItem->CtlID == IDC_SETTINGS_SPECTRUM)
-			{
-				HDC hdcMem;
-				hdcMem = CreateCompatibleDC(lpDrawItem->hDC);
-				if (hdcMem != NULL)
-				{
-					SelectObject(hdcMem, pGlobalData->hBitmap);
-					StretchBlt(lpDrawItem->hDC, lpDrawItem->rcItem.left, lpDrawItem->rcItem.top,
-								lpDrawItem->rcItem.right - lpDrawItem->rcItem.left,
-								lpDrawItem->rcItem.bottom - lpDrawItem->rcItem.top,
-								hdcMem, 0, 0, pGlobalData->cxSource, pGlobalData->cySource, SRCCOPY);
-					DeleteDC(hdcMem);
-				}
-			}
+                ShowColorSpectrum(lpDrawItem->hDC, &lpDrawItem->rcItem, pGlobalData->CurrentDisplayDevice->CurrentSettings->dmBitsPerPel, pGlobalData);
+
 			break;
 		}
 		case WM_COMMAND:
@@ -784,6 +813,8 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 		case WM_DESTROY:
 		{
+            INT i;
+
 			PDISPLAY_DEVICE_ENTRY Current = pGlobalData->DisplayDeviceList;
 			while (Current != NULL)
 			{
@@ -801,8 +832,11 @@ SettingsPageProc(IN HWND hwndDlg, IN UINT uMsg, IN WPARAM wParam, IN LPARAM lPar
 
 			HeapFree(GetProcessHeap(), 0, pGlobalData);
 
-			if (pGlobalData->hBitmap)
-				DeleteObject(pGlobalData->hBitmap);
+            for(i = 0; i < NUM_SPECTRUM_BITMAPS; i++)
+            {
+                if(pGlobalData->hSpectrumBitmaps[i])
+                    DeleteObject(pGlobalData->hSpectrumBitmaps[i]);
+            }
 		}
 	}
 	return FALSE;

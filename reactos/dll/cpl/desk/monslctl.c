@@ -895,7 +895,7 @@ MonSelPaint(IN OUT PMONITORSELWND infoPtr,
 
     /* Paint the dragging monitor last */
     if (infoPtr->IsDraggingMonitor &&
-        (DWORD)infoPtr->DraggingMonitor >= 0)
+        infoPtr->DraggingMonitor >= 0)
     {
         MonSelRectToScreen(infoPtr,
                            &infoPtr->rcDragging,
