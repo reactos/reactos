@@ -1,0 +1,60 @@
+/*
+ * PROJECT:     ReactOS Help Viewer
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        applications/winhelp/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for ReactOS Help Viewer
+ * PROGRAMMERS: Rostislav Zabolotny
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+/* Menu */
+
+MAIN_MENU MENU
+{
+ POPUP "&Файл" {
+  MENUITEM "&Відкрити", MNID_FILE_OPEN
+  MENUITEM SEPARATOR
+  MENUITEM "&Друк", MNID_FILE_PRINT
+  MENUITEM "Налаштування &прінтера...", MNID_FILE_SETUP
+   MENUITEM SEPARATOR
+  MENUITEM "В&ихід", MNID_FILE_EXIT
+ }
+ POPUP "&Правка" {
+   MENUITEM "&Копіювати...", MNID_EDIT_COPYDLG
+   MENUITEM SEPARATOR
+   MENUITEM "&Опис...", MNID_EDIT_ANNOTATE
+ }
+ POPUP "&Закладка" {
+   MENUITEM "&Визначити...", MNID_BKMK_DEFINE
+ }
+ POPUP "&Допомога" {
+   MENUITEM "Допомога &по допомозі", MNID_HELP_HELPON
+   MENUITEM "&Над усіма вікнами", MNID_HELP_HELPTOP
+   MENUITEM SEPARATOR
+   MENUITEM "&Інформація...", MNID_HELP_ABOUT
+#ifdef WINELIB
+   MENUITEM "&Про WINE", MNID_HELP_WINE
+#endif
+ }
+}
+
+/* Strings */
+
+STRINGTABLE DISCARDABLE
+{
+STID_WINE_HELP, 	"Допомога WINE"
+STID_WHERROR, 		"ПОМИЛКА"
+STID_WARNING,  		"ПОПЕРЕДЖЕННЯ"
+STID_INFO,  		"Інформація"
+STID_NOT_IMPLEMENTED, 	"Не реалізовано"
+STID_HLPFILE_ERROR_s, 	"Помилка під час читання файлу допомоги `%s'"
+STID_CONTENTS, 		"&Зміст"
+STID_SEARCH, 		"&Пошук"
+STID_BACK, 		"&Назад"
+STID_HISTORY, 		"&Історія"
+STID_TOPICS,		"&Розділи"
+STID_ALL_FILES, 	"Всі файли (*.*)"
+STID_HELP_FILES_HLP, 	"Файли допомоги (*.hlp)"
+STID_FILE_NOT_FOUND_s	"Не можу знайти '%s'. Чи не бажаєте вказати розташування самостійно?"
+}

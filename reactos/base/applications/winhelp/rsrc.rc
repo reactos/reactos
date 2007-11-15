@@ -45,5 +45,6 @@
 #include "lang/sk-SK.rc"
 #include "lang/sv-SE.rc"
 #include "lang/tr-TR.rc"
+#include "lang/uk-UA.rc"
 //#include "lang/wa-WA.rc"
 #include "lang/zh-CN.rc"
