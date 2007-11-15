@@ -96,6 +96,19 @@ typedef struct tagRASPBDLGW
 	ULONG_PTR     reserved2;
 } RASPBDLGW, *LPRASPBDLGW;
 
+typedef struct tagRASMONITORDLG
+{
+	DWORD         dwSize;
+	HWND          hwndOwner;
+	DWORD         dwFlags;
+	DWORD         dwStartPage;
+	LONG          xDlg;
+	LONG          yDlg;
+	OUT DWORD     dwError;
+	ULONG_PTR     reserved;
+	ULONG_PTR     reserved2;
+} RASMONITORDLG, *LPRASMONITORDLG;
+
 typedef struct tagRASNOUSERA
 {
 	DWORD dwSize;
@@ -123,6 +136,10 @@ BOOL APIENTRY RasEntryDlgA(LPSTR,LPSTR,LPRASENTRYDLGA);
 BOOL APIENTRY RasEntryDlgW(LPWSTR,LPWSTR,LPRASENTRYDLGW);
 BOOL APIENTRY RasPhonebookDlgA(LPSTR,LPSTR,LPRASPBDLGA);
 BOOL APIENTRY RasPhonebookDlgW(LPWSTR,LPWSTR,LPRASPBDLGW);
+#if (WINVER <= 0x500)
+BOOL APIENTRY RasMonitorDlgA(LPSTR, LPRASMONITORDLG);
+BOOL APIENTRY RasMonitorDlgW(LPWSTR, LPRASMONITORDLG);
+#endif /*(WINVER <= 0x500)*/
 
 #ifdef UNICODE
 typedef RASENTRYDLGW	RASENTRYDLG, *LPRASENTRYDLG;
@@ -130,6 +147,9 @@ typedef RASPBDLGW	RASPBDLG, *LPRASPBDLG;
 typedef RASNOUSERW	RASNOUSER, *LPRASNOUSER;
 #define RasDialDlg	RasDialDlgW
 #define RasEntryDlg	RasEntryDlgW
+#if (WINVER <= 0x500)
+#define RasMonitorDlg RasMonitorDlgW
+#endif /*(WINVER <= 0x500)*/
 #define RasPhonebookDlg	RasPhonebookDlgW
 #else
 typedef RASENTRYDLGA	RASENTRYDLG, *LPRASENTRYDLG;
@@ -137,6 +157,9 @@ typedef RASPBDLGA	RASPBDLG, *LPRASPBDLG;
 typedef RASNOUSERA	RASNOUSER, *LPRASNOUSER;
 #define RasDialDlg	RasDialDlgA
 #define RasEntryDlg	RasEntryDlgA
+#if (WINVER <= 0x500)
+#define RasMonitorDlg RasMonitorDlgA
+#endif /*(WINVER <= 0x500)*/
 #define RasPhonebookDlg	RasPhonebookDlgA
 #endif /* UNICODE */
 

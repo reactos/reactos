@@ -35,6 +35,7 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define RAS_MaxFacilities     200
 #define RAS_MaxUserData       200
 #define RAS_MaxReplyMessage   1024
+#define RAS_MaxDnsSuffix      256
 #define RDEOPT_UsePrefixSuffix           0x00000001
 #define RDEOPT_PausedStates              0x00000002
 #define RDEOPT_IgnoreModemSpeaker        0x00000004
@@ -78,23 +79,30 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define RASFP_Ppp                       0x00000001
 #define RASFP_Slip                      0x00000002
 #define RASFP_Ras                       0x00000004
+#define RASDT_Direct                    TEXT("direct")
 #define RASDT_Modem                     TEXT("modem")
 #define RASDT_Isdn                      TEXT("isdn")
 #define RASDT_X25                       TEXT("x25")
 #define RASDT_Vpn                       TEXT("vpn")
 #define RASDT_Pad                       TEXT("pad")
 #define RASDT_Generic                   TEXT("GENERIC")
-#define RASDT_Serial        		TEXT("SERIAL")
+#define RASDT_Serial        		    TEXT("SERIAL")
 #define RASDT_FrameRelay                TEXT("FRAMERELAY")
 #define RASDT_Atm                       TEXT("ATM")
 #define RASDT_Sonet                     TEXT("SONET")
 #define RASDT_SW56                      TEXT("SW56")
 #define RASDT_Irda                      TEXT("IRDA")
 #define RASDT_Parallel                  TEXT("PARALLEL")
+#if (WINVER >= 0x501)
+#define RASDT_PPPoE                     TEXT("PPPoE")
+#endif
 #define RASET_Phone     1
 #define RASET_Vpn       2
 #define RASET_Direct    3
 #define RASET_Internet  4
+#if (WINVER >= 0x501)
+#define RASET_Broadband 5
+#endif
 #if (WINVER >= 0x401)
 #define RASEO_SecureLocalFiles  0x00010000
 #define RASCN_Connection        0x00000001
@@ -117,6 +125,13 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #endif  /* (WINVER >= 0x401) */
 #if (WINVER >= 0x500)
 #define RDEOPT_CustomDial   0x00001000
+#if (WINVER >= 0x501)
+#define RDEOPT_UseCustomScripting        0x00002000
+#define RASCM_DefaultCreds       0x00000008
+#define RASCM_PreSharedKey       0x00000010
+#define RASCM_ServerPreSharedKey 0x00000020
+#define RASCM_DDMPreSharedKey    0x00000040
+#endif /*(WINVER >= 0x501)*/
 #define RASLCPAP_PAP        0xC023
 #define RASLCPAP_SPAP       0xC027
 #define RASLCPAP_CHAP       0xC223
@@ -164,6 +179,18 @@ typedef unsigned long ULONG_PTR, *PULONG_PTR;
 #define ET_RequireMax   2
 #define ET_Optional     3
 #endif /* (WINVER >= 0x500) */
+#if (WINVER >= 0x501)
+#define RASEO2_SecureFileAndPrint       0x00000001
+#define RASEO2_SecureClientForMSNet     0x00000002
+#define RASEO2_DontNegotiateMultilink   0x00000004
+#define RASEO2_DontUseRasCredentials    0x00000008
+#define RASEO2_UsePreSharedKey          0x00000010
+#define RASEO2_Internet                 0x00000020
+#define RASEO2_DisableNbtOverIP         0x00000040
+#define RASEO2_UseGlobalDeviceSettings  0x00000080
+#define RASEO2_ReconnectIfDropped       0x00000100
+#define RASEO2_SharePhoneNumbers        0x00000200
+#endif /*(WINVER >= 0x501)*/
 
 #define RASCS_PAUSED 0x1000
 #define RASCS_DONE   0x2000
@@ -546,6 +573,16 @@ typedef struct tagRASENTRYW {
     WCHAR szCustomDialDll[MAX_PATH];
     DWORD dwVpnStrategy;
 #endif
+#if (WINVER >= 0x501)
+	DWORD		dwfOptions2;
+	DWORD       dwfOptions3;
+	WCHAR		szDnsSuffix[RAS_MaxDnsSuffix];
+	DWORD       dwTcpWindowSize;
+	WCHAR       szPrerequisitePbk[MAX_PATH];
+	WCHAR       szPrerequisiteEntry[RAS_MaxEntryName + 1];
+	DWORD       dwRedialCount;
+	DWORD       dwRedialPause;
+#endif /*(WINVER >= 0x501)*/
 } RASENTRYW, *LPRASENTRYW;
 
 typedef struct tagRASENTRYA {
@@ -593,6 +630,16 @@ typedef struct tagRASENTRYA {
     CHAR szCustomDialDll[MAX_PATH];
     DWORD dwVpnStrategy;
 #endif
+#if (WINVER >= 0x501)
+	DWORD		dwfOptions2;
+	DWORD       dwfOptions3;
+	CHAR		szDnsSuffix[RAS_MaxDnsSuffix];
+	DWORD       dwTcpWindowSize;
+	CHAR        szPrerequisitePbk[MAX_PATH];
+	CHAR        szPrerequisiteEntry[RAS_MaxEntryName + 1];
+	DWORD       dwRedialCount;
+	DWORD       dwRedialPause;
+#endif /*(WINVER >= 0x501)*/
 } RASENTRYA, *LPRASENTRYA;
 
 
@@ -719,7 +766,30 @@ typedef RASAUTODIALENTRYW RASAUTODIALENTRY, *LPRASAUTODIALENTRY;
 
 #if (WINVER >= 0x500)
 typedef RASEAPUSERIDENTITYW RASEAPUSERIDENTITY, *LPRASEAPUSERIDENTITY;
+typedef DWORD (WINAPI *PFNRASGETBUFFER) (PBYTE *ppBuffer, PDWORD pdwSize);
+typedef DWORD (WINAPI *PFNRASFREEBUFFER) (PBYTE pBufer);
+typedef DWORD (WINAPI *PFNRASSENDBUFFER) (HANDLE hPort, PBYTE pBuffer, DWORD dwSize);
+typedef DWORD (WINAPI *PFNRASRECEIVEBUFFER) (HANDLE hPort, PBYTE pBuffer, PDWORD pdwSize, DWORD dwTimeOut, HANDLE hEvent);
+typedef DWORD (WINAPI *PFNRASRETRIEVEBUFFER) (HANDLE hPort, PBYTE pBuffer, PDWORD pdwSize);
+typedef DWORD (WINAPI *RasCustomScriptExecuteFn) (HANDLE hPort, LPCWSTR lpszPhonebook, LPCWSTR lpszEntryName, PFNRASGETBUFFER pfnRasGetBuffer, PFNRASFREEBUFFER pfnRasFreeBuffer, PFNRASSENDBUFFER pfnRasSendBuffer, PFNRASRECEIVEBUFFER pfnRasReceiveBuffer, PFNRASRETRIEVEBUFFER pfnRasRetrieveBuffer, HWND hWnd, RASDIALPARAMS *pRasDialParams, PVOID pvReserved);
 #endif /* (WINVER >= 0x500) */
+
+#if (WINVER >= 0x501)
+typedef struct tagRASCOMMSETTINGS
+{
+    DWORD dwSize;
+    BYTE  bParity;
+    BYTE  bStop;
+    BYTE  bByteSize;
+    BYTE  bAlign;
+} RASCOMMSETTINGS;
+typedef DWORD (WINAPI *PFNRASSETCOMMSETTINGS) (HANDLE hPort,RASCOMMSETTINGS *pRasCommSettings,PVOID  pvReserved);
+typedef struct tagRASCUSTOMSCRIPTEXTENSIONS
+{
+    DWORD                 dwSize;                  
+    PFNRASSETCOMMSETTINGS pfnRasSetCommSettings;
+} RASCUSTOMSCRIPTEXTENSIONS;
+#endif /*(WINVER >= 0x501)*/
 
 #else  /* ! defined UNICODE */
 typedef RASCONNA RASCONN, *LPRASCONN;
@@ -865,6 +935,10 @@ DWORD APIENTRY RasGetEapUserIdentityA (LPCSTR, LPCSTR, DWORD, HWND, LPRASEAPUSER
 VOID APIENTRY RasFreeEapUserIdentityW (LPRASEAPUSERIDENTITYW);
 VOID APIENTRY RasFreeEapUserIdentityA (LPRASEAPUSERIDENTITYA);
 #endif  /* (WINVER >= 0x500) */
+#if (WINVER >=0x501)
+DWORD APIENTRY RasDeleteSubEntryA(LPCSTR pszPhonebook, LPCSTR pszEntry, DWORD dwSubentryId);
+DWORD APIENTRY  RasDeleteSubEntryW(LPCWSTR pszPhonebook, LPCWSTR pszEntry, DWORD dwSubEntryId);
+#endif (WINVER >=0x501)
 
 
 /* UNICODE defines for functions */
@@ -911,6 +985,9 @@ VOID APIENTRY RasFreeEapUserIdentityA (LPRASEAPUSERIDENTITYA);
 #define RasGetEapUserIdentity RasGetEapUserIdentityW
 #define RasFreeEapUserIdentity RasFreeEapUserIdentityW
 #endif /* (WINVER >= 0x500) */
+#if (WINVER >= 0x501)
+#define RasDeleteSubEntry RasDeleteSubEntryW
+#endif /*(WINVER >= 0x501)*/
 
 #else  /* ! defined UNICODE */
 #define RasDial RasDialA
@@ -957,6 +1034,9 @@ VOID APIENTRY RasFreeEapUserIdentityA (LPRASEAPUSERIDENTITYA);
 #define RasGetEapUserIdentity RasGetEapUserIdentityA
 #define RasFreeEapUserIdentity RasFreeEapUserIdentityA
 #endif /* (WINVER >= 0x500) */
+#if (WINVER >= 0x501)
+#define RasDeleteSubEntry RasDeleteSubEntryA
+#endif /*(WINVER >= 0x501)*/
 #endif /* ! UNICODE */
 
 #ifdef __cplusplus
