@@ -333,19 +333,6 @@ EnableInterrupts(
 
 	i8042Flush(DeviceExtension);
 
-	/* First, reset the mouse (if any) to start the detection */
-	if (DeviceExtension->Flags & MOUSE_PRESENT)
-	{
-		KIRQL Irql;
-
-		Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
-
-		i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_WRITE_MOUSE);
-		i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET);
-
-		KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
-	}
-
 	/* Select the devices we have */
 	if (DeviceExtension->Flags & KEYBOARD_PRESENT)
 	{
@@ -359,6 +346,19 @@ EnableInterrupts(
 	}
 	if (!i8042ChangeMode(DeviceExtension, FlagsToDisable, FlagsToEnable))
 		return STATUS_UNSUCCESSFUL;
+
+	/* Reset the mouse (if any) to start the detection */
+	if (DeviceExtension->Flags & MOUSE_PRESENT)
+	{
+		KIRQL Irql;
+
+		Irql = KeAcquireInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt);
+
+		i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_WRITE_MOUSE);
+		i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET);
+
+		KeReleaseInterruptSpinLock(DeviceExtension->HighestDIRQLInterrupt, Irql);
+	}
 
 	return STATUS_SUCCESS;
 }
