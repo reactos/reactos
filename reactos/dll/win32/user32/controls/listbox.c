@@ -1696,7 +1696,7 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index,
                                      LPCWSTR str )
 {
     LPWSTR new_str = NULL;
-    DWORD data = 0;
+    ULONG_PTR data = 0;
     LRESULT ret;
 
     if (HAS_STRINGS(descr))
@@ -1710,7 +1710,7 @@ static LRESULT LISTBOX_InsertString( LB_DESCR *descr, INT index,
         }
         strcpyW(new_str, str);
     }
-    else data = (DWORD)str;
+    else data = (ULONG_PTR)str;
 
     if (index == -1) index = descr->nb_items;
     if ((ret = LISTBOX_InsertItem( descr, index, new_str, data )) != 0)
