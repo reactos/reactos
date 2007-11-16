@@ -152,7 +152,6 @@ co_IntSetForegroundAndFocusWindow(PWINDOW_OBJECT Window, PWINDOW_OBJECT FocusWin
    ASSERT_REFS_CO(Window);
 
    DPRINT("IntSetForegroundAndFocusWindow(%x, %x, %s)\n", hWnd, hWndFocus, MouseActivate ? "TRUE" : "FALSE");
-   DPRINT("(%wZ)\n", &Window->WindowName);
 
    Wnd = Window->Wnd;
 
@@ -425,8 +424,6 @@ NtUserSetActiveWindow(HWND hWnd)
       {
          RETURN( 0);
       }
-
-      DPRINT("(%wZ)\n", &Window->WindowName);
 
       ThreadQueue = (PUSER_MESSAGE_QUEUE)PsGetCurrentThreadWin32Thread()->MessageQueue;
 

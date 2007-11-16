@@ -1528,12 +1528,12 @@ UserDrawSysMenuButton(
 
    /* Get the icon to draw. We don't care about WM_GETICON here. */
 
-   hIcon = pWnd->Class->hIconSm;
+   hIcon = pWnd->Wnd->Class->hIconSm;
 
    if(!hIcon)
    {
       DPRINT("Wnd class has no small icon.\n");
-      hIcon = pWnd->Class->hIcon;
+      hIcon = pWnd->Wnd->Class->hIcon;
    }
 
    if(!hIcon)
@@ -1864,7 +1864,7 @@ BOOL UserDrawCaption(
       if (str)
          UserDrawCaptionText(hMemDc, str, &r, uFlags);
 	  else if (pWnd != NULL)
-	     UserDrawCaptionText(hMemDc, &pWnd->WindowName, &r, uFlags);
+	     UserDrawCaptionText(hMemDc, &pWnd->Wnd->WindowName, &r, uFlags);
    }
 
    if(!NtGdiBitBlt(hDc, lpRc->left, lpRc->top,

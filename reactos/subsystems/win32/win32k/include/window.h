@@ -45,10 +45,6 @@ typedef struct _WINDOW_OBJECT
   };
   /* Indicates whether the window is derived from a system class */
   BOOL IsSystem;
-  /* Pointer to the window class. */
-  PWINDOWCLASS Class;
-  /* Window name. */
-  UNICODE_STRING WindowName;
   /* Context help id */
   DWORD ContextHelpId;
   /* system menu handle. */

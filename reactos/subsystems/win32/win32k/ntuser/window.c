@@ -296,6 +296,7 @@ static VOID
 UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
 {
     PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    PWINDOW Wnd = WindowObject->Wnd;
 
     if (ClientInfo->pvWND == DesktopHeapAddressToUser(WindowObject->Wnd))
     {
@@ -303,7 +304,16 @@ UserFreeWindowInfo(PW32THREADINFO ti, PWINDOW_OBJECT WindowObject)
         ClientInfo->pvWND = NULL;
     }
 
-    DesktopHeapFree(ti->Desktop, WindowObject->Wnd);
+   if (Wnd->WindowName.Buffer != NULL)
+   {
+       Wnd->WindowName.Length = 0;
+       Wnd->WindowName.MaximumLength = 0;
+       DesktopHeapFree(Wnd->ti->Desktop,
+                       Wnd->WindowName.Buffer);
+       Wnd->WindowName.Buffer = NULL;
+   }
+
+    DesktopHeapFree(ti->Desktop, Wnd);
     WindowObject->Wnd = NULL;
 }
 
@@ -453,17 +463,15 @@ static LRESULT co_UserFreeWindow(PWINDOW_OBJECT Window,
    IntDestroyScrollBars(Window);
 
    /* dereference the class */
-   IntDereferenceClass(Window->Class,
+   IntDereferenceClass(Wnd->Class,
                        Window->ti->Desktop,
                        Window->ti->kpi);
-   Window->Class = NULL;
+   Wnd->Class = NULL;
 
    if(Window->WindowRegion)
    {
       NtGdiDeleteObject(Window->WindowRegion);
    }
-
-   RtlFreeUnicodeString(&Window->WindowName);
 
    ASSERT(Window->Wnd != NULL);
    UserFreeWindowInfo(Window->ti, Window);
@@ -507,6 +515,8 @@ static WNDPROC
 IntGetWindowProc(IN PWINDOW_OBJECT Window,
                  IN BOOL Ansi)
 {
+    PWINDOW Wnd = Window->Wnd;
+
     ASSERT(UserIsEnteredExclusive() == TRUE);
 
     if (Window->IsSystem)
@@ -529,22 +539,22 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
             {
                 PCALLPROC NewCallProc, CallProc;
 
-                NewCallProc = UserFindCallProc(Window->Class,
+                NewCallProc = UserFindCallProc(Wnd->Class,
                                                Window->WndProc,
                                                Window->Unicode);
                 if (NewCallProc == NULL)
                 {
-                    NewCallProc = CreateCallProc(Window->ti->Desktop,
+                    NewCallProc = CreateCallProc(Wnd->ti->Desktop,
                                                  Window->WndProc,
                                                  Window->Unicode,
-                                                 Window->ti->kpi);
+                                                 Wnd->ti->kpi);
                     if (NewCallProc == NULL)
                     {
                         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                         return NULL;
                     }
 
-                    UserAddCallProcToClass(Window->Class,
+                    UserAddCallProcToClass(Wnd->Class,
                                            NewCallProc);
                 }
 
@@ -569,7 +579,7 @@ IntGetWindowInfo(PWINDOW_OBJECT Window, PWINDOWINFO pwi)
    pwi->dwExStyle = Wnd->ExStyle;
    pwi->dwWindowStatus = (UserGetForegroundWindow() == Window->hSelf); /* WS_ACTIVECAPTION */
    IntGetWindowBorderMeasures(Window, &pwi->cxWindowBorders, &pwi->cyWindowBorders);
-   pwi->atomWindowType = (Window->Class ? Window->Class->Atom : 0);
+   pwi->atomWindowType = (Wnd->Class ? Wnd->Class->Atom : 0);
    pwi->wCreatorVersion = 0x400; /* FIXME - return a real version number */
    return TRUE;
 }
@@ -1596,7 +1606,7 @@ AllocErr:
     * Fill out the structure describing it.
     */
    Window->ti = ti;
-   Window->Class = Class;
+   Wnd->Class = Class;
    Class = NULL;
 
    Window->SystemMenu = (HMENU)0;
@@ -1606,7 +1616,7 @@ AllocErr:
    Window->hSelf = hWnd;
 
    if (!hMenu)
-       hMenu = Window->Class->hMenu;
+       hMenu = Wnd->Class->hMenu;
 
    if (0 != (dwStyle & WS_CHILD))
    {
@@ -1634,18 +1644,18 @@ AllocErr:
 
    Wnd->UserData = 0;
 
-   Window->IsSystem = Window->Class->System;
-   if (Window->Class->System)
+   Window->IsSystem = Wnd->Class->System;
+   if (Wnd->Class->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
        Window->Unicode = TRUE;
-       Window->WndProc = Window->Class->WndProc;
-       Window->WndProcExtra = Window->Class->WndProcExtra;
+       Window->WndProc = Wnd->Class->WndProc;
+       Window->WndProcExtra = Wnd->Class->WndProcExtra;
    }
    else
    {
-       Window->Unicode = Window->Class->Unicode;
-       Window->WndProc = Window->Class->WndProc;
+       Window->Unicode = Wnd->Class->Unicode;
+       Window->WndProc = Wnd->Class->WndProc;
        Window->CallProc = NULL;
    }
 
@@ -1654,28 +1664,35 @@ AllocErr:
    Window->LastChild = NULL;
    Window->PrevSibling = NULL;
    Window->NextSibling = NULL;
-   Wnd->ExtraDataSize = Window->Class->WndExtra;
+   Wnd->ExtraDataSize = Wnd->Class->WndExtra;
 
    InitializeListHead(&Window->PropListHead);
    InitializeListHead(&Window->WndObjListHead);
 
-   if (NULL != WindowName->Buffer)
+   if (NULL != WindowName->Buffer && WindowName->Length > 0)
    {
-      Window->WindowName.MaximumLength = WindowName->MaximumLength;
-      Window->WindowName.Length = WindowName->Length;
-      Window->WindowName.Buffer = ExAllocatePoolWithTag(PagedPool, WindowName->MaximumLength,
-                                  TAG_STRING);
-      if (NULL == Window->WindowName.Buffer)
+      Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+                                                WindowName->Length + sizeof(UNICODE_NULL));
+      if (Wnd->WindowName.Buffer == NULL)
       {
-         DPRINT1("Failed to allocate mem for window name\n");
-         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
-         RETURN( NULL);
+          SetLastNtError(STATUS_INSUFFICIENT_RESOURCES);
+          RETURN( (HWND)0);
       }
-      RtlCopyMemory(Window->WindowName.Buffer, WindowName->Buffer, WindowName->MaximumLength);
-   }
-   else
-   {
-      RtlInitUnicodeString(&Window->WindowName, NULL);
+
+      Wnd->WindowName.Buffer[WindowName->Length / sizeof(WCHAR)] = L'\0';
+      _SEH_TRY
+      {
+          RtlCopyMemory(Wnd->WindowName.Buffer,
+                        WindowName->Buffer,
+                        WindowName->Length);
+          Wnd->WindowName.Length = WindowName->Length;
+      }
+      _SEH_HANDLE
+      {
+          WindowName->Length = 0;
+          Wnd->WindowName.Buffer[0] = L'\0';
+      }
+      _SEH_END;
    }
 
    /*
@@ -2459,8 +2476,8 @@ IntFindWindow(PWINDOW_OBJECT Parent,
          /* Do not send WM_GETTEXT messages in the kernel mode version!
             The user mode version however calls GetWindowText() which will
             send WM_GETTEXT messages to windows belonging to its processes */
-         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->WindowName), TRUE)) &&
-               (!ClassAtom || Child->Class->Atom == ClassAtom))
+         if((!CheckWindowName || !RtlCompareUnicodeString(WindowName, &(Child->Wnd->WindowName), TRUE)) &&
+               (!ClassAtom || Child->Wnd->Class->Atom == ClassAtom))
          {
             Ret = Child->hSelf;
             break;
@@ -2633,9 +2650,9 @@ NtUserFindWindowEx(HWND hwndParent,
                    The user mode version however calls GetWindowText() which will
                    send WM_GETTEXT messages to windows belonging to its processes */
                 WindowMatches = !CheckWindowName || !RtlCompareUnicodeString(
-                                   &WindowName, &TopLevelWindow->WindowName, TRUE);
+                                   &WindowName, &TopLevelWindow->Wnd->WindowName, TRUE);
                 ClassMatches = (ClassAtom == (RTL_ATOM)0) ||
-                               ClassAtom == TopLevelWindow->Class->Atom;
+                               ClassAtom == TopLevelWindow->Wnd->Class->Atom;
 
                 if (WindowMatches && ClassMatches)
                 {
@@ -3574,6 +3591,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
 {
     WNDPROC Ret;
     PCALLPROC CallProc;
+    PWINDOW Wnd = Window->Wnd;
 
     /* resolve any callproc handle if possible */
     if (IsCallProcHandle(NewWndProc))
@@ -3601,7 +3619,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         }
         else
         {
-            CallProc = UserFindCallProc(Window->Class,
+            CallProc = UserFindCallProc(Wnd->Class,
                                         Window->WndProc,
                                         Window->Unicode);
             if (CallProc == NULL)
@@ -3609,14 +3627,14 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                 CallProc = CreateCallProc(NULL,
                                           Window->WndProc,
                                           Window->Unicode,
-                                          Window->ti->kpi);
+                                          Wnd->ti->kpi);
                 if (CallProc == NULL)
                 {
                     SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
                     return NULL;
                 }
 
-                UserAddCallProcToClass(Window->Class,
+                UserAddCallProcToClass(Wnd->Class,
                                        CallProc);
             }
 
@@ -3626,17 +3644,17 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         }
     }
 
-    if (Window->Class->System)
+    if (Wnd->Class->System)
     {
         /* check if the new procedure matches with the one in the
            window class. If so, we need to restore both procedures! */
-        Window->IsSystem = (NewWndProc == Window->Class->WndProc ||
-                            NewWndProc == Window->Class->WndProcExtra);
+        Window->IsSystem = (NewWndProc == Wnd->Class->WndProc ||
+                            NewWndProc == Wnd->Class->WndProcExtra);
 
         if (Window->IsSystem)
         {
-            Window->WndProc = Window->Class->WndProc;
-            Window->WndProcExtra = Window->Class->WndProcExtra;
+            Window->WndProc = Wnd->Class->WndProc;
+            Window->WndProcExtra = Wnd->Class->WndProcExtra;
             Window->Unicode = !Ansi;
             return Ret;
         }
@@ -4622,36 +4640,97 @@ BOOL STDCALL
 NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
 {
    PWINDOW_OBJECT Window;
+   PWINDOW Wnd;
    UNICODE_STRING SafeText;
-   NTSTATUS Status;
-   DECLARE_RETURN(INT);
+   BOOL Ret = TRUE;
 
    DPRINT("Enter NtUserDefSetText\n");
+
+   RtlInitUnicodeString(&SafeText, NULL);
+   if (WindowText != NULL)
+   {
+       _SEH_TRY
+       {
+           SafeText = ProbeForReadUnicodeString(WindowText);
+       }
+       _SEH_HANDLE
+       {
+           Ret = FALSE;
+           SetLastNtError(_SEH_GetExceptionCode());
+       }
+       _SEH_END;
+
+       if (!Ret)
+           return FALSE;
+   }
+
    UserEnterExclusive();
 
    if(!(Window = UserGetWindowObject(hWnd)))
    {
-      RETURN( FALSE);
+      UserLeave();
+      return FALSE;
    }
+   Wnd = Window->Wnd;
 
-   if(WindowText)
+   if(SafeText.Length != 0)
    {
-      Status = IntSafeCopyUnicodeString(&SafeText, WindowText);
-      if(!NT_SUCCESS(Status))
+      _SEH_TRY
       {
-         SetLastNtError(Status);
-         RETURN( FALSE);
+          if (Wnd->WindowName.MaximumLength > 0 &&
+              SafeText.Length <= Wnd->WindowName.MaximumLength - sizeof(UNICODE_NULL))
+          {
+              ASSERT(Wnd->WindowName.Buffer != NULL);
+
+              Wnd->WindowName.Length = SafeText.Length;
+              Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+              RtlCopyMemory(Wnd->WindowName.Buffer,
+                            SafeText.Buffer,
+                            SafeText.Length);
+          }
+          else
+          {
+              PWCHAR buf;
+              Wnd->WindowName.MaximumLength = Wnd->WindowName.Length = 0;
+              buf = Wnd->WindowName.Buffer;
+              Wnd->WindowName.Buffer = NULL;
+              if (buf != NULL)
+              {
+                  DesktopHeapFree(Wnd->ti->Desktop,
+                                  buf);
+              }
+
+              Wnd->WindowName.Buffer = DesktopHeapAlloc(Wnd->ti->Desktop,
+                                                        SafeText.Length + sizeof(UNICODE_NULL));
+              if (Wnd->WindowName.Buffer != NULL)
+              {
+                  Wnd->WindowName.Buffer[SafeText.Length / sizeof(WCHAR)] = L'\0';
+                  RtlCopyMemory(Wnd->WindowName.Buffer,
+                                SafeText.Buffer,
+                                SafeText.Length);
+                  Wnd->WindowName.MaximumLength = SafeText.Length + sizeof(UNICODE_NULL);
+                  Wnd->WindowName.Length = SafeText.Length;
+              }
+              else
+              {
+                  SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+                  Ret = FALSE;
+              }
+          }
       }
+      _SEH_HANDLE
+      {
+           SetLastNtError(_SEH_GetExceptionCode());
+           Ret = FALSE;
+      }
+      _SEH_END;
    }
    else
    {
-      RtlInitUnicodeString(&SafeText, NULL);
+      Wnd->WindowName.Length = 0;
+      if (Wnd->WindowName.Buffer != NULL)
+          Wnd->WindowName.Buffer[0] = L'\0';
    }
-
-   /* FIXME - do this thread-safe! otherwise one could crash here! */
-   RtlFreeUnicodeString(&Window->WindowName);
-
-   Window->WindowName = SafeText;
 
    /* Send shell notifications */
    if (!IntGetOwner(Window) && !IntGetParent(Window))
@@ -4659,12 +4738,11 @@ NtUserDefSetText(HWND hWnd, PUNICODE_STRING WindowText)
       co_IntShellHookNotify(HSHELL_REDRAW, (LPARAM) hWnd);
    }
 
-   RETURN( TRUE);
+   Ret = TRUE;
 
-CLEANUP:
-   DPRINT("Leave NtUserDefSetText, ret=%i\n",_ret_);
+   DPRINT("Leave NtUserDefSetText, ret=%i\n", Ret);
    UserLeave();
-   END_CLEANUP;
+   return Ret;
 }
 
 /*
@@ -4678,6 +4756,7 @@ INT STDCALL
 NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
 {
    PWINDOW_OBJECT Window;
+   PWINDOW Wnd;
    NTSTATUS Status;
    INT Result;
    DECLARE_RETURN(INT);
@@ -4695,9 +4774,9 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
    {
       RETURN( 0);
    }
+   Wnd = Window->Wnd;
 
-   /* FIXME - do this thread-safe! otherwise one could crash here! */
-   Result = Window->WindowName.Length / sizeof(WCHAR);
+   Result = Wnd->WindowName.Length / sizeof(WCHAR);
    if(lpString)
    {
       const WCHAR Terminator = L'\0';
@@ -4707,7 +4786,7 @@ NtUserInternalGetWindowText(HWND hWnd, LPWSTR lpString, INT nMaxCount)
       Copy = min(nMaxCount - 1, Result);
       if(Copy > 0)
       {
-         Status = MmCopyToCaller(Buffer, Window->WindowName.Buffer, Copy * sizeof(WCHAR));
+         Status = MmCopyToCaller(Buffer, Wnd->WindowName.Buffer, Copy * sizeof(WCHAR));
          if(!NT_SUCCESS(Status))
          {
             SetLastNtError(Status);

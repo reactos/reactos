@@ -1602,6 +1602,7 @@ DefWindowProcA(HWND hWnd,
 	       LPARAM lParam)
 {
     LRESULT Result = 0;
+    PWINDOW Wnd;
 
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
@@ -1630,33 +1631,57 @@ DefWindowProcA(HWND hWnd,
 
         case WM_GETTEXTLENGTH:
         {
-            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            PWSTR buf;
+            ULONG len;
+
+            Wnd = ValidateHwnd(hWnd);
+            if (Wnd != NULL && Wnd->WindowName.Length != 0)
+            {
+                buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                if (buf != NULL &&
+                    NT_SUCCESS(RtlUnicodeToMultiByteSize(&len,
+                                                         buf,
+                                                         Wnd->WindowName.Length)))
+                {
+                    Result = (LRESULT)len;
+                }
+            }
             break;
         }
 
         case WM_GETTEXT:
         {
-            LPWSTR Buffer;
-            LPSTR AnsiBuffer = (LPSTR)lParam;
-            INT Length;
+            PWSTR buf = NULL;
+            PSTR outbuf = (PSTR)lParam;
+            UINT copy;
 
-            Buffer = HeapAlloc(GetProcessHeap(), 0, wParam * sizeof(WCHAR));
-            if (!Buffer)
+            Wnd = ValidateHwnd(hWnd);
+            if (Wnd != NULL && wParam != 0)
             {
-                Result = 0;
-                break;
-            }
-            Length = NtUserInternalGetWindowText(hWnd, Buffer, wParam);
-            if (Length > 0 && wParam > 0 &&
-                !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
-                AnsiBuffer, wParam, NULL, NULL))
-            {
-                AnsiBuffer[0] = '\0';
-            }
+                if (Wnd->WindowName.Buffer != NULL)
+                    buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                else
+                    outbuf[0] = L'\0';
 
-            HeapFree(GetProcessHeap(), 0, Buffer);
-
-            Result = (LRESULT)Length;
+                if (buf != NULL)
+                {
+                    if (Wnd->WindowName.Length != 0)
+                    {
+                        copy = min(Wnd->WindowName.Length / sizeof(WCHAR), wParam - 1);
+                        Result = WideCharToMultiByte(CP_ACP,
+                                                     0,
+                                                     buf,
+                                                     copy,
+                                                     outbuf,
+                                                     wParam,
+                                                     NULL,
+                                                     NULL);
+                        outbuf[Result] = '\0';
+                    }
+                    else
+                        outbuf[0] = '\0';
+                }
+            }
             break;
         }
 
@@ -1711,6 +1736,7 @@ DefWindowProcW(HWND hWnd,
 	       LPARAM lParam)
 {
     LRESULT Result = 0;
+    PWINDOW Wnd;
 
     SPY_EnterMessage(SPY_DEFWNDPROC, hWnd, Msg, wParam, lParam);
     switch (Msg)
@@ -1732,13 +1758,51 @@ DefWindowProcW(HWND hWnd,
 
         case WM_GETTEXTLENGTH:
         {
-            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
+            PWSTR buf;
+            ULONG len;
+
+            Wnd = ValidateHwnd(hWnd);
+            if (Wnd != NULL && Wnd->WindowName.Length != 0)
+            {
+                buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                if (buf != NULL &&
+                    NT_SUCCESS(RtlUnicodeToMultiByteSize(&len,
+                                                         buf,
+                                                         Wnd->WindowName.Length)))
+                {
+                    Result = (LRESULT)len;
+                }
+            }
             break;
         }
 
         case WM_GETTEXT:
         {
-            Result = (LRESULT)NtUserInternalGetWindowText(hWnd, (PWSTR)lParam, wParam);
+            PWSTR buf = NULL;
+            PWSTR outbuf = (PWSTR)lParam;
+
+            Wnd = ValidateHwnd(hWnd);
+            if (Wnd != NULL && wParam != 0)
+            {
+                if (Wnd->WindowName.Buffer != NULL)
+                    buf = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                else
+                    outbuf[0] = L'\0';
+
+                if (buf != NULL)
+                {
+                    if (Wnd->WindowName.Length != 0)
+                    {
+                        Result = min(Wnd->WindowName.Length / sizeof(WCHAR), wParam - 1);
+                        RtlCopyMemory(outbuf,
+                                      buf,
+                                      Result * sizeof(WCHAR));
+                        outbuf[Result] = L'\0';
+                    }
+                    else
+                        outbuf[0] = L'\0';
+                }
+            }
             break;
         }
 

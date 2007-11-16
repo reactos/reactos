@@ -1035,31 +1035,50 @@ GetWindowRect(HWND hWnd,
 int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
-   DWORD ProcessId;
+   PWINDOW Wnd;
+   PCWSTR Buffer;
 
    if (lpString == NULL)
       return 0;
 
-   if (!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-      return 0;
+   Wnd = ValidateHwnd(hWnd);
+   if (!Wnd)
+       return 0;
 
-   if (ProcessId != GetCurrentProcessId())
+   if (Wnd->pi != g_kpi)
    {
-      /* do not send WM_GETTEXT messages to other processes */
-      LPWSTR Buffer;
       INT Length;
 
-      Buffer = HeapAlloc(GetProcessHeap(), 0, nMaxCount * sizeof(WCHAR));
-      if (!Buffer)
-         return FALSE;
-      Length = NtUserInternalGetWindowText(hWnd, Buffer, nMaxCount);
-      if (Length > 0 && nMaxCount > 0 &&
-          !WideCharToMultiByte(CP_ACP, 0, Buffer, -1,
-          lpString, nMaxCount, NULL, NULL))
+      if (nMaxCount <= 0)
+          return 0;
+
+      /* do not send WM_GETTEXT messages to other processes */
+      Length = Wnd->WindowName.Length / sizeof(WCHAR);
+      if (Length != 0)
       {
-         lpString[0] = '\0';
+          Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+          if (Buffer != NULL)
+          {
+              if (!WideCharToMultiByte(CP_ACP,
+                                       0,
+                                       Buffer,
+                                       Length + 1,
+                                       lpString,
+                                       nMaxCount,
+                                       NULL,
+                                       NULL))
+              {
+                  lpString[nMaxCount - 1] = '\0';
+              }
+          }
+          else
+          {
+              Length = 0;
+              lpString[0] = '\0';
+          }
       }
-      HeapFree(GetProcessHeap(), 0, Buffer);
+      else
+          lpString[0] = '\0';
 
       return (LRESULT)Length;
    }
@@ -1074,19 +1093,7 @@ GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 int STDCALL
 GetWindowTextLengthA(HWND hWnd)
 {
-  DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-  {
-    return 0;
-  }
-
-  if(ProcessId == GetCurrentProcessId())
-  {
     return(SendMessageA(hWnd, WM_GETTEXTLENGTH, 0, 0));
-  }
-
-  /* do not send WM_GETTEXT messages to other processes */
-  return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
 
 
@@ -1096,19 +1103,7 @@ GetWindowTextLengthA(HWND hWnd)
 int STDCALL
 GetWindowTextLengthW(HWND hWnd)
 {
-  DWORD ProcessId;
-  if(!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-  {
-    return 0;
-  }
-
-  if(ProcessId == GetCurrentProcessId())
-  {
     return(SendMessageW(hWnd, WM_GETTEXTLENGTH, 0, 0));
-  }
-
-  /* do not send WM_GETTEXT messages to other processes */
-  return (LRESULT)NtUserInternalGetWindowText(hWnd, NULL, 0);
 }
 
 
@@ -1118,18 +1113,47 @@ GetWindowTextLengthW(HWND hWnd)
 int STDCALL
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-   DWORD ProcessId;
+   PWINDOW Wnd;
+   PCWSTR Buffer;
 
    if (lpString == NULL)
       return 0;
 
-   if (!NtUserGetWindowThreadProcessId(hWnd, &ProcessId))
-      return 0;
+   Wnd = ValidateHwnd(hWnd);
+   if (!Wnd)
+       return 0;
 
-   if (ProcessId == GetCurrentProcessId())
-      return SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+   if (Wnd->pi != g_kpi)
+   {
+      INT Length;
 
-   return NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
+      if (nMaxCount <= 0)
+          return 0;
+
+      /* do not send WM_GETTEXT messages to other processes */
+      Length = Wnd->WindowName.Length / sizeof(WCHAR);
+      if (Length != 0)
+      {
+          Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+          if (Buffer != NULL)
+          {
+              RtlCopyMemory(lpString,
+                            Buffer,
+                            (Length + 1) * sizeof(WCHAR));
+          }
+          else
+          {
+              Length = 0;
+              lpString[0] = L'\0';
+          }
+      }
+      else
+          lpString[0] = L'\0';
+
+      return (LRESULT)Length;
+   }
+
+   return SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
 }
 
 DWORD STDCALL
@@ -1643,7 +1667,10 @@ int
 STDCALL
 InternalGetWindowText(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-  return NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
+    INT Ret = NtUserInternalGetWindowText(hWnd, lpString, nMaxCount);
+    if (Ret == 0)
+        *lpString = L'\0';
+    return Ret;
 }
 
 /*

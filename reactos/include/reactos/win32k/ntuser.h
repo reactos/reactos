@@ -77,6 +77,10 @@ typedef struct _WINDOW
     /* Window menu handle or window id */
     UINT IDMenu;
     LONG UserData;
+    /* Pointer to the window class. */
+    PWINDOWCLASS Class;
+    /* Window name. */
+    UNICODE_STRING WindowName;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO
