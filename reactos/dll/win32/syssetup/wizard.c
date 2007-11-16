@@ -1116,7 +1116,8 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
   LPTSTR Buffer;
   LPTSTR Ptr;
   LPTSTR End;
-  BOOL bFound;
+  BOOL bFound = FALSE;
+  int iLanguageID;
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
 		   _T("SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"),
@@ -1137,6 +1138,7 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
       return FALSE;
     }
 
+  iLanguageID = _ttoi(szLanguageIdString);
   RegCloseKey(hKey);
 
   if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
@@ -1183,22 +1185,21 @@ GetTimeZoneListIndex(LPDWORD lpIndex)
   while (*Ptr != 0)
     {
       Length = _tcslen(Ptr);
-      if (_tcsicmp(Ptr, szLanguageIdString) == 0)
+      if (_ttoi(Ptr) == iLanguageID)
         bFound = TRUE;
 
       Ptr = Ptr + Length + 1;
       if (*Ptr == 0)
         break;
 
-      Length = _tcslen(Ptr);
-
       if (bFound)
         {
           *lpIndex = _tcstoul(Ptr, &End, 10);
           HeapFree(GetProcessHeap(), 0, Buffer);
-          return FALSE;
+          return TRUE;
         }
 
+      Length = _tcslen(Ptr);
       Ptr = Ptr + Length + 1;
     }
 
