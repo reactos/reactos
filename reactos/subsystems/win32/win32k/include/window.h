@@ -78,7 +78,6 @@ typedef struct _WINDOW_OBJECT
   ULONG PropListItems;
   /* Scrollbar info */
   PWINDOW_SCROLLINFO Scroll;
-  BOOL Unicode;
   WNDPROC WndProc;
   PETHREAD OwnerThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/

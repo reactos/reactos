@@ -115,6 +115,8 @@ typedef struct _WINDOW
     PWINDOWCLASS Class;
     /* Window name. */
     UNICODE_STRING WindowName;
+
+    UINT Unicode : 1;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO

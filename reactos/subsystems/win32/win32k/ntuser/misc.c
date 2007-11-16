@@ -283,7 +283,7 @@ NtUserCallOneParam(
             {
                RETURN( FALSE);
             }
-            Result = Window->Unicode;
+            Result = Window->Wnd->Unicode;
             RETURN( Result);
          }
 

@@ -1201,8 +1201,14 @@ IsIconic(HWND hWnd)
 BOOL STDCALL
 IsWindow(HWND hWnd)
 {
-  DWORD WndProc = NtUserGetWindowLong(hWnd, GWL_WNDPROC, FALSE);
-  return (0 != WndProc || ERROR_INVALID_WINDOW_HANDLE != GetLastError());
+    PWINDOW Wnd = ValidateHwndNoErr(hWnd);
+    if (Wnd != NULL)
+    {
+        /* FIXME: If window is being destroyed return FALSE! */
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 
@@ -1212,7 +1218,12 @@ IsWindow(HWND hWnd)
 BOOL STDCALL
 IsWindowUnicode(HWND hWnd)
 {
-	return NtUserIsWindowUnicode(hWnd);
+    PWINDOW Wnd = ValidateHwnd(hWnd);
+
+    if (Wnd != NULL)
+        return Wnd->Unicode;
+
+    return FALSE;
 }
 
 

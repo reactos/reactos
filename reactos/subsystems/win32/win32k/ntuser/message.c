@@ -385,7 +385,7 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
             }
             else
             {
-                MsgInfo.Ansi = !Window->Unicode;
+                MsgInfo.Ansi = !Window->Wnd->Unicode;
                 MsgInfo.Proc = Window->WndProc;
             }
          }
@@ -1390,7 +1390,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
           RETURN( FALSE);
       }
 
-      Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProc, !Window->Unicode, hWnd, Msg, wParam,
+      Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
                lParamPacked,lParamBufferSize);
 
       if(uResult)
@@ -1566,7 +1566,7 @@ co_IntDoSendMessage(HWND hWnd,
                                 sizeof(BOOL));
       if (! NT_SUCCESS(Status))
       {
-         Info.Ansi = ! Window->Unicode;
+         Info.Ansi = ! Window->Wnd->Unicode;
       }
 
       if (Window->IsSystem)
@@ -1575,7 +1575,7 @@ co_IntDoSendMessage(HWND hWnd,
       }
       else
       {
-          Info.Ansi = !Window->Unicode;
+          Info.Ansi = !Window->Wnd->Unicode;
           Info.Proc = Window->WndProc;
       }
    }

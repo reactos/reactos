@@ -422,6 +422,35 @@ ValidateHandle(HANDLE handle, UINT uType)
 }
 
 //
+// Validate Handle and return the pointer to the object.
+//
+PVOID
+FASTCALL
+ValidateHandleNoErr(HANDLE handle, UINT uType)
+{
+  PVOID ret;
+  PUSER_HANDLE_ENTRY pEntry;
+
+  ASSERT(uType <= VALIDATE_TYPE_MONITOR);
+
+  pEntry = GetUser32Handle(handle);
+
+  if (pEntry && uType == 0)
+      uType = pEntry->type;
+
+// Must have an entry and must be the same type!
+  if ( (!pEntry) || (pEntry->type != uType) || !pEntry->ptr )
+    return NULL;
+
+  if (g_ObjectHeapTypeShared[uType])
+    ret = SharedPtrToUser(pEntry->ptr);
+  else
+    ret = DesktopPtrToUser(pEntry->ptr);
+
+  return ret;
+}
+
+//
 // Validate a callproc handle and return the pointer to the object.
 //
 PCALLPROC
@@ -451,6 +480,45 @@ ValidateHwnd(HWND hwnd)
         return ClientInfo->pvWND;
 
     Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
+    if (Wnd != NULL)
+    {
+        /* FIXME: Check if handle table entry is marked as deleting and
+                  return NULL in this case! */
+
+#if 0
+        return Wnd;
+#else
+        /* HACK HACK HACK! This needs to be done until WINDOW_OBJECT is completely
+           superseded by the WINDOW structure. We *ASSUME* a pointer to the WINDOW
+           structure to be at the beginning of the WINDOW_OBJECT structure!!!
+
+           !!! REMOVE AS SOON AS WINDOW_OBJECT NO LONGER EXISTS !!!
+         */
+
+        if (*((PVOID*)Wnd) != NULL)
+            return DesktopPtrToUser(*((PVOID*)Wnd));
+#endif
+    }
+
+    return NULL;
+}
+
+//
+// Validate a window handle and return the pointer to the object.
+//
+PWINDOW
+FASTCALL
+ValidateHwndNoErr(HWND hwnd)
+{
+    PWINDOW Wnd;
+    PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
+    ASSERT(ClientInfo != NULL);
+
+    /* See if the window is cached */
+    if (hwnd == ClientInfo->hWND)
+        return ClientInfo->pvWND;
+
+    Wnd = ValidateHandleNoErr((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
         /* FIXME: Check if handle table entry is marked as deleting and

@@ -525,7 +525,7 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
     }
     else
     {
-        if (!Ansi == Window->Unicode)
+        if (!Ansi == Wnd->Unicode)
         {
             return Window->WndProc;
         }
@@ -541,12 +541,12 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
 
                 NewCallProc = UserFindCallProc(Wnd->Class,
                                                Window->WndProc,
-                                               Window->Unicode);
+                                               Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
                     NewCallProc = CreateCallProc(Wnd->ti->Desktop,
                                                  Window->WndProc,
-                                                 Window->Unicode,
+                                                 Wnd->Unicode,
                                                  Wnd->ti->kpi);
                     if (NewCallProc == NULL)
                     {
@@ -1649,13 +1649,13 @@ AllocErr:
    if (Wnd->Class->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
-       Window->Unicode = TRUE;
+       Wnd->Unicode = TRUE;
        Window->WndProc = Wnd->Class->WndProc;
        Window->WndProcExtra = Wnd->Class->WndProcExtra;
    }
    else
    {
-       Window->Unicode = Wnd->Class->Unicode;
+       Wnd->Unicode = Wnd->Class->Unicode;
        Window->WndProc = Wnd->Class->WndProc;
        Window->CallProc = NULL;
    }
@@ -3614,7 +3614,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     }
     else
     {
-        if (!Ansi == Window->Unicode)
+        if (!Ansi == Wnd->Unicode)
         {
             Ret = Window->WndProc;
         }
@@ -3622,12 +3622,12 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         {
             CallProc = UserFindCallProc(Wnd->Class,
                                         Window->WndProc,
-                                        Window->Unicode);
+                                        Wnd->Unicode);
             if (CallProc == NULL)
             {
                 CallProc = CreateCallProc(NULL,
                                           Window->WndProc,
-                                          Window->Unicode,
+                                          Wnd->Unicode,
                                           Wnd->ti->kpi);
                 if (CallProc == NULL)
                 {
@@ -3656,7 +3656,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
         {
             Window->WndProc = Wnd->Class->WndProc;
             Window->WndProcExtra = Wnd->Class->WndProcExtra;
-            Window->Unicode = !Ansi;
+            Wnd->Unicode = !Ansi;
             return Ret;
         }
     }
@@ -3665,7 +3665,7 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
 
     /* update the window procedure */
     Window->WndProc = NewWndProc;
-    Window->Unicode = !Ansi;
+    Wnd->Unicode = !Ansi;
 
     return Ret;
 }

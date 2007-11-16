@@ -89,3 +89,5 @@ PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
 PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
 PWINDOW FASTCALL GetThreadDesktopWnd(VOID);
+PVOID FASTCALL ValidateHandleNoErr(HANDLE handle, UINT uType);
+PWINDOW FASTCALL ValidateHwndNoErr(HWND hwnd);
