@@ -44,23 +44,6 @@ static const GUID SID_HACK_SMenuPopup = {0xD1E7AFEB,0x6A2E,0x11D0,{0x8C,0x78,0x0
 #define IDockingWindow_ResizeBorderDW(T,a,b,c) (T)->lpVtbl->ResizeBorderDW(T,a,b,c)
 #endif
 
-#define INTERFACE IDeskBarClient
-DECLARE_INTERFACE_(IDeskBarClient,IUnknown)
-{
-    /*** IUnknown methods ***/
-    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
-    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
-    STDMETHOD_(ULONG,Release)(THIS) PURE;
-    /*** IOleWindow methods ***/
-    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
-    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
-    /*** IDeskBarClient methods ***/
-    STDMETHOD_(HRESULT,SetDeskBarSite)(THIS_ IUnknown*) PURE;
-    STDMETHOD_(HRESULT,SetModeDBC)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,UIActivateDBC)(THIS_ DWORD) PURE;
-    STDMETHOD_(HRESULT,GetSize)(THIS_ DWORD,LPRECT) PURE;
-};
-#undef INTERFACE
 
 #ifdef COBJMACROS
 #define IDeskBarClient_QueryInterface(T,a,b) (T)->lpVtbl->QueryInterface(T,a,b)
