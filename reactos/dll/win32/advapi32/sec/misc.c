@@ -69,7 +69,9 @@ CheckNtMartaPresent(VOID)
 {
     DWORD ErrorCode;
 
-    if (NtMarta == NULL)
+    if (InterlockedCompareExchangePointer(&NtMarta,
+                                          NULL,
+                                          NULL) == NULL)
     {
         /* we're the first one trying to use ntmarta, initialize it and change
            the pointer after initialization */
