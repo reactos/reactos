@@ -2835,14 +2835,7 @@ ShellLink_InvokeCommand( IContextMenu* iface, LPCMINVOKECOMMANDINFO lpici )
     sei.lpVerb = szOpen;
 
     if( ShellExecuteExW( &sei ) )
-    {
-        if ( sei.hProcess )
-        {
-            WaitForSingleObject( sei.hProcess, 10000 );
-            CloseHandle( sei.hProcess );
-        }
         r = S_OK;
-    }
     else
         r = E_FAIL;
 
