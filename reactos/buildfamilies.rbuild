@@ -10,18 +10,18 @@
 	<buildfamily name="applications" />
 	<buildfamily name="guiapplications" description="Win32 GUI applications" />
 	<buildfamily name="cuiapplications" description="Win32 console applications" />
-	<buildfamily name="nativeapplications"  description="Native console applications"/>
+	<buildfamily name="nativeapplications" description="Native console applications"/>
 
 	<!-- By functionality -->
 	<buildfamily name="games" />
 	<buildfamily name="screensavers" />
 	<buildfamily name="services" />
 	<buildfamily name="shells" />
-	<buildfamily name="cpapplets" />
+	<buildfamily name="cplapplets" />
 
 	<!-- Drivers -->
 	<buildfamily name="drivers" />
-	<buildfamily name="fsdrivers"  description="File system drivers" />
+	<buildfamily name="fsdrivers" description="File system drivers" />
 	<buildfamily name="hardwaredrivers" description="Hardware drivers" />
 	<buildfamily name="displaydrivers" description="Hardware display drivers" />
 	<buildfamily name="inputdrivers" description="I/O device drivers" />

@@ -46,6 +46,8 @@
 #        This is faster than the depends target which does a complete dependency
 #        check of the ReactOS codebase.
 #
+#    families
+#        A list will be shown with all available build families.
 #
 # Accepted environment variables:
 #

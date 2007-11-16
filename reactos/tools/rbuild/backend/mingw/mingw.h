@@ -76,7 +76,7 @@ private:
 	bool IncludeInAllTarget ( const Module& module ) const;
 	void GenerateAllTarget ( const std::vector<MingwModuleHandler*>& handlers ) const;
 	std::string GetBuildToolDependencies () const;
-    void GenerateFamiliesTarget() const;
+    void GenerateFamiliesTargetsInfo() const;
     void GenerateInitTarget () const;
 	void GenerateRegTestsRunTarget () const;
 	void GenerateXmlBuildFilesMacro() const;
