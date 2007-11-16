@@ -5,6 +5,8 @@
   <property name="BASEADDRESS_NOTIFYHOOK" value="0x08000000" />
   <property name="BASEADDRESS_COMCAT" value="0x20A50000" />
   <property name="BASEADDRESS_DEVENUM" value="0x35680000" />
+  <property name="BASEADDRESS_RSABASE" value="0x35700000" />
+  <property name="BASEADDRESS_RSAENH" value="0x35780000" />
   <property name="BASEADDRESS_TELEPHON" value="0x58750000" />
   <property name="BASEADDRESS_PWRCFG" value="0x587e0000" />
   <property name="BASEADDRESS_MMSYS" value="0x588a0000" />

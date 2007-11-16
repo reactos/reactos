@@ -226,6 +226,8 @@ dll\win32\rasapi32\rasapi32.dll                     1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\riched32\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
+dll\win32\rsabase\rsabase.dll                       1
+dll\win32\rsaenh\rsaenh.dll                         1
 dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1
 dll\win32\secur32\secur32.dll                       1

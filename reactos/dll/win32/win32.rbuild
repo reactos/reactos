@@ -211,6 +211,12 @@
 <directory name="rpcrt4">
 	<xi:include href="rpcrt4/rpcrt4.rbuild" />
 </directory>
+<directory name="rsabase">
+	<xi:include href="rsabase/rsabase.rbuild" />
+</directory>
+<directory name="rsaenh">
+	<xi:include href="rsaenh/rsaenh.rbuild" />
+</directory>
 <directory name="samlib">
 	<xi:include href="samlib/samlib.rbuild" />
 </directory>
