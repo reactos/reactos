@@ -409,7 +409,7 @@ GetClassNameW(
     UNICODE_STRING ClassName;
     int Result;
 
-    ClassName.MaximumLength = nMaxCount;
+    ClassName.MaximumLength = nMaxCount * sizeof(WCHAR);
     ClassName.Buffer = lpClassName;
 
     Result = NtUserGetClassName(hWnd,
