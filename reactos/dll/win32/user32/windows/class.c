@@ -199,80 +199,101 @@ GetClassLongA(HWND hWnd, int nIndex)
     if (!Wnd)
         return 0;
 
-    Class = DesktopPtrToUser(Wnd->Class);
-    ASSERT(Class != NULL);
-
-    if (nIndex >= 0)
+    _SEH_TRY
     {
-        if (nIndex + sizeof(ULONG_PTR) < nIndex ||
-            nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+        Class = DesktopPtrToUser(Wnd->Class);
+        if (Class != NULL)
         {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
+            if (nIndex >= 0)
+            {
+                if (nIndex + sizeof(ULONG_PTR) < nIndex ||
+                    nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+                {
+                    SetLastError(ERROR_INVALID_PARAMETER);
+                }
+                else
+                    Ret = *(PULONG_PTR)((ULONG_PTR)(Class + 1) + nIndex);
+            }
+            else
+            {
+                switch (nIndex)
+                {
+                    case GCL_CBWNDEXTRA:
+                        Ret = (ULONG_PTR)Class->WndExtra;
+                        break;
 
-        Ret = *(PULONG_PTR)((ULONG_PTR)(Class + 1) + nIndex);
+                    case GCL_CBCLSEXTRA:
+                        Ret = (ULONG_PTR)Class->ClsExtra;
+                        break;
+
+                    case GCL_HBRBACKGROUND:
+                        Ret = (ULONG_PTR)Class->hbrBackground;
+                        if (Ret != 0 && Ret < 0x4000)
+                            Ret = (ULONG_PTR)GetSysColorBrush((ULONG)Ret - 1);
+                        break;
+
+                    case GCL_HMODULE:
+                        Ret = (ULONG_PTR)Class->hInstance;
+                        break;
+
+                    case GCL_MENUNAME:
+                        Ret = (ULONG_PTR)Class->AnsiMenuName;
+                        break;
+
+                    case GCL_STYLE:
+                        Ret = (ULONG_PTR)Class->Style;
+                        break;
+
+                    case GCW_ATOM:
+                        Ret = (ULONG_PTR)Class->Atom;
+                        break;
+
+                    case GCLP_HCURSOR:
+                        /* FIXME - get handle from pointer to CURSOR object */
+                        Ret = (ULONG_PTR)Class->hCursor;
+                        break;
+
+                    case GCLP_HICON:
+                        /* FIXME - get handle from pointer to ICON object */
+                        Ret = (ULONG_PTR)Class->hIcon;
+                        break;
+
+                    case GCLP_HICONSM:
+                        /* FIXME - get handle from pointer to ICON object */
+                        Ret = (ULONG_PTR)Class->hIconSm;
+                        break;
+
+                    case GCLP_WNDPROC:
+                        /* We need to make a call to win32k as it may be required to
+                           create a callproc handle */
+                        Wnd = NULL;
+                        break;
+
+                    default:
+                        SetLastError(ERROR_INVALID_INDEX);
+                        break;
+                }
+            }
+        }
+        else
+        {
+            /* This is a race condition! Call win32k to make sure we're getting
+               the correct result */
+            Wnd = NULL; /* Make sure we call NtUserGetClassLong */
+
+            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
+        }
     }
-    else
+    _SEH_HANDLE
     {
-        switch (nIndex)
-        {
-            case GCL_CBWNDEXTRA:
-                Ret = (ULONG_PTR)Class->WndExtra;
-                break;
-
-            case GCL_CBCLSEXTRA:
-                Ret = (ULONG_PTR)Class->ClsExtra;
-                break;
-
-            case GCL_HBRBACKGROUND:
-                Ret = (ULONG_PTR)Class->hbrBackground;
-                if (Ret != 0 && Ret < 0x4000)
-                    Ret = (ULONG_PTR)GetSysColorBrush((ULONG)Ret - 1);
-                break;
-
-            case GCL_HMODULE:
-                Ret = (ULONG_PTR)Class->hInstance;
-                break;
-
-            case GCL_MENUNAME:
-                Ret = (ULONG_PTR)Class->AnsiMenuName;
-                break;
-
-            case GCL_STYLE:
-                Ret = (ULONG_PTR)Class->Style;
-                break;
-
-            case GCW_ATOM:
-                Ret = (ULONG_PTR)Class->Atom;
-                break;
-
-            case GCLP_HCURSOR:
-                /* FIXME - get handle from pointer to CURSOR object */
-                Ret = (ULONG_PTR)Class->hCursor;
-                break;
-
-            case GCLP_HICON:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIcon;
-                break;
-
-            case GCLP_HICONSM:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
-                break;
-
-            case GCLP_WNDPROC:
-                /* We need to make a call to win32k as it may be required to
-                   create a callproc handle */
-                return NtUserGetClassLong(hWnd, nIndex, TRUE);
-
-            default:
-                SetLastError(ERROR_INVALID_INDEX);
-        }
+        Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
+    _SEH_END;
 
-   return Ret;
+    if (Wnd == NULL)
+        Ret = NtUserGetClassLong(hWnd, nIndex, TRUE);
+
+    return Ret;
 }
 
 /*
@@ -291,80 +312,101 @@ GetClassLongW ( HWND hWnd, int nIndex )
     if (!Wnd)
         return 0;
 
-    Class = DesktopPtrToUser(Wnd->Class);
-    ASSERT(Class != NULL);
-
-    if (nIndex >= 0)
+    _SEH_TRY
     {
-        if (nIndex + sizeof(ULONG_PTR) < nIndex ||
-            nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+        Class = DesktopPtrToUser(Wnd->Class);
+        if (Class != NULL)
         {
-            SetLastError(ERROR_INVALID_PARAMETER);
-            return 0;
-        }
+            if (nIndex >= 0)
+            {
+                if (nIndex + sizeof(ULONG_PTR) < nIndex ||
+                    nIndex + sizeof(ULONG_PTR) > Class->ClsExtra)
+                {
+                    SetLastError(ERROR_INVALID_PARAMETER);
+                }
+                else
+                    Ret = *(PULONG_PTR)((ULONG_PTR)(Class + 1) + nIndex);
+            }
+            else
+            {
+                switch (nIndex)
+                {
+                    case GCL_CBWNDEXTRA:
+                        Ret = (ULONG_PTR)Class->WndExtra;
+                        break;
 
-        Ret = *(PULONG_PTR)((ULONG_PTR)(Class + 1) + nIndex);
+                    case GCL_CBCLSEXTRA:
+                        Ret = (ULONG_PTR)Class->ClsExtra;
+                        break;
+
+                    case GCL_HBRBACKGROUND:
+                        Ret = (ULONG_PTR)Class->hbrBackground;
+                        if (Ret != 0 && Ret < 0x4000)
+                            Ret = (ULONG_PTR)GetSysColorBrush((ULONG)Ret - 1);
+                        break;
+
+                    case GCL_HMODULE:
+                        Ret = (ULONG_PTR)Class->hInstance;
+                        break;
+
+                    case GCL_MENUNAME:
+                        Ret = (ULONG_PTR)Class->MenuName;
+                        break;
+
+                    case GCL_STYLE:
+                        Ret = (ULONG_PTR)Class->Style;
+                        break;
+
+                    case GCW_ATOM:
+                        Ret = (ULONG_PTR)Class->Atom;
+                        break;
+
+                    case GCLP_HCURSOR:
+                        /* FIXME - get handle from pointer to CURSOR object */
+                        Ret = (ULONG_PTR)Class->hCursor;
+                        break;
+
+                    case GCLP_HICON:
+                        /* FIXME - get handle from pointer to ICON object */
+                        Ret = (ULONG_PTR)Class->hIcon;
+                        break;
+
+                    case GCLP_HICONSM:
+                        /* FIXME - get handle from pointer to ICON object */
+                        Ret = (ULONG_PTR)Class->hIconSm;
+                        break;
+
+                    case GCLP_WNDPROC:
+                        /* We need to make a call to win32k as it may be required to
+                           create a callproc handle */
+                        Wnd = NULL;
+                        break;
+
+                    default:
+                        SetLastError(ERROR_INVALID_INDEX);
+                        break;
+                }
+            }
+        }
+        else
+        {
+            /* This is a race condition! Call win32k to make sure we're getting
+               the correct result */
+            Wnd = NULL; /* Make sure we call NtUserGetClassLong */
+
+            WARN("Invalid class for hwnd 0x%p!\n", hWnd);
+        }
     }
-    else
+    _SEH_HANDLE
     {
-        switch (nIndex)
-        {
-            case GCL_CBWNDEXTRA:
-                Ret = (ULONG_PTR)Class->WndExtra;
-                break;
-
-            case GCL_CBCLSEXTRA:
-                Ret = (ULONG_PTR)Class->ClsExtra;
-                break;
-
-            case GCL_HBRBACKGROUND:
-                Ret = (ULONG_PTR)Class->hbrBackground;
-                if (Ret != 0 && Ret < 0x4000)
-                    Ret = (ULONG_PTR)GetSysColorBrush((ULONG)Ret - 1);
-                break;
-
-            case GCL_HMODULE:
-                Ret = (ULONG_PTR)Class->hInstance;
-                break;
-
-            case GCL_MENUNAME:
-                Ret = (ULONG_PTR)Class->MenuName;
-                break;
-
-            case GCL_STYLE:
-                Ret = (ULONG_PTR)Class->Style;
-                break;
-
-            case GCW_ATOM:
-                Ret = (ULONG_PTR)Class->Atom;
-                break;
-
-            case GCLP_HCURSOR:
-                /* FIXME - get handle from pointer to CURSOR object */
-                Ret = (ULONG_PTR)Class->hCursor;
-                break;
-
-            case GCLP_HICON:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIcon;
-                break;
-
-            case GCLP_HICONSM:
-                /* FIXME - get handle from pointer to ICON object */
-                Ret = (ULONG_PTR)Class->hIconSm;
-                break;
-
-            case GCLP_WNDPROC:
-                /* We need to make a call to win32k as it may be required to
-                   create a callproc handle */
-                return NtUserGetClassLong(hWnd, nIndex, FALSE);
-
-            default:
-                SetLastError(ERROR_INVALID_INDEX);
-        }
+        Wnd = NULL; /* Make sure we call NtUserGetClassLong */
     }
+    _SEH_END;
 
-   return Ret;
+    if (Wnd == NULL)
+        Ret = NtUserGetClassLong(hWnd, nIndex, FALSE);
+
+    return Ret;
 }
 
 

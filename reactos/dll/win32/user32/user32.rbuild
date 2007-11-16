@@ -14,6 +14,7 @@
 	<library>advapi32</library>
 	<library>imm32</library>
 	<library>win32ksys</library>
+	<library>pseh</library>
 
 	<directory name="include">
 		<pch>user32.h</pch>

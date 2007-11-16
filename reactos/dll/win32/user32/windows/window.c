@@ -1027,55 +1027,67 @@ GetWindowRect(HWND hWnd,
 int STDCALL
 GetWindowTextA(HWND hWnd, LPSTR lpString, int nMaxCount)
 {
-   PWINDOW Wnd;
-   PCWSTR Buffer;
+    PWINDOW Wnd;
+    PCWSTR Buffer;
+    INT Length = 0;
 
-   if (lpString == NULL)
-      return 0;
+    if (lpString == NULL)
+        return 0;
 
-   Wnd = ValidateHwnd(hWnd);
-   if (!Wnd)
-       return 0;
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
 
-   if (Wnd->pi != g_kpi)
-   {
-      INT Length;
+    _SEH_TRY
+    {
+        if (Wnd->pi != g_kpi)
+        {
+            if (nMaxCount > 0)
+            {
+                /* do not send WM_GETTEXT messages to other processes */
+                Length = Wnd->WindowName.Length / sizeof(WCHAR);
+                if (Length != 0)
+                {
+                    Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                    if (Buffer != NULL)
+                    {
+                        if (!WideCharToMultiByte(CP_ACP,
+                                               0,
+                                               Buffer,
+                                               Length + 1,
+                                               lpString,
+                                               nMaxCount,
+                                               NULL,
+                                               NULL))
+                        {
+                            lpString[nMaxCount - 1] = '\0';
+                        }
+                    }
+                    else
+                    {
+                        Length = 0;
+                        lpString[0] = '\0';
+                    }
+                }
+                else
+                    lpString[0] = '\0';
+            }
 
-      if (nMaxCount <= 0)
-          return 0;
+            Wnd = NULL; /* Don't send a message */
+        }
+    }
+    _SEH_HANDLE
+    {
+        lpString[0] = '\0';
+        Length = 0;
+        Wnd = NULL; /* Don't send a message */
+    }
+    _SEH_END;
 
-      /* do not send WM_GETTEXT messages to other processes */
-      Length = Wnd->WindowName.Length / sizeof(WCHAR);
-      if (Length != 0)
-      {
-          Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
-          if (Buffer != NULL)
-          {
-              if (!WideCharToMultiByte(CP_ACP,
-                                       0,
-                                       Buffer,
-                                       Length + 1,
-                                       lpString,
-                                       nMaxCount,
-                                       NULL,
-                                       NULL))
-              {
-                  lpString[nMaxCount - 1] = '\0';
-              }
-          }
-          else
-          {
-              Length = 0;
-              lpString[0] = '\0';
-          }
-      }
-      else
-          lpString[0] = '\0';
+    if (Wnd != NULL)
+        Length = SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
 
-      return (LRESULT)Length;
-   }
-
-   return SendMessageA(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    return Length;
 }
 
 
@@ -1105,47 +1117,59 @@ GetWindowTextLengthW(HWND hWnd)
 int STDCALL
 GetWindowTextW(HWND hWnd, LPWSTR lpString, int nMaxCount)
 {
-   PWINDOW Wnd;
-   PCWSTR Buffer;
+    PWINDOW Wnd;
+    PCWSTR Buffer;
+    INT Length = 0;
 
-   if (lpString == NULL)
-      return 0;
+    if (lpString == NULL)
+        return 0;
 
-   Wnd = ValidateHwnd(hWnd);
-   if (!Wnd)
-       return 0;
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return 0;
 
-   if (Wnd->pi != g_kpi)
-   {
-      INT Length;
+    _SEH_TRY
+    {
+        if (Wnd->pi != g_kpi)
+        {
+            if (nMaxCount > 0)
+            {
+                /* do not send WM_GETTEXT messages to other processes */
+                Length = Wnd->WindowName.Length / sizeof(WCHAR);
+                if (Length != 0)
+                {
+                    Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
+                    if (Buffer != NULL)
+                    {
+                        RtlCopyMemory(lpString,
+                                      Buffer,
+                                      (Length + 1) * sizeof(WCHAR));
+                    }
+                    else
+                    {
+                        Length = 0;
+                        lpString[0] = '\0';
+                    }
+                }
+                else
+                    lpString[0] = '\0';
+            }
 
-      if (nMaxCount <= 0)
-          return 0;
+            Wnd = NULL; /* Don't send a message */
+        }
+    }
+    _SEH_HANDLE
+    {
+        lpString[0] = '\0';
+        Length = 0;
+        Wnd = NULL; /* Don't send a message */
+    }
+    _SEH_END;
 
-      /* do not send WM_GETTEXT messages to other processes */
-      Length = Wnd->WindowName.Length / sizeof(WCHAR);
-      if (Length != 0)
-      {
-          Buffer = DesktopPtrToUser(Wnd->WindowName.Buffer);
-          if (Buffer != NULL)
-          {
-              RtlCopyMemory(lpString,
-                            Buffer,
-                            (Length + 1) * sizeof(WCHAR));
-          }
-          else
-          {
-              Length = 0;
-              lpString[0] = L'\0';
-          }
-      }
-      else
-          lpString[0] = L'\0';
+    if (Wnd != NULL)
+        Length = SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
 
-      return (LRESULT)Length;
-   }
-
-   return SendMessageW(hWnd, WM_GETTEXT, nMaxCount, (LPARAM)lpString);
+    return Length;
 }
 
 DWORD STDCALL
@@ -1187,9 +1211,7 @@ IsIconic(HWND hWnd)
     PWINDOW Wnd = ValidateHwnd(hWnd);
 
     if (Wnd != NULL)
-    {
         return (Wnd->Style & WS_MINIMIZE) != 0;
-    }
 
     return FALSE;
 }
