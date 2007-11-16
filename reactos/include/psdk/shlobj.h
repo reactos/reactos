@@ -390,6 +390,26 @@ DECLARE_INTERFACE_(IDockingWindow,IUnknown)
 #undef INTERFACE
 
 
+/* IDeskBarClient interface */
+#define INTERFACE IDeskBarClient
+DECLARE_INTERFACE_(IDeskBarClient,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD(QueryInterface)(THIS_ REFIID,PVOID*) PURE;
+    STDMETHOD_(ULONG,AddRef)(THIS) PURE;
+    STDMETHOD_(ULONG,Release)(THIS) PURE;
+    /*** IOleWindow methods ***/
+    STDMETHOD_(HRESULT,GetWindow)(THIS_ HWND*) PURE;
+    STDMETHOD_(HRESULT,ContextSensitiveHelp)(THIS_ BOOL) PURE;
+    /*** IDeskBarClient methods ***/
+    STDMETHOD_(HRESULT,SetDeskBarSite)(THIS_ IUnknown*) PURE;
+    STDMETHOD_(HRESULT,SetModeDBC)(THIS_ DWORD) PURE;
+    STDMETHOD_(HRESULT,UIActivateDBC)(THIS_ DWORD) PURE;
+    STDMETHOD_(HRESULT,GetSize)(THIS_ DWORD,LPRECT) PURE;
+};
+#undef INTERFACE
+
+
 /****************************************************************************
 * SHAddToRecentDocs API
 */
