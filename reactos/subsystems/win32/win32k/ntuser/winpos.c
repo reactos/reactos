@@ -1415,6 +1415,7 @@ co_WinPosShowWindow(PWINDOW_OBJECT Window, INT Cmd)
          Swp |= SWP_NOACTIVATE | SWP_NOZORDER;
          /* Fall through. */
       case SW_SHOW:
+            if (WasVisible) return(TRUE); // Nothing to do!
          Swp |= SWP_SHOWWINDOW | SWP_NOSIZE | SWP_NOMOVE;
          /* Don't activate the topmost window. */
          break;
