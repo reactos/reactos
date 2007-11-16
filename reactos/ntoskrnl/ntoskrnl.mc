@@ -1168,6 +1168,7 @@ Facility=System
 SymbolicName=ATTEMPTED_WRITE_TO_READONLY_MEMORY
 Language=English
 ATTEMPTED_WRITE_TO_READONLY_MEMORY
+.
 
 MessageId=0xC2
 Severity=Success
