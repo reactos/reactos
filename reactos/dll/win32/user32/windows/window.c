@@ -1577,36 +1577,28 @@ WindowFromPoint(POINT Point)
 int STDCALL
 MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 {
-  POINT FromOffset, ToOffset;
-  LONG XMove, YMove;
-  ULONG i;
+    PWINDOW FromWnd, ToWnd;
+    POINT Delta;
+    UINT i;
 
-  if (hWndFrom == NULL)
-  {
-    FromOffset.x = FromOffset.y = 0;
-  } else
-  if(!NtUserGetClientOrigin(hWndFrom, &FromOffset))
-  {
-    return 0;
-  }
+    FromWnd = ValidateHwndOrDesk(hWndFrom);
+    if (!FromWnd)
+        return 0;
 
-  if (hWndTo == NULL)
-  {
-    ToOffset.x = ToOffset.y = 0;
-  } else
-  if(!NtUserGetClientOrigin(hWndTo, &ToOffset))
-  {
-    return 0;
-  }
-  XMove = FromOffset.x - ToOffset.x;
-  YMove = FromOffset.y - ToOffset.y;
+    ToWnd = ValidateHwndOrDesk(hWndTo);
+    if (!ToWnd)
+        return 0;
 
-  for (i = 0; i < cPoints; i++)
+    Delta.x = FromWnd->ClientRect.left - ToWnd->ClientRect.left;
+    Delta.y = FromWnd->ClientRect.top - ToWnd->ClientRect.top;
+
+    for (i = 0; i != cPoints; i++)
     {
-      lpPoints[i].x += XMove;
-      lpPoints[i].y += YMove;
+        lpPoints[i].x += Delta.x;
+        lpPoints[i].y += Delta.y;
     }
-  return(MAKELONG(LOWORD(XMove), LOWORD(YMove)));
+
+    return MAKELONG(LOWORD(Delta.x), LOWORD(Delta.y));
 }
 
 
@@ -1616,7 +1608,18 @@ MapWindowPoints(HWND hWndFrom, HWND hWndTo, LPPOINT lpPoints, UINT cPoints)
 BOOL STDCALL
 ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 {
-  return(MapWindowPoints(NULL, hWnd, lpPoint, 1) != 0);
+    PWINDOW Wnd, DesktopWnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return FALSE;
+
+    DesktopWnd = GetThreadDesktopWnd();
+
+    lpPoint->x += DesktopWnd->ClientRect.left - Wnd->ClientRect.left;
+    lpPoint->y += DesktopWnd->ClientRect.top - Wnd->ClientRect.top;
+
+    return TRUE;
 }
 
 
@@ -1626,7 +1629,18 @@ ScreenToClient(HWND hWnd, LPPOINT lpPoint)
 BOOL STDCALL
 ClientToScreen(HWND hWnd, LPPOINT lpPoint)
 {
-    return (MapWindowPoints( hWnd, NULL, lpPoint, 1 ) != 0);
+    PWINDOW Wnd, DesktopWnd;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return FALSE;
+
+    DesktopWnd = GetThreadDesktopWnd();
+
+    lpPoint->x += Wnd->ClientRect.left - DesktopWnd->ClientRect.left;
+    lpPoint->y += Wnd->ClientRect.top - DesktopWnd->ClientRect.top;
+
+    return TRUE;
 }
 
 

@@ -1600,6 +1600,7 @@ AllocErr:
    {
       /* If there is no desktop window yet, we must be creating it */
       PsGetCurrentThreadWin32Thread()->Desktop->DesktopWindow = hWnd;
+      PsGetCurrentThreadWin32Thread()->Desktop->DesktopInfo->Wnd = Wnd;
    }
 
    /*

@@ -87,3 +87,5 @@ SharedPtrToKernel(PVOID Ptr)
 
 PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
+PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
+PWINDOW FASTCALL GetThreadDesktopWnd(VOID);

@@ -3,6 +3,7 @@
 
 struct _W32PROCESSINFO;
 struct _W32THREADINFO;
+struct _WINDOW;
 
 typedef struct _REGISTER_SYSCLASS
 {
@@ -22,9 +23,11 @@ typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
     ULONG_PTR HeapLimit;
-    WCHAR szDesktopName[1];
     HWND hTaskManWindow;
     HWND hProgmanWindow;
+    struct _WINDOW *Wnd;
+
+    WCHAR szDesktopName[1];
 } DESKTOP, *PDESKTOP;
 
 typedef struct _CALLPROC

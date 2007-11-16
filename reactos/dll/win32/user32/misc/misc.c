@@ -148,6 +148,19 @@ GetW32ProcessInfo(VOID)
     return pi;
 }
 
+static PDESKTOP
+GetThreadDesktopInfo(VOID)
+{
+    PW32THREADINFO ti;
+    PDESKTOP di = NULL;
+
+    ti = GetW32ThreadInfo();
+    if (ti != NULL)
+        di = DesktopPtrToUser(ti->Desktop);
+
+    return di;
+}
+
 
 /*
  * GetUserObjectSecurity
@@ -429,6 +442,7 @@ PWINDOW
 FASTCALL
 ValidateHwnd(HWND hwnd)
 {
+    PWINDOW Wnd;
     PW32CLIENTINFO ClientInfo = GetWin32ClientInfo();
     ASSERT(ClientInfo != NULL);
 
@@ -436,7 +450,7 @@ ValidateHwnd(HWND hwnd)
     if (hwnd == ClientInfo->hWND)
         return ClientInfo->pvWND;
 
-    PWINDOW Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
+    Wnd = ValidateHandle((HANDLE)hwnd, VALIDATE_TYPE_WIN);
     if (Wnd != NULL)
     {
         /* FIXME: Check if handle table entry is marked as deleting and
@@ -458,4 +472,27 @@ ValidateHwnd(HWND hwnd)
     }
 
     return NULL;
+}
+
+PWINDOW
+FASTCALL
+GetThreadDesktopWnd(VOID)
+{
+    PWINDOW Wnd = GetThreadDesktopInfo()->Wnd;
+    if (Wnd != NULL)
+        Wnd = DesktopPtrToUser(Wnd);
+    return Wnd;
+}
+
+//
+// Validate a window handle and return the pointer to the object.
+//
+PWINDOW
+FASTCALL
+ValidateHwndOrDesk(HWND hwnd)
+{
+    if (hwnd == HWND_DESKTOP)
+        return GetThreadDesktopWnd();
+
+    return ValidateHwnd(hwnd);
 }
