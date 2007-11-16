@@ -765,6 +765,33 @@ NtUserCallTwoParam(
             RETURN( Ret);
          }
 
+      case TWOPARAM_ROUTINE_ROS_REGSYSCLASSES:
+      {
+          DWORD Ret = 0;
+          DWORD Count = Param1;
+          PREGISTER_SYSCLASS RegSysClassArray = (PREGISTER_SYSCLASS)Param2;
+
+          if (Count != 0 && RegSysClassArray != NULL)
+          {
+              _SEH_TRY
+              {
+                  ProbeArrayForRead(RegSysClassArray,
+                                    sizeof(RegSysClassArray[0]),
+                                    Count,
+                                    2);
+
+                  Ret = (DWORD)UserRegisterSystemClasses(Count,
+                                                         RegSysClassArray);
+              }
+              _SEH_HANDLE
+              {
+                  SetLastNtError(_SEH_GetExceptionCode());
+              }
+              _SEH_END;
+          }
+
+          RETURN( Ret);
+      }
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallTwoParam(), Param1=0x%x Parm2=0x%x\n",
            Routine, Param1, Param2);

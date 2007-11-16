@@ -4,6 +4,20 @@
 struct _W32PROCESSINFO;
 struct _W32THREADINFO;
 
+typedef struct _REGISTER_SYSCLASS
+{
+    /* This is a reactos specific class used to initialize the
+       system window classes during user32 initialization */
+    UNICODE_STRING ClassName;
+    UINT Style;
+    WNDPROC ProcW;
+    WNDPROC ProcA;
+    UINT ExtraBytes;
+    HICON hCursor;
+    HBRUSH hBrush;
+    UINT ClassId;
+} REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
+
 typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
@@ -54,6 +68,23 @@ typedef struct _WINDOWCLASS
     UINT System : 1;
     UINT Global : 1;
     UINT MenuNameIsString : 1;
+
+#define CLASS_DEFAULT    0x0
+#define CLASS_DESKTOP    0x1
+#define CLASS_DIALOG     0x2
+#define CLASS_POPUPMENU  0x3
+#define CLASS_COMBO      0x4
+#define CLASS_COMBOLBOX  0x5
+#define CLASS_MDICLIENT  0x6
+#define CLASS_MENU       0x7
+#define CLASS_SCROLL     0x8
+#define CLASS_BUTTON     0x9
+#define CLASS_LISTBOX    0xA
+#define CLASS_EDIT       0xB
+#define CLASS_ICONTITLE  0xC
+#define CLASS_STATIC     0xD
+    UINT ClassId : 4;
+
 } WINDOWCLASS, *PWINDOWCLASS;
 
 typedef struct _WINDOW
@@ -92,6 +123,9 @@ typedef struct _W32PROCESSINFO
     PWINDOWCLASS LocalClassList;
     PWINDOWCLASS GlobalClassList;
     PWINDOWCLASS SystemClassList;
+
+    UINT RegisteredSysClasses : 1;
+
 } W32PROCESSINFO, *PW32PROCESSINFO;
 
 typedef struct _W32THREADINFO
@@ -590,6 +624,7 @@ NtUserCallOneParam(
 #define TWOPARAM_ROUTINE_ROS_SHOWWINDOW     0x1000
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
+#define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003
 DWORD
 NTAPI
 NtUserCallTwoParam(
@@ -1761,8 +1796,7 @@ NtUserRegisterUserApiHook(
 
 /* FIXME: These flag constans aren't what Windows uses. */
 #define REGISTERCLASS_ANSI	2
-#define REGISTERCLASS_SYSTEM	4
-#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI | REGISTERCLASS_SYSTEM)
+#define REGISTERCLASS_ALL	(REGISTERCLASS_ANSI)
 
 RTL_ATOM NTAPI
 NtUserRegisterClassEx(

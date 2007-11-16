@@ -38,6 +38,8 @@
 
 /* WINDOWCLASS ***************************************************************/
 
+#define REGISTERCLASS_SYSTEM 0x4
+
 static VOID
 IntFreeClassMenuName(IN OUT PWINDOWCLASS Class)
 {
@@ -1042,9 +1044,11 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
 {
     RTL_ATOM Atom = (RTL_ATOM)0;
 
+    ASSERT(BaseClass != NULL);
+
     if (IntGetAtomFromStringOrAtom(ClassName,
                                    &Atom) &&
-        BaseClass != NULL && Atom != (RTL_ATOM)0)
+        Atom != (RTL_ATOM)0)
     {
         PWINDOWCLASS Class;
 
@@ -1098,7 +1102,6 @@ IntGetClassAtom(IN PUNICODE_STRING ClassName,
                              NULL,
                              &pi->SystemClassList,
                              Link);
-
         if (Class == NULL)
         {
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
@@ -1129,7 +1132,7 @@ UserRegisterClass(IN CONST WNDCLASSEXW* lpwcx,
     /* NOTE: Accessing the buffers in ClassName and MenuName may raise exceptions! */
 
     ti = GetW32ThreadInfo();
-    if (ti == NULL)
+    if (ti == NULL || !ti->kpi->RegisteredSysClasses)
     {
         SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
         return (RTL_ATOM)0;
@@ -1794,6 +1797,74 @@ UserGetClassInfo(IN PWINDOWCLASS Class,
     return TRUE;
 }
 
+BOOL
+UserRegisterSystemClasses(IN ULONG Count,
+                          IN PREGISTER_SYSCLASS SystemClasses)
+{
+    /* NOTE: This routine may raise exceptions! */
+    UINT i;
+    UNICODE_STRING ClassName, MenuName;
+    PW32PROCESSINFO pi = GetW32ProcessInfo();
+    WNDCLASSEXW wc;
+    PWINDOWCLASS Class;
+    BOOL Ret = TRUE;
+
+    if (pi->RegisteredSysClasses || pi->hModUser == NULL)
+        return FALSE;
+
+    RtlZeroMemory(&MenuName, sizeof(MenuName));
+
+    for (i = 0; i != Count; i++)
+    {
+        ClassName = ProbeForReadUnicodeString(&SystemClasses[i].ClassName);
+        if (ClassName.Length != 0)
+        {
+            ProbeForRead(ClassName.Buffer,
+                         ClassName.Length,
+                         sizeof(WCHAR));
+        }
+
+        wc.cbSize = sizeof(wc);
+        wc.style = SystemClasses[i].Style;
+        wc.lpfnWndProc = SystemClasses[i].ProcW;
+        wc.cbClsExtra = 0;
+        wc.cbWndExtra = SystemClasses[i].ExtraBytes;
+        wc.hInstance = pi->hModUser;
+        wc.hIcon = NULL;
+        wc.hCursor = SystemClasses[i].hCursor;
+        wc.hbrBackground = SystemClasses[i].hBrush;
+        wc.lpszMenuName = NULL;
+        wc.lpszClassName = ClassName.Buffer;
+        wc.hIconSm = NULL;
+
+        Class = IntCreateClass(&wc,
+                               &ClassName,
+                               &MenuName,
+                               SystemClasses[i].ProcA,
+                               REGISTERCLASS_SYSTEM,
+                               NULL,
+                               pi);
+        if (Class != NULL)
+        {
+            Class->ClassId = SystemClasses[i].ClassId;
+
+            ASSERT(Class->System);
+            Class->Next = pi->SystemClassList;
+            (void)InterlockedExchangePointer(&pi->SystemClassList,
+                                             Class);
+        }
+        else
+        {
+            WARN("!!! Registering system class failed!\n");
+            Ret = FALSE;
+        }
+    }
+
+    if (Ret)
+        pi->RegisteredSysClasses = TRUE;
+    return Ret;
+}
+
 /* SYSCALLS *****************************************************************/
 
 
@@ -2179,9 +2250,9 @@ InvalidParameter:
          else
          {
             if (CapturedClassName.Length == 0)
-               WARN("Tried to get information of a non-existing class atom 0x%p\n", CapturedClassName.Buffer);
+                WARN("Tried to get information of a non-existing class atom 0x%p process 0x%p init: 0x%x\n", CapturedClassName.Buffer, PsGetCurrentProcessId(), pi->RegisteredSysClasses);
             else
-               WARN("Tried to get information of a non-existing class \"%wZ\"\n", &CapturedClassName);
+                WARN("Tried to get information of a non-existing class \"%wZ\" process 0x%p init: 0x%x\n", &CapturedClassName, PsGetCurrentProcessId(), pi->RegisteredSysClasses);
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
          }
     }

@@ -26,7 +26,7 @@ struct builtin_class_descr
     HBRUSH  brush;   /* brush or system color */
 };
 
-extern BOOL FASTCALL ControlsInit(LPCWSTR ClassName);
+BOOL WINAPI RegisterSystemControls(VOID);
 
 extern const struct builtin_class_descr BUTTON_builtin_class;
 extern const struct builtin_class_descr COMBO_builtin_class;

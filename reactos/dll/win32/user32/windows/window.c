@@ -16,8 +16,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-BOOL ControlsInitialized = FALSE;
-
 LRESULT DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active);
 void MDI_CalcDefaultChildPos( HWND hwndClient, INT total, LPPOINT lpPos, INT delta, UINT *id );
 
@@ -185,12 +183,6 @@ User32CreateWindowEx(DWORD dwExStyle,
 	     return (HWND)0;
 	  }
        }
-    }
-
-  /* Register built-in controls if not already done */
-  if (! ControlsInitialized)
-    {
-      ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
   if (Unicode)

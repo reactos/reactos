@@ -74,6 +74,10 @@ UserFindCallProc(IN PWINDOWCLASS Class,
                  IN WNDPROC WndProc,
                  IN BOOL bUnicode);
 
+BOOL
+UserRegisterSystemClasses(IN ULONG Count,
+                          IN PREGISTER_SYSCLASS SystemClasses);
+
 VOID
 UserAddCallProcToClass(IN OUT PWINDOWCLASS Class,
                        IN PCALLPROC CallProc);

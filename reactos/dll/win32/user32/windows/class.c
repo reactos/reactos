@@ -14,8 +14,6 @@
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
-extern BOOL ControlsInitialized;
-
 /*
  * @implemented
  */
@@ -60,12 +58,6 @@ GetClassInfoExA(
             SetLastError(ERROR_NOT_ENOUGH_MEMORY);
             return FALSE;
         }
-    }
-
-    /* Register built-in controls if not already done */
-    if (! ControlsInitialized)
-    {
-        ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
     Ret = NtUserGetClassInfo(hInstance,
@@ -121,12 +113,6 @@ GetClassInfoExW(
     {
         RtlInitUnicodeString(&ClassName,
                              lpszClass);
-    }
-
-    /* Register built-in controls if not already done */
-    if (! ControlsInitialized)
-    {
-        ControlsInitialized = ControlsInit(ClassName.Buffer);
     }
 
     return NtUserGetClassInfo(hInstance,

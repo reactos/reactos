@@ -105,8 +105,11 @@ DllMain(
    {
       case DLL_PROCESS_ATTACH:
          User32Instance = hInstanceDll;
-         if (!NtUserRegisterUserModule(hInstanceDll))
+         if (!NtUserRegisterUserModule(hInstanceDll) ||
+             !RegisterSystemControls())
+         {
              return FALSE;
+         }
 
          hProcessHeap = RtlGetProcessHeap();
          if (!Init())
