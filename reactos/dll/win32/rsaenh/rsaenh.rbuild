@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
-<module name="rsaenh" type="win32dll" baseaddress="${BASEADDRESS_RSAENH}" installbase="system32" installname="rsaenh.dll" allowwarnings="true" entrypoint="0">
+<module name="rsaenh" type="win32dll" baseaddress="${BASEADDRESS_RSAENH}" installbase="system32" installname="rsaenh.dll" allowwarnings="true">
 	<autoregister infsection="OleControlDlls" type="DllRegisterServer" />
 	<importlibrary definition="rsaenh.spec.def" />
 	<include base="rsaenh">.</include>
