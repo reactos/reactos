@@ -72,10 +72,10 @@ BOOL STDCALL KillSystemTimer(HWND,UINT_PTR);
 /* Item structure */
 typedef struct
 {
-    LPWSTR  str;       /* Item text */
-    BOOL    selected;  /* Is item selected? */
-    UINT    height;    /* Item height (only for OWNERDRAWVARIABLE) */
-    DWORD   data;      /* User data */
+    LPWSTR    str;       /* Item text */
+    BOOL      selected;  /* Is item selected? */
+    UINT      height;    /* Item height (only for OWNERDRAWVARIABLE) */
+    ULONG_PTR data;      /* User data */
 } LB_ITEMDATA;
 
 /* Listbox structure */
@@ -929,7 +929,7 @@ static INT LISTBOX_FindStringPos( LB_DESCR *descr, LPCWSTR str, BOOL exact )
             /* note that some application (MetaStock) expects the second item
              * to be in the listbox */
             cis.itemID1    = -1;
-            cis.itemData1  = (DWORD)str;
+            cis.itemData1  = (ULONG_PTR)str;
             cis.itemID2    = index;
             cis.itemData2  = descr->items[index].data;
             cis.dwLocaleId = descr->locale;
@@ -1604,7 +1604,7 @@ static void LISTBOX_MoveCaret( LB_DESCR *descr, INT index,
  *           LISTBOX_InsertItem
  */
 static LRESULT LISTBOX_InsertItem( LB_DESCR *descr, INT index,
-                                   LPWSTR str, DWORD data )
+                                   LPWSTR str, ULONG_PTR data )
 {
     LB_ITEMDATA *item;
     INT max_items;
@@ -2815,8 +2815,9 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
             SetLastError(ERROR_INVALID_INDEX);
             return LB_ERR;
         }
-        descr->items[wParam].data = (DWORD)lParam;
-        return LB_OKAY;
+        descr->items[wParam].data = lParam;
+        /* undocumented: returns TRUE, not LB_OKAY (0) */
+        return TRUE;
 
 #ifndef __REACTOS__
     case LB_GETCOUNT16:
