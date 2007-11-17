@@ -519,33 +519,33 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
 
     ASSERT(UserIsEnteredExclusive() == TRUE);
 
-    if (Window->IsSystem)
+    if (Wnd->IsSystem)
     {
-        return (Ansi ? Window->WndProcExtra : Window->WndProc);
+        return (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
     }
     else
     {
         if (!Ansi == Wnd->Unicode)
         {
-            return Window->WndProc;
+            return Wnd->WndProc;
         }
         else
         {
-            if (Window->CallProc != NULL)
+            if (Wnd->CallProc != NULL)
             {
-                return GetCallProcHandle(Window->CallProc);
+                return GetCallProcHandle(Wnd->CallProc);
             }
             else
             {
                 PCALLPROC NewCallProc, CallProc;
 
                 NewCallProc = UserFindCallProc(Wnd->Class,
-                                               Window->WndProc,
+                                               Wnd->WndProc,
                                                Wnd->Unicode);
                 if (NewCallProc == NULL)
                 {
                     NewCallProc = CreateCallProc(Wnd->ti->Desktop,
-                                                 Window->WndProc,
+                                                 Wnd->WndProc,
                                                  Wnd->Unicode,
                                                  Wnd->ti->kpi);
                     if (NewCallProc == NULL)
@@ -558,8 +558,8 @@ IntGetWindowProc(IN PWINDOW_OBJECT Window,
                                            NewCallProc);
                 }
 
-                CallProc = Window->CallProc;
-                Window->CallProc = NewCallProc;
+                CallProc = Wnd->CallProc;
+                Wnd->CallProc = NewCallProc;
 
                 return GetCallProcHandle((CallProc == NULL ? NewCallProc : CallProc));
             }
@@ -1645,19 +1645,19 @@ AllocErr:
 
    Wnd->UserData = 0;
 
-   Window->IsSystem = Wnd->Class->System;
+   Wnd->IsSystem = Wnd->Class->System;
    if (Wnd->Class->System)
    {
        /* NOTE: Always create a unicode window for system classes! */
        Wnd->Unicode = TRUE;
-       Window->WndProc = Wnd->Class->WndProc;
-       Window->WndProcExtra = Wnd->Class->WndProcExtra;
+       Wnd->WndProc = Wnd->Class->WndProc;
+       Wnd->WndProcExtra = Wnd->Class->WndProcExtra;
    }
    else
    {
        Wnd->Unicode = Wnd->Class->Unicode;
-       Window->WndProc = Wnd->Class->WndProc;
-       Window->CallProc = NULL;
+       Wnd->WndProc = Wnd->Class->WndProc;
+       Wnd->CallProc = NULL;
    }
 
    Window->OwnerThread = PsGetCurrentThread();
@@ -3608,25 +3608,25 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     }
 
     /* attempt to get the previous window proc */
-    if (Window->IsSystem)
+    if (Wnd->IsSystem)
     {
-        Ret = (Ansi ? Window->WndProcExtra : Window->WndProc);
+        Ret = (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
     }
     else
     {
         if (!Ansi == Wnd->Unicode)
         {
-            Ret = Window->WndProc;
+            Ret = Wnd->WndProc;
         }
         else
         {
             CallProc = UserFindCallProc(Wnd->Class,
-                                        Window->WndProc,
+                                        Wnd->WndProc,
                                         Wnd->Unicode);
             if (CallProc == NULL)
             {
                 CallProc = CreateCallProc(NULL,
-                                          Window->WndProc,
+                                          Wnd->WndProc,
                                           Wnd->Unicode,
                                           Wnd->ti->kpi);
                 if (CallProc == NULL)
@@ -3639,9 +3639,9 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
                                        CallProc);
             }
 
-            Window->CallProc = CallProc;
+            Wnd->CallProc = CallProc;
 
-            Ret = GetCallProcHandle(Window->CallProc);
+            Ret = GetCallProcHandle(Wnd->CallProc);
         }
     }
 
@@ -3649,22 +3649,22 @@ IntSetWindowProc(PWINDOW_OBJECT Window,
     {
         /* check if the new procedure matches with the one in the
            window class. If so, we need to restore both procedures! */
-        Window->IsSystem = (NewWndProc == Wnd->Class->WndProc ||
-                            NewWndProc == Wnd->Class->WndProcExtra);
+        Wnd->IsSystem = (NewWndProc == Wnd->Class->WndProc ||
+                         NewWndProc == Wnd->Class->WndProcExtra);
 
-        if (Window->IsSystem)
+        if (Wnd->IsSystem)
         {
-            Window->WndProc = Wnd->Class->WndProc;
-            Window->WndProcExtra = Wnd->Class->WndProcExtra;
+            Wnd->WndProc = Wnd->Class->WndProc;
+            Wnd->WndProcExtra = Wnd->Class->WndProcExtra;
             Wnd->Unicode = !Ansi;
             return Ret;
         }
     }
 
-    ASSERT(!Window->IsSystem);
+    ASSERT(!Wnd->IsSystem);
 
     /* update the window procedure */
-    Window->WndProc = NewWndProc;
+    Wnd->WndProc = NewWndProc;
     Wnd->Unicode = !Ansi;
 
     return Ret;

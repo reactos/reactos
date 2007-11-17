@@ -85,6 +85,12 @@ SharedPtrToKernel(PVOID Ptr)
     return (PVOID)((ULONG_PTR)Ptr + g_pi->UserHeapDelta);
 }
 
+static __inline BOOL
+IsThreadHooked(PW32THREADINFO ti)
+{
+    return ti->Hooks != 0;
+}
+
 PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
 PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);

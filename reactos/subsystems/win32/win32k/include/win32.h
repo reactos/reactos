@@ -14,7 +14,7 @@ typedef struct _W32THREAD
   DWORD MessagePumpHookValue;
   BOOLEAN IsExiting;
   SINGLE_LIST_ENTRY  ReferencesList;
-
+  ULONG Hooks;
   PW32THREADINFO ThreadInfo;
 } W32THREAD, *PW32THREAD;
 

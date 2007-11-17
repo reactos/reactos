@@ -379,14 +379,14 @@ NtUserDispatchMessage(PNTUSERDISPATCHMESSAGEINFO UnsafeMsgInfo)
             MsgInfo.HandledByKernel = FALSE;
             Result = 0;
 
-            if (Window->IsSystem)
+            if (Window->Wnd->IsSystem)
             {
-                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->WndProc : Window->WndProcExtra);
+                MsgInfo.Proc = (!MsgInfo.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
             }
             else
             {
                 MsgInfo.Ansi = !Window->Wnd->Unicode;
-                MsgInfo.Proc = Window->WndProc;
+                MsgInfo.Proc = Window->Wnd->WndProc;
             }
          }
       }
@@ -1390,7 +1390,7 @@ co_IntSendMessageTimeoutSingle(HWND hWnd,
           RETURN( FALSE);
       }
 
-      Result = (ULONG_PTR)co_IntCallWindowProc(Window->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
+      Result = (ULONG_PTR)co_IntCallWindowProc(Window->Wnd->WndProc, !Window->Wnd->Unicode, hWnd, Msg, wParam,
                lParamPacked,lParamBufferSize);
 
       if(uResult)
@@ -1569,14 +1569,14 @@ co_IntDoSendMessage(HWND hWnd,
          Info.Ansi = ! Window->Wnd->Unicode;
       }
 
-      if (Window->IsSystem)
+      if (Window->Wnd->IsSystem)
       {
-          Info.Proc = (!Info.Ansi ? Window->WndProc : Window->WndProcExtra);
+          Info.Proc = (!Info.Ansi ? Window->Wnd->WndProc : Window->Wnd->WndProcExtra);
       }
       else
       {
           Info.Ansi = !Window->Wnd->Unicode;
-          Info.Proc = Window->WndProc;
+          Info.Proc = Window->Wnd->WndProc;
       }
    }
    else

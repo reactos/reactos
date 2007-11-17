@@ -2585,6 +2585,7 @@ GetW32ThreadInfo(VOID)
             /* initialize it */
             ti->kpi = GetW32ProcessInfo();
             ti->pi = UserHeapAddressToUser(ti->kpi);
+            ti->Hooks = W32Thread->Hooks;
             if (W32Thread->Desktop != NULL)
             {
                 ti->Desktop = W32Thread->Desktop->DesktopInfo;

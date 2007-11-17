@@ -1298,6 +1298,30 @@ CallWindowProcW(WNDPROC lpPrevWndFunc,
 }
 
 
+static LRESULT WINAPI
+IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam, IN BOOL Ansi)
+{
+    WNDPROC WndProc;
+    BOOL IsAnsi;
+
+    if (Wnd->IsSystem)
+    {
+        WndProc = (Ansi ? Wnd->WndProcExtra : Wnd->WndProc);
+        IsAnsi = Ansi;
+    }
+    else
+    {
+        WndProc = Wnd->WndProc;
+        IsAnsi = !Wnd->Unicode;
+    }
+
+    if (!Ansi)
+        return IntCallWindowProcW(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
+    else
+        return IntCallWindowProcA(IsAnsi, WndProc, hWnd, Msg, wParam, lParam);
+}
+
+
 /*
  * @implemented
  */
@@ -1651,6 +1675,25 @@ SendMessageW(HWND Wnd,
   NTUSERSENDMESSAGEINFO Info;
   LRESULT Result;
 
+  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  {
+      PWINDOW Window;
+      PW32THREADINFO ti = GetW32ThreadInfo();
+
+      Window = ValidateHwnd(Wnd);
+      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      {
+          /* NOTE: We can directly send messages to the window procedure
+                   if *all* the following conditions are met:
+
+                   * Window belongs to calling thread
+                   * The calling thread is not being hooked
+           */
+
+          return IntCallMessageProc(Window, Wnd, Msg, wParam, lParam, FALSE);
+      }
+  }
+
   UMMsg.hwnd = Wnd;
   UMMsg.message = Msg;
   UMMsg.wParam = wParam;
@@ -1688,6 +1731,25 @@ SendMessageA(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
   MSG KMMsg;
   LRESULT Result;
   NTUSERSENDMESSAGEINFO Info;
+
+  if (Wnd != HWND_BROADCAST && (Msg < WM_DDE_FIRST || Msg > WM_DDE_LAST))
+  {
+      PWINDOW Window;
+      PW32THREADINFO ti = GetW32ThreadInfo();
+
+      Window = ValidateHwnd(Wnd);
+      if (Window != NULL && SharedPtrToUser(Window->ti) == ti && !IsThreadHooked(ti))
+      {
+          /* NOTE: We can directly send messages to the window procedure
+                   if *all* the following conditions are met:
+
+                   * Window belongs to calling thread
+                   * The calling thread is not being hooked
+           */
+
+          return IntCallMessageProc(Window, Wnd, Msg, wParam, lParam, TRUE);
+      }
+  }
 
   AnsiMsg.hwnd = Wnd;
   AnsiMsg.message = Msg;

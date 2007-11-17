@@ -100,6 +100,16 @@ typedef struct _WINDOW
     struct _W32THREADINFO *ti;
     RECT WindowRect;
     RECT ClientRect;
+
+    WNDPROC WndProc;
+    union
+    {
+        /* Pointer to a call procedure handle */
+        PCALLPROC CallProc;
+        /* Extra Wnd proc (windows of system classes) */
+        WNDPROC WndProcExtra;
+    };
+
     /* Size of the extra data associated with the window. */
     ULONG ExtraDataSize;
     /* Style. */
@@ -117,6 +127,8 @@ typedef struct _WINDOW
     UNICODE_STRING WindowName;
 
     UINT Unicode : 1;
+    /* Indicates whether the window is derived from a system class */
+    UINT IsSystem : 1;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO
@@ -141,6 +153,8 @@ typedef struct _W32THREADINFO
     PVOID DesktopHeapBase;
     ULONG_PTR DesktopHeapLimit;
     ULONG_PTR DesktopHeapDelta;
+    /* A mask of what hooks are currently active */
+    ULONG Hooks;
 } W32THREADINFO, *PW32THREADINFO;
 
 /* Window Client Information structure */
