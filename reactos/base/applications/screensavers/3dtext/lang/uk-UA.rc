@@ -1,0 +1,27 @@
+/*
+ * PROJECT:     OpenGL 3DText ScreenSaver
+ * LICENSE:     Public Domain
+ * FILE:        base/applications/screensavers/3dtext/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for OpenGL 3DText ScreenSaver
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_CONFIG DIALOGEX 0, 0, 273, 178
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Параметры заставки ""Об'ємний текст"""
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,216,7,50,14
+    PUSHBUTTON      "Скасувати",IDCANCEL,216,24,50,14
+    EDITTEXT        IDC_MESSAGE_TEXT,18,28,122,14,ES_AUTOHSCROLL
+    LTEXT           "Текст",IDC_STATIC_TEXT,18,17,65,8
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Заставка ""Об'ємний текст"""
+    IDS_TITLE       "Про"
+    IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
+END

@@ -1,5 +1,6 @@
 /*
  * Copyright 2004 Ilya Korniyko
+ *           2007 Artem Reznikov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -20,9 +21,9 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 MENU_001 MENU DISCARDABLE
 BEGIN
-	MENUITEM "&Великі Іконки",   FCIDM_SHVIEW_BIGICON
-	MENUITEM "&Малі Іконки",     FCIDM_SHVIEW_SMALLICON
-	MENUITEM "&Список",          FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "&Великі значки",   FCIDM_SHVIEW_BIGICON
+	MENUITEM "&Дрібні значки",   FCIDM_SHVIEW_SMALLICON
+	MENUITEM "Спис&ок",          FCIDM_SHVIEW_LISTVIEW
 	MENUITEM "&Подробиці",       FCIDM_SHVIEW_REPORTVIEW
 END
 
@@ -33,27 +34,27 @@ BEGIN
 	BEGIN
 		POPUP "&Вигляд"
 		BEGIN
-			MENUITEM "&Великі Іконки",     FCIDM_SHVIEW_BIGICON
-			MENUITEM "&Малі Іконки",       FCIDM_SHVIEW_SMALLICON
-			MENUITEM "&Список",            FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "&Великі значки",     FCIDM_SHVIEW_BIGICON
+			MENUITEM "&Дрібні значки",     FCIDM_SHVIEW_SMALLICON
+			MENUITEM "Спис&ок",            FCIDM_SHVIEW_LISTVIEW
 			MENUITEM "&Подробиці",         FCIDM_SHVIEW_REPORTVIEW
 		END
 		MENUITEM SEPARATOR
-		POPUP "Впорядкувати &Іконки"
+		POPUP "&Упорядкувати значки"
 		BEGIN
-			MENUITEM "За &Назвою",         0x30  /* column 0 */
-			MENUITEM "За &Типом",          0x32  /* column 2 */
-			MENUITEM "За &Розміром",       0x31  /* ... */
-			MENUITEM "За &Датою",          0x33
+			MENUITEM "за &ім'ям",          0x30  /* column 0 */
+			MENUITEM "за &типом",          0x32  /* column 2 */
+			MENUITEM "за &розміром",       0x31  /* ... */
+			MENUITEM "за &датою",          0x33
 			MENUITEM SEPARATOR
-			MENUITEM "&Автоматично",       FCIDM_SHVIEW_AUTOARRANGE
+			MENUITEM "&автоматично",       FCIDM_SHVIEW_AUTOARRANGE
 		END
-		MENUITEM "Вирівняти Іконки",     FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM "Вирівняти значки",     FCIDM_SHVIEW_SNAPTOGRID
 		MENUITEM SEPARATOR
 		MENUITEM "Оновити",              FCIDM_SHVIEW_REFRESH
 		MENUITEM SEPARATOR
 		MENUITEM "Вставити",             FCIDM_SHVIEW_INSERT
-		MENUITEM "Вставити Посилання",   FCIDM_SHVIEW_INSERTLINK
+		MENUITEM "Вставити ярлик",       FCIDM_SHVIEW_INSERTLINK
 		MENUITEM SEPARATOR
 		MENUITEM "Властивості",          FCIDM_SHVIEW_PROPERTIES
 	END
@@ -65,26 +66,26 @@ BEGIN
 	POPUP ""
 	BEGIN
 		MENUITEM "&Провідник",           FCIDM_SHVIEW_EXPLORE
-		MENUITEM "&Відкрити",            FCIDM_SHVIEW_OPEN
+		MENUITEM "В&ідкрити",            FCIDM_SHVIEW_OPEN
 		MENUITEM SEPARATOR
-		MENUITEM "Ви&різати",            FCIDM_SHVIEW_CUT
-		MENUITEM "&Копія",               FCIDM_SHVIEW_COPY
+		MENUITEM "&Вирізати",            FCIDM_SHVIEW_CUT
+		MENUITEM "&Копіювати",           FCIDM_SHVIEW_COPY
 		MENUITEM SEPARATOR
-		MENUITEM "&Створити Посилання",  FCIDM_SHVIEW_CREATELINK
-		MENUITEM "Ви&далити",            FCIDM_SHVIEW_DELETE
-		MENUITEM "Пере&йменувати",       FCIDM_SHVIEW_RENAME
+		MENUITEM "Створити &ярлик",      FCIDM_SHVIEW_CREATELINK
+		MENUITEM "В&идалити",            FCIDM_SHVIEW_DELETE
+		MENUITEM "Перей&менувати",       FCIDM_SHVIEW_RENAME
 		MENUITEM SEPARATOR
-		MENUITEM "&Властивості",         FCIDM_SHVIEW_PROPERTIES
+		MENUITEM "В&ластивості",         FCIDM_SHVIEW_PROPERTIES
 	END
 END
 
 SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Огляд до теки"
+CAPTION "Огляд папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	DEFPUSHBUTTON "OK", 1, 80, 176, 50, 12, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Відміна", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Скасувати", 2, 134, 176, 50, 12, WS_GROUP | WS_TABSTOP
 	LTEXT "", IDD_TITLE, 4, 4, 180, 12
 	LTEXT "", IDD_STATUS, 4, 25, 180, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
@@ -92,28 +93,28 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Огляд до теки"
+CAPTION "Огляд папок"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "Папка:", IDD_FOLDER, 10, 152, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Створити &папку", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
 	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Відміна", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Скасувати", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Message"
+CAPTION "Повідомлення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Yes to &all", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Так", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Так для &всіх", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Ні", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Скасувати", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -125,14 +126,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Версія " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Ця версія ReactOS зареєстрована на:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "Доступна фізична пам'ять:", IDC_STATIC, 35, 152, 130, 10
 	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
 	DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
 	
@@ -153,12 +154,12 @@ CAPTION ""
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
-	LTEXT "Введіть ім'я програми, теки, документу чи ресурс Інтернету, і Wine відкриє їх.", 12289, 36, 11, 182, 18
+	LTEXT "Введіть ім'я програми, папки, документа або ресурсу Інтернету, і ReactOS відкриє їх.", 12289, 36, 11, 182, 18
 	LTEXT "&Відкрити:", 12305, 7, 39, 24, 10
 	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
 	DEFPUSHBUTTON "OK", IDOK, 62, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "Відміна", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
-	PUSHBUTTON "&Огляд...", 12288, 170, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "Скасувати", IDCANCEL, 116, 63, 50, 14, WS_TABSTOP
+	PUSHBUTTON "О&гляд...", 12288, 170, 63, 50, 14, WS_TABSTOP
 END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
@@ -296,7 +297,7 @@ END
 
 DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Hardware"
+CAPTION "Устаткування"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 END
@@ -319,21 +320,21 @@ BEGIN
 	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
 	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
 	PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
-	PUSHBUTTON "Cancel", 14008, 122, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "Скасувати", 14008, 122, 170, 60, 14, WS_TABSTOP
 END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Властивості Кошика"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
 	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	RADIOBUTTON "&Користувацький розмір:", 14001, 20, 90, 80, 10, WS_TABSTOP
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	LTEXT "&Граничний об'єм кошика (Мб):", -1, 20, 105, 70, 10
+	RADIOBUTTON "Не переміщ&увати файли до кошика, а видаляти їх остаточно відразу", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "Пока&зувати діалог підтвердження видалення", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
@@ -346,49 +347,49 @@ BEGIN
 	IDS_SHV_COLUMN5             "Атрибути"
 	IDS_SHV_COLUMN6             "Розмір"
 	IDS_SHV_COLUMN7             "Вільний Розмір"
-	IDS_SHV_COLUMN8             "Name"
-	IDS_SHV_COLUMN9             "Comments"
-	IDS_SHV_COLUMN10            "Owner"
-	IDS_SHV_COLUMN11            "Group"
-	IDS_SHV_COLUMN_DELFROM      "Original location"
-	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN8             "Ім'я"
+	IDS_SHV_COLUMN9             "Примітка"
+	IDS_SHV_COLUMN10            "Власник"
+	IDS_SHV_COLUMN11            "Група"
+	IDS_SHV_COLUMN_DELFROM      "Вихідне розташування"
+	IDS_SHV_COLUMN_DELDATE      "Дата видалення"
 
 	/* special folders */
-	IDS_DESKTOP                 "Стільниця"
+	IDS_DESKTOP                 "Робочий стіл"
 	IDS_MYCOMPUTER              "Мій Комп'ютер"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Кошик"
 
 	/* context menus */
-	IDS_VIEW_LARGE              "&Великі Іконки"
-	IDS_VIEW_SMALL              "&Малі Іконки"
-	IDS_VIEW_LIST               "&Список"
+	IDS_VIEW_LARGE              "&Великі значки"
+	IDS_VIEW_SMALL              "&Дрібні значки"
+	IDS_VIEW_LIST               "Спис&ок"
 	IDS_VIEW_DETAILS            "&Подробиці"
 	IDS_SELECT                  "Ви&брати"
 	IDS_OPEN                    "Ві&дкрити"
 
-	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову теку: Відмова у доступі."
-	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової теки"
+	IDS_CREATEFOLDER_DENIED     "Не вдалося створити нову папку: Відмова у доступі."
+	IDS_CREATEFOLDER_CAPTION    "Помилка при створенні нової папки"
 	IDS_DELETEITEM_CAPTION      "Підтвердження вилучення файлу"
-	IDS_DELETEFOLDER_CAPTION    "Підтвердження вилучення теки"
-	IDS_DELETEITEM_TEXT         "Ви впевнені, що хочете вилучити '%1'?"
-	IDS_DELETEMULTIPLE_TEXT     "Ви впевнені, що хочете вилучити ці %1 елементи(ів)?"
-	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
-	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
-	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
-	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
-	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_DELETEFOLDER_CAPTION    "Підтвердження вилучення папки"
+	IDS_DELETEITEM_TEXT         "Ви дійсно бажаєте видалити '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "Ви дійсно бажаєте видалити ці %1 об'єкти(ів)?"
+	IDS_DELETESELECTED_TEXT     "Ви дійсно бажаєте видалити ці об'єкти?"
+	IDS_TRASHITEM_TEXT          "Ви дійсно бажаєте перемістити '%1' до кошика?"
+	IDS_TRASHFOLDER_TEXT        "Ви дійсно бажаєте перемістити '%1' і весь її вміст до кошика?"
+	IDS_TRASHMULTIPLE_TEXT      "Ви дійсно бажаєте перемістити ці об'єкти (%1 шт.) до кошика?"
+	IDS_CANTTRASH_TEXT          "Об'єкт '%1' не можна перемістити до кошика. Бажаєте видалити його?"
+	IDS_OVERWRITEFILE_TEXT      "Ця папка вже містить файл з ім'ям '%1'.\n\nБажаєте замінити його?"
 	IDS_OVERWRITEFILE_CAPTION   "Підтвердження Перезапису Файлу"
-	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+	IDS_OVERWRITEFOLDER_TEXT    "Ця папка вже містить папку з ім'ям '%1'.\n\n"\
+		"Якщо файли в папці призначення мають ті ж імена, що файли у вибраній папці,\n"\
+		"вони будуть замінені. Ви все ще бажаєте перемістити або\n"\
+		"скопіювати папку?"
 
 	/* message box strings */
-	IDS_RESTART_TITLE           "Restart"
-	IDS_RESTART_PROMPT          "Do you want to restart the system?"
-	IDS_SHUTDOWN_TITLE          "Shutdown"
-	IDS_SHUTDOWN_PROMPT         "Do you want to shutdown?"
+	IDS_RESTART_TITLE           "Перезавантажити"
+	IDS_RESTART_PROMPT          "Ви хочете перезавантажити систему?"
+	IDS_SHUTDOWN_TITLE          "Вимкнути"
+	IDS_SHUTDOWN_PROMPT         "Ви хочете вимкнути комп'ютер?"
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
@@ -419,16 +420,16 @@ BEGIN
 	IDS_COMMON_VIDEO            "Documents\\My Video"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
-	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_FIXED             "Локальний диск"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_DRIVE_NETWORK           "Мережний диск"
 
-	IDS_OPEN_WITH               "Open With"
-	IDS_OPEN_WITH_CHOOSE        "Select Program"
+	IDS_OPEN_WITH               "Відкрити за допомогою"
+	IDS_OPEN_WITH_CHOOSE        "Вибрати програму"
 
-	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
-	IDS_SHELL_ABOUT_BACK        "< &Back"
+	IDS_SHELL_ABOUT_AUTHORS     "&Автори"
+	IDS_SHELL_ABOUT_BACK        "< &Назад"
 	FCIDM_SHVIEW_NEW 	    "Створити"
-	FCIDM_SHVIEW_NEWFOLDER 	    "Нова &Тека"
-	FCIDM_SHVIEW_NEWLINK 	    "Нове &Посилання"
+	FCIDM_SHVIEW_NEWFOLDER 	    "&Папку"
+	FCIDM_SHVIEW_NEWLINK 	    "&Ярлик"
 END

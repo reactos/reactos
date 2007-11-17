@@ -214,8 +214,8 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "—пец≥альн≥ можливост≥"
+	IDS_CMT_MAGNIFY      	     "≈кранна лупа"
 END
 
 STRINGTABLE
