@@ -1328,26 +1328,38 @@ IntCallMessageProc(IN PWINDOW Wnd, IN HWND hWnd, IN UINT Msg, IN WPARAM wParam, 
 LRESULT STDCALL
 DispatchMessageA(CONST MSG *lpmsg)
 {
-  NTUSERDISPATCHMESSAGEINFO Info;
-  LRESULT Result;
+    LRESULT Ret = 0;
+    PWINDOW Wnd;
 
-  Info.Ansi = TRUE;
-  Info.Msg = *lpmsg;
-  Result = NtUserDispatchMessage(&Info);
-  if (! Info.HandledByKernel)
+    if (lpmsg->hwnd != NULL)
     {
-      /* We need to send the message ourselves */
-      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
-                       Info.Msg.wParam, Info.Msg.lParam);
-      Result = IntCallWindowProcA(Info.Ansi, Info.Proc, Info.Msg.hwnd,
-                                  Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
-      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
-                      Info.Msg.wParam, Info.Msg.lParam);
+        Wnd = ValidateHwnd(lpmsg->hwnd);
+        if (!Wnd || SharedPtrToUser(Wnd->ti) != GetW32ThreadInfo())
+            return 0;
     }
-  MsgConversionCleanup(lpmsg, TRUE, TRUE, &Result);
+    else
+        Wnd = NULL;
 
-  return Result;
-}
+    if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
+    {
+        WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
+        Ret = WndProc(lpmsg->hwnd,
+                      lpmsg->message,
+                      lpmsg->wParam,
+                      GetTickCount());
+    }
+    else if (Wnd != NULL)
+    {
+        /* FIXME: WM_PAINT needs special handling */
+        Ret = IntCallMessageProc(Wnd,
+                                 lpmsg->hwnd,
+                                 lpmsg->message,
+                                 lpmsg->wParam,
+                                 lpmsg->lParam,
+                                 TRUE);
+    }
+
+    return Ret;}
 
 
 /*
@@ -1356,25 +1368,38 @@ DispatchMessageA(CONST MSG *lpmsg)
 LRESULT STDCALL
 DispatchMessageW(CONST MSG *lpmsg)
 {
-  NTUSERDISPATCHMESSAGEINFO Info;
-  LRESULT Result;
+    LRESULT Ret = 0;
+    PWINDOW Wnd;
 
-  Info.Ansi = FALSE;
-  Info.Msg = *lpmsg;
-  Result = NtUserDispatchMessage(&Info);
-  if (! Info.HandledByKernel)
+    if (lpmsg->hwnd != NULL)
     {
-      /* We need to send the message ourselves */
-      SPY_EnterMessage(SPY_DISPATCHMESSAGE, Info.Msg.hwnd, Info.Msg.message,
-                       Info.Msg.wParam, Info.Msg.lParam);
-      Result = IntCallWindowProcW(Info.Ansi, Info.Proc, Info.Msg.hwnd,
-                                  Info.Msg.message, Info.Msg.wParam, Info.Msg.lParam);
-      SPY_ExitMessage(SPY_RESULT_OK, Info.Msg.hwnd, Info.Msg.message, Result,
-                      Info.Msg.wParam, Info.Msg.lParam);
+        Wnd = ValidateHwnd(lpmsg->hwnd);
+        if (!Wnd || SharedPtrToUser(Wnd->ti) != GetW32ThreadInfo())
+            return 0;
     }
-  MsgConversionCleanup(lpmsg, FALSE, TRUE, &Result);
+    else
+        Wnd = NULL;
 
-  return Result;
+    if ((lpmsg->message == WM_TIMER || lpmsg->message == WM_SYSTIMER) && lpmsg->lParam != 0)
+    {
+        WNDPROC WndProc = (WNDPROC)lpmsg->lParam;
+        Ret = WndProc(lpmsg->hwnd,
+                      lpmsg->message,
+                      lpmsg->wParam,
+                      GetTickCount());
+    }
+    else if (Wnd != NULL)
+    {
+        /* FIXME: WM_PAINT needs special handling */
+        Ret = IntCallMessageProc(Wnd,
+                                 lpmsg->hwnd,
+                                 lpmsg->message,
+                                 lpmsg->wParam,
+                                 lpmsg->lParam,
+                                 FALSE);
+    }
+
+    return Ret;
 }
 
 
