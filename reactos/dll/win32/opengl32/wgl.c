@@ -1027,7 +1027,7 @@ rosglMakeCurrent( HDC hdc, HGLRC hglrc )
 			DBGPRINT( "Info: Calling DrvSetContext!" );
 			SetLastError( ERROR_SUCCESS );
 			icdTable = glrc->icd->DrvSetContext( hdc, glrc->hglrc,
-			                                     ROSGL_SetContextCallBack );
+			                                     (void *)ROSGL_SetContextCallBack );
 			if (icdTable == NULL)
 			{
 				DBGPRINT( "Error: DrvSetContext failed (%d)\n", GetLastError() );

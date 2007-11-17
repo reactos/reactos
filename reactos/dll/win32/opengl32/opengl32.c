@@ -601,7 +601,7 @@ static DWORD
 OPENGL32_RegGetDriverInfo( LPCWSTR driver, GLDRIVERDATA *icd )
 {
 	HKEY hKey;
-	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY"\\";
+	WCHAR subKey[1024] = OPENGL_DRIVERS_SUBKEY2;
 	LONG ret;
 	DWORD type, size;
 

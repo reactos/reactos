@@ -23,6 +23,7 @@ extern "C" {
 #endif
 
 #define OPENGL_DRIVERS_SUBKEY L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers"
+#define OPENGL_DRIVERS_SUBKEY2 L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\OpenGLDrivers\\"
 
 /* gl function list */
 #include "glfuncs.h"
@@ -42,16 +43,12 @@ extern "C" {
 #endif /* !NDEBUG */
 
 /* debug macros */
-#ifdef _MSC_VER
-inline void DBGPRINT ( ... ) {}
-#else
 # ifdef DEBUG_OPENGL32
 ULONG DbgPrint(PCH Format,...);
 #  include <debug.h>
 #  define DBGPRINT( fmt, args... ) \
           DPRINT( "OpenGL32.DLL: %s: "fmt"\n", __FUNCTION__, ##args )
 # endif
-#endif
 
 #ifndef DBGPRINT
 # define DBGPRINT( ... ) do {} while (0)
