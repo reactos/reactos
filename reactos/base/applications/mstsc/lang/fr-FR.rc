@@ -33,16 +33,17 @@ BEGIN
     LTEXT           "Note: Les paramètres de l'ordinateur distant pourraient remplacer ce paramètre.",IDC_STATIC,56,143,165,18
     LTEXT           "Moins",IDC_STATIC,35,52,15,8
     LTEXT           "Plus",IDC_STATIC,189,51,17,8
+    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
 END
 
-IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 277
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Connexion au bureau distant"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "Connecter",IDOK,147,256,50,14
-    PUSHBUTTON      "Annuler",IDCANCEL,203,256,50,14
-    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,54,246,198
+    DEFPUSHBUTTON   "Connecter",IDOK,147,245,50,14
+    PUSHBUTTON      "Annuler",IDCANCEL,203,245,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
 END
 
 
@@ -50,4 +51,13 @@ STRINGTABLE
 BEGIN
     IDS_TAB_GENERAL         "Général"
     IDS_TAB_DISPLAY         "Affichage"
+    IDS_256COLORS           "256 Coleurs"
+    IDS_HIGHCOLOR15         "Couleurs hautes (15 bit)"
+    IDS_HIGHCOLOR16         "Couleurs hautes (16 bit)"
+    IDS_HIGHCOLOR24         "Couleurs vraies (24 bit)"
+    IDS_PIXEL               "%lux%lu Pixels"
+    IDS_FULLSCREEN          "Plein écran"
+    IDS_BROWSESERVER        "<Parcourir pour plus...>"
+    IDS_HEADERTEXT1         "Bureau distant"
+    IDS_HEADERTEXT2         "Connexion"
 END
