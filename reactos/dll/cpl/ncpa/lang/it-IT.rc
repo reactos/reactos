@@ -20,7 +20,7 @@ BEGIN
  LTEXT "Collegati usando:", -1, 9,9,217,8
  EDITTEXT IDC_NETCARDNAME, 9, 21, 230, 12, WS_DISABLED | WS_BORDER | WS_TABSTOP
  PUSHBUTTON "&Configura", IDC_CONFIGURE, 189, 38, 50, 14
- LTEXT "I componentis marcati sono usati da questa connessione:", -1, 9, 59, 217, 8
+ LTEXT "I componenti marcati sono usati da questa connessione:", -1, 9, 59, 217, 8
  LISTBOX IDC_COMPONENTSLIST, 9, 71, 230, 55, LBS_STANDARD | LBS_NOINTEGRALHEIGHT
  PUSHBUTTON "&Installa", IDC_INSTALL, 9, 130, 65, 14, WS_DISABLED | WS_TABSTOP
  PUSHBUTTON "&Disinstalla", IDC_UNINSTALL, 90, 130, 65, 14, WS_DISABLED | WS_TABSTOP
@@ -33,7 +33,7 @@ END
 
 IDD_CARDPROPERTIES DIALOG DISCARDABLE  0, 0, 200,180
 STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
  GROUPBOX "Connessione", -1, 9, 8, 182, 58, BS_GROUPBOX
@@ -78,7 +78,7 @@ END
 
 IDD_TCPIPPROPERTIES DIALOG DISCARDABLE  0, 0, 246, 228
 STYLE DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg"
 BEGIN
  LTEXT "Puoi ottenere automaticamente la configurazione IP se la vostra rete lo supporta. Altrimenti è necessario contattare l'amministratore di rete per farsi dare le impostazioni appropriate.", -1, 9, 9, 228, 27

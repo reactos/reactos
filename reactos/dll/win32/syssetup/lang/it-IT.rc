@@ -209,14 +209,14 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_TOOLS        "System Tools"
-	IDS_CMT_CHARMAP      "CharMap"
+	IDS_SYS_TOOLS        "Strumenti di sistema"
+	IDS_CMT_CHARMAP      "Mappa dei caratteri"
 END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Accessibilità"
+	IDS_CMT_MAGNIFY      	     "Ingrandisci"
 END
 
 STRINGTABLE

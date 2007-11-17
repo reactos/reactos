@@ -6,6 +6,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 #include "lang/en-US.rc"
 #include "lang/de-DE.rc"
 #include "lang/id-ID.rc"
+#include "lang/it-IT.rc"
 #include "lang/pl-PL.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"

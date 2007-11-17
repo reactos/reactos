@@ -177,12 +177,12 @@ END
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sorting"
+CAPTION "Ordinamento"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sorting", -1, 7, 7, 230, 74
-    LTEXT "Sorting methods define the sorting order of characters, words, files and folders.", -1, 14, 17, 220, 25
-    LTEXT "Select a sorting method for your language:", -1, 14, 37, 220, 22
+    GROUPBOX "Ordinamento", -1, 7, 7, 230, 74
+    LTEXT "Il metodo di ordinamento definisce come considerare l'ordine di caratteri, parole, file e cartelle.", -1, 14, 17, 220, 25
+    LTEXT "Scegliere il metodo di orinamento per il vostro linguaggio:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
