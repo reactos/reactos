@@ -992,7 +992,42 @@ HWND STDCALL
 GetWindow(HWND hWnd,
 	  UINT uCmd)
 {
-  return NtUserGetWindow(hWnd, uCmd);
+    PWINDOW Wnd, FoundWnd;
+    HWND Ret = NULL;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return NULL;
+
+    _SEH_TRY
+    {
+        FoundWnd = NULL;
+        switch (uCmd)
+        {
+            case GW_OWNER:
+                if (Wnd->Owner != NULL)
+                    FoundWnd = DesktopPtrToUser(Wnd->Owner);
+                break;
+
+            default:
+                /* FIXME: Optimize! Fall back to NtUserGetWindow for now... */
+                Wnd = NULL;
+                break;
+        }
+
+        if (FoundWnd != NULL)
+            Ret = UserHMGetHandle(FoundWnd);
+    }
+    _SEH_HANDLE
+    {
+        /* Do nothing */
+    }
+    _SEH_END;
+
+    if (!Wnd) /* Fall back to win32k... */
+        Ret = NtUserGetWindow(hWnd, uCmd);
+
+    return Ret;
 }
 
 
