@@ -56,7 +56,7 @@ CreateDefaultLangList(HWND hWnd)
     INT Count;
     LCID Lcid;
 
-    if(RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, TEXT("Keyboard Layout\\Preload"), 0, KEY_QUERY_VALUE, &hKey) != ERROR_SUCCESS)
     {
         return FALSE;
     }
@@ -81,14 +81,14 @@ CreateDefaultLangList(HWND hWnd)
             GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
 
             SendMessage(hWnd,
-                        CB_INSERTSTRING,
+                        CB_ADDSTRING,
                         0,
                         (LPARAM)Lang);
             if (Count == 0)
             {
                 SendMessage(hWnd,
                             CB_SELECTSTRING,
-                            (WPARAM) -1,
+                            (WPARAM)-1,
                             (LPARAM)Lang);
             }
         }

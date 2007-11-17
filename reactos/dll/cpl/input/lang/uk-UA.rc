@@ -15,7 +15,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Мова вводу за замовчуванням", -1, 7,7,231,53
     LTEXT "Виберіть одну з установлених мов вводу, яка використовуватиметься при запуску комп'ютера.",-1,14,18,220,17
-    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
     GROUPBOX "Установлені служби", -1, 7,65,231,115
     LTEXT "Виберіть потрібні служби для кожної мови вводу зі списку. Змінити список можна за допомогою кнопок ""Додати"" та ""Видалити"".",-1,14,75,220,17
     CONTROL "Текст", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78

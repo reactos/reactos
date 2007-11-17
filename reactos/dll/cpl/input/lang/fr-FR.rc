@@ -7,7 +7,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Langue de saisie par défaut", -1, 7,7,231,53
     LTEXT "Sélectionnez une des langues de saisie installées pour l'utiliser quand vous allumez votre ordinateur.",-1,14,18,220,17
-    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST
+    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
     GROUPBOX "Services &installés", -1, 7,65,231,115
     LTEXT "Sélectionnez les services que vous voulez pour chaque langue de saisie affichée dans la liste. Utilisez les boutons Ajouter et Supprimer pour modifier cette liste.",-1,14,75,220,17
     CONTROL "TEXT", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78
