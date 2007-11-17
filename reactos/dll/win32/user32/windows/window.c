@@ -893,7 +893,37 @@ GetLastActivePopup(HWND hWnd)
 HWND STDCALL
 GetParent(HWND hWnd)
 {
-  return NtUserGetParent(hWnd);
+    PWINDOW Wnd, WndParent;
+    HWND Ret = NULL;
+
+    Wnd = ValidateHwnd(hWnd);
+    if (Wnd != NULL)
+    {
+        _SEH_TRY
+        {
+            WndParent = NULL;
+            if (Wnd->Style & WS_CHILD)
+            {
+                if (Wnd->Parent != NULL)
+                    WndParent = DesktopPtrToUser(Wnd->Parent);
+            }
+            else if (Wnd->Style & WS_POPUP)
+            {
+                if (Wnd->Owner != NULL)
+                    WndParent = DesktopPtrToUser(Wnd->Owner);
+            }
+
+            if (WndParent != NULL)
+                Ret = UserHMGetHandle(WndParent);
+        }
+        _SEH_HANDLE
+        {
+            /* Do nothing */
+        }
+        _SEH_END;
+    }
+
+    return Ret;
 }
 
 

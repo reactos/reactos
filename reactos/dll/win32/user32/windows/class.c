@@ -527,6 +527,7 @@ GetWindowLongA ( HWND hWnd, int nIndex )
                 return Wnd->UserData;
 
             case GWL_HWNDPARENT:
+                DbgPrint("GWL_HWNDPARENT\n");
                 /* FIXME: Implement in user32 */
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need
@@ -580,6 +581,7 @@ GetWindowLongW(HWND hWnd, int nIndex)
                 return Wnd->UserData;
 
             case GWL_HWNDPARENT:
+                DbgPrint("GWL_HWNDPARENT\n");
                 /* FIXME: Implement in user32 */
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need

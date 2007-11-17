@@ -5,6 +5,9 @@ struct _W32PROCESSINFO;
 struct _W32THREADINFO;
 struct _WINDOW;
 
+/* FIXME: UserHMGetHandle needs to be updated once the new handle manager is implemented */
+#define UserHMGetHandle(obj) ((obj)->hdr.Handle)
+
 typedef struct _REGISTER_SYSCLASS
 {
     /* This is a reactos specific class used to initialize the
@@ -19,6 +22,12 @@ typedef struct _REGISTER_SYSCLASS
     UINT ClassId;
 } REGISTER_SYSCLASS, *PREGISTER_SYSCLASS;
 
+typedef struct _USER_OBJHDR
+{
+    /* This is the common header for all user handle objects */
+    HANDLE Handle;
+} USER_OBJHDR, PUSER_OBJHDR;
+
 typedef struct _DESKTOP
 {
     HANDLE hKernelHeap;
@@ -32,6 +41,7 @@ typedef struct _DESKTOP
 
 typedef struct _CALLPROC
 {
+    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
     struct _W32PROCESSINFO *pi;
     WNDPROC WndProc;
     struct _CALLPROC *Next;
@@ -92,6 +102,8 @@ typedef struct _WINDOWCLASS
 
 typedef struct _WINDOW
 {
+    USER_OBJHDR hdr; /* FIXME: Move out of the structure once new handle manager is implemented */
+
     /* NOTE: This structure is located in the desktop heap and will
              eventually replace WINDOW_OBJECT. Right now WINDOW_OBJECT
              keeps a reference to this structure until all the information
@@ -109,6 +121,9 @@ typedef struct _WINDOW
         /* Extra Wnd proc (windows of system classes) */
         WNDPROC WndProcExtra;
     };
+
+    struct _WINDOW *Parent;
+    struct _WINDOW *Owner;
 
     /* Size of the extra data associated with the window. */
     ULONG ExtraDataSize;

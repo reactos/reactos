@@ -908,6 +908,7 @@ IntLinkWindow(
    PWINDOW_OBJECT Parent;
 
    Wnd->Parent = WndParent;
+   Wnd->Wnd->Parent = WndParent ? WndParent->Wnd : NULL;
    if ((Wnd->PrevSibling = WndPrevSibling))
    {
       /* link after WndPrevSibling */
@@ -964,9 +965,13 @@ IntSetOwner(HWND hWnd, HWND hWndNewOwner)
    if((WndNewOwner = UserGetWindowObject(hWndNewOwner)))
    {
       Wnd->hOwner = hWndNewOwner;
+      Wnd->Wnd->Owner = WndNewOwner->Wnd;
    }
    else
+   {
       Wnd->hOwner = NULL;
+      Wnd->Wnd->Owner = NULL;
+   }
 
    UserDerefObject(Wnd);
    return ret;
@@ -1109,6 +1114,7 @@ IntUnlinkWindow(PWINDOW_OBJECT Wnd)
       WndParent->FirstChild = Wnd->NextSibling;
 
    Wnd->PrevSibling = Wnd->NextSibling = Wnd->Parent = NULL;
+   Wnd->Wnd->Parent = NULL;
 }
 
 BOOL FASTCALL
@@ -1575,10 +1581,11 @@ co_IntCreateWindowEx(DWORD dwExStyle,
                                       sizeof(WINDOW) + Class->WndExtra);
        if (!Window->Wnd)
            goto AllocErr;
-       Wnd = Window->Wnd;
-
        RtlZeroMemory(Window->Wnd,
                      sizeof(WINDOW) + Class->WndExtra);
+       Window->Wnd->hdr.Handle = hWnd; /* FIXME: Remove hack */
+       Wnd = Window->Wnd;
+
        Wnd->ti = ti;
        Wnd->pi = ti->kpi;
    }
@@ -1631,15 +1638,18 @@ AllocErr:
    Window->MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
+   Wnd->Parent = ParentWindow ? ParentWindow->Wnd : NULL;
 
    if((OwnerWindow = UserGetWindowObject(OwnerWindowHandle)))
    {
       Window->hOwner = OwnerWindowHandle;
+      Wnd->Owner = OwnerWindow->Wnd;
       HasOwner = TRUE;
    }
    else
    {
       Window->hOwner = NULL;
+      Wnd->Owner = NULL;
       HasOwner = FALSE;
    }
 
@@ -2336,6 +2346,7 @@ BOOLEAN FASTCALL co_UserDestroyWindow(PWINDOW_OBJECT Window)
                if (Child->hOwner != NULL)
                {
                   Child->hOwner = NULL;
+                  Child->Wnd->Owner = NULL;
                }
 
             }
