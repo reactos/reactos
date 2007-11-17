@@ -94,7 +94,7 @@ CreateDirectoryW (
         OBJECT_ATTRIBUTES ObjectAttributes;
         IO_STATUS_BLOCK IoStatusBlock;
         UNICODE_STRING NtPathU;
-        HANDLE DirectoryHandle;
+        HANDLE DirectoryHandle = NULL;
         NTSTATUS Status;
 
         DPRINT ("lpPathName %S lpSecurityAttributes %p\n",
@@ -134,6 +134,7 @@ CreateDirectoryW (
 
         if (!NT_SUCCESS(Status))
         {
+                DPRINT("NtCreateFile failed with Status %lx\n", Status);
                 SetLastErrorByStatus(Status);
                 return FALSE;
         }
@@ -522,7 +523,7 @@ RemoveDirectoryW (
         OBJECT_ATTRIBUTES ObjectAttributes;
         IO_STATUS_BLOCK IoStatusBlock;
         UNICODE_STRING NtPathU;
-        HANDLE DirectoryHandle;
+        HANDLE DirectoryHandle = NULL;
         NTSTATUS Status;
 
         DPRINT("lpPathName %S\n", lpPathName);
