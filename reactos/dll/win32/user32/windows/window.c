@@ -1342,17 +1342,38 @@ IsWindowUnicode(HWND hWnd)
 BOOL STDCALL
 IsWindowVisible(HWND hWnd)
 {
-    DWORD Style;
+    BOOL Ret = FALSE;
+    PWINDOW Wnd = ValidateHwnd(hWnd);
 
-    while ((Style = GetWindowLongW(hWnd, GWL_STYLE)) & WS_CHILD)
+    if (Wnd != NULL)
     {
-        if (!(Style & WS_VISIBLE))
-            return FALSE;
+        _SEH_TRY
+        {
+            Ret = TRUE;
 
-        hWnd = GetAncestor(hWnd, GA_PARENT);
+            do
+            {
+                if (!(Wnd->Style & WS_VISIBLE))
+                {
+                    Ret = FALSE;
+                    break;
+                }
+
+                if (Wnd->Parent != NULL)
+                    Wnd = DesktopPtrToUser(Wnd->Parent);
+                else
+                    break;
+
+            } while (Wnd != NULL);
+        }
+        _SEH_HANDLE
+        {
+            Ret = FALSE;
+        }
+        _SEH_END;
     }
 
-    return (GetWindowLongW(hWnd, GWL_STYLE) & WS_VISIBLE) != 0;
+    return Ret;
 }
 
 
