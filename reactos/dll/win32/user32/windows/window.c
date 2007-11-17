@@ -1252,18 +1252,40 @@ BOOL STDCALL
 IsChild(HWND hWndParent,
 	HWND hWnd)
 {
-   if (! IsWindow(hWndParent) || ! IsWindow(hWnd))
-   {
-       return FALSE;
-   }
+    PWINDOW WndParent, Wnd;
+    BOOL Ret = FALSE;
 
-   do
-   {
-      hWnd = (HWND)NtUserGetWindowLong(hWnd, GWL_HWNDPARENT, FALSE);
-   }
-   while (hWnd != NULL && hWnd != hWndParent);
+    WndParent = ValidateHwnd(hWndParent);
+    if (!WndParent)
+        return FALSE;
+    Wnd = ValidateHwnd(hWnd);
+    if (!Wnd)
+        return FALSE;
 
-   return hWnd == hWndParent;
+    _SEH_TRY
+    {
+        while (Wnd != NULL)
+        {
+            if (Wnd->Parent != NULL)
+            {
+                Wnd = DesktopPtrToUser(Wnd->Parent);
+                if (Wnd == WndParent)
+                {
+                    Ret = TRUE;
+                    break;
+                }
+            }
+            else
+                break;
+        }
+    }
+    _SEH_HANDLE
+    {
+        /* Do nothing */
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
