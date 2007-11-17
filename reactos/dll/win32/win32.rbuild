@@ -118,6 +118,9 @@
 <directory name="mapi32">
 	<xi:include href="mapi32/mapi32.rbuild" />
 </directory>
+<directory name="modemui">
+	<xi:include href="modemui/modemui.rbuild" />
+</directory>
 <directory name="mlang">
 	<xi:include href="mlang/mlang.rbuild" />
 </directory>

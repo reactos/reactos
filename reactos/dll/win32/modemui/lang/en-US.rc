@@ -1,0 +1,613 @@
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+
+IDM_MENU MENU
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "&Duplicate...", 0
+		MENUITEM "R&emove", 1
+		MENUITEM "&View log", 2
+		MENUITEM SEPARATOR
+		MENUITEM "P&roperties", 3
+		MENUITEM "C&opy properties", 4
+		MENUITEM "A&pply properties", 5
+	END
+END
+
+IDD_ADVANCED DIALOG 17, 12, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Extra Settings", 1018, 6, 6, 225, 70
+	LTEXT "E&xtra initialization commands:", 1011, 16, 20, 143, 8
+	EDITTEXT 1016, 16, 31, 205, 13, ES_AUTOHSCROLL
+	LTEXT "&Wait for credit card tone:", 1007, 16, 55, 109, 8, NOT WS_VISIBLE
+	EDITTEXT 1008, 133, 52, 26, 12, ES_RIGHT | NOT WS_VISIBLE | WS_GROUP
+	CONTROL "", 1009, "MSCTLS_UPDOWN32", NOT WS_VISIBLE | WS_BORDER | WS_GROUP | 0x00000036, 159, 52, 12, 12
+	LTEXT "seconds", 1010, 173, 54, 40, 8, NOT WS_VISIBLE
+	GROUPBOX "&Country/Region Select", 1012, 6, 80, 225, 75
+	COMBOBOX 1013, 18, 99, 203, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "&Advanced Port Settings...", 1100, 107, 170, 125, 14
+	DEFPUSHBUTTON "Change &Default Preferences...", 3, 107, 188, 125, 14
+END
+
+IDD_GENERAL DIALOG 0, 0, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Port:", 1018, 9, 8, 32, 10
+	LTEXT "Com port", 1095, 48, 8, 181, 10
+	GROUPBOX "&Speaker volume", 1029, 10, 21, 218, 48
+	CONTROL "", 1032, "MSCTLS_TRACKBAR32", WS_GROUP | WS_TABSTOP | 0x00000001, 84, 40, 66, 20
+	RTEXT "Off", 1045, 56, 40, 22, 8
+	LTEXT "High", 1001, 155, 40, 25, 11
+	GROUPBOX "&Maximum Port Speed", 1031, 10, 78, 218, 46
+	COMBOBOX 1036, 18, 100, 202, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Dial Control", 1060, 10, 133, 218, 51
+	AUTOCHECKBOX "&Wait for dial tone before dialing", 1003, 27, 157, 174, 10
+END
+
+IDD_DISTINCTIVE_RING DIALOG 0, 0, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Distinctive Ring"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "", 1068, 10, 7, 218, 145
+	AUTOCHECKBOX "&This phone line has Distinctive Ring Services", 1069, 20, 7, 184, 10
+	CTEXT "Ring Pattern", -1, 84, 21, 70, 8
+	CTEXT "Type of Call", -1, 159, 21, 63, 8
+	LTEXT "&Primary address:", 1070, 20, 41, 62, 8
+	COMBOBOX 1073, 84, 37, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1082, 160, 37, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Address &1:", 1071, 20, 59, 62, 8
+	COMBOBOX 1074, 84, 55, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1083, 160, 55, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Address &2:", 1072, 20, 77, 62, 8
+	COMBOBOX 1075, 84, 73, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1084, 160, 73, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Address &3:", 1076, 20, 95, 62, 8
+	COMBOBOX 1077, 84, 91, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1085, 160, 91, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Priority &callers:", 1078, 20, 112, 62, 8
+	COMBOBOX 1079, 84, 109, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1086, 160, 109, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Call&back:", 1080, 20, 131, 62, 8
+	COMBOBOX 1081, 84, 127, 71, 61, CBS_DROPDOWNLIST | CBS_OWNERDRAWFIXED | WS_VSCROLL | NOT WS_TABSTOP
+	COMBOBOX 1087, 160, 127, 62, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DISTINCTIVE_RING_2 DIALOG 0, 0, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Distinctive Ring"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "", 1068, 10, 7, 218, 87
+	AUTOCHECKBOX "&This phone line has Distinctive Ring Services", 1069, 19, 7, 177, 10
+	CTEXT "Ring Pattern", -1, 20, 21, 74, 8
+	CTEXT "Type of Call", -1, 96, 21, 65, 8
+	LTEXT "&Single ring:", 1088, 20, 37, 53, 8
+	COMBOBOX 1091, 96, 37, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Double ring:", 1089, 20, 57, 53, 8
+	COMBOBOX 1092, 96, 55, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "T&riple ring:", 1090, 20, 76, 53, 8
+	COMBOBOX 1093, 96, 73, 65, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+IDD_DIAGNOSTICS DIALOG 0, 0, 238, 215
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Diagnostics"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL "", 1042, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 18, 200, 58
+	CONTROL "", 1041, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000084D, 19, 84, 200, 58
+	PUSHBUTTON "&Query Modem", 1096, 138, 149, 75, 14
+	AUTOCHECKBOX "Record a &Log", 1020, 18, 187, 98, 10
+	PUSHBUTTON "&View log", 1094, 138, 184, 75, 14, WS_DISABLED
+	GROUPBOX "Modem Information", 1047, 10, 6, 217, 164
+	GROUPBOX "Logging", -1, 10, 173, 217, 32
+END
+
+IDD_PLEASE_WAIT DIALOG 0, 0, 195, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Please Wait..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Communicating with Modem. This may take several seconds.", -1, 42, 7, 146, 28
+	DEFPUSHBUTTON "Cancel", 2, 72, 52, 50, 14
+END
+
+IDD_GENERAL_2 DIALOG 0, 0, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&Operator assisted (manual) dial", 1002, 19, 22, 150, 10
+	AUTOCHECKBOX "&Disconnect a call if idle for more than", 1042, 19, 38, 143, 10
+	EDITTEXT 1043, 168, 35, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "&Cancel the call if not connected within", -1, 19, 56, 147, 10
+	EDITTEXT 1040, 168, 54, 25, 13, ES_AUTOHSCROLL | ES_NUMBER
+	RTEXT "&Port speed:", 1034, 16, 102, 93, 8
+	COMBOBOX 1036, 114, 100, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "D&ata Protocol:", 1032, 16, 122, 93, 8
+	COMBOBOX 1037, 114, 119, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "Comp&ression:", 1035, 16, 139, 93, 8
+	COMBOBOX 1099, 114, 137, 84, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Flow control:", 1027, 16, 157, 93, 8
+	COMBOBOX 1031, 114, 155, 84, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Call preferences", 1060, 11, 7, 217, 66
+	LTEXT "mins", 1044, 195, 38, 22, 8
+	LTEXT "secs", 1041, 194, 56, 22, 8
+	GROUPBOX "Data Connection Preferences", -1, 11, 82, 217, 94
+END
+
+IDD_ADVANCED_2 DIALOG 17, 12, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Advanced"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "Bring up terminal window &before dialing", 1000, 20, 21, 200, 10
+	AUTOCHECKBOX "Bring up terminal window a&fter dialing", 1001, 20, 38, 200, 10
+	RTEXT "&Data bits:", 1024, 18, 79, 93, 8
+	COMBOBOX 1025, 114, 77, 106, 61, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Parity:", 1026, 18, 97, 93, 8
+	COMBOBOX 1028, 114, 95, 106, 60, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Stop bits:", 1029, 18, 115, 93, 8
+	COMBOBOX 1030, 114, 113, 106, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	RTEXT "&Modulation:", 1045, 18, 133, 93, 8
+	COMBOBOX 1038, 114, 131, 106, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Terminal Window", 1004, 10, 7, 217, 49
+	GROUPBOX "Hardware Settings", 1005, 10, 64, 217, 89
+END
+
+IDD_ISDN DIALOG 0, 0, 238, 210
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Switch &Type", -1, 11, 6, 217, 39
+	COMBOBOX 1104, 17, 20, 204, 69, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "&First Number", -1, 11, 50, 217, 50
+	EDITTEXT 1017, 33, 62, 188, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "S&PID/EAZ:", 1027, 34, 83, 67, 8
+	EDITTEXT 1107, 104, 79, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+	GROUPBOX "&Second Number", -1, 11, 105, 217, 49
+	EDITTEXT 1018, 33, 114, 189, 13, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "SPI&D/EAZ:", 1028, 35, 135, 68, 8
+	EDITTEXT 1108, 105, 132, 117, 13, ES_AUTOHSCROLL | ES_NUMBER
+END
+
+IDD_PLEASE_WAIT_2 DIALOG 0, 0, 195, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Please Wait"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Sending country/region information to Modem.", -1, 42, 7, 146, 28
+END
+
+IDD_WARNING DIALOG 0, 0, 360, 105
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Warning"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "Do not show this message again", 1109, 17, 73, 118, 10
+	DEFPUSHBUTTON "OK", 1, 302, 84, 50, 14
+	LTEXT "Some modems do not properly handle initialization strings of this length.", -1, 50, 27, 304, 8
+	LTEXT "Information about this limitation can be obtained from your modem manufacturer.", -1, 50, 41, 304, 8
+	ICON 5100, -1, 15, 14, 20, 20
+	LTEXT "You have entered a modem initialization string greater than 57 characters long.", -1, 50, 14, 304, 8
+END
+
+IDD_MODEMS DIALOG 0, 0, 252, 218
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modems"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 5100, 1057, 6, 7, 20, 20
+	LTEXT "The following &modems are  installed:", -1, 44, 12, 203, 9
+	CONTROL "", 113, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00000849, 7, 32, 238, 158, WS_EX_CLIENTEDGE
+	PUSHBUTTON "A&dd...", 110, 56, 198, 60, 14
+	PUSHBUTTON "&Remove", 112, 121, 198, 60, 14
+	PUSHBUTTON "&Properties", 109, 185, 198, 60, 14
+END
+
+IDD_PLEASE_WAIT_3 DIALOG 0, 0, 195, 72
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Please Wait..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Stop", 2, 74, 53, 50, 14
+	ICON 5100, -1, 9, 7, 20, 20
+	LTEXT "Removing", -1, 40, 8, 151, 8
+	LTEXT "Modem", 1005, 40, 16, 151, 25
+END
+
+STRINGTABLE
+BEGIN
+	180 "RS-232 Serial Port"
+	181 "External Modem"
+	182 "Internal Modem"
+	183 "PCMCIA Modem"
+	184 "Parallel Modem"
+	185 "Parallel Port"
+	200 "110"
+	201 "1200"
+	202 "2400"
+	203 "4800"
+	204 "9600"
+	206 "19200"
+	207 "38400"
+	210 "115200"
+	211 "57600"
+	216 "300"
+	220 "230400"
+	221 "460800"
+	222 "921600"
+	240 "4"
+	241 "5"
+	242 "6"
+	243 "7"
+	244 "8"
+	250 "Even"
+	251 "Odd"
+	252 "None"
+	253 "Mark"
+	254 "Space"
+	255 "1"
+	256 "1.5"
+	257 "2"
+	260 "Xon / Xoff"
+	261 "Hardware"
+	262 "None"
+	263 "On"
+	264 "Low"
+	265 "V.23 (Minitel)"
+	266 "Standard"
+	267 "Non-standard (Bell, HST)"
+	270 "Append to &Log"
+	300 "Unspecified"
+	301 "Data"
+	302 "Fax"
+	303 "Voice"
+	304 "None"
+	320 "Country/region setting updated"
+	340 "Modem"
+	341 "Modem Settings"
+	342 "Modem Address"
+	400 "Country/region setting not updated"
+	401 "Some modems do not accept user initialization commands greater than 57 characters.\n\nInformation about this limitation can be obtained from your modem manufacturer"
+	402 "Warning"
+	460 "There is not enough memory to view the General dialog box.\nClose some files or programs, and then try again."
+	461 "There is not enough memory to view the Modem Settings dialog box.\nClose some files or programs, and then try again."
+	463 "Each calling address must be set to 'Automatic' or to a unique ring pattern.\n\nChange the duplicate ring pattern to a different one."
+	465 "Standard EC"
+	466 "Forced EC"
+	467 "Cellular"
+	468 "Disabled"
+	469 "Enabled"
+	470 "Disabled"
+	480 "AUTO  (1 Ch.)"
+	481 "AUTO  (2 Ch.)"
+	482 "PPP   (56K)"
+	483 "PPP   (64K)"
+	484 "PPP   (112K)"
+	485 "PPP   (112K,PAP)"
+	486 "PPP   (112K,CHAP)"
+	487 "PPP   (112K,MSCHAP)"
+	488 "PPP   (128K)"
+	489 "PPP   (128K,PAP)"
+	490 "PPP   (128K,CHAP)"
+	491 "PPP   (128K,MSCHAP)"
+	500 "V.120 (64K)"
+	501 "V.120 (56K)"
+	502 "V.120 (112K)"
+	503 "V.120 (128K)"
+	504 "X.75  (64K)"
+	505 "X.75  (128K)"
+	506 "X.75  (T.70)"
+	507 "X.75  (BTX)"
+	508 "V.110 (1.2K)"
+	509 "V.110 (2.4K)"
+	510 "V.110 (4.8K)"
+	511 "V.110 (9.6K)"
+	512 "V.110 (12.0K)"
+	513 "V.110 (14.4K)"
+	514 "V.110 (19.2K)"
+	515 "V.110 (28.8K)"
+	516 "V.110 (38.4K)"
+	517 "V.110 (57.6K)"
+	518 "Analog (V.34/V.90)"
+	550 "ESS5 (AT&T) (North America)"
+	551 "AT&T Point to Multipoint"
+	552 "National ISDN 1 (NI-1)"
+	553 "Northern Telecom DMS 100 (NT1)"
+	554 "NTT INS64 (Japan)"
+	555 "European ISDN (DSS1)"
+	556 "German National (1TR6) (rarely used)"
+	557 "French National (VN3) (rarely used)"
+	558 "Belgium National (rarely used)"
+	559 "Australian National (rarely used)"
+	560 "Unknown switch"
+	570 "The ISDN Configuration for this modem\nis not complete.\n\nPlease fill out the information in the\nISDN Tab before using this modem."
+	600 "PPP   (56K,GSM)"
+	601 "PPP   (64K,GSM)"
+	602 "V.120 (64K,GSM)"
+	604 "V.110 (1.2K,GSM)"
+	605 "V.110 (2.4K,GSM)"
+	606 "V.110 (4.8K,GSM)"
+	607 "V.110 (9.6K,GSM)"
+	608 "V.110 (12.0K,GSM)"
+	609 "V.110 (14.4K,GSM)"
+	610 "V.110 (19.2K,GSM)"
+	611 "V.110 (28.8K,GSM)"
+	612 "V.110 (38.4K,GSM)"
+	613 "V.110 (57.6K,GSM)"
+	614 "Analog RLP"
+	615 "Analog NRLP"
+	616 "GPRS"
+	617 "PIAFS - incoming"
+	618 "PIAFS - outgoing"
+	700 "Use current TAPI location"
+	2006 "Attached To"
+	2007 "Not present"
+	2008 "Not functional"
+	2009 "Needs reboot"
+	2010 "#To finish setting up your modem, you must restart your computer.\n\nDo you want to restart your computer now?"
+	2011 "Modem not properly installed"
+	2012 "Unknown port"
+	3000 "Modem Setup"
+	3018 "Modems"
+	3019 "Installs a new modem and changes modem properties."
+	3053 "The modem properties cannot be displayed because the modem is not available.\n\nRestart the system and try again."
+	3054 "Properties for Modems"
+	3060 "Are you sure you want to remove the selected modem(s) from your system?"
+	3061 "ReactOS was unable to remove the modem '%1' from %2."
+	3062 "Modem"
+	3069 "There is not enough memory to open the modem control panel.\n\nClose some programs and try again."
+	3073 "You must be a System Administrator to install a modem."
+	3074 "No modems are installed.  You must be a System Administrator to install a modem."
+	3076 "You must shut down and restart your computer before the new settings will take effect.\n\nDo you want to restart your computer now?"
+	3077 "Network Settings Change"
+	3200 "300 Baud"
+	3201 "1200 Baud"
+	3202 "2400 Baud"
+	3203 "9600 Baud"
+	3204 "19.2K Baud"
+	3205 "38.4K Baud"
+	3206 "57.6K Baud"
+	3207 "No response"
+	3212 "Command"
+	3213 "Response"
+	3214 "The port that the modem is attached could not be opened. This may be the result of a hardware conflict. Check the device manager to verify all devices are functional."
+	3215 "The port that the modem is using is currently open by another application. Exit any application that may currently be using the port."
+	3218 "OpenComm"
+	3221 "115K Baud"
+	3222 "Updating"
+	3223 "Error"
+	3233 "Success"
+	3236 "The modem failed to respond. Make sure it is properly connected and turned on.  If it is an internal modem or is connected, verify that the interrupt for the port is properly set."
+	3237 "COMMAND NOT SUPPORTED"
+	3238 "Field"
+	3239 "Value"
+	3240 " Default Preferences"
+	3241 " Connection Preferences"
+	6144 "Japan"
+	6145 "Albania"
+	6146 "Algeria"
+	6147 "American Samoa"
+	6148 "Germany (Country/region code 04)"
+	6149 "Anguilla"
+	6150 "Antigua and Barbuda"
+	6151 "Argentina"
+	6152 "Ascension Island"
+	6153 "Australia"
+	6154 "Austria"
+	6155 "Bahamas"
+	6156 "Bahrain"
+	6157 "Bangladesh"
+	6158 "Barbados"
+	6159 "Belgium"
+	6160 "Belize"
+	6161 "Benin"
+	6162 "Bermuda"
+	6163 "Bhutan"
+	6164 "Bolivia"
+	6165 "Botswana"
+	6166 "Brazil"
+	6167 "Country/region code (23)"
+	6168 "British Indian Ocean Territory"
+	6169 "British Virgin Islands"
+	6170 "Brunei"
+	6171 "Bulgaria"
+	6172 "Myanmar"
+	6173 "Burundi"
+	6174 "Belarus"
+	6175 "Cameroon"
+	6176 "Canada"
+	6177 "Cape Verde"
+	6178 "Cayman Islands"
+	6179 "Central African Republic"
+	6180 "Chad"
+	6181 "Chile"
+	6182 "China"
+	6183 "Colombia"
+	6184 "Comoros"
+	6185 "Congo"
+	6186 "Cook Islands"
+	6187 "Costa Rica"
+	6188 "Cuba"
+	6189 "Cyprus"
+	6190 "Czech Republic"
+	6191 "Cambodia"
+	6192 "North Korea"
+	6193 "Denmark"
+	6194 "Djibouti"
+	6195 "Dominican Republic"
+	6196 "Dominica"
+	6197 "Ecuador"
+	6198 "Egypt"
+	6199 "El Salvador"
+	6200 "Equatorial Guinea"
+	6201 "Ethiopia"
+	6202 "Falkland Islands (Islas Malvinas)"
+	6203 "Fiji Islands"
+	6204 "Finland"
+	6205 "France"
+	6206 "French Polynesia"
+	6207 "Country/region code (63)"
+	6208 "Gabon"
+	6209 "Gambia"
+	6210 "Germany (Country/region code 66)"
+	6211 "Angola"
+	6212 "Ghana"
+	6213 "Gibraltar"
+	6214 "Greece"
+	6215 "Grenada"
+	6216 "Guam"
+	6217 "Guatemala"
+	6218 "Guernsey"
+	6219 "Guinea"
+	6220 "Guinea-Bissau"
+	6221 "Guyana"
+	6222 "Haiti"
+	6223 "Honduras"
+	6224 "Hong Kong SAR"
+	6225 "Hungary"
+	6226 "Iceland"
+	6227 "India"
+	6228 "Indonesia"
+	6229 "Iran"
+	6230 "Iraq"
+	6231 "Ireland"
+	6232 "Israel"
+	6233 "Italy"
+	6234 "Cote d'Ivoire"
+	6235 "Jamaica"
+	6236 "Afghanistan"
+	6237 "Jersey"
+	6238 "Jordan"
+	6239 "Kenya"
+	6240 "Kiribati"
+	6241 "Korea"
+	6242 "Kuwait"
+	6243 "Laos"
+	6244 "Lebanon"
+	6245 "Lesotho"
+	6246 "Liberia"
+	6247 "Libya"
+	6248 "Liechtenstein"
+	6249 "Luxembourg"
+	6250 "Macau SAR"
+	6251 "Madagascar"
+	6252 "Malaysia"
+	6253 "Malawi"
+	6254 "Maldives"
+	6255 "Mali"
+	6256 "Malta"
+	6257 "Mauritania"
+	6258 "Mauritius"
+	6259 "Mexico"
+	6260 "Monaco"
+	6261 "Mongolia"
+	6262 "Montserrat"
+	6263 "Morocco"
+	6264 "Mozambique"
+	6265 "Nauru"
+	6266 "Nepal"
+	6267 "Netherlands"
+	6268 "Netherlands Antilles"
+	6269 "New Caledonia"
+	6270 "New Zealand"
+	6271 "Nicaragua"
+	6272 "Niger"
+	6273 "Nigeria"
+	6274 "Norway"
+	6275 "Oman"
+	6276 "Pakistan"
+	6277 "Panama"
+	6278 "Papua New Guinea"
+	6279 "Paraguay"
+	6280 "Peru"
+	6281 "Philippines"
+	6282 "Poland"
+	6283 "Portugal"
+	6284 "Puerto Rico"
+	6285 "Qatar"
+	6286 "Romania"
+	6287 "Rwanda"
+	6288 "St. Kitts and Nevis"
+	6289 "Country/region code (145)"
+	6290 "St. Helena"
+	6291 "St. Lucia"
+	6292 "San Marino"
+	6293 "Country/region code (148)"
+	6294 "Sao Tome and Principe"
+	6295 "St. Vincent and the Grenadines"
+	6296 "Saudi Arabia"
+	6297 "Senegal"
+	6298 "Seychelles"
+	6299 "Sierra Leone"
+	6300 "Singapore"
+	6301 "Solomon Islands"
+	6302 "Somalia"
+	6303 "South Africa"
+	6304 "Spain"
+	6305 "Sri Lanka"
+	6306 "Sudan"
+	6307 "Suriname"
+	6308 "Swaziland"
+	6309 "Sweden"
+	6310 "Switzerland"
+	6311 "Syria"
+	6312 "Tanzania"
+	6313 "Thailand"
+	6314 "Togo"
+	6315 "Tonga"
+	6316 "Trinidad and Tobago"
+	6317 "Tunisia"
+	6318 "Turkey"
+	6319 "Turks and Caicos Islands"
+	6320 "Tuvalu"
+	6321 "Uganda"
+	6322 "Ukraine"
+	6323 "United Arab Emirates"
+	6324 "United Kingdom"
+	6325 "United States"
+	6326 "Burkina Faso"
+	6327 "Uruguay"
+	6328 "Country/region code (184)"
+	6329 "Vanuatu"
+	6330 "Vatican City"
+	6331 "Venezuela"
+	6332 "Vietnam"
+	6333 "Wallis and Futuna"
+	6334 "Samoa"
+	6335 "Yemen"
+	6336 "Yemen"
+	6337 "Country/region code (193)"
+	6338 "Congo (DRC)"
+	6339 "Zambia"
+	6340 "Zimbabwe"
+	6501 "Moldova"
+	6502 "Estonia"
+	6503 "Lithuania"
+	6504 "Armenia"
+	6505 "Georgia"
+	6506 "Azerbaijan"
+	6507 "Turkmenistan"
+	6508 "Uzbekistan"
+	6509 "Kazakhstan"
+	6510 "Tajikistan"
+	6511 "Kyrgyzstan"
+	6512 "Latvia"
+	6513 "Russia"
+	6600 "Croatia"
+	6601 "Slovenia"
+	6602 "Macedonia, FYRO"
+	6603 "Bosnia and Herzegovina"
+	6604 "Yugoslavia"
+	20013 "Hardware ID"
+END

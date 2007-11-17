@@ -196,6 +196,7 @@ dll\win32\lsasrv\lsasrv.dll                         1
 dll\win32\lz32\lz32.dll                             1
 dll\win32\mapi32\mapi32.dll                         1
 dll\win32\winmm\midimap\midimap.dll                 1
+dll\win32\modemui\modemui.dll                       1
 dll\win32\mlang\mlang.dll                           1
 dll\win32\mmdrv\mmdrv.dll                           1
 dll\win32\mpr\mpr.dll                               1

@@ -22,6 +22,7 @@
   <property name="BASEADDRESS_INPUT" value ="0x5e400000" />
   <property name="BASEADDRESS_DINPUT" value="0x5f580000" />
   <property name="BASEADDRESS_NETID" value="0x5f660000" />
+  <property name="BASEADDRESS_MODEMUI" value="0x61650000" />
   <property name="BASEADDRESS_MAPI32" value="0x62250000" />
   <property name="BASEADDRESS_HDWWIZ" value="0x64d40000" />
   <property name="BASEADDRESS_TIMEDATE" value="0x64da0000" />
