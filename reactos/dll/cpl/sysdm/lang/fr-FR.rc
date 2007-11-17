@@ -272,4 +272,9 @@ BEGIN
     IDS_MINI_DUMP "Mini cliché(64Ko)"
     IDS_KERNEL_DUMP "Cliché du noyau"
     IDS_FULL_DUMP "Cliché complet"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END

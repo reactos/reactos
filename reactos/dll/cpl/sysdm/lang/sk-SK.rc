@@ -276,4 +276,9 @@ BEGIN
     IDS_MINI_DUMP "Malý výpis pamäte (64 kB)"
     IDS_KERNEL_DUMP "Výpis pamäte jadra"
     IDS_FULL_DUMP "Úplný výpis pamäte"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END

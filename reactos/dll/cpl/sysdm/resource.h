@@ -25,6 +25,12 @@
 #define IDS_KERNEL_DUMP                 70
 #define IDS_FULL_DUMP                   71
 
+#define IDS_USERPROFILE_NAME            72
+#define IDS_USERPROFILE_SIZE            73
+#define IDS_USERPROFILE_TYPE            74
+#define IDS_USERPROFILE_STATUS          75
+#define IDS_USERPROFILE_MODIFIED        76
+
 
 /* propsheet - general */
 #define IDD_PROPPAGEGENERAL             100

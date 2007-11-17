@@ -185,7 +185,7 @@ BEGIN
     LTEXT       "Auslagerungsdatei (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX    "Größe der Auslagerungsdatei für das gewählte Laufwerk", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT       "Laufwerk:", IDC_STATIC, 20, 80, 40, 8
+    LTEXT       "Laufwerk:", IDC_STATIC, 20, 81, 40, 9
     LTEXT       "", IDC_DRIVE, 105, 81, 100, 9
     LTEXT       "Verfügbarer Speicherplatz:", IDC_STATIC, 20, 92, 130, 9
     LTEXT       "", IDC_SPACEAVAIL, 105, 92, 104, 9
@@ -202,9 +202,9 @@ BEGIN
     LTEXT       "Minimal zugelassen:", IDC_STATIC, 18, 188, 70, 9
     LTEXT       "", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT       "Empfohlen:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT       "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT       "", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT       "Momentan zugeteilt:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT       "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT       "", IDC_CURRENT, 88, 210, 100, 9
 
     DEFPUSHBUTTON  "OK", IDOK, 114, 232, 48, 14
     PUSHBUTTON  "Abbrechen", IDCANCEL, 168, 232, 48, 14
@@ -273,4 +273,9 @@ BEGIN
     IDS_MINI_DUMP "Kleines Speicherabild (64KB)"
     IDS_KERNEL_DUMP "Kernelspeicherabild"
     IDS_FULL_DUMP "Vollständiges Speicherabild"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Größe"
+    IDS_USERPROFILE_TYPE "Typ"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Geändert"
 END
