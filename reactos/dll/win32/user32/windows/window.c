@@ -842,7 +842,42 @@ GetAltTabInfoW(HWND hwnd,
 HWND STDCALL
 GetAncestor(HWND hwnd, UINT gaFlags)
 {
-  return(NtUserGetAncestor(hwnd, gaFlags));
+    HWND Ret = NULL;
+    PWINDOW Ancestor, Wnd;
+    
+    Wnd = ValidateHwnd(hwnd);
+    if (!Wnd)
+        return NULL;
+
+    _SEH_TRY
+    {
+        Ancestor = NULL;
+        switch (gaFlags)
+        {
+            case GA_PARENT:
+                if (Wnd->Parent != NULL)
+                    Ancestor = DesktopPtrToUser(Wnd->Parent);
+                break;
+
+            default:
+                /* FIXME: Call win32k for now */
+                Wnd = NULL;
+                break;
+        }
+
+        if (Ancestor != NULL)
+            Ret = UserHMGetHandle(Ancestor);
+    }
+    _SEH_HANDLE
+    {
+        /* Do nothing */
+    }
+    _SEH_END;
+
+    if (!Wnd) /* Fall back */
+        Ret = NtUserGetAncestor(hwnd, gaFlags);
+
+    return Ret;
 }
 
 
