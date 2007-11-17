@@ -2081,8 +2081,7 @@ MenuMoveSelection(HWND WndOwner, PROSMENUINFO MenuInfo, INT Offset)
         }
       /* If this is a good candidate; */
       if (MenuGetRosMenuItemInfo(MenuInfo->Self, i, &ItemInfo) &&
-          0 == (ItemInfo.fType & MF_SEPARATOR) &&
-          0 == (ItemInfo.fState & (MFS_DISABLED | MFS_GRAYED)) )
+          0 == (ItemInfo.fType & MF_SEPARATOR))
         {
           MenuSelectItem(WndOwner, MenuInfo, i, TRUE, NULL);
           MenuCleanupRosMenuItemInfo(&ItemInfo);
@@ -2638,11 +2637,11 @@ MenuMouseMove(MTRACKER *Mt, HMENU PtMenu, UINT Flags)
     {
 	MenuInitRosMenuItemInfo(&ItemInfo);
 	if (MenuGetRosMenuItemInfo(MenuInfo.Self, Index, &ItemInfo) &&
-           !(ItemInfo.fType & MF_SEPARATOR) &&
-           !(ItemInfo.fState & (MFS_DISABLED | MFS_GRAYED)) )
+           !(ItemInfo.fType & MF_SEPARATOR))
 	{
 	    MenuSwitchTracking(Mt, &MenuInfo, Index);
-	    Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &MenuInfo, FALSE, Flags);
+        if (!(ItemInfo.fState & (MFS_DISABLED | MFS_GRAYED)))
+	        Mt->CurrentMenu = MenuShowSubPopup(Mt->OwnerWnd, &MenuInfo, FALSE, Flags);
 	}
 	MenuCleanupRosMenuItemInfo(&ItemInfo);
     }
