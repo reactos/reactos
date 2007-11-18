@@ -125,7 +125,7 @@ typedef struct _UNICODE_STRING
 //
 // List Functions
 //
-static inline
+static __inline
 VOID
 InitializeListHead(
                    IN PLIST_ENTRY ListHead
@@ -134,7 +134,7 @@ InitializeListHead(
     ListHead->Flink = ListHead->Blink = ListHead;
 }
 
-static inline
+static __inline
 VOID
 InsertHeadList(
                IN PLIST_ENTRY ListHead,
@@ -149,7 +149,7 @@ InsertHeadList(
     ListHead->Flink = Entry;
 }
 
-static inline
+static __inline
 VOID
 InsertTailList(
                IN PLIST_ENTRY ListHead,
@@ -165,7 +165,7 @@ InsertTailList(
 }
 
 BOOLEAN
-static inline
+static __inline
 IsListEmpty(
             IN const LIST_ENTRY * ListHead
             )
@@ -173,7 +173,7 @@ IsListEmpty(
     return (BOOLEAN)(ListHead->Flink == ListHead);
 }
 
-static inline
+static __inline
 BOOLEAN
 RemoveEntryList(
                 IN PLIST_ENTRY Entry)
@@ -188,7 +188,7 @@ RemoveEntryList(
     return (BOOLEAN)(OldFlink == OldBlink);
 }
 
-static inline
+static __inline
 PLIST_ENTRY
 RemoveHeadList(
                IN PLIST_ENTRY ListHead)
@@ -203,7 +203,7 @@ RemoveHeadList(
     return Entry;
 }
 
-static inline
+static __inline
 PLIST_ENTRY
 RemoveTailList(
                IN PLIST_ENTRY ListHead)
