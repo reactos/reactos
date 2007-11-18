@@ -598,11 +598,3 @@ DWORD STDCALL MBToWCSEx(WORD CodePage,LPSTR MBString,LONG MBSize,LPWSTR *Unicode
 	}
 	return Size;
 }
-const LPWSTR strings[14] = {L"OK",L"Cancel",L"&Abort",L"&Retry",L"&Ignore",L"&Yes",L"&No",L"&Close",L"Help",L"&Try Again",L"&Continue"};
-/*
- * @implemented
- */
-LPWSTR STDCALL MB_GetString(DWORD string)
-{
-	return heap_string_poolW(strings[string],wcslen(strings[string]));
-}

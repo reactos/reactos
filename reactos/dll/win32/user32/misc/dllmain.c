@@ -111,7 +111,6 @@ DllMain(
              return FALSE;
          }
 
-         hProcessHeap = RtlGetProcessHeap();
          if (!Init())
             return FALSE;
          if (!InitThread())

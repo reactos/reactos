@@ -1200,7 +1200,6 @@ UnregisterClassA(
   HINSTANCE hInstance)
 {
     UNICODE_STRING ClassName = {0};
-    NTSTATUS Status;
     BOOL Ret;
 
     TRACE("class/atom: %s/%04x %p\n",
@@ -1210,15 +1209,12 @@ UnregisterClassA(
 
     if (!IS_ATOM(lpClassName))
     {
-        Status = HEAP_strdupAtoW(&ClassName.Buffer, lpClassName, NULL);
-        if (!NT_SUCCESS(Status))
+        if (!RtlCreateUnicodeStringFromAsciiz(&ClassName,
+                                              lpClassName))
         {
-            SetLastError(RtlNtStatusToDosError(Status));
-            return FALSE;
+            SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+            return 0;
         }
-
-        RtlInitUnicodeString(&ClassName,
-                             ClassName.Buffer);
     }
     else
         ClassName.Buffer = (PWSTR)((ULONG_PTR)lpClassName);
@@ -1226,8 +1222,8 @@ UnregisterClassA(
     Ret = NtUserUnregisterClass(&ClassName,
                                 hInstance);
 
-    if(!IS_ATOM(lpClassName) && ClassName.Buffer != NULL)
-        HEAP_free(ClassName.Buffer);
+    if (!IS_ATOM(lpClassName))
+        RtlFreeUnicodeString(&ClassName);
 
     return Ret;
 }

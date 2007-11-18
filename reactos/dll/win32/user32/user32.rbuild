@@ -41,7 +41,6 @@
 		<file>misc.c</file>
 		<file>object.c</file>
 		<file>resources.c</file>
-		<file>strpool.c</file>
 		<file>stubs.c</file>
 		<file>timer.c</file>
 		<file>winhelp.c</file>

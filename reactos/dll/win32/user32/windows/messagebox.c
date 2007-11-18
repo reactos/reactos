@@ -922,4 +922,14 @@ MessageBeep(UINT uType)
 #endif
 }
 
+
+/*
+ * @implemented
+ */
+LPWSTR STDCALL MB_GetString(DWORD string)
+{
+    UNIMPLEMENTED;
+    return NULL;
+}
+
 /* EOF */

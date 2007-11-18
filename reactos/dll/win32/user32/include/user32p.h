@@ -22,7 +22,6 @@
 #include "regcontrol.h"
 #include "resource.h"
 #include "scroll.h"
-#include "strpool.h"
 #include "window.h"
 #include "winpos.h"
 #include "winsta.h"
