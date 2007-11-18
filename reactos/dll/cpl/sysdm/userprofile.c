@@ -62,10 +62,63 @@ SetListViewColumns(HWND hwndListView)
 
 
 static VOID
+AddUserProfile(HWND hwndListView,
+               LPTSTR lpProfileSid)
+{
+    LV_ITEM lvi;
+    INT iItem;
+
+    memset(&lvi, 0x00, sizeof(lvi));
+    lvi.mask = LVIF_TEXT | LVIF_STATE;
+    lvi.pszText = lpProfileSid;
+    lvi.state = 0;
+    iItem = ListView_InsertItem(hwndListView, &lvi);
+}
+
+
+static VOID
+AddUserProfiles(HWND hwndListView)
+{
+    HKEY hKeyUserProfiles;
+    DWORD dwIndex;
+    TCHAR szProfileSid[64];
+    DWORD dwSidLength;
+    FILETIME ftLastWrite;
+
+    if (RegOpenKeyEx(HKEY_LOCAL_MACHINE,
+                     _T("Software\\Microsoft\\Windows NT\\CurrentVersion\\ProfileList"),
+                     0,
+                     KEY_READ,
+                     &hKeyUserProfiles))
+        return;
+
+    for (dwIndex = 0; ; dwIndex++)
+    {
+        dwSidLength = 64;
+        if (RegEnumKeyEx(hKeyUserProfiles,
+                         dwIndex,
+                         szProfileSid,
+                         &dwSidLength,
+                         NULL,
+                         NULL,
+                         NULL,
+                         &ftLastWrite))
+            break;
+
+        AddUserProfile(hwndListView, szProfileSid);
+    }
+
+    RegCloseKey(hKeyUserProfiles);
+}
+
+
+static VOID
 OnInitDialog(HWND hwndDlg)
 {
     /* Initialize the list view control */
     SetListViewColumns(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
+
+    AddUserProfiles(GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST));
 
     /* Disable the "Delete" and "Copy To" buttons if the user is not an admin */
     if (!IsUserAdmin())
