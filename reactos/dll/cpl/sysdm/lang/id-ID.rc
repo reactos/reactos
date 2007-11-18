@@ -76,8 +76,8 @@ BEGIN
     LTEXT       "You can set up hardware profiles for different hardware configurations. At startup, you can choose the profile you want to use.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Available hardware profiles:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
     PUSHBUTTON  "&Properties", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&Copy", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "&Rename", IDC_HRDPROFRENAME, 118, 106, 50, 14
@@ -266,4 +266,9 @@ BEGIN
     IDS_MINI_DUMP "Minidump(64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Complete dump"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END

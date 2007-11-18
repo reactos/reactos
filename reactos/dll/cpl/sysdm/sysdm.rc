@@ -16,8 +16,6 @@ IDI_CPLSYSTEM   ICON "resources/applet.ico"
 IDI_USERPROF    ICON "resources/devmgr.ico"
 IDI_HARDPROF    ICON "resources/devmgr.ico"
 IDI_DEVMGR      ICON "resources/devmgr.ico"
-IDI_UP      	ICON "resources/up.ico"
-IDI_DOWN     	ICON "resources/down.ico"
 IDB_ROSBMP      BITMAP "resources/rosbitmap.bmp"
 
 RC_LICENSE RTDATA "resources/gpl.txt"

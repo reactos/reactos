@@ -76,8 +76,8 @@ BEGIN
     LTEXT       "Можно создать несколько профилей для различных конфигураций оборудования и выбрать нужный при загрузке системы.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Доступные профили оборудования:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
     PUSHBUTTON  "Свойства", IDC_HRDPROFPROP, 8, 106, 47, 14
     PUSHBUTTON  "Копировать", IDC_HRDPROFCOPY, 60, 106, 47, 14
     PUSHBUTTON  "Переименовать", IDC_HRDPROFRENAME, 112, 106, 59, 14
@@ -267,4 +267,9 @@ BEGIN
     IDS_MINI_DUMP "Minidump(64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Complete dump"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END

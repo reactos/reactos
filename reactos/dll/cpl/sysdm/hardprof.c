@@ -53,16 +53,8 @@ HardProfDlgProc(HWND hwndDlg,
     switch (uMsg)
     {
         case WM_INITDIALOG:
-		{
-		    SendMessage(GetDlgItem(hwndDlg, IDC_HRDPROFUP),
-			            BM_SETIMAGE,(WPARAM)IMAGE_ICON,
-						(LPARAM)(HANDLE)LoadIcon(hApplet, MAKEINTRESOURCE(IDI_UP)));
-		    SendMessage(GetDlgItem(hwndDlg, IDC_HRDPROFDWN),
-			            BM_SETIMAGE,(WPARAM)IMAGE_ICON,
-						(LPARAM)(HANDLE)LoadIcon(hApplet, MAKEINTRESOURCE(IDI_DOWN)));
             MessageBox(hwndDlg, _T("Dialog not yet implemented!"), NULL, 0);
-		}
-        break;
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))

@@ -79,8 +79,8 @@ BEGIN
     LTEXT       "Vous pouvez paramétrer des profils matériels pour différentes configurations matérielles. Au démarrage, vous pouvez choisir le profil désiré.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "Profils Matériels disponibles:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
     PUSHBUTTON  "&Propriétés", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&Copier", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "&Renommer", IDC_HRDPROFRENAME, 118, 106, 50, 14
@@ -272,4 +272,9 @@ BEGIN
     IDS_MINI_DUMP "Mini cliché(64Ko)"
     IDS_KERNEL_DUMP "Cliché du noyau"
     IDS_FULL_DUMP "Cliché complet"
+    IDS_USERPROFILE_NAME "Name"
+    IDS_USERPROFILE_SIZE "Size"
+    IDS_USERPROFILE_TYPE "Type"
+    IDS_USERPROFILE_STATUS "Status"
+    IDS_USERPROFILE_MODIFIED "Modified"
 END
