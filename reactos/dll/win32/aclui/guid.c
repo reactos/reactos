@@ -24,4 +24,6 @@
 #include <aclui.h>
 #include <objsel.h>
 
+#include <precomp.h>
+
 /* NO CODE HERE, THIS IS JUST REQUIRED FOR THE GUID DEFINITIONS */
