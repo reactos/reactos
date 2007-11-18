@@ -83,6 +83,8 @@ struct regsvr_coclass
 #define SHELLFOLDER_WANTSFORPARSING   0x00000002
 #define SHELLFOLDER_ATTRIBUTES        0x00000004
 #define SHELLFOLDER_CALLFORATTRIBUTES 0x00000008
+#define SHELLFOLDER_WANTSFORDISPLAY   0x00000010
+#define SHELLFOLDER_HIDEASDELETEPERUSER 0x00000020
 
 static HRESULT register_coclasses(struct regsvr_coclass const *list);
 static HRESULT unregister_coclasses(struct regsvr_coclass const *list);
@@ -135,6 +137,8 @@ static WCHAR const defaulticon_keyname[] = {
 static WCHAR const contextmenu_keyname[] = { 'C', 'o', 'n', 't', 'e', 'x', 't', 'M', 'e', 'n', 'u', 'H', 'a', 'n', 'd', 'l', 'e', 'r', 's', 0 };
 static char const tmodel_valuename[] = "ThreadingModel";
 static char const wfparsing_valuename[] = "WantsFORPARSING";
+static char const wfdisplay_valuename[] = "WantsFORDISPLAY";
+static char const hideasdeleteperuser_valuename[] = "HideAsDeletePerUser";
 static char const attributes_valuename[] = "Attributes";
 static char const cfattributes_valuename[] = "CallForAttributes";
 static char const localized_valuename[] = "LocalizedString";
@@ -335,7 +339,7 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	}
 
 	if (list->flags &
-		(SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES))
+		(SHELLFOLDER_WANTSFORPARSING|SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_CALLFORATTRIBUTES|SHELLFOLDER_WANTSFORDISPLAY|SHELLFOLDER_HIDEASDELETEPERUSER))
 	{
 	    HKEY shellfolder_key;
 
@@ -351,7 +355,11 @@ static HRESULT register_coclasses(struct regsvr_coclass const *list)
 	    if (list->flags & SHELLFOLDER_CALLFORATTRIBUTES)
 		res = RegSetValueExA(shellfolder_key, cfattributes_valuename, 0, REG_DWORD,
 				     (const BYTE *)&list->dwCallForAttributes, sizeof(DWORD));
-	    RegCloseKey(shellfolder_key);
+        if (list->flags & SHELLFOLDER_WANTSFORDISPLAY)
+		res = RegSetValueExA(shellfolder_key, wfdisplay_valuename, 0, REG_SZ, (const BYTE *)"", 1);
+        if (list->flags & SHELLFOLDER_HIDEASDELETEPERUSER)
+		res = RegSetValueExA(shellfolder_key, hideasdeleteperuser_valuename, 0, REG_SZ, (const BYTE *)"", 1);
+        RegCloseKey(shellfolder_key);
 	    if (res != ERROR_SUCCESS) goto error_close_clsid_key;
 	}
 
@@ -572,6 +580,19 @@ static struct regsvr_coclass const coclass_list[] = {
 	"shell32.dll",
 	"Apartment"
     },
+    {  &CLSID_ControlPanel,
+       "Shell Control Panel Folder",
+       IDS_CONTROLPANEL,
+       NULL,
+       "shell32.dll",
+       "Apartment",
+       SHELLFOLDER_WANTSFORDISPLAY|SHELLFOLDER_ATTRIBUTES|SHELLFOLDER_HIDEASDELETEPERUSER,
+	   SFGAO_FOLDER|SFGAO_HASSUBFOLDER,
+	   0,
+	   NULL,
+	   NULL,
+	   IDI_SHELL_CONTROL_PANEL1
+    },
     {   &CLSID_DragDropHelper,
         "Shell Drag and Drop Helper",
 	0,
@@ -706,6 +727,8 @@ static const WCHAR wszDesktop[] = { 'D','e','s','k','t','o','p',0 };
 static const WCHAR wszSlash[] = { '/', 0 };
 static const WCHAR wszMyDocuments[] = { 'M','y',' ','D','o','c','u','m','e','n','t','s', 0 };
 static const WCHAR wszRecycleBin[] = { 'T','r','a','s','h', 0 };
+static const WCHAR wszMyComputer[] = { 'M','y','C','o','m','p','u','t','e','r',0 };
+static const WCHAR wszControlPanel[] = { 'C','o','n','t','r','o','l',0 };
 
 static struct regsvr_namespace const namespace_extensions_list[] = {
 #if 0
@@ -724,6 +747,11 @@ static struct regsvr_namespace const namespace_extensions_list[] = {
         &CLSID_RecycleBin,
         wszDesktop,
         wszRecycleBin
+    },
+    {
+        &CLSID_ControlPanel,
+        wszMyComputer,
+        wszControlPanel
     },
     { NULL }
 };

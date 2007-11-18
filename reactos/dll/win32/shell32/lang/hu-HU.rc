@@ -360,6 +360,7 @@ BEGIN
 	IDS_DESKTOP                 "Asztal"
 	IDS_MYCOMPUTER              "Számítógép"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Nagy képek"

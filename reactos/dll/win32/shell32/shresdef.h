@@ -106,6 +106,8 @@
 #define IDS_SHELL_ABOUT_AUTHORS     144
 #define IDS_SHELL_ABOUT_BACK        145
 #define FCIDM_SHVIEW_NEW            146
+#define FCIDM_SHVIEW_VIEW           147
+#define IDS_CONTROLPANEL            148
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
@@ -172,7 +174,7 @@
 #define IDI_SHELL_TRASH_FILE       142
 #define IDI_SHELL_CONFIRM_DELETE   161
 #define IDI_SHELL_MY_DOCUMENTS     235
-
+#define IDI_SHELL_CONTROL_PANEL1   330
 /*
 AVI resources, windows shell32 has 14 of them: 150-152 and 160-170
 FIXME: Need to add them, but for now just let them use the same: searching.avi

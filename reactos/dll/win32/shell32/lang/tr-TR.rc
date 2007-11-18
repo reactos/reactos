@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "Masaüstü"
 	IDS_MYCOMPUTER              "Bilgisayarým"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Çöp"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Bü&yük Simgeler"

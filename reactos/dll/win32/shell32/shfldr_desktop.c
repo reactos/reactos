@@ -289,7 +289,7 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
                         }
                         else
                         {
-                            ret = AddToEnumList(list, _ILCreateGuidFromStrW(iid));
+                            ret = AddToEnumList(list, pidl);
                         }
                         i++;
                     }

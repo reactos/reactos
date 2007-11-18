@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "Työpöytä"
 	IDS_MYCOMPUTER              "Oma Tietokone"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Suuret Kuvakkeet"

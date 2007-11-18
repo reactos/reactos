@@ -358,6 +358,7 @@ BEGIN
 	IDS_DESKTOP                 "Pulpit"
 	IDS_MYCOMPUTER              "Mój komputer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Kosz"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Du¿e Ikony"

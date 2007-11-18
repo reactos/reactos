@@ -358,6 +358,7 @@ BEGIN
 	IDS_DESKTOP                 "Plocha"
 	IDS_MYCOMPUTER              "Tento poèítaè"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Vedle sebe"

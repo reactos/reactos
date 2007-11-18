@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "Рабочий стол"
 	IDS_MYCOMPUTER              "Мой компьютер"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Корзина"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Большие значки"

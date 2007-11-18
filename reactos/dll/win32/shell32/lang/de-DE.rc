@@ -359,6 +359,7 @@ BEGIN
 	IDS_DESKTOP                 "Desktop"
 	IDS_MYCOMPUTER              "Arbeitsplatz"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papierkorb"
+	IDS_CONTROLPANEL            "Systemsteuerung"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Groﬂe Symbole"

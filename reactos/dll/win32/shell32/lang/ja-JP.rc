@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "デスクトップ"
 	IDS_MYCOMPUTER              "マイ コンピュータ"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "大きいアイコン(&G)"

@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "Работна площ"
 	IDS_MYCOMPUTER              "Моят компютър"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Големи значета"

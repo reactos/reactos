@@ -357,6 +357,7 @@ BEGIN
 	IDS_DESKTOP                 "Skrivebord"
 	IDS_MYCOMPUTER              "Min datamaskin"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Papirkurv"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Store ikoner"

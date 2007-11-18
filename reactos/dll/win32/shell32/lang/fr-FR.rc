@@ -361,6 +361,7 @@ BEGIN
 	IDS_DESKTOP                 "Bureau"
 	IDS_MYCOMPUTER              "Poste de travail"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Grandes icônes"

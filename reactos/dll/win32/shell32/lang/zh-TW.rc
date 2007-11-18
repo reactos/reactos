@@ -358,6 +358,7 @@ BEGIN
 	IDS_DESKTOP                 "Desktop"
 	IDS_MYCOMPUTER              "My Computer"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Lar&ge Icons"

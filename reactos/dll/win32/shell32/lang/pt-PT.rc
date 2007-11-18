@@ -359,6 +359,7 @@ BEGIN
 	IDS_DESKTOP                 "Ambiente de trabalho"
 	IDS_MYCOMPUTER              "O Meu Computador"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "Ícones &grandes"
