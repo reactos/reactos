@@ -7,6 +7,8 @@
 #define IDI_DEVMGR                      51
 #define IDI_HARDPROF                    52
 #define IDI_USERPROF                    53
+#define IDI_UP							2500
+#define IDI_DOWN						2501
 
 #define IDB_ROSBMP                      55
 
@@ -24,12 +26,6 @@
 #define IDS_MINI_DUMP                   69
 #define IDS_KERNEL_DUMP                 70
 #define IDS_FULL_DUMP                   71
-
-#define IDS_USERPROFILE_NAME            72
-#define IDS_USERPROFILE_SIZE            73
-#define IDS_USERPROFILE_TYPE            74
-#define IDS_USERPROFILE_STATUS          75
-#define IDS_USERPROFILE_MODIFIED        76
 
 
 /* propsheet - general */

@@ -385,7 +385,7 @@ BEGIN
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Перезагрузить"
-	IDS_RESTART_PROMPT          "Вы хотите симулировать перезапуск Windows?"
+	IDS_RESTART_PROMPT          "Вы действительно хотите перезагрузить ReactOS?"
 	IDS_SHUTDOWN_TITLE          "Выключить питание"
 	IDS_SHUTDOWN_PROMPT         "Закончить работу с ReactOS?"
 

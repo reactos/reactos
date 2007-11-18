@@ -136,7 +136,7 @@ END
 
 IDD_GPL DIALOG 0, 0, 333, 230
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "GNU General Public License"
+CAPTION "Открытое лицензионное соглашение GNU"
 FONT 8, "MS Shell Dlg"
 BEGIN
     EDITTEXT        IDC_GPL_TEXT,7,7,319,190,ES_MULTILINE | ES_AUTOHSCROLL |
@@ -187,13 +187,13 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Сделать снимок экрана"
     IDS_CMT_DEVMGMT     "Запустить диспетчер устройств"
     IDS_CMT_SERVMAN     "Запустить диспетчер служб"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Запустить удаленный рабочий стол"
 
 END
 
 STRINGTABLE
 BEGIN
-    IDS_GAMES		"Игры"
+    IDS_GAMES			"Игры"
     IDS_CMT_SOLITAIRE	"Пасьянс"
     IDS_CMT_WINEMINE	"Сапер"
 END
@@ -207,27 +207,27 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_SYS_ACCESSIBILITY        "Accessibility"
-	IDS_CMT_MAGNIFY      	     "Magnify"
+	IDS_SYS_ACCESSIBILITY        "Специальные возможности"
+	IDS_CMT_MAGNIFY      	     "Экранная лупа"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_REACTOS_SETUP		"Установка ReactOS"
+    IDS_REACTOS_SETUP			"Установка ReactOS"
     IDS_UNKNOWN_ERROR           "Неизвестная ошибка"
     IDS_REGISTERING_COMPONENTS  "Регистрация компонентов..."
-    IDS_LOADLIBRARY_FAILED	"Ошибка LoadLibrary: "
-    IDS_GETPROCADDR_FAILED	"Ошибка GetProcAddr: "
+    IDS_LOADLIBRARY_FAILED		"Ошибка LoadLibrary: "
+    IDS_GETPROCADDR_FAILED		"Ошибка GetProcAddr: "
     IDS_REGSVR_FAILED           "Ошибка DllRegisterServer: "
-    IDS_DLLINSTALL_FAILED	"Ошибка DllInstall: "
-    IDS_TIMEOUT			"Таймаут в ходе регистрации"
+    IDS_DLLINSTALL_FAILED		"Ошибка DllInstall: "
+    IDS_TIMEOUT					"Таймаут в ходе регистрации"
     IDS_REASON_UNKNOWN          ""
 END
 
 STRINGTABLE
 BEGIN
     IDS_SHORT_CMD        "Командная строка.lnk"
-    IDS_SHORT_EXPLORER   "ReactOS Explorer.lnk"
+    IDS_SHORT_EXPLORER   "Проводник ReactOS.lnk"
     IDS_SHORT_DOWNLOADER "Скачать !.lnk"
     IDS_SHORT_SERVICE    "Диспетчер служб.lnk"
     IDS_SHORT_DEVICE     "Диспетчер устройств.lnk"
@@ -239,8 +239,8 @@ BEGIN
     IDS_SHORT_SOLITAIRE  "Пасьянс.lnk"
     IDS_SHORT_WINEMINE   "Сапер.lnk"
 	IDS_SHORT_CHARMAP    "Таблица символов.lnk"
-	IDS_SHORT_MAGNIFY    "Magnify.lnk"
-    IDS_SHORT_RDESKTOP   "Remote Desktop.lnk"
+	IDS_SHORT_MAGNIFY    "Экранная лупа.lnk"
+    IDS_SHORT_RDESKTOP   "Удаленный рабочий стол.lnk"
 END
 
 STRINGTABLE

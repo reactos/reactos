@@ -64,7 +64,7 @@ BEGIN
     IDS_DEV_MOVED "ReactOS is in the process of setting up this device."
     IDS_DEV_TOO_EARLY "ReactOS is in the process of setting up this device."
     IDS_DEV_NO_VALID_LOG_CONF "ReactOS can\'t specify the resources for this device."
-    IDS_DEV_FAILED_INSTALL "The drivers for this device are not installed."
+    IDS_DEV_FAILED_INSTALL "Драйверы для этого устройства не установлены."
     IDS_DEV_HARDWARE_DISABLED "This device is disabled because the BIOS for the device did not give it any resources."
     IDS_DEV_CANT_SHARE_IRQ "This device is using an Interrupt Request (IRQ) resource that is in use by another device and cannot be shared.\nYou must change the conflicting setting or remove the real-mode driver causing the conflict."
     IDS_DEV_FAILED_ADD "This device is not working properly because $1 is not working properly."
