@@ -157,8 +157,8 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
      }
     else
     {
-       DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
        PDC dc = DC_LockDc ( pDce->hDC );
+       DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
        MmCopyFromCaller(&dc->Dc_Attr, dc->pDc_Attr, sizeof(DC_ATTR));
        DC_UnlockDc( dc );
        DC_FreeDcAttr(pDce->hDC);         // Free the dcattr!
