@@ -360,7 +360,7 @@ SaveSettings(HWND hwnd)
 	TCHAR szBuf[MAX_PATH];
 
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                   TEXT("Software\\ReactOS\\Download!"),
+                   TEXT("Software\\ReactOS\\Downloader"),
                    &hKey) != ERROR_SUCCESS)
 		return FALSE;
 
@@ -415,10 +415,10 @@ InitProfDlg(HWND hwnd)
 	DWORD dwDisp, dwSize;
 
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
-                   TEXT("Software\\ReactOS\\Download!"),
+                   TEXT("Software\\ReactOS\\Downloader"),
                    &hKey) != ERROR_SUCCESS)
 	{
-		if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\Download!",
+		if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Software\\ReactOS\\Downloader",
 						   0, NULL, REG_OPTION_NON_VOLATILE,
 						   KEY_WRITE, NULL, &hKey, &dwDisp))
 		{

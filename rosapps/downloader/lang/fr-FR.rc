@@ -51,7 +51,7 @@ BEGIN
   IDS_CATS_TITLE		"Catégories"
   IDS_CHOOSE_FOLDER		"Veuillez choisir le répertoire..."
   IDS_NOTCREATE_REGKEY		"Échec lors de la création de la clé registre."
-  IDS_DOWNLOAD_FOLDER		"Download!"
+  IDS_DOWNLOAD_FOLDER		"Downloader"
   IDS_UNABLECREATE_FOLDER	"Échec lors du répertoire avec ce nom !"
   IDS_UPDATE_URL		"http://svn.reactos.org"
 END

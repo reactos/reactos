@@ -51,7 +51,7 @@ BEGIN
   IDS_CATS_TITLE		"Categories"
   IDS_CHOOSE_FOLDER		"Please, choose the folder..."
   IDS_NOTCREATE_REGKEY		"Could not create the registry key."
-  IDS_DOWNLOAD_FOLDER		"Download!"
+  IDS_DOWNLOAD_FOLDER		"Downloader"
   IDS_UNABLECREATE_FOLDER	"Unable to create a folder with this name!"
   IDS_UPDATE_URL		"http://svn.reactos.org"
 END

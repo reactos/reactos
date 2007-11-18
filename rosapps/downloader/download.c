@@ -5,7 +5,7 @@
  * COPYRIGHT:   Copyright 2001 John R. Sheets (for CodeWeavers)
  *              Copyright 2004 Mike McCormack (for CodeWeavers)
  *              Copyright 2005 Ge van Geldorp (gvg@reactos.org)
- *	      Copyright 2007 Dmitry Chapyshev ()lentind@yandex.ru)
+ *	            Copyright 2007 Dmitry Chapyshev (lentind@yandex.ru)
  */
 /*
  * Based on Wine dlls/shdocvw/shdocvw_main.c
@@ -237,7 +237,7 @@ ThreadFunc(LPVOID Context)
 		goto end;
     }
 	if (RegOpenKey(HKEY_LOCAL_MACHINE,
-				  TEXT("Software\\ReactOS\\Download!"),
+				  TEXT("Software\\ReactOS\\Downloader"),
                   &hKey) != ERROR_SUCCESS)
 	{
 		goto end;
