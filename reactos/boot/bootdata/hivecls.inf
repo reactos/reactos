@@ -27,6 +27,14 @@ HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}","",0x00000000,"ReactOS New O
 HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}\InProcServer32","",0x00000000,"shell32.dll"
 HKCR,"CLSID\{D969A300-E7FF-11d0-A93B-00A0C90F2719}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 
+; Rich Text Files
+HKCR,".rtf","",0x00000000,"rtffile"
+HKCR,".rtf\shellnew","",0x00000000,""
+HKCR,".rft\shellnew","Data",0x00020000,"{\rtf1}"
+HKCR,"rtffile","",0x00000000,"Rich Text Document"
+HKCR,"rtffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-2"
+HKCR,"rtffile\shell\open","",0x00000000,"Open"
+HKCR,"rtffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\wordpad.exe %1"
 
 ; Virtual Device Drivers
 HKCR,".386","",0x00000000,"vxdfile"
