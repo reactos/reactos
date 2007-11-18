@@ -955,7 +955,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
    ObjectName.MaximumLength = ObjectName.Length + sizeof(WCHAR);
    ObjectName.Buffer = ExAllocatePool(PagedPool, ObjectName.MaximumLength);
    wcscpy(ObjectName.Buffer, L"\\Driver\\");
-   memcpy(ObjectName.Buffer + 8, Start, (ObjectName.Length - 8) * sizeof(WCHAR));
+   memcpy(ObjectName.Buffer + 8, Start, ObjectName.Length - 8 * sizeof(WCHAR));
    ObjectName.Buffer[ObjectName.Length/sizeof(WCHAR)] = 0;
 
    /*
@@ -967,7 +967,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("Can't locate driver object for %wZ\n", ObjectName);
+      DPRINT1("Can't locate driver object for %wZ\n", ObjectName);
       return Status;
    }
 
@@ -994,7 +994,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+      DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
       return Status;
    }
 
@@ -1006,7 +1006,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
+      DPRINT1("IopNormalizeImagePath() failed (Status %x)\n", Status);
       return Status;
    }
 
