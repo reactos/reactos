@@ -2418,7 +2418,7 @@ DC_FreeDcAttr(HDC  DCToFree )
       NTSTATUS Status = ZwFreeVirtualMemory(Pid,
                                &Entry->UserData,
                                        &MemSize,
-                                   MEM_DECOMMIT);
+                                   MEM_RELEASE);
       if (NT_SUCCESS(Status))
       {
         DPRINT("DC_FreeDC DC_ATTR 0x%x\n", Entry->UserData);

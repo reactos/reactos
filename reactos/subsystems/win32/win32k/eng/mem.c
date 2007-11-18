@@ -102,7 +102,7 @@ EngFreeUserMem(PVOID pv)
   PUSERMEMHEADER Header = ((PUSERMEMHEADER) pv) - 1;
   ULONG MemSize = sizeof(USERMEMHEADER) + Header->MemSize;
 
-  ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_DECOMMIT);
+  ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &Header, &MemSize, MEM_RELEASE);
 }
 
 /*

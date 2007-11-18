@@ -887,7 +887,7 @@ NtUserPeekMessage(PNTUSERGETMESSAGEINFO UnsafeInfo,
          if (! NT_SUCCESS(Status))
          {
             ZwFreeVirtualMemory(NtCurrentProcess(), (PVOID *) &UserMem,
-                                &Info.LParamSize, MEM_DECOMMIT);
+                                &Info.LParamSize, MEM_RELEASE);
             SetLastNtError(Status);
             RETURN( (BOOL) -1);
          }
