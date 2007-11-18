@@ -1,0 +1,63 @@
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+
+IDD_GENERAL DIALOGEX 0, 0, 242, 175
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Paràmetres d'entrada",IDC_STATIC,7,7,228,89
+    GROUPBOX        "Paràmetres de connexió",IDC_STATIC,7,103,228,65
+    ICON            "", IDC_LOGONICON, 15,19,20,20
+    LTEXT           "Entreu l'adreça del servidor",IDC_STATIC,47,24,81,8
+    LTEXT           "Servidor:",IDC_STATIC,47,41,25,8
+    LTEXT           "Nom d'usuari:",IDC_STATIC,47,58,38,8
+    COMBOBOX        IDC_SERVERCOMBO,79,39,141,150,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "Desa",IDC_SAVE,67,139,50,14
+    PUSHBUTTON      "Desa com...",IDC_SAVEAS,123,139,50,14
+    PUSHBUTTON      "Obre...",IDC_OPEN,177,139,50,14
+    ICON            "", IDC_CONNICON, 16,114,20,20
+    LTEXT           "Guarda els paràmetres de la connexió actual o obre una configuració existent",IDC_STATIC,50,115,172,20
+END
+
+IDD_DISPLAY DIALOGEX 0, 0, 242, 175
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX        "Tamany de l'escriptori Remot",IDC_STATIC,7,7,228,68
+    GROUPBOX        "Colors",IDC_STATIC,7,83,228,85
+    ICON            "", IDC_REMICON, 15,19,20,20
+    ICON            "", IDC_COLORSICON, 15,98,20,20
+    LTEXT           "Trieu el tamany de pantalla del escriptori remot. Arrossegueu el cursor al extrem dret per a pantalla complerta",IDC_STATIC,53,22,175,21
+    CONTROL         "", IDC_GEOSLIDER, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 56, 42, 124, 17
+    COMBOBOX        IDC_BPPCOMBO,56,102,128,80, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "",IDC_COLORIMAGE,"Static",SS_OWNERDRAW | SS_SUNKEN, 56,121,127,10
+    LTEXT           "Nota: La configuració del equip remot pot canviar aquestes configuracions.",IDC_STATIC,56,143,165,18
+    LTEXT           "Menys",IDC_STATIC,35,42,15,8
+    LTEXT           "Més",IDC_STATIC,189,42,17,8
+    LTEXT           "", IDC_SETTINGS_RESOLUTION_TEXT, 56, 62, 120, 10, SS_CENTER
+END
+
+IDD_CONNECTDIALOG DIALOGEX 0, 0, 260, 262
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Remote Desktop Connection"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Connectar",IDOK,147,245,50,14
+    PUSHBUTTON      "Cancel·lar",IDCANCEL,203,245,50,14
+    CONTROL         "",IDC_TAB,"SysTabControl32",0x0,7,50,246,190
+END
+
+
+STRINGTABLE 
+BEGIN
+    IDS_TAB_GENERAL         "General"
+    IDS_TAB_DISPLAY         "Pantalla"
+    IDS_256COLORS           "256 Colors"
+    IDS_HIGHCOLOR15         "High Color (15 bit)"
+    IDS_HIGHCOLOR16         "High Color (16 bit)"
+    IDS_HIGHCOLOR24         "Color Real (24 bit)"
+    IDS_PIXEL               "%lux%lu Pixels"
+    IDS_FULLSCREEN          "Pantalla Complerta"
+    IDS_BROWSESERVER        "<Navega per més...>"
+    IDS_HEADERTEXT1         "Remote Desktop"
+    IDS_HEADERTEXT2         "Connection"
+END
