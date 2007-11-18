@@ -32,14 +32,15 @@ IntGdiMoveToEx(DC      *dc,
                LPPOINT Point)
 {
   BOOL  PathIsOpen;
-
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   if ( Point )
   {
-    Point->x = dc->Dc_Attr.ptlCurrent.x;
-    Point->y = dc->Dc_Attr.ptlCurrent.y;
+    Point->x = Dc_Attr->ptlCurrent.x;
+    Point->y = Dc_Attr->ptlCurrent.y;
   }
-  dc->Dc_Attr.ptlCurrent.x = X;
-  dc->Dc_Attr.ptlCurrent.y = Y;
+  Dc_Attr->ptlCurrent.x = X;
+  Dc_Attr->ptlCurrent.y = Y;
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
 
@@ -60,6 +61,9 @@ IntGdiLineTo(DC  *dc,
   GDIBRUSHINST PenBrushInst;
   RECTL     Bounds;
   POINT     Points[2];
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   if (PATH_IsPathOpen(dc->w.path))
     {
@@ -67,8 +71,8 @@ IntGdiLineTo(DC  *dc,
       if (Ret)
 	  {
 	    // FIXME - PATH_LineTo should maybe do this...
-	    dc->Dc_Attr.ptlCurrent.x = XEnd;
-	    dc->Dc_Attr.ptlCurrent.y = YEnd;
+	    Dc_Attr->ptlCurrent.x = XEnd;
+	    Dc_Attr->ptlCurrent.y = YEnd;
 	  }
       return Ret;
     }
@@ -81,8 +85,8 @@ IntGdiLineTo(DC  *dc,
           return FALSE;
         }
 
-      Points[0].x = dc->Dc_Attr.ptlCurrent.x;
-      Points[0].y = dc->Dc_Attr.ptlCurrent.y;
+      Points[0].x = Dc_Attr->ptlCurrent.x;
+      Points[0].y = Dc_Attr->ptlCurrent.y;
       Points[1].x = XEnd;
       Points[1].y = YEnd;
 
@@ -100,7 +104,7 @@ IntGdiLineTo(DC  *dc,
       Bounds.bottom = max(Points[0].y, Points[1].y);
 
       /* get BRUSHOBJ from current pen. */
-      PenBrushObj = PENOBJ_LockPen( dc->Dc_Attr.hpen );
+      PenBrushObj = PENOBJ_LockPen( Dc_Attr->hpen );
       /* FIXME - PenBrushObj can be NULL!!!! Don't assert here! */
       ASSERT(PenBrushObj);
 
@@ -113,7 +117,7 @@ IntGdiLineTo(DC  *dc,
                            Points[0].x, Points[0].y,
                            Points[1].x, Points[1].y,
                            &Bounds,
-                           ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+                           ROP2_TO_MIX(Dc_Attr->jROP2));
       }
 
       BITMAPOBJ_UnlockBitmap ( BitmapObj );
@@ -122,8 +126,8 @@ IntGdiLineTo(DC  *dc,
 
   if (Ret)
     {
-      dc->Dc_Attr.ptlCurrent.x = XEnd;
-      dc->Dc_Attr.ptlCurrent.y = YEnd;
+      Dc_Attr->ptlCurrent.x = XEnd;
+      Dc_Attr->ptlCurrent.y = YEnd;
     }
 
   return Ret;
@@ -163,7 +167,9 @@ IntGdiPolyBezierTo(DC      *dc,
                    DWORD  Count)
 {
   BOOL ret = FALSE; // default to failure
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   if ( PATH_IsPathOpen(dc->w.path) )
     ret = PATH_PolyBezierTo ( dc, pt, Count );
   else /* We'll do it using PolyBezier */
@@ -172,8 +178,8 @@ IntGdiPolyBezierTo(DC      *dc,
     npt = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_BEZIER);
     if ( npt )
     {
-      npt[0].x = dc->Dc_Attr.ptlCurrent.x;
-      npt[0].y = dc->Dc_Attr.ptlCurrent.y;
+      npt[0].x = Dc_Attr->ptlCurrent.x;
+      npt[0].y = Dc_Attr->ptlCurrent.y;
       memcpy(npt + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyBezier(dc, npt, Count+1);
       ExFreePool(npt);
@@ -181,8 +187,8 @@ IntGdiPolyBezierTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
-    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
+    Dc_Attr->ptlCurrent.x = pt[Count-1].x;
+    Dc_Attr->ptlCurrent.y = pt[Count-1].y;
   }
 
   return ret;
@@ -199,12 +205,14 @@ IntGdiPolyline(DC      *dc,
    LPPOINT Points;
    BOOL Ret = TRUE;
    LONG i;
-
+   PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  
+   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    if (PATH_IsPathOpen(dc->w.path))
       return PATH_Polyline(dc, pt, Count);
 
    /* Get BRUSHOBJ from current pen. */
-   PenBrushObj = PENOBJ_LockPen(dc->Dc_Attr.hpen);
+   PenBrushObj = PENOBJ_LockPen(Dc_Attr->hpen);
    /* FIXME - PenBrushObj can be NULL! Don't assert here! */
    ASSERT(PenBrushObj);
 
@@ -230,7 +238,7 @@ IntGdiPolyline(DC      *dc,
          IntGdiInitBrushInstance(&PenBrushInst, PenBrushObj, dc->XlatePen);
          Ret = IntEngPolyline(&BitmapObj->SurfObj, dc->CombinedClip,
                               &PenBrushInst.BrushObject, Points, Count,
-                              ROP2_TO_MIX(dc->Dc_Attr.jROP2));
+                              ROP2_TO_MIX(Dc_Attr->jROP2));
 
          BITMAPOBJ_UnlockBitmap(BitmapObj);
          EngFreeMem(Points);
@@ -252,7 +260,9 @@ IntGdiPolylineTo(DC      *dc,
                  DWORD   Count)
 {
   BOOL ret = FALSE; // default to failure
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   if(PATH_IsPathOpen(dc->w.path))
   {
     ret = PATH_PolylineTo(dc, pt, Count);
@@ -262,8 +272,8 @@ IntGdiPolylineTo(DC      *dc,
     POINT *pts = ExAllocatePoolWithTag(PagedPool, sizeof(POINT) * (Count + 1), TAG_SHAPE);
     if ( pts )
     {
-      pts[0].x = dc->Dc_Attr.ptlCurrent.x;
-      pts[0].y = dc->Dc_Attr.ptlCurrent.y;
+      pts[0].x = Dc_Attr->ptlCurrent.x;
+      pts[0].y = Dc_Attr->ptlCurrent.y;
       memcpy( pts + 1, pt, sizeof(POINT) * Count);
       ret = IntGdiPolyline(dc, pts, Count + 1);
       ExFreePool(pts);
@@ -271,8 +281,8 @@ IntGdiPolylineTo(DC      *dc,
   }
   if ( ret )
   {
-    dc->Dc_Attr.ptlCurrent.x = pt[Count-1].x;
-    dc->Dc_Attr.ptlCurrent.y = pt[Count-1].y;
+    Dc_Attr->ptlCurrent.x = pt[Count-1].x;
+    Dc_Attr->ptlCurrent.y = pt[Count-1].y;
   }
 
   return ret;
@@ -417,9 +427,12 @@ NtGdiPolyDraw(
     BOOL result = FALSE;
     POINT lastmove;
     unsigned int i;
-
+    PDC_ATTR Dc_Attr = NULL;
+  
     dc = DC_LockDc(hdc);
     if(!dc) return FALSE;
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
     _SEH_TRY
     {
@@ -436,8 +449,8 @@ NtGdiPolyDraw(
         }
 
         /* if no moveto occurs, we will close the figure here */
-        lastmove.x = dc->Dc_Attr.ptlCurrent.x;
-        lastmove.y = dc->Dc_Attr.ptlCurrent.y;
+        lastmove.x = Dc_Attr->ptlCurrent.x;
+        lastmove.y = Dc_Attr->ptlCurrent.y;
 
         /* now let's draw */
         for( i = 0; i < cCount; i++ )
@@ -445,16 +458,16 @@ NtGdiPolyDraw(
             if( lpbTypes[i] == PT_MOVETO )
             {
                 IntGdiMoveToEx( dc, lppt[i].x, lppt[i].y, NULL );
-                lastmove.x = dc->Dc_Attr.ptlCurrent.x;
-                lastmove.y = dc->Dc_Attr.ptlCurrent.y;
+                lastmove.x = Dc_Attr->ptlCurrent.x;
+                lastmove.y = Dc_Attr->ptlCurrent.y;
             }
             else if( lpbTypes[i] & PT_LINETO )
                 IntGdiLineTo( dc, lppt[i].x, lppt[i].y );
             else if( lpbTypes[i] & PT_BEZIERTO )
             {
                 POINT pts[4];
-                pts[0].x = dc->Dc_Attr.ptlCurrent.x;
-                pts[0].y = dc->Dc_Attr.ptlCurrent.y;
+                pts[0].x = Dc_Attr->ptlCurrent.x;
+                pts[0].y = Dc_Attr->ptlCurrent.y;
                 RtlCopyMemory(pts + 1, &lppt[i], sizeof(POINT) * 3);
                 IntGdiPolyBezier(dc, pts, 4);
                 i += 2;

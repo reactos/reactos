@@ -42,6 +42,7 @@ NtGdiAlphaBlend(
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
+        PDC_ATTR Dc_Attr = NULL;
 	BITMAPOBJ *BitmapDest, *BitmapSrc;
 	RECTL DestRect, SourceRect;
 	BOOL Status;
@@ -87,6 +88,9 @@ NtGdiAlphaBlend(
 		DCSrc = DCDest;
 	}
 
+        Dc_Attr = DCSrc->pDc_Attr;
+        if (!Dc_Attr) Dc_Attr = &DCSrc->Dc_Attr;
+
 	/* Offset the destination and source by the origin of their DCs. */
 	XOriginDest += DCDest->w.DCOrgX;
 	YOriginDest += DCDest->w.DCOrgY;
@@ -125,11 +129,11 @@ NtGdiAlphaBlend(
 	{
 		if (DCDest->w.bitsPerPixel == 1)
 		{
-			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->Dc_Attr.crBackgroundClr);
+			XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, Dc_Attr->crBackgroundClr);
 		}
 		else if (DCSrc->w.bitsPerPixel == 1)
 		{
-			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->Dc_Attr.crBackgroundClr, DCSrc->Dc_Attr.crForegroundClr);
+			XlateObj = IntEngCreateSrcMonoXlate(DestPalette, Dc_Attr->crBackgroundClr, Dc_Attr->crForegroundClr);
 		}
 		else
 		{
@@ -182,6 +186,7 @@ NtGdiBitBlt(
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
+        PDC_ATTR Dc_Attr = NULL;
 	BITMAPOBJ *BitmapDest, *BitmapSrc;
 	RECTL DestRect;
 	POINTL SourcePoint, BrushOrigin;
@@ -235,6 +240,9 @@ NtGdiBitBlt(
 		DCSrc = NULL;
 	}
 
+        Dc_Attr = DCDest->pDc_Attr;
+        if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+
 	/* Offset the destination and source by the origin of their DCs. */
 	XDest += DCDest->w.DCOrgX;
 	YDest += DCDest->w.DCOrgY;
@@ -273,7 +281,7 @@ NtGdiBitBlt(
 
 	if (UsesPattern)
 	{
-		BrushObj = BRUSHOBJ_LockBrush(DCDest->Dc_Attr.hbrush);
+		BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
 		if (NULL == BrushObj)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
@@ -316,13 +324,15 @@ NtGdiBitBlt(
 		}
 		else
 		{
+                        Dc_Attr = DCSrc->pDc_Attr;
+                        if (!Dc_Attr) Dc_Attr = &DCSrc->Dc_Attr;
 			if (DCDest->w.bitsPerPixel == 1)
 			{
-				XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, DCSrc->Dc_Attr.crBackgroundClr);
+				XlateObj = IntEngCreateMonoXlate(0, DestPalette, SourcePalette, Dc_Attr->crBackgroundClr);
 			}
 			else if (DCSrc->w.bitsPerPixel == 1)
 			{
-				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, DCSrc->Dc_Attr.crBackgroundClr, DCSrc->Dc_Attr.crForegroundClr);
+				XlateObj = IntEngCreateSrcMonoXlate(DestPalette, Dc_Attr->crBackgroundClr, Dc_Attr->crForegroundClr);
 			}
 			else
 			{
@@ -781,6 +791,7 @@ NtGdiStretchBlt(
 {
 	PDC DCDest = NULL;
 	PDC DCSrc  = NULL;
+        PDC_ATTR Dc_Attr = NULL;
 	BITMAPOBJ *BitmapDest, *BitmapSrc;
 	RECTL DestRect;
 	RECTL SourceRect;
@@ -929,7 +940,9 @@ NtGdiStretchBlt(
 
 	if (UsesPattern)
 	{
-		BrushObj = BRUSHOBJ_LockBrush(DCDest->Dc_Attr.hbrush);
+                Dc_Attr = DCDest->pDc_Attr;
+                if (!Dc_Attr) Dc_Attr = &DCDest->Dc_Attr;
+		BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
 		if (NULL == BrushObj)
 		{
 			if (UsesSource && hDCSrc != hDCDest)
@@ -1132,6 +1145,7 @@ NtGdiPatBlt(
 {
    PGDIBRUSHOBJ BrushObj;
    DC *dc = DC_LockDc(hDC);
+   PDC_ATTR Dc_Attr;
    BOOL ret;
 
    if (dc == NULL)
@@ -1139,6 +1153,8 @@ NtGdiPatBlt(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
+   Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
    if (dc->IsIC)
    {
       DC_UnlockDc(dc);
@@ -1146,7 +1162,7 @@ NtGdiPatBlt(
       return TRUE;
    }
 
-   BrushObj = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+   BrushObj = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
    if (BrushObj == NULL)
    {
       SetLastWin32Error(ERROR_INVALID_HANDLE);

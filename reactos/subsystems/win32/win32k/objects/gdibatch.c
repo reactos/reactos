@@ -19,7 +19,13 @@ FASTCALL
 GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
 {
   PDC dc = NULL;
-  if (hDC) dc = DC_LockDc(hDC);
+  PDC_ATTR Dc_Attr = NULL;
+  if (hDC)
+  {
+    dc = DC_LockDc(hDC);
+    Dc_Attr = dc->pDc_Attr;
+    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  }
   // The thread is approaching the end of sunset.
   switch(pHdr->Cmd)
   {
@@ -35,7 +41,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      {
         if (!dc) break;
         PGDIBSSETBRHORG pgSBO = (PGDIBSSETBRHORG) pHdr;
-        dc->Dc_Attr.ptlBrushOrigin = pgSBO->ptlBrushOrigin;
+        Dc_Attr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
         break;
      }
      case GdiBCExtSelClipRgn:

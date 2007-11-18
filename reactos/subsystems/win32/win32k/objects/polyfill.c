@@ -560,7 +560,7 @@ FillPolygon(
   FILL_EDGE_LIST *list = 0;
   FILL_EDGE *ActiveHead = 0;
   int ScanLine;
-
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
   void
   (STDCALL *FillScanLine)(
     PDC dc,
@@ -570,6 +570,8 @@ FillPolygon(
     BRUSHOBJ *BrushObj,
     MIX RopMode );
 
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  
   //DPRINT("FillPolygon\n");
 
   /* Create Edge List. */
@@ -578,7 +580,7 @@ FillPolygon(
   if (NULL == list)
     return FALSE;
 
-  if ( WINDING == dc->Dc_Attr.jFillMode )
+  if ( WINDING == Dc_Attr->jFillMode )
     FillScanLine = POLYGONFILL_FillScanLineWinding;
   else /* default */
     FillScanLine = POLYGONFILL_FillScanLineAlternate;

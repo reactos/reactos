@@ -265,12 +265,14 @@ NtGdiPathToRegion(HDC  hDC)
    GdiPath *pPath;
    HRGN  hrgnRval = 0;
    DC *pDc;
+   PDC_ATTR Dc_Attr;
 
    DPRINT("Enter %s\n", __FUNCTION__);
 
    pDc = DC_LockDc(hDC);
    if(!pDc) return NULL;
-
+   Dc_Attr = pDc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &pDc->Dc_Attr;
    pPath = &pDc->w.path;
 
    if(pPath->state!=PATH_Closed)
@@ -281,7 +283,7 @@ NtGdiPathToRegion(HDC  hDC)
    else
    {
       /* FIXME: Should we empty the path even if conversion failed? */
-      if(PATH_PathToRegion(pPath, pDc->Dc_Attr.jFillMode, &hrgnRval))
+      if(PATH_PathToRegion(pPath, Dc_Attr->jFillMode, &hrgnRval))
            PATH_EmptyPath(pPath);
    }
 
@@ -351,9 +353,11 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
  HRGN  hrgnPath;
  BOOL  success = FALSE;
  PDC dc = DC_LockDc ( hDC );
-
+ PDC_ATTR Dc_Attr;
+ 
  if( !dc ) return FALSE;
-
+ Dc_Attr = dc->pDc_Attr;
+ if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
  /* Check that path is closed */
  if( dc->w.path.state != PATH_Closed )
  {
@@ -361,7 +365,7 @@ BOOL STDCALL NtGdiSelectClipPath(HDC  hDC,
    return FALSE;
  }
  /* Construct a region from the path */
- else if( PATH_PathToRegion( &dc->w.path, dc->Dc_Attr.jFillMode, &hrgnPath ) )
+ else if( PATH_PathToRegion( &dc->w.path, Dc_Attr->jFillMode, &hrgnPath ) )
  {
    success = IntGdiExtSelectClipRgn( dc, hrgnPath, Mode ) != ERROR;
    NtGdiDeleteObject( hrgnPath );
@@ -394,6 +398,9 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
   POINT ptViewportOrg, ptWindowOrg;
   XFORM xform;
   HRGN  hrgn;
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   if( pPath->state != PATH_Closed )
   {
@@ -401,7 +408,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
     return FALSE;
   }
 
-  if( PATH_PathToRegion( pPath, dc->Dc_Attr.jFillMode, &hrgn ))
+  if( PATH_PathToRegion( pPath, Dc_Attr->jFillMode, &hrgn ))
   {
     /* Since PaintRgn interprets the region as being in logical coordinates
      * but the points we store for the path are already in device
@@ -412,11 +419,11 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
      */
 
     /* Save the information about the old mapping mode */
-    mapMode = dc->Dc_Attr.iMapMode;
-    ptViewportExt = dc->Dc_Attr.szlViewportExt;
-    ptViewportOrg = dc->Dc_Attr.ptlViewportOrg;
-    ptWindowExt   = dc->Dc_Attr.szlWindowExt;
-    ptWindowOrg   = dc->Dc_Attr.ptlWindowOrg;
+    mapMode = Dc_Attr->iMapMode;
+    ptViewportExt = Dc_Attr->szlViewportExt;
+    ptViewportOrg = Dc_Attr->ptlViewportOrg;
+    ptWindowExt   = Dc_Attr->szlWindowExt;
+    ptWindowOrg   = Dc_Attr->ptlWindowOrg;
 
     /* Save world transform
      * NB: The Windows documentation on world transforms would lead one to
@@ -428,31 +435,31 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
 
     /* Set MM_TEXT */
     IntGdiSetMapMode( dc, MM_TEXT );
-    dc->Dc_Attr.ptlViewportOrg.x = 0;
-    dc->Dc_Attr.ptlViewportOrg.y = 0;
-    dc->Dc_Attr.ptlWindowOrg.x = 0;
-    dc->Dc_Attr.ptlWindowOrg.y = 0;
+    Dc_Attr->ptlViewportOrg.x = 0;
+    Dc_Attr->ptlViewportOrg.y = 0;
+    Dc_Attr->ptlWindowOrg.x = 0;
+    Dc_Attr->ptlWindowOrg.y = 0;
 
-    graphicsMode = dc->Dc_Attr.iGraphicsMode;
-    dc->Dc_Attr.iGraphicsMode = GM_ADVANCED;
+    graphicsMode = Dc_Attr->iGraphicsMode;
+    Dc_Attr->iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform( dc, &xform, MWT_IDENTITY );
-    dc->Dc_Attr.iGraphicsMode =  graphicsMode;
+    Dc_Attr->iGraphicsMode =  graphicsMode;
 
     /* Paint the region */
     IntGdiPaintRgn( dc, hrgn );
     NtGdiDeleteObject( hrgn );
     /* Restore the old mapping mode */
     IntGdiSetMapMode( dc, mapMode );
-    dc->Dc_Attr.szlViewportExt = ptViewportExt;
-    dc->Dc_Attr.ptlViewportOrg = ptViewportOrg;
-    dc->Dc_Attr.szlWindowExt   = ptWindowExt;
-    dc->Dc_Attr.ptlWindowOrg   = ptWindowOrg;
+    Dc_Attr->szlViewportExt = ptViewportExt;
+    Dc_Attr->ptlViewportOrg = ptViewportOrg;
+    Dc_Attr->szlWindowExt   = ptWindowExt;
+    Dc_Attr->ptlWindowOrg   = ptWindowOrg;
 
     /* Go to GM_ADVANCED temporarily to restore the world transform */
-    graphicsMode = dc->Dc_Attr.iGraphicsMode;
-    dc->Dc_Attr.iGraphicsMode = GM_ADVANCED;
+    graphicsMode = Dc_Attr->iGraphicsMode;
+    Dc_Attr->iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform( dc, &xform, MWT_MAX+1 );
-    dc->Dc_Attr.iGraphicsMode = graphicsMode;
+    Dc_Attr->iGraphicsMode = graphicsMode;
     return TRUE;
   }
   return FALSE;
@@ -1091,6 +1098,8 @@ PATH_PolyPolyline ( PDC dc, const POINT* pts, const DWORD* counts, DWORD polylin
 BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
 {
    INT temp;
+   PDC_ATTR Dc_Attr = dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
    /* Convert points to device coordinates */
    corners[0].x=x1;
@@ -1115,7 +1124,7 @@ BOOL PATH_CheckCorners(DC *dc, POINT corners[], INT x1, INT y1, INT x2, INT y2)
    }
 
    /* In GM_COMPATIBLE, don't include bottom and right edges */
-   if(dc->Dc_Attr.iGraphicsMode==GM_COMPATIBLE)
+   if(Dc_Attr->iGraphicsMode==GM_COMPATIBLE)
    {
       corners[1].x--;
       corners[1].y--;
@@ -1471,14 +1480,15 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
     SIZE szViewportExt, szWindowExt;
     DWORD mapMode, graphicsMode;
     XFORM xform;
+    PDC_ATTR Dc_Attr = dc->pDc_Attr;
 
     DPRINT("Enter %s\n", __FUNCTION__);
 
     if(pPath->state != PATH_Closed)
         return FALSE;
-
+    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
     /* Save the mapping mode info */
-    mapMode=dc->Dc_Attr.iMapMode;
+    mapMode = Dc_Attr->iMapMode;
     IntGetViewportExtEx(dc, &szViewportExt);
     IntGetViewportOrgEx(dc, &ptViewportOrg);
     IntGetWindowExtEx(dc, &szWindowExt);
@@ -1486,15 +1496,15 @@ BOOL FASTCALL PATH_StrokePath(DC *dc, GdiPath *pPath)
     xform = dc->w.xformWorld2Wnd;
 
     /* Set MM_TEXT */
-    dc->Dc_Attr.iMapMode = MM_TEXT;
-    dc->Dc_Attr.ptlViewportOrg.x = 0;
-    dc->Dc_Attr.ptlViewportOrg.y = 0;
-    dc->Dc_Attr.ptlWindowOrg.x = 0;
-    dc->Dc_Attr.ptlWindowOrg.y = 0;
-    graphicsMode = dc->Dc_Attr.iGraphicsMode;
-    dc->Dc_Attr.iGraphicsMode = GM_ADVANCED;
+    Dc_Attr->iMapMode = MM_TEXT;
+    Dc_Attr->ptlViewportOrg.x = 0;
+    Dc_Attr->ptlViewportOrg.y = 0;
+    Dc_Attr->ptlWindowOrg.x = 0;
+    Dc_Attr->ptlWindowOrg.y = 0;
+    graphicsMode = Dc_Attr->iGraphicsMode;
+    Dc_Attr->iGraphicsMode = GM_ADVANCED;
     IntGdiModifyWorldTransform(dc, &xform, MWT_IDENTITY);
-    dc->Dc_Attr.iGraphicsMode = graphicsMode;
+    Dc_Attr->iGraphicsMode = graphicsMode;
 
     /* Allocate enough memory for the worst case without beziers (one PT_MOVETO
      * and the rest PT_LINETO with PT_CLOSEFIGURE at the end) plus some buffer
@@ -1599,16 +1609,16 @@ end:
     if(pLinePts)ExFreePool(pLinePts);
 
     /* Restore the old mapping mode */
-    dc->Dc_Attr.iMapMode =  mapMode;
-    dc->Dc_Attr.szlWindowExt.cx = szWindowExt.cx;
-    dc->Dc_Attr.szlWindowExt.cy = szWindowExt.cy;
-    dc->Dc_Attr.ptlWindowOrg.x = ptWindowOrg.x;
-    dc->Dc_Attr.ptlWindowOrg.y = ptWindowOrg.y;
+    Dc_Attr->iMapMode =  mapMode;
+    Dc_Attr->szlWindowExt.cx = szWindowExt.cx;
+    Dc_Attr->szlWindowExt.cy = szWindowExt.cy;
+    Dc_Attr->ptlWindowOrg.x = ptWindowOrg.x;
+    Dc_Attr->ptlWindowOrg.y = ptWindowOrg.y;
 
-    dc->Dc_Attr.szlViewportExt.cx = szViewportExt.cx;
-    dc->Dc_Attr.szlViewportExt.cy = szViewportExt.cy;
-    dc->Dc_Attr.ptlViewportOrg.x = ptViewportOrg.x;
-    dc->Dc_Attr.ptlViewportOrg.y = ptViewportOrg.y;
+    Dc_Attr->szlViewportExt.cx = szViewportExt.cx;
+    Dc_Attr->szlViewportExt.cy = szViewportExt.cy;
+    Dc_Attr->ptlViewportOrg.x = ptViewportOrg.x;
+    Dc_Attr->ptlViewportOrg.y = ptViewportOrg.y;
 
     /* Restore the world transform */
     dc->w.xformWorld2Wnd = xform;

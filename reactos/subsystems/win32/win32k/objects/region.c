@@ -1935,17 +1935,20 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   DC * dc = DC_LockDc(hdc);
   RECT tmpRect;
   BOOL ret = FALSE;
-
+  PDC_ATTR Dc_Attr;
+  
   if(!dc)
     return ret;
-
-  if(dc->Dc_Attr.iMapMode == MM_TEXT) // Requires only a translation
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  
+  if(Dc_Attr->iMapMode == MM_TEXT) // Requires only a translation
   {
     if(NtGdiCombineRgn(hDest, hSrc, 0, RGN_COPY) == ERROR)
       goto done;
 
-    NtGdiOffsetRgn(hDest, dc->Dc_Attr.ptlViewportOrg.x - dc->Dc_Attr.ptlWindowOrg.x,
-                                       dc->Dc_Attr.ptlViewportOrg.y - dc->Dc_Attr.ptlWindowOrg.y);
+    NtGdiOffsetRgn(hDest, Dc_Attr->ptlViewportOrg.x - Dc_Attr->ptlWindowOrg.x,
+                                       Dc_Attr->ptlViewportOrg.y - Dc_Attr->ptlWindowOrg.y);
     ret = TRUE;
     goto done;
   }
@@ -1963,10 +1966,10 @@ BOOL FASTCALL REGION_LPTODP(HDC hdc, HRGN hDest, HRGN hSrc)
   for(pCurRect = (PRECT)srcObj->Buffer; pCurRect < pEndRect; pCurRect++)
   {
     tmpRect = *pCurRect;
-    tmpRect.left = XLPTODP(dc, tmpRect.left);
-    tmpRect.top = YLPTODP(dc, tmpRect.top);
-    tmpRect.right = XLPTODP(dc, tmpRect.right);
-    tmpRect.bottom = YLPTODP(dc, tmpRect.bottom);
+    tmpRect.left = XLPTODP(Dc_Attr, tmpRect.left);
+    tmpRect.top = YLPTODP(Dc_Attr, tmpRect.top);
+    tmpRect.right = XLPTODP(Dc_Attr, tmpRect.right);
+    tmpRect.bottom = YLPTODP(Dc_Attr, tmpRect.bottom);
 
     if(tmpRect.left > tmpRect.right)
       { INT tmp = tmpRect.left; tmpRect.left = tmpRect.right; tmpRect.right = tmp; }
@@ -2639,10 +2642,13 @@ IntGdiPaintRgn(PDC dc, HRGN  hRgn)
   GDIBRUSHINST BrushInst;
   POINTL BrushOrigin;
   BITMAPOBJ *BitmapObj;
-
+  PDC_ATTR Dc_Attr;
+  
   if( !dc )
     return FALSE;
-
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  
   if(!(tmpVisRgn = NtGdiCreateRectRgn(0, 0, 0, 0)))
   {
     DC_UnlockDc( dc );
@@ -2675,12 +2681,12 @@ IntGdiPaintRgn(PDC dc, HRGN  hRgn)
                                       (PRECTL)visrgn->Buffer,
                                       (PRECTL)&visrgn->rdh.rcBound );
   ASSERT( ClipRegion );
-  pBrush = BRUSHOBJ_LockBrush(dc->Dc_Attr.hbrush);
+  pBrush = BRUSHOBJ_LockBrush(Dc_Attr->hbrush);
   ASSERT(pBrush);
   IntGdiInitBrushInstance(&BrushInst, pBrush, dc->XlateBrush);
 
-  BrushOrigin.x = dc->Dc_Attr.ptlBrushOrigin.x;
-  BrushOrigin.y = dc->Dc_Attr.ptlBrushOrigin.y;
+  BrushOrigin.x = Dc_Attr->ptlBrushOrigin.x;
+  BrushOrigin.y = Dc_Attr->ptlBrushOrigin.y;
   BitmapObj = BITMAPOBJ_LockBitmap(dc->w.hBitmap);
   /* FIXME - Handle BitmapObj == NULL !!!! */
 

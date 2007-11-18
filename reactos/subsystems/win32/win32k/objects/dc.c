@@ -1,4 +1,3 @@
-
 /*
  *  ReactOS W32 Subsystem
  *  Copyright (C) 1998, 1999, 2000, 2001, 2002, 2003 ReactOS Team
@@ -55,98 +54,6 @@ InitDcImpl(VOID)
 
 /* FIXME: DCs should probably be thread safe  */
 
-/*
- * DC device-independent Get/SetXXX functions
- * (RJJ) swiped from WINE
- */
-
-#define DC_GET_VAL( func_type, func_name, dc_field ) \
-func_type STDCALL  func_name( HDC hdc ) \
-{                                   \
-  func_type  ft;                    \
-  PDC  dc = DC_LockDc( hdc );       \
-  if (!dc)                          \
-  {                                 \
-    SetLastWin32Error(ERROR_INVALID_HANDLE); \
-    return 0;                       \
-  }                                 \
-  ft = dc->dc_field;                \
-  DC_UnlockDc(dc);                  \
-  return ft;                        \
-}
-
-/* DC_GET_VAL_EX is used to define functions returning a POINT or a SIZE. It is
- * important that the function has the right signature, for the implementation
- * we can do whatever we want.
- */
-#define DC_GET_VAL_EX( FuncName, ret_x, ret_y, type, ax, ay ) \
-VOID FASTCALL Int##FuncName ( PDC dc, LP##type pt) \
-{ \
-  ASSERT(dc); \
-  ASSERT(pt); \
-  pt->ax = dc->ret_x; \
-  pt->ay = dc->ret_y; \
-} \
-BOOL STDCALL NtGdi##FuncName ( HDC hdc, LP##type pt ) \
-{ \
-  NTSTATUS Status = STATUS_SUCCESS; \
-  type Safept; \
-  PDC dc; \
-  if(!pt) \
-  { \
-    SetLastWin32Error(ERROR_INVALID_PARAMETER); \
-    return FALSE; \
-  } \
-  if(!(dc = DC_LockDc(hdc))) \
-  { \
-    SetLastWin32Error(ERROR_INVALID_HANDLE); \
-    return FALSE; \
-  } \
-  Int##FuncName( dc, &Safept); \
-  DC_UnlockDc(dc); \
-  _SEH_TRY \
-  { \
-    ProbeForWrite(pt, \
-                  sizeof( type ), \
-                  1); \
-    *pt = Safept; \
-  } \
-  _SEH_HANDLE \
-  { \
-    Status = _SEH_GetExceptionCode(); \
-  } \
-  _SEH_END; \
-  if(!NT_SUCCESS(Status)) \
-  { \
-    SetLastNtError(Status); \
-    return FALSE; \
-  } \
-  return TRUE; \
-}
-
-#define DC_SET_MODE( func_name, dc_field, min_val, max_val ) \
-INT STDCALL  func_name( HDC hdc, INT mode ) \
-{                                           \
-  INT  prevMode;                            \
-  PDC  dc;                                  \
-  if ((mode < min_val) || (mode > max_val)) \
-  { \
-    SetLastWin32Error(ERROR_INVALID_PARAMETER); \
-    return 0;                               \
-  } \
-  dc = DC_LockDc ( hdc );              \
-  if ( !dc )                                \
-  { \
-    SetLastWin32Error(ERROR_INVALID_HANDLE); \
-    return 0;                               \
-  } \
-  prevMode = dc->dc_field;                  \
-  dc->dc_field = mode;                      \
-  DC_UnlockDc ( dc );                    \
-  return prevMode;                          \
-}
-
-
 //  ---------------------------------------------------------  File Statics
 
 //  -----------------------------------------------------  Public Functions
@@ -162,6 +69,7 @@ HDC STDCALL
 NtGdiCreateCompatibleDC(HDC hDC)
 {
   PDC  NewDC, OrigDC;
+  PDC_ATTR nDc_Attr, oDc_Attr;
   HBITMAP  hBitmap;
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
@@ -192,7 +100,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
       return NULL;
     }
   hNewDC = DC_AllocDC(&OrigDC->DriverName);
-
   if (NULL == hNewDC)
     {
       DC_UnlockDc(OrigDC);
@@ -204,6 +111,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
     }
   NewDC = DC_LockDc( hNewDC );
 
+  oDc_Attr = OrigDC->pDc_Attr;
+  if(!oDc_Attr) oDc_Attr = &OrigDC->Dc_Attr;
+  nDc_Attr = NewDC->pDc_Attr;
+  if(!nDc_Attr) nDc_Attr = &NewDC->Dc_Attr;
+
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = hNewDC;
   NewDC->IsIC = FALSE;
@@ -214,14 +126,10 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.bitsPerPixel = OrigDC->w.bitsPerPixel;
 
   /* DriverName is copied in the AllocDC routine  */
-  NewDC->Dc_Attr.ptlWindowOrg.x = OrigDC->Dc_Attr.ptlWindowOrg.x;
-  NewDC->Dc_Attr.ptlWindowOrg.y = OrigDC->Dc_Attr.ptlWindowOrg.y;
-  NewDC->Dc_Attr.szlWindowExt.cx = OrigDC->Dc_Attr.szlWindowExt.cx;
-  NewDC->Dc_Attr.szlWindowExt.cy = OrigDC->Dc_Attr.szlWindowExt.cy;
-  NewDC->Dc_Attr.ptlViewportOrg.x = OrigDC->Dc_Attr.ptlViewportOrg.x;
-  NewDC->Dc_Attr.ptlViewportOrg.y = OrigDC->Dc_Attr.ptlViewportOrg.y;
-  NewDC->Dc_Attr.szlViewportExt.cx = OrigDC->Dc_Attr.szlViewportExt.cx;
-  NewDC->Dc_Attr.szlViewportExt.cy = OrigDC->Dc_Attr.szlViewportExt.cy;
+  nDc_Attr->ptlWindowOrg   = oDc_Attr->ptlWindowOrg;
+  nDc_Attr->szlWindowExt   = oDc_Attr->szlWindowExt;
+  nDc_Attr->ptlViewportOrg = oDc_Attr->ptlViewportOrg;
+  nDc_Attr->szlViewportExt = oDc_Attr->szlViewportExt;
 
   /* Create default bitmap */
   if (!(hBitmap = IntGdiCreateBitmap( 1, 1, 1, NewDC->w.bitsPerPixel, NULL )))
@@ -238,15 +146,15 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NewDC->w.flags        = DC_MEMORY;
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
-  NewDC->pPDev      = OrigDC->pPDev;
+  NewDC->pPDev          = OrigDC->pPDev;
 
   NewDC->PalIndexed = OrigDC->PalIndexed;
   NewDC->w.hPalette = OrigDC->w.hPalette;
-  NewDC->Dc_Attr.crForegroundClr = OrigDC->Dc_Attr.crForegroundClr;
-  NewDC->Dc_Attr.lTextAlign = OrigDC->Dc_Attr.lTextAlign;
-  NewDC->Dc_Attr.crBackgroundClr = OrigDC->Dc_Attr.crBackgroundClr;
-  NewDC->Dc_Attr.jBkMode = OrigDC->Dc_Attr.jBkMode;
-  NewDC->Dc_Attr.jROP2 = OrigDC->Dc_Attr.jROP2;
+  nDc_Attr->crForegroundClr = oDc_Attr->crForegroundClr;
+  nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
+  nDc_Attr->crBackgroundClr = oDc_Attr->crBackgroundClr;
+  nDc_Attr->jBkMode         = oDc_Attr->jBkMode;
+  nDc_Attr->jROP2           = oDc_Attr->jROP2;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -260,8 +168,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
   NtGdiDeleteObject(hVisRgn);
 
   DC_InitDC(hNewDC);
-  DCU_SynchDcAttrtoUser(hNewDC, -1);
-
   return hNewDC;
 }
 
@@ -815,6 +721,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 {
   HDC      hNewDC;
   PDC      NewDC;
+  PDC_ATTR nDc_Attr;
   HDC      hDC = NULL;
   HRGN     hVisRgn;
   UNICODE_STRING StdDriver;
@@ -902,6 +809,9 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     return NULL;
   }
 
+  nDc_Attr = NewDC->pDc_Attr;
+  if(!nDc_Attr) nDc_Attr = &NewDC->Dc_Attr;
+
   NewDC->DC_Type = DC_TYPE_DIRECT;
   NewDC->IsIC = CreateAsIC;
 
@@ -918,7 +828,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   {
     NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->w.hPalette = PrimarySurface.DevInfo.hpalDefault;
-    NewDC->Dc_Attr.jROP2 = R2_COPYPEN;
+    nDc_Attr->jROP2 = R2_COPYPEN;
 
     DC_UnlockDc( NewDC );
 
@@ -933,7 +843,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NtGdiSetTextAlign(hNewDC, TA_TOP);
     NtGdiSetBkColor(hNewDC, RGB(255, 255, 255));
     NtGdiSetBkMode(hNewDC, OPAQUE);
-    DCU_SynchDcAttrtoUser(hNewDC, -1);
   }
   else
   {
@@ -946,7 +855,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
     NewDC->DC_Type = DC_TYPE_INFO;
     DC_UnlockDc( NewDC );
   }
-
   return hNewDC;
 }
 
@@ -1101,7 +1009,6 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
 
   DC_UnlockDc( DCToDelete );
   DC_FreeDC ( DCHandle );
-
   return TRUE;
 }
 
@@ -1129,15 +1036,13 @@ NtGdiEnumObjects(
   return 0;
 }
 
-DC_GET_VAL( COLORREF, NtGdiGetBkColor, Dc_Attr.crBackgroundClr )
-DC_GET_VAL( INT, NtGdiGetBkMode, Dc_Attr.jBkMode )
-
 HANDLE
 STDCALL
 NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
 {
   HGDIOBJ SelObject;
   DC *dc;
+  PDC_ATTR Dc_Attr;
 
   /* From Wine: GetCurrentObject does not SetLastError() on a null object */
   if(!hDC) return NULL;
@@ -1147,21 +1052,22 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return NULL;
   }
-
+  Dc_Attr = dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   switch(ObjectType)
   {
     case GDI_OBJECT_TYPE_EXTPEN:
     case GDI_OBJECT_TYPE_PEN:
-      SelObject = dc->Dc_Attr.hpen;
+      SelObject = Dc_Attr->hpen;
       break;
     case GDI_OBJECT_TYPE_BRUSH:
-      SelObject = dc->Dc_Attr.hbrush;
+      SelObject = Dc_Attr->hbrush;
       break;
     case GDI_OBJECT_TYPE_PALETTE:
       SelObject = dc->w.hPalette;
       break;
     case GDI_OBJECT_TYPE_FONT:
-      SelObject = dc->Dc_Attr.hlfntNew;
+      SelObject = Dc_Attr->hlfntNew;
       break;
     case GDI_OBJECT_TYPE_BITMAP:
       SelObject = dc->w.hBitmap;
@@ -1179,8 +1085,6 @@ NtGdiGetDCObject(HDC  hDC, INT  ObjectType)
   DC_UnlockDc(dc);
   return SelObject;
 }
-
-DC_GET_VAL_EX ( GetCurrentPositionEx, Dc_Attr.ptlCurrent.x, Dc_Attr.ptlCurrent.y, POINT, x, y )
 
 BOOL FASTCALL
 IntGdiGetDCOrgEx(DC *dc, LPPOINT  Point)
@@ -1270,80 +1174,59 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
   return Ret;
 }
 
-COLORREF STDCALL
-NtGdiSetBkColor(HDC hDC, COLORREF color)
-{
-  COLORREF oldColor;
-  PDC dc;
-  HBRUSH hBrush;
-
-  if (!(dc = DC_LockDc(hDC)))
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return CLR_INVALID;
-  }
-
-  oldColor = dc->Dc_Attr.crBackgroundClr;
-  dc->Dc_Attr.crBackgroundClr = color;
-  hBrush = dc->Dc_Attr.hbrush;
-  DC_UnlockDc(dc);
-  NtGdiSelectObject(hDC, hBrush);
-  return oldColor;
-}
-
-
 VOID
 FASTCALL
 IntGdiCopyToSaveState(PDC dc, PDC newdc)
 {
-  newdc->w.flags                   = dc->w.flags | DC_SAVED;
-  newdc->Dc_Attr.hpen              = dc->Dc_Attr.hpen;
-  newdc->Dc_Attr.hbrush            = dc->Dc_Attr.hbrush;
-  newdc->Dc_Attr.hlfntNew          = dc->Dc_Attr.hlfntNew;
-  newdc->w.hBitmap                 = dc->w.hBitmap;
-  newdc->w.hFirstBitmap            = dc->w.hFirstBitmap;
+  PDC_ATTR Dc_Attr, nDc_Attr;
+
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  nDc_Attr = newdc->pDc_Attr;
+  if(!nDc_Attr) nDc_Attr = &newdc->Dc_Attr;
+
+  newdc->w.flags            = dc->w.flags | DC_SAVED;
+  nDc_Attr->hpen            = Dc_Attr->hpen;
+  nDc_Attr->hbrush          = Dc_Attr->hbrush;
+  nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
+  newdc->w.hBitmap          = dc->w.hBitmap;
+  newdc->w.hFirstBitmap     = dc->w.hFirstBitmap;
 #if 0
-  newdc->w.hDevice                 = dc->w.hDevice;
+  newdc->w.hDevice          = dc->w.hDevice;
 #endif
-  newdc->PalIndexed                = dc->PalIndexed;
-  newdc->w.hPalette                = dc->w.hPalette;
-  newdc->w.totalExtent             = dc->w.totalExtent;
-  newdc->w.bitsPerPixel            = dc->w.bitsPerPixel;
-  newdc->Dc_Attr.jROP2             = dc->Dc_Attr.jROP2;
-  newdc->Dc_Attr.jFillMode         = dc->Dc_Attr.jFillMode;
-  newdc->Dc_Attr.jStretchBltMode   = dc->Dc_Attr.jStretchBltMode;
-  newdc->Dc_Attr.lRelAbs           = dc->Dc_Attr.lRelAbs;
-  newdc->Dc_Attr.jBkMode           = dc->Dc_Attr.jBkMode;
-  newdc->Dc_Attr.crBackgroundClr   = dc->Dc_Attr.crBackgroundClr;
-  newdc->Dc_Attr.crForegroundClr   = dc->Dc_Attr.crForegroundClr;
-  newdc->Dc_Attr.ptlBrushOrigin.x  = dc->Dc_Attr.ptlBrushOrigin.x;
-  newdc->Dc_Attr.ptlBrushOrigin.y  = dc->Dc_Attr.ptlBrushOrigin.y;
-  newdc->Dc_Attr.lTextAlign        = dc->Dc_Attr.lTextAlign;
-  newdc->Dc_Attr.lTextExtra        = dc->Dc_Attr.lTextExtra;
-  newdc->Dc_Attr.cBreak            = dc->Dc_Attr.cBreak;
-  newdc->Dc_Attr.lBreakExtra       = dc->Dc_Attr.lBreakExtra;
-  newdc->Dc_Attr.iMapMode          = dc->Dc_Attr.iMapMode;
-  newdc->Dc_Attr.iGraphicsMode     = dc->Dc_Attr.iGraphicsMode;
+  newdc->PalIndexed         = dc->PalIndexed;
+  newdc->w.hPalette         = dc->w.hPalette;
+  newdc->w.totalExtent      = dc->w.totalExtent;
+  newdc->w.bitsPerPixel     = dc->w.bitsPerPixel;
+  nDc_Attr->jROP2           = Dc_Attr->jROP2;
+  nDc_Attr->jFillMode       = Dc_Attr->jFillMode;
+  nDc_Attr->jStretchBltMode = Dc_Attr->jStretchBltMode;
+  nDc_Attr->lRelAbs         = Dc_Attr->lRelAbs;
+  nDc_Attr->jBkMode         = Dc_Attr->jBkMode;
+  nDc_Attr->crBackgroundClr = Dc_Attr->crBackgroundClr;
+  nDc_Attr->crForegroundClr = Dc_Attr->crForegroundClr;
+  nDc_Attr->ptlBrushOrigin  = Dc_Attr->ptlBrushOrigin;
+  nDc_Attr->lTextAlign      = Dc_Attr->lTextAlign;
+  nDc_Attr->lTextExtra      = Dc_Attr->lTextExtra;
+  nDc_Attr->cBreak          = Dc_Attr->cBreak;
+  nDc_Attr->lBreakExtra     = Dc_Attr->lBreakExtra;
+  nDc_Attr->iMapMode        = Dc_Attr->iMapMode;
+  nDc_Attr->iGraphicsMode   = Dc_Attr->iGraphicsMode;
 #if 0
   /* Apparently, the DC origin is not changed by [GS]etDCState */
-  newdc->w.DCOrgX                  = dc->w.DCOrgX;
-  newdc->w.DCOrgY                  = dc->w.DCOrgY;
+  newdc->w.DCOrgX           = dc->w.DCOrgX;
+  newdc->w.DCOrgY           = dc->w.DCOrgY;
 #endif
-  newdc->Dc_Attr.ptlCurrent.x      = dc->Dc_Attr.ptlCurrent.x;
-  newdc->Dc_Attr.ptlCurrent.y      = dc->Dc_Attr.ptlCurrent.y;
-  newdc->w.ArcDirection            = dc->w.ArcDirection;
-  newdc->w.xformWorld2Wnd          = dc->w.xformWorld2Wnd;
-  newdc->w.xformWorld2Vport        = dc->w.xformWorld2Vport;
-  newdc->w.xformVport2World        = dc->w.xformVport2World;
-  newdc->w.vport2WorldValid        = dc->w.vport2WorldValid;
-  newdc->Dc_Attr.ptlWindowOrg.x    = dc->Dc_Attr.ptlWindowOrg.x;
-  newdc->Dc_Attr.ptlWindowOrg.y    = dc->Dc_Attr.ptlWindowOrg.y;
-  newdc->Dc_Attr.szlWindowExt.cx   = dc->Dc_Attr.szlWindowExt.cx;
-  newdc->Dc_Attr.szlWindowExt.cy   = dc->Dc_Attr.szlWindowExt.cy;
-  newdc->Dc_Attr.ptlViewportOrg.x  = dc->Dc_Attr.ptlViewportOrg.x;
-  newdc->Dc_Attr.ptlViewportOrg.y  = dc->Dc_Attr.ptlViewportOrg.y;
-  newdc->Dc_Attr.szlViewportExt.cx = dc->Dc_Attr.szlViewportExt.cx;
-  newdc->Dc_Attr.szlViewportExt.cy = dc->Dc_Attr.szlViewportExt.cy;
+  nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
+  newdc->w.ArcDirection     = dc->w.ArcDirection;
+  newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
+  newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
+  newdc->w.xformVport2World = dc->w.xformVport2World;
+  newdc->w.vport2WorldValid = dc->w.vport2WorldValid;
+  nDc_Attr->ptlWindowOrg    = Dc_Attr->ptlWindowOrg;
+  nDc_Attr->szlWindowExt    = Dc_Attr->szlWindowExt;
+  nDc_Attr->ptlViewportOrg  = Dc_Attr->ptlViewportOrg;
+  nDc_Attr->szlViewportExt  = Dc_Attr->szlViewportExt;
 
   newdc->saveLevel = 0;
   newdc->IsIC = dc->IsIC;
@@ -1367,52 +1250,53 @@ VOID
 FASTCALL
 IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 {
-  dc->w.flags                   = dcs->w.flags & ~DC_SAVED;
+  PDC_ATTR Dc_Attr, sDc_Attr;
 
-  dc->w.hFirstBitmap            = dcs->w.hFirstBitmap;
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  sDc_Attr = dcs->pDc_Attr;
+  if(!sDc_Attr) sDc_Attr = &dcs->Dc_Attr;
+  
+  dc->w.flags              = dcs->w.flags & ~DC_SAVED;
+
+  dc->w.hFirstBitmap       = dcs->w.hFirstBitmap;
 
 #if 0
-  dc->w.hDevice                 = dcs->w.hDevice;
+  dc->w.hDevice            = dcs->w.hDevice;
 #endif
 
-  dc->w.totalExtent             = dcs->w.totalExtent;
-  dc->Dc_Attr.jROP2             = dcs->Dc_Attr.jROP2;
-  dc->Dc_Attr.jFillMode         = dcs->Dc_Attr.jFillMode;
-  dc->Dc_Attr.jStretchBltMode   = dcs->Dc_Attr.jStretchBltMode;
-  dc->Dc_Attr.lRelAbs           = dcs->Dc_Attr.lRelAbs;
-  dc->Dc_Attr.jBkMode           = dcs->Dc_Attr.jBkMode;
-  dc->Dc_Attr.crBackgroundClr   = dcs->Dc_Attr.crBackgroundClr;
-  dc->Dc_Attr.crForegroundClr   = dcs->Dc_Attr.crForegroundClr;
-  dc->Dc_Attr.ptlBrushOrigin.x  = dcs->Dc_Attr.ptlBrushOrigin.x;
-  dc->Dc_Attr.ptlBrushOrigin.y  = dcs->Dc_Attr.ptlBrushOrigin.y;
-  dc->Dc_Attr.lTextAlign        = dcs->Dc_Attr.lTextAlign;
-  dc->Dc_Attr.lTextExtra        = dcs->Dc_Attr.lTextExtra;
-  dc->Dc_Attr.cBreak            = dcs->Dc_Attr.cBreak;
-  dc->Dc_Attr.lBreakExtra       = dcs->Dc_Attr.lBreakExtra;
-  dc->Dc_Attr.iMapMode          = dcs->Dc_Attr.iMapMode;
-  dc->Dc_Attr.iGraphicsMode     = dcs->Dc_Attr.iGraphicsMode;
+  dc->w.totalExtent        = dcs->w.totalExtent;
+  Dc_Attr->jROP2           = sDc_Attr->jROP2;
+  Dc_Attr->jFillMode       = sDc_Attr->jFillMode;
+  Dc_Attr->jStretchBltMode = sDc_Attr->jStretchBltMode;
+  Dc_Attr->lRelAbs         = sDc_Attr->lRelAbs;
+  Dc_Attr->jBkMode         = sDc_Attr->jBkMode;
+  Dc_Attr->crBackgroundClr = sDc_Attr->crBackgroundClr;
+  Dc_Attr->crForegroundClr = sDc_Attr->crForegroundClr;
+  Dc_Attr->ptlBrushOrigin  = sDc_Attr->ptlBrushOrigin;
+
+  Dc_Attr->lTextAlign      = sDc_Attr->lTextAlign;
+  Dc_Attr->lTextExtra      = sDc_Attr->lTextExtra;
+  Dc_Attr->cBreak          = sDc_Attr->cBreak;
+  Dc_Attr->lBreakExtra     = sDc_Attr->lBreakExtra;
+  Dc_Attr->iMapMode        = sDc_Attr->iMapMode;
+  Dc_Attr->iGraphicsMode   = sDc_Attr->iGraphicsMode;
 #if 0
 /* Apparently, the DC origin is not changed by [GS]etDCState */
-  dc->w.DCOrgX                  = dcs->w.DCOrgX;
-  dc->w.DCOrgY                  = dcs->w.DCOrgY;
+  dc->w.DCOrgX             = dcs->w.DCOrgX;
+  dc->w.DCOrgY             = dcs->w.DCOrgY;
 #endif
-  dc->Dc_Attr.ptlCurrent.x      = dcs->Dc_Attr.ptlCurrent.x;
-  dc->Dc_Attr.ptlCurrent.y      = dcs->Dc_Attr.ptlCurrent.y;
-  dc->w.ArcDirection            = dcs->w.ArcDirection;
-
-  dc->w.xformWorld2Wnd          = dcs->w.xformWorld2Wnd;
-  dc->w.xformWorld2Vport        = dcs->w.xformWorld2Vport;
-  dc->w.xformVport2World        = dcs->w.xformVport2World;
-  dc->w.vport2WorldValid        = dcs->w.vport2WorldValid;
-  dc->Dc_Attr.ptlWindowOrg.x    = dcs->Dc_Attr.ptlWindowOrg.x;
-  dc->Dc_Attr.ptlWindowOrg.y    = dcs->Dc_Attr.ptlWindowOrg.y;
-  dc->Dc_Attr.szlWindowExt.cx   = dcs->Dc_Attr.szlWindowExt.cx;
-  dc->Dc_Attr.szlWindowExt.cy   = dcs->Dc_Attr.szlWindowExt.cy;
-  dc->Dc_Attr.ptlViewportOrg.x  = dcs->Dc_Attr.ptlViewportOrg.x;
-  dc->Dc_Attr.ptlViewportOrg.y  = dcs->Dc_Attr.ptlViewportOrg.y;
-  dc->Dc_Attr.szlViewportExt.cx = dcs->Dc_Attr.szlViewportExt.cx;
-  dc->Dc_Attr.szlViewportExt.cy = dcs->Dc_Attr.szlViewportExt.cy;
-  dc->PalIndexed                = dcs->PalIndexed;
+  Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
+  dc->w.ArcDirection       = dcs->w.ArcDirection;
+  dc->w.xformWorld2Wnd     = dcs->w.xformWorld2Wnd;
+  dc->w.xformWorld2Vport   = dcs->w.xformWorld2Vport;
+  dc->w.xformVport2World   = dcs->w.xformVport2World;
+  dc->w.vport2WorldValid   = dcs->w.vport2WorldValid;
+  Dc_Attr->ptlWindowOrg    = sDc_Attr->ptlWindowOrg;
+  Dc_Attr->szlWindowExt    = sDc_Attr->szlWindowExt;
+  Dc_Attr->ptlViewportOrg  = sDc_Attr->ptlViewportOrg;
+  Dc_Attr->szlViewportExt  = sDc_Attr->szlViewportExt;
+  dc->PalIndexed           = dcs->PalIndexed;
 
   if (!(dc->w.flags & DC_MEMORY))
   {
@@ -1449,12 +1333,12 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
 
   NtGdiSelectObject( hDC, dcs->w.hBitmap );
-  NtGdiSelectObject( hDC, dcs->Dc_Attr.hbrush );
-  NtGdiSelectObject( hDC, dcs->Dc_Attr.hlfntNew );
-  NtGdiSelectObject( hDC, dcs->Dc_Attr.hpen );
+  NtGdiSelectObject( hDC, sDc_Attr->hbrush );
+  NtGdiSelectObject( hDC, sDc_Attr->hlfntNew );
+  NtGdiSelectObject( hDC, sDc_Attr->hpen );
 
-  NtGdiSetBkColor( hDC, dcs->Dc_Attr.crBackgroundClr);
-  NtGdiSetTextColor( hDC, dcs->Dc_Attr.crForegroundClr);
+  NtGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
+  NtGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
 
   NtUserSelectPalette( hDC, dcs->w.hPalette, FALSE );
 
@@ -1489,7 +1373,6 @@ IntGdiGetDCState(HDC  hDC)
   newdc->hSelf = hnewdc;
   IntGdiCopyToSaveState( dc, newdc);
 
-//  DCU_SyncDcAttrtoUser(newdc, -1);
   DC_UnlockDc( newdc );
   DC_UnlockDc( dc );
   return  hnewdc;
@@ -1745,9 +1628,6 @@ NtGdiGetDeviceCaps(HDC  hDC,
   return ret;
 }
 
-DC_GET_VAL( INT, NtGdiGetMapMode, Dc_Attr.iMapMode )
-DC_GET_VAL( INT, NtGdiGetPolyFillMode, Dc_Attr.jFillMode )
-
 INT
 FASTCALL
 IntGdiGetObject(IN HANDLE Handle,
@@ -1852,15 +1732,6 @@ NtGdiExtGetObjectW(IN HANDLE hGdiObj,
     // Return the count
     return iRetCount;
 }
-
-DC_GET_VAL( INT, NtGdiGetROP2, Dc_Attr.jROP2 )
-DC_GET_VAL( INT, NtGdiGetStretchBltMode, Dc_Attr.jStretchBltMode )
-DC_GET_VAL( UINT, NtGdiGetTextAlign, Dc_Attr.lTextAlign )
-DC_GET_VAL( COLORREF, NtGdiGetTextColor, Dc_Attr.crForegroundClr )
-DC_GET_VAL_EX( GetViewportExtEx, Dc_Attr.szlViewportExt.cx, Dc_Attr.szlViewportExt.cy, SIZE, cx, cy )
-DC_GET_VAL_EX( GetViewportOrgEx, Dc_Attr.ptlViewportOrg.x, Dc_Attr.ptlViewportOrg.y, POINT, x, y )
-DC_GET_VAL_EX( GetWindowExtEx, Dc_Attr.szlWindowExt.cx, Dc_Attr.szlWindowExt.cy, SIZE, cx, cy )
-DC_GET_VAL_EX( GetWindowOrgEx, Dc_Attr.ptlWindowOrg.x, Dc_Attr.ptlWindowOrg.y, POINT, x, y )
 
 BOOL
 APIENTRY
@@ -2003,6 +1874,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   HGDIOBJ objOrg = NULL; // default to failure
   BITMAPOBJ *pb;
   PDC dc;
+  PDC_ATTR Dc_Attr;
   PGDIBRUSHOBJ pen;
   PGDIBRUSHOBJ brush;
   XLATEOBJ *XlateObj;
@@ -2027,7 +1899,9 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return NULL;
     }
-
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  
   objectType = GDIOBJ_GetObjectType(hGDIObj);
 
   switch (objectType)
@@ -2048,8 +1922,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         break;
       }
 
-      objOrg = (HGDIOBJ)dc->Dc_Attr.hpen;
-      dc->Dc_Attr.hpen = hGDIObj;
+      objOrg = (HGDIOBJ)Dc_Attr->hpen;
+      Dc_Attr->hpen = hGDIObj;
       if (dc->XlatePen != NULL)
         EngDeleteXlate(dc->XlatePen);
       dc->XlatePen = XlateObj;
@@ -2071,8 +1945,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
         break;
       }
 
-      objOrg = (HGDIOBJ)dc->Dc_Attr.hbrush;
-      dc->Dc_Attr.hbrush = hGDIObj;
+      objOrg = (HGDIOBJ)Dc_Attr->hbrush;
+      Dc_Attr->hbrush = hGDIObj;
       if (dc->XlateBrush != NULL)
         EngDeleteXlate(dc->XlateBrush);
       dc->XlateBrush = XlateObj;
@@ -2081,8 +1955,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     case GDI_OBJECT_TYPE_FONT:
       if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
       {
-        objOrg = (HGDIOBJ)dc->Dc_Attr.hlfntNew;
-        dc->Dc_Attr.hlfntNew = (HFONT) hGDIObj;
+        objOrg = (HGDIOBJ)Dc_Attr->hlfntNew;
+        Dc_Attr->hlfntNew = (HFONT) hGDIObj;
       }
       break;
 
@@ -2118,8 +1992,8 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       }
 
       /* Reselect brush and pen to regenerate the XLATEOBJs. */
-      NtGdiSelectObject ( hDC, dc->Dc_Attr.hbrush );
-      NtGdiSelectObject ( hDC, dc->Dc_Attr.hpen );
+      NtGdiSelectObject ( hDC, Dc_Attr->hbrush );
+      NtGdiSelectObject ( hDC, Dc_Attr->hpen );
 
       DC_UnlockDc ( dc );
       hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
@@ -2143,7 +2017,6 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
     default:
       break;
   }
-//  DCU_SyncDcAttrtoUser(dc, -1);
   DC_UnlockDc( dc );
   return objOrg;
 }
@@ -2192,7 +2065,9 @@ NtGdiGetDCDword(
                )
 {
   BOOL Ret = TRUE;
-  DC *dc;
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+
   DWORD SafeResult = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2208,19 +2083,21 @@ NtGdiGetDCDword(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   switch (u)
   {
     case GdiGetJournal:
       break;
     case GdiGetRelAbs:
-      SafeResult = dc->Dc_Attr.lRelAbs;
+      SafeResult = Dc_Attr->lRelAbs;
       break;
     case GdiGetBreakExtra:
-      SafeResult = dc->Dc_Attr.lBreakExtra;
+      SafeResult = Dc_Attr->lBreakExtra;
       break;
     case GdiGerCharBreak:
-      SafeResult = dc->Dc_Attr.cBreak;
+      SafeResult = Dc_Attr->cBreak;
       break;
     case GdiGetArcDirection:
       SafeResult = dc->w.ArcDirection;
@@ -2233,10 +2110,10 @@ NtGdiGetDCDword(
           SafeResult = dc->DC_Type;
       break;
     case GdiGetMapMode:
-      SafeResult = dc->Dc_Attr.iMapMode;
+      SafeResult = Dc_Attr->iMapMode;
       break;
     case GdiGetTextCharExtra:
-      SafeResult = dc->Dc_Attr.lTextExtra;
+      SafeResult = Dc_Attr->lTextExtra;
       break;
     default:
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
@@ -2281,7 +2158,9 @@ NtGdiGetAndSetDCDword(
                      )
 {
   BOOL Ret = TRUE;
-  DC *dc;
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+
   DWORD SafeResult = 0;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -2297,23 +2176,25 @@ NtGdiGetAndSetDCDword(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   switch (u)
   {
     case GdtGetSetCopyCount:
       break;
     case GdiGetSetTextAlign:
-      SafeResult = dc->Dc_Attr.lTextAlign;
-      dc->Dc_Attr.lTextAlign = dwIn;
-      dc->Dc_Attr.flTextAlign = dwIn;
+      SafeResult = Dc_Attr->lTextAlign;
+      Dc_Attr->lTextAlign = dwIn;
+      // Dc_Attr->flTextAlign = dwIn; // Flags!
       break;
     case GdiGetSetRelAbs:
-      SafeResult = dc->Dc_Attr.lRelAbs;
-      dc->Dc_Attr.lRelAbs = dwIn;
+      SafeResult = Dc_Attr->lRelAbs;
+      Dc_Attr->lRelAbs = dwIn;
       break;
     case GdiGetSetTextCharExtra:
-      SafeResult = dc->Dc_Attr.lTextExtra;
-      dc->Dc_Attr.lTextExtra = dwIn;
+      SafeResult = Dc_Attr->lTextExtra;
+      Dc_Attr->lTextExtra = dwIn;
       break;
     case GdiGetSetSelectFont:
       break;
@@ -2364,18 +2245,13 @@ NtGdiGetAndSetDCDword(
   return Ret;
 }
 
-
-DC_SET_MODE( NtGdiSetBkMode, Dc_Attr.jBkMode, TRANSPARENT, OPAQUE )
-DC_SET_MODE( NtGdiSetPolyFillMode, Dc_Attr.jFillMode, ALTERNATE, WINDING )
-DC_SET_MODE( NtGdiSetROP2, Dc_Attr.jROP2, R2_BLACK, R2_WHITE )
-DC_SET_MODE( NtGdiSetStretchBltMode, Dc_Attr.jStretchBltMode, BLACKONWHITE, HALFTONE )
-
 //  ----------------------------------------------------  Private Interface
 
 HDC FASTCALL
 DC_AllocDC(PUNICODE_STRING Driver)
 {
   PDC  NewDC;
+  PDC_ATTR Dc_Attr;
   HDC  hDC;
   PWSTR Buf = NULL;
 
@@ -2408,7 +2284,9 @@ DC_AllocDC(PUNICODE_STRING Driver)
     RtlCopyMemory(&NewDC->DriverName, Driver, sizeof(UNICODE_STRING));
     NewDC->DriverName.Buffer = Buf;
   }
-
+  Dc_Attr = NewDC->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
+  
   NewDC->hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
   NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
@@ -2421,31 +2299,31 @@ DC_AllocDC(PUNICODE_STRING Driver)
   NewDC->w.vport2WorldValid = TRUE;
 
 // Setup syncing bits for the dcattr data packets.
-  NewDC->Dc_Attr.flXform = DEVICE_TO_PAGE_INVALID;
+  Dc_Attr->flXform = DEVICE_TO_PAGE_INVALID;
 
-  NewDC->Dc_Attr.ulDirty_ = 0;  // Server side
+  Dc_Attr->ulDirty_ = 0;  // Server side
 
-  NewDC->Dc_Attr.iMapMode = MM_TEXT;
+  Dc_Attr->iMapMode = MM_TEXT;
 
-  NewDC->Dc_Attr.szlWindowExt.cx = 1; // Float to Int,,, WRONG!
-  NewDC->Dc_Attr.szlWindowExt.cy = 1;
-  NewDC->Dc_Attr.szlViewportExt.cx = 1;
-  NewDC->Dc_Attr.szlViewportExt.cy = 1;
+  Dc_Attr->szlWindowExt.cx = 1; // Float to Int,,, WRONG!
+  Dc_Attr->szlWindowExt.cy = 1;
+  Dc_Attr->szlViewportExt.cx = 1;
+  Dc_Attr->szlViewportExt.cy = 1;
 
-  NewDC->Dc_Attr.crForegroundClr = 0;
-  NewDC->Dc_Attr.ulForegroundClr = 0;
+  Dc_Attr->crForegroundClr = 0;
+  Dc_Attr->ulForegroundClr = 0;
 
-  NewDC->Dc_Attr.ulBackgroundClr = 0xffffff;
-  NewDC->Dc_Attr.crBackgroundClr = 0xffffff;
+  Dc_Attr->ulBackgroundClr = 0xffffff;
+  Dc_Attr->crBackgroundClr = 0xffffff;
 
-  NewDC->Dc_Attr.ulPenClr = RGB( 0, 0, 0 );
-  NewDC->Dc_Attr.crPenClr = RGB( 0, 0, 0 );
+  Dc_Attr->ulPenClr = RGB( 0, 0, 0 );
+  Dc_Attr->crPenClr = RGB( 0, 0, 0 );
 
-  NewDC->Dc_Attr.ulBrushClr = RGB( 255, 255, 255 ); // Do this way too.
-  NewDC->Dc_Attr.crBrushClr = RGB( 255, 255, 255 );
+  Dc_Attr->ulBrushClr = RGB( 255, 255, 255 ); // Do this way too.
+  Dc_Attr->crBrushClr = RGB( 255, 255, 255 );
 
-  NewDC->Dc_Attr.hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
-  TextIntRealizeFont(NewDC->Dc_Attr.hlfntNew);
+  Dc_Attr->hlfntNew = NtGdiGetStockObject(SYSTEM_FONT);
+  TextIntRealizeFont(Dc_Attr->hlfntNew);
 
   NewDC->w.hPalette = NtGdiGetStockObject(DEFAULT_PALETTE);
 
@@ -2595,16 +2473,18 @@ DC_UpdateXforms(PDC  dc)
 {
   XFORM  xformWnd2Vport;
   FLOAT  scaleX, scaleY;
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   /* Construct a transformation to do the window-to-viewport conversion */
-  scaleX = (dc->Dc_Attr.szlWindowExt.cx ? (FLOAT)dc->Dc_Attr.szlViewportExt.cx / (FLOAT)dc->Dc_Attr.szlWindowExt.cx : 0.0f);
-  scaleY = (dc->Dc_Attr.szlWindowExt.cy ? (FLOAT)dc->Dc_Attr.szlViewportExt.cy / (FLOAT)dc->Dc_Attr.szlWindowExt.cy : 0.0f);
+  scaleX = (Dc_Attr->szlWindowExt.cx ? (FLOAT)Dc_Attr->szlViewportExt.cx / (FLOAT)Dc_Attr->szlWindowExt.cx : 0.0f);
+  scaleY = (Dc_Attr->szlWindowExt.cy ? (FLOAT)Dc_Attr->szlViewportExt.cy / (FLOAT)Dc_Attr->szlWindowExt.cy : 0.0f);
   xformWnd2Vport.eM11 = scaleX;
   xformWnd2Vport.eM12 = 0.0;
   xformWnd2Vport.eM21 = 0.0;
   xformWnd2Vport.eM22 = scaleY;
-  xformWnd2Vport.eDx  = (FLOAT)dc->Dc_Attr.ptlViewportOrg.x - scaleX * (FLOAT)dc->Dc_Attr.ptlWindowOrg.x;
-  xformWnd2Vport.eDy  = (FLOAT)dc->Dc_Attr.ptlViewportOrg.y - scaleY * (FLOAT)dc->Dc_Attr.ptlWindowOrg.y;
+  xformWnd2Vport.eDx  = (FLOAT)Dc_Attr->ptlViewportOrg.x - scaleX * (FLOAT)Dc_Attr->ptlWindowOrg.x;
+  xformWnd2Vport.eDy  = (FLOAT)Dc_Attr->ptlViewportOrg.y - scaleY * (FLOAT)Dc_Attr->ptlWindowOrg.y;
 
   /* Combine with the world transformation */
   IntGdiCombineTransform(&dc->w.xformWorld2Vport, &dc->w.xformWorld2Wnd, &xformWnd2Vport);

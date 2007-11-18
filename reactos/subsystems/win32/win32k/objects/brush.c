@@ -139,8 +139,11 @@ IntGdiCreateBrushXlate(PDC Dc, GDIBRUSHOBJ *BrushObj, BOOLEAN *Failed)
       /* Special case: 1bpp pattern */
       if (Pattern->SurfObj.iBitmapFormat == BMF_1BPP)
       {
+         PDC_ATTR Dc_Attr = Dc->pDc_Attr;
+         if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+
          if (Dc->w.bitsPerPixel != 1)
-            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc->Dc_Attr.crForegroundClr, Dc->Dc_Attr.crBackgroundClr);
+            Result = IntEngCreateSrcMonoXlate(Dc->w.hPalette, Dc_Attr->crForegroundClr, Dc_Attr->crBackgroundClr);
       }
       else if (BrushObj->flAttrs & GDIBRUSH_IS_DIB)
       {

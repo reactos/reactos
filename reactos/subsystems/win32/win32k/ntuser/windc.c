@@ -158,6 +158,9 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     else
     {
        DPRINT("FREE DCATTR!!!! NOT DCE_WINDOW_DC!!!!! hDC-> %x\n", pDce->hDC);
+       PDC dc = DC_LockDc ( pDce->hDC );
+       MmCopyFromCaller(&dc->Dc_Attr, dc->pDc_Attr, sizeof(DC_ATTR));
+       DC_UnlockDc( dc );
        DC_FreeDcAttr(pDce->hDC);         // Free the dcattr!
        DC_SetOwnership(pDce->hDC, NULL); // This hDC is inaccessible!
     }
@@ -273,6 +276,16 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
          dce->hwndCurrent = 0;
          dce->DCXFlags &= DCX_CACHE;
          dce->DCXFlags |= DCX_DCEEMPTY;
+       }
+     }
+     else
+     { // Save Users Dc_Attr.
+       PDC dc = DC_LockDc(dce->hDC);
+       if(dc)
+       {
+         PDC_ATTR Dc_Attr = dc->pDc_Attr;
+         if(Dc_Attr) MmCopyFromCaller(&dc->Dc_Attr, Dc_Attr, sizeof(DC_ATTR));
+         DC_UnlockDc(dc);
        }
      }
      DPRINT("Exit!!!!! DCX_CACHE!!!!!!   hDC-> %x \n", dce->hDC);

@@ -37,18 +37,27 @@
 void FASTCALL
 IntFixIsotropicMapping(PDC dc)
 {
-  ULONG xdim = EngMulDiv(dc->Dc_Attr.szlViewportExt.cx, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes) / dc->Dc_Attr.szlWindowExt.cx;
-  ULONG ydim = EngMulDiv(dc->Dc_Attr.szlViewportExt.cy, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes) / dc->Dc_Attr.szlWindowExt.cy;
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  ULONG xdim = EngMulDiv(Dc_Attr->szlViewportExt.cx,
+               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize,
+               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes) /
+                                Dc_Attr->szlWindowExt.cx;
+  ULONG ydim = EngMulDiv(Dc_Attr->szlViewportExt.cy,
+               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize,
+               ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes) /
+                                Dc_Attr->szlWindowExt.cy;
 
   if (xdim > ydim)
   {
-    dc->Dc_Attr.szlViewportExt.cx = dc->Dc_Attr.szlViewportExt.cx * abs(ydim / xdim);
-    if (!dc->Dc_Attr.szlViewportExt.cx) dc->Dc_Attr.szlViewportExt.cx = 1;
+    Dc_Attr->szlViewportExt.cx = Dc_Attr->szlViewportExt.cx * abs(ydim / xdim);
+    if (!Dc_Attr->szlViewportExt.cx) Dc_Attr->szlViewportExt.cx = 1;
   }
   else
   {
-    dc->Dc_Attr.szlViewportExt.cy = dc->Dc_Attr.szlViewportExt.cy * abs(xdim / ydim);
-    if (!dc->Dc_Attr.szlViewportExt.cy) dc->Dc_Attr.szlViewportExt.cy = 1;
+    Dc_Attr->szlViewportExt.cy = Dc_Attr->szlViewportExt.cy * abs(xdim / ydim);
+    if (!Dc_Attr->szlViewportExt.cy) Dc_Attr->szlViewportExt.cy = 1;
   }
 }
 
@@ -161,8 +170,11 @@ int
 FASTCALL
 IntGetGraphicsMode ( PDC dc )
 {
+  PDC_ATTR Dc_Attr;
   ASSERT ( dc );
-  return dc->Dc_Attr.iGraphicsMode;
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  return Dc_Attr->iGraphicsMode;
 }
 
 BOOL
@@ -209,6 +221,7 @@ STDCALL
 NtGdiGetGraphicsMode ( HDC hDC )
 {
   PDC dc;
+  PDC_ATTR Dc_Attr;
   int GraphicsMode; // default to failure
 
   dc = DC_LockDc ( hDC );
@@ -217,8 +230,9 @@ NtGdiGetGraphicsMode ( HDC hDC )
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
-
-  GraphicsMode = dc->Dc_Attr.iGraphicsMode;
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  GraphicsMode = Dc_Attr->iGraphicsMode;
 
   DC_UnlockDc(dc);
   return GraphicsMode;
@@ -464,6 +478,7 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
                         LPPOINT UnsafePoint)
 {
   PDC      dc;
+  PDC_ATTR Dc_Attr;
   NTSTATUS Status = STATUS_SUCCESS;
 
   dc = DC_LockDc ( hDC );
@@ -472,7 +487,9 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  
   if (UnsafePoint)
     {
         _SEH_TRY
@@ -480,8 +497,8 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
             ProbeForWrite(UnsafePoint,
                           sizeof(POINT),
                           1);
-            UnsafePoint->x = dc->Dc_Attr.ptlViewportOrg.x;
-            UnsafePoint->y = dc->Dc_Attr.ptlViewportOrg.y;
+            UnsafePoint->x = Dc_Attr->ptlViewportOrg.x;
+            UnsafePoint->y = Dc_Attr->ptlViewportOrg.y;
         }
         _SEH_HANDLE
         {
@@ -497,8 +514,8 @@ NtGdiOffsetViewportOrgEx(HDC hDC,
 	  }
     }
 
-  dc->Dc_Attr.ptlViewportOrg.x += XOffset;
-  dc->Dc_Attr.ptlViewportOrg.y += YOffset;
+  Dc_Attr->ptlViewportOrg.x += XOffset;
+  Dc_Attr->ptlViewportOrg.y += YOffset;
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
   return TRUE;
@@ -512,13 +529,16 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
                       LPPOINT  Point)
 {
   PDC dc;
-
+  PDC_ATTR Dc_Attr;
+  
   dc = DC_LockDc(hDC);
   if (!dc)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   if (Point)
     {
@@ -529,8 +549,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->Dc_Attr.ptlWindowOrg.x;
-         Point->y = dc->Dc_Attr.ptlWindowOrg.y;
+         Point->x = Dc_Attr->ptlWindowOrg.x;
+         Point->y = Dc_Attr->ptlWindowOrg.y;
       }
       _SEH_HANDLE
       {
@@ -546,8 +566,8 @@ NtGdiOffsetWindowOrgEx(HDC  hDC,
       }
     }
 
-  dc->Dc_Attr.ptlWindowOrg.x += XOffset;
-  dc->Dc_Attr.ptlWindowOrg.y += YOffset;
+  Dc_Attr->ptlWindowOrg.x += XOffset;
+  Dc_Attr->ptlWindowOrg.y += YOffset;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -588,6 +608,7 @@ NtGdiSetGraphicsMode(HDC  hDC,
 {
   INT ret;
   PDC dc;
+  PDC_ATTR Dc_Attr;
 
   dc = DC_LockDc (hDC);
   if (!dc)
@@ -595,6 +616,8 @@ NtGdiSetGraphicsMode(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return 0;
   }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   /* One would think that setting the graphics mode to GM_COMPATIBLE
    * would also reset the world transformation matrix to the unity
@@ -609,8 +632,8 @@ NtGdiSetGraphicsMode(HDC  hDC,
       return 0;
     }
 
-  ret = dc->Dc_Attr.iGraphicsMode;
-  dc->Dc_Attr.iGraphicsMode = Mode;
+  ret = Dc_Attr->iGraphicsMode;
+  Dc_Attr->iGraphicsMode = Mode;
   DC_UnlockDc(dc);
   return  ret;
 }
@@ -621,56 +644,58 @@ IntGdiSetMapMode(PDC  dc,
                 int  MapMode)
 {
   int PrevMapMode;
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  PrevMapMode = dc->Dc_Attr.iMapMode;
+  PrevMapMode = Dc_Attr->iMapMode;
 
-  if (MapMode != dc->Dc_Attr.iMapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
+  if (MapMode != Dc_Attr->iMapMode || (MapMode != MM_ISOTROPIC && MapMode != MM_ANISOTROPIC))
   {
-    dc->Dc_Attr.iMapMode = MapMode;
+    Dc_Attr->iMapMode = MapMode;
 
     switch (MapMode)
     {
       case MM_TEXT:
-        dc->Dc_Attr.szlWindowExt.cx = 1;
-        dc->Dc_Attr.szlWindowExt.cy = 1;
-        dc->Dc_Attr.szlViewportExt.cx = 1;
-        dc->Dc_Attr.szlViewportExt.cy = 1;
+        Dc_Attr->szlWindowExt.cx = 1;
+        Dc_Attr->szlWindowExt.cy = 1;
+        Dc_Attr->szlViewportExt.cx = 1;
+        Dc_Attr->szlViewportExt.cy = 1;
         break;
 
       case MM_LOMETRIC:
       case MM_ISOTROPIC:
-        dc->Dc_Attr.szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 10;
-        dc->Dc_Attr.szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 10;
-        dc->Dc_Attr.szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        dc->Dc_Attr.szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 10;
+        Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 10;
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_HIMETRIC:
-        dc->Dc_Attr.szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 100;
-        dc->Dc_Attr.szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 100;
-        dc->Dc_Attr.szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        dc->Dc_Attr.szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        Dc_Attr->szlWindowExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize * 100;
+        Dc_Attr->szlWindowExt.cy = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize * 100;
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_LOENGLISH:
-        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
-        dc->Dc_Attr.szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        dc->Dc_Attr.szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        Dc_Attr->szlWindowExt.cx = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
+        Dc_Attr->szlWindowExt.cy = EngMulDiv(1000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_HIENGLISH:
-        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
-        dc->Dc_Attr.szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        dc->Dc_Attr.szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        Dc_Attr->szlWindowExt.cx = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
+        Dc_Attr->szlWindowExt.cy = EngMulDiv(10000, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_TWIPS:
-        dc->Dc_Attr.szlWindowExt.cx = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
-        dc->Dc_Attr.szlWindowExt.cy = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
-        dc->Dc_Attr.szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
-        dc->Dc_Attr.szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
+        Dc_Attr->szlWindowExt.cx = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize, 254);
+        Dc_Attr->szlWindowExt.cy = EngMulDiv(14400, ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize, 254);
+        Dc_Attr->szlViewportExt.cx = ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes;
+        Dc_Attr->szlViewportExt.cy = -((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes;
         break;
 
       case MM_ANISOTROPIC:
@@ -691,6 +716,7 @@ NtGdiSetViewportExtEx(HDC  hDC,
                       LPSIZE  Size)
 {
   PDC dc;
+  PDC_ATTR Dc_Attr;
 
   dc = DC_LockDc(hDC);
   if ( !dc )
@@ -698,8 +724,10 @@ NtGdiSetViewportExtEx(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  switch (dc->Dc_Attr.iMapMode)
+  switch (Dc_Attr->iMapMode)
     {
       case MM_HIENGLISH:
       case MM_HIMETRIC:
@@ -725,13 +753,13 @@ NtGdiSetViewportExtEx(HDC  hDC,
          ProbeForWrite(Size,
                        sizeof(SIZE),
                        1);
-         Size->cx = dc->Dc_Attr.szlViewportExt.cx;
-         Size->cy = dc->Dc_Attr.szlViewportExt.cy;
+         Size->cx = Dc_Attr->szlViewportExt.cx;
+         Size->cy = Dc_Attr->szlViewportExt.cy;
 
-         dc->Dc_Attr.szlViewportExt.cx = XExtent;
-         dc->Dc_Attr.szlViewportExt.cy = YExtent;
+         Dc_Attr->szlViewportExt.cx = XExtent;
+         Dc_Attr->szlViewportExt.cy = YExtent;
 
-         if (dc->Dc_Attr.iMapMode == MM_ISOTROPIC)
+         if (Dc_Attr->iMapMode == MM_ISOTROPIC)
              IntFixIsotropicMapping(dc);
       }
       _SEH_HANDLE
@@ -763,6 +791,7 @@ NtGdiSetViewportOrgEx(HDC  hDC,
                      LPPOINT  Point)
 {
   PDC dc;
+  PDC_ATTR Dc_Attr;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -770,6 +799,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   if (Point)
     {
@@ -780,8 +811,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->Dc_Attr.ptlViewportOrg.x;
-         Point->y = dc->Dc_Attr.ptlViewportOrg.y;
+         Point->x = Dc_Attr->ptlViewportOrg.x;
+         Point->y = Dc_Attr->ptlViewportOrg.y;
       }
       _SEH_HANDLE
       {
@@ -797,8 +828,8 @@ NtGdiSetViewportOrgEx(HDC  hDC,
       }
     }
 
-  dc->Dc_Attr.ptlViewportOrg.x = X;
-  dc->Dc_Attr.ptlViewportOrg.y = Y;
+  Dc_Attr->ptlViewportOrg.x = X;
+  Dc_Attr->ptlViewportOrg.y = Y;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -814,6 +845,7 @@ NtGdiSetWindowExtEx(HDC  hDC,
                    LPSIZE  Size)
 {
   PDC dc;
+  PDC_ATTR Dc_Attr;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -821,8 +853,10 @@ NtGdiSetWindowExtEx(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  switch (dc->Dc_Attr.iMapMode)
+  switch (Dc_Attr->iMapMode)
     {
       case MM_HIENGLISH:
       case MM_HIMETRIC:
@@ -843,8 +877,8 @@ NtGdiSetWindowExtEx(HDC  hDC,
          ProbeForWrite(Size,
                        sizeof(SIZE),
                        1);
-         Size->cx = dc->Dc_Attr.szlWindowExt.cx;
-         Size->cy = dc->Dc_Attr.szlWindowExt.cy;
+         Size->cx = Dc_Attr->szlWindowExt.cx;
+         Size->cy = Dc_Attr->szlWindowExt.cy;
       }
       _SEH_HANDLE
       {
@@ -860,8 +894,8 @@ NtGdiSetWindowExtEx(HDC  hDC,
       }
     }
 
-  dc->Dc_Attr.szlWindowExt.cx = XExtent;
-  dc->Dc_Attr.szlWindowExt.cy = YExtent;
+  Dc_Attr->szlWindowExt.cx = XExtent;
+  Dc_Attr->szlWindowExt.cy = YExtent;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
@@ -877,6 +911,7 @@ NtGdiSetWindowOrgEx(HDC  hDC,
                    LPPOINT  Point)
 {
   PDC dc;
+  PDC_ATTR Dc_Attr;
 
   dc = DC_LockDc(hDC);
   if (!dc)
@@ -884,6 +919,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
   if (Point)
     {
@@ -894,8 +931,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
          ProbeForWrite(Point,
                        sizeof(POINT),
                        1);
-         Point->x = dc->Dc_Attr.ptlWindowOrg.x;
-         Point->y = dc->Dc_Attr.ptlWindowOrg.y;
+         Point->x = Dc_Attr->ptlWindowOrg.x;
+         Point->y = Dc_Attr->ptlWindowOrg.y;
       }
       _SEH_HANDLE
       {
@@ -911,8 +948,8 @@ NtGdiSetWindowOrgEx(HDC  hDC,
       }
     }
 
-  dc->Dc_Attr.ptlWindowOrg.x = X;
-  dc->Dc_Attr.ptlWindowOrg.y = Y;
+  Dc_Attr->ptlWindowOrg.x = X;
+  Dc_Attr->ptlWindowOrg.y = Y;
 
   DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
