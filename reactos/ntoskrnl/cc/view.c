@@ -237,10 +237,16 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         current = CONTAINING_RECORD(current_entry, CACHE_SEGMENT,
                                     DirtySegmentListEntry);
         current_entry = current_entry->Flink;
-        
+
+        /* This Ros-specific function needs FileObject to be referenced,
+           ohterwise it may be deleted while this function still works
+           with it */
+        ObReferenceObject(current->Bcb->FileObject);
+
         Locked = ExTryToAcquireResourceExclusiveLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
         if (!Locked)
         {
+            ObDereferenceObject(current->Bcb->FileObject);
             continue;
         }
         
@@ -248,6 +254,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         if (!Locked)
         {
             ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
+            ObDereferenceObject(current->Bcb->FileObject);
             continue;
         }
         
@@ -256,6 +263,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
         {
             ExReleasePushLock(&current->Lock);
             ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
+            ObDereferenceObject(current->Bcb->FileObject);
             continue;
         }
         
@@ -267,6 +275,7 @@ CcRosFlushDirtyPages(ULONG Target, PULONG Count)
 
         ExReleasePushLock(&current->Lock);
         ExReleaseResourceLite(((FSRTL_COMMON_FCB_HEADER*)(current->Bcb->FileObject->FsContext))->Resource);
+        ObDereferenceObject(current->Bcb->FileObject);
 
         if (!NT_SUCCESS(Status) &&  (Status != STATUS_END_OF_FILE))
         {
