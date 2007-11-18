@@ -302,38 +302,38 @@ acpi_os_out32(ACPI_IO_ADDRESS port, u32 val)
   WRITE_PORT_ULONG((PULONG)port, val);
 }
 
-UINT8
+u8
 acpi_os_mem_in8 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
   return (*(PUCHAR)(ULONG)phys_addr);
 }
 
-UINT16
+u16
 acpi_os_mem_in16 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
   return (*(PUSHORT)(ULONG)phys_addr);
 }
 
-UINT32
+u32
 acpi_os_mem_in32 (ACPI_PHYSICAL_ADDRESS phys_addr)
 {
   return (*(PULONG)(ULONG)phys_addr);
 }
 
 void
-acpi_os_mem_out8 (ACPI_PHYSICAL_ADDRESS phys_addr, UINT8 value)
+acpi_os_mem_out8 (ACPI_PHYSICAL_ADDRESS phys_addr, u8 value)
 {
   *(PUCHAR)(ULONG)phys_addr = value;
 }
 
 void
-acpi_os_mem_out16 (ACPI_PHYSICAL_ADDRESS phys_addr, UINT16 value)
+acpi_os_mem_out16 (ACPI_PHYSICAL_ADDRESS phys_addr, u16 value)
 {
   *(PUSHORT)(ULONG)phys_addr = value;
 }
 
 void
-acpi_os_mem_out32 (ACPI_PHYSICAL_ADDRESS phys_addr, UINT32 value)
+acpi_os_mem_out32 (ACPI_PHYSICAL_ADDRESS phys_addr, u32 value)
 {
   *(PULONG)(ULONG)phys_addr = value;
 }

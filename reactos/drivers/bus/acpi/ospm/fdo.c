@@ -108,7 +108,7 @@ AcpiCreateInstanceIDString(PUNICODE_STRING InstanceID,
     swprintf(Buffer, L"%S", Node->device.id.uid);
   else
     /* FIXME: Generate unique id! */
-    swprintf(Buffer, L"0000");
+    swprintf(Buffer, L"%S", L"0000");
 
   return AcpiCreateUnicodeString(InstanceID, Buffer, PagedPool);
 }

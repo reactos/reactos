@@ -246,7 +246,7 @@ acpi_aml_digits_needed (
 	}
 
 	else {
-		for (num_digits = 1 + (val < 0); (val = ACPI_DIVIDE (val,base)); ++num_digits) { ; }
+		for (num_digits = 1; (val = ACPI_DIVIDE (val,base)); ++num_digits) { ; }
 	}
 
 	return (num_digits);
