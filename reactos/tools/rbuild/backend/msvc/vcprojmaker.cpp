@@ -228,7 +228,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		}
 	}
 	/* include intermediate path for reactos.rc */
-	string version = intdir + "\\include\\reactos";
+	string version = intdir + "\\include";
+	includes.push_back (version);
+	version += "\\reactos";
 	includes.push_back (version);
 
 	string include_string;
