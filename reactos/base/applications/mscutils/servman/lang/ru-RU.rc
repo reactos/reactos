@@ -63,11 +63,11 @@ BEGIN
 END
 
 IDD_ABOUTBOX DIALOGEX 22,16,190,182
-CAPTION "О Менеджере служб"
+CAPTION "О Диспетчере служб"
 FONT 8, "MS Shell Dlg",0,0
 STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 BEGIN
-  LTEXT "Менеджер служб v0.8\nCopyright (C) 2005-2007\nот Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 26
+  LTEXT "Диспетчер служб v0.8\nАвторское право (C) 2005-2007\nГед Мерфи (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 32
   PUSHBUTTON "Закрыть", IDOK, 75, 162, 44, 15
   ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
   EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
@@ -97,7 +97,7 @@ BEGIN
   LTEXT "Можно указать параметры запуска, применяемые при запуске службы из этого каталога.",IDC_STATIC, 6,177,240,15
   LTEXT "Параметры запуска:", IDC_STATIC, 6, 200, 73, 11
   EDITTEXT IDC_START_PARAM, 78, 199, 168, 11, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+  PUSHBUTTON "Изменить", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
@@ -208,12 +208,12 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_PROGRESS_INFO_START "ReactOS пытается запустить службу"
-  IDS_PROGRESS_INFO_STOP  "ReactOS пытается остановить службу"
-  IDS_PROGRESS_INFO_PAUSE  "ReactOS is attempting to pause the following service"
-  IDS_PROGRESS_INFO_RESUME "ReactOS is attempting to resume the following service"
+  IDS_PROGRESS_INFO_START "ReactOS запускает службу"
+  IDS_PROGRESS_INFO_STOP  "ReactOS остановливает службу"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS останавливает следующие службы"
+  IDS_PROGRESS_INFO_RESUME "ReactOS возобновляет работу следующих служб"
   IDS_CREATE_SUCCESS "Создание службы успешно завершено"
-  IDS_DELETE_SUCCESS "Service Deleted Succesfully"
+  IDS_DELETE_SUCCESS "Удаление службы успешно завершено"
   IDS_CREATE_REQ "* = обязательные поля"
   IDS_DELETE_STOP "Вы должны вручную остановить службу перед удалением!"
 END
@@ -240,7 +240,7 @@ BEGIN
   IDS_HINT_EDIT         " Изменить свойства выбранной службы."
   IDS_HINT_CREATE       " Создать новую службу."
   IDS_HINT_DELETE       " Удалить выбранную службу."
-  IDS_HINT_PROP         " Open property sheet for the current selection."
+  IDS_HINT_PROP         " Открыть список свойств для выделенного элемента."
 
   IDS_HINT_LARGE        " Отображать элементы в виде больших значков."
   IDS_HINT_SMALL        " Отображать элементы в виде маленьких значков."
@@ -249,7 +249,7 @@ BEGIN
   IDS_HINT_CUST         " Настройка вида."
 
   IDS_HINT_HELP         " Показать окно справки."
-  IDS_HINT_ABOUT        " О Менеджере служб ReactOS."
+  IDS_HINT_ABOUT        " О Диспетчере служб ReactOS."
 
   IDS_HINT_SYS_RESTORE  " Востановить нормальный размер окна."
   IDS_HINT_SYS_MOVE     " Переместить это окно."
@@ -262,5 +262,5 @@ END
 /* Application title */
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_APPNAME "Менеджер служб ReactOS"
+  IDS_APPNAME "Диспетчер служб ReactOS"
 END
