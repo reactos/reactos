@@ -331,4 +331,7 @@
 <directory name="wtsapi32">
 	<xi:include href="wtsapi32/wtsapi32.rbuild" />
 </directory>
+<directory name="scrnsave">
+	<xi:include href="scrnsave/scrnsave.rbuild" />
+</directory>
 </group>
