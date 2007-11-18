@@ -1,0 +1,21 @@
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&Fitxer"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "&Sortida\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&Ajuda"
+    BEGIN
+        MENUITEM "&En quant a Consola d'administracio de ReactOS...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Consola d'administracio de ReactOS"
+    IDS_CONSOLETITLE "Consola%1!u!"
+END

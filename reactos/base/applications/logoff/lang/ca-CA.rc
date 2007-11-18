@@ -1,0 +1,15 @@
+LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "Finalitza una sessió.\n\n\
+  /v\t\tMostra informació en quant a les accions dutes a terme.\n\
+  /?\t\tMostra aquesta informació.\n\n"
+
+IDS_LOGOFF_REMOTE, "Finalitzant sessió en un equip remot."
+IDS_LOGOFF_LOCAL, "Finalitzant la sessió actual en aquesta equip."
+
+IDS_ILLEGAL_PARAM, "Parametre(s) no vàlid(s)\n"
+}
+/* EOF */
