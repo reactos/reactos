@@ -2,9 +2,9 @@ NAME	LESSON38SAVER.SCR
 
 DESCRIPTION	'Lesson38Saver screen saver'
 
-HEAPSIZE 1024 
-STACKSIZE 4096 
+HEAPSIZE 1024
+STACKSIZE 4096
 
-EXPORTS 
-	ScreenSaverProc 
-	ScreenSaverConfigureDialog 
+EXPORTS
+	ScreenSaverProc
+	ScreenSaverConfigureDialog

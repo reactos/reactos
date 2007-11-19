@@ -1,0 +1,97 @@
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+#include "afxres.h"
+#undef APSTUDIO_READONLY_SYMBOLS
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+#ifdef _WIN32
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+#pragma code_page(1252)
+#endif
+
+IDD_DLG_SCREEN DIALOG DISCARDABLE  0, 0, 172, 57
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Schmetterlinge Einstellungen"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
+    PUSHBUTTON      "Abbrechen",IDCANCEL,61,35,50,14
+    CONTROL         "Schmetterlinge rotieren",ROTATE,"Button",BS_AUTOCHECKBOX |
+                    WS_TABSTOP,45,15,85,8
+    PUSHBUTTON      "Über",IDABOUT,115,35,50,14
+END
+
+IDD_DLG_ABOUT DIALOG DISCARDABLE  0, 0, 149, 79
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Über"
+FONT 8, "MS Sans Serif"
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,48,58,56,14
+    CTEXT           "Schmetterlinge",IDC_STATIC,7,7,135,9
+    CTEXT           "Demo von: NeHe ",IDC_STATIC,7,20,135,8
+    CTEXT           "http://nehe.gamedev.net",WEBPAGE1,7,29,135,8,SS_NOTIFY |
+                    NOT WS_GROUP
+    CTEXT           "Bildschirmschoner von: tHaPuTeR",IDC_STATIC,7,38,135,8,NOT
+                    WS_GROUP
+    CTEXT           "http://www.thaputer.com",WEBPAGE2,7,47,135,8,SS_NOTIFY |
+                    NOT WS_GROUP
+END
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO DISCARDABLE
+BEGIN
+    IDD_DLG_SCREEN, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 165
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 50
+    END
+
+    IDD_DLG_ABOUT, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 142
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 72
+    END
+END
+#endif
+
+
+#ifdef APSTUDIO_INVOKED
+
+1 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "#include ""afxres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE DISCARDABLE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif
+
+IDB_BUTTERFLY1          BITMAP  DISCARDABLE     "res/butterfly1.bmp"
+IDB_BUTTERFLY2          BITMAP  DISCARDABLE     "res/butterfly2.bmp"
+IDB_BUTTERFLY3          BITMAP  DISCARDABLE     "res/butterfly3.bmp"
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_STR_DESCRIP         "Schmetterlinge"
+END
+
+#endif
+
+#ifndef APSTUDIO_INVOKED
+
+#endif

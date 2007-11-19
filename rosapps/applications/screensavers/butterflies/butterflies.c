@@ -1,8 +1,8 @@
 #include <windows.h>
 #include <scrnsave.h>
-#include <math.h>			
-#include <stdio.h>			
-#include <stdlib.h>			
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include "resource.h"
@@ -129,11 +129,11 @@ HGLRC InitOGLWindow(HWND hWnd)
 	pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_DOUBLEBUFFER;
 	pfd.cColorBits = 24;
 	pfd.cDepthBits = 24;
-	
+
 	nFormat = ChoosePixelFormat(hDC, &pfd);
 	DescribePixelFormat(hDC, nFormat, sizeof(PIXELFORMATDESCRIPTOR), &pfd);
 	SetPixelFormat(hDC, nFormat, &pfd);
-	
+
 	hRC = wglCreateContext(hDC);
 	wglMakeCurrent(hDC, hRC);
 
@@ -157,13 +157,13 @@ void InitOpenGL(GLsizei width, GLsizei height)
 	glLoadIdentity();									// Reset The Projection Matrix
 
 	// Calculate The Aspect Ratio Of The Window
-	gluPerspective (45.0f, (GLfloat)(width)/(GLfloat)(height),1.0f, 1000.0f);		
+	gluPerspective (45.0f, (GLfloat)(width)/(GLfloat)(height),1.0f, 1000.0f);
 
 	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
 	glLoadIdentity();
 		// Start Of User Initialization
 	LoadGLTextures();									// Load The Textures From Our Resource File
-	
+
 	glClearColor (0.0f, 0.0f, 0.0f, 0.5f);				// Black Background
 	glClearDepth (1.0f);								// Depth Buffer Setup
 	glDepthFunc (GL_LEQUAL);							// The Type Of Depth Testing (Less Or Equal)
@@ -174,7 +174,7 @@ void InitOpenGL(GLsizei width, GLsizei height)
 	glBlendFunc(GL_ONE,GL_SRC_ALPHA);					// Set Blending Mode (Cheap / Quick)
 	glEnable(GL_BLEND);
 
-	
+
 	for (loop=0; loop<50; loop++)					// Loop To Initialize 50 Objects
 	{
 		SetObject(loop);										// Call SetObject To Assign New Random Values
@@ -227,7 +227,7 @@ void Display()
 
 	Sleep(15);													// Create A Short Delay (15 Milliseconds)
 
-	glFlush ();	
+	glFlush ();
 
 }
 
@@ -251,7 +251,7 @@ BOOL AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
     case WM_COMMAND:
 		switch(LOWORD(wpm)){
 		case IDOK:
-			EndDialog(hdlg, LOWORD(wpm));	
+			EndDialog(hdlg, LOWORD(wpm));
 			break;
 		case WEBPAGE1:
 			ShellExecute(NULL, "open", "http://nehe.gamedev.net", NULL, NULL, SW_SHOWNORMAL);
@@ -264,8 +264,8 @@ BOOL AboutProc(HWND hdlg, UINT msg, WPARAM wpm, LPARAM lpm){
 	return FALSE;
 }
 
-LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message, 
-					 WPARAM wParam, LPARAM lParam) 
+LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message,
+					 WPARAM wParam, LPARAM lParam)
 {
 	static HGLRC hRC;
 	static DWORD timer = 1;
@@ -274,33 +274,33 @@ LRESULT WINAPI ScreenSaverProc(HWND hWnd, UINT message,
 	int width;
 	int height;
 
-	switch (message) 
-	{ 
-	case WM_CREATE: 
+	switch (message)
+	{
+	case WM_CREATE:
 		ReadRegistry();
 		hRC = InitOGLWindow(hWnd);
-		GetClientRect (hWnd, &WindowRect); 
+		GetClientRect (hWnd, &WindowRect);
 		width = WindowRect.right - WindowRect.left;
 		height = WindowRect.bottom - WindowRect.top;
 		InitOpenGL(width,height);
 		SetTimer(hWnd, timer, 5, NULL);
-		break; 
+		break;
 	case WM_TIMER:
 		hDC = GetDC(hWnd);
 		Display();
 		SwapBuffers(hDC);
 		ReleaseDC(hWnd, hDC);
 		break;
-	case WM_DESTROY: 
+	case WM_DESTROY:
 		wglMakeCurrent(NULL, NULL);
 		wglDeleteContext(hRC);
 		break;
-	} 
+	}
 
 	return DefScreenSaverProc(hWnd, message, wParam, lParam);
 }
 
-BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message, 
+BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message,
 								WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
