@@ -3852,6 +3852,7 @@ NtGdiGetTextFaceW(
 )
 {
    PDC Dc;
+   PDC_ATTR Dc_Attr;
    HFONT hFont;
    PTEXTOBJ TextObj;
    NTSTATUS Status;
@@ -3864,7 +3865,9 @@ NtGdiGetTextFaceW(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   hFont = Dc->Dc_Attr.hlfntNew;
+   Dc_Attr = Dc->pDc_Attr;
+   if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+   hFont = Dc_Attr->hlfntNew;
    DC_UnlockDc(Dc);
 
    TextObj = TEXTOBJ_LockText(hFont);
