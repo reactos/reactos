@@ -15,3 +15,4 @@ IDI_702    ICON "res/702.ico"
 IDI_703    ICON "res/703.ico"
 
 #include "lang/en-US.rc"
+#include "lang/uk-UA.rc"

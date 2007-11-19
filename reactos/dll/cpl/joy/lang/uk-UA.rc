@@ -1,0 +1,92 @@
+/*
+ * PROJECT:     Joystick Properties Control Panel Applet
+ * LICENSE:     GPL - See COPYING in the top level directory
+ * FILE:        dll/cpl/joy/lang/uk-UA.rc
+ * PURPOSE:     Ukraianian Language File for joy.cpl
+ * TRANSLATOR:  Artem Reznikov
+ */
+
+LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEMAIN DIALOGEX 0, 0, 252, 205
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Ігрові пристрої"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLSYSTEM, -1, 7, 7, 20, 20
+    LTEXT "Ці параметри дають змогу налаштувати ігрові пристрої, установлені на цьому комп'ютері.", -1, 33, 7, 214, 20, NOT WS_GROUP
+    GROUPBOX "&Установлені ігрові пристрої", -1, 7, 34, 238, 117
+    CONTROL "List1", IDC_CONTROLLER_LIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000808D, 14, 44, 224, 80
+    PUSHBUTTON "&Додати...", IDC_ADD_BUTTON, 35, 129, 65, 14
+    PUSHBUTTON "В&идалити", IDC_REMOVE_BUTTON, 104, 129, 65, 14, WS_DISABLED
+    PUSHBUTTON "В&ластивості", IDC_PROPERTIES_BUTTON, 173, 129, 65, 14, WS_DISABLED
+    PUSHBUTTON "Д&одатково...", IDC_ADVANCED_BUTTON, 111, 157, 65, 14
+    PUSHBUTTON "Діа&гностика...", IDC_TROUBLESHOOT_BUTTON, 180, 157, 65, 14
+    PUSHBUTTON "OK", IDOK, 195, 185, 50, 14
+END
+
+IDD_ADD DIALOGEX 0, 0, 265, 200
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Додавання ігрового пристрою"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLSYSTEM, -1, 8, 7, 20, 20
+    LTEXT "Виберіть ігровий пристрій із нижченаведеного списку й натисніть кнопку ""OK"". Якщо вашого ігрового пристрою немає у списку, натисніть кнопку ""Інший"".", -1, 35, 7, 210, 33
+    LTEXT "&Ігрові пристрої:", -1, 8, 45, 126, 8
+    LISTBOX IDC_GAME_CONTROLLERS_LIST, 7, 55, 251, 57, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | LBS_WANTKEYBOARDINPUT | WS_HSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Підключити руль і педалі", IDC_ENABLE_RUDDERS_CHECKBOX, 7, 114, 100, 10, WS_GROUP
+    LTEXT "І&гровий порт:", -1, 7, 134, 38, 8, NOT WS_VISIBLE
+    COMBOBOX IDC_GAME_PORT_COMBO, 7, 147, 140, 50, CBS_DROPDOWNLIST | CBS_SORT | NOT WS_VISIBLE | WS_VSCROLL
+    PUSHBUTTON "Ін&ший...", IDC_CUSTOM_BUTTON, 208, 147, 50, 14
+    CONTROL "", -25525, "STATIC", SS_ETCHEDHORZ, 7, 170, 251, 1
+    DEFPUSHBUTTON "OK", IDOK, 155, 179, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 208, 179, 50, 14
+END
+
+IDD_CUSTOM DIALOGEX 0, 0, 265, 183, 0
+STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Особливий ігровий пристрій"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Особливості", -1, 7, 7, 245, 52
+    AUTORADIOBUTTON "Джо&йстик", IDC_JOYSTICK_RADIO, 17, 23, 55, 10
+    AUTORADIOBUTTON "&Штурвал або ручка керування", IDC_FLIGHT_YOKE_RADIO, 147, 23, 89, 10
+    AUTORADIOBUTTON "І&гровий планшет", IDC_GAME_PAD_RADIO, 17, 40, 65, 10
+    AUTORADIOBUTTON "Керування перегоновим &автомобілем", IDC_RACE_CAR_RADIO, 147, 40, 93, 10
+    GROUPBOX "&Степені вільності", -1, 7, 67, 116, 44, WS_GROUP
+    COMBOBOX IDC_AXES_COMBO, 37, 79, 48, 50, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTORADIOBUTTON "Руль або педалі", IDC_RUDDER_PEDALS_RADIO, 14, 97, 63, 10, NOT WS_VISIBLE
+    AUTORADIOBUTTON "Вісь Z", IDC_Z_AXIS_RADIO, 81, 97, 35, 10, NOT WS_VISIBLE
+    GROUPBOX "К&нопки", -1, 137, 67, 116, 44
+    COMBOBOX IDC_BUTTONS_COMBO, 178, 79, 48, 50, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL, WS_EX_CLIENTEDGE
+    AUTOCHECKBOX "Є &перемикач точки зору", IDC_INC_POINT_CHECKBOX, 7, 123, 115, 10
+    LTEXT "&Ім'я пристрою:", -1, 7, 139, 200, 9
+    EDITTEXT IDC_CONTROLLER_NAME_EDIT, 7, 150, 116, 15, ES_AUTOHSCROLL, WS_EX_CLIENTEDGE | WS_EX_STATICEDGE
+    DEFPUSHBUTTON "OK", IDOK, 137, 150, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 203, 150, 50, 14
+END
+
+IDD_ADVANCED DIALOGEX 0, 0, 220, 86
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Додаткові параметри"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLSYSTEM, -1, 7, 24, 20, 20
+    DEFPUSHBUTTON "OK", IDOK, 106, 65, 50, 14
+    PUSHBUTTON "Скасувати", IDCANCEL, 163, 65, 50, 14
+    LTEXT "Виберіть пристрій, який слід використовувати зі старими програмами.", -1, 7, 7, 208, 10
+    LTEXT "&Кращий пристрій:", -1, 34, 24, 70, 10
+    COMBOBOX IDC_PREFERRED_DEV_COMBO, 34, 38, 179, 75, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Ігрові пристрої"
+    IDS_CPLSYSTEMDESCRIPTION "Додавання, видалення й настройка параметрів ігрових пристроїв, наприклад, джойстиків або ігрових планшетів."
+    IDS_CONTROLLER "Пристрій"
+    IDS_STATUS "Стан"
+END

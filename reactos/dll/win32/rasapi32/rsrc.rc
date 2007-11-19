@@ -2,3 +2,4 @@
 
 #include "lang/en-US.rc"
 #include "lang/ru-RU.rc"
+#include "lang/uk-UA.rc"

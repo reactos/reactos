@@ -195,7 +195,7 @@ BEGIN
     IDS_CMT_SCREENSHOT  "Зробити знімок екрана"
     IDS_CMT_DEVMGMT     "Запустити Диспетчер пристроїв"
     IDS_CMT_SERVMAN     "Запустити Диспетчер керування службами"
-    IDS_CMT_RDESKTOP    "Launch Remote Desktop"
+    IDS_CMT_RDESKTOP    "Запустити Віддалене керування робочим столом"
 END
 
 STRINGTABLE
