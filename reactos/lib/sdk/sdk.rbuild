@@ -20,4 +20,7 @@
 	<directory name="wdmguid">
 		<xi:include href="wdmguid/wdmguid.rbuild" />
 	</directory>
+	<directory name="scrnsave">
+		<xi:include href="scrnsave/scrnsave.rbuild" />
+	</directory>
 </group>
