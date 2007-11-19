@@ -16,4 +16,7 @@
 	<directory name="mazescr">
 		<xi:include href="mazescr/mazescr.rbuild" />
 	</directory>
+	<directory name="butterflies">
+		<xi:include href="butterflies/butterflies.rbuild" />
+	</directory>
 </group>
