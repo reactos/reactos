@@ -70,14 +70,11 @@ GetTextCharacterExtra(
 	HDC	hDc
 	)
 {
-#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hDc, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->lTextExtra;
-#endif
-  // Do it this way for now.
-  return GetDCDWord( hDc, GdiGetTextCharExtra, 0);
+// return GetDCDWord( hDc, GdiGetTextCharExtra, 0);
 }
 
 
@@ -432,7 +429,7 @@ SetTextCharacterExtra(
 	)
 {
   INT cExtra = 0x80000000;
-//  PDC_ATTR Dc_Attr;
+  PDC_ATTR Dc_Attr;
 
   if (CharExtra == cExtra)
   {
@@ -444,9 +441,10 @@ SetTextCharacterExtra(
   {
     return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
   }
+#endif
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return cExtra;
 
-  if (NtCurrentTeb()->GdiTebBatch.HDC == hDC)
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hDC)
   {
      if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
      {
@@ -456,10 +454,8 @@ SetTextCharacterExtra(
   }
   cExtra = Dc_Attr->lTextExtra;
   Dc_Attr->lTextExtra = CharExtra;
-  return cExrta;
-#endif
-// Do this for now.
-  return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
+  return cExtra;
+// return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
 }
 
 

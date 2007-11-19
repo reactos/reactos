@@ -41,8 +41,6 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
 {
  PDC_ATTR Dc_Attr;
 
- if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
-
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
@@ -61,6 +59,8 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
       }
     }
  }
+
+ if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
  if ( Point )
  {

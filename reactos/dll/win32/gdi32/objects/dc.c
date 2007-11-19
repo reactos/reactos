@@ -327,7 +327,6 @@ DeleteObject(HGDIOBJ hObject)
      case GDI_OBJECT_TYPE_EXTPEN:
      case GDI_OBJECT_TYPE_PEN:
        {
-#if 0
           PBRUSH_ATTR Brh_Attr;
           PTEB pTeb;
 
@@ -351,7 +350,6 @@ DeleteObject(HGDIOBJ hObject)
              if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
              return TRUE;
           }
-#endif
        break;
        }
      case GDI_OBJECT_TYPE_BITMAP:
@@ -750,13 +748,10 @@ GetDCBrushColor(
 	HDC hdc
 )
 {
-//#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
-//#endif
-  return NtUserGetDCBrushColor(hdc);
 }
 
 /*
@@ -768,13 +763,10 @@ GetDCPenColor(
 	HDC hdc
 )
 {
-//#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
-//#endif
-  return NtUserGetDCPenColor(hdc);
 }
 
 /*
@@ -787,7 +779,6 @@ SetDCBrushColor(
 	COLORREF crColor
 )
 {
-//#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -804,8 +795,6 @@ SetDCBrushColor(
     }
   }
   return OldColor;
-//#endif
-  return NtUserSetDCBrushColor(hdc, crColor);
 }
 
 /*
@@ -818,7 +807,6 @@ SetDCPenColor(
 	COLORREF crColor
 )
 {
-//#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -835,8 +823,7 @@ SetDCPenColor(
     }
   }
   return OldColor;
-//#endif
-  return NtUserSetDCPenColor(hdc, crColor);
+//  return NtUserSetDCPenColor(hdc, crColor);
 }
 
 /*
@@ -849,7 +836,6 @@ SetTextColor(
 	COLORREF crColor
 )
 {
-#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -883,8 +869,7 @@ SetTextColor(
      Dc_Attr->crForegroundClr = crColor;
   }
   return OldColor;
-#endif
-  return NtGdiSetTextColor(hdc, crColor);
+//  return NtGdiSetTextColor(hdc, crColor);
 }
 
 /*
@@ -897,7 +882,6 @@ SetBkColor(
 	COLORREF crColor
 )
 {
-#if 0
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
@@ -931,8 +915,7 @@ SetBkColor(
      Dc_Attr->crBackgroundClr = crColor;
   }
   return OldColor;
-#endif
-  return NtGdiSetBkColor(hdc, crColor);
+//  return NtGdiSetBkColor(hdc, crColor);
 }
 
 /*
@@ -1087,22 +1070,18 @@ GetViewportExtEx(
              LPSIZE lpSize
                 )
 {
-#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
 
   if ( Dc_Attr->flXform & PAGE_EXTENTS_CHANGED ) // Something was updated, go to kernel.
-#endif
-  return NtGdiGetDCPoint( hdc, GdiGetViewPortExt, (LPPOINT) lpSize );
-#if 0
+     return NtGdiGetDCPoint( hdc, GdiGetViewPortExt, (LPPOINT) lpSize );
   else
   {
      lpSize->cx = Dc_Attr->szlViewportExt.cx;
      lpSize->cy = Dc_Attr->szlViewportExt.cy;
   }
   return TRUE;
-#endif
 }
 
 
@@ -1113,16 +1092,13 @@ GetViewportOrgEx(
              LPPOINT lpPoint
                 )
 {
-#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpPoint->x = Dc_Attr->ptlViewportOrg.x;
   lpPoint->x = Dc_Attr->ptlViewportOrg.x;
   return TRUE;
-#endif
-  // Do it this way for now.
-  return NtGdiGetDCPoint( hdc, GdiGetViewPortOrg, lpPoint );
+  // return NtGdiGetDCPoint( hdc, GdiGetViewPortOrg, lpPoint );
 }
 
 
@@ -1133,16 +1109,13 @@ GetWindowExtEx(
            LPSIZE lpSize
               )
 {
-#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpSize->cx = Dc_Attr->szlWindowExt.cx;
   lpSize->cy = Dc_Attr->szlWindowExt.cy;
   return TRUE;
-#endif
-  // Do it this way for now.
-  return NtGdiGetDCPoint( hdc, GdiGetWindowExt, (LPPOINT) lpSize );
+  // return NtGdiGetDCPoint( hdc, GdiGetWindowExt, (LPPOINT) lpSize );
 }
 
 
@@ -1153,16 +1126,13 @@ GetWindowOrgEx(
            LPPOINT lpPoint
               )
 {
-#if 0
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
   lpPoint->x = Dc_Attr->ptlWindowOrg.x;
   lpPoint->x = Dc_Attr->ptlWindowOrg.x;
   return TRUE;
-#endif
-  // Do it this way for now.
-  return NtGdiGetDCPoint( hdc, GdiGetWindowOrg, lpPoint );
+  //return NtGdiGetDCPoint( hdc, GdiGetWindowOrg, lpPoint );
 }
 
 /* FIXME: include correct header */

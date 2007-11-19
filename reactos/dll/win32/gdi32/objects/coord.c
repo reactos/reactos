@@ -194,13 +194,14 @@ ModifyWorldTransform(
       return FALSE;
     }
   }
+#endif
   PDC_ATTR Dc_Attr;
 
   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
   /* Check that graphics mode is GM_ADVANCED */
   if ( Dc_Attr->iGraphicsMode != GM_ADVANCED ) return FALSE;
-#endif
+
   return NtGdiModifyWorldTransform(hDC, (CONST LPXFORM) Xform, iMode);
 }
 
