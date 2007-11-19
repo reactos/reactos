@@ -578,50 +578,77 @@ KdbSymUnloadDriverSymbols(IN PLDR_DATA_TABLE_ENTRY ModuleObject)
 }
 
 VOID
-KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName)
+KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInfo)
 {
-    ANSI_STRING SystemPrefix, RealPathPrefix, ProperName;
-    CHAR Buffer[MAX_PATH], RealPathBuffer[MAX_PATH];
+    BOOLEAN Found = FALSE;
+    PLIST_ENTRY ListHead, NextEntry;
+    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
 
-    /* Init our strings for compare operations */
-    RtlInitAnsiString(&SystemPrefix, "\\SystemRoot");
+    //DPRINT("KdbSymProcessSymbols(%Z)\n", AnsiFileName);
 
-    /* Convert system root to ansi */
-    sprintf(RealPathBuffer, "%S", (PWCHAR)&SharedUserData->NtSystemRoot[2]);
-    RtlInitAnsiString(&RealPathPrefix, RealPathBuffer);
-    RealPathPrefix.MaximumLength = MAX_PATH;
+    /* We use PsLoadedModuleList here, otherwise (in case of
+       using KeLoaderBlock) all our data will be just lost */
+    ListHead = &PsLoadedModuleList;
 
-    /* There are 3 cases:
-       1) \SystemRoot\System32\ -> no change
-       2) \ReactOS\System32 -> \SystemRoot\System32
-       3) module.dll -> \??\C:\ReactOS\system32\module.dll
-     */
-    if (RtlPrefixString(&SystemPrefix, AnsiFileName, FALSE))
+    /* Found module we are interested in */
+    NextEntry = ListHead->Flink;
+    while (ListHead != NextEntry)
     {
-        /* Case: \SystemRoot\System32\ , just directly load it */
-        KdbSymProcessBootSymbols(AnsiFileName, TRUE, FALSE);
+        /* Get the entry */
+        LdrEntry = CONTAINING_RECORD(NextEntry,
+                                     LDR_DATA_TABLE_ENTRY,
+                                     InLoadOrderLinks);
+
+        if (SymbolInfo->BaseOfDll == LdrEntry->DllBase)
+        {
+            Found = TRUE;
+            break;
+        }
+
+        /* Go to the next one */
+        NextEntry = NextEntry->Flink;
     }
-    else if (RtlPrefixString(&RealPathPrefix, AnsiFileName, FALSE))
+
+    /* Exit if we didn't find the module requested */
+    if (!Found)
+        return;
+
+    DPRINT("Found LdrEntry=%p\n", LdrEntry);
+    if (!LoadSymbols)
     {
-        /* It's prefixed with a real path, instead of a \SystemRoot.
-           So build a new, proper name. */
-        RtlZeroMemory(Buffer, MAX_PATH);
-        strcpy(Buffer, "\\SystemRoot");
-        strncat(Buffer,
-            AnsiFileName->Buffer + RealPathPrefix.Length,
-            AnsiFileName->Length - RealPathPrefix.Length);
+        LdrEntry->PatchInformation = NULL;
+        return;
+    }
 
-        /* Convert it to ANSI_STRING */
-        RtlInitAnsiString(&ProperName, Buffer);
+    /* Remove symbol info if it already exists */
+    if (LdrEntry->PatchInformation != NULL)
+    {
+        KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
+    }
 
-        /* Process symbols */
-        KdbSymProcessBootSymbols(&ProperName, TRUE, TRUE);
+    /* Load new symbol information */
+    if (! RosSymCreateFromMem(LdrEntry->DllBase,
+        LdrEntry->SizeOfImage,
+        (PROSSYM_INFO*)&LdrEntry->PatchInformation))
+    {
+        /* Error loading symbol info, try to load it from file */
+        KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
+            (PROSSYM_INFO*)&LdrEntry->PatchInformation);
+
+        /* It already added symbols to cache */
     }
     else
     {
-        /* Just a bare filename, nothing else. Why? Who knows... */
-        KdbSymProcessBootSymbols(AnsiFileName, FALSE, TRUE);
+        /* Add file to cache */
+        KdbpSymAddCachedFile(&LdrEntry->FullDllName, LdrEntry->PatchInformation);
     }
+
+    DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
+           &LdrEntry->BaseDllName,
+           LdrEntry->DllBase,
+           LdrEntry->SizeOfImage + (ULONG)LdrEntry->DllBase,
+           LdrEntry->PatchInformation);
+
 }
 
 

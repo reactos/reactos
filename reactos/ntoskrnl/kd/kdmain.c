@@ -131,7 +131,8 @@ KdpEnterDebuggerException(IN PKTRAP_FRAME TrapFrame,
         else if (ExceptionCommand == BREAKPOINT_LOAD_SYMBOLS)
         {
             /* Load symbols. Currently implemented only for KDBG! */
-            KDB_SYMBOLFILE_HOOK((PANSI_STRING)ExceptionRecord->ExceptionInformation[1]);
+            KDB_SYMBOLFILE_HOOK((PANSI_STRING)ExceptionRecord->ExceptionInformation[1],
+                (PKD_SYMBOLS_INFO)ExceptionRecord->ExceptionInformation[2]);
         }
 
         /* This we can handle: simply bump EIP */

@@ -89,7 +89,7 @@ KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName,
                          IN BOOLEAN LoadFromFile);
 
 VOID
-KdbSymProcessSymbols(IN PANSI_STRING FileName);
+KdbSymProcessSymbols(IN PANSI_STRING FileName, IN PKD_SYMBOLS_INFO SymbolInfo);
 
 BOOLEAN
 KdbSymPrintAddress(IN PVOID Address);
@@ -119,12 +119,12 @@ typedef struct _KDB_MODULE_INFO
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	KdbSymLoadUserModuleSymbols(LDRMOD)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	KdbSymLoadDriverSymbols(FILENAME, MODULE)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		KdbSymUnloadDriverSymbols(MODULE)
-# define KDB_SYMBOLFILE_HOOK(FILENAME)		KdbSymProcessSymbols(FILENAME)
+# define KDB_SYMBOLFILE_HOOK(FILENAME, SYMBOLINFO)	KdbSymProcessSymbols((FILENAME), (SYMBOLINFO))
 #else
 # define KDB_LOADUSERMODULE_HOOK(LDRMOD)	do { } while (0)
 # define KDB_LOADDRIVER_HOOK(FILENAME, MODULE)	do { } while (0)
 # define KDB_UNLOADDRIVER_HOOK(MODULE)		do { } while (0)
-# define KDB_SYMBOLFILE_HOOK(FILENAME)		do { } while (0)
+# define KDB_SYMBOLFILE_HOOK(FILENAME, SYMBOLINFO)		do { } while (0)
 # define KDB_CREATE_THREAD_HOOK(CONTEXT)	do { } while (0)
 #endif
 
