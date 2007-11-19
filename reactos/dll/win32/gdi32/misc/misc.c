@@ -124,8 +124,25 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
     if(pid == NULL || pid == CurrentProcessId)
     {
-      *UserData = Entry->UserData;
-      return TRUE;
+    //
+    // Need to test if we have Read & Write access to the VM address space.
+    //
+      BOOL Result = TRUE;
+      if(Entry->UserData)
+      {
+         volatile CHAR *Current = (volatile CHAR*)Entry->UserData;
+         _SEH_TRY
+         {
+           *Current = *Current;
+         }
+         _SEH_HANDLE
+         {
+           Result = FALSE;
+         }
+         _SEH_END
+      }
+      if (Result) *UserData = Entry->UserData;
+      return Result;
     }
   }
   SetLastError(ERROR_INVALID_PARAMETER);
