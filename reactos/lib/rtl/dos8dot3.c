@@ -255,7 +255,7 @@ RtlIsNameLegalDOS8Dot3(IN PCUNICODE_STRING UnicodeName,
     if (RtlUpcaseUnicodeStringToCountedOemString( AnsiName, UnicodeName, FALSE ) != STATUS_SUCCESS)
         return FALSE;
 
-    if (AnsiName->Length > 12) return FALSE;
+    if ((AnsiName->Length > 12) || (AnsiName->Buffer == NULL)) return FALSE;
 
     /* a starting . is invalid, except for . and .. */
     if (AnsiName->Buffer[0] == '.')
