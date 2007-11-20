@@ -27,6 +27,8 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <fstream>
+#include <iostream>
 
 #include <stdio.h>
 
@@ -82,6 +84,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	string vcproj_file = VcprojFileName(module);
 	string computername;
 	string username;
+	string intermediatedir = "";
 
 	if (getenv ( "USERNAME" ) != NULL)
 		username = getenv ( "USERNAME" );
@@ -264,6 +267,14 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 	int n = 0;
 
 	std::string output_dir;
+	string importLib;
+
+	// don't do the work m_configurations.size() times
+	if (module.importLibrary != NULL)
+	{
+		intermediatedir = intdir + "\\" + module.output->relative_path + vcdir;
+		importLib = _strip_gcc_deffile(module.importLibrary->source->name, module.importLibrary->source->relative_path, intermediatedir);
+	}
 
 	fprintf ( OUT, "\t<Configurations>\r\n" );
 	for ( size_t icfg = 0; icfg < m_configurations.size(); icfg++ )
@@ -449,7 +460,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 			}
 
 			if (module.importLibrary != NULL)
-				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", module.importLibrary->source->name.c_str ());
+				fprintf ( OUT, "\t\t\t\tModuleDefinitionFile=\"%s\"\r\n", importLib.c_str());
 
 			fprintf ( OUT, "\t\t\t\tAdditionalDependencies=\"" );
 			bool use_msvcrt_lib = false;
@@ -829,6 +840,53 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 		fclose ( OUT );
 	}
 
+}
+
+std::string
+MSVCBackend::_strip_gcc_deffile(std::string Filename, std::string sourcedir, std::string objdir)
+{
+	std::string NewFilename = objdir + "\\" + Filename;
+	// we don't like infinite loops - so replace it in two steps
+	NewFilename = _replace_str(NewFilename, ".def", "_msvc.de");
+	NewFilename = _replace_str(NewFilename, "_msvc.de", "_msvc.def");
+	Filename = sourcedir + "\\" + Filename;
+
+	std::fstream in_file(Filename.c_str(), std::ios::in);
+	std::fstream out_file(NewFilename.c_str(), std::ios::out);
+	std::string::size_type pos;
+	DWORD i = 0;
+
+	std::string line;
+	while (std::getline(in_file, line))
+	{
+		pos = line.find("@", 0);
+		while (std::string::npos != pos)
+		{
+			if (pos > 1)
+			{
+				// make sure it is stdcall and no ordinal
+				if (line[pos -1] != ' ')
+				{
+					i = 0;
+					while (true)
+					{
+						i++;
+						if ((line[pos + i] < '0') || (line[pos + i] > '9'))
+							break;
+					}
+					line.replace(pos, i, "");
+				}
+			}
+			pos = line.find("@", pos + 1);
+		}
+
+		line += "\n";
+		out_file << line;
+	} 
+	in_file.close();
+	out_file.close();
+
+	return NewFilename;
 }
 
 std::string

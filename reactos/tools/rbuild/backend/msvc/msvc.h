@@ -112,6 +112,7 @@ class MSVCBackend : public Backend
 
 		// functions in vcprojmaker.cpp:
 
+		std::string _strip_gcc_deffile(std::string Filename, std::string sourcedir, std::string objdir);
 		std::string _get_solution_version ( void );
 		std::string _gen_guid();
 		std::string _replace_str(
