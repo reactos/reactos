@@ -237,7 +237,7 @@ SepCaptureSecurityQualityOfService(IN POBJECT_ATTRIBUTES ObjectAttributes  OPTIO
       _SEH_TRY
       {
         ProbeForRead(ObjectAttributes,
-                     sizeof(ObjectAttributes),
+                     sizeof(OBJECT_ATTRIBUTES),
                      sizeof(ULONG));
         if(ObjectAttributes->Length == sizeof(OBJECT_ATTRIBUTES))
         {
