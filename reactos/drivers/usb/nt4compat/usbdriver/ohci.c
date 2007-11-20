@@ -21,6 +21,7 @@
  */
 
 #include "usbdriver.h"
+#include "ehci.h"
 #include "ohci.h"
 
 PDEVICE_OBJECT ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
@@ -29,14 +30,20 @@ PDEVICE_OBJECT ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
 //static VOID ohci_stop(PEHCI_DEV ehci);
 PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
                           PUSB_DEV_MANAGER dev_mgr);
-//PDEVICE_OBJECT ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr);
+PDEVICE_OBJECT ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr);
 //BOOLEAN ohci_delete_device(PDEVICE_OBJECT pdev);
 //VOID ohci_get_capabilities(PEHCI_DEV ehci, PBYTE base);
 //BOOLEAN NTAPI ohci_isr(PKINTERRUPT interrupt, PVOID context);
 //BOOLEAN ohci_start(PHCD hcd);
+VOID ohci_init_hcd_interface(POHCI_DEV ohci);
+
+// shared with EHCI
+NTSTATUS ehci_dispatch_irp(IN PDEVICE_OBJECT DeviceObject, IN PIRP irp);
+VOID ehci_set_dev_mgr(PHCD hcd, PUSB_DEV_MANAGER dev_mgr);
+VOID ehci_set_id(PHCD hcd, UCHAR id);
+BOOLEAN NTAPI ehci_cal_cpu_freq(PVOID context);
 
 extern USB_DEV_MANAGER g_dev_mgr;
-
 
 PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
                           PUSB_DEV_MANAGER dev_mgr)
@@ -91,7 +98,7 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
         if (pdev_ext)
         {
             // acquire higher irql to eliminate pre-empty
-            //KeSynchronizeExecution(pdev_ext->ehci_int, ehci_cal_cpu_freq, NULL);
+            KeSynchronizeExecution(pdev_ext->ohci_int, ehci_cal_cpu_freq, NULL);
         }
     }
     return NULL;
@@ -100,25 +107,33 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
 PDEVICE_OBJECT
 ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PUSB_DEV_MANAGER dev_mgr)
 {
-    //LONG frd_num, prd_num;
+    LONG frd_num, prd_num;
     PDEVICE_OBJECT pdev = NULL;
-    //POHCI_DEVICE_EXTENSION pdev_ext;
-    //ULONG vector, addr_space;
+    POHCI_DEVICE_EXTENSION pdev_ext;
+    ULONG addr_space;
+    //ULONG vector;
     LONG bus;
     //KIRQL irql;
     //KAFFINITY affinity;
 
     DEVICE_DESCRIPTION dev_desc;
-    //CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
+    CM_PARTIAL_RESOURCE_DESCRIPTOR *pprd;
     PCI_SLOT_NUMBER slot_num;
-    //NTSTATUS status;
+    NTSTATUS status;
 
+    pdev = ohci_create_device(drvr_obj, dev_mgr);
+
+    if (pdev == NULL)
+        return NULL;
+
+    pdev_ext = pdev->DeviceExtension;
+
+    pdev_ext->pci_addr = bus_addr;
     bus = (bus_addr >> 8);
 
     slot_num.u.AsULONG = 0;
     slot_num.u.bits.DeviceNumber = ((bus_addr & 0xff) >> 3);
     slot_num.u.bits.FunctionNumber = (bus_addr & 0x07);
-
 
     //now create adapter object
     RtlZeroMemory(&dev_desc, sizeof(dev_desc));
@@ -135,7 +150,7 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
               ohci_alloc(): bus=0x%x, bus_addr=0x%x \n \
               ohci_alloc(): slot_num=0x%x \n \
             ", (DWORD) reg_path, (DWORD) bus, (DWORD) bus_addr, (DWORD) slot_num.u.AsULONG);
-#if 0
+
     //let's allocate resources for this device
     DbgPrint("ohci_alloc(): about to assign slot res\n");
     if ((status = HalAssignSlotResources(reg_path, NULL,        //no class name yet
@@ -144,9 +159,11 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                          bus, slot_num.u.AsULONG, &pdev_ext->res_list)) != STATUS_SUCCESS)
     {
         DbgPrint("ohci_alloc(): error assign slot res, 0x%x\n", status);
+#if 0
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
         ohci_delete_device(pdev);
+#endif
         return NULL;
     }
 
@@ -176,44 +193,48 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     //for port, translate them to system address
     addr_space = 0;
     if (HalTranslateBusAddress(PCIBus, bus, pdev_ext->res_port.Start, &addr_space,      //io space
-                               &pdev_ext->ehci->ehci_reg_base) != (BOOLEAN) TRUE)
+                               &pdev_ext->ohci->ohci_reg_base) != (BOOLEAN) TRUE)
     {
-        DbgPrint("ehci_alloc(): error, can not translate bus address\n");
+        DbgPrint("ohci_alloc(): error, can not translate bus address\n");
+#if 0
         release_adapter(pdev_ext->padapter);
         pdev_ext->padapter = NULL;
         ehci_delete_device(pdev);
+#endif
         return NULL;
     }
 
-    DbgPrint("ehci_alloc(): address space=0x%x\n, reg_base=0x%x\n",
-             addr_space, pdev_ext->ehci->ehci_reg_base.u.LowPart);
+    DbgPrint("ohci_alloc(): address space=0x%x\n, reg_base=0x%x\n",
+             addr_space, pdev_ext->ohci->ohci_reg_base.u.LowPart);
 
     if (addr_space == 0)
     {
         //port has been mapped to memory space
-        pdev_ext->ehci->port_mapped = TRUE;
-        pdev_ext->ehci->port_base = (PBYTE) MmMapIoSpace(pdev_ext->ehci->ehci_reg_base,
+        pdev_ext->ohci->port_mapped = TRUE;
+        pdev_ext->ohci->port_base = (PBYTE) MmMapIoSpace(pdev_ext->ohci->ohci_reg_base,
                                                          pdev_ext->res_port.Length, FALSE);
 
         //fatal error can not map the registers
-        if (pdev_ext->ehci->port_base == NULL)
+        if (pdev_ext->ohci->port_base == NULL)
         {
+#if 0
             release_adapter(pdev_ext->padapter);
             pdev_ext->padapter = NULL;
             ehci_delete_device(pdev);
+#endif
             return NULL;
         }
     }
     else
     {
         //io space
-        pdev_ext->ehci->port_mapped = FALSE;
-        pdev_ext->ehci->port_base = (PBYTE) pdev_ext->ehci->ehci_reg_base.LowPart;
+        pdev_ext->ohci->port_mapped = FALSE;
+        pdev_ext->ohci->port_base = (PBYTE) pdev_ext->ohci->ohci_reg_base.LowPart;
     }
 
-    //before we connect the interrupt, we have to init ehci
-    pdev_ext->ehci->pdev_ext = pdev_ext;
-
+    //before we connect the interrupt, we have to init ohci
+    pdev_ext->ohci->pdev_ext = pdev_ext;
+#if 0
     //init ehci_caps
     // i = ( ( PEHCI_HCS_CONTENT )( &pdev_ext->ehci->ehci_caps.hcs_params ) )->length;
 
@@ -266,6 +287,99 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 PDEVICE_OBJECT
 ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 {
-    return NULL;
+    NTSTATUS status;
+    PDEVICE_OBJECT pdev;
+    POHCI_DEVICE_EXTENSION pdev_ext;
+
+    UNICODE_STRING dev_name;
+    UNICODE_STRING symb_name;
+
+    STRING string, another_string;
+    CHAR str_dev_name[64], str_symb_name[64];
+    UCHAR hcd_id;
+
+    if (drvr_obj == NULL)
+        return NULL;
+
+    //note: hcd count wont increment till the hcd is registered in dev_mgr
+    sprintf(str_dev_name, "%s%d", OHCI_DEVICE_NAME, dev_mgr->hcd_count);
+    sprintf(str_symb_name, "%s%d", OHCI_DOS_DEVICE_NAME, dev_mgr->hcd_count);
+
+    RtlInitString(&string, str_dev_name);
+    RtlAnsiStringToUnicodeString(&dev_name, &string, TRUE);
+
+    pdev = NULL;
+    status = IoCreateDevice(drvr_obj,
+                            sizeof(OHCI_DEVICE_EXTENSION) + sizeof(OHCI_DEV),
+                            &dev_name, FILE_OHCI_DEV_TYPE, 0, FALSE, &pdev);
+
+    if (status != STATUS_SUCCESS || pdev == NULL)
+    {
+        RtlFreeUnicodeString(&dev_name);
+        ehci_dbg_print(DBGLVL_MAXIMUM, ("ohci_create_device(): error create device 0x%x\n", status));
+        return NULL;
+    }
+
+    pdev_ext = pdev->DeviceExtension;
+    RtlZeroMemory(pdev_ext, sizeof(OHCI_DEVICE_EXTENSION) + sizeof(OHCI_DEV));
+
+    pdev_ext->dev_ext_hdr.type = NTDEV_TYPE_HCD;
+    pdev_ext->dev_ext_hdr.dispatch = ehci_dispatch_irp;
+    pdev_ext->dev_ext_hdr.start_io = NULL;      //we do not support startio
+    pdev_ext->dev_ext_hdr.dev_mgr = dev_mgr;
+
+    pdev_ext->pdev_obj = pdev;
+    pdev_ext->pdrvr_obj = drvr_obj;
+
+    pdev_ext->ohci = (POHCI_DEV) & (pdev_ext[1]);
+
+    RtlInitString(&another_string, str_symb_name);
+    RtlAnsiStringToUnicodeString(&symb_name, &another_string, TRUE);
+    //RtlInitUnicodeString( &symb_name, DOS_DEVICE_NAME );
+
+    IoCreateSymbolicLink(&symb_name, &dev_name);
+
+    ehci_dbg_print(DBGLVL_MAXIMUM,
+                   ("ohci_create_device(): dev=0x%x\n, pdev_ext= 0x%x, ehci=0x%x, dev_mgr=0x%x\n", pdev,
+                    pdev_ext, pdev_ext->ohci, dev_mgr));
+
+    RtlFreeUnicodeString(&dev_name);
+    RtlFreeUnicodeString(&symb_name);
+
+    //register with dev_mgr though it is not initilized
+    ohci_init_hcd_interface(pdev_ext->ohci);
+    hcd_id = dev_mgr_register_hcd(dev_mgr, &pdev_ext->ohci->hcd_interf);
+
+    pdev_ext->ohci->hcd_interf.hcd_set_id(&pdev_ext->ohci->hcd_interf, hcd_id);
+    pdev_ext->ohci->hcd_interf.hcd_set_dev_mgr(&pdev_ext->ohci->hcd_interf, dev_mgr);
+
+    return pdev;
+}
+
+VOID
+ohci_init_hcd_interface(POHCI_DEV ohci)
+{
+    ohci->hcd_interf.hcd_set_dev_mgr = ehci_set_dev_mgr;
+#if 0
+    ohci->hcd_interf.hcd_get_dev_mgr = ehci_get_dev_mgr;
+    ohci->hcd_interf.hcd_get_type = ehci_get_type;
+#endif
+    ohci->hcd_interf.hcd_set_id = ehci_set_id;
+#if 0
+    ohci->hcd_interf.hcd_get_id = ehci_get_id;
+    ohci->hcd_interf.hcd_alloc_addr = ehci_alloc_addr;
+    ohci->hcd_interf.hcd_free_addr = ehci_free_addr;
+    ohci->hcd_interf.hcd_submit_urb = ehci_submit_urb2;
+    ohci->hcd_interf.hcd_generic_urb_completion = ehci_generic_urb_completion;
+    ohci->hcd_interf.hcd_get_root_hub = ehci_get_root_hub;
+    ohci->hcd_interf.hcd_set_root_hub = ehci_set_root_hub;
+    ohci->hcd_interf.hcd_remove_device = ehci_remove_device2;
+    ohci->hcd_interf.hcd_rh_reset_port = ehci_rh_reset_port;
+    ohci->hcd_interf.hcd_release = ehci_hcd_release;
+    ohci->hcd_interf.hcd_cancel_urb = ehci_cancel_urb2;
+    ohci->hcd_interf.hcd_start = ehci_start;
+    ohci->hcd_interf.hcd_dispatch = ehci_hcd_dispatch;
+#endif
+    ohci->hcd_interf.flags = HCD_TYPE_OHCI;     //hcd types | hcd id
 }
 

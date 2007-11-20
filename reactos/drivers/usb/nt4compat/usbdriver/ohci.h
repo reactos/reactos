@@ -18,9 +18,20 @@
 #ifndef __OHCI_H__
 #define __OHCI_H__
 
+#define OHCI_DEVICE_NAME "\\Device\\OHCI"
+#define OHCI_DOS_DEVICE_NAME "\\DosDevices\\OHCI"
+
 typedef struct _OHCI_DEV
 {
     HCD     hcd_interf;
+
+    PHYSICAL_ADDRESS   	ohci_reg_base;						// io space
+    BOOLEAN				port_mapped;
+    PBYTE				port_base;							// note: added by ehci_caps.length, operational regs base addr, not the actural base
+
+    KTIMER				reset_timer;						//used to reset the host controller
+    struct _OHCI_DEVICE_EXTENSION    *pdev_ext;
+    PUSB_DEV            root_hub;							//root hub
 } OHCI_DEV, *POHCI_DEV;
 
 typedef struct _OHCI_DEVICE_EXTENSION
@@ -30,11 +41,20 @@ typedef struct _OHCI_DEVICE_EXTENSION
     PDRIVER_OBJECT  	pdrvr_obj;
     POHCI_DEV 			ohci;
 
+    //device resources
+    PADAPTER_OBJECT     padapter;
+    ULONG 				map_regs;
+    PCM_RESOURCE_LIST 	res_list;
     ULONG               pci_addr;	// bus number | slot number | funciton number
     UHCI_INTERRUPT   	res_interrupt;
+    union
+    {
+        UHCI_PORT 			res_port;
+        EHCI_MEMORY 		res_memory;
+    };
 
-    PKINTERRUPT         ohci_int;
-    KDPC                ohci_dpc;
+    PKINTERRUPT			ohci_int;
+    KDPC   				ohci_dpc;
 } OHCI_DEVICE_EXTENSION, *POHCI_DEVICE_EXTENSION;
 
 
