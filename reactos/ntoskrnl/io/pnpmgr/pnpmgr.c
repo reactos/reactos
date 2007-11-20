@@ -171,12 +171,12 @@ IopStartDevice(
       }
       else
       {
-         DPRINT("IopTranslateDeviceResources() failed (Status 0x08lx)\n", Status);
+         DPRINT("IopTranslateDeviceResources() failed (Status 0x%08lx)\n", Status);
       }
    }
    else
    {
-      DPRINT("IopAssignDeviceResources() failed (Status 0x08lx)\n", Status);
+      DPRINT("IopAssignDeviceResources() failed (Status 0x%08lx)\n", Status);
    }
    IopDeviceNodeClearFlag(DeviceNode, DNF_ASSIGNING_RESOURCES);
 
