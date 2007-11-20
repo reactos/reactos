@@ -156,7 +156,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	fprintf ( OUT, "\r\nMSC_WARNING_LEVEL=/W3 /WX\r\n\r\n" );
 
 	/* Disable deprecated function uage warnings */
-	fprintf ( OUT, "C_DEFINES=$(C_DEFINES) /wd4996\r\n" );
+	fprintf ( OUT, "C_DEFINES=$(C_DEFINES) /DDDKAPI=__stdcall /wd4996\r\n" );
 
 
 	/* includes */
