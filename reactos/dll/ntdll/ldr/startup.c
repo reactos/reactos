@@ -249,7 +249,7 @@ LdrpInit(PCONTEXT Context,
    PEPFUNC EntryPoint;
    PIMAGE_DOS_HEADER PEDosHeader;
    PVOID ImageBase;
-   PPEB Peb;
+   PPEB Peb = NtCurrentPeb();
    PLDR_DATA_TABLE_ENTRY NtModule;  // ntdll
    NLSTABLEINFO NlsTable;
    WCHAR FullNtDllPath[MAX_PATH];
@@ -257,12 +257,12 @@ LdrpInit(PCONTEXT Context,
    NTSTATUS Status;
 
    DPRINT("LdrpInit()\n");
-   if (NtCurrentPeb()->Ldr == NULL || NtCurrentPeb()->Ldr->Initialized == FALSE)
+   DPRINT("Peb %p\n", Peb);
+   ImageBase = Peb->ImageBaseAddress;
+   DPRINT("ImageBase %p\n", ImageBase);
+
+   if (NtCurrentPeb()->Ldr == NULL)
      {
-       Peb = NtCurrentPeb();
-       DPRINT("Peb %p\n", Peb);
-       ImageBase = Peb->ImageBaseAddress;
-       DPRINT("ImageBase %p\n", ImageBase);
        if (ImageBase <= (PVOID)0x1000)
          {
            DPRINT("ImageBase is null\n");
@@ -419,7 +419,10 @@ LdrpInit(PCONTEXT Context,
        LdrpLoadUserModuleSymbols(NtModule);
 
 #endif /* DBG || KDBG */
+     }
 
+   if (NtCurrentPeb()->Ldr->Initialized == FALSE)
+     {
        /* add entry for executable (becomes first list entry) */
        ExeModule = (PLDR_DATA_TABLE_ENTRY)RtlAllocateHeap (Peb->ProcessHeap,
                                                  0,
