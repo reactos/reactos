@@ -150,8 +150,11 @@ NtGdiCreateCompatibleDC(HDC hDC)
 
   NewDC->PalIndexed = OrigDC->PalIndexed;
   NewDC->w.hPalette = OrigDC->w.hPalette;
-  nDc_Attr->crForegroundClr = oDc_Attr->crForegroundClr;
   nDc_Attr->lTextAlign      = oDc_Attr->lTextAlign;
+  nDc_Attr->ulForegroundClr = oDc_Attr->ulForegroundClr;
+  nDc_Attr->ulBackgroundClr = oDc_Attr->ulBackgroundClr;
+  nDc_Attr->lBkMode         = oDc_Attr->lBkMode;
+  nDc_Attr->crForegroundClr = oDc_Attr->crForegroundClr;
   nDc_Attr->crBackgroundClr = oDc_Attr->crBackgroundClr;
   nDc_Attr->jBkMode         = oDc_Attr->jBkMode;
   nDc_Attr->jROP2           = oDc_Attr->jROP2;
@@ -1203,8 +1206,11 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->jStretchBltMode = Dc_Attr->jStretchBltMode;
   nDc_Attr->lRelAbs         = Dc_Attr->lRelAbs;
   nDc_Attr->jBkMode         = Dc_Attr->jBkMode;
+  nDc_Attr->lBkMode         = Dc_Attr->lBkMode;
   nDc_Attr->crBackgroundClr = Dc_Attr->crBackgroundClr;
   nDc_Attr->crForegroundClr = Dc_Attr->crForegroundClr;
+  nDc_Attr->ulBackgroundClr = Dc_Attr->ulBackgroundClr;
+  nDc_Attr->ulForegroundClr = Dc_Attr->ulForegroundClr;
   nDc_Attr->ptlBrushOrigin  = Dc_Attr->ptlBrushOrigin;
   nDc_Attr->lTextAlign      = Dc_Attr->lTextAlign;
   nDc_Attr->lTextExtra      = Dc_Attr->lTextExtra;
@@ -1273,6 +1279,9 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->jBkMode         = sDc_Attr->jBkMode;
   Dc_Attr->crBackgroundClr = sDc_Attr->crBackgroundClr;
   Dc_Attr->crForegroundClr = sDc_Attr->crForegroundClr;
+  Dc_Attr->lBkMode         = sDc_Attr->lBkMode;
+  Dc_Attr->ulBackgroundClr = sDc_Attr->ulBackgroundClr;
+  Dc_Attr->ulForegroundClr = sDc_Attr->ulForegroundClr;
   Dc_Attr->ptlBrushOrigin  = sDc_Attr->ptlBrushOrigin;
 
   Dc_Attr->lTextAlign      = sDc_Attr->lTextAlign;
@@ -2577,42 +2586,6 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
        return FALSE;
      }
    return SurfObj->hsurf == PrimarySurface.Handle;
-}
-
-/*
- * Returns the color of the brush or pen that is currently selected into the DC.
- * This function is called from GetDCBrushColor() and GetDCPenColor()
- */
-COLORREF FASTCALL
-IntGetDCColor(HDC hDC, ULONG Object)
-{
-   /*
-    * The previous implementation was completly incorrect. It modified the
-    * brush that was currently selected into the device context, but in fact
-    * the DC pen/brush color should be stored directly in the device context
-    * (at address 0x2C of the user mode DC object memory on Windows 2K/XP).
-    * The actual color is then used when DC_BRUSH/DC_PEN object is selected
-    * into the device context and BRUSHOBJ for drawing is composed (belongs
-    * to IntGdiInitBrushInstance in the current ReactOS implementation). Also
-    * the implementation should be moved to user mode GDI32.dll when UM
-    * mapped GDI objects will be implemented.
-    */
-
-   DPRINT("WIN32K:IntGetDCColor is unimplemented\n");
-   return 0xFFFFFF; /* The default DC color. */
-}
-
-/*
- * Changes the color of the brush or pen that is currently selected into the DC.
- * This function is called from SetDCBrushColor() and SetDCPenColor()
- */
-COLORREF FASTCALL
-IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color)
-{
-   /* See the comment in IntGetDCColor. */
-
-   DPRINT("WIN32K:IntSetDCColor is unimplemented\n");
-   return CLR_INVALID;
 }
 
 #define SIZEOF_DEVMODEW_300 188

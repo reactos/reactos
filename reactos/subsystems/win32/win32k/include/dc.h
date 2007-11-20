@@ -104,6 +104,15 @@ VOID FASTCALL IntGetWindowOrgEx(PDC dc, LPPOINT pt);
 
 NTSTATUS STDCALL NtGdiFlushUserBatch(VOID);
 
+COLORREF FASTCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
+INT FASTCALL NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
+COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
+INT STDCALL  NtGdiGetBkMode(HDC  hDC);
+COLORREF FASTCALL  NtGdiSetTextColor(HDC hDC, COLORREF color);
+UINT FASTCALL NtGdiSetTextAlign(HDC  hDC, UINT  Mode);
+UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
+COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
+
 /* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
 typedef struct
 {

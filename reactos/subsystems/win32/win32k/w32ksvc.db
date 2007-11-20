@@ -679,18 +679,13 @@ NtGdiDrawStream                                  3
 #
 #ReactOS specify syscall 
 NtGdiSelectObject                       2
-NtGdiSetBkColor                         2
-NtGdiSetBkMode                          2
 NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
 NtGdiSetPolyFillMode                    2
-NtGdiSetROP2                            2
 NtGdiSetStretchBltMode                  2
-NtGdiSetTextAlign                       2
-NtGdiSetTextColor                       2
 NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
@@ -744,8 +739,6 @@ NtGdiEnumICMProfiles                    3
 NtGdiExtTextOut                         8
 NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2
-NtGdiGetBkColor                         1
-NtGdiGetBkMode                          1
 NtGdiGetColorSpace                      1
 NtGdiGetCurrentPositionEx               2
 NtGdiGetEnhMetaFile                     1
@@ -762,10 +755,7 @@ NtGdiGetLogColorSpace                   3
 NtGdiGetMapMode                         1
 NtGdiGetPixelFormat                     1
 NtGdiGetPolyFillMode                    1
-NtGdiGetROP2                            1
 NtGdiGetStretchBltMode                  1
-NtGdiGetTextAlign                       1
-NtGdiGetTextColor                       1
 NtGdiGetTextExtentPoint32               4
 NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4

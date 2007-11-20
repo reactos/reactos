@@ -4029,54 +4029,6 @@ NtGdiSetMapperFlags(HDC  hDC,
   return 0;
 }
 
-UINT
-STDCALL
-NtGdiSetTextAlign(HDC  hDC,
-                       UINT  Mode)
-{
-  UINT prevAlign;
-  DC *dc;
-  PDC_ATTR Dc_Attr;
-
-  dc = DC_LockDc(hDC);
-  if (!dc)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return GDI_ERROR;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  prevAlign = Dc_Attr->lTextAlign;
-  Dc_Attr->lTextAlign = Mode;
-  DC_UnlockDc( dc );
-  return  prevAlign;
-}
-
-COLORREF
-STDCALL
-NtGdiSetTextColor(HDC hDC,
-                 COLORREF color)
-{
-  COLORREF  oldColor;
-  PDC  dc = DC_LockDc(hDC);
-  PDC_ATTR Dc_Attr;
-  HBRUSH hBrush;
-
-  if (!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return CLR_INVALID;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  oldColor = Dc_Attr->crForegroundClr;
-  Dc_Attr->crForegroundClr = color;
-  hBrush = Dc_Attr->hbrush;
-  DC_UnlockDc( dc );
-  NtGdiSelectObject(hDC, hBrush);
-  return  oldColor;
-}
 
 BOOL
 STDCALL

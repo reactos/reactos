@@ -196,20 +196,6 @@ STDCALL
 NtGdiGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio);
 
-/* Should be done in user-mode using shared GDI Objects. */
-COLORREF STDCALL  NtGdiGetBkColor(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetBkMode(HDC  hDC);
-
-/* Use NtGdiGetCharABCWidthsW */
-BOOL
-STDCALL
-NtGdiGetCharABCWidths(HDC  hDC,
-                           UINT  FirstChar,
-                           UINT  LastChar,
-                           LPABC  abc);
-
 /* Use NtGdiGetColorSpaceforBitmap. */
 HCOLORSPACE
 STDCALL
@@ -307,21 +293,12 @@ NtGdiGetPixelFormat(HDC  hDC);
 INT STDCALL  NtGdiGetPolyFillMode(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetROP2(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
-UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
 UINT
 STDCALL
 NtGdiGetTextCharset(HDC  hDC);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
@@ -404,12 +381,6 @@ NtGdiRemoveFontResource(LPCWSTR  FileName);
 /* Should be done in user-mode. */
 HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
 
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-COLORREF STDCALL NtGdiSetBkColor (HDC hDC, COLORREF Color);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-INT STDCALL  NtGdiSetBkMode(HDC  hDC, INT  backgroundMode);
-
 /* Use SetDIBitsToDevice in gdi32. */
 INT
 STDCALL
@@ -455,19 +426,7 @@ NtGdiSetMapperFlags(HDC  hDC,
 INT STDCALL  NtGdiSetPolyFillMode(HDC  hDC, INT polyFillMode);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
-INT STDCALL  NtGdiSetROP2(HDC  hDC, INT  ROPmode);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
 INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-UINT
-STDCALL
-NtGdiSetTextAlign(HDC  hDC,
-                       UINT  Mode);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-COLORREF STDCALL  NtGdiSetTextColor(HDC hDC, COLORREF color);
 
 /* Needs to be done in user-mode. */
 BOOL
@@ -536,29 +495,6 @@ NtGdiUpdateICMRegKey(DWORD  Reserved,
                           LPWSTR  Filename,
                           UINT  Command);
 
-/* All this Should be in user-mode, not NtUser calls. Especially not in GDI! */
-DWORD
-NTAPI
-NtUserCallTwoParam(
-  DWORD Param1,
-  DWORD Param2,
-  DWORD Routine);
-
-#define TWOPARAM_ROUTINE_SETDCPENCOLOR      0x45
-#define TWOPARAM_ROUTINE_SETDCBRUSHCOLOR    0x46
-#define TWOPARAM_ROUTINE_GETDCCOLOR         0x47
-
-#define NtUserGetDCBrushColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_BRUSH, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserGetDCPenColor(hbr) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), OBJ_PEN, TWOPARAM_ROUTINE_GETDCCOLOR)
-
-#define NtUserSetDCBrushColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCBRUSHCOLOR)
-
-#define NtUserSetDCPenColor(hbr, crColor) \
-  (COLORREF)NtUserCallTwoParam((DWORD)(hbr), (DWORD)crColor, TWOPARAM_ROUTINE_SETDCPENCOLOR)
 
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
 

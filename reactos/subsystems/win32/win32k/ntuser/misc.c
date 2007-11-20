@@ -485,18 +485,6 @@ NtUserCallTwoParam(
 
    switch(Routine)
    {
-      case TWOPARAM_ROUTINE_SETDCPENCOLOR:
-         {
-            RETURN( (DWORD)IntSetDCColor((HDC)Param1, OBJ_PEN, (COLORREF)Param2));
-         }
-      case TWOPARAM_ROUTINE_SETDCBRUSHCOLOR:
-         {
-            RETURN( (DWORD)IntSetDCColor((HDC)Param1, OBJ_BRUSH, (COLORREF)Param2));
-         }
-      case TWOPARAM_ROUTINE_GETDCCOLOR:
-         {
-            RETURN( (DWORD)IntGetDCColor((HDC)Param1, (ULONG)Param2));
-         }
       case TWOPARAM_ROUTINE_GETWINDOWRGNBOX:
          {
             DWORD Ret;

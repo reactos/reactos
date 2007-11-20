@@ -164,12 +164,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
                CONST PDEVMODEW InitData,
                BOOL CreateAsIC);
 
-COLORREF FASTCALL
-IntGetDCColor(HDC hDC, ULONG Object);
-
-COLORREF FASTCALL
-IntSetDCColor(HDC hDC, ULONG Object, COLORREF Color);
-
 /* Coord functions */
 
 BOOL FASTCALL

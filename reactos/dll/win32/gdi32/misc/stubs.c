@@ -116,18 +116,6 @@ SetRectRgn(HRGN hrgn,
 /*
  * @unimplemented
  */
-UINT
-STDCALL
-SetTextAlign(HDC hdc,
-             UINT fMode)
-{
-    /* FIXME share memory */
-    return NtGdiSetTextAlign(hdc, fMode);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 SetViewportExtEx(HDC hdc,
@@ -2337,30 +2325,6 @@ GdiConvertBitmapV5(
     return FALSE;
 }
 
-
-/*
- * @implemented
- *
- */
-COLORREF
-STDCALL
-GetBkColor(HDC hdc)
-{
-    /* FIXME some part are done in user mode */
-    return NtGdiGetBkColor(hdc);
-}
-
-/*
- * @implemented
- *
- */
-int
-STDCALL
-GetBkMode(HDC hdc)
-{
-    /* FIXME some part are done in user mode */
-    return NtGdiGetBkMode(hdc);
-}
 
 /*
  * @implemented

@@ -823,53 +823,19 @@ SetDCPenColor(
     }
   }
   return OldColor;
-//  return NtUserSetDCPenColor(hdc, crColor);
 }
 
 /*
  * @implemented
+ *
  */
 COLORREF
 STDCALL
-SetTextColor(
-	HDC hdc,
-	COLORREF crColor
-)
+GetBkColor(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  COLORREF OldColor = CLR_INVALID;
-
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
-#if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
-  {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
-      return MFDRV_SetTextColor( hDC, crColor );
-    else
-    {
-      PLDC pLDC = Dc_Attr->pvLDC;
-      if ( !pLDC )
-      {
-         SetLastError(ERROR_INVALID_HANDLE);
-         return FALSE;
-      }
-      if (pLDC->iType == LDC_EMFLDC)
-      {
-        if return EMFDRV_SetTextColor( hDC, crColor );
-      }
-    }
-  }
-#endif
-  OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
-  Dc_Attr->ulForegroundClr = (ULONG) crColor;
-
-  if ( Dc_Attr->crForegroundClr != crColor )
-  {
-     Dc_Attr->ulDirty_ |= DIRTY_TEXT;
-     Dc_Attr->crForegroundClr = crColor;
-  }
-  return OldColor;
-//  return NtGdiSetTextColor(hdc, crColor);
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->ulBackgroundClr;
 }
 
 /*
@@ -915,7 +881,58 @@ SetBkColor(
      Dc_Attr->crBackgroundClr = crColor;
   }
   return OldColor;
-//  return NtGdiSetBkColor(hdc, crColor);
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetBkMode(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->lBkMode;
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+SetBkMode(HDC hdc,
+              int iBkMode)
+{
+  PDC_ATTR Dc_Attr;
+  INT OldMode = 0;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldMode;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetBkMode( hdc, iBkMode )
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetBkMode( hdc, iBkMode )
+      }
+    }
+  }
+#endif
+  OldMode = Dc_Attr->lBkMode;
+  Dc_Attr->jBkMode = iBkMode; // Processed
+  Dc_Attr->lBkMode = iBkMode; // Raw
+  return OldMode;
 }
 
 /*

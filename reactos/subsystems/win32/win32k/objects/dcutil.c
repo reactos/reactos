@@ -157,14 +157,13 @@ DC_GET_VAL_EX( GetWindowExtEx, szlWindowExt.cx, szlWindowExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, ptlWindowOrg.x, ptlWindowOrg.y, POINT, x, y )
 DC_GET_VAL_EX ( GetCurrentPositionEx, ptlCurrent.x, ptlCurrent.y, POINT, x, y )
 
-DC_SET_MODE( NtGdiSetBkMode, jBkMode, TRANSPARENT, OPAQUE )
 DC_SET_MODE( NtGdiSetPolyFillMode, jFillMode, ALTERNATE, WINDING )
 DC_SET_MODE( NtGdiSetROP2, jROP2, R2_BLACK, R2_WHITE )
 DC_SET_MODE( NtGdiSetStretchBltMode, jStretchBltMode, BLACKONWHITE, HALFTONE )
 
 
 
-COLORREF STDCALL
+COLORREF FASTCALL
 NtGdiSetBkColor(HDC hDC, COLORREF color)
 {
   COLORREF oldColor;
@@ -181,9 +180,80 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   oldColor = Dc_Attr->crBackgroundClr;
   Dc_Attr->crBackgroundClr = color;
+  Dc_Attr->ulBackgroundClr = (ULONG)color;
+  Dc_Attr->ulDirty_ &= ~DIRTY_LINE; // Clear Flag if set.
   hBrush = Dc_Attr->hbrush;
   DC_UnlockDc(dc);
   NtGdiSelectObject(hDC, hBrush);
   return oldColor;
 }
 
+INT FASTCALL
+NtGdiSetBkMode(HDC hDC, INT Mode)
+{
+  COLORREF oldMode;
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+
+  if (!(dc = DC_LockDc(hDC)))
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
+  }
+  Dc_Attr = dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  oldMode = Dc_Attr->lBkMode;
+  Dc_Attr->jBkMode = Mode;
+  Dc_Attr->lBkMode = Mode;
+  DC_UnlockDc(dc);
+  return oldMode;
+}
+
+UINT
+FASTCALL
+NtGdiSetTextAlign(HDC  hDC,
+                       UINT  Mode)
+{
+  UINT prevAlign;
+  DC *dc;
+  PDC_ATTR Dc_Attr;
+
+  dc = DC_LockDc(hDC);
+  if (!dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return GDI_ERROR;
+    }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+  prevAlign = Dc_Attr->lTextAlign;
+  Dc_Attr->lTextAlign = Mode;
+  DC_UnlockDc( dc );
+  return  prevAlign;
+}
+
+COLORREF
+FASTCALL
+NtGdiSetTextColor(HDC hDC,
+                 COLORREF color)
+{
+  COLORREF  oldColor;
+  PDC  dc = DC_LockDc(hDC);
+  PDC_ATTR Dc_Attr;
+  HBRUSH hBrush;
+
+  if (!dc)
+  {
+    SetLastWin32Error(ERROR_INVALID_HANDLE);
+    return CLR_INVALID;
+  }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  oldColor = Dc_Attr->crForegroundClr;
+  Dc_Attr->crForegroundClr = color;
+  hBrush = Dc_Attr->hbrush;
+  DC_UnlockDc( dc );
+  NtGdiSelectObject(hDC, hBrush);
+  return  oldColor;
+}

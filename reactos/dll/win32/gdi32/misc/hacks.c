@@ -43,21 +43,6 @@ GetGraphicsMode(HDC hdc)
  * @implemented
  *
  */
-int
-STDCALL
-GetROP2(HDC hdc)
-{
-    /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove
-     */
-     return NtGdiGetROP2(hdc);
-}
-
-
-/*
- * @implemented
- *
- */
 INT
 STDCALL
 SetDIBitsToDevice(
@@ -96,18 +81,6 @@ SetDIBitsToDevice(
  * @implemented
  *
  */
-int
-STDCALL
-SetBkMode(HDC hdc,
-              int iBkMode)
-{
-    return NtGdiSetBkMode(hdc,iBkMode);
-}
-
-/*
- * @implemented
- *
- */
 HGDIOBJ
 STDCALL
 SelectObject(HDC hdc,
@@ -137,29 +110,6 @@ STDCALL
 GetStretchBltMode(HDC hdc)
 {
     return NtGdiGetStretchBltMode(hdc);
-}
-
-/*
- * @implemented
- *
- */
-UINT
-STDCALL
-GetTextAlign(HDC hdc)
-{
-    return NtGdiGetTextAlign(hdc);
-}
-
-
-/*
- * @implemented
- *
- */
-COLORREF
-STDCALL
-GetTextColor(HDC hdc)
-{
-    return NtGdiGetTextColor(hdc);
 }
 
 /*

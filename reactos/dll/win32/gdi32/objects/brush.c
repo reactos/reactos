@@ -204,6 +204,18 @@ PolyPatBlt(IN HDC hdc,
     return NtGdiPolyPatBlt(hdc, rop4, pPoly,Count,Mode);
 }
 
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetROP2(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->jROP2;
+}
 
 /*
  * @implemented

@@ -458,4 +458,117 @@ SetTextCharacterExtra(
 // return GetAndSetDCDWord( hDC, GdiGetSetTextCharExtra, CharExtra, 0, 0, 0 );
 }
 
+/*
+ * @implemented
+ *
+ */
+UINT
+STDCALL
+GetTextAlign(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->lTextAlign;
+}
+
+
+/*
+ * @implemented
+ *
+ */
+COLORREF
+STDCALL
+GetTextColor(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->ulForegroundClr;
+}
+
+
+
+/*
+ * @unimplemented
+ */
+UINT
+STDCALL
+SetTextAlign(HDC hdc,
+             UINT fMode)
+{
+  PDC_ATTR Dc_Attr;
+  INT OldMode = 0;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldMode;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetTextAlign( hdc, fMode )
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetTextAlign( hdc, fMode )
+      }
+    }
+  }
+#endif
+  OldMode = Dc_Attr->lTextAlign;
+  Dc_Attr->lTextAlign = fMode; // Raw
+  Dc_Attr->flTextAlign = fMode & 0x1f;
+  return OldMode;
+
+}
+
+
+/*
+ * @implemented
+ */
+COLORREF
+STDCALL
+SetTextColor(
+	HDC hdc,
+	COLORREF crColor
+)
+{
+  PDC_ATTR Dc_Attr;
+  COLORREF OldColor = CLR_INVALID;
+
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetTextColor( hDC, crColor );
+    else
+    {
+      PLDC pLDC = Dc_Attr->pvLDC;
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetTextColor( hDC, crColor );
+      }
+    }
+  }
+#endif
+  OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
+  Dc_Attr->ulForegroundClr = (ULONG) crColor;
+
+  if ( Dc_Attr->crForegroundClr != crColor )
+  {
+     Dc_Attr->ulDirty_ |= DIRTY_TEXT;
+     Dc_Attr->crForegroundClr = crColor;
+  }
+  return OldColor;
+}
 
