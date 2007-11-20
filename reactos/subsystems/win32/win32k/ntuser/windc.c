@@ -580,7 +580,7 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
       // Need to set ownership so Sync dcattr will work.
       DC_SetOwnership( Dce->hDC, PsGetCurrentProcess());
       DC_AllocateDcAttr( Dce->hDC );         // Allocate new dcattr
-      DCU_SynchDcAttrtoUser( Dce->hDC, -1);  // Copy data from dc to dcattr
+      DCU_SynchDcAttrtoUser( Dce->hDC);      // Copy data from dc to dcattr
       Dce->pProcess = PsGetCurrentProcess(); // Set the temp owning process
    }
    return(Dce->hDC);

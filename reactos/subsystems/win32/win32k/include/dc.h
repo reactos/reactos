@@ -94,8 +94,8 @@ VOID FASTCALL IntGdiCopyToSaveState(PDC, PDC);
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
-BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC, FLONG);
-BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC, FLONG);
+BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
+BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);
 
 VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
 VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);
