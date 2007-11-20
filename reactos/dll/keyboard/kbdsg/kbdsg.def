@@ -4,5 +4,5 @@
 LIBRARY kbdsg.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF

@@ -1,4 +1,4 @@
 LIBRARY kbdit.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0

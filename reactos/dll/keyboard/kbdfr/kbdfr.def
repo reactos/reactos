@@ -4,5 +4,5 @@
 LIBRARY kbdfr.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF

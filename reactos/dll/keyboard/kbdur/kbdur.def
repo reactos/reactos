@@ -4,5 +4,5 @@
 LIBRARY kbdur.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF

@@ -4,5 +4,5 @@
 LIBRARY kbdcz1.dll
 
 EXPORTS
-KbdLayerDescriptor
+KbdLayerDescriptor@0
 ;EOF
