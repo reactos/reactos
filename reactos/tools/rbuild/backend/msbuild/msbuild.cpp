@@ -149,9 +149,10 @@ MsBuildBackend::_generate_sources ( const Module& module )
 		}
 	}
 
-
 	if (module_type == ".sys")
 		fprintf ( OUT, "TARGETTYPE=DRIVER\r\n" );
+	if (module_type == ".dll")
+		fprintf ( OUT, "TARGETTYPE=LIBRARY\r\n" );
 
 	fprintf ( OUT, "\r\nMSC_WARNING_LEVEL=/W3 /WX\r\n\r\n" );
 
