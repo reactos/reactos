@@ -506,7 +506,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
   DWORD dwValue;
   DWORD dwType;
   WCHAR szValueName[MAX_PATH];
-  WCHAR szValue[MAX_PATH];
+  WCHAR szValue[LF_FACESIZE] = L"\0";
   DWORD Value;
 
   if (RegQueryInfoKey(hKey, NULL, NULL, NULL, NULL, NULL, NULL, &dwNumSubKeys, NULL, NULL, NULL, NULL) != ERROR_SUCCESS)
@@ -530,7 +530,7 @@ GuiConsoleReadUserSettings(HKEY hKey, PCSRSS_CONSOLE Console, PGUI_CONSOLE_DATA 
                * retry in case of string value
                */
               dwValue = sizeof(szValue);
-              dwValueName = MAX_PATH;
+              dwValueName = LF_FACESIZE;
               if (RegEnumValueW(hKey, dwIndex, szValueName, &dwValueName, NULL, NULL, (BYTE*)szValue, &dwValue) != ERROR_SUCCESS)
                 break;
             }
