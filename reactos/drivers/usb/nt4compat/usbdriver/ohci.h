@@ -115,6 +115,146 @@
 #define	RH_A_POTPGT	(0xff << 24)		/* power on to power good time */
 
 /*
+ * OHCI Endpoint Descriptor (ED) ... holds TD queue
+ * See OHCI spec, section 4.2
+ *
+ * This is a "Queue Head" for those transfers, which is why
+ * both EHCI and UHCI call similar structures a "QH".
+ */
+typedef struct _OHCI_ED {
+	/* first fields are hardware-specified */
+	ULONG			hwINFO;       	/* endpoint config bitmap */
+	/* info bits defined by hcd */
+#define ED_DEQUEUE	(1 << 27)
+	/* info bits defined by the hardware */
+#define ED_ISO		(1 << 15)
+#define ED_SKIP		(1 << 14)
+#define ED_LOWSPEED	(1 << 13)
+#define ED_OUT		(0x01 << 11)
+#define ED_IN		(0x02 << 11)
+	ULONG			hwTailP;	/* tail of TD list */
+	ULONG			hwHeadP;	/* head of TD list (hc r/w) */
+#define ED_C		(0x02)			/* toggle carry */
+#define ED_H		(0x01)			/* halted */
+	ULONG			hwNextED;	/* next ED in list */
+
+	/* rest are purely for the driver's use */
+#if 0
+	dma_addr_t		dma;		/* addr of ED */
+	struct _OHCI_TD		*dummy;		/* next TD to activate */
+
+	/* host's view of schedule */
+	struct _OHCI_ED		*ed_next;	/* on schedule or rm_list */
+	struct _OHCI_ED		*ed_prev;	/* for non-interrupt EDs */
+	struct list_head	td_list;	/* "shadow list" of our TDs */
+
+	/* create --> IDLE --> OPER --> ... --> IDLE --> destroy
+	 * usually:  OPER --> UNLINK --> (IDLE | OPER) --> ...
+	 */
+	UCHAR			state;		/* ED_{IDLE,UNLINK,OPER} */
+#define ED_IDLE 	0x00		/* NOT linked to HC */
+#define ED_UNLINK 	0x01		/* being unlinked from hc */
+#define ED_OPER		0x02		/* IS linked to hc */
+
+	UCHAR			type; 		/* PIPE_{BULK,...} */
+
+	/* periodic scheduling params (for intr and iso) */
+	UCHAR			branch;
+	USHORT			interval;
+	USHORT			load;
+	USHORT			last_iso;	/* iso only */
+
+	/* HC may see EDs on rm_list until next frame (frame_no == tick) */
+	USHORT			tick;
+#endif
+} OHCI_ED, *POHCI_ED;
+
+#define ED_MASK	((u32)~0x0f)		/* strip hw status in low addr bits */
+
+ 
+/*
+ * OHCI Transfer Descriptor (TD) ... one per transfer segment
+ * See OHCI spec, sections 4.3.1 (general = control/bulk/interrupt)
+ * and 4.3.2 (iso)
+ */
+typedef struct _OHCI_TD {
+	/* first fields are hardware-specified */
+	ULONG		hwINFO;		/* transfer info bitmask */
+
+	/* hwINFO bits for both general and iso tds: */
+#define TD_CC       0xf0000000			/* condition code */
+#define TD_CC_GET(td_p) ((td_p >>28) & 0x0f)
+//#define TD_CC_SET(td_p, cc) (td_p) = ((td_p) & 0x0fffffff) | (((cc) & 0x0f) << 28)
+#define TD_DI       0x00E00000			/* frames before interrupt */
+#define TD_DI_SET(X) (((X) & 0x07)<< 21)
+	/* these two bits are available for definition/use by HCDs in both
+	 * general and iso tds ... others are available for only one type
+	 */
+#define TD_DONE     0x00020000			/* retired to donelist */
+#define TD_ISO      0x00010000			/* copy of ED_ISO */
+
+	/* hwINFO bits for general tds: */
+#define TD_EC       0x0C000000			/* error count */
+#define TD_T        0x03000000			/* data toggle state */
+#define TD_T_DATA0  0x02000000				/* DATA0 */
+#define TD_T_DATA1  0x03000000				/* DATA1 */
+#define TD_T_TOGGLE 0x00000000				/* uses ED_C */
+#define TD_DP       0x00180000			/* direction/pid */
+#define TD_DP_SETUP 0x00000000			/* SETUP pid */
+#define TD_DP_IN    0x00100000				/* IN pid */
+#define TD_DP_OUT   0x00080000				/* OUT pid */
+							/* 0x00180000 rsvd */
+#define TD_R        0x00040000			/* round: short packets OK? */
+
+	/* (no hwINFO #defines yet for iso tds) */
+
+  	ULONG		hwCBP;		/* Current Buffer Pointer (or 0) */
+  	ULONG		hwNextTD;	/* Next TD Pointer */
+  	ULONG		hwBE;		/* Memory Buffer End Pointer */
+
+	/* PSW is only for ISO.  Only 1 PSW entry is used, but on
+	 * big-endian PPC hardware that's the second entry.
+	 */
+#define MAXPSW	2
+  	USHORT		hwPSW [MAXPSW];
+
+	/* rest are purely for the driver's use */
+#if 0
+  	UCHAR		index;
+  	struct ed	*ed;
+  	struct td	*td_hash;	/* dma-->td hashtable */
+  	struct td	*next_dl_td;
+  	struct urb	*urb;
+
+	dma_addr_t	td_dma;		/* addr of this TD */
+	dma_addr_t	data_dma;	/* addr of data it points to */
+
+	struct list_head td_list;	/* "shadow list", TDs on same ED */
+#endif
+} OHCI_TD, *POHCI_TD;
+
+/*
+ * The HCCA (Host Controller Communications Area) is a 256 byte
+ * structure defined section 4.4.1 of the OHCI spec. The HC is
+ * told the base address of it.  It must be 256-byte aligned.
+ */
+typedef struct _OHCI_HCCA
+{
+#define NUM_INTS 32
+	ULONG	int_table [NUM_INTS];	/* periodic schedule */
+
+	/* 
+	 * OHCI defines u16 frame_no, followed by u16 zero pad.
+	 * Since some processors can't do 16 bit bus accesses,
+	 * portable access must be a 32 bits wide.
+	 */
+	ULONG	frame_no;		/* current frame number */
+	ULONG	done_head;		/* info returned for an interrupt */
+	UCHAR	reserved_for_hc [116];
+	UCHAR	what [4];		/* spec only identifies 252 bytes :) */
+} OHCI_HCCA, *POHCI_HCCA;
+
+/*
  * This is the structure of the OHCI controller's memory mapped I/O region.
  * You must use readl() and writel() (in <asm/io.h>) to access these fields!!
  * Layout is in section 7 (and appendix B) of the spec.
@@ -165,6 +305,13 @@ typedef struct _OHCI_DEV
     BOOLEAN				port_mapped;
     PBYTE				port_base;							// note: added by ehci_caps.length, operational regs base addr, not the actural base
     struct _OHCI_REGS   *regs;
+    struct _OHCI_HCCA   *hcca;
+    PVOID               td_cache;
+    PVOID               ed_cache;
+
+    PHYSICAL_ADDRESS	hcca_logic_addr;
+    PHYSICAL_ADDRESS	td_logic_addr;
+    PHYSICAL_ADDRESS	ed_logic_addr;
 
     USHORT              num_ports;
 

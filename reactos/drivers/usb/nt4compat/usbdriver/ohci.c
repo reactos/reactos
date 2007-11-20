@@ -87,6 +87,12 @@ static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
 */
 
 
+/* For initializing controller (mask in an HCFS mode too) */
+#define	OHCI_CONTROL_INIT 	OHCI_CTRL_CBSR
+#define	OHCI_INTR_INIT \
+	(OHCI_INTR_MIE | OHCI_INTR_UE | OHCI_INTR_RD | OHCI_INTR_WDH)
+
+
 VOID
 ohci_wait_ms(POHCI_DEV ohci, LONG ms)
 {
@@ -161,6 +167,28 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
     return NULL;
 }
 
+BOOLEAN ohci_mem_init (POHCI_DEVICE_EXTENSION dev_ext)
+{
+	dev_ext->ohci->td_cache = HalAllocateCommonBuffer(dev_ext->padapter,
+        sizeof(OHCI_TD), &dev_ext->ohci->td_logic_addr, FALSE);
+
+	if (!dev_ext->ohci->td_cache)
+		return FALSE;
+
+	dev_ext->ohci->ed_cache = HalAllocateCommonBuffer(dev_ext->padapter,
+        sizeof(OHCI_ED), &dev_ext->ohci->ed_logic_addr, FALSE);
+
+	if (!dev_ext->ohci->ed_cache)
+    {
+        HalFreeCommonBuffer(dev_ext->padapter, sizeof(OHCI_TD), dev_ext->ohci->td_logic_addr,
+            dev_ext->ohci->td_cache, FALSE);
+		return FALSE;
+    }
+
+	return TRUE;
+}
+
+
 PDEVICE_OBJECT
 ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PUSB_DEV_MANAGER dev_mgr)
 {
@@ -201,7 +229,9 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     dev_desc.Dma32BitAddresses = TRUE;
     dev_desc.BusNumber = bus;
     dev_desc.InterfaceType = PCIBus;
-    //dev_desc.MaximumLength = EHCI_MAX_SIZE_TRANSFER;
+    dev_desc.MaximumLength = EHCI_MAX_SIZE_TRANSFER;
+    pdev_ext->map_regs = 2;     // we do not use it seriously
+    pdev_ext->padapter = HalGetAdapter(&dev_desc, &pdev_ext->map_regs);
 
     DbgPrint("ohci_alloc(): reg_path=0x%x, \n \
               ohci_alloc(): bus=0x%x, bus_addr=0x%x \n \
@@ -333,13 +363,20 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     DbgPrint("OHCI: %d ports\n", pdev_ext->ohci->num_ports);
 
-	//ohci->hcca = dma_alloc_coherent (ohci_to_hcd(ohci)->self.controller,
-	//		sizeof *ohci->hcca, &ohci->hcca_dma, 0);
-	//if (!ohci->hcca)
-	//	return -ENOMEM;
+	pdev_ext->ohci->hcca = HalAllocateCommonBuffer(pdev_ext->padapter,
+        sizeof(*pdev_ext->ohci->hcca), &pdev_ext->ohci->hcca_logic_addr, FALSE);
 
-	//if ((ret = ohci_mem_init (ohci)) < 0)
-	//	ohci_stop (ohci_to_hcd(ohci));
+    if (!pdev_ext->ohci->hcca)
+    {
+        DbgPrint("OHCI: HCCA allocation failed!\n");
+        return NULL;
+    }
+
+    if (!ohci_mem_init(pdev_ext))
+    {
+        DbgPrint("OHCI: Mem init failed!\n");
+        return NULL;
+    }
 
 #if 0
     //init ehci_caps
@@ -464,72 +501,137 @@ ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
 BOOLEAN
 ohci_start(PHCD hcd)
 {
-    //ULONG tmp;
+    ULONG temp, mask;
     //PBYTE base;
     //PEHCI_USBCMD_CONTENT usbcmd;
-    //POHCI_DEV ohci;
+    POHCI_DEV ohci;
+    ULONG hc_control;
 
     if (hcd == NULL)
         return FALSE;
 
-    return TRUE;
+    ohci = struct_ptr(hcd, OHCI_DEV, hcd_interf);
+
+  	/* Reset USB nearly "by the book".  RemoteWakeupConnected
+	 * saved if boot firmware (BIOS/SMM/...) told us it's connected
+	 * (for OHCI integrated on mainboard, it normally is)
+	 */
+	hc_control = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->control);
+	DbgPrint("resetting from state %x, control = 0x%x\n",
+			(hc_control & OHCI_CTRL_HCFS),
+			hc_control);
+
+	//if (hc_control & OHCI_CTRL_RWC
+	//		&& !(ohci->flags & OHCI_QUIRK_AMD756))
+	//	ohci_to_hcd(ohci)->can_wakeup = 1;
+
+	switch (hc_control & OHCI_CTRL_HCFS) {
+	case OHCI_USB_OPER:
+		temp = 0;
+		break;
+	case OHCI_USB_SUSPEND:
+	case OHCI_USB_RESUME:
+		hc_control &= OHCI_CTRL_RWC;
+		hc_control |= OHCI_USB_RESUME;
+		temp = 10 /* msec wait */;
+		break;
+	// case OHCI_USB_RESET:
+	default:
+		hc_control &= OHCI_CTRL_RWC;
+		hc_control |= OHCI_USB_RESET;
+		temp = 50 /* msec wait */;
+		break;
+	}
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->control, hc_control);
+
+	// flush the writes
+    (VOID)OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->control);
+
+	ohci_wait_ms(ohci, temp);
+	temp = roothub_a (ohci);
+	if (!(temp & RH_A_NPS)) {
+		/* power down each port */
+		for (temp = 0; temp < ohci->num_ports; temp++)
+        {
+            OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus [temp], RH_PS_LSDA);
+        }
+	}
+	// flush those writes
+	(VOID)OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->control);
+    RtlZeroMemory(ohci->hcca, sizeof(OHCI_HCCA));
+
+	/* 2msec timelimit here means no irqs/preempt */
+	//spin_lock_irq (&ohci->lock);
+
+//retry:
+	/* HC Reset requires max 10 us delay */
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->cmdstatus, OHCI_HCR);
+	temp = 30;	/* ... allow extra time */
+	while ((OHCI_READ_PORT_ULONG ((PULONG)&ohci->regs->cmdstatus) & OHCI_HCR) != 0) {
+		if (--temp == 0) {
+			//spin_unlock_irq (&ohci->lock);
+			//ohci_err (ohci, "USB HC reset timed out!\n");
+            DbgPrint("OHCI: USB HC reset timed out!\n");
+			return FALSE;
+		}
+        KeStallExecutionProcessor(1);
+	}
+
+	/* now we're in the SUSPEND state ... must go OPERATIONAL
+	 * within 2msec else HC enters RESUME
+	 *
+	 * ... but some hardware won't init fmInterval "by the book"
+	 * (SiS, OPTi ...), so reset again instead.  SiS doesn't need
+	 * this if we write fmInterval after we're OPERATIONAL.
+	 * Unclear about ALi, ServerWorks, and others ... this could
+	 * easily be a longstanding bug in chip init on Linux.
+	 */
 #if 0
-    ehci = struct_ptr(hcd, EHCI_DEV, hcd_interf);
-    base = ehci->port_base;
-
-    // stop the controller
-    tmp = EHCI_READ_PORT_ULONG((PULONG) (base + EHCI_USBCMD));
-    usbcmd = (PEHCI_USBCMD_CONTENT) & tmp;
-    usbcmd->run_stop = 0;
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
-
-    // wait the controller stop( ehci spec, 16 microframe )
-    usb_wait_ms_dpc(2);
-
-    // reset the controller
-    usbcmd = (PEHCI_USBCMD_CONTENT) & tmp;
-    usbcmd->hcreset = TRUE;
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
-
-    for(;;)
-    {
-        // interval.QuadPart = -100 * 10000; // 10 ms
-        // KeDelayExecutionThread( KernelMode, FALSE, &interval );
-        KeStallExecutionProcessor(10);
-        tmp = EHCI_READ_PORT_ULONG((PULONG) (base + EHCI_USBCMD));
-        if (!usbcmd->hcreset)
-            break;
-    }
-
-    // prepare the registers
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_CTRLDSSEGMENT), 0);
-
-    // turn on all the int
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBINTR),
-                          EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
-                          // EHCI_USBINTR_FLROVR | \  // it is noisy
-                          // EHCI_USBINTR_PC     // we detect it by polling
-        );
-    // write the list base reg
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_PERIODICLISTBASE), ehci->frame_list_phys_addr.LowPart);
-
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_ASYNCLISTBASE), ehci->skel_async_qh->phys_addr & ~(0x1f));
-
-    usbcmd->int_threshold = 1;
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
-
-    // let's rock
-    usbcmd->run_stop = 1;
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
-
-    // set the configuration flag
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_CONFIGFLAG), 1);
-
-    // enable the list traversaling
-    usbcmd->async_enable = 1;
-    usbcmd->periodic_enable = 1;
-    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+	if (ohci->flags & OHCI_QUIRK_INITRESET) {
+		ohci_writel (ohci, ohci->hc_control, &ohci->regs->control);
+		// flush those writes
+		(void) ohci_readl (ohci, &ohci->regs->control);
+	}
 #endif
+	/* Tell the controller where the control and bulk lists are
+	 * The lists are empty now. */
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->ed_controlhead, 0);
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->ed_bulkhead, 0);
+
+	/* a reset clears this */
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->hcca, (ULONG)ohci->hcca_logic_addr.LowPart);
+
+	//periodic_reinit (ohci);
+
+ 	/* start controller operations */
+	hc_control &= OHCI_CTRL_RWC;
+ 	hc_control |= OHCI_CONTROL_INIT | OHCI_USB_OPER;
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->control, hc_control);
+	//ohci_to_hcd(ohci)->state = HC_STATE_RUNNING;
+
+	/* wake on ConnectStatusChange, matching external hubs */
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.status, RH_HS_DRWE);
+
+	/* Choose the interrupts we care about now, others later on demand */
+	mask = OHCI_INTR_INIT;
+    //OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->intrstatus, mask);
+    //OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->intrenable, mask);
+
+	/* handle root hub init quirks ... */
+	temp = roothub_a(ohci);
+	temp &= ~(RH_A_PSM | RH_A_OCPM);
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.status, RH_HS_LPSC);
+    OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.b, (temp & RH_A_NPS) ? 0 : RH_B_PPCM);
+	// flush those writes
+    (VOID)OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->control);
+
+	//spin_unlock_irq (&ohci->lock);
+
+	// POTPGT delay is bits 24-31, in 2 ms units.
+    ohci_wait_ms(ohci, (temp >> 23) & 0x1fe);
+	//ohci_to_hcd(ohci)->state = HC_STATE_RUNNING;
+
+
     return TRUE;
 }
 
@@ -607,20 +709,48 @@ ohci_rh_reset_port(PHCD hcd, UCHAR port_idx)
     //ULONG i;
     POHCI_DEV ohci;
     //ULONG status;
-    //UCHAR port_count;
 
     if (hcd == NULL)
         return FALSE;
 
     ohci = ohci_from_hcd(hcd);
-    //port_count = (UCHAR) ((PEHCI_HCS_CONTENT) & ehci->ehci_caps.hcs_params)->port_count;
 
-    //if (port_idx < 1 || port_idx > port_count)
-    //    return FALSE;
+    //if (port_idx < 1 || port_idx > ohci->num_ports)
+      //  return FALSE;
 
     //usb_dbg_print(DBGLVL_MAXIMUM, ("ohci_rh_reset_port(): status after written=0x%x\n", status));
     return TRUE;
 }
+
+BOOLEAN
+ohci_rh_get_dev_change(PHCD hcd, PBYTE buf)     //must have the rh dev_lock acquired
+{
+    POHCI_DEV ohci;
+    LONG i;
+    ULONG status;
+
+    if (hcd == NULL)
+        return FALSE;
+
+    ohci = ohci_from_hcd(hcd);
+
+    for(i = 0; i < ohci->num_ports; i++)
+    {
+        status = OHCI_READ_PORT_ULONG((PULONG)(ohci->regs->roothub.portstatus[i]));
+
+        if (status != 0)
+        {
+            ohci_dbg_print(DBGLVL_MAXIMUM, ("ohci_rh_get_dev_change(): erh port%d status=0x%x\n", i, status));
+        }
+
+        if (status & (RH_PS_PESC | RH_PS_CSC | RH_PS_OCIC))
+        {
+            buf[(i + 1) >> 3] |= (1 << ((i + 1) & 7));
+        }
+    }
+    return TRUE;
+}
+
 
 NTSTATUS
 ohci_hcd_dispatch(PHCD hcd, LONG disp_code, PVOID param)
@@ -630,24 +760,24 @@ ohci_hcd_dispatch(PHCD hcd, LONG disp_code, PVOID param)
     if (hcd == NULL)
         return STATUS_INVALID_PARAMETER;
     ohci = ohci_from_hcd(hcd);
-#if 0
+
     switch (disp_code)
     {
         case HCD_DISP_READ_PORT_COUNT:
         {
             if (param == NULL)
                 return STATUS_INVALID_PARAMETER;
-            *((PUCHAR) param) = (UCHAR) HCS_N_PORTS(ehci->ehci_caps.hcs_params);
+            *((PUCHAR) param) = ohci->num_ports;
             return STATUS_SUCCESS;
         }
         case HCD_DISP_READ_RH_DEV_CHANGE:
         {
-            if (ehci_rh_get_dev_change(hcd, param) == FALSE)
+            if (ohci_rh_get_dev_change(hcd, param) == FALSE)
                 return STATUS_INVALID_PARAMETER;
             return STATUS_SUCCESS;
         }
     }
-#endif
+
     return STATUS_NOT_IMPLEMENTED;
 }
 
