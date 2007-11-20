@@ -72,7 +72,7 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
   if (ImageSize < SectionHeader->PointerToRawData + SectionHeader->SizeOfRawData
       || SectionHeader->SizeOfRawData < sizeof(ROSSYM_HEADER))
     {
-      DPRINT1("Invalid %s section\n", ROSSYM_SECTION_NAME);
+      DPRINT("Invalid %s section\n", ROSSYM_SECTION_NAME);
       return FALSE;
     }
 

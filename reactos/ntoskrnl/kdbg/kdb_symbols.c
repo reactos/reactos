@@ -651,122 +651,6 @@ KdbSymProcessSymbols(IN PANSI_STRING AnsiFileName, IN PKD_SYMBOLS_INFO SymbolInf
 
 }
 
-
-/*! \brief Called when a symbol file is loaded by the loader?
- *
- * Tries to find a driver (.sys) or executable (.exe) with the same base name
- * as the symbol file and sets the drivers/exes symbol info to the loaded
- * module.
- * Used to load ntoskrnl and hal symbols before the SystemRoot is available to us.
- *
- * \param FileName        Filename for which the symbols are loaded.
- */
-VOID
-KdbSymProcessBootSymbols(IN PANSI_STRING AnsiFileName,
-                         IN BOOLEAN FullName,
-                         IN BOOLEAN LoadFromFile)
-{
-    BOOLEAN Found = FALSE;
-    PLIST_ENTRY ListHead, NextEntry;
-    PLDR_DATA_TABLE_ENTRY LdrEntry = NULL;
-    WCHAR Buffer[MAX_PATH];
-    UNICODE_STRING ModuleName;
-    NTSTATUS Status;
-
-    /* Convert file name to unicode */
-    ModuleName.MaximumLength = (MAX_PATH-1)*sizeof(WCHAR);
-    ModuleName.Length = 0;
-    ModuleName.Buffer = Buffer;
-
-    Status = RtlAnsiStringToUnicodeString(&ModuleName, AnsiFileName, FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to convert Ansi to Unicode with Status=0x%08X, Length=%d\n",
-            Status, ModuleName.Length);
-        return;
-    }
-
-    DPRINT("KdbSymProcessBootSymbols(%wZ)\n", &ModuleName);
-
-    /* We use PsLoadedModuleList here, otherwise (in case of
-       using KeLoaderBlock) all our data will be just lost */
-    ListHead = &PsLoadedModuleList;
-
-    /* Found module we are interested in */
-    NextEntry = ListHead->Flink;
-    while (ListHead != NextEntry)
-    {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        if (FullName)
-        {
-            if (RtlEqualUnicodeString(&ModuleName, &LdrEntry->FullDllName, TRUE))
-            {
-                Found = TRUE;
-                break;
-            }
-        }
-        else
-        {
-            if (RtlEqualUnicodeString(&ModuleName, &LdrEntry->BaseDllName, TRUE))
-            {
-                Found = TRUE;
-                break;
-            }
-        }
-
-        /* Go to the next one */
-        NextEntry = NextEntry->Flink;
-    }
-
-    /* Exit if we didn't find the module requested */
-    if (!Found)
-        return;
-
-    DPRINT("Found LdrEntry=%p\n", LdrEntry);
-    if (!LoadSymbols)
-    {
-        LdrEntry->PatchInformation = NULL;
-        return;
-    }
-
-    /* Remove symbol info if it already exists */
-    if (LdrEntry->PatchInformation != NULL)
-    {
-        KdbpSymRemoveCachedFile(LdrEntry->PatchInformation);
-    }
-
-    if (LoadFromFile)
-    {
-        /* Load symbol info from file */
-        KdbpSymLoadModuleSymbols(&LdrEntry->FullDllName,
-            (PROSSYM_INFO*)&LdrEntry->PatchInformation);
-    }
-    else
-    {
-        /* Load new symbol information */
-        if (! RosSymCreateFromMem(LdrEntry->DllBase,
-            LdrEntry->SizeOfImage,
-            (PROSSYM_INFO*)&LdrEntry->PatchInformation))
-        {
-            /* Error loading symbol info, exit */
-            return;
-        }
-
-        /* Add file to cache */
-        KdbpSymAddCachedFile(&ModuleName, LdrEntry->PatchInformation);
-    }
-
-    DPRINT("Installed symbols: %wZ@%08x-%08x %p\n",
-           &ModuleName,
-           LdrEntry->DllBase,
-           LdrEntry->SizeOfImage + (ULONG)LdrEntry->DllBase,
-           LdrEntry->PatchInformation);
-}
-
 VOID
 NTAPI
 KdbDebugPrint(PCH Message, ULONG Length)
@@ -786,9 +670,11 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
               ULONG BootPhase)
 {
     PCHAR p1, p2;
-    int Found;
-    char YesNo;
-    ANSI_STRING FileName;
+    SHORT Found;
+    CHAR YesNo;
+    LIST_ENTRY *ModuleEntry;
+    PLDR_DATA_TABLE_ENTRY DataTableEntry;
+    KD_SYMBOLS_INFO SymbolsInfo;
 
     DPRINT("KdbSymInit() BootPhase=%d\n", BootPhase);
 
@@ -860,13 +746,29 @@ KdbInitialize(PKD_DISPATCH_TABLE DispatchTable,
     }
     else if (BootPhase == 1)
     {
-        /* Load symbols for NTOSKRNL.EXE and HAL.DLL*/
-        /* FIXME: Load as 1st and 2nd entries of InLoadOrderList instead
-                  of hardcoding them here! */
-        RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\NTOSKRNL.EXE");
-        KdbSymProcessBootSymbols(&FileName, TRUE, FALSE);
-        RtlInitAnsiString(&FileName, "\\SystemRoot\\System32\\HAL.DLL");
-        KdbSymProcessBootSymbols(&FileName, TRUE, FALSE);
+        /* Load symbols for NTOSKRNL.EXE */
+        ModuleEntry = &KeLoaderBlock->LoadOrderListHead;
+        DataTableEntry = CONTAINING_RECORD(ModuleEntry,
+            LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        SymbolsInfo.BaseOfDll = DataTableEntry->DllBase;
+        SymbolsInfo.CheckSum = DataTableEntry->CheckSum;
+        SymbolsInfo.ProcessId = 0;
+        SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
+
+        KdbSymProcessSymbols(NULL, &SymbolsInfo);
+
+        /* and HAL.DLL */
+        ModuleEntry = ModuleEntry->Flink;
+        DataTableEntry = CONTAINING_RECORD(ModuleEntry,
+            LDR_DATA_TABLE_ENTRY, InLoadOrderLinks);
+
+        SymbolsInfo.BaseOfDll = DataTableEntry->DllBase;
+        SymbolsInfo.CheckSum = DataTableEntry->CheckSum;
+        SymbolsInfo.ProcessId = 0;
+        SymbolsInfo.SizeOfImage = DataTableEntry->SizeOfImage;
+
+        KdbSymProcessSymbols(NULL, &SymbolsInfo);
     }
 }
 
