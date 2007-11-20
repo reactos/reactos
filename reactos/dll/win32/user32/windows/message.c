@@ -2067,7 +2067,17 @@ SendNotifyMessageW(
 BOOL STDCALL
 TranslateMessageEx(CONST MSG *lpMsg, DWORD unk)
 {
-  return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
+    switch (lpMsg->message)
+    {
+        case WM_KEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYDOWN:
+        case WM_SYSKEYUP:
+            return(NtUserTranslateMessage((LPMSG)lpMsg, (HKL)unk));
+
+        default:
+            return FALSE;
+    }
 }
 
 
