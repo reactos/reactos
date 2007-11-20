@@ -33,7 +33,10 @@ NTAPI
 KeRosDumpStackFrames(
     PULONG Frame,
     ULONG FrameCount
-);
+)
+{
+  return; 
+}
 
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
@@ -328,7 +331,6 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
                 Function, hObj, Entry->Type);
     }
     KeRosDumpStackFrames(NULL, 20);
-
 }
 
 /*!
@@ -658,6 +660,23 @@ LockHandle:
   return FALSE;
 }
 
+BOOL
+FASTCALL
+IsObjectDead(HGDIOBJ hObject)
+{
+  INT Index = GDI_HANDLE_GET_INDEX(hObject);
+  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
+  // We check to see if the objects are knocking on deaths door.
+  if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+     return FALSE;
+  else
+  {
+     DPRINT1("Object 0x%x currently being destroyed!!!\n",hObject);
+     return TRUE; // return true and move on.
+  }
+}
+
+
 /*!
  * Delete GDI object
  * \param	hObject object handle
@@ -668,13 +687,10 @@ FASTCALL
 NtGdiDeleteObject(HGDIOBJ hObject)
 {
   DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
-  INT Index = GDI_HANDLE_GET_INDEX(hObject);
-  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  // We check to see if the objects are knocking on deaths door.
-  if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+  if(!IsObjectDead(hObject))
   {
      return NULL != hObject
-                 ? GDIOBJ_FreeObj(GdiHandleTable, hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;        
+                 ? GDIOBJ_FreeObj(GdiHandleTable, hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
   }
   else
   {

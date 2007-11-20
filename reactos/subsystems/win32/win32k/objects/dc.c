@@ -2433,9 +2433,7 @@ VOID FASTCALL
 DC_FreeDC(HDC  DCToFree)
 {
   DC_FreeDcAttr(DCToFree);
-  INT Index = GDI_HANDLE_GET_INDEX(DCToFree);
-  PGDI_TABLE_ENTRY Entry = &GdiHandleTable->Entries[Index];
-  if ((Entry->Type & ~GDI_ENTRY_REUSE_MASK) != 0 && Entry->KernelData != NULL)
+  if(!IsObjectDead( DCToFree ))
   {
     if (!GDIOBJ_FreeObj(GdiHandleTable, DCToFree, GDI_OBJECT_TYPE_DC))
     {
