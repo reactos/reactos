@@ -45,6 +45,33 @@ BOOLEAN NTAPI ehci_cal_cpu_freq(PVOID context);
 
 extern USB_DEV_MANAGER g_dev_mgr;
 
+
+#define OHCI_READ_PORT_ULONG( pul ) ( *pul )
+#define OHCI_WRITE_PORT_ULONG( pul, src ) \
+{\
+   	*pul = ( ULONG )src;\
+}
+
+#define OHCI_READ_PORT_UCHAR( pch ) ( *pch )
+#define OHCI_WRITE_PORT_UCHAR( pch, src ) ( *pch = ( UCHAR )src )
+#define OHCI_READ_PORT_USHORT( psh ) ( *psh )
+#define OHCI_WRITE_PORT_USHORT( psh, src ) ( *psh = ( USHORT )src )
+
+VOID
+ohci_wait_ms(POHCI_DEV ohci, LONG ms)
+{
+    LARGE_INTEGER lms;
+    if (ms <= 0)
+        return;
+
+    lms.QuadPart = -10 * ms;
+    KeSetTimer(&ohci->reset_timer, lms, NULL);
+
+    KeWaitForSingleObject(&ohci->reset_timer, Executive, KernelMode, FALSE, NULL);
+
+    return;
+}
+
 PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
                           PUSB_DEV_MANAGER dev_mgr)
 {
@@ -98,7 +125,7 @@ PDEVICE_OBJECT ohci_probe(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path,
         if (pdev_ext)
         {
             // acquire higher irql to eliminate pre-empty
-            KeSynchronizeExecution(pdev_ext->ohci_int, ehci_cal_cpu_freq, NULL);
+            //KeSynchronizeExecution(pdev_ext->ohci_int, ehci_cal_cpu_freq, NULL);
         }
     }
     return NULL;
@@ -234,6 +261,38 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     //before we connect the interrupt, we have to init ohci
     pdev_ext->ohci->pdev_ext = pdev_ext;
+
+    KeInitializeTimer(&pdev_ext->ohci->reset_timer);
+
+    // take it over from SMM/BIOS/whoever has it
+	if (OHCI_READ_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_CONTROL)) & OHCI_CTRL_IR)
+    {
+		ULONG temp;
+
+		DbgPrint("USB HC TakeOver from BIOS/SMM\n");
+
+		/* this timeout is arbitrary.  we make it long, so systems
+		 * depending on usb keyboards may be usable even if the
+		 * BIOS/SMM code seems pretty broken.
+		 */
+		temp = 500;	/* arbitrary: five seconds */
+
+        OHCI_WRITE_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_INTRENABLE), OHCI_INTR_OC);
+        OHCI_WRITE_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_CMDSTATUS), OHCI_OCR);
+
+        while (OHCI_READ_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_CONTROL)) & OHCI_CTRL_IR)
+        {
+			ohci_wait_ms(pdev_ext->ohci, 10);
+			if (--temp == 0) {
+				DbgPrint("USB HC takeover failed!"
+					"  (BIOS/SMM bug)\n");
+				return NULL;
+			}
+		}
+		//ohci_usb_reset (ohci);
+	}
+
+
 #if 0
     //init ehci_caps
     // i = ( ( PEHCI_HCS_CONTENT )( &pdev_ext->ehci->ehci_caps.hcs_params ) )->length;
@@ -258,8 +317,6 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
                                     &pdev_ext->ehci->pending_endp_list));
 
     init_pending_endp_pool(&pdev_ext->ehci->pending_endp_pool);
-
-    KeInitializeTimer(&pdev_ext->ehci->reset_timer);
 
     vector = HalGetInterruptVector(PCIBus,
                                    bus,
