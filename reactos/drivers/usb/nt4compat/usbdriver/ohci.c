@@ -36,6 +36,7 @@ PDEVICE_OBJECT ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_
 //BOOLEAN NTAPI ohci_isr(PKINTERRUPT interrupt, PVOID context);
 //BOOLEAN ohci_start(PHCD hcd);
 VOID ohci_init_hcd_interface(POHCI_DEV ohci);
+BOOLEAN ohci_rh_reset_port(PHCD hcd, UCHAR port_idx);
 
 // shared with EHCI
 NTSTATUS ehci_dispatch_irp(IN PDEVICE_OBJECT DeviceObject, IN PIRP irp);
@@ -50,6 +51,8 @@ BOOLEAN NTAPI ehci_cal_cpu_freq(PVOID context);
 
 extern USB_DEV_MANAGER g_dev_mgr;
 
+/* wrap-aware logic morphed from <linux/jiffies.h> */
+#define tick_before(t1,t2) ((SHORT)(((SHORT)(t1))-((SHORT)(t2))) < 0)
 
 #define OHCI_READ_PORT_ULONG( pul ) ( *pul )
 #define OHCI_WRITE_PORT_ULONG( pul, src ) \
@@ -91,6 +94,20 @@ static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
 #define	OHCI_CONTROL_INIT 	OHCI_CTRL_CBSR
 #define	OHCI_INTR_INIT \
 	(OHCI_INTR_MIE | OHCI_INTR_UE | OHCI_INTR_RD | OHCI_INTR_WDH)
+
+/* See usb 7.1.7.5:  root hubs must issue at least 50 msec reset signaling,
+ * not necessarily continuous ... to guard against resume signaling.
+ * The short timeout is safe for non-root hubs, and is backward-compatible
+ * with earlier Linux hosts.
+ */
+#ifdef	CONFIG_USB_SUSPEND
+#define	PORT_RESET_MSEC		50
+#else
+#define	PORT_RESET_MSEC		10
+#endif
+
+/* this timer value might be vendor-specific ... */
+#define	PORT_RESET_HW_MSEC	10
 
 
 VOID
@@ -517,7 +534,7 @@ ohci_start(PHCD hcd)
 	 * (for OHCI integrated on mainboard, it normally is)
 	 */
 	hc_control = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->control);
-	DbgPrint("resetting from state %x, control = 0x%x\n",
+    DbgPrint("OHCI: resetting from state %x, control = 0x%x\n",
 			(hc_control & OHCI_CTRL_HCFS),
 			hc_control);
 
@@ -632,6 +649,14 @@ ohci_start(PHCD hcd)
 	//ohci_to_hcd(ohci)->state = HC_STATE_RUNNING;
 
 
+    // Debug code follows!
+    /*(VOID)ohci_rh_reset_port(hcd, 1);
+    (VOID)ohci_rh_reset_port(hcd, 2);
+    (VOID)ohci_rh_reset_port(hcd, 3);
+    (VOID)ohci_rh_reset_port(hcd, 4);*/
+    // Debug code ends!
+
+
     return TRUE;
 }
 
@@ -645,6 +670,7 @@ ohci_get_type(PHCD hcd)
 NTSTATUS
 ohci_submit_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
+    DbgPrint("ohci_submit_urb2 caled, but not implemented!\n");
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -695,30 +721,67 @@ ohci_cancel_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
         return STATUS_INVALID_PARAMETER;
 
     ohci = ohci_from_hcd(hcd);
+    DbgPrint("ohci_cancel_urb2 called, but not implemented!\n");
     return STATUS_UNSUCCESSFUL;//ehci_cancel_urb(ehci, pdev, pendp, purb);
 }
 
 VOID
 ohci_generic_urb_completion(PURB purb, PVOID context)
 {
+    DbgPrint("ohci_generic_urb_completion called, but not implemented!\n");
 }
 
 BOOLEAN
 ohci_rh_reset_port(PHCD hcd, UCHAR port_idx)
 {
-    //ULONG i;
     POHCI_DEV ohci;
-    //ULONG status;
+    ULONG status, temp;
+    PULONG PortStatus;
+    USHORT Now, ResetDone;
 
     if (hcd == NULL)
         return FALSE;
 
     ohci = ohci_from_hcd(hcd);
 
-    //if (port_idx < 1 || port_idx > ohci->num_ports)
-      //  return FALSE;
+    if (port_idx < 1 || port_idx > ohci->num_ports)
+        return FALSE;
 
-    //usb_dbg_print(DBGLVL_MAXIMUM, ("ohci_rh_reset_port(): status after written=0x%x\n", status));
+    port_idx--;
+
+    PortStatus = &ohci->regs->roothub.portstatus[port_idx];
+
+    Now = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->fmnumber);
+	ResetDone = Now + PORT_RESET_MSEC;
+
+	/* build a "continuous enough" reset signal, with up to
+	 * 3msec gap between pulses.  scheduler HZ==100 must work;
+	 * this might need to be deadline-scheduled.
+	 */
+	do {
+		/* spin until any current reset finishes */
+		for (;;) {
+            temp = OHCI_READ_PORT_ULONG(PortStatus);
+			if (!(temp & RH_PS_PRS))
+				break;
+            usb_wait_us_dpc(500);
+		} 
+
+		if (!(temp & RH_PS_CCS))
+			break;
+		if (temp & RH_PS_PRSC)
+        {
+            OHCI_WRITE_PORT_ULONG(PortStatus, RH_PS_PRSC);
+        }
+
+		/* start the next reset, sleep till it's probably done */
+        OHCI_WRITE_PORT_ULONG(PortStatus, RH_PS_PRS);
+        usb_wait_ms_dpc(PORT_RESET_HW_MSEC);
+        Now = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->fmnumber);
+	} while (tick_before(Now, ResetDone));
+
+    status = OHCI_READ_PORT_ULONG((PULONG)(&ohci->regs->roothub.portstatus[port_idx]));
+    usb_dbg_print(DBGLVL_MAXIMUM, ("ohci_rh_reset_port(): status after written=0x%x\n", status));
     return TRUE;
 }
 
@@ -736,7 +799,7 @@ ohci_rh_get_dev_change(PHCD hcd, PBYTE buf)     //must have the rh dev_lock acqu
 
     for(i = 0; i < ohci->num_ports; i++)
     {
-        status = OHCI_READ_PORT_ULONG((PULONG)(ohci->regs->roothub.portstatus[i]));
+        status = OHCI_READ_PORT_ULONG((PULONG)(&ohci->regs->roothub.portstatus[i]));
 
         if (status != 0)
         {
