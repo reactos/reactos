@@ -42,6 +42,5 @@
 
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
-	<linkerflag>-enable-stdcall-fixup</linkerflag>
 
 </project>
