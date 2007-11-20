@@ -3417,7 +3417,7 @@ ehci_hcd_dispatch(PHCD hcd, LONG disp_code, PVOID param)
 //
 VOID ehci_init_int8_qh(PEHCI_QH_CONTENT qh);
 
-static BOOLEAN NTAPI
+BOOLEAN NTAPI
 ehci_cal_cpu_freq(PVOID context)
 {
     usb_cal_cpu_freq();
