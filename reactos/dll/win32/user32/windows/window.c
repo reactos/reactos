@@ -529,7 +529,22 @@ EndDeferWindowPos(HDWP hWinPosInfo)
 HWND STDCALL
 GetDesktopWindow(VOID)
 {
-	return NtUserGetDesktopWindow();
+    PWINDOW Wnd;
+    HWND Ret = NULL;
+
+    _SEH_TRY
+    {
+        Wnd = GetThreadDesktopWnd();
+        if (Wnd != NULL)
+            Ret = UserHMGetHandle(Wnd);
+    }
+    _SEH_HANDLE
+    {
+        /* Do nothing */
+    }
+    _SEH_END;
+
+    return Ret;
 }
 
 
@@ -1096,7 +1111,7 @@ GetWindowModuleFileNameW(HWND hwnd,
  */
 BOOL STDCALL
 GetWindowPlacement(HWND hWnd,
-		   WINDOWPLACEMENT *lpwndpl)
+                   WINDOWPLACEMENT *lpwndpl)
 {
   return (BOOL)NtUserGetWindowPlacement(hWnd, lpwndpl);
 }
