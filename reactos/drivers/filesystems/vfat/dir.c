@@ -351,7 +351,7 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
         {
           FirstQuery = TRUE;
           pCcb->SearchPattern.MaximumLength = pSearchPattern->Length + sizeof(WCHAR);
-          pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, pCcb->SearchPattern.MaximumLength);
+          pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool, pCcb->SearchPattern.MaximumLength, TAG_VFAT);
           if (!pCcb->SearchPattern.Buffer)
             {
               ExReleaseResourceLite(&pFcb->MainResource);
@@ -365,7 +365,7 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
     {
       FirstQuery = TRUE;
       pCcb->SearchPattern.MaximumLength = 2 * sizeof(WCHAR);
-      pCcb->SearchPattern.Buffer = ExAllocatePool(NonPagedPool, 2 * sizeof(WCHAR));
+      pCcb->SearchPattern.Buffer = ExAllocatePoolWithTag(NonPagedPool, 2 * sizeof(WCHAR), TAG_VFAT);
       if (!pCcb->SearchPattern.Buffer)
         {
           ExReleaseResourceLite(&pFcb->MainResource);

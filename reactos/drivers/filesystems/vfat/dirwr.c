@@ -219,7 +219,7 @@ FATAddEntry (PDEVICE_EXTENSION DeviceExt,
 
   nbSlots = (DirContext.LongNameU.Length / sizeof(WCHAR) + 12) / 13 + 1;	//nb of entry needed for long name+normal entry
   DPRINT ("NameLen= %d, nbSlots =%d\n", DirContext.LongNameU.Length / sizeof(WCHAR), nbSlots);
-  Buffer = ExAllocatePool (NonPagedPool, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY));
+  Buffer = ExAllocatePoolWithTag (NonPagedPool, (nbSlots - 1) * sizeof (FAT_DIR_ENTRY), TAG_VFAT);
   if (Buffer == NULL)
   {
     return STATUS_INSUFFICIENT_RESOURCES;

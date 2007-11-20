@@ -413,6 +413,7 @@ typedef struct _VFATCCB
 #define TAG_CCB TAG('V', 'C', 'C', 'B')
 #define TAG_FCB TAG('V', 'F', 'C', 'B')
 #define TAG_IRP TAG('V', 'I', 'R', 'P')
+#define TAG_VFAT TAG('V', 'F', 'A', 'T')
 
 #define ENTRIES_PER_SECTOR (BLOCKSIZE / sizeof(FATDirEntry))
 

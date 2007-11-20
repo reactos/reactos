@@ -133,7 +133,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
    if (*RecognizedFS)
    {
 
-      Boot = ExAllocatePool(NonPagedPool, DiskGeometry.BytesPerSector);
+      Boot = ExAllocatePoolWithTag(NonPagedPool, DiskGeometry.BytesPerSector, TAG_VFAT);
       if (Boot == NULL)
       {
          return STATUS_INSUFFICIENT_RESOURCES;
@@ -257,7 +257,7 @@ VfatHasFileSystem(PDEVICE_OBJECT DeviceToMount,
 
    if (!*RecognizedFS && PartitionInfoIsValid)
    {
-      BootFatX = ExAllocatePool(NonPagedPool, sizeof(struct _BootSectorFatX));
+      BootFatX = ExAllocatePoolWithTag(NonPagedPool, sizeof(struct _BootSectorFatX), TAG_VFAT);
       if (BootFatX == NULL)
       {
          *RecognizedFS=FALSE;
