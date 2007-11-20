@@ -3,6 +3,6 @@ LIBRARY desk.cpl
 EXPORTS
 CPlApplet@16
 DisplayClassInstaller@12
-DisplaySaveSettings
+DisplaySaveSettings@8
 
 ; EOF

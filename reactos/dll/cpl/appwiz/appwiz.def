@@ -2,8 +2,8 @@ LIBRARY appwiz.cpl
 
 EXPORTS
 CPlApplet@16
-NewLinkHere
-NewLinkHereA
-NewLinkHereW
+NewLinkHere@16
+NewLinkHereA@16
+NewLinkHereW@16
 
 ; EOF
