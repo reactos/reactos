@@ -1,6 +1,6 @@
 LIBRARY input.dll
 
 EXPORTS
-CPlApplet
+CPlApplet@16
 
 ; EOF

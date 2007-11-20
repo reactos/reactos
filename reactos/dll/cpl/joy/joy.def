@@ -1,6 +1,6 @@
 LIBRARY joy.cpl
 
 EXPORTS
-CPlApplet
+CPlApplet@16
 
 ; EOF
