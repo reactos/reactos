@@ -119,7 +119,7 @@
  * You must use readl() and writel() (in <asm/io.h>) to access these fields!!
  * Layout is in section 7 (and appendix B) of the spec.
  */
-struct _OHCI_REGS
+typedef struct _OHCI_REGS
 {
 	/* control and status registers (section 7.1) */
 	ULONG	revision;
@@ -164,6 +164,9 @@ typedef struct _OHCI_DEV
     PHYSICAL_ADDRESS   	ohci_reg_base;						// io space
     BOOLEAN				port_mapped;
     PBYTE				port_base;							// note: added by ehci_caps.length, operational regs base addr, not the actural base
+    struct _OHCI_REGS   *regs;
+
+    USHORT              num_ports;
 
     KTIMER				reset_timer;						//used to reset the host controller
     struct _OHCI_DEVICE_EXTENSION    *pdev_ext;
@@ -193,6 +196,6 @@ typedef struct _OHCI_DEVICE_EXTENSION
     KDPC   				ohci_dpc;
 } OHCI_DEVICE_EXTENSION, *POHCI_DEVICE_EXTENSION;
 
-
+#define ohci_from_hcd( hCD ) ( struct_ptr( ( hCD ), OHCI_DEV, hcd_interf ) )
 
 #endif /* __OHCI_H__ */

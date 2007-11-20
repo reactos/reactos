@@ -39,8 +39,13 @@ VOID ohci_init_hcd_interface(POHCI_DEV ohci);
 
 // shared with EHCI
 NTSTATUS ehci_dispatch_irp(IN PDEVICE_OBJECT DeviceObject, IN PIRP irp);
+PUSB_DEV_MANAGER ehci_get_dev_mgr(PHCD hcd);
 VOID ehci_set_dev_mgr(PHCD hcd, PUSB_DEV_MANAGER dev_mgr);
 VOID ehci_set_id(PHCD hcd, UCHAR id);
+UCHAR ehci_get_id(PHCD hcd);
+UCHAR ehci_alloc_addr(PHCD hcd);
+VOID ehci_free_addr(PHCD hcd, UCHAR addr);
+
 BOOLEAN NTAPI ehci_cal_cpu_freq(PVOID context);
 
 extern USB_DEV_MANAGER g_dev_mgr;
@@ -56,6 +61,31 @@ extern USB_DEV_MANAGER g_dev_mgr;
 #define OHCI_WRITE_PORT_UCHAR( pch, src ) ( *pch = ( UCHAR )src )
 #define OHCI_READ_PORT_USHORT( psh ) ( *psh )
 #define OHCI_WRITE_PORT_USHORT( psh, src ) ( *psh = ( USHORT )src )
+
+/* AMD-756 (D2 rev) reports corrupt register contents in some cases.
+ * The erratum (#4) description is incorrect.  AMD's workaround waits
+ * till some bits (mostly reserved) are clear; ok for all revs.
+ */
+#define read_roothub(hc, register, mask) ({ \
+	ULONG temp = OHCI_READ_PORT_ULONG(&((hc)->regs->roothub.register)); \
+	if (temp == -1) \
+		/*disable (hc)*/; \
+	/*else if (hc->flags & OHCI_QUIRK_AMD756) \
+		while (temp & mask) \
+			temp = ohci_readl (hc, &hc->regs->roothub.register); */ \
+	temp; })
+
+static ULONG roothub_a (POHCI_DEV hc)
+	{ return read_roothub (hc, a, 0xfc0fe000); }
+/*
+static inline u32 roothub_b (struct ohci_hcd *hc)
+	{ return ohci_readl (hc, &hc->regs->roothub.b); }
+static inline u32 roothub_status (struct ohci_hcd *hc)
+	{ return ohci_readl (hc, &hc->regs->roothub.status); }
+static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
+	{ return read_roothub (hc, portstatus [i], 0xffe0fce0); }
+*/
+
 
 VOID
 ohci_wait_ms(POHCI_DEV ohci, LONG ms)
@@ -261,6 +291,7 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 
     //before we connect the interrupt, we have to init ohci
     pdev_ext->ohci->pdev_ext = pdev_ext;
+    pdev_ext->ohci->regs = (POHCI_REGS)pdev_ext->ohci->port_base;
 
     KeInitializeTimer(&pdev_ext->ohci->reset_timer);
 
@@ -292,6 +323,23 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
 		//ohci_usb_reset (ohci);
 	}
 
+	/* Disable HC interrupts */
+    OHCI_WRITE_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_INTRDISABLE), OHCI_INTR_MIE);
+	// flush the writes
+    (VOID)OHCI_READ_PORT_ULONG((PULONG)(pdev_ext->ohci->port_base + OHCI_CONTROL));
+
+	/* Read the number of ports unless overridden */
+	pdev_ext->ohci->num_ports = roothub_a(pdev_ext->ohci) & RH_A_NDP;
+
+    DbgPrint("OHCI: %d ports\n", pdev_ext->ohci->num_ports);
+
+	//ohci->hcca = dma_alloc_coherent (ohci_to_hcd(ohci)->self.controller,
+	//		sizeof *ohci->hcca, &ohci->hcca_dma, 0);
+	//if (!ohci->hcca)
+	//	return -ENOMEM;
+
+	//if ((ret = ohci_mem_init (ohci)) < 0)
+	//	ohci_stop (ohci_to_hcd(ohci));
 
 #if 0
     //init ehci_caps
@@ -413,30 +461,217 @@ ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_mgr)
     return pdev;
 }
 
+BOOLEAN
+ohci_start(PHCD hcd)
+{
+    //ULONG tmp;
+    //PBYTE base;
+    //PEHCI_USBCMD_CONTENT usbcmd;
+    //POHCI_DEV ohci;
+
+    if (hcd == NULL)
+        return FALSE;
+
+    return TRUE;
+#if 0
+    ehci = struct_ptr(hcd, EHCI_DEV, hcd_interf);
+    base = ehci->port_base;
+
+    // stop the controller
+    tmp = EHCI_READ_PORT_ULONG((PULONG) (base + EHCI_USBCMD));
+    usbcmd = (PEHCI_USBCMD_CONTENT) & tmp;
+    usbcmd->run_stop = 0;
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+
+    // wait the controller stop( ehci spec, 16 microframe )
+    usb_wait_ms_dpc(2);
+
+    // reset the controller
+    usbcmd = (PEHCI_USBCMD_CONTENT) & tmp;
+    usbcmd->hcreset = TRUE;
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+
+    for(;;)
+    {
+        // interval.QuadPart = -100 * 10000; // 10 ms
+        // KeDelayExecutionThread( KernelMode, FALSE, &interval );
+        KeStallExecutionProcessor(10);
+        tmp = EHCI_READ_PORT_ULONG((PULONG) (base + EHCI_USBCMD));
+        if (!usbcmd->hcreset)
+            break;
+    }
+
+    // prepare the registers
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_CTRLDSSEGMENT), 0);
+
+    // turn on all the int
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBINTR),
+                          EHCI_USBINTR_INTE | EHCI_USBINTR_ERR | EHCI_USBINTR_ASYNC | EHCI_USBINTR_HSERR
+                          // EHCI_USBINTR_FLROVR | \  // it is noisy
+                          // EHCI_USBINTR_PC     // we detect it by polling
+        );
+    // write the list base reg
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_PERIODICLISTBASE), ehci->frame_list_phys_addr.LowPart);
+
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_ASYNCLISTBASE), ehci->skel_async_qh->phys_addr & ~(0x1f));
+
+    usbcmd->int_threshold = 1;
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+
+    // let's rock
+    usbcmd->run_stop = 1;
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+
+    // set the configuration flag
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_CONFIGFLAG), 1);
+
+    // enable the list traversaling
+    usbcmd->async_enable = 1;
+    usbcmd->periodic_enable = 1;
+    EHCI_WRITE_PORT_ULONG((PULONG) (base + EHCI_USBCMD), tmp);
+#endif
+    return TRUE;
+}
+
+
+ULONG
+ohci_get_type(PHCD hcd)
+{
+    return HCD_TYPE_OHCI;       // ( hcd->flags & HCD_TYPE_MASK );
+}
+
+NTSTATUS
+ohci_submit_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
+{
+    return STATUS_UNSUCCESSFUL;
+}
+
+PUSB_DEV
+ohci_get_root_hub(PHCD hcd)
+{
+    return ohci_from_hcd(hcd)->root_hub;
+}
+
+VOID
+ohci_set_root_hub(PHCD hcd, PUSB_DEV root_hub)
+{
+    if (hcd == NULL || root_hub == NULL)
+        return;
+    ohci_from_hcd(hcd)->root_hub = root_hub;
+    return;
+}
+
+BOOLEAN
+ohci_remove_device2(PHCD hcd, PUSB_DEV pdev)
+{
+    if (hcd == NULL || pdev == NULL)
+        return FALSE;
+
+    return FALSE;
+    //return ehci_remove_device(ehci_from_hcd(hcd), pdev);
+}
+
+BOOLEAN
+ohci_hcd_release(PHCD hcd)
+{
+    POHCI_DEV ohci;
+    POHCI_DEVICE_EXTENSION pdev_ext;
+
+    if (hcd == NULL)
+        return FALSE;
+
+    ohci = ohci_from_hcd(hcd);
+    pdev_ext = ohci->pdev_ext;
+    return FALSE;//ehci_release(pdev_ext->pdev_obj);
+}
+
+NTSTATUS
+ohci_cancel_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
+{
+    POHCI_DEV ohci;
+    if (hcd == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    ohci = ohci_from_hcd(hcd);
+    return STATUS_UNSUCCESSFUL;//ehci_cancel_urb(ehci, pdev, pendp, purb);
+}
+
+VOID
+ohci_generic_urb_completion(PURB purb, PVOID context)
+{
+}
+
+BOOLEAN
+ohci_rh_reset_port(PHCD hcd, UCHAR port_idx)
+{
+    //ULONG i;
+    POHCI_DEV ohci;
+    //ULONG status;
+    //UCHAR port_count;
+
+    if (hcd == NULL)
+        return FALSE;
+
+    ohci = ohci_from_hcd(hcd);
+    //port_count = (UCHAR) ((PEHCI_HCS_CONTENT) & ehci->ehci_caps.hcs_params)->port_count;
+
+    //if (port_idx < 1 || port_idx > port_count)
+    //    return FALSE;
+
+    //usb_dbg_print(DBGLVL_MAXIMUM, ("ohci_rh_reset_port(): status after written=0x%x\n", status));
+    return TRUE;
+}
+
+NTSTATUS
+ohci_hcd_dispatch(PHCD hcd, LONG disp_code, PVOID param)
+{
+    POHCI_DEV ohci;
+
+    if (hcd == NULL)
+        return STATUS_INVALID_PARAMETER;
+    ohci = ohci_from_hcd(hcd);
+#if 0
+    switch (disp_code)
+    {
+        case HCD_DISP_READ_PORT_COUNT:
+        {
+            if (param == NULL)
+                return STATUS_INVALID_PARAMETER;
+            *((PUCHAR) param) = (UCHAR) HCS_N_PORTS(ehci->ehci_caps.hcs_params);
+            return STATUS_SUCCESS;
+        }
+        case HCD_DISP_READ_RH_DEV_CHANGE:
+        {
+            if (ehci_rh_get_dev_change(hcd, param) == FALSE)
+                return STATUS_INVALID_PARAMETER;
+            return STATUS_SUCCESS;
+        }
+    }
+#endif
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID
 ohci_init_hcd_interface(POHCI_DEV ohci)
 {
     ohci->hcd_interf.hcd_set_dev_mgr = ehci_set_dev_mgr;
-#if 0
     ohci->hcd_interf.hcd_get_dev_mgr = ehci_get_dev_mgr;
-    ohci->hcd_interf.hcd_get_type = ehci_get_type;
-#endif
+    ohci->hcd_interf.hcd_get_type = ohci_get_type;
     ohci->hcd_interf.hcd_set_id = ehci_set_id;
-#if 0
     ohci->hcd_interf.hcd_get_id = ehci_get_id;
     ohci->hcd_interf.hcd_alloc_addr = ehci_alloc_addr;
     ohci->hcd_interf.hcd_free_addr = ehci_free_addr;
-    ohci->hcd_interf.hcd_submit_urb = ehci_submit_urb2;
-    ohci->hcd_interf.hcd_generic_urb_completion = ehci_generic_urb_completion;
-    ohci->hcd_interf.hcd_get_root_hub = ehci_get_root_hub;
-    ohci->hcd_interf.hcd_set_root_hub = ehci_set_root_hub;
-    ohci->hcd_interf.hcd_remove_device = ehci_remove_device2;
-    ohci->hcd_interf.hcd_rh_reset_port = ehci_rh_reset_port;
-    ohci->hcd_interf.hcd_release = ehci_hcd_release;
-    ohci->hcd_interf.hcd_cancel_urb = ehci_cancel_urb2;
-    ohci->hcd_interf.hcd_start = ehci_start;
-    ohci->hcd_interf.hcd_dispatch = ehci_hcd_dispatch;
-#endif
+    ohci->hcd_interf.hcd_submit_urb = ohci_submit_urb2;
+    ohci->hcd_interf.hcd_generic_urb_completion = ohci_generic_urb_completion;
+    ohci->hcd_interf.hcd_get_root_hub = ohci_get_root_hub;
+    ohci->hcd_interf.hcd_set_root_hub = ohci_set_root_hub;
+    ohci->hcd_interf.hcd_remove_device = ohci_remove_device2;
+    ohci->hcd_interf.hcd_rh_reset_port = ohci_rh_reset_port;
+    ohci->hcd_interf.hcd_release = ohci_hcd_release;
+    ohci->hcd_interf.hcd_cancel_urb = ohci_cancel_urb2;
+    ohci->hcd_interf.hcd_start = ohci_start;
+    ohci->hcd_interf.hcd_dispatch = ohci_hcd_dispatch;
+
     ohci->hcd_interf.flags = HCD_TYPE_OHCI;     //hcd types | hcd id
 }
 
