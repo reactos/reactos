@@ -33,10 +33,7 @@ NTAPI
 KeRosDumpStackFrames(
     PULONG Frame,
     ULONG FrameCount
-)
-{
-  return; 
-}
+);
 
 #define GDI_ENTRY_TO_INDEX(ht, e)                                              \
   (((ULONG_PTR)(e) - (ULONG_PTR)&((ht)->Entries[0])) / sizeof(GDI_TABLE_ENTRY))
