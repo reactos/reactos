@@ -236,7 +236,7 @@ PopulateCustomPathCombo(
 {
 	HKEY hKey = NULL;
 	DWORD dwRegType;
-	DWORD dwPathLength;
+	DWORD dwPathLength = 0;
 	LPWSTR Buffer = NULL;
 	LPCWSTR Path;
 	LONG rc;

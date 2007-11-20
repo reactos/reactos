@@ -150,7 +150,7 @@ UpdateDriverForPlugAndPlayDevicesW(
 			TRACE("SetupDiGetDeviceInstanceIdW() failed with error 0x%x\n", GetLastError());
 			goto cleanup;
 		}
-		else if ((Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize)) == NULL)
+		else if ((Buffer = HeapAlloc(GetProcessHeap(), 0, BufferSize * sizeof(WCHAR))) == NULL)
 		{
 			TRACE("HeapAlloc() failed\n", GetLastError());
 			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
