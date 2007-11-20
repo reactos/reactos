@@ -3389,6 +3389,7 @@ NtGdiGetTextCharsetInfo(
     IN DWORD dwFlags)
 {
   PDC Dc;
+  PDC_ATTR Dc_Attr;
   UINT Ret = DEFAULT_CHARSET, i = 0, fs_fsCsb0 = 0;
   HFONT hFont;
   PTEXTOBJ TextObj;
@@ -3404,7 +3405,9 @@ NtGdiGetTextCharsetInfo(
          SetLastWin32Error(ERROR_INVALID_HANDLE);
          return Ret;
     }
-  hFont = Dc->Dc_Attr.hlfntNew;
+  Dc_Attr = Dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
+  hFont = Dc_Attr->hlfntNew;
   TextObj = TEXTOBJ_LockText(hFont);
   DC_UnlockDc( Dc );
   if ( TextObj == NULL)
