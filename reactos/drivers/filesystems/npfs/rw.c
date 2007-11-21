@@ -43,6 +43,7 @@ VOID HexDump(PUCHAR Buffer, ULONG Length)
 }
 #endif
 
+static DRIVER_CANCEL NpfsReadWriteCancelRoutine;
 static VOID STDCALL
 NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 						   IN PIRP Irp)

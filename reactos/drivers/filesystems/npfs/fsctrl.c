@@ -16,6 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
+static DRIVER_CANCEL NpfsListeningCancelRoutine;
 static VOID STDCALL
 NpfsListeningCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 						   IN PIRP Irp)
