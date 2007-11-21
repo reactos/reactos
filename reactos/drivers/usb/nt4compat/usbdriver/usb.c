@@ -1014,80 +1014,24 @@ LBL_OUT:
 VOID
 usb_wait_ms_dpc(ULONG ms)
 {
-    LARGE_INTEGER start;
-    LARGE_INTEGER ticker;
-    LARGE_INTEGER freq;
-    ULONG interval;
-    ULONG expire_count;
+    LARGE_INTEGER Interval;
+    if (ms <= 0)
+        return;
 
-    KeQueryPerformanceCounter(&freq);
-
-    expire_count = 2000000;
-    if (cpu_clock_freq)
-        expire_count = (cpu_clock_freq / 1000) * ms;
-
-    if (usb_query_clicks(&start) == FALSE)
-    {
-        ticker.QuadPart = 0;
-        while (TRUE)
-        {
-            KeQuerySystemTime(&ticker);
-            interval = ticker.LowPart - start.LowPart;
-            if (interval >= ms * 10000)
-                break;
-        }
-    }
-    else
-    {
-        ticker.QuadPart = 0;
-        while (TRUE)
-        {
-            usb_query_clicks(&ticker);
-            interval = ticker.LowPart - start.LowPart;
-            if (interval >= expire_count)
-                break;
-        }
-    }
+    Interval.QuadPart = -ms * 10000;
+    KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
 
 
 VOID
 usb_wait_us_dpc(ULONG us)
 {
-    LARGE_INTEGER start;
-    LARGE_INTEGER ticker;
-    LARGE_INTEGER freq;
-    ULONG interval;
-    ULONG expire_count;
+    LARGE_INTEGER Interval;
+    if (us <= 0)
+        return;
 
-    KeQueryPerformanceCounter(&freq);
-
-    expire_count = 2000000;
-    if (cpu_clock_freq)
-        expire_count = (cpu_clock_freq / 1000000) * us;
-
-    if (usb_query_clicks(&start) == FALSE)
-    {
-        ticker.QuadPart = 0;
-        while (TRUE)
-        {
-            KeQuerySystemTime(&ticker);
-            interval = ticker.LowPart - start.LowPart;
-            if (interval >= us * 10)
-                break;
-        }
-    }
-    else
-    {
-        ticker.QuadPart = 0;
-        while (TRUE)
-        {
-            usb_query_clicks(&ticker);
-            interval = ticker.LowPart - start.LowPart;
-            if (interval >= expire_count)
-                break;
-        }
-    }
+    Interval.QuadPart = -us;
+    KeDelayExecutionThread(KernelMode, FALSE, &Interval);
 }
 
 VOID
