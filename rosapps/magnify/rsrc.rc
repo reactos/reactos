@@ -6,3 +6,4 @@
 #include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/uk-UA.rc"
+#include "lang/ru-RU.rc"
