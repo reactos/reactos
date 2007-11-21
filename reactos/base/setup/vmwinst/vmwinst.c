@@ -554,7 +554,7 @@ PageInstallingProc(
       switch(pnmh->code)
       {
         case PSN_SETACTIVE:
-          SetDlgItemText(hwndDlg, IDC_INSTALLINGSTATUS, NULL);
+          SetDlgItemText(hwndDlg, IDC_INSTALLINGSTATUS, L"");
           SendDlgItemMessage(hwndDlg, IDC_INSTALLINGPROGRESS, PBM_SETMARQUEE, TRUE, 50);
           PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK);
           InstStartInstallationThread(hwndDlg);
