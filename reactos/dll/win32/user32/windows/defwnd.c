@@ -988,6 +988,18 @@ static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
     SendMessageW(hwnd, WM_PRINTCLIENT, (WPARAM)hdc, PRF_CLIENT);
 }
 
+static BOOL CALLBACK
+UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
+{
+    WPARAM wParam;
+
+    /* Unpack WPARAM */
+    wParam = MAKEWPARAM((lParam >> 3) & 0x3,
+                        lParam & (UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE));
+    SendMessageW(hwnd, WM_UPDATEUISTATE, wParam, 0);
+    return TRUE;
+}
+
 
 VOID FASTCALL
 DefWndScreenshot(HWND hWnd)
@@ -1589,6 +1601,168 @@ User32DefWindowProc(HWND hWnd,
         case WM_ENDSESSION:
             if (wParam) PostQuitMessage(0);
             return 0;
+
+        case WM_QUERYUISTATE:
+        {
+            LRESULT Ret = 0;
+            PWINDOW Wnd = ValidateHwnd(hWnd);
+            if (Wnd != NULL)
+            {
+                if (Wnd->HideFocus)
+                    Ret |= UISF_HIDEFOCUS;
+                if (Wnd->HideAccel)
+                    Ret |= UISF_HIDEACCEL;
+            }
+            return Ret;
+        }
+
+        case WM_CHANGEUISTATE:
+        {
+            WORD Action = LOWORD(wParam);
+            WORD Flags = HIWORD(wParam);
+            PWINDOW Wnd = ValidateHwnd(hWnd);
+            if (!Wnd || lParam != 0)
+                break;
+
+            if (Flags & ~(UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE))
+                break;
+
+            if (Flags & UISF_ACTIVE)
+            {
+                WARN("WM_CHANGEUISTATE does not yet support UISF_ACTIVE!\n");
+            }
+
+            if (Action == UIS_INITIALIZE)
+            {
+                PDESKTOP Desk = GetThreadDesktopInfo();
+                if (Desk == NULL)
+                    break;
+
+                Action = Desk->LastInputWasKbd ? UIS_CLEAR : UIS_SET;
+                Flags = UISF_HIDEFOCUS | UISF_HIDEACCEL;
+
+                /* We need to update wParam in case we need to send out messages */
+                wParam = MAKEWPARAM(Action, Flags);
+            }
+
+            switch (Action)
+            {
+                case UIS_SET:
+                    /* See if we actually need to change something */
+                    if ((Flags & UISF_HIDEFOCUS) && !Wnd->HideFocus)
+                        break;
+                    if ((Flags & UISF_HIDEACCEL) && !Wnd->HideAccel)
+                        break;
+
+                    /* Don't need to do anything... */
+                    return 0;
+
+                case UIS_CLEAR:
+                    /* See if we actually need to change something */
+                    if ((Flags & UISF_HIDEFOCUS) && Wnd->HideFocus)
+                        break;
+                    if ((Flags & UISF_HIDEACCEL) && Wnd->HideAccel)
+                        break;
+
+                    /* Don't need to do anything... */
+                    return 0;
+
+                default:
+                    WARN("WM_CHANGEUISTATE: Unsupported Action 0x%x\n", Action);
+                    break;
+            }
+
+            if ((Wnd->Style & WS_CHILD) && Wnd->Parent != NULL)
+            {
+                /* We're a child window and we need to pass this message down until
+                   we reach the root */
+                hWnd = UserHMGetHandle(Wnd->Parent);
+            }
+            else
+            {
+                /* We're a top level window, we need to change the UI state */
+                Msg = WM_UPDATEUISTATE;
+            }
+
+            if (bUnicode)
+                return SendMessageW(hWnd, Msg, wParam, lParam);
+            else
+                return SendMessageA(hWnd, Msg, wParam, lParam);
+        }
+
+        case WM_UPDATEUISTATE:
+        {
+            BOOL Change = TRUE;
+            WORD Action = LOWORD(wParam);
+            WORD Flags = HIWORD(wParam);
+            PWINDOW Wnd = ValidateHwnd(hWnd);
+            if (!Wnd || lParam != 0)
+                break;
+
+            if (Flags & ~(UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE))
+                break;
+
+            if (Flags & UISF_ACTIVE)
+            {
+                WARN("WM_UPDATEUISTATE does not yet support UISF_ACTIVE!\n");
+            }
+
+            if (Action == UIS_INITIALIZE)
+            {
+                PDESKTOP Desk = GetThreadDesktopInfo();
+                if (Desk == NULL)
+                    break;
+
+                Action = Desk->LastInputWasKbd ? UIS_CLEAR : UIS_SET;
+                Flags = UISF_HIDEFOCUS | UISF_HIDEACCEL;
+
+                /* We need to update wParam for broadcasting the update */
+                wParam = MAKEWPARAM(Action, Flags);
+            }
+
+            switch (Action)
+            {
+                case UIS_SET:
+                    /* See if we actually need to change something */
+                    if ((Flags & UISF_HIDEFOCUS) && !Wnd->HideFocus)
+                        break;
+                    if ((Flags & UISF_HIDEACCEL) && !Wnd->HideAccel)
+                        break;
+
+                    /* Don't need to do anything... */
+                    Change = FALSE;
+                    break;
+
+                case UIS_CLEAR:
+                    /* See if we actually need to change something */
+                    if ((Flags & UISF_HIDEFOCUS) && Wnd->HideFocus)
+                        break;
+                    if ((Flags & UISF_HIDEACCEL) && Wnd->HideAccel)
+                        break;
+
+                    /* Don't need to do anything... */
+                    Change = FALSE;
+                    break;
+
+                default:
+                    WARN("WM_UPDATEUISTATE: Unsupported Action 0x%x\n", Action);
+                    return 0;
+            }
+
+            /* Pack the information and call win32k */
+            if (Change)
+            {
+                if (!NtUserCallTwoParam((DWORD)hWnd, (DWORD)Flags | ((DWORD)Action << 3), TWOPARAM_ROUTINE_ROS_UPDATEUISTATE))
+                    break;
+            }
+
+            /* Always broadcast the update to all children */
+            EnumChildWindows(hWnd,
+                             UserSendUiUpdateMsg,
+                             (LPARAM)Flags | ((LPARAM)Action << 3));
+
+            break;
+        }
 
     }
     return 0;

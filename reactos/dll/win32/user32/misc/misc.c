@@ -148,19 +148,6 @@ GetW32ProcessInfo(VOID)
     return pi;
 }
 
-static PDESKTOP
-GetThreadDesktopInfo(VOID)
-{
-    PW32THREADINFO ti;
-    PDESKTOP di = NULL;
-
-    ti = GetW32ThreadInfo();
-    if (ti != NULL)
-        di = DesktopPtrToUser(ti->Desktop);
-
-    return di;
-}
-
 
 /*
  * GetUserObjectSecurity

@@ -594,6 +594,19 @@ NtUserCallTwoParam(
             RETURN( 0 );
          }
 
+      case TWOPARAM_ROUTINE_ROS_UPDATEUISTATE:
+      {
+          WPARAM wParam;
+          Window = UserGetWindowObject((HWND)Param1);
+          if (!Window) RETURN(0);
+
+          /* Unpack wParam */
+          wParam = MAKEWPARAM((Param2 >> 3) & 0x3,
+                              Param2 & (UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE));
+
+          RETURN( UserUpdateUiState(Window->Wnd, wParam) );
+      }
+
       case TWOPARAM_ROUTINE_SWITCHTOTHISWINDOW:
          UNIMPLEMENTED
          RETURN( 0);

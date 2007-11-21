@@ -13,6 +13,8 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/prop.h>
 #include <include/scroll.h>
 
+BOOL FASTCALL UserUpdateUiState(PWINDOW Wnd, WPARAM wParam);
+
 typedef struct _WINDOW_OBJECT
 {
   /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This

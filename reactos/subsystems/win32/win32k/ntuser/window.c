@@ -66,6 +66,40 @@ CleanupWindowImpl(VOID)
 
 /* HELPER FUNCTIONS ***********************************************************/
 
+BOOL FASTCALL UserUpdateUiState(PWINDOW Wnd, WPARAM wParam)
+{
+    WORD Action = LOWORD(wParam);
+    WORD Flags = HIWORD(wParam);
+
+    if (Flags & ~(UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE))
+    {
+        SetLastWin32Error(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    switch (Action)
+    {
+        case UIS_INITIALIZE:
+            SetLastWin32Error(ERROR_INVALID_PARAMETER);
+            return FALSE;
+
+        case UIS_SET:
+            if (Flags & UISF_HIDEFOCUS)
+                Wnd->HideFocus = TRUE;
+            if (Flags & UISF_HIDEACCEL)
+                Wnd->HideAccel = TRUE;
+            break;
+
+        case UIS_CLEAR:
+            if (Flags & UISF_HIDEFOCUS)
+                Wnd->HideFocus = FALSE;
+            if (Flags & UISF_HIDEACCEL)
+                Wnd->HideAccel = FALSE;
+            break;
+    }
+
+    return TRUE;
+}
 
 PWINDOW_OBJECT FASTCALL IntGetWindowObject(HWND hWnd)
 {
@@ -1639,6 +1673,11 @@ AllocErr:
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
    Wnd->Parent = ParentWindow ? ParentWindow->Wnd : NULL;
+   if (Wnd->Parent != NULL && hWndParent != 0)
+   {
+       Wnd->HideFocus = Wnd->Parent->HideFocus;
+       Wnd->HideAccel = Wnd->Parent->HideAccel;
+   }
 
    if((OwnerWindow = UserGetWindowObject(OwnerWindowHandle)))
    {

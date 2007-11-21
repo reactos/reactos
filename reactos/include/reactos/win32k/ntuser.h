@@ -36,6 +36,15 @@ typedef struct _DESKTOP
     HWND hProgmanWindow;
     struct _WINDOW *Wnd;
 
+    union
+    {
+        UINT Dummy;
+        struct
+        {
+            UINT LastInputWasKbd : 1;
+        };
+    };
+
     WCHAR szDesktopName[1];
 } DESKTOP, *PDESKTOP;
 
@@ -154,6 +163,8 @@ typedef struct _WINDOW
     /* Indicates whether the window is derived from a system class */
     UINT IsSystem : 1;
     UINT InternalPosInitialized : 1;
+    UINT HideFocus : 1;
+    UINT HideAccel : 1;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO
@@ -669,6 +680,7 @@ NtUserCallOneParam(
 #define TWOPARAM_ROUTINE_ROS_ISACTIVEICON   0x1001
 #define TWOPARAM_ROUTINE_ROS_NCDESTROY      0x1002
 #define TWOPARAM_ROUTINE_ROS_REGSYSCLASSES  0x1003
+#define TWOPARAM_ROUTINE_ROS_UPDATEUISTATE  0x1004
 DWORD
 NTAPI
 NtUserCallTwoParam(

@@ -478,6 +478,7 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
    NTSTATUS WaitStatus;
    DECLARE_RETURN(BOOL);
    USER_REFERENCE_ENTRY Ref;
+   PDESKTOP Desk = NULL;
 
    WaitObjects[1] = MessageQueue->NewMessages;
    WaitObjects[0] = &HardwareMessageQueueLock;
@@ -499,7 +500,11 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
 
    DesktopWindow = UserGetWindowObject(IntGetDesktopWindow());
 
-   if (DesktopWindow) UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
+   if (DesktopWindow)
+   {
+       UserRefObjectCo(DesktopWindow, &Ref);//can DesktopWindow be NULL?
+       Desk = DesktopWindow->ti->Desktop;
+   }
 
    /* Process messages in the message queue itself. */
    IntLockHardwareMessageQueue(MessageQueue);
@@ -514,7 +519,6 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
       {
 
 
-
          Accept = co_MsqTranslateMouseMessage(MessageQueue, hWnd, FilterLow, FilterHigh,
                                               Current, Remove, &Freed,
                                               DesktopWindow, &ScreenPoint, FALSE);
@@ -527,6 +531,9 @@ co_MsqPeekHardwareMessage(PUSER_MESSAGE_QUEUE MessageQueue, HWND hWnd,
             IntUnLockHardwareMessageQueue(MessageQueue);
             IntUnLockSystemHardwareMessageQueueLock(FALSE);
             *Message = Current;
+
+            if (Desk)
+                Desk->LastInputWasKbd = FALSE;
 
             RETURN(TRUE);
          }
@@ -723,6 +730,9 @@ co_MsqPostKeyboardMessage(UINT uMsg, WPARAM wParam, LPARAM lParam)
       {
          Msg.hwnd = FocusMessageQueue->FocusWindow;
          DPRINT("Msg.hwnd = %x\n", Msg.hwnd);
+
+         FocusMessageQueue->Desktop->DesktopInfo->LastInputWasKbd = TRUE;
+
          IntGetCursorLocation(FocusMessageQueue->Desktop->WindowStation,
                               &Msg.pt);
          MsqPostMessage(FocusMessageQueue, &Msg, FALSE, QS_KEY);

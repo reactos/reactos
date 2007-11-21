@@ -91,6 +91,19 @@ IsThreadHooked(PW32THREADINFO ti)
     return ti->Hooks != 0;
 }
 
+static __inline PDESKTOP
+GetThreadDesktopInfo(VOID)
+{
+    PW32THREADINFO ti;
+    PDESKTOP di = NULL;
+
+    ti = GetW32ThreadInfo();
+    if (ti != NULL)
+        di = DesktopPtrToUser(ti->Desktop);
+
+    return di;
+}
+
 PCALLPROC FASTCALL ValidateCallProc(HANDLE hCallProc);
 PWINDOW FASTCALL ValidateHwnd(HWND hwnd);
 PWINDOW FASTCALL ValidateHwndOrDesk(HWND hwnd);
