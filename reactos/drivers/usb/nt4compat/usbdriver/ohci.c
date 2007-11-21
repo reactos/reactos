@@ -990,6 +990,7 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
     PHUB2_EXTENSION hub_ext;
     PUSB_PORT_STATUS ps, psret;
     UCHAR port_count;
+    ULONG i;
 
     USE_NON_PENDING_IRQL;
     if (pdev == NULL || purb == NULL)
@@ -1028,32 +1029,29 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 ps = &hub_ext->rh_port_status[psetup->wIndex];
                 psret = (PUSB_PORT_STATUS) purb->data_buffer;
 
-#if 0
-                i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
-                status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
-                ps = &hub_ext->rh_port_status[psetup->wIndex];
+                status =
+                    OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[psetup->wIndex-1]);
 
-                psret = (PUSB_PORT_STATUS) purb->data_buffer;
                 ps->wPortStatus = 0;
 
-                if (status & PORT_CCS)
+                if (status & RH_PS_CCS)
                 {
                     ps->wPortStatus |= USB_PORT_STAT_CONNECTION;
                 }
-                if (status & PORT_PE)
+                if (status & RH_PS_PES)
                 {
                     ps->wPortStatus |= USB_PORT_STAT_ENABLE;
-                    ps->wPortStatus |= USB_PORT_STAT_HIGH_SPEED;        // ehci spec
+                    //ps->wPortStatus |= USB_PORT_STAT_HIGH_SPEED;        // ehci spec
                 }
-                if (status & PORT_PR)
+                if (status & RH_PS_PRS)
                 {
                     ps->wPortStatus |= USB_PORT_STAT_RESET;
                 }
-                if (status & PORT_SUSP)
+                if (status & RH_PS_PSS)
                 {
                     ps->wPortStatus |= USB_PORT_STAT_SUSPEND;
                 }
-                if (PORT_USB11(status))
+                if (status & RH_PS_LSDA)
                 {
                     ps->wPortStatus |= USB_PORT_STAT_LOW_SPEED;
                 }
@@ -1062,15 +1060,15 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 ps->wPortStatus |= USB_PORT_STAT_POWER;
 
                 //now set change field
-                if ((status & PORT_CSC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
+                if ((status & RH_PS_CSC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
                 {
                     ps->wPortChange |= USB_PORT_STAT_C_CONNECTION;
                 }
-                if ((status & PORT_PEC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
+                if ((status & RH_PS_PESC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
                 {
                     ps->wPortChange |= USB_PORT_STAT_C_ENABLE;
                 }
-#endif
+
                 //don't touch other fields, might be filled by
                 //other function
 
@@ -1093,8 +1091,8 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                     purb->status = STATUS_INVALID_PARAMETER;
                     break;
                 }
-#if 0
-                i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
+
+                i = psetup->wIndex - 1;
                 ps = &hub_ext->rh_port_status[psetup->wIndex];
 
                 purb->status = STATUS_SUCCESS;
@@ -1102,19 +1100,19 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 {
                     case USB_PORT_FEAT_C_CONNECTION:
                     {
-                        SET_RH2_PORTSTAT(i, USBPORTSC_CSC);
-                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i], RH_PS_CSC);
+                        status = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i]);
                         usb_dbg_print(DBGLVL_MAXIMUM,
-                                      ("ehci_rh_submit_urb(): clear csc, port%d=0x%x\n", psetup->wIndex));
+                                      ("ohci_rh_submit_urb(): clear csc, port%d=0x%x\n", psetup->wIndex, status));
                         ps->wPortChange &= ~USB_PORT_STAT_C_CONNECTION;
                         break;
                     }
                     case USB_PORT_FEAT_C_ENABLE:
                     {
-                        SET_RH2_PORTSTAT(i, USBPORTSC_PEC);
-                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i], RH_PS_PESC);
+                        status = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i]);
                         usb_dbg_print(DBGLVL_MAXIMUM,
-                                      ("ehci_rh_submit_urb(): clear pec, port%d=0x%x\n", psetup->wIndex));
+                                      ("ohci_rh_submit_urb(): clear pec, port%d=0x%x\n", psetup->wIndex, status));
                         ps->wPortChange &= ~USB_PORT_STAT_C_ENABLE;
                         break;
                     }
@@ -1125,23 +1123,23 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                         // enable or not is set by host controller
                         // status = EHCI_READ_PORT_ULONG( ( PUSHORT ) ( ehci->port_base + i ) );
                         usb_dbg_print(DBGLVL_MAXIMUM,
-                                      ("ehci_rh_submit_urb(): clear pr, enable pe, port%d=0x%x\n",
-                                       psetup->wIndex));
+                                      ("ohci_rh_submit_urb(): clear pr, enable pe, port%d=0x%x\n",
+                                       psetup->wIndex, 0));
                         break;
                     }
                     case USB_PORT_FEAT_ENABLE:
                     {
                         ps->wPortStatus &= ~USB_PORT_STAT_ENABLE;
-                        CLR_RH2_PORTSTAT(i, USBPORTSC_PE);
-                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        OHCI_WRITE_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i], RH_PS_PES);
+                        status = OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[i]);
                         usb_dbg_print(DBGLVL_MAXIMUM,
-                                      ("ehci_rh_submit_urb(): clear pe, port%d=0x%x\n", psetup->wIndex));
+                                      ("ohci_rh_submit_urb(): clear pe, port%d=0x%x\n", psetup->wIndex, status));
                         break;
                     }
                     default:
                         purb->status = STATUS_UNSUCCESSFUL;
                 }
-#endif
+
                 break;
             }
             else if (psetup->bmRequestType == 0xd3 && psetup->bRequest == HUB_REQ_GET_STATE)
@@ -1170,7 +1168,7 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                 {
                     purb->status = STATUS_INVALID_PARAMETER;
                     ehci_dbg_print(DBGLVL_MAXIMUM,
-                                   ("ehci_rh_submit_urb(): set feature with wValue=0x%x\n", psetup->wValue));
+                                   ("ohci_rh_submit_urb(): set feature with wValue=0x%x\n", psetup->wValue));
                     break;
                 }
 
@@ -1187,7 +1185,7 @@ ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
                     OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[psetup->wIndex-1]);
 
                 usb_dbg_print(DBGLVL_MAXIMUM,
-                              ("ehci_rh_submit_urb(): reset port, port%d=0x%x\n", psetup->wIndex, status));
+                              ("ohci_rh_submit_urb(): reset port, port%d=0x%x\n", psetup->wIndex, status));
                 InsertTailList(&dev_mgr->timer_svc_list, &ptimer->timer_svc_link);
                 purb->status = STATUS_PENDING;
             }
@@ -1294,7 +1292,7 @@ ohci_submit_urb(POHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
     else
         purb->bytes_to_transfer = purb->data_length;
 
-    ehci_dbg_print(DBGLVL_MEDIUM, ("ehci_submit_urb(): bytes_to_transfer=0x%x\n", purb->bytes_to_transfer));
+    ehci_dbg_print(DBGLVL_MEDIUM, ("ohci_submit_urb(): bytes_to_transfer=0x%x\n", purb->bytes_to_transfer));
 
     purb->bytes_transfered = 0;
     InitializeListHead(&purb->trasac_list);
@@ -1419,7 +1417,87 @@ ohci_cancel_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 VOID
 ohci_generic_urb_completion(PURB purb, PVOID context)
 {
-    DbgPrint("ohci_generic_urb_completion called, but not implemented!\n");
+    PUSB_DEV pdev;
+    BOOLEAN is_ctrl = FALSE;
+    USE_NON_PENDING_IRQL;
+
+    old_irql = KeGetCurrentIrql();
+    if (old_irql > DISPATCH_LEVEL)
+        TRAP();
+
+    if (old_irql < DISPATCH_LEVEL)
+        KeRaiseIrql(DISPATCH_LEVEL, &old_irql);
+
+    pdev = purb->pdev;
+    if (purb == NULL)
+        goto LBL_LOWER_IRQL;
+
+    if (pdev == NULL)
+        goto LBL_LOWER_IRQL;
+
+    lock_dev(pdev, TRUE);
+
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        // no need to do following statistics
+        unlock_dev(pdev, TRUE);
+        goto LBL_CLIENT_PROCESS;
+    }
+    if (usb_error(purb->status))
+    {
+        pdev->error_count++;
+    }
+
+    if (purb->pendp == &pdev->default_endp)
+    {
+        if (usb_halted(purb->status))
+        {
+            pdev->time_out_count++;
+            if (pdev->time_out_count > 3)
+            {
+                dev_set_state(pdev, USB_DEV_STATE_ZOMB);
+                ohci_dbg_print(DBGLVL_MAXIMUM,
+                               ("ohci_generic_urb_completion(): contiguous error 3 times, dev 0x%x is deactivated\n",
+                                pdev));
+            }
+        }
+        else
+            pdev->time_out_count = 0;
+
+    }
+
+    if (endp_type(purb->pendp) == USB_ENDPOINT_XFER_CONTROL)
+        is_ctrl = TRUE;
+
+    unlock_dev(pdev, TRUE);
+
+  LBL_CLIENT_PROCESS:
+    if (!is_ctrl)
+    {
+        if (purb->completion)
+            purb->completion(purb, context);
+    }
+    else
+    {
+        if (purb->ctrl_req_context.ctrl_stack_count == 0)
+        {
+            if (purb->completion)
+                purb->completion(purb, context);
+        }
+        else
+        {
+            // pstack = &purb->ctrl_req_stack[ purb->ctrl_req_context.ctrl_cur_stack ];
+            // if( pstack->urb_completion )
+            //              pstack->urb_completion( purb, pstack->context );
+            usb_call_ctrl_completion(purb);
+        }
+    }
+
+  LBL_LOWER_IRQL:
+    if (old_irql < DISPATCH_LEVEL)
+        KeLowerIrql(old_irql);
+
+    return;
 }
 
 BOOLEAN
