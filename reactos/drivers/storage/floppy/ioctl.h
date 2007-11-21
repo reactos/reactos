@@ -24,6 +24,7 @@
  *                  15-Feb-2004 vizzini - Created
  */
 
+DRIVER_DISPATCH DeviceIoctl;
 NTSTATUS NTAPI DeviceIoctl(PDEVICE_OBJECT DeviceObject,
                            PIRP Irp);
 

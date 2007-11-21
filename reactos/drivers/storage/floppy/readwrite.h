@@ -24,7 +24,7 @@
  *                  15-Feb-2004 vizzini - Created
  */
 
-
+DRIVER_DISPATCH ReadWrite;
 NTSTATUS NTAPI ReadWrite(PDEVICE_OBJECT DeviceObject,
                          PIRP Irp);
 

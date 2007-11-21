@@ -181,7 +181,7 @@ VOID NTAPI WaitForControllerInterrupt(PCONTROLLER_INFO ControllerInfo)
   KeClearEvent(&ControllerInfo->SynchEvent);
 }
 
-
+static DRIVER_DISPATCH CreateClose;
 static NTSTATUS NTAPI CreateClose(PDEVICE_OBJECT DeviceObject,
                                   PIRP Irp)
 /*
