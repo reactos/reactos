@@ -374,7 +374,7 @@ SmpMoveFilesQueryRoutine(IN PWSTR ValueName,
 	static LPWSTR FistFileName = NULL;
 
 	DPRINT("SmpMoveFilesQueryRoutine() called \n");
-	DPRINT("ValueData = %S \n", ValueData);
+	DPRINT("ValueData = %S \n", (PWSTR) ValueData);
 
 	if( !FistFileName )
 	{

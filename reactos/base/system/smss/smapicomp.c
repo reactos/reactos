@@ -38,7 +38,7 @@ SMAPI(SmCompSes)
 
 	DPRINT("SM: %s called\n", __FUNCTION__);
 
-	DPRINT("SM: %s: ClientId.UniqueProcess=%lx\n",
+	DPRINT("SM: %s: ClientId.UniqueProcess=%p\n",
 		__FUNCTION__, Request->Header.ClientId.UniqueProcess);
 	Status = SmCompleteClientInitialization ((ULONG) Request->Header.ClientId.UniqueProcess);
 	if (!NT_SUCCESS(Status))

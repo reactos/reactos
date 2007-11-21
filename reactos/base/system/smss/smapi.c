@@ -220,7 +220,7 @@ SmpHandleConnectionRequest (PSM_PORT_MESSAGE Request)
 				Status = SmBeginClientInitialization (Request, & ClientData);
 				if(STATUS_SUCCESS == Status)
 				{
-					DPRINT("SM: %s: ClientData = 0x%08lx\n",
+					DPRINT("SM: %s: ClientData = %p\n",
 						__FUNCTION__, ClientData);
 					/*
 					 * OK: the client is an environment subsystem

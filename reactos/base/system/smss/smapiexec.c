@@ -194,7 +194,7 @@ SMAPI(SmExecPgm)
 		DPRINT1("SM: %s: Request == NULL!\n", __FUNCTION__);
 		return STATUS_INVALID_PARAMETER;
 	}
-	DPRINT("SM: %s called from CID(%lx|%lx)\n",
+	DPRINT("SM: %s called from CID(%p|%p)\n",
 		__FUNCTION__, Request->Header.ClientId.UniqueProcess,
 		Request->Header.ClientId.UniqueThread);
 	ExecPgm = & Request->Request.ExecPgm;

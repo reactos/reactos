@@ -59,7 +59,7 @@ NTSTATUS STDCALL SmRegisterInternalSubsystem (LPWSTR PgmName,
 	ProcessInfo.Size = sizeof ProcessInfo;
 	ProcessInfo.ProcessHandle = (HANDLE) SmSsProcessId;
 	ProcessInfo.ClientId.UniqueProcess = (HANDLE) SmSsProcessId;
-	DPRINT("SM: %s: ProcessInfo.ProcessHandle=%lx\n",
+	DPRINT("SM: %s: ProcessInfo.ProcessHandle=%p\n",
 		__FUNCTION__,ProcessInfo.ProcessHandle);
 	Status = SmCreateClient (& ProcessInfo, PgmName);
 	if (NT_SUCCESS(Status))
@@ -164,14 +164,14 @@ SmLoadSubsystems(VOID)
 	Status = SmRegisterInternalSubsystem (L"Session Manager", IMAGE_SUBSYSTEM_NATIVE, & hSmApiPort);
 	if(!NT_SUCCESS(Status))
 	{
-		DPRINT1("SM: SmRegisterInternalSubsystem failed Status=%08lx\n", __FUNCTION__, Status);
+		DPRINT1("SM: %s SmRegisterInternalSubsystem failed Status=%08lx\n", __FUNCTION__, Status);
 		return Status;
 	}
 	/* Load Required subsystems (Debug Windows) */
 	Status = SmpLoadRequiredSubsystems();
 	if(!NT_SUCCESS(Status))
 	{
-		DPRINT1("SM: SmpLoadRequiredSubsystems failed Status=%08lx\n", __FUNCTION__, Status);
+		DPRINT1("SM: %s SmpLoadRequiredSubsystems failed Status=%08lx\n", __FUNCTION__, Status);
 		return Status;
 	}
 	/* done */
