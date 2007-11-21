@@ -169,7 +169,7 @@ MsfsSetInformation(PDEVICE_OBJECT DeviceObject,
     BufferLength = IoStack->Parameters.QueryFile.Length;
 
     DPRINT("FileInformationClass %d\n", FileInformationClass);
-    DPRINT("SystemBuffer %x\n", SystemBuffer);
+    DPRINT("SystemBuffer %p\n", SystemBuffer);
 
     switch (FileInformationClass)
     {
