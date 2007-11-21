@@ -24,8 +24,8 @@ FsRecIsNtfsVolume(IN PPACKED_BOOT_SECTOR BootSector,
     PAGED_CODE();
     BOOLEAN Result;
 
-    /* Assume success */
-    Result = TRUE;
+    /* Assume failure */
+    Result = FALSE;
 
     if ((BootSector->Oem[0] == 'N') &&
         (BootSector->Oem[1] == 'T') &&
@@ -36,8 +36,8 @@ FsRecIsNtfsVolume(IN PPACKED_BOOT_SECTOR BootSector,
         (BootSector->Oem[6] == ' ') &&
         (BootSector->Oem[7] == ' '))
     {
-        /* Fail */
-        Result = FALSE;
+        /* Success */
+        Result = TRUE;
     }
 
     /* Return the result */
@@ -84,7 +84,7 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
                                    (PVOID)&Bpb,
                                    NULL))
                 {
-                    /* Check if it's an actual FAT volume */
+                    /* Check if it's an actual NTFS volume */
                     if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
                     {
                         /* It is! */
@@ -98,7 +98,7 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Bpb,
                                         NULL))
                 {
-                    /* Check if it's an actual FAT volume */
+                    /* Check if it's an actual NTFS volume */
                     if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
                     {
                         /* It is! */
@@ -112,7 +112,7 @@ FsRecNtfsFsControl(IN PDEVICE_OBJECT DeviceObject,
                                         (PVOID)&Bpb,
                                         NULL))
                 {
-                    /* Check if it's an actual FAT volume */
+                    /* Check if it's an actual NTFS volume */
                     if (FsRecIsNtfsVolume(Bpb, SectorSize, &SectorCount))
                     {
                         /* It is! */
