@@ -37,6 +37,7 @@ PDEVICE_OBJECT ohci_create_device(PDRIVER_OBJECT drvr_obj, PUSB_DEV_MANAGER dev_
 //BOOLEAN ohci_start(PHCD hcd);
 VOID ohci_init_hcd_interface(POHCI_DEV ohci);
 BOOLEAN ohci_rh_reset_port(PHCD hcd, UCHAR port_idx);
+VOID ohci_generic_urb_completion(PURB purb, PVOID context);
 
 // shared with EHCI
 NTSTATUS ehci_dispatch_irp(IN PDEVICE_OBJECT DeviceObject, IN PIRP irp);
@@ -46,8 +47,10 @@ VOID ehci_set_id(PHCD hcd, UCHAR id);
 UCHAR ehci_get_id(PHCD hcd);
 UCHAR ehci_alloc_addr(PHCD hcd);
 VOID ehci_free_addr(PHCD hcd, UCHAR addr);
-
 BOOLEAN NTAPI ehci_cal_cpu_freq(PVOID context);
+
+VOID rh_timer_svc_int_completion(PUSB_DEV pdev, PVOID context);
+VOID rh_timer_svc_reset_port_completion(PUSB_DEV pdev, PVOID context);
 
 extern USB_DEV_MANAGER g_dev_mgr;
 
@@ -109,6 +112,58 @@ static u32 roothub_portstatus (struct ohci_hcd *hc, int i)
 /* this timer value might be vendor-specific ... */
 #define	PORT_RESET_HW_MSEC	10
 
+#define DEFAULT_ENDP( enDP ) \
+( enDP->flags & USB_ENDP_FLAG_DEFAULT_ENDP )
+
+#define dev_from_endp( enDP ) \
+( DEFAULT_ENDP( enDP )\
+  ? ( ( PUSB_DEV )( enDP )->pusb_if )\
+  : ( ( enDP )->pusb_if->pusb_config->pusb_dev ) )
+
+#define endp_state( enDP ) ( ( enDP )->flags & USB_ENDP_FLAG_STAT_MASK )
+
+#define endp_num( enDP ) \
+( DEFAULT_ENDP( enDP )\
+  ? 0 \
+  : ( ( enDP )->pusb_endp_desc->bEndpointAddress & 0x0f ) )
+
+#define endp_dir( enDP ) \
+( DEFAULT_ENDP( enDP )\
+  ? 0L\
+  : ( ( enDP )->pusb_endp_desc->bEndpointAddress & USB_DIR_IN ) )
+
+#define dev_set_state( pdEV, staTE ) \
+( pdEV->flags = ( ( pdEV )->flags & ( ~USB_DEV_STATE_MASK ) ) | ( staTE ) )
+
+#define endp_max_packet_size( enDP ) \
+( DEFAULT_ENDP( enDP )\
+  ? ( ( ( PUSB_DEV )enDP->pusb_if )->pusb_dev_desc ? \
+	  ( ( PUSB_DEV )enDP->pusb_if )->pusb_dev_desc->bMaxPacketSize0\
+	  : 8 )\
+  : ( enDP->pusb_endp_desc->wMaxPacketSize & 0x7ff ) )
+
+#define endp_mult_count( endp ) ( ( ( endp->pusb_endp_desc->wMaxPacketSize & 0x1800 ) >> 11 ) + 1 )
+
+#define get_parent_hs_hub( pDEV, parent_HUB, port_IDX ) \
+{\
+	parent_HUB = pDEV->parent_dev;\
+	port_IDX = pdev->port_idx;\
+	while( parent_HUB )\
+	{\
+		if( ( parent_HUB->flags & USB_DEV_CLASS_MASK ) != USB_DEV_CLASS_HUB )\
+		{\
+			parent_HUB = NULL;\
+			break;\
+		}\
+		if( ( parent_HUB->flags & USB_DEV_FLAG_HIGH_SPEED ) == 0 )\
+		{\
+			port_IDX = parent_HUB->port_idx;\
+			parent_HUB = parent_HUB->parent_dev;\
+			continue;\
+		}\
+		break;\
+	}\
+}
 
 VOID
 ohci_wait_ms(POHCI_DEV ohci, LONG ms)
@@ -396,13 +451,6 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
     }
 
 #if 0
-    //init ehci_caps
-    // i = ( ( PEHCI_HCS_CONTENT )( &pdev_ext->ehci->ehci_caps.hcs_params ) )->length;
-
-    ehci_get_capabilities(pdev_ext->ehci, pdev_ext->ehci->port_base);
-    i = pdev_ext->ehci->ehci_caps.length;
-    pdev_ext->ehci->port_base += i;
-
     if (ehci_init_schedule(pdev_ext->ehci, pdev_ext->padapter) == FALSE)
     {
         release_adapter(pdev_ext->padapter);
@@ -410,16 +458,18 @@ ohci_alloc(PDRIVER_OBJECT drvr_obj, PUNICODE_STRING reg_path, ULONG bus_addr, PU
         ehci_delete_device(pdev);
         return NULL;
     }
+#endif
 
-    InitializeListHead(&pdev_ext->ehci->urb_list);
-    KeInitializeSpinLock(&pdev_ext->ehci->pending_endp_list_lock);
-    InitializeListHead(&pdev_ext->ehci->pending_endp_list);
+    InitializeListHead(&pdev_ext->ohci->urb_list);
+    KeInitializeSpinLock(&pdev_ext->ohci->pending_endp_list_lock);
+    InitializeListHead(&pdev_ext->ohci->pending_endp_list);
 
-    ehci_dbg_print(DBGLVL_MAXIMUM, ("ehci_alloc(): pending_endp_list=0x%x\n",
-                                    &pdev_ext->ehci->pending_endp_list));
+    ohci_dbg_print(DBGLVL_MAXIMUM, ("ohci_alloc(): pending_endp_list=0x%x\n",
+                                    &pdev_ext->ohci->pending_endp_list));
 
-    init_pending_endp_pool(&pdev_ext->ehci->pending_endp_pool);
+    init_pending_endp_pool(&pdev_ext->ohci->pending_endp_pool);
 
+#if 0
     vector = HalGetInterruptVector(PCIBus,
                                    bus,
                                    pdev_ext->res_interrupt.level,
@@ -660,6 +710,648 @@ ohci_start(PHCD hcd)
     return TRUE;
 }
 
+static VOID NTAPI
+ohci_cancel_pending_endp_urb(IN PVOID Parameter)
+{
+    PLIST_ENTRY abort_list;
+    PUSB_DEV pdev;
+    PURB purb;
+    USE_BASIC_NON_PENDING_IRQL;
+
+    abort_list = (PLIST_ENTRY) Parameter;
+
+    if (abort_list == NULL)
+        return;
+
+    while (IsListEmpty(abort_list) == FALSE)
+    {
+        //these devs are protected by purb's ref-count
+        purb = (PURB) RemoveHeadList(abort_list);
+        pdev = purb->pdev;
+        // purb->status is set when they are added to abort_list
+
+        ohci_generic_urb_completion(purb, purb->context);
+
+        lock_dev(pdev, FALSE);
+        pdev->ref_count--;
+        unlock_dev(pdev, FALSE);
+    }
+    usb_free_mem(abort_list);
+    return;
+}
+
+static NTSTATUS
+ohci_internal_submit_bulk(POHCI_DEV ohci, PURB purb)
+{
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+ohci_internal_submit_ctrl(POHCI_DEV ohci, PURB purb)
+{
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+ohci_internal_submit_int(POHCI_DEV ohci, PURB purb)
+{
+    return STATUS_SUCCESS;
+}
+
+static NTSTATUS
+ohci_internal_submit_iso(POHCI_DEV ohci, PURB purb)
+{
+    return STATUS_SUCCESS;
+}
+
+
+static BOOLEAN
+ohci_process_pending_endp(POHCI_DEV ehci)
+{
+    PUSB_DEV pdev;
+    LIST_ENTRY temp_list, abort_list;
+    PLIST_ENTRY pthis;
+    PURB purb;
+    PUSB_ENDPOINT pendp;
+    NTSTATUS can_submit = STATUS_SUCCESS;
+    PWORK_QUEUE_ITEM pwork_item;
+    PLIST_ENTRY cancel_list;
+    PUSB_DEV pparent = NULL;
+    UCHAR port_idx = 0;
+    BOOLEAN tt_needed;
+    UCHAR hub_addr = 0;
+    USE_BASIC_IRQL;
+
+    if (ehci == NULL)
+        return FALSE;
+
+    InitializeListHead(&temp_list);
+    InitializeListHead(&abort_list);
+
+    purb = NULL;
+    ohci_dbg_print(DBGLVL_MEDIUM, ("ohci_process_pending_endp(): entering..., ehci=0x%x\n", ehci));
+
+    lock_pending_endp_list(&ehci->pending_endp_list_lock);
+    while (IsListEmpty(&ehci->pending_endp_list) == FALSE)
+    {
+
+        ehci_dbg_print(DBGLVL_MAXIMUM, ("ohci_process_pending_endp(): pending_endp_list=0x%x\n",
+                                        &ehci->pending_endp_list));
+
+        tt_needed = FALSE;
+        pthis = RemoveHeadList(&ehci->pending_endp_list);
+        pendp = ((PUHCI_PENDING_ENDP) pthis)->pendp;
+        pdev = dev_from_endp(pendp);
+        lock_dev(pdev, TRUE);
+
+        if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+        {
+            unlock_dev(pdev, TRUE);
+            free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+            //delegate to ehci_remove_device for remiving the purb queue on the endpoint
+            continue;
+        }
+        if ((pdev->flags & USB_DEV_FLAG_HIGH_SPEED) == 0)
+        {
+            // prepare split transaction
+            unlock_dev(pdev, TRUE);
+
+            // pparent won't be removed when pending_endp_list_lock is acquired.
+            get_parent_hs_hub(pdev, pparent, port_idx);
+
+            if (pparent == NULL)
+            {
+                TRAP();
+                ehci_dbg_print(DBGLVL_MEDIUM,
+                               ("ohci_process_pending_endp(): full/low speed device with no parent!!!\n"));
+                free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+                continue;
+            }
+
+            if (hub_lock_tt(pparent, port_idx, (UCHAR) endp_type(pendp)) == FALSE)
+            {
+                lock_dev(pdev, TRUE);
+                if (dev_state(pdev) != USB_DEV_STATE_ZOMB)
+                {
+                    // reinsert the pending-endp to the list
+                    InsertTailList(&temp_list, pthis);
+                    unlock_dev(pdev, TRUE);
+                }
+                else
+                {
+                    // delegate to ehci_remove_device for purb removal
+                    unlock_dev(pdev, TRUE);
+                    free_pending_endp(&ehci->pending_endp_pool,
+                                      struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+                }
+                continue;
+            }
+
+            // backup the hub address for future use
+            hub_addr = pparent->dev_addr;
+
+            lock_dev(pdev, TRUE);
+            if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+            {
+                unlock_dev(pdev, TRUE);
+                free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+                hub_unlock_tt(pparent, port_idx, (UCHAR) endp_type(pendp));
+                continue;
+            }
+            tt_needed = TRUE;
+            // go on processing
+        }
+
+        if (endp_state(pendp) == USB_ENDP_FLAG_STALL)
+        {
+            while (IsListEmpty(&pendp->urb_list) == FALSE)
+            {
+                purb = (PURB) RemoveHeadList(&pendp->urb_list);
+                purb->status = USB_STATUS_ENDPOINT_HALTED;
+                InsertTailList(&abort_list, (LIST_ENTRY *) purb);
+            }
+            InitializeListHead(&pendp->urb_list);
+            unlock_dev(pdev, TRUE);
+            free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+            if (tt_needed)
+                hub_unlock_tt(pparent, port_idx, (UCHAR) endp_type(pendp));
+            continue;
+        }
+
+        if (IsListEmpty(&pendp->urb_list) == FALSE)
+        {
+            purb = (PURB) RemoveHeadList(&pendp->urb_list);
+            ASSERT(purb);
+        }
+        else
+        {
+            InitializeListHead(&pendp->urb_list);
+            unlock_dev(pdev, TRUE);
+            free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+            if (tt_needed)
+                hub_unlock_tt(pparent, port_idx, (UCHAR) endp_type(pendp));
+            continue;
+        }
+
+        if (tt_needed)
+        {
+            ((PURB_HS_CONTEXT_CONTENT) & purb->hs_context)->hub_addr = hub_addr;
+            ((PURB_HS_CONTEXT_CONTENT) & purb->hs_context)->port_idx = port_idx;
+        }
+
+        // if can_submit is STATUS_SUCCESS, the purb is inserted into the schedule
+        switch (endp_type(pendp))
+        {
+            case USB_ENDPOINT_XFER_BULK:
+            {
+                can_submit = ohci_internal_submit_bulk(ehci, purb);
+                break;
+            }
+            case USB_ENDPOINT_XFER_CONTROL:
+            {
+                can_submit = ohci_internal_submit_ctrl(ehci, purb);
+                break;
+            }
+            case USB_ENDPOINT_XFER_INT:
+            {
+                can_submit = ohci_internal_submit_int(ehci, purb);
+                break;
+            }
+            case USB_ENDPOINT_XFER_ISOC:
+            {
+                can_submit = ohci_internal_submit_iso(ehci, purb);
+                break;
+            }
+        }
+
+        if (can_submit == STATUS_NO_MORE_ENTRIES)
+        {
+            //no enough bandwidth or tds
+            InsertHeadList(&pendp->urb_list, (PLIST_ENTRY) purb);
+            InsertTailList(&temp_list, pthis);
+        }
+        else
+        {
+            // otherwise error or success
+            free_pending_endp(&ehci->pending_endp_pool, struct_ptr(pthis, UHCI_PENDING_ENDP, endp_link));
+
+            if (can_submit != STATUS_SUCCESS)
+            {
+                //abort these URBs
+                InsertTailList(&abort_list, (LIST_ENTRY *) purb);
+                purb->status = can_submit;
+            }
+        }
+        unlock_dev(pdev, TRUE);
+        if (can_submit != STATUS_SUCCESS && tt_needed)
+        {
+            hub_unlock_tt(pparent, port_idx, (UCHAR) endp_type(pendp));
+        }
+    }
+
+    if (IsListEmpty(&temp_list) == FALSE)
+    {
+        //re-append them to the pending_endp_list
+        ListFirst(&temp_list, pthis);
+        RemoveEntryList(&temp_list);
+        MergeList(&ehci->pending_endp_list, pthis);
+    }
+    unlock_pending_endp_list(&ehci->pending_endp_list_lock);
+
+    if (IsListEmpty(&abort_list) == FALSE)
+    {
+        PLIST_ENTRY pthis;
+        cancel_list = (PLIST_ENTRY) usb_alloc_mem(NonPagedPool, sizeof(WORK_QUEUE_ITEM) + sizeof(LIST_ENTRY));
+        ASSERT(cancel_list);
+
+        ListFirst(&abort_list, pthis);
+        RemoveEntryList(&abort_list);
+        InsertTailList(pthis, cancel_list);
+
+        pwork_item = (PWORK_QUEUE_ITEM) & cancel_list[1];
+
+        // we do not need to worry the ehci_cancel_pending_endp_urb running when the
+        // driver is unloading since purb-reference count will prevent the dev_mgr to
+        // quit till all the reference count to the dev drop to zero.
+        ExInitializeWorkItem(pwork_item, ohci_cancel_pending_endp_urb, (PVOID) cancel_list);
+        ExQueueWorkItem(pwork_item, DelayedWorkQueue);
+    }
+    return TRUE;
+}
+
+NTSTATUS
+ohci_rh_submit_urb(PUSB_DEV pdev, PURB purb)
+{
+    PUSB_DEV_MANAGER dev_mgr;
+    PTIMER_SVC ptimer;
+    PUSB_CTRL_SETUP_PACKET psetup;
+    POHCI_DEV ohci;
+    NTSTATUS status;
+    PHUB2_EXTENSION hub_ext;
+    PUSB_PORT_STATUS ps, psret;
+    UCHAR port_count;
+
+    USE_NON_PENDING_IRQL;
+    if (pdev == NULL || purb == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    dev_mgr = dev_mgr_from_dev(pdev);
+
+    KeAcquireSpinLock(&dev_mgr->timer_svc_list_lock, &old_irql);
+    lock_dev(pdev, FALSE);
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        unlock_dev(pdev, FALSE);
+        KeReleaseSpinLock(&dev_mgr->timer_svc_list_lock, old_irql);
+        return STATUS_DEVICE_DOES_NOT_EXIST;
+    }
+
+    ohci = ohci_from_hcd(pdev->hcd);
+    psetup = (PUSB_CTRL_SETUP_PACKET) purb->setup_packet;
+
+    hub_ext = ((PHUB2_EXTENSION) pdev->dev_ext);
+    port_count = ohci->num_ports;
+
+    switch (endp_type(purb->pendp))
+    {
+        case USB_ENDPOINT_XFER_CONTROL:
+        {
+            if (psetup->bmRequestType == 0xa3 && psetup->bRequest == USB_REQ_GET_STATUS)
+            {
+                //get-port-status
+                if (psetup->wIndex == 0 || psetup->wIndex > port_count || psetup->wLength < 4)
+                {
+                    purb->status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+
+                ps = &hub_ext->rh_port_status[psetup->wIndex];
+                psret = (PUSB_PORT_STATUS) purb->data_buffer;
+
+#if 0
+                i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
+                status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                ps = &hub_ext->rh_port_status[psetup->wIndex];
+
+                psret = (PUSB_PORT_STATUS) purb->data_buffer;
+                ps->wPortStatus = 0;
+
+                if (status & PORT_CCS)
+                {
+                    ps->wPortStatus |= USB_PORT_STAT_CONNECTION;
+                }
+                if (status & PORT_PE)
+                {
+                    ps->wPortStatus |= USB_PORT_STAT_ENABLE;
+                    ps->wPortStatus |= USB_PORT_STAT_HIGH_SPEED;        // ehci spec
+                }
+                if (status & PORT_PR)
+                {
+                    ps->wPortStatus |= USB_PORT_STAT_RESET;
+                }
+                if (status & PORT_SUSP)
+                {
+                    ps->wPortStatus |= USB_PORT_STAT_SUSPEND;
+                }
+                if (PORT_USB11(status))
+                {
+                    ps->wPortStatus |= USB_PORT_STAT_LOW_SPEED;
+                }
+
+                //always power on
+                ps->wPortStatus |= USB_PORT_STAT_POWER;
+
+                //now set change field
+                if ((status & PORT_CSC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
+                {
+                    ps->wPortChange |= USB_PORT_STAT_C_CONNECTION;
+                }
+                if ((status & PORT_PEC) && !(ps->wPortStatus & USB_PORT_STAT_LOW_SPEED))
+                {
+                    ps->wPortChange |= USB_PORT_STAT_C_ENABLE;
+                }
+#endif
+                //don't touch other fields, might be filled by
+                //other function
+
+                usb_dbg_print(DBGLVL_MAXIMUM,
+                              ("ohci_rh_submit_urb(): get port status, wPortStatus=0x%x, wPortChange=0x%x, address=0x%x\n",
+                               ps->wPortStatus, ps->wPortChange, ps));
+
+                psret->wPortChange = ps->wPortChange;
+                psret->wPortStatus = ps->wPortStatus;
+
+                purb->status = STATUS_SUCCESS;
+
+                break;
+            }
+            else if (psetup->bmRequestType == 0x23 && psetup->bRequest == USB_REQ_CLEAR_FEATURE)
+            {
+                //clear-port-feature
+                if (psetup->wIndex == 0 || psetup->wIndex > port_count)
+                {
+                    purb->status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+#if 0
+                i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
+                ps = &hub_ext->rh_port_status[psetup->wIndex];
+
+                purb->status = STATUS_SUCCESS;
+                switch (psetup->wValue)
+                {
+                    case USB_PORT_FEAT_C_CONNECTION:
+                    {
+                        SET_RH2_PORTSTAT(i, USBPORTSC_CSC);
+                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        usb_dbg_print(DBGLVL_MAXIMUM,
+                                      ("ehci_rh_submit_urb(): clear csc, port%d=0x%x\n", psetup->wIndex));
+                        ps->wPortChange &= ~USB_PORT_STAT_C_CONNECTION;
+                        break;
+                    }
+                    case USB_PORT_FEAT_C_ENABLE:
+                    {
+                        SET_RH2_PORTSTAT(i, USBPORTSC_PEC);
+                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        usb_dbg_print(DBGLVL_MAXIMUM,
+                                      ("ehci_rh_submit_urb(): clear pec, port%d=0x%x\n", psetup->wIndex));
+                        ps->wPortChange &= ~USB_PORT_STAT_C_ENABLE;
+                        break;
+                    }
+                    case USB_PORT_FEAT_C_RESET:
+                    {
+                        ps->wPortChange &= ~USB_PORT_STAT_C_RESET;
+                        //the reset signal is down in rh_timer_svc_reset_port_completion
+                        // enable or not is set by host controller
+                        // status = EHCI_READ_PORT_ULONG( ( PUSHORT ) ( ehci->port_base + i ) );
+                        usb_dbg_print(DBGLVL_MAXIMUM,
+                                      ("ehci_rh_submit_urb(): clear pr, enable pe, port%d=0x%x\n",
+                                       psetup->wIndex));
+                        break;
+                    }
+                    case USB_PORT_FEAT_ENABLE:
+                    {
+                        ps->wPortStatus &= ~USB_PORT_STAT_ENABLE;
+                        CLR_RH2_PORTSTAT(i, USBPORTSC_PE);
+                        status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                        usb_dbg_print(DBGLVL_MAXIMUM,
+                                      ("ehci_rh_submit_urb(): clear pe, port%d=0x%x\n", psetup->wIndex));
+                        break;
+                    }
+                    default:
+                        purb->status = STATUS_UNSUCCESSFUL;
+                }
+#endif
+                break;
+            }
+            else if (psetup->bmRequestType == 0xd3 && psetup->bRequest == HUB_REQ_GET_STATE)
+            {
+                // get bus state
+                if (psetup->wIndex == 0 || psetup->wIndex > port_count || psetup->wLength == 0)
+                {
+                    purb->status = STATUS_INVALID_PARAMETER;
+                    break;
+                }
+#if 0
+                i = EHCI_PORTSC + 4 * (psetup->wIndex - 1);     // USBPORTSC1;
+                status = EHCI_READ_PORT_ULONG((PULONG) (ehci->port_base + i));
+                purb->data_buffer[0] = (status & USBPORTSC_LS);
+
+                // reverse the order
+                purb->data_buffer[0] ^= 0x3;
+#endif
+                purb->status = STATUS_SUCCESS;
+                break;
+            }
+            else if (psetup->bmRequestType == 0x23 && psetup->bRequest == USB_REQ_SET_FEATURE)
+            {
+                //reset port
+                if (psetup->wValue != USB_PORT_FEAT_RESET)
+                {
+                    purb->status = STATUS_INVALID_PARAMETER;
+                    ehci_dbg_print(DBGLVL_MAXIMUM,
+                                   ("ehci_rh_submit_urb(): set feature with wValue=0x%x\n", psetup->wValue));
+                    break;
+                }
+
+                ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+                ptimer->threshold = 0;  // within [ 50ms, 60ms ], one tick is 10 ms
+                ptimer->context = (ULONG) purb;
+                ptimer->pdev = pdev;
+                ptimer->func = rh_timer_svc_reset_port_completion;
+
+                //start the timer
+                pdev->ref_count += 2;   //one for timer and one for purb
+
+                status =
+                    OHCI_READ_PORT_ULONG((PULONG)&ohci->regs->roothub.portstatus[psetup->wIndex-1]);
+
+                usb_dbg_print(DBGLVL_MAXIMUM,
+                              ("ehci_rh_submit_urb(): reset port, port%d=0x%x\n", psetup->wIndex, status));
+                InsertTailList(&dev_mgr->timer_svc_list, &ptimer->timer_svc_link);
+                purb->status = STATUS_PENDING;
+            }
+            else
+            {
+                purb->status = STATUS_INVALID_PARAMETER;
+            }
+            break;
+        }
+        case USB_ENDPOINT_XFER_INT:
+        {
+            ptimer = alloc_timer_svc(&dev_mgr->timer_svc_pool, 1);
+            ptimer->threshold = RH_INTERVAL;
+            ptimer->context = (ULONG) purb;
+            ptimer->pdev = pdev;
+            ptimer->func = rh_timer_svc_int_completion;
+
+            //start the timer
+            InsertTailList(&dev_mgr->timer_svc_list, &ptimer->timer_svc_link);
+
+            //usb_dbg_print(DBGLVL_MAXIMUM,
+            //              ("ehci_rh_submit_urb(): current rh's ref_count=0x%x\n", pdev->ref_count));
+            pdev->ref_count += 2;       //one for timer and one for purb
+
+            purb->status = STATUS_PENDING;
+            break;
+        }
+        case USB_ENDPOINT_XFER_BULK:
+        case USB_ENDPOINT_XFER_ISOC:
+        default:
+        {
+            purb->status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+    }
+    unlock_dev(pdev, FALSE);
+    KeReleaseSpinLock(&dev_mgr->timer_svc_list_lock, old_irql);
+    return purb->status;
+}
+
+NTSTATUS
+ohci_submit_urb(POHCI_DEV ehci, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
+{
+    int i;
+    PUHCI_PENDING_ENDP pending_endp;
+    NTSTATUS status;
+    USE_BASIC_IRQL;
+
+    if (ehci == NULL)
+        return STATUS_INVALID_PARAMETER;
+
+    if (pdev == NULL || pendp == NULL || purb == NULL)
+    {
+        // give a chance to those pending urb, especially for clearing hub tt
+        ohci_process_pending_endp(ehci);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    lock_pending_endp_list(&ehci->pending_endp_list_lock);
+    lock_dev(pdev, TRUE);
+
+    if (dev_state(pdev) == USB_DEV_STATE_ZOMB)
+    {
+        status = purb->status = STATUS_DEVICE_DOES_NOT_EXIST;
+        goto LBL_OUT;
+    }
+
+    if (dev_class(pdev) == USB_DEV_CLASS_ROOT_HUB)
+    {
+        unlock_dev(pdev, TRUE);
+        unlock_pending_endp_list(&ehci->pending_endp_list_lock);
+        status = ohci_rh_submit_urb(pdev, purb);
+        return status;
+    }
+
+    if (pendp)
+        purb->pendp = pendp;
+    else
+        purb->pendp = &pdev->default_endp;
+
+    if (dev_from_endp(purb->pendp) != pdev)
+    {
+        status = purb->status = STATUS_INVALID_PARAMETER;
+        goto LBL_OUT;
+    }
+
+    if (endp_state(purb->pendp) == USB_ENDP_FLAG_STALL)
+    {
+        status = purb->status = USB_STATUS_ENDPOINT_HALTED;
+        goto LBL_OUT;
+    }
+
+    if ((pdev->flags & USB_DEV_FLAG_HIGH_SPEED) == 0)
+    {
+        // wait one ms
+        usb_wait_ms_dpc(1);
+    }
+
+    purb->pdev = pdev;
+    purb->rest_bytes = purb->data_length;
+
+    if (endp_type(purb->pendp) == USB_ENDPOINT_XFER_BULK)
+        purb->bytes_to_transfer = (purb->data_length > EHCI_MAX_SIZE_TRANSFER ? EHCI_MAX_SIZE_TRANSFER : purb->data_length);    //multiple transfer for large data block
+    else
+        purb->bytes_to_transfer = purb->data_length;
+
+    ehci_dbg_print(DBGLVL_MEDIUM, ("ehci_submit_urb(): bytes_to_transfer=0x%x\n", purb->bytes_to_transfer));
+
+    purb->bytes_transfered = 0;
+    InitializeListHead(&purb->trasac_list);
+    purb->last_finished_td = &purb->trasac_list;
+    purb->flags &= ~(URB_FLAG_STATE_MASK | URB_FLAG_IN_SCHEDULE | URB_FLAG_FORCE_CANCEL);
+    purb->flags |= URB_FLAG_STATE_PENDING;
+
+
+    i = IsListEmpty(&pendp->urb_list);
+    InsertTailList(&pendp->urb_list, &purb->urb_link);
+
+    pdev->ref_count++;          //for purb reference
+
+    if (i == FALSE)
+    {
+        //there is purb pending, simply queue it and return
+        status = purb->status = STATUS_PENDING;
+        goto LBL_OUT;
+    }
+    else if (usb_endp_busy_count(purb->pendp) && endp_type(purb->pendp) != USB_ENDPOINT_XFER_ISOC)
+    {
+        //
+        //No purb waiting but purb overlap not allowed,
+        //so leave it in queue and return, will be scheduled
+        //later
+        //
+        status = purb->status = STATUS_PENDING;
+        goto LBL_OUT;
+    }
+
+    pending_endp = alloc_pending_endp(&ehci->pending_endp_pool, 1);
+    if (pending_endp == NULL)
+    {
+        //panic
+        status = purb->status = STATUS_UNSUCCESSFUL;
+        goto LBL_OUT2;
+    }
+
+    pending_endp->pendp = purb->pendp;
+    InsertTailList(&ehci->pending_endp_list, (PLIST_ENTRY) pending_endp);
+
+    unlock_dev(pdev, TRUE);
+    unlock_pending_endp_list(&ehci->pending_endp_list_lock);
+
+    ohci_process_pending_endp(ehci);
+    return STATUS_PENDING;
+
+  LBL_OUT2:
+    pdev->ref_count--;
+    RemoveEntryList((PLIST_ENTRY) purb);
+
+  LBL_OUT:
+    unlock_dev(pdev, TRUE);
+    unlock_pending_endp_list(&ehci->pending_endp_list_lock);
+    ohci_process_pending_endp(ehci);
+    return status;
+}
 
 ULONG
 ohci_get_type(PHCD hcd)
@@ -670,8 +1362,7 @@ ohci_get_type(PHCD hcd)
 NTSTATUS
 ohci_submit_urb2(PHCD hcd, PUSB_DEV pdev, PUSB_ENDPOINT pendp, PURB purb)
 {
-    DbgPrint("ohci_submit_urb2 caled, but not implemented!\n");
-    return STATUS_UNSUCCESSFUL;
+    return ohci_submit_urb(ohci_from_hcd(hcd), pdev, pendp, purb);
 }
 
 PUSB_DEV

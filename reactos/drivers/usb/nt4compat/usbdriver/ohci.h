@@ -315,6 +315,15 @@ typedef struct _OHCI_DEV
 
     USHORT              num_ports;
 
+    LIST_HEAD           urb_list;                   	    // active urb-list
+
+	//
+    //for iso and int bandwidth claim, bandwidth schedule
+	//
+	KSPIN_LOCK 			pending_endp_list_lock;				//lock to access the following two
+	LIST_HEAD 			pending_endp_list;
+	UHCI_PENDING_ENDP_POOL  pending_endp_pool;
+
     KTIMER				reset_timer;						//used to reset the host controller
     struct _OHCI_DEVICE_EXTENSION    *pdev_ext;
     PUSB_DEV            root_hub;							//root hub
