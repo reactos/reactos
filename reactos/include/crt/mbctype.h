@@ -53,29 +53,29 @@ extern "C" {
 
 #ifndef	__STRICT_ANSI__
 
-_CRTIMP int __cdecl _setmbcp (int);
-_CRTIMP int __cdecl _getmbcp (void);
+_CRTIMP int __cdecl __MINGW_NOTHROW _setmbcp (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _getmbcp (void);
 
 /* byte classification  */
 /* NB: Corresponding _ismbc* functions are in mbstring.h */
 
-_CRTIMP int __cdecl _ismbbalpha (unsigned int);
-_CRTIMP int __cdecl _ismbbalnum (unsigned int);
-_CRTIMP int __cdecl _ismbbgraph (unsigned int);
-_CRTIMP int __cdecl _ismbbprint (unsigned int);
-_CRTIMP int __cdecl _ismbbpunct (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbalpha (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbalnum (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbgraph (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbprint (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbpunct (unsigned int);
 
-_CRTIMP int __cdecl _ismbbkana (unsigned int);
-_CRTIMP int __cdecl _ismbbkalnum (unsigned int);
-_CRTIMP int __cdecl _ismbbkprint (unsigned int);
-_CRTIMP int __cdecl _ismbbkpunct (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbkana (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbkalnum (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbkprint (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbkpunct (unsigned int);
 
 
 /* these are also in mbstring.h */
-_CRTIMP int __cdecl _ismbblead (unsigned int);
-_CRTIMP int __cdecl _ismbbtrail (unsigned int);
-_CRTIMP int __cdecl _ismbslead (const unsigned char*, const unsigned char*);
-_CRTIMP int __cdecl _ismbstrail (const unsigned char*, const unsigned char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbblead (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbbtrail (unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbslead (const unsigned char*, const unsigned char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _ismbstrail (const unsigned char*, const unsigned char*);
 
 #ifdef __DECLSPEC_SUPPORTED
 __MINGW_IMPORT unsigned char _mbctype[];
@@ -93,4 +93,5 @@ __MINGW_IMPORT unsigned char _mbcasemap[];
 #endif	/* Not RC_INVOKED */
 
 #endif	/* Not _MCTYPE_H_ */
+
 

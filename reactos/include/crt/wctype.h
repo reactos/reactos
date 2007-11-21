@@ -64,38 +64,40 @@ typedef wchar_t wctype_t;
 #endif
 
 /* Wide character equivalents - also in ctype.h */
-_CRTIMP int __cdecl	iswalnum(wint_t);
-_CRTIMP int __cdecl	iswalpha(wint_t);
-_CRTIMP int __cdecl	iswascii(wint_t);
-_CRTIMP int __cdecl	iswcntrl(wint_t);
-_CRTIMP int __cdecl	iswctype(wint_t, wctype_t);
-_CRTIMP int __cdecl	is_wctype(wint_t, wctype_t);	/* Obsolete! */
-_CRTIMP int __cdecl	iswdigit(wint_t);
-_CRTIMP int __cdecl	iswgraph(wint_t);
-_CRTIMP int __cdecl	iswlower(wint_t);
-_CRTIMP int __cdecl	iswprint(wint_t);
-_CRTIMP int __cdecl	iswpunct(wint_t);
-_CRTIMP int __cdecl	iswspace(wint_t);
-_CRTIMP int __cdecl	iswupper(wint_t);
-_CRTIMP int __cdecl	iswxdigit(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswalnum(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswalpha(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswascii(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswcntrl(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswctype(wint_t, wctype_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	is_wctype(wint_t, wctype_t);	/* Obsolete! */
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswdigit(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswgraph(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswlower(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswprint(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswpunct(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswspace(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswupper(wint_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	iswxdigit(wint_t);
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
      || !defined __STRICT_ANSI__ || defined __cplusplus
-int __cdecl iswblank (wint_t);
+int __cdecl __MINGW_NOTHROW iswblank (wint_t);
 #endif
 
 /* Older MS docs uses wchar_t for arg and return type, while newer
    online MS docs say arg is wint_t and return is int.
    ISO C uses wint_t for both.  */
-_CRTIMP wint_t __cdecl	towlower (wint_t);
-_CRTIMP wint_t __cdecl	towupper (wint_t);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	towlower (wint_t);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	towupper (wint_t);
 
-_CRTIMP int __cdecl	isleadbyte (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	isleadbyte (int);
 
 /* Also in ctype.h */
 
 #ifdef __DECLSPEC_SUPPORTED
-__MINGW_IMPORT unsigned short _ctype[];
+# if __MSVCRT_VERSION__ <= 0x0700
+  __MINGW_IMPORT unsigned short _ctype[];
+# endif 
 # ifdef __MSVCRT__
   __MINGW_IMPORT unsigned short* _pctype;
 # else	/* CRTDLL */
@@ -104,8 +106,10 @@ __MINGW_IMPORT unsigned short _ctype[];
 # endif
 
 #else		/* ! __DECLSPEC_SUPPORTED */
-extern unsigned short** _imp___ctype;
-#define _ctype (*_imp___ctype)
+# if __MSVCRT_VERSION__ <= 0x0700
+  extern unsigned short** _imp___ctype;
+# define _ctype (*_imp___ctype)
+# endif
 # ifdef __MSVCRT__
   extern unsigned short** _imp___pctype;
 # define _pctype (*_imp___pctype)
@@ -119,23 +123,23 @@ extern unsigned short** _imp___ctype;
 #if !(defined (__NO_INLINE__) || defined(__NO_CTYPE_INLINES) \
       || defined(__WCTYPE_INLINES_DEFINED))
 #define __WCTYPE_INLINES_DEFINED
-__CRT_INLINE int __cdecl iswalnum(wint_t wc) {return (iswctype(wc,_ALPHA|_DIGIT));}
-__CRT_INLINE int __cdecl iswalpha(wint_t wc) {return (iswctype(wc,_ALPHA));}
-__CRT_INLINE int __cdecl iswascii(wint_t wc) {return ((wc & ~0x7F) ==0);}
-__CRT_INLINE int __cdecl iswcntrl(wint_t wc) {return (iswctype(wc,_CONTROL));}
-__CRT_INLINE int __cdecl iswdigit(wint_t wc) {return (iswctype(wc,_DIGIT));}
-__CRT_INLINE int __cdecl iswgraph(wint_t wc) {return (iswctype(wc,_PUNCT|_ALPHA|_DIGIT));}
-__CRT_INLINE int __cdecl iswlower(wint_t wc) {return (iswctype(wc,_LOWER));}
-__CRT_INLINE int __cdecl iswprint(wint_t wc) {return (iswctype(wc,_BLANK|_PUNCT|_ALPHA|_DIGIT));}
-__CRT_INLINE int __cdecl iswpunct(wint_t wc) {return (iswctype(wc,_PUNCT));}
-__CRT_INLINE int __cdecl iswspace(wint_t wc) {return (iswctype(wc,_SPACE));}
-__CRT_INLINE int __cdecl iswupper(wint_t wc) {return (iswctype(wc,_UPPER));}
-__CRT_INLINE int __cdecl iswxdigit(wint_t wc) {return (iswctype(wc,_HEX));}
-__CRT_INLINE int __cdecl isleadbyte(int c) {return (_pctype[(unsigned char)(c)] & _LEADBYTE);}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswalnum(wint_t wc) {return (iswctype(wc,_ALPHA|_DIGIT));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswalpha(wint_t wc) {return (iswctype(wc,_ALPHA));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswascii(wint_t wc) {return ((wc & ~0x7F) ==0);}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswcntrl(wint_t wc) {return (iswctype(wc,_CONTROL));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswdigit(wint_t wc) {return (iswctype(wc,_DIGIT));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswgraph(wint_t wc) {return (iswctype(wc,_PUNCT|_ALPHA|_DIGIT));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswlower(wint_t wc) {return (iswctype(wc,_LOWER));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswprint(wint_t wc) {return (iswctype(wc,_BLANK|_PUNCT|_ALPHA|_DIGIT));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswpunct(wint_t wc) {return (iswctype(wc,_PUNCT));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswspace(wint_t wc) {return (iswctype(wc,_SPACE));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswupper(wint_t wc) {return (iswctype(wc,_UPPER));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswxdigit(wint_t wc) {return (iswctype(wc,_HEX));}
+__CRT_INLINE int __cdecl __MINGW_NOTHROW isleadbyte(int c) {return (_pctype[(unsigned char)(c)] & _LEADBYTE);}
 
 #if (defined (__STDC_VERSION__) && __STDC_VERSION__ >= 199901L) \
      || !defined __STRICT_ANSI__ || defined __cplusplus
-__CRT_INLINE int __cdecl iswblank (wint_t wc)
+__CRT_INLINE int __cdecl __MINGW_NOTHROW iswblank (wint_t wc)
   {return (iswctype(wc, _BLANK) || wc == L'\t');}
 #endif
 
@@ -150,9 +154,9 @@ typedef wchar_t wctrans_t;
    for a valid string descriptor.  If you want the MS behaviour (and you have
    msvcp60.dll in your path) add -lmsvcp60 to your command line.  */
 
-wint_t __cdecl		towctrans(wint_t, wctrans_t);
-wctrans_t __cdecl	wctrans(const char*);
-wctype_t __cdecl	wctype(const char*);
+wint_t __cdecl __MINGW_NOTHROW		towctrans(wint_t, wctrans_t);
+wctrans_t __cdecl __MINGW_NOTHROW	wctrans(const char*);
+wctype_t __cdecl __MINGW_NOTHROW	wctype(const char*);
 
 #ifdef __cplusplus
 }
@@ -161,4 +165,5 @@ wctype_t __cdecl	wctype(const char*);
 #endif	/* Not RC_INVOKED */
 
 #endif	/* Not _WCTYPE_H_ */
+
 

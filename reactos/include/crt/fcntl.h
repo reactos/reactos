@@ -46,6 +46,12 @@
 #define	_O_BINARY	0x8000	/* Input and output is not translated. */
 #define	_O_RAW		_O_BINARY
 
+#if (__MSVCRT_VERSION__ >= 0x0800)
+#define _O_WTEXT	0x10000
+#define _O_U16TEXT	0x20000
+#define _O_U8TEXT	0x40000
+#endif
+
 #ifndef	_NO_OLDNAMES
 
 /* POSIX/Non-ANSI names for increased portability */

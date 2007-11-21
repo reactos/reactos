@@ -59,7 +59,7 @@
 
 #ifndef RC_INVOKED
 
-#ifdef __cplusplus
+#ifdef __cplusplus 
 extern "C" {
 #endif
 
@@ -100,67 +100,75 @@ struct tm {
 
 #ifndef _WSTDIO_DEFINED
 /*  Also in stdio.h - keep in sync */
-_CRTIMP int __cdecl	fwprintf (FILE*, const wchar_t*, ...);
-_CRTIMP int __cdecl	wprintf (const wchar_t*, ...);
-_CRTIMP int __cdecl	swprintf (wchar_t*, const wchar_t*, ...);
-_CRTIMP int __cdecl	_snwprintf (wchar_t*, size_t, const wchar_t*, ...);
-_CRTIMP int __cdecl	vfwprintf (FILE*, const wchar_t*, __VALIST);
-_CRTIMP int __cdecl	vwprintf (const wchar_t*, __VALIST);
-_CRTIMP int __cdecl	vswprintf (wchar_t*, const wchar_t*, __VALIST);
-_CRTIMP int __cdecl	_vsnwprintf (wchar_t*, size_t, const wchar_t*, __VALIST);
-_CRTIMP int __cdecl	fwscanf (FILE*, const wchar_t*, ...);
-_CRTIMP int __cdecl	wscanf (const wchar_t*, ...);
-_CRTIMP int __cdecl	swscanf (const wchar_t*, const wchar_t*, ...);
-_CRTIMP wint_t __cdecl	fgetwc (FILE*);
-_CRTIMP wint_t __cdecl	fputwc (wchar_t, FILE*);
-_CRTIMP wint_t __cdecl	ungetwc (wchar_t, FILE*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	fwprintf (FILE*, const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wprintf (const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	swprintf (wchar_t*, const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_snwprintf (wchar_t*, size_t, const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	vfwprintf (FILE*, const wchar_t*, __VALIST);
+_CRTIMP int __cdecl __MINGW_NOTHROW	vwprintf (const wchar_t*, __VALIST);
+_CRTIMP int __cdecl __MINGW_NOTHROW	vswprintf (wchar_t*, const wchar_t*, __VALIST);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_vsnwprintf (wchar_t*, size_t, const wchar_t*, __VALIST);
+_CRTIMP int __cdecl __MINGW_NOTHROW	fwscanf (FILE*, const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wscanf (const wchar_t*, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	swscanf (const wchar_t*, const wchar_t*, ...);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	fgetwc (FILE*);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	fputwc (wchar_t, FILE*);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	ungetwc (wchar_t, FILE*);
 
-#ifdef __MSVCRT__
-_CRTIMP wchar_t* __cdecl fgetws (wchar_t*, int, FILE*);
-_CRTIMP int __cdecl	fputws (const wchar_t*, FILE*);
-_CRTIMP wint_t __cdecl	getwc (FILE*);
-_CRTIMP wint_t __cdecl	getwchar (void);
-_CRTIMP wint_t __cdecl	putwc (wint_t, FILE*);
-_CRTIMP wint_t __cdecl	putwchar (wint_t);
+#ifdef __MSVCRT__ 
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW fgetws (wchar_t*, int, FILE*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	fputws (const wchar_t*, FILE*);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	getwc (FILE*);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	getwchar (void);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	putwc (wint_t, FILE*);
+_CRTIMP wint_t __cdecl __MINGW_NOTHROW	putwchar (wint_t);
 #ifndef __STRICT_ANSI__
-_CRTIMP wchar_t* __cdecl _getws (wchar_t*);
-_CRTIMP int __cdecl	_putws (const wchar_t*);
-_CRTIMP FILE* __cdecl	_wfdopen(int, wchar_t *);
-_CRTIMP FILE* __cdecl	_wfopen (const wchar_t*, const wchar_t*);
-_CRTIMP FILE* __cdecl	_wfreopen (const wchar_t*, const wchar_t*, FILE*);
-_CRTIMP FILE* __cdecl	_wfsopen (const wchar_t*, const wchar_t*, int);
-_CRTIMP wchar_t* __cdecl _wtmpnam (wchar_t*);
-_CRTIMP wchar_t* __cdecl _wtempnam (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl	_wrename (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl	_wremove (const wchar_t*);
-_CRTIMP void __cdecl	_wperror (const wchar_t*);
-_CRTIMP FILE* __cdecl	_wpopen (const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _getws (wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_putws (const wchar_t*);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfdopen(int, wchar_t *);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfopen (const wchar_t*, const wchar_t*);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfreopen (const wchar_t*, const wchar_t*, FILE*);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wfsopen (const wchar_t*, const wchar_t*, int);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wtmpnam (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wtempnam (const wchar_t*, const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wrename (const wchar_t*, const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wremove (const wchar_t*);
+_CRTIMP void __cdecl __MINGW_NOTHROW	_wperror (const wchar_t*);
+_CRTIMP FILE* __cdecl __MINGW_NOTHROW	_wpopen (const wchar_t*, const wchar_t*);
 #endif  /* __STRICT_ANSI__ */
 #endif	/* __MSVCRT__ */
 
 #ifndef __NO_ISOCEXT  /* externs in libmingwex.a */
-int __cdecl snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...);
-__CRT_INLINE int __cdecl
+int __cdecl __MINGW_NOTHROW snwprintf (wchar_t* s, size_t n, const wchar_t*  format, ...);
+__CRT_INLINE int __cdecl __MINGW_NOTHROW
 vsnwprintf (wchar_t* s, size_t n, const wchar_t* format, __VALIST arg)
   { return _vsnwprintf ( s, n, format, arg);}
-int __cdecl vwscanf (const wchar_t * __restrict__, __VALIST);
-int __cdecl vfwscanf (FILE * __restrict__,
+int __cdecl __MINGW_NOTHROW vwscanf (const wchar_t * __restrict__, __VALIST);
+int __cdecl __MINGW_NOTHROW vfwscanf (FILE * __restrict__,
 		       const wchar_t * __restrict__, __VALIST);
-int __cdecl vswscanf (const wchar_t * __restrict__,
+int __cdecl __MINGW_NOTHROW vswscanf (const wchar_t * __restrict__,
 		       const wchar_t * __restrict__, __VALIST);
 #endif
 
 #define _WSTDIO_DEFINED
 #endif /* _WSTDIO_DEFINED */
-
 #ifndef _WSTDLIB_DEFINED /* also declared in stdlib.h */
-_CRTIMP long __cdecl 		wcstol (const wchar_t*, wchar_t**, int);
-_CRTIMP unsigned long __cdecl	wcstoul (const wchar_t*, wchar_t**, int);
-_CRTIMP double __cdecl		wcstod (const wchar_t*, wchar_t**);
+_CRTIMP long __cdecl __MINGW_NOTHROW 	wcstol (const wchar_t*, wchar_t**, int);
+_CRTIMP unsigned long __cdecl __MINGW_NOTHROW wcstoul (const wchar_t*, wchar_t**, int);
+_CRTIMP double __cdecl __MINGW_NOTHROW	wcstod (const wchar_t*, wchar_t**);
 #if !defined __NO_ISOCEXT /* in libmingwex.a */
-float __cdecl wcstof (const wchar_t * __restrict__, wchar_t ** __restrict__);
-long double __cdecl wcstold (const wchar_t * __restrict__, wchar_t ** __restrict__);
+float __cdecl __MINGW_NOTHROW wcstof (const wchar_t * __restrict__, wchar_t ** __restrict__);
+long double __cdecl __MINGW_NOTHROW wcstold (const wchar_t * __restrict__, wchar_t ** __restrict__);
 #endif /* __NO_ISOCEXT */
+#ifdef __MSVCRT__ 
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wgetenv(const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wputenv(const wchar_t*);
+_CRTIMP void __cdecl __MINGW_NOTHROW	_wsearchenv(const wchar_t*, const wchar_t*, wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wsystem(const wchar_t*);
+_CRTIMP void __cdecl __MINGW_NOTHROW	_wmakepath(wchar_t*, const wchar_t*, const wchar_t*, const wchar_t*, const wchar_t*);
+_CRTIMP void __cdecl __MINGW_NOTHROW	_wsplitpath (const wchar_t*, wchar_t*, wchar_t*, wchar_t*, wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wfullpath (wchar_t*, const wchar_t*, size_t);
+#endif
 #define  _WSTDLIB_DEFINED
 #endif /* _WSTDLIB_DEFINED */
 
@@ -168,18 +176,18 @@ long double __cdecl wcstold (const wchar_t * __restrict__, wchar_t ** __restrict
 #ifndef __STRICT_ANSI__
 #ifdef __MSVCRT__
 /* wide function prototypes, also declared in time.h */
-_CRTIMP wchar_t* __cdecl	_wasctime (const struct tm*);
-_CRTIMP wchar_t* __cdecl	_wctime (const time_t*);
-_CRTIMP wchar_t* __cdecl	_wstrdate (wchar_t*);
-_CRTIMP wchar_t* __cdecl	_wstrtime (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wasctime (const struct tm*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wctime (const time_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wstrdate (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wstrtime (wchar_t*);
 #if __MSVCRT_VERSION__ >= 0x601
-_CRTIMP wchar_t* __cdecl	_wctime64 (const __time64_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wctime64 (const __time64_t*);
 #endif
 #endif /* __MSVCRT__ */
 #endif /* __STRICT_ANSI__ */
-_CRTIMP size_t __cdecl	wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
 #define _WTIME_DEFINED
-#endif /* _WTIME_DEFINED */
+#endif /* _WTIME_DEFINED */ 
 
 
 #ifndef _WSTRING_DEFINED
@@ -187,23 +195,23 @@ _CRTIMP size_t __cdecl	wcsftime (wchar_t*, size_t, const wchar_t*, const struct 
  * Unicode versions of the standard string calls.
  * Also in string.h.
  */
-_CRTIMP wchar_t* __cdecl wcscat (wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcschr (const wchar_t*, wchar_t);
-_CRTIMP int __cdecl	wcscmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl	wcscoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcscpy (wchar_t*, const wchar_t*);
-_CRTIMP size_t __cdecl	wcscspn (const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcscat (wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcschr (const wchar_t*, wchar_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcscmp (const wchar_t*, const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcscoll (const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcscpy (wchar_t*, const wchar_t*);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcscspn (const wchar_t*, const wchar_t*);
 /* Note:  _wcserror requires __MSVCRT_VERSION__ >= 0x0700.  */
-_CRTIMP size_t __cdecl	wcslen (const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcsncat (wchar_t*, const wchar_t*, size_t);
-_CRTIMP int __cdecl	wcsncmp(const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl wcsncpy(wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl wcspbrk(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcsrchr(const wchar_t*, wchar_t);
-_CRTIMP size_t __cdecl	wcsspn(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcsstr(const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcstok(wchar_t*, const wchar_t*);
-_CRTIMP size_t __cdecl	wcsxfrm(wchar_t*, const wchar_t*, size_t);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcslen (const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsncat (wchar_t*, const wchar_t*, size_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcsncmp(const wchar_t*, const wchar_t*, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsncpy(wchar_t*, const wchar_t*, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcspbrk(const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsrchr(const wchar_t*, wchar_t);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcsspn(const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsstr(const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcstok(wchar_t*, const wchar_t*);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW	wcsxfrm(wchar_t*, const wchar_t*, size_t);
 
 #ifndef	__STRICT_ANSI__
 /*
@@ -213,39 +221,39 @@ _CRTIMP size_t __cdecl	wcsxfrm(wchar_t*, const wchar_t*, size_t);
 /* NOTE: _wcscmpi not provided by CRTDLL, this define is for portability */
 #define		_wcscmpi	_wcsicmp
 
-_CRTIMP wchar_t* __cdecl _wcsdup (const wchar_t*);
-_CRTIMP int __cdecl	_wcsicmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl	_wcsicoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl _wcslwr (wchar_t*);
-_CRTIMP int __cdecl	_wcsnicmp (const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl _wcsnset (wchar_t*, wchar_t, size_t);
-_CRTIMP wchar_t* __cdecl _wcsrev (wchar_t*);
-_CRTIMP wchar_t* __cdecl _wcsset (wchar_t*, wchar_t);
-_CRTIMP wchar_t* __cdecl _wcsupr (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsdup (const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsicmp (const wchar_t*, const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsicoll (const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcslwr (wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wcsnicmp (const wchar_t*, const wchar_t*, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsnset (wchar_t*, wchar_t, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsrev (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsset (wchar_t*, wchar_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wcsupr (wchar_t*);
 
 #ifdef __MSVCRT__
-_CRTIMP int __cdecl  _wcsncoll(const wchar_t*, const wchar_t*, size_t);
-_CRTIMP int   __cdecl _wcsnicoll(const wchar_t*, const wchar_t*, size_t);
+_CRTIMP int __cdecl __MINGW_NOTHROW  _wcsncoll(const wchar_t*, const wchar_t*, size_t);
+_CRTIMP int   __cdecl __MINGW_NOTHROW _wcsnicoll(const wchar_t*, const wchar_t*, size_t);
 #if __MSVCRT_VERSION__ >= 0x0700
-_CRTIMP  wchar_t* __cdecl _wcserror(int);
-_CRTIMP  wchar_t* __cdecl __wcserror(const wchar_t*);
+_CRTIMP  wchar_t* __cdecl __MINGW_NOTHROW _wcserror(int);
+_CRTIMP  wchar_t* __cdecl __MINGW_NOTHROW __wcserror(const wchar_t*);
 #endif
 #endif
 
 #ifndef	_NO_OLDNAMES
 /* NOTE: There is no _wcscmpi, but this is for compatibility. */
-__CRT_INLINE int __cdecl
+__CRT_INLINE int __cdecl __MINGW_NOTHROW
 wcscmpi (const wchar_t * __ws1, const wchar_t * __ws2)
   {return _wcsicmp (__ws1, __ws2);}
-_CRTIMP wchar_t* __cdecl wcsdup (const wchar_t*);
-_CRTIMP int __cdecl	wcsicmp (const wchar_t*, const wchar_t*);
-_CRTIMP int __cdecl	wcsicoll (const wchar_t*, const wchar_t*);
-_CRTIMP wchar_t* __cdecl wcslwr (wchar_t*);
-_CRTIMP int __cdecl	wcsnicmp (const wchar_t*, const wchar_t*, size_t);
-_CRTIMP wchar_t* __cdecl wcsnset (wchar_t*, wchar_t, size_t);
-_CRTIMP wchar_t* __cdecl wcsrev (wchar_t*);
-_CRTIMP wchar_t* __cdecl wcsset (wchar_t*, wchar_t);
-_CRTIMP wchar_t* __cdecl wcsupr (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsdup (const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcsicmp (const wchar_t*, const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcsicoll (const wchar_t*, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcslwr (wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	wcsnicmp (const wchar_t*, const wchar_t*, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsnset (wchar_t*, wchar_t, size_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsrev (wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsset (wchar_t*, wchar_t);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW wcsupr (wchar_t*);
 #endif	/* Not _NO_OLDNAMES */
 
 #endif	/* Not strict ANSI */
@@ -264,35 +272,35 @@ typedef wchar_t _Wint_t;
 
 typedef int mbstate_t;
 
-wint_t __cdecl btowc(int);
-size_t __cdecl mbrlen(const char * __restrict__, size_t,
+wint_t __cdecl __MINGW_NOTHROW btowc(int);
+size_t __cdecl __MINGW_NOTHROW mbrlen(const char * __restrict__, size_t,
 		      mbstate_t * __restrict__);
-size_t __cdecl mbrtowc(wchar_t * __restrict__, const char * __restrict__,
+size_t __cdecl __MINGW_NOTHROW mbrtowc(wchar_t * __restrict__, const char * __restrict__,
 		       size_t, mbstate_t * __restrict__);
-size_t __cdecl mbsrtowcs(wchar_t * __restrict__, const char ** __restrict__,
+size_t __cdecl __MINGW_NOTHROW mbsrtowcs(wchar_t * __restrict__, const char ** __restrict__,
 			 size_t, mbstate_t * __restrict__);
-size_t __cdecl wcrtomb(char * __restrict__, wchar_t,
+size_t __cdecl __MINGW_NOTHROW wcrtomb(char * __restrict__, wchar_t,
 		       mbstate_t * __restrict__);
-size_t __cdecl wcsrtombs(char * __restrict__, const wchar_t ** __restrict__,
+size_t __cdecl __MINGW_NOTHROW wcsrtombs(char * __restrict__, const wchar_t ** __restrict__,
 			 size_t, mbstate_t * __restrict__);
-int __cdecl wctob(wint_t);
+int __cdecl __MINGW_NOTHROW wctob(wint_t);
 
 #ifndef __NO_ISOCEXT /* these need static lib libmingwex.a */
-__CRT_INLINE int __cdecl fwide(FILE* __UNUSED_PARAM(stream),
+__CRT_INLINE int __cdecl __MINGW_NOTHROW fwide(FILE* __UNUSED_PARAM(stream),
 			       int __UNUSED_PARAM(mode))
-  {return -1;} /* limited to byte orientation */
-__CRT_INLINE int __cdecl mbsinit(const mbstate_t* __UNUSED_PARAM(ps))
+  {return -1;} /* limited to byte orientation */ 
+__CRT_INLINE int __cdecl __MINGW_NOTHROW mbsinit(const mbstate_t* __UNUSED_PARAM(ps))
   {return 1;}
-wchar_t* __cdecl wmemset(wchar_t *, wchar_t, size_t);
-wchar_t* __cdecl wmemchr(const wchar_t*, wchar_t, size_t);
+wchar_t* __cdecl __MINGW_NOTHROW wmemset(wchar_t *, wchar_t, size_t);
+wchar_t* __cdecl __MINGW_NOTHROW wmemchr(const wchar_t*, wchar_t, size_t);
 int wmemcmp(const wchar_t*, const wchar_t *, size_t);
-wchar_t* __cdecl wmemcpy(wchar_t* __restrict__,
+wchar_t* __cdecl __MINGW_NOTHROW wmemcpy(wchar_t* __restrict__,
 		         const wchar_t* __restrict__,
 			 size_t);
-wchar_t* __cdecl wmemmove(wchar_t* s1, const wchar_t *, size_t);
-long long __cdecl wcstoll(const wchar_t * __restrict__,
+wchar_t* __cdecl __MINGW_NOTHROW wmemmove(wchar_t* s1, const wchar_t *, size_t);
+long long __cdecl __MINGW_NOTHROW wcstoll(const wchar_t * __restrict__,
 			  wchar_t** __restrict__, int);
-unsigned long long __cdecl wcstoull(const wchar_t * __restrict__,
+unsigned long long __cdecl __MINGW_NOTHROW wcstoull(const wchar_t * __restrict__,
 			    wchar_t ** __restrict__, int);
 #endif /* __NO_ISOCEXT */
 
@@ -323,7 +331,7 @@ struct _wfinddatai64_t {
 };
 struct __wfinddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;
+        __time64_t  time_create;    
         __time64_t  time_access;
         __time64_t  time_write;
         _fsize_t    size;
@@ -338,20 +346,20 @@ struct __wfinddata64_t {
 #if !defined (_WIO_DEFINED)
 #if defined (__MSVCRT__)
 #include <stdint.h>  /* For intptr_t.  */
-_CRTIMP int __cdecl	_waccess (const wchar_t*, int);
-_CRTIMP int __cdecl	_wchmod (const wchar_t*, int);
-_CRTIMP int __cdecl	_wcreat (const wchar_t*, int);
-_CRTIMP long __cdecl	_wfindfirst (const wchar_t*, struct _wfinddata_t *);
-_CRTIMP int __cdecl	_wfindnext (long, struct _wfinddata_t *);
-_CRTIMP int __cdecl	_wunlink (const wchar_t*);
-_CRTIMP int __cdecl	_wopen (const wchar_t*, int, ...);
-_CRTIMP int __cdecl	_wsopen (const wchar_t*, int, int, ...);
-_CRTIMP wchar_t* __cdecl _wmktemp (wchar_t*);
-_CRTIMP long __cdecl	_wfindfirsti64 (const wchar_t*, struct _wfinddatai64_t*);
-_CRTIMP int __cdecl 	_wfindnexti64 (long, struct _wfinddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_waccess (const wchar_t*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wchmod (const wchar_t*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wcreat (const wchar_t*, int);
+_CRTIMP long __cdecl __MINGW_NOTHROW	_wfindfirst (const wchar_t*, struct _wfinddata_t *);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wfindnext (long, struct _wfinddata_t *);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wunlink (const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wopen (const wchar_t*, int, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wsopen (const wchar_t*, int, int, ...);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wmktemp (wchar_t*);
+_CRTIMP long __cdecl __MINGW_NOTHROW	_wfindfirsti64 (const wchar_t*, struct _wfinddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW 	_wfindnexti64 (long, struct _wfinddatai64_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*);
-_CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindfirst64(const wchar_t*, struct __wfinddata64_t*); 
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindnext64(intptr_t, struct __wfinddata64_t*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 #endif /* defined (__MSVCRT__) */
 #define _WIO_DEFINED
@@ -359,12 +367,12 @@ _CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
 
 #ifndef _WDIRECT_DEFINED
 /* Also in direct.h */
-#ifdef __MSVCRT__
-_CRTIMP int __cdecl	  _wchdir (const wchar_t*);
-_CRTIMP wchar_t* __cdecl  _wgetcwd (wchar_t*, int);
-_CRTIMP wchar_t* __cdecl  _wgetdcwd (int, wchar_t*, int);
-_CRTIMP int __cdecl	  _wmkdir (const wchar_t*);
-_CRTIMP int __cdecl	  _wrmdir (const wchar_t*);
+#ifdef __MSVCRT__ 
+_CRTIMP int __cdecl __MINGW_NOTHROW	  _wchdir (const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW  _wgetcwd (wchar_t*, int);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW  _wgetdcwd (int, wchar_t*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	  _wmkdir (const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	  _wrmdir (const wchar_t*);
 #endif	/* __MSVCRT__ */
 #define _WDIRECT_DEFINED
 #endif /* _WDIRECT_DEFINED */
@@ -448,17 +456,17 @@ struct __stat64
 #if !defined ( _WSTAT_DEFINED)
 /* also declared in sys/stat.h */
 #if defined __MSVCRT__
-_CRTIMP int __cdecl	_wstat (const wchar_t*, struct _stat*);
-_CRTIMP int __cdecl	_wstati64 (const wchar_t*, struct _stati64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wstat (const wchar_t*, struct _stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wstati64 (const wchar_t*, struct _stati64*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP int __cdecl _wstat64 (const wchar_t*, struct __stat64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wstat64 (const wchar_t*, struct __stat64*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 #endif  /* __MSVCRT__ */
 #define _WSTAT_DEFINED
 #endif /* ! _WSTAT_DEFIND  */
 
 #ifndef _WLOCALE_DEFINED  /* also declared in locale.h */
-_CRTIMP wchar_t* __cdecl _wsetlocale (int, const wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wsetlocale (int, const wchar_t*);
 #define _WLOCALE_DEFINED
 #endif
 
@@ -471,4 +479,5 @@ _CRTIMP wchar_t* __cdecl _wsetlocale (int, const wchar_t*);
 #endif /* Not RC_INVOKED */
 
 #endif /* not _WCHAR_H_ */
+
 

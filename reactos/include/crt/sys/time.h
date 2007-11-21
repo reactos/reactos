@@ -36,7 +36,7 @@ struct timezone
 
    The timezone pointer arg is ignored.  Errors are ignored.
 */
-int __cdecl gettimeofday(struct timeval *__restrict__,
+int __cdecl __MINGW_NOTHROW gettimeofday(struct timeval *__restrict__,
 			 void *__restrict__  /*	tzp (unused) */);
 
 #ifdef	__cplusplus

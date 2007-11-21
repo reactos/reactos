@@ -88,7 +88,7 @@ extern "C" {
 #undef errno
 extern int errno;
 #else
-_CRTIMP int* __cdecl _errno(void);
+_CRTIMP int* __cdecl __MINGW_NOTHROW _errno(void);
 #define	errno		(*_errno())
 #endif
 

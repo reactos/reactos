@@ -81,10 +81,10 @@ struct tm
 extern "C" {
 #endif
 
-_CRTIMP clock_t __cdecl	clock (void);
-_CRTIMP time_t __cdecl	time (time_t*);
-_CRTIMP double __cdecl	difftime (time_t, time_t);
-_CRTIMP time_t __cdecl	mktime (struct tm*);
+_CRTIMP clock_t __cdecl __MINGW_NOTHROW	clock (void);
+_CRTIMP time_t __cdecl __MINGW_NOTHROW	time (time_t*);
+_CRTIMP double __cdecl __MINGW_NOTHROW	difftime (time_t, time_t);
+_CRTIMP time_t __cdecl __MINGW_NOTHROW	mktime (struct tm*);
 
 /*
  * These functions write to and return pointers to static buffers that may
@@ -96,31 +96,31 @@ _CRTIMP time_t __cdecl	mktime (struct tm*);
  * Fault and crap out your program. Guess how I know. Hint: stat called on
  * a directory gives 'invalid' times in st_atime etc...
  */
-_CRTIMP char* __cdecl		asctime (const struct tm*);
-_CRTIMP char* __cdecl		ctime (const time_t*);
-_CRTIMP struct tm*  __cdecl	gmtime (const time_t*);
-_CRTIMP struct tm*  __cdecl	localtime (const time_t*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW		asctime (const struct tm*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW		ctime (const time_t*);
+_CRTIMP struct tm*  __cdecl __MINGW_NOTHROW	gmtime (const time_t*);
+_CRTIMP struct tm*  __cdecl __MINGW_NOTHROW	localtime (const time_t*);
 
-_CRTIMP size_t __cdecl		strftime (char*, size_t, const char*, const struct tm*);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW		strftime (char*, size_t, const char*, const struct tm*);
 
 #ifndef __STRICT_ANSI__
 
-extern _CRTIMP void __cdecl	_tzset (void);
+extern _CRTIMP void __cdecl __MINGW_NOTHROW	_tzset (void);
 
 #ifndef _NO_OLDNAMES
-extern _CRTIMP void __cdecl	tzset (void);
+extern _CRTIMP void __cdecl __MINGW_NOTHROW	tzset (void);
 #endif
 
-_CRTIMP char* __cdecl	_strdate(char*);
-_CRTIMP char* __cdecl	_strtime(char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW	_strdate(char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW	_strtime(char*);
 
 /* These require newer versions of msvcrt.dll (6.10 or higher). */
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP __time64_t __cdecl  _time64( __time64_t*);
-_CRTIMP __time64_t __cdecl  _mktime64 (struct tm*);
-_CRTIMP char* __cdecl _ctime64 (const __time64_t*);
-_CRTIMP struct tm*  __cdecl _gmtime64 (const __time64_t*);
-_CRTIMP struct tm*  __cdecl _localtime64 (const __time64_t*);
+_CRTIMP __time64_t __cdecl __MINGW_NOTHROW  _time64( __time64_t*);
+_CRTIMP __time64_t __cdecl __MINGW_NOTHROW  _mktime64 (struct tm*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW _ctime64 (const __time64_t*);
+_CRTIMP struct tm*  __cdecl __MINGW_NOTHROW _gmtime64 (const __time64_t*);
+_CRTIMP struct tm*  __cdecl __MINGW_NOTHROW _localtime64 (const __time64_t*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 
 /*
@@ -132,9 +132,9 @@ _CRTIMP struct tm*  __cdecl _localtime64 (const __time64_t*);
 #ifdef __MSVCRT__
 
 /* These are for compatibility with pre-VC 5.0 suppied MSVCRT. */
-extern _CRTIMP int* __cdecl	__p__daylight (void);
-extern _CRTIMP long* __cdecl	__p__timezone (void);
-extern _CRTIMP char** __cdecl	__p__tzname (void);
+extern _CRTIMP int* __cdecl __MINGW_NOTHROW	__p__daylight (void);
+extern _CRTIMP long* __cdecl __MINGW_NOTHROW	__p__timezone (void);
+extern _CRTIMP char** __cdecl __MINGW_NOTHROW	__p__tzname (void);
 
 __MINGW_IMPORT int	_daylight;
 __MINGW_IMPORT long	_timezone;
@@ -195,16 +195,16 @@ __MINGW_IMPORT char 	*tzname[2];
 /* wide function prototypes, also declared in wchar.h */
 #ifndef __STRICT_ANSI__
 #ifdef __MSVCRT__
-_CRTIMP wchar_t* __cdecl	_wasctime(const struct tm*);
-_CRTIMP wchar_t* __cdecl	_wctime(const time_t*);
-_CRTIMP wchar_t* __cdecl	_wstrdate(wchar_t*);
-_CRTIMP wchar_t* __cdecl	_wstrtime(wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wasctime(const struct tm*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wctime(const time_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wstrdate(wchar_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wstrtime(wchar_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP wchar_t* __cdecl	_wctime64 (const __time64_t*);
+_CRTIMP wchar_t* __cdecl __MINGW_NOTHROW	_wctime64 (const __time64_t*);
 #endif
 #endif /*  __MSVCRT__ */
 #endif /* __STRICT_ANSI__ */
-_CRTIMP size_t __cdecl		wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
+_CRTIMP size_t __cdecl __MINGW_NOTHROW		wcsftime (wchar_t*, size_t, const wchar_t*, const struct tm*);
 #define _WTIME_DEFINED
 #endif /* _WTIME_DEFINED */
 
@@ -215,4 +215,5 @@ _CRTIMP size_t __cdecl		wcsftime (wchar_t*, size_t, const wchar_t*, const struct
 #endif	/* Not RC_INVOKED */
 
 #endif	/* Not _TIME_H_ */
+
 

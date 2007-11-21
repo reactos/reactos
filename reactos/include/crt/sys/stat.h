@@ -155,32 +155,32 @@ struct __stat64
 extern "C" {
 #endif
 
-_CRTIMP int __cdecl	_fstat (int, struct _stat*);
-_CRTIMP int __cdecl	_chmod (const char*, int);
-_CRTIMP int __cdecl	_stat (const char*, struct _stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_fstat (int, struct _stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_chmod (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_stat (const char*, struct _stat*);
 
 #ifndef	_NO_OLDNAMES
 
 /* These functions live in liboldnames.a. */
-_CRTIMP int __cdecl	fstat (int, struct stat*);
-_CRTIMP int __cdecl	chmod (const char*, int);
-_CRTIMP int __cdecl	stat (const char*, struct stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	fstat (int, struct stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	chmod (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW	stat (const char*, struct stat*);
 
 #endif	/* Not _NO_OLDNAMES */
 
 #if defined (__MSVCRT__)
-_CRTIMP int __cdecl  _fstati64(int, struct _stati64 *);
-_CRTIMP int __cdecl  _stati64(const char *, struct _stati64 *);
+_CRTIMP int __cdecl __MINGW_NOTHROW  _fstati64(int, struct _stati64 *);
+_CRTIMP int __cdecl __MINGW_NOTHROW  _stati64(const char *, struct _stati64 *);
 /* These require newer versions of msvcrt.dll (6.10 or higher).  */
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP int __cdecl _fstat64 (int, struct __stat64*);
-_CRTIMP int __cdecl _stat64 (const char*, struct __stat64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _fstat64 (int, struct __stat64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _stat64 (const char*, struct __stat64*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 #if !defined ( _WSTAT_DEFINED) /* also declared in wchar.h */
-_CRTIMP int __cdecl	_wstat(const wchar_t*, struct _stat*);
-_CRTIMP int __cdecl	_wstati64 (const wchar_t*, struct _stati64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wstat(const wchar_t*, struct _stat*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wstati64 (const wchar_t*, struct _stati64*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP int __cdecl _wstat64 (const wchar_t*, struct __stat64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wstat64 (const wchar_t*, struct __stat64*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 #define _WSTAT_DEFINED
 #endif /* _WSTAT_DEFIND */

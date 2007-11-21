@@ -35,7 +35,7 @@ extern "C" {
  * CRTDLL nicely supplies a function which does the actual output and
  * call to abort.
  */
-_CRTIMP void __cdecl _assert (const char*, const char*, int) __MINGW_ATTRIB_NORETURN;
+_CRTIMP void __cdecl __MINGW_NOTHROW _assert (const char*, const char*, int) __MINGW_ATTRIB_NORETURN;
 
 /*
  * Definition of the assert macro.

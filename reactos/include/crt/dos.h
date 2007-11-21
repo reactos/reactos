@@ -74,7 +74,7 @@ struct _diskfree_t {
 #define _DISKFREE_T_DEFINED
 #endif
 
-_CRTIMP unsigned __cdecl _getdiskfree (unsigned, struct _diskfree_t *);
+_CRTIMP unsigned __cdecl __MINGW_NOTHROW _getdiskfree (unsigned, struct _diskfree_t *);
 
 #ifndef	_NO_OLDNAMES
 # define diskfree_t _diskfree_t

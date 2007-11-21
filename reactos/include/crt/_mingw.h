@@ -23,6 +23,9 @@
 #ifndef __MINGW_H
 #define __MINGW_H
 
+#if __GNUC__ >= 3
+#pragma GCC system_header
+#endif
 
 /* These are defined by the user (or the compiler)
    to specify how identifiers are imported from a DLL.
@@ -163,7 +166,7 @@
 #else
 #define __MINGW_ATTRIB_DEPRECATED
 #endif /* GNUC >= 3.1 */
-
+ 
 #if  __MINGW_GNUC_PREREQ (3, 3)
 #define __MINGW_NOTHROW __attribute__ ((__nothrow__))
 #else
@@ -175,8 +178,8 @@
 # define __MSVCRT_VERSION__ 0x0600
 #endif
 
-#define __MINGW32_VERSION 3.12
+#define __MINGW32_VERSION 3.13
 #define __MINGW32_MAJOR_VERSION 3
-#define __MINGW32_MINOR_VERSION 12
+#define __MINGW32_MINOR_VERSION 13
 
 #endif /* __MINGW_H */

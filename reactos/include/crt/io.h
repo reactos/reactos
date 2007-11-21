@@ -1,4 +1,4 @@
-/*
+/* 
  * io.h
  * This file has no copyright assigned and is placed in the Public Domain.
  * This file is a part of the mingw-runtime package.
@@ -18,7 +18,6 @@
  *       an inclusion of sys/types.h */
 
 #include <sys/types.h>	/* To get time_t.  */
-#include <stdint.h>  /* For intptr_t.  */
 
 /*
  * Attributes of files as returned by _findfirst et al.
@@ -34,6 +33,15 @@
 
 #ifndef RC_INVOKED
 
+#ifndef _INTPTR_T_DEFINED
+#define _INTPTR_T_DEFINED
+#ifdef _WIN64
+  typedef __int64 intptr_t;
+#else
+  typedef int intptr_t;
+#endif
+#endif
+
 #ifndef	_FSIZE_T_DEFINED
 typedef	unsigned long	_fsize_t;
 #define _FSIZE_T_DEFINED
@@ -42,7 +50,7 @@ typedef	unsigned long	_fsize_t;
 /*
  * The maximum length of a file name. You should use GetVolumeInformation
  * instead of this constant. But hey, this works.
- * Also defined in stdio.h.
+ * Also defined in stdio.h. 
  */
 #ifndef FILENAME_MAX
 #define	FILENAME_MAX	(260)
@@ -73,8 +81,8 @@ struct _finddatai64_t {
 
 struct __finddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;
-        __time64_t  time_access;
+        __time64_t  time_create;    
+        __time64_t  time_access;    
         __time64_t  time_write;
         _fsize_t    size;
          char       name[FILENAME_MAX];
@@ -101,7 +109,7 @@ struct _wfinddatai64_t {
 
 struct __wfinddata64_t {
         unsigned    attrib;
-        __time64_t  time_create;
+        __time64_t  time_create;    
         __time64_t  time_access;
         __time64_t  time_write;
         _fsize_t    size;
@@ -122,31 +130,32 @@ extern "C" {
  * and 0 if a match was found. Call _findclose when you are finished.
  */
 /*  FIXME: Should these all use intptr_t, as per recent MSDN docs?  */
-_CRTIMP long __cdecl _findfirst (const char*, struct _finddata_t*);
-_CRTIMP int __cdecl _findnext (long, struct _finddata_t*);
-_CRTIMP int __cdecl _findclose (long);
+_CRTIMP long __cdecl __MINGW_NOTHROW _findfirst (const char*, struct _finddata_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _findnext (long, struct _finddata_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _findclose (long);
 
-_CRTIMP int __cdecl _chdir (const char*);
-_CRTIMP char* __cdecl _getcwd (char*, int);
-_CRTIMP int __cdecl _mkdir (const char*);
-_CRTIMP char* __cdecl _mktemp (char*);
-_CRTIMP int __cdecl _rmdir (const char*);
-_CRTIMP int __cdecl _chmod (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _chdir (const char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW _getcwd (char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _mkdir (const char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW _mktemp (char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _rmdir (const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _chmod (const char*, int);
 
 #ifdef __MSVCRT__
-_CRTIMP __int64 __cdecl _filelengthi64(int);
-_CRTIMP long __cdecl _findfirsti64(const char*, struct _finddatai64_t*);
-_CRTIMP int __cdecl _findnexti64(long, struct _finddatai64_t*);
-_CRTIMP __int64 __cdecl _lseeki64(int, __int64, int);
-_CRTIMP __int64 __cdecl _telli64(int);
-/* These require newer versions of msvcrt.dll (6.1 or higher). */
+_CRTIMP __int64 __cdecl __MINGW_NOTHROW _filelengthi64(int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _findfirsti64(const char*, struct _finddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _findnexti64(long, struct _finddatai64_t*);
+_CRTIMP __int64 __cdecl __MINGW_NOTHROW _lseeki64(int, __int64, int);
+_CRTIMP __int64 __cdecl __MINGW_NOTHROW _telli64(int);
+/* These require newer versions of msvcrt.dll (6.1 or higher). */ 
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP intptr_t __cdecl _findfirst64(const char*, struct __finddata64_t*);
-_CRTIMP intptr_t __cdecl _findnext64(intptr_t, struct __finddata64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _findfirst64(const char*, struct __finddata64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _findnext64(intptr_t, struct __finddata64_t*); 
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 
 #ifndef __NO_MINGW_LFS
-__CRT_INLINE off64_t lseek64 (int fd, off64_t offset, int whence)
+__CRT_INLINE off64_t lseek64 (int, off64_t, int);
+__CRT_INLINE off64_t lseek64 (int fd, off64_t offset, int whence) 
 {
   return _lseeki64(fd, (__int64) offset, whence);
 }
@@ -157,12 +166,12 @@ __CRT_INLINE off64_t lseek64 (int fd, off64_t offset, int whence)
 #ifndef _NO_OLDNAMES
 
 #ifndef _UWIN
-_CRTIMP int __cdecl chdir (const char*);
-_CRTIMP char* __cdecl getcwd (char*, int);
-_CRTIMP int __cdecl mkdir (const char*);
-_CRTIMP char* __cdecl mktemp (char*);
-_CRTIMP int __cdecl rmdir (const char*);
-_CRTIMP int __cdecl chmod (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW chdir (const char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW getcwd (char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW mkdir (const char*);
+_CRTIMP char* __cdecl __MINGW_NOTHROW mktemp (char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW rmdir (const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW chmod (const char*, int);
 #endif /* _UWIN */
 
 #endif /* Not _NO_OLDNAMES */
@@ -181,7 +190,7 @@ _CRTIMP int __cdecl chmod (const char*, int);
  * it doesn't seem to hurt to add them). */
 #define	F_OK	0	/* Check for file existence */
 /* Well maybe it does hurt.  On newer versions of MSVCRT, an access mode
-   of 1 causes invalid parameter error. */
+   of 1 causes invalid parameter error. */   
 #define	X_OK	1	/* MS access() doesn't check for execute permission. */
 #define	W_OK	2	/* Check for write permission */
 #define	R_OK	4	/* Check for read permission */
@@ -192,20 +201,20 @@ _CRTIMP int __cdecl chmod (const char*, int);
 extern "C" {
 #endif
 
-_CRTIMP int __cdecl _access (const char*, int);
-_CRTIMP int __cdecl _chsize (int, long);
-_CRTIMP int __cdecl _close (int);
-_CRTIMP int __cdecl _commit(int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _access (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _chsize (int, long);
+_CRTIMP int __cdecl __MINGW_NOTHROW _close (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _commit(int);
 
 /* NOTE: The only significant bit in unPermissions appears to be bit 7 (0x80),
  *       the "owner write permission" bit (on FAT). */
-_CRTIMP int __cdecl _creat (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _creat (const char*, int);
 
-_CRTIMP int __cdecl _dup (int);
-_CRTIMP int __cdecl _dup2 (int, int);
-_CRTIMP long __cdecl _filelength (int);
-_CRTIMP long __cdecl _get_osfhandle (int);
-_CRTIMP int __cdecl _isatty (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _dup (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _dup2 (int, int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _filelength (int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _get_osfhandle (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _isatty (int);
 
 /* In a very odd turn of events this function is excluded from those
  * files which define _STREAM_COMPAT. This is required in order to
@@ -213,54 +222,54 @@ _CRTIMP int __cdecl _isatty (int);
  * line 107. Actually I might just be able to change the name of
  * the enum member in streambuf.h... we'll see. TODO */
 #ifndef	_STREAM_COMPAT
-_CRTIMP int __cdecl _eof (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _eof (int);
 #endif
 
 /* LK_... locking commands defined in sys/locking.h. */
-_CRTIMP int __cdecl _locking (int, int, long);
+_CRTIMP int __cdecl __MINGW_NOTHROW _locking (int, int, long);
 
-_CRTIMP long __cdecl _lseek (int, long, int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _lseek (int, long, int);
 
 /* Optional third argument is unsigned unPermissions. */
-_CRTIMP int __cdecl _open (const char*, int, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW _open (const char*, int, ...);
 
-_CRTIMP int __cdecl _open_osfhandle (long, int);
-_CRTIMP int __cdecl _pipe (int *, unsigned int, int);
-_CRTIMP int __cdecl _read (int, void*, unsigned int);
-_CRTIMP int __cdecl _setmode (int, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _open_osfhandle (long, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _pipe (int *, unsigned int, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _read (int, void*, unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _setmode (int, int);
 /* MS puts remove & rename (but not wide versions) in io.h as well
    as in stdio.h. */
-_CRTIMP int __cdecl	remove (const char*);
-_CRTIMP int __cdecl	rename (const char*, const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	remove (const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	rename (const char*, const char*);
 
 /* SH_... flags for nShFlags defined in share.h
  * Optional fourth argument is unsigned unPermissions */
-_CRTIMP int __cdecl _sopen (const char*, int, int, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW _sopen (const char*, int, int, ...);
 
-_CRTIMP long __cdecl _tell (int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _tell (int);
 /* Should umask be in sys/stat.h and/or sys/types.h instead? */
-_CRTIMP int __cdecl _umask (int);
-_CRTIMP int __cdecl _unlink (const char*);
-_CRTIMP int __cdecl _write (int, const void*, unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _umask (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _unlink (const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _write (int, const void*, unsigned int);
 
 /* Wide character versions. Also declared in wchar.h. */
 /* Not in crtdll.dll */
 #if !defined (_WIO_DEFINED)
 #if defined (__MSVCRT__)
-_CRTIMP int __cdecl _waccess(const wchar_t*, int);
-_CRTIMP int __cdecl _wchmod(const wchar_t*, int);
-_CRTIMP int __cdecl _wcreat(const wchar_t*, int);
-_CRTIMP long __cdecl _wfindfirst(const wchar_t*, struct _wfinddata_t*);
-_CRTIMP int __cdecl _wfindnext(long, struct _wfinddata_t *);
-_CRTIMP int __cdecl _wunlink(const wchar_t*);
-_CRTIMP int __cdecl _wopen(const wchar_t*, int, ...);
-_CRTIMP int __cdecl _wsopen(const wchar_t*, int, int, ...);
-_CRTIMP wchar_t * __cdecl _wmktemp(wchar_t*);
-_CRTIMP long __cdecl _wfindfirsti64(const wchar_t*, struct _wfinddatai64_t*);
-_CRTIMP int __cdecl _wfindnexti64(long, struct _wfinddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _waccess(const wchar_t*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wchmod(const wchar_t*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wcreat(const wchar_t*, int);
+_CRTIMP long __cdecl __MINGW_NOTHROW _wfindfirst(const wchar_t*, struct _wfinddata_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wfindnext(long, struct _wfinddata_t *);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wunlink(const wchar_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wopen(const wchar_t*, int, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wsopen(const wchar_t*, int, int, ...);
+_CRTIMP wchar_t * __cdecl __MINGW_NOTHROW _wmktemp(wchar_t*);
+_CRTIMP long __cdecl __MINGW_NOTHROW _wfindfirsti64(const wchar_t*, struct _wfinddatai64_t*);
+_CRTIMP int __cdecl __MINGW_NOTHROW _wfindnexti64(long, struct _wfinddatai64_t*);
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP intptr_t __cdecl _wfindfirst64(const wchar_t*, struct __wfinddata64_t*);
-_CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindfirst64(const wchar_t*, struct __wfinddata64_t*); 
+_CRTIMP intptr_t __cdecl __MINGW_NOTHROW _wfindnext64(intptr_t, struct __wfinddata64_t*);
 #endif
 #endif /* defined (__MSVCRT__) */
 #define _WIO_DEFINED
@@ -273,24 +282,24 @@ _CRTIMP intptr_t __cdecl _wfindnext64(intptr_t, struct __wfinddata64_t*);
  */
 
 #ifndef _UWIN
-_CRTIMP int __cdecl access (const char*, int);
-_CRTIMP int __cdecl chsize (int, long );
-_CRTIMP int __cdecl close (int);
-_CRTIMP int __cdecl creat (const char*, int);
-_CRTIMP int __cdecl dup (int);
-_CRTIMP int __cdecl dup2 (int, int);
-_CRTIMP int __cdecl eof (int);
-_CRTIMP long __cdecl filelength (int);
-_CRTIMP int __cdecl isatty (int);
-_CRTIMP long __cdecl lseek (int, long, int);
-_CRTIMP int __cdecl open (const char*, int, ...);
-_CRTIMP int __cdecl read (int, void*, unsigned int);
-_CRTIMP int __cdecl setmode (int, int);
-_CRTIMP int __cdecl sopen (const char*, int, int, ...);
-_CRTIMP long __cdecl tell (int);
-_CRTIMP int __cdecl umask (int);
-_CRTIMP int __cdecl unlink (const char*);
-_CRTIMP int __cdecl write (int, const void*, unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW access (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW chsize (int, long );
+_CRTIMP int __cdecl __MINGW_NOTHROW close (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW creat (const char*, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW dup (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW dup2 (int, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW eof (int);
+_CRTIMP long __cdecl __MINGW_NOTHROW filelength (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW isatty (int);
+_CRTIMP long __cdecl __MINGW_NOTHROW lseek (int, long, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW open (const char*, int, ...);
+_CRTIMP int __cdecl __MINGW_NOTHROW read (int, void*, unsigned int);
+_CRTIMP int __cdecl __MINGW_NOTHROW setmode (int, int);
+_CRTIMP int __cdecl __MINGW_NOTHROW sopen (const char*, int, int, ...);
+_CRTIMP long __cdecl __MINGW_NOTHROW tell (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW umask (int);
+_CRTIMP int __cdecl __MINGW_NOTHROW unlink (const char*);
+_CRTIMP int __cdecl __MINGW_NOTHROW write (int, const void*, unsigned int);
 #endif /* _UWIN */
 
 #ifdef __USE_MINGW_ACCESS

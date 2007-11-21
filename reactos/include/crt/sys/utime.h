@@ -52,25 +52,25 @@ struct __utimbuf64
 extern "C" {
 #endif
 
-_CRTIMP int __cdecl	_utime (const char*, struct _utimbuf*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_utime (const char*, struct _utimbuf*);
 
 #ifndef	_NO_OLDNAMES
-_CRTIMP int __cdecl	utime (const char*, struct utimbuf*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	utime (const char*, struct utimbuf*);
 #endif	/* Not _NO_OLDNAMES */
 
-_CRTIMP int __cdecl	_futime (int, struct _utimbuf*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_futime (int, struct _utimbuf*);
 
 /* The wide character version, only available for MSVCRT versions of the
  * C runtime library. */
 #ifdef __MSVCRT__
-_CRTIMP int __cdecl	_wutime (const wchar_t*, struct _utimbuf*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wutime (const wchar_t*, struct _utimbuf*);
 #endif /* MSVCRT runtime */
 
 /* These require newer versions of msvcrt.dll (6.10 or higher).  */
 #if __MSVCRT_VERSION__ >= 0x0601
-_CRTIMP int __cdecl	_utime64 (const char*, struct __utimbuf64*);
-_CRTIMP int __cdecl	_wutime64 (const wchar_t*, struct __utimbuf64*);
-_CRTIMP int __cdecl	_futime64 (int, struct __utimbuf64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_utime64 (const char*, struct __utimbuf64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_wutime64 (const wchar_t*, struct __utimbuf64*);
+_CRTIMP int __cdecl __MINGW_NOTHROW	_futime64 (int, struct __utimbuf64*);
 #endif /* __MSVCRT_VERSION__ >= 0x0601 */
 
 #ifdef	__cplusplus

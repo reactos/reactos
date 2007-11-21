@@ -68,13 +68,13 @@ struct lconv
 extern "C" {
 #endif
 
-_CRTIMP  char* __cdecl setlocale (int, const char*);
-_CRTIMP struct lconv* __cdecl localeconv (void);
+_CRTIMP  char* __cdecl __MINGW_NOTHROW setlocale (int, const char*);
+_CRTIMP struct lconv* __cdecl __MINGW_NOTHROW localeconv (void);
 
 #ifndef _WLOCALE_DEFINED  /* also declared in wchar.h */
 # define __need_wchar_t
 # include <stddef.h>
-  _CRTIMP wchar_t* __cdecl _wsetlocale(int, const wchar_t*);
+  _CRTIMP wchar_t* __cdecl __MINGW_NOTHROW _wsetlocale(int, const wchar_t*);
 # define _WLOCALE_DEFINED
 #endif /* ndef _WLOCALE_DEFINED */
 
@@ -85,4 +85,5 @@ _CRTIMP struct lconv* __cdecl localeconv (void);
 #endif	/* Not RC_INVOKED */
 
 #endif	/* Not _LOCALE_H_ */
+
 

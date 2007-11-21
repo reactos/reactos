@@ -99,12 +99,12 @@ extern "C" {
 /* Set the FPU control word as cw = (cw & ~unMask) | (unNew & unMask),
  * i.e. change the bits in unMask to have the values they have in unNew,
  * leaving other bits unchanged. */
-_CRTIMP unsigned int __cdecl _controlfp (unsigned int unNew, unsigned int unMask);
-_CRTIMP unsigned int __cdecl _control87 (unsigned int unNew, unsigned int unMask);
+_CRTIMP unsigned int __cdecl __MINGW_NOTHROW _controlfp (unsigned int unNew, unsigned int unMask);
+_CRTIMP unsigned int __cdecl __MINGW_NOTHROW _control87 (unsigned int unNew, unsigned int unMask);
 
 
-_CRTIMP unsigned int __cdecl _clearfp (void);	/* Clear the FPU status word */
-_CRTIMP unsigned int __cdecl _statusfp (void);	/* Report the FPU status word */
+_CRTIMP unsigned int __cdecl __MINGW_NOTHROW _clearfp (void);	/* Clear the FPU status word */
+_CRTIMP unsigned int __cdecl __MINGW_NOTHROW _statusfp (void);	/* Report the FPU status word */
 #define		_clear87	_clearfp
 #define		_status87	_statusfp
 
@@ -118,11 +118,11 @@ _CRTIMP unsigned int __cdecl _statusfp (void);	/* Report the FPU status word */
    per fninit. To use the MSVCRT.dll _fpreset, include CRT_fp8.o when
    building your application.
 */
-void __cdecl _fpreset (void);
-void __cdecl fpreset (void);
+void __cdecl __MINGW_NOTHROW _fpreset (void);
+void __cdecl __MINGW_NOTHROW fpreset (void);
 
 /* Global 'variable' for the current floating point error code. */
-_CRTIMP int * __cdecl __fpecode(void);
+_CRTIMP int * __cdecl __MINGW_NOTHROW __fpecode(void);
 #define	_fpecode	(*(__fpecode()))
 
 /*
@@ -130,15 +130,15 @@ _CRTIMP int * __cdecl __fpecode(void);
  * but they really belong in math.h.
  */
 
-_CRTIMP double __cdecl _chgsign	(double);
-_CRTIMP double __cdecl _copysign (double, double);
-_CRTIMP double __cdecl _logb (double);
-_CRTIMP double __cdecl _nextafter (double, double);
-_CRTIMP double __cdecl _scalb (double, long);
+_CRTIMP double __cdecl __MINGW_NOTHROW _chgsign	(double);
+_CRTIMP double __cdecl __MINGW_NOTHROW _copysign (double, double);
+_CRTIMP double __cdecl __MINGW_NOTHROW _logb (double);
+_CRTIMP double __cdecl __MINGW_NOTHROW _nextafter (double, double);
+_CRTIMP double __cdecl __MINGW_NOTHROW _scalb (double, long);
 
-_CRTIMP int __cdecl _finite (double);
-_CRTIMP int __cdecl _fpclass (double);
-_CRTIMP int __cdecl _isnan (double);
+_CRTIMP int __cdecl __MINGW_NOTHROW _finite (double);
+_CRTIMP int __cdecl __MINGW_NOTHROW _fpclass (double);
+_CRTIMP int __cdecl __MINGW_NOTHROW _isnan (double);
 
 #ifdef	__cplusplus
 }
@@ -149,4 +149,5 @@ _CRTIMP int __cdecl _isnan (double);
 #endif	/* Not __STRICT_ANSI__ */
 
 #endif /* _FLOAT_H_ */
+
 
