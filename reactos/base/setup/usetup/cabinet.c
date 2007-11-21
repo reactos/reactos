@@ -712,7 +712,7 @@ CabinetFindNext(PCAB_SEARCH Search)
   PCFFILE Prev;
   ANSI_STRING AnsiString;
   UNICODE_STRING UnicodeString;
-  WCHAR FileName[MAX_PATH];
+  WCHAR FileName[MAX_PATH] = {L'\0'};
 
   if( wcscmp( Search->Cabinet, CabinetName ) != 0 )
 	Search->File = 0;    // restart search of cabinet has changed since last find
