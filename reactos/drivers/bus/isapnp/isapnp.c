@@ -1224,7 +1224,7 @@ static NTSTATUS BuildResourceList(PISAPNP_LOGICAL_DEVICE LogicalDevice,
 
     if (List->Priority == Priority) {
 
-      DPRINT("Logical device %d  DestinationList 0x%X\n",
+      DPRINT("Logical device %d  DestinationList %p\n",
         LogicalDevice->Number,
         DestinationList);
 
@@ -1238,7 +1238,7 @@ static NTSTATUS BuildResourceList(PISAPNP_LOGICAL_DEVICE LogicalDevice,
         Descriptor = CONTAINING_RECORD(
           Entry, ISAPNP_DESCRIPTOR, ListEntry);
 
-        DPRINT("Logical device %d  Destination 0x%X(%d)\n",
+        DPRINT("Logical device %d  Destination %p(%d)\n",
           LogicalDevice->Number,
           &DestinationList->Descriptors[i],
           i);
@@ -1572,6 +1572,7 @@ ISAPNPStopDevice(
 }
 
 
+static DRIVER_DISPATCH ISAPNPDispatchOpenClose;
 static NTSTATUS
 STDCALL
 ISAPNPDispatchOpenClose(
@@ -1587,7 +1588,7 @@ ISAPNPDispatchOpenClose(
   return STATUS_SUCCESS;
 }
 
-
+static DRIVER_DISPATCH ISAPNPDispatchReadWrite;
 static NTSTATUS
 STDCALL
 ISAPNPDispatchReadWrite(
@@ -1603,7 +1604,7 @@ ISAPNPDispatchReadWrite(
   return STATUS_UNSUCCESSFUL;
 }
 
-
+static DRIVER_DISPATCH ISAPNPDispatchDeviceControl;
 static NTSTATUS
 STDCALL
 ISAPNPDispatchDeviceControl(
@@ -1635,7 +1636,7 @@ ISAPNPDispatchDeviceControl(
   return Status;
 }
 
-
+static DRIVER_DISPATCH ISAPNPControl;
 static NTSTATUS
 STDCALL
 ISAPNPControl(
