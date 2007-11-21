@@ -5388,7 +5388,7 @@ Return Value:
         //
 
         if ((Srb->Lun != 0) ||
-            (!deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT)) {
+            (!(deviceExtension->DeviceFlags[Srb->TargetId] & DFLAGS_DEVICE_PRESENT))) {
 
             //
             // Indicate no device found at this address.
