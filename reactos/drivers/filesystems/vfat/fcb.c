@@ -181,7 +181,7 @@ vfatReleaseFCB(PDEVICE_EXTENSION  pVCB,  PVFATFCB  pFCB)
 	ULONG ShortIndex;
 	PVFATFCB tmpFcb;
 
-	DPRINT ("releasing FCB at %x: %wZ, refCount:%d\n",
+	DPRINT ("releasing FCB at %p: %wZ, refCount:%d\n",
 		pFCB,
 		&pFCB->PathNameU,
 		pFCB->RefCount);
@@ -562,7 +562,7 @@ vfatAttachFCBToFileObject (
 	fileObject->SectionObjectPointer = &fcb->SectionObjectPointers;
 	fileObject->FsContext = fcb;
 	fileObject->FsContext2 = newCCB;
-	DPRINT ("file open: fcb:%x PathName:%wZ\n", fcb, &fcb->PathNameU);
+	DPRINT ("file open: fcb:%p PathName:%wZ\n", fcb, &fcb->PathNameU);
 
 	return  STATUS_SUCCESS;
 }
@@ -590,7 +590,7 @@ vfatDirFindFile (
 	ASSERT(pDirectoryFCB);
 	ASSERT(FileToFindU);
 
-	DPRINT ("vfatDirFindFile(VCB:%08x, dirFCB:%08x, File:%wZ)\n",
+	DPRINT ("vfatDirFindFile(VCB:%p, dirFCB:%p, File:%wZ)\n",
 		pDeviceExt,
 		pDirectoryFCB,
 		FileToFindU);
@@ -666,7 +666,7 @@ vfatGetFCBForFile (
 	PWCHAR curr, prev, last;
 	ULONG Length;
 
-	DPRINT ("vfatGetFCBForFile (%x,%x,%x,%wZ)\n",
+	DPRINT ("vfatGetFCBForFile (%p,%p,%p,%wZ)\n",
 		pVCB,
 		pParentFCB,
 		pFCB,
