@@ -76,16 +76,28 @@ typedef struct _MSFS_MESSAGE
 
 #define KeUnlockMutex(x) KeReleaseMutex(x, FALSE);
 
+DRIVER_DISPATCH MsfsCreate;
 NTSTATUS DEFAULTAPI MsfsCreate(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH MsfsCreateMailslot;
 NTSTATUS DEFAULTAPI MsfsCreateMailslot(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH MsfsClose;
 NTSTATUS DEFAULTAPI MsfsClose(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+DRIVER_DISPATCH MsfsQueryInformation;
 NTSTATUS DEFAULTAPI MsfsQueryInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH MsfsSetInformation;
 NTSTATUS DEFAULTAPI MsfsSetInformation(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+DRIVER_DISPATCH MsfsRead;
 NTSTATUS DEFAULTAPI MsfsRead(PDEVICE_OBJECT DeviceObject, PIRP Irp);
+
+DRIVER_DISPATCH MsfsWrite;
 NTSTATUS DEFAULTAPI MsfsWrite(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
+DRIVER_DISPATCH MsfsFileSystemControl;
 NTSTATUS DEFAULTAPI MsfsFileSystemControl(PDEVICE_OBJECT DeviceObject, PIRP Irp);
 
 NTSTATUS NTAPI
