@@ -1618,9 +1618,16 @@ User32DefWindowProc(HWND hWnd,
 
         case WM_CHANGEUISTATE:
         {
+            BOOL AlwaysShowCues = TRUE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
-            PWINDOW Wnd = ValidateHwnd(hWnd);
+            PWINDOW Wnd;
+
+            SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &AlwaysShowCues, 0);
+            if (AlwaysShowCues)
+                break;
+
+            Wnd= ValidateHwnd(hWnd);
             if (!Wnd || lParam != 0)
                 break;
 
@@ -1693,9 +1700,16 @@ User32DefWindowProc(HWND hWnd,
         case WM_UPDATEUISTATE:
         {
             BOOL Change = TRUE;
+            BOOL AlwaysShowCues = TRUE;
             WORD Action = LOWORD(wParam);
             WORD Flags = HIWORD(wParam);
-            PWINDOW Wnd = ValidateHwnd(hWnd);
+            PWINDOW Wnd;
+
+            SystemParametersInfoW(SPI_GETKEYBOARDCUES, 0, &AlwaysShowCues, 0);
+            if (AlwaysShowCues)
+                break;
+
+            Wnd = ValidateHwnd(hWnd);
             if (!Wnd || lParam != 0)
                 break;
 
