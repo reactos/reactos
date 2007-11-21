@@ -89,7 +89,7 @@ NtfsOpenFile(PDEVICE_EXTENSION DeviceExt,
   NTSTATUS Status;
   PWSTR AbsFileName = NULL;
 
-  DPRINT("NtfsOpenFile(%08lx, %08lx, %S)\n", DeviceExt, FileObject, FileName);
+  DPRINT("NtfsOpenFile(%p, %p, %S)\n", DeviceExt, FileObject, FileName);
 
   if (FileObject->RelatedFileObject)
     {

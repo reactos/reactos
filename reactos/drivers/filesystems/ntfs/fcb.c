@@ -127,7 +127,7 @@ NtfsGrabFCB(PDEVICE_EXTENSION Vcb,
 {
   KIRQL  oldIrql;
 
-  DPRINT("grabbing FCB at %x: %S, refCount:%d\n",
+  DPRINT("grabbing FCB at %p: %S, refCount:%d\n",
 	 Fcb,
 	 Fcb->PathName,
 	 Fcb->RefCount);
@@ -144,7 +144,7 @@ NtfsReleaseFCB(PDEVICE_EXTENSION Vcb,
 {
   KIRQL  oldIrql;
 
-  DPRINT("releasing FCB at %x: %S, refCount:%d\n",
+  DPRINT("releasing FCB at %p: %S, refCount:%d\n",
 	 Fcb,
 	 Fcb->PathName,
 	 Fcb->RefCount);
@@ -570,7 +570,7 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
   PFCB  FCB;
   PFCB  parentFCB;
 
-  DPRINT("NtfsGetFCBForFile(%x, %x, %x, '%S')\n",
+  DPRINT("NtfsGetFCBForFile(%p, %p, %p, '%S')\n",
 	 Vcb,
 	 pParentFCB,
 	 pFCB,
@@ -612,7 +612,7 @@ NtfsGetFCBForFile(PDEVICE_EXTENSION Vcb,
 	}
 
       DPRINT("Parsing, currentElement:%S\n", currentElement);
-      DPRINT("  parentFCB:%x FCB:%x\n", parentFCB, FCB);
+      DPRINT("  parentFCB:%p FCB:%p\n", parentFCB, FCB);
 
       /* Descend to next directory level */
       if (parentFCB)

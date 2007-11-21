@@ -76,7 +76,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
   NtfsGlobalData->DeviceObject = DeviceObject;
 
   /* Initialize driver data */
-  DeviceObject->Flags = DO_DIRECT_IO;
+  DeviceObject->Flags |= DO_DIRECT_IO;
   DriverObject->MajorFunction[IRP_MJ_CLOSE] = NtfsClose;
   DriverObject->MajorFunction[IRP_MJ_CREATE] = NtfsCreate;
   DriverObject->MajorFunction[IRP_MJ_READ] = NtfsRead;

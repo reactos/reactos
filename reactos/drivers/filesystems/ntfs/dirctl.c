@@ -565,7 +565,7 @@ NtfsQueryDirectory(PDEVICE_OBJECT DeviceObject,
     {
       Buffer = Irp->UserBuffer;
     }
-  DPRINT("Buffer=%x tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
+  DPRINT("Buffer=%p tofind=%S\n", Buffer, Ccb->DirectorySearchPattern);
 #if 0
   TempFcb.ObjectName = TempFcb.PathName;
   while (Status == STATUS_SUCCESS && BufferLength > 0)
