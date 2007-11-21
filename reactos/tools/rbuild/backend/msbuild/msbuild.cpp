@@ -157,7 +157,7 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	fprintf ( OUT, "\r\nMSC_WARNING_LEVEL=/W3 /WX\r\n\r\n" );
 
 	/* Disable deprecated function uage warnings */
-	fprintf ( OUT, "C_DEFINES=$(C_DEFINES) /DDDKAPI=__stdcall /wd4996\r\n" );
+	fprintf ( OUT, "C_DEFINES=$(C_DEFINES) /DSTDCALL=__stdcall /DDDKAPI=__stdcall /wd4996\r\n" );
 
 
 	/* includes */
@@ -166,10 +166,11 @@ MsBuildBackend::_generate_sources ( const Module& module )
 	{
 		const string& include = includes[i];
 
-		/* don't include psdk / ddk */
+		/* don't include psdk / ddk / crt */
 		std::string::size_type pos = include.find("ddk");
 		std::string::size_type pos2 = include.find("psdk");
-		if ((std::string::npos == pos) && (std::string::npos == pos2))
+		std::string::size_type pos3 = include.find("crt");
+		if ((std::string::npos == pos) && (std::string::npos == pos2) && (std::string::npos == pos3))
 			fprintf ( OUT, "\t%s; \\\r\n", include.c_str() );
 	}
 	if (includes.size() > 1)
