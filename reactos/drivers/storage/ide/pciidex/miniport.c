@@ -140,7 +140,7 @@ PciIdeXSetBusData(
 	if (!CurrentBuffer)
 	{
 		Status = STATUS_INSUFFICIENT_RESOURCES;
-		goto cleanup;
+		return Status;
 	}
 
 	Status = PciIdeXGetBusData(DeviceExtension, Buffer, ConfigDataOffset, BufferLength);
