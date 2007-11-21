@@ -73,7 +73,7 @@ NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 	ASSERT(DeviceObject != NULL);
 	ASSERT(Irp != NULL);
 
-	DPRINT("NpfsQueryVolumeInformation(DeviceObject %x, Irp %x)\n",
+	DPRINT("NpfsQueryVolumeInformation(DeviceObject %p, Irp %p)\n",
 		DeviceObject,
 		Irp);
 
@@ -83,7 +83,7 @@ NpfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 	SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
 
 	DPRINT("FsInformationClass %d\n", FsInformationClass);
-	DPRINT("SystemBuffer %x\n", SystemBuffer);
+	DPRINT("SystemBuffer %p\n", SystemBuffer);
 
 	switch (FsInformationClass)
 	{

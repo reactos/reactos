@@ -54,7 +54,7 @@ NpfsReadWriteCancelRoutine(IN PDEVICE_OBJECT DeviceObject,
 	PNPFS_CCB Ccb;
 	BOOLEAN Complete = FALSE;
 
-	DPRINT("NpfsReadWriteCancelRoutine(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+	DPRINT("NpfsReadWriteCancelRoutine(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
 	IoReleaseCancelSpinLock(Irp->CancelIrql);
 
