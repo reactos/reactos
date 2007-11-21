@@ -499,18 +499,18 @@ typedef struct _EHCI_FSTN
 /* Section 2.2 Host Controller Capability Registers */
 #define HCS_DEBUG_PORT(p)	(((p)>>20)&0xf)	/* bits 23:20, debug port? */
 #define HCS_INDICATOR(p)	((p)&(1 << 16))	/* true: has port indicators */
-#define HCS_N_CC(p)		(((p)>>12)&0xf)	/* bits 15:12, #companion HCs */
+#define HCS_N_CC(p)			(((p)>>12)&0xf)	/* bits 15:12, #companion HCs */
 #define HCS_N_PCC(p)		(((p)>>8)&0xf)	/* bits 11:8, ports per CC */
 #define HCS_PORTROUTED(p)	((p)&(1 << 7))	/* true: port routing */
 #define HCS_PPC(p)		((p)&(1 << 4))	/* true: port power control */
 #define HCS_N_PORTS(p)		(((p)>>0)&0xf)	/* bits 3:0, ports on HC */
 
 #define HCC_EXT_CAPS(p)		(((p)>>8)&0xff)	/* for pci extended caps */
-#define HCC_ISOC_CACHE(p)       ((p)&(1 << 7))  /* true: can cache isoc frame */
-#define HCC_ISOC_THRES(p)       (((p)>>4)&0x7)  /* bits 6:4, uframes cached */
+#define HCC_ISOC_CACHE(p)	((p)&(1 << 7))  /* true: can cache isoc frame */
+#define HCC_ISOC_THRES(p)	(((p)>>4)&0x7)  /* bits 6:4, uframes cached */
 #define HCC_CANPARK(p)		((p)&(1 << 2))  /* true: can park on async qh */
 #define HCC_PGM_FRAMELISTLEN(p) ((p)&(1 << 1))  /* true: periodic_size changes*/
-#define HCC_64BIT_ADDR(p)       ((p)&(1))       /* true: can use 64-bit addr */
+#define HCC_64BIT_ADDR(p)	((p)&(1))       /* true: can use 64-bit addr */
 
 /* 23:16 is r/w intr rate, in microframes; default "8" == 1/msec */
 #define CMD_PARK	(1<<11)		/* enable "park" on async qh */
