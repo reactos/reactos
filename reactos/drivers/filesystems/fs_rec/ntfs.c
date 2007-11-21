@@ -21,11 +21,10 @@ FsRecIsNtfsVolume(IN PPACKED_BOOT_SECTOR BootSector,
                   IN ULONG BytesPerSector,
                   IN PLARGE_INTEGER  NumberOfSectors)
 {
-    PAGED_CODE();
-    BOOLEAN Result;
-
     /* Assume failure */
-    Result = FALSE;
+    BOOLEAN Result = FALSE;
+
+    PAGED_CODE();
 
     if ((BootSector->Oem[0] == 'N') &&
         (BootSector->Oem[1] == 'T') &&

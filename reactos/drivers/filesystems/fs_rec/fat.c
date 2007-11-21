@@ -23,6 +23,8 @@ FsRecIsFatVolume(IN PPACKED_BOOT_SECTOR PackedBootSector)
     BOOLEAN Result = TRUE;
     PAGED_CODE();
 
+    RtlZeroMemory(&Bpb, sizeof(BIOS_PARAMETER_BLOCK));
+
     /* Unpack the BPB and do a small fix up */
     FatUnpackBios(&Bpb, &PackedBootSector->PackedBpb);
     if (Bpb.Sectors) Bpb.LargeSectors = 0;
