@@ -58,7 +58,7 @@ static NTSTATUS VfatLockControl(
    PVFATFCB Fcb;
    NTSTATUS Status;
 
-   DPRINT("VfatLockControl(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatLockControl(IrpContext %p)\n", IrpContext);
 
    ASSERT(IrpContext);
 
@@ -94,7 +94,7 @@ Fail:;
 static NTSTATUS
 VfatDispatchRequest (IN PVFAT_IRP_CONTEXT IrpContext)
 {
-    DPRINT ("VfatDispatchRequest (IrpContext %x), is called for %s\n", IrpContext,
+    DPRINT ("VfatDispatchRequest (IrpContext %p), is called for %s\n", IrpContext,
 	    IrpContext->MajorFunction >= IRP_MJ_MAXIMUM_FUNCTION ? "????" : MajorFunctionNames[IrpContext->MajorFunction]);
 
    ASSERT(IrpContext);
@@ -144,7 +144,7 @@ NTSTATUS NTAPI VfatBuildRequest (
    PVFAT_IRP_CONTEXT IrpContext;
    KIRQL Irql;
 
-   DPRINT ("VfatBuildRequest (DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+   DPRINT ("VfatBuildRequest (DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
    ASSERT(DeviceObject);
    ASSERT(Irp);
@@ -188,7 +188,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PVFAT_IRP_CONTEXT IrpContext;
    /*PIO_STACK_LOCATION Stack;*/
    UCHAR MajorFunction;
-   DPRINT ("VfatAllocateIrpContext(DeviceObject %x, Irp %x)\n", DeviceObject, Irp);
+   DPRINT ("VfatAllocateIrpContext(DeviceObject %p, Irp %p)\n", DeviceObject, Irp);
 
    ASSERT(DeviceObject);
    ASSERT(Irp);
@@ -227,7 +227,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 static VOID NTAPI VfatDoRequest (PVOID IrpContext)
 {
    InterlockedDecrement(&QueueCount);
-   DPRINT ("VfatDoRequest (IrpContext %x), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
+   DPRINT ("VfatDoRequest (IrpContext %p), MajorFunction %x, %d\n", IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
    FsRtlEnterFileSystem();
    VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
    FsRtlExitFileSystem();
@@ -237,7 +237,7 @@ static VOID NTAPI VfatDoRequest (PVOID IrpContext)
 NTSTATUS VfatQueueRequest(PVFAT_IRP_CONTEXT IrpContext)
 {
    InterlockedIncrement(&QueueCount);
-   DPRINT ("VfatQueueRequest (IrpContext %x), %d\n", IrpContext, QueueCount);
+   DPRINT ("VfatQueueRequest (IrpContext %p), %d\n", IrpContext, QueueCount);
 
    ASSERT(IrpContext != NULL);
    ASSERT(IrpContext->Irp != NULL);

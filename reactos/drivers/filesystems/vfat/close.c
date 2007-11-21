@@ -23,7 +23,7 @@ VfatCloseFile (PDEVICE_EXTENSION DeviceExt, PFILE_OBJECT FileObject)
   PVFATCCB pCcb;
   NTSTATUS Status = STATUS_SUCCESS;
 
-  DPRINT ("VfatCloseFile(DeviceExt %x, FileObject %x)\n",
+  DPRINT ("VfatCloseFile(DeviceExt %p, FileObject %p)\n",
 	  DeviceExt, FileObject);
 
   /* FIXME : update entry in directory? */
@@ -76,7 +76,7 @@ NTSTATUS VfatClose (PVFAT_IRP_CONTEXT IrpContext)
 {
   NTSTATUS Status;
 
-  DPRINT ("VfatClose(DeviceObject %x, Irp %x)\n", IrpContext->DeviceObject, IrpContext->Irp);
+  DPRINT ("VfatClose(DeviceObject %p, Irp %p)\n", IrpContext->DeviceObject, IrpContext->Irp);
 
   if (IrpContext->DeviceObject == VfatGlobalData->DeviceObject)
     {

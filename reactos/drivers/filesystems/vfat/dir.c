@@ -389,7 +389,7 @@ static NTSTATUS DoQuery (PVFAT_IRP_CONTEXT IrpContext)
       DirContext.DirIndex = pCcb->Entry;
     }
 
-  DPRINT ("Buffer=%x tofind=%wZ\n", Buffer, &pCcb->SearchPattern);
+  DPRINT ("Buffer=%p tofind=%wZ\n", Buffer, &pCcb->SearchPattern);
 
   DirContext.LongNameU.Buffer = LongNameBuffer;
   DirContext.LongNameU.MaximumLength = sizeof(LongNameBuffer);

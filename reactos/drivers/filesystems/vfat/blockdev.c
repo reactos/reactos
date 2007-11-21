@@ -14,6 +14,7 @@
 
 /* FUNCTIONS ***************************************************************/
 
+static IO_COMPLETION_ROUTINE VfatReadWritePartialCompletion;
 static NTSTATUS NTAPI
 VfatReadWritePartialCompletion (IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,
@@ -66,7 +67,7 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
 
   KeInitializeEvent (&event, NotificationEvent, FALSE);
 
-  DPRINT ("VfatReadDisk(pDeviceObject %x, Offset %I64x, Length %d, Buffer %x)\n",
+  DPRINT ("VfatReadDisk(pDeviceObject %p, Offset %I64x, Length %d, Buffer %p)\n",
 	  pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
 
   DPRINT ("Building synchronous FSD Request...\n");
@@ -89,26 +90,26 @@ VfatReadDisk (IN PDEVICE_OBJECT pDeviceObject,
       Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  DPRINT ("Calling IO Driver... with irp %p\n", Irp);
   Status = IoCallDriver (pDeviceObject, Irp);
 
-  DPRINT ("Waiting for IO Operation for %x\n", Irp);
+  DPRINT ("Waiting for IO Operation for %p\n", Irp);
   if (Status == STATUS_PENDING)
     {
       DPRINT ("Operation pending\n");
       KeWaitForSingleObject (&event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT ("Getting IO Status... for %x\n", Irp);
+      DPRINT ("Getting IO Status... for %p\n", Irp);
       Status = IoStatus.Status;
     }
 
   if (!NT_SUCCESS (Status))
     {
       DPRINT ("IO failed!!! VfatReadDisk : Error code: %x\n", Status);
-      DPRINT ("(pDeviceObject %x, Offset %I64x, Size %d, Buffer %x\n",
+      DPRINT ("(pDeviceObject %p, Offset %I64x, Size %d, Buffer %p\n",
 	      pDeviceObject, ReadOffset->QuadPart, ReadLength, Buffer);
       return (Status);
     }
-  DPRINT ("Block request succeeded for %x\n", Irp);
+  DPRINT ("Block request succeeded for %p\n", Irp);
   return (STATUS_SUCCESS);
 }
 
@@ -124,7 +125,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   NTSTATUS Status;
   PVOID Buffer;
 
-  DPRINT ("VfatReadDiskPartial(IrpContext %x, ReadOffset %I64x, ReadLength %d, BufferOffset %x, Wait %d)\n",
+  DPRINT ("VfatReadDiskPartial(IrpContext %p, ReadOffset %I64x, ReadLength %d, BufferOffset %x, Wait %d)\n",
 	  IrpContext, ReadOffset->QuadPart, ReadLength, BufferOffset, Wait);
 
   DPRINT ("Building asynchronous FSD Request...\n");
@@ -178,7 +179,7 @@ VfatReadDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
       InterlockedIncrement((PLONG)&IrpContext->RefCount);
     }
 
-  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  DPRINT ("Calling IO Driver... with irp %p\n", Irp);
   Status = IoCallDriver (IrpContext->DeviceExt->StorageDevice, Irp);
 
   if (Wait && Status == STATUS_PENDING)
@@ -204,7 +205,7 @@ VfatWriteDiskPartial (IN PVFAT_IRP_CONTEXT IrpContext,
   NTSTATUS Status;
   PVOID Buffer;
 
-  DPRINT ("VfatWriteDiskPartial(IrpContext %x, WriteOffset %I64x, WriteLength %d, BufferOffset %x, Wait %d)\n",
+  DPRINT ("VfatWriteDiskPartial(IrpContext %p, WriteOffset %I64x, WriteLength %d, BufferOffset %x, Wait %d)\n",
 	  IrpContext, WriteOffset->QuadPart, WriteLength, BufferOffset, Wait);
 
   Buffer = (PCHAR)MmGetMdlVirtualAddress(IrpContext->Irp->MdlAddress) + BufferOffset;
@@ -283,9 +284,9 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
   IO_STATUS_BLOCK IoStatus;
   NTSTATUS Status;
 
-  DPRINT("VfatBlockDeviceIoControl(DeviceObject %x, CtlCode %x, "
-         "InputBuffer %x, InputBufferSize %x, OutputBuffer %x, "
-         "OutputBufferSize %x (%x)\n", DeviceObject, CtlCode,
+  DPRINT("VfatBlockDeviceIoControl(DeviceObject %p, CtlCode %x, "
+         "InputBuffer %p, InputBufferSize %x, OutputBuffer %p, "
+         "OutputBufferSize %p (%x)\n", DeviceObject, CtlCode,
          InputBuffer, InputBufferSize, OutputBuffer, OutputBufferSize,
          OutputBufferSize ? *OutputBufferSize : 0);
 
@@ -313,15 +314,15 @@ VfatBlockDeviceIoControl (IN PDEVICE_OBJECT DeviceObject,
       Stack->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
     }
 
-  DPRINT ("Calling IO Driver... with irp %x\n", Irp);
+  DPRINT ("Calling IO Driver... with irp %p\n", Irp);
   Status = IoCallDriver(DeviceObject, Irp);
 
-  DPRINT ("Waiting for IO Operation for %x\n", Irp);
+  DPRINT ("Waiting for IO Operation for %p\n", Irp);
   if (Status == STATUS_PENDING)
     {
       DPRINT ("Operation pending\n");
       KeWaitForSingleObject (&Event, Suspended, KernelMode, FALSE, NULL);
-      DPRINT ("Getting IO Status... for %x\n", Irp);
+      DPRINT ("Getting IO Status... for %p\n", Irp);
 
       Status = IoStatus.Status;
     }

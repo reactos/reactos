@@ -196,7 +196,7 @@ FindFile (
 	UNICODE_STRING FileToFindUpcase;
 	BOOLEAN WildCard;
 
-	DPRINT ("FindFile(Parent %x, FileToFind '%wZ', DirIndex: %d)\n",
+	DPRINT ("FindFile(Parent %p, FileToFind '%wZ', DirIndex: %d)\n",
 		Parent, FileToFindU, DirContext->DirIndex);
 	DPRINT ("FindFile: Path %wZ)\n",&Parent->PathNameU);
 
@@ -350,7 +350,7 @@ VfatOpenFile (
 	PVFATFCB Fcb;
 	NTSTATUS Status;
 
-	DPRINT ("VfatOpenFile(%08lx, '%wZ', %08lx, %08lx)\n", DeviceExt, PathNameU, FileObject, ParentFcb);
+	DPRINT ("VfatOpenFile(%p, '%wZ', %p, %p)\n", DeviceExt, PathNameU, FileObject, ParentFcb);
 
 	if (FileObject->RelatedFileObject)
 	{

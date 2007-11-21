@@ -463,6 +463,7 @@ typedef struct _VFAT_DIRENTRY_CONTEXT
 
 /*  ------------------------------------------------------  shutdown.c  */
 
+DRIVER_DISPATCH VfatShutdown;
 NTSTATUS NTAPI VfatShutdown (PDEVICE_OBJECT DeviceObject,
                                PIRP Irp);
 
@@ -762,6 +763,7 @@ PVFAT_IRP_CONTEXT VfatAllocateIrpContext(PDEVICE_OBJECT DeviceObject,
 
 VOID VfatFreeIrpContext(PVFAT_IRP_CONTEXT IrpContext);
 
+DRIVER_DISPATCH VfatBuildRequest;
 NTSTATUS NTAPI VfatBuildRequest (PDEVICE_OBJECT DeviceObject,
                                    PIRP Irp);
 

@@ -379,7 +379,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    ULONG eocMark;
    FATINFO FatInfo;
 
-   DPRINT("VfatMount(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatMount(IrpContext %p)\n", IrpContext);
 
    ASSERT(IrpContext);
 
@@ -504,7 +504,7 @@ VfatMount (PVFAT_IRP_CONTEXT IrpContext)
    DeviceObject->StackSize = DeviceExt->StorageDevice->StackSize + 1;
    DeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
-   DPRINT("FsDeviceObject %lx\n", DeviceObject);
+   DPRINT("FsDeviceObject %p\n", DeviceObject);
 
    DeviceExt->FATFileObject = IoCreateStreamFileObject(NULL, DeviceExt->StorageDevice);
    Fcb = vfatNewFCB(DeviceExt, &NameU);
@@ -631,7 +631,7 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
   BOOLEAN RecognizedFS;
   PDEVICE_EXTENSION DeviceExt = IrpContext->DeviceExt;
 
-  DPRINT("VfatVerify(IrpContext %x)\n", IrpContext);
+  DPRINT("VfatVerify(IrpContext %p)\n", IrpContext);
 
   DeviceToVerify = IrpContext->Stack->Parameters.VerifyVolume.DeviceObject;
   Status = VfatBlockDeviceIoControl(DeviceToVerify,
@@ -677,7 +677,7 @@ VfatVerify (PVFAT_IRP_CONTEXT IrpContext)
 static NTSTATUS
 VfatGetVolumeBitmap(PVFAT_IRP_CONTEXT IrpContext)
 {
-   DPRINT("VfatGetVolumeBitmap (IrpContext %x)\n", IrpContext);
+   DPRINT("VfatGetVolumeBitmap (IrpContext %p)\n", IrpContext);
 
    return STATUS_INVALID_DEVICE_REQUEST;
 }
@@ -698,7 +698,7 @@ VfatGetRetrievalPointers(PVFAT_IRP_CONTEXT IrpContext)
    ULONG LastCluster;
    NTSTATUS Status;
 
-   DPRINT("VfatGetRetrievalPointers(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatGetRetrievalPointers(IrpContext %p)\n", IrpContext);
 
    DeviceExt = IrpContext->DeviceExt;
    FileObject = IrpContext->FileObject;
@@ -779,7 +779,7 @@ ByeBye:
 static NTSTATUS
 VfatMoveFile(PVFAT_IRP_CONTEXT IrpContext)
 {
-   DPRINT("VfatMoveFile(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatMoveFile(IrpContext %p)\n", IrpContext);
 
    return STATUS_INVALID_DEVICE_REQUEST;
 }
@@ -792,7 +792,7 @@ VfatRosQueryLcnMapping(PVFAT_IRP_CONTEXT IrpContext)
    PROS_QUERY_LCN_MAPPING LcnQuery;
    PIO_STACK_LOCATION Stack;
 
-   DPRINT("VfatRosQueryLcnMapping(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatRosQueryLcnMapping(IrpContext %p)\n", IrpContext);
 
    DeviceExt = IrpContext->DeviceExt;
    Stack = IrpContext->Stack;
@@ -813,7 +813,7 @@ VfatIsVolumeDirty(PVFAT_IRP_CONTEXT IrpContext)
 {
    PULONG Flags;
 
-   DPRINT("VfatIsVolumeDirty(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatIsVolumeDirty(IrpContext %p)\n", IrpContext);
 
    if (IrpContext->Stack->Parameters.FileSystemControl.OutputBufferLength != sizeof(ULONG))
       return STATUS_INVALID_BUFFER_SIZE;
@@ -839,7 +839,7 @@ VfatMarkVolumeDirty(PVFAT_IRP_CONTEXT IrpContext)
    PDEVICE_EXTENSION DeviceExt;
    NTSTATUS Status = STATUS_SUCCESS;
 
-   DPRINT("VfatMarkVolumeDirty(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatMarkVolumeDirty(IrpContext %p)\n", IrpContext);
    DeviceExt = IrpContext->DeviceExt;
 
    if (!(DeviceExt->VolumeFcb->Flags & VCB_IS_DIRTY))
@@ -866,7 +866,7 @@ NTSTATUS VfatFileSystemControl(PVFAT_IRP_CONTEXT IrpContext)
 
    NTSTATUS Status;
 
-   DPRINT("VfatFileSystemControl(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatFileSystemControl(IrpContext %p)\n", IrpContext);
 
    ASSERT(IrpContext);
    ASSERT(IrpContext->Irp);

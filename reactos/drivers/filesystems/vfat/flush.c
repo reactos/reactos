@@ -18,7 +18,7 @@ static NTSTATUS VfatFlushFile(PDEVICE_EXTENSION DeviceExt, PVFATFCB Fcb)
    IO_STATUS_BLOCK IoStatus;
    NTSTATUS Status;
 
-   DPRINT("VfatFlushFile(DeviceExt %x, Fcb %x) for '%wZ'\n", DeviceExt, Fcb, &Fcb->PathNameU);
+   DPRINT("VfatFlushFile(DeviceExt %p, Fcb %p) for '%wZ'\n", DeviceExt, Fcb, &Fcb->PathNameU);
 
    CcFlushCache(&Fcb->SectionObjectPointers, NULL, 0, &IoStatus);
    if (IoStatus.Status == STATUS_INVALID_PARAMETER)
@@ -43,7 +43,7 @@ NTSTATUS VfatFlushVolume(PDEVICE_EXTENSION DeviceExt, PVFATFCB VolumeFcb)
    PVFATFCB Fcb;
    NTSTATUS Status, ReturnStatus = STATUS_SUCCESS;
 
-   DPRINT("VfatFlushVolume(DeviceExt %x, FatFcb %x)\n", DeviceExt, VolumeFcb);
+   DPRINT("VfatFlushVolume(DeviceExt %p, FatFcb %p)\n", DeviceExt, VolumeFcb);
 
    ListEntry = DeviceExt->FcbListHead.Flink;
    while (ListEntry != &DeviceExt->FcbListHead)

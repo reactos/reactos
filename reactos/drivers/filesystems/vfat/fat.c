@@ -626,7 +626,7 @@ GetNextCluster(PDEVICE_EXTENSION DeviceExt,
 {
   NTSTATUS Status;
 
-  DPRINT ("GetNextCluster(DeviceExt %x, CurrentCluster %x)\n",
+  DPRINT ("GetNextCluster(DeviceExt %p, CurrentCluster %x)\n",
 	  DeviceExt, CurrentCluster);
 
   if (CurrentCluster == 0)
@@ -649,7 +649,7 @@ GetNextClusterExtend(PDEVICE_EXTENSION DeviceExt,
 {
   NTSTATUS Status;
 
-  DPRINT ("GetNextClusterExtend(DeviceExt %x, CurrentCluster %x)\n",
+  DPRINT ("GetNextClusterExtend(DeviceExt %p, CurrentCluster %x)\n",
 	  DeviceExt, CurrentCluster);
 
   ExAcquireResourceExclusiveLite(&DeviceExt->FatResource, TRUE);

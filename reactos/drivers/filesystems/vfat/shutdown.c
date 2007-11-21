@@ -49,7 +49,7 @@ VfatShutdown(PDEVICE_OBJECT DeviceObject, PIRP Irp)
    PDEVICE_EXTENSION DeviceExt;
    ULONG eocMark;
 
-   DPRINT("VfatShutdown(DeviceObject %x, Irp %x)\n",DeviceObject, Irp);
+   DPRINT("VfatShutdown(DeviceObject %p, Irp %p)\n",DeviceObject, Irp);
 
    /* FIXME: block new mount requests */
 

@@ -104,7 +104,7 @@ VfatSetPositionInformation(PFILE_OBJECT FileObject,
 {
   DPRINT ("FsdSetPositionInformation()\n");
 
-  DPRINT ("PositionInfo %x\n", PositionInfo);
+  DPRINT ("PositionInfo %p\n", PositionInfo);
   DPRINT ("Setting position %d\n", PositionInfo->CurrentByteOffset.u.LowPart);
 
   FileObject->CurrentByteOffset.QuadPart =
@@ -868,7 +868,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
   /* PRECONDITION */
   ASSERT(IrpContext);
 
-  DPRINT("VfatSetInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("VfatSetInformation(IrpContext %p)\n", IrpContext);
 
   /* INITIALIZATION */
   FileInformationClass =
@@ -880,7 +880,7 @@ NTSTATUS VfatSetInformation(PVFAT_IRP_CONTEXT IrpContext)
          FileInformationClass >= FileMaximumInformation - 1 ? "????" : FileInformationClassNames[ FileInformationClass]);
 
   DPRINT("FileInformationClass %d\n", FileInformationClass);
-  DPRINT("SystemBuffer %x\n", SystemBuffer);
+  DPRINT("SystemBuffer %p\n", SystemBuffer);
 
   if (!(FCB->Flags & FCB_IS_PAGE_FILE))
     {

@@ -306,7 +306,7 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   /* PRECONDITION */
   ASSERT(IrpContext);
 
-  DPRINT("VfatQueryVolumeInformation(IrpContext %x)\n", IrpContext);
+  DPRINT("VfatQueryVolumeInformation(IrpContext %p)\n", IrpContext);
 
   if (!ExAcquireResourceSharedLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                    (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
@@ -321,7 +321,7 @@ NTSTATUS VfatQueryVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 
 
   DPRINT ("FsInformationClass %d\n", FsInformationClass);
-  DPRINT ("SystemBuffer %x\n", SystemBuffer);
+  DPRINT ("SystemBuffer %p\n", SystemBuffer);
 
   switch (FsInformationClass)
     {
@@ -380,7 +380,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
   /* PRECONDITION */
   ASSERT(IrpContext);
 
-  DPRINT ("VfatSetVolumeInformation(IrpContext %x)\n", IrpContext);
+  DPRINT ("VfatSetVolumeInformation(IrpContext %p)\n", IrpContext);
 
   if (!ExAcquireResourceExclusiveLite(&((PDEVICE_EXTENSION)IrpContext->DeviceObject->DeviceExtension)->DirResource,
                                       (BOOLEAN)(IrpContext->Flags & IRPCONTEXT_CANWAIT)))
@@ -394,7 +394,7 @@ NTSTATUS VfatSetVolumeInformation(PVFAT_IRP_CONTEXT IrpContext)
 
   DPRINT ("FsInformationClass %d\n", FsInformationClass);
   DPRINT ("BufferLength %d\n", BufferLength);
-  DPRINT ("SystemBuffer %x\n", SystemBuffer);
+  DPRINT ("SystemBuffer %p\n", SystemBuffer);
 
   switch(FsInformationClass)
     {

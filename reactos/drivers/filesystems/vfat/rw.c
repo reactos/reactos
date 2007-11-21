@@ -139,7 +139,7 @@ VfatReadFileData (PVFAT_IRP_CONTEXT IrpContext,
   ASSERT(IrpContext->FileObject);
   ASSERT(IrpContext->FileObject->FsContext2 != NULL);
 
-  DPRINT("VfatReadFileData(DeviceExt %x, FileObject %x, "
+  DPRINT("VfatReadFileData(DeviceExt %p, FileObject %p, "
 	 "Length %d, ReadOffset 0x%I64x)\n", DeviceExt,
 	 IrpContext->FileObject, Length, ReadOffset.QuadPart);
 
@@ -358,7 +358,7 @@ VfatWriteFileData(PVFAT_IRP_CONTEXT IrpContext,
    BytesPerCluster = DeviceExt->FatInfo.BytesPerCluster;
    BytesPerSector = DeviceExt->FatInfo.BytesPerSector;
 
-   DPRINT("VfatWriteFileData(DeviceExt %x, FileObject %x, "
+   DPRINT("VfatWriteFileData(DeviceExt %p, FileObject %p, "
 	  "Length %d, WriteOffset 0x%I64x), '%wZ'\n", DeviceExt,
 	  IrpContext->FileObject, Length, WriteOffset,
 	  &Fcb->PathNameU);
@@ -547,7 +547,7 @@ VfatRead(PVFAT_IRP_CONTEXT IrpContext)
 
    ASSERT(IrpContext);
 
-   DPRINT("VfatRead(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatRead(IrpContext %p)\n", IrpContext);
 
    ASSERT(IrpContext->DeviceObject);
 
@@ -789,7 +789,7 @@ NTSTATUS VfatWrite (PVFAT_IRP_CONTEXT IrpContext)
 
    ASSERT(IrpContext);
 
-   DPRINT("VfatWrite(IrpContext %x)\n", IrpContext);
+   DPRINT("VfatWrite(IrpContext %p)\n", IrpContext);
 
    ASSERT(IrpContext->DeviceObject);
 
