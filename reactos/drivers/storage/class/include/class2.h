@@ -146,6 +146,7 @@ typedef struct _COMPLETION_CONTEXT
 
 /* FUNCTIONS ****************************************************************/
 
+IO_COMPLETION_ROUTINE ScsiClassAsynchronousCompletion;
 NTSTATUS STDCALL
 ScsiClassAsynchronousCompletion(IN PDEVICE_OBJECT DeviceObject,
 				IN PIRP Irp,

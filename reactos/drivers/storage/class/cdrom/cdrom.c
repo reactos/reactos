@@ -231,7 +231,6 @@ typedef struct _CDROM_DATA {
 #define ExAllocatePool(a,b) ExAllocatePoolWithTag(a,b,'CscS')
 #endif
 
-
 NTSTATUS
 STDCALL
 DriverEntry(
@@ -278,6 +277,7 @@ CdRomDeviceControl(
     IN PIRP Irp
     );
 
+IO_COMPLETION_ROUTINE CdRomDeviceControlCompletion;
 NTSTATUS
 STDCALL
 CdRomDeviceControlCompletion(
@@ -286,6 +286,7 @@ CdRomDeviceControlCompletion(
     IN PVOID Context
     );
 
+IO_COMPLETION_ROUTINE CdRomSetVolumeIntermediateCompletion;
 NTSTATUS
 STDCALL
 CdRomSetVolumeIntermediateCompletion(
@@ -294,6 +295,7 @@ CdRomSetVolumeIntermediateCompletion(
     IN PVOID Context
     );
 
+IO_COMPLETION_ROUTINE CdRomSwitchModeCompletion;
 NTSTATUS
 STDCALL
 CdRomSwitchModeCompletion(
@@ -302,6 +304,7 @@ CdRomSwitchModeCompletion(
     IN PVOID Context
     );
 
+IO_COMPLETION_ROUTINE CdRomXACompletion;
 NTSTATUS
 STDCALL
 CdRomXACompletion(
@@ -310,6 +313,7 @@ CdRomXACompletion(
     IN PVOID Context
     );
 
+IO_COMPLETION_ROUTINE CdRomClassIoctlCompletion;
 NTSTATUS
 STDCALL
 CdRomClassIoctlCompletion(
@@ -383,6 +387,7 @@ HitachProcessError(
     BOOLEAN *Retry
     );
 
+IO_COMPLETION_ROUTINE ToshibaProcessErrorCompletion;
 VOID
 STDCALL
 ToshibaProcessError(
@@ -451,7 +456,6 @@ FindScsiAdapter (
 
 ULONG NoLoad = 0;
 
-
 NTSTATUS
 STDCALL
 DriverEntry(
@@ -519,7 +523,6 @@ Return Value:
 
 } // end DriverEntry()
 
-
 BOOLEAN
 STDCALL
 ScsiCdRomFindDevices(
@@ -665,7 +668,6 @@ Return Value:
 
 } // end FindScsiCdRoms()
 
-
 VOID
 STDCALL
 CdRomCreateNamedEvent(
@@ -699,7 +701,7 @@ Return Value:
     NTSTATUS          status;
 
 
-    sprintf(eventNameBuffer,"\\Device\\MediaChangeEvent%d",
+    sprintf(eventNameBuffer,"\\Device\\MediaChangeEvent%ld",
             DeviceNumber);
 
     RtlInitString(&eventNameString,
@@ -728,7 +730,6 @@ Return Value:
     RtlFreeUnicodeString(&unicodeString);
 }
 
-
 NTSTATUS
 STDCALL
 CreateCdRomDeviceObject(
@@ -765,7 +766,6 @@ Return Value:
 --*/
 {
     UCHAR ntNameBuffer[64];
-    STRING ntNameString;
     UNICODE_STRING ntUnicodeString;
     NTSTATUS status;
     BOOLEAN changerDevice;
@@ -802,7 +802,7 @@ Return Value:
     //
 
     sprintf(ntNameBuffer,
-            "\\Device\\CdRom%d",
+            "\\Device\\CdRom%lu",
             *DeviceCount);
 
     status = ScsiClassCreateDeviceObject(DriverObject,
@@ -1365,7 +1365,6 @@ CreateCdRomDeviceObjectExit:
 
 } // end CreateCdRomDeviceObject()
 
-
 VOID
 STDCALL
 ScsiCdRomStartIo(
@@ -1382,7 +1381,6 @@ ScsiCdRomStartIo(
     ULONG               transferPages;
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     ULONG               maximumTransferLength = deviceExtension->PortCapabilities->MaximumTransferLength;
-    LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
     PCDROM_DATA         cdData;
     PSCSI_REQUEST_BLOCK srb = NULL;
     PCDB                cdb;
@@ -1828,7 +1826,6 @@ ScsiCdRomStartIo(
                 if (cdData->RawAccess) {
 
                     ULONG  startingSector;
-                    UCHAR  min, sec, frame;
 
                     //
                     // Free the recently allocated irp, as we don't need it.
@@ -2404,8 +2401,6 @@ ScsiCdRomStartIo(
 
         case IOCTL_CDROM_READ_Q_CHANNEL: {
 
-            PSUB_Q_CHANNEL_DATA userChannelData =
-                             Irp->AssociatedIrp.SystemBuffer;
             PCDROM_SUB_Q_DATA_FORMAT inputBuffer =
                              Irp->AssociatedIrp.SystemBuffer;
 
@@ -2585,10 +2580,6 @@ ScsiCdRomStartIo(
         }
 
         case IOCTL_CDROM_GET_CONTROL: {
-
-            PAUDIO_OUTPUT audioOutput;
-            PCDROM_AUDIO_CONTROL audioControl = Irp->AssociatedIrp.SystemBuffer;
-
             //
             // Allocate buffer for volume control information.
             //
@@ -2789,7 +2780,6 @@ ScsiCdRomStartIo(
 }
 
 
-
 NTSTATUS
 STDCALL
 ScsiCdRomReadVerification(
@@ -2820,11 +2810,6 @@ Return Value:
     PIO_STACK_LOCATION  currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     ULONG               transferByteCount = currentIrpStack->Parameters.Read.Length;
     LARGE_INTEGER       startingOffset = currentIrpStack->Parameters.Read.ByteOffset;
-    PCDROM_DATA         cdData = (PCDROM_DATA)(deviceExtension+1);
-    KIRQL               irql;
-    SCSI_REQUEST_BLOCK  srb;
-    PCDB                cdb = (PCDB)srb.Cdb;
-    NTSTATUS            status;
 
     //
     // If the cd is playing music then reject this request.
@@ -2875,7 +2860,6 @@ Return Value:
 } // end ScsiCdRomReadVerification()
 
 
-
 NTSTATUS
 STDCALL
 CdRomDeviceControlCompletion(
@@ -3443,7 +3427,6 @@ CdRomDeviceControlCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 NTSTATUS
 STDCALL
 CdRomSetVolumeIntermediateCompletion(
@@ -3776,7 +3759,6 @@ CdRomSetVolumeIntermediateCompletion(
 }
 
 
-
 NTSTATUS
 STDCALL
 CdRomSwitchModeCompletion(
@@ -3788,7 +3770,6 @@ CdRomSwitchModeCompletion(
     PDEVICE_EXTENSION   deviceExtension = DeviceObject->DeviceExtension;
     PIO_STACK_LOCATION  irpStack        = IoGetCurrentIrpStackLocation(Irp);
     PCDROM_DATA         cdData = (PCDROM_DATA)(deviceExtension + 1);
-    BOOLEAN             use6Byte = cdData->XAFlags & XA_USE_6_BYTE;
     PIO_STACK_LOCATION  realIrpStack;
     PIO_STACK_LOCATION  realIrpNextStack;
     PSCSI_REQUEST_BLOCK srb     = Context;
@@ -3925,7 +3906,6 @@ CdRomSwitchModeCompletion(
 
             ULONG maximumTransferLength;
             ULONG transferPages;
-            UCHAR min, sec, frame;
 
             //
             // Calculate starting offset.
@@ -4145,7 +4125,6 @@ CdRomSwitchModeCompletion(
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 NTSTATUS
 STDCALL
 CdRomXACompletion(
@@ -4183,7 +4162,6 @@ Return Value:
     PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
     PIO_STACK_LOCATION irpNextStack = IoGetNextIrpStackLocation(Irp);
     PSCSI_REQUEST_BLOCK srb = Context;
-    PDEVICE_EXTENSION deviceExtension = DeviceObject->DeviceExtension;
     NTSTATUS status;
     BOOLEAN retry;
 
@@ -4304,7 +4282,6 @@ Return Value:
     return status;
 }
 
-
 NTSTATUS
 STDCALL
 CdRomDeviceControl(
@@ -4336,13 +4313,8 @@ Return Value:
     PKEVENT            deviceControlEvent;
     PDEVICE_EXTENSION  deviceExtension = DeviceObject->DeviceExtension;
     PCDROM_DATA        cdData = (PCDROM_DATA)(deviceExtension+1);
-    BOOLEAN            use6Byte = cdData->XAFlags & XA_USE_6_BYTE;
     SCSI_REQUEST_BLOCK srb;
-    PCDB cdb = (PCDB)srb.Cdb;
-    PVOID outputBuffer;
-    ULONG bytesTransferred = 0;
     NTSTATUS status;
-    NTSTATUS status2;
     KIRQL    irql;
 
     ULONG ioctlCode;
@@ -4861,7 +4833,6 @@ RetryControl:
 
 } // end ScsiCdRomDeviceControl()
 
-
 VOID
 STDCALL
 ScanForSpecial(
@@ -5024,7 +4995,6 @@ Return Value:
     return;
 }
 
-
 VOID
 STDCALL
 HitachProcessError(
@@ -5224,7 +5194,6 @@ Return Value:
     }
 }
 
-
 NTSTATUS
 STDCALL
 ToshibaProcessErrorCompletion(
@@ -5288,7 +5257,6 @@ Return Value:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 VOID
 STDCALL
 ToshibaProcessError(
@@ -5463,7 +5431,6 @@ Return Value:
     }
 }
 
-
 BOOLEAN
 STDCALL
 CdRomIsPlayActive(
@@ -5555,8 +5522,7 @@ Return Value:
 
 }
 
-
-
+IO_COMPLETION_ROUTINE CdRomMediaChangeCompletion;
 NTSTATUS
 STDCALL
 CdRomMediaChangeCompletion(
@@ -5727,7 +5693,7 @@ Return Value:
 
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
-
+
 VOID
 STDCALL
 CdRomTickHandler(
@@ -5981,7 +5947,7 @@ Return Value:
         heldIrpList = nextIrp;
     }
 }
-
+
 BOOLEAN
 STDCALL
 CdRomCheckRegistryForMediaChangeValue(
@@ -6070,7 +6036,7 @@ Return Value:
     // the suffix for the path
     //
 
-    sprintf(buf, "\\Device%d", DeviceNumber);
+    sprintf(buf, "\\Device%lu", DeviceNumber);
     RtlInitAnsiString(&paramNum, buf);
 
     //
@@ -6192,7 +6158,7 @@ Return Value:
     return FALSE;
 }
 
-
+
 BOOLEAN
 STDCALL
 IsThisASanyo(
@@ -6294,7 +6260,6 @@ Return Value:
     return FALSE;
 }
 
-
 BOOLEAN
 STDCALL
 IsThisAnAtapiChanger(
@@ -6403,7 +6368,6 @@ Return Value:
     return retVal;
 }
 
-
 BOOLEAN
 STDCALL
 IsThisAMultiLunDevice(
@@ -6496,7 +6460,7 @@ Return Value:
 
 }
 
-
+IO_COMPLETION_ROUTINE CdRomUpdateGeometryCompletion;
 NTSTATUS
 STDCALL
 CdRomUpdateGeometryCompletion(
@@ -6749,7 +6713,6 @@ Return Value:
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-
 NTSTATUS
 STDCALL
 CdRomUpdateCapacity(
@@ -6922,7 +6885,6 @@ Return Value:
     return STATUS_INSUFFICIENT_RESOURCES;
 }
 
-
 NTSTATUS
 STDCALL
 CdRomClassIoctlCompletion(
