@@ -69,7 +69,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
 	}
 
 	/* initialize the device object */
-	DeviceObject->Flags = DO_DIRECT_IO;
+	DeviceObject->Flags |= DO_DIRECT_IO;
 
 	/* initialize the device extension */
 	DeviceExtension = DeviceObject->DeviceExtension;
