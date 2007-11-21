@@ -13,17 +13,6 @@ typedef struct _WINDOW_OBJECT *PWINDOW_OBJECT;
 #include <include/prop.h>
 #include <include/scroll.h>
 
-
-VOID FASTCALL
-WinPosSetupInternalPos(VOID);
-
-typedef struct _INTERNALPOS
-{
-  RECT NormalRect;
-  POINT IconPos;
-  POINT MaxPos;
-} INTERNALPOS, *PINTERNALPOS;
-
 typedef struct _WINDOW_OBJECT
 {
   /* NOTE: Do *NOT* Move this pointer anywhere in this structure! This
@@ -36,8 +25,6 @@ typedef struct _WINDOW_OBJECT
   PW32THREADINFO ti;
   /* Pointer to the desktop */
   PDESKTOP Desktop;
-  /* Context help id */
-  DWORD ContextHelpId;
   /* system menu handle. */
   HMENU SystemMenu;
   /* Entry in the thread's list of windows. */
@@ -71,7 +58,6 @@ typedef struct _WINDOW_OBJECT
   PWINDOW_SCROLLINFO Scroll;
   PETHREAD OwnerThread;
   HWND hWndLastPopup; /* handle to last active popup window (wine doesn't use pointer, for unk. reason)*/
-  PINTERNALPOS InternalPos;
   ULONG Status;
   /* counter for tiled child windows */
   ULONG TiledCounter;

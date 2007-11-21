@@ -140,10 +140,20 @@ typedef struct _WINDOW
     PWINDOWCLASS Class;
     /* Window name. */
     UNICODE_STRING WindowName;
+    /* Context help id */
+    DWORD ContextHelpId;
+
+    struct
+    {
+        RECT NormalRect;
+        POINT IconPos;
+        POINT MaxPos;
+    } InternalPos;
 
     UINT Unicode : 1;
     /* Indicates whether the window is derived from a system class */
     UINT IsSystem : 1;
+    UINT InternalPosInitialized : 1;
 } WINDOW, *PWINDOW;
 
 typedef struct _W32PROCESSINFO

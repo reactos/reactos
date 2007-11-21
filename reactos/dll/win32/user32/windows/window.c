@@ -1854,7 +1854,13 @@ DWORD
 STDCALL
 GetWindowContextHelpId(HWND hwnd)
 {
-  return NtUserGetWindowContextHelpId(hwnd);
+    PWINDOW Wnd = ValidateHwnd(hwnd);
+    if (Wnd != NULL)
+    {
+        return Wnd->ContextHelpId;
+    }
+
+    return 0;
 }
 
 /*

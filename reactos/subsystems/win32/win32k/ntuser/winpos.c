@@ -267,14 +267,14 @@ WinPosFindIconPos(PWINDOW_OBJECT Window, POINT *Pos)
    /* FIXME */
 }
 
-PINTERNALPOS FASTCALL
+VOID FASTCALL
 WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
 {
-   PWINDOW_OBJECT Parent;
-   UINT XInc, YInc;
-   PWINDOW Wnd = Window->Wnd;
+    PWINDOW_OBJECT Parent;
+    UINT XInc, YInc;
+    PWINDOW Wnd = Window->Wnd;
 
-   if (Window->InternalPos == NULL)
+   if (!Wnd->InternalPosInitialized)
    {
       RECT WorkArea;
       PDESKTOP_OBJECT Desktop = PsGetCurrentThreadWin32Thread()->Desktop; /* Or rather get it from the window? */
@@ -290,51 +290,43 @@ WinPosInitInternalPos(PWINDOW_OBJECT Window, POINT *pt, PRECT RestoreRect)
       else
          IntGetDesktopWorkArea(Desktop, &WorkArea);
 
-      Window->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
-      if(!Window->InternalPos)
-      {
-         DPRINT1("Failed to allocate INTERNALPOS structure for window 0x%x\n", Window->hSelf);
-         return NULL;
-      }
-      Window->InternalPos->NormalRect = Window->Wnd->WindowRect;
+      Wnd->InternalPos.NormalRect = Window->Wnd->WindowRect;
       IntGetWindowBorderMeasures(Window, &XInc, &YInc);
-      Window->InternalPos->MaxPos.x = WorkArea.left - XInc;
-      Window->InternalPos->MaxPos.y = WorkArea.top - YInc;
-      Window->InternalPos->IconPos.x = WorkArea.left;
-      Window->InternalPos->IconPos.y = WorkArea.bottom - UserGetSystemMetrics(SM_CYMINIMIZED);
+      Wnd->InternalPos.MaxPos.x = WorkArea.left - XInc;
+      Wnd->InternalPos.MaxPos.y = WorkArea.top - YInc;
+      Wnd->InternalPos.IconPos.x = WorkArea.left;
+      Wnd->InternalPos.IconPos.y = WorkArea.bottom - UserGetSystemMetrics(SM_CYMINIMIZED);
+
+      Wnd->InternalPosInitialized = TRUE;
    }
    if (Wnd->Style & WS_MINIMIZE)
    {
-      Window->InternalPos->IconPos = *pt;
+      Wnd->InternalPos.IconPos = *pt;
    }
    else if (Wnd->Style & WS_MAXIMIZE)
    {
-      Window->InternalPos->MaxPos = *pt;
+      Wnd->InternalPos.MaxPos = *pt;
    }
    else if (RestoreRect != NULL)
    {
-      Window->InternalPos->NormalRect = *RestoreRect;
+      Wnd->InternalPos.NormalRect = *RestoreRect;
    }
-   return(Window->InternalPos);
 }
 
 UINT FASTCALL
 co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 {
    POINT Size;
-   PINTERNALPOS InternalPos;
    UINT SwpFlags = 0;
    PWINDOW Wnd;
 
    ASSERT_REFS_CO(Window);
    Wnd = Window->Wnd;
 
-   Size.x = Window->Wnd->WindowRect.left;
-   Size.y = Window->Wnd->WindowRect.top;
-   InternalPos = WinPosInitInternalPos(Window, &Size, &Window->Wnd->WindowRect);
+   Size.x = Wnd->WindowRect.left;
+   Size.y = Wnd->WindowRect.top;
+   WinPosInitInternalPos(Window, &Size, &Wnd->WindowRect);
 
-   if (InternalPos)
-   {
       if (Wnd->Style & WS_MINIMIZE)
       {
          if (!co_IntSendMessage(Window->hSelf, WM_QUERYOPEN, 0, 0))
@@ -359,8 +351,8 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                co_UserRedrawWindow(Window, NULL, 0, RDW_VALIDATE | RDW_NOERASE |
                                    RDW_NOINTERNALPAINT);
                Wnd->Style |= WS_MINIMIZE;
-               WinPosFindIconPos(Window, &InternalPos->IconPos);
-               IntGdiSetRect(NewPos, InternalPos->IconPos.x, InternalPos->IconPos.y,
+               WinPosFindIconPos(Window, &Wnd->InternalPos.IconPos);
+               IntGdiSetRect(NewPos, Wnd->InternalPos.IconPos.x, Wnd->InternalPos.IconPos.y,
                              UserGetSystemMetrics(SM_CXMINIMIZED),
                              UserGetSystemMetrics(SM_CYMINIMIZED));
                SwpFlags |= SWP_NOCOPYBITS;
@@ -369,16 +361,16 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
 
          case SW_MAXIMIZE:
             {
-               co_WinPosGetMinMaxInfo(Window, &Size, &InternalPos->MaxPos,
+               co_WinPosGetMinMaxInfo(Window, &Size, &Wnd->InternalPos.MaxPos,
                                       NULL, NULL);
                DPRINT("Maximize: %d,%d %dx%d\n",
-                      InternalPos->MaxPos.x, InternalPos->MaxPos.y, Size.x, Size.y);
+                      Wnd->InternalPos.MaxPos.x, Wnd->InternalPos.MaxPos.y, Size.x, Size.y);
                if (Wnd->Style & WS_MINIMIZE)
                {
                   Wnd->Style &= ~WS_MINIMIZE;
                }
                Wnd->Style |= WS_MAXIMIZE;
-               IntGdiSetRect(NewPos, InternalPos->MaxPos.x, InternalPos->MaxPos.y,
+               IntGdiSetRect(NewPos, Wnd->InternalPos.MaxPos.x, Wnd->InternalPos.MaxPos.y,
                              Size.x, Size.y);
                break;
             }
@@ -391,15 +383,15 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                   if (Window->Flags & WINDOWOBJECT_RESTOREMAX)
                   {
                      co_WinPosGetMinMaxInfo(Window, &Size,
-                                            &InternalPos->MaxPos, NULL, NULL);
+                                            &Wnd->InternalPos.MaxPos, NULL, NULL);
                      Wnd->Style |= WS_MAXIMIZE;
-                     IntGdiSetRect(NewPos, InternalPos->MaxPos.x,
-                                   InternalPos->MaxPos.y, Size.x, Size.y);
+                     IntGdiSetRect(NewPos, Wnd->InternalPos.MaxPos.x,
+                                   Wnd->InternalPos.MaxPos.y, Size.x, Size.y);
                      break;
                   }
                   else
                   {
-                     *NewPos = InternalPos->NormalRect;
+                     *NewPos = Wnd->InternalPos.NormalRect;
                      NewPos->right -= NewPos->left;
                      NewPos->bottom -= NewPos->top;
                      break;
@@ -412,18 +404,14 @@ co_WinPosMinMaximize(PWINDOW_OBJECT Window, UINT ShowFlag, RECT* NewPos)
                      return 0;
                   }
                   Wnd->Style &= ~WS_MAXIMIZE;
-                  *NewPos = InternalPos->NormalRect;
+                  *NewPos = Wnd->InternalPos.NormalRect;
                   NewPos->right -= NewPos->left;
                   NewPos->bottom -= NewPos->top;
                   break;
                }
             }
       }
-   }
-   else
-   {
-      SwpFlags |= SWP_NOSIZE | SWP_NOMOVE;
-   }
+
    return(SwpFlags);
 }
 
@@ -447,9 +435,9 @@ WinPosFillMinMaxInfoStruct(PWINDOW_OBJECT Window, MINMAXINFO *Info)
    Info->ptMaxTrackSize.x = Info->ptMaxSize.x;
    Info->ptMaxTrackSize.y = Info->ptMaxSize.y;
 
-   if (Window->InternalPos != NULL)
+   if (Window->Wnd->InternalPosInitialized)
    {
-      Info->ptMaxPosition = Window->InternalPos->MaxPos;
+      Info->ptMaxPosition = Window->Wnd->InternalPos.MaxPos;
    }
    else
    {
@@ -1696,8 +1684,8 @@ NtUserGetMinMaxInfo(
    BOOL SendMessage)
 {
    POINT Size;
-   PINTERNALPOS InternalPos;
    PWINDOW_OBJECT Window = NULL;
+   PWINDOW Wnd;
    MINMAXINFO SafeMinMax;
    NTSTATUS Status;
    DECLARE_RETURN(BOOL);
@@ -1712,33 +1700,30 @@ NtUserGetMinMaxInfo(
    }
 
    UserRefObjectCo(Window, &Ref);
+   Wnd = Window->Wnd;
 
    Size.x = Window->Wnd->WindowRect.left;
    Size.y = Window->Wnd->WindowRect.top;
-   InternalPos = WinPosInitInternalPos(Window, &Size,
-                                       &Window->Wnd->WindowRect);
-   if(InternalPos)
-   {
-      if(SendMessage)
-      {
-         co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
-                                &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
-      }
-      else
-      {
-         WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
-      }
-      Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         RETURN( FALSE);
-      }
+   WinPosInitInternalPos(Window, &Size,
+                         &Wnd->WindowRect);
 
-      RETURN( TRUE);
+   if(SendMessage)
+   {
+      co_WinPosGetMinMaxInfo(Window, &SafeMinMax.ptMaxSize, &SafeMinMax.ptMaxPosition,
+                             &SafeMinMax.ptMinTrackSize, &SafeMinMax.ptMaxTrackSize);
+   }
+   else
+   {
+      WinPosFillMinMaxInfoStruct(Window, &SafeMinMax);
+   }
+   Status = MmCopyToCaller(MinMaxInfo, &SafeMinMax, sizeof(MINMAXINFO));
+   if(!NT_SUCCESS(Status))
+   {
+      SetLastNtError(Status);
+      RETURN( FALSE);
    }
 
-   RETURN( FALSE);
+   RETURN( TRUE);
 
 CLEANUP:
    if (Window) UserDerefObjectCo(Window);

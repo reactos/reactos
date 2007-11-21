@@ -301,7 +301,7 @@ NtUserCallOneParam(
                RETURN( FALSE);
             }
 
-            Result = Window->ContextHelpId;
+            Result = Window->Wnd->ContextHelpId;
 
             RETURN( Result);
          }
@@ -605,7 +605,7 @@ NtUserCallTwoParam(
             RETURN( (DWORD)FALSE);
          }
 
-         Window->ContextHelpId = Param2;
+         Window->Wnd->ContextHelpId = Param2;
 
          RETURN( (DWORD)TRUE);
 

@@ -1618,7 +1618,7 @@ AllocErr:
    Class = NULL;
 
    Window->SystemMenu = (HMENU)0;
-   Window->ContextHelpId = 0;
+   Wnd->ContextHelpId = 0;
    Wnd->IDMenu = 0;
    Wnd->Instance = hInstance;
    Window->hSelf = hWnd;
@@ -3883,7 +3883,6 @@ NtUserGetWindowPlacement(HWND hWnd,
 {
    PWINDOW_OBJECT Window;
    PWINDOW Wnd;
-   PINTERNALPOS InternalPos;
    POINT Size;
    WINDOWPLACEMENT Safepl;
    NTSTATUS Status;
@@ -3930,18 +3929,12 @@ NtUserGetWindowPlacement(HWND hWnd,
 
    Size.x = Wnd->WindowRect.left;
    Size.y = Wnd->WindowRect.top;
-   InternalPos = WinPosInitInternalPos(Window, &Size,
-                                       &Wnd->WindowRect);
-   if (InternalPos)
-   {
-      Safepl.rcNormalPosition = InternalPos->NormalRect;
-      Safepl.ptMinPosition = InternalPos->IconPos;
-      Safepl.ptMaxPosition = InternalPos->MaxPos;
-   }
-   else
-   {
-      RETURN( FALSE);
-   }
+   WinPosInitInternalPos(Window, &Size,
+                         &Wnd->WindowRect);
+
+   Safepl.rcNormalPosition = Wnd->InternalPos.NormalRect;
+   Safepl.ptMinPosition = Wnd->InternalPos.IconPos;
+   Safepl.ptMaxPosition = Wnd->InternalPos.MaxPos;
 
    Status = MmCopyToCaller(lpwndpl, &Safepl, sizeof(WINDOWPLACEMENT));
    if(!NT_SUCCESS(Status))
@@ -4334,11 +4327,10 @@ NtUserSetWindowPlacement(HWND hWnd,
    /* FIXME - change window status */
    co_WinPosShowWindow(Window, Safepl.showCmd);
 
-   if (Window->InternalPos == NULL)
-      Window->InternalPos = ExAllocatePoolWithTag(PagedPool, sizeof(INTERNALPOS), TAG_WININTLIST);
-   Window->InternalPos->NormalRect = Safepl.rcNormalPosition;
-   Window->InternalPos->IconPos = Safepl.ptMinPosition;
-   Window->InternalPos->MaxPos = Safepl.ptMaxPosition;
+   Wnd->InternalPosInitialized = TRUE;
+   Wnd->InternalPos.NormalRect = Safepl.rcNormalPosition;
+   Wnd->InternalPos.IconPos = Safepl.ptMinPosition;
+   Wnd->InternalPos.MaxPos = Safepl.ptMaxPosition;
 
    UserDerefObjectCo(Window);
    RETURN(TRUE);
