@@ -965,340 +965,69 @@ mi_paint_rect(char * data, int width, int height, int x, int y, int cx, int cy)
 
 }
 
-#if 0
-/*****************************************************************************/
-static int
-mi_process_a_param(char * param1, int state)
+
+static BOOL
+ParseCommandLine(LPWSTR lpCmdLine,
+                 PRDPSETTINGS pRdpSettings,
+                 BOOL *bSkipDlg)
 {
-  char * p;
+    LPWSTR lpStr = lpCmdLine;
+    WCHAR szSeps[] = L"/";
+    LPWSTR lpToken;
+    BOOL bRet = TRUE;
+    INT i;
 
-  if (state == 0)
-  {
-    if (strcmp(param1, "-g") == 0 || strcmp(param1, "geometry") == 0)
-    {
-      state = 1;
-    }
-    if (strcmp(param1, "-t") == 0 || strcmp(param1, "port") == 0)
-    {
-      state = 2;
-    }
-    if (strcmp(param1, "-a") == 0 || strcmp(param1, "bpp") == 0)
-    {
-      state = 3;
-    }
-    if (strcmp(param1, "-f") == 0 || strcmp(param1, "fullscreen") == 0)
-    {
-      g_fullscreen = 1;
-    }
-    if (strcmp(param1, "-u") == 0 || strcmp(param1, "username") == 0)
-    {
-      state = 5;
-    }
-    if (strcmp(param1, "-p") == 0 || strcmp(param1, "password") == 0)
-    {
-      state = 6;
-    }
-    if (strcmp(param1, "-d") == 0 || strcmp(param1, "domain") == 0)
-    {
-      state = 7;
-    }
-    if (strcmp(param1, "-s") == 0 || strcmp(param1, "shell") == 0)
-    {
-      state = 8;
-    }
-    if (strcmp(param1, "-c") == 0 || strcmp(param1, "directory") == 0)
-    {
-      state = 9;
-    }
-    if (strcmp(param1, "-n") == 0 || strcmp(param1, "hostname") == 0)
-    {
-      state = 10;
-    }
-  }
-  else
-  {
-    if (state == 1) /* -g widthxheight*/
-    {
-      state = 0;
-      if (strcmp(param1, "workarea") == 0)
-      {
-        g_workarea = 1;
-        return state;
-      }
-      g_width = strtol(param1, &p, 10);
-      if (g_width <= 0)
-      {
-        mi_error("invalid geometry\r\n");
-      }
-      if (*p == 'x')
-      {
-        g_height = strtol(p + 1, &p, 10);
-      }
-      if (g_height <= 0)
-      {
-        mi_error("invalid geometry\r\n");
-      }
-      g_width_height_set = 1;
-    }
-    if (state == 2) /* -t port */
-    {
-      state = 0;
-      g_tcp_port_rdp = atol(param1);
-    }
-    if (state == 3) /* -a bpp */
-    {
-      state = 0;
-      g_server_depth = atol(param1);
-      if (g_server_depth != 8 && g_server_depth != 15 && g_server_depth != 16 && g_server_depth != 24)
-      {
-        mi_error("invalid server bpp\r\n");
-      }
-    }
-    if (state == 5) /* -u username */
-    {
-      state = 0;
-      strcpy(g_username, param1);
-    }
-    if (state == 6) /* -p password */
-    {
-      state = 0;
-      strcpy(g_password, param1);
-    }
-    if (state == 7) /* -d domain */
-    {
-      state = 0;
-      strcpy(g_domain, param1);
-    }
-    if (state == 8) /* -s shell */
-    {
-      state = 0;
-      strcpy(g_shell, param1);
-    }
-    if (state == 9) /* -c workin directory*/
-    {
-      state = 0;
-      strcpy(g_directory, param1);
-    }
-    if (state == 10) /* -n host name*/
-    {
-      state = 0;
-      strcpy(g_hostname, param1);
-    }
-  }
-  return state;
-}
+    *bSkipDlg = TRUE;
 
-/*****************************************************************************/
-static int
-mi_post_param(void)
-{
-  /* after parameters */
-  if (g_fullscreen)
-  {
-    g_xoff = 0;
-    g_yoff = 0;
-    if (!g_width_height_set)
+    if (*lpCmdLine != L'/')
     {
-      g_width = g_screen_width;
-      g_height = g_screen_height;
-    }
-  }
-  else if (g_workarea)
-  {
-    g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
-    g_yoff = GetSystemMetrics(SM_CYCAPTION) +
-             GetSystemMetrics(SM_CYEDGE) * 2;
-    g_width = g_screen_width;
-    g_height = g_screen_height;
-    g_height = (g_height - g_yoff) - g_xoff - 20; /* todo */
-    g_width_height_set = 1;
-  }
-  else
-  {
-    g_xoff = GetSystemMetrics(SM_CXEDGE) * 2;
-    g_yoff = GetSystemMetrics(SM_CYCAPTION) +
-             GetSystemMetrics(SM_CYEDGE) * 2;
-  }
-  g_width = g_width & (~3);
-  return 1;
-}
-
-
-/*****************************************************************************/
-static int
-mi_check_config_file(void)
-{
-  HANDLE fd;
-  DWORD count;
-  TCHAR filename[256];
-  char buffer[256];
-  char vname[256];
-  char value[256];
-  int index;
-  int mode;
-  int vnameindex;
-  int valueindex;
-  int state;
-  int rv;
-
-  rv = 0;
-  mode = 0;
-  vnameindex = 0;
-  valueindex = 0;
-  vname[vnameindex] = 0;
-  value[valueindex] = 0;
-  str_to_uni(filename, ".\\winrdesktop.ini");
-
-  fd = CreateFile(filename, GENERIC_READ,
-                  FILE_SHARE_READ | FILE_SHARE_WRITE,
-                  NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-  count = 255;
-  while (ReadFile(fd, buffer, count, &count, NULL))
-  {
-    if (count == 0)
-    {
-      break;
-    }
-    buffer[count] = 0;
-    index = 0;
-    while (index < (int) count)
-    {
-      if (buffer[index] == '=')
-      {
-        mode = 1;
-      }
-      else if (buffer[index] == 10 || buffer[index] == 13)
-      {
-        mode = 0;
-        vname[vnameindex] = 0;
-        value[valueindex] = 0;
-        if (strlen(vname) > 0 || strlen(value) > 0)
-        {
-          if (strcmp(vname, "server") == 0)
-          {
-            strcpy(g_servername, value);
-            rv = 1;
-          }
-          else
-          {
-            state = mi_process_a_param(vname, 0);
-            mi_process_a_param(value, state);
-          }
-        }
-        vnameindex = 0;
-        valueindex = 0;
-      }
-      else if (mode == 0)
-      {
-        vname[vnameindex] = buffer[index];
-        vnameindex++;
-      }
-      else
-      {
-        value[valueindex] = buffer[index];
-        valueindex++;
-      }
-      index++;
-    }
-    count = 255;
-  }
-  CloseHandle(fd);
-  if (rv)
-  {
-    mi_post_param();
-  }
-  return rv;
-}
-
-
-/*****************************************************************************/
-/* process the command line parameters */
-/* returns boolean, non zero is ok */
-static int
-mi_process_cl(LPTSTR lpCmdLine)
-{
-  char param[256];
-  char param1[256];
-  TCHAR l_username[256];
-  DWORD size;
-  int len;
-  int i;
-  int i1;
-  int state;
-
-  strcpy(g_hostname, "test");
-  strcpy(g_username, "pda");
-  /* get username and convert it from unicode */
-  size = 255;
-
-  if (GetUserName(l_username, &size))
-  {
-    for (i = size; i >= 0; i--)
-    {
-      g_username[i] = (char) l_username[i];
-    }
-    g_username[size] = 0;
-  }
-  else
-  {
-    mi_show_error("GetUserName");
-  }
-
-  /* get computer name */
-  if (gethostname(g_hostname, 255) != 0)
-  {
-    mi_show_error("gethostname");
-  }
-  /* defaults */
-  strcpy(g_servername, "127.0.0.1");
-  g_server_depth = 8;
-  g_screen_width = GetSystemMetrics(SM_CXSCREEN);
-  g_screen_height = GetSystemMetrics(SM_CYSCREEN);
-  /* process parameters */
-  i1 = 0;
-  state = 0;
-  len = lstrlen(lpCmdLine);
-  if (len == 0)
-  {
-    return mi_check_config_file();
-  }
-  for (i = 0; i < len; i++)
-  {
-    if (lpCmdLine[i] != 32 && lpCmdLine[i] != 9) /* space or tab */
-    {
-      param[i1] = (char) lpCmdLine[i];
-      i1++;
+        LoadRdpSettingsFromFile(pRdpSettings, lpCmdLine);
     }
     else
     {
-      param[i1] = 0;
-      i1 = 0;
-      strcpy(param1, param);
-      state = mi_process_a_param(param1, state);
-      strcpy(g_servername, param1);
+        /* default to 16bpp */
+        SetIntegerToSettings(pRdpSettings, L"session bpp", 16);
+
+        lpToken = wcstok(lpStr, szSeps);
+        while (lpToken)
+        {
+            if (wcsncmp(lpToken, L"edit", 4) == 0)
+            {
+                lpToken += 5;
+                LoadRdpSettingsFromFile(pRdpSettings, lpToken);
+                *bSkipDlg = FALSE;
+                break;
+            }
+
+            if (*lpToken == L'v')
+            {
+                lpToken += 2;
+                SetStringToSettings(pRdpSettings, L"full address", lpToken);
+            }
+            else if (*lpToken == L'w')
+            {
+                lpToken += 2;
+                SetIntegerToSettings(pRdpSettings, L"desktopwidth", _wtoi(lpToken));
+            }
+            else if (*lpToken == L'h')
+            {
+                lpToken += 2;
+                SetIntegerToSettings(pRdpSettings, L"desktopheight", _wtoi(lpToken));
+            }
+
+            lpToken = wcstok(NULL, szSeps);
+        }
     }
-  }
-  if (i1 > 0)
-  {
-    param[i1] = 0;
-    strcpy(param1, param);
-    state = mi_process_a_param(param1, state);
-    strcpy(g_servername, param1);
-  }
-  if (state == 0)
-  {
-    mi_post_param();
-  }
-  return (state == 0);
+
+    return bRet;
 }
-#endif
 
 /*****************************************************************************/
 int WINAPI
 wWinMain(HINSTANCE hInstance,
-        HINSTANCE hPrevInstance,
-        LPWSTR lpCmdLine,
-        int nCmdShow)
+         HINSTANCE hPrevInstance,
+         LPWSTR lpCmdLine,
+         int nCmdShow)
 {
     PRDPSETTINGS pRdpSettings;
     WSADATA d;
@@ -1316,11 +1045,15 @@ wWinMain(HINSTANCE hInstance,
 
             if (InitRdpSettings(pRdpSettings))
             {
-                LoadRdpSettingsFromFile(pRdpSettings, NULL);
+                BOOL bSkipDlg = FALSE;
 
-                //mi_process_cl(lpCmdLine)
-                if (OpenRDPConnectDialog(hInstance,
-                                         pRdpSettings))
+                if (*lpCmdLine)
+                    ParseCommandLine(lpCmdLine, pRdpSettings,&bSkipDlg);
+                else
+                    LoadRdpSettingsFromFile(pRdpSettings, NULL);
+
+                if (bSkipDlg || OpenRDPConnectDialog(hInstance,
+                                                      pRdpSettings))
                 {
                     char szValue[MAXVALUE];
 
