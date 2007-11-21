@@ -1683,7 +1683,7 @@ User32DefWindowProc(HWND hWnd,
             {
                 /* We're a child window and we need to pass this message down until
                    we reach the root */
-                hWnd = UserHMGetHandle(Wnd->Parent);
+                hWnd = UserHMGetHandle((PWINDOW)DesktopPtrToUser(Wnd->Parent));
             }
             else
             {

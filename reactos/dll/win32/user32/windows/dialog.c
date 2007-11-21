@@ -816,6 +816,8 @@ static HWND DIALOG_CreateIndirect( HINSTANCE hInst, LPCVOID dlgTemplate,
                 SetFocus( dlgInfo->hwndFocus );
         }
 
+        SendMessageW( hwnd, WM_CHANGEUISTATE, MAKEWPARAM(UIS_INITIALIZE, 0), 0);
+
         if (template.style & WS_VISIBLE && !(GetWindowLongW( hwnd, GWL_STYLE ) & WS_VISIBLE))
         {
            ShowWindow( hwnd, SW_SHOWNORMAL );   /* SW_SHOW doesn't always work */
@@ -2207,6 +2209,8 @@ IsDialogMessageW(
          case VK_TAB:
             if (!(dlgCode & DLGC_WANTTAB))
             {
+                SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
+
                 /* I am not sure under which circumstances the TAB is handled
                  * each way.  All I do know is that it does not always simply
                  * send WM_NEXTDLGCTL.  (Personally I have never yet seen it
@@ -2305,6 +2309,10 @@ IsDialogMessageW(
              /* don't translate or dispatch */
              return TRUE;
          }
+         break;
+
+     case WM_SYSKEYDOWN:
+         SendMessageW(hDlg, WM_CHANGEUISTATE, MAKEWPARAM(UIS_CLEAR, UISF_HIDEFOCUS), 0);
          break;
      }
 
