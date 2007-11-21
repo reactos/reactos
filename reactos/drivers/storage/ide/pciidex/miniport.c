@@ -12,6 +12,7 @@
 #define INITGUID
 #include "pciidex.h"
 
+static DRIVER_DISPATCH PciIdeXForwardOrIgnore;
 static NTSTATUS NTAPI
 PciIdeXForwardOrIgnore(
 	IN PDEVICE_OBJECT DeviceObject,
@@ -43,6 +44,7 @@ PciIdeXForwardOrIgnore(
 	}
 }
 
+static DRIVER_DISPATCH PciIdeXPnpDispatch;
 static NTSTATUS NTAPI
 PciIdeXPnpDispatch(
 	IN PDEVICE_OBJECT DeviceObject,
