@@ -1345,7 +1345,14 @@ MonitorSelWndProc(IN HWND hwnd,
 
         case WM_UPDATEUISTATE:
         {
-            DWORD OldUIState = infoPtr->UIState;
+            DWORD OldUIState;
+
+            Ret = DefWindowProcW(hwnd,
+                                 uMsg,
+                                 wParam,
+                                 lParam);
+
+            OldUIState = infoPtr->UIState;
             switch (LOWORD(wParam))
             {
                 case UIS_SET:
