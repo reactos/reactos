@@ -665,7 +665,7 @@ cleanup:
 					Irp->AssociatedIrp.SystemBuffer,
 					&DeviceExtension->KeyboardIndicators,
 					sizeof(KEYBOARD_INDICATOR_PARAMETERS));
-				Irp->IoStatus.Information = sizeof(LOCAL_KEYBOARD_INDICATOR_TRANSLATION);
+				Irp->IoStatus.Information = sizeof(KEYBOARD_INDICATOR_PARAMETERS);
 				Status = STATUS_SUCCESS;
 			}
 			break;
