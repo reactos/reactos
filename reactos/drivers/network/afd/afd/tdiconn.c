@@ -165,54 +165,6 @@ TdiBuildConnectionInfo
     return Status;
 }
 
-NTSTATUS
-TdiBuildConnectionInfoPair
-( PTDI_CONNECTION_INFO_PAIR ConnectionInfo,
-  PTRANSPORT_ADDRESS From, PTRANSPORT_ADDRESS To )
-    /*
-     * FUNCTION: Fill a TDI_CONNECTION_INFO_PAIR struct will the two addresses
-     *           given.
-     * ARGUMENTS:
-     *   ConnectionInfo: The pair
-     *   From:           The from address
-     *   To:             The to address
-     * RETURNS:
-     *   Status of the operation
-     */
-{
-    PCHAR LayoutFrame;
-    UINT SizeOfEntry;
-    ULONG TdiAddressSize;
-    PTDI_CONNECTION_INFORMATION FromTdiConn, ToTdiConn;
-
-    /* FIXME: Get from socket information */
-    TdiAddressSize = TdiAddressSizeFromType(From->Address[0].AddressType);
-    SizeOfEntry = TdiAddressSize + sizeof(TDI_CONNECTION_INFORMATION);
-
-    LayoutFrame = (PCHAR)ExAllocatePool(NonPagedPool, 2 * SizeOfEntry);
-
-    if (!LayoutFrame) {
-        AFD_DbgPrint(MIN_TRACE, ("Insufficient resources.\n"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    RtlZeroMemory( LayoutFrame, 2 * SizeOfEntry );
-
-	FromTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame;
-	ToTdiConn = (PTDI_CONNECTION_INFORMATION)LayoutFrame + SizeOfEntry;
-
-    if (From != NULL) {
-	TdiBuildConnectionInfoInPlace( FromTdiConn, From );
-    } else {
-	TdiBuildNullConnectionInfoInPlace( FromTdiConn,
-					   From->Address[0].AddressType );
-    }
-
-    TdiBuildConnectionInfoInPlace( ToTdiConn, To );
-
-    return STATUS_SUCCESS;
-}
-
 PTA_ADDRESS TdiGetRemoteAddress( PTDI_CONNECTION_INFORMATION TdiConn )
     /*
      * Convenience function that rounds out the abstraction of

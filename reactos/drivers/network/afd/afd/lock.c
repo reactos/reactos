@@ -58,7 +58,7 @@ PAFD_WSABUF LockBuffers( PAFD_WSABUF Buf, UINT Count,
 
         _SEH_TRY {
             RtlCopyMemory( NewBuf, Buf, sizeof(AFD_WSABUF) * Count );
-            if( LockAddress ) {
+            if( LockAddress && AddressLen ) {
                 NewBuf[Count].buf = AddressBuf;
                 NewBuf[Count].len = *AddressLen;
                 Count++;
