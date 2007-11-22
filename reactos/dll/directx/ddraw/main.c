@@ -204,17 +204,6 @@ DirectDrawEnumerateA( LPDDENUMCALLBACKA lpCallback,
      return retValue;
 }
 
-
-/*
- * UNIMPLEMENT
- */
-
-HRESULT WINAPI DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback,
-                                    LPVOID lpContext)
-{
-    DX_STUB;
-}
-
 /*
  * UNIMPLEMENT
  */
@@ -255,9 +244,13 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback,
     return DDERR_UNSUPPORTED;
 }
 
-/*
- * UNIMPLEMENT
- */
+HRESULT
+WINAPI
+DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback,
+                                    LPVOID lpContext)
+{
+    return DDERR_UNSUPPORTED;
+}
 
 HRESULT
 WINAPI
@@ -265,9 +258,11 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
                        LPVOID lpContext,
                        DWORD dwFlags)
 {
-     /* Note this function are not longer supported in ddraw in windows 2003 */
-     DX_STUB;
+    return DDERR_UNSUPPORTED;
 }
+
+
+
 
 /*
    See http://msdn.microsoft.com/library/default.asp?url=/library/en-us/
@@ -376,7 +371,7 @@ D3DParseUnknownCommand( LPVOID lpCmd,
               (dp2command->bCommand >= D3DDP2OP_LINELIST) )  // dp2command->bCommand  >= with 15 to 255
            {
                /* set error code for command 0 to 3, 8 and 15 to 255 */
-               retCode = E_FAIL;
+               retCode = DDERR_INVALIDPARAMS;
            }
            else
            {   /* set error code for 4 - 7, 9 - 12, 14  */
