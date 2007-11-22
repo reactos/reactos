@@ -71,6 +71,7 @@ static void Parallel_putchar(unsigned char ch)
 	WRITE_PORT_UCHAR((PUCHAR)LP_C, LP_PSELECP | LP_PINITP);
 }
 
+static DRIVER_DISPATCH Dispatch;
 static NTSTATUS STDCALL
 Dispatch(PDEVICE_OBJECT DeviceObject, PIRP Irp)
 /*
