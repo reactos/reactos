@@ -9,6 +9,7 @@
 #include <ndk/ntndk.h>
 #include <fmifs/fmifs.h>
 
+#include <pshpack1.h>
 typedef struct _FATX_BOOT_SECTOR
 {
    unsigned char SysType[4];        // 0
@@ -17,8 +18,8 @@ typedef struct _FATX_BOOT_SECTOR
    unsigned short FATCount;         // 12
    unsigned long Unknown;           // 14
    unsigned char Unused[4078];      // 18
-} __attribute__((packed)) FATX_BOOT_SECTOR, *PFATX_BOOT_SECTOR;
-
+} FATX_BOOT_SECTOR, *PFATX_BOOT_SECTOR;
+#include <poppack.h>
 
 typedef struct _FORMAT_CONTEXT
 {

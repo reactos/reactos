@@ -12,6 +12,7 @@
 
 #define SECTORSIZE 512
 
+#include <pshpack1.h>
 typedef struct _FAT16_BOOT_SECTOR
 {
   unsigned char  magic0;                      // 0
@@ -38,7 +39,7 @@ typedef struct _FAT16_BOOT_SECTOR
   unsigned char  SysType[8];                  // 54
   unsigned char  Res2[446];                   // 62
   unsigned long  Signature1;                  // 508
-} __attribute__((packed)) FAT16_BOOT_SECTOR, *PFAT16_BOOT_SECTOR;
+} FAT16_BOOT_SECTOR, *PFAT16_BOOT_SECTOR;
 
 
 typedef struct _FAT32_BOOT_SECTOR
@@ -74,7 +75,7 @@ typedef struct _FAT32_BOOT_SECTOR
   unsigned char  SysType[8];                  // 82
   unsigned char  Res2[418];                   // 90
   unsigned long  Signature1;                  // 508
-} __attribute__((packed)) FAT32_BOOT_SECTOR, *PFAT32_BOOT_SECTOR;
+} FAT32_BOOT_SECTOR, *PFAT32_BOOT_SECTOR;
 
 typedef struct _FAT32_FSINFO
 {
@@ -85,8 +86,8 @@ typedef struct _FAT32_FSINFO
   unsigned long  NextFree;         // 492
   unsigned long  Res2[3];          // 496
   unsigned long  TrailSig;         // 508
-} __attribute__((packed)) FAT32_FSINFO, *PFAT32_FSINFO;
-
+} FAT32_FSINFO, *PFAT32_FSINFO;
+#include <poppack.h>
 
 typedef struct _FORMAT_CONTEXT
 {
