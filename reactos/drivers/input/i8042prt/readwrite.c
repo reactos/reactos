@@ -111,7 +111,7 @@ i8042ReadDataWait(
  * is enough this time. Note how MSDN specifies the
  * WaitForAck parameter to be ignored.
  */
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 i8042SynchReadPort(
 	IN PVOID Context,
 	OUT PUCHAR Value,
@@ -205,7 +205,7 @@ i8042Write(
 	if (ResendIterations)
 	{
 		WRITE_PORT_UCHAR(addr, data);
-		DPRINT("Sent 0x%x to port 0x%x\n", data, addr);
+		DPRINT("Sent 0x%x to port %p\n", data, addr);
 		return TRUE;
 	}
 	return FALSE;

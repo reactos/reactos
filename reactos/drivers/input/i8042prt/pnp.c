@@ -515,18 +515,18 @@ i8042PnpStartDevice(
 					if (!FoundDataPort)
 					{
 						PortDeviceExtension->DataPort = ULongToPtr(ResourceDescriptor->u.Port.Start.u.LowPart);
-						DPRINT("Found data port: 0x%lx\n", PortDeviceExtension->DataPort);
+						DPRINT("Found data port: %p\n", PortDeviceExtension->DataPort);
 						FoundDataPort = TRUE;
 					}
 					else if (!FoundControlPort)
 					{
 						PortDeviceExtension->ControlPort = ULongToPtr(ResourceDescriptor->u.Port.Start.u.LowPart);
-						DPRINT("Found control port: 0x%lx\n", PortDeviceExtension->ControlPort);
+						DPRINT("Found control port: %p\n", PortDeviceExtension->ControlPort);
 						FoundControlPort = TRUE;
 					}
 					else
 					{
-						DPRINT("Too much I/O ranges provided\n", ResourceDescriptor->u.Port.Length);
+						DPRINT("Too much I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
 						return STATUS_INVALID_PARAMETER;
 					}
 				}

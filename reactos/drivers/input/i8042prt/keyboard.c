@@ -39,7 +39,7 @@ i8042DebugWorkItem(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PVOID Key)
 {
-	DPRINT("Debug key: 0x%02x\n", Key);
+	DPRINT("Debug key: %p\n", Key);
 
 	if (!Key)
 		return;
@@ -97,7 +97,7 @@ i8042KbdQueuePacket(
  * These functions are callbacks for filter driver custom
  * initialization routines.
  */
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 i8042SynchWritePortKbd(
 	IN PVOID Context,
 	IN UCHAR Value,

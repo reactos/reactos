@@ -303,7 +303,7 @@ DRIVER_DISPATCH i8042Close;
 
 /* keyboard.c */
 
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 i8042SynchWritePortKbd(
 	IN PVOID Context,
 	IN UCHAR Value,
@@ -414,7 +414,7 @@ i8042ReadStatus(
 	IN PPORT_DEVICE_EXTENSION DeviceExtension,
 	OUT PUCHAR Status);
 
-NTSTATUS DDKAPI
+NTSTATUS NTAPI
 i8042SynchReadPort(
 	IN PVOID Context,
 	OUT PUCHAR Value,
