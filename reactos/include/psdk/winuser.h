@@ -514,6 +514,8 @@ extern "C" {
 #define DSS_UNION	16
 #define DSS_DISABLED	32
 #define DSS_MONO	128
+#define	DSS_HIDEPREFIX	0x0200
+#define	DSS_PREFIXONLY	0x0400
 #define DSS_RIGHT	0x8000
 #define DT_BOTTOM	8
 #define DT_CALCRECT	1024
@@ -536,6 +538,9 @@ extern "C" {
 #define DT_VCENTER	4
 #define DT_WORDBREAK	16
 #define DT_INTERNAL	4096
+#define DT_NOFULLWIDTHCHARBREAK	524288
+#define DT_HIDEPREFIX	1048576
+#define DT_PREFIXONLY	2097152
 #define WB_ISDELIMITER	2
 #define WB_LEFT	0
 #define WB_RIGHT	1
