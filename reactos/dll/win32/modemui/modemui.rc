@@ -14,5 +14,6 @@ IDI_701    ICON "res/701.ico"
 IDI_702    ICON "res/702.ico"
 IDI_703    ICON "res/703.ico"
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/uk-UA.rc"
