@@ -12,6 +12,7 @@
 
 #include "rosdraw.h"
 
+
 /* PSEH for SEH Support */
 #include <pseh/pseh.h>
 
@@ -19,7 +20,23 @@ CRITICAL_SECTION ddcs;
 
 // This function is exported by the dll
 
+typedef struct
+{
+    LPVOID lpCallback;
+    LPVOID lpContext;
+} DirectDrawEnumerateProcData;
 
+BOOL 
+CALLBACK 
+TranslateCallbackA(GUID *lpGUID,
+                   LPSTR lpDriverDescription,
+                   LPSTR lpDriverName,
+                   LPVOID lpContext,
+                   HMONITOR hm)
+{
+        DirectDrawEnumerateProcData *pEPD = (DirectDrawEnumerateProcData*)lpContext;
+        return ((LPDDENUMCALLBACKA) pEPD->lpCallback)(lpGUID, lpDriverDescription, lpDriverName, pEPD->lpContext);
+}
 
 /*++
 * @name DirectDrawCreateClipper
@@ -163,17 +180,28 @@ DirectDrawCreateEx(LPGUID lpGUID,
     return retVal;
 }
 
-/*
- * UNIMPLEMENT
- */
-
-HRESULT
-WINAPI
-DirectDrawEnumerateA(
-                     LPDDENUMCALLBACKA lpCallback,
+HRESULT 
+WINAPI 
+DirectDrawEnumerateA( LPDDENUMCALLBACKA lpCallback,
                      LPVOID lpContext)
 {
-    DX_STUB;
+     HRESULT retValue;
+     DirectDrawEnumerateProcData epd;
+
+     DX_WINDBG_trace();
+
+     epd.lpCallback = (LPVOID) lpCallback;
+     epd.lpContext = lpContext;
+
+     if (!IsBadCodePtr((LPVOID)lpCallback))
+     {
+         return DirectDrawEnumerateExA((LPDDENUMCALLBACKEXA)TranslateCallbackA, &epd, DDENUM_NONDISPLAYDEVICES);
+     }
+     else
+     {
+         retValue = DDERR_INVALIDPARAMS;
+     }
+     return retValue;
 }
 
 
@@ -197,7 +225,34 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback,
                        LPVOID lpContext,
                        DWORD dwFlags)
 {
-    DX_STUB;
+    HKEY hKey;
+    DWORD cbData = 0;
+    DWORD Value = 0;
+    LONG rc;
+    BOOL  EnumerateAttachedSecondaries = FALSE;
+    DWORD privateDWFlags = 0;
+
+    DX_WINDBG_trace();
+
+    rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, REGSTR_PATH_DDHW, &hKey);
+    if (rc == ERROR_SUCCESS)
+    {
+        /* Enumerate Attached Secondaries */
+        cbData = sizeof(DWORD);
+        rc = RegQueryValueExA(hKey, "EnumerateAttachedSecondaries", NULL, NULL, (LPBYTE)&Value, &cbData);
+        if (rc == ERROR_SUCCESS)
+        {
+           if (Value != 0)
+           {
+                EnumerateAttachedSecondaries = TRUE;
+                privateDWFlags = DDENUM_ATTACHEDSECONDARYDEVICES;
+           }
+        }
+        RegCloseKey(hKey);
+    }
+
+    // not finish 
+    return DDERR_UNSUPPORTED;
 }
 
 /*
@@ -210,6 +265,7 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
                        LPVOID lpContext,
                        DWORD dwFlags)
 {
+     /* Note this function are not longer supported in ddraw in windows 2003 */
      DX_STUB;
 }
 
