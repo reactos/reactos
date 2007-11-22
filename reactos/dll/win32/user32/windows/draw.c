@@ -1581,9 +1581,16 @@ IntDrawState(HDC hdc, HBRUSH hbr, DRAWSTATEPROC func, LPARAM lp, WPARAM wp,
         dtflags |= DT_RIGHT;
     if(opcode == DST_TEXT)
         dtflags |= DT_NOPREFIX;
+    else if(opcode == DST_PREFIXTEXT)
+    {
+        if (flags & DSS_HIDEPREFIX)
+            dtflags |= DT_HIDEPREFIX;
+        if (flags & DSS_PREFIXONLY)
+            dtflags |= DT_PREFIXONLY;
+    }
 
     /* For DSS_NORMAL we just jam in the image and return */
-    if((flags & 0x7ff0) == DSS_NORMAL)
+    if((flags & 0x79f0) == DSS_NORMAL)
     {
         return PAINTING_DrawStateJam(hdc, opcode, func, lp, len, &rc, dtflags, unicode);
     }

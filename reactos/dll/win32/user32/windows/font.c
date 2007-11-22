@@ -1158,11 +1158,12 @@ DrawTextExW( HDC hdc, LPWSTR str, INT i_count,
                 else
                     len_seg = len;
 
-                if (!ExtTextOutW( hdc, xseg, y,
+                if (!(flags & DT_PREFIXONLY)&&
+                    !ExtTextOutW( hdc, xseg, y,
                                  ((flags & DT_NOCLIP) ? 0 : ETO_CLIPPED) |
                                  ((flags & DT_RTLREADING) ? ETO_RTLREADING : 0),
                                  rect, str, len_seg, NULL ))  return 0;
-                if (prefix_offset != -1 && prefix_offset < len_seg)
+                if (prefix_offset != -1 && prefix_offset < len_seg && !(flags & DT_HIDEPREFIX))
                 {
                     TEXT_DrawUnderscore (hdc, xseg, y + tm.tmAscent + 2, str, prefix_offset, (flags & DT_NOCLIP) ? NULL : rect);
                 }
