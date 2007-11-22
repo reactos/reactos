@@ -27,7 +27,7 @@ RosSymAllocMemKM(ULONG_PTR Size)
 static VOID
 RosSymFreeMemKM(PVOID Area)
 {
-  return ExFreePool(Area);
+  ExFreePool(Area);
 }
 
 VOID
