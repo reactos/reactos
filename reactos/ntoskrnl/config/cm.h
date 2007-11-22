@@ -86,11 +86,16 @@
 #define MAXIMUM_CACHED_DATA                             2 * PAGE_SIZE
 
 //
+// Hives to load on startup
+//
+#define CM_NUMBER_OF_MACHINE_HIVES                      6
+
+//
 // Number of items that can fit inside an Allocation Page
 //
 #define CM_KCBS_PER_PAGE                                \
     PAGE_SIZE / sizeof(CM_KEY_CONTROL_BLOCK)
-#define CM_DELAYS_PER_PAGE                       \
+#define CM_DELAYS_PER_PAGE                              \
     PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
 
 //
@@ -429,9 +434,8 @@ typedef struct _CM_CACHED_VALUE
 //
 typedef struct _HIVE_LIST_ENTRY
 {
-    PWCHAR FileName;
-    PWCHAR BaseName;
-    PWCHAR RegRootName;
+    PWSTR Name;
+    PWSTR BaseName;
     PCMHIVE CmHive;
     ULONG HHiveFlags;
     ULONG CmHiveFlags;
@@ -439,7 +443,6 @@ typedef struct _HIVE_LIST_ENTRY
     BOOLEAN ThreadFinished;
     BOOLEAN ThreadStarted;
     BOOLEAN Allocate;
-    BOOLEAN WinPERequired;
 } HIVE_LIST_ENTRY, *PHIVE_LIST_ENTRY;
 
 //
@@ -759,6 +762,12 @@ CmpInitHiveFromFile(
     IN ULONG CheckFlags
 );
 
+VOID
+NTAPI
+CmpInitializeHiveList(
+    IN USHORT Flag
+);
+
 //
 // Registry Utility Functions
 //
@@ -956,7 +965,7 @@ CmpGetNextName(
 );
 
 //
-// Flush Routines
+// Command Routines (Flush, Open, Close, Init);
 //
 BOOLEAN
 NTAPI
@@ -974,6 +983,16 @@ VOID
 NTAPI
 CmpCmdInit(
     IN BOOLEAN SetupBoot
+);
+
+NTSTATUS
+NTAPI
+CmpCmdHiveOpen(
+    IN POBJECT_ATTRIBUTES FileAttributes,
+    IN PSECURITY_CLIENT_CONTEXT ImpersonationContext,
+    IN OUT PBOOLEAN Allocate,
+    OUT PCMHIVE *NewHive,
+    IN ULONG CheckFlags
 );
 
 VOID
@@ -1351,7 +1370,7 @@ extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
 extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
-extern HIVE_LIST_ENTRY CmpMachineHiveList[5];
+extern HIVE_LIST_ENTRY CmpMachineHiveList[];
 extern UNICODE_STRING CmSymbolicLinkValueName;
 extern UNICODE_STRING CmpSystemStartOptions;
 extern UNICODE_STRING CmpLoadOptions;

@@ -139,10 +139,7 @@ NtLoadKeyEx(
     IN POBJECT_ATTRIBUTES TargetKey,
     IN POBJECT_ATTRIBUTES SourceFile,
     IN ULONG Flags,
-    IN HANDLE TrustClassKey,
-    IN HANDLE Event,
-    IN ACCESS_MASK DesiredAccess,
-    OUT PHANDLE RootHandle
+    IN HANDLE TrustClassKey
 );
 
 NTSTATUS

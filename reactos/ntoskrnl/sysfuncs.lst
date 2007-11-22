@@ -101,7 +101,7 @@ NtListenPort 2
 NtLoadDriver 1
 NtLoadKey 2
 NtLoadKey2 3
-NtLoadKeyEx 7
+NtLoadKeyEx 4
 NtLockFile 10
 NtLockProductActivationKeys 2
 NtLockRegistryKey 1

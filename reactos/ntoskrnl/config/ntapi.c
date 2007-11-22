@@ -494,16 +494,69 @@ NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 NTSTATUS
 NTAPI
+NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
+           IN POBJECT_ATTRIBUTES FileObjectAttributes,
+           IN ULONG Flags)
+{
+    return NtLoadKeyEx(KeyObjectAttributes, FileObjectAttributes, Flags, NULL);
+}
+
+NTSTATUS
+NTAPI
+CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
+          IN POBJECT_ATTRIBUTES SourceFile,
+          IN ULONG Flags,
+          IN PKEY_OBJECT KeyBody);
+
+NTSTATUS
+NTAPI
 NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
             IN POBJECT_ATTRIBUTES SourceFile,
             IN ULONG Flags,
-            IN HANDLE TrustClassKey,
-            IN HANDLE Event,
-            IN ACCESS_MASK DesiredAccess,
-            OUT PHANDLE RootHandle)
+            IN HANDLE TrustClassKey)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PKEY_OBJECT KeyBody = NULL;
+    PAGED_CODE();
+
+    /* Validate flags */
+    if (Flags & ~REG_NO_LAZY_FLUSH) return STATUS_INVALID_PARAMETER;
+    
+    /* Validate privilege */
+    if (!SeSinglePrivilegeCheck(SeRestorePrivilege, PreviousMode))
+    {
+        /* Fail */
+        DPRINT1("Restore Privilege missing!\n");
+        //return STATUS_PRIVILEGE_NOT_HELD;
+    }
+    
+    /* Block APCs */
+    KeEnterCriticalRegion();
+    
+    /* Check if we have a trust class */
+    if (TrustClassKey)
+    {
+        /* Reference it */
+        Status = ObReferenceObjectByHandle(TrustClassKey,
+                                           0,
+                                           CmpKeyObjectType,
+                                           PreviousMode,
+                                           (PVOID *)&KeyBody,
+                                           NULL);
+    }
+    
+    /* Call the internal API */
+    Status = CmLoadKey(TargetKey, SourceFile, Flags, KeyBody);
+    
+    /* Dereference the trust key, if any */
+    if (KeyBody) ObDereferenceObject(KeyBody);
+    
+    /* Bring back APCs */
+    KeLeaveCriticalRegion();
+    
+    /* Return status */
+    return Status;
 }
 
 NTSTATUS

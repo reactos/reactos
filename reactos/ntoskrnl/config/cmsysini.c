@@ -15,6 +15,8 @@
 
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
+KEVENT CmpLoadWorkerEvent;
+LONG CmpLoadWorkerIncrement;
 PEPROCESS CmpSystemProcess;
 BOOLEAN HvShutdownComplete;
 PVOID CmpRegistryLockCallerCaller, CmpRegistryLockCaller;
@@ -496,11 +498,11 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
     else
     {
-#if 0
         /* Create it */
-        Status = CmpInitializeHive((PCMHIVE*)&SystemHive,
+#if 0
+        Status = CmpInitializeHive(&SystemHive,
                                    HINIT_CREATE,
-                                   HIVE_NOLAZYFLUSH,
+                                   0, //HIVE_NOLAZYFLUSH,
                                    HFILE_TYPE_LOG,
                                    NULL,
                                    NULL,
@@ -509,8 +511,10 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                    &HiveName,
                                    0);
         if (!NT_SUCCESS(Status)) return FALSE;
+        
+        /* Set the hive filename */
+        RtlCreateUnicodeString(&SystemHive->FileFullPath, SYSTEM_REG_FILE);
 #endif
-
         /* Tell CmpLinkHiveToMaster to allocate a hive */
         Allocate = TRUE;
     }
@@ -744,6 +748,314 @@ CmpCreateRegistryRoot(VOID)
 
     /* Completely sucessful */
     return TRUE;
+}
+
+VOID
+NTAPI
+CmpLoadHiveThread(IN PVOID StartContext)
+{
+    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    UNICODE_STRING TempName, FileName, RegName;
+    ULONG FileStart, RegStart, i, ErrorResponse, ClusterSize, WorkerCount;
+    ULONG PrimaryDisposition, SecondaryDisposition, Length;
+    PCMHIVE CmHive;
+    HANDLE PrimaryHandle, LogHandle;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PVOID ErrorParameters;
+    PAGED_CODE();
+    
+    /* Get the hive index, make sure it makes sense */
+    i = (ULONG)StartContext;
+    ASSERT(CmpMachineHiveList[i].Name != NULL);
+    DPRINT1("[HiveLoad] Parallel Thread: %d\n", i);
+    
+    /* We were started */
+    CmpMachineHiveList[i].ThreadStarted = TRUE;
+    
+    /* Build the file name and registry name strings */
+    RtlInitEmptyUnicodeString(&FileName, FileBuffer, MAX_PATH);
+    RtlInitEmptyUnicodeString(&RegName, RegBuffer, MAX_PATH);
+    
+    /* Now build the system root path */
+    RtlInitUnicodeString(&TempName, L"\\SystemRoot\\System32\\Config\\");
+    RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
+    FileStart = FileName.Length;
+    
+    /* And build the registry root path */
+    RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");
+    RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+    RegStart = RegName.Length;
+    
+    /* Build the base name */
+    RegName.Length = RegStart;
+    RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);
+    RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+    
+    /* Check if this is a child of the root */
+    if (RegName.Buffer[RegName.Length / sizeof(WCHAR) - 1] == '\\')
+    {
+        /* Then setup the whole name */
+        RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].Name);
+        RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+    }
+    
+    /* Now Add tge rest if the file name */
+    RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].Name);
+    FileName.Length = FileStart;
+    RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
+    if (!CmpMachineHiveList[i].CmHive)
+    {
+        /* We need to allocate a ne whive structure */
+        CmpMachineHiveList[i].Allocate = TRUE;
+        
+        /* Load the hive file */
+        DPRINT1("[HiveLoad]: Load from file %wZ\n", &FileName);
+        CmpMachineHiveList[i].CmHive2 = (PVOID)0xBAADBEEF;
+        goto Later;
+        Status = CmpInitHiveFromFile(&FileName,
+                                     CmpMachineHiveList[i].HHiveFlags,
+                                     &CmHive,
+                                     &CmpMachineHiveList[i].Allocate,
+                                     0);
+        if (!(NT_SUCCESS(Status)) || !(CmHive->FileHandles[HFILE_TYPE_LOG]))
+        {
+            /* We failed or couldn't get a log file, raise a hard error */
+            ErrorParameters = &FileName;
+            NtRaiseHardError(STATUS_CANNOT_LOAD_REGISTRY_FILE,
+                             1,
+                             1,
+                             (PULONG_PTR)&ErrorParameters,
+                             OptionOk,
+                             &ErrorResponse);
+        }
+        
+        /* Set the hive flags and newly allocated hive pointer */
+        CmHive->Flags = CmpMachineHiveList[i].CmHiveFlags;
+        CmpMachineHiveList[i].CmHive2 = CmHive;
+    }
+    else
+    {
+        /* We already have a hive, is it volatile? */
+        CmHive = CmpMachineHiveList[i].CmHive;
+        if (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE))
+        {
+            DPRINT1("[HiveLoad]: Open from file %wZ\n", &FileName);
+            CmpMachineHiveList[i].CmHive2 = CmHive;
+            goto Later;
+            
+            /* It's now, open the hive file and log */
+            Status = CmpOpenHiveFiles(&FileName,
+                                      L".LOG",
+                                      &PrimaryHandle,
+                                      &LogHandle,
+                                      &PrimaryDisposition,
+                                      &SecondaryDisposition,
+                                      TRUE,
+                                      TRUE,
+                                      FALSE,
+                                      &ClusterSize);
+            if (!(NT_SUCCESS(Status)) || !(LogHandle))
+            {
+                /* Couldn't open the hive or its log file, raise a hard error */
+                ErrorParameters = &FileName;
+                NtRaiseHardError(STATUS_CANNOT_LOAD_REGISTRY_FILE,
+                                 1,
+                                 1,
+                                 (PULONG_PTR)&ErrorParameters,
+                                 OptionOk,
+                                 &ErrorResponse);
+                
+                /* And bugcheck for posterity's sake */
+                KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO, 9, 0, i, Status);
+            }
+            
+            /* Save the file handles. This should remove our sync hacks */
+            CmHive->FileHandles[HFILE_TYPE_LOG] = LogHandle;
+            CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
+            
+            /* Allow lazy flushing since the handles are there -- remove sync hacks */
+            ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
+            CmHive->Hive.HiveFlags &= ~HIVE_NOLAZYFLUSH;
+            
+            /* Get the real size of the hive */
+            Length = CmHive->Hive.Storage[Stable].Length + HBLOCK_SIZE;
+            
+            /* Check if the cluster size doesn't match */
+            if (CmHive->Hive.Cluster != ClusterSize) ASSERT(FALSE);
+            
+            /* Set the file size */
+            if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
+            {
+                /* This shouldn't fail */
+                ASSERT(FALSE);
+            }
+            
+            /* Another thing we don't support is NTLDR-recovery */
+            if (CmHive->Hive.BaseBlock->BootRecover) ASSERT(FALSE);
+            
+            /* Finally, set our allocated hive to the same hive we've had */
+            CmpMachineHiveList[i].CmHive2 = CmHive;
+            ASSERT(CmpMachineHiveList[i].CmHive == CmpMachineHiveList[i].CmHive2);
+        }
+    }
+    
+    /* We're done */
+Later:
+    CmpMachineHiveList[i].ThreadFinished = TRUE;
+    
+    /* Check if we're the last worker */
+    WorkerCount = InterlockedIncrement(&CmpLoadWorkerIncrement);
+    if (WorkerCount == CM_NUMBER_OF_MACHINE_HIVES)
+    
+    {
+        /* Signal the event */
+        KeSetEvent(&CmpLoadWorkerEvent, 0, FALSE);
+    }
+
+    /* Kill the thread */
+    PsTerminateSystemThread(Status);
+}
+
+VOID
+NTAPI
+CmpInitializeHiveList(IN USHORT Flag)
+{
+    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    UNICODE_STRING TempName, FileName, RegName;
+    HANDLE Thread;
+    NTSTATUS Status;
+    ULONG FileStart, RegStart, i;
+    PSECURITY_DESCRIPTOR SecurityDescriptor;
+    PAGED_CODE();
+    
+    /* Allow writing for now */
+    CmpNoWrite = FALSE;
+    
+    /* Build the file name and registry name strings */
+    RtlInitEmptyUnicodeString(&FileName, FileBuffer, MAX_PATH);
+    RtlInitEmptyUnicodeString(&RegName, RegBuffer, MAX_PATH);
+    
+    /* Now build the system root path */
+    RtlInitUnicodeString(&TempName, L"\\SystemRoot\\System32\\Config\\");
+    RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
+    FileStart = FileName.Length;
+    
+    /* And build the registry root path */
+    RtlInitUnicodeString(&TempName, L"\\REGISTRY\\");
+    RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+    RegStart = RegName.Length;
+    
+    /* Setup the event to synchronize workers */
+    KeInitializeEvent(&CmpLoadWorkerEvent, SynchronizationEvent, FALSE);
+    
+    /* Enter special boot condition */
+    CmpSpecialBootCondition = TRUE;
+    
+    /* Create the SD for the root hives */
+    SecurityDescriptor = CmpHiveRootSecurityDescriptor();      
+    
+    /* Loop every hive we care about */
+    for (i = 0; i < CM_NUMBER_OF_MACHINE_HIVES; i++)
+    {
+        /* Make sure the list is setup */
+        ASSERT(CmpMachineHiveList[i].Name != NULL);
+        
+        /* Create a thread to handle this hive */
+        Status = PsCreateSystemThread(&Thread,
+                                      THREAD_ALL_ACCESS,
+                                      NULL,
+                                      0,
+                                      NULL,
+                                      CmpLoadHiveThread,
+                                      (PVOID)i);
+        if (NT_SUCCESS(Status))
+        {
+            /* We don't care about the handle -- the thread self-terminates */
+            ZwClose(Thread);
+        }
+        else
+        {
+            /* Can't imagine this happening */
+            KeBugCheckEx(BAD_SYSTEM_CONFIG_INFO, 9, 3, i, Status);
+        }
+    }
+    
+    /* Make sure we've reached the end of the list */
+    ASSERT(CmpMachineHiveList[i].Name == NULL);
+    
+    /* Wait for hive loading to finish */
+    KeWaitForSingleObject(&CmpLoadWorkerEvent,
+                          Executive,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+    
+    /* Exit the special boot condition and make sure all workers completed */
+    CmpSpecialBootCondition = FALSE;
+    ASSERT(CmpLoadWorkerIncrement == CM_NUMBER_OF_MACHINE_HIVES);
+    
+    /* Loop hives again */
+    for (i = 0; i < CM_NUMBER_OF_MACHINE_HIVES; i++)
+    {
+        /* Make sure the thread ran and finished */
+        ASSERT(CmpMachineHiveList[i].ThreadFinished == TRUE);
+        ASSERT(CmpMachineHiveList[i].ThreadStarted == TRUE);
+        
+        /* Check if this was a new hive */
+        if (!CmpMachineHiveList[i].CmHive)
+        {
+            /* Make sure we allocated something */
+            ASSERT(CmpMachineHiveList[i].CmHive2 != NULL);
+            
+            /* Build the base name */
+            RegName.Length = RegStart;
+            RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].BaseName);
+            RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+            
+            /* Check if this is a child of the root */
+            if (RegName.Buffer[RegName.Length / sizeof(WCHAR) - 1] == '\\')
+            {
+                /* Then setup the whole name */
+                RtlInitUnicodeString(&TempName, CmpMachineHiveList[i].Name);
+                RtlAppendStringToString((PSTRING)&RegName, (PSTRING)&TempName);
+            }
+            
+            /* Now link the hive to its master */
+            DPRINT1("[HiveLoad]: Link %wZ\n", &RegName);
+#if 0
+            Status = CmpLinkHiveToMaster(&RegName,
+                                         NULL,
+                                         CmpMachineHiveList[i].CmHive2,
+                                         CmpMachineHiveList[i].Allocate,
+                                         SecurityDescriptor);
+            if (Status != STATUS_SUCCESS)
+            {
+                /* Linking needs to work */
+                KeBugCheckEx(CONFIG_LIST_FAILED, 11, Status, i, (ULONG_PTR)&RegName);
+            }
+            
+            /* Check if we had to allocate a new hive */
+			if (CmpMachineHiveList[i].Allocate)
+            {
+                /* Sync the new hive */
+				HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
+			}
+#endif      
+        }
+        
+        /* Check if we created a new hive */
+        if (CmpMachineHiveList[i].CmHive2)
+        {
+            /* TODO: Add to HiveList key */
+        }
+    }
+    
+    /* Get rid of the SD */
+    ExFreePool(SecurityDescriptor);
+
+    /* FIXME: Link SECURITY to SAM */
+    
+    /* FIXME: Link S-1-5-18 to .Default */
 }
 
 BOOLEAN

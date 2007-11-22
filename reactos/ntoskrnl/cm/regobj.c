@@ -838,22 +838,20 @@ CmiGetLinkTarget(PCMHIVE RegistryHive,
     UNICODE_STRING LinkName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
     PCM_KEY_VALUE ValueCell;
     PVOID DataCell;
-    NTSTATUS Status;
+    HCELL_INDEX Cell;
 
     DPRINT("CmiGetLinkTarget() called\n");
 
-    /* Get Value block of interest */
-    Status = CmiScanKeyForValue(RegistryHive,
-                                KeyCell,
-                                &LinkName,
-                                &ValueCell,
-                                NULL);
-    if (!NT_SUCCESS(Status))
+    /* Find the cell */
+    Cell = CmpFindValueByName(&RegistryHive->Hive, KeyCell, &LinkName);
+    if (Cell == HCELL_NIL)
     {
-        DPRINT1("CmiScanKeyForValue() failed (Status %lx)\n", Status);
-        return(Status);
+        DPRINT1("CmiScanKeyForValue() failed\n");
+        return STATUS_OBJECT_NAME_NOT_FOUND;
     }
-
+    
+    /* Get the cell data */
+    ValueCell = (PCM_KEY_VALUE)HvGetCell(&RegistryHive->Hive, Cell);
     if (ValueCell->Type != REG_LINK)
     {
         DPRINT1("Type != REG_LINK\n!");

@@ -578,65 +578,25 @@ openkey_cleanup:
     return Status;
 }
 
-/*
- * NOTE:
- * KeyObjectAttributes->RootDirectory specifies the handle to the parent key and
- * KeyObjectAttributes->Name specifies the name of the key to load.
- * Flags can be 0 or REG_NO_LAZY_FLUSH.
- */
-NTSTATUS
-NTAPI
-NtLoadKey2 (IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-            IN POBJECT_ATTRIBUTES FileObjectAttributes,
-            IN ULONG Flags)
-{
-    NTSTATUS Status;
-    PAGED_CODE();
-    DPRINT ("NtLoadKey2() called\n");
-
-#if 0
-    if (!SeSinglePrivilegeCheck (SeRestorePrivilege, ExGetPreviousMode ()))
-        return STATUS_PRIVILEGE_NOT_HELD;
-#endif
-
-    /* Acquire hive lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-    Status = CmiLoadHive (KeyObjectAttributes,
-                          FileObjectAttributes->ObjectName,
-                          Flags);
-    if (!NT_SUCCESS (Status))
-    {
-        DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
-    }
-
-    /* Release hive lock */
-    ExReleaseResourceLite(&CmpRegistryLock);
-    KeLeaveCriticalRegion();
-
-    return Status;
-}
-
 NTSTATUS
 NTAPI
 NtInitializeRegistry (IN USHORT Flag)
 {
     NTSTATUS Status;
-
+    
     PAGED_CODE();
-
+    
     if (CmiRegistryInitialized == TRUE)
         return STATUS_ACCESS_DENIED;
     
     /* Save boot log file */
     IopSaveBootLogToFile();
-
+    
     Status = CmiInitHives (Flag);
-
+    
     CmpCmdInit(Flag);
     CmiRegistryInitialized = TRUE;
-
+    
     return Status;
 }
 

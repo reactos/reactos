@@ -140,7 +140,6 @@
 	</directory>
 	<directory name="cm">
 		<file>ntfunc.c</file>
-		<file>regfile.c</file>
 		<file>registry.c</file>
 		<file>regobj.c</file>
 	</directory>

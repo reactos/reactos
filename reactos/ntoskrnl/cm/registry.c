@@ -328,6 +328,8 @@ CmiInitHives(BOOLEAN SetupBoot)
     ULONG BufferSize;
     ULONG ResultSize;
     PWSTR EndPtr;
+    PCMHIVE CmHive;
+    BOOLEAN Allocate = TRUE;
 
     DPRINT("CmiInitHives() called\n");
 
@@ -379,138 +381,172 @@ CmiInitHives(BOOLEAN SetupBoot)
         wcscpy(ConfigPath, L"\\SystemRoot");
     }
     wcscat(ConfigPath, L"\\system32\\config");
-
     DPRINT("ConfigPath: %S\n", ConfigPath);
-
     EndPtr = ConfigPath + wcslen(ConfigPath);
 
-    /* FIXME: Save boot log */
+    /* Setup the file name for the SECURITY hive */
+    wcscpy(EndPtr, REG_SEC_FILE_NAME);
+    RtlInitUnicodeString(&FileName, ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
+    
+    /* Load the hive */
+    Status = CmpInitHiveFromFile(&FileName,
+                                 0,
+                                 &CmHive,
+                                 &Allocate,
+                                 0);
+    
+    /* Setup the key name for the SECURITY hive */
+    RtlInitUnicodeString(&KeyName, REG_SEC_KEY_NAME);
+    
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 CmHive,
+                                 FALSE,
+                                 NULL);
+    
+    /* Connect the SOFTWARE hive */
+    wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
+    RtlInitUnicodeString(&FileName, ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
 
+    /* Load the hive */
+    Status = CmpInitHiveFromFile(&FileName,
+                                 0,
+                                 &CmHive,
+                                 &Allocate,
+                                 0);
+    
+    /* Setup the key name for the SECURITY hive */
+    RtlInitUnicodeString (&KeyName, REG_SOFTWARE_KEY_NAME);
+    
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 CmHive,
+                                 FALSE,
+                                 NULL);
+    
     /* Connect the SYSTEM hive only if it has been created */
     if (SetupBoot == TRUE)
     {
         wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
+        RtlInitUnicodeString(&FileName, ConfigPath);
         DPRINT ("ConfigPath: %S\n", ConfigPath);
-
-        RtlInitUnicodeString (&KeyName,
-                              REG_SYSTEM_KEY_NAME);
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-
-        RtlInitUnicodeString (&FileName,
-                              ConfigPath);
-        Status = CmiLoadHive (&ObjectAttributes,
-                              &FileName,
-                              0);
-        if (!NT_SUCCESS(Status))
+#if 0
+        HANDLE PrimaryHandle, LogHandle;
+        ULONG PrimaryDisposition, SecondaryDisposition;
+        ULONG ClusterSize, Length;
+        
+        /* Build the file name */
+        wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
+        RtlInitUnicodeString(&FileName, ConfigPath);
+        DPRINT ("ConfigPath: %S\n", ConfigPath);
+        
+        /* Hive already exists */
+        CmHive = CmpMachineHiveList[3].CmHive;
+        
+        /* Open the hive file and log */
+        Status = CmpOpenHiveFiles(&FileName,
+                                  L".LOG",
+                                  &PrimaryHandle,
+                                  &LogHandle,
+                                  &PrimaryDisposition,
+                                  &SecondaryDisposition,
+                                  TRUE,
+                                  TRUE,
+                                  FALSE,
+                                  &ClusterSize);
+        if (!(NT_SUCCESS(Status)) || !(LogHandle))
         {
-            DPRINT1 ("CmiLoadHive() failed (Status %lx)\n", Status);
-            return Status;
+            /* Bugcheck */
+            KeBugCheck(BAD_SYSTEM_CONFIG_INFO);
         }
+        
+        /* Save the file handles */
+        CmHive->FileHandles[HFILE_TYPE_LOG] = LogHandle;
+        CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
+        
+        /* Allow lazy flushing since the handles are there */
+        ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
+        CmHive->Hive.HiveFlags &= ~HIVE_NOLAZYFLUSH;
+        
+        /* Get the real size of the hive */
+        Length = CmHive->Hive.Storage[Stable].Length + HBLOCK_SIZE;
+        
+        /* Check if the cluster size doesn't match */
+        if (CmHive->Hive.Cluster != ClusterSize) ASSERT(FALSE);
+        
+        /* Set the file size */
+        if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
+        {
+            /* This shouldn't fail */
+            ASSERT(FALSE);
+        }
+        
+        /* Setup the key name for the SECURITY hive */
+        RtlInitUnicodeString (&KeyName, REG_SYSTEM_KEY_NAME);
+#else
+        /* Load the hive */
+        Status = CmpInitHiveFromFile(&FileName,
+                                     0,
+                                     &CmHive,
+                                     &Allocate,
+                                     0);
+        
+        /* Setup the key name for the SECURITY hive */
+        RtlInitUnicodeString (&KeyName, REG_SYSTEM_KEY_NAME);
+        
+        Status = CmpLinkHiveToMaster(&KeyName,
+                                     NULL,
+                                     CmHive,
+                                     FALSE,
+                                     NULL);
 
         Status = CmiInitControlSetLink ();
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("CmiInitControlSetLink() failed (Status %lx)\n", Status);
-            return(Status);
-        }
-    }
-
-    /* Connect the SOFTWARE hive */
-    wcscpy(EndPtr, REG_SOFTWARE_FILE_NAME);
-    RtlInitUnicodeString (&FileName,
-                          ConfigPath);
-    DPRINT ("ConfigPath: %S\n", ConfigPath);
-
-    RtlInitUnicodeString (&KeyName,
-                          REG_SOFTWARE_KEY_NAME);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = CmiLoadHive (&ObjectAttributes,
-                          &FileName,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-        return(Status);
-    }
-
-    /* Connect the SAM hive */
-    wcscpy(EndPtr, REG_SAM_FILE_NAME);
-    RtlInitUnicodeString (&FileName,
-                          ConfigPath);
-    DPRINT ("ConfigPath: %S\n", ConfigPath);
-
-    RtlInitUnicodeString (&KeyName,
-                          REG_SAM_KEY_NAME);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = CmiLoadHive (&ObjectAttributes,
-                          &FileName,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-        return(Status);
-    }
-
-    /* Connect the SECURITY hive */
-    wcscpy(EndPtr, REG_SEC_FILE_NAME);
-    RtlInitUnicodeString (&FileName,
-                          ConfigPath);
-    DPRINT ("ConfigPath: %S\n", ConfigPath);
-
-    RtlInitUnicodeString (&KeyName,
-                          REG_SEC_KEY_NAME);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = CmiLoadHive (&ObjectAttributes,
-                          &FileName,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-        return(Status);
+#endif
     }
 
     /* Connect the DEFAULT hive */
     wcscpy(EndPtr, REG_DEFAULT_USER_FILE_NAME);
-    RtlInitUnicodeString (&FileName,
-                          ConfigPath);
+    RtlInitUnicodeString(&FileName, ConfigPath);
     DPRINT ("ConfigPath: %S\n", ConfigPath);
 
-    RtlInitUnicodeString (&KeyName,
-                          REG_DEFAULT_USER_KEY_NAME);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = CmiLoadHive (&ObjectAttributes,
-                          &FileName,
-                          0);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CmiInitializeHive() failed (Status %lx)\n", Status);
-        return(Status);
-    }
+    /* Load the hive */
+    Status = CmpInitHiveFromFile(&FileName,
+                                 0,
+                                 &CmHive,
+                                 &Allocate,
+                                 0);
 
-    DPRINT("CmiInitHives() done\n");
+    /* Setup the key name for the SECURITY hive */
+    RtlInitUnicodeString (&KeyName, REG_DEFAULT_USER_KEY_NAME);
+    
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 CmHive,
+                                 FALSE,
+                                 NULL);
 
-    return(STATUS_SUCCESS);
+    /* Connect the SAM hive */
+    wcscpy(EndPtr, REG_SAM_FILE_NAME);
+    RtlInitUnicodeString(&FileName, ConfigPath);
+    DPRINT ("ConfigPath: %S\n", ConfigPath);
+    
+    /* Load the hive */
+    Status = CmpInitHiveFromFile(&FileName,
+                                 0,
+                                 &CmHive,
+                                 &Allocate,
+                                 0);
+    
+    /* Setup the key name for the SECURITY hive */
+    RtlInitUnicodeString(&KeyName, REG_SAM_KEY_NAME);
+    Status = CmpLinkHiveToMaster(&KeyName,
+                                 NULL,
+                                 CmHive,
+                                 FALSE,
+                                 NULL);
+    return Status;
 }
 
 VOID

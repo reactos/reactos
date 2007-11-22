@@ -13,9 +13,6 @@
 #define NDEBUG
 #include "debug.h"
 
-NTSTATUS
-CmiFlushRegistryHive(PCMHIVE RegistryHive);
-
 /* FUNCTIONS *****************************************************************/
 
 BOOLEAN
@@ -892,7 +889,7 @@ CmpQueryKeyData(IN PHHIVE Hive,
             Info->KeyFullInformation.MaxNameLen = Node->MaxNameLen;
             Info->KeyFullInformation.MaxClassLen = Node->MaxClassLen;
             Info->KeyFullInformation.MaxValueNameLen = Node->MaxValueNameLen;
-            Info->KeyFullInformation.MaxValueDataLen = Node->MaxValueDataLen;            
+            Info->KeyFullInformation.MaxValueDataLen = Node->MaxValueDataLen;
 
             /* Check if we have a class */
             if (Node->ClassLength > 0)
@@ -1200,5 +1197,123 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     }
 
     /* Return the status */
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
+          IN POBJECT_ATTRIBUTES SourceFile,
+          IN ULONG Flags,
+          IN PKEY_OBJECT KeyBody)
+{
+    SECURITY_QUALITY_OF_SERVICE ServiceQos;
+    SECURITY_CLIENT_CONTEXT ClientSecurityContext;
+    HANDLE KeyHandle;
+    BOOLEAN Allocate = TRUE;
+    PCMHIVE CmHive;
+    NTSTATUS Status;
+    
+    /* Check if we have a trust key */
+    if (KeyBody)
+    {
+        /* Fail */
+        DPRINT1("Trusted classes not yet supported\n");
+        return STATUS_NOT_IMPLEMENTED;
+    }
+    
+    /* Build a service QoS for a security context */
+    ServiceQos.Length = sizeof(SECURITY_QUALITY_OF_SERVICE);
+    ServiceQos.ImpersonationLevel = SecurityImpersonation;
+    ServiceQos.ContextTrackingMode = SECURITY_DYNAMIC_TRACKING;
+    ServiceQos.EffectiveOnly = TRUE;
+    Status = SeCreateClientSecurity(PsGetCurrentThread(),
+                                    &ServiceQos,
+                                    FALSE,
+                                    &ClientSecurityContext);
+    if (!NT_SUCCESS(Status))
+    {
+        /* Fail */
+        DPRINT1("Security context failed\n");
+        return Status;
+    }
+    
+    /* Open the target key */
+    Status = ZwOpenKey(&KeyHandle, KEY_READ, TargetKey);
+    if (!NT_SUCCESS(Status)) KeyHandle = NULL;
+    
+    /* Open the hive */
+    Status = CmpCmdHiveOpen(SourceFile,
+                            &ClientSecurityContext,
+                            &Allocate,
+                            &CmHive,
+                            0);
+
+    /* Get rid of the security context */
+    SeDeleteClientSecurity(&ClientSecurityContext);
+
+    /* See if we failed */
+    if (!NT_SUCCESS(Status))
+    {
+        /* See if the target already existed */
+        if (KeyHandle)
+        {
+            /* Lock the registry */
+            CmpLockRegistryExclusive();
+            
+            /* FIXME: Check if we are already loaded */
+            
+            /* Release the registry */
+            CmpUnlockRegistry();
+        }
+        
+        /* Close the key handle if we had one */
+        if (KeyHandle) ZwClose(KeyHandle);
+        DPRINT1("Failed: %lx\n", Status);
+        return Status;
+    }
+    
+    /* Lock the registry shared */
+    //CmpLockRegistry();
+    
+    /* Lock the hive to this thread */
+    CmHive->Hive.HiveFlags |= HIVE_IS_UNLOADING;
+    CmHive->CreatorOwner = KeGetCurrentThread();
+    
+    /* Set flag */
+    if (Flags & REG_NO_LAZY_FLUSH) CmHive->Hive.HiveFlags |= HIVE_NOLAZYFLUSH;
+    
+    /* Link the hive */
+    Status = CmpLinkHiveToMaster(TargetKey->ObjectName,
+                                 TargetKey->RootDirectory,
+                                 CmHive,
+                                 FALSE,
+                                 TargetKey->SecurityDescriptor);
+    if (NT_SUCCESS(Status))
+    {
+        /* FIXME: Add to HiveList key */
+        
+        /* Sync the hive if necessary */
+        if (Allocate)
+        {
+            /* Sync it */
+            HvSyncHive(&CmHive->Hive);
+        }
+        
+        /* Release the hive */
+        CmHive->Hive.HiveFlags &= ~HIVE_IS_UNLOADING;
+        CmHive->CreatorOwner = NULL;
+    }
+    else
+    {
+        /* FIXME: TODO */
+        
+    }
+    
+    /* Unlock the registry */
+    //CmpUnlockRegistry();
+    
+    /* Close handle and return */
+    if (KeyHandle) ZwClose(KeyHandle);
     return Status;
 }
