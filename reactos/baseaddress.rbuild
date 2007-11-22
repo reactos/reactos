@@ -118,6 +118,7 @@
   <property name="BASEADDRESS_CRYPTDLL" value="0x76740000" />
   <property name="BASEADDRESS_SHFOLDER" value="0x76780000" />
   <property name="BASEADDRESS_NTMARTA" value="0x768A0000" />
+  <property name="BASEADDRESS_RASDLG" value="0x768d0000" />
   <property name="BASEADDRESS_GDIPLUS" value="0x76a00000" />
   <property name="BASEADDRESS_WINTRUST" value="0x76c30000" />
   <property name="BASEADDRESS_IMAGEHLP" value="0x76c90000" />

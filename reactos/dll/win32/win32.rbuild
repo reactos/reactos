@@ -205,6 +205,9 @@
 <directory name="rasapi32">
 	<xi:include href="rasapi32/rasapi32.rbuild" />
 </directory>
+<directory name="rasdlg">
+	<xi:include href="rasdlg/rasdlg.rbuild" />
+</directory>
 <directory name="riched20">
 	<xi:include href="riched20/riched20.rbuild" />
 </directory>
