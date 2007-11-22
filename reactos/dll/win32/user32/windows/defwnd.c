@@ -991,12 +991,7 @@ static void DefWndPrint( HWND hwnd, HDC hdc, ULONG uFlags)
 static BOOL CALLBACK
 UserSendUiUpdateMsg(HWND hwnd, LPARAM lParam)
 {
-    WPARAM wParam;
-
-    /* Unpack WPARAM */
-    wParam = MAKEWPARAM((lParam >> 3) & 0x3,
-                        lParam & (UISF_HIDEFOCUS | UISF_HIDEACCEL | UISF_ACTIVE));
-    SendMessageW(hwnd, WM_UPDATEUISTATE, wParam, 0);
+    SendMessageW(hwnd, WM_UPDATEUISTATE, (WPARAM)lParam, 0);
     return TRUE;
 }
 
@@ -1773,7 +1768,7 @@ User32DefWindowProc(HWND hWnd,
             /* Always broadcast the update to all children */
             EnumChildWindows(hWnd,
                              UserSendUiUpdateMsg,
-                             (LPARAM)Flags | ((LPARAM)Action << 3));
+                             (LPARAM)wParam);
 
             break;
         }
