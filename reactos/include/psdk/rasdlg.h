@@ -14,9 +14,10 @@ extern "C" {
 #define RASPBDEVENT_NoUser	6
 #define RASPBDEVENT_NoUserEdit	7
 
-#define RASPBDFLAG_PositionDlg	1
-#define RASPBDFLAG_ForceCloseOnDial	2
-#define RASPBDFLAG_NoUser	16
+#define RASPBDFLAG_PositionDlg      0x00000001
+#define RASPBDFLAG_ForceCloseOnDial	0x00000002
+#define RASPBDFLAG_NoUser           0x00000010
+#define RASPBDFLAG_UpdateDefaults   0x80000000
 
 #define RASEDFLAG_PositionDlg	1
 #define RASEDFLAG_NewEntry	2
