@@ -1,0 +1,66 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_BCAST   "Broadcast"
+  IDS_P2P     "Peer To Peer"
+  IDS_MIXED   "Gemischt"
+  IDS_HYBRID  "Hybrid"
+  IDS_UNKNOWN "Unbekannt"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_OTHER   "Anderer Adapter"
+  IDS_ETH     "Ethernet Adapter"
+  IDS_TOKEN   "Token Ring Adapter"
+  IDS_FDDI    "FDDI Adapter"
+  IDS_PPP     "PPP Adapter"
+  IDS_LOOP    "Loopback Adapter"
+  IDS_SLIP    "SLIP Adapter"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_USAGE
+    "\nSyntax:\n \
+        ipconfig [/? | /all | /renew [adapter] | /release [adapter] |\n \
+                  /flushdns | /displaydns | /registerdns |\n \
+                  /showclassid adapter |\n \
+                  /setclassid adapter [Klassen-ID] ]\n \
+    \n \
+    wobei\n \
+        Adapter         Verbindungsname\n \
+                       (wildcards * und ? sind möglich, siehe Beispiele)\n \
+    \n \
+        Optionen:\n \
+           /?           Zeigt die Hilfe an.\n \
+           /all         Zeigt alle Konfigurationsinformationen an.\n \
+           /release     Gibt die IP-Adresse für den angegebenen Adapter frei.\n \
+           /renew       Erneuert die IP-Adresse für den angegebenen Adapter.\n \
+           /flushdns    Leert den DNS-Auflösungscache.\n \
+           /registerdns Aktualisiert alle DHCP-Leases und registriert DNS-Namen.\n \
+           /displaydns  Zeigt den Inhalt des DNS-Auflösungscaches an.\n \
+           /showclassid Zeigt alle DHCP-Klassen-IDs an, die für diesen\n \
+                        Adapter zugelassen sind. \n \
+           /setclassid  Ändert die DHCP-Klassen-ID\n \
+    \n \
+    Standardmäßig wird nur die IP-Adresse, die Subnetzmaske und das Standard-\n \
+    gateway für jeden an TCP/IP gebundenen Adapter angezeigt.\n \
+    \n \
+    Wird bei RELEASE oder RENEW kein Adaptername angegeben, so werden die IP-\n \
+    Adressen von allen an TCP/IP gebundenen Adapter freigegeben oder erneuert.\n \
+    \n \
+    Wird bei SETCLASSID kein Klassenkennung angegeben, dann wird die Klassen-\n \
+    kennung gelöscht. \n \
+    \n \
+    Beispiele:\n \
+        > ipconfig                   ... Zeigt Informationen an.\n \
+        > ipconfig /all              ... Zeigt detaillierte Informationen an.\n \
+        > ipconfig /renew            ... Erneuert alle Verbindungen.\n \
+        > ipconfig /renew EL*        ... Erneuert alle Verbindungen, deren Name\n \
+                                         mit EL beginnt.\n \
+        > ipconfig /release *Ver*    ... Gibt alle passenden Verbindungen frei,\n \
+                                         z.B. ""Lokale Vebindung 1"" oder\n \
+                                              ""Lokale Vebindung 2""\n"
+END
