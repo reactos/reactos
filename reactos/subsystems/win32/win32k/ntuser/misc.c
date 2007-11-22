@@ -1040,6 +1040,10 @@ IntSystemParametersInfo(
 
 
       case SPI_GETKEYBOARDCUES:
+           /* FIXME: Implement this, don't just return constant */
+           *(PBOOL)pvParam = FALSE;
+           break;
+
       case SPI_SETDOUBLECLKWIDTH:
       case SPI_SETDOUBLECLKHEIGHT:
       case SPI_SETDOUBLECLICKTIME:
