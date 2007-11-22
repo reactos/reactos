@@ -9,7 +9,7 @@
 	<library>kernel32</library>
 	<library>advapi32</library>
 	<library>win32ksys</library>
-        <library>pseh</library>
+	<library>pseh</library>
 
 	<directory name="include">
 		<pch>precomp.h</pch>
