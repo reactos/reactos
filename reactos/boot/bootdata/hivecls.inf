@@ -99,6 +99,7 @@ HKCR,"fonfile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-155
 HKCR,".ttf","",0x00000000,"ttffile"
 HKCR,"ttffile","",0x00000000,"TrueType Font File"
 HKCR,"ttffile\DefaultIcon","",0x00020000,"%SystemRoot%\system32\shell32.dll,-156"
+HKCR,"ttffile\shell\open\command","",0x00020000,"%SystemRoot%\system32\fontview.exe %1"
 
 ; Help Files
 HKCR,".hlp","",0x00000000,"hlpfile"

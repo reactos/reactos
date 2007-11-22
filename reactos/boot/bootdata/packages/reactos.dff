@@ -484,6 +484,7 @@ modules\rosapps\devutils\zoomin\zoomin.exe                          1   optional
 modules\rosapps\dflat32\edit.exe                                    1   optional
 modules\rosapps\downloader\downloader.exe                           1   optional
 modules\rosapps\downloader\downloader.xml                           1   optional
+modules\rosapps\fontview\fontview.exe                               1   optional
 modules\rosapps\gettype\gettype.exe                                 1   optional
 modules\rosapps\green\green.sys                                     1   optional
 modules\rosapps\imagesoft\imagesoft.exe                             1   optional
