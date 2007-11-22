@@ -19,7 +19,7 @@ typedef struct _SECURITY_ATTRIBUTES SECURITY_ATTRIBUTES, *PSECURITY_ATTRIBUTES;
 #include <wincon.h>
 #include <blue/ntddblue.h>
 #include <ndk/inbvfuncs.h>
-#include <intrin.h>
+//#include <intrin.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -264,6 +264,7 @@ ScrAcquireOwnership(PDEVICE_EXTENSION DeviceExtension)
 NTSTATUS STDCALL
 DriverEntry (PDRIVER_OBJECT DriverObject, PUNICODE_STRING RegistryPath);
 
+static DRIVER_DISPATCH ScrCreate;
 static NTSTATUS STDCALL
 ScrCreate(PDEVICE_OBJECT DeviceObject,
 	  PIRP Irp)
@@ -297,7 +298,7 @@ ScrCreate(PDEVICE_OBJECT DeviceObject,
     return (Status);
 }
 
-
+static DRIVER_DISPATCH ScrWrite;
 static NTSTATUS STDCALL
 ScrWrite(PDEVICE_OBJECT DeviceObject,
 	 PIRP Irp)
@@ -439,7 +440,7 @@ ScrWrite(PDEVICE_OBJECT DeviceObject,
     return (Status);
 }
 
-
+static DRIVER_DISPATCH ScrIoControl;
 static NTSTATUS STDCALL
 ScrIoControl(PDEVICE_OBJECT DeviceObject,
 	     PIRP Irp)
@@ -767,7 +768,7 @@ ScrIoControl(PDEVICE_OBJECT DeviceObject,
   return Status;
 }
 
-
+static DRIVER_DISPATCH ScrDispatch;
 static NTSTATUS STDCALL
 ScrDispatch(PDEVICE_OBJECT DeviceObject,
 	    PIRP Irp)
