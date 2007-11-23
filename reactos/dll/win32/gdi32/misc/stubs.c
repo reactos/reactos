@@ -2491,9 +2491,11 @@ NamedEscape(HDC hdc,
 /*
  * @unimplemented
  */
+
+/* FIXME wrong protypes, it is a fastcall api */
 DWORD
 STDCALL
-cGetTTFFromFOT(DWORD unknown)
+cGetTTFFromFOT(DWORD x1 ,DWORD x2 ,DWORD x3, DWORD x4, DWORD x5, DWORD x6, DWORD x7)
 {
     UNIMPLEMENTED;
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
