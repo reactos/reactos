@@ -24,8 +24,9 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
   PIMAGE_DOS_HEADER DosHeader;
   PIMAGE_NT_HEADERS NtHeaders;
   PIMAGE_SECTION_HEADER SectionHeader;
-  unsigned SectionIndex;
-  char SectionName[IMAGE_SIZEOF_SHORT_NAME];
+  ULONG SectionIndex;
+  BOOLEAN RosSymSectionFound = FALSE;
+  CHAR SectionName[IMAGE_SIZEOF_SHORT_NAME];
 
   /* Check if MZ header is valid */
   DosHeader = (PIMAGE_DOS_HEADER) ImageStart;
@@ -58,11 +59,13 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
     {
       if (0 == memcmp(SectionName, SectionHeader->Name, IMAGE_SIZEOF_SHORT_NAME))
         {
+          RosSymSectionFound = TRUE;
           break;
         }
       SectionHeader++;
     }
-  if (NtHeaders->FileHeader.NumberOfSections <= SectionIndex)
+
+  if (!RosSymSectionFound)
     {
       DPRINT("No %s section found\n", ROSSYM_SECTION_NAME);
       return FALSE;
@@ -75,6 +78,12 @@ RosSymCreateFromMem(PVOID ImageStart, ULONG_PTR ImageSize, PROSSYM_INFO *RosSymI
       DPRINT("Invalid %s section\n", ROSSYM_SECTION_NAME);
       return FALSE;
     }
+
+  if (SectionHeader->VirtualAddress + SectionHeader->Misc.VirtualSize > ImageSize)
+  {
+      DPRINT("Bad %s section virtual size!\n", ROSSYM_SECTION_NAME);
+      return FALSE;
+  }
 
   /* Load it */
   return RosSymCreateFromRaw((char *) ImageStart + SectionHeader->VirtualAddress,
