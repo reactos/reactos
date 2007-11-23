@@ -27,6 +27,103 @@ CmiGetLinkTarget(PCMHIVE RegistryHive,
 
 /* FUNCTONS *****************************************************************/
 
+NTSTATUS
+NTAPI
+CmpCreateHandle(PVOID ObjectBody,
+                ACCESS_MASK GrantedAccess,
+                ULONG HandleAttributes,
+                PHANDLE HandleReturn)
+/*
+ * FUNCTION: Add a handle referencing an object
+ * ARGUMENTS:
+ *         obj = Object body that the handle should refer to
+ * RETURNS: The created handle
+ * NOTE: The handle is valid only in the context of the current process
+ */
+{
+    HANDLE_TABLE_ENTRY NewEntry;
+    PEPROCESS CurrentProcess;
+    PVOID HandleTable;
+    POBJECT_HEADER ObjectHeader;
+    HANDLE Handle;
+    KAPC_STATE ApcState;
+    BOOLEAN AttachedToProcess = FALSE;
+    
+    PAGED_CODE();
+    
+    DPRINT("CmpCreateHandle(obj %p)\n",ObjectBody);
+    
+    ASSERT(ObjectBody);
+    
+    CurrentProcess = PsGetCurrentProcess();
+    
+    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
+    
+    /* check that this is a valid kernel pointer */
+    //ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
+    
+    if (GrantedAccess & MAXIMUM_ALLOWED)
+    {
+        GrantedAccess &= ~MAXIMUM_ALLOWED;
+        GrantedAccess |= GENERIC_ALL;
+    }
+    
+    if (GrantedAccess & GENERIC_ACCESS)
+    {
+        RtlMapGenericMask(&GrantedAccess,
+                          &ObjectHeader->Type->TypeInfo.GenericMapping);
+    }
+    
+    NewEntry.Object = ObjectHeader;
+    if(HandleAttributes & OBJ_INHERIT)
+        NewEntry.ObAttributes |= OBJ_INHERIT;
+    else
+        NewEntry.ObAttributes &= ~OBJ_INHERIT;
+    NewEntry.GrantedAccess = GrantedAccess;
+    
+    if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
+        ExGetPreviousMode() == KernelMode)
+    {
+        HandleTable = ObpKernelHandleTable;
+        if (PsGetCurrentProcess() != PsInitialSystemProcess)
+        {
+            KeStackAttachProcess(&PsInitialSystemProcess->Pcb,
+                                 &ApcState);
+            AttachedToProcess = TRUE;
+        }
+    }
+    else
+    {
+        HandleTable = PsGetCurrentProcess()->ObjectTable;
+    }
+    
+    Handle = ExCreateHandle(HandleTable,
+                            &NewEntry);
+    
+    if (AttachedToProcess)
+    {
+        KeUnstackDetachProcess(&ApcState);
+    }
+    
+    if(Handle != NULL)
+    {
+        if (HandleAttributes & OBJ_KERNEL_HANDLE)
+        {
+            /* mark the handle value */
+            Handle = ObMarkHandleAsKernelHandle(Handle);
+        }
+        
+        InterlockedIncrement(&ObjectHeader->HandleCount);
+        ObReferenceObject(ObjectBody);
+        
+        *HandleReturn = Handle;
+        
+        return STATUS_SUCCESS;
+    }
+    
+    return STATUS_UNSUCCESSFUL;
+}
+
 PVOID
 NTAPI
 CmpLookupEntryDirectory(IN POBJECT_DIRECTORY Directory,

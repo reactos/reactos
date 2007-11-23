@@ -23,107 +23,16 @@
 
 /* GLOBALS ******************************************************************/
 
-extern POBJECT_TYPE  CmpKeyObjectType;
-static BOOLEAN CmiRegistryInitialized = FALSE;
-
-/* FUNCTIONS ****************************************************************/
-
 NTSTATUS
 NTAPI
 CmpCreateHandle(PVOID ObjectBody,
                 ACCESS_MASK GrantedAccess,
                 ULONG HandleAttributes,
-                PHANDLE HandleReturn)
-                /*
-                * FUNCTION: Add a handle referencing an object
-                * ARGUMENTS:
-                *         obj = Object body that the handle should refer to
-                * RETURNS: The created handle
-                * NOTE: The handle is valid only in the context of the current process
-                */
-{
-    HANDLE_TABLE_ENTRY NewEntry;
-    PEPROCESS CurrentProcess;
-    PVOID HandleTable;
-    POBJECT_HEADER ObjectHeader;
-    HANDLE Handle;
-    KAPC_STATE ApcState;
-    BOOLEAN AttachedToProcess = FALSE;
+                PHANDLE HandleReturn);
 
-    PAGED_CODE();
+static BOOLEAN CmiRegistryInitialized = FALSE;
 
-    DPRINT("CmpCreateHandle(obj %p)\n",ObjectBody);
-
-    ASSERT(ObjectBody);
-
-    CurrentProcess = PsGetCurrentProcess();
-
-    ObjectHeader = OBJECT_TO_OBJECT_HEADER(ObjectBody);
-
-    /* check that this is a valid kernel pointer */
-    //ASSERT((ULONG_PTR)ObjectHeader & EX_HANDLE_ENTRY_LOCKED);
-
-    if (GrantedAccess & MAXIMUM_ALLOWED)
-    {
-        GrantedAccess &= ~MAXIMUM_ALLOWED;
-        GrantedAccess |= GENERIC_ALL;
-    }
-
-    if (GrantedAccess & GENERIC_ACCESS)
-    {
-        RtlMapGenericMask(&GrantedAccess,
-            &ObjectHeader->Type->TypeInfo.GenericMapping);
-    }
-
-    NewEntry.Object = ObjectHeader;
-    if(HandleAttributes & OBJ_INHERIT)
-        NewEntry.ObAttributes |= OBJ_INHERIT;
-    else
-        NewEntry.ObAttributes &= ~OBJ_INHERIT;
-    NewEntry.GrantedAccess = GrantedAccess;
-
-    if ((HandleAttributes & OBJ_KERNEL_HANDLE) &&
-        ExGetPreviousMode() == KernelMode)
-    {
-        HandleTable = ObpKernelHandleTable;
-        if (PsGetCurrentProcess() != PsInitialSystemProcess)
-        {
-            KeStackAttachProcess(&PsInitialSystemProcess->Pcb,
-                &ApcState);
-            AttachedToProcess = TRUE;
-        }
-    }
-    else
-    {
-        HandleTable = PsGetCurrentProcess()->ObjectTable;
-    }
-
-    Handle = ExCreateHandle(HandleTable,
-        &NewEntry);
-
-    if (AttachedToProcess)
-    {
-        KeUnstackDetachProcess(&ApcState);
-    }
-
-    if(Handle != NULL)
-    {
-        if (HandleAttributes & OBJ_KERNEL_HANDLE)
-        {
-            /* mark the handle value */
-            Handle = ObMarkHandleAsKernelHandle(Handle);
-        }
-
-        InterlockedIncrement(&ObjectHeader->HandleCount);
-        ObReferenceObject(ObjectBody);
-
-        *HandleReturn = Handle;
-
-        return STATUS_SUCCESS;
-    }
-
-    return STATUS_UNSUCCESSFUL;
-}
+/* FUNCTIONS ****************************************************************/
 
 NTSTATUS
 NTAPI
@@ -137,228 +46,137 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 {
     UNICODE_STRING RemainingPath = {0}, ReturnedPath = {0};
     ULONG LocalDisposition;
-    PKEY_OBJECT KeyObject;
+    PKEY_OBJECT KeyObject, Parent;
     NTSTATUS Status = STATUS_SUCCESS;
-    PVOID Object = NULL;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    unsigned int i;
-    REG_PRE_CREATE_KEY_INFORMATION PreCreateKeyInfo;
-    REG_POST_CREATE_KEY_INFORMATION PostCreateKeyInfo;
-    KPROCESSOR_MODE PreviousMode;
-    UNICODE_STRING CapturedClass = {0};
+    ULONG i;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     HANDLE hKey;
     PCM_KEY_NODE Node, ParentNode;
-
     PAGED_CODE();
 
-    DPRINT("NtCreateKey(TI 0x%x, DA 0x%x, Class '%wZ', OA 0x%p, OA->ON '%wZ'\n",
-        TitleIndex, DesiredAccess, Class, ObjectAttributes,
-        ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
-
-    PreviousMode = ExGetPreviousMode();
-
-    if (PreviousMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            ProbeAndZeroHandle(KeyHandle);
-            if (Disposition != NULL)
-            {
-                ProbeForWriteUlong(Disposition);
-            }
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-    }
-
-    if (Class != NULL)
-    {
-        Status = ProbeAndCaptureUnicodeString(&CapturedClass,
-                                              PreviousMode,
-                                              Class);
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-    }
-
     /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         PreviousMode,
                                         FALSE,
                                         &ObjectCreateInfo,
                                         &ObjectName);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
-    PostCreateKeyInfo.CompleteName = &ObjectName;
-    PreCreateKeyInfo.CompleteName = &ObjectName;
-    Status = CmiCallRegisteredCallbacks(RegNtPreCreateKey, &PreCreateKeyInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-        goto Cleanup;
-    }
-
+    /* Find the key object */
     Status = CmFindObject(&ObjectCreateInfo,
                           &ObjectName,
-                          (PVOID*)&Object,
+                          (PVOID*)&Parent,
                           &ReturnedPath,
                           CmpKeyObjectType,
                           NULL,
                           NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
-        DPRINT1("CmpFindObject failed, Status: 0x%x\n", Status);
-        goto Cleanup;
-    }
-    
+    /* Check if we found the entire path */
     RemainingPath = ReturnedPath;
-    DPRINT("RemainingPath (preparse) %wZ\n", &RemainingPath);
-
-    if (RemainingPath.Length == 0)
+    if (!RemainingPath.Length)
     {
-        /* Fail if the key has been deleted */
-        if (((PKEY_OBJECT) Object)->KeyControlBlock->Delete)
+        /* Check if the parent has been deleted */
+        if (Parent->KeyControlBlock->Delete)
         {
-            PostCreateKeyInfo.Object = NULL;
-            PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
-            CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
+            /* Fail */
             DPRINT1("Object marked for delete!\n");
             Status = STATUS_UNSUCCESSFUL;
             goto Cleanup;
         }
 
-        Status = CmpCreateHandle(Object,
+        /* Create a new handle to the parent */
+        Status = CmpCreateHandle(Parent,
                                  DesiredAccess,
                                  ObjectCreateInfo.Attributes,
                                  &hKey);
+        if (!NT_SUCCESS(Status)) goto Cleanup;
 
-        if (!NT_SUCCESS(Status))
-            DPRINT1("CmpCreateHandle failed Status 0x%x\n", Status);
-
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
+        /* Tell the caller we did this */
         LocalDisposition = REG_OPENED_EXISTING_KEY;
         goto SuccessReturn;
     }
 
-    /* If RemainingPath contains \ we must return error
-       because NtCreateKey doesn't create trees */
-    while (RemainingPath.Length && *RemainingPath.Buffer == L'\\')
+    /* Loop every leading slash */
+    while ((RemainingPath.Length) &&
+           (*RemainingPath.Buffer == OBJ_NAME_PATH_SEPARATOR))
     {
+        /* And remove it */
         RemainingPath.Length -= sizeof(WCHAR);
         RemainingPath.MaximumLength -= sizeof(WCHAR);
         RemainingPath.Buffer++;
     }
 
-    while (RemainingPath.Length && 
-           RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] == L'\\')
+    /* Loop every terminating slash */
+    while ((RemainingPath.Length) && 
+           (RemainingPath.Buffer[(RemainingPath.Length / sizeof(WCHAR)) - 1] ==
+            OBJ_NAME_PATH_SEPARATOR))
     {
+        /* And remove it */
         RemainingPath.Length -= sizeof(WCHAR);
         RemainingPath.MaximumLength -= sizeof(WCHAR);
     }
 
+    /* Now loop the entire path */
     for (i = 0; i < RemainingPath.Length / sizeof(WCHAR); i++)
     {
-        if (L'\\' == RemainingPath.Buffer[i])
+        /* And check if we found slahes */
+        if (RemainingPath.Buffer[i] == OBJ_NAME_PATH_SEPARATOR)
         {
-            DPRINT("NtCreateKey() doesn't create trees! (found \'\\\' in remaining path: \"%wZ\"!)\n", &RemainingPath);
-
-            PostCreateKeyInfo.Object = NULL;
-            PostCreateKeyInfo.Status = STATUS_OBJECT_NAME_NOT_FOUND;
-            CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
+            /* We don't create trees -- parent key doesn't exist, so fail */
             Status = STATUS_OBJECT_NAME_NOT_FOUND;
             goto Cleanup;
         }
     }
 
-    DPRINT("RemainingPath %wZ ParentObject 0x%p\n", &RemainingPath, Object);
-
-    // 
-    if (RemainingPath.Length == 0 || RemainingPath.Buffer[0] == UNICODE_NULL)
+    /* Now check if we're left with no name by this point */
+    if (!(RemainingPath.Length) || (RemainingPath.Buffer[0] == UNICODE_NULL))
     {
+        /* Then fail since we can't do anything */
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Cleanup;
     }
-        
-
-    /* Acquire hive lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
     /* Create the key */
-    Status = CmpDoCreate(((PKEY_OBJECT)Object)->KeyControlBlock->KeyHive,
-                         ((PKEY_OBJECT)Object)->KeyControlBlock->KeyCell,
+    Status = CmpDoCreate(Parent->KeyControlBlock->KeyHive,
+                         Parent->KeyControlBlock->KeyCell,
                          NULL,
                          &RemainingPath,
                          KernelMode,
                          Class,
                          CreateOptions,
-                         ((PKEY_OBJECT)Object)->KeyControlBlock,
+                         Parent->KeyControlBlock,
                          NULL,
                          (PVOID*)&KeyObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
-        /* Release hive lock */
-        ExReleaseResourceLite(&CmpRegistryLock);
-        KeLeaveCriticalRegion();
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = STATUS_UNSUCCESSFUL;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
+    /* If we got here, this is a new key */
+    LocalDisposition = REG_CREATED_NEW_KEY;
 
-        Status = STATUS_UNSUCCESSFUL;
-        goto Cleanup;
-    }
+    /* Now save the key name */
+    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
+                              &RemainingPath,
+                              &KeyObject->Name);
 
-    RtlDuplicateUnicodeString
-        (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
-         &RemainingPath, &KeyObject->Name);
-    DPRINT("Key Name: %wZ\n", &KeyObject->Name);
+    /* Get the parent node and the child node */
 
     ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->ParentKcb->KeyHive,
                                          KeyObject->KeyControlBlock->ParentKcb->KeyCell);
-
     Node = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->KeyHive,
                                    KeyObject->KeyControlBlock->KeyCell);
-    
+
+    /* Inherit some information */
     Node->Parent = KeyObject->KeyControlBlock->ParentKcb->KeyCell;
     Node->Security = ParentNode->Security;
-    
     KeyObject->KeyControlBlock->ValueCache.ValueList = Node->ValueList.List;
     KeyObject->KeyControlBlock->ValueCache.Count = Node->ValueList.Count;
 
-    DPRINT("RemainingPath: %wZ\n", &RemainingPath);
+    /* Link child to parent */
+    CmiAddKeyToList(Parent, KeyObject);
 
-    CmiAddKeyToList(((PKEY_OBJECT)Object), KeyObject);
-
-    VERIFY_KEY_OBJECT(KeyObject);
-
+    /* Create the actual handle to the object */
     Status = CmpCreateHandle(KeyObject,
                              DesiredAccess,
                              ObjectCreateInfo.Attributes,
@@ -367,58 +185,25 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     /* Free the create information */
     ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(KeyObject)->ObjectCreateInfo);
     OBJECT_TO_OBJECT_HEADER(KeyObject)->ObjectCreateInfo = NULL;
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ObInsertObject() failed!\n");
-
-        PostCreateKeyInfo.Object = NULL;
-        PostCreateKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
-        goto Cleanup;
-    }
+    if (!NT_SUCCESS(Status)) goto Cleanup;
 
     /* Add the keep-alive reference */
     ObReferenceObject(KeyObject);
-    /* Release hive lock */
-    ExReleaseResourceLite(&CmpRegistryLock);
-    KeLeaveCriticalRegion();
 
-    PostCreateKeyInfo.Object = KeyObject;
-    PostCreateKeyInfo.Status = Status;
-    CmiCallRegisteredCallbacks(RegNtPostCreateKey, &PostCreateKeyInfo);
-
+    /* Force a lazy flush */
     CmpLazyFlush();
-    
-    LocalDisposition = REG_CREATED_NEW_KEY;
 
 SuccessReturn:
-    _SEH_TRY
-    {
-        *KeyHandle = hKey;
-        if (Disposition != NULL)
-        {
-            *Disposition = LocalDisposition;
-        }
-    }
-    _SEH_HANDLE
-    {
-        Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
+    /* Return data to user */
+    *KeyHandle = hKey;
+    if (Disposition) *Disposition = LocalDisposition;
 
 Cleanup:
+    /* Cleanup */
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-    if (Class != NULL)
-    {
-        ReleaseCapturedUnicodeString(&CapturedClass,
-                                     PreviousMode);
-    }
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
     RtlFreeUnicodeString(&ReturnedPath);
-    if (Object != NULL) ObDereferenceObject(Object);
-
+    if (Parent) ObDereferenceObject(Parent);
     return Status;
 }
 
@@ -428,88 +213,34 @@ NtOpenKey(OUT PHANDLE KeyHandle,
           IN ACCESS_MASK DesiredAccess,
           IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
-    UNICODE_STRING RemainingPath;
-    KPROCESSOR_MODE PreviousMode;
-    PVOID Object = NULL;
+    UNICODE_STRING RemainingPath = {0};
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    PKEY_OBJECT Object = NULL;
     HANDLE hKey = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-    REG_PRE_OPEN_KEY_INFORMATION PreOpenKeyInfo;
-    REG_POST_OPEN_KEY_INFORMATION PostOpenKeyInfo;
-
     PAGED_CODE();
-
-    DPRINT("NtOpenKey(KH 0x%p  DA %x  OA 0x%p  OA->ON '%wZ'\n",
-        KeyHandle,
-        DesiredAccess,
-        ObjectAttributes,
-        ObjectAttributes ? ObjectAttributes->ObjectName : NULL);
-
-    /* Check place for result handle, if it's null - return immediately */
-    if (KeyHandle == NULL)
-        return(STATUS_INVALID_PARAMETER);
-
-    PreviousMode = ExGetPreviousMode();
-
-    if(PreviousMode != KernelMode)
-    {
-        _SEH_TRY
-        {
-            ProbeAndZeroHandle(KeyHandle);
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-
-        if(!NT_SUCCESS(Status))
-        {
-           return Status;
-        }
-    }
-
-    /* WINE checks for the length also */
-    /*if (ObjectAttributes->ObjectName->Length > MAX_NAME_LENGTH)
-        return(STATUS_BUFFER_OVERFLOW);*/
-
+ 
     /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
                                         PreviousMode,
                                         FALSE,
                                         &ObjectCreateInfo,
                                         &ObjectName);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Loop every terminating slash */
+    while ((ObjectName.Length) && 
+           (ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] ==
+            OBJ_NAME_PATH_SEPARATOR))
     {
-        DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    if (ObjectName.Buffer &&
-        ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] == '\\')
-    {
-        ObjectName.Buffer[(ObjectName.Length / sizeof(WCHAR)) - 1] = UNICODE_NULL;
+        /* And remove it */
         ObjectName.Length -= sizeof(WCHAR);
         ObjectName.MaximumLength -= sizeof(WCHAR);
     }
-
-    PostOpenKeyInfo.CompleteName = &ObjectName;
-    PreOpenKeyInfo.CompleteName = &ObjectName;
-    Status = CmiCallRegisteredCallbacks(RegNtPreOpenKey, &PreOpenKeyInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        PostOpenKeyInfo.Object = NULL;
-        PostOpenKeyInfo.Status = Status;
-        CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
-        ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-        if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-        return Status;
-    }
-
-    RemainingPath.Buffer = NULL;
-
+    
+    /* Find the key */
     Status = CmFindObject(&ObjectCreateInfo,
                           &ObjectName,
                           (PVOID*)&Object,
@@ -517,64 +248,39 @@ NtOpenKey(OUT PHANDLE KeyHandle,
                           CmpKeyObjectType,
                           NULL,
                           NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) goto openkey_cleanup;
+
+    /* Make sure we don't have any remaining path */
+    if ((RemainingPath.Buffer) && (RemainingPath.Buffer[0] != UNICODE_NULL))
     {
-        DPRINT("CmpFindObject() returned 0x%08lx\n", Status);
-        Status = STATUS_INVALID_HANDLE; /* Because ObFindObject returns STATUS_UNSUCCESSFUL */
-        goto openkey_cleanup;
-    }
-
-    VERIFY_KEY_OBJECT((PKEY_OBJECT) Object);
-
-    DPRINT("RemainingPath '%wZ'\n", &RemainingPath);
-
-    if ((RemainingPath.Buffer != NULL) && (RemainingPath.Buffer[0] != 0))
-    {
-        RtlFreeUnicodeString(&RemainingPath);
+        /* Fail */
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto openkey_cleanup;
     }
 
-    RtlFreeUnicodeString(&RemainingPath);
-
-    /* Fail if the key has been deleted */
-    if (((PKEY_OBJECT)Object)->KeyControlBlock->Delete)
+    /* Check if the key has been deleted */
+    if (Object->KeyControlBlock->Delete)
     {
+        /* Fail */
         Status = STATUS_UNSUCCESSFUL;
         goto openkey_cleanup;
     }
 
+    /* Create the actual handle */
     Status = CmpCreateHandle(Object,
                              DesiredAccess,
                              ObjectCreateInfo.Attributes,
                              &hKey);
 
 openkey_cleanup:
-
+    /* Cleanup */
     ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-    PostOpenKeyInfo.Object = NT_SUCCESS(Status) ? (PVOID)Object : NULL;
-    PostOpenKeyInfo.Status = Status;
-    CmiCallRegisteredCallbacks (RegNtPostOpenKey, &PostOpenKeyInfo);
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-
-    if (Object)
-    {
-        ObDereferenceObject(Object);
-    }
-
-    if (NT_SUCCESS(Status))
-    {
-        _SEH_TRY
-        {
-            *KeyHandle = hKey;
-        }
-        _SEH_HANDLE
-        {
-            Status = _SEH_GetExceptionCode();
-        }
-        _SEH_END;
-    }
-
+    RtlFreeUnicodeString(&RemainingPath);
+    if (Object) ObDereferenceObject(Object);
+    
+    /* Return information and status to user */
+    *KeyHandle = hKey;
     return Status;
 }
 
