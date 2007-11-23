@@ -98,7 +98,7 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
                 break;
             }
 
-            if (!_stricmp(DisplayDeviceA.DeviceName, This->lpLcl->lpGbl->cDriverName))
+            if (_stricmp(DisplayDeviceA.DeviceName, This->lpLcl->lpGbl->cDriverName) != 0)
             {
                 /* if we got another device like hardware mpeg decoder or video card or another drv */
                 found = TRUE;
