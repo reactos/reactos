@@ -147,7 +147,6 @@ typedef struct _AFD_FCB {
     PVOID Context;
     DWORD PollState;
     UINT ContextSize;
-    PIRP PendingClose;
     LIST_ENTRY PendingIrpList[MAX_FUNCTIONS];
     LIST_ENTRY DatagramList;
     LIST_ENTRY PendingConnections;

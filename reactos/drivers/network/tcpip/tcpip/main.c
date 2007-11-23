@@ -146,6 +146,7 @@ CP
   }
 CP
   Context->CancelIrps = FALSE;
+  KeInitializeEvent(&Context->CleanupEvent, NotificationEvent, FALSE);
 CP
   IrpSp = IoGetCurrentIrpStackLocation(Irp);
   IrpSp->FileObject->FsContext = Context;
@@ -273,11 +274,20 @@ VOID TiCleanupFileObjectComplete(
 {
   PIRP Irp;
   PIO_STACK_LOCATION IrpSp;
+  PTRANSPORT_CONTEXT TranContext;
+  KIRQL OldIrql;
 
   Irp         = (PIRP)Context;
   IrpSp       = IoGetCurrentIrpStackLocation(Irp);
+  TranContext = (PTRANSPORT_CONTEXT)IrpSp->FileObject->FsContext;
 
   Irp->IoStatus.Status = Status;
+
+  IoAcquireCancelSpinLock(&OldIrql);
+
+  KeSetEvent(&TranContext->CleanupEvent, 0, FALSE);
+
+  IoReleaseCancelSpinLock(OldIrql);
 }
 
 
@@ -311,6 +321,7 @@ NTSTATUS TiCleanupFileObject(
   IoAcquireCancelSpinLock(&OldIrql);
 
   Context->CancelIrps = TRUE;
+  KeResetEvent(&Context->CleanupEvent);
 
   IoReleaseCancelSpinLock(OldIrql);
 
@@ -344,6 +355,12 @@ NTSTATUS TiCleanupFileObject(
 
     return STATUS_INVALID_PARAMETER;
   }
+
+  if (Status != STATUS_PENDING)
+    TiCleanupFileObjectComplete(Irp, Status);
+
+  KeWaitForSingleObject(&Context->CleanupEvent,
+    UserRequest, KernelMode, FALSE, NULL);
 
   return Irp->IoStatus.Status;
 }
