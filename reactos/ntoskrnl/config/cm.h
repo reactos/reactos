@@ -501,10 +501,6 @@ typedef struct _KEY_INFORMATION
 //
 // BUGBUG Old Hive Stuff for Temporary Support
 //
-#define SYSTEM_REG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM"
-#define SYSTEM_LOG_FILE         L"\\SystemRoot\\System32\\Config\\SYSTEM.log"
-#define REG_SYSTEM_KEY_NAME     L"\\Registry\\Machine\\SYSTEM"
-#define REG_HARDWARE_KEY_NAME   L"\\Registry\\Machine\\HARDWARE"
 typedef struct _KEY_OBJECT
 {
     ULONG Type;
@@ -515,10 +511,19 @@ typedef struct _KEY_OBJECT
     struct _KEY_OBJECT **SubKeys;
     PCM_KEY_CONTROL_BLOCK KeyControlBlock;
 } KEY_OBJECT, *PKEY_OBJECT;
-extern PCMHIVE CmiVolatileHive;
-extern LIST_ENTRY CmiKeyObjectListHead, CmiConnectedHiveList;
-PVOID NTAPI CmpRosGetHardwareHive(OUT PULONG Length);
+NTSTATUS
+NTAPI
+CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
+             PUNICODE_STRING ObjectName,
+             PVOID* ReturnedObject,
+             PUNICODE_STRING RemainingPath,
+             POBJECT_TYPE ObjectType,
+             IN PACCESS_STATE AccessState,
+             IN PVOID ParseContext);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
+VOID
+CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
+                IN PKEY_OBJECT NewKey);
 ///////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1399,6 +1404,8 @@ extern ULONG CmpDelayedCloseSize, CmpDelayedCloseIndex;
 extern BOOLEAN CmpNoWrite;
 extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
+extern PCMHIVE CmiVolatileHive;
+extern LIST_ENTRY CmiKeyObjectListHead;
 
 //
 // Inlined functions

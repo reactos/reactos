@@ -170,7 +170,7 @@ ShutdownThreadMain(PVOID Context)
    Waittime.QuadPart = (LONGLONG)-10000000; /* 1sec */
    KeDelayExecutionThread(KernelMode, FALSE, &Waittime);
 
-   CmShutdownRegistry();
+   CmShutdownSystem();
    IoShutdownRegisteredFileSystems();
    IoShutdownRegisteredDevices();
 
