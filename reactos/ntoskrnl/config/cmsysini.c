@@ -152,11 +152,10 @@ NTAPI
 CmpSetSystemValues(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName, ValueName;
+    UNICODE_STRING KeyName, ValueName = {0};
     HANDLE KeyHandle;
     NTSTATUS Status;
     ASSERT(LoaderBlock != NULL);
-    if (ExpInTextModeSetup) return STATUS_SUCCESS;
 
     /* Setup attributes for loader options */
     RtlInitUnicodeString(&KeyName,
@@ -198,7 +197,7 @@ Quickie:
     NtClose(KeyHandle);
 
     /* Return the status */
-    return Status;
+    return (ExpInTextModeSetup ? STATUS_SUCCESS : Status);
 }
 
 NTSTATUS
@@ -222,7 +221,6 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG ResultLength, Disposition;
     PLOADER_PARAMETER_EXTENSION LoaderExtension;
     PAGED_CODE();
-    if (ExpInTextModeSetup) return STATUS_SUCCESS;
 
     /* Open the select key */
     InitializeObjectAttributes(&ObjectAttributes,
@@ -231,7 +229,19 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                NULL,
                                NULL);
     Status = NtOpenKey(&SelectHandle, KEY_READ, &ObjectAttributes);
-    if (!NT_SUCCESS(Status)) return(Status);
+    if (!NT_SUCCESS(Status))
+    {
+        /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
+        if (!LoaderBlock->RegistryBase)
+        {
+            /* Use hard-coded setting */
+            ControlSet = 1;
+            goto UseSet;
+        }
+
+        /* Fail for real boots */
+        return Status;
+    }
 
     /* Open the current value */
     RtlInitUnicodeString(&KeyName, L"Current");
@@ -249,6 +259,7 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ControlSet = *(PULONG)((PUCHAR)ValueInfo + ValueInfo->DataOffset);
 
     /* Create the current control set key */
+UseSet:
     RtlInitUnicodeString(&KeyName,
                          L"\\Registry\\Machine\\System\\CurrentControlSet");
     InitializeObjectAttributes(&ObjectAttributes,
@@ -499,10 +510,9 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     else
     {
         /* Create it */
-#if 0
         Status = CmpInitializeHive(&SystemHive,
                                    HINIT_CREATE,
-                                   0, //HIVE_NOLAZYFLUSH,
+                                   HIVE_NOLAZYFLUSH,
                                    HFILE_TYPE_LOG,
                                    NULL,
                                    NULL,
@@ -514,7 +524,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         
         /* Set the hive filename */
         RtlCreateUnicodeString(&SystemHive->FileFullPath, SYSTEM_REG_FILE);
-#endif
+
         /* Tell CmpLinkHiveToMaster to allocate a hive */
         Allocate = TRUE;
     }
@@ -750,11 +760,83 @@ CmpCreateRegistryRoot(VOID)
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+CmpGetRegistryPath(IN PWCHAR ConfigPath)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+    HANDLE KeyHandle;
+    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
+    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
+    ULONG BufferSize,ResultSize;
+
+    /* Check if we are booted in setup */
+    if (ExpInTextModeSetup)
+    {
+        /* Setup the object attributes */
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE,
+                                   NULL,
+                                   NULL);
+        /* Open the key */
+        Status =  ZwOpenKey(&KeyHandle,
+                            KEY_ALL_ACCESS,
+                            &ObjectAttributes);
+        if (!NT_SUCCESS(Status)) return Status;
+        
+        /* Allocate the buffer */
+        BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
+        ValueInfo = ExAllocatePoolWithTag(PagedPool, BufferSize, TAG_CM);
+        if (!ValueInfo)
+        {
+            /* Fail */
+            ZwClose(KeyHandle);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        /* Query the value */
+        Status = ZwQueryValueKey(KeyHandle,
+                                 &ValueName,
+                                 KeyValuePartialInformation,
+                                 ValueInfo,
+                                 BufferSize,
+                                 &ResultSize);
+        ZwClose(KeyHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Fail */
+            ExFreePool(ValueInfo);
+            return Status;
+        }
+
+        /* Copy the config path and null-terminate it */
+        RtlCopyMemory(ConfigPath,
+                      ValueInfo->Data,
+                      ValueInfo->DataLength);
+        ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = UNICODE_NULL;
+        ExFreePool(ValueInfo);
+    }
+    else
+    {
+        /* Just use default path */
+        wcscpy(ConfigPath, L"\\SystemRoot");
+    }
+
+    /* Add registry path */
+    wcscat(ConfigPath, L"\\System32\\Config");
+
+    /* Done */
+    return STATUS_SUCCESS;
+}
+
 VOID
 NTAPI
 CmpLoadHiveThread(IN PVOID StartContext)
 {
-    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
     ULONG FileStart, RegStart, i, ErrorResponse, ClusterSize, WorkerCount;
     ULONG PrimaryDisposition, SecondaryDisposition, Length;
@@ -777,7 +859,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
     RtlInitEmptyUnicodeString(&RegName, RegBuffer, MAX_PATH);
     
     /* Now build the system root path */
-    RtlInitUnicodeString(&TempName, L"\\SystemRoot\\System32\\Config\\");
+    CmpGetRegistryPath(ConfigPath);
+    RtlInitUnicodeString(&TempName, ConfigPath);
     RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
     FileStart = FileName.Length;
     

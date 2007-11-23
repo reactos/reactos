@@ -115,9 +115,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     CM_PARSE_CONTEXT ParseContext = {0};
     PAGED_CODE();
 
-    /* TEMPHACK: Don't do anything if we don't actually have a hive */
-    if (Allocate) return STATUS_SUCCESS;
-
     /* Setup the object attributes */
     InitializeObjectAttributes(&ObjectAttributes,
                                LinkName,
@@ -130,8 +127,17 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     ParseContext.CreateOperation = TRUE;
     ParseContext.ChildHive.KeyHive = &RegistryHive->Hive;
     
-    /* Because of CmCreateRootNode, ReactOS Hack */
-    ParseContext.ChildHive.KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
+    /* Check if we have a root keycell or if we need to create it */
+    if (Allocate)
+    {
+        /* Create it */
+        ParseContext.ChildHive.KeyCell = HCELL_NIL;
+    }
+    else
+    {
+        /* We have one */
+        ParseContext.ChildHive.KeyCell = RegistryHive->Hive.BaseBlock->RootCell;   
+    }
     
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(&ObjectAttributes,
@@ -181,7 +187,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                                NULL,
                                RemainingPath,
                                KernelMode,
-                               REG_OPTION_VOLATILE,
+                               0,
                                &ParseContext,
                                ParentKey->KeyControlBlock,
                                (PVOID*)&NewKey);
@@ -217,142 +223,23 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     return STATUS_SUCCESS;    
 }
 
-static NTSTATUS
-CmiInitControlSetLink (VOID)
-{
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING ControlSetKeyName = RTL_CONSTANT_STRING(
-        L"\\Registry\\Machine\\SYSTEM\\ControlSet001");
-    UNICODE_STRING ControlSetLinkName =  RTL_CONSTANT_STRING(
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
-    UNICODE_STRING ControlSetValueName = RTL_CONSTANT_STRING(L"SymbolicLinkValue");
-    HANDLE KeyHandle;
-    NTSTATUS Status;
-
-    /* Create 'ControlSet001' key */
-    InitializeObjectAttributes (&ObjectAttributes,
-                                &ControlSetKeyName,
-                                OBJ_CASE_INSENSITIVE,
-                                NULL,
-                                NULL);
-    Status = ZwCreateKey (&KeyHandle,
-                          KEY_ALL_ACCESS,
-                          &ObjectAttributes,
-                          0,
-                          NULL,
-                          REG_OPTION_NON_VOLATILE,
-                          NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
-        return Status;
-    }
-    ZwClose (KeyHandle);
-
-    /* Link 'CurrentControlSet' to 'ControlSet001' key */
-    InitializeObjectAttributes (&ObjectAttributes,
-                                &ControlSetLinkName,
-                                OBJ_CASE_INSENSITIVE | OBJ_OPENIF | OBJ_OPENLINK,
-                                NULL,
-                                NULL);
-    Status = ZwCreateKey (&KeyHandle,
-                          KEY_ALL_ACCESS | KEY_CREATE_LINK,
-                          &ObjectAttributes,
-                          0,
-                          NULL,
-                          REG_OPTION_VOLATILE | REG_OPTION_CREATE_LINK,
-                          NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("ZwCreateKey() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
-    Status = ZwSetValueKey (KeyHandle,
-                            &ControlSetValueName,
-                            0,
-                            REG_LINK,
-                            (PVOID)ControlSetKeyName.Buffer,
-                            ControlSetKeyName.Length);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1 ("ZwSetValueKey() failed (Status %lx)\n", Status);
-    }
-    ZwClose (KeyHandle);
-
-    return STATUS_SUCCESS;
-}
+NTSTATUS
+NTAPI
+CmpGetRegistryPath(IN PWCHAR ConfigPath);
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot)
 {
-    PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING FileName;
-    UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
-    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
-    HANDLE KeyHandle;
-
     NTSTATUS Status;
-
     WCHAR ConfigPath[MAX_PATH];
-
-    ULONG BufferSize;
-    ULONG ResultSize;
     PWSTR EndPtr;
     PCMHIVE CmHive;
     BOOLEAN Allocate = TRUE;
+    UNICODE_STRING FileName, KeyName;
 
     DPRINT("CmiInitHives() called\n");
 
-    if (SetupBoot == TRUE)
-    {
-        InitializeObjectAttributes(&ObjectAttributes,
-                                   &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
-                                   NULL,
-                                   NULL);
-        Status =  ZwOpenKey(&KeyHandle,
-                            KEY_ALL_ACCESS,
-                            &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ZwOpenKey() failed (Status %lx)\n", Status);
-            return(Status);
-        }
-
-        BufferSize = sizeof(KEY_VALUE_PARTIAL_INFORMATION) + 4096;
-        ValueInfo = ExAllocatePool(PagedPool, BufferSize);
-        if (ValueInfo == NULL)
-        {
-            ZwClose(KeyHandle);
-            return(STATUS_INSUFFICIENT_RESOURCES);
-        }
-
-        Status = ZwQueryValueKey(KeyHandle,
-                                 &ValueName,
-                                 KeyValuePartialInformation,
-                                 ValueInfo,
-                                 BufferSize,
-                                 &ResultSize);
-        ZwClose(KeyHandle);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePool(ValueInfo);
-            return(Status);
-        }
-
-        RtlCopyMemory(ConfigPath,
-                      ValueInfo->Data,
-                      ValueInfo->DataLength);
-        ConfigPath[ValueInfo->DataLength / sizeof(WCHAR)] = (WCHAR)0;
-        ExFreePool(ValueInfo);
-    }
-    else
-    {
-        wcscpy(ConfigPath, L"\\SystemRoot");
-    }
-    wcscat(ConfigPath, L"\\system32\\config");
+    CmpGetRegistryPath(ConfigPath);
     DPRINT("ConfigPath: %S\n", ConfigPath);
     EndPtr = ConfigPath + wcslen(ConfigPath);
 
@@ -401,10 +288,6 @@ CmiInitHives(BOOLEAN SetupBoot)
     /* Connect the SYSTEM hive only if it has been created */
     if (SetupBoot == TRUE)
     {
-        wcscpy(EndPtr, REG_SYSTEM_FILE_NAME);
-        RtlInitUnicodeString(&FileName, ConfigPath);
-        DPRINT ("ConfigPath: %S\n", ConfigPath);
-#if 0
         HANDLE PrimaryHandle, LogHandle;
         ULONG PrimaryDisposition, SecondaryDisposition;
         ULONG ClusterSize, Length;
@@ -439,7 +322,7 @@ CmiInitHives(BOOLEAN SetupBoot)
         CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
         
         /* Allow lazy flushing since the handles are there */
-        ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
+        //ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
         CmHive->Hive.HiveFlags &= ~HIVE_NOLAZYFLUSH;
         
         /* Get the real size of the hive */
@@ -454,28 +337,6 @@ CmiInitHives(BOOLEAN SetupBoot)
             /* This shouldn't fail */
             ASSERT(FALSE);
         }
-        
-        /* Setup the key name for the SECURITY hive */
-        RtlInitUnicodeString (&KeyName, REG_SYSTEM_KEY_NAME);
-#else
-        /* Load the hive */
-        Status = CmpInitHiveFromFile(&FileName,
-                                     0,
-                                     &CmHive,
-                                     &Allocate,
-                                     0);
-        
-        /* Setup the key name for the SECURITY hive */
-        RtlInitUnicodeString (&KeyName, REG_SYSTEM_KEY_NAME);
-        
-        Status = CmpLinkHiveToMaster(&KeyName,
-                                     NULL,
-                                     CmHive,
-                                     FALSE,
-                                     NULL);
-
-        Status = CmiInitControlSetLink ();
-#endif
     }
 
     /* Connect the DEFAULT hive */
