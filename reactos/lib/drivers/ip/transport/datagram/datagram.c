@@ -10,6 +10,36 @@
 
 #include "precomp.h"
 
+VOID DGRemoveIRP(
+    PADDRESS_FILE AddrFile,
+    PIRP Irp)
+{
+    PLIST_ENTRY ListEntry;
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+
+    TI_DbgPrint(MAX_TRACE, ("Called (Cancel IRP %08x for file %08x).\n",
+                            Irp, AddrFile));
+
+    for( ListEntry = AddrFile->ReceiveQueue.Flink; 
+         ListEntry != &AddrFile->ReceiveQueue;
+         ListEntry = ListEntry->Flink )
+    {
+        ReceiveRequest = CONTAINING_RECORD
+            (ListEntry, DATAGRAM_RECEIVE_REQUEST, ListEntry);
+
+        TI_DbgPrint(MAX_TRACE, ("Request: %08x?\n", ReceiveRequest));
+
+        if (ReceiveRequest->Irp == Irp)
+        {
+            RemoveEntryList(&ReceiveRequest->ListEntry);
+            exFreePool(ReceiveRequest);
+            break;
+        }
+    }
+
+    TI_DbgPrint(MAX_TRACE, ("Done.\n"));
+}
+
 VOID DGDeliverData(
   PADDRESS_FILE AddrFile,
   PIP_ADDRESS SrcAddress,
@@ -153,3 +183,110 @@ VOID DGDeliverData(
   TI_DbgPrint(MAX_TRACE, ("Leaving.\n"));
 }
 
+
+VOID DGReceiveComplete(PVOID Context, NTSTATUS Status, ULONG Count) {
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest =
+	(PDATAGRAM_RECEIVE_REQUEST)Context;
+    TI_DbgPrint(MAX_TRACE,("Called (%08x:%08x)\n", Status, Count));
+    ReceiveRequest->UserComplete( ReceiveRequest->UserContext, Status, Count );
+    exFreePool( ReceiveRequest );
+    TI_DbgPrint(MAX_TRACE,("Done\n"));
+}
+
+NTSTATUS DGReceiveDatagram(
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR BufferData,
+    ULONG ReceiveLength,
+    ULONG ReceiveFlags,
+    PTDI_CONNECTION_INFORMATION ReturnInfo,
+    PULONG BytesReceived,
+    PDATAGRAM_COMPLETION_ROUTINE Complete,
+    PVOID Context,
+    PIRP Irp)
+/*
+ * FUNCTION: Attempts to receive an DG datagram from a remote address
+ * ARGUMENTS:
+ *     Request       = Pointer to TDI request
+ *     ConnInfo      = Pointer to connection information
+ *     Buffer        = Pointer to NDIS buffer chain to store received data
+ *     ReceiveLength = Maximum size to use of buffer, 0 if all can be used
+ *     ReceiveFlags  = Receive flags (None, Normal, Peek)
+ *     ReturnInfo    = Pointer to structure for return information
+ *     BytesReceive  = Pointer to structure for number of bytes received
+ * RETURNS:
+ *     Status of operation
+ * NOTES:
+ *     This is the high level interface for receiving DG datagrams
+ */
+{
+    KIRQL OldIrql;
+    NTSTATUS Status;
+    PDATAGRAM_RECEIVE_REQUEST ReceiveRequest;
+
+    TI_DbgPrint(MAX_TRACE, ("Called.\n"));
+
+    TcpipAcquireSpinLock(&AddrFile->Lock, &OldIrql);
+
+    if (AF_IS_VALID(AddrFile))
+    {
+	ReceiveRequest = exAllocatePool(NonPagedPool, sizeof(DATAGRAM_RECEIVE_REQUEST));
+	if (ReceiveRequest)
+        {
+	    /* Initialize a receive request */
+
+	    /* Extract the remote address filter from the request (if any) */
+	    if ((ConnInfo->RemoteAddressLength != 0) &&
+		(ConnInfo->RemoteAddress))
+            {
+		Status = AddrGetAddress(ConnInfo->RemoteAddress,
+					&ReceiveRequest->RemoteAddress,
+					&ReceiveRequest->RemotePort);
+		if (!NT_SUCCESS(Status))
+                {
+		    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+		    exFreePool(ReceiveRequest);
+		    return Status;
+                }
+            }
+	    else
+            {
+		ReceiveRequest->RemotePort    = 0;
+            }
+	    ReceiveRequest->ReturnInfo = ReturnInfo;
+	    ReceiveRequest->Buffer = BufferData;
+	    ReceiveRequest->BufferSize = ReceiveLength;
+	    ReceiveRequest->UserComplete = Complete;
+	    ReceiveRequest->UserContext = Context;
+	    ReceiveRequest->Complete =
+		(PDATAGRAM_COMPLETION_ROUTINE)DGReceiveComplete;
+	    ReceiveRequest->Context = ReceiveRequest;
+            ReceiveRequest->AddressFile = AddrFile;
+            ReceiveRequest->Irp = Irp;
+
+	    /* Queue receive request */
+	    InsertTailList(&AddrFile->ReceiveQueue, &ReceiveRequest->ListEntry);
+	    AF_SET_PENDING(AddrFile, AFF_RECEIVE);
+
+	    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
+	    TI_DbgPrint(MAX_TRACE, ("Leaving (pending %08x).\n", ReceiveRequest));
+
+	    return STATUS_PENDING;
+        }
+	else
+        {
+	    Status = STATUS_INSUFFICIENT_RESOURCES;
+        }
+    }
+    else
+    {
+	Status = STATUS_INVALID_ADDRESS;
+    }
+
+    TcpipReleaseSpinLock(&AddrFile->Lock, OldIrql);
+
+    TI_DbgPrint(MAX_TRACE, ("Leaving with errors (0x%X).\n", Status));
+
+    return Status;
+}

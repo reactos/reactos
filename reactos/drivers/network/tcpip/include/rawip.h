@@ -7,8 +7,6 @@
 #ifndef __RAWIP_H
 #define __RAWIP_H
 
-
-
 NTSTATUS RawIPSendDatagram(
     PADDRESS_FILE AddrFile,
     PTDI_CONNECTION_INFORMATION ConnInfo,

@@ -152,50 +152,7 @@ AfdCreateSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 }
 
 VOID DestroySocket( PAFD_FCB FCB ) {
-    UINT i;
-    BOOLEAN ReturnEarly = FALSE;
-    PAFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
-
     AFD_DbgPrint(MIN_TRACE,("Called (%x)\n", FCB));
-
-    if( !SocketAcquireStateLock( FCB ) ) return;
-
-    FCB->State = SOCKET_STATE_CLOSED;
-
-    InFlightRequest[0] = &FCB->ListenIrp;
-    InFlightRequest[1] = &FCB->ReceiveIrp;
-    InFlightRequest[2] = &FCB->SendIrp;
-
-    /* Return early here because we might be called in the mean time. */
-    if( FCB->Critical ||
-	FCB->ListenIrp.InFlightRequest ||
-	FCB->ReceiveIrp.InFlightRequest ||
-	FCB->SendIrp.InFlightRequest ) {
-	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
-				FCB->ListenIrp.InFlightRequest,
-				FCB->ReceiveIrp.InFlightRequest,
-				FCB->SendIrp.InFlightRequest));
-        ReturnEarly = TRUE;
-    }
-
-    /* After PoolReeval, this FCB should not be involved in any outstanding
-     * poll requests */
-
-    /* Cancel our pending requests */
-    for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
-	NTSTATUS Status = STATUS_NO_SUCH_FILE;
-	if( InFlightRequest[i]->InFlightRequest ) {
-	    AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
-				    i, InFlightRequest[i]->InFlightRequest));
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Status = Status;
-	    InFlightRequest[i]->InFlightRequest->IoStatus.Information = 0;
-	    IoCancelIrp( InFlightRequest[i]->InFlightRequest );
-	}
-    }
-
-    SocketStateUnlock( FCB );
-
-    if( ReturnEarly ) return;
 
     if( FCB->Recv.Window )
 	ExFreePool( FCB->Recv.Window );
@@ -218,8 +175,12 @@ static NTSTATUS STDCALL
 AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
 	       PIO_STACK_LOCATION IrpSp)
 {
+    UINT i;
+    AFD_IN_FLIGHT_REQUEST InFlightRequest[IN_FLIGHT_REQUESTS];
     PFILE_OBJECT FileObject = IrpSp->FileObject;
     PAFD_FCB FCB = FileObject->FsContext;
+
+    if (!SocketAcquireStateLock(FCB)) return LostSocket(Irp, FALSE);
 
     AFD_DbgPrint(MID_TRACE,
 		 ("AfdClose(DeviceObject %p Irp %p)\n", DeviceObject, Irp));
@@ -233,15 +194,56 @@ AfdCloseSocket(PDEVICE_OBJECT DeviceObject, PIRP Irp,
     if( FCB->EventSelect ) ObDereferenceObject( FCB->EventSelect );
 
     FileObject->FsContext = NULL;
+
+    FCB->State = SOCKET_STATE_CLOSED;
+    SocketStateUnlock(FCB);
+
+    InFlightRequest[0] = FCB->ListenIrp;
+    InFlightRequest[1] = FCB->ReceiveIrp;
+    InFlightRequest[2] = FCB->SendIrp;
+
+    /* Return early here because we might be called in the mean time. */
+    if( !(FCB->Critical ||
+          FCB->ListenIrp.InFlightRequest ||
+          FCB->ReceiveIrp.InFlightRequest ||
+          FCB->SendIrp.InFlightRequest) ) {
+	AFD_DbgPrint(MIN_TRACE,("Leaving socket alive (%x %x %x)\n",
+				FCB->ListenIrp.InFlightRequest,
+				FCB->ReceiveIrp.InFlightRequest,
+				FCB->SendIrp.InFlightRequest));
+        SocketStateUnlock(FCB);
+        DestroySocket(FCB);
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+    else
+    {
+        /* After PoolReeval, this FCB should not be involved in any outstanding
+         * poll requests */
+        
+        /* Cancel our pending requests */
+        for( i = 0; i < IN_FLIGHT_REQUESTS; i++ ) {
+            NTSTATUS Status = STATUS_NO_SUCH_FILE;
+            if( InFlightRequest[i].InFlightRequest ) {
+                AFD_DbgPrint(MID_TRACE,("Cancelling in flight irp %d (%x)\n",
+                                        i, InFlightRequest[i].InFlightRequest));
+                InFlightRequest[i].InFlightRequest->IoStatus.Status = Status;
+                InFlightRequest[i].InFlightRequest->IoStatus.Information = 0;
+                IoCancelIrp( InFlightRequest[i].InFlightRequest );
+            }
+        }
+
+        FCB->PendingClose = Irp;
+        Irp->IoStatus.Status = STATUS_SUCCESS;
+        Irp->IoStatus.Information = 0;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+    }
+
     DestroySocket( FCB );
-
-    Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = 0;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
     AFD_DbgPrint(MID_TRACE, ("Returning success.\n"));
 
-    return STATUS_SUCCESS;
+    return Irp->IoStatus.Status;
 }
 
 static NTSTATUS STDCALL

@@ -9,6 +9,21 @@
 
 #include <titypes.h>
 
+NTSTATUS DGReceiveDatagram(
+    PADDRESS_FILE AddrFile,
+    PTDI_CONNECTION_INFORMATION ConnInfo,
+    PCHAR Buffer,
+    ULONG ReceiveLength,
+    ULONG ReceiveFlags,
+    PTDI_CONNECTION_INFORMATION ReturnInfo,
+    PULONG BytesReceived,
+    PDATAGRAM_COMPLETION_ROUTINE Complete,
+    PVOID Context,
+    PIRP Irp);
+
+VOID DGRemoveIRP(
+    PADDRESS_FILE AddrFile,
+    PIRP Irp);
 
 VOID DGDeliverData(
   PADDRESS_FILE AddrFile,

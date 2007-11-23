@@ -50,17 +50,6 @@ NTSTATUS UDPSendDatagram(
     ULONG DataSize,
     PULONG DataUsed );
 
-NTSTATUS UDPReceiveDatagram(
-    PADDRESS_FILE AddrFile,
-    PTDI_CONNECTION_INFORMATION ConnInfo,
-    PCHAR Buffer,
-    ULONG ReceiveLength,
-    ULONG ReceiveFlags,
-    PTDI_CONNECTION_INFORMATION ReturnInfo,
-    PULONG BytesReceived,
-    PDATAGRAM_COMPLETION_ROUTINE Complete,
-    PVOID Context);
-
 VOID UDPReceive(
     PIP_INTERFACE Interface,
     PIP_PACKET IPPacket);
