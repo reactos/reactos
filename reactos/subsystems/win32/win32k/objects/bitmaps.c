@@ -662,6 +662,11 @@ BITMAPOBJ_CopyBitmap(HBITMAP  hBitmap)
 		if (resBitmap)
 		{
 			buf = ExAllocatePoolWithTag (PagedPool, bm.bmWidthBytes * abs(bm.bmHeight), TAG_BITMAP);
+			if (buf == NULL)
+			{
+				GDIOBJ_UnlockObjByPtr(GdiHandleTable, resBitmap);
+				return 0;
+			}
 			IntGetBitmapBits (Bitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			IntSetBitmapBits (resBitmap, bm.bmWidthBytes * abs(bm.bmHeight), buf);
 			ExFreePool (buf);
