@@ -455,10 +455,10 @@ typedef struct _CM_PARSE_CONTEXT
     ULONG CreateOptions;
     ULONG Disposition;
     CM_KEY_REFERENCE ChildHive;
-    BOOLEAN CreateLink;
-    BOOLEAN Flag2;
     HANDLE PredefinedHandle;
-    ULONG PostActions;
+    BOOLEAN CreateLink;
+    BOOLEAN CreateOperation;
+    PCMHIVE OriginatingPoint;
 } CM_PARSE_CONTEXT, *PCM_PARSE_CONTEXT;
 
 //
@@ -1016,6 +1016,20 @@ CmpDoCreate(
     IN ULONG CreateOptions,
     IN PCM_KEY_CONTROL_BLOCK ParentKcb,
     IN PCMHIVE OriginatingHive OPTIONAL,
+    OUT PVOID *Object
+);
+
+NTSTATUS
+NTAPI
+CmpCreateLinkNode(
+    IN PHHIVE Hive,
+    IN HCELL_INDEX Cell,
+    IN PACCESS_STATE AccessState,
+    IN UNICODE_STRING Name,
+    IN KPROCESSOR_MODE AccessMode,
+    IN ULONG CreateOptions,
+    IN PCM_PARSE_CONTEXT Context,
+    IN PCM_KEY_CONTROL_BLOCK ParentKcb,
     OUT PVOID *Object
 );
 

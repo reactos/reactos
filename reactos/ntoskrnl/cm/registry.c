@@ -92,6 +92,7 @@ EnlistKeyBodyWithKeyObject(IN PKEY_OBJECT KeyObject,
     /* Insert it into the global list (we don't have KCBs here) */
     InsertTailList(&CmiKeyObjectListHead, &KeyObject->KeyBodyList);
 
+    /* Release hive lock */
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
 }
@@ -105,8 +106,16 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING RemainingPath;
+    PKEY_OBJECT ParentKey;
+    PKEY_OBJECT NewKey;
+    NTSTATUS Status;
+    UNICODE_STRING ObjectName;
+    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
+    CM_PARSE_CONTEXT ParseContext = {0};
+    PAGED_CODE();
 
-    /* Don't do anything if we don't actually have a hive */
+    /* TEMPHACK: Don't do anything if we don't actually have a hive */
     if (Allocate) return STATUS_SUCCESS;
 
     /* Setup the object attributes */
@@ -115,40 +124,24 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                RootDirectory,
                                SecurityDescriptor);
-
-    /* Connect the hive */
-    return CmiConnectHive(&ObjectAttributes, RegistryHive);
-}
-
-NTSTATUS
-CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
-               IN PCMHIVE RegistryHive)
-{
-    UNICODE_STRING RemainingPath;
-    PKEY_OBJECT ParentKey;
-    PKEY_OBJECT NewKey;
-    NTSTATUS Status;
-    PWSTR SubName;
-    UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
-
-    DPRINT("CmiConnectHive(%p, %p) called.\n",
-        KeyObjectAttributes, RegistryHive);
-
+    
+    /* Setup the parse context */
+    ParseContext.CreateLink = TRUE;
+    ParseContext.CreateOperation = TRUE;
+    ParseContext.ChildHive.KeyHive = &RegistryHive->Hive;
+    
+    /* Because of CmCreateRootNode, ReactOS Hack */
+    ParseContext.ChildHive.KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
+    
     /* Capture all the info */
-    DPRINT("Capturing Create Info\n");
-    Status = ObpCaptureObjectAttributes(KeyObjectAttributes,
+    Status = ObpCaptureObjectAttributes(&ObjectAttributes,
                                         KernelMode,
                                         FALSE,
                                         &ObjectCreateInfo,
                                         &ObjectName);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ObpCaptureObjectAttributes() failed (Status %lx)\n", Status);
-        return Status;
-    }
-
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Do the parse */
     Status = CmFindObject(&ObjectCreateInfo,
                           &ObjectName,
                           (PVOID*)&ParentKey,
@@ -156,93 +149,72 @@ CmiConnectHive(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
                           CmpKeyObjectType,
                           NULL,
                           NULL);
-    /* Yields a new reference */
-    ObpReleaseCapturedAttributes(&ObjectCreateInfo);
-
+    
+    /* Let go of captured attributes and name */
+    ObpReleaseCapturedAttributes(&ObjectCreateInfo);   
     if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    if (!NT_SUCCESS(Status))
+    
+    /* Get out of here if we failed */
+    if (!NT_SUCCESS(Status)) return Status;
+    
+    /* Scan for no name */
+    if (!(RemainingPath.Length) || (RemainingPath.Buffer[0] == UNICODE_NULL))
     {
-        return Status;
-    }
-
-    DPRINT ("RemainingPath %wZ\n", &RemainingPath);
-
-    if ((RemainingPath.Buffer == NULL) || (RemainingPath.Buffer[0] == 0))
-    {
-        ObDereferenceObject (ParentKey);
-        RtlFreeUnicodeString(&RemainingPath);
-        return STATUS_OBJECT_NAME_COLLISION;
-    }
-
-    /* Ignore leading backslash */
-    SubName = RemainingPath.Buffer;
-    if (*SubName == L'\\')
-        SubName++;
-
-    /* If RemainingPath contains \ we must return error
-       because CmiConnectHive() can not create trees */
-    if (wcschr (SubName, L'\\') != NULL)
-    {
-        ObDereferenceObject (ParentKey);
-        RtlFreeUnicodeString(&RemainingPath);
+        /* Fail */
+        ObDereferenceObject(ParentKey);
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
-
-    DPRINT("RemainingPath %wZ  ParentKey %p\n",
-        &RemainingPath, ParentKey);
-
-    DPRINT ("SubName %S\n", SubName);
-
-    /* Create the key */
-    Status = CmpDoCreate(ParentKey->KeyControlBlock->KeyHive,
-                         ParentKey->KeyControlBlock->KeyCell,
-                         NULL,
-                         &RemainingPath,
-                         KernelMode,
-                         NULL,
-                         REG_OPTION_VOLATILE,
-                         ParentKey->KeyControlBlock,
-                         NULL,
-                         (PVOID*)&NewKey);
+    
+    /* Scan for leading backslash */
+    while ((RemainingPath.Length) &&
+           (*RemainingPath.Buffer == OBJ_NAME_PATH_SEPARATOR))
+    {
+        /* Ignore it */
+        RemainingPath.Length -= sizeof(WCHAR);
+        RemainingPath.MaximumLength -= sizeof(WCHAR);
+        RemainingPath.Buffer++;
+    }
+    
+    /* Create the link node */
+    Status = CmpCreateLinkNode(ParentKey->KeyControlBlock->KeyHive,
+                               ParentKey->KeyControlBlock->KeyCell,
+                               NULL,
+                               RemainingPath,
+                               KernelMode,
+                               REG_OPTION_VOLATILE,
+                               &ParseContext,
+                               ParentKey->KeyControlBlock,
+                               (PVOID*)&NewKey);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("CmiAddSubKey() failed (Status %lx)\n", Status);
-        ObDereferenceObject (NewKey);
-        ObDereferenceObject (ParentKey);
-        return STATUS_INSUFFICIENT_RESOURCES;
+        /* Failed */
+        DPRINT1("CmpLinkHiveToMaster failed: %lx\n", Status);
+        ObDereferenceObject(ParentKey);
+        return Status;
     }
-
-    NewKey->KeyControlBlock->KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
-    NewKey->KeyControlBlock->KeyHive = &RegistryHive->Hive;
-
-    Status = RtlpCreateUnicodeString(&NewKey->Name,
-        SubName, NonPagedPool);
-    RtlFreeUnicodeString(&RemainingPath);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlpCreateUnicodeString() failed (Status %lx)\n", Status);
-        ObDereferenceObject (NewKey);
-        ObDereferenceObject (ParentKey);
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
+    
     /* Free the create information */
     ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
     OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
-
-    /* FN1 */
-    ObReferenceObject (NewKey);
-
-    CmiAddKeyToList (ParentKey, NewKey);
-    ObDereferenceObject (ParentKey);
-
-    VERIFY_KEY_OBJECT(NewKey);
-
-    /* We're holding a pointer to the parent key ..  We must keep it
-     * referenced */
-    /* Note: Do not dereference NewKey here! */
-
-    return STATUS_SUCCESS;
+    
+    /* Mark the hive as clean */
+    RegistryHive->Hive.DirtyFlag = FALSE;
+    
+    /* Update KCB information */
+    NewKey->KeyControlBlock->KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
+    NewKey->KeyControlBlock->KeyHive = &RegistryHive->Hive;
+    
+    /* Build the key name */
+    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
+                              &RemainingPath,
+                              &NewKey->Name);
+    
+    /* Reference the new key */
+    ObReferenceObject(NewKey);
+    
+    /* Link this key to the parent */
+    CmiAddKeyToList(ParentKey, NewKey);
+    return STATUS_SUCCESS;    
 }
 
 static NTSTATUS

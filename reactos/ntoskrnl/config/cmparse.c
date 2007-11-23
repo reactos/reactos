@@ -444,14 +444,14 @@ CmpDoOpen(IN PHHIVE Hive,
     }
 
     /* If we have a KCB, make sure it's locked */
-    ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
+    //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
 
-    /* Create the KCB */
+    /* Create the KCB. FIXME: Use lock flag */
     Kcb = CmpCreateKeyControlBlock(Hive, Cell, Node, *CachedKcb, 0, KeyName);
     if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Make sure it's also locked, and set the pointer */
-    ASSERT(CmpIsKcbLockedExclusive(Kcb));
+    //ASSERT(CmpIsKcbLockedExclusive(Kcb));
     *CachedKcb = Kcb;
 
     /* Allocate the key object */

@@ -86,26 +86,9 @@ CmUnRegisterCallback(IN LARGE_INTEGER    Cookie);
 VOID
 CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
 		IN PKEY_OBJECT NewKey);
-
-NTSTATUS
-CmiLoadHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
-	    PCUNICODE_STRING FileName,
-	    ULONG Flags);
-
-NTSTATUS
-CmiScanKeyForValue(IN PCMHIVE RegistryHive,
-		   IN PCM_KEY_NODE KeyCell,
-		   IN PUNICODE_STRING ValueName,
-		   OUT PCM_KEY_VALUE *ValueCell,
-		   OUT HCELL_INDEX *VBOffset);
-
 VOID
 NTAPI
 CmpLazyFlush(VOID);
-
-NTSTATUS
-CmiConnectHive(POBJECT_ATTRIBUTES KeyObjectAttributes,
-	       PCMHIVE RegistryHive);
 
 NTSTATUS
 CmiInitHives(BOOLEAN SetupBoot);
