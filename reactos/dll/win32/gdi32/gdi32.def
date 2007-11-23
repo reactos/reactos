@@ -620,5 +620,5 @@ XLATEOBJ_iXlate@8
 XLATEOBJ_piVector@4
 bInitSystemAndFontsDirectoriesW@8
 bMakePathNameW@16
-;cGetTTFFromFOT
+cGetTTFFromFOT@4
 gdiPlaySpoolStream@24

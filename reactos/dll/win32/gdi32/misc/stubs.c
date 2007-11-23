@@ -2488,9 +2488,15 @@ NamedEscape(HDC hdc,
 
 
 
-
-
-
-
-
+/*
+ * @unimplemented
+ */
+DWORD
+STDCALL
+cGetTTFFromFOT(DWORD unknown)
+{
+    UNIMPLEMENTED;
+    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+    return 0;
+}
 
