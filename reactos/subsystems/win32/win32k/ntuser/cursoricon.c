@@ -1400,7 +1400,10 @@ UserDrawIconEx(
       IconSize.cy = bmpMask.bmHeight / 2;
    }
 
-   if (bmpColor.bmBitsPixel == 32)
+   /* NtGdiCreateCompatibleBitmap will create a monochrome bitmap
+      when cxWidth or cyHeight is 0
+   */
+   if ((bmpColor.bmBitsPixel == 32) && (cxWidth != 0) && (cyHeight != 0))
    {
       bAlpha = TRUE;
    }
