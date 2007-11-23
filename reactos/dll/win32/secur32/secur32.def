@@ -40,7 +40,7 @@ GetUserNameExW@12
 ;@InitSecurityInterfaceA
 InitSecurityInterfaceW@0
 InitializeSecurityContextA@48
-;InitializeSecurityContextW@48
+InitializeSecurityContextW@48
 LsaEnumerateLogonSessions@8
 LsaGetLogonSessionData@8
 LsaRegisterPolicyChangeNotification@8

@@ -156,6 +156,26 @@ AcquireCredentialsHandleW (
 	return ERROR_CALL_NOT_IMPLEMENTED;
 }
 
+SECURITY_STATUS
+WINAPI
+InitializeSecurityContextW (
+    PCredHandle phCred,
+    PCtxtHandle phContext,
+    SEC_WCHAR* pszTarget,
+    ULONG fContextReq,
+    ULONG Reserved,
+    ULONG TargetData,
+    PSecBufferDesc pInput,
+    ULONG Reserved2,
+    PCtxtHandle phNewContext,
+    PSecBufferDesc pOut,
+    PULONG pfContextAttributes,
+    PTimeStamp pExpires
+    )
+{
+	DPRINT1("%s() not implemented!\n", __FUNCTION__);
+	return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 SECURITY_STATUS
 WINAPI
