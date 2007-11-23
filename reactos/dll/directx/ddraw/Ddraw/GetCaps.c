@@ -2,7 +2,7 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 ddraw/ddraw/ddraw_main.c
+ * FILE:                 ddraw/ddraw/GetCaps.c
  * PURPOSE:              IDirectDraw7 Implementation
  * PROGRAMMER:           Magnus Olsen
  *
@@ -139,6 +139,8 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                     myCaps->ddsCaps.dwCaps4 = 0;
                     myCaps->dwSize = sizeof(DDCAPS_DX7);
 
+                    retVal = DD_OK;
+
                 }
                 break;
 
@@ -246,6 +248,8 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
                     myCaps->ddsCaps.dwCaps3 = 0;
                     myCaps->ddsCaps.dwCaps4 = 0;
                     myCaps->dwSize = sizeof(DDCAPS_DX7);
+
+                    retVal = DD_OK;
 
                 }
                 break;
