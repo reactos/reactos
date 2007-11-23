@@ -836,7 +836,7 @@ KeInitThread(IN OUT PKTHREAD Thread,
         if (AllocatedStack)
         {
             /* Delete the stack */
-            MmDeleteKernelStack(Thread->StackBase, FALSE);
+            MmDeleteKernelStack((PVOID)Thread->StackLimit, FALSE);
             Thread->InitialStack = NULL;
         }
     }
@@ -878,7 +878,7 @@ NTAPI
 KeUninitThread(IN PKTHREAD Thread)
 {
     /* Delete the stack */
-    MmDeleteKernelStack(Thread->StackBase, FALSE);
+    MmDeleteKernelStack((PVOID)Thread->StackLimit, FALSE);
     Thread->InitialStack = NULL;
 }
 
