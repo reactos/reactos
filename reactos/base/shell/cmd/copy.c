@@ -173,16 +173,6 @@ copy (TCHAR source[MAX_PATH],
 	}
 	else if (!append)
 	{
-		if (!_tcscmp (dest, source))
-		{
-			LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
-			ConOutPrintf(szMsg, source);
-
-			CloseHandle (hFileSrc);
-            nErrorLevel = 1;
-			return 0;
-		}
-
 #ifdef _DEBUG
 		DebugPrintf (_T("SetFileAttributes (%s, FILE_ATTRIBUTE_NORMAL);\n"), dest);
 #endif
@@ -830,7 +820,13 @@ INT cmd_copy (LPTSTR cmd, LPTSTR param)
 
 			/* Check to see if the file is the same file */
 			if(!bTouch && !_tcscmp (tmpSrcPath, tmpDestPath))
-				continue;
+            {
+			    LoadString(CMD_ModuleHandle, STRING_COPY_ERROR2, szMsg, RC_STRING_MAX_SIZE);
+			    ConOutPrintf(szMsg);
+
+                nErrorLevel = 1;
+                break;
+            }
 
 			/* Handle any overriding / prompting that needs to be done */
 			if(((!(dwFlags & COPY_NO_PROMPT) && IsExistingFile (tmpDestPath)) || dwFlags & COPY_PROMPT) && !bTouch)
