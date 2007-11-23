@@ -826,7 +826,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
     }
 
     /* Add registry path */
-    wcscat(ConfigPath, L"\\System32\\Config");
+    wcscat(ConfigPath, L"\\System32\\Config\\");
 
     /* Done */
     return STATUS_SUCCESS;
@@ -888,13 +888,11 @@ CmpLoadHiveThread(IN PVOID StartContext)
     RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
     if (!CmpMachineHiveList[i].CmHive)
     {
-        /* We need to allocate a ne whive structure */
+        /* We need to allocate a new hive structure */
         CmpMachineHiveList[i].Allocate = TRUE;
         
         /* Load the hive file */
         DPRINT1("[HiveLoad]: Load from file %wZ\n", &FileName);
-        CmpMachineHiveList[i].CmHive2 = (PVOID)0xBAADBEEF;
-        goto Later;
         Status = CmpInitHiveFromFile(&FileName,
                                      CmpMachineHiveList[i].HHiveFlags,
                                      &CmHive,
@@ -918,13 +916,12 @@ CmpLoadHiveThread(IN PVOID StartContext)
     }
     else
     {
+        if (ExpInTextModeSetup) {
         /* We already have a hive, is it volatile? */
         CmHive = CmpMachineHiveList[i].CmHive;
         if (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE))
         {
             DPRINT1("[HiveLoad]: Open from file %wZ\n", &FileName);
-            CmpMachineHiveList[i].CmHive2 = CmHive;
-            goto Later;
             
             /* It's now, open the hive file and log */
             Status = CmpOpenHiveFiles(&FileName,
@@ -957,7 +954,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
             CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
             
             /* Allow lazy flushing since the handles are there -- remove sync hacks */
-            ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
+            //ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
             CmHive->Hive.HiveFlags &= ~HIVE_NOLAZYFLUSH;
             
             /* Get the real size of the hive */
@@ -979,17 +976,15 @@ CmpLoadHiveThread(IN PVOID StartContext)
             /* Finally, set our allocated hive to the same hive we've had */
             CmpMachineHiveList[i].CmHive2 = CmHive;
             ASSERT(CmpMachineHiveList[i].CmHive == CmpMachineHiveList[i].CmHive2);
-        }
+        }}
     }
     
     /* We're done */
-Later:
     CmpMachineHiveList[i].ThreadFinished = TRUE;
     
     /* Check if we're the last worker */
     WorkerCount = InterlockedIncrement(&CmpLoadWorkerIncrement);
     if (WorkerCount == CM_NUMBER_OF_MACHINE_HIVES)
-    
     {
         /* Signal the event */
         KeSetEvent(&CmpLoadWorkerEvent, 0, FALSE);
@@ -1003,7 +998,7 @@ VOID
 NTAPI
 CmpInitializeHiveList(IN USHORT Flag)
 {
-    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH];
+    WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
     HANDLE Thread;
     NTSTATUS Status;
@@ -1019,7 +1014,8 @@ CmpInitializeHiveList(IN USHORT Flag)
     RtlInitEmptyUnicodeString(&RegName, RegBuffer, MAX_PATH);
     
     /* Now build the system root path */
-    RtlInitUnicodeString(&TempName, L"\\SystemRoot\\System32\\Config\\");
+    CmpGetRegistryPath(ConfigPath);
+    RtlInitUnicodeString(&TempName, ConfigPath);
     RtlAppendStringToString((PSTRING)&FileName, (PSTRING)&TempName);
     FileStart = FileName.Length;
     
@@ -1105,11 +1101,10 @@ CmpInitializeHiveList(IN USHORT Flag)
             
             /* Now link the hive to its master */
             DPRINT1("[HiveLoad]: Link %wZ\n", &RegName);
-#if 0
             Status = CmpLinkHiveToMaster(&RegName,
                                          NULL,
                                          CmpMachineHiveList[i].CmHive2,
-                                         CmpMachineHiveList[i].Allocate,
+                                         FALSE, //CmpMachineHiveList[i].Allocate,
                                          SecurityDescriptor);
             if (Status != STATUS_SUCCESS)
             {
@@ -1121,9 +1116,8 @@ CmpInitializeHiveList(IN USHORT Flag)
 			if (CmpMachineHiveList[i].Allocate)
             {
                 /* Sync the new hive */
-				HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
-			}
-#endif      
+				//HvSyncHive((PHHIVE)(CmpMachineHiveList[i].CmHive2));
+			}   
         }
         
         /* Check if we created a new hive */
@@ -1310,19 +1304,27 @@ CmInitSystem1(VOID)
         /* Bugcheck */
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 11, Status, 0);
     }
+    
+    /* Add the hive to the hive list */
+    CmpMachineHiveList[0].CmHive = (PCMHIVE)HardwareHive;
 
     /* Attach it to the machine key */
     RtlInitUnicodeString(&KeyName, REG_HARDWARE_KEY_NAME);
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
                                  (PCMHIVE)HardwareHive,
-                                 FALSE,
+                                 FALSE, // TRUE
                                  SecurityDescriptor);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 12, Status, 0);
     }
+    
+    /* FIXME: Add to HiveList key */
+    
+    /* Free the security descriptor */
+    ExFreePool(SecurityDescriptor);
 
     /* Fill out the Hardware key with the ARC Data from the Loader */
     Status = CmpInitializeHardwareConfiguration(KeLoaderBlock);

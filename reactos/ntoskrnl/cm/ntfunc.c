@@ -582,8 +582,6 @@ NTSTATUS
 NTAPI
 NtInitializeRegistry (IN USHORT Flag)
 {
-    NTSTATUS Status;
-    
     PAGED_CODE();
     
     if (CmiRegistryInitialized == TRUE)
@@ -591,13 +589,11 @@ NtInitializeRegistry (IN USHORT Flag)
     
     /* Save boot log file */
     IopSaveBootLogToFile();
-    
-    Status = CmiInitHives (Flag);
-    
+        
     CmpCmdInit(Flag);
     CmiRegistryInitialized = TRUE;
     
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
