@@ -266,13 +266,13 @@ unsigned short _ctype[] = {
 	0			/* 0xff */
 };
 
-unsigned short *_pctype = _ctype + 1;
-unsigned short *_pwctype = _ctype + 1;
+const unsigned short *_pctype = _ctype + 1;
+const unsigned short *_pwctype = _ctype + 1;
 
 /*
  * @implemented
  */
-unsigned short **__p__pctype(void)
+const unsigned short **__p__pctype(void)
 {
    return &_pctype;
 }
@@ -280,7 +280,7 @@ unsigned short **__p__pctype(void)
 /*
  * @implemented
  */
-unsigned short **__p__pwctype(void)
+const unsigned short **__p__pwctype(void)
 {
    return &_pwctype;
 }

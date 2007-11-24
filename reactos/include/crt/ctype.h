@@ -112,9 +112,9 @@ _CRTIMP int __cdecl __MINGW_NOTHROW _toupper(int);
   __MINGW_IMPORT unsigned short _ctype[];
 # endif
 # ifdef __MSVCRT__
-  __MINGW_IMPORT unsigned short* _pctype;
+  __MINGW_IMPORT const unsigned short* _pctype;
 # else /* CRTDLL */
-  __MINGW_IMPORT unsigned short* _pctype_dll;
+  __MINGW_IMPORT const unsigned short* _pctype_dll;
 # define  _pctype _pctype_dll
 # endif 
 
