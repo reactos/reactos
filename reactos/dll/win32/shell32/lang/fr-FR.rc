@@ -328,16 +328,16 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Proprétés de la corbeille"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	GROUPBOX "Paramètres pour la localisation sélectionnée", -1, 10, 72, 220, 70
+	RADIOBUTTON "Taille personnalisée :", 14001, 20, 90, 80, 10, WS_TABSTOP
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	LTEXT "T&aille maximale (MO) :", -1, 20, 105, 70, 10
+	RADIOBUTTON "Ne pas déplacer les fichie&rs vers la Corbeille. Effacer les fichiers immédiatement lors de la suppression.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "Afficher une fenêtre de confirmation d'effacement", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 STRINGTABLE DISCARDABLE
@@ -428,11 +428,11 @@ BEGIN
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Disque réseau"
 
-	IDS_OPEN_WITH               "Open With"
-	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
+	IDS_OPEN_WITH               "Ouvrir avec"
+	IDS_OPEN_WITH_CHOOSE        "Choisir le programme..."
 
-	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
-	IDS_SHELL_ABOUT_BACK        "< &Back"
+	IDS_SHELL_ABOUT_AUTHORS     "&Auteurs"
+	IDS_SHELL_ABOUT_BACK        "< Précédent"
 	FCIDM_SHVIEW_NEW 	    "Nouveau"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Nouveau d&ossier"
 	FCIDM_SHVIEW_NEWLINK 	    "Nouveau &lien"
