@@ -139,6 +139,17 @@ static BOOL COMBO_Init()
   return FALSE;
 }
 
+
+/* Retrieve the UI state for the control */
+static BOOL COMBO_update_uistate(LPHEADCOMBO lphc)
+{
+    LONG prev_flags;
+
+    prev_flags = lphc->UIState;
+    lphc->UIState = DefWindowProcW(lphc->self, WM_QUERYUISTATE, 0, 0);
+    return prev_flags != lphc->UIState;
+}
+
 /***********************************************************************
  *           COMBO_NCCreate
  */
@@ -150,6 +161,8 @@ static LRESULT COMBO_NCCreate(HWND hwnd, LONG style)
     {
         lphc->self = hwnd;
         SetWindowLongPtrW( hwnd, 0, (LONG_PTR)lphc );
+
+        COMBO_update_uistate(lphc);
 
        /* some braindead apps do try to use scrollbar/border flags */
 
@@ -817,7 +830,8 @@ static void CBPaintText(
 		    &rectEdit,
 		    pText ? pText : empty_stringW , size, NULL );
 
-       if(lphc->wState & CBF_FOCUSED && !(lphc->wState & CBF_DROPPED))
+       if(lphc->wState & CBF_FOCUSED && !(lphc->wState & CBF_DROPPED) &&
+          !(lphc->UIState & UISF_HIDEFOCUS))
 	 DrawFocusRect( hdc, &rectEdit );
      }
 
@@ -2337,6 +2351,21 @@ static LRESULT ComboWndProc_common( HWND hwnd, UINT message,
                 if( lphc->wState & CBF_EDIT )
                    return SendMessageW(lphc->hWndEdit, EM_LIMITTEXT, wParam, lParam);
                 break;
+
+    case WM_UPDATEUISTATE:
+        if (unicode)
+            DefWindowProcW(lphc->self, message, wParam, lParam);
+        else
+            DefWindowProcA(lphc->self, message, wParam, lParam);
+
+        if (COMBO_update_uistate(lphc))
+        {
+           /* redraw text */
+           if( !(lphc->wState & CBF_EDIT) )
+                NtUserInvalidateRect(lphc->self, &lphc->textRect, TRUE);
+        }
+        break;
+
 	default:
 		if (message >= WM_USER)
 		    WARN("unknown msg WM_USER+%04x wp=%04x lp=%08lx\n",

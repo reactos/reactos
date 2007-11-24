@@ -63,7 +63,8 @@ static COLORREF color_3dshadow, color_3ddkshadow, color_3dhighlight;
 /* offsets for GetWindowLong for static private information */
 #define HFONT_GWL_OFFSET    0
 #define HICON_GWL_OFFSET    (sizeof(HFONT))
-#define STATIC_EXTRA_BYTES  (HICON_GWL_OFFSET + sizeof(HICON))
+#define UISTATE_GWL_OFFSET (HICON_GWL_OFFSET+sizeof(HICON))
+#define STATIC_EXTRA_BYTES  (UISTATE_GWL_OFFSET + sizeof(LONG))
 
 typedef void (*pfPaint)( HWND hwnd, HDC hdc, DWORD style );
 
@@ -115,6 +116,16 @@ const struct builtin_class_descr STATIC_builtin_class =
 #endif
 };
 
+static __inline void set_ui_state( HWND hwnd, LONG flags )
+{
+    SetWindowLongW( hwnd, UISTATE_GWL_OFFSET, flags );
+}
+
+static __inline LONG get_ui_state( HWND hwnd )
+{
+    return GetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET );
+}
+
 static void setup_clipping(HWND hwnd, HDC hdc, HRGN *orig)
 {
     RECT rc;
@@ -141,6 +152,27 @@ static void restore_clipping(HDC hdc, HRGN hrgn)
     SelectClipRgn(hdc, hrgn);
     if (hrgn != NULL)
         DeleteObject(hrgn);
+}
+
+/* Retrieve the UI state for the control */
+static BOOL STATIC_update_uistate(HWND hwnd, BOOL unicode)
+{
+    LONG flags, prevflags;
+
+    if (unicode)
+        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
+    else
+        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
+
+    prevflags = get_ui_state(hwnd);
+
+    if (prevflags != flags)
+    {
+        set_ui_state(hwnd, flags);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /***********************************************************************
@@ -424,6 +456,7 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
             ERR("Unknown style 0x%02lx\n", style );
             return -1;
         }
+        STATIC_update_uistate(hwnd, unicode);
         STATIC_InitColours();
         break;
 
@@ -613,6 +646,18 @@ static LRESULT StaticWndProc_common( HWND hwnd, UINT uMsg, WPARAM wParam,
         STATIC_TryPaintFcn( hwnd, full_style );
         break;
 
+    case WM_UPDATEUISTATE:
+        if (unicode)
+            DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        else
+            DefWindowProcA(hwnd, uMsg, wParam, lParam);
+
+        if (STATIC_update_uistate(hwnd, unicode) && hasTextStyle( full_style ))
+        {
+            RedrawWindow( hwnd, NULL, 0, RDW_INVALIDATE | RDW_ERASE | RDW_UPDATENOW | RDW_ALLCHILDREN );
+        }
+        break;
+
     default:
         return unicode ? DefWindowProcW(hwnd, uMsg, wParam, lParam) :
                          DefWindowProcA(hwnd, uMsg, wParam, lParam);
@@ -666,7 +711,7 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
     RECT rc;
     HBRUSH hBrush;
     HFONT hFont, hOldFont = NULL;
-    WORD wFormat;
+    DWORD wFormat;
     INT len, buf_size;
     WCHAR *text;
 
@@ -700,6 +745,8 @@ static void STATIC_PaintTextfn( HWND hwnd, HDC hdc, DWORD style )
 
     if (style & SS_NOPREFIX)
         wFormat |= DT_NOPREFIX;
+    else if (get_ui_state(hwnd) & UISF_HIDEACCEL)
+        wFormat |= DT_HIDEPREFIX;
 
     if ((style & SS_TYPEMASK) != SS_SIMPLE)
     {

@@ -103,6 +103,7 @@ typedef struct
    INT            fixedOwnerDrawHeight;
    INT            droppedWidth;   /* last two are not used unless set */
    INT            editHeight;     /* explicitly */
+   LONG           UIState;
 } HEADCOMBO,*LPHEADCOMBO;
 
 /* Note, that CBS_DROPDOWNLIST style is actually (CBS_SIMPLE | CBS_DROPDOWN) */

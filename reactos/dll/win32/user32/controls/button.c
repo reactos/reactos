@@ -72,7 +72,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(button);
 #define STATE_GWL_OFFSET  0
 #define HFONT_GWL_OFFSET  (sizeof(LONG))
 #define HIMAGE_GWL_OFFSET (HFONT_GWL_OFFSET+sizeof(HFONT))
-#define NB_EXTRA_BYTES    (HIMAGE_GWL_OFFSET+sizeof(HANDLE))
+#define UISTATE_GWL_OFFSET (HIMAGE_GWL_OFFSET+sizeof(HFONT))
+#define NB_EXTRA_BYTES    (UISTATE_GWL_OFFSET+sizeof(LONG))
 
   /* Button state values */
 #define BUTTON_UNCHECKED       0x00
@@ -179,6 +180,16 @@ __inline static void set_button_state( HWND hwnd, LONG state )
     SetWindowLongW( hwnd, STATE_GWL_OFFSET, state );
 }
 
+static __inline void set_ui_state( HWND hwnd, LONG flags )
+{
+    SetWindowLongW( hwnd, UISTATE_GWL_OFFSET, flags );
+}
+
+static __inline LONG get_ui_state( HWND hwnd )
+{
+    return GetWindowLongPtrW( hwnd, UISTATE_GWL_OFFSET );
+}
+
 __inline static HFONT get_button_font( HWND hwnd )
 {
     return (HFONT)GetWindowLongPtrW( hwnd, HFONT_GWL_OFFSET );
@@ -212,6 +223,27 @@ __inline static WCHAR *get_button_text( HWND hwnd )
     WCHAR *buffer = HeapAlloc( GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR) );
     if (buffer) InternalGetWindowText( hwnd, buffer, len + 1 );
     return buffer;
+}
+
+/* Retrieve the UI state for the control */
+static BOOL button_update_uistate(HWND hwnd, BOOL unicode)
+{
+    LONG flags, prevflags;
+
+    if (unicode)
+        flags = DefWindowProcW(hwnd, WM_QUERYUISTATE, 0, 0);
+    else
+        flags = DefWindowProcA(hwnd, WM_QUERYUISTATE, 0, 0);
+
+    prevflags = get_ui_state(hwnd);
+
+    if (prevflags != flags)
+    {
+        set_ui_state(hwnd, flags);
+        return TRUE;
+    }
+
+    return FALSE;
 }
 
 /***********************************************************************
@@ -260,6 +292,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         if (btn_type >= MAX_BTN_TYPE)
             return -1; /* abort */
         set_button_state( hWnd, BUTTON_UNCHECKED );
+        button_update_uistate( hWnd, unicode );
         return 0;
 
     case WM_ERASEBKGND:
@@ -530,6 +563,16 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
         paint_button( hWnd, btn_type, ODA_SELECT );
         break;
 
+    case WM_UPDATEUISTATE:
+        if (unicode)
+            DefWindowProcW(hWnd, uMsg, wParam, lParam);
+        else
+            DefWindowProcA(hWnd, uMsg, wParam, lParam);
+
+        if (button_update_uistate(hWnd, unicode))
+            paint_button( hWnd, btn_type, ODA_DRAWENTIRE );
+        break;
+
     case WM_NCHITTEST:
         if(btn_type == BS_GROUPBOX) return HTTRANSPARENT;
         /* fall through */
@@ -539,6 +582,7 @@ static LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     }
     return 0;
 }
+
 
 /***********************************************************************
  *           ButtonWndProcW
@@ -643,6 +687,9 @@ static UINT BUTTON_CalcLabelRect(HWND hwnd, HDC hdc, RECT *rc)
           }
           DrawTextW(hdc, text, -1, &r, dtStyle | DT_CALCRECT);
           HeapFree( GetProcessHeap(), 0, text );
+
+          if (get_ui_state( hwnd ) & UISF_HIDEACCEL)
+              dtStyle |= DT_HIDEPREFIX;
           break;
 
       case BS_ICON:
@@ -760,6 +807,9 @@ static void BUTTON_DrawLabel(HWND hwnd, HDC hdc, UINT dtFlags, RECT *rc)
          if (!(text = get_button_text( hwnd ))) return;
          lp = (LPARAM)text;
          wp = (WPARAM)dtFlags;
+
+         if (dtFlags & DT_HIDEPREFIX)
+             flags |= DSS_HIDEPREFIX;
          break;
 
       case BS_ICON:
@@ -858,9 +908,12 @@ static void PB_Paint( HWND hwnd, HDC hDC, UINT action )
 
     if (state & BUTTON_HASFOCUS)
     {
-        InflateRect( &focus_rect, -1, -1 );
-        IntersectRect(&focus_rect, &focus_rect, &rc);
-        DrawFocusRect( hDC, &focus_rect );
+        if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
+        {
+            InflateRect( &focus_rect, -1, -1 );
+            IntersectRect(&focus_rect, &focus_rect, &rc);
+            DrawFocusRect( hDC, &focus_rect );
+        }
     }
 
  cleanup:
@@ -990,10 +1043,13 @@ static void CB_Paint( HWND hwnd, HDC hDC, UINT action )
     if ((action == ODA_FOCUS) ||
         ((action == ODA_DRAWENTIRE) && (state & BUTTON_HASFOCUS)))
     {
-	rtext.left--;
-	rtext.right++;
-	IntersectRect(&rtext, &rtext, &client);
-	DrawFocusRect( hDC, &rtext );
+        if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
+        {
+            rtext.left--;
+            rtext.right++;
+            IntersectRect(&rtext, &rtext, &client);
+            DrawFocusRect( hDC, &rtext );
+        }
     }
 }
 
@@ -1099,7 +1155,10 @@ static void UB_Paint( HWND hwnd, HDC hDC, UINT action )
     FillRect( hDC, &rc, hBrush );
     if ((action == ODA_FOCUS) ||
         ((action == ODA_DRAWENTIRE) && (state & BUTTON_HASFOCUS)))
-        DrawFocusRect( hDC, &rc );
+    {
+        if (!(get_ui_state(hwnd) & UISF_HIDEFOCUS))
+            DrawFocusRect( hDC, &rc );
+    }
 }
 
 

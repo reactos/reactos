@@ -106,6 +106,7 @@ typedef struct
     HFONT       font;           /* Current font */
     LCID          locale;         /* Current locale for string comparisons */
     LPHEADCOMBO   lphc;		  /* ComboLBox */
+    LONG        UIState;
 } LB_DESCR;
 
 
@@ -603,7 +604,10 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc,
 	if (!item)
 	{
 	    if (action == ODA_FOCUS)
-		DrawFocusRect( hdc, rect );
+        {
+            if (!(descr->UIState & UISF_HIDEFOCUS))
+                DrawFocusRect( hdc, rect );
+        }
 	    else
 	        FIXME("called with an out of bounds index %d(%d) in owner draw, Not good.\n",index,descr->nb_items);
 	    return;
@@ -643,7 +647,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc,
 
         if (action == ODA_FOCUS)
         {
-            DrawFocusRect( hdc, rect );
+            if (!(descr->UIState & UISF_HIDEFOCUS))
+                DrawFocusRect( hdc, rect );
             return;
         }
         if (item && item->selected)
@@ -678,7 +683,8 @@ static void LISTBOX_PaintItem( LB_DESCR *descr, HDC hdc,
         }
         if (!ignoreFocus && (descr->focus_item == index) &&
             (descr->caret_on) &&
-            (descr->in_focus)) DrawFocusRect( hdc, rect );
+            (descr->in_focus) &&
+            !(descr->UIState & UISF_HIDEFOCUS)) DrawFocusRect( hdc, rect );
     }
 }
 
@@ -2545,6 +2551,16 @@ static LRESULT LISTBOX_HandleChar( LB_DESCR *descr, WCHAR charW )
     return 0;
 }
 
+/* Retrieve the UI state for the control */
+static BOOL LISTBOX_update_uistate(LB_DESCR *descr)
+{
+    LONG prev_flags;
+
+    prev_flags = descr->UIState;
+    descr->UIState = DefWindowProcW(descr->self, WM_QUERYUISTATE, 0, 0);
+    return prev_flags != descr->UIState;
+}
+
 
 /***********************************************************************
  *           LISTBOX_Create
@@ -2604,6 +2620,8 @@ static BOOL LISTBOX_Create( HWND hwnd, LPHEADCOMBO lphc )
     }
 
     SetWindowLongPtrW( descr->self, 0, (LONG_PTR)descr );
+
+    LISTBOX_update_uistate(descr);
 
 /*    if (wnd->dwExStyle & WS_EX_NOPARENTNOTIFY) descr->style &= ~LBS_NOTIFY;
  */
@@ -3404,6 +3422,20 @@ static LRESULT WINAPI ListBoxWndProc_common( HWND hwnd, UINT msg,
     case WM_NCACTIVATE:
         if (lphc) return 0;
 	break;
+
+    case WM_UPDATEUISTATE:
+        if (unicode)
+            DefWindowProcW(descr->self, msg, wParam, lParam);
+        else
+            DefWindowProcA(descr->self, msg, wParam, lParam);
+
+        if (LISTBOX_update_uistate(descr))
+        {
+           /* redraw text */
+           if (descr->focus_item != -1)
+               LISTBOX_DrawFocusRect( descr, descr->in_focus );
+        }
+        break;
 
     default:
         if ((msg >= WM_USER) && (msg < 0xc000))
