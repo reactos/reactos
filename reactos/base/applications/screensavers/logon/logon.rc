@@ -13,6 +13,7 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 IDB_WORKSTATION BITMAP DISCARDABLE	"res/0.bmp"
 IDB_SERVER 	BITMAP DISCARDABLE	"res/1.bmp"
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"

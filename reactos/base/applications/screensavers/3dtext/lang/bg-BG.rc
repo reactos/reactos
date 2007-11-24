@@ -1,0 +1,19 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_CONFIG DIALOGEX 0, 0, 273, 178
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Настройки на екранния предпазител ""Тримерен текст""."
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "Добре",IDOK,216,7,50,14
+    PUSHBUTTON      "Отказ",IDCANCEL,216,24,50,14
+    EDITTEXT        IDC_MESSAGE_TEXT,18,28,122,14,ES_AUTOHSCROLL
+    LTEXT           "Собствен текст",IDC_STATIC_TEXT,18,17,65,8
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Екранен предпазител ""Тримерен текст""."
+    IDS_TITLE       "За"
+    IDS_TEXT        "Няма нужда от настройки."
+END

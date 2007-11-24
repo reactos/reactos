@@ -11,6 +11,7 @@ IDI_WARNINGICON         ICON  "res/warning.ico"
 IDI_INFORMATIONICON     ICON  "res/info.ico"
 IDI_ERRORICON           ICON  "res/error.ico"
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/es-ES.rc"

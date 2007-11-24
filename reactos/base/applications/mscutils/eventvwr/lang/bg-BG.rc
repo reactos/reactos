@@ -1,0 +1,90 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDC_EVENTVWR MENU 
+BEGIN
+    POPUP "&Дневник"
+    BEGIN
+        MENUITEM "&Приложение",                ID_LOG_APPLICATION, CHECKED
+        MENUITEM "&Сигурност",                   ID_LOG_SECURITY
+        MENUITEM "&Уредба",                     ID_LOG_SYSTEM
+        MENUITEM SEPARATOR
+        MENUITEM "Из&ход",                       IDM_EXIT
+    END
+    POPUP "Из&глед"
+    BEGIN
+        MENUITEM "О&пресняване",                    IDM_REFRESH
+    END
+    MENUITEM "На&стройки",                        ID_OPTIONS
+    POPUP "Помо&щ"
+    BEGIN
+        MENUITEM "Помо&щ",                       IDM_HELP
+        MENUITEM SEPARATOR
+        MENUITEM "&За...",                   IDM_ABOUT
+    END
+END
+
+IDC_EVENTVWR ACCELERATORS 
+BEGIN
+    "?",            IDM_ABOUT,              ASCII,  ALT
+    "/",            IDM_ABOUT,              ASCII,  ALT
+END
+
+IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
+CAPTION "За"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
+    LTEXT           "Преглед на събития, в 1,0 за РеактОС",IDC_STATIC,49,10,150,8,SS_NOPREFIX
+    LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
+    DEFPUSHBUTTON   "Добре",IDOK,90,48,42,16,WS_GROUP
+END
+
+IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER 
+CAPTION "Почакайте..."
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT           "Зареждане на събитията. Почакайте...",IDC_STATIC,49,15,119,8,SS_NOPREFIX
+END
+
+
+IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+EXSTYLE WS_EX_CONTEXTHELP
+CAPTION "Подробно за събитието"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Затваряне",IDOK,12,258,50,14
+    PUSHBUTTON      "На&зад",IDPREVIOUS,78,258,50,14
+    PUSHBUTTON      "На&пред",IDNEXT,144,258,50,14
+    PUSHBUTTON      "Помо&щ",IDHELP,210,258,50,14
+    EDITTEXT        IDC_EVENTTEXTEDIT,14,81,247,108,ES_MULTILINE | ES_READONLY
+    LTEXT           "&Описание:",IDC_STATIC,15,70,39,8
+    LTEXT           "Дата:",IDC_STATIC,14,14,36,8
+    LTEXT           "Статичен",IDC_EVENTDATESTATIC,60,14,40,8
+    LTEXT           "Време:",IDC_STATIC,14,27,36,8
+    LTEXT           "Статичен",IDC_EVENTTIMESTATIC,60,27,40,8
+    LTEXT           "&Потребител:",IDC_STATIC,14,41,50,8
+    LTEXT           "Статичен",IDC_EVENTUSERSTATIC,60,41,40,8
+    LTEXT           "&Компютър:",IDC_STATIC,14,54,40,8
+    LTEXT           "Статичен",IDC_EVENTCOMPUTERSTATIC,60,54,40,8
+    LTEXT           "Означител събитие:",IDC_STATIC,105,15,71,8
+    LTEXT           "Статичен",IDC_EVENTIDSTATIC,175,15,40,8
+    LTEXT           "Източник:",IDC_STATIC,105,28,36,8
+    LTEXT           "Статичен",IDC_EVENTSOURCESTATIC,175,28,40,8
+    LTEXT           "Вид:",IDC_STATIC,105,42,36,8
+    LTEXT           "Статичен",IDC_EVENTTYPESTATIC,175,42,40,8
+    LTEXT           "Раздел:",IDC_STATIC,105,55,36,8
+    LTEXT           "Статичен",IDC_EVENTCATEGORYSTATIC,175,55,40,8
+    EDITTEXT        IDC_EVENTDATAEDIT,14,204,247,44,ES_MULTILINE | ES_READONLY
+    LTEXT           "&Данни",IDC_STATIC,14,194,25,8
+    CONTROL         "&Байтове",IDC_BYTESRADIO,"Button",BS_AUTORADIOBUTTON,39,194,40,10
+    CONTROL         "&Думи",IDC_WORDRADIO,"Button",BS_AUTORADIOBUTTON,85,194,33,10
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_APP_TITLE				      "Преглед на събития"
+  	 IDC_EVENTSTRINGIDNOTFOUND	"Не е намерено описанието на събитие ( %lu ) в източник ( %s ). Възможно е местият компютър да няма нужните сведения в регистъра или DLL файловет, нужни за показване на съобщения от отдалечен компютър."
+END

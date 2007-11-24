@@ -1,0 +1,107 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_VOLUME DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Сила"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
+    LTEXT "",IDC_DEVICE_NAME,40,10,194,36
+    GROUPBOX "Сила на устройството", -1, 7,30,230,100
+    ICON IDI_CPLICON, IDI_CPLICON, 17,45,32,32
+    CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
+    LTEXT "Слабо",-1,62,66,30,17
+    LTEXT "Силно",-1,195,66,30,17
+    CHECKBOX "За&глушено", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
+    CHECKBOX "Поставяне на &значе за звука в задачната лента", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    PUSHBUTTON "Разш&ирени...", -1, 150,105,75,15
+    GROUPBOX "Настройки на говорителя", -1, 7,140,230,80
+    CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
+    LTEXT "Чрез долните настройки можете да укажете силата и други свойства на всеки отделен говорител.",-1,70,155,150,36
+    PUSHBUTTON "Сила на &говорителя...", -1, 70,195,75,15
+    PUSHBUTTON "Раз&ширени...", -1, 150,195,75,15
+END
+
+IDD_SOUNDS DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Звуци"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Звукова наредна е набор от звуци, прилагани при събития в РеактОС и в приложенията. Можете да изберете съществуваща наредба или да запишете променена от вас.",-1,8,7,230,40
+    LTEXT "Звукова под&редба:",-1,8,42,150,17
+    COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Запис &като...", -1, 134,70,50,15
+    PUSHBUTTON "Из&триване", -1, 188,70,50,15
+    LTEXT "За да промените звуците, цъкнете на събитие в списъка и и му задайте звук. Можете да запишете промените като нова звукова наредба.",-1,8,90,230,40
+    LTEXT "&Събития:",-1,8,118,150,17
+    CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
+    LTEXT "&Звуци",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
+    PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED
+    PUSHBUTTON "&Обзор...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+END
+
+IDD_AUDIO DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Звук"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "Възпроизвеждане на звук", -1, 7,7,230,60
+    ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
+    LTEXT "Под&разбрано устройство:",-1,50,20,80,17
+    COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
+    PUSHBUTTON "&Сила...", -1, 85,47,70,15
+    PUSHBUTTON "Разши&рени...", -1, 160,47,70,15
+    GROUPBOX "Запис на звук", -1, 7,75,230,60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
+    LTEXT "&Подразбрано устройство:",-1,50,88,80,17
+    COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
+    PUSHBUTTON "С&ила...", -1, 85,115,70,15
+    PUSHBUTTON "Разшир&ени...", -1, 160,115,70,15
+    GROUPBOX "Възпроизвеждане на МИДИ", -1, 7,145,230,60
+    ICON IDI_CPLICON, IDI_CPLICON, 15,158,32,32
+    LTEXT "Подраз&брано устройство:",-1,50,158,80,17
+    COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
+    PUSHBUTTON "Си&ла...", -1, 85,185,70,15
+    PUSHBUTTON "&За...", -1, 160,185,70,15
+    CHECKBOX "Из&ползване само на подразбрани устройства", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+END
+
+IDD_VOICE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Глас"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Тези настройки са за за силата и другите възможности на избраното устройството за възпроизвеждане или запис на глас." ,-1,8,7,230,40
+    GROUPBOX "Възпроизвеждане на глас", -1, 7,37,230,60
+    ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
+    LTEXT "Под&разбрано устройство:",-1,50,50,80,17
+    COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
+    PUSHBUTTON "&Сила...", -1, 85,77,70,15
+    PUSHBUTTON "Разши&рени...", -1, 160,77,70,15
+    GROUPBOX "Запис на глас", -1, 7,105,230,60
+    ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
+    LTEXT "&Подразбрано устройство:",-1,50,118,80,17
+    COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
+    PUSHBUTTON "С&ила...", -1, 85,145,70,15
+    PUSHBUTTON "Разшир&ени...", -1, 160,145,70,15
+    PUSHBUTTON "&Проба на оборудването...", -1, 160,175,70,15
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Оборудване"
+FONT 8, "MS Shell Dlg"
+BEGIN
+
+END
+
+STRINGTABLE 
+BEGIN
+    IDS_CPLNAME "Звукови устройства"
+    IDS_CPLDESCRIPTION "Променя звуковата наредба за компютъра ви или настройките за говорителите и записващите устройства."
+    IDS_NO_SOUND "(Няма)"
+END
+
+
+

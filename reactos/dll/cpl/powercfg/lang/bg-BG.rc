@@ -47,29 +47,29 @@ BEGIN
     CONTROL         "Slider1",IDC_ALARMBAR1,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,40,170,15
     LTEXT           "100%",-1,215,40,25,10
-    PUSHBUTTON      "Действие при &тревога...",-1,20,70,70,15,WS_DISABLED
+    PUSHBUTTON      "Действие при &тревога...",-1,5,70,85,15,WS_DISABLED
     LTEXT           "Уведомяване:",-1,95,70,50,10
-    LTEXT           "Неизвестно",IDC_ALARMMSG1,145,70,95,10
+    LTEXT           "Неизвестно",IDC_ALARMMSG1,180,70,55,10
     LTEXT           "Действие:",-1,95,80,45,10
-    LTEXT           "Неизвестно",IDC_ALARMAKTION1,145,80,95,10
+    LTEXT           "Неизвестно",IDC_ALARMAKTION1,180,80,55,10
     LTEXT           "Изпълняване на приложение:",-1,95,90,50,10
-    LTEXT           "Неизвестно",IDC_ALARMPROG1,150,90,40,10
+    LTEXT           "Неизвестно",IDC_ALARMPROG1,180,90,55,10
 
     GROUPBOX        "Тревога за разредена батерия",-1,10,115,235,95
-    CONTROL         "Тревога за разредена батерия при разреждане до:",IDC_ALARM2,
+    CONTROL         "Тревога при разреждане на батерията под:",IDC_ALARM2,
                     "Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,125,180,15
     LTEXT           "неизвестно",IDC_ALARMVALUE2,200,125,40,10
     LTEXT           "0%",-1,20,140,15,15
     CONTROL         "Slider1",IDC_ALARMBAR2,"msctls_trackbar32",TBS_HORZ |
                     TBS_AUTOTICKS | WS_TABSTOP,30,140,170,15
     LTEXT           "100%",-1,215,140,25,10
-    PUSHBUTTON      "&Действие при тревога...",-1,20,170,70,15,WS_DISABLED
+    PUSHBUTTON      "&Действие при тревога",-1,10,170,85,15,WS_DISABLED
     LTEXT           "Известяване:",-1,95,170,50,10
-    LTEXT           "Unknown",IDC_ALARMMSG2,145,170,95,10
+    LTEXT           "Неизвестно",IDC_ALARMMSG2,180,170,55,10
     LTEXT           "Действие:",-1,95,180,45,10
-    LTEXT           "Unknown",IDC_ALARMAKTION2,145,180,95,10
-    LTEXT           "Запуск на приложение:",-1,95,190,50,10
-    LTEXT           "Unknown",IDC_ALARMPROG2,150,190,40,10
+    LTEXT           "Неизвестно",IDC_ALARMAKTION2,180,180,55,10
+    LTEXT           "Запуск на приложение:",-1,95,190,90,10
+    LTEXT           "Неизвестно",IDC_ALARMPROG2,180,190,55,10
 END
 
 IDD_PROPPAGEADVANCED DIALOG DISCARDABLE  0, 0, 250, 220
@@ -82,9 +82,9 @@ BEGIN
     GROUPBOX        "Възможности",-1,5,35,225,55
     CONTROL         "Винаги има значе в задачната лента",IDC_SYSTRAYBATTERYMETER,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,45,200,10
-    CONTROL         "&Искане на парола при излизане от озчакване",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Искане на парола при излизане от изчакване",IDC_PASSWORDLOGON,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,55,200,10
-    CONTROL         "&Затъмняване на екрана при работа от батерии.",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "&Затъмняване на екрана при работа на батерии",IDC_VIDEODIMDISPLAY,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,15,65,200,10
     GROUPBOX        "Клавиши за захранване",-1,5,100,230,105
     LTEXT           "&При затваряне на капака на преносимия ми компютър:", IDC_SLIDCLOSE,10,110,210,10
@@ -93,7 +93,7 @@ BEGIN
     LTEXT           "П&ри натискане на копчето за изключване на компютъра:", IDC_SPOWERBUTTON,10,135,210,10
     COMBOBOX        IDC_POWERBUTTON,10,150,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
-    LTEXT           "Пр&и натискане на копчето за приспиване на компютара:", IDC_SSLEEPBUTTON,10,165,210,10
+    LTEXT           "Пр&и натискане на копчето за приспиване на компютъра:", IDC_SSLEEPBUTTON,10,165,210,10
     COMBOBOX        IDC_SLEEPBUTTON,10,180,220,90,CBS_DROPDOWNLIST | CBS_SORT |
                     WS_VSCROLL | WS_TABSTOP
 END
@@ -110,7 +110,7 @@ BEGIN
     CONTROL         "Включване на за&спиването",IDC_HIBERNATEFILE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,10,55,210,10
     GROUPBOX        "Дисково място за заспиване",-1,5,80,240,60
-    LTEXT           "Свободнио дисково място:",-1,10,90,155,10
+    LTEXT           "Свободно дисково място:",-1,10,90,155,10
     LTEXT           "Неизвестно",IDC_FREESPACE,180,90,70,10
     LTEXT           "Необходимо дисково място за заспиване:",-1,10,100,155,10
     LTEXT           "Неизвестно",IDC_SPACEFORHIBERNATEFILE,180,100,55,10
@@ -159,4 +159,6 @@ BEGIN
   IDS_TIMEOUT15 "След 5 часа"
   IDS_TIMEOUT16 "Никога"
 END
+
+
 

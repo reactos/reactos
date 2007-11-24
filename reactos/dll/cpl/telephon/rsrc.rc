@@ -1,6 +1,7 @@
 #include "resource.h"
 #include <windows.h>
 
+#include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
