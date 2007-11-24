@@ -30,6 +30,7 @@ char* _strnset(char* szToFill, int szFill, size_t sizeMaxFill)
 /*
  * @implemented
  */
+#ifndef _MSC_VER
 char* _strset(char* szToFill, int szFill)
 {
 	char *t = szToFill;
@@ -41,3 +42,4 @@ char* _strset(char* szToFill, int szFill)
 	}
 	return t;
 }
+#endif

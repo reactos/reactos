@@ -3,6 +3,24 @@
 
 #undef _pctype
 
+/* MS's CRT header defines all that, and we actually implement that */
+#undef iswalnum
+#undef __isascii
+#undef iswascii
+#undef __iscsym
+#undef __iscsymf
+#undef iswalpha
+#undef iswcntrl
+#undef iswdigit
+#undef iswgraph
+#undef iswprint
+#undef iswpunct
+#undef iswlower
+#undef iswupper
+#undef iswspace
+#undef iswxdigit
+#undef __toascii
+
 #define upalpha ('A' - 'a')
 
 

@@ -6,6 +6,9 @@
 #define NDEBUG
 #include <internal/debug.h>
 
+#ifndef TRACE
+#define TRACE DPRINT
+#endif
 #define WARN DPRINT1
 
 
@@ -26,6 +29,11 @@ static int char2digit(char c, int base) {
 #undef WIDE_SCANF
 #undef CONSOLE
 #define STRING 1
+
+#ifdef _MSC_VER
+#define debugstr_a(x) x
+#endif
+
 #include "wine/scanf.h"
 
 int sscanf(const char *str, const char *format, ...)

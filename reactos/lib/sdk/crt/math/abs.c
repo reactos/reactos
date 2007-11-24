@@ -4,8 +4,10 @@
 /*
  * @implemented
  */
+#ifndef _MSC_VER
 int
 abs(int j)
 {
   return j<0 ? -j : j;
 }
+#endif

@@ -30,6 +30,7 @@ wchar_t* _wcsnset (wchar_t* wsToFill, wchar_t wcFill, size_t sizeMaxFill)
 /*
  * @implemented
  */
+#ifndef _MSC_VER
 wchar_t* _wcsset (wchar_t* wsToFill, wchar_t wcFill)
 {
 	wchar_t *t = wsToFill;
@@ -41,3 +42,4 @@ wchar_t* _wcsset (wchar_t* wsToFill, wchar_t wcFill)
 	}
 	return t;
 }
+#endif
