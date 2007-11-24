@@ -10,6 +10,7 @@
 	<library>opengl32</library>
 	<library>glu32</library>
 	<library>advapi32</library>
+        <library>shell32</library>
 
 	<metadata description = "Butterflies screensaver" />
 
