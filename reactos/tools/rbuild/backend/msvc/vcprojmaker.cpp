@@ -380,7 +380,7 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 			string unescaped = *it1;
 			defines.erase(unescaped);
-			const string& escaped = _replace_str(unescaped, "\"","&quot;");
+			const string& escaped = _replace_str(unescaped, "\"","");
 
 			defines.insert(escaped);
 			fprintf ( OUT, "%s", escaped.c_str() );
