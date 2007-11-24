@@ -24,6 +24,8 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 
     DX_WINDBG_trace();
 
+    ZeroMemory(&DevMode, sizeof(DEVMODE));
+
     _SEH_TRY
     {
 
@@ -44,6 +46,8 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
                 DDSURFACEDESC2 SurfaceDesc;
+
+                ZeroMemory(&SurfaceDesc, sizeof(DDSURFACEDESC2));
 
                 iMode++;
 
