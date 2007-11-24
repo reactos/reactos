@@ -49,11 +49,7 @@ enum __wine_debug_class
     __WINE_DBCL_TRACE = 3, /* 0x8 */
 
     /* lazy init flag */
-#ifdef YDEBUG
-    __WINE_DBCL_INIT = 0xf
-#else
     __WINE_DBCL_INIT = 0x7
-#endif
 };
 
 struct __wine_debug_channel

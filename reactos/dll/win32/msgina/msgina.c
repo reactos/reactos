@@ -26,7 +26,6 @@
 
 #include "msgina.h"
 
-//#define YDEBUG
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(msgina);

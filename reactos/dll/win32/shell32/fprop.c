@@ -20,7 +20,6 @@
 
 #define COBJMACROS
 #define NONAMELESSUNION
-//#define YDEBUG
 
 #include "config.h"
 #include "wine/port.h"

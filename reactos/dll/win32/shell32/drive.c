@@ -20,7 +20,6 @@
 
 #include "config.h"
 #include "wine/port.h"
-//#define YDEBUG
 #define LARGEINT_PROTOS
 #define LargeIntegerDivide RtlLargeIntegerDivide
 #define ExtendedIntegerMultiply RtlExtendedIntegerMultiply

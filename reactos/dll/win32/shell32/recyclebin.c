@@ -19,7 +19,6 @@
  */
 
 #include "config.h"
-//#define YDEBUG
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT

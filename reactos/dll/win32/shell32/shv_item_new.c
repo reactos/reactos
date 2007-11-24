@@ -11,7 +11,6 @@
 #define COBJMACROS
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
-//#define YDEBUG
 #include "wine/debug.h"
 
 #include "windef.h"

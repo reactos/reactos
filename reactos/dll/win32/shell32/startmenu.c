@@ -20,7 +20,6 @@
 
 #define COBJMACROS
 
-//#define YDEBUG
 #include "wine/debug.h"
 
 #include "windef.h"
