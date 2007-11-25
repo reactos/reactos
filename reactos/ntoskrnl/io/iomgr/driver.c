@@ -1502,14 +1502,14 @@ IopLoadUnloadDriver(PLOAD_UNLOAD_PARAMS LoadParams)
    NTSTATUS Status;
    ULONG Type;
    PDEVICE_NODE DeviceNode;
-   PLDR_DATA_TABLE_ENTRY ModuleObject;
    PDRIVER_OBJECT DriverObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject;
    WCHAR *cur;
 
    /* Check if it's an unload request */
    if (LoadParams->DriverObject)
    {
-       (*DriverObject->DriverUnload)(DriverObject);
+       (*LoadParams->DriverObject->DriverUnload)(LoadParams->DriverObject);
 
        /* Return success and signal the event */
        LoadParams->Status = STATUS_SUCCESS;
