@@ -11,7 +11,7 @@ MENU_WINEMINE MENU DISCARDABLE
     POPUP "&Optionen" {
         MENUITEM "&Neu",           IDM_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Mark Question", IDM_MARKQ
+        MENUITEM "&Merker (?)", IDM_MARKQ
         MENUITEM SEPARATOR
         MENUITEM "&Anfänger",      IDM_BEGINNER
         MENUITEM "&Fortgeschrittene",      IDM_ADVANCED

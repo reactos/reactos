@@ -31,11 +31,11 @@ BEGIN
     IDS_APPLYINGYOURPERSONALSETTINGS "Ihre persönlichen Einstellungen setzen..."
     IDS_RUNNINGLOGOFFSCRIPTS "Skripte um abzumelden ausführen..."
     IDS_RUNNINGLOGONSCRIPTS "Skripte um anzumelden ausführen..."
-    IDS_LOADINGYOURPERSONALSETTINGS "Ihr persönlichen Einstellungen laden..."
+    IDS_LOADINGYOURPERSONALSETTINGS "Ihre persönlichen Einstellungen laden..."
     IDS_CLOSINGNETWORKCONNECTIONS "Netzwerkverbindungen schliessen..."
     IDS_REACTOSISSHUTTINGDOWN "ReactOS fährt herunter..."
     IDS_PREPARETOSTANDBY "Vorbereiten für den StandBy Modus..."
-    IDS_PREPARETOHIBERNATE "Vorbereiten für den Nachtmodus..."
+    IDS_PREPARETOHIBERNATE "Vorbereiten für den Ruhezustand..."
     IDS_SAVEYOURSETTINGS "Speichern Ihrer persönlichen Einstellungen..."
     IDS_REACTOSISSTARTINGUP "ReactOS startet..."
 END
