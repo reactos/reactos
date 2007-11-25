@@ -436,11 +436,7 @@ static HRESULT WINAPI ISF_MyDocuments_fnGetUIObjectOf (IShellFolder2 * iface,
 
     if (IsEqualIID (riid, &IID_IContextMenu))
     {
-        if (cidl > 0)
-            pObj = (LPUNKNOWN) ISvItemCm_Constructor( (IShellFolder *) iface, This->pidlRoot, apidl, cidl);
-        else
-            pObj = (LPUNKNOWN) ISvBgCm_Constructor( (IShellFolder *) iface, TRUE);
-        hr = S_OK;
+        hr = CDefFolderMenu_Create2(This->pidlRoot, hwndOwner, cidl, apidl, (IShellFolder*)iface, NULL, 0, NULL, (IContextMenu**)&pObj);
     }
     else if (IsEqualIID (riid, &IID_IDataObject) && (cidl >= 1))
     {
