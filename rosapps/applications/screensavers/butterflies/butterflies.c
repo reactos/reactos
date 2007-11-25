@@ -5,10 +5,8 @@
 #include <stdlib.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
+#include <GL/glext.h>
 #include "resource.h"
-
-/* missing declare from gl.h */
-#define GL_BGR_EXT                        0x80E0
 
 HINSTANCE		hInstance;			// Holds The Instance Of The Application
 
