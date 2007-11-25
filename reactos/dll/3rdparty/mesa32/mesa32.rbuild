@@ -236,6 +236,7 @@
 		<directory name="windows">
 			<directory name="gdi">
 				<file>wmesa.c</file>
+				<file>wgl.c</file>
 			</directory>
 			<directory name="icd">
 				<file>icd.c</file>

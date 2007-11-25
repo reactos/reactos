@@ -703,3 +703,12 @@ WINGDIAPI const char * GLAPIENTRY wglGetExtensionsStringARB(HDC hdc)
 {
     return "WGL_ARB_extensions_string";
 }
+
+GLAPI const char * GLAPIENTRY
+wglGetExtensionsStringEXT (void)
+{
+   return 
+          // "WGL_EXT_swap_control "
+          "WGL_EXT_extensions_string WGL_ARB_extensions_string"
+         /*WGL_ARB_pixel_format WGL_ARB_render_texture WGL_ARB_pbuffer*/;
+}

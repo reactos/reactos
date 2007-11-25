@@ -49,6 +49,8 @@ extern "C" {
 #include "mtypes.h"
 #include "glapi.h"
 
+GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
+
 #define MAX_MESA_ATTRS	20
 
 typedef struct wmesa_context *PWMC;
@@ -306,11 +308,48 @@ WGLAPI int GLAPIENTRY DrvDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nByte
 /*
 * GetProcAddress - return the address of an appropriate extension
 */
+
+static struct {
+   const char *name;
+   PROC func;
+} wgl_ext[] = {
+       {"wglGetExtensionsStringARB",    (PROC)wglGetExtensionsStringARB},
+       {"wglGetExtensionsStringEXT",    (PROC)wglGetExtensionsStringEXT},
+//       {"wglSwapIntervalEXT",           (PROC)wglSwapIntervalEXT},
+//       {"wglGetSwapIntervalEXT",        (PROC)wglGetSwapIntervalEXT},
+//       {"wglGetDeviceGammaRamp3DFX",    (PROC)wglGetDeviceGammaRamp3DFX},
+//       {"wglSetDeviceGammaRamp3DFX",    (PROC)wglSetDeviceGammaRamp3DFX},
+       /* WGL_ARB_pixel_format */
+//       {"wglGetPixelFormatAttribivARB", (PROC)wglGetPixelFormatAttribivARB},
+//       {"wglGetPixelFormatAttribfvARB", (PROC)wglGetPixelFormatAttribfvARB},
+//       {"wglChoosePixelFormatARB",      (PROC)wglChoosePixelFormatARB},
+       /* WGL_ARB_render_texture */
+//       {"wglBindTexImageARB",           (PROC)wglBindTexImageARB},
+//       {"wglReleaseTexImageARB",        (PROC)wglReleaseTexImageARB},
+//       {"wglSetPbufferAttribARB",       (PROC)wglSetPbufferAttribARB},
+//       /* WGL_ARB_pbuffer */
+//       {"wglCreatePbufferARB",          (PROC)wglCreatePbufferARB},
+//       {"wglGetPbufferDCARB",           (PROC)wglGetPbufferDCARB},
+//       {"wglReleasePbufferDCARB",       (PROC)wglReleasePbufferDCARB},
+//       {"wglDestroyPbufferARB",         (PROC)wglDestroyPbufferARB},
+//       {"wglQueryPbufferARB",           (PROC)wglQueryPbufferARB},
+       {NULL, NULL}
+};
+
 WGLAPI PROC GLAPIENTRY DrvGetProcAddress(LPCSTR lpszProc)
 {
+   int i;
    PROC p = (PROC) (int) _glapi_get_proc_address((const char *) lpszProc);
    if (p)
       return p;
+
+   for (i = 0; wgl_ext[i].name; i++)
+   {
+      if (!strcmp(lpszProc, wgl_ext[i].name))
+      {
+         return wgl_ext[i].func;
+      }
+   }
 
    SetLastError(0);
    return(NULL);
