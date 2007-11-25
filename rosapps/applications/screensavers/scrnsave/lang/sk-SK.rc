@@ -6,7 +6,7 @@ LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Predvolený šetriè obrazovky"
+    IDS_DESCRIPTION "Blank"
     IDS_TITLE       "Èo je ..."
     IDS_TEXT        "Nie sú potrebné žiadne nastavenia."
 END

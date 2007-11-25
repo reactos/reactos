@@ -1,0 +1,7 @@
+NAME	blankscr.SCR
+
+DESCRIPTION	'Blank screen saver'
+
+EXPORTS
+	ScreenSaverProc
+	ScreenSaverConfigureDialog

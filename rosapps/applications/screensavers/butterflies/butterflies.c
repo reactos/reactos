@@ -14,7 +14,7 @@ HINSTANCE		hInstance;			// Holds The Instance Of The Application
 
 GLuint texture[3];	                //stores texture objects and display list
 
-LPCTSTR registryPath = ("Software\\tHaPuTeRProductions\\Lesson38Saver");
+LPCTSTR registryPath = ("Software\\Microsoft\\ScreenSavers\\Butterflies");
 BOOL dRotate;
 
 
@@ -299,25 +299,25 @@ BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message,
 {
 	switch (message)
 	{
-	case WM_INITDIALOG:
-		ReadRegistry();
-		CheckDlgButton(hDlg, ROTATE, dRotate);
-		return TRUE;
-	case WM_COMMAND:
-		switch (LOWORD(wParam))
-		{
-		case IDOK:
-			dRotate = (IsDlgButtonChecked(hDlg, ROTATE) == BST_CHECKED);
-			WriteRegistry();
-			EndDialog(hDlg, TRUE);
-			return TRUE;
-		case IDCANCEL:
-			EndDialog(hDlg, TRUE);
-			break;
-		case IDABOUT:
-			DialogBox(hInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hDlg, (DLGPROC)AboutProc);
-            break;
-		}
+        case WM_INITDIALOG:
+	        ReadRegistry();
+	        CheckDlgButton(hDlg, ROTATE, dRotate);
+	        return TRUE;
+	    case WM_COMMAND:
+		    switch (LOWORD(wParam))
+		    {
+		        case IDOK:
+			        dRotate = (IsDlgButtonChecked(hDlg, ROTATE) == BST_CHECKED);
+			        WriteRegistry();
+			        EndDialog(hDlg, TRUE);
+			        return TRUE;
+		        case IDCANCEL:
+			        EndDialog(hDlg, TRUE);
+			        break;
+		        case IDABOUT:
+			        DialogBox(hInstance, MAKEINTRESOURCE(IDD_DLG_ABOUT), hDlg, (DLGPROC)AboutProc);
+                    break;
+		    }
 	}
 
 	return FALSE;

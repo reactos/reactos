@@ -1,6 +1,6 @@
-NAME	LESSON38SAVER.SCR
+NAME	butterflies.SCR
 
-DESCRIPTION	'Lesson38Saver screen saver'
+DESCRIPTION	'OpenGL Butterflies screen saver'
 
 HEAPSIZE 1024
 STACKSIZE 4096

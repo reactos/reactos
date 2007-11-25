@@ -10,7 +10,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION "Заставка за замовчуванням"
+    IDS_DESCRIPTION "Blank"
     IDS_TITLE       "Про"
     IDS_TEXT        "Ця заставка не має налаштовуваних параметрів."
 END
