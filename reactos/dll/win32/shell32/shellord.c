@@ -1816,9 +1816,9 @@ void WINAPI SHDestroyPropSheetExtArray(HPSXA hpsxa)
  */
 HRESULT WINAPI CIDLData_CreateFromIDArray(
 	LPCITEMIDLIST pidlFolder,
-	DWORD cpidlFiles,
+	UINT cpidlFiles,
 	LPCITEMIDLIST *lppidlFiles,
-	LPDATAOBJECT *ppdataObject)
+	IDataObject **ppdataObject)
 {
     UINT i;
     HWND hwnd = 0;   /*FIXME: who should be hwnd of owner? set to desktop */

@@ -451,3 +451,17 @@ LPDATAOBJECT IDataObject_Constructor(HWND hwndOwner,
     TRACE("(%p)->(apidl=%p cidl=%u)\n",dto, apidl, cidl);
     return (LPDATAOBJECT)dto;
 }
+
+/*************************************************************************
+ * SHCreateDataObject			[SHELL32.@]
+ *
+ */
+
+HRESULT WINAPI SHCreateDataObject(LPCITEMIDLIST pidlFolder, UINT cidl, LPCITEMIDLIST* apidl, IDataObject *pdtInner, REFIID riid, void **ppv)
+{
+    if (IsEqualIID(riid, &IID_IDataObject))
+    {
+        return CIDLData_CreateFromIDArray(pidlFolder, cidl, apidl, ppv);
+    }
+    return E_FAIL;
+}

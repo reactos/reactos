@@ -350,12 +350,6 @@ BOOL WINAPI DAD_SetDragImageFromListView(
 
 BOOL WINAPI DAD_ShowDragImage(BOOL bShow);
 
-HRESULT WINAPI CIDLData_CreateFromIDArray(
-	LPCITEMIDLIST pidlFolder,
-	DWORD cpidlFiles,
-	LPCITEMIDLIST *lppidlFiles,
-	LPDATAOBJECT *ppdataObject);
-
 /****************************************************************************
  * Path Manipulation Routines
  */
