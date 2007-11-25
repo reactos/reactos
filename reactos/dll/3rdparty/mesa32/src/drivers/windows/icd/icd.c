@@ -55,7 +55,7 @@ typedef struct wmesa_context *PWMC;
 
 typedef struct _icdTable {
     DWORD size;
-    PROC  table[336];
+    PROC  table[418];
 } ICDTABLE, *PICDTABLE;
 
 #ifdef USE_MGL_NAMESPACE
@@ -65,7 +65,7 @@ typedef struct _icdTable {
 #endif
 
 
-static ICDTABLE icdTable = { 416, {
+static ICDTABLE icdTable = { 418, {
 #define ICD_ENTRY(func) (PROC)GL_FUNC(func),
 #include "icdlist.h"
 #undef ICD_ENTRY
@@ -284,17 +284,21 @@ WGLAPI BOOL GLAPIENTRY DrvSwapLayerBuffers(HDC hdc,UINT fuPlanes)
 WGLAPI int GLAPIENTRY DrvDescribePixelFormat(HDC hdc,int iPixelFormat,UINT nBytes,
                                     LPPIXELFORMATDESCRIPTOR ppfd)
 {
-    int	qt_valid_pix;
+    int qt_valid_pix;
     (void) hdc;
 
     qt_valid_pix = qt_pix;
-    if(ppfd==NULL)
-	return(qt_valid_pix);
-    if(iPixelFormat < 1 || iPixelFormat > qt_valid_pix || nBytes != sizeof(PIXELFORMATDESCRIPTOR))
+    if( (nBytes != sizeof(PIXELFORMATDESCRIPTOR)) || (iPixelFormat < 1) || (iPixelFormat >qt_valid_pix) )
     {
         SetLastError(0);
         return(0);
     }
+
+    if(ppfd==NULL)
+    {
+        return(qt_valid_pix);
+    }
+
     *ppfd = pix[iPixelFormat - 1].pfd;
     return(qt_valid_pix);
 }

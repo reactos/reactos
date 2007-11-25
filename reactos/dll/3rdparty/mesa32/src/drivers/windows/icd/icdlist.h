@@ -1,3 +1,4 @@
+/* OpenGL version 1.0 */
 ICD_ENTRY(NewList)                      /* 000 "glNewList"                  */
 ICD_ENTRY(EndList)                      /* 001 "glEndList"                  */
 ICD_ENTRY(CallList)                     /* 002 "glCallList"                 */
@@ -304,6 +305,7 @@ ICD_ENTRY(Scalef)                       /* 302 "glScalef"                   */
 ICD_ENTRY(Translated)                   /* 303 "glTranslated"               */
 ICD_ENTRY(Translatef)                   /* 304 "glTranslatef"               */
 ICD_ENTRY(Viewport)                     /* 305 "glViewport"                 */
+/* OpenGL version 1.1 */
 ICD_ENTRY(ArrayElement)                 /* 306 "glArrayElement"             */
 ICD_ENTRY(BindTexture)                  /* 307 "glBindTexture"              */
 ICD_ENTRY(ColorPointer)                 /* 308 "glColorPointer"             */
@@ -334,13 +336,15 @@ ICD_ENTRY(TexSubImage1D)                /* 332 "glTexSubImage1D"            */
 ICD_ENTRY(TexSubImage2D)                /* 333 "glTexSubImage2D"            */
 ICD_ENTRY(PopClientAttrib)              /* 334 "glPopClientAttrib"          */
 ICD_ENTRY(PushClientAttrib)             /* 335 "glPushClientAttrib"         */
+/* OpenGL 1.2 and 1.2.1 */
 ICD_ENTRY(TexImage3D)                   /* 336 "glTexImage3D"               */
 ICD_ENTRY(TexSubImage3D)                /* 337 "glTexSubImage3D"            */
 ICD_ENTRY(DrawRangeElements)            /* 338 "glDrawRangeElements"        */
 ICD_ENTRY(BlendColor)                   /* 339 "glBlendColor"               */
 ICD_ENTRY(BlendEquation)                /* 340 "glBlendEquation"            */
-ICD_ENTRY(ActiveTexture)                /* 341 "glActiveTexture"            */
-ICD_ENTRY(ClientActiveTexture)          /* 342 "glClientActiveTexture"      */
+/* Open 1.3 */
+ICD_ENTRY(ActiveTexture)                /* 341 "glActiveTexture" */
+ICD_ENTRY(ClientActiveTexture)          /* 342 "glClientActiveTexture" */
 ICD_ENTRY(MultiTexCoord1d)              /* 343 "glMultiTexCoord1d"          */
 ICD_ENTRY(MultiTexCoord1dv)             /* 344 "glMultiTexCoord1dv"         */
 ICD_ENTRY(MultiTexCoord1f)              /* 345 "glMultiTexCoord1f"          */
@@ -385,6 +389,7 @@ ICD_ENTRY(CompressedTexSubImage2D)      /* 383 "glCompressedTexSubImage2D"  */
 ICD_ENTRY(CompressedTexSubImage1D)      /* 384 "glCompressedTexSubImage1D"  */
 ICD_ENTRY(GetCompressedTexImage)        /* 385 "glGetCompressedTexImage"    */
 ICD_ENTRY(SampleCoverage)               /* 386 "glSampleCoverage"           */
+/* Open 1.4 and higher */
 ICD_ENTRY(FogCoordf)                    /* 387 "glFogCoordf"                */
 ICD_ENTRY(FogCoordd)                    /* 388 "glFogCoordd"                */
 ICD_ENTRY(FogCoordfv)                   /* 389 "glFogCoordfv"               */
@@ -401,7 +406,7 @@ ICD_ENTRY(SecondaryColor3iv)            /* 399 "glSecondaryColor3iv"        */
 ICD_ENTRY(SecondaryColor3s)             /* 400 "glSecondaryColor3s"         */
 ICD_ENTRY(SecondaryColor3sv)            /* 401 "glSecondaryColor3sv"        */
 ICD_ENTRY(SecondaryColor3ub)            /* 402 "glSecondaryColor3ub"        */
-ICD_ENTRY(SecondaryColor3ubv)           /* 403 "glSecondaryColor3ubv"        */
+ICD_ENTRY(SecondaryColor3ubv)           /* 403 "glSecondaryColor3ubv"       */
 ICD_ENTRY(SecondaryColor3ui)            /* 404 "glSecondaryColor3ui"        */
 ICD_ENTRY(SecondaryColor3uiv)           /* 405 "glSecondaryColor3uiv"       */
 ICD_ENTRY(SecondaryColor3us)            /* 406 "glSecondaryColor3us"        */
@@ -414,4 +419,6 @@ ICD_ENTRY(PointParameterfv)             /* 412 "glPointParameterfv"         */
 ICD_ENTRY(PointParameteri)              /* 413 "glPointParameteri"          */
 ICD_ENTRY(PointParameteriv)             /* 414 "glPointParameteriv"         */
 ICD_ENTRY(BlendFuncSeparate)            /* 415 "glBlendFuncSeparate"        */
+ICD_ENTRY(WindowPos2d)                  /* 416 "glWindowPos2d"              */
+ICD_ENTRY(WindowPos2dv)                 /* 417 "glWindowPos2dv"             */
 
