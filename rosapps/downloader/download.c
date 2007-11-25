@@ -229,30 +229,50 @@ ThreadFunc(LPVOID Context)
 	BOOL bCancelled = FALSE;
 	BOOL bTempfile = FALSE;
 	HKEY hKey;
+	DWORD dwSize = MAX_PATH;
 
 	/* built the path for the download */
 	p = wcsrchr(SelectedApplication->Location, L'/');
 	if (NULL == p)
-    {
-		goto end;
-    }
-	if (RegOpenKey(HKEY_LOCAL_MACHINE,
-				  TEXT("Software\\ReactOS\\Downloader"),
-                  &hKey) != ERROR_SUCCESS)
 	{
 		goto end;
 	}
-
-	DWORD dwSize = MAX_PATH;
-	if (RegQueryValueEx(hKey,
+  
+	/* Create default download path */
+	if (GetWindowsDirectory(path, sizeof(path) / sizeof(WCHAR)))
+	{
+		WCHAR DPath[256];
+		int i;
+		for (i = 0; i < 4; i++)
+		{
+			if (i == 3)
+			{
+				DPath[i] = '\0';
+				break;
+			}
+			DPath[i] = path[i];
+		}
+		LoadString(GetModuleHandle(NULL), IDS_DOWNLOAD_FOLDER, path, sizeof(path) / sizeof(WCHAR));
+		wcscat((LPWSTR)DPath, path);
+		wcscpy(path, DPath);
+	}
+	
+	if (RegOpenKey(HKEY_LOCAL_MACHINE,
+				  TEXT("Software\\ReactOS\\Downloader"),
+				  &hKey) == ERROR_SUCCESS)
+	{
+		if ((RegQueryValueEx(hKey,
 						L"DownloadFolder",
 						NULL,
 						NULL,
 						(LPBYTE)&path,
-						&dwSize) != ERROR_SUCCESS)
-	{
-		goto end;
+						&dwSize) != ERROR_SUCCESS) && (path[0] == 0))
+		{
+			goto end;
+		}
 	}
+	
+	
 
 	if (GetFileAttributes(path) == 0xFFFFFFFF)
 		if (!CreateDirectory((LPCTSTR)path,NULL))
