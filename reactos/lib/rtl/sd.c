@@ -142,8 +142,8 @@ RtlCopySecurityDescriptor(IN PSECURITY_DESCRIPTOR pSourceSecurityDescriptor,
   PACL Dacl = NULL, Sacl = NULL;
   BOOLEAN Defaulted, Present;
   DWORD OwnerLength, GroupLength;
-  PSECURITY_DESCRIPTOR srcSD = pSourceSecurityDescriptor;
-  PSECURITY_DESCRIPTOR destSD = pDestinationSecurityDescriptor;
+  PISECURITY_DESCRIPTOR srcSD = pSourceSecurityDescriptor;
+  PISECURITY_DESCRIPTOR destSD = pDestinationSecurityDescriptor;
      
   if (srcSD->Revision != SECURITY_DESCRIPTOR_REVISION)
     return STATUS_UNKNOWN_REVISION;
