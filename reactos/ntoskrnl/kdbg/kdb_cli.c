@@ -195,7 +195,7 @@ KdbpEvaluateExpression(
 STATIC BOOLEAN
 KdbpCmdEvalExpression(ULONG Argc, PCHAR Argv[])
 {
-   UINT i, len;
+   ULONG i, len;
    ULONGLONG Result = 0;
    ULONG ul;
    LONG l = 0;

@@ -7,6 +7,14 @@
 # define RTL_NUMBER_OF(x) (sizeof(x) / sizeof((x)[0]))
 #endif
 
+#ifndef STATIC
+#define STATIC static
+#endif
+
+#ifndef CONST
+#define CONST const
+#endif
+
 /* TYPES *********************************************************************/
 
 /* from kdb.c */
