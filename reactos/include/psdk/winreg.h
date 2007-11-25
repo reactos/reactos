@@ -47,6 +47,7 @@ extern "C" {
 #define RRF_RT_REG_QWORD        (1 << 6)
 #define RRF_RT_DWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_DWORD)
 #define RRF_RT_QWORD            (RRF_RT_REG_BINARY | RRF_RT_REG_QWORD)
+#define RRF_RT_ANY              (0x0000FFFF)
 #define RRF_NOEXPAND            (1 << 28)
 #define RRF_ZEROONFAILURE       (1 << 29)
 #endif
