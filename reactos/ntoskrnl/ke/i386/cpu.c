@@ -891,7 +891,7 @@ KeInvalidateAllCaches(VOID)
     if (KeI386CpuType < 6) return FALSE;
 
     /* Invalidate all caches */
-    Ke386WbInvd();
+    __wbinvd();
     return TRUE;
 }
 
