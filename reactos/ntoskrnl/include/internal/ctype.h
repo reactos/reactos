@@ -39,5 +39,6 @@ extern inline int tolower(int c);
 extern inline int islower(int c);
 extern inline int isdigit(int c);
 extern inline int isxdigit(int c);
+extern inline int isprint(int c);
 
 #endif

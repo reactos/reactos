@@ -485,6 +485,7 @@ MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    BoundaryAddressMultiple.QuadPart = 0;
 
     /* Create the shared data page */
     BaseAddress = (PVOID)USER_SHARED_DATA;
