@@ -2825,7 +2825,10 @@ BOOL InitAdapters(void) {
 #else
 #define USE_GL_FUNC(pfn) pfn = (void*)pwglGetProcAddress(#pfn);
         /* To bypass the opengl32 thunks load wglGetProcAddress from gdi32 (glXGetProcAddress wrapper) instead of opengl32's */
-        mod_gl = GetModuleHandleA("gdi32.dll");
+
+        /* ReactOS hack, we do not have wglGetProcAddress implement in gdi32.dll yet, */
+        mod_gl = GetModuleHandleA("opengl32.dll");
+
 #endif
     }
 
