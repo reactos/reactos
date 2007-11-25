@@ -276,7 +276,6 @@
 				<file>kdb_expr.c</file>
 				<file>kdb_keyboard.c</file>
 				<file>kdb_serial.c</file>
-				<file>kdb_string.c</file>
 			</if>
 			<if property="DBG_OR_KDBG" value="true">
 				<file>kdb_symbols.c</file>

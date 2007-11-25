@@ -49,7 +49,7 @@ static unsigned char keyb_layout[2][128] =
 	"\r\000/"					/* 0x60 - 0x6f */
 };
 
-typedef BYTE byte_t;
+typedef UCHAR byte_t;
 
 VOID KbdEnableMouse()
 {
