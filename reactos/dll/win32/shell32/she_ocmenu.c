@@ -41,6 +41,11 @@ WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
 const GUID CLSID_OpenWith = { 0x09799AFB, 0xAD67, 0x11d1, {0xAB,0xCD,0x00,0xC0,0x4F,0xC3,0x09,0x36} };
 
+///
+/// [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system]
+/// "NoInternetOpenWith"=dword:00000001
+///
+
 typedef struct
 {	
     const IContextMenu2Vtbl *lpVtblContextMenu;
@@ -48,8 +53,10 @@ typedef struct
     LONG  wId;
     volatile LONG ref;
     WCHAR ** szArray;
+    BOOL NoOpen;
     UINT size;
     UINT count;
+    WCHAR szName[MAX_PATH];
 } SHEOWImpl;
 
 static const IShellExtInitVtbl eivt;
@@ -203,7 +210,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
     MENUITEMINFOW	mii;
     USHORT items = 0;
     WCHAR szBuffer[100];
-    BOOL bDefault = FALSE;
+    INT pos;
 
     HMENU hSubMenu = NULL;
     SHEOWImpl *This = impl_from_IContextMenu(iface);
@@ -213,8 +220,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
        TRACE("failed to load string\n");
        return E_FAIL;
     }
-
-    if (This->count)
+    if (This->count > 1)
     {
         hSubMenu = CreatePopupMenu();
         if (hSubMenu == NULL)
@@ -224,16 +230,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
         }
         items = AddItems(This, hSubMenu, idCmdFirst + 1);
     }
-    else
-    {
-        /* no file association found */
-        UINT pos = GetMenuDefaultItem(hmenu, TRUE, 0);
-        if (pos != -1)
-        {
-            /* replace default item with "Open With" action */
-            bDefault = DeleteMenu(hmenu, pos, MF_BYPOSITION);
-        }
-    }
+    pos = GetMenuDefaultItem(hmenu, TRUE, 0) + 1;
 
     ZeroMemory(&mii, sizeof(mii));
 	mii.cbSize = sizeof(mii);
@@ -245,7 +242,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
     }
     mii.dwTypeData = (LPWSTR) szBuffer;
 	mii.fState = MFS_ENABLED;
-    if (bDefault)
+    if (!pos)
     {
         mii.fState |= MFS_DEFAULT;
     }
@@ -254,7 +251,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
     This->wId = idCmdFirst;
 
 	mii.fType = MFT_STRING;
-	if (InsertMenuItemW( hmenu, 0, TRUE, &mii))
+	if (InsertMenuItemW( hmenu, pos, TRUE, &mii))
         items++;
 
     TRACE("items %x\n",items);
@@ -519,12 +516,14 @@ SHEOW_LoadItemFromHKCR(SHEOWImpl *This, WCHAR * szExt)
         RegCloseKey(hSubKey);
     }
 
+    if (RegGetValueW(HKEY_CLASSES_ROOT, szExt, L"NoOpen", RRF_RT_REG_SZ, NULL, NULL, &dwSize) == ERROR_SUCCESS)
+    {
+        This->NoOpen = TRUE;
+    }
+
     RegCloseKey(hKey);
     return NumKeys;
 }
-
-
-
 
 UINT
 SHEOW_LoadItemFromHKCU(SHEOWImpl *This, WCHAR * szExt)
@@ -586,6 +585,7 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     LPCITEMIDLIST pidl_child; 
     LPCITEMIDLIST pidl; 
     WCHAR szPath[MAX_PATH];
+    DWORD dwPath;
     LPWSTR szPtr;
     static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
 
@@ -647,6 +647,12 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
 
         SHEOW_LoadItemFromHKCU(This, szPtr);
         SHEOW_LoadItemFromHKCR(This, szPtr);
+        dwPath = sizeof(szPath);
+        if (RegGetValueW(HKEY_CLASSES_ROOT, szPtr, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
+        {
+            SHEOW_LoadItemFromHKCU(This, szPath);
+        }
+
     }
     TRACE("count %u\n", This->count);
     return S_OK;
