@@ -32,7 +32,4 @@
 	<directory name="wine">
 		<xi:include href="wine/wine.rbuild" />
 	</directory>
-	<directory name="d3d9">
-		<xi:include href="d3d9/d3d9.rbuild" />
-	</directory>
 </group>
