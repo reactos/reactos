@@ -840,6 +840,7 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 {
 	FILE *fp;
 	int ch, i;
+	size_t newline;
 	char buffer[81];
 
 	fp = popen ( versionCommand.c_str () , "r" );
@@ -865,6 +866,8 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 	{
 		prevtoken = token;
 		version = string( prevtoken );
+		if ( (newline = version.find('\n')) != std::string::npos )
+			version.erase(newline, 1);
 		if ( version.find('.') != std::string::npos )
 			break;
 		token = strtok ( NULL, separators );
