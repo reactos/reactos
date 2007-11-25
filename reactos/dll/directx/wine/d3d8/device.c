@@ -463,7 +463,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateTexture(LPDIRECT3DDEVICE8 iface
     LeaveCriticalSection(&d3d8_cs);
 
     if (FAILED(hrc)) {
-        /* free up object */
+        /* free up object */ 
         FIXME("(%p) call to IWineD3DDevice_CreateTexture failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
 /*      *ppTexture = NULL; */
@@ -477,8 +477,8 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateTexture(LPDIRECT3DDEVICE8 iface
    return hrc;
 }
 
-static HRESULT WINAPI IDirect3DDevice8Impl_CreateVolumeTexture(LPDIRECT3DDEVICE8 iface,
-                                                          UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage,
+static HRESULT WINAPI IDirect3DDevice8Impl_CreateVolumeTexture(LPDIRECT3DDEVICE8 iface, 
+                                                          UINT Width, UINT Height, UINT Depth, UINT Levels, DWORD Usage, 
                                                           D3DFORMAT Format, D3DPOOL Pool, IDirect3DVolumeTexture8** ppVolumeTexture) {
 
     IDirect3DVolumeTexture8Impl *object;
@@ -518,7 +518,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateVolumeTexture(LPDIRECT3DDEVICE8
     return hrc;
 }
 
-static HRESULT WINAPI IDirect3DDevice8Impl_CreateCubeTexture(LPDIRECT3DDEVICE8 iface, UINT EdgeLength, UINT Levels, DWORD Usage,
+static HRESULT WINAPI IDirect3DDevice8Impl_CreateCubeTexture(LPDIRECT3DDEVICE8 iface, UINT EdgeLength, UINT Levels, DWORD Usage, 
                                                         D3DFORMAT Format, D3DPOOL Pool, IDirect3DCubeTexture8** ppCubeTexture) {
 
     IDirect3DCubeTexture8Impl *object;
@@ -634,7 +634,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_CreateSurface(LPDIRECT3DDEVICE8 iface
     IDirect3DSurface8Impl *object;
     IDirect3DDevice8Impl  *This = (IDirect3DDevice8Impl *)iface;
     TRACE("(%p) Relay\n", This);
-    if(MultisampleQuality < 0) {
+    if(MultisampleQuality < 0) { 
         FIXME("MultisampleQuality out of range %d, substituting 0\n", MultisampleQuality);
         /*FIXME: Find out what windows does with a MultisampleQuality < 0 */
         MultisampleQuality=0;
@@ -989,7 +989,7 @@ static HRESULT WINAPI IDirect3DDevice8Impl_SetLight(LPDIRECT3DDEVICE8 iface, DWO
     IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
     HRESULT hr;
     TRACE("(%p) Relay\n" , This);
-
+ 
     /* Note: D3DLIGHT8 is compatible with WINED3DLIGHT */
     EnterCriticalSection(&d3d8_cs);
     hr = IWineD3DDevice_SetLight(This->WineD3DDevice, Index, (const WINED3DLIGHT *)pLight);
@@ -1413,7 +1413,7 @@ static HRESULT  WINAPI  IDirect3DDevice8Impl_GetCurrentTexturePalette(LPDIRECT3D
 }
 
 static HRESULT WINAPI IDirect3DDevice8Impl_DrawPrimitive(LPDIRECT3DDEVICE8 iface, D3DPRIMITIVETYPE PrimitiveType, UINT StartVertex, UINT PrimitiveCount) {
-    IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface;
+    IDirect3DDevice8Impl *This = (IDirect3DDevice8Impl *)iface; 
     HRESULT hr;
     TRACE("(%p) Relay\n" , This);
 
@@ -1803,6 +1803,12 @@ static HRESULT WINAPI IDirect3DDevice8Impl_SetIndices(LPDIRECT3DDEVICE8 iface, I
     TRACE("(%p) Relay\n", This);
 
     EnterCriticalSection(&d3d8_cs);
+    /* WineD3D takes an INT(due to d3d9), but d3d8 uses UINTs. Do I have to add a check here that
+     * the UINT doesn't cause an overflow in the INT? It seems rather unlikely because such large
+     * vertex buffers can't be created to address them with an index that requires the 32nd bit
+     * (4 Byte minimum vertex size * 2^31-1 -> 8 gb buffer. The index sign would be the least
+     * problem)
+     */
     IWineD3DDevice_SetBaseVertexIndex(This->WineD3DDevice, baseVertexIndex);
     hr = IWineD3DDevice_SetIndices(This->WineD3DDevice,
             pIndexData ? ((IDirect3DIndexBuffer8Impl *)pIndexData)->wineD3DIndexBuffer : NULL);
@@ -1822,7 +1828,8 @@ static HRESULT WINAPI IDirect3DDevice8Impl_GetIndices(LPDIRECT3DDEVICE8 iface, I
     }
 
     EnterCriticalSection(&d3d8_cs);
-    IWineD3DDevice_GetBaseVertexIndex(This->WineD3DDevice, pBaseVertexIndex);
+    /* The case from UINT to INT is safe because d3d8 will never set negative values */
+    IWineD3DDevice_GetBaseVertexIndex(This->WineD3DDevice, (INT *) pBaseVertexIndex);
     rc = IWineD3DDevice_GetIndices(This->WineD3DDevice, &retIndexData);
     if (SUCCEEDED(rc) && retIndexData) {
         IWineD3DIndexBuffer_GetParent(retIndexData, (IUnknown **)ppIndexData);

@@ -67,19 +67,19 @@ static ULONG WINAPI IDirect3DStateBlock8Impl_Release(IDirect3DStateBlock8 *iface
 /* IDirect3DStateBlock8 Interface follow: */
 static HRESULT WINAPI IDirect3DStateBlock8Impl_GetDevice(IDirect3DStateBlock8 *iface, IDirect3DDevice8 **ppDevice) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This);
+    TRACE("(%p) Relay\n", This); 
     return IDirect3DResource8Impl_GetDevice((LPDIRECT3DRESOURCE8) This, ppDevice);
 }
 
 static HRESULT WINAPI IDirect3DStateBlock8Impl_Capture(IDirect3DStateBlock8 *iface) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This);
+    TRACE("(%p) Relay\n", This); 
     return IWineD3DStateBlock_Capture(This->wineD3DStateBlock);
 }
 
 static HRESULT WINAPI IDirect3DStateBlock8Impl_Apply(IDirect3DStateBlock8 *iface) {
     IDirect3DStateBlock8Impl *This = (IDirect3DStateBlock8Impl *)iface;
-    TRACE("(%p) Relay\n", This);
+    TRACE("(%p) Relay\n", This); 
     return IWineD3DStateBlock_Apply(This->wineD3DStateBlock);
 }
 

@@ -109,8 +109,8 @@ static HRESULT  WINAPI  IDirect3D8Impl_GetAdapterIdentifier       (LPDIRECT3D8 i
 
     TRACE("(%p)->(%d,%08x, %p\n", This, Adapter, Flags, pIdentifier);
     EnterCriticalSection(&d3d8_cs);
-    /* dx8 and dx9 have different structures to be filled in, with incompatible
-       layouts so pass in pointers to the places to be filled via an internal
+    /* dx8 and dx9 have different structures to be filled in, with incompatible 
+       layouts so pass in pointers to the places to be filled via an internal 
        structure                                                                */
     adapter_id.Driver           = pIdentifier->Driver;
     adapter_id.Description      = pIdentifier->Description;
@@ -203,7 +203,7 @@ static HRESULT  WINAPI  IDirect3D8Impl_CheckDeviceMultiSampleType(LPDIRECT3D8 if
     return hr;
 }
 
-static HRESULT  WINAPI  IDirect3D8Impl_CheckDepthStencilMatch(LPDIRECT3D8 iface,
+static HRESULT  WINAPI  IDirect3D8Impl_CheckDepthStencilMatch(LPDIRECT3D8 iface, 
 						       UINT Adapter, D3DDEVTYPE DeviceType, D3DFORMAT AdapterFormat,
 						       D3DFORMAT RenderTargetFormat, D3DFORMAT DepthStencilFormat) {
     IDirect3D8Impl *This = (IDirect3D8Impl *)iface;
@@ -269,8 +269,8 @@ HRESULT WINAPI D3D8CB_CreateRenderTarget(IUnknown *device, IUnknown *pSuperior, 
     IDirect3DSurface8Impl *d3dSurface = NULL;
 
     TRACE("(%p) call back\n", device);
-    res = IDirect3DDevice8_CreateRenderTarget((IDirect3DDevice8 *)device, Width, Height,
-                                         (D3DFORMAT)Format, MultiSample, Lockable,
+    res = IDirect3DDevice8_CreateRenderTarget((IDirect3DDevice8 *)device, Width, Height, 
+                                         (D3DFORMAT)Format, MultiSample, Lockable, 
                                          (IDirect3DSurface8 **)&d3dSurface);
 
     if (SUCCEEDED(res)) {
@@ -365,7 +365,7 @@ HRESULT WINAPI D3D8CB_CreateDepthStencilSurface(IUnknown *device, IUnknown *pSup
     IDirect3DSurface8Impl *d3dSurface = NULL;
     TRACE("(%p) call back\n", device);
 
-    res = IDirect3DDevice8_CreateDepthStencilSurface((IDirect3DDevice8 *)device, Width, Height,
+    res = IDirect3DDevice8_CreateDepthStencilSurface((IDirect3DDevice8 *)device, Width, Height, 
                                          (D3DFORMAT)Format, MultiSample, (IDirect3DSurface8 **)&d3dSurface);
     if (SUCCEEDED(res)) {
         *ppSurface = d3dSurface->wineD3DSurface;

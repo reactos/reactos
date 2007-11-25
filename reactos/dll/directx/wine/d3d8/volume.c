@@ -229,10 +229,10 @@ HRESULT WINAPI D3D8CB_CreateVolume(IUnknown  *pDevice, IUnknown *pSuperior, UINT
 
     object->lpVtbl = &Direct3DVolume8_Vtbl;
     object->ref = 1;
-    hrc = IWineD3DDevice_CreateVolume(This->WineD3DDevice, Width, Height, Depth, Usage, Format,
+    hrc = IWineD3DDevice_CreateVolume(This->WineD3DDevice, Width, Height, Depth, Usage, Format, 
                                        Pool, &object->wineD3DVolume, pSharedHandle, (IUnknown *)object);
     if (hrc != D3D_OK) {
-        /* free up object */
+        /* free up object */ 
         FIXME("(%p) call to IWineD3DDevice_CreateVolume failed\n", This);
         HeapFree(GetProcessHeap(), 0, object);
         *ppVolume = NULL;
