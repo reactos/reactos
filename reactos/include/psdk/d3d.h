@@ -202,6 +202,7 @@ typedef DWORD D3DVIEWPORTHANDLE, *LPD3DVIEWPORTHANDLE;
 /*****************************************************************************
  * IDirect3D interface
  */
+#undef INTERFACE
 #define INTERFACE IDirect3D
 DECLARE_INTERFACE_(IDirect3D,IUnknown)
 {
