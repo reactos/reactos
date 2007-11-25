@@ -207,7 +207,7 @@ WINAPI ISF_MyDocuments_fnParseDisplayName (IShellFolder2 * iface,
             }
         }
         else
-            pidlTemp = _ILCreateMyComputer();
+            pidlTemp = _ILCreateMyDocuments();
 
         szNext = NULL;
     }
@@ -367,12 +367,9 @@ static HRESULT WINAPI ISF_MyDocuments_fnGetAttributesOf (IShellFolder2 * iface,
 {
     IGenericSFImpl *This = (IGenericSFImpl *)iface;
     HRESULT hr = S_OK;
-    static const DWORD dwDesktopAttributes =
+    static const DWORD dwMyDocumentsAttributes =
         SFGAO_STORAGE | SFGAO_HASPROPSHEET | SFGAO_STORAGEANCESTOR |
         SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_HASSUBFOLDER;
-    static const DWORD dwMyComputerAttributes =
-        SFGAO_CANRENAME | SFGAO_CANDELETE | SFGAO_HASPROPSHEET |
-        SFGAO_DROPTARGET | SFGAO_FILESYSANCESTOR | SFGAO_FOLDER | SFGAO_HASSUBFOLDER;
 
     TRACE ("(%p)->(cidl=%d apidl=%p mask=%p (0x%08x))\n",
            This, cidl, apidl, rgfInOut, rgfInOut ? *rgfInOut : 0);
@@ -386,14 +383,12 @@ static HRESULT WINAPI ISF_MyDocuments_fnGetAttributesOf (IShellFolder2 * iface,
         *rgfInOut = ~0;
 
     if(cidl == 0) {
-        *rgfInOut &= dwDesktopAttributes;
+        *rgfInOut &= dwMyDocumentsAttributes;
     } else {
         while (cidl > 0 && *apidl) {
             pdump (*apidl);
-            if (_ILIsDesktop(*apidl)) {
-                *rgfInOut &= dwDesktopAttributes;
-            } else if (_ILIsMyComputer(*apidl)) {
-                *rgfInOut &= dwMyComputerAttributes;
+            if (_ILIsMyDocuments(*apidl)) {
+                *rgfInOut &= dwMyDocumentsAttributes;
             } else {
                 SHELL32_GetItemAttributes (_IShellFolder_ (This), *apidl, rgfInOut);
             }
@@ -509,13 +504,13 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
     if (!pszPath)
         return E_OUTOFMEMORY;
 
-    if (_ILIsMyDocuments (pidl))
+    if (_ILIsMyDocuments (pidl) || _ILIsDesktop(pidl))
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
             (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
             strcpyW(pszPath, This->sPathTarget);
         else
-            HCR_GetClassNameW(&CLSID_ShellDesktop, pszPath, MAX_PATH);
+            HCR_GetClassNameW(&CLSID_MyDocuments, pszPath, MAX_PATH);
     }
     else if (_ILIsPidlSimple (pidl))
     {
@@ -534,7 +529,7 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
                  * Exception: The MyComputer folder doesn't have this key,
                  *   but any other filesystem backed folder it needs it.
                  */
-                if (IsEqualIID (clsid, &CLSID_MyComputer))
+                if (IsEqualIID (clsid, &CLSID_MyDocuments))
                 {
                     bWantsForParsing = TRUE;
                 }
@@ -903,7 +898,7 @@ HRESULT WINAPI ISF_MyDocuments_Constructor (
     {
         IGenericSFImpl *sf;
 
-        if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_DESKTOPDIRECTORY, TRUE ))
+        if (!SHGetSpecialFolderPathW( 0, szMyPath, CSIDL_PERSONAL, TRUE ))
             return E_UNEXPECTED;
 
         sf = LocalAlloc( LMEM_ZEROINIT, sizeof (IGenericSFImpl) );

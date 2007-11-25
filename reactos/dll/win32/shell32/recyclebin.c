@@ -388,6 +388,17 @@ static HRESULT WINAPI RecycleBin_GetDisplayNameOf(IShellFolder2 *This, LPCITEMID
     PDELETED_FILE_DETAILS_W pFileDetails;
     TRACE("(%p, %p, %x, %p)\n", This, pidl, (unsigned int)uFlags, pName);
 
+
+    if (_ILIsBitBucket (pidl))
+    {
+       WCHAR pszPath[100];
+
+       HCR_GetClassNameW(&CLSID_RecycleBin, pszPath, MAX_PATH);
+       pName->uType = STRRET_WSTR;
+       pName->u.pOleStr = StrDupW(pszPath);
+       return S_OK;
+    }
+
     pFileDetails = UnpackDetailsFromPidl(pidl);
     pName->uType = STRRET_WSTR;
     pName->u.pOleStr = StrDupW(&pFileDetails->FileName[0]);

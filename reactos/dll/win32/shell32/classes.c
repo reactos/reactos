@@ -365,6 +365,16 @@ BOOL HCR_GetClassNameW(REFIID riid, LPWSTR szDest, DWORD len)
 	    if(LoadStringW(shell32_hInstance, IDS_MYCOMPUTER, szDest, buflen))
 	      ret = TRUE;
 	  }
+	  else if (IsEqualIID(riid, &CLSID_MyDocuments))
+	  {
+	    if(LoadStringW(shell32_hInstance, IDS_PERSONAL, szDest, buflen))
+	      ret = TRUE;
+	  }
+	  else if (IsEqualIID(riid, &CLSID_RecycleBin))
+	  {
+	    if(LoadStringW(shell32_hInstance, IDS_RECYCLEBIN_FOLDER_NAME, szDest, buflen))
+	      ret = TRUE;
+	  }
 	}
 	TRACE("-- %s\n", debugstr_w(szDest));
 	return ret;
