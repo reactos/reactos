@@ -1432,6 +1432,28 @@ SHCreateDefaultExtractIcon(
   REFIID riid,
   void **ppv);
 
+/****************************************************************************
+ * SHCreateDataObject API
+ */
+
+HRESULT WINAPI SHCreateDataObject(
+  LPCITEMIDLIST pidlFolder,
+  UINT cidl,
+  LPCITEMIDLIST* apidl,
+  IDataObject *pdtInner,
+  REFIID riid,
+  void **ppv);
+
+/****************************************************************************
+ * CIDLData_CreateFromIDArray API
+ */
+
+HRESULT WINAPI CIDLData_CreateFromIDArray(
+	LPCITEMIDLIST pidlFolder,
+	UINT cidl,
+	LPCITEMIDLIST* apidl,
+	IDataObject **ppdtobj);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */
