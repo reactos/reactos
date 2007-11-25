@@ -50,6 +50,9 @@ extern "C" {
 #include "glapi.h"
 
 GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
+GLAPI BOOL GLAPIENTRY wglChoosePixelFormatARB (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+GLAPI BOOL GLAPIENTRY wglSwapIntervalEXT (int interval);
+GLAPI int GLAPIENTRY wglGetSwapIntervalEXT (void);
 
 #define MAX_MESA_ATTRS	20
 
@@ -315,24 +318,25 @@ static struct {
 } wgl_ext[] = {
        {"wglGetExtensionsStringARB",    (PROC)wglGetExtensionsStringARB},
        {"wglGetExtensionsStringEXT",    (PROC)wglGetExtensionsStringEXT},
-//       {"wglSwapIntervalEXT",           (PROC)wglSwapIntervalEXT},
-//       {"wglGetSwapIntervalEXT",        (PROC)wglGetSwapIntervalEXT},
-//       {"wglGetDeviceGammaRamp3DFX",    (PROC)wglGetDeviceGammaRamp3DFX},
-//       {"wglSetDeviceGammaRamp3DFX",    (PROC)wglSetDeviceGammaRamp3DFX},
-       /* WGL_ARB_pixel_format */
-//       {"wglGetPixelFormatAttribivARB", (PROC)wglGetPixelFormatAttribivARB},
-//       {"wglGetPixelFormatAttribfvARB", (PROC)wglGetPixelFormatAttribfvARB},
-//       {"wglChoosePixelFormatARB",      (PROC)wglChoosePixelFormatARB},
-       /* WGL_ARB_render_texture */
-//       {"wglBindTexImageARB",           (PROC)wglBindTexImageARB},
-//       {"wglReleaseTexImageARB",        (PROC)wglReleaseTexImageARB},
-//       {"wglSetPbufferAttribARB",       (PROC)wglSetPbufferAttribARB},
-//       /* WGL_ARB_pbuffer */
-//       {"wglCreatePbufferARB",          (PROC)wglCreatePbufferARB},
-//       {"wglGetPbufferDCARB",           (PROC)wglGetPbufferDCARB},
-//       {"wglReleasePbufferDCARB",       (PROC)wglReleasePbufferDCARB},
-//       {"wglDestroyPbufferARB",         (PROC)wglDestroyPbufferARB},
-//       {"wglQueryPbufferARB",           (PROC)wglQueryPbufferARB},
+       {"wglSwapIntervalEXT",    (PROC)wglSwapIntervalEXT},
+       {"wglGetSwapIntervalEXT",    (PROC)wglGetSwapIntervalEXT},
+//       {"wglGetPixelFormatAttribivARB",    (PROC)wglGetPixelFormatAttribivARB},
+//       {"wglGetPixelFormatAttribfvARB",    (PROC)wglGetPixelFormatAttribfvARB},
+       {"wglChoosePixelFormatARB",    (PROC)wglChoosePixelFormatARB},
+//       {"wglCreatePbufferARB",    (PROC)wglCreatePbufferARB},
+//       {"wglGetPbufferDCARB",    (PROC)wglGetPbufferDCARB},
+//       {"wglReleasePbufferDCARB",    (PROC)wglReleasePbufferDCARB},
+//       {"wglDestroyPbufferARB",    (PROC)wglDestroyPbufferARB},
+//       {"wglQueryPbufferARB",    (PROC)wglQueryPbufferARB},
+//       {"wglSetPbufferAttribARB",    (PROC)wglSetPbufferAttribARB},
+//       {"wglBindTexImageARB",    (PROC)wglBindTexImageARB},
+//       {"wglReleaseTexImageARB",    (PROC)wglReleaseTexImageARB},
+//       {"wglCreateBufferRegionARB",    (PROC)wglCreateBufferRegionARB},
+//       {"wglDeleteBufferRegionARB",    (PROC)wglDeleteBufferRegionARB},
+//       {"wglSaveBufferRegionARB",    (PROC)wglSaveBufferRegionARB},
+//       {"wglRestoreBufferRegionARB",    (PROC)wglRestoreBufferRegionARB},
+//       {"wglMakeContextCurrentARB",    (PROC)wglMakeContextCurrentARB},
+//       {"wglGetCurrentReadDCARB",    (PROC)wglGetCurrentReadDCARB},
        {NULL, NULL}
 };
 

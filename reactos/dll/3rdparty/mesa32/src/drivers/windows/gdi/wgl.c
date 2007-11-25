@@ -712,3 +712,50 @@ wglGetExtensionsStringEXT (void)
           "WGL_EXT_extensions_string WGL_ARB_extensions_string"
          /*WGL_ARB_pixel_format WGL_ARB_render_texture WGL_ARB_pbuffer*/;
 }
+
+GLAPI BOOL GLAPIENTRY
+wglChoosePixelFormatARB (HDC hdc,
+                         const int *piAttribIList,
+                         const FLOAT *pfAttribFList,
+                         UINT nMaxFormats,
+                         int *piFormats,
+                         UINT *nNumFormats)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglSwapIntervalEXT (int interval)
+{
+   /*
+   WMesaContext ctx = wglGetCurrentContext();
+   if (ctx == NULL) {
+      return FALSE;
+   }
+   if (interval < 0) {
+      interval = 0;
+   } else if (interval > 3) {
+      interval = 3;
+   }
+   ctx->gl_ctx.swapInterval = interval;
+   return TRUE;
+   */
+    return FALSE;
+}
+
+GLAPI int GLAPIENTRY
+wglGetSwapIntervalEXT (void)
+{
+    /*
+
+   WMesaContext ctx = wglGetCurrentContext();
+
+   if (ctx == NULL) {
+      return -1;
+   }
+   return (int)ctx->gl_ctx.swapInterval;
+   */
+    return -1;
+}
+
