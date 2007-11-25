@@ -191,9 +191,11 @@
 #define D3DVERTEXTEXTURESAMPLER2 (D3DDMAPSAMPLER+3)
 #define D3DVERTEXTEXTURESAMPLER3 (D3DDMAPSAMPLER+4)
 
+#ifndef MAKEFOURCC
 #define MAKEFOURCC(ch0, ch1, ch2, ch3)  \
     ((DWORD)(BYTE)(ch0) | ((DWORD)(BYTE)(ch1) << 8) |  \
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
+#endif
 
 /* Constants used by D3DPRESENT_PARAMETERS. when creating a device or swapchain */
 
