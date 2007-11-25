@@ -770,3 +770,28 @@ wglGetSwapIntervalEXT (void)
     return -1;
 }
 
+/* WGL_ARB_pixel_format */
+GLAPI BOOL GLAPIENTRY
+wglGetPixelFormatAttribivARB (HDC hdc,
+                              int iPixelFormat,
+                              int iLayerPlane,
+                              UINT nAttributes,
+                              const int *piAttributes,
+                              int *piValues)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglGetPixelFormatAttribfvARB (HDC hdc,
+                              int iPixelFormat,
+                              int iLayerPlane,
+                              UINT nAttributes,
+                              const int *piAttributes,
+                              FLOAT *pfValues)
+{
+   SetLastError(0);
+   return FALSE;
+}
+

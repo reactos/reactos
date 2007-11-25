@@ -53,6 +53,8 @@ GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
 GLAPI BOOL GLAPIENTRY wglChoosePixelFormatARB (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
 GLAPI BOOL GLAPIENTRY wglSwapIntervalEXT (int interval);
 GLAPI int GLAPIENTRY wglGetSwapIntervalEXT (void);
+GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribivARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
+GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribfvARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, FLOAT *pfValues);
 
 #define MAX_MESA_ATTRS	20
 
@@ -318,11 +320,11 @@ static struct {
 } wgl_ext[] = {
        {"wglGetExtensionsStringARB",    (PROC)wglGetExtensionsStringARB},
        {"wglGetExtensionsStringEXT",    (PROC)wglGetExtensionsStringEXT},
-       {"wglSwapIntervalEXT",    (PROC)wglSwapIntervalEXT},
-       {"wglGetSwapIntervalEXT",    (PROC)wglGetSwapIntervalEXT},
-//         {"wglGetPixelFormatAttribivARB",    (PROC)wglGetPixelFormatAttribivARB},
-//       {"wglGetPixelFormatAttribfvARB",    (PROC)wglGetPixelFormatAttribfvARB},
-       {"wglChoosePixelFormatARB",    (PROC)wglChoosePixelFormatARB},
+       {"wglSwapIntervalEXT",           (PROC)wglSwapIntervalEXT},
+       {"wglGetSwapIntervalEXT",        (PROC)wglGetSwapIntervalEXT},
+       {"wglGetPixelFormatAttribivARB", (PROC)wglGetPixelFormatAttribivARB},
+       {"wglGetPixelFormatAttribfvARB", (PROC)wglGetPixelFormatAttribfvARB},
+       {"wglChoosePixelFormatARB",      (PROC)wglChoosePixelFormatARB},
 //       {"wglCreatePbufferARB",    (PROC)wglCreatePbufferARB},
 //       {"wglGetPbufferDCARB",    (PROC)wglGetPbufferDCARB},
 //       {"wglReleasePbufferDCARB",    (PROC)wglReleasePbufferDCARB},
