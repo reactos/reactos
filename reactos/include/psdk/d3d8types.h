@@ -148,11 +148,11 @@
 #define D3DCOLORWRITEENABLE_ALPHA (1L<<3)
 
 
-
+#ifndef MAKEFOURCC
 #define MAKEFOURCC(ch0, ch1, ch2, ch3)  \
     ((DWORD)(BYTE)(ch0) | ((DWORD)(BYTE)(ch1) << 8) |  \
     ((DWORD)(BYTE)(ch2) << 16) | ((DWORD)(BYTE)(ch3) << 24 ))
-
+#endif
 
 /****************************
  * Vertex Shaders Declaration
