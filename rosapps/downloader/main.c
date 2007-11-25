@@ -364,7 +364,7 @@ SaveSettings(HWND hwnd)
                    &hKey) != ERROR_SUCCESS)
 		return FALSE;
 
-	SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_GETTEXT, sizeof(szBuf)/sizeof(TCHAR), (LPARAM)szBuf);
+	GetDlgItemText(hwnd, IDC_DOWNLOAD_FOLDER_EDIT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
 	if (GetFileAttributes(szBuf) == 0xFFFFFFFF)
 		if (!CreateDirectory((LPCTSTR)szBuf,NULL))
 		{
@@ -380,7 +380,7 @@ SaveSettings(HWND hwnd)
 					  (DWORD)(sizeof(szBuf) / sizeof(TCHAR))))
 		return FALSE;
 
-	SendMessage(GetDlgItem(hwnd, IDC_UPDATE_SERVER_EDIT), WM_GETTEXT, sizeof(szBuf)/sizeof(TCHAR), (LPARAM)szBuf);
+	GetDlgItemText(hwnd, IDC_UPDATE_SERVER_EDIT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
 	if (RegSetValueEx(hKey,
 					  L"UpdateServer",
 					  0,
@@ -390,7 +390,7 @@ SaveSettings(HWND hwnd)
 		return FALSE;
 
 	DWORD dwValue;
-	if (SendMessage(GetDlgItem(hwnd, IDC_DELINST_FILES_CHECKBOX), BM_GETCHECK, 0, 0) == BST_CHECKED)
+	if (SendDlgItemMessage(hwnd, IDC_DELINST_FILES_CHECKBOX, BM_GETCHECK, 0, 0) == BST_CHECKED)
 		dwValue = 0x1;
 	else
 		dwValue = 0x0;
@@ -436,7 +436,7 @@ InitProfDlg(HWND hwnd)
                         (LPBYTE)&Buf,
                         &dwSize) == ERROR_SUCCESS)
 	{
-		SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_SETTEXT, -1, (LPARAM)Buf);
+		SetDlgItemText(hwnd, IDC_DOWNLOAD_FOLDER_EDIT, Buf);
 	}
 	else
 	{
@@ -466,7 +466,7 @@ InitProfDlg(HWND hwnd)
 		{
 			if (GetFileAttributes(DPath) == 0xFFFFFFFF)
 				if (!CreateDirectory((LPCTSTR)DPath,NULL)) return FALSE;
-			SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_SETTEXT, -1, (LPARAM)DPath);
+			SetDlgItemText(hwnd, IDC_DOWNLOAD_FOLDER_EDIT, DPath);
 		}
 	}
 
@@ -478,7 +478,7 @@ InitProfDlg(HWND hwnd)
                         (LPBYTE)&Buf,
                         &dwSize) == ERROR_SUCCESS)
 	{
-		SendMessage(GetDlgItem(hwnd, IDC_UPDATE_SERVER_EDIT), WM_SETTEXT, -1, (LPARAM)Buf);
+		SetDlgItemText(hwnd, IDC_UPDATE_SERVER_EDIT, Buf);
 	}
 	else
 	{
@@ -492,7 +492,7 @@ InitProfDlg(HWND hwnd)
 			return FALSE;
 		else
 		{
-			SendMessage(GetDlgItem(hwnd, IDC_UPDATE_SERVER_EDIT), WM_SETTEXT, -1, (LPARAM)Buf);
+			SetDlgItemText(hwnd, IDC_UPDATE_SERVER_EDIT, Buf);
 		}
 	}
 
@@ -506,7 +506,7 @@ InitProfDlg(HWND hwnd)
                         &dwSize) == ERROR_SUCCESS)
 	{
 		if (dwValue == 0x1)
-			SendMessage(GetDlgItem(hwnd, IDC_DELINST_FILES_CHECKBOX), BM_SETCHECK, 1, 1);
+			SendDlgItemMessage(hwnd, IDC_DELINST_FILES_CHECKBOX, BM_SETCHECK, 1, 1);
 	}
 	else
 	{
@@ -545,7 +545,7 @@ ChooseFolder(HWND hwnd)
 	SHGetPathFromIDList(lpItemList, szPath);
 
 	if (_tcslen(szPath) == 0) return FALSE;
-	SendMessage(GetDlgItem(hwnd, IDC_DOWNLOAD_FOLDER_EDIT), WM_SETTEXT, -1, (LPARAM)szPath);
+	SetDlgItemText(hwnd, IDC_DOWNLOAD_FOLDER_EDIT, szPath);
 
 	return TRUE;
 }
