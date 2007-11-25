@@ -320,7 +320,7 @@ static struct {
        {"wglGetExtensionsStringEXT",    (PROC)wglGetExtensionsStringEXT},
        {"wglSwapIntervalEXT",    (PROC)wglSwapIntervalEXT},
        {"wglGetSwapIntervalEXT",    (PROC)wglGetSwapIntervalEXT},
-//       {"wglGetPixelFormatAttribivARB",    (PROC)wglGetPixelFormatAttribivARB},
+//         {"wglGetPixelFormatAttribivARB",    (PROC)wglGetPixelFormatAttribivARB},
 //       {"wglGetPixelFormatAttribfvARB",    (PROC)wglGetPixelFormatAttribfvARB},
        {"wglChoosePixelFormatARB",    (PROC)wglChoosePixelFormatARB},
 //       {"wglCreatePbufferARB",    (PROC)wglCreatePbufferARB},

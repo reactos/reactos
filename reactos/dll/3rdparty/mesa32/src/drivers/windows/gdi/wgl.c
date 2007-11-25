@@ -692,7 +692,7 @@ WINGDIAPI BOOL GLAPIENTRY wglRealizeLayerPalette(HDC hdc,
 }
 
 WINGDIAPI BOOL GLAPIENTRY wglSwapLayerBuffers(HDC hdc,
-					      UINT fuPlanes)
+                                              UINT fuPlanes)
 {
     (void) hdc; (void) fuPlanes;
     SetLastError(0);
@@ -701,16 +701,27 @@ WINGDIAPI BOOL GLAPIENTRY wglSwapLayerBuffers(HDC hdc,
 
 WINGDIAPI const char * GLAPIENTRY wglGetExtensionsStringARB(HDC hdc)
 {
-    return "WGL_ARB_extensions_string";
+     /* WGL_ARB_render_texture */
+    return "WGL_ARB_extensions_string WGL_"
+           "ARB_pixel_format WGL_ARB_multi"
+           "sample WGL_EXT_swap_control WG"
+           "L_ARB_pbuffer WGL_ARB_render_t"
+           "exture WGL_ARB_make_current_re"
+           "ad WGL_EXT_extensions_string W"
+           "GL_ARB_buffer_region ";
 }
 
 GLAPI const char * GLAPIENTRY
 wglGetExtensionsStringEXT (void)
 {
-   return 
-          // "WGL_EXT_swap_control "
-          "WGL_EXT_extensions_string WGL_ARB_extensions_string"
-         /*WGL_ARB_pixel_format WGL_ARB_render_texture WGL_ARB_pbuffer*/;
+    /* WGL_ARB_render_texture */
+    return "WGL_ARB_extensions_string WGL_"
+           "ARB_pixel_format WGL_ARB_multi"
+           "sample WGL_EXT_swap_control WG"
+           "L_ARB_pbuffer WGL_ARB_render_t"
+           "exture WGL_ARB_make_current_re"
+           "ad WGL_EXT_extensions_string W"
+           "GL_ARB_buffer_region ";
 }
 
 GLAPI BOOL GLAPIENTRY
