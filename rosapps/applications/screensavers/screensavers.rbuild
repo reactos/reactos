@@ -7,8 +7,8 @@
 	<directory name="matrix">
 		<xi:include href="matrix/matrix.rbuild" />
 	</directory>
-	<directory name="scrnsave">
-		<xi:include href="scrnsave/scrnsave.rbuild" />
+	<directory name="blankscr">
+		<xi:include href="blankscr/blankscr.rbuild" />
 	</directory>
 	<directory name="starfield">
 		<xi:include href="starfield/starfield.rbuild" />

@@ -17,39 +17,39 @@
  *  Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA
  */
 
-#include <windows.h> 
-#include <scrnsave.h> 
+#include <windows.h>
+#include <scrnsave.h>
 #include "resource.h"
 
-LRESULT WINAPI ScreenSaverProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam) 
+LRESULT WINAPI ScreenSaverProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 { 
-    static HDC  hdc;   
+    static HDC  hdc;
     static RECT rc;
 
-    switch(message) 
-    { 
-        case WM_CREATE: 
-            break; 
-        case WM_DESTROY: 
-            PostQuitMessage(0); 
-            break; 
-        case WM_ERASEBKGND: 
-            hdc = GetDC(hwnd); 
-            GetClientRect (hwnd, &rc); 
-            FillRect (hdc, &rc, GetStockObject(BLACK_BRUSH)); 
-            ReleaseDC(hwnd,hdc); 
-            break; 
-       case WM_PAINT: 
-            break; 
-       default: 
-            return DefScreenSaverProc(hwnd, message, wParam, lParam); 
-    } 
-    return 0; 
+    switch(message)
+    {
+        case WM_CREATE:
+            break;
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            break;
+        case WM_ERASEBKGND:
+            hdc = GetDC(hwnd);
+            GetClientRect (hwnd, &rc);
+            FillRect (hdc, &rc, GetStockObject(BLACK_BRUSH));
+            ReleaseDC(hwnd,hdc);
+            break;
+       case WM_PAINT:
+            break;
+       default:
+            return DefScreenSaverProc(hwnd, message, wParam, lParam);
+    }
+    return 0;
 }
 
-BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) 
-{ 
-    return FALSE; 
+BOOL WINAPI ScreenSaverConfigureDialog(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    return FALSE;
 }
 
 BOOL WINAPI RegisterDialogClasses(HANDLE hInst)
