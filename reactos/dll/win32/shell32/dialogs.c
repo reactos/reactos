@@ -119,7 +119,7 @@ void WINAPI RunFileDlg(
 static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
     {
     int ic ;
-    char *psz, szMsg[256] ;
+    char *psz, *pdir, szMsg[256];
     static RUNFILEDLGPARAMS *prfdp = NULL ;
 
     switch (message)
@@ -144,8 +144,16 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                         {
                         psz = HeapAlloc( GetProcessHeap(), 0, (ic + 2) );
                         GetWindowTextA (htxt, psz, ic + 1) ;
-
-                        if (ShellExecuteA(NULL, "open", psz, NULL, NULL, SW_SHOWNORMAL) < (HINSTANCE)33)
+                        pdir = HeapAlloc(  GetProcessHeap(), 0, (ic + 2) );
+                        if (pdir)
+                            {
+                            char * ptr;
+                            strcpy(pdir, psz);
+                            ptr = strrchr(pdir, '\\');
+                            if(ptr)
+                                ptr[0] = '\0';
+                            }
+                        if (ShellExecuteA(NULL, "open", psz, NULL, pdir, SW_SHOWNORMAL) < (HINSTANCE)33)
                             {
                             char *pszSysMsg = NULL ;
                             FormatMessageA (
@@ -161,11 +169,13 @@ static INT_PTR CALLBACK RunDlgProc (HWND hwnd, UINT message, WPARAM wParam, LPAR
                             MessageBoxA (hwnd, szMsg, "Nix", MB_OK | MB_ICONEXCLAMATION) ;
 
                             HeapFree(GetProcessHeap(), 0, psz);
+                            HeapFree(GetProcessHeap(), 0, pdir);
                             SendMessageA (htxt, CB_SETEDITSEL, 0, MAKELPARAM (0, -1)) ;
                             return TRUE ;
                             }
                         FillList (htxt, psz) ;
                         HeapFree(GetProcessHeap(), 0, psz);
+                        HeapFree(GetProcessHeap(), 0, pdir);
                         EndDialog (hwnd, 0) ;
                         }
                     }
