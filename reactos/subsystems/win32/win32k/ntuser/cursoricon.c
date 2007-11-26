@@ -1401,8 +1401,7 @@ UserDrawIconEx(
    }
 
    /* NtGdiCreateCompatibleBitmap will create a monochrome bitmap
-      when cxWidth or cyHeight is 0
-   */
+      when cxWidth or cyHeight is 0 */
    if ((bmpColor.bmBitsPixel == 32) && (cxWidth != 0) && (cyHeight != 0))
    {
       bAlpha = TRUE;
@@ -1425,6 +1424,9 @@ UserDrawIconEx(
    if (DoFlickerFree || bAlpha)
    {
       RECT r;
+      BITMAP bm;
+      BITMAPOBJ *BitmapObj = NULL;
+
       r.right = cxWidth;
       r.bottom = cyHeight;
 
@@ -1441,6 +1443,21 @@ UserDrawIconEx(
          DPRINT1("NtGdiCreateCompatibleBitmap() failed!\n");
          goto cleanup;
       }
+
+      /* make sure we have a 32 bit offscreen bitmap
+        otherwise we can't do alpha blending */
+      BitmapObj = BITMAPOBJ_LockBitmap(hbmOff);
+      if (BitmapObj == NULL)
+      {
+          DPRINT1("GDIOBJ_LockObj() failed!\n");
+          goto cleanup;
+      }
+      BITMAP_GetObject(BitmapObj, sizeof(BITMAP), &bm);
+
+      if (bm.bmBitsPixel != 32)
+        bAlpha = FALSE;
+
+      BITMAPOBJ_UnlockBitmap(BitmapObj);
 
       hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
       if (!hOldOffBmp)
