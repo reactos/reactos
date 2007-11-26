@@ -32,10 +32,12 @@
 #include "undocshell.h"
 #include "shlobj.h"
 #include "objbase.h"
+#include "commdlg.h"
 
 #include "shell32_main.h"
 #include "shellfolder.h"
 #include "shresdef.h"
+#include "stdio.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL (shell);
 
@@ -45,6 +47,9 @@ const GUID CLSID_OpenWith = { 0x09799AFB, 0xAD67, 0x11d1, {0xAB,0xCD,0x00,0xC0,0
 /// [HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\policies\system]
 /// "NoInternetOpenWith"=dword:00000001
 ///
+
+typedef BOOL (*LPFNOFN) (OPENFILENAMEW *) ;
+
 
 typedef struct
 {	
@@ -57,6 +62,8 @@ typedef struct
     UINT size;
     UINT count;
     WCHAR szName[MAX_PATH];
+    WCHAR szPath[MAX_PATH];
+    INT iSelItem;
 } SHEOWImpl;
 
 static const IShellExtInitVtbl eivt;
@@ -248,7 +255,7 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
     }
 
 	mii.wID = idCmdFirst;
-    This->wId = idCmdFirst;
+    This->wId = 0;
 
 	mii.fType = MFT_STRING;
 	if (InsertMenuItemW( hmenu, pos, TRUE, &mii))
@@ -256,6 +263,201 @@ static HRESULT WINAPI SHEOWCm_fnQueryContextMenu(
 
     TRACE("items %x\n",items);
     return MAKE_HRESULT(SEVERITY_SUCCESS, 0, items);
+}
+
+static void AddListViewItem(HWND hwndDlg, WCHAR * item, UINT state, UINT index)
+{
+    LV_ITEMW listItem;
+    HWND hList;
+    WCHAR * ptr;
+
+    hList = GetDlgItem(hwndDlg, 14002);
+
+
+    ptr = wcsrchr(item, L'\\') + 1;
+    ZeroMemory(&listItem, sizeof(LV_ITEM));
+    listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
+    listItem.state      = state;
+    listItem.pszText    = ptr;
+    listItem.iImage     = -1;
+    listItem.iItem      = index;
+    listItem.lParam     = (LPARAM)item;
+
+    (void)ListView_InsertItemW(hList, &listItem);
+}
+
+static void AddListViewItems(HWND hwndDlg, SHEOWImpl * This)
+{
+    HWND hList;
+    RECT clientRect;
+    LV_COLUMN col;
+
+    hList = GetDlgItem(hwndDlg, 14002);
+
+    GetClientRect(hList, &clientRect);
+
+    ZeroMemory(&col, sizeof(LV_COLUMN));
+    col.mask      = LVCF_SUBITEM | LVCF_WIDTH;
+    col.iSubItem  = 0;
+    col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
+    (void)ListView_InsertColumn(hList, 0, &col);
+
+    /* FIXME 
+     * add default items
+     */
+    This->iSelItem = -1;
+}
+static void FreeListViewItems(HWND hwndDlg)
+{
+    HWND hList;
+    int iIndex, iCount;
+    LVITEM lvItem;
+
+    hList = GetDlgItem(hwndDlg, 14002);
+
+    iCount = ListView_GetItemCount(hList);
+    ZeroMemory(&lvItem, sizeof(LVITEM));
+
+    for (iIndex = 0; iIndex < iCount; iIndex++)
+    {
+        lvItem.mask = LVIF_PARAM;
+        lvItem.iItem = iIndex;
+        if (ListView_GetItem(GetDlgItem(hwndDlg, 14002), &lvItem))
+        {
+            free((void*)lvItem.lParam);
+        }
+    }
+}
+
+
+static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    OPENFILENAMEW ofn;
+    static HMODULE hComdlg = NULL;
+    LPFNOFN ofnProc;
+    WCHAR szBuffer[MAX_PATH + 30] = { 0 };
+    WCHAR szPath[MAX_PATH * 2 +1] = { 0 };
+    int res;
+    LVITEM lvItem;
+    STARTUPINFOW si;
+    PROCESS_INFORMATION pi;
+
+    SHEOWImpl *This = (SHEOWImpl*) GetWindowLong(hwndDlg, DWLP_USER);
+
+    switch(uMsg)
+    {
+    case WM_INITDIALOG:
+        SetWindowLong(hwndDlg, DWLP_USER, (LONG)lParam);
+        This = (SHEOWImpl*)lParam;
+        res = SendDlgItemMessageW(hwndDlg, 14001, WM_GETTEXT, (sizeof(szBuffer) / sizeof(WCHAR)), (LPARAM)szBuffer);
+        if (res < sizeof(szBuffer) / sizeof(WCHAR))
+        {
+            wcsncat(szBuffer, This->szPath, (sizeof(szBuffer) / sizeof(WCHAR)) - res);
+            SendDlgItemMessageW(hwndDlg, 14001, WM_SETTEXT, 0, (LPARAM)szBuffer);
+        }
+        AddListViewItems(hwndDlg, This);
+        return TRUE;
+    case WM_COMMAND:
+        switch(LOWORD(wParam))
+		{
+        case 14004: /* browse */
+            res = LoadStringW(shell32_hInstance, IDS_OPEN_WITH, szBuffer, sizeof(szBuffer) / sizeof(WCHAR));
+            if (res < sizeof(szBuffer))
+            {
+                ofn.lpstrTitle = szBuffer;
+                ofn.nMaxFileTitle = strlenW(szBuffer);
+            }
+            
+            ZeroMemory(&ofn, sizeof(OPENFILENAMEW));
+            ofn.lStructSize  = sizeof(OPENFILENAMEW);
+            ofn.hInstance = shell32_hInstance;
+            ofn.lpstrFilter = L"Executable Files\0*.exe\0\0\0"; //FIXME
+            ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+            ofn.nMaxFile = (sizeof(szPath) / sizeof(WCHAR));
+            ofn.lpstrFile = szPath;
+            
+            if (!hComdlg)
+                hComdlg = LoadLibraryExW (L"comdlg32", NULL, 0);
+            if (!hComdlg)
+                return TRUE;
+
+            ofnProc = (LPFNOFN)GetProcAddress (hComdlg, "GetOpenFileNameW");
+            if (!ofnProc)
+                return TRUE;
+
+            if (!ofnProc (&ofn))
+                return TRUE;
+      
+            /* FIXME
+             * check for duplicates 
+             */
+            AddListViewItem(hwndDlg, wcsdup(szPath), LVIS_FOCUSED | LVIS_SELECTED, 0);
+            This->iSelItem = 0;
+            return TRUE;
+        case 14005: /* ok */
+            ZeroMemory(&lvItem, sizeof(LVITEM));
+            lvItem.mask = LVIF_PARAM;
+            lvItem.iItem = This->iSelItem;
+
+            if (!ListView_GetItem(GetDlgItem(hwndDlg, 14002), &lvItem))
+            {
+                ERR("Failed to get item index %d\n", This->iSelItem);
+                DestroyWindow(hwndDlg);
+                return FALSE;
+            }
+                        
+            if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            {
+                /* FIXME
+                 * give selected program default invokation rights
+                 */
+            }
+            ZeroMemory(&si, sizeof(STARTUPINFOW));
+            si.cb = sizeof(STARTUPINFOW);
+            wcscpy(szPath, (WCHAR*)lvItem.lParam);
+            wcscat(szPath, L" ");
+            wcscat(szPath, This->szPath);
+
+            //TRACE("exe: %s path %s\n", debugstr_w((WCHAR*)lvItem.lParam), debugstr_w(This->szPath)); 
+            if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+            {
+                CloseHandle(pi.hThread);
+                CloseHandle(pi.hProcess);
+            }
+            else
+            {
+                ERR("failed to execute with err %x\n", GetLastError());
+                return FALSE;
+            }
+            FreeListViewItems(hwndDlg);
+            DestroyWindow(hwndDlg);
+            return TRUE;
+        case 14006: /* cancel */
+            DestroyWindow(hwndDlg);
+            return FALSE;
+        }
+    case WM_NOTIFY:
+        {
+            LPNMHDR lpnm = (LPNMHDR)lParam;
+
+            switch(lpnm->code)
+            {
+                case LVN_ITEMCHANGED:
+                {
+                    LPNMLISTVIEW nm = (LPNMLISTVIEW)lParam;
+
+                    if ((nm->uNewState & LVIS_SELECTED) == 0)
+                        return FALSE;
+
+                    This->iSelItem = nm->iItem;        
+                }
+            }
+            break;
+        }
+    default:
+        break;
+    }
+    return FALSE;
 }
 
 static HRESULT WINAPI
@@ -266,6 +468,36 @@ SHEOWCm_fnInvokeCommand( IContextMenu2* iface, LPCMINVOKECOMMANDINFO lpici )
 
     if (This->wId > LOWORD(lpici->lpVerb) || This->count + This->wId < LOWORD(lpici->lpVerb))
        return E_FAIL;
+
+    if (This->NoOpen)
+    {
+        /* FIXME
+         * show warning open dialog 
+         */
+    }
+    
+    if (This->wId == LOWORD(lpici->lpVerb))
+    {
+        MSG msg;
+        BOOL bRet;
+        HWND hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(OPEN_WITH_PROGRAMM_DLG), lpici->hwnd, OpenWithProgrammDlg, (LPARAM)This);
+        ShowWindow(hwnd, SW_SHOW);
+
+        while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0) 
+        { 
+            if (bRet == -1)
+            {
+                // Handle the error and possibly exit
+            }
+            else if (!IsWindow(hwnd) || !IsDialogMessage(hwnd, &msg)) 
+            { 
+                TranslateMessage(&msg); 
+                DispatchMessage(&msg); 
+            } 
+        } 
+        return S_OK;
+    }
+
 
     if (This->wId == LOWORD(lpici->lpVerb))
     {
@@ -584,9 +816,9 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     LPCITEMIDLIST pidl_folder;
     LPCITEMIDLIST pidl_child; 
     LPCITEMIDLIST pidl; 
-    WCHAR szPath[MAX_PATH];
     DWORD dwPath;
     LPWSTR szPtr;
+    WCHAR szPath[100];
     static const WCHAR szShortCut[] = { '.','l','n','k', 0 };
 
     fmt.cfFormat = RegisterClipboardFormatA(CFSTR_SHELLIDLIST);
@@ -622,21 +854,21 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     if (_ILIsFolder(pidl_child))
     {
         TRACE("pidl is a folder\n");
-        SHFree(pidl);
+        SHFree((void*)pidl);
         return E_FAIL;
     }
 
-    if (!SHGetPathFromIDListW(pidl, szPath))
+    if (!SHGetPathFromIDListW(pidl, This->szPath))
     {
-        SHFree(pidl);
+        SHFree((void*)pidl);
         ERR("SHGetPathFromIDListW failed\n");
         return E_FAIL;
     }
     
-    SHFree(pidl);    
-    TRACE("szPath %s\n", debugstr_w(szPath));
+    SHFree((void*)pidl);    
+    TRACE("szPath %s\n", debugstr_w(This->szPath));
 
-    szPtr = wcschr(szPath, '.');
+    szPtr = wcschr(This->szPath, '.');
     if (szPtr)
     {
         if (!_wcsicmp(szPtr, szShortCut))

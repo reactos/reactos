@@ -126,6 +126,7 @@
 #define IDD_TITLE                   0x3742
 #define IDD_TREEVIEW                0x3741
 #define SHELL_EXTENDED_SHORTCUT_DLG 0x4000
+#define OPEN_WITH_PROGRAMM_DLG      0x4001
 
 /* ID's of the ShellAbout controls */
 // Part 1 - ID's identical to Windows Server 2003 SP1's shell32.dll
