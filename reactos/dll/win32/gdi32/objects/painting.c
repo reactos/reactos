@@ -33,14 +33,13 @@ LineTo( HDC hDC, INT x, INT y )
  return NtGdiLineTo( hDC, x, y);
 }
 
-#if 0 /* FIXME: enable this as soon as we have working usermode gdi */
 
 BOOL
 STDCALL
 MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
 {
  PDC_ATTR Dc_Attr;
-
+#if 0
  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
  {
     if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
@@ -59,7 +58,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
       }
     }
  }
-
+#endif
  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
 
  if ( Point )
@@ -80,10 +79,11 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
  Dc_Attr->ptlCurrent.x = x;
  Dc_Attr->ptlCurrent.y = y;
 
- Dc_Attr->ulDirty_ |= ( DIRTY_PTLCURRENT|DIRTY_STYLESTATE); // Set dirty
+ Dc_Attr->ulDirty_ &= ~DIRTY_PTLCURRENT;
+ Dc_Attr->ulDirty_ |= ( DIRTY_PTFXCURRENT|DIRTY_STYLESTATE); // Set dirty
  return TRUE;
 }
-#endif
+
 
 /*
  * @implemented

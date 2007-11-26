@@ -156,7 +156,6 @@ DC_GET_VAL_EX( GetViewportExtEx, szlViewportExt.cx, szlViewportExt.cy, SIZE, cx,
 DC_GET_VAL_EX( GetViewportOrgEx, ptlViewportOrg.x, ptlViewportOrg.y, POINT, x, y )
 DC_GET_VAL_EX( GetWindowExtEx, szlWindowExt.cx, szlWindowExt.cy, SIZE, cx, cy )
 DC_GET_VAL_EX( GetWindowOrgEx, ptlWindowOrg.x, ptlWindowOrg.y, POINT, x, y )
-DC_GET_VAL_EX ( GetCurrentPositionEx, ptlCurrent.x, ptlCurrent.y, POINT, x, y )
 
 DC_SET_MODE( NtGdiSetPolyFillMode, jFillMode, ALTERNATE, WINDING )
 DC_SET_MODE( NtGdiSetROP2, jROP2, R2_BLACK, R2_WHITE )

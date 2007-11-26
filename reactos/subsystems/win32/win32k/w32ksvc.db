@@ -740,7 +740,6 @@ NtGdiExtTextOut                         8
 NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetColorSpace                      1
-NtGdiGetCurrentPositionEx               2
 NtGdiGetEnhMetaFile                     1
 NtGdiGetEnhMetaFileBits                 3
 NtGdiGetEnhMetaFileDescription          3
@@ -757,7 +756,6 @@ NtGdiGetPixelFormat                     1
 NtGdiGetPolyFillMode                    1
 NtGdiGetStretchBltMode                  1
 NtGdiGetTextExtentPoint32               4
-NtGdiMoveToEx                           4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 NtGdiPlayEnhMetaFile                    3

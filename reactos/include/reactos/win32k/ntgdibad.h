@@ -201,12 +201,6 @@ HCOLORSPACE
 STDCALL
 NtGdiGetColorSpace(HDC  hDC);
 
-/* Should be done in user mode. */
-BOOL STDCALL  NtGdiGetCurrentPositionEx(HDC  hDC, LPPOINT currentPosition);
-
-/* Use NtGdiGetDCPoint with GdiGetDCOrg. */
-BOOL STDCALL  NtGdiGetDCOrgEx(HDC  hDC, LPPOINT  Point);
-
 /* Meta are user-mode. */
 HENHMETAFILE
 STDCALL
@@ -311,14 +305,6 @@ BOOL STDCALL  NtGdiGetWindowExtEx(HDC  hDC, LPSIZE windowExt);
 
 /* Needs to be done in user-mode. */
 BOOL STDCALL  NtGdiGetWindowOrgEx(HDC  hDC, LPPOINT windowOrg);
-
-/* Needs to be done in user-mode. */
-BOOL
-STDCALL
-NtGdiMoveToEx(HDC  hDC,
-                   int  X,
-                   int  Y,
-                   LPPOINT  Point);
 
 /* Needs to be done in user-mode. */
 BOOL

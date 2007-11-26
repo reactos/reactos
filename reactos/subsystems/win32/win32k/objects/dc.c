@@ -1224,6 +1224,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   newdc->w.DCOrgY           = dc->w.DCOrgY;
 #endif
   nDc_Attr->ptlCurrent      = Dc_Attr->ptlCurrent;
+  nDc_Attr->ptfxCurrent     = Dc_Attr->ptfxCurrent;
   newdc->w.ArcDirection     = dc->w.ArcDirection;
   newdc->w.xformWorld2Wnd   = dc->w.xformWorld2Wnd;
   newdc->w.xformWorld2Vport = dc->w.xformWorld2Vport;
@@ -1296,6 +1297,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   dc->w.DCOrgY             = dcs->w.DCOrgY;
 #endif
   Dc_Attr->ptlCurrent      = sDc_Attr->ptlCurrent;
+  Dc_Attr->ptfxCurrent     = sDc_Attr->ptfxCurrent;
   dc->w.ArcDirection       = dcs->w.ArcDirection;
   dc->w.xformWorld2Wnd     = dcs->w.xformWorld2Wnd;
   dc->w.xformWorld2Vport   = dcs->w.xformWorld2Vport;

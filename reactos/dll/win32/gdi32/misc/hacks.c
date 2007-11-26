@@ -118,20 +118,6 @@ GetStretchBltMode(HDC hdc)
  */
 BOOL
 STDCALL
-MoveToEx(HDC hdc,
-         int X,
-         int Y,
-         LPPOINT lpPoint)
-{
-    return  NtGdiMoveToEx(hdc, X, Y, lpPoint);
-}
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
 OffsetViewportOrgEx(HDC hdc,
                     int nXOffset,
                     int nYOffset,

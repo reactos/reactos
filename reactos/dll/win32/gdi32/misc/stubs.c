@@ -2339,20 +2339,6 @@ GetDeviceCaps(HDC hdc,
     return NtGdiGetDeviceCaps(hdc,i);
 }
 
-
-/*
- * @implemented
- *
- */
-BOOL
-STDCALL
-GetCurrentPositionEx(HDC hdc,
-                     LPPOINT lpPoint)
-{
-    /* FIXME some part need be done in user mode */
-    return  NtGdiGetCurrentPositionEx(hdc, lpPoint);
-}
-
 /*
  * @implemented
  *

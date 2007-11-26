@@ -24,7 +24,8 @@
 
 // Some code from the WINE project source (www.winehq.com)
 
-
+// Should use Fx in Point
+//
 BOOL FASTCALL
 IntGdiMoveToEx(DC      *dc,
                int     X,
@@ -36,11 +37,23 @@ IntGdiMoveToEx(DC      *dc,
   if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   if ( Point )
   {
-    Point->x = Dc_Attr->ptlCurrent.x;
-    Point->y = Dc_Attr->ptlCurrent.y;
+    if ( Dc_Attr->ulDirty_ & DIRTY_PTLCURRENT ) // Double hit!
+    {
+       Point->x = Dc_Attr->ptfxCurrent.x; // ret prev before change.
+       Point->y = Dc_Attr->ptfxCurrent.y;
+       IntDPtoLP ( dc, Point, 1);         // reconvert back.
+     }
+     else
+     {
+       Point->x = Dc_Attr->ptlCurrent.x;
+       Point->y = Dc_Attr->ptlCurrent.y;
+     }
   }
   Dc_Attr->ptlCurrent.x = X;
   Dc_Attr->ptlCurrent.y = Y;
+  Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+  IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+  Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
 
@@ -48,6 +61,27 @@ IntGdiMoveToEx(DC      *dc,
     return PATH_MoveTo ( dc );
 
   return TRUE;
+}
+
+// Should use Fx in pt
+//
+VOID FASTCALL
+IntGetCurrentPositionEx(PDC dc, LPPOINT pt)
+{
+  PDC_ATTR Dc_Attr = dc->pDc_Attr;
+  if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if ( pt )
+  {
+     if (Dc_Attr->ulDirty_ & DIRTY_PTFXCURRENT)
+     {
+        Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+        IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+        Dc_Attr->ulDirty_ &= ~(DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
+     }
+     pt->x = Dc_Attr->ptlCurrent.x;
+     pt->y = Dc_Attr->ptlCurrent.y;
+  }
 }
 
 BOOL FASTCALL
@@ -73,6 +107,9 @@ IntGdiLineTo(DC  *dc,
 	    // FIXME - PATH_LineTo should maybe do this...
 	    Dc_Attr->ptlCurrent.x = XEnd;
 	    Dc_Attr->ptlCurrent.y = YEnd;
+            Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+            IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+            Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 	  }
       return Ret;
     }
@@ -128,6 +165,9 @@ IntGdiLineTo(DC  *dc,
     {
       Dc_Attr->ptlCurrent.x = XEnd;
       Dc_Attr->ptlCurrent.y = YEnd;
+      Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+      IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+      Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
     }
 
   return Ret;
@@ -189,6 +229,9 @@ IntGdiPolyBezierTo(DC      *dc,
   {
     Dc_Attr->ptlCurrent.x = pt[Count-1].x;
     Dc_Attr->ptlCurrent.y = pt[Count-1].y;
+    Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+    IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+    Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
   }
 
   return ret;
@@ -283,6 +326,9 @@ IntGdiPolylineTo(DC      *dc,
   {
     Dc_Attr->ptlCurrent.x = pt[Count-1].x;
     Dc_Attr->ptlCurrent.y = pt[Count-1].y;
+    Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
+    IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+    Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
   }
 
   return ret;
@@ -359,61 +405,6 @@ NtGdiLineTo(HDC  hDC,
   DC_UnlockDc(dc);
   return Ret;
 }
-
-BOOL
-STDCALL
-NtGdiMoveToEx(HDC      hDC,
-             int      X,
-             int      Y,
-             LPPOINT  Point)
-{
-  DC *dc;
-  POINT SafePoint;
-  NTSTATUS Status = STATUS_SUCCESS;
-  BOOL Ret;
-
-  dc = DC_LockDc(hDC);
-  if(!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return FALSE;
-  }
-  if (dc->IsIC)
-  {
-    DC_UnlockDc(dc);
-    /* Yes, Windows really returns TRUE in this case */
-    return TRUE;
-  }
-
-  Ret = IntGdiMoveToEx(dc, X, Y, (Point ? &SafePoint : NULL));
-
-  if(Point)
-  {
-    _SEH_TRY
-    {
-      ProbeForWrite(Point,
-                   sizeof(POINT),
-                   1);
-      *Point = SafePoint;
-    }
-    _SEH_HANDLE
-    {
-      Status = _SEH_GetExceptionCode();
-    }
-    _SEH_END;
-
-    if(!NT_SUCCESS(Status))
-    {
-      DC_UnlockDc(dc);
-      SetLastNtError(Status);
-      return FALSE;
-    }
-  }
-
-  DC_UnlockDc(dc);
-  return Ret;
-}
-
 
 BOOL
 APIENTRY
