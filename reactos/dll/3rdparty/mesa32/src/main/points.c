@@ -123,9 +123,15 @@ _mesa_PointParameterfvEXT( GLenum pname, const GLfloat *params)
 	       return;
 	    FLUSH_VERTICES(ctx, _NEW_POINT);
             COPY_3V(ctx->Point.Params, params);
+
             ctx->Point._Attenuated = (ctx->Point.Params[0] != 1.0 ||
                                       ctx->Point.Params[1] != 0.0 ||
                                       ctx->Point.Params[2] != 0.0);
+
+            if (ctx->Point._Attenuated)
+               ctx->_TriangleCaps |= DD_POINT_ATTEN;
+            else
+               ctx->_TriangleCaps &= ~DD_POINT_ATTEN;
          }
          else {
             _mesa_error(ctx, GL_INVALID_ENUM,

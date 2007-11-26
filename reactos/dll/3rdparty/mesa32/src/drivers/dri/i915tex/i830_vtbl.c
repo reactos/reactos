@@ -519,6 +519,16 @@ i830_emit_state(struct intel_context *intel)
 static void
 i830_destroy_context(struct intel_context *intel)
 {
+   GLuint i;
+   struct i830_context *i830 = i830_context(&intel->ctx);
+
+   for (i = 0; i < I830_TEX_UNITS; i++) {
+      if (i830->state.tex_buffer[i] != NULL) {
+	 driBOUnReference(i830->state.tex_buffer[i]);
+	 i830->state.tex_buffer[i] = NULL;
+      }
+   }
+
    _tnl_free_vertices(&intel->ctx);
 }
 

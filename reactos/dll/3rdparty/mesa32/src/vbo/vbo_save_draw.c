@@ -132,9 +132,11 @@ static void vbo_bind_vertex_list( GLcontext *ctx,
    }
 
    for (attr = 0; attr < VBO_ATTRIB_MAX; attr++) {
-      if (node->attrsz[attr]) {
+      GLuint src = map[attr];
+
+      if (node->attrsz[src]) {
 	 arrays[attr].Ptr = (const GLubyte *)data;
-	 arrays[attr].Size = node->attrsz[attr];
+	 arrays[attr].Size = node->attrsz[src];
 	 arrays[attr].StrideB = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Stride = node->vertex_size * sizeof(GLfloat);
 	 arrays[attr].Type = GL_FLOAT;

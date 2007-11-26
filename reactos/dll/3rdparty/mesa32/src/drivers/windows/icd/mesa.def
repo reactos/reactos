@@ -1,5 +1,5 @@
 DESCRIPTION 'Mesa (OpenGL driver) for Win32'
-VERSION 6.1
+VERSION 7.0
 
 EXPORTS
 ;

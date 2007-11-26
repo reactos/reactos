@@ -878,10 +878,10 @@ _glapi_get_proc_address(const char *funcName)
 
 #ifdef MANGLE
    if (funcName[0] != 'm' || funcName[1] != 'g' || funcName[2] != 'l')
-       return NULL;
+      return NULL;
 #else
    if (funcName[0] != 'g' || funcName[1] != 'l')
-       return NULL;
+      return NULL;
 #endif
 
    /* search extension functions first */

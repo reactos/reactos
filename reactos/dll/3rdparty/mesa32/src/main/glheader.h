@@ -237,7 +237,7 @@
 #endif
 
 
-#if !defined __GNUC__ || __GNUC__ < 3
+#if (!defined(__GNUC__) || __GNUC__ < 3) && !defined(__IBMC__)
 #  define __builtin_expect(x, y) x
 #endif
 

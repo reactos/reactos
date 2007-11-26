@@ -114,7 +114,7 @@
     do {                                                                \
         GLuint p = *(volatile GLuint *) GET_PTR(_x, _y);                \
        __asm__ __volatile__( "bswap	%0; rorl $8, %0"                \
-				: "=r" (p) : "r" (p) );                 \
+				: "=r" (p) : "0" (p) );                 \
        ((GLuint *)rgba)[0] = p;                                         \
     } while (0)
 # elif defined( MESA_BIG_ENDIAN )

@@ -58,10 +58,14 @@ _mesa_PopClientAttrib( void );
 extern void 
 _mesa_init_attrib( GLcontext *ctx );
 
+extern void 
+_mesa_free_attrib_data( GLcontext *ctx );
+
 #else
 
 /** No-op */
 #define _mesa_init_attrib( c ) ((void)0)
+#define _mesa_free_attrib_data( c ) ((void)0)
 
 #endif
 

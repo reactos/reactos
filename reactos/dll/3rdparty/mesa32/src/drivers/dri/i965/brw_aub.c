@@ -80,7 +80,7 @@ static void init_aubfile( FILE *aub_file )
    fh.hour = (nr>>16) & 0xff;
    fh.comment_length = 0x0;   
 
-   if (fwrite(&fh, sizeof(fh), 1, aub_file) < 0) 
+   if (fwrite(&fh, sizeof(fh), 1, aub_file) < 1) 
       FAIL;
          
    /* Setup the GTT starting at main memory address zero (!):
@@ -96,12 +96,12 @@ static void init_aubfile( FILE *aub_file )
    bh.address = PGETBL_CTL;
    bh.length = 0x4;
 
-   if (fwrite(&bh, sizeof(bh), 1, aub_file) < 0) 
+   if (fwrite(&bh, sizeof(bh), 1, aub_file) < 1) 
       FAIL;
 
    data = 0x0 | PGETBL_ENABLED;
 
-   if (fwrite(&data, sizeof(data), 1, aub_file) < 0) 
+   if (fwrite(&data, sizeof(data), 1, aub_file) < 1) 
       FAIL;
 }
 
@@ -128,7 +128,7 @@ static void init_aub_gtt( struct brw_context *brw,
    bh.address =  start_offset / 4096 * 4;
    bh.length = size / 4096 * 4;
 
-   if (fwrite(&bh, sizeof(bh), 1, aub_file) < 0) 
+   if (fwrite(&bh, sizeof(bh), 1, aub_file) < 1) 
       FAIL;
 
    for (i = 0; i < size / 4096; i++) {
@@ -136,7 +136,7 @@ static void init_aub_gtt( struct brw_context *brw,
 
       brw->next_free_page += 4096;
 
-      if (fwrite(&data, sizeof(data), 1, aub_file) < 0) 
+      if (fwrite(&data, sizeof(data), 1, aub_file) < 1) 
 	 FAIL;
    }
 
@@ -149,10 +149,10 @@ static void write_block_header( FILE *aub_file,
 {
    sz = (sz + 3) & ~3;
 
-   if (fwrite(bh, sizeof(*bh), 1, aub_file) < 0) 
+   if (fwrite(bh, sizeof(*bh), 1, aub_file) < 1) 
       FAIL;
 
-   if (fwrite(data, sz, 1, aub_file) < 0) 
+   if (fwrite(data, sz, 1, aub_file) < 1) 
       FAIL;
 
    fflush(aub_file);
@@ -162,7 +162,7 @@ static void write_block_header( FILE *aub_file,
 static void write_dump_bmp( FILE *aub_file,
 			    struct aub_dump_bmp *db )
 {
-   if (fwrite(db, sizeof(*db), 1, aub_file) < 0) 
+   if (fwrite(db, sizeof(*db), 1, aub_file) < 1) 
       FAIL;
 
    fflush(aub_file);

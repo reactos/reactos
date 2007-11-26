@@ -1063,20 +1063,29 @@ struct x86_reg x86_fn_arg( struct x86_function *p,
 }
 
 
-void x86_init_func( struct x86_function *p )
+/**
+ * Initialize an x86_function object, allocating space for up to
+ * 'code_size' bytes of code.
+ */
+GLboolean x86_init_func( struct x86_function *p, GLuint code_size )
 {
-   x86_init_func_size(p, 1024);
-}
-
-void x86_init_func_size( struct x86_function *p, GLuint code_size )
-{
+   assert(!p->store);
    p->store = _mesa_exec_malloc(code_size);
-   p->csr = p->store;
+   if (p->store) {
+      p->csr = p->store;
+      return GL_TRUE;
+   }
+   else {
+      p->csr = NULL;
+      return GL_FALSE;
+   }
 }
 
 void x86_release_func( struct x86_function *p )
 {
-   _mesa_exec_free(p->store);
+   if (p->store)
+      _mesa_exec_free(p->store);
+   p->store = p->csr = NULL;
 }
 
 

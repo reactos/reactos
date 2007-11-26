@@ -90,7 +90,7 @@ static void calculate_curbe_offsets( struct brw_context *brw )
     */
    if (nr_fp_regs > brw->curbe.wm_size ||
        nr_vp_regs > brw->curbe.vs_size ||
-       nr_clip_regs > brw->curbe.clip_size ||
+       nr_clip_regs != brw->curbe.clip_size ||
        (total_regs < brw->curbe.total_size / 4 &&
 	brw->curbe.total_size > 16)) {
 

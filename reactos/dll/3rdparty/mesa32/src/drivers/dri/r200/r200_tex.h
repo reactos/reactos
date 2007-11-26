@@ -36,6 +36,10 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef __R200_TEX_H__
 #define __R200_TEX_H__
 
+extern void r200SetTexOffset(__DRIcontext *pDRICtx, GLint texname,
+			     unsigned long long offset, GLint depth,
+			     GLuint pitch);
+
 extern void r200UpdateTextureState( GLcontext *ctx );
 
 extern int r200UploadTexImages( r200ContextPtr rmesa, r200TexObjPtr t, GLuint face );

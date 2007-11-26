@@ -409,6 +409,9 @@ intelClearWithBlit(GLcontext * ctx, GLbitfield mask)
             b = *box;
          }
 
+         if (b.x1 >= b.x2 || b.y1 >= b.y2)
+            continue;
+
          if (0)
             _mesa_printf("clear %d,%d..%d,%d, mask %x\n",
                          b.x1, b.y1, b.x2, b.y2, mask);

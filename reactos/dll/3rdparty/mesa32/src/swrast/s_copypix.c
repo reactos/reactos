@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.3
+ * Version:  7.0.2
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -71,13 +71,20 @@ regions_overlap(GLint srcx, GLint srcy,
    }
    else {
       /* add one pixel of slop when zooming, just to be safe */
-      if ((srcx > dstx + (width * zoomX) + 1) || (srcx + width + 1 < dstx)) {
+      if (srcx > (dstx + ((zoomX > 0.0F) ? (width * zoomX + 1.0F) : 0.0F))) {
+         /* src is completely right of dest */
+         return GL_FALSE;
+      }
+      else if (srcx + width + 1.0F < dstx + ((zoomX > 0.0F) ? 0.0F : (width * zoomX))) {
+         /* src is completely left of dest */
          return GL_FALSE;
       }
       else if ((srcy < dsty) && (srcy + height < dsty + (height * zoomY))) {
+         /* src is completely below dest */
          return GL_FALSE;
       }
       else if ((srcy > dsty) && (srcy + height > dsty + (height * zoomY))) {
+         /* src is completely above dest */
          return GL_FALSE;
       }
       else {

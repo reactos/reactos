@@ -525,7 +525,57 @@ static void precalc_tex( struct brw_wm_compile *c,
    struct prog_src_register coord;
    struct prog_dst_register tmpcoord;
 
-   if (inst->TexSrcTarget == TEXTURE_RECT_INDEX) {
+   if (inst->TexSrcTarget == TEXTURE_CUBE_INDEX) {
+       struct prog_instruction *out;
+       struct prog_dst_register tmp0 = get_temp(c);
+       struct prog_src_register tmp0src = src_reg_from_dst(tmp0);
+       struct prog_dst_register tmp1 = get_temp(c);
+       struct prog_src_register tmp1src = src_reg_from_dst(tmp1);
+       struct prog_src_register src0 = inst->SrcReg[0];
+
+       tmpcoord = get_temp(c);
+       coord = src_reg_from_dst(tmpcoord);
+
+       out = emit_op(c, OPCODE_MOV,
+                     tmpcoord,
+                     0, 0, 0,
+                     src0,
+                     src_undef(),
+                     src_undef());
+       out->SrcReg[0].NegateBase = 0;
+       out->SrcReg[0].Abs = 1;
+
+       emit_op(c, OPCODE_MAX,
+               tmp0,
+               0, 0, 0,
+               src_swizzle1(coord, X),
+               src_swizzle1(coord, Y),
+               src_undef());
+
+       emit_op(c, OPCODE_MAX,
+               tmp1,
+               0, 0, 0,
+               tmp0src,
+               src_swizzle1(coord, Z),
+               src_undef());
+
+       emit_op(c, OPCODE_RCP,
+               tmp0,
+               0, 0, 0,
+               tmp1src,
+               src_undef(),
+               src_undef());
+
+       emit_op(c, OPCODE_MUL,
+               tmpcoord,
+               0, 0, 0,
+               src0,
+               tmp0src,
+               src_undef());
+
+       release_temp(c, tmp0);
+       release_temp(c, tmp1);
+   } else if (inst->TexSrcTarget == TEXTURE_RECT_INDEX) {
       struct prog_src_register scale = 
 	 search_or_add_param5( c, 
 			       STATE_INTERNAL, 

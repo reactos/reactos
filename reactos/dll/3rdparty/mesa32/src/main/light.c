@@ -53,6 +53,11 @@ _mesa_ShadeModel( GLenum mode )
 
    FLUSH_VERTICES(ctx, _NEW_LIGHT);
    ctx->Light.ShadeModel = mode;
+   if (mode == GL_FLAT)
+      ctx->_TriangleCaps |= DD_FLATSHADE;
+   else
+      ctx->_TriangleCaps &= ~DD_FLATSHADE;
+
    if (ctx->Driver.ShadeModel)
       ctx->Driver.ShadeModel( ctx, mode );
 }
@@ -441,6 +446,10 @@ _mesa_LightModelfv( GLenum pname, const GLfloat *params )
 	    return;
 	 FLUSH_VERTICES(ctx, _NEW_LIGHT);
 	 ctx->Light.Model.TwoSide = newbool;
+         if (ctx->Light.Enabled && ctx->Light.Model.TwoSide)
+            ctx->_TriangleCaps |= DD_TRI_LIGHT_TWOSIDE;
+         else
+            ctx->_TriangleCaps &= ~DD_TRI_LIGHT_TWOSIDE;
          break;
       case GL_LIGHT_MODEL_COLOR_CONTROL:
          if (params[0] == (GLfloat) GL_SINGLE_COLOR)

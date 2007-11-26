@@ -95,7 +95,7 @@ meta_depth_replace(struct intel_context *intel)
    i915->meta.Ctx[I915_CTXREG_LIS6] |= (S6_DEPTH_TEST_ENABLE |
                                         S6_DEPTH_WRITE_ENABLE);
 
-   /* ctx->Driver.DepthFunc( ctx, GL_REPLACE )
+   /* ctx->Driver.DepthFunc( ctx, GL_ALWAYS )
     */
    i915->meta.Ctx[I915_CTXREG_LIS6] &= ~S6_DEPTH_TEST_FUNC_MASK;
    i915->meta.Ctx[I915_CTXREG_LIS6] |=

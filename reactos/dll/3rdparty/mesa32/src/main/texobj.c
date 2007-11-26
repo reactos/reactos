@@ -156,6 +156,11 @@ _mesa_delete_texture_object( GLcontext *ctx, struct gl_texture_object *texObj )
 
    (void) ctx;
 
+   /* Set Target to an invalid value.  With some assertions elsewhere
+    * we can try to detect possible use of deleted textures.
+    */
+   texObj->Target = 0x99;
+
    _mesa_free_colortable_data(&texObj->Palette);
 
    /* free the texture images */
@@ -188,6 +193,7 @@ void
 _mesa_copy_texture_object( struct gl_texture_object *dest,
                            const struct gl_texture_object *src )
 {
+   dest->Target = src->Target;
    dest->Name = src->Name;
    dest->Priority = src->Priority;
    dest->BorderColor[0] = src->BorderColor[0];
@@ -217,6 +223,92 @@ _mesa_copy_texture_object( struct gl_texture_object *dest,
    dest->Palette = src->Palette;
    dest->Complete = src->Complete;
 }
+
+
+/**
+ * Check if the given texture object is valid by examining its Target field.
+ * For debugging only.
+ */
+static GLboolean
+valid_texture_object(const struct gl_texture_object *tex)
+{
+   switch (tex->Target) {
+   case 0:
+   case GL_TEXTURE_1D:
+   case GL_TEXTURE_2D:
+   case GL_TEXTURE_3D:
+   case GL_TEXTURE_CUBE_MAP_ARB:
+   case GL_TEXTURE_RECTANGLE_NV:
+      return GL_TRUE;
+   case 0x99:
+      _mesa_problem(NULL, "invalid reference to a deleted texture object");
+      return GL_FALSE;
+   default:
+      _mesa_problem(NULL, "invalid texture object Target value");
+      return GL_FALSE;
+   }
+}
+
+
+/**
+ * Reference (or unreference) a texture object.
+ * If '*ptr', decrement *ptr's refcount (and delete if it becomes zero).
+ * If 'tex' is non-null, increment its refcount.
+ */
+void
+_mesa_reference_texobj(struct gl_texture_object **ptr,
+                       struct gl_texture_object *tex)
+{
+   assert(ptr);
+   if (*ptr == tex) {
+      /* no change */
+      return;
+   }
+
+   if (*ptr) {
+      /* Unreference the old texture */
+      GLboolean deleteFlag = GL_FALSE;
+      struct gl_texture_object *oldTex = *ptr;
+
+      assert(valid_texture_object(oldTex));
+
+      _glthread_LOCK_MUTEX(oldTex->Mutex);
+      ASSERT(oldTex->RefCount > 0);
+      oldTex->RefCount--;
+
+      deleteFlag = (oldTex->RefCount == 0);
+      _glthread_UNLOCK_MUTEX(oldTex->Mutex);
+
+      if (deleteFlag) {
+         GET_CURRENT_CONTEXT(ctx);
+         if (ctx)
+            ctx->Driver.DeleteTexture(ctx, oldTex);
+         else
+            _mesa_problem(NULL, "Unable to delete texture, no context");
+      }
+
+      *ptr = NULL;
+   }
+   assert(!*ptr);
+
+   if (tex) {
+      /* reference new texture */
+      assert(valid_texture_object(tex));
+      _glthread_LOCK_MUTEX(tex->Mutex);
+      if (tex->RefCount == 0) {
+         /* this texture's being deleted (look just above) */
+         /* Not sure this can every really happen.  Warn if it does. */
+         _mesa_problem(NULL, "referencing deleted texture object");
+         *ptr = NULL;
+      }
+      else {
+         tex->RefCount++;
+         *ptr = tex;
+      }
+      _glthread_UNLOCK_MUTEX(tex->Mutex);
+   }
+}
+
 
 
 /**
@@ -620,8 +712,7 @@ unbind_texobj_from_fbo(GLcontext *ctx, struct gl_texture_object *texObj)
 
 /**
  * Check if the given texture object is bound to any texture image units and
- * unbind it if so.
- * XXX all RefCount accesses should be protected by a mutex.
+ * unbind it if so (revert to default textures).
  */
 static void
 unbind_texobj_from_texunits(GLcontext *ctx, struct gl_texture_object *texObj)
@@ -630,34 +721,20 @@ unbind_texobj_from_texunits(GLcontext *ctx, struct gl_texture_object *texObj)
 
    for (u = 0; u < MAX_TEXTURE_IMAGE_UNITS; u++) {
       struct gl_texture_unit *unit = &ctx->Texture.Unit[u];
-      struct gl_texture_object **curr = NULL;
-
       if (texObj == unit->Current1D) {
-         curr = &unit->Current1D;
-         unit->Current1D = ctx->Shared->Default1D;
+         _mesa_reference_texobj(&unit->Current1D, ctx->Shared->Default1D);
       }
       else if (texObj == unit->Current2D) {
-         curr = &unit->Current2D;
-         unit->Current2D = ctx->Shared->Default2D;
+         _mesa_reference_texobj(&unit->Current2D, ctx->Shared->Default2D);
       }
       else if (texObj == unit->Current3D) {
-         curr = &unit->Current3D;
-         unit->Current3D = ctx->Shared->Default3D;
+         _mesa_reference_texobj(&unit->Current3D, ctx->Shared->Default3D);
       }
       else if (texObj == unit->CurrentCubeMap) {
-         curr = &unit->CurrentCubeMap;
-         unit->CurrentCubeMap = ctx->Shared->DefaultCubeMap;
+         _mesa_reference_texobj(&unit->CurrentCubeMap, ctx->Shared->DefaultCubeMap);
       }
       else if (texObj == unit->CurrentRect) {
-         curr = &unit->CurrentRect;
-         unit->CurrentRect = ctx->Shared->DefaultRect;
-      }
-
-      if (curr) {
-         (*curr)->RefCount++;
-         texObj->RefCount--;
-         if (texObj == unit->_Current)
-            unit->_Current = *curr;
+         _mesa_reference_texobj(&unit->CurrentRect, ctx->Shared->DefaultRect);
       }
    }
 }
@@ -693,8 +770,6 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
             = _mesa_lookup_texture(ctx, textures[i]);
 
          if (delObj) {
-	    GLboolean deleted;
-
 	    _mesa_lock_texture(ctx, delObj);
 
             /* Check if texture is bound to any framebuffer objects.
@@ -704,9 +779,11 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
             unbind_texobj_from_fbo(ctx, delObj);
 
             /* Check if this texture is currently bound to any texture units.
-             * If so, unbind it and decrement the reference count.
+             * If so, unbind it.
              */
             unbind_texobj_from_texunits(ctx, delObj);
+
+	    _mesa_unlock_texture(ctx, delObj);
 
             ctx->NewState |= _NEW_TEXTURE;
 
@@ -717,23 +794,10 @@ _mesa_DeleteTextures( GLsizei n, const GLuint *textures)
             _mesa_HashRemove(ctx->Shared->TexObjects, delObj->Name);
             _glthread_UNLOCK_MUTEX(ctx->Shared->Mutex);
 
-            /* The actual texture object will not be freed until it's no
-             * longer bound in any context.
-             * XXX all RefCount accesses should be protected by a mutex.
+            /* Unreference the texobj.  If refcount hits zero, the texture
+             * will be deleted.
              */
-            delObj->RefCount--;
-	    deleted = (delObj->RefCount == 0);
-	    _mesa_unlock_texture(ctx, delObj);
-
-	    /* We know that refcount went to zero above, so this is
-	     * the only pointer left to delObj, so we don't have to
-	     * worry about locking any more:
-	     */
-            if (deleted) {
-               ASSERT(delObj->Name != 0); /* Never delete default tex objs */
-               ASSERT(ctx->Driver.DeleteTexture);
-               (*ctx->Driver.DeleteTexture)(ctx, delObj);
-            }
+            _mesa_reference_texobj(&delObj, NULL);
          }
       }
    }
@@ -761,55 +825,12 @@ _mesa_BindTexture( GLenum target, GLuint texName )
    GET_CURRENT_CONTEXT(ctx);
    const GLuint unit = ctx->Texture.CurrentUnit;
    struct gl_texture_unit *texUnit = &ctx->Texture.Unit[unit];
-   struct gl_texture_object *oldTexObj;
    struct gl_texture_object *newTexObj = NULL;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
    if (MESA_VERBOSE & (VERBOSE_API|VERBOSE_TEXTURE))
       _mesa_debug(ctx, "glBindTexture %s %d\n",
                   _mesa_lookup_enum_by_nr(target), (GLint) texName);
-
-   /*
-    * Get pointer to currently bound texture object (oldTexObj)
-    */
-   switch (target) {
-      case GL_TEXTURE_1D:
-         oldTexObj = texUnit->Current1D;
-         break;
-      case GL_TEXTURE_2D:
-         oldTexObj = texUnit->Current2D;
-         break;
-      case GL_TEXTURE_3D:
-         oldTexObj = texUnit->Current3D;
-         break;
-      case GL_TEXTURE_CUBE_MAP_ARB:
-         if (!ctx->Extensions.ARB_texture_cube_map) {
-            _mesa_error( ctx, GL_INVALID_ENUM, "glBindTexture(target)" );
-            return;
-         }
-         oldTexObj = texUnit->CurrentCubeMap;
-         break;
-      case GL_TEXTURE_RECTANGLE_NV:
-         if (!ctx->Extensions.NV_texture_rectangle) {
-            _mesa_error( ctx, GL_INVALID_ENUM, "glBindTexture(target)" );
-            return;
-         }
-         oldTexObj = texUnit->CurrentRect;
-         break;
-      default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glBindTexture(target)" );
-         return;
-   }
-
-   if (oldTexObj->Name == texName) {
-      /* XXX this might be wrong.  If the texobj is in use by another
-       * context and a texobj parameter was changed, this might be our
-       * only chance to update this context's hardware state.
-       * Note that some applications re-bind the same texture a lot so we
-       * want to handle that case quickly.
-       */
-      return;   /* rebinding the same texture- no change */
-   }
 
    /*
     * Get pointer to new texture object (newTexObj)
@@ -879,28 +900,30 @@ _mesa_BindTexture( GLenum target, GLuint texName )
       newTexObj->Target = target;
    }
 
-   /* XXX all RefCount accesses should be protected by a mutex. */
-   newTexObj->RefCount++;
+   assert(valid_texture_object(newTexObj));
 
-   /* do the actual binding, but first flush outstanding vertices:
-    */
+   /* flush before changing binding */
    FLUSH_VERTICES(ctx, _NEW_TEXTURE);
 
+   /* Do the actual binding.  The refcount on the previously bound
+    * texture object will be decremented.  It'll be deleted if the
+    * count hits zero.
+    */
    switch (target) {
       case GL_TEXTURE_1D:
-         texUnit->Current1D = newTexObj;
+         _mesa_reference_texobj(&texUnit->Current1D, newTexObj);
          break;
       case GL_TEXTURE_2D:
-         texUnit->Current2D = newTexObj;
+         _mesa_reference_texobj(&texUnit->Current2D, newTexObj);
          break;
       case GL_TEXTURE_3D:
-         texUnit->Current3D = newTexObj;
+         _mesa_reference_texobj(&texUnit->Current3D, newTexObj);
          break;
       case GL_TEXTURE_CUBE_MAP_ARB:
-         texUnit->CurrentCubeMap = newTexObj;
+         _mesa_reference_texobj(&texUnit->CurrentCubeMap, newTexObj);
          break;
       case GL_TEXTURE_RECTANGLE_NV:
-         texUnit->CurrentRect = newTexObj;
+         _mesa_reference_texobj(&texUnit->CurrentRect, newTexObj);
          break;
       default:
          _mesa_problem(ctx, "bad target in BindTexture");
@@ -910,18 +933,6 @@ _mesa_BindTexture( GLenum target, GLuint texName )
    /* Pass BindTexture call to device driver */
    if (ctx->Driver.BindTexture)
       (*ctx->Driver.BindTexture)( ctx, target, newTexObj );
-
-   /* Decrement the reference count on the old texture and check if it's
-    * time to delete it.
-    */
-   /* XXX all RefCount accesses should be protected by a mutex. */
-   oldTexObj->RefCount--;
-   ASSERT(oldTexObj->RefCount >= 0);
-   if (oldTexObj->RefCount == 0) {
-      ASSERT(oldTexObj->Name != 0);
-      ASSERT(ctx->Driver.DeleteTexture);
-      (*ctx->Driver.DeleteTexture)( ctx, oldTexObj );
-   }
 }
 
 

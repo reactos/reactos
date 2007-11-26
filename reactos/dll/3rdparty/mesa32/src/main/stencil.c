@@ -1,8 +1,8 @@
 /*
  * Mesa 3-D graphics library
- * Version:  6.5.2
+ * Version:  7.1
  *
- * Copyright (C) 1999-2006  Brian Paul   All Rights Reserved.
+ * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
@@ -53,6 +53,48 @@
 #include "mtypes.h"
 
 
+static GLboolean
+validate_stencil_op(GLcontext *ctx, GLenum op)
+{
+   switch (op) {
+   case GL_KEEP:
+   case GL_ZERO:
+   case GL_REPLACE:
+   case GL_INCR:
+   case GL_DECR:
+   case GL_INVERT:
+      return GL_TRUE;
+   case GL_INCR_WRAP_EXT:
+   case GL_DECR_WRAP_EXT:
+      if (ctx->Extensions.EXT_stencil_wrap) {
+         return GL_TRUE;
+      }
+      /* FALL-THROUGH */
+   default:
+      return GL_FALSE;
+   }
+}
+
+
+static GLboolean
+validate_stencil_func(GLcontext *ctx, GLenum func)
+{
+   switch (func) {
+   case GL_NEVER:
+   case GL_LESS:
+   case GL_LEQUAL:
+   case GL_GREATER:
+   case GL_GEQUAL:
+   case GL_EQUAL:
+   case GL_NOTEQUAL:
+   case GL_ALWAYS:
+      return GL_TRUE;
+   default:
+      return GL_FALSE;
+   }
+}
+
+
 /**
  * Set the clear value for the stencil buffer.
  *
@@ -85,6 +127,62 @@ _mesa_ClearStencil( GLint s )
 /**
  * Set the function and reference value for stencil testing.
  *
+ * \param frontfunc front test function.
+ * \param backfunc back test function.
+ * \param ref front and back reference value.
+ * \param mask front and back bitmask.
+ *
+ * \sa glStencilFunc().
+ *
+ * Verifies the parameters and updates the respective values in
+ * __GLcontextRec::Stencil. On change flushes the vertices and notifies the
+ * driver via the dd_function_table::StencilFunc callback.
+ */
+void GLAPIENTRY
+_mesa_StencilFuncSeparateATI( GLenum frontfunc, GLenum backfunc, GLint ref, GLuint mask )
+{
+   GET_CURRENT_CONTEXT(ctx);
+   const GLint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
+   ASSERT_OUTSIDE_BEGIN_END(ctx);
+
+   if (!validate_stencil_func(ctx, frontfunc)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glStencilFuncSeparateATI(frontfunc)");
+      return;
+   }
+   if (!validate_stencil_func(ctx, backfunc)) {
+      _mesa_error(ctx, GL_INVALID_ENUM,
+                  "glStencilFuncSeparateATI(backfunc)");
+      return;
+   }
+
+   ref = CLAMP( ref, 0, stencilMax );
+
+   /* set both front and back state */
+   if (ctx->Stencil.Function[0] == frontfunc &&
+       ctx->Stencil.Function[1] == backfunc &&
+       ctx->Stencil.ValueMask[0] == mask &&
+       ctx->Stencil.ValueMask[1] == mask &&
+       ctx->Stencil.Ref[0] == ref &&
+       ctx->Stencil.Ref[1] == ref)
+      return;
+   FLUSH_VERTICES(ctx, _NEW_STENCIL);
+   ctx->Stencil.Function[0]  = frontfunc;
+   ctx->Stencil.Function[1]  = backfunc;
+   ctx->Stencil.Ref[0]       = ctx->Stencil.Ref[1]       = ref;
+   ctx->Stencil.ValueMask[0] = ctx->Stencil.ValueMask[1] = mask;
+   if (ctx->Driver.StencilFuncSeparate) {
+      ctx->Driver.StencilFuncSeparate(ctx, GL_FRONT,
+                                      frontfunc, ref, mask);
+      ctx->Driver.StencilFuncSeparate(ctx, GL_BACK,
+                                      backfunc, ref, mask);
+   }
+}
+
+
+/**
+ * Set the function and reference value for stencil testing.
+ *
  * \param func test function.
  * \param ref reference value.
  * \param mask bitmask.
@@ -102,19 +200,9 @@ _mesa_StencilFunc( GLenum func, GLint ref, GLuint mask )
    const GLint stencilMax = (1 << ctx->DrawBuffer->Visual.stencilBits) - 1;
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   switch (func) {
-      case GL_NEVER:
-      case GL_LESS:
-      case GL_LEQUAL:
-      case GL_GREATER:
-      case GL_GEQUAL:
-      case GL_EQUAL:
-      case GL_NOTEQUAL:
-      case GL_ALWAYS:
-         break;
-      default:
-         _mesa_error( ctx, GL_INVALID_ENUM, "glStencilFunc (0x%04x)", func );
-         return;
+   if (!validate_stencil_func(ctx, func)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFunc(func)");
+      return;
    }
 
    ref = CLAMP( ref, 0, stencilMax );
@@ -218,59 +306,17 @@ _mesa_StencilOp(GLenum fail, GLenum zfail, GLenum zpass)
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
-   switch (fail) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp");
-         return;
+   if (!validate_stencil_op(ctx, fail)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp(sfail)");
+      return;
    }
-   switch (zfail) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp");
-         return;
+   if (!validate_stencil_op(ctx, zfail)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp(zfail)");
+      return;
    }
-   switch (zpass) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp");
-         return;
+   if (!validate_stencil_op(ctx, zpass)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOp(zpass)");
+      return;
    }
 
    if (ctx->Extensions.ATI_separate_stencil) {
@@ -343,85 +389,55 @@ _mesa_ActiveStencilFaceEXT(GLenum face)
  * instead.
  */
 void GLAPIENTRY
-_mesa_StencilOpSeparate(GLenum face, GLenum fail, GLenum zfail, GLenum zpass)
+_mesa_StencilOpSeparate(GLenum face, GLenum sfail, GLenum zfail, GLenum zpass)
 {
+   GLboolean set = GL_FALSE;
    GET_CURRENT_CONTEXT(ctx);
    ASSERT_OUTSIDE_BEGIN_END(ctx);
 
+   if (!validate_stencil_op(ctx, sfail)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(sfail)");
+      return;
+   }
+   if (!validate_stencil_op(ctx, zfail)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(zfail)");
+      return;
+   }
+   if (!validate_stencil_op(ctx, zpass)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(zpass)");
+      return;
+   }
    if (face != GL_FRONT && face != GL_BACK && face != GL_FRONT_AND_BACK) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(face)");
       return;
    }
 
-   switch (fail) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(fail)");
-         return;
-   }
-   switch (zfail) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(zfail)");
-         return;
-   }
-   switch (zpass) {
-      case GL_KEEP:
-      case GL_ZERO:
-      case GL_REPLACE:
-      case GL_INCR:
-      case GL_DECR:
-      case GL_INVERT:
-         break;
-      case GL_INCR_WRAP_EXT:
-      case GL_DECR_WRAP_EXT:
-         if (ctx->Extensions.EXT_stencil_wrap) {
-            break;
-         }
-         /* FALL-THROUGH */
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilOpSeparate(zpass)");
-         return;
-   }
-
-   FLUSH_VERTICES(ctx, _NEW_STENCIL);
-
    if (face != GL_BACK) {
-      ctx->Stencil.FailFunc[0] = fail;
-      ctx->Stencil.ZFailFunc[0] = zfail;
-      ctx->Stencil.ZPassFunc[0] = zpass;
+      /* set front */
+      if (ctx->Stencil.ZFailFunc[0] != zfail ||
+          ctx->Stencil.ZPassFunc[0] != zpass ||
+          ctx->Stencil.FailFunc[0] != sfail){
+         FLUSH_VERTICES(ctx, _NEW_STENCIL);
+         ctx->Stencil.ZFailFunc[0] = zfail;
+         ctx->Stencil.ZPassFunc[0] = zpass;
+         ctx->Stencil.FailFunc[0] = sfail;
+         set = GL_TRUE;
+      }
    }
    if (face != GL_FRONT) {
-      ctx->Stencil.FailFunc[1] = fail;
-      ctx->Stencil.ZFailFunc[1] = zfail;
-      ctx->Stencil.ZPassFunc[1] = zpass;
+      /* set back */
+      if (ctx->Stencil.ZFailFunc[1] != zfail ||
+          ctx->Stencil.ZPassFunc[1] != zpass ||
+          ctx->Stencil.FailFunc[1] != sfail) {
+         FLUSH_VERTICES(ctx, _NEW_STENCIL);
+         ctx->Stencil.ZFailFunc[1] = zfail;
+         ctx->Stencil.ZPassFunc[1] = zpass;
+         ctx->Stencil.FailFunc[1] = sfail;
+         set = GL_TRUE;
+      }
    }
-   if (ctx->Driver.StencilOpSeparate) {
-      ctx->Driver.StencilOpSeparate(ctx, face, fail, zfail, zpass);
+   if (set && ctx->Driver.StencilOpSeparate) {
+      ctx->Driver.StencilOpSeparate(ctx, face, sfail, zfail, zpass);
    }
 }
 
@@ -438,20 +454,9 @@ _mesa_StencilFuncSeparate(GLenum face, GLenum func, GLint ref, GLuint mask)
       _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFuncSeparate(face)");
       return;
    }
-
-   switch (func) {
-      case GL_NEVER:
-      case GL_LESS:
-      case GL_LEQUAL:
-      case GL_GREATER:
-      case GL_GEQUAL:
-      case GL_EQUAL:
-      case GL_NOTEQUAL:
-      case GL_ALWAYS:
-         break;
-      default:
-         _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFuncSeparate(func)");
-         return;
+   if (!validate_stencil_func(ctx, func)) {
+      _mesa_error(ctx, GL_INVALID_ENUM, "glStencilFuncSeparate(func)");
+      return;
    }
 
    ref = CLAMP(ref, 0, stencilMax);

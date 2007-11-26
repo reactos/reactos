@@ -262,7 +262,7 @@ intelBeginQuery(GLcontext *ctx, GLenum target, struct gl_query_object *q)
 	};
 	intel->stats_wm++;
 	intelFinish(&intel->ctx);
-	drmCommandRead(intel->driFd, DRM_I830_MMIO, &io, sizeof(io));
+	drmCommandWrite(intel->driFd, DRM_I830_MMIO, &io, sizeof(io));
 }
 
 static void
@@ -276,7 +276,7 @@ intelEndQuery(GLcontext *ctx, GLenum target, struct gl_query_object *q)
 		.data = &tmp
 	};
 	intelFinish(&intel->ctx);
-	drmCommandRead(intel->driFd, DRM_I830_MMIO, &io, sizeof(io));
+	drmCommandWrite(intel->driFd, DRM_I830_MMIO, &io, sizeof(io));
 	q->Result = tmp - q->Result;
 	q->Ready = GL_TRUE;
 	intel->stats_wm--;
@@ -487,7 +487,7 @@ GLboolean intelInitContext( struct intel_context *intel,
       _mesa_enable_extension( ctx, "GL_EXT_texture_compression_s3tc" );
       _mesa_enable_extension( ctx, "GL_S3_s3tc" );
    }
-   else if (driQueryOptionb (&intelScreen->optionCache, "force_s3tc_enable")) {
+   else if (driQueryOptionb (&intel->optionCache, "force_s3tc_enable")) {
       _mesa_enable_extension( ctx, "GL_EXT_texture_compression_s3tc" );
    }
 
@@ -566,6 +566,10 @@ GLboolean intelMakeCurrent(__DRIcontextPrivate *driContextPriv,
 
    if (driContextPriv) {
       struct intel_context *intel = (struct intel_context *) driContextPriv->driverPrivate;
+
+      if (intel->driReadDrawable != driReadPriv) {
+          intel->driReadDrawable = driReadPriv;
+      }
 
       if ( intel->driDrawable != driDrawPriv ) {
 	 /* Shouldn't the readbuffer be stored also? */

@@ -59,6 +59,11 @@ _mesa_LineWidth( GLfloat width )
 			    ctx->Const.MinLineWidth,
 			    ctx->Const.MaxLineWidth);
 
+   if (width != 1.0F)
+      ctx->_TriangleCaps |= DD_LINE_WIDTH;
+   else
+      ctx->_TriangleCaps &= ~DD_LINE_WIDTH;
+
    if (ctx->Driver.LineWidth)
       ctx->Driver.LineWidth(ctx, width);
 }

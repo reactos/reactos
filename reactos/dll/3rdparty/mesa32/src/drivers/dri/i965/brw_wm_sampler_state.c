@@ -173,12 +173,12 @@ static void brw_update_sampler_state( struct gl_texture_unit *texUnit,
        * message (sample_c).  So need to recompile WM program when
        * shadow comparison is enabled on each/any texture unit.
        */
-      sampler->ss0.shadow_function = intel_translate_compare_func(texObj->CompareFunc);
+      sampler->ss0.shadow_function = intel_translate_shadow_compare_func(texObj->CompareFunc);
    }
 
    /* Set LOD bias: 
     */
-   sampler->ss0.lod_bias = S_FIXED(texUnit->LodBias + texObj->LodBias, 6);
+   sampler->ss0.lod_bias = S_FIXED(CLAMP(texUnit->LodBias + texObj->LodBias, -16, 15), 6);
 
    sampler->ss0.lod_preclamp = 1; /* OpenGL mode */
    sampler->ss0.default_color_mode = 0; /* OpenGL/DX10 mode */
@@ -192,8 +192,8 @@ static void brw_update_sampler_state( struct gl_texture_unit *texUnit,
     */
    sampler->ss0.base_level = U_FIXED(0, 1);
 
-   sampler->ss1.max_lod = U_FIXED(MAX2(texObj->MaxLod, 0), 6);
-   sampler->ss1.min_lod = U_FIXED(MAX2(texObj->MinLod, 0), 6);
+   sampler->ss1.max_lod = U_FIXED(MIN2(MAX2(texObj->MaxLod, 0), 13), 6);
+   sampler->ss1.min_lod = U_FIXED(MIN2(MAX2(texObj->MinLod, 0), 13), 6);
    
    sampler->ss2.default_color_pointer = sdc_gs_offset >> 5;
 }

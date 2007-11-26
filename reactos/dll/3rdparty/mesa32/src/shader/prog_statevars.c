@@ -507,6 +507,8 @@ _mesa_program_state_flags(const gl_state_index state[STATE_LENGTH])
       switch (state[1]) {
       case STATE_TEXRECT_SCALE:
 	 return _NEW_TEXTURE;
+      case STATE_FOG_PARAMS_OPTIMIZED:
+	 return _NEW_FOG;
       default:
          /* unknown state indexes are silently ignored and
          *  no flag set, since it is handled by the driver.

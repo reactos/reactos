@@ -212,6 +212,10 @@ static void upload_clip_prog( struct brw_context *brw )
 	    }
 	 }
 
+    if (brw->attribs.Polygon->BackMode != GL_FILL ||
+        brw->attribs.Polygon->FrontMode != GL_FILL)
+        key.do_unfilled = 1;
+
 	 /* Most cases the fixed function units will handle.  Cases where
 	  * one or more polygon faces are unfilled will require help:
 	  */

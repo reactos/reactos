@@ -159,7 +159,6 @@ index_mask( GLcontext *ctx, GLuint mask )
          m = (unsigned long) mask;
       }
       XMesaSetPlaneMask( xmesa->display, xmbuf->cleargc, m );
-      XMesaSetPlaneMask( xmesa->display, xmbuf->gc, m );
    }
 }
 
@@ -191,7 +190,6 @@ color_mask(GLcontext *ctx,
          if (bmask)   m |= GET_BLUEMASK(xmesa->xm_visual);
       }
       XMesaSetPlaneMask( xmesa->display, xmbuf->cleargc, m );
-      XMesaSetPlaneMask( xmesa->display, xmbuf->gc, m );
    }
 }
 
@@ -450,13 +448,13 @@ xmesa_DrawPixels_8R8G8B( GLcontext *ctx,
        ctx->_ImageTransferState == 0 &&  /* no color tables, scale/bias, etc */
        ctx->Pixel.ZoomX == 1.0 &&        /* no zooming */
        ctx->Pixel.ZoomY == 1.0 &&
-       xrb->pixmap &&
+       xrb->pixmap &&                    /* drawing to pixmap or window */
        xrb->Base.AlphaBits == 0)
    {
       const XMesaContext xmesa = XMESA_CONTEXT(ctx);
       XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
       XMesaDisplay *dpy = xmesa->xm_visual->display;
-      const XMesaGC gc = xmbuf->gc;
+      const XMesaGC gc = xmbuf->cleargc;  /* effected by glColorMask */
       int dstX = x;
       int dstY = y;
       int w = width;
@@ -551,7 +549,7 @@ xmesa_DrawPixels_5R6G5B( GLcontext *ctx,
    const SWcontext *swrast = SWRAST_CONTEXT( ctx );
    XMesaDisplay *dpy = xmesa->xm_visual->display;
    XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
-   const XMesaGC gc = xmbuf->gc;
+   const XMesaGC gc = xmbuf->cleargc;  /* effected by glColorMask */
 
    ASSERT(dpy);
    ASSERT(gc);
@@ -560,7 +558,7 @@ xmesa_DrawPixels_5R6G5B( GLcontext *ctx,
    if (swrast->NewState)
       _swrast_validate_derived( ctx );
 
-   if (xrb->pixmap &&
+   if (xrb->pixmap &&       /* drawing to pixmap or window */
        format == GL_RGB &&
        type == GL_UNSIGNED_SHORT_5_6_5 &&
        !ctx->Color.DitherFlag &&  /* no dithering */
@@ -651,7 +649,8 @@ xmesa_CopyPixels( GLcontext *ctx,
    const XMesaContext xmesa = XMESA_CONTEXT(ctx);
    const SWcontext *swrast = SWRAST_CONTEXT( ctx );
    XMesaDisplay *dpy = xmesa->xm_visual->display;
-   const XMesaGC gc = ((XMesaBuffer) ctx->DrawBuffer)->gc;
+   XMesaBuffer xmbuf = XMESA_BUFFER(ctx->DrawBuffer);
+   const XMesaGC gc = xmbuf->cleargc;  /* effected by glColorMask */
    struct xmesa_renderbuffer *srcXrb
       = xmesa_renderbuffer(ctx->ReadBuffer->_ColorReadBuffer->Wrapped);
    struct xmesa_renderbuffer *dstXrb

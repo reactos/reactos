@@ -38,6 +38,31 @@
 #include "intel_regions.h"
 #include "swrast/swrast.h"
 
+int intel_translate_shadow_compare_func( GLenum func )
+{
+   switch(func) {
+   case GL_NEVER: 
+       return COMPAREFUNC_ALWAYS; 
+   case GL_LESS: 
+       return COMPAREFUNC_LEQUAL; 
+   case GL_LEQUAL: 
+       return COMPAREFUNC_LESS;
+   case GL_GREATER: 
+       return COMPAREFUNC_GEQUAL; 
+   case GL_GEQUAL: 
+      return COMPAREFUNC_GREATER; 
+   case GL_NOTEQUAL: 
+      return COMPAREFUNC_EQUAL; 
+   case GL_EQUAL: 
+      return COMPAREFUNC_NOTEQUAL; 
+   case GL_ALWAYS: 
+       return COMPAREFUNC_NEVER; 
+   }
+
+   fprintf(stderr, "Unknown value in %s: %x\n", __FUNCTION__, func);
+   return COMPAREFUNC_NEVER; 
+}
+
 int intel_translate_compare_func( GLenum func )
 {
    switch(func) {

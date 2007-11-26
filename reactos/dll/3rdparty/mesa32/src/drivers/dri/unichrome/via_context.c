@@ -733,14 +733,15 @@ void viaXMesaWindowMoved(struct via_context *vmesa)
 {
    __DRIdrawablePrivate *const drawable = vmesa->driDrawable;
    __DRIdrawablePrivate *const readable = vmesa->driReadable;
-   struct via_renderbuffer *const draw_buffer = 
-     (struct via_renderbuffer *) drawable->driverPrivate;
-   struct via_renderbuffer *const read_buffer =
-     (struct via_renderbuffer *) readable->driverPrivate;
+   struct via_renderbuffer * draw_buffer;
+   struct via_renderbuffer * read_buffer;
    GLuint bytePerPixel = vmesa->viaScreen->bitsPerPixel >> 3;
 
    if (!drawable)
       return;
+
+   draw_buffer =  (struct via_renderbuffer *) drawable->driverPrivate;
+   read_buffer =  (struct via_renderbuffer *) readable->driverPrivate;
    
    switch (vmesa->glCtx->DrawBuffer->_ColorDrawBufferMask[0]) {
    case BUFFER_BIT_BACK_LEFT: 

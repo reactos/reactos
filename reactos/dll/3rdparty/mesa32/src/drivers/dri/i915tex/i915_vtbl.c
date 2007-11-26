@@ -430,6 +430,16 @@ i915_emit_state(struct intel_context *intel)
 static void
 i915_destroy_context(struct intel_context *intel)
 {
+   GLuint i;
+   struct i915_context *i915 = i915_context(&intel->ctx);
+
+   for (i = 0; i < I915_TEX_UNITS; i++) {
+      if (i915->state.tex_buffer[i] != NULL) {
+	 driBOUnReference(i915->state.tex_buffer[i]);
+	 i915->state.tex_buffer[i] = NULL;
+      }
+   }
+
    _tnl_free_vertices(&intel->ctx);
 }
 

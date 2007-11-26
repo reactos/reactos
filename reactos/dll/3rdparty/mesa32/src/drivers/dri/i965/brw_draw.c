@@ -330,6 +330,7 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
       else {
 	 /* Otherwise, explicitly do the cliprects at this point:
 	  */
+          GLuint nprims = 0;
 	 for (j = 0; j < brw->intel.numClipRects; j++) {
 	    brw_emit_cliprect(brw, &brw->intel.pClipRects[j]);
 
@@ -337,6 +338,11 @@ static GLboolean brw_try_draw_prims( GLcontext *ctx,
 	     */
 	    for (i = 0; i < nr_prims; i++) {
 	       brw_emit_prim(brw, &prim[i]);   
+
+          if (++nprims == VBO_MAX_PRIM) {
+              intel_batchbuffer_flush(brw->intel.batch);
+              nprims = 0;
+          }
 	    }
 	 }
       }

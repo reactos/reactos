@@ -1124,6 +1124,15 @@ intel_draw_buffer(GLcontext * ctx, struct gl_framebuffer *fb)
       ctx->Driver.Enable(ctx, GL_STENCIL_TEST, ctx->Stencil.Enabled);
    }
 
+   /*
+    * Update depth test state
+    */
+   if (ctx->Depth.Test && fb->Visual.depthBits > 0) {
+      ctx->Driver.Enable(ctx, GL_DEPTH_TEST, GL_TRUE);
+   }
+   else {
+      ctx->Driver.Enable(ctx, GL_DEPTH_TEST, GL_FALSE);
+   }
 
    /**
     ** Release old regions, reference new regions

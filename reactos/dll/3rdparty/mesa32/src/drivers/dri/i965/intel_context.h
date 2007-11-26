@@ -234,6 +234,7 @@ struct intel_context
    int driFd;
 
    __DRIdrawablePrivate *driDrawable;
+   __DRIdrawablePrivate *driReadDrawable;
    __DRIscreenPrivate *driScreen;
    intelScreenPrivate *intelScreen; 
    volatile drmI830Sarea *sarea; 
@@ -463,7 +464,7 @@ extern void intelInitStateFuncs( struct dd_function_table *functions );
 #define BLENDFACT_INV_CONST_ALPHA	0x0f
 #define BLENDFACT_MASK          	0x0f
 
-
+extern int intel_translate_shadow_compare_func( GLenum func );
 extern int intel_translate_compare_func( GLenum func );
 extern int intel_translate_stencil_op( GLenum op );
 extern int intel_translate_blend_factor( GLenum factor );

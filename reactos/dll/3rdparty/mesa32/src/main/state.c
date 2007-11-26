@@ -812,6 +812,9 @@ _mesa_init_exec_table(struct _glapi_table *exec)
    SET_ProgramEnvParameters4fvEXT(exec, _mesa_ProgramEnvParameters4fvEXT);
    SET_ProgramLocalParameters4fvEXT(exec, _mesa_ProgramLocalParameters4fvEXT);
 #endif
+
+   /* GL_ATI_separate_stencil */
+   SET_StencilFuncSeparateATI(exec, _mesa_StencilFuncSeparateATI);
 }
 
 
@@ -819,6 +822,16 @@ _mesa_init_exec_table(struct _glapi_table *exec)
 /**********************************************************************/
 /** \name State update logic */
 /*@{*/
+
+
+static void
+update_separate_specular( GLcontext *ctx )
+{
+   if (NEED_SECONDARY_COLOR(ctx))
+      ctx->_TriangleCaps |= DD_SEPARATE_SPECULAR;
+   else
+      ctx->_TriangleCaps &= ~DD_SEPARATE_SPECULAR;
+}
 
 
 /**
@@ -1045,6 +1058,26 @@ update_color(GLcontext *ctx)
 }
 
 
+/*
+ * Check polygon state and set DD_TRI_CULL_FRONT_BACK and/or DD_TRI_OFFSET
+ * in ctx->_TriangleCaps if needed.
+ */
+static void
+update_polygon( GLcontext *ctx )
+{
+   ctx->_TriangleCaps &= ~(DD_TRI_CULL_FRONT_BACK | DD_TRI_OFFSET);
+
+   if (ctx->Polygon.CullFlag && ctx->Polygon.CullFaceMode == GL_FRONT_AND_BACK)
+      ctx->_TriangleCaps |= DD_TRI_CULL_FRONT_BACK;
+
+   /* Any Polygon offsets enabled? */
+   if (ctx->Polygon.OffsetPoint ||
+       ctx->Polygon.OffsetLine ||
+       ctx->Polygon.OffsetFill) {
+      ctx->_TriangleCaps |= DD_TRI_OFFSET;
+   }
+}
+
 
 /**
  * Update the ctx->_TriangleCaps bitfield.
@@ -1052,6 +1085,7 @@ update_color(GLcontext *ctx)
  * This function must be called after other update_*() functions since
  * there are dependencies on some other derived values.
  */
+#if 0
 static void
 update_tricaps(GLcontext *ctx, GLbitfield new_state)
 {
@@ -1117,6 +1151,7 @@ update_tricaps(GLcontext *ctx, GLbitfield new_state)
    if (ctx->Stencil._TestTwoSide)
       ctx->_TriangleCaps |= DD_TRI_TWOSTENCIL;
 }
+#endif
 
 
 /**
@@ -1154,6 +1189,9 @@ _mesa_update_state_locked( GLcontext *ctx )
    if (new_state & (_NEW_SCISSOR | _NEW_BUFFERS | _NEW_VIEWPORT))
       _mesa_update_draw_buffer_bounds( ctx );
 
+   if (new_state & _NEW_POLYGON)
+      update_polygon( ctx );
+
    if (new_state & _NEW_LIGHT)
       _mesa_update_lighting( ctx );
 
@@ -1162,6 +1200,9 @@ _mesa_update_state_locked( GLcontext *ctx )
 
    if (new_state & _IMAGE_NEW_TRANSFER_STATE)
       _mesa_update_pixel( ctx, new_state );
+
+   if (new_state & _DD_NEW_SEPARATE_SPECULAR)
+      update_separate_specular( ctx );
 
    if (new_state & (_NEW_ARRAY | _NEW_PROGRAM))
       update_arrays( ctx );
@@ -1172,9 +1213,11 @@ _mesa_update_state_locked( GLcontext *ctx )
    if (new_state & _NEW_COLOR)
       update_color( ctx );
 
+#if 0
    if (new_state & (_NEW_POINT | _NEW_LINE | _NEW_POLYGON | _NEW_LIGHT
                     | _NEW_STENCIL | _DD_NEW_SEPARATE_SPECULAR))
       update_tricaps( ctx, new_state );
+#endif
 
    if (ctx->FragmentProgram._MaintainTexEnvProgram) {
       if (new_state & (_NEW_TEXTURE | _DD_NEW_SEPARATE_SPECULAR | _NEW_FOG))

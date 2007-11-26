@@ -625,11 +625,10 @@ static void viaFastRenderClippedPoly(GLcontext *ctx, const GLuint *elts,
     }
 }
 
+
 /**********************************************************************/
 /*                    Choose render functions                         */
 /**********************************************************************/
-
-
 
 
 #define _VIA_NEW_VERTEX (_NEW_TEXTURE |                         \
@@ -665,14 +664,17 @@ static void viaChooseRenderState(GLcontext *ctx)
       vmesa->drawTri = via_draw_triangle;
    }
 
-   if (flags & (ANY_FALLBACK_FLAGS|ANY_RASTER_FLAGS)) {
-      if (flags & DD_TRI_LIGHT_TWOSIDE)    index |= VIA_TWOSIDE_BIT;
-      if (flags & DD_TRI_OFFSET)           index |= VIA_OFFSET_BIT;
-      if (flags & DD_TRI_UNFILLED)         index |= VIA_UNFILLED_BIT;
-      if (flags & ANY_FALLBACK_FLAGS)      index |= VIA_FALLBACK_BIT;
+   if (flags & (ANY_FALLBACK_FLAGS | ANY_RASTER_FLAGS)) {
+      if (ctx->Light.Enabled && ctx->Light.Model.TwoSide)
+         index |= VIA_TWOSIDE_BIT;
+      if (ctx->Polygon.FrontMode != GL_FILL || ctx->Polygon.BackMode != GL_FILL)
+         index |= VIA_UNFILLED_BIT;
+      if (flags & DD_TRI_OFFSET)
+         index |= VIA_OFFSET_BIT;
+      if (flags & ANY_FALLBACK_FLAGS)
+         index |= VIA_FALLBACK_BIT;
 
-      /* Hook in fallbacks for specific primitives.
-       */
+      /* Hook in fallbacks for specific primitives. */
       if (flags & POINT_FALLBACK)
 	 vmesa->drawPoint = via_fallback_point;
       
@@ -683,11 +685,8 @@ static void viaChooseRenderState(GLcontext *ctx)
 	 vmesa->drawTri = via_fallback_tri;
    }
 
-
-   if ((flags & DD_SEPARATE_SPECULAR) &&
-       ctx->Light.ShadeModel == GL_FLAT) {
+   if ((flags & DD_SEPARATE_SPECULAR) && ctx->Light.ShadeModel == GL_FLAT)
       index = VIA_MAX_TRIFUNC;	/* flat specular */
-   }
 
    if (vmesa->renderIndex != index) {
       vmesa->renderIndex = index;

@@ -167,6 +167,11 @@ _mesa_PolygonMode( GLenum face, GLenum mode )
       return;
    }
 
+   if (ctx->Polygon.FrontMode == GL_FILL && ctx->Polygon.BackMode == GL_FILL)
+      ctx->_TriangleCaps &= ~DD_TRI_UNFILLED;
+   else
+      ctx->_TriangleCaps |= DD_TRI_UNFILLED;
+
    if (ctx->Driver.PolygonMode)
       ctx->Driver.PolygonMode(ctx, face, mode);
 }

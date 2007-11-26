@@ -440,7 +440,7 @@ _mesa_PassTexCoordATI(GLuint dst, GLuint coord, GLenum swizzle)
       _mesa_error(ctx, GL_INVALID_OPERATION, "glPassTexCoordATI(coord)");
       return;
    }
-   if ((swizzle < GL_SWIZZLE_STR_ATI) && (swizzle > GL_SWIZZLE_STQ_DQ_ATI)) {
+   if (!(swizzle >= GL_SWIZZLE_STR_ATI) && (swizzle <= GL_SWIZZLE_STQ_DQ_ATI)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glPassTexCoordATI(swizzle)");
       return;
    }
@@ -513,7 +513,7 @@ _mesa_SampleMapATI(GLuint dst, GLuint interp, GLenum swizzle)
       _mesa_error(ctx, GL_INVALID_OPERATION, "glSampleMapATI(interp)");
       return;
    }
-   if ((swizzle < GL_SWIZZLE_STR_ATI) && (swizzle > GL_SWIZZLE_STQ_DQ_ATI)) {
+   if (!(swizzle >= GL_SWIZZLE_STR_ATI) && (swizzle <= GL_SWIZZLE_STQ_DQ_ATI)) {
       _mesa_error(ctx, GL_INVALID_ENUM, "glSampleMapATI(swizzle)");
       return;
    }

@@ -217,9 +217,9 @@ NAME ( GLcontext *ctx, const SWvertex *vert )
       }
       else {
          /* even size */
-         xmin = (GLint) vert->win[0] - iRadius + 1;
+         xmin = (GLint) vert->win[0] - iRadius;
          xmax = xmin + iSize - 1;
-         ymin = (GLint) vert->win[1] - iRadius + 1;
+         ymin = (GLint) vert->win[1] - iRadius;
          ymax = ymin + iSize - 1;
       }
 #endif /*SMOOTH*/

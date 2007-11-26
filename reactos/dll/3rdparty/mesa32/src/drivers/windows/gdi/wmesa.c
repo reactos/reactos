@@ -458,23 +458,84 @@ static void write_rgba_span_front(const GLcontext *ctx,
 				   const GLubyte rgba[][4], 
 				   const GLubyte mask[] )
 {
-    WMesaContext pwc = wmesa_context(ctx);
-    GLuint i;
-    
-    (void) ctx;
-    y=FLIP(y);
-    if (mask) {
-	for (i=0; i<n; i++)
-	    if (mask[i])
-		SetPixel(pwc->hDC, x+i, y, RGB(rgba[i][RCOMP], rgba[i][GCOMP], 
-					       rgba[i][BCOMP]));
-    }
-    else {
-	for (i=0; i<n; i++)
-	    SetPixel(pwc->hDC, x+i, y, RGB(rgba[i][RCOMP], rgba[i][GCOMP], 
-					   rgba[i][BCOMP]));
-    }
-    
+   WMesaContext pwc = wmesa_context(ctx);
+   WMesaFramebuffer pwfb = wmesa_lookup_framebuffer(pwc->hDC);
+   CONST BITMAPINFO bmi=
+   {
+      {
+         sizeof(BITMAPINFOHEADER),
+         n, 1, 1, 32, BI_RGB, 0, 1, 1, 0, 0
+      }
+   };
+   HBITMAP bmp=0;
+   HDC mdc=0;
+   typedef union
+   {
+      unsigned i;
+      struct {
+         unsigned b:8, g:8, r:8, a:8;
+      };
+   } BGRA;
+   BGRA *bgra, c;
+   int i;
+
+   if (n < 16) {   // the value 16 is just guessed
+      y=FLIP(y);
+      if (mask) {
+         for (i=0; i<n; i++)
+            if (mask[i])
+               SetPixel(pwc->hDC, x+i, y,
+                        RGB(rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP]));
+      }
+      else {
+         for (i=0; i<n; i++)
+            SetPixel(pwc->hDC, x+i, y,
+                     RGB(rgba[i][RCOMP], rgba[i][GCOMP], rgba[i][BCOMP]));
+      }
+   }
+   else {
+      if (!pwfb) {
+         _mesa_problem(NULL, "wmesa: write_rgba_span_front on unknown hdc");
+         return;
+      }
+      bgra=malloc(n*sizeof(BGRA));
+      if (!bgra) {
+         _mesa_problem(NULL, "wmesa: write_rgba_span_front: out of memory");
+         return;
+      }
+      c.a=0;
+      if (mask) {
+         for (i=0; i<n; i++) {
+            if (mask[i]) {
+               c.r=rgba[i][RCOMP];
+               c.g=rgba[i][GCOMP];
+               c.b=rgba[i][BCOMP];
+               c.a=rgba[i][ACOMP];
+               bgra[i]=c;
+            }
+            else
+               bgra[i].i=0;
+         }
+      }
+      else {
+         for (i=0; i<n; i++) {
+            c.r=rgba[i][RCOMP];
+            c.g=rgba[i][GCOMP];
+            c.b=rgba[i][BCOMP];
+            c.a=rgba[i][ACOMP];
+            bgra[i]=c;
+         }
+      }
+      bmp=CreateBitmap(n, 1,  1, 32, bgra);
+      mdc=CreateCompatibleDC(pwfb->hDC);
+      SelectObject(mdc, bmp);
+      y=FLIP(y);
+      BitBlt(pwfb->hDC, x, y, n, 1, mdc, 0, 0, SRCCOPY);
+      SelectObject(mdc, 0);
+      DeleteObject(bmp);
+      DeleteDC(mdc);
+      free(bgra);
+   }
 }
 
 /* Write a horizontal span of RGB color pixels with a boolean mask. */

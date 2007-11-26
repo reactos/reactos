@@ -117,7 +117,7 @@ static void upload_wm_unit(struct brw_context *brw )
    wm.thread1.floating_point_mode = BRW_FLOATING_POINT_NON_IEEE_754;
 
    /* CACHE_NEW_SAMPLER */
-   wm.wm4.sampler_count = brw->wm.sampler_count;
+   wm.wm4.sampler_count = (brw->wm.sampler_count + 1) / 4;
    wm.wm4.sampler_state_pointer = brw->wm.sampler_gs_offset >> 5;
 
    /* BRW_NEW_FRAGMENT_PROGRAM */

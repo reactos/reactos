@@ -38,6 +38,7 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #include "context.h"
 #include "macros.h"
 #include "texformat.h"
+#include "texobj.h"
 #include "enums.h"
 
 #include "r200_context.h"
@@ -73,10 +74,11 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 #define VALID_FORMAT(f) ( ((f) <= MESA_FORMAT_RGBA_DXT5) \
 			     && (tx_table_le[f].format != 0xffffffff) )
 
-static const struct {
+struct tx_table {
    GLuint format, filter;
-}
-tx_table_be[] =
+};
+
+static const struct tx_table tx_table_be[] =
 {
    [ MESA_FORMAT_RGBA8888 ] = { R200_TXFORMAT_ABGR8888 | R200_TXFORMAT_ALPHA_IN_MAP, 0 },
    _ALPHA_REV(RGBA8888),
@@ -105,16 +107,13 @@ tx_table_be[] =
    _ALPHA(RGBA_DXT5),
 };
 
-static const struct {
-   GLuint format, filter;
-}
-tx_table_le[] =
+static const struct tx_table tx_table_le[] =
 {
    _ALPHA(RGBA8888),
    [ MESA_FORMAT_RGBA8888_REV ] = { R200_TXFORMAT_ABGR8888 | R200_TXFORMAT_ALPHA_IN_MAP, 0 },
    _ALPHA(ARGB8888),
    _ALPHA_REV(ARGB8888),
-   _INVALID(RGB888),
+   [ MESA_FORMAT_RGB888 ] = { R200_TXFORMAT_ARGB8888, 0 },
    _COLOR(RGB565),
    _COLOR_REV(RGB565),
    _ALPHA(ARGB4444),
@@ -161,29 +160,22 @@ static void r200SetTexImages( r200ContextPtr rmesa,
    GLint i, texelBytes;
    GLint numLevels;
    GLint log2Width, log2Height, log2Depth;
-   const GLuint ui = 1;
-   const GLubyte littleEndian = *((const GLubyte *) &ui);
 
    /* Set the hardware texture format
     */
+   if ( !t->image_override ) {
+      if ( VALID_FORMAT( baseImage->TexFormat->MesaFormat ) ) {
+         t->pp_txformat &= ~(R200_TXFORMAT_FORMAT_MASK |
+                             R200_TXFORMAT_ALPHA_IN_MAP);
+         t->pp_txfilter &= ~R200_YUV_TO_RGB;
 
-   t->pp_txformat &= ~(R200_TXFORMAT_FORMAT_MASK |
-		       R200_TXFORMAT_ALPHA_IN_MAP);
-   t->pp_txfilter &= ~R200_YUV_TO_RGB;
-
-   if ( VALID_FORMAT( baseImage->TexFormat->MesaFormat ) ) {
-      if (littleEndian) {
 	 t->pp_txformat |= tx_table_le[ baseImage->TexFormat->MesaFormat ].format;
 	 t->pp_txfilter |= tx_table_le[ baseImage->TexFormat->MesaFormat ].filter;
       }
       else {
-	 t->pp_txformat |= tx_table_be[ baseImage->TexFormat->MesaFormat ].format;
-	 t->pp_txfilter |= tx_table_be[ baseImage->TexFormat->MesaFormat ].filter;
+         _mesa_problem(NULL, "unexpected texture format in %s", __FUNCTION__);
+         return;
       }
-   }
-   else {
-      _mesa_problem(NULL, "unexpected texture format in %s", __FUNCTION__);
-      return;
    }
 
    texelBytes = baseImage->TexFormat->TexelBytes;
@@ -381,11 +373,13 @@ static void r200SetTexImages( r200ContextPtr rmesa,
     * requires 64-byte aligned pitches, and we may/may not need the
     * blitter.   NPOT only!
     */
-   if (baseImage->IsCompressed)
-      t->pp_txpitch = (tObj->Image[0][t->base.firstLevel]->Width + 63) & ~(63);
-   else
-      t->pp_txpitch = ((tObj->Image[0][t->base.firstLevel]->Width * texelBytes) + 63) & ~(63);
-   t->pp_txpitch -= 32;
+   if ( !t->image_override ) {
+      if (baseImage->IsCompressed)
+         t->pp_txpitch = (tObj->Image[0][t->base.firstLevel]->Width + 63) & ~(63);
+      else
+         t->pp_txpitch = ((tObj->Image[0][t->base.firstLevel]->Width * texelBytes) + 63) & ~(63);
+      t->pp_txpitch -= 32;
+   }
 
    t->dirty_state = TEX_ALL;
 
@@ -980,6 +974,46 @@ static GLboolean r200UpdateTextureEnv( GLcontext *ctx, int unit, int slot, GLuin
    return GL_TRUE;
 }
 
+void r200SetTexOffset(__DRIcontext * pDRICtx, GLint texname,
+		      unsigned long long offset, GLint depth, GLuint pitch)
+{
+	r200ContextPtr rmesa =
+	    (r200ContextPtr) ((__DRIcontextPrivate *) pDRICtx->private)->
+	    driverPrivate;
+	struct gl_texture_object *tObj =
+	    _mesa_lookup_texture(rmesa->glCtx, texname);
+	r200TexObjPtr t;
+
+	if (!tObj)
+		return;
+
+	t = (r200TexObjPtr) tObj->DriverData;
+
+	t->image_override = GL_TRUE;
+
+	if (!offset)
+		return;
+
+	t->pp_txoffset = offset;
+	t->pp_txpitch = pitch - 32;
+
+	switch (depth) {
+	case 32:
+		t->pp_txformat = tx_table_le[MESA_FORMAT_ARGB8888].format;
+		t->pp_txfilter |= tx_table_le[MESA_FORMAT_ARGB8888].filter;
+		break;
+	case 24:
+	default:
+		t->pp_txformat = tx_table_le[MESA_FORMAT_RGB888].format;
+		t->pp_txfilter |= tx_table_le[MESA_FORMAT_RGB888].filter;
+		break;
+	case 16:
+		t->pp_txformat = tx_table_le[MESA_FORMAT_RGB565].format;
+		t->pp_txfilter |= tx_table_le[MESA_FORMAT_RGB565].filter;
+		break;
+	}
+}
+
 #define REF_COLOR 1
 #define REF_ALPHA 2
 
@@ -1561,7 +1595,7 @@ static GLboolean enable_tex_2d( GLcontext *ctx, int unit )
       R200_FIREVERTICES( rmesa );
       r200SetTexImages( rmesa, tObj );
       r200UploadTexImages( rmesa, (r200TexObjPtr) tObj->DriverData, 0 );
-      if ( !t->base.memBlock ) 
+      if ( !t->base.memBlock && !t->image_override ) 
 	 return GL_FALSE;
    }
 
@@ -1669,7 +1703,9 @@ static GLboolean enable_tex_rect( GLcontext *ctx, int unit )
       R200_FIREVERTICES( rmesa );
       r200SetTexImages( rmesa, tObj );
       r200UploadTexImages( rmesa, (r200TexObjPtr) tObj->DriverData, 0 );
-      if ( !t->base.memBlock && !rmesa->prefer_gart_client_texturing ) 
+      if ( !t->base.memBlock &&
+           !t->image_override &&
+           !rmesa->prefer_gart_client_texturing ) 
 	 return GL_FALSE;
    }
 

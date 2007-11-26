@@ -231,6 +231,7 @@ do_blit_copypixels(GLcontext * ctx,
 
    if (intel->driDrawable->numClipRects) {
       __DRIdrawablePrivate *dPriv = intel->driDrawable;
+      __DRIdrawablePrivate *dReadPriv = intel->driReadDrawable;
       drm_clip_rect_t *box = dPriv->pClipRects;
       drm_clip_rect_t dest_rect;
       GLint nbox = dPriv->numClipRects;
@@ -262,8 +263,8 @@ do_blit_copypixels(GLcontext * ctx,
       srcy = dPriv->h - srcy - height;  
       dstx += dPriv->x;
       dsty += dPriv->y;
-      srcx += dPriv->x;
-      srcy += dPriv->y;
+      srcx += dReadPriv->x;
+      srcy += dReadPriv->y;
 
       /* Clip against the source region.  This is the only source
        * clipping we do.  Dst is clipped with cliprects below.

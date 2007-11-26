@@ -61,8 +61,11 @@ _swrast_span_default_z( GLcontext *ctx, SWspan *span )
    const GLfloat depthMax = ctx->DrawBuffer->_DepthMaxF;
    if (ctx->DrawBuffer->Visual.depthBits <= 16)
       span->z = FloatToFixed(ctx->Current.RasterPos[2] * depthMax + 0.5F);
-   else
-      span->z = (GLint) (ctx->Current.RasterPos[2] * depthMax + 0.5F);
+   else {
+      GLfloat tmpf = ctx->Current.RasterPos[2] * depthMax; 
+      tmpf = MIN2(tmpf, depthMax);
+      span->z = (GLint) tmpf;
+   }
    span->zStep = 0;
    span->interpMask |= SPAN_Z;
 }

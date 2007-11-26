@@ -1098,10 +1098,11 @@ static const char IsRenderbufferEXT_names[] =
     "";
 #endif
 
-#if defined(need_GL_VERSION_2_0)
+#if defined(need_GL_VERSION_2_0) || defined(need_GL_ATI_separate_stencil)
 static const char StencilOpSeparate_names[] = 
     "iiii\0" /* Parameter signature */
     "glStencilOpSeparate\0"
+    "glStencilOpSeparateATI\0"
     "";
 #endif
 
@@ -4172,6 +4173,13 @@ static const char ActiveStencilFaceEXT_names[] =
     "";
 #endif
 
+#if defined(need_GL_ATI_separate_stencil)
+static const char StencilFuncSeparateATI_names[] = 
+    "iiii\0" /* Parameter signature */
+    "glStencilFuncSeparateATI\0"
+    "";
+#endif
+
 #if defined(need_GL_VERSION_2_0) || defined(need_GL_ARB_shader_objects)
 static const char GetShaderSourceARB_names[] = 
     "iipp\0" /* Parameter signature */
@@ -5171,6 +5179,14 @@ static const struct dri_extension_function GL_ATI_fragment_shader_functions[] = 
     { ColorFragmentOp3ATI_names, ColorFragmentOp3ATI_remap_index, -1 },
     { GenFragmentShadersATI_names, GenFragmentShadersATI_remap_index, -1 },
     { EndFragmentShaderATI_names, EndFragmentShaderATI_remap_index, -1 },
+    { NULL, 0, 0 }
+};
+#endif
+
+#if defined(need_GL_ATI_separate_stencil)
+static const struct dri_extension_function GL_ATI_separate_stencil_functions[] = {
+    { StencilOpSeparate_names, StencilOpSeparate_remap_index, -1 },
+    { StencilFuncSeparateATI_names, StencilFuncSeparateATI_remap_index, -1 },
     { NULL, 0, 0 }
 };
 #endif

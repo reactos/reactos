@@ -179,7 +179,8 @@ $(TOP)/$(LIB_DIR):
 	mkdir $(TOP)/$(LIB_DIR)
 
 $(TOP)/$(LIB_DIR)/$(GL_LIB_NAME): $(OBJECTS) $(MESA_MODULES) $(GLU_MODULES)
-	@$(TOP)/bin/mklib -o $(GL_LIB) -install $(TOP)/$(LIB_DIR) -major $(MESA_MAJOR) -minor $(MESA_MINOR) -patch $(MESA_TINY) \
+	@$(TOP)/bin/mklib -o $(GL_LIB) -ldflags '$(LDFLAGS)' -install $(TOP)/$(LIB_DIR) \
+		-major $(MESA_MAJOR) -minor $(MESA_MINOR) -patch $(MESA_TINY) \
 		$(MKLIB_OPTIONS) $(GL_LIB_DEPS) $(OBJECTS) $(MESA_MODULES) $(GLU_MODULES)
 
 # $(GLU_OBJECTS):

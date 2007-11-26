@@ -3794,7 +3794,7 @@ _mesa_pack_stencil_span( const GLcontext *ctx, GLuint n,
          GLint *dst = (GLint *) dest;
          GLuint i;
          for (i=0;i<n;i++) {
-            *dst++ = (GLint) source[i];
+            dst[i] = (GLint) source[i];
          }
          if (dstPacking->SwapBytes) {
             _mesa_swap4( (GLuint *) dst, n );

@@ -79,6 +79,10 @@ intel_miptree_create(struct intel_context *intel,
    switch (intel->intelScreen->deviceID) {
    case PCI_CHIP_I945_G:
    case PCI_CHIP_I945_GM:
+   case PCI_CHIP_I945_GME:
+   case PCI_CHIP_G33_G:
+   case PCI_CHIP_Q33_G:
+   case PCI_CHIP_Q35_G:
       ok = i945_miptree_layout(mt);
       break;
    case PCI_CHIP_I915_G:
@@ -93,9 +97,28 @@ intel_miptree_create(struct intel_context *intel,
       break;
    }
 
-   if (ok)
+   if (ok) {
+      if (!mt->compressed) {
+	 /* XXX: Align pitch to multiple of 64 bytes for now to allow
+	  * render-to-texture to work in all cases. This should probably be
+	  * replaced at some point by some scheme to only do this when really
+	  * necessary.
+	  */
+	 mt->pitch = (mt->pitch * cpp + 63) & ~63;
+
+	 /* XXX: At least the i915 seems very upset when the pitch is a multiple
+	  * of 1024 and sometimes 512 bytes - performance can drop by several
+	  * times. Go to the next multiple of 64 for now.
+	  */
+	 if (!(mt->pitch & 511))
+	    mt->pitch += 64;
+
+	 mt->pitch /= cpp;
+      }
+
       mt->region = intel_region_alloc(intel->intelScreen,
                                       mt->cpp, mt->pitch, mt->total_height);
+   }
 
    if (!mt->region) {
       free(mt);

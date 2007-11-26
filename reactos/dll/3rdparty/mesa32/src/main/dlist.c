@@ -1,6 +1,6 @@
 /*
  * Mesa 3-D graphics library
- * Version:  7.0.1
+ * Version:  7.0.2
  *
  * Copyright (C) 1999-2007  Brian Paul   All Rights Reserved.
  *
@@ -5737,7 +5737,7 @@ execute_list(GLcontext *ctx, GLuint list)
    if (!dlist)
       return;
 
-   ctx->ListState.CallStack[ctx->ListState.CallDepth++] = dlist;
+   ctx->ListState.CallDepth++;
 
    if (ctx->Driver.BeginCallList)
       ctx->Driver.BeginCallList(ctx, dlist);
@@ -6629,7 +6629,7 @@ execute_list(GLcontext *ctx, GLuint list)
    if (ctx->Driver.EndCallList)
       ctx->Driver.EndCallList(ctx);
 
-   ctx->ListState.CallStack[ctx->ListState.CallDepth--] = NULL;
+   ctx->ListState.CallDepth--;
 }
 
 

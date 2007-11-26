@@ -1523,12 +1523,6 @@ struct gl_texture_unit
 
    struct gl_texture_object *_Current; /**< Points to really enabled tex obj */
 
-   struct gl_texture_object Saved1D;  /**< only used by glPush/PopAttrib */
-   struct gl_texture_object Saved2D;
-   struct gl_texture_object Saved3D;
-   struct gl_texture_object SavedCubeMap;
-   struct gl_texture_object SavedRect;
-
    /* GL_SGI_texture_color_table */
    struct gl_color_table ColorTable;
    struct gl_color_table ProxyColorTable;
@@ -2848,7 +2842,6 @@ struct mesa_display_list
  */
 struct gl_dlist_state
 {
-   struct mesa_display_list *CallStack[MAX_LIST_NESTING];
    GLuint CallDepth;		/**< Current recursion calling depth */
 
    struct mesa_display_list *CurrentList;

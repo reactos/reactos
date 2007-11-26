@@ -198,14 +198,16 @@ static void TAG(quadfunc)( GLcontext *ctx, GLuint v0,
 {
    if (IND & SS_UNFILLED_BIT) {
       struct vertex_buffer *VB = &TNL_CONTEXT(ctx)->vb;
-      GLubyte ef1 = VB->EdgeFlag[v1];
-      GLubyte ef3 = VB->EdgeFlag[v3];
-      VB->EdgeFlag[v1] = 0;
-      TAG(triangle)( ctx, v0, v1, v3 );
-      VB->EdgeFlag[v1] = ef1;
-      VB->EdgeFlag[v3] = 0;
-      TAG(triangle)( ctx, v1, v2, v3 );
-      VB->EdgeFlag[v3] = ef3;
+      if (VB->EdgeFlag) { /* XXX this test shouldn't be needed (bug 12614) */
+         GLubyte ef1 = VB->EdgeFlag[v1];
+         GLubyte ef3 = VB->EdgeFlag[v3];
+         VB->EdgeFlag[v1] = 0;
+         TAG(triangle)( ctx, v0, v1, v3 );
+         VB->EdgeFlag[v1] = ef1;
+         VB->EdgeFlag[v3] = 0;
+         TAG(triangle)( ctx, v1, v2, v3 );
+         VB->EdgeFlag[v3] = ef3;
+      }
    } else {
       TAG(triangle)( ctx, v0, v1, v3 );
       TAG(triangle)( ctx, v1, v2, v3 );

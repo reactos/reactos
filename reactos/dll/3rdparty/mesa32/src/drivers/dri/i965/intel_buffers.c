@@ -31,7 +31,9 @@
 #include "intel_regions.h"
 #include "intel_batchbuffer.h"
 #include "context.h"
+#include "utils.h"
 #include "framebuffer.h"
+#include "vblank.h"
 #include "macros.h"
 #include "swrast/swrast.h"
 
@@ -190,8 +192,40 @@ void intelWindowMoved( struct intel_context *intel )
       }
    }
 
+   {
+      if (intel->intelScreen->driScrnPriv->ddxMinor >= 7) {
+	 volatile drmI830Sarea *sarea = intel->sarea;
+	 drm_clip_rect_t drw_rect = { .x1 = dPriv->x, .x2 = dPriv->x + dPriv->w,
+				      .y1 = dPriv->y, .y2 = dPriv->y + dPriv->h 
+	 };
+	 drm_clip_rect_t pipeA_rect = { .x1 = sarea->pipeA_x,
+					.x2 = sarea->pipeA_x + sarea->pipeA_w,
+					.y1 = sarea->pipeA_y,
+                                        .y2 = sarea->pipeA_y + sarea->pipeA_h };
+         drm_clip_rect_t pipeB_rect = { .x1 = sarea->pipeB_x,
+                                        .x2 = sarea->pipeB_x + sarea->pipeB_w,
+                                        .y1 = sarea->pipeB_y,
+                                        .y2 = sarea->pipeB_y + sarea->pipeB_h };
+         GLint areaA = driIntersectArea( drw_rect, pipeA_rect );
+         GLint areaB = driIntersectArea( drw_rect, pipeB_rect );
+         GLuint flags = intel->vblank_flags;
+	 
+         if (areaB > areaA || (areaA > 0 && areaB > 0)) {
+            flags = intel->vblank_flags | VBLANK_FLAG_SECONDARY;
+         } else {
+            flags = intel->vblank_flags & ~VBLANK_FLAG_SECONDARY;
+         }
+	 
+         if (flags != intel->vblank_flags) {
+            intel->vblank_flags = flags;
+            driGetCurrentVBlank(dPriv, intel->vblank_flags, &intel->vbl_seq);
+         }
+      } else {
+         intel->vblank_flags &= ~VBLANK_FLAG_SECONDARY;
+      }
+   }
    _mesa_resize_framebuffer(&intel->ctx,
-			    (GLframebuffer*)dPriv->driverPrivate,
+   			    (GLframebuffer*)dPriv->driverPrivate,
 			    dPriv->w, dPriv->h);
 
    /* Set state we know depends on drawable parameters:
