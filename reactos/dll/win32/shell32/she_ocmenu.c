@@ -435,7 +435,10 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         case 14006: /* cancel */
             DestroyWindow(hwndDlg);
             return FALSE;
+        default:
+            break;
         }
+        break;
     case WM_NOTIFY:
         {
             LPNMHDR lpnm = (LPNMHDR)lParam;
