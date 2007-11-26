@@ -173,7 +173,7 @@ IntLoadSystemFonts(VOID)
    HANDLE hDirectory;
    BYTE *DirInfoBuffer;
    PFILE_DIRECTORY_INFORMATION DirInfo;
-   BOOL bRestartScan = TRUE;
+   BOOLEAN bRestartScan = TRUE;
    NTSTATUS Status;
 
    RtlInitUnicodeString(&Directory, L"\\SystemRoot\\media\\fonts\\");
@@ -2583,7 +2583,7 @@ FTVectorToPOINTFX(FT_Vector *vec, POINTFX *pt)
    in the highest 16 bits and the decimal part in the lowest 16 bits of the FT_Fixed.
    It fails if the integer part of the float number is greater than SHORT_MAX.
 */
-static inline FT_Fixed FT_FixedFromFloat(float f)
+static __inline FT_Fixed FT_FixedFromFloat(float f)
 {
 	short value = f;
 	unsigned short fract = (f - value) * 0xFFFF;
@@ -2594,7 +2594,7 @@ static inline FT_Fixed FT_FixedFromFloat(float f)
    This function builds an FT_Fixed from a FIXED. It simply put f.value
    in the highest 16 bits and f.fract in the lowest 16 bits of the FT_Fixed.
 */
-static inline FT_Fixed FT_FixedFromFIXED(FIXED f)
+static __inline FT_Fixed FT_FixedFromFIXED(FIXED f)
 {
 	return (FT_Fixed)((long)f.value << 16 | (unsigned long)f.fract);
 }
@@ -3364,10 +3364,11 @@ DWORD
 NtGdiGetCharSet(HDC hDC)
 {
   PDC Dc;
+  PDC_ATTR Dc_Attr;
   DWORD cscp = IntGdiGetCharSet(hDC);
   // If here, update everything!  
   Dc = DC_LockDc(hDC);
-  PDC_ATTR Dc_Attr = Dc->pDc_Attr;
+  Dc_Attr = Dc->pDc_Attr;
   if (!Dc_Attr) Dc_Attr = &Dc->Dc_Attr;
   if (!Dc)
   {
@@ -3621,7 +3622,7 @@ NtGdiGetTextExtentExW(
 
   /* FIXME: Handle fl */
 
-  if (Count < 0)
+  if (!Count)
     {
       SetLastWin32Error(ERROR_INVALID_PARAMETER);
       return FALSE;

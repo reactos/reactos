@@ -389,16 +389,17 @@ NtGdiCreateEnhMetaFile(HDC  hDCRef,
    ret = tempHDC;
    if (File)
    {
-      DPRINT1("Trying Create EnhMetaFile\n");
-
-      /* disk based metafile */
-      dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;
       OBJECT_ATTRIBUTES ObjectAttributes;
       IO_STATUS_BLOCK IoStatusBlock;
       IO_STATUS_BLOCK Iosb;
       UNICODE_STRING NtPathU;
       NTSTATUS Status;
       ULONG FileAttributes = (FILE_ATTRIBUTE_VALID_FLAGS & ~FILE_ATTRIBUTE_DIRECTORY);
+
+      DPRINT1("Trying Create EnhMetaFile\n");
+
+      /* disk based metafile */
+      dwDesiredAccess = GENERIC_WRITE | GENERIC_READ | SYNCHRONIZE | FILE_READ_ATTRIBUTES;
 
       if (!RtlDosPathNameToNtPathName_U (File, &NtPathU, NULL, NULL))
       {

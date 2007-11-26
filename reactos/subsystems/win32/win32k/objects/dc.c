@@ -1103,7 +1103,7 @@ NtGdiGetDCPoint( HDC hDC, UINT iPoint, PPOINTL Point)
 {
   BOOL Ret = TRUE;
   DC *dc;
-  POINT SafePoint;
+  POINTL SafePoint;
   SIZE Size;
   NTSTATUS Status = STATUS_SUCCESS;
 
@@ -1997,7 +1997,7 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
       else
       {
         dc->w.bitsPerPixel = BitsPerFormat(pb->SurfObj.iBitmapFormat);
-        dc->w.hPalette = ((DEVINFO)((GDIDEVICE *)dc->pPDev)->DevInfo).hpalDefault;
+        dc->w.hPalette = ((GDIDEVICE *)dc->pPDev)->DevInfo.hpalDefault;
       }
 
       /* Reselect brush and pen to regenerate the XLATEOBJs. */
@@ -2373,6 +2373,7 @@ FASTCALL
 DC_AllocateDcAttr(HDC hDC)
 {
   PVOID NewMem = NULL;
+  PDC pDC;
   HANDLE Pid = NtCurrentProcess();
   ULONG MemSize = sizeof(DC_ATTR); //PAGE_SIZE it will allocate that size
 
@@ -2399,7 +2400,7 @@ DC_AllocateDcAttr(HDC hDC)
     }
   }
   KeLeaveCriticalRegion();
-  PDC pDC = DC_LockDc(hDC);
+  pDC = DC_LockDc(hDC);
   if(NewMem)
   {
      pDC->pDc_Attr = NewMem; // Store pointer

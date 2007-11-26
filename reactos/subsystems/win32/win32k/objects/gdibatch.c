@@ -20,6 +20,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
 {
   PDC dc = NULL;
   PDC_ATTR Dc_Attr = NULL;
+  PGDIBSSETBRHORG pgSBO;
   if (hDC)
   {
     dc = DC_LockDc(hDC);
@@ -40,7 +41,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      case GdiBCSetBrushOrg:
      {
         if (!dc) break;
-        PGDIBSSETBRHORG pgSBO = (PGDIBSSETBRHORG) pHdr;
+        pgSBO = (PGDIBSSETBRHORG) pHdr;
         Dc_Attr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
         break;
      }

@@ -134,9 +134,10 @@ BOOL
 FASTCALL
 DCU_SynchDcAttrtoUser(HDC hDC)
 {
+  BOOL Ret;
   PDC pDC = DC_LockDc ( hDC );
   if (!pDC) return FALSE;
-  BOOL Ret = DCU_SyncDcAttrtoUser(pDC);
+  Ret = DCU_SyncDcAttrtoUser(pDC);
   DC_UnlockDc( pDC );
   return Ret;
 }

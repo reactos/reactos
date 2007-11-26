@@ -627,7 +627,7 @@ BOOL STDCALL NtGdiResizePalette(HPALETTE  hpal,
 }
 
 BOOL STDCALL NtGdiSetColorAdjustment(HDC  hDC,
-                             CONST LPCOLORADJUSTMENT  ca)
+                                     LPCOLORADJUSTMENT  ca)
 {
    UNIMPLEMENTED;
    return FALSE;

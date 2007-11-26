@@ -37,14 +37,16 @@
 void FASTCALL
 IntFixIsotropicMapping(PDC dc)
 {
+  ULONG xdim;
+  ULONG ydim;
   PDC_ATTR Dc_Attr = dc->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
 
-  ULONG xdim = EngMulDiv(Dc_Attr->szlViewportExt.cx,
+  xdim = EngMulDiv(Dc_Attr->szlViewportExt.cx,
                ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzSize,
                ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulHorzRes) /
                                 Dc_Attr->szlWindowExt.cx;
-  ULONG ydim = EngMulDiv(Dc_Attr->szlViewportExt.cy,
+  ydim = EngMulDiv(Dc_Attr->szlViewportExt.cy,
                ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertSize,
                ((PGDIDEVICE)dc->pPDev)->GDIInfo.ulVertRes) /
                                 Dc_Attr->szlWindowExt.cy;
@@ -85,8 +87,8 @@ IntGdiCombineTransform(LPXFORM XFormResult,
 }
 
 BOOL STDCALL NtGdiCombineTransform(LPXFORM  UnsafeXFormResult,
-                           CONST LPXFORM  Unsafexform1,
-                           CONST LPXFORM  Unsafexform2)
+                                   LPXFORM  Unsafexform1,
+                                   LPXFORM  Unsafexform2)
 {
   XFORM  xformTemp;
   XFORM  xform1 = {0}, xform2 = {0};
@@ -433,7 +435,7 @@ NtGdiTransformPoints( HDC hDC,
 BOOL
 STDCALL
 NtGdiModifyWorldTransform(HDC hDC,
-                          CONST LPXFORM  UnsafeXForm,
+                          LPXFORM  UnsafeXForm,
                           DWORD Mode)
 {
    PDC dc;

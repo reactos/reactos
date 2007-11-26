@@ -261,10 +261,11 @@ DceReleaseDC(DCE* dce, BOOL EndPaint)
    {
      if (!(dce->DCXFlags & DCX_NORESETATTRS))
      {
+       PDC dc;
        /* make the DC clean so that SetDCState doesn't try to update the vis rgn */
        IntGdiSetHookFlags(dce->hDC, DCHF_VALIDATEVISRGN);
 
-       PDC dc = DC_LockDc ( dce->hDC );
+       dc = DC_LockDc ( dce->hDC );
        IntGdiCopyFromSaveState(dc, defaultDCstate, dce->hDC ); // Was SetDCState.
 
        dce->DCXFlags &= ~DCX_DCEBUSY;

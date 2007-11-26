@@ -330,11 +330,7 @@ co_IntSetScrollInfo(PWINDOW_OBJECT Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bR
    }
 
    /* Make sure the page size is valid */
-   if (Info->nPage < 0)
-   {
-      Info->nPage = 0;
-   }
-   else if (Info->nMax - Info->nMin + 1 < Info->nPage)
+   if (Info->nMax - Info->nMin + 1 < Info->nPage)
    {
       Info->nPage = Info->nMax - Info->nMin + 1;
    }

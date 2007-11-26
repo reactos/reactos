@@ -2758,7 +2758,7 @@ UnsafeIntRectInRegion(PROSRGNDATA Rgn,
 BOOL
 STDCALL
 NtGdiRectInRegion(HRGN  hRgn,
-                       CONST LPRECT  unsaferc)
+                  LPRECT  unsaferc)
 {
   PROSRGNDATA Rgn;
   RECT rc = {0};

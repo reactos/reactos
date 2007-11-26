@@ -209,7 +209,7 @@ IntSetDIBits(
   }
 
   // Destination palette obtained from the hDC
-  hDCPalette = PALETTE_LockPalette(((DEVINFO)((GDIDEVICE *)DC->pPDev)->DevInfo).hpalDefault);
+  hDCPalette = PALETTE_LockPalette(((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault);
   if (NULL == hDCPalette)
     {
       EngUnlockSurface(SourceSurf);
@@ -219,7 +219,7 @@ IntSetDIBits(
       return 0;
     }
   DDB_Palette_Type = hDCPalette->Mode;
-  DDB_Palette = ((DEVINFO)((GDIDEVICE *)DC->pPDev)->DevInfo).hpalDefault;
+  DDB_Palette = ((GDIDEVICE *)DC->pPDev)->DevInfo.hpalDefault;
   PALETTE_UnlockPalette(hDCPalette);
 
   // Source palette obtained from the BITMAPINFO
@@ -489,9 +489,11 @@ NtGdiGetDIBitsInternal(HDC hDC,
         {
             if (Info->bmiHeader.biSize == sizeof(BITMAPCOREHEADER))
             {
+                BITMAPCOREHEADER* coreheader;
+
                 ProbeForWrite(Info, sizeof(BITMAPINFO), 1);
 
-                BITMAPCOREHEADER* coreheader = (BITMAPCOREHEADER*) Info;
+                coreheader = (BITMAPCOREHEADER*) Info;
                 coreheader->bcWidth =BitmapObj->SurfObj.sizlBitmap.cx;
                 coreheader->bcPlanes = 1;
                 coreheader->bcBitCount =  BitsPerFormat(BitmapObj->SurfObj.iBitmapFormat);

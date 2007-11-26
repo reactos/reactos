@@ -395,7 +395,7 @@ PATH_FillPath( PDC dc, GdiPath *pPath )
 {
   INT   mapMode, graphicsMode;
   SIZE  ptViewportExt, ptWindowExt;
-  POINT ptViewportOrg, ptWindowOrg;
+  POINTL ptViewportOrg, ptWindowOrg;
   XFORM xform;
   HRGN  hrgn;
   PDC_ATTR Dc_Attr = dc->pDc_Attr;
@@ -663,7 +663,7 @@ PATH_Rectangle ( PDC dc, INT x1, INT y1, INT x2, INT y2 )
  * is an error in the bezier drawing code so that there are small pixel-size
  * gaps when the resulting path is drawn by StrokePath()
  */
-FASTCALL BOOL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height)
+BOOL FASTCALL PATH_RoundRect(DC *dc, INT x1, INT y1, INT x2, INT y2, INT ell_width, INT ell_height)
 {
    GdiPath *pPath = &dc->w.path;
    POINT corners[2], pointTemp;
