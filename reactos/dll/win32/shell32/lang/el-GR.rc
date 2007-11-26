@@ -1,0 +1,451 @@
+/*
+ * Copyright 1998 Juergen Schmied
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+MENU_001 MENU DISCARDABLE
+BEGIN
+	MENUITEM "Μεγάλα εικονίδια",  FCIDM_SHVIEW_BIGICON
+	MENUITEM "Μικρά εικονίδια",   FCIDM_SHVIEW_SMALLICON
+	MENUITEM "Λίστα",             FCIDM_SHVIEW_LISTVIEW
+	MENUITEM "Λεπτομέρειες",      FCIDM_SHVIEW_REPORTVIEW
+END
+
+/* shellview background menu */
+MENU_002 MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+		POPUP "&Εμφάνιση"
+		BEGIN
+			MENUITEM "Μεγάλα εικονίδια",   FCIDM_SHVIEW_BIGICON
+			MENUITEM "Μικρά εικονίδια",    FCIDM_SHVIEW_SMALLICON
+			MENUITEM "Λίστα",              FCIDM_SHVIEW_LISTVIEW
+			MENUITEM "Λεπτομέρειες",       FCIDM_SHVIEW_REPORTVIEW
+		END
+		MENUITEM SEPARATOR
+		POPUP "Τακτοποίηση εικονιδίων κατά"
+		BEGIN
+			MENUITEM "Όνομα",          0x30  /* column 0 */
+			MENUITEM "Τύπο",           0x32  /* column 2 */
+			MENUITEM "μέγεθος",        0x31  /* ... */
+			MENUITEM "Ημερομηνία",     0x33
+			MENUITEM SEPARATOR
+			MENUITEM "Αυτόματη τακτοποίηση",      FCIDM_SHVIEW_AUTOARRANGE
+		END
+		MENUITEM "Line up Icons",         FCIDM_SHVIEW_SNAPTOGRID
+		MENUITEM SEPARATOR
+		MENUITEM "Ανανέωση",               FCIDM_SHVIEW_REFRESH
+		MENUITEM SEPARATOR
+		MENUITEM "Επικόλληση",             FCIDM_SHVIEW_INSERT
+		MENUITEM "Επικόλληση ως σύνδεσμο", FCIDM_SHVIEW_INSERTLINK
+		MENUITEM SEPARATOR
+		MENUITEM "Ιδιότητες",           FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+/* shellview item menu */
+MENU_SHV_FILE MENU DISCARDABLE
+BEGIN
+	POPUP ""
+	BEGIN
+		MENUITEM "Εξερεύνηση",            FCIDM_SHVIEW_EXPLORE
+		MENUITEM "’νοιγμα",               FCIDM_SHVIEW_OPEN
+		MENUITEM SEPARATOR
+		MENUITEM "Αποκοπή",               FCIDM_SHVIEW_CUT
+		MENUITEM "Αντιγραφή",             FCIDM_SHVIEW_COPY
+		MENUITEM SEPARATOR
+		MENUITEM "Δημιουργία συνδέσμου",  FCIDM_SHVIEW_CREATELINK
+		MENUITEM "Διαγραφή",              FCIDM_SHVIEW_DELETE
+		MENUITEM "Μετονομασία",           FCIDM_SHVIEW_RENAME
+		MENUITEM SEPARATOR
+		MENUITEM "Ιδιότητες",             FCIDM_SHVIEW_PROPERTIES
+	END
+END
+
+SHBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 188, 192
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Αναζήτηση φακέλου"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "OK", 1, 60, 175, 60, 15, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "’κυρο", 2, 125, 175, 60, 15, WS_GROUP | WS_TABSTOP
+	LTEXT "", IDD_TITLE, 4, 4, 180, 12
+	LTEXT "", IDD_STATUS, 4, 25, 180, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 4, 40, 180, 120
+END
+
+SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
+STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
+CAPTION "Αναζήτηση φακέλου"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", IDD_TITLE, 10, 8, 198, 24
+	LTEXT "", IDD_STATUS, 10, 25, 198, 12
+	LTEXT "Φάκελος:", IDD_FOLDER, 10, 152, 40, 12
+	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Δημιουργία νέου φακέλου", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "’κυρο", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+END
+
+SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Μήνυμα"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Ναι", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Ναι σε &όλα", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Όχι", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&’κυρο", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	ICON "", IDD_ICON, 10, 10, 16, 16
+	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
+END
+
+IDD_SHELL_ABOUT DIALOGEX LOADONCALL MOVEABLE DISCARDABLE 0, 0, 275, 198
+STYLE DS_FIXEDSYS | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Σχετικά με %s"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
+	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
+	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
+	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
+	LTEXT "Αυτή η έκδοση του ReactOS είναι registered στον/ην:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
+	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
+	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
+	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
+	DEFPUSHBUTTON "OK", IDOK, 220, 178, 50, 14
+	
+	PUSHBUTTON "", IDC_SHELL_ABOUT_AUTHORS, 5, 178, 70, 14
+END
+
+IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
+STYLE DS_FIXEDSYS | WS_CHILD
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Το ReactOS ήρθε σε εσάς χάρη στους:", IDC_STATIC, 0, 0, 180, 10
+	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
+END
+
+SHELL_RUN_DLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 0, 0, 227, 95
+STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION ""
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON "", 12297, 7, 11, 18, 20, WS_VISIBLE
+	LTEXT "Type the name of a program, folder, document, or Internet resource, and ReactOS will open it for you.", 12289, 36, 11, 182, 18
+	LTEXT "&Open:", 12305, 7, 39, 24, 10
+	CONTROL "", 12298, "COMBOBOX", WS_TABSTOP | WS_GROUP | WS_VSCROLL | WS_VISIBLE | CBS_DISABLENOSCROLL | CBS_AUTOHSCROLL | CBS_DROPDOWN, 36, 37, 183, 100
+	DEFPUSHBUTTON "OK", IDOK, 36, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "’κυρο", IDCANCEL, 98, 63, 59, 14, WS_TABSTOP
+	PUSHBUTTON "&Αναζήτηση...", 12288, 160, 63, 59, 14, WS_TABSTOP
+END
+
+SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Συντόμευση"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
+	LTEXT "Target type:", 14004, 8, 38, 64, 10
+	LTEXT "", 14005, 78, 38, 142, 10
+	LTEXT "Target location:", 14006, 8, 58, 64, 10
+	LTEXT "", 14007, 79, 58, 141, 10
+	LTEXT "Target:", 14008, 8, 77, 45, 10
+	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
+	LTEXT "&Start in:", 14010, 8, 96, 57, 10
+	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
+	LTEXT "Shortcut &key:", 14014, 8, 115, 57, 10
+	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
+	LTEXT "Run:", 14016, 8, 134, 57, 10
+	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
+	LTEXT "C&omment:", 14018, 8, 152, 57, 10
+	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Find Target...", 14020, 9, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "&Αλλαγή εικονίδίου...", 14021, 84, 172, 70, 14, ES_LEFT
+	PUSHBUTTON "A&dvanced...", 14022, 159, 172, 70, 14, ES_LEFT
+END
+
+SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 230, 150
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "Extended Properties"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Choose the advanced properties you want for this shortcut.", -1, 5, 30, 210, 10
+	CHECKBOX "Run with different credentials", 14000, 25, 50, 150, 10
+	LTEXT "This option can allow you to run the this shortcut as another user, or continue as yourself while protecting your computer and data from unauthorized program activity.", -1, 50, 60, 175, 40
+	CHECKBOX "Run in seperate memory space", 14001, 25, 100, 90, 10, WS_DISABLED
+	PUSHBUTTON "OK", 1, 63, 124, 50, 15, WS_VISIBLE
+	PUSHBUTTON "Abort", 2, 120, 124, 50, 15, WS_VISIBLE
+END
+
+SHELL_FILE_GENERAL_DLG DIALOGEX 0, 0, 240, 205
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
+	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
+	LTEXT "Τύπος αρχείου:", 14004, 8, 35, 50, 10
+	LTEXT "Αρχείο", 14005, 68, 35, 160, 10
+	LTEXT "Ανοίγει με εφαρμογή:", 14006, 8, 53, 50, 10
+	LTEXT "", 14007, 68, 53, 160, 10
+	LTEXT "Θέση:", 14008, 8, 72, 45, 10
+	LTEXT "", 14009, 68, 72, 315, 10
+	LTEXT "Μέγεθος:", 14010, 8, 93, 45, 10
+	LTEXT "", 14011, 68, 93, 160, 10
+	LTEXT "Δημιουργήθηκε:", 14014, 8, 118, 45, 10
+	LTEXT "", 14015, 68, 118, 160, 10
+	LTEXT "Τροποποιήθηκε:", 14016, 8, 140, 45, 10
+	LTEXT "", 14017, 68, 140, 160, 10
+	LTEXT "Προσπελάστηκε:", 14018, 8, 160, 45, 10
+	LTEXT "", 14019, 68, 160, 160, 10
+	LTEXT "Χαρακτηριστικά:", 14020, 8, 189, 45, 10
+	CHECKBOX "Μόνο για ανάγνωση", 14021, 58, 189, 67, 10
+	CHECKBOX "Κρυφό", 14022, 126, 189, 50, 10
+	CHECKBOX "Προς φύλαξη", 14023, 181, 189, 49, 10
+END
+
+SHELL_FILE_VERSION_DLG DIALOGEX 0, 0, 235, 215
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Version"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Έκδοση αρχείου: ", 14000, 10, 10, 55, 10
+	LTEXT "", 14001, 77, 10, 152, 10
+	LTEXT "Περιγραφή: ", 14002, 10, 27, 45, 10
+	LTEXT "", 14003, 77, 27, 152, 10
+	LTEXT "Copyright: ", 14004, 10, 46, 66, 10
+	LTEXT "", 14005, 77, 46, 152, 10
+	GROUPBOX "Other version information: ", 14006, 6, 70, 222, 115
+	LTEXT "Item name: ", 14007, 13, 82, 50, 10
+	LTEXT "Τιμή: ", 14008, 112, 82, 45, 10
+	LISTBOX 14009, 12, 94, 94, 83, LBS_STANDARD | WS_TABSTOP | LBS_NOTIFY
+	EDITTEXT 14010, 112, 93, 109, 83, ES_LEFT | WS_BORDER | WS_VSCROLL | WS_GROUP | ES_MULTILINE | ES_READONLY
+END
+
+DRIVE_GENERAL_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Γενικά"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	EDITTEXT 14001, 40, 20, 190, 14, ES_LEFT|WS_BORDER|WS_GROUP
+	LTEXT "Τύπος:", -1, 15, 55, 40, 10
+	LTEXT "", 14002, 110, 55, 100, 10
+
+	LTEXT "File system:", -1, 15, 70, 100, 10
+	LTEXT "", 14003, 110, 70, 100, 10
+
+	CONTROL "", 14013, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 90, 10, 10
+	LTEXT "Χώρος που χρησιμοποιείται:", -1, 25, 90, 120, 10
+	LTEXT "", 14004, 110, 90, 120, 10
+	LTEXT "", 14005, 200, 90, 40, 10
+
+	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
+	LTEXT "Ελεύθερος χώρος:", -1, 25, 105, 70, 10
+	LTEXT "", 14006, 110, 105, 120, 10
+	LTEXT "", 14007, 200, 105, 40, 10
+
+	LTEXT "Χωρητικότητα:", -1, 25, 125, 80, 10
+	LTEXT "", 14008, 110, 125, 120, 10
+	LTEXT "", 14009, 200, 125, 40, 10
+
+	CONTROL "", 14015, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 20, 140, 200, 20
+
+	LTEXT "Drive %s", 14010, 100, 170, 40, 10
+	PUSHBUTTON "Disk Cleanup", 14011, 180, 175, 50, 15, WS_TABSTOP
+	CHECKBOX "Compress drive to save disk space", 14012, 15, 205, 180, 10, WS_DISABLED
+	CHECKBOX "Allow Indexing Service to index this disk for fast file searching", 14012, 15, 220, 200, 10, WS_DISABLED
+END
+
+DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Tools"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	GROUPBOX "Error-checking", -1, 5, 5, 230, 60
+	LTEXT "This option will check the volume for\nerrors.", -1, 40, 25, 160, 20
+	PUSHBUTTON "Έλεγχος τώρα...", 14000, 130, 45, 90, 15, WS_TABSTOP
+	GROUPBOX "Defragmentation", -1, 5, 65, 230, 60
+	LTEXT "This option will defragment files on the volume", -1, 40, 85, 160, 20
+	PUSHBUTTON "Defragment Now...", 14001, 130, 105, 90, 15, WS_TABSTOP
+	GROUPBOX "Backup", -1, 5, 130, 230, 60
+	LTEXT "This option will back up files on the volume.", -1, 40, 150, 160, 20
+	PUSHBUTTON "Backup Now...", 14002, 130, 170, 90, 15, WS_TABSTOP
+END
+
+DRIVE_HARDWARE_DLG DIALOGEX 0, 0, 240, 230
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Υλικό"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+END
+
+RUN_AS_DIALOG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Εκτέλεση ως"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+	CHECKBOX "Current User %s", 14000, 10, 45, 150, 10
+	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "This option can prevent computer viruses from harming your computer or personal data, but selecting it might cause the program to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	CHECKBOX "The following user:", 14002, 10, 100, 90, 10
+	LTEXT "User name:", -1, 20, 118, 54, 10
+	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+
+	PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
+	LTEXT "Συνθηματικό:", -1, 20, 143, 53, 10
+	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
+	PUSHBUTTON "...", 14006, 180, 140, 30, 14, WS_TABSTOP
+	PUSHBUTTON "OK", 14007, 57, 170, 60, 14, WS_TABSTOP
+	PUSHBUTTON "’κυρο", 14008, 122, 170, 60, 14, WS_TABSTOP
+END
+
+BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ιδιότητες του κάδου ανακύκλωσης"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
+	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
+	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
+	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+END
+
+OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "’νοιγμα με"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
+	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
+	LTEXT "File:    %s", 14001, 44, 25, 188, 10
+	GROUPBOX "Προγράμματα", -1, 7, 42, 249, 187
+	CONTROL "", 14002, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 16, 57, 230, 130
+	CHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
+	PUSHBUTTON "&Αναζήτηση...", 14004, 198, 207, 50, 14
+	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
+	PUSHBUTTON "’κυρο", 14006, 206, 236, 50, 14
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+	/* columns in the shellview */
+	IDS_SHV_COLUMN1             "Αρχείο"
+	IDS_SHV_COLUMN2             "Μέγεθος"
+	IDS_SHV_COLUMN3             "Τύπος"
+	IDS_SHV_COLUMN4             "Τροποποιήθηκε"
+	IDS_SHV_COLUMN5             "Χαρακτηριστικά"
+	IDS_SHV_COLUMN6             "Μέγεθος"
+	IDS_SHV_COLUMN7             "Μέγεθος διαθέσιμο"
+	IDS_SHV_COLUMN8             "Όνομα"
+	IDS_SHV_COLUMN9             "Σχόλια"
+	IDS_SHV_COLUMN10            "Ιδιοκτήτης"
+	IDS_SHV_COLUMN11            "Γκρουπ"
+	IDS_SHV_COLUMN_DELFROM      "Αρχική τοποθεσία"
+	IDS_SHV_COLUMN_DELDATE      "Ημερομηνία διαγραφής"
+
+	/* special folders */
+	IDS_DESKTOP                 "Επιφάνεια εργασίας"
+	IDS_MYCOMPUTER              "Ο Υπολογιστής μου"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Κάδος Ανακύκλωσης"
+	IDS_CONTROLPANEL            "Πίνακας Ελέγχου"
+
+	/* context menus */
+	IDS_VIEW_LARGE              "Μεγάλα εικονίδια"
+	IDS_VIEW_SMALL              "Μικρά εικονίδια"
+	IDS_VIEW_LIST               "Λίστα"
+	IDS_VIEW_DETAILS            "Λεπτομέρειες"
+	IDS_SELECT                  "Επιλογή"
+	IDS_OPEN                    "’νοιγμα"
+
+	IDS_CREATEFOLDER_DENIED     "Unable to create new Folder: Permission denied."
+	IDS_CREATEFOLDER_CAPTION    "Error during creation of a new folder"
+	IDS_DELETEITEM_CAPTION      "Επιβεβαίωση διαγραφής αρχείου"
+	IDS_DELETEFOLDER_CAPTION    "Επιβεβαίωση διαγραφής φακέλου"
+	IDS_DELETEITEM_TEXT         "Είστε σίγουροι ότι θέλετε να διαγράψετε το '%1'?"
+	IDS_DELETEMULTIPLE_TEXT     "Are you sure you want to delete these %1 items?"
+	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
+	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
+	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
+	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
+	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
+	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
+	IDS_OVERWRITEFILE_CAPTION   "Confirm file overwrite"
+	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
+		"If the files in the destination folder have the same names as files in the\n"\
+		"selected folder they will be replaced. Do you still want to move or copy\n"\
+		"the folder?"
+
+	/* message box strings */
+	IDS_RESTART_TITLE           "Επανεκκίνηση"
+	IDS_RESTART_PROMPT          "Θέλετε να επανεκκινήσετε το σύστημα;"
+	IDS_SHUTDOWN_TITLE          "Σβήσιμο υπολογιστή"
+	IDS_SHUTDOWN_PROMPT         "Θέλετε να τερματίσετε τη λειτουργία του συστήματος;"
+
+	/* shell folder path default values */
+	IDS_PROGRAMS                "Start Menu\\Programs"
+	IDS_PERSONAL                "Τα έγγραφά μου"
+	IDS_FAVORITES               "Αγαπημένα"
+	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
+	IDS_RECENT                  "Πρόσφατα"
+	IDS_SENDTO                  "SendTo"
+	IDS_STARTMENU               "Start Menu"
+	IDS_MYMUSIC                 "Η μουσική μου"
+	IDS_MYVIDEO                 "Τα βίντεό μου"
+	IDS_DESKTOPDIRECTORY        "Desktop"
+	IDS_NETHOOD                 "NetHood"
+	IDS_TEMPLATES               "Templates"
+	IDS_APPDATA                 "Application Data"
+	IDS_PRINTHOOD               "PrintHood"
+	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
+	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
+	IDS_COOKIES                 "Cookies"
+	IDS_HISTORY                 "Local Settings\\History"
+	IDS_PROGRAM_FILES           "Program Files"
+	IDS_MYPICTURES              "My Pictures"
+	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
+	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
+	IDS_COMMON_MUSIC            "Documents\\My Music"
+	IDS_COMMON_PICTURES         "Documents\\My Pictures"
+	IDS_COMMON_VIDEO            "Documents\\My Video"
+	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
+
+	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_CDROM             "CDROM"
+	IDS_DRIVE_NETWORK           "Network Disk"
+
+	IDS_OPEN_WITH               "’νοιγμα με"
+	IDS_OPEN_WITH_CHOOSE        "Επιλογή προγράμματος..."
+
+	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
+	IDS_SHELL_ABOUT_BACK        "< &Back"
+	FCIDM_SHVIEW_NEW 	    "Νέο"
+	FCIDM_SHVIEW_NEWFOLDER 	    "Νέος φάκελος"
+	FCIDM_SHVIEW_NEWLINK 	    "Νέος σύνδεσμος"
+END
