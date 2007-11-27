@@ -49,12 +49,28 @@ extern "C" {
 #include "mtypes.h"
 #include "glapi.h"
 
+typedef void *HPBUFFERARB;
+
 GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
 GLAPI BOOL GLAPIENTRY wglChoosePixelFormatARB (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
 GLAPI BOOL GLAPIENTRY wglSwapIntervalEXT (int interval);
 GLAPI int GLAPIENTRY wglGetSwapIntervalEXT (void);
 GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribivARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
 GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribfvARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, FLOAT *pfValues);
+GLAPI BOOL GLAPIENTRY wglMakeContextCurrentARB(HDC hDrawDC, HDC hReadDC, HGLRC hglrc);
+GLAPI HANDLE GLAPIENTRY wglGetCurrentReadDCARB(void);
+GLAPI HPBUFFERARB GLAPIENTRY wglCreatePbufferARB (HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int *piAttribList);
+GLAPI HDC GLAPIENTRY wglGetPbufferDCARB (HPBUFFERARB hPbuffer);
+GLAPI int GLAPIENTRY wglReleasePbufferDCARB (HPBUFFERARB hPbuffer, HDC hDC);
+GLAPI BOOL GLAPIENTRY wglDestroyPbufferARB (HPBUFFERARB hPbuffer);
+GLAPI BOOL GLAPIENTRY wglQueryPbufferARB (HPBUFFERARB hPbuffer, int iAttribute, int *piValue);
+GLAPI HANDLE GLAPIENTRY wglCreateBufferRegionARB(HDC hDC, int iLayerPlane, UINT uType);
+GLAPI VOID GLAPIENTRY wglDeleteBufferRegionARB(HANDLE hRegion);
+GLAPI BOOL GLAPIENTRY wglSaveBufferRegionARB(HANDLE hRegion, int x, int y, int width, int height);
+GLAPI BOOL GLAPIENTRY wglRestoreBufferRegionARB(HANDLE hRegion, int x, int y, int width, int height, int xSrc, int ySrc);
+GLAPI BOOL GLAPIENTRY wglSetPbufferAttribARB (HPBUFFERARB hPbuffer, const int *piAttribList);
+GLAPI BOOL GLAPIENTRY wglBindTexImageARB (HPBUFFERARB hPbuffer, int iBuffer);
+GLAPI BOOL GLAPIENTRY wglReleaseTexImageARB (HPBUFFERARB hPbuffer, int iBuffer);
 
 #define MAX_MESA_ATTRS	20
 
@@ -325,20 +341,20 @@ static struct {
        {"wglGetPixelFormatAttribivARB", (PROC)wglGetPixelFormatAttribivARB},
        {"wglGetPixelFormatAttribfvARB", (PROC)wglGetPixelFormatAttribfvARB},
        {"wglChoosePixelFormatARB",      (PROC)wglChoosePixelFormatARB},
-//       {"wglCreatePbufferARB",    (PROC)wglCreatePbufferARB},
-//       {"wglGetPbufferDCARB",    (PROC)wglGetPbufferDCARB},
-//       {"wglReleasePbufferDCARB",    (PROC)wglReleasePbufferDCARB},
-//       {"wglDestroyPbufferARB",    (PROC)wglDestroyPbufferARB},
-//       {"wglQueryPbufferARB",    (PROC)wglQueryPbufferARB},
-//       {"wglSetPbufferAttribARB",    (PROC)wglSetPbufferAttribARB},
-//       {"wglBindTexImageARB",    (PROC)wglBindTexImageARB},
-//       {"wglReleaseTexImageARB",    (PROC)wglReleaseTexImageARB},
-//       {"wglCreateBufferRegionARB",    (PROC)wglCreateBufferRegionARB},
-//       {"wglDeleteBufferRegionARB",    (PROC)wglDeleteBufferRegionARB},
-//       {"wglSaveBufferRegionARB",    (PROC)wglSaveBufferRegionARB},
-//       {"wglRestoreBufferRegionARB",    (PROC)wglRestoreBufferRegionARB},
-//       {"wglMakeContextCurrentARB",    (PROC)wglMakeContextCurrentARB},
-//       {"wglGetCurrentReadDCARB",    (PROC)wglGetCurrentReadDCARB},
+       {"wglCreatePbufferARB",          (PROC)wglCreatePbufferARB},
+       {"wglGetPbufferDCARB",           (PROC)wglGetPbufferDCARB},
+       {"wglReleasePbufferDCARB",       (PROC)wglReleasePbufferDCARB},
+       {"wglDestroyPbufferARB",         (PROC)wglDestroyPbufferARB},
+       {"wglQueryPbufferARB",           (PROC)wglQueryPbufferARB},
+       {"wglSetPbufferAttribARB",       (PROC)wglSetPbufferAttribARB},
+       {"wglBindTexImageARB",           (PROC)wglBindTexImageARB},
+       {"wglReleaseTexImageARB",        (PROC)wglReleaseTexImageARB},
+       {"wglCreateBufferRegionARB",     (PROC)wglCreateBufferRegionARB},
+       {"wglDeleteBufferRegionARB",     (PROC)wglDeleteBufferRegionARB},
+       {"wglSaveBufferRegionARB",       (PROC)wglSaveBufferRegionARB},
+       {"wglRestoreBufferRegionARB",    (PROC)wglRestoreBufferRegionARB},
+       {"wglMakeContextCurrentARB",     (PROC)wglMakeContextCurrentARB},
+       {"wglGetCurrentReadDCARB",       (PROC)wglGetCurrentReadDCARB},
        {NULL, NULL}
 };
 

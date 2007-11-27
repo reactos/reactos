@@ -795,3 +795,126 @@ wglGetPixelFormatAttribfvARB (HDC hdc,
    return FALSE;
 }
 
+GLAPI BOOL GLAPIENTRY
+wglMakeContextCurrentARB(HDC hDrawDC,
+                         HDC hReadDC,
+                         HGLRC hglrc)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI HANDLE GLAPIENTRY
+wglGetCurrentReadDCARB(void)
+{
+   SetLastError(0);
+   return NULL;
+}
+
+typedef void *HPBUFFERARB;
+
+/* WGL_ARB_pbuffer */
+GLAPI HPBUFFERARB GLAPIENTRY
+wglCreatePbufferARB (HDC hDC,
+                     int iPixelFormat,
+                     int iWidth,
+                     int iHeight,
+                     const int *piAttribList)
+{
+   SetLastError(0);
+   return NULL;
+}
+
+GLAPI HDC GLAPIENTRY
+wglGetPbufferDCARB (HPBUFFERARB hPbuffer)
+{
+   SetLastError(0);
+   return NULL;
+}
+
+GLAPI int GLAPIENTRY
+wglReleasePbufferDCARB (HPBUFFERARB hPbuffer, HDC hDC)
+{
+   SetLastError(0);
+   return -1;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglDestroyPbufferARB (HPBUFFERARB hPbuffer)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglQueryPbufferARB (HPBUFFERARB hPbuffer,
+                    int iAttribute,
+                    int *piValue)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI HANDLE GLAPIENTRY
+wglCreateBufferRegionARB(HDC hDC,
+                         int iLayerPlane,
+                         UINT uType)
+{
+   SetLastError(0);
+   return NULL;
+}
+
+GLAPI VOID GLAPIENTRY
+wglDeleteBufferRegionARB(HANDLE hRegion)
+{
+   SetLastError(0);
+   return;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglSaveBufferRegionARB(HANDLE hRegion,
+                       int x,
+                       int y,
+                       int width,
+                       int height)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglRestoreBufferRegionARB(HANDLE hRegion,
+                          int x,
+                          int y,
+                          int width,
+                          int height,
+                          int xSrc,
+                          int ySrc)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+/* WGL_ARB_render_texture */
+GLAPI BOOL GLAPIENTRY
+wglSetPbufferAttribARB (HPBUFFERARB hPbuffer,
+                        const int *piAttribList)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglBindTexImageARB (HPBUFFERARB hPbuffer, int iBuffer)
+{
+   SetLastError(0);
+   return FALSE;
+}
+
+GLAPI BOOL GLAPIENTRY
+wglReleaseTexImageARB (HPBUFFERARB hPbuffer, int iBuffer)
+{
+   SetLastError(0);
+   return FALSE;
+}
+

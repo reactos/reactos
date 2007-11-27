@@ -101,18 +101,41 @@ WGLAPI int   GLAPIENTRY wglUseFontOutlinesA(HDC, unsigned long, unsigned long, u
 WGLAPI int   GLAPIENTRY wglUseFontOutlinesW(HDC, unsigned long, unsigned long, unsigned long, float,float, int, LPGLYPHMETRICSFLOAT);
 
 #ifndef __MINGW32__
+
+typedef void *HPBUFFERARB;
+
 WGLAPI int   GLAPIENTRY SwapBuffers(HDC);
 WGLAPI int   GLAPIENTRY ChoosePixelFormat(HDC,const PIXELFORMATDESCRIPTOR *);
 WGLAPI int   GLAPIENTRY DescribePixelFormat(HDC,int,unsigned int,LPPIXELFORMATDESCRIPTOR);
 WGLAPI int   GLAPIENTRY GetPixelFormat(HDC);
 WGLAPI int   GLAPIENTRY SetPixelFormat(HDC,int,const PIXELFORMATDESCRIPTOR *);
+
+GLAPI const char * GLAPIENTRY wglGetExtensionsStringEXT (void);
+GLAPI BOOL GLAPIENTRY wglChoosePixelFormatARB (HDC hdc, const int *piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+GLAPI BOOL GLAPIENTRY wglSwapIntervalEXT (int interval);
+GLAPI int GLAPIENTRY wglGetSwapIntervalEXT (void);
+GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribivARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, int *piValues);
+GLAPI BOOL GLAPIENTRY wglGetPixelFormatAttribfvARB (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int *piAttributes, FLOAT *pfValues);
+GLAPI BOOL GLAPIENTRY wglMakeContextCurrentARB(HDC hDrawDC, HDC hReadDC, HGLRC hglrc);
+GLAPI HANDLE GLAPIENTRY wglGetCurrentReadDCARB(void);
+GLAPI HPBUFFERARB GLAPIENTRY wglCreatePbufferARB (HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int *piAttribList);
+GLAPI HDC GLAPIENTRY wglGetPbufferDCARB (HPBUFFERARB hPbuffer);
+GLAPI int GLAPIENTRY wglReleasePbufferDCARB (HPBUFFERARB hPbuffer, HDC hDC);
+GLAPI BOOL GLAPIENTRY wglDestroyPbufferARB (HPBUFFERARB hPbuffer);
+GLAPI BOOL GLAPIENTRY wglQueryPbufferARB (HPBUFFERARB hPbuffer, int iAttribute, int *piValue);
+GLAPI HANDLE GLAPIENTRY wglCreateBufferRegionARB(HDC hDC, int iLayerPlane, UINT uType);
+GLAPI VOID GLAPIENTRY wglDeleteBufferRegionARB(HANDLE hRegion);
+GLAPI BOOL GLAPIENTRY wglSaveBufferRegionARB(HANDLE hRegion, int x, int y, int width, int height);
+GLAPI BOOL GLAPIENTRY wglRestoreBufferRegionARB(HANDLE hRegion, int x, int y, int width, int height, int xSrc, int ySrc);
+GLAPI BOOL GLAPIENTRY wglSetPbufferAttribARB (HPBUFFERARB hPbuffer, const int *piAttribList);
+GLAPI BOOL GLAPIENTRY wglBindTexImageARB (HPBUFFERARB hPbuffer, int iBuffer);
+GLAPI BOOL GLAPIENTRY wglReleaseTexImageARB (HPBUFFERARB hPbuffer, int iBuffer);
 #endif
 
 #ifndef WGL_ARB_extensions_string
 #define WGL_ARB_extensions_string 1
 
 WGLAPI const char * GLAPIENTRY wglGetExtensionsStringARB(HDC hdc);
-
 #endif /* WGL_ARB_extensions_string */
 
 
