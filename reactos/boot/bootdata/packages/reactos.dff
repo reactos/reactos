@@ -463,7 +463,7 @@ modules\vms\dll\win32\vmsdll\vmsdll.dll                             1   optional
 modules\rosapps\avtest\avtest.sys                                   1   optional
 modules\rosapps\applications\screensavers\cylfrac\cylfrac.scr       1   optional
 modules\rosapps\applications\screensavers\matrix\matrix.scr         1   optional
-modules\rosapps\applications\screensavers\blankscr\blankscr.scr     1   optional
+modules\rosapps\applications\screensavers\blankscr\scrnsave.scr     1   optional
 modules\rosapps\applications\screensavers\starfield\starfield.scr   1   optional
 modules\rosapps\applications\screensavers\mazescr\mazescr.scr       1   optional
 modules\rosapps\cmdutils\comp\comp.exe                              1   optional
