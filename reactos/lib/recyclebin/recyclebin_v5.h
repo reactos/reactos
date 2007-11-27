@@ -97,7 +97,7 @@ interface IRecycleBin5
 #endif
 
 HRESULT
-RecycleBin5_Enumerator_Constructor(
+RecycleBin5Enum_Constructor(
 	IN IRecycleBin5 *prb,
 	IN HANDLE hInfo,
 	IN HANDLE hInfoMapped,

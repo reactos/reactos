@@ -19,7 +19,7 @@ struct RecycleBinGeneric
 };
 
 static HRESULT STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_QueryInterface( 
+RecycleBinGeneric_RecycleBin_QueryInterface(
 	IRecycleBin *This,
 	REFIID riid,
 	void **ppvObject)
@@ -46,7 +46,7 @@ RecycleBinGenericVtbl_RecycleBin_QueryInterface(
 }
 
 static ULONG STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_AddRef(
+RecycleBinGeneric_RecycleBin_AddRef(
 	IRecycleBin *This)
 {
 	struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
@@ -55,8 +55,17 @@ RecycleBinGenericVtbl_RecycleBin_AddRef(
 	return refCount;
 }
 
+static VOID
+RecycleBinGeneric_Destructor(
+	struct RecycleBinGeneric *s)
+{
+	TRACE("(%p)\n", s);
+
+	CoTaskMemFree(s);
+}
+
 static ULONG STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_Release(
+RecycleBinGeneric_RecycleBin_Release(
 	IRecycleBin *This)
 {
 	struct RecycleBinGeneric *s = CONTAINING_RECORD(This, struct RecycleBinGeneric, recycleBinImpl);
@@ -67,13 +76,13 @@ RecycleBinGenericVtbl_RecycleBin_Release(
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
 	if (refCount == 0)
-		CoTaskMemFree(s);
+		RecycleBinGeneric_Destructor(s);
 
 	return refCount;
 }
 
 static HRESULT STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_DeleteFile(
+RecycleBinGeneric_RecycleBin_DeleteFile(
 	IN IRecycleBin *This,
 	IN LPCWSTR szFileName)
 {
@@ -140,7 +149,7 @@ RecycleBinGenericVtbl_RecycleBin_DeleteFile(
 }
 
 static HRESULT STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_EmptyRecycleBin(
+RecycleBinGeneric_RecycleBin_EmptyRecycleBin(
 	IN IRecycleBin *This)
 {
 	WCHAR szVolumeName[MAX_PATH];
@@ -161,7 +170,7 @@ RecycleBinGenericVtbl_RecycleBin_EmptyRecycleBin(
 		swprintf(szVolumeName, L"%c:\\", 'A' + i);
 		if (GetDriveTypeW(szVolumeName) != DRIVE_FIXED)
 			continue;
-		
+
 		hr = GetDefaultRecycleBin(szVolumeName, &prb);
 		if (!SUCCEEDED(hr))
 			return hr;
@@ -174,22 +183,22 @@ RecycleBinGenericVtbl_RecycleBin_EmptyRecycleBin(
 }
 
 static HRESULT STDMETHODCALLTYPE
-RecycleBinGenericVtbl_RecycleBin_EnumObjects(
+RecycleBinGeneric_RecycleBin_EnumObjects(
 	IN IRecycleBin *This,
 	OUT IRecycleBinEnumList **ppEnumList)
 {
 	TRACE("(%p, %p)\n", This, ppEnumList);
-	return RecycleBinGeneric_Enumerator_Constructor(ppEnumList);
+	return RecycleBinGenericEnum_Constructor(ppEnumList);
 }
 
 CONST_VTBL struct IRecycleBinVtbl RecycleBinGenericVtbl =
 {
-	RecycleBinGenericVtbl_RecycleBin_QueryInterface,
-	RecycleBinGenericVtbl_RecycleBin_AddRef,
-	RecycleBinGenericVtbl_RecycleBin_Release,
-	RecycleBinGenericVtbl_RecycleBin_DeleteFile,
-	RecycleBinGenericVtbl_RecycleBin_EmptyRecycleBin,
-	RecycleBinGenericVtbl_RecycleBin_EnumObjects,
+	RecycleBinGeneric_RecycleBin_QueryInterface,
+	RecycleBinGeneric_RecycleBin_AddRef,
+	RecycleBinGeneric_RecycleBin_Release,
+	RecycleBinGeneric_RecycleBin_DeleteFile,
+	RecycleBinGeneric_RecycleBin_EmptyRecycleBin,
+	RecycleBinGeneric_RecycleBin_EnumObjects,
 };
 
 HRESULT RecycleBinGeneric_Constructor(OUT IUnknown **ppUnknown)

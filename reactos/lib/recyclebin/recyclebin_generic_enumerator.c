@@ -58,6 +58,17 @@ RecycleBinGenericEnum_RecycleBinEnumList_AddRef(
 	return refCount;
 }
 
+static VOID
+RecycleBinGenericEnum_Destructor(
+	struct RecycleBinGenericEnum *s)
+{
+	TRACE("(%p)\n", s);
+
+	if (s->current)
+		IRecycleBinEnumList_Release(s->current);
+	CoTaskMemFree(s);
+}
+
 static ULONG STDMETHODCALLTYPE
 RecycleBinGenericEnum_RecycleBinEnumList_Release(
 	IN IRecycleBinEnumList *This)
@@ -70,11 +81,7 @@ RecycleBinGenericEnum_RecycleBinEnumList_Release(
 	refCount = InterlockedDecrement((PLONG)&s->ref);
 
 	if (refCount == 0)
-	{
-		if (s->current)
-			IRecycleBinEnumList_Release(s->current);
-		CoTaskMemFree(s);
-	}
+		RecycleBinGenericEnum_Destructor(s);
 
 	return refCount;
 }
@@ -213,7 +220,7 @@ CONST_VTBL struct IRecycleBinEnumListVtbl RecycleBinGenericEnumVtbl =
 };
 
 HRESULT
-RecycleBinGeneric_Enumerator_Constructor(
+RecycleBinGenericEnum_Constructor(
 	OUT IRecycleBinEnumList **pprbel)
 {
 	struct RecycleBinGenericEnum *s;

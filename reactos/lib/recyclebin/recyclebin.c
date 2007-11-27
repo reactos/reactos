@@ -10,12 +10,16 @@
 #include "recyclebin_private.h"
 #include <stdio.h>
 
+WINE_DEFAULT_DEBUG_CHANNEL(recyclebin);
+
 BOOL WINAPI
 CloseRecycleBinHandle(
 	IN HANDLE hDeletedFile)
 {
 	IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
 	HRESULT hr;
+
+	TRACE("(%p)\n", hDeletedFile);
 
 	hr = IRecycleBinFile_Release(rbf);
 	if (SUCCEEDED(hr))
@@ -34,6 +38,8 @@ DeleteFileToRecycleBinA(
 	int len;
 	LPWSTR FileNameW = NULL;
 	BOOL ret = FALSE;
+
+	TRACE("(%s)\n", debugstr_a(FileName));
 
 	/* Check parameters */
 	if (FileName == NULL)
@@ -68,6 +74,8 @@ DeleteFileToRecycleBinW(
 	IRecycleBin *prb;
 	HRESULT hr;
 
+	TRACE("(%s)\n", debugstr_w(FileName));
+
 	hr = GetDefaultRecycleBin(NULL, &prb);
 	if (!SUCCEEDED(hr))
 		goto cleanup;
@@ -92,6 +100,8 @@ EmptyRecycleBinA(
 	int len;
 	LPWSTR szRootW = NULL;
 	BOOL ret = FALSE;
+
+	TRACE("(%s)\n", debugstr_a(pszRoot));
 
 	if (pszRoot)
 	{
@@ -122,6 +132,8 @@ EmptyRecycleBinW(
 	IRecycleBin *prb;
 	HRESULT hr;
 
+	TRACE("(%s)\n", debugstr_w(pszRoot));
+
 	hr = GetDefaultRecycleBin(pszRoot, &prb);
 	if (!SUCCEEDED(hr))
 		goto cleanup;
@@ -148,6 +160,8 @@ EnumerateRecycleBinA(
 	int len;
 	LPWSTR szRootW = NULL;
 	BOOL ret = FALSE;
+
+	TRACE("(%s, %p, %p)\n", debugstr_a(pszRoot), pFnCallback, Context);
 
 	if (pszRoot)
 	{
@@ -181,6 +195,8 @@ EnumerateRecycleBinW(
 	IRecycleBinEnumList *prbel = NULL;
 	IRecycleBinFile *prbf;
 	HRESULT hr;
+
+	TRACE("(%s, %p, %p)\n", debugstr_w(pszRoot), pFnCallback, Context);
 
 	hr = GetDefaultRecycleBin(NULL, &prb);
 	if (!SUCCEEDED(hr))
@@ -231,6 +247,8 @@ GetDeletedFileDetailsA(
 	DWORD BufferSizeW = 0;
 	BOOL ret = FALSE;
 
+	TRACE("(%p, %lu, %p, %p)\n", hDeletedFile, BufferSize, FileDetails, RequiredSize);
+
 	if (BufferSize >= FIELD_OFFSET(DELETED_FILE_DETAILS_A, FileName))
 	{
 		BufferSizeW = FIELD_OFFSET(DELETED_FILE_DETAILS_W, FileName)
@@ -273,6 +291,8 @@ GetDeletedFileDetailsW(
 	IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
 	HRESULT hr;
 	SIZE_T NameSize, Needed;
+
+	TRACE("(%p, %lu, %p, %p)\n", hDeletedFile, BufferSize, FileDetails, RequiredSize);
 
 	hr = IRecycleBinFile_GetFileName(rbf, 0, NULL, &NameSize);
 	if (!SUCCEEDED(hr))
@@ -321,6 +341,8 @@ RestoreFile(
 	IRecycleBinFile *rbf = (IRecycleBinFile *)hDeletedFile;
 	HRESULT hr;
 
+	TRACE("(%p)\n", hDeletedFile);
+
 	hr = IRecycleBinFile_Restore(rbf);
 	if (SUCCEEDED(hr))
 		return TRUE;
@@ -338,6 +360,8 @@ GetDefaultRecycleBin(
 {
 	IUnknown *pUnk;
 	HRESULT hr;
+
+	TRACE("(%s, %p)\n", debugstr_w(pszVolume), pprb);
 
 	if (!pprb)
 		return E_POINTER;

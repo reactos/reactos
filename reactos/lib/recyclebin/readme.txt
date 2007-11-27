@@ -4,7 +4,6 @@ It is aimed to be compatible with Windows 2000/XP/2003 (at least) on FAT or NTFS
 TODO
 - Empty a recycle bin containing directories (v5)
 - Set security on recycle bin folder
-- Delete files > 4Gb
 - Make the library thread-safe
 
 3 levels
