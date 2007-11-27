@@ -230,40 +230,8 @@ static UINT WINAPI IWineD3DCubeTextureImpl_GetTextureDimensions(IWineD3DCubeText
 static void WINAPI IWineD3DCubeTextureImpl_ApplyStateChanges(IWineD3DCubeTexture *iface, 
                                                         const DWORD textureStates[WINED3D_HIGHEST_TEXTURE_STATE + 1], 
                                                         const DWORD samplerStates[WINED3D_HIGHEST_SAMPLER_STATE + 1]) {
-    IWineD3DCubeTextureImpl *This = (IWineD3DCubeTextureImpl *)iface;
-    float matrix[16];
+    TRACE("(%p) : relay to BaseTexture\n", iface);
     IWineD3DBaseTextureImpl_ApplyStateChanges((IWineD3DBaseTexture *)iface, textureStates, samplerStates);
-
-
-    /* Apply non-power2 mappings and texture offsets so long as the texture coords aren't projected or generated */
-    if(This->pow2scalingFactor != 1.0f) {
-        if((textureStates[WINED3DTSS_TEXCOORDINDEX] & 0xFFFF0000) == WINED3DTSS_TCI_PASSTHRU &&
-           (~textureStates[WINED3DTSS_TEXTURETRANSFORMFLAGS] & WINED3DTTFF_PROJECTED)) {
-
-            glMatrixMode(GL_TEXTURE);
-            memset(matrix, 0 , sizeof(matrix));
-
-            matrix[0] = This->pow2scalingFactor;
-            matrix[5] = This->pow2scalingFactor;
-            matrix[10] = This->pow2scalingFactor;
-#if 0 /* Translation fixup is no longer required (here for reminder) */
-            matrix[12] = -0.25f / (float)This->edgeLength;
-            matrix[13] = -0.75f / (float)This->edgeLength;
-            matrix[14] = -0.25f / (float)This->edgeLength;
-#endif
-            TRACE("(%p) Setup Matrix:\n", This);
-            TRACE(" %f %f %f %f\n", matrix[0], matrix[1], matrix[2], matrix[3]);
-            TRACE(" %f %f %f %f\n", matrix[4], matrix[5], matrix[6], matrix[7]);
-            TRACE(" %f %f %f %f\n", matrix[8], matrix[9], matrix[10], matrix[11]);
-            TRACE(" %f %f %f %f\n", matrix[12], matrix[13], matrix[14], matrix[15]);
-            TRACE("\n");
-            glMultMatrixf(matrix);
-        } else {
-            /* I don't expect nonpower 2 textures to be used with generated texture coordinates, but if they are present a fixme. */
-            FIXME("Non-power2 texture being used with generated texture coords\n");
-        }
-    }
-
 }
 
 

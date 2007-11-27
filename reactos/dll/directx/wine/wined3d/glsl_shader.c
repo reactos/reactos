@@ -199,6 +199,11 @@ static void shader_glsl_load_constantsF(IWineD3DBaseShaderImpl* This, WineD3D_GL
     }
     checkGLcall("glUniform4fvARB()");
 
+    if(!This->baseShader.load_local_constsF) {
+        TRACE("No need to load local float constants for this shader\n");
+        return;
+    }
+
     /* Load immediate constants */
     if (TRACE_ON(d3d_shader)) {
         LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
@@ -288,7 +293,7 @@ static void shader_glsl_load_constantsB(
     for (i=0; i<max_constants; ++i) {
         if (NULL == constants_set || constants_set[i]) {
 
-            TRACE_(d3d_constants)("Loading constants %i: %i;\n", i, constants[i*4]);
+            TRACE_(d3d_constants)("Loading constants %i: %i;\n", i, constants[i]);
 
             /* TODO: Benchmark and see if it would be beneficial to store the 
              * locations of the constants to avoid looking up each time */
@@ -296,7 +301,7 @@ static void shader_glsl_load_constantsB(
             tmp_loc = GL_EXTCALL(glGetUniformLocationARB(programId, tmp_name));
             if (tmp_loc != -1) {
                 /* We found this uniform name in the program - go ahead and send the data */
-                GL_EXTCALL(glUniform1ivARB(tmp_loc, 1, &constants[i*4]));
+                GL_EXTCALL(glUniform1ivARB(tmp_loc, 1, &constants[i]));
                 checkGLcall("glUniform1ivARB");
             }
         }
@@ -464,6 +469,7 @@ void shader_generate_glsl_declarations(
     IWineD3DDeviceImpl *device = (IWineD3DDeviceImpl *) This->baseShader.device;
     int i;
     unsigned int extra_constants_needed = 0;
+    local_constant* lconst;
 
     /* There are some minor differences between pixel and vertex shaders */
     char pshader = shader_is_pshader_version(This->baseShader.hex_version);
@@ -527,9 +533,9 @@ void shader_generate_glsl_declarations(
                 extra_constants_needed++;
             } else {
                 ps_impl->srgb_mode_hardcoded = 1;
-                shader_addline(buffer, "const vec4 srgb_mul_low = {%f, %f, %f, %f};\n",
+                shader_addline(buffer, "const vec4 srgb_mul_low = vec4(%f, %f, %f, %f);\n",
                                srgb_mul_low, srgb_mul_low, srgb_mul_low, srgb_mul_low);
-                shader_addline(buffer, "const vec4 srgb_comparison = {%f, %f, %f, %f};\n",
+                shader_addline(buffer, "const vec4 srgb_comparison = vec4(%f, %f, %f, %f);\n",
                                srgb_cmp, srgb_cmp, srgb_cmp, srgb_cmp);
             }
         } else {
@@ -551,7 +557,7 @@ void shader_generate_glsl_declarations(
                  * actually used, only the max limit of the shader version
                  */
                 FIXME("Cannot find a free uniform for vpos correction params\n");
-                shader_addline(buffer, "const vec4 ycorrection = {%f, %f, 0.0, 0.0};\n",
+                shader_addline(buffer, "const vec4 ycorrection = vec4(%f, %f, 0.0, 0.0);\n",
                                device->render_offscreen ? 0.0 : ((IWineD3DSurfaceImpl *) device->render_targets[0])->currentDesc.Height,
                                device->render_offscreen ? 1.0 : -1.0);
             }
@@ -639,6 +645,15 @@ void shader_generate_glsl_declarations(
     /* Temporary variables for matrix operations */
     shader_addline(buffer, "vec4 tmp0;\n");
     shader_addline(buffer, "vec4 tmp1;\n");
+
+    /* Hardcodeable local constants */
+    if(!This->baseShader.load_local_constsF) {
+        LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
+            float *value = (float *) lconst->value;
+            shader_addline(buffer, "const vec4 LC%u = vec4(%f, %f, %f, %f);\n", lconst->idx,
+                           value[0], value[1], value[2], value[3]);
+        }
+    }
 
     /* Start the main program */
     shader_addline(buffer, "void main() {\n");
@@ -734,6 +749,17 @@ static void shader_glsl_gen_modifier (
     }
 }
 
+static BOOL constant_is_local(IWineD3DBaseShaderImpl* This, DWORD reg) {
+    local_constant* lconst;
+
+    if(This->baseShader.load_local_constsF) return FALSE;
+    LIST_FOR_EACH_ENTRY(lconst, &This->baseShader.constantsF, local_constant, entry) {
+        if(lconst->idx == reg) return TRUE;
+    }
+    return FALSE;
+
+}
+
 /** Writes the GLSL variable name that corresponds to the register that the
  * DX opcode parameter is trying to access */
 static void shader_glsl_get_register_name(
@@ -819,8 +845,13 @@ static void shader_glsl_get_register_name(
                }
            }
 
-        } else
-             sprintf(tmpStr, "%s[%u]", prefix, reg);
+        } else {
+            if(constant_is_local(This, reg)) {
+                sprintf(tmpStr, "LC%u", reg);
+            } else {
+                sprintf(tmpStr, "%s[%u]", prefix, reg);
+            }
+        }
 
         break;
     }
@@ -1532,9 +1563,17 @@ void shader_glsl_compare(SHADER_OPCODE_ARG* arg) {
     } else {
         switch(arg->opcode->opcode) {
             case WINED3DSIO_SLT:
-                shader_addline(arg->buffer, "step(%s, %s));\n", src0_param.param_str, src1_param.param_str);
+                /* Step(src0, src1) is not suitable here because if src0 == src1 SLT is supposed,
+                 * to return 0.0 but step returns 1.0 because step is not < x
+                 * An alternative is a bvec compare padded with an unused secound component.
+                 * step(src1 * -1.0, src0 * -1.0) is not an option because it suffers from the same
+                 * issue. Playing with not() is not possible either because not() does not accept
+                 * a scalar.
+                 */
+                shader_addline(arg->buffer, "(%s < %s) ? 1.0 : 0.0);\n", src0_param.param_str, src1_param.param_str);
                 break;
             case WINED3DSIO_SGE:
+                /* Here we can use the step() function and safe a conditional */
                 shader_addline(arg->buffer, "step(%s, %s));\n", src1_param.param_str, src0_param.param_str);
                 break;
             default:
@@ -3137,10 +3176,44 @@ static void shader_glsl_cleanup(IWineD3DDevice *iface) {
     GL_EXTCALL(glUseProgramObjectARB(0));
 }
 
+static void shader_glsl_destroy(IWineD3DBaseShader *iface) {
+    struct list *linked_programs;
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *) iface;
+    WineD3D_GL_Info *gl_info = &((IWineD3DDeviceImpl *) This->baseShader.device)->adapter->gl_info;
+
+    /* Note: Do not use QueryInterface here to find out which shader type this is because this code
+     * can be called from IWineD3DBaseShader::Release
+     */
+    char pshader = shader_is_pshader_version(This->baseShader.hex_version);
+
+    if(This->baseShader.prgId == 0) return;
+    linked_programs = &This->baseShader.linked_programs;
+
+    TRACE("Deleting linked programs\n");
+    if (linked_programs->next) {
+        struct glsl_shader_prog_link *entry, *entry2;
+
+        if(pshader) {
+            LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, linked_programs, struct glsl_shader_prog_link, pshader_entry) {
+                delete_glsl_program_entry(This->baseShader.device, entry);
+            }
+        } else {
+            LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, linked_programs, struct glsl_shader_prog_link, vshader_entry) {
+                delete_glsl_program_entry(This->baseShader.device, entry);
+            }
+        }
+    }
+
+    TRACE("Deleting shader object %u\n", This->baseShader.prgId);
+    GL_EXTCALL(glDeleteObjectARB(This->baseShader.prgId));
+    checkGLcall("glDeleteObjectARB");
+}
+
 const shader_backend_t glsl_shader_backend = {
     &shader_glsl_select,
     &shader_glsl_select_depth_blt,
     &shader_glsl_load_constants,
     &shader_glsl_cleanup,
-    &shader_glsl_color_correction
+    &shader_glsl_color_correction,
+    &shader_glsl_destroy
 };

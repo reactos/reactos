@@ -248,12 +248,11 @@ HRESULT WINAPI IWineD3DResourceImpl_GetParent(IWineD3DResource *iface, IUnknown 
     return WINED3D_OK;
 }
 
-void dumpResources(ResourceList *resources) {
-    ResourceList *iterator = resources;
+void dumpResources(struct list *list) {
+    IWineD3DResourceImpl *resource;
 
-    while(iterator) {
-        FIXME("Leftover resource %p with type %d,%s\n", iterator->resource, IWineD3DResource_GetType(iterator->resource), debug_d3dresourcetype(IWineD3DResource_GetType(iterator->resource)));
-        iterator = iterator->next;
+    LIST_FOR_EACH_ENTRY(resource, list, IWineD3DResourceImpl, resource.resource_list_entry) {
+        FIXME("Leftover resource %p with type %d,%s\n", resource, IWineD3DResource_GetType((IWineD3DResource *) resource), debug_d3dresourcetype(IWineD3DResource_GetType((IWineD3DResource *) resource)));
     }
 }
 

@@ -57,7 +57,7 @@ static void surface_download_data(IWineD3DSurfaceImpl *This) {
         checkGLcall("glActiveTextureARB");
     }
     IWineD3DDeviceImpl_MarkStateDirty(This->resource.wineD3DDevice, STATE_SAMPLER(0));
-    IWineD3DSurface_PreLoad((IWineD3DSurface *) This);
+    IWineD3DSurface_BindTexture((IWineD3DSurface *) This);
 
     if (This->resource.format == WINED3DFMT_DXT1 ||
             This->resource.format == WINED3DFMT_DXT2 || This->resource.format == WINED3DFMT_DXT3 ||
@@ -2186,6 +2186,30 @@ static HRESULT WINAPI IWineD3DSurfaceImpl_LoadTexture(IWineD3DSurface *iface, BO
     return WINED3D_OK;
 }
 
+static void WINAPI IWineD3DSurfaceImpl_BindTexture(IWineD3DSurface *iface) {
+    /* TODO: check for locks */
+    IWineD3DSurfaceImpl *This = (IWineD3DSurfaceImpl *)iface;
+    IWineD3DBaseTexture *baseTexture = NULL;
+    IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
+
+    TRACE("(%p)Checking to see if the container is a base texture\n", This);
+    if (IWineD3DSurface_GetContainer(iface, &IID_IWineD3DBaseTexture, (void **)&baseTexture) == WINED3D_OK) {
+        TRACE("Passing to container\n");
+        IWineD3DBaseTexture_BindTexture(baseTexture);
+        IWineD3DBaseTexture_Release(baseTexture);
+    } else {
+        TRACE("(%p) : Binding surface\n", This);
+
+        if(!device->isInDraw) {
+            ActivateContext(device, device->lastActiveRenderTarget, CTXUSAGE_RESOURCELOAD);
+        }
+        ENTER_GL();
+        glBindTexture(This->glDescription.target, This->glDescription.textureName);
+        LEAVE_GL();
+    }
+    return;
+}
+
 #include <errno.h>
 #include <stdio.h>
 HRESULT WINAPI IWineD3DSurfaceImpl_SaveSnapshot(IWineD3DSurface *iface, const char* filename) {
@@ -3131,6 +3155,10 @@ static HRESULT IWineD3DSurfaceImpl_BltOverride(IWineD3DSurfaceImpl *This, RECT *
             checkGLcall("glDisable(GL_ALPHA_TEST)");
         }
 
+        /* Flush in case the drawable is used by multiple GL contexts */
+        if(dstSwapchain && (dstSwapchain->num_contexts >= 2))
+            glFlush();
+
         /* Unbind the texture */
         glBindTexture(GL_TEXTURE_2D, 0);
         checkGLcall("glEnable glBindTexture");
@@ -3481,6 +3509,8 @@ struct coords {
 static inline void surface_blt_to_drawable(IWineD3DSurfaceImpl *This, const RECT *rect_in) {
     struct coords coords[4];
     RECT rect;
+    IWineD3DSwapChain *swapchain = NULL;
+    HRESULT hr;
     IWineD3DDeviceImpl *device = This->resource.wineD3DDevice;
 
     if(rect_in) {
@@ -3601,6 +3631,15 @@ static inline void surface_blt_to_drawable(IWineD3DSurfaceImpl *This, const RECT
         checkGLcall("glEnable(GL_TEXTURE_2D)");
         glDisable(GL_TEXTURE_CUBE_MAP_ARB);
         checkGLcall("glDisable(GL_TEXTURE_CUBE_MAP_ARB)");
+    }
+
+    hr = IWineD3DSurface_GetContainer((IWineD3DSurface*)This, &IID_IWineD3DSwapChain, (void **) &swapchain);
+    if(hr == WINED3D_OK && swapchain) {
+        /* Make sure to flush the buffers. This is needed in apps like Red Alert II and Tiberian SUN that use multiple WGL contexts. */
+        if(((IWineD3DSwapChainImpl*)swapchain)->num_contexts >= 2)
+            glFlush();
+
+        IWineD3DSwapChain_Release(swapchain);
     }
     LEAVE_GL();
 }
@@ -3830,6 +3869,7 @@ const IWineD3DSurfaceVtbl IWineD3DSurface_Vtbl =
     /* Internal use: */
     IWineD3DSurfaceImpl_AddDirtyRect,
     IWineD3DSurfaceImpl_LoadTexture,
+    IWineD3DSurfaceImpl_BindTexture,
     IWineD3DSurfaceImpl_SaveSnapshot,
     IWineD3DBaseSurfaceImpl_SetContainer,
     IWineD3DSurfaceImpl_SetGlTextureDesc,

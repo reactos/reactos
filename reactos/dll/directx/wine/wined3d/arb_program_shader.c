@@ -468,7 +468,7 @@ static void vshader_program_add_param(SHADER_OPCODE_ARG *arg, const DWORD param,
     break;
   case WINED3DSPR_CONST:
       if(param & WINED3DSHADER_ADDRMODE_RELATIVE) {
-          if(reg - This->rel_offset >= 0) {
+          if(reg >= This->rel_offset) {
               sprintf(tmpReg, "C[A0.x + %u]", reg - This->rel_offset);
           } else {
               sprintf(tmpReg, "C[A0.x - %u]", -reg + This->rel_offset);
@@ -1723,10 +1723,14 @@ static void shader_arb_cleanup(IWineD3DDevice *iface) {
     if (GL_SUPPORT(ARB_FRAGMENT_PROGRAM)) glDisable(GL_FRAGMENT_PROGRAM_ARB);
 }
 
+static void shader_arb_destroy(IWineD3DBaseShader *iface) {
+}
+
 const shader_backend_t arb_program_shader_backend = {
     &shader_arb_select,
     &shader_arb_select_depth_blt,
     &shader_arb_load_constants,
     &shader_arb_cleanup,
-    &shader_arb_color_correction
+    &shader_arb_color_correction,
+    &shader_arb_destroy
 };

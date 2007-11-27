@@ -860,10 +860,17 @@ void ActivateContext(IWineD3DDeviceImpl *This, IWineD3DSurface *target, ContextU
     /* Activate the opengl context */
     if(context != This->activeContext) {
         BOOL ret;
-        TRACE("Switching gl ctx to %p, hdc=%p ctx=%p\n", context, context->hdc, context->glCtx);
-        ret = pwglMakeCurrent(context->hdc, context->glCtx);
-        if(ret == FALSE) {
-            ERR("Failed to activate the new context\n");
+
+        /* Prevent an unneeded context switch as those are expensive */
+        if(context->glCtx && (context->glCtx == pwglGetCurrentContext())) {
+            TRACE("Already using gl context %p\n", context->glCtx);
+        }
+        else {
+            TRACE("Switching gl ctx to %p, hdc=%p ctx=%p\n", context, context->hdc, context->glCtx);
+            ret = pwglMakeCurrent(context->hdc, context->glCtx);
+            if(ret == FALSE) {
+                ERR("Failed to activate the new context\n");
+            }
         }
         This->activeContext = context;
     }

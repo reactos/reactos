@@ -107,7 +107,7 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_GetEntries(IWineD3DPalette *iface, DW
 static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface, DWORD Flags, DWORD Start, DWORD Count, PALETTEENTRY *PalEnt)
 {
     IWineD3DPaletteImpl *This = (IWineD3DPaletteImpl *)iface;
-    ResourceList *res;
+    IWineD3DResourceImpl *res;
 
     TRACE("(%p)->(%08x,%d,%d,%p)\n",This,Flags,Start,Count,PalEnt);
 
@@ -134,11 +134,11 @@ static HRESULT  WINAPI IWineD3DPaletteImpl_SetEntries(IWineD3DPalette *iface, DW
 
     /* If the palette is attached to the render target, update all render targets */
 
-    for(res = This->wineD3DDevice->resources; res != NULL; res=res->next) {
-        if(IWineD3DResource_GetType(res->resource) == WINED3DRTYPE_SURFACE) {
-            IWineD3DSurfaceImpl *impl = (IWineD3DSurfaceImpl *) res->resource;
+    LIST_FOR_EACH_ENTRY(res, &This->wineD3DDevice->resources, IWineD3DResourceImpl, resource.resource_list_entry) {
+        if(IWineD3DResource_GetType((IWineD3DResource *) res) == WINED3DRTYPE_SURFACE) {
+            IWineD3DSurfaceImpl *impl = (IWineD3DSurfaceImpl *) res;
             if(impl->palette == This)
-                IWineD3DSurface_RealizePalette( (IWineD3DSurface *) res->resource);
+                IWineD3DSurface_RealizePalette((IWineD3DSurface *) res);
         }
     }
 

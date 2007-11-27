@@ -447,12 +447,16 @@ HRESULT shader_get_registers_used(
                 else if (WINED3DSPR_MISCTYPE == regtype && reg == 0 && pshader)
                     reg_maps->vpos = 1;
 
-                else if(WINED3DSPR_CONST == regtype && !pshader &&
-                        param & WINED3DSHADER_ADDRMODE_RELATIVE) {
-                    if(reg <= ((IWineD3DVertexShaderImpl *) This)->min_rel_offset) {
-                        ((IWineD3DVertexShaderImpl *) This)->min_rel_offset = reg;
-                    } else if(reg >= ((IWineD3DVertexShaderImpl *) This)->max_rel_offset) {
-                        ((IWineD3DVertexShaderImpl *) This)->max_rel_offset = reg;
+                else if(WINED3DSPR_CONST == regtype) {
+                    if(param & WINED3DSHADER_ADDRMODE_RELATIVE) {
+                        if(!pshader) {
+                            if(reg <= ((IWineD3DVertexShaderImpl *) This)->min_rel_offset) {
+                                ((IWineD3DVertexShaderImpl *) This)->min_rel_offset = reg;
+                            } else if(reg >= ((IWineD3DVertexShaderImpl *) This)->max_rel_offset) {
+                                ((IWineD3DVertexShaderImpl *) This)->max_rel_offset = reg;
+                            }
+                        }
+                        reg_maps->usesrelconstF = TRUE;
                     }
                 }
             }
@@ -1058,7 +1062,7 @@ void shader_trace_init(
     }
 }
 
-void shader_delete_constant_list(
+static void shader_delete_constant_list(
     struct list* clist) {
 
     struct list *ptr;
@@ -1076,10 +1080,56 @@ static void shader_none_select(IWineD3DDevice *iface, BOOL usePS, BOOL useVS) {}
 static void shader_none_select_depth_blt(IWineD3DDevice *iface) {}
 static void shader_none_load_constants(IWineD3DDevice *iface, char usePS, char useVS) {}
 static void shader_none_cleanup(IWineD3DDevice *iface) {}
+static void shader_none_color_correction(SHADER_OPCODE_ARG* arg) {}
+static void shader_none_destroy(IWineD3DBaseShader *iface) {}
 
 const shader_backend_t none_shader_backend = {
     &shader_none_select,
     &shader_none_select_depth_blt,
     &shader_none_load_constants,
-    &shader_none_cleanup
+    &shader_none_cleanup,
+    &shader_none_color_correction,
+    &shader_none_destroy
 };
+
+/* *******************************************
+   IWineD3DPixelShader IUnknown parts follow
+   ******************************************* */
+HRESULT  WINAPI IWineD3DBaseShaderImpl_QueryInterface(IWineD3DBaseShader *iface, REFIID riid, LPVOID *ppobj)
+{
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)iface;
+    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
+    if (IsEqualGUID(riid, &IID_IUnknown)
+        || IsEqualGUID(riid, &IID_IWineD3DBase)
+        || IsEqualGUID(riid, &IID_IWineD3DBaseShader)
+        || IsEqualGUID(riid, &IID_IWineD3DPixelShader)) {
+        IUnknown_AddRef(iface);
+        *ppobj = This;
+        return S_OK;
+    }
+    *ppobj = NULL;
+    return E_NOINTERFACE;
+}
+
+ULONG  WINAPI IWineD3DBaseShaderImpl_AddRef(IWineD3DBaseShader *iface) {
+    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
+    TRACE("(%p) : AddRef increasing from %d\n", This, This->baseShader.ref);
+    return InterlockedIncrement(&This->baseShader.ref);
+}
+
+ULONG  WINAPI IWineD3DBaseShaderImpl_Release(IWineD3DBaseShader *iface) {
+    IWineD3DBaseShaderImpl *This = (IWineD3DBaseShaderImpl *)iface;
+    IWineD3DDeviceImpl *deviceImpl = (IWineD3DDeviceImpl *) This->baseShader.device;
+    ULONG ref;
+    TRACE("(%p) : Releasing from %d\n", This, This->baseShader.ref);
+    ref = InterlockedDecrement(&This->baseShader.ref);
+    if (ref == 0) {
+        deviceImpl->shader_backend->shader_destroy(iface);
+        HeapFree(GetProcessHeap(), 0, This->baseShader.function);
+        shader_delete_constant_list(&This->baseShader.constantsF);
+        shader_delete_constant_list(&This->baseShader.constantsB);
+        shader_delete_constant_list(&This->baseShader.constantsI);
+        HeapFree(GetProcessHeap(), 0, This);
+    }
+    return ref;
+}

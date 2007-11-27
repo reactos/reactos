@@ -1055,7 +1055,7 @@ static HRESULT  WINAPI IWineD3DStateBlockImpl_InitStartupStateBlock(IWineD3DStat
 
     TRACE("Render states\n");
     /* Render states: */
-    if (ThisDevice->depthStencilBuffer != NULL) {
+    if (ThisDevice->auto_depth_stencil_buffer != NULL) {
        IWineD3DDevice_SetRenderState(device, WINED3DRS_ZENABLE,       WINED3DZB_TRUE);
     } else {
        IWineD3DDevice_SetRenderState(device, WINED3DRS_ZENABLE,       WINED3DZB_FALSE);

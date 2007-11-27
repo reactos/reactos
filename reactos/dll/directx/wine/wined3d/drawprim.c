@@ -630,7 +630,7 @@ static void depth_blt(IWineD3DDevice *iface, GLuint texture) {
 
 static void depth_copy(IWineD3DDevice *iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    IWineD3DSurfaceImpl *depth_stencil = (IWineD3DSurfaceImpl *)This->depthStencilBuffer;
+    IWineD3DSurfaceImpl *depth_stencil = (IWineD3DSurfaceImpl *)This->auto_depth_stencil_buffer;
 
     /* Only copy the depth buffer if there is one. */
     if (!depth_stencil) return;

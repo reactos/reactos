@@ -71,8 +71,8 @@ static void WINAPI IWineD3DDeviceImpl_AddResource(IWineD3DDevice *iface, IWineD3
     object=HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IWineD3D##type##Impl)); \
     D3DMEMCHECK(object, pp##type); \
     object->lpVtbl = &IWineD3D##type##_Vtbl;  \
-    object->parent       = parent; \
-    object->ref          = 1; \
+    object->parent          = parent; \
+    object->baseShader.ref  = 1; \
     object->baseShader.device = (IWineD3DDevice*) This; \
     list_init(&object->baseShader.linked_programs); \
     *pp##type = (IWineD3D##type *) object; \
@@ -179,9 +179,9 @@ static ULONG WINAPI IWineD3DDeviceImpl_Release(IWineD3DDevice *iface) {
         /* NOTE: You must release the parent if the object was created via a callback
         ** ***************************/
 
-        if (This->resources != NULL ) {
+        if (!list_empty(&This->resources)) {
             FIXME("(%p) Device released with resources still bound, acceptable but unexpected\n", This);
-            dumpResources(This->resources);
+            dumpResources(&This->resources);
         }
 
         if(This->contexts) ERR("Context array not freed!\n");
@@ -880,9 +880,11 @@ static HRESULT  WINAPI IWineD3DDeviceImpl_CreateTexture(IWineD3DDevice *iface, U
 
     /** FIXME: add support for real non-power-two if it's provided by the video card **/
     /* Precalculated scaling for 'faked' non power of two texture coords */
-    object->pow2scalingFactorX  =  (((float)Width)  / ((float)pow2Width));
-    object->pow2scalingFactorY  =  (((float)Height) / ((float)pow2Height));
-    TRACE(" xf(%f) yf(%f)\n", object->pow2scalingFactorX, object->pow2scalingFactorY);
+    object->baseTexture.pow2Matrix[0] =  (((float)Width)  / ((float)pow2Width));
+    object->baseTexture.pow2Matrix[5] =  (((float)Height) / ((float)pow2Height));
+    object->baseTexture.pow2Matrix[10] = 1.0;
+    object->baseTexture.pow2Matrix[15] = 1.0;
+    TRACE(" xf(%f) yf(%f)\n", object->baseTexture.pow2Matrix[0], object->baseTexture.pow2Matrix[5]);
 
     /* Calculate levels for mip mapping */
     if (Usage & WINED3DUSAGE_AUTOGENMIPMAP) {
@@ -975,6 +977,12 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateVolumeTexture(IWineD3DDevice *ifa
     object->width  = Width;
     object->height = Height;
     object->depth  = Depth;
+
+    /* Is NP2 support for volumes needed? */
+    object->baseTexture.pow2Matrix[ 0] = 1.0;
+    object->baseTexture.pow2Matrix[ 5] = 1.0;
+    object->baseTexture.pow2Matrix[10] = 1.0;
+    object->baseTexture.pow2Matrix[15] = 1.0;
 
     /* Calculate levels for mip mapping */
     if (Usage & WINED3DUSAGE_AUTOGENMIPMAP) {
@@ -1112,7 +1120,10 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateCubeTexture(IWineD3DDevice *iface
     object->edgeLength           = EdgeLength;
     /* TODO: support for native non-power 2 */
     /* Precalculated scaling for 'faked' non power of two texture coords */
-    object->pow2scalingFactor    = ((float)EdgeLength) / ((float)pow2EdgeLength);
+    object->baseTexture.pow2Matrix[ 0] = ((float)EdgeLength) / ((float)pow2EdgeLength);
+    object->baseTexture.pow2Matrix[ 5] = ((float)EdgeLength) / ((float)pow2EdgeLength);
+    object->baseTexture.pow2Matrix[10] = ((float)EdgeLength) / ((float)pow2EdgeLength);
+    object->baseTexture.pow2Matrix[15] = 1.0;
 
     /* Calculate levels for mip mapping */
     if (Usage & WINED3DUSAGE_AUTOGENMIPMAP) {
@@ -1578,7 +1589,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateAdditionalSwapChain(IWineD3DDevic
     /* Under directX swapchains share the depth stencil, so only create one depth-stencil */
     if (pPresentationParameters->EnableAutoDepthStencil && hr == WINED3D_OK) {
         TRACE("Creating depth stencil buffer\n");
-        if (This->depthStencilBuffer == NULL ) {
+        if (This->auto_depth_stencil_buffer == NULL ) {
             hr = D3DCB_CreateDepthStencil((IUnknown *) This->parent,
                                     parent,
                                     object->presentParms.BackBufferWidth,
@@ -1587,10 +1598,10 @@ static HRESULT WINAPI IWineD3DDeviceImpl_CreateAdditionalSwapChain(IWineD3DDevic
                                     object->presentParms.MultiSampleType,
                                     object->presentParms.MultiSampleQuality,
                                     FALSE /* FIXME: Discard */,
-                                    &This->depthStencilBuffer,
+                                    &This->auto_depth_stencil_buffer,
                                     NULL /* pShared (always null)*/  );
-            if (This->depthStencilBuffer != NULL)
-                IWineD3DSurface_SetContainer(This->depthStencilBuffer, 0);
+            if (This->auto_depth_stencil_buffer != NULL)
+                IWineD3DSurface_SetContainer(This->auto_depth_stencil_buffer, 0);
         }
 
         /** TODO: A check on width, height and multisample types
@@ -2054,7 +2065,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_Init3D(IWineD3DDevice *iface, WINED3DPR
     This->lastThread = GetCurrentThreadId();
 
     /* Depth Stencil support */
-    This->stencilBufferTarget = This->depthStencilBuffer;
+    This->stencilBufferTarget = This->auto_depth_stencil_buffer;
     if (NULL != This->stencilBufferTarget) {
         IWineD3DSurface_AddRef(This->stencilBufferTarget);
     }
@@ -2206,8 +2217,8 @@ static HRESULT WINAPI IWineD3DDeviceImpl_Uninit3D(IWineD3DDevice *iface, D3DCB_D
     /* Release the buffers (with sanity checks)*/
     TRACE("Releasing the depth stencil buffer at %p\n", This->stencilBufferTarget);
     if(This->stencilBufferTarget != NULL && (IWineD3DSurface_Release(This->stencilBufferTarget) >0)){
-        if(This->depthStencilBuffer != This->stencilBufferTarget)
-            FIXME("(%p) Something's still holding the depthStencilBuffer\n",This);
+        if(This->auto_depth_stencil_buffer != This->stencilBufferTarget)
+            FIXME("(%p) Something's still holding the stencilBufferTarget\n",This);
     }
     This->stencilBufferTarget = NULL;
 
@@ -2218,11 +2229,11 @@ static HRESULT WINAPI IWineD3DDeviceImpl_Uninit3D(IWineD3DDevice *iface, D3DCB_D
     TRACE("Setting rendertarget to NULL\n");
     This->render_targets[0] = NULL;
 
-    if (This->depthStencilBuffer) {
-        if(D3DCB_DestroyDepthStencilSurface(This->depthStencilBuffer) > 0) {
-            FIXME("(%p) Something's still holding the depthStencilBuffer\n", This);
+    if (This->auto_depth_stencil_buffer) {
+        if(D3DCB_DestroyDepthStencilSurface(This->auto_depth_stencil_buffer) > 0) {
+            FIXME("(%p) Something's still holding the auto depth stencil buffer\n", This);
         }
-        This->depthStencilBuffer = NULL;
+        This->auto_depth_stencil_buffer = NULL;
     }
 
     for(i=0; i < This->NumberOfSwapChains; i++) {
@@ -6045,7 +6056,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_SetFrontBackBuffers(IWineD3DDevice *ifa
 
 static HRESULT  WINAPI  IWineD3DDeviceImpl_GetDepthStencilSurface(IWineD3DDevice* iface, IWineD3DSurface **ppZStencilSurface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    *ppZStencilSurface = This->depthStencilBuffer;
+    *ppZStencilSurface = This->stencilBufferTarget;
     TRACE("(%p) : zStencilSurface  returning %p\n", This,  *ppZStencilSurface);
 
     if(*ppZStencilSurface != NULL) {
@@ -6387,7 +6398,7 @@ static HRESULT WINAPI IWineD3DDeviceImpl_SetDepthStencilSurface(IWineD3DDevice *
     HRESULT  hr = WINED3D_OK;
     IWineD3DSurface *tmp;
 
-    TRACE("(%p) Swapping z-buffer\n",This);
+    TRACE("(%p) Swapping z-buffer. Old = %p, new = %p\n",This, This->stencilBufferTarget, pNewZStencil);
 
     if (pNewZStencil == This->stencilBufferTarget) {
         TRACE("Trying to do a NOP SetRenderTarget operation\n");
@@ -6611,18 +6622,18 @@ static BOOL     WINAPI  IWineD3DDeviceImpl_ShowCursor(IWineD3DDevice* iface, BOO
 
 static HRESULT  WINAPI  IWineD3DDeviceImpl_TestCooperativeLevel(IWineD3DDevice* iface) {
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *) iface;
+    IWineD3DResourceImpl *resource;
     TRACE("(%p) : state (%u)\n", This, This->state);
+
     /* TODO: Implement wrapping of the WndProc so that mimimize and maxamise can be monitored and the states adjusted. */
     switch (This->state) {
     case WINED3D_OK:
         return WINED3D_OK;
     case WINED3DERR_DEVICELOST:
         {
-            ResourceList *resourceList  = This->resources;
-            while (NULL != resourceList) {
-                if (((IWineD3DResourceImpl *)resourceList->resource)->resource.pool == WINED3DPOOL_DEFAULT /* TODO: IWineD3DResource_GetPool(resourceList->resource)*/)
-                return WINED3DERR_DEVICENOTRESET;
-                resourceList = resourceList->next;
+            LIST_FOR_EACH_ENTRY(resource, &This->resources, IWineD3DResourceImpl, resource.resource_list_entry) {
+                if (resource->resource.pool == WINED3DPOOL_DEFAULT)
+                    return WINED3DERR_DEVICENOTRESET;
             }
             return WINED3DERR_DEVICELOST;
         }
@@ -6865,51 +6876,17 @@ static void WINAPI IWineD3DDeviceImpl_GetGammaRamp(IWineD3DDevice *iface, UINT i
  *****************************************************/
 static void WINAPI IWineD3DDeviceImpl_AddResource(IWineD3DDevice *iface, IWineD3DResource *resource){
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    ResourceList* resourceList;
 
-    TRACE("(%p) : resource %p\n", This, resource);
-    /* add a new texture to the frot of the linked list */
-    resourceList = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(ResourceList));
-    resourceList->resource = resource;
-
-    /* Get the old head */
-    resourceList->next = This->resources;
-
-    This->resources = resourceList;
-    TRACE("Added resource %p with element %p pointing to %p\n", resource, resourceList, resourceList->next);
-
-    return;
+    TRACE("(%p) : Adding Resource %p\n", This, resource);
+    list_add_head(&This->resources, &((IWineD3DResourceImpl *) resource)->resource.resource_list_entry);
 }
 
 static void WINAPI IWineD3DDeviceImpl_RemoveResource(IWineD3DDevice *iface, IWineD3DResource *resource){
     IWineD3DDeviceImpl *This = (IWineD3DDeviceImpl *)iface;
-    ResourceList* resourceList = NULL;
-    ResourceList* previousResourceList = NULL;
-    
-    TRACE("(%p) : resource %p\n", This, resource);
 
-    resourceList = This->resources;
+    TRACE("(%p) : Removing resource %p\n", This, resource);
 
-    while (resourceList != NULL) {
-        if(resourceList->resource == resource) break;
-        previousResourceList = resourceList;
-        resourceList = resourceList->next;
-    }
-
-    if (resourceList == NULL) {
-        FIXME("Attempted to remove resource %p that hasn't been stored\n", resource);
-        return;
-    } else {
-            TRACE("Found resource  %p with element %p pointing to %p (previous %p)\n", resourceList->resource, resourceList, resourceList->next, previousResourceList);
-    }
-    /* make sure we don't leave a hole in the list */
-    if (previousResourceList != NULL) {
-        previousResourceList->next = resourceList->next;
-    } else {
-        This->resources = resourceList->next;
-    }
-
-    return;
+    list_remove(&((IWineD3DResourceImpl *) resource)->resource.resource_list_entry);
 }
 
 

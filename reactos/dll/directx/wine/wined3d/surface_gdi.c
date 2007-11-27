@@ -805,6 +805,7 @@ const IWineD3DSurfaceVtbl IWineGDISurface_Vtbl =
     /* Internal use: */
     IWineGDISurfaceImpl_AddDirtyRect,
     IWineGDISurfaceImpl_LoadTexture,
+    IWineD3DBaseSurfaceImpl_BindTexture,
     IWineGDISurfaceImpl_SaveSnapshot,
     IWineD3DBaseSurfaceImpl_SetContainer,
     IWineGDISurfaceImpl_SetGlTextureDesc,

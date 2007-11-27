@@ -42,62 +42,17 @@ WINE_DEFAULT_DEBUG_CHANNEL(d3d_shader);
 #endif
 
 #define GLNAME_REQUIRE_GLSL  ((const char *)1)
-/* *******************************************
-   IWineD3DPixelShader IUnknown parts follow
-   ******************************************* */
-static HRESULT  WINAPI IWineD3DPixelShaderImpl_QueryInterface(IWineD3DPixelShader *iface, REFIID riid, LPVOID *ppobj)
-{
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
-    TRACE("(%p)->(%s,%p)\n",This,debugstr_guid(riid),ppobj);
-    if (IsEqualGUID(riid, &IID_IUnknown)
-        || IsEqualGUID(riid, &IID_IWineD3DBase)
-        || IsEqualGUID(riid, &IID_IWineD3DBaseShader)
-        || IsEqualGUID(riid, &IID_IWineD3DPixelShader)) {
-        IUnknown_AddRef(iface);
-        *ppobj = This;
-        return S_OK;
-    }
-    *ppobj = NULL;
-    return E_NOINTERFACE;
+
+static HRESULT  WINAPI IWineD3DPixelShaderImpl_QueryInterface(IWineD3DPixelShader *iface, REFIID riid, LPVOID *ppobj) {
+    return IWineD3DBaseShaderImpl_QueryInterface((IWineD3DBaseShader *) iface, riid, ppobj);
 }
 
 static ULONG  WINAPI IWineD3DPixelShaderImpl_AddRef(IWineD3DPixelShader *iface) {
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
-    TRACE("(%p) : AddRef increasing from %d\n", This, This->ref);
-    return InterlockedIncrement(&This->ref);
-}
-
-static void destroy_glsl_pshader(IWineD3DPixelShaderImpl *This) {
-    struct list *linked_programs = &This->baseShader.linked_programs;
-
-    TRACE("Deleting linked programs\n");
-    if (linked_programs->next) {
-        struct glsl_shader_prog_link *entry, *entry2;
-        LIST_FOR_EACH_ENTRY_SAFE(entry, entry2, linked_programs, struct glsl_shader_prog_link, pshader_entry) {
-            delete_glsl_program_entry(This->baseShader.device, entry);
-        }
-    }
-
-    TRACE("Deleting shader object %u\n", This->baseShader.prgId);
-    GL_EXTCALL(glDeleteObjectARB(This->baseShader.prgId));
-    checkGLcall("glDeleteObjectARB");
+    return IWineD3DBaseShaderImpl_AddRef((IWineD3DBaseShader *) iface);
 }
 
 static ULONG  WINAPI IWineD3DPixelShaderImpl_Release(IWineD3DPixelShader *iface) {
-    IWineD3DPixelShaderImpl *This = (IWineD3DPixelShaderImpl *)iface;
-    ULONG ref;
-    TRACE("(%p) : Releasing from %d\n", This, This->ref);
-    ref = InterlockedDecrement(&This->ref);
-    if (ref == 0) {
-        if (This->baseShader.shader_mode == SHADER_GLSL && This->baseShader.prgId != 0) {
-            destroy_glsl_pshader(This);
-        }
-        shader_delete_constant_list(&This->baseShader.constantsF);
-        shader_delete_constant_list(&This->baseShader.constantsB);
-        shader_delete_constant_list(&This->baseShader.constantsI);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
-    return ref;
+    return IWineD3DBaseShaderImpl_Release((IWineD3DBaseShader *) iface);
 }
 
 /* *******************************************
@@ -586,6 +541,7 @@ static HRESULT WINAPI IWineD3DPixelShaderImpl_SetFunction(IWineD3DPixelShader *i
             }
         }
     }
+    This->baseShader.load_local_constsF = FALSE;
 
     This->baseShader.shader_mode = deviceImpl->ps_selected_mode;
 
@@ -675,9 +631,7 @@ static HRESULT WINAPI IWineD3DPixelShaderImpl_CompileShader(IWineD3DPixelShader 
             This->baseShader.recompile_count++;
         }
 
-        if (This->baseShader.shader_mode == SHADER_GLSL && This->baseShader.prgId != 0) {
-            destroy_glsl_pshader(This);
-        }
+        deviceImpl->shader_backend->shader_destroy((IWineD3DBaseShader *) iface);
     }
 
     /* We don't need to compile */
