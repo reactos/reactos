@@ -1123,8 +1123,11 @@ GrowIfNecessary_dbg ( UINT needed, LPTSTR* ret, UINT* retlen, const char *file, 
 	*retlen = needed;
 	if ( *ret )
 		cmd_free ( *ret );
-//	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
+#ifdef _DEBUG_MEM
 	*ret = (LPTSTR)cmd_alloc_dbg ( *retlen * sizeof(TCHAR), file, line );
+#else
+	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
+#endif
 	if ( !*ret )
 		SetLastError ( ERROR_OUTOFMEMORY );
 	return *ret != NULL;
