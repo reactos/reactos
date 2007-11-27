@@ -1992,7 +1992,7 @@ NtUserGetMenuItemRect(
    }
 
    Rect.left   += XMove;
-   Rect.Top    += YMove;
+   Rect.top    += YMove;
    Rect.right  += XMove;
    Rect.bottom += YMove;
    
