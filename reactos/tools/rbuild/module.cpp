@@ -283,11 +283,6 @@ Module::Module ( const Project& project,
 	else
 		extension = GetDefaultModuleExtension ();
 
-	output = new FileLocation ( GetTargetDirectoryTree (),
-	                            modulePath,
-	                            name + extension,
-	                            &moduleNode );
-
 	att = moduleNode.GetAttribute ( "unicode", false );
 	if ( att != NULL )
 	{
@@ -416,9 +411,20 @@ Module::Module ( const Project& project,
 		                             installbase ? installbase->value : "",
 		                             att->value,
 		                             &moduleNode );
+
+    	output = new FileLocation ( GetTargetDirectoryTree (),
+                modulePath,
+                att->value,
+                &moduleNode );
 	}
 	else
+    {
 		install = NULL;
+    	output = new FileLocation ( GetTargetDirectoryTree (),
+                            modulePath,
+                            name + extension,
+                            &moduleNode );
+    }
 
 	att = moduleNode.GetAttribute ( "allowwarnings", false );
 	if ( att == NULL )
