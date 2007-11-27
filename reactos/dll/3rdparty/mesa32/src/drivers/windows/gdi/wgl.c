@@ -771,16 +771,40 @@ wglGetSwapIntervalEXT (void)
 }
 
 /* WGL_ARB_pixel_format */
+#define WGL_NUMBER_PIXEL_FORMATS_ARB    0x2000
+#define WGL_SUPPORT_OPENGL_ARB          0x2010
+
 GLAPI BOOL GLAPIENTRY
 wglGetPixelFormatAttribivARB (HDC hdc,
                               int iPixelFormat,
                               int iLayerPlane,
                               UINT nAttributes,
-                              const int *piAttributes,
+                              int *piAttributes,
                               int *piValues)
 {
-   SetLastError(0);
-   return FALSE;
+    BOOL retVal = FALSE;
+    int i;
+
+    for (i=0;i<nAttributes;i++)
+    {
+        switch (piAttributes[i])
+        {
+            case WGL_NUMBER_PIXEL_FORMATS_ARB :
+                piValues[i] = (int)npfd;
+                retVal = TRUE;
+                break;
+
+            case WGL_SUPPORT_OPENGL_ARB:
+                piValues[i] = (int)TRUE;
+                retVal = TRUE;
+
+            default :
+                SetLastError(0);
+                break;
+        }
+    }
+
+   return retVal;
 }
 
 GLAPI BOOL GLAPIENTRY
@@ -788,11 +812,32 @@ wglGetPixelFormatAttribfvARB (HDC hdc,
                               int iPixelFormat,
                               int iLayerPlane,
                               UINT nAttributes,
-                              const int *piAttributes,
+                              int *piAttributes,
                               FLOAT *pfValues)
 {
-   SetLastError(0);
-   return FALSE;
+    BOOL retVal = FALSE;
+    int i;
+
+    for (i=0;i<nAttributes;i++)
+    {
+        switch (piAttributes[i])
+        {
+            case WGL_NUMBER_PIXEL_FORMATS_ARB :
+                pfValues[i] = (FLOAT)npfd;
+                retVal = TRUE;
+                break;
+
+            case WGL_SUPPORT_OPENGL_ARB:
+                pfValues[i] = (FLOAT)TRUE;
+                retVal = TRUE;
+
+            default :
+                SetLastError(0);
+                break;
+        }
+    }
+
+    return retVal;
 }
 
 GLAPI BOOL GLAPIENTRY
