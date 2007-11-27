@@ -1134,6 +1134,7 @@ DECLARE_INTERFACE_(IWineD3DSurface,IWineD3DResource)
     /* Internally used methods */
     STDMETHOD(AddDirtyRect)(THIS_ CONST RECT* pRect) PURE;
     STDMETHOD(LoadTexture)(THIS, BOOL srgb_mode) PURE;
+    STDMETHOD_(void, BindTexture)(THIS) PURE;
     STDMETHOD(SaveSnapshot)(THIS_ const char *filename) PURE;
     STDMETHOD(SetContainer)(THIS_ IWineD3DBase *container) PURE;
     STDMETHOD_(void,SetGlTextureDesc)(THIS_ UINT textureName, int target) PURE;
@@ -1191,6 +1192,7 @@ DECLARE_INTERFACE_(IWineD3DSurface,IWineD3DResource)
 /*** IWineD3DSurface (Internal, no d3d mapping) methods ***/
 #define IWineD3DSurface_AddDirtyRect(p,a)            (p)->lpVtbl->AddDirtyRect(p,a)
 #define IWineD3DSurface_LoadTexture(p,a)             (p)->lpVtbl->LoadTexture(p,a)
+#define IWineD3DSurface_BindTexture(p)               (p)->lpVtbl->BindTexture(p)
 #define IWineD3DSurface_SaveSnapshot(p,a)            (p)->lpVtbl->SaveSnapshot(p,a)
 #define IWineD3DSurface_SetContainer(p,a)            (p)->lpVtbl->SetContainer(p,a)
 #define IWineD3DSurface_SetGlTextureDesc(p,a,b)      (p)->lpVtbl->SetGlTextureDesc(p,a,b)
