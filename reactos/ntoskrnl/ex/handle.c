@@ -1120,9 +1120,8 @@ ExDupHandleTable(IN PEPROCESS Process,
                                            HandleTableEntry,
                                            NewEntry))
                     {
-                        /* Lock the entry, increase the handle count */
+                        /* Lock the entry */
                         NewEntry->Value |= EXHANDLE_TABLE_ENTRY_LOCK_BIT;
-                        NewTable->HandleCount++;
                     }
                     else
                     {
