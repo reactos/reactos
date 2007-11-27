@@ -79,77 +79,6 @@ SetStretchBltMode(HDC hdc, int iStretchMode)
  */
 BOOL
 STDCALL
-SetRectRgn(HRGN hrgn,
-           int nLeftRect,
-           int nTopRect,
-           int nRightRect,
-           int nBottomRect)
-{
-    /* FIXME metadc stuff */
-    return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetViewportExtEx(HDC hdc,
-                 int nXExtent,
-                 int nYExtent,
-                 LPSIZE lpSize)
-{
-    /* FIXME share memory */
-    return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetWindowOrgEx(HDC hdc,
-               int X,
-               int Y,
-               LPPOINT lpPoint)
-{
-    /* FIXME share memory */
-    return NtGdiSetWindowOrgEx(hdc,X,Y,lpPoint);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetWindowExtEx(HDC hdc,
-               int nXExtent,
-               int nYExtent,
-               LPSIZE lpSize)
-{
-    /* FIXME share memory */
-    return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetViewportOrgEx(HDC hdc,
-                 int X,
-                 int Y,
-                 LPPOINT lpPoint)
-{
-    /* FIXME share memory */
-    return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
 PtInRegion(IN HRGN hrgn,
            int x,
            int y)
@@ -396,22 +325,6 @@ SetMetaFileBitsEx(
 	UNIMPLEMENTED;
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-SetTextJustification(
-	HDC	a0,
-	int	a1,
-	int	a2
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
 }
 
 /*

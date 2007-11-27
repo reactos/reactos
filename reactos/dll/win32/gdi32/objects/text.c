@@ -572,3 +572,41 @@ SetTextColor(
   return OldColor;
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetTextJustification(
+	HDC	hdc,
+	int	extra,
+	int	breaks
+	)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetTextJustification( hdc, extra, breaks )
+    else
+    {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+#endif
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  {
+     if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+     {
+       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+     }
+  }
+  Dc_Attr->cBreak = breaks;
+  Dc_Attr->lBreakExtra = extra;
+  return TRUE;
+}
+
+

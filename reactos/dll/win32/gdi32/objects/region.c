@@ -136,3 +136,54 @@ ExtCreateRegion(
    return NULL;
 }
 
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+SetRectRgn(HRGN hrgn,
+           int nLeftRect,
+           int nTopRect,
+           int nRightRect,
+           int nBottomRect)
+{
+#if 0
+  PREGION_ATTR Rgn_Attr;
+
+  if (!(GdiGetHandleUserData((HGDIOBJ) hrgn, (PVOID) &Rgn_Attr)) ||
+       (GDI_HANDLE_GET_TYPE(hrgn) != GDI_OBJECT_TYPE_REGION)) 
+#endif
+     return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
+#if 0
+  if ((nLeftRect == nRightRect) || (nTopRect == nBottomRect))
+  {
+     Rgn_Attr->flFlags |= DIRTY_RGNATTR;
+     Rgn_Attr->dwType = RGNATTR_INIT;
+     Rgn_Attr->rcBound.left = Rgn_Attr->rcBound.top =
+     Rgn_Attr->rcBound.right = Rgn_Attr->rcBound.bottom = 0;
+     return TRUE;
+  }
+
+  Rgn_Attr->rcBound.left   = nLeftRect;
+  Rgn_Attr->rcBound.top    = nTopRect;
+  Rgn_Attr->rcBound.right  = nRightRect;
+  Rgn_Attr->rcBound.bottom = nBottomRect;
+
+  if(nLeftRect > nRightRect)
+  {
+     Rgn_Attr->rcBound.left   = nRightRect;
+     Rgn_Attr->rcBound.right  = nLeftRect;
+  }
+  if(nTopRect > nBottomRect)
+  {
+     Rgn_Attr->rcBound.top    = nBottomRect;
+     Rgn_Attr->rcBound.bottom = nTopRect;
+  }
+
+  Rgn_Attr->flFlags |= DIRTY_RGNATTR;
+  Rgn_Attr->dwType = RGNATTR_SET;
+  return TRUE;
+#endif
+}
+

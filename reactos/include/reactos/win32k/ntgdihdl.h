@@ -192,6 +192,15 @@
 #define PAGE_EXTENTS_CHANGED                0x00004000
 #define WORLD_XFORM_CHANGED                 0x00008000
 
+
+/* RGN_ATTR Dirty Flags */
+#define DIRTY_RGNATTR                       0x00000020
+
+/* RGN_ATTR Type Flags */
+#define RGNATTR_INIT                        0x00000001
+#define RGNATTR_SET                         0x00000002
+
+
 /* TYPES *********************************************************************/
 
 typedef struct _GDI_TABLE_ENTRY
@@ -291,15 +300,11 @@ typedef struct _BRUSH_ATTR
     DWORD    dwUnused[3];
 } BRUSH_ATTR, *PBRUSH_ATTR;
 
-
 typedef struct _REGION_ATTR
 {
-    DWORD dwUnknown1; 
-    DWORD dwUnknown2; 
-    LONG right; 
-    LONG bottom;
-    LONG left; 
-    LONG top; 
+    FLONG flFlags;
+    DWORD dwType;
+    RECT  rcBound;
 } REGION_ATTR, *PREGION_ATTR;
 
 typedef struct _FONT_ATTR

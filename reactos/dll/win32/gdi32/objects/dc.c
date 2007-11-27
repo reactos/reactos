@@ -867,7 +867,7 @@ SetBkColor(
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        if return EMFDRV_SetBkColor( hDC, crColor );
+        return EMFDRV_SetBkColor( hDC, crColor );
       }
     }
   }
@@ -924,7 +924,7 @@ SetBkMode(HDC hdc,
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        if return EMFDRV_SetBkMode( hdc, iBkMode )
+        return EMFDRV_SetBkMode( hdc, iBkMode )
       }
     }
   }
@@ -973,7 +973,7 @@ SetPolyFillMode(HDC hdc,
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
-        if return EMFDRV_SetPolyFillMode( hdc, iPolyFillMode )
+        return EMFDRV_SetPolyFillMode( hdc, iPolyFillMode )
       }
     }
   }
@@ -1257,6 +1257,240 @@ GetWindowOrgEx(
   return TRUE;
   //return NtGdiGetDCPoint( hdc, GdiGetWindowOrg, lpPoint );
 }
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetViewportExtEx(HDC hdc,
+                 int nXExtent,
+                 int nYExtent,
+                 LPSIZE lpSize)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetViewportExtEx();
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetViewportExtEx();
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+
+  if (lpSize)
+  {
+     lpSize->cx = Dc_Attr->szlWindowExt.cx;
+     lpSize->cy = Dc_Attr->szlWindowExt.cy;
+  }
+
+  if ((Dc_Attr->iMapMode == MM_ISOTROPIC) && (Dc_Attr->iMapMode == MM_ANISOTROPIC))
+  {
+     if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+     {
+        if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+        {
+           NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+           Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+        }
+     }
+  
+     Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+     Dc_Attr->szlWindowExt.cx = nXExtent;
+     Dc_Attr->szlWindowExt.cy = nYExtent;
+  }
+  return TRUE;
+#endif
+  return NtGdiSetViewportExtEx(hdc, nXExtent, nYExtent, lpSize);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetWindowOrgEx(HDC hdc,
+               int X,
+               int Y,
+               LPPOINT lpPoint)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetWindowOrgEx();
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetWindowOrgEx();
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+
+  if (lpPoint)
+  {
+     lpPoint->x = Dc_Attr->ptlWindowOrg.x;
+     lpPoint->y = Dc_Attr->ptlWindowOrg.y;
+  }
+
+  if ((Dc_Attr->ptlWindowOrg.x == X) && (Dc_Attr->ptlWindowOrg.y == Y))
+     return TRUE;
+
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  {
+     if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+     {
+       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+     }
+  }
+  
+  Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+  Dc_Attr->ptlWindowOrg.x = X;
+  Dc_Attr->ptlWindowOrg.y = Y;
+  return TRUE;
+#endif
+  return NtGdiSetWindowOrgEx(hdc,X,Y,lpPoint);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetWindowExtEx(HDC hdc,
+               int nXExtent,
+               int nYExtent,
+               LPSIZE lpSize)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetWindowExtEx();
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetWindowExtEx();
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+
+  if (lpSize)
+  {
+     lpSize->cx = Dc_Attr->szlWindowExt.cx;
+     lpSize->cy = Dc_Attr->szlWindowExt.cy;
+  }
+
+  if ((Dc_Attr->iMapMode == MM_ISOTROPIC) && (Dc_Attr->iMapMode == MM_ANISOTROPIC))
+  {
+     if ((Dc_Attr->szlWindowExt.cx == nXExtent) && (Dc_Attr->szlWindowExt.cy == nYExtent))
+        return TRUE;
+
+     if ((!nXExtent) && (!nYExtent)) return FALSE;
+
+     if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+     {
+        if (Dc_Attr->ulDirty_ & DC_FONTTEXT_DIRTY)
+        {
+           NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+           Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+        }
+     }
+  
+     Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+     Dc_Attr->szlWindowExt.cx = nXExtent;
+     Dc_Attr->szlWindowExt.cy = nYExtent;
+  }
+  return TRUE;
+#endif
+  return NtGdiSetWindowExtEx(hdc, nXExtent, nYExtent, lpSize);
+}
+
+/*
+ * @unimplemented
+ */
+BOOL
+STDCALL
+SetViewportOrgEx(HDC hdc,
+                 int X,
+                 int Y,
+                 LPPOINT lpPoint)
+{
+#if 0
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetViewportOrgEx();
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetViewportOrgEx();
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+
+  if (lpPoint)
+  {
+     lpPoint->x = Dc_Attr->ptlViewportOrg.x;
+     lpPoint->y = Dc_Attr->ptlViewportOrg.y;
+  }
+  Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+  Dc_Attr->ptlViewportOrg.x = X;
+  Dc_Attr->ptlViewportOrg.y = Y;
+  return TRUE;
+#endif
+  return NtGdiSetViewportOrgEx(hdc,X,Y,lpPoint);
+}
+
+
 
 /* FIXME: include correct header */
 HPALETTE STDCALL NtUserSelectPalette(HDC  hDC,
