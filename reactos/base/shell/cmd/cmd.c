@@ -1116,18 +1116,20 @@ VOID ParseCommandLine (LPTSTR cmd)
 }
 
 BOOL
-GrowIfNecessary ( UINT needed, LPTSTR* ret, UINT* retlen )
+GrowIfNecessary_dbg ( UINT needed, LPTSTR* ret, UINT* retlen, const char *file, int line )
 {
 	if ( *ret && needed < *retlen )
 		return TRUE;
 	*retlen = needed;
 	if ( *ret )
 		cmd_free ( *ret );
-	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
+//	*ret = (LPTSTR)cmd_alloc ( *retlen * sizeof(TCHAR) );
+	*ret = (LPTSTR)cmd_alloc_dbg ( *retlen * sizeof(TCHAR), file, line );
 	if ( !*ret )
 		SetLastError ( ERROR_OUTOFMEMORY );
 	return *ret != NULL;
 }
+#define GrowIfNecessary(x, y, z) GrowIfNecessary_dbg(x, y, z, __FILE__, __LINE__)
 
 LPCTSTR
 GetEnvVarOrSpecial ( LPCTSTR varName )
@@ -1222,7 +1224,7 @@ GetEnvVarOrSpecial ( LPCTSTR varName )
 		return ret;
 	}
 
-	GrowIfNecessary(_tcslen(varName) + 2, &ret, &retlen);
+	GrowIfNecessary(_tcslen(varName) + 3, &ret, &retlen);
 	_stprintf(ret,_T("%%%s%%"),varName);
 	return ret; /* not found - return orginal string */
 }
