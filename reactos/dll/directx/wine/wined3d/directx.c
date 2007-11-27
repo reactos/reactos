@@ -183,7 +183,8 @@ static void WineD3D_ReleaseFakeGLContext(void) {
         if(!wined3d_fake_gl_context_foreign && glCtx) {
             TRACE_(d3d_caps)("destroying fake GL context\n");
             pwglMakeCurrent(NULL, NULL);
-            pwglDeleteContext(glCtx);
+            //ros hack, this line does destire the real icd interface in windows and reactos
+            // pwglDeleteContext(glCtx);
         }
         if(wined3d_fake_gl_context_hdc)
             ReleaseDC(wined3d_fake_gl_context_hwnd, wined3d_fake_gl_context_hdc);
