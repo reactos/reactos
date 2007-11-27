@@ -106,6 +106,7 @@ static ULONG WINAPI IDirect3DDevice8Impl_Release(LPDIRECT3DDEVICE8 iface) {
         for(i = 0; i < This->numConvertedDecls; i++) {
             IWineD3DVertexDeclaration_Release(This->decls[i].decl);
         }
+        HeapFree(GetProcessHeap(), 0, This->decls);
 
         IWineD3DDevice_Uninit3D(This->WineD3DDevice, D3D8CB_DestroyDepthStencilSurface, D3D8CB_DestroySwapChain);
         IWineD3DDevice_Release(This->WineD3DDevice);
