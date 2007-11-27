@@ -3622,11 +3622,6 @@ NtGdiGetTextExtentExW(
 
   /* FIXME: Handle fl */
 
-  if (!Count)
-    {
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return FALSE;
-    }
   if (0 == Count)
     {
       Size.cx = 0;
