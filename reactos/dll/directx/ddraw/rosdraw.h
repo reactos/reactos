@@ -13,6 +13,8 @@
 #include "Surface/surface.h"
 #include "Clipper/clipper.h"
 
+#include "resource.h"
+
 /* DirectDraw startup code only internal use  */
 extern DDRAWI_DIRECTDRAW_GBL ddgbl;
 extern DDRAWI_DDRAWSURFACE_GBL ddSurfGbl;
@@ -234,7 +236,7 @@ VOID Hal_DirectDraw_Release (LPDIRECTDRAW7);
 	return DD_OK;
 
 
-#if 0
+#if 1
     #define DX_STUB_str(x) \
     { \
         char buffer[1024]; \

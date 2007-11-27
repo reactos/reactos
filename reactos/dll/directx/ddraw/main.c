@@ -11,7 +11,7 @@
 
 
 #include "rosdraw.h"
-
+HMODULE hDllModule = 0;
 
 /* PSEH for SEH Support */
 #include <pseh/pseh.h>
@@ -220,28 +220,51 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback,
     LONG rc;
     BOOL  EnumerateAttachedSecondaries = FALSE;
     DWORD privateDWFlags = 0;
+    CHAR strMsg[RC_STRING_MAX_SIZE];
+    HRESULT retVal = DDERR_INVALIDPARAMS;
 
     DX_WINDBG_trace();
 
-    rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, REGSTR_PATH_DDHW, &hKey);
-    if (rc == ERROR_SUCCESS)
+    if ((IsBadCodePtr((LPVOID)lpCallback) == 0) &&
+       ((dwFlags & ~(DDENUM_NONDISPLAYDEVICES |
+                    DDENUM_DETACHEDSECONDARYDEVICES |
+                    DDENUM_ATTACHEDSECONDARYDEVICES)) == 0))
     {
-        /* Enumerate Attached Secondaries */
-        cbData = sizeof(DWORD);
-        rc = RegQueryValueExA(hKey, "EnumerateAttachedSecondaries", NULL, NULL, (LPBYTE)&Value, &cbData);
+        LoadStringA(hDllModule, STR_PRIMARY_DISPLAY, (LPSTR)&strMsg, RC_STRING_MAX_SIZE);
+
+        rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, REGSTR_PATH_DDHW, &hKey);
         if (rc == ERROR_SUCCESS)
         {
-           if (Value != 0)
-           {
-                EnumerateAttachedSecondaries = TRUE;
-                privateDWFlags = DDENUM_ATTACHEDSECONDARYDEVICES;
-           }
+            /* Enumerate Attached Secondaries */
+            cbData = sizeof(DWORD);
+            rc = RegQueryValueExA(hKey, "EnumerateAttachedSecondaries", NULL, NULL, (LPBYTE)&Value, &cbData);
+            if (rc == ERROR_SUCCESS)
+            {
+                if (Value != 0)
+                {
+                    EnumerateAttachedSecondaries = TRUE;
+                    privateDWFlags = DDENUM_ATTACHEDSECONDARYDEVICES;
+                }
+            }
+            RegCloseKey(hKey);
         }
-        RegCloseKey(hKey);
+
+        /* Call the user supplyed callback function */
+        rc = lpCallback(NULL, strMsg, "display", lpContext, NULL);
+
+        /* If the callback function returns DDENUMRET_CANCEL, we will stop enumerating devices now */
+        if(rc == DDENUMRET_CANCEL)
+        {
+            retVal = DD_OK;
+        }
+        else
+        {
+            // not finish
+            retVal = DDERR_UNSUPPORTED;
+        }
     }
 
-    // not finish 
-    return DDERR_UNSUPPORTED;
+    return retVal;
 }
 
 HRESULT
@@ -249,6 +272,8 @@ WINAPI
 DirectDrawEnumerateW(LPDDENUMCALLBACKW lpCallback,
                                     LPVOID lpContext)
 {
+    DX_WINDBG_trace();
+
     return DDERR_UNSUPPORTED;
 }
 
@@ -258,6 +283,8 @@ DirectDrawEnumerateExW(LPDDENUMCALLBACKEXW lpCallback,
                        LPVOID lpContext,
                        DWORD dwFlags)
 {
+    DX_WINDBG_trace();
+
     return DDERR_UNSUPPORTED;
 }
 
@@ -339,6 +366,8 @@ D3DParseUnknownCommand( LPVOID lpCmd,
     DWORD retCode = DD_OK;
     LPD3DHAL_DP2COMMAND dp2command = lpCmd;
 
+    DX_WINDBG_trace();
+
     /* prevent it crash if null pointer are being sent */
     if ( (lpCmd == NULL) || (lpRetCmd == NULL) )
     {
@@ -388,39 +417,46 @@ VOID
 WINAPI
 AcquireDDThreadLock()
 {
-   EnterCriticalSection(&ddcs);
+    DX_WINDBG_trace();
+
+    EnterCriticalSection(&ddcs);
 }
 
 VOID
 WINAPI
 ReleaseDDThreadLock()
 {
-   LeaveCriticalSection(&ddcs);
+    DX_WINDBG_trace();
+
+    LeaveCriticalSection(&ddcs);
 }
+
 
 BOOL APIENTRY
 DllMain( HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved )
 {
-  BOOL retStatus;
+
+    hDllModule = hModule;
+
+    DX_WINDBG_trace();
+
+
   switch(ul_reason_for_call)
   {
      case DLL_PROCESS_DETACH:
-           //DeleteCriticalSection( &ddcs );
-           retStatus = TRUE;
+           DeleteCriticalSection( &ddcs );
            break;
 
      case DLL_PROCESS_ATTACH:
-        //DisableThreadLibraryCalls( hModule );
-        //InitializeCriticalSection( &ddcs );
-        //EnterCriticalSection( &ddcs );
-        //LeaveCriticalSection( &ddcs );
-        retStatus = FALSE;
+        DisableThreadLibraryCalls( hModule );
+        InitializeCriticalSection( &ddcs );
+        EnterCriticalSection( &ddcs );
+        LeaveCriticalSection( &ddcs );
         break;
 
     default:
-        retStatus = TRUE;
          break;
   }
-  return retStatus;
 
+  return TRUE;
 }
