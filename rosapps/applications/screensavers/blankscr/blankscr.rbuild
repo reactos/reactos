@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../../tools/rbuild/project.dtd">
-<module name="blankscr" type="win32scr" installbase="system32" installname="blankscr.scr">
+<module name="blankscr" type="win32scr" installbase="system32" installname="scrnsave.scr">
 	<importlibrary definition="scrnsave.def" />
 	<library>scrnsave</library>
 	<library>kernel32</library>
