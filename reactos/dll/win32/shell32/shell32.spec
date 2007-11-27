@@ -205,12 +205,15 @@
  213 stdcall Printers_RegisterWindowW(wstr long ptr ptr)
  214 stdcall Printers_UnregisterWindow(long long)
  215 stdcall -noname SHStartNetConnectionDialog(long str long)
+ 255 stdcall Options_RunDLL(ptr ptr str long)
  243 stdcall @(long long) shell32_243
  244 stdcall -noname SHInitRestricted(ptr ptr)
  249 stdcall -noname PathParseIconLocation(ptr) PathParseIconLocationAW
  250 stdcall -noname PathRemoveExtension(ptr) PathRemoveExtensionAW
  251 stdcall -noname PathRemoveArgs(ptr) PathRemoveArgsAW
+ 255 stdcall Options_RunDLLA(ptr ptr str long)
  256 stdcall @(ptr ptr) SHELL32_256
+ 260 stdcall Options_RunDLLW(ptr ptr wstr long)
 #299 stub Shl1632_ThunkData32
 #300 stub Shl3216_ThunkData32
 

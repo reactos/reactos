@@ -2069,3 +2069,27 @@ HRESULT WINAPI SHSetLocalizedName(LPWSTR pszPath, LPCWSTR pszResModule, int idsR
 
     return S_OK;
 }
+
+/*************************************************************************
+ *              Options_RunDLL (SHELL32.@)
+ */
+VOID WINAPI Options_RunDLL(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
+{
+    
+    PostMessage(GetShellWindow(), WM_USER+22, StrToIntA(cmd), 0);
+}
+/*************************************************************************
+ *              Options_RunDLLA (SHELL32.@)
+ */
+VOID WINAPI Options_RunDLLA(HWND hWnd, HINSTANCE hInst, LPCSTR cmd, DWORD nCmdShow)
+{
+    PostMessage(GetShellWindow(), WM_USER+22, StrToIntA(cmd), 0);
+}
+
+/*************************************************************************
+ *              Options_RunDLLW (SHELL32.@)
+ */
+VOID WINAPI Options_RunDLLW(HWND hWnd, HINSTANCE hInst, LPCWSTR cmd, DWORD nCmdShow)
+{
+    PostMessage(GetShellWindow(), WM_USER+22, StrToIntW(cmd), 0);
+}
