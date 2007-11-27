@@ -1947,7 +1947,8 @@ NtUserGetMenuItemRect(
    LPRECT lprcItem)
 {
    ROSMENUINFO mi;
-   HWND referenceHwnd;
+   PWINDOW_OBJECT ReferenceWnd;
+   LONG XMove, YMove;
    RECT Rect;
    NTSTATUS Status;
    PMENU_OBJECT Menu;
@@ -1967,20 +1968,34 @@ NtUserGetMenuItemRect(
    else
       RETURN(FALSE);
 
-   referenceHwnd = hWnd;
-
    if(!hWnd)
    {
       if(!UserMenuInfo(Menu, &mi, FALSE))
          RETURN( FALSE);
       if(mi.Wnd == 0)
          RETURN( FALSE);
-      referenceHwnd = mi.Wnd; /* Okay we found it, so now what do we do? */
    }
 
-   if (lprcItem == NULL)
-      RETURN( FALSE);
+   if (lprcItem == NULL) RETURN( FALSE);
 
+   if (!(ReferenceWnd = UserGetWindowObject(mi.Wnd))) RETURN( FALSE);
+
+   if(MenuItem->fType & MF_POPUP)
+   {
+     XMove = ReferenceWnd->Wnd->ClientRect.left;
+     YMove = ReferenceWnd->Wnd->ClientRect.top;
+   }
+   else
+   {
+     XMove = ReferenceWnd->Wnd->WindowRect.left;
+     YMove = ReferenceWnd->Wnd->WindowRect.top;
+   }
+
+   Rect.left   += XMove;
+   Rect.Top    += YMove;
+   Rect.right  += XMove;
+   Rect.bottom += YMove;
+   
    Status = MmCopyToCaller(lprcItem, &Rect, sizeof(RECT));
    if (! NT_SUCCESS(Status))
    {
