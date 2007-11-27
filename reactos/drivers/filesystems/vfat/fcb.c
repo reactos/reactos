@@ -76,7 +76,7 @@ vfatInitFcb(PVFATFCB Fcb, PUNICODE_STRING NameU)
 	else
 		PathNameBufferLength = 0;
 
-	Fcb->PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameBufferLength);
+	Fcb->PathNameBuffer = ExAllocatePoolWithTag(NonPagedPool, PathNameBufferLength, TAG_FCB);
 	if (!Fcb->PathNameBuffer)
 	{
 		/* FIXME: what to do if no more memory? */
@@ -454,7 +454,7 @@ vfatMakeFCBFromDirEntry(
 	{
 		return  STATUS_OBJECT_NAME_INVALID;
 	}
-	PathNameBuffer = ExAllocatePool(NonPagedPool, PathNameLength + sizeof(WCHAR));
+	PathNameBuffer = ExAllocatePoolWithTag(NonPagedPool, PathNameLength + sizeof(WCHAR), TAG_FCB);
 	if (!PathNameBuffer)
 	{
 		return STATUS_INSUFFICIENT_RESOURCES;
