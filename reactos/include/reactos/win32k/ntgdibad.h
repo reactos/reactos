@@ -257,11 +257,6 @@ STDCALL
 NtGdiGetFontLanguageInfo(HDC  hDC);
 
 /* Should be done in user-mode. */
-int
-STDCALL
-NtGdiGetGraphicsMode ( HDC hDC );
-
-/* Should be done in user-mode. */
 BOOL
 STDCALL
 NtGdiGetICMProfile(HDC  hDC,
@@ -274,17 +269,11 @@ STDCALL
 NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
                            LPLOGCOLORSPACEW  Buffer,
                            DWORD  Size);
-
-/* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetMapMode(HDC  hDC);
-
+ 
 /* Should be done in user-mode using shared GDI Objects. */
 INT
 STDCALL
 NtGdiGetPixelFormat(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetPolyFillMode(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
 INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
@@ -388,14 +377,6 @@ NtGdiSetEnhMetaFileBits (
 	CONST PBYTE	Data
 	);
 
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-int
-STDCALL
-NtGdiSetGraphicsMode (
-	HDC	hDC,
-	int	Mode
-	);
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL
@@ -407,9 +388,6 @@ DWORD
 STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-INT STDCALL  NtGdiSetPolyFillMode(HDC  hDC, INT polyFillMode);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);

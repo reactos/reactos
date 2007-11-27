@@ -14,35 +14,6 @@
  * @implemented
  *
  */
-int
-STDCALL
-GetPolyFillMode(HDC hdc)
-{
-    /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove
-     */
-     return NtGdiGetPolyFillMode(hdc);
-}
-
-
-/*
- * @implemented
- *
- */
-int
-STDCALL
-GetGraphicsMode(HDC hdc)
-{
-    /* FIXME do not use reactos own syscall for this,
-     * this hack need be remove
-     */
-     return NtGdiGetGraphicsMode(hdc);
-}
-
-/*
- * @implemented
- *
- */
 INT
 STDCALL
 SetDIBitsToDevice(
@@ -87,18 +58,6 @@ SelectObject(HDC hdc,
              HGDIOBJ hgdiobj)
 {
     return NtGdiSelectObject(hdc,hgdiobj);
-}
-
-
-/*
- * @implemented
- *
- */
-int
-STDCALL
-GetMapMode(HDC hdc)
-{
-    return NtGdiGetMapMode(hdc);
 }
 
 /*

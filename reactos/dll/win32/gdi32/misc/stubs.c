@@ -68,30 +68,6 @@ SetDIBits(HDC hdc,
  */
 int
 STDCALL
-SetGraphicsMode(HDC hdc,
-                int iMode)
-{
-    /* FIXME share memory */
-    return NtGdiSetGraphicsMode(hdc, iMode);
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
-SetPolyFillMode(HDC hdc,
-                int iPolyFillMode)
-{
-    /* FIXME share memory */
-    return NtGdiSetPolyFillMode(hdc, iPolyFillMode);
-}
-
-/*
- * @unimplemented
- */
-int
-STDCALL
 SetStretchBltMode(HDC hdc, int iStretchMode)
 {
     /* FIXME share memory */
@@ -274,23 +250,6 @@ Escape(HDC hdc, INT escape, INT in_count, LPCSTR in_data, LPVOID out_data)
         SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
         return 0;
 }
-
-/*
- * @unimplemented
- */
-HRGN
-STDCALL
-ExtCreateRegion(
-	CONST XFORM *	a0,
-	DWORD		a1,
-	CONST RGNDATA *	a2
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
 
 /*
  * @implemented

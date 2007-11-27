@@ -112,3 +112,27 @@ DeleteRegion( HRGN hRgn )
   return NtGdiDeleteObjectApp((HGDIOBJ) hRgn);
 }
 
+/*
+ * @implemented
+ */
+HRGN
+STDCALL
+ExtCreateRegion(
+	CONST XFORM *	lpXform,
+	DWORD		nCount,
+	CONST RGNDATA *	lpRgnData
+	)
+{
+   if (lpRgnData)
+   {
+     if ((!lpXform) && (lpRgnData->rdh.nCount == 1))
+     {
+         PRECT pRect = (PRECT)&lpRgnData->Buffer[0];
+         return CreateRectRgn(pRect->left, pRect->top, pRect->right, pRect->bottom);
+     }
+     return NtGdiExtCreateRegion((LPXFORM) lpXform, nCount,(LPRGNDATA) lpRgnData);
+   }
+   SetLastError(ERROR_INVALID_PARAMETER);
+   return NULL;
+}
+

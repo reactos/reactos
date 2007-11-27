@@ -52,7 +52,7 @@ IntGdiMoveToEx(DC      *dc,
   Dc_Attr->ptlCurrent.x = X;
   Dc_Attr->ptlCurrent.y = Y;
   Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-  IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+  CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
   Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 
   PathIsOpen = PATH_IsPathOpen(dc->w.path);
@@ -76,7 +76,7 @@ IntGetCurrentPositionEx(PDC dc, LPPOINT pt)
      if (Dc_Attr->ulDirty_ & DIRTY_PTFXCURRENT)
      {
         Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-        IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+        CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
         Dc_Attr->ulDirty_ &= ~(DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
      }
      pt->x = Dc_Attr->ptlCurrent.x;
@@ -108,7 +108,7 @@ IntGdiLineTo(DC  *dc,
 	    Dc_Attr->ptlCurrent.x = XEnd;
 	    Dc_Attr->ptlCurrent.y = YEnd;
             Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-            IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+            CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
             Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
 	  }
       return Ret;
@@ -166,7 +166,7 @@ IntGdiLineTo(DC  *dc,
       Dc_Attr->ptlCurrent.x = XEnd;
       Dc_Attr->ptlCurrent.y = YEnd;
       Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-      IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+      CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
       Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
     }
 
@@ -230,7 +230,7 @@ IntGdiPolyBezierTo(DC      *dc,
     Dc_Attr->ptlCurrent.x = pt[Count-1].x;
     Dc_Attr->ptlCurrent.y = pt[Count-1].y;
     Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-    IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+    CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
     Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
   }
 
@@ -327,7 +327,7 @@ IntGdiPolylineTo(DC      *dc,
     Dc_Attr->ptlCurrent.x = pt[Count-1].x;
     Dc_Attr->ptlCurrent.y = pt[Count-1].y;
     Dc_Attr->ptfxCurrent = Dc_Attr->ptlCurrent;
-    IntLPtoDP(dc, &Dc_Attr->ptfxCurrent, 1); // Update fx
+    CoordLPtoDP(dc, &Dc_Attr->ptfxCurrent); // Update fx
     Dc_Attr->ulDirty_ &= ~(DIRTY_PTLCURRENT|DIRTY_PTFXCURRENT|DIRTY_STYLESTATE);
   }
 

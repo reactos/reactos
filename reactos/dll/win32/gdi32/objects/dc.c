@@ -910,9 +910,9 @@ SetBkMode(HDC hdc,
 
   if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldMode;
 #if 0
-  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
   {
-    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
       return MFDRV_SetBkMode( hdc, iBkMode )
     else
     {
@@ -933,6 +933,112 @@ SetBkMode(HDC hdc,
   Dc_Attr->jBkMode = iBkMode; // Processed
   Dc_Attr->lBkMode = iBkMode; // Raw
   return OldMode;
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetPolyFillMode(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->lFillMode;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetPolyFillMode(HDC hdc,
+                int iPolyFillMode)
+{
+  INT fmode;
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetPolyFillMode( hdc, iPolyFillMode )
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SetPolyFillMode( hdc, iPolyFillMode )
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  {
+     if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+     {
+       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+     }
+  }
+
+  fmode = Dc_Attr->lFillMode;
+  Dc_Attr->lFillMode = iPolyFillMode;
+
+  return fmode;
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetGraphicsMode(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->iGraphicsMode;
+}
+
+/*
+ * @unimplemented
+ */
+int
+STDCALL
+SetGraphicsMode(HDC hdc,
+                int iMode)
+{
+  INT oMode;
+  PDC_ATTR Dc_Attr;
+  if ((iMode < GM_COMPATIBLE) || (iMode > GM_ADVANCED))
+  {
+     SetLastError(ERROR_INVALID_PARAMETER);
+     return 0;
+  }
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+
+  if (iMode == Dc_Attr->iGraphicsMode) return iMode;
+
+  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
+  {
+     if (Dc_Attr->ulDirty_ & DC_MODE_DIRTY)
+     {
+       NtGdiFlush(); // Sync up Dc_Attr from Kernel space.
+       Dc_Attr->ulDirty_ &= ~(DC_MODE_DIRTY|DC_FONTTEXT_DIRTY);
+     }
+  }
+  oMode = Dc_Attr->iGraphicsMode;
+  Dc_Attr->iGraphicsMode = iMode;
+
+  return oMode;
 }
 
 /*
@@ -1164,7 +1270,40 @@ SelectPalette(
     HPALETTE hPal,
     BOOL bForceBackground)
 {
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SelectPalette( hDC, hPal, bForceBackground);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hDC);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        if return EMFDRV_SelectPalette( hDC, hPal, bForceBackground);
+      }
+    }
+  }
+#endif
     return NtUserSelectPalette(hDC, hPal, bForceBackground);
+}
+
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetMapMode(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->iMapMode;
 }
 
 /*
@@ -1177,6 +1316,20 @@ SetMapMode(
 	INT Mode
 	)
 {
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetMapMode(hdc, Mode);
+    else
+    {
+      SetLastError(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+#endif
+  if ((Mode == Dc_Attr->iMapMode) && (Mode != MM_ISOTROPIC)) return Mode;
   return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
 }
 

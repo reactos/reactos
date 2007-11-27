@@ -681,10 +681,8 @@ NtGdiDrawStream                                  3
 NtGdiSelectObject                       2
 NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
-NtGdiSetGraphicsMode                    2
 NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
-NtGdiSetPolyFillMode                    2
 NtGdiSetStretchBltMode                  2
 NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
@@ -748,12 +746,9 @@ NtGdiGetEnhMetaFilePaletteEntries       3
 NtGdiGetEnhMetaFilePixelFormat          3
 NtGdiGetFontFamilyInfo                  4
 NtGdiGetFontLanguageInfo                1
-NtGdiGetGraphicsMode                    1
 NtGdiGetICMProfile                      3
 NtGdiGetLogColorSpace                   3
-NtGdiGetMapMode                         1
 NtGdiGetPixelFormat                     1
-NtGdiGetPolyFillMode                    1
 NtGdiGetStretchBltMode                  1
 NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
