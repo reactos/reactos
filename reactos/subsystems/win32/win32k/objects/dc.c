@@ -941,6 +941,8 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
   if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
      return NtGdiDeleteObject((HGDIOBJ) DCHandle);
 
+  if(IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
+
   if (!GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, DCHandle))
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
