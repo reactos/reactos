@@ -27,6 +27,9 @@
 #define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
 #define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
 
+#define min(a, b)  ((a) < (b) ? (a) : (b))
+#define max(a,b)   ((a) < (b) ? (b) : (a))
+
 #include <stdarg.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"

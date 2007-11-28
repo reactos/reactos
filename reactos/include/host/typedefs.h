@@ -227,9 +227,6 @@ RemoveTailList(
 typedef const UNICODE_STRING *PCUNICODE_STRING;
 
 /* Widely used macros */
-#define min(a, b)               ((a) < (b) ? (a) : (b))
-#define max(a,b)                ((a) < (b) ? (b) : (a))
-
 #define LOBYTE(w)               ((BYTE)(w))
 #define HIBYTE(w)               ((BYTE)(((WORD)(w)>>8)&0xFF))
 #define LOWORD(l)               ((WORD)((DWORD_PTR)(l)))
