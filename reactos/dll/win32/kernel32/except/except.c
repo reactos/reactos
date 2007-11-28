@@ -215,14 +215,22 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    NTSTATUS ErrCode;
 
    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
-       ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
+       ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
    {
-      /* Change the protection on some write attempts, some InstallShield setups
-         have this bug */
-      RetValue = BasepCheckForReadOnlyResource(
-         (PVOID)ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
-      if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
-         return EXCEPTION_CONTINUE_EXECUTION;
+      switch(ExceptionInfo->ExceptionRecord->ExceptionInformation[0])
+      {
+      case EXCEPTION_WRITE_FAULT:
+         /* Change the protection on some write attempts, some InstallShield setups
+            have this bug */
+         RetValue = BasepCheckForReadOnlyResource(
+            (PVOID)ExceptionInfo->ExceptionRecord->ExceptionInformation[1]);
+         if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
+            return EXCEPTION_CONTINUE_EXECUTION;
+         break;
+	  case EXCEPTION_EXECUTE_FAULT:
+         /* FIXME */
+         break;
+      }
    }
 
    /* Is there a debugger running ? */
@@ -241,6 +249,13 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       return EXCEPTION_CONTINUE_SEARCH;
    }
 
+   if (GlobalTopLevelExceptionFilter)
+   {
+      LONG ret = GlobalTopLevelExceptionFilter( ExceptionInfo );
+      if (ret != EXCEPTION_CONTINUE_SEARCH)
+         return ret;
+   }
+    
    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
    {
 #ifdef _X86_
