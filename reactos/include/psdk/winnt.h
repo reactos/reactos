@@ -118,6 +118,15 @@ extern "C" {
 #endif
 #endif
 
+/* i386 context definitions */
+#ifdef __i386__
+
+#define EXCEPTION_READ_FAULT    0
+#define EXCEPTION_WRITE_FAULT   1
+#define EXCEPTION_EXECUTE_FAULT 8
+
+#endif  /* __i386__ */
+
 #ifndef VOID
 #define VOID void
 #endif
