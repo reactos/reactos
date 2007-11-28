@@ -17,7 +17,11 @@ IntDeleteRecursive(
 	IN LPCWSTR FullName)
 {
 	DWORD RemovableAttributes = FILE_ATTRIBUTE_READONLY;
+	WIN32_FIND_DATAW FindData;
+	HANDLE hSearch = INVALID_HANDLE_VALUE;
+	LPWSTR FullPath = NULL, pFilePart;
 	DWORD FileAttributes;
+	SIZE_T dwLength;
 	BOOL ret = FALSE;
 
 	FileAttributes = GetFileAttributesW(FullName);
@@ -34,11 +38,46 @@ IntDeleteRecursive(
 	}
 	if (FileAttributes & FILE_ATTRIBUTE_DIRECTORY)
 	{
-		/* Recursive deletion */
-		/* FIXME: recursive deletion */
-		SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-		goto cleanup;
+		/* Prepare file specification */
+		dwLength = wcslen(FullName);
+		FullPath = HeapAlloc(GetProcessHeap(), 0, (dwLength + 1 + MAX_PATH + 1) * sizeof(WCHAR));
+		if (!FullPath)
+		{
+			SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+			goto cleanup;
+		}
+		wcscpy(FullPath, FullName);
+		if (FullPath[dwLength - 1] != '\\')
+		{
+			FullPath[dwLength] = '\\';
+			dwLength++;
+		}
+		pFilePart = &FullPath[dwLength];
+		wcscpy(pFilePart, L"*");
 
+		/* Enumerate contents, and delete it */
+		hSearch = FindFirstFileW(FullPath, &FindData);
+		if (hSearch == INVALID_HANDLE_VALUE)
+			goto cleanup;
+		do
+		{
+			if (!(FindData.cFileName[0] == '.' &&
+				(FindData.cFileName[1] == '\0' || (FindData.cFileName[1] == '.' && FindData.cFileName[2] == '\0'))))
+			{
+				wcscpy(pFilePart, FindData.cFileName);
+				if (!IntDeleteRecursive(FullPath))
+				{
+					FindClose(hSearch);
+					goto cleanup;
+				}
+			}
+		}
+		while (FindNextFileW(hSearch, &FindData));
+		FindClose(hSearch);
+		if (GetLastError() != ERROR_NO_MORE_FILES)
+			goto cleanup;
+
+		/* Remove (now empty) directory */
 		if (!RemoveDirectoryW(FullName))
 			goto cleanup;
 	}
@@ -50,6 +89,7 @@ IntDeleteRecursive(
 	ret = TRUE;
 
 cleanup:
+	HeapFree(GetProcessHeap(), 0, FullPath);
 	return ret;
 }
 
