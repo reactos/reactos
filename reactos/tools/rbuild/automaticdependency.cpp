@@ -265,7 +265,7 @@ SourceFile::Parse ()
 				         this->file.file.relative_path.c_str (),
 				         cSep,
 				         this->file.file.name.c_str () );
-		}
+			}
 		p++;
 	}
 	Close ();

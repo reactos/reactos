@@ -845,10 +845,10 @@ MingwBackend::GetVersionString ( const string& versionCommand )
 
 	fp = popen ( versionCommand.c_str () , "r" );
 	for( i = 0;
-             ( i < 80 ) &&
-                 ( feof ( fp ) == 0 &&
-                   ( ( ch = fgetc( fp ) ) != -1 ) );
-             i++ )
+	     ( i < 80 ) &&
+	       ( feof ( fp ) == 0 &&
+	         ( ( ch = fgetc( fp ) ) != -1 ) );
+	     i++ )
 	{
 		buffer[i] = (char) ch;
 	}

@@ -412,19 +412,19 @@ Module::Module ( const Project& project,
 		                             att->value,
 		                             &moduleNode );
 
-    	output = new FileLocation ( GetTargetDirectoryTree (),
-                modulePath,
-                att->value,
-                &moduleNode );
+		output = new FileLocation ( GetTargetDirectoryTree (),
+		                            modulePath,
+		                            att->value,
+		                            &moduleNode );
 	}
 	else
-    {
+	{
 		install = NULL;
-    	output = new FileLocation ( GetTargetDirectoryTree (),
-                            modulePath,
-                            name + extension,
-                            &moduleNode );
-    }
+		output = new FileLocation ( GetTargetDirectoryTree (),
+		                            modulePath,
+		                            name + extension,
+		                            &moduleNode );
+	}
 
 	att = moduleNode.GetAttribute ( "allowwarnings", false );
 	if ( att == NULL )
