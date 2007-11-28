@@ -1984,9 +1984,6 @@ int StartMenuHandler::Command(int id, int code)
 		CloseStartMenu(id);
 
 #ifndef ROSSHELL
-#ifdef _ROS_	// to be removed when printer folder will be implemented
-		MessageBox(0, TEXT("printer folder not yet implemented in SHELL32"), ResString(IDS_TITLE), MB_OK);
-#else
 #ifndef _NO_MDI
 		XMLPos explorer_options = g_Globals.get_cfg("general/explorer");
 		bool mdi = XMLBool(explorer_options, "mdi", true);
@@ -1996,7 +1993,6 @@ int StartMenuHandler::Command(int id, int code)
 		else
 #endif
 			SDIMainFrame::Create(TEXT("::{20D04FE0-3AEA-1069-A2D8-08002B30309D}\\::{21EC2020-3AEA-1069-A2DD-08002B30309D}\\::{2227A280-3AEA-1069-A2DE-08002B30309D}"), 0);
-#endif
 #else
 		launch_file(_hwnd, SHELLPATH_PRINTERS);
 #endif
