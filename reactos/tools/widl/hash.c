@@ -21,10 +21,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#include "windef.h"
-#include "winbase.h"
-#include "winnls.h"
-
+#include <host/nls.h>
 #include "hash.h"
 
 static const unsigned char Lookup_16[128 * 3] = {

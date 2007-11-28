@@ -35,7 +35,6 @@
 #include "utils.h"
 #include "parser.h"
 #include "header.h"
-#include "windef.h"
 
 #include "widl.h"
 #include "typelib.h"

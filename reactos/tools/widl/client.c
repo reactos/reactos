@@ -29,12 +29,12 @@
 #include <ctype.h>
 #include <signal.h>
 
-#include "windef.h"
-
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"
 #include "header.h"
+
+#include <host/typedefs.h>
 
 #include "widltypes.h"
 #include "typelib.h"

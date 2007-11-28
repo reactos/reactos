@@ -59,7 +59,7 @@ WIDL_OBJECTS = \
 WIDL_HOST_CFLAGS = \
 	-DINT16=SHORT -DYYDEBUG=1 \
 	-I$(WIDL_BASE) -I$(WPP_BASE) \
-	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude/psdk \
+	-Iinclude/reactos/wine -Iinclude/reactos -Iinclude \
 	-I$(INTERMEDIATE_)include $(TOOLS_CFLAGS)
 
 WIDL_HOST_LFLAGS = $(TOOLS_LFLAGS)

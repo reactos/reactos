@@ -21,6 +21,12 @@
 #ifndef __WIDL_WIDLTYPES_H
 #define __WIDL_WIDLTYPES_H
 
+#include <host/typedefs.h>
+#define S_OK           ((HRESULT)0x00000000L)
+#define S_FALSE        ((HRESULT)0x00000001L)
+#define E_OUTOFMEMORY  ((HRESULT)0x8007000EL)
+#define TYPE_E_IOERROR ((HRESULT)0x80028CA2L)
+
 #include <stdarg.h>
 #include "guiddef.h"
 #include "wine/rpcfc.h"
@@ -29,9 +35,6 @@
 #define UUID_DEFINED
 typedef GUID UUID;
 #endif
-
-#define TRUE 1
-#define FALSE 0
 
 typedef struct _attr_t attr_t;
 typedef struct _expr_t expr_t;

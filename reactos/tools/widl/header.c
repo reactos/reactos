@@ -30,7 +30,6 @@
 #include <ctype.h>
 #include <signal.h>
 
-#include "windef.h"
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"

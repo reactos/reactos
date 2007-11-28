@@ -35,9 +35,6 @@
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
-#include "windef.h"
-#include "winbase.h"
-
 #include "widl.h"
 #include "utils.h"
 #include "parser.h"
