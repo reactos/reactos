@@ -5,6 +5,7 @@
 #include "gdi.h"
 
 extern HINSTANCE g_hInstance;
+extern PGDI_TABLE_ENTRY GdiHandleTable;
 
 #endif /* _GDITEST_H */
 
