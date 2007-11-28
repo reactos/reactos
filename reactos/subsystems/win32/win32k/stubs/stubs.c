@@ -3172,20 +3172,6 @@ NtGdiMirrorWindowOrg(
  /*
  * @unimplemented
  */
-DWORD
-APIENTRY
-NtGdiSetLayout(
-    IN HDC hdc,
-    IN LONG wox,
-    IN DWORD dwLayout)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
 INT
 APIENTRY
 NtGdiStretchDIBitsInternal(

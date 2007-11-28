@@ -683,7 +683,6 @@ NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
-NtGdiSetStretchBltMode                  2
 NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
@@ -749,7 +748,6 @@ NtGdiGetFontLanguageInfo                1
 NtGdiGetICMProfile                      3
 NtGdiGetLogColorSpace                   3
 NtGdiGetPixelFormat                     1
-NtGdiGetStretchBltMode                  1
 NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4

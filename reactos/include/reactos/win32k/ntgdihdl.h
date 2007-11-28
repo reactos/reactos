@@ -378,6 +378,9 @@ typedef struct _DC
   HDC         hNext;
   HDC         hPrev;
 
+  RECTL       erclWindow;
+  RECTL       erclBounds;
+
   CLIPOBJ     *CombinedClip;
   XLATEOBJ    *XlateBrush;
   XLATEOBJ    *XlatePen;

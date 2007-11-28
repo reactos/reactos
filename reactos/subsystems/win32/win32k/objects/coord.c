@@ -959,5 +959,43 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   return TRUE;
 }
 
+ /*
+ * @unimplemented
+ */
+DWORD
+APIENTRY
+NtGdiSetLayout(
+    IN HDC hdc,
+    IN LONG wox,
+    IN DWORD dwLayout)
+{
+  PDC dc;
+  PDC_ATTR Dc_Attr;
+  DWORD oLayout;
+
+  dc = DC_LockDc(hdc);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return GDI_ERROR;
+  }
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  Dc_Attr->dwLayout = dwLayout;
+  oLayout = Dc_Attr->dwLayout;
+
+  if (!(dwLayout & LAYOUT_ORIENTATIONMASK))
+  {
+     DC_UnlockDc(dc);
+     return oLayout;
+  }
+  
+//  DC_UpdateXforms(dc);
+  DC_UnlockDc(dc);
+
+  UNIMPLEMENTED;
+  return GDI_ERROR;
+}
 
 /* EOF */

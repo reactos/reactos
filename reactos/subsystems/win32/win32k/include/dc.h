@@ -42,6 +42,7 @@ typedef struct
 
   PERESOURCE hsemDevLock;
 
+  PVOID  pvGammaRamp;
   PVOID  pfnSync;
 
   DHPDEV PDev;
@@ -112,6 +113,7 @@ COLORREF FASTCALL  NtGdiSetTextColor(HDC hDC, COLORREF color);
 UINT FASTCALL NtGdiSetTextAlign(HDC  hDC, UINT  Mode);
 UINT STDCALL  NtGdiGetTextAlign(HDC  hDC);
 COLORREF STDCALL  NtGdiGetTextColor(HDC  hDC);
+INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 
 /* For Metafile and MetaEnhFile not in windows this struct taken from wine cvs 15/9-2006*/
 typedef struct

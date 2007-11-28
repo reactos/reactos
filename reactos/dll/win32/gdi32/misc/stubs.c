@@ -66,17 +66,6 @@ SetDIBits(HDC hdc,
 /*
  * @unimplemented
  */
-int
-STDCALL
-SetStretchBltMode(HDC hdc, int iStretchMode)
-{
-    /* FIXME share memory */
-    return NtGdiSetStretchBltMode(hdc, iStretchMode);
-}
-
-/*
- * @unimplemented
- */
 BOOL
 STDCALL
 PtInRegion(IN HRGN hrgn,
@@ -1439,31 +1428,6 @@ GetFontAssocStatus(HDC hdc)
 }
 
 /*
- * @unimplemented
- */
-HFONT
-STDCALL
-GetHFONT(HDC dc)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetLayout(HDC hdc
-)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
  * @implemented
  */
 BOOL
@@ -1583,33 +1547,6 @@ SetBrushAttributes(HBRUSH hbm, DWORD dwFlags)
 	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
 	return 0;
 }
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetLayout(HDC hdc,
-          DWORD dwLayout)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
 
 /*
  * @implemented

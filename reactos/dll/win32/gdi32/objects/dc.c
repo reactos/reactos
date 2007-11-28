@@ -1515,7 +1515,7 @@ SelectPalette(
       if ( !pLDC )
       {
          SetLastError(ERROR_INVALID_HANDLE);
-         return FALSE;
+         return NULL;
       }
       if (pLDC->iType == LDC_EMFLDC)
       {
@@ -1560,11 +1560,134 @@ SetMapMode(
     else
     {
       SetLastError(ERROR_INVALID_HANDLE);
-      return FALSE;
+      return 0;
     }
 #endif
   if ((Mode == Dc_Attr->iMapMode) && (Mode != MM_ISOTROPIC)) return Mode;
   return GetAndSetDCDWord( hdc, GdiGetSetMapMode, Mode, 0, 0, 0 );
 }
 
+/*
+ * @implemented
+ *
+ */
+int
+STDCALL
+GetStretchBltMode(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  return Dc_Attr->lStretchBltMode;
+}
+
+/*
+ * @implemented
+ */
+int
+STDCALL
+SetStretchBltMode(HDC hdc, int iStretchMode)
+{
+  INT oSMode;
+  PDC_ATTR Dc_Attr;
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetStretchBltMode( hdc, iStretchMode);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetStretchBltMode( hdc, iStretchMode);
+      }
+    }
+  }
+#endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+
+  oSMode = Dc_Attr->lStretchBltMode;
+  Dc_Attr->lStretchBltMode = iStretchMode;
+
+  // Wine returns an error here. We set the default.
+  if ((iStretchMode <= 0) || (iStretchMode > MAXSTRETCHBLTMODE)) iStretchMode = WHITEONBLACK;
+
+  Dc_Attr->jStretchBltMode = iStretchMode;
+
+  return oSMode;
+}
+
+/*
+ * @implemented
+ */
+HFONT
+STDCALL
+GetHFONT(HDC hdc)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return NULL;
+  return Dc_Attr->hlfntNew;
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetLayout(HDC hdc
+)
+{
+  PDC_ATTR Dc_Attr;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return GDI_ERROR;
+  return Dc_Attr->dwLayout;
+}
+
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetLayout(HDC hdc,
+          DWORD dwLayout)
+{
+#if 0
+  if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_SetLayout( hdc, dwLayout);
+    else
+    {
+      PLDC pLDC = GdiGetLDC(hdc);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return 0;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_SetLayout( hdc, dwLayout);
+      }
+    }
+  }
+#endif
+  if (!GdiIsHandleValid((HGDIOBJ) hdc)) return GDI_ERROR;
+  return NtGdiSetLayout( hdc, -1, dwLayout);
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
+{
+  if (!GdiIsHandleValid((HGDIOBJ) hdc)) return GDI_ERROR;
+  return NtGdiSetLayout( hdc, wox, dwLayout);
+}
 

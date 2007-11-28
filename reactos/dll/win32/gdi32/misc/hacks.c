@@ -64,17 +64,6 @@ SelectObject(HDC hdc,
  * @implemented
  *
  */
-int
-STDCALL
-GetStretchBltMode(HDC hdc)
-{
-    return NtGdiGetStretchBltMode(hdc);
-}
-
-/*
- * @implemented
- *
- */
 BOOL
 STDCALL
 OffsetViewportOrgEx(HDC hdc,

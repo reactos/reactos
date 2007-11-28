@@ -276,9 +276,6 @@ STDCALL
 NtGdiGetPixelFormat(HDC  hDC);
 
 /* Should be done in user-mode using shared GDI Objects. */
-INT STDCALL  NtGdiGetStretchBltMode(HDC  hDC);
-
-/* Should be done in user-mode using shared GDI Objects. */
 UINT
 STDCALL
 NtGdiGetTextCharset(HDC  hDC);
@@ -388,9 +385,6 @@ DWORD
 STDCALL
 NtGdiSetMapperFlags(HDC  hDC,
                           DWORD  Flag);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-INT STDCALL  NtGdiSetStretchBltMode(HDC  hDC, INT  stretchBltMode);
 
 /* Needs to be done in user-mode. */
 BOOL

@@ -827,11 +827,15 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
                                      ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
-  if (! CreateAsIC)
+  if (!CreateAsIC)
   {
     NewDC->PalIndexed = NtGdiGetStockObject(DEFAULT_PALETTE);
     NewDC->w.hPalette = PrimarySurface.DevInfo.hpalDefault;
     nDc_Attr->jROP2 = R2_COPYPEN;
+
+    NewDC->erclWindow.top = NewDC->erclWindow.left = 0;
+    NewDC->erclWindow.right  = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulHorzRes;
+    NewDC->erclWindow.bottom = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.ulVertRes;
 
     DC_UnlockDc( NewDC );
 
@@ -1189,6 +1193,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   if(!nDc_Attr) nDc_Attr = &newdc->Dc_Attr;
 
   newdc->w.flags            = dc->w.flags | DC_SAVED;
+  nDc_Attr->dwLayout        = Dc_Attr->dwLayout;
   nDc_Attr->hpen            = Dc_Attr->hpen;
   nDc_Attr->hbrush          = Dc_Attr->hbrush;
   nDc_Attr->hlfntNew        = Dc_Attr->hlfntNew;
@@ -1272,6 +1277,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   dc->w.hDevice            = dcs->w.hDevice;
 #endif
 
+  Dc_Attr->dwLayout        = sDc_Attr->dwLayout;
   dc->w.totalExtent        = dcs->w.totalExtent;
   Dc_Attr->jROP2           = sDc_Attr->jROP2;
   Dc_Attr->jFillMode       = sDc_Attr->jFillMode;
