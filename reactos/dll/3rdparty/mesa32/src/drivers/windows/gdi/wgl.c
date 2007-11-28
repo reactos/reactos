@@ -773,6 +773,24 @@ wglGetSwapIntervalEXT (void)
 /* WGL_ARB_pixel_format */
 #define WGL_NUMBER_PIXEL_FORMATS_ARB    0x2000
 #define WGL_SUPPORT_OPENGL_ARB          0x2010
+#define WGL_STEREO_ARB                  0x2012
+#define WGL_PIXEL_TYPE_ARB              0x2013
+#define WGL_COLOR_BITS_ARB              0x2014
+#define WGL_RED_BITS_ARB                0x2015
+#define WGL_RED_SHIFT_ARB               0x2016
+#define WGL_GREEN_BITS_ARB              0x2017
+#define WGL_GREEN_SHIFT_ARB             0x2018
+#define WGL_BLUE_BITS_ARB               0x2019
+#define WGL_BLUE_SHIFT_ARB              0x201A
+#define WGL_ALPHA_BITS_ARB              0x201B
+#define WGL_ALPHA_SHIFT_ARB             0x201C
+#define WGL_ACCUM_BITS_ARB              0x201D
+#define WGL_ACCUM_RED_BITS_ARB          0x201E
+#define WGL_ACCUM_GREEN_BITS_ARB        0x201F
+#define WGL_ACCUM_BLUE_BITS_ARB         0x2020
+#define WGL_ACCUM_ALPHA_BITS_ARB        0x2021
+#define WGL_DEPTH_BITS_ARB              0x2022
+#define WGL_STENCIL_BITS_ARB            0x2023
 
 GLAPI BOOL GLAPIENTRY
 wglGetPixelFormatAttribivARB (HDC hdc,
@@ -792,11 +810,35 @@ wglGetPixelFormatAttribivARB (HDC hdc,
             case WGL_NUMBER_PIXEL_FORMATS_ARB :
                 piValues[i] = (int)npfd;
                 retVal = TRUE;
+
+            case WGL_SUPPORT_OPENGL_ARB: 
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.dwFlags & ~PFD_SUPPORT_OPENGL;
+                retVal = TRUE;
                 break;
 
-            case WGL_SUPPORT_OPENGL_ARB:
-                piValues[i] = (int)TRUE;
-                retVal = TRUE;
+            case WGL_RED_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cRedBits;
+                break;
+
+            case WGL_GREEN_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cGreenBits;
+                break;
+
+            case WGL_BLUE_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cBlueBits;
+                break;
+
+            case WGL_ALPHA_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cAlphaBits;
+                break;
+
+            case WGL_DEPTH_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cDepthBits;
+                break;
+
+            case WGL_STENCIL_BITS_ARB :
+                piValues[i] = (int)pfd[iPixelFormat - 1].pfd.cAuxBuffers;
+                break;
 
             default :
                 SetLastError(0);
@@ -825,11 +867,35 @@ wglGetPixelFormatAttribfvARB (HDC hdc,
             case WGL_NUMBER_PIXEL_FORMATS_ARB :
                 pfValues[i] = (FLOAT)npfd;
                 retVal = TRUE;
+
+            case WGL_SUPPORT_OPENGL_ARB: 
+                pfValues[i] = (FLOAT) (pfd[iPixelFormat - 1].pfd.dwFlags & ~PFD_SUPPORT_OPENGL);
+                retVal = TRUE;
                 break;
 
-            case WGL_SUPPORT_OPENGL_ARB:
-                pfValues[i] = (FLOAT)TRUE;
-                retVal = TRUE;
+            case WGL_RED_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cRedBits;
+                break;
+
+            case WGL_GREEN_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cGreenBits;
+                break;
+
+            case WGL_BLUE_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cBlueBits;
+                break;
+
+            case WGL_ALPHA_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cAlphaBits;
+                break;
+
+            case WGL_DEPTH_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cDepthBits;
+                break;
+
+            case WGL_STENCIL_BITS_ARB :
+                pfValues[i] = (FLOAT)pfd[iPixelFormat - 1].pfd.cAuxBuffers;
+                break;
 
             default :
                 SetLastError(0);
