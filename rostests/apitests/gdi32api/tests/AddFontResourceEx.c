@@ -5,6 +5,17 @@ Test_AddFontResourceEx(PTESTINFO pti)
 {
 	WCHAR szFileName[MAX_PATH];
 
+	/* Test NULL filename */
+	SetLastError(ERROR_SUCCESS);
+	/* Windows crashes, would need SEH here */
+//	TEST(AddFontResourceExW(NULL, 0, 0) != 0);
+//	TEST(GetLastError() == ERROR_SUCCESS);
+
+	/* Test "" filename */
+	SetLastError(ERROR_SUCCESS);
+	TEST(AddFontResourceExW(L"", 0, 0) == 0);
+	TEST(GetLastError() == ERROR_INVALID_PARAMETER);
+
 	GetEnvironmentVariableW(L"systemroot", szFileName, MAX_PATH);
 	wcscat(szFileName, L"\\Fonts\\cour.ttf");
 
