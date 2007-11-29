@@ -63,6 +63,7 @@ typedef union tagKEY_CONTEXT {
     rc2_key rc2;
     des_key des;
     des3_key des3;
+    aes_key aes;
     prng_state rc4;
     rsa_key rsa;
 } KEY_CONTEXT;

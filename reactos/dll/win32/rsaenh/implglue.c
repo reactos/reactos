@@ -3,6 +3,7 @@
  * Glueing the RSAENH specific code to the crypto library
  *
  * Copyright (c) 2004, 2005 Michael Jung
+ * Copyright (c) 2007 Vijay Kiran Kamuju
  *
  * based on code by Mike McCormack and David Hammerton
  *
@@ -194,6 +195,19 @@ BOOL setup_key_impl(ALG_ID aiAlgid, KEY_CONTEXT *pKeyContext, DWORD dwKeyLen,
         case CALG_DES:
             des_setup(abKeyValue, 8, 0, &pKeyContext->des);
             break;
+
+        case CALG_AES:
+        case CALG_AES_128:
+            aes_setup(abKeyValue, 16, 0, &pKeyContext->aes);
+            break;
+
+        case CALG_AES_192:
+            aes_setup(abKeyValue, 24, 0, &pKeyContext->aes);
+            break;
+
+        case CALG_AES_256:
+            aes_setup(abKeyValue, 32, 0, &pKeyContext->aes);
+            break;
     }
 
     return TRUE;
@@ -209,6 +223,10 @@ BOOL duplicate_key_impl(ALG_ID aiAlgid, CONST KEY_CONTEXT *pSrcKeyContext,
         case CALG_3DES:
         case CALG_3DES_112:
         case CALG_DES:
+        case CALG_AES:
+        case CALG_AES_128:
+        case CALG_AES_192:
+        case CALG_AES_256:
             memcpy(pDestKeyContext, pSrcKeyContext, sizeof(KEY_CONTEXT));
             break;
         case CALG_RSA_KEYX:
@@ -272,6 +290,17 @@ BOOL encrypt_block_impl(ALG_ID aiAlgid, DWORD dwKeySpec, KEY_CONTEXT *pKeyContex
                 des_ecb_encrypt(in, out, &pKeyContext->des);
             } else {
                 des_ecb_decrypt(in, out, &pKeyContext->des);
+            }
+            break;
+
+        case CALG_AES:
+        case CALG_AES_128:
+        case CALG_AES_192:
+        case CALG_AES_256:
+            if (enc) {
+                aes_ecb_encrypt(in, out, &pKeyContext->aes);
+            } else {
+                aes_ecb_decrypt(in, out, &pKeyContext->aes);
             }
             break;
 

@@ -17,7 +17,7 @@ Index: rsaenh.c
 ===================================================================
 --- rsaenh.c	(revision 30501)
 +++ rsaenh.c	(working copy)
-@@ -33,9 +33,9 @@
+@@ -34,9 +34,9 @@
  #include "winbase.h"
  #include "winreg.h"
  #include "wincrypt.h"

@@ -5,6 +5,7 @@
  * Copyright 2002 TransGaming Technologies (David Hammerton)
  * Copyright 2004 Mike McCormack for CodeWeavers
  * Copyright 2004, 2005 Michael Jung
+ * Copyright 2007 Vijay Kiran Kamuju
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -111,6 +112,7 @@ typedef struct tagCRYPTKEY
 #define RSAENH_PERSONALITY_STRONG      1u
 #define RSAENH_PERSONALITY_ENHANCED    2u
 #define RSAENH_PERSONALITY_SCHANNEL    3u
+#define RSAENH_PERSONALITY_AES         4u
 
 #define RSAENH_MAGIC_CONTAINER         0x26384993u
 typedef struct tagKEYCONTAINER
@@ -153,9 +155,9 @@ typedef struct tagKEYCONTAINER
 /******************************************************************************
  * aProvEnumAlgsEx - Defines the capabilities of the CSP personalities.
  */
-#define RSAENH_MAX_ENUMALGS 20
+#define RSAENH_MAX_ENUMALGS 24
 #define RSAENH_PCT1_SSL2_SSL3_TLS1 (CRYPT_FLAG_PCT1|CRYPT_FLAG_SSL2|CRYPT_FLAG_SSL3|CRYPT_FLAG_TLS1)
-static const PROV_ENUMALGS_EX aProvEnumAlgsEx[4][RSAENH_MAX_ENUMALGS+1] =
+static const PROV_ENUMALGS_EX aProvEnumAlgsEx[5][RSAENH_MAX_ENUMALGS+1] =
 {
  {
   {CALG_RC2,       40, 40,   56,0,                    4,"RC2",     24,"RSA Data Security's RC2"},
@@ -228,6 +230,27 @@ static const PROV_ENUMALGS_EX aProvEnumAlgsEx[4][RSAENH_MAX_ENUMALGS+1] =
   {CALG_SCHANNEL_ENC_KEY,0,0,-1,0,                         12,"SCH ENC KEY",24,"SChannel Encryption Key"},
   {CALG_TLS1PRF,    0,  0,   -1,0,                          9,"TLS1 PRF",   28,"TLS1 Pseudo Random Function"},
   {0,               0,  0,    0,0,                          1,"",            1,""}
+ },
+ {
+  {CALG_RC2,      128, 40,  128,0,                    4,"RC2",     24,"RSA Data Security's RC2"},
+  {CALG_RC4,      128, 40,  128,0,                    4,"RC4",     24,"RSA Data Security's RC4"},
+  {CALG_DES,       56, 56,   56,0,                    4,"DES",     31,"Data Encryption Standard (DES)"},
+  {CALG_3DES_112, 112,112,  112,0,                   13,"3DES TWO KEY",19,"Two Key Triple DES"},
+  {CALG_3DES,     168,168,  168,0,                    5,"3DES",    21,"Three Key Triple DES"},
+  {CALG_AES,      128,128,  128,0,                    4,"AES",     35,"Advanced Encryption Standard (AES)"},
+  {CALG_AES_128,  128,128,  128,0,                    8,"AES-128", 39,"Advanced Encryption Standard (AES-128)"},
+  {CALG_AES_192,  192,192,  192,0,                    8,"AES-192", 39,"Advanced Encryption Standard (AES-192)"},
+  {CALG_AES_256,  256,256,  256,0,                    8,"AES-256", 39,"Advanced Encryption Standard (AES-256)"},
+  {CALG_SHA,      160,160,  160,CRYPT_FLAG_SIGNING,   6,"SHA-1",   30,"Secure Hash Algorithm (SHA-1)"},
+  {CALG_MD2,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD2",     23,"Message Digest 2 (MD2)"},
+  {CALG_MD4,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD4",     23,"Message Digest 4 (MD4)"},
+  {CALG_MD5,      128,128,  128,CRYPT_FLAG_SIGNING,   4,"MD5",     23,"Message Digest 5 (MD5)"},
+  {CALG_SSL3_SHAMD5,288,288,288,0,                   12,"SSL3 SHAMD5",12,"SSL3 SHAMD5"},
+  {CALG_MAC,        0,  0,    0,0,                    4,"MAC",     28,"Message Authentication Code"},
+  {CALG_RSA_SIGN,1024,384,16384,CRYPT_FLAG_SIGNING|CRYPT_FLAG_IPSEC,9,"RSA_SIGN",14,"RSA Signature"},
+  {CALG_RSA_KEYX,1024,384,16384,CRYPT_FLAG_SIGNING|CRYPT_FLAG_IPSEC,9,"RSA_KEYX",17,"RSA Key Exchange"},
+  {CALG_HMAC,       0,  0,    0,0,                    5,"HMAC",    18,"Hugo's MAC (HMAC)"},
+  {0,               0,  0,    0,0,                    1,"",         1,""}
  }
 };
 
@@ -844,6 +867,14 @@ static HCRYPTKEY new_key(HCRYPTPROV hProv, ALG_ID aiAlgid, DWORD dwFlags, CRYPTK
                 pCryptKey->dwMode = CRYPT_MODE_CBC;
                 break;
 
+            case CALG_AES:
+            case CALG_AES_128:
+            case CALG_AES_192:
+            case CALG_AES_256:
+                pCryptKey->dwBlockLen = 16;
+                pCryptKey->dwMode = CRYPT_MODE_ECB;
+                break;
+
             case CALG_RSA_KEYX:
             case CALG_RSA_SIGN:
                 pCryptKey->dwBlockLen = dwKeyLen >> 3;
@@ -1081,6 +1112,8 @@ static HCRYPTPROV new_key_container(PCCH pszContainerName, DWORD dwFlags, const 
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_ENHANCED;
             } else if (!strcmp(pVTable->pszProvName, MS_DEF_RSA_SCHANNEL_PROV_A)) { 
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_SCHANNEL;
+            } else if (!strcmp(pVTable->pszProvName, MS_ENH_RSA_AES_PROV_A)) {
+                pKeyContainer->dwPersonality = RSAENH_PERSONALITY_AES;
             } else {
                 pKeyContainer->dwPersonality = RSAENH_PERSONALITY_STRONG;
             }
@@ -1550,8 +1583,8 @@ BOOL WINAPI RSAENH_CPAcquireContext(HCRYPTPROV *phProv, LPSTR pszContainer,
 
         case CRYPT_VERIFYCONTEXT|CRYPT_NEWKEYSET:
         case CRYPT_VERIFYCONTEXT:
-            if (pszContainer) {
-                TRACE("pszContainer should be NULL\n");
+            if (pszContainer && *pszContainer) {
+                TRACE("pszContainer should be empty\n");
                 SetLastError(NTE_BAD_FLAGS);
                 return FALSE;
             }
@@ -2562,6 +2595,10 @@ BOOL WINAPI RSAENH_CPGenKey(HCRYPTPROV hProv, ALG_ID Algid, DWORD dwFlags, HCRYP
         case CALG_DES:
         case CALG_3DES_112:
         case CALG_3DES:
+        case CALG_AES:
+        case CALG_AES_128:
+        case CALG_AES_192:
+        case CALG_AES_256:
         case CALG_PCT1_MASTER:
         case CALG_SSL2_MASTER:
         case CALG_SSL3_MASTER:
@@ -3757,7 +3794,7 @@ cleanup:
     return res;
 }
 
-static const WCHAR szProviderKeys[4][97] = {
+static const WCHAR szProviderKeys[5][104] = {
     {   'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g','r',
         'a','p','h','y','\\','D','e','f','a','u','l','t','s','\\','P','r','o','v',
@@ -3781,9 +3818,14 @@ static const WCHAR szProviderKeys[4][97] = {
         'C','r','y','p','t','o','g','r','a','p','h','y','\\','D','e','f','a','u','l','t','s','\\',
         'P','r','o','v','i','d','e','r','\\','M','i','c','r','o','s','o','f','t',' ',
         'R','S','A',' ','S','C','h','a','n','n','e','l',' ',
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 },
+    {   'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
+        'C','r','y','p','t','o','g','r','a','p','h','y','\\','D','e','f','a','u','l','t','s','\\',
+        'P','r','o','v','i','d','e','r','\\','M','i','c','r','o','s','o','f','t',' ',
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
         'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
 };
-static const WCHAR szDefaultKeys[2][65] = {
+static const WCHAR szDefaultKeys[3][65] = {
     {   'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g','r',
         'a','p','h','y','\\','D','e','f','a','u','l','t','s','\\','P','r','o','v',
@@ -3791,7 +3833,11 @@ static const WCHAR szDefaultKeys[2][65] = {
     {   'S','o','f','t','w','a','r','e','\\',
         'M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g','r',
         'a','p','h','y','\\','D','e','f','a','u','l','t','s','\\','P','r','o','v',
-        'i','d','e','r',' ','T','y','p','e','s','\\','T','y','p','e',' ','0','1','2',0 }
+        'i','d','e','r',' ','T','y','p','e','s','\\','T','y','p','e',' ','0','1','2',0 },
+    {   'S','o','f','t','w','a','r','e','\\',
+        'M','i','c','r','o','s','o','f','t','\\','C','r','y','p','t','o','g','r',
+        'a','p','h','y','\\','D','e','f','a','u','l','t','s','\\','P','r','o','v',
+        'i','d','e','r',' ','T','y','p','e','s','\\','T','y','p','e',' ','0','2','4',0 }
 };
 
 
@@ -3823,7 +3869,7 @@ HRESULT WINAPI DllRegisterServer(void)
     long apiRet;
     int i;
 
-    for (i=0; i<4; i++) {
+    for (i=0; i<5; i++) {
         apiRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szProviderKeys[i], 0, NULL,
             REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &dp);
 
@@ -3835,8 +3881,21 @@ HRESULT WINAPI DllRegisterServer(void)
                 static const WCHAR szRSABase[] = { 'r','s','a','e','n','h','.','d','l','l',0 };
                 static const WCHAR szType[] = { 'T','y','p','e',0 };
                 static const WCHAR szSignature[] = { 'S','i','g','n','a','t','u','r','e',0 };
-                DWORD type = (i == 3) ? PROV_RSA_SCHANNEL : PROV_RSA_FULL;
-                DWORD sign = 0xdeadbeef;
+                DWORD type, sign;
+
+                switch(i)
+                {
+                    case 3:
+                        type=PROV_RSA_SCHANNEL;
+                        break;
+                    case 4:
+                        type=PROV_RSA_AES;
+                        break;
+                    default:
+                        type=PROV_RSA_FULL;
+                        break;
+                }
+                sign = 0xdeadbeef;
                 RegSetValueExW(key, szImagePath, 0, REG_SZ, (const BYTE *)szRSABase,
                                (lstrlenW(szRSABase) + 1) * sizeof(WCHAR));
                 RegSetValueExW(key, szType, 0, REG_DWORD, (LPBYTE)&type, sizeof(type));
@@ -3846,30 +3905,35 @@ HRESULT WINAPI DllRegisterServer(void)
         }
     }
     
-    for (i=0; i<2; i++) {
-        apiRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szDefaultKeys[i], 0, NULL, 
+    for (i=0; i<3; i++) {
+        apiRet = RegCreateKeyExW(HKEY_LOCAL_MACHINE, szDefaultKeys[i], 0, NULL,
                                  REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &dp);
         if (apiRet == ERROR_SUCCESS)
         {
             if (dp == REG_CREATED_NEW_KEY)
             {
                 static const WCHAR szName[] = { 'N','a','m','e',0 };
-                static const WCHAR szRSAName[2][46] = {
+                static const WCHAR szRSAName[3][54] = {
                   { 'M','i','c','r','o','s','o','f','t',' ', 'B','a','s','e',' ',
                     'C','r','y','p','t','o','g','r','a','p','h','i','c',' ', 
                     'P','r','o','v','i','d','e','r',' ','v','1','.','0',0 },
                   { 'M','i','c','r','o','s','o','f','t',' ','R','S','A',' ',
                     'S','C','h','a','n','n','e','l',' ',
                     'C','r','y','p','t','o','g','r','a','p','h','i','c',' ',
+                    'P','r','o','v','i','d','e','r',0 },
+                  { 'M','i','c','r','o','s','o','f','t',' ','E','n','h','a','n','c','e','d',' ',
+                    'R','S','A',' ','a','n','d',' ','A','E','S',' ',
+                    'C','r','y','p','t','o','g','r','a','p','h','i','c',' ',
                     'P','r','o','v','i','d','e','r',0 } };
                 static const WCHAR szTypeName[] = { 'T','y','p','e','N','a','m','e',0 };
-                static const WCHAR szRSATypeName[2][38] = { 
+                static const WCHAR szRSATypeName[3][38] = {
                   { 'R','S','A',' ','F','u','l','l',' ',
                        '(','S','i','g','n','a','t','u','r','e',' ','a','n','d',' ',
                     'K','e','y',' ','E','x','c','h','a','n','g','e',')',0 },
-                  { 'R','S','A',' ','S','C','h','a','n','n','e','l',0 } };
+                  { 'R','S','A',' ','S','C','h','a','n','n','e','l',0 },
+                  { 'R','S','A',' ','F','u','l','l',' ','a','n','d',' ','A','E','S',0 } };
 
-                RegSetValueExW(key, szName, 0, REG_SZ, 
+                RegSetValueExW(key, szName, 0, REG_SZ,
                                 (const BYTE *)szRSAName[i], lstrlenW(szRSAName[i])*sizeof(WCHAR)+sizeof(WCHAR));
                 RegSetValueExW(key, szTypeName, 0, REG_SZ, 
                                 (const BYTE *)szRSATypeName[i], lstrlenW(szRSATypeName[i])*sizeof(WCHAR)+sizeof(WCHAR));
@@ -3900,7 +3964,9 @@ HRESULT WINAPI DllUnregisterServer(void)
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[1]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[2]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[3]);
+    RegDeleteKeyW(HKEY_LOCAL_MACHINE, szProviderKeys[4]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[0]);
     RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[1]);
+    RegDeleteKeyW(HKEY_LOCAL_MACHINE, szDefaultKeys[2]);
     return S_OK;
 }
