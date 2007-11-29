@@ -98,7 +98,8 @@ DPtoLP ( HDC hDC, LPPOINT Points, INT Count )
   INT i;
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (Dc_Attr->flXform & ( DEVICE_TO_WORLD_INVALID | // Force a full recalibration!
                            PAGE_XLATE_CHANGED      | // Changes or Updates have been made,
@@ -125,7 +126,8 @@ LPtoDP ( HDC hDC, LPPOINT Points, INT Count )
   INT i;
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (Dc_Attr->flXform & ( PAGE_XLATE_CHANGED   |  // Check for Changes and Updates
                            PAGE_EXTENTS_CHANGED |
@@ -153,7 +155,8 @@ GetCurrentPositionEx(HDC hdc,
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if ( lpPoint )
   {
@@ -234,7 +237,8 @@ ModifyWorldTransform(
 #endif
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   /* Check that graphics mode is GM_ADVANCED */
   if ( Dc_Attr->iGraphicsMode != GM_ADVANCED ) return FALSE;
@@ -251,7 +255,8 @@ GetViewportExtEx(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if ((Dc_Attr->flXform & PAGE_EXTENTS_CHANGED) && (Dc_Attr->iMapMode == MM_ISOTROPIC))
      // Something was updated, go to kernel.
@@ -274,7 +279,8 @@ GetViewportOrgEx(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
   lpPoint->x = Dc_Attr->ptlViewportOrg.x;
   lpPoint->y = Dc_Attr->ptlViewportOrg.y;
   if (Dc_Attr->dwLayout & LAYOUT_RTL) lpPoint->x = -lpPoint->x;
@@ -292,7 +298,8 @@ GetWindowExtEx(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
   lpSize->cx = Dc_Attr->szlWindowExt.cx;
   lpSize->cy = Dc_Attr->szlWindowExt.cy;
   if (Dc_Attr->dwLayout & LAYOUT_RTL) lpSize->cx = -lpSize->cx;
@@ -310,7 +317,8 @@ GetWindowOrgEx(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
   lpPoint->x = Dc_Attr->ptlWindowOrg.x;
   lpPoint->y = Dc_Attr->ptlWindowOrg.y;
   return TRUE;
@@ -349,13 +357,17 @@ SetViewportExtEx(HDC hdc,
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (lpSize)
   {
      lpSize->cx = Dc_Attr->szlWindowExt.cx;
      lpSize->cy = Dc_Attr->szlWindowExt.cy;
   }
+
+  if ((Dc_Attr->ptlWindowExt.cx == nXExtent) && (Dc_Attr->ptlWindowExt.cy == nYExtent))
+     return TRUE;
 
   if ((Dc_Attr->iMapMode == MM_ISOTROPIC) && (Dc_Attr->iMapMode == MM_ANISOTROPIC))
   {
@@ -409,7 +421,8 @@ SetWindowOrgEx(HDC hdc,
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (lpPoint)
   {
@@ -471,13 +484,14 @@ SetWindowExtEx(HDC hdc,
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (lpSize)
   {
      lpSize->cx = Dc_Attr->szlWindowExt.cx;
      lpSize->cy = Dc_Attr->szlWindowExt.cy;
-     if (Dc_Attr->dwLayout & LAYOUT_RTL) -lpSize->cx;
+     if (Dc_Attr->dwLayout & LAYOUT_RTL) lpSize->cx = -lpSize->cx;
   }
 
   if (Dc_Attr->dwLayout & LAYOUT_RTL)
@@ -542,15 +556,17 @@ SetViewportOrgEx(HDC hdc,
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (lpPoint)
   {
      lpPoint->x = Dc_Attr->ptlViewportOrg.x;
      lpPoint->y = Dc_Attr->ptlViewportOrg.y;
-     if (Dc_Attr->dwLayout & LAYOUT_RTL) -lpPoint->x;
+     if (Dc_Attr->dwLayout & LAYOUT_RTL) lpPoint->x = -lpPoint->x;
   }
   Dc_Attr->flXform |= (PAGE_XLATE_CHANGED|DEVICE_TO_WORLD_INVALID);
+  if (Dc_Attr->dwLayout & LAYOUT_RTL) X = -X;
   Dc_Attr->ptlViewportOrg.x = X;
   Dc_Attr->ptlViewportOrg.y = Y;
   return TRUE;
@@ -567,7 +583,8 @@ GetLayout(HDC hdc
 )
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return GDI_ERROR;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
+       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return GDI_ERROR;
   return Dc_Attr->dwLayout;
 }
 
@@ -600,7 +617,8 @@ SetLayout(HDC hdc,
     }
   }
 #endif
-  if (!GdiIsHandleValid((HGDIOBJ) hdc)) return GDI_ERROR;
+  if (!GdiIsHandleValid((HGDIOBJ) hdc) &&
+      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return GDI_ERROR;
   return NtGdiSetLayout( hdc, -1, dwLayout);
 }
 
@@ -611,7 +629,8 @@ DWORD
 STDCALL
 SetLayoutWidth(HDC hdc,LONG wox,DWORD dwLayout)
 {
-  if (!GdiIsHandleValid((HGDIOBJ) hdc)) return GDI_ERROR;
+  if (!GdiIsHandleValid((HGDIOBJ) hdc) && 
+      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return GDI_ERROR;
   return NtGdiSetLayout( hdc, wox, dwLayout);
 }
 
