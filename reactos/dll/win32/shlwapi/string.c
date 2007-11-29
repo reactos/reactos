@@ -66,8 +66,8 @@ static void FillNumberFmt(NUMBERFMTW *fmt, LPWSTR decimal_buffer, int decimal_bu
   fmt->lpThousandSep = thousand_buffer;
   fmt->lpDecimalSep = decimal_buffer;
 
-  /*
-   * Converting grouping string to number as described on
+  /* 
+   * Converting grouping string to number as described on 
    * http://blogs.msdn.com/oldnewthing/archive/2006/04/18/578251.aspx
    */
   fmt->Grouping = 0;
@@ -113,7 +113,7 @@ static int FormatInt(LONGLONG qdwValue, LPWSTR pszBuf, int cchBuf)
   } while (qdwValue > 0);
   if (neg)
     *(--c) = '-';
-
+  
   return GetNumberFormatW(LOCALE_USER_DEFAULT, 0, c, &fmt, pszBuf, cchBuf);
 }
 
@@ -132,7 +132,7 @@ static int FormatDouble(double value, int decimals, LPWSTR pszBuf, int cchBuf)
   WCHAR buf[64];
   NUMBERFMTW fmt;
   WCHAR decimal[8], thousand[8];
-
+  
   snprintfW(buf, 64, flfmt, value);
 
   FillNumberFmt(&fmt, decimal, sizeof decimal / sizeof (WCHAR),
@@ -1558,7 +1558,7 @@ HRESULT WINAPI StrRetToBSTR(STRRET *lpStrRet, LPCITEMIDLIST pidl, BSTR* pBstrOut
 LPSTR WINAPI StrFormatKBSizeA(LONGLONG llBytes, LPSTR lpszDest, UINT cchMax)
 {
   WCHAR wszBuf[256];
-
+  
   if (!StrFormatKBSizeW(llBytes, wszBuf, 256))
     return NULL;
   if (!WideCharToMultiByte(CP_ACP, 0, wszBuf, -1, lpszDest, cchMax, NULL, NULL))
@@ -2699,7 +2699,7 @@ HRESULT WINAPI SHLoadIndirectString(LPCWSTR src, LPWSTR dst, UINT dst_len, void 
         *index_str = 0;
         index_str++;
         index = atoiW(index_str);
-
+  
         hmod = LoadLibraryW(dllname);
         if(!hmod) goto end;
 

@@ -210,7 +210,7 @@ LONG WINAPI SHRegCloseUSKey(
  * SHRegCreateUSKeyA  [SHLWAPI.@]
  *
  * Create or open a user-specific registry key.
- *
+ * 
  * PARAMS
  *  pszPath        [I] Key name to create or open.
  *  samDesired     [I] Wanted security access.
@@ -251,7 +251,7 @@ LONG WINAPI SHRegCreateUSKeyW(LPCWSTR pszPath, REGSAM samDesired, HUSKEY hRelati
  * PARAMS
  *  hUSKey      [I] Handle to an open registry key.
  *  pszValue    [I] Empty key name.
- *  delRegFlags [I] Flag that specifies the base from which to delete
+ *  delRegFlags [I] Flag that specifies the base from which to delete 
  *                  the key.
  *
  * RETURNS
@@ -1550,7 +1550,7 @@ DWORD WINAPI SHDeleteKeyW(HKEY hKey, LPCWSTR lpszSubKey)
         }
         if (dwRet == ERROR_NO_MORE_ITEMS)
           dwRet = ERROR_SUCCESS;
-
+    
         if (lpszName != szNameBuf)
           HeapFree(GetProcessHeap(), 0, lpszName); /* Free buffer if allocated */
       }

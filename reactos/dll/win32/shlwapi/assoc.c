@@ -414,7 +414,7 @@ HRESULT WINAPI AssocQueryStringByKeyA(ASSOCF cfFlags, ASSOCSTR str, HKEY hkAssoc
 
 /**************************************************************************
  *  AssocIsDangerous  (SHLWAPI.@)
- *
+ *  
  * Determine if a file association is dangerous (potentially malware).
  *
  * PARAMS
@@ -468,7 +468,7 @@ static ULONG WINAPI IQueryAssociations_fnAddRef(IQueryAssociations *iface)
 {
   IQueryAssociationsImpl *This = (IQueryAssociationsImpl *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
-
+  
   TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
   return refCount;
@@ -491,7 +491,7 @@ static ULONG WINAPI IQueryAssociations_fnRelease(IQueryAssociations *iface)
     TRACE("Destroying IQueryAssociations (%p)\n", This);
     HeapFree(GetProcessHeap(), 0, This);
   }
-
+  
   return refCount;
 }
 

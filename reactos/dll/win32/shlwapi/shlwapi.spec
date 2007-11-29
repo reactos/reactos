@@ -13,7 +13,7 @@
 13  stdcall -noname RegisterDefaultAcceptHeaders(ptr ptr)
 14  stdcall -noname GetAcceptLanguagesA(ptr ptr)
 15  stdcall -noname GetAcceptLanguagesW(ptr ptr)
-16  stdcall SHCreateThread(ptr ptr long ptr)
+16  stdcall -noname SHCreateThread(ptr ptr long ptr)
 17  stdcall -noname SHWriteDataBlockList(ptr ptr)
 18  stdcall -noname SHReadDataBlockList(ptr ptr)
 19  stdcall -noname SHFreeDataBlockList(ptr)
@@ -33,121 +33,121 @@
 33  stdcall -noname IsCharDigitW(long)
 34  stdcall -noname IsCharXDigitW(long)
 35  stdcall -noname GetStringType3ExW(ptr long ptr)
-36  stdcall -noname AppendMenuWrapW(long long long wstr)
-37  stdcall @(ptr long long long long) user32.CallWindowProcW
-38  stdcall @(wstr) user32.CharLowerW
-39  stdcall @(wstr long) user32.CharLowerBuffW
-40  stdcall @(wstr) user32.CharNextW
-41  stdcall @(wstr wstr) user32.CharPrevW
-42  stdcall @(wstr) user32.CharToOemW
-43  stdcall @(wstr) user32.CharUpperW
-44  stdcall @(wstr long) user32.CharUpperBuffW
-45  stdcall @(long long wstr long wstr long) kernel32.CompareStringW
-46  stdcall @(long ptr long) user32.CopyAcceleratorTableW
-47  stdcall @(ptr long) user32.CreateAcceleratorTableW
-48  stdcall @(wstr wstr wstr ptr) gdi32.CreateDCW
-49  stdcall @(long ptr long ptr long) user32.CreateDialogParamA
-50  stdcall @(wstr ptr) kernel32.CreateDirectoryW
-51  stdcall @(ptr long long wstr) kernel32.CreateEventW
-52  stdcall @(wstr long long ptr long long long) kernel32.CreateFileW
-53  stdcall @(ptr) gdi32.CreateFontIndirectW
-54  stdcall @(wstr wstr wstr ptr) gdi32.CreateICW
-55  stdcall @(long wstr wstr long long long long long long long long ptr) user32.CreateWindowExW
-56  stdcall @(long long long long) user32.DefWindowProcW
-57  stdcall @(wstr) kernel32.DeleteFileW
-58  stdcall @(long ptr long ptr long) user32.DialogBoxIndirectParamW
-59  stdcall @(long wstr long ptr long) user32.DialogBoxParamW
-60  stdcall @(ptr) user32.DispatchMessageW
-61  stdcall @(long wstr long ptr long) user32.DrawTextW
-62  stdcall @(long wstr ptr long) gdi32.EnumFontFamiliesW
-63  stdcall @(long ptr ptr long long) gdi32.EnumFontFamiliesExW
-64  stdcall @(long wstr ptr long) kernel32.EnumResourceNamesW
-65  stdcall @(wstr ptr) kernel32.FindFirstFileW
-66  stdcall @(long wstr wstr) kernel32.FindResourceW
-67  stdcall @(wstr wstr) user32.FindWindowW
-68  stdcall @(long ptr long long ptr long ptr) kernel32.FormatMessageW
-69  stdcall @(long wstr ptr) user32.GetClassInfoW
-70  stdcall @(long long) user32.GetClassLongW
-71  stdcall @(long ptr long) user32.GetClassNameW
-72  stdcall @(long ptr long) user32.GetClipboardFormatNameW
-73  stdcall @(long ptr) kernel32.GetCurrentDirectoryW
-74  stdcall @(long long wstr long) user32.GetDlgItemTextW
-75  stdcall @(wstr) kernel32.GetFileAttributesW
-76  stdcall @(wstr long ptr ptr) kernel32.GetFullPathNameW
-77  stdcall @(long long ptr long) kernel32.GetLocaleInfoW
-78  stdcall @(long long ptr long long) user32.GetMenuStringW
-79  stdcall @(ptr long long long) user32.GetMessageW
-80  stdcall @(long ptr long) kernel32.GetModuleFileNameW
-81  stdcall @(ptr long) kernel32.GetSystemDirectoryW
-82  stdcall @(wstr wstr wstr long ptr ptr) kernel32.SearchPathW
-83  stdcall @(wstr) kernel32.GetModuleHandleW
-84  stdcall @(long long ptr) gdi32.GetObjectW
-85  stdcall @(wstr wstr long wstr) kernel32.GetPrivateProfileIntW
-86  stdcall @(wstr wstr wstr ptr long) kernel32.GetProfileStringW
-87  stdcall @(long wstr) user32.GetPropW
-88  stdcall @(long long wstr long ptr) kernel32.GetStringTypeExW
-89  stdcall @(wstr wstr long ptr) kernel32.GetTempFileNameW
-90  stdcall @(long ptr) kernel32.GetTempPathW
-91  stdcall @(long wstr long ptr) gdi32.GetTextExtentPoint32W
-92  stdcall @(long long ptr) gdi32.GetTextFaceW
-93  stdcall @(long ptr) gdi32.GetTextMetricsW
-94  stdcall @(long long) user32.GetWindowLongW
-95  stdcall @(long ptr long) user32.GetWindowTextW
-96  stdcall @(long) user32.GetWindowTextLengthW
-97  stdcall @(ptr long) kernel32.GetWindowsDirectoryW
-98  stdcall @(long long long long ptr) user32.InsertMenuW
-99  stdcall @(long ptr) user32.IsDialogMessageW
-100 stdcall @(long wstr) user32.LoadAcceleratorsW
-101 stdcall @(long wstr) user32.LoadBitmapW
-102 stdcall @(long wstr) user32.LoadCursorW
-103 stdcall @(long wstr) user32.LoadIconW
-104 stdcall @(long wstr long long long long) user32.LoadImageW
-105 stdcall @(wstr long long) kernel32.LoadLibraryExW
-106 stdcall @(long wstr) user32.LoadMenuW
-107 stdcall @(long long ptr long) user32.LoadStringW
-108 stdcall @(ptr) user32.MessageBoxIndirectW
-109 stdcall @(long long long long ptr) user32.ModifyMenuW
-110 stdcall @(long long long long) gdi32.GetCharWidth32W
-111 stdcall @(long wstr long long ptr long) gdi32.GetCharacterPlacementW
-112 stdcall @(wstr wstr long) kernel32.CopyFileW
-113 stdcall @(wstr wstr) kernel32.MoveFileW
-114 stdcall @(ptr ptr) user32.OemToCharW
-115 stdcall @(wstr) kernel32.OutputDebugStringW
-116 stdcall @(ptr long long long long) user32.PeekMessageW
-117 stdcall @(long long long long) user32.PostMessageW
-118 stdcall @(long long long long) user32.PostThreadMessageW
-119 stdcall @(long wstr ptr) advapi32.RegCreateKeyW
-120 stdcall @(long wstr long ptr long long ptr ptr ptr) advapi32.RegCreateKeyExW
-121 stdcall @(long wstr) advapi32.RegDeleteKeyW
-122 stdcall @(long long ptr long) advapi32.RegEnumKeyW
-123 stdcall @(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumKeyExW
-124 stdcall @(long wstr ptr) advapi32.RegOpenKeyW
-125 stdcall @(long wstr long long ptr) advapi32.RegOpenKeyExW
-126 stdcall @(long ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) advapi32.RegQueryInfoKeyW
-127 stdcall @(long wstr ptr ptr) advapi32.RegQueryValueW
-128 stdcall @(long wstr ptr ptr ptr ptr) advapi32.RegQueryValueExW
-129 stdcall @(long wstr long ptr long) advapi32.RegSetValueW
-130 stdcall @(long wstr long long ptr long) advapi32.RegSetValueExW
-131 stdcall @(ptr) user32.RegisterClassW
-132 stdcall @(wstr) user32.RegisterClipboardFormatW
-133 stdcall @(wstr) user32.RegisterWindowMessageW
-134 stdcall @(long wstr) user32.RemovePropW
-135 stdcall @(long long long long long) user32.SendDlgItemMessageW
-136 stdcall @(long long long long) user32.SendMessageW
-137 stdcall @(wstr) kernel32.SetCurrentDirectoryW
-138 stdcall -noname SetDlgItemTextWrapW(long long wstr)
-139 stdcall @(long long long ptr) user32.SetMenuItemInfoW
-140 stdcall @(long wstr long) user32.SetPropW
-141 stdcall @(long long long) user32.SetWindowLongW
-142 stdcall @(long long long long) user32.SetWindowsHookExW
-143 stdcall @(long wstr) user32.SetWindowTextW
-144 stdcall @(long ptr) gdi32.StartDocW
-145 stdcall @(long long ptr long) user32.SystemParametersInfoW
-146 stdcall @(long long ptr) user32.TranslateAcceleratorW
-147 stdcall @(wstr long) user32.UnregisterClassW
-148 stdcall @(long) user32.VkKeyScanW
-149 stdcall @(long wstr long long) user32.WinHelpW
-150 stdcall @(ptr wstr ptr) user32.wvsprintfW
+36  stdcall -noname AppendMenuWrapW(long long long wstr) user32.AppendMenuW
+37  stdcall -noname CallWindowProcWrapW(ptr long long long long) user32.CallWindowProcW
+38  stdcall -noname CharLowerWrapW(wstr) user32.CharLowerW
+39  stdcall -noname CharLowerBuffWrapW(wstr long) user32.CharLowerBuffW
+40  stdcall -noname CharNextWrapW(wstr) user32.CharNextW
+41  stdcall -noname CharPrevWrapW(wstr wstr) user32.CharPrevW
+42  stdcall -noname CharToOemWrapW(wstr) user32.CharToOemW
+43  stdcall -noname CharUpperWrapW(wstr) user32.CharUpperW
+44  stdcall -noname CharUpperBuffWrapW(wstr long) user32.CharUpperBuffW
+45  stdcall -noname CompareStringWrapW(long long wstr long wstr long) kernel32.CompareStringW
+46  stdcall -noname CopyAcceleratorTableWrapW(long ptr long) user32.CopyAcceleratorTableW
+47  stdcall -noname CreateAcceleratorTableWrapW(ptr long) user32.CreateAcceleratorTableW
+48  stdcall -noname CreateDCWrapW(wstr wstr wstr ptr) gdi32.CreateDCW
+49  stdcall -noname CreateDialogParamWrapW(long ptr long ptr long) user32.CreateDialogParamW
+50  stdcall -noname CreateDirectoryWrapW(wstr ptr) kernel32.CreateDirectoryW
+51  stdcall -noname CreateEventWrapW(ptr long long wstr) kernel32.CreateEventW
+52  stdcall -noname CreateFileWrapW(wstr long long ptr long long long) kernel32.CreateFileW
+53  stdcall -noname CreateFontIndirectWrapW(ptr) gdi32.CreateFontIndirectW
+54  stdcall -noname CreateICWrapW(wstr wstr wstr ptr) gdi32.CreateICW
+55  stdcall -noname CreateWindowExWrapW(long wstr wstr long long long long long long long long ptr) user32.CreateWindowExW
+56  stdcall -noname DefWindowProcWrapW(long long long long) user32.DefWindowProcW
+57  stdcall -noname DeleteFileWrapW(wstr) kernel32.DeleteFileW
+58  stdcall -noname DialogBoxIndirectParamWrapW(long ptr long ptr long) user32.DialogBoxIndirectParamW
+59  stdcall -noname DialogBoxParamWrapW(long wstr long ptr long) user32.DialogBoxParamW
+60  stdcall -noname DispatchMessageWrapW(ptr) user32.DispatchMessageW
+61  stdcall -noname DrawTextWrapW(long wstr long ptr long) user32.DrawTextW
+62  stdcall -noname EnumFontFamiliesWrapW(long wstr ptr long) gdi32.EnumFontFamiliesW
+63  stdcall -noname EnumFontFamiliesExWrapW(long ptr ptr long long) gdi32.EnumFontFamiliesExW
+64  stdcall -noname EnumResourceNamesWrapW(long wstr ptr long) kernel32.EnumResourceNamesW
+65  stdcall -noname FindFirstFileWrapW(wstr ptr) kernel32.FindFirstFileW
+66  stdcall -noname FindResourceWrapW(long wstr wstr) kernel32.FindResourceW
+67  stdcall -noname FindWindowWrapW(wstr wstr) user32.FindWindowW
+68  stdcall -noname FormatMessageWrapW(long ptr long long ptr long ptr) kernel32.FormatMessageW
+69  stdcall -noname GetClassInfoWrapW(long wstr ptr) user32.GetClassInfoW
+70  stdcall -noname GetClassLongWrapW(long long) user32.GetClassLongW
+71  stdcall -noname GetClassNameWrapW(long ptr long) user32.GetClassNameW
+72  stdcall -noname GetClipboardFormatNameWrapW(long ptr long) user32.GetClipboardFormatNameW
+73  stdcall -noname GetCurrentDirectoryWrapW(long ptr) kernel32.GetCurrentDirectoryW
+74  stdcall -noname GetDlgItemTextWrapW(long long wstr long) user32.GetDlgItemTextW
+75  stdcall -noname GetFileAttributesWrapW(wstr) kernel32.GetFileAttributesW
+76  stdcall -noname GetFullPathNameWrapW(wstr long ptr ptr) kernel32.GetFullPathNameW
+77  stdcall -noname GetLocaleInfoWrapW(long long ptr long) kernel32.GetLocaleInfoW
+78  stdcall -noname GetMenuStringWrapW(long long ptr long long) user32.GetMenuStringW
+79  stdcall -noname GetMessageWrapW(ptr long long long) user32.GetMessageW
+80  stdcall -noname GetModuleFileNameWrapW(long ptr long) kernel32.GetModuleFileNameW
+81  stdcall -noname GetSystemDirectoryWrapW(ptr long) kernel32.GetSystemDirectoryW
+82  stdcall -noname SearchPathWrapW(wstr wstr wstr long ptr ptr) kernel32.SearchPathW
+83  stdcall -noname GetModuleHandleWrapW(wstr) kernel32.GetModuleHandleW
+84  stdcall -noname GetObjectWrapW(long long ptr) gdi32.GetObjectW
+85  stdcall -noname GetPrivateProfileIntWrapW(wstr wstr long wstr) kernel32.GetPrivateProfileIntW
+86  stdcall -noname GetProfileStringWrapW(wstr wstr wstr ptr long) kernel32.GetProfileStringW
+87  stdcall -noname GetPropWrapW(long wstr) user32.GetPropW
+88  stdcall -noname GetStringTypeExWrapW(long long wstr long ptr) kernel32.GetStringTypeExW
+89  stdcall -noname GetTempFileNameWrapW(wstr wstr long ptr) kernel32.GetTempFileNameW
+90  stdcall -noname GetTempPathWrapW(long ptr) kernel32.GetTempPathW
+91  stdcall -noname GetTextExtentPoint32WrapW(long wstr long ptr) gdi32.GetTextExtentPoint32W
+92  stdcall -noname GetTextFaceWrapW(long long ptr) gdi32.GetTextFaceW
+93  stdcall -noname GetTextMetricsWrapW(long ptr) gdi32.GetTextMetricsW
+94  stdcall -noname GetWindowLongWrapW(long long) user32.GetWindowLongW
+95  stdcall -noname GetWindowTextWrapW(long ptr long) user32.GetWindowTextW
+96  stdcall -noname GetWindowTextLengthWrapW(long) user32.GetWindowTextLengthW
+97  stdcall -noname GetWindowsDirectoryWrapW(ptr long) kernel32.GetWindowsDirectoryW
+98  stdcall -noname InsertMenuWrapW(long long long long ptr) user32.InsertMenuW
+99  stdcall -noname IsDialogMessageWrapW(long ptr) user32.IsDialogMessageW
+100 stdcall -noname LoadAcceleratorsWrapW(long wstr) user32.LoadAcceleratorsW
+101 stdcall -noname LoadBitmapWrapW(long wstr) user32.LoadBitmapW
+102 stdcall -noname LoadCursorWrapW(long wstr) user32.LoadCursorW
+103 stdcall -noname LoadIconWrapW(long wstr) user32.LoadIconW
+104 stdcall -noname LoadImageWrapW(long wstr long long long long) user32.LoadImageW
+105 stdcall -noname LoadLibraryExWrapW(wstr long long) kernel32.LoadLibraryExW
+106 stdcall -noname LoadMenuWrapW(long wstr) user32.LoadMenuW
+107 stdcall -noname LoadStringWrapW(long long ptr long) user32.LoadStringW
+108 stdcall -noname MessageBoxIndirectWrapW(ptr) user32.MessageBoxIndirectW
+109 stdcall -noname ModifyMenuWrapW(long long long long ptr) user32.ModifyMenuW
+110 stdcall -noname GetCharWidth32WrapW(long long long long) gdi32.GetCharWidth32W
+111 stdcall -noname GetCharacterPlacementWrapW(long wstr long long ptr long) gdi32.GetCharacterPlacementW
+112 stdcall -noname CopyFileWrapW(wstr wstr long) kernel32.CopyFileW
+113 stdcall -noname MoveFileWrapW(wstr wstr) kernel32.MoveFileW
+114 stdcall -noname OemToCharWrapW(ptr ptr) user32.OemToCharW
+115 stdcall -noname OutputDebugStringWrapW(wstr) kernel32.OutputDebugStringW
+116 stdcall -noname PeekMessageWrapW(ptr long long long long) user32.PeekMessageW
+117 stdcall -noname PostMessageWrapW(long long long long) user32.PostMessageW
+118 stdcall -noname PostThreadMessageWrapW(long long long long) user32.PostThreadMessageW
+119 stdcall -noname RegCreateKeyWrapW(long wstr ptr) advapi32.RegCreateKeyW
+120 stdcall -noname RegCreateKeyExWrapW(long wstr long ptr long long ptr ptr ptr) advapi32.RegCreateKeyExW
+121 stdcall -noname RegDeleteKeyWrapW(long wstr) advapi32.RegDeleteKeyW
+122 stdcall -noname RegEnumKeyWrapW(long long ptr long) advapi32.RegEnumKeyW
+123 stdcall -noname RegEnumKeyExWrapW(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumKeyExW
+124 stdcall -noname RegOpenKeyWrapW(long wstr ptr) advapi32.RegOpenKeyW
+125 stdcall -noname RegOpenKeyExWrapW(long wstr long long ptr) advapi32.RegOpenKeyExW
+126 stdcall -noname RegQueryInfoKeyWrapW(long ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr) advapi32.RegQueryInfoKeyW
+127 stdcall -noname RegQueryValueWrapW(long wstr ptr ptr) advapi32.RegQueryValueW
+128 stdcall -noname RegQueryValueExWrapW(long wstr ptr ptr ptr ptr) advapi32.RegQueryValueExW
+129 stdcall -noname RegSetValueWrapW(long wstr long ptr long) advapi32.RegSetValueW
+130 stdcall -noname RegSetValueExWrapW(long wstr long long ptr long) advapi32.RegSetValueExW
+131 stdcall -noname RegisterClassWrapW(ptr) user32.RegisterClassW
+132 stdcall -noname RegisterClipboardFormatWrapW(wstr) user32.RegisterClipboardFormatW
+133 stdcall -noname RegisterWindowMessageWrapW(wstr) user32.RegisterWindowMessageW
+134 stdcall -noname RemovePropWrapW(long wstr) user32.RemovePropW
+135 stdcall -noname SendDlgItemMessageWrapW(long long long long long) user32.SendDlgItemMessageW
+136 stdcall -noname SendMessageWrapW(long long long long) user32.SendMessageW
+137 stdcall -noname SetCurrentDirectoryWrapW(wstr) kernel32.SetCurrentDirectoryW
+138 stdcall -noname SetDlgItemTextWrapW(long long wstr) user32.SetDlgItemTextW
+139 stdcall -noname SetMenuItemInfoWrapW(long long long ptr) user32.SetMenuItemInfoW
+140 stdcall -noname SetPropWrapW(long wstr long) user32.SetPropW
+141 stdcall -noname SetWindowLongWrapW(long long long) user32.SetWindowLongW
+142 stdcall -noname SetWindowsHookExWrapW(long long long long) user32.SetWindowsHookExW
+143 stdcall -noname SetWindowTextWrapW(long wstr) user32.SetWindowTextW
+144 stdcall -noname StartDocWrapW(long ptr) gdi32.StartDocW
+145 stdcall -noname SystemParametersInfoWrapW(long long ptr long) user32.SystemParametersInfoW
+146 stdcall -noname TranslateAcceleratorWrapW(long long ptr) user32.TranslateAcceleratorW
+147 stdcall -noname UnregisterClassWrapW(wstr long) user32.UnregisterClassW
+148 stdcall -noname VkKeyScanWrapW(long) user32.VkKeyScanW
+149 stdcall -noname WinHelpWrapW(long wstr long long) user32.WinHelpW
+150 stdcall -noname wvsprintfWrapW(ptr wstr ptr) user32.wvsprintfW
 151 stdcall -noname StrCmpNCA(str ptr long)
 152 stdcall -noname StrCmpNCW(wstr wstr long)
 153 stdcall -noname StrCmpNICA(long long long)
@@ -156,7 +156,7 @@
 156 stdcall -noname StrCmpCW(wstr wstr)
 157 stdcall -noname StrCmpICA(str str)
 158 stdcall -noname StrCmpICW(wstr wstr)
-159 stdcall @(long long wstr long wstr long) kernel32.CompareStringW
+159 stdcall -noname CompareStringAltW(long long wstr long wstr long) kernel32.CompareStringW
 160 stdcall -noname SHAboutInfoA(ptr long)
 161 stdcall -noname SHAboutInfoW(ptr long)
 162 stdcall -noname SHTruncateString(str long)
@@ -181,7 +181,7 @@
 181 stdcall -noname SHEnableMenuItem(long long long)
 182 stdcall -noname SHCheckMenuItem(long long long)
 183 stdcall -noname SHRegisterClassA(ptr)
-184 stdcall @(ptr ptr long) SHLWAPI_184
+184 stdcall -noname IStream_Read(ptr ptr long) SHIStream_Read
 185 stdcall -noname SHMessageBoxCheckA(ptr str str long long str)
 186 stdcall -noname SHSimulateDrop(ptr ptr long ptr ptr)
 187 stdcall -noname SHLoadFromPropertyBag(ptr ptr)
@@ -209,7 +209,7 @@
 209 stdcall -noname FDSA_Destroy(ptr)
 210 stdcall -noname FDSA_InsertItem(ptr long ptr)
 211 stdcall -noname FDSA_DeleteItem(ptr long)
-212 stdcall @(ptr ptr long) SHLWAPI_212
+212 stdcall -noname IStream_Write(ptr ptr long) SHIStream_Write
 213 stdcall -noname IStream_Reset(ptr)
 214 stdcall -noname IStream_Size(ptr ptr)
 215 stdcall -noname SHAnsiToUnicode(str ptr long)
@@ -219,9 +219,9 @@
 219 stdcall -noname QISearch(long long long long)
 220 stub -noname SHSetDefaultDialogFont
 221 stdcall -noname SHRemoveDefaultDialogFont(ptr)
-222 stdcall -noname _SHGlobalCounterCreate(long)
-223 stdcall -noname _SHGlobalCounterGetValue(long)
-224 stdcall -noname _SHGlobalCounterIncrement(long)
+222 stdcall -noname SHGlobalCounterCreate(long)
+223 stdcall -noname SHGlobalCounterGetValue(long)
+224 stdcall -noname SHGlobalCounterIncrement(long)
 225 stdcall -noname SHStripMneumonicW(wstr)
 226 stub -noname ZoneCheckPathA
 227 stub -noname ZoneCheckPathW
@@ -278,8 +278,8 @@
 278 stdcall -noname SHCreateWorkerWindowW(long long long long long long)
 279 stdcall -noname SHInvokeDefaultCommand(ptr ptr ptr)
 280 stdcall -noname SHRegGetIntW(ptr wstr long)
-281 stdcall -noname SHPackDispParamsV(ptr ptr ptr ptr)
-282 stdcall -noname SHPackDispParams(ptr ptr ptr ptr)
+281 stdcall -noname SHPackDispParamsV(ptr ptr long ptr)
+282 varargs -noname SHPackDispParams(ptr ptr long)
 283 stub -noname IConnectionPoint_InvokeWithCancel
 284 stdcall -noname IConnectionPoint_SimpleInvoke(ptr long ptr)
 285 stdcall -noname IConnectionPoint_OnChanged(ptr long)
@@ -295,28 +295,28 @@
 295 stdcall -noname SHSetIniStringW(wstr ptr wstr wstr)
 296 stub -noname CreateURLFileContentsW
 297 stub -noname CreateURLFileContentsA
-298 stdcall @(wstr wstr wstr wstr) kernel32.WritePrivateProfileStringW
-299 stdcall @(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
-300 stdcall @(long long long long long long long long long long long long long wstr) gdi32.CreateFontW
-301 stdcall @(long wstr long ptr long ptr) user32.DrawTextExW
-302 stdcall @(long long long ptr) user32.GetMenuItemInfoW
-303 stdcall @(long long long ptr) user32.InsertMenuItemW
-304 stdcall @(wstr) gdi32.CreateMetaFileW
-305 stdcall @(ptr long wstr) kernel32.CreateMutexW
-306 stdcall @(wstr ptr long) kernel32.ExpandEnvironmentStringsW
-307 stdcall @(ptr long long wstr) kernel32.CreateSemaphoreW
-308 stdcall @(ptr long) kernel32.IsBadStringPtrW
-309 stdcall @(wstr) kernel32.LoadLibraryW
-310 stdcall @(long long ptr wstr ptr long) kernel32.GetTimeFormatW
-311 stdcall @(long long ptr wstr ptr long) kernel32.GetDateFormatW
-312 stdcall @(wstr wstr wstr ptr long wstr) kernel32.GetPrivateProfileStringW
+298 stdcall -noname WritePrivateProfileStringWrapW(wstr wstr wstr wstr) kernel32.WritePrivateProfileStringW
+299 stdcall -noname ExtTextOutWrapW(long long long long ptr wstr long ptr) gdi32.ExtTextOutW
+300 stdcall -noname CreateFontWrapW(long long long long long long long long long long long long long wstr) gdi32.CreateFontW
+301 stdcall -noname DrawTextExWrapW(long wstr long ptr long ptr) user32.DrawTextExW
+302 stdcall -noname GetMenuItemInfoWrapW(long long long ptr) user32.GetMenuItemInfoW
+303 stdcall -noname InsertMenuItemWrapW(long long long ptr) user32.InsertMenuItemW
+304 stdcall -noname CreateMetaFileWrapW(wstr) gdi32.CreateMetaFileW
+305 stdcall -noname CreateMutexWrapW(ptr long wstr) kernel32.CreateMutexW
+306 stdcall -noname ExpandEnvironmentStringsWrapW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
+307 stdcall -noname CreateSemaphoreWrapW(ptr long long wstr) kernel32.CreateSemaphoreW
+308 stdcall -noname IsBadStringPtrWrapW(ptr long) kernel32.IsBadStringPtrW
+309 stdcall -noname LoadLibraryWrapW(wstr) kernel32.LoadLibraryW
+310 stdcall -noname GetTimeFormatWrapW(long long ptr wstr ptr long) kernel32.GetTimeFormatW
+311 stdcall -noname GetDateFormatWrapW(long long ptr wstr ptr long) kernel32.GetDateFormatW
+312 stdcall -noname GetPrivateProfileStringWrapW(wstr wstr wstr ptr long wstr) kernel32.GetPrivateProfileStringW
 313 stdcall -noname SHGetFileInfoWrapW(ptr long ptr long long)
-314 stdcall @(ptr) user32.RegisterClassExW
-315 stdcall @(long wstr ptr) user32.GetClassInfoExW
+314 stdcall -noname RegisterClassExWrapW(ptr) user32.RegisterClassExW
+315 stdcall -noname GetClassInfoExWrapW(long wstr ptr) user32.GetClassInfoExW
 316 stub -noname IShellFolder_GetDisplayNameOf
 317 stub -noname IShellFolder_ParseDisplayName
 318 stdcall -noname DragQueryFileWrapW(long long wstr long)
-319 stdcall @(long long wstr wstr) user32.FindWindowExW
+319 stdcall -noname FindWindowExWrapW(long long wstr wstr) user32.FindWindowExW
 320 stdcall -noname RegisterMIMETypeForExtensionA(str str)
 321 stdcall -noname RegisterMIMETypeForExtensionW(wstr wstr)
 322 stdcall -noname UnregisterMIMETypeForExtensionA(str)
@@ -329,22 +329,22 @@
 329 stdcall -noname GetMIMETypeSubKeyW(wstr ptr long)
 330 stdcall -noname MIME_GetExtensionA(str ptr long)
 331 stdcall -noname MIME_GetExtensionW(wstr ptr long)
-332 stdcall @(ptr long) user32.CallMsgFilterW
+332 stdcall -noname CallMsgFilterWrapW(ptr long) user32.CallMsgFilterW
 333 stdcall -noname SHBrowseForFolderWrapW(ptr)
 334 stdcall -noname SHGetPathFromIDListWrapW(ptr ptr)
 335 stdcall -noname ShellExecuteExWrapW(ptr)
 336 stdcall -noname SHFileOperationWrapW(ptr)
-337 stdcall @(wstr long ptr ptr long) user32.PrivateExtractIconExW
-338 stdcall @(wstr long) kernel32.SetFileAttributesW
-339 stdcall @(long long wstr ptr ptr long) kernel32.GetNumberFormatW
-340 stdcall @(long wstr wstr long) user32.MessageBoxW
-341 stdcall @(long ptr) kernel32.FindNextFileW
+337 stdcall -noname ExtractIconExWrapW(wstr long ptr ptr long) user32.PrivateExtractIconExW
+338 stdcall -noname SetFileAttributesWrapW(wstr long) kernel32.SetFileAttributesW
+339 stdcall -noname GetNumberFormatWrapW(long long wstr ptr ptr long) kernel32.GetNumberFormatW
+340 stdcall -noname MessageBoxWrapW(long wstr wstr long) user32.MessageBoxW
+341 stdcall -noname FindNextFileWrapW(long ptr) kernel32.FindNextFileW
 342 stdcall -noname SHInterlockedCompareExchange(ptr ptr ptr)
 343 stdcall -noname SHRegGetCLSIDKeyA(ptr str long long ptr)
 344 stdcall -noname SHRegGetCLSIDKeyW(ptr wstr long long ptr)
 345 stdcall -noname SHAnsiToAnsi(str ptr long)
 346 stdcall -noname SHUnicodeToUnicode(wstr ptr long)
-347 stdcall @(long wstr) advapi32.RegDeleteValueW
+347 stdcall -noname RegDeleteValueWrapW(long wstr) advapi32.RegDeleteValueW
 348 stub -noname SHGetFileDescriptionW
 349 stub -noname SHGetFileDescriptionA
 350 stdcall -noname GetFileVersionInfoSizeWrapW(wstr ptr)
@@ -353,20 +353,20 @@
 353 stub -noname SHFormatDateTimeA
 354 stub -noname SHFormatDateTimeW
 355 stdcall -noname IUnknown_EnableModeless(ptr long)
-356 stdcall -noname _CreateAllAccessSecurityAttributes(ptr ptr long)
+356 stdcall -noname CreateAllAccessSecurityAttributes(ptr ptr long)
 357 stdcall -noname SHGetNewLinkInfoWrapW(wstr wstr wstr long long)
 358 stdcall -noname SHDefExtractIconWrapW(wstr long long ptr ptr long)
-359 stdcall @(long long wstr) kernel32.OpenEventW
-360 stdcall @(wstr) kernel32.RemoveDirectoryW
-361 stdcall @(wstr ptr long) kernel32.GetShortPathNameW
-362 stdcall @(ptr ptr) advapi32.GetUserNameW
+359 stdcall -noname OpenEventWrapW(long long wstr) kernel32.OpenEventW
+360 stdcall -noname RemoveDirectoryWrapW(wstr) kernel32.RemoveDirectoryW
+361 stdcall -noname GetShortPathNameWrapW(wstr ptr long) kernel32.GetShortPathNameW
+362 stdcall -noname GetUserNameWrapW(ptr ptr) advapi32.GetUserNameW
 363 stdcall -noname SHInvokeCommand(ptr ptr ptr long)
 364 stdcall -noname DoesStringRoundTripA(str ptr long)
 365 stdcall -noname DoesStringRoundTripW(wstr ptr long)
-366 stdcall @(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumValueW
-367 stdcall @(wstr wstr ptr long wstr) kernel32.WritePrivateProfileStructW
-368 stdcall @(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
-369 stdcall @(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
+366 stdcall -noname RegEnumValueWrapW(long long ptr ptr ptr ptr ptr ptr) advapi32.RegEnumValueW
+367 stdcall -noname WritePrivateProfileStructWrapW(wstr wstr ptr long wstr) kernel32.WritePrivateProfileStructW
+368 stdcall -noname GetPrivateProfileStructWrapW(wstr wstr ptr long wstr) kernel32.GetPrivateProfileStructW
+369 stdcall -noname CreateProcessWrapW(wstr wstr ptr ptr long long ptr wstr ptr ptr) kernel32.CreateProcessW
 370 stdcall -noname ExtractIconWrapW(long wstr long)
 371 stdcall -noname DdeInitializeWrapW(ptr ptr long long) user32.DdeInitializeW
 372 stdcall -noname DdeCreateStringHandleWrapW(long ptr long) user32.DdeCreateStringHandleW
@@ -374,8 +374,8 @@
 374 stub -noname SHCheckDiskForMediaA
 375 stub -noname SHCheckDiskForMediaW
 376 stdcall -noname MLGetUILanguage() kernel32.GetUserDefaultUILanguage
-377 stdcall MLLoadLibraryA(str long long)
-378 stdcall MLLoadLibraryW(wstr long long)
+377 stdcall -noname MLLoadLibraryA(str long long)
+378 stdcall -noname MLLoadLibraryW(wstr long long)
 379 stub -noname Shell_GetCachedImageIndexWrapW
 380 stub -noname Shell_GetCachedImageIndexWrapA
 381 stub -noname AssocCopyVerbs
@@ -385,13 +385,13 @@
 385 stub -noname SHLoadRawAccelerators
 386 stub -noname SHQueryRawAccelerator
 387 stub -noname SHQueryRawAcceleratorMsg
-388 stdcall -noname ShellMessageBoxWrapW(ptr long long wstr long wstr)
+388 varargs -noname ShellMessageBoxWrapW(long long wstr wstr long)
 389 stdcall -noname GetSaveFileNameWrapW(ptr)
 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
 391 stdcall -noname WNetGetLastErrorWrapW(ptr ptr long ptr long)
 392 stdcall -noname EndDialogWrap(ptr ptr) user32.EndDialog
-393 stdcall @(long ptr long ptr long) user32.CreateDialogIndirectParamW
-394 stdcall -noname SHChangeNotify(long long ptr ptr)
+393 stdcall -noname CreateDialogIndirectParamWrapW(long ptr long ptr long) user32.CreateDialogIndirectParamW
+394 stdcall -noname SHChangeNotifyWrap(long long ptr ptr)
 395 stub -noname MLWinHelpA
 396 stub -noname MLHtmlHelpA
 397 stub -noname MLWinHelpW
@@ -401,7 +401,7 @@
 401 stdcall -noname PageSetupDlgWrapW(ptr)
 402 stdcall -noname PrintDlgWrapW(ptr)
 403 stdcall -noname GetOpenFileNameWrapW(ptr)
-404 stdcall -noname IUnknown_EnumObjects(ptr ptr long ptr)
+404 stdcall -noname IShellFolder_EnumObjects(ptr ptr long ptr) SHIShellFolder_EnumObjects
 405 stdcall -noname MLBuildResURLA(str ptr long str ptr long)
 406 stdcall -noname MLBuildResURLW(wstr ptr long wstr ptr long)
 407 stub -noname AssocMakeProgid
@@ -419,19 +419,19 @@
 419 stdcall -noname SHFlushSFCacheWrap()
 420 stub @ # CMemStream::Commit
 421 stub -noname SHLoadPersistedDataObject
-422 stdcall -noname _SHGlobalCounterCreateNamedA(str long)
-423 stdcall -noname _SHGlobalCounterCreateNamedW(wstr long)
-424 stdcall -noname _SHGlobalCounterDecrement(long)
-425 stdcall -noname DeleteMenuWrap(ptr long long)
-426 stub -noname DestroyMenuWrap
-427 stub -noname TrackPopupMenuWrap
-428 stdcall @(long long long long long ptr) user32.TrackPopupMenuEx
+422 stdcall -noname SHGlobalCounterCreateNamedA(str long)
+423 stdcall -noname SHGlobalCounterCreateNamedW(wstr long)
+424 stdcall -noname SHGlobalCounterDecrement(long)
+425 stdcall -noname DeleteMenuWrap(ptr long long) user32.DeleteMenu
+426 stdcall -noname DestroyMenuWrap(long) user32.DestroyMenu
+427 stdcall -noname TrackPopupMenuWrap(long long long long long long ptr) user32.TrackPopupMenu
+428 stdcall -noname TrackPopupMenuExWrap(long long long long long ptr) user32.TrackPopupMenuEx
 429 stdcall -noname MLIsMLHInstance(long)
 430 stdcall -noname MLSetMLHInstance(long long)
 431 stdcall -noname MLClearMLHInstance(long)
 432 stub -noname SHSendMessageBroadcastA
 433 stub -noname SHSendMessageBroadcastW
-434 stdcall @(long long long long long long ptr) user32.SendMessageTimeoutW
+434 stdcall -noname SendMessageTimeoutWrapW(long long long long long long ptr) user32.SendMessageTimeoutW
 435 stdcall -noname CLSIDFromProgIDWrap(wstr ptr) ole32.CLSIDFromProgID
 436 stdcall -noname CLSIDFromStringWrap(wstr ptr)
 437 stdcall -noname IsOS(long)
@@ -439,9 +439,9 @@
 439 stdcall -noname SHLoadRegUIStringW(ptr wstr ptr long)
 440 stdcall -noname SHGetWebFolderFilePathA(str ptr long)
 441 stdcall -noname SHGetWebFolderFilePathW(wstr ptr long)
-442 stdcall @(wstr ptr long) kernel32.GetEnvironmentVariableW
-443 stdcall @(ptr long) kernel32.GetSystemWindowsDirectoryA
-444 stdcall @(ptr long) kernel32.GetSystemWindowsDirectoryW
+442 stdcall -noname GetEnvironmentVariableWrapW(wstr ptr long) kernel32.GetEnvironmentVariableW
+443 stdcall -noname SHGetSystemWindowsDirectoryA(ptr long) kernel32.GetSystemWindowsDirectoryA
+444 stdcall -noname SHGetSystemWindowsDirectoryW(ptr long) kernel32.GetSystemWindowsDirectoryW
 445 stdcall -noname PathFileExistsAndAttributesA(str ptr)
 446 stdcall -noname PathFileExistsAndAttributesW(wstr ptr)
 447 stub -noname FixSlashesAndColonA
@@ -454,8 +454,8 @@
 454 stub -noname CharLowerNoDBCSW
 455 stdcall -noname PathIsValidCharA(long long)
 456 stdcall -noname PathIsValidCharW(long long)
-457 stdcall @(wstr ptr long) kernel32.GetLongPathNameW
-458 stdcall @(str ptr long) kernel32.GetLongPathNameA
+457 stdcall -noname GetLongPathNameWrapW(wstr ptr long) kernel32.GetLongPathNameW
+458 stdcall -noname GetLongPathNameWrapA(str ptr long) kernel32.GetLongPathNameA
 459 stdcall -noname SHExpandEnvironmentStringsA(str ptr long) kernel32.ExpandEnvironmentStringsA
 460 stdcall -noname SHExpandEnvironmentStringsW(wstr ptr long) kernel32.ExpandEnvironmentStringsW
 461 stdcall -noname SHGetAppCompatFlags(long)
@@ -469,7 +469,7 @@
 469 stub -noname RunRegCommand
 470 stub -noname IUnknown_ProfferServiceOld
 471 stub -noname SHCreatePropertyBagOnRegKey
-472 stub -noname SHCreatePropertyBagOnProfileSelections
+472 stub -noname SHCreatePropertyBagOnProfileSelection
 473 stub -noname SHGetIniStringUTF7W
 474 stub -noname SHSetIniStringUTF7W
 475 stdcall -noname GetShellSecurityDescriptor(ptr long)
@@ -484,10 +484,10 @@
 484 stdcall -noname IUnknown_QueryServiceExec(ptr ptr ptr long long long ptr)
 485 stub -noname MapWin32ErrorToSTG
 486 stub -noname ModeToCreateFileFlags
-
+487 stdcall -noname SHLoadIndirectString(wstr ptr long ptr)
 488 stub -noname SHConvertGraphicsFile
-489 stub -noname GlobalAddAtomWrapW
-490 stub -noname GlobalFindAtomWrapW
+489 stdcall -noname GlobalAddAtomWrapW(wstr) kernel32.GlobalAddAtomW
+490 stdcall -noname GlobalFindAtomWrapW(wstr) kernel32.GlobalFindAtomW
 491 stdcall -noname SHGetShellKey(long long long)
 492 stub -noname PrettifyFileDescriptionW
 493 stub -noname SHPropertyBag_ReadType
@@ -508,7 +508,7 @@
 512 stub -noname IStream_ReadPidl
 513 stub -noname IStream_WritePidl
 514 stdcall -noname IUnknown_ProfferService(ptr ptr ptr ptr)
-
+515 stub -noname SHGetViewStatePropertyBag
 516 stdcall -noname SKGetValueW(long wstr wstr long long long)
 517 stub -noname SKSetValueW
 518 stub -noname SKDeleteValueW
@@ -536,7 +536,7 @@
 540 stub -noname SHInvokeCommandOnContextMenu
 541 stub -noname SHInvokeCommandsOnContextMen
 542 stdcall -noname GetUIVersion()
-543 stub -noname CreateColorSpaceWrapW
+543 stdcall -noname CreateColorSpaceWrapW(ptr) gdi32.CreateColorSpaceW
 544 stub -noname QuerySourceCreateFromKey
 545 stub -noname SHForwardContextMenuMsg
 546 stub -noname IUnknown_DoContextMenuPopup
@@ -699,7 +699,6 @@
 @ stdcall SHGetValueA ( long str str ptr ptr ptr )
 @ stdcall SHGetValueW ( long wstr wstr ptr ptr ptr )
 @ stdcall SHIsLowMemoryMachine(long)
-@ stdcall SHLoadIndirectString(wstr ptr long ptr)
 @ stdcall SHOpenRegStream2A(long str str long)
 @ stdcall SHOpenRegStream2W(long wstr str long)
 @ stdcall SHOpenRegStreamA(long str str long)

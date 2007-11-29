@@ -1,7 +1,7 @@
 /*
  * Korean resources for shlwapi
  *
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005,2007 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,10 +28,10 @@ FONT 8, "MS Shell Dlg"
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
  CHECKBOX "이 메세지를 다시는 보여주지 마시오(&I)", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"확인(&O)" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"취소(&C)" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"예(&Y)" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
- PUSHBUTTON L"아니오(&N)" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "확인(&O)" IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "취소(&C)" IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "예(&Y)" IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "아니오(&N)" IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
 
 

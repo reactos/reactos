@@ -268,11 +268,11 @@ HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
 	LPDWORD pcchCanonicalized, DWORD dwFlags)
 {
     LPWSTR base, canonical;
-    DWORD ret, len, len2;
+    HRESULT ret;
+    DWORD   len, len2;
 
-    TRACE("(%s %p %p 0x%08x) using W version\n",
-	  debugstr_a(pszUrl), pszCanonicalized,
-	  pcchCanonicalized, dwFlags);
+    TRACE("(%s, %p, %p, 0x%08x) *pcchCanonicalized: %d\n", debugstr_a(pszUrl), pszCanonicalized,
+        pcchCanonicalized, dwFlags, pcchCanonicalized ? *pcchCanonicalized : -1);
 
     if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
 	return E_INVALIDARG;
@@ -286,19 +286,19 @@ HRESULT WINAPI UrlCanonicalizeA(LPCSTR pszUrl, LPSTR pszCanonicalized,
 
     ret = UrlCanonicalizeW(base, canonical, &len, dwFlags);
     if (ret != S_OK) {
-	HeapFree(GetProcessHeap(), 0, base);
-	return ret;
+        *pcchCanonicalized = len * 2;
+        HeapFree(GetProcessHeap(), 0, base);
+        return ret;
     }
 
-    len2 = WideCharToMultiByte(0, 0, canonical, len, 0, 0, 0, 0);
+    len2 = WideCharToMultiByte(0, 0, canonical, -1, 0, 0, 0, 0);
     if (len2 > *pcchCanonicalized) {
-	*pcchCanonicalized = len;
-	HeapFree(GetProcessHeap(), 0, base);
-	return E_POINTER;
+        *pcchCanonicalized = len2;
+        HeapFree(GetProcessHeap(), 0, base);
+        return E_POINTER;
     }
-    WideCharToMultiByte(0, 0, canonical, len+1, pszCanonicalized,
-			*pcchCanonicalized, 0, 0);
-    *pcchCanonicalized = len2;
+    WideCharToMultiByte(0, 0, canonical, -1, pszCanonicalized, *pcchCanonicalized, 0, 0);
+    *pcchCanonicalized = len;
     HeapFree(GetProcessHeap(), 0, base);
     return S_OK;
 }
@@ -320,8 +320,8 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
 
     static const WCHAR wszFile[] = {'f','i','l','e',':'};
 
-    TRACE("(%s %p %p 0x%08x)\n", debugstr_w(pszUrl), pszCanonicalized,
-	  pcchCanonicalized, dwFlags);
+    TRACE("(%s, %p, %p, 0x%08x) *pcchCanonicalized: %d\n", debugstr_w(pszUrl), pszCanonicalized,
+        pcchCanonicalized, dwFlags, pcchCanonicalized ? *pcchCanonicalized : -1);
 
     if(!pszUrl || !pszCanonicalized || !pcchCanonicalized)
 	return E_INVALIDARG;
@@ -332,7 +332,8 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
     }
 
     nByteLen = (lstrlenW(pszUrl) + 1) * sizeof(WCHAR); /* length in bytes */
-    lpszUrlCpy = HeapAlloc(GetProcessHeap(), 0, INTERNET_MAX_URL_LENGTH);
+    lpszUrlCpy = HeapAlloc(GetProcessHeap(), 0,
+                           INTERNET_MAX_URL_LENGTH * sizeof(WCHAR));
 
     if((dwFlags & URL_FILE_USE_PATHURL) && nByteLen >= sizeof(wszFile)
             && !memcmp(wszFile, pszUrl, sizeof(wszFile)))
@@ -425,7 +426,7 @@ HRESULT WINAPI UrlCanonicalizeW(LPCWSTR pszUrl, LPWSTR pszCanonicalized,
                 state = 3;
                 break;
             }
-
+ 
             /* Now at root location, cannot back up any more. */
             /* "root" will point at the '/' */
 
@@ -735,8 +736,9 @@ HRESULT WINAPI UrlCombineW(LPCWSTR pszBase, LPCWSTR pszRelative,
 		process_case = 4;
 		break;
 	    }
-	    /* case where scheme is followed by document path */
-	    process_case = 5;
+            /* replace either just location if base's location starts with a
+             * slash or otherwise everything */
+            process_case = (*base.pszSuffix == '/') ? 5 : 1;
 	    break;
 	}
         if ((*relative.pszSuffix == '/') && (*(relative.pszSuffix+1) == '/')) {
@@ -1044,7 +1046,7 @@ HRESULT WINAPI UrlEscapeW(
     for(src = pszUrl; *src; ) {
         WCHAR cur = *src;
         len = 0;
-
+        
         if((int_flags & WINE_URL_COLLAPSE_SLASHES) && src == pszUrl + parsed_url.cchProtocol + 1) {
             int localhost_len = sizeof(localhost)/sizeof(WCHAR) - 1;
             while(cur == '/' || cur == '\\') {
@@ -1443,7 +1445,7 @@ HRESULT WINAPI HashData(const unsigned char *lpSrc, DWORD nSrcLen,
  *  pszUrl   [I] Url to hash
  *  lpDest   [O] Destinationh for hash
  *  nDestLen [I] Length of lpDest
- *
+ * 
  * RETURNS
  *  Success: S_OK. lpDest is filled with the computed hash value.
  *  Failure: E_INVALIDARG, if any argument is invalid.
@@ -2178,7 +2180,7 @@ BOOL WINAPI PathIsURLW(LPCWSTR lpstrPath)
 
 /*************************************************************************
  *      UrlCreateFromPathA  	[SHLWAPI.@]
- *
+ * 
  * See UrlCreateFromPathW
  */
 HRESULT WINAPI UrlCreateFromPathA(LPCSTR pszPath, LPSTR pszUrl, LPDWORD pcchUrl, DWORD dwReserved)

@@ -82,7 +82,7 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
   ULONG refCount = InterlockedIncrement(&This->ref);
-
+  
   TRACE("(%p)->(ref before=%u)\n",This, refCount - 1);
 
   return refCount;
@@ -94,10 +94,10 @@ static ULONG WINAPI IStream_fnAddRef(IStream *iface)
 static ULONG WINAPI IStream_fnRelease(IStream *iface)
 {
   ISHFileStream *This = (ISHFileStream *)iface;
-  ULONG refCount = InterlockedDecrement(&This->ref);
+  ULONG refCount = InterlockedDecrement(&This->ref); 
 
   TRACE("(%p)->(ref before=%u)\n",This, refCount + 1);
-
+  
   if (!refCount)
   {
     IStream_fnCommit(iface, 0); /* If ever buffered, this will be needed */
@@ -105,7 +105,7 @@ static ULONG WINAPI IStream_fnRelease(IStream *iface)
     CloseHandle(This->hFile);
     HeapFree(GetProcessHeap(), 0, This);
   }
-
+  
   return refCount;
 }
 
@@ -548,7 +548,7 @@ HRESULT WINAPI SHCreateStreamOnFileA(LPCSTR lpszPath, DWORD dwMode,
  *  Failure: An HRESULT error code, or E_FAIL if the read succeeded but the
  *           number of bytes read does not match.
  */
-HRESULT WINAPI SHLWAPI_184(IStream *lpStream, LPVOID lpvDest, ULONG ulSize)
+HRESULT WINAPI SHIStream_Read(IStream *lpStream, LPVOID lpvDest, ULONG ulSize)
 {
   ULONG ulRead;
   HRESULT hRet;
@@ -593,7 +593,7 @@ BOOL WINAPI SHIsEmptyStream(IStream *lpStream)
     DWORD dwDummy;
 
     /* Try to read from the stream */
-    if(SUCCEEDED(SHLWAPI_184(lpStream, &dwDummy, sizeof(dwDummy))))
+    if(SUCCEEDED(SHIStream_Read(lpStream, &dwDummy, sizeof(dwDummy))))
     {
       LARGE_INTEGER zero;
       zero.QuadPart = 0;
@@ -620,7 +620,7 @@ BOOL WINAPI SHIsEmptyStream(IStream *lpStream)
  *  Failure: An HRESULT error code, or E_FAIL if the write succeeded but the
  *           number of bytes written does not match.
  */
-HRESULT WINAPI SHLWAPI_212(IStream *lpStream, LPCVOID lpvSrc, ULONG ulSize)
+HRESULT WINAPI SHIStream_Write(IStream *lpStream, LPCVOID lpvSrc, ULONG ulSize)
 {
   ULONG ulWritten;
   HRESULT hRet;
