@@ -53,14 +53,14 @@ BOOL WINAPI DllMain (HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
  *                NetServerEnum (NETAPI32.@)
  */
 NET_API_STATUS  WINAPI NetServerEnum(
-  LPCWSTR servername,
+  LMCSTR servername,
   DWORD level,
   LPBYTE* bufptr,
   DWORD prefmaxlen,
   LPDWORD entriesread,
   LPDWORD totalentries,
   DWORD servertype,
-  LPCWSTR domain,
+  LMCSTR domain,
   LPDWORD resume_handle
 )
 {
@@ -75,15 +75,15 @@ NET_API_STATUS  WINAPI NetServerEnum(
  *                NetServerEnumEx (NETAPI32.@)
  */
 NET_API_STATUS WINAPI NetServerEnumEx(
-    LPCWSTR ServerName,
+    LMCSTR ServerName,
     DWORD Level,
     LPBYTE *Bufptr,
     DWORD PrefMaxlen,
     LPDWORD EntriesRead,
     LPDWORD totalentries,
     DWORD servertype,
-    LPCWSTR domain,
-    LPCWSTR FirstNameToReturn)
+    LMCSTR domain,
+    LMCSTR FirstNameToReturn)
 {
     FIXME("Stub (%s %d %p %d %p %p %d %s %p)\n", debugstr_w(ServerName),
      Level, Bufptr, PrefMaxlen, EntriesRead, totalentries, servertype,
@@ -105,7 +105,7 @@ NET_API_STATUS WINAPI NetServerGetInfo(LMSTR servername, DWORD level, LPBYTE* bu
 /************************************************************
  *                NetStatisticsGet  (NETAPI32.@)
  */
-NET_API_STATUS WINAPI NetStatisticsGet(LPWSTR server, LPWSTR service,
+NET_API_STATUS WINAPI NetStatisticsGet(LMSTR server, LMSTR service,
                                        DWORD level, DWORD options,
                                        LPBYTE *bufptr)
 {
@@ -156,4 +156,12 @@ DWORD WINAPI NetpNetBiosStatusToApiStatus(DWORD nrc)
             ret = NERR_NetworkError;
     }
     return ret;
+}
+
+NET_API_STATUS WINAPI NetUseEnum(LMSTR server, DWORD level, LPBYTE* bufptr, DWORD prefmaxsize,
+                          LPDWORD entriesread, LPDWORD totalentries, LPDWORD resumehandle)
+{
+    FIXME("stub (%p, %d, %p, %d, %p, %p, %p)\n", server, level, bufptr, prefmaxsize,
+           entriesread, totalentries, resumehandle);
+    return ERROR_NOT_SUPPORTED;
 }

@@ -29,6 +29,7 @@
 #include "lmaccess.h"
 #include "lmapibuf.h"
 #include "lmerr.h"
+#include "lmuse.h"
 #include "ntsecapi.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
@@ -131,7 +132,7 @@ NET_API_STATUS WINAPI NetUserAdd(LPCWSTR servername,
         /* Fall through */
     case 2:
         FIXME("Level 2 not implemented.\n");
-        /* Fall throught */
+        /* Fall through */
     case 1:
     {
         PUSER_INFO_1 ui = (PUSER_INFO_1) bufptr;
@@ -177,13 +178,8 @@ NET_API_STATUS WINAPI NetUserAdd(LPCWSTR servername,
         break;
     }
 
-    if(su)
-    {
-        HeapFree(GetProcessHeap(), 0, su->home_dir);
-        HeapFree(GetProcessHeap(), 0, su->user_comment);
-        HeapFree(GetProcessHeap(), 0, su->user_logon_script_path);
-        HeapFree(GetProcessHeap(), 0, su);
-    }
+    HeapFree(GetProcessHeap(), 0, su);
+
     return status;
 }
 
@@ -448,7 +444,7 @@ static void ACCESS_QueryAdminDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     name_sz = lstrlenW(sAdminUserName);
     comment_sz = 1;
     full_name_sz = 1;
-
+    
     *pdwSize = sizeof(NET_DISPLAY_USER);
     *pdwSize += (name_sz + comment_sz + full_name_sz) * sizeof(WCHAR);
     NetApiBufferAllocate(*pdwSize, (LPVOID *) buf);
@@ -487,7 +483,7 @@ static void ACCESS_QueryGuestDisplayInformation(PNET_DISPLAY_USER *buf, PDWORD p
     name_sz = lstrlenW(sGuestUserName);
     comment_sz = 1;
     full_name_sz = 1;
-
+    
     *pdwSize = sizeof(NET_DISPLAY_USER);
     *pdwSize += (name_sz + comment_sz + full_name_sz) * sizeof(WCHAR);
     NetApiBufferAllocate(*pdwSize, (LPVOID *) buf);
@@ -666,7 +662,7 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
 {
   FIXME("(%s, %s, %p) stub!\n", debugstr_w(servername),
                  debugstr_w(domainname), bufptr);
-  return NERR_DCNotFound; /* say we can't find a domain controller */
+  return NERR_DCNotFound; /* say we can't find a domain controller */  
 }
 
 
@@ -684,7 +680,7 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
  *         USER_MODALS_INFO_0 struct.
  *     1   Return logon server and domain controller information. bufptr
  *         points to a USER_MODALS_INFO_1 struct.
- *     2   Return domain name and identifier. bufptr points to a
+ *     2   Return domain name and identifier. bufptr points to a 
  *         USER_MODALS_INFO_2 struct.
  *     3   Return lockout information. bufptr points to a USER_MODALS_INFO_3
  *         struct.
@@ -692,7 +688,7 @@ NetGetDCName(LPCWSTR servername, LPCWSTR domainname, LPBYTE *bufptr)
  *
  * RETURNS
  *  Success: NERR_Success.
- *  Failure:
+ *  Failure: 
  *     ERROR_ACCESS_DENIED - the user does not have access to the info.
  *     NERR_InvalidComputer - computer name is invalid.
  */
@@ -700,7 +696,7 @@ NET_API_STATUS WINAPI NetUserModalsGet(
     LPCWSTR szServer, DWORD level, LPBYTE *pbuffer)
 {
     TRACE("(%s %d %p)\n", debugstr_w(szServer), level, pbuffer);
-
+    
     switch (level)
     {
         case 0:
@@ -779,7 +775,7 @@ NET_API_STATUS WINAPI NetUserModalsGet(
             LsaFreeMemory(domainInfo);
 
             break;
-        }
+        } 
         case 3:
             /* return lockout information */
             FIXME("level 3 not implemented!\n");
@@ -833,7 +829,7 @@ NET_API_STATUS WINAPI NetUserChangePassword(LPCWSTR domainname, LPCWSTR username
     return NERR_Success;
 }
 
-NET_API_STATUS NetUseAdd(LMSTR servername, DWORD level, LPBYTE bufptr, LPDWORD parm_err)
+NET_API_STATUS WINAPI NetUseAdd(LMSTR servername, DWORD level, LPBYTE bufptr, LPDWORD parm_err)
 {
     FIXME("%s %d %p %p stub\n", debugstr_w(servername), level, bufptr, parm_err);
     return NERR_Success;
