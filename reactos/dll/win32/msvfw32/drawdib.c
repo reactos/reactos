@@ -77,12 +77,12 @@ static DWORD HDD_HandleRef = 1;
 /***********************************************************************
  *		DrawDibOpen		[MSVFW32.@]
  */
-HDRAWDIB VFWAPI DrawDibOpen(void)
+HDRAWDIB VFWAPI DrawDibOpen(void) 
 {
     WINE_HDD*   whdd;
 
     TRACE("(void)\n");
-
+	
     whdd = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WINE_HDD));
     TRACE("=> %p\n", whdd);
 
@@ -98,7 +98,7 @@ HDRAWDIB VFWAPI DrawDibOpen(void)
 /***********************************************************************
  *		DrawDibClose		[MSVFW32.@]
  */
-BOOL VFWAPI DrawDibClose(HDRAWDIB hdd)
+BOOL VFWAPI DrawDibClose(HDRAWDIB hdd) 
 {
     WINE_HDD* whdd = MSVIDEO_GetHddPtr(hdd);
     WINE_HDD** p;
@@ -126,7 +126,7 @@ BOOL VFWAPI DrawDibClose(HDRAWDIB hdd)
 /***********************************************************************
  *		DrawDibEnd		[MSVFW32.@]
  */
-BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd)
+BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd) 
 {
     BOOL ret = TRUE;
     WINE_HDD *whdd = MSVIDEO_GetHddPtr(hdd);
@@ -145,7 +145,7 @@ BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd)
     /*if (whdd->lpvbits)
       HeapFree(GetProcessHeap(), 0, whdd->lpvbuf);*/
 
-    if (whdd->hMemDC)
+    if (whdd->hMemDC) 
     {
         SelectObject(whdd->hMemDC, whdd->hOldDib);
         DeleteDC(whdd->hMemDC);
@@ -155,7 +155,7 @@ BOOL VFWAPI DrawDibEnd(HDRAWDIB hdd)
     if (whdd->hDib) DeleteObject(whdd->hDib);
     whdd->hDib = 0;
 
-    if (whdd->hic)
+    if (whdd->hic) 
     {
         ICDecompressEnd(whdd->hic);
         ICClose(whdd->hic);
@@ -177,7 +177,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
                          LPBITMAPINFOHEADER lpbi,
                          INT      dxSrc,
                          INT      dySrc,
-                         UINT     wFlags)
+                         UINT     wFlags) 
 {
     BOOL ret = TRUE;
     WINE_HDD *whdd;
@@ -199,28 +199,28 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
 
     if (whdd->begun) DrawDibEnd(hdd);
 
-    if (lpbi->biCompression)
+    if (lpbi->biCompression) 
     {
         DWORD size = 0;
 
         whdd->hic = ICOpen(ICTYPE_VIDEO, lpbi->biCompression, ICMODE_DECOMPRESS);
-        if (!whdd->hic)
+        if (!whdd->hic) 
         {
             WARN("Could not open IC. biCompression == 0x%08x\n", lpbi->biCompression);
             ret = FALSE;
         }
 
-        if (ret)
+        if (ret) 
         {
             size = ICDecompressGetFormat(whdd->hic, lpbi, NULL);
-            if (size == ICERR_UNSUPPORTED)
+            if (size == ICERR_UNSUPPORTED) 
             {
                 WARN("Codec doesn't support GetFormat, giving up.\n");
                 ret = FALSE;
             }
         }
 
-        if (ret)
+        if (ret) 
         {
             whdd->lpbiOut = HeapAlloc(GetProcessHeap(), 0, size);
 
@@ -228,18 +228,18 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
                 ret = FALSE;
         }
 
-        if (ret)
+        if (ret) 
         {
             /* FIXME: Use Ex functions if available? */
             if (ICDecompressBegin(whdd->hic, lpbi, whdd->lpbiOut) != ICERR_OK)
                 ret = FALSE;
-
+            
             TRACE("biSizeImage == %d\n", whdd->lpbiOut->biSizeImage);
             TRACE("biCompression == %d\n", whdd->lpbiOut->biCompression);
             TRACE("biBitCount == %d\n", whdd->lpbiOut->biBitCount);
         }
     }
-    else
+    else 
     {
         DWORD dwSize;
         /* No compression */
@@ -249,14 +249,14 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         memcpy(whdd->lpbiOut, lpbi, dwSize);
     }
 
-    if (ret)
+    if (ret) 
     {
         /*whdd->lpvbuf = HeapAlloc(GetProcessHeap(), 0, whdd->lpbiOut->biSizeImage);*/
 
         whdd->hMemDC = CreateCompatibleDC(hdc);
         TRACE("Creating: %d, %p\n", whdd->lpbiOut->biSize, whdd->lpvbits);
         whdd->hDib = CreateDIBSection(whdd->hMemDC, (BITMAPINFO *)whdd->lpbiOut, DIB_RGB_COLORS, &(whdd->lpvbits), 0, 0);
-        if (whdd->hDib)
+        if (whdd->hDib) 
         {
             TRACE("Created: %p,%p\n", whdd->hDib, whdd->lpvbits);
         }
@@ -268,7 +268,7 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         whdd->hOldDib = SelectObject(whdd->hMemDC, whdd->hDib);
     }
 
-    if (ret)
+    if (ret) 
     {
         whdd->hdc = hdc;
         whdd->dxDst = dxDst;
@@ -279,8 +279,8 @@ BOOL VFWAPI DrawDibBegin(HDRAWDIB hdd,
         whdd->dySrc = dySrc;
         whdd->begun = TRUE;
         whdd->hpal = 0;
-    }
-    else
+    } 
+    else 
     {
         if (whdd->hic)
             ICClose(whdd->hic);
@@ -315,7 +315,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
     if (wFlags & ~(DDF_SAME_HDC | DDF_SAME_DRAW | DDF_NOTKEYFRAME | DDF_UPDATE | DDF_DONTDRAW | DDF_BACKGROUNDPAL))
         FIXME("wFlags == 0x%08x not handled\n", (DWORD)wFlags);
 
-    if (!lpBits)
+    if (!lpBits) 
     {
         /* Undocumented? */
         lpBits = (LPSTR)lpbi + (WORD)(lpbi->biSize) + (WORD)(num_colours(lpbi)*sizeof(RGBQUAD));
@@ -324,9 +324,9 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
 #define CHANGED(x) (whdd->x != x)
 
-    if ((!whdd->begun) ||
-        (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc)) ||
-        (!(wFlags & DDF_SAME_DRAW) && (CHANGED(lpbi) || CHANGED(dxSrc) || CHANGED(dySrc) || CHANGED(dxDst) || CHANGED(dyDst))))
+    if ((!whdd->begun) || 
+        (!(wFlags & DDF_SAME_HDC) && CHANGED(hdc)) || 
+        (!(wFlags & DDF_SAME_DRAW) && (CHANGED(lpbi) || CHANGED(dxSrc) || CHANGED(dySrc) || CHANGED(dxDst) || CHANGED(dyDst)))) 
     {
         TRACE("Something changed!\n");
         ret = DrawDibBegin(hdd, hdc, dxDst, dyDst, lpbi, dxSrc, dySrc, 0);
@@ -334,13 +334,13 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
 #undef CHANGED
 
-    if ((dxDst == -1) && (dyDst == -1))
+    if ((dxDst == -1) && (dyDst == -1)) 
     {
         dxDst = dxSrc;
         dyDst = dySrc;
     }
 
-    if (!(wFlags & DDF_UPDATE))
+    if (!(wFlags & DDF_UPDATE)) 
     {
         DWORD biSizeImage = lpbi->biSizeImage;
 
@@ -348,7 +348,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
         if ((lpbi->biCompression == BI_RGB) && (biSizeImage == 0))
             biSizeImage = ((lpbi->biWidth * lpbi->biBitCount + 31) / 32) * 4 * lpbi->biHeight;
 
-        if (lpbi->biCompression)
+        if (lpbi->biCompression) 
         {
             DWORD flags = 0;
 
@@ -374,7 +374,7 @@ BOOL VFWAPI DrawDibDraw(HDRAWDIB hdd, HDC hdc,
 
     if (!(StretchBlt(whdd->hdc, xDst, yDst, dxDst, dyDst, whdd->hMemDC, xSrc, ySrc, dxSrc, dySrc, SRCCOPY)))
         ret = FALSE;
-
+    
     return ret;
 }
 
@@ -406,7 +406,7 @@ BOOL VFWAPI DrawDibChangePalette(HDRAWDIB hdd, int iStart, int iLen, LPPALETTEEN
 /***********************************************************************
  *              DrawDibSetPalette       [MSVFW32.@]
  */
-BOOL VFWAPI DrawDibSetPalette(HDRAWDIB hdd, HPALETTE hpal)
+BOOL VFWAPI DrawDibSetPalette(HDRAWDIB hdd, HPALETTE hpal) 
 {
     WINE_HDD *whdd;
 
@@ -417,7 +417,7 @@ BOOL VFWAPI DrawDibSetPalette(HDRAWDIB hdd, HPALETTE hpal)
 
     whdd->hpal = hpal;
 
-    if (whdd->begun)
+    if (whdd->begun) 
     {
         SelectPalette(whdd->hdc, hpal, 0);
         RealizePalette(whdd->hdc);
@@ -438,7 +438,7 @@ LPVOID VFWAPI DrawDibGetBuffer(HDRAWDIB hdd, LPBITMAPINFOHEADER lpbi, DWORD dwSi
 /***********************************************************************
  *              DrawDibGetPalette       [MSVFW32.@]
  */
-HPALETTE VFWAPI DrawDibGetPalette(HDRAWDIB hdd)
+HPALETTE VFWAPI DrawDibGetPalette(HDRAWDIB hdd) 
 {
     WINE_HDD *whdd;
 
@@ -453,7 +453,7 @@ HPALETTE VFWAPI DrawDibGetPalette(HDRAWDIB hdd)
 /***********************************************************************
  *              DrawDibRealize          [MSVFW32.@]
  */
-UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground)
+UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground) 
 {
     WINE_HDD *whdd;
     HPALETTE oldPal;
@@ -464,7 +464,7 @@ UINT VFWAPI DrawDibRealize(HDRAWDIB hdd, HDC hdc, BOOL fBackground)
     whdd = MSVIDEO_GetHddPtr(hdd);
     if (!whdd) return FALSE;
 
-    if (!whdd || !(whdd->begun))
+    if (!whdd || !(whdd->begun)) 
     {
         ret = 0;
         goto out;

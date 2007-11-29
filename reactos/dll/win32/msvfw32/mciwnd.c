@@ -1185,6 +1185,8 @@ end_of_mci_open:
                 if (!mwi->lasterror)
                     SendDlgItemMessageW(hWnd, CTL_TRACKBAR, TBM_SETRANGEMAX, 1,
                                         SendMessageW(hWnd, MCIWNDM_GETLENGTH, 0, 0));
+
+                HeapFree(GetProcessHeap(), 0, cmdW);
             }
 
             if (wMsg == MCIWNDM_SETTIMEFORMATA)
