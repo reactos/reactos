@@ -1,7 +1,7 @@
 /*
- * MPR dll resources
+ * MPR Bulgarian resource
  *
- * Copyright (C) 2004 Juan Lang
+ * Copyright 2005 Milko Krachounov
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -27,20 +27,20 @@ STRINGTABLE DISCARDABLE
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Въведете парола за мрежата"
+CAPTION "Въведете мрежова парола"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Въведете своите потребителско име и парола:", IDC_EXPLAIN, 40, 6, 150, 15
- LTEXT "Презсървър", -1, 40, 26, 50, 10
-/* LTEXT "Страна", -1, 40, 46, 50, 10 */
+ LTEXT "Въведете вашето потребителско име и парола:", IDC_EXPLAIN, 40, 6, 150, 15
+ LTEXT "Прокси", -1, 40, 26, 50, 10
+/* LTEXT "Realm", -1, 40, 46, 50, 10 */
  LTEXT "Потребител", -1, 40, 66, 50, 10
  LTEXT "Парола", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Съхраняване на паролата (небезопасно)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Save this password (Insecure)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "Добре", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Отказ", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Отмени", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }

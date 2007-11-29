@@ -56,8 +56,9 @@ static LPSTR MPR_GetValueName( LPCSTR pbResource, WORD cbResource, BYTE nType )
     DWORD  i;
 
     name = HeapAlloc( GetProcessHeap(), 0, 6+cbResource*2 );
-    if( name )
-        sprintf( name, "X-%02X-", nType );
+    if( !name ) return NULL;
+
+    sprintf( name, "X-%02X-", nType );
     for(i=0; i<cbResource; i++)
     {
         name[5+i*2]=hex((pbResource[i]&0xf0)>>4);
@@ -107,7 +108,7 @@ DWORD WINAPI WNetCachePassword(
     valname = MPR_GetValueName( pbResource, cbResource, nType );
     if( valname )
     {
-        r = RegSetValueExA( hkey, valname, 0, REG_BINARY,
+        r = RegSetValueExA( hkey, valname, 0, REG_BINARY, 
                             (LPBYTE)pbPassword, cbPassword );
         if( r )
             r = WN_CANCEL;
@@ -221,9 +222,9 @@ DWORD WINAPI WNetGetCachedPassword(
  *
  * NOTES
  *	the parameter count is verifyed
- *
+ * 
  *  This function is a huge security risk, as virii and such can use
- * it to grab all the passwords in the cache.  It's bad enough to
+ * it to grab all the passwords in the cache.  It's bad enough to 
  * store the passwords (insecurely).
  *
  *  bpPrefix and cbPrefix are used to filter the returned passwords
@@ -306,7 +307,7 @@ UINT WINAPI WNetEnumCachedPasswords(
         entry->cbPassword = data_sz;
         entry->iEntry = i;
         entry->nType = nType;
-        r = RegEnumValueA( hkey, i, NULL, &val_sz, NULL, &type,
+        r = RegEnumValueA( hkey, i, NULL, &val_sz, NULL, &type, 
                            &entry->abResource[val_sz], &data_sz );
         if( r == ERROR_SUCCESS )
             enumPasswordProc( entry, param );

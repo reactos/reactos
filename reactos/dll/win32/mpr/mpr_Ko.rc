@@ -2,7 +2,7 @@
  * MPR dll resources
  *
  * Copyright (C) 2004 Juan Lang
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005,2007 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -40,7 +40,7 @@ FONT 8, "MS Shell Dlg"
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "암호 저장(&S) (Insecure)", IDC_SAVEPASSWORD,
+ CHECKBOX "암호 저장(&S) (보안에 주의)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "확인", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
  PUSHBUTTON "취소", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
