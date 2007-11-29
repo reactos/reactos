@@ -10,7 +10,7 @@ Index: info.c
  #include "wine/winuser16.h"
  #include "wine/unicode.h"
  #include "winerror.h"
-@@ -304,6 +305,7 @@
+@@ -302,6 +303,7 @@
      return len;
  }
  
@@ -18,7 +18,7 @@ Index: info.c
  /***********************************************************************
   *           VERSION_GetFileVersionInfo_16             [internal]
   *
-@@ -437,6 +440,7 @@
+@@ -435,6 +438,7 @@
  
      return len;
  }
@@ -26,7 +26,7 @@ Index: info.c
  
  /***********************************************************************
   *           GetFileVersionInfoSizeW         [VERSION.@]
-@@ -470,6 +473,10 @@
+@@ -468,6 +471,10 @@
  
      if (!len)
      {
@@ -37,7 +37,7 @@ Index: info.c
          LPSTR filenameA;
  
          len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-@@ -501,6 +508,7 @@
+@@ -499,6 +506,7 @@
           * doesn't seem to be a problem (len is bigger than info->wLength).
           */
           len = (len - sizeof(VS_FIXEDFILEINFO)) * 4;
@@ -45,7 +45,7 @@ Index: info.c
      }
      else
      {
-@@ -565,6 +573,10 @@
+@@ -563,6 +571,10 @@
  
      if (!len)
      {
@@ -56,7 +56,7 @@ Index: info.c
          LPSTR filenameA;
  
          len = WideCharToMultiByte( CP_ACP, 0, filename, -1, NULL, 0, NULL, NULL );
-@@ -580,6 +592,7 @@
+@@ -578,6 +590,7 @@
              return FALSE;
          }
          /* We have a 16bit resource. */
@@ -64,71 +64,11 @@ Index: info.c
      }
      else 
      {
-@@ -784,6 +784,9 @@
-     TRACE("(%p,%s,%p,%p)\n",
-                 pBlock, debugstr_a(lpSubBlock), lplpBuffer, puLen );
- 
-+    if (!pBlock)
-+        return FALSE;
-+
-     if ( !VersionInfoIs16( info ) )
-     {
-         BOOL ret;
-@@ -836,6 +839,9 @@
-     TRACE("(%p,%s,%p,%p)\n",
-                 pBlock, debugstr_w(lpSubBlock), lplpBuffer, puLen );
- 
-+    if (!pBlock)
-+        return FALSE;
-+
-     if ( VersionInfoIs16( info ) )
-     {
-         BOOL ret;
-Index: install.c
-===================================================================
---- install.c	(revision 23123)
-+++ install.c	(working copy)
-@@ -122,7 +122,7 @@
-  *         Reimplementation of VerFindFile from original stub.
-  */
- DWORD WINAPI VerFindFileA(
--    UINT flags,
-+    DWORD flags,
-     LPSTR lpszFilename,
-     LPSTR lpszWinDir,
-     LPSTR lpszAppDir,
-@@ -220,7 +220,7 @@
- /*****************************************************************************
-  * VerFindFileW						[VERSION.@]
-  */
--DWORD WINAPI VerFindFileW( UINT flags,LPWSTR lpszFilename,LPWSTR lpszWinDir,
-+DWORD WINAPI VerFindFileW( DWORD flags,LPWSTR lpszFilename,LPWSTR lpszWinDir,
-                            LPWSTR lpszAppDir, LPWSTR lpszCurDir,UINT *lpuCurDirLen,
-                            LPWSTR lpszDestDir,UINT *lpuDestDirLen )
- {
-@@ -361,7 +361,7 @@
-  * VerInstallFileA [VERSION.@]
-  */
- DWORD WINAPI VerInstallFileA(
--	UINT flags,LPSTR srcfilename,LPSTR destfilename,LPSTR srcdir,
-+	DWORD flags,LPSTR srcfilename,LPSTR destfilename,LPSTR srcdir,
-  	LPSTR destdir,LPSTR curdir,LPSTR tmpfile,UINT *tmpfilelen )
- {
-     LPCSTR pdest;
-@@ -529,7 +529,7 @@
-  * VerInstallFileW				[VERSION.@]
-  */
- DWORD WINAPI VerInstallFileW(
--	UINT flags,LPWSTR srcfilename,LPWSTR destfilename,LPWSTR srcdir,
-+	DWORD flags,LPWSTR srcfilename,LPWSTR destfilename,LPWSTR srcdir,
- 	LPWSTR destdir,LPWSTR curdir,LPWSTR tmpfile,UINT *tmpfilelen )
- {
-     LPSTR wsrcf = NULL, wsrcd = NULL, wdestf = NULL, wdestd = NULL, wtmpf = NULL, wcurd = NULL;
 Index: resource.c
 ===================================================================
 --- resource.c	(revision 23123)
 +++ resource.c	(working copy)
-@@ -43,6 +43,9 @@
+@@ -42,6 +42,9 @@
  
  #include "wine/debug.h"
  
@@ -138,7 +78,7 @@ Index: resource.c
  WINE_DEFAULT_DEBUG_CHANNEL(ver);
  
  
-@@ -169,6 +172,7 @@
+@@ -168,6 +171,7 @@
      return 0;
  }
  
@@ -146,7 +86,7 @@ Index: resource.c
  /***********************************************************************
   *           load_ne_resource         [internal]
   */
-@@ -267,6 +272,7 @@
+@@ -266,6 +271,7 @@
      HeapFree( GetProcessHeap(), 0, resTab );
      return TRUE;
  }
@@ -154,7 +94,7 @@ Index: resource.c
  
  /***********************************************************************
   *           load_pe_resource         [internal]
-@@ -412,8 +417,13 @@
+@@ -411,8 +416,13 @@
      switch ( read_xx_header( lzfd ) )
      {
      case IMAGE_OS2_SIGNATURE:
@@ -168,7 +108,7 @@ Index: resource.c
          break;
  
      case IMAGE_NT_SIGNATURE:
-@@ -451,8 +461,13 @@
+@@ -450,8 +460,13 @@
          switch ( read_xx_header( lzfd ) )
          {
          case IMAGE_OS2_SIGNATURE:

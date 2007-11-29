@@ -39,7 +39,6 @@
 
 #include "wine/unicode.h"
 #include "wine/winbase16.h"
-#include "wine/winuser16.h"
 
 #include "wine/debug.h"
 
@@ -295,7 +294,7 @@ static BOOL find_pe_resource( HFILE lzfd, LPCSTR typeid, LPCSTR resid,
     pehdoffset = LZSeek( lzfd, 0, SEEK_CUR );
     if ( sizeof(pehd) != LZRead( lzfd, (LPSTR)&pehd, sizeof(pehd) ) ) return 0;
 
-    resDataDir = pehd.OptionalHeader.DataDirectory+IMAGE_FILE_RESOURCE_DIRECTORY;
+    resDataDir = pehd.OptionalHeader.DataDirectory+IMAGE_DIRECTORY_ENTRY_RESOURCE;
     if ( !resDataDir->Size )
     {
         TRACE("No resources in PE dll\n" );

@@ -247,11 +247,9 @@ static DWORD VERSION_GetFileVersionInfo_PE( LPCWSTR filename, DWORD datasize, LP
 
     TRACE("%s\n", debugstr_w(filename));
 
-    hModule = GetModuleHandleW(filename);
-    if(!hModule)
+    if (!GetModuleHandleExW(0, filename, &hModule))
 	hModule = LoadLibraryExW(filename, 0, LOAD_LIBRARY_AS_DATAFILE);
-    else
-	hModule = LoadLibraryExW(filename, 0, 0);
+
     if(!hModule)
     {
 	WARN("Could not load %s\n", debugstr_w(filename));
@@ -594,12 +592,12 @@ BOOL WINAPI GetFileVersionInfoW( LPCWSTR filename, DWORD handle,
         /* We have a 16bit resource. */
 #endif /* ! __REACTOS__ */
     }
-    else
+    else 
     {
         static const char signature[] = "FE2X";
         DWORD bufsize = vvis->wLength + strlen(signature);
         DWORD convbuf;
-
+ 
         /* We have a 32bit resource.
          *
          * XP/W2K/W2K3 uses a buffer which is 2 times the actual needed space + 4 bytes "FE2X"
@@ -775,7 +773,7 @@ static BOOL WINAPI VersionInfo32_QueryValue( const VS_VERSION_INFO_STRUCT32 *inf
  *           VerQueryValueA              [VERSION.@]
  */
 BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
-                               LPVOID *lplpBuffer, UINT *puLen )
+                               LPVOID *lplpBuffer, PUINT puLen )
 {
     static const char rootA[] = "\\";
     static const char varfileinfoA[] = "\\VarFileInfo\\Translation";
@@ -784,7 +782,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
     TRACE("(%p,%s,%p,%p)\n",
                 pBlock, debugstr_a(lpSubBlock), lplpBuffer, puLen );
 
-    if (!pBlock)
+     if (!pBlock)
         return FALSE;
 
     if ( !VersionInfoIs16( info ) )
@@ -828,7 +826,7 @@ BOOL WINAPI VerQueryValueA( LPCVOID pBlock, LPCSTR lpSubBlock,
  *           VerQueryValueW              [VERSION.@]
  */
 BOOL WINAPI VerQueryValueW( LPCVOID pBlock, LPCWSTR lpSubBlock,
-                               LPVOID *lplpBuffer, UINT *puLen )
+                               LPVOID *lplpBuffer, PUINT puLen )
 {
     static const WCHAR rootW[] = { '\\', 0 };
     static const WCHAR varfileinfoW[] = { '\\','V','a','r','F','i','l','e','I','n','f','o',
