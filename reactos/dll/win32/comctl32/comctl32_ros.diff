@@ -1,16 +1,3 @@
-Index: commctrl.c
-===================================================================
---- commctrl.c	(revision 23123)
-+++ commctrl.c	(working copy)
-@@ -1620,7 +1620,7 @@
-  *
-  * Draw text with shadow.
-  */
-+int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, const RECT *rect, DWORD dwFlags,
--int WINAPI DrawShadowText(HDC hdc, LPCWSTR pszText, UINT cch, RECT *rect, DWORD dwFlags,
-                           COLORREF crText, COLORREF crShadow, int ixOffset, int iyOffset)
- {
-     FIXME("(%p, %s, %d, %p, %d, 0x%08x, 0x%08x, %d, %d): stub\n", hdc, debugstr_w(pszText), cch, rect, dwFlags,
 Index: listview.c
 ===================================================================
 --- listview.c	(revision 23123)
