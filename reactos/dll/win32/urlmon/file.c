@@ -92,7 +92,7 @@ static ULONG WINAPI FileProtocol_Release(IInternetProtocol *iface)
     if(!ref) {
         if(This->file)
             CloseHandle(This->file);
-        HeapFree(GetProcessHeap(), 0, This);
+        urlmon_free(This);
 
         URLMON_UnlockModule();
     }
@@ -135,10 +135,10 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         return MK_E_SYNTAX;
 
     len = lstrlenW(szUrl)+16;
-    url = HeapAlloc(GetProcessHeap(), 0, len*sizeof(WCHAR));
+    url = urlmon_alloc(len*sizeof(WCHAR));
     hres = CoInternetParseUrl(szUrl, PARSE_ENCODE, 0, url, len, &len, 0);
     if(FAILED(hres)) {
-        HeapFree(GetProcessHeap(), 0, url);
+        urlmon_free(url);
         return hres;
     }
 
@@ -163,7 +163,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
             This->file = NULL;
             IInternetProtocolSink_ReportResult(pOIProtSink, INET_E_RESOURCE_NOT_FOUND,
                     GetLastError(), NULL);
-            HeapFree(GetProcessHeap(), 0, url);
+            urlmon_free(url);
             return INET_E_RESOURCE_NOT_FOUND;
         }
 
@@ -180,7 +180,7 @@ static HRESULT WINAPI FileProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         }
     }
 
-    HeapFree(GetProcessHeap(), 0, url);
+    urlmon_free(url);
 
     if(GetFileSizeEx(This->file, &size))
         IInternetProtocolSink_ReportData(pOIProtSink,
@@ -246,7 +246,7 @@ static HRESULT WINAPI FileProtocol_Read(IInternetProtocol *iface, void *pv,
 
     if(pcbRead)
         *pcbRead = read;
-
+    
     return cb == read ? S_OK : S_FALSE;
 }
 
@@ -353,7 +353,7 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(FileProtocol));
+    ret = urlmon_alloc(sizeof(FileProtocol));
 
     ret->lpInternetProtocolVtbl = &FileProtocolVtbl;
     ret->lpInternetPriorityVtbl = &FilePriorityVtbl;
@@ -362,6 +362,6 @@ HRESULT FileProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);
-
+    
     return S_OK;
 }

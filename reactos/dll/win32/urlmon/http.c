@@ -25,6 +25,7 @@
 #include <stdarg.h>
 
 #define COBJMACROS
+#define NONAMELESSUNION
 
 #include "windef.h"
 #include "winbase.h"
@@ -141,26 +142,15 @@ static void HTTPPROTOCOL_AllDataRead(HttpProtocol *This)
 
 static void HTTPPROTOCOL_Close(HttpProtocol *This)
 {
-    if (This->protocol_sink)
-    {
-        IInternetProtocolSink_Release(This->protocol_sink);
-        This->protocol_sink = 0;
-    }
     if (This->http_negotiate)
     {
         IHttpNegotiate_Release(This->http_negotiate);
         This->http_negotiate = 0;
     }
     if (This->request)
-    {
         InternetCloseHandle(This->request);
-        This->request = 0;
-    }
     if (This->connect)
-    {
         InternetCloseHandle(This->connect);
-        This->connect = 0;
-    }
     if (This->internet)
     {
         InternetCloseHandle(This->internet);
@@ -169,13 +159,8 @@ static void HTTPPROTOCOL_Close(HttpProtocol *This)
     if (This->full_header)
     {
         if (This->full_header != wszHeaders)
-            HeapFree(GetProcessHeap(), 0, This->full_header);
+            urlmon_free(This->full_header);
         This->full_header = 0;
-    }
-    if (This->bind_info.cbSize)
-    {
-        ReleaseBindInfo(&This->bind_info);
-        memset(&This->bind_info, 0, sizeof(This->bind_info));
     }
     This->flags = 0;
 }
@@ -213,6 +198,30 @@ static void CALLBACK HTTPPROTOCOL_InternetStatusCallback(
         else
             IInternetProtocol_Continue((IInternetProtocol *)This, &data);
         return;
+    case INTERNET_STATUS_HANDLE_CREATED:
+        IInternetProtocol_AddRef((IInternetProtocol *)This);
+        return;
+    case INTERNET_STATUS_HANDLE_CLOSING:
+        if (*(HINTERNET *)lpvStatusInformation == This->connect)
+        {
+            This->connect = 0;
+        }
+        else if (*(HINTERNET *)lpvStatusInformation == This->request)
+        {
+            This->request = 0;
+            if (This->protocol_sink)
+            {
+                IInternetProtocolSink_Release(This->protocol_sink);
+                This->protocol_sink = 0;
+            }
+            if (This->bind_info.cbSize)
+            {
+                ReleaseBindInfo(&This->bind_info);
+                memset(&This->bind_info, 0, sizeof(This->bind_info));
+            }
+        }
+        IInternetProtocol_Release((IInternetProtocol *)This);
+        return;
     default:
         WARN("Unhandled Internet status callback %d\n", dwInternetStatus);
         return;
@@ -221,11 +230,11 @@ static void CALLBACK HTTPPROTOCOL_InternetStatusCallback(
     IInternetProtocolSink_ReportProgress(This->protocol_sink, ulStatusCode, (LPWSTR)lpvStatusInformation);
 }
 
-static inline LPWSTR strndupW(LPWSTR string, int len)
+static inline LPWSTR strndupW(LPCWSTR string, int len)
 {
     LPWSTR ret = NULL;
     if (string &&
-        (ret = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR))) != NULL)
+        (ret = urlmon_alloc((len+1)*sizeof(WCHAR))) != NULL)
     {
         memcpy(ret, string, len*sizeof(WCHAR));
         ret[len] = 0;
@@ -287,7 +296,7 @@ static ULONG WINAPI HttpProtocol_Release(IInternetProtocol *iface)
 
     if(!ref) {
         HTTPPROTOCOL_Close(This);
-        HeapFree(GetProcessHeap(), 0, This);
+        urlmon_free(This);
 
         URLMON_UnlockModule();
     }
@@ -319,6 +328,9 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
 
     TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
+
+    IInternetProtocolSink_AddRef(pOIProtSink);
+    This->protocol_sink = pOIProtSink;
 
     memset(&This->bind_info, 0, sizeof(This->bind_info));
     This->bind_info.cbSize = sizeof(BINDINFO);
@@ -353,7 +365,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         url.nPort = INTERNET_DEFAULT_HTTP_PORT;
 
     if(!(This->grfBINDF & BINDF_FROMURLMON))
-        IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_DIRECTBIND, NULL);
+        IInternetProtocolSink_ReportProgress(This->protocol_sink, BINDSTATUS_DIRECTBIND, NULL);
 
     hres = IInternetBindInfo_GetBindString(pOIBindInfo, BINDSTRING_USER_AGENT, &user_agent,
                                            1, &num);
@@ -366,7 +378,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         {
             WARN("ObtainUserAgentString failed: %08x\n", hres);
         }
-        else if (!(user_agenta = HeapAlloc(GetProcessHeap(), 0, len*sizeof(CHAR))))
+        else if (!(user_agenta = urlmon_alloc(len*sizeof(CHAR))))
         {
             WARN("Out of memory\n");
         }
@@ -381,7 +393,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
             else
                 MultiByteToWideChar(CP_ACP, 0, user_agenta, -1, user_agent, len*sizeof(WCHAR));
         }
-        HeapFree(GetProcessHeap(), 0, user_agenta);
+        urlmon_free(user_agenta);
     }
 
     This->internet = InternetOpenW(user_agent, 0, NULL, NULL, INTERNET_FLAG_ASYNC);
@@ -391,9 +403,6 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         hres = INET_E_NO_SESSION;
         goto done;
     }
-
-    IInternetProtocolSink_AddRef(pOIProtSink);
-    This->protocol_sink = pOIProtSink;
 
     /* Native does not check for success of next call, so we won't either */
     InternetSetStatusCallbackW(This->internet, HTTPPROTOCOL_InternetStatusCallback);
@@ -433,7 +442,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
         goto done;
     }
 
-    hres = IInternetProtocolSink_QueryInterface(pOIProtSink, &IID_IServiceProvider,
+    hres = IInternetProtocolSink_QueryInterface(This->protocol_sink, &IID_IServiceProvider,
                                                 (void **)&service_provider);
     if (hres != S_OK)
     {
@@ -463,8 +472,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
     else
     {
         int len_addl_header = lstrlenW(addl_header);
-        This->full_header = HeapAlloc(GetProcessHeap(), 0,
-                                      len_addl_header*sizeof(WCHAR)+sizeof(wszHeaders));
+        This->full_header = urlmon_alloc(len_addl_header*sizeof(WCHAR)+sizeof(wszHeaders));
         if (!This->full_header)
         {
             WARN("Out of memory\n");
@@ -516,7 +524,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
             WARN("Expected This->bind_info.stgmedData.tymed to be TYMED_HGLOBAL, not %d\n",
                  This->bind_info.stgmedData.tymed);
         else
-            optional = (LPWSTR)This->bind_info.stgmedData.hGlobal;
+            optional = (LPWSTR)This->bind_info.stgmedData.u.hGlobal;
     }
     if (!HttpSendRequestW(This->request, This->full_header, lstrlenW(This->full_header),
                           optional,
@@ -532,7 +540,7 @@ static HRESULT WINAPI HttpProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl
 done:
     if (hres != S_OK)
     {
-        IInternetProtocolSink_ReportResult(pOIProtSink, hres, 0, NULL);
+        IInternetProtocolSink_ReportResult(This->protocol_sink, hres, 0, NULL);
         HTTPPROTOCOL_Close(This);
     }
 
@@ -548,10 +556,10 @@ done:
         CoTaskMemFree(accept_mimes[num++]);
     CoTaskMemFree(user_agent);
 
-    HeapFree(GetProcessHeap(), 0, pass);
-    HeapFree(GetProcessHeap(), 0, user);
-    HeapFree(GetProcessHeap(), 0, path);
-    HeapFree(GetProcessHeap(), 0, host);
+    urlmon_free(pass);
+    urlmon_free(user);
+    urlmon_free(path);
+    urlmon_free(host);
 
     return hres;
 }
@@ -601,7 +609,7 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
             if ((!HttpQueryInfoW(This->request, HTTP_QUERY_RAW_HEADERS_CRLF, response_headers, &len,
                                  NULL) &&
                  GetLastError() != ERROR_INSUFFICIENT_BUFFER) ||
-                !(response_headers = HeapAlloc(GetProcessHeap(), 0, len)) ||
+                !(response_headers = urlmon_alloc(len)) ||
                 !HttpQueryInfoW(This->request, HTTP_QUERY_RAW_HEADERS_CRLF, response_headers, &len,
                                 NULL))
             {
@@ -622,7 +630,7 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
         len = 0;
         if ((!HttpQueryInfoW(This->request, HTTP_QUERY_CONTENT_TYPE, content_type, &len, NULL) &&
              GetLastError() != ERROR_INSUFFICIENT_BUFFER) ||
-            !(content_type = HeapAlloc(GetProcessHeap(), 0, len)) ||
+            !(content_type = urlmon_alloc(len)) ||
             !HttpQueryInfoW(This->request, HTTP_QUERY_CONTENT_TYPE, content_type, &len, NULL))
         {
             WARN("HttpQueryInfo failed: %d\n", GetLastError());
@@ -634,6 +642,10 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
         }
         else
         {
+            /* remove the charset, if present */
+            LPWSTR p = strchrW(content_type, ';');
+            if (p) *p = '\0';
+
             IInternetProtocolSink_ReportProgress(This->protocol_sink,
                                                  (This->grfBINDF & BINDF_FROMURLMON) ?
                                                  BINDSTATUS_MIMETYPEAVAILABLE :
@@ -644,7 +656,7 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
         len = 0;
         if ((!HttpQueryInfoW(This->request, HTTP_QUERY_CONTENT_LENGTH, content_length, &len, NULL) &&
              GetLastError() != ERROR_INSUFFICIENT_BUFFER) ||
-            !(content_length = HeapAlloc(GetProcessHeap(), 0, len)) ||
+            !(content_length = urlmon_alloc(len)) ||
             !HttpQueryInfoW(This->request, HTTP_QUERY_CONTENT_LENGTH, content_length, &len, NULL))
         {
             WARN("HttpQueryInfo failed: %d\n", GetLastError());
@@ -660,28 +672,30 @@ static HRESULT WINAPI HttpProtocol_Continue(IInternetProtocol *iface, PROTOCOLDA
 
     if (pProtocolData->pData >= (LPVOID)BINDSTATUS_DOWNLOADINGDATA)
     {
+        /* InternetQueryDataAvailable may immediately fork and perform its asynchronous
+         * read, so clear the flag _before_ calling so it does not incorrectly get cleared
+         * after the status callback is called */
+        This->flags &= ~FLAG_REQUEST_COMPLETE;
         if (!InternetQueryDataAvailable(This->request, &This->available_bytes, 0, 0))
         {
-            if (GetLastError() == ERROR_IO_PENDING)
+            if (GetLastError() != ERROR_IO_PENDING)
             {
-                This->flags &= ~FLAG_REQUEST_COMPLETE;
-            }
-            else
-            {
+                This->flags |= FLAG_REQUEST_COMPLETE;
                 WARN("InternetQueryDataAvailable failed: %d\n", GetLastError());
                 HTTPPROTOCOL_ReportResult(This, INET_E_DATA_NOT_AVAILABLE);
             }
         }
         else
         {
+            This->flags |= FLAG_REQUEST_COMPLETE;
             HTTPPROTOCOL_ReportData(This);
         }
     }
 
 done:
-    HeapFree(GetProcessHeap(), 0, response_headers);
-    HeapFree(GetProcessHeap(), 0, content_type);
-    HeapFree(GetProcessHeap(), 0, content_length);
+    urlmon_free(response_headers);
+    urlmon_free(content_type);
+    urlmon_free(content_length);
 
     /* Returns S_OK on native */
     return S_OK;
@@ -911,7 +925,7 @@ HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(HttpProtocol));
+    ret = urlmon_alloc(sizeof(HttpProtocol));
 
     ret->lpInternetProtocolVtbl = &HttpProtocolVtbl;
     ret->lpInternetPriorityVtbl = &HttpPriorityVtbl;
@@ -927,6 +941,12 @@ HRESULT HttpProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
     ret->ref = 1;
 
     *ppobj = PROTOCOL(ret);
-
+    
     return S_OK;
+}
+
+HRESULT HttpSProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
+{
+    FIXME("(%p %p)\n", pUnkOuter, ppobj);
+    return E_NOINTERFACE;
 }

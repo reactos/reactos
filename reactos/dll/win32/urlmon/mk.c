@@ -88,7 +88,7 @@ static ULONG WINAPI MkProtocol_Release(IInternetProtocol *iface)
         if(This->stream)
             IStream_Release(This->stream);
 
-        HeapFree(GetProcessHeap(), 0, This);
+        urlmon_free(This);
 
         URLMON_UnlockModule();
     }
@@ -122,6 +122,9 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     TRACE("(%p)->(%s %p %p %08x %d)\n", This, debugstr_w(szUrl), pOIProtSink,
             pOIBindInfo, grfPI, dwReserved);
 
+    if(strncmpiW(szUrl, wszMK, sizeof(wszMK)/sizeof(WCHAR)))
+        return INET_E_INVALID_URL;
+
     memset(&bindinfo, 0, sizeof(bindinfo));
     bindinfo.cbSize = sizeof(BINDINFO);
     hres = IInternetBindInfo_GetBindInfo(pOIBindInfo, &bindf, &bindinfo);
@@ -131,9 +134,6 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     ReleaseBindInfo(&bindinfo);
-
-    if(strncmpiW(szUrl, wszMK, sizeof(wszMK)/sizeof(WCHAR)))
-        return MK_E_SYNTAX;
 
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_DIRECTBIND, NULL);
     IInternetProtocolSink_ReportProgress(pOIProtSink, BINDSTATUS_SENDINGREQUEST, NULL);
@@ -153,11 +153,11 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     if(!ptr)
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
 
-    progid = HeapAlloc(GetProcessHeap(), 0, (ptr-ptr2+1)*sizeof(WCHAR));
+    progid = urlmon_alloc((ptr-ptr2+1)*sizeof(WCHAR));
     memcpy(progid, ptr2, (ptr-ptr2)*sizeof(WCHAR));
     progid[ptr-ptr2] = 0;
     hres = CLSIDFromProgID(progid, &clsid);
-    HeapFree(GetProcessHeap(), 0, progid);
+    urlmon_free(progid);
     if(FAILED(hres))
         return report_result(pOIProtSink, INET_E_RESOURCE_NOT_FOUND, ERROR_INVALID_PARAMETER);
 
@@ -169,10 +169,10 @@ static HRESULT WINAPI MkProtocol_Start(IInternetProtocol *iface, LPCWSTR szUrl,
     }
 
     len = strlenW(--ptr2);
-    display_name = HeapAlloc(GetProcessHeap(), 0, (len+1)*sizeof(WCHAR));
+    display_name = urlmon_alloc((len+1)*sizeof(WCHAR));
     memcpy(display_name, ptr2, (len+1)*sizeof(WCHAR));
     hres = IParseDisplayName_ParseDisplayName(pdn, NULL /* FIXME */, display_name, &eaten, &mon);
-    HeapFree(GetProcessHeap(), 0, display_name);
+    urlmon_free(display_name);
     IParseDisplayName_Release(pdn);
     if(FAILED(hres)) {
         WARN("ParseDisplayName failed: %08x\n", hres);
@@ -307,7 +307,7 @@ HRESULT MkProtocol_Construct(IUnknown *pUnkOuter, LPVOID *ppobj)
 
     URLMON_LockModule();
 
-    ret = HeapAlloc(GetProcessHeap(), 0, sizeof(MkProtocol));
+    ret = urlmon_alloc(sizeof(MkProtocol));
 
     ret->lpInternetProtocolVtbl = &MkProtocolVtbl;
     ret->ref = 1;

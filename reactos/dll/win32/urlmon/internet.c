@@ -43,7 +43,7 @@ static HRESULT parse_schema(LPCWSTR url, DWORD flags, LPWSTR result, DWORD size,
 
     if(flags)
         ERR("wrong flags\n");
-
+    
     ptr = strchrW(url, ':');
     if(ptr)
         len = ptr-url;
@@ -219,7 +219,7 @@ HRESULT WINAPI CoInternetCombineUrl(LPCWSTR pwzBaseUrl, LPCWSTR pwzRelativeUrl,
     IInternetProtocolInfo *protocol_info;
     DWORD size = cchResult;
     HRESULT hres;
-
+    
     TRACE("(%s,%s,0x%08x,%p,%d,%p,%d)\n", debugstr_w(pwzBaseUrl),
           debugstr_w(pwzRelativeUrl), dwCombineFlags, pwzResult, cchResult, pcchResult,
           dwReserved);

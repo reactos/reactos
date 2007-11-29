@@ -68,17 +68,17 @@ static HRESULT get_protocol_cf(LPCWSTR schema, DWORD schema_len, CLSID *pclsid, 
         {'P','R','O','T','O','C','O','L','S','\\','H','a','n','d','l','e','r','\\'};
     static const WCHAR wszCLSID[] = {'C','L','S','I','D',0};
 
-    wszKey = HeapAlloc(GetProcessHeap(), 0, sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
+    wszKey = urlmon_alloc(sizeof(wszProtocolsKey)+(schema_len+1)*sizeof(WCHAR));
     memcpy(wszKey, wszProtocolsKey, sizeof(wszProtocolsKey));
     memcpy(wszKey + sizeof(wszProtocolsKey)/sizeof(WCHAR), schema, (schema_len+1)*sizeof(WCHAR));
 
     res = RegOpenKeyW(HKEY_CLASSES_ROOT, wszKey, &hkey);
-    HeapFree(GetProcessHeap(), 0, wszKey);
+    urlmon_free(wszKey);
     if(res != ERROR_SUCCESS) {
         TRACE("Could not open protocol handler key\n");
         return E_FAIL;
     }
-
+    
     size = sizeof(str_clsid);
     res = RegQueryValueExW(hkey, wszCLSID, NULL, &type, (LPBYTE)str_clsid, &size);
     RegCloseKey(hkey);
@@ -207,10 +207,10 @@ static HRESULT WINAPI InternetSession_RegisterNameSpace(IInternetSession *iface,
     if(!pCF || !pwzProtocol)
         return E_INVALIDARG;
 
-    new_name_space = HeapAlloc(GetProcessHeap(), 0, sizeof(name_space));
+    new_name_space = urlmon_alloc(sizeof(name_space));
 
     size = (strlenW(pwzProtocol)+1)*sizeof(WCHAR);
-    new_name_space->protocol = HeapAlloc(GetProcessHeap(), 0, size);
+    new_name_space->protocol = urlmon_alloc(size);
     memcpy(new_name_space->protocol, pwzProtocol, size);
 
     IClassFactory_AddRef(pCF);
@@ -247,8 +247,8 @@ static HRESULT WINAPI InternetSession_UnregisterNameSpace(IInternetSession *ifac
         name_space_list = iter->next;
 
     IClassFactory_Release(iter->cf);
-    HeapFree(GetProcessHeap(), 0, iter->protocol);
-    HeapFree(GetProcessHeap(), 0, iter);
+    urlmon_free(iter->protocol);
+    urlmon_free(iter);
 
     return S_OK;
 }
@@ -340,7 +340,7 @@ static BOOL get_url_encoding(HKEY root, DWORD *encoding)
     DWORD size = sizeof(DWORD), res, type;
     HKEY hkey;
 
-    static const WCHAR wszKeyName[] =
+    static const WCHAR wszKeyName[] = 
         {'S','O','F','T','W','A','R','E',
          '\\','M','i','c','r','o','s','o','f','t',
          '\\','W','i','n','d','o','w','s',

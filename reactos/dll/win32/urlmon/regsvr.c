@@ -121,9 +121,6 @@ static LONG register_key_defvalueA(HKEY base, WCHAR const *name,
 static LONG register_progid(WCHAR const *clsid,
 			    char const *progid, char const *curver_progid,
 			    char const *name, char const *extra);
-static LONG recursive_delete_key(HKEY key);
-static LONG recursive_delete_keyA(HKEY base, char const *name);
-static LONG recursive_delete_keyW(HKEY base, WCHAR const *name);
 
 /***********************************************************************
  *		register_interfaces
@@ -212,7 +209,8 @@ static HRESULT unregister_interfaces(struct regsvr_interface const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->iid, buf, 39);
-	res = recursive_delete_keyW(interface_key, buf);
+	res = RegDeleteTreeW(interface_key, buf);
+	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
     }
 
     RegCloseKey(interface_key);
@@ -319,16 +317,19 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 	WCHAR buf[39];
 
 	StringFromGUID2(list->clsid, buf, 39);
-	res = recursive_delete_keyW(coclass_key, buf);
+	res = RegDeleteTreeW(coclass_key, buf);
+	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 
 	if (list->progid) {
-	    res = recursive_delete_keyA(HKEY_CLASSES_ROOT, list->progid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->progid);
+	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
 
 	if (list->viprogid) {
-	    res = recursive_delete_keyA(HKEY_CLASSES_ROOT, list->viprogid);
+	    res = RegDeleteTreeA(HKEY_CLASSES_ROOT, list->viprogid);
+	    if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
 	    if (res != ERROR_SUCCESS) goto error_close_coclass_key;
 	}
     }
@@ -441,70 +442,6 @@ error_close_progid_key:
 }
 
 /***********************************************************************
- *		recursive_delete_key
- */
-static LONG recursive_delete_key(HKEY key)
-{
-    LONG res;
-    WCHAR subkey_name[MAX_PATH];
-    DWORD cName;
-    HKEY subkey;
-
-    for (;;) {
-	cName = sizeof(subkey_name) / sizeof(WCHAR);
-	res = RegEnumKeyExW(key, 0, subkey_name, &cName,
-			    NULL, NULL, NULL, NULL);
-	if (res != ERROR_SUCCESS && res != ERROR_MORE_DATA) {
-	    res = ERROR_SUCCESS; /* presumably we're done enumerating */
-	    break;
-	}
-	res = RegOpenKeyExW(key, subkey_name, 0,
-			    KEY_READ | KEY_WRITE, &subkey);
-	if (res == ERROR_FILE_NOT_FOUND) continue;
-	if (res != ERROR_SUCCESS) break;
-
-	res = recursive_delete_key(subkey);
-	RegCloseKey(subkey);
-	if (res != ERROR_SUCCESS) break;
-    }
-
-    if (res == ERROR_SUCCESS) res = RegDeleteKeyW(key, 0);
-    return res;
-}
-
-/***********************************************************************
- *		recursive_delete_keyA
- */
-static LONG recursive_delete_keyA(HKEY base, char const *name)
-{
-    LONG res;
-    HKEY key;
-
-    res = RegOpenKeyExA(base, name, 0, KEY_READ | KEY_WRITE, &key);
-    if (res == ERROR_FILE_NOT_FOUND) return ERROR_SUCCESS;
-    if (res != ERROR_SUCCESS) return res;
-    res = recursive_delete_key(key);
-    RegCloseKey(key);
-    return res;
-}
-
-/***********************************************************************
- *		recursive_delete_keyW
- */
-static LONG recursive_delete_keyW(HKEY base, WCHAR const *name)
-{
-    LONG res;
-    HKEY key;
-
-    res = RegOpenKeyExW(base, name, 0, KEY_READ | KEY_WRITE, &key);
-    if (res == ERROR_FILE_NOT_FOUND) return ERROR_SUCCESS;
-    if (res != ERROR_SUCCESS) return res;
-    res = recursive_delete_key(key);
-    RegCloseKey(key);
-    return res;
-}
-
-/***********************************************************************
  *		coclass list
  */
 static struct regsvr_coclass const coclass_list[] = {
@@ -613,7 +550,7 @@ static HRESULT register_inf(BOOL doregister)
     INF_SET_CLSID(MkProtocol);
 
     for(i = 0; i < sizeof(pse)/sizeof(pse[0]); i++) {
-        pse[i].pszValue = HeapAlloc(GetProcessHeap(), 0, 39);
+        pse[i].pszValue = urlmon_alloc(39);
         sprintf(pse[i].pszValue, "{%08X-%04X-%04X-%02X%02X-%02X%02X%02X%02X%02X%02X}",
                 clsids[i]->Data1, clsids[i]->Data2, clsids[i]->Data3, clsids[i]->Data4[0],
                 clsids[i]->Data4[1], clsids[i]->Data4[2], clsids[i]->Data4[3], clsids[i]->Data4[4],
@@ -629,7 +566,7 @@ static HRESULT register_inf(BOOL doregister)
     hres = pRegInstall(URLMON_hInstance, doregister ? "RegisterDll" : "UnregisterDll", &strtable);
 
     for(i=0; i < sizeof(pse)/sizeof(pse[0]); i++)
-        HeapFree(GetProcessHeap(), 0, pse[i].pszValue);
+        urlmon_free(pse[i].pszValue);
 
     return hres;
 }
