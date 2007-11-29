@@ -55,8 +55,8 @@ STDCALL
 GdiGetCodePage(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+       (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return 0;
   if (Dc_Attr->ulDirty_ & DIRTY_CHARSET) return LOWORD(NtGdiGetCharSet(hdc));
   return LOWORD(Dc_Attr->iCS_CP);
 }
@@ -73,8 +73,8 @@ GetTextCharacterExtra(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDc, (PVOID) &Dc_Attr) &&
-      (GDI_HANDLE_GET_TYPE(hDc) == GDI_OBJECT_TYPE_DC)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDc, (PVOID) &Dc_Attr) ||
+      (GDI_HANDLE_GET_TYPE(hDc) != GDI_OBJECT_TYPE_DC)) return 0;
   return Dc_Attr->lTextExtra;
 // return GetDCDWord( hDc, GdiGetTextCharExtra, 0);
 }
@@ -444,8 +444,8 @@ SetTextCharacterExtra(
     return MFDRV_SetTextCharacterExtra( hDC, CharExtra ); // Wine port.
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr) &&
-      (GDI_HANDLE_GET_TYPE(hDC) == GDI_OBJECT_TYPE_DC)) return cExtra;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr) ||
+      (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)) return cExtra;
 
   if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hDC)
   {
@@ -470,8 +470,8 @@ STDCALL
 GetTextAlign(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+      (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return 0;
   return Dc_Attr->lTextAlign;
 }
 
@@ -485,8 +485,8 @@ STDCALL
 GetTextColor(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+      (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return 0;
   return Dc_Attr->ulForegroundClr;
 }
 
@@ -502,9 +502,6 @@ SetTextAlign(HDC hdc,
 {
   PDC_ATTR Dc_Attr;
   INT OldMode = 0;
-
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return OldMode;
 #if 0
   if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
   {
@@ -525,6 +522,9 @@ SetTextAlign(HDC hdc,
     }
   }
 #endif
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+       (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return OldMode;
+
   OldMode = Dc_Attr->lTextAlign;
   Dc_Attr->lTextAlign = fMode; // Raw
   if (Dc_Attr->dwLayout & LAYOUT_RTL)
@@ -569,8 +569,8 @@ SetTextColor(
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-       (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return OldColor;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+       (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return OldColor;
 
   OldColor = (COLORREF) Dc_Attr->ulForegroundClr;
   Dc_Attr->ulForegroundClr = (ULONG) crColor;
@@ -606,8 +606,8 @@ SetTextJustification(
       return FALSE;
     }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) &&
-      (GDI_HANDLE_GET_TYPE(hdc) == GDI_OBJECT_TYPE_DC)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr) ||
+      (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)) return FALSE;
 
   if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
   {
