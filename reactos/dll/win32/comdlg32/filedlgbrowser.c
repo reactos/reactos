@@ -134,17 +134,17 @@ static void COMDLG32_UpdateCurrentDir(const FileOpenDlgInfos *fodInfos)
     res = SHGetDesktopFolder(&psfDesktop);
     if (FAILED(res))
         return;
-
+    
     res = IShellFolder_GetDisplayNameOf(psfDesktop, fodInfos->ShellInfos.pidlAbsCurrent,
                                         SHGDN_FORPARSING, &strret);
     if (SUCCEEDED(res)) {
         WCHAR wszCurrentDir[MAX_PATH];
-
+        
         res = StrRetToBufW(&strret, fodInfos->ShellInfos.pidlAbsCurrent, wszCurrentDir, MAX_PATH);
         if (SUCCEEDED(res))
             SetCurrentDirectoryW(wszCurrentDir);
     }
-
+    
     IShellFolder_Release(psfDesktop);
 }
 
@@ -868,8 +868,8 @@ static HRESULT WINAPI IShellBrowserImpl_ICommDlgBrowser_IncludeObject(ICommDlgBr
     ulAttr = SFGAO_HIDDEN | SFGAO_FOLDER | SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR | SFGAO_LINK;
     IShellFolder_GetAttributesOf(fodInfos->Shell.FOIShellFolder, 1, &pidl, &ulAttr);
 
-    if( (ulAttr & SFGAO_HIDDEN)                                         /* hidden */
-      | !(ulAttr & (SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR))) /* special folder */
+    if( (ulAttr & SFGAO_HIDDEN) ||                                      /* hidden */
+        !(ulAttr & (SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR))) /* special folder */
         return S_FALSE;
 
     /* always include directories and links */
