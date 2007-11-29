@@ -961,7 +961,7 @@ struct RTFFont
 
 
 /*
- * Color values are -1 if the default color for the the color
+ * Color values are -1 if the default color for the color
  * number should be used.  The default color is writer-dependent.
  */
 
@@ -1083,7 +1083,7 @@ struct _RTF_Info {
 
     /* edit window to output to */
     HWND hwndEdit;
-
+    
     ME_TextEditor *editor;
     ME_Style *style;
 
@@ -1112,30 +1112,30 @@ struct _RTF_Info {
 
 void		RTFInit (RTF_Info *);
 void	        RTFDestroy(RTF_Info *info);
-void		RTFSetInputName (RTF_Info *, char *);
-char		*RTFGetInputName (RTF_Info *);
-void		RTFSetOutputName (RTF_Info *, char *);
-char		*RTFGetOutputName (RTF_Info *);
+void		RTFSetInputName (RTF_Info *, const char *);
+char		*RTFGetInputName (const RTF_Info *);
+void		RTFSetOutputName (RTF_Info *, const char *);
+char		*RTFGetOutputName (const RTF_Info *);
 void		RTFSetClassCallback (RTF_Info *, int, RTFFuncPtr);
-RTFFuncPtr	RTFGetClassCallback (RTF_Info *, int);
+RTFFuncPtr	RTFGetClassCallback (const RTF_Info *, int);
 void		RTFSetDestinationCallback (RTF_Info *, int, RTFFuncPtr);
-RTFFuncPtr	RTFGetDestinationCallback (RTF_Info *, int);
+RTFFuncPtr	RTFGetDestinationCallback (const RTF_Info *, int);
 void		RTFRead (RTF_Info *);
 int		RTFGetToken (RTF_Info *);	/* writer should rarely need this */
 void		RTFUngetToken (RTF_Info *);
 int		RTFPeekToken (RTF_Info *);
 void		RTFSetToken (RTF_Info *, int, int, int, int, const char *);
 void		RTFSetReadHook (RTF_Info *, RTFFuncPtr);
-RTFFuncPtr	RTFGetReadHook (RTF_Info *);
+RTFFuncPtr	RTFGetReadHook (const RTF_Info *);
 void		RTFRouteToken (RTF_Info *);
 void		RTFSkipGroup (RTF_Info *);
 void		RTFExpandStyle (RTF_Info *, int);
-int		RTFCheckCM (RTF_Info *, int, int);
-int		RTFCheckCMM (RTF_Info *, int, int, int);
-int		RTFCheckMM (RTF_Info *, int, int);
-RTFFont		*RTFGetFont (RTF_Info *, int);
-RTFColor	*RTFGetColor (RTF_Info *, int);
-RTFStyle	*RTFGetStyle (RTF_Info *, int);
+int		RTFCheckCM (const RTF_Info *, int, int);
+int		RTFCheckCMM (const RTF_Info *, int, int, int);
+int		RTFCheckMM (const RTF_Info *, int, int);
+RTFFont		*RTFGetFont (const RTF_Info *, int);
+RTFColor	*RTFGetColor (const RTF_Info *, int);
+RTFStyle	*RTFGetStyle (const RTF_Info *, int);
 int		RTFCharToHex ( char);
 int		RTFHexToChar ( int );
 

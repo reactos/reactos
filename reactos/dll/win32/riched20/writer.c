@@ -25,7 +25,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 
 
 static BOOL
-ME_StreamOutRTFText(ME_OutStream *pStream, WCHAR *text, LONG nChars);
+ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars);
 
 
 static ME_OutStream*
@@ -60,7 +60,7 @@ ME_StreamOutFlush(ME_OutStream *pStream)
                                           pStream->pos - nStart, &nWritten);
     TRACE("error=%u written=%u\n", stream->dwError, nWritten);
     if (nWritten > (pStream->pos - nStart) || nWritten<0) {
-      FIXME("Invalid returned written size *pcb: 0x%x (%d) instead of %d\n",
+      FIXME("Invalid returned written size *pcb: 0x%x (%d) instead of %d\n", 
             (unsigned)nWritten, nWritten, nRemaining);
       nWritten = nRemaining;
     }
@@ -92,7 +92,7 @@ ME_StreamOutMove(ME_OutStream *pStream, const char *buffer, int len)
     int space = STREAMOUT_BUFFER_SIZE - pStream->pos;
     int fit = min(space, len);
 
-    TRACE("%u:%u:%.*s\n", pStream->pos, fit, fit, buffer);
+    TRACE("%u:%u:%s\n", pStream->pos, fit, debugstr_an(buffer,fit));
     memmove(pStream->buffer + pStream->pos, buffer, fit);
     len -= fit;
     buffer += fit;
@@ -116,7 +116,7 @@ ME_StreamOutPrint(ME_OutStream *pStream, const char *format, ...)
   va_start(valist, format);
   len = vsnprintf(string, sizeof(string), format, valist);
   va_end(valist);
-
+  
   return ME_StreamOutMove(pStream, string, len);
 }
 
@@ -128,10 +128,10 @@ ME_StreamOutRTFHeader(ME_OutStream *pStream, int dwFormat)
   UINT nCodePage;
   LANGID language;
   BOOL success;
-
+  
   if (dwFormat & SF_USECODEPAGE) {
     CPINFOEXW info;
-
+    
     switch (HIWORD(dwFormat)) {
       case CP_ACP:
         cCharSet = "ansi";
@@ -177,10 +177,10 @@ ME_StreamOutRTFHeader(ME_OutStream *pStream, int dwFormat)
     return FALSE;
 
   pStream->nDefaultCodePage = nCodePage;
-
+  
   /* FIXME: This should be a document property */
   /* TODO: handle SFF_PLAINRTF */
-  language = GetUserDefaultLangID();
+  language = GetUserDefaultLangID(); 
   if (!ME_StreamOutPrint(pStream, "\\deff0\\deflang%u\\deflangfe%u", language, language))
     return FALSE;
 
@@ -192,12 +192,12 @@ ME_StreamOutRTFHeader(ME_OutStream *pStream, int dwFormat)
 
 
 static BOOL
-ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun, ME_DisplayItem *pLastRun)
+ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun, const ME_DisplayItem *pLastRun)
 {
   ME_DisplayItem *item = pFirstRun;
   ME_FontTableItem *table = pStream->fonttbl;
   int i;
-
+  
   do {
     CHARFORMAT2W *fmt = &item->member.run.style->fmt;
     COLORREF crColor;
@@ -205,7 +205,7 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
     if (fmt->dwMask & CFM_FACE) {
       WCHAR *face = fmt->szFaceName;
       BYTE bCharSet = (fmt->dwMask & CFM_CHARSET) ? fmt->bCharSet : DEFAULT_CHARSET;
-
+  
       for (i = 0; i < pStream->nFontTblLen; i++)
         if (table[i].bCharSet == bCharSet
             && (table[i].szFaceName == face || !lstrcmpW(table[i].szFaceName, face)))
@@ -216,7 +216,7 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
         pStream->nFontTblLen++;
       }
     }
-
+    
     if (fmt->dwMask & CFM_COLOR && !(fmt->dwEffects & CFE_AUTOCOLOR)) {
       crColor = fmt->crTextColor;
       for (i = 1; i < pStream->nColorTblLen; i++)
@@ -242,10 +242,10 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
       break;
     item = ME_FindItemFwd(item, diRun);
   } while (item);
-
+        
   if (!ME_StreamOutPrint(pStream, "{\\fonttbl"))
     return FALSE;
-
+  
   for (i = 0; i < pStream->nFontTblLen; i++) {
     if (table[i].bCharSet != DEFAULT_CHARSET) {
       if (!ME_StreamOutPrint(pStream, "{\\f%u\\fcharset%u ", i, table[i].bCharSet))
@@ -282,7 +282,7 @@ ME_StreamOutRTFFontAndColorTbl(ME_OutStream *pStream, ME_DisplayItem *pFirstRun,
 
 
 static BOOL
-ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
+ME_StreamOutRTFParaProps(ME_OutStream *pStream, const ME_DisplayItem *para)
 {
   PARAFORMAT2 *fmt = para->member.para.pFmt;
   char props[STREAMOUT_BUFFER_SIZE] = "";
@@ -291,7 +291,7 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
   if (para->member.para.pCells)
   {
     ME_TableCell *cell = para->member.para.pCells;
-
+    
     if (!ME_StreamOutPrint(pStream, "\\trowd"))
       return FALSE;
     do {
@@ -302,19 +302,19 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
     } while (cell);
     props[0] = '\0';
   }
-
+  
   /* TODO: Don't emit anything if the last PARAFORMAT2 is inherited */
   if (!ME_StreamOutPrint(pStream, "\\pard"))
     return FALSE;
 
   if (para->member.para.bTable)
     strcat(props, "\\intbl");
-
+  
   /* TODO: PFM_BORDER. M$ does not emit any keywords for these properties, and
    * when streaming border keywords in, PFM_BORDER is set, but wBorder field is
    * set very different from the documentation.
    * (Tested with RichEdit 5.50.25.0601) */
-
+  
   if (fmt->dwMask & PFM_ALIGNMENT) {
     switch (fmt->wAlignment) {
       case PFA_LEFT:
@@ -331,7 +331,7 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
         break;
     }
   }
-
+  
   if (fmt->dwMask & PFM_LINESPACING) {
     /* FIXME: MSDN says that the bLineSpacingRule field is controlled by the
      * PFM_SPACEAFTER flag. Is that true? I don't believe so. */
@@ -375,7 +375,7 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
     strcat(props, "\\sbys");
   if (fmt->dwMask & PFM_TABLE && fmt->dwMask & PFE_TABLE)
     strcat(props, "\\intbl");
-
+  
   if (fmt->dwMask & PFM_OFFSET)
     sprintf(props + strlen(props), "\\li%d", fmt->dxOffset);
   if (fmt->dwMask & PFM_OFFSETINDENT || fmt->dwMask & PFM_STARTINDENT)
@@ -391,7 +391,7 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
 
   if (fmt->dwMask & PFM_TABSTOPS) {
     static const char * const leader[6] = { "", "\\tldot", "\\tlhyph", "\\tlul", "\\tlth", "\\tleq" };
-
+    
     for (i = 0; i < fmt->cTabCount; i++) {
       switch ((fmt->rgxTabs[i] >> 24) & 0xF) {
         case 1:
@@ -412,8 +412,8 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
       sprintf(props+strlen(props), "\\tx%d", fmt->rgxTabs[i]&0x00FFFFFF);
     }
   }
-
-
+    
+  
   if (fmt->dwMask & PFM_SHADING) {
     static const char * const style[16] = { "", "\\bgdkhoriz", "\\bgdkvert", "\\bgdkfdiag",
                                      "\\bgdkbdiag", "\\bgdkcross", "\\bgdkdcross",
@@ -427,7 +427,7 @@ ME_StreamOutRTFParaProps(ME_OutStream *pStream, ME_DisplayItem *para)
     sprintf(props + strlen(props), "\\cfpat%d\\cbpat%d",
             (fmt->wShadingStyle >> 4) & 0xF, (fmt->wShadingStyle >> 8) & 0xF);
   }
-
+  
   if (*props && !ME_StreamOutPrint(pStream, props))
     return FALSE;
 
@@ -540,10 +540,10 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
       strcat(props, "\\ul");
   }
   /* FIXME: How to emit CFM_WEIGHT? */
-
+  
   if (fmt->dwMask & CFM_FACE || fmt->dwMask & CFM_CHARSET) {
     WCHAR *szFaceName;
-
+    
     if (fmt->dwMask & CFM_FACE)
       szFaceName = fmt->szFaceName;
     else
@@ -579,7 +579,7 @@ ME_StreamOutRTFCharProps(ME_OutStream *pStream, CHARFORMAT2W *fmt)
 
 
 static BOOL
-ME_StreamOutRTFText(ME_OutStream *pStream, WCHAR *text, LONG nChars)
+ME_StreamOutRTFText(ME_OutStream *pStream, const WCHAR *text, LONG nChars)
 {
   char buffer[STREAMOUT_BUFFER_SIZE];
   int pos = 0;
@@ -587,7 +587,7 @@ ME_StreamOutRTFText(ME_OutStream *pStream, WCHAR *text, LONG nChars)
 
   if (nChars == -1)
     nChars = lstrlenW(text);
-
+  
   while (nChars) {
     /* In UTF-8 mode, font charsets are not used. */
     if (pStream->nDefaultCodePage == CP_UTF8) {
@@ -650,21 +650,21 @@ static BOOL
 ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nChars, int dwFormat)
 {
   ME_DisplayItem *p, *pEnd, *pPara;
-  int nOffset, nEndLen;
-
+  int nOffset, nEndLen; 
+  
   ME_RunOfsFromCharOfs(editor, nStart, &p, &nOffset);
   ME_RunOfsFromCharOfs(editor, nStart+nChars, &pEnd, &nEndLen);
-
+  
   pPara = ME_GetParagraph(p);
-
+  
   if (!ME_StreamOutRTFHeader(pStream, dwFormat))
     return FALSE;
 
   if (!ME_StreamOutRTFFontAndColorTbl(pStream, p, pEnd))
     return FALSE;
-
+  
   /* TODO: stylesheet table */
-
+  
   /* FIXME: maybe emit something smarter for the generator? */
   if (!ME_StreamOutPrint(pStream, "{\\*\\generator Wine Riched20 2.0.????;}"))
     return FALSE;
@@ -713,13 +713,13 @@ ME_StreamOutRTF(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int nC
             nChars--;
         } else {
           int nEnd;
-
+          
           if (!ME_StreamOutPrint(pStream, "{"))
             return FALSE;
           TRACE("style %p\n", p->member.run.style);
           if (!ME_StreamOutRTFCharProps(pStream, &p->member.run.style->fmt))
             return FALSE;
-
+        
           nEnd = (p == pEnd) ? nEndLen : ME_StrLen(p->member.run.strText);
           if (!ME_StreamOutRTFText(pStream, p->member.run.strText->szData + nOffset, nEnd - nOffset))
             return FALSE;
@@ -754,12 +754,12 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
 
   if (!item)
     return FALSE;
-
+   
   if (dwFormat & SF_USECODEPAGE)
     nCodePage = HIWORD(dwFormat);
 
   /* TODO: Handle SF_TEXTIZED */
-
+  
   while (success && nChars && item) {
     nLen = ME_StrLen(item->member.run.strText) - nStart;
     if (nLen > nChars)
@@ -767,7 +767,7 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
 
     if (item->member.run.nFlags & MERF_ENDPARA) {
       static const WCHAR szEOL[2] = { '\r', '\n' };
-
+      
       if (dwFormat & SF_UNICODE)
         success = ME_StreamOutMove(pStream, (const char *)szEOL, sizeof(szEOL));
       else
@@ -791,14 +791,14 @@ ME_StreamOutText(ME_TextEditor *editor, ME_OutStream *pStream, int nStart, int n
         success = ME_StreamOutMove(pStream, buffer, nSize);
       }
     }
-
+    
     nChars -= nLen;
     if (editor->bEmulateVersion10 && nChars && item->member.run.nFlags & MERF_ENDPARA)
       nChars--;
     nStart = 0;
     item = ME_FindItemFwd(item, diRun);
   }
-
+  
   FREE_OBJ(buffer);
   return success;
 }

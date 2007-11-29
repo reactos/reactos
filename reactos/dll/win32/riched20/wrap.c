@@ -51,7 +51,7 @@ static void ME_BeginRow(ME_WrapContext *wc)
   wc->pt.x = 0;
 }
 
-void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd)
+void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd)
 {
   ME_DisplayItem *p, *row, *para;
   int ascent = 0, descent = 0, width=0, shift = 0, align = 0;
@@ -429,11 +429,13 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   ME_InitContext(&c, editor, hDC);
   c.pt.x = 0;
   c.pt.y = 0;
+  editor->nHeight = 0;
   item = editor->pBuffer->pFirst->next;
   while(item != editor->pBuffer->pLast) {
     BOOL bRedraw = FALSE;
 
     assert(item->type == diParagraph);
+    editor->nHeight = max(editor->nHeight, item->member.para.nYPos);
     if ((item->member.para.nFlags & MEPF_REWRAP)
      || (item->member.para.nYPos != c.pt.y))
       bRedraw = TRUE;
@@ -457,12 +459,12 @@ BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor) {
   }
   editor->sizeWindow.cx = c.rcView.right-c.rcView.left;
   editor->sizeWindow.cy = c.rcView.bottom-c.rcView.top;
-
+  
   editor->nTotalLength = c.pt.y;
 
   ME_DestroyContext(&c);
   ReleaseDC(hWnd, hDC);
-
+  
   if (bModified || editor->nTotalLength < editor->nLastTotalLength)
     ME_InvalidateMarkedParagraphs(editor);
   return bModified;
@@ -476,11 +478,11 @@ void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor) {
   if (editor->bRedraw)
   {
     RECT rc = c.rcView;
-    int ofs = ME_GetYScrollPos(editor);
-
+    int ofs = ME_GetYScrollPos(editor); 
+     
     ME_DisplayItem *item = editor->pBuffer->pFirst;
     while(item != editor->pBuffer->pLast) {
-      if (item->member.para.nFlags & MEPF_REPAINT) {
+      if (item->member.para.nFlags & MEPF_REPAINT) { 
         rc.top = item->member.para.nYPos - ofs;
         rc.bottom = item->member.para.nYPos + item->member.para.nHeight - ofs;
         InvalidateRect(editor->hWnd, &rc, TRUE);
@@ -517,7 +519,7 @@ ME_SendRequestResize(ME_TextEditor *editor, BOOL force)
       info.nmhdr.code = EN_REQUESTRESIZE;
       info.rc = rc;
       info.rc.bottom = editor->nTotalLength;
-
+    
       SendMessageW(GetParent(editor->hWnd), WM_NOTIFY,
                    info.nmhdr.idFrom, (LPARAM)&info);
     }

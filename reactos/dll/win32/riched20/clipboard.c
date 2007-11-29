@@ -45,7 +45,7 @@ typedef struct EnumFormatImpl {
     UINT cur;
 } EnumFormatImpl;
 
-static HRESULT EnumFormatImpl_Create(FORMATETC *fmtetc, UINT size, LPENUMFORMATETC *lplpformatetc);
+static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT size, LPENUMFORMATETC *lplpformatetc);
 
 static HRESULT WINAPI EnumFormatImpl_QueryInterface(IEnumFORMATETC *iface, REFIID riid, LPVOID *ppvObj)
 {
@@ -147,7 +147,7 @@ static const IEnumFORMATETCVtbl VT_EnumFormatImpl = {
     EnumFormatImpl_Clone
 };
 
-static HRESULT EnumFormatImpl_Create(FORMATETC *fmtetc, UINT fmtetc_cnt, IEnumFORMATETC **lplpformatetc)
+static HRESULT EnumFormatImpl_Create(const FORMATETC *fmtetc, UINT fmtetc_cnt, IEnumFORMATETC **lplpformatetc)
 {
     EnumFormatImpl *ret;
     TRACE("\n");
@@ -325,7 +325,7 @@ static const IDataObjectVtbl VT_DataObjectImpl =
     DataObjectImpl_EnumDAdvise
 };
 
-static HGLOBAL get_unicode_text(ME_TextEditor *editor, CHARRANGE *lpchrg)
+static HGLOBAL get_unicode_text(ME_TextEditor *editor, const CHARRANGE *lpchrg)
 {
     int pars, len;
     WCHAR *data;
@@ -369,7 +369,7 @@ static DWORD CALLBACK ME_AppendToHGLOBAL(DWORD_PTR dwCookie, LPBYTE lpBuff, LONG
     return 0;
 }
 
-static HGLOBAL get_rtf_text(ME_TextEditor *editor, CHARRANGE *lpchrg)
+static HGLOBAL get_rtf_text(ME_TextEditor *editor, const CHARRANGE *lpchrg)
 {
     EDITSTREAM es;
     ME_GlobalDestStruct gds;
@@ -383,7 +383,7 @@ static HGLOBAL get_rtf_text(ME_TextEditor *editor, CHARRANGE *lpchrg)
     return gds.hData;
 }
 
-HRESULT ME_GetDataObject(ME_TextEditor *editor, CHARRANGE *lpchrg, LPDATAOBJECT *lplpdataobj)
+HRESULT ME_GetDataObject(ME_TextEditor *editor, const CHARRANGE *lpchrg, LPDATAOBJECT *lplpdataobj)
 {
     DataObjectImpl *obj;
     TRACE("(%p,%d,%d)\n", editor, lpchrg->cpMin, lpchrg->cpMax);

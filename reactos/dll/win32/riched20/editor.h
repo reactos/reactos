@@ -71,8 +71,8 @@ CHARFORMAT2W *ME_ToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyToCF2W(CHARFORMAT2W *to, CHARFORMAT2W *from);
 CHARFORMAT2W *ME_ToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from);
 void ME_CopyToCFAny(CHARFORMAT2W *to, CHARFORMAT2W *from);
-void ME_CopyCharFormat(CHARFORMAT2W *pDest, CHARFORMAT2W *pSrc); /* only works with 2W structs */
-void ME_CharFormatFromLogFont(HDC hDC, LOGFONTW *lf, CHARFORMAT2W *fmt); /* ditto */
+void ME_CopyCharFormat(CHARFORMAT2W *pDest, const CHARFORMAT2W *pSrc); /* only works with 2W structs */
+void ME_CharFormatFromLogFont(HDC hDC, const LOGFONTW *lf, CHARFORMAT2W *fmt); /* ditto */
 
 /* list.c */
 void ME_InsertBefore(ME_DisplayItem *diWhere, ME_DisplayItem *diWhat);
@@ -94,25 +94,25 @@ ME_String *ME_MakeString(LPCWSTR szText);
 ME_String *ME_MakeStringN(LPCWSTR szText, int nMaxChars);
 ME_String *ME_MakeStringR(WCHAR cRepeat, int nMaxChars);
 ME_String *ME_MakeStringB(int nMaxChars);
-ME_String *ME_StrDup(ME_String *s);
+ME_String *ME_StrDup(const ME_String *s);
 void ME_DestroyString(ME_String *s);
-void ME_AppendString(ME_String *s1, ME_String *s2);
-ME_String *ME_ConcatString(ME_String *s1, ME_String *s2);
+void ME_AppendString(ME_String *s1, const ME_String *s2);
+ME_String *ME_ConcatString(const ME_String *s1, const ME_String *s2);
 ME_String *ME_VSplitString(ME_String *orig, int nVPos);
-int ME_IsWhitespaces(ME_String *s);
-int ME_IsSplitable(ME_String *s);
+int ME_IsWhitespaces(const ME_String *s);
+int ME_IsSplitable(const ME_String *s);
 /* int ME_CalcSkipChars(ME_String *s); */
-int ME_StrLen(ME_String *s);
-int ME_StrVLen(ME_String *s);
-int ME_FindNonWhitespaceV(ME_String *s, int nVChar);
+int ME_StrLen(const ME_String *s);
+int ME_StrVLen(const ME_String *s);
+int ME_FindNonWhitespaceV(const ME_String *s, int nVChar);
 int ME_FindWhitespaceV(ME_String *s, int nVChar);
 int ME_CallWordBreakProc(ME_TextEditor *editor, ME_String *str, INT start, INT code);
-int ME_GetCharFwd(ME_String *s, int nPos); /* get char starting from start */
-int ME_GetCharBack(ME_String *s, int nPos); /* get char starting from \0  */
-int ME_StrRelPos(ME_String *s, int nVChar, int *pRelChars);
-int ME_StrRelPos2(ME_String *s, int nVChar, int nRelChars);
+int ME_GetCharFwd(const ME_String *s, int nPos); /* get char starting from start */
+int ME_GetCharBack(const ME_String *s, int nPos); /* get char starting from \0  */
+int ME_StrRelPos(const ME_String *s, int nVChar, int *pRelChars);
+int ME_StrRelPos2(const ME_String *s, int nVChar, int nRelChars);
 int ME_VPosToPos(ME_String *s, int nVPos);
-int ME_PosToVPos(ME_String *s, int nPos);
+int ME_PosToVPos(const ME_String *s, int nPos);
 void ME_StrDeleteV(ME_String *s, int nVChar, int nChars);
 /* smart helpers for A<->W conversions, they reserve/free memory and call MultiByte<->WideChar functions */
 LPWSTR ME_ToUnicode(BOOL unicode, LPVOID psz);
@@ -128,10 +128,10 @@ static inline int ME_CharCompare(WCHAR a, WCHAR b, int caseSensitive)
   return caseSensitive ? (a == b) : (toupperW(a) == toupperW(b));
 }
 
-/* note: those two really return the first matching offset (starting from EOS)+1
+/* note: those two really return the first matching offset (starting from EOS)+1 
  * in other words, an offset of the first trailing white/black */
-int ME_ReverseFindNonWhitespaceV(ME_String *s, int nVChar);
-int ME_ReverseFindWhitespaceV(ME_String *s, int nVChar);
+int ME_ReverseFindNonWhitespaceV(const ME_String *s, int nVChar);
+int ME_ReverseFindWhitespaceV(const ME_String *s, int nVChar);
 
 /* row.c */
 ME_DisplayItem *ME_FindRowStart(ME_Context *c, ME_DisplayItem *run, int nRelPos);
@@ -155,15 +155,15 @@ int ME_CharFromPoint(ME_TextEditor *editor, int cx, ME_Run *run);
 int ME_CharFromPointCursor(ME_TextEditor *editor, int cx, ME_Run *run);
 int ME_PointFromChar(ME_TextEditor *editor, ME_Run *pRun, int nOffset);
 int ME_GetLastSplittablePlace(ME_Context *c, ME_Run *run);
-int ME_CanJoinRuns(ME_Run *run1, ME_Run *run2);
+int ME_CanJoinRuns(const ME_Run *run1, const ME_Run *run2);
 void ME_JoinRuns(ME_TextEditor *editor, ME_DisplayItem *p);
 ME_DisplayItem *ME_SplitRun(ME_Context *c, ME_DisplayItem *item, int nChar);
 ME_DisplayItem *ME_SplitRunSimple(ME_TextEditor *editor, ME_DisplayItem *item, int nChar);
 int ME_FindSplitPoint(ME_Context *c, POINT *pt, ME_Run *run, int desperate);
 void ME_UpdateRunFlags(ME_TextEditor *editor, ME_Run *run);
 ME_DisplayItem *ME_SplitFurther(ME_TextEditor *editor, ME_DisplayItem *run);
-void ME_CalcRunExtent(ME_Context *c, ME_Paragraph *para, ME_Run *run);
-SIZE ME_GetRunSize(ME_Context *c, ME_Paragraph *para, ME_Run *run, int nLen);
+void ME_CalcRunExtent(ME_Context *c, const ME_Paragraph *para, ME_Run *run);
+SIZE ME_GetRunSize(ME_Context *c, const ME_Paragraph *para, ME_Run *run, int nLen);
 void ME_CursorFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_Cursor *pCursor);
 void ME_RunOfsFromCharOfs(ME_TextEditor *editor, int nCharOfs, ME_DisplayItem **ppRun, int *pOfs);
 int ME_CharOfsFromRunOfs(ME_TextEditor *editor, ME_DisplayItem *pRun, int nOfs);
@@ -186,7 +186,7 @@ int ME_CharFromPos(ME_TextEditor *editor, int x, int y);
 void ME_LButtonDown(ME_TextEditor *editor, int x, int y);
 void ME_MouseMove(ME_TextEditor *editor, int x, int y);
 void ME_DeleteTextAtCursor(ME_TextEditor *editor, int nCursor, int nChars);
-void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor,
+void ME_InsertTextFromCursor(ME_TextEditor *editor, int nCursor, 
                              const WCHAR *str, int len, ME_Style *style);
 BOOL ME_ArrowKey(ME_TextEditor *ed, int nVKey, BOOL extend, BOOL ctrl);
 
@@ -206,44 +206,44 @@ void ME_InsertGraphicsFromCursor(ME_TextEditor *editor, int nCursor);
 void ME_InsertTableCellFromCursor(ME_TextEditor *editor, int nCursor);
 void ME_InternalDeleteText(ME_TextEditor *editor, int nOfs, int nChars);
 int ME_GetTextLength(ME_TextEditor *editor);
-int ME_GetTextLengthEx(ME_TextEditor *editor, GETTEXTLENGTHEX *how);
+int ME_GetTextLengthEx(ME_TextEditor *editor, const GETTEXTLENGTHEX *how);
 ME_Style *ME_GetSelectionInsertStyle(ME_TextEditor *editor);
-BOOL ME_UpdateSelection(ME_TextEditor *editor, ME_Cursor *pTempCursor);
+BOOL ME_UpdateSelection(ME_TextEditor *editor, const ME_Cursor *pTempCursor);
 
 /* wrap.c */
 void ME_PrepareParagraphForWrapping(ME_Context *c, ME_DisplayItem *tp);
 ME_DisplayItem *ME_MakeRow(int height, int baseline, int width);
-void ME_InsertRowStart(ME_WrapContext *wc, ME_DisplayItem *pEnd);
+void ME_InsertRowStart(ME_WrapContext *wc, const ME_DisplayItem *pEnd);
 void ME_WrapTextParagraph(ME_Context *c, ME_DisplayItem *tp);
 BOOL ME_WrapMarkedParagraphs(ME_TextEditor *editor);
 void ME_InvalidateMarkedParagraphs(ME_TextEditor *editor);
 void ME_SendRequestResize(ME_TextEditor *editor, BOOL force);
 
 /* para.c */
-ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run);
+ME_DisplayItem *ME_GetParagraph(ME_DisplayItem *run); 
 void ME_GetSelectionParas(ME_TextEditor *editor, ME_DisplayItem **para, ME_DisplayItem **para_end);
 void ME_MakeFirstParagraph(HDC hDC, ME_TextBuffer *editor);
 ME_DisplayItem *ME_SplitParagraph(ME_TextEditor *editor, ME_DisplayItem *rp, ME_Style *style);
 ME_DisplayItem *ME_JoinParagraphs(ME_TextEditor *editor, ME_DisplayItem *tp);
 void ME_DumpParaStyle(ME_Paragraph *s);
-void ME_DumpParaStyleToBuf(PARAFORMAT2 *pFmt, char buf[2048]);
-void ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *pFmt);
-void ME_SetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt);
-void ME_GetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, PARAFORMAT2 *pFmt);
+void ME_DumpParaStyleToBuf(const PARAFORMAT2 *pFmt, char buf[2048]);
+void ME_SetParaFormat(ME_TextEditor *editor, ME_DisplayItem *para, const PARAFORMAT2 *pFmt);
+void ME_SetSelectionParaFormat(ME_TextEditor *editor, const PARAFORMAT2 *pFmt);
+void ME_GetParaFormat(ME_TextEditor *editor, const ME_DisplayItem *para, PARAFORMAT2 *pFmt);
 void ME_GetSelectionParaFormat(ME_TextEditor *editor, PARAFORMAT2 *pFmt);
 /* marks from first up to (but not including) last */
-void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, ME_DisplayItem *last);
-void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, ME_DisplayItem *last);
+void ME_MarkForWrapping(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last);
+void ME_MarkForPainting(ME_TextEditor *editor, ME_DisplayItem *first, const ME_DisplayItem *last);
 void ME_MarkAllForWrapping(ME_TextEditor *editor);
 
 /* paint.c */
-void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, RECT *rcUpdate);
+void ME_PaintContent(ME_TextEditor *editor, HDC hDC, BOOL bOnlyNew, const RECT *rcUpdate);
 void ME_Repaint(ME_TextEditor *editor);
 void ME_RewrapRepaint(ME_TextEditor *editor);
 void ME_UpdateRepaint(ME_TextEditor *editor);
 void ME_DrawParagraph(ME_Context *c, ME_DisplayItem *paragraph);
 void ME_EnsureVisible(ME_TextEditor *editor, ME_DisplayItem *pRun);
-COLORREF ME_GetBackColor(ME_TextEditor *editor);
+COLORREF ME_GetBackColor(const ME_TextEditor *editor);
 void ME_InvalidateSelection(ME_TextEditor *editor);
 void ME_QueueInvalidateFromCursor(ME_TextEditor *editor, int nCursor);
 BOOL ME_SetZoom(ME_TextEditor *editor, int numerator, int denominator);
@@ -268,7 +268,7 @@ ME_TextEditor *ME_MakeEditor(HWND hWnd);
 void ME_DestroyEditor(ME_TextEditor *editor);
 void ME_SendOldNotify(ME_TextEditor *editor, int nCode);
 void ME_LinkNotify(ME_TextEditor *editor, UINT msg, WPARAM wParam, LPARAM lParam);
-ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayItem *di);
+ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi);
 void ME_CommitUndo(ME_TextEditor *editor);
 void ME_Undo(ME_TextEditor *editor);
 void ME_Redo(ME_TextEditor *editor);
@@ -285,4 +285,4 @@ LRESULT ME_StreamOutRange(ME_TextEditor *editor, DWORD dwFormat, int nStart, int
 LRESULT ME_StreamOut(ME_TextEditor *editor, DWORD dwFormat, EDITSTREAM *stream);
 
 /* clipboard.c */
-HRESULT ME_GetDataObject(ME_TextEditor *editor, CHARRANGE *lpchrg, LPDATAOBJECT *lplpdataobj);
+HRESULT ME_GetDataObject(ME_TextEditor *editor, const CHARRANGE *lpchrg, LPDATAOBJECT *lplpdataobj);

@@ -22,7 +22,7 @@
 
 void ME_InitContext(ME_Context *c, ME_TextEditor *editor, HDC hDC)
 {
-  c->nSequence = editor->nSequence++;
+  c->nSequence = editor->nSequence++;  
   c->hDC = hDC;
   c->editor = editor;
   c->pt.x = 0;

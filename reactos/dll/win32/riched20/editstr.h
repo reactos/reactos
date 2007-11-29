@@ -70,7 +70,7 @@ typedef enum {
   diRun, /* run (sequence of chars with the same character format) */
   diStartRow, /* start of the row (line of text on the screen) */
   diTextEnd, /* end of the text buffer */
-
+  
   /********************* these below are meant for finding only *********************/
   diStartRowOrParagraph, /* 5 */
   diStartRowOrParagraphOrEnd,
@@ -78,7 +78,7 @@ typedef enum {
   diRunOrStartRow,
   diParagraphOrEnd,
   diRunOrParagraphOrEnd, /* 10 */
-
+  
   diUndoInsertRun, /* 11 */
   diUndoDeleteRun, /* 12 */
   diUndoJoinParagraphs, /* 13 */
@@ -162,7 +162,7 @@ typedef struct tagME_TableCell
 typedef struct tagME_Paragraph
 {
   PARAFORMAT2 *pFmt;
-
+  
   BOOL bTable;                       /* this paragraph is a table row */
   struct tagME_TableCell *pCells;    /* list of cells and their properties */
   struct tagME_TableCell *pLastCell; /* points to the last cell in the list */
@@ -194,7 +194,7 @@ typedef struct tagME_Row
  *   to a screen line (that's why there are no rows in an unformatted
  *   paragraph
  * - the paragraphs contain "shortcut" pointers to the previous and the next
- *   paragraph, that makes iteration over paragraphs faster
+ *   paragraph, that makes iteration over paragraphs faster 
  * - the list starts with diTextStart and ends with diTextEnd
  */
 
@@ -291,6 +291,7 @@ typedef struct tagME_TextEditor
   int nCursors;
   SIZE sizeWindow;
   int nTotalLength, nLastTotalLength;
+  int nHeight;
   int nUDArrowX;
   int nSequence;
   COLORREF rgbBackColor;
@@ -350,9 +351,9 @@ typedef struct tagME_WrapContext
   POINT pt;
   BOOL bOverflown;
   ME_DisplayItem *pRowStart;
-
+  
   ME_DisplayItem *pLastSplittableRun;
   POINT ptLastSplittableRun;
-} ME_WrapContext;
+} ME_WrapContext;  
 
 #endif

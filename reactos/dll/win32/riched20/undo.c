@@ -25,10 +25,10 @@ WINE_DEFAULT_DEBUG_CHANNEL(richedit);
 void ME_EmptyUndoStack(ME_TextEditor *editor)
 {
   ME_DisplayItem *p, *pNext;
-
+  
   if (editor->nUndoMode == umIgnore)
     return;
-
+  
   TRACE("Emptying undo stack\n");
 
   p = editor->pUndoStack;
@@ -36,19 +36,19 @@ void ME_EmptyUndoStack(ME_TextEditor *editor)
   editor->nUndoStackSize = 0;
   while(p) {
     pNext = p->next;
-    ME_DestroyDisplayItem(p);
+    ME_DestroyDisplayItem(p);    
     p = pNext;
-  }
+  } 
   p = editor->pRedoStack;
   editor->pRedoStack = NULL;
   while(p) {
     pNext = p->next;
-    ME_DestroyDisplayItem(p);
+    ME_DestroyDisplayItem(p);    
     p = pNext;
-  }
+  } 
 }
 
-ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayItem *pdi) {
+ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, const ME_DisplayItem *pdi) {
   if (editor->nUndoMode == umIgnore)
     return NULL;
   else if (editor->nUndoLimit == 0)
@@ -82,7 +82,7 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
       pItem->member.para.pFmt = ALLOC_OBJ(PARAFORMAT2);
       pItem->member.para.pFmt->cbSize = sizeof(PARAFORMAT2);
       pItem->member.para.pFmt->dwMask = 0;
-
+ 
       break;
     default:
       assert(0 == "AddUndoItem, unsupported item type");
@@ -105,7 +105,7 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
       else
         editor->pUndoStackBottom = pItem;
       editor->pUndoStack = pItem;
-
+      
       if (editor->nUndoStackSize > editor->nUndoLimit)
       { /* remove oldest undo from stack */
         ME_DisplayItem *p = editor->pUndoStackBottom;
@@ -150,9 +150,9 @@ ME_UndoItem *ME_AddUndoItem(ME_TextEditor *editor, ME_DIType type, ME_DisplayIte
 void ME_CommitUndo(ME_TextEditor *editor) {
   if (editor->nUndoMode == umIgnore)
     return;
-
+  
   assert(editor->nUndoMode == umAddToUndo);
-
+  
   /* no transactions, no need to commit */
   if (!editor->pUndoStack)
     return;
@@ -160,7 +160,7 @@ void ME_CommitUndo(ME_TextEditor *editor) {
   /* no need to commit empty transactions */
   if (editor->pUndoStack->type == diUndoEndTransaction)
     return;
-
+    
   ME_AddUndoItem(editor, diUndoEndTransaction, NULL);
   ME_SendSelChange(editor);
 }
@@ -232,18 +232,18 @@ static void ME_PlayUndoItem(ME_TextEditor *editor, ME_DisplayItem *pItem)
 void ME_Undo(ME_TextEditor *editor) {
   ME_DisplayItem *p;
   ME_UndoMode nMode = editor->nUndoMode;
-
+  
   if (editor->nUndoMode == umIgnore)
     return;
   assert(nMode == umAddToUndo || nMode == umIgnore);
-
+  
   /* no undo items ? */
   if (!editor->pUndoStack)
     return;
-
+    
   /* watch out for uncommited transactions ! */
   assert(editor->pUndoStack->type == diUndoEndTransaction);
-
+  
   editor->nUndoMode = umAddToRedo;
   p = editor->pUndoStack->next;
   ME_DestroyDisplayItem(editor->pUndoStack);
@@ -265,18 +265,18 @@ void ME_Undo(ME_TextEditor *editor) {
 void ME_Redo(ME_TextEditor *editor) {
   ME_DisplayItem *p;
   ME_UndoMode nMode = editor->nUndoMode;
-
+  
   assert(nMode == umAddToUndo || nMode == umIgnore);
-
+  
   if (editor->nUndoMode == umIgnore)
     return;
   /* no redo items ? */
   if (!editor->pRedoStack)
     return;
-
+    
   /* watch out for uncommited transactions ! */
   assert(editor->pRedoStack->type == diUndoEndTransaction);
-
+  
   editor->nUndoMode = umAddBackToUndo;
   p = editor->pRedoStack->next;
   ME_DestroyDisplayItem(editor->pRedoStack);

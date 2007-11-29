@@ -99,10 +99,10 @@ BOOL ME_DITypesEqual(ME_DIType type, ME_DIType nTypeOrClass)
     return TRUE;
   if (nTypeOrClass==diStartRowOrParagraph && (type==diStartRow || type==diParagraph))
     return TRUE;
-  if (nTypeOrClass==diStartRowOrParagraphOrEnd
+  if (nTypeOrClass==diStartRowOrParagraphOrEnd 
     && (type==diStartRow || type==diParagraph || type==diTextEnd))
     return TRUE;
-  if (nTypeOrClass==diRunOrParagraphOrEnd
+  if (nTypeOrClass==diRunOrParagraphOrEnd 
     && (type==diRun || type==diParagraph || type==diTextEnd))
     return TRUE;
   return FALSE;
@@ -154,7 +154,7 @@ ME_DisplayItem *ME_MakeDI(ME_DIType type) {
     item->member.para.pFmt->dwMask = 0;
     item->member.para.nFlags = MEPF_REWRAP;
   }
-
+    
   return item;
 }
 
@@ -197,7 +197,7 @@ void ME_DumpDocument(ME_TextBuffer *buffer)
         TRACE(" - StartRow\n");
         break;
       case diRun:
-        TRACE(" - Run(\"%s\", %d)\n", debugstr_w(pItem->member.run.strText->szData),
+        TRACE(" - Run(\"%s\", %d)\n", debugstr_w(pItem->member.run.strText->szData), 
           pItem->member.run.nCharOfs);
         break;
       case diTextEnd:
