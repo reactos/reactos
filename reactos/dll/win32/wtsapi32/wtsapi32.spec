@@ -14,6 +14,7 @@
 @ stdcall WTSQuerySessionInformationW(long long long ptr ptr)
 @ stub WTSQueryUserConfigA
 @ stub WTSQueryUserConfigW
+@ stdcall WTSRegisterSessionNotification(long long)
 @ stub WTSSendMessageA
 @ stub WTSSendMessageW
 @ stub WTSSetSessionInformationA
@@ -22,6 +23,7 @@
 @ stub WTSSetUserConfigW
 @ stub WTSShutdownSystem
 @ stub WTSTerminateProcess
+@ stdcall WTSUnRegisterSessionNotification(long)
 @ stub WTSVirtualChannelClose
 @ stub WTSVirtualChannelOpen
 @ stub WTSVirtualChannelPurgeInput

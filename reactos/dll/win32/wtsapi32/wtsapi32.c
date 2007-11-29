@@ -204,3 +204,21 @@ BOOL WINAPI WTSWaitSystemEvent(HANDLE hServer, DWORD Mask, DWORD* Flags)
     FIXME("Stub %p 0x%08x %p\n", hServer, Mask, Flags);
     return FALSE;
 }
+
+/************************************************************
+ *                WTSRegisterSessionNotification (WTSAPI32.@)
+ */
+BOOL WINAPI WTSRegisterSessionNotification(HWND hWnd, DWORD dwFlags)
+{
+    FIXME("Stub %p 0x%08x\n", hWnd, dwFlags);
+    return FALSE;
+}
+
+/************************************************************
+ *                WTSUnRegisterSessionNotification (WTSAPI32.@)
+ */
+BOOL WINAPI WTSUnRegisterSessionNotification(HWND hWnd)
+{
+    FIXME("Stub %p\n", hWnd);
+    return FALSE;
+}
