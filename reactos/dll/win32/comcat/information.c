@@ -163,11 +163,11 @@ static HRESULT WINAPI COMCAT_ICatInformation_EnumClassesOfCategories(
 
     TRACE("\n");
 
-	if (cImplemented == (ULONG)-1)
+	if (cImplemented == (ULONG)-1) 
 		cImplemented = 0;
-	if (cRequired == (ULONG)-1)
+	if (cRequired == (ULONG)-1) 
 		cRequired = 0;
-
+	
     if (iface == NULL || ppenumCLSID == NULL ||
 	(cImplemented && rgcatidImpl == NULL) ||
 	(cRequired && rgcatidReq == NULL)) return E_POINTER;

@@ -101,8 +101,6 @@ static LONG register_key_defvalueW(HKEY base, WCHAR const *name,
 				   WCHAR const *value);
 static LONG register_key_defvalueA(HKEY base, WCHAR const *name,
 				   char const *value);
-static LONG recursive_delete_key(HKEY key);
-
 
 /***********************************************************************
  *		register_interfaces
@@ -189,22 +187,12 @@ static HRESULT unregister_interfaces(struct regsvr_interface const *list)
 
     for (; res == ERROR_SUCCESS && list->iid; ++list) {
 	WCHAR buf[39];
-	HKEY iid_key;
 
 	StringFromGUID2(list->iid, buf, 39);
-	res = RegOpenKeyExW(interface_key, buf, 0,
-			    KEY_READ | KEY_WRITE, &iid_key);
-	if (res == ERROR_FILE_NOT_FOUND) {
-	    res = ERROR_SUCCESS;
-	    continue;
-	}
-	if (res != ERROR_SUCCESS) goto error_close_interface_key;
-	res = recursive_delete_key(iid_key);
-	RegCloseKey(iid_key);
-	if (res != ERROR_SUCCESS) goto error_close_interface_key;
+	res = RegDeleteTreeW(interface_key, buf);
+	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
     }
 
-error_close_interface_key:
     RegCloseKey(interface_key);
 error_return:
     return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
@@ -287,23 +275,12 @@ static HRESULT unregister_coclasses(struct regsvr_coclass const *list)
 
     for (; res == ERROR_SUCCESS && list->clsid; ++list) {
 	WCHAR buf[39];
-	HKEY clsid_key;
 
 	StringFromGUID2(list->clsid, buf, 39);
-	res = RegOpenKeyExW(coclass_key, buf, 0,
-			    KEY_READ | KEY_WRITE, &clsid_key);
-	if (res == ERROR_FILE_NOT_FOUND) {
-	    res = ERROR_SUCCESS;
-	    continue;
-	}
-	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
-	res = recursive_delete_key(clsid_key);
-	RegCloseKey(clsid_key);
-	if (res != ERROR_SUCCESS) goto error_close_coclass_key;
+	res = RegDeleteTreeW(coclass_key, buf);
+	if (res == ERROR_FILE_NOT_FOUND) res = ERROR_SUCCESS;
     }
 
-error_close_coclass_key:
-    RegCloseKey(coclass_key);
 error_return:
     return res != ERROR_SUCCESS ? HRESULT_FROM_WIN32(res) : S_OK;
 }
@@ -356,38 +333,6 @@ static LONG register_key_defvalueA(
     res = RegSetValueExA(key, NULL, 0, REG_SZ, (CONST BYTE*)value,
 			 lstrlenA(value) + 1);
     RegCloseKey(key);
-    return res;
-}
-
-/***********************************************************************
- *		recursive_delete_key
- */
-static LONG recursive_delete_key(HKEY key)
-{
-    LONG res;
-    WCHAR subkey_name[MAX_PATH];
-    DWORD cName;
-    HKEY subkey;
-
-    for (;;) {
-	cName = sizeof(subkey_name) / sizeof(WCHAR);
-	res = RegEnumKeyExW(key, 0, subkey_name, &cName,
-			    NULL, NULL, NULL, NULL);
-	if (res != ERROR_SUCCESS && res != ERROR_MORE_DATA) {
-	    res = ERROR_SUCCESS; /* presumably we're done enumerating */
-	    break;
-	}
-	res = RegOpenKeyExW(key, subkey_name, 0,
-			    KEY_READ | KEY_WRITE, &subkey);
-	if (res == ERROR_FILE_NOT_FOUND) continue;
-	if (res != ERROR_SUCCESS) break;
-
-	res = recursive_delete_key(subkey);
-	RegCloseKey(subkey);
-	if (res != ERROR_SUCCESS) break;
-    }
-
-    if (res == ERROR_SUCCESS) res = RegDeleteKeyW(key, 0);
     return res;
 }
 
