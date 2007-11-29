@@ -970,7 +970,7 @@ LONG WINAPI ImmGetCompositionStringW(
     else
     {
         FIXME("Unhandled index 0x%x\n",dwIndex);
-    }
+    }   
 
     ImmUnlockIMCC(data->IMC.hCompStr);
 
@@ -1057,7 +1057,12 @@ BOOL WINAPI ImmGetConversionStatus(
  */
 HWND WINAPI ImmGetDefaultIMEWnd(HWND hWnd)
 {
-  FIXME("(%p - %p %p ): semi-stub\n", hWnd,hwndDefault, root_context);
+  static int shown = 0;
+
+  if (!shown) {
+        FIXME("(%p - %p %p ): semi-stub\n", hWnd,hwndDefault, root_context);
+	shown = 1;
+  }
 
   if (hwndDefault == NULL)
   {
@@ -1517,9 +1522,13 @@ BOOL WINAPI ImmRegisterWordW(
  */
 BOOL WINAPI ImmReleaseContext(HWND hWnd, HIMC hIMC)
 {
-  FIXME("(%p, %p): stub\n", hWnd, hIMC);
+  static int shown = 0;
 
-    return TRUE;
+  if (!shown) {
+     FIXME("(%p, %p): stub\n", hWnd, hIMC);
+     shown = 1;
+  }
+  return TRUE;
 }
 
 /***********************************************************************
@@ -1731,9 +1740,14 @@ BOOL WINAPI ImmSetCompositionWindow(
 BOOL WINAPI ImmSetConversionStatus(
   HIMC hIMC, DWORD fdwConversion, DWORD fdwSentence)
 {
-  FIXME("(%p, %d, %d): stub\n",
-    hIMC, fdwConversion, fdwSentence
-  );
+  static int shown = 0;
+
+  if (!shown) {
+      FIXME("(%p, %d, %d): stub\n",
+          hIMC, fdwConversion, fdwSentence
+      );
+      shown = 1;
+  }
   SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
   return FALSE;
 }

@@ -10,7 +10,7 @@
 @ stdcall ImmDestroyIMCC(long)
 @ stub ImmDestroySoftKeyboard
 @ stdcall ImmDisableIME(long)
-@ stub ImmDisableIme
+@ stdcall ImmDisableIme(long) ImmDisableIME
 @ stub ImmEnumInputContext
 @ stdcall ImmEnumRegisterWordA(long ptr str long str ptr)
 @ stdcall ImmEnumRegisterWordW(long ptr wstr long wstr ptr)
