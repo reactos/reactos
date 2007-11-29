@@ -25,14 +25,14 @@ CAPTION "Opcje kompresji"
 FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT           "&Wybierz strumieñ:",-1,2,5,114,10
-    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL |
+    COMBOBOX        IDC_STREAM,2,18,134,61,CBS_DROPDOWNLIST | WS_VSCROLL | 
                     WS_TABSTOP
     PUSHBUTTON      "&Opcje...",IDC_OPTIONS,145,17,45,14
     AUTOCHECKBOX    "&Przeplot co",IDC_INTERLEAVE,3,42,60,11,WS_TABSTOP
     EDITTEXT        IDC_INTERLEAVEEVERY,66,41,32,12,ES_AUTOHSCROLL
     LTEXT           "klatek",-1,104,43,36,9
     LTEXT           "Wybrany format:",-1,2,56,53,9
-    LTEXT           "Zarezerwownae miejsce",IDC_FORMATTEXT,55,56,90,26
+    LTEXT           "Zarezerwowane miejsce",IDC_FORMATTEXT,55,56,90,26
     DEFPUSHBUTTON   "OK",IDOK,145,42,45,14
     PUSHBUTTON      "Anuluj",IDCANCEL,145,61,45,14
 END

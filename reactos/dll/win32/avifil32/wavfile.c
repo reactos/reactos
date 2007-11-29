@@ -915,7 +915,7 @@ static HRESULT WINAPI IAVIStream_fnRead(IAVIStream *iface, LONG start,
   if (bytesread != NULL)
     *bytesread = buffersize;
   if (samplesread != NULL)
-    *samplesread = samples;
+    *samplesread = samples;  
 
   return AVIERR_OK;
 }

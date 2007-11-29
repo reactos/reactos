@@ -1018,14 +1018,15 @@ static HRESULT WINAPI IAVIStream_fnSetFormat(IAVIStream *iface, LONG pos,
       lppc->peNew[n].peFlags = 0;
     }
 
-    if (mmioSeek(This->paf->hmmio, This->paf->dwNextFramePos, SEEK_SET) == -1)
+    if (mmioSeek(This->paf->hmmio, This->paf->dwNextFramePos, SEEK_SET) == -1 ||
+        mmioCreateChunk(This->paf->hmmio, &ck, 0) != S_OK ||
+        mmioWrite(This->paf->hmmio, (HPSTR)lppc, ck.cksize) != ck.cksize ||
+        mmioAscend(This->paf->hmmio, &ck, 0) != S_OK)
+    {
+      HeapFree(GetProcessHeap(), 0, lppc);
       return AVIERR_FILEWRITE;
-    if (mmioCreateChunk(This->paf->hmmio, &ck, 0) != S_OK)
-      return AVIERR_FILEWRITE;
-    if (mmioWrite(This->paf->hmmio, (HPSTR)lppc, ck.cksize) != ck.cksize)
-      return AVIERR_FILEWRITE;
-    if (mmioAscend(This->paf->hmmio, &ck, 0) != S_OK)
-      return AVIERR_FILEWRITE;
+    }
+
     This->paf->dwNextFramePos += ck.cksize + 2 * sizeof(DWORD);
 
     HeapFree(GetProcessHeap(), 0, lppc);
@@ -1939,6 +1940,7 @@ static HRESULT AVIFILE_LoadIndex(const IAVIFileImpl *This, DWORD size, DWORD off
       HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, pStream->nIdxFrames * sizeof(AVIINDEXENTRY));
     if (pStream->idxFrames == NULL && pStream->nIdxFrames > 0) {
       pStream->nIdxFrames = 0;
+      HeapFree(GetProcessHeap(), 0, lp);
       return AVIERR_MEMORY;
     }
   }
@@ -2248,7 +2250,7 @@ static HRESULT AVIFILE_SaveFile(IAVIFileImpl *This)
 			  ck.cksize, NULL, NULL);
 
       if (mmioWrite(This->hmmio, (HPSTR)str, ck.cksize) != ck.cksize) {
-	HeapFree(GetProcessHeap(), 0, str);
+	HeapFree(GetProcessHeap(), 0, str);	
 	return AVIERR_FILEWRITE;
       }
 

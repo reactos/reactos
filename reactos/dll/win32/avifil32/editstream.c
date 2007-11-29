@@ -653,7 +653,7 @@ static HRESULT WINAPI IAVIEditStream_fnPaste(IAVIEditStream*iface,LONG*plStart,
       nLastStream++;
 
     nStreams = nLastStream - streamNr;
-  } else
+  } else 
     nStreams = 1;
   if (This->nStreams + nStreams + 1 > This->nTableSize) {
     n = This->nStreams + nStreams + 33;
@@ -944,7 +944,7 @@ static HRESULT WINAPI IEditAVIStream_fnReadFormat(IAVIStream*iface,LONG pos,
   } else
     n = 0;
   n += lp->biSize;
-
+  
   memcpy(format, lp, min((LONG)n, *fmtsize));
   hr = ((LONG)n > *fmtsize ? AVIERR_BUFFERTOOSMALL : AVIERR_OK);
   *fmtsize = n;

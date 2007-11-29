@@ -550,7 +550,7 @@ HRESULT WINAPI AVIStreamInfoW(PAVISTREAM pstream, LPAVISTREAMINFOW asi,
  *		AVIStreamFindSample	(AVIFIL32.@)
  *		AVIStreamFindSample	(AVIFILE.163)
  */
-HRESULT WINAPI AVIStreamFindSample(PAVISTREAM pstream, LONG pos, DWORD flags)
+LONG WINAPI AVIStreamFindSample(PAVISTREAM pstream, LONG pos, LONG flags)
 {
   TRACE("(%p,%d,0x%X)\n", pstream, pos, flags);
 
@@ -1159,7 +1159,7 @@ HRESULT WINAPI AVIBuildFilterW(LPWSTR szFilter, LONG cbFilter, BOOL fSaving)
 	break;
       }
     }
-
+      
     memcpy(szFilter, szAllFiles, size * sizeof(szAllFiles[0]));
     szFilter += size;
     szFilter[0] = 0;
@@ -1827,7 +1827,7 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
 	  if (curStream != 0) {
 	    lFirstVideo =
 	      AVIStreamSampleToSample(pInStreams[curStream], pInStreams[0],
-				      (sInfo.fccType == streamtypeVIDEO ?
+				      (sInfo.fccType == streamtypeVIDEO ? 
 				       (LONG)dwInterleave : lSampleInc) +
 				      sInfo.dwInitialFrames + lCurFrame);
 	  } else
@@ -1913,7 +1913,7 @@ HRESULT WINAPI AVISaveVW(LPCWSTR szFile, CLSID *pclsidHandler,
 	  hres = AVIStreamReadFormat(pInStreams[curStream], sInfo.dwStart,
 				     lpBuffer, &lBufferSize);
 	  if (FAILED(hres))
-	    return hres;
+	    goto error;
 	  AVIStreamSetFormat(pOutStreams[curStream], sInfo.dwStart,
 			     lpBuffer, lBufferSize);
 

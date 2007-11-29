@@ -815,7 +815,7 @@ static HRESULT AVIFILE_EncodeFrame(IAVIStreamImpl *This,
   dwMinQual = ICQUALITY_LOW;
 
   noPrev = TRUE;
-  if ((icmFlags & ICCOMPRESS_KEYFRAME) == 0 &&
+  if ((icmFlags & ICCOMPRESS_KEYFRAME) == 0 && 
       (This->dwICMFlags & VIDCF_FASTTEMPORALC) == 0)
     noPrev = FALSE;
 

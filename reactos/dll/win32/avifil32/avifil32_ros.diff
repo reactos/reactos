@@ -63,8 +63,8 @@ Index: rsrc.rc
 ===================================================================
 --- rsrc.rc	(revision 23782)
 +++ rsrc.rc	(working copy)
-@@ -54,3 +54,4 @@
- #include "avifile_Ru.rc"
+@@ -55,3 +55,4 @@
  #include "avifile_Si.rc"
+ #include "avifile_Sv.rc"
  #include "avifile_Tr.rc"
 +#include "avifile_Uk.rc"
