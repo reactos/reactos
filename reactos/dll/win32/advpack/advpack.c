@@ -49,6 +49,17 @@ static const WCHAR setup_key[] = {
     'C','o','m','p','o','n','e','n','t','s',0
 };
 
+/* Strip single quotes from a token - note size includes NULL */
+static void strip_quotes(WCHAR *buffer, DWORD *size)
+{
+    if (buffer[0] == '\'' && (*size > 1) && buffer[*size-2]=='\'')
+    {
+        *size -= 2;
+        buffer[*size] = 0x00;
+        memmove(buffer, buffer + 1, *size * sizeof(WCHAR));
+    }
+}
+
 /* parses the destination directory parameters from pszSection
  * the parameters are of the form: root,key,value,unknown,fallback
  * we first read the reg value root\\key\\value and if that fails,
@@ -68,8 +79,11 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
     /* load the destination parameters */
     SetupFindFirstLineW(hInf, pszSection, NULL, &context);
     SetupGetStringFieldW(&context, 1, prefix, PREFIX_LEN, &size);
+    strip_quotes(prefix, &size);
     SetupGetStringFieldW(&context, 2, key, MAX_PATH, &size);
+    strip_quotes(key, &size);
     SetupGetStringFieldW(&context, 3, value, MAX_PATH, &size);
+    strip_quotes(value, &size);
 
     if (!lstrcmpW(prefix, hklm))
         root = HKEY_LOCAL_MACHINE;
@@ -84,7 +98,8 @@ static void get_dest_dir(HINF hInf, PCWSTR pszSection, PWSTR pszBuffer, DWORD dw
     if (RegOpenKeyW(root, key, &subkey) ||
         RegQueryValueExW(subkey, value, NULL, NULL, (LPBYTE)pszBuffer, &size))
     {
-        SetupGetStringFieldW(&context, 5, pszBuffer, dwSize, NULL);
+        SetupGetStringFieldW(&context, 5, pszBuffer, dwSize, &size);
+        strip_quotes(pszBuffer, &size);
     }
 
     RegCloseKey(subkey);
@@ -116,6 +131,7 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
     do
     {
         LPWSTR value, ptr, key, key_copy = NULL;
+        DWORD flags = 0;
 
         SetupGetLineTextW(&context, NULL, NULL, NULL,
                           line, MAX_FIELD_LENGTH, &size);
@@ -141,16 +157,22 @@ void set_ldids(HINF hInf, LPCWSTR pszInstallSection, LPCWSTR pszWorkingDir)
         while (*value == ' ')
             value++;
 
-        /* FIXME: need to check the query option */
+        /* Extract the flags */
         ptr = strchrW(value, ',');
-        if (ptr)
+        if (ptr) {
             *ptr = '\0';
+            flags = atolW(ptr+1);
+        }
 
         /* set dest to pszWorkingDir if key is SourceDir */
         if (pszWorkingDir && !lstrcmpiW(value, source_dir))
             lstrcpynW(dest, pszWorkingDir, MAX_PATH);
         else
             get_dest_dir(hInf, value, dest, MAX_PATH);
+
+        /* If prompting required, provide dialog to request path */
+        if (flags & 0x04)
+            FIXME("Need to support changing paths - default will be used\n");
 
         /* set all ldids to dest */
         while ((ptr = get_parameter(&key, ',')))
@@ -365,7 +387,7 @@ HRESULT WINAPI OpenINFEngineW(LPCWSTR pszInfFilename, LPCWSTR pszInstallSection,
         return HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND);
 
     set_ldids(*phInf, pszInstallSection, NULL);
-
+    
     return S_OK;
 }
 
@@ -672,7 +694,7 @@ HRESULT WINAPI TranslateInfStringA(LPCSTR pszInfFilename, LPCSTR pszInstallSecti
             else
                 res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         }
-
+        
         HeapFree(GetProcessHeap(), 0, bufferW);
     }
 
@@ -789,7 +811,7 @@ HRESULT WINAPI TranslateInfStringExA(HINF hInf, LPCSTR pszInfFilename,
             else
                 res = HRESULT_FROM_WIN32(ERROR_INSUFFICIENT_BUFFER);
         }
-
+        
         HeapFree(GetProcessHeap(), 0, bufferW);
     }
 
@@ -850,7 +872,7 @@ HRESULT WINAPI TranslateInfStringExW(HINF hInf, LPCWSTR pszInfFilename,
         return SPAPI_E_LINE_NOT_FOUND;
     }
 
-    return S_OK;
+    return S_OK;   
 }
 
 /***********************************************************************

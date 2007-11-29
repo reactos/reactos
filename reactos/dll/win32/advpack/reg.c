@@ -77,7 +77,7 @@ static BOOL create_tmp_ini_file(HMODULE hm, WCHAR *ini_file)
     if(!rsrc_data || !rsrc_size) {
         ERR("Can't load REGINST resource\n");
         goto error;
-    }
+    }       
 
     if((hf = CreateFileW(ini_file, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
                          FILE_ATTRIBUTE_NORMAL, NULL)) == INVALID_HANDLE_VALUE) {
@@ -213,7 +213,7 @@ static HRESULT write_predefined_strings(HMODULE hm, LPCWSTR ini_path)
  *   hm         [I] Module that contains the REGINST resouce.
  *   pszSection [I] The INF section to execute.
  *   pstTable   [I] Table of string substitutions.
- *
+ * 
  * RETURNS
  *   Success: S_OK.
  *   Failure: E_FAIL.
@@ -239,11 +239,11 @@ HRESULT WINAPI RegInstallW(HMODULE hm, LPCWSTR pszSection, const STRTABLEW* pstT
         for(i = 0; i < pstTable->cEntries; i++)
         {
             WCHAR tmp_value[MAX_PATH + 2];
-
+    
             tmp_value[0] = '\"';
             lstrcpyW(tmp_value + 1, pstTable->pse[i].pszValue);
             lstrcatW(tmp_value, quote);
-
+    
             WritePrivateProfileStringW(Strings, pstTable->pse[i].pszName, tmp_value, tmp_ini_path);
         }
     }
@@ -307,8 +307,8 @@ HRESULT WINAPI RegRestoreAllA(HWND hWnd, LPSTR pszTitleString, HKEY hkBackupKey)
 HRESULT WINAPI RegRestoreAllW(HWND hWnd, LPWSTR pszTitleString, HKEY hkBackupKey)
 {
     FIXME("(%p, %s, %p) stub\n", hWnd, debugstr_w(pszTitleString), hkBackupKey);
-
-    return E_FAIL;
+    
+    return E_FAIL;   
 }
 
 /***********************************************************************
@@ -354,9 +354,9 @@ HRESULT WINAPI RegSaveRestoreA(HWND hWnd, LPCSTR pszTitleString, HKEY hkBackupKe
  *   hkBackupKey    [I] Key used to store the backup data.
  *   pcszRootKey    [I] Root key of the registry value
  *   pcszSubKey     [I] Sub key of the registry value.
- *   pcszValueName  [I] Value to save or restore.
+ *   pcszValueName  [I] Value to save or restore. 
  *   dwFlags        [I] See advpub.h.
- *
+ * 
  * RETURNS
  *   Success: S_OK.
  *   Failure: E_FAIL.
@@ -372,7 +372,7 @@ HRESULT WINAPI RegSaveRestoreW(HWND hWnd, LPCWSTR pszTitleString, HKEY hkBackupK
           hkBackupKey, debugstr_w(pcszRootKey), debugstr_w(pcszSubKey),
           debugstr_w(pcszValueName), dwFlags);
 
-    return E_FAIL;
+    return E_FAIL;   
 }
 
 /***********************************************************************
@@ -434,5 +434,5 @@ HRESULT WINAPI RegSaveRestoreOnINFW(HWND hWnd, LPCWSTR pszTitle, LPCWSTR pszINF,
           debugstr_w(pszINF), debugstr_w(pszSection),
           hHKLMBackKey, hHKCUBackKey, dwFlags);
 
-    return E_FAIL;
+    return E_FAIL;   
 }
