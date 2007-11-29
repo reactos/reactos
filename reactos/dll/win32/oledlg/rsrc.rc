@@ -46,5 +46,6 @@
 #include "oledlg_No.rc"
 #include "oledlg_Pl.rc"
 #include "oledlg_Pt.rc"
+#include "oledlg_Sv.rc"
 #include "oledlg_Tr.rc"
 #include "oledlg_Uk.rc"

@@ -32,7 +32,7 @@ BEGIN
     DEFPUSHBUTTON   "Tamam",IDOK,221,7,66,14
     PUSHBUTTON      "Ýptal",IDCANCEL,221,24,66,14
     GROUPBOX        "Sonuç",IDC_RESULT,7,103,208,41
-    CONTROL         "Yeni Oluþtur",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON |
+    CONTROL         "Yeni Oluþtur",IDC_CREATENEW,"Button",BS_AUTORADIOBUTTON | 
                     WS_GROUP,7,20,62,10
     CONTROL         "Denetim Oluþtur",IDC_CREATECONTROL,"Button",
                     BS_AUTORADIOBUTTON | NOT WS_VISIBLE,7,54,62,10
@@ -40,7 +40,7 @@ BEGIN
                     BS_AUTORADIOBUTTON,7,37,67,10
     LTEXT           "",IDC_RESULTDESC,49,112,159,23
     PUSHBUTTON      "&Denetim Ekle...",IDC_ADDCONTROL,81,88,63,14,NOT WS_VISIBLE
-    CONTROL         "Simge Olarak Göster",IDC_ASICON,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Simge Olarak Göster",IDC_ASICON,"Button",BS_AUTOCHECKBOX | 
                     WS_TABSTOP | NOT WS_VISIBLE,223,58,64,10
     PUSHBUTTON      "Gözat...",IDC_BROWSE,83,53,50,14,NOT WS_VISIBLE
     LTEXT           "Dosya:",IDC_FILELBL,83,27,20,8, NOT WS_VISIBLE

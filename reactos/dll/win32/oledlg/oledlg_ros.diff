@@ -58,8 +58,8 @@ Index: rsrc.rc
 ===================================================================
 --- rsrc.rc	(revision 25690)
 +++ rsrc.rc	(revision working copy)
-@@ -47,3 +47,4 @@
- #include "oledlg_Pl.rc"
+@@ -48,3 +48,4 @@
  #include "oledlg_Pt.rc"
+ #include "oledlg_Sv.rc"
  #include "oledlg_Tr.rc"
 +#include "oledlg_Uk.rc"
