@@ -33,6 +33,23 @@
 #define _S_IWRITE 0x0080
 #define _S_IREAD  0x0100
 
+/* from msvcrt/fcntl.h */
+#define _O_RDONLY      0
+#define _O_WRONLY      1
+#define _O_RDWR        2
+#define _O_ACCMODE     (_O_RDONLY|_O_WRONLY|_O_RDWR)
+#define _O_APPEND      0x0008
+#define _O_RANDOM      0x0010
+#define _O_SEQUENTIAL  0x0020
+#define _O_TEMPORARY   0x0040
+#define _O_NOINHERIT   0x0080
+#define _O_CREAT       0x0100
+#define _O_TRUNC       0x0200
+#define _O_EXCL        0x0400
+#define _O_SHORT_LIVED 0x1000
+#define _O_TEXT        0x4000
+#define _O_BINARY      0x8000
+
 #define CAB_SPLITMAX (10)
 
 #define CAB_SEARCH_SIZE (32*1024)
@@ -132,7 +149,7 @@ struct ZIPstate {
     cab_ULONG x[ZIPBMAX+1];     /* bit offsets, then code stack */
     cab_UBYTE *inpos;
 };
-
+  
 /* Quantum stuff */
 
 struct QTMmodelsym {
@@ -140,7 +157,7 @@ struct QTMmodelsym {
 };
 
 struct QTMmodel {
-  int shiftsleft, entries;
+  int shiftsleft, entries; 
   struct QTMmodelsym *syms;
   cab_UWORD tabloc[256];
 };
@@ -614,29 +631,27 @@ static const cab_UWORD Zipmask[17] = {                                          
  0x01ff, 0x03ff, 0x07ff, 0x0fff, 0x1fff, 0x3fff, 0x7fff, 0xffff                    \
 }
 
-/* EXTRACTdest flags */
+/* SESSION Operation */
 #define EXTRACT_FILLFILELIST  0x00000001
 #define EXTRACT_EXTRACTFILES  0x00000002
 
-struct ExtractFileList {
-        LPSTR  filename;
-        struct ExtractFileList *next;
-        BOOL   flag;
-} ;
+struct FILELIST{
+    LPSTR FileName;
+    struct FILELIST *next;
+    BOOL DoExtract;
+};
 
-/* the first parameter of the function extract */
 typedef struct {
-        long  result1;          /* 0x000 */
-        long  unknown1[3];      /* 0x004 */
-        struct ExtractFileList *filelist; /* 0x010 */
-        long  filecount;        /* 0x014 */
-        DWORD flags;            /* 0x018 */
-        char  directory[MAX_PATH]; /* 0x01c */
-        char  lastfile[MAX_PATH];  /* 0x120 */
-        char  unknown2[MAX_PATH];  /* 0x224 */
-        struct ExtractFileList *filterlist; /* 0x328 */
-} EXTRACTdest;
-
+    INT FileSize;
+    ERF Error;
+    struct FILELIST *FileList;
+    INT FileCount;
+    INT Operation;
+    CHAR Destination[MAX_PATH];
+    CHAR CurrentFile[MAX_PATH];
+    CHAR Reserved[MAX_PATH];
+    struct FILELIST *FilterList;
+} SESSION;
 
 /* from fdi.c */
 void QTMupdatemodel(struct QTMmodel *model, int sym);
