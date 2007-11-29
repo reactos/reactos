@@ -530,7 +530,7 @@ HRESULT WINAPI ConvertINetMultiByteToUnicode(
             *pcDstSize = MultiByteToWideChar(dwEncoding, 0, pSrcStr, *pcSrcSize, NULL, 0);
         break;
     }
-
+    
     if (!*pcDstSize)
         return E_FAIL;
 
@@ -634,10 +634,9 @@ HRESULT WINAPI ConvertINetString(
 
         pDstStrW = HeapAlloc(GetProcessHeap(), 0, cDstSizeW * sizeof(WCHAR));
         hr = ConvertINetMultiByteToUnicode(pdwMode, dwSrcEncoding, pSrcStr, pcSrcSize, pDstStrW, &cDstSizeW);
-        if (hr != S_OK)
-            return hr;
+        if (hr == S_OK)
+            hr = ConvertINetUnicodeToMultiByte(pdwMode, dwDstEncoding, pDstStrW, &cDstSizeW, pDstStr, pcDstSize);
 
-        hr = ConvertINetUnicodeToMultiByte(pdwMode, dwDstEncoding, pDstStrW, &cDstSizeW, pDstStr, pcDstSize);
         HeapFree(GetProcessHeap(), 0, pDstStrW);
         return hr;
     }
@@ -694,7 +693,7 @@ static inline INT lcid_to_rfc1766A( LCID lcid, LPSTR rfc1766, INT len )
     if (n)
     {
         rfc1766[n - 1] = '-';
-        n += GetLocaleInfoA( lcid, LOCALE_SISO3166CTRYNAME, rfc1766 + n, len - n ) + 1;
+        n += GetLocaleInfoA( lcid, LOCALE_SISO3166CTRYNAME, rfc1766 + n, len - n );
         LCMapStringA( LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, rfc1766, n, rfc1766, len );
         return n;
     }
@@ -707,7 +706,7 @@ static inline INT lcid_to_rfc1766W( LCID lcid, LPWSTR rfc1766, INT len )
     if (n)
     {
         rfc1766[n - 1] = '-';
-        n += GetLocaleInfoW( lcid, LOCALE_SISO3166CTRYNAME, rfc1766 + n, len - n ) + 1;
+        n += GetLocaleInfoW( lcid, LOCALE_SISO3166CTRYNAME, rfc1766 + n, len - n );
         LCMapStringW( LOCALE_USER_DEFAULT, LCMAP_LOWERCASE, rfc1766, n, rfc1766, len );
         return n;
     }
@@ -830,7 +829,7 @@ static HRESULT WINAPI MLANGCF_CreateInstance(LPCLASSFACTORY iface, LPUNKNOWN pOu
     IClassFactoryImpl *This = (IClassFactoryImpl *)iface;
     HRESULT hres;
     LPUNKNOWN punk;
-
+    
     TRACE("(%p)->(%p,%s,%p)\n",This,pOuter,debugstr_guid(riid),ppobj);
 
     *ppobj = NULL;
@@ -1217,6 +1216,7 @@ static ULONG WINAPI fnIEnumScript_Release(
     if (ref == 0)
     {
         TRACE("Destroying %p\n", This);
+        HeapFree(GetProcessHeap(), 0, This->script_info);
         HeapFree(GetProcessHeap(), 0, This);
     }
 
@@ -1384,7 +1384,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePageToCodePages(
 {
     ICOM_THIS_MULTI(MLang_impl, vtbl_IMLangFontLink, iface);
     CHARSETINFO cs;
-    BOOL rc;
+    BOOL rc; 
 
     TRACE("(%p) Seeking %u\n",This, uCodePage);
     memset(&cs, 0, sizeof(cs));
@@ -1412,7 +1412,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
     DWORD mask = 0x00000000;
     UINT i;
     CHARSETINFO cs;
-    BOOL rc;
+    BOOL rc; 
 
     TRACE("(%p) scanning  0x%x  default page %u\n",This, dwCodePages,
             uDefaultCodePage);
@@ -1420,7 +1420,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
     *puCodePage = 0x00000000;
 
     rc = TranslateCharsetInfo((DWORD*)uDefaultCodePage, &cs, TCI_SRCCODEPAGE);
-
+  
     if (rc && (dwCodePages & cs.fs.fsCsb[0]))
     {
         TRACE("Found Default Codepage\n");
@@ -1428,7 +1428,7 @@ static HRESULT WINAPI fnIMLangFontLink_CodePagesToCodePage(
         return S_OK;
     }
 
-
+    
     for (i = 0; i < 32; i++)
     {
 
@@ -1862,7 +1862,7 @@ static BOOL CALLBACK enum_locales_proc(LPWSTR locale)
     info->wszLocaleName[0] = 0;
     GetLocaleInfoW(info->lcid, LOCALE_SLANGUAGE, info->wszLocaleName, MAX_LOCALE_NAME);
     TRACE("ISO639: %s SLANGUAGE: %s\n", wine_dbgstr_w(info->wszRfc1766), wine_dbgstr_w(info->wszLocaleName));
-
+    
     data->total++;
 
     return TRUE;
@@ -1885,7 +1885,11 @@ static HRESULT EnumRfc1766_create(MLang_impl* mlang, LANGID LangId,
     data.total = 0;
     data.allocated = 32;
     data.info = HeapAlloc(GetProcessHeap(), 0, data.allocated * sizeof(RFC1766INFO));
-    if (!data.info) return S_FALSE;
+    if (!data.info)
+    {
+        HeapFree(GetProcessHeap(), 0, rfc);
+        return S_FALSE;
+    }
 
     TlsSetValue(MLANG_tls_index, &data);
     EnumSystemLocalesW(enum_locales_proc, 0/*LOCALE_SUPPORTED*/);
@@ -1893,7 +1897,12 @@ static HRESULT EnumRfc1766_create(MLang_impl* mlang, LANGID LangId,
 
     TRACE("enumerated %d rfc1766 structures\n", data.total);
 
-    if (!data.total) return FALSE;
+    if (!data.total)
+    {
+        HeapFree(GetProcessHeap(), 0, data.info);
+        HeapFree(GetProcessHeap(), 0, rfc);
+        return FALSE;
+    }
 
     rfc->info = data.info;
     rfc->total = data.total;
@@ -2298,7 +2307,7 @@ static HRESULT WINAPI fnIMultiLanguage2_ConvertStringToUnicodeEx(
  *
  * PARAMS
  *   see ConvertStringToUnicode
- *   dwFlag
+ *   dwFlag 
  *   lpFallBack if dwFlag contains MLCONVCHARF_USEDEFCHAR, lpFallBack string used
  *              instead unconvertible characters.
  *
