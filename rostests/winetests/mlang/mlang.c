@@ -629,7 +629,7 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
             "IMLangFontLink_CodePageToCodePages failed\n");
     ok (dwCodePages != 0, "No CodePages returned\n");
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwCodePages, 1035,
-                &CodePage)==S_OK,
+                &CodePage)==S_OK, 
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 932, "Incorrect CodePage Returned (%i)\n",CodePage);
 
@@ -644,12 +644,12 @@ static void IMLangFontLink_Test(IMLangFontLink* iMLFL)
     dwManyCodePages = dwManyCodePages | dwCodePages;
 
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 1256,
-                &CodePage)==S_OK,
+                &CodePage)==S_OK, 
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 1256, "Incorrect CodePage Returned (%i)\n",CodePage);
 
     ok(IMLangFontLink_CodePagesToCodePage(iMLFL, dwManyCodePages, 936,
-                &CodePage)==S_OK,
+                &CodePage)==S_OK, 
             "IMLangFontLink_CodePagesToCodePage failed\n");
     ok(CodePage == 1252, "Incorrect CodePage Returned (%i)\n",CodePage);
 }
@@ -677,6 +677,7 @@ static void test_rfc1766(IMultiLanguage2 *iML2)
         ok(n == 1, "couldn't fetch 1 RFC1766INFO structure\n");
         ok(IsValidLocale(info.lcid, LCID_SUPPORTED), "invalid lcid %04x\n", info.lcid);
     }
+    IEnumRfc1766_Release(pEnumRfc1766);
 }
 
 static void test_GetLcidFromRfc1766(IMultiLanguage2 *iML2)
@@ -783,6 +784,6 @@ START_TEST(mlang)
 
     IMLangFontLink_Test(iMLFL);
     IMLangFontLink_Release(iMLFL);
-
+    
     CoUninitialize();
 }

@@ -1,9 +1,9 @@
-<module name="shlwapi_winetest" type="win32cui" installbase="bin" installname="shlwapi_winetest.exe" allowwarnings="true">
+<?xml version="1.0"?>
+<!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
+<module name="shlwapi_winetest" type="win32cui" installbase="bin" installname="shlwapi_winetest.exe" allowwarnings="true" entrypoint="0">
 	<include base="shlwapi_winetest">.</include>
-	<define name="__USE_W32API" />
-	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
+	<define name="WINVER">0x600</define>
+	<define name="_WIN32_WINNT">0x600</define>
 	<library>wine</library>
 	<library>shlwapi</library>
 	<library>advapi32</library>
@@ -19,5 +19,6 @@
 	<file>path.c</file>
 	<file>shreg.c</file>
 	<file>string.c</file>
+	<file>url.c</file>
 	<file>testlist.c</file>
 </module>

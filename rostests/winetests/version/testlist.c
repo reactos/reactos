@@ -12,6 +12,6 @@ extern void func_install(void);
 const struct test winetest_testlist[] =
 {
     { "info", func_info },
-//    { "install", func_install },
+    { "install", func_install },
     { 0, 0 }
 };

@@ -23,6 +23,8 @@
 #include "winbase.h"
 #include "winerror.h"
 #include "winuser.h"
+#include "ole2.h"
+#include "oaidl.h"
 
 /* Function ptrs for ordinal calls */
 static HMODULE hShlwapi;
@@ -33,6 +35,7 @@ static HANDLE (WINAPI *pSHAllocShared)(LPCVOID,DWORD,DWORD);
 static LPVOID (WINAPI *pSHLockShared)(HANDLE,DWORD);
 static BOOL   (WINAPI *pSHUnlockShared)(LPVOID);
 static BOOL   (WINAPI *pSHFreeShared)(HANDLE,DWORD);
+static HRESULT(WINAPIV *pSHPackDispParams)(DISPPARAMS*,VARIANTARG*,UINT,...);
 
 static void test_GetAcceptLanguagesA(void)
 {   HRESULT retval;
@@ -52,7 +55,7 @@ static void test_GetAcceptLanguagesA(void)
 	trace("GetAcceptLanguagesA: skipping tests\n");
 	return;
     }
-    ok( (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()) ||
+    ok( (ERROR_NO_IMPERSONATION_TOKEN == GetLastError()) || 
 	(ERROR_CLASS_DOES_NOT_EXIST == GetLastError()) ||
 	(ERROR_PROC_NOT_FOUND == GetLastError()) ||
 	(ERROR_CALL_NOT_IMPLEMENTED == GetLastError()) ||
@@ -380,7 +383,7 @@ static void test_GetShellSecurityDescriptor(void)
                 "GetSecurityDescriptorControl failed with error %u\n", GetLastError());
         ok(0 == (control & SE_SELF_RELATIVE), "SD should be absolute\n");
 
-        ok(GetSecurityDescriptorDacl(psd, &bHasDacl, &pAcl, &bDefaulted),
+        ok(GetSecurityDescriptorDacl(psd, &bHasDacl, &pAcl, &bDefaulted), 
             "GetSecurityDescriptorDacl failed with error %u\n", GetLastError());
 
         ok(bHasDacl, "SD has no DACL\n");
@@ -404,21 +407,21 @@ static void test_GetShellSecurityDescriptor(void)
                     ACCESS_ALLOWED_ACE *paaa; /* will use for DENIED too */
 
                     ok(GetAce(pAcl, 0, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_ALLOWED_ACE_TYPE,
-                            "Invalid ACE type %d\n", paaa->Header.AceType);
+                    ok(paaa->Header.AceType == ACCESS_ALLOWED_ACE_TYPE, 
+                            "Invalid ACE type %d\n", paaa->Header.AceType); 
                     ok(paaa->Header.AceFlags == 0, "Invalid ACE flags %x\n", paaa->Header.AceFlags);
                     ok(paaa->Mask == GENERIC_ALL, "Invalid ACE mask %x\n", paaa->Mask);
 
                     ok(GetAce(pAcl, 1, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE,
-                            "Invalid ACE type %d\n", paaa->Header.AceType);
+                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE, 
+                            "Invalid ACE type %d\n", paaa->Header.AceType); 
                     /* first one of two ACEs generated from inheritable entry - without inheritance */
                     ok(paaa->Header.AceFlags == 0, "Invalid ACE flags %x\n", paaa->Header.AceFlags);
                     ok(paaa->Mask == GENERIC_WRITE, "Invalid ACE mask %x\n", paaa->Mask);
 
                     ok(GetAce(pAcl, 2, (LPVOID*)&paaa), "GetAce failed with error %u\n", GetLastError());
-                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE,
-                            "Invalid ACE type %d\n", paaa->Header.AceType);
+                    ok(paaa->Header.AceType == ACCESS_DENIED_ACE_TYPE, 
+                            "Invalid ACE type %d\n", paaa->Header.AceType); 
                     /* second ACE - with inheritance */
                     ok(paaa->Header.AceFlags == MY_INHERITANCE,
                             "Invalid ACE flags %x\n", paaa->Header.AceFlags);
@@ -431,6 +434,53 @@ static void test_GetShellSecurityDescriptor(void)
     }
 }
 
+static void test_SHPackDispParams(void)
+{
+    DISPPARAMS params;
+    VARIANT vars[10];
+    HRESULT hres;
+
+    if(!pSHPackDispParams)
+        skip("SHPackSidpParams not available\n");
+
+    memset(&params, 0xc0, sizeof(params));
+    memset(vars, 0xc0, sizeof(vars));
+    hres = pSHPackDispParams(&params, vars, 1, VT_I4, 0xdeadbeef);
+    ok(hres == S_OK, "SHPackDispParams failed: %08x\n", hres);
+    ok(params.cArgs == 1, "params.cArgs = %d\n", params.cArgs);
+    ok(params.cNamedArgs == 0, "params.cNamedArgs = %d\n", params.cArgs);
+    ok(params.rgdispidNamedArgs == NULL, "params.rgdispidNamedArgs = %p\n", params.rgdispidNamedArgs);
+    ok(params.rgvarg == vars, "params.rgvarg = %p\n", params.rgvarg);
+    ok(V_VT(vars) == VT_I4, "V_VT(var) = %d\n", V_VT(vars));
+    ok(V_DISPATCH(vars) == (void*)0xdeadbeef, "failed\n");
+
+    memset(&params, 0xc0, sizeof(params));
+    hres = pSHPackDispParams(&params, NULL, 0, 0);
+    ok(hres == S_OK, "SHPackDispParams failed: %08x\n", hres);
+    ok(params.cArgs == 0, "params.cArgs = %d\n", params.cArgs);
+    ok(params.cNamedArgs == 0, "params.cNamedArgs = %d\n", params.cArgs);
+    ok(params.rgdispidNamedArgs == NULL, "params.rgdispidNamedArgs = %p\n", params.rgdispidNamedArgs);
+    ok(params.rgvarg == NULL, "params.rgvarg = %p\n", params.rgvarg);
+
+    memset(vars, 0xc0, sizeof(vars));
+    memset(&params, 0xc0, sizeof(params));
+    hres = pSHPackDispParams(&params, vars, 4, VT_BSTR, (void*)0xdeadbeef, VT_EMPTY, 10,
+            VT_I4, 100, VT_DISPATCH, (void*)0xdeadbeef);
+    ok(hres == S_OK, "SHPackDispParams failed: %08x\n", hres);
+    ok(params.cArgs == 4, "params.cArgs = %d\n", params.cArgs);
+    ok(params.cNamedArgs == 0, "params.cNamedArgs = %d\n", params.cArgs);
+    ok(params.rgdispidNamedArgs == NULL, "params.rgdispidNamedArgs = %p\n", params.rgdispidNamedArgs);
+    ok(params.rgvarg == vars, "params.rgvarg = %p\n", params.rgvarg);
+    ok(V_VT(vars) == VT_DISPATCH, "V_VT(vars[0]) = %x\n", V_VT(vars));
+    ok(V_I4(vars) == 0xdeadbeef, "V_I4(vars[0]) = %x\n", V_I4(vars));
+    ok(V_VT(vars+1) == VT_I4, "V_VT(vars[1]) = %d\n", V_VT(vars+1));
+    ok(V_I4(vars+1) == 100, "V_I4(vars[1]) = %x\n", V_I4(vars+1));
+    ok(V_VT(vars+2) == VT_I4, "V_VT(vars[2]) = %d\n", V_VT(vars+2));
+    ok(V_I4(vars+2) == 10, "V_I4(vars[2]) = %x\n", V_I4(vars+2));
+    ok(V_VT(vars+3) == VT_BSTR, "V_VT(vars[3]) = %d\n", V_VT(vars+3));
+    ok(V_BSTR(vars+3) == (void*)0xdeadbeef, "V_BSTR(vars[3]) = %p\n", V_BSTR(vars+3));
+}
+
 START_TEST(ordinal)
 {
   hShlwapi = GetModuleHandleA("shlwapi.dll");
@@ -441,10 +491,12 @@ START_TEST(ordinal)
   pSHLockShared=(void*)GetProcAddress(hShlwapi,(char*)8);
   pSHUnlockShared=(void*)GetProcAddress(hShlwapi,(char*)9);
   pSHFreeShared=(void*)GetProcAddress(hShlwapi,(char*)10);
+  pSHPackDispParams=(void*)GetProcAddress(hShlwapi,(char*)282);
 
   test_GetAcceptLanguagesA();
   test_SHSearchMapInt();
   test_alloc_shared();
   test_fdsa();
   test_GetShellSecurityDescriptor();
+  test_SHPackDispParams();
 }
