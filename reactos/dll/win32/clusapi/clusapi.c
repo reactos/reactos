@@ -30,12 +30,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(clusapi);
 /***********************************************************************
  *             GetNodeClusterState   (CLUSAPI.@)
  *
+ * PARAMS
+ *   lpszNodeName    [I] Optional Pointer to a NULL terminated unicode string
+ *   pdwClusterState [O] Current state of the cluster
+ *                        0x00 - Cluster not installed.
+ *                        0x01 - Cluster not configured.
+ *                        0x03 - Cluster not running.
+ *                        0x13 - Cluster is running.
  */
 DWORD WINAPI GetNodeClusterState(LPCWSTR lpszNodeName, LPDWORD pdwClusterState)
 {
-    FIXME("(%s,%p) stub!\n",debugstr_w(lpszNodeName),pdwClusterState);
+    FIXME("(%s,%p,%u) stub!\n",debugstr_w(lpszNodeName),pdwClusterState, *pdwClusterState);
 
-    return 0;
+    *pdwClusterState = 0;
+
+    return ERROR_SUCCESS;
 }
 
 
