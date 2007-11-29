@@ -1180,6 +1180,28 @@ typedef HANDLE HCRYPTASYNC, *PHCRYPTASYNC;
 typedef void (WINAPI *PFN_CRYPT_ASYNC_PARAM_FREE_FUNC)(LPSTR pszParamOid,
  LPVOID pvParam);
 
+#define CRYPT_PARAM_ASYNC_RETRIEVAL_COMPLETION ((LPCSTR)1)
+#define CRYPT_PARAM_CANCEL_ASYNC_RETRIEVAL     ((LPCSTR)2)
+
+typedef void (WINAPI *PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC)(
+ void *pvCompletion, DWORD dwCompletionCode, LPCSTR pszURL, LPSTR pszObjectOid,
+ void *pvObject);
+
+typedef struct _CRYPT_ASYNC_RETRIEVAL_COMPLETION
+{
+    PFN_CRYPT_ASYNC_RETRIEVAL_COMPLETION_FUNC pfnCompletion;
+    void                                     *pvCompletion;
+} CRYPT_ASYNC_RETRIEVAL_COMPLETION, *PCRYPT_ASYNC_RETRIEVAL_COMPLETION;
+
+typedef BOOL (WINAPI *PFN_CANCEL_ASYNC_RETRIEVAL_FUNC)(
+ HCRYPTASYNC hAsyncRetrieve);
+
+typedef struct _CRYPT_BLOB_ARRAY
+{
+    DWORD            cBlob;
+    PCRYPT_DATA_BLOB rgBlob;
+} CRYPT_BLOB_ARRAY, *PCRYPT_BLOB_ARRAY;
+
 typedef struct _CRYPT_CREDENTIALS {
     DWORD  cbSize;
     LPCSTR pszCredentialsOid;
@@ -1211,7 +1233,26 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
     DWORD     dwMaxUrlRetrievalByteCount;
 } CRYPT_RETRIEVE_AUX_INFO, *PCRYPT_RETRIEVE_AUX_INFO;
 
+typedef void (WINAPI *PFN_FREE_ENCODED_OBJECT_FUNC)(LPCSTR pszObjectOid,
+ PCRYPT_BLOB_ARRAY pObject, void *pvFreeContext);
+
+#define SCHEME_OID_RETRIEVE_ENCODED_OBJECT_FUNC \
+ "SchemeDllRetrieveEncodedObject"
+#define SCHEME_OID_RETRIEVE_ENCODED_OBJECTW_FUNC \
+ "SchemeDllRetrieveEncodedObjectW"
+/* The signature of SchemeDllRetrieveEncodedObjectW is:
+BOOL WINAPI SchemeDllRetrieveEncodedObjectW(LPCWSTR pwszUrl,
+ LPCSTR pszObjectOid, DWORD dwRetrievalFlags, DWORD dwTimeout,
+ PCRYPT_BLOB_ARRAY pObject, PFN_FREE_ENCODED_OBJECT_FUNC *ppfnFreeObject,
+ void **ppvFreeContext, HCRYPTASYNC hAsyncRetrieve,
+ PCRYPT_CREDENTIALS pCredentials, PCRYPT_RETRIEVE_AUX_INFO pAuxInfo);
+ */
+
 #define CONTEXT_OID_CREATE_OBJECT_CONTEXT_FUNC "ContextDllCreateObjectContext"
+/* The signature of ContextDllCreateObjectContext is:
+BOOL WINAPI ContextDllCreateObjectContext(LPCSTR pszObjectOid,
+ DWORD dwRetrievalFlags, PCRYPT_BLOB_ARRAY pObject, void **ppvContxt);
+ */
 
 #define CONTEXT_OID_CERTIFICATE ((LPCSTR)1)
 #define CONTEXT_OID_CRL         ((LPCSTR)2)
@@ -1309,6 +1350,12 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
 #define ALG_SID_SAFERSK64               7
 #define ALG_SID_SAFERSK128              8
 #define ALG_SID_3DES_112                9
+#define ALG_SID_CYLINK_MEK             12
+#define ALG_SID_RC5                    13
+#define ALG_SID_AES_128                14
+#define ALG_SID_AES_192                15
+#define ALG_SID_AES_256                16
+#define ALG_SID_AES                    17
 /* Diffie-Hellmans SIDs */
 #define ALG_SID_DH_SANDF                1
 #define ALG_SID_DH_EPHEM                2
@@ -1330,6 +1377,10 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
 #define ALG_SID_SSL3SHAMD5              8
 #define ALG_SID_HMAC                    9
 #define ALG_SID_TLS1PRF                10
+#define ALG_SID_HASH_REPLACE_OWF       11
+#define ALG_SID_SHA_256                12
+#define ALG_SID_SHA_384                13
+#define ALG_SID_SHA_512                14
 /* SCHANNEL SIDs */
 #define ALG_SID_SSL3_MASTER             1
 #define ALG_SID_SCHANNEL_MASTER_HASH    2
@@ -1350,6 +1401,10 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
 #define CALG_SSL3_SHAMD5          (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_SSL3SHAMD5)
 #define CALG_HMAC                 (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_HMAC)
 #define CALG_TLS1PRF              (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_TLS1PRF)
+#define CALG_HASH_REPLACE_OWF     (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_HASH_REPLACE_OWF)
+#define CALG_SHA_256              (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_SHA_256)
+#define CALG_SHA_384              (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_SHA_384)
+#define CALG_SHA_512              (ALG_CLASS_HASH         | ALG_TYPE_ANY           | ALG_SID_SHA_512)
 #define CALG_RSA_SIGN             (ALG_CLASS_SIGNATURE    | ALG_TYPE_RSA           | ALG_SID_RSA_ANY)
 #define CALG_DSS_SIGN             (ALG_CLASS_SIGNATURE    | ALG_TYPE_DSS           | ALG_SID_DSS_ANY)
 #define CALG_NO_SIGN              (ALG_CLASS_SIGNATURE    | ALG_TYPE_ANY           | ALG_SID_ANY)
@@ -1360,8 +1415,13 @@ typedef struct _CRYPT_RETRIEVE_AUX_INFO {
 #define CALG_RC2                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_RC2)
 #define CALG_3DES                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES)
 #define CALG_3DES_112             (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_3DES_112)
+#define CALG_AES_128              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_128)
+#define CALG_AES_192              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_192)
+#define CALG_AES_256              (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES_256)
+#define CALG_AES                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_BLOCK         | ALG_SID_AES)
 #define CALG_RC4                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC4)
 #define CALG_SEAL                 (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_SEAL)
+#define CALG_RC5                  (ALG_CLASS_DATA_ENCRYPT | ALG_TYPE_STREAM        | ALG_SID_RC5)
 #define CALG_SSL3_MASTER          (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SSL3_MASTER)
 #define CALG_SCHANNEL_MASTER_HASH (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MASTER_HASH)
 #define CALG_SCHANNEL_MAC_KEY     (ALG_CLASS_MSG_ENCRYPT  | ALG_TYPE_SECURECHANNEL | ALG_SID_SCHANNEL_MAC_KEY)
@@ -1522,6 +1582,20 @@ static const WCHAR MS_SCARD_PROV_W[] =           { 'M','i','c','r','o','s','o','
 	'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 };
 #endif
 #define MS_SCARD_PROV                            WINELIB_NAME_AW(MS_SCARD_PROV_)
+
+#define MS_ENH_RSA_AES_PROV_A                          "Microsoft Enhanced RSA and AES Cryptographic Provider"
+#if defined(__GNUC__)
+# define MS_ENH_RSA_AES_PROV_W (const WCHAR []){ 'M','i','c','r','o','s','o','f','t',' ', \
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',\
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 }
+#elif defined(_MSC_VER)
+# define MS_ENH_RSA_AES_PROV_W     L"Microsoft Enhanced RSA and AES Cryptographic Provider"
+#else
+static const WCHAR MS_ENH_RSA_AES_PROV_W[] =           { 'M','i','c','r','o','s','o','f','t',' ',
+        'E','n','h','a','n','c','e','d',' ','R','S','A',' ','a','n','d',' ','A','E','S',' ',
+        'C','r','y','p','t','o','g','r','a','p','h','i','c',' ','P','r','o','v','i','d','e','r',0 };
+#endif
+#define MS_ENH_RSA_AES_PROV                            WINELIB_NAME_AW(MS_ENH_RSA_AES_PROV_)
 
 /* Key Specs*/
 #define AT_KEYEXCHANGE          1

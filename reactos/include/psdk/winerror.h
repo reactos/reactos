@@ -1872,6 +1872,7 @@
 #define MAKE_SCODE(s,f,c) ((SCODE)(((unsigned long)(s)<<31)|((unsigned long)(f)<<16)|((unsigned long)(c))) )
 #define FACILITY_NT_BIT 0x10000000
 #define HRESULT_FROM_WIN32(x) (x?((HRESULT)(((x)&0x0000FFFF)|(FACILITY_WIN32<<16)|0x80000000)):0)
+#define __HRESULT_FROM_WIN32(x) HRESULT_FROM_WIN32(x)
 #define HRESULT_FROM_NT(x) ((HRESULT)((x)|FACILITY_NT_BIT))
 #define GetScode(hr) ((SCODE) (hr))
 #define ResultFromScode(sc) ((HRESULT) (sc))

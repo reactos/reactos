@@ -370,6 +370,58 @@ DECLARE_INTERFACE_(IACList,IUnknown)
 #define IACList_Expand(p,a)             (p)->lpVtbl->Expand(p,a)
 #endif
 
+/* IProgressDialog interface */
+#define PROGDLG_NORMAL           0x00000000
+#define PROGDLG_MODAL            0x00000001
+#define PROGDLG_AUTOTIME         0x00000002
+#define PROGDLG_NOTIME           0x00000004
+#define PROGDLG_NOMINIMIZE       0x00000008
+#define PROGDLG_NOPROGRESSBAR    0x00000010
+#define PROGDLG_MARQUEEPROGRESS  0x00000020
+#define PROGDLG_NOCANCEL         0x00000040
+
+#define PDTIMER_RESET            0x00000001
+#define PDTIMER_PAUSE            0x00000002
+#define PDTIMER_RESUME           0x00000003
+
+#define INTERFACE IProgressDialog
+DECLARE_INTERFACE_(IProgressDialog,IUnknown)
+{
+    /*** IUnknown methods ***/
+    STDMETHOD_(HRESULT,QueryInterface) (THIS_ REFIID riid, void** ppvObject) PURE;
+    STDMETHOD_(ULONG,AddRef) (THIS) PURE;
+    STDMETHOD_(ULONG,Release) (THIS) PURE;
+    /*** IProgressDialog methods ***/
+    STDMETHOD(StartProgressDialog)(THIS_ HWND hwndParent, IUnknown *punkEnableModeless, DWORD dwFlags, LPCVOID reserved) PURE;
+    STDMETHOD(StopProgressDialog)(THIS) PURE;
+    STDMETHOD(SetTitle)(THIS_ LPCWSTR pwzTitle) PURE;
+    STDMETHOD(SetAnimation)(THIS_ HINSTANCE hInstance, UINT uiResourceId) PURE;
+    STDMETHOD_(BOOL,HasUserCancelled)(THIS) PURE;
+    STDMETHOD(SetProgress)(THIS_ DWORD dwCompleted, DWORD dwTotal) PURE;
+    STDMETHOD(SetProgress64)(THIS_ ULONGLONG ullCompleted, ULONGLONG ullTotal) PURE;
+    STDMETHOD(SetLine)(THIS_ DWORD dwLineNum, LPCWSTR pwzString, BOOL bPath, LPCVOID reserved) PURE;
+    STDMETHOD(SetCancelMsg)(THIS_ LPCWSTR pwzCancelMsg, LPCVOID reserved) PURE;
+    STDMETHOD(Timer)(THIS_ DWORD dwTimerAction, LPCVOID reserved) PURE;
+};
+#undef INTERFACE
+
+#if !defined(__cplusplus) || defined(CINTERFACE)
+/*** IUnknown methods ***/
+#define IProgressDialog_QueryInterface(p,a,b)  (p)->lpVtbl->QueryInterface(p,a,b)
+#define IProgressDialog_AddRef(p)              (p)->lpVtbl->AddRef(p)
+#define IProgressDialog_Release(p)             (p)->lpVtbl->Release(p)
+/*** IProgressDialog methods ***/
+#define IProgressDialog_StartProgressDialog(p,a,b,c,d)    (p)->lpVtbl->StartProgressDialog(p,a,b,c,d)
+#define IProgressDialog_StopProgressDialog(p)             (p)->lpVtbl->StopProgressDialog(p)
+#define IProgressDialog_SetTitle(p,a)                     (p)->lpVtbl->SetTitle(p,a)
+#define IProgressDialog_SetAnimation(p,a,b)               (p)->lpVtbl->SetAnimation(p,a,b)
+#define IProgressDialog_HasUserCancelled(p)               (p)->lpVtbl->HasUserCancelled(p)
+#define IProgressDialog_SetProgress(p,a,b)                (p)->lpVtbl->SetProgress(p,a,b)
+#define IProgressDialog_SetProgress64(p,a,b)              (p)->lpVtbl->SetProgress64(p,a,b)
+#define IProgressDialog_SetLine(p,a,b,c,d)                (p)->lpVtbl->SetLine(p,a,b,c,d)
+#define IProgressDialog_SetCancelMsg(p,a,b)               (p)->lpVtbl->SetCancelMsg(p,a,b)
+#define IProgressDialog_Timer(p,a,b)                      (p)->lpVtbl->Timer(p,a,b)
+#endif
 
 /* IDockingWindowFrame interface */
 #define INTERFACE IDockingWindow
