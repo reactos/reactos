@@ -122,6 +122,7 @@ GdiIsHandleValid(HGDIOBJ hGdiObj);
 BOOL
 GdiGetHandleUserData(
     HGDIOBJ hGdiObj,
+    DWORD ObjectType,
     PVOID *UserData
 );
 

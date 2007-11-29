@@ -65,7 +65,7 @@ IntCreateDICW ( LPCWSTR   lpwszDriver,
     PDC_ATTR Dc_Attr;
     PLDC pLDC;
 
-    GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr);
+    GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr);
 
     pLDC = LocalAlloc(LMEM_ZEROINIT, sizeof(LDC));
 
@@ -258,7 +258,7 @@ DeleteDC(HDC hDC)
   PDC_ATTR Dc_Attr;
   PLDC pLDC;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
   if ( Dc_Attr )
     {
@@ -330,7 +330,7 @@ DeleteObject(HGDIOBJ hObject)
           PBRUSH_ATTR Brh_Attr;
           PTEB pTeb;
 
-          if ((!GdiGetHandleUserData(hObject, (PVOID) &Brh_Attr)) ||
+          if ((!GdiGetHandleUserData(hObject, (DWORD)Type, (PVOID) &Brh_Attr)) ||
               (Brh_Attr == NULL) ) break;
 
           pTeb = NtCurrentTeb();
@@ -387,7 +387,7 @@ GetDCObject( HDC hDC, INT iType)
    HGDIOBJ hGO = NULL;
    PDC_ATTR Dc_Attr;
 
-   if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return NULL;
+   if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
 
    switch (iType)
    {
@@ -750,7 +750,7 @@ GetDCBrushColor(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
 }
 
@@ -765,7 +765,7 @@ GetDCPenColor(
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return CLR_INVALID;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return CLR_INVALID;
   return (COLORREF) Dc_Attr->ulPenClr;
 }
 
@@ -782,7 +782,7 @@ SetDCBrushColor(
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
   else
   {
     OldColor = (COLORREF) Dc_Attr->ulBrushClr;
@@ -810,7 +810,7 @@ SetDCPenColor(
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
   else
   {
      OldColor = (COLORREF) Dc_Attr->ulPenClr;
@@ -834,7 +834,7 @@ STDCALL
 GetBkColor(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->ulBackgroundClr;
 }
 
@@ -851,7 +851,7 @@ SetBkColor(
   PDC_ATTR Dc_Attr;
   COLORREF OldColor = CLR_INVALID;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldColor;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldColor;
 #if 0
   if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
   {
@@ -892,7 +892,7 @@ STDCALL
 GetBkMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->lBkMode;
 }
 
@@ -908,7 +908,7 @@ SetBkMode(HDC hdc,
   PDC_ATTR Dc_Attr;
   INT OldMode = 0;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return OldMode;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return OldMode;
 #if 0
   if (GDI_HANDLE_GET_TYPE(hdc) != GDI_OBJECT_TYPE_DC)
   {
@@ -944,7 +944,7 @@ STDCALL
 GetPolyFillMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->lFillMode;
 }
 
@@ -978,7 +978,7 @@ SetPolyFillMode(HDC hdc,
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 
   if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG)hdc)
   {
@@ -1004,7 +1004,7 @@ STDCALL
 GetGraphicsMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->iGraphicsMode;
 }
 
@@ -1023,7 +1023,7 @@ SetGraphicsMode(HDC hdc,
      SetLastError(ERROR_INVALID_PARAMETER);
      return 0;
   }
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 
   if (iMode == Dc_Attr->iGraphicsMode) return iMode;
 
@@ -1234,7 +1234,7 @@ STDCALL
 GetMapMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->iMapMode;
 }
 
@@ -1249,7 +1249,7 @@ SetMapMode(
 	)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 #if 0
   if (GDI_HANDLE_GET_TYPE(hDC) != GDI_OBJECT_TYPE_DC)
   {
@@ -1274,7 +1274,7 @@ STDCALL
 GetStretchBltMode(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->lStretchBltMode;
 }
 
@@ -1307,7 +1307,7 @@ SetStretchBltMode(HDC hdc, int iStretchMode)
     }
   }
 #endif
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
 
   oSMode = Dc_Attr->lStretchBltMode;
   Dc_Attr->lStretchBltMode = iStretchMode;
@@ -1328,7 +1328,7 @@ STDCALL
 GetHFONT(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return NULL;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return NULL;
   return Dc_Attr->hlfntNew;
 }
 

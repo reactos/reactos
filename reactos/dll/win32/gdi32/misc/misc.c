@@ -115,10 +115,10 @@ BOOL GdiIsHandleValid(HGDIOBJ hGdiObj)
   return FALSE;
 }
 
-BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
+BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
 {
   PGDI_TABLE_ENTRY Entry = GdiHandleTable + GDI_HANDLE_GET_INDEX(hGdiObj);
-  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) != 0 &&
+  if((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == ObjectType &&
      (Entry->Type << GDI_ENTRY_UPPER_SHIFT) == GDI_HANDLE_GET_UPPER(hGdiObj))
   {
     HANDLE pid = (HANDLE)((ULONG_PTR)Entry->ProcessId & ~0x1);
@@ -152,7 +152,7 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, PVOID *UserData)
 PLDC GdiGetLDC(HDC hDC)
 {
     PDC_ATTR Dc_Attr;
-    if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr))
+    if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
       return NULL;
     return Dc_Attr->pvLDC;
 }

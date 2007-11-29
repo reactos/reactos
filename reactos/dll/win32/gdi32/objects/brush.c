@@ -213,7 +213,7 @@ STDCALL
 GetROP2(HDC hdc)
 {
   PDC_ATTR Dc_Attr;
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return 0;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return 0;
   return Dc_Attr->jROP2;
 }
 
@@ -250,7 +250,7 @@ SetROP2(HDC hdc,
     }
  }
 #endif
- if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+ if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
  if (NtCurrentTeb()->GdiTebBatch.HDC == (ULONG) hdc)
  {
@@ -277,7 +277,7 @@ GetBrushOrgEx(HDC hdc,LPPOINT pt)
 {
   PDC_ATTR Dc_Attr;
 
-  if (!GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr)) return FALSE;
+  if (!GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
   if (pt)
   {
      pt->x = Dc_Attr->ptlBrushOrigin.x;
@@ -314,7 +314,7 @@ SetBrushOrgEx(HDC hdc,
     return FALSE;
  }
 #endif
- if (GdiGetHandleUserData((HGDIOBJ) hdc, (PVOID) &Dc_Attr))
+ if (GdiGetHandleUserData((HGDIOBJ) hdc, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
  {
     PTEB pTeb = NtCurrentTeb();
     if (lppt)

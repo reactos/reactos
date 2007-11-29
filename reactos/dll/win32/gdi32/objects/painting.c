@@ -59,7 +59,7 @@ MoveToEx( HDC hDC, INT x, INT y, LPPOINT Point )
     }
  }
 #endif
- if (!GdiGetHandleUserData((HGDIOBJ) hDC, (PVOID) &Dc_Attr)) return FALSE;
+ if (!GdiGetHandleUserData((HGDIOBJ) hDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr)) return FALSE;
 
  if ( Point )
  {
