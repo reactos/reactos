@@ -244,7 +244,7 @@ HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","",0x00000000
 HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\InProcServer32","ThreadingModel",0x00000000,"Apartment"
 HKCR,"CLSID\{09799AFB-AD67-11d1-ABCD-00C04FC30936}\shellex\MayChangeDefaultMenu","",0x00000000,""
 HKCR,"SystemFileAssociations","",0x00000000,""
-
+HKCR,"Applications","",0x00000000,""
 
 ; Recycle bin is not implemented 
 ;HKCR,"CLSID\{645FF040-5081-101B-9F08-00AA002F954E}","",0x00000000,"Recycle Bin"

@@ -38,8 +38,9 @@ HKCU,"SOFTWARE\Microsoft\DirectX","InstallMDX",0x00010001,0x00000001
 HKCU,"SOFTWARE\Microsoft\DirectX","RC",0x00010001,0x00000000
 HKCU,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"5.03.2600.2180"
 
-
-
+; Open With settings
+HKCU,"SOFTWARE\Classes",,0x00000012
+HKCU,"SOFTWARE\Classes\Applications",,0x00000012
 
 ; Current user shell folder settings
 HKCU,"SOFTWARE\Microsoft\Windows",,0x00000012
