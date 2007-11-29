@@ -31,8 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -47,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
  */
 ULONG CDECL ldap_compareA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR attr, PCHAR value )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *attrW = NULL, *valueW = NULL;
 
@@ -99,7 +97,7 @@ exit:
  */
 ULONG CDECL ldap_compareW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR attr, PWCHAR value )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *attrU = NULL, *valueU = NULL;
     struct berval val = { 0, NULL };
@@ -153,7 +151,7 @@ ULONG CDECL ldap_compare_extA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR attr, PCHAR val
     struct WLDAP32_berval *data, PLDAPControlA *serverctrls, PLDAPControlA *clientctrls,
     ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *attrW = NULL, *valueW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -229,7 +227,7 @@ ULONG CDECL ldap_compare_extW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR attr, PWCHAR 
     struct WLDAP32_berval *data, PLDAPControlW *serverctrls, PLDAPControlW *clientctrls,
     ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *attrU = NULL, *valueU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -292,7 +290,7 @@ exit:
 ULONG CDECL ldap_compare_ext_sA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR attr, PCHAR value,
     struct WLDAP32_berval *data, PLDAPControlA *serverctrls, PLDAPControlA *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *attrW = NULL, *valueW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -366,7 +364,7 @@ exit:
 ULONG CDECL ldap_compare_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR attr, PWCHAR value,
     struct WLDAP32_berval *data, PLDAPControlW *serverctrls, PLDAPControlW *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *attrU = NULL, *valueU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -428,7 +426,7 @@ exit:
  */
 ULONG CDECL ldap_compare_sA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR attr, PCHAR value )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *attrW = NULL, *valueW = NULL;
 
@@ -480,7 +478,7 @@ exit:
  */
 ULONG CDECL ldap_compare_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR attr, PWCHAR value )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *attrU = NULL, *valueU = NULL;
     struct berval val = { 0, NULL };

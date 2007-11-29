@@ -31,8 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -47,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
  */
 ULONG CDECL ldap_modrdnA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newdnW = NULL;
 
@@ -96,7 +94,7 @@ exit:
  */
 ULONG CDECL ldap_modrdnW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newdnU = NULL;
     int msg;
@@ -137,7 +135,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn2A( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn, INT delete )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newdnW = NULL;
 
@@ -187,7 +185,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn2W( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn, INT delete )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newdnU = NULL;
     int msg;
@@ -228,7 +226,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn2_sA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn, INT delete )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newdnW = NULL;
 
@@ -273,7 +271,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn2_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn, INT delete )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newdnU = NULL;
 
@@ -308,7 +306,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn_sA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newdn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newdnW = NULL;
 
@@ -352,7 +350,7 @@ exit:
  */
 ULONG CDECL ldap_modrdn_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newdn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newdnU = NULL;
 

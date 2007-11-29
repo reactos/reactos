@@ -31,9 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_SUCCESS        0x00
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -53,7 +50,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 ULONG CDECL ldap_create_page_controlA( WLDAP32_LDAP *ld, ULONG pagesize,
     struct WLDAP32_berval *cookie, UCHAR critical, PLDAPControlA *control )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     LDAPControlW *controlW = NULL;
 
@@ -126,7 +123,7 @@ static ULONG create_page_control( ULONG pagesize, struct WLDAP32_berval *cookie,
 
     *control = ctrl;
 
-    return LDAP_SUCCESS;
+    return WLDAP32_LDAP_SUCCESS;
 }
 
 #endif /* HAVE_LDAP */
@@ -162,7 +159,7 @@ ULONG CDECL ldap_create_page_controlW( WLDAP32_LDAP *ld, ULONG pagesize,
     return create_page_control( pagesize, cookie, critical, control );
 
 #else
-    return LDAP_NOT_SUPPORTED;
+    return WLDAP32_LDAP_NOT_SUPPORTED;
 #endif
 }
 
@@ -172,7 +169,7 @@ ULONG CDECL ldap_get_next_page( WLDAP32_LDAP *ld, PLDAPSearch search, ULONG page
     FIXME( "(%p, %p, 0x%08x, %p)\n", ld, search, pagesize, message );
 
     if (!ld) return ~0UL;
-    return LDAP_NOT_SUPPORTED;
+    return WLDAP32_LDAP_NOT_SUPPORTED;
 }
 
 ULONG CDECL ldap_get_next_page_s( WLDAP32_LDAP *ld, PLDAPSearch search,
@@ -183,13 +180,13 @@ ULONG CDECL ldap_get_next_page_s( WLDAP32_LDAP *ld, PLDAPSearch search,
            pagesize, count, results );
 
     if (!ld) return ~0UL;
-    return LDAP_NOT_SUPPORTED;
+    return WLDAP32_LDAP_NOT_SUPPORTED;
 }
 
 ULONG CDECL ldap_get_paged_count( WLDAP32_LDAP *ld, PLDAPSearch search,
     ULONG *count, WLDAP32_LDAPMessage *results )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     FIXME( "(%p, %p, %p, %p)\n", ld, search, count, results );
 
@@ -206,7 +203,7 @@ ULONG CDECL ldap_get_paged_count( WLDAP32_LDAP *ld, PLDAPSearch search,
 ULONG CDECL ldap_parse_page_controlA( WLDAP32_LDAP *ld, PLDAPControlA *ctrls,
     ULONG *count, struct WLDAP32_berval **cookie )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     LDAPControlW **ctrlsW = NULL;
 
@@ -220,7 +217,7 @@ ULONG CDECL ldap_parse_page_controlA( WLDAP32_LDAP *ld, PLDAPControlA *ctrls,
 
     ret = ldap_parse_page_controlW( ld, ctrlsW, count, cookie );
     controlarrayfreeW( ctrlsW );
-
+ 
 #endif
     return ret;
 }
@@ -231,7 +228,7 @@ ULONG CDECL ldap_parse_page_controlA( WLDAP32_LDAP *ld, PLDAPControlA *ctrls,
 ULONG CDECL ldap_parse_page_controlW( WLDAP32_LDAP *ld, PLDAPControlW *ctrls,
     ULONG *count, struct WLDAP32_berval **cookie )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     LDAPControlW *control = NULL;
     BerElement *ber;
@@ -250,8 +247,8 @@ ULONG CDECL ldap_parse_page_controlW( WLDAP32_LDAP *ld, PLDAPControlW *ctrls,
     }
 
     if (!control)
-        return WLDAP32_LDAP_CONTROL_NOT_FOUND;
-
+        return WLDAP32_LDAP_CONTROL_NOT_FOUND; 
+            
     ber = ber_init( &((LDAPControl *)control)->ldctl_value );
     if (!ber)
         return WLDAP32_LDAP_NO_MEMORY;
@@ -260,10 +257,10 @@ ULONG CDECL ldap_parse_page_controlW( WLDAP32_LDAP *ld, PLDAPControlW *ctrls,
     if ( tag == LBER_ERROR )
         ret = WLDAP32_LDAP_DECODING_ERROR;
     else
-        ret = LDAP_SUCCESS;
+        ret = WLDAP32_LDAP_SUCCESS;
 
     ber_free( ber, 1 );
-
+    
 #endif
     return ret;
 }
@@ -273,7 +270,7 @@ ULONG CDECL ldap_search_abandon_page( WLDAP32_LDAP *ld, PLDAPSearch search )
     FIXME( "(%p, %p)\n", ld, search );
 
     if (!ld) return ~0UL;
-    return LDAP_SUCCESS;
+    return WLDAP32_LDAP_SUCCESS;
 }
 
 PLDAPSearch CDECL ldap_search_init_pageA( WLDAP32_LDAP *ld, PCHAR dn, ULONG scope,

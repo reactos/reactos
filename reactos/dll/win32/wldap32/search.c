@@ -31,9 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_SUCCESS        0x00
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -49,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 ULONG CDECL ldap_searchA( WLDAP32_LDAP *ld, PCHAR base, ULONG scope, PCHAR filter,
     PCHAR attrs[], ULONG attrsonly )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *baseW = NULL, *filterW = NULL, **attrsW = NULL;
 
@@ -110,7 +107,7 @@ exit:
 ULONG CDECL ldap_searchW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope, PWCHAR filter,
     PWCHAR attrs[], ULONG attrsonly )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
     int msg;
@@ -161,7 +158,7 @@ ULONG CDECL ldap_search_extA( WLDAP32_LDAP *ld, PCHAR base, ULONG scope,
     PCHAR filter, PCHAR attrs[], ULONG attrsonly, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls, ULONG timelimit, ULONG sizelimit, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *baseW = NULL, *filterW = NULL, **attrsW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -242,7 +239,7 @@ ULONG CDECL ldap_search_extW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
     PWCHAR filter, PWCHAR attrs[], ULONG attrsonly, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls, ULONG timelimit, ULONG sizelimit, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -303,7 +300,7 @@ ULONG CDECL ldap_search_ext_sA( WLDAP32_LDAP *ld, PCHAR base, ULONG scope,
     PCHAR filter, PCHAR attrs[], ULONG attrsonly, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls, struct l_timeval* timeout, ULONG sizelimit, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *baseW = NULL, *filterW = NULL, **attrsW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -381,7 +378,7 @@ ULONG CDECL ldap_search_ext_sW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope,
     PWCHAR filter, PWCHAR attrs[], ULONG attrsonly, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls, struct l_timeval* timeout, ULONG sizelimit, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -437,7 +434,7 @@ exit:
 ULONG CDECL ldap_search_sA( WLDAP32_LDAP *ld, PCHAR base, ULONG scope, PCHAR filter,
     PCHAR attrs[], ULONG attrsonly, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *baseW = NULL, *filterW = NULL, **attrsW = NULL;
 
@@ -497,7 +494,7 @@ exit:
 ULONG CDECL ldap_search_sW( WLDAP32_LDAP *ld, PWCHAR base, ULONG scope, PWCHAR filter,
     PWCHAR attrs[], ULONG attrsonly, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
 
@@ -542,7 +539,7 @@ ULONG CDECL ldap_search_stA( WLDAP32_LDAP *ld, const PCHAR base, ULONG scope,
     const PCHAR filter, PCHAR attrs[], ULONG attrsonly,
     struct l_timeval *timeout, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *baseW = NULL, *filterW = NULL, **attrsW = NULL;
 
@@ -606,7 +603,7 @@ ULONG CDECL ldap_search_stW( WLDAP32_LDAP *ld, const PWCHAR base, ULONG scope,
     const PWCHAR filter, PWCHAR attrs[], ULONG attrsonly,
     struct l_timeval *timeout, WLDAP32_LDAPMessage **res )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *baseU = NULL, *filterU = NULL, **attrsU = NULL;
 

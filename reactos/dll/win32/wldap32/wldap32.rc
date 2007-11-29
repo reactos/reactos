@@ -30,4 +30,5 @@
 #include "wldap32_Nl.rc"
 #include "wldap32_No.rc"
 #include "wldap32_Ru.rc"
+#include "wldap32_Sv.rc"
 #include "wldap32_Tr.rc"

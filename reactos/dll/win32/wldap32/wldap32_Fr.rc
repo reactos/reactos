@@ -117,7 +117,7 @@ STRINGTABLE DISCARDABLE
     92 "Opération non supportée par cette version du protocole LDAP"
     93 "Le contrôle spécifié n'a pas été trouvé dans le message"
     94 "Pas de résultat dans le message"
-    95 "Plusde résultats retournés"
+    95 "Plus de résultats retournés"
     96 "Boucle lors du traitement des référants"
     97 "Limite du nombre de référents dépassée"
 }

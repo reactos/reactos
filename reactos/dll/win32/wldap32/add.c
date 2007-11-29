@@ -33,10 +33,6 @@
 #include <ldap.h>
 #endif
 
-#ifndef LDAP_NOT_SUPPORTED
-#define LDAP_NOT_SUPPORTED  0x5c
-#endif
-
 #include "winldap_private.h"
 #include "wldap32.h"
 
@@ -53,7 +49,7 @@ static LDAPMod *nullattrs[] = { NULL };
  */
 ULONG CDECL ldap_addA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *attrs[] )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPModW **attrsW = NULL;
@@ -105,12 +101,12 @@ exit:
  */
 ULONG CDECL ldap_addW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *attrs[] )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPMod **attrsU = NULL;
     int msg;
-
+ 
     ret = WLDAP32_LDAP_NO_MEMORY;
 
     TRACE( "(%p, %s, %p)\n", ld, debugstr_w(dn), attrs );
@@ -149,7 +145,7 @@ exit:
 ULONG CDECL ldap_add_extA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *attrs[],
     PLDAPControlA *serverctrls, PLDAPControlA *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPModW **attrsW = NULL;
@@ -217,7 +213,7 @@ exit:
 ULONG CDECL ldap_add_extW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *attrs[],
     PLDAPControlW *serverctrls, PLDAPControlW *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPMod **attrsU = NULL;
@@ -269,7 +265,7 @@ exit:
 ULONG CDECL ldap_add_ext_sA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *attrs[],
     PLDAPControlA *serverctrls, PLDAPControlA *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPModW **attrsW = NULL;
@@ -335,7 +331,7 @@ exit:
 ULONG CDECL ldap_add_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *attrs[],
     PLDAPControlW *serverctrls, PLDAPControlW *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPMod **attrsU = NULL;
@@ -385,7 +381,7 @@ exit:
  */
 ULONG CDECL ldap_add_sA( WLDAP32_LDAP *ld, PCHAR dn, LDAPModA *attrs[] )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPModW **attrsW = NULL;
@@ -432,7 +428,7 @@ exit:
  */
 ULONG CDECL ldap_add_sW( WLDAP32_LDAP *ld, PWCHAR dn, LDAPModW *attrs[] )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPMod **attrsU = NULL;

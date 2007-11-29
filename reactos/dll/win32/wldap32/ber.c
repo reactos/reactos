@@ -315,7 +315,7 @@ ULONG CDECL WLDAP32_ber_skip_tag( BerElement *berelement, ULONG *len )
  *  ...        [I]   Values to encode.
  *
  * RETURNS
- *  Success: Non-negative number.
+ *  Success: Non-negative number. 
  *  Failure: LBER_ERROR
  *
  * NOTES
@@ -410,7 +410,7 @@ INT CDECL WLDAP32_ber_printf( BerElement *berelement, PCHAR fmt, ... )
  *  ...        [I]   Pointers to values to be decoded.
  *
  * RETURNS
- *  Success: Non-negative number.
+ *  Success: Non-negative number. 
  *  Failure: LBER_ERROR
  *
  * NOTES

@@ -31,8 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -47,7 +45,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
  */
 ULONG CDECL ldap_deleteA( WLDAP32_LDAP *ld, PCHAR dn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
 
@@ -87,7 +85,7 @@ ULONG CDECL ldap_deleteA( WLDAP32_LDAP *ld, PCHAR dn )
  */
 ULONG CDECL ldap_deleteW( WLDAP32_LDAP *ld, PWCHAR dn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     int msg;
@@ -122,7 +120,7 @@ ULONG CDECL ldap_deleteW( WLDAP32_LDAP *ld, PWCHAR dn )
 ULONG CDECL ldap_delete_extA( WLDAP32_LDAP *ld, PCHAR dn, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -182,7 +180,7 @@ exit:
 ULONG CDECL ldap_delete_extW( WLDAP32_LDAP *ld, PWCHAR dn, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -228,7 +226,7 @@ exit:
 ULONG CDECL ldap_delete_ext_sA( WLDAP32_LDAP *ld, PCHAR dn, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -284,7 +282,7 @@ exit:
 ULONG CDECL ldap_delete_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -317,7 +315,7 @@ exit:
 #endif
     return ret;
 }
-
+ 
 /***********************************************************************
  *      ldap_delete_sA     (WLDAP32.@)
  *
@@ -325,7 +323,7 @@ exit:
  */
 ULONG CDECL ldap_delete_sA( WLDAP32_LDAP *ld, PCHAR dn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL;
 
@@ -360,7 +358,7 @@ ULONG CDECL ldap_delete_sA( WLDAP32_LDAP *ld, PCHAR dn )
  */
 ULONG CDECL ldap_delete_sW( WLDAP32_LDAP *ld, PWCHAR dn )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL;
 

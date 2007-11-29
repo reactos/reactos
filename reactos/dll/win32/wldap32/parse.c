@@ -31,8 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -48,7 +46,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 ULONG CDECL ldap_parse_extended_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
     PCHAR *oid, struct WLDAP32_berval **data, BOOLEAN free )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *oidW = NULL;
 
@@ -72,7 +70,7 @@ ULONG CDECL ldap_parse_extended_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
 /***********************************************************************
  *      ldap_parse_extended_resultW     (WLDAP32.@)
  *
- * Parse the result of an extended operation.
+ * Parse the result of an extended operation. 
  *
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
@@ -92,7 +90,7 @@ ULONG CDECL ldap_parse_extended_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
 ULONG CDECL ldap_parse_extended_resultW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
     PWCHAR *oid, struct WLDAP32_berval **data, BOOLEAN free )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *oidU = NULL;
 
@@ -121,7 +119,7 @@ ULONG CDECL ldap_parse_extended_resultW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
 ULONG CDECL ldap_parse_referenceA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *message,
     PCHAR **referrals )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR **referralsW = NULL;
 
@@ -134,7 +132,7 @@ ULONG CDECL ldap_parse_referenceA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
     *referrals = strarrayWtoA( referralsW );
     ldap_value_freeW( referralsW );
 
-#endif
+#endif 
     return ret;
 }
 
@@ -158,14 +156,14 @@ ULONG CDECL ldap_parse_referenceA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
 ULONG CDECL ldap_parse_referenceW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *message,
     PWCHAR **referrals )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP_PARSE_REFERENCE
     char **referralsU = NULL;
 
     TRACE( "(%p, %p, %p)\n", ld, message, referrals );
 
     if (!ld) return ~0UL;
-
+    
     ret = ldap_parse_reference( ld, message, &referralsU, NULL, 0 );
 
     *referrals = strarrayUtoW( referralsU );
@@ -184,7 +182,7 @@ ULONG CDECL ldap_parse_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
     ULONG *retcode, PCHAR *matched, PCHAR *error, PCHAR **referrals,
     PLDAPControlA **serverctrls, BOOLEAN free )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR **matchedW = NULL, **errorW = NULL, **referralsW = NULL;
     LDAPControlW **serverctrlsW = NULL;
@@ -215,7 +213,7 @@ ULONG CDECL ldap_parse_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
 /***********************************************************************
  *      ldap_parse_resultW     (WLDAP32.@)
  *
- * Parse a result message.
+ * Parse a result message. 
  *
  * PARAMS
  *  ld           [I] Pointer to an LDAP context.
@@ -241,7 +239,7 @@ ULONG CDECL ldap_parse_resultW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
     ULONG *retcode, PWCHAR *matched, PWCHAR *error, PWCHAR **referrals,
     PLDAPControlW **serverctrls, BOOLEAN free )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char **matchedU = NULL, **errorU = NULL, **referralsU = NULL;
     LDAPControl **serverctrlsU = NULL;
@@ -277,7 +275,7 @@ ULONG CDECL ldap_parse_resultW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
 ULONG CDECL ldap_parse_sort_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
     ULONG *result, PCHAR *attr )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *attrW = NULL;
     LDAPControlW **controlW = NULL;
@@ -321,11 +319,17 @@ ULONG CDECL ldap_parse_sort_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
 ULONG CDECL ldap_parse_sort_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
     ULONG *result, PWCHAR *attr )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *attrU = NULL;
     LDAPControl **controlU = NULL;
+#ifdef HAVE_LDAP_PARSE_SORT_CONTROL
     unsigned long res;
+#elif defined(HAVE_LDAP_PARSE_SORTRESPONSE_CONTROL)
+    ber_int_t res;
+    LDAPControl *sortcontrol = NULL;
+    unsigned int i;
+#endif
 
     TRACE( "(%p, %p, %p, %p)\n", ld, control, result, attr );
 
@@ -336,10 +340,29 @@ ULONG CDECL ldap_parse_sort_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
         if (!controlU) return WLDAP32_LDAP_NO_MEMORY;
     }
 
-    ret = ldap_parse_sort_control( ld, controlU, &res, &attrU );
-
-    *result = res;
-    *attr = strUtoW( attrU );
+#ifdef HAVE_LDAP_PARSE_SORT_CONTROL
+    if (!(ret = ldap_parse_sort_control( ld, controlU, &res, &attrU )))
+    {
+        *result = res;
+        *attr = strUtoW( attrU );
+    }
+#elif defined(HAVE_LDAP_PARSE_SORTRESPONSE_CONTROL)
+    for (i = 0; controlU[i]; i++)
+    {
+        if (!strcmp( LDAP_SERVER_RESP_SORT_OID, controlU[i]->ldctl_oid ))
+            sortcontrol = controlU[i];
+    }
+    if (!sortcontrol)
+    {
+        controlarrayfreeU( controlU );
+        return WLDAP32_LDAP_CONTROL_NOT_FOUND;
+    }
+    if (!(ret = ldap_parse_sortresponse_control( ld, sortcontrol, &res, &attrU )))
+    {
+        *result = res;
+        *attr = strUtoW( attrU );
+    }
+#endif
     controlarrayfreeU( controlU );
 
 #endif
@@ -355,7 +378,7 @@ INT CDECL ldap_parse_vlv_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
     PULONG targetpos, PULONG listcount,
     struct WLDAP32_berval **context, PINT errcode )
 {
-    int ret = LDAP_NOT_SUPPORTED;
+    int ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     LDAPControlW **controlW = NULL;
 
@@ -386,7 +409,7 @@ INT CDECL ldap_parse_vlv_controlA( WLDAP32_LDAP *ld, PLDAPControlA *control,
  * PARAMS
  *  ld         [I] Pointer to an LDAP context.
  *  control    [I] Controls obtained from a result message.
- *  targetpos  [O] Positition of the target in the result list.
+ *  targetpos  [O] Positition of the target in the result list. 
  *  listcount  [O] Estimate of the number of results in the list.
  *  context    [O] Server side context.
  *  errcode    [O] Error code from the listview operation.
@@ -402,10 +425,16 @@ INT CDECL ldap_parse_vlv_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
     PULONG targetpos, PULONG listcount,
     struct WLDAP32_berval **context, PINT errcode )
 {
-    int ret = LDAP_NOT_SUPPORTED;
+    int ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     LDAPControl **controlU = NULL;
+#ifdef HAVE_LDAP_PARSE_VLV_CONTROL
     unsigned long pos, count;
+#elif defined(HAVE_LDAP_PARSE_VLVRESPONSE_CONTROL)
+    ber_int_t pos, count;
+    LDAPControl *vlvcontrol = NULL;
+    unsigned int i;
+#endif
 
     TRACE( "(%p, %p, %p, %p, %p, %p)\n", ld, control, targetpos,
            listcount, context, errcode );
@@ -417,11 +446,31 @@ INT CDECL ldap_parse_vlv_controlW( WLDAP32_LDAP *ld, PLDAPControlW *control,
         if (!controlU) return WLDAP32_LDAP_NO_MEMORY;
     }
 
-    ret = ldap_parse_vlv_control( ld, controlU, &pos, &count,
-                                  (struct berval **)context, errcode );
-
-    *targetpos = pos;
-    *listcount = count;
+#ifdef HAVE_LDAP_PARSE_VLV_CONTROL
+    if (!(ret = ldap_parse_vlv_control( ld, controlU, &pos, &count,
+                                        (struct berval **)context, errcode )))
+    {
+        *targetpos = pos;
+        *listcount = count;
+    }
+#elif defined(HAVE_LDAP_PARSE_VLVRESPONSE_CONTROL)
+    for (i = 0; controlU[i]; i++)
+    {
+        if (!strcmp( LDAP_CONTROL_VLVRESPONSE, controlU[i]->ldctl_oid ))
+            vlvcontrol = controlU[i];
+    }
+    if (!vlvcontrol)
+    {
+        controlarrayfreeU( controlU );
+        return WLDAP32_LDAP_CONTROL_NOT_FOUND;
+    }
+    if (!(ret = ldap_parse_vlvresponse_control( ld, vlvcontrol, &pos, &count,
+                                                (struct berval **)context, errcode )))
+    {
+        *targetpos = pos;
+        *listcount = count;
+    }
+#endif
     controlarrayfreeU( controlU );
 
 #endif

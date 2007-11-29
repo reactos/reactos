@@ -31,8 +31,6 @@
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
-#else
-#define LDAP_NOT_SUPPORTED  0x5c
 #endif
 
 #include "winldap_private.h"
@@ -49,7 +47,7 @@ ULONG CDECL ldap_rename_extA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newrdn,
     PCHAR newparent, INT delete, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newrdnW = NULL, *newparentW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -125,7 +123,7 @@ ULONG CDECL ldap_rename_extW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newrdn,
     PWCHAR newparent, INT delete, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls, ULONG *message )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newrdnU = NULL, *newparentU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
@@ -182,7 +180,7 @@ ULONG CDECL ldap_rename_ext_sA( WLDAP32_LDAP *ld, PCHAR dn, PCHAR newrdn,
     PCHAR newparent, INT delete, PLDAPControlA *serverctrls,
     PLDAPControlA *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     WCHAR *dnW = NULL, *newrdnW = NULL, *newparentW = NULL;
     LDAPControlW **serverctrlsW = NULL, **clientctrlsW = NULL;
@@ -246,12 +244,12 @@ exit:
  * RETURNS
  *  Success: LDAP_SUCCESS
  *  Failure: An LDAP error code.
- */
+ */ 
 ULONG CDECL ldap_rename_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newrdn,
     PWCHAR newparent, INT delete, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls )
 {
-    ULONG ret = LDAP_NOT_SUPPORTED;
+    ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;
 #ifdef HAVE_LDAP
     char *dnU = NULL, *newrdnU = NULL, *newparentU = NULL;
     LDAPControl **serverctrlsU = NULL, **clientctrlsU = NULL;
