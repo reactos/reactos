@@ -432,7 +432,7 @@ BOOL WINAPI SQLInstallDriver(LPCSTR lpszInfFile, LPCSTR lpszDriver,
 
     if (lpszInfFile)
         return FALSE;
-
+   
     return SQLInstallDriverEx(lpszDriver, NULL, lpszPath, cbPathMax,
                               pcbPathOut, ODBC_INSTALL_COMPLETE, &usage);
 }
