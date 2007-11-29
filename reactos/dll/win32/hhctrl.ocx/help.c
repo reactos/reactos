@@ -143,7 +143,7 @@ static void SB_OnPaint(HWND hWnd)
     PAINTSTRUCT ps;
     HDC hdc;
     RECT rc;
-
+    
     hdc = BeginPaint(hWnd, &ps);
 
     GetClientRect(hWnd, &rc);
@@ -159,7 +159,7 @@ static void SB_OnPaint(HWND hWnd)
     LineTo(hdc, 1, 1);
     LineTo(hdc, 1, rc.bottom - 1);
 
-
+    
     MoveToEx(hdc, 0, rc.bottom, NULL);
     LineTo(hdc, rc.right, rc.bottom);
 

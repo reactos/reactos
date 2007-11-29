@@ -38,7 +38,7 @@ BEGIN
     IDTB_REFRESH     "Odœwie¿"
     IDTB_BACK        "Wstecz"
     IDTB_HOME        "Start"
-    IDTB_SYNC        "Sync"
+    IDTB_SYNC        "Synchronizuj"
     IDTB_PRINT       "Drukuj"
     IDTB_OPTIONS     "Opcje"
     IDTB_FORWARD     "Dalej"

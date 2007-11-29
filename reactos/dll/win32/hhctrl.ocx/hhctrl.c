@@ -151,6 +151,16 @@ HWND WINAPI HtmlHelpW(HWND caller, LPCWSTR filename, UINT command, DWORD_PTR dat
 
         return NULL; /* FIXME */
     }
+    case HH_PRETRANSLATEMESSAGE: {
+        static BOOL warned = FALSE;
+
+        if (!warned)
+        {
+            FIXME("HH_PRETRANSLATEMESSAGE unimplemented\n");
+            warned = TRUE;
+        }
+        return 0;
+    }
     default:
         FIXME("HH case %s not handled.\n", command_to_string( command ));
     }

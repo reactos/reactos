@@ -1,10 +1,9 @@
 /*
  * HTML Help resources
- * English Language Support
+ * Swedish Language Support
  *
- * Copyright 2005 James Hawkins
- * Copyright 2005 YunSong Hwang
- 
+ * Copyright 2007 Daniel Nylander
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -20,28 +19,28 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_CONTENTS     "¸ñ·Ï(&C)"
-    IDS_INDEX        "ÀÎµ¦½º(&N)"
-    IDS_SEARCH       "Ã£±â(&S)"
-    IDS_FAVORITES    "Áñ°ÜÃ£±â(&I)"
+    IDS_CONTENTS     "&Innehåll"
+    IDS_INDEX        "I&ndex"
+    IDS_SEARCH       "&Sök"
+    IDS_FAVORITES    "Favor&iter"
 END
 
 STRINGTABLE
 BEGIN
-    IDTB_EXPAND      "º¸¿©ÁÖ±â"
-    IDTB_CONTRACT    "¼û±â±â"
-    IDTB_STOP        "Á¤Áö"
-    IDTB_REFRESH     "»õ·Î °íÄ§"
-    IDTB_BACK        "µÚ·Î"
-    IDTB_HOME        "È¨"
-    IDTB_SYNC        "µ¿±âÈ­"
-    IDTB_PRINT       "ÀÎ¼â"
-    IDTB_OPTIONS     "¿É¼Ç"
-    IDTB_FORWARD     "¾ÕÀ¸·Î"
+    IDTB_EXPAND      "Visa"
+    IDTB_CONTRACT    "Dölj"
+    IDTB_STOP        "Stoppa"
+    IDTB_REFRESH     "Uppdatera"
+    IDTB_BACK        "Bakåt"
+    IDTB_HOME        "Hem"
+    IDTB_SYNC        "Synkronisera"
+    IDTB_PRINT       "Skriv ut"
+    IDTB_OPTIONS     "Alternativ"
+    IDTB_FORWARD     "Framåt"
     IDTB_NOTES       "IDTB_NOTES"
     IDTB_BROWSE_FWD  "IDTB_BROWSE_FWD"
     IDTB_BROWSE_BACK "IDT_BROWSE_BACK"
@@ -52,8 +51,8 @@ BEGIN
     IDTB_FAVORITES   "IDTB_FAVORITES"
     IDTB_JUMP1       "Jump1"
     IDTB_JUMP2       "Jump2"
-    IDTB_CUSTOMIZE   "»ç¿ëÀÚÁ¤ÀÇ"
-    IDTB_ZOOM        "È®´ë"
+    IDTB_CUSTOMIZE   "Anpassa"
+    IDTB_ZOOM        "Zoom"
     IDTB_TOC_NEXT    "IDTB_TOC_NEXT"
     IDTB_TOC_PREV    "IDTB_TOC_PREV"
 END
