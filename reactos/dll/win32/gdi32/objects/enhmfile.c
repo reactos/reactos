@@ -31,7 +31,7 @@ HDC WINAPI CreateEnhMetaFileW(
     mDC = NtGdiCreateMetafileDC( hDC ); // Basically changes the handle from 1xxxx to 46xxxx.
     // If hDC == NULL, works just like createdc in win32k.
 
-    if ( !GdiGetHandleUserData((HGDIOBJ) mDC, (PVOID) &Dc_Attr))
+    if ( !GdiGetHandleUserData((HGDIOBJ) mDC, GDI_OBJECT_TYPE_DC, (PVOID) &Dc_Attr))
     {
       SetLastError (ERROR_INVALID_PARAMETER);
       return NULL; // need to delete the handle?

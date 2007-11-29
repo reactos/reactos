@@ -87,7 +87,7 @@ DeleteRegion( HRGN hRgn )
 #if 0
   PREGION_ATTR Rgn_Attr;
 
-  if ((GdiGetHandleUserData((HGDIOBJ) hRgn, (PVOID) &Rgn_Attr)) &&
+  if ((GdiGetHandleUserData((HGDIOBJ) hRgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) &&
       ( Rgn_Attr != NULL ))
   {
      PTEB pTeb = NtCurrentTeb();
@@ -151,8 +151,7 @@ SetRectRgn(HRGN hrgn,
 #if 0
   PREGION_ATTR Rgn_Attr;
 
-  if (!(GdiGetHandleUserData((HGDIOBJ) hrgn, (PVOID) &Rgn_Attr)) ||
-       (GDI_HANDLE_GET_TYPE(hrgn) != GDI_OBJECT_TYPE_REGION)) 
+  if (!GdiGetHandleUserData((HGDIOBJ) hrgn, GDI_OBJECT_TYPE_REGION, (PVOID) &Rgn_Attr)) 
 #endif
      return NtGdiSetRectRgn(hrgn, nLeftRect, nTopRect, nRightRect, nBottomRect);
 #if 0
