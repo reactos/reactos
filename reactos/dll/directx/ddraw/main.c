@@ -220,28 +220,51 @@ DirectDrawEnumerateExA(LPDDENUMCALLBACKEXA lpCallback,
     LONG rc;
     BOOL  EnumerateAttachedSecondaries = FALSE;
     DWORD privateDWFlags = 0;
+    CHAR strMsg[RC_STRING_MAX_SIZE];
+    HRESULT retVal = DDERR_INVALIDPARAMS;
 
     DX_WINDBG_trace();
 
-    rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, REGSTR_PATH_DDHW, &hKey);
-    if (rc == ERROR_SUCCESS)
+    if ((IsBadCodePtr((LPVOID)lpCallback) == 0) &&
+       ((dwFlags & ~(DDENUM_NONDISPLAYDEVICES |
+                    DDENUM_DETACHEDSECONDARYDEVICES |
+                    DDENUM_ATTACHEDSECONDARYDEVICES)) == 0))
     {
-        /* Enumerate Attached Secondaries */
-        cbData = sizeof(DWORD);
-        rc = RegQueryValueExA(hKey, "EnumerateAttachedSecondaries", NULL, NULL, (LPBYTE)&Value, &cbData);
+        LoadStringA(hDllModule, STR_PRIMARY_DISPLAY, (LPSTR)&strMsg, RC_STRING_MAX_SIZE);
+
+        rc = RegOpenKeyA(HKEY_LOCAL_MACHINE, REGSTR_PATH_DDHW, &hKey);
         if (rc == ERROR_SUCCESS)
         {
-           if (Value != 0)
-           {
-                EnumerateAttachedSecondaries = TRUE;
-                privateDWFlags = DDENUM_ATTACHEDSECONDARYDEVICES;
-           }
+            /* Enumerate Attached Secondaries */
+            cbData = sizeof(DWORD);
+            rc = RegQueryValueExA(hKey, "EnumerateAttachedSecondaries", NULL, NULL, (LPBYTE)&Value, &cbData);
+            if (rc == ERROR_SUCCESS)
+            {
+                if (Value != 0)
+                {
+                    EnumerateAttachedSecondaries = TRUE;
+                    privateDWFlags = DDENUM_ATTACHEDSECONDARYDEVICES;
+                }
+            }
+            RegCloseKey(hKey);
         }
-        RegCloseKey(hKey);
+
+        /* Call the user supplyed callback function */
+        rc = lpCallback(NULL, strMsg, "display", lpContext, NULL);
+
+        /* If the callback function returns DDENUMRET_CANCEL, we will stop enumerating devices now */
+        if(rc == DDENUMRET_CANCEL)
+        {
+            retVal = DD_OK;
+        }
+        else
+        {
+            // not finish
+            retVal = DDERR_UNSUPPORTED;
+        }
     }
 
-    // not finish 
-    return DDERR_UNSUPPORTED;
+    return retVal;
 }
 
 HRESULT
