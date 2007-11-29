@@ -1,5 +1,5 @@
 /*
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005,2007 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,20 +13,20 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_KOREAN, SUBLANG_DEFAULT
+LANGUAGE LANG_KOREAN, SUBLANG_NEUTRAL
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "네트워크 암호 입력"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "당신이 사용자이름과 암호를 입력하시오:", -1, 40, 6, 150, 15
+ LTEXT "당신의 사용자 이름과 암호를 입력하시오:", -1, 40, 6, 150, 15
  LTEXT "프록시", -1, 40, 26, 50, 10
  LTEXT "Realm", -1, 40, 46, 50, 10
- LTEXT " 사용자", -1, 40, 66, 50, 10
+ LTEXT "사용자", -1, 40, 66, 50, 10
  LTEXT "암호", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0

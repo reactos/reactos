@@ -13,7 +13,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
@@ -22,7 +22,7 @@ IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Въведете мрежова парола"
 FONT 8, "MS Shell Dlg"
-{
+{       
  LTEXT "Въведете вашето потребителско име и парола:", -1, 40, 6, 150, 15
  LTEXT "Прокси", -1, 40, 26, 50, 10
  LTEXT "Област", -1, 40, 46, 50, 10

@@ -169,7 +169,7 @@
 @ stdcall InternetOpenUrlW(ptr wstr wstr long long long)
 @ stdcall InternetOpenW(wstr long wstr wstr long)
 @ stdcall InternetQueryDataAvailable(ptr ptr long long)
-@ stub InternetQueryFortezzaStatus
+@ stdcall InternetQueryFortezzaStatus(ptr long)
 @ stdcall InternetQueryOptionA(ptr long ptr ptr)
 @ stdcall InternetQueryOptionW(ptr long ptr ptr)
 @ stdcall InternetReadFile(ptr ptr long ptr)
@@ -209,8 +209,8 @@
 @ stub InternetWriteFileExA
 @ stub InternetWriteFileExW
 @ stdcall IsHostInProxyBypassList(long str long)
-@ stub IsUrlCacheEntryExpiredA
-@ stub IsUrlCacheEntryExpiredW
+@ stdcall IsUrlCacheEntryExpiredA(str long ptr)
+@ stdcall IsUrlCacheEntryExpiredW(wstr long ptr)
 @ stub LoadUrlCacheContent
 @ stub ParseX509EncodedCertificateForListBoxEntry
 @ stub PrivacyGetZonePreferenceW # (long long ptr ptr ptr)

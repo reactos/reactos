@@ -1,10 +1,5 @@
 /*
- * Wininet
- * French language support
- *
- * Copyright 2003 Mike McCormack for CodeWeavers
- * Copyright 2003 Vincent Béron
- * Copyright 2005 Jonathan Ernst
+ * Copyright 2007 Daniel Nylander
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,29 +16,29 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
+LANGUAGE LANG_SWEDISH, SUBLANG_DEFAULT
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Entrez le mot de passe réseau"
+CAPTION "Ange nätverkslösenord"
 FONT 8, "MS Shell Dlg"
 {
- LTEXT "Entrez votre nom d'utilisateur et votre mot de passe :", -1, 40, 6, 150, 15
- LTEXT "Mandataire", -1, 40, 26, 50, 10
- LTEXT "Domaine", -1, 40, 46, 50, 10
- LTEXT "Utilisateur", -1, 40, 66, 50, 10
- LTEXT "Mot de passe", -1, 40, 86, 50, 10
+ LTEXT "Ange ditt användarnamn och lösenord:", -1, 40, 6, 150, 15
+ LTEXT "Proxy", -1, 40, 26, 50, 10
+ LTEXT "Domän", -1, 40, 46, 50, 10
+ LTEXT "Användarnamn", -1, 40, 66, 50, 10
+ LTEXT "Lösenord", -1, 40, 86, 50, 10
  LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
  LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
  EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
  EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
- CHECKBOX "&Enregistrer ce mot de passe (risqué)", IDC_SAVEPASSWORD,
+ CHECKBOX "&Spara detta lösenord (osäkert)", IDC_SAVEPASSWORD,
            80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
  PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
- PUSHBUTTON "Annuler", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "Avbryt", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
 STRINGTABLE DISCARDABLE
 {
-  IDS_LANCONNECTION "Connexion LAN"
+  IDS_LANCONNECTION "LAN-anslutning"
 }

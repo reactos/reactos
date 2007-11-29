@@ -1,5 +1,6 @@
 /*
  * Copyright 2003 Marcelo Duarte
+ * Copyright 2006-2007 Américo José Melo
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -13,10 +14,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
 
 IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
@@ -38,7 +39,39 @@ FONT 8, "MS Shell Dlg"
  PUSHBUTTON "Cancelar", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
 }
 
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+IDD_PROXYDLG DIALOG LOADONCALL MOVEABLE DISCARDABLE 36, 24, 250, 154
+STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Indicar Senha da Rede"
+FONT 8, "MS Shell Dlg"
+{
+ LTEXT "Por favor, indique o nome de utilizador e a senha:", -1, 40, 6, 150, 15
+ LTEXT "Proxy", -1, 40, 26, 50, 10
+ LTEXT "Realm", -1, 40, 46, 50, 10
+ LTEXT "Utilizador", -1, 40, 66, 50, 10
+ LTEXT "Senha", -1, 40, 86, 50, 10
+ LTEXT "" IDC_PROXY, 80, 26, 150, 14, 0
+ LTEXT "" IDC_REALM, 80, 46, 150, 14, 0
+ EDITTEXT IDC_USERNAME, 80, 66, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
+ EDITTEXT IDC_PASSWORD, 80, 86, 150, 14, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP | ES_PASSWORD
+ CHECKBOX "&Gravar esta senha (inseguro)", IDC_SAVEPASSWORD,
+           80, 106, 150, 12, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "OK", IDOK, 98, 126, 56, 14, WS_GROUP | WS_TABSTOP | BS_DEFPUSHBUTTON
+ PUSHBUTTON "Cancelar", IDCANCEL, 158, 126, 56, 14, WS_GROUP | WS_TABSTOP
+}
+
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE_BRAZILIAN
+
 STRINGTABLE DISCARDABLE
 {
   IDS_LANCONNECTION "Conexão LAN"
+}
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_PORTUGUESE
+
+STRINGTABLE DISCARDABLE
+{
+  IDS_LANCONNECTION "Ligação LAN"
 }

@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -29,7 +29,6 @@
 #include "winreg.h"
 #include "wininet.h"
 #include "winnetwk.h"
-#include "winnls.h"
 #include "wine/debug.h"
 #include "winerror.h"
 #define NO_SHLWAPI_STREAM
@@ -68,11 +67,11 @@ static BOOL WININET_GetProxyServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
     if (NULL == lpwhr)
 	return FALSE;
 
-    lpwhs = (LPWININETHTTPSESSIONW) lpwhr->hdr.lpwhparent;
+    lpwhs = lpwhr->lpHttpSession;
     if (NULL == lpwhs)
 	return FALSE;
 
-    hIC = (LPWININETAPPINFOW) lpwhs->hdr.lpwhparent;
+    hIC = lpwhs->lpAppInfo;
     if (NULL == hIC)
 	return FALSE;
 
@@ -80,7 +79,7 @@ static BOOL WININET_GetProxyServer( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 
     /* FIXME: perhaps it would be better to use InternetCrackUrl here */
     p = strchrW(szBuf, ':');
-    if(*p)
+    if (p)
         *p = 0;
 
     return TRUE;
@@ -108,19 +107,22 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
      * dealing with 'Basic' Authentication
      */
     p = strchrW( szBuf, ' ' );
-    if( p && !strncmpW( p+1, szRealm, strlenW(szRealm) ) )
+    if( !p || strncmpW( p+1, szRealm, strlenW(szRealm) ) )
     {
-        /* remove quotes */
-        p += 7;
-        if( *p == '"' )
-        {
-            p++;
-            q = strrchrW( p, '"' );
-            if( q )
-                *q = 0;
-        }
+        ERR("proxy response wrong? (%s)\n", debugstr_w(szBuf));
+        return FALSE;
     }
 
+
+    /* remove quotes */
+    p += 7;
+    if( *p == '"' )
+    {
+        p++;
+        q = strrchrW( p, '"' );
+        if( q )
+            *q = 0;
+    }
     strcpyW( szBuf, p );
 
     return TRUE;
@@ -129,7 +131,7 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz )
 /***********************************************************************
  *         WININET_GetSetPassword
  */
-static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
+static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer, 
                                     LPCWSTR szRealm, BOOL bSet )
 {
     WCHAR szResource[0x80], szUserPass[0x40];
@@ -158,11 +160,11 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
     if( bSet )
     {
         szUserPass[0] = 0;
-        GetWindowTextW( hUserItem, szUserPass,
+        GetWindowTextW( hUserItem, szUserPass, 
                         (sizeof szUserPass-1)/sizeof(WCHAR) );
         lstrcatW(szUserPass, szColon);
         u_len = strlenW( szUserPass );
-        GetWindowTextW( hPassItem, szUserPass+u_len,
+        GetWindowTextW( hPassItem, szUserPass+u_len, 
                         (sizeof szUserPass)/sizeof(WCHAR)-u_len );
 
         r_len = (strlenW( szResource ) + 1)*sizeof(WCHAR);
@@ -205,27 +207,27 @@ static BOOL WININET_SetProxyAuthorization( HINTERNET hRequest,
     lpwhr = (LPWININETHTTPREQW) WININET_GetObject( hRequest );
     if( !lpwhr )
 	return FALSE;
-
-    lpwhs = (LPWININETHTTPSESSIONW) lpwhr->hdr.lpwhparent;
+        
+    lpwhs = lpwhr->lpHttpSession;
     if (NULL == lpwhs ||  lpwhs->hdr.htype != WH_HHTTPSESSION)
     {
         INTERNET_SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
 	return FALSE;
     }
 
-    hIC = (LPWININETAPPINFOW) lpwhs->hdr.lpwhparent;
+    hIC = lpwhs->lpAppInfo;
 
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( username ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-
+    
     lstrcpyW( p, username );
     hIC->lpszProxyUsername = p;
 
     p = HeapAlloc( GetProcessHeap(), 0, (strlenW( password ) + 1)*sizeof(WCHAR) );
     if( !p )
         return FALSE;
-
+    
     lstrcpyW( p, password );
     hIC->lpszProxyPassword = p;
 
@@ -259,7 +261,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
         }
 
         /* extract the name of the proxy server */
-        if( WININET_GetProxyServer( params->hRequest,
+        if( WININET_GetProxyServer( params->hRequest, 
                                     szServer, sizeof szServer/sizeof(WCHAR)) )
         {
             hitem = GetDlgItem( hdlg, IDC_PROXY );
@@ -285,7 +287,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
             hitem = GetDlgItem( hdlg, IDC_USERNAME );
             if( hitem )
                 GetWindowTextW( hitem, username, sizeof username/sizeof(WCHAR) );
-
+            
             password[0] = 0;
             hitem = GetDlgItem( hdlg, IDC_PASSWORD );
             if( hitem )
@@ -296,7 +298,7 @@ static INT_PTR WINAPI WININET_ProxyPasswordDialog(
                 SendMessageW( hitem, BM_GETSTATE, 0, 0 ) &&
                 WININET_GetAuthRealm( params->hRequest,
                                   szRealm, sizeof szRealm/sizeof(WCHAR)) &&
-                WININET_GetProxyServer( params->hRequest,
+                WININET_GetProxyServer( params->hRequest, 
                                     szServer, sizeof szServer/sizeof(WCHAR)) )
             {
                 WININET_GetSetPassword( hdlg, szServer, szRealm, TRUE );
@@ -333,7 +335,7 @@ static INT WININET_GetConnectionStatus( HINTERNET hRequest )
         return -1;
     dwStatus = atoiW( szStatus );
 
-    TRACE("request %p status = %ld\n", hRequest, dwStatus );
+    TRACE("request %p status = %d\n", hRequest, dwStatus );
 
     return dwStatus;
 }
@@ -349,7 +351,7 @@ DWORD WINAPI InternetErrorDlg(HWND hWnd, HINTERNET hRequest,
     HMODULE hwininet = GetModuleHandleA( "wininet.dll" );
     INT dwStatus;
 
-    TRACE("%p %p %ld %08lx %p\n", hWnd, hRequest, dwError, dwFlags, lppvData);
+    TRACE("%p %p %d %08x %p\n", hWnd, hRequest, dwError, dwFlags, lppvData);
 
     params.hWnd = hWnd;
     params.hRequest = hRequest;
@@ -377,7 +379,7 @@ DWORD WINAPI InternetErrorDlg(HWND hWnd, HINTERNET hRequest,
     case ERROR_INTERNET_POST_IS_NON_SECURE:
     case ERROR_INTERNET_SEC_CERT_CN_INVALID:
     case ERROR_INTERNET_SEC_CERT_DATE_INVALID:
-        FIXME("Need to display dialog for error %ld\n", dwError);
+        FIXME("Need to display dialog for error %d\n", dwError);
         return ERROR_SUCCESS;
     }
     return ERROR_INVALID_PARAMETER;
