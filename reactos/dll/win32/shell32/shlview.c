@@ -355,7 +355,10 @@ static BOOL ShellView_CreateList (IShellViewImpl * This)
          if (0)
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, CLR_NONE);
          else
+         {
            SendMessageW(This->hWndList, LVM_SETTEXTBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
+           SendMessageW(This->hWndList, LVM_SETBKCOLOR, 0, GetSysColor(COLOR_DESKTOP));
+         }
 
          SendMessageW(This->hWndList, LVM_SETTEXTCOLOR, 0, RGB(255,255,255));
        }
