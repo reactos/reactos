@@ -3779,6 +3779,12 @@ typedef BOOL
   IN POINTL  *pptlBrushOrg,
   IN MIX  mix);
 
+typedef VOID 
+(APIENTRY *PFN_DrvMovePanning)(
+  IN LONG    x,
+  IN LONG    y,
+  IN FLONG   fl);
+
 typedef BOOL
 (APIENTRY *PFN_DrvPlgBlt)(
   IN SURFOBJ  *psoTrg,
