@@ -23,6 +23,11 @@ typedef struct
 
 typedef struct
 {
+   HGDIOBJ     hHmgr;
+   PVOID       pvEntry;
+   ULONG       lucExcLock;
+   ULONG       Tid;
+
    ULONG ulStyle;
    HBITMAP hbmPattern;
    HANDLE hbmClient;
