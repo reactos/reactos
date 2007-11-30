@@ -6,10 +6,10 @@
 
 /* Internal region data. Can't use RGNDATA structure because buffer is allocated statically */
 typedef struct _ROSRGNDATA {
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
+//  HGDIOBJ     hHmgr;
+//  PVOID       pvEntry;
+//  ULONG       lucExcLock;
+//  ULONG       Tid;
 
   RGNDATAHEADER rdh;
   PRECT         Buffer;

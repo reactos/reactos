@@ -6,10 +6,10 @@
 /* GDI logical font object */
 typedef struct
 {
-   HGDIOBJ     hHmgr;
-   PVOID       pvEntry;
-   ULONG       lucExcLock;
-   ULONG       Tid;
+//   HGDIOBJ     hHmgr;
+//   PVOID       pvEntry;
+//   ULONG       lucExcLock;
+//   ULONG       Tid;
 
    ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
    FONTOBJ    *Font;
