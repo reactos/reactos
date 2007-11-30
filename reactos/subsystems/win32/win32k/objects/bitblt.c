@@ -709,14 +709,14 @@ NtGdiMaskBlt (
 
 	/* 1. make mask bitmap's dc */
 	hDCMask = NtGdiCreateCompatibleDC(hdcDest);
-	hOldMaskBitmap = (HBITMAP)NtGdiSelectObject(hDCMask, hbmMask);
+	hOldMaskBitmap = (HBITMAP)NtGdiSelectBitmap(hDCMask, hbmMask);
 
 	/* 2. make masked Background bitmap */
 
 	/* 2.1 make bitmap */
 	hDC1 = NtGdiCreateCompatibleDC(hdcDest);
 	hBitmap2 = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
-	hOldBitmap2 = (HBITMAP)NtGdiSelectObject(hDC1, hBitmap2);
+	hOldBitmap2 = (HBITMAP)NtGdiSelectBitmap(hDC1, hBitmap2);
 
 	/* 2.2 draw dest bitmap and mask */
 	NtGdiBitBlt(hDC1, 0, 0, nWidth, nHeight, hdcSrc, nXSrc, nYSrc, SRCCOPY, 0, 0);
@@ -728,7 +728,7 @@ NtGdiMaskBlt (
 	/* 3.1 make bitmap */
 	hDC2 = NtGdiCreateCompatibleDC(hdcDest);
 	hBitmap3 = NtGdiCreateCompatibleBitmap(hdcDest, nWidth, nHeight);
-	hOldBitmap3 = (HBITMAP)NtGdiSelectObject(hDC2, hBitmap3);
+	hOldBitmap3 = (HBITMAP)NtGdiSelectBitmap(hDC2, hBitmap3);
 
 	/* 3.2 draw src bitmap and mask */
 	NtGdiBitBlt(hDC2, 0, 0, nWidth, nHeight, hdcDest, nXDest, nYDest, SRCCOPY, 0, 0);
@@ -740,9 +740,9 @@ NtGdiMaskBlt (
 	NtGdiBitBlt(hdcDest, nXDest, nYDest, nWidth, nHeight, hDC1, 0, 0, SRCCOPY, 0, 0);
 
 	/* 5. restore all object */
-	NtGdiSelectObject(hDCMask, hOldMaskBitmap);
-	NtGdiSelectObject(hDC1, hOldBitmap2);
-	NtGdiSelectObject(hDC2, hOldBitmap3);
+	NtGdiSelectBitmap(hDCMask, hOldMaskBitmap);
+	NtGdiSelectBitmap(hDC1, hOldBitmap2);
+	NtGdiSelectBitmap(hDC2, hOldBitmap3);
 
 	/* 6. delete all temp object */
 	NtGdiDeleteObject(hBitmap2);
