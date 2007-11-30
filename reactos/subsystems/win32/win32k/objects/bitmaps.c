@@ -305,13 +305,13 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 			//HBITMAP hBmpTmp = IntGdiCreateBitmap ( 1, 1, 1, 32, NULL);
 			if ( hBmpTmp )
 			{
-				HBITMAP hBmpOld = (HBITMAP)NtGdiSelectObject ( hDCTmp, hBmpTmp );
+				HBITMAP hBmpOld = (HBITMAP)NtGdiSelectBitmap ( hDCTmp, hBmpTmp );
 				if ( hBmpOld )
 				{
 					PBITMAPOBJ bmpobj;
 
 					NtGdiBitBlt ( hDCTmp, 0, 0, 1, 1, hDC, XPos, YPos, SRCCOPY, 0, 0 );
-					NtGdiSelectObject ( hDCTmp, hBmpOld );
+					NtGdiSelectBitmap ( hDCTmp, hBmpOld );
 
 					// our bitmap is no longer selected, so we can access it's stuff...
 					bmpobj = BITMAPOBJ_LockBitmap ( hBmpTmp );
@@ -529,14 +529,14 @@ GdiSetPixelV(
 
 	if (NewBrush == NULL)
 		return(FALSE);
-	OldBrush = NtGdiSelectObject(hDC, NewBrush);
+	OldBrush = NtGdiSelectBrush(hDC, NewBrush);
 	if (OldBrush == NULL)
 	{
 		NtGdiDeleteObject(NewBrush);
 		return(FALSE);
 	}
 	NtGdiPatBlt(hDC, X, Y, 1, 1, PATCOPY);
-	NtGdiSelectObject(hDC, OldBrush);
+	NtGdiSelectBrush(hDC, OldBrush);
 	NtGdiDeleteObject(NewBrush);
 	return TRUE;
 }
