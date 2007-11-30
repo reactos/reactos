@@ -23,6 +23,8 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
   if (hDC)
   {
     dc = DC_LockDc(hDC);
+    if (!dc)
+        return pHdr->Size; // Return the full size of the structure.
     Dc_Attr = dc->pDc_Attr;
     if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   }
@@ -40,7 +42,6 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      case GdiBCSetBrushOrg:
      {
         PGDIBSSETBRHORG pgSBO;
-        if (!dc) break;
         pgSBO = (PGDIBSSETBRHORG) pHdr;
         Dc_Attr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
         break;
