@@ -48,17 +48,6 @@ SetDIBitsToDevice(
                                           NULL);
 }
 
-/*
- * @implemented
- *
- */
-HGDIOBJ
-STDCALL
-SelectObject(HDC hdc,
-             HGDIOBJ hgdiobj)
-{
-    return NtGdiSelectObject(hdc,hgdiobj);
-}
 
 /*
  * @implemented

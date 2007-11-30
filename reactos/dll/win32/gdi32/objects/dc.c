@@ -1333,3 +1333,58 @@ GetHFONT(HDC hdc)
 }
 
 
+/*
+ * @implemented
+ *
+ */
+HGDIOBJ
+STDCALL
+SelectObject(HDC hDC,
+             HGDIOBJ hGdiObj)
+{
+    PDC_ATTR pDc_Attr;
+//    HGDIOBJ hOldObj = NULL;
+
+    if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
+    {
+    	SetLastError(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    hGdiObj = GdiFixUpHandle(hGdiObj);
+	if (!GdiIsHandleValid(hGdiObj))
+	{
+		return NULL;
+	}
+
+    UINT uType = GDI_HANDLE_GET_TYPE(hGdiObj);
+
+    switch (uType)
+    {
+        case GDI_OBJECT_TYPE_PALETTE:
+            SetLastError(ERROR_INVALID_FUNCTION);
+            return NULL;
+
+      	case GDI_OBJECT_TYPE_REGION:
+            return (HGDIOBJ)ExtSelectClipRgn(hDC, hGdiObj, RGN_COPY);
+
+        case GDI_OBJECT_TYPE_BITMAP:
+            return NtGdiSelectBitmap(hDC, hGdiObj);
+
+        case GDI_OBJECT_TYPE_BRUSH:
+            return NtGdiSelectBrush(hDC, hGdiObj);
+
+        case GDI_OBJECT_TYPE_PEN:
+        case GDI_OBJECT_TYPE_EXTPEN:
+            return NtGdiSelectPen(hDC, hGdiObj);
+
+        case GDI_OBJECT_TYPE_FONT:
+            return NtGdiSelectFont(hDC, hGdiObj);
+
+    }
+
+    return NULL;
+}
+
+
+
