@@ -13,9 +13,10 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 123 24 DISCARDABLE "manifest.xml"
 
-IDI_AC ICON "resources/ac.ico"
-IDI_ACDC ICON "resources/acdc.ico"
-IDI_DC ICON "resources/dc.ico"
-IDI_SCREEN ICON "resources/screen.ico"
+IDI_AC        ICON "resources/ac.ico"
+IDI_ACDC      ICON "resources/acdc.ico"
+IDI_DC        ICON "resources/dc.ico"
+IDI_SCREEN    ICON "resources/screen.ico"
+IDI_HIBERNATE ICON "resources/hibernate.ico"
 
 #include "rsrc.rc"

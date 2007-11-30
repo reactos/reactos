@@ -12,6 +12,7 @@
 	<library>comctl32</library>
 	<library>shell32</library>
 	<library>msvcrt</library>
+	<library>advapi32</library>
 	<file>powercfg.c</file>
 	<file>powershemes.c</file>
 	<file>alarms.c</file>

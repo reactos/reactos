@@ -7,6 +7,7 @@
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
  *                  Johannes Anderwald (johannes.anderwald@student.tugraz.at)
  *                  Martin Rottensteiner
+ *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
 #include <windows.h>
@@ -46,6 +47,7 @@ unsigned aps = 0;
 
 POWER_POLICY gPP[MAX_POWER_POLICY];
 UINT guiIndex = 0;
+HWND hwndDialog;
 
 void LoadConfig(HWND hwndDlg);
 void Pos_InitPage(HWND hwndDlg);
@@ -54,6 +56,44 @@ void Pos_SaveData(HWND hwndDlg);
 
 
 BOOLEAN CreateEnergyList(HWND hwnd);
+
+static
+BOOLEAN DelScheme(HWND hwnd)
+{
+	INT iCurSel;
+	HWND hList;
+	TCHAR szBuf[1024], szBufT[1024];
+	UINT DelScheme;
+			
+	hList = GetDlgItem(hwnd, IDC_ENERGYLIST);
+	
+	iCurSel = SendMessage(hList, CB_GETCURSEL, 0, 0);
+	if (iCurSel == CB_ERR) return FALSE;
+
+	SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+				
+	DelScheme = SendMessage(hList, CB_GETITEMDATA, (WPARAM)iCurSel, 0);
+	if (DelScheme == (UINT)CB_ERR) return FALSE;
+
+	LoadString(hApplet, IDS_DEL_SCHEME_TITLE, szBufT, sizeof(szBufT) / sizeof(TCHAR));
+	LoadString(hApplet, IDS_DEL_SCHEME, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+			
+	if (MessageBox(hwnd, (LPCTSTR)szBuf, (LPCTSTR)szBufT, MB_OKCANCEL | MB_ICONQUESTION) == IDOK)
+	{
+		UINT Current;
+		
+		if (GetActivePwrScheme(&Current))
+		{
+			SendMessage(hList, CB_SETCURSEL, (WPARAM)0, 0);
+			SendMessage(hList, CB_DELETESTRING, (WPARAM)iCurSel, 0);
+			if (Current == DelScheme) Pos_SaveData(hwnd);
+		}
+		
+		if (DeletePwrScheme(DelScheme) != 0) return TRUE;
+	}
+	
+	return FALSE;
+}
 
 /* Property page dialog callback */
 INT_PTR CALLBACK
@@ -68,6 +108,7 @@ powershemesProc(
   {
     case WM_INITDIALOG:
 		hPos = hwndDlg;
+		hwndDialog = hwndDlg;
 	    if (!Pos_InitData())
 		{
 			//TODO
@@ -94,6 +135,16 @@ powershemesProc(
 				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
 			}
 			break;
+		case IDC_DELETE_BTN:
+		{
+			DelScheme(hwndDlg);
+		}
+		break;
+		case IDC_SAVEAS_BTN:
+		{
+		
+		}
+		break;
 		case IDC_MONITORACLIST:
 		case IDC_MONITORDCLIST:
 		case IDC_DISKACLIST:
@@ -307,6 +358,12 @@ BOOLEAN CreateEnergyList(HWND hwnd)
 		return FALSE;
 
 	retval = EnumPwrSchemes(callback_EnumPwrScheme, aps);
+	
+    if(SendMessage(hwnd, CB_GETCOUNT, 0, 0) > 0)
+    {
+        EnableWindow(GetDlgItem(hwndDialog, IDC_DELETE_BTN),TRUE);
+		EnableWindow(GetDlgItem(hwndDialog, IDC_SAVEAS_BTN),TRUE);
+    }
 
 	return retval;
 }

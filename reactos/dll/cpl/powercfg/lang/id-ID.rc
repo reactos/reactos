@@ -158,5 +158,9 @@ BEGIN
   IDS_TIMEOUT14 "Setelah 4 jam"
   IDS_TIMEOUT15 "Setelah 5 jam"
   IDS_TIMEOUT16 "Tidak pernah"
+  
+  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+  IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
+
 

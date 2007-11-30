@@ -173,4 +173,7 @@ BEGIN
   IDS_TIMEOUT14 "Dopo 4 ore"
   IDS_TIMEOUT15 "Dopo 5 ore"
   IDS_TIMEOUT16 "Mai"
+  
+  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+  IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END

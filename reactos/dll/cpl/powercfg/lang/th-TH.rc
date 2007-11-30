@@ -156,5 +156,9 @@ BEGIN
   IDS_TIMEOUT14 "หลังจาก 4 ชั่วโมง"
   IDS_TIMEOUT15 "หลังจาก 5 ชั่วโมง"
   IDS_TIMEOUT16 "ไม่ตั้งค่า"
+  
+  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+  IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
+
 

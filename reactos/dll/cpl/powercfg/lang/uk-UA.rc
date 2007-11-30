@@ -164,6 +164,10 @@ BEGIN
   IDS_TIMEOUT14 "через 4 години"
   IDS_TIMEOUT15 "через 5 годин"
   IDS_TIMEOUT16 "ніколи"
+  
+  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
+  IDS_DEL_SCHEME_TITLE "Delete Scheme"
 END
+
 
 

@@ -52,11 +52,14 @@
 #define IDS_TIMEOUT13                   163
 #define IDS_TIMEOUT14                   164
 #define IDS_TIMEOUT15                   165
+#define IDS_DEL_SCHEME                  166
+#define IDS_DEL_SCHEME_TITLE            167
 
 #define IDI_AC                          175
 #define IDI_DC                          176
 #define IDI_ACDC                        177
 #define IDI_SCREEN                      178
+#define IDI_HIBERNATE                   179
 
 #define IDS_CPLNAME_1	                190
 #define IDC_ENERGYLIST                  200
@@ -109,6 +112,9 @@
 #define IDC_FREESPACE                   501
 #define IDC_SPACEFORHIBERNATEFILE       502
 #define IDC_TOLESSFREESPACE             503
+
+#define IDC_DELETE_BTN                  504
+#define IDC_SAVEAS_BTN                  505
 
 #define IDS_ALPERTLOWENERGY						715
 #define IDS_ALPERTCRITICLEENERGY				716

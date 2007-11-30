@@ -7,6 +7,7 @@
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
  *                  Johannes Anderwald (johannes.anderwald@student.tugraz.at)
  *                  Martin Rottensteiner
+ *                  Dmitry Chapyshev (lentind@yandex.ru)
  */
 
 
