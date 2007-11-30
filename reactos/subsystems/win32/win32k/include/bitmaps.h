@@ -5,11 +5,6 @@
 /* GDI logical bitmap object */
 typedef struct _BITMAPOBJ
 {
-//  HGDIOBJ     hHmgr;
-//  PVOID       pvEntry;
-//  ULONG       lucExcLock;
-//  ULONG       Tid;
-
   SURFOBJ     SurfObj;
   FLONG	      flHooks;
   FLONG       flFlags;

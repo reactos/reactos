@@ -43,19 +43,6 @@ typedef struct _GDIOBJHDR
 #endif
 } GDIOBJHDR, *PGDIOBJHDR;
 
-//
-// Every GDI Object must have this standard type of header.
-// It's for thread locking.
-// This header is standalone, used only in gdiobj.c.
-//
-typedef struct _GDIOBJEMPTYHDR
-{
-  HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
-  ULONG       lucExcLock;
-  ULONG       Tid;
-} GDIOBJEMPTYHDR, *PGDIOBJEMPTYHDR;
-
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle);
 void    INTERNAL_CALL GDIOBJ_SetOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle, PEPROCESS Owner);
 void    INTERNAL_CALL GDIOBJ_CopyOwnership(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ CopyFrom, HGDIOBJ CopyTo);
