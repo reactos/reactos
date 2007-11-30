@@ -2375,7 +2375,7 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
       return FALSE;
     }
 
-  if (NULL == (oldhBrush = NtGdiSelectObject(hDC, hBrush)))
+  if (NULL == (oldhBrush = NtGdiSelectBrush(hDC, hBrush)))
     {
       RGNDATA_UnlockRgn(rgn);
       return FALSE;
@@ -2387,7 +2387,7 @@ NtGdiFillRgn(HDC hDC, HRGN hRgn, HBRUSH hBrush)
     }
 
   RGNDATA_UnlockRgn( rgn );
-  NtGdiSelectObject(hDC, oldhBrush);
+  NtGdiSelectBrush(hDC, oldhBrush);
 
   return TRUE;
 }
