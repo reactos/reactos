@@ -16,6 +16,10 @@
 #include "ntgdi/NtGdiEnumFontOpen.c"
 #include "ntgdi/NtGdiGetBitmapBits.c"
 #include "ntgdi/NtGdiGetRandomRgn.c"
+#include "ntgdi/NtGdiSelectBitmap.c"
+#include "ntgdi/NtGdiSelectBrush.c"
+#include "ntgdi/NtGdiSelectFont.c"
+#include "ntgdi/NtGdiSelectPen.c"
 #include "ntgdi/NtGdiSetBitmapBits.c"
 //#include "ntgdi/NtGdiSTROBJ_vEnumStart.c"
 #include "ntgdi/NtGdiGetDIBits.c"
@@ -46,6 +50,10 @@ TESTENTRY TestList[] =
 	{ L"NtGdiGetBitmapBits", Test_NtGdiGetBitmapBits },
 	{ L"NtGdiGetRandomRgn", Test_NtGdiGetRandomRgn },
 	{ L"NtGdiSetBitmapBits", Test_NtGdiSetBitmapBits },
+	{ L"NtGdiSelectBitmap", Test_NtGdiSelectBitmap },
+	{ L"NtGdiSelectBrush", Test_NtGdiSelectBrush },
+	{ L"NtGdiSelectFont", Test_NtGdiSelectFont },
+	{ L"NtGdiSelectPen", Test_NtGdiSelectPen },
 //	{ L"NtGdiSTROBJ_vEnumStart", Test_NtGdiSTROBJ_vEnumStart },
 	{ L"NtGdiGetDIBitsInternal", Test_NtGdiGetDIBitsInternal },
 
