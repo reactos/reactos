@@ -184,7 +184,7 @@ NtGdiSetBkColor(HDC hDC, COLORREF color)
   Dc_Attr->ulDirty_ &= ~DIRTY_LINE; // Clear Flag if set.
   hBrush = Dc_Attr->hbrush;
   DC_UnlockDc(dc);
-  NtGdiSelectObject(hDC, hBrush);
+  NtGdiSelectBrush(hDC, hBrush);
   return oldColor;
 }
 
@@ -254,6 +254,6 @@ NtGdiSetTextColor(HDC hDC,
   Dc_Attr->crForegroundClr = color;
   hBrush = Dc_Attr->hbrush;
   DC_UnlockDc( dc );
-  NtGdiSelectObject(hDC, hBrush);
+  NtGdiSelectBrush(hDC, hBrush);
   return  oldColor;
 }
