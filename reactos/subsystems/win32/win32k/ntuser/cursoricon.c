@@ -1316,7 +1316,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
          DPRINT1("Failed to create temporary bitmap\n");
          return;
       }
-      OldBitmap = NtGdiSelectObject(DcStretched, BitmapStretched);
+      OldBitmap = NtGdiSelectBitmap(DcStretched, BitmapStretched);
       if (NULL == OldBitmap)
       {
          NtGdiDeleteObject(BitmapStretched);
@@ -1332,7 +1332,7 @@ DoStretchBlt(HDC DcDest, int XDest, int YDest, int WidthDest, int HeightDest,
       {
          DPRINT1("Failed to blt\n");
       }
-      NtGdiSelectObject(DcStretched, OldBitmap);
+      NtGdiSelectBitmap(DcStretched, OldBitmap);
       NtGdiDeleteObject(BitmapStretched);
       NtGdiDeleteObjectApp(DcStretched);
    }
@@ -1459,19 +1459,19 @@ UserDrawIconEx(
 
       BITMAPOBJ_UnlockBitmap(BitmapObj);
 
-      hOldOffBmp = NtGdiSelectObject(hdcOff, hbmOff);
+      hOldOffBmp = NtGdiSelectBitmap(hdcOff, hbmOff);
       if (!hOldOffBmp)
       {
-         DPRINT1("NtGdiSelectObject() failed!\n");
+         DPRINT1("NtGdiSelectBitmap() failed!\n");
          goto cleanup;
       }
 
       if (DoFlickerFree)
       {
-          hOldOffBrush = NtGdiSelectObject(hdcOff, hbrFlickerFreeDraw);
+          hOldOffBrush = NtGdiSelectBrush(hdcOff, hbrFlickerFreeDraw);
           if (!hOldOffBrush)
           {
-             DPRINT1("NtGdiSelectObject() failed!\n");
+             DPRINT1("NtGdiSelectBitmap() failed!\n");
              goto cleanup;
           }
 
@@ -1495,10 +1495,10 @@ UserDrawIconEx(
 
    if (diFlags & DI_MASK)
    {
-      hOldMem = NtGdiSelectObject(hdcMem, hbmMask);
+      hOldMem = NtGdiSelectBitmap(hdcMem, hbmMask);
       if (!hOldMem)
       {
-         DPRINT("NtGdiSelectObject() failed!\n");
+         DPRINT("NtGdiSelectBitmap() failed!\n");
          goto cleanup;
       }
 
@@ -1518,12 +1518,12 @@ UserDrawIconEx(
          diFlags &= ~DI_IMAGE;
       }
 
-      NtGdiSelectObject(hdcMem, hOldMem);
+      NtGdiSelectBitmap(hdcMem, hOldMem);
    }
 
    if(diFlags & DI_IMAGE)
    {
-      hOldMem = NtGdiSelectObject(hdcMem, (hbmColor ? hbmColor : hbmMask));
+      hOldMem = NtGdiSelectBitmap(hdcMem, (hbmColor ? hbmColor : hbmMask));
 
       DoStretchBlt(hdcOff, (DoFlickerFree ? 0 : xLeft),
                    (DoFlickerFree ? 0 : yTop), cxWidth, cyHeight, hdcMem,
@@ -1531,7 +1531,7 @@ UserDrawIconEx(
                    ((diFlags & DI_MASK) ? SRCINVERT : SRCCOPY),
                    NULL != hbmColor);
 
-      NtGdiSelectObject(hdcMem, hOldMem);
+      NtGdiSelectBitmap(hdcMem, hOldMem);
    }
 
     if (bAlpha)
@@ -1612,8 +1612,8 @@ UserDrawIconEx(
 cleanup:
    if(DoFlickerFree)
    {
-      if(hOldOffBmp) NtGdiSelectObject(hdcOff, hOldOffBmp);
-      if(hOldOffBrush) NtGdiSelectObject(hdcOff, hOldOffBrush);
+      if(hOldOffBmp) NtGdiSelectBitmap(hdcOff, hOldOffBmp);
+      if(hOldOffBrush) NtGdiSelectBrush(hdcOff, hOldOffBrush);
       if(hbmOff) NtGdiDeleteObject(hbmOff);
       if(hdcOff) NtGdiDeleteObjectApp(hdcOff);
    }
