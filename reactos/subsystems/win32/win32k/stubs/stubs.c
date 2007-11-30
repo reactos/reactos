@@ -3031,58 +3031,6 @@ NtGdiMoveTo(
  */
 HBITMAP
 APIENTRY
-NtGdiSelectBitmap(
-    IN HDC hdc,
-    IN HBITMAP hbm)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-HBRUSH
-APIENTRY
-NtGdiSelectBrush(
-    IN HDC hdc,
-    IN HBRUSH hbrush)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-HFONT
-APIENTRY
-NtGdiSelectFont(
-    IN HDC hdc,
-    IN HFONT hf)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-HPEN
-APIENTRY
-NtGdiSelectPen(
-    IN HDC hdc,
-    IN HPEN hpen)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
-HBITMAP
-APIENTRY
 NtGdiSetBitmapAttributes(
     IN HBITMAP hbm,
     IN DWORD dwFlags)

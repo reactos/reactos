@@ -2040,6 +2040,214 @@ NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
   return objOrg;
 }
 
+ /*
+ * @implemented
+ */
+HBITMAP
+APIENTRY
+NtGdiSelectBitmap(
+    IN HDC hDC,
+    IN HBITMAP hBmp)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HBITMAP hOrgBmp;
+    PBITMAPOBJ pBmp;
+    HRGN hVisRgn;
+    BOOLEAN bFailed;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    /* must be memory dc to select bitmap */
+    if (!(pDC->w.flags & DC_MEMORY))
+    {
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
+
+    pBmp = BITMAPOBJ_LockBitmap(hBmp);
+    if (!pBmp)
+    {
+        DC_UnlockDc(pDC);
+        return NULL;
+    }
+    hOrgBmp = pDC->w.hBitmap;
+
+    /* Release the old bitmap, lock the new one and convert it to a SURF */
+    pDC->w.hBitmap = hBmp;
+
+    // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
+    if(pBmp->dib)
+    {
+        pDC->w.bitsPerPixel = pBmp->dib->dsBmih.biBitCount;
+        pDC->w.hPalette = pBmp->hDIBPalette;
+    }
+    else
+    {
+        pDC->w.bitsPerPixel = BitsPerFormat(pBmp->SurfObj.iBitmapFormat);
+        pDC->w.hPalette = ((GDIDEVICE *)pDC->pPDev)->DevInfo.hpalDefault;
+    }
+
+    /* Regenerate the XLATEOBJs. */
+    EngDeleteXlate(pDC->XlateBrush);
+    pDC->XlateBrush = IntGdiCreateBrushXlate(pDC, pDc_Attr->hbrush, &bFailed);
+
+    EngDeleteXlate(pDC->XlatePen);
+    pDC->XlatePen = IntGdiCreateBrushXlate(pDC, pDc_Attr->hpen, &bFailed);
+
+    DC_UnlockDc(pDC);
+
+    hVisRgn = NtGdiCreateRectRgn(0, 0, pBmp->SurfObj.sizlBitmap.cx, pBmp->SurfObj.sizlBitmap.cy);
+    BITMAPOBJ_UnlockBitmap(pBmp);
+    IntGdiSelectVisRgn(hDC, hVisRgn);
+    NtGdiDeleteObject(hVisRgn);
+
+    return hOrgBmp;
+}
+
+ /*
+ * @implemented
+ */
+HBRUSH
+APIENTRY
+NtGdiSelectBrush(
+    IN HDC hDC,
+    IN HBRUSH hBrush)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HBRUSH hOrgBrush;
+    PGDIBRUSHOBJ pBrush;
+    XLATEOBJ *XlateObj;
+    BOOLEAN bFailed;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    pBrush = BRUSHOBJ_LockBrush(hBrush);
+    if (pBrush == NULL)
+    {
+        SetLastWin32Error(ERROR_INVALID_HANDLE);
+        return NULL;
+    }
+
+    XlateObj = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
+    BRUSHOBJ_UnlockBrush(pBrush);
+    if(bFailed)
+    {
+        return NULL;
+    }
+
+    hOrgBrush = pDc_Attr->hbrush;
+    pDc_Attr->hbrush = hBrush;
+    if (pDC->XlateBrush != NULL)
+    {
+        EngDeleteXlate(pDC->XlateBrush);
+    }
+    pDC->XlateBrush = XlateObj;
+
+    DC_UnlockDc(pDC);
+    return hOrgBrush;
+}
+
+ /*
+ * @implemented
+ */
+HFONT
+APIENTRY
+NtGdiSelectFont(
+    IN HDC hDC,
+    IN HFONT hFont)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HFONT hOrgFont = NULL;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    /* FIXME: what if not successful? */
+    if(NT_SUCCESS(TextIntRealizeFont((HFONT)hFont)))
+    {
+        hOrgFont = pDc_Attr->hlfntNew;
+        pDc_Attr->hlfntNew = hFont;
+    }
+
+    DC_UnlockDc(pDC);
+
+    return hOrgFont;
+}
+
+ /*
+ * @implemented
+ */
+HPEN
+APIENTRY
+NtGdiSelectPen(
+    IN HDC hDC,
+    IN HPEN hPen)
+{
+    PDC pDC;
+    PDC_ATTR pDc_Attr;
+    HPEN hOrgPen = NULL;
+    PGDIBRUSHOBJ pPen;
+    XLATEOBJ *XlateObj;
+    BOOLEAN bFailed;
+
+    pDC = DC_LockDc(hDC);
+    if (!pDC)
+    {
+        return NULL;
+    }
+
+    pDc_Attr = pDC->pDc_Attr;
+    if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
+
+    pPen = PENOBJ_LockPen(hPen);
+    if (pPen == NULL)
+    {
+        return NULL;
+    }
+
+    XlateObj = IntGdiCreateBrushXlate(pDC, pPen, &bFailed);
+    PENOBJ_UnlockPen(pPen);
+    if (bFailed)
+    {
+        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
+        return NULL;
+    }
+
+    hOrgPen = pDc_Attr->hpen;
+    pDc_Attr->hpen = hPen;
+    if (pDC->XlatePen != NULL)
+    {
+        EngDeleteXlate(pDC->XlatePen);
+    }
+    pDC->XlatePen = XlateObj;
+
+    DC_UnlockDc(pDC);
+
+    return hOrgPen;
+}
 
 WORD STDCALL
 IntGdiSetHookFlags(HDC hDC, WORD Flags)
