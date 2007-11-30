@@ -135,17 +135,42 @@ HalReleaseDisplayOwnership(
 STATIC VOID
 KdbpTrapFrameToKdbTrapFrame(PKTRAP_FRAME TrapFrame, PKDB_KTRAP_FRAME KdbTrapFrame)
 {
+   ULONG TrapCr0, TrapCr2, TrapCr3, TrapCr4;
+
    /* Copy the TrapFrame only up to Eflags and zero the rest*/
    RtlCopyMemory(&KdbTrapFrame->Tf, TrapFrame, FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
    RtlZeroMemory((PVOID)((ULONG_PTR)&KdbTrapFrame->Tf + FIELD_OFFSET(KTRAP_FRAME, HardwareEsp)),
                  sizeof (KTRAP_FRAME) - FIELD_OFFSET(KTRAP_FRAME, HardwareEsp));
+
+#ifndef _MSC_VER
    asm volatile(
       "movl %%cr0, %0"    "\n\t"
       "movl %%cr2, %1"    "\n\t"
       "movl %%cr3, %2"    "\n\t"
       "movl %%cr4, %3"    "\n\t"
-      : "=r"(KdbTrapFrame->Cr0), "=r"(KdbTrapFrame->Cr2),
-        "=r"(KdbTrapFrame->Cr3), "=r"(KdbTrapFrame->Cr4));
+      : "=r"(TrapCr0), "=r"(TrapCr2),
+        "=r"(TrapCr3), "=r"(TrapCr4));
+#else
+   __asm
+   {
+       mov eax, cr0;
+       mov TrapCr0, eax;
+
+       mov eax, cr2;
+       mov TrapCr2, eax;
+
+       mov eax, cr3;
+       mov TrapCr3, eax;
+/* FIXME: What's the problem with cr4? */
+       //mov eax, cr4;
+       //mov TrapCr4, eax;
+   }
+#endif
+
+    KdbTrapFrame->Cr0 = TrapCr0;
+    KdbTrapFrame->Cr2 = TrapCr2;
+    KdbTrapFrame->Cr3 = TrapCr3;
+    KdbTrapFrame->Cr4 = TrapCr4;
 
     KdbTrapFrame->Tf.HardwareEsp = KiEspFromTrapFrame(TrapFrame);
     KdbTrapFrame->Tf.HardwareSegSs = (USHORT)(KiSsFromTrapFrame(TrapFrame) & 0xFFFF);
@@ -282,7 +307,7 @@ BOOLEAN
 KdbpShouldStepOverInstruction(ULONG_PTR Eip)
 {
    UCHAR Mem[3];
-   UINT i = 0;
+   ULONG i = 0;
 
    if (!NT_SUCCESS(KdbpSafeReadMemory(Mem, (PVOID)Eip, sizeof (Mem))))
    {
@@ -342,7 +367,7 @@ KdbpStepOverInstruction(ULONG_PTR Eip)
 BOOLEAN
 KdbpStepIntoInstruction(ULONG_PTR Eip)
 {
-   KDESCRIPTOR Idtr;
+    KDESCRIPTOR Idtr = {0};
    UCHAR Mem[2];
    INT IntVect;
    ULONG IntDesc[2];
@@ -372,7 +397,7 @@ KdbpStepIntoInstruction(ULONG_PTR Eip)
    }
 
    /* Read the interrupt descriptor table register  */
-   asm volatile("sidt %0" : : "m"(Idtr.Limit));
+   Ke386GetInterruptDescriptorTable(*(PKDESCRIPTOR)&Idtr.Limit);
    if (IntVect >= (Idtr.Limit + 1) / 8)
    {
       /*KdbpPrint("IDT does not contain interrupt vector %d\n.", IntVect);*/
@@ -677,7 +702,7 @@ KdbpIsBreakPointOurs(
    IN NTSTATUS ExceptionCode,
    IN PKTRAP_FRAME TrapFrame)
 {
-   UINT i;
+   ULONG i;
    ASSERT(ExceptionCode == STATUS_SINGLE_STEP || ExceptionCode == STATUS_BREAKPOINT);
 
    if (ExceptionCode == STATUS_BREAKPOINT) /* Software interrupt */
@@ -883,7 +908,7 @@ KdbpDisableBreakPoint(
    IN LONG BreakPointNr  OPTIONAL,
    IN OUT PKDB_BREAKPOINT BreakPoint  OPTIONAL)
 {
-   UINT i;
+   ULONG i;
    NTSTATUS Status;
 
    if (BreakPointNr < 0)
@@ -933,7 +958,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != (UINT)-1) /* not found */
+      if (i != (ULONG)-1) /* not found */
          ASSERT(0);
    }
    else
@@ -959,7 +984,7 @@ KdbpDisableBreakPoint(
             break;
          }
       }
-      if (i != (UINT)-1) /* not found */
+      if (i != (ULONG)-1) /* not found */
          ASSERT(0);
    }
 
@@ -1048,7 +1073,7 @@ KdbpAttachToThread(
    /* Get a pointer to the thread */
    if (!NT_SUCCESS(PsLookupThreadByThreadId(ThreadId, &Thread)))
    {
-      KdbpPrint("Invalid thread id: 0x%08x\n", (UINT)ThreadId);
+      KdbpPrint("Invalid thread id: 0x%08x\n", (ULONG)ThreadId);
       return FALSE;
    }
    Process = Thread->ThreadsProcess;
@@ -1127,14 +1152,14 @@ KdbpAttachToProcess(
    /* Get a pointer to the process */
    if (!NT_SUCCESS(PsLookupProcessByProcessId(ProcessId, &Process)))
    {
-      KdbpPrint("Invalid process id: 0x%08x\n", (UINT)ProcessId);
+      KdbpPrint("Invalid process id: 0x%08x\n", (ULONG)ProcessId);
       return FALSE;
    }
 
    Entry = Process->ThreadListHead.Flink;
    if (Entry == &KdbCurrentProcess->ThreadListHead)
    {
-      KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (UINT)ProcessId);
+      KdbpPrint("No threads in process 0x%08x, cannot attach to process!\n", (ULONG)ProcessId);
       return FALSE;
    }
 
@@ -1497,11 +1522,19 @@ KdbEnterDebuggerException(
           ExceptionRecord != NULL && ExceptionRecord->NumberParameters != 0)
       {
          /* FIXME: Add noexec memory stuff */
-         ULONG_PTR Cr2;
+         ULONG_PTR TrapCr2;
          ULONG Err;
-         asm volatile("movl %%cr2, %0" : "=r"(Cr2));
+#ifdef __GNUC__
+         asm volatile("movl %%cr2, %0" : "=r"(TrapCr2));
+#elif _MSC_VER
+         __asm mov eax, cr2;
+         __asm mov TrapCr2, eax;
+#else
+#error Unknown compiler for inline assembler
+#endif
+
          Err = TrapFrame->ErrCode;
-         DbgPrint("Memory at 0x%p could not be %s: ", Cr2, (Err & (1 << 1)) ? "written" : "read");
+         DbgPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
          if ((Err & (1 << 0)) == 0)
             DbgPrint("Page not present.\n");
          else
