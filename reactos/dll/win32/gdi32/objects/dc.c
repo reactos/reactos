@@ -1375,7 +1375,7 @@ SelectObject(HDC hDC,
             return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
-        case GDI_OBJECT_TYPE_EXTPEN:
+//        case GDI_OBJECT_TYPE_EXTPEN:
             return NtGdiSelectPen(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_FONT:
