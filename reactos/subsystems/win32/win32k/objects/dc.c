@@ -2055,6 +2055,9 @@ NtGdiSelectBitmap(
     PBITMAPOBJ pBmp;
     HRGN hVisRgn;
     BOOLEAN bFailed;
+    PGDIBRUSHOBJ pBrush;
+
+    if (hDC == NULL || hBmp == NULL) return NULL;
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
@@ -2096,11 +2099,27 @@ NtGdiSelectBitmap(
     }
 
     /* Regenerate the XLATEOBJs. */
-    EngDeleteXlate(pDC->XlateBrush);
-    pDC->XlateBrush = IntGdiCreateBrushXlate(pDC, pDc_Attr->hbrush, &bFailed);
+    pBrush = BRUSHOBJ_LockBrush(pDc_Attr->hbrush);
+    if (pBrush)
+    {
+        if (pDC->XlateBrush)
+        {
+            EngDeleteXlate(pDC->XlateBrush);
+        }
+        pDC->XlateBrush = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
+        BRUSHOBJ_UnlockBrush(pBrush);
+    }
 
-    EngDeleteXlate(pDC->XlatePen);
-    pDC->XlatePen = IntGdiCreateBrushXlate(pDC, pDc_Attr->hpen, &bFailed);
+    pBrush = PENOBJ_LockPen(pDc_Attr->hpen);
+    if (pBrush)
+    {
+        if (pDC->XlatePen)
+        {
+            EngDeleteXlate(pDC->XlatePen);
+        }
+        pDC->XlatePen = IntGdiCreateBrushXlate(pDC, pBrush, &bFailed);
+        PENOBJ_UnlockPen(pBrush);
+    }
 
     DC_UnlockDc(pDC);
 
@@ -2127,6 +2146,8 @@ NtGdiSelectBrush(
     PGDIBRUSHOBJ pBrush;
     XLATEOBJ *XlateObj;
     BOOLEAN bFailed;
+
+    if (hDC == NULL || hBrush == NULL) return NULL;
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
@@ -2176,6 +2197,8 @@ NtGdiSelectFont(
     PDC_ATTR pDc_Attr;
     HFONT hOrgFont = NULL;
 
+    if (hDC == NULL || hFont == NULL) return NULL;
+
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
@@ -2212,6 +2235,8 @@ NtGdiSelectPen(
     PGDIBRUSHOBJ pPen;
     XLATEOBJ *XlateObj;
     BOOLEAN bFailed;
+
+    if (hDC == NULL || hPen == NULL) return NULL;
 
     pDC = DC_LockDc(hDC);
     if (!pDC)
