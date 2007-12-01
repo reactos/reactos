@@ -350,9 +350,6 @@ BOOL
 STDCALL
 NtGdiRemoveFontResource(LPCWSTR  FileName);
 
-/* Should be done in user-mode. */
-HGDIOBJ STDCALL  NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj);
-
 /* Use SetDIBitsToDevice in gdi32. */
 INT
 STDCALL
