@@ -61,9 +61,9 @@ reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.
 reactos/dll/win32/odbccp32        # Autosync
-reactos/dll/win32/ole32           # Autosync
+reactos/dll/win32/ole32           # Needs a widl update
 reactos/dll/win32/oleacc          # Autosync
-reactos/dll/win32/oleaut32        # Autosync
+reactos/dll/win32/oleaut32        # Needs a widl update
 reactos/dll/win32/oledlg          # Autosync
 reactos/dll/win32/olepro32        # Autosync
 reactos/dll/win32/powrprof        # Autosync
@@ -82,7 +82,7 @@ reactos/dll/win32/twain_32        # Out of sync
 reactos/dll/win32/urlmon          # Autosync
 reactos/dll/win32/uxtheme         # Autosync
 reactos/dll/win32/version         # Autosync
-reactos/dll/win32/wininet         # Synced to Wine-0_9_10
+reactos/dll/win32/wininet         # Autosync
 reactos/dll/win32/wintrust        # Out of sync
 reactos/dll/win32/winmm           # Forked at Wine-20050628
 reactos/dll/win32/winmm/midimap   # Forked at Wine-20050628
