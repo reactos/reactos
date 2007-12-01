@@ -1828,13 +1828,13 @@ FillRect(HDC hDC, CONST RECT *lprc, HBRUSH hbr)
     {
         hbr = GetSysColorBrush((int)hbr - 1);
     }
-    if ((prevhbr = NtGdiSelectObject(hDC, hbr)) == NULL)
+    if ((prevhbr = SelectObject(hDC, hbr)) == NULL)
     {
         return FALSE;
     }
-    NtGdiPatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
+    PatBlt(hDC, lprc->left, lprc->top, lprc->right - lprc->left,
                 lprc->bottom - lprc->top, PATCOPY);
-    NtGdiSelectObject(hDC, prevhbr);
+    SelectObject(hDC, prevhbr);
     return TRUE;
 }
 
