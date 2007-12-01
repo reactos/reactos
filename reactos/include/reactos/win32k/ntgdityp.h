@@ -381,6 +381,7 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_OFFSET                     Offset;
   PGD_RESETPDEV                  ResetPDEV;
   PGD_DISABLEDRIVER              DisableDriver;
+  PVOID                          Unknown0;
   PGD_CREATEDEVICEBITMAP         CreateDeviceBitmap;
   PGD_DELETEDEVICEBITMAP         DeleteDeviceBitmap;
   PGD_REALIZEBRUSH               RealizeBrush;
@@ -392,9 +393,10 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_BITBLT                     BitBlt;
   PGD_COPYBITS                   CopyBits;
   PGD_STRETCHBLT                 StretchBlt;
-  PGD_SETPALETTE                 SetPalette;
+  PVOID                          Unknown1;
+  PGD_SETPALETTE                 SetPalette;   
   PGD_TEXTOUT                    TextOut;
-  PGD_ESCAPE                     Escape;
+  PGD_ESCAPE                     Escape; 
   PGD_DRAWESCAPE                 DrawEscape;
   PGD_QUERYFONT                  QueryFont;
   PGD_QUERYFONTTREE              QueryFontTree;
@@ -406,8 +408,10 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_STARTPAGE                  StartPage;
   PGD_ENDDOC                     EndDoc;
   PGD_STARTDOC                   StartDoc;
+  PVOID                          Unknown2;
   PGD_GETGLYPHMODE               GetGlyphMode;
   PGD_SYNCHRONIZE                Synchronize;
+  PVOID                          Unknown3;
   PGD_SAVESCREENBITS             SaveScreenBits;
   PGD_GETMODES                   GetModes;
   PGD_FREE                       Free;
@@ -431,6 +435,7 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_ENABLEDIRECTDRAW           EnableDirectDraw;
   PGD_DISABLEDIRECTDRAW          DisableDirectDraw;
   PGD_QUERYSPOOLTYPE             QuerySpoolType;
+  PVOID                          Unknown4;
   PFN_DrvIcmCreateColorTransform IcmCreateColorTransform;
   PFN_DrvIcmDeleteColorTransform IcmDeleteColorTransform;
   PFN_DrvIcmCheckBitmapBits      IcmCheckBitmapBits;
@@ -440,9 +445,9 @@ typedef struct _DRIVER_FUNCTIONS
   PFN_DrvPlgBlt                  PlgBlt;
   PGD_ALPHABLEND                 AlphaBlend;
 //  PFN_DrvSynthesizeFont          SynthesizeFont;
-  PVOID                          Unknown1;
+  PVOID                          Unknown5;
 //  PFN_DrvGetSynthesizedFontFiles GetSynthesizedFontFiles;
-  PVOID                          Unknown2;
+  PVOID                          Unknown6;
   PGD_TRANSPARENTBLT             TransparentBlt;
   PFN_DrvQueryPerBandInfo        QueryPerBandInfo;
   PFN_DrvQueryDeviceSupport      QueryDeviceSupport;
