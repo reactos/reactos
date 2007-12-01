@@ -49,7 +49,13 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      case GdiBCExtSelClipRgn:
         break;
      case GdiBCSelObj:
-        break;
+     {
+        PGDIBSOBJECT pgO;
+        if(!dc) break;
+        pgO = (PGDIBSOBJECT) pHdr;
+        if(NT_SUCCESS(TextIntRealizeFont((HFONT) pgO->hgdiobj)))
+                      Dc_Attr->hlfntNew = (HFONT) pgO->hgdiobj;
+     }
      case GdiBCDelObj:
      case GdiBCDelRgn:
      {
@@ -114,4 +120,5 @@ NtGdiFlushUserBatch(VOID)
   }
   return STATUS_SUCCESS;
 }
+
 
