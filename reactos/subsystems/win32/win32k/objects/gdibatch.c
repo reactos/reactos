@@ -23,10 +23,11 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
   if (hDC)
   {
     dc = DC_LockDc(hDC);
-    if (!dc)
-        return pHdr->Size; // Return the full size of the structure.
-    Dc_Attr = dc->pDc_Attr;
-    if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    if (dc)
+    {
+      Dc_Attr = dc->pDc_Attr;
+      if (!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+    }
   }
   // The thread is approaching the end of sunset.
   switch(pHdr->Cmd)
