@@ -29,6 +29,7 @@ blue.sys=,,,,,,x
 
 [SourceFiles]
 ; <filename> = <directory_id>
+acpi.sys      = 3
 atapi.sys     = 3
 buslogic.sys  = 3
 blue.sys      = 3
@@ -47,6 +48,7 @@ kbdclass.sys  = 3
 l_intl.nls    = 2
 ntfs.sys      = 3
 ntoskrnl.exe  = 2
+pci.sys       = 3
 scsiport.sys  = 3
 uniata.sys    = 3
 vfatfs.sys    = 3

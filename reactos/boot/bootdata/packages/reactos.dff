@@ -273,9 +273,7 @@ drivers\base\bootvid\bootvid.dll                    1
 drivers\base\beep\beep.sys                          2
 drivers\base\null\null.sys                          2
 
-drivers\bus\acpi\acpi.sys                           2
 drivers\bus\isapnp\isapnp.sys                       2
-drivers\bus\pci\pci.sys                             2
 
 drivers\directx\dxapi\dxapi.sys                     2
 drivers\directx\dxg\dxg.sys                         2
