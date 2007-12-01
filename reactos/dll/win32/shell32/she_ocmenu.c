@@ -329,6 +329,265 @@ static void FreeListViewItems(HWND hwndDlg)
     }
 }
 
+BOOL HideApplicationFromList(WCHAR * pFileName)
+{
+    WCHAR szBuffer[100];
+    DWORD dwSize;
+
+    wcscpy(szBuffer, L"Applications\\");
+    wcscat(szBuffer, pFileName);
+
+    if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize) == ERROR_SUCCESS)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+BOOL WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath)
+{
+    HKEY hShell;
+    HKEY hVerb;
+    HKEY hCmd;
+    LONG result;
+
+    if (RegCreateKeyExW(hRootKey, L"shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hShell, NULL) != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    result = RegCreateKeyExW(hShell, pVerb, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hVerb, NULL);
+    RegCloseKey(hShell);
+    if (result != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    result = RegCreateKeyExW(hVerb, L"command", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hCmd, NULL);
+    RegCloseKey(hVerb);
+    if(result != ERROR_SUCCESS)
+    {
+        return FALSE;
+    }
+
+    result = RegSetValueExW(hCmd, NULL, 0, REG_SZ, (const BYTE*)pFullPath, (strlenW(pFullPath)+1)* sizeof(WCHAR));
+    RegCloseKey(hCmd);
+    if (result == ERROR_SUCCESS)
+        return TRUE;
+    else
+        return FALSE;
+}
+
+BOOL StoreApplicationsPathForUser(WCHAR *pFileName, WCHAR* pFullPath)
+{
+    HKEY hKey;
+    HKEY hRootKey;
+    LONG result;
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER, L"SOFTWARE\\Classes\\Applications", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hRootKey, NULL) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to open HKCU\\Software\\Classes\\Applications key\n");
+        return FALSE;
+    }
+
+    if (RegCreateKeyExW(hRootKey, pFileName, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hKey, NULL) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to create HKCR\\Software\\Classes\\Applications\\%s key\n", debugstr_w(pFileName));
+        RegCloseKey(hRootKey);
+        return FALSE;
+    }
+    RegCloseKey(hKey);
+    RegCloseKey(hRootKey);
+
+    result = WriteStaticShellExtensionKey(hKey, L"open", pFullPath);
+    RegCloseKey(hKey);
+
+    return (BOOL)result;
+}
+BOOL StoreNewSettings(WCHAR * pExt, WCHAR * pFileName, WCHAR * pFullPath)
+{
+    WCHAR szBuffer[70];
+    WCHAR szVal[100];
+    DWORD dwVal;
+    HKEY hRootKey;
+    HKEY hKey;
+    DWORD dwDisposition;
+    LONG result;
+    DWORD dwBuffer;
+    DWORD dwIndex;
+    DWORD dwMask;
+    WCHAR CurChar[2];
+
+    wcscpy(szBuffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\FileExts\\");
+    wcscat(szBuffer, pExt);
+
+    if (RegCreateKeyExW(HKEY_CURRENT_USER,
+                        szBuffer,
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_WRITE | KEY_QUERY_VALUE,
+                        NULL,
+                        &hRootKey,
+                        NULL) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to create/open %s\n", szBuffer);
+        return FALSE;
+    }
+
+    if (RegCreateKeyExW(hRootKey,
+                        L"OpenWithList",
+                        0,
+                        NULL,
+                        REG_OPTION_NON_VOLATILE,
+                        KEY_WRITE | KEY_QUERY_VALUE,
+                        NULL,
+                        &hKey,
+                        &dwDisposition) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to create/open key dwDisposition %x\n", dwDisposition);
+        RegCloseKey(hRootKey);
+        return FALSE;
+    }
+
+    RegCloseKey(hRootKey);
+
+    if (dwDisposition & REG_CREATED_NEW_KEY)
+    {
+        result = RegSetValueExW(hKey, L"a", 0, REG_SZ, (const BYTE*)pFileName, (strlenW(pFileName)+1) * sizeof(WCHAR));
+
+        if (result != ERROR_SUCCESS)
+        {
+            ERR("Error: failed to set value\n");
+            RegCloseKey(hKey);
+            return FALSE;
+        }
+        
+        result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)L"a", 2 * sizeof(WCHAR));
+        RegCloseKey(hKey);
+        if (result == ERROR_SUCCESS)
+            return TRUE;
+        else
+            return FALSE;
+    }
+
+    dwBuffer = sizeof(szBuffer);
+    result = RegGetValueW(hKey, NULL, L"MRUList", RRF_RT_REG_SZ, NULL, szBuffer, &dwBuffer);
+    if (result != ERROR_SUCCESS)
+    {
+        /* FIXME
+         * recreate info
+         */
+        ERR("Failed to get value of MRUList\n");
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+    dwMask = 0;
+    CurChar[1] = 0;
+    dwBuffer = (dwBuffer / sizeof(WCHAR));
+    for(dwIndex = 0; dwIndex < dwBuffer - 1; dwIndex++)
+    {
+        CurChar[0] = szBuffer[dwIndex];
+        dwMask |= (1 << (CurChar[0] - L'a'));
+
+        dwVal = sizeof(szVal);
+        if (RegGetValueW(hKey, NULL, CurChar, RRF_RT_REG_SZ, NULL, szVal, &dwVal) == ERROR_SUCCESS)
+        {
+            if (!wcsicmp(szVal, pFileName))
+            {
+                memmove(&szBuffer[0], &szBuffer[1], dwIndex * sizeof(WCHAR));
+                szBuffer[0] = CurChar[0];
+                result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)szBuffer, dwBuffer * sizeof(WCHAR));
+                RegCloseKey(hKey);
+                if (result == ERROR_SUCCESS)
+                    return TRUE;
+                else
+                    return FALSE;
+            }
+        }
+    }
+
+    dwIndex = 0;
+    while(dwMask & (1 << dwIndex))
+        dwIndex++;
+
+    if (dwIndex >= sizeof(DWORD) * 8)
+    {
+        /* more than 32 progs in list */
+        TRACE("no entry index available\n");
+        RegCloseKey(hKey);
+        return FALSE;
+    }
+    
+    CurChar[0] = L'a' + dwIndex;
+    result = RegSetValueExW(hKey, CurChar, 0, REG_SZ, (const BYTE*)pFileName, (strlenW(pFileName) + 1) * sizeof(WCHAR));
+    if (result == ERROR_SUCCESS)
+    {
+        memmove(&szBuffer[0], &szBuffer[1], dwBuffer * sizeof(WCHAR));
+        szBuffer[0] = CurChar[0];
+        result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)szBuffer, dwBuffer * sizeof(WCHAR));
+        if (result == ERROR_SUCCESS)
+        {
+            StoreApplicationsPathForUser(pFileName, pFullPath);
+        }
+    }
+
+    RegCloseKey(hKey);
+
+    if (result == ERROR_SUCCESS)
+        return TRUE;
+    else
+        return FALSE;
+}
+BOOL
+SetProgrammAsDefaultHandler(WCHAR *pFileExt, WCHAR* pFullPath)
+{
+    HKEY hExtKey;
+    HKEY hProgKey;
+    DWORD dwDisposition;
+    WCHAR szBuffer[20];
+    DWORD dwSize;
+    BOOL result;
+
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, pFileExt, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hExtKey, &dwDisposition) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to create HKCR\\%s key\n", debugstr_w(pFileExt));
+        return FALSE;
+    }
+
+    if (dwDisposition & REG_CREATED_NEW_KEY)
+    {
+        wcscpy(szBuffer, &pFileExt[1]);
+        wcscat(szBuffer, L"_auto_file");
+    }
+    else
+    {
+        dwSize = sizeof(szBuffer);
+        if (!RegGetValueW(hExtKey, NULL, NULL, RRF_RT_REG_SZ, NULL, szBuffer, &dwSize))
+        {
+            ERR("Error: failed to retrieve subkey\n");
+            RegCloseKey(hExtKey);
+            return FALSE;
+        }
+    }
+
+    RegCloseKey(hExtKey);
+    TRACE("progkey %s\n", debugstr_w(szBuffer));
+    if (RegCreateKeyExW(HKEY_CLASSES_ROOT, szBuffer, 0, NULL, 0, KEY_WRITE, NULL, &hProgKey, &dwDisposition) != ERROR_SUCCESS)
+    {
+        ERR("Error: failed to set progid key %s\n", debugstr_w(szBuffer));
+        return FALSE;
+    }
+
+    /* FIXME
+     * Should copy all verbs from HKCR\Classes\Applications\foo.exe\shell\*
+     */
+
+    result = WriteStaticShellExtensionKey(hProgKey, L"open", pFullPath);
+    RegCloseKey(hProgKey);
+
+    return result;
+}
+
 
 static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -337,8 +596,9 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     LPFNOFN ofnProc;
     WCHAR szBuffer[MAX_PATH + 30] = { 0 };
     WCHAR szPath[MAX_PATH * 2 +1] = { 0 };
+    WCHAR * pExt;
     int res;
-    LVITEM lvItem;
+    LVITEMW lvItem;
     STARTUPINFOW si;
     PROCESS_INFORMATION pi;
 
@@ -395,22 +655,39 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             This->iSelItem = 0;
             return TRUE;
         case 14005: /* ok */
-            ZeroMemory(&lvItem, sizeof(LVITEM));
-            lvItem.mask = LVIF_PARAM;
-            lvItem.iItem = This->iSelItem;
+            ZeroMemory(&lvItem, sizeof(LVITEMW));
 
-            if (!ListView_GetItem(GetDlgItem(hwndDlg, 14002), &lvItem))
+            lvItem.mask = LVIF_PARAM | LVIF_TEXT;
+            lvItem.iItem = This->iSelItem;
+            lvItem.pszText = szBuffer;
+            if (!ListView_GetItemW(GetDlgItem(hwndDlg, 14002), &lvItem))
             {
                 ERR("Failed to get item index %d\n", This->iSelItem);
                 DestroyWindow(hwndDlg);
                 return FALSE;
             }
-                        
+            pExt = wcsrchr(szBuffer, L'.');
+
+            if (!HideApplicationFromList(szBuffer))
+            {
+#if 0
+                if (!StoreNewSettings(pExt, szBuffer, (WCHAR*)lvItem.lParam))
+                {
+                    /* failed to store setting */
+                    WARN("Error: failed to store settings for app %s\n", debugstr_w(szBuffer));
+                }
+#endif
+            }
+
             if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
             {
-                /* FIXME
-                 * give selected program default invokation rights
-                 */
+#if 0
+                if (!SetProgrammAsDefaultHandler(pExt, (WCHAR*)lvItem.lParam))
+                {
+                    /* failed to associate programm */
+                    WARN("Error: failed to associate programm\n");
+                }
+#endif
             }
             ZeroMemory(&si, sizeof(STARTUPINFOW));
             si.cb = sizeof(STARTUPINFOW);
@@ -418,7 +695,7 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
             wcscat(szPath, L" ");
             wcscat(szPath, This->szPath);
 
-            //TRACE("exe: %s path %s\n", debugstr_w((WCHAR*)lvItem.lParam), debugstr_w(This->szPath)); 
+            TRACE("exe: %s path %s\n", debugstr_w((WCHAR*)lvItem.lParam), debugstr_w(This->szPath)); 
             if (CreateProcessW(NULL, szPath, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
             {
                 CloseHandle(pi.hThread);
