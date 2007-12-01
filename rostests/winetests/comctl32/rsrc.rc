@@ -1,6 +1,7 @@
-/* Resources for the unit test suite for property sheet control.
+/* Resources for the common control unit test suite.
  *
  * Copyright 2006 Huw Davies
+ * Copyright 2006 Mikolaj Zalewski
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,6 +20,7 @@
 
 #include "windef.h"
 #include "winuser.h"
+#include "resources.h"
 
 PROP_PAGE1 DIALOG LOADONCALL MOVEABLE DISCARDABLE 5, 43, 227, 215
 STYLE  WS_POPUP | WS_CAPTION | WS_CLIPSIBLINGS | WS_VISIBLE
@@ -27,3 +29,19 @@ FONT 8, "MS Shell Dlg"
 {
  LTEXT "Test", -1, 10, 6, 100, 8
 }
+
+STRINGTABLE 
+{
+    IDS_TBADD1           "abc"
+    IDS_TBADD2           "|p|q|r"
+    IDS_TBADD3           "*p*q*"
+    IDS_TBADD4           "#p#q##"
+    IDS_TBADD5           "|p||q|r|"
+    IDS_TBADD7           "abracadabra"
+}
+
+/* @makedep: bmp128x15.bmp */
+IDB_BITMAP_128x15 BITMAP bmp128x15.bmp
+
+/* @makedep: bmp80x15.bmp */
+IDB_BITMAP_80x15 BITMAP bmp80x15.bmp

@@ -82,108 +82,108 @@ static void test_comboboxex(void) {
                  out_of_range_item[] = {'O','u','t',' ','o','f',' ','R','a','n','g','e',' ','I','t','e','m',0};
 
     /* Allocate space for result */
-    textBuffer = malloc(MAX_CHARS);
+    textBuffer = HeapAlloc(GetProcessHeap(), 0, MAX_CHARS);
 
     /* Basic comboboxex test */
     myHwnd = createComboEx(WS_BORDER | WS_VISIBLE | WS_CHILD | CBS_DROPDOWN);
 
     /* Add items onto the end of the combobox */
     res = addItem(myHwnd, -1, first_item);
-    ok(res == 0, "Adding simple item failed (%ld)\n", res);
+    ok(res == 0, "Adding simple item failed (%d)\n", res);
     res = addItem(myHwnd, -1, second_item);
-    ok(res == 1, "Adding simple item failed (%ld)\n", res);
+    ok(res == 1, "Adding simple item failed (%d)\n", res);
     res = addItem(myHwnd, 2, third_item);
-    ok(res == 2, "Adding simple item failed (%ld)\n", res);
+    ok(res == 2, "Adding simple item failed (%d)\n", res);
     res = addItem(myHwnd, 1, middle_item);
-    ok(res == 1, "Inserting simple item failed (%ld)\n", res);
+    ok(res == 1, "Inserting simple item failed (%d)\n", res);
 
     /* Add an item completely out of range */
     res = addItem(myHwnd, 99, out_of_range_item);
-    ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
+    ok(res == -1, "Adding using out of range index worked unexpectedly (%d)\n", res);
     res = addItem(myHwnd, 5, out_of_range_item);
-    ok(res == -1, "Adding using out of range index worked unexpectedly (%ld)\n", res);
+    ok(res == -1, "Adding using out of range index worked unexpectedly (%d)\n", res);
     /* Removed: Causes traps on Windows XP
        res = addItem(myHwnd, -2, "Out Of Range Item");
        ok(res == -1, "Adding out of range worked unexpectedly (%ld)\n", res);
      */
 
-    /* Get an item completely out of range */
-    res = getItem(myHwnd, 99, &cbexItem);
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
-    res = getItem(myHwnd, 4, &cbexItem);
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
-    res = getItem(myHwnd, -2, &cbexItem);
-    ok(res == 0, "Getting item using out of range index worked unexpectedly (%ld, %s)\n", res, cbexItem.pszText);
+    /* Get an item completely out of range */ 
+    res = getItem(myHwnd, 99, &cbexItem); 
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
+    res = getItem(myHwnd, 4, &cbexItem); 
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
+    res = getItem(myHwnd, -2, &cbexItem); 
+    ok(res == 0, "Getting item using out of range index worked unexpectedly (%d, %s)\n", res, cbexItem.pszText);
 
-    /* Get an item in range */
-    res = getItem(myHwnd, 0, &cbexItem);
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
+    /* Get an item in range */ 
+    res = getItem(myHwnd, 0, &cbexItem); 
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
     ok(strcmp(first_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 1, &cbexItem);
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
+    res = getItem(myHwnd, 1, &cbexItem); 
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
     ok(strcmp(middle_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 2, &cbexItem);
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
+    res = getItem(myHwnd, 2, &cbexItem); 
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
     ok(strcmp(second_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    res = getItem(myHwnd, 3, &cbexItem);
-    ok(res != 0, "Getting item using valid index failed unexpectedly (%ld)\n", res);
+    res = getItem(myHwnd, 3, &cbexItem); 
+    ok(res != 0, "Getting item using valid index failed unexpectedly (%d)\n", res);
     ok(strcmp(third_item, cbexItem.pszText) == 0, "Getting item returned wrong string (%s)\n", cbexItem.pszText);
 
-    /* Set an item completely out of range */
-    res = setItem(myHwnd, 99, replacement_item);
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, 4, replacement_item);
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
-    res = setItem(myHwnd, -2, replacement_item);
-    ok(res == 0, "Setting item using out of range index worked unexpectedly (%ld)\n", res);
+    /* Set an item completely out of range */ 
+    res = setItem(myHwnd, 99, replacement_item); 
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
+    res = setItem(myHwnd, 4, replacement_item); 
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
+    res = setItem(myHwnd, -2, replacement_item); 
+    ok(res == 0, "Setting item using out of range index worked unexpectedly (%d)\n", res);
 
-    /* Set an item in range */
+    /* Set an item in range */ 
     res = setItem(myHwnd, 0, replacement_item);
-    ok(res != 0, "Setting first item failed (%ld)\n", res);
+    ok(res != 0, "Setting first item failed (%d)\n", res);
     res = setItem(myHwnd, 3, replacement_item);
-    ok(res != 0, "Setting last item failed (%ld)\n", res);
+    ok(res != 0, "Setting last item failed (%d)\n", res);
 
     /* Remove items completely out of range (4 items in control at this point) */
     res = delItem(myHwnd, -1);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
     res = delItem(myHwnd, 4);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
 
     /* Remove items in range (4 items in control at this point) */
     res = delItem(myHwnd, 3);
-    ok(res == 3, "Deleting using out of range index failed (%ld)\n", res);
+    ok(res == 3, "Deleting using out of range index failed (%d)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 2, "Deleting using out of range index failed (%ld)\n", res);
+    ok(res == 2, "Deleting using out of range index failed (%d)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 1, "Deleting using out of range index failed (%ld)\n", res);
+    ok(res == 1, "Deleting using out of range index failed (%d)\n", res);
     res = delItem(myHwnd, 0);
-    ok(res == 0, "Deleting using out of range index failed (%ld)\n", res);
+    ok(res == 0, "Deleting using out of range index failed (%d)\n", res);
 
     /* Remove from an empty box */
     res = delItem(myHwnd, 0);
-    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%ld)\n", res);
+    ok(res == CB_ERR, "Deleting using out of range index worked unexpectedly (%d)\n", res);
 
 
     /* Cleanup */
-    free(textBuffer);
+    HeapFree(GetProcessHeap(), 0, textBuffer);
 
 }
 
-LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+static LRESULT CALLBACK ComboExTestWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
     switch(msg) {
 
     case WM_DESTROY:
         PostQuitMessage(0);
         break;
-
+  
     default:
         return DefWindowProcA(hWnd, msg, wParam, lParam);
     }
-
+    
     return 0L;
 }
 
@@ -200,14 +200,14 @@ static void init(void) {
     wc.cbWndExtra = 0;
     wc.hInstance = GetModuleHandleA(NULL);
     wc.hIcon = NULL;
-    wc.hCursor = LoadCursorA(NULL, MAKEINTRESOURCEA(IDC_ARROW));
+    wc.hCursor = LoadCursorA(NULL, IDC_ARROW);
     wc.hbrBackground = GetSysColorBrush(COLOR_WINDOW);
     wc.lpszMenuName = NULL;
     wc.lpszClassName = ComboExTestClass;
     wc.lpfnWndProc = ComboExTestWndProc;
     RegisterClassA(&wc);
 
-    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW,
+    hComboExParentWnd = CreateWindowExA(0, ComboExTestClass, "ComboEx test", WS_OVERLAPPEDWINDOW, 
       CW_USEDEFAULT, CW_USEDEFAULT, 680, 260, NULL, NULL, GetModuleHandleA(NULL), 0);
     assert(hComboExParentWnd != NULL);
 
@@ -218,13 +218,13 @@ static void init(void) {
 static void cleanup(void)
 {
     MSG msg;
-
+    
     PostMessageA(hComboExParentWnd, WM_CLOSE, 0, 0);
     while (GetMessageA(&msg,0,0,0)) {
         TranslateMessage(&msg);
         DispatchMessageA(&msg);
     }
-
+    
     UnregisterClassA(ComboExTestClass, GetModuleHandleA(NULL));
 }
 

@@ -111,7 +111,7 @@ static void check_reg_entries(const char *mrulist, const char**items)
     buff[0] = '\0';
     ret = RegQueryValueExA(hKey, "MRUList", NULL, &type, (LPBYTE)buff, &size);
 
-    ok(!ret && buff[0], "Checking MRU: got %ld from RegQueryValueExW\n", ret);
+    ok(!ret && buff[0], "Checking MRU: got %d from RegQueryValueExW\n", ret);
     if(ret || !buff[0]) return;
 
     ok(strcmp(buff, mrulist) == 0, "Checking MRU: Expected list %s, got %s\n",
@@ -128,7 +128,7 @@ static void check_reg_entries(const char *mrulist, const char**items)
         buff[0] = '\0';
         ret = RegQueryValueExA(hKey, name, NULL, &type, (LPBYTE)buff, &size);
         ok(!ret && buff[0],
-           "Checking MRU item %d ('%c'): got %ld from RegQueryValueExW\n",
+           "Checking MRU item %d ('%c'): got %d from RegQueryValueExW\n",
            i, mrulist[i], ret);
         if(ret || !buff[0]) return;
         ok(!strcmp(buff, items[mrulist[i]-'a']),
@@ -165,37 +165,39 @@ static void test_MRUListA(void)
     if (!pCreateMRUListA || !pFreeMRUList || !pAddMRUStringA)
         return;
 
-#if 0 /* Create (NULL) - crashes native */
+    if (0)
+    {
+    /* Create (NULL) - crashes native */
     hMRU = pCreateMRUListA(NULL);
-#endif
+    }
 
     /* Create (size too small) */
     mruA.cbSize = sizeof(mruA) - 2;
-    hMRU = create_mruA(NULL, MRUF_STRING_LIST, cmp_mru_strA);
+    hMRU = create_mruA(NULL, MRUF_STRING_LIST, (PROC)cmp_mru_strA);
     ok (!hMRU && !GetLastError(),
-        "CreateMRUListA(too small) expected NULL,0 got %p,%ld\n",
+        "CreateMRUListA(too small) expected NULL,0 got %p,%d\n",
         hMRU, GetLastError());
     mruA.cbSize = sizeof(mruA);
 
     /* Create (size too big) */
     mruA.cbSize = sizeof(mruA) + 2;
-    hMRU = create_mruA(NULL, MRUF_STRING_LIST, cmp_mru_strA);
+    hMRU = create_mruA(NULL, MRUF_STRING_LIST, (PROC)cmp_mru_strA);
     ok (!hMRU && !GetLastError(),
-        "CreateMRUListA(too big) expected NULL,0 got %p,%ld\n",
+        "CreateMRUListA(too big) expected NULL,0 got %p,%d\n",
         hMRU, GetLastError());
     mruA.cbSize = sizeof(mruA);
 
     /* Create (NULL hKey) */
-    hMRU = create_mruA(NULL, MRUF_STRING_LIST, cmp_mru_strA);
+    hMRU = create_mruA(NULL, MRUF_STRING_LIST, (PROC)cmp_mru_strA);
     ok (!hMRU && !GetLastError(),
-        "CreateMRUListA(NULL key) expected NULL,0 got %p,%ld\n",
+        "CreateMRUListA(NULL key) expected NULL,0 got %p,%d\n",
         hMRU, GetLastError());
 
     /* Create (NULL name) */
     mruA.lpszSubKey = NULL;
-    hMRU = create_mruA(NULL, MRUF_STRING_LIST, cmp_mru_strA);
+    hMRU = create_mruA(NULL, MRUF_STRING_LIST, (PROC)cmp_mru_strA);
     ok (!hMRU && !GetLastError(),
-        "CreateMRUListA(NULL name) expected NULL,0 got %p,%ld\n",
+        "CreateMRUListA(NULL name) expected NULL,0 got %p,%d\n",
         hMRU, GetLastError());
     mruA.lpszSubKey = REG_TEST_SUBKEYA;
 
@@ -204,9 +206,9 @@ static void test_MRUListA(void)
        "Couldn't create test key \"%s\"\n", REG_TEST_KEYA);
     if (!hKey)
         return;
-    hMRU = create_mruA(hKey, MRUF_STRING_LIST, cmp_mru_strA);
+    hMRU = create_mruA(hKey, MRUF_STRING_LIST, (PROC)cmp_mru_strA);
     ok(hMRU && !GetLastError(),
-       "CreateMRUListA(string) expected non-NULL,0 got %p,%ld\n",
+       "CreateMRUListA(string) expected non-NULL,0 got %p,%d\n",
        hMRU, GetLastError());
 
     if (hMRU)
@@ -220,38 +222,39 @@ static void test_MRUListA(void)
         SetLastError(0);
         iRet = pAddMRUStringA(NULL, checks[0]);
         ok(iRet == -1 && !GetLastError(),
-           "AddMRUStringA(NULL list) expected -1,0 got %d,%ld\n",
+           "AddMRUStringA(NULL list) expected -1,0 got %d,%d\n",
            iRet, GetLastError());
 
         /* Add (NULL string) */
-#if 0
+        if (0)
+        {
 	/* Some native versions crash when passed NULL or fail to SetLastError()  */
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, NULL);
         ok(iRet == 0 && GetLastError() == ERROR_INVALID_PARAMETER,
-           "AddMRUStringA(NULL str) expected 0,ERROR_INVALID_PARAMETER got %d,%ld\n",
+           "AddMRUStringA(NULL str) expected 0,ERROR_INVALID_PARAMETER got %d,%d\n",
            iRet, GetLastError());
-#endif
+        }
 
         /* Add 3 strings. Check the registry is correct after each add */
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, checks[0]);
         ok(iRet == 0 && !GetLastError(),
-           "AddMRUStringA(1) expected 0,0 got %d,%ld\n",
+           "AddMRUStringA(1) expected 0,0 got %d,%d\n",
            iRet, GetLastError());
         check_reg_entries("a", checks);
 
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, checks[1]);
         ok(iRet == 1 && !GetLastError(),
-           "AddMRUStringA(2) expected 1,0 got %d,%ld\n",
+           "AddMRUStringA(2) expected 1,0 got %d,%d\n",
            iRet, GetLastError());
         check_reg_entries("ba", checks);
 
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, checks[2]);
         ok(iRet == 2 && !GetLastError(),
-           "AddMRUStringA(2) expected 2,0 got %d,%ld\n",
+           "AddMRUStringA(2) expected 2,0 got %d,%d\n",
            iRet, GetLastError());
         check_reg_entries("cba", checks);
 
@@ -261,7 +264,7 @@ static void test_MRUListA(void)
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, checks[1]);
         ok(iRet == 1 && !GetLastError(),
-           "AddMRUStringA(re-add 1) expected 1,0 got %d,%ld\n",
+           "AddMRUStringA(re-add 1) expected 1,0 got %d,%d\n",
            iRet, GetLastError());
         check_reg_entries("bca", checks);
 
@@ -269,7 +272,7 @@ static void test_MRUListA(void)
         SetLastError(0);
         iRet = pAddMRUStringA(hMRU, checks[3]);
         ok(iRet == 0 && !GetLastError(),
-           "AddMRUStringA(add new) expected 0,0 got %d,%ld\n",
+           "AddMRUStringA(add new) expected 0,0 got %d,%d\n",
            iRet, GetLastError());
         checks[0] = checks[3];
         check_reg_entries("abc", checks);
@@ -285,8 +288,6 @@ static void test_MRUListA(void)
 START_TEST(mru)
 {
     hComctl32 = GetModuleHandleA("comctl32.dll");
-    if (!hComctl32)
-        return;
 
     delete_reg_entries();
     if (!create_reg_entries())

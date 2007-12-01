@@ -38,10 +38,10 @@ static void test_create_tooltip(void)
     assert(hwnd);
 
     style = GetWindowLong(hwnd, GWL_STYLE);
-    trace("style = %08lx\n", style);
+    trace("style = %08x\n", style);
     exp_style = 0x7fffffff | WS_POPUP;
     exp_style &= ~(WS_CHILD | WS_MAXIMIZE | WS_BORDER | WS_DLGFRAME);
-    ok(style == exp_style,"wrong style %08lx/%08lx\n", style, exp_style);
+    ok(style == exp_style,"wrong style %08x/%08x\n", style, exp_style);
 
     DestroyWindow(hwnd);
 
@@ -51,9 +51,9 @@ static void test_create_tooltip(void)
     assert(hwnd);
 
     style = GetWindowLong(hwnd, GWL_STYLE);
-    trace("style = %08lx\n", style);
+    trace("style = %08x\n", style);
     ok(style == (WS_POPUP | WS_CLIPSIBLINGS | WS_BORDER),
-       "wrong style %08lx\n", style);
+       "wrong style %08x\n", style);
 
     DestroyWindow(hwnd);
 

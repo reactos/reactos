@@ -156,7 +156,7 @@ static void ok_sequence(const struct message *expected, const char *context)
             "%s: the procnum %d was expected, but got procnum %d instead\n",
             context, expected->procnum, actual->procnum);
         ok(expected->wParam == actual->wParam,
-            "%s: in procnum %d expecting wParam 0x%x got 0x%x\n",
+            "%s: in procnum %d expecting wParam 0x%lx got 0x%lx\n",
             context, expected->procnum, expected->wParam, actual->wParam);
         expected++;
         actual++;
@@ -169,7 +169,7 @@ static void ok_sequence(const struct message *expected, const char *context)
 static LRESULT WINAPI WndProc1(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     struct message msg;
-
+    
     if(message == WM_USER) {
         msg.wParam = wParam;
         msg.procnum = 1;
@@ -183,7 +183,7 @@ static WNDPROC origProc3;
 static LRESULT WINAPI WndProc3(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     struct message msg;
-
+    
     if(message == WM_USER) {
         msg.wParam = wParam;
         msg.procnum = 3;
@@ -195,12 +195,12 @@ static LRESULT WINAPI WndProc3(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
 static LRESULT WINAPI WndProcSub(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, UINT_PTR uldSubclass, DWORD_PTR dwRefData)
 {
     struct message msg;
-
+    
     if(message == WM_USER) {
         msg.wParam = wParam;
         msg.procnum = uldSubclass;
         add_message(&msg);
-
+        
         if(lParam) {
             if(dwRefData & DELETE_SELF) {
                 pRemoveWindowSubclass(hwnd, WndProcSub, uldSubclass);
@@ -275,20 +275,23 @@ static BOOL RegisterWindowClasses(void)
     cls.lpszMenuName = NULL;
     cls.lpszClassName = "TestSubclass";
     if(!RegisterClassA(&cls)) return FALSE;
-
+    
     return TRUE;
 }
 
 START_TEST(subclass)
 {
     HMODULE hdll;
-
+    
     hdll = GetModuleHandleA("comctl32.dll");
     assert(hdll);
-    pSetWindowSubclass = (void*)GetProcAddress(hdll, "SetWindowSubclass");
-    pRemoveWindowSubclass = (void*)GetProcAddress(hdll, "RemoveWindowSubclass");
-    pDefSubclassProc = (void*)GetProcAddress(hdll, "DefSubclassProc");
-
+    /* Functions have to be loaded by ordinal. Only XP and W2K3 export
+     * them by name.
+     */
+    pSetWindowSubclass = (void*)GetProcAddress(hdll, (LPSTR)410);
+    pRemoveWindowSubclass = (void*)GetProcAddress(hdll, (LPSTR)412);
+    pDefSubclassProc = (void*)GetProcAddress(hdll, (LPSTR)413);
+    
     if(!pSetWindowSubclass || !pRemoveWindowSubclass || !pDefSubclassProc)
         return;
 
