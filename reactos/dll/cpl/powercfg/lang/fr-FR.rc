@@ -159,8 +159,8 @@ BEGIN
   IDS_TIMEOUT15 "Après 5 heures"
   IDS_TIMEOUT16 "Jamais"
   
-  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
-  IDS_DEL_SCHEME_TITLE "Delete Scheme"
+  IDS_DEL_SCHEME "Êtes-vous sûr de vouloir supprimer le profil d'alimentation ?"
+  IDS_DEL_SCHEME_TITLE "Supprimer le profil"
 END
 
 

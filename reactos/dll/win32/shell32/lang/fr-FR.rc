@@ -342,18 +342,18 @@ END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Open With"
+CAPTION "Ouvrir avec"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_SHELL_OPEN_WITH, -1, 8, 12, 21, 20
-	LTEXT "Choose the program you want to use to open this file:", -1, 44, 12, 211, 10
-	LTEXT "File:    ", 14001, 44, 25, 188, 10
-	GROUPBOX "&Programs", -1, 7, 42, 249, 187
+	LTEXT "Choisissez le programme que vous désirez utiliser pour ouvrir ce fichier :", -1, 44, 12, 211, 10
+	LTEXT "Fichier :    ", 14001, 44, 25, 188, 10
+	GROUPBOX "&Programmes", -1, 7, 42, 249, 187
 	CONTROL "", 14002, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 16, 57, 230, 130
-	AUTOCHECKBOX "&Always use the selected program to open this kind of file", 14003, 20, 193, 225, 10
-	PUSHBUTTON "&Browse...", 14004, 198, 207, 50, 14
+	AUTOCHECKBOX "Toujours utiliser le progr&amme sélectionné pour ouvrir ce type de fichier", 14003, 20, 193, 225, 10
+	PUSHBUTTON "Parcourir...", 14004, 198, 207, 50, 14
 	PUSHBUTTON "OK", 14005, 150, 236, 50, 14
-	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
+	PUSHBUTTON "Annuler", 14006, 206, 236, 50, 14
 END
 
 STRINGTABLE DISCARDABLE
@@ -377,7 +377,7 @@ BEGIN
 	IDS_DESKTOP                 "Bureau"
 	IDS_MYCOMPUTER              "Poste de travail"
 	IDS_RECYCLEBIN_FOLDER_NAME  "Corbeille"
-	IDS_CONTROLPANEL            "Control Panel"
+	IDS_CONTROLPANEL            "Panneau de contrôle"
 
 	/* context menus */
 	IDS_VIEW_LARGE              "&Grandes icônes"
