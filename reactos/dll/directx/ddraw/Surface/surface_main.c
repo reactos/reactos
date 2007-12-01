@@ -186,17 +186,25 @@ HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7 iface, LPRECT rdst,
 }
 
 
-HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
-				LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE events)
+HRESULT WINAPI
+Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
+                        LPDDSURFACEDESC2 pDDSD, DWORD flags, HANDLE events)
 {
-	LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
-	DDHAL_LOCKDATA mdLock;
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
+    DDHAL_LOCKDATA mdLock;
 
-	DX_WINDBG_trace();
+    DX_WINDBG_trace();
 
-	/* FIXME add a check see if lock suport or not */
+    DX_WINDBG_trace_res( This->lpLcl->lpGbl->wWidth, This->lpLcl->lpGbl->wHeight, This->lpLcl->lpGbl->lPitch, 0);
 
-	if (prect!=NULL)
+    if (events != NULL)
+    {
+        return DDERR_INVALIDPARAMS; 
+    }
+
+    /* FIXME add a check see if lock suport or not */
+
+    if (prect!=NULL)
     {
         mdLock.bHasRect = TRUE;
         memcpy(&mdLock.rArea,prect,sizeof(RECTL));
@@ -206,17 +214,17 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
         mdLock.bHasRect = FALSE;
     }
 
-	//This->lpLcl->lpSurfMore->slist[0]->hDC = This->lpLcl->lpSurfMore->lpDD_lcl->hDC;
+    //FIXME check if it primary or not and use primary or pixelformat data, at moment it is hardcode to primary
 
     mdLock.ddRVal = DDERR_NOTPALETTIZED;
     mdLock.Lock = This->lpLcl->lpSurfMore->lpDD_lcl->lpDDCB->HALDDSurface.Lock;
     mdLock.dwFlags = flags;
-	mdLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
-	mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
+    mdLock.lpDDSurface = This->lpLcl->lpSurfMore->slist[0];
+    mdLock.lpDD = This->lpLcl->lpSurfMore->lpDD_lcl->lpGbl;
     mdLock.lpSurfData = NULL;
 
 
-	if (!DdResetVisrgn(This->lpLcl->lpSurfMore->slist[0], NULL))
+    if (!DdResetVisrgn(This->lpLcl->lpSurfMore->slist[0], NULL))
     {
       DX_STUB_str("Here DdResetVisrgn lock");
       return DDERR_UNSUPPORTED;
@@ -233,8 +241,8 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
     if (pDDSD != NULL)
     {
-		ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
-		pDDSD->dwSize = sizeof(DDSURFACEDESC2);
+        ZeroMemory(pDDSD,sizeof(DDSURFACEDESC2));
+        pDDSD->dwSize = sizeof(DDSURFACEDESC2);
 
         //if (pDDSD->dwSize == sizeof(DDSURFACEDESC2))
         //{
@@ -253,16 +261,12 @@ HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7 iface, LPRECT prect,
 
         pDDSD->lpSurface = (LPVOID)  mdLock.lpSurfData;
 
-		pDDSD->dwHeight =This->lpLcl->lpGbl->wHeight;
-		pDDSD->dwWidth = This->lpLcl->lpGbl->wWidth;
+        pDDSD->dwHeight =This->lpLcl->lpGbl->wHeight;
+        pDDSD->dwWidth = This->lpLcl->lpGbl->wWidth;
 
-
-
-
-		pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lPitch/ 8;
-		pDDSD->lPitch = This->lpLcl->lpGbl->lPitch;
-		pDDSD->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
-
+        pDDSD->ddpfPixelFormat.dwRGBBitCount = This->lpLcl->lpGbl->lpDD->lpModeInfo->dwBPP;// .lpModeInfo->dwBPP; //This->lpLcl->lpGbl->lPitch/ 8;
+        pDDSD->lPitch = This->lpLcl->lpGbl->lPitch;
+        pDDSD->dwFlags = DDSD_WIDTH | DDSD_HEIGHT | DDSD_PITCH;
     }
 
     return mdLock.ddRVal;
