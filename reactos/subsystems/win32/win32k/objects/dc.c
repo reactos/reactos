@@ -978,10 +978,10 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
   if (!(DCToDelete->w.flags & DC_SAVED))
   {
     /*
-    NtGdiSelectObject (DCHandle, STOCK_BLACK_PEN);
-    NtGdiSelectObject (DCHandle, STOCK_WHITE_BRUSH);
-    NtGdiSelectObject (DCHandle, STOCK_SYSTEM_FONT);
-    DC_LockDC (DCHandle); NtGdiSelectObject does not recognize stock objects yet  */
+    NtGdiSelectPen (DCHandle, STOCK_BLACK_PEN);
+    NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
+    NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
+    DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
     if (DCToDelete->w.flags & DC_MEMORY)
     {
       NtGdiDeleteObject (DCToDelete->w.hFirstBitmap);
@@ -1351,10 +1351,10 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
 #endif
   if(!hDC) return; // Not a MemoryDC or SaveLevel DC, return.
 
-  NtGdiSelectObject( hDC, dcs->w.hBitmap );
-  NtGdiSelectObject( hDC, sDc_Attr->hbrush );
-  NtGdiSelectObject( hDC, sDc_Attr->hlfntNew );
-  NtGdiSelectObject( hDC, sDc_Attr->hpen );
+  NtGdiSelectBitmap( hDC, dcs->w.hBitmap );
+  NtGdiSelectBrush( hDC, sDc_Attr->hbrush );
+  NtGdiSelectFont( hDC, sDc_Attr->hlfntNew );
+  NtGdiSelectPen( hDC, sDc_Attr->hpen );
 
   NtGdiSetBkColor( hDC, sDc_Attr->crBackgroundClr);
   NtGdiSetTextColor( hDC, sDc_Attr->crForegroundClr);
@@ -1884,160 +1884,6 @@ NtGdiSaveDC(HDC  hDC)
   DC_UnlockDc( dc );
 
   return  ret;
-}
-
-HGDIOBJ
-STDCALL
-NtGdiSelectObject(HDC  hDC, HGDIOBJ  hGDIObj)
-{
-  HGDIOBJ objOrg = NULL; // default to failure
-  BITMAPOBJ *pb;
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-  PGDIBRUSHOBJ pen;
-  PGDIBRUSHOBJ brush;
-  XLATEOBJ *XlateObj;
-  DWORD objectType;
-  HRGN hVisRgn;
-  BOOLEAN Failed;
-
-  if (!hDC || !hGDIObj)
-    {
-    /* From Wine:
-     * SelectObject() with a NULL DC returns 0 and sets ERROR_INVALID_HANDLE.
-     * Note: Under XP at least invalid ptrs can also be passed, not just NULL;
-     *       Don't test that here in case it crashes earlier win versions.
-     */
-       if (!hDC) SetLastWin32Error(ERROR_INVALID_HANDLE);
-       return NULL;
-    }
-
-  dc = DC_LockDc(hDC);
-  if (NULL == dc)
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return NULL;
-    }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  
-  objectType = GDIOBJ_GetObjectType(hGDIObj);
-
-  switch (objectType)
-  {
-    case GDI_OBJECT_TYPE_PEN:
-      pen = PENOBJ_LockPen((HPEN) hGDIObj);
-      if (pen == NULL)
-      {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        break;
-      }
-
-      XlateObj = IntGdiCreateBrushXlate(dc, pen, &Failed);
-      PENOBJ_UnlockPen(pen);
-      if (Failed)
-      {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        break;
-      }
-
-      objOrg = (HGDIOBJ)Dc_Attr->hpen;
-      Dc_Attr->hpen = hGDIObj;
-      if (dc->XlatePen != NULL)
-        EngDeleteXlate(dc->XlatePen);
-      dc->XlatePen = XlateObj;
-      break;
-
-    case GDI_OBJECT_TYPE_BRUSH:
-      brush = BRUSHOBJ_LockBrush((HPEN) hGDIObj);
-      if (brush == NULL)
-      {
-        SetLastWin32Error(ERROR_INVALID_HANDLE);
-        break;
-      }
-
-      XlateObj = IntGdiCreateBrushXlate(dc, brush, &Failed);
-      BRUSHOBJ_UnlockBrush(brush);
-      if (Failed)
-      {
-        SetLastWin32Error(ERROR_NO_SYSTEM_RESOURCES);
-        break;
-      }
-
-      objOrg = (HGDIOBJ)Dc_Attr->hbrush;
-      Dc_Attr->hbrush = hGDIObj;
-      if (dc->XlateBrush != NULL)
-        EngDeleteXlate(dc->XlateBrush);
-      dc->XlateBrush = XlateObj;
-      break;
-
-    case GDI_OBJECT_TYPE_FONT:
-      if(NT_SUCCESS(TextIntRealizeFont((HFONT)hGDIObj)))
-      {
-        objOrg = (HGDIOBJ)Dc_Attr->hlfntNew;
-        Dc_Attr->hlfntNew = (HFONT) hGDIObj;
-      }
-      break;
-
-    case GDI_OBJECT_TYPE_BITMAP:
-      // must be memory dc to select bitmap
-      if (!(dc->w.flags & DC_MEMORY))
-        {
-          DC_UnlockDc(dc);
-          return NULL;
-        }
-      pb = BITMAPOBJ_LockBitmap(hGDIObj);
-      if (NULL == pb)
-        {
-          SetLastWin32Error(ERROR_INVALID_HANDLE);
-          DC_UnlockDc(dc);
-          return NULL;
-        }
-      objOrg = (HGDIOBJ)dc->w.hBitmap;
-
-      /* Release the old bitmap, lock the new one and convert it to a SURF */
-      dc->w.hBitmap = hGDIObj;
-
-      // if we're working with a DIB, get the palette [fixme: only create if the selected palette is null]
-      if(pb->dib)
-      {
-        dc->w.bitsPerPixel = pb->dib->dsBmih.biBitCount;
-        dc->w.hPalette = pb->hDIBPalette;
-      }
-      else
-      {
-        dc->w.bitsPerPixel = BitsPerFormat(pb->SurfObj.iBitmapFormat);
-        dc->w.hPalette = ((GDIDEVICE *)dc->pPDev)->DevInfo.hpalDefault;
-      }
-
-      /* Reselect brush and pen to regenerate the XLATEOBJs. */
-      NtGdiSelectObject ( hDC, Dc_Attr->hbrush );
-      NtGdiSelectObject ( hDC, Dc_Attr->hpen );
-
-      DC_UnlockDc ( dc );
-      hVisRgn = NtGdiCreateRectRgn ( 0, 0, pb->SurfObj.sizlBitmap.cx, pb->SurfObj.sizlBitmap.cy );
-      BITMAPOBJ_UnlockBitmap( pb );
-      IntGdiSelectVisRgn ( hDC, hVisRgn );
-      NtGdiDeleteObject ( hVisRgn );
-
-      return objOrg;
-
-    case GDI_OBJECT_TYPE_REGION:
-      /*
-       * The return value is one of the following values:
-       *  SIMPLEREGION
-       *  COMPLEXREGION
-       *  NULLREGION
-       */
-      objectType = IntGdiExtSelectClipRgn(dc, (HRGN)hGDIObj, RGN_COPY);
-      DC_UnlockDc (dc);
-      return (HGDIOBJ)objectType;
-
-    default:
-      break;
-  }
-  DC_UnlockDc( dc );
-  return objOrg;
 }
 
  /*
@@ -2598,9 +2444,9 @@ DC_InitDC(HDC  DCHandle)
 {
 //  NtGdiRealizeDefaultPalette(DCHandle);
 
-  NtGdiSelectObject(DCHandle, NtGdiGetStockObject( WHITE_BRUSH ));
-  NtGdiSelectObject(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
-  //NtGdiSelectObject(DCHandle, hFont);
+  NtGdiSelectBrush(DCHandle, NtGdiGetStockObject( WHITE_BRUSH ));
+  NtGdiSelectPen(DCHandle, NtGdiGetStockObject( BLACK_PEN ));
+  //NtGdiSelectFont(DCHandle, hFont);
 
 /*
   {

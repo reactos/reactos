@@ -678,7 +678,6 @@ NtGdiDrawStream                                  3
 #
 #
 #ReactOS specify syscall 
-NtGdiSelectObject                       2
 NtGdiSetDIBits                          7
 NtGdiSetEnhMetaFileBits                 2
 NtGdiSetICMProfile                      2
