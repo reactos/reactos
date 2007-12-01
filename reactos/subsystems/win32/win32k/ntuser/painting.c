@@ -1594,10 +1594,10 @@ UserDrawCaptionText(HDC hDc,
       return FALSE;
    }
 
-   hOldFont = NtGdiSelectObject(hDc, hFont);
+   hOldFont = NtGdiSelectFont(hDc, hFont);
    if(!hOldFont)
    {
-      DPRINT1("%s: SelectObject() failed!\n", __FUNCTION__);
+      DPRINT1("%s: SelectFont() failed!\n", __FUNCTION__);
       NtGdiDeleteObject(hFont);
       return FALSE;
    }
@@ -1614,7 +1614,7 @@ UserDrawCaptionText(HDC hDc,
       Text->Length/sizeof(WCHAR), NULL);
 
    NtGdiSetTextColor(hDc, OldTextColor);
-   NtGdiSelectObject(hDc, hOldFont);
+   NtGdiSelectFont(hDc, hOldFont);
    NtGdiDeleteObject(hFont);
 
    return TRUE;
@@ -1662,10 +1662,10 @@ BOOL UserDrawCaption(
       goto cleanup;
    }
 
-   hOldBmp = NtGdiSelectObject(hMemDc, hMemBmp);
+   hOldBmp = NtGdiSelectBitmap(hMemDc, hMemBmp);
    if(!hOldBmp)
    {
-      DPRINT1("%s: NtGdiSelectObject() failed!\n", __FUNCTION__);
+      DPRINT1("%s: NtGdiSelectBitmap() failed!\n", __FUNCTION__);
       goto cleanup;
    }
 
@@ -1692,13 +1692,13 @@ BOOL UserDrawCaption(
    // Draw the caption background
    if(uFlags & DC_INBUTTON)
    {
-      hOldBrush = NtGdiSelectObject(hMemDc,
+      hOldBrush = NtGdiSelectBrush(hMemDc,
          IntGetSysColorBrush(uFlags & DC_ACTIVE ?
             COLOR_BTNFACE : COLOR_BTNSHADOW));
 
       if(!hOldBrush)
       {
-         DPRINT1("%s: NtGdiSelectObject() failed!\n", __FUNCTION__);
+         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
          goto cleanup;
       }
 
@@ -1720,13 +1720,13 @@ BOOL UserDrawCaption(
          ButtonWidth = UserGetSystemMetrics(SM_CXSMSIZE) - 2;
       else ButtonWidth = UserGetSystemMetrics(SM_CXSIZE) - 2;
 
-      hOldBrush = NtGdiSelectObject(hMemDc,
+      hOldBrush = NtGdiSelectBrush(hMemDc,
          IntGetSysColorBrush(uFlags & DC_ACTIVE ?
             COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION));
 
       if(!hOldBrush)
       {
-         DPRINT1("%s: NtGdiSelectObject() failed!\n", __FUNCTION__);
+         DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
          goto cleanup;
       }
 
@@ -1767,11 +1767,11 @@ BOOL UserDrawCaption(
 				}
 
 				//Draw buttons background
-				if(!NtGdiSelectObject(hMemDc,
+				if(!NtGdiSelectBrush(hMemDc,
 				   IntGetSysColorBrush(uFlags & DC_ACTIVE ?
 					  COLOR_GRADIENTACTIVECAPTION:COLOR_GRADIENTINACTIVECAPTION)))
 				{
-				   DPRINT1("%s: NtGdiSelectObject() failed!\n", __FUNCTION__);
+				   DPRINT1("%s: NtGdiSelectBrush() failed!\n", __FUNCTION__);
 				   goto cleanup;
 				}
 
@@ -1878,8 +1878,8 @@ BOOL UserDrawCaption(
    Ret = TRUE;
 
 cleanup:
-   if (hOldBrush) NtGdiSelectObject(hMemDc, hOldBrush);
-   if (hOldBmp) NtGdiSelectObject(hMemDc, hOldBmp);
+   if (hOldBrush) NtGdiSelectBrush(hMemDc, hOldBrush);
+   if (hOldBmp) NtGdiSelectBitmap(hMemDc, hOldBmp);
    if (hMemBmp) NtGdiDeleteObject(hMemBmp);
    if (hMemDc) NtGdiDeleteObjectApp(hMemDc);
 
