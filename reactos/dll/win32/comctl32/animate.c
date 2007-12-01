@@ -24,11 +24,11 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Mar. 15, 2005, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  * TODO:
  *   - check for the 'rec ' list in some AVI files
  */
@@ -124,7 +124,7 @@ static BOOL ANIMATE_LoadResW(ANIMATE_INFO *infoPtr, HINSTANCE hInst, LPCWSTR lpN
     mminfo.pchBuffer = (LPSTR)lpAvi;
     mminfo.cchBuffer = SizeofResource(hInst, hrsrc);
     infoPtr->hMMio = mmioOpenW(NULL, &mminfo, MMIO_READ);
-    if (!infoPtr->hMMio)
+    if (!infoPtr->hMMio) 
     {
 	FreeResource(infoPtr->hRes);
 	return FALSE;
@@ -270,7 +270,7 @@ static BOOL ANIMATE_PaintFrame(ANIMATE_INFO* infoPtr, HDC hDC)
 
         nWidth = infoPtr->outbih->biWidth;
         nHeight = infoPtr->outbih->biHeight;
-    }
+    } 
     else
     {
         pBitmapData = infoPtr->indata;
@@ -435,14 +435,14 @@ static LRESULT ANIMATE_Play(ANIMATE_INFO *infoPtr, UINT cRepeat, WORD wFrom, WOR
 
     infoPtr->currFrame = infoPtr->nFromFrame;
 
-    if (infoPtr->dwStyle & ACS_TIMER)
+    if (infoPtr->dwStyle & ACS_TIMER) 
     {
 	TRACE("Using a timer\n");
 	/* create a timer to display AVI */
-	infoPtr->uTimer = SetTimer(infoPtr->hwndSelf, 1,
+	infoPtr->uTimer = SetTimer(infoPtr->hwndSelf, 1, 
                                    infoPtr->mah.dwMicroSecPerFrame / 1000, NULL);
-    }
-    else
+    } 
+    else 
     {
         if(infoPtr->dwStyle & ACS_TRANSPARENT)
             infoPtr->hbrushBG = (HBRUSH)SendMessageW(infoPtr->hwndNotify,
@@ -602,7 +602,7 @@ static BOOL ANIMATE_GetAviInfo(ANIMATE_INFO *infoPtr)
     /* FIXME: should handle the 'rec ' LIST when present */
 
     infoPtr->lpIndex = Alloc(infoPtr->mah.dwTotalFrames * sizeof(DWORD));
-    if (!infoPtr->lpIndex)
+    if (!infoPtr->lpIndex) 
 	return FALSE;
 
     numFrame = insize = 0;
@@ -624,7 +624,7 @@ static BOOL ANIMATE_GetAviInfo(ANIMATE_INFO *infoPtr)
     }
 
     infoPtr->indata = Alloc(infoPtr->ash.dwSuggestedBufferSize);
-    if (!infoPtr->indata)
+    if (!infoPtr->indata) 
 	return FALSE;
 
     return TRUE;
@@ -659,14 +659,14 @@ static BOOL ANIMATE_GetAviCodec(ANIMATE_INFO *infoPtr)
 	return FALSE;
 
     if (fnIC.fnICSendMessage(infoPtr->hic, ICM_DECOMPRESS_GET_FORMAT,
-		      (DWORD_PTR)infoPtr->inbih, (DWORD_PTR)infoPtr->outbih) != ICERR_OK)
+		      (DWORD_PTR)infoPtr->inbih, (DWORD_PTR)infoPtr->outbih) != ICERR_OK) 
     {
 	WARN("Can't get output BIH\n");
 	return FALSE;
     }
 
     infoPtr->outdata = Alloc(infoPtr->outbih->biSizeImage);
-    if (!infoPtr->outdata)
+    if (!infoPtr->outdata) 
 	return FALSE;
 
     if (fnIC.fnICSendMessage(infoPtr->hic, ICM_DECOMPRESS_BEGIN,
@@ -683,7 +683,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 {
     ANIMATE_Free(infoPtr);
 
-    if (!lpszName)
+    if (!lpszName) 
     {
 	TRACE("Closing avi!\n");
         /* installer of thebat! v1.62 requires FALSE here */
@@ -697,17 +697,17 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 
     if (HIWORD(lpszName))
     {
-	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName))
+	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName)) 
         {
 	    TRACE("No AVI resource found!\n");
-	    if (!ANIMATE_LoadFileW(infoPtr, lpszName))
+	    if (!ANIMATE_LoadFileW(infoPtr, lpszName)) 
             {
 		WARN("No AVI file found!\n");
 		return FALSE;
 	    }
 	}
-    }
-    else
+    } 
+    else 
     {
 	if (!ANIMATE_LoadResW(infoPtr, hInstance, lpszName))
         {
@@ -716,14 +716,14 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 	}
     }
 
-    if (!ANIMATE_GetAviInfo(infoPtr))
+    if (!ANIMATE_GetAviInfo(infoPtr)) 
     {
 	WARN("Can't get AVI information\n");
 	ANIMATE_Free(infoPtr);
 	return FALSE;
     }
 
-    if (!ANIMATE_GetAviCodec(infoPtr))
+    if (!ANIMATE_GetAviCodec(infoPtr)) 
     {
 	WARN("Can't get AVI Codec\n");
 	ANIMATE_Free(infoPtr);
@@ -734,7 +734,7 @@ static BOOL ANIMATE_OpenW(ANIMATE_INFO *infoPtr, HINSTANCE hInstance, LPWSTR lps
 	SetWindowPos(infoPtr->hwndSelf, 0, 0, 0, infoPtr->mah.dwWidth, infoPtr->mah.dwHeight,
 		     SWP_NOACTIVATE | SWP_NOMOVE | SWP_NOZORDER);
 
-    if (infoPtr->dwStyle & ACS_AUTOPLAY)
+    if (infoPtr->dwStyle & ACS_AUTOPLAY) 
 	return ANIMATE_Play(infoPtr, -1, 0, infoPtr->mah.dwTotalFrames - 1);
 
     return TRUE;
@@ -849,7 +849,7 @@ static LRESULT ANIMATE_StyleChanged(ANIMATE_INFO *infoPtr, WPARAM wStyleType, co
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
-
+  
     infoPtr->dwStyle = lpss->styleNew;
 
     InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
@@ -939,7 +939,7 @@ static LRESULT WINAPI ANIMATE_WindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LP
         break;
 
     case WM_SIZE:
-        if (infoPtr->dwStyle & ACS_CENTER)
+        if (infoPtr->dwStyle & ACS_CENTER) 
 	    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 	return DefWindowProcW(hWnd, uMsg, wParam, lParam);
 

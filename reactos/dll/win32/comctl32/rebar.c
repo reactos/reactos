@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 19, 2004, by Robert Shearman.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features or bugs please note them below.
@@ -430,7 +430,7 @@ static void translate_rect(const REBAR_INFO *infoPtr, RECT *dest, const RECT *sr
         tmp = src->left;
         dest->left = src->top;
         dest->top = tmp;
-
+        
         tmp = src->right;
         dest->right = src->bottom;
         dest->bottom = tmp;
@@ -626,7 +626,7 @@ REBAR_DrawBand (HDC hdc, const REBAR_INFO *infoPtr, REBAR_BAND *lpBand)
     {
         if (theme)
         {
-            int stateId;
+            int stateId; 
             if (lpBand->fDraw & DRAW_CHEVRONPUSHED)
                 stateId = CHEVS_PRESSED;
             else if (lpBand->fDraw & DRAW_CHEVRONHOT)
@@ -1568,8 +1568,8 @@ REBAR_CommonSetupBand(HWND hwnd, const REBARBANDINFOW *lprbbi, REBAR_BAND *lpBan
               (lpBand->cyMaxChild != lprbbi->cyMaxChild ) ||
               (lpBand->cyIntegral != lprbbi->cyIntegral ) ) ) ||
           ( (lprbbi->cbSize < sizeof (REBARBANDINFOA)) &&
-            ( (lpBand->cyChild ||
-               lpBand->cyMaxChild ||
+            ( (lpBand->cyChild || 
+               lpBand->cyMaxChild || 
                lpBand->cyIntegral ) ) ) ) )
     {
 	lpBand->cxMinChild = lprbbi->cxMinChild;
@@ -2510,7 +2510,7 @@ REBAR_SetBandInfoT(REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnic
         else
             Str_SetPtrAtoW(&wstr, (LPSTR)lprbbi->lpText);
 
-        if (REBAR_strdifW(wstr, lprbbi->lpText)) {
+        if (REBAR_strdifW(wstr, lpBand->lpText)) {
             Free(lpBand->lpText);
             lpBand->lpText = wstr;
             bChanged = TRUE;
@@ -2725,13 +2725,13 @@ REBAR_Create (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     }
 
     TRACE("created!\n");
-
+    
     if ((theme = OpenThemeData (infoPtr->hwndSelf, themeClass)))
     {
         /* native seems to clear WS_BORDER when themed */
         infoPtr->dwStyle &= ~WS_BORDER;
     }
-
+    
     return 0;
 }
 
@@ -2767,7 +2767,7 @@ REBAR_Destroy (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
     DestroyCursor (infoPtr->hcurDrag);
     if(infoPtr->hDefaultFont) DeleteObject (infoPtr->hDefaultFont);
     SetWindowLongPtrW (infoPtr->hwndSelf, 0, 0);
-
+    
     CloseThemeData (GetWindowTheme (infoPtr->hwndSelf));
 
     /* free rebar info data */
@@ -3326,7 +3326,7 @@ REBAR_Size (REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 	      infoPtr->fStatus, lParam);
 	return 0;
     }
-
+    
     /* FIXME: wrong */
     if (infoPtr->dwStyle & RBS_AUTOSIZE) {
 	NMRBAUTOSIZE autosize;

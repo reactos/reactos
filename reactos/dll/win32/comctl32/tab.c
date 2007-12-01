@@ -887,7 +887,7 @@ static LRESULT TAB_AdjustRect(const TAB_INFO *infoPtr, WPARAM fLarger, LPRECT pr
 			 ((lStyle & TCS_BUTTONS)? 3 * (infoPtr->uNumRows - 1) : 0);
 
 	/* Inflate the rectangle for the padding */
-	InflateRect(prc, DISPLAY_AREA_PADDINGX, DISPLAY_AREA_PADDINGY);
+	InflateRect(prc, DISPLAY_AREA_PADDINGX, DISPLAY_AREA_PADDINGY); 
 
 	/* Inflate for the border */
 	InflateRect(prc, CONTROL_BORDER_SIZEX, CONTROL_BORDER_SIZEY);
@@ -1098,7 +1098,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
   /* Now use hPadding and vPadding */
   infoPtr->uHItemPadding = infoPtr->uHItemPadding_s;
   infoPtr->uVItemPadding = infoPtr->uVItemPadding_s;
-
+  
   /* The leftmost item will be "0" aligned */
   curItemLeftPos = 0;
   curItemRowCount = infoPtr->uNumItem ? 1 : 0;
@@ -1125,7 +1125,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
      * Make sure there is enough space for the letters + icon + growing the
      * selected item + extra space for the selected item.
      */
-    infoPtr->tabHeight = item_height +
+    infoPtr->tabHeight = item_height + 
 	                 ((lStyle & TCS_BUTTONS) ? 2 : 1) *
                           infoPtr->uVItemPadding;
 
@@ -1150,7 +1150,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
   for (curItem = 0; curItem < infoPtr->uNumItem; curItem++)
   {
     TAB_ITEM *curr = TAB_GetItem(infoPtr, curItem);
-
+	
     /* Set the leftmost position of the tab. */
     curr->rect.left = curItemLeftPos;
 
@@ -1203,7 +1203,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
      */
 
     if (((lStyle & TCS_MULTILINE) || (lStyle & TCS_VERTICAL)) &&
-        (curr->rect.right >
+        (curr->rect.right > 
 	(clientRect.right - CONTROL_BORDER_SIZEX - DISPLAY_AREA_PADDINGX)))
     {
         curr->rect.right -= curr->rect.left;
@@ -1283,7 +1283,7 @@ static void TAB_SetItemBounds (TAB_INFO *infoPtr)
       {
           /* normalize the current rect */
           TAB_ITEM *curr = TAB_GetItem(infoPtr, iItm);
-
+ 
           /* shift the item to the left side of the clientRect */
           curr->rect.right -= curr->rect.left;
           curr->rect.left = 0;
@@ -1501,7 +1501,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
   HPEN   holdPen;
   INT    oldBkMode;
   HFONT  hOldFont;
-
+  
 /*  if (drawRect == NULL) */
   {
     BOOL isVisible;
@@ -1530,7 +1530,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
       *drawRect = selectedRect;
     else
       *drawRect = itemRect;
-
+        
     if (lStyle & TCS_BUTTONS)
     {
       if (iItem == infoPtr->iSelected)
@@ -1634,8 +1634,8 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
   */
   oldBkMode = SetBkMode(hdc, TRANSPARENT);
   if (!GetWindowTheme (infoPtr->hwnd) || (lStyle & TCS_BUTTONS))
-      SetTextColor(hdc, (((lStyle & TCS_HOTTRACK) && (iItem == infoPtr->iHotTracked)
-                          && !(lStyle & TCS_FLATBUTTONS))
+      SetTextColor(hdc, (((lStyle & TCS_HOTTRACK) && (iItem == infoPtr->iHotTracked) 
+                          && !(lStyle & TCS_FLATBUTTONS)) 
                         | (TAB_GetItem(infoPtr, iItem)->dwState & TCIS_HIGHLIGHTED)) ?
                         comctl32_color.clrHighlight : comctl32_color.clrBtnText);
 
@@ -1670,7 +1670,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     dis.itemState = 0;
     if ( iItem == infoPtr->iSelected )
       dis.itemState |= ODS_SELECTED;
-    if (infoPtr->uFocus == iItem)
+    if (infoPtr->uFocus == iItem) 
       dis.itemState |= ODS_FOCUS;
     dis.hwndItem = infoPtr->hwnd;
     dis.hDC      = hdc;
@@ -1713,7 +1713,7 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
     {
       INT cx;
       INT cy;
-
+      
       ImageList_GetIconSize(infoPtr->himl, &cx, &cy);
 
       if(lStyle & TCS_VERTICAL)
@@ -1738,10 +1738,10 @@ TAB_DrawItemInterior(const TAB_INFO *infoPtr, HDC hdc, INT iItem, RECT *drawRect
 
       if (center_offset_h < 2)
         center_offset_h = 2;
-
+	
       if (center_offset_v < 0)
         center_offset_v = 0;
-
+	
       TRACE("for <%s>, c_o_h=%d, c_o_v=%d, draw=(%d,%d)-(%d,%d), textlen=%d\n",
 	  debugstr_w(item->pszText), center_offset_h, center_offset_v,
 	  drawRect->left, drawRect->top, drawRect->right, drawRect->bottom,
@@ -1963,7 +1963,7 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
       if (iItem == infoPtr->iSelected)
       {
 	DrawEdge(hdc, &r, EDGE_SUNKEN, BF_SOFT|BF_RECT);
-
+	
 	OffsetRect(&r, 1, 1);
       }
       else  /* ! selected */
@@ -1998,7 +1998,7 @@ static void TAB_DrawItem(const TAB_INFO *infoPtr, HDC  hdc, INT  iItem)
        * Windows draws even side or bottom tabs themed, with wacky results.
        * However, since in Wine apps may get themed that did not opt in via
        * a manifest avoid theming when we know the result will be wrong */
-      if ((theme = GetWindowTheme (infoPtr->hwnd))
+      if ((theme = GetWindowTheme (infoPtr->hwnd)) 
           && ((lStyle & (TCS_VERTICAL | TCS_BOTTOM)) == 0))
       {
           static const int partIds[8] = {
@@ -2325,11 +2325,6 @@ static void TAB_Refresh (TAB_INFO *infoPtr, HDC hdc)
 
     /* Then, draw the selected item */
     TAB_DrawItem (infoPtr, hdc, infoPtr->iSelected);
-
-    /* If we haven't set the current focus yet, set it now.
-     * Only happens when we first paint the tab controls */
-    if (infoPtr->uFocus == -1)
-      TAB_SetCurFocus(infoPtr, infoPtr->iSelected);
   }
 
   SelectObject (hdc, hOldFont);
@@ -2506,13 +2501,13 @@ static void TAB_InvalidateTabArea(const TAB_INFO *infoPtr)
     if (infoPtr->uNumRows == 1)
       rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
   }
-  else
+  else 
   {
     rInvalidate.bottom = rAdjClient.top;
     if (infoPtr->uNumRows == 1)
       rInvalidate.right = clientRect.left + rect.right + 2 * SELECTED_TAB_OFFSET;
   }
-
+  
   /* Punch out the updown control */
   if (infoPtr->needsScrolling && (rInvalidate.right > 0)) {
     RECT r;
@@ -2522,11 +2517,11 @@ static void TAB_InvalidateTabArea(const TAB_INFO *infoPtr)
     else
       rInvalidate.right = clientRect.right - r.left;
   }
-
+  
   TRACE("invalidate (%d,%d)-(%d,%d)\n",
 	rInvalidate.left,  rInvalidate.top,
 	rInvalidate.right, rInvalidate.bottom);
-
+ 
   InvalidateRect(infoPtr->hwnd, &rInvalidate, TRUE);
 }
 
@@ -2627,7 +2622,7 @@ TAB_InsertItemT (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
     memcpy(item->extra, &pti->lParam, infoPtr->cbInfo);
   else
     memset(item->extra, 0, infoPtr->cbInfo);
-
+  
   TAB_SetItemBounds(infoPtr);
   if (infoPtr->uNumItem > 1)
     TAB_InvalidateTabArea(infoPtr);
@@ -2636,6 +2631,10 @@ TAB_InsertItemT (TAB_INFO *infoPtr, WPARAM wParam, LPARAM lParam, BOOL bUnicode)
 
   TRACE("[%p]: added item %d %s\n",
         infoPtr->hwnd, iItem, debugstr_w(item->pszText));
+
+  /* If we haven't set the current focus yet, set it now. */
+  if (infoPtr->uFocus == -1)
+    TAB_SetCurFocus(infoPtr, iItem);
 
   return iItem;
 }
@@ -2688,7 +2687,7 @@ static inline LRESULT TAB_SetMinTabWidth (TAB_INFO *infoPtr, INT cx)
   return oldcx;
 }
 
-static inline LRESULT
+static inline LRESULT 
 TAB_HighlightItem (TAB_INFO *infoPtr, INT iItem, BOOL fHighlight)
 {
   LPDWORD lpState;
@@ -2697,7 +2696,7 @@ TAB_HighlightItem (TAB_INFO *infoPtr, INT iItem, BOOL fHighlight)
 
   if (!infoPtr || iItem < 0 || iItem >= infoPtr->uNumItem)
     return FALSE;
-
+  
   lpState = &TAB_GetItem(infoPtr, iItem)->dwState;
 
   if (fHighlight)
@@ -3019,7 +3018,7 @@ static LRESULT TAB_Create (HWND hwnd, WPARAM wParam, LPARAM lParam)
   }
 
   OpenThemeData (infoPtr->hwnd, themeClass);
-
+  
   /*
    * We need to get text information so we need a DC and we need to select
    * a font.
@@ -3064,8 +3063,7 @@ TAB_Destroy (TAB_INFO *infoPtr)
 
   if (infoPtr->items) {
     for (iItem = 0; iItem < infoPtr->uNumItem; iItem++) {
-      if (TAB_GetItem(infoPtr, iItem)->pszText)
-	Free (TAB_GetItem(infoPtr, iItem)->pszText);
+      Free (TAB_GetItem(infoPtr, iItem)->pszText);
     }
     Free (infoPtr->items);
   }
@@ -3080,7 +3078,7 @@ TAB_Destroy (TAB_INFO *infoPtr)
     KillTimer(infoPtr->hwnd, TAB_HOTTRACK_TIMER);
 
   CloseThemeData (GetWindowTheme (infoPtr->hwnd));
-
+  
   Free (infoPtr);
   return 0;
 }
@@ -3112,7 +3110,7 @@ TAB_SetItemExtra (TAB_INFO *infoPtr, INT cbInfo)
     /* FIXME: MSDN says this is not allowed, but this hasn't been verified */
     return FALSE;
   }
-
+    
   infoPtr->cbInfo = cbInfo;
   return TRUE;
 }

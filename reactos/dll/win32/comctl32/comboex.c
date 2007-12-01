@@ -20,14 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- *
+ * 
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  */
 
 #include <stdarg.h>
@@ -731,7 +731,7 @@ COMBOEX_SetExtendedStyle (COMBOEX_INFO *infoPtr, DWORD mask, DWORD style)
 
     /* see if we need to change the word break proc on the edit */
     if ((infoPtr->dwExtStyle ^ dwTemp) & CBES_EX_PATHWORDBREAKPROC)
-        SetPathWordBreakProc(infoPtr->hwndEdit,
+        SetPathWordBreakProc(infoPtr->hwndEdit, 
             (infoPtr->dwExtStyle & CBES_EX_PATHWORDBREAKPROC) ? TRUE : FALSE);
 
     /* test if the control's appearance has changed */
@@ -1240,6 +1240,7 @@ static LRESULT COMBOEX_Command (COMBOEX_INFO *infoPtr, WPARAM wParam, LPARAM lPa
 	return SendMessageW (parent, WM_COMMAND, wParam, (LPARAM)infoPtr->hwndSelf);
 
     case CBN_SELENDOK:
+    case CBN_SELENDCANCEL:
 	/*
 	 * We have to change the handle since we are the control
 	 * issuing the message. IE4 depends on this.
@@ -1577,6 +1578,27 @@ static LRESULT COMBOEX_DrawItem (COMBOEX_INFO *infoPtr, DRAWITEMSTRUCT const *di
 }
 
 
+static void COMBOEX_ResetContent (COMBOEX_INFO *infoPtr)
+{
+    if (infoPtr->items)
+    {
+        CBE_ITEMDATA *item, *next;
+
+        item = infoPtr->items;
+        while (item) {
+            next = item->next;
+            COMBOEX_FreeText (item);
+            Free (item);
+            item = next;
+        }
+        infoPtr->items = 0;
+    }
+
+    infoPtr->selected = -1;
+    infoPtr->nb_items = 0;
+}
+
+
 static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
 {
     if (infoPtr->hwndCombo)
@@ -1585,18 +1607,7 @@ static LRESULT COMBOEX_Destroy (COMBOEX_INFO *infoPtr)
     Free (infoPtr->edit);
     infoPtr->edit = 0;
 
-    if (infoPtr->items) {
-        CBE_ITEMDATA *item, *next;
-
-	item = infoPtr->items;
-	while (item) {
-	    next = item->next;
-	    COMBOEX_FreeText (item);
-	    Free (item);
-	    item = next;
-	}
-	infoPtr->items = 0;
-    }
+    COMBOEX_ResetContent (infoPtr);
 
     if (infoPtr->defaultFont)
 	DeleteObject (infoPtr->defaultFont);
@@ -2225,6 +2236,7 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 	case WM_SETTEXT:
 	case WM_GETTEXT:
+	case WM_GETTEXTLENGTH:
             return SendMessageW(infoPtr->hwndEdit, uMsg, wParam, lParam);
 
 	case CB_GETLBTEXT:
@@ -2233,12 +2245,15 @@ COMBOEX_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case CB_GETLBTEXTLEN:
             return COMBOEX_GetListboxText(infoPtr, wParam, NULL);
 
+	case CB_RESETCONTENT:
+            COMBOEX_ResetContent(infoPtr);
+            /* fall through */
+
 /*   Combo messages we are not sure if we need to process or just forward */
 	case CB_GETDROPPEDCONTROLRECT:
 	case CB_GETITEMHEIGHT:
 	case CB_GETEXTENDEDUI:
 	case CB_LIMITTEXT:
-	case CB_RESETCONTENT:
 	case CB_SELECTSTRING:
 
 /*   Combo messages OK to just forward to the regular COMBO */

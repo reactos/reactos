@@ -680,9 +680,9 @@ LPSTR WINAPI StrRStrIA(LPCSTR lpszStr, LPCSTR lpszEnd, LPCSTR lpszSearch)
   LPSTR lpszRet = NULL;
   WORD ch1, ch2;
   INT iLen;
-
+ 
   TRACE("(%s,%s)\n", debugstr_a(lpszStr), debugstr_a(lpszSearch));
-
+ 
   if (!lpszStr || !lpszSearch || !*lpszSearch)
     return NULL;
 

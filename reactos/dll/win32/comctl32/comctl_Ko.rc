@@ -1,6 +1,6 @@
 /*
  * Copyright 2002 Won-kyu Park <wkpark@kldp.org>
- * Copyright 2005 YunSong Hwang
+ * Copyright 2005,2007 YunSong Hwang
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -57,11 +57,11 @@ BEGIN
   PUSHBUTTON    "다시(&E)",     IDC_RESET_BTN,308,23,44,14
   PUSHBUTTON    "도움말(&H)",      IDC_HELP_BTN,308,40,44,14
   PUSHBUTTON    "위로 이동(&U)",   IDC_MOVEUP_BTN,308,74,44,14
-  PUSHBUTTON    "아래로 이동(&D)", IDC_MOVEDN_BTN,308,91,44,14
+  PUSHBUTTON    "아래로이동(&D)", IDC_MOVEDN_BTN,308,91,49,14
   LTEXT         "가능한 버튼(&V)", -1,4,5,84,10
   LISTBOX       IDC_AVAILBTN_LBOX,4,17,120,100, LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
   PUSHBUTTON    "더하기(&A) ->",    IDOK, 131, 42, 44, 14
-  PUSHBUTTON    "<- 제거하기(&R)", IDC_REMOVE_BTN,131,62,44,14
+  PUSHBUTTON    "<-지우기(&R)", IDC_REMOVE_BTN,131,62,44,14
   LTEXT         "도구바 버튼(&T):", -1,182,5,78,10
   LISTBOX       IDC_TOOLBARBTN_LBOX, 182,17,120,100,LBS_NOTIFY | LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | LBS_DISABLENOSCROLL | WS_BORDER | WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
 END

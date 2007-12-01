@@ -82,7 +82,7 @@ Index: propsheet.c
  }
  
  /******************************************************************************
-@@ -3555,6 +3558,8 @@
+@@ -3521,6 +3525,8 @@
         * from which to switch to the next page */
        SendMessageW(hwndTabCtrl, TCM_SETCURSEL, psInfo->active_page, 0);
  
@@ -95,7 +95,7 @@ Index: tooltips.c
 ===================================================================
 --- tooltips.c	(revision 25790)
 +++ tooltips.c	(working copy)
-@@ -2471,7 +2471,34 @@
+@@ -2440,7 +2440,34 @@
  TOOLTIPS_NotifyFormat (HWND hwnd, WPARAM wParam, LPARAM lParam)
  {
      FIXME ("hwnd=%p wParam=%lx lParam=%lx\n", hwnd, wParam, lParam);
@@ -170,7 +170,7 @@ Index: monthcal.c
 ===================================================================
 --- monthcal.c	(revision 29360)
 +++ monthcal.c	(working copy)
-@@ -1703,11 +1703,12 @@
+@@ -1719,11 +1719,12 @@
  
  
  static LRESULT
@@ -185,7 +185,7 @@ Index: monthcal.c
  
    return 0;
  }
-@@ -2015,7 +2016,7 @@
+@@ -2031,7 +2032,7 @@
      return DLGC_WANTARROWS | DLGC_WANTCHARS;
  
    case WM_KILLFOCUS:

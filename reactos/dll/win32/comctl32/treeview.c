@@ -2325,7 +2325,7 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
 
     hbr    = CreateSolidBrush(infoPtr->clrBk);
     hbrOld = SelectObject(hdc, hbr);
-
+    
     centerx = (item->linesOffset + item->stateOffset) / 2;
     centery = (item->rect.top + item->rect.bottom) / 2;
 
@@ -2406,21 +2406,21 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
                 LONG rectsize = min(height, width) / 4;
                 /* plussize = ceil(rectsize * 3/4) */
                 LONG plussize = (rectsize + 1) * 3 / 4;
-
+    
                 HPEN hNewPen  = CreatePen(PS_SOLID, 0, infoPtr->clrLine);
                 HPEN hOldPen  = SelectObject(hdc, hNewPen);
-
+    
                 Rectangle(hdc, centerx - rectsize - 1, centery - rectsize - 1,
                           centerx + rectsize + 2, centery + rectsize + 2);
-
+    
                 SelectObject(hdc, hOldPen);
                 DeleteObject(hNewPen);
-
+    
                 if (height < 18 || width < 18)
                 {
                     MoveToEx(hdc, centerx - plussize + 1, centery, NULL);
                     LineTo(hdc, centerx + plussize, centery);
-
+    
                     if (!(item->state & TVIS_EXPANDED))
                     {
                         MoveToEx(hdc, centerx, centery - plussize + 1, NULL);
@@ -2431,7 +2431,7 @@ TREEVIEW_DrawItemLines(const TREEVIEW_INFO *infoPtr, HDC hdc, const TREEVIEW_ITE
                 {
                     Rectangle(hdc, centerx - plussize + 1, centery - 1,
                     centerx + plussize, centery + 2);
-
+    
                     if (!(item->state & TVIS_EXPANDED))
                     {
                         Rectangle(hdc, centerx - 1, centery - plussize + 1,
@@ -2601,7 +2601,7 @@ TREEVIEW_DrawItem(const TREEVIEW_INFO *infoPtr, HDC hdc, TREEVIEW_ITEM *wineItem
 		        wineItem->pszText,
 		        lstrlenW(wineItem->pszText),
 			NULL);
-
+			
 	    /* Draw the box around the selected item */
 	    if ((wineItem == infoPtr->selectedItem) && inFocus)
 	    {
@@ -2870,7 +2870,7 @@ TREEVIEW_Paint(TREEVIEW_INFO *infoPtr, WPARAM wParam)
     if (wParam)
     {
         hdc = (HDC)wParam;
-        GetClientRect(infoPtr->hwnd, &rc);
+        GetClientRect(infoPtr->hwnd, &rc);        
         TREEVIEW_EraseBackground(infoPtr, hdc);
     }
     else
@@ -4997,7 +4997,7 @@ TREEVIEW_Create(HWND hwnd, const CREATESTRUCTW *lpcs)
     /* Make sure actual scrollbar state is consistent with uInternalStatus */
     ShowScrollBar(hwnd, SB_VERT, FALSE);
     ShowScrollBar(hwnd, SB_HORZ, FALSE);
-
+    
     OpenThemeData (hwnd, themeClass);
 
     return 0;

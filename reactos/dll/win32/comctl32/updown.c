@@ -18,14 +18,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- *
+ * 
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 9, 2002, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  */
 
 #include <stdlib.h>
@@ -100,7 +100,7 @@ typedef struct
 #define COUNT_OF(a) (sizeof(a)/sizeof(a[0]))
 
 static const WCHAR BUDDY_UPDOWN_HWND[] = { 'b', 'u', 'd', 'd', 'y', 'U', 'p', 'D', 'o', 'w', 'n', 'H', 'W', 'N', 'D', 0 };
-static const WCHAR BUDDY_SUPERCLASS_WNDPROC[] = { 'b', 'u', 'd', 'd', 'y', 'S', 'u', 'p', 'p', 'e', 'r',
+static const WCHAR BUDDY_SUPERCLASS_WNDPROC[] = { 'b', 'u', 'd', 'd', 'y', 'S', 'u', 'p', 'p', 'e', 'r', 
 						  'C', 'l', 'a', 's', 's', 'W', 'n', 'd', 'P', 'r', 'o', 'c', 0 };
 static void UPDOWN_DoAction (UPDOWN_INFO *infoPtr, int delta, int action);
 
@@ -312,7 +312,7 @@ static BOOL UPDOWN_SetBuddyInt (const UPDOWN_INFO *infoPtr)
     WCHAR txt[20];
     int len;
 
-    if (!((infoPtr->dwStyle & UDS_SETBUDDYINT) && IsWindow(infoPtr->Buddy)))
+    if (!((infoPtr->dwStyle & UDS_SETBUDDYINT) && IsWindow(infoPtr->Buddy))) 
         return FALSE;
 
     TRACE("set new value(%d) to buddy.\n", infoPtr->CurVal);
@@ -384,10 +384,10 @@ static LRESULT UPDOWN_Draw (const UPDOWN_INFO *infoPtr, HDC hdc)
     dHot = (infoPtr->Flags & FLAG_DECR) && (infoPtr->Flags & FLAG_MOUSEIN);
     if (theme) {
         uPart = (infoPtr->dwStyle & UDS_HORZ) ? SPNP_UPHORZ : SPNP_UP;
-        uState = (infoPtr->dwStyle & WS_DISABLED) ? DNS_DISABLED
+        uState = (infoPtr->dwStyle & WS_DISABLED) ? DNS_DISABLED 
             : (uPressed ? DNS_PRESSED : (uHot ? DNS_HOT : DNS_NORMAL));
         dPart = (infoPtr->dwStyle & UDS_HORZ) ? SPNP_DOWNHORZ : SPNP_DOWN;
-        dState = (infoPtr->dwStyle & WS_DISABLED) ? DNS_DISABLED
+        dState = (infoPtr->dwStyle & WS_DISABLED) ? DNS_DISABLED 
             : (dPressed ? DNS_PRESSED : (dHot ? DNS_HOT : DNS_NORMAL));
         needBuddyBg = IsWindow (infoPtr->Buddy)
             && (IsThemeBackgroundPartiallyTransparent (theme, uPart, uState)
@@ -765,7 +765,7 @@ static void UPDOWN_HandleMouseEvent (UPDOWN_INFO *infoPtr, UINT msg, INT x, INT 
             if(temp != infoPtr->Flags)
 		 InvalidateRect (infoPtr->Self, NULL, FALSE);
 
-            /* Set up tracking so the mousein flags can be reset when the
+            /* Set up tracking so the mousein flags can be reset when the 
              * mouse leaves the control */
             tme.cbSize = sizeof( tme );
             tme.dwFlags = TME_LEAVE;

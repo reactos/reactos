@@ -20,14 +20,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTE
- *
+ * 
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 24, 2002, by Dimitrie O. Paun.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features, or bugs, please note them below.
- *
+ * 
  * TODO:
  * 	-- CCS_BOTTOM (default)
  * 	-- CCS_LEFT
@@ -115,13 +115,13 @@ STATUSBAR_DrawSizeGrip (HTHEME theme, HDC hdc, LPRECT lpRect)
     INT i;
 
     TRACE("draw size grip %d,%d - %d,%d\n", lpRect->left, lpRect->top, lpRect->right, lpRect->bottom);
-
+    
     if (theme)
     {
         RECT gripperRect;
         SIZE gripperSize;
         gripperRect = *lpRect;
-        if (SUCCEEDED (GetThemePartSize (theme, hdc, SP_GRIPPER, 0, lpRect,
+        if (SUCCEEDED (GetThemePartSize (theme, hdc, SP_GRIPPER, 0, lpRect, 
             TS_DRAW, &gripperSize)))
         {
             gripperRect.left = gripperRect.right - gripperSize.cx;
@@ -633,9 +633,8 @@ STATUSBAR_SetMinHeight (STATUS_INFO *infoPtr, INT height)
 	RECT parent_rect;
         HTHEME theme;
 
-	GetClientRect (infoPtr->Notify, &parent_rect);
 	infoPtr->height = height + infoPtr->verticalBorder;
-
+        
         if ((theme = GetWindowTheme (infoPtr->Self)))
         {
             /* Determine bar height from theme such that the content area is
@@ -650,14 +649,15 @@ STATUSBAR_SetMinHeight (STATUS_INFO *infoPtr, INT height)
             }
             ReleaseDC (infoPtr->Self, hdc);
         }
-
-	width = parent_rect.right - parent_rect.left;
-	x = parent_rect.left;
-	y = parent_rect.bottom - infoPtr->height;
-	MoveWindow (infoPtr->Self, parent_rect.left,
-		    parent_rect.bottom - infoPtr->height,
-		    width, infoPtr->height, TRUE);
-	STATUSBAR_SetPartBounds (infoPtr);
+        
+        if (GetClientRect (infoPtr->Notify, &parent_rect))
+        {
+            width = parent_rect.right - parent_rect.left;
+            x = parent_rect.left;
+            y = parent_rect.bottom - infoPtr->height;
+            MoveWindow (infoPtr->Self, x, y, width, infoPtr->height, TRUE);
+            STATUSBAR_SetPartBounds (infoPtr);
+        }
     }
 
     return TRUE;
@@ -958,7 +958,7 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
     infoPtr->parts[0].x = -1;
     infoPtr->parts[0].style = 0;
     infoPtr->parts[0].hIcon = 0;
-
+    
     OpenThemeData (hwnd, themeClass);
 
     if (IsWindowUnicode (hwnd)) {
@@ -1029,7 +1029,7 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
         GetClientRect (infoPtr->Notify, &rect);
         width = rect.right - rect.left;
         infoPtr->height = textHeight + 4 + infoPtr->verticalBorder;
-
+        
         if ((theme = GetWindowTheme (hwnd)))
         {
             /* Determine bar height from theme such that the content area is
@@ -1044,7 +1044,7 @@ STATUSBAR_WMCreate (HWND hwnd, const CREATESTRUCTA *lpCreate)
             }
             ReleaseDC (hwnd, hdc);
         }
-
+    
         SetWindowPos(hwnd, 0, lpCreate->x, lpCreate->y - 1,
 			width, infoPtr->height, SWP_NOZORDER);
         STATUSBAR_SetPartBounds (infoPtr);
@@ -1191,13 +1191,13 @@ STATUSBAR_WMSize (STATUS_INFO *infoPtr, WORD flags)
     if (GetWindowLongW(infoPtr->Self, GWL_STYLE) & CCS_NORESIZE) return FALSE;
 
     /* width and height don't apply */
-    GetClientRect (infoPtr->Notify, &parent_rect);
+    if (!GetClientRect (infoPtr->Notify, &parent_rect))
+        return FALSE;
+
     width = parent_rect.right - parent_rect.left;
     x = parent_rect.left;
     y = parent_rect.bottom - infoPtr->height;
-    MoveWindow (infoPtr->Self, parent_rect.left,
-		parent_rect.bottom - infoPtr->height,
-		width, infoPtr->height, TRUE);
+    MoveWindow (infoPtr->Self, x, y, width, infoPtr->height, TRUE);
     STATUSBAR_SetPartBounds (infoPtr);
     return TRUE;
 }

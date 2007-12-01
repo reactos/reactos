@@ -1415,14 +1415,14 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
     infoPtr->status = MC_NEXTPRESSED;
     SetTimer(infoPtr->hwndSelf, MC_NEXTMONTHTIMER, MC_NEXTMONTHDELAY, 0);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    return TRUE;
+    return 0;
   }
   if(hit == MCHT_TITLEBTNPREV){
     MONTHCAL_GoToPrevMonth(infoPtr);
     infoPtr->status = MC_PREVPRESSED;
     SetTimer(infoPtr->hwndSelf, MC_PREVMONTHTIMER, MC_NEXTMONTHDELAY, 0);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    return TRUE;
+    return 0;
   }
 
   if(hit == MCHT_TITLEMONTH) {
@@ -1471,14 +1471,30 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
     SendMessageW( infoPtr->hWndYearUpDown, UDM_SETRANGE, (WPARAM) 0, MAKELONG (9999, 1753));
     SendMessageW( infoPtr->hWndYearUpDown, UDM_SETBUDDY, (WPARAM) infoPtr->hWndYearEdit, (LPARAM)0 );
     SendMessageW( infoPtr->hWndYearUpDown, UDM_SETPOS,   (WPARAM) 0,(LPARAM)infoPtr->currentYear );
-    return TRUE;
+    return 0;
 
   }
   if(hit == MCHT_TODAYLINK) {
+    NMSELCHANGE nmsc;
+
+    infoPtr->curSelDay = infoPtr->todaysDate.wDay;
+    infoPtr->firstSelDay = infoPtr->todaysDate.wDay;
     infoPtr->currentMonth=infoPtr->todaysDate.wMonth;
     infoPtr->currentYear=infoPtr->todaysDate.wYear;
+    MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->minSel);
+    MONTHCAL_CopyTime(&infoPtr->todaysDate, &infoPtr->maxSel);
     InvalidateRect(infoPtr->hwndSelf, NULL, FALSE);
-    return TRUE;
+
+    nmsc.nmhdr.hwndFrom = infoPtr->hwndSelf;
+    nmsc.nmhdr.idFrom   = GetWindowLongPtrW(infoPtr->hwndSelf, GWLP_ID);
+    nmsc.nmhdr.code     = MCN_SELCHANGE;
+    MONTHCAL_CopyTime(&infoPtr->minSel, &nmsc.stSelStart);
+    MONTHCAL_CopyTime(&infoPtr->maxSel, &nmsc.stSelEnd);
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, (WPARAM)nmsc.nmhdr.idFrom, (LPARAM)&nmsc);
+
+    nmsc.nmhdr.code     = MCN_SELECT;
+    SendMessageW(infoPtr->hwndNotify, WM_NOTIFY, (WPARAM)nmsc.nmhdr.idFrom,(LPARAM)&nmsc);
+    return 0;
   }
   if(hit == MCHT_CALENDARDATE) {
     SYSTEMTIME selArray[2];
@@ -1511,10 +1527,10 @@ MONTHCAL_LButtonDown(MONTHCAL_INFO *infoPtr, LPARAM lParam)
     infoPtr->firstSelDay = ht.st.wDay;
     infoPtr->curSelDay = ht.st.wDay;
     infoPtr->status = MC_SEL_LBUTDOWN;
-    return TRUE;
+    return 0;
   }
 
-  return 0;
+  return 1;
 }
 
 

@@ -19,7 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * NOTES
- *
+ * 
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Oct. 21, 2002, by Christian Neumair.
  *
@@ -74,7 +74,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(commctrl);
 
 #define NAME       "microsoft.windows.common-controls"
 #define FILE       "comctl32.dll"
-#define VERSION    "6.0.0.0"
+#define VERSION    "6.0.2600.2982"
 #define PUBLIC_KEY "6595b64144ccf1df"
 
 #ifdef __i386__
@@ -248,7 +248,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
             break;
 
 	case DLL_PROCESS_DETACH:
-            /* clean up subclassing */
+            /* clean up subclassing */ 
             THEMING_Uninitialize();
 
             /* unregister all common control classes */
@@ -875,7 +875,7 @@ CreateMappedBitmap (HINSTANCE hInstance, INT_PTR idBitmap, UINT wFlags,
 
     if (lpBitmap->biSize >= sizeof(BITMAPINFOHEADER) && lpBitmap->biClrUsed)
         nColorTableSize = lpBitmap->biClrUsed;
-    else if (lpBitmap->biBitCount <= 8)
+    else if (lpBitmap->biBitCount <= 8)	
         nColorTableSize = (1 << lpBitmap->biBitCount);
     else
         nColorTableSize = 0;
@@ -1090,7 +1090,7 @@ VOID WINAPI InitMUILanguage (LANGID uiLang)
  *
  * BUGS
  *     If an application manually subclasses a window after subclassing it with
- *     this API and then with this API again, then none of the previous
+ *     this API and then with this API again, then none of the previous 
  *     subclasses get called or the origional window procedure.
  */
 
@@ -1139,7 +1139,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
          proc = proc->next;
       }
    }
-
+   
    proc = Alloc(sizeof(SUBCLASSPROCS));
    if (!proc) {
       ERR ("Failed to allocate subclass entry in stack\n");
@@ -1151,7 +1151,7 @@ BOOL WINAPI SetWindowSubclass (HWND hWnd, SUBCLASSPROC pfnSubclass,
       RemovePropW( hWnd, COMCTL32_wSubclass );
       return FALSE;
    }
-
+   
    proc->subproc = pfnSubclass;
    proc->ref = dwRef;
    proc->id = uIDSubclass;
@@ -1238,15 +1238,15 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
    while (proc) {
       if ((proc->id == uID) &&
          (proc->subproc == pfnSubclass)) {
-
+         
          if (!prevproc)
             stack->SubclassProcs = proc->next;
          else
             prevproc->next = proc->next;
-
+          
          if (stack->stackpos == proc)
             stack->stackpos = stack->stackpos->next;
-
+            
          Free (proc);
          ret = TRUE;
          break;
@@ -1254,7 +1254,7 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
       prevproc = proc;
       proc = proc->next;
    }
-
+   
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the origional window procedure */
@@ -1265,14 +1265,14 @@ BOOL WINAPI RemoveWindowSubclass(HWND hWnd, SUBCLASSPROC pfnSubclass, UINT_PTR u
       Free (stack);
       RemovePropW( hWnd, COMCTL32_wSubclass );
    }
-
+   
    return ret;
 }
 
 /***********************************************************************
  * COMCTL32_SubclassProc (internal)
  *
- * Window procedure for all subclassed windows.
+ * Window procedure for all subclassed windows. 
  * Saves the current subclassing stack position to support nested messages
  */
 LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -1280,7 +1280,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
    LPSUBCLASS_INFO stack;
    LPSUBCLASSPROCS proc;
    LRESULT ret;
-
+    
    TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
    stack = (LPSUBCLASS_INFO)GetPropW (hWnd, COMCTL32_wSubclass);
@@ -1288,7 +1288,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
       ERR ("Our sub classing stack got erased for %p!! Nothing we can do\n", hWnd);
       return 0;
    }
-
+    
    /* Save our old stackpos to properly handle nested messages */
    proc = stack->stackpos;
    stack->stackpos = stack->SubclassProcs;
@@ -1296,7 +1296,7 @@ LRESULT WINAPI COMCTL32_SubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARA
    ret = DefSubclassProc(hWnd, uMsg, wParam, lParam);
    stack->running--;
    stack->stackpos = proc;
-
+    
    if (!stack->SubclassProcs && !stack->running) {
       TRACE("Last Subclass removed, cleaning up\n");
       /* clean up our heap and reset the origional window procedure */
@@ -1330,7 +1330,7 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
 {
    LPSUBCLASS_INFO stack;
    LRESULT ret;
-
+   
    TRACE ("(%p, 0x%08x, 0x%08lx, 0x%08lx)\n", hWnd, uMsg, wParam, lParam);
 
    /* retrieve our little stack from the Properties */
@@ -1349,7 +1349,7 @@ LRESULT WINAPI DefSubclassProc (HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lPar
          ret = CallWindowProcA (stack->origproc, hWnd, uMsg, wParam, lParam);
    } else {
       const SUBCLASSPROCS *proc = stack->stackpos;
-      stack->stackpos = stack->stackpos->next;
+      stack->stackpos = stack->stackpos->next; 
       /* call the Subclass procedure from the stack */
       ret = proc->subproc (hWnd, uMsg, wParam, lParam,
             proc->id, proc->ref);
@@ -1461,8 +1461,8 @@ void COMCTL32_DrawInsertMark(HDC hDC, const RECT *lpRect, COLORREF clrInsertMark
     HPEN hPen = CreatePen(PS_SOLID, 1, clrInsertMark);
     HPEN hOldPen;
     static const DWORD adwPolyPoints[] = {4,4,4};
-    LONG lCentre = (bHorizontal ?
-        lpRect->top + (lpRect->bottom - lpRect->top)/2 :
+    LONG lCentre = (bHorizontal ? 
+        lpRect->top + (lpRect->bottom - lpRect->top)/2 : 
         lpRect->left + (lpRect->right - lpRect->left)/2);
     LONG l1 = (bHorizontal ? lpRect->left : lpRect->top);
     LONG l2 = (bHorizontal ? lpRect->right : lpRect->bottom);
@@ -1546,7 +1546,7 @@ void COMCTL32_EnsureBitmapSize(HBITMAP *pBitmap, int cxMinWidth, int cyMinHeight
     SelectObject(hdcOld, hOldDCBitmap);
     DeleteDC(hdcOld);
 
-    DeleteObject(*pBitmap);
+    DeleteObject(*pBitmap);    
     *pBitmap = hNewBitmap;
     return;
 }

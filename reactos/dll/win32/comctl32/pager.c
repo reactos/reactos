@@ -21,7 +21,7 @@
  *
  * This code was audited for completeness against the documented features
  * of Comctl32.dll version 6.0 on Sep. 18, 2004, by Robert Shearman.
- *
+ * 
  * Unless otherwise noted, we believe this code to be complete, as per
  * the specification mentioned above.
  * If you discover missing features or bugs please note them below.
@@ -43,11 +43,11 @@
  *
  * IMPLEMENTATION NOTES:
  *    This control uses WM_NCPAINT instead of WM_PAINT to paint itself
- *    as we need to scroll a child window. In order to do this we move
+ *    as we need to scroll a child window. In order to do this we move 
  *    the child window in the control's client area, using the clipping
- *    region that is automatically set around the client area. As the
- *    entire client area now consists of the child window, we must
- *    allocate space (WM_NCCALCSIZE) for the buttons and draw them as
+ *    region that is automatically set around the client area. As the 
+ *    entire client area now consists of the child window, we must 
+ *    allocate space (WM_NCCALCSIZE) for the buttons and draw them as 
  *    a non-client area (WM_NCPAINT).
  *       Robert Shearman <rob@codeweavers.com>
  */
@@ -493,7 +493,7 @@ PAGER_UpdateBtns(PAGER_INFO *infoPtr, INT scrollRange, BOOL hideGrayBtns)
                      SWP_NOZORDER | SWP_NOACTIVATE);
 
     /* repaint when changing any state */
-    repaintBtns = (oldTLbtnState != infoPtr->TLbtnState) ||
+    repaintBtns = (oldTLbtnState != infoPtr->TLbtnState) || 
                   (oldBRbtnState != infoPtr->BRbtnState);
     if (repaintBtns)
         SendMessageW(infoPtr->hwndSelf, WM_NCPAINT, 0, 0);
@@ -1236,7 +1236,7 @@ PAGER_Size (PAGER_INFO* infoPtr, INT type, INT x, INT y)
 }
 
 
-static LRESULT
+static LRESULT 
 PAGER_StyleChanged(PAGER_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lpss)
 {
     DWORD oldStyle = infoPtr->dwStyle;
@@ -1245,7 +1245,7 @@ PAGER_StyleChanged(PAGER_INFO *infoPtr, WPARAM wStyleType, const STYLESTRUCT *lp
           wStyleType, lpss->styleOld, lpss->styleNew);
 
     if (wStyleType != GWL_STYLE) return 0;
-
+  
     infoPtr->dwStyle = lpss->styleNew;
 
     if ((oldStyle ^ lpss->styleNew) & (PGS_HORZ | PGS_VERT))

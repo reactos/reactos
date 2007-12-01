@@ -82,7 +82,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
      */
     CopyRect (&rectEdit, &cbi->rcItem);
     InflateRect( &rectEdit, -1, -1 );
-
+     
     if(dwStyle & (CBS_OWNERDRAWFIXED | CBS_OWNERDRAWVARIABLE))
     {
        DRAWITEMSTRUCT dis;
@@ -106,7 +106,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
          clipRegion=NULL;
        }
 
-       if (!IsWindowEnabled(hwnd) & WS_DISABLED) itemState |= ODS_DISABLED;
+       if (!IsWindowEnabled(hwnd)) itemState |= ODS_DISABLED;
 
        dis.CtlType      = ODT_COMBOBOX;
        dis.CtlID        = ctlid;
@@ -158,7 +158,7 @@ static void paint_text (HWND hwnd, HDC hdc, DWORD dwStyle, const COMBOBOXINFO *c
 
     if( hPrevFont )
       SelectObject(hdc, hPrevFont );
-
+   
     HeapFree( GetProcessHeap(), 0, pText );
 }
 
@@ -179,10 +179,10 @@ static LRESULT paint (HTHEME theme, HWND hwnd, HDC hParamDC, ULONG state)
   {
       RECT frameRect;
       int buttonState;
-
+  
       cbi.cbSize = sizeof (cbi);
       SendMessageW (hwnd, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbi);
-
+      
       /* paint border */
       if ((dwStyle & CBS_DROPDOWNLIST) != CBS_SIMPLE)
           GetClientRect (hwnd, &frameRect);
@@ -190,14 +190,14 @@ static LRESULT paint (HTHEME theme, HWND hwnd, HDC hParamDC, ULONG state)
       {
           CopyRect (&frameRect, &cbi.rcItem);
 
-          InflateRect(&frameRect,
-              EDIT_CONTROL_PADDING + COMBO_XBORDERSIZE,
+          InflateRect(&frameRect, 
+              EDIT_CONTROL_PADDING + COMBO_XBORDERSIZE, 
               EDIT_CONTROL_PADDING + COMBO_YBORDERSIZE);
       }
-
-      DrawThemeBackground (theme, hDC, 0,
+      
+      DrawThemeBackground (theme, hDC, 0, 
           IsWindowEnabled (hwnd) ? CBXS_NORMAL : CBXS_DISABLED, &frameRect, NULL);
-
+      
       /* paint button */
       if (cbi.stateButton != STATE_SYSTEM_INVISIBLE)
       {
@@ -209,7 +209,7 @@ static LRESULT paint (HTHEME theme, HWND hwnd, HDC hParamDC, ULONG state)
               buttonState = CBXS_HOT;
           else
               buttonState = CBXS_NORMAL;
-          DrawThemeBackground (theme, hDC, CP_DROPDOWNBUTTON, buttonState,
+          DrawThemeBackground (theme, hDC, CP_DROPDOWNBUTTON, buttonState, 
               &cbi.rcButton, NULL);
       }
 
@@ -228,21 +228,21 @@ static LRESULT paint (HTHEME theme, HWND hwnd, HDC hParamDC, ULONG state)
 /**********************************************************************
  * The combo control subclass window proc.
  */
-LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
-                                            WPARAM wParam, LPARAM lParam,
+LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg, 
+                                            WPARAM wParam, LPARAM lParam, 
                                             ULONG_PTR dwRefData)
 {
     const WCHAR* themeClass = WC_COMBOBOXW;
     HTHEME theme;
     LRESULT result;
-
+      
     switch (msg)
     {
     case WM_CREATE:
         result = THEMING_CallOriginalClass  (hwnd, msg, wParam, lParam);
         OpenThemeData( hwnd, themeClass );
         return result;
-
+    
     case WM_DESTROY:
         theme = GetWindowTheme( hwnd );
         CloseThemeData ( theme );
@@ -253,21 +253,21 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
         CloseThemeData ( theme );
         OpenThemeData( hwnd, themeClass );
         break;
-
+        
     case WM_SYSCOLORCHANGE:
         theme = GetWindowTheme( hwnd );
 	if (!theme) return THEMING_CallOriginalClass (hwnd, msg, wParam, lParam);
         /* Do nothing. When themed, a WM_THEMECHANGED will be received, too,
    	 * which will do the repaint. */
         break;
-
+        
     case WM_PAINT:
         theme = GetWindowTheme( hwnd );
         if (!theme) return THEMING_CallOriginalClass (hwnd, msg, wParam, lParam);
         return paint (theme, hwnd, (HDC)wParam, dwRefData);
 
     case WM_SETREDRAW:
-        /* Since there doesn't seem to be WM_GETREDRAW, do redraw tracking in
+        /* Since there doesn't seem to be WM_GETREDRAW, do redraw tracking in 
          * the subclass as well. */
         if( wParam )
             dwRefData &= ~STATE_NOREDRAW;
@@ -275,7 +275,7 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
             dwRefData |= STATE_NOREDRAW;
         THEMING_SetSubclassData (hwnd, dwRefData);
         return THEMING_CallOriginalClass (hwnd, msg, wParam, lParam);
-
+        
     case WM_MOUSEMOVE:
         {
             /* Dropdown button hot-tracking */
@@ -286,7 +286,7 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
             pt.y = (short)HIWORD(lParam);
             cbi.cbSize = sizeof (cbi);
             SendMessageW (hwnd, CB_GETCOMBOBOXINFO, 0, (LPARAM)&cbi);
-
+            
             if (cbi.stateButton != STATE_SYSTEM_INVISIBLE)
             {
                 if (PtInRect (&cbi.rcButton, pt))
@@ -295,7 +295,7 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
                     {
                         dwRefData |= STATE_HOT;
                         THEMING_SetSubclassData (hwnd, dwRefData);
-                        RedrawWindow (hwnd, &cbi.rcButton, 0,
+                        RedrawWindow (hwnd, &cbi.rcButton, 0, 
                             RDW_INVALIDATE | RDW_UPDATENOW);
                     }
                 }
@@ -305,15 +305,15 @@ LRESULT CALLBACK THEMING_ComboSubclassProc (HWND hwnd, UINT msg,
                     {
                         dwRefData &= ~STATE_HOT;
                         THEMING_SetSubclassData (hwnd, dwRefData);
-                        RedrawWindow (hwnd, &cbi.rcButton, 0,
+                        RedrawWindow (hwnd, &cbi.rcButton, 0, 
                             RDW_INVALIDATE | RDW_UPDATENOW);
                     }
                 }
             }
         }
         return THEMING_CallOriginalClass (hwnd, msg, wParam, lParam);
-
-    default:
+    
+    default: 
 	/* Call old proc */
 	return THEMING_CallOriginalClass (hwnd, msg, wParam, lParam);
     }
