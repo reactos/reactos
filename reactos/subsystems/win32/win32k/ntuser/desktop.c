@@ -1403,15 +1403,15 @@ NtUserPaintDesktop(HDC hDC)
                /* FIXME - clip out the bitmap
                                             can be replaced with "NtGdiPatBlt(hDC, x, y, WinSta->cxWallpaper, WinSta->cyWallpaper, PATCOPY | DSTINVERT);"
                                             once we support DSTINVERT */
-              PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
+              PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
               NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-              NtGdiSelectObject(hDC, PreviousBrush);
+              NtGdiSelectBrush(hDC, PreviousBrush);
             }
 
             /*Do not fill the background after it is painted no matter the size of the picture */
             doPatBlt = FALSE;
 
-            hOldBitmap = NtGdiSelectObject(hWallpaperDC, WinSta->hbmWallpaper);
+            hOldBitmap = NtGdiSelectBitmap(hWallpaperDC, WinSta->hbmWallpaper);
 
             if (WinSta->WallpaperMode == wmStretch)
             {
@@ -1465,7 +1465,7 @@ NtUserPaintDesktop(HDC hDC)
                             0,
                             0);
             }
-            NtGdiSelectObject(hWallpaperDC, hOldBitmap);
+            NtGdiSelectBitmap(hWallpaperDC, hOldBitmap);
             NtGdiDeleteObjectApp(hWallpaperDC);
          }
       }
@@ -1474,9 +1474,9 @@ NtUserPaintDesktop(HDC hDC)
    /* Back ground is set to none, clear the screen */
    if (doPatBlt)
    {
-      PreviousBrush = NtGdiSelectObject(hDC, DesktopBrush);
+      PreviousBrush = NtGdiSelectBrush(hDC, DesktopBrush);
       NtGdiPatBlt(hDC, Rect.left, Rect.top, Rect.right, Rect.bottom, PATCOPY);
-      NtGdiSelectObject(hDC, PreviousBrush);
+      NtGdiSelectBrush(hDC, PreviousBrush);
    }
 
    /*
