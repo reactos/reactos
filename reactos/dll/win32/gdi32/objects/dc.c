@@ -1344,6 +1344,7 @@ SelectObject(HDC hDC,
 {
     PDC_ATTR pDc_Attr;
 //    HGDIOBJ hOldObj = NULL;
+//    PTEB pTeb;
 
     if(!GdiGetHandleUserData(hDC, GDI_OBJECT_TYPE_DC, (PVOID)&pDc_Attr))
     {
@@ -1352,35 +1353,79 @@ SelectObject(HDC hDC,
     }
 
     hGdiObj = GdiFixUpHandle(hGdiObj);
-	if (!GdiIsHandleValid(hGdiObj))
-	{
-		return NULL;
-	}
+    if (!GdiIsHandleValid(hGdiObj))
+    {
+        return NULL;
+    }
 
     UINT uType = GDI_HANDLE_GET_TYPE(hGdiObj);
 
     switch (uType)
     {
-        case GDI_OBJECT_TYPE_PALETTE:
-            SetLastError(ERROR_INVALID_FUNCTION);
-            return NULL;
-
-      	case GDI_OBJECT_TYPE_REGION:
+        case GDI_OBJECT_TYPE_REGION:
             return (HGDIOBJ)ExtSelectClipRgn(hDC, hGdiObj, RGN_COPY);
 
         case GDI_OBJECT_TYPE_BITMAP:
             return NtGdiSelectBitmap(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_BRUSH:
+#if 0 // enable this when support is ready in win32k
+            hOldObj = pDc_Attr->hbrush;
+            pDc_Attr->ulDirty_ |= DC_BRUSH_DIRTY;
+            pDc_Attr->hbrush = hGdiObj;
+            return hOldObj;
+#endif
             return NtGdiSelectBrush(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_PEN:
 //        case GDI_OBJECT_TYPE_EXTPEN:
+#if 0 // enable this when support is ready in win32k
+            hOldObj = pDc_Attr->hpen;
+            pDc_Attr->ulDirty_ |= DC_PEN_DIRTY;
+            pDc_Attr->hpen = hGdiObj;
+            return hOldObj;
+#endif
             return NtGdiSelectPen(hDC, hGdiObj);
 
         case GDI_OBJECT_TYPE_FONT:
-            return NtGdiSelectFont(hDC, hGdiObj);
+#if 0
+            pTeb = NtCurrentTeb();
+            if (((pTeb->GdiTebBatch.HDC == 0) ||
+                 (pTeb->GdiTebBatch.HDC == (ULONG)hDC)) &&
+                ((pTeb->GdiTebBatch.Offset + sizeof(GDIBSOBJECT)) <= GDIBATCHBUFSIZE) &&
+               (!(pDc_Attr->ulDirty_ & DC_DIBSECTION)))
+            {
+              PGDIBSOBJECT pgO = (PGDIBSOBJECT)(&pTeb->GdiTebBatch.Buffer[0] +
+                                                pTeb->GdiTebBatch.Offset);
+              pgO->gbHdr.Cmd = GdiBCSelObj;
+              pgO->gbHdr.Size = sizeof(GDIBSOBJECT);
+              pgO->hgdiobj = hGdiObj;
 
+              pTeb->GdiTebBatch.Offset += sizeof(GDIBSOBJECT);
+              pTeb->GdiTebBatch.HDC = (ULONG)hDC;
+              pTeb->GdiBatchCount++;
+              if (pTeb->GdiBatchCount >= GDI_BatchLimit) NtGdiFlush();
+              return pDc_Attr->hlfntNew;
+            }
+#endif
+            // default for select object font
+            return NtGdiSelectFont(hDC, hGdiObj);
+#if 0
+        case GDI_OBJECT_TYPE_METADC:
+            return MFDRV_SelectObject( hDC, hGdiObj); 
+        case GDI_OBJECT_TYPE_EMF:
+            PLDC pLDC = GdiGetLDC(hDC);
+            if ( !pLDC ) return NULL;
+            return EMFDRV_SelectObject( hDC, hGdiObj);
+#endif
+        case GDI_OBJECT_TYPE_COLORSPACE:
+            SetColorSpace(hDC, (HCOLORSPACE) hGdiObj);
+            return NULL;
+
+        case GDI_OBJECT_TYPE_PALETTE:
+        default:
+            SetLastError(ERROR_INVALID_FUNCTION);
+            return NULL;
     }
 
     return NULL;
