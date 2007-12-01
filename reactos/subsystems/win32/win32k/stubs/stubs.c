@@ -3096,30 +3096,6 @@ NtGdiSetMagicColors(
  /*
  * @unimplemented
  */
-LONG
-APIENTRY
-NtGdiGetDeviceWidth(
-    IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return 0;
-}
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiMirrorWindowOrg(
-    IN HDC hdc)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
- /*
- * @unimplemented
- */
 INT
 APIENTRY
 NtGdiStretchDIBitsInternal(

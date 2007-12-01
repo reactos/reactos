@@ -218,28 +218,6 @@ IntGdiModifyWorldTransform(PDC pDc,
   return TRUE;
 }
 
-int
-STDCALL
-NtGdiGetGraphicsMode ( HDC hDC )
-{
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-  int GraphicsMode; // default to failure
-
-  dc = DC_LockDc ( hDC );
-  if (!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-  GraphicsMode = Dc_Attr->iGraphicsMode;
-
-  DC_UnlockDc(dc);
-  return GraphicsMode;
-}
-
 BOOL
 STDCALL
 NtGdiGetTransform(HDC  hDC,
@@ -605,43 +583,6 @@ NtGdiScaleWindowExtEx(HDC  hDC,
 
 int
 STDCALL
-NtGdiSetGraphicsMode(HDC  hDC,
-                    int  Mode)
-{
-  INT ret;
-  PDC dc;
-  PDC_ATTR Dc_Attr;
-
-  dc = DC_LockDc (hDC);
-  if (!dc)
-  {
-    SetLastWin32Error(ERROR_INVALID_HANDLE);
-    return 0;
-  }
-  Dc_Attr = dc->pDc_Attr;
-  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-
-  /* One would think that setting the graphics mode to GM_COMPATIBLE
-   * would also reset the world transformation matrix to the unity
-   * matrix. However, in Windows, this is not the case. This doesn't
-   * make a lot of sense to me, but that's the way it is.
-   */
-
-  if ((Mode != GM_COMPATIBLE) && (Mode != GM_ADVANCED))
-    {
-      DC_UnlockDc(dc);
-      SetLastWin32Error(ERROR_INVALID_PARAMETER);
-      return 0;
-    }
-
-  ret = Dc_Attr->iGraphicsMode;
-  Dc_Attr->iGraphicsMode = Mode;
-  DC_UnlockDc(dc);
-  return  ret;
-}
-
-int
-STDCALL
 IntGdiSetMapMode(PDC  dc,
                 int  MapMode)
 {
@@ -959,8 +900,44 @@ NtGdiSetWindowOrgEx(HDC  hDC,
   return TRUE;
 }
 
- /*
- * @unimplemented
+//
+// Mirror Window function.
+//
+VOID
+FASTCALL
+IntMirrorWindowOrg(PDC dc)
+{
+  PDC_ATTR Dc_Attr;
+  LONG X;
+  
+  Dc_Attr = dc->pDc_Attr;
+  if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
+
+  if (!(Dc_Attr->dwLayout & LAYOUT_RTL))
+  {
+     Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx; // Flip it back.
+     return;
+  }
+  if (!Dc_Attr->szlViewportExt.cx) return;
+  // 
+  // WOrgx = wox - (Width - 1) * WExtx / VExtx
+  //
+  X = (dc->erclWindow.right - dc->erclWindow.left) - 1; // Get device width - 1
+
+  X = ( X * Dc_Attr->szlWindowExt.cx) / Dc_Attr->szlViewportExt.cx;
+
+  Dc_Attr->ptlWindowOrg.x = Dc_Attr->lWindowOrgx - X; // Now set the inverted win origion.
+
+  return;
+}
+
+// NtGdiSetLayout
+// 
+// The default is left to right. This function changes it to right to left, which
+// is the standard in Arabic and Hebrew cultures.
+//
+/*
+ * @implemented
  */
 DWORD
 APIENTRY
@@ -990,12 +967,70 @@ NtGdiSetLayout(
      DC_UnlockDc(dc);
      return oLayout;
   }
-  
+
+  if (dwLayout & LAYOUT_RTL) Dc_Attr->iMapMode = MM_ANISOTROPIC;
+
+  Dc_Attr->szlWindowExt.cy = -Dc_Attr->szlWindowExt.cy;
+  Dc_Attr->ptlWindowOrg.x  = -Dc_Attr->ptlWindowOrg.x;
+
+  if (wox == -1)
+     IntMirrorWindowOrg(dc);
+  else
+     Dc_Attr->ptlWindowOrg.x = wox - Dc_Attr->ptlWindowOrg.x;
+
+  if (!(Dc_Attr->flTextAlign & TA_CENTER)) Dc_Attr->flTextAlign |= TA_RIGHT;
+
+  if (dc->w.ArcDirection == AD_CLOCKWISE)
+      dc->w.ArcDirection = AD_COUNTERCLOCKWISE;
+  else
+      dc->w.ArcDirection = AD_CLOCKWISE;
+
+  Dc_Attr->flXform |= (PAGE_EXTENTS_CHANGED|INVALIDATE_ATTRIBUTES|DEVICE_TO_WORLD_INVALID);
+
 //  DC_UpdateXforms(dc);
   DC_UnlockDc(dc);
+  return oLayout;
+}
 
-  UNIMPLEMENTED;
-  return GDI_ERROR;
+/*
+ * @implemented
+ */
+LONG
+APIENTRY
+NtGdiGetDeviceWidth(
+    IN HDC hdc)
+{
+  PDC dc;
+  LONG Ret;
+  dc = DC_LockDc(hdc);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return 0;
+  }
+  Ret = dc->erclWindow.right - dc->erclWindow.left;
+  DC_UnlockDc(dc);
+  return Ret;
+}
+
+/*
+ * @implemented
+ */
+BOOL
+APIENTRY
+NtGdiMirrorWindowOrg(
+    IN HDC hdc)
+{
+  PDC dc;
+  dc = DC_LockDc(hdc);
+  if (!dc)
+  {
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
+     return FALSE;
+  }
+  IntMirrorWindowOrg(dc);
+  DC_UnlockDc(dc);
+  return TRUE;
 }
 
 /* EOF */
