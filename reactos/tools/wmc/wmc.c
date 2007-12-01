@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -31,7 +31,7 @@
 #include "lang.h"
 #include "write.h"
 
-static char usage[] =
+static const char usage[] =
 	"Usage: wmc [options...] [inputfile.mc]\n"
 	"   -B x        Set output byte-order x={n[ative], l[ittle], b[ig]}\n"
 	"               (default is n[ative] which equals "
@@ -58,7 +58,7 @@ static char usage[] =
 	"bytes read, which should be 0x0000..0x00ff.\n"
 	;
 
-static char version_string[] =
+static const char version_string[] =
 	"Wine Message Compiler version " PACKAGE_VERSION "\n"
 	"Copyright 2000 Bertho A. Stultiens\n"
 	;
@@ -113,8 +113,21 @@ int char_number = 1;		/* The current char pos within the line */
 char *cmdline;			/* The entire commandline */
 time_t now;			/* The time of start of wmc */
 
+int mcy_debug;
+
 int getopt (int argc, char *const *argv, const char *optstring);
 static void segvhandler(int sig);
+
+static void cleanup_files(void)
+{
+    if (output_name) unlink( output_name );
+    if (header_name) unlink( header_name );
+}
+
+static void exit_on_signal( int sig )
+{
+    exit(1);  /* this will call the atexit functions */
+}
 
 int main(int argc,char *argv[])
 {
@@ -126,7 +139,13 @@ int main(int argc,char *argv[])
 	int i;
 	int cmdlen;
 
+	atexit( cleanup_files );
 	signal(SIGSEGV, segvhandler);
+	signal( SIGTERM, exit_on_signal );
+	signal( SIGINT, exit_on_signal );
+#ifdef SIGHUP
+	signal( SIGHUP, exit_on_signal );
+#endif
 
 	now = time(NULL);
 
@@ -220,7 +239,7 @@ int main(int argc,char *argv[])
 		return 1;
 	}
 
-	yydebug = dodebug;
+	mcy_debug = dodebug;
 	if(dodebug)
 	{
 		setbuf(stdout, 0);
@@ -254,7 +273,7 @@ int main(int argc,char *argv[])
 	else
 		yyin = stdin;
 
-	ret = yyparse();
+	ret = mcy_parse();
 
 	if(input_name)
 		fclose(yyin);
@@ -269,7 +288,8 @@ int main(int argc,char *argv[])
 	write_rc_file(output_name);
 	if(!rcinline)
 		write_bin_files();
-
+	output_name = NULL;
+	header_name = NULL;
 	return 0;
 }
 

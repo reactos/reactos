@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 #include <stdio.h>
 #include <stdlib.h>
@@ -33,7 +33,47 @@
  */
 static const language_t languages[] = {
 
-	{0x0000, 437, 1252, "Neutral", "Neutral"},
+	{0x0000, 437, 1252, "Neutral", NULL},
+	{0x0002, 866, 1251, "Bulgarian", NULL},
+	{0x0003, 850, 1252, "Catalan", NULL},
+	{0x0005, 852, 1250, "Czech", NULL},
+	{0x0006, 850, 1252, "Danish", NULL},
+	{0x0007, 850, 1252, "German", NULL},
+	{0x0008, 737, 1253, "Greek", NULL},
+	{0x0009, 437, 1252, "English", NULL},
+	{0x000A, 850, 1252, "Spanish - Traditional Sort", NULL},
+	{0x000B, 850, 1252, "Finnish", NULL},
+	{0x000C, 850, 1252, "French", NULL},
+	{0x000E, 852, 1250, "Hungarian", NULL},
+	{0x000F, 850, 1252, "Icelandic", NULL},
+	{0x0010, 850, 1252, "Italian", NULL},
+	{0x0011, 932,  932, "Japanese", NULL},
+	{0x0012, 949,  949, "Korean", NULL},
+	{0x0013, 850, 1252, "Dutch", NULL},
+	{0x0014, 850, 1252, "Norwegian (Bokmål)", NULL},
+	{0x0015, 852, 1250, "Polish", NULL},
+	{0x0016, 850, 1252, "Portuguese", NULL},
+	{0x0018, 852, 1250, "Romanian", NULL},
+	{0x0019, 866, 1251, "Russian", NULL},
+	{0x001A, 852, 1250, "Serbian", NULL},
+	{0x001B, 852, 1250, "Slovak", NULL},
+	{0x001C, 852, 1250, "Albanian", NULL},
+	{0x001D, 850, 1252, "Swedish", NULL},
+	{0x001F, 857, 1254, "Turkish", NULL},
+	{0x0021, 850, 1252, "Indonesian", NULL},
+	{0x0022, 866, 1251, "Ukrainian", NULL},
+	{0x0023, 866, 1251, "Belarusian", NULL},
+	{0x0024, 852, 1250, "Slovene", NULL},
+	{0x0025, 775, 1257, "Estonian", NULL},
+	{0x0026, 775, 1257, "Latvian", NULL},
+	{0x0027, 775, 1257, "Lithuanian", NULL},
+	{0x002A,1258, 1258, "Vietnamese", NULL},
+	{0x002D, 850, 1252, "Basque", NULL},
+	{0x002F, 866, 1251, "Macedonian", NULL},
+	{0x0036, 850, 1252, "Afrikaans", NULL},
+	{0x0038, 852, 1252, "Faroese", NULL},
+	{0x003C, 437, 1252, "Irish", NULL},
+	{0x003E, 850, 1252, "Malay", NULL},
 	{0x0402, 866, 1251, "Bulgarian", "Bulgaria"},
 	{0x0403, 850, 1252, "Catalan", "Spain"},
 	{0x0405, 852, 1250, "Czech", "Czech Republic"},
@@ -67,11 +107,11 @@ static const language_t languages[] = {
 	{0x0425, 775, 1257, "Estonian", "Estonia"},
 	{0x0426, 775, 1257, "Latvian", "Latvia"},
 	{0x0427, 775, 1257, "Lithuanian", "Lithuania"},
-/*	{0x042A,   ?,    ?, "Vietnamese", "Vietnam"},*/
+	{0x042A,1258, 1258, "Vietnamese", "Vietnam"},
 	{0x042D, 850, 1252, "Basque", "Spain"},
 	{0x042F, 866, 1251, "Macedonian", "Former Yugoslav Republic of Macedonia"},
 	{0x0436, 850, 1252, "Afrikaans", "South Africa"},
-/*	{0x0438, 852, 1252, "Faroese", "Faroe Islands"}, FIXME: Not sure about codepages */
+	{0x0438, 852, 1252, "Faroese", "Faroe Islands"},
 	{0x043C, 437, 1252, "Irish", "Ireland"},
 	{0x043E, 850, 1252, "Malay", "Malaysia"},
 /*	{0x048F,   ?,    ?, "Esperanto", "<none>"},*/
@@ -84,7 +124,7 @@ static const language_t languages[] = {
 	{0x0813, 850, 1252, "Dutch", "Belgium"},
 	{0x0814, 850, 1252, "Norwegian (Nynorsk)", "Norway"},
 	{0x0816, 850, 1252, "Portuguese", "Portugal"},
-/*	{0x081A,   ?,    ?, "Serbian (latin)", "Yugoslavia"},*/
+	{0x081A, 852, 1250, "Serbian (latin)", "Yugoslavia"},
 	{0x081D, 850, 1252, "Swedish (Finland)", "Finland"},
 	{0x0C07, 850, 1252, "German", "Austria"},
 	{0x0C09, 850, 1252, "English", "Australia"},
@@ -135,7 +175,7 @@ void show_languages(void)
 			languages[i].doscp,
 			languages[i].wincp,
 			languages[i].name,
-			languages[i].country);
+			languages[i].country ? languages[i].country : "Neutral");
 }
 
 static int langcmp(const void *p1, const void *p2)
