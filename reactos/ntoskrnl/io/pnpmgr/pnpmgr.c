@@ -3221,7 +3221,9 @@ cleanup:
 static NTSTATUS INIT_FUNCTION
 IopUpdateRootKey(VOID)
 {
-   UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum\\Root");
+   UNICODE_STRING ControlSetU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
+   UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"Enum");
+   UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"Root");
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
    UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
    UNICODE_STRING HardwareIDU = RTL_CONSTANT_STRING(L"HardwareID");
@@ -3231,17 +3233,30 @@ IopUpdateRootKey(VOID)
    UNICODE_STRING HalAcpiDeviceDesc = RTL_CONSTANT_STRING(L"HAL ACPI");
    UNICODE_STRING HalAcpiHardwareID = RTL_CONSTANT_STRING(L"*PNP0C08\0");
    OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
+   HANDLE hControlSet, hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
    NTSTATUS Status;
 
-   InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
-   Status = ZwOpenKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes);
-   if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
+   InitializeObjectAttributes(&ObjectAttributes, &ControlSetU, OBJ_KERNEL_HANDLE, NULL, NULL);
+   Status = ZwCreateKey(&hControlSet, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   if (!NT_SUCCESS(Status))
    {
-      /* We are probably in 1st stage */
-      return STATUS_SUCCESS;
+      DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      return Status;
    }
-   else if (!NT_SUCCESS(Status))
+
+   InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE, hControlSet, NULL);
+   Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   ZwClose(hControlSet);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
+      return Status;
+   }
+
+   InitializeObjectAttributes(&ObjectAttributes, &RootPathU, OBJ_KERNEL_HANDLE, hEnum, NULL);
+   Status = ZwCreateKey(&hRoot, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
+   ZwClose(hEnum);
+   if (!NT_SUCCESS(Status))
    {
       DPRINT1("ZwOpenKey() failed with status 0x%08lx\n", Status);
       return Status;
