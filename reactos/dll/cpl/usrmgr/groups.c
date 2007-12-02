@@ -29,8 +29,8 @@ SetGroupsListColumns(HWND hwndListView)
     GetClientRect(hwndListView, &rect);
 
     memset(&column, 0x00, sizeof(column));
-    column.mask=LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_TEXT;
-    column.fmt=LVCFMT_LEFT;
+    column.mask = LVCF_FMT | LVCF_WIDTH | LVCF_SUBITEM | LVCF_TEXT;
+    column.fmt = LVCFMT_LEFT;
     column.cx = (INT)((rect.right - rect.left) * 0.40);
     column.iSubItem = 0;
     LoadString(hApplet, IDS_NAME, szStr, sizeof(szStr) / sizeof(szStr[0]));

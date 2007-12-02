@@ -13,10 +13,14 @@
 
 #define ICONSIZE            16
 
-/* ids */
 
-#define IDC_USRMGR_ICON                   40
-#define IDC_USRMGR_ICON2                  100 // Needed for theme compatability with Windows.
+/* Icons */
+#define IDI_USRMGR_ICON                 40
+#define IDI_USRMGR_ICON2                100 // Needed for theme compatibility with Windows.
+#define IDI_USER                        41
+#define IDI_LOCKED_USER                 42
+#define IDI_GROUP                       43
+
 
 #define IDD_USERS                       100
 #define IDD_GROUPS                      101
@@ -29,6 +33,26 @@
 #define IDC_STATIC                      -1
 
 
+/* Dialogs */
+
+#define IDD_USER_GENERAL            310
+#define IDC_USER_NAME               311
+#define IDC_USER_FULLNAME           312
+#define IDC_USER_DESCRIPTION        313
+#define IDC_USER_PW_CHANGE          314
+#define IDC_USER_PW_NOCHANGE        315
+#define IDC_USER_PW_EXPIRE          316
+#define IDC_USER_DEACTIVATE         317
+#define IDC_USER_LOCK               318
+
+
+#define IDD_CHANGE_PASSWORD         350
+#define IDC_EDIT_PASSWORD1          351
+#define IDC_EDIT_PASSWORD2          352
+
+
+/* Strings */
+
 #define IDS_CPLNAME                 2000
 #define IDS_CPLDESCRIPTION          2001
 
@@ -36,7 +60,9 @@
 #define IDS_FULLNAME                2101
 #define IDS_DESCRIPTION             2102
 
+
 /* Menus */
+
 #define IDM_POPUP_GROUP             120
 #define IDM_GROUP_ADD_MEMBER        121
 #define IDM_GROUP_NEW               122

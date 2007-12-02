@@ -20,7 +20,7 @@ HINSTANCE hApplet = 0;
 APPLET Applets[NUM_APPLETS] =
 {
     {
-        IDC_USRMGR_ICON,
+        IDI_USRMGR_ICON,
         IDS_CPLNAME,
         IDS_CPLDESCRIPTION,
         UsrmgrApplet
@@ -60,7 +60,7 @@ UsrmgrApplet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
     psh.dwFlags =  PSH_PROPSHEETPAGE;
     psh.hwndParent = NULL;
     psh.hInstance = hApplet;
-    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDC_USRMGR_ICON));
+    psh.hIcon = LoadIcon(hApplet, MAKEINTRESOURCE(IDI_USRMGR_ICON));
     psh.pszCaption = Caption;
     psh.nPages = sizeof(psp) / sizeof(PROPSHEETPAGE);
     psh.nStartPage = 0;

@@ -20,6 +20,69 @@ typedef struct _USER_DATA
 } USER_DATA, *PUSER_DATA;
 
 
+
+static BOOL
+SetPassword(HWND hwndDlg)
+{
+    TCHAR szPassword1[256];
+    TCHAR szPassword2[256];
+    UINT uLen1;
+    UINT uLen2;
+
+    uLen1 = GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD1, szPassword1, 256);
+    uLen2 = GetDlgItemText(hwndDlg, IDC_EDIT_PASSWORD2, szPassword2, 256);
+
+    /* Check the passwords */
+    if (uLen1 != uLen2 || _tcscmp(szPassword1, szPassword2) != 0)
+    {
+        MessageBox(hwndDlg,
+                   TEXT("The passwords you entered are not the same!"),
+                   TEXT("ERROR"),
+                   MB_OK | MB_ICONERROR);
+        return FALSE;
+    }
+
+
+    return TRUE;
+}
+
+
+INT_PTR CALLBACK
+ChangePasswordDlgProc(HWND hwndDlg,
+                      UINT uMsg,
+                      WPARAM wParam,
+                      LPARAM lParam)
+{
+    UNREFERENCED_PARAMETER(wParam);
+
+    switch (uMsg)
+    {
+        case WM_INITDIALOG:
+            break;
+
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDOK:
+                    if (SetPassword(hwndDlg))
+                        EndDialog(hwndDlg, 0);
+                    break;
+
+                case IDCANCEL:
+                    EndDialog(hwndDlg, 0);
+                    break;
+            }
+            break;
+
+        default:
+            return FALSE;
+    }
+
+    return TRUE;
+}
+
+
+
 static VOID
 SetUsersListColumns(HWND hwndListView)
 {
@@ -120,7 +183,46 @@ OnInitDialog(HWND hwndDlg)
 }
 
 
-static VOID
+static BOOL
+OnEndLabelEdit(LPNMLVDISPINFO pnmv)
+{
+    TCHAR szOldUserName[UNLEN];
+    TCHAR szNewUserName[UNLEN];
+    USER_INFO_0 useri0;
+    NET_API_STATUS status;
+
+    if (pnmv->item.iItem == -1)
+        return FALSE;
+
+    ListView_GetItemText(pnmv->hdr.hwndFrom,
+                         pnmv->item.iItem, 0,
+                         szOldUserName,
+                         UNLEN);
+    lstrcpy(szNewUserName, pnmv->item.pszText);
+
+    if (lstrcmp(szOldUserName, szNewUserName) == 0)
+        return FALSE;
+
+    useri0.usri0_name = szNewUserName;
+
+    status = NetUserSetInfo(NULL, szOldUserName, 0, (LPBYTE)&useri0, NULL);
+    if (status != NERR_Success)
+    {
+        TCHAR szText[256];
+        wsprintf(szText, _T("Error: %u"), status);
+        MessageBox(NULL, szText, _T("NetUserSetInfo"), MB_ICONERROR | MB_OK);
+        return FALSE;
+    }
+
+    ListView_SetItemText(pnmv->hdr.hwndFrom,
+                         pnmv->item.iItem, 0,
+                         szNewUserName);
+
+    return TRUE;
+}
+
+
+static BOOL
 OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
 {
     LPNMLISTVIEW lpnmlv = (LPNMLISTVIEW)phdr;
@@ -143,6 +245,9 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
                 case NM_DBLCLK:
                     break;
 
+                case LVN_ENDLABELEDIT:
+                    return OnEndLabelEdit((LPNMLVDISPINFO)phdr);
+
                 case NM_RCLICK:
                     ClientToScreen(GetDlgItem(hwndDlg, IDC_USERS_LIST), &lpnmlv->ptAction);
                     TrackPopupMenu(GetSubMenu(pUserData->hPopupMenu, (lpnmlv->iItem == -1) ? 0 : 1),
@@ -151,6 +256,8 @@ OnNotify(HWND hwndDlg, PUSER_DATA pUserData, NMHDR *phdr)
             }
             break;
     }
+
+    return FALSE;
 }
 
 
@@ -180,6 +287,28 @@ UsersPageProc(HWND hwndDlg,
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDM_USER_CHANGE_PASSWORD:
+                    DialogBoxParam(hApplet,
+                                   MAKEINTRESOURCE(IDD_CHANGE_PASSWORD),
+                                   hwndDlg,
+                                   ChangePasswordDlgProc,
+                                   (LPARAM)NULL);
+                    break;
+
+                case IDM_USER_RENAME:
+                    {
+                        INT nItem;
+                        HWND hwndLV;
+
+                        hwndLV = GetDlgItem(hwndDlg, IDC_USERS_LIST);
+                        nItem = ListView_GetNextItem(hwndLV, -1, LVNI_SELECTED);
+                        if (nItem != -1)
+                        {
+                            (void)ListView_EditLabel(hwndLV, nItem);
+                        }
+                    }
+                    break;
+
                 case IDM_USER_PROPERTIES:
                     MessageBeep(-1);
                     break;
@@ -187,8 +316,7 @@ UsersPageProc(HWND hwndDlg,
             break;
 
         case WM_NOTIFY:
-            OnNotify(hwndDlg, pUserData, (NMHDR *)lParam);
-            break;
+            return OnNotify(hwndDlg, pUserData, (NMHDR *)lParam);
 
         case WM_DESTROY:
             DestroyMenu(pUserData->hPopupMenu);

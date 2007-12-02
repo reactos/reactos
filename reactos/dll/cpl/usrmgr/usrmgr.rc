@@ -11,7 +11,11 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 123 24 DISCARDABLE "manifest.xml"
 
-IDC_USRMGR_ICON ICON "resources/applet.ico"
-IDC_USRMGR_ICON2 ICON "resources/applet.ico"
+IDI_USRMGR_ICON ICON "resources/applet.ico"
+IDI_USRMGR_ICON2 ICON "resources/applet.ico"
+
+IDI_USER ICON "resources/user.ico"
+IDI_LOCKED_USER ICON "resources/locked.ico"
+IDI_GROUP ICON "resources/group.ico"
 
 #include "rsrc.rc"
