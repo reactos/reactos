@@ -1,0 +1,2373 @@
+LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
+
+102 DIALOG 0, 0, 255, 265
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Alternative Telefonnummern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie alternative Telefonnummern für diese Verbindung an.", 1018, 7, 5, 243, 16
+	LTEXT "Telefo&nnummern:", 1019, 7, 27, 238, 8
+	CONTROL "", 1012, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000848D, 7, 38, 217, 144
+	PUSHBUTTON "Nach &oben", 1017, 230, 40, 18, 16, BS_ICON
+	PUSHBUTTON "Nach &unten", 1015, 230, 61, 18, 16, BS_ICON
+	PUSHBUTTON "&Hinzufügen...", 1013, 7, 187, 70, 14
+	PUSHBUTTON "&Bearbeiten...", 1016, 81, 187, 70, 14
+	PUSHBUTTON "&Löschen", 1014, 154, 187, 70, 14
+	AUTOCHECKBOX "Falls eine Nummernwahl fehls&chlägt, versuche nächste Nummer.", 1011, 8, 210, 243, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Nummer bei erfolgreicher Verbindung nach oben verschieben.", 1010, 8, 228, 243, 10, BS_TOP | BS_MULTILINE
+	DEFPUSHBUTTON "OK", 1, 122, 245, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 188, 245, 60, 14
+END
+
+103 DIALOG 6, 18, 250, 170
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Netzwerkverbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", 1029, 5, 5, 241, 35, NOT WS_GROUP
+	LTEXT "&Verbindungen:", -1, 5, 46, 238, 10
+	CONTROL "List1", 1677, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 5, 57, 240, 57
+	AUTOCHECKBOX "&Bis zur nächsten Anmeldung nicht mehr fragen", 1022, 8, 125, 235, 10
+	PUSHBUTTON "&Einstellungen", 1026, 7, 149, 60, 14
+	DEFPUSHBUTTON "V&erbinden...", 1024, 117, 149, 60, 14
+	PUSHBUTTON "Abbrechen", 1025, 183, 149, 60, 14
+END
+
+104 DIALOG 6, 18, 269, 263
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Leitungsbündelungsfehler"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 32516, 1031, 7, 7, 20, 20
+	LTEXT "Eine oder mehrere Leitungen konnten keine Verbindung herstellen.", 1033, 37, 8, 216, 20
+	CONTROL "", 1032, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00008401, 37, 83, 224, 136
+	AUTOCHECKBOX "&Fehlgeschlagene Leitungen zukünftig nicht mehr verwenden.", 1030, 38, 226, 222, 10
+	DEFPUSHBUTTON "&Annehmen", 1, 135, 242, 60, 14
+	PUSHBUTTON "A&uflegen", 2, 201, 242, 60, 14
+	LTEXT "Wenn nur eine Verbindung aufgebaut werden konnte, dann ist der Server vermutlich nicht für Mehrfachverbindungen ausgelegt. Aktivieren Sie das Kontrollkästchen Fehlgeschlagene Leitungen zukünftig nicht verwenden, um unnötige Verbindungsgebühren zu vermeiden.", -1, 37, 36, 224, 44
+END
+
+105 DIALOG 0, 0, 261, 253
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Erweiterte Sicherheitseinstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Anmeldesicherheit", 1547, 7, 33, 246, 191
+	LTEXT "&Datenverschlüsselung:", 1546, 7, 5, 247, 10
+	COMBOBOX 1495, 7, 17, 247, 76, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Extensible Authentication Protocol (EAP) verwenden", 1544, 17, 47, 226, 8, WS_GROUP
+	LTEXT "EAP Typ", -1, 18, 64, 35, 8, NOT WS_VISIBLE | NOT WS_GROUP
+	COMBOBOX 1034, 53, 62, 191, 42, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "&Eigenschaften", 1035, 184, 77, 60, 14
+	AUTORADIOBUTTON "Diese &Protokolle erlauben", 1545, 17, 92, 224, 10
+	AUTOCHECKBOX "&Unverschlüsseltes Passwort (PAP)", 1491, 28, 105, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Shiva Password Authentication Protocol (SPAP)", 1496, 28, 119, 214, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Challenge Handshake Authentication Protocol (CHAP)", 1494, 28, 133, 215, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&MS CHAP (MS-CHAP)", 1493, 28, 148, 212, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Ältere MS-CHAP Versionen von &Win 95 Servern erlauben", 200, 46, 162, 198, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "M&icrosoft CHAP Version 2 (MS-CHAP v2)", 1492, 28, 176, 200, 10, BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 28, 189, 208, 1
+	AUTOCHECKBOX "&Für MS-CHAP basierte Protokolle, automatisch den ReactOS Anmeldename und Passwort verwenden (und Domäne wenn vorhanden)", 1549, 28, 195, 213, 24, BS_TOP | BS_MULTILINE
+	DEFPUSHBUTTON "OK", 1, 127, 232, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 192, 232, 60, 14
+END
+
+106 DIALOG 6, 18, 255, 109
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Verbindung hergestellt"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "OK", 1, 97, 91, 60, 14
+	ICON 563, 1046, 7, 7, 20, 20
+	LTEXT "Die Verbindung wurde hergestellt.", 1047, 40, 7, 212, 16
+	LTEXT "Um den Status der Verbindung zu überprüfen oder die Verbindung zu trennen, klicken Sie mit der rechten Maustaste auf das Symbol im Ordner Netzwerkverbindungen oder klicken Sie auf das Symbol in der Taskleiste (falls vorhanden).", -1, 40, 30, 212, 34
+	AUTOCHECKBOX "&Diese Nachricht nicht mehr anzeigen", 1045, 40, 69, 212, 10, BS_TOP | BS_MULTILINE
+END
+
+107 DIALOG 0, 0, 258, 167
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Telefonnummer", 1053, 7, 5, 243, 92
+	LTEXT "&Vorwahl:", 1055, 18, 17, 54, 8
+	COMBOBOX 1049, 17, 30, 55, 129, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Telefonnummer:", 1057, 77, 17, 166, 8, NOT WS_GROUP
+	EDITTEXT 1051, 77, 30, 163, 14, ES_AUTOHSCROLL
+	LTEXT "Landesvor&wahl:", 1056, 18, 48, 221, 8, NOT WS_GROUP
+	COMBOBOX 1054, 17, 61, 224, 93, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "&Wählregeln verwenden", 1048, 20, 81, 219, 10, BS_TOP | BS_MULTILINE
+	GROUPBOX "Ko&mmentar", 1052, 7, 102, 243, 36
+	EDITTEXT 1050, 17, 115, 224, 14, ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 127, 147, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 191, 147, 60, 14
+END
+
+108 DIALOG 6, 18, 222, 104
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Passwort ändern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Ihr Kennwort für das Remotenetzwerk ist abgelaufen. Geben Sie ein Kennwort ein und klicken Sie auf OK, um es festzulegen.", 1062, 7, 5, 210, 24
+	LTEXT "&Neues Passwort:", 1064, 8, 43, 108, 8
+	EDITTEXT 1060, 118, 38, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "N&eues Passwort bestätigen:", 1061, 8, 61, 102, 8
+	EDITTEXT 1058, 118, 57, 98, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 90, 84, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 154, 84, 60, 14
+END
+
+109 DIALOG 6, 18, 223, 122
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Passwort ändern"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Ihr Kennwort für das Remotenetzwerk ist abgelaufen. Geben Sie ein Kennwort ein und klicken Sie auf OK, um es festzulegen.", 1062, 7, 5, 212, 29
+	LTEXT "&Altes Passwort:", 1063, 7, 42, 108, 8
+	EDITTEXT 1059, 116, 38, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "&Neues Passwort:", 1064, 7, 60, 108, 8
+	EDITTEXT 1060, 116, 56, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "N&eues Passwort bestätigen:", 1061, 7, 78, 108, 8
+	EDITTEXT 1058, 116, 74, 100, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 92, 101, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 156, 101, 60, 14
+END
+
+110 DIALOG 12, 16, 230, 105
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Rückruf"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Sie verfügen über das Rückrufrecht 'Vom Anrufer festlegen lassen'. Klicken Sie auf OK, damit Sie vom Server unter der unten angegebenen Nummer zurückgerufen werden, oder klicken Sie auf Abbrechen, um den Rückruf zu überspringen.", 1066, 5, 5, 221, 39, SS_NOPREFIX
+	LTEXT "&Geben Sie die Telefonnummer des Modems ein:", 1067, 5, 46, 222, 8, NOT WS_GROUP
+	EDITTEXT 1065, 5, 57, 221, 14, ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 100, 85, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 164, 85, 60, 14
+END
+
+111 DIALOG 6, 19, 265, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Fehler beim Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 32515, 1068, 7, 7, 20, 20, WS_GROUP
+	LTEXT "", 1070, 34, 7, 226, 105
+	DEFPUSHBUTTON "Nicht wählen=88", 1, 4, 117, 128, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 136, 117, 60, 14
+	PUSHBUTTON "&Details", 1069, 200, 117, 60, 14
+END
+
+112 DIALOG 6, 18, 263, 219
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Automatisches Wählen und Auflegen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS kann Geräte automatisch wählen und auflegen lassen, abhängig davon, wie viele Informationen gesendet und empfangen wurden.", 1085, 9, 7, 253, 30
+	GROUPBOX "Automatisches wählen", -1, 6, 38, 249, 71
+	LTEXT "Andere Leitung wählen, wenn beide der folgenden Bedingungen für diese Verbindung zutreffen:", 1083, 16, 51, 237, 16, NOT WS_GROUP
+	LTEXT "Mindest&aktivität:", -1, 16, 73, 100, 8
+	COMBOBOX 1079, 117, 70, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Mindestzeitdauer:", 1084, 16, 92, 99, 8, NOT WS_GROUP
+	COMBOBOX 1080, 117, 89, 90, 162, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Automatisches auflegen", -1, 6, 113, 248, 81
+	LTEXT "Von dieser Verbindung verwendete Geräte auflegen, wenn beide der folgenden Bedingungen für diese Verbindung eintreffen:", 1086, 16, 127, 230, 18, NOT WS_GROUP
+	LTEXT "Ma&ximalaktivität:", -1, 16, 150, 92, 8
+	COMBOBOX 1081, 115, 146, 60, 100, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "M&indestzeitdauer:", 1087, 16, 168, 92, 8, NOT WS_GROUP
+	COMBOBOX 1082, 115, 166, 90, 151, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	DEFPUSHBUTTON "OK", 1, 131, 199, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 194, 199, 60, 14
+END
+
+113 DIALOG 21, 46, 225, 65
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Verbinde mit %1..."
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 563, 1417, 7, 7, 20, 20
+	LTEXT "", 1097, 36, 7, 185, 35, SS_NOPREFIX
+	PUSHBUTTON "Abbrechen", 2, 83, 47, 60, 14
+END
+
+114 DIALOG 6, 18, 225, 60
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "DFÜ Netzwerk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 563, 1098, 7, 6, 20, 20, WS_GROUP
+	LTEXT "Der automatische Wählversuch ist fehlgeschlagen. Wollen Sie automatisches Wählen von diesem Standort deaktivieren?", 1099, 40, 6, 181, 34, NOT WS_GROUP
+	PUSHBUTTON "&Ja", 1, 60, 42, 50, 14
+	DEFPUSHBUTTON "&Nein", 2, 115, 42, 50, 14
+END
+
+115 DIALOG 0, 0, 263, 124
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 263, 50
+	LTEXT "Wäh&len:", 1412, 9, 60, 68, 8
+	COMBOBOX 1416, 88, 56, 165, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Wählen &von:", 1415, 9, 77, 71, 8
+	COMBOBOX 1414, 88, 75, 89, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Wähl&regeln", 1108, 181, 75, 72, 14
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 96, 245, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 103, 61, 14
+	PUSHBUTTON "Abbrechen", 1591, 70, 103, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 132, 103, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 194, 103, 60, 14
+END
+
+116 DIALOG 0, 0, 265, 176
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutername:", 1413, 8, 60, 88, 8
+	EDITTEXT 1104, 103, 57, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 8, 79, 88, 8
+	EDITTEXT 1103, 103, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 8, 97, 248, 1
+	AUTOCHECKBOX "Benutzername und Passwort &speichern für:", 1101, 14, 105, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für den aktuellen Benutzer", 1622, 26, 120, 226, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Nutzer dieses Computers", 1623, 26, 134, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 8, 149, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 156, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 71, 156, 60, 14
+	PUSHBUTTON "E&igenschaften", 1107, 133, 156, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 195, 156, 60, 14
+END
+
+117 DIALOG 0, 0, 263, 192
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 9, 61, 92, 8
+	EDITTEXT 1104, 102, 57, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 9, 80, 92, 8
+	EDITTEXT 1103, 102, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "&Domäne:", 1110, 9, 99, 91, 8
+	EDITTEXT 1102, 102, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 9, 116, 247, 1
+	AUTOCHECKBOX "Benutzername und Passwort &speichern für:", 1101, 12, 123, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für den aktuellen Benutzer", 1622, 25, 137, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Nutzer dieses Computers", 1623, 25, 151, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 167, 247, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 173, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 71, 173, 60, 14
+	PUSHBUTTON "E&igenschaften", 1107, 133, 173, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 195, 173, 60, 14
+END
+
+118 DIALOG 0, 0, 265, 220
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 61, 92, 8
+	EDITTEXT 1104, 104, 57, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 10, 80, 92, 8
+	EDITTEXT 1103, 104, 76, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "&Domäne:", 1110, 10, 100, 92, 8
+	EDITTEXT 1102, 104, 95, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 11, 116, 247, 1
+	AUTOCHECKBOX "Benutzername und Passwort &speichern für:", 1101, 16, 124, 239, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für den aktuellen Benutzer", 1622, 29, 139, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Nutzer dieses Computers", 1623, 29, 152, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 167, 247, 1
+	LTEXT "Wäh&len:", 1412, 10, 177, 90, 8
+	COMBOBOX 1416, 102, 173, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 192, 247, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 10, 199, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 72, 199, 60, 14
+	PUSHBUTTON "E&igenschaften", 1107, 134, 199, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 196, 199, 60, 14
+END
+
+119 DIALOG 0, 0, 265, 200
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 62, 91, 8
+	EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 10, 81, 92, 8
+	EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 97, 247, 1
+	AUTOCHECKBOX "Benutzername und Passwort &speichern für:", 1101, 12, 103, 243, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für den aktuellen Benutzer", 1622, 24, 117, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Nutzer dieses Computers", 1623, 24, 132, 229, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 147, 247, 1
+	LTEXT "Wäh&len:", 1412, 13, 157, 88, 8
+	COMBOBOX 1416, 103, 154, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 173, 247, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 10, 180, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 72, 180, 60, 14
+	PUSHBUTTON "E&igenschaften", 1107, 134, 180, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 197, 180, 60, 14
+END
+
+121 DIALOG 6, 18, 230, 131
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN Konfiguration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Leitungstyp:", 1155, 9, 9, 65, 8
+	COMBOBOX 1153, 76, 7, 148, 42, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+	AUTOCHECKBOX "Leitungstyp a&ushandeln", 1150, 23, 26, 199, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	GROUPBOX "    ", 1152, 8, 48, 214, 51, WS_GROUP
+	AUTOCHECKBOX "&Altes, proprietäres Protokoll verwenden", 1149, 17, 48, 102, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&Zu verwendende Kanäle:", 1154, 16, 65, 100, 8, NOT WS_GROUP
+	EDITTEXT 1151, 119, 61, 94, 14, ES_AUTOHSCROLL
+	AUTOCHECKBOX "&Hardwarekompression aktivieren", 1148, 16, 82, 198, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "OK", 1, 99, 109, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 163, 109, 60, 14
+END
+
+122 DIALOG 6, 18, 220, 68
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "ISDN Konfiguration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Leitungstyp:", 1155, 9, 11, 55, 8
+	COMBOBOX 1153, 67, 7, 148, 43, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP
+	AUTOCHECKBOX "L&eitungstyp aushandeln", 1150, 21, 28, 194, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	PUSHBUTTON "OK", 1, 90, 49, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 154, 49, 60, 14
+END
+
+123 DIALOG 11, 20, 350, 275
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	EDITTEXT 1161, 5, 5, 338, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
+	LTEXT "I&P Adresse:", 1163, 7, 253, 68, 8
+	CONTROL "", 1160, "RASIPADDRESS", WS_TABSTOP, 76, 250, 117, 14
+	DEFPUSHBUTTON "", 1162, 197, 252, 16, 13, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+	PUSHBUTTON "&Fertig", 1, 219, 252, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 283, 252, 60, 14
+END
+
+124 DIALOG 6, 17, 350, 266
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	EDITTEXT 1161, 5, 4, 340, 236, ES_MULTILINE | ES_AUTOVSCROLL | WS_VSCROLL | WS_GROUP
+	DEFPUSHBUTTON "", 1162, 7, 247, 50, 14, NOT WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
+	PUSHBUTTON "&Fertig", 1, 222, 247, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 286, 247, 60, 14
+END
+
+125 DIALOG 12, 16, 261, 190
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Modem Konfiguration"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 15102, 1238, 7, 7, 20, 20
+	LTEXT "Modem", -1, 25, 27, 24, 8, NOT WS_VISIBLE | NOT WS_GROUP
+	EDITTEXT 1235, 40, 7, 214, 16, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER
+	LTEXT "Ma&ximale Geschwindigkeit (bps):", 1243, 7, 36, 110, 8
+	COMBOBOX 1239, 119, 34, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Modemprotokoll", 1244, 7, 52, 111, 8
+	COMBOBOX 1245, 119, 50, 136, 186, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Hardwarefunktionen", 1237, 6, 70, 248, 61, WS_GROUP
+	AUTOCHECKBOX "&Hardwareflusssteuerung aktivieren", 1232, 19, 82, 217, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Modem&fehlerkontrolle aktivieren", 1231, 19, 98, 217, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Modem&kompression aktivieren", 1229, 19, 115, 217, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Terminalfenster aktivieren", 1234, 8, 136, 246, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Modem&lautsprecher aktivieren", 1230, 8, 151, 247, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	DEFPUSHBUTTON "OK", 1, 129, 171, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 194, 171, 60, 14
+END
+
+126 DIALOG 0, 0, 270, 117
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Netzwerkkomponententyp auswählen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Klicken Sie auf die zu installierende Netzwerkomponente:", -1, 8, 7, 258, 8
+	CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 8, 20, 188, 58
+	GROUPBOX "", -1, 8, 81, 188, 30
+	LTEXT "", 1250, 12, 90, 177, 17
+	DEFPUSHBUTTON "&Hinzufügen...", 1252, 205, 20, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 205, 38, 60, 14
+END
+
+127 DIALOG 16, 20, 260, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "NetWare oder kompatible Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 32515, 1278, 7, 7, 21, 20, WS_GROUP
+	LTEXT "Es bestehen Verbindungen zu einem NetWare kompatiblen Netzwerk. Diese Verbindungen werden beendet, sobald die PPP-IPX-Verbindung hergestellt wurde.", 1279, 42, 7, 215, 37
+	LTEXT "Schließen Sie vor dem wählen zu Verhinderung von Datenverlust entweder alle Dateien, dies diese Verbindung nutzen, oder deaktivieren Sie das IPX-Protokoll für diesen Eintrag.", 1280, 42, 46, 215, 38, NOT WS_GROUP
+	AUTOCHECKBOX "&Diese Nachricht in der Zukunft nicht mehr anzeigen", 1277, 42, 86, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	DEFPUSHBUTTON "OK", 1, 65, 112, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 134, 112, 60, 14
+END
+
+128 DIALOG 7, 22, 236, 90
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Manuelles wählen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Nehmen Sie den Hörer und wählen Sie (oder bitten Sie die Vermittlung). Nach vollendetem Wählvorgang, klicken Sie auf OK. Warten Sie, bis kein Ton mehr zu hören ist und dann legen Sie auf.", 1281, 8, 8, 219, 32
+	LTEXT "Telefonnummer:", 1282, 8, 46, 91, 8
+	LTEXT "", 1283, 103, 46, 126, 8, NOT WS_GROUP
+	DEFPUSHBUTTON "OK", 1, 104, 70, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 168, 70, 60, 14
+END
+
+129 DIALOG 6, 20, 260, 85
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbindungsresultate für Netzwerkprotokoll"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 32516, 1328, 7, 7, 21, 20, WS_GROUP
+	LTEXT "", 1329, 38, 7, 216, 24, NOT WS_GROUP
+	AUTOCHECKBOX "&Fehlgeschlagene Protokolle kein weiteres Mal anfordern", 1327, 40, 44, 215, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	PUSHBUTTON "&Annehmen", 1, 129, 64, 60, 14
+	PUSHBUTTON "A&uflegen", 2, 193, 64, 60, 14
+END
+
+133 DIALOG 6, 18, 231, 211
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "X.25 Anmeldeeinstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Wählen Sie ihren X.25 Netzwerkanbieter and und geben Sie ihre X.121 Adresse des Remoteservers ein:", 1408, 7, 4, 220, 27
+	LTEXT "&Netzwerk:", 1410, 9, 35, 213, 8, NOT WS_GROUP
+	COMBOBOX 1406, 9, 46, 215, 125, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "X.121 &Adresse:", 1407, 9, 66, 213, 8, NOT WS_GROUP
+	EDITTEXT 1402, 8, 77, 215, 14, ES_AUTOHSCROLL
+	GROUPBOX "Optional", 1405, 8, 95, 215, 79
+	LTEXT "&Benutzerdaten:", 1411, 19, 109, 182, 8, NOT WS_GROUP
+	EDITTEXT 1404, 19, 120, 193, 14, ES_AUTOHSCROLL
+	LTEXT "&Einrichtungen:", 1409, 19, 138, 182, 8, NOT WS_GROUP
+	EDITTEXT 1403, 19, 149, 193, 14, ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 100, 189, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 164, 189, 60, 14
+END
+
+146 DIALOG 6, 18, 230, 210
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Automatisches Wählen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Wenn Sie keine Verbindung mit dem Netzwerk haben, wird bei jedem Zugriff auf Remoteinformationen versucht, eine Verbindung mit dem Netzwerk durch automatisches Wählen herzustellen.", -1, 7, 4, 219, 32
+	LTEXT "&Automatisches Wählen nach Standorten aktivieren:", 1006, 8, 42, 213, 8
+	CONTROL "", 1004, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000C401, 7, 53, 216, 109
+	AUTOCHECKBOX "&Vor dem automatischen Wählen immer nachfragen", 1496, 8, 170, 218, 9, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "A&utomatisches Wählen für diese Sitzung deaktivieren", 1550, 8, 185, 217, 9, BS_TOP | BS_MULTILINE
+END
+
+147 DIALOG 6, 18, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Wählen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Diese Einstellungen werden auf 'Anmelden am DFÜ Netzwerk' im Strg-Alt-Entf Menü angewendet. Als Administrator haben Sie Zugriff hierauf.", 1007, 7, 4, 221, 40, NOT WS_GROUP
+	LTEXT "&Anzahl der Wahlwiederholungsversuchen:", 1005, 7, 55, 154, 8
+	EDITTEXT 1001, 164, 52, 60, 14, ES_AUTOHSCROLL
+	LTEXT "S&ekunden zwischen Wahlwiederholungen:", 1009, 7, 73, 156, 8, NOT WS_GROUP
+	EDITTEXT 1003, 164, 70, 60, 14, ES_AUTOHSCROLL
+	LTEXT "Se&kunden im Leerlauf, bevor aufgelegt wird:", 1008, 7, 91, 154, 8, NOT WS_GROUP
+	EDITTEXT 1002, 164, 88, 60, 14, ES_AUTOHSCROLL
+END
+
+148 DIALOG 6, 18, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Rückruf"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Ein Server kann beim Einwählen die Möglichkeit des Rückrufs anbieten, um Telefonkosten zu reduzieren. Geben Sie an, ob Sie die Rückrufoption verwenden möchten. (Rückruf wird für VPN-Verbindungen nicht unterstützt.", 1043, 8, 4, 219, 43
+	AUTORADIOBUTTON "&Kein Rückruf", 1041, 7, 48, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Beim &Wählen am Server anfragen, ob er dies anbietet", 1040, 7, 61, 219, 10, BS_TOP | BS_MULTILINE
+	AUTORADIOBUTTON "&Die unten angegebenen Nummern für den Rückruf verwenden:", 1042, 7, 74, 219, 10, BS_TOP | BS_MULTILINE
+	CONTROL "", 1037, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 16, 88, 204, 94
+	PUSHBUTTON "Be&arbeiten...", 1039, 96, 190, 60, 14
+	PUSHBUTTON "&Löschen", 1038, 159, 190, 60, 14
+END
+
+149 DIALOG 6, 18, 317, 142
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Sie müssen die Anmeldeinformationen festlegen, die Remoterouter verwenden, um eine Verbindung mit dieser Schnittstelle herzustellen. Die unten eingegebenen Informationen werden zum Erstellen eines Benutzerkontos auf dem Router verwendet", 1094, 8, 5, 307, 35
+	LTEXT "Be&nutzername:", 1078, 8, 47, 124, 8, NOT WS_GROUP
+	EDITTEXT 1074, 135, 45, 175, 12, ES_AUTOHSCROLL | WS_DISABLED
+	LTEXT "&Passwort:", 1077, 8, 68, 124, 8, NOT WS_GROUP
+	EDITTEXT 1073, 135, 66, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "Passwort b&estätigen:", 1075, 8, 90, 124, 8, NOT WS_GROUP
+	EDITTEXT 1071, 135, 87, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+150 DIALOG 6, 18, 321, 144
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Sie müssen die Anmeldeinformationen festlegen, die diese Schnittstelle beim Herstellen einer Verbindung mit dem Remoterouter verwendet. Diese Einstellungen müssen mit den auf dem Remoterouter konfigurierten übereinstimmen.", 1094, 8, 5, 308, 33
+	LTEXT "Be&nutzername:", 1096, 8, 43, 130, 8, NOT WS_GROUP
+	EDITTEXT 1091, 140, 40, 175, 12, ES_AUTOHSCROLL
+	LTEXT "&Domäne:", 1093, 8, 63, 130, 8, NOT WS_GROUP
+	EDITTEXT 1089, 140, 60, 175, 12, ES_UPPERCASE | ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1095, 8, 81, 130, 8, NOT WS_GROUP
+	EDITTEXT 1090, 140, 78, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "Passwort b&estätigen:", 1092, 8, 99, 130, 8, NOT WS_GROUP
+	EDITTEXT 1088, 140, 96, 175, 12, ES_PASSWORD | ES_AUTOHSCROLL
+END
+
+153 DIALOG 0, 0, 315, 140
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie einen Namen für diese Verbindung ein:", -1, 8, 4, 190, 8
+	EDITTEXT 1114, 8, 17, 190, 12, ES_AUTOHSCROLL
+	LTEXT "Klicken Sie auf Fertig stellen, um die Verbindung in Netzwerkverbindungen zu speichern", -1, 8, 38, 193, 16
+	LTEXT "Um diese Verbindung später zu beareiten, markieren Sie diese Verbindung, und klicken Sie auf Datei und anschließend auf Eigenschaften, .", -1, 8, 58, 193, 16
+END
+
+155 DIALOGEX 0, 0, 231, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Verbinden über:", 1124, 7, 5, 219, 8
+	CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 198, 44, WS_EX_CLIENTEDGE
+	PUSHBUTTON "H&och", 1132, 210, 18, 16, 14, BS_ICON
+	PUSHBUTTON "R&unter", 1131, 210, 36, 16, 14, BS_ICON
+	AUTOCHECKBOX "Alle &Geräte wählen dieselbe Nummer", 1119, 9, 66, 133, 14, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Konfigurieren...", 1130, 144, 66, 60, 14
+	GROUPBOX "Beispiel", 1125, 8, 84, 215, 100, WS_GROUP
+	LTEXT "V&orwahl:", 1133, 17, 102, 52, 8
+	COMBOBOX 1122, 17, 112, 52, 110, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Telefonnummer:", 1135, 71, 102, 139, 8
+	EDITTEXT 1123, 73, 112, 79, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "Alter&nativ", 1129, 154, 112, 60, 14
+	LTEXT "Landesvor&wahl:", 1134, 17, 132, 197, 8
+	COMBOBOX 1126, 17, 143, 193, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "Wä&hlregeln verwenden", 1121, 17, 163, 132, 14, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Wählregeln", 1136, 151, 161, 60, 14
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 10, 192, 214, 19, BS_TOP | BS_MULTILINE
+END
+
+156 DIALOG 0, 0, 231, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	PUSHBUTTON "&Konfigurieren...", 1130, 164, 38, 60, 14
+	GROUPBOX "Beispiel", 1125, 8, 55, 217, 100, WS_GROUP
+	LTEXT "V&orwahl:", 1133, 17, 72, 48, 8
+	COMBOBOX 1122, 17, 83, 48, 119, CBS_DROPDOWN | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Telefonnummer:", 1135, 71, 72, 146, 8
+	EDITTEXT 1123, 71, 83, 81, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "Alter&nativ", 1129, 155, 83, 63, 14
+	LTEXT "Landesvor&wahl:", 1134, 17, 103, 193, 8
+	COMBOBOX 1126, 17, 114, 201, 130, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "Wä&hlregeln verwenden", 1121, 19, 134, 136, 12, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Wählregeln", 1136, 157, 132, 60, 14
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 12, 164, 209, 18, BS_TOP | BS_MULTILINE
+	LTEXT "Verbinden über:", 1124, 8, 5, 217, 8
+	CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 217, 15
+END
+
+157 DIALOG 6, 18, 235, 160
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Erscheinung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&Telefonnummern vor dem Wählen anzeigen", 1142, 8, 10, 224, 10, WS_GROUP
+	AUTOCHECKBOX "Standorteinste&llungen vor dem Wählen anzeigen", 1139, 8, 27, 224, 10
+	AUTOCHECKBOX "Standortänderungen während dem &Wählen zulassen", 1140, 21, 43, 212, 10
+	AUTOCHECKBOX "Verbindungsforts&chritt während dem Wählen anzeigen", 1143, 8, 59, 224, 10
+	AUTOCHECKBOX "Beim Wählvorgang schlie&ssen", 1137, 8, 76, 224, 10
+	AUTOCHECKBOX "Telef&onbuchänderungen während dem Wählen zulassen", 1141, 8, 94, 224, 10
+	AUTOCHECKBOX "&Zum Erstellen neuer Einträge den Assistenten verwenden", 1144, 22, 111, 210, 10
+END
+
+158 DIALOG 6, 18, 235, 160
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Erscheinung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&Telefonnummern vor dem Wählen anzeigen", 1142, 8, 10, 223, 10, WS_GROUP
+	AUTOCHECKBOX "Standorteinste&llungen vor dem Wählen anzeigen", 1139, 8, 27, 206, 10
+	AUTOCHECKBOX "DFÜ-Netz&werk-Monitor vor dem Wählen starten", 1138, 8, 44, 226, 10
+	AUTOCHECKBOX "Verbindungsforts&chritt während dem Wählen anzeigen", 1143, 8, 61, 224, 10
+	AUTOCHECKBOX "Beim Wählvorgang schlie&ssen", 1137, 8, 79, 220, 10
+	AUTOCHECKBOX "&Zum Erstellen neuer Einträge den Assistenten verwenden", 1144, 8, 97, 220, 10
+	AUTOCHECKBOX "Vo&r automatischen Wählvorgang immer fragen", 1136, 8, 114, 220, 10
+END
+
+160 DIALOG 6, 18, 320, 145
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie einen Namen für diese Schnittstelle für Wählen bei Bedarf ein. Allgemeine Praxis ist, die Schnittstelle nach dem Netzwerk oder Router zu benennen, zu dem die Verbindung hergestellt wird.", 1158, 7, 5, 309, 29
+	LTEXT "&Schnittstellenname:", 1159, 17, 41, 285, 8, NOT WS_GROUP
+	EDITTEXT 1157, 17, 53, 284, 12, ES_AUTOHSCROLL
+	AUTOCHECKBOX "&Ich benötige keine weiteren Informationen über Schnittstellen für Wählen bei Bedarf und möchte die Eigenschaften selbst direkt bearbeiten", 1156, 24, 100, 258, 31, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+END
+
+162 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Sicherheit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Sicherhetseinstellungen", 1580, 8, 3, 215, 139
+	AUTORADIOBUTTON "&Typisch (Empfohlen)", 1540, 14, 16, 201, 9, BS_NOTIFY | WS_GROUP
+	AUTORADIOBUTTON "E&rweitert (Benutzerdefiniert)", 1541, 14, 102, 198, 8, BS_NOTIFY
+	LTEXT "&Identität folgendermaßen bestätigen:", 1537, 26, 29, 187, 8, NOT WS_GROUP
+	COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "&Automatisch eigenen ReactOS-Anmeldenamen und Kennwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 58, 184, 20, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Daten&verschlüsselung ist zwingend erforderlich", 1169, 26, 82, 183, 10, BS_TOP | BS_MULTILINE
+	LTEXT "Diese Einstellungen erfordern Kenntnisse über Sicherheitsprotokolle.", 1539, 15, 114, 134, 20
+	PUSHBUTTON "&Einstellungen...", 1180, 151, 115, 60, 14
+	GROUPBOX "Interaktive Anmeldung und Skripting", 1177, 8, 146, 215, 62, WS_GROUP
+	AUTOCHECKBOX "Terminal&fenster anzeigen", 1173, 14, 159, 198, 11, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Skript starten:", 1172, 14, 172, 57, 10, BS_TOP | BS_MULTILINE
+	COMBOBOX 1179, 72, 171, 140, 104, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Bea&rbeiten...", 1182, 87, 187, 60, 14
+	PUSHBUTTON "&Durchsuchen...", 1181, 151, 187, 60, 14
+END
+
+163 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Sie haben mehr als ein DFÜ-Gerät am Computer angeschlossen.", -1, 6, 3, 307, 13
+	LTEXT "Wählen Sie die &Geräte, die für diese Verbindung verwendet werden sollen:", -1, 6, 15, 307, 11
+	CONTROL "", 1228, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 7, 28, 304, 77
+END
+
+165 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Netzwerk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Typ des anzurufenden Einwählservers:", 1583, 7, 4, 219, 8
+	COMBOBOX 1418, 7, 17, 215, 46, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "&Einstellungen", 1419, 160, 35, 60, 14
+	LTEXT "Diese &Verbindung verwendet folgende Elemente:", 1684, 8, 64, 219, 10
+	CONTROL "", 1251, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C40D, 7, 75, 216, 53
+	PUSHBUTTON "I&nstallieren...", 1252, 7, 133, 67, 14
+	PUSHBUTTON "&Deinstallieren", 1254, 80, 133, 67, 14
+	PUSHBUTTON "E&igenschaften", 1253, 153, 133, 67, 14
+	GROUPBOX "Beschreibung", 1585, 9, 158, 213, 43
+	LTEXT "", 1250, 18, 167, 195, 25
+END
+
+166 DIALOG 6, 18, 320, 145
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie die IP-Adresse eines DNS- oder WINS- Servers im Remotenetzwerk an. Behalten Sie 0.0.0.0 bei, wenn der Remoterouter die Adressen zur Verfügung stellt oder wenn Sie sich der Adressen nicht sicher sind.", 1275, 7, 2, 311, 25
+	LTEXT "&DNS Server:", 1274, 7, 29, 160, 8, NOT WS_GROUP
+	CONTROL "", 1272, "RASIPADDRESS", WS_TABSTOP, 21, 41, 85, 12
+	LTEXT "&WINS Server:", 1276, 7, 65, 166, 8, NOT WS_GROUP
+	CONTROL "", 1273, "RASIPADDRESS", WS_TABSTOP, 21, 77, 85, 12
+END
+
+167 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Optionen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Wähloptionen", 1289, 7, 2, 213, 64
+	AUTOCHECKBOX "&Fortschritt während des Wählens anzeigen", 1284, 16, 14, 201, 10
+	AUTOCHECKBOX "Na&me, Kennwort, Zertifikat usw. abfragen", 1554, 16, 27, 201, 10
+	AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 39, 201, 10
+	AUTOCHECKBOX "&Telefonnummer abfragen", 1285, 16, 52, 200, 10, BS_TOP | BS_MULTILINE
+	GROUPBOX "Wahlwiederholungsoptionen", 1290, 6, 72, 213, 79
+	LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 16, 87, 123, 8
+	EDITTEXT 1287, 141, 84, 69, 14, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "&Zeit zwischen Wahlwiederholungen:", 1301, 16, 103, 123, 8
+	COMBOBOX 1292, 141, 101, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Leerlaufzeit, nach der aufgelegt wird:", 1299, 16, 120, 123, 8
+	COMBOBOX 1291, 141, 116, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "Wählvorgang wiederholen, falls &Verbindung getrennt wurde", 1286, 16, 136, 199, 10, BS_TOP | BS_MULTILINE
+	GROUPBOX "Mehrere Geräte", 1288, 7, 156, 213, 32
+	COMBOBOX 1551, 16, 169, 128, 45, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "&Konfigurieren...", 1293, 150, 168, 60, 14
+	PUSHBUTTON "&X.25", 1295, 7, 194, 50, 14
+	PUSHBUTTON "Virtuelle &Tunnel-Verbindung", 1294, 62, 194, 120, 14, NOT WS_VISIBLE | WS_DISABLED
+END
+
+168 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Telefonnummer unten eingeben. ", -1, 7, 4, 306, 14
+	LTEXT "&Telefonnummer:", 1308, 7, 19, 130, 8
+	EDITTEXT 1304, 7, 30, 304, 14, ES_AUTOHSCROLL
+	LTEXT "Sie müssen eventuell eine 1 bzw. eine Vorwahl oder beides einbeziehen. Wählen Sie die Telefonnummer auf Ihrem Telefon, wenn Sie sich nicht sicher sind, ob diese zusätzlichen Nummern erforderlich sind. Die gewählte Nummer ist korrekt, wenn Sie bei dem Telefonanruf einen Modemton hören.", -1, 20, 50, 291, 53
+END
+
+169 DIALOG 6, 18, 235, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Telefonbuch"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Dieses Telefonbuch verwenden:", 1326, 8, 8, 222, 8
+	AUTORADIOBUTTON "Das &Systemtelefonbuch", 1325, 14, 22, 216, 10, WS_GROUP
+	AUTORADIOBUTTON "Das &persönliche Telefonbuch", 1324, 14, 34, 216, 10
+	AUTORADIOBUTTON "Dieses &alternative Telefonbuch:", 1323, 14, 46, 217, 10
+	COMBOBOX 1321, 26, 61, 201, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
+	PUSHBUTTON "&Durchsuchen...", 1322, 167, 81, 60, 14
+END
+
+170 DIALOG 6, 18, 235, 135
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Telefonbuch"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Dieses Telefonbuch verwenden:", 1326, 8, 8, 223, 8
+	AUTORADIOBUTTON "Das &Systemtelefonbuch", 1325, 14, 22, 217, 10, WS_GROUP
+	AUTORADIOBUTTON "Dieses &alternative Telefonbuch:", 1323, 14, 36, 216, 10
+	COMBOBOX 1321, 26, 51, 203, 77, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_GROUP | NOT WS_TABSTOP
+	PUSHBUTTON "&Durchsuchen...", 1322, 169, 69, 60, 14
+END
+
+171 DIALOG 6, 18, 317, 144
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie die IP-Adresse des Routers im Remotenetzwerk an, oder setzen Sie sie auf 0.0.0.0., wenn der Server die Adresse zur Verfügung stellt. Der Administrator des Remotenetzwerks gibt gewöhnlich Anweisungen für die Eingabe.", 1331, 5, 4, 308, 35
+	LTEXT "Meine &IP Adresse:", 1332, 4, 51, 100, 8, NOT WS_GROUP
+	CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
+	LTEXT "Anmerkung: Wenn Sie einen Adapter installiert haben, sollten Sie NICHT die gleiche Adresse wie der Adapter wählen.", 1333, 5, 94, 306, 36, NOT WS_GROUP
+END
+
+172 DIALOG 6, 18, 317, 144
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Bei einigen DFÜ-Servern oder Routern ist nach der Verbindungsherstellung eine interaktive Anmeldung erforderlich. Sie können ein Skript automatisch ausführen, das das Antworten für Sie übernimmt.", 1339, 5, 3, 309, 27
+	AUTOCHECKBOX "&Terminal Fenster anzeigen", 1462, 15, 31, 162, 10
+	AUTOCHECKBOX "&Skript starten:", 1463, 15, 45, 58, 10
+	COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Bea&rbeiten...", 1335, 180, 77, 60, 14
+	PUSHBUTTON "&Durchsuchen...", 1465, 244, 77, 60, 14
+END
+
+173 DIALOGEX 6, 18, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Wählen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Wählrichtlinien", 1344, 9, 4, 213, 53, WS_GROUP
+	LTEXT "&Anzahl der Wahlwiederholungen", 1349, 16, 22, 140, 8, NOT WS_GROUP
+	EDITTEXT 1340, 158, 19, 56, 14, ES_AUTOHSCROLL
+	LTEXT "&Sekunden zwischen Wahlwiederholungen:", 1351, 16, 38, 140, 8, NOT WS_GROUP
+	EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
+	GROUPBOX "Verbindungstyp", 1343, 9, 63, 213, 56, WS_GROUP
+	LTEXT "&Leerlaufzeit, nach der aufgelegt wird:", 1350, 28, 88, 124, 8, NOT WS_GROUP
+	AUTORADIOBUTTON "&Wählverbindung beantragen", 1347, 16, 78, 135, 10, WS_GROUP
+	AUTORADIOBUTTON "&Persistente Verbindung", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
+	EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Rückruf...", 1345, 150, 125, 70, 14, WS_GROUP
+	PUSHBUTTON "&Mehrere Verbindungen...", 1346, 59, 125, 85, 14
+END
+
+174 DIALOG 0, 0, 215, 226
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Router"
+FONT 8, "MS Shell Dlg"
+BEGIN
+ CTEXT "NYI...need spec from KCrocker", -1, 57, 86, 106, 28
+END
+
+175 DIALOG 6, 18, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Fertigstellen des Assistenten", 1352, 122, 5, 192, 32
+	LTEXT "Um diese Schnittstelle zu erstellen und aktivieren, klicken Sie auf Fertig.", 1354, 122, 41, 192, 26, NOT WS_GROUP
+	LTEXT "Öffnen Sie das RAS-Snap-In, klicken Sie auf Netzwerkschnittstellen, markieren Sie die Schnittstelle und klicken Sie anschließend Sie auf Eigenschaften, um die Schnittstelle zu bearbeiten.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+END
+
+179 DIALOG 6, 18, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Wählen Sie das &Modem oder den Adapter, das diese Schnittstelle verwendet.", 1356, 7, 4, 306, 11
+	CONTROL "", 1355, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 6, 15, 305, 80
+	LTEXT "Die Liste zeigt Geräte die für Routing ausgelegt sind.", 1357, 15, 98, 288, 37, NOT WS_GROUP
+END
+
+180 DIALOG 6, 18, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie die Rufnummer des DFÜ-Servers oder Routers an. Alternative Telefonnummern werden automatisch gewählt, wenn die erste Telefonnummer nicht erreicht wurde.", 1360, 7, 4, 305, 42
+	LTEXT "&Telefonnummer oder Adresse:", 1361, 7, 50, 275, 8, NOT WS_GROUP
+	EDITTEXT 1358, 7, 62, 304, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "Alternativen...", 1359, 250, 80, 60, 14
+END
+
+181 DIALOG 6, 18, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
+CAPTION "Sicherheit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Richtlinien für die Authentifizierung und Verschlüsselung", 1367, 6, 8, 216, 103, WS_GROUP
+	AUTORADIOBUTTON "&Beliebige Authentifizierung einschl. Klartext akzeptieren", 1370, 16, 20, 195, 10, BS_TOP | BS_MULTILINE
+	AUTORADIOBUTTON "Nur &verschlüsselte Authentifizierung akzeptieren", 1373, 16, 36, 195, 10, BS_TOP | BS_MULTILINE
+	AUTORADIOBUTTON "Nur &MS-verschlüsselte Authentifizierung akzeptieren", 1374, 16, 52, 195, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Datenverschlüsselung benötigt", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Starke Datenverschlüsselung benötigt", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Beidseitige &Authentifizierung verwenden", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "&Kennwort nicht speichern", 1369, 54, 117, 85, 14, WS_GROUP
+	PUSHBUTTON "&Erweitert...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
+	AUTOCHECKBOX "Datei- &und Druckerfreigaben vor dem Wählen erkennen", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+END
+
+182 DIALOG 6, 18, 248, 148
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Sicherheit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Richtlinien für die Authentifizierung und Verschlüsselung", 1367, 7, 8, 200, 98, WS_GROUP
+	AUTORADIOBUTTON "&Beliebige Authentifizierung einschl. Klartext akzeptieren", 1370, 14, 24, 185, 10
+	AUTORADIOBUTTON "Nur &verschlüsselte Authentifizierung akzeptieren", 1373, 14, 39, 183, 10
+	AUTORADIOBUTTON "Nur &MS-verschlüsselte Authentifizierung akzeptieren", 1374, 14, 53, 184, 10
+	AUTOCHECKBOX "&Datenverschlüsselung benötigt", 1363, 33, 67, 165, 10, WS_GROUP
+	AUTOCHECKBOX "&Starke Datenverschlüsselung benötigt", 1364, 48, 79, 152, 10
+	AUTOCHECKBOX "&Aktuellen Benutzernamen und Kennwort nutzen", 1366, 31, 91, 165, 10
+	PUSHBUTTON "&Kennwort nicht speichern", 1369, 6, 114, 100, 14, WS_GROUP
+	PUSHBUTTON "&Erweitert...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
+	AUTOCHECKBOX "Datei- &und Druckerfreigaben vor dem Wählen erkennen", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
+END
+
+183 DIALOG 6, 18, 317, 144
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Die zutreffenden Kontrollkästchen aktivieren:", 1388, 7, 4, 296, 9
+	AUTOCHECKBOX "Routing von &IP-Paketen auf dieser Schnittstelle.", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Routing von IP&X-Paketen auf dieser Schnittstelle.", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Benutzerkonto hinzufügen, über das sich ein Remoterouter einwählen kann.", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Klartextkennwort senden, wenn Verbindung nur darüber hergestellt werden kann.", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Skripting verwenden, um die Verbindung mit dem Remoterouter herzustellen.", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
+END
+
+184 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+186 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Eine Verbindung, die nur für die eigene Verwendung erstellt wird, wird in Ihrem Benutzerprofil gespeichert und steht nur zur Verfügung, wenn Sie angemeldet sind.", -1, 7, 4, 306, 23
+	LTEXT "Verbindung erstellen für:", -1, 14, 27, 288, 12
+	AUTORADIOBUTTON "&Für alle Benutzer", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Eigene Verwendung", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+498 DIALOG 12, 16, 215, 126
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Kennwort herstellen. Geben Sie den Benutzernamen und das Kennwort erneut ein.", 1396, 7, 6, 206, 36
+	LTEXT "&Benutzername:", 1399, 8, 51, 49, 8
+	EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1397, 8, 70, 49, 8, NOT WS_GROUP
+	EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	AUTOCHECKBOX "Passwort &speichern", 1391, 66, 84, 143, 10
+	CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
+	DEFPUSHBUTTON "OK", 1, 81, 104, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 145, 104, 60, 14
+END
+
+500 DIALOG 12, 16, 215, 173
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS konnte keine Verbindung unter dem angegebenen Benutzernamen und Kennwort herstellen. Geben Sie den Benutzernamen und das Kennwort erneut ein.", 1396, 7, 6, 209, 26
+	LTEXT "&Benutzername:", 1399, 7, 72, 49, 8
+	EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1397, 7, 90, 45, 8, NOT WS_GROUP
+	EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "&Domäne:", 1395, 7, 108, 53, 8, NOT WS_GROUP
+	EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	AUTOCHECKBOX "Benutzername und Passwort &speichern", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+	DEFPUSHBUTTON "OK", 1, 87, 146, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 151, 146, 60, 14
+	CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
+	LTEXT "Sie können einen Domänennamen eingeben oder das Domänenfeld leer lassen. Domänennamen sind für Verbindungen mit dem Internet nicht erforderlich.", -1, 8, 38, 209, 26
+END
+
+502 DIALOG 20, 60, 215, 73
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "PPP Einstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&LCP Erweiterungen aktivieren", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Software Kompression aktivieren", 1424, 9, 22, 201, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Mehrfachverbindungen für Einzelverbindungen aushandeln", 1557, 9, 37, 202, 10, BS_TOP | BS_MULTILINE
+	DEFPUSHBUTTON "OK", 1, 82, 53, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 148, 53, 60, 14
+END
+
+509 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Wählen Sie die Rolle für diesen Computer:", -1, 10, 5, 275, 9
+	AUTORADIOBUTTON "&Host", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Gast", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
+	LTEXT "Auf diesem Computer befinden sich die Informationen, auf die Sie zugreifen möchten.", -1, 45, 31, 270, 13, NOT WS_GROUP | WS_TABSTOP
+	LTEXT "Dieser Computer wird verwendet, um auf Informationen auf dem Hostcomputer zuzugreifen.", -1, 43, 56, 270, 23, NOT WS_GROUP
+END
+
+511 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Wählen Sie ein Gerät:", -1, 8, 5, 261, 8
+	COMBOBOX 1485, 9, 18, 302, 62, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+528 DIALOG 0, 0, 227, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Anmelderechte", 1582, 8, 10, 213, 63
+	LTEXT "Nicht-Administratoren dürfen vor der Anmeldung keine Verbindungen erstellen oder ändern.", 1581, 16, 21, 194, 30
+	AUTOCHECKBOX "Verbindungen &erstellen/ändern beim Anmelden zulassen", 1497, 16, 56, 195, 10, BS_TOP | BS_MULTILINE
+END
+
+532 DIALOGEX 0, 0, 263, 263
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Router Rückruf"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Ein Router kann beim Einwählen die Möglichkeit des Rückrufs anbieten, um Telefonkosten zu reduzieren und gleichzeitig die Sicherheit zu erhöhen. Geben Sie an, ob Sie die Rückrufoption verwenden möchten.", 1043, 7, 5, 253, 24
+	AUTORADIOBUTTON "&Kein Rückruf", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Immer die unten angegebenen Nummern für den Rückruf verwenden:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
+	CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
+	PUSHBUTTON "&Bearbeiten...", 1504, 131, 213, 60, 14
+	PUSHBUTTON "&Löschen", 1505, 194, 213, 60, 14
+	CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+	DEFPUSHBUTTON "OK", 1, 132, 242, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 196, 242, 60, 14
+END
+
+534 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Optionen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Verbindungstyp", 1289, 7, 7, 215, 55
+	AUTORADIOBUTTON "&Wählen bei Bedarf", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	LTEXT "&Leerlaufzeit, nach der aufgelegt wird:", 1299, 27, 33, 116, 8, NOT WS_GROUP
+	COMBOBOX 1291, 144, 30, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Persistente Verbindung", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	GROUPBOX "Wählrichtlinie", 1290, 7, 66, 215, 48
+	LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 14, 79, 123, 8
+	EDITTEXT 1287, 143, 76, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "&Zeit zwischen den Wahlwiederholungen:", 1301, 14, 96, 129, 8
+	COMBOBOX 1292, 143, 94, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	GROUPBOX "Mehrere Geräte", 1288, 7, 116, 215, 35
+	COMBOBOX 1551, 16, 130, 128, 41, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "K&onfigurieren...", 1293, 150, 129, 65, 14
+	PUSHBUTTON "&Rückruf", 1302, 8, 195, 60, 14
+	PUSHBUTTON "&X.25", 1295, 73, 195, 50, 14
+END
+
+539 DIALOG 0, 0, 265, 110
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 14, 64, 84, 8
+	EDITTEXT 1104, 102, 62, 154, 14, ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 82, 247, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 89, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 71, 89, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 133, 89, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 195, 89, 60, 14
+END
+
+540 DIALOG 0, 0, 265, 133
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 64, 90, 8
+	EDITTEXT 1104, 105, 60, 154, 14, ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 80, 252, 1
+	LTEXT "Wä&hlen:", 1412, 10, 91, 92, 10
+	COMBOBOX 1416, 105, 88, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 107, 251, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 113, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 71, 113, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 134, 113, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 197, 113, 60, 14
+END
+
+541 DIALOG 0, 0, 265, 157
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 12, 67, 87, 8
+	EDITTEXT 1104, 103, 63, 154, 14, ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 9, 84, 248, 1
+	LTEXT "Wä&hlen:", 1412, 10, 96, 48, 8
+	COMBOBOX 1416, 103, 92, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Wählen &von:", 1415, 10, 114, 46, 8
+	COMBOBOX 1414, 102, 110, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Wähl&regeln", 1108, 193, 110, 64, 14
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 7, 130, 250, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 6, 136, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 69, 136, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 132, 136, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 196, 136, 60, 14
+END
+
+544 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Durch Internetverbindungsfreigabe können andere Computer des lokalen Netzwerks auf externe Ressourcen über diese Verbindung zugreifen.", -1, 10, 5, 300, 22
+	AUTOCHECKBOX "&Internetverbindungsfreigabe für diese Verbindung aktivieren", 1512, 21, 31, 272, 10
+	LTEXT "Aktivieren Sie das folgende Kontrollkästchen, um die Verbindung automatisch herzustellen, wenn ein Computer des lokalen Netzwerks versucht auf eine externe Ressource zuzugreifen.", 1514, 10, 56, 294, 22
+	AUTOCHECKBOX "Wählen bei Bedarf &aktivieren", 1513, 21, 86, 260, 10
+END
+
+545 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Durch gemeinsamen Zugriff können andere Computer des lokalen Netzwerks auf externe Ressourcen über diese DFÜ-Verbindung zugreifen. Sie können gemeinsamen Zugriff für eine Verbindung und ein lokales Netzwerk gleichzeitig aktivieren.", -1, 10, 5, 300, 25
+	LTEXT "Wählen Sie das &lokale Netzwerk, das über diese Verbindung auf Ressourcen zugreift:", -1, 21, 35, 285, 8
+	COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+546 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Sie können diese Verbindung so konfigurieren, dass die eigene Smartcard für die Anmeldung an das Remotenetzwerk verwendet wird. Wählen Sie, ob die Smartcard verwendet werden soll.", -1, 10, 5, 303, 22
+	AUTORADIOBUTTON "&Eigene Smartcard verwenden ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Eigene Smartcard &nicht verwenden ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+547 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Assistent für Schnittstelle für Wählen bei Bedarf"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Willkommen zum Assistenten.", 1530, 122, 8, 192, 32
+	LTEXT "Mit diesem Assistenten können Sie eine Schnittstelle für Wählen bei Bedarf erstellen, um eine Verbindung von diesem Router zu anderen Routern herzustellen.", 1531, 122, 43, 192, 37
+	LTEXT "Klicken Sie auf Weiter um den Vorgang fortzusetzen.", 1532, 122, 85, 191, 29
+END
+
+548 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTORADIOBUTTON "Verbindung über ein &Modem, einen ISDN-Adapter oder ein anderes physikalisches Gerät herstellen", 1531, 21, 17, 290, 19, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Verbindung über ein &virtuelles privates Netzwerk (VPN) herstellen", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Verbindung über &PPP-over-Ethernet (PPPoE) herstellen", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
+END
+
+550 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie den Namen oder die IP-Adresse des Routers ein, zu dem eine Verbindung hergestellt werden soll.", 1535, 10, 8, 289, 18
+	LTEXT "&Hostname oder IP-Adresse (wie z.B. reactos.org oder 145.52.0.1):", 1537, 21, 35, 285, 8
+	EDITTEXT 1536, 21, 47, 285, 14, ES_AUTOHSCROLL
+END
+
+551 DIALOG 0, 0, 265, 127
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 12, 62, 89, 8
+	EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+	LTEXT "Do&mäne:", 1110, 12, 82, 90, 8
+	EDITTEXT 1102, 104, 79, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 99, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 9, 106, 61, 14
+	PUSHBUTTON "Abbrechen", 1591, 72, 106, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 135, 106, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 106, 60, 14
+END
+
+552 DIALOG 0, 0, 265, 159
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 67, 91, 10
+	EDITTEXT 1104, 104, 64, 154, 14, ES_AUTOHSCROLL
+	LTEXT "Do&mäne", 1110, 11, 86, 91, 8
+	EDITTEXT 1102, 104, 83, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 103, 248, 1
+	LTEXT "Wä&hlen:", 1412, 10, 115, 91, 8
+	COMBOBOX 1416, 104, 111, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 132, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 139, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 71, 139, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 134, 139, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 139, 60, 14
+END
+
+553 DIALOG 0, 0, 265, 183
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 68, 92, 10
+	EDITTEXT 1104, 104, 65, 154, 14, ES_AUTOHSCROLL
+	LTEXT "Do&mäne:", 1110, 10, 90, 91, 8
+	EDITTEXT 1102, 104, 86, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 106, 248, 1
+	LTEXT "Wä&hlen:", 1412, 10, 118, 92, 8
+	COMBOBOX 1416, 104, 114, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Wählen &von:", 1415, 10, 137, 91, 8
+	COMBOBOX 1414, 104, 134, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Wähl&regeln", 1108, 194, 134, 65, 14
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 154, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 162, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 71, 162, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 134, 162, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 162, 60, 14
+END
+
+554 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Verbindung herstellen über:", 1124, 7, 4, 193, 8
+	CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 195, 44, WS_EX_CLIENTEDGE
+	PUSHBUTTON "&Hoch", 1132, 208, 18, 16, 14, BS_ICON
+	PUSHBUTTON "&Runter", 1131, 208, 36, 16, 14, BS_ICON
+	AUTOCHECKBOX "Alle &Geräte wählen dieselbe Nummer", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "K&onfigurieren...", 1130, 140, 66, 60, 14
+	GROUPBOX "Beispiel", 1125, 7, 87, 213, 56, WS_GROUP
+	LTEXT "&Telefonnummer:", 1135, 19, 102, 191, 8
+	EDITTEXT 1123, 17, 112, 138, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "Alter&nativ", 1129, 161, 112, 50, 14
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 11, 194, 212, 20, BS_TOP | BS_MULTILINE
+END
+
+555 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	PUSHBUTTON "K&onfigurieren...", 1130, 160, 38, 60, 14
+	LTEXT "&Telefonnummer:", 1135, 8, 72, 194, 8
+	EDITTEXT 1123, 8, 83, 148, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "Alter&nativ", 1129, 160, 83, 60, 14
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 11, 194, 213, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&Verbindung herstellen über:", 1124, 8, 5, 214, 8
+	CONTROL "", 1127, "SYSLISTVIEW32", WS_DISABLED | WS_BORDER | 0x0000EC0D, 7, 18, 214, 15
+END
+
+556 DIALOG 0, 0, 220, 165
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Programmeinstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Beschreibung des im Netzwerk ausgeführten Programms:", -1, 7, 5, 203, 8
+	EDITTEXT 1565, 7, 17, 206, 14, ES_AUTOHSCROLL
+	LTEXT "&Portnummer des Internetservers:", -1, 7, 35, 202, 8
+	EDITTEXT 1566, 7, 47, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
+	AUTORADIOBUTTON "&TCP", 1548, 128, 49, 30, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&UDP", 1567, 166, 49, 31, 10, NOT WS_TABSTOP
+	LTEXT "&Internetserverantworten auf folgenden Ports bzw. Portbereichen abhören: (z. B.: 1024-1209, 1300-1310, 1450)", -1, 7, 70, 207, 22
+	LTEXT "T&CP:", -1, 7, 100, 28, 8
+	EDITTEXT 1569, 50, 97, 162, 14, ES_AUTOHSCROLL
+	LTEXT "UD&P:", -1, 7, 121, 30, 8
+	EDITTEXT 1551, 51, 117, 162, 14, ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 90, 144, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 154, 144, 60, 14
+END
+
+557 DIALOG 0, 0, 217, 164
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Diensteinstellugen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Beschreibung des Dienstes", -1, 7, 5, 203, 8
+	EDITTEXT 1552, 7, 18, 205, 14, ES_AUTOHSCROLL
+	LTEXT "&Name oder IP-Adresse (z. B. 192.168.0.12) des Hostcomputers für diesen Dienst im Netzwerk:", -1, 7, 37, 208, 16
+	EDITTEXT 1556, 7, 57, 203, 14, ES_AUTOHSCROLL
+	LTEXT "&Portnummer des Dienstes:", -1, 7, 85, 203, 8
+	EDITTEXT 1553, 7, 97, 113, 14, ES_AUTOHSCROLL | ES_NUMBER
+	AUTORADIOBUTTON "&TCP", 1554, 128, 99, 30, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&UDP", 1555, 166, 99, 31, 10, NOT WS_TABSTOP
+	DEFPUSHBUTTON "OK", 1, 86, 143, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 150, 143, 60, 14
+END
+
+558 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Programme"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Die Internetverbindung wurde auf diesem Computer so angepasst, dass die folgenden Programme korrekt über das Netzwerk ausgeführt werden können:", -1, 7, 7, 218, 28
+	CONTROL "List1", 1558, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
+	PUSHBUTTON "&Hinzufügen...", 1538, 7, 197, 67, 14
+	PUSHBUTTON "Be&arbeiten...", 1559, 80, 197, 67, 14
+	PUSHBUTTON "&Löschen", 1568, 153, 197, 67, 14
+END
+
+559 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Dienste"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Wählen Sie die Dienste aus, die im Netzwerk ausgeführt werden und auf die Internetbenutzer zugreifen können.", -1, 7, 5, 216, 22
+	LTEXT "Dienste:", -1, 7, 27, 143, 8
+	CONTROL "List1", 1560, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000441D, 7, 37, 215, 155, WS_EX_CLIENTEDGE
+	PUSHBUTTON "&Hinzufügen...", 1561, 7, 197, 67, 14
+	PUSHBUTTON "Be&arbeiten...", 1563, 80, 197, 67, 14
+	PUSHBUTTON "&Löschen", 1562, 153, 197, 67, 14
+END
+
+560 DIALOG 6, 18, 240, 88
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Ursprüngliche Verbindung"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "&Ja", 6, 68, 68, 50, 14
+	PUSHBUTTON "&Nein", 7, 125, 68, 50, 14
+	ICON 32516, 1575, 7, 7, 20, 20
+	LTEXT "", 1576, 40, 7, 190, 33
+	AUTOCHECKBOX "&Diese Erinnerung nicht mehr anzeigen", 1579, 40, 48, 192, 11, BS_TOP | BS_MULTILINE
+END
+
+567 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie einen Dienstnamen ein, wenn Sie diesen von Ihrem Internetdienstanbieter erhalten haben. Andernfalls wird der Breitbanddienst beim Herstellen einer Verbindung automatisch von ReactOS gesucht und konfiguriert.", -1, 10, 7, 301, 25
+	LTEXT "&Dienstname (Optional):", -1, 22, 32, 229, 8
+	EDITTEXT 1593, 22, 44, 275, 14, ES_AUTOHSCROLL
+END
+
+568 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Dienstname:", 1686, 7, 5, 217, 10
+	EDITTEXT 1594, 7, 17, 217, 14, ES_AUTOHSCROLL
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 9, 196, 215, 8
+END
+
+569 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Sicherheit"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Sicherheitsoptionen", 1580, 8, 4, 213, 151
+	AUTORADIOBUTTON "&Typisch (empfohlene Einstellungen)", 1540, 14, 16, 197, 9, BS_NOTIFY | WS_GROUP
+	AUTORADIOBUTTON "Er&weitert (Benutzerdefinierte Einstellungen)", 1541, 14, 100, 197, 8, BS_NOTIFY
+	LTEXT "&Identität folgendermaßen bestätigen:", 1537, 26, 29, 183, 8, NOT WS_GROUP
+	COMBOBOX 1178, 26, 40, 184, 78, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "&Automatisch eigenen ReactOS-Anmeldenamen und Kennwort (und Domäne, falls vorhanden) verwenden", 1174, 26, 59, 182, 20, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Daten&verschlüsselung ist zwingend erforderlich", 1169, 26, 83, 182, 10, BS_TOP | BS_MULTILINE
+	LTEXT "Diese Einstellungen erfordern Kenntnisse über Sicherheitsprotokolle.", 1539, 26, 111, 136, 20
+	PUSHBUTTON "&Einstellungen...", 1180, 151, 134, 60, 14
+	PUSHBUTTON "I&PSec Einstellungen...", 1598, 126, 163, 85, 14
+END
+
+570 DIALOG 0, 0, 265, 126
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "IPSec Einstellungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	DEFPUSHBUTTON "OK", 1, 151, 104, 50, 14
+	PUSHBUTTON "Abbrechen", 2, 207, 104, 50, 14
+	AUTOCHECKBOX "&Vorinstallierten Schlüssel für Authentifizierung verwenden", 1604, 21, 15, 217, 10
+	LTEXT "&Schlüssel:", 1602, 20, 31, 44, 12
+	EDITTEXT 1605, 66, 30, 172, 12, ES_AUTOHSCROLL
+	AUTOCHECKBOX "Zertifikate des eigenen Speichers zusätzlich zu Computerzertifikaten zulassen", 1606, 20, 50, 242, 13, WS_DISABLED
+	AUTOCHECKBOX "Spezifisches Zertifikat verwenden", 1607, 20, 67, 239, 10, WS_DISABLED
+	PUSHBUTTON "Wählen", 1608, 31, 84, 50, 14, WS_DISABLED
+	COMBOBOX 1610, 91, 84, 135, 30, CBS_DROPDOWN | CBS_SORT | WS_DISABLED | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+571 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Sicherheitslogging"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Logging Optionen:", -1, 6, 8, 216, 47
+	AUTOCHECKBOX "&Fehlgeschlagene eingeh. Verbindungsversuche loggen", 1642, 14, 22, 201, 10
+	AUTOCHECKBOX "&Erfolgreiche eingehende Verbindungsversuche loggen", 1641, 14, 37, 200, 10
+	GROUPBOX "Logdatei Optionen:", -1, 7, 64, 215, 91
+	LTEXT "&Name:", -1, 14, 78, 199, 8
+	EDITTEXT 1674, 14, 90, 199, 14, ES_READONLY
+	PUSHBUTTON "&Durchsuchen...", 1639, 153, 108, 60, 14
+	LTEXT "&Größenlimit:", -1, 14, 133, 67, 8
+	EDITTEXT 1640, 86, 130, 50, 14, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "KB", -1, 140, 133, 20, 8
+	PUSHBUTTON "&Wiederherstellen", 1643, 135, 197, 85, 14
+END
+
+572 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "ICMP"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Das &Internet Control Message-Protokoll (ICMP) ermöglicht Computern eines Netzwerks die gemeinsame Nutzung von Fehler- und Statusinformationen. Wählen Sie Informationsanfragen aus dem Internet, auf die dieser Computer antworten soll:", -1, 7, 5, 215, 37
+	CONTROL "IList1", 1644, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 45, 215, 100, WS_EX_CLIENTEDGE
+	GROUPBOX "Beschreibung:", -1, 7, 153, 215, 55
+	LTEXT "", 1645, 14, 171, 199, 32
+END
+
+574 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Erweitert"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "", 575, 7, 60, 213, 100
+END
+
+577 DIALOG 0, 0, 312, 144
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie den Namen des Internetdienstanbieters im folgenden Textfeld ein.", 1681, 10, 3, 296, 11
+	LTEXT "N&ame:", 1690, 18, 20, 127, 10
+	EDITTEXT 1680, 17, 32, 222, 14, ES_AUTOHSCROLL
+	LTEXT "Der hier eingegebene Name wird als Name für die zu erstellende Verbindung verwendet.", 1683, 17, 52, 282, 42
+END
+
+580 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTORADIOBUTTON "&Automatische Auswahl", 1534, 21, 20, 288, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Point to Point Tunneling Protokoll (PPTP)", 1532, 21, 39, 290, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Layer 2 Tunneling Protokoll (L2TP)", 1533, 21, 56, 286, 11, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+END
+
+1420 DIALOG 0, 0, 265, 108
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Wä&hlen:", 1412, 14, 63, 86, 8
+	COMBOBOX 1416, 104, 60, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 80, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 9, 87, 60, 14
+	PUSHBUTTON "Abbrechen", 1591, 72, 87, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 135, 87, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 87, 60, 14
+END
+
+1421 DIALOG 0, 0, 265, 223
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 61, 90, 8
+	EDITTEXT 1104, 104, 58, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 11, 81, 90, 8
+	EDITTEXT 1103, 104, 77, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 98, 248, 1
+	AUTOCHECKBOX "Benutzernamen und Kennwort &speichern für:", 1101, 14, 105, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für eigene Verwendung", 1622, 26, 119, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Benutzer dieses Computers", 1623, 26, 133, 225, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 149, 248, 1
+	LTEXT "Wä&hlen:", 1412, 14, 161, 87, 8
+	COMBOBOX 1416, 104, 157, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Wählen &von:", 1415, 14, 178, 88, 8
+	COMBOBOX 1414, 104, 175, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Wähl&regeln", 1108, 193, 175, 65, 14
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 196, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 9, 202, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 72, 202, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 135, 202, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 202, 60, 14
+END
+
+1422 DIALOG 0, 0, 265, 242
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Verbinden mit %1"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	CONTROL 1678, 1100, "STATIC", SS_BITMAP, 0, 0, 265, 50
+	LTEXT "Be&nutzername:", 1413, 10, 67, 91, 8
+	EDITTEXT 1104, 104, 63, 154, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1112, 10, 85, 92, 8
+	EDITTEXT 1103, 104, 82, 154, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "Do&mäne:", 1110, 10, 104, 92, 8
+	EDITTEXT 1102, 104, 101, 154, 14, ES_UPPERCASE | ES_AUTOHSCROLL
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN, 10, 121, 248, 1
+	AUTOCHECKBOX "Benutzernamen und Kennwort &speichern für:", 1101, 12, 127, 242, 13, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "N&ur für eigene Verwendung", 1622, 24, 141, 227, 11, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Alle Benutzer dieses Computers", 1623, 24, 155, 230, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 170, 248, 1
+	LTEXT "Wä&hlen:", 1412, 14, 182, 87, 8
+	COMBOBOX 1416, 104, 178, 154, 112, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Wählen &von:", 1415, 14, 198, 87, 8
+	COMBOBOX 1414, 104, 195, 87, 112, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	PUSHBUTTON "Wähl&regeln", 1108, 193, 195, 65, 14
+	CONTROL "", -1, "STATIC", SS_LEFTNOWORDWRAP | SS_SUNKEN | WS_GROUP, 10, 215, 248, 1
+	DEFPUSHBUTTON "&Wählen", 1590, 8, 221, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 1591, 71, 221, 60, 14
+	PUSHBUTTON "&Eigenschaften", 1107, 134, 221, 60, 14
+	PUSHBUTTON "&Hilfe", 1592, 198, 221, 60, 14
+END
+
+1425 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Hostname oder IP-Adresse des Ziels (wie z.B. reactos.org oder 145.52.0.1):", 1430, 7, 5, 217, 18
+	EDITTEXT 1427, 7, 25, 215, 14, ES_AUTOHSCROLL
+	GROUPBOX "Erste Verbindung", 1431, 9, 48, 213, 78
+	LTEXT "ReactOS kann zuerst Verbindungen zu öffentlichen Netzwerken, wie dem Internet, herstellen, bevor versucht wird, virtuelle Verbindungen aufzubauen.", 1432, 17, 63, 199, 24
+	AUTOCHECKBOX "&Andere Verbindung zuerst wählen:", 1428, 19, 89, 183, 10
+	COMBOBOX 1429, 29, 103, 182, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 10, 192, 213, 13
+END
+
+1426 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
+CAPTION "Optionen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Wähloptionen", 1289, 8, 7, 214, 56
+	AUTOCHECKBOX "&Fortschritt während des Wählens anzeigen", 1284, 16, 17, 199, 10
+	AUTOCHECKBOX "Na&me, Kennwort, Zertifikat usw. abfragen", 1554, 16, 32, 199, 10
+	AUTOCHECKBOX "&ReactOS-Anmeldedomäne einbeziehen", 1555, 16, 47, 178, 10
+	GROUPBOX "Wahlwiederholungsoptionen", 1290, 8, 68, 214, 89
+	LTEXT "&Anzahl der Wahlwiederholungen:", 1300, 16, 81, 121, 8
+	EDITTEXT 1287, 140, 77, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
+	LTEXT "&Zeit zwischen Wahlwiederholungen:", 1301, 16, 99, 121, 8
+	COMBOBOX 1292, 141, 95, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "&Leerlaufzeit, nach der aufgelegt wird:", 1299, 16, 117, 121, 8
+	COMBOBOX 1291, 141, 113, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "Wählvorgang wiederholen, falls &Verbindung getrennt wurde", 1286, 16, 138, 199, 10, BS_TOP | BS_MULTILINE
+END
+
+1427 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie den Hostnamen oder die IP-Adresse des Computers ein, zu dem eine Verbindung hergestellt werden soll.", -1, 10, 6, 275, 16
+	LTEXT "&Hostname oder IP-Adresse des Ziels (wie z.B. reactos.org oder 145.52.0.1):", -1, 21, 28, 277, 11
+	EDITTEXT 1433, 21, 42, 275, 14, ES_AUTOHSCROLL
+END
+
+1428 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "ReactOS kann eine Anfangsverbindung mit dem Internet oder einem anderen öffentlichen Netzwerk automatisch wählen, bevor die virtuelle Verbindung hergestellt wird.", -1, 10, 6, 275, 24
+	AUTORADIOBUTTON "&Keine Anfangsverbindung automatisch wählen", 1509, 32, 31, 271, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Automatisch diese Anfangsverbindung wählen:", 1510, 32, 45, 269, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	COMBOBOX 1435, 43, 62, 253, 87, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+END
+
+1436 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Gerät auswählen:", 1597, 8, 5, 213, 8
+	COMBOBOX 1437, 7, 17, 217, 166, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | NOT WS_TABSTOP
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 1120, 11, 195, 213, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "K&onfigurieren...", 1130, 160, 34, 60, 14
+END
+
+1448 DIALOG 10, 20, 265, 71
+STYLE DS_SETFONT | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Netzwerkverbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Netzwerkverbindung auswählen:", 1456, 7, 7, 251, 10
+	COMBOBOX 1457, 8, 18, 250, 140, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
+	DEFPUSHBUTTON "&Verbinden...", 1449, 7, 50, 60, 14
+	PUSHBUTTON "Abbrechen", 1455, 70, 50, 60, 14
+	PUSHBUTTON "&Neu...", 1459, 134, 50, 60, 14
+	PUSHBUTTON "&Eigenschften", 1460, 198, 50, 60, 14
+END
+
+1466 DIALOG 6, 18, 265, 262
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Beispieltext", 1469, 7, 7, 251, 8
+	EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Hinzufügen", 1471, 77, 36, 60, 14
+	PUSHBUTTON "&Ersetzen", 1472, 141, 36, 60, 14
+	LTEXT "Beispieltext", 1473, 7, 57, 193, 8
+ LISTBOX 1474, 7, 68, 193, 145, WS_VSCROLL | WS_TABSTOP
+	PUSHBUTTON "", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+	PUSHBUTTON "&Runter", 1476, 206, 86, 51, 14, BS_BITMAP
+	PUSHBUTTON "&Löschen", 1477, 141, 215, 60, 14
+	CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 196, 242, 60, 14
+END
+
+1467 DIALOG 6, 18, 263, 263
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Beispieltext", 1469, 7, 7, 197, 8
+	EDITTEXT 1470, 7, 17, 193, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Hinzufügen", 1471, 76, 36, 60, 14
+	PUSHBUTTON "&Ersetzen", 1472, 141, 36, 60, 14
+	LTEXT "Beispieltext", 1473, 7, 57, 193, 8
+ LISTBOX 1474, 7, 68, 193, 135, WS_VSCROLL | WS_TABSTOP
+	PUSHBUTTON "&Hoch", 1475, 206, 68, 51, 14, BS_BITMAP | WS_GROUP
+	PUSHBUTTON "&Runter", 1476, 206, 86, 51, 14, BS_BITMAP
+	PUSHBUTTON "&Löschen", 1477, 141, 204, 60, 14
+	AUTOCHECKBOX "Beispieltext", 1478, 7, 225, 249, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 196, 242, 60, 14
+END
+
+1468 DIALOG 6, 18, 263, 263
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Beispieltext", 1469, 7, 5, 249, 8
+	EDITTEXT 1470, 7, 17, 249, 14, ES_AUTOHSCROLL
+	PUSHBUTTON "&Hinzufügen", 1471, 132, 36, 60, 14
+	PUSHBUTTON "&Ersetzen", 1472, 196, 36, 60, 14
+	LTEXT "Beispieltext", 1473, 7, 55, 251, 8
+ LISTBOX 1474, 7, 68, 249, 140, LBS_STANDARD | WS_TABSTOP
+	PUSHBUTTON "&Löschen", 1477, 196, 214, 60, 14, WS_GROUP
+	CONTROL "", 1479, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
+	PUSHBUTTON "OK", 1, 132, 242, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 196, 242, 60, 14
+END
+
+1469 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTORADIOBUTTON "&In ein privates Netzwerk einwählen", 1488, 24, 9, 126, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Verbindung mit einem privaten Netz durch das Internet herstellen", 1489, 24, 34, 216, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Direkte Verbindung mit anderem Computer herstellen", 1490, 24, 59, 177, 10, NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Breitbandverbindung mit dem Netzwerk herstellen", 1491, 24, 83, 273, 10, NOT WS_TABSTOP
+	LTEXT "Verbindung über eine Telefonleitung (Modem oder ISDN) herstellen.", -1, 45, 21, 216, 8
+	LTEXT "VPN-Verbindung oder Tunnel durch das Internet (oder ein anderes Netz) herstellen.", -1, 45, 46, 266, 8
+	LTEXT "Verbindung über einen seriellen, parallelen oder einen Infrarotanschluss herstellen.", -1, 45, 71, 266, 8
+	LTEXT "Verbindung über eine Breitbandverbindung herstellen.", -1, 45, 95, 266, 8
+END
+
+1480 DIALOG 0, 0, 230, 61
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Telefonnummer Editor"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Bitte geben Sie eine neue Telefonnummer ein:", 1481, 7, 7, 218, 8
+	EDITTEXT 1482, 7, 17, 217, 15, ES_AUTOHSCROLL
+	DEFPUSHBUTTON "OK", 1, 99, 40, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 163, 40, 60, 14
+END
+
+1481 DIALOG 0, 0, 321, 157
+STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Assistent für neue Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Geben Sie einen Kontonamen und ein Kennwort für den Internetdienstanbieter ein. Schreiben Sie diese Informationen auf und verwahren Sie sie an einem sicheren Ort.", 1689, 10, 4, 308, 25
+	LTEXT "Be&nutzername:", 1636, 23, 35, 89, 15
+	EDITTEXT 1614, 115, 34, 190, 15, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", 1637, 23, 55, 90, 13
+	EDITTEXT 1615, 115, 54, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "Passwort &bestätigen:", 1638, 23, 74, 88, 13
+	EDITTEXT 1616, 115, 73, 190, 15, ES_PASSWORD | ES_AUTOHSCROLL
+	AUTOCHECKBOX "&Diesen Kontonamen und Kennwort für die Internetverbindung aller Benutzer dieses Computers verwenden", 1596, 23, 91, 291, 17, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Verbindung als Standardinternetverbindung verwenden", 1595, 23, 112, 288, 14
+	AUTOCHECKBOX "&Internetverbindungsfirewall für diese Verbindung aktivieren", 1682, 23, 133, 290, 14
+END
+
+1660 DIALOG 0, 0, 258, 78
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Internetverbindungs Firewall"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 32515, -1, 7, 7, 20, 20
+	LTEXT "Durch Deaktivieren des Internetverbindungsfirewalls wird der Computer eventuell nicht autorisierten Zugriffen aus dem Internet ausgesetzt. Soll der Firewall deaktiviert werden?", -1, 44, 5, 212, 24
+	AUTOCHECKBOX "&Diesen Dialog nicht mehr anzeigen", 1662, 42, 40, 210, 10
+	DEFPUSHBUTTON "&Ja", 6, 74, 60, 50, 14
+	PUSHBUTTON "&Nein", 7, 128, 60, 50, 14
+END
+
+7000 DIALOG 0, 0, 215, 103
+STYLE DS_SETFONT | DS_MODALFRAME | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Be&nutzername:", -1, 7, 8, 90, 12, SS_CENTERIMAGE
+	EDITTEXT 7001, 101, 7, 108, 14, ES_AUTOHSCROLL
+	LTEXT "&Voller Name:", -1, 7, 26, 90, 12
+	EDITTEXT 7002, 101, 25, 108, 14, ES_AUTOHSCROLL
+	LTEXT "&Passwort:", -1, 7, 44, 90, 12
+	EDITTEXT 7003, 101, 43, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	LTEXT "Passwort &bestätigen:", -1, 7, 62, 91, 12
+	EDITTEXT 7004, 101, 61, 108, 14, ES_PASSWORD | ES_AUTOHSCROLL
+	PUSHBUTTON "OK", 1, 84, 82, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 149, 82, 60, 14
+END
+
+7005 DIALOG 0, 0, 230, 215
+STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "Rückruf"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTORADIOBUTTON "&Rückruf nicht gestatten", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Anrufer gestatten, die Nummer für den Rückruf einzurichten", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Immer folgende Nummer für den Rückruf verwenden:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
+END
+
+7010 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "Allgemein"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Eingehende Verbindungen", -1, 7, 4, 214, 110, WS_GROUP
+	LTEXT "Eingehende Verbindungen für diese Geräte zulassen.", -1, 17, 17, 195, 8
+	LTEXT "&Geräte:", -1, 17, 29, 29, 8
+	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
+	AUTOCHECKBOX "&Mehrfachverbindungen aktivieren", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	PUSHBUTTON "&Eigenschaften", 7013, 145, 94, 65, 14, WS_GROUP
+	GROUPBOX "Virtuelles privates Netzwerk", -1, 6, 122, 214, 49, WS_GROUP
+	AUTOCHECKBOX "&Anderen den Zugriff auf diesen Rechner durch Tunneln des Internets oder eines anderen Netzwerks gestatten", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Symbol bei Verbindung im Infobereich der Taskleiste anzeigen", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+END
+
+7016 DIALOGEX 0, 0, 265, 190
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "TCP/IP Eigenschaften eingehender Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Netzwerkzugriff", -1, 6, 5, 252, 32
+	AUTOCHECKBOX "Anrufern den &Zugriff auf das lokale Netzwerk gestatten", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "TCP/IP-Adresszuweisung", -1, 6, 42, 250, 122
+	AUTORADIOBUTTON "TCP/IP-Adressen automatisch durch &DHCP zuweisen", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "TCP/I&P-Adressen", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&Von:", -1, 29, 88, 53, 8
+	CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
+	LTEXT "B&is:", -1, 29, 105, 53, 8
+	CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
+	LTEXT "Total:", -1, 29, 124, 53, 10
+	LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
+	AUTOCHECKBOX "Anrufendem &Computer Angabe der eigenen IP-Adresse gestatten", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 197, 169, 60, 14
+END
+
+7025 DIALOG 0, 0, 250, 157
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "IPX Eigenschaften eingehender Verbindungen"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	GROUPBOX "Netzwerkzugriff", -1, 8, 6, 234, 32
+	AUTOCHECKBOX "&Anrufern den Zugriff auf das lokale Netzwerk gestatten", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "Netzwerknummer zuweisen", -1, 8, 43, 234, 87
+	AUTOCHECKBOX "Allen &dieselbe Netzwerknummer zuweisen", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Netzwerknummern automatisch &zuweisen", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Netz&werknummer angeben:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
+	AUTOCHECKBOX "Anrufern Angabe der eigenen &Knotennummer gestatten", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+	DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
+	PUSHBUTTON "Abbrechen", 2, 181, 136, 60, 14
+END
+
+7033 DIALOG 0, 0, 220, 50
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Eigenschaften eingehender Protokolle"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	AUTOCHECKBOX "&Anrufern den Zugriff auf das lokale Netzwerk gestatten", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+	DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
+	PUSHBUTTON "Abbrechen", 2, 151, 30, 60, 14
+END
+
+7035 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
+CAPTION "Netzwerk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Netzwerkkomponenten:", -1, 7, 7, 217, 9
+	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
+	PUSHBUTTON "&Installieren...", 7037, 9, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "&Deinstallieren", 7038, 80, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "&Eigenschaften", 7039, 153, 110, 67, 14, WS_GROUP
+	GROUPBOX "Beschreibung", -1, 7, 138, 213, 69
+	LTEXT "<protokoll beschreibung>", 7040, 17, 150, 193, 48
+END
+
+7042 DIALOGEX 0, 0, 230, 215
+STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
+CAPTION "Benutzer"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Benutzern, denen die &Verbindung gestattet ist:", -1, 7, 5, 213, 8
+	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
+	PUSHBUTTON "&Neu...", 7044, 7, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "&Löschen", 7045, 80, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "&Eigenschaften", 7046, 153, 107, 67, 14, WS_GROUP
+	AUTOCHECKBOX "Von al&len Benutzern sichere Passwörter und Daten verlangen.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Direkt angeschlossenen Geräten, wie z. B. Palmtop-Computern die Verbindung ohne Kennworteingabe gestatten", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+	LTEXT "Bedenken Sie, dass andere Faktoren, wie z. B. deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 9, 126, 212, 23
+END
+
+7049 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Aktivieren Sie das Kontrollkästchen neben den Benutzernamen, die eine Verbindung mit diesem Computer herstellen dürfen. Bedenken Sie, dass andere Faktoren, wie z. B. deaktivierte Benutzerkonten, das Herstellen von Verbindungen beeinflussen können.", -1, 10, 1, 275, 27
+	LTEXT "Benutzern, denen die &Verbindung gestattet ist:", -1, 10, 28, 275, 8
+	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
+	PUSHBUTTON "&Hinzufügen...", 7044, 10, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "&Löschen", 7045, 79, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "E&igenschaften", 7046, 147, 122, 65, 14, WS_GROUP
+END
+
+7050 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Aktivieren Sie jedes Gerät, das für eingehende Verbindungen verwendet werden soll.", -1, 10, 4, 299, 10
+	LTEXT "&Verbindungsgeräte:", -1, 10, 16, 275, 8
+	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
+	PUSHBUTTON "&Eigenschaften", 7013, 243, 120, 65, 14, WS_GROUP
+END
+
+7051 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Aktivieren Sie das Kontrollkästchen neben jedem Typ von Netzwerksoftware, für den eingehende Verbindungen aktiviert werden sollen.", -1, 10, 1, 288, 20
+	LTEXT "&Netzwerksoftware:", -1, 10, 24, 274, 8
+	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
+	PUSHBUTTON "&Installieren...", 7037, 108, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&Deinstallieren", 7038, 172, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&Eigenschaften", 7039, 236, 71, 60, 14, WS_GROUP
+	LTEXT "<protokoll beschreibung>", 7040, 21, 105, 273, 38
+	LTEXT "Beschreibung:", -1, 21, 95, 275, 8
+END
+
+7052 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "Virtuelle private Verbindungen zu dem Computer durch das Internet sind nur möglich, wenn der Computer einen im Internet bekannten Namen bzw. eine IP-Adresse hat.", -1, 10, 4, 290, 20
+	AUTORADIOBUTTON "&VPN-Verbindungen zulassen", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "VPN-Verbindungen &nicht zulassen", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Sollen VPN-Verbindungen mit diesem Computer zugelassen werden?", -1, 17, 49, 275, 8
+	LTEXT "Wenn Sie VPN-Verbindungen zulassen, wird der Internetverbindungsfirewall so modifiziert, dass der Computer VPN-Pakete senden und empfangen kann.", -1, 10, 25, 293, 25
+END
+
+7055 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+	LTEXT "&Gerät für diese Verbindung:", -1, 23, 24, 275, 8
+	COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
+	LTEXT "Andere Geräte als die ausgewählten werden nicht beeinflusst und können für andere Zwecke verwendet werden.", -1, 10, 4, 275, 17
+	PUSHBUTTON "&Eigenschaften", 7061, 232, 53, 65, 14, WS_GROUP
+END
+
+7379 DIALOG 0, 0, 317, 143
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+19900 DIALOG 0, 0, 156, 44
+STYLE DS_SETFONT | WS_POPUP | WS_CAPTION
+CAPTION "DFÜ Netzwerk"
+FONT 8, "MS Shell Dlg"
+BEGIN
+	ICON 563, 19901, 10, 10, 18, 20
+	LTEXT "Dienste werden gestartet...", 19902, 34, 16, 120, 8
+END
+
+STRINGTABLE
+BEGIN
+	187 "&No, do not dial\0"
+	188 "You (or a program) have requested information from %1. Which connection do you want to use?\0"
+	189 "Add Alternate Phone Number\0"
+	190 "Dial only first available device\0"
+	191 "Dial all devices\0"
+	192 "Dial devices only as needed\0"
+	193 "Enter a user name and password with access to the remote network domain.\0"
+	194 "Network Address Translation (NAT) is currently installed as a routing protocol,\nand must be removed before enabling Internet Connection Sharing.\nTo remove Network Address Translation, open the Routing and Remote Access Manager\nsnapin and expand the router's entry in the left pane.\nDelete the Network Address Translation routing protocol from the list of IP\nrouting protocols.\0"
+	195 "The area code must contain only the digits 0 to 9.\0"
+	196 "The entry name must contain at least one non-blank character and cannot begin with a period.  Choose a different name.\0"
+	197 "You must choose a value from %1 to %2 for this field.\0"
+	198 "The custom authentication configuration DLL could not be loaded.  Make sure the custom authentication package is correctly installed.\0"
+	199 "The connection selected was established by the Multiprotocol router.\nPlease use the 'Routing and RAS Admin' tool to hang up the connection.\0"
+	200 "Comment\0"
+	201 "The custom authentication package configuration failed.\0"
+	202 "TCP/IP is not installed or is disabled for Routing and Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Routing and Remote Access Service' Properties, and press the Network button.\0"
+	203 "IPX is not installed or is disabled for Routing and Remote Access.  You can install/enable IPX by viewing the properties of any connection in \"Connections\" folder.\0"
+	204 "Remove the selected device(s) from the list?\0"
+	205 "Delete %1 from the phonebook?\0"
+	206 "Disconnect from %1?\0"
+	207 "A file named %1 already exists.  Overwrite it?\0"
+	208 "Syntax errors were found in the script. Do you wish to view the error log?\0"
+	209 "'%1' is now connected.  \0"
+	210 "Right-click the Dial-Up Networking Monitor on the task bar to hang up or check the status of your connection.\0"
+	212 "Connected successfully.\0"
+	213 "The custom authentication method selected must be initialized by pressing Properties.\0"
+	214 "lnk\0"
+	215 "Dial-up shortcut files (*.rnk)\0"
+	216 "*.rnk\0"
+	217 "Create Dial-Up Shortcut\0"
+	218 "Link to %1 failed.  Reconnect pending...\0"
+	219 "Cannot retrieve framing information.\0"
+	220 "Cannot retrieve port information.\0"
+	221 "Cannot retrieve projection information.\0"
+	222 "Cannot load connection list.\0"
+	223 "Client:\0"
+	224 "Details\0"
+	225 "Device:\0"
+	226 "Network:\0"
+	227 "(not connected)\0"
+	228 "&Connect...\0"
+	229 "Hang &Up\0"
+	230 "Dial-up Connection\0"
+	231 "Modem configuration set to defaults\0"
+	232 "COM1\0"
+	233 "Remote Router\0"
+	234 "Modem or device\0"
+	235 "Please enter a username for this interface's account on the remote router.\0"
+	236 "An entry named %1 already exists.  Choose a different name.\0"
+	237 "You may want to allow sending your password without encryption.\0"
+	238 "Password Encryption\0"
+	239 "The wizard is ready to create your connection.\0"
+	240 "Finished\0"
+	241 "Phone &number:\0"
+	242 "Call Me Back At\0"
+	243 "Edit Alternate Phone Number\0"
+	244 "Since this connection is currently active, some settings will not take effect until the next time you dial it.\0"
+	245 "There are no connections available to all users.  You must logon before dialing.\0"
+	246 "The phonebook is empty.\n\nPress OK to add an entry.\0"
+	247 "Due to import/export restrictions, data encryption is not available in this version of ReactOS.\0"
+	248 "Please enter an X.25 address on the next screen.\0"
+	249 "Error %1: %2\0"
+	250 "%1\n\nError %2: %3\0"
+	251 "%1\n\nError %2: %3\nDiagnostic: %4\0"
+	252 "%1\n\nError %2: %3\nFail Code: %4\0"
+	253 "%1\n\nError %2: %3\n\nPress F1 for more information.\0"
+	254 "%1\n\nError %2: %3\nName: %4\0"
+	255 "%1\n\n%4\0"
+	256 "%1\n\nError %2: %3\nResponse: %4\0"
+	257 "Fail Code: 0x%1\n\0"
+	258 "Name: %1\n\0"
+	259 "%1 CP reported error %2: %3\n\0"
+	260 "%1 CP connected successfully.\n\0"
+	261 "You can choose which dial-up protocol to use.\0"
+	262 "Choose Dial-up Protocol\0"
+	263 "Press Finish to save '%1'.\0"
+	264 "netcfg.hlp\0"
+	265 "&Move successful number to the top of the list on connection\0"
+	266 "&New phone number:\0"
+	267 "&Phone numbers:\0"
+	268 "Phone Numbers\0"
+	269 "You may enter a fixed IP address.\0"
+	270 "IP Address\0"
+	271 "The Internet protocols (TCP/IP), are not installed or are disabled for Remote Access.  In Control Panel, start Network, go to the Services page, choose 'Remote Access Service' Properties, and press the Network button.\0"
+	272 "TCP/IP\0"
+	273 "IPSec, default policy\0"
+	274 "IPX/SPX or compatible\0"
+	275 " (the current location)\0"
+	276 "ISDN\0"
+	277 "All available ISDN lines multi-linked\0"
+	278 "64K Digital\0"
+	279 "56K Digital\0"
+	280 "56K Voice\0"
+	281 "You may need a special procedure before connecting.\0"
+	282 "Choose Logon Options\0"
+	283 "%d%%\0"
+	284 "Phone number for %s\0"
+	285 "&New location:\0"
+	286 "&Locations:\0"
+	287 "Locations\0"
+	288 "This is the device that will be used to make the connection.\0"
+	289 "Select a Device\0"
+	290 "Multiple Lines cannot be bundled unless you are calling a PPP server.\0"
+	291 "Modem\0"
+	292 "The modem is not installed.\0"
+	293 "MS Point-to-Point Encryption, 128 bit RSA/RC4\0"
+	294 "MS Point-to-Point Encryption, 40 bit RSA/RC4\0"
+	295 "Multiple Lines\0"
+	296 "(Press Configure to set)\0"
+	297 "You may enter fixed DNS and WINS addresses.\0"
+	298 "Name Server Addresses\0"
+	299 "Down-level RAS\0"
+	300 "PPP\0"
+	301 "PPP multi-link\0"
+	302 "SLIP\0"
+	303 "NetBEUI\0"
+	304 "A personal phonebook has been created and initialized with the contents of the system phonebook.\0"
+	305 "No alternate phonebook is selected.\0"
+	306 "That device cannot be dynamically configured.\0"
+	307 "The entry cannot be deleted because it is connected.\0"
+	308 "No entry is selected.  Press the New button to create an entry.\0"
+	309 "A non-zero IP address must be supplied when 'specify an IP address' is selected.\0"
+	310 "An X.25 Address is required when an X.25 dial-up network or X.25 device is selected.\0"
+	311 "(none)\0"
+	312 "'%1' is already in the list.\0"
+	313 "Secure my password and my data\0"
+	314 "The %1 protocol cannot be selected because it is not installed or is disabled for Remote Access.  To change, in Control Panel start Network, choose Services page, Remote Access Properties, and press the Network button.\0"
+	315 "Cannot save password.\0"
+	316 "Cannot display data.\0"
+	317 "Cannot get auto-dial information.\0"
+	318 "Cannot load dialog.\0"
+	319 "Cannot disable shared access.\0"
+	320 "Cannot load property page.\0"
+	321 "Cannot load phonebook.\0"
+	322 "Cannot load RAS Manager port information.\0"
+	323 "Cannot read user preferences from registry.\0"
+	324 "Cannot load script information.\0"
+	325 "Cannot view script.log with notepad.exe\0"
+	326 "Cannot edit switch.inf with notepad.exe\0"
+	327 "Cannot load TAPI information.\0"
+	328 "Cannot load X.25 information.\0"
+	329 "Cannot create new phonebook.\0"
+	330 "Cannot enable shared access.\0"
+	331 "Cannot connect the phonebook entry.\0"
+	332 "Cannot get send/receive buffer.\0"
+	333 "Cannot get status information for a port.\0"
+	334 "Cannot retrieve protocol information.\0"
+	335 "Cannot receive buffer from device.\0"
+	336 "Cannot send buffer to device.\0"
+	337 "Cannot retrieve data.\0"
+	338 "Cannot save TAPI information.\0"
+	339 "Cannot save data.\0"
+	340 "The script has halted.\0"
+	341 "The script has halted due to an error. Do you wish to view the error log?\0"
+	342 "Cannot set auto-dial information.\0"
+	343 "Cannot delete saved password.\0"
+	344 "Cannot write phonebook.\0"
+	345 "Writing preferences to registry\0"
+	346 "Cannot write the shortcut file.\0"
+	347 "OK\0"
+	348 "What is your ISP's phone number?\0"
+	349 "Phone Number to Dial\0"
+	350 "The Password and Confirm password fields do not match.\0"
+	351 "The New Password and Confirm New Password fields do not match.\0"
+	352 "pbk\0"
+	353 "Phonebook files (*.pbk)\0"
+	354 "*.pbk\0"
+	355 "Open Phonebook\0"
+	356 "Clone Phonebook Entry\0"
+	357 "Edit Phonebook Entry\0"
+	358 "New Phonebook Entry\0"
+	359 "Phone number\0"
+	360 "Phone numbers\0"
+	361 "Network Connections\0"
+	362 "You must select at least one network protocol.\0"
+	363 "Before you can call PPP servers you must install a network protocol with the Control Network applet.\0"
+	364 "&New prefix:\0"
+	365 "&Prefixes:\0"
+	366 "Phone Number Prefixes\0"
+	367 "One or more requested network protocols did not connect successfully.\n\n\0"
+	368 "Press Accept to use the connection as is, or Hang Up to disconnect.\0"
+	369 "Point-to-point protocol settings to use when %1 initiates a demand dial connection on interface %2:\0"
+	370 "[To change the saved password, click here]\0"
+	405 "NetBEUI protocol is required to call older RAS servers.\0"
+	406 "Before you can call older RAS servers you must install the NetBEUI protocol.  NetBEUI can be installed with the Control Panel Network applet.\0"
+	407 "&Redial\0"
+	408 "You have chosen to disable one or more transports. Doing so requires the routing managers and routing protocols for the disabled transports to be removed from this demand-dial interface.\nClick Yes if you want to conti \n \n\n\n\n\n\nnue, or No if you want to re-enable the transports.\0"
+	409 "Internet Connection Sharing\0"
+	410 "Demand-dial interface dial-in account.\0"
+	411 "You now need to set the dial-out credentials that interface '%1' will use when connecting to the remote router. These credentials must match the dial-in credentials configured on the remote router. When connecting to a \n \n\n\n\n\n\nWin NT4/2000 router, the user name must also match the interface name of the remote router.\0"
+	412 "mpradmin.hlp\0"
+	413 "&Move successful number or address to the top of the list on connection\0"
+	414 "&New phone number or address:\0"
+	415 "&Phone numbers or addresses:\0"
+	416 "Numbers and Addresses\0"
+	417 "PPP: Win 95/98/NT4/2000, Internet\0"
+	418 "None\0"
+	419 "SLIP: Unix Connection\0"
+	420 "All devices connected.\0"
+	421 "Receiving registration result...\0"
+	422 "Sending callback information...\0"
+	423 "Sending new password...\0"
+	424 "Calculating link speed...\0"
+	425 "Checking authentication status...\0"
+	426 "Registering your computer on the network...\0"
+	427 "Retrying authentication...\0"
+	428 "Verifying username and password...\0"
+	429 "Authenticated.\0"
+	430 "Connecting through %1...\0"
+	431 "Dialing...\0"
+	432 "Modems connecting...\0"
+	433 "Connecting over cable...\0"
+	434 "Dialing %1...\0"
+	435 "Connecting over X.25 to %1...\0"
+	436 "Postconnecting through %1...\0"
+	437 "Preconnecting through %1...\0"
+	438 "Connected.\0"
+	439 "Device connected.\0"
+	440 "Disconnected.\0"
+	441 "Modem connected.\0"
+	442 "Cable connected.\0"
+	443 "Opening port...\0"
+	444 "X.25 connected.\0"
+	445 "Port opened.\0"
+	446 "Postconnect complete.\0"
+	447 "Preconnect complete.\0"
+	448 "Preparing for callback...\0"
+	449 "Checking network protocol connections...\0"
+	450 "Verifying username and password...\0"
+	451 "Connected, bundling additional lines\0"
+	452 "Unknown state.\0"
+	453 "Waiting for callback...\0"
+	454 "Waiting for modem reset...\0"
+	455 "Make the phone number change permanent?\0"
+	456 "scp\0"
+	457 "*.scp\0"
+	458 "Dial-up script files (*.scp)\0"
+	459 "Browse Dial-Up Scripts\0"
+	460 "You must check at least one modem or adapter.\0"
+	461 "Phone number\0"
+	462 "TCP/IP protocol is required to call SLIP servers.\0"
+	463 "Before you can call SLIP servers you must install the TCP/IP protocol.  TCP/IP can be installed with the Control Panel Network applet.\0"
+	464 "Status\0"
+	465 "&New suffix:\0"
+	466 "&Suffixes:\0"
+	467 "Phone Number Suffixes\0"
+	468 "You can go on to choose special settings, if necessary.\0"
+	469 "Custom Settings\0"
+	470 "Manual Modem Command Terminal\0"
+	471 "After Dial Terminal\0"
+	472 "Before Dial Terminal\0"
+	473 "SLIP Login Terminal\0"
+	474 "10 minutes\0"
+	475 "10 seconds\0"
+	476 "1 hour\0"
+	477 "1 minute\0"
+	478 "24 hours\0"
+	479 "2 hours\0"
+	480 "2 minutes\0"
+	481 "30 minutes\0"
+	482 "30 seconds\0"
+	483 "3 seconds\0"
+	484 "4 hours\0"
+	485 "4 minutes\0"
+	486 "5 minutes\0"
+	487 "5 seconds\0"
+	488 "8 hours\0"
+	489 "never\0"
+	490 "You can make the new connection available to any user or only to yourself.\0"
+	491 "Connection Availability\0"
+	492 "Discard multiple line settings for the entry?\0"
+	493 "Unavailable device\0"
+	494 "Logon Preferences\0"
+	495 "Dial-up Preferences\0"
+	496 "X.25\0"
+	497 "X.25 PAD\0"
+	498 "You can let other computers access resources through this dial-up connection.\0"
+	499 "VPN Server Selection\0"
+	500 "Cannot enable on-demand dialing.\0"
+	501 "What is the name or address of the VPN server?\0"
+	502 "Cannot disable on-demand dialing.\0"
+	503 "Public Network\0"
+	504 "ReactOS can make sure the public network is connected first.\0"
+	505 "VPN1\0"
+	506 "Internet Connection Sharing\0"
+	507 "You can let a local network access resources through this dial-up connection.\0"
+	508 "Host or Guest?\0"
+	509 "Internet Connection Sharing  is currently enabled for connection '%1'.\n\nIt will now be enabled for connection '%2' instead.\0"
+	510 "To connect two computers, your computer must be identified as either a host or a guest.\0"
+	511 "When Internet Connection Sharing is enabled, your LAN adapter will be set to use IP address 192.168.0.1. Your computer may lose connectivity with other computers on your network. If these other computers have static IP addresses, you should set them to obtain their IP addresses automatically.  Are you sure you want to enable Internet Connection Sharing?\0"
+	512 "Select a Device\0"
+	513 "This is the device that will be used to make the connection.\0"
+	514 "&Connect\0"
+	515 "Let the server determine encryption\0"
+	516 "Always encrypt my data\0"
+	517 "Use MPPE-40 data encryption\0"
+	518 "Use MPPE-128 data encryption\0"
+	519 "The current encryption selection requires MS-CHAP or EAP authentication.\0"
+	520 "Custom Authentication Message\0"
+	521 "Connecting to %1...\0"
+	522 "Connection Name\0"
+	523 "Automatic\0"
+	524 "PPTP VPN\0"
+	525 "L2TP IPSec VPN\0"
+	526 "Select the type of the connection.\0"
+	527 "Type of Connection\0"
+	528 "hh.exe netcfg.chm::/trouble_all.htm\0"
+	529 "Virtual Private Connection\0"
+	530 "Use any form of authentication required including clear text.  Do not encrypt data.\0"
+	531 "Use any form of authentication that requires passwords to be encrypted.  Do not encrypt data.\0"
+	532 "Please type a name for the entry.\0"
+	533 "Encrypt passwords and data.\0"
+	534 "Please type a port number between 1 and 65535.\0"
+	535 "Specify custom authentication and data encryption with the Settings button.\0"
+	536 "Use any form of authentication that requires encrypted passwords.  Do not encrypt data.\0"
+	537 "Encrypt passwords and data.\0"
+	538 "Specify custom authentication and data encryption with the Settings button.\0"
+	539 "The port number is already used by another entry.\nPlease enter a unique port number.\0"
+	540 "Please enter one or more ports for incoming responses.\0"
+	541 "Please select the entry to be deleted.\0"
+	542 "1 second\0"
+	543 "Please select the entry to be modified.\0"
+	549 "What is the name of the other computer you are connecting to?\0"
+	576 "20 minutes\0"
+	579 "Specify a name for this connection to your workplace.\0"
+	581 "Network Application Settings\0"
+	582 "Type a name for this connection in the following box.\0"
+	583 "Type the name of the other computer in the following box.\0"
+	584 "Type the name of your ISP in the following box.\0"
+	585 "What is the name of the service that provides your Internet connection?\0"
+	586 "Please type the IP address of the server computer on the private network.\0"
+	587 "Advanced Settings\0"
+	588 "The entry name begins with a period. or contains some invalid characters. \nChoose a different name.\0"
+	589 "Properties\0"
+	1512 "Communications Port\0"
+	1523 " channel\0"
+	1526 "Smart Cards\0"
+	1527 "You can use your smart card with this connection.\0"
+	1528 "Direct Connection\0"
+	1529 "Please select a device for this connection.\0"
+	1530 "Verdana Bold\0"
+	1531 "12\0"
+	1532 "Connection Type\0"
+	1533 "Select the type of demand dial interface you want to create.\0"
+	1534 "Select a device\0"
+	1535 "This is the device that will be used to make the connection.\0"
+	1536 "Phone Number\0"
+	1537 "Enter the phone number of the remote server or router you are calling.\0"
+	1538 "VPN Type\0"
+	1539 "Select the type of VPN interface you want to create.\0"
+	1540 "Destination Address\0"
+	1541 "What is the name or address of the remote router?\0"
+	1544 "IP Address\0"
+	1545 "Configure this router's IP address for this interface.\0"
+	1546 "Name Server Addresses\0"
+	1547 "Configure DNS and WINS addresses for use by this interface.\0"
+	1548 "Router Scripting\0"
+	1549 "You can set up a scripting for connecting to the remote router.\0"
+	1550 "Dial In Credentials\0"
+	1551 "Configure the user name and password that the remote router will use when it dials in to this server.\0"
+	1552 "Dial Out Credentials\0"
+	1553 "Configure the user name and password to be used when connecting to the remote router.\0"
+	1554 "Interface Name\0"
+	1555 "Select the name by which this new interface will be known.\0"
+	1556 "No available devices\0"
+	1557 "A user account named %1 already exists on the local computer.  Should the demand dial interface be configured to use this user account?\0"
+	1558 "There are no security protocol settings for SLIP server connections.\0"
+	1559 "Allow unsecured password\0"
+	1560 "Require secured password\0"
+	1561 "Use smart card\0"
+	1562 "You must select at least one password authentication protocol.\0"
+	1563 "No encryption allowed (server will disconnect if it requires encryption)\0"
+	1564 "Optional encryption (connect even if no encryption)\0"
+	1565 "Require encryption (disconnect if server declines)\0"
+	1566 "Maximum strength encryption (disconnect if server declines)\0"
+	1567 " (encryption enabled)\0"
+	1568 "Internet Account Information\0"
+	1569 "You will need an account name and password to sign in to your Internet account.\0"
+	1570 "The selected EAP package does not provide encryption keys.  Select an EAP package that does provide keys or select not to encrypt.\0"
+	1571 "The current encryption selection requires EAP or some version of MS-CHAP logon security methods.\0"
+	1572 "Protocols and Security\0"
+	1573 "Select transports and security options for this connection.\0"
+	1574 "The protocols you have selected include PAP, SPAP, and/or CHAP.  If one of these is negotiated, data encryption will not occur.  Do you want to keep these settings?\0"
+	1575 "To connect to '%1', you must first be connected to '%2'.  Do you want  to connect to '%2' now?\0"
+	1576 "Connecting over parallel cable...\0"
+	1577 "Connecting over infrared...\0"
+	1578 "Parallel cable connected.\0"
+	1579 "Infrared connected.\0"
+	1580 "This connection was configured to use a data encryption strength that is not supported by the installed software.  The security properties of this connection have been reset to the available encryption strengths.\0"
+	1581 "Typ&e of VPN:\0"
+	1582 "Please enter a user name.\0"
+	1583 "This user name and password will be saved for your own use.  There is already a user name and password saved for all other users of this connection.  Do you want to delete the user name and password saved for all other users?\0"
+	1584 "For example, you could type the name of your workplace or the name of a server you will connect to.\0"
+	1585 "Account Information\0"
+	1586 "The controls on this property sheet are disabled because the system must first be rebooted before any configuration changes can be made.\0"
+	1587 "The controls on this property sheet are disabled because one or more other Network property sheets are already open. To use these controls, close all these property sheets and then reopen this one.\0"
+	1588 "Some of the controls on this property sheet are disabled because you do not have sufficient privileges to access them.\0"
+	1589 "The following message was received from your service provider:\r\n\r\n%1\0"
+	1590 "Reconnect %1\0"
+	1591 "Service Name\0"
+	1592 "What is the name of the service that provides your broadband connection?\0"
+	1593 "You will need an account name and password to sign on to your account\0"
+	1594 "PPPOE1-0\0"
+	1595 "Point-to-Point Protocol over Ethernet (PPPoE)\0"
+	1596 "Type of &broadband connection to make:\0"
+	1611 "Broadband Connection\0"
+	1612 "You have selected to use a preshared key but you have not entered one. \nPlease enter a preshared key.\0"
+	1613 "Cannot Commit Credentials\0"
+	1634 "Because the Windows Management Instrumentation (WMI) service has been disabled, ReactOS cannot display the properties of this connection or the home network.\n\nTo configure the properties of this connection or your home network, you must first enable the WMI service. To do this, in the Administrative Tools control panel, double-click Services, right-click Windows Management Instrumentation, and then click Start.\0"
+	1635 "ReactOS cannot display the properties of this connection. The Windows Management Instrumentation (WMI) information might be corrupted. To correct this, use System Restore to restore ReactOS to an earlier time (called a restore point). System Restore is located in the System Tools folder in Accessories.\0"
+	1646 "Allow incoming echo request\0"
+	1647 "Allow incoming timestamp request\0"
+	1648 "Allow incoming mask request\0"
+	1649 "Allow incoming router request\0"
+	1650 "Allow outgoing destination unreachable\0"
+	1651 "Allow outgoing source quench\0"
+	1652 "Allow outgoing parameter problem\0"
+	1653 "Allow outgoing time exceeded\0"
+	1654 "Allow redirect\0"
+	1655 "log\0"
+	1656 "*.log\0"
+	1657 "Firewall log files (*.log)\0"
+	1658 "Browse\0"
+	1663 "Select a private network connection\0"
+	1664 "To enable Internet Connection Sharing a connection must be selected for the private network. Please select a connection from the list of available connections.\0"
+	1665 "Messages sent to this computer will be repeated back to the sender. This is commonly used for troubleshooting, for example, to ping a machine.\0"
+	1666 "Data sent to this computer can be acknowledged with a confirmation message indicating the time that the data was received.\0"
+	1667 "This computer will listen for and respond to requests for more information about the public network to which it is attached.\0"
+	1668 "This computer will respond to requests for information about the routes it recognizes.\0"
+	1669 "Data sent over the Internet that fails to reach this computer due to an error will be discarded and acknowledged with a \"destination unreachable\" message explaining the failure.\0"
+	1670 "When this computer's ability to process incoming data cannot keep up with the rate of a transmission, data will be dropped and the sender will be asked to slow down.\0"
+	1671 "When this computer discards data it has received due to a problematic header, it will reply to the sender with a \"bad header\" error message.\0"
+	1672 "When this computer discards an incomplete data transmission because the entire transmission required more time than allowed, it will reply to the sender with a \"time expired\" message.\0"
+	1673 "Data sent from this computer will be rerouted if the default path changes.\0"
+	1675 "The value entered for the log file size is not valid. Enter a value between 1 and 32767 k.\0"
+	1685 "Your user account does not have permission to use this connection.  Usually, this is because you are logged in as Guest.\0"
+	1686 "Type an account name and password. (If you have forgotten an existing account name or password, contact your network administrator.)\0"
+	1687 "Computer N&ame\0"
+	1688 "ISP N&ame\0"
+	1689 "Company N&ame\0"
+	1690 "What is the phone number you will use to make this connection?\n\0"
+	7301 "Incoming TCP/IP Properties\0"
+	7302 "You must choose a value from %1 to %2 for this field.\0"
+	7306 "Incoming Connections Error\0"
+	7307 "Incoming Connections General Error\0"
+	7308 "Incoming Connections\0"
+	7309 "Incoming Connections Networking Error\0"
+	7310 "Incoming Connections Multilink Status Error\0"
+	7311 "Incoming Connections Error\0"
+	7312 "Incoming Connections Initialization Error\0"
+	7313 "Incoming Connections TCP/IP Properties Error\0"
+	7314 "Incoming Connections IPX Properties Error\0"
+	7315 "Incoming Connections Error\0"
+	7316 "Generic\0"
+	7317 "Device\0"
+	7318 "Miscellaneous Database\0"
+	7319 "User Database\0"
+	7320 "Protocol Database\0"
+	7321 "You must enter a logon name for the new user or press Abbrechen.\0"
+	7322 "The password you entered was too short.\0"
+	7323 "The passwords entered are not the same.  Please re-enter them.\0"
+	7324 "An internal error has occured.  \0"
+	7325 "Listview\0"
+	7326 "An error has occurred while attempting to commit the changes you have made to the local user database.  \0"
+	7327 "You have insufficient priveleges to add a user to the local system database.  \0"
+	7328 "The user you are trying create already exists in the local user database.\0"
+	7329 "The user was not added to the local user database because the password you entered was rejected.\0"
+	7330 "Unable to reload the system user database because of an internal error.\0"
+	7331 "An internal error has occurred:  The local user database handle is corrupt.\0"
+	7332 "Unable to load the resources neccessary to display the user tab.\0"
+	7333 "An internal error occured while attempting to rollback the changes you made to the local user database.  \0"
+	7334 "The device database handle is corrupt.\0"
+	7335 "Unable to load the resources neccessary to display the general tab.\0"
+	7336 "An error has occurred while attempting to commit some of the device/vpn related changes you have made.  \0"
+	7337 "An internal error occured.\0"
+	7338 "An internal error occurred: The networking component database handle is corrupt.\0"
+	7339 "An internal error has occurred.  \0"
+	7340 "An error has occurred while attempting to commit the changes you have made to the networking components.\0"
+	7341 "An internal error occured.\0"
+	7342 "Unable to commit the changes you made to the TCP/IP protocol to the system.  \0"
+	7343 "Unable to save the changes you made to the IPX protocol to the system.  \0"
+	7344 "Unable to display the TCPIP properties.\0"
+	7345 "Unable to display the IPX properties.\0"
+	7346 "Unable to load TCP/IP properties from the system.  \0"
+	7347 "Unable to load IPX properties from the system.  \0"
+	7348 "Incoming Connections depend on the Routing and Remote Access service which was unable to start.  For more information, check the system event log.\0"
+	7349 "Unable to allow the editing of networking components at this time because they are currently being modified elsewhere.\0"
+	7350 "The new user you entered was not added to the local user database because  the name or password entered violated a system policy (it was too large, too small, or ill-formed).  \0"
+	7351 "The system is unable to delete the requested user.  \0"
+	7352 "Unable to remove the selected network component because it is in use.\0"
+	7353 "Incoming Connections Warning\0"
+	7354 "Any users that you delete will be permanently removed from the system even if Abbrechen is pressed.  Are you sure you want to permanently remove %s? \0"
+	7355 "You are about to switch to a system management console.  This Incoming Connections property sheet will be closed and any changes you may have made will be committed to the system.  Is it ok to continue?\0"
+	7356 "Your Network Mask value has been changed.  A zero bit in a mask can only be followed by other zero bits.  For example, a Network Mask value, expressed in decimal dotted notation, of 255.255.0.0, is valid, but 255.0.255.0 is not.  \n\0"
+	7357 "User Permissions\0"
+	7358 "You can specify the users who can connect to this computer.\0"
+	7359 "Devices for Incoming Connections\0"
+	7360 "You can choose the devices your computer uses to accept incoming connections.\0"
+	7361 "Incoming Virtual Private Network (VPN) Connection\0"
+	7362 "Another computer can connect to yours through a VPN connection\0"
+	7363 "Networking Software\0"
+	7364 "Networking software allows this computer to accept connections from other kinds of computers.\0"
+	7365 "Completing the New Connection Wizard\0"
+	7366 " \0"
+	7367 "Incoming Connections\0"
+	7371 "No hardware capable of accepting calls is installed.\0"
+	7372 " \0"
+	7373 "Assign specified &network number:\0"
+	7374 "Assign &network numbers sequentially from:\0"
+	7375 "New User\0"
+	7376 "Connection Device\0"
+	7377 "What device do you want to use to make this connection?\0"
+	7378 "No devices capable of accepting direct connections are currently installed.\0"
+	7379 "New Incoming Connection Warning\0"
+	7380 "Because this Win 2000 Server belongs to or controls a domain, you must use the Routing and Remote Access system console to configure this machine to receive incoming connections.  Abbrechen changes and switch to this console?\n\0"
+	7381 "A&ssign network number automatically\0"
+	7382 "A&ssign network numbers automatically\0"
+	7383 "Incoming Connections can not issue the ipx network numbers 00000000 or FFFFFFFF.  Please either change the assigned network numbers or use automatic network number assignment.\0"
+	7384 "to\0"
+	7385 "Communications Port (%s)\0"
+	7386 "Network Connections does not display some specialized options for inbound connections that have been set using the Local User Manager or Remote Access Policy consoles.  For complete and correct information on incoming connections, you will need to use these consoles.\0"
+	7387 "The user callback mode you have selected requires you to enter a valid callback number.\0"
+	7388 "ReactOS must reboot to complete the operation.  Is it ok to reboot now?\0"
+	7389 "The currently selected device has no configuration options available.\0"
+	7390 "Invalid Range\0"
+	7391 "You have requested that '%1' be disabled for Incoming Connections.  In order to disable this, you must stop the 'Server' service.  Once stopped, any shared directories or printers on this computer will no longer be available to any other computer.  Do you want to bring up a system console that will allow you to stop the 'Server' service?\r\n\nUnder Computer Management, click System Tools and then click Services.  In the right pane, right-click Server and click stop.\0"
+	7392 "This serial port is not enabled for use in a direct connection to another computer.  It will be enabled after you complete this wizard.  You can then configure the port speed and other properties by right-clicking the icon for this connection and selecting Properties.\n\0"
+	7393 "Incoming Connections\0"
+	7394 "The IP address pool you've entered is invalid.\0"
+	7395 "The mask provided is invalid.\0"
+	7396 "The start address entered for the TCP/IP pool is invalid.  It must lie between 1.0.0.0 and 224.0.0.0 and it must not be in the form 127.x.x.x.\0"
+	7397 "The TCP/IP pool entered is invalid because the address is more specific than the mask.\0"
+	7398 "The start address must be less than the end address.\0"
+	7399 "The Routing and Remote Access Service is in the process of stopping.  Until it stops, the Incoming Connections option is not available.  Please wait a few moments and retry.\0"
+	7400 "%s (%s)\0"
+	7401 "%s (%d channels)\0"
+	7402 "Incoming Connection VPN (PPTP)\0"
+	7403 "Incoming Connection VPN (L2TP)\0"
+	7404 "IP Security (IKE)\0"
+	7405 "127.0.0.1\0"
+	7406 "You do not have sufficient privileges to set up Incoming Connections\0"
+29900 "Cannot load the Remote Access Connection Manager service.\0"
+29901 "Cannot load the file MPRAPI.DLL in the system32 directory.\0"
+END

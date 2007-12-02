@@ -35,6 +35,7 @@
 101		BITMAP "res/bitmaps/101.bmp"
 102		BITMAP "res/bitmaps/102.bmp"
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
