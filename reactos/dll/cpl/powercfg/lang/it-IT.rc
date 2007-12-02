@@ -11,8 +11,8 @@ BEGIN
     GROUPBOX        "Schema di gestione dell'energia",-1,8,48,240,48
     COMBOBOX        IDC_ENERGYLIST,15,61,224,92,CBS_DROPDOWNLIST |
                     WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON      "&Salva come...",-1,101,76,75,15,WS_DISABLED
-    PUSHBUTTON      "&Cancella",-1,181,76,55,15,WS_DISABLED
+    PUSHBUTTON      "&Salva come...",IDC_SAVEAS_BTN,101,76,75,15,WS_DISABLED
+    PUSHBUTTON      "&Cancella",IDC_DELETE_BTN,181,76,55,15,WS_DISABLED
     GROUPBOX        "sconosciuto",IDC_GRPDETAIL,8,100,240,112
     LTEXT           "Quando il computer è:",IDC_SAT,16,112,72,16
     LTEXT           "Alimentato\rda rete",IDC_SAC,120,112,45,15
