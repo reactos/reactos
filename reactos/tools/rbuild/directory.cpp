@@ -57,7 +57,7 @@ Directory::Directory ( const string& name_ )
 
 	if ( p )
 	{
-		name.erase ( p - name.c_str ());
+		name.erase ( p - name_.c_str ());
 		Add ( p + 1 );
 	}
 }
