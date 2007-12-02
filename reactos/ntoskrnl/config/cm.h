@@ -1353,6 +1353,15 @@ CmQueryValueKey(
     IN PULONG ResultLength
 );
 
+NTSTATUS
+NTAPI
+CmLoadKey(
+    IN POBJECT_ATTRIBUTES TargetKey,
+    IN POBJECT_ATTRIBUTES SourceFile,
+    IN ULONG Flags,
+    IN PKEY_OBJECT KeyBody
+);
+
 //
 // Startup and Shutdown
 //
@@ -1406,6 +1415,7 @@ extern BOOLEAN CmpForceForceFlush;
 extern BOOLEAN CmpWasSetupBoot;
 extern PCMHIVE CmiVolatileHive;
 extern LIST_ENTRY CmiKeyObjectListHead;
+extern BOOLEAN CmpHoldLazyFlush;
 
 //
 // Inlined functions

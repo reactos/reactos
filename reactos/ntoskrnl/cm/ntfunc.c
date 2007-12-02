@@ -30,8 +30,6 @@ CmpCreateHandle(PVOID ObjectBody,
                 ULONG HandleAttributes,
                 PHANDLE HandleReturn);
 
-static BOOLEAN CmiRegistryInitialized = FALSE;
-
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -282,24 +280,6 @@ openkey_cleanup:
     /* Return information and status to user */
     *KeyHandle = hKey;
     return Status;
-}
-
-NTSTATUS
-NTAPI
-NtInitializeRegistry (IN USHORT Flag)
-{
-    PAGED_CODE();
-    
-    if (CmiRegistryInitialized == TRUE)
-        return STATUS_ACCESS_DENIED;
-    
-    /* Save boot log file */
-    IopSaveBootLogToFile();
-        
-    CmpCmdInit(Flag);
-    CmiRegistryInitialized = TRUE;
-    
-    return STATUS_SUCCESS;
 }
 
 /* EOF */

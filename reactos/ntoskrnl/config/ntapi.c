@@ -13,6 +13,9 @@
 #define NDEBUG
 #include "debug.h"
 
+BOOLEAN CmBootAcceptFirstTime = TRUE;
+BOOLEAN CmFirstTime = TRUE;
+
 /* FUNCTIONS *****************************************************************/
 
 NTSTATUS
@@ -503,13 +506,6 @@ NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
 
 NTSTATUS
 NTAPI
-CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
-          IN POBJECT_ATTRIBUTES SourceFile,
-          IN ULONG Flags,
-          IN PKEY_OBJECT KeyBody);
-
-NTSTATUS
-NTAPI
 NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
             IN POBJECT_ATTRIBUTES SourceFile,
             IN ULONG Flags,
@@ -557,6 +553,68 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
     
     /* Return status */
     return Status;
+}
+
+NTSTATUS
+NTAPI
+NtInitializeRegistry(IN USHORT Flag)
+{
+    BOOLEAN SetupBoot;
+    NTSTATUS Status = STATUS_SUCCESS;
+    PAGED_CODE();
+
+    /* Always do this as kernel mode */
+    if (KeGetPreviousMode() == UserMode) return ZwInitializeRegistry(Flag);
+    
+    /* Validate flag */
+    if (Flag > CM_BOOT_FLAG_MAX) return STATUS_INVALID_PARAMETER;
+
+    /* Check if boot was accepted */
+    if ((Flag >= CM_BOOT_FLAG_ACCEPTED) && (Flag <= CM_BOOT_FLAG_MAX))
+    {
+        /* Only allow once */
+        if (!CmBootAcceptFirstTime) return STATUS_ACCESS_DENIED;
+        CmBootAcceptFirstTime = FALSE;
+        
+        /* Get the control set accepted */
+        Flag -= CM_BOOT_FLAG_ACCEPTED;
+        if (Flag)
+        {
+            /* FIXME: Save the last known good boot */
+            //Status = CmpSaveBootControlSet(Flag);
+            
+            /* Notify HAL */
+            HalEndOfBoot();
+
+            /* Enable lazy flush */
+            CmpHoldLazyFlush = FALSE;
+            CmpLazyFlush();
+            return Status;
+        }
+
+        /* Otherwise, invalid boot */
+        return STATUS_INVALID_PARAMETER;
+    }
+    
+    /* Check if this was a setup boot */
+    SetupBoot = (Flag == CM_BOOT_FLAG_SETUP ? TRUE : FALSE);
+
+    /* Make sure we're only called once */
+    if (!CmFirstTime) return STATUS_ACCESS_DENIED;
+    CmFirstTime = FALSE;
+    
+    /* Acquire registry lock */
+    //CmpLockRegistryExclusive();
+
+    /* Initialize the hives and lazy flusher */
+    CmpCmdInit(SetupBoot);
+
+    /* FIXME: Save version data */
+    //CmpSetVersionData();
+
+    /* Release the registry lock */
+    //CmpUnlockRegistry();
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS

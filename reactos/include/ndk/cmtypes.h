@@ -110,6 +110,14 @@ typedef enum _CM_SHARE_DISPOSITION
 #define CM_RESOURCE_DMA_TYPE_B            0x0020
 #define CM_RESOURCE_DMA_TYPE_F            0x0040
 
+//
+// NtInitializeRegistry Flags
+//
+#define CM_BOOT_FLAG_SMSS                 0x0000
+#define CM_BOOT_FLAG_SETUP                0x0001
+#define CM_BOOT_FLAG_ACCEPTED             0x0002
+#define CM_BOOT_FLAG_MAX                  0x03E9
+
 #ifdef NTOS_MODE_USER
 
 //
@@ -509,4 +517,5 @@ typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
 #endif // _!NTOS_MODE_USER
 
 #endif // _CMTYPES_H
+
 

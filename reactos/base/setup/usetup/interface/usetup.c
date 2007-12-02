@@ -3197,7 +3197,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
   /* Create the default hives */
 #ifdef __REACTOS__
-  Status = NtInitializeRegistry(TRUE);
+  Status = NtInitializeRegistry(CM_BOOT_FLAG_SETUP);
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtInitializeRegistry() failed (Status %lx)\n", Status);

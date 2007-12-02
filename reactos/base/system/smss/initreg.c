@@ -35,7 +35,7 @@ SmInitializeRegistry(VOID)
   DPRINT("SM: %s: initializing registry\n", __FUNCTION__);
 
   /* Load remaining registry hives */
-  return NtInitializeRegistry(FALSE);
+  return NtInitializeRegistry(CM_BOOT_FLAG_SMSS);
 }
 
 /* EOF */
