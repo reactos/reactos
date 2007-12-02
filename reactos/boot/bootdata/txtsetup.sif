@@ -5,53 +5,35 @@ Signature = "$ReactOS$"
 ; <directory_id> = <path>
 1 = "\"
 2 = system32
-3 = system32\drivers
-4 = system32\config
+3 = system32\config
+4 = system32\drivers
 5 = media
 6 = media\fonts
 7 = bin
 
 [SourceDisksFiles]
-atapi.sys=,,,,,,x
-buslogic.sys=,,,,,,x
-;acpi.sys=,,,,,,x
-;isapnp.sys=,,,,,,x
-;pci.sys=,,,,,,x
-scsiport.sys=,,,,,,x
-class2.sys=,,,,,,x
-cdrom.sys=,,,,,,x
-cdfs.sys=,,,,,,x
-disk.sys=,,,,,,x
-floppy.sys=,,,,,,x
-i8042prt.sys=,,,,,,x
-kbdclass.sys=,,,,,,x
-blue.sys=,,,,,,x
-
-[SourceFiles]
-; <filename> = <directory_id>
-acpi.sys      = 3
-atapi.sys     = 3
-buslogic.sys  = 3
-blue.sys      = 3
-bootvid.dll   = 3
-c_437.nls     = 2
-c_1252.nls    = 2
-cdfs.sys      = 3
-cdrom.sys     = 3
-class2.sys    = 3
-kdcom.dll     = 3
-disk.sys      = 3
-floppy.sys    = 3
-;keyboard.sys  = 3
-i8042prt.sys  = 3
-kbdclass.sys  = 3
-l_intl.nls    = 2
-ntfs.sys      = 3
-ntoskrnl.exe  = 2
-pci.sys       = 3
-scsiport.sys  = 3
-uniata.sys    = 3
-vfatfs.sys    = 3
+acpi.sys=,,,,,,,,,,,,4
+atapi.sys=,,,,,,x,,,,,,4
+buslogic.sys=,,,,,,x,,,,,,4
+blue.sys=,,,,,,x,,,,,,4
+bootvid.dll=,,,,,,,,,,,,4
+c_437.nls=,,,,,,,,,,,,2
+c_1252.nls=,,,,,,,,,,,,2
+cdfs.sys=,,,,,,x,,,,,,4
+cdrom.sys=,,,,,,x,,,,,,4
+class2.sys=,,,,,,x,,,,,,4
+kdcom.dll=,,,,,,,,,,,,4
+disk.sys=,,,,,,x,,,,,,4
+floppy.sys=,,,,,,x,,,,,,4
+i8042prt.sys=,,,,,,x,,,,,,4
+kbdclass.sys=,,,,,,x,,,,,,4
+l_intl.nls=,,,,,,,,,,,,2
+ntfs.sys=,,,,,,,,,,,,4
+ntoskrnl.exe=,,,,,,,,,,,,2
+pci.sys=,,,,,,,,,,,,4
+scsiport.sys=,,,,,,x,,,,,,4
+uniata.sys=,,,,,,,,,,,,4
+vfatfs.sys=,,,,,,,,,,,,4
 
 [Cabinets]
 Cabinet=reactos.cab
@@ -79,12 +61,12 @@ pci_up = "PC UP"
 pci_mp = "PC MP"
 
 [Files.pci_up]
-; <filename> = <directory_id>,<new name>
-hal.dll      = 2
+ntoskrnl.exe=,,,,,,,,,,,,2
+hal.dll=,,,,,,,,,,,,2
 
 [Files.pci_mp]
-; <filename> = <directory_id>,<new name>
-halmp.dll    = 2,hal.dll
+ntkrnlmp.exe=,,,,,,,,,,ntoskrnl.exe,,2
+halmp.dll=,,,,,,,,,,hal.dll,,2
 
 [Display]
 ;<id> = <user friendly name>,<spare>,<service key name>,<hight>,<width>,<bpp>

@@ -2635,7 +2635,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
 }
 
 static BOOLEAN
-AddSectionToCopyQueue(HINF InfFile,
+AddSectionToCopyQueueCab(HINF InfFile,
 		       PWCHAR SectionName,
 		       PWCHAR SourceCabinet,
 			   PCUNICODE_STRING DestinationPath,
@@ -2710,6 +2710,94 @@ AddSectionToCopyQueue(HINF InfFile,
 }
 
 static BOOLEAN
+AddSectionToCopyQueue(HINF InfFile,
+                      PWCHAR SectionName,
+                      PWCHAR SourceCabinet,
+                      PCUNICODE_STRING DestinationPath,
+                      PINPUT_RECORD Ir)
+{
+  INFCONTEXT FilesContext;
+  INFCONTEXT DirContext;
+  PWCHAR FileKeyName;
+  PWCHAR FileKeyValue;
+  PWCHAR DirKeyValue;
+  PWCHAR TargetFileName;
+
+  if (SourceCabinet)
+    return AddSectionToCopyQueueCab(InfFile, L"SourceFiles", SourceCabinet, DestinationPath, Ir);
+
+  /* Search for the SectionName section */
+  if (!SetupFindFirstLineW (InfFile, SectionName, NULL, &FilesContext))
+    {
+      char Buffer[128];
+      sprintf(Buffer, "Setup failed to find the '%S' section\nin TXTSETUP.SIF.\n", SectionName);
+      PopupError(Buffer, "ENTER = Reboot computer", Ir, POPUP_WAIT_ENTER);
+      return(FALSE);
+    }
+
+  /*
+   * Enumerate the files in the section
+   * and add them to the file queue.
+   */
+  do
+    {
+      /* Get source file name and target directory id */
+      if (!INF_GetData (&FilesContext, &FileKeyName, &FileKeyValue))
+        {
+          /* FIXME: Handle error! */
+          DPRINT1("INF_GetData() failed\n");
+          break;
+        }
+
+      /* Get target directory id */
+      if (!INF_GetDataField (&FilesContext, 13, &FileKeyValue))
+        {
+          /* FIXME: Handle error! */
+          DPRINT1("INF_GetData() failed\n");
+          break;
+        }
+
+      /* Get optional target file name */
+      if (!INF_GetDataField (&FilesContext, 11, &TargetFileName))
+        TargetFileName = NULL;
+      else if (!*TargetFileName)
+        TargetFileName = NULL;
+
+      DPRINT ("FileKeyName: '%S'  FileKeyValue: '%S'\n", FileKeyName, FileKeyValue);
+
+      /* Lookup target directory */
+      if (!SetupFindFirstLineW (InfFile, L"Directories", FileKeyValue, &DirContext))
+        {
+          /* FIXME: Handle error! */
+          DPRINT1("SetupFindFirstLine() failed\n");
+          break;
+        }
+
+      if (!INF_GetData (&DirContext, NULL, &DirKeyValue))
+        {
+          /* FIXME: Handle error! */
+          DPRINT1("INF_GetData() failed\n");
+          break;
+        }
+
+      if (!SetupQueueCopy(SetupFileQueue,
+                          SourceCabinet,
+                          SourceRootPath.Buffer,
+                          SourceRootDir.Buffer,
+                          FileKeyName,
+                          DirKeyValue,
+                          TargetFileName))
+        {
+          /* FIXME: Handle error! */
+          DPRINT1("SetupQueueCopy() failed\n");
+        }
+    }
+  while (SetupFindNextLine(&FilesContext, &FilesContext));
+
+  return TRUE;
+}
+
+static BOOLEAN
 PrepareCopyPageInfFile(HINF InfFile,
 		       PWCHAR SourceCabinet,
 		       PINPUT_RECORD Ir)
@@ -2722,7 +2810,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   NTSTATUS Status;
 
   /* Add common files */
-  if (!AddSectionToCopyQueue(InfFile, L"SourceFiles", SourceCabinet, &DestinationPath, Ir))
+  if (!AddSectionToCopyQueue(InfFile, L"SourceDisksFiles", SourceCabinet, &DestinationPath, Ir))
     return FALSE;
 
   /* Add specific files depending of computer type */
