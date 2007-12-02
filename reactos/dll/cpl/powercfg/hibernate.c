@@ -26,48 +26,12 @@
 #include "powercfg.h"
 
 
-void Hib_InitDialog(HWND);
-INT_PTR Hib_SaveData(HWND);
 BOOLEAN Pos_InitData();
 void Adv_InitDialog();
 
-/* Property page dialog callback */
-INT_PTR CALLBACK
-hibernateProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-		Hib_InitDialog(hwndDlg);
-		return TRUE;
-	case WM_COMMAND:
-		switch(LOWORD(wParam))
-		{
-		case IDC_HIBERNATEFILE:
-			if (HIWORD(wParam) == BN_CLICKED)
-			{
-				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-			}
-		}
-		break;
-	case WM_NOTIFY:
-		{
-			LPNMHDR lpnm = (LPNMHDR)lParam;
-			if (lpnm->code == (UINT)PSN_APPLY)
-			{
-				return Hib_SaveData(hwndDlg);
-			}
-		}
-  }
-  return FALSE;
-}
 
-void Hib_InitDialog(HWND hwndDlg)
+static VOID
+Hib_InitDialog(HWND hwndDlg)
 {
 	SYSTEM_POWER_CAPABILITIES PowerCaps;
 	MEMORYSTATUSEX msex;
@@ -145,7 +109,8 @@ void Hib_InitDialog(HWND hwndDlg)
 	}
 }
 
-INT_PTR Hib_SaveData(HWND hwndDlg)
+INT_PTR
+Hib_SaveData(HWND hwndDlg)
 {
 	BOOLEAN bHibernate;
 
@@ -160,4 +125,38 @@ INT_PTR Hib_SaveData(HWND hwndDlg)
 	}
 
 	return FALSE;
+}
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+HibernateDlgProc(HWND hwndDlg,
+                 UINT uMsg,
+                 WPARAM wParam,
+                 LPARAM lParam)
+{
+  switch(uMsg)
+  {
+    case WM_INITDIALOG:
+		Hib_InitDialog(hwndDlg);
+		return TRUE;
+	case WM_COMMAND:
+		switch(LOWORD(wParam))
+		{
+		case IDC_HIBERNATEFILE:
+			if (HIWORD(wParam) == BN_CLICKED)
+			{
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			}
+		}
+		break;
+	case WM_NOTIFY:
+		{
+			LPNMHDR lpnm = (LPNMHDR)lParam;
+			if (lpnm->code == (UINT)PSN_APPLY)
+			{
+				return Hib_SaveData(hwndDlg);
+			}
+		}
+  }
+  return FALSE;
 }

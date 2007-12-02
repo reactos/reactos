@@ -22,66 +22,15 @@
 #include "resource.h"
 #include "powercfg.h"
 
-HWND hAdv=0;
-
-void Adv_InitDialog();
-void Adv_SaveData(HWND hwndDlg);
+HWND hAdv = 0;
 
 static POWER_ACTION g_SystemBatteries[3];
 static POWER_ACTION g_PowerButton[5];
 static POWER_ACTION g_SleepButton[5];
 
-/* Property page dialog callback */
-INT_PTR CALLBACK
-advancedProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-		hAdv = hwndDlg;
-		Adv_InitDialog();
-		return TRUE;
-      break;
-	case WM_COMMAND:
-		switch(LOWORD(wParam))
-		{
-		case IDC_SYSTRAYBATTERYMETER:
-		case IDC_PASSWORDLOGON:
-		case IDC_VIDEODIMDISPLAY:
-			if (HIWORD(wParam) == BN_CLICKED)
-			{
-				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-			}
-			break;
-		case IDC_LIDCLOSE:
-		case IDC_POWERBUTTON:
-		case IDC_SLEEPBUTTON:
-			if (HIWORD(wParam) == CBN_SELCHANGE)
-			{
-				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
-			}
-			break;
-		}
-		break;
-	case WM_NOTIFY:
-		{
-			LPNMHDR lpnm = (LPNMHDR)lParam;
-			if (lpnm->code == (UINT)PSN_APPLY)
-			{
-				Adv_SaveData(hwndDlg);
-			}
-			return TRUE;
-		}
-  }
-  return FALSE;
-}
 
-static void AddItem(HWND hDlgCtrl, int ResourceId, LPARAM lParam, POWER_ACTION * lpAction)
+static VOID
+AddItem(HWND hDlgCtrl, INT ResourceId, LPARAM lParam, POWER_ACTION * lpAction)
 {
   TCHAR szBuffer[MAX_PATH];
   LRESULT Index;
@@ -96,11 +45,12 @@ static void AddItem(HWND hDlgCtrl, int ResourceId, LPARAM lParam, POWER_ACTION *
   }
 }
 
-static int FindActionIndex(POWER_ACTION * lpAction, DWORD dwActionSize, POWER_ACTION poAction)
+static INT
+FindActionIndex(POWER_ACTION * lpAction, DWORD dwActionSize, POWER_ACTION poAction)
 {
-  int Index;
+  INT Index;
 
-  for (Index = 0; Index < (int) dwActionSize; Index++)
+  for (Index = 0; Index < (INT)dwActionSize; Index++)
   {
 	if (lpAction[Index] == poAction)
 	    return Index;
@@ -109,7 +59,8 @@ static int FindActionIndex(POWER_ACTION * lpAction, DWORD dwActionSize, POWER_AC
   return -1;
 }
 
-static BOOLEAN IsBatteryUsed()
+static BOOLEAN
+IsBatteryUsed(VOID)
 {
 	SYSTEM_BATTERY_STATE sbs;
 
@@ -128,7 +79,8 @@ static BOOLEAN IsBatteryUsed()
 	return FALSE;
 }
 
-POWER_ACTION GetPowerActionFromPolicy(POWER_ACTION_POLICY * Policy)
+POWER_ACTION
+GetPowerActionFromPolicy(POWER_ACTION_POLICY *Policy)
 {
 	POWER_ACTION poAction = PowerActionNone;
 	/*
@@ -171,10 +123,11 @@ POWER_ACTION GetPowerActionFromPolicy(POWER_ACTION_POLICY * Policy)
 	return poAction;
 }
 
-void ShowCurrentPowerActionPolicy(HWND hDlgCtrl,
-									POWER_ACTION * lpAction,
-									DWORD dwActionSize,
-									POWER_ACTION_POLICY * Policy)
+VOID
+ShowCurrentPowerActionPolicy(HWND hDlgCtrl,
+                             POWER_ACTION *lpAction,
+                             DWORD dwActionSize,
+                             POWER_ACTION_POLICY *Policy)
 {
 	int poActionIndex;
 	POWER_ACTION poAction;
@@ -190,8 +143,9 @@ void ShowCurrentPowerActionPolicy(HWND hDlgCtrl,
 	SendMessage(hDlgCtrl, CB_SETCURSEL, (WPARAM)poActionIndex, (LPARAM)0);
 }
 
-BOOLEAN SaveCurrentPowerActionPolicy(IN HWND hDlgCtrl,
-				 OUT POWER_ACTION_POLICY * Policy)
+BOOLEAN
+SaveCurrentPowerActionPolicy(IN HWND hDlgCtrl,
+                             OUT POWER_ACTION_POLICY *Policy)
 {
 	LRESULT Index;
 	LRESULT ItemData;
@@ -236,7 +190,8 @@ BOOLEAN SaveCurrentPowerActionPolicy(IN HWND hDlgCtrl,
 
 //-------------------------------------------------------------------
 
-void ShowCurrentPowerActionPolicies(HWND hwndDlg)
+VOID
+ShowCurrentPowerActionPolicies(HWND hwndDlg)
 {
 	TCHAR szAction[MAX_PATH];
 
@@ -323,7 +278,8 @@ void ShowCurrentPowerActionPolicies(HWND hwndDlg)
 	}
 }
 
-void Adv_InitDialog()
+VOID
+Adv_InitDialog(VOID)
 {
 	HWND hList1;
 	HWND hList2;
@@ -445,7 +401,8 @@ void Adv_InitDialog()
 }
 
 
-void Adv_SaveData(HWND hwndDlg)
+static VOID
+Adv_SaveData(HWND hwndDlg)
 {
 	BOOL bSystrayBatteryMeter;
 	BOOL bPasswordLogon;
@@ -528,4 +485,52 @@ void Adv_SaveData(HWND hwndDlg)
 	}
 
 	Adv_InitDialog();
+}
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+AdvancedDlgProc(HWND hwndDlg,
+                UINT uMsg,
+                WPARAM wParam,
+                LPARAM lParam)
+{
+  switch(uMsg)
+  {
+    case WM_INITDIALOG:
+		hAdv = hwndDlg;
+		Adv_InitDialog();
+		return TRUE;
+      break;
+	case WM_COMMAND:
+		switch(LOWORD(wParam))
+		{
+		case IDC_SYSTRAYBATTERYMETER:
+		case IDC_PASSWORDLOGON:
+		case IDC_VIDEODIMDISPLAY:
+			if (HIWORD(wParam) == BN_CLICKED)
+			{
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			}
+			break;
+		case IDC_LIDCLOSE:
+		case IDC_POWERBUTTON:
+		case IDC_SLEEPBUTTON:
+			if (HIWORD(wParam) == CBN_SELCHANGE)
+			{
+				PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
+			}
+			break;
+		}
+		break;
+	case WM_NOTIFY:
+		{
+			LPNMHDR lpnm = (LPNMHDR)lParam;
+			if (lpnm->code == (UINT)PSN_APPLY)
+			{
+				Adv_SaveData(hwndDlg);
+			}
+			return TRUE;
+		}
+  }
+  return FALSE;
 }

@@ -20,35 +20,8 @@
 #include "resource.h"
 #include "powercfg.h"
 
-BOOLEAN Ala_InitData(HWND);
-
-/* Property page dialog callback */
-INT_PTR CALLBACK
-alarmsProc(
-  HWND hwndDlg,
-  UINT uMsg,
-  WPARAM wParam,
-  LPARAM lParam
-)
-{
-  UNREFERENCED_PARAMETER(lParam);
-  UNREFERENCED_PARAMETER(wParam);
-  switch(uMsg)
-  {
-    case WM_INITDIALOG:
-		if (!Ala_InitData(hwndDlg))
-		{
-			//TODO
-			//handle initialization error
-		}
-		return TRUE;
-	default:
-		break;
-  }
-  return FALSE;
-}
-
-BOOLEAN Ala_InitData(HWND hwndDlg)
+static BOOLEAN
+Ala_InitData(HWND hwndDlg)
 {
 	TCHAR szAction[MAX_PATH];
 	TCHAR szText[MAX_PATH];
@@ -196,4 +169,28 @@ BOOLEAN Ala_InitData(HWND hwndDlg)
 	}
 
 	return TRUE;
+}
+
+/* Property page dialog callback */
+INT_PTR CALLBACK
+AlarmsDlgProc(HWND hwndDlg,
+              UINT uMsg,
+              WPARAM wParam,
+              LPARAM lParam)
+{
+  UNREFERENCED_PARAMETER(lParam);
+  UNREFERENCED_PARAMETER(wParam);
+  switch(uMsg)
+  {
+    case WM_INITDIALOG:
+		if (!Ala_InitData(hwndDlg))
+		{
+			//TODO
+			//handle initialization error
+		}
+		return TRUE;
+	default:
+		break;
+  }
+  return FALSE;
 }
