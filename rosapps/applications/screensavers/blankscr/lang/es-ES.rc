@@ -1,0 +1,8 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "En blanco"
+    IDS_TITLE       "Acerca de"
+    IDS_TEXT        "Ninguna opción necesita ser configurada."
+END
