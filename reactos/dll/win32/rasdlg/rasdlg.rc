@@ -36,4 +36,5 @@
 102		BITMAP "res/bitmaps/102.bmp"
 
 #include "lang/en-US.rc"
+#include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
