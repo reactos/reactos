@@ -8,11 +8,11 @@
 			<location>http://svn.reactos.org/packages/Firefox%20Setup%201.5.0.12.exe</location>
 		</application>
 		<application name="Firefox 2.0">
-			<regname>Mozilla Firefox (2.0.0.7)</regname>
+			<regname>Mozilla Firefox (2.0.0.11)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.7</version>
+			<version>2.0.0.11</version>
 			<description>The most popular and one of the best free Web Browsers out there.</description>
-			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.7/win32/en-US/Firefox%20Setup%202.0.0.7.exe</location>
+			<location>http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/2.0.0.11/win32/en-US/Firefox%20Setup%202.0.0.11.exe</location>
 		</application>
 		<application name="Thunderbird 1.5">
 			<regname>Mozilla Thunderbird (1.5)</regname>
@@ -22,17 +22,17 @@
 			<location>http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/1.5.0.13/win32/en-US/Thunderbird%20Setup%201.5.0.13.exe</location>
 		</application>
 		<application name="Thunderbird 2.0">
-			<regname>Mozilla Thunderbird (2.0.0.6)</regname>
+			<regname>Mozilla Thunderbird (2.0.0.9)</regname>
 			<licence>MPL/GPL/LGPL</licence>
-			<version>2.0.0.6</version>
+			<version>2.0.0.9</version>
 			<description>The most popular and one of the best free Mail Clients out there.</description>
-			<location>http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.6/win32/en-US/Thunderbird%20Setup%202.0.0.6.exe</location>
+			<location>http://ftp.mozilla.org/pub/mozilla.org/thunderbird/releases/2.0.0.9/win32/en-US/Thunderbird%20Setup%202.0.0.9.exe</location>
 		</application>
 		<application name="SeaMonkey">
-			<regname>SeaMonkey (1.1.4)</regname>
-			<version>1.1.4</version>
+			<regname>SeaMonkey (1.1.7)</regname>
+			<version>1.1.7</version>
 			<description>Mozilla Suite is alive. This is the one and only Browser, Mail, Chat, and Composer bundle you will ever need.</description>
-			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.1.4/seamonkey-1.1.4.en-US.win32.installer.exe</location>
+			<location>http://ftp-mozilla.netscape.com/pub/mozilla.org/seamonkey/releases/1.1.7/seamonkey-1.1.7.en-US.win32.installer.exe</location>
 		</application>
 		<application name="Mozilla ActiveX Control">
 			<regname>Mozilla ActiveX Control v1.7.12 (ReactOS special)</regname>
@@ -48,9 +48,9 @@
 		<application name="mIRC">
 			<regname>mIRC</regname>
 			<licence>Shareware</licence>
-			<version>6.21</version>
+			<version>6.31</version>
 			<description>The most popular client for the Internet Relay Chat (IRC).</description>
-			<location>http://www.efnet.org/clients/win32/mirc/mirc621.exe</location>
+			<location>http://mirc.bigchief.dk/mirc631.exe</location>
 		</application>
 		<application name="Samba TNG">
 			<description>This tool allows you to access your Windows shared folders/printers with ReactOS.</description>
@@ -58,9 +58,9 @@
 		</application>
 		<application name="Miranda IM">
 			<regname>Miranda IM</regname>
-			<version>0.6.8</version>
+			<version>0.7.3</version>
 			<description>Open source multiprotocol instant messaging application - May not work completely.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.6.8-unicode.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/miranda/miranda-im-v0.7.3-unicode.exe</location>
 		</application>
 		<application name="Putty">
 			<regname>PuTTY version 0.60</regname>
@@ -78,39 +78,39 @@
 			<location>http://www.abiword.org/downloads/abiword/2.5.2/Windows/abiword-setup-2.5.2.exe</location>
 		</application>
 		<application name="OpenOffice">
-			<regname>OpenOffice.org 2.2</regname>
-			<version>2.2.1</version>
+			<regname>OpenOffice.org 2.3</regname>
+			<version>2.3.0</version>
 			<description>THE Open Source Office Suite.</description>
-			<location>http://ftp.tu-chemnitz.de/pub/openoffice-extended/stable/2.2.1/OOo_2.2.1_Win32Intel_install_en-US.exe</location>
+			<location>http://ftp.tu-chemnitz.de/pub/openoffice-extended/stable/2.3.0/OOo_2.3.0_Win32Intel_install_en-US.exe</location>
 		</application>
 	</category>
 	<category name="Graphics" icon="3">
 		<application name="IrfanView">
 			<regname>IrfanView (remove only)</regname>
-			<version>4.00</version>
+			<version>4.10</version>
 			<description>Viewer for all kinds of graphics/audio files/video files.</description>
-			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview400_setup.exe</location>
+			<location>http://gd.tuwien.ac.at/graphics/irfanview/iview410_setup.exe</location>
 		</application>
 		<application name="IrfanView Plugins">
-			<version>4.00</version>
+			<version>4.10</version>
 			<description>Additional Plugins for supporting more file types.</description>
-			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_400_setup.exe</location>
+			<location>http://irfanview.tuwien.ac.at/plugins/irfanview_plugins_410_setup.exe</location>
 		</application>
 		<application name="TuxPaint">
-			<regname>Tux Paint 0.9.17</regname>
-			<version>0.9.17</version>
+			<regname>Tux Paint 0.9.18</regname>
+			<version>0.9.18</version>
 			<description>An Open Source bitmap graphics editor geared towards young children.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.17-win32-installer.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/tuxpaint/tuxpaint-0.9.18-win32-installer.exe</location>
 		</application>
 	</category>
 	<category name="Multimedia" icon="4">
 	</category>
 	<category name="Development" icon="5">
 		<application name="ReactOS Build Environment">
-			<regname>ReactOS Build Environment 0.3.8</regname>
-			<version>0.3.8</version>
+			<regname>ReactOS Build Environment 1.0</regname>
+			<version>1.0</version>
 			<description>Allows you to build the ReactOS Source. For more instructions see ReactOS wiki.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/reactos/RosBE-0.3.8.exe</location>
+			<location>http://kent.dl.sourceforge.net/sourceforge/reactos/RosBE-1.0.exe</location>
 		</application>
 		<application name="MinGW">
 			<regname>MinGW 5.1.3</regname>
@@ -119,10 +119,10 @@
 			<location>http://ovh.dl.sourceforge.net/sourceforge/mingw/MinGW-5.1.3.exe</location>
 		</application>
 		<application name="FreeBASIC">
-			<regname>FreeBASIC 0.17b</regname>
-			<version>0.17b</version>
+			<regname>FreeBASIC 0.18.2b</regname>
+			<version>0.18.2b</version>
 			<description>Open Source BASIC Compiler. The BASIC syntax is compatible to QBASIC.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.18.1b-win32.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/fbc/FreeBASIC-v0.18.2b-win32.exe</location>
 		</application>
 	</category>
 	<category name="Games &amp; Fun" icon="6">
@@ -169,16 +169,16 @@
 	</category>
 	<category name="Tools" icon="7">
 		<application name="7-Zip">
-			<regname>7-Zip 4.52</regname>
-			<version>4.52</version>
+			<regname>7-Zip 4.56</regname>
+			<version>4.56</version>
 			<description>Utility to create and open 7zip, zip, tar, rar and other archive files.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z452.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/sevenzip/7z456.exe</location>
 		</application>
 		<application name="uTorrent">
 			<regname>&#181;Torrent</regname>
-			<version>1.7.2</version>
+			<version>1.7.5</version>
 			<description>Small and fast BitTorrent Client.</description>
-			<location>http://download.utorrent.com/1.7.2/utorrent.exe</location>
+			<location>http://download.utorrent.com/1.7.5/utorrent.exe</location>
 		</application>
 		<application name="Audio Grabber">
 			<regname>Audiograbber 1.83 SE</regname>
@@ -194,9 +194,9 @@
 			<location>http://www.libsdl.org/release/SDL-1.2.12-win32.zip</location>
 		</application>
 		<application name="DOSBox">
-			<version>0.71</version>
+			<version>0.72</version>
 			<description>DOSBox is a DOS emulator.</description>
-			<location>http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.71-win32-installer.exe</location>
+			<location>http://ovh.dl.sourceforge.net/sourceforge/dosbox/DOSBox0.72-win32-installer.exe</location>
 		</application>
 	</category>
 </tree>
