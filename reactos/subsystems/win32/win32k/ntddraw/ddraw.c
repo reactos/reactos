@@ -50,10 +50,12 @@ DxDdStartupDxGraphics(  ULONG ulc1,
     // DxApiGetVersion()
 
     /* Loading the kernel interface of directx for win32k */
-    ghDxGraphics = EngLoadImage(L"drivers\\dxg.sys");
-    if (!ghDxGraphics)
+
+    ghDxGraphics = EngLoadImage(L"\\SystemRoot\\System32\\drivers\\dxg.sys");
+    
+    if (ghDxGraphics == NULL)
     {
-		DPRINT1("Warning: dxg.sys not found\n");
+        DPRINT1("Warning: dxg.sys not found\n");
         Status = STATUS_DLL_NOT_FOUND;
     }
     else
@@ -83,8 +85,11 @@ DxDdStartupDxGraphics(  ULONG ulc1,
         {
             gpfnStartupDxGraphics = NULL;
             gpfnCleanupDxGraphics = NULL;
-            EngUnloadImage( ghDxGraphics);
-            ghDxGraphics = NULL;
+            if (ghDxGraphics != NULL)
+            {
+                EngUnloadImage( ghDxGraphics);
+                ghDxGraphics = NULL;
+            }
             DPRINT1("Warning: DirectX graphics interface can not be initialized\n");
         }
         else
