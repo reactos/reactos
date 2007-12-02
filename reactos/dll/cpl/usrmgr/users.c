@@ -205,7 +205,11 @@ OnEndLabelEdit(LPNMLVDISPINFO pnmv)
 
     useri0.usri0_name = szNewUserName;
 
+#if 0
     status = NetUserSetInfo(NULL, szOldUserName, 0, (LPBYTE)&useri0, NULL);
+#else
+    status = NERR_Success;
+#endif
     if (status != NERR_Success)
     {
         TCHAR szText[256];
