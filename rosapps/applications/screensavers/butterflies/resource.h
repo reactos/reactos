@@ -1,3 +1,4 @@
+#define IDC_STATIC                      -1
 
 #define IDS_STR_DESCRIP                 1
 #define IDABOUT                         3
