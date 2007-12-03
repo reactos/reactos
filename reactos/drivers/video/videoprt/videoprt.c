@@ -474,6 +474,14 @@ IntVideoPortFindAdapter(
       DeviceExtension->RegistryPath.Buffer,
       DeviceExtension->RegistryPath.MaximumLength);
 
+   RtlWriteRegistryValue(
+       RTL_REGISTRY_DEVICEMAP,
+       L"VIDEO",
+       L"MaxObjectNumber",
+       REG_DWORD,
+       &DeviceNumber,
+       sizeof(DeviceNumber));
+
    /* FIXME: Allocate hardware resources for device. */
 
    /*
