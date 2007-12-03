@@ -328,6 +328,7 @@ EnumerateDevices(
   PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
   OBJECT_ATTRIBUTES ObjectAttributes;
   PKEY_BASIC_INFORMATION KeyInfo = NULL, SubKeyInfo = NULL;
+  UNICODE_STRING LegacyU = RTL_CONSTANT_STRING(L"LEGACY_");
   UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM L"\\" REGSTR_KEY_ROOTENUM);
   UNICODE_STRING SubKeyName;
   WCHAR DevicePath[MAX_PATH + 1];
@@ -405,8 +406,16 @@ EnumerateDevices(
     /* Terminate the string */
     KeyInfo->Name[KeyInfo->NameLength / sizeof(WCHAR)] = 0;
 
-    /* Open the key */
+    /* Check if it is a legacy driver */
     RtlInitUnicodeString(&SubKeyName, KeyInfo->Name);
+    if (RtlPrefixUnicodeString(&LegacyU, &SubKeyName, FALSE))
+    {
+        DPRINT("Ignoring legacy driver '%wZ'\n", &SubKeyName);
+        Index1++;
+        continue;
+    }
+
+    /* Open the key */
     InitializeObjectAttributes(
       &ObjectAttributes,
       &SubKeyName,

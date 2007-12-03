@@ -36,9 +36,6 @@ HKLM,"SYSTEM\CurrentControlSet\Control\DeviceClasses",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
-; The following line is only here to prevent the "New hardware wizard" to display a window for "Unknown device".
-; This device comes from Root plug and play bus (ntoskrnl/io/pnproot.c) and this one should never appear
-HKLM,"SYSTEM\CurrentControlSet\Enum\Root\LEGACY_UNKNOWN\0000","ConfigFlags",0x00010001,0x00000040
 
 ; Keyboard Layouts
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout File",0x00000000,"kbdda.dll"

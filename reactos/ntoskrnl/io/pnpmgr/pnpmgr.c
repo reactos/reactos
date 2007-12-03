@@ -2147,11 +2147,14 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
 
    ZwClose(InstanceKey);
 
-   DeviceNode->Flags |= DNF_PROCESSED;
+   IopDeviceNodeSetFlag(DeviceNode, DNF_PROCESSED);
 
-   /* Report the device to the user-mode pnp manager */
-   IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                             &DeviceNode->InstancePath);
+   if (!IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
+   {
+      /* Report the device to the user-mode pnp manager */
+      IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
+                                &DeviceNode->InstancePath);
+   }
 
    return STATUS_SUCCESS;
 }
