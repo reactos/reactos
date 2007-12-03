@@ -270,15 +270,30 @@ static void AddListViewItem(HWND hwndDlg, WCHAR * item, UINT state, UINT index)
     LV_ITEMW listItem;
     HWND hList;
     WCHAR * ptr;
+    WCHAR szApp[MAX_PATH];
 
     hList = GetDlgItem(hwndDlg, 14002);
 
+    szApp[0] = 0;
+    ptr = wcsrchr(item, L'\\');
+    if (ptr)
+    {
+        ptr++;
+    }
+    else
+    {
+        ptr = item;
+    }
 
-    ptr = wcsrchr(item, L'\\') + 1;
+    wcscpy(szApp, ptr);
+    ptr = wcsrchr(szApp, L'.');
+    if (ptr)
+        ptr[0] = 0;
+
     ZeroMemory(&listItem, sizeof(LV_ITEM));
     listItem.mask       = LVIF_TEXT | LVIF_PARAM | LVIF_STATE | LVIF_IMAGE;
     listItem.state      = state;
-    listItem.pszText    = ptr;
+    listItem.pszText    = szApp;
     listItem.iImage     = -1;
     listItem.iItem      = index;
     listItem.lParam     = (LPARAM)item;
@@ -291,6 +306,7 @@ static void AddListViewItems(HWND hwndDlg, SHEOWImpl * This)
     HWND hList;
     RECT clientRect;
     LV_COLUMN col;
+    int index;
 
     hList = GetDlgItem(hwndDlg, 14002);
 
@@ -302,10 +318,22 @@ static void AddListViewItems(HWND hwndDlg, SHEOWImpl * This)
     col.cx        = (clientRect.right - clientRect.left) - GetSystemMetrics(SM_CXVSCROLL);
     (void)ListView_InsertColumn(hList, 0, &col);
 
-    /* FIXME 
-     * add default items
-     */
     This->iSelItem = -1;
+
+    if (!This->szArray)
+        return;
+
+    for(index = 0; index < This->count; index++)
+    {
+        if (This->szArray[index] == NULL)
+            continue;
+        TRACE("val %s\n", debugstr_w(This->szArray[index]));
+        AddListViewItem(hwndDlg, This->szArray[index], 0, index);
+    }
+
+    /* FIXME
+     * select default item
+     */
 }
 static void FreeListViewItems(HWND hwndDlg)
 {
@@ -332,12 +360,17 @@ static void FreeListViewItems(HWND hwndDlg)
 BOOL HideApplicationFromList(WCHAR * pFileName)
 {
     WCHAR szBuffer[100];
-    DWORD dwSize;
+    DWORD dwSize = 0;
+    LONG result;
 
     wcscpy(szBuffer, L"Applications\\");
     wcscat(szBuffer, pFileName);
 
-    if (RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize) == ERROR_SUCCESS)
+    result = RegGetValueW(HKEY_CLASSES_ROOT, szBuffer, L"NoOpenWith", RRF_RT_REG_SZ, NULL, NULL, &dwSize);
+
+    TRACE("result %d szBuffer %s\n", result, debugstr_w(szBuffer));
+
+    if (result == ERROR_SUCCESS)
         return TRUE;
     else
         return FALSE;
@@ -349,6 +382,7 @@ BOOL WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath
     HKEY hVerb;
     HKEY hCmd;
     LONG result;
+    WCHAR szPath[MAX_PATH+10];
 
     if (RegCreateKeyExW(hRootKey, L"shell", 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL, &hShell, NULL) != ERROR_SUCCESS)
     {
@@ -369,7 +403,10 @@ BOOL WriteStaticShellExtensionKey(HKEY hRootKey, WCHAR * pVerb, WCHAR *pFullPath
         return FALSE;
     }
 
-    result = RegSetValueExW(hCmd, NULL, 0, REG_SZ, (const BYTE*)pFullPath, (strlenW(pFullPath)+1)* sizeof(WCHAR));
+    wcscpy(szPath, pFullPath);
+    wcscat(szPath, L" %1");
+
+    result = RegSetValueExW(hCmd, NULL, 0, REG_SZ, (const BYTE*)szPath, (strlenW(szPath)+1)* sizeof(WCHAR));
     RegCloseKey(hCmd);
     if (result == ERROR_SUCCESS)
         return TRUE;
@@ -395,7 +432,6 @@ BOOL StoreApplicationsPathForUser(WCHAR *pFileName, WCHAR* pFullPath)
         RegCloseKey(hRootKey);
         return FALSE;
     }
-    RegCloseKey(hKey);
     RegCloseKey(hRootKey);
 
     result = WriteStaticShellExtensionKey(hKey, L"open", pFullPath);
@@ -451,50 +487,37 @@ BOOL StoreNewSettings(WCHAR * pExt, WCHAR * pFileName, WCHAR * pFullPath)
 
     RegCloseKey(hRootKey);
 
-    if (dwDisposition & REG_CREATED_NEW_KEY)
-    {
-        result = RegSetValueExW(hKey, L"a", 0, REG_SZ, (const BYTE*)pFileName, (strlenW(pFileName)+1) * sizeof(WCHAR));
-
-        if (result != ERROR_SUCCESS)
-        {
-            ERR("Error: failed to set value\n");
-            RegCloseKey(hKey);
-            return FALSE;
-        }
-        
-        result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)L"a", 2 * sizeof(WCHAR));
-        RegCloseKey(hKey);
-        if (result == ERROR_SUCCESS)
-            return TRUE;
-        else
-            return FALSE;
-    }
-
     dwBuffer = sizeof(szBuffer);
     result = RegGetValueW(hKey, NULL, L"MRUList", RRF_RT_REG_SZ, NULL, szBuffer, &dwBuffer);
     if (result != ERROR_SUCCESS)
     {
         /* FIXME
-         * recreate info
+         * should rescan all values and rebuild the list
          */
-        ERR("Failed to get value of MRUList\n");
-        RegCloseKey(hKey);
-        return FALSE;
+        szBuffer[0] = 0;
     }
+
     dwMask = 0;
     CurChar[1] = 0;
-    dwBuffer = (dwBuffer / sizeof(WCHAR));
-    for(dwIndex = 0; dwIndex < dwBuffer - 1; dwIndex++)
+    dwBuffer = strlenW(szBuffer); //FIXME
+
+    TRACE("MRUList %s length %u\n", debugstr_w(szBuffer), dwBuffer);
+
+    for(dwIndex = 0; dwIndex < dwBuffer; dwIndex++)
     {
         CurChar[0] = szBuffer[dwIndex];
-        dwMask |= (1 << (CurChar[0] - L'a'));
+        dwMask |= (1 << (szBuffer[0] - L'a'));
+
+        TRACE("dwMask %x CurChar %s\n", dwMask, debugstr_w(CurChar));
 
         dwVal = sizeof(szVal);
         if (RegGetValueW(hKey, NULL, CurChar, RRF_RT_REG_SZ, NULL, szVal, &dwVal) == ERROR_SUCCESS)
         {
             if (!wcsicmp(szVal, pFileName))
             {
-                memmove(&szBuffer[0], &szBuffer[1], dwIndex * sizeof(WCHAR));
+                if (dwIndex)
+                    memmove(&szBuffer[1], &szBuffer[0], dwIndex * sizeof(WCHAR));
+
                 szBuffer[0] = CurChar[0];
                 result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)szBuffer, dwBuffer * sizeof(WCHAR));
                 RegCloseKey(hKey);
@@ -505,6 +528,7 @@ BOOL StoreNewSettings(WCHAR * pExt, WCHAR * pFileName, WCHAR * pFullPath)
             }
         }
     }
+    TRACE("dwMask %x\n", dwMask);
 
     dwIndex = 0;
     while(dwMask & (1 << dwIndex))
@@ -519,18 +543,23 @@ BOOL StoreNewSettings(WCHAR * pExt, WCHAR * pFileName, WCHAR * pFullPath)
     }
     
     CurChar[0] = L'a' + dwIndex;
+
+    TRACE("new index %u CurChar %s\n", dwIndex, debugstr_w(CurChar));
+
     result = RegSetValueExW(hKey, CurChar, 0, REG_SZ, (const BYTE*)pFileName, (strlenW(pFileName) + 1) * sizeof(WCHAR));
     if (result == ERROR_SUCCESS)
     {
-        memmove(&szBuffer[0], &szBuffer[1], dwBuffer * sizeof(WCHAR));
+        memmove(&szBuffer[1], &szBuffer[0], (dwBuffer + 1) * sizeof(WCHAR));
         szBuffer[0] = CurChar[0];
-        result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)szBuffer, dwBuffer * sizeof(WCHAR));
+        dwBuffer = strlenW(szBuffer);
+        TRACE("New MRUList %s length %u\n", debugstr_w(szBuffer), dwBuffer);
+        result = RegSetValueExW(hKey, L"MRUList", 0, REG_SZ, (const BYTE*)szBuffer, (dwBuffer+1) * sizeof(WCHAR));
         if (result == ERROR_SUCCESS)
         {
             StoreApplicationsPathForUser(pFileName, pFullPath);
         }
     }
-
+    
     RegCloseKey(hKey);
 
     if (result == ERROR_SUCCESS)
@@ -539,7 +568,7 @@ BOOL StoreNewSettings(WCHAR * pExt, WCHAR * pFileName, WCHAR * pFullPath)
         return FALSE;
 }
 BOOL
-SetProgrammAsDefaultHandler(WCHAR *pFileExt, WCHAR* pFullPath)
+SetProgramAsDefaultHandler(WCHAR *pFileExt, WCHAR* pFullPath)
 {
     HKEY hExtKey;
     HKEY hProgKey;
@@ -558,11 +587,17 @@ SetProgrammAsDefaultHandler(WCHAR *pFileExt, WCHAR* pFullPath)
     {
         wcscpy(szBuffer, &pFileExt[1]);
         wcscat(szBuffer, L"_auto_file");
+        if (RegSetValueExW(hExtKey, NULL, 0, REG_SZ, (const BYTE*)szBuffer, (strlenW(szBuffer)+1) * sizeof(WCHAR)) != ERROR_SUCCESS)
+        {
+            ERR("Error: failed to store default key\n");
+            RegCloseKey(hExtKey);
+            return FALSE;
+        }
     }
     else
     {
         dwSize = sizeof(szBuffer);
-        if (!RegGetValueW(hExtKey, NULL, NULL, RRF_RT_REG_SZ, NULL, szBuffer, &dwSize))
+        if (RegGetValueW(hExtKey, NULL, NULL, RRF_RT_REG_SZ, NULL, szBuffer, &dwSize) != ERROR_SUCCESS)
         {
             ERR("Error: failed to retrieve subkey\n");
             RegCloseKey(hExtKey);
@@ -596,7 +631,7 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
     LPFNOFN ofnProc;
     WCHAR szBuffer[MAX_PATH + 30] = { 0 };
     WCHAR szPath[MAX_PATH * 2 +1] = { 0 };
-    WCHAR * pExt;
+    WCHAR * pExt, *pFileName;
     int res;
     LVITEMW lvItem;
     STARTUPINFOW si;
@@ -657,38 +692,43 @@ static BOOL CALLBACK OpenWithProgrammDlg(HWND hwndDlg, UINT uMsg, WPARAM wParam,
         case 14005: /* ok */
             ZeroMemory(&lvItem, sizeof(LVITEMW));
 
-            lvItem.mask = LVIF_PARAM | LVIF_TEXT;
+            lvItem.mask = LVIF_PARAM;
             lvItem.iItem = This->iSelItem;
-            lvItem.pszText = szBuffer;
+
             if (!ListView_GetItemW(GetDlgItem(hwndDlg, 14002), &lvItem))
             {
-                ERR("Failed to get item index %d\n", This->iSelItem);
+                ERR("Failed to get item lparam %d\n", This->iSelItem);
                 DestroyWindow(hwndDlg);
                 return FALSE;
             }
-            pExt = wcsrchr(szBuffer, L'.');
 
-            if (!HideApplicationFromList(szBuffer))
+            pFileName = wcsrchr((WCHAR*)lvItem.lParam, L'\\');
+            pExt = wcsrchr(This->szPath, L'\\');
+            if (pExt)
             {
-#if 0
-                if (!StoreNewSettings(pExt, szBuffer, (WCHAR*)lvItem.lParam))
-                {
-                    /* failed to store setting */
-                    WARN("Error: failed to store settings for app %s\n", debugstr_w(szBuffer));
-                }
-#endif
+                pExt = wcsrchr(pExt + 1, L'.');
             }
 
-            if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+            if (pFileName && pExt)
             {
-#if 0
-                if (!SetProgrammAsDefaultHandler(pExt, (WCHAR*)lvItem.lParam))
+                pFileName++;
+                if (!HideApplicationFromList(pFileName))
                 {
-                    /* failed to associate programm */
-                    WARN("Error: failed to associate programm\n");
+                    if (!StoreNewSettings(pExt, pFileName, (WCHAR*)lvItem.lParam))
+                    {
+                        WARN("Error: failed to store settings for app %s\n", debugstr_w(szBuffer));
+                    }
                 }
-#endif
+                if (SendDlgItemMessage(hwndDlg, 14003, BM_GETCHECK, 0, 0) == BST_CHECKED)
+                {
+                    if (!SetProgramAsDefaultHandler(pExt, (WCHAR*)lvItem.lParam))
+                    {
+                        /* failed to associate programm */
+                        WARN("Error: failed to associate programm\n");
+                    }
+                }
             }
+
             ZeroMemory(&si, sizeof(STARTUPINFOW));
             si.cb = sizeof(STARTUPINFOW);
             wcscpy(szPath, (WCHAR*)lvItem.lParam);
@@ -761,7 +801,12 @@ SHEOWCm_fnInvokeCommand( IContextMenu2* iface, LPCMINVOKECOMMANDINFO lpici )
         MSG msg;
         BOOL bRet;
         HWND hwnd = CreateDialogParam(shell32_hInstance, MAKEINTRESOURCE(OPEN_WITH_PROGRAMM_DLG), lpici->hwnd, OpenWithProgrammDlg, (LPARAM)This);
-        ShowWindow(hwnd, SW_SHOW);
+        if (hwnd == NULL)
+        {
+            ERR("Failed to create dialog\n");
+            return E_FAIL;
+        }
+        ShowWindow(hwnd, SW_SHOWNORMAL);
 
         while ((bRet = GetMessage(&msg, NULL, 0, 0)) != 0) 
         { 
@@ -858,27 +903,20 @@ SHEOW_ResizeArray(SHEOWImpl *This)
 void
 SHEOW_AddOWItem(SHEOWImpl *This, WCHAR * szAppName)
 {
-   UINT index;
-   WCHAR * szPtr;
-
-   if (This->count + 1 >= This->size || !This->szArray)
-   {
+    UINT index;
+    if (This->count + 1 >= This->size || !This->szArray)
+    {
         if (!SHEOW_ResizeArray(This))
             return;
-   }
+    }
 
-   szPtr = wcsrchr(szAppName, '.');
-   if (szPtr)
-   {
-        szPtr[0] = 0;
-   }
-
-   for(index = 0; index < This->count; index++)
-   {
+    for(index = 0; index < This->count; index++)
+    {
         if (!wcsicmp(This->szArray[index], szAppName))
             return;
-   }
-   This->szArray[This->count] = wcsdup(szAppName);
+    }
+
+    This->szArray[This->count] = wcsdup(szAppName);
 
     if (This->szArray[This->count])
         This->count++;
@@ -902,7 +940,7 @@ SHEW_AddOpenWithItem(SHEOWImpl *This, HKEY hKey)
     LONG result = ERROR_SUCCESS;
     WCHAR szName[10];
     WCHAR szValue[MAX_PATH];
-    WCHAR szMRUList[MAX_PATH] = {0};
+    WCHAR szMRUList[32] = {0};
 
     static const WCHAR szMRU[] = {'M','R','U','L','i','s','t', 0 };
 
@@ -925,14 +963,14 @@ SHEW_AddOpenWithItem(SHEOWImpl *This, HKEY hKey)
 
         if (result == ERROR_SUCCESS)
         {
-            if (wcsicmp(szValue, szMRU))
+            if (!wcsicmp(szName, szMRU))
             {
-                SHEOW_AddOWItem(This, szValue);    
-                NumItems++;
+                wcsncpy(szMRUList, szValue, sizeof(szMRU) / sizeof(WCHAR));
             }
             else
             {
-                wcscpy(szMRUList, szValue);
+                SHEOW_AddOWItem(This, szValue);    
+                NumItems++;
             }
         }
         dwIndex++;
@@ -1169,9 +1207,6 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
     TRACE("count %u\n", This->count);
     return S_OK;
 }
-
-
-
 
 static HRESULT WINAPI
 SHEOW_ExtInit_Initialize( IShellExtInit* iface, LPCITEMIDLIST pidlFolder,
