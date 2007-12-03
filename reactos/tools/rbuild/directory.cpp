@@ -125,6 +125,7 @@ Directory::CreateDirectory ( const string& path )
 	if ( isalpha ( path[0] ) && path[1] == ':' && path[2] == cSep )
 	{
 		nextIndex = path.find ( cSep, 3);
+		index = path.find ( cSep );
 	}
 	else
 		nextIndex = path.find ( cSep );
