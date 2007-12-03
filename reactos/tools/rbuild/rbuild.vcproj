@@ -136,6 +136,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;INFLIB_HOST"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="1"
+				DefaultCharIsUnsigned="true"
 				UsePrecompiledHeader="0"
 				PrecompiledHeaderFile=".\Debug/rbuild.pch"
 				AssemblerListingLocation=".\Debug/"
