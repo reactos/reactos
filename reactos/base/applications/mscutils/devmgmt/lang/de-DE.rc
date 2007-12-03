@@ -6,7 +6,7 @@ BEGIN
   BEGIN
     MENUITEM "&Beenden",                   IDC_EXIT
   END
-  POPUP "Action"
+  POPUP "Aktion"
   BEGIN
     MENUITEM "Drucken",                   IDC_PRINT, GRAYED
     MENUITEM SEPARATOR
@@ -14,14 +14,14 @@ BEGIN
     MENUITEM SEPARATOR
     MENUITEM "Hilfe",                    IDC_PROGHELP, GRAYED
   END
-  POPUP "View"
+  POPUP "Ansicht"
   BEGIN
     MENUITEM "Geräte nach Typ",         IDC_DEVBYTYPE, CHECKED
     MENUITEM "Geräte nach Verbindung",   IDC_STATIC, GRAYED
     MENUITEM "Resourcen nach Typ",       IDC_STATIC, GRAYED
     MENUITEM "Resourcen nach Verbindung", IDC_STATIC, GRAYED
   END
-  POPUP "Help"
+  POPUP "&?"
   BEGIN
     MENUITEM "Hilfe",                    IDC_PROGHELP
     MENUITEM "Info",                   IDC_ABOUT
