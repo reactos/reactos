@@ -366,7 +366,7 @@ typedef struct _DC
   ULONG       lucExcLock;
   ULONG       Tid;
 
-  DHPDEV      PDev;   // GDIDEVICE.Handle
+  DHPDEV      PDev;   // GDIDEVICE.PDev
   INT         DC_Type;
   INT         DC_Flags;
   PVOID       pPDev;  // PGDIDEVICE

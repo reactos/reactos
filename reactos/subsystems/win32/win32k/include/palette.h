@@ -10,26 +10,26 @@
 #define PALETTE_WHITESET 0x2000
 
 // Palette mode flags
-#if 0 // Defined in ddk/winddi.h
-#define PAL_INDEXED         0x00000001
-#define PAL_BITFIELDS       0x00000002
-#define PAL_RGB             0x00000004
-#define PAL_BGR             0x00000008
-#define PAL_CMYK            0x00000010
+#ifndef __WINDDI_H // Defined in ddk/winddi.h
+#define PAL_INDEXED         0x00000001 // Indexed palette
+#define PAL_BITFIELDS       0x00000002 // Bit fields used for DIB, DIB section
+#define PAL_RGB             0x00000004 // Red, green, blue
+#define PAL_BGR             0x00000008 // Blue, green, red
+#define PAL_CMYK            0x00000010 // Cyan, magenta, yellow, black
 #endif
 #define PAL_DC              0x00000100
-#define PAL_FIXED           0x00000200
+#define PAL_FIXED           0x00000200 // Can't be changed
 #define PAL_FREE            0x00000400
 #define PAL_MANAGED         0x00000800
 #define PAL_NOSTATIC        0x00001000
-#define PAL_MONOCHROME      0x00002000
+#define PAL_MONOCHROME      0x00002000 // Two colors only
 #define PAL_BRUSHHACK       0x00004000
-#define PAL_DIBSECTION      0x00008000
+#define PAL_DIBSECTION      0x00008000 // Used for a DIB section
 #define PAL_NOSTATIC256     0x00010000
-#define PAL_HT              0x00100000
-#define PAL_RGB16_555       0x00200000
-#define PAL_RGB16_565       0x00400000
-#define PAL_GAMMACORRECTION 0x00800000
+#define PAL_HT              0x00100000 // Halftone palette
+#define PAL_RGB16_555       0x00200000 // 16-bit RGB in 555 format
+#define PAL_RGB16_565       0x00400000 // 16-bit RGB in 565 format
+#define PAL_GAMMACORRECTION 0x00800000 // Correct colors
 
 typedef struct {
     int shift;
@@ -52,6 +52,7 @@ typedef struct _PALGDI {
   ULONG RedMask;
   ULONG GreenMask;
   ULONG BlueMask;
+  HDEV  hPDev;
 } PALGDI, *PPALGDI;
 
 HPALETTE FASTCALL PALETTE_AllocPalette(ULONG Mode,

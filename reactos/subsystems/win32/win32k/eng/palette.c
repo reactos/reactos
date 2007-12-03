@@ -32,6 +32,30 @@
 #define NDEBUG
 #include <debug.h>
 
+//
+//
+//
+VOID FASTCALL
+ColorCorrection(PPALGDI PalGDI, PPALETTEENTRY PaletteEntry, ULONG Colors)
+{
+   PGDIDEVICE pGDev = (PGDIDEVICE)PalGDI->hPDev;
+
+   if (!pGDev) return;
+
+   if (pGDev->flFlags & PDEV_GAMMARAMP_TABLE)
+   {
+      INT i;
+      PGAMMARAMP GammaRamp = (PGAMMARAMP)pGDev->pvGammaRamp;
+      for ( i = 0; i < Colors; i++)
+      {
+          PaletteEntry[i].peRed   += GammaRamp->Red[i];
+          PaletteEntry[i].peGreen += GammaRamp->Green[i];
+          PaletteEntry[i].peBlue  += GammaRamp->Blue[i];
+      }
+   }
+   return;
+}
+
 /*
  * @implemented
  */
@@ -79,6 +103,9 @@ PALOBJ_cGetColors(PALOBJ *PalObj, ULONG Start, ULONG Colors, ULONG *PaletteEntry
 
    /* NOTE: PaletteEntry ULONGs are in the same order as PALETTEENTRY. */
    RtlCopyMemory(PaletteEntry, PalGDI->IndexedColors + Start, sizeof(ULONG) * Colors);
+
+   if (PalGDI->Mode & PAL_GAMMACORRECTION)
+      ColorCorrection(PalGDI, (PPALETTEENTRY)PaletteEntry, Colors);
 
    return Colors;
 }

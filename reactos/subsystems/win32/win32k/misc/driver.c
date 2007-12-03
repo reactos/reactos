@@ -284,6 +284,7 @@ TRACEDRV_ROUTINE(GetDirectDrawInfo)
 TRACEDRV_ROUTINE(EnableDirectDraw)
 TRACEDRV_ROUTINE(DisableDirectDraw)
 TRACEDRV_ROUTINE(QuerySpoolType)
+TRACEDRV_ROUTINE(IcmSetDeviceGammaRamp)
 TRACEDRV_ROUTINE(GradientFill)
 TRACEDRV_ROUTINE(SynchronizeSurface)
 TRACEDRV_ROUTINE(AlphaBlend)
@@ -352,6 +353,7 @@ static TRACEDRVINFO TraceDrvInfo[] =
     TRACEDRVINFO_ENTRY(EnableDirectDraw),
     TRACEDRVINFO_ENTRY(DisableDirectDraw),
     TRACEDRVINFO_ENTRY(QuerySpoolType),
+    TRACEDRVINFO_ENTRY(IcmSetDeviceGammaRamp),
     TRACEDRVINFO_ENTRY(GradientFill),
     TRACEDRVINFO_ENTRY(SynchronizeSurface),
     TRACEDRVINFO_ENTRY(AlphaBlend)
@@ -450,6 +452,7 @@ BOOL DRIVER_BuildDDIFunctions(PDRVENABLEDATA  DED,
     DRIVER_FUNCTION(EnableDirectDraw);
     DRIVER_FUNCTION(DisableDirectDraw);
     DRIVER_FUNCTION(QuerySpoolType);
+    DRIVER_FUNCTION(IcmSetDeviceGammaRamp);
     DRIVER_FUNCTION(GradientFill);
     DRIVER_FUNCTION(SynchronizeSurface);
     DRIVER_FUNCTION(AlphaBlend);

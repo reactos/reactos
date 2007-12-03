@@ -35,6 +35,7 @@
 #define TAG_DC		TAG('D', 'C', 'D', 'C') /* dc */
 #define TAG_GDIOBJ	TAG('G', 'D', 'I', 'O') /* gdi obj */
 #define TAG_GDIHNDTBLE	TAG('G', 'D', 'I', 'H') /* gdi handle table */
+#define TAG_GDIICM	TAG('G', 'i', 'c', 'm') /* gdi Icm */
 #define TAG_DIB		TAG('D', 'I', 'B', ' ') /* dib */
 #define TAG_COLORMAP	TAG('C', 'O', 'L', 'M') /* color map */
 #define TAG_SHAPE	TAG('S', 'H', 'A', 'P') /* shape */
