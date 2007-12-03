@@ -164,6 +164,7 @@ AddItems(SHEOWImpl *This, HMENU hMenu, UINT idCmdFirst)
     MENUITEMINFOW mii;
     WCHAR szBuffer[MAX_PATH];
     UINT index;
+    WCHAR * szPtr;
     static const WCHAR szChoose[] = { 'C','h','o','o','s','e',' ','P','r','o','g','r','a','m','.','.','.',0 };
 
     ZeroMemory(&mii, sizeof(mii));
@@ -175,7 +176,26 @@ AddItems(SHEOWImpl *This, HMENU hMenu, UINT idCmdFirst)
     for (index = 0; index < This->count; index++)
     {
         mii.wID = idCmdFirst;
-        mii.dwTypeData = (LPWSTR)This->szArray[index];
+        szPtr = wcsrchr(This->szArray[index], L'\\');
+        if (!szPtr)
+        {
+            szPtr = This->szArray[index];
+        }
+        else
+        {
+            /* remove backslash from path */
+            szPtr++;
+        }
+        
+        wcscpy(szBuffer, szPtr);
+        szPtr = wcsrchr(szBuffer, L'.');
+        if (szPtr)
+        {
+            /* remove .exe part from display list */
+            szPtr[0] = 0;
+        }
+
+        mii.dwTypeData = szBuffer;
         if (InsertMenuItemW(hMenu, -1, TRUE, &mii))
         {
             idCmdFirst++;
@@ -1013,6 +1033,31 @@ SHEOW_LoadItemFromHKCR(SHEOWImpl *This, WCHAR * szExt)
         return NumKeys;
 
     result = RegOpenKeyExW(hKey,
+                           L"shell\\open\\command",
+                           0,
+                           KEY_READ | KEY_QUERY_VALUE,
+                           &hSubKey);
+
+    if (result == ERROR_SUCCESS)
+    {
+        WCHAR szBuffer[MAX_PATH+10];
+        WCHAR * ptr;
+        DWORD dwBuffer = sizeof(szBuffer);
+
+        if (RegGetValueW(hSubKey, NULL, NULL, RRF_RT_REG_SZ, NULL, (PVOID)szBuffer, &dwBuffer) == ERROR_SUCCESS)
+        {
+            ptr = wcsrchr(szBuffer, L' ');
+            if (ptr)
+            {
+                /* erase %1 or extra arguments */
+                ptr[0] = 0;
+            }
+            SHEOW_AddOWItem(This, szBuffer);
+        }
+        RegCloseKey(hSubKey);
+    }
+
+    result = RegOpenKeyExW(hKey,
                           szCROW,
                           0,
                           KEY_READ | KEY_QUERY_VALUE,
@@ -1196,13 +1241,17 @@ SHEOW_LoadOpenWithItems(SHEOWImpl *This, IDataObject *pdtobj)
         }
 
         SHEOW_LoadItemFromHKCU(This, szPtr);
-        SHEOW_LoadItemFromHKCR(This, szPtr);
-        dwPath = sizeof(szPath);
-        if (RegGetValueW(HKEY_CLASSES_ROOT, szPtr, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
+        if (RegGetValueW(HKEY_CURRENT_USER, szPtr, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
         {
             SHEOW_LoadItemFromHKCU(This, szPath);
         }
 
+        SHEOW_LoadItemFromHKCR(This, szPtr);
+        dwPath = sizeof(szPath);
+        if (RegGetValueW(HKEY_CLASSES_ROOT, szPtr, NULL, RRF_RT_REG_SZ, NULL, szPath, &dwPath) == ERROR_SUCCESS)
+        {
+            SHEOW_LoadItemFromHKCR(This, szPath);
+        }
     }
     TRACE("count %u\n", This->count);
     return S_OK;
