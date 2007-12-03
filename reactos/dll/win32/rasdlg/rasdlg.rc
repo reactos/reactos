@@ -8,6 +8,8 @@
 #define REACTOS_STR_ORIGINAL_FILENAME	"rasdlg.dll\0"
 #include <reactos/version.rc>
 
+128 24 DISCARDABLE "manifest.xml"
+
 50		ICON "res/icons/50.ico"
 51		ICON "res/icons/51.ico"
 52		ICON "res/icons/52.ico"
