@@ -351,6 +351,9 @@ MSVCBackend::_generate_vcproj ( const Module& module )
 
 		StringSet defines = common_defines;
 
+        // Always add _CRT_SECURE_NO_WARNINGS to disable warnings about not using the safe functions introduced in MSVC8.
+        defines.insert ( "_CRT_SECURE_NO_WARNINGS" );
+
 		if ( debug )
 		{
 			defines.insert ( "_DEBUG" );
