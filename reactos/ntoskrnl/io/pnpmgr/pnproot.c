@@ -226,48 +226,6 @@ cleanup:
     return Status;
 }
 
-static NTSTATUS STDCALL
-ForwardIrpAndWaitCompletion(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp,
-	IN PVOID Context)
-{
-	if (Irp->PendingReturned)
-		KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-	return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-static NTSTATUS
-ForwardIrpAndWait(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp)
-{
-	PDEVICE_OBJECT LowerDevice;
-	KEVENT Event;
-	NTSTATUS Status;
-
-	ASSERT(((PPNPROOT_COMMON_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->IsFDO);
-	LowerDevice = ((PPNPROOT_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->Ldo;
-
-	ASSERT(LowerDevice);
-
-	KeInitializeEvent(&Event, NotificationEvent, FALSE);
-	IoCopyCurrentIrpStackLocationToNext(Irp);
-
-	DPRINT("Calling lower device %p [%wZ]\n", LowerDevice, &LowerDevice->DriverObject->DriverName);
-	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
-
-	Status = IoCallDriver(LowerDevice, Irp);
-	if (Status == STATUS_PENDING)
-	{
-		Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-		if (NT_SUCCESS(Status))
-			Status = Irp->IoStatus.Status;
-	}
-
-	return Status;
-}
-
 static NTSTATUS NTAPI
 QueryStringCallback(
     IN PWSTR ValueName,
@@ -702,10 +660,14 @@ PnpRootFdoPnpControl(
 
         case IRP_MN_START_DEVICE:
             DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
-            Status = ForwardIrpAndWait(DeviceObject, Irp);
-            if (NT_SUCCESS(Status))
-                DeviceExtension->State = dsStarted;
-            Status = STATUS_SUCCESS;
+            if (!IoForwardIrpSynchronously(DeviceExtension->Ldo, Irp))
+                Status = STATUS_UNSUCCESSFUL;
+            else
+            {
+                Status = Irp->IoStatus.Status;
+                if (NT_SUCCESS(Status))
+                    DeviceExtension->State = dsStarted;
+            }
             break;
 
          case IRP_MN_STOP_DEVICE:

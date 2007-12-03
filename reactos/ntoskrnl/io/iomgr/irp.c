@@ -1411,16 +1411,56 @@ IofCompleteRequest(IN PIRP Irp,
     }
 }
 
+NTSTATUS
+NTAPI
+IopSynchronousCompletion(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp,
+    IN PVOID Context)
+{
+    if (Irp->PendingReturned)
+        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
+    return STATUS_MORE_PROCESSING_REQUIRED;
+}
+
 /*
- * @unimplemented
+ * @implemented
  */
 BOOLEAN
 NTAPI
 IoForwardIrpSynchronously(IN PDEVICE_OBJECT DeviceObject,
                           IN PIRP Irp)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    KEVENT Event;
+    NTSTATUS Status;
+
+    /* Check if next stack location is available */
+    if (Irp->CurrentLocation < Irp->StackCount)
+    {
+        /* No more stack location */
+        return FALSE;
+    }
+
+    /* Initialize event */
+    KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+    /* Copy stack location for next driver */
+    IoCopyCurrentIrpStackLocationToNext(Irp);
+
+    /* Set a completion routine, which will signal the event */
+    IoSetCompletionRoutine(Irp, IopSynchronousCompletion, &Event, TRUE, TRUE, TRUE);
+
+    /* Call next driver */
+    Status = IoCallDriver(DeviceObject, Irp);
+
+    /* Check if irp is pending */
+    if (Status == STATUS_PENDING)
+    {
+        /* Yes, wait for its completion */
+        KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
+    }
+
+    return TRUE;
 }
 
 /*
