@@ -258,7 +258,15 @@ UserDrawCaptionButtonWnd(HWND hWnd, HDC hDC, BOOL bDown, ULONG Type)
    UserDrawCaptionButton(&WindowRect, Style, ExStyle, hDC, bDown, Type);
 }
 
+// Note from Wine:
+/* MSDN docs are pretty idiotic here, they say app CAN use clipRgn in
+   the call to GetDCEx implying that it is allowed not to use it either.
+   However, the suggested GetDCEx(    , DCX_WINDOW | DCX_INTERSECTRGN)
+   will cause clipRgn to be deleted after ReleaseDC().
+   Now, how is the "system" supposed to tell what happened?
+ */
 #define DCX_USESTYLE     0x00010000
+#define DCX_KEEPCLIPRGN  0x00040000 // <-- You do this!
 /*
  * FIXME:
  * - Drawing of WS_BORDER after scrollbars
@@ -277,7 +285,7 @@ DefWndNCPaint(HWND hWnd, HRGN hRgn, BOOL Active)
 
    Style = GetWindowLongW(hWnd, GWL_STYLE);
 
-   hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE);
+   hDC = GetDCEx(hWnd, hRgn, DCX_WINDOW | DCX_INTERSECTRGN | DCX_USESTYLE | DCX_KEEPCLIPRGN);
    if (hDC == 0)
    {
       return 0;
