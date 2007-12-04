@@ -541,7 +541,7 @@ IntPrepareDriver()
 
       PrimarySurface.PreparedDriver = TRUE;
       PrimarySurface.DisplayNumber = DisplayNumber;
-
+      PrimarySurface.flFlags = PDEV_DISPLAY; // Hard set,, add more flags.
       PrimarySurface.hsemDevLock = (PERESOURCE)EngCreateSemaphore();
 
       ret = TRUE;
@@ -826,6 +826,9 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel * 
                                      ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
+
+  NewDC->flGraphics  = PrimarySurface.DevInfo.flGraphicsCaps;
+  NewDC->flGraphics2 = PrimarySurface.DevInfo.flGraphicsCaps2;
 
   if (!CreateAsIC)
   {
@@ -2676,6 +2679,17 @@ IntIsPrimarySurface(SURFOBJ *SurfObj)
        return FALSE;
      }
    return SurfObj->hsurf == PrimarySurface.Handle;
+}
+
+//
+// Enumerate HDev
+//
+PGDIDEVICE FASTCALL
+IntEnumHDev(VOID)
+{
+// I guess we will soon have more than one primary surface.
+// This will do for now.
+   return &PrimarySurface;
 }
 
 #define SIZEOF_DEVMODEW_300 188

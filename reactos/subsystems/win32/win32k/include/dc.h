@@ -51,7 +51,7 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
 
 typedef struct
 {
-  HANDLE Handle;
+  HANDLE Handle;                 // HSURF
   PVOID  pvEntry;
   ULONG  lucExcLock;
   ULONG  Tid;
@@ -60,7 +60,6 @@ typedef struct
   PERESOURCE hsemDevLock;
 
   PVOID  pvGammaRamp;
-  PVOID  pfnSync;
 
   DHPDEV PDev;
   DEVMODEW DMW;
@@ -94,6 +93,7 @@ typedef struct
 
 NTSTATUS FASTCALL InitDcImpl(VOID);
 HDC  FASTCALL RetrieveDisplayHDC(VOID);
+PGDIDEVICE FASTCALL IntEnumHDev(VOID);
 HDC  FASTCALL DC_AllocDC(PUNICODE_STRING  Driver);
 VOID FASTCALL DC_InitDC(HDC  DCToInit);
 HDC  FASTCALL DC_FindOpenDC(PUNICODE_STRING  Driver);
