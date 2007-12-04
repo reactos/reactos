@@ -141,6 +141,8 @@ BOOL GdiGetHandleUserData(HGDIOBJ hGdiObj, DWORD ObjectType, PVOID *UserData)
          }
          _SEH_END
       }
+       else
+         Result = FALSE; // Can not be zero.
       if (Result) *UserData = Entry->UserData;
       return Result;
     }
