@@ -2,7 +2,7 @@
 #define WORD unsigned short
 #define DWORD unsigned long
 #define ULONG unsigned long
-#define BOOL unsigned long
+#define BOOL int
 #define LPSTR char*
 #define LPCSTR char*
 #define LPWSTR wchar_t*

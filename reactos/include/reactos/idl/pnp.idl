@@ -64,11 +64,11 @@ interface pnp
     cpp_quote("#define PNP_BRANCH_ENUM  1")
     cpp_quote("#define PNP_BRANCH_CLASS 2")
     CONFIGRET PNP_EnumerateSubKeys(handle_t BindingHandle,
-                                   [in] unsigned long Branch,
-                                   [in] unsigned long Index,
+                                   [in] DWORD Branch,
+                                   [in] DWORD Index,
                                    [out, string, size_is(Length)] wchar_t *Buffer,
-                                   [in] unsigned long Length,
-                                   [out] unsigned long *RequiredLength,
+                                   [in] DWORD Length,
+                                   [out] DWORD *RequiredLength,
                                    [in] DWORD Flags);
 
     /* Function 10 */
@@ -93,11 +93,11 @@ interface pnp
     /* Function 13 */
     CONFIGRET PNP_GetDeviceRegProp(handle_t BindingHandle,
                                    [in, string] wchar_t *DeviceInstance,
-                                   [in] unsigned long Property,
-                                   [in, out] unsigned long *DataType,
+                                   [in] DWORD Property,
+                                   [in, out] DWORD *DataType,
                                    [out, size_is(*TransferLen)] char *Buffer,
-                                   [in, out] unsigned long *TransferLen,
-                                   [in, out] unsigned long *Length,
+                                   [in, out] DWORD *TransferLen,
+                                   [in, out] DWORD *Length,
                                    [in] DWORD Flags);
 
     /* Function 14 */
@@ -192,7 +192,7 @@ interface pnp
                               [in] DWORD Action,
                               [in, string] wchar_t *DeviceId,
                               [in] DWORD ProfileId,
-                              [in, out] unsigned long *Value,
+                              [in, out] DWORD *Value,
                               [in] DWORD Flags);
 
     /* Function 42 */
