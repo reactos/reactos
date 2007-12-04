@@ -493,20 +493,31 @@ CmiScanKeyList(PKEY_OBJECT Parent,
     return STATUS_SUCCESS;
 }
 
-
+NTSTATUS
+NTAPI
+CmpParseKey2(IN PVOID ParseObject,
+             IN PVOID ObjectType,
+             IN OUT PACCESS_STATE AccessState,
+             IN KPROCESSOR_MODE AccessMode,
+             IN ULONG Attributes,
+             IN OUT PUNICODE_STRING CompleteName,
+             IN OUT PUNICODE_STRING RemainingName,
+             IN OUT PVOID Context OPTIONAL,
+             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+             OUT PVOID *Object);
 
 NTSTATUS
 NTAPI
 CmpParseKey(IN PVOID ParsedObject,
-               IN PVOID ObjectType,
-               IN OUT PACCESS_STATE AccessState,
-               IN KPROCESSOR_MODE AccessMode,
-               IN ULONG Attributes,
-               IN OUT PUNICODE_STRING FullPath,
-               IN OUT PUNICODE_STRING RemainingName,
-               IN OUT PVOID Context OPTIONAL,
-               IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-               OUT PVOID *NextObject)
+            IN PVOID ObjectType,
+            IN OUT PACCESS_STATE AccessState,
+            IN KPROCESSOR_MODE AccessMode,
+            IN ULONG Attributes,
+            IN OUT PUNICODE_STRING FullPath,
+            IN OUT PUNICODE_STRING RemainingName,
+            IN OUT PVOID Context OPTIONAL,
+            IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+            OUT PVOID *NextObject)
 {
     HCELL_INDEX BlockOffset;
     PKEY_OBJECT FoundObject;
@@ -522,6 +533,22 @@ CmpParseKey(IN PVOID ParsedObject,
     PWSTR *Path = &RemainingName->Buffer;
     PCM_KEY_CONTROL_BLOCK ParentKcb = NULL, Kcb;
     PCM_KEY_NODE Node;
+    
+    /* Detect new-style parse */
+    if (Context)
+    {
+        /* Call proper parse routine */
+        return CmpParseKey2(ParsedObject,
+                            ObjectType,
+                            AccessState,
+                            AccessMode,
+                            Attributes,
+                            FullPath,
+                            RemainingName,
+                            Context,
+                            SecurityQos,
+                            NextObject);
+    }
     
     ParsedKey = ParsedObject;
 

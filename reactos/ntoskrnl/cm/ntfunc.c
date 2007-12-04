@@ -136,6 +136,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
         Status = STATUS_OBJECT_NAME_NOT_FOUND;
         goto Cleanup;
     }
+    
+    /* Lock the registry */
+    CmpLockRegistry();
 
     /* Create the key */
     Status = CmpDoCreate(Parent->KeyControlBlock->KeyHive,
@@ -187,6 +190,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 
     /* Add the keep-alive reference */
     ObReferenceObject(KeyObject);
+    
+    /* Unlock registry */
+    CmpUnlockRegistry();
 
     /* Force a lazy flush */
     CmpLazyFlush();

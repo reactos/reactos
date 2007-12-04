@@ -77,6 +77,15 @@ typedef struct _CHILD_LIST
 } CHILD_LIST, *PCHILD_LIST;
 
 //
+// Node Key Reference to Parents
+//
+typedef struct  _CM_KEY_REFERENCE
+{
+    HCELL_INDEX KeyCell;
+    PHHIVE KeyHive;
+} CM_KEY_REFERENCE, *PCM_KEY_REFERENCE;
+
+//
 // Node Key
 //
 typedef struct _CM_KEY_NODE
@@ -87,6 +96,15 @@ typedef struct _CM_KEY_NODE
     ULONG Spare;
     HCELL_INDEX Parent;
     ULONG SubKeyCounts[HTYPE_COUNT];
+    union
+    {
+        struct
+        {
+            HCELL_INDEX SubKeyLists[HTYPE_COUNT];
+            CHILD_LIST ValueList;
+        };
+        //CM_KEY_REFERENCE ChildHiveReference;
+    };
     HCELL_INDEX SubKeyLists[HTYPE_COUNT];
     CHILD_LIST ValueList;
     HCELL_INDEX Security;

@@ -215,7 +215,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
                                    *KeyCell,
                                    KeyNode,
                                    ParentKcb,
-                                   0,
+                                   CMP_LOCK_HASHES_FOR_KCB,
                                    Name);
     if (!Kcb)
     {
@@ -280,6 +280,12 @@ CmpDoCreate(IN PHHIVE Hive,
     PCM_KEY_NODE KeyNode;
     UNICODE_STRING LocalClass = {0};
     if (!Class) Class = &LocalClass;
+
+    /* Sanity check */
+#if 0
+    ASSERT((CmpIsKcbLockedExclusive(ParentKcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+#endif
 
     /* Acquire the flusher lock */
     ExAcquirePushLockShared((PVOID)&((PCMHIVE)Hive)->FlusherLock);
@@ -447,7 +453,12 @@ CmpDoOpen(IN PHHIVE Hive,
     //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
 
     /* Create the KCB. FIXME: Use lock flag */
-    Kcb = CmpCreateKeyControlBlock(Hive, Cell, Node, *CachedKcb, 0, KeyName);
+    Kcb = CmpCreateKeyControlBlock(Hive,
+                                   Cell,
+                                   Node,
+                                   *CachedKcb,
+                                   CMP_LOCK_HASHES_FOR_KCB,
+                                   KeyName);
     if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Make sure it's also locked, and set the pointer */
@@ -503,7 +514,10 @@ CmpCreateLinkNode(IN PHHIVE Hive,
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
     PCM_KEY_CONTROL_BLOCK Kcb = ParentKcb;
-    
+#if 0
+    CMP_ASSERT_REGISTRY_LOCK();
+#endif
+
     /* Link nodes only allowed on the master */
     if (Hive != &CmiVolatileHive->Hive)
     {
@@ -711,4 +725,239 @@ Exit:
     ExReleasePushLock((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
     ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
+}
+
+NTSTATUS
+NTAPI
+CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
+                                IN OUT PCM_KEY_CONTROL_BLOCK *Kcb,
+                                IN PUNICODE_STRING Current,
+                                OUT PHHIVE *Hive,
+                                OUT HCELL_INDEX *Cell,
+                                OUT PULONG TotalRemainingSubkeys,
+                                OUT PULONG MatchRemainSubkeyLevel,
+                                OUT PULONG TotalSubkeys,
+                                OUT PULONG OuterStackArray,
+                                OUT PULONG *LockedKcbs)
+{
+    ULONG HashKeyCopy;
+    
+    /* We don't lock anything for now */
+    *LockedKcbs = NULL;
+
+    /* Make a copy of the hash key */
+    HashKeyCopy = (*Kcb)->ConvKey;
+
+    /* Calculate hash values */
+    *TotalRemainingSubkeys = 0xBAADF00D;
+    
+    /* Lock the registry */
+    CmpLockRegistry();
+    
+    /* Return hive and cell data */
+    *Hive = (*Kcb)->KeyHive;
+    *Cell = (*Kcb)->KeyCell;
+    
+    /* Return success for now */
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+NTAPI
+CmpParseKey2(IN PVOID ParseObject,
+             IN PVOID ObjectType,
+             IN OUT PACCESS_STATE AccessState,
+             IN KPROCESSOR_MODE AccessMode,
+             IN ULONG Attributes,
+             IN OUT PUNICODE_STRING CompleteName,
+             IN OUT PUNICODE_STRING RemainingName,
+             IN OUT PVOID Context OPTIONAL,
+             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+             OUT PVOID *Object)
+{
+    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    PCM_KEY_CONTROL_BLOCK Kcb, ParentKcb;
+    PHHIVE Hive = NULL;
+    PCM_KEY_NODE Node = NULL;
+    HCELL_INDEX Cell = HCELL_NIL, NextCell;
+    UNICODE_STRING Current, NextName;
+    PCM_PARSE_CONTEXT ParseContext = Context;
+    ULONG TotalRemainingSubkeys = 0, MatchRemainSubkeyLevel = 0, TotalSubkeys = 0;
+    PULONG LockedKcbs = NULL;
+    BOOLEAN Result, Last;
+    PAGED_CODE();
+    DPRINT1("New style parse routine called: %wZ %wZ!\n", CompleteName, RemainingName);
+
+    /* Loop path separators at the end */
+    while ((RemainingName->Length) &&
+           (RemainingName->Buffer[(RemainingName->Length / sizeof(WCHAR)) - 1] ==
+            OBJ_NAME_PATH_SEPARATOR))
+    {
+        /* Remove path separator */
+        RemainingName->Length -= sizeof(WCHAR);
+    }
+
+    /* Fail if this isn't a key object */
+    if (ObjectType != CmpKeyObjectType) return STATUS_OBJECT_TYPE_MISMATCH;
+    
+    /* Copy the remaining name */
+    Current = *RemainingName;
+    
+    /* Check if this is a create */
+    if (!(ParseContext) || !(ParseContext->CreateOperation))
+    {
+        /* It isn't, so no context */
+        ParseContext = NULL;
+    }
+    
+    /* Grab the KCB */
+    Kcb = ((PKEY_OBJECT)ParseObject)->KeyControlBlock;
+    DPRINT1("KCB Parse: %p\n", Kcb);
+
+    /* Lookup in the cache */
+    Status = CmpBuildHashStackAndLookupCache(ParseObject,
+                                             &Kcb,
+                                             &Current,
+                                             &Hive,
+                                             &Cell,
+                                             &TotalRemainingSubkeys,
+                                             &MatchRemainSubkeyLevel,
+                                             &TotalSubkeys,
+                                             NULL,
+                                             &LockedKcbs);
+    
+    /* This is now the parent */
+    ParentKcb = Kcb;
+    DPRINT1("ParentKcb Parse: %p\n", ParentKcb);
+    DPRINT1("Hive Parse: %p\n", Hive);
+    DPRINT1("Cell Parse: %p\n", Cell);    
+    
+    /* Check if everything was found cached */
+    if (!TotalRemainingSubkeys) ASSERTMSG("Caching not implemented", FALSE);
+    
+    /* Don't do anything if we're being deleted */
+    if (Kcb->Delete) return STATUS_OBJECT_NAME_NOT_FOUND;
+    
+    /* Check if this is a symlink */
+    if (Kcb->Flags & KEY_SYM_LINK)
+    {
+        /* Not implemented */
+        DPRINT1("Parsing sym link\n");
+        while (TRUE);
+    }
+    
+    /* Get the key node */
+    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+    if (!Node) return STATUS_INSUFFICIENT_RESOURCES;
+    DPRINT1("Node Parse: %p\n", Node);
+    
+    /* Start parsing */
+    Status = STATUS_SUCCESS;
+    while (TRUE)
+    {
+        /* Get the next component */
+        Result = CmpGetNextName(&Current, &NextName, &Last); 
+        DPRINT1("Result Parse: %p\n", Result);
+        if ((Result) && (NextName.Length))
+        {
+            /* See if this is a sym link */
+            if (!(Kcb->Flags & KEY_SYM_LINK))
+            {
+                /* Find the subkey */
+                NextCell = CmpFindSubKeyByName(Hive, Node, &NextName);
+                DPRINT1("NextCell Parse: %lx\n", NextCell);
+                if (NextCell != HCELL_NIL)
+                {
+                    /* Get the new node */
+                    Cell = NextCell;
+                    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+                    DPRINT1("Node Parse: %p\n", Node);
+                    if (!Node) ASSERT(FALSE);
+                    
+                    /* Check if this was the last key */
+                    if (Last)
+                    {
+                        /* Shouldn't happen yet */
+                        DPRINT1("Unhandled: Open of last key\n");
+                        break;
+                    }
+                    
+                    /* Get hive and cell from reference */
+                    //Hive = Node->ChildHiveReference.KeyHive;
+                    //Cell = Node->ChildHiveReference.KeyCell;
+                    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
+                    DPRINT1("Node Parse: %p\n", Node);
+                    if (!Node) ASSERT(FALSE);
+
+                    /* Create a KCB for this key */
+                    Kcb = CmpCreateKeyControlBlock(Hive,
+                                                   Cell,
+                                                   Node,
+                                                   ParentKcb,
+                                                   0,
+                                                   &NextName);
+                    if (!Kcb) ASSERT(FALSE);
+                    DPRINT1("Kcb Parse: %p\n", Kcb);
+                    
+                    /* Dereference the parent and set the new one */
+                    CmpDereferenceKeyControlBlock(ParentKcb);
+                    ParentKcb = Kcb;
+                }
+                else
+                {
+                    /* Check if this was the last key for a create */
+                    if ((Last) && (ParseContext))
+                    {
+                        /* Check if we're doing a link node */
+                        if (ParseContext->CreateLink)
+                        {
+                            /* The only thing we should see */
+                            DPRINT1("Expected: Creating new link\n");
+                        }
+                        else
+                        {
+                            /* Create: should not see this (yet) */
+                            DPRINT1("Unexpected: Creating new child\n");
+                            while (TRUE);
+                        }
+
+                        /* Update disposition */
+                        ParseContext->Disposition = REG_CREATED_NEW_KEY;
+                        break;
+                    }
+                    else
+                    {
+                        /* Key not found */
+                        Status = STATUS_OBJECT_NAME_NOT_FOUND;
+                        break;
+                    }
+                }
+            }
+            else
+            {
+                /* Not implemented */
+                DPRINT1("Parsing sym link\n");
+                while (TRUE);
+            }
+        }
+        else if ((Result) && (Last))
+        {
+            /* Opening root: unexpected */
+            DPRINT1("Unexpected: Opening root\n");
+            while (TRUE);
+        }
+        else
+        {
+            /* Bogus */
+            Status = STATUS_INVALID_PARAMETER;
+            break;
+        }
+    }
+
+    /* Dereference the parent if it exists */
+    if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
+    
+    /* Unlock the registry */
+    CmpUnlockRegistry();
+    return STATUS_NOT_IMPLEMENTED;
 }

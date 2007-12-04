@@ -194,15 +194,6 @@ typedef struct _CM_INDEX_HINT_BLOCK
 } CM_INDEX_HINT_BLOCK, *PCM_INDEX_HINT_BLOCK;
 
 //
-// Key Reference
-//
-typedef struct _CM_KEY_REFERENCE
-{
-    HCELL_INDEX KeyCell;
-    PHHIVE KeyHive;
-} CM_KEY_REFERENCE, *PCM_KEY_REFERENCE;
-
-//
 // Key Body
 //
 typedef struct _CM_KEY_BODY
@@ -782,6 +773,12 @@ CmpTestRegistryLockExclusive(
     VOID
 );
 
+BOOLEAN
+NTAPI
+CmpTestRegistryLock(
+    VOID
+);
+
 VOID
 NTAPI
 CmpLockRegistryExclusive(
@@ -886,6 +883,12 @@ CmpDereferenceKeyControlBlockWithLock(
 
 VOID
 NTAPI
+CmpDereferenceKeyControlBlock(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+VOID
+NTAPI
 EnlistKeyBodyWithKCB(
     IN PCM_KEY_BODY KeyObject,
     IN ULONG Flags
@@ -904,6 +907,20 @@ CmpFreeKeyByCell(
     IN PHHIVE Hive,
     IN HCELL_INDEX Cell,
     IN BOOLEAN Unlink
+);
+
+VOID
+NTAPI
+CmpAcquireTwoKcbLocksExcusiveByKey(
+    IN ULONG ConvKey1,
+    IN ULONG ConvKey2
+);
+
+VOID
+NTAPI
+CmpReleaseTwoKcbLockByKey(
+    IN ULONG ConvKey1,
+    IN ULONG ConvKey2
 );
 
 //

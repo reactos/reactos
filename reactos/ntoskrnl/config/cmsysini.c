@@ -504,6 +504,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     CM_PARSE_CONTEXT ParseContext = {0};
+    HANDLE KeyHandle;
     PAGED_CODE();
     
     /* Setup the object attributes */
@@ -529,6 +530,17 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
         /* We have one */
         ParseContext.ChildHive.KeyCell = RegistryHive->Hive.BaseBlock->RootCell;   
     }
+    
+    DPRINT1("Ready to parse\n");
+    Status = ObOpenObjectByName(&ObjectAttributes,
+                                CmpKeyObjectType,
+                                KernelMode,
+                                NULL,
+                                KEY_READ | KEY_WRITE,
+                                (PVOID)&ParseContext,
+                                &KeyHandle);
+    DPRINT1("Parse done: %lx\n", Status);
+    //while (TRUE);
     
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(&ObjectAttributes,
@@ -1600,6 +1612,73 @@ CmpUnlockRegistry(VOID)
     /* Release the lock and leave the critical region */
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
+}
+
+VOID
+NTAPI
+CmpAcquireTwoKcbLocksExcusiveByKey(IN ULONG ConvKey1,
+                                   IN ULONG ConvKey2)
+{
+    ULONG Index1, Index2;
+    
+    /* Sanity check */
+    CMP_ASSERT_REGISTRY_LOCK();
+
+    /* Get hash indexes */
+    Index1 = GET_HASH_INDEX(ConvKey1);
+    Index2 = GET_HASH_INDEX(ConvKey2);
+
+    /* See which one is highest */
+    if (Index1 < Index2)
+    {
+        /* Grab them in the proper order */
+        CmpAcquireKcbLockExclusiveByKey(ConvKey1);
+        CmpAcquireKcbLockExclusiveByKey(ConvKey2);
+    }
+    else
+    {
+        /* Grab the second one first, then the first */
+        CmpAcquireKcbLockExclusiveByKey(ConvKey2);
+        if (Index1 != Index2) CmpAcquireKcbLockExclusiveByKey(ConvKey1);        
+    }
+}
+
+VOID
+NTAPI
+CmpReleaseTwoKcbLockByKey(IN ULONG ConvKey1,
+                          IN ULONG ConvKey2)
+{
+    ULONG Index1, Index2;
+    
+    /* Sanity check */
+    CMP_ASSERT_REGISTRY_LOCK();
+    
+    /* Get hash indexes */
+    Index1 = GET_HASH_INDEX(ConvKey1);
+    Index2 = GET_HASH_INDEX(ConvKey2);
+    ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey2).Owner == KeGetCurrentThread()) ||
+           (CmpTestRegistryLockExclusive()));
+    
+    /* See which one is highest */
+    if (Index1 < Index2)
+    {
+        /* Grab them in the proper order */
+        ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1).Owner == KeGetCurrentThread()) ||
+               (CmpTestRegistryLockExclusive()));
+        CmpReleaseKcbLockByKey(ConvKey2);
+        CmpReleaseKcbLockByKey(ConvKey1);
+    }
+    else
+    {
+        /* Release the first one first, then the second */
+        if (Index1 != Index2)
+        {
+            ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1).Owner == KeGetCurrentThread()) ||
+                   (CmpTestRegistryLockExclusive()));
+            CmpReleaseKcbLockByKey(ConvKey1);        
+        }
+        CmpReleaseKcbLockByKey(ConvKey2);
+    }
 }
 
 VOID

@@ -503,6 +503,39 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
 VOID
 NTAPI
+CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    LONG OldRefCount, NewRefCount;
+    ULONG ConvKey;
+
+    /* Get the ref count and update it */
+    OldRefCount = *(PLONG)&Kcb->RefCount;
+    NewRefCount = OldRefCount - 1;
+    
+    /* Check if we still have refenreces */
+    if( (NewRefCount & 0xffff) > 0)
+    {
+        /* Do the dereference */
+        if (InterlockedCompareExchange((PLONG)&Kcb->RefCount,
+                                       NewRefCount,
+                                       OldRefCount) == OldRefCount)
+        {
+            /* We'de done */
+            return;
+        }
+    }
+    
+    /* Save the key */
+    ConvKey = Kcb->ConvKey;
+
+    /* Do the dereference inside the lock */
+    CmpAcquireKcbLockExclusive(Kcb);
+    CmpDereferenceKeyControlBlockWithLock(Kcb, FALSE);
+    CmpReleaseKcbLockByKey(ConvKey);
+}
+
+VOID
+NTAPI
 CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                       IN BOOLEAN LockHeldExclusively)
 {
@@ -621,10 +654,19 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
 
     /* Check if we have two hash entires */
     HashLock = Flags & CMP_LOCK_HASHES_FOR_KCB ? TRUE : FALSE;
-    if (HashLock)
+    if (!HashLock)
     {
-        /* Not yet implemented */
-        KeBugCheck(0);
+        /* It's not locked, do we have a parent? */
+        if (Parent)
+        {
+            /* Lock the parent KCB and ourselves */
+            CmpAcquireTwoKcbLocksExcusiveByKey(ConvKey, Parent->ConvKey);
+        }
+        else
+        {
+            /* Lock only ourselves */
+            CmpAcquireKcbLockExclusive(Kcb);
+        }
     }
 
     /* Check if we already have a KCB */
@@ -746,10 +788,19 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     ASSERT((!Kcb) || (Kcb->Delete == FALSE));
 
     /* Check if we had locked the hashes */
-    if (HashLock)
+    if (!HashLock)
     {
-        /* Not yet implemented: Unlock hashes */
-        KeBugCheck(0);
+        /* We locked them manually, do we have a parent? */
+        if (Parent)
+        {
+            /* Unlock the parent KCB and ourselves */
+            CmpReleaseTwoKcbLockByKey(ConvKey, Parent->ConvKey);
+        }
+        else
+        {
+            /* Unlock only ourselves */
+            CmpReleaseKcbLockByKey(ConvKey);
+        }
     }
 
     /* Return the KCB */
@@ -763,4 +814,5 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
 {
     ASSERT(FALSE);
 }
+
 
