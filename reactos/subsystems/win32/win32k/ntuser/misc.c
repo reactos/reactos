@@ -2397,10 +2397,10 @@ IntSafeCopyUnicodeString(PUNICODE_STRING Dest,
 
    Src = Dest->Buffer;
    Dest->Buffer = NULL;
+   Dest->MaximumLength = Dest->Length;
 
    if(Dest->Length > 0 && Src)
    {
-      Dest->MaximumLength = Dest->Length;
       Dest->Buffer = ExAllocatePoolWithTag(PagedPool, Dest->MaximumLength, TAG_STRING);
       if(!Dest->Buffer)
       {
@@ -2443,6 +2443,7 @@ IntSafeCopyUnicodeStringTerminateNULL(PUNICODE_STRING Dest,
 
    Src = Dest->Buffer;
    Dest->Buffer = NULL;
+   Dest->MaximumLength = 0;
 
    if(Dest->Length > 0 && Src)
    {
