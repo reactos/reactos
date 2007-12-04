@@ -105,8 +105,6 @@ typedef struct _CM_KEY_NODE
         };
         //CM_KEY_REFERENCE ChildHiveReference;
     };
-    HCELL_INDEX SubKeyLists[HTYPE_COUNT];
-    CHILD_LIST ValueList;
     HCELL_INDEX Security;
     HCELL_INDEX Class;
     ULONG MaxNameLen;
