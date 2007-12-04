@@ -272,7 +272,7 @@ std::string
 MSVCBackend::VcprojFileName ( const Module& module ) const
 {
 	return FixSeparatorForSystemCommand(
-			ReplaceExtension ( module.output->relative_path + "\\" + module.output->name, "_" + _get_vc_dir() + "_auto.vcproj" )
+			ReplaceExtension ( module.output->relative_path + "\\" + module.name, "_" + _get_vc_dir() + "_auto.vcproj" )
 			);
 }
 
