@@ -53,6 +53,7 @@ END
 #include "lang/da-DK.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
+#include "lang/en-GB.rc"
 #include "lang/en-US.rc"
 #include "lang/eo-EO.rc"
 #include "lang/es-ES.rc"
