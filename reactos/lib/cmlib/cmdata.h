@@ -103,7 +103,7 @@ typedef struct _CM_KEY_NODE
             HCELL_INDEX SubKeyLists[HTYPE_COUNT];
             CHILD_LIST ValueList;
         };
-        //CM_KEY_REFERENCE ChildHiveReference;
+        CM_KEY_REFERENCE ChildHiveReference;
     };
     HCELL_INDEX Security;
     HCELL_INDEX Class;

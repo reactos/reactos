@@ -379,11 +379,12 @@ CmpDoCreate(IN PHHIVE Hive,
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb == ParentKcb);
-        //ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
 
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
         KeyNode->LastWriteTime = TimeStamp;
+        KeyBody->KeyControlBlock->ParentKcb->KcbLastWriteTime = TimeStamp;
 
         /* Check if we need to update name maximum */
         if (KeyNode->MaxNameLen < Name->Length)
@@ -413,6 +414,7 @@ CmpDoCreate(IN PHHIVE Hive,
 
             /* Update the flags */
             CellData->u.KeyNode.Flags |= KEY_SYM_LINK;
+            KeyBody->KeyControlBlock->Flags = CellData->u.KeyNode.Flags;
             HvReleaseCell(Hive, KeyCell);
         }
     }
@@ -448,6 +450,9 @@ CmpDoOpen(IN PHHIVE Hive,
         /* It is, don't touch it */
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
+    
+    /* Do this in the registry lock */
+    CmpLockRegistry();
 
     /* If we have a KCB, make sure it's locked */
     //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
@@ -457,13 +462,16 @@ CmpDoOpen(IN PHHIVE Hive,
                                    Cell,
                                    Node,
                                    *CachedKcb,
-                                   CMP_LOCK_HASHES_FOR_KCB,
+                                   0,
                                    KeyName);
     if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Make sure it's also locked, and set the pointer */
     //ASSERT(CmpIsKcbLockedExclusive(Kcb));
     *CachedKcb = Kcb;
+
+    /* Release the registry lock */
+    CmpUnlockRegistry();
 
     /* Allocate the key object */
     Status = ObCreateObject(AccessMode,
@@ -671,8 +679,8 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         KeyNode->ClassLength = 0;
         
         /* Reference the root node */
-        //KeyNode->ChildHiveReference.KeyHive = Context->ChildHive.KeyHive;
-        //KeyNode->ChildHiveReference.KeyCell = ChildCell;
+        KeyNode->ChildHiveReference.KeyHive = Context->ChildHive.KeyHive;
+        KeyNode->ChildHiveReference.KeyCell = ChildCell;
         HvReleaseCell(Hive, LinkCell);
         
         /* Get the parent node */
@@ -698,7 +706,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Sanity checks */
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyHive == Hive);
-        //ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
+        ASSERT(KeyBody->KeyControlBlock->ParentKcb->KcbMaxNameLen == KeyNode->MaxNameLen);
         
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
@@ -725,6 +733,42 @@ Exit:
     ExReleasePushLock((PVOID)&((PCMHIVE)Context->ChildHive.KeyHive)->FlusherLock);
     ExReleasePushLock((PVOID)&((PCMHIVE)Hive)->FlusherLock);
     return Status;
+}
+
+VOID
+NTAPI
+CmpHandleExitNode(IN OUT PHHIVE *Hive,
+                  IN OUT HCELL_INDEX *Cell,
+                  IN OUT PCM_KEY_NODE *KeyNode,
+                  IN OUT PHHIVE *ReleaseHive,
+                  IN OUT HCELL_INDEX *ReleaseCell)
+{
+    /* Check if we have anything to release */
+    if (*ReleaseCell != HCELL_NIL)
+    {
+        /* Release it */
+        ASSERT(*ReleaseHive != NULL);
+        HvReleaseCell((*ReleaseHive), *ReleaseCell);
+    }
+    
+    /* Get the link references */
+    *Hive = (*KeyNode)->ChildHiveReference.KeyHive;
+    *Cell = (*KeyNode)->ChildHiveReference.KeyCell;
+    
+    /* Get the new node */
+    *KeyNode = (PCM_KEY_NODE)HvGetCell((*Hive), *Cell);
+    if (*KeyNode)
+    {
+        /* Set the new release values */
+        *ReleaseCell = *Cell;
+        *ReleaseHive = *Hive;
+    }
+    else
+    {
+        /* Nothing to release */
+        *ReleaseCell = HCELL_NIL;
+        *ReleaseHive = NULL;
+    }
 }
 
 NTSTATUS
@@ -775,11 +819,13 @@ CmpParseKey2(IN PVOID ParseObject,
              IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
              OUT PVOID *Object)
 {
-    NTSTATUS Status = STATUS_UNSUCCESSFUL;
+    NTSTATUS Status;
     PCM_KEY_CONTROL_BLOCK Kcb, ParentKcb;
     PHHIVE Hive = NULL;
     PCM_KEY_NODE Node = NULL;
     HCELL_INDEX Cell = HCELL_NIL, NextCell;
+    PHHIVE HiveToRelease = NULL;
+    HCELL_INDEX CellToRelease = HCELL_NIL;
     UNICODE_STRING Current, NextName;
     PCM_PARSE_CONTEXT ParseContext = Context;
     ULONG TotalRemainingSubkeys = 0, MatchRemainSubkeyLevel = 0, TotalSubkeys = 0;
@@ -852,7 +898,7 @@ CmpParseKey2(IN PVOID ParseObject,
     DPRINT1("Node Parse: %p\n", Node);
     
     /* Start parsing */
-    Status = STATUS_SUCCESS;
+    Status = STATUS_NOT_IMPLEMENTED;
     while (TRUE)
     {
         /* Get the next component */
@@ -865,7 +911,7 @@ CmpParseKey2(IN PVOID ParseObject,
             {
                 /* Find the subkey */
                 NextCell = CmpFindSubKeyByName(Hive, Node, &NextName);
-                DPRINT1("NextCell Parse: %lx\n", NextCell);
+                DPRINT1("NextCell Parse: %lx %wZ\n", NextCell, &NextName);
                 if (NextCell != HCELL_NIL)
                 {
                     /* Get the new node */
@@ -877,17 +923,57 @@ CmpParseKey2(IN PVOID ParseObject,
                     /* Check if this was the last key */
                     if (Last)
                     {
-                        /* Shouldn't happen yet */
-                        DPRINT1("Unhandled: Open of last key\n");
+                        /* Is this an exit node */
+                        if (Node->Flags & KEY_HIVE_EXIT)
+                        {
+                            /* Handle it */
+                            DPRINT1("Exit node\n");
+                            CmpHandleExitNode(&Hive,
+                                              &Cell,
+                                              &Node,
+                                              &HiveToRelease,
+                                              &CellToRelease);
+                            DPRINT1("Node Parse: %p\n", Node);
+                            if (!Node) ASSERT(FALSE);
+                        }
+                        
+                        /* Do the open */
+                        Status = CmpDoOpen(Hive,
+                                           Cell,
+                                           Node,
+                                           AccessState,
+                                           AccessMode,
+                                           Attributes,
+                                           ParseContext,
+                                           0,
+                                           &Kcb,
+                                           &NextName,
+                                           Object);
+                        if (Status == STATUS_REPARSE)
+                        {
+                            /* Not implemented */
+                            DPRINT1("Parsing sym link\n");
+                            while (TRUE); 
+                        }
+                        
+                        /* We are done */
+                        DPRINT1("Open of last key\n");
                         break;
                     }
                     
-                    /* Get hive and cell from reference */
-                    //Hive = Node->ChildHiveReference.KeyHive;
-                    //Cell = Node->ChildHiveReference.KeyCell;
-                    Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
-                    DPRINT1("Node Parse: %p\n", Node);
-                    if (!Node) ASSERT(FALSE);
+                    /* Is this an exit node */
+                    if (Node->Flags & KEY_HIVE_EXIT)
+                    {
+                        /* Handle it */
+                        DPRINT1("Exit node: %lx\n", Node->Flags);
+                        CmpHandleExitNode(&Hive,
+                                          &Cell,
+                                          &Node,
+                                          &HiveToRelease,
+                                          &CellToRelease);
+                        DPRINT1("Node Parse: %p\n", Node);
+                        if (!Node) ASSERT(FALSE);
+                    }
 
                     /* Create a KCB for this key */
                     Kcb = CmpCreateKeyControlBlock(Hive,
@@ -959,5 +1045,5 @@ CmpParseKey2(IN PVOID ParseObject,
     
     /* Unlock the registry */
     CmpUnlockRegistry();
-    return STATUS_NOT_IMPLEMENTED;
+    return Status;
 }

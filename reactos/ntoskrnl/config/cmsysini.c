@@ -1580,7 +1580,7 @@ NTAPI
 CmpTestRegistryLock(VOID)
 {
     /* Test the lock */
-    return (BOOLEAN)ExIsResourceAcquiredSharedLite(&CmpRegistryLock);
+    return !ExIsResourceAcquiredSharedLite(&CmpRegistryLock) ? FALSE : TRUE;
 }
 
 BOOLEAN
@@ -1588,7 +1588,7 @@ NTAPI
 CmpTestRegistryLockExclusive(VOID)
 {
     /* Test the lock */
-    return ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock);
+    return !ExIsResourceAcquiredExclusiveLite(&CmpRegistryLock) ? FALSE : TRUE;
 }
 
 VOID
