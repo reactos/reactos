@@ -732,25 +732,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
 
   RtlInitUnicodeString(&StdDriver, L"DISPLAY");
 
-  if (Driver != NULL)
-  {
-    DPRINT("NAME Driver: %wZ\n", Driver);
-  }
-  else
-  {
-    DPRINT("NAME Driver: NULL\n", Driver);
-  }
-
-
-  if (Driver != NULL)
-  {
-    DPRINT("NAME Device: %wZ\n", Device);
-  }
-  else
-  {
-    DPRINT("NAME Device: NULL\n", Device);
-  }
-
+  DPRINT("DriverName: %wZ, DeviceName: %wZ\n", Driver, Device);
 
   if (NULL == Driver || 0 == RtlCompareUnicodeString(Driver, &StdDriver, TRUE))
     {
@@ -790,12 +772,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   {
     hDC = hNewDC;
     return  NtGdiCreateCompatibleDC(hDC);
-  }
-
-  if (Driver != NULL && Driver->Buffer != NULL)
-  {
-    if (Driver!=NULL)
-        DPRINT("NAME: %wZ\n", Driver);
   }
 
   /*  Allocate a DC object  */
@@ -922,10 +898,10 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
     }
   }
 
-  Ret = IntGdiCreateDC(NULL == Device ? NULL : &SafeDevice,
+  Ret = IntGdiCreateDC(Device ? &SafeDevice : NULL,
                        NULL,
-                       NULL == pUMdhpdev ? NULL : &Dhpdev,
-                       NULL == InitData ? NULL : &SafeInitData,
+                       pUMdhpdev ? &Dhpdev : NULL,
+                       InitData ? &SafeInitData : NULL,
                        (BOOL) iType); // FALSE 0 DCW, TRUE 1 ICW
 
   if (pUMdhpdev) pUMdhpdev = Dhpdev;
