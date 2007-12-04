@@ -657,7 +657,7 @@ CreateServiceW(SC_HANDLE hSCManager,
                                  (LPWSTR)lpServiceStartName,
                                  NULL,              /* FIXME: lpPassword */
                                  0,                 /* FIXME: dwPasswordLength */
-                                 (unsigned int *)&hService);
+                                 (unsigned long *)&hService);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT("ScmrCreateServiceW() failed (Error %lu)\n", dwError);
@@ -1334,7 +1334,7 @@ OpenSCManagerA(LPCSTR lpMachineName,
                                  (LPSTR)lpMachineName,
                                  (LPSTR)lpDatabaseName,
                                  dwDesiredAccess,
-                                 (unsigned int*)&hScm);
+                                 (unsigned long*)&hScm);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("ScmrOpenSCManagerA() failed (Error %lu)\n", dwError);
@@ -1373,7 +1373,7 @@ OpenSCManagerW(LPCWSTR lpMachineName,
                                  (LPWSTR)lpMachineName,
                                  (LPWSTR)lpDatabaseName,
                                  dwDesiredAccess,
-                                 (unsigned int*)&hScm);
+                                 (unsigned long*)&hScm);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("ScmrOpenSCManagerW() failed (Error %lu)\n", dwError);
@@ -1410,7 +1410,7 @@ OpenServiceA(SC_HANDLE hSCManager,
                                (unsigned int)hSCManager,
                                (LPSTR)lpServiceName,
                                dwDesiredAccess,
-                               (unsigned int*)&hService);
+                               (unsigned long*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT1("ScmrOpenServiceA() failed (Error %lu)\n", dwError);
@@ -1447,7 +1447,7 @@ OpenServiceW(SC_HANDLE hSCManager,
                                (unsigned int)hSCManager,
                                (LPWSTR)lpServiceName,
                                dwDesiredAccess,
-                               (unsigned int*)&hService);
+                               (unsigned long*)&hService);
     if (dwError != ERROR_SUCCESS)
     {
         DPRINT("ScmrOpenServiceW() failed (Error %lu)\n", dwError);

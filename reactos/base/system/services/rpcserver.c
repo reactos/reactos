@@ -17,6 +17,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define SC_LOCK unsigned int
+#define SC_STATUS_TYPE unsigned long
+#define SC_ENUM_TYPE unsigned long
 
 /* GLOBALS *****************************************************************/
 
@@ -237,9 +240,9 @@ ScmAssignNewTag(PSERVICE lpService)
 
 
 /* Function 0 */
-unsigned long
+DWORD
 ScmrCloseServiceHandle(handle_t BindingHandle,
-                       unsigned int hScObject)
+                       unsigned long hScObject)
 {
     PMANAGER_HANDLE hManager;
 
@@ -289,10 +292,10 @@ ScmrCloseServiceHandle(handle_t BindingHandle,
 
 
 /* Function 1 */
-unsigned long
+DWORD
 ScmrControlService(handle_t BindingHandle,
-                   unsigned int hService,
-                   unsigned long dwControl,
+                   unsigned long hService,
+                   DWORD dwControl,
                    LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE_HANDLE hSvc;
@@ -378,9 +381,9 @@ ScmrControlService(handle_t BindingHandle,
 
 
 /* Function 2 */
-unsigned long
+DWORD
 ScmrDeleteService(handle_t BindingHandle,
-                  unsigned int hService)
+                  unsigned long hService)
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
@@ -428,10 +431,10 @@ ScmrDeleteService(handle_t BindingHandle,
 
 
 /* Function 3 */
-unsigned long
+DWORD
 ScmrLockServiceDatabase(handle_t BindingHandle,
-                        unsigned int hSCManager,
-                        unsigned int *hLock)
+                        unsigned long hSCManager,
+                        SC_LOCK *hLock)
 {
     PMANAGER_HANDLE hMgr;
 
@@ -457,13 +460,13 @@ ScmrLockServiceDatabase(handle_t BindingHandle,
 
 
 /* Function 4 */
-unsigned long
+DWORD
 ScmrQueryServiceObjectSecurity(handle_t BindingHandle,
-                               unsigned int hService,
-                               unsigned long dwSecurityInformation,
+                               unsigned long hService,
+                               DWORD dwSecurityInformation,
                                unsigned char *lpSecurityDescriptor,
-                               unsigned long dwSecuityDescriptorSize,
-                               unsigned long *pcbBytesNeeded)
+                               DWORD dwSecuityDescriptorSize,
+                               DWORD *pcbBytesNeeded)
 {
 #if 0
     PSERVICE_HANDLE hSvc;
@@ -541,12 +544,12 @@ ScmrQueryServiceObjectSecurity(handle_t BindingHandle,
 
 
 /* Function 5 */
-unsigned long
+DWORD
 ScmrSetServiceObjectSecurity(handle_t BindingHandle,
-                             unsigned int hService,
-                             unsigned long dwSecurityInformation,
+                             unsigned long hService,
+                             DWORD dwSecurityInformation,
                              unsigned char *lpSecurityDescriptor,
-                             unsigned long dwSecuityDescriptorSize)
+                             DWORD dwSecuityDescriptorSize)
 {
     PSERVICE_HANDLE hSvc;
     PSERVICE lpService;
@@ -661,9 +664,9 @@ Done:
 
 
 /* Function 6 */
-unsigned long
+DWORD
 ScmrQueryServiceStatus(handle_t BindingHandle,
-                       unsigned int hService,
+                       unsigned long hService,
                        LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE_HANDLE hSvc;
@@ -705,9 +708,9 @@ ScmrQueryServiceStatus(handle_t BindingHandle,
 
 
 /* Function 7 */
-unsigned long
+DWORD
 ScmrSetServiceStatus(handle_t BindingHandle,
-                     unsigned long hServiceStatus,
+                     SERVICE_STATUS_HANDLE hServiceStatus,
                      LPSERVICE_STATUS lpServiceStatus)
 {
     PSERVICE lpService;
@@ -736,9 +739,9 @@ ScmrSetServiceStatus(handle_t BindingHandle,
 
 
 /* Function 8 */
-unsigned long
+DWORD
 ScmrUnlockServiceDatabase(handle_t BindingHandle,
-                          unsigned int hLock)
+                          SC_LOCK hLock)
 {
     DPRINT1("ScmrUnlockServiceDatabase() called\n");
     /* FIXME */
@@ -747,9 +750,9 @@ ScmrUnlockServiceDatabase(handle_t BindingHandle,
 
 
 /* Function 9 */
-unsigned long
+DWORD
 ScmrNotifyBootConfigStatus(handle_t BindingHandle,
-                           unsigned long BootAcceptable)
+                           BOOL BootAcceptable)
 {
     DPRINT1("ScmrNotifyBootConfigStatus() called\n");
     /* FIXME */
@@ -758,12 +761,12 @@ ScmrNotifyBootConfigStatus(handle_t BindingHandle,
 
 
 /* Function 10 */
-unsigned long
+DWORD
 ScmrSetServiceBitsW(handle_t BindingHandle,
-                    unsigned long hServiceStatus,
-                    unsigned long dwServiceBits,
-                    unsigned long bSetBitsOn,
-                    unsigned long bUpdateImmediately,
+                    SERVICE_STATUS_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
                     wchar_t *lpString)
 {
     DPRINT1("ScmrSetServiceBitsW() called\n");
@@ -773,20 +776,20 @@ ScmrSetServiceBitsW(handle_t BindingHandle,
 
 
 /* Function 11 */
-unsigned long
+DWORD
 ScmrChangeServiceConfigW(handle_t BiningHandle,
-                         unsigned int hService,
-                         unsigned long dwServiceType,
-                         unsigned long dwStartType,
-                         unsigned long dwErrorControl,
+                         unsigned long hService,
+                         DWORD dwServiceType,
+                         DWORD dwStartType,
+                         DWORD dwErrorControl,
                          wchar_t *lpBinaryPathName,
                          wchar_t *lpLoadOrderGroup,
-                         unsigned long *lpdwTagId, /* in, out, unique */
+                         DWORD *lpdwTagId, /* in, out, unique */
                          wchar_t *lpDependencies,
-                         unsigned long dwDependenciesLength,
+                         DWORD dwDependenciesLength,
                          wchar_t *lpServiceStartName,
                          wchar_t *lpPassword,
-                         unsigned long dwPasswordLength,
+                         DWORD dwPasswordLength,
                          wchar_t *lpDisplayName)
 {
     DWORD dwError = ERROR_SUCCESS;
@@ -994,24 +997,24 @@ done:
 
 
 /* Function 12 */
-unsigned long
+DWORD
 ScmrCreateServiceW(handle_t BindingHandle,
-                   unsigned int hSCManager,
+                   unsigned long hSCManager,
                    wchar_t *lpServiceName,
                    wchar_t *lpDisplayName,
-                   unsigned long dwDesiredAccess,
-                   unsigned long dwServiceType,
-                   unsigned long dwStartType,
-                   unsigned long dwErrorControl,
+                   DWORD dwDesiredAccess,
+                   DWORD dwServiceType,
+                   DWORD dwStartType,
+                   DWORD dwErrorControl,
                    wchar_t *lpBinaryPathName,
                    wchar_t *lpLoadOrderGroup,
-                   unsigned long *lpdwTagId, /* in, out */
+                   DWORD *lpdwTagId, /* in, out */
                    wchar_t *lpDependencies,
-                   unsigned long dwDependenciesLength,
+                   DWORD dwDependenciesLength,
                    wchar_t *lpServiceStartName,
                    wchar_t *lpPassword,
-                   unsigned long dwPasswordLength,
-                   unsigned int *hService) /* out */
+                   DWORD dwPasswordLength,
+                   unsigned long *hService) /* out */
 {
     PMANAGER_HANDLE hManager;
     DWORD dwError = ERROR_SUCCESS;
@@ -1244,7 +1247,7 @@ done:;
     if (dwError == ERROR_SUCCESS)
     {
         DPRINT("hService %lx\n", hServiceHandle);
-        *hService = (unsigned int)hServiceHandle;
+        *hService = (unsigned long)hServiceHandle;
 
         if (lpdwTagId != NULL)
             *lpdwTagId = lpService->dwTag;
@@ -1255,7 +1258,7 @@ done:;
         if (lpService->lpServiceName != NULL)
             HeapFree(GetProcessHeap(), 0, lpService->lpDisplayName);
 
-        if (hServiceHandle != NULL)
+        if (hServiceHandle)
         {
             /* Remove the service handle */
             HeapFree(GetProcessHeap(), 0, hServiceHandle);
@@ -1277,14 +1280,14 @@ done:;
 
 
 /* Function 13 */
-unsigned long
+DWORD
 ScmrEnumDependentServicesW(handle_t BindingHandle,
-                           unsigned int hService,
-                           unsigned long dwServiceState,
+                           unsigned long hService,
+                           DWORD dwServiceState,
                            unsigned char *lpServices,
-                           unsigned long cbBufSize,
-                           unsigned long *pcbBytesNeeded,
-                           unsigned long *lpServicesReturned)
+                           DWORD cbBufSize,
+                           DWORD *pcbBytesNeeded,
+                           DWORD *lpServicesReturned)
 {
     DWORD dwError = ERROR_SUCCESS;
 
@@ -1299,16 +1302,16 @@ ScmrEnumDependentServicesW(handle_t BindingHandle,
 
 
 /* Function 14 */
-unsigned long
+DWORD
 ScmrEnumServicesStatusW(handle_t BindingHandle,
-                        unsigned int hSCManager,
-                        unsigned long dwServiceType,
-                        unsigned long dwServiceState,
+                        unsigned long hSCManager,
+                        DWORD dwServiceType,
+                        DWORD dwServiceState,
                         unsigned char *lpServices,
-                        unsigned long dwBufSize,
-                        unsigned long *pcbBytesNeeded,
-                        unsigned long *lpServicesReturned,
-                        unsigned long *lpResumeHandle)
+                        DWORD dwBufSize,
+                        DWORD *pcbBytesNeeded,
+                        DWORD *lpServicesReturned,
+                        DWORD *lpResumeHandle)
 {
     PMANAGER_HANDLE hManager;
     PSERVICE lpService;
@@ -1498,12 +1501,12 @@ Done:;
 
 
 /* Function 15 */
-unsigned long
+DWORD
 ScmrOpenSCManagerW(handle_t BindingHandle,
                    wchar_t *lpMachineName,
                    wchar_t *lpDatabaseName,
-                   unsigned long dwDesiredAccess,
-                   unsigned int *hScm)
+                   DWORD dwDesiredAccess,
+                   unsigned long *hScm)
 {
     DWORD dwError;
     SC_HANDLE hHandle;
@@ -1536,7 +1539,7 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
         return dwError;
     }
 
-    *hScm = (unsigned int)hHandle;
+    *hScm = (unsigned long)hHandle;
     DPRINT("*hScm = %x\n", *hScm);
 
     DPRINT("ScmrOpenSCManagerW() done\n");
@@ -1546,12 +1549,12 @@ ScmrOpenSCManagerW(handle_t BindingHandle,
 
 
 /* Function 16 */
-unsigned long
+DWORD
 ScmrOpenServiceW(handle_t BindingHandle,
-                 unsigned int hSCManager,
+                 unsigned long hSCManager,
                  wchar_t *lpServiceName,
-                 unsigned long dwDesiredAccess,
-                 unsigned int *hService)
+                 DWORD dwDesiredAccess,
+                 unsigned long *hService)
 {
     PSERVICE lpService;
     PMANAGER_HANDLE hManager;
@@ -1603,7 +1606,7 @@ ScmrOpenServiceW(handle_t BindingHandle,
         return dwError;
     }
 
-    *hService = (unsigned int)hHandle;
+    *hService = (unsigned long)hHandle;
     DPRINT("*hService = %x\n", *hService);
 
     DPRINT("ScmrOpenServiceW() done\n");
@@ -1613,12 +1616,12 @@ ScmrOpenServiceW(handle_t BindingHandle,
 
 
 /* Function 17 */
-unsigned long
+DWORD
 ScmrQueryServiceConfigW(handle_t BindingHandle,
-                        unsigned int hService,
+                        unsigned long hService,
                         unsigned char *lpServiceConfig,
-                        unsigned long cbBufSize,
-                        unsigned long *pcbBytesNeeded)
+                        DWORD cbBufSize,
+                        DWORD *pcbBytesNeeded)
 {
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
@@ -1773,12 +1776,12 @@ Done:;
 
 
 /* Function 18 */
-unsigned long
+DWORD
 ScmrQueryServiceLockStatusW(handle_t BindingHandle,
-                            unsigned int hSCManager,
+                            unsigned long hSCManager,
                             unsigned char *lpLockStatus,   /* [out, unique, size_is(cbBufSize)] */
-                            unsigned long cbBufSize,       /* [in] */
-                            unsigned long *pcbBytesNeeded) /* [out] */
+                            DWORD cbBufSize,       /* [in] */
+                            DWORD *pcbBytesNeeded) /* [out] */
 {
     DPRINT1("ScmrQueryServiceLockStatusW() called\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -1786,12 +1789,12 @@ ScmrQueryServiceLockStatusW(handle_t BindingHandle,
 
 
 /* Function 19 */
-unsigned long
+DWORD
 ScmrStartServiceW(handle_t BindingHandle,
-                  unsigned int hService,
-                  unsigned long dwNumServiceArgs,
+                  unsigned long hService,
+                  DWORD dwNumServiceArgs,
                   unsigned char *lpServiceArgBuffer,
-                  unsigned long cbBufSize)
+                  DWORD cbBufSize)
 {
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
@@ -1837,12 +1840,12 @@ ScmrStartServiceW(handle_t BindingHandle,
 
 
 /* Function 20 */
-unsigned long
+DWORD
 ScmrGetServiceDisplayNameW(handle_t BindingHandle,
-                           unsigned int hSCManager,
+                           unsigned long hSCManager,
                            wchar_t *lpServiceName,
                            wchar_t *lpDisplayName, /* [out, unique] */
-                           unsigned long *lpcchBuffer)
+                           DWORD *lpcchBuffer)
 {
 //    PMANAGER_HANDLE hManager;
     PSERVICE lpService;
@@ -1887,12 +1890,12 @@ ScmrGetServiceDisplayNameW(handle_t BindingHandle,
 
 
 /* Function 21 */
-unsigned long
+DWORD
 ScmrGetServiceKeyNameW(handle_t BindingHandle,
-                       unsigned int hSCManager,
+                       unsigned long hSCManager,
                        wchar_t *lpDisplayName,
                        wchar_t *lpServiceName, /* [out, unique] */
-                       unsigned long *lpcchBuffer)
+                       DWORD *lpcchBuffer)
 {
 //    PMANAGER_HANDLE hManager;
     PSERVICE lpService;
@@ -1937,12 +1940,12 @@ ScmrGetServiceKeyNameW(handle_t BindingHandle,
 
 
 /* Function 22 */
-unsigned long
+DWORD
 ScmrSetServiceBitsA(handle_t BindingHandle,
-                    unsigned long hServiceStatus,
-                    unsigned long dwServiceBits,
-                    unsigned long bSetBitsOn,
-                    unsigned long bUpdateImmediately,
+                    SERVICE_STATUS_HANDLE hServiceStatus,
+                    DWORD dwServiceBits,
+                    BOOL bSetBitsOn,
+                    BOOL bUpdateImmediately,
                     char *lpString)
 {
     DPRINT1("ScmrSetServiceBitsA() is unimplemented\n");
@@ -1951,20 +1954,20 @@ ScmrSetServiceBitsA(handle_t BindingHandle,
 
 
 /* Function 23 */
-unsigned long
+DWORD
 ScmrChangeServiceConfigA(handle_t BiningHandle,
-                         unsigned int hService,
-                         unsigned long dwServiceType,
-                         unsigned long dwStartType,
-                         unsigned long dwErrorControl,
+                         unsigned long hService,
+                         DWORD dwServiceType,
+                         DWORD dwStartType,
+                         DWORD dwErrorControl,
                          char *lpBinaryPathName,
                          char *lpLoadOrderGroup,
-                         unsigned long *lpdwTagId,
+                         DWORD *lpdwTagId,
                          char *lpDependencies,
-                         unsigned long dwDependenciesLength,
+                         DWORD dwDependenciesLength,
                          char *lpServiceStartName,
                          char *lpPassword,
-                         unsigned long dwPasswordLength,
+                         DWORD dwPasswordLength,
                          char *lpDisplayName)
 {
     DPRINT1("ScmrChangeServiceConfigA() is unimplemented\n");
@@ -1973,24 +1976,24 @@ ScmrChangeServiceConfigA(handle_t BiningHandle,
 
 
 /* Function 24 */
-unsigned long
+DWORD
 ScmrCreateServiceA(handle_t BindingHandle,
-                   unsigned int hSCManager,
+                   unsigned long hSCManager,
                    char *lpServiceName,
                    char *lpDisplayName,
-                   unsigned long dwDesiredAccess,
-                   unsigned long dwServiceType,
-                   unsigned long dwStartType,
-                   unsigned long dwErrorControl,
+                   DWORD dwDesiredAccess,
+                   DWORD dwServiceType,
+                   DWORD dwStartType,
+                   DWORD dwErrorControl,
                    char *lpBinaryPathName,
                    char *lpLoadOrderGroup,
-                   unsigned long *lpdwTagId, /* in, out */
+                   DWORD *lpdwTagId, /* in, out */
                    char *lpDependencies,
-                   unsigned long dwDependenciesLength,
+                   DWORD dwDependenciesLength,
                    char *lpServiceStartName,
                    char *lpPassword,
-                   unsigned long dwPasswordLength,
-                   unsigned int *hService) /* out */
+                   DWORD dwPasswordLength,
+                   unsigned long *hService) /* out */
 {
     DPRINT1("ScmrCreateServiceA() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -1998,14 +2001,14 @@ ScmrCreateServiceA(handle_t BindingHandle,
 
 
 /* Function 25 */
-unsigned long
+DWORD
 ScmrEnumDependentServicesA(handle_t BindingHandle,
-                           unsigned int hService,
-                           unsigned long dwServiceState,
+                           unsigned long hService,
+                           DWORD dwServiceState,
                            unsigned char *lpServices,
-                           unsigned long cbBufSize,
-                           unsigned long *pcbBytesNeeded,
-                           unsigned long *lpServicesReturned)
+                           DWORD cbBufSize,
+                           DWORD *pcbBytesNeeded,
+                           DWORD *lpServicesReturned)
 {
     DPRINT1("ScmrEnumDependentServicesA() is unimplemented\n");
     *pcbBytesNeeded = 0;
@@ -2015,15 +2018,15 @@ ScmrEnumDependentServicesA(handle_t BindingHandle,
 
 
 /* Function 26 */
-unsigned long
+DWORD
 ScmrEnumServicesStatusA(handle_t BindingHandle,
-                        unsigned int hSCManager,
-                        unsigned long dwServiceType,
-                        unsigned long dwServiceState,
+                        unsigned long hSCManager,
+                        DWORD dwServiceType,
+                        DWORD dwServiceState,
                         unsigned char *lpServices,
-                        unsigned long dwBufSize,
-                        unsigned long *pcbBytesNeeded,
-                        unsigned long *lpServicesReturned,
+                        DWORD dwBufSize,
+                        DWORD *pcbBytesNeeded,
+                        DWORD *lpServicesReturned,
                         unsigned long *lpResumeHandle)
 {
     DPRINT1("ScmrEnumServicesAtatusA() is unimplemented\n");
@@ -2032,12 +2035,12 @@ ScmrEnumServicesStatusA(handle_t BindingHandle,
 
 
 /* Function 27 */
-unsigned long
+DWORD
 ScmrOpenSCManagerA(handle_t BindingHandle,
                    char *lpMachineName,
                    char *lpDatabaseName,
-                   unsigned long dwDesiredAccess,
-                   unsigned int *hScm)
+                   DWORD dwDesiredAccess,
+                   unsigned long *hScm)
 {
     UNICODE_STRING MachineName;
     UNICODE_STRING DatabaseName;
@@ -2070,12 +2073,12 @@ ScmrOpenSCManagerA(handle_t BindingHandle,
 
 
 /* Function 28 */
-unsigned int
+DWORD
 ScmrOpenServiceA(handle_t BindingHandle,
-                 unsigned int hSCManager,
+                 unsigned long hSCManager,
                  char *lpServiceName,
-                 unsigned long dwDesiredAccess,
-                 unsigned int *hService)
+                 DWORD dwDesiredAccess,
+                 unsigned long *hService)
 {
     UNICODE_STRING ServiceName;
     DWORD dwError;
@@ -2098,12 +2101,12 @@ ScmrOpenServiceA(handle_t BindingHandle,
 
 
 /* Function 29 */
-unsigned long
+DWORD
 ScmrQueryServiceConfigA(handle_t BindingHandle,
-                        unsigned int hService,
+                        unsigned long hService,
                         unsigned char *lpServiceConfig,
-                        unsigned long cbBufSize,
-                        unsigned long *pcbBytesNeeded)
+                        DWORD cbBufSize,
+                        DWORD *pcbBytesNeeded)
 {
     DPRINT1("ScmrQueryServiceConfigA() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2111,12 +2114,12 @@ ScmrQueryServiceConfigA(handle_t BindingHandle,
 
 
 /* Function 30 */
-unsigned long
+DWORD
 ScmrQueryServiceLockStatusA(handle_t BindingHandle,
-                            unsigned int hSCManager,
+                            unsigned long hSCManager,
                             unsigned char *lpLockStatus,   /* [out, unique, size_is(cbBufSize)] */
-                            unsigned long cbBufSize,       /* [in] */
-                            unsigned long *pcbBytesNeeded) /* [out] */
+                            DWORD cbBufSize,       /* [in] */
+                            DWORD *pcbBytesNeeded) /* [out] */
 {
     DPRINT1("ScmrQueryServiceLockStatusA() called\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2124,12 +2127,12 @@ ScmrQueryServiceLockStatusA(handle_t BindingHandle,
 
 
 /* Function 31 */
-unsigned long
+DWORD
 ScmrStartServiceA(handle_t BindingHandle,
-                  unsigned int hService,
-                  unsigned long dwNumServiceArgs,
+                  unsigned long hService,
+                  DWORD dwNumServiceArgs,
                   unsigned char *lpServiceArgBuffer,
-                  unsigned long cbBufSize)
+                  DWORD cbBufSize)
 {
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
@@ -2179,12 +2182,12 @@ ScmrStartServiceA(handle_t BindingHandle,
 
 
 /* Function 32 */
-unsigned long
+DWORD
 ScmrGetServiceDisplayNameA(handle_t BindingHandle,
-                           unsigned int hSCManager,
+                           unsigned long hSCManager,
                            char *lpServiceName,
                            char *lpDisplayName, /* [out, unique] */
-                           unsigned long *lpcchBuffer)
+                           DWORD *lpcchBuffer)
 {
     DPRINT1("ScmrGetServiceDisplayNameA() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2192,12 +2195,12 @@ ScmrGetServiceDisplayNameA(handle_t BindingHandle,
 
 
 /* Function 33 */
-unsigned long
+DWORD
 ScmrGetServiceKeyNameA(handle_t BindingHandle,
-                       unsigned int hSCManager,
+                       unsigned long hSCManager,
                        char *lpDisplayName,
                        char *lpServiceName, /* [out, unique] */
-                       unsigned long *lpcchBuffer)
+                       DWORD *lpcchBuffer)
 {
     DPRINT1("ScmrGetServiceKeyNameA() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2205,7 +2208,7 @@ ScmrGetServiceKeyNameA(handle_t BindingHandle,
 
 
 /* Function 34 */
-unsigned long
+DWORD
 ScmrGetCurrentGroupStateW(handle_t BindingHandle)
 {
     DPRINT1("ScmrGetCurrentGroupStateW() is unimplemented\n");
@@ -2214,7 +2217,7 @@ ScmrGetCurrentGroupStateW(handle_t BindingHandle)
 
 
 /* Function 35 */
-unsigned long
+DWORD
 ScmrEnumServiceGroupW(handle_t BindingHandle)
 {
     DPRINT1("ScmrEnumServiceGroupW() is unimplemented\n");
@@ -2223,12 +2226,12 @@ ScmrEnumServiceGroupW(handle_t BindingHandle)
 
 
 /* Function 36 */
-unsigned long
+DWORD
 ScmrChangeServiceConfig2A(handle_t BindingHandle,
-                          unsigned int hService,
-                          unsigned long dwInfoLevel,
+                          unsigned long hService,
+                          DWORD dwInfoLevel,
                           unsigned char *lpInfo,
-                          unsigned long dwInfoSize)
+                          DWORD dwInfoSize)
 {
     DPRINT1("ScmrChangeServiceConfig2A() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2236,12 +2239,12 @@ ScmrChangeServiceConfig2A(handle_t BindingHandle,
 
 
 /* Function 37 */
-unsigned long
+DWORD
 ScmrChangeServiceConfig2W(handle_t BindingHandle,
-                          unsigned int hService,
-                          unsigned long dwInfoLevel,
+                          unsigned long hService,
+                          DWORD dwInfoLevel,
                           unsigned char *lpInfo,
-                          unsigned long dwInfoSize)
+                          DWORD dwInfoSize)
 {
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
@@ -2332,13 +2335,13 @@ done:
 
 
 /* Function 38 */
-unsigned long
+DWORD
 ScmrQueryServiceConfig2A(handle_t BindingHandle,
-                         unsigned int hService,
-                         unsigned long dwInfoLevel,
+                         unsigned long hService,
+                         DWORD dwInfoLevel,
                          unsigned char *lpBuffer,
-                         unsigned long cbBufSize,
-                         unsigned long *pcbBytesNeeded)
+                         DWORD cbBufSize,
+                         DWORD *pcbBytesNeeded)
 {
     DPRINT1("ScmrQueryServiceConfig2A() is unimplemented\n");
     return ERROR_CALL_NOT_IMPLEMENTED;
@@ -2346,13 +2349,13 @@ ScmrQueryServiceConfig2A(handle_t BindingHandle,
 
 
 /* Function 39 */
-unsigned long
+DWORD
 ScmrQueryServiceConfig2W(handle_t BindingHandle,
-                         unsigned int hService,
-                         unsigned long dwInfoLevel,
+                         unsigned long hService,
+                         DWORD dwInfoLevel,
                          unsigned char *lpBuffer,
-                         unsigned long cbBufSize,
-                         unsigned long *pcbBytesNeeded)
+                         DWORD cbBufSize,
+                         DWORD *pcbBytesNeeded)
 {
     DWORD dwError = ERROR_SUCCESS;
     PSERVICE_HANDLE hSvc;
@@ -2444,13 +2447,13 @@ done:
 
 
 /* Function 40 */
-unsigned long
+DWORD
 ScmrQueryServiceStatusEx(handle_t BindingHandle,
-                         unsigned int hService,
-                         unsigned long InfoLevel,
+                         unsigned long hService,
+                         SC_STATUS_TYPE InfoLevel,
                          unsigned char *lpBuffer, /* out */
-                         unsigned long cbBufSize,
-                         unsigned long *pcbBytesNeeded) /* out */
+                         DWORD cbBufSize,
+                         DWORD *pcbBytesNeeded) /* out */
 {
     LPSERVICE_STATUS_PROCESS lpStatus;
     PSERVICE_HANDLE hSvc;
@@ -2505,16 +2508,16 @@ ScmrQueryServiceStatusEx(handle_t BindingHandle,
 
 
 /* Function 41 */
-unsigned long
+DWORD
 ScmrEnumServicesStatusExA(handle_t BindingHandle,
-                          unsigned int hSCManager,
-                          unsigned long InfoLevel,
-                          unsigned long dwServiceType,
-                          unsigned long dwServiceState,
+                          unsigned long hSCManager,
+                          SC_STATUS_TYPE InfoLevel,
+                          DWORD dwServiceType,
+                          DWORD dwServiceState,
                           unsigned char *lpServices,
-                          unsigned long dwBufSize,
-                          unsigned long *pcbBytesNeeded,
-                          unsigned long *lpServicesReturned,
+                          DWORD dwBufSize,
+                          DWORD *pcbBytesNeeded,
+                          DWORD *lpServicesReturned,
                           unsigned long *lpResumeHandle,
                           char *pszGroupName)
 {
@@ -2526,17 +2529,17 @@ ScmrEnumServicesStatusExA(handle_t BindingHandle,
 
 
 /* Function 42 */
-unsigned long
+DWORD
 ScmrEnumServicesStatusExW(handle_t BindingHandle,
-                          unsigned int hSCManager,
-                          unsigned long InfoLevel,
-                          unsigned long dwServiceType,
-                          unsigned long dwServiceState,
+                          unsigned long hSCManager,
+                          SC_ENUM_TYPE InfoLevel,
+                          DWORD dwServiceType,
+                          DWORD dwServiceState,
                           unsigned char *lpServices,
-                          unsigned long dwBufSize,
-                          unsigned long *pcbBytesNeeded,
-                          unsigned long *lpServicesReturned,
-                          unsigned long *lpResumeHandle,
+                          DWORD dwBufSize,
+                          DWORD *pcbBytesNeeded,
+                          DWORD *lpServicesReturned,
+                          DWORD *lpResumeHandle,
                           wchar_t *pszGroupName)
 {
     PMANAGER_HANDLE hManager;
