@@ -194,14 +194,14 @@ PNP_InitDetection(handle_t BindingHandle)
 /* Function 5 */
 CONFIGRET
 PNP_ReportLogOn(handle_t BindingHandle,
-                unsigned long Admin,
-                unsigned long ProcessId)
+                BOOL Admin,
+                DWORD ProcessId)
 {
     HANDLE hProcess;
 
     UNREFERENCED_PARAMETER(BindingHandle);
 
-    DPRINT1("PNP_ReportLogOn(%lu, %lu) called\n", Admin, ProcessId);
+    DPRINT1("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS,
@@ -233,7 +233,7 @@ PNP_ReportLogOn(handle_t BindingHandle,
 CONFIGRET
 PNP_ValidateDeviceInstance(handle_t BindingHandle,
                            wchar_t *DeviceInstance,
-                           unsigned long Flags)
+                           DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
     HKEY hDeviceKey = NULL;
@@ -270,7 +270,7 @@ Done:
 CONFIGRET
 PNP_GetRootDeviceInstance(handle_t BindingHandle,
                           wchar_t *DeviceInstance,
-                          unsigned long Length)
+                          DWORD Length)
 {
     CONFIGRET ret = CR_SUCCESS;
 
@@ -297,11 +297,11 @@ Done:
 /* Function 8 */
 CONFIGRET
 PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
-                             unsigned long Relationship,
+                             DWORD Relationship,
                              wchar_t *DeviceId,
                              wchar_t *RelatedDeviceId,
-                             unsigned long Length,
-                             unsigned long Flags)
+                             DWORD Length,
+                             DWORD Flags)
 {
     PLUGPLAY_CONTROL_RELATED_DEVICE_DATA PlugPlayData;
     CONFIGRET ret = CR_SUCCESS;
@@ -343,11 +343,11 @@ PNP_GetRelatedDeviceInstance(handle_t BindingHandle,
 /* Function 9 */
 CONFIGRET
 PNP_EnumerateSubKeys(handle_t BindingHandle,
-                     unsigned long Branch,
-                     unsigned long Index,
+                     DWORD Branch,
+                     DWORD Index,
                      wchar_t *Buffer,
-                     unsigned long Length,
-                     unsigned long *RequiredLength,
+                     DWORD Length,
+                     DWORD *RequiredLength,
                      DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
@@ -458,11 +458,11 @@ PNP_GetDepth(handle_t BindingHandle,
 CONFIGRET
 PNP_GetDeviceRegProp(handle_t BindingHandle,
                      wchar_t *DeviceInstance,
-                     unsigned long Property,
-                     unsigned long *DataType,
+                     DWORD Property,
+                     DWORD *DataType,
                      char *Buffer,
-                     unsigned long *TransferLen,
-                     unsigned long *Length,
+                     DWORD *TransferLen,
+                     DWORD *Length,
                      DWORD Flags)
 {
     PLUGPLAY_CONTROL_PROPERTY_DATA PlugPlayData;
@@ -1316,11 +1316,11 @@ PNP_RequestEjectPC(handle_t BindingHandle)
 /* Function 40 */
 CONFIGRET
 PNP_HwProfFlags(handle_t BindingHandle,
-                unsigned long Action,
+                DWORD Action,
                 wchar_t *DeviceId,
-                unsigned long ProfileId,
-                unsigned long *Value, // out
-                unsigned long Flags)
+                DWORD ProfileId,
+                DWORD *Value, // out
+                DWORD Flags)
 {
     CONFIGRET ret = CR_SUCCESS;
 
