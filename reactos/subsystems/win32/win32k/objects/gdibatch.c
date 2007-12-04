@@ -88,6 +88,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
      case GdiBCSetBrushOrg:
      {
         PGDIBSSETBRHORG pgSBO;
+        if(!dc) break;
         pgSBO = (PGDIBSSETBRHORG) pHdr;
         Dc_Attr->ptlBrushOrigin = pgSBO->ptlBrushOrigin;
         break;
