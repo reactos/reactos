@@ -805,7 +805,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   }
 
   NewDC = DC_LockDc( hNewDC );
-  /* FIXME - NewDC can be NULL!!! Don't assert here! */
   if ( !NewDC )
   {
     DC_FreeDC( hNewDC );
