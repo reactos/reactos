@@ -785,21 +785,18 @@ i8042KbdInterruptService(
 	if (PortDeviceExtension->Settings.CrashOnCtrlScroll)
 	{
 		/* Test for CTRL + SCROLL LOCK twice */
-		static const UCHAR ScanCodes[] = { 0x1d, 0x46, 0x46, 0 };
+		static const UCHAR ScanCodes[] = { 0xe0, 0x1d, 0x46, 0xc6, 0x46, 0 };
 
-		if (!(Output & 0x80))
+		if (Output == ScanCodes[DeviceExtension->ComboPosition])
 		{
-			if ((Output & 0x7f) == ScanCodes[DeviceExtension->ComboPosition])
-			{
-				DeviceExtension->ComboPosition++;
-				if (ScanCodes[DeviceExtension->ComboPosition] == 0)
-					KeBugCheck(MANUALLY_INITIATED_CRASH);
-			}
-			else if ((Output & 0x7f) == ScanCodes[0])
-				DeviceExtension->ComboPosition = 1;
-			else
-				DeviceExtension->ComboPosition = 0;
+			DeviceExtension->ComboPosition++;
+			if (ScanCodes[DeviceExtension->ComboPosition] == 0)
+				KeBugCheck(MANUALLY_INITIATED_CRASH);
 		}
+		else if (Output == ScanCodes[0])
+			DeviceExtension->ComboPosition = 1;
+		else
+			DeviceExtension->ComboPosition = 0;
 	}
 
 	if (i8042KbdCallIsrHook(DeviceExtension, PortStatus, Output, &ToReturn))
