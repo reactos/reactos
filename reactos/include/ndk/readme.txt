@@ -175,7 +175,7 @@ you would like to be credited for it.
 3.3 CAVEATS
 
     * winternl.h: This header, part of the PSDK, was released by Microsoft as part of one of the governmen
-      lawsuits against it, and documents a certain (minimal) part of the Native API and/or types. Unforunately,
+      lawsuits against it, and documents a certain (minimal) part of the Native API and/or types. Unfortunately,
       Microsoft decided to hack the Native Types and to define them incorrectly, replacing real members by "reserved"
       ones. As such, you 'cannot include winternl.h in any project that uses the NDK. Note however, that the NDK fully
       replaces it and retains compatibility with any project that used it.

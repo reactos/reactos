@@ -23,6 +23,7 @@ Author:
 // Dependencies
 //
 #include <umtypes.h>
+#include <cmtypes.h>
 
 //
 // Native calls
