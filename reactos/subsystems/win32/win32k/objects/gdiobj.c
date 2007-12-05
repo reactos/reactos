@@ -112,7 +112,6 @@ static LARGE_INTEGER ShortDelay;
 #ifdef GDI_DEBUG
 BOOLEAN STDCALL KiRosPrintAddress(PVOID Address);
 VOID STDCALL KeRosDumpStackFrames(PULONG Frame, ULONG FrameCount);
-ULONG STDCALL KeRosGetStackFrames(PULONG Frames, ULONG FrameCount);
 #endif
 
 /*!
@@ -441,7 +440,7 @@ LockHandle:
 
 #ifdef GDI_DEBUG
         memset ( GDIHandleAllocator[Index], 0xcd, GDI_STACK_LEVELS * sizeof(ULONG) );
-        KeRosGetStackFrames ( GDIHandleAllocator[Index], GDI_STACK_LEVELS );
+        RtlCaptureStackBackTrace(2, GDI_STACK_LEVELS, (PVOID*)GDIHandleAllocator[Index], NULL);
 #endif /* GDI_DEBUG */
 
         if(W32Process != NULL)
