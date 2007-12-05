@@ -1327,8 +1327,7 @@ UINT STDCALL SetCPGlobal(UINT CodePage)
 BOOL
 STDCALL
 SetClientTimeZoneInformation(
-		       CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation
-		       )
+    CONST TIME_ZONE_INFORMATION *lpTimeZoneInformation)
 {
     STUB;
     return 0;
@@ -1369,7 +1368,7 @@ SIZE_T
 WINAPI
 GetLargePageMinimum(void)
 {
-	STUB;
-	return 0;
+    STUB;
+    return 0;
 }
 
