@@ -1364,11 +1364,3 @@ Wow64RevertWow64FsRedirection (VOID * pv)
     STUB;
     return FALSE;
 }
-SIZE_T
-WINAPI
-GetLargePageMinimum(void)
-{
-    STUB;
-    return 0;
-}
-

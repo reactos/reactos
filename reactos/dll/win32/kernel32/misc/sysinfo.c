@@ -21,6 +21,16 @@
 #define PV_NT351 0x00030033
 
 /*
+ * @implemented
+ */
+SIZE_T
+WINAPI
+GetLargePageMinimum(VOID)
+{
+	return SharedUserData->LargePageMinimum;
+}
+
+/*
  * @unimplemented
  */
 VOID
