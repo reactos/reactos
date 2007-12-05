@@ -2902,6 +2902,12 @@ MingwAddImplicitLibraries( Module &module )
 		return;
 	}
 
+	if ( module.name == "ntdll" )
+	{
+		// no implicit libraries
+		return;
+	}
+
 	if ( !module.isDefaultEntryPoint )
 	{
 		if ( module.GetEntryPoint(false) == "0" )
