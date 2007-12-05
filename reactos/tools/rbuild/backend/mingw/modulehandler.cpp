@@ -2887,10 +2887,23 @@ MingwWin32OCXModuleHandler::MingwWin32OCXModuleHandler (
 {
 }
 
+static bool
+LinksToCrt( Module &module )
+{
+	for ( size_t i = 0; i < module.non_if_data.libraries.size (); i++ )
+	{
+		Library& library = *module.non_if_data.libraries[i];
+		if ( library.name == "libcntpr" || library.name == "crt" )
+			return true;
+	}
+	return false;
+}
+
 static void
 MingwAddImplicitLibraries( Module &module )
 {
 	Library* pLibrary;
+	bool links_to_crt;
 
 	if ( module.type != Win32DLL
 	  && module.type != Win32OCX
@@ -2902,20 +2915,21 @@ MingwAddImplicitLibraries( Module &module )
 		return;
 	}
 
-	if ( module.name == "ntdll" )
-	{
-		// no implicit libraries
-		return;
-	}
+	links_to_crt = LinksToCrt ( module );
 
 	if ( !module.isDefaultEntryPoint )
 	{
 		if ( module.GetEntryPoint(false) == "0" )
 		{
-			pLibrary = new Library ( module, "mingw_common" );
-			module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() , pLibrary );
-			pLibrary = new Library ( module, "msvcrt" );
-			module.non_if_data.libraries.push_back ( pLibrary );
+			if ( !links_to_crt )
+			{
+				pLibrary = new Library ( module, "mingw_common" );
+				module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() , pLibrary );
+
+				pLibrary = new Library ( module, "msvcrt" );
+				module.non_if_data.libraries.push_back ( pLibrary );
+				links_to_crt = true;
+			}
 		}
 		return;
 	}
@@ -2934,7 +2948,7 @@ MingwAddImplicitLibraries( Module &module )
 	pLibrary = new Library ( module, "mingw_common" );
 	module.non_if_data.libraries.insert ( module.non_if_data.libraries.begin() + 1, pLibrary );
 
-	if ( module.name != "msvcrt" )
+	if ( !links_to_crt )
 	{
 		// always link in msvcrt to get the basic routines
 		pLibrary = new Library ( module, "msvcrt" );
