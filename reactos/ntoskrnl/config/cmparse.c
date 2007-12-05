@@ -230,10 +230,6 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Now fill out the Cm object */
     KeyBody->KeyControlBlock = Kcb;
-    KeyBody->SubKeyCounts = 0;
-    KeyBody->SubKeys = NULL;
-    KeyBody->SizeOfSubKeys = 0;
-    InsertTailList(&CmiKeyObjectListHead, &KeyBody->KeyBodyList);
 
 Quickie:
     /* Check if we got here because of failure */
@@ -488,10 +484,6 @@ CmpDoOpen(IN PHHIVE Hive,
         /* Get the key body and fill it out */
         KeyBody = (PKEY_OBJECT)(*Object);       
         KeyBody->KeyControlBlock = Kcb;
-        KeyBody->SubKeyCounts = 0;
-        KeyBody->SubKeys = NULL;
-        KeyBody->SizeOfSubKeys = 0;
-        InsertTailList(&CmiKeyObjectListHead, &KeyBody->KeyBodyList);
     }
     else
     {

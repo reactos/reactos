@@ -17,8 +17,6 @@ POBJECT_TYPE CmpKeyObjectType;
 PCMHIVE CmiVolatileHive;
 LIST_ENTRY CmpHiveListHead;
 ERESOURCE CmpRegistryLock;
-LIST_ENTRY CmiKeyObjectListHead;
-LIST_ENTRY CmiConnectedHiveList;
 KGUARDED_MUTEX CmpSelfHealQueueLock;
 LIST_ENTRY CmpSelfHealQueueListHead;
 KEVENT CmpLoadWorkerEvent;
@@ -183,10 +181,6 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
         NewHive->FileFullPath.Length = HiveName->Length;
         NewHive->FileFullPath.MaximumLength = HiveName->MaximumLength;
     }
-
-    /* ROS: Close the hive files */
-    ZwClose(FileHandle);
-    if (LogHandle) ZwClose(LogHandle);
 
     /* Return success */
     return STATUS_SUCCESS;
@@ -530,8 +524,8 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
         /* We have one */
         ParseContext.ChildHive.KeyCell = RegistryHive->Hive.BaseBlock->RootCell;   
     }
-    
-    DPRINT1("Ready to parse\n");
+
+    /* Create the link node */
     Status = ObOpenObjectByName(&ObjectAttributes,
                                 CmpKeyObjectType,
                                 KernelMode,
@@ -539,8 +533,6 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                                 KEY_READ | KEY_WRITE,
                                 (PVOID)&ParseContext,
                                 &KeyHandle);
-    DPRINT1("Parse done: %lx\n", Status);
-    //while (TRUE);
     
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(&ObjectAttributes,
@@ -622,7 +614,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     ObReferenceObject(NewKey);
     
     /* Link this key to the parent */
-    CmiAddKeyToList(ParentKey, NewKey);
+    CmiAddKeyToList(ParentKey->KeyControlBlock, NewKey);
     return STATUS_SUCCESS;    
 }
 
@@ -670,7 +662,7 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         ((PHBASE_BLOCK)HiveBase)->Length = LoaderBlock->RegistryLength;
         Status = CmpInitializeHive((PCMHIVE*)&SystemHive,
                                    HINIT_MEMORY,
-                                   0, //HIVE_NOLAZYFLUSH,
+                                   HIVE_NOLAZYFLUSH,
                                    HFILE_TYPE_LOG,
                                    HiveBase,
                                    NULL,
@@ -915,13 +907,7 @@ CmpCreateRegistryRoot(VOID)
     RootKey->ProcessID = PsGetCurrentProcessId();
 #else
     RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
-    RootKey->SubKeyCounts = 0;
-    RootKey->SubKeys = NULL;
-    RootKey->SizeOfSubKeys = 0;
 #endif
-
-    /* Insert it into the object list head */
-    InsertTailList(&CmiKeyObjectListHead, &RootKey->KeyBodyList);
 
     /* Insert the key into the namespace */
     Status = ObInsertObject(RootKey,
@@ -1023,8 +1009,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
 {
     WCHAR FileBuffer[MAX_PATH], RegBuffer[MAX_PATH], ConfigPath[MAX_PATH];
     UNICODE_STRING TempName, FileName, RegName;
-    ULONG FileStart, RegStart, i, ErrorResponse, ClusterSize, WorkerCount;
-    ULONG PrimaryDisposition, SecondaryDisposition, Length;
+    ULONG FileStart, RegStart, i, ErrorResponse, WorkerCount, Length;
+    ULONG PrimaryDisposition, SecondaryDisposition, ClusterSize;
     PCMHIVE CmHive;
     HANDLE PrimaryHandle, LogHandle;
     NTSTATUS Status = STATUS_SUCCESS;
@@ -1101,13 +1087,12 @@ CmpLoadHiveThread(IN PVOID StartContext)
     }
     else
     {
-        if (ExpInTextModeSetup) {
-        /* We already have a hive, is it volatile? */
         CmHive = CmpMachineHiveList[i].CmHive;
+        /* We already have a hive, is it volatile? */
         if (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE))
         {
             DPRINT1("[HiveLoad]: Open from file %wZ\n", &FileName);
-            
+
             /* It's now, open the hive file and log */
             Status = CmpOpenHiveFiles(&FileName,
                                       L".LOG",
@@ -1137,31 +1122,31 @@ CmpLoadHiveThread(IN PVOID StartContext)
             /* Save the file handles. This should remove our sync hacks */
             CmHive->FileHandles[HFILE_TYPE_LOG] = LogHandle;
             CmHive->FileHandles[HFILE_TYPE_PRIMARY] = PrimaryHandle;
-            
+
             /* Allow lazy flushing since the handles are there -- remove sync hacks */
             //ASSERT(CmHive->Hive.HiveFlags & HIVE_NOLAZYFLUSH);
             CmHive->Hive.HiveFlags &= ~HIVE_NOLAZYFLUSH;
-            
+
             /* Get the real size of the hive */
             Length = CmHive->Hive.Storage[Stable].Length + HBLOCK_SIZE;
-            
+          
             /* Check if the cluster size doesn't match */
             if (CmHive->Hive.Cluster != ClusterSize) ASSERT(FALSE);
             
             /* Set the file size */
-            if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
+            //if (!CmpFileSetSize((PHHIVE)CmHive, HFILE_TYPE_PRIMARY, Length, Length))
             {
                 /* This shouldn't fail */
-                ASSERT(FALSE);
+                //ASSERT(FALSE);
             }
-            
+     
             /* Another thing we don't support is NTLDR-recovery */
             if (CmHive->Hive.BaseBlock->BootRecover) ASSERT(FALSE);
             
             /* Finally, set our allocated hive to the same hive we've had */
             CmpMachineHiveList[i].CmHive2 = CmHive;
             ASSERT(CmpMachineHiveList[i].CmHive == CmpMachineHiveList[i].CmHive2);
-        }}
+        }
     }
     
     /* We're done */
@@ -1289,7 +1274,7 @@ CmpInitializeHiveList(IN USHORT Flag)
             Status = CmpLinkHiveToMaster(&RegName,
                                          NULL,
                                          CmpMachineHiveList[i].CmHive2,
-                                         FALSE, //CmpMachineHiveList[i].Allocate,
+                                         CmpMachineHiveList[i].Allocate,
                                          SecurityDescriptor);
             if (Status != STATUS_SUCCESS)
             {
@@ -1367,12 +1352,6 @@ CmInitSystem1(VOID)
 
     /* Save the current process and lock the registry */
     CmpSystemProcess = PsGetCurrentProcess();
-
-#if 1
-    /* OLD CM: Initialize the key object list */
-    InitializeListHead(&CmiKeyObjectListHead);
-    InitializeListHead(&CmiConnectedHiveList);
-#endif
 
     /* Create the key object types */
     Status = CmpCreateObjectTypes();
@@ -1475,7 +1454,7 @@ CmInitSystem1(VOID)
     ((PHBASE_BLOCK)BaseAddress)->Length = Length;
     Status = CmpInitializeHive((PCMHIVE*)&HardwareHive,
                                HINIT_MEMORY, //HINIT_CREATE,
-                               HIVE_VOLATILE,
+                               HIVE_VOLATILE | HIVE_NOLAZYFLUSH,
                                HFILE_TYPE_PRIMARY,
                                BaseAddress, // NULL,
                                NULL,

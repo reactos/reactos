@@ -17,7 +17,6 @@
 
 #include "cm.h"
 
-extern LIST_ENTRY CmiKeyObjectListHead;
 extern ULONG CmiTimer;
 
 static NTSTATUS
@@ -440,22 +439,18 @@ Next:
 
 /* Preconditions: Must be called with CmpRegistryLock held. */
 NTSTATUS
-CmiScanKeyList(PKEY_OBJECT Parent,
+CmiScanKeyList(PCM_KEY_CONTROL_BLOCK Parent,
                PCUNICODE_STRING KeyName,
                ULONG Attributes,
                PKEY_OBJECT* ReturnedObject)
 {
     PKEY_OBJECT CurKey = NULL;
-    ULONG Index;
-    
-    DPRINT("Scanning key list for: %wZ (Parent: %wZ)\n",
-           KeyName, &Parent->Name);
-    
-    /* FIXME: if list maintained in alphabetic order, use dichotomic search */
-    /* (a binary search) */
-    for (Index=0; Index < Parent->SubKeyCounts; Index++)
+    PLIST_ENTRY NextEntry;
+
+    NextEntry = Parent->KeyBodyListHead.Flink;
+    while (NextEntry != &Parent->KeyBodyListHead)
     {
-        CurKey = Parent->SubKeys[Index];
+        CurKey = CONTAINING_RECORD(NextEntry, KEY_OBJECT, KeyBodyEntry);
         if (Attributes & OBJ_CASE_INSENSITIVE)
         {
             DPRINT("Comparing %wZ and %wZ\n", KeyName, &CurKey->Name);
@@ -473,9 +468,11 @@ CmiScanKeyList(PKEY_OBJECT Parent,
                 break;
             }
         }
+        
+        NextEntry = NextEntry->Flink;
     }
     
-    if (Index < Parent->SubKeyCounts)
+    if (NextEntry != &Parent->KeyBodyListHead)
     {
         if (CurKey->KeyControlBlock->Delete)
         {
@@ -588,7 +585,7 @@ CmpParseKey(IN PVOID ParsedObject,
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-    Status = CmiScanKeyList(ParsedKey,
+    Status = CmiScanKeyList(ParsedKey->KeyControlBlock,
                             &KeyName,
                             Attributes,
                             &FoundObject);
@@ -722,9 +719,8 @@ CmpParseKey(IN PVOID ParsedObject,
                                   
         FoundObject->KeyControlBlock = Kcb;
         ASSERT(FoundObject->KeyControlBlock->KeyHive == ParsedKey->KeyControlBlock->KeyHive);
-        InsertTailList(&CmiKeyObjectListHead, &FoundObject->KeyBodyList);
         RtlpCreateUnicodeString(&FoundObject->Name, KeyName.Buffer, NonPagedPool);
-        CmiAddKeyToList(ParsedKey, FoundObject);
+        CmiAddKeyToList(ParsedKey->KeyControlBlock, FoundObject);
         DPRINT("Created object 0x%p\n", FoundObject);
     }
     else
@@ -784,9 +780,6 @@ CmpParseKey(IN PVOID ParsedObject,
         }
     }
 
-    RemoveEntryList(&FoundObject->KeyBodyList);
-    InsertHeadList(&CmiKeyObjectListHead, &FoundObject->KeyBodyList);
-
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
 
@@ -831,15 +824,9 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-    RemoveEntryList(&KeyObject->KeyBodyList);
     RtlFreeUnicodeString(&KeyObject->Name);
 
     ASSERT((KeyObject->KeyControlBlock->Delete) == FALSE);
-
-    if (KeyObject->SizeOfSubKeys)
-    {
-        ExFreePool(KeyObject->SubKeys);
-    }
 
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
@@ -917,41 +904,10 @@ CmpQueryKeyName(PVOID ObjectBody,
 }
 
 VOID
-CmiAddKeyToList(PKEY_OBJECT ParentKey,
+CmiAddKeyToList(PCM_KEY_CONTROL_BLOCK ParentKey,
                 PKEY_OBJECT NewKey)
 {
-    DPRINT("ParentKey %.08x\n", ParentKey);
-
-    if (ParentKey->SizeOfSubKeys <= ParentKey->SubKeyCounts)
-    {
-        PKEY_OBJECT *tmpSubKeys = ExAllocatePool(NonPagedPool,
-            (ParentKey->SubKeyCounts + 1) * sizeof(ULONG));
-
-        if (ParentKey->SubKeyCounts > 0)
-        {
-            RtlCopyMemory (tmpSubKeys,
-                           ParentKey->SubKeys,
-                           ParentKey->SubKeyCounts * sizeof(ULONG));
-        }
-
-        if (ParentKey->SubKeys)
-            ExFreePool(ParentKey->SubKeys);
-
-        ParentKey->SubKeys = tmpSubKeys;
-        ParentKey->SizeOfSubKeys = ParentKey->SubKeyCounts + 1;
-    }
-
-    /* FIXME: Please maintain the list in alphabetic order */
-    /*      to allow a dichotomic search */
-    ParentKey->SubKeys[ParentKey->SubKeyCounts++] = NewKey;
-
-    DPRINT("Reference parent key: 0x%p\n", ParentKey);
-
-    ObReferenceObjectByPointer(ParentKey,
-                               STANDARD_RIGHTS_REQUIRED,
-                               CmpKeyObjectType,
-                               KernelMode);
-    //NewKey->ParentKey = ParentKey;
+    InsertTailList(&ParentKey->KeyBodyListHead, &NewKey->KeyBodyEntry);
 }
 
 static NTSTATUS

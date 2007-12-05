@@ -460,6 +460,7 @@ HvInitialize(
    Hive->StorageTypeCount = HTYPE_COUNT;
    Hive->Cluster = 1;
    Hive->Version = HSYS_MINOR;
+   Hive->HiveFlags = HiveFlags &~ HIVE_NOLAZYFLUSH;
 
    switch (Operation)
    {

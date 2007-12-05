@@ -175,7 +175,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     KeyObject->KeyControlBlock->ValueCache.Count = Node->ValueList.Count;
 
     /* Link child to parent */
-    CmiAddKeyToList(Parent, KeyObject);
+    CmiAddKeyToList(Parent->KeyControlBlock, KeyObject);
 
     /* Create the actual handle to the object */
     Status = CmpCreateHandle(KeyObject,

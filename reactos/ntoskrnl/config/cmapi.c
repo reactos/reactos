@@ -39,26 +39,9 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
         Hive = CONTAINING_RECORD(NextEntry, CMHIVE, HiveList);
         if (!(Hive->Hive.HiveFlags & HIVE_NOLAZYFLUSH))
         {
-            /* Find out why this is needed? [Aleksey] */
-            ULONG Disposition;
-            CmpOpenHiveFiles(&Hive->FileFullPath,
-                             L".LOG",
-                             &Hive->FileHandles[HFILE_TYPE_PRIMARY],
-                             &Hive->FileHandles[HFILE_TYPE_LOG],
-                             &Disposition,
-                             &Disposition,
-                             FALSE,
-                             FALSE,
-                             TRUE,
-                             NULL);
-            
             /* Do the sync */
             Status = HvSyncHive(&Hive->Hive);
             if (!NT_SUCCESS(Status)) Result = FALSE;
-            
-            /* ReactOS requires this */
-            ZwClose(Hive->FileHandles[HFILE_TYPE_PRIMARY]);
-            ZwClose(Hive->FileHandles[HFILE_TYPE_LOG]);
         }
 
         /* Try the next entry */
@@ -1170,30 +1153,12 @@ CmFlushKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
     }
     else
     {
-        ULONG Disposition;
-
-        /* ReactOS Requires this */
-        CmpOpenHiveFiles(&CmHive->FileFullPath,
-                         L".LOG",
-                         &CmHive->FileHandles[HFILE_TYPE_PRIMARY],
-                         &CmHive->FileHandles[HFILE_TYPE_LOG],
-                         &Disposition,
-                         &Disposition,
-                         FALSE,
-                         FALSE,
-                         TRUE,
-                         NULL);
-
         /* Flush only this hive */
         if (!HvSyncHive(Hive))
         {
             /* Fail */
             Status = STATUS_REGISTRY_IO_FAILED;
         }
-        
-        /* ReactOS requires this */
-        ZwClose(CmHive->FileHandles[HFILE_TYPE_PRIMARY]);
-        ZwClose(CmHive->FileHandles[HFILE_TYPE_LOG]);
     }
 
     /* Return the status */

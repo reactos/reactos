@@ -202,8 +202,6 @@ typedef struct _CM_KEY_BODY
     struct _CM_KEY_CONTROL_BLOCK *KeyControlBlock;
     struct _CM_NOTIFY_BLOCK *NotifyBlock;
     HANDLE ProcessID;
-    ULONG Callers;
-    PVOID CallerAddress[10];
     LIST_ENTRY KeyBodyList;
 } CM_KEY_BODY, *PCM_KEY_BODY;
 
@@ -496,11 +494,8 @@ typedef struct _KEY_OBJECT
 {
     ULONG Type;
     UNICODE_STRING Name;
-    LIST_ENTRY KeyBodyList;
-    ULONG SubKeyCounts;
-    ULONG SizeOfSubKeys;
-    struct _KEY_OBJECT **SubKeys;
     PCM_KEY_CONTROL_BLOCK KeyControlBlock;
+    LIST_ENTRY KeyBodyEntry;
 } KEY_OBJECT, *PKEY_OBJECT;
 NTSTATUS
 NTAPI
@@ -513,7 +508,7 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
              IN PVOID ParseContext);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
 VOID
-CmiAddKeyToList(IN PKEY_OBJECT ParentKey,
+CmiAddKeyToList(IN PCM_KEY_CONTROL_BLOCK ParentKey,
                 IN PKEY_OBJECT NewKey);
 ///////////////////////////////////////////////////////////////////////////////
 
