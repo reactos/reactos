@@ -108,7 +108,17 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
-   return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
+   if (!hWnd)
+   {  // MSDN:
+      //"hWnd [in] Handle to the window whose DC is to be retrieved.
+      // If this value is NULL, GetDC retrieves the DC for the entire screen."
+      hWnd = IntGetDesktopWindow();
+      if (hWnd)
+        return NtUserGetDCEx(hWnd, NULL, DCX_CACHE | DCX_WINDOW);
+      else
+        return NULL;
+   }
+   return NtUserGetDCEx(hWnd, NULL, DCX_USESTYLE);
 }
 
 PDCE FASTCALL
