@@ -412,6 +412,7 @@ GetGeoInfoA@20
 GetGeoInfoW@20
 GetHandleContext@4
 GetHandleInformation@8
+GetLargePageMinimum@0
 GetLargestConsoleWindowSize@4
 GetLastError@0
 ;GetLinguistLangSize
