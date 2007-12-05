@@ -3,85 +3,83 @@
 LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE {
-     IDS_APPNAME, "Минички"
-
+	IDS_APPNAME, "Минички"
+	IDS_SECONDS, "seconds"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
 {
-    POPUP "&Игра" {
-        MENUITEM "&Нова",           IDM_NEW
-        MENUITEM SEPARATOR
-        MENUITEM "Използване на &въпросителна (?)", IDM_MARKQ
-        MENUITEM SEPARATOR
-        MENUITEM "На&чинаещ",      IDM_BEGINNER
-        MENUITEM "На&преднал",      IDM_ADVANCED
-        MENUITEM "&Вещ",        IDM_EXPERT
-        MENUITEM "&Нагаждане",        IDM_CUSTOM
-        MENUITEM SEPARATOR
-        MENUITEM "Из&ход",          IDM_EXIT
-    }
-    POPUP "&Сведения" {
-        MENUITEM "&Най- къси времена",    IDM_TIMES
-        MENUITEM "&За",         IDM_ABOUT
-    }
+	POPUP "&Game" {
+		MENUITEM "&Нова",                           IDM_NEW
+		MENUITEM SEPARATOR
+		MENUITEM "Използване на &въпросителна (?)", IDM_MARKQ
+		MENUITEM SEPARATOR
+		MENUITEM "На&чинаещ",                       IDM_BEGINNER
+		MENUITEM "На&преднал",                      IDM_ADVANCED
+		MENUITEM "&Вещ",                            IDM_EXPERT
+		MENUITEM "&Нагаждане",                      IDM_CUSTOM
+		MENUITEM SEPARATOR
+		MENUITEM "&Най- къси времена",              IDM_TIMES
+		MENUITEM SEPARATOR
+		MENUITEM "Из&ход",                          IDM_EXIT
+	}
+	POPUP "&Сведения" {
+		MENUITEM "&За",                             IDM_ABOUT
+	}
 }
 
-DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Най- къси времена"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
-    GROUPBOX        "Най- къси времена", IDNONE,  10,  10, 140,  45
-    LTEXT           "Начинаещ",      IDNONE,  20,  20,  40,   8
-    LTEXT           "Напреднал",      IDNONE,  20,  30,  40,   8
-    LTEXT           "Вещ",        IDNONE,  20,  40,  40,   8
-    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
-    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
-    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
-    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
-    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
-    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
-    DEFPUSHBUTTON   "Добре",                IDOK,  55,  60,  50,  15
+	GROUPBOX        "Най- къси времена", IDNONE,     10,  10, 182,  45
+	LTEXT           "Начинаещ:",         IDNONE,     20,  20,  58,   8
+	LTEXT           "Напреднал:",        IDNONE,     20,  30,  58,   8
+	LTEXT           "Вещ:",              IDNONE,     20,  40,  58,   8
+	LTEXT           "",                  IDC_TIME1,  80,  20,  50,   8
+	LTEXT           "",                  IDC_TIME2,  80,  30,  50,   8
+	LTEXT           "",                  IDC_TIME3,  80,  40,  50,   8
+	LTEXT           "",                  IDC_NAME1, 132,  20,  55,   8
+	LTEXT           "",                  IDC_NAME2, 132,  30,  55,   8
+	LTEXT           "",                  IDC_NAME3, 132,  40,  55,   8
+	DEFPUSHBUTTON   "Добре",             IDOK,      127,  57,  50,  15
+	PUSHBUTTON      "&Reset Scores",     IDRESET,    18,  57,  67,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Поздрави!"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
-    LTEXT           "Въведете името си", IDIGNORE,  10,  10, 150,  10
-    EDITTEXT                              IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "Добре",                         IDOK,  60,  40,  40,  15
+	LTEXT           "Въведете името си", IDIGNORE,      10,  10, 150,  10
+	EDITTEXT                             IDC_EDITNAME,  25,  20, 110,  12
+	DEFPUSHBUTTON   "Добре",             IDOK,          60,  40,  40,  15
 }
 
-DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Нагодена игра"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
-    LTEXT           "Реда",   IDNONE,   5,   5,  30,  10
-    LTEXT           "Стълба",   IDNONE,   5,  35,  30,  10
-    LTEXT           "Мини",  IDNONE,   5,  65,  30,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "Добре",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "Отказ", IDCANCEL,  40,  50,  50,  15
+	LTEXT           "Реда:",   IDNONE,         5,  15,  43,  10
+	LTEXT           "Стълба:", IDNONE,         5,  35,  43,  10
+	LTEXT           "Мини:",   IDNONE,         5,  55,  43,  10
+	EDITTEXT                   IDC_EDITROWS,  49,  15,  30,  12, ES_NUMBER
+	EDITTEXT                   IDC_EDITCOLS,  49,  35,  30,  12, ES_NUMBER
+	EDITTEXT                   IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
+	DEFPUSHBUTTON   "Добре",   IDOK,          86,  32,  45,  15
+	PUSHBUTTON      "Отказ",   IDCANCEL,      86,  52,  45,  15
 }
 
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP
+STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "За"
 FONT 8, "MS Shell Dlg"
-EXSTYLE DS_SHELLFONT
 {
-    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
-    LTEXT                 "under the Wine license", IDNONE,  35,  35, 100,  10
-    ICON                                "WINEMINE", IDNONE,  10,  25,  20,  20
-    DEFPUSHBUTTON                             "Добре", IDOK,      50,  60,  55,  15
+	LTEXT                               "WineMine", IDNONE,  10,  10,  35,  10
+	LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 100,  10
+	LTEXT                 "under the Wine license", IDNONE,  35,  35, 100,  10
+	ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+	DEFPUSHBUTTON                          "Добре", IDOK,    50,  60,  55,  15
 }

@@ -48,9 +48,12 @@
 #define IDC_EDITMINES  1033
 
 #define IDS_APPNAME    1101
+#define IDS_SECONDS    1102
 
 #define IDI_WINEMINE   1201
 
 #define IDB_FACES      1301
 #define IDB_LEDS       1302
 #define IDB_MINES      1303
+
+#define IDRESET        1401

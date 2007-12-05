@@ -262,32 +262,31 @@ void InitBoard( BOARD *p_board )
 
     LoadBoard( p_board );
 
-    if( p_board->pos.x < (unsigned) GetSystemMetrics( SM_CXFIXEDFRAME ))
+    if( p_board->pos.x < GetSystemMetrics( SM_CXFIXEDFRAME ) )
         p_board->pos.x = GetSystemMetrics( SM_CXFIXEDFRAME );
 
-    if( p_board->pos.x > (unsigned) (GetSystemMetrics( SM_CXSCREEN )
-    - GetSystemMetrics( SM_CXFIXEDFRAME ))) {
+    if( p_board->pos.x > (GetSystemMetrics( SM_CXSCREEN )  - GetSystemMetrics( SM_CXFIXEDFRAME )))
+    {
         p_board->pos.x = GetSystemMetrics( SM_CXSCREEN )
         - GetSystemMetrics( SM_CXFIXEDFRAME );
     }
 
-    if( p_board->pos.y < (unsigned) (GetSystemMetrics( SM_CYMENU )
-    + GetSystemMetrics( SM_CYCAPTION )
-    + GetSystemMetrics( SM_CYFIXEDFRAME ))) {
+    if( p_board->pos.y < (GetSystemMetrics( SM_CYMENU ) + GetSystemMetrics( SM_CYCAPTION ) + GetSystemMetrics( SM_CYFIXEDFRAME )))
+    {
         p_board->pos.y = GetSystemMetrics( SM_CYMENU ) +
         GetSystemMetrics( SM_CYCAPTION ) +
         GetSystemMetrics( SM_CYFIXEDFRAME );
     }
 
-    if( p_board->pos.y > (unsigned) (GetSystemMetrics( SM_CYSCREEN )
-    - GetSystemMetrics( SM_CYFIXEDFRAME ))) {
+    if( p_board->pos.y > (GetSystemMetrics( SM_CYSCREEN ) - GetSystemMetrics( SM_CYFIXEDFRAME )))
+    {
         p_board->pos.y = GetSystemMetrics( SM_CYSCREEN )
         - GetSystemMetrics( SM_CYFIXEDFRAME );
     }
 
     hMenu = GetMenu( p_board->hWnd );
-    CheckMenuItem( hMenu, IDM_BEGINNER + (unsigned) p_board->difficulty,
-            MF_CHECKED );
+    CheckMenuItem( hMenu, IDM_BEGINNER + p_board->difficulty, MF_CHECKED );
+
     if( p_board->IsMarkQ )
         CheckMenuItem( hMenu, IDM_MARKQ, MF_CHECKED );
     else
@@ -297,90 +296,81 @@ void InitBoard( BOARD *p_board )
 
 void LoadBoard( BOARD *p_board )
 {
-    DWORD size;
-    DWORD type;
+    DWORD dwSize;
+    DWORD dwValue;
     HKEY hkey;
     char data[16];
     char key_name[8];
     unsigned i;
 
 
-    RegOpenKeyEx( HKEY_LOCAL_MACHINE, "Software\\Wine\\WineMine",
+    RegOpenKeyEx( HKEY_CURRENT_USER, WINEMINE_REGKEY,
             0, KEY_QUERY_VALUE, &hkey );
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Xpos", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS ) {
-        p_board->pos.x = atoi( data );
-    }
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Xpos", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->pos.x = dwValue;
     else
         p_board->pos.x = GetSystemMetrics( SM_CXFIXEDFRAME );
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Ypos", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->pos.y = atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Ypos", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->pos.y = dwValue;
     else
         p_board->pos.y = GetSystemMetrics( SM_CYMENU )
         + GetSystemMetrics( SM_CYCAPTION )
         + GetSystemMetrics( SM_CYFIXEDFRAME );
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Rows", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->rows = atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Rows", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->rows = dwValue;
     else
         p_board->rows = BEGINNER_ROWS;
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Cols", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->cols = atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Cols", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->cols = dwValue;
     else
         p_board->cols = BEGINNER_COLS;
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Mines", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->mines = atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Mines", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->mines = dwValue;
     else
         p_board->rows = BEGINNER_ROWS;
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "Difficulty", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->difficulty = (DIFFICULTY) atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "Difficulty", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->difficulty = (DIFFICULTY) dwValue;
     else
         p_board->difficulty = BEGINNER;
 
-    size = sizeof( data );
-    if( RegQueryValueEx( hkey, "MarkQ", NULL, (LPDWORD) &type,
-            (LPBYTE) data, (LPDWORD) &size ) == ERROR_SUCCESS )
-        p_board->IsMarkQ = atoi( data );
+    dwSize = sizeof(DWORD);
+    if( RegQueryValueEx( hkey, "MarkQ", NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+        p_board->IsMarkQ = dwValue;
     else
         p_board->IsMarkQ = TRUE;
 
     for( i = 0; i < 3; i++ ) {
         wsprintf( key_name, "Name%d", i );
-        size = sizeof( data );
-        if( RegQueryValueEx( hkey, key_name, NULL, (LPDWORD) &type,
-                (LPBYTE) data,
-                (LPDWORD) &size ) == ERROR_SUCCESS )
-                    strncpy( p_board->best_name[i], data, sizeof( data ) );
+        dwSize = sizeof( data );
+
+        if( RegQueryValueEx( hkey, key_name, NULL, NULL, (LPBYTE) data, (LPDWORD) &dwSize ) == ERROR_SUCCESS )
+            strncpy( p_board->best_name[i], data, sizeof( data ) );
         else
             wsprintf( p_board->best_name[i], "Nobody");
     }
 
     for( i = 0; i < 3; i++ ) {
         wsprintf( key_name, "Time%d", i );
-        size = sizeof( data );
-        if( RegQueryValueEx( hkey, key_name, NULL, (LPDWORD) &type,
-                (LPBYTE) data,
-                (LPDWORD) &size ) == ERROR_SUCCESS )
-            p_board->best_time[i] = atoi( data );
+
+        dwSize = sizeof(DWORD);
+        if( RegQueryValueEx( hkey, key_name, NULL, NULL, (LPBYTE) &dwValue, &dwSize ) == ERROR_SUCCESS )
+            p_board->best_time[i] = dwValue;
         else
             p_board->best_time[i] = 999;
     }
+
     RegCloseKey( hkey );
 }
 
@@ -392,32 +382,19 @@ void SaveBoard( BOARD *p_board )
     char data[16];
     char key_name[8];
 
-    if( RegCreateKeyEx( HKEY_LOCAL_MACHINE,
-                "Software\\Wine\\WineMine", 0, NULL,
+    if( RegCreateKeyEx( HKEY_CURRENT_USER,
+                WINEMINE_REGKEY, 0, NULL,
                 REG_OPTION_NON_VOLATILE, KEY_WRITE, NULL,
                 &hkey, &disp ) != ERROR_SUCCESS)
         return;
 
-    wsprintf( data, "%d", p_board->pos.x );
-    RegSetValueEx( hkey, "Xpos", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", p_board->pos.x );
-    RegSetValueEx( hkey, "Ypos", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", (int) p_board->difficulty );
-    RegSetValueEx( hkey, "Difficulty", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", p_board->rows );
-    RegSetValueEx( hkey, "Rows", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", p_board->cols );
-    RegSetValueEx( hkey, "Cols", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", p_board->mines );
-    RegSetValueEx( hkey, "Mines", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
-
-    wsprintf( data, "%d", (int) p_board->IsMarkQ );
-    RegSetValueEx( hkey, "MarkQ", 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
+    RegSetValueEx( hkey, "Xpos", 0, REG_DWORD, (LPBYTE) &p_board->pos.x, sizeof(DWORD) );
+    RegSetValueEx( hkey, "Ypos", 0, REG_DWORD, (LPBYTE) &p_board->pos.y, sizeof(DWORD) );
+    RegSetValueEx( hkey, "Difficulty", 0, REG_DWORD, (LPBYTE) &p_board->difficulty, sizeof(DWORD) );
+    RegSetValueEx( hkey, "Rows", 0, REG_DWORD, (LPBYTE) &p_board->rows, sizeof(DWORD) );
+    RegSetValueEx( hkey, "Cols", 0, REG_DWORD, (LPBYTE) &p_board->cols, sizeof(DWORD) );
+    RegSetValueEx( hkey, "Mines", 0, REG_DWORD, (LPBYTE) &p_board->mines, sizeof(DWORD) );
+    RegSetValueEx( hkey, "MarkQ", 0, REG_DWORD, (LPBYTE) &p_board->IsMarkQ, sizeof(DWORD) );
 
     for( i = 0; i < 3; i++ ) {
         wsprintf( key_name, "Name%u", i );
@@ -427,9 +404,9 @@ void SaveBoard( BOARD *p_board )
 
     for( i = 0; i < 3; i++ ) {
         wsprintf( key_name, "Time%u", i );
-        wsprintf( data, "%d", p_board->best_time[i] );
-        RegSetValueEx( hkey, key_name, 0, REG_SZ, (LPBYTE) data, strlen(data)+1 );
+        RegSetValueEx( hkey, key_name, 0, REG_DWORD, (LPBYTE) p_board->best_time[i], sizeof(DWORD) );
     }
+
     RegCloseKey( hkey );
 }
 
@@ -787,6 +764,7 @@ void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board )
 void TestBoard( HWND hWnd, BOARD *p_board, unsigned x, unsigned y, int msg )
 {
     POINT pt;
+    UINT col, row;
 
     pt.x = x;
     pt.y = y;
@@ -802,9 +780,24 @@ void TestBoard( HWND hWnd, BOARD *p_board, unsigned x, unsigned y, int msg )
         p_board->press.y = 0;
     }
 
-    if( p_board->boxes_left == 0 ) {
+    if( p_board->boxes_left == 0 ) 
+    {
+        // MG - 2006-02-21
+        // mimic MS minesweeper behaviour - when autocompleting a board, flag mines 
         p_board->status = WON;
-
+        for( col = 0; col <= p_board->cols + 1; col++ )
+        {
+            for( row = 0; row <= p_board->rows + 1; row++ ) 
+            {
+                if(p_board->box[col][row].IsMine == TRUE)
+                {
+                    p_board->box[col][row].FlagType = FLAG;
+                }
+            }
+        }
+        p_board->num_flags = p_board->mines;
+        RedrawWindow( p_board->hWnd, NULL, NULL_HANDLE, RDW_INVALIDATE | RDW_UPDATENOW );
+        
         if( p_board->difficulty != CUSTOM &&
                     p_board->time < p_board->best_time[p_board->difficulty] ) {
             p_board->best_time[p_board->difficulty] = p_board->time;

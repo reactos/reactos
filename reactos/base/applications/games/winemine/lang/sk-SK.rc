@@ -7,46 +7,48 @@
 LANGUAGE LANG_SLOVAK, SUBLANG_DEFAULT
 
 STRINGTABLE {
-     IDS_APPNAME, "MÌny"
-
+	IDS_APPNAME, "MÌny"
+	IDS_SECONDS, "seconds"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
 {
-    POPUP "&Moûnosti" {
-        MENUITEM "&Nov· hra",      IDM_NEW
-        MENUITEM SEPARATOR
-        MENUITEM "Zn&aËky (?)",    IDM_MARKQ
-        MENUITEM SEPARATOR
-        MENUITEM "&ZaËiatoËnÌk",   IDM_BEGINNER
-        MENUITEM "&PokroËil˝",     IDM_ADVANCED
-        MENUITEM "&Expert",        IDM_EXPERT
-        MENUITEM "&VlastnÈ...",    IDM_CUSTOM
-        MENUITEM SEPARATOR
-        MENUITEM "Sk&onËiù",       IDM_EXIT
-    }
-    POPUP "&Info" {
-        MENUITEM "&Najlepöie Ëasy...",    IDM_TIMES
-        MENUITEM "»&o je hra MÌny...",    IDM_ABOUT
-    }
+	POPUP "&Game" {
+		MENUITEM "&Nov· hra",          IDM_NEW
+		MENUITEM SEPARATOR
+		MENUITEM "Zn&aËky (?)",        IDM_MARKQ
+		MENUITEM SEPARATOR
+		MENUITEM "&ZaËiatoËnÌk",       IDM_BEGINNER
+		MENUITEM "&PokroËil˝",         IDM_ADVANCED
+		MENUITEM "&Expert",            IDM_EXPERT
+		MENUITEM "&VlastnÈ...",        IDM_CUSTOM
+		MENUITEM SEPARATOR
+		MENUITEM "&Najlepöie Ëasy...", IDM_TIMES
+		MENUITEM SEPARATOR
+		MENUITEM "Sk&onËiù",           IDM_EXIT
+	}
+	POPUP "&Info" {
+		MENUITEM "»&o je hra MÌny...", IDM_ABOUT
+	}
 }
 
-DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 160, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
+DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
+STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Najr˝chlejöÌ hæadaËi mÌn"
 FONT 8, "MS Shell Dlg"
 {
-    GROUPBOX        "Najlepöie Ëasy", IDNONE,  10,  10, 140,  45
-    LTEXT           "ZaËiatoËnÌk",    IDNONE,  20,  20,  40,   8
-    LTEXT           "PokroËil˝",      IDNONE,  20,  30,  40,   8
-    LTEXT           "Expert",         IDNONE,  20,  40,  40,   8
-    LTEXT           "999",          IDC_TIME1,  70,  20,  15,   8
-    LTEXT           "999",          IDC_TIME2,  70,  30,  15,   8
-    LTEXT           "999",          IDC_TIME3,  70,  40,  15,   8
-    LTEXT           "",             IDC_NAME1,  90,  20,  55,   8
-    LTEXT           "",             IDC_NAME2,  90,  30,  55,   8
-    LTEXT           "",             IDC_NAME3,  90,  40,  55,   8
-    DEFPUSHBUTTON   "OK",                IDOK,  55,  60,  50,  15
+	GROUPBOX        "Najlepöie Ëasy", IDNONE,     10,  10, 182,  45
+	LTEXT           "ZaËiatoËnÌk:",   IDNONE,     20,  20,  58,   8
+	LTEXT           "PokroËil˝:",     IDNONE,     20,  30,  58,   8
+	LTEXT           "Expert:",        IDNONE,     20,  40,  58,   8
+	LTEXT           "",               IDC_TIME1,  80,  20,  50,   8
+	LTEXT           "",               IDC_TIME2,  80,  30,  50,   8
+	LTEXT           "",               IDC_TIME3,  80,  40,  50,   8
+	LTEXT           "",               IDC_NAME1, 132,  20,  55,   8
+	LTEXT           "",               IDC_NAME2, 132,  30,  55,   8
+	LTEXT           "",               IDC_NAME3, 132,  40,  55,   8
+	DEFPUSHBUTTON   "OK",             IDOK,      127,  57,  50,  15
+	PUSHBUTTON      "&Reset Scores",  IDRESET,    18,  57,  67,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
@@ -54,34 +56,35 @@ STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHEL
 CAPTION "Blahoûel·m!"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "Zadajte svoje meno, prosÌm!", IDIGNORE,  10,  10, 150,  10
-    EDITTEXT                                   IDC_EDITNAME,  25,  20, 110,  12
-    DEFPUSHBUTTON   "Ok",                              IDOK,  60,  40,  40,  15
+	LTEXT           "Zadajte svoje meno, prosÌm!", IDIGNORE,      10,  10, 150,  10
+	EDITTEXT                                       IDC_EDITNAME,  25,  20, 110,  12
+	DEFPUSHBUTTON   "Ok",                          IDOK,          60,  40,  40,  15
 }
 
-DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 100, 100
+DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "VlastnÈ pole"
+CAPTION "Custom Game"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT           "V˝öka",  IDNONE,   5,   5,  30,  10
-    LTEXT           "äÌrka",  IDNONE,   5,  35,  30,  10
-    LTEXT           "MÌny",   IDNONE,   5,  65,  30,  10
-    EDITTEXT              IDC_EDITROWS,   5,  15,  20,  12, ES_NUMBER
-    EDITTEXT              IDC_EDITCOLS,   5,  45,  20,  12, ES_NUMBER
-    EDITTEXT             IDC_EDITMINES,   5,  75,  20,  12, ES_NUMBER
-    DEFPUSHBUTTON   "Ok",     IDOK,      40,  30,  50,  15
-    PUSHBUTTON      "Zruöiù", IDCANCEL,  40,  50,  50,  15
+	LTEXT           "V˝öka:", IDNONE,         5,  15,  43,  10
+	LTEXT           "äÌrka:", IDNONE,         5,  35,  43,  10
+	LTEXT           "MÌny:",  IDNONE,         5,  55,  43,  10
+	EDITTEXT                  IDC_EDITROWS,  49,  15,  30,  12, ES_NUMBER
+	EDITTEXT                  IDC_EDITCOLS,  49,  35,  30,  12, ES_NUMBER
+	EDITTEXT                  IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
+	DEFPUSHBUTTON   "OK",     IDOK,          86,  32,  45,  15
+	PUSHBUTTON      "Zruöiù", IDCANCEL,      86,  52,  45,  15
 }
+
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "»o je hra MÌny (WineMine)"
 FONT 8, "MS Shell Dlg"
 {
-    LTEXT                               "Winemine", IDNONE,  10,  10,  35,  10
-    LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
-    LTEXT                     "pod licenciou Wine", IDNONE,  35,  35, 100,  10
-    LTEXT                     "Preloûil Kario",     IDNONE,  35,  45, 100,  10
-    ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
-    DEFPUSHBUTTON                             "Ok", IDOK,    50,  60,  55,  15
+	LTEXT                               "WineMine", IDNONE,  10,  10,  35,  10
+	LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
+	LTEXT                     "pod licenciou Wine", IDNONE,  35,  35, 100,  10
+	LTEXT                         "Preloûil Kario", IDNONE,  35,  45, 100,  10
+	ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
+	DEFPUSHBUTTON                             "Ok", IDOK,    50,  60,  55,  15
 }
