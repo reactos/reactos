@@ -771,7 +771,7 @@ CreateShortcuts(VOID)
     /* Creacte Accessibility subfolder and fill if the exe is available */
     if (CreateShortcutFolder(CSIDL_PROGRAMS, IDS_SYS_ACCESSIBILITY, szFolder, sizeof(szFolder)/sizeof(szFolder[0])))
     {
-        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, FALSE);
+        CreateShortcut(CSIDL_PROGRAMS, szFolder, IDS_SHORT_MAGNIFY, _T("%SystemRoot%\\system32\\magnify.exe"), IDS_CMT_MAGNIFY, TRUE);
     }
 
     /* Create Games subfolder and fill if the exe is available */
