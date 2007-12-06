@@ -11,6 +11,14 @@
 #define IDM_ABOUT                       40004
 #define IDM_CLOSE                       40005
 
+/* Strings */
+#define IDS_WINDOW_TITLE                5000
+#define IDS_ABOUT                       5001
+#define IDS_ABOUT_TITLE                 5002
+#define IDS_NO_ITEMS                    5003
+#define IDS_NAME                        5004
+#define IDS_COMMENT                     5005
+
 // Next default values for new objects
 //
 #ifdef APSTUDIO_INVOKED

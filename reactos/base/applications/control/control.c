@@ -181,6 +181,8 @@ VOID PopulateCPLList(HWND hLisCtrl)
 
 LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 {
+	TCHAR szBuf[1024];
+
 	switch (uMsg)
 	{
 	case WM_CREATE:
@@ -197,11 +199,13 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			column.fmt = LVCFMT_LEFT;
 			column.cx = (rect.right - rect.left) / 3;
 			column.iSubItem = 0;
-			column.pszText = _T("Name");
+			LoadString(hInst, IDS_NAME, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+			column.pszText = szBuf;
 			(void)ListView_InsertColumn(hListView,0,&column);
 			column.cx = (rect.right - rect.left) - ((rect.right - rect.left) / 3) - 1;
 			column.iSubItem = 1;
-			column.pszText = _T("Comment");
+			LoadString(hInst, IDS_COMMENT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+			column.pszText = szBuf;
 			(void)ListView_InsertColumn(hListView,1,&column);
 			PopulateCPLList(hListView);
 			(void)ListView_SetColumnWidth(hListView,2,LVSCW_AUTOSIZE_USEHEADER);
@@ -242,7 +246,8 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 					if (nSelect==-1)
 					{
 						/* no items */
-						MessageBox(hWnd,_T("No Items in ListView"),_T("Error"),MB_OK|MB_ICONINFORMATION);
+						LoadString(hInst, IDS_NO_ITEMS, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+						MessageBox(hWnd,(LPCTSTR)szBuf,NULL,MB_OK|MB_ICONINFORMATION);
 						break;
 					}
 
@@ -284,7 +289,14 @@ LRESULT CALLBACK MyWindowProc(HWND hWnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
 			DestroyWindow(hWnd);
 			break;
 		case IDM_ABOUT:
-			MessageBox(hWnd,_T("Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"),_T("About the Control Panel"),MB_OK | MB_ICONINFORMATION);
+			{
+				TCHAR Title[256];
+				
+				LoadString(hInst, IDS_ABOUT, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+				LoadString(hInst, IDS_ABOUT_TITLE, Title, sizeof(Title) / sizeof(TCHAR));
+				
+				MessageBox(hWnd,(LPCTSTR)szBuf,(LPCTSTR)Title,MB_OK | MB_ICONINFORMATION);
+			}
 			break;
 		}
 		break;
@@ -302,6 +314,7 @@ RunControlPanelWindow(int nCmdShow)
 {
   MSG msg;
   WNDCLASS wc;
+  TCHAR szBuf[256];
 
   memset(&wc,0x00,sizeof(wc));
   wc.hIcon = LoadIcon(hInst,MAKEINTRESOURCE(IDI_MAINICON));
@@ -311,10 +324,11 @@ RunControlPanelWindow(int nCmdShow)
   RegisterClass(&wc);
 
   InitCommonControls();
-
+  
+  LoadString(hInst, IDS_WINDOW_TITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
   hMainWnd = CreateWindowEx(WS_EX_CLIENTEDGE,
 			    MYWNDCLASS,
-			    _T("Control Panel"),
+			    (LPCTSTR)szBuf,
 			    WS_OVERLAPPEDWINDOW,
 			    CW_USEDEFAULT,
 			    CW_USEDEFAULT,

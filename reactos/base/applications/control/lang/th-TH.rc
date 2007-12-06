@@ -32,3 +32,13 @@ BEGIN
         MENUITEM "เกี่ยวกับ...",                   IDM_ABOUT
     END
 END
+
+STRINGTABLE
+BEGIN
+    IDS_WINDOW_TITLE "Control Panel"
+	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
+	IDS_ABOUT_TITLE "About the Control Panel"
+	IDS_NO_ITEMS "No Items in ListView"
+	IDS_NAME "Name"
+	IDS_COMMENT "Comment"
+END
