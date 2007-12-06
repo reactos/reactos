@@ -52,7 +52,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     HANDLE hKey;
     PCM_KEY_NODE Node, ParentNode;
+    CM_PARSE_CONTEXT ParseContext = {0};
     PAGED_CODE();
+
+    /* Setup the parse context */
+    ParseContext.CreateOperation = TRUE;
+    ParseContext.CreateOptions = CreateOptions;
+    if (Class) ParseContext.Class = *Class;
 
     /* Capture all the info */
     Status = ObpCaptureObjectAttributes(ObjectAttributes,
@@ -146,10 +152,8 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                          NULL,
                          &RemainingPath,
                          KernelMode,
-                         Class,
-                         CreateOptions,
+                         &ParseContext,
                          Parent->KeyControlBlock,
-                         NULL,
                          (PVOID*)&KeyObject);
     if (!NT_SUCCESS(Status)) goto Cleanup;
 
@@ -175,7 +179,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     KeyObject->KeyControlBlock->ValueCache.Count = Node->ValueList.Count;
 
     /* Link child to parent */
-    CmiAddKeyToList(Parent->KeyControlBlock, KeyObject);
+    InsertTailList(&Parent->KeyControlBlock->KeyBodyListHead, &KeyObject->KeyBodyEntry);
 
     /* Create the actual handle to the object */
     Status = CmpCreateHandle(KeyObject,

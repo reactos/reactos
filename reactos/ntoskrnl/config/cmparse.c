@@ -82,9 +82,9 @@ CmpDoCreateChild(IN PHHIVE Hive,
                  IN PACCESS_STATE AccessState,
                  IN PUNICODE_STRING Name,
                  IN KPROCESSOR_MODE AccessMode,
-                 IN PUNICODE_STRING Class,
+                 IN PCM_PARSE_CONTEXT ParseContext,
                  IN PCM_KEY_CONTROL_BLOCK ParentKcb,
-                 IN ULONG CreateOptions,
+                 IN ULONG Flags,
                  OUT PHCELL_INDEX KeyCell,
                  OUT PVOID *Object)
 {
@@ -110,7 +110,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Get the storage type */
     StorageType = Stable;
-    if (CreateOptions & REG_OPTION_VOLATILE) StorageType = Volatile;
+    if (Flags & REG_OPTION_VOLATILE) StorageType = Volatile;
 
     /* Allocate the child */
     *KeyCell = HvAllocateCell(Hive,
@@ -139,10 +139,13 @@ CmpDoCreateChild(IN PHHIVE Hive,
     HvReleaseCell(Hive, *KeyCell);
 
     /* Check if we have a class name */
-    if (Class->Length > 0)
+    if (ParseContext->Class.Length > 0)
     {
         /* Allocate a class cell */
-        ClassCell = HvAllocateCell(Hive, Class->Length, StorageType, HCELL_NIL);
+        ClassCell = HvAllocateCell(Hive,
+                                   ParseContext->Class.Length,
+                                   StorageType,
+                                   HCELL_NIL);
         if (ClassCell == HCELL_NIL)
         {
             /* Fail */
@@ -165,7 +168,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyBody = (PKEY_OBJECT)(*Object);
 
     /* Check if we had a class */
-    if (Class->Length > 0)
+    if (ParseContext->Class.Length > 0)
     {
         /* Get the class cell */
         CellData = HvGetCell(Hive, ClassCell);
@@ -183,13 +186,13 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
         /* Copy the class data */
         RtlCopyMemory(&CellData->u.KeyString[0],
-                      Class->Buffer,
-                      Class->Length);
+                      ParseContext->Class.Buffer,
+                      ParseContext->Class.Length);
     }
 
     /* Fill out the key node */
     KeyNode->Signature = CM_KEY_NODE_SIGNATURE;
-    KeyNode->Flags = CreateOptions;
+    KeyNode->Flags = Flags;
     KeQuerySystemTime(&SystemTime);
     KeyNode->LastWriteTime = SystemTime;
     KeyNode->Spare = 0;
@@ -202,7 +205,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     KeyNode->ValueList.List = HCELL_NIL;
     KeyNode->Security = HCELL_NIL;
     KeyNode->Class = ClassCell;
-    KeyNode->ClassLength = Class->Length;
+    KeyNode->ClassLength = ParseContext->Class.Length;
     KeyNode->MaxValueDataLen = 0;
     KeyNode->MaxNameLen = 0;
     KeyNode->MaxValueNameLen = 0;
@@ -236,7 +239,7 @@ Quickie:
     if (!NT_SUCCESS(Status))
     {
         /* Free any cells we might've allocated */
-        if (Class->Length > 0) HvFreeCell(Hive, ClassCell);
+        if (ParseContext->Class.Length > 0) HvFreeCell(Hive, ClassCell);
         HvFreeCell(Hive, *KeyCell);
     }
 
@@ -260,10 +263,8 @@ CmpDoCreate(IN PHHIVE Hive,
             IN PACCESS_STATE AccessState,
             IN PUNICODE_STRING Name,
             IN KPROCESSOR_MODE AccessMode,
-            IN PUNICODE_STRING Class OPTIONAL,
-            IN ULONG CreateOptions,
+            IN PCM_PARSE_CONTEXT ParseContext,
             IN PCM_KEY_CONTROL_BLOCK ParentKcb,
-            IN PCMHIVE OriginatingHive OPTIONAL,
             OUT PVOID *Object)
 {
     NTSTATUS Status;
@@ -274,8 +275,6 @@ CmpDoCreate(IN PHHIVE Hive,
     PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
-    UNICODE_STRING LocalClass = {0};
-    if (!Class) Class = &LocalClass;
 
     /* Sanity check */
 #if 0
@@ -319,7 +318,8 @@ CmpDoCreate(IN PHHIVE Hive,
 
     /* Get the parent type */
     ParentType = HvGetCellType(Cell);
-    if ((ParentType == Volatile) && !(CreateOptions & REG_OPTION_VOLATILE))
+    if ((ParentType == Volatile) &&
+        !(ParseContext->CreateOptions & REG_OPTION_VOLATILE))
     {
         /* Children of volatile parents must also be volatile */
         ASSERT(FALSE);
@@ -346,9 +346,9 @@ CmpDoCreate(IN PHHIVE Hive,
                               AccessState,
                               Name,
                               AccessMode,
-                              Class,
+                              ParseContext,
                               ParentKcb,
-                              CreateOptions,
+                              ParseContext->CreateOptions, // WRONG!
                               &KeyCell,
                               Object);
     if (NT_SUCCESS(Status))
@@ -391,14 +391,14 @@ CmpDoCreate(IN PHHIVE Hive,
         }
 
         /* Check if we need toupdate class length maximum */
-        if (KeyNode->MaxClassLen < Class->Length)
+        if (KeyNode->MaxClassLen < ParseContext->Class.Length)
         {
             /* Update it */
-            KeyNode->MaxClassLen = Class->Length;
+            KeyNode->MaxClassLen = ParseContext->Class.Length;
         }
 
         /* Check if we're creating a symbolic link */
-        if (CreateOptions & REG_OPTION_CREATE_LINK)
+        if (ParseContext->CreateOptions & REG_OPTION_CREATE_LINK)
         {
             /* Get the cell data */
             CellData = HvGetCell(Hive, KeyCell);
@@ -591,7 +591,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
                            AccessState,
                            AccessMode,
                            CreateOptions,
-                           NULL,
+                           Context,
                            0,
                            &Kcb,
                            &Name,
@@ -607,7 +607,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
                                   AccessState,
                                   &Name,
                                   AccessMode,
-                                  &Context->Class,
+                                  Context,
                                   ParentKcb,
                                   KEY_HIVE_ENTRY | KEY_NO_DELETE,
                                   &ChildCell,

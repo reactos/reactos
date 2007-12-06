@@ -720,7 +720,7 @@ CmpParseKey(IN PVOID ParsedObject,
         FoundObject->KeyControlBlock = Kcb;
         ASSERT(FoundObject->KeyControlBlock->KeyHive == ParsedKey->KeyControlBlock->KeyHive);
         RtlpCreateUnicodeString(&FoundObject->Name, KeyName.Buffer, NonPagedPool);
-        CmiAddKeyToList(ParsedKey->KeyControlBlock, FoundObject);
+        InsertTailList(&ParsedKey->KeyControlBlock->KeyBodyListHead, &FoundObject->KeyBodyEntry);
         DPRINT("Created object 0x%p\n", FoundObject);
     }
     else
@@ -901,13 +901,6 @@ CmpQueryKeyName(PVOID ObjectBody,
 #endif
 
     return STATUS_SUCCESS;
-}
-
-VOID
-CmiAddKeyToList(PCM_KEY_CONTROL_BLOCK ParentKey,
-                PKEY_OBJECT NewKey)
-{
-    InsertTailList(&ParentKey->KeyBodyListHead, &NewKey->KeyBodyEntry);
 }
 
 static NTSTATUS

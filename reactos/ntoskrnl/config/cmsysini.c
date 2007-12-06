@@ -614,7 +614,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     ObReferenceObject(NewKey);
     
     /* Link this key to the parent */
-    CmiAddKeyToList(ParentKey->KeyControlBlock, NewKey);
+    InsertTailList(&ParentKey->KeyControlBlock->KeyBodyListHead, &NewKey->KeyBodyEntry);
     return STATUS_SUCCESS;    
 }
 

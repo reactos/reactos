@@ -507,9 +507,6 @@ CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
              IN PACCESS_STATE AccessState,
              IN PVOID ParseContext);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
-VOID
-CmiAddKeyToList(IN PCM_KEY_CONTROL_BLOCK ParentKey,
-                IN PKEY_OBJECT NewKey);
 ///////////////////////////////////////////////////////////////////////////////
 
 //
@@ -1029,10 +1026,8 @@ CmpDoCreate(
     IN PACCESS_STATE AccessState,
     IN PUNICODE_STRING Name,
     IN KPROCESSOR_MODE AccessMode,
-    IN PUNICODE_STRING Class,
-    IN ULONG CreateOptions,
+    IN PCM_PARSE_CONTEXT Context,
     IN PCM_KEY_CONTROL_BLOCK ParentKcb,
-    IN PCMHIVE OriginatingHive OPTIONAL,
     OUT PVOID *Object
 );
 
