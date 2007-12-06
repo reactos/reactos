@@ -138,7 +138,7 @@ Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWO
                 LONG retval;
                 // Here we go
                 DEVMODE DevMode;
-				ZeroMemory(&DevMode, sizeof(DEVMODE));
+                ZeroMemory(&DevMode, sizeof(DEVMODE));
                 DevMode.dmSize = sizeof(DEVMODE);
 
                 if (dwHeight)
