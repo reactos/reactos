@@ -257,3 +257,19 @@ NtGdiSetTextColor(HDC hDC,
   NtGdiSelectBrush(hDC, hBrush);
   return  oldColor;
 }
+
+VOID
+FASTCALL
+DCU_SetDcUndeletable(HDC  hDC)
+{
+  PDC dc = DC_LockDc(hDC);
+  if (!dc)
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return;
+    }
+
+  dc->DC_Flags |= DC_FLAG_PERMANENT;
+  DC_UnlockDc( dc );
+  return;
+}

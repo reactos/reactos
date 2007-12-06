@@ -161,6 +161,8 @@ DceAllocDCE(PWINDOW_OBJECT Window OPTIONAL, DCE_TYPE Type)
     FirstDce = pDce;
     KeLeaveCriticalRegion();
 
+    DCU_SetDcUndeletable(pDce->hDC);
+
     if (Type == DCE_WINDOW_DC) //Window DCE have ownership.
      { // Process should already own it.
        pDce->pProcess = PsGetCurrentProcess();
@@ -403,8 +405,11 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    PWINDOW Wnd = NULL;
 
    if (NULL == Window)
-   {
-      Flags &= ~DCX_USESTYLE;
+   {  // Do the same as GetDC with a NULL.
+      Window = UserGetWindowObject(IntGetDesktopWindow());
+      if (Window) Wnd = Window->Wnd;
+      else
+         Flags &= ~DCX_USESTYLE;
    }
    else
        Wnd = Window->Wnd;
@@ -723,7 +728,8 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
       }
      }
 
-   NtGdiDeleteObjectApp(pdce->hDC);
+   IntGdiDeleteDC(pdce->hDC, TRUE);
+
    if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
      {
       NtGdiDeleteObject(pdce->hClipRgn);

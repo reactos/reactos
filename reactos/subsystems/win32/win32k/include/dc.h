@@ -108,12 +108,14 @@ VOID FASTCALL DC_LockDisplay(HDC);
 VOID FASTCALL DC_UnlockDisplay(HDC);
 VOID FASTCALL IntGdiCopyFromSaveState(PDC, PDC, HDC);
 VOID FASTCALL IntGdiCopyToSaveState(PDC, PDC);
+BOOL FASTCALL IntGdiDeleteDC(HDC, BOOL);
 
 VOID FASTCALL DC_UpdateXforms(PDC  dc);
 BOOL FASTCALL DC_InvertXform(const XFORM *xformSrc, XFORM *xformDest);
 
 BOOL FASTCALL DCU_SyncDcAttrtoUser(PDC);
 BOOL FASTCALL DCU_SynchDcAttrtoUser(HDC);
+VOID FASTCALL DCU_SetDcUndeletable(HDC);
 
 VOID FASTCALL IntGetViewportExtEx(PDC dc, LPSIZE pt);
 VOID FASTCALL IntGetViewportOrgEx(PDC dc, LPPOINT pt);

@@ -910,29 +910,32 @@ NtGdiOpenDCW( PUNICODE_STRING Device,
 
 }
 
+//
+//
+//
 BOOL
-STDCALL
-NtGdiDeleteObjectApp(HANDLE  DCHandle)
+FASTCALL
+IntGdiDeleteDC(HDC hDC, BOOL Force)
 {
-  PDC  DCToDelete;
+  BOOL Ret = FALSE;
+  PDC  DCToDelete = DC_LockDc(hDC);
 
-  if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
-     return NtGdiDeleteObject((HGDIOBJ) DCHandle);
-
-  if(IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
-
-  if (!GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, DCHandle))
-    {
-      SetLastWin32Error(ERROR_INVALID_HANDLE);
-      return FALSE;
-    }
-
-  DCToDelete = DC_LockDc(DCHandle);
   if (DCToDelete == NULL)
     {
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
     }
+
+  if(!Force)
+  {
+    if (DCToDelete->DC_Flags & DC_FLAG_PERMANENT)
+    {
+         DPRINT1("No! You Naughty Application!\n");
+//       if(!UserReleaseDC(NULL, hDC, FALSE)) Ret = FALSE;
+    }
+    DC_UnlockDc( DCToDelete );
+    return Ret;
+  }
 
   /*  First delete all saved DCs  */
   while (DCToDelete->saveLevel)
@@ -995,8 +998,29 @@ NtGdiDeleteObjectApp(HANDLE  DCHandle)
   }
 
   DC_UnlockDc( DCToDelete );
-  DC_FreeDC ( DCHandle );
+  DC_FreeDC ( hDC );
   return TRUE;
+}
+
+BOOL
+STDCALL
+NtGdiDeleteObjectApp(HANDLE  DCHandle)
+{
+
+  if (GDI_HANDLE_IS_STOCKOBJ(DCHandle)) return TRUE;
+
+  if (GDI_HANDLE_GET_TYPE(DCHandle) != GDI_OBJECT_TYPE_DC)
+     return NtGdiDeleteObject((HGDIOBJ) DCHandle);
+
+  if(IsObjectDead((HGDIOBJ)DCHandle)) return TRUE;
+
+  if (!GDIOBJ_OwnedByCurrentProcess(GdiHandleTable, DCHandle))
+    {
+      SetLastWin32Error(ERROR_INVALID_HANDLE);
+      return FALSE;
+    }
+
+  return IntGdiDeleteDC(DCHandle, FALSE);
 }
 
 INT
