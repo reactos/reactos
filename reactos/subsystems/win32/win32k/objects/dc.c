@@ -932,9 +932,9 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     {
          DPRINT1("No! You Naughty Application!\n");
 //       if(!UserReleaseDC(NULL, hDC, FALSE)) Ret = FALSE;
+         DC_UnlockDc( DCToDelete );
+         return Ret;
     }
-    DC_UnlockDc( DCToDelete );
-    return Ret;
   }
 
   /*  First delete all saved DCs  */
