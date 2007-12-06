@@ -28,10 +28,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
+    IDS_WINDOW_TITLE "Systemsteuerung"
+	IDS_ABOUT "Einfache Systemsteuerung (nicht Shell-namespace basiert)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rVeröffentlicht unter der GPL"
+	IDS_ABOUT_TITLE "Über Systemsteuerung"
+	IDS_NO_ITEMS "Keine Items in ListView"
 	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+	IDS_COMMENT "Kommentar"
 END
