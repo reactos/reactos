@@ -1595,8 +1595,8 @@ CmpUnlockRegistry(VOID)
 
 VOID
 NTAPI
-CmpAcquireTwoKcbLocksExcusiveByKey(IN ULONG ConvKey1,
-                                   IN ULONG ConvKey2)
+CmpAcquireTwoKcbLocksExclusiveByKey(IN ULONG ConvKey1,
+                                    IN ULONG ConvKey2)
 {
     ULONG Index1, Index2;
     

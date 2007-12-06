@@ -660,7 +660,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
         if (Parent)
         {
             /* Lock the parent KCB and ourselves */
-            CmpAcquireTwoKcbLocksExcusiveByKey(ConvKey, Parent->ConvKey);
+            CmpAcquireTwoKcbLocksExclusiveByKey(ConvKey, Parent->ConvKey);
         }
         else
         {

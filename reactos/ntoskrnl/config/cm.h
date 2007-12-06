@@ -906,7 +906,7 @@ CmpFreeKeyByCell(
 
 VOID
 NTAPI
-CmpAcquireTwoKcbLocksExcusiveByKey(
+CmpAcquireTwoKcbLocksExclusiveByKey(
     IN ULONG ConvKey1,
     IN ULONG ConvKey2
 );
