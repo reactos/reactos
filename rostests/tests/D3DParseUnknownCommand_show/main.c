@@ -22,10 +22,10 @@
  *
  */
 
-INT main(INT argc, CHAR argv[]);
+INT main(INT argc, TCHAR *argv[]);
 VOID BuildReturnCode(DWORD * ReturnCode);
 
-INT main(INT argc, TCHAR argv[])
+INT main(INT argc, TCHAR *argv[])
 {
     DWORD ReturnCode[256];
 
@@ -44,6 +44,6 @@ VOID BuildReturnCode(DWORD * ReturnCode)
     {
        dp2command.bCommand = t;
        ReturnCode[t] = D3DParseUnknownCommand ( (LPVOID) &dp2command, (LPVOID *) lplpvReturnedCommand) ;
-       printf("D3DParseUnknownCommand return code = %x command %d \n", ReturnCode[t], t);
+       printf("D3DParseUnknownCommand return code = %x command %d \n", (UINT)ReturnCode[t], t);
     }
 }
