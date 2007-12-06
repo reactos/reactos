@@ -108,6 +108,7 @@ UserGetWindowDC(PWINDOW_OBJECT Wnd)
 HDC STDCALL
 NtUserGetDC(HWND hWnd)
 {
+#if 0
    if (!hWnd)
    {  // MSDN:
       //"hWnd [in] Handle to the window whose DC is to be retrieved.
@@ -119,6 +120,9 @@ NtUserGetDC(HWND hWnd)
         return NULL;
    }
    return NtUserGetDCEx(hWnd, NULL, DCX_USESTYLE);
+#endif
+// We have a problem here!
+  return NtUserGetDCEx(hWnd, NULL, NULL == hWnd ? DCX_CACHE | DCX_WINDOW : DCX_USESTYLE);
 }
 
 PDCE FASTCALL
@@ -406,9 +410,9 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
 
    if (NULL == Window)
    {  // Do the same as GetDC with a NULL.
-      Window = UserGetWindowObject(IntGetDesktopWindow());
-      if (Window) Wnd = Window->Wnd;
-      else
+//      Window = UserGetWindowObject(IntGetDesktopWindow());
+//      if (Window) Wnd = Window->Wnd;
+//      else
          Flags &= ~DCX_USESTYLE;
    }
    else
@@ -729,7 +733,7 @@ DceFreeDCE(PDCE pdce, BOOLEAN Force)
      }
 
    IntGdiDeleteDC(pdce->hDC, TRUE);
-
+   
    if (pdce->hClipRgn && ! (pdce->DCXFlags & DCX_KEEPCLIPRGN))
      {
       NtGdiDeleteObject(pdce->hClipRgn);
