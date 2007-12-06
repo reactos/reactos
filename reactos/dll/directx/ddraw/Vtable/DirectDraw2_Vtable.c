@@ -130,7 +130,7 @@ Main_DirectDraw_SetCooperativeLevel (
                                      DWORD cooplevel);
 
 HRESULT WINAPI
-Main_DirectDraw_SetDisplayMode(
+Main_DirectDraw_SetDisplayMode2(
                                LPDIRECTDRAW2 iface,
                                DWORD dwWidth,
                                DWORD dwHeight,
@@ -176,7 +176,7 @@ IDirectDraw2Vtbl DirectDraw2_Vtable =
     Main_DirectDraw_Initialize,
     Main_DirectDraw_RestoreDisplayMode,
     Main_DirectDraw_SetCooperativeLevel,
-    Main_DirectDraw_SetDisplayMode,
+    Main_DirectDraw_SetDisplayMode2,
     Main_DirectDraw_WaitForVerticalBlank,
     Main_DirectDraw_GetAvailableVidMem
 };

@@ -134,9 +134,7 @@ Main_DirectDraw_SetDisplayMode(
                                LPDIRECTDRAW iface,
                                DWORD dwWidth,
                                DWORD dwHeight,
-                               DWORD dwBPP,
-                               DWORD dwRefreshRate,
-                               DWORD dwFlags);
+                               DWORD dwBPP);
 
 HRESULT WINAPI
 Main_DirectDraw_WaitForVerticalBlank(

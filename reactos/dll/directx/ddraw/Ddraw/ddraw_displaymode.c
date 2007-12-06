@@ -109,8 +109,14 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 }
 
 HRESULT WINAPI
-Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWORD dwHeight,
-                                                                DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
+Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWORD dwHeight, DWORD dwBPP)
+{
+    return Main_DirectDraw_SetDisplayMode2 (This, dwWidth, dwHeight, dwBPP, 0, 0 );
+}
+
+HRESULT WINAPI
+Main_DirectDraw_SetDisplayMode2 (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWORD dwHeight,
+                                 DWORD dwBPP, DWORD dwRefreshRate, DWORD dwFlags)
 {
     HRESULT ret = DD_OK;
     DX_WINDBG_trace();

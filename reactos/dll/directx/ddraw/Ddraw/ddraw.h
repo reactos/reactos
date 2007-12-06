@@ -119,6 +119,13 @@ Main_DirectDraw_SetDisplayMode(
                                LPDDRAWI_DIRECTDRAW_INT This,
                                DWORD dwWidth,
                                DWORD dwHeight,
+                               DWORD dwBPP);
+
+HRESULT WINAPI
+Main_DirectDraw_SetDisplayMode2(
+                               LPDDRAWI_DIRECTDRAW_INT This,
+                               DWORD dwWidth,
+                               DWORD dwHeight,
                                DWORD dwBPP,
                                DWORD dwRefreshRate,
                                DWORD dwFlags);
