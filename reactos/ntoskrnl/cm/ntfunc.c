@@ -160,13 +160,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     /* If we got here, this is a new key */
     LocalDisposition = REG_CREATED_NEW_KEY;
 
-    /* Now save the key name */
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
-                              &RemainingPath,
-                              &KeyObject->Name);
-
     /* Get the parent node and the child node */
-
     ParentNode = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->ParentKcb->KeyHive,
                                          KeyObject->KeyControlBlock->ParentKcb->KeyCell);
     Node = (PCM_KEY_NODE)HvGetCell(KeyObject->KeyControlBlock->KeyHive,

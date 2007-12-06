@@ -604,12 +604,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     /* Update KCB information */
     NewKey->KeyControlBlock->KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
     NewKey->KeyControlBlock->KeyHive = &RegistryHive->Hive;
-    
-    /* Build the key name */
-    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, 
-                              &RemainingPath,
-                              &NewKey->Name);
-    
+
     /* Reference the new key */
     ObReferenceObject(NewKey);
     
@@ -900,13 +895,11 @@ CmpCreateRegistryRoot(VOID)
     if (!Kcb) return FALSE;
 
     /* Initialize the object */
-    RootKey->Type = TAG('k', 'v', '0', '2');
     RootKey->KeyControlBlock = Kcb;
 #if 0
+    RootKey->Type = TAG('k', 'v', '0', '2');
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
-#else
-    RtlpCreateUnicodeString(&RootKey->Name, L"Registry", NonPagedPool);
 #endif
 
     /* Insert the key into the namespace */

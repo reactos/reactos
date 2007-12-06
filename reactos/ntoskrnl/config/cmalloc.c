@@ -116,9 +116,9 @@ CmpAllocateKeyControlBlock(VOID)
     PCM_ALLOC_PAGE AllocPage;
     ULONG i;
     PAGED_CODE();
-    
+
     /* Check if private allocations are initialized */
-    if (CmpAllocInited)
+    if (FALSE)
     {
         /* They are, acquire the bucket lock */
         KeAcquireGuardedMutex(&CmpAllocBucketLock);
@@ -178,7 +178,7 @@ SearchKcbList:
             goto SearchKcbList;
         }
     }
-    
+
     /* Allocate a KCB only */
     CurrentKcb = ExAllocatePoolWithTag(PagedPool,
                                        sizeof(CM_KEY_CONTROL_BLOCK),

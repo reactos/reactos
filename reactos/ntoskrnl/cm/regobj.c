@@ -436,7 +436,6 @@ Next:
     return STATUS_SUCCESS;
 }
 
-
 /* Preconditions: Must be called with CmpRegistryLock held. */
 NTSTATUS
 CmiScanKeyList(PCM_KEY_CONTROL_BLOCK Parent,
@@ -445,48 +444,74 @@ CmiScanKeyList(PCM_KEY_CONTROL_BLOCK Parent,
                PKEY_OBJECT* ReturnedObject)
 {
     PKEY_OBJECT CurKey = NULL;
+    PCM_NAME_CONTROL_BLOCK Ncb;
     PLIST_ENTRY NextEntry;
-
+    PWCHAR p, pp;
+    ULONG i;
+    *ReturnedObject = NULL;
+    
+    /* Loop child keys in the KCB */
     NextEntry = Parent->KeyBodyListHead.Flink;
     while (NextEntry != &Parent->KeyBodyListHead)
     {
+        /* Get the current ReactOS Key Object */
         CurKey = CONTAINING_RECORD(NextEntry, KEY_OBJECT, KeyBodyEntry);
-        if (Attributes & OBJ_CASE_INSENSITIVE)
+        
+        /* Get the NCB */
+        Ncb = CurKey->KeyControlBlock->NameBlock;
+        
+        /* Check if the key is compressed */
+        if (Ncb->Compressed)
         {
-            DPRINT("Comparing %wZ and %wZ\n", KeyName, &CurKey->Name);
-            if ((KeyName->Length == CurKey->Name.Length)
-                && (_wcsicmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
+            /* Do a compressed compare */
+            if (!CmpCompareCompressedName(KeyName,
+                                          Ncb->Name,
+                                          Ncb->NameLength))
             {
+                /* We got it */
                 break;
             }
         }
         else
         {
-            if ((KeyName->Length == CurKey->Name.Length)
-                && (wcscmp(KeyName->Buffer, CurKey->Name.Buffer) == 0))
+            /* Do a manual compare */
+            p = KeyName->Buffer;
+            pp = Ncb->Name;
+            for (i = 0; i < Ncb->NameLength; i += sizeof(WCHAR))
             {
+                /* Compare the character */
+                if (RtlUpcaseUnicodeChar(*p) != RtlUpcaseUnicodeChar(*pp))
+                {
+                    /* Failed */
+                    break;
+                }
+                
+                /* Next chars */
+                p++;
+                pp++;
+            }
+            
+            /* Did we find it? */
+            if (i == Ncb->NameLength - 1)
+            {
+                /* We found it, break out */
                 break;
             }
         }
         
+        /* Go go the next entry */
         NextEntry = NextEntry->Flink;
     }
     
+    /* Check if we got here and found something */
     if (NextEntry != &Parent->KeyBodyListHead)
     {
-        if (CurKey->KeyControlBlock->Delete)
-        {
-            CHECKPOINT;
-            *ReturnedObject = NULL;
-            return STATUS_UNSUCCESSFUL;
-        }
+        /* Refernece the object and return it */
         ObReferenceObject(CurKey);
         *ReturnedObject = CurKey;
     }
-    else
-    {
-        *ReturnedObject = NULL;
-    }
+    
+    /* Return success */
     return STATUS_SUCCESS;
 }
 
@@ -719,7 +744,6 @@ CmpParseKey(IN PVOID ParsedObject,
                                   
         FoundObject->KeyControlBlock = Kcb;
         ASSERT(FoundObject->KeyControlBlock->KeyHive == ParsedKey->KeyControlBlock->KeyHive);
-        RtlpCreateUnicodeString(&FoundObject->Name, KeyName.Buffer, NonPagedPool);
         InsertTailList(&ParsedKey->KeyControlBlock->KeyBodyListHead, &FoundObject->KeyBodyEntry);
         DPRINT("Created object 0x%p\n", FoundObject);
     }
@@ -783,8 +807,6 @@ CmpParseKey(IN PVOID ParsedObject,
     ExReleaseResourceLite(&CmpRegistryLock);
     KeLeaveCriticalRegion();
 
-    DPRINT("CmpParseKey: %wZ\n", &FoundObject->Name);
-
     *Path = EndPtr;
 
     VERIFY_KEY_OBJECT(FoundObject);
@@ -824,8 +846,6 @@ CmpDeleteKeyObject(PVOID DeletedObject)
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
 
-    RtlFreeUnicodeString(&KeyObject->Name);
-
     ASSERT((KeyObject->KeyControlBlock->Delete) == FALSE);
 
     ExReleaseResourceLite(&CmpRegistryLock);
@@ -845,61 +865,6 @@ CmpQueryKeyName(PVOID ObjectBody,
 {
     DPRINT1("CmpQueryKeyName() called\n");
     while (TRUE);
-#if 0
-    PKEY_OBJECT KeyObject;
-    NTSTATUS Status;
-
-    KeyObject = (PKEY_OBJECT)ObjectBody;
-
-    if (KeyObject->KeyControlBlock->ParentKcb != KeyObject->KeyControlBlock)
-    {
-        Status = ObQueryNameString (KeyObject->ParentKey,
-                                    ObjectNameInfo,
-                                    Length,
-                                    ReturnLength);
-    }
-    else
-    {
-        /* KeyObject is the root key */
-        Status = ObQueryNameString (OBJECT_HEADER_TO_NAME_INFO(OBJECT_TO_OBJECT_HEADER(KeyObject))->Directory,
-                                    ObjectNameInfo,
-                                    Length,
-                                    ReturnLength);
-    }
-
-    if (!NT_SUCCESS(Status) && Status != STATUS_INFO_LENGTH_MISMATCH)
-    {
-        return Status;
-    }
-    (*ReturnLength) += sizeof(WCHAR) + KeyObject->Name.Length;
-
-    if (Status == STATUS_INFO_LENGTH_MISMATCH || *ReturnLength > Length)
-    {
-        return STATUS_INFO_LENGTH_MISMATCH;
-    }
-
-    if (ObjectNameInfo->Name.Buffer == NULL)
-    {
-        ObjectNameInfo->Name.Buffer = (PWCHAR)(ObjectNameInfo + 1);
-        ObjectNameInfo->Name.Length = 0;
-        ObjectNameInfo->Name.MaximumLength = (USHORT)Length - sizeof(OBJECT_NAME_INFORMATION);
-    }
-
-    DPRINT ("Parent path: %wZ\n", ObjectNameInfo->Name);
-
-    Status = RtlAppendUnicodeToString (&ObjectNameInfo->Name,
-                                       L"\\");
-    if (!NT_SUCCESS (Status))
-        return Status;
-
-    Status = RtlAppendUnicodeStringToString (&ObjectNameInfo->Name,
-                                             &KeyObject->Name);
-    if (NT_SUCCESS (Status))
-    {
-        DPRINT ("Total path: %wZ\n", &ObjectNameInfo->Name);
-    }
-#endif
-
     return STATUS_SUCCESS;
 }
 

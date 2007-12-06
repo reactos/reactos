@@ -492,8 +492,6 @@ typedef struct _KEY_INFORMATION
 //
 typedef struct _KEY_OBJECT
 {
-    ULONG Type;
-    UNICODE_STRING Name;
     PCM_KEY_CONTROL_BLOCK KeyControlBlock;
     LIST_ENTRY KeyBodyEntry;
 } KEY_OBJECT, *PKEY_OBJECT;
