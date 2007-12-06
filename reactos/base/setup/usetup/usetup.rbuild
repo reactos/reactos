@@ -16,6 +16,7 @@
 	<library>ntdll</library>
 	<directory name="interface">
 		<file>consup.c</file>
+		<file>devinst.c</file>
 		<file>usetup.c</file>
 	</directory>
 	<directory name="native">

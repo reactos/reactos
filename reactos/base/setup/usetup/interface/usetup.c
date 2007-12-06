@@ -84,6 +84,7 @@ LONG UnattendFormatPartition = 0;
 LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 BOOLEAN RepairUpdateFlag = FALSE;
+HANDLE hPnpThread = INVALID_HANDLE_VALUE;
 
 /* LOCALS *******************************************************************/
 
@@ -697,6 +698,13 @@ SetupStartPage(PINPUT_RECORD Ir)
 		 "ENTER = Reboot computer",
 		 Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
+    }
+
+  /* Start PnP thread */
+  if (hPnpThread != INVALID_HANDLE_VALUE)
+    {
+      NtResumeThread(hPnpThread, NULL);
+      hPnpThread = INVALID_HANDLE_VALUE;
     }
 
   CheckUnattendedSetup();
@@ -3630,15 +3638,22 @@ FlushPage(PINPUT_RECORD Ir)
 }
 
 
+DWORD WINAPI
+PnpEventThread(IN LPVOID lpParameter);
+
 VOID
 RunUSetup(VOID)
 {
   INPUT_RECORD Ir;
   PAGE_NUMBER Page;
   LARGE_INTEGER Time;
+  NTSTATUS Status;
 
   NtQuerySystemTime(&Time);
 
+  Status = RtlCreateUserThread(NtCurrentProcess(), NULL, TRUE, 0, 0, 0, PnpEventThread, &SetupInf, &hPnpThread, NULL);
+  if (!NT_SUCCESS(Status))
+      hPnpThread = INVALID_HANDLE_VALUE;
   if (!CONSOLE_Init())
     {
       PrintString("Unable to open the console\n\n");

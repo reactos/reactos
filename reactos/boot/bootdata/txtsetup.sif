@@ -29,11 +29,19 @@ i8042prt.sys=,,,,,,x,,,,,,4
 kbdclass.sys=,,,,,,x,,,,,,4
 l_intl.nls=,,,,,,,,,,,,2
 ntfs.sys=,,,,,,,,,,,,4
-ntoskrnl.exe=,,,,,,,,,,,,2
 pci.sys=,,,,,,,,,,,,4
 scsiport.sys=,,,,,,x,,,,,,4
 uniata.sys=,,,,,,,,,,,,4
 vfatfs.sys=,,,,,,,,,,,,4
+
+[HardwareIdsDatabase]
+*PNP0C08 = acpi
+*PNP0A03 = pci
+PCI\CC_0604 = pci
+
+[BootBusExtenders.Load]
+acpi = acpi.sys
+pci = pci.sys
 
 [Cabinets]
 Cabinet=reactos.cab
