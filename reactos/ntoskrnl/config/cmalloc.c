@@ -88,12 +88,12 @@ CmpFreeKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     if (++AllocPage->FreeCount == CM_KCBS_PER_PAGE)
     {
         /* Loop all the entries */
-        for (i = CM_KCBS_PER_PAGE - 1; i; i--)
+        for (i = CM_KCBS_PER_PAGE; i; i--)
         {
             /* Get the KCB */
             Kcb = (PVOID)((ULONG_PTR)AllocPage +
                           FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage) +
-                          i * sizeof(CM_KEY_CONTROL_BLOCK));
+                          (i - 1) * sizeof(CM_KEY_CONTROL_BLOCK));
             
             /* Remove the entry */ 
             RemoveEntryList(&Kcb->FreeListEntry);
