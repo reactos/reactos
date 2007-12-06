@@ -1170,7 +1170,7 @@ NTAPI
 CmLoadKey(IN POBJECT_ATTRIBUTES TargetKey,
           IN POBJECT_ATTRIBUTES SourceFile,
           IN ULONG Flags,
-          IN PKEY_OBJECT KeyBody)
+          IN PCM_KEY_BODY KeyBody)
 {
     SECURITY_QUALITY_OF_SERVICE ServiceQos;
     SECURITY_CLIENT_CONTEXT ClientSecurityContext;

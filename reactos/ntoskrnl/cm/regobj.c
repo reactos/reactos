@@ -441,9 +441,9 @@ NTSTATUS
 CmiScanKeyList(PCM_KEY_CONTROL_BLOCK Parent,
                PCUNICODE_STRING KeyName,
                ULONG Attributes,
-               PKEY_OBJECT* ReturnedObject)
+               PCM_KEY_BODY* ReturnedObject)
 {
-    PKEY_OBJECT CurKey = NULL;
+    PCM_KEY_BODY CurKey = NULL;
     PCM_NAME_CONTROL_BLOCK Ncb;
     PLIST_ENTRY NextEntry;
     PWCHAR p, pp;
@@ -455,7 +455,7 @@ CmiScanKeyList(PCM_KEY_CONTROL_BLOCK Parent,
     while (NextEntry != &Parent->KeyBodyListHead)
     {
         /* Get the current ReactOS Key Object */
-        CurKey = CONTAINING_RECORD(NextEntry, KEY_OBJECT, KeyBodyEntry);
+        CurKey = CONTAINING_RECORD(NextEntry, CM_KEY_BODY, KeyBodyList);
         
         /* Get the NCB */
         Ncb = CurKey->KeyControlBlock->NameBlock;
@@ -542,8 +542,8 @@ CmpParseKey(IN PVOID ParsedObject,
             OUT PVOID *NextObject)
 {
     HCELL_INDEX BlockOffset;
-    PKEY_OBJECT FoundObject;
-    PKEY_OBJECT ParsedKey;
+    PCM_KEY_BODY FoundObject;
+    PCM_KEY_BODY ParsedKey;
     PCM_KEY_NODE SubKeyCell;
     NTSTATUS Status;
     PWSTR StartPtr;
@@ -573,8 +573,6 @@ CmpParseKey(IN PVOID ParsedObject,
     }
     
     ParsedKey = ParsedObject;
-
-    VERIFY_KEY_OBJECT(ParsedKey);
 
     *NextObject = NULL;
 
@@ -698,7 +696,7 @@ CmpParseKey(IN PVOID ParsedObject,
                                 NULL,
                                 KernelMode,
                                 NULL,
-                                sizeof(KEY_OBJECT),
+                                sizeof(CM_KEY_BODY),
                                 0,
                                 0,
                                 (PVOID*)&FoundObject);
@@ -744,7 +742,7 @@ CmpParseKey(IN PVOID ParsedObject,
                                   
         FoundObject->KeyControlBlock = Kcb;
         ASSERT(FoundObject->KeyControlBlock->KeyHive == ParsedKey->KeyControlBlock->KeyHive);
-        InsertTailList(&ParsedKey->KeyControlBlock->KeyBodyListHead, &FoundObject->KeyBodyEntry);
+        InsertTailList(&ParsedKey->KeyControlBlock->KeyBodyListHead, &FoundObject->KeyBodyList);
         DPRINT("Created object 0x%p\n", FoundObject);
     }
     else
@@ -809,7 +807,6 @@ CmpParseKey(IN PVOID ParsedObject,
 
     *Path = EndPtr;
 
-    VERIFY_KEY_OBJECT(FoundObject);
 
     *NextObject = FoundObject;
 
@@ -822,14 +819,14 @@ VOID
 NTAPI
 CmpDeleteKeyObject(PVOID DeletedObject)
 {
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_KEY_HANDLE_CLOSE_INFORMATION KeyHandleCloseInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     NTSTATUS Status;
 
     DPRINT("Delete key object (%p)\n", DeletedObject);
 
-    KeyObject = (PKEY_OBJECT) DeletedObject;
+    KeyObject = (PCM_KEY_BODY) DeletedObject;
 
 
     PostOperationInfo.Object = (PVOID)KeyObject;

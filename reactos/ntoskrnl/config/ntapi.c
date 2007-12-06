@@ -22,7 +22,7 @@ NTSTATUS
 NTAPI
 NtDeleteKey(IN HANDLE KeyHandle)
 {
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     NTSTATUS Status;
     REG_DELETE_KEY_INFORMATION DeleteKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
@@ -81,7 +81,7 @@ NtEnumerateKey(IN HANDLE KeyHandle,
                OUT PULONG ResultLength)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
@@ -142,7 +142,7 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
                     OUT PULONG ResultLength)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
@@ -203,7 +203,7 @@ NtQueryKey(IN HANDLE KeyHandle,
            OUT PULONG ResultLength)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_QUERY_KEY_INFORMATION QueryKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
@@ -265,7 +265,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                 OUT PULONG ResultLength)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_QUERY_VALUE_KEY_INFORMATION QueryValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
@@ -328,7 +328,7 @@ NtSetValueKey(IN HANDLE KeyHandle,
               IN ULONG DataSize)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
@@ -385,7 +385,7 @@ NTAPI
 NtDeleteValueKey(IN HANDLE KeyHandle,
                  IN PUNICODE_STRING ValueName)
 {
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     NTSTATUS Status;
     REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
@@ -433,7 +433,7 @@ NTAPI
 NtFlushKey(IN HANDLE KeyHandle)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyObject;
+    PCM_KEY_BODY KeyObject;
     PAGED_CODE();
     
     /* Get the key object */
@@ -513,7 +513,7 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
 {
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PKEY_OBJECT KeyBody = NULL;
+    PCM_KEY_BODY KeyBody = NULL;
     PAGED_CODE();
 
     /* Validate flags */

@@ -492,8 +492,8 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING RemainingPath;
-    PKEY_OBJECT ParentKey;
-    PKEY_OBJECT NewKey;
+    PCM_KEY_BODY ParentKey;
+    PCM_KEY_BODY NewKey;
     NTSTATUS Status;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
@@ -609,7 +609,7 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
     ObReferenceObject(NewKey);
     
     /* Link this key to the parent */
-    InsertTailList(&ParentKey->KeyControlBlock->KeyBodyListHead, &NewKey->KeyBodyEntry);
+    InsertTailList(&ParentKey->KeyControlBlock->KeyBodyListHead, &NewKey->KeyBodyList);
     return STATUS_SUCCESS;    
 }
 
@@ -840,11 +840,7 @@ CmpCreateRegistryRoot(VOID)
 {
     UNICODE_STRING KeyName;
     OBJECT_ATTRIBUTES ObjectAttributes;
-#if 0
     PCM_KEY_BODY RootKey;
-#else
-    PKEY_OBJECT RootKey;
-#endif
     HCELL_INDEX RootIndex;
     NTSTATUS Status;
     PCM_KEY_NODE KeyCell;
@@ -872,7 +868,7 @@ CmpCreateRegistryRoot(VOID)
                             &ObjectAttributes,
                             KernelMode,
                             NULL,
-                            sizeof(KEY_OBJECT),
+                            sizeof(CM_KEY_BODY),
                             0,
                             0,
                             (PVOID*)&RootKey);
@@ -896,11 +892,9 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
-#if 0
     RootKey->Type = TAG('k', 'v', '0', '2');
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
-#endif
 
     /* Insert the key into the namespace */
     Status = ObInsertObject(RootKey,

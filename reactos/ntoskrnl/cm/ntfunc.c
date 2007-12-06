@@ -44,7 +44,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
 {
     UNICODE_STRING RemainingPath = {0}, ReturnedPath = {0};
     ULONG LocalDisposition;
-    PKEY_OBJECT KeyObject, Parent;
+    PCM_KEY_BODY KeyObject, Parent;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING ObjectName;
     OBJECT_CREATE_INFORMATION ObjectCreateInfo;
@@ -173,7 +173,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     KeyObject->KeyControlBlock->ValueCache.Count = Node->ValueList.Count;
 
     /* Link child to parent */
-    InsertTailList(&Parent->KeyControlBlock->KeyBodyListHead, &KeyObject->KeyBodyEntry);
+    InsertTailList(&Parent->KeyControlBlock->KeyBodyListHead, &KeyObject->KeyBodyList);
 
     /* Create the actual handle to the object */
     Status = CmpCreateHandle(KeyObject,
@@ -217,7 +217,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
 {
     UNICODE_STRING RemainingPath = {0};
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
-    PKEY_OBJECT Object = NULL;
+    PCM_KEY_BODY Object = NULL;
     HANDLE hKey = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     UNICODE_STRING ObjectName;

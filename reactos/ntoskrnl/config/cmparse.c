@@ -89,7 +89,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
                  OUT PVOID *Object)
 {
     NTSTATUS Status = STATUS_SUCCESS;
-    PKEY_OBJECT KeyBody;
+    PCM_KEY_BODY KeyBody;
     HCELL_INDEX ClassCell = HCELL_NIL;
     PCM_KEY_NODE KeyNode;
     PCELL_DATA CellData;
@@ -160,12 +160,12 @@ CmpDoCreateChild(IN PHHIVE Hive,
                             NULL,
                             AccessMode,
                             NULL,
-                            sizeof(KEY_OBJECT),
+                            sizeof(CM_KEY_BODY),
                             0,
                             0,
                             Object);
     if (!NT_SUCCESS(Status)) goto Quickie;
-    KeyBody = (PKEY_OBJECT)(*Object);
+    KeyBody = (PCM_KEY_BODY)(*Object);
 
     /* Check if we had a class */
     if (ParseContext->Class.Length > 0)
@@ -271,7 +271,7 @@ CmpDoCreate(IN PHHIVE Hive,
     PCELL_DATA CellData;
     HCELL_INDEX KeyCell;
     ULONG ParentType;
-    PKEY_OBJECT KeyBody;
+    PCM_KEY_BODY KeyBody;
     PSECURITY_DESCRIPTOR SecurityDescriptor = NULL;
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
@@ -354,7 +354,7 @@ CmpDoCreate(IN PHHIVE Hive,
     if (NT_SUCCESS(Status))
     {
         /* Get the key body */
-        KeyBody = (PKEY_OBJECT)(*Object);
+        KeyBody = (PCM_KEY_BODY)(*Object);
 
         /* Now add the subkey */
         if (!CmpAddSubKey(Hive, Cell, KeyCell))
@@ -436,7 +436,7 @@ CmpDoOpen(IN PHHIVE Hive,
           OUT PVOID *Object)
 {
     NTSTATUS Status;
-    PKEY_OBJECT KeyBody = NULL;
+    PCM_KEY_BODY KeyBody = NULL;
     PCM_KEY_CONTROL_BLOCK Kcb = NULL;
 
     /* Make sure the hive isn't locked */
@@ -475,14 +475,14 @@ CmpDoOpen(IN PHHIVE Hive,
                             NULL,
                             AccessMode,
                             NULL,
-                            sizeof(KEY_OBJECT),
+                            sizeof(CM_KEY_BODY),
                             0,
                             0,
                             Object);
     if (NT_SUCCESS(Status))
     {
         /* Get the key body and fill it out */
-        KeyBody = (PKEY_OBJECT)(*Object);       
+        KeyBody = (PCM_KEY_BODY)(*Object);       
         KeyBody->KeyControlBlock = Kcb;
     }
     else
@@ -510,7 +510,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
 {
     NTSTATUS Status;
     HCELL_INDEX KeyCell, LinkCell, ChildCell;
-    PKEY_OBJECT KeyBody;
+    PCM_KEY_BODY KeyBody;
     LARGE_INTEGER TimeStamp;
     PCM_KEY_NODE KeyNode;
     PCM_KEY_CONTROL_BLOCK Kcb = ParentKcb;
@@ -693,7 +693,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         }
         
         /* Get the key body */
-        KeyBody = (PKEY_OBJECT)*Object;
+        KeyBody = (PCM_KEY_BODY)*Object;
 
         /* Sanity checks */
         ASSERT(KeyBody->KeyControlBlock->ParentKcb->KeyCell == Cell);
@@ -849,7 +849,7 @@ CmpParseKey2(IN PVOID ParseObject,
     }
     
     /* Grab the KCB */
-    Kcb = ((PKEY_OBJECT)ParseObject)->KeyControlBlock;
+    Kcb = ((PCM_KEY_BODY)ParseObject)->KeyControlBlock;
     DPRINT1("KCB Parse: %p\n", Kcb);
 
     /* Lookup in the cache */

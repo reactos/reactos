@@ -179,8 +179,7 @@ typedef struct _CACHED_CHILD_LIST
     union
     {
         ULONG ValueList;
-        //struct _CM_KEY_CONTROL_BLOCK *RealKcb;
-        struct _KEY_OBJECT *RealKcb;
+        struct _CM_KEY_CONTROL_BLOCK *RealKcb;
     };
 } CACHED_CHILD_LIST, *PCACHED_CHILD_LIST;
 
@@ -490,11 +489,6 @@ typedef struct _KEY_INFORMATION
 //
 // BUGBUG Old Hive Stuff for Temporary Support
 //
-typedef struct _KEY_OBJECT
-{
-    PCM_KEY_CONTROL_BLOCK KeyControlBlock;
-    LIST_ENTRY KeyBodyEntry;
-} KEY_OBJECT, *PKEY_OBJECT;
 NTSTATUS
 NTAPI
 CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
@@ -882,13 +876,6 @@ NTAPI
 EnlistKeyBodyWithKCB(
     IN PCM_KEY_BODY KeyObject,
     IN ULONG Flags
-);
-
-VOID
-NTAPI
-EnlistKeyBodyWithKeyObject(
-   IN PKEY_OBJECT KeyObject,
-   IN ULONG Flags
 );
 
 NTSTATUS
@@ -1364,7 +1351,7 @@ CmLoadKey(
     IN POBJECT_ATTRIBUTES TargetKey,
     IN POBJECT_ATTRIBUTES SourceFile,
     IN ULONG Flags,
-    IN PKEY_OBJECT KeyBody
+    IN PCM_KEY_BODY KeyBody
 );
 
 //
