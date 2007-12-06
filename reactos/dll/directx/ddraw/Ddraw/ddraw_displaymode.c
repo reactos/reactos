@@ -41,7 +41,6 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
         {
 
             DevMode.dmSize = sizeof(DEVMODE);
-            DevMode.dmDriverExtra = 0;
 
             while (EnumDisplaySettingsEx(NULL, iMode, &DevMode, 0) == TRUE)
             {
@@ -139,7 +138,8 @@ Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWO
                 LONG retval;
                 // Here we go
                 DEVMODE DevMode;
-                DevMode.dmFields = 0;
+				ZeroMemory(&DevMode, sizeof(DEVMODE));
+                DevMode.dmSize = sizeof(DEVMODE);
 
                 if (dwHeight)
                     DevMode.dmFields |= DM_PELSHEIGHT;
