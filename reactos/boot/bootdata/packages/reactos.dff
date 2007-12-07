@@ -224,6 +224,7 @@ dll\win32\opengl32\opengl32.dll                     1
 dll\win32\psapi\psapi.dll                           1
 dll\win32\powrprof\powrprof.dll                     1
 dll\win32\rasapi32\rasapi32.dll                     1
+dll\win32\rasdlg\rasdlg.dll                         1
 dll\win32\riched20\riched20.dll                     1
 dll\win32\riched32\riched32.dll                     1
 dll\win32\rpcrt4\rpcrt4.dll                         1
