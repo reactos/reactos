@@ -877,6 +877,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     PIMAGE_NT_HEADERS NtHeader;
     WCHAR PathToDrivers[] = L"\\SystemRoot\\System32\\drivers\\";
     WCHAR PathToSystem32[] = L"\\SystemRoot\\System32\\";
+    WCHAR PathSetup[] = L"\\SystemRoot\\";
     CHAR DriverNameLow[256];
     ULONG Base;
 
@@ -1064,7 +1065,13 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         LdrEntry->FullDllName.Buffer = BldrModuleStringsFull[i];
 
         /* Guess the path */
-        if (strstr(DriverNameLow, ".dll") || strstr(DriverNameLow, ".exe"))
+        if (LoaderBlock->SetupLdrBlock)
+        {
+            UNICODE_STRING TempString;
+            RtlInitUnicodeString(&TempString, PathSetup);
+            RtlAppendUnicodeStringToString(&LdrEntry->FullDllName, &TempString);
+        }
+        else if (strstr(DriverNameLow, ".dll") || strstr(DriverNameLow, ".exe"))
         {
             UNICODE_STRING TempString;
             RtlInitUnicodeString(&TempString, PathToSystem32);
