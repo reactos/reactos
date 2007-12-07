@@ -815,56 +815,6 @@ CmpParseKey(IN PVOID ParsedObject,
     return(STATUS_SUCCESS);
 }
 
-VOID
-NTAPI
-CmpDeleteKeyObject(PVOID DeletedObject)
-{
-    PCM_KEY_BODY KeyObject;
-    REG_KEY_HANDLE_CLOSE_INFORMATION KeyHandleCloseInfo;
-    REG_POST_OPERATION_INFORMATION PostOperationInfo;
-    NTSTATUS Status;
-
-    DPRINT("Delete key object (%p)\n", DeletedObject);
-
-    KeyObject = (PCM_KEY_BODY) DeletedObject;
-
-
-    PostOperationInfo.Object = (PVOID)KeyObject;
-    KeyHandleCloseInfo.Object = (PVOID)KeyObject;
-    Status = CmiCallRegisteredCallbacks(RegNtPreKeyHandleClose, &KeyHandleCloseInfo);
-    if (!NT_SUCCESS(Status))
-    {
-        PostOperationInfo.Status = Status;
-        CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
-        return;
-    }
-
-    /* Acquire hive lock */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
-
-    ASSERT((KeyObject->KeyControlBlock->Delete) == FALSE);
-
-    ExReleaseResourceLite(&CmpRegistryLock);
-    KeLeaveCriticalRegion();
-    PostOperationInfo.Status = STATUS_SUCCESS;
-    CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
-}
-
-NTSTATUS
-NTAPI
-CmpQueryKeyName(PVOID ObjectBody,
-                IN BOOLEAN HasName,
-                POBJECT_NAME_INFORMATION ObjectNameInfo,
-                ULONG Length,
-                PULONG ReturnLength,
-                IN KPROCESSOR_MODE PreviousMode)
-{
-    DPRINT1("CmpQueryKeyName() called\n");
-    while (TRUE);
-    return STATUS_SUCCESS;
-}
-
 static NTSTATUS
 CmiGetLinkTarget(PCMHIVE RegistryHive,
                  PCM_KEY_NODE KeyCell,

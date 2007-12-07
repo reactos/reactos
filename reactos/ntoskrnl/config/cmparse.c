@@ -165,7 +165,11 @@ CmpDoCreateChild(IN PHHIVE Hive,
                             0,
                             Object);
     if (!NT_SUCCESS(Status)) goto Quickie;
+    
+    /* Setup the key body */
     KeyBody = (PCM_KEY_BODY)(*Object);
+    KeyBody->Type = TAG('k', 'y', '0', '2');
+    KeyBody->KeyControlBlock = NULL;
 
     /* Check if we had a class */
     if (ParseContext->Class.Length > 0)
@@ -232,7 +236,12 @@ CmpDoCreateChild(IN PHHIVE Hive,
     ASSERT(Kcb->RefCount == 1);
 
     /* Now fill out the Cm object */
+    KeyBody->NotifyBlock = NULL;
+    KeyBody->ProcessID = PsGetCurrentProcessId();
     KeyBody->KeyControlBlock = Kcb;
+    
+    /* Link it with the KCB */
+    EnlistKeyBodyWithKCB(KeyBody, 0);
 
 Quickie:
     /* Check if we got here because of failure */
@@ -484,6 +493,12 @@ CmpDoOpen(IN PHHIVE Hive,
         /* Get the key body and fill it out */
         KeyBody = (PCM_KEY_BODY)(*Object);       
         KeyBody->KeyControlBlock = Kcb;
+        KeyBody->Type = TAG('k', 'y', '0', '2');
+        KeyBody->ProcessID = PsGetCurrentProcessId();
+        KeyBody->NotifyBlock = NULL;
+        
+        /* Link to the KCB */
+        EnlistKeyBodyWithKCB(KeyBody, 0);
     }
     else
     {
@@ -703,6 +718,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Update the timestamp */
         KeQuerySystemTime(&TimeStamp);
         KeyNode->LastWriteTime = TimeStamp;
+        KeyBody->KeyControlBlock->ParentKcb->KcbLastWriteTime = TimeStamp;
         
         /* Check if we need to update name maximum */
         if (KeyNode->MaxNameLen < Name.Length)
@@ -718,6 +734,14 @@ CmpCreateLinkNode(IN PHHIVE Hive,
             /* Update it */
             KeyNode->MaxClassLen = Context->Class.Length;
         }
+        
+        /* Release the cell */
+        HvReleaseCell(Hive, Cell);
+    }
+    else
+    {
+        /* Release the link cell */
+        HvReleaseCell(Hive, LinkCell);
     }
     
 Exit:
@@ -986,11 +1010,22 @@ CmpParseKey2(IN PVOID ParseObject,
                     /* Check if this was the last key for a create */
                     if ((Last) && (ParseContext))
                     {
+                        PCM_KEY_BODY KeyBody;
+
                         /* Check if we're doing a link node */
                         if (ParseContext->CreateLink)
                         {
                             /* The only thing we should see */
-                            DPRINT1("Expected: Creating new link\n");
+                            Status = CmpCreateLinkNode(Hive,
+                                                       Cell,
+                                                       AccessState,
+                                                       NextName,
+                                                       AccessMode,
+                                                       Attributes,
+                                                       ParseContext,
+                                                       ParentKcb,
+                                                       Object);
+                            DPRINT1("Link created: %lx\n", Status);
                         }
                         else
                         {
@@ -998,6 +1033,14 @@ CmpParseKey2(IN PVOID ParseObject,
                             DPRINT1("Unexpected: Creating new child\n");
                             while (TRUE);
                         }
+                        
+                        /* Check for reparse (in this case, someone beat us) */
+                        if (Status == STATUS_REPARSE) break;
+                        
+                        /* ReactOS Hack: Link this key to the parent */
+                        KeyBody = (PCM_KEY_BODY)*Object;
+                        InsertTailList(&ParentKcb->KeyBodyListHead,
+                                       &KeyBody->KeyBodyList);
 
                         /* Update disposition */
                         ParseContext->Disposition = REG_CREATED_NEW_KEY;

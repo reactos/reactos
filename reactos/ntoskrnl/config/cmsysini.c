@@ -72,6 +72,96 @@ CmpRosGetHardwareHive(OUT PULONG Length)
     return (PVOID)((MdBlock->BasePage << PAGE_SHIFT) | KSEG0_BASE);
 }
 
+VOID
+NTAPI
+CmpDeleteKeyObject(PVOID DeletedObject)
+{
+    PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)DeletedObject;
+    PCM_KEY_CONTROL_BLOCK Kcb;
+    REG_KEY_HANDLE_CLOSE_INFORMATION KeyHandleCloseInfo;
+    REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    NTSTATUS Status;
+    PAGED_CODE();
+    
+    /* First off, prepare the handle close information callback */
+    PostOperationInfo.Object = KeyBody;
+    KeyHandleCloseInfo.Object = KeyBody;
+    Status = CmiCallRegisteredCallbacks(RegNtPreKeyHandleClose,
+                                        &KeyHandleCloseInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        /* If we failed, notify the post routine */
+        PostOperationInfo.Status = Status;
+        CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
+        return;
+    }
+    
+    /* Acquire hive lock */
+    CmpLockRegistry();
+    
+    /* Make sure this is a valid key body */
+    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    {
+        /* Get the KCB */
+        Kcb = KeyBody->KeyControlBlock;
+        if (Kcb)
+        {
+            /* Delist the key (once new parse routines are used) */
+            //DelistKeyBodyFromKCB(KeyBody, FALSE);
+        }
+        
+        /* Dereference the KCB */
+        CmpDelayDerefKeyControlBlock(Kcb);
+        
+    }
+    
+    /* Release the registry lock */
+    CmpUnlockRegistry();
+    
+    /* Do the post callback */
+    PostOperationInfo.Status = STATUS_SUCCESS;
+    CmiCallRegisteredCallbacks(RegNtPostKeyHandleClose, &PostOperationInfo);
+}
+
+VOID
+NTAPI
+CmpCloseKeyObject(IN PEPROCESS Process OPTIONAL,
+                  IN PVOID Object,
+                  IN ACCESS_MASK GrantedAccess,
+                  IN ULONG ProcessHandleCount,
+                  IN ULONG SystemHandleCount)
+{
+    PCM_KEY_BODY KeyBody = (PCM_KEY_BODY)Object;
+    PAGED_CODE();
+    
+    /* Don't do anything if we're not the last handle */
+    if (SystemHandleCount > 1) return;
+    
+    /* Make sure we're a valid key body */
+    if (KeyBody->Type == TAG('k', 'y', '0', '2'))
+    {
+        /* Don't do anything if we don't have a notify block */
+        if (!KeyBody->NotifyBlock) return;
+        
+        /* This shouldn't happen yet */
+        ASSERT(FALSE);
+    }
+}
+
+NTSTATUS
+NTAPI
+CmpQueryKeyName(IN PVOID ObjectBody,
+                IN BOOLEAN HasName,
+                IN OUT POBJECT_NAME_INFORMATION ObjectNameInfo,
+                IN ULONG Length,
+                OUT PULONG ReturnLength,
+                IN KPROCESSOR_MODE PreviousMode)
+{
+    DPRINT1("CmpQueryKeyName() called\n");
+    while (TRUE);
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 NTAPI
 CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
@@ -491,14 +581,10 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                     IN PSECURITY_DESCRIPTOR SecurityDescriptor)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING RemainingPath;
-    PCM_KEY_BODY ParentKey;
-    PCM_KEY_BODY NewKey;
     NTSTATUS Status;
-    UNICODE_STRING ObjectName;
-    OBJECT_CREATE_INFORMATION ObjectCreateInfo;
     CM_PARSE_CONTEXT ParseContext = {0};
     HANDLE KeyHandle;
+    PCM_KEY_BODY KeyBody;
     PAGED_CODE();
     
     /* Setup the object attributes */
@@ -533,83 +619,22 @@ CmpLinkHiveToMaster(IN PUNICODE_STRING LinkName,
                                 KEY_READ | KEY_WRITE,
                                 (PVOID)&ParseContext,
                                 &KeyHandle);
-    
-    /* Capture all the info */
-    Status = ObpCaptureObjectAttributes(&ObjectAttributes,
-                                        KernelMode,
-                                        FALSE,
-                                        &ObjectCreateInfo,
-                                        &ObjectName);
     if (!NT_SUCCESS(Status)) return Status;
-    
-    /* Do the parse */
-    Status = CmFindObject(&ObjectCreateInfo,
-                          &ObjectName,
-                          (PVOID*)&ParentKey,
-                          &RemainingPath,
-                          CmpKeyObjectType,
-                          NULL,
-                          NULL);
-    
-    /* Let go of captured attributes and name */
-    ObpReleaseCapturedAttributes(&ObjectCreateInfo);   
-    if (ObjectName.Buffer) ObpFreeObjectNameBuffer(&ObjectName);
-    
-    /* Get out of here if we failed */
-    if (!NT_SUCCESS(Status)) return Status;
-    
-    /* Scan for no name */
-    if (!(RemainingPath.Length) || (RemainingPath.Buffer[0] == UNICODE_NULL))
-    {
-        /* Fail */
-        ObDereferenceObject(ParentKey);
-        return STATUS_OBJECT_NAME_NOT_FOUND;
-    }
-    
-    /* Scan for leading backslash */
-    while ((RemainingPath.Length) &&
-           (*RemainingPath.Buffer == OBJ_NAME_PATH_SEPARATOR))
-    {
-        /* Ignore it */
-        RemainingPath.Length -= sizeof(WCHAR);
-        RemainingPath.MaximumLength -= sizeof(WCHAR);
-        RemainingPath.Buffer++;
-    }
-    
-    /* Create the link node */
-    Status = CmpCreateLinkNode(ParentKey->KeyControlBlock->KeyHive,
-                               ParentKey->KeyControlBlock->KeyCell,
-                               NULL,
-                               RemainingPath,
-                               KernelMode,
-                               0,
-                               &ParseContext,
-                               ParentKey->KeyControlBlock,
-                               (PVOID*)&NewKey);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Failed */
-        DPRINT1("CmpLinkHiveToMaster failed: %lx\n", Status);
-        ObDereferenceObject(ParentKey);
-        return Status;
-    }
-    
-    /* Free the create information */
-    ObpFreeAndReleaseCapturedAttributes(OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo);
-    OBJECT_TO_OBJECT_HEADER(NewKey)->ObjectCreateInfo = NULL;
     
     /* Mark the hive as clean */
     RegistryHive->Hive.DirtyFlag = FALSE;
     
-    /* Update KCB information */
-    NewKey->KeyControlBlock->KeyCell = RegistryHive->Hive.BaseBlock->RootCell;
-    NewKey->KeyControlBlock->KeyHive = &RegistryHive->Hive;
+    /* ReactOS Hack: Keep alive */
+    Status = ObReferenceObjectByHandle(KeyHandle,
+                                       0,
+                                       CmpKeyObjectType,
+                                       KernelMode,
+                                       (PVOID*)&KeyBody,
+                                       NULL);
+    ASSERT(NT_SUCCESS(Status));
 
-    /* Reference the new key */
-    ObReferenceObject(NewKey);
-    
-    /* Link this key to the parent */
-    InsertTailList(&ParentKey->KeyControlBlock->KeyBodyListHead, &NewKey->KeyBodyList);
+    /* Close the extra handle */
+    ZwClose(KeyHandle);
     return STATUS_SUCCESS;    
 }
 
@@ -767,7 +792,7 @@ CmpCreateObjectTypes(VOID)
     ObjectTypeInitializer.ParseProcedure = CmpParseKey;
     ObjectTypeInitializer.SecurityProcedure = CmpSecurityMethod;
     ObjectTypeInitializer.QueryNameProcedure = CmpQueryKeyName;
-    //ObjectTypeInitializer.CloseProcedure = CmpCloseKeyObject;
+    ObjectTypeInitializer.CloseProcedure = CmpCloseKeyObject;
     ObjectTypeInitializer.SecurityRequired = TRUE;
 
     /* Create it */
@@ -892,9 +917,12 @@ CmpCreateRegistryRoot(VOID)
 
     /* Initialize the object */
     RootKey->KeyControlBlock = Kcb;
-    RootKey->Type = TAG('k', 'v', '0', '2');
+    RootKey->Type = TAG('k', 'y', '0', '2');
     RootKey->NotifyBlock = NULL;
     RootKey->ProcessID = PsGetCurrentProcessId();
+
+    /* Link with KCB */
+    EnlistKeyBodyWithKCB(RootKey, 0);
 
     /* Insert the key into the namespace */
     Status = ObInsertObject(RootKey,
@@ -928,7 +956,7 @@ CmpGetRegistryPath(IN PWCHAR ConfigPath)
     PKEY_VALUE_PARTIAL_INFORMATION ValueInfo;
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE");
     UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"InstallPath");
-    ULONG BufferSize,ResultSize;
+    ULONG BufferSize, ResultSize;
 
     /* Check if we are booted in setup */
     if (ExpInTextModeSetup)
@@ -1056,7 +1084,8 @@ CmpLoadHiveThread(IN PVOID StartContext)
                                      &CmHive,
                                      &CmpMachineHiveList[i].Allocate,
                                      0);
-        if (!(NT_SUCCESS(Status)) || !(CmHive->FileHandles[HFILE_TYPE_LOG]))
+        if (!(NT_SUCCESS(Status)) ||
+            (!(CmHive->FileHandles[HFILE_TYPE_LOG]) && !(CmpMiniNTBoot))) // hak
         {
             /* We failed or couldn't get a log file, raise a hard error */
             ErrorParameters = &FileName;

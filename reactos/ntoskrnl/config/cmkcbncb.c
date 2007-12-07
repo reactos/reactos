@@ -812,7 +812,12 @@ NTAPI
 EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
                      IN ULONG Flags)
 {
-    ASSERT(FALSE);
-}
+    /* Sanity check */
+    ASSERT(KeyBody->KeyControlBlock != NULL);
+    
+    /* Initialize the list entry */
+    InitializeListHead(&KeyBody->KeyBodyList);
 
+    /* FIXME: Implement once we don't link parents to children anymore */
+}
 
