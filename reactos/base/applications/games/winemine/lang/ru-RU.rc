@@ -7,12 +7,12 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 STRINGTABLE
 {
 	IDS_APPNAME, "Сапер"
-	IDS_SECONDS, "seconds"
+	IDS_SECONDS, "секунд"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
 {
-	POPUP "&Game" {
+	POPUP "&Игра" {
 		MENUITEM "&Новая игра",           IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "&Метки",                IDM_MARKQ
@@ -47,7 +47,7 @@ FONT 8, "MS Shell Dlg"
 	LTEXT           "",              IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",              IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "OK",            IDOK,      127,  57,  50,  15
-	PUSHBUTTON      "&Reset Scores", IDRESET,    18,  57,  67,  15
+	PUSHBUTTON      "&Сбросить", IDRESET,    18,  57,  67,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
