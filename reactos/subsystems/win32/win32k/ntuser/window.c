@@ -1657,18 +1657,6 @@ AllocErr:
    Wnd->Instance = hInstance;
    Window->hSelf = hWnd;
 
-   if (!hMenu)
-       hMenu = Wnd->Class->hMenu;
-
-   if (0 != (dwStyle & WS_CHILD))
-   {
-      Wnd->IDMenu = (UINT) hMenu;
-   }
-   else
-   {
-      IntSetMenu(Window, hMenu, &MenuChanged);
-   }
-
    Window->MessageQueue = PsGetCurrentThreadWin32Thread()->MessageQueue;
    IntReferenceMessageQueue(Window->MessageQueue);
    Window->Parent = ParentWindow;
@@ -1770,8 +1758,7 @@ AllocErr:
    }
 
    /* create system menu */
-   if((dwStyle & WS_SYSMENU) &&
-         (dwStyle & WS_CAPTION) == WS_CAPTION)
+   if((dwStyle & WS_SYSMENU) )//&& (dwStyle & WS_CAPTION) == WS_CAPTION)
    {
       SystemMenu = IntGetSystemMenu(Window, TRUE, TRUE);
       if(SystemMenu)
@@ -1780,6 +1767,20 @@ AllocErr:
          IntReleaseMenuObject(SystemMenu);
       }
    }
+
+   /* Set the window menu */
+   if ((dwStyle & (WS_CHILD | WS_POPUP)) != WS_CHILD)
+   {
+      if (hMenu)
+         IntSetMenu(Window, hMenu, &MenuChanged);
+      else
+      {
+          hMenu = Wnd->Class->hMenu;
+          if (hMenu) IntSetMenu(Window, hMenu, &MenuChanged);
+      }
+   }
+   else
+       Wnd->IDMenu = (UINT) hMenu;
 
    /* Insert the window into the thread's window list. */
    InsertTailList (&PsGetCurrentThreadWin32Thread()->WindowListHead, &Window->ThreadListEntry);
@@ -2051,7 +2052,6 @@ AllocErr:
       RETURN((HWND)0);
    }
 
-
    /* Send move and size messages. */
    if (!(Window->Flags & WINDOWOBJECT_NEED_SIZE))
    {
@@ -2065,14 +2065,12 @@ AllocErr:
          DPRINT("Sending bogus WM_SIZE\n");
       }
 
-
       lParam = MAKE_LONG(Window->Wnd->ClientRect.right -
                          Window->Wnd->ClientRect.left,
                          Window->Wnd->ClientRect.bottom -
                          Window->Wnd->ClientRect.top);
       co_IntSendMessage(Window->hSelf, WM_SIZE, SIZE_RESTORED,
                         lParam);
-
 
       DPRINT("IntCreateWindow(): About to send WM_MOVE\n");
 
@@ -2087,14 +2085,10 @@ AllocErr:
                             Wnd->ClientRect.top);
       }
 
-
       co_IntSendMessage(Window->hSelf, WM_MOVE, 0, lParam);
-
 
       /* Call WNDOBJ change procs */
       IntEngWindowChanged(Window, WOC_RGN_CLIENT);
-
-
    }
 
    /* Show or maybe minimize or maximize the window. */
@@ -2105,11 +2099,13 @@ AllocErr:
 
       SwFlag = (Wnd->Style & WS_MINIMIZE) ? SW_MINIMIZE :
                SW_MAXIMIZE;
+
       co_WinPosMinMaximize(Window, SwFlag, &NewPos);
-      SwFlag =
-         ((Wnd->Style & WS_CHILD) || UserGetActiveWindow()) ?
-         SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
-         SWP_NOZORDER | SWP_FRAMECHANGED;
+
+      SwFlag = ((Wnd->Style & WS_CHILD) || UserGetActiveWindow()) ?
+                SWP_NOACTIVATE | SWP_NOZORDER | SWP_FRAMECHANGED :
+                SWP_NOZORDER | SWP_FRAMECHANGED;
+
       DPRINT("IntCreateWindow(): About to minimize/maximize\n");
       DPRINT("%d,%d %dx%d\n", NewPos.left, NewPos.top, NewPos.right, NewPos.bottom);
       co_WinPosSetWindowPos(Window, 0, NewPos.left, NewPos.top,
@@ -2149,8 +2145,20 @@ AllocErr:
 
    if (dwStyle & WS_VISIBLE)
    {
+      if (Wnd->Style & WS_MAXIMIZE)
+         dwShowMode = SW_SHOW;
+      else if (Wnd->Style & WS_MINIMIZE)
+         dwShowMode = SW_SHOWMINIMIZED;
+
       DPRINT("IntCreateWindow(): About to show window\n");
       co_WinPosShowWindow(Window, dwShowMode);
+
+      if (Wnd->ExStyle & WS_EX_MDICHILD)
+      {
+        co_IntSendMessage(ParentWindow->hSelf, WM_MDIREFRESHMENU, 0, 0);
+        /* ShowWindow won't activate child windows */
+        co_WinPosSetWindowPos(Window, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
+      }
    }
 
    DPRINT("IntCreateWindow(): = %X\n", hWnd);

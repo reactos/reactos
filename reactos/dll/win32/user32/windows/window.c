@@ -354,13 +354,6 @@ CreateWindowExA(DWORD dwExStyle,
                                 hInstance,
                                 lpParam,
                                 FALSE);
-
-    if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD) && hwnd != (HWND)0)
-    {
-        SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
-        SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
-    }
-
     return hwnd;
 }
 
@@ -466,13 +459,6 @@ CreateWindowExW(DWORD dwExStyle,
                                 hInstance,
                                 lpParam,
                                 TRUE);
-
-    if ((dwStyle & WS_VISIBLE) && (dwExStyle & WS_EX_MDICHILD) && hwnd != (HWND)0)
-    {
-        SendMessageW(hWndParent, WM_MDIREFRESHMENU, 0, 0);
-        SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE);
-    }
-
     return hwnd;
 }
 
