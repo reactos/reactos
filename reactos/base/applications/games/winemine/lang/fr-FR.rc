@@ -10,12 +10,12 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE {
 	IDS_APPNAME, "WineMine"
-	IDS_SECONDS, "seconds"
+	IDS_SECONDS, "secondes"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
 {
-	POPUP "&Game" {
+	POPUP "&Jeu" {
 		MENUITEM "&Nouveau",        IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "&Marqueur ?",     IDM_MARKQ
@@ -29,7 +29,7 @@ MENU_WINEMINE MENU DISCARDABLE
 		MENUITEM SEPARATOR
 		MENUITEM "&Quitter",        IDM_EXIT
 	}
-	POPUP "&Info" {
+	POPUP "&Informations" {
 		MENUITEM "&Temps accéléré", IDM_TIMES
 		MENUITEM "&À propos",       IDM_ABOUT
 	}
@@ -51,7 +51,7 @@ FONT 8, "MS Shell Dlg"
 	LTEXT           "",               IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",               IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "OK",             IDOK,      127,  57,  50,  15
-	PUSHBUTTON      "&Reset Scores",  IDRESET,    18,  57,  67,  15
+	PUSHBUTTON      "&Réinitialiser les scores",  IDRESET,    18,  57,  67,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
