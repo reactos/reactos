@@ -163,6 +163,7 @@ CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     if (!CmpDelayDerefKCBWorkItemActive)
     {
         /* Yes, we have no work item, setup the interval */
+        CmpDelayDerefKCBWorkItemActive = TRUE;
         Timeout.QuadPart = CmpDelayDerefKCBIntervalInSeconds * -10000000;
         KeSetTimer(&CmpDelayDerefKCBTimer, Timeout, &CmpDelayDerefKCBDpc);
     }
@@ -304,4 +305,5 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
 }
+
 

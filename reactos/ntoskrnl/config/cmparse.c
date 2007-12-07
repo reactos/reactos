@@ -74,6 +74,135 @@ CmpGetNextName(IN OUT PUNICODE_STRING RemainingName,
     return NameValid;
 }
 
+BOOLEAN
+NTAPI
+CmpGetSymbolicLink(IN PHHIVE Hive,
+                   IN OUT PUNICODE_STRING ObjectName,
+                   IN OUT PCM_KEY_CONTROL_BLOCK SymbolicKcb,
+                   IN PUNICODE_STRING RemainingName OPTIONAL)
+{
+    HCELL_INDEX LinkCell = HCELL_NIL;
+    PCM_KEY_VALUE LinkValue = NULL;
+    PWSTR LinkName = NULL;
+    BOOLEAN LinkNameAllocated = FALSE;
+    PWSTR NewBuffer;
+    ULONG Length = 0;
+    ULONG ValueLength = 0;
+    BOOLEAN Result = FALSE;
+    HCELL_INDEX CellToRelease = HCELL_NIL;
+    PCM_KEY_NODE Node;
+    UNICODE_STRING NewObjectName;
+
+    /* Make sure we're not being deleted */
+    if (SymbolicKcb->Delete) return FALSE;
+
+    /* Get the key node */
+    Node = (PCM_KEY_NODE)HvGetCell(SymbolicKcb->KeyHive, SymbolicKcb->KeyCell);
+    if (!Node) goto Exit;
+
+    /* Find the symbolic link key */
+    LinkCell = CmpFindValueByName(Hive, Node, &CmSymbolicLinkValueName);
+    HvReleaseCell(SymbolicKcb->KeyHive, SymbolicKcb->KeyCell);
+    if (LinkCell == HCELL_NIL) goto Exit;
+
+    /* Get the value cell */
+    LinkValue = (PCM_KEY_VALUE)HvGetCell(Hive, LinkCell);
+    if (!LinkValue) goto Exit;
+
+    /* Make sure it's a registry link */
+    if (LinkValue->Type != REG_LINK) goto Exit;
+
+    /* Now read the value data */
+    if (!CmpGetValueData(Hive,
+                         LinkValue,
+                         &ValueLength,
+                         (PVOID)&LinkName,
+                         &LinkNameAllocated,
+                         &CellToRelease))
+    {
+        /* Fail */
+        goto Exit;
+    }
+
+    /* Get the length */
+    Length = ValueLength + sizeof(WCHAR);
+
+    /* Make sure we start with a slash */
+    if (*LinkName != OBJ_NAME_PATH_SEPARATOR) goto Exit;
+
+    /* Add the remaining name if needed */
+    if (RemainingName) Length += RemainingName->Length + sizeof(WCHAR);
+    
+    /* Check for overflow */
+    if (Length > 0xFFFF) goto Exit;
+
+    /* Check if we need a new buffer */
+	if (Length > ObjectName->MaximumLength)
+    {
+        /* We do -- allocate one */
+        NewBuffer = ExAllocatePoolWithTag(PagedPool, Length, TAG_CM);
+        if (!NewBuffer) goto Exit;
+        
+        /* Setup the new string and copy the symbolic target */
+        NewObjectName.Buffer = NewBuffer;
+        NewObjectName.MaximumLength = (USHORT)Length;
+        NewObjectName.Length = (USHORT)ValueLength;
+        RtlCopyMemory(NewBuffer, LinkName, ValueLength);
+
+        /* Check if we need to add anything else */
+        if (RemainingName)
+        {
+            /* Add the remaining name */
+            NewBuffer[ValueLength / sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
+            NewObjectName.Length += sizeof(WCHAR);
+            RtlAppendUnicodeStringToString(&NewObjectName, RemainingName);
+        }
+
+        /* Free the old buffer */
+        ExFreePool(ObjectName->Buffer);
+        *ObjectName = NewObjectName;
+    }
+    else
+    {
+        /* The old name is large enough -- update the length */
+        ObjectName->Length = (USHORT)ValueLength;
+        if (RemainingName)
+        {
+            /* Copy the remaining name inside */
+            RtlMoveMemory(&ObjectName->Buffer[(ValueLength / sizeof(WCHAR)) + 1],
+                          RemainingName->Buffer,
+                          RemainingName->Length);
+
+            /* Add the slash and update the length */
+            ObjectName->Buffer[ValueLength / sizeof(WCHAR)] = OBJ_NAME_PATH_SEPARATOR;
+            ObjectName->Length += RemainingName->Length + sizeof(WCHAR);
+        }
+
+        /* Copy the symbolic link target name */
+        RtlCopyMemory(ObjectName->Buffer, LinkName, ValueLength);
+    }
+
+    /* Null-terminate the whole thing */
+    ObjectName->Buffer[ObjectName->Length / sizeof(WCHAR)] = UNICODE_NULL;
+    Result = TRUE;
+
+Exit:
+    /* Free the link name */
+    if (LinkNameAllocated) ExFreePool(LinkName);
+
+    /* Check if we had a value cell */
+    if (LinkValue)
+    {
+        /* Release it */
+        ASSERT(LinkCell != HCELL_NIL);
+        HvReleaseCell(Hive, LinkCell);
+    }
+
+    /* Check if we had an active cell and release it, then return the result */
+    if (CellToRelease != HCELL_NIL) HvReleaseCell(Hive, CellToRelease);
+    return Result;
+}
+
 NTSTATUS
 NTAPI
 CmpDoCreateChild(IN PHHIVE Hive,
@@ -196,7 +325,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
 
     /* Fill out the key node */
     KeyNode->Signature = CM_KEY_NODE_SIGNATURE;
-    KeyNode->Flags = Flags;
+    KeyNode->Flags = Flags &~ REG_OPTION_CREATE_LINK;
     KeQuerySystemTime(&SystemTime);
     KeyNode->LastWriteTime = SystemTime;
     KeyNode->Spare = 0;
@@ -903,9 +1032,52 @@ CmpParseKey2(IN PVOID ParseObject,
     /* Check if this is a symlink */
     if (Kcb->Flags & KEY_SYM_LINK)
     {
+        DPRINT1("Parsing sym link: %lx %lx %lx\n", Kcb->Flags, Status,
+                CompleteName);
+        
+        /* Get the next name */
+        Result = CmpGetNextName(&Current, &NextName, &Last);
+        Current.Buffer = NextName.Buffer;
+
+        /* Validate the current name string length */
+        if (Current.Length + NextName.Length > MAXUSHORT)
+        {
+            /* too long */
+            Status = STATUS_NAME_TOO_LONG;
+            goto Quickie;
+        }
+        Current.Length += NextName.Length;
+
+        /* Validate the current name string maximum length */
+        if (Current.MaximumLength + NextName.MaximumLength > MAXUSHORT)
+        {
+            /* too long */
+            Status = STATUS_NAME_TOO_LONG;
+            goto Quickie;
+        }
+        Current.MaximumLength += NextName.MaximumLength;
+        
+        /* Parse the symlink */
+        if (CmpGetSymbolicLink(Hive,
+                               CompleteName,
+                               Kcb,
+                               &Current))
+        {
+            /* Symlink parse succeeded */
+            Status = STATUS_REPARSE;
+        }
+        else
+        {
+            /* Couldn't find symlink */
+            Status = STATUS_OBJECT_NAME_NOT_FOUND;
+        }
+        
         /* Not implemented */
-        DPRINT1("Parsing sym link\n");
-        while (TRUE);
+        DPRINT1("Parsing sym link: %lx %wZ %wZ\n", Status,
+                CompleteName, &Current);
+
+        /* We're done */
+        goto Quickie;
     }
     
     /* Get the key node */
@@ -967,8 +1139,22 @@ CmpParseKey2(IN PVOID ParseObject,
                                            Object);
                         if (Status == STATUS_REPARSE)
                         {
+                            DPRINT1("Parsing sym link: %lx %lx\n", Status,
+                                    CompleteName);
+
+                            /* Parse the symlink */
+                            if (!CmpGetSymbolicLink(Hive,
+                                                    CompleteName,
+                                                    Kcb,
+                                                    NULL))
+                            {
+                                /* Symlink parse failed */
+                                Status = STATUS_OBJECT_NAME_NOT_FOUND;
+                            }
+
                             /* Not implemented */
-                            DPRINT1("Parsing sym link\n");
+                            DPRINT1("Parsing sym link: %lx %wZ\n", Status,
+                                    CompleteName);
                             while (TRUE); 
                         }
                         
@@ -1056,9 +1242,51 @@ CmpParseKey2(IN PVOID ParseObject,
             }
             else
             {
+                DPRINT1("Parsing sym link: %lx %lx\n", Status,
+                        CompleteName);
+                
+                /* Save the next name */
+                Current.Buffer = NextName.Buffer;
+                
+                /* Validate the current name string length */
+                if (Current.Length + NextName.Length > MAXUSHORT)
+                {
+                    /* too long */
+                    Status = STATUS_NAME_TOO_LONG;
+                    break;
+                }
+                Current.Length += NextName.Length;
+                
+                /* Validate the current name string maximum length */
+                if (Current.MaximumLength + NextName.MaximumLength > MAXUSHORT)
+                {
+                    /* too long */
+                    Status = STATUS_NAME_TOO_LONG;
+                    break;
+                }
+                Current.MaximumLength += NextName.MaximumLength;
+                
+                /* Parse the symlink */
+                if (CmpGetSymbolicLink(Hive,
+                                       CompleteName,
+                                       Kcb,
+                                       &Current))
+                {
+                    /* Symlink parse succeeded */
+                    Status = STATUS_REPARSE;
+                }
+                else
+                {
+                    /* Couldn't find symlink */
+                    Status = STATUS_OBJECT_NAME_NOT_FOUND;
+                }
+                
                 /* Not implemented */
-                DPRINT1("Parsing sym link\n");
-                while (TRUE);
+                DPRINT1("Parsing sym link: %lx %wZ %wZ\n", Status,
+                        CompleteName, &Current);
+                
+                /* We're done */
+                break;
             }
         }
         else if ((Result) && (Last))
@@ -1076,6 +1304,7 @@ CmpParseKey2(IN PVOID ParseObject,
     }
 
     /* Dereference the parent if it exists */
+Quickie:
     if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
     
     /* Unlock the registry */
