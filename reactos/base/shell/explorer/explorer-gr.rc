@@ -36,11 +36,11 @@ BEGIN
     END
     POPUP "&Εμφάνιση"
     BEGIN
-        MENUITEM "&ραμμή εργαλείων",         ID_VIEW_TOOL_BAR
-        MENUITEM "&Επιπλέον γραμμή",          ID_VIEW_EXTRA_BAR
-        MENUITEM "&Drivebar",                      ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "S&ide Bar",                      ID_VIEW_SIDE_BAR
-        MENUITEM "&Γραμμή καταστασης",       ID_VIEW_STATUSBAR
+        MENUITEM "Γ&ραμμή εργαλείων",           ID_VIEW_TOOL_BAR
+        MENUITEM "&Επιπλέον γραμμή",            ID_VIEW_EXTRA_BAR
+        MENUITEM "&Γραμμή δίσκων",              ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "Α&γαπημένα",                  ID_VIEW_SIDE_BAR
+        MENUITEM "&Γραμμή κατάστασης",          ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Ανανέωση\tF5",                ID_REFRESH
         MENUITEM "Π&λήρης Οθόνη\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
@@ -49,11 +49,11 @@ BEGIN
     POPUP "&Παράθυρο"
     BEGIN
         MENUITEM "Νέο &Παράθυρο",                 ID_WINDOW_NEW
-        MENUITEM "Cascading\tShift+F5",         ID_WINDOW_CASCADE
-        MENUITEM "Tile &Horizontally",          ID_WINDOW_TILE_HORZ
-        MENUITEM "Tile &Vertically\tShift+F4",  ID_WINDOW_TILE_VERT
-        MENUITEM "Arrange Automatically",       ID_WINDOW_AUTOSORT
-        MENUITEM "Arrange &Symbols",            ID_WINDOW_ARRANGE
+        MENUITEM "Τακτοποίηση\tShift+F5",       ID_WINDOW_CASCADE
+        MENUITEM "Τακτοποίηση Κα&τακόρυφα",     ID_WINDOW_TILE_HORZ
+        MENUITEM "Τακτοποίηση Κά&θετα\tShift+F4", ID_WINDOW_TILE_VERT
+        MENUITEM "Αυτόματη Τακτοποίηση",        ID_WINDOW_AUTOSORT
+        MENUITEM "Τακτοποίηση &εικονιδίων",     ID_WINDOW_ARRANGE
     END
     POPUP "&Εργαλεία"
     BEGIN
@@ -62,8 +62,8 @@ BEGIN
     POPUP "&Βοήθεια"
     BEGIN
         MENUITEM "Εξερεύνηση &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Σχετκά με την Εξερεύνηση...",          ID_ABOUT_EXPLORER
-        MENUITEM "Σχετικά με το &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "&Σχετικά με τον εξερευνητή",  ID_ABOUT_EXPLORER
+        MENUITEM "&Σχετικά με το Reactos",      ID_ABOUT_WINDOWS
     END
 END
 
@@ -72,9 +72,9 @@ BEGIN
     POPUP ""
     BEGIN
         MENUITEM "&Ρυθμίσεις...",                ID_DESKTOPBAR_SETTINGS
-        MENUITEM "&Task Manager...",            ID_TASKMGR
+        MENUITEM "&Διαχείρηση Εργασιών",        ID_TASKMGR
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετκά με την Εξερεύνηση...",          ID_ABOUT_EXPLORER
+        MENUITEM "&Σχετικά με τον εξερευνητή",  ID_ABOUT_EXPLORER
     END
 END
 
@@ -82,8 +82,8 @@ IDM_VOLUME MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "Open Volume Control",         ID_TRAY_VOLUME
-        MENUITEM "Adjust Audio Properties",     ID_VOLUME_PROPERTIES
+        MENUITEM "’νοιγμα της ρύθμισης έντασης ήχου", ID_TRAY_VOLUME
+        MENUITEM "Διόρθωση ιδιοτήτων ήχου",     ID_VOLUME_PROPERTIES
     END
 END
 
@@ -91,12 +91,12 @@ IDM_NOTIFYAREA MENU DISCARDABLE
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Εμφάνιση κρυμμένν εικονιδίων",          ID_SHOW_HIDDEN_ICONS
-        MENUITEM "Show Icon &Button",           ID_SHOW_ICON_BUTTON
-        MENUITEM "&Configure Notifications...", ID_CONFIG_NOTIFYAREA
-        MENUITEM "Ρύθμιση Ημερομηνίας/&Ώρας...",        ID_CONFIG_TIME
+        MENUITEM "&Εμφάνηση κρυμμένων εικονιδίων", ID_SHOW_HIDDEN_ICONS
+        MENUITEM "Πλήκτρο εμφάνησης εικονιδίων", ID_SHOW_ICON_BUTTON
+        MENUITEM "Ρυθμίσεις ειδοποιήσεων",      ID_CONFIG_NOTIFYAREA
+        MENUITEM "Ρύθμιση ημερομηνίας/&ώρας",   ID_CONFIG_TIME
         MENUITEM SEPARATOR
-        MENUITEM "&Σχετκά με την Εξερεύνηση",          ID_ABOUT_EXPLORER
+        MENUITEM "&Σχετικά με το εξερευνητή",   ID_ABOUT_EXPLORER
     END
 END
 
@@ -106,29 +106,27 @@ BEGIN
     BEGIN
         MENUITEM "&Εκτέλεση...",                 ID_EXECUTE
         MENUITEM SEPARATOR
-        MENUITEM "&Κλείσιμο",                      ID_FILE_EXIT
+        MENUITEM "Έ&ξοδος",                     ID_FILE_EXIT
     END
     POPUP "&Εμφάνιση"
     BEGIN
-        MENUITEM "&ραμμή εργαλείων",         ID_VIEW_TOOL_BAR
-        MENUITEM "&Επιπλέον γραμμή",          ID_VIEW_EXTRA_BAR
-        MENUITEM "&Drivebar",                      ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "S&ide Bar",                      ID_VIEW_SIDE_BAR
-        MENUITEM "&Γραμμή καταστασης",       ID_VIEW_STATUSBAR
+        MENUITEM "Γ&ραμμή εργαλείων",           ID_VIEW_TOOL_BAR
+        MENUITEM "Α&γαπημένα",                  ID_VIEW_SIDE_BAR, GRAYED
+        MENUITEM "&Γραμμή κατάστασης",          ID_VIEW_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "&Ανανέωση\tF5",                ID_REFRESH
-        MENUITEM "Π&λήρης Οθόνη\tCtrl+Shift+S",  ID_VIEW_FULLSCREEN
+        MENUITEM "Π&λήρης οθόνη",               ID_VIEW_FULLSCREEN
         MENUITEM "MDI",                         ID_VIEW_MDI
     END
-    POPUP "&Tools"
+    POPUP "&Εργαλεία"
     BEGIN
-        MENUITEM "&Options",                    ID_TOOLS_OPTIONS
+        MENUITEM "&Επιλογές",                   ID_TOOLS_OPTIONS
     END
-    POPUP "&Help"
+    POPUP "Βοήθεια"
     BEGIN
-        MENUITEM "Εξερεύνηση &FAQ...",            ID_EXPLORER_FAQ
-        MENUITEM "&Σχετικάμε την Εξερεύνηση...",          ID_ABOUT_EXPLORER
-        MENUITEM "Σχετικά με το &OS...",                ID_ABOUT_WINDOWS
+        MENUITEM "Εξερεύνηση &FAQ",             ID_EXPLORER_FAQ
+        MENUITEM "&Σχετικά με τον εξερευνητή",  ID_ABOUT_EXPLORER
+        MENUITEM "&Σχετικά με το Reactos",      ID_ABOUT_WINDOWS
     END
 END
 
@@ -144,13 +142,13 @@ CAPTION "Εκτέλεση"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "",101,"Static",SS_SIMPLE | SS_NOPREFIX,3,6,150,10
-    CONTROL         "&Command:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,
-                    18,60,10
+    CONTROL         "’νοιγμα:",-1,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,3,18,
+                    58,10
     EDITTEXT        201,3,29,134,12,ES_AUTOHSCROLL
-    CONTROL         "As &Symbol",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
+    CONTROL         "Ώς σύμβολο",214,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,3,
                     45,71,12
     DEFPUSHBUTTON   "&OK",1,158,6,47,14
-    PUSHBUTTON      "&Ακύρωση",2,158,23,47,14
+    PUSHBUTTON      "&Ακύρωση",2,158,24,47,14
     PUSHBUTTON      "&Βοήθεια",254,158,43,47,14
 END
 
@@ -158,15 +156,15 @@ IDD_SEARCH_PROGRAM DIALOGEX 0, 0, 200, 65
 STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Αναζήτηση προγράμματος το μενού 'έναρξη'"
+CAPTION "Αναζήτηση στο μενού ""έναρξη"""
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "&Φίλτρο:",IDC_STATIC,7,9,18,8
+    LTEXT           "&Φίλτρο:",IDC_STATIC,4,9,27,8
     EDITTEXT        IDC_FILTER,34,7,100,14,ES_AUTOHSCROLL
-    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT |
-                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER |
+    CONTROL         "List1",IDC_PROGRAMS_FOUND,"SysListView32",LVS_REPORT | 
+                    LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | 
                     WS_TABSTOP,7,25,186,33
-    PUSHBUTTON      "&Check Entries",IDC_CHECK_ENTRIES,143,7,50,14
+    PUSHBUTTON      "&Αναζήτηση",IDC_CHECK_ENTRIES,143,7,50,14
 END
 
 IDD_DESKBAR_DESKTOP DIALOG DISCARDABLE  0, 0, 212, 194
@@ -174,31 +172,31 @@ STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ιδιότητες επιφάνειας εργασίας"
 FONT 8, "MS Sans Serif"
 BEGIN
-    LTEXT           "Please select your prefered icon alignment algorithm:",
-                    IDC_STATIC,7,7,166,8
-    CONTROL         "left/top dwn",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW |
+    LTEXT           "Επιλέξτε τον τρόπο τακτοποίηση  των εικονιδίων:",
+                    IDC_STATIC,7,7,198,8
+    CONTROL         "κάτω",IDC_ICON_ALIGN_0,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,25,46,44
-    CONTROL         "left/top right",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW |
+    CONTROL         "δεξιά",IDC_ICON_ALIGN_1,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,25,46,44
-    CONTROL         "right/top left",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW |
+    CONTROL         "αριστερά",IDC_ICON_ALIGN_2,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,25,46,44
-    CONTROL         "rig./top dwn",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW |
+    CONTROL         "κάτω",IDC_ICON_ALIGN_3,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,25,46,44
-    CONTROL         "left/bot. up",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW |
+    CONTROL         "πάνω",IDC_ICON_ALIGN_4,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,73,46,44
-    CONTROL         "left/bot. right",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW |
+    CONTROL         "δεξιά",IDC_ICON_ALIGN_5,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,73,46,44
-    CONTROL         "right/bot. left",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW |
+    CONTROL         "αριστερά",IDC_ICON_ALIGN_6,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,73,46,44
-    CONTROL         "rig./bot. dwn",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW |
+    CONTROL         "πάνω",IDC_ICON_ALIGN_7,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,159,73,46,44
-    CONTROL         "border down",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW |
+    CONTROL         "κάτων",IDC_ICON_ALIGN_8,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,7,121,46,44
-    CONTROL         "border H/V",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW |
+    CONTROL         "πλαίσιο",IDC_ICON_ALIGN_9,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,57,121,46,44
-    CONTROL         "round about",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW |
+    CONTROL         "γύρω γύρω",IDC_ICON_ALIGN_10,"Button",BS_OWNERDRAW | 
                     BS_BOTTOM | WS_TABSTOP,110,121,46,44
-    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM |
+    CONTROL         "",IDC_ICON_ALIGN_11,"Button",BS_OWNERDRAW | BS_BOTTOM | 
                     WS_TABSTOP,159,121,46,44
 //    CONTROL         "Display &Version Number",ID_DESKTOP_VERSION,"Button",
 //                    BS_AUTOCHECKBOX | WS_TABSTOP,7,177,91,10
@@ -206,85 +204,84 @@ END
 
 IDD_DESKBAR_TASKBAR DIALOG DISCARDABLE  0, 0, 210, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Taskbar Properties"
+CAPTION "Ιδιότητες γραμμής εργασιών"
 FONT 8, "MS Sans Serif"
 BEGIN
-    CONTROL         "show &clock",ID_SHOW_CLOCK,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,152,52,10
-    CONTROL         "&hide inactive notification icons",
-                    ID_HIDE_INACTIVE_ICONS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,174,111,10
-    PUSHBUTTON      "&Notifications...",ID_CONFIG_NOTIFYAREA,153,173,50,14
+    CONTROL         "Εμφάνηση του &ρολογιού",ID_SHOW_CLOCK,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,152,96,10
+    CONTROL         "&Απόκρυψη αενεργών εικονιδίων",ID_HIDE_INACTIVE_ICONS,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,174,122,10
+    PUSHBUTTON      "&Προσαρμογή...",ID_CONFIG_NOTIFYAREA,147,173,56,14
 END
 
 IDD_DESKBAR_STARTMENU DIALOG DISCARDABLE  0, 0, 210, 194
 STYLE WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ιδιότητες μενού 'έναρξη'"
+CAPTION "Ιδιότητες του μενού ""έναρξη"""
 FONT 8, "MS Sans Serif"
 BEGIN
 END
 
-IDD_NOTIFYAREA DIALOGEX 0, 0, 208, 174
-STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+IDD_NOTIFYAREA DIALOGEX 0, 0, 218, 174
+STYLE WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION | 
     WS_SYSMENU | WS_THICKFRAME
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Configure Notification Icons"
+CAPTION "Ρυθμίσεις για τον χώρο ειδοποιήσεων"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES |
-                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,194,31
-    LTEXT           "&Tooltip Text:",IDC_LABEL1,7,44,40,8
-    EDITTEXT        IDC_NOTIFY_TOOLTIP,58,42,143,14,ES_AUTOHSCROLL
-    LTEXT           "W&indow Title:",IDC_LABEL2,7,63,44,8
-    EDITTEXT        IDC_NOTIFY_TITLE,58,60,143,14,ES_AUTOHSCROLL
-    LTEXT           "&Module Path:",IDC_LABEL3,7,81,43,8
-    EDITTEXT        IDC_NOTIFY_MODULE,58,78,143,14,ES_AUTOHSCROLL
-    GROUPBOX        "&Display Mode",IDC_LABEL4,7,96,157,28
-    CONTROL         "&show",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON |
-                    WS_TABSTOP,15,108,33,10
-    CONTROL         "&hide",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,66,
-                    108,29,10
-    CONTROL         "a&utohide",IDC_NOTIFY_AUTOHIDE,"Button",
-                    BS_AUTORADIOBUTTON,112,108,43,10
-    ICON            "",IDC_PICTURE,173,101,21,20
-    LTEXT           "&Last Change:",IDC_LABEL6,7,132,43,8
-    EDITTEXT        IDC_LAST_CHANGE,59,129,105,14,ES_AUTOHSCROLL |
+    CONTROL         "Tree1",IDC_NOTIFY_ICONS,"SysTreeView32",TVS_HASLINES | 
+                    TVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP,7,7,202,31
+    LTEXT           "&Βοηθητικό κείμενο :",IDC_LABEL1,7,44,66,8
+    EDITTEXT        IDC_NOTIFY_TOOLTIP,76,42,133,14,ES_AUTOHSCROLL
+    LTEXT           "&Όνομα παραθύρου :",IDC_LABEL2,7,63,67,8
+    EDITTEXT        IDC_NOTIFY_TITLE,76,60,133,14,ES_AUTOHSCROLL
+    LTEXT           "&Διαδρομή αρχείου :",IDC_LABEL3,7,81,65,8
+    EDITTEXT        IDC_NOTIFY_MODULE,76,78,133,14,ES_AUTOHSCROLL
+    GROUPBOX        "Τρόπος εμφάνησης",IDC_LABEL4,7,96,169,31
+    CONTROL         "&εμφάνηση",IDC_NOTIFY_SHOW,"Button",BS_AUTORADIOBUTTON | 
+                    WS_TABSTOP,14,108,51,10
+    CONTROL         "&απόκριψη",IDC_NOTIFY_HIDE,"Button",BS_AUTORADIOBUTTON,
+                    67,108,47,10
+    CONTROL         "α&υτόματη απόκριψη",IDC_NOTIFY_AUTOHIDE,"Button",
+                    BS_AUTORADIOBUTTON | BS_MULTILINE,118,104,56,19
+    ICON            "",IDC_PICTURE,184,103,20,20
+    LTEXT           "Τελευταία αλαγή :",IDC_LABEL6,7,134,62,8
+    EDITTEXT        IDC_LAST_CHANGE,71,132,105,14,ES_AUTOHSCROLL | 
                     ES_READONLY
-    CONTROL         "sho&w hidden",ID_SHOW_HIDDEN_ICONS,"Button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP,7,154,56,10
+    CONTROL         "εμφάνηση κρυφών",ID_SHOW_HIDDEN_ICONS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,7,155,79,10
     DEFPUSHBUTTON   "&OK",IDOK,91,153,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",IDCANCEL,151,153,50,14
+    PUSHBUTTON      "&’κυρο",IDCANCEL,151,153,50,14
 END
 
 IDD_MDI_SDI DIALOGEX 0, 0, 194, 157
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_APPWINDOW
-CAPTION "Choose Explorer window mode"
+CAPTION "Μορφή του εξερευνητή"
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
-    LTEXT           "Please select your prefered explorer user interface:",
-                    IDC_STATIC,7,7,160,8
-    CONTROL         "&MDI (Multiple Document Interface)",IDC_MDI,"Button",
-                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,124,10
-    CONTROL         "&SDI (Single Document Interface)",IDC_SDI,"Button",
+    LTEXT           "Επιλέξτε την μορφή του εξερευνητή που θέλετε :",
+                    IDC_STATIC,7,7,166,8
+    CONTROL         "&MDI (Μορφή πολλαπλών παραθύρων)",IDC_MDI,"Button",
+                    BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP,7,31,137,10
+    CONTROL         "&SDI (Μορφή μονού παραθύρου)",IDC_SDI,"Button",
                     BS_AUTORADIOBUTTON,7,62,118,10
     CONTROL         170,IDC_STATIC,"Static",SS_BITMAP,145,23,15,13
     CONTROL         171,IDC_STATIC,"Static",SS_BITMAP,145,57,15,13
-    CONTROL         "Open Subfolders in s&eparate windows",
-                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX |
-                    WS_TABSTOP,7,90,135,10
-    LTEXT           "This setting will be used as default for all explorer windows in the future.",
-                    IDC_STATIC,7,111,174,22
+    CONTROL         "’νοιγμα υποφακέλων σε ξεχωριστά παράθυρα",
+                    IDC_SEPARATE_SUBFOLDERS,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,7,90,172,10
+    LTEXT           "Αυτές οι ρυθμίσεις θα χρησιμοποιούνται αυτόματα για όλα τα παράθυρα του εξερευνητή στο μέλλον",
+                    IDC_STATIC,5,108,174,22
     DEFPUSHBUTTON   "&OK",IDOK,29,136,50,14,WS_GROUP
-    PUSHBUTTON      "&Cancel",IDCANCEL,106,136,50,14
+    PUSHBUTTON      "&’κυρο",IDCANCEL,106,136,50,14
 END
 
 IDD_ABOUT_EXPLORER DIALOG DISCARDABLE  0, 0, 199, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Σχετικάμε την Εξερεύνηση του ReactOS"
+CAPTION "Σχετικά με τον εξρευνητή του  ReactOS"
 FONT 10, "MS Sans Serif"
 BEGIN
-    LTEXT           "Εξερεύνηση ReactOS",IDC_ROS_EXPLORER,91,13,104,11
+    LTEXT           "Εξερευνητής του ReactOS",IDC_ROS_EXPLORER,91,13,104,11
     LTEXT           "V 0.9",IDC_VERSION_TXT,91,27,104,8
     LTEXT           "(c) 2003-2005 Martin Fuchs",IDC_STATIC,91,42,104,8
     LTEXT           "",IDC_WIN_VERSION,91,58,98,22
@@ -328,11 +325,11 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_TITLE               "ReactOS Explorer"
+    IDS_TITLE               "Εξερευνητής του ReactOS"
     IDS_START               "έναρξη"
     IDS_LOGOFF              "Αποσύνδεση..."
     IDS_SHUTDOWN            "Τερματισμός..."
-    IDS_RESTART             "Restart..."
+    IDS_RESTART             "Επανεκκίνηση..."
     IDS_LAUNCH              "Εκτέλεση..."
     IDS_START_HELP          "Βοήθεια"
     IDS_SEARCH_FILES        "Αναζήτηση..."
@@ -341,25 +338,25 @@ BEGIN
     IDS_PROGRAMS            "Προγράμματα"
     IDS_SETTINGS            "Ρυθμίσεις"
     IDS_EXPLORE             "Εξερεύνηση"
-    IDS_EMPTY               "(’δειο)"
+    IDS_EMPTY               "(Κενό)"
     IDS_RECENT              "Πρόσφατα έγγραφα"
-    IDS_ADMIN               "Διαχείριση"
+    IDS_ADMIN               "Διαχείρηση"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_STARTMENU           "Startmenu"
-    IDS_MINIMIZE_ALL        "Ελαχιστοποίηση όλων των παραθυρων"
+    IDS_STARTMENU           "Μενού έναρξη"
+    IDS_MINIMIZE_ALL        "Ελαχιστοποίηση όλων των παραθύρων"
     IDS_DESKTOP_NUM         "Επιφάνεια εργασίας %d"
-    IDS_VOLUME              "΄Ένταση ήχου"
+    IDS_VOLUME              "Ένταση ήχου"
     IDS_ITEMS_CUR           "current items"
     IDS_ITEMS_CONFIGURED    "configuration"
     IDS_ITEMS_VISIBLE       "ορατό"
     IDS_ITEMS_HIDDEN        "κρυμμένο"
-    IDS_NOTIFY_SHOW         "εμφάνιση"
+    IDS_NOTIFY_SHOW         "εμφάνηση"
     IDS_NOTIFY_HIDE         "απόκρυψη"
-    IDS_NOTIFY_AUTOHIDE     "autohide"
-    IDS_SHOW_HIDDEN_ICONS   "Εμφάωιση κρυμμένων εικονιδίων"
+    IDS_NOTIFY_AUTOHIDE     "αυτόματη απόκρυψη"
+    IDS_SHOW_HIDDEN_ICONS   "Εμφάνηση κρυμμένων εικονιδίων"
     IDS_HIDE_ICONS          "Απόκρυψη εικονιδίων"
     IDS_TERMINATE           "Τερματισμός της Εξερεύνησης του ROS"
 END
@@ -367,25 +364,25 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_NETWORK             "Δίκτυο"
-    IDS_CONNECTIONS         "Συνδέσεις Δκτύου"
-    IDS_DRIVES              "Drives"
+    IDS_CONNECTIONS         "Συνδέσεις δικτίου"
+    IDS_DRIVES              "Ο υπολογιστής μου"
     IDS_SEARCH_COMPUTER     "Αναζήτηση Υπολογιστή..."
-    IDS_SETTINGS_MENU       "Settings Menu"
-    IDS_CONTROL_PANEL       "Κέντρο Ελέγχου"
+    IDS_SETTINGS_MENU       "Ρυθμίσεις"
+    IDS_CONTROL_PANEL       "Πίνακας ελέγχου"
     IDS_PRINTERS            "Εκτυπωτές"
-    IDS_BROWSE              "Browse Files"
+    IDS_BROWSE              "Εξερεύνηση αρχείων"
     IDS_SEARCH_PRG          "Αναζήτηση Προγράμματος..."
     IDS_ALL_USERS           "All Users\\"
     IDS_SEARCH              "Αναζήτηση"
-    IDS_ABOUT_EXPLORER      "&Σχετικά με την Εξερεύνηση..."
-    IDS_LAUNCH_MANY_PROGRAMS
-                            "Έχετε επιλέξει παραπάνω του ενός προγράμματα.\nΕίστε σίγουροι ότι θέλετε να εκτελεστούν όλα;"
+    IDS_ABOUT_EXPLORER      "Σχετικά με τον εξερευνητή"
+    IDS_LAUNCH_MANY_PROGRAMS 
+                            "Έχετε επιλέξει παραπάνω του ενός προγράμματα.\nΕίστε σίγουροι οτι θέλετε να εκτελεστούν όλα;"
     IDS_DESKTOPBAR_SETTINGS "Ρυθμίσεις Επιφάνειας Εργασίας"
     IDS_DESKTOP             "Επιφάνεια Εργασίας"
-    IDS_TASKBAR             "Taskbar"
+    IDS_TASKBAR             "Γραμμή εργασιών"
 END
 
-#endif    // English (U.S.) resources
+#endif    // Greek resources
 /////////////////////////////////////////////////////////////////////////////
 
 

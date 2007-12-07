@@ -1,0 +1,171 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_KEYBSPEED DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Ταχύτητα"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Επανάληψη χαρακτήρα", -1, 5, 5, 230, 130
+  ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
+  LTEXT "&Καθυστέρηση επανάλψης:", -1, 36, 15, 100, 10
+  LTEXT "Μεγάλη", -1, 36, 30, 25, 10
+  LTEXT "Μικρή", -1, 197, 30, 20, 10
+  CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
+  ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
+  LTEXT "&Ρυθμός επενάληψης:", -1, 36, 60, 70, 10
+  LTEXT "Μικρός", -1, 36, 75, 23, 10
+  LTEXT "Μεγάλος", -1, 197, 75, 28, 10
+  CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 75, 130, 17
+  LTEXT "Πατήστε εδώ και κρατήστε πατημένο ένα κουμπί για να δοκιμάσετε τον ρυθμό επανάληψης:", -1, 15, 97, 150, 15
+  EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
+  GROUPBOX "&Ρυθμός επανεμφάνησης δρομέα:", -1, 5, 145, 230, 50
+  LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
+  LTEXT "Μικρός", -1, 40, 165, 30, 10
+  LTEXT "Μεγάλος", -1, 200, 165, 30, 10
+  CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
+END
+
+IDD_HARDWARE DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Υλικό"
+FONT 8, "MS Shell Dlg"
+BEGIN
+END
+
+IDD_CLICK_LOCK DIALOGEX 0, 0, 246, 100
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "Κλείδωμα κλίκ"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Μικρό", -1, 35,  50, 30, 10
+  LTEXT "Μεγάλο", -1, 140, 50, 30, 10
+  CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
+  PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
+  PUSHBUTTON "’&κυρο", IDCANCEL, 175, 75, 50, 15
+  LTEXT "&Επιλέξτε πόσο πρέπει να κρατήσετε πατημένο το κουμπί του ποντικιού μέχρι να κλειδωθεί",-1,60,15,170,30  
+  ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
+END
+
+IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Κουμπί"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Ρυθμίσεις κουμπιών", -1, 5, 5, 230, 70
+  CHECKBOX "&Εναλλαγή αριστερού και δεξιού κουμπιού", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 155, 10
+  CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
+  LTEXT "Πατήστε εδώ για να ορίσετε το αριστερό κουμπί ως το κουμπί με το οποίο θα εκτελείτε βασικές εργασίες όπως η επιλογή και το σύρσιμο.", -1, 10, 30, 150, 40
+  GROUPBOX "Ταχύτητα διπλού κλικ", -1, 5, 75, 230, 70
+  LTEXT "Κάντε διπλό κλικ στον φάκελο για να ελένξετε τις ρυθμίσεις σας. Αν ο φακελος δεν αλλάζει, δοκιμάστε μια πιο αργή ρύθμιση.", -1, 10, 85, 150, 30
+  LTEXT "&Ταχύτητα: Μικρή", -1, 10, 120, 95, 8
+  LTEXT "Μεγάλη", -1, 136, 120, 30, 8
+  CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 66, 120, 70, 17
+  CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
+  GROUPBOX "Κλείδωμα κλικ", -1, 5, 150, 230, 70
+  CHECKBOX "&Ενεργοποίηση", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  PUSHBUTTON "&Ρυθμίσεις...", IDC_BUTTON_CLICK_LOCK, 170, 162, 50, 13
+  LTEXT "Σας δίνει την δυνατότητα να επιλέξετε ή να σύρετε χωρίς να καρατάτε πατημένο το κουλπί του ποντικιού. Για να το ενεργοποιήσετε ή να το απενεργοποιήσετε, κρατήστε πατημένο το κουμπί του ποντικιού.", -1, 10, 180, 190, 33
+END
+
+IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Δείκτης"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Συνδιασμός", -1, 5, 5, 170, 45
+  COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 155, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+  PUSHBUTTON "&Αποθήκευση Ώς...", IDC_BUTTON_SAVEAS_SCHEME, 50, 30, 70, 15
+  PUSHBUTTON "&Διαγραφή", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+  CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
+  LTEXT "&Επεξεργσία", -1, 5, 60, 40, 10
+  LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
+  CHECKBOX "Ε&νεργοποίηση σκιάς δείκτη", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
+  PUSHBUTTON "&Χρήση προεπιλογής", IDC_BUTTON_USE_DEFAULT_CURSOR, 110, 200, 70, 15
+  PUSHBUTTON "&Αναζήτηση", IDC_BUTTON_BROWSE_CURSOR, 185, 200, 50, 15
+END
+
+IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
+CAPTION "Αποθήκευση συνδιασμού"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  LTEXT "Αποθήκευση του τρέχοντος συνδιασμού με το όνομα:", -1, 5, 5, 100, 10
+  EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
+  PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
+  PUSHBUTTON "&’κυρο", IDCANCEL, 115, 45, 50, 15
+END
+
+
+IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Ιδιότητες δείκτη"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Κίνηση", -1, 5, 5, 230, 60
+  LTEXT "&Επιλέξτε την ταχύτητα του δείκτη:", -1, 60, 15, 130, 10
+  LTEXT "Μικρή", -1, 60, 30, 20, 10
+  CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
+  LTEXT "Μεγάλη", -1, 170, 30, 25, 10
+  ICON -1, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
+  CHECKBOX "&Βελτίωση της ακρίβειας του δείκτη", IDC_CHECK_POINTER_PRECISION, 60, 50, 130, 10
+  GROUPBOX "Συγκράτηση", -1, 5, 65, 230, 40
+  CHECKBOX "Αυτόματη μετακίνηση του δείκτη στο επιλεγμένο κουμπί ενός παραθύρου διαλόγου",
+           IDC_CHECK_SNAP_TO, 60, 78, 170, 20, BS_MULTILINE | BS_TOP
+  ICON -1, IDC_ICON_SNAP_TO, 15, 75, 15, 15
+  GROUPBOX "Ορατήτα", -1, 5, 105, 230, 95
+  CHECKBOX "&Εμφάνιση του ίχνους του δείκτη", IDC_CHECK_POINTER_TRAIL, 60, 115, 130, 10
+  LTEXT "Μικρό", IDC_TEXT_TRAIL_SHORT, 60, 130, 30, 10
+  LTEXT "Μεγάλο", IDC_TEXT_TRAIL_LONG, 160, 130, 30, 10
+  ICON -1, IDC_ICON_POINTER_TRAIL, 15, 115, 15, 15
+  CONTROL "", IDC_SLIDER_POINTER_TRAIL ,"msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
+  CHECKBOX "&Απόκρυψη του δείκτη κατά την πληκτρολόγηση", IDC_CHECK_HIDE_POINTER, 60, 150, 170, 10
+  ICON -1, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
+  CHECKBOX "&Εμφάνηση της θέσης του δείκτη όταν πατάω CTRL",
+           IDC_CHECK_SHOW_POINTER, 60, 175, 170, 20, BS_MULTILINE | BS_TOP
+  ICON -1, IDC_ICON_SHOW_POINTER, 15, 170, 15, 15
+END
+
+IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
+CAPTION "Τροχός"
+FONT 8, "MS Shell Dlg"
+BEGIN
+  GROUPBOX "Μετακίνηση", -1, 5, 5, 230, 80
+  ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
+  LTEXT "Μετακίνηση κατα την κύλιση του τροχού κατα μια θέση:", -1, 60, 15, 150, 20
+  RADIOBUTTON "&Αριθμός γραμμών την φορά", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+  RADIOBUTTON "&Ολόκληρη σελίδα", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
+  EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
+  CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
+END
+
+STRINGTABLE
+BEGIN
+  IDS_CPLNAME_1 "Ποντίκι"
+  IDS_CPLDESCRIPTION_1 "Αλλάξτε τις ρυθμίσεις του πονιτκιού."
+  IDS_CPLNAME_2 "Πληκρολόγιο"
+  IDS_CPLDESCRIPTION_2 "Αλλάξτε τις ρυθμίσεις του πληκρολογίου."
+  IDS_ARROW "Κανονικός δείκτης"
+  IDS_HELP "Δείκτης βοήθειας"
+  IDS_APPSTARTING "Εργασία στο παρασκήνιο"
+  IDS_WAIT "Απασχολημένο"
+  IDS_CROSSHAIR "Επιλογή ακριβείας"
+  IDS_IBEAM "Επιλογή κειμένου"
+  IDS_NWPEN "Χειρόγραφο"
+  IDS_NO "Μη διαθέσιμο"
+  IDS_SIZENS "Κατακόρυφη αλλαγή μεγέθους"
+  IDS_SIZEWE "Οριζόντια αλλαγή μεγέθους"
+  IDS_SIZENWSE "Διαγώνια αλλαγή μεγέθους 1"
+  IDS_SIZENESW "Διαγώνια αλλαγή μεγέθους 2"
+  IDS_SIZEALL "Μετακίνηση"
+  IDS_UPARROW "Εναλλακτική επιλογή"
+  IDS_HAND "Επιλογή συνδέσμου"
+  IDS_NONE "(Χωρίς επιλογή)"
+  IDS_SYSTEM_SCHEME "(Συνδιασμός συστήματος)"
+  IDS_BROWSE_FILTER "Δείκτες (*.ani, *.cur)\0*.ani;*.cur\0Κινούμενοι δείκτες (*.ani)\0*.ani\0Ακίνητοι δείκτες (*.cur)\0*.cur\0All Files\0*.*\0\0"
+  IDS_BROWSE_TITLE "Αναζήτηση"
+  IDS_REMOVE_TITLE "Επιβαιβέωση διαγραφής του συνδιασμού"
+  IDS_REMOVE_TEXT "Είστε σίγουροι οτι θέλετε να διαγράψετε τον συνδιασμό δεικτών '%s';"
+  IDS_OVERWRITE_TITLE "Επιβαιβέωση αντικατάστασης του συνδιασμού"
+  IDS_OVERWRITE_TEXT "Το όνομα του συνδιασμού δεικτών που επιλέξατε υπάρχει ήδη. Είστε σίγουροι οτι θέλετε να αντικαταστήσετε τον συνδιασμό δεικτών;"
+END
