@@ -343,6 +343,8 @@ NtGdiSetDIBitsToDeviceInternal(
     SIZEL SourceSize;
     XLATEOBJ *XlateObj = NULL;
 
+    if (!Bits) return 0;
+
     pDC = DC_LockDc(hDC);
     if (!pDC)
     {
