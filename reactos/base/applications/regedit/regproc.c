@@ -365,45 +365,6 @@ static void REGPROC_unescape_string(LPSTR str)
 }
 
 /******************************************************************************
- * Parses HKEY_SOME_ROOT\some\key\path to get the root key handle and
- * extract the key path (what comes after the first '\').
- */
-static BOOL parseKeyName(LPSTR lpKeyName, HKEY *hKey, LPSTR *lpKeyPath)
-{
-    LPSTR lpSlash;
-    unsigned int i, len;
-
-    if (lpKeyName == NULL)
-        return FALSE;
-
-    lpSlash = strchr(lpKeyName, '\\');
-    if (lpSlash)
-    {
-        len = lpSlash-lpKeyName;
-    }
-    else
-    {
-        len = strlen(lpKeyName);
-        lpSlash = lpKeyName+len;
-    }
-    *hKey = NULL;
-    for (i = 0; i < REG_CLASS_NUMBER; i++) {
-        if (strncmp(lpKeyName, reg_class_names[i], len) == 0 &&
-            len == strlen(reg_class_names[i])) {
-            *hKey = reg_class_keys[i];
-            break;
-        }
-    }
-    if (*hKey == NULL)
-        return FALSE;
-
-    if (*lpSlash != '\0')
-        lpSlash++;
-    *lpKeyPath = lpSlash;
-    return TRUE;
-}
-
-/******************************************************************************
  * Sets the value with name val_name to the data in val_data for the currently
  * opened key.
  *
@@ -1457,7 +1418,53 @@ BOOL import_registry_file(LPTSTR filename)
 }
 
 /******************************************************************************
- 
+ * Recursive function which removes the registry key with all subkeys.
+ */
+static void delete_branch(HKEY key,
+                   CHAR **reg_key_name_buf, DWORD *reg_key_name_len)
+{
+    HKEY branch_key;
+    DWORD max_sub_key_len;
+    DWORD subkeys;
+    DWORD curr_len;
+    LONG ret;
+    long int i;
+
+    if (RegOpenKeyA(key, *reg_key_name_buf, &branch_key) != ERROR_SUCCESS) {
+        REGPROC_print_error();
+    }
+
+    /* get size information and resize the buffers if necessary */
+    if (RegQueryInfoKey(branch_key, NULL, NULL, NULL,
+                        &subkeys, &max_sub_key_len,
+                        NULL, NULL, NULL, NULL, NULL, NULL
+                       ) != ERROR_SUCCESS) {
+        REGPROC_print_error();
+    }
+    curr_len = (DWORD) strlen(*reg_key_name_buf);
+    REGPROC_resize_char_buffer(reg_key_name_buf, reg_key_name_len,
+                               max_sub_key_len + curr_len + 1);
+
+    (*reg_key_name_buf)[curr_len] = '\\';
+    for (i = subkeys - 1; i >= 0; i--) {
+        DWORD buf_len = *reg_key_name_len - curr_len;
+
+        ret = RegEnumKeyExA(branch_key, i, *reg_key_name_buf + curr_len + 1,
+                            &buf_len, NULL, NULL, NULL, NULL);
+        if (ret != ERROR_SUCCESS &&
+                ret != ERROR_MORE_DATA &&
+                ret != ERROR_NO_MORE_ITEMS) {
+            REGPROC_print_error();
+        } else {
+            delete_branch(key, reg_key_name_buf, reg_key_name_len);
+        }
+    }
+    (*reg_key_name_buf)[curr_len] = '\0';
+    RegCloseKey(branch_key);
+    RegDeleteKeyA(key, *reg_key_name_buf);
+}
+
+/******************************************************************************
  * Removes the registry key with all subkeys. Parses full key name.
  *
  * Parameters:
@@ -1466,24 +1473,33 @@ BOOL import_registry_file(LPTSTR filename)
  */
 void delete_registry_key(CHAR *reg_key_name)
 {
-    CHAR *key_name;
-    HKEY key_class;
+    CHAR *branch_name;
+    DWORD branch_name_len;
+    HKEY reg_key_class;
+    HKEY branch_key;
 
     if (!reg_key_name || !reg_key_name[0])
         return;
-
-    if (!parseKeyName(reg_key_name, &key_class, &key_name)) {
+    /* open the specified key */
+    if (!getRegClass(reg_key_name, &reg_key_class)) {
         fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
                 getAppName(), reg_key_name);
         exit(1);
     }
-    if (!*key_name) {
+    branch_name = getRegKeyName(reg_key_name);
+    CHECK_ENOUGH_MEMORY(branch_name);
+    branch_name_len = (DWORD) strlen(branch_name);
+    if (!branch_name[0]) {
         fprintf(stderr,"%s: Can't delete registry class '%s'\n",
                 getAppName(), reg_key_name);
         exit(1);
     }
-
-    RegDeleteTreeA(key_class, key_name);
+    if (RegOpenKeyA(reg_key_class, branch_name, &branch_key) == ERROR_SUCCESS) {
+        /* check whether the key exists */
+        RegCloseKey(branch_key);
+        delete_branch(reg_key_class, &branch_name, &branch_name_len);
+    }
+    HeapFree(GetProcessHeap(), 0, branch_name);
 }
 
 /******************************************************************************
