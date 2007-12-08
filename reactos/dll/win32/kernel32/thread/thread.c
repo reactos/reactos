@@ -489,10 +489,10 @@ SuspendThread(HANDLE hThread)
 /*
  * @implemented
  */
-DWORD
+DWORD_PTR
 WINAPI
 SetThreadAffinityMask(HANDLE hThread,
-                      DWORD dwThreadAffinityMask)
+                      DWORD_PTR dwThreadAffinityMask)
 {
     THREAD_BASIC_INFORMATION ThreadBasic;
     KAFFINITY AffinityMask;
