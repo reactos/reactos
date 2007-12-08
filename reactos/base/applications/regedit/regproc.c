@@ -157,16 +157,14 @@ void get_file_name(CHAR **command_line, CHAR *file_name)
 /******************************************************************************
  * Converts a hex representation of a DWORD into a DWORD.
  */
-DWORD convertHexToDWord(char *str, BYTE *buf)
+static BOOL convertHexToDWord(char* str, DWORD *dw)
 {
-    DWORD dw;
-    char xbuf[9];
-
-    memcpy(xbuf,str,8);
-    xbuf[8]='\0';
-    sscanf(xbuf,"%08lx",&dw);
-    memcpy(buf,&dw,sizeof(DWORD));
-    return sizeof(DWORD);
+    char dummy;
+    if (strlen(str) > 8 || sscanf(str, "%lx%c", dw, &dummy) != 1) {
+        fprintf(stderr,"%s: ERROR, invalid hex value\n", getAppName());
+        return FALSE;
+    }
+    return TRUE;
 }
 
 /******************************************************************************
@@ -219,46 +217,45 @@ char* convertHexToDWORDStr(BYTE *buf, ULONG bufLen)
 }
 
 /******************************************************************************
- * Converts a hex comma separated values list into a hex list.
- * The Hex input string must be in exactly the correct form.
- */
-DWORD convertHexCSVToHex(char *str, BYTE *buf, ULONG bufLen)
+* Converts a hex comma separated values list into a binary string.
+  */
+static BYTE* convertHexCSVToHex(char *str, DWORD *size)
 {
-    char *s = str;  /* Pointer to current */
-    char *b = (char*) buf;  /* Pointer to result  */
+    char *s;
+    BYTE *d, *data;
 
-    size_t strLen    = strlen(str);
-    size_t strPos    = 0;
-    DWORD byteCount = 0;
+    /* The worst case is 1 digit + 1 comma per byte */
+    *size=(strlen(str)+1)/2;
+    data=HeapAlloc(GetProcessHeap(), 0, *size);
+    CHECK_ENOUGH_MEMORY(data);
 
-    memset(buf, 0, bufLen);
-
-    /*
-     * warn the user if we are here with a string longer than 2 bytes that does
-     * not contains ",".  It is more likely because the data is invalid.
-     */
-    if ( ( strLen > 2) && ( strchr(str, ',') == NULL) )
-        fprintf(stderr,"%s: WARNING converting CSV hex stream with no comma, "
-                "input data seems invalid.\n", getAppName());
-    if (strLen > 3*bufLen)
-        fprintf(stderr,"%s: ERROR converting CSV hex stream.  Too long\n",
-                getAppName());
-
-    while (strPos < strLen) {
-        char xbuf[3];
+    s = str;
+    d = data;
+    *size=0;
+    while (*s != '\0') {
         UINT wc;
+        char dummy;
 
-        memcpy(xbuf,s,2); xbuf[2]='\0';
-        sscanf(xbuf,"%02x",&wc);
-        if (byteCount < bufLen)
-            *b++ =(unsigned char)wc;
-
-        s+=3;
-        strPos+=3;
-        byteCount++;
+        if (s[1] != ',' && s[1] != '\0' && s[2] != ',' && s[2] != '\0') {
+            fprintf(stderr,"%s: ERROR converting CSV hex stream. Invalid sequence at '%s'\n",
+                    getAppName(), s);
+            HeapFree(GetProcessHeap(), 0, data);
+            return NULL;
+        }
+        if (sscanf(s, "%x%c", &wc, &dummy) < 1 || dummy != ',') {
+            fprintf(stderr,"%s: ERROR converting CSV hex stream. Invalid value at '%s'\n",
+                    getAppName(), s);
+            HeapFree(GetProcessHeap(), 0, data);
+            return NULL;
+        }
+        *d++ =(BYTE)wc;
+        (*size)++;
+        /* Skip one or two digits and any comma */
+        while (*s && *s!=',') s++;
+        if (*s) s++;
     }
 
-    return byteCount;
+    return data;
 }
 
 /******************************************************************************
@@ -417,11 +414,9 @@ static BOOL parseKeyName(LPSTR lpKeyName, HKEY *hKey, LPSTR *lpKeyPath)
 LONG setValue(LPSTR val_name, LPSTR val_data)
 {
     LONG res;
-    DWORD   dwDataType, dwParseType = REG_BINARY;
+    DWORD  dwDataType, dwParseType;
     LPBYTE lpbData;
-    BYTE   convert[KEY_MAX_LEN];
-    BYTE *bBigBuffer = 0;
-    DWORD  dwLen;
+    DWORD  dwData, dwLen;
 
     if ( (val_name == NULL) || (val_data == NULL) )
         return ERROR_INVALID_PARAMETER;
@@ -449,21 +444,16 @@ LONG setValue(LPSTR val_name, LPSTR val_data)
     }
     else if (dwParseType == REG_DWORD)  /* Convert the dword types */
     {
-        dwLen   = convertHexToDWord(val_data, convert);
-        lpbData = convert;
+        if (!convertHexToDWord(val_data, &dwData))
+            return ERROR_INVALID_DATA;
+        lpbData = (BYTE*)&dwData;
+        dwLen = sizeof(dwData);    
     }
     else if (dwParseType == REG_BINARY) /* Convert the binary data */
     {
-        size_t b_len = strlen (val_data)+2/3;
-        if (b_len > KEY_MAX_LEN) {
-            bBigBuffer = HeapAlloc (GetProcessHeap(), 0, b_len);
-            CHECK_ENOUGH_MEMORY(bBigBuffer);
-            dwLen = convertHexCSVToHex(val_data, bBigBuffer, (ULONG) b_len);
-            lpbData = bBigBuffer;
-        } else {
-            dwLen   = convertHexCSVToHex(val_data, convert, KEY_MAX_LEN);
-            lpbData = convert;
-        }
+        lpbData = convertHexCSVToHex(val_data, &dwLen);
+        if (!lpbData)
+            return ERROR_INVALID_DATA;    
     }
     else                                /* unknown format */
     {
@@ -479,8 +469,8 @@ LONG setValue(LPSTR val_name, LPSTR val_data)
                lpbData,
                dwLen);
 
-    if (bBigBuffer)
-        HeapFree (GetProcessHeap(), 0, bBigBuffer);
+    if (dwParseType == REG_BINARY)
+        HeapFree(GetProcessHeap(), 0, lpbData);
     return res;
 }
 
