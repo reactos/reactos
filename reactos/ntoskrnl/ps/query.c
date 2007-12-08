@@ -120,11 +120,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set return length */
             Length = sizeof(PROCESS_BASIC_INFORMATION);
 
-			if ( ProcessInformationLength != Length )
-			{
-				Status = STATUS_INFO_LENGTH_MISMATCH;
-				break;
-			}
+            if ( ProcessInformationLength != Length )
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
             /* Protect writes with SEH */
             _SEH_TRY
             {
@@ -132,7 +132,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 ProcessBasicInfo->ExitStatus = Process->ExitStatus;
                 ProcessBasicInfo->PebBaseAddress = Process->Peb;
                 ProcessBasicInfo->AffinityMask = Process->Pcb.Affinity;
-                ProcessBasicInfo->UniqueProcessId = (ULONG)Process->
+                ProcessBasicInfo->UniqueProcessId = (ULONG_PTR)Process->
                                                     UniqueProcessId;
                 ProcessBasicInfo->InheritedFromUniqueProcessId =
                     (ULONG)Process->InheritedFromUniqueProcessId;
@@ -151,12 +151,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         case ProcessQuotaLimits:
         case ProcessIoCounters:
 
-			Length = sizeof(IO_COUNTERS);
-			if ( ProcessInformationLength != Length )
-			{
-				Status = STATUS_INFO_LENGTH_MISMATCH;
-				break;
-			}
+            Length = sizeof(IO_COUNTERS);
+            if ( ProcessInformationLength != Length )
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             Status = STATUS_NOT_IMPLEMENTED;
             break;
@@ -167,11 +167,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(KERNEL_USER_TIMES);
 
-			if ( ProcessInformationLength != Length )
-			{
-				Status = STATUS_INFO_LENGTH_MISMATCH;
-				break;
-			}
+            if ( ProcessInformationLength != Length )
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Protect writes with SEH */
             _SEH_TRY
@@ -225,11 +225,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length*/
             Length = sizeof(ULONG);
 
-			if ( ProcessInformationLength != Length )
-			{
-				Status = STATUS_INFO_LENGTH_MISMATCH;
-				break;
-			}
+            if ( ProcessInformationLength != Length )
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Count the number of handles this process has */
             HandleCount = ObpGetHandleCountByHandleTable(Process->ObjectTable);
@@ -279,11 +279,11 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             /* Set the return length */
             Length = sizeof(VM_COUNTERS);
 
-			if ( ProcessInformationLength != Length )
-			{
-				Status = STATUS_INFO_LENGTH_MISMATCH;
-				break;
-			}
+            if ( ProcessInformationLength != Length )
+            {
+                Status = STATUS_INFO_LENGTH_MISMATCH;
+                break;
+            }
 
             /* Enter SEH for write safety */
             _SEH_TRY
