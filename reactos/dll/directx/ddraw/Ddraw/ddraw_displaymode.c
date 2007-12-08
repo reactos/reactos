@@ -205,6 +205,8 @@ Main_DirectDraw_EnumDisplayModes4(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
 HRESULT WINAPI
 Main_DirectDraw_SetDisplayMode (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DWORD dwHeight, DWORD dwBPP)
 {
+    DX_WINDBG_trace();
+
     return Main_DirectDraw_SetDisplayMode2 (This, dwWidth, dwHeight, dwBPP, 0, 0 );
 }
 
@@ -255,12 +257,23 @@ Main_DirectDraw_SetDisplayMode2 (LPDDRAWI_DIRECTDRAW_INT This, DWORD dwWidth, DW
                 DevMode.dmBitsPerPel = dwBPP;
                 DevMode.dmDisplayFrequency = dwRefreshRate;
 
+                DX_WINDBG_trace_res(dwHeight, dwWidth, dwBPP, dwRefreshRate);
+
                 retval = ChangeDisplaySettings(&DevMode, CDS_FULLSCREEN);
                 /* FIXME: Are we supposed to set CDS_SET_PRIMARY as well ? */
 
                 if(retval == DISP_CHANGE_BADMODE)
                 {
-                    ret = DDERR_UNSUPPORTED;
+                    /* Note : it seam ms ddraw ignore this and try using the bad mode any case.
+                     * tested with Ati HD2400 that only support 16 and 32 Bpp in windows
+                     */
+                    DX_STUB_str("Warning ChangeDisplaySettings return DISP_CHANGE_BADMODE, but ddraw.dll ignore it\n");
+
+                    //ret = DDERR_UNSUPPORTED;
+                    BOOL ModeChanged;
+                    This->lpLcl->lpGbl->hDD = This->lpLcl->hDD;
+                    DdReenableDirectDrawObject(This->lpLcl->lpGbl, &ModeChanged);
+                    StartDirectDraw((LPDIRECTDRAW)This, 0, TRUE);
                 }
                 else if(retval != DISP_CHANGE_SUCCESSFUL)
                 {
