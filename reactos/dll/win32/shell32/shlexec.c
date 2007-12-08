@@ -632,11 +632,7 @@ UINT SHELL_FindExecutable(LPCWSTR lpPath, LPCWSTR lpFile, LPCWSTR lpOperation,
                      * attached */
                     TRACE("found %s\n", debugstr_w(lpResult));
                     return 33;
-
-                    /* Greater than 32 to indicate success FIXME According to the
-                     * docs, I should be returning a handle for the
-                     * executable. Does this mean I'm supposed to open the
-                     * executable file or something? More RTFM, I guess... */
+                   /* Greater than 32 to indicate success */
                 }
                 tok = p;
             }
@@ -756,7 +752,8 @@ static unsigned dde_connect(WCHAR* key, const WCHAR* start, WCHAR* ddeexec,
 {
     static const WCHAR wApplication[] = {'\\','a','p','p','l','i','c','a','t','i','o','n',0};
     static const WCHAR wTopic[] = {'\\','t','o','p','i','c',0};
-    WCHAR *     endkey = key + strlenW(key);
+    WCHAR       regkey[256];
+    WCHAR *     endkey = regkey + strlenW(key);
     WCHAR       app[256], topic[256], ifexec[256], res[256];
     LONG        applen, topiclen, ifexeclen;
     WCHAR *     exec;
@@ -769,9 +766,10 @@ static unsigned dde_connect(WCHAR* key, const WCHAR* start, WCHAR* ddeexec,
     unsigned    ret = SE_ERR_NOASSOC;
     BOOL unicode = !(GetVersion() & 0x80000000);
 
+    strcpyW(regkey, key);
     strcpyW(endkey, wApplication);
     applen = sizeof(app);
-    if (RegQueryValueW(HKEY_CLASSES_ROOT, key, app, &applen) != ERROR_SUCCESS)
+    if (RegQueryValueW(HKEY_CLASSES_ROOT, regkey, app, &applen) != ERROR_SUCCESS)
     {
         WCHAR command[1024], fullpath[MAX_PATH];
         static const WCHAR wSo[] = { '.','s','o',0 };
@@ -822,7 +820,7 @@ static unsigned dde_connect(WCHAR* key, const WCHAR* start, WCHAR* ddeexec,
 
     strcpyW(endkey, wTopic);
     topiclen = sizeof(topic);
-    if (RegQueryValueW(HKEY_CLASSES_ROOT, key, topic, &topiclen) != ERROR_SUCCESS)
+    if (RegQueryValueW(HKEY_CLASSES_ROOT, regkey, topic, &topiclen) != ERROR_SUCCESS)
     {
         static const WCHAR wSystem[] = {'S','y','s','t','e','m',0};
         strcpyW(topic, wSystem);
@@ -864,7 +862,7 @@ static unsigned dde_connect(WCHAR* key, const WCHAR* start, WCHAR* ddeexec,
         }
         strcpyW(endkey, wIfexec);
         ifexeclen = sizeof(ifexec);
-        if (RegQueryValueW(HKEY_CLASSES_ROOT, key, ifexec, &ifexeclen) == ERROR_SUCCESS)
+        if (RegQueryValueW(HKEY_CLASSES_ROOT, regkey, ifexec, &ifexeclen) == ERROR_SUCCESS)
         {
             exec = ifexec;
         }
@@ -1172,7 +1170,7 @@ static HRESULT shellex_run_context_menu_default( IShellExtInit *obj,
 
     memset( &ici, 0, sizeof ici );
     ici.cbSize = sizeof ici;
-    ici.fMask = CMIC_MASK_UNICODE;
+    ici.fMask = CMIC_MASK_UNICODE | (sei->fMask & (SEE_MASK_NOASYNC|SEE_MASK_ASYNCOK|SEE_MASK_FLAG_NO_UI));
     ici.nShow = sei->nShow;
     ici.lpVerb = MAKEINTRESOURCEA( def );
     ici.hwnd = sei->hwnd;
@@ -1268,7 +1266,7 @@ static LONG ShellExecute_FromContextMenu( LPSHELLEXECUTEINFOW sei )
         i = 0;
         while ( 1 )
         {
-            r = RegEnumKeyW( hkeycm, i++, szguid, 39 );
+            r = RegEnumKeyW( hkeycm, i++, szguid, sizeof(szguid)/sizeof(szguid[0]) );
             if ( r != ERROR_SUCCESS )
                 break;
 

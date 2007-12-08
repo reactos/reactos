@@ -708,6 +708,7 @@ static HRESULT WINAPI ISF_MyComputer_fnGetDisplayNameOf (IShellFolder2 *iface,
         {
             /* Neither a shell namespace extension nor a drive letter. */
             ERR("Wrong pidl type\n");
+            CoTaskMemFree(pszPath);
             return E_INVALIDARG;
         }
     }

@@ -469,7 +469,7 @@ static HRESULT WINAPI RecycleBin_GetDefaultColumnState(IShellFolder2 *iface, UIN
 {
     RecycleBin *This = (RecycleBin *)iface;
     TRACE("(%p, %d, %p)\n", This, iColumn, pcsFlags);
-    if (iColumn < 0 || iColumn >= COLUMNS_COUNT)
+    if (iColumn >= COLUMNS_COUNT)
         return E_INVALIDARG;
     *pcsFlags = RecycleBinColumns[iColumn].pcsFlags;
     return S_OK;
@@ -488,7 +488,7 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
     WCHAR buffer[MAX_PATH];
 
     TRACE("(%p, %p, %d, %p)\n", This, pidl, iColumn, pDetails);
-    if (iColumn < 0 || iColumn >= COLUMNS_COUNT)
+    if (iColumn >= COLUMNS_COUNT)
         return E_FAIL;
     pDetails->fmt = RecycleBinColumns[iColumn].fmt;
     pDetails->cxChar = RecycleBinColumns[iColumn].cxChars;
@@ -527,15 +527,14 @@ static HRESULT WINAPI RecycleBin_GetDetailsOf(IShellFolder2 *iface, LPCITEMIDLIS
     }
 
     pDetails->str.uType = STRRET_WSTR;
-    pDetails->str.u.pOleStr = StrDupW(buffer);
-    return (pDetails->str.u.pOleStr != NULL ? S_OK : E_OUTOFMEMORY);
+    return SHStrDupW(buffer, &pDetails->str.u.pOleStr);
 }
 
 static HRESULT WINAPI RecycleBin_MapColumnToSCID(IShellFolder2 *iface, UINT iColumn, SHCOLUMNID *pscid)
 {
     RecycleBin *This = (RecycleBin *)iface;
     TRACE("(%p, %d, %p)\n", This, iColumn, pscid);
-    if (iColumn<0 || iColumn>=COLUMNS_COUNT)
+    if (iColumn>=COLUMNS_COUNT)
         return E_INVALIDARG;
     pscid->fmtid = *RecycleBinColumns[iColumn].fmtId;
     pscid->pid = RecycleBinColumns[iColumn].pid;

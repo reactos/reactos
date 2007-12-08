@@ -213,6 +213,8 @@
  251 stdcall -noname PathRemoveArgs(ptr) PathRemoveArgsAW
  255 stdcall Options_RunDLLA(ptr ptr str long)
  256 stdcall @(ptr ptr) SHELL32_256
+ 258 stdcall -noname LinkWindow_RegisterClass()
+ 259 stdcall -noname LinkWindow_UnregisterClass()
  260 stdcall Options_RunDLLW(ptr ptr wstr long)
 #299 stub Shl1632_ThunkData32
 #300 stub Shl3216_ThunkData32

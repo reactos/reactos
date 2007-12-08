@@ -341,7 +341,6 @@ HRESULT WINAPI ILLoadFromStream (IStream * pStream, LPITEMIDLIST * ppPidl)
  */
 HRESULT WINAPI ILSaveToStream (IStream * pStream, LPCITEMIDLIST pPidl)
 {
-    LPCITEMIDLIST    pidl;
     WORD        wLen = 0;
     HRESULT        ret = E_FAIL;
 
@@ -349,12 +348,7 @@ HRESULT WINAPI ILSaveToStream (IStream * pStream, LPCITEMIDLIST pPidl)
 
     IStream_AddRef (pStream);
 
-    pidl = pPidl;
-    while (pidl->mkid.cb)
-    {
-        wLen += sizeof(WORD) + pidl->mkid.cb;
-        pidl = ILGetNext(pidl);
-    }
+    wLen = ILGetSize(pPidl);
 
     if (SUCCEEDED(IStream_Write(pStream, (LPVOID)&wLen, 2, NULL)))
     {

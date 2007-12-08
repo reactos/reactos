@@ -65,7 +65,7 @@ BOOL HCR_MapTypeToValueW(LPCWSTR szExtension, LPWSTR szFileType, LONG len, BOOL 
 
 	lstrcpynW(szTemp + (bPrependDot?1:0), szExtension, MAX_EXTENSION_LENGTH);
 
-	if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, 0x02000000, &hkey))
+	if (RegOpenKeyExW(HKEY_CLASSES_ROOT, szTemp, 0, KEY_READ, &hkey))
 	{
 	  return FALSE;
 	}
@@ -99,7 +99,7 @@ BOOL HCR_MapTypeToValueA(LPCSTR szExtension, LPSTR szFileType, LONG len, BOOL bP
 
 	lstrcpynA(szTemp + (bPrependDot?1:0), szExtension, MAX_EXTENSION_LENGTH);
 
-	if (RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, 0x02000000, &hkey))
+	if (RegOpenKeyExA(HKEY_CLASSES_ROOT, szTemp, 0, KEY_READ, &hkey))
 	{
 	  return FALSE;
 	}
@@ -182,7 +182,7 @@ BOOL HCR_GetExecuteCommandW( HKEY hkeyClass, LPCWSTR szClass, LPCWSTR szVerb, LP
 	TRACE("%p %s %s %p\n", hkeyClass, debugstr_w(szClass), debugstr_w(szVerb), szDest);
 
 	if (szClass)
-            RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, 0x02000000, &hkeyClass);
+            RegOpenKeyExW(HKEY_CLASSES_ROOT, szClass, 0, KEY_READ, &hkeyClass);
         if (!hkeyClass)
             return FALSE;
         ret = FALSE;
@@ -280,7 +280,7 @@ BOOL HCR_GetDefaultIconW(LPCWSTR szClass, LPWSTR szDest, DWORD len, int* picon_i
 	lstrcpynW(sTemp, szClass, MAX_PATH);
 	lstrcatW(sTemp, swDefaultIcon);
 
-	if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, 0x02000000, &hkey))
+	if (!RegOpenKeyExW(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
 	{
 	  ret = HCR_RegGetDefaultIconW(hkey, szDest, len, picon_idx);
 	  RegCloseKey(hkey);
@@ -304,7 +304,7 @@ BOOL HCR_GetDefaultIconA(LPCSTR szClass, LPSTR szDest, DWORD len, int* picon_idx
 
 	sprintf(sTemp, "%s\\DefaultIcon",szClass);
 
-	if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, 0x02000000, &hkey))
+	if (!RegOpenKeyExA(HKEY_CLASSES_ROOT, sTemp, 0, KEY_READ, &hkey))
 	{
 	  ret = HCR_RegGetDefaultIconA(hkey, szDest, len, picon_idx);
 	  RegCloseKey(hkey);

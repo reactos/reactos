@@ -1541,18 +1541,25 @@ static LRESULT ShellView_OnNotify(IShellViewImpl * This, UINT CtlID, LPNMHDR lpn
 
 		/* free pidl array memory */
 		HeapFree(GetProcessHeap(), 0, pItems);
-              }
+        }
 
-              /* Initiate a refresh */
-              else if(plvKeyDown->wVKey == VK_F5)
-              {
-		IShellView_Refresh((IShellView*)This);
-              }
-
-              else
-		FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
-	    }
-	    break;
+        /* Initiate a refresh */
+        else if(plvKeyDown->wVKey == VK_F5)
+        {
+            IShellView_Refresh((IShellView*)This);
+        }
+        else if(plvKeyDown->wVKey == VK_BACK)
+        {
+            LPSHELLBROWSER lpSb;
+            if((lpSb = (LPSHELLBROWSER)SendMessageW(This->hWndParent, CWM_GETISHELLBROWSER, 0, 0)))
+            {
+                IShellBrowser_BrowseObject(lpSb, NULL, SBSP_PARENT);
+            }
+        }
+        else
+            FIXME("LVN_KEYDOWN key=0x%08x\n",plvKeyDown->wVKey);
+        }
+        break;
 
 	  default:
 	    TRACE("-- %p WM_COMMAND %x unhandled\n", This, lpnmh->code);
