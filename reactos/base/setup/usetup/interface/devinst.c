@@ -222,7 +222,7 @@ InstallDevice(
         NtClose(hDeviceKey);
         return;
     }
-    else
+    else if (pPartialInformation)
     {
         for (HardwareID = (LPCWSTR)pPartialInformation->Data;
              (PUCHAR)HardwareID < pPartialInformation->Data + pPartialInformation->DataLength
@@ -277,7 +277,7 @@ InstallDevice(
             DPRINT1("NtQueryValueKey() failed with status 0x%08x\n", Status);
             return;
         }
-        else
+        else if (pPartialInformation)
         {
             for (HardwareID = (LPCWSTR)pPartialInformation->Data;
                  (PUCHAR)HardwareID < pPartialInformation->Data + pPartialInformation->DataLength
@@ -347,7 +347,8 @@ EventThread(IN LPVOID lpParameter)
         if (Status == STATUS_BUFFER_TOO_SMALL)
         {
             PnpEventSize += 0x400;
-            PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlReAllocateHeap(ProcessHeap, 0, PnpEvent, PnpEventSize);
+            RtlFreeHeap(ProcessHeap, 0, PnpEvent);
+            PnpEvent = (PPLUGPLAY_EVENT_BLOCK)RtlAllocateHeap(ProcessHeap, 0, PnpEventSize);
             if (PnpEvent == NULL)
             {
                 NtClose(hEnum);
