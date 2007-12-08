@@ -365,7 +365,7 @@ EventThread(IN LPVOID lpParameter)
 
         /* Process the pnp event */
         DPRINT("Received PnP Event\n");
-        if (IsEqualIID(&PnpEvent->EventGuid, (UUID*)&GUID_DEVICE_ARRIVAL))
+        if (IsEqualIID(&PnpEvent->EventGuid, (REFGUID)&GUID_DEVICE_ARRIVAL))
         {
             DPRINT1("Device arrival event: %S\n", PnpEvent->TargetDevice.DeviceIds);
             InstallDevice(hInf, hEnum, hServices, PnpEvent->TargetDevice.DeviceIds);
