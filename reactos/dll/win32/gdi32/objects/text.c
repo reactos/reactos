@@ -274,6 +274,34 @@ GetTextExtentPoint32W(
   return NtGdiGetTextExtentPoint32(hdc, lpString, cbString, lpSize);
 }
 
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetTextExtentExPointI(HDC hdc,
+                      LPWORD pgiIn,
+                      int cgi,
+                      int nMaxExtent,
+                      LPINT lpnFit,
+                      LPINT alpDx,
+                      LPSIZE lpSize)
+{
+    return NtGdiGetTextExtentExW(hdc,pgiIn,cgi,nMaxExtent,(ULONG *)lpnFit, (PULONG) alpDx,lpSize,1);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+GetTextExtentPointI(HDC hdc,
+                    LPWORD pgiIn,
+                    int cgi,
+                    LPSIZE lpSize)
+{
+    return NtGdiGetTextExtent(hdc,pgiIn,cgi,lpSize,2);
+}
 
 /*
  * @implemented
