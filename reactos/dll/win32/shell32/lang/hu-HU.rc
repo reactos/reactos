@@ -419,7 +419,7 @@ BEGIN
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Start Menu"
 	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Video"
+	IDS_MYVIDEO                 "My Videos"
 	IDS_DESKTOPDIRECTORY        "Asztal"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
@@ -436,7 +436,7 @@ BEGIN
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Felügyeleti eszközök"
 	IDS_COMMON_MUSIC            "Dokumentumok\\My Music"
 	IDS_COMMON_PICTURES         "Dokumentumok\\Képek"
-	IDS_COMMON_VIDEO            "Dokumentumok\\My Video"
+	IDS_COMMON_VIDEO            "Dokumentumok\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
 	IDS_DRIVE_FIXED             "Local Disk"

@@ -416,7 +416,7 @@ BEGIN
 	IDS_SENDTO                  "SendTo"
 	IDS_STARTMENU               "Start Menu"
 	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Video"
+	IDS_MYVIDEO                 "My Videos"
 	IDS_DESKTOPDIRECTORY        "Desktop"
 	IDS_NETHOOD                 "NetHood"
 	IDS_TEMPLATES               "Templates"
@@ -433,7 +433,7 @@ BEGIN
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
 	IDS_COMMON_MUSIC            "Documents\\My Music"
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
-	IDS_COMMON_VIDEO            "Documents\\My Video"
+	IDS_COMMON_VIDEO            "Documents\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
 	IDS_DRIVE_FIXED             "Τοπικός δίσκος"
