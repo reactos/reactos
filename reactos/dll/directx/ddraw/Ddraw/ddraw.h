@@ -47,6 +47,14 @@ HRESULT WINAPI
 Main_DirectDraw_EnumDisplayModes(
                                  LPDDRAWI_DIRECTDRAW_INT This,
                                  DWORD dwFlags,
+                                 LPDDSURFACEDESC pDDSD,
+                                 LPVOID pContext,
+                                 LPDDENUMMODESCALLBACK pCallback);
+
+HRESULT WINAPI
+Main_DirectDraw_EnumDisplayModes4(
+                                 LPDDRAWI_DIRECTDRAW_INT This,
+                                 DWORD dwFlags,
                                  LPDDSURFACEDESC2 pDDSD,
                                  LPVOID pContext,
                                  LPDDENUMMODESCALLBACK2 pCallback);

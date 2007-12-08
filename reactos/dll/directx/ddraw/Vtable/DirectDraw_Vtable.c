@@ -70,9 +70,9 @@ HRESULT WINAPI
 Main_DirectDraw_EnumSurfaces(
                              LPDIRECTDRAW iface,
                              DWORD dwFlags,
-                             LPDDSURFACEDESC2 lpDDSD2,
+                             LPDDSURFACEDESC lpDDSD2,
                              LPVOID context,
-                             LPDDENUMSURFACESCALLBACK7 callback);
+                             LPDDENUMSURFACESCALLBACK callback);
 
 HRESULT WINAPI
 Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW iface);

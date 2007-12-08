@@ -70,7 +70,7 @@ HRESULT WINAPI
 Main_DirectDraw_EnumSurfaces(
                              LPDIRECTDRAW2 iface,
                              DWORD dwFlags,
-                             LPDDSURFACEDESC2 lpDDSD,
+                             LPDDSURFACEDESC lpDDSD,
                              LPVOID context,
                              LPDDENUMSURFACESCALLBACK callback);
 

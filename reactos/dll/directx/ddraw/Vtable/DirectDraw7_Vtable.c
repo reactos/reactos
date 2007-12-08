@@ -63,7 +63,7 @@ Main_DirectDraw_DuplicateSurface(
                                  LPDIRECTDRAWSURFACE7* dst);
 
 HRESULT WINAPI
-Main_DirectDraw_EnumDisplayModes(
+Main_DirectDraw_EnumDisplayModes4(
                                  LPDIRECTDRAW7 iface,
                                  DWORD dwFlags,
                                  LPDDSURFACEDESC2 pDDSD,
@@ -197,7 +197,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_CreatePalette,
     Main_DirectDraw_CreateSurface4,             /* (CreateSurface4 testing / devloping) */
     Main_DirectDraw_DuplicateSurface,
-    Main_DirectDraw_EnumDisplayModes,           /* (EnumDisplayModes testing / devloping) */
+    Main_DirectDraw_EnumDisplayModes4,           /* (EnumDisplayModes testing / devloping) */
     Main_DirectDraw_EnumSurfaces,
     Main_DirectDraw_FlipToGDISurface,
     Main_DirectDraw_GetCaps,                    /* (GetCaps done) */

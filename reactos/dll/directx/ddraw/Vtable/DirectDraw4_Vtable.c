@@ -59,7 +59,7 @@ Main_DirectDraw_DuplicateSurface(
                                  LPDIRECTDRAWSURFACE4* dst);
 
 HRESULT WINAPI
-Main_DirectDraw_EnumDisplayModes(
+Main_DirectDraw_EnumDisplayModes4(
                                  LPDIRECTDRAW4 iface,
                                  DWORD dwFlags,
                                  LPDDSURFACEDESC2 pDDSD,
@@ -182,7 +182,7 @@ IDirectDraw4Vtbl DirectDraw4_Vtable =
     Main_DirectDraw_CreatePalette,
     Main_DirectDraw_CreateSurface4,
     Main_DirectDraw_DuplicateSurface,
-    Main_DirectDraw_EnumDisplayModes,
+    Main_DirectDraw_EnumDisplayModes4,
     Main_DirectDraw_EnumSurfaces,
     Main_DirectDraw_FlipToGDISurface,
     Main_DirectDraw_GetCaps,
