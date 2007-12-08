@@ -185,7 +185,7 @@ static void AddEntryToList(HWND hwndLV, LPTSTR Name, DWORD dwValType, void* ValB
                 TCHAR buf[200];
                 if(dwCount == sizeof(DWORD))
                 {
-                  wsprintf(buf, _T("0x%08X (%d)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
+                  wsprintf(buf, _T("0x%08x (%u)"), *(DWORD*)ValBuf, *(DWORD*)ValBuf);
                 }
                 else
                 {
