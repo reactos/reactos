@@ -57,7 +57,7 @@ DWORD   convertHexCSVToHex(char *str, BYTE *buf, ULONG bufLen);
 LPSTR   convertHexToHexCSV( BYTE *buf, ULONG len);
 LPSTR   convertHexToDWORDStr( BYTE *buf, ULONG len);
 LPSTR   getRegKeyName(LPSTR lpLine);
-HKEY    getRegClass(LPSTR lpLine);
+BOOL    getRegClass(LPSTR lpLine, HKEY* hkey);
 DWORD   getDataType(LPSTR *lpValue, DWORD* parse_type);
 LPSTR   getArg(LPSTR arg);
 HRESULT openKey(LPSTR stdInput);

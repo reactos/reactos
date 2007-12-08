@@ -61,7 +61,7 @@ static HKEY reg_class_keys[REG_CLASS_NUMBER] = {
 #define CHECK_ENOUGH_MEMORY(p) \
 if (!(p)) \
 { \
-    fprintf(stderr,"%s: file %s, line %d: Not enough memory", \
+    fprintf(stderr,"%s: file %s, line %d: Not enough memory\n", \
             getAppName(), __FILE__, __LINE__); \
     exit(NOT_ENOUGH_MEMORY); \
 }
@@ -305,7 +305,8 @@ DWORD getDataType(LPSTR *lpValue, DWORD* parse_type)
         }
         return type;
     }
-    return (**lpValue=='\0'?REG_SZ:REG_NONE);
+    *parse_type=REG_NONE;
+    return REG_NONE;
 }
 
 /******************************************************************************
@@ -413,9 +414,9 @@ static BOOL parseKeyName(LPSTR lpKeyName, HKEY *hKey, LPSTR *lpKeyPath)
  * val_name - name of the registry value
  * val_data - registry value data
  */
-HRESULT setValue(LPSTR val_name, LPSTR val_data)
+LONG setValue(LPSTR val_name, LPSTR val_data)
 {
-    HRESULT hRes;
+    LONG res;
     DWORD   dwDataType, dwParseType = REG_BINARY;
     LPBYTE lpbData;
     BYTE   convert[KEY_MAX_LEN];
@@ -425,10 +426,16 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
     if ( (val_name == NULL) || (val_data == NULL) )
         return ERROR_INVALID_PARAMETER;
 
+    if (strcmp(val_data, "-") == 0)
+    {
+        res=RegDeleteValueA(currentKeyHandle,val_name);
+        return (res == ERROR_FILE_NOT_FOUND ? ERROR_SUCCESS : res);
+    }
+
     /* Get the data type stored into the value field */
     dwDataType = getDataType(&val_data, &dwParseType);
 
-    if ( dwParseType == REG_SZ)        /* no conversion for string */
+    if (dwParseType == REG_SZ)        /* no conversion for string */
     {
         dwLen = (DWORD) strlen(val_data);
         if (dwLen>0 && val_data[dwLen-1]=='"')
@@ -439,11 +446,13 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
         dwLen++;
         REGPROC_unescape_string(val_data);
         lpbData = (LPBYTE)val_data;
-    } else if (dwParseType == REG_DWORD)  /* Convert the dword types */
+    }
+    else if (dwParseType == REG_DWORD)  /* Convert the dword types */
     {
         dwLen   = convertHexToDWord(val_data, convert);
         lpbData = convert;
-    } else                               /* Convert the hexadecimal types */
+    }
+    else if (dwParseType == REG_BINARY) /* Convert the binary data */
     {
         size_t b_len = strlen (val_data)+2/3;
         if (b_len > KEY_MAX_LEN) {
@@ -456,8 +465,13 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
             lpbData = convert;
         }
     }
+    else                                /* unknown format */
+    {
+        fprintf(stderr,"%s: ERROR, unknown data format\n", getAppName());
+        return ERROR_INVALID_DATA;
+    }
 
-    hRes = RegSetValueExA(
+    res = RegSetValueExA(
                currentKeyHandle,
                val_name,
                0,                  /* Reserved */
@@ -467,33 +481,32 @@ HRESULT setValue(LPSTR val_name, LPSTR val_data)
 
     if (bBigBuffer)
         HeapFree (GetProcessHeap(), 0, bBigBuffer);
-    return hRes;
+    return res;
 }
 
 
 /******************************************************************************
  * Open the key
  */
-HRESULT openKey( LPSTR stdInput)
+LONG openKey( LPSTR stdInput)
 {
-    DWORD   dwDisp;
-    HRESULT hRes;
+    DWORD dwDisp;
+    LONG res;
 
     /* Sanity checks */
     if (stdInput == NULL)
         return ERROR_INVALID_PARAMETER;
 
     /* Get the registry class */
-    currentKeyClass = getRegClass(stdInput); /* Sets global variable */
-    if (currentKeyClass == (HKEY)ERROR_INVALID_PARAMETER)
-        return (HRESULT)ERROR_INVALID_PARAMETER;
+    if (!getRegClass(stdInput, &currentKeyClass)) /* Sets global variable */
+        return ERROR_INVALID_PARAMETER;
 
     /* Get the key name */
     currentKeyName = getRegKeyName(stdInput); /* Sets global variable */
     if (currentKeyName == NULL)
         return ERROR_INVALID_PARAMETER;
 
-    hRes = RegCreateKeyExA(
+    res = RegCreateKeyExA(
                currentKeyClass,          /* Class     */
                currentKeyName,           /* Sub Key   */
                0,                        /* MUST BE 0 */
@@ -505,10 +518,10 @@ HRESULT openKey( LPSTR stdInput)
                &dwDisp);                 /* disposition, REG_CREATED_NEW_KEY or
                                                         REG_OPENED_EXISTING_KEY */
 
-    if (hRes == ERROR_SUCCESS)
+    if (res == ERROR_SUCCESS)
         bTheKeyIsOpen = TRUE;
 
-    return hRes;
+    return res;
 
 }
 
@@ -548,7 +561,7 @@ LPSTR getRegKeyName(LPSTR lpLine)
  * Extracts from [HKEY\some\key\path] or HKEY\some\key\path types of line
  * the key class (what ends before the first '\')
  */
-HKEY getRegClass(LPSTR lpClass)
+BOOL getRegClass(LPSTR lpClass, HKEY* hkey)
 {
     LPSTR classNameEnd;
     LPSTR classNameBeg;
@@ -557,7 +570,7 @@ HKEY getRegClass(LPSTR lpClass)
     char  lpClassCopy[KEY_MAX_LEN];
 
     if (lpClass == NULL)
-        return (HKEY)ERROR_INVALID_PARAMETER;
+        return FALSE;
 
     lstrcpynA(lpClassCopy, lpClass, KEY_MAX_LEN);
 
@@ -579,10 +592,11 @@ HKEY getRegClass(LPSTR lpClass)
 
     for (i = 0; i < REG_CLASS_NUMBER; i++) {
         if (!strcmp(classNameBeg, reg_class_names[i])) {
-            return reg_class_keys[i];
+            *hkey = reg_class_keys[i];
+            return TRUE;
         }
     }
-    return (HKEY)ERROR_INVALID_PARAMETER;
+    return FALSE;
 }
 
 /******************************************************************************
@@ -724,7 +738,7 @@ void processSetValue(LPSTR line)
     LPSTR val_data;                   /* registry value data   */
 
     int line_idx = 0;                 /* current character under analysis */
-    HRESULT hRes = 0;
+    LONG res;
 
     /* get value name */
     if (line[line_idx] == '@' && line[line_idx + 1] == '=') {
@@ -767,8 +781,8 @@ void processSetValue(LPSTR line)
     val_data = line + line_idx;
 
     REGPROC_unescape_string(val_name);
-    hRes = setValue(val_name, val_data);
-    if ( hRes != ERROR_SUCCESS )
+    res = setValue(val_name, val_data);
+    if ( res != ERROR_SUCCESS )
         fprintf(stderr,"%s: ERROR Key %s not created. Value: %s, Data: %s\n",
                 getAppName(),
                 currentKeyName,
@@ -1372,8 +1386,7 @@ BOOL export_registry_key(const TCHAR *file_name, CHAR *reg_key_name)
         strcpy(reg_key_name_buf, reg_key_name);
 
         /* open the specified key */
-        reg_key_class = getRegClass(reg_key_name);
-        if (reg_key_class == (HKEY)ERROR_INVALID_PARAMETER) {
+        if (!getRegClass(reg_key_name, &reg_key_class)) {
             fprintf(stderr,"%s: Incorrect registry class specification in '%s'\n",
                     getAppName(), reg_key_name);
             exit(1);
