@@ -7,3 +7,4 @@
 #include "lang/fr-FR.rc"
 #include "lang/ru-RU.rc"
 #include "lang/uk-UA.rc"
+#include "lang/it-IT.rc"

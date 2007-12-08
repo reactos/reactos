@@ -12,5 +12,7 @@
 #include "lang/ru-RU.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
+#include "lang/it-IT.rc"
+
 
 

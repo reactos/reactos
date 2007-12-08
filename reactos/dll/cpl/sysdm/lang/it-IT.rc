@@ -46,7 +46,7 @@ END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Advanced"
+CAPTION "Avanzate"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "I privilegi di amministrazione sono necessari per la maggior parte delle impostazioni seguenti.", IDC_STATIC, 12, 5, 236, 8
@@ -113,7 +113,7 @@ END
 
 IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
 STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "User Profiles"
+CAPTION "Profili Utente"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
