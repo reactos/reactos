@@ -4,7 +4,7 @@
  * FILE:        base/applications/screensavers/matrix/lang/lt-LT.rc
  * PURPOSE:     Lithuanian Language File
  * TRANSLATOR:  Vytis "CMan" Girdþijauskas (cman@cman.us)
- * DATE:        2007-09-24
+ * DATE:        2007-12-02
  */
 
 #include "resource.h"
@@ -13,7 +13,7 @@ LANGUAGE LANG_LITHUANIAN, SUBLANG_DEFAULT
 
 IDD_CONFIG DIALOG DISCARDABLE  0, 0, 340, 183
 STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Matrix ekrano uþsklandos nustatymai"
+CAPTION "Ekrano uþsklandos nustatymai"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Dekodavimo &greitis",IDC_STATIC,7,7,128,36
@@ -52,11 +52,11 @@ BEGIN
                     WS_VSCROLL | WS_TABSTOP
     CONTROL         "Pus&juodis ðriftas",IDC_BOLD,"Button",BS_AUTOCHECKBOX |
                     BS_MULTILINE | WS_TABSTOP,247,134,77,10
-    CTEXT           "Matrix ScreenSaver www.catch22.org.uk",IDC_ABOUT,140,
-                    158,75,18
+    CTEXT           "Ekrano uþsklanda Matrica www.catch22.org.uk",IDC_ABOUT,140,
+                    151,75,25
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Matrix ekrano uþsklanda"
+    IDS_DESCRIPTION         "Matrica"
 END
