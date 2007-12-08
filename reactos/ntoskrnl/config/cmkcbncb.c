@@ -312,9 +312,10 @@ NTAPI
 CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
 {
     PCM_NAME_HASH Current, *Next;
+    ULONG ConvKey = Ncb->ConvKey;
 
     /* Lock the NCB */
-    CmpAcquireNcbLockExclusive(Ncb);
+    CmpAcquireNcbLockExclusiveByKey(ConvKey);
 
     /* Decrease the reference count */
     if (!(--Ncb->RefCount))
@@ -342,7 +343,7 @@ CmpDereferenceNameControlBlockWithLock(IN PCM_NAME_CONTROL_BLOCK Ncb)
     }
 
     /* Release the lock */
-    CmpReleaseNcbLock(Ncb);
+    CmpReleaseNcbLockByKey(ConvKey);
 }
 
 BOOLEAN
@@ -363,13 +364,13 @@ CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 
                 /* Increase the reference count while we release the lock */
                 InterlockedIncrement((PLONG)&Kcb->RefCount);
-                
+               
                 /* Go from shared to exclusive */
                 CmpConvertKcbSharedToExclusive(Kcb);
 
                 /* Decrement the reference count; the lock is now held again */
                 InterlockedDecrement((PLONG)&Kcb->RefCount);
-                
+               
                 /* Check if we still control the index */
                 if (Kcb->DelayedCloseIndex == 1)
                 {
@@ -387,7 +388,7 @@ CmpReferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     }
 
     /* Increase the reference count */
-    if (InterlockedIncrement((PLONG)&Kcb->RefCount) == 0)
+    if ((InterlockedIncrement((PLONG)&Kcb->RefCount) & 0xFFFF) == 0)
     {
         /* We've overflown to 64K references, bail out */
         InterlockedDecrement((PLONG)&Kcb->RefCount);
@@ -511,9 +512,9 @@ CmpDereferenceKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Get the ref count and update it */
     OldRefCount = *(PLONG)&Kcb->RefCount;
     NewRefCount = OldRefCount - 1;
-    
-    /* Check if we still have refenreces */
-    if( (NewRefCount & 0xffff) > 0)
+   
+    /* Check if we still have references */
+    if( (NewRefCount & 0xFFFF) > 0)
     {
         /* Do the dereference */
         if (InterlockedCompareExchange((PLONG)&Kcb->RefCount,
@@ -544,7 +545,7 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
            (CmpTestRegistryLockExclusive() == TRUE));
 
     /* Check if this is the last reference */
-    if (InterlockedDecrement((PLONG)&Kcb->RefCount) == 0)
+    if ((InterlockedDecrement((PLONG)&Kcb->RefCount) & 0xFFFF) == 0)
     {
         /* Check if we should do a direct delete */
         if (((CmpHoldLazyFlush) &&
@@ -783,7 +784,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
             }
         }
     }
-    
+
     /* Sanity check */
     ASSERT((!Kcb) || (Kcb->Delete == FALSE));
 
@@ -820,4 +821,5 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
 
     /* FIXME: Implement once we don't link parents to children anymore */
 }
+
 

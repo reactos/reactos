@@ -231,11 +231,14 @@ typedef struct _CM_KEY_CONTROL_BLOCK
 {
     USHORT RefCount;
     USHORT Flags;
-    ULONG ExtFlags:8;
-    ULONG PrivateAlloc:1;
-    ULONG Delete:1;
-    ULONG DelayedCloseIndex:12;
-    ULONG TotalLevels:10;
+    struct
+    {
+        ULONG ExtFlags:8;
+        ULONG PrivateAlloc:1;
+        ULONG Delete:1;
+        ULONG DelayedCloseIndex:12;
+        ULONG TotalLevels:10;
+    };
     union
     {
         CM_KEY_HASH KeyHash;
@@ -251,9 +254,12 @@ typedef struct _CM_KEY_CONTROL_BLOCK
     PCM_NAME_CONTROL_BLOCK NameBlock;
     PCM_KEY_SECURITY_CACHE CachedSecurity;
     CACHED_CHILD_LIST ValueCache;
-    PCM_INDEX_HINT_BLOCK IndexHint;
-    ULONG HashKey;
-    ULONG SubKeyCount;
+    union
+    {
+        PCM_INDEX_HINT_BLOCK IndexHint;
+        ULONG HashKey;
+        ULONG SubKeyCount;
+    };
     union
     {
         LIST_ENTRY KeyBodyListHead;

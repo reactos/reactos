@@ -107,6 +107,8 @@ CmpDelayDerefKCBWorker(IN PVOID Context)
     ASSERT(CmpDelayDerefKCBWorkItemActive);
 
     /* FIXME: TODO */
+    DPRINT1("CmpDelayDerefKCBWorker has work to do!\n");
+    return;
     ASSERT(FALSE);
 }
 
@@ -305,5 +307,6 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
 }
+
 
 

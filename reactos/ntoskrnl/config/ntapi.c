@@ -20,6 +20,25 @@ BOOLEAN CmFirstTime = TRUE;
 
 NTSTATUS
 NTAPI
+NtOpenKey(OUT PHANDLE KeyHandle,
+          IN ACCESS_MASK DesiredAccess,
+          IN POBJECT_ATTRIBUTES ObjectAttributes)
+{
+    CM_PARSE_CONTEXT ParseContext = {0};
+    PAGED_CODE();
+
+    /* Just let the object manager handle this */
+    return ObOpenObjectByName(ObjectAttributes,
+                              CmpKeyObjectType,
+                              ExGetPreviousMode(),
+                              NULL,
+                              DesiredAccess,
+                              &ParseContext,
+                              KeyHandle);
+}
+
+NTSTATUS
+NTAPI
 NtDeleteKey(IN HANDLE KeyHandle)
 {
     PCM_KEY_BODY KeyObject;
@@ -472,26 +491,10 @@ NtFlushKey(IN HANDLE KeyHandle)
 
 NTSTATUS
 NTAPI
-NtCompactKeys(IN ULONG Count,
-              IN PHANDLE KeyArray)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtCompressKey(IN HANDLE Key)
-{
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 NtLoadKey(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
           IN POBJECT_ATTRIBUTES FileObjectAttributes)
 {
+    /* Call the newer API */
     return NtLoadKey2(KeyObjectAttributes, FileObjectAttributes, 0);
 }
 
@@ -501,6 +504,7 @@ NtLoadKey2(IN POBJECT_ATTRIBUTES KeyObjectAttributes,
            IN POBJECT_ATTRIBUTES FileObjectAttributes,
            IN ULONG Flags)
 {
+    /* Call the newer API */
     return NtLoadKeyEx(KeyObjectAttributes, FileObjectAttributes, Flags, NULL);
 }
 
@@ -553,6 +557,34 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
     
     /* Return status */
     return Status;
+}
+
+NTSTATUS
+NTAPI
+NtNotifyChangeKey(IN HANDLE KeyHandle,
+                  IN HANDLE Event,
+                  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
+                  IN PVOID ApcContext OPTIONAL,
+                  OUT PIO_STATUS_BLOCK IoStatusBlock,
+                  IN ULONG CompletionFilter,
+                  IN BOOLEAN WatchTree,
+                  OUT PVOID Buffer,
+                  IN ULONG Length,
+                  IN BOOLEAN Asynchronous)
+{
+    /* Call the newer API */
+    return NtNotifyChangeMultipleKeys(KeyHandle,
+                                      0,
+                                      NULL,
+                                      Event,
+                                      ApcRoutine,
+                                      ApcContext,
+                                      IoStatusBlock,
+                                      CompletionFilter,
+                                      WatchTree,
+                                      Buffer,
+                                      Length,
+                                      Asynchronous);
 }
 
 NTSTATUS
@@ -619,6 +651,23 @@ NtInitializeRegistry(IN USHORT Flag)
 
 NTSTATUS
 NTAPI
+NtCompactKeys(IN ULONG Count,
+              IN PHANDLE KeyArray)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+NtCompressKey(IN HANDLE Key)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 NtLockProductActivationKeys(IN PULONG pPrivateVer,
                             IN PULONG pSafeMode)
 {
@@ -651,33 +700,6 @@ NtNotifyChangeMultipleKeys(IN HANDLE MasterKeyHandle,
 {
     UNIMPLEMENTED;
     return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
-NtNotifyChangeKey(IN HANDLE KeyHandle,
-                  IN HANDLE Event,
-                  IN PIO_APC_ROUTINE ApcRoutine OPTIONAL,
-                  IN PVOID ApcContext OPTIONAL,
-                  OUT PIO_STATUS_BLOCK IoStatusBlock,
-                  IN ULONG CompletionFilter,
-                  IN BOOLEAN WatchTree,
-                  OUT PVOID Buffer,
-                  IN ULONG Length,
-                  IN BOOLEAN Asynchronous)
-{
-     return NtNotifyChangeMultipleKeys(KeyHandle,
-                                       0,
-                                       NULL,
-                                       Event,
-                                       ApcRoutine,
-                                       ApcContext,
-                                       IoStatusBlock,
-                                       CompletionFilter,
-                                       WatchTree,
-                                       Buffer,
-                                       Length,
-                                       Asynchronous);
 }
 
 NTSTATUS

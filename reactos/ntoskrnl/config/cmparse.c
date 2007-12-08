@@ -782,7 +782,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
         /* Release it */
         HvReleaseCell(Context->ChildHive.KeyHive, ChildCell);
         
-        /* Set the parent adn flags */
+        /* Set the parent and flags */
         KeyNode->Parent = LinkCell;
         KeyNode->Flags |= KEY_HIVE_ENTRY | KEY_NO_DELETE;
         
@@ -977,7 +977,6 @@ CmpParseKey2(IN PVOID ParseObject,
     PULONG LockedKcbs = NULL;
     BOOLEAN Result, Last;
     PAGED_CODE();
-    DPRINT1("New style parse routine called: %wZ %wZ!\n", CompleteName, RemainingName);
 
     /* Loop path separators at the end */
     while ((RemainingName->Length) &&
@@ -1003,7 +1002,6 @@ CmpParseKey2(IN PVOID ParseObject,
     
     /* Grab the KCB */
     Kcb = ((PCM_KEY_BODY)ParseObject)->KeyControlBlock;
-    DPRINT1("KCB Parse: %p\n", Kcb);
 
     /* Lookup in the cache */
     Status = CmpBuildHashStackAndLookupCache(ParseObject,
@@ -1019,9 +1017,6 @@ CmpParseKey2(IN PVOID ParseObject,
     
     /* This is now the parent */
     ParentKcb = Kcb;
-    DPRINT1("ParentKcb Parse: %p\n", ParentKcb);
-    DPRINT1("Hive Parse: %p\n", Hive);
-    DPRINT1("Cell Parse: %p\n", Cell);    
     
     /* Check if everything was found cached */
     if (!TotalRemainingSubkeys) ASSERTMSG("Caching not implemented", FALSE);
@@ -1032,9 +1027,6 @@ CmpParseKey2(IN PVOID ParseObject,
     /* Check if this is a symlink */
     if (Kcb->Flags & KEY_SYM_LINK)
     {
-        DPRINT1("Parsing sym link: %lx %lx %lx\n", Kcb->Flags, Status,
-                CompleteName);
-        
         /* Get the next name */
         Result = CmpGetNextName(&Current, &NextName, &Last);
         Current.Buffer = NextName.Buffer;
@@ -1071,10 +1063,6 @@ CmpParseKey2(IN PVOID ParseObject,
             /* Couldn't find symlink */
             Status = STATUS_OBJECT_NAME_NOT_FOUND;
         }
-        
-        /* Not implemented */
-        DPRINT1("Parsing sym link: %lx %wZ %wZ\n", Status,
-                CompleteName, &Current);
 
         /* We're done */
         goto Quickie;
@@ -1083,7 +1071,6 @@ CmpParseKey2(IN PVOID ParseObject,
     /* Get the key node */
     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
     if (!Node) return STATUS_INSUFFICIENT_RESOURCES;
-    DPRINT1("Node Parse: %p\n", Node);
     
     /* Start parsing */
     Status = STATUS_NOT_IMPLEMENTED;
@@ -1091,7 +1078,6 @@ CmpParseKey2(IN PVOID ParseObject,
     {
         /* Get the next component */
         Result = CmpGetNextName(&Current, &NextName, &Last); 
-        DPRINT1("Result Parse: %p\n", Result);
         if ((Result) && (NextName.Length))
         {
             /* See if this is a sym link */
@@ -1099,13 +1085,11 @@ CmpParseKey2(IN PVOID ParseObject,
             {
                 /* Find the subkey */
                 NextCell = CmpFindSubKeyByName(Hive, Node, &NextName);
-                DPRINT1("NextCell Parse: %lx %wZ\n", NextCell, &NextName);
                 if (NextCell != HCELL_NIL)
                 {
                     /* Get the new node */
                     Cell = NextCell;
                     Node = (PCM_KEY_NODE)HvGetCell(Hive, Cell);
-                    DPRINT1("Node Parse: %p\n", Node);
                     if (!Node) ASSERT(FALSE);
                     
                     /* Check if this was the last key */
@@ -1115,13 +1099,11 @@ CmpParseKey2(IN PVOID ParseObject,
                         if (Node->Flags & KEY_HIVE_EXIT)
                         {
                             /* Handle it */
-                            DPRINT1("Exit node\n");
                             CmpHandleExitNode(&Hive,
                                               &Cell,
                                               &Node,
                                               &HiveToRelease,
                                               &CellToRelease);
-                            DPRINT1("Node Parse: %p\n", Node);
                             if (!Node) ASSERT(FALSE);
                         }
                         
@@ -1139,9 +1121,6 @@ CmpParseKey2(IN PVOID ParseObject,
                                            Object);
                         if (Status == STATUS_REPARSE)
                         {
-                            DPRINT1("Parsing sym link: %lx %lx\n", Status,
-                                    CompleteName);
-
                             /* Parse the symlink */
                             if (!CmpGetSymbolicLink(Hive,
                                                     CompleteName,
@@ -1151,15 +1130,9 @@ CmpParseKey2(IN PVOID ParseObject,
                                 /* Symlink parse failed */
                                 Status = STATUS_OBJECT_NAME_NOT_FOUND;
                             }
-
-                            /* Not implemented */
-                            DPRINT1("Parsing sym link: %lx %wZ\n", Status,
-                                    CompleteName);
-                            while (TRUE); 
                         }
                         
                         /* We are done */
-                        DPRINT1("Open of last key\n");
                         break;
                     }
                     
@@ -1167,13 +1140,11 @@ CmpParseKey2(IN PVOID ParseObject,
                     if (Node->Flags & KEY_HIVE_EXIT)
                     {
                         /* Handle it */
-                        DPRINT1("Exit node: %lx\n", Node->Flags);
                         CmpHandleExitNode(&Hive,
                                           &Cell,
                                           &Node,
                                           &HiveToRelease,
                                           &CellToRelease);
-                        DPRINT1("Node Parse: %p\n", Node);
                         if (!Node) ASSERT(FALSE);
                     }
 
@@ -1185,10 +1156,9 @@ CmpParseKey2(IN PVOID ParseObject,
                                                    0,
                                                    &NextName);
                     if (!Kcb) ASSERT(FALSE);
-                    DPRINT1("Kcb Parse: %p\n", Kcb);
                     
                     /* Dereference the parent and set the new one */
-                    CmpDereferenceKeyControlBlock(ParentKcb);
+                    //CmpDereferenceKeyControlBlock(ParentKcb);
                     ParentKcb = Kcb;
                 }
                 else
@@ -1211,7 +1181,6 @@ CmpParseKey2(IN PVOID ParseObject,
                                                        ParseContext,
                                                        ParentKcb,
                                                        Object);
-                            DPRINT1("Link created: %lx\n", Status);
                         }
                         else
                         {
@@ -1242,9 +1211,6 @@ CmpParseKey2(IN PVOID ParseObject,
             }
             else
             {
-                DPRINT1("Parsing sym link: %lx %lx\n", Status,
-                        CompleteName);
-                
                 /* Save the next name */
                 Current.Buffer = NextName.Buffer;
                 
@@ -1280,20 +1246,47 @@ CmpParseKey2(IN PVOID ParseObject,
                     /* Couldn't find symlink */
                     Status = STATUS_OBJECT_NAME_NOT_FOUND;
                 }
-                
-                /* Not implemented */
-                DPRINT1("Parsing sym link: %lx %wZ %wZ\n", Status,
-                        CompleteName, &Current);
-                
+
                 /* We're done */
                 break;
             }
         }
         else if ((Result) && (Last))
         {
-            /* Opening root: unexpected */
-            DPRINT1("Unexpected: Opening root\n");
-            while (TRUE);
+            /* Opening the root. Is this an exit node? */
+            if (Node->Flags & KEY_HIVE_EXIT)
+            {
+                /* Handle it */
+                CmpHandleExitNode(&Hive,
+                                  &Cell,
+                                  &Node,
+                                  &HiveToRelease,
+                                  &CellToRelease);
+                if (!Node) ASSERT(FALSE);
+            }
+            
+            /* FIXME: This hack seems required? */
+            RtlInitUnicodeString(&NextName, L"\\REGISTRY");
+            
+            /* Do the open */
+            Status = CmpDoOpen(Hive,
+                               Cell,
+                               Node,
+                               AccessState,
+                               AccessMode,
+                               Attributes,
+                               ParseContext,
+                               0,
+                               &Kcb,
+                               &NextName,
+                               Object);
+            if (Status == STATUS_REPARSE)
+            {
+                /* Nothing to do */
+            }
+            
+            /* We're done */
+            break;
         }
         else
         {
@@ -1305,7 +1298,7 @@ CmpParseKey2(IN PVOID ParseObject,
 
     /* Dereference the parent if it exists */
 Quickie:
-    if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
+    //if (ParentKcb) CmpDereferenceKeyControlBlock(ParentKcb);
     
     /* Unlock the registry */
     CmpUnlockRegistry();
