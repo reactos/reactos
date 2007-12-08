@@ -3,7 +3,7 @@
 	<linkerflag>--enable-stdcall-fixup</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
 	<linkerflag>-lgcc</linkerflag>
-	<importlibrary definition="msvcrt.def" />
+	<importlibrary definition="msvcrt.spec.def" />
 	<include base="msvcrt">.</include>
 	<include base="crt">include</include>
 	<define name="_DISABLE_TIDENTS" />
@@ -26,5 +26,6 @@
 	<library>ntdll</library>
 	<pch>precomp.h</pch>
 	<file>dllmain.c</file>
+	<file>msvcrt.spec</file>
 	<file>msvcrt.rc</file>
 </module>
