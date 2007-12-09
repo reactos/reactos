@@ -61,6 +61,8 @@ DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
         FldrCreateComponentKey(SystemKey,
                                L"MultifunctionAdapter",
                                *BusNumber,
+                               AdapterClass,
+                               MultiFunctionAdapter,
                                &BiosKey);
         
 #if 0

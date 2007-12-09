@@ -156,6 +156,8 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
       FldrCreateComponentKey(BusKey,
                              L"RealModeIrqRoutingTable",
                              0,
+                             SystemClass,
+                             RealModeIrqRoutingTable,
                              &TableKey);
 
       /* Set 'Component Information' */
@@ -228,6 +230,8 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       FldrCreateComponentKey(SystemKey,
                              L"MultifunctionAdapter",
                              *BusNumber,
+                             AdapterClass,
+                             MultiFunctionAdapter,
                              &BiosKey);
 
       /* Set 'Component Information' */
@@ -283,6 +287,8 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
           FldrCreateComponentKey(SystemKey,
                                  L"MultifunctionAdapter",
                                  *BusNumber,
+                                 AdapterClass,
+                                 MultiFunctionAdapter,
                                  &BiosKey);
           
           /* Set 'Component Information' */

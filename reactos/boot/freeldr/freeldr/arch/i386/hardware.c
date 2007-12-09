@@ -275,7 +275,12 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   DbgPrint((DPRINT_HWDETECT, "Estimated buffer size %u\n", NodeSize * NodeCount));
 
     /* Create component key */
-    FldrCreateComponentKey(SystemKey, L"MultifunctionAdapter", *BusNumber, &BusKey);
+    FldrCreateComponentKey(SystemKey,
+                           L"MultifunctionAdapter",
+                           *BusNumber,
+                           AdapterClass,
+                           MultiFunctionAdapter,
+                           &BusKey);
     (*BusNumber)++;
     
     /* Set the component information */
@@ -605,6 +610,8 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
       FldrCreateComponentKey(BusKey,
                              L"DiskController\\0\\DiskPeripheral",
                              i,
+                             PeripheralClass,
+                             DiskPeripheral,
                              &DiskKey);
 
       /* Set disk values */
@@ -681,6 +688,8 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     FldrCreateComponentKey(ControllerKey,
                            L"FloppyDiskPeripheral",
                            FloppyNumber,
+                           PeripheralClass,
+                           FloppyDiskPeripheral,
                            &PeripheralKey);
 
     /* Set 'ComponentInformation' value */
@@ -754,6 +763,8 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   FldrCreateComponentKey(SystemKey,
                          L"DiskController",
                          0,
+                         ControllerClass,
+                         DiskController,
                          &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: DiskController\\0\n"));
 
@@ -1130,6 +1141,8 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       FldrCreateComponentKey(ControllerKey,
                              L"PointerPeripheral",
                              0,
+                             PeripheralClass,
+                             PointerPeripheral,
                              &PeripheralKey);
       DbgPrint((DPRINT_HWDETECT,
 		"Created key: PointerPeripheral\\0\n"));
@@ -1193,6 +1206,8 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       FldrCreateComponentKey(BusKey,
                              L"SerialController",
                              ControllerNumber,
+                             ControllerClass,
+                             SerialController,
                              &ControllerKey);
 
       /* Set 'ComponentInformation' value */
@@ -1305,6 +1320,8 @@ DetectParallelPorts(FRLDRHKEY BusKey)
       FldrCreateComponentKey(BusKey,
                              L"ParallelController",
                              ControllerNumber,
+                             ControllerClass,
+                             ParallelController,
                              &ControllerKey);
 
       /* Set 'ComponentInformation' value */
@@ -1460,6 +1477,8 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
       FldrCreateComponentKey(ControllerKey,
                              L"KeyboardPeripheral",
                              0,
+                             PeripheralClass,
+                             KeyboardPeripheral,
                              &PeripheralKey);
     DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardPeripheral\\0\n"));
 
@@ -1522,6 +1541,8 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   FldrCreateComponentKey(BusKey,
                          L"KeyboardController",
                          0,
+                         ControllerClass,
+                         KeyboardController,
                          &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardController\\0\n"));
 
@@ -1709,6 +1730,8 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
       FldrCreateComponentKey(BusKey,
                              L"PointerController",
                              0,
+                             ControllerClass,
+                             PointerController,
                              &ControllerKey);
       DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
 
@@ -1746,8 +1769,10 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 
           /* Create peripheral key */
           FldrCreateComponentKey(ControllerKey,
-                                 L"PointerController",
+                                 L"PointerPeripheral",
                                  0,
+                                 ControllerClass,
+                                 PointerPeripheral,
                                  &PeripheralKey);
 	  DbgPrint((DPRINT_HWDETECT, "Created key: PointerPeripheral\\0\n"));
 
@@ -1788,6 +1813,8 @@ DetectDisplayController(FRLDRHKEY BusKey)
   FldrCreateComponentKey(BusKey,
                          L"DisplayController",
                          0,
+                         ControllerClass,
+                         DisplayController,
                          &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: DisplayController\\0\n"));
 
@@ -1842,6 +1869,8 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   FldrCreateComponentKey(SystemKey,
                          L"MultifunctionAdapter",
                          *BusNumber,
+                         AdapterClass,
+                         MultiFunctionAdapter,
                          &BusKey);
 
   /* Set 'Component Information' value similar to my NT4 box */

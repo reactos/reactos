@@ -59,6 +59,8 @@ FldrCreateComponentKey(
     IN FRLDRHKEY SystemKey,
     IN PWCHAR BusName,
     IN ULONG BusNumber,
+    IN CONFIGURATION_CLASS Class,
+    IN CONFIGURATION_TYPE Type,
     OUT FRLDRHKEY *ComponentKey
 );
 
