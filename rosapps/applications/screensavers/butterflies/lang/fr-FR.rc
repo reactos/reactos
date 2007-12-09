@@ -30,5 +30,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Butterflies ScreenSaver"
+    IDS_DESCRIPTION         "Écran de veille de papillons"
 END
