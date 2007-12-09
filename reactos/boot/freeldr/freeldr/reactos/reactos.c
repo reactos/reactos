@@ -35,6 +35,8 @@ reactos_mem_data_t reactos_mem_data;
 ARC_DISK_SIGNATURE      reactos_arc_disk_info[32]; // ARC Disk Information
 char                    reactos_arc_strings[32][256];
 unsigned long           reactos_disk_count = 0;
+char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE] = {0};
+
 CHAR szHalName[255];
 CHAR szBootPath[255];
 CHAR SystemRoot[255];
@@ -601,6 +603,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	LoaderBlock.ModsCount = 0;
 	LoaderBlock.ModsAddr = reactos_modules;
     LoaderBlock.DrivesAddr = reactos_arc_disk_info;
+    LoaderBlock.ArchExtra = (ULONG)reactos_arc_hardware_data;
     LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {

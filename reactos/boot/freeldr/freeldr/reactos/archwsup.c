@@ -14,9 +14,28 @@
 
 /* GLOBALS ********************************************************************/
 
+extern CHAR reactos_arc_hardware_data[];
+ULONG FldrpHwHeapLocation;
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
 
 /* FUNCTIONS ******************************************************************/
+
+PVOID
+NTAPI
+FldrpHwHeapAlloc(IN ULONG Size)
+{
+    PVOID Buffer;
+    
+    /* Return a block of memory from the ARC Hardware Heap */
+    Buffer = &reactos_arc_hardware_data[FldrpHwHeapLocation];
+    
+    /* Increment the heap location */
+    FldrpHwHeapLocation += Size;
+    if (FldrpHwHeapLocation > HW_MAX_ARC_HEAP_SIZE) Buffer = NULL;
+    
+    /* Return the buffer */
+    return Buffer;
+}
 
 VOID
 NTAPI
@@ -51,21 +70,31 @@ FldrSetComponentInformation(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
 VOID
 NTAPI
 FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                  IN PWCHAR Identifier)
+                  IN PWCHAR IdentifierString)
 {
     LONG Error;
-    ULONG IdentifierLength = (wcslen(Identifier) + 1) * sizeof(WCHAR);
+    ULONG IdentifierLength;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
+    PCHAR Identifier;
+    
+    /* Allocate memory for the identifier */
+    /* WARNING: This should be ASCII data */
+    IdentifierLength = (wcslen(IdentifierString) + 1) * sizeof(WCHAR);
+    Identifier = FldrpHwHeapAlloc(IdentifierLength);
+    if (!Identifier) return;
+    
+    /* Copy the identifier */
+    RtlCopyMemory(Identifier, IdentifierString, IdentifierLength);
     
     /* Set component information */
     Component->IdentifierLength = IdentifierLength;
-    Component->Identifier = (PCHAR)Identifier; // We need to use ASCII instead
+    Component->Identifier = Identifier;
 
     /* Set the key */
     Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Identifier",
                         REG_SZ,
-                        (PCHAR)Identifier,
+                        (PCHAR)IdentifierString,
                         IdentifierLength);
     if (Error != ERROR_SUCCESS)
     {
@@ -82,7 +111,7 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     PCONFIGURATION_COMPONENT Component;
     
     /* Allocate the root */
-    FldrArcHwTreeRoot = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+    FldrArcHwTreeRoot = FldrpHwHeapAlloc(sizeof(CONFIGURATION_COMPONENT_DATA));
     if (!FldrArcHwTreeRoot) return;
     
     /* Set it up */
@@ -125,7 +154,7 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     PCONFIGURATION_COMPONENT Component;
 
     /* Allocate the node for this component */
-    ComponentData = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
+    ComponentData = FldrpHwHeapAlloc(sizeof(CONFIGURATION_COMPONENT_DATA));
     if (!ComponentData) return;
     
     /* Now save our parent */
@@ -168,21 +197,29 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
 VOID
 NTAPI
 FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                         IN PVOID ConfigurationData,
+                         IN PVOID Data,
                          IN ULONG Size)
 {
     LONG Error;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
-    
+    PVOID ConfigurationData;
+
+    /* Allocate a buffer from the hardware heap */
+    ConfigurationData = FldrpHwHeapAlloc(Size);
+    if (!ConfigurationData) return;
+
+    /* Copy component information */
+    RtlCopyMemory(ConfigurationData, Data, Size);
+        
     /* Set component information */
     ComponentData->ConfigurationData = ConfigurationData;
     Component->ConfigurationDataLength = Size;
-    
+        
     /* Set 'Configuration Data' value */
     Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Configuration Data",
                         REG_FULL_RESOURCE_DESCRIPTOR,
-                        ConfigurationData,
+                        Data,
                         Size);
     if (Error != ERROR_SUCCESS)
     {
