@@ -34,7 +34,6 @@ void doSetValue(LPSTR lpsLine);
 void doDeleteValue(LPSTR lpsLine);
 void doCreateKey(LPSTR lpsLine);
 void doDeleteKey(LPSTR lpsLine);
-void doQueryValue(LPSTR lpsLine);
 void doRegisterDLL(LPSTR lpsLine);
 void doUnregisterDLL(LPSTR lpsLine);
 
@@ -66,11 +65,6 @@ void    closeKey(void);
  */
 void    processSetValue(LPSTR cmdline);
 HRESULT setValue(LPSTR val_name, LPSTR val_data);
-
-/*
- * api queryValue prototypes
- */
-void    processQueryValue(LPSTR cmdline);
 
 /*
  * Permission prototypes
