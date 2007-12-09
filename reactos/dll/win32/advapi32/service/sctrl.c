@@ -247,7 +247,7 @@ ScConnectControlPipe(HANDLE *hPipe)
     dwState = PIPE_READMODE_MESSAGE;
     if (!SetNamedPipeHandleState(*hPipe, &dwState, NULL, NULL))
     {
-        CloseHandle(hPipe);
+        CloseHandle(*hPipe);
         *hPipe = INVALID_HANDLE_VALUE;
         return ERROR_FAILED_SERVICE_CONTROLLER_CONNECT;
     }
