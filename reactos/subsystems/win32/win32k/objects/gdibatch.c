@@ -65,7 +65,7 @@ GdiFlushUserBatch(HDC hDC, PGDIBATCHHDR pHdr)
 {
   PDC dc = NULL;
   PDC_ATTR Dc_Attr = NULL;
-  if (hDC)
+  if (hDC && !IsObjectDead(hDC))
   {
     dc = DC_LockDc(hDC);
     if (dc)
