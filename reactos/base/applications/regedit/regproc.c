@@ -441,12 +441,14 @@ LPSTR getRegKeyName(LPSTR lpLine)
 
     keyNameBeg = strchr(lpLineCopy, '\\');    /* The key name start by '\' */
     if (keyNameBeg) {
-        LPSTR keyNameEnd;
+        if (lpLine[0] == '[') /* need to find matching ']' */
+        {
+            LPSTR keyNameEnd;
 
-        keyNameBeg++;                             /* is not part of the name */
-        keyNameEnd = strchr(lpLineCopy, ']');
-        if (keyNameEnd) {
-            *keyNameEnd = '\0';               /* remove ']' from the key name */
+            keyNameEnd = strrchr(lpLineCopy, ']');
+            if (keyNameEnd) {
+                *keyNameEnd = '\0';               /* remove ']' from the key name */
+            }
         }
     } else {
         keyNameBeg = lpLineCopy + strlen(lpLineCopy); /* branch - empty string */
