@@ -495,15 +495,6 @@ typedef struct _KEY_INFORMATION
 //
 // BUGBUG Old Hive Stuff for Temporary Support
 //
-NTSTATUS
-NTAPI
-CmFindObject(POBJECT_CREATE_INFORMATION ObjectCreateInfo,
-             PUNICODE_STRING ObjectName,
-             PVOID* ReturnedObject,
-             PUNICODE_STRING RemainingPath,
-             POBJECT_TYPE ObjectType,
-             IN PACCESS_STATE AccessState,
-             IN PVOID ParseContext);
 NTSTATUS CmiCallRegisteredCallbacks(IN REG_NOTIFY_CLASS Argument1, IN PVOID Argument2);
 ///////////////////////////////////////////////////////////////////////////////
 

@@ -363,6 +363,26 @@ CmpCreateControlSet(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* ReactOS Hack: Hard-code current to 001 for SetupLdr */
         if (!LoaderBlock->RegistryBase)
         {
+            /* Build the ControlSet001 key */
+            RtlInitUnicodeString(&KeyName,
+                                 L"\\Registry\\Machine\\System\\ControlSet001");
+            InitializeObjectAttributes(&ObjectAttributes,
+                                       &KeyName,
+                                       OBJ_CASE_INSENSITIVE,
+                                       NULL,
+                                       NULL);
+            Status = NtCreateKey(&KeyHandle,
+                                 KEY_ALL_ACCESS,
+                                 &ObjectAttributes,
+                                 0,
+                                 NULL,
+                                 0,
+                                 &Disposition);
+            if (!NT_SUCCESS(Status)) return Status;
+
+            /* Don't need the handle */
+            ZwClose(KeyHandle);
+
             /* Use hard-coded setting */
             ControlSet = 1;
             goto UseSet;
@@ -396,7 +416,6 @@ UseSet:
                                OBJ_CASE_INSENSITIVE,
                                NULL,
                                NULL);
-
     Status = NtCreateKey(&KeyHandle,
                          KEY_CREATE_LINK,
                          &ObjectAttributes,

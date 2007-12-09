@@ -18,6 +18,42 @@ BOOLEAN CmFirstTime = TRUE;
 
 /* FUNCTIONS *****************************************************************/
 
+#if 0
+NTSTATUS
+NTAPI
+NtCreateKey(OUT PHANDLE KeyHandle,
+            IN ACCESS_MASK DesiredAccess,
+            IN POBJECT_ATTRIBUTES ObjectAttributes,
+            IN ULONG TitleIndex,
+            IN PUNICODE_STRING Class,
+            IN ULONG CreateOptions,
+            OUT PULONG Disposition)
+{
+    NTSTATUS Status;
+    KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    CM_PARSE_CONTEXT ParseContext = {0};
+    PAGED_CODE();
+    
+    /* Setup the parse context */
+    ParseContext.CreateOperation = TRUE;
+    ParseContext.CreateOptions = CreateOptions;
+    if (Class) ParseContext.Class = *Class;
+    
+    /* Do the create */
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                CmpKeyObjectType,
+                                PreviousMode,
+                                NULL,
+                                DesiredAccess,
+                                &ParseContext,
+                                KeyHandle);
+    
+    /* Return data to user */
+    if (Disposition) *Disposition = ParseContext.Disposition;
+    return Status;
+}
+#endif
+
 NTSTATUS
 NTAPI
 NtOpenKey(OUT PHANDLE KeyHandle,

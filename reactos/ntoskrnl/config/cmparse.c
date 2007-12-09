@@ -1077,7 +1077,7 @@ CmpParseKey2(IN PVOID ParseObject,
     while (TRUE)
     {
         /* Get the next component */
-        Result = CmpGetNextName(&Current, &NextName, &Last); 
+        Result = CmpGetNextName(&Current, &NextName, &Last);
         if ((Result) && (NextName.Length))
         {
             /* See if this is a sym link */
@@ -1184,9 +1184,15 @@ CmpParseKey2(IN PVOID ParseObject,
                         }
                         else
                         {
-                            /* Create: should not see this (yet) */
-                            DPRINT1("Unexpected: Creating new child\n");
-                            while (TRUE);
+                            /* Do the create */
+                            Status = CmpDoCreate(Hive,
+                                                 Cell,
+                                                 AccessState,
+                                                 &NextName,
+                                                 AccessMode,
+                                                 ParseContext,
+                                                 ParentKcb,
+                                                 Object);
                         }
                         
                         /* Check for reparse (in this case, someone beat us) */
