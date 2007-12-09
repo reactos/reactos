@@ -29,15 +29,19 @@ Main_DirectDraw_EnumDisplayModes(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
     _SEH_TRY
     {
 
-        if
-        ((!IsBadReadPtr(pCallback,sizeof(LPDDENUMMODESCALLBACK)))  ||
-        (!IsBadWritePtr(pCallback,sizeof(LPDDENUMMODESCALLBACK))) ||
-        (!IsBadReadPtr(pDDSD,sizeof(DDSURFACEDESC)))  ||
-        (!IsBadWritePtr(pDDSD,sizeof(DDSURFACEDESC))))
+        if (pDDSD != NULL)
+        {
+            if (pDDSD->dwSize != sizeof(DDSURFACEDESC))
+            {
+                 ret = DDERR_INVALIDPARAMS;
+            }
+        }
+
+        if (IsBadCodePtr(pCallback))
         {
             ret = DDERR_INVALIDPARAMS;
         }
-        else
+        else if ( ret == DD_OK)
         {
 
             DevMode.dmSize = sizeof(DEVMODE);
@@ -123,15 +127,19 @@ Main_DirectDraw_EnumDisplayModes4(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
     _SEH_TRY
     {
 
-        if
-        ((!IsBadReadPtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2)))  ||
-        (!IsBadWritePtr(pCallback,sizeof(LPDDENUMMODESCALLBACK2))) ||
-        (!IsBadReadPtr(pDDSD,sizeof(DDSURFACEDESC2)))  ||
-        (!IsBadWritePtr(pDDSD,sizeof(DDSURFACEDESC2))))
+        if (pDDSD != NULL)
+        {
+            if (pDDSD->dwSize != sizeof(DDSURFACEDESC2))
+            {
+                 ret = DDERR_INVALIDPARAMS;
+            }
+        }
+
+        if (IsBadCodePtr(pCallback))
         {
             ret = DDERR_INVALIDPARAMS;
         }
-        else
+        else if ( ret == DD_OK)
         {
 
             DevMode.dmSize = sizeof(DEVMODE);
