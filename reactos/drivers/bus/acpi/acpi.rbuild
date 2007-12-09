@@ -136,5 +136,7 @@
 		<file>cmxface.c</file>
 	</directory>
 	<file>acpi.rc</file>
-	<pch>include/acpi.h</pch>
+	<directory name="include">
+		<pch>acpi.h</pch>
+	</directory>
 </module>

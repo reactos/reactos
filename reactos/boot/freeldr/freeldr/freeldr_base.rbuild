@@ -79,5 +79,7 @@
 	<file>version.c</file>
 	<file>cmdline.c</file>
 	<file>machine.c</file>
-	<pch>include/freeldr.h</pch>
+	<directory name="include">
+		<pch>freeldr.h</pch>
+	</directory>
 </module>

@@ -52,7 +52,7 @@
 	<file>shfldr_desktop.c</file>
 	<file>shfldr_fs.c</file>
 	<file>shfldr_mycomp.c</file>
-	<file> shlfldr_mydocuments.c</file>
+	<file>shlfldr_mydocuments.c</file>
 	<file>shfldr_printers.c</file>
 	<file>shlexec.c</file>
 	<file>shlfileop.c</file>

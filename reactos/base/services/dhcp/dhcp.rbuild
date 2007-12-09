@@ -9,7 +9,6 @@
 	<library>ws2_32</library>
 	<library>iphlpapi</library>
 	<library>advapi32</library>
-	<pch>include/rosdhcp.h</pch>
 	<file>adapter.c</file>
 	<file>alloc.c</file>
 	<file>api.c</file>
@@ -25,4 +24,7 @@
 	<file>timer.c</file>
 	<file>util.c</file>
 	<file>dhcp.rc</file>
+	<directory name="include">
+		<pch>rosdhcp.h</pch>
+	</directory>
 </module>
