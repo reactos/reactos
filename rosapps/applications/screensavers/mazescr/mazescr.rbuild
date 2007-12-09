@@ -1,4 +1,4 @@
-<module name="mazescr" type="win32scr" installbase="system32" installname="maze.scr">
+<module name="mazescr" type="win32scr" installbase="system32">
 	<define name="_WIN32_IE">0x0501</define>
 	<define name="_WIN32_WINNT">0x0501</define>
 

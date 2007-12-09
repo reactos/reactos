@@ -19,6 +19,7 @@
 
 #include <windows.h>
 #include <tchar.h>
+#include "resource.h"
 
 #define APPNAME _T("Scrnsave")
 
@@ -156,6 +157,27 @@ void ParseCommandLine(PSTR szCmdLine, int *chOption, HWND *hwndParent)
 		*hwndParent = 0;
 }
 
+void Configure(void)
+{
+	TCHAR szTitle[256];
+	TCHAR szText[256];
+
+	LoadString(hInstance,
+		   IDS_TITLE,
+		   szTitle,
+		   256);
+
+	LoadString(hInstance,
+		   IDS_TEXT,
+		   szText,
+		   256);
+
+	MessageBox(0,
+	           szText,
+	           szTitle,
+	           MB_OK | MB_ICONWARNING);
+}
+
 int WINAPI WinMain (HINSTANCE hInst,
                     HINSTANCE hPrev,
                     LPSTR lpCmdLine,
@@ -184,10 +206,7 @@ int WINAPI WinMain (HINSTANCE hInst,
 
 		case 'c':
 		default:
-			MessageBox(0,
-			           _T("No options need to be set."),
-			           _T("About"),
-			           MB_OK | MB_ICONWARNING);
+			Configure();
 			return 0;
 	}
 

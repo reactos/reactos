@@ -10,10 +10,5 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
-
-LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
-
-STRINGTABLE DISCARDABLE
-BEGIN
-    IDS_DESCRIPTION         "Maze ScreenSaver"
-END
+#include "lang/en-US.rc"
+#include "lang/lt-LT.rc"

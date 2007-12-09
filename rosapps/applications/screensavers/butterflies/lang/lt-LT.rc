@@ -36,3 +36,8 @@ BEGIN
     CTEXT           "http://www.thaputer.com",WEBPAGE2,7,47,135,8,SS_NOTIFY |
                     NOT WS_GROUP
 END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION         "Drugeliai"
+END

@@ -1,6 +1,6 @@
 #define IDC_STATIC                      -1
 
-#define IDS_STR_DESCRIP                 1
+#define IDS_DESCRIPTION                 1
 #define IDABOUT                         3
 #define IDI_ICON_SCREEN                 100
 #define IDB_BUTTERFLY1                  103
