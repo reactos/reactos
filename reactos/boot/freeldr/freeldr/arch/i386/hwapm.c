@@ -56,50 +56,32 @@ FindApmBios(VOID)
 VOID
 DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
-  WCHAR Buffer[80];
-  FRLDRHKEY BiosKey;
-  LONG Error;
-
-  if (FindApmBios())
+    FRLDRHKEY BiosKey;
+    
+    if (FindApmBios())
     {
-      /* Create new bus key */
-      swprintf(Buffer,
-	      L"MultifunctionAdapter\\%u", *BusNumber);
-      Error = RegCreateKey(SystemKey,
-			   Buffer,
-			   &BiosKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-	  return;
-	}
-
+        /* Create new bus key */
+        FldrCreateComponentKey(SystemKey,
+                               L"MultifunctionAdapter",
+                               *BusNumber,
+                               &BiosKey);
+        
 #if 0
-      /* Set 'Component Information' */
-      SetComponentInformation(BiosKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
+        /* Set 'Component Information' */
+        FldrSetComponentInformation(BiosKey,
+                                    0x0,
+                                    0x0,
+                                    0xFFFFFFFF);
 #endif
-
-      /* Increment bus number */
-      (*BusNumber)++;
-
-      /* Set 'Identifier' value */
-      Error = RegSetValue(BiosKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)L"APM",
-			  4 * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	  return;
-	}
-
+        
+        /* Increment bus number */
+        (*BusNumber)++;
+        
+        /* Set 'Identifier' value */
+        FldrSetIdentifier(BiosKey, L"APM");
     }
-
-  /* FIXME: Add congiguration data */
+    
+    /* FIXME: Add congiguration data */
 }
 
 /* EOF */

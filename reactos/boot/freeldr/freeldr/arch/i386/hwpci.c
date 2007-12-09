@@ -147,39 +147,25 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
   PPCI_IRQ_ROUTING_TABLE Table;
   FRLDRHKEY TableKey;
   ULONG Size;
-  LONG Error;
 
   Table = GetPciIrqRoutingTable();
   if (Table != NULL)
     {
       DbgPrint((DPRINT_HWDETECT, "Table size: %u\n", Table->Size));
 
-      Error = RegCreateKey(BusKey,
-			   L"RealModeIrqRoutingTable\\0",
-			   &TableKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+      FldrCreateComponentKey(BusKey,
+                             L"RealModeIrqRoutingTable",
+                             0,
+                             &TableKey);
 
       /* Set 'Component Information' */
-      SetComponentInformation(TableKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
+      FldrSetComponentInformation(TableKey,
+                                  0x0,
+                                  0x0,
+                                  0xFFFFFFFF);
 
       /* Set 'Identifier' value */
-      Error = RegSetValue(TableKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)L"PCI Real-mode IRQ Routing Table",
-			  32 * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+      FldrSetIdentifier(TableKey, L"PCI Real-mode IRQ Routing Table");
 
       /* Set 'Configuration Data' value */
       Size = FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors) +
@@ -216,19 +202,8 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 	     Table->Size);
 
       /* Set 'Configuration Data' value */
-      Error = RegSetValue(TableKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR) FullResourceDescriptor,
-			  Size);
+      FldrSetConfigurationData(TableKey, FullResourceDescriptor, Size);
       MmFreeMemory(FullResourceDescriptor);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	  return;
-	}
     }
 }
 
@@ -238,10 +213,8 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   CM_PCI_BUS_DATA BusData;
-  WCHAR Buffer[80];
   FRLDRHKEY BiosKey;
   ULONG Size;
-  LONG Error;
 #if 0
   FRLDRHKEY BusKey;
   ULONG i;
@@ -252,37 +225,22 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   if (FindPciBios(&BusData))
     {
       /* Create new bus key */
-      swprintf(Buffer,
-	      L"MultifunctionAdapter\\%u", *BusNumber);
-      Error = RegCreateKey(SystemKey,
-			   Buffer,
-			   &BiosKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+      FldrCreateComponentKey(SystemKey,
+                             L"MultifunctionAdapter",
+                             *BusNumber,
+                             &BiosKey);
 
       /* Set 'Component Information' */
-      SetComponentInformation(BiosKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
+      FldrSetComponentInformation(BiosKey,
+                                  0x0,
+                                  0x0,
+                                  0xFFFFFFFF);
 
       /* Increment bus number */
       (*BusNumber)++;
 
       /* Set 'Identifier' value */
-      Error = RegSetValue(BiosKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)L"PCI BIOS",
-			  9 * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	  return;
-	}
+      FldrSetIdentifier(BiosKey, L"PCI BIOS");
 
       /* Set 'Configuration Data' value */
       Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
@@ -307,19 +265,8 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
       FullResourceDescriptor->PartialResourceList.PartialDescriptors[0].u.BusNumber.Length = 1;
 
       /* Set 'Configuration Data' value */
-      Error = RegSetValue(BiosKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR) FullResourceDescriptor,
-			  Size);
+      FldrSetConfigurationData(BiosKey, FullResourceDescriptor, Size);
       MmFreeMemory(FullResourceDescriptor);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	  return;
-	}
 
       DetectPciIrqRoutingTable(BiosKey);
 
@@ -332,43 +279,25 @@ DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
       /* Report PCI buses */
       for (i = 0; i < (ULONG)BusData.BusCount; i++)
-	{
-	  swprintf(Buffer,
-		   L"MultifunctionAdapter\\%u", *BusNumber);
-	  Error = RegCreateKey(SystemKey,
-			       Buffer,
-			       &BusKey);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-	      printf("RegCreateKey() failed (Error %u)\n", (int)Error);
-	      return;
-	    }
-
-	  /* Set 'Component Information' */
-	  SetComponentInformation(BusKey,
-				  0x0,
-				  0x0,
-				  0xFFFFFFFF);
-
-	  /* Increment bus number */
-	  (*BusNumber)++;
-
-
-	  /* Set 'Identifier' value */
-	  Error = RegSetValue(BusKey,
-			      L"Identifier",
-			      REG_SZ,
-			      (PCSTR)szPci,
-			      sizeof(szPci));
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-	      return;
-	    }
-	}
+      {
+          FldrCreateComponentKey(SystemKey,
+                                 L"MultifunctionAdapter",
+                                 *BusNumber,
+                                 &BiosKey);
+          
+          /* Set 'Component Information' */
+          FldrSetComponentInformation(BusKey,
+                                      0x0,
+                                      0x0,
+                                      0xFFFFFFFF);
+          
+          /* Increment bus number */
+          (*BusNumber)++;
+          
+          /* Set 'Identifier' value */
+          FldrSetIdentifier(BiosKey, szPci);
+      }
 #endif
-
     }
 }
 

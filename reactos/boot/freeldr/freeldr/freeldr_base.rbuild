@@ -46,6 +46,7 @@
 	<directory name="reactos">
 		<file>registry.c</file>
 		<file>arcname.c</file>
+		<file>archwsup.c</file>
 		<file>binhive.c</file>
 		<file>reactos.c</file>
 	</directory>

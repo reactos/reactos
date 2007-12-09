@@ -51,49 +51,34 @@ FindAcpiBios(VOID)
 VOID
 DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
-    WCHAR Buffer[80];
     FRLDRHKEY BiosKey;
-    LONG Error;
-
+    
     if (FindAcpiBios())
     {
         AcpiPresent = TRUE;
+
         /* Create new bus key */
-        swprintf(Buffer,
-                 L"MultifunctionAdapter\\%u", *BusNumber);
-        Error = RegCreateKey(SystemKey,
-                             Buffer,
-                             &BiosKey);
-        if (Error != ERROR_SUCCESS)
-        {
-            DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-            return;
-        }
-
+        FldrCreateComponentKey(SystemKey,
+                               L"MultifunctionAdapter",
+                               *BusNumber,
+                               &BiosKey);
+        
 #if 0
-      /* Set 'Component Information' */
-      SetComponentInformation(BiosKey,
-                              0x0,
-                              0x0,
-                              0xFFFFFFFF);
+        /* Set 'Component Information' */
+        FldrSetComponentInformation(BiosKey,
+                                    0x0,
+                                    0x0,
+                                    0xFFFFFFFF);
 #endif
-
+        
         /* Increment bus number */
         (*BusNumber)++;
-
+        
         /* Set 'Identifier' value */
-        Error = RegSetValue(BiosKey,
-                            L"Identifier",
-                            REG_SZ,
-                            (PCHAR)L"ACPI BIOS",
-                            10 * sizeof(WCHAR));
-        if (Error != ERROR_SUCCESS)
-        {
-            DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-            return;
-        }
-
+        FldrSetIdentifier(BiosKey, L"ACPI BIOS");
     }
+    
+    /* FIXME: Add congiguration data */
 }
 
 /* EOF */

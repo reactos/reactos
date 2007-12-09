@@ -233,41 +233,12 @@ HalpCalibrateStallExecution(VOID)
   delay_count /= (MILLISEC / 2);   /* Calculate delay_count for 1ms */
 }
 
-
-VOID
-SetComponentInformation(FRLDRHKEY ComponentKey,
-			ULONG Flags,
-			ULONG Key,
-			ULONG Affinity)
-{
-  CM_COMPONENT_INFORMATION CompInfo;
-  LONG Error;
-
-  CompInfo.Flags = Flags;
-  CompInfo.Version = 0;
-  CompInfo.Key = Key;
-  CompInfo.Affinity = Affinity;
-
-  /* Set 'Component Information' value */
-  Error = RegSetValue(ComponentKey,
-		      L"Component Information",
-		      REG_BINARY,
-		      (PCHAR)&CompInfo,
-		      sizeof(CM_COMPONENT_INFORMATION));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-    }
-}
-
-
 static VOID
 DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PNP_BIOS_DEVICE_NODE DeviceNode;
   PCM_PNP_BIOS_INSTALLATION_CHECK InstData;
-  WCHAR Buffer[80];
   FRLDRHKEY BusKey;
   ULONG x;
   ULONG NodeSize = 0;
@@ -278,7 +249,6 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   ULONG PnpBufferSize;
   ULONG Size;
   char *Ptr;
-  LONG Error;
 
   InstData = (PCM_PNP_BIOS_INSTALLATION_CHECK)PnpBiosSupported();
   if (InstData == NULL || strncmp((CHAR*)InstData->Signature, "$PnP", 4))
@@ -304,40 +274,20 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   DbgPrint((DPRINT_HWDETECT, "MaxNodeSize %u  NodeCount %u\n", NodeSize, NodeCount));
   DbgPrint((DPRINT_HWDETECT, "Estimated buffer size %u\n", NodeSize * NodeCount));
 
-  /* Create new bus key */
-  swprintf(Buffer,
-	  L"MultifunctionAdapter\\%u", *BusNumber);
-  Error = RegCreateKey(SystemKey,
-		       Buffer,
-		       &BusKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
+    /* Create component key */
+    FldrCreateComponentKey(SystemKey, L"MultifunctionAdapter", *BusNumber, &BusKey);
+    (*BusNumber)++;
+    
+    /* Set the component information */
+    FldrSetComponentInformation(BusKey,
+                                0x0,
+                                0x0,
+                                0xFFFFFFFF);
+    
+    /* Set the identifier */
+    FldrSetIdentifier(BusKey, L"PNP BIOS");
 
-  /* Increment bus number */
-  (*BusNumber)++;
-
-  /* Set 'Component Information' value similar to my NT4 box */
-  SetComponentInformation(BusKey,
-                          0x0,
-                          0x0,
-                          0xFFFFFFFF);
-
-  /* Set 'Identifier' value */
-  Error = RegSetValue(BusKey,
-		      L"Identifier",
-		      REG_SZ,
-		      (PCHAR)L"PNP BIOS",
-		      9 * sizeof(WCHAR));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
-  /* Set 'Configuration Data' value */
+    /* Set 'Configuration Data' value */
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) + (NodeSize * NodeCount);
   FullResourceDescriptor = MmAllocateMemory(Size);
   if (FullResourceDescriptor == NULL)
@@ -404,20 +354,9 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
   DbgPrint((DPRINT_HWDETECT, "Real buffer size: %u\n", PnpBufferSize));
   DbgPrint((DPRINT_HWDETECT, "Resource size: %u\n", Size));
-
-  /* Set 'Configuration Data' value */
-  Error = RegSetValue(BusKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
-  MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-    }
+  
+    FldrSetConfigurationData(BusKey, FullResourceDescriptor, Size);
+    MmFreeMemory(FullResourceDescriptor);
 }
 
 
@@ -431,7 +370,6 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
   EXTENDED_GEOMETRY ExtGeometry;
   GEOMETRY Geometry;
   ULONG Size;
-  LONG Error;
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
@@ -490,18 +428,8 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
 	   DiskGeometry->SectorsPerTrack,
 	   DiskGeometry->BytesPerSector));
 
-  Error = RegSetValue(DiskKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
+  FldrSetConfigurationData(DiskKey, FullResourceDescriptor, Size);
   MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-    }
 }
 
 
@@ -516,7 +444,6 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   ULONG Signature;
   WCHAR Identifier[20];
   CHAR ArcName[256];
-  LONG Error;
 
   /* Read the MBR */
   if (!MachDiskReadLogicalSectors(DriveNumber, 0ULL, 1, (PVOID)DISKREADBUFFER))
@@ -573,17 +500,7 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
   DbgPrint((DPRINT_HWDETECT, "Identifier: %S\n", Identifier));
 
   /* Set identifier */
-  Error = RegSetValue(DiskKey,
-		      L"Identifier",
-		      REG_SZ,
-		      (PCHAR)Identifier,
-		      sizeof(Identifier));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Identifier) failed (Error %u)\n",
-		(int)Error));
-    }
+  FldrSetIdentifier(DiskKey, Identifier);
 }
 
 
@@ -594,12 +511,10 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_INT13_DRIVE_PARAMETER Int13Drives;
   GEOMETRY Geometry;
-  WCHAR Buffer[80];
   FRLDRHKEY DiskKey;
   ULONG DiskCount;
   ULONG Size;
   ULONG i;
-  LONG Error;
   BOOLEAN Changed;
 
   /* Count the number of visible drives */
@@ -680,37 +595,17 @@ DetectBiosDisks(FRLDRHKEY SystemKey,
     }
 
   /* Set 'Configuration Data' value */
-  Error = RegSetValue(SystemKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
+  FldrSetConfigurationData(SystemKey, FullResourceDescriptor, Size);
   MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
 
   /* Create and fill subkey for each harddisk */
   for (i = 0; i < DiskCount; i++)
     {
       /* Create disk key */
-      swprintf (Buffer,
-	        L"DiskController\\0\\DiskPeripheral\\%u",
-	        i);
-
-      Error = RegCreateKey(BusKey,
-			   Buffer,
-			   &DiskKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Failed to create drive key\n"));
-	  continue;
-	}
-      DbgPrint((DPRINT_HWDETECT, "Created key: %S\n", Buffer));
+      FldrCreateComponentKey(BusKey,
+                             L"DiskController\\0\\DiskPeripheral",
+                             i,
+                             &DiskKey);
 
       /* Set disk values */
       SetHarddiskConfigurationData(DiskKey, 0x80 + i);
@@ -764,11 +659,9 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_FLOPPY_DEVICE_DATA FloppyData;
-  WCHAR KeyName[32];
   WCHAR Identifier[20];
   FRLDRHKEY PeripheralKey;
   ULONG Size;
-  LONG Error;
   ULONG FloppyNumber;
   UCHAR FloppyType;
   ULONG MaxDensity[6] = {0, 360, 1200, 720, 1440, 2880};
@@ -784,25 +677,17 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     DiskResetController(FloppyNumber);
 
     Ptr = GetInt1eTable();
-
-    swprintf(KeyName, L"FloppyDiskPeripheral\\%u", FloppyNumber);
-
-    Error = RegCreateKey(ControllerKey,
-			 KeyName,
-			 &PeripheralKey);
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
-      return;
-    }
-
-    DbgPrint((DPRINT_HWDETECT, "Created key: %S\n", KeyName));
+    
+    FldrCreateComponentKey(ControllerKey,
+                           L"FloppyDiskPeripheral",
+                           FloppyNumber,
+                           &PeripheralKey);
 
     /* Set 'ComponentInformation' value */
-    SetComponentInformation(PeripheralKey,
-			    0x0,
-			    FloppyNumber,
-			    0xFFFFFFFF);
+    FldrSetComponentInformation(PeripheralKey,
+                                0x0,
+                                FloppyNumber,
+                                0xFFFFFFFF);
 
     Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
 	   sizeof(CM_FLOPPY_DEVICE_DATA);
@@ -838,33 +723,12 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
     FloppyData->DataTransferRate = 0;
 
     /* Set 'Configuration Data' value */
-    Error = RegSetValue(PeripheralKey,
-			L"Configuration Data",
-			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PCHAR) FullResourceDescriptor,
-			Size);
+    FldrSetConfigurationData(PeripheralKey, FullResourceDescriptor, Size);
     MmFreeMemory(FullResourceDescriptor);
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
 
     /* Set 'Identifier' value */
     swprintf(Identifier, L"FLOPPY%u", FloppyNumber + 1);
-    Error = RegSetValue(PeripheralKey,
-			L"Identifier",
-			REG_SZ,
-			(PCHAR)Identifier,
-			(wcslen(Identifier) + 1) * sizeof(WCHAR));
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue() failed (Error %u)\n",
-		(int)Error));
-    }
+    FldrSetIdentifier(PeripheralKey, Identifier);
   }
 }
 
@@ -877,7 +741,6 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   FRLDRHKEY ControllerKey;
   ULONG Size;
-  LONG Error;
   ULONG FloppyCount;
 
   FloppyCount = GetFloppyCount();
@@ -887,23 +750,18 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
 
   if (FloppyCount == 0)
     return;
-
-  Error = RegCreateKey(BusKey,
-		       L"DiskController\\0",
-		       &ControllerKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-      return;
-    }
-
+  
+  FldrCreateComponentKey(SystemKey,
+                         L"DiskController",
+                         0,
+                         &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: DiskController\\0\n"));
 
   /* Set 'ComponentInformation' value */
-  SetComponentInformation(ControllerKey,
-			  0x64,
-			  0,
-			  0xFFFFFFFF);
+  FldrSetComponentInformation(ControllerKey,
+                              Output | Input | Removable,
+                              0,
+                              0xFFFFFFFF);
 
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
 	 2 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
@@ -950,19 +808,8 @@ DetectBiosFloppyController(FRLDRHKEY SystemKey,
   PartialDescriptor->u.Dma.Port = 0;
 
   /* Set 'Configuration Data' value */
-  Error = RegSetValue(ControllerKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
+  FldrSetConfigurationData(ControllerKey, FullResourceDescriptor, Size);
   MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
 
   DetectBiosFloppyPeripheral(ControllerKey);
 }
@@ -1153,7 +1000,6 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
   ULONG i;
   ULONG j;
   ULONG k;
-  LONG Error;
 
   DbgPrint((DPRINT_HWDETECT,
 	    "DetectSerialPointerPeripheral()\n"));
@@ -1281,23 +1127,18 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
 	}
 
       /* Create 'PointerPeripheral' key */
-      Error = RegCreateKey(ControllerKey,
-			   L"PointerPeripheral\\0",
-			   &PeripheralKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "Failed to create peripheral key\n"));
-	  return;
-	}
+      FldrCreateComponentKey(ControllerKey,
+                             L"PointerPeripheral",
+                             0,
+                             &PeripheralKey);
       DbgPrint((DPRINT_HWDETECT,
 		"Created key: PointerPeripheral\\0\n"));
 
       /* Set 'ComponentInformation' value */
-      SetComponentInformation(PeripheralKey,
-			      0x20,
-			      0,
-			      0xFFFFFFFF);
+      FldrSetComponentInformation(PeripheralKey,
+                                  Input,
+                                  0,
+                                  0xFFFFFFFF);
 
       /* Set 'Configuration Data' value */
       memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
@@ -1307,31 +1148,13 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
       FullResourceDescriptor.PartialResourceList.Revision = 1;
       FullResourceDescriptor.PartialResourceList.Count = 0;
 
-      Error = RegSetValue(PeripheralKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR)&FullResourceDescriptor,
-			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-			  sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	}
+      FldrSetConfigurationData(PeripheralKey,
+                               &FullResourceDescriptor,
+                               sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+                               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
       /* Set 'Identifier' value */
-      Error = RegSetValue(PeripheralKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)Identifier,
-			  (wcslen(Identifier) + 1) * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue() failed (Error %u)\n",
-		    (int)Error));
-	}
+      FldrSetIdentifier(PeripheralKey, Identifier);
     }
 }
 
@@ -1349,7 +1172,6 @@ DetectSerialPorts(FRLDRHKEY BusKey)
   ULONG ControllerNumber = 0;
   FRLDRHKEY ControllerKey;
   ULONG i;
-  LONG Error;
   ULONG Size;
 
   DbgPrint((DPRINT_HWDETECT, "DetectSerialPorts()\n"));
@@ -1368,25 +1190,16 @@ DetectSerialPorts(FRLDRHKEY BusKey)
 		Base));
 
       /* Create controller key */
-      swprintf(Buffer,
-	      L"SerialController\\%u",
-	      ControllerNumber);
-
-      Error = RegCreateKey(BusKey,
-			   Buffer,
-			   &ControllerKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-	  continue;
-	}
-      DbgPrint((DPRINT_HWDETECT, "Created key: %S\n", Buffer));
+      FldrCreateComponentKey(BusKey,
+                             L"SerialController",
+                             ControllerNumber,
+                             &ControllerKey);
 
       /* Set 'ComponentInformation' value */
-      SetComponentInformation(ControllerKey,
-			      0x78,
-			      ControllerNumber,
-			      0xFFFFFFFF);
+      FldrSetComponentInformation(ControllerKey,
+                                  Output | Input | ConsoleIn | ConsoleOut,
+                                  ControllerNumber,
+                                  0xFFFFFFFF);
 
       /* Build full device descriptor */
       Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
@@ -1438,35 +1251,12 @@ DetectSerialPorts(FRLDRHKEY BusKey)
       SerialDeviceData->BaudClock = 1843200; /* UART Clock frequency (Hertz) */
 
       /* Set 'Configuration Data' value */
-      Error = RegSetValue(ControllerKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR) FullResourceDescriptor,
-			  Size);
+      FldrSetConfigurationData(ControllerKey, FullResourceDescriptor, Size);
       MmFreeMemory(FullResourceDescriptor);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	}
-
+      
       /* Set 'Identifier' value */
-      swprintf(Buffer,
-	       L"COM%u",
-	       i + 1);
-      Error = RegSetValue(ControllerKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)Buffer,
-			  (wcslen(Buffer) + 1) * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue() failed (Error %u)\n",
-		    (int)Error));
-	  continue;
-	}
+      swprintf(Buffer, L"COM%u", i + 1);
+      FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
 		Buffer));
@@ -1494,7 +1284,6 @@ DetectParallelPorts(FRLDRHKEY BusKey)
   ULONG Base;
   ULONG ControllerNumber;
   ULONG i;
-  LONG Error;
   ULONG Size;
 
   DbgPrint((DPRINT_HWDETECT, "DetectParallelPorts() called\n"));
@@ -1513,25 +1302,16 @@ DetectParallelPorts(FRLDRHKEY BusKey)
 		Base));
 
       /* Create controller key */
-      swprintf(Buffer,
-	       L"ParallelController\\%u",
-	       ControllerNumber);
-
-      Error = RegCreateKey(BusKey,
-			   Buffer,
-			   &ControllerKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-	  continue;
-	}
-      DbgPrint((DPRINT_HWDETECT, "Created key: %S\n", Buffer));
+      FldrCreateComponentKey(BusKey,
+                             L"ParallelController",
+                             ControllerNumber,
+                             &ControllerKey);
 
       /* Set 'ComponentInformation' value */
-      SetComponentInformation(ControllerKey,
-			      0x40,
-			      ControllerNumber,
-			      0xFFFFFFFF);
+      FldrSetComponentInformation(ControllerKey,
+                                  Output,
+                                  ControllerNumber,
+                                  0xFFFFFFFF);
 
       /* Build full device descriptor */
       Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR);
@@ -1576,35 +1356,12 @@ DetectParallelPorts(FRLDRHKEY BusKey)
 	}
 
       /* Set 'Configuration Data' value */
-      Error = RegSetValue(ControllerKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR) FullResourceDescriptor,
-			  Size);
+      FldrSetConfigurationData(ControllerKey, FullResourceDescriptor, Size);
       MmFreeMemory(FullResourceDescriptor);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	}
 
       /* Set 'Identifier' value */
-      swprintf(Buffer,
-	      L"PARALLEL%u",
-	      i + 1);
-      Error = RegSetValue(ControllerKey,
-			  L"Identifier",
-			  REG_SZ,
-			  (PCHAR)Buffer,
-			  (wcslen(Buffer) + 1) * sizeof(WCHAR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue() failed (Error %u)\n",
-		    (int)Error));
-	  continue;
-	}
+      swprintf(Buffer, L"PARALLEL%u", i + 1);
+      FldrSetIdentifier(ControllerKey, Buffer);
       DbgPrint((DPRINT_HWDETECT,
 		"Created value: Identifier %s\n",
 		Buffer));
@@ -1695,27 +1452,22 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
   PCM_KEYBOARD_DEVICE_DATA KeyboardData;
   FRLDRHKEY PeripheralKey;
   ULONG Size;
-  LONG Error;
 
   /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2 */
   if (TRUE || DetectKeyboardDevice())
   {
-    /* Create controller key */
-    Error = RegCreateKey(ControllerKey,
-			 L"KeyboardPeripheral\\0",
-			 &PeripheralKey);
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
-      return;
-    }
+      /* Create controller key */
+      FldrCreateComponentKey(ControllerKey,
+                             L"KeyboardPeripheral",
+                             0,
+                             &PeripheralKey);
     DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardPeripheral\\0\n"));
 
     /* Set 'ComponentInformation' value */
-    SetComponentInformation(ControllerKey,
-			    0x28,
-			    0,
-			    0xFFFFFFFF);
+    FldrSetComponentInformation(ControllerKey,
+                                Input | ConsoleIn,
+                                0,
+                                0xFFFFFFFF);
 
     /* Set 'Configuration Data' value */
     Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
@@ -1749,31 +1501,11 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
     KeyboardData->KeyboardFlags = 0x20;
 
     /* Set 'Configuration Data' value */
-    Error = RegSetValue(PeripheralKey,
-			L"Configuration Data",
-			REG_FULL_RESOURCE_DESCRIPTOR,
-			(PCHAR)FullResourceDescriptor,
-			Size);
+    FldrSetConfigurationData(PeripheralKey, FullResourceDescriptor, Size);
     MmFreeMemory(FullResourceDescriptor);
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-    }
 
     /* Set 'Identifier' value */
-    Error = RegSetValue(PeripheralKey,
-			L"Identifier",
-			REG_SZ,
-			(PCHAR)L"PCAT_ENHANCED",
-			14 * sizeof(WCHAR));
-    if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue() failed (Error %u)\n",
-		(int)Error));
-    }
+    FldrSetIdentifier(PeripheralKey, L"PCAT_ENHANCED");
   }
 }
 
@@ -1785,24 +1517,19 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   FRLDRHKEY ControllerKey;
   ULONG Size;
-  LONG Error;
 
   /* Create controller key */
-  Error = RegCreateKey(BusKey,
-		       L"KeyboardController\\0",
-		       &ControllerKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-      return;
-    }
+  FldrCreateComponentKey(BusKey,
+                         L"KeyboardController",
+                         0,
+                         &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: KeyboardController\\0\n"));
 
   /* Set 'ComponentInformation' value */
-  SetComponentInformation(ControllerKey,
-			  0x28,
-			  0,
-			  0xFFFFFFFF);
+  FldrSetComponentInformation(ControllerKey,
+                              Input | ConsoleIn,
+                              0,
+                              0xFFFFFFFF);
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) +
@@ -1851,20 +1578,9 @@ DetectKeyboardController(FRLDRHKEY BusKey)
   PartialDescriptor->u.Port.Length = 1;
 
   /* Set 'Configuration Data' value */
-  Error = RegSetValue(ControllerKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR)FullResourceDescriptor,
-		      Size);
+  FldrSetConfigurationData(ControllerKey, FullResourceDescriptor, Size);
   MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
-
+ 
   DetectKeyboardPeripheral(ControllerKey);
 }
 
@@ -1984,28 +1700,23 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   FRLDRHKEY ControllerKey;
   FRLDRHKEY PeripheralKey;
-  LONG Error;
 
   if (DetectPS2AuxPort())
     {
       DbgPrint((DPRINT_HWDETECT, "Detected PS2 port\n"));
 
       /* Create controller key */
-      Error = RegCreateKey(BusKey,
-			   L"PointerController\\0",
-			   &ControllerKey);
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-	  return;
-	}
+      FldrCreateComponentKey(BusKey,
+                             L"PointerController",
+                             0,
+                             &ControllerKey);
       DbgPrint((DPRINT_HWDETECT, "Created key: PointerController\\0\n"));
 
       /* Set 'ComponentInformation' value */
-      SetComponentInformation(ControllerKey,
-			      0x20,
-			      0,
-			      0xFFFFFFFF);
+      FldrSetComponentInformation(ControllerKey,
+                                  Input,
+                                  0,
+                                  0xFFFFFFFF);
 
       memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 
@@ -2025,40 +1736,26 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
       FullResourceDescriptor.PartialResourceList.PartialDescriptors[0].u.Interrupt.Affinity = 0xFFFFFFFF;
 
       /* Set 'Configuration Data' value */
-      Error = RegSetValue(ControllerKey,
-			  L"Configuration Data",
-			  REG_FULL_RESOURCE_DESCRIPTOR,
-			  (PCHAR)&FullResourceDescriptor,
-			  sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
-      if (Error != ERROR_SUCCESS)
-	{
-	  DbgPrint((DPRINT_HWDETECT,
-		    "RegSetValue(Configuration Data) failed (Error %u)\n",
-		    (int)Error));
-	  return;
-	}
-
+      FldrSetConfigurationData(ControllerKey,
+                               &FullResourceDescriptor,
+                               sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
 
       if (DetectPS2AuxDevice())
 	{
 	  DbgPrint((DPRINT_HWDETECT, "Detected PS2 mouse\n"));
 
-	  /* Create peripheral key */
-	  Error = RegCreateKey(ControllerKey,
-			       L"PointerPeripheral\\0",
-			       &PeripheralKey);
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT, "Failed to create peripheral key\n"));
-	      return;
-	    }
+          /* Create peripheral key */
+          FldrCreateComponentKey(ControllerKey,
+                                 L"PointerController",
+                                 0,
+                                 &PeripheralKey);
 	  DbgPrint((DPRINT_HWDETECT, "Created key: PointerPeripheral\\0\n"));
 
 	  /* Set 'ComponentInformation' value */
-	  SetComponentInformation(PeripheralKey,
-				  0x20,
-				  0,
-				  0xFFFFFFFF);
+	  FldrSetComponentInformation(PeripheralKey,
+                                  Input,
+                                  0,
+                                  0xFFFFFFFF);
 
 	  /* Initialize resource descriptor */
 	  memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
@@ -2069,35 +1766,15 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 	  FullResourceDescriptor.PartialResourceList.Count = 0;
 
 	  /* Set 'Configuration Data' value */
-	  Error = RegSetValue(PeripheralKey,
-			      L"Configuration Data",
-			      REG_FULL_RESOURCE_DESCRIPTOR,
-			      (PCHAR)&FullResourceDescriptor,
-			      sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
-			      sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue(Configuration Data) failed (Error %u)\n",
-			(int)Error));
-	      return;
-	    }
+      FldrSetConfigurationData(PeripheralKey,
+                               &FullResourceDescriptor,
+                               sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+                               sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
 	  /* Set 'Identifier' value */
-	  Error = RegSetValue(PeripheralKey,
-			      L"Identifier",
-			      REG_SZ,
-			      (PCHAR)L"MICROSOFT PS2 MOUSE",
-			      20 * sizeof(WCHAR));
-	  if (Error != ERROR_SUCCESS)
-	    {
-	      DbgPrint((DPRINT_HWDETECT,
-			"RegSetValue() failed (Error %u)\n",
-			(int)Error));
-	      return;
-	    }
-	}
+      FldrSetIdentifier(PeripheralKey, L"MICROSOFT PS2 MOUSE");
     }
+  }
 }
 
 
@@ -2107,23 +1784,18 @@ DetectDisplayController(FRLDRHKEY BusKey)
   WCHAR Buffer[80];
   FRLDRHKEY ControllerKey;
   USHORT VesaVersion;
-  LONG Error;
 
-  Error = RegCreateKey(BusKey,
-		       L"DisplayController\\0",
-		       &ControllerKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "Failed to create controller key\n"));
-      return;
-    }
+  FldrCreateComponentKey(BusKey,
+                         L"DisplayController",
+                         0,
+                         &ControllerKey);
   DbgPrint((DPRINT_HWDETECT, "Created key: DisplayController\\0\n"));
 
   /* Set 'ComponentInformation' value */
-  SetComponentInformation(ControllerKey,
-			  0x00,
-			  0,
-			  0xFFFFFFFF);
+  FldrSetComponentInformation(ControllerKey,
+                              0x00,
+                              0,
+                              0xFFFFFFFF);
 
   /* FIXME: Set 'ComponentInformation' value */
 
@@ -2153,18 +1825,7 @@ DetectDisplayController(FRLDRHKEY BusKey)
     }
 
   /* Set 'Identifier' value */
-  Error = RegSetValue(ControllerKey,
-		      L"Identifier",
-		      REG_SZ,
-		      (PCHAR)Buffer,
-		      (wcslen(Buffer) + 1) * sizeof(WCHAR));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue() failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
+  FldrSetIdentifier(ControllerKey, Buffer);
 
   /* FIXME: Add display peripheral (monitor) data */
 }
@@ -2174,43 +1835,26 @@ static VOID
 DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  WCHAR Buffer[80];
   FRLDRHKEY BusKey;
   ULONG Size;
-  LONG Error;
 
   /* Create new bus key */
-  swprintf(Buffer,
-	  L"MultifunctionAdapter\\%u", *BusNumber);
-  Error = RegCreateKey(SystemKey,
-		       Buffer,
-		       &BusKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
+  FldrCreateComponentKey(SystemKey,
+                         L"MultifunctionAdapter",
+                         *BusNumber,
+                         &BusKey);
 
   /* Set 'Component Information' value similar to my NT4 box */
-  SetComponentInformation(BusKey,
-                          0x0,
-                          0x0,
-                          0xFFFFFFFF);
+  FldrSetComponentInformation(BusKey,
+                              0x0,
+                              0x0,
+                              0xFFFFFFFF);
 
   /* Increment bus number */
   (*BusNumber)++;
 
   /* Set 'Identifier' value */
-  Error = RegSetValue(BusKey,
-		      L"Identifier",
-		      REG_SZ,
-		      (PCHAR)L"ISA",
-		      4 * sizeof(WCHAR));
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegSetValue() failed (Error %u)\n", (int)Error));
-      return;
-    }
+  FldrSetIdentifier(BusKey, L"ISA");
 
   /* Set 'Configuration Data' value */
   Size = sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
@@ -2232,19 +1876,8 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
   FullResourceDescriptor->PartialResourceList.Count = 0;
 
   /* Set 'Configuration Data' value */
-  Error = RegSetValue(BusKey,
-		      L"Configuration Data",
-		      REG_FULL_RESOURCE_DESCRIPTOR,
-		      (PCHAR) FullResourceDescriptor,
-		      Size);
+  FldrSetConfigurationData(BusKey, FullResourceDescriptor, Size);
   MmFreeMemory(FullResourceDescriptor);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT,
-		"RegSetValue(Configuration Data) failed (Error %u)\n",
-		(int)Error));
-      return;
-    }
 
   /* Detect ISA/BIOS devices */
   DetectBiosDisks(SystemKey, BusKey);
@@ -2270,27 +1903,19 @@ PcHwDetect(VOID)
 {
   FRLDRHKEY SystemKey;
   ULONG BusNumber = 0;
-  LONG Error;
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
 
   /* Create the 'System' key */
-  Error = RegCreateKey(NULL,
-		       L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
-		       &SystemKey);
-  if (Error != ERROR_SUCCESS)
-    {
-      DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", (int)Error));
-      return;
-    }
-
+  FldrCreateSystemKey(&SystemKey);
+  
   /* Detect buses */
   DetectPciBios(SystemKey, &BusNumber);
   DetectApmBios(SystemKey, &BusNumber);
   DetectPnpBios(SystemKey, &BusNumber);
   DetectIsaBios(SystemKey, &BusNumber);
   DetectAcpiBios(SystemKey, &BusNumber);
-
+  
   DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 }
 
