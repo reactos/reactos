@@ -49,9 +49,9 @@ FindAcpiBios(VOID)
 
 
 VOID
-DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
+DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
-    FRLDRHKEY BiosKey;
+    PCONFIGURATION_COMPONENT_DATA BiosKey;
     
     if (FindAcpiBios())
     {

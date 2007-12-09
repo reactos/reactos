@@ -34,7 +34,7 @@
 VOID
 NTAPI
 FldrSetComponentInformation(
-    IN FRLDRHKEY ComponentKey,
+    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
     IN IDENTIFIER_FLAG Flags,
     IN ULONG Key,
     IN ULONG Affinity
@@ -43,31 +43,31 @@ FldrSetComponentInformation(
 VOID
 NTAPI
 FldrSetIdentifier(
-    IN FRLDRHKEY ComponentKey,
+    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
     IN PWCHAR Identifier
 );
 
 VOID
 NTAPI
 FldrCreateSystemKey(
-    OUT FRLDRHKEY *SystemKey
+    OUT PCONFIGURATION_COMPONENT_DATA *SystemKey
 );
 
 VOID
 NTAPI
 FldrCreateComponentKey(
-    IN FRLDRHKEY SystemKey,
+    IN PCONFIGURATION_COMPONENT_DATA SystemKey,
     IN PWCHAR BusName,
     IN ULONG BusNumber,
     IN CONFIGURATION_CLASS Class,
     IN CONFIGURATION_TYPE Type,
-    OUT FRLDRHKEY *ComponentKey
+    OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey
 );
 
 VOID
 NTAPI
 FldrSetConfigurationData(
-    IN FRLDRHKEY ComponentKey,
+    IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
     IN PVOID ConfigurationData,
     IN ULONG Size
 );
@@ -82,16 +82,13 @@ VOID StallExecutionProcessor(ULONG Microseconds);
 VOID HalpCalibrateStallExecution(VOID);
 
 /* hwacpi.c */
-VOID DetectAcpiBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
+VOID DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwapm.c */
-VOID DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
-
-/* hwcpu.c */
-VOID DetectCPUs(FRLDRHKEY SystemKey);
+VOID DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* hwpci.c */
-VOID DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber);
+VOID DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber);
 
 /* i386cpu.S */
 ULONG CpuidSupported(VOID);

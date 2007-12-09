@@ -234,12 +234,12 @@ HalpCalibrateStallExecution(VOID)
 }
 
 static VOID
-DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
+DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PNP_BIOS_DEVICE_NODE DeviceNode;
   PCM_PNP_BIOS_INSTALLATION_CHECK InstData;
-  FRLDRHKEY BusKey;
+  PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG x;
   ULONG NodeSize = 0;
   ULONG NodeCount = 0;
@@ -367,7 +367,7 @@ DetectPnpBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 
 
 static VOID
-SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
+SetHarddiskConfigurationData(PCONFIGURATION_COMPONENT_DATA DiskKey,
 			     ULONG DriveNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
@@ -439,7 +439,7 @@ SetHarddiskConfigurationData(FRLDRHKEY DiskKey,
 
 
 static VOID
-SetHarddiskIdentifier(FRLDRHKEY DiskKey,
+SetHarddiskIdentifier(PCONFIGURATION_COMPONENT_DATA DiskKey,
 		      ULONG DriveNumber)
 {
   PMASTER_BOOT_RECORD Mbr;
@@ -510,13 +510,13 @@ SetHarddiskIdentifier(FRLDRHKEY DiskKey,
 
 
 static VOID
-DetectBiosDisks(FRLDRHKEY SystemKey,
-		FRLDRHKEY BusKey)
+DetectBiosDisks(PCONFIGURATION_COMPONENT_DATA SystemKey,
+		PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_INT13_DRIVE_PARAMETER Int13Drives;
   GEOMETRY Geometry;
-  FRLDRHKEY DiskKey;
+  PCONFIGURATION_COMPONENT_DATA DiskKey;
   ULONG DiskCount;
   ULONG Size;
   ULONG i;
@@ -661,13 +661,13 @@ GetInt1eTable(VOID)
 
 
 static VOID
-DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
+DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_FLOPPY_DEVICE_DATA FloppyData;
   WCHAR Identifier[20];
-  FRLDRHKEY PeripheralKey;
+  PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG Size;
   ULONG FloppyNumber;
   UCHAR FloppyType;
@@ -743,12 +743,12 @@ DetectBiosFloppyPeripheral(FRLDRHKEY ControllerKey)
 
 
 static VOID
-DetectBiosFloppyController(FRLDRHKEY SystemKey,
-			   FRLDRHKEY BusKey)
+DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA SystemKey,
+			   PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  FRLDRHKEY ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
   ULONG Size;
   ULONG FloppyCount;
 
@@ -999,13 +999,13 @@ GetSerialMousePnpId(ULONG Port, char *Buffer)
 
 
 static VOID
-DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
+DetectSerialPointerPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey,
 			      ULONG Base)
 {
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   char Buffer[256];
   WCHAR Identifier[256];
-  FRLDRHKEY PeripheralKey;
+  PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG MouseType;
   ULONG Length;
   ULONG i;
@@ -1173,7 +1173,7 @@ DetectSerialPointerPeripheral(FRLDRHKEY ControllerKey,
 
 
 static VOID
-DetectSerialPorts(FRLDRHKEY BusKey)
+DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
@@ -1183,7 +1183,7 @@ DetectSerialPorts(FRLDRHKEY BusKey)
   WCHAR Buffer[80];
   PUSHORT BasePtr;
   ULONG ControllerNumber = 0;
-  FRLDRHKEY ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
   ULONG i;
   ULONG Size;
 
@@ -1288,13 +1288,13 @@ DetectSerialPorts(FRLDRHKEY BusKey)
 
 
 static VOID
-DetectParallelPorts(FRLDRHKEY BusKey)
+DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   ULONG Irq[3] = {7, 5, (ULONG)-1};
   WCHAR Buffer[80];
-  FRLDRHKEY ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
   PUSHORT BasePtr;
   ULONG Base;
   ULONG ControllerNumber;
@@ -1462,12 +1462,12 @@ DetectKeyboardDevice(VOID)
 
 
 static VOID
-DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
+DetectKeyboardPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PCM_KEYBOARD_DEVICE_DATA KeyboardData;
-  FRLDRHKEY PeripheralKey;
+  PCONFIGURATION_COMPONENT_DATA PeripheralKey;
   ULONG Size;
 
   /* HACK: don't call DetectKeyboardDevice() as it fails in Qemu 0.8.2 */
@@ -1530,11 +1530,11 @@ DetectKeyboardPeripheral(FRLDRHKEY ControllerKey)
 
 
 static VOID
-DetectKeyboardController(FRLDRHKEY BusKey)
+DetectKeyboardController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
-  FRLDRHKEY ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
   ULONG Size;
 
   /* Create controller key */
@@ -1716,11 +1716,11 @@ DetectPS2AuxDevice(VOID)
 
 
 static VOID
-DetectPS2Mouse(FRLDRHKEY BusKey)
+DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  FRLDRHKEY ControllerKey;
-  FRLDRHKEY PeripheralKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA PeripheralKey;
 
   if (DetectPS2AuxPort())
     {
@@ -1804,10 +1804,10 @@ DetectPS2Mouse(FRLDRHKEY BusKey)
 
 
 static VOID
-DetectDisplayController(FRLDRHKEY BusKey)
+DetectDisplayController(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   WCHAR Buffer[80];
-  FRLDRHKEY ControllerKey;
+  PCONFIGURATION_COMPONENT_DATA ControllerKey;
   USHORT VesaVersion;
 
   FldrCreateComponentKey(BusKey,
@@ -1859,10 +1859,10 @@ DetectDisplayController(FRLDRHKEY BusKey)
 
 
 static VOID
-DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
+DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
-  FRLDRHKEY BusKey;
+  PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG Size;
 
   /* Create new bus key */
@@ -1930,7 +1930,7 @@ DetectIsaBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
 VOID
 PcHwDetect(VOID)
 {
-  FRLDRHKEY SystemKey;
+  PCONFIGURATION_COMPONENT_DATA SystemKey;
   ULONG BusNumber = 0;
 
   DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));

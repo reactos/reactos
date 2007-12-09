@@ -140,12 +140,12 @@ FindPciBios(PCM_PCI_BUS_DATA BusData)
 
 
 static VOID
-DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
+DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
   PPCI_IRQ_ROUTING_TABLE Table;
-  FRLDRHKEY TableKey;
+  PCONFIGURATION_COMPONENT_DATA TableKey;
   ULONG Size;
 
   Table = GetPciIrqRoutingTable();
@@ -211,14 +211,14 @@ DetectPciIrqRoutingTable(FRLDRHKEY BusKey)
 
 
 VOID
-DetectPciBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
+DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
   PCM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
   CM_PCI_BUS_DATA BusData;
-  FRLDRHKEY BiosKey;
+  PCONFIGURATION_COMPONENT_DATA BiosKey;
   ULONG Size;
 #if 0
-  FRLDRHKEY BusKey;
+  PCONFIGURATION_COMPONENT_DATA BusKey;
   ULONG i;
   WCHAR szPci[] = L"PCI";
 #endif

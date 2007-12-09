@@ -15,87 +15,28 @@
 /* GLOBALS ********************************************************************/
 
 PCONFIGURATION_COMPONENT_DATA FldrArcHwTreeRoot;
-ULONG FldrBusTypeCount[MaximumType + 1] = {0};
-const PWCHAR FldrBusTypeString[MaximumType + 1] =
-{
-    L"System",
-    L"CentralProcessor",
-    L"FloatingPointProcessor",
-    L"PrimaryICache",
-    L"PrimaryDCache",
-    L"SecondaryICache",
-    L"SecondaryDCache",
-    L"SecondaryCache",
-    L"EisaAdapter",
-    L"TcAdapter",
-    L"ScsiAdapter",
-    L"DtiAdapter",
-    L"MultifunctionAdapter",
-    L"DiskController",
-    L"TapeController",
-    L"CdRomController",
-    L"WormController",
-    L"SerialController",
-    L"NetworkController",
-    L"DisplayController",
-    L"ParallelController",
-    L"PointerController",
-    L"KeyboardController",
-    L"AudioController",
-    L"OtherController",
-    L"DiskPeripheral",
-    L"FloppyDiskPeripheral",
-    L"TapePeripheral",
-    L"ModemPeripheral",
-    L"MonitorPeripheral",
-    L"PrinterPeripheral",
-    L"PointerPeripheral",
-    L"KeyboardPeripheral",
-    L"TerminalPeripheral",
-    L"OtherPeripheral",
-    L"LinePeripheral",
-    L"NetworkPeripheral",
-    L"SystemMemory",
-    L"DockingInformation",
-    L"RealModeIrqRoutingTable",    
-    L"RealModePCIEnumeration",    
-    L"Undefined"
-};
-const PWCHAR FldrClassString[MaximumClass + 1] =
-{
-    L"System",
-    L"Processor",
-    L"Cache",
-    L"Adapter",
-    L"Controller",
-    L"Peripheral",
-    L"MemoryClass",
-    L"Undefined"
-};
 
 /* FUNCTIONS ******************************************************************/
 
 VOID
 NTAPI
-FldrSetComponentInformation(IN FRLDRHKEY ComponentKey,
+FldrSetComponentInformation(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                             IN IDENTIFIER_FLAG Flags,
                             IN ULONG Key,
                             IN ULONG Affinity)
 {
     LONG Error;
-    CONFIGURATION_COMPONENT_DATA Data = {0}; // This would be "ComponentKey"
-    PCONFIGURATION_COMPONENT_DATA ComponentData = &Data;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
-    
+
     /* Set component information */
     Component->Flags = Flags;
     Component->Version = 0;
     Component->Revision = 0;
-    Component->Key = Key;
+    //Component->Key = Key; // HACK: We store the registry key here
     Component->AffinityMask = Affinity;
     
     /* Set the value */
-    Error = RegSetValue(ComponentKey,
+    Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Component Information",
                         REG_BINARY,
                         (PVOID)&Component->Flags,
@@ -109,13 +50,11 @@ FldrSetComponentInformation(IN FRLDRHKEY ComponentKey,
 
 VOID
 NTAPI
-FldrSetIdentifier(IN FRLDRHKEY ComponentKey,
+FldrSetIdentifier(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                   IN PWCHAR Identifier)
 {
     LONG Error;
     ULONG IdentifierLength = (wcslen(Identifier) + 1) * sizeof(WCHAR);
-    CONFIGURATION_COMPONENT_DATA Data = {0}; // This would be "ComponentKey"
-    PCONFIGURATION_COMPONENT_DATA ComponentData = &Data;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
     
     /* Set component information */
@@ -123,7 +62,7 @@ FldrSetIdentifier(IN FRLDRHKEY ComponentKey,
     Component->Identifier = (PCHAR)Identifier; // We need to use ASCII instead
 
     /* Set the key */
-    Error = RegSetValue(ComponentKey,
+    Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Identifier",
                         REG_SZ,
                         (PCHAR)Identifier,
@@ -137,7 +76,7 @@ FldrSetIdentifier(IN FRLDRHKEY ComponentKey,
 
 VOID
 NTAPI
-FldrCreateSystemKey(OUT FRLDRHKEY *SystemKey)
+FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
 {
     LONG Error;
     PCONFIGURATION_COMPONENT Component;
@@ -157,10 +96,13 @@ FldrCreateSystemKey(OUT FRLDRHKEY *SystemKey)
     Component->Identifier = 0;
     Component->IdentifierLength = 0;
     
+    /* Return the node */
+    *SystemNode = FldrArcHwTreeRoot;
+
     /* Create the key */
     Error = RegCreateKey(NULL,
                          L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System",
-                         SystemKey);
+                         (FRLDRHKEY*)&Component->Key);
     if (Error != ERROR_SUCCESS)
     {
         DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", Error));
@@ -170,20 +112,18 @@ FldrCreateSystemKey(OUT FRLDRHKEY *SystemKey)
 
 VOID
 NTAPI
-FldrCreateComponentKey(IN FRLDRHKEY SystemKey,
+FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
                        IN PWCHAR BusName,
                        IN ULONG BusNumber,
                        IN CONFIGURATION_CLASS Class,
                        IN CONFIGURATION_TYPE Type,
-                       OUT FRLDRHKEY *ComponentKey)
+                       OUT PCONFIGURATION_COMPONENT_DATA *ComponentKey)
 {
     LONG Error;
     WCHAR Buffer[80];
-    CONFIGURATION_COMPONENT_DATA Root = {0}; // This would be "SystemKey"
-    PCONFIGURATION_COMPONENT_DATA SystemNode = &Root;
     PCONFIGURATION_COMPONENT_DATA ComponentData;
     PCONFIGURATION_COMPONENT Component;
-    
+
     /* Allocate the node for this component */
     ComponentData = MmAllocateMemory(sizeof(CONFIGURATION_COMPONENT_DATA));
     if (!ComponentData) return;
@@ -203,18 +143,21 @@ FldrCreateComponentKey(IN FRLDRHKEY SystemKey,
         SystemNode->Child = ComponentData;
     }
     
-    /* Set us up (need to use class/type instead of name/number) */
-    Component = &FldrArcHwTreeRoot->ComponentEntry;
+    /* Set us up */
+    Component = &ComponentData->ComponentEntry;
     Component->Class = Class;
     Component->Type = Type;
     
-    /* FIXME: Use Class/Type to build key name */
-    
+    /* Return the child */
+    *ComponentKey = ComponentData;
+       
     /* Build the key name */
     swprintf(Buffer, L"%s\\%u", BusName, BusNumber);
     
     /* Create the key */
-    Error = RegCreateKey(SystemKey, Buffer, ComponentKey);
+    Error = RegCreateKey((FRLDRHKEY)SystemNode->ComponentEntry.Key,
+                         Buffer,
+                         (FRLDRHKEY*)&Component->Key);
     if (Error != ERROR_SUCCESS)
     {
         DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", Error));
@@ -224,13 +167,11 @@ FldrCreateComponentKey(IN FRLDRHKEY SystemKey,
 
 VOID
 NTAPI
-FldrSetConfigurationData(IN FRLDRHKEY ComponentKey,
+FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
                          IN PVOID ConfigurationData,
                          IN ULONG Size)
 {
     LONG Error;
-    CONFIGURATION_COMPONENT_DATA Data = {0}; // This would be "ComponentKey"
-    PCONFIGURATION_COMPONENT_DATA ComponentData = &Data;
     PCONFIGURATION_COMPONENT Component = &ComponentData->ComponentEntry;
     
     /* Set component information */
@@ -238,7 +179,7 @@ FldrSetConfigurationData(IN FRLDRHKEY ComponentKey,
     Component->ConfigurationDataLength = Size;
     
     /* Set 'Configuration Data' value */
-    Error = RegSetValue(ComponentKey,
+    Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Configuration Data",
                         REG_FULL_RESOURCE_DESCRIPTOR,
                         ConfigurationData,

@@ -54,9 +54,9 @@ FindApmBios(VOID)
 
 
 VOID
-DetectApmBios(FRLDRHKEY SystemKey, ULONG *BusNumber)
+DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
-    FRLDRHKEY BiosKey;
+    PCONFIGURATION_COMPONENT_DATA BiosKey;
     
     if (FindApmBios())
     {
