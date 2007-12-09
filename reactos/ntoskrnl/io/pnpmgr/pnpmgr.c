@@ -3224,8 +3224,7 @@ cleanup:
 static NTSTATUS INIT_FUNCTION
 IopUpdateRootKey(VOID)
 {
-   UNICODE_STRING ControlSetU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet");
-   UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"Enum");
+   UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
    UNICODE_STRING RootPathU = RTL_CONSTANT_STRING(L"Root");
    UNICODE_STRING MultiKeyPathU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\HARDWARE\\DESCRIPTION\\System\\MultifunctionAdapter");
    UNICODE_STRING DeviceDescU = RTL_CONSTANT_STRING(L"DeviceDesc");
@@ -3236,20 +3235,11 @@ IopUpdateRootKey(VOID)
    UNICODE_STRING HalAcpiDeviceDesc = RTL_CONSTANT_STRING(L"HAL ACPI");
    UNICODE_STRING HalAcpiHardwareID = RTL_CONSTANT_STRING(L"*PNP0C08\0");
    OBJECT_ATTRIBUTES ObjectAttributes;
-   HANDLE hControlSet, hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
+   HANDLE hEnum, hRoot, hHalAcpiDevice, hHalAcpiId, hLogConf;
    NTSTATUS Status;
 
-   InitializeObjectAttributes(&ObjectAttributes, &ControlSetU, OBJ_KERNEL_HANDLE, NULL, NULL);
-   Status = ZwCreateKey(&hControlSet, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
-      return Status;
-   }
-
-   InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE, hControlSet, NULL);
+   InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_KERNEL_HANDLE, NULL, NULL);
    Status = ZwCreateKey(&hEnum, KEY_CREATE_SUB_KEY, &ObjectAttributes, 0, NULL, 0, NULL);
-   ZwClose(hControlSet);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("ZwCreateKey() failed with status 0x%08lx\n", Status);
