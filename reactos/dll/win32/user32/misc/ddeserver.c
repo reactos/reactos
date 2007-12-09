@@ -983,7 +983,7 @@ static LRESULT CALLBACK WDML_ServerConvProc(HWND hwndServer, UINT iMsg, WPARAM w
     WDML_CONV*		pConv;
     WDML_XACT*		pXAct = NULL;
 
-    TRACE("%p %04x %08x %08lx\n", hwndServer, iMsg, wParam , lParam);
+    TRACE("%p %04x %08lx %08lx\n", hwndServer, iMsg, wParam , lParam);
 
     if (iMsg == WM_DESTROY)
     {

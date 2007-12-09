@@ -729,7 +729,7 @@ IntScrollHandleKbdEvent(
   WPARAM wParam /* [in] Variable input including enable state */,
   LPARAM lParam /* [in] Variable input including input point */)
 {
-  TRACE("Wnd=%p wParam=%d lParam=%ld\n", Wnd, wParam, lParam);
+  TRACE("Wnd=%p wParam=%ld lParam=%ld\n", Wnd, wParam, lParam);
 
   /* hide caret on first KEYDOWN to prevent flicker */
   if (0 == (lParam & PFD_DOUBLEBUFFER_DONTCARE))
@@ -1445,14 +1445,14 @@ ScrollBarWndProc(HWND Wnd, UINT Msg, WPARAM wParam, LPARAM lParam)
       case 0x00ed:
       case 0x00ee:
       case 0x00ef:
-        WARN("unknown Win32 msg %04x wp=%08x lp=%08lx\n",
+        WARN("unknown Win32 msg %04x wp=%08lx lp=%08lx\n",
 		Msg, wParam, lParam );
         break;
 
       default:
         if (WM_USER <= Msg)
           {
-            WARN("unknown msg %04x wp=%04x lp=%08lx\n", Msg, wParam, lParam);
+            WARN("unknown msg %04x wp=%04lx lp=%08lx\n", Msg, wParam, lParam);
           }
         return DefWindowProcW(Wnd, Msg, wParam, lParam );
     }

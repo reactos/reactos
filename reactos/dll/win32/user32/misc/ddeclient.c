@@ -526,7 +526,7 @@ static WDML_QUEUE_STATE WDML_HandleRequestReply(WDML_CONV* pConv, MSG* msg, WDML
 
     case WM_DDE_DATA:
         UnpackDDElParam(WM_DDE_DATA, msg->lParam, &uiLo, &uiHi);
-	TRACE("Got the result (%08x)\n", uiLo);
+	TRACE("Got the result (%08lx)\n", uiLo);
 
 	hsz = WDML_MakeHszFromAtom(pConv->instance, uiHi);
 
@@ -1272,7 +1272,7 @@ static LRESULT CALLBACK WDML_ClientProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPA
     WDML_CONV*	pConv = NULL;
     HSZ		hszSrv, hszTpc;
 
-    TRACE("%p %04x %08x %08lx\n", hwnd, iMsg, wParam , lParam);
+    TRACE("%p %04x %08lx %08lx\n", hwnd, iMsg, wParam , lParam);
 
     if (iMsg == WM_DDE_ACK &&
 	/* in the initial WM_INITIATE sendmessage */

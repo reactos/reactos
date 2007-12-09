@@ -940,7 +940,7 @@ MenuDrawPopupMenu(HWND Wnd, HDC Dc, HMENU Menu)
 static LRESULT WINAPI
 PopupMenuWndProcW(HWND Wnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-  TRACE("hwnd=%x msg=0x%04x wp=0x%04x lp=0x%08lx\n", Wnd, Message, wParam, lParam);
+  TRACE("hwnd=%x msg=0x%04x wp=0x%04lx lp=0x%08lx\n", Wnd, Message, wParam, lParam);
 
   switch(Message)
     {
