@@ -435,7 +435,7 @@ BEGIN
 	IDS_COMMON_VIDEO            "Общие документы\\Мои фильмы"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
-	IDS_NEWFOLDER               "New Folder"
+	IDS_NEWFOLDER               "Новая папка"
 
 	IDS_DRIVE_FIXED             "Локальный диск"
 	IDS_DRIVE_CDROM             "CDROM"
