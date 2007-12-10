@@ -82,14 +82,14 @@ Main_DirectDraw_QueryInterface (LPDDRAWI_DIRECTDRAW_INT This,
                 }
             }
 
-            This->lpVtbl = &DirectDraw2_Vtable;
+            This->lpVtbl = &DirectDraw4_Vtable;
             *obj = This;
             Main_DirectDraw_AddRef(This);
         }
 
-        else if (IsEqualGUID(&IID_IDirectDraw4, id))
+        else if (IsEqualGUID(&IID_IDirectDraw2, id))
         {
-            if (This->lpVtbl != &DirectDraw4_Vtable)
+            if (This->lpVtbl != &DirectDraw2_Vtable)
             {
                 This = internal_directdraw_int_alloc(This);
                 if (!This)
