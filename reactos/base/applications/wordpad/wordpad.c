@@ -771,7 +771,7 @@ static void set_default_font(void)
     SendMessageW(hEditorWnd, EM_SETCHARFORMAT,  SCF_DEFAULT, (LPARAM)&fmt);
 }
 
-static void add_font(LPWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMETRICEXW *ntmc)
+static void add_font(LPCWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMETRICEXW *ntmc)
 {
     COMBOBOXEXITEMW cbItem;
     WCHAR buffer[MAX_PATH];
@@ -789,7 +789,8 @@ static void add_font(LPWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMETR
         else
             break;
     }
-    cbItem.pszText = fontName;
+    cbItem.pszText = HeapAlloc( GetProcessHeap(), 0, (lstrlenW(fontName) + 1)*sizeof(WCHAR) );
+    lstrcpyW( cbItem.pszText, fontName );
 
     cbItem.mask |= CBEIF_LPARAM;
     if(fontType & RASTER_FONTTYPE)
@@ -797,6 +798,7 @@ static void add_font(LPWSTR fontName, DWORD fontType, HWND hListWnd, NEWTEXTMETR
 
     cbItem.lParam = MAKELONG(fontType,fontHeight);
     SendMessageW(hListWnd, CBEM_INSERTITEMW, 0, (LPARAM)&cbItem);
+	HeapFree( GetProcessHeap(), 0, cbItem.pszText );
 }
 
 static void dialog_choose_font(void)
