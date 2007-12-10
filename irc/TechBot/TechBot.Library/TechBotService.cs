@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Data;
 using System.Threading;
@@ -18,19 +19,19 @@ namespace TechBot.Library
 		private string wmXml;
 		private string svnCommand;
 		private string bugUrl, WineBugUrl, SambaBugUrl;
-		private ArrayList commands = new ArrayList();
+        private List<Command> commands = new List<Command>();
 		
 		public TechBotService(IServiceOutput serviceOutput,
 		                      string chmPath,
-		                      string mainChm,
-		                      string ntstatusXml,
-		                      string winerrorXml,
-		                      string hresultXml,
-		                      string wmXml,
-		                      string svnCommand,
-		                      string bugUrl,
-		                      string WineBugUrl,
-		                      string SambaBugUrl)
+		                      string mainChm)
+                              //string ntstatusXml,
+                              //string winerrorXml,
+                              //string hresultXml,
+                              //string wmXml,
+		                      //string svnCommand,
+                              //string bugUrl,
+                              //string WineBugUrl,
+                              //string SambaBugUrl)
 		{
 			this.serviceOutput = serviceOutput;
 			this.chmPath = chmPath;
@@ -44,33 +45,33 @@ namespace TechBot.Library
 			this.WineBugUrl = WineBugUrl;
 			this.SambaBugUrl = SambaBugUrl;
 		}
-		
-		public void Run()
-		{
-			commands.Add(new HelpCommand(serviceOutput,
-			                             commands));
-			/*commands.Add(new ApiCommand(serviceOutput,
-			                            chmPath,
-			                            mainChm));*/
-			commands.Add(new NtStatusCommand(serviceOutput,
-			                                 ntstatusXml));
-			commands.Add(new WinerrorCommand(serviceOutput,
-			                                 winerrorXml));
-			commands.Add(new HresultCommand(serviceOutput,
-			                                hresultXml));
-			commands.Add(new ErrorCommand(serviceOutput,
-											ntstatusXml,
-											winerrorXml,
-											hresultXml));
-			commands.Add(new WmCommand(serviceOutput,
-			                           wmXml));
-			commands.Add(new SvnCommand(serviceOutput,
-			                            svnCommand));
-			commands.Add(new BugCommand(serviceOutput,
-			                            bugUrl,
-			                            WineBugUrl,
-			                            SambaBugUrl));
-		}
+
+        public void Run()
+        {
+            commands.Add(new HelpCommand(this));
+            /*commands.Add(new ApiCommand(serviceOutput,
+                                        chmPath,
+                                        mainChm));*/
+            commands.Add(new NtStatusCommand(this));
+            commands.Add(new WinerrorCommand(this));
+            commands.Add(new HResultCommand(this));
+            commands.Add(new ErrorCommand(this));
+            commands.Add(new WMCommand(this));
+            commands.Add(new SvnCommand(this));
+            commands.Add(new ReactOSBugUrl(this));
+            commands.Add(new SambaBugUrl(this));
+            commands.Add(new WineBugUrl(this));
+        }
+
+        public IServiceOutput ServiceOutput
+        {
+            get { return serviceOutput; }
+        }
+
+        public IList<Command> Commands
+        {
+            get { return commands; }
+        }
 		
 		public void InjectMessage(MessageContext context,
 		                          string message)
@@ -94,23 +95,27 @@ namespace TechBot.Library
 			message = message.Substring(1).Trim();
 			int index = message.IndexOf(' ');
 			string commandName;
-			string parameters = "";
+			string commandParams = "";
 			if (index != -1)
 			{
 				commandName = message.Substring(0, index).Trim();
-				parameters = message.Substring(index).Trim();
+				commandParams = message.Substring(index).Trim();
 			}
 			else
 				commandName = message.Trim();
 
-			foreach (ICommand command in commands)
+			foreach (Command command in commands)
 			{
-				if (command.CanHandle(commandName))
-				{
-					command.Handle(context,
-					               commandName, parameters);
-					return;
-				}
+                foreach (string cmd in command.AvailableCommands)
+                {
+                    if (cmd == commandName)
+                    {
+                        command.Handle(context,
+                                       commandName, 
+                                       commandParams);
+                        return;
+                    }
+                }
 			}
 		}
 	}

@@ -7,22 +7,17 @@ using HtmlHelp.ChmDecoding;
 
 namespace TechBot.Library
 {
-	public class ApiCommand : BaseCommand, ICommand
+	public class ApiCommand : Command
 	{
 		private const bool IsVerbose = false;
 
 		private HtmlHelpSystem chm;
-		private IServiceOutput serviceOutput;
 		private string chmPath;
 		private string mainChm;
-		
-		public ApiCommand(IServiceOutput serviceOutput,
-		                  string chmPath,
-		                  string mainChm)
+
+        public ApiCommand(TechBotService techBot)
+            : base(techBot)
 		{
-			this.serviceOutput = serviceOutput;
-			this.chmPath = chmPath;
-			this.mainChm = mainChm;
 			Run();
 		}
 		
@@ -30,7 +25,7 @@ namespace TechBot.Library
 		                            string message)
 		{
 			if (IsVerbose)
-				serviceOutput.WriteLine(context,
+                TechBot.ServiceOutput.WriteLine(context,
 				                        message);
 		}
 
@@ -65,14 +60,21 @@ namespace TechBot.Library
 			Console.WriteLine(String.Format("Loaded {0} CHMs",
 			                                chm.FileList.Length));
 		}
-		
+
+        public override string[] AvailableCommands
+        {
+            get { return new string[] { "api" }; }
+        }
+
+        /*
 		public bool CanHandle(string commandName)
 		{
 			return CanHandle(commandName,
 			                 new string[] { "api" });
 		}
+*/
 		
-		public void Handle(MessageContext context,
+		public override void Handle(MessageContext context,
 		                   string commandName,
 		                   string parameters)
 		{
@@ -82,8 +84,8 @@ namespace TechBot.Library
 				Search(context,
 				       parameters);
 		}
-		
-		public string Help()
+
+        public override string Help()
 		{
 			return "!api <apiname>";
 		}
@@ -177,7 +179,7 @@ namespace TechBot.Library
 			if (prototype == null || prototype.Trim().Equals(String.Empty))
 				return false;
 			string formattedPrototype = FormatPrototype(prototype);
-			serviceOutput.WriteLine(context,
+            TechBot.ServiceOutput.WriteLine(context,
 			                        formattedPrototype);
 			return true;
 		}
@@ -203,7 +205,7 @@ namespace TechBot.Library
 					if (prototype == null || prototype.Trim().Equals(String.Empty))
 						continue;
 					string formattedPrototype = FormatPrototype(prototype);
-					serviceOutput.WriteLine(context,
+                    TechBot.ServiceOutput.WriteLine(context,
 					                        formattedPrototype);
 					return true;
 				}
@@ -214,14 +216,14 @@ namespace TechBot.Library
 		private void DisplayNoResult(MessageContext context,
 		                             string keyword)
 		{
-			serviceOutput.WriteLine(context,
+            TechBot.ServiceOutput.WriteLine(context,
 			                        String.Format("I don't know about keyword {0}",
 			                                      keyword));
 		}
 
 		private void DisplayNoKeyword(MessageContext context)
 		{
-			serviceOutput.WriteLine(context,
+            TechBot.ServiceOutput.WriteLine(context,
 			                        "Please give me a keyword.");
 		}
 

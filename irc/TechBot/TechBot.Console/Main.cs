@@ -217,11 +217,11 @@ namespace TechBot.Console
 			                                       IRCBotPassword,
 			                                       ChmPath,
 			                                       MainChm,
-			                                       NtstatusXml,
-			                                       WinerrorXml,
-			                                       HresultXml,
-			                                       WmXml,
-			                                       SvnCommand,
+                                                   //NtstatusXml,
+                                                   //WinerrorXml,
+                                                   //HresultXml,
+                                                   //WmXml,
+			                                       //SvnCommand,
 			                                       BugUrl,
 			                                       WineBugUrl,
 			                                       SambaBugUrl);
@@ -239,15 +239,15 @@ namespace TechBot.Console
 			System.Console.WriteLine("TechBot running console service...");
 			TechBotService service = new TechBotService(new ConsoleServiceOutput(),
 			                                            ChmPath,
-			                                            MainChm,
-			                                            NtstatusXml,
-			                                            WinerrorXml,
-			                                            HresultXml,
-			                                            WmXml,
-			                                            SvnCommand,
-			                                            BugUrl,
-			                                            WineBugUrl,
-			                                            SambaBugUrl);
+			                                            MainChm);
+                                                        //NtstatusXml,
+                                                        //WinerrorXml,
+                                                        //HresultXml,
+                                                        //WmXml,
+			                                            //SvnCommand,
+                                                        //BugUrl,
+                                                        //WineBugUrl,
+                                                        //SambaBugUrl);
 			service.Run();
 			while (true)
 			{

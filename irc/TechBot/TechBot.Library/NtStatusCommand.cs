@@ -3,35 +3,37 @@ using System.Xml;
 
 namespace TechBot.Library
 {
-	public class NtStatusCommand : BaseCommand, ICommand
+	public class NtStatusCommand : XmlCommand
 	{
-		private IServiceOutput serviceOutput;
-		private string ntstatusXml;
-		private XmlDocument ntstatusXmlDocument;
-
-		public NtStatusCommand(IServiceOutput serviceOutput,
-		                       string ntstatusXml)
+        public NtStatusCommand(TechBotService techBot)
+            : base(techBot)
 		{
-			this.serviceOutput = serviceOutput;
-			this.ntstatusXml = ntstatusXml;
-			ntstatusXmlDocument = new XmlDocument();
-			ntstatusXmlDocument.Load(ntstatusXml);
 		}
-		
+
+        public override string XmlFile
+        {
+            get { return Settings.Default.NtStatusXml; }
+        }
+
+        public override string[] AvailableCommands
+        {
+            get { return new string[] { "ntstatus" }; }
+        }
+/*		
 		public bool CanHandle(string commandName)
 		{
 			return CanHandle(commandName,
 			                 new string[] { "ntstatus" });
 		}
-
-		public void Handle(MessageContext context,
+*/
+		public override void Handle(MessageContext context,
 		                   string commandName,
 		                   string parameters)
 		{
 			string ntstatusText = parameters;
 			if (ntstatusText.Equals(String.Empty))
 			{
-				serviceOutput.WriteLine(context,
+				TechBot.ServiceOutput.WriteLine(context,
 				                        "Please provide a valid NTSTATUS value.");
 				return;
 			}
@@ -40,7 +42,7 @@ namespace TechBot.Library
 			long ntstatus = np.Parse(ntstatusText);
 			if (np.Error)
 			{
-				serviceOutput.WriteLine(context,
+                TechBot.ServiceOutput.WriteLine(context,
 				                        String.Format("{0} is not a valid NTSTATUS value.",
 				                                      ntstatusText));
 				return;
@@ -49,27 +51,27 @@ namespace TechBot.Library
 			string description = GetNtstatusDescription(ntstatus);
 			if (description != null)
 			{
-				serviceOutput.WriteLine(context,
+                TechBot.ServiceOutput.WriteLine(context,
 				                        String.Format("{0} is {1}.",
 				                                      ntstatusText,
 				                                      description));
 			}
 			else
 			{
-				serviceOutput.WriteLine(context,
+                TechBot.ServiceOutput.WriteLine(context,
 				                        String.Format("I don't know about NTSTATUS {0}.",
 				                                      ntstatusText));
 			}
 		}
-		
-		public string Help()
+
+        public override string Help()
 		{
 			return "!ntstatus <value>";
 		}
 		
 		public string GetNtstatusDescription(long ntstatus)
 		{
-			XmlElement root = ntstatusXmlDocument.DocumentElement;
+			XmlElement root = base.m_XmlDocument.DocumentElement;
 			XmlNode node = root.SelectSingleNode(String.Format("Ntstatus[@value='{0}']",
 			                                                   ntstatus.ToString("X8")));
 			if (node != null)

@@ -40,8 +40,10 @@
   -->
   <ItemGroup>
     <Compile Include="ApiCommand.cs" />
-    <Compile Include="AssemblyInfo.cs" />
     <Compile Include="BugCommand.cs" />
+    <Compile Include="Commands\Base\XmlCommand.cs" />
+    <Compile Include="SambaBugUrl.cs" />
+    <Compile Include="WineBugUrl.cs" />
     <Compile Include="ErrorCommand.cs" />
     <Compile Include="HelpCommand.cs" />
     <Compile Include="HresultCommand.cs" />
@@ -50,7 +52,15 @@
     <Compile Include="MessageContext.cs" />
     <Compile Include="NtStatusCommand.cs" />
     <Compile Include="NumberParser.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReactOSBugUrl.cs" />
     <Compile Include="ServiceOutput.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+      <DependentUpon>Settings.settings</DependentUpon>
+    </Compile>
     <Compile Include="SvnCommand.cs" />
     <Compile Include="TechBotService.cs" />
     <Compile Include="WinerrorCommand.cs" />
@@ -72,6 +82,10 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="Properties\" />
+    <None Include="app.config" />
+    <None Include="Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
   </ItemGroup>
 </Project>
