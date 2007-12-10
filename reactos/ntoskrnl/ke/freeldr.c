@@ -36,7 +36,7 @@ ULONG KeMemoryMapRangeCount;
 ULONG BldrCurrentMd;
 ULONG BldrCurrentMod;
 
-/* NT Loader Data. Eats up about 80KB! */
+/* NT Loader Data. Eats up about 100KB! */
 LOADER_PARAMETER_BLOCK BldrLoaderBlock;                 // 0x0000
 LOADER_PARAMETER_EXTENSION BldrExtensionBlock;          // 0x0060
 CHAR BldrCommandLine[256];                              // 0x00DC
@@ -53,7 +53,7 @@ SETUP_LOADER_BLOCK BldrSetupBlock;                      // 0x11DE8
 ARC_DISK_INFORMATION BldrArcDiskInfo;                   // 0x12134
 CHAR BldrArcNames[32][256];                             // 0x1213C
 ARC_DISK_SIGNATURE BldrDiskInfo[32];                    // 0x1413C
-                                                        // 0x1443C
+CHAR BldrArcHwBuffer[16 * 1024];                        // 0x1843C
 
 /* BIOS Memory Map */
 BIOS_MEMORY_DESCRIPTOR BiosMemoryDescriptors[16] = {{0}};
@@ -862,6 +862,34 @@ KiRosBuildArcMemoryList(VOID)
 
 VOID
 NTAPI
+KiRosFixupComponentTree(IN PCONFIGURATION_COMPONENT_DATA p,
+                        IN ULONG i)
+{
+    PCONFIGURATION_COMPONENT pp;
+
+    /* Loop each entry */
+    while (p)
+    {
+        /* Grab the component entry */
+        pp = &p->ComponentEntry;
+        
+        /* Fixup the pointers */
+        if (pp->Identifier) pp->Identifier = (PVOID)((ULONG_PTR)pp->Identifier + i);
+        if (p->ConfigurationData) p->ConfigurationData = (PVOID)((ULONG_PTR)p->ConfigurationData + i);
+        if (p->Parent) p->Parent = (PVOID)((ULONG_PTR)p->Parent + i);
+        if (p->Sibling) p->Sibling = (PVOID)((ULONG_PTR)p->Sibling + i);
+        if (p->Child) p->Child = (PVOID)((ULONG_PTR)p->Child + i);
+        
+        /* Check if we have a child */
+        if (p->Child) KiRosFixupComponentTree(p->Child, i);
+        
+        /* Get to the next entry */
+        p = p->Sibling;
+    }
+}
+
+VOID
+NTAPI
 KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                      IN PLOADER_PARAMETER_BLOCK *NtLoaderBlock)
 {
@@ -1185,6 +1213,15 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
                        &ArcDiskInfo->ListEntry);
     }
+    
+    /* Copy the ARC Hardware Tree */
+    RtlCopyMemory(BldrArcHwBuffer, (PVOID)RosLoaderBlock->ArchExtra, 16 * 1024);
+    LoaderBlock->ConfigurationRoot = (PVOID)BldrArcHwBuffer;
+
+    /* Apply fixups */
+    KiRosFixupComponentTree(LoaderBlock->ConfigurationRoot,
+                            (ULONG_PTR)BldrArcHwBuffer -
+                            RosLoaderBlock->ArchExtra);
 }
 
 VOID

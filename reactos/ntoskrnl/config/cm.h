@@ -456,6 +456,16 @@ typedef struct _CM_PARSE_CONTEXT
 } CM_PARSE_CONTEXT, *PCM_PARSE_CONTEXT;
 
 //
+// MultiFunction Adapter Recognizer Structure
+//
+typedef struct _CMP_MF_TYPE
+{
+    PWCHAR Identifier;
+    USHORT InterfaceType;
+    USHORT Count;    
+} CMP_MF_TYPE, *PCMP_MF_TYPE;
+
+//
 // System Control Vector
 //
 typedef struct _CM_SYSTEM_CONTROL_VECTOR
@@ -1387,6 +1397,10 @@ extern CM_SYSTEM_CONTROL_VECTOR CmControlVector[];
 extern ULONG CmpConfigurationAreaSize;
 extern PCM_FULL_RESOURCE_DESCRIPTOR CmpConfigurationData;
 extern UNICODE_STRING CmTypeName[];
+extern UNICODE_STRING CmClassName[];
+extern CMP_MF_TYPE CmpMultifunctionTypes[];
+extern USHORT CmpUnknownBusCount;
+extern ULONG CmpTypeCount[MaximumType + 1];
 extern HIVE_LIST_ENTRY CmpMachineHiveList[];
 extern UNICODE_STRING CmSymbolicLinkValueName;
 extern UNICODE_STRING CmpSystemStartOptions;

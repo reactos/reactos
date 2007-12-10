@@ -60,7 +60,22 @@ BOOLEAN CmpSelfHeal = TRUE;
 BOOLEAN CmpMiniNTBoot;
 ULONG CmpBootType;
 
+USHORT CmpUnknownBusCount;
+ULONG CmpTypeCount[MaximumType + 1];
+
 HANDLE CmpRegistryRootHandle;
+
+UNICODE_STRING CmClassName[MaximumClass + 1] =
+{
+    RTL_CONSTANT_STRING(L"System"),
+    RTL_CONSTANT_STRING(L"Processor"),
+    RTL_CONSTANT_STRING(L"Cache"),
+    RTL_CONSTANT_STRING(L"Adapter"),
+    RTL_CONSTANT_STRING(L"Controller"),
+    RTL_CONSTANT_STRING(L"Peripheral"),
+    RTL_CONSTANT_STRING(L"MemoryClass"),
+    RTL_CONSTANT_STRING(L"Undefined")
+};
 
 UNICODE_STRING CmTypeName[MaximumType + 1] =
 {
@@ -106,6 +121,19 @@ UNICODE_STRING CmTypeName[MaximumType + 1] =
     RTL_CONSTANT_STRING(L"RealModeIrqRoutingTable"),
     RTL_CONSTANT_STRING(L"RealModePCIEnumeration"),
     RTL_CONSTANT_STRING(L"Undefined")
+};
+
+CMP_MF_TYPE CmpMultifunctionTypes[] =
+{
+    {L"ISA", Isa, 0},
+    {L"MCA", MicroChannel, 0},
+    {L"PCI", PCIBus, 0},
+    {L"VME", VMEBus, 0},
+    {L"PCMCIA", PCMCIABus, 0},
+    {L"CBUS", CBus, 0},
+    {L"MPIPI", MPIBus, 0},
+    {L"MPSA", MPSABus, 0},
+    {NULL, Internal, 0}
 };
 
 CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =

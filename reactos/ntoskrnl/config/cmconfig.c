@@ -87,10 +87,10 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
         /* Fail if the key couldn't be created, and make sure it's a new key */
         if (!NT_SUCCESS(Status)) return Status;
-        ASSERT(Disposition == REG_CREATED_NEW_KEY);
+        //ASSERT(Disposition == REG_CREATED_NEW_KEY);
     }
 
-    /* Sstup the compnent information key */
+    /* Setup the component information key */
     RtlInitUnicodeString(&ValueName, L"Component Information");
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
@@ -116,6 +116,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         Status = RtlAnsiStringToUnicodeString(&ValueData,
                                               &TempString,
                                               TRUE);
+        RtlCreateUnicodeString(&ValueData, (PWCHAR)Component->Identifier);
         if (NT_SUCCESS(Status))
         {
             /* Save the identifier in the registry */
@@ -194,6 +195,157 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     return Status;
 }
 
+int t, tabLevel;
+
+VOID
+NTAPI
+CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
+                    IN INTERFACE_TYPE InterfaceType,
+                    IN ULONG BusNumber)
+{
+    PCONFIGURATION_COMPONENT Component;
+    USHORT DeviceIndexTable[MaximumType + 1] = {0};
+    ULONG Interface = InterfaceType, Bus = BusNumber, i;
+    PCHAR InterfaceStrings[MaximumInterfaceType + 1] =
+    {
+        "Internal",
+        "Isa",
+        "Eisa",
+        "MicroChannel",
+        "TurboChannel",
+        "PCIBus",
+        "VMEBus",
+        "NuBus",
+        "PCMCIABus",
+        "CBus",
+        "MPIBus",
+        "MPSABus",
+        "ProcessorInternal",
+        "InternalPowerBus",
+        "PNPISABus",
+        "PNPBus",
+        "Unknown"
+    };
+        
+    while (CurrentEntry)
+    {
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Dumping node @ 0x%p\n", CurrentEntry);
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Parent @ 0x%p Sibling @ 0x%p Child @ 0x%p\n",
+                 CurrentEntry->Parent, CurrentEntry->Sibling, CurrentEntry->Child);
+        
+        /* Check if this is an adapter */
+        Component = &CurrentEntry->ComponentEntry;
+        if ((Component->Class == AdapterClass) &&
+            (CurrentEntry->Parent->ComponentEntry.Class == SystemClass))
+        {
+            /* Check what kind of adapter it is */
+            switch (Component->Type)
+            {
+                /* EISA */
+                case EisaAdapter:
+                    
+                    /* Fixup information */
+                    Interface = Eisa;
+                    Bus = CmpTypeCount[EisaAdapter]++;
+                    break;
+                
+                /* Turbo-channel */
+                case TcAdapter:
+                    
+                    /* Fixup information */
+                    Interface = TurboChannel;
+                    Bus = CmpTypeCount[TurboChannel]++;
+                    break;
+                
+                /* ISA, PCI, etc busses */
+                case MultiFunctionAdapter:
+                    
+                    /* Check if we have an  identifier */
+                    if (Component->Identifier)
+                    {
+                        /* Loop each multi-function adapter type */
+                        for (i = 0; CmpMultifunctionTypes[i].Identifier; i++)
+                        {
+                            /* Check for a name match */
+                            if (!_wcsicmp(CmpMultifunctionTypes[i].Identifier,
+                                          (PWCHAR)Component->Identifier))
+                            {
+                                /* Match found */
+                                break;
+                            }
+                        }
+                        
+                        /* Fix up information */
+                        Interface = CmpMultifunctionTypes[i].InterfaceType;
+                        Bus = CmpMultifunctionTypes[i].Count++;
+                    }
+                    break;
+                
+                /* SCSI Bus */
+                case ScsiAdapter:
+
+                    /* Fix up */
+                    Interface = Internal;
+                    Bus = CmpTypeCount[ScsiAdapter]++;
+                    break;
+                
+                /* Unknown */
+                default:
+                    Interface = -1;
+                    Bus = CmpUnknownBusCount++;
+                    break;
+            }
+        }
+
+        /* Convert from NT to ARC class */
+        if (Component->Class == SystemClass) Component->Type = ArcSystem;
+        
+        /* Dump information on the component */
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Component Type: %wZ\n", &CmTypeName[Component->Type]);
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Class: %wZ\n", &CmClassName[Component->Class]);
+        if (Component->Class != SystemClass)
+        {
+            for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+            DbgPrint("Device Index: %lx\n", DeviceIndexTable[Component->Type]++);    
+        }
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Component Information:\n");
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("\tFlags: %lx\n", Component->Flags);
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("\tVersion: %lx\n", Component->Version);
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("\tAffinity: %lx\n", Component->AffinityMask);
+        if (Component->IdentifierLength)
+        {
+            for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+            DbgPrint("Identifier: %S\n", Component->Identifier);
+        }
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Configuration Data: %p\n", CurrentEntry->ConfigurationData);    
+        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
+        DbgPrint("Interface Type: %s Bus Number: %d\n\n",
+                 InterfaceStrings[Interface],
+                 Bus);
+        
+        /* Check for children */
+        if (CurrentEntry->Child)
+        {
+            /* Recurse child */
+            tabLevel++;
+            CmpDumpHardwareTree(CurrentEntry->Child, Interface, Bus);
+            tabLevel--;
+        }
+        
+        /* Get to the next entry */
+        CurrentEntry = CurrentEntry->Sibling;
+    }
+}
+
 NTSTATUS
 NTAPI
 CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -258,7 +410,10 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Check if we got anything from NTLDR */
     if (LoaderBlock->ConfigurationRoot)
     {
-        ASSERTMSG("NTLDR ARC Hardware Tree Not Supported!\n", FALSE);
+        /* Dump the hardware tree */
+        DPRINT1("ARC Hardware Tree Received @ 0x%p. Dumping HW Info:\n\n",
+                LoaderBlock->ConfigurationRoot);
+        CmpDumpHardwareTree(LoaderBlock->ConfigurationRoot, -1, -1);
     }
     else
     {
@@ -271,4 +426,5 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
     return Status;
 }
+
 

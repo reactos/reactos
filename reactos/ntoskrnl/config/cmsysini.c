@@ -1054,8 +1054,7 @@ CmpLoadHiveThread(IN PVOID StartContext)
     /* Get the hive index, make sure it makes sense */
     i = (ULONG)StartContext;
     ASSERT(CmpMachineHiveList[i].Name != NULL);
-    DPRINT1("[HiveLoad] Parallel Thread: %d\n", i);
-    
+   
     /* We were started */
     CmpMachineHiveList[i].ThreadStarted = TRUE;
     
@@ -1097,7 +1096,6 @@ CmpLoadHiveThread(IN PVOID StartContext)
         CmpMachineHiveList[i].Allocate = TRUE;
         
         /* Load the hive file */
-        DPRINT1("[HiveLoad]: Load from file %wZ\n", &FileName);
         Status = CmpInitHiveFromFile(&FileName,
                                      CmpMachineHiveList[i].HHiveFlags,
                                      &CmHive,
@@ -1122,12 +1120,10 @@ CmpLoadHiveThread(IN PVOID StartContext)
     }
     else
     {
-        CmHive = CmpMachineHiveList[i].CmHive;
         /* We already have a hive, is it volatile? */
+        CmHive = CmpMachineHiveList[i].CmHive;
         if (!(CmHive->Hive.HiveFlags & HIVE_VOLATILE))
         {
-            DPRINT1("[HiveLoad]: Open from file %wZ\n", &FileName);
-
             /* It's now, open the hive file and log */
             Status = CmpOpenHiveFiles(&FileName,
                                       L".LOG",
@@ -1305,7 +1301,6 @@ CmpInitializeHiveList(IN USHORT Flag)
             }
             
             /* Now link the hive to its master */
-            DPRINT1("[HiveLoad]: Link %wZ\n", &RegName);
             Status = CmpLinkHiveToMaster(&RegName,
                                          NULL,
                                          CmpMachineHiveList[i].CmHive2,
