@@ -236,7 +236,7 @@
 @ cdecl _findclose(long)
 @ cdecl _findfirst(str ptr)
 @ cdecl _findfirsti64(str ptr)
-@ stub _findnext #(long ptr) MSVCRT__findnext
+@ cdecl _findnext(long ptr)
 @ cdecl _findnexti64(long ptr)
 @ cdecl _finite( double )
 @ cdecl _flsbuf(long ptr)
