@@ -1,0 +1,77 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{1114F34D-F388-4F38-AE27-C0EE1B10B777}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>TechBot.Library</RootNamespace>
+    <AssemblyName>TechBot.Library</AssemblyName>
+    <StartupObject>
+    </StartupObject>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+  <ItemGroup>
+    <Compile Include="ApiCommand.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="BugCommand.cs" />
+    <Compile Include="ErrorCommand.cs" />
+    <Compile Include="HelpCommand.cs" />
+    <Compile Include="HresultCommand.cs" />
+    <Compile Include="ICommand.cs" />
+    <Compile Include="IrcService.cs" />
+    <Compile Include="MessageContext.cs" />
+    <Compile Include="NtStatusCommand.cs" />
+    <Compile Include="NumberParser.cs" />
+    <Compile Include="ServiceOutput.cs" />
+    <Compile Include="SvnCommand.cs" />
+    <Compile Include="TechBotService.cs" />
+    <Compile Include="WinerrorCommand.cs" />
+    <Compile Include="WmCommand.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.XML" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\CHMLibrary\CHMLibrary.csproj">
+      <Project>{72E5CCA1-6318-4D62-964D-CB23A5C743B5}</Project>
+      <Name>CHMLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\TechBot.IRCLibrary\TechBot.IRCLibrary.csproj">
+      <Project>{D2A57931-DF04-4BC3-BD11-75DF4F3B0A88}</Project>
+      <Name>TechBot.IRCLibrary</Name>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
+</Project>
