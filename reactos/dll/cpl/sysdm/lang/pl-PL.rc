@@ -80,8 +80,8 @@ BEGIN
     LTEXT       "Mo¿esz okreœliæ profile sprzêtu dla ró¿nych konfiguracji sprzêtu. Podczas uruchamiania mo¿esz wybraæ profil, którego chcesz u¿yæ.", IDC_STATIC, 46, 11, 188, 25
     LTEXT       "&Dostêpne profile sprzêtu:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
-    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14
-    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 14, BS_ICON
     PUSHBUTTON  "&W³aœciwoœci", IDC_HRDPROFPROP, 8, 106, 50, 14
     PUSHBUTTON  "&Kopiuj", IDC_HRDPROFCOPY, 63, 106, 50, 14
     PUSHBUTTON  "Z&mieñ nazwê", IDC_HRDPROFRENAME, 118, 106, 50, 14
