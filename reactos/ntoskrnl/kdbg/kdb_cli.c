@@ -1928,6 +1928,10 @@ KdbpPrint(
                while (!isalpha(p2[j++]));
                strcpy(p2, p2 + j);
             }
+            else
+            {
+                strcpy(p2, p2 + 1);
+            }
          }
       }
 
