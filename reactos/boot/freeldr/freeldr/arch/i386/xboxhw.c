@@ -19,9 +19,28 @@
 
 #include <freeldr.h>
 
+#define NDEBUG
+#include <debug.h>
+
 VOID
 XboxHwDetect(VOID)
 {
+  PCONFIGURATION_COMPONENT_DATA SystemKey;
+
+  DbgPrint((DPRINT_HWDETECT, "DetectHardware()\n"));
+
+  /* Create the 'System' key */
+  FldrCreateSystemKey(&SystemKey);
+
+  /* Set empty component information */
+  FldrSetComponentInformation(SystemKey,
+                              0x0,
+                              0x0,
+                              0xFFFFFFFF);
+
+  /* TODO: Build actual xbox's hardware configuration tree */
+
+  DbgPrint((DPRINT_HWDETECT, "DetectHardware() Done\n"));
 }
 
 /* EOF */
