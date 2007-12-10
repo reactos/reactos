@@ -165,7 +165,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
             /* FIXME  ThisSurfaceMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop */
             ThisSurfaceMore->dmiDDrawReserved7.wMonitorsAttachedToDesktop = 1;
             pDDraw->lpLcl->lpPrimary = ThisSurfInt;
-            Main_DirectDraw_AddRef((LPDIRECTDRAW7)pDDraw);
+            Main_DirectDraw_AddRef(pDDraw);
         }
         else
         {
@@ -244,5 +244,6 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
     RtlCopyMemory(dst_pDesc,src_pDesc,sizeof(DDSURFACEDESC));
     dst_pDesc->dwSize =  sizeof(DDSURFACEDESC2);
 }
+
 
 

@@ -88,7 +88,7 @@ Main_DirectDraw_GetCaps(
                         LPDDCAPS pHELCaps);
 
 HRESULT WINAPI
-Main_DirectDraw_GetDisplayMode (
+Main_DirectDraw_GetDisplayMode4 (
                                 LPDIRECTDRAW7 iface,
                                 LPDDSURFACEDESC2 pDDSD);
 
@@ -201,7 +201,7 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_EnumSurfaces,
     Main_DirectDraw_FlipToGDISurface,
     Main_DirectDraw_GetCaps,                    /* (GetCaps done) */
-    Main_DirectDraw_GetDisplayMode,             /* (GetDisplayMode testing / devloping) */
+    Main_DirectDraw_GetDisplayMode4,             /* (GetDisplayMode testing / devloping) */
     Main_DirectDraw_GetFourCCCodes,             /* (GetFourCCCodes done) */
     Main_DirectDraw_GetGDISurface,
     Main_DirectDraw_GetMonitorFrequency,        /* (GetMonitorFrequency done) */
@@ -220,4 +220,5 @@ IDirectDraw7Vtbl DirectDraw7_Vtable =
     Main_DirectDraw_StartModeTest,
     Main_DirectDraw_EvaluateMode
 };
+
 

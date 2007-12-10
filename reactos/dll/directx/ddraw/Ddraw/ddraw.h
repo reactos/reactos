@@ -79,6 +79,11 @@ Main_DirectDraw_GetCaps(
 HRESULT WINAPI
 Main_DirectDraw_GetDisplayMode (
                                 LPDDRAWI_DIRECTDRAW_INT This,
+                                LPDDSURFACEDESC pDDSD);
+
+HRESULT WINAPI
+Main_DirectDraw_GetDisplayMode4 (
+                                LPDDRAWI_DIRECTDRAW_INT This,
                                 LPDDSURFACEDESC2 pDDSD);
 
 HRESULT WINAPI
@@ -202,4 +207,5 @@ DWORD CALLBACK HelDdSurfSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA lpSetO
 DWORD CALLBACK HelDdSurfSetPalette(LPDDHAL_SETPALETTEDATA lpSetPaletteData);
 DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData);
 DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLayData);
+
 
