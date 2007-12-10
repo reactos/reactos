@@ -436,6 +436,8 @@ BEGIN
 	IDS_COMMON_VIDEO            "Dokumenter\\Mine videoklipp"
 	IDS_CDBURN_AREA             "Lokale innstillinger\\Programdata\\Microsoft\\CD Burning"
 
+	IDS_NEWFOLDER               "Ny mappe"
+
 	IDS_DRIVE_FIXED             "Local Disk"
 	IDS_DRIVE_CDROM             "CDROM"
 	IDS_DRIVE_NETWORK           "Network Disk"

@@ -436,6 +436,8 @@ BEGIN
 	IDS_COMMON_VIDEO            "Documents\\My Videos"
 	IDS_CDBURN_AREA             "Local Settings\\Application Data\\Microsoft\\CD Burning"
 
+	IDS_NEWFOLDER               "New Folder"
+
 	IDS_DRIVE_FIXED             "Τοπικός δίσκος"
 	IDS_DRIVE_CDROM             "Μονάδα CD"
 	IDS_DRIVE_NETWORK           "Δίσκος δικτύου"

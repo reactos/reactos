@@ -1078,8 +1078,10 @@ ISFHelper_fnGetUniqueName (ISFHelper * iface, LPWSTR pwszName, UINT uLen)
     IEnumIDList *penum;
     HRESULT hr;
     WCHAR wszText[MAX_PATH];
-    const WCHAR wszNewFolder[] = {'N','e','w',' ','F','o','l','d','e','r',0 };
+    WCHAR wszNewFolder[25];
     const WCHAR wszFormat[] = {'%','s',' ','%','d',0 };
+
+    LoadStringW(shell32_hInstance, IDS_NEWFOLDER, wszNewFolder,  sizeof(wszNewFolder)/sizeof(WCHAR));
 
     TRACE ("(%p)(%p %u)\n", This, pwszName, uLen);
 
