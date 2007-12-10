@@ -451,7 +451,7 @@ CheckSectionValid(
             pExtensionPlatform = ExtensionPlatformNT;
             break;
         default:
-            ERR("Unkown platform 0x%lx\n", PlatformInfo->Platform);
+            ERR("Unknown platform 0x%lx\n", PlatformInfo->Platform);
             pExtensionPlatform = ExtensionPlatformNone;
             break;
     }
