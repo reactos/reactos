@@ -6,7 +6,7 @@ STRINGTABLE DISCARDABLE
 IDS_USAGE, "FIND: Mostra totes les linies que continguin una determinada cadena de caràcters.\n\n\
   FIND [ /C ] [ /I ] [ /N ] [ /V ] \"Cadena de caràcters\" [ file... ]\n\
     /C  Conta el numero de linies que contenen la cadena de caràcters\n\
-    /I  Ignore case\n\
+    /I  Ignora majúscules i minúscules\n\
     /N  Numero de linies mostrades, començant per la primera\n\
     /V  Mostra les linies que no contenen la cadena de caràcters"
 
