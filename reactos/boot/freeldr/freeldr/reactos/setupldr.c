@@ -30,6 +30,7 @@ char					reactos_kernel_cmdline[255];	// Command line passed to kernel
 LOADER_MODULE			reactos_modules[64];		// Array to hold boot module info loaded for the kernel
 char					reactos_module_strings[64][256];	// Array to hold module names
 reactos_mem_data_t reactos_mem_data;
+extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
 char szBootPath[256];
 char szHalName[256];
 CHAR SystemRoot[255];
@@ -186,6 +187,7 @@ VOID RunLoader(VOID)
   LoaderBlock.PageDirectoryEnd = (ULONG)&PageDirectoryEnd;
   LoaderBlock.ModsCount = 0;
   LoaderBlock.ModsAddr = reactos_modules;
+  LoaderBlock.ArchExtra = (ULONG)reactos_arc_hardware_data;
   LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
   if (LoaderBlock.MmapLength)
   {

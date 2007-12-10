@@ -29,6 +29,9 @@ FldrpHwHeapAlloc(IN ULONG Size)
     /* Return a block of memory from the ARC Hardware Heap */
     Buffer = &reactos_arc_hardware_data[FldrpHwHeapLocation];
     
+    /* Clear it */
+    RtlZeroMemory(Buffer, Size);
+    
     /* Increment the heap location */
     FldrpHwHeapLocation += Size;
     if (FldrpHwHeapLocation > HW_MAX_ARC_HEAP_SIZE) Buffer = NULL;
@@ -118,9 +121,6 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     Component = &FldrArcHwTreeRoot->ComponentEntry;
     Component->Class = SystemClass;
     Component->Type = MaximumType;
-    Component->Version = 0;
-    Component->Key = 0;
-    Component->AffinityMask = 0;
     Component->ConfigurationDataLength = 0;
     Component->Identifier = 0;
     Component->IdentifierLength = 0;
@@ -136,6 +136,36 @@ FldrCreateSystemKey(OUT PCONFIGURATION_COMPONENT_DATA *SystemNode)
     {
         DbgPrint((DPRINT_HWDETECT, "RegCreateKey() failed (Error %u)\n", Error));
         return;
+    }
+}
+
+VOID
+NTAPI
+FldrLinkToParent(IN PCONFIGURATION_COMPONENT_DATA Parent,
+                 IN PCONFIGURATION_COMPONENT_DATA Child)
+{
+    PCONFIGURATION_COMPONENT_DATA Sibling;
+
+    /* Get the first sibling */
+    Sibling = Parent->Child;
+
+    /* If no sibling exists, then we are the first child */
+    if (!Sibling)
+    {
+        /* Link us in */
+        Parent->Child = Child;
+    }
+    else
+    {
+        /* Loop each sibling */
+        do
+        {
+            /* This is now the parent */
+            Parent = Sibling;
+        } while ((Sibling = Sibling->Sibling));
+        
+        /* Found the lowest sibling; mark us as its sibling too */
+        Parent->Sibling = Child;
     }
 }
 
@@ -160,17 +190,8 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
     /* Now save our parent */
     ComponentData->Parent = SystemNode;
     
-    /* Now we need to figure out if the parent already has a child entry */
-    if (SystemNode->Child)
-    {
-        /* It does, so we'll be a sibling of the child instead */
-        SystemNode->Child->Sibling = ComponentData;
-    }
-    else
-    {
-        /* It doesn't, so we will be the first child */
-        SystemNode->Child = ComponentData;
-    }
+    /* Link us to the parent */
+    FldrLinkToParent(SystemNode, ComponentData);
     
     /* Set us up */
     Component = &ComponentData->ComponentEntry;

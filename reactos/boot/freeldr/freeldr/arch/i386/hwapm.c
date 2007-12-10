@@ -57,7 +57,8 @@ VOID
 DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 {
     PCONFIGURATION_COMPONENT_DATA BiosKey;
-    
+    CM_FULL_RESOURCE_DESCRIPTOR FullResourceDescriptor;
+
     if (FindApmBios())
     {
         /* Create new bus key */
@@ -67,14 +68,24 @@ DetectApmBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
                                AdapterClass,
                                MultiFunctionAdapter,
                                &BiosKey);
-        
-#if 0
+
         /* Set 'Component Information' */
         FldrSetComponentInformation(BiosKey,
                                     0x0,
                                     0x0,
                                     0xFFFFFFFF);
-#endif
+        
+        /* Set 'Configuration Data' value */
+        memset(&FullResourceDescriptor, 0, sizeof(CM_FULL_RESOURCE_DESCRIPTOR));
+        FullResourceDescriptor.InterfaceType = Internal;
+        FullResourceDescriptor.BusNumber = *BusNumber;
+        FullResourceDescriptor.PartialResourceList.Version = 0;
+        FullResourceDescriptor.PartialResourceList.Revision = 0;
+        FullResourceDescriptor.PartialResourceList.Count = 0;
+        FldrSetConfigurationData(BiosKey,
+                                 &FullResourceDescriptor,
+                                 sizeof(CM_FULL_RESOURCE_DESCRIPTOR) -
+                                 sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
         
         /* Increment bus number */
         (*BusNumber)++;
