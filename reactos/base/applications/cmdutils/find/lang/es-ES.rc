@@ -1,0 +1,17 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE DISCARDABLE
+{
+
+IDS_USAGE, "FIND: Imprime todas las líneas de un fichero que contiene una cadena.\n\n\
+  FIND [ /C ] [ /I ] [ /N ] [ /V ] \"cadena\" [ fichero... ]\n\
+    /C  Cuenta el número de líneas que contienen cadenas.\n\
+    /I  Ignora mayúsculas y minúsculas\n\
+    /N  Numere las líneas que aparece en la pantalla, a partir de 1.\n\
+    /V  Impreme las líneas que no contienen una cadena."
+
+IDS_NO_SUCH_FILE, "FIND: %s: Ningún tal fichero\n"
+
+IDS_CANNOT_OPEN, "FIND: %s: No se puede abrir este fichero\n"
+
+}
