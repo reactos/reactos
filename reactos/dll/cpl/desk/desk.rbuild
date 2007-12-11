@@ -46,6 +46,7 @@
 
 	<metadata description="ReactOS Display ControlPanel Applet" />
 
+	<!-- Module localizations -->
 	<localization isoname="bg-BG">lang/bg-BG.rc</localization>
 	<localization isoname="cs-CZ">lang/cs-CZ.rc</localization>
 	<localization isoname="de-DE">lang/de-DE.rc</localization>

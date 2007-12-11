@@ -60,7 +60,7 @@ ModulesManifestGenerator::WriteManifestFile ( Module& module )
 	s = s + sprintf ( s, " <assemblyIdentity");
 	s = s + sprintf ( s, "  version=\"1.0.0.0\"");
 	s = s + sprintf ( s, "  processorArchitecture=\"x86\"");
-	s = s + sprintf ( s, "  name=\"ReactOS.System.ControlPanel.System\"");
+	s = s + sprintf ( s, "  name=\"ReactOS.System.Module\"");
 	s = s + sprintf ( s, "  type=\"win32\"");
 	s = s + sprintf ( s, " />");
 	

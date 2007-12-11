@@ -17,7 +17,6 @@
  */
 #include "pch.h"
 #include <assert.h>
-
 #include "rbuild.h"
 
 using std::string;
@@ -74,18 +73,6 @@ Bootstrap::IsSupportedModuleType ( ModuleType type )
 	throw InvalidOperationException ( __FILE__,
 	                                  __LINE__ );
 }
-
-//string
-//Bootstrap::ReplaceVariable ( const string& name,
-//                             const string& value,
-//                             string path )
-//{
-//	size_t i = path.find ( name );
-//	if ( i != string::npos )
-//		return path.replace ( i, name.length (), value );
-//	else
-//		return path;
-//}
 
 void
 Bootstrap::Initialize ()

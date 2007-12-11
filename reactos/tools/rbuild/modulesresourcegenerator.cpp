@@ -84,14 +84,20 @@ ModulesResourceGenerator::WriteResourceFile ( Module& module )
 		s = s + sprintf ( s, "\n" );
 	}
 
+	/* Include resources for module localizations */
 	for ( size_t i = 0; i < module.localizations.size (); i++ )
 	{
 		Localization& localization = *module.localizations[i];
 
-		std::string langFile = NormalizeFilename(localization.file.relative_path + sSep + localization.file.name);
+		/* If this locale is included in our platform ... */
+		const PlatformLanguage* platformLanguage = module.project.LocatePlatformLanguage (localization.isoname);
+		if (platformLanguage != NULL)
+		{
+			std::string langFile = NormalizeFilename(localization.file.relative_path + sSep + localization.file.name);
 
-		s = s + sprintf ( s, "#include \"%s\"" , langFile.c_str() );
-		s = s + sprintf ( s, "\n" );
+			s = s + sprintf ( s, "#include \"%s\"" , langFile.c_str() );
+			s = s + sprintf ( s, "\n" );
+		}
 	}
 
 	FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + module.output->relative_path + sSep + "auto.rc" ) );

@@ -122,6 +122,7 @@ class InstallFolder;
 class BaseAdress;
 class BuildFamily;
 class Family;
+class PlatformLanguage;
 
 typedef std::map<std::string,Directory*> directory_map;
 
@@ -276,6 +277,7 @@ public:
     std::vector<BuildFamily*> buildfamilies;
 	std::vector<Module*> modules;
 	std::vector<Language*> languages;
+	std::vector<PlatformLanguage*> platformLanguages;
     std::vector<Contributor*> contributors;
     std::vector<InstallFolder*> installFolders;
 	IfableData non_if_data;
@@ -292,6 +294,8 @@ public:
 	ArchitectureType architectureType;
 	void ProcessXML ( const std::string& path );
 	Module* LocateModule ( const std::string& name );
+	const Language* LocateLanguage ( const std::string& name ) const;
+	const PlatformLanguage* LocatePlatformLanguage ( const std::string& name ) const;
     const BuildFamily* LocateFamily ( const std::string& name ) const;
     const Contributor* LocateContributor ( const std::string& alias ) const;
 	const Module* LocateModule ( const std::string& name ) const;
@@ -687,6 +691,19 @@ public:
 	std::string isoname;
 
 	Language ( const XMLElement& _node );
+
+	void ProcessXML ();
+};
+
+class PlatformLanguage
+{
+public:
+	const Project& project;
+	const XMLElement& node;
+	std::string isoname;
+
+	PlatformLanguage (	const Project& _project, 
+						const XMLElement& _node );
 
 	void ProcessXML ();
 };

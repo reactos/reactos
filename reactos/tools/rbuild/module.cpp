@@ -1674,6 +1674,28 @@ Language::ProcessXML()
 {
 }
 
+PlatformLanguage::PlatformLanguage ( const Project& _project , const XMLElement& _node)
+	: project(_project) , node (_node)
+{
+	const XMLAttribute* att = node.GetAttribute ( "isoname", true );
+	assert(att);
+	isoname = att->value;
+
+	const Language* language = project.LocateLanguage ( isoname );
+	if ( language == NULL )
+	{
+		throw XMLInvalidBuildFileException (
+			node.location,
+			"<PlatformLanguage> references a no existant language '%s'",
+			isoname.c_str() );
+	}
+}
+
+void
+PlatformLanguage::ProcessXML()
+{
+}
+
 Family::Family ( const XMLElement& _node,
                  const Module& _module )
 	: node (_node),

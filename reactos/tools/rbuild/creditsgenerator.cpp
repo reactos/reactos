@@ -103,6 +103,10 @@ CreditsGenerator::GenerateHeader ()
     
     s = buf;
     s = s + sprintf ( s, "/* Auto generated */\n");
+    s = s + sprintf ( s, "/* Edit contributors.rbuild to add or remove developers */\n" );
+    s = s + sprintf ( s, "\n" );
+	s = s + sprintf ( s, "#ifndef __INCLUDE_AUTOCONTRIBUTORS_H\n" );
+	s = s + sprintf ( s, "#define __INCLUDE_AUTOCONTRIBUTORS_H\n" );
     s = s + sprintf ( s, "\n" );
     s = s + sprintf ( s, "const char* szAutoContributors[]= \n" );
     s = s + sprintf ( s, "{\n" );
@@ -118,6 +122,8 @@ CreditsGenerator::GenerateHeader ()
 
     s = s + sprintf ( s, "\t0\n");
     s = s + sprintf ( s, "};\n" );
+    s = s + sprintf ( s, "\n" );
+    s = s + sprintf ( s, "#endif /* __INCLUDE_AUTOCONTRIBUTORS_H */\n" );
 
     FileSupportCode::WriteIfChanged ( buf, NormalizeFilename ( Environment::GetIntermediatePath () + sSep + "include" + sSep + "reactos" + sSep + "autocontributors.h" ) );
 

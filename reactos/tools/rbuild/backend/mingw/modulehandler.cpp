@@ -2612,7 +2612,7 @@ MingwKernelModuleHandler::GenerateKernelModuleTarget ()
 		                                     module.baseaddress.c_str () );
 		GenerateLinkerCommand ( dependencies,
 					"${gcc}",
-					linkerParameters + " $(NTOSKRNL_SHARED)",
+					linkerParameters + " -Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared",
 					objectsMacro,
 					libsMacro,
 					"-sections" );

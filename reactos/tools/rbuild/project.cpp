@@ -524,6 +524,12 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		languages.push_back ( language );
 		subs_invalid = false;
 	}
+	else if ( e.name == "platformlanguage" )
+	{
+		PlatformLanguage* platformLanguage = new PlatformLanguage ( *this, e );
+		platformLanguages.push_back ( platformLanguage );
+		subs_invalid = false;
+	}
 	else if ( e.name == "contributor" )
 	{
 		Contributor* contributor = new Contributor ( e );
@@ -664,6 +670,30 @@ Project::LocateContributor ( const string& alias ) const
 	{
 		if ( contributors[i]->alias == alias )
 			return contributors[i];
+	}
+
+	return NULL;
+}
+
+const Language*
+Project::LocateLanguage ( const std::string& name ) const
+{
+	for ( size_t i = 0; i < languages.size (); i++ )
+	{
+		if ( languages[i]->isoname == name )
+			return languages[i];
+	}
+
+	return NULL;
+}
+
+const PlatformLanguage*
+Project::LocatePlatformLanguage ( const std::string& name ) const
+{
+	for ( size_t i = 0; i < platformLanguages.size (); i++ )
+	{
+		if ( platformLanguages[i]->isoname == name )
+			return platformLanguages[i];
 	}
 
 	return NULL;

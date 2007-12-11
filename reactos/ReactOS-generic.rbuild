@@ -70,4 +70,9 @@
 		<xi:include href="subsystems/subsystems.rbuild" />
 	</directory>
 
+	<!-- The languages to be included in to the platform being build. see languages.rbuild for additional languages -->
+	<platformlanguage isoname="en-US" />
+	<platformlanguage isoname="es-ES" />
+	<platformlanguage isoname="de-DE" />
+
 </group>
