@@ -1024,8 +1024,12 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     BOOL needToClean;
     PSID pSid1, pSid2;
     ULONG i;
-    LONG rc;
-    BOOL ret;
+    BOOL bRet;
+    DWORD LastErr;
+    DWORD Ret = ERROR_SUCCESS;
+
+    /* save the last error code */
+    LastErr = GetLastError();
 
     *NewAcl = NULL;
 
@@ -1033,10 +1037,18 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     if (OldAcl)
     {
         if (!GetAclInformation(OldAcl, &SizeInformation, sizeof(ACL_SIZE_INFORMATION), AclSizeInformation))
-            return GetLastError();
+        {
+            Ret = GetLastError();
+            goto Cleanup;
+        }
+
         pKeepAce = (BOOL *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount);
         if (!pKeepAce)
-            return ERROR_NOT_ENOUGH_MEMORY;
+        {
+            Ret = ERROR_NOT_ENOUGH_MEMORY;
+            goto Cleanup;
+        }
+
         memset(pKeepAce, TRUE, SizeInformation.AceCount);
     }
     else
@@ -1059,7 +1071,11 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                     if (!pKeepAce[i])
                         continue;
                     if (!GetAce(OldAcl, i, (PVOID*)&pAce))
-                        goto cleanup;
+                    {
+                        Ret = GetLastError();
+                        goto Cleanup;
+                    }
+
                     pSid2 = AccpGetAceSid(pAce);
                     if (RtlEqualSid(pSid1, pSid2))
                     {
@@ -1099,11 +1115,14 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     pNew = (PACL)LocalAlloc(LMEM_FIXED, SizeInformation.AclBytesInUse);
     if (!pNew)
     {
-        rc = ERROR_NOT_ENOUGH_MEMORY;
-        goto done;
+        Ret = ERROR_NOT_ENOUGH_MEMORY;
+        goto Cleanup;
     }
     if (!InitializeAcl(pNew, SizeInformation.AclBytesInUse, ACL_REVISION))
-        goto cleanup;
+    {
+        Ret = GetLastError();
+        goto Cleanup;
+    }
 
     /* Fill it */
     /* 1a) New audit entries (SET_AUDIT_SUCCESS, SET_AUDIT_FAILURE) */
@@ -1119,10 +1138,13 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
         {
             /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
             pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
-            ret = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            bRet = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
             if (needToClean) LocalFree((HLOCAL)pSid1);
-            if (!ret)
-                goto cleanup;
+            if (!bRet)
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
         }
     }
 
@@ -1137,10 +1159,13 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
         {
             /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
             pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
-            ret = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            bRet = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
             if (needToClean) LocalFree((HLOCAL)pSid1);
-            if (!ret)
-                goto cleanup;
+            if (!bRet)
+            {
+                Ret = GetLastError();
+                goto Cleanup;
+            }
         }
     }
 
@@ -1148,17 +1173,15 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     /* FIXME */
 
     *NewAcl = pNew;
-    rc = ERROR_SUCCESS;
-    goto done;
 
-cleanup:
-    rc = GetLastError();
-
-done:
+Cleanup:
     if (pKeepAce)
         LocalFree((HLOCAL)pKeepAce);
-    DPRINT("Returning %d\n", rc);
-    return rc;
+
+    /* restore the last error code */
+    SetLastError(LastErr);
+
+    return Ret;
 }
 
 
