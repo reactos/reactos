@@ -58,9 +58,11 @@
  * #defines and error codes
  */
 #ifdef D3D_DEBUG_INFO
-#define D3D_SDK_VERSION                         (32 | 0x80000000)
+#define D3D_SDK_VERSION                         (32 | 0x80000000L)
+#define D3D9b_SDK_VERSION                       (31 | 0x80000000L)
 #else
 #define D3D_SDK_VERSION                         32
+#define D3D9b_SDK_VERSION                       31
 #endif
 
 #define D3DADAPTER_DEFAULT                      0
