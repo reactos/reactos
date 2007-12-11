@@ -42,9 +42,9 @@ BEGIN
     LTEXT "Введите ваше полное имя и название организации.",
           IDC_STATIC, 54, 7, 242, 21
     LTEXT "&Имя:", IDC_STATIC, 54, 37, 44, 8
-    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 11, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT IDC_OWNERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "&Организация:", IDC_STATIC, 54, 57, 47, 8
-    EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 11, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
+    EDITTEXT IDC_OWNERORGANIZATION, 132, 55, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL
 END
 
 
@@ -57,16 +57,16 @@ BEGIN
           "Если ваш компьютер подключен к сети, то его имя должно быть уникально.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Имя компьютера:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 140, 35, 163, 11, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     LTEXT "При установке будет создан профиль пользователя с именем Administrator "\
           "Вы можете использовать этот профиль, если вам нужно получить права администратора.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Введите пароль администратора (не более 14 символов).",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 110, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 142, 101, 170, 11, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Пароль администратора:", IDC_STATIC, 54, 104, 96, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
     LTEXT "П&овторите пароль:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 142, 120, 170, 11, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
@@ -97,9 +97,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Дата и время:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
-            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 11
+            DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
-            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 11
+            DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
     LTEXT "Часовой пояс:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL

@@ -75,16 +75,16 @@ BEGIN
           "If you are on a network, your computer name must be unique.",
           IDC_STATIC, 54, 7, 250, 24
     LTEXT "&Computer Name:", IDC_STATIC, 54, 38, 75, 8
-    EDITTEXT IDC_COMPUTERNAME, 132, 35, 163, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
+    EDITTEXT IDC_COMPUTERNAME, 165, 35, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_AUTOHSCROLL | ES_UPPERCASE
     LTEXT "Setup will create a user account on your computer called Administrator. "\
           "You can use this account if you need full access to your computer.",
           IDC_STATIC, 54, 57, 250, 25
     LTEXT "Type an Administrator Password that is 14 characters or less.",
           IDC_STATIC, 54, 87, 250, 8
-    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD1, 132, 101, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
-    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 75, 8
-    EDITTEXT IDC_ADMINPASSWORD2, 132, 120, 172, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "&Administrator Password:", IDC_STATIC, 54, 104, 105, 8
+    EDITTEXT IDC_ADMINPASSWORD1, 165, 101, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
+    LTEXT "C&onfirm Password:", IDC_STATIC, 54, 123, 105, 8
+    EDITTEXT IDC_ADMINPASSWORD2, 165, 120, 148, 14, WS_VISIBLE | WS_TABSTOP | ES_PASSWORD
 END
 
 
@@ -98,14 +98,14 @@ BEGIN
           "currencies, and dates appear.", IDC_STATIC, 53, 7, 253, 20
     LTEXT "", IDC_LOCALETEXT, 53, 29, 250, 16
     LTEXT "To change system or user locale settings, click Customize.",
-          IDC_STATIC, 53, 60, 184, 8
-    PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 245, 57, 50, 14
+          IDC_STATIC, 53, 60, 196, 8
+    PUSHBUTTON "&Customize...", IDC_CUSTOMLOCALE, 250, 57, 50, 14
     LTEXT "The keyboard layout controls the characters that appear when you type.",
           IDC_STATIC, 53, 86, 253, 8
     LTEXT "", IDC_LAYOUTTEXT, 53, 100, 250, 16
     LTEXT "To change the keyboard layout, click Customize.",
           IDC_STATIC, 53, 126, 184, 8
-    PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 245, 122, 50, 14
+    PUSHBUTTON "C&ustomize...", IDC_CUSTOMLAYOUT, 250, 122, 50, 14
 END
 
 
@@ -114,12 +114,12 @@ STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "ReactOS Setup"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Date and Time", IDC_STATIC, 53, 7, 253, 8
+    LTEXT "Date and Time:", IDC_STATIC, 53, 7, 253, 8
     CONTROL "", IDC_DATEPICKER, "SysDateTimePick32",
             DTS_LONGDATEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 53, 17, 137, 14
     CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32",
             DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 200, 17, 54, 14
-    LTEXT "Timezone", IDC_STATIC, 53, 42, 253, 8
+    LTEXT "Timezone:", IDC_STATIC, 53, 42, 253, 8
     COMBOBOX IDC_TIMEZONELIST, 53, 52, 201, 93,
              CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
