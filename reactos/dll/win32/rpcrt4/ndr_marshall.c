@@ -904,36 +904,24 @@ void WINAPI PointerFree(PMIDL_STUB_MESSAGE pStubMsg,
   pFormat += 2;
   if (attr & RPC_FC_P_SIMPLEPOINTER) desc = pFormat;
   else desc = pFormat + *(const SHORT*)pFormat;
-  if (attr & RPC_FC_P_DEREF) {
-    Pointer = *(unsigned char**)Pointer;
-    TRACE("deref => %p\n", Pointer);
-  }
 
   if (!Pointer) return;
 
+  if (attr & RPC_FC_P_DEREF) {
+      Pointer = *(unsigned char**)Pointer;
+      TRACE("deref => %p\n", Pointer);
+  }
+  
   m = NdrFreer[*desc & NDR_TABLE_MASK];
   if (m) m(pStubMsg, Pointer, desc);
 
-  /* hmm... is this sensible?
-   * perhaps we should check if the memory comes from NdrAllocate,
+  /* we should check if the memory comes from NdrAllocate,
    * and deallocate only if so - checking if the pointer is between
-   * BufferStart and BufferEnd is probably no good since the buffer
+   * BufferStart and BufferEnd will not always work since the buffer
    * may be reallocated when the server wants to marshal the reply */
-  switch (*desc) {
-  case RPC_FC_BOGUS_STRUCT:
-  case RPC_FC_BOGUS_ARRAY:
-  case RPC_FC_USER_MARSHAL:
-    break;
-  default:
-    FIXME("unhandled data type=%02x\n", *desc);
-  case RPC_FC_CARRAY:
-  case RPC_FC_C_CSTRING:
-  case RPC_FC_C_WSTRING:
-    if (pStubMsg->ReuseBuffer) goto notfree;
-    break;
-  case RPC_FC_IP:
-    goto notfree;
-  }
+  if (Pointer >= (unsigned char *)pStubMsg->RpcMsg->Buffer ||
+      Pointer <= (unsigned char *)pStubMsg->RpcMsg->Buffer + pStubMsg->BufferLength)
+      goto notfree;
 
   if (attr & RPC_FC_P_ONSTACK) {
     TRACE("not freeing stack ptr %p\n", Pointer);

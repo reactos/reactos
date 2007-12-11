@@ -207,37 +207,10 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     ULONG Interface = InterfaceType, Bus = BusNumber, i;
     NTSTATUS Status;
     HANDLE NewHandle;
-    static ULONG t, tabLevel;
-    PCHAR InterfaceStrings[MaximumInterfaceType + 1] =
-    {
-        "Internal",
-        "Isa",
-        "Eisa",
-        "MicroChannel",
-        "TurboChannel",
-        "PCIBus",
-        "VMEBus",
-        "NuBus",
-        "PCMCIABus",
-        "CBus",
-        "MPIBus",
-        "MPSABus",
-        "ProcessorInternal",
-        "InternalPowerBus",
-        "PNPISABus",
-        "PNPBus",
-        "Unknown"
-    };
 
     /* Loop each entry */
     while (CurrentEntry)
     {
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Dumping node @ 0x%p\n", CurrentEntry);
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Parent @ 0x%p Sibling @ 0x%p Child @ 0x%p\n",
-                 CurrentEntry->Parent, CurrentEntry->Sibling, CurrentEntry->Child);
-
         /* Check if this is an adapter */
         Component = &CurrentEntry->ComponentEntry;
         if ((Component->Class == AdapterClass) &&
@@ -303,35 +276,7 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         }
         
         /* Dump information on the component */
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Component Type: %wZ\n", &CmTypeName[Component->Type]);
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Class: %wZ\n", &CmClassName[Component->Class]);
-        if (Component->Class != SystemClass)
-        {
-            for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-            DbgPrint("Device Index: %lx\n", DeviceIndexTable[Component->Type]);    
-        }
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Component Information:\n");
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("\tFlags: %lx\n", Component->Flags);
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("\tVersion: %lx\n", Component->Version);
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("\tAffinity: %lx\n", Component->AffinityMask);
-        if (Component->IdentifierLength)
-        {
-            for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-            DbgPrint("Identifier: %S\n", Component->Identifier);
-        }
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Configuration Data: %p\n", CurrentEntry->ConfigurationData);    
-        for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-        DbgPrint("Interface Type: %s Bus Number: %d\n\n",
-                 InterfaceStrings[Interface],
-                 Bus);
-        
+
         /* Setup the hardware node */
         Status = CmpInitializeRegistryNode(CurrentEntry,
                                            ParentHandle,
@@ -345,12 +290,10 @@ CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         if (CurrentEntry->Child)
         {
             /* Recurse child */
-            tabLevel++;
             Status = CmpSetupConfigurationTree(CurrentEntry->Child,
                                                NewHandle,
                                                Interface,
                                                Bus);
-            tabLevel--;
             if (!NT_SUCCESS(Status))
             {
                 /* Fail */
@@ -433,8 +376,6 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (LoaderBlock->ConfigurationRoot)
     {
         /* Setup the configuration tree */
-        DPRINT1("ARC Hardware Tree Received @ 0x%p. Dumping HW Info:\n\n",
-                LoaderBlock->ConfigurationRoot);
         Status = CmpSetupConfigurationTree(LoaderBlock->ConfigurationRoot,
                                            KeyHandle,
                                            -1,
@@ -451,6 +392,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
     return Status;
 }
+
 
 
 

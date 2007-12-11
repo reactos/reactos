@@ -13,6 +13,8 @@
 #define NDEBUG
 #include <debug.h>
 
+SIZE_T RtlpAllocDeallocQueryBufferSize = PAGE_SIZE;
+
 /* FUNCTIONS ***************************************************************/
 
 /*
