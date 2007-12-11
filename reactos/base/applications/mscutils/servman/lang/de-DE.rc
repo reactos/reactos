@@ -98,7 +98,7 @@ BEGIN
   LTEXT "Sie können die Startparameter angeben, die übernommen werden sollen, wenn der Dienst von hier aus gestartet wird.",IDC_STATIC, 6,177,240,20
   LTEXT "Startparameter:", IDC_STATIC, 6, 200, 58, 11
   EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-  PUSHBUTTON "Edit", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+  PUSHBUTTON "Bearbeiten", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
 END
 
 IDD_DLG_DEPEND DIALOGEX 6,6,253,225
