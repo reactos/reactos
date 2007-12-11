@@ -1020,7 +1020,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     PACL pNew;
     ACL_SIZE_INFORMATION SizeInformation;
     PACE_HEADER pAce;
-    BOOL *pKeepAce = NULL;
+    BOOLEAN *pKeepAce = NULL;
     BOOL needToClean;
     PSID pSid1, pSid2;
     ULONG i;
@@ -1042,14 +1042,14 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             goto Cleanup;
         }
 
-        pKeepAce = (BOOL *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount);
+        pKeepAce = (BOOLEAN *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount * sizeof(*pKeepAce));
         if (!pKeepAce)
         {
             Ret = ERROR_NOT_ENOUGH_MEMORY;
             goto Cleanup;
         }
 
-        memset(pKeepAce, TRUE, SizeInformation.AceCount);
+        memset(pKeepAce, TRUE, SizeInformation.AceCount * sizeof(*pKeepAce));
     }
     else
     {
