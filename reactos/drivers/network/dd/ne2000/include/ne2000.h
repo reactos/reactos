@@ -29,6 +29,8 @@
 
 #define DRIVER_DEFAULT_IO_BASE_ADDRESS      0x280  /* bochs default */
 #define DRIVER_DEFAULT_INTERRUPT_NUMBER     9      /* bochs default */
+#define DRIVER_DEFAULT_INTERRUPT_SHARED     FALSE
+#define DRIVER_DEFAULT_INTERRUPT_MODE       NdisInterruptLatched
 
 #define DRIVER_MAX_MULTICAST_LIST_SIZE  8
 
@@ -80,6 +82,8 @@ typedef struct _NIC_ADAPTER
     ULONG IoBaseAddress;
     ULONG InterruptLevel;
     ULONG InterruptVector;
+    BOOLEAN InterruptShared;
+    KINTERRUPT_MODE InterruptMode;
 
     /* Mapped address of the I/O base port */
     PUCHAR IOBase;
