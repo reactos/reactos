@@ -1195,7 +1195,7 @@ LdrGetExportByName(PVOID BaseAddress,
           }
      }
 
-   DPRINT1("LdrGetExportByName(): failed to find %s\n",SymbolName);
+   DPRINT("LdrGetExportByName(): failed to find %s\n",SymbolName);
    return (PVOID)NULL;
 }
 
