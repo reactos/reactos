@@ -4,8 +4,8 @@ STRINGTABLE DISCARDABLE
 {
    IDS_APPNAME,            "Калькулятор"
 
-   IDS_COPYRIGHT1,         "Калькулятор 5.0. Распространяется под LGPL 2"
-   IDS_COPYRIGHT2          "Copyright 2003, James Briggs"
+   IDS_COPYRIGHT1,         "Калькулятор 5.0. Распространяется по LGPL 2"
+   IDS_COPYRIGHT2          "Авторские права (с) 2003, Джемес Бригс"
    IDS_COPYRIGHT3          "Сан-Хосе, Калифорния, США"
    IDS_COPYRIGHT4          "james@ActionMessage.com"
    IDS_COPYRIGHT5          "http://www.ActionMessage.com/winecalc/"
@@ -112,11 +112,12 @@ BEGIN
    VK_F1, IDV_HELP,     VIRTKEY
 END
 
-DLG_ABOUT DIALOG 12,0,175,80
+DLG_ABOUT DIALOG 12,0,175,82
 CAPTION "О программе GNU WineCalc"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS Shell Dlg"
 BEGIN
-   DEFPUSHBUTTON "OK", IDOK,       5, 60, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+   DEFPUSHBUTTON "OK", IDOK,       73, 62, 30, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 WHATS_THIS_MENU MENU DISCARDABLE
