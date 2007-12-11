@@ -54,21 +54,6 @@ RegInitializeRegistry (VOID)
   RegCreateKey (RootKey,
 		L"Registry\\Machine\\HARDWARE",
 		NULL);
-
-  /* Create 'HARDWARE\DESCRIPTION' key */
-  RegCreateKey (RootKey,
-		L"Registry\\Machine\\HARDWARE\\DESCRIPTION",
-		NULL);
-
-  /* Create 'HARDWARE\DEVICEMAP' key */
-  RegCreateKey (RootKey,
-		L"Registry\\Machine\\HARDWARE\\DEVICEMAP",
-		NULL);
-
-  /* Create 'HARDWARE\RESOURCEMAP' key */
-  RegCreateKey (RootKey,
-		L"Registry\\Machine\\HARDWARE\\RESOURCEMAP",
-		NULL);
 }
 
 
