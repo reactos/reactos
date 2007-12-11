@@ -140,6 +140,11 @@ AccpGetAceStructureSize(IN PACE_HEADER AceHeader)
                 Size += sizeof(Ace->InheritedObjectType);
             break;
         }
+
+        case SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+            Size = FIELD_OFFSET(SYSTEM_MANDATORY_LABEL_ACE,
+                                SidStart);
+            break;
     }
 
     return Size;
@@ -1000,24 +1005,6 @@ GetTrusteeSid(PTRUSTEE Trustee,
     }
 }
 
-static PSID
-GetOwner(PACE_HEADER Ace)
-{
-    switch (Ace->AceType)
-    {
-        case ACCESS_ALLOWED_ACE_TYPE:
-            return (PSID)&((PACCESS_ALLOWED_ACE)Ace)->SidStart;
-        case ACCESS_DENIED_ACE_TYPE:
-            return (PSID)&((PACCESS_DENIED_ACE)Ace)->SidStart;
-        case SYSTEM_AUDIT_ACE_TYPE:
-            return (PSID)&((PSYSTEM_AUDIT_ACE)Ace)->SidStart;
-        case SYSTEM_MANDATORY_LABEL_ACE_TYPE:
-            return (PSID)&((PSYSTEM_MANDATORY_LABEL_ACE)Ace)->SidStart;
-        default:
-            DPRINT1("Unknown ACE type 0x%x\n", Ace->AceType);
-            return NULL;
-    }
-}
 
 /**********************************************************************
  * AccRewriteSetEntriesInAcl				EXPORTED
@@ -1073,7 +1060,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                         continue;
                     if (!GetAce(OldAcl, i, (PVOID*)&pAce))
                         goto cleanup;
-                    pSid2 = GetOwner(pAce);
+                    pSid2 = AccpGetAceSid(pAce);
                     if (RtlEqualSid(pSid1, pSid2))
                     {
                         pKeepAce[i] = FALSE;
