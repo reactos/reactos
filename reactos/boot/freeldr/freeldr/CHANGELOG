@@ -1,8 +1,24 @@
-Changes in v2.0.0 (02/07/2005) (alex ionesco)
+Changes in v3.0.0 (11/12/2007) (fball)
 
-- PE loading of ntoskrnl.exe
-- Work on 3GB support
-- w32api conversion
+- Support for building an ARC Tree.
+- Removal of registry write code.
+- Removal of HARDWARE registry building code.
+- Working WinLDR branch for booting NT4.
+
+Changes in v2.5.0 (??/??/2007) (ion)
+
+- Memory layout fixes to support NT boot
+- Refactor PTE/PDE setup code
+- Identity mapping support
+- Set 0x80000000 as kernel base address, and all physical addresses with the high bit off (KSEG0_BASE) so that physical->virtual translation can be done with an OR.
+
+Changes in v2.1.0 (??/??/2006) (ion)
+
+- PE loading fixups and full NT-style driver loading
+
+Changes in v2.0.0 (02/07/2005) (ion)
+
+- Remove Multi-boot booting of ReactOS
 
 Changes in v1.8.26 (10/30/2004) (chorns)
 
