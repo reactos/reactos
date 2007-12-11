@@ -975,7 +975,6 @@ ParseCommandLine(LPWSTR lpCmdLine,
     WCHAR szSeps[] = L"/";
     LPWSTR lpToken;
     BOOL bRet = TRUE;
-    INT i;
 
     *bSkipDlg = TRUE;
 
