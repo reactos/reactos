@@ -366,7 +366,10 @@ AccpLookupSidByName(IN LSA_HANDLE PolicyHandle,
         return LsaNtStatusToWinError(Status);
 
     if (TranslatedSid->Use == SidTypeUnknown || TranslatedSid->Use == SidTypeInvalid)
-        return LsaNtStatusToWinError(STATUS_NONE_MAPPED); /* FIXME- what error code? */
+    {
+        Ret = LsaNtStatusToWinError(STATUS_NONE_MAPPED); /* FIXME- what error code? */
+        goto Cleanup;
+    }
 
     SidLen = GetLengthSid(TranslatedSid->Sid);
     ASSERT(SidLen != 0);
@@ -387,6 +390,7 @@ AccpLookupSidByName(IN LSA_HANDLE PolicyHandle,
     else
         Ret = ERROR_NOT_ENOUGH_MEMORY;
 
+Cleanup:
     LsaFreeMemory(ReferencedDomains);
     LsaFreeMemory(TranslatedSid);
 
