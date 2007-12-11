@@ -584,12 +584,55 @@ CmpDoOpen(IN PHHIVE Hive,
         /* It is, don't touch it */
         return STATUS_OBJECT_NAME_NOT_FOUND;
     }
-    
+
+    /* Check if we have a context */
+    if (Context)
+    {
+        /* Check if this is a link create (which shouldn't be an open) */
+        if (Context->CreateLink)
+        {
+            return STATUS_ACCESS_DENIED;
+        }
+
+        /* Check if this is symlink create attempt */
+        if (Context->CreateOptions & REG_OPTION_CREATE_LINK)
+        {
+            /* Key already exists */
+            return STATUS_OBJECT_NAME_COLLISION;
+        }
+
+        /* Set the disposition */
+        Context->Disposition = REG_OPENED_EXISTING_KEY;
+    }
+
     /* Do this in the registry lock */
     CmpLockRegistry();
 
     /* If we have a KCB, make sure it's locked */
     //ASSERT(CmpIsKcbLockedExclusive(*CachedKcb));
+
+    /* Check if this is a symlink */
+    if ((Node->Flags & KEY_SYM_LINK) && !(Attributes & OBJ_OPENLINK))
+    {
+        /* Create the KCB for the symlink */
+        Kcb = CmpCreateKeyControlBlock(Hive,
+                                       Cell,
+                                       Node,
+                                       *CachedKcb,
+                                       0,
+                                       KeyName);
+        if (!Kcb) return STATUS_INSUFFICIENT_RESOURCES;
+
+        /* Make sure it's also locked, and set the pointer */
+        //ASSERT(CmpIsKcbLockedExclusive(Kcb));
+        *CachedKcb = Kcb;
+
+        /* Release the registry lock */
+        CmpUnlockRegistry();
+
+        /* Return reparse required */
+        return STATUS_REPARSE;
+    }
 
     /* Create the KCB. FIXME: Use lock flag */
     Kcb = CmpCreateKeyControlBlock(Hive,
@@ -735,7 +778,7 @@ CmpCreateLinkNode(IN PHHIVE Hive,
                            AccessState,
                            AccessMode,
                            CreateOptions,
-                           Context,
+                           NULL,
                            0,
                            &Kcb,
                            &Name,
