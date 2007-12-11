@@ -2,24 +2,24 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 IDD_DLG_SCREEN DIALOG DISCARDABLE  0, 0, 172, 57
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Butterflies ScreenSaver Settings"
+CAPTION "Параметри заставки ""Метелики"""
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,7,35,50,14
     PUSHBUTTON      "Скасувати",IDCANCEL,61,35,50,14
-    CONTROL         "Rotate Butterflies",ROTATE,"Button",BS_AUTOCHECKBOX |
+    CONTROL         "Перегортати метеликів",ROTATE,"Button",BS_AUTOCHECKBOX |
                     WS_TABSTOP,56,15,70,8
     PUSHBUTTON      "Про",IDABOUT,115,35,50,14
 END
 
 IDD_DLG_ABOUT DIALOG DISCARDABLE  0, 0, 149, 79
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
+CAPTION "Про"
 FONT 8, "MS Shell Dlg"
 BEGIN
     DEFPUSHBUTTON   "OK",IDOK,48,58,56,14
-    CTEXT           "Заставка ""Butterflies""",IDC_STATIC,7,7,135,9
-    CTEXT           "Demo by: NeHe ",IDC_STATIC,7,20,135,8
+    CTEXT           "Заставка ""Метелики""",IDC_STATIC,7,7,135,9
+    CTEXT           "Демо від: NeHe ",IDC_STATIC,7,20,135,8
     CTEXT           "http://nehe.gamedev.net",WEBPAGE1,7,29,135,8,SS_NOTIFY |
                     NOT WS_GROUP
     CTEXT           "Заставка від: tHaPuTeR",IDC_STATIC,7,38,135,8,NOT
@@ -30,5 +30,5 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_DESCRIPTION         "Butterflies ScreenSaver"
+    IDS_DESCRIPTION         "Заставка ""Метелики"""
 END
