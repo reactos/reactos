@@ -1,0 +1,276 @@
+// Location: \dll\cpl\sysdm\lang
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGEGENERAL DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Общи"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    CONTROL     "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
+    LTEXT       "Уредба:", IDC_STATIC, 4, 132, 32, 9
+    LTEXT       REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
+    LTEXT       "Версия:", IDC_STATIC, 10, 153, 40, 9
+    LTEXT       REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 45, 153, 91, 9
+    LTEXT       REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 60, 9
+    LTEXT       "Машина:", IDC_STATIC, 124, 132, 34, 9
+    LTEXT       "", IDC_MACHINELINE1, 130, 144, 118, 9
+    LTEXT       "", IDC_MACHINELINE2, 130, 153, 118, 9
+    LTEXT       "", IDC_MACHINELINE3, 130, 162, 118, 9
+    LTEXT       "", IDC_MACHINELINE4, 130, 171, 118, 9
+    LTEXT       "", IDC_MACHINELINE5, 130, 180, 118, 9
+    CONTROL     "Посетете <A HREF=""http://www.reactos.org/"">ReactOS Homepage</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 20, 200, 93, 8
+    PUSHBUTTON  "&Разрешителното", IDC_LICENCE, 170, 199, 78, 13
+END
+
+
+IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Оборудване"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX    "Управител на устройствата", IDC_STATIC, 6, 7, 244, 61
+    ICON        IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
+    LTEXT       "Управителят на устройствата извежда списък на всички устройства в компютъра ви. Чрез него можете да укажете свойствата на всяко от тях.", IDC_STATIC, 42, 18, 204, 24
+    PUSHBUTTON  "Управител на &устройствата...", IDC_HARDWARE_DEVICE_MANAGER, 134, 48, 110, 15
+
+    GROUPBOX    "Съветник по оборудването", IDC_STATIC, 6, 79, 244, 61
+    ICON        IDI_DEVMGR, IDC_STATIC, 12, 90, 23, 21, SS_ICON
+    LTEXT       "Съветникът по оборудването ще ви помогне да подкарате, махнете, извадите, изхмъкнете и настроите оборудването си.", IDC_STATIC, 42, 90, 204, 24
+    PUSHBUTTON  "Съветник по &оборудването", IDC_HARDWARE_WIZARD, 134, 120, 110, 15
+
+    GROUPBOX    "Профили за оборудването", IDC_STATIC, 6, 149, 244, 61
+    ICON        IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
+    LTEXT       "Профилите за оборудването позволяват създаването и записа на различни настройки на оборудването.", IDC_STATIC, 42, 160, 204, 24
+    PUSHBUTTON  "Профили за &оборудването...", IDC_HARDWARE_PROFILE, 134, 190, 110, 15
+END
+
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, 256, 218
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Разширени"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "За повечето от тези настройски са нужни управителски права.", IDC_STATIC, 12, 5, 236, 8
+    GROUPBOX    "Производителност", IDC_STATIC, 6, 18, 244, 50
+    LTEXT       "Тези настройки управляват употребата на памет от приложенията, което влияе на бързината на компютъра ви.", IDC_STATIC, 16, 29, 210, 17
+    PUSHBUTTON  "Настройки", IDC_PERFOR, 194, 48, 50, 15
+
+    GROUPBOX    "Потребителски очерци", IDC_STATIC, 6,75,244,48
+    LTEXT       "Настройки на работната площ, свързани с влизането ви.", IDC_STATIC, 16, 88, 210, 20
+    PUSHBUTTON  "Настройки", IDC_USERPROFILE, 194, 103, 50, 15
+
+    GROUPBOX    "Пускане и възстановяване", IDC_STATIC, 6, 131, 244, 52
+    LTEXT       "Изборите за пускане и възстановяване казват на компютъра ви как да се пусне и какво да прави, в случай на грешка, която да го накара да спре.", IDC_STATIC, 16, 144, 210, 24
+    PUSHBUTTON  "Настройки", IDC_STAREC, 194, 162, 50, 15
+
+    PUSHBUTTON  "Променливи на средата", IDC_ENVVAR, 64, 192, 90, 15
+    PUSHBUTTON  "Докладване на грешки", IDC_ERRORREPORT, 160, 192, 90, 15
+END
+
+
+IDD_HARDWAREPROFILES DIALOGEX 6, 18, 254, 234
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Профили за оборудването"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON        IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
+    LTEXT       "Можете на направите профили за различно оборудване и при пускане да изберете кой да използвате." , IDC_STATIC, 46, 11, 188, 25
+    LTEXT       "Налични профили за оборудването", IDC_STATIC, 8, 41, 120, 8
+    LISTBOX     IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
+    PUSHBUTTON  "", IDC_HRDPROFUP, 232, 59, 15, 15
+    PUSHBUTTON  "", IDC_HRDPROFDWN, 232, 79, 15, 15
+    PUSHBUTTON  "&Свойства", IDC_HRDPROFPROP, 8, 106, 54, 14
+    PUSHBUTTON  "За&помняне", IDC_HRDPROFCOPY, 63, 106, 54, 14
+    PUSHBUTTON  "Пре&именуване", IDC_HRDPROFRENAME, 118, 106, 54, 14
+    PUSHBUTTON  "Из&триване", IDC_HRDPROFDEL, 173, 106, 54, 14
+
+    GROUPBOX    "Избор на профили за оборудването", IDC_STATIC, 7, 130, 240, 75
+    LTEXT       "При пускане на РеактОС:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "Из&чакване до избор на профили за оборудването", IDC_HRDPROFWAIT, 14, 158, 220, 8, WS_GROUP
+    AUTORADIOBUTTON "&Избиране на първия профил, ако не е избран такъв до", IDC_HRDPROFSELECT, 14, 173, 220, 8
+    LTEXT       "секунди", IDC_STATIC, 65, 187, 35, 8
+    EDITTEXT    IDC_HRDPROFEDIT, 25, 185, 35, 12
+    CONTROL     "", IDC_HRDPROFUPDWN, "msctls_updown32", UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 25, 185, 7, 10
+
+    DEFPUSHBUTTON "Добре", IDOK, 143, 213, 50, 14
+    PUSHBUTTON  "Отказ", IDCANCEL, 197, 213, 50, 14
+END
+
+
+IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Преименуване на очерк"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT        "От:", IDC_STATIC, 5, 10, 20, 8
+    LTEXT        "", IDC_RENPROFEDITFROM, 30, 10, 160, 10
+    LTEXT        "На:", IDC_STATIC, 5, 30, 20, 8
+    EDITTEXT     IDC_RENPROFEDITTO, 30, 30, 160, 12
+
+    DEFPUSHBUTTON "Добре", IDOK, 196, 6, 50, 14
+    PUSHBUTTON   "Отказ", IDCANCEL, 196, 24, 50, 14
+END
+
+
+IDD_USERPROFILE DIALOGEX 0, 0, 256, 218
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | DS_SETFONT | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Потребителски очерци"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON        IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
+    LTEXT       "Потребителските очерци съдържат настройки на работната площ и други сведения, свързани с влизането ви. Можете да си правите различен на всеки компютър, който използвате или можете да изберете прехождащ очерк, който да е еднакъв навсякъде.",
+                    IDC_STATIC, 40, 11, 204, 41
+    LTEXT       "Очерци в компютъра:", IDC_STATIC, 16, 51, 204, 9
+    CONTROL     "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP,
+                    6, 66, 244, 85, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "Промяна на вида", IDC_USERPROFILE_CHANGE, 75, 156, 65, 13
+    PUSHBUTTON  "Изтриване", IDC_USERPROFILE_DELETE, 145, 156, 50, 13
+    PUSHBUTTON  "Презапис в", IDC_USERPROFILE_COPY, 200, 156, 50, 13
+
+    CONTROL     "За създаване на нова потребителска сметка, отворете <A>Потребителски сметки</A> от крилото за управление.", IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 204, 18
+
+    DEFPUSHBUTTON  "Добре", IDOK, 134, 200, 54, 13
+    PUSHBUTTON  "Отказ", IDCANCEL, 196, 200, 54, 13
+END
+
+
+IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Пускане и възстановяване"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX    "Пускане на системата", IDC_STATIC, 7, 12, 238, 95
+    LTEXT       "Подразбирана работна &система", IDC_STATIC, 14, 26, 160, 8
+    COMBOBOX    IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST
+    AUTOCHECKBOX "Показване на списъка с &работни системи:", IDC_STRECLIST, 14, 56, 165, 8
+    EDITTEXT    IDC_STRRECLISTEDIT, 179, 54, 30, 12
+    CONTROL     "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT       "секунди", IDC_STATIC, 215, 56, 25, 8
+    AUTOCHECKBOX "Показване изборник за &възстановяване:", IDC_STRRECREC, 14, 70, 165, 8
+    EDITTEXT    IDC_STRRECRECEDIT, 179, 68, 30, 12
+    CONTROL     "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
+    LTEXT       "секунди", IDC_STATIC, 215, 70, 25, 8
+    LTEXT       "За да обработите ръчно файла с пусковите настройки, натиснете „Обработка”.", IDC_STATIC, 14, 87, 187, 16
+    PUSHBUTTON  "&Обработка", IDC_STRRECEDIT, 188, 87, 50, 14
+
+    GROUPBOX    "Отказ (повреда) на системата", IDC_STATIC, 7, 111, 238, 140
+    AUTOCHECKBOX "В&писване на събития в дневника на уредбата", IDC_STRRECWRITEEVENT, 14, 124, 220, 10
+    AUTOCHECKBOX "Из&пращане на административно предупреждение", IDC_STRRECSENDALERT, 14, 138, 220, 10
+    AUTOCHECKBOX "Самопре&запускане", IDC_STRRECRESTART, 14, 152, 220, 10
+
+    GROUPBOX    "Записване на данни за чистене на недъзи", IDC_STATIC, 12, 167, 227, 76
+    COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    LTEXT       "Отчетен &файл:", IDC_STATIC, 17, 202, 150, 8
+    EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
+    AUTOCHECKBOX "За&мяна на съществуващите файлове", IDC_STRRECOVERWRITE, 17, 228, 210, 10
+
+    DEFPUSHBUTTON  "Добре", IDOK, 141, 259, 50, 14
+    PUSHBUTTON  "Отказ", IDCANCEL, 195, 259, 50, 14
+END
+
+
+IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Обменен файл"
+FONT 8, "MS Sans Serif", 0, 0, 0x0
+BEGIN
+    LTEXT       "Устройство [Етикет на тома]", IDC_STATIC, 12, 5, 100, 9
+    LTEXT       "Размер на обменния файл (МБ)", IDC_STATIC, 113, 5, 110, 9
+    LISTBOX     IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX    "Размер на обменния файл за избраното устройство", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT       "Устройство:", IDC_STATIC, 20, 80, 60, 8
+    LTEXT       "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT       "Свободно място:", IDC_STATIC, 20, 92, 60, 9
+    LTEXT       "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT       "&Начален размер (МБ):", -1, 22, 118, 77, 9
+    LTEXT       "Размер до (МБ):", -1, 22, 131, 64, 9
+    AUTORADIOBUTTON "За&даден размер", IDC_CUSTOM, 20, 105, 80, 9, WS_GROUP
+    AUTORADIOBUTTON "Определен от &системата размер", IDC_SYSMANSIZE, 20, 145, 135, 9
+    AUTORADIOBUTTON "Без обменен файл", IDC_NOPAGEFILE, 20, 158, 135, 9
+    EDITTEXT    IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT    IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "Задаване", IDC_SET, 158, 155, 50, 13
+
+    GROUPBOX    "Пълен размер на обменния файл за всички устройства", IDC_TOTALGROUP, 10, 177, 204, 46
+    LTEXT       "Задължително поне:", IDC_STATIC, 18, 188, 73, 9
+    LTEXT       "", IDC_MINIMUM, 98, 188, 100, 9
+    LTEXT       "Препоръчително:", IDC_STATIC, 18, 199, 73, 9
+    LTEXT       "", IDC_RECOMMENDED, 98, 197, 100, 9
+    LTEXT       "Текущо заделени:", IDC_STATIC, 18, 210, 73, 9
+    LTEXT       "", IDC_CURRENT, 98, 208, 100, 9
+
+    DEFPUSHBUTTON  "Добре", IDOK, 114, 232, 48, 13
+    PUSHBUTTON  "Отказ", IDCANCEL, 168, 232, 48, 13
+END
+
+
+IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
+STYLE DS_FIXEDSYS | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Променливи на средата"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX    "Потребителски променливи", IDC_STATIC, 7, 12, 238, 100
+
+    CONTROL     "", IDC_USER_VARIABLE_LIST, "SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 25, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "&Нов...", IDC_USER_VARIABLE_NEW, 80, 90, 50, 14
+    PUSHBUTTON  "&Обработка...", IDC_USER_VARIABLE_EDIT, 134, 90, 50, 14
+    PUSHBUTTON  "Из&триване", IDC_USER_VARIABLE_DELETE, 188, 90, 50, 14
+    GROUPBOX    "Променливи на системата", IDC_STATIC, 7, 116, 238, 100
+
+    CONTROL     "", IDC_SYSTEM_VARIABLE_LIST, "SysListView32",
+                    LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | LVS_NOSORTHEADER |
+                    WS_VSCROLL | WS_HSCROLL | WS_TABSTOP, 14, 129, 224, 58, WS_EX_CLIENTEDGE
+    PUSHBUTTON  "Но&в...", IDC_SYSTEM_VARIABLE_NEW, 80, 194, 50, 14
+    PUSHBUTTON  "Об&работка...", IDC_SYSTEM_VARIABLE_EDIT, 134, 194, 50, 14
+    PUSHBUTTON  "Из&триване", IDC_SYSTEM_VARIABLE_DELETE, 188, 194, 50, 14
+    DEFPUSHBUTTON  "Добре", IDOK, 141, 224, 50, 14, WS_GROUP
+    PUSHBUTTON  "Отказ", IDCANCEL, 195, 224, 50, 14
+END
+
+
+IDD_EDIT_VARIABLE DIALOGEX 10, 15, 227, 71
+STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+CAPTION "Обработка на променливата"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    LTEXT       "&Име на променливата", IDC_STATIC, 7, 14, 80, 8
+    EDITTEXT    IDC_VARIABLE_NAME, 88, 12, 135, 12, ES_AUTOHSCROLL
+    LTEXT       "&Стойност на променливата", IDC_STATIC, 7, 32, 80, 8
+    EDITTEXT    IDC_VARIABLE_VALUE, 88, 30, 135, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON  "Добре", IDOK, 116, 50, 50, 14
+    PUSHBUTTON  "Отказ", IDCANCEL, 170, 50, 50, 14
+END
+
+
+IDD_LICENCE DIALOGEX 6, 5, 267, 159
+CAPTION "Разрешително"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+STYLE WS_BORDER | WS_THICKFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
+BEGIN
+    EDITTEXT    IDC_LICENCEEDIT, 6, 3, 255, 131, WS_VSCROLL | ES_READONLY | ES_MULTILINE
+    DEFPUSHBUTTON  "Добре", IDOK, 106, 142, 54, 13
+END
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Уредба"
+    IDS_CPLSYSTEMDESCRIPTION "Можете да видите сведения за компютъра ви и за различни настройки"
+    IDS_MEGABYTE "МБ памет"
+    IDS_GIGABYTE "ГБ памет"
+    IDS_TERABYTE "ТБ памет"
+    IDS_PETABYTE "ПБ памет"
+    IDS_VARIABLE "Променлива"
+    IDS_VALUE    "Стойност"
+    IDS_NO_DUMP "(Няма)"
+    IDS_MINI_DUMP "Малък отчет (64КБ)"
+    IDS_KERNEL_DUMP "Отчет на ядрото"
+    IDS_FULL_DUMP "Пълен отчет"
+    IDS_USERPROFILE_NAME "Име"
+    IDS_USERPROFILE_SIZE "Размер"
+    IDS_USERPROFILE_TYPE "Вид"
+    IDS_USERPROFILE_STATUS "Състояние"
+    IDS_USERPROFILE_MODIFIED "Изменен"
+END

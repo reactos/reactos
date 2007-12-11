@@ -1,0 +1,48 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_DISPLAYADAPTER DIALOGEX 0, 0, 252, 226
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Карта"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  GROUPBOX "Вид карта", -1, 7, 3, 237, 50
+  LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
+  PUSHBUTTON "&Свойства", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+  GROUPBOX "Сведения за картата:", -1, 7, 56, 237, 75
+  LTEXT "Вид чип:", -1, 13, 68, 58, 8
+  LTEXT "", IDC_CHIPTYPE, 85, 68, 155, 8, SS_NOPREFIX
+  LTEXT "Вид ЦАП:", -1, 13, 80, 58, 8
+  LTEXT "", IDC_DACTYPE, 85, 80, 155, 8, SS_NOPREFIX
+  LTEXT "Размер на паметта:", -1, 13, 92, 75, 8
+  LTEXT "", IDC_MEMORYSIZE, 85, 92, 155, 8, SS_NOPREFIX
+  LTEXT "Низ на картата:", -1, 13, 104, 58, 8
+  LTEXT "", IDC_ADAPTERSTRING, 85, 104, 155, 8, SS_NOPREFIX
+  LTEXT "Сведения на БИОСа:", -1, 13, 115, 75, 8
+  LTEXT "", IDC_BIOSINFORMATION, 85, 115, 155, 8, SS_NOPREFIX
+  PUSHBUTTON "&Списък на всички режими...", IDC_LISTALLMODES, 7, 139, 110, 14
+END
+
+IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Списък на всички режими"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  DEFPUSHBUTTON "Добре", IDOK, 112, 115, 50, 15
+  PUSHBUTTON "Отказ", IDCANCEL, 167, 115, 50, 15
+  GROUPBOX "Списък на допустимите режими", -1, 6, 7, 212, 98
+  LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+  IDS_MODEFMT "%d на %d, %s, %s"
+  IDS_DEFREFRESHRATE "Подразбрано опресняване"
+  IDES_REFRESHRATEFMT "%d херца"
+  IDS_4BPP "16 цвята"
+  IDS_8BPP "256 цвята"
+  IDS_15BPP "Висока цветност (15 разряда)"
+  IDS_16BPP "Висока цветност (16 разряда)"
+  IDS_24BPP "Истинска цветност (24 разряда)"
+  IDS_32BPP "Истинска цветност (32 разряда)"
+END
+

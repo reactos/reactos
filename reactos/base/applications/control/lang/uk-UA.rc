@@ -34,10 +34,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
-	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+    IDS_WINDOW_TITLE "Панель керування"
+	IDS_ABOUT "Проста панель управління (не заснована на просторі імен оболонки)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rРозповсюджується по GPL"
+	IDS_ABOUT_TITLE "Про панель керування"
+	IDS_NO_ITEMS "Немає елементів в ListView"
+	IDS_NAME "Ім'я"
+	IDS_COMMENT "Опис"
 END

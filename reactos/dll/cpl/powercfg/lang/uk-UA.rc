@@ -165,9 +165,10 @@ BEGIN
   IDS_TIMEOUT15 "через 5 годин"
   IDS_TIMEOUT16 "ніколи"
   
-  IDS_DEL_SCHEME "Are you sure you want to delete the power scheme?"
-  IDS_DEL_SCHEME_TITLE "Delete Scheme"
+  IDS_DEL_SCHEME "Ви дійсно бажаєте видалити схему керування електроживленням?"
+  IDS_DEL_SCHEME_TITLE "Видалення схеми"
 END
+
 
 
 

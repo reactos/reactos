@@ -1,0 +1,75 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Dialogs
+//
+
+SELWINDOW DIALOG DISCARDABLE 20, 20, 220, 140
+STYLE DS_SYSMODAL | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION |
+    WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+CAPTION "Избор на прозорец"
+BEGIN
+  LISTBOX 100, 5, 5, 210, 110, LBS_NOTIFY | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_BORDER | WS_VSCROLL | WS_HSCROLL
+  PUSHBUTTON "&Добре", 1, 60, 120, 40, 15, BS_DEFPUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "&Отказ" , 2, 120, 120, 40, 15, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+END
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Menus
+//
+
+EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  POPUP "DUMMY"
+  BEGIN
+    MENUITEM "&Отмяна", EM_UNDO
+    MENUITEM SEPARATOR
+    MENUITEM "От&рязване", WM_CUT
+    MENUITEM "За&помняне", WM_COPY
+    MENUITEM "По&ставяне", WM_PASTE
+    MENUITEM "Из&триване", WM_CLEAR
+    MENUITEM SEPARATOR
+    MENUITEM "Избор на вси&чки", EM_SETSEL
+  END
+}
+
+
+SYSMENU MENU LOADONCALL MOVEABLE DISCARDABLE
+{
+  MENUITEM "&Възстановяване", 61728
+  MENUITEM "&Преместване", 61456
+  MENUITEM "&Размер", 61440
+  MENUITEM "С&маляване", 61472
+  MENUITEM "У&големяване", 61488
+  MENUITEM SEPARATOR
+  MENUITEM "&Затваряне\tAlt-F4", 61536
+}
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// Strings
+//
+
+STRINGTABLE
+{
+  IDS_ERROR,    "Грешка"
+  IDS_OK,       "Добре"
+  IDS_CANCEL,   "Отказ"
+  IDS_ABORT,    "Прекъсване"
+  IDS_RETRY,    "&Нов опит"
+  IDS_IGNORE,   "Прене&брегване"
+  IDS_YES,      "&Да"
+  IDS_NO,       "&Не"
+  IDS_HELP,     "Помощ"
+  IDS_TRYAGAIN, "&Нов опит"
+  IDS_CONTINUE, "Про&дължаване"
+}
+
+STRINGTABLE
+{
+  IDS_MDI_MOREWINDOWS, "&Още прозорци..."
+}
+

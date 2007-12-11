@@ -1,0 +1,374 @@
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_PROPPAGESETTINGS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Настройки"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Поздразбиран език на въвеждане", -1, 7,7,231,53
+    LTEXT "Изберете клавиатурната уредба, която да се използва при включване на компютъра.",-1,14,18,220,17
+    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
+    GROUPBOX "&Сложени услуги", -1, 7,65,231,115
+    LTEXT "Изберете услуги за всяки език на въвеждане, показан в списъка. Използвайте „Добавяне и премахване”, за да промените списъка.",-1,14,75,220,17
+    CONTROL "TEXT", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78
+    PUSHBUTTON "&Прилагане на подразбираните", IDC_SET_DEFAULT, 179, 106, 53, 14
+    PUSHBUTTON "&Добавяне...", IDC_ADD_BUTTON, 179, 124, 53, 14
+    PUSHBUTTON "Пре&махване...", IDC_REMOVE_BUTTON, 179, 142, 53, 14
+    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 179, 160, 53, 14
+    GROUPBOX "Предпочитания", -1, 7,185,231,36
+    PUSHBUTTON "Езикова &лента...", IDC_LANG_BAR_BUTTON, 14, 198, 70, 14
+    PUSHBUTTON "Настройка на &клавишите...", IDC_KEY_SETTINGS_BUTTON, 90, 198, 70, 14
+END
+
+IDD_PROPPAGEADVANCED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Разширени"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "Настройка за съвместимост", -1, 7,7,231,60
+    AUTOCHECKBOX "Из&ползване на поддръжката на раширените словесни услуги във всички приложения", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
+    LTEXT "Отметнете тази кутийка, за да включите разширената словесна поддръжка за бележника и за други приложения, които обикновено не поддържат ръкописно разпознаване или други разширени услуги за въвеждане.",-1,14,33,220,25
+    GROUPBOX "Настройка на уредбата", -1, 7,74,231,60
+    AUTOCHECKBOX "&Изключване на разширените словесни услуги", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
+    LTEXT "Отметнете тази кутийка, за да включите разширената словесна поддръжка за всички програми. Не се препоръчва за източноазиатски потребители, защото ще затвори езиковата лента.",-1,14,100,220,25
+END
+
+IDD_LANGBAR DIALOG 20, 20, 240, 120
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Настройки на езиковата лента"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 7, 7, 226, 85
+    AUTOCHECKBOX "Показване на езиковата &лента върху работната площ", IDC_LANGBAR_ON_DESK_CHECKBOX, 17, 17, 210, 10, WS_GROUP
+    AUTOCHECKBOX "Езиковата &лента е прозначна, когато е бездейна", IDC_LANGBAR_TRANSP_INACT_CHECKBOX, 17, 32, 210, 10
+    AUTOCHECKBOX "Показване на допълнителни значета в езиковата лента", IDC_ADDIT_LANGBAR_ICON_NOTIFYAREA_CHECKBOX, 17, 47, 210, 10
+    AUTOCHECKBOX "Показване на над&писи върху езиковата лента", IDC_TEXTLABEL_ON_LANGBAR_CHECKBOX, 17, 62, 210, 10
+    AUTOCHECKBOX "&Изключване на разширените словесни услуги", IDC_OFF_ADVAN_TEXTSERV_CHECKBOX, 17, 77, 200, 10
+    DEFPUSHBUTTON "Добре", IDOK, 129, 99, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 182, 99, 50, 14
+END
+
+IDD_KEYSETTINGS DIALOG 0, 0, 272, 163
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Разширените словесни услуги"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "За изключване на Caps Lock", -1, 7, 7, 258, 26
+    AUTORADIOBUTTON "Натиснете CAPS &LOCK key", IDC_PRESS_CAPSLOCK_KEY_RADIOBTN, 14, 17, 120, 11, WS_GROUP
+    AUTORADIOBUTTON "Натиснете SHI&FT", IDC_PRESS_SHIFT_KEY_RADIOBTN, 144, 17, 120, 11, NOT WS_TABSTOP
+    GROUPBOX "Бързи клавиши за езиците на въвеждане", -1, 7, 37, 258, 95
+    LTEXT "Действие", -1, 14, 47, 60, 9
+    RTEXT "Последователност на &клавишите", -1, 177, 47, 79, 9
+    LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON "Про&мяна последователността на клавишите", IDC_CHANGE_KEY_SEQ_BUTTON, 152, 113, 106, 14, WS_GROUP
+    DEFPUSHBUTTON "Добре", IDOK, 66, 140, 70, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 146, 140, 70, 14
+END
+
+IDD_ADD DIALOG 20, 20, 227, 90
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "&Добавяне език на въвеждане"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Език на &въвеждане:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANGUAGE_COMBO, 7, 17, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    LTEXT "Клавиатурна подредба/IME:", -1, 7, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LAYOUT_COMBO, 7, 47, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 116, 68, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 169, 68, 50, 14
+END
+
+IDD_ADD2 DIALOG 20, 20, 257, 176
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "&Добавяне език на въвеждане"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Език на &въвеждане:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "Клавиатурна подредба/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "Разпознаване на &ръкописи", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
+    COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "&Говор:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
+    COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "О&ще словесни услуги:", IDC_MORE_TEXT_SERV_CHECKBOX, 37, 123, 110, 10
+    COMBOBOX IDC_MORE_TEXT_SERV_COMBO, 49, 134, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 146, 155, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 199, 155, 50, 14
+END
+
+IDD_ADD3 DIALOG 20, 20, 257, 147
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "&Добавяне език на въвеждане"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Език на &въвеждане:", -1, 7, 7, 61, 10
+    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "Клавиатурна подредба/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
+    COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "Разпознаване на &ръкописи", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
+    COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    AUTOCHECKBOX "&Говор:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
+    COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 146, 126, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 199, 126, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ2 DIALOG 5, 100, 269, 78
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Промяна на клавишната последователност"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", -1, 16, 5, 250, 10
+    GROUPBOX "", -1, 12, 17, 184, 48
+    AUTOCHECKBOX "&Включване последователност на клавишите", IDC_ENABLE_KEY_SEQ_CHECKBOX, 17, 17, 85, 8
+    CTEXT "SHIFT", -1, 68, 37, 27, 12
+    CTEXT "+", -1, 57, 37, 8, 9
+    CTEXT "+", -1, 98, 37, 8, 10
+    CHECKBOX "&CTRL", IDC_CTRL_CHECKBOX, 24, 31, 30, 11, NOT WS_TABSTOP
+    CHECKBOX "&ALT", IDC_ALT_CHECKBOX, 24, 45, 40, 12, NOT WS_TABSTOP
+    LTEXT "&Клавиш:", -1, 110, 37, 14, 10
+    COMBOBOX IDC_CKEY_COMBOBOX, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 212, 25, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 212, 47, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ DIALOG 5, 100, 285, 74
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Промяна на клавишната последователност"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 9, 5, 209, 60
+    AUTOCHECKBOX "&Превключване езиците на въвеждане", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+    LTEXT "SHIFT", -1, 73, 37, 27, 12
+    CTEXT "+", -1, 62, 37, 8, 9
+    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "Left &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+    AUTOCHECKBOX "Прев&ключване на клавишните подредби", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 121, 15, 90, 12
+    LTEXT "SHIFT", -1, 179, 37, 27, 12
+    CTEXT "+", -1, 168, 37, 8, 9
+    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 135, 31, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "Ляв A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 135, 45, 40, 12, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 227, 18, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 227, 44, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ3 DIALOG 5, 100, 249, 125
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Промяна на клавишната последователност"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 9, 5, 174, 110
+    AUTOCHECKBOX "&Превключване езиците на въвеждане", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+    LTEXT "SHIFT", -1, 73, 37, 27, 12
+    CTEXT "+", -1, 62, 37, 8, 9
+    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "Left &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+    AUTOCHECKBOX "Прев&ключване на клавишните подредби", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
+    LTEXT "SHIFT", -1, 73, 87, 27, 12
+    CTEXT "+", -1, 62, 87, 8, 9
+    CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 77, 13, 33
+    AUTORADIOBUTTON "&Обратно ударение ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 87, 69, 10, WS_GROUP
+    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Ляв A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 192, 25, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 192, 47, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ4 DIALOG 5, 100, 249, 125
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Промяна на клавишната последователност"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    GROUPBOX "", -1, 9, 5, 174, 110
+    AUTOCHECKBOX "&Превключване езиците на въвеждане", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+    LTEXT "SHIFT", -1, 73, 37, 27, 12
+    CTEXT "+", -1, 62, 37, 8, 9
+    CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 27, 13, 33
+    AUTORADIOBUTTON "&Обратно ударение ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 37, 69, 10, WS_GROUP
+    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, NOT WS_TABSTOP
+    AUTORADIOBUTTON "Left &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+    AUTOCHECKBOX "Прев&ключване на клавишните подредби", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
+    LTEXT "SHIFT", -1, 73, 87, 27, 12
+    CTEXT "+", -1, 62, 87, 8, 9
+    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "Ляв A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
+    DEFPUSHBUTTON "Добре", IDOK, 192, 25, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 192, 47, 50, 14
+END
+
+IDD_CHANGE_KEY_SEQ5 DIALOG 5, 100, 269, 78
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Промяна на клавишната последователност"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "", 1240, 16, 5, 250, 10
+    GROUPBOX "", -1, 12, 17, 184, 48
+    AUTOCHECKBOX "&Включване последователност на клавишите", 1249, 17, 17, 85, 8
+    CTEXT "SHIFT", -1, 68, 37, 27, 12
+    CTEXT "+", -1, 57, 37, 8, 9
+    CTEXT "+", -1, 98, 37, 8, 10
+    AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
+    AUTORADIOBUTTON "Left &ALT", -1, 24, 45, 40, 12, NOT WS_TABSTOP
+    LTEXT "&Клавиш:", -1, 110, 37, 14, 10
+    COMBOBOX 1236, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 212, 25, 50, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 212, 47, 50, 14
+END
+
+IDD_INPUT_LANG_PROP DIALOG 20, 20, 227, 75
+STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
+CAPTION "Свойства на езика на въвеждане"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "Език на въвеждане", -1, 7, 7, 61, 8
+    LTEXT "", -1, 73, 7, 129, 8
+    LTEXT "Клавиатурна подредба/IME:", -1, 7, 21, 110, 10
+    COMBOBOX IDC_KEYBOARD_LAYOUT_IME_COMBO, 7, 32, 212, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+    DEFPUSHBUTTON "Добре", IDOK, 116, 53, 52, 14
+    PUSHBUTTON "Отказ", IDCANCEL, 169, 53, 52, 14
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLSYSTEMNAME "Словесни услуги и езици на въвеждане"
+    IDS_CPLSYSTEMDESCRIPTION "Нагласяване на настройките за езиците на въвеждане."
+END
+
+STRINGTABLE
+BEGIN
+	//Selected language on "&Добавяне език на въвеждане"
+	IDS_SELECTED_LANGUAGE               "English (United States)"
+	//Selected keyboard layout on "&Добавяне език на въвеждане"
+	IDS_SELECTED_LAYOUT, 				"САЩ- Дворак"
+	IDS_US_LAYOUT, 									"САЩ"
+	IDS_BELGIAN_LAYOUT, 							"Белгийска (точка)"
+	IDS_BELGIAN_FRENCH_LAYOUT, 						"Белгийска за френски"
+	IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT, 			"Португалска (Бразилска ABNT)"
+	IDS_CANADIAN_FRENCH_LAYOUT, 					"Канадска за френски"
+	IDS_CANADIAN_FRENCH_LEGACY_LAYOUT, 				"Канадска за френски (завещана)" 
+	IDS_DANISH_LAYOUT, 								"Датска"
+	IDS_DUTCH_LAYOUT, 								"Холандска"
+	IDS_FINNISH_LAYOUT, 							"Финска"
+	IDS_FRENCH_LAYOUT, 								"Френска"
+	IDS_GERMAN_LAYOUT, 								"Немска"
+	IDS_GERMAN_IBM_LAYOUT, 							"Немска"
+	IDS_ICELANDIC_LAYOUT, 							"Исландска"
+	IDS_IRISH_LAYOUT, 								"Ирландска"
+	IDS_ITALIAN_LAYOUT, 							"Италианска"
+	IDS_ITALIAN_142_LAYOUT, 						"Италианска (142)"
+	IDS_LATIN_AMERICAN_LAYOUT, 						"Латиноамериканска"
+	IDS_NORWEGIAN_LAYOUT, 							"Норвежка"
+	IDS_PORTUGUESE_LAYOUT, 							"Португалска"
+	IDS_SPANISH_LAYOUT, 							"Испанска"
+	IDS_SPANISH_VARIANTION_LAYOUT, 					"Испанска разновидност"
+	IDS_SWEDISH_LAYOUT, 							"Шведска"
+	IDS_SWISS_FRENCH_LAYOUT, 						"Швейцарска за френски"
+	IDS_SWISS_GERMAN_LAYOUT, 						"Швейцарска за немски"
+	IDS_UNITED_KINGDOM_LAYOUT, 						"Английска"
+	IDS_UNITED_STATES_INTERNATIONAL_LAYOUT, 		"САЩ- международна"
+	IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT, 	"САЩ- Дворак за лява ръка"
+	IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "САЩ- Дворак за дясна ръка"
+	IDS_ALBANIAN_LAYOUT, 							"Албанска"
+	IDS_CROATIAN_LAYOUT, 							"Хърватска"
+	IDS_CZECH_LAYOUT, 								"Чешка"
+	IDS_CZECH_QWERTY_LAYOUT, 						"Чешка (QWERTY)"
+	IDS_HUNGARIAN_LAYOUT, 							"Унгарска"
+	IDS_HUNGARIAN_101_KEY_LAYOUT, 					"Унгарска 101-клавиша"
+	IDS_POLISH_LAYOUT, 								"Полска за програмисти"
+	IDS_POLISH_214_LAYOUT, 							"Полска (214)"
+	IDS_ROMANIAN_LAYOUT, 							"Румънска"
+	IDS_SERBIAN_LATIN_LAYOUT, 						"Сръбска (латиница)"
+	IDS_SLOVAK_LAYOUT, 								"Словашка"
+	IDS_SLOVAK_QWERTY_LAYOUT, 						"Словашка (QWERTY)"
+	IDS_SLOVENIAN_LAYOUT, 							"Словенска"
+	IDS_ESTONIAN_LAYOUT, 							"Естонска"
+	IDS_LATVIAN_LAYOUT, 							"Латвийска"
+	IDS_LATVIAN_QWERTY_LAYOUT, 						"Латвийска (QWERTY)"
+	IDS_LITHUANIAN_IBM_LAYOUT, 						"Литовска IBM"
+	IDS_GREEK_LAYOUT, 								"Гръцка"
+	IDS_GREEK_LATIN_LAYOUT, 						"Гръцка латиница"
+	IDS_GREEK_220_LAYOUT, 							"Гръцка (220)"
+	IDS_GREEK_319_LAYOUT, 							"Гръцка (319)"
+	IDS_GREEK_220_LATIN_LAYOUT, 					"Гръцка (220)"
+	IDS_GREEK_319_LATIN_LAYOUT, 					"Гръцка (319)"
+	IDS_BELARUSIAN_LAYOUT, 							"Белоруска"
+	IDS_BULGARIAN_LAYOUT, 							"Българска"
+	IDS_BULGARIAN_LATIN_LAYOUT, 					"Българска (латиница)"
+	IDS_RUSSIAN_LAYOUT, 							"Руска"
+	IDS_RUSSIAN_TYPEWRITER_LAYOUT, 					"Руска (машинописна)"
+	IDS_SERBIAN_CYRILLIC_LAYOUT, 					"Сръбска (кирилица)"
+	IDS_UKRAINIAN_LAYOUT, 							"Украинска"
+	IDS_TURKISH_F_LAYOUT, 							"Турска F"
+	IDS_TURKISH_Q_LAYOUT, 							"Турска Q"
+	IDS_JAPANESE_LAYOUT, 							"Японска"
+	IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT, 	"Японска уредба за въвеждане (MS-IME2002)"
+	IDS_KOREAN_LAYOUT, 								"Корейска"
+	IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT, 		"Korean Input System (MS-IME2002)"
+	IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT, 		"Китайска (традиционна) - US Keyboard"
+	IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT, 		"Китайска (традиционна) - Phonetic"
+	IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT, 		"Китайска (традиционна) - ChangJie"
+	IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT, 		"Китайска (традиционна) - Big5 Code"
+	IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT, 			"Китайска (традиционна) - DaYi"
+	IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT, 		"Китайска (традиционна) - Unicode"
+	IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT, 	"Китайска (традиционна) - Alphanumeric"
+	IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT, 		"Китайска (опростена) - US Keyboard"
+	IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT, 			"Китайска (опростена) - QuanPin"
+	IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT, 		"Китайска (опростена) - ShuangPin"
+	IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT, 			"Китайска (опростена) - ZhengMa"
+	IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT, 			"Китайска (опростена) - NeiMa"
+	IDS_THAI_KEDMANEE_LAYOUT, 						"Thai Kedmanee"
+	IDS_THAI_PATTACHOTE_LAYOUT, 					"Thai Pattachote"
+	IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT, 			"Thai Kedmanee (non-ShiftLock)"
+	IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT, 		"Thai Pattachote (non-ShiftLock)"
+	IDS_HEBREW_LAYOUT, 								"Иврит"
+	IDS_ARABIC_101_LAYOUT, 							"Арабска (101)"
+	IDS_ARABIC_102_LAYOUT, 							"Арабска (102)"
+	IDS_ARABIC_102_AZERTY_LAYOUT, 					"Арабска (102) AZERTY"
+	IDS_CZECH_PROGRAMMERS_LAYOUT, 					"Чешка за програмисти"
+	IDS_LITHUANIAN_LAYOUT, 							"Литовска"
+	IDS_BELGIAN_COMMA_LAYOUT, 						"Белгийска (запетайка)"
+	IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT, 	"Китайска (традиционна)- нова позвукова"
+	IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT, 	"Китайска (традиционна)- Microsoft Pinyin IME 3.0"
+	IDS_UNITED_STATES_DVIRAK_LAYOUT, 				"САЩ- Дворак"
+	IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT, 	"Chinese (Traditional) - New ChangJie"
+	IDS_ASSAMESE_LAYOUT, 							"Assamese"
+	IDS_BENGALI_LAYOUT, 							"Бенгалска"
+	IDS_DEVANAGARI_INSCRIPT_LAYOUT, 				"Devanagari - INSCRIPT"
+	IDS_GUJARATI_LAYOUT, 							"Gujarati"
+	IDS_KANNADA_LAYOUT, 							"Kannada"
+	IDS_MALAYALAM_LAYOUT, 							"Malayalam"
+	IDS_ORIYA_LAYOUT, 								"Oriya"
+	IDS_PUNJABI_LAYOUT, 							"Панджабска"
+	IDS_TAMIL_LAYOUT, 								"Тамилска"
+	IDS_TELUGU_LAYOUT, 								"Telugu"
+	IDS_MARATHI_LAYOUT, 							"Marathi"
+	IDS_HINDI_TRADITIONAL_LAYOUT, 					"Хинди традиционна"
+	IDS_CANTONESE_PHONETIC_LAYOUT, 					"Кантонска позвукова"
+	IDS_FAEROESE_LAYOUT, 							"Faeroese"
+	IDS_FYRO_MACEDONIAN_LAYOUT, 					"FYRO Macedonian"
+	IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT, 			"Канадска многоезична стандартна"
+	IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT, 			"Китайска (традиционна) - бърза"
+	IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT, 			"Китайска (традиционна) - украсена"
+	IDS_KAZAKH_LAYOUT, 								"Казахска"
+	IDS_UZBEK_CYRILLIC_LAYOUT, 						"Узбекска кирилица"
+	IDS_AZERI_CYRILLIC_LAYOUT, 						"Азърска кирилица"
+	IDS_TATAR_LAYOUT, 								"Татарска"
+	IDS_AZERI_LATIN_LAYOUT, 						"Азърска латиница"
+	IDS_VIETNAMESE_LAYOUT, 							"Виетнамска"
+	IDS_GEORGIAN_LAYOUT, 							"Грузинска"
+	IDS_ARMENIAN_EASTERN_LAYOUT, 					"Арменска източна"
+	IDS_ARMENIAN_WESTERN_LAYOUT, 					"Арменска западна"
+	IDS_GREEK_POLYTONIC_LAYOUT, 					"Гръцка многотонова"
+	IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT, 			"Таблица за САЩ английски за IBM арабска 238_L"
+	IDS_FARSI_LAYOUT, 								"Фарси"
+	IDS_GAELIC_LAYOUT, 								"Ирландска"
+	IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT, 			"Португалска (бразилска ABNT2)"
+	IDS_MONGOLIAN_CYRILLIC_LAYOUT, 					"Монголска"
+	IDS_KYRGYZ_CYRILLIC_LAYOUT, 					"Кирзгизка кирилица"
+	IDS_URDU_LAYOUT, 								"Урду"
+	IDS_SYRIAC_LAYOUT, 								"Syriac"
+	IDS_SYRIAC_PHONETIC_LAYOUT, 					"Syriac Phonetic"
+	IDS_DIVEHI_PHONETIC_LAYOUT, 					"Divehi Phonetic"
+	IDS_DIVEHI_TYPEWRITER_LAYOUT, 					"Divehi Typewriter"
+END

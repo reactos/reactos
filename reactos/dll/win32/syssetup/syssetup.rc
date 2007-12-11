@@ -41,6 +41,7 @@ IDR_GPL RT_TEXT "COPYING"
  * a neutral version. This is to get localized bitmaps for example.
  */
 
+#include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"

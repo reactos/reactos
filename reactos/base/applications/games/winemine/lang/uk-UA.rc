@@ -1,7 +1,7 @@
 /*
  * PROJECT:     WineMine
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/games/winemine/Uk.rc
+ * FILE:        base/applications/games/winemine/lang/uk-UA.rc
  * PURPOSE:     Ukraianian Language File for WineMine
  * TRANSLATOR:  Artem Reznikov
  */
@@ -12,7 +12,7 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE {
 	IDS_APPNAME, "Сапер"
-	IDS_SECONDS, "seconds"
+	IDS_SECONDS, "сек"
 }
 
 MENU_WINEMINE MENU DISCARDABLE
@@ -22,29 +22,29 @@ MENU_WINEMINE MENU DISCARDABLE
 		MENUITEM SEPARATOR
 		MENUITEM "&Мітки (?)",     IDM_MARKQ
 		MENUITEM SEPARATOR
-		MENUITEM "&Початківець",   IDM_BEGINNER
-		MENUITEM "&Любитель",      IDM_ADVANCED
-		MENUITEM "&Експерт",       IDM_EXPERT
-		MENUITEM "&Особлива",      IDM_CUSTOM
+		MENUITEM "&Новачок",       IDM_BEGINNER
+		MENUITEM "&Аматор",        IDM_ADVANCED
+		MENUITEM "&Професіонал",   IDM_EXPERT
+		MENUITEM "&Особливі...",   IDM_CUSTOM
 		MENUITEM SEPARATOR
-		MENUITEM "&Кращі часи",    IDM_TIMES
+		MENUITEM "&Чемпіони...",   IDM_TIMES
 		MENUITEM SEPARATOR
 		MENUITEM "В&ихід",         IDM_EXIT
 	}
 	POPUP "&Інформація" {
-		MENUITEM "&Про",           IDM_ABOUT
+		MENUITEM "&Про програму...", IDM_ABOUT
 	}
 }
 
 DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Кращі часи"
+CAPTION "Чемпіони за категоріями"
 FONT 8, "MS Shell Dlg"
 {
 	GROUPBOX        "Кращі часи",    IDNONE,     10,  10, 182,  45
-	LTEXT           "Початківець:",  IDNONE,     20,  20,  58,   8
-	LTEXT           "Любитель:",     IDNONE,     20,  30,  58,   8
-	LTEXT           "Експерт:",      IDNONE,     20,  40,  58,   8
+	LTEXT           "Новачок:",      IDNONE,     20,  20,  58,   8
+	LTEXT           "Аматор:",       IDNONE,     20,  30,  58,   8
+	LTEXT           "Професіонал:",  IDNONE,     20,  40,  58,   8
 	LTEXT           "",              IDC_TIME1,  80,  20,  50,   8
 	LTEXT           "",              IDC_TIME2,  80,  30,  50,   8
 	LTEXT           "",              IDC_TIME3,  80,  40,  50,   8
@@ -52,7 +52,7 @@ FONT 8, "MS Shell Dlg"
 	LTEXT           "",              IDC_NAME2, 132,  30,  55,   8
 	LTEXT           "",              IDC_NAME3, 132,  40,  55,   8
 	DEFPUSHBUTTON   "OK",            IDOK,      127,  57,  50,  15
-	PUSHBUTTON      "&Reset Scores", IDRESET,    18,  57,  67,  15
+	PUSHBUTTON      "&Скидання результатів", IDRESET,    18,  57,  67,  15
 }
 
 DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
@@ -67,7 +67,7 @@ FONT 8, "MS Shell Dlg"
 
 DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Custom Game"
+CAPTION "Спеціальне поле"
 FONT 8, "MS Shell Dlg"
 {
 	LTEXT           "Висота:",   IDNONE,         5,  15,  43,  10

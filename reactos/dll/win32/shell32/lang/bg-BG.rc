@@ -92,28 +92,28 @@ END
 
 SHNEWBRSFORFOLDER_MSGBOX DIALOG LOADONCALL MOVEABLE DISCARDABLE 15, 40, 218, 196
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | DS_MODALFRAME | DS_SETFONT | DS_3DLOOK
-CAPTION "Browse for Folder"
+CAPTION "Търсене на папка"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	LTEXT "", IDD_TITLE, 10, 8, 198, 24
 	LTEXT "", IDD_STATUS, 10, 25, 198, 12
-	LTEXT "Folder:", IDD_FOLDER, 10, 152, 40, 12
+	LTEXT "Папка:", IDD_FOLDER, 10, 156, 40, 12
 	CONTROL "", IDD_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
 	EDITTEXT IDD_FOLDERTEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Make New Folder", IDD_MAKENEWFOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
-	DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Създаване на нова папка", IDD_MAKENEWFOLDER, 10, 174, 92, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "Добре", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Отказ", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
 END
 
 SHELL_YESTOALL_MSGBOX DIALOG 200, 100, 280, 90
 STYLE DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Message"
+CAPTION "Съобщение"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "Yes to &all", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&No", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
-	PUSHBUTTON "&Cancel", IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	DEFPUSHBUTTON "&Да", IDYES, 34, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "Да за вси&чки", IDD_YESTOALL, 92, 69, 65, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Не", IDNO, 162, 69, 53, 14, WS_GROUP | WS_TABSTOP
+	PUSHBUTTON "&Отказ" , IDCANCEL, 220, 69, 53, 14, WS_GROUP | WS_TABSTOP
 	ICON "", IDD_ICON, 10, 10, 16, 16
 	LTEXT "", IDD_MESSAGE, 40, 10, 238, 52, 0
 END
@@ -125,14 +125,14 @@ FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", IDC_SHELL_ABOUT_ICON, 7, 55, 21, 20
 	LTEXT "", IDC_SHELL_ABOUT_APPNAME, 35, 55, 200, 10
-	LTEXT "Version " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
+	LTEXT "Версия " KERNEL_VERSION_STR " (" KERNEL_VERSION_BUILD_STR ")", IDC_STATIC, 35, 65, 235, 10
 	LTEXT REACTOS_DEFAULT_STR_LEGAL_COPYRIGHT, IDC_STATIC, 35, 75, 210, 10
 	LTEXT "", IDC_SHELL_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-	LTEXT "This ReactOS version is registered to:", IDC_STATIC, 35, 115, 180, 10
+	LTEXT "Тази версия на РеактОС е записана на:", IDC_STATIC, 35, 115, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_USERNAME, 45, 125, 180, 10
 	LTEXT "", IDC_SHELL_ABOUT_REG_ORGNAME, 45, 135, 180, 10
 	LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
-	LTEXT "Installed physical memory:", IDC_STATIC, 35, 152, 130, 10
+	LTEXT "Налична физическа памет:", IDC_STATIC, 35, 152, 130, 10
 	LTEXT "", IDC_SHELL_ABOUT_PHYSMEM, 167, 152, 88, 10
 	DEFPUSHBUTTON "Добре", IDOK, 220, 178, 50, 14
 	
@@ -143,7 +143,7 @@ IDD_SHELL_ABOUT_AUTHORS DIALOGEX MOVEABLE DISCARDABLE 35, 90, 235, 85
 STYLE DS_FIXEDSYS | WS_CHILD
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS was brought to you by:", IDC_STATIC, 0, 0, 180, 10
+	LTEXT "Реактос достигна до вас, благодарение на:", IDC_STATIC, 0, 0, 250, 10
 	LISTBOX IDC_SHELL_ABOUT_AUTHORS_LISTBOX, 0, 10, 165, 75
 END
 
@@ -163,27 +163,27 @@ END
 
 SHELL_GENERAL_SHORTCUT_DLG DIALOGEX 0, 0, 235, 215
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Shortcut"
+CAPTION "Препратка"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	ICON "", 14000, 10, 4, 30, 30, WS_VISIBLE
-	LTEXT "Вид на целта:", 14004, 8, 38, 64, 10
-	LTEXT "", 14005, 78, 38, 142, 10
-	LTEXT "Местоположение на целта:", 14006, 8, 58, 64, 10
-	LTEXT "", 14007, 79, 58, 141, 10
-	LTEXT "Цел:", 14008, 8, 77, 45, 10
-	EDITTEXT 14009, 79, 75, 150, 14, ES_AUTOHSCROLL
-	LTEXT "Изпълняване в:", 14010, 8, 96, 57, 10
-	EDITTEXT 14011, 79, 94, 150, 14, ES_AUTOHSCROLL
-	LTEXT "Бърз &клавиш:", 14014, 8, 115, 57, 10
-	EDITTEXT 14015, 79, 112, 150, 14, ES_LEFT
-	LTEXT "Изпълняване:", 14016, 8, 134, 57, 10
-	EDITTEXT 14017, 79, 131, 150, 14, ES_AUTOHSCROLL
-	LTEXT "Забележка:", 14018, 8, 152, 57, 10
-	EDITTEXT 14019, 79, 149, 150, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Намиране на целта", 14020, 9, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "&Смяна на значето:", 14021, 84, 172, 70, 14, ES_LEFT
-	PUSHBUTTON "Раз&ширени...", 14022, 159, 172, 70, 14, ES_LEFT
+	ICON "", 14000, 10, 5, 30, 30, WS_VISIBLE
+	LTEXT "Вид на целта:", 14004, 10, 30, 60, 10
+	LTEXT "", 14005, 70, 30, 150, 10
+	LTEXT "Място на целта:", 14006, 10, 40, 60, 10
+	LTEXT "", 14007, 70, 40, 150, 10
+	LTEXT "Цел:", 14008, 10, 55, 55, 10
+	EDITTEXT 14009, 70, 55, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "Изпълняване в:",14010, 10, 65, 55, 10
+	EDITTEXT 14011, 70, 65, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	LTEXT "Бърз &клавиш:", 14014, 10, 80, 55, 10
+	EDITTEXT 14015, 70, 80, 150, 10, ES_LEFT
+	LTEXT "Изпълняване:", 14016, 10, 90, 55, 10
+	EDITTEXT 14017, 70, 90, 150, 10, ES_AUTOHSCROLL
+	LTEXT "Забележка:", 14018, 10, 100, 55, 10
+	EDITTEXT 14019, 70, 100, 150, 10, ES_LEFT | ES_AUTOHSCROLL
+	PUSHBUTTON "&Намиране на целта...", 14020, 10, 115, 75, 14, ES_LEFT
+	PUSHBUTTON "&Смяна на значето...", 14021, 85, 115, 72, 14, ES_LEFT
+	PUSHBUTTON "Раз&ширени...", 14022, 160, 115, 60, 14, ES_LEFT
 END
 
 SHELL_EXTENDED_SHORTCUT_DLG DIALOGEX 0, 0, 260, 150
@@ -207,7 +207,7 @@ BEGIN
 	ICON "", 14000, 10, 3, 30, 30, WS_VISIBLE
 	EDITTEXT 14001, 70, 9, 158, 14, ES_LEFT | ES_READONLY
 	LTEXT "Вид файл:", 14004, 8, 35, 50, 10
-	LTEXT "File", 14005, 68, 35, 160, 10
+	LTEXT "Файл", 14005, 68, 35, 160, 10
 	LTEXT "Отваряне с:", 14006, 8, 53, 50, 10
 	LTEXT "", 14007, 68, 53, 160, 10
 	LTEXT "Местоположение:", 14008, 8, 72, 45, 10
@@ -262,7 +262,7 @@ BEGIN
 	LTEXT "", 14005, 200, 90, 40, 10
 
 	CONTROL "", 14014, "Static", SS_NOTIFY | SS_SUNKEN | SS_OWNERDRAW, 5, 105, 10, 10
-	LTEXT "Free space:", -1, 25, 105, 70, 10
+	LTEXT "Свободно място:", -1, 25, 105, 70, 10
 	LTEXT "", 14006, 110, 105, 120, 10
 	LTEXT "", 14007, 200, 105, 40, 10
 
@@ -306,14 +306,13 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Изпълняване като"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-	LTEXT "Which user account do you want to use to run this program?", -1, 10, 20, 220, 20
+	LTEXT "От чия потребителска сметка искате да изпълните приложението?", -1, 10, 20, 220, 20
 	CHECKBOX "Сегашен потребител %s", 14000, 10, 45, 150, 10
-	LTEXT "Protect my computer and data from unauthorized program activity", -1, 25, 57, 200, 10, WS_DISABLED
-	CHECKBOX "This option can prevent computer viruses from harming your\ncomputer or personal data, but selecting it might cause the\nprogram to function improperly.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
+	LTEXT "Защита на компютъра и данните от неупълномощена дейност на приложенията", -1, 25, 57, 200, 10, WS_DISABLED
+	CHECKBOX "Този избор може да попречи на вирусите да повредят компютъра или данните ви, но може и да попречи на редовната работа на приложението.", 14001, 25, 68, 200, 30, WS_DISABLED | BS_MULTILINE
 	CHECKBOX "Следният потребител:", 14002, 10, 100, 90, 10
-	LTEXT "Потребителско име:", -1, 20, 118, 54, 10
-	COMBOBOX 14003, 75, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
-
+	LTEXT "Потребител:", -1, 20, 115, 60, 10
+	COMBOBOX 14003, 70, 115, 100, 15, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
 	PUSHBUTTON "...", 14004, 180, 115, 30, 14, WS_TABSTOP
 	LTEXT "Парола:", -1, 20, 143, 53, 10
 	EDITTEXT 14005, 74, 140, 100, 14, ES_LEFT | WS_BORDER | WS_GROUP
@@ -324,16 +323,16 @@ END
 
 BITBUCKET_PROPERTIES_DLG DIALOGEX 0, 0, 240, 190
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Recycle Bin Properties"
+CAPTION "Свойства на кошчето"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
-	GROUPBOX "Settings for selected location", -1, 10, 72, 220, 70
-	RADIOBUTTON "&Custom size:", 14001, 20, 90, 80, 10, WS_TABSTOP
+	GROUPBOX "Настройки за избраното място", -1, 10, 72, 220, 70
+	RADIOBUTTON "У&казан размер:", 14001, 20, 90, 80, 10, WS_TABSTOP
 	EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
-	LTEXT "M&aximum size(MB):", -1, 20, 105, 70, 10
-	RADIOBUTTON "Do not move files to the &Recycle Bin. Remove files immediately when deleted.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
-	RADIOBUTTON "&Display delete confirmation dialog", 14004, 20, 155, 140, 10, WS_TABSTOP
+	LTEXT "Размер до (МБ):", -1, 20, 105, 70, 10
+	RADIOBUTTON "Файловете се изтриват веднага, без да се местят в кошчето.", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
+	RADIOBUTTON "&Питане преди изтриване", 14004, 20, 155, 140, 10, WS_TABSTOP
 END
 
 OPEN_WITH_PROGRAMM_DLG DIALOGEX 0, 0, 264, 256
@@ -367,13 +366,13 @@ BEGIN
 	IDS_SHV_COLUMN9             "Забележки"
 	IDS_SHV_COLUMN10            "Собственик"
 	IDS_SHV_COLUMN11            "Група"
-	IDS_SHV_COLUMN_DELFROM      "Original location"
-	IDS_SHV_COLUMN_DELDATE      "Date deleted"
+	IDS_SHV_COLUMN_DELFROM      "Първоначално място"
+	IDS_SHV_COLUMN_DELDATE      "Дата на изтриване"
 
 	/* special folders */
 	IDS_DESKTOP                 "Работна площ"
 	IDS_MYCOMPUTER              "Моят компютър"
-	IDS_RECYCLEBIN_FOLDER_NAME  "Trash"
+	IDS_RECYCLEBIN_FOLDER_NAME  "Кошче"
 	IDS_CONTROLPANEL            "Control Panel"
 
 	/* context menus */
@@ -390,17 +389,17 @@ BEGIN
 	IDS_DELETEFOLDER_CAPTION    "Потвърдете изтриване на папката"
 	IDS_DELETEITEM_TEXT         "Сигурен ли сте, че искате да изтриете '%1'?"
 	IDS_DELETEMULTIPLE_TEXT     "Сигурен ли сте, че искате да изтриете тези %1 предмета?"
-	IDS_DELETESELECTED_TEXT     "Are you sure you want to delete the selected item(s)?"
-	IDS_TRASHITEM_TEXT          "Are you sure that you want to send '%1' to the Trash?"
-	IDS_TRASHFOLDER_TEXT        "Are you sure that you want to send '%1' and all its content to the Trash?"
-	IDS_TRASHMULTIPLE_TEXT      "Are you sure that you want to send these %1 items to the Trash?"
-	IDS_CANTTRASH_TEXT          "The item '%1' can't be sent to Trash. Do you want to delete it instead?"
-	IDS_OVERWRITEFILE_TEXT      "This folder already contains a file called '%1'.\n\nDo you want to replace it?"
-	IDS_OVERWRITEFILE_CAPTION   "Confirm file overwrite"
-	IDS_OVERWRITEFOLDER_TEXT    "This folder already contains a folder named '%1'.\n\n"\
-		"If the files in the destination folder have the same names as files in the\n"\
-		"selected folder they will be replaced. Do you still want to move or copy\n"\
-		"the folder?"
+	IDS_DELETESELECTED_TEXT     "Да бъдат ли изтрити избраните файлове?"
+	IDS_TRASHITEM_TEXT          "Да бъде ли изпратен '%1' в кошчето?"
+	IDS_TRASHFOLDER_TEXT        "Да бъдат ли изпратени '%1' и съдържанието й в кошчето?"
+	IDS_TRASHMULTIPLE_TEXT      "Да бъдат ли изпратени тези %1 предмета в кошчето?"
+	IDS_CANTTRASH_TEXT          "Предметът '%1' не може да бъде изпратен в кошчето. Искате ли направо да го изтриете?"
+	IDS_OVERWRITEFILE_TEXT      "Папката вече съдържа файл с име '%1'.\n\nИскате ли да го замените?"
+	IDS_OVERWRITEFILE_CAPTION   "Потвърждаване замяната на файла"
+	IDS_OVERWRITEFOLDER_TEXT    "Тази папка вече съдържа папка с име '%1'.\n\n"\
+		"Ако файловете в целевата папка имат същите имена като файловете в\n"\
+		"избраната папка, те ще бъдат заменени. Все още ли искате да преместите\n"\
+		"или презапишете папката?"
 
 	/* message box strings */
 	IDS_RESTART_TITLE           "Презапуск"
@@ -410,7 +409,7 @@ BEGIN
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
+	IDS_PERSONAL                "Книжа"
 	IDS_FAVORITES               "Любимки"
 	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
 	IDS_RECENT                  "Скорошни"
@@ -430,7 +429,7 @@ BEGIN
 	IDS_PROGRAM_FILES           "Program Files"
 	IDS_MYPICTURES              "My Pictures"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_COMMON_DOCUMENTS        "Документи"
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
 	IDS_COMMON_MUSIC            "Documents\\My Music"
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
@@ -439,15 +438,15 @@ BEGIN
 
 	IDS_NEWFOLDER               "New Folder"
 
-	IDS_DRIVE_FIXED             "Local Disk"
+	IDS_DRIVE_FIXED             "Местен диск"
 	IDS_DRIVE_CDROM             "CDROM"
-	IDS_DRIVE_NETWORK           "Network Disk"
+	IDS_DRIVE_NETWORK           "Мрежов диск"
 
-	IDS_OPEN_WITH               "Open With"
-	IDS_OPEN_WITH_CHOOSE        "Choose Program..."
+	IDS_OPEN_WITH               "Отваряне с"
+	IDS_OPEN_WITH_CHOOSE        "Избор на приложение..."
 
-	IDS_SHELL_ABOUT_AUTHORS     "&Authors"
-	IDS_SHELL_ABOUT_BACK        "< &Back"
+	IDS_SHELL_ABOUT_AUTHORS     "&Създатели"
+	IDS_SHELL_ABOUT_BACK        "< &Назад"
 	FCIDM_SHVIEW_NEW 	    "Нови"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Нова &папка"
 	FCIDM_SHVIEW_NEWLINK        "Нова &връзка"

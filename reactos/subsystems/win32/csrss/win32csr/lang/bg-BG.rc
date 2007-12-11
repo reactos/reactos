@@ -1,0 +1,54 @@
+/*
+ * PROJECT:         ReactOS CSRSS subsystem
+ * FILE:            subsystems/win32/csrss/win32csr/lang/bg-BG.rc
+ * PURPOSE:         Bulgarian resource file
+ */
+
+LANGUAGE LANG_BULGARIAN, SUBLANG_DEFAULT
+
+IDD_END_NOW DIALOG DISCARDABLE  0, 0, 200, 95
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Прекратяване на приложение - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT           "Прекратяване на приложението... Почакайте",IDC_STATIC,7,7,186,11
+    CONTROL         "Ход",IDC_PROGRESS,"msctls_progress32",WS_BORDER,
+                    7,20,186,13
+    LTEXT           "Ако решите да затворите приложението веднага, ще изгубите всички незаписани данни. За да прекратите приложението веднага, натиснете „Прекратяване веднага„.",
+                    IDC_STATIC,7,40,186,26
+    DEFPUSHBUTTON   "&Прекратяване веднага",IDC_END_NOW,150,71,60,17
+END
+
+IDD_NOT_RESPONDING DIALOG DISCARDABLE 0, 0, 192, 122
+STYLE DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Прекратяване на приложение - "
+FONT 8, "MS Shell Dlg"
+BEGIN
+    DEFPUSHBUTTON   "Отказ",IDCANCEL,142,98,43,17
+    PUSHBUTTON      "&Прекратяване веднага",IDC_END_NOW,150,71,60,17
+    LTEXT           "Приложението не отговаря",IDC_STATIC,7,7,178,8
+    LTEXT           "За да се върнете в РеактОС и да проверите състоянието на приложението, натиснете „Отказ„.",
+                    IDC_STATIC,7,26,178,16
+    LTEXT           "Ако решите да затворите приложението веднага, ще изгубите всички незаписани данни. За да прекратите приложението веднага, натиснете „Прекратяване веднага“.",
+                    IDC_STATIC,7,53,178,26
+END
+
+STRINGTABLE
+BEGIN
+  IDS_EDIT "Обработка"
+  IDS_MARK "Отбелязване"
+  IDS_COPY "Запомняне\tEnter"
+  IDS_PASTE "Поставяне"
+  IDS_SELECTALL "Избор на всичко"
+  IDS_SCROLL "Прелистване"
+  IDS_FIND "Търсене..."
+  IDS_DEFAULTS "Подразбирани"
+  IDS_PROPERTIES "Свойства"
+  IDS_SCROLLHERE "Прелистване тук"
+  IDS_SCROLLTOP "Прелистване до горе"
+  IDS_SCROLLBOTTOM "Прелистване до долу"
+  IDS_SCROLLPAGE_UP "Горна страница"
+  IDS_SCROLLPAGE_DOWN "Долна страница"
+  IDS_SCROLLUP "Прелистване нагоре"
+  IDS_SCROLLDOWN "Прелистване надолу"
+END
