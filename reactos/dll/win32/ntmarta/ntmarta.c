@@ -970,10 +970,59 @@ AccRewriteSetNamedRights(LPWSTR pObjectName,
 }
 
 
+static PSID
+GetTrusteeSid(PTRUSTEE Trustee,
+              BOOL *Allocated)
+{
+    if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
+    {
+        DPRINT1("Trustee form not supported\n");
+        return NULL;
+    }
+
+    switch (Trustee->TrusteeForm)
+    {
+        case TRUSTEE_IS_NAME:
+        case TRUSTEE_IS_OBJECTS_AND_NAME:
+            /* FIXME */
+            DPRINT1("Case not implemented\n");
+            ASSERT(FALSE);
+            return NULL;
+        case TRUSTEE_IS_OBJECTS_AND_SID:
+            *Allocated = FALSE;
+            return ((POBJECTS_AND_SID)Trustee->ptstrName)->pSid;
+        case TRUSTEE_IS_SID:
+            *Allocated = FALSE;
+            return (PSID)Trustee->ptstrName;
+        default:
+            DPRINT1("Wrong Trustee form\n");
+            return NULL;
+    }
+}
+
+static PSID
+GetOwner(PACE_HEADER Ace)
+{
+    switch (Ace->AceType)
+    {
+        case ACCESS_ALLOWED_ACE_TYPE:
+            return (PSID)&((PACCESS_ALLOWED_ACE)Ace)->SidStart;
+        case ACCESS_DENIED_ACE_TYPE:
+            return (PSID)&((PACCESS_DENIED_ACE)Ace)->SidStart;
+        case SYSTEM_AUDIT_ACE_TYPE:
+            return (PSID)&((PSYSTEM_AUDIT_ACE)Ace)->SidStart;
+        case SYSTEM_MANDATORY_LABEL_ACE_TYPE:
+            return (PSID)&((PSYSTEM_MANDATORY_LABEL_ACE)Ace)->SidStart;
+        default:
+            DPRINT1("Unknown ACE type 0x%x\n", Ace->AceType);
+            return NULL;
+    }
+}
+
 /**********************************************************************
  * AccRewriteSetEntriesInAcl				EXPORTED
  *
- * @unimplemented
+ * @implemented
  */
 DWORD WINAPI
 AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
@@ -981,13 +1030,153 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                           PACL OldAcl,
                           PACL* NewAcl)
 {
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    PACL pNew;
+    ACL_SIZE_INFORMATION SizeInformation;
+    PACE_HEADER pAce;
+    BOOL *pKeepAce = NULL;
+    BOOL needToClean;
+    PSID pSid1, pSid2;
+    ULONG i;
+    LONG rc;
+    BOOL ret;
+
+    *NewAcl = NULL;
+
+    /* Get information about previous ACL */
+    if (OldAcl)
+    {
+        if (!GetAclInformation(OldAcl, &SizeInformation, sizeof(ACL_SIZE_INFORMATION), AclSizeInformation))
+            return GetLastError();
+        pKeepAce = (BOOL *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount);
+        if (!pKeepAce)
+            return ERROR_NOT_ENOUGH_MEMORY;
+        memset(pKeepAce, TRUE, SizeInformation.AceCount);
+    }
+    else
+    {
+        ZeroMemory(&SizeInformation, sizeof(ACL_SIZE_INFORMATION));
+        SizeInformation.AclBytesInUse = sizeof(ACL);
+    }
+
+    /* Get size required for new entries */
+    for (i = 0; i < cCountOfExplicitEntries; i++)
+    {
+        switch (pListOfExplicitEntries[i].grfAccessMode)
+        {
+            case REVOKE_ACCESS:
+            case SET_ACCESS:
+                /* Discard all accesses for the trustee... */
+                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+                for (i = 0; i < SizeInformation.AceCount; i++)
+                {
+                    if (!pKeepAce[i])
+                        continue;
+                    if (!GetAce(OldAcl, i, (PVOID*)&pAce))
+                        goto cleanup;
+                    pSid2 = GetOwner(pAce);
+                    if (RtlEqualSid(pSid1, pSid2))
+                    {
+                        pKeepAce[i] = FALSE;
+                        SizeInformation.AclBytesInUse -= pAce->AceSize;
+                    }
+                }
+                if (needToClean) LocalFree((HLOCAL)pSid1);
+                if (pListOfExplicitEntries[i].grfAccessMode == REVOKE_ACCESS)
+                    break;
+                /* ...and replace by the current access */
+            case GRANT_ACCESS:
+                /* Add to ACL */
+                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+                SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(pSid1);
+                if (needToClean) LocalFree((HLOCAL)pSid1);
+                break;
+            case DENY_ACCESS:
+                /* Add to ACL */
+                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+                SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_DENIED_ACE, SidStart) + RtlLengthSid(pSid1);
+                if (needToClean) LocalFree((HLOCAL)pSid1);
+                break;
+            case SET_AUDIT_SUCCESS:
+            case SET_AUDIT_FAILURE:
+                /* FIXME */
+                DPRINT1("Case not implemented!\n");
+                break;
+            default:
+                DPRINT1("Unknown access mode 0x%x. Ignoring it\n", pListOfExplicitEntries[i].grfAccessMode);
+                break;
+        }
+    }
+
+    /* OK, now create the new ACL */
+    DPRINT("Allocating %u bytes for the new ACL\n", SizeInformation.AclBytesInUse);
+    pNew = (PACL)LocalAlloc(LMEM_FIXED, SizeInformation.AclBytesInUse);
+    if (!pNew)
+    {
+        rc = ERROR_NOT_ENOUGH_MEMORY;
+        goto done;
+    }
+    if (!InitializeAcl(pNew, SizeInformation.AclBytesInUse, ACL_REVISION))
+        goto cleanup;
+
+    /* Fill it */
+    /* 1a) New audit entries (SET_AUDIT_SUCCESS, SET_AUDIT_FAILURE) */
+    /* FIXME */
+
+    /* 1b) Existing audit entries */
+    /* FIXME */
+
+    /* 2a) New denied entries (DENY_ACCESS) */
+    for (i = 0; i < cCountOfExplicitEntries; i++)
+    {
+        if (pListOfExplicitEntries[i].grfAccessMode == DENY_ACCESS)
+        {
+            /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
+            pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+            ret = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            if (needToClean) LocalFree((HLOCAL)pSid1);
+            if (!ret)
+                goto cleanup;
+        }
+    }
+
+    /* 2b) Existing denied entries */
+    /* FIXME */
+
+    /* 3a) New allow entries (GRANT_ACCESS, SET_ACCESS) */
+    for (i = 0; i < cCountOfExplicitEntries; i++)
+    {
+        if (pListOfExplicitEntries[i].grfAccessMode == SET_ACCESS ||
+            pListOfExplicitEntries[i].grfAccessMode == GRANT_ACCESS)
+        {
+            /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
+            pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+            ret = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            if (needToClean) LocalFree((HLOCAL)pSid1);
+            if (!ret)
+                goto cleanup;
+        }
+    }
+
+    /* 3b) Existing allow entries */
+    /* FIXME */
+
+    *NewAcl = pNew;
+    rc = ERROR_SUCCESS;
+    goto done;
+
+cleanup:
+    rc = GetLastError();
+
+done:
+    if (pKeepAce)
+        LocalFree((HLOCAL)pKeepAce);
+    DPRINT("Returning %d\n", rc);
+    return rc;
 }
 
 
 /**********************************************************************
- * AccRewriteSetEntriesInAcl				EXPORTED
+ * AccGetInheritanceSource				EXPORTED
  *
  * @unimplemented
  */
