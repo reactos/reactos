@@ -292,6 +292,167 @@ AccpGetObjectAceInheritedObjectType(IN PACE_HEADER AceHeader)
     return ObjectType;
 }
 
+static DWORD
+AccpOpenLSAPolicyHandle(IN LPWSTR SystemName,
+                        IN ACCESS_MASK DesiredAccess,
+                        OUT PLSA_HANDLE pPolicyHandle)
+{
+    LSA_OBJECT_ATTRIBUTES LsaObjectAttributes = {0};
+    LSA_UNICODE_STRING LsaSystemName, *psn;
+    NTSTATUS Status;
+
+    if (SystemName != NULL && SystemName[0] != L'\0')
+    {
+        LsaSystemName.Buffer = SystemName;
+        LsaSystemName.Length = wcslen(SystemName) * sizeof(WCHAR);
+        LsaSystemName.MaximumLength = LsaSystemName.Length + sizeof(WCHAR);
+        psn = &LsaSystemName;
+    }
+    else
+    {
+        psn = NULL;
+    }
+
+    Status = LsaOpenPolicy(psn,
+                           &LsaObjectAttributes,
+                           DesiredAccess,
+                           pPolicyHandle);
+    if (!NT_SUCCESS(Status))
+        return LsaNtStatusToWinError(Status);
+
+    return ERROR_SUCCESS;
+}
+
+static LPWSTR
+AccpGetTrusteeName(IN PTRUSTEE_W Trustee)
+{
+    switch (Trustee->TrusteeForm)
+    {
+        case TRUSTEE_IS_NAME:
+            return Trustee->ptstrName;
+
+        case TRUSTEE_IS_OBJECTS_AND_NAME:
+            return ((POBJECTS_AND_NAME_W)Trustee->ptstrName)->ptstrName;
+
+        default:
+            return NULL;
+    }
+}
+
+static DWORD
+AccpLookupSidByName(IN LSA_HANDLE PolicyHandle,
+                    IN LPWSTR Name,
+                    OUT PSID *pSid)
+{
+    NTSTATUS Status;
+    LSA_UNICODE_STRING LsaNames[1];
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
+    PLSA_TRANSLATED_SID2 TranslatedSid = NULL;
+    DWORD SidLen;
+    DWORD Ret = ERROR_SUCCESS;
+
+    LsaNames[0].Buffer = Name;
+    LsaNames[0].Length = wcslen(Name) * sizeof(WCHAR);
+    LsaNames[0].MaximumLength = LsaNames[0].Length + sizeof(WCHAR);
+
+    Status = LsaLookupNames2(PolicyHandle,
+                             0,
+                             sizeof(LsaNames) / sizeof(LsaNames[0]),
+                             LsaNames,
+                             &ReferencedDomains,
+                             &TranslatedSid);
+
+    if (!NT_SUCCESS(Status))
+        return LsaNtStatusToWinError(Status);
+
+    if (TranslatedSid->Use == SidTypeUnknown || TranslatedSid->Use == SidTypeInvalid)
+        return LsaNtStatusToWinError(STATUS_NONE_MAPPED); /* FIXME- what error code? */
+
+    SidLen = GetLengthSid(TranslatedSid->Sid);
+    ASSERT(SidLen != 0);
+
+    *pSid = LocalAlloc(LMEM_FIXED, (SIZE_T)SidLen);
+    if (*pSid != NULL)
+    {
+        if (!CopySid(SidLen,
+                     *pSid,
+                     TranslatedSid->Sid))
+        {
+            Ret = GetLastError();
+
+            LocalFree((HLOCAL)*pSid);
+            *pSid = NULL;
+        }
+    }
+    else
+        Ret = ERROR_NOT_ENOUGH_MEMORY;
+
+    LsaFreeMemory(ReferencedDomains);
+    LsaFreeMemory(TranslatedSid);
+
+    return Ret;
+}
+
+
+static DWORD
+AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
+                  IN OUT PLSA_HANDLE pPolicyHandle,
+                  OUT PSID *ppSid,
+                  OUT BOOL *Allocated)
+{
+    DWORD Ret = ERROR_SUCCESS;
+
+    *ppSid = NULL;
+    *Allocated = FALSE;
+
+    if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
+    {
+        DPRINT1("Trustee form not supported\n");
+        return ERROR_INVALID_PARAMETER;
+    }
+
+    switch (Trustee->TrusteeForm)
+    {
+        case TRUSTEE_IS_NAME:
+        case TRUSTEE_IS_OBJECTS_AND_NAME:
+            if (*pPolicyHandle == NULL)
+            {
+                Ret = AccpOpenLSAPolicyHandle(NULL, /* FIXME - always local? */
+                                              POLICY_LOOKUP_NAMES,
+                                              pPolicyHandle);
+                if (Ret != ERROR_SUCCESS)
+                    return Ret;
+
+                ASSERT(*pPolicyHandle != NULL);
+            }
+
+            Ret = AccpLookupSidByName(*pPolicyHandle,
+                                      AccpGetTrusteeName(Trustee),
+                                      ppSid);
+            if (Ret == ERROR_SUCCESS)
+            {
+                ASSERT(*ppSid != NULL);
+                *Allocated = TRUE;
+            }
+            break;
+
+        case TRUSTEE_IS_OBJECTS_AND_SID:
+            *ppSid = ((POBJECTS_AND_SID)Trustee->ptstrName)->pSid;
+            break;
+
+        case TRUSTEE_IS_SID:
+            *ppSid = (PSID)Trustee->ptstrName;
+            break;
+
+        default:
+            DPRINT1("Wrong Trustee form\n");
+            Ret = ERROR_INVALID_PARAMETER;
+            break;
+    }
+
+    return Ret;
+}
+
 
 /**********************************************************************
  * AccRewriteGetHandleRights				EXPORTED
@@ -975,37 +1136,6 @@ AccRewriteSetNamedRights(LPWSTR pObjectName,
 }
 
 
-static PSID
-GetTrusteeSid(PTRUSTEE Trustee,
-              BOOL *Allocated)
-{
-    if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
-    {
-        DPRINT1("Trustee form not supported\n");
-        return NULL;
-    }
-
-    switch (Trustee->TrusteeForm)
-    {
-        case TRUSTEE_IS_NAME:
-        case TRUSTEE_IS_OBJECTS_AND_NAME:
-            /* FIXME */
-            DPRINT1("Case not implemented\n");
-            ASSERT(FALSE);
-            return NULL;
-        case TRUSTEE_IS_OBJECTS_AND_SID:
-            *Allocated = FALSE;
-            return ((POBJECTS_AND_SID)Trustee->ptstrName)->pSid;
-        case TRUSTEE_IS_SID:
-            *Allocated = FALSE;
-            return (PSID)Trustee->ptstrName;
-        default:
-            DPRINT1("Wrong Trustee form\n");
-            return NULL;
-    }
-}
-
-
 /**********************************************************************
  * AccRewriteSetEntriesInAcl				EXPORTED
  *
@@ -1017,13 +1147,14 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                           PACL OldAcl,
                           PACL* NewAcl)
 {
-    PACL pNew;
+    PACL pNew = NULL;
     ACL_SIZE_INFORMATION SizeInformation;
     PACE_HEADER pAce;
     BOOLEAN *pKeepAce = NULL;
     BOOL needToClean;
     PSID pSid1, pSid2;
     ULONG i;
+    LSA_HANDLE PolicyHandle = NULL;
     BOOL bRet;
     DWORD LastErr;
     DWORD Ret = ERROR_SUCCESS;
@@ -1060,12 +1191,18 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     /* Get size required for new entries */
     for (i = 0; i < cCountOfExplicitEntries; i++)
     {
+        Ret = AccpGetTrusteeSid(&pListOfExplicitEntries[i].Trustee,
+                                &PolicyHandle,
+                                &pSid1,
+                                &needToClean);
+        if (Ret != ERROR_SUCCESS)
+            goto Cleanup;
+
         switch (pListOfExplicitEntries[i].grfAccessMode)
         {
             case REVOKE_ACCESS:
             case SET_ACCESS:
                 /* Discard all accesses for the trustee... */
-                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
                 for (i = 0; i < SizeInformation.AceCount; i++)
                 {
                     if (!pKeepAce[i])
@@ -1083,21 +1220,16 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                         SizeInformation.AclBytesInUse -= pAce->AceSize;
                     }
                 }
-                if (needToClean) LocalFree((HLOCAL)pSid1);
                 if (pListOfExplicitEntries[i].grfAccessMode == REVOKE_ACCESS)
                     break;
                 /* ...and replace by the current access */
             case GRANT_ACCESS:
                 /* Add to ACL */
-                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
                 SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(pSid1);
-                if (needToClean) LocalFree((HLOCAL)pSid1);
                 break;
             case DENY_ACCESS:
                 /* Add to ACL */
-                pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
                 SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_DENIED_ACE, SidStart) + RtlLengthSid(pSid1);
-                if (needToClean) LocalFree((HLOCAL)pSid1);
                 break;
             case SET_AUDIT_SUCCESS:
             case SET_AUDIT_FAILURE:
@@ -1108,6 +1240,9 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                 DPRINT1("Unknown access mode 0x%x. Ignoring it\n", pListOfExplicitEntries[i].grfAccessMode);
                 break;
         }
+
+        if (needToClean)
+            LocalFree((HLOCAL)pSid1);
     }
 
     /* OK, now create the new ACL */
@@ -1137,7 +1272,13 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
         if (pListOfExplicitEntries[i].grfAccessMode == DENY_ACCESS)
         {
             /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
-            pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+            Ret = AccpGetTrusteeSid(&pListOfExplicitEntries[i].Trustee,
+                                    &PolicyHandle,
+                                    &pSid1,
+                                    &needToClean);
+            if (Ret != ERROR_SUCCESS)
+                goto Cleanup;
+
             bRet = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
             if (needToClean) LocalFree((HLOCAL)pSid1);
             if (!bRet)
@@ -1158,7 +1299,13 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             pListOfExplicitEntries[i].grfAccessMode == GRANT_ACCESS)
         {
             /* FIXME: take care of pListOfExplicitEntries[i].grfInheritance */
-            pSid1 = GetTrusteeSid(&pListOfExplicitEntries[i].Trustee, &needToClean);
+            Ret = AccpGetTrusteeSid(&pListOfExplicitEntries[i].Trustee,
+                                    &PolicyHandle,
+                                    &pSid1,
+                                    &needToClean);
+            if (Ret != ERROR_SUCCESS)
+                goto Cleanup;
+
             bRet = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
             if (needToClean) LocalFree((HLOCAL)pSid1);
             if (!bRet)
@@ -1177,6 +1324,12 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
 Cleanup:
     if (pKeepAce)
         LocalFree((HLOCAL)pKeepAce);
+
+    if (pNew && Ret != ERROR_SUCCESS)
+        LocalFree((HLOCAL)pNew);
+
+    if (PolicyHandle)
+        LsaClose(PolicyHandle);
 
     /* restore the last error code */
     SetLastError(LastErr);
