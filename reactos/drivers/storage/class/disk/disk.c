@@ -15,7 +15,7 @@
 #include <include/class2.h>
 #include <stdio.h>
 
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #define IO_WRITE_CACHE_ENABLED  ((NTSTATUS)0x80040020L)
