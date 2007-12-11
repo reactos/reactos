@@ -395,7 +395,6 @@ CreateLogoffSecurityAttributes(
 
 	if (SetEntriesInAcl(1, &Access, NULL, &pACL) != ERROR_SUCCESS) 
 	{
-		// SetEntriesInAcl is not implemented yet
 		ERR("Failed to set Access Rights for logoff thread. Logging out will most likely fail.\n");
 
 		HeapFree(GetProcessHeap(), 0, pMem);
