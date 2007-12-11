@@ -822,13 +822,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 
 	UiDrawProgressBarCenter(15, 100, szLoadingMsg);
 
-	/*
-	 * Export the hardware hive
-	 */
-	Base = FrLdrCreateModule ("HARDWARE");
-	RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PCHAR)Base, &Size);
-	FrLdrCloseModule (Base, Size);
-
 	UiDrawProgressBarCenter(20, 100, szLoadingMsg);
 
 	/*

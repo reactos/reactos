@@ -49,11 +49,6 @@ RegInitializeRegistry (VOID)
   RegCreateKey (RootKey,
 		L"Registry\\Machine\\SYSTEM",
 		NULL);
-
-  /* Create 'HARDWARE' key */
-  RegCreateKey (RootKey,
-		L"Registry\\Machine\\HARDWARE",
-		NULL);
 }
 
 

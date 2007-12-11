@@ -87,7 +87,7 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
 
         /* Fail if the key couldn't be created, and make sure it's a new key */
         if (!NT_SUCCESS(Status)) return Status;
-        //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+        ASSERT(Disposition == REG_CREATED_NEW_KEY);
     }
 
     /* Setup the component information key */
@@ -399,7 +399,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
 
     /* Nobody should've created this key yet! */
-    //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Setup the key name */
     RtlInitUnicodeString(&KeyName,
@@ -421,7 +421,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Nobody should've created this key yet! */
-    //ASSERT(Disposition == REG_CREATED_NEW_KEY);
+    ASSERT(Disposition == REG_CREATED_NEW_KEY);
 
     /* Allocate the configuration data buffer */
     CmpConfigurationData = ExAllocatePoolWithTag(PagedPool,
@@ -451,6 +451,7 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
     return Status;
 }
+
 
 
 

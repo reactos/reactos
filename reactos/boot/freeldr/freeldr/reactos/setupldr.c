@@ -160,8 +160,7 @@ LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 
 VOID RunLoader(VOID)
 {
-  ULONG_PTR Base;
-  ULONG Size, i;
+  ULONG i;
   const char *SourcePath;
   const char *LoadOptions = "", *DbgLoadOptions = "";
   const char *sourcePaths[] = {
@@ -305,11 +304,6 @@ VOID RunLoader(VOID)
 
     /* Load the kernel */
     if (!FrLdrLoadKernel(szKernelName, 5)) return;
-
-  /* Export the hardware hive */
-  Base = FrLdrCreateModule ("HARDWARE");
-  RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
-  FrLdrCloseModule (Base, Size);
 
   /* Insert boot disk 2 */
   if (MachDiskBootingFromFloppy())

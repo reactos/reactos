@@ -33,45 +33,6 @@ BOOLEAN CmpWasSetupBoot;
 
 /* FUNCTIONS *****************************************************************/
 
-PVOID
-NTAPI
-CmpRosGetHardwareHive(OUT PULONG Length)
-{
-    PLIST_ENTRY ListHead, NextEntry;
-    PMEMORY_ALLOCATION_DESCRIPTOR MdBlock = NULL;
-    
-    /* Loop the memory descriptors */
-    ListHead = &KeLoaderBlock->MemoryDescriptorListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
-    {
-        /* Get the current block */
-        MdBlock = CONTAINING_RECORD(NextEntry,
-                                    MEMORY_ALLOCATION_DESCRIPTOR,
-                                    ListEntry);
-        
-        /* Check if this is an registry block */
-        if (MdBlock->MemoryType == LoaderRegistryData)
-        {
-            /* Check if it's not the SYSTEM hive that we already initialized */
-            if ((MdBlock->BasePage) !=
-                (((ULONG_PTR)KeLoaderBlock->RegistryBase &~ KSEG0_BASE) >> PAGE_SHIFT))
-            {
-                /* Hardware hive break out */
-                break;
-            }
-        }
-        
-        /* Go to the next block */
-        NextEntry = MdBlock->ListEntry.Flink;
-    }
-    
-    /* We need a hardware hive */
-    ASSERT(MdBlock);
-    *Length = MdBlock->PageCount << PAGE_SHIFT;
-    return (PVOID)((MdBlock->BasePage << PAGE_SHIFT) | KSEG0_BASE);
-}
-
 VOID
 NTAPI
 CmpDeleteKeyObject(PVOID DeletedObject)
@@ -1344,8 +1305,6 @@ CmInitSystem1(VOID)
     HANDLE KeyHandle;
     NTSTATUS Status;
     PCMHIVE HardwareHive;
-    PVOID BaseAddress;
-    ULONG Length;
     PSECURITY_DESCRIPTOR SecurityDescriptor;
     PAGED_CODE();
 
@@ -1479,20 +1438,17 @@ CmInitSystem1(VOID)
         KEBUGCHECKEX(CONFIG_INITIALIZATION_FAILED, 1, 8, Status, 0);
     }
 
-    /* Import the hardware hive (FIXME: We should create it from scratch) */
-    BaseAddress = CmpRosGetHardwareHive(&Length);
-    ((PHBASE_BLOCK)BaseAddress)->Length = Length;
+    /* Create the hardware hive */
     Status = CmpInitializeHive((PCMHIVE*)&HardwareHive,
-                               HINIT_MEMORY, //HINIT_CREATE,
-                               HIVE_VOLATILE | HIVE_NOLAZYFLUSH,
+                               HINIT_CREATE,
+                               HIVE_VOLATILE,
                                HFILE_TYPE_PRIMARY,
-                               BaseAddress, // NULL,
+                               NULL,
                                NULL,
                                NULL,
                                NULL,
                                NULL,
                                0);
-    CmPrepareHive(&HardwareHive->Hive);
     if (!NT_SUCCESS(Status))
     {
         /* Bugcheck */
@@ -1507,7 +1463,7 @@ CmInitSystem1(VOID)
     Status = CmpLinkHiveToMaster(&KeyName,
                                  NULL,
                                  (PCMHIVE)HardwareHive,
-                                 FALSE, // TRUE
+                                 TRUE,
                                  SecurityDescriptor);
     if (!NT_SUCCESS(Status))
     {
