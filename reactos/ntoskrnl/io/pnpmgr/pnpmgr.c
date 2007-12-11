@@ -2657,7 +2657,7 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode,
 static NTSTATUS INIT_FUNCTION
 IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
-   IN PUNICODE_STRING RelativePath,
+   IN PUNICODE_STRING RelativePath OPTIONAL,
    IN HANDLE hRootKey,
    IN BOOLEAN EnumerateSubKeys,
    IN PCM_FULL_RESOURCE_DESCRIPTOR ParentBootResources,
@@ -2707,13 +2707,18 @@ IopEnumerateDetectedDevices(
    PUNICODE_STRING pHardwareId;
    ULONG DeviceIndex = 0;
 
-   InitializeObjectAttributes(&ObjectAttributes, RelativePath, OBJ_KERNEL_HANDLE, hBaseKey, NULL);
-   Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
-   if (!NT_SUCCESS(Status))
-   {
-      DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
-      goto cleanup;
-   }
+    if (RelativePath)
+    {
+        InitializeObjectAttributes(&ObjectAttributes, RelativePath, OBJ_KERNEL_HANDLE, hBaseKey, NULL);
+        Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+            goto cleanup;
+        }
+    }
+    else
+        hDevicesKey = hBaseKey;
 
    pDeviceInformation = ExAllocatePool(PagedPool, DeviceInfoLength);
    if (!pDeviceInformation)
@@ -2931,17 +2936,17 @@ IopEnumerateDetectedDevices(
             ValueName.Length -= sizeof(WCHAR);
       }
 
-      if (RtlCompareUnicodeString(RelativePath, &IdentifierSerial, FALSE) == 0)
+      if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierSerial, FALSE) == 0)
       {
          pHardwareId = &HardwareIdSerial;
          DeviceIndex = DeviceIndexSerial++;
       }
-      else if (RtlCompareUnicodeString(RelativePath, &IdentifierKeyboard, FALSE) == 0)
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierKeyboard, FALSE) == 0)
       {
          pHardwareId = &HardwareIdKeyboard;
          DeviceIndex = DeviceIndexKeyboard++;
       }
-      else if (RtlCompareUnicodeString(RelativePath, &IdentifierMouse, FALSE) == 0)
+      else if (RelativePath && RtlCompareUnicodeString(RelativePath, &IdentifierMouse, FALSE) == 0)
       {
          pHardwareId = &HardwareIdMouse;
          DeviceIndex = DeviceIndexMouse++;
@@ -2971,7 +2976,7 @@ IopEnumerateDetectedDevices(
       else
       {
          /* Unknown key path */
-         DPRINT("Unknown key path %wZ\n", RelativePath);
+         DPRINT("Unknown key path '%wZ'\n", RelativePath);
          goto nextdevice;
       }
 
@@ -3070,7 +3075,7 @@ nextdevice:
    Status = STATUS_SUCCESS;
 
 cleanup:
-   if (hDevicesKey)
+   if (hDevicesKey && hDevicesKey != hBaseKey)
       ZwClose(hDevicesKey);
    if (hDeviceKey)
       ZwClose(hDeviceKey);
@@ -3282,15 +3287,25 @@ IopUpdateRootKey(VOID)
    }
    else
    {
-      Status = IopEnumerateDetectedDevices(
-         NULL,
-         &MultiKeyPathU,
-         hRoot,
-         TRUE,
-         NULL,
-         0);
-      ZwClose(hRoot);
-      return Status;
+        InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
+        Status = ZwOpenKey(&hEnum, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+        if (!NT_SUCCESS(Status))
+        {
+            /* Nothing to do, don't return with an error status */
+            DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+            ZwClose(hRoot);
+            return STATUS_SUCCESS;
+        }
+        Status = IopEnumerateDetectedDevices(
+            hEnum,
+            NULL,
+            hRoot,
+            TRUE,
+            NULL,
+            0);
+        ZwClose(hEnum);
+        ZwClose(hRoot);
+        return Status;
    }
 }
 
