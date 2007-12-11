@@ -1631,6 +1631,8 @@ static BOOL InstallOneService(
     SC_HANDLE hService = NULL;
     LPDWORD GroupOrder = NULL;
     LPQUERY_SERVICE_CONFIGW ServiceConfig = NULL;
+    HKEY hServicesKey, hServiceKey;
+    LONG rc;
     BOOL ret = FALSE;
 
     HKEY hGroupOrderListKey = NULL;
@@ -1752,7 +1754,6 @@ static BOOL InstallOneService(
     if (useTag)
     {
         /* Add the tag to SYSTEM\CurrentControlSet\Control\GroupOrderList key */
-        LONG rc;
         LPCWSTR lpLoadOrderGroup;
         DWORD bufferSize;
 
@@ -1831,7 +1832,44 @@ static BOOL InstallOneService(
         }
     }
 
-    ret = TRUE;
+    /* Handle AddReg and DelReg */
+    rc = RegOpenKeyExW(
+        list ? list->HKLM : HKEY_LOCAL_MACHINE,
+        REGSTR_PATH_SERVICES,
+        0,
+        0,
+        &hServicesKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+    rc = RegOpenKeyExW(
+        hServicesKey,
+        ServiceName,
+        0,
+        KEY_READ | KEY_WRITE,
+        &hServiceKey);
+    RegCloseKey(hServicesKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        SetLastError(rc);
+        goto cleanup;
+    }
+
+    ret = SetupInstallFromInfSectionW(
+        NULL,
+        hInf,
+        ServiceSection,
+        SPINST_REGISTRY,
+        hServiceKey,
+        NULL,
+        0,
+        NULL,
+        NULL,
+        NULL,
+        NULL);
+    RegCloseKey(hServiceKey);
 
 cleanup:
     if (hSCManager != NULL)
