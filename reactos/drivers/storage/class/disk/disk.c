@@ -1158,7 +1158,7 @@ CreatePartitionDeviceObjects(
     // then fix up the partition list to make it look like there is one
     // zero length partition.
     //
-    DPRINT1("IoReadPartitionTable() status: 0x%08X\n", status);
+    DPRINT("IoReadPartitionTable() status: 0x%08X\n", status);
     if ((!NT_SUCCESS(status) || partitionList->PartitionCount == 0) &&
         PhysicalDeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
 

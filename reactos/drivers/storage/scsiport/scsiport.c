@@ -1098,7 +1098,7 @@ CreatePortConfig:
 
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
+            DPRINT("SpiCreatePortConfig() failed with Status 0x%08X\n", Status);
             break;
         }
 
