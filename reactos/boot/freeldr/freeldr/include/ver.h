@@ -22,10 +22,10 @@
 
 
 /* just some stuff */
-#define VERSION			"FreeLoader v2.1"
-#define COPYRIGHT		"Copyright (C) 1998-2005 Brian Palmer <brianp@sginet.com>"
-#define AUTHOR_EMAIL	"<brianp@sginet.com>"
-#define BY_AUTHOR		"by Brian Palmer"
+#define VERSION			"FreeLoader v3.0"
+#define COPYRIGHT		"Copyright (C) 1998-2007 ReactOS Team"
+#define AUTHOR_EMAIL	"<www.reactos.org>"
+#define BY_AUTHOR		"by ReactOS Team"
 
 // FreeLoader version defines
 //
@@ -34,8 +34,8 @@
 // If you add features then you increment the minor version and zero the patch version
 // If you add major functionality then you increment the major version and zero the minor & patch versions
 //
-#define FREELOADER_MAJOR_VERSION	2
-#define FREELOADER_MINOR_VERSION	1
+#define FREELOADER_MAJOR_VERSION	3
+#define FREELOADER_MINOR_VERSION	0
 #define FREELOADER_PATCH_VERSION	0
 
 
