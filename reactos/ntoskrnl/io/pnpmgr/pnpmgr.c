@@ -2704,6 +2704,7 @@ IopEnumerateDetectedDevices(
    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
    static ULONG DeviceIndexMouse = 0;
+   UNICODE_STRING HardwareIdKey;
    PUNICODE_STRING pHardwareId;
    ULONG DeviceIndex = 0;
 
@@ -2980,8 +2981,12 @@ IopEnumerateDetectedDevices(
          goto nextdevice;
       }
 
+      /* Prepare hardware id key (hardware id value without final \0) */
+      HardwareIdKey = *pHardwareId;
+      HardwareIdKey.Length -= sizeof(UNICODE_NULL);
+
       /* Add the detected device to Root key */
-      InitializeObjectAttributes(&ObjectAttributes, pHardwareId, OBJ_KERNEL_HANDLE, hRootKey, NULL);
+      InitializeObjectAttributes(&ObjectAttributes, &HardwareIdKey, OBJ_KERNEL_HANDLE, hRootKey, NULL);
       Status = ZwCreateKey(
          &hLevel1Key,
          KEY_CREATE_SUB_KEY,
@@ -3012,7 +3017,7 @@ IopEnumerateDetectedDevices(
          DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
          goto nextdevice;
       }
-      DPRINT("Found %wZ #%lu (%wZ)\n", &ValueName, DeviceIndex, pHardwareId);
+      DPRINT("Found %wZ #%lu (%wZ)\n", &ValueName, DeviceIndex, &HardwareIdKey);
       Status = ZwSetValueKey(hLevel2Key, &DeviceDescU, 0, REG_SZ, ValueName.Buffer, ValueName.MaximumLength);
       if (!NT_SUCCESS(Status))
       {
