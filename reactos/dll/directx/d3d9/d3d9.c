@@ -1,39 +1,45 @@
 #include <windows.h>
-#include "d3d9.h"
+#include "d3d9_private.h"
 
 #include <debug.h>
 
-HRESULT DLLAPI Direct3DShaderValidatorCreate9(void)
+DLLAPI
+HRESULT Direct3DShaderValidatorCreate9(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DLLAPI PSGPError(void)
+DLLAPI
+HRESULT PSGPError(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DLLAPI PSGPSampleTexture(void)
+DLLAPI
+HRESULT PSGPSampleTexture(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DLLAPI DebugSetLevel(void)
+DLLAPI
+HRESULT  DebugSetLevel(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-HRESULT DLLAPI DebugSetMute(DWORD dw1)
+DLLAPI
+HRESULT DebugSetMute(DWORD dw1)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DWORD DLLAPI Direct3DCreate9( UINT SDKVersion )
+DLLAPI
+IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
     UNIMPLEMENTED
     return 0;
