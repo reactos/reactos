@@ -57,7 +57,12 @@
 /*****************************************************************************
  * #defines and error codes
  */
+#ifdef D3D_DEBUG_INFO
+#define D3D_SDK_VERSION                         (32 | 0x80000000)
+#else
 #define D3D_SDK_VERSION                         32
+#endif
+
 #define D3DADAPTER_DEFAULT                      0
 #define D3DENUM_NO_WHQL_LEVEL                   0x00000002L
 #define D3DPRESENT_BACK_BUFFERS_MAX             3L
@@ -176,6 +181,11 @@ DECLARE_INTERFACE_(IDirect3D9,IUnknown)
     STDMETHOD(GetDeviceCaps)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, D3DCAPS9* pCaps) PURE;
     STDMETHOD_(HMONITOR, GetAdapterMonitor)(THIS_ UINT Adapter) PURE;
     STDMETHOD(CreateDevice)(THIS_ UINT Adapter, D3DDEVTYPE DeviceType, HWND hFocusWindow, DWORD BehaviorFlags, D3DPRESENT_PARAMETERS* pPresentationParameters, struct IDirect3DDevice9** ppReturnedDeviceInterface) PURE;
+
+#ifdef D3D_DEBUG_INFO
+    LPCWSTR Version;
+#endif
+
 };
 #undef INTERFACE
 
