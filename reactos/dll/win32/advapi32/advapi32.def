@@ -479,6 +479,8 @@ RegCreateKeyExW@36
 RegCreateKeyW@12
 RegDeleteKeyA@8
 RegDeleteKeyW@8
+RegDeleteKeyExA@16
+RegDeleteKeyExW@16
 RegDeleteKeyValueA@12
 RegDeleteKeyValueW@12
 RegDeleteTreeA@8

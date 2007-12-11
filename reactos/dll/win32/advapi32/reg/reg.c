@@ -1244,6 +1244,39 @@ Cleanup:
   return ERROR_SUCCESS;
 }
 
+/************************************************************************
+ *  RegDeleteKeyExA
+ *
+ * @unimplemented
+ */
+LONG
+WINAPI
+RegDeleteKeyExA ( HKEY hKey,
+            LPCSTR lpSubKey,
+          REGSAM samDesired,
+             DWORD Reserved
+                )
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
+
+/************************************************************************
+ *  RegDeleteKeyExW
+ *
+ * @unimplemented
+ */
+LONG
+WINAPI
+RegDeleteKeyExW (HKEY hKey,
+          LPCWSTR lpSubKey,
+         REGSAM samDesired,
+            DWORD Reserved
+                 )
+{
+  SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+  return ERROR_CALL_NOT_IMPLEMENTED;
+}
 
 /************************************************************************
  *  RegDeleteKeyValueW

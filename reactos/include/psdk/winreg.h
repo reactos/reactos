@@ -82,6 +82,8 @@ LONG WINAPI RegCreateKeyExA(HKEY,LPCSTR,DWORD,LPSTR,DWORD,REGSAM,LPSECURITY_ATTR
 LONG WINAPI RegCreateKeyExW(HKEY,LPCWSTR,DWORD,LPWSTR,DWORD,REGSAM,LPSECURITY_ATTRIBUTES,PHKEY,PDWORD);
 LONG WINAPI RegCreateKeyW(HKEY,LPCWSTR,PHKEY);
 LONG WINAPI RegDeleteKeyA(HKEY,LPCSTR);
+LONG WINAPI RegDeleteKeyExA (HKEY,LPCSTR,REGSAM,DWORD);
+LONG WINAPI RegDeleteKeyExW (HKEY,LPCWSTR,REGSAM,DWORD);
 #if (_WIN32_WINNT >= 0x0600)
 LONG WINAPI RegDeleteKeyValueA(HKEY,LPCSTR,LPCSTR);
 LONG WINAPI RegDeleteKeyValueW(HKEY,LPCWSTR,LPCWSTR);
@@ -165,6 +167,7 @@ typedef VALENTW VALENT,*PVALENT;
 #define RegCreateKey RegCreateKeyW
 #define RegCreateKeyEx RegCreateKeyExW
 #define RegDeleteKey RegDeleteKeyW
+#define RegDeleteKeyEx RegDeleteKeyExW
 #if (_WIN32_WINNT >= 0x0600)
 #define RegDeleteKeyValue RegDeleteKeyValueW
 #define RegDeleteTree RegDeleteTreeW
@@ -206,6 +209,7 @@ typedef VALENTA VALENT,*PVALENT;
 #define RegCreateKey RegCreateKeyA
 #define RegCreateKeyEx RegCreateKeyExA
 #define RegDeleteKey RegDeleteKeyA
+#define RegDeleteKeyEx RegDeleteKeyExA
 #if (_WIN32_WINNT >= 0x0600)
 #define RegDeleteKeyValue RegDeleteKeyValueA
 #define RegDeleteTree RegDeleteTreeA
