@@ -218,7 +218,7 @@ FldrCreateComponentKey(IN PCONFIGURATION_COMPONENT_DATA SystemNode,
 VOID
 NTAPI
 FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
-                         IN PVOID Data,
+                         IN PCM_FULL_RESOURCE_DESCRIPTOR Data,
                          IN ULONG Size)
 {
     LONG Error;
@@ -230,17 +230,19 @@ FldrSetConfigurationData(IN PCONFIGURATION_COMPONENT_DATA ComponentData,
     if (!ConfigurationData) return;
 
     /* Copy component information */
-    RtlCopyMemory(ConfigurationData, Data, Size);
+    RtlCopyMemory(ConfigurationData, &Data->PartialResourceList.Version, Size);
         
     /* Set component information */
     ComponentData->ConfigurationData = ConfigurationData;
-    Component->ConfigurationDataLength = Size;
+    Component->ConfigurationDataLength = Size -
+                                         FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR,
+                                                      PartialResourceList);
         
     /* Set 'Configuration Data' value */
     Error = RegSetValue((FRLDRHKEY)Component->Key,
                         L"Configuration Data",
                         REG_FULL_RESOURCE_DESCRIPTOR,
-                        Data,
+                        (PVOID)Data,
                         Size);
     if (Error != ERROR_SUCCESS)
     {

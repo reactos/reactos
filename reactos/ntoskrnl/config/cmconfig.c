@@ -195,17 +195,19 @@ CmpInitializeRegistryNode(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
     return Status;
 }
 
-int t, tabLevel;
-
-VOID
+NTSTATUS
 NTAPI
-CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
-                    IN INTERFACE_TYPE InterfaceType,
-                    IN ULONG BusNumber)
+CmpSetupConfigurationTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
+                          IN HANDLE ParentHandle,
+                          IN INTERFACE_TYPE InterfaceType,
+                          IN ULONG BusNumber)
 {
     PCONFIGURATION_COMPONENT Component;
     USHORT DeviceIndexTable[MaximumType + 1] = {0};
     ULONG Interface = InterfaceType, Bus = BusNumber, i;
+    NTSTATUS Status;
+    HANDLE NewHandle;
+    static ULONG t, tabLevel;
     PCHAR InterfaceStrings[MaximumInterfaceType + 1] =
     {
         "Internal",
@@ -226,7 +228,8 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         "PNPBus",
         "Unknown"
     };
-        
+
+    /* Loop each entry */
     while (CurrentEntry)
     {
         for (t = 0; t < tabLevel; t++) DbgPrint("\t");
@@ -234,7 +237,7 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         for (t = 0; t < tabLevel; t++) DbgPrint("\t");
         DbgPrint("Parent @ 0x%p Sibling @ 0x%p Child @ 0x%p\n",
                  CurrentEntry->Parent, CurrentEntry->Sibling, CurrentEntry->Child);
-        
+
         /* Check if this is an adapter */
         Component = &CurrentEntry->ComponentEntry;
         if ((Component->Class == AdapterClass) &&
@@ -250,7 +253,7 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                     Interface = Eisa;
                     Bus = CmpTypeCount[EisaAdapter]++;
                     break;
-                
+
                 /* Turbo-channel */
                 case TcAdapter:
                     
@@ -258,7 +261,7 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                     Interface = TurboChannel;
                     Bus = CmpTypeCount[TurboChannel]++;
                     break;
-                
+
                 /* ISA, PCI, etc busses */
                 case MultiFunctionAdapter:
                     
@@ -282,15 +285,15 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                         Bus = CmpMultifunctionTypes[i].Count++;
                     }
                     break;
-                
+
                 /* SCSI Bus */
                 case ScsiAdapter:
-
+                    
                     /* Fix up */
                     Interface = Internal;
                     Bus = CmpTypeCount[ScsiAdapter]++;
                     break;
-                
+
                 /* Unknown */
                 default:
                     Interface = -1;
@@ -298,9 +301,6 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                     break;
             }
         }
-
-        /* Convert from NT to ARC class */
-        if (Component->Class == SystemClass) Component->Type = ArcSystem;
         
         /* Dump information on the component */
         for (t = 0; t < tabLevel; t++) DbgPrint("\t");
@@ -310,7 +310,7 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
         if (Component->Class != SystemClass)
         {
             for (t = 0; t < tabLevel; t++) DbgPrint("\t");
-            DbgPrint("Device Index: %lx\n", DeviceIndexTable[Component->Type]++);    
+            DbgPrint("Device Index: %lx\n", DeviceIndexTable[Component->Type]);    
         }
         for (t = 0; t < tabLevel; t++) DbgPrint("\t");
         DbgPrint("Component Information:\n");
@@ -332,18 +332,40 @@ CmpDumpHardwareTree(IN PCONFIGURATION_COMPONENT_DATA CurrentEntry,
                  InterfaceStrings[Interface],
                  Bus);
         
+        /* Setup the hardware node */
+        Status = CmpInitializeRegistryNode(CurrentEntry,
+                                           ParentHandle,
+                                           &NewHandle,
+                                           Interface,
+                                           Bus,
+                                           DeviceIndexTable);
+        if (!NT_SUCCESS(Status)) return Status;
+        
         /* Check for children */
         if (CurrentEntry->Child)
         {
             /* Recurse child */
             tabLevel++;
-            CmpDumpHardwareTree(CurrentEntry->Child, Interface, Bus);
+            Status = CmpSetupConfigurationTree(CurrentEntry->Child,
+                                               NewHandle,
+                                               Interface,
+                                               Bus);
             tabLevel--;
+            if (!NT_SUCCESS(Status))
+            {
+                /* Fail */
+                NtClose(NewHandle);
+                return Status;
+            }
         }
         
         /* Get to the next entry */
+        NtClose(NewHandle);
         CurrentEntry = CurrentEntry->Sibling;
     }
+    
+    /* We're done */
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -410,10 +432,13 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Check if we got anything from NTLDR */
     if (LoaderBlock->ConfigurationRoot)
     {
-        /* Dump the hardware tree */
+        /* Setup the configuration tree */
         DPRINT1("ARC Hardware Tree Received @ 0x%p. Dumping HW Info:\n\n",
                 LoaderBlock->ConfigurationRoot);
-        CmpDumpHardwareTree(LoaderBlock->ConfigurationRoot, -1, -1);
+        Status = CmpSetupConfigurationTree(LoaderBlock->ConfigurationRoot,
+                                           KeyHandle,
+                                           -1,
+                                           -1);
     }
     else
     {
@@ -426,5 +451,6 @@ CmpInitializeHardwareConfiguration(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NtClose(KeyHandle);
     return Status;
 }
+
 
 

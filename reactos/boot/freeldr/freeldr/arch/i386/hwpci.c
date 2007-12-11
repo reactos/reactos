@@ -183,7 +183,7 @@ DetectPciIrqRoutingTable(PCONFIGURATION_COMPONENT_DATA BusKey)
 
       /* Initialize resource descriptor */
       memset(FullResourceDescriptor, 0, Size);
-      FullResourceDescriptor->InterfaceType = Isa;
+      FullResourceDescriptor->InterfaceType = Internal;
       FullResourceDescriptor->BusNumber = 0;
       FullResourceDescriptor->PartialResourceList.Version = 1;
       FullResourceDescriptor->PartialResourceList.Revision = 1;
@@ -259,7 +259,7 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
 
       /* Initialize resource descriptor */
       memset(FullResourceDescriptor, 0, Size);
-      FullResourceDescriptor->InterfaceType = PCIBus;
+      FullResourceDescriptor->InterfaceType = Internal;
       FullResourceDescriptor->BusNumber = 0;
       FullResourceDescriptor->PartialResourceList.Version = 0;
       FullResourceDescriptor->PartialResourceList.Revision = 0;

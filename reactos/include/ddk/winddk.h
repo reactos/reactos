@@ -1775,7 +1775,42 @@ typedef struct _CM_INT13_DRIVE_PARAMETER {
   USHORT  MaxHeads;
   USHORT  NumberDrives;
 } CM_INT13_DRIVE_PARAMETER, *PCM_INT13_DRIVE_PARAMETER;
+
+typedef struct _CM_PNP_BIOS_DEVICE_NODE
+{
+    USHORT Size;
+    UCHAR Node;
+    ULONG ProductId;
+    UCHAR DeviceType[3];
+    USHORT DeviceAttributes;
+} CM_PNP_BIOS_DEVICE_NODE,*PCM_PNP_BIOS_DEVICE_NODE;
+
+typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
+{
+    UCHAR Signature[4];
+    UCHAR Revision;
+    UCHAR Length;
+    USHORT ControlField;
+    UCHAR Checksum;
+    ULONG EventFlagAddress;
+    USHORT RealModeEntryOffset;
+    USHORT RealModeEntrySegment;
+    USHORT ProtectedModeEntryOffset;
+    ULONG ProtectedModeCodeBaseAddress;
+    ULONG OemDeviceId;
+    USHORT RealModeDataBaseAddress;
+    ULONG ProtectedModeDataBaseAddress;
+} CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
+
 #include <poppack.h>
+
+typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
+{
+    ULONG BytesPerSector;
+    ULONG NumberOfCylinders;
+    ULONG SectorsPerTrack;
+    ULONG NumberOfHeads;
+} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
 
 typedef struct _CM_KEYBOARD_DEVICE_DATA {
   USHORT  Version;
