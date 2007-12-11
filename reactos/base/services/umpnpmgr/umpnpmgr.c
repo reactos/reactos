@@ -201,7 +201,7 @@ PNP_ReportLogOn(handle_t BindingHandle,
 
     UNREFERENCED_PARAMETER(BindingHandle);
 
-    DPRINT1("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
+    DPRINT("PNP_ReportLogOn(%u, %u) called\n", Admin, ProcessId);
 
     /* Get the users token */
     hProcess = OpenProcess(PROCESS_ALL_ACCESS,

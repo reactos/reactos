@@ -129,7 +129,7 @@ LsarClose(IN handle_t BindingHandle,
     PLSAR_POLICY_HANDLE Policy = NULL;
     NTSTATUS Status;
 
-    DPRINT1("LsarClose(0x%p) called!\n", ObjectHandle);
+    DPRINT("LsarClose(0x%p) called!\n", ObjectHandle);
 
     Status = ReferencePolicyHandle((LSA_HANDLE)ObjectHandle,
                                    0,

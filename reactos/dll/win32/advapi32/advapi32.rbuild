@@ -1,4 +1,4 @@
-<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}"  installbase="system32" installname="advapi32.dll">
+<module name="advapi32" type="win32dll" baseaddress="${BASEADDRESS_ADVAPI32}" installbase="system32" installname="advapi32.dll">
 
 	<importlibrary definition="advapi32.def" />
 	<include base="advapi32">.</include>
