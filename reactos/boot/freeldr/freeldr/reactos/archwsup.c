@@ -29,13 +29,14 @@ FldrpHwHeapAlloc(IN ULONG Size)
     /* Return a block of memory from the ARC Hardware Heap */
     Buffer = &reactos_arc_hardware_data[FldrpHwHeapLocation];
     
-    /* Clear it */
-    RtlZeroMemory(Buffer, Size);
-    
     /* Increment the heap location */
     FldrpHwHeapLocation += Size;
     if (FldrpHwHeapLocation > HW_MAX_ARC_HEAP_SIZE) Buffer = NULL;
-    
+
+    /* Clear it */
+    if (Buffer)
+        RtlZeroMemory(Buffer, Size);
+
     /* Return the buffer */
     return Buffer;
 }
