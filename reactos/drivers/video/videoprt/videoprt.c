@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) 2002, 2003, 2004 ReactOS Team
+ * Copyright (C) ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c 29323 2007-10-01 08:14:24Z fireball $
  */
 
 
@@ -669,15 +668,13 @@ VideoPortInitialize(
          return STATUS_UNSUCCESSFUL;
    }
 
-   /* add no PNP bus here, add more bus type if it needed */
-
-   if ( (HwInitializationData->AdapterInterfaceType == InterfaceTypeUndefined) ||
-        (HwInitializationData->AdapterInterfaceType == Internal) )
-
-   {
-       DPRINT1("No PNP Videocard .\n");
-       LegacyDetection = TRUE;
-   }
+   /* We can't check HwInitializationData->AdapterInterfaceType to know if
+    * we have to use legacy detection, as MSDN states that this member is
+    * ignored by videoprt and should remain zero-initialized.
+    * Force legacy detection, so NT4 drivers will still work on ReactOS.
+    * WARNING: this will cause all Plug-and-Play IRPs to fail.
+    */
+   LegacyDetection = TRUE;
 
    DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
    DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
