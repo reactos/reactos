@@ -186,6 +186,74 @@ AccpIsObjectAce(IN PACE_HEADER AceHeader)
     return Ret;
 }
 
+static DWORD
+AccpGetTrusteeObjects(IN PTRUSTEE_W Trustee,
+                      OUT GUID *pObjectTypeGuid  OPTIONAL,
+                      OUT GUID *pInheritedObjectTypeGuid  OPTIONAL)
+{
+    DWORD Ret;
+
+    switch (Trustee->TrusteeForm)
+    {
+        case TRUSTEE_IS_OBJECTS_AND_NAME:
+        {
+            POBJECTS_AND_NAME_W pOan = (POBJECTS_AND_NAME_W)Trustee->ptstrName;
+
+            /* pOan->ObjectsPresent should always be 0 here because a previous
+               call to AccpGetTrusteeSid should have rejected these trustees
+               already. */
+            ASSERT(pOan->ObjectsPresent == 0);
+
+            Ret = pOan->ObjectsPresent;
+            break;
+        }
+
+        case TRUSTEE_IS_OBJECTS_AND_SID:
+        {
+            POBJECTS_AND_SID pOas = (POBJECTS_AND_SID)Trustee->ptstrName;
+
+            if (pObjectTypeGuid != NULL && pOas->ObjectsPresent & ACE_OBJECT_TYPE_PRESENT)
+                *pObjectTypeGuid = pOas->ObjectTypeGuid;
+
+            if (pInheritedObjectTypeGuid != NULL && pOas->ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+                *pObjectTypeGuid = pOas->InheritedObjectTypeGuid;
+
+            Ret = pOas->ObjectsPresent;
+            break;
+        }
+
+        default:
+            /* Any other trustee forms have no objects attached... */
+            Ret = 0;
+            break;
+    }
+
+    return Ret;
+}
+
+static DWORD
+AccpCalcNeededAceSize(IN PSID Sid,
+                      IN DWORD ObjectsPresent)
+{
+    DWORD Ret;
+
+    Ret = sizeof(ACE) + GetLengthSid(Sid);
+
+    /* This routine calculates the generic size of the ACE needed.
+       If no objects are present it is assumed that only a standard
+       ACE is to be created. */
+
+    if (ObjectsPresent & ACE_OBJECT_TYPE_PRESENT)
+        Ret += sizeof(GUID);
+    if (ObjectsPresent & ACE_INHERITED_OBJECT_TYPE_PRESENT)
+        Ret += sizeof(GUID);
+
+    if (ObjectsPresent != 0)
+        Ret += sizeof(DWORD); /* Include the Flags member to make it an object ACE */
+
+    return Ret;
+}
+
 static GUID*
 AccpGetObjectAceObjectType(IN PACE_HEADER AceHeader)
 {
@@ -411,14 +479,23 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
 
     if (Trustee->pMultipleTrustee || Trustee->MultipleTrusteeOperation != NO_MULTIPLE_TRUSTEE)
     {
-        DPRINT1("Trustee form not supported\n");
+        /* This is currently not supported */
         return ERROR_INVALID_PARAMETER;
     }
 
     switch (Trustee->TrusteeForm)
     {
-        case TRUSTEE_IS_NAME:
         case TRUSTEE_IS_OBJECTS_AND_NAME:
+            if (((POBJECTS_AND_NAME_W)Trustee->ptstrName)->ObjectsPresent != 0)
+            {
+                /* This is not supported as there is no way to interpret the
+                   strings provided, and we need GUIDs for the ACEs... */
+                Ret = ERROR_INVALID_PARAMETER;
+                break;
+            }
+            /* fall through */
+
+        case TRUSTEE_IS_NAME:
             if (*pPolicyHandle == NULL)
             {
                 Ret = AccpOpenLSAPolicyHandle(NULL, /* FIXME - always local? */
@@ -449,7 +526,6 @@ AccpGetTrusteeSid(IN PTRUSTEE_W Trustee,
             break;
 
         default:
-            DPRINT1("Wrong Trustee form\n");
             Ret = ERROR_INVALID_PARAMETER;
             break;
     }
@@ -1154,7 +1230,10 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     PACL pNew = NULL;
     ACL_SIZE_INFORMATION SizeInformation;
     PACE_HEADER pAce;
+    BOOLEAN KeepAceBuf[8];
     BOOLEAN *pKeepAce = NULL;
+    GUID ObjectTypeGuid, InheritedObjectTypeGuid;
+    DWORD ObjectsPresent;
     BOOL needToClean;
     PSID pSid1, pSid2;
     ULONG i;
@@ -1177,12 +1256,17 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             goto Cleanup;
         }
 
-        pKeepAce = (BOOLEAN *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount * sizeof(*pKeepAce));
-        if (!pKeepAce)
+        if (SizeInformation.AceCount > sizeof(KeepAceBuf) / sizeof(KeepAceBuf[0]))
         {
-            Ret = ERROR_NOT_ENOUGH_MEMORY;
-            goto Cleanup;
+            pKeepAce = (BOOLEAN *)LocalAlloc(LMEM_FIXED, SizeInformation.AceCount * sizeof(*pKeepAce));
+            if (!pKeepAce)
+            {
+                Ret = ERROR_NOT_ENOUGH_MEMORY;
+                goto Cleanup;
+            }
         }
+        else
+            pKeepAce = KeepAceBuf;
 
         memset(pKeepAce, TRUE, SizeInformation.AceCount * sizeof(*pKeepAce));
     }
@@ -1201,6 +1285,10 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                                 &needToClean);
         if (Ret != ERROR_SUCCESS)
             goto Cleanup;
+
+        ObjectsPresent = AccpGetTrusteeObjects(&pListOfExplicitEntries[i].Trustee,
+                                               NULL,
+                                               NULL);
 
         switch (pListOfExplicitEntries[i].grfAccessMode)
         {
@@ -1228,12 +1316,9 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
                     break;
                 /* ...and replace by the current access */
             case GRANT_ACCESS:
-                /* Add to ACL */
-                SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_ALLOWED_ACE, SidStart) + RtlLengthSid(pSid1);
-                break;
             case DENY_ACCESS:
                 /* Add to ACL */
-                SizeInformation.AclBytesInUse += FIELD_OFFSET(ACCESS_DENIED_ACE, SidStart) + RtlLengthSid(pSid1);
+                SizeInformation.AclBytesInUse += AccpCalcNeededAceSize(pSid1, ObjectsPresent);
                 break;
             case SET_AUDIT_SUCCESS:
             case SET_AUDIT_FAILURE:
@@ -1283,7 +1368,23 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             if (Ret != ERROR_SUCCESS)
                 goto Cleanup;
 
-            bRet = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            ObjectsPresent = AccpGetTrusteeObjects(&pListOfExplicitEntries[i].Trustee,
+                                                   &ObjectTypeGuid,
+                                                   &InheritedObjectTypeGuid);
+
+            if (ObjectsPresent == 0)
+            {
+                /* FIXME: Call AddAccessDeniedAceEx instead! */
+                bRet = AddAccessDeniedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            }
+            else
+            {
+                /* FIXME: Call AddAccessDeniedObjectAce */
+                DPRINT1("Object ACEs not yet supported!\n");
+                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+                bRet = FALSE;
+            }
+
             if (needToClean) LocalFree((HLOCAL)pSid1);
             if (!bRet)
             {
@@ -1310,7 +1411,23 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
             if (Ret != ERROR_SUCCESS)
                 goto Cleanup;
 
-            bRet = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            ObjectsPresent = AccpGetTrusteeObjects(&pListOfExplicitEntries[i].Trustee,
+                                                   &ObjectTypeGuid,
+                                                   &InheritedObjectTypeGuid);
+
+            if (ObjectsPresent == 0)
+            {
+                /* FIXME: Call AddAccessAllowedAceEx instead! */
+                bRet = AddAccessAllowedAce(pNew, ACL_REVISION, pListOfExplicitEntries[i].grfAccessPermissions, pSid1);
+            }
+            else
+            {
+                /* FIXME: Call AddAccessAllowedObjectAce */
+                DPRINT1("Object ACEs not yet supported!\n");
+                SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+                bRet = FALSE;
+            }
+
             if (needToClean) LocalFree((HLOCAL)pSid1);
             if (!bRet)
             {
@@ -1326,7 +1443,7 @@ AccRewriteSetEntriesInAcl(ULONG cCountOfExplicitEntries,
     *NewAcl = pNew;
 
 Cleanup:
-    if (pKeepAce)
+    if (pKeepAce && pKeepAce != KeepAceBuf)
         LocalFree((HLOCAL)pKeepAce);
 
     if (pNew && Ret != ERROR_SUCCESS)
