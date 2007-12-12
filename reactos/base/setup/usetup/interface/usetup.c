@@ -31,45 +31,6 @@
 #define NDEBUG
 #include <debug.h>
 
-typedef enum _PAGE_NUMBER
-{
-  START_PAGE,
-  INTRO_PAGE,
-  LICENSE_PAGE,
-  INSTALL_INTRO_PAGE,
-
-//  SCSI_CONTROLLER_PAGE,
-
-  DEVICE_SETTINGS_PAGE,
-  COMPUTER_SETTINGS_PAGE,
-  DISPLAY_SETTINGS_PAGE,
-  KEYBOARD_SETTINGS_PAGE,
-  LAYOUT_SETTINGS_PAGE,
-
-  SELECT_PARTITION_PAGE,
-  CREATE_PARTITION_PAGE,
-  DELETE_PARTITION_PAGE,
-
-  SELECT_FILE_SYSTEM_PAGE,
-  FORMAT_PARTITION_PAGE,
-  CHECK_FILE_SYSTEM_PAGE,
-
-  PREPARE_COPY_PAGE,
-  INSTALL_DIRECTORY_PAGE,
-  FILE_COPY_PAGE,
-  REGISTRY_PAGE,
-  BOOT_LOADER_PAGE,
-  BOOT_LOADER_FLOPPY_PAGE,
-  BOOT_LOADER_HARDDISK_PAGE,
-
-  REPAIR_INTRO_PAGE,
-
-  SUCCESS_PAGE,
-  QUIT_PAGE,
-  FLUSH_PAGE,
-  REBOOT_PAGE,			/* virtual page */
-} PAGE_NUMBER, *PPAGE_NUMBER;
-
 /* GLOBALS ******************************************************************/
 
 HANDLE ProcessHeap;
@@ -136,10 +97,6 @@ PrintString(char* fmt,...)
   RtlFreeUnicodeString(&UnicodeString);
 }
 
-
-#define POPUP_WAIT_NONE    0
-#define POPUP_WAIT_ANY_KEY 1
-#define POPUP_WAIT_ENTER   2
 
 static VOID
 DrawBox(
@@ -240,7 +197,7 @@ DrawBox(
 		&Written);
 }
 
-static VOID
+VOID
 PopupError(PCHAR Text,
 	   PCHAR Status,
 	   PINPUT_RECORD Ir,
@@ -722,20 +679,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetHighlightedTextXY(6, 8, "Welcome to ReactOS Setup");
-
-  CONSOLE_SetTextXY(6, 11, "This part of the setup copies the ReactOS Operating System to your");
-  CONSOLE_SetTextXY(6, 12, "computer and prepares the second part of the setup.");
-
-  CONSOLE_SetTextXY(8, 15, "\x07  Press ENTER to install ReactOS.");
-  CONSOLE_SetTextXY(8, 17, "\x07  Press R to repair ReactOS.");
-  CONSOLE_SetTextXY(8, 19, "\x07  Press L to view the ReactOS Licensing Terms and Conditions");
-  CONSOLE_SetTextXY(8, 21, "\x07  Press F3 to quit without installing ReactOS.");
-
-  CONSOLE_SetTextXY(6, 23, "For more information on ReactOS, please visit:");
-  CONSOLE_SetHighlightedTextXY(6, 24, "http://www.reactos.org");
-
-  CONSOLE_SetStatusText("   ENTER = Continue  R = Repair F3 = Quit");
+  MUIDisplayPage(INTRO_PAGE);
 
   if (IsUnattendedSetup)
     {
@@ -787,32 +731,9 @@ IntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetHighlightedTextXY(6, 6, "Licensing:");
-
-  CONSOLE_SetTextXY(8, 8, "The ReactOS System is licensed under the terms of the");
-  CONSOLE_SetTextXY(8, 9, "GNU GPL with parts containing code from other compatible");
-  CONSOLE_SetTextXY(8, 10, "licenses such as the X11 or BSD and GNU LGPL licenses.");
-  CONSOLE_SetTextXY(8, 11, "All software that is part of the ReactOS system is");
-  CONSOLE_SetTextXY(8, 12, "therefore released under the GNU GPL as well as maintaining");
-  CONSOLE_SetTextXY(8, 13, "the original license.");
-
-  CONSOLE_SetTextXY(8, 15, "This software comes with NO WARRANTY or restrictions on usage");
-  CONSOLE_SetTextXY(8, 16, "save applicable local and international law. The licensing of");
-  CONSOLE_SetTextXY(8, 17, "ReactOS only covers distribution to third parties.");
-
-  CONSOLE_SetTextXY(8, 18, "If for some reason you did not receive a copy of the");
-  CONSOLE_SetTextXY(8, 19, "GNU General Public License with ReactOS please visit");
-  CONSOLE_SetHighlightedTextXY(8, 20, "http://www.gnu.org/licenses/licenses.html");
-
-  CONSOLE_SetHighlightedTextXY(6, 22, "Warranty:");
-
-  CONSOLE_SetTextXY(8, 24, "This is free software; see the source for copying conditions.");
-  CONSOLE_SetTextXY(8, 25, "There is NO warranty; not even for MERCHANTABILITY or");
-  CONSOLE_SetTextXY(8, 26, "FITNESS FOR A PARTICULAR PURPOSE");
-
-  CONSOLE_SetStatusText("   ENTER = Return");
-
-  while (TRUE)
+   MUIDisplayPage(LICENSE_PAGE);
+    
+    while (TRUE)
     {
       CONSOLE_ConInKey(Ir);
 
@@ -829,20 +750,7 @@ LicensePage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 RepairIntroPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
-  CONSOLE_SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
-
-  CONSOLE_SetTextXY(6, 12, "The repair functions are not implemented yet.");
-
-  CONSOLE_SetTextXY(8, 15, "\x07  Press U for Updating OS.");
-
-  CONSOLE_SetTextXY(8, 17, "\x07  Press R for the Recovery Console.");
-
-  CONSOLE_SetTextXY(8, 19, "\x07  Press ESC to return to the main page.");
-
-  CONSOLE_SetTextXY(8, 21, "\x07  Press ENTER to reboot your computer.");
-
-  CONSOLE_SetStatusText("   ESC = Main page  ENTER = Reboot");
+  MUIDisplayPage(REPAIR_INTRO_PAGE);
 
   while(TRUE)
     {
@@ -875,27 +783,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
-
-  CONSOLE_SetTextXY(6, 8, "ReactOS Setup is in an early development phase. It does not yet");
-  CONSOLE_SetTextXY(6, 9, "support all the functions of a fully usable setup application.");
-
-  CONSOLE_SetTextXY(6, 12, "The following limitations apply:");
-  CONSOLE_SetTextXY(8, 13, "- Setup can not handle more than one primary partition per disk.");
-  CONSOLE_SetTextXY(8, 14, "- Setup can not delete a primary partition from a disk");
-  CONSOLE_SetTextXY(8, 15, "  as long as extended partitions exist on this disk.");
-  CONSOLE_SetTextXY(8, 16, "- Setup can not delete the first extended partition from a disk");
-  CONSOLE_SetTextXY(8, 17, "  as long as other extended partitions exist on this disk.");
-  CONSOLE_SetTextXY(8, 18, "- Setup supports FAT file systems only.");
-  CONSOLE_SetTextXY(8, 19, "- File system checks are not implemented yet.");
-
-
-  CONSOLE_SetTextXY(8, 23, "\x07  Press ENTER to install ReactOS.");
-
-  CONSOLE_SetTextXY(8, 25, "\x07  Press F3 to quit without installing ReactOS.");
-
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
+  MUIDisplayPage(INTRO_PAGE);
 
   if (RepairUpdateFlag)
     {
@@ -970,6 +858,7 @@ static PAGE_NUMBER
 DeviceSettingsPage(PINPUT_RECORD Ir)
 {
   static ULONG Line = 16;
+  MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
   /* Initialize the computer settings list */
   if (ComputerList == NULL)
@@ -1024,34 +913,17 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 	}
     }
 
-  CONSOLE_SetTextXY(6, 8, "The list below shows the current device settings.");
+  MUIDisplayPage(DEVICE_SETTINGS_PAGE);
 
-  CONSOLE_SetTextXY(8, 11, "       Computer:");
-  CONSOLE_SetTextXY(8, 12, "        Display:");
-  CONSOLE_SetTextXY(8, 13, "       Keyboard:");
-  CONSOLE_SetTextXY(8, 14, "Keyboard layout:");
-
-  CONSOLE_SetTextXY(8, 16, "         Accept:");
 
   CONSOLE_SetTextXY(25, 11, GetGenericListEntry(ComputerList)->Text);
   CONSOLE_SetTextXY(25, 12, GetGenericListEntry(DisplayList)->Text);
   CONSOLE_SetTextXY(25, 13, GetGenericListEntry(KeyboardList)->Text);
   CONSOLE_SetTextXY(25, 14, GetGenericListEntry(LayoutList)->Text);
 
-  CONSOLE_SetTextXY(25, 16, "Accept these device settings");
   CONSOLE_InvertTextXY (24, Line, 48, 1);
 
-
-  CONSOLE_SetTextXY(6, 19, "You can change the hardware settings by pressing the UP or DOWN keys");
-  CONSOLE_SetTextXY(6, 20, "to select an entry. Then press the ENTER key to select alternative");
-  CONSOLE_SetTextXY(6, 21, "settings.");
-
-  CONSOLE_SetTextXY(6, 23, "When all settings are correct, select \"Accept these device settings\"");
-  CONSOLE_SetTextXY(6, 24, "and press ENTER.");
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
-
-  if (RepairUpdateFlag)
+  if (RepairUpdateFlag) 
     {
       return SELECT_PARTITION_PAGE;
     }
@@ -1113,21 +985,13 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 ComputerSettingsPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "You want to change the type of computer to be installed.");
-
-  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired computer type.");
-  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
-
-  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  CONSOLE_SetTextXY(8, 14, "   the computer type.");
+  MUIDisplayPage(COMPUTER_SETTINGS_PAGE);
 
   DrawGenericList(ComputerList,
 		  2,
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
-
-  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(ComputerList);
 
@@ -1171,21 +1035,13 @@ ComputerSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 DisplaySettingsPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "You want to change the type of display to be installed.");
-
-  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired display type.");
-  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
-
-  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  CONSOLE_SetTextXY(8, 14, "   the display type.");
+  MUIDisplayPage(DISPLAY_SETTINGS_PAGE);
 
   DrawGenericList(DisplayList,
 		  2,
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
-
-  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(DisplayList);
 
@@ -3441,14 +3297,8 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 {
   NTSTATUS Status;
 
-  CONSOLE_SetTextXY(6, 8, "Setup cannot install the bootloader on your computers");
-  CONSOLE_SetTextXY(6, 9, "harddisk");
+  MUIDisplayPage(BOOT_LOADER_FLOPPY_PAGE);
 
-  CONSOLE_SetTextXY(6, 13, "Please insert a formatted floppy disk in drive A: and");
-  CONSOLE_SetTextXY(6, 14, "press ENTER.");
-
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
 //  SetStatusText("   Please wait...");
 
   while(TRUE)
@@ -3531,14 +3381,7 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 QuitPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(10, 6, "ReactOS is not completely installed");
-
-  CONSOLE_SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
-  CONSOLE_SetTextXY(10, 9, "all CD-ROMs from CD-Drives.");
-
-  CONSOLE_SetTextXY(10, 11, "Press ENTER to reboot your computer.");
-
-  CONSOLE_SetStatusText("   Please wait ...");
+  MUIDisplayPage(QUIT_PAGE);
 
   /* Destroy partition list */
   if (PartitionList != NULL)
@@ -3599,14 +3442,7 @@ QuitPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SuccessPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(10, 6, "The basic components of ReactOS have been installed successfully.");
-
-  CONSOLE_SetTextXY(10, 8, "Remove floppy disk from Drive A: and");
-  CONSOLE_SetTextXY(10, 9, "all CD-ROMs from CD-Drive.");
-
-  CONSOLE_SetTextXY(10, 11, "Press ENTER to reboot your computer.");
-
-  CONSOLE_SetStatusText("   ENTER = Reboot computer");
+  MUIDisplayPage(SUCCESS_PAGE);
 
   if (IsUnattendedSetup)
     {
@@ -3628,13 +3464,7 @@ SuccessPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 FlushPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(10, 6, "The system is now making sure all data is stored on your disk");
-
-  CONSOLE_SetTextXY(10, 8, "This may take a minute");
-  CONSOLE_SetTextXY(10, 9, "When finished, your computer will reboot automatically");
-
-  CONSOLE_SetStatusText("   Flushing cache");
-
+  MUIDisplayPage(FLUSH_PAGE);
   return REBOOT_PAGE;
 }
 

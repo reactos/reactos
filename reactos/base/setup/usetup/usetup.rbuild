@@ -43,4 +43,5 @@
 	<file>registry.c</file>
 	<file>settings.c</file>
 	<file>usetup.rc</file>
+	<file>mui.c</file>
 </module>
