@@ -1299,11 +1299,6 @@ IopAssignDeviceResources(
       for (i = 0; i < DeviceNode->BootResources->Count; i++)
       {
          pPartialResourceList = &DeviceNode->BootResources->List[i].PartialResourceList;
-         if (pPartialResourceList->Version != 1 || pPartialResourceList->Revision != 1)
-         {
-            Status = STATUS_REVISION_MISMATCH;
-            goto ByeBye;
-         }
          Size += FIELD_OFFSET(CM_FULL_RESOURCE_DESCRIPTOR, PartialResourceList.PartialDescriptors)
             + pPartialResourceList->Count * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
          for (j = 0; j < pPartialResourceList->Count; j++)
@@ -2687,7 +2682,7 @@ IopEnumerateDetectedDevices(
    ULONG BootResourcesLength;
    NTSTATUS Status;
 
-   const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI BIOS");
+   const UNICODE_STRING IdentifierPci = RTL_CONSTANT_STRING(L"PCI");
    UNICODE_STRING HardwareIdPci = RTL_CONSTANT_STRING(L"*PNP0A03\0");
    static ULONG DeviceIndexPci = 0;
 #ifdef ENABLE_ACPI
@@ -2806,11 +2801,6 @@ IopEnumerateDetectedDevices(
       {
          DPRINT("Wrong registry type: got 0x%lx, expected 0x%lx\n", pValueInformation->Type, REG_FULL_RESOURCE_DESCRIPTOR);
          goto nextdevice;
-      }
-      else if (((PCM_FULL_RESOURCE_DESCRIPTOR)pValueInformation->Data)->PartialResourceList.Count == 0)
-      {
-         BootResources = ParentBootResources;
-         BootResourcesLength = ParentBootResourcesLength;
       }
       else
       {
