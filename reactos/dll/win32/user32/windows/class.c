@@ -529,6 +529,11 @@ GetWindowLongA ( HWND hWnd, int nIndex )
             case GWL_HWNDPARENT:
                 DbgPrint("GWL_HWNDPARENT\n");
                 /* FIXME: Implement in user32 */
+            {
+                HWND parent = GetAncestor( hWnd, GA_PARENT );
+                if (parent == GetDesktopWindow()) parent = GetWindow( hWnd, GW_OWNER );
+                return (LONG)parent;
+            }
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need
                    to be created */
@@ -583,6 +588,11 @@ GetWindowLongW(HWND hWnd, int nIndex)
             case GWL_HWNDPARENT:
                 DbgPrint("GWL_HWNDPARENT\n");
                 /* FIXME: Implement in user32 */
+            {
+                HWND parent = GetAncestor( hWnd, GA_PARENT );
+                if (parent == GetDesktopWindow()) parent = GetWindow( hWnd, GW_OWNER );
+                return (LONG)parent;
+            }
             case GWL_WNDPROC:
                 /* Call win32k for this as a callproc handle may need
                    to be created */
