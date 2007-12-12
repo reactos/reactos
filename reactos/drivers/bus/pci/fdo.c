@@ -399,7 +399,7 @@ FdoStartDevice(
         break;
       }
       default:
-        DPRINT1("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
+        DPRINT("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
     }
   }
   /* HACK due to a bug in ACPI driver, which doesn't report the bus number */

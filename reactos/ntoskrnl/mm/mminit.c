@@ -263,17 +263,17 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
         PMEMORY_ALLOCATION_DESCRIPTOR Md;
         ULONG TotalPages = 0;
 
-        DPRINT1("Base\t\tLength\t\tType\n");
+        DPRINT("Base\t\tLength\t\tType\n");
         for (NextEntry = KeLoaderBlock->MemoryDescriptorListHead.Flink;
              NextEntry != &KeLoaderBlock->MemoryDescriptorListHead;
              NextEntry = NextEntry->Flink)
         {
             Md = CONTAINING_RECORD(NextEntry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-            DPRINT1("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
+            DPRINT("%08lX\t%08lX\t%s\n", Md->BasePage, Md->PageCount, MemType[Md->MemoryType]);
             TotalPages += Md->PageCount;
         }
 
-        DPRINT1("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
+        DPRINT("Total: %08lX (%d MB)\n", TotalPages, (TotalPages * PAGE_SIZE) / 1024 / 1024);
     }
 
    /* Set the page directory */
