@@ -261,9 +261,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
       memset(FullResourceDescriptor, 0, Size);
       FullResourceDescriptor->InterfaceType = Internal;
       FullResourceDescriptor->BusNumber = 0;
-      FullResourceDescriptor->PartialResourceList.Version = 0;
-      FullResourceDescriptor->PartialResourceList.Revision = 0;
-      FullResourceDescriptor->PartialResourceList.Count = 0;
 
       /* Set 'Configuration Data' value */
       FldrSetConfigurationData(BiosKey, FullResourceDescriptor, Size);
@@ -340,9 +337,6 @@ DetectPciBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
               memset(FullResourceDescriptor, 0, Size);
               FullResourceDescriptor->InterfaceType = PCIBus;
               FullResourceDescriptor->BusNumber = i;
-              FullResourceDescriptor->PartialResourceList.Version = 0;
-              FullResourceDescriptor->PartialResourceList.Revision = 0;
-              FullResourceDescriptor->PartialResourceList.Count = 0;
 
               /* Set 'Configuration Data' value */
               FldrSetConfigurationData(BusKey, FullResourceDescriptor, Size);
