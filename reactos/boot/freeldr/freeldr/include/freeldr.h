@@ -69,6 +69,8 @@
 #include <arch/i386/machxbox.h>
 #include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
+#elif _PPC_
+#include <arch/powerpc/hardware.h>
 #elif _MIPS_
 #include <arch/mips/arcbios.h>
 #endif
