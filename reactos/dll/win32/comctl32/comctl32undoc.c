@@ -834,8 +834,8 @@ INT WINAPI EnumMRUListW (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     const WINEMRUITEM *witem;
     INT desired, datasize;
 
-    if (nItemPos >= mp->cursize) return -1;
     if ((nItemPos < 0) || !lpBuffer) return mp->cursize;
+    if (nItemPos >= mp->cursize) return -1;
     desired = mp->realMRU[nItemPos];
     desired -= 'a';
     TRACE("nItemPos=%d, desired=%d\n", nItemPos, desired);
@@ -860,8 +860,8 @@ INT WINAPI EnumMRUListA (HANDLE hList, INT nItemPos, LPVOID lpBuffer,
     INT desired, datasize;
     DWORD lenA;
 
-    if (nItemPos >= mp->cursize) return -1;
     if ((nItemPos < 0) || !lpBuffer) return mp->cursize;
+    if (nItemPos >= mp->cursize) return -1;
     desired = mp->realMRU[nItemPos];
     desired -= 'a';
     TRACE("nItemPos=%d, desired=%d\n", nItemPos, desired);

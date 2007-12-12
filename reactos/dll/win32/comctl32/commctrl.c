@@ -343,7 +343,7 @@ MenuHelp (UINT uMsg, WPARAM wParam, LPARAM lParam, HMENU hMainMenu,
 	    else {
 		/* menu item was selected */
 		if (HIWORD(wParam) & MF_POPUP)
-		    uMenuID = (UINT)*(lpwIDs+1);
+		    uMenuID = *(lpwIDs+1);
 		else
 		    uMenuID = (UINT)LOWORD(wParam);
 		TRACE("uMenuID = %u\n", uMenuID);

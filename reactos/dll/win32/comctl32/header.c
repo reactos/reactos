@@ -981,7 +981,7 @@ HEADER_CreateDragImage (HWND hwnd, WPARAM wParam)
     int height, width;
     HFONT hFont;
     
-    if (wParam < 0 || wParam >= infoPtr->uNumItem)
+    if (wParam >= infoPtr->uNumItem)
         return FALSE;
 
     if (!infoPtr->bRectsValid)

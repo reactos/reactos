@@ -944,7 +944,7 @@ static inline DWORD notify_customdraw (const LISTVIEW_INFO *infoPtr, DWORD dwDra
     return result;
 }
 
-static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRAW *lpnmlvcd)
+static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRAW *lpnmlvcd, BOOL SubItem)
 {
     if (lpnmlvcd->clrTextBk == CLR_DEFAULT)
         lpnmlvcd->clrTextBk = comctl32_color.clrWindow;
@@ -952,18 +952,21 @@ static void prepaint_setup (const LISTVIEW_INFO *infoPtr, HDC hdc, NMLVCUSTOMDRA
         lpnmlvcd->clrText = comctl32_color.clrWindowText;
 
     /* apprently, for selected items, we have to override the returned values */
-    if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
+    if (!SubItem)
     {
-	if (infoPtr->bFocus)
-	{
-	    lpnmlvcd->clrTextBk = comctl32_color.clrHighlight;
-	    lpnmlvcd->clrText   = comctl32_color.clrHighlightText;
+        if (lpnmlvcd->nmcd.uItemState & CDIS_SELECTED)
+        {
+            if (infoPtr->bFocus)
+            {
+                lpnmlvcd->clrTextBk = comctl32_color.clrHighlight;
+                lpnmlvcd->clrText   = comctl32_color.clrHighlightText;
+            }
+            else if (infoPtr->dwStyle & LVS_SHOWSELALWAYS)
+            {
+                lpnmlvcd->clrTextBk = comctl32_color.clr3dFace;
+                lpnmlvcd->clrText   = comctl32_color.clrBtnText;
+            }
         }
-	else if (infoPtr->dwStyle & LVS_SHOWSELALWAYS)
-	{
-	    lpnmlvcd->clrTextBk = comctl32_color.clr3dFace;
-	    lpnmlvcd->clrText   = comctl32_color.clrBtnText;
-	}
     }
 
     /* Set the text attributes */
@@ -3787,7 +3790,9 @@ static BOOL LISTVIEW_DrawItem(LISTVIEW_INFO *infoPtr, HDC hdc, INT nItem, INT nS
         if (cdsubitemmode & CDRF_SKIPDEFAULT) goto postpaint;
     }
     if (nSubItem == 0 || (cdmode & CDRF_NOTIFYITEMDRAW))
-        prepaint_setup(infoPtr, hdc, &nmlvcd);
+        prepaint_setup(infoPtr, hdc, &nmlvcd, FALSE);
+    else if ((infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT) == FALSE)
+        prepaint_setup(infoPtr, hdc, &nmlvcd, TRUE);
 
     /* in full row select, subitems, will just use main item's colors */
     if (nSubItem && uView == LVS_REPORT && (infoPtr->dwLvExStyle & LVS_EX_FULLROWSELECT))
@@ -3930,7 +3935,7 @@ static void LISTVIEW_RefreshOwnerDraw(const LISTVIEW_INFO *infoPtr, ITERATOR *i,
     
 	if (!(cditemmode & CDRF_SKIPDEFAULT))
 	{
-            prepaint_setup (infoPtr, hdc, &nmlvcd);
+            prepaint_setup (infoPtr, hdc, &nmlvcd, FALSE);
 	    SendMessageW(infoPtr->hwndNotify, WM_DRAWITEM, dis.CtlID, (LPARAM)&dis);
 	}
 
@@ -4118,7 +4123,7 @@ static void LISTVIEW_Refresh(LISTVIEW_INFO *infoPtr, HDC hdc, const RECT *prcEra
     customdraw_fill(&nmlvcd, infoPtr, hdc, &rcClient, 0);
     cdmode = notify_customdraw(infoPtr, CDDS_PREPAINT, &nmlvcd);
     if (cdmode & CDRF_SKIPDEFAULT) goto enddraw;
-    prepaint_setup(infoPtr, hdc, &nmlvcd);
+    prepaint_setup(infoPtr, hdc, &nmlvcd, FALSE);
 
     /* Use these colors to draw the items */
     infoPtr->clrTextBk = nmlvcd.clrTextBk;
@@ -5040,12 +5045,12 @@ static INT LISTVIEW_FindItemA(const LISTVIEW_INFO *infoPtr, INT nStart,
     BOOL hasText = lpFindInfo->flags & (LVFI_STRING | LVFI_PARTIAL);
     LVFINDINFOW fiw;
     INT res;
-    LPWSTR strW;
+    LPWSTR strW = NULL;
 
     memcpy(&fiw, lpFindInfo, sizeof(fiw));
     if (hasText) fiw.psz = strW = textdupTtoW((LPCWSTR)lpFindInfo->psz, FALSE);
     res = LISTVIEW_FindItemW(infoPtr, nStart, &fiw);
-    if (hasText) textfreeT(strW, FALSE);
+    textfreeT(strW, FALSE);
     return res;
 }
 

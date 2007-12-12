@@ -1725,6 +1725,8 @@ MONTHCAL_KillFocus(const MONTHCAL_INFO *infoPtr, HWND hFocusWnd)
 
   if (infoPtr->hwndNotify != hFocusWnd)
     ShowWindow(infoPtr->hwndSelf, SW_HIDE);
+  else
+    InvalidateRect(infoPtr->hwndSelf, NULL, TRUE);
 
   return 0;
 }
@@ -2032,7 +2034,7 @@ MONTHCAL_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     return DLGC_WANTARROWS | DLGC_WANTCHARS;
 
   case WM_KILLFOCUS:
-    return MONTHCAL_KillFocus(infoPtr, wParam);
+    return MONTHCAL_KillFocus(infoPtr, (HWND)wParam);
 
   case WM_RBUTTONDOWN:
     return MONTHCAL_RButtonDown(infoPtr, lParam);

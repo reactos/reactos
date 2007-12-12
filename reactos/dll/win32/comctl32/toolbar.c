@@ -3190,7 +3190,7 @@ TOOLBAR_Customize (HWND hwnd)
                                 (LPWSTR)RT_DIALOG)))
 	return FALSE;
 
-    if(!(template = (LPVOID)LoadResource (COMCTL32_hModule, hRes)))
+    if(!(template = LoadResource (COMCTL32_hModule, hRes)))
 	return FALSE;
 
     ret = DialogBoxIndirectParamW ((HINSTANCE)GetWindowLongPtrW(hwnd, GWLP_HINSTANCE),
@@ -5893,7 +5893,7 @@ TOOLBAR_LButtonUp (HWND hwnd, WPARAM wParam, LPARAM lParam)
 	infoPtr->nButtonDown = -1;
 
 	/* Issue NM_RELEASEDCAPTURE to parent to let him know it is released */
-	TOOLBAR_SendNotify ((NMHDR *) &hdr, infoPtr,
+	TOOLBAR_SendNotify (&hdr, infoPtr,
 			NM_RELEASEDCAPTURE);
 
 	/* native issues TBN_ENDDRAG here, if _LBUTTONDOWN issued the

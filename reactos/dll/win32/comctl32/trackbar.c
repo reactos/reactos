@@ -811,7 +811,7 @@ TRACKBAR_UpdateToolTip (const TRACKBAR_INFO *infoPtr)
     ClientToScreen(infoPtr->hwndSelf, &pt);
 
     SendMessageW (infoPtr->hwndToolTip, TTM_TRACKPOSITION,
-                  0, (LPARAM)MAKELPARAM(pt.x, pt.y));
+                  0, MAKELPARAM(pt.x, pt.y));
 }
 
 

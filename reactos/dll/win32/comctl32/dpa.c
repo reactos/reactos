@@ -443,7 +443,7 @@ HDPA WINAPI DPA_Clone (const HDPA hdpa, const HDPA hdpaNew)
 
     /* create a new pointer array */
     nNewItems = hdpaTemp->nGrow *
-                ((INT)((hdpa->nItemCount - 1) / hdpaTemp->nGrow) + 1);
+                (((hdpa->nItemCount - 1) / hdpaTemp->nGrow) + 1);
     nSize = nNewItems * sizeof(LPVOID);
     hdpaTemp->ptrs = HeapAlloc (hdpaTemp->hHeap, HEAP_ZERO_MEMORY, nSize);
     hdpaTemp->nMaxCount = nNewItems;
@@ -583,7 +583,7 @@ BOOL WINAPI DPA_SetPtr (const HDPA hdpa, INT i, LPVOID p)
         if (hdpa->nMaxCount <= i) {
             /* resize the block of memory */
             INT nNewItems =
-                hdpa->nGrow * ((INT)(((i+1) - 1) / hdpa->nGrow) + 1);
+                hdpa->nGrow * ((((i+1) - 1) / hdpa->nGrow) + 1);
             INT nSize = nNewItems * sizeof(LPVOID);
 
             if (hdpa->ptrs)
@@ -654,7 +654,7 @@ LPVOID WINAPI DPA_DeletePtr (const HDPA hdpa, INT i)
             return NULL;
 
         hdpa->nMaxCount = nNewItems;
-        hdpa->ptrs = (LPVOID*)lpDest;
+        hdpa->ptrs = lpDest;
     }
 
     return lpTemp;

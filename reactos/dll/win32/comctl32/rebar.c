@@ -2797,7 +2797,7 @@ REBAR_GetFont (const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 static LRESULT
 REBAR_PushChevron(const REBAR_INFO *infoPtr, WPARAM wParam, LPARAM lParam)
 {
-    if (wParam >= 0 && (UINT)wParam < infoPtr->uNumBands)
+    if ((UINT)wParam < infoPtr->uNumBands)
     {
         NMREBARCHEVRON nmrbc;
         REBAR_BAND *lpBand = &infoPtr->bands[wParam];

@@ -211,7 +211,7 @@ BOOL WINAPI DSA_SetItem (const HDSA hdsa, INT nIndex, LPVOID pSrc)
         else {
             /* resize the block of memory */
             nNewItems =
-                hdsa->nGrow * ((INT)(((nIndex + 1) - 1) / hdsa->nGrow) + 1);
+                hdsa->nGrow * ((((nIndex + 1) - 1) / hdsa->nGrow) + 1);
             nSize = hdsa->nItemSize * nNewItems;
 
             lpTemp = ReAlloc (hdsa->pData, nSize);

@@ -1109,7 +1109,7 @@ TOOLTIPS_AddToolW (HWND hwnd, WPARAM wParam, LPARAM lParam)
 
     if (IS_INTRESOURCE(lpToolInfo->lpszText)) {
 	TRACE("add string id %x\n", LOWORD(lpToolInfo->lpszText));
-	toolPtr->lpszText = (LPWSTR)lpToolInfo->lpszText;
+	toolPtr->lpszText = lpToolInfo->lpszText;
     }
     else if (lpToolInfo->lpszText) {
 	if (lpToolInfo->lpszText == LPSTR_TEXTCALLBACKW) {
