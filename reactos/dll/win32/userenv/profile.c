@@ -1,6 +1,5 @@
 /*
  *  ReactOS kernel
- *  Copyright (C) 2004 ReactOS Team
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -16,13 +15,13 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * FILE:            lib/userenv/profile.c
  * PURPOSE:         User profile code
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Hervé Poussineau
  */
 
 #include <precomp.h>
@@ -98,6 +97,67 @@ CreateUserProfileA (PSID Sid,
   RtlFreeUnicodeString (&UserName);
 
   return bResult;
+}
+
+
+static BOOL
+AcquireRemoveRestorePrivilege(
+    IN BOOL bAcquire)
+{
+    HANDLE Process;
+    HANDLE Token;
+    PTOKEN_PRIVILEGES TokenPriv;
+    BOOL bRet;
+
+    DPRINT("AcquireRemoveRestorePrivilege(%d)\n", bAcquire);
+
+    Process = OpenProcess(PROCESS_QUERY_INFORMATION, FALSE, GetCurrentProcessId());
+    if (!Process)
+    {
+        DPRINT1("OpenProcess() failed with error %lu\n", GetLastError());
+        return FALSE;
+    }
+    bRet = OpenProcessToken(Process, TOKEN_ADJUST_PRIVILEGES, &Token);
+    CloseHandle(Process);
+    if (!bRet)
+    {
+        DPRINT1("OpenProcessToken() failed with error %lu\n", GetLastError());
+        return FALSE;
+    }
+    TokenPriv = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(TOKEN_PRIVILEGES, Privileges) + sizeof(LUID_AND_ATTRIBUTES));
+    if (!TokenPriv)
+    {
+        DPRINT1("Failed to allocate mem for token privileges\n");
+        CloseHandle(Token);
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+    TokenPriv->PrivilegeCount = 1;
+    TokenPriv->Privileges[0].Attributes = bAcquire ? SE_PRIVILEGE_ENABLED : 0;
+    if (!LookupPrivilegeValue(NULL, SE_RESTORE_NAME, &TokenPriv->Privileges[0].Luid))
+    {
+        DPRINT1("LookupPrivilegeValue() failed with error %lu\n", GetLastError());
+        HeapFree(GetProcessHeap(), 0, TokenPriv);
+        CloseHandle(Token);
+        return FALSE;
+    }
+    bRet = AdjustTokenPrivileges(
+        Token,
+        FALSE,
+        TokenPriv,
+        0,
+        NULL,
+        NULL);
+    HeapFree(GetProcessHeap(), 0, TokenPriv);
+    CloseHandle(Token);
+
+    if (!bRet)
+    {
+        DPRINT1("AdjustTokenPrivileges() failed with error %lu\n", GetLastError());
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 
@@ -285,10 +345,19 @@ CreateUserProfileW (PSID Sid,
   wcscpy (szBuffer, szUserProfilePath);
   wcscat (szBuffer, L"\\ntuser.dat");
 
+  /* Acquire restore privilege */
+  if (!AcquireRemoveRestorePrivilege(TRUE))
+    {
+      DPRINT1("Error: %lu\n", Error);
+      LocalFree ((HLOCAL)SidString);
+      return FALSE;
+    }
+
   /* Create new user hive */
   Error = RegLoadKeyW (HKEY_USERS,
 		       SidString,
 		       szBuffer);
+  AcquireRemoveRestorePrivilege(FALSE);
   if (Error != ERROR_SUCCESS)
     {
       DPRINT1("Error: %lu\n", Error);
@@ -967,10 +1036,18 @@ LoadUserProfileW(
     }
     ret = FALSE;
 
+    /* Acquire restore privilege */
+    if (!AcquireRemoveRestorePrivilege(TRUE))
+    {
+        DPRINT1("AcquireRemoveRestorePrivilege() failed (Error %ld)\n", GetLastError());
+        goto cleanup;
+    }
+
     /* Load user registry hive */
     Error = RegLoadKeyW(HKEY_USERS,
                         SidString.Buffer,
                         szUserHivePath);
+    AcquireRemoveRestorePrivilege(FALSE);
     if (Error != ERROR_SUCCESS)
     {
         DPRINT1("RegLoadKeyW() failed (Error %ld)\n", Error);
