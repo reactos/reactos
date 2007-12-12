@@ -1509,8 +1509,13 @@ NtGdiCreateClientObj(
     IN ULONG ulType
     )
 {
-  UNIMPLEMENTED;
-  return 0;
+//  INT Index;
+//  PGDI_TABLE_ENTRY Entry;
+  HANDLE handle = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TAG_CLIOBJ);
+// Need to change handle type based on ulType.
+//  Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)handle);
+//  Entry = &GdiHandleTable->Entries[Index];
+  return handle;
 }
 
 W32KAPI
@@ -1520,8 +1525,7 @@ NtGdiDeleteClientObj(
     IN HANDLE h
     )
 {
-  UNIMPLEMENTED;
-  return 0;
+  return GDIOBJ_FreeObj(GdiHandleTable, h, GDI_OBJECT_TAG_CLIOBJ);
 }
 
 /* EOF */
