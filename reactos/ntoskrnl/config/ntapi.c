@@ -564,7 +564,7 @@ NtLoadKeyEx(IN POBJECT_ATTRIBUTES TargetKey,
     {
         /* Fail */
         DPRINT1("Restore Privilege missing!\n");
-        //return STATUS_PRIVILEGE_NOT_HELD;
+        return STATUS_PRIVILEGE_NOT_HELD;
     }
     
     /* Block APCs */
