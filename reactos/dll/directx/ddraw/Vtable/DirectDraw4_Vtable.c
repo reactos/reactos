@@ -72,7 +72,7 @@ Main_DirectDraw_EnumSurfaces(
                              DWORD dwFlags,
                              LPDDSURFACEDESC2 lpDDSD2,
                              LPVOID context,
-                             LPDDENUMSURFACESCALLBACK7 callback);
+                             LPDDENUMSURFACESCALLBACK2 callback);
 
 HRESULT WINAPI
 Main_DirectDraw_FlipToGDISurface(LPDIRECTDRAW4 iface);
@@ -97,7 +97,7 @@ Main_DirectDraw_GetFourCCCodes(
 HRESULT WINAPI
 Main_DirectDraw_GetGDISurface(
                               LPDIRECTDRAW4 iface,
-                              LPDIRECTDRAWSURFACE7 *lplpGDIDDSSurface);
+                              LPDIRECTDRAWSURFACE4 *lplpGDIDDSSurface);
 
 HRESULT WINAPI
 Main_DirectDraw_GetMonitorFrequency (
@@ -156,7 +156,7 @@ HRESULT WINAPI
 Main_DirectDraw_GetSurfaceFromDC(
                                  LPDIRECTDRAW4 iface,
                                  HDC hdc,
-                                 LPDIRECTDRAWSURFACE7 *lpDDS);
+                                 LPDIRECTDRAWSURFACE4 *lpDDS);
 
 HRESULT WINAPI
 Main_DirectDraw_RestoreAllSurfaces(LPDIRECTDRAW4 iface);

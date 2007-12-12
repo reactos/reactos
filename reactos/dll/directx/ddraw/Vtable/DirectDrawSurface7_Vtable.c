@@ -1,7 +1,24 @@
-// public interfaces
-ULONG   WINAPI Main_DDrawSurface_AddRef(LPDDRAWI_DDRAWSURFACE_INT);
+#include <windows.h>
+#include <stdio.h>
+#include <ddraw.h>
+#include <ddrawi.h>
+#include <d3dhal.h>
+#include <ddrawgdi.h>
+
+#if defined(_WIN32) && !defined(_NO_COM )
+#define COM_NO_WINDOWS_H
+#include <objbase.h>
+#else
+#define IUnknown void
+#if !defined(NT_BUILD_ENVIRONMENT) && !defined(WINNT)
+        #define CO_E_NOTINITIALIZED 0x800401F0
+#endif
+#endif
+
+ULONG   WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7);
 ULONG   WINAPI Main_DDrawSurface_Release(LPDIRECTDRAWSURFACE7);
-HRESULT WINAPI Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT, REFIID, LPVOID*);
+HRESULT WINAPI Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7, REFIID, LPVOID*);
+HRESULT WINAPI Main_DDrawSurface_ReleaseDC(LPDIRECTDRAWSURFACE7, HDC);
 HRESULT WINAPI Main_DDrawSurface_Blt(LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT, DWORD, LPDDBLTFX);
 HRESULT WINAPI Main_DDrawSurface_BltBatch(LPDIRECTDRAWSURFACE7, LPDDBLTBATCH, DWORD, DWORD);
 HRESULT WINAPI Main_DDrawSurface_BltFast(LPDIRECTDRAWSURFACE7, DWORD, DWORD, LPDIRECTDRAWSURFACE7, LPRECT, DWORD);
@@ -45,26 +62,61 @@ HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7, LPDIRECTDRAW,
 HRESULT WINAPI Main_DDrawSurface_Lock (LPDIRECTDRAWSURFACE7, LPRECT, LPDDSURFACEDESC2, DWORD, HANDLE);
 HRESULT WINAPI Main_DDrawSurface_Restore(LPDIRECTDRAWSURFACE7);
 HRESULT WINAPI Main_DDrawSurface_UpdateOverlay (LPDIRECTDRAWSURFACE7, LPRECT, LPDIRECTDRAWSURFACE7, LPRECT,
-												DWORD, LPDDOVERLAYFX);
-HRESULT WINAPI Main_DDrawSurface_ChangeUniquenessValue(LPDIRECTDRAWSURFACE7 iface);
-HRESULT WINAPI Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAWSURFACE7 pAttach);
-HRESULT WINAPI Main_DDrawSurface_AddOverlayDirtyRect(LPDIRECTDRAWSURFACE7 iface, LPRECT pRect);
-HRESULT WINAPI Main_DDrawSurface_GetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface, LPDDSURFACEDESC2 pDDSD);
-HRESULT WINAPI Main_DDrawSurface_SetSurfaceDesc(LPDIRECTDRAWSURFACE7 iface, DDSURFACEDESC2 *DDSD, DWORD Flags);
+                                                DWORD, LPDDOVERLAYFX);
+HRESULT WINAPI Main_DDrawSurface_ChangeUniquenessValue(LPDIRECTDRAWSURFACE7);
+HRESULT WINAPI Main_DDrawSurface_AddAttachedSurface(LPDIRECTDRAWSURFACE7, LPDIRECTDRAWSURFACE7);
+HRESULT WINAPI Main_DDrawSurface_AddOverlayDirtyRect(LPDIRECTDRAWSURFACE7, LPRECT);
 
 
-
-// hel callbacks
-DWORD CALLBACK  HelDdDestroyDriver(LPDDHAL_DESTROYDRIVERDATA lpDestroyDriver);
-DWORD CALLBACK  HelDdCreateSurface(LPDDHAL_CREATESURFACEDATA lpCreateSurface);
-DWORD CALLBACK  HelDdSetColorKey(LPDDHAL_DRVSETCOLORKEYDATA lpSetColorKey);
-DWORD CALLBACK  HelDdSetMode(LPDDHAL_SETMODEDATA SetMode);
-DWORD CALLBACK  HelDdWaitForVerticalBlank(LPDDHAL_WAITFORVERTICALBLANKDATA lpWaitForVerticalBlank);
-DWORD CALLBACK  HelDdCanCreateSurface(LPDDHAL_CANCREATESURFACEDATA lpCanCreateSurface);
-DWORD CALLBACK  HelDdCreatePalette(LPDDHAL_CREATEPALETTEDATA lpCreatePalette);
-DWORD CALLBACK  HelDdGetScanLine(LPDDHAL_GETSCANLINEDATA lpGetScanLine);
-DWORD CALLBACK  HelDdSetExclusiveMode(LPDDHAL_SETEXCLUSIVEMODEDATA lpSetExclusiveMode);
-DWORD CALLBACK  HelDdFlipToGDISurface(LPDDHAL_FLIPTOGDISURFACEDATA lpFlipToGDISurface);
-
-
-
+IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable =
+{
+    Main_DDrawSurface_QueryInterface,
+    Main_DDrawSurface_AddRef,                        /* (Compact done) */
+    Main_DDrawSurface_Release,
+    Main_DDrawSurface_AddAttachedSurface,
+    Main_DDrawSurface_AddOverlayDirtyRect,
+    Main_DDrawSurface_Blt,
+    Main_DDrawSurface_BltBatch,
+    Main_DDrawSurface_BltFast,
+    Main_DDrawSurface_DeleteAttachedSurface,
+    Main_DDrawSurface_EnumAttachedSurfaces,
+    Main_DDrawSurface_EnumOverlayZOrders,
+    Main_DDrawSurface_Flip,
+    Main_DDrawSurface_GetAttachedSurface,
+    Main_DDrawSurface_GetBltStatus,
+    Main_DDrawSurface_GetCaps,
+    Main_DDrawSurface_GetClipper,
+    Main_DDrawSurface_GetColorKey,
+    Main_DDrawSurface_GetDC,
+    Main_DDrawSurface_GetFlipStatus,
+    Main_DDrawSurface_GetOverlayPosition,
+    Main_DDrawSurface_GetPalette,
+    Main_DDrawSurface_GetPixelFormat,
+    Main_DDrawSurface_GetSurfaceDesc,
+    Main_DDrawSurface_Initialize,
+    Main_DDrawSurface_IsLost,
+    Main_DDrawSurface_Lock,
+    Main_DDrawSurface_ReleaseDC,
+    Main_DDrawSurface_Restore,
+    Main_DDrawSurface_SetClipper,
+    Main_DDrawSurface_SetColorKey,
+    Main_DDrawSurface_SetOverlayPosition,
+    Main_DDrawSurface_SetPalette,
+    Main_DDrawSurface_Unlock,
+    Main_DDrawSurface_UpdateOverlay,
+    Main_DDrawSurface_UpdateOverlayDisplay,
+    Main_DDrawSurface_UpdateOverlayZOrder,
+    Main_DDrawSurface_GetDDInterface,
+    Main_DDrawSurface_PageLock,
+    Main_DDrawSurface_PageUnlock,
+    Main_DDrawSurface_SetSurfaceDesc,
+    Main_DDrawSurface_SetPrivateData,
+    Main_DDrawSurface_GetPrivateData,
+    Main_DDrawSurface_FreePrivateData,
+    Main_DDrawSurface_GetUniquenessValue,
+    Main_DDrawSurface_ChangeUniquenessValue,
+    Main_DDrawSurface_SetPriority,
+    Main_DDrawSurface_GetPriority,
+    Main_DDrawSurface_SetLOD,
+    Main_DDrawSurface_GetLOD
+};

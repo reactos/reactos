@@ -20,19 +20,31 @@
     SetPalette;
 */
 
+LPDDRAWI_DDRAWSURFACE_INT
+internal_directdrawsurface_int_alloc(LPDDRAWI_DDRAWSURFACE_INT This)
+{
+    LPDDRAWI_DDRAWSURFACE_INT  newThis;
+    DxHeapMemAlloc(newThis, sizeof(LPDDRAWI_DDRAWSURFACE_INT));
+    if (newThis)
+    {
+        newThis->lpLcl = This->lpLcl;
+        newThis->lpLink = This;
+    }
+    return  newThis;
+}
 
 HRESULT WINAPI Main_DDrawSurface_Initialize (LPDIRECTDRAWSURFACE7 iface, LPDIRECTDRAW pDD, LPDDSURFACEDESC2 pDDSD2)
 {
     return DDERR_ALREADYINITIALIZED;
 }
 
-ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
+ULONG WINAPI Main_DDrawSurface_AddRef(LPDDRAWI_DDRAWSURFACE_INT iface)
 {
     LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
 
     DX_WINDBG_trace();
 
-    if (iface!=NULL)
+    if (This!=NULL)
     {
         This->dwIntRefCnt++;
         This->lpLcl->dwLocalRefCnt++;
@@ -47,14 +59,102 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDIRECTDRAWSURFACE7 iface)
 }
 
 HRESULT WINAPI
-Main_DDrawSurface_QueryInterface(LPDIRECTDRAWSURFACE7 iface, REFIID riid,
+Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT iface, REFIID riid,
 				      LPVOID* ppObj)
 {
+    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
     DX_WINDBG_trace();
+    HRESULT retVal = DD_OK;
+    *ppObj = NULL;
 
-	DX_STUB_str("Unimplement\n");
-
-	return E_NOINTERFACE;
+    _SEH_TRY
+    {
+        if (IsEqualGUID(&IID_IDirectDrawSurface7, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface7_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurface7_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawSurface4, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface4_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurface4_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawSurface3, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface3_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurface3_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawSurface2, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface2_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurface2_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawSurface, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurface_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else
+        {
+            DX_STUB_str("E_NOINTERFACE");
+            retVal = E_NOINTERFACE;
+        }
+    }
+    _SEH_HANDLE
+    {
+    }
+    _SEH_END;
+    return retVal;
 }
 
 
@@ -688,62 +788,3 @@ Main_DDrawSurface_SetOverlayPosition (LPDIRECTDRAWSURFACE7 iface, LONG X, LONG Y
 
 	return DDERR_GENERIC;
 }
-
-IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable =
-{
-      /*** IUnknown ***/
-    Main_DDrawSurface_QueryInterface,
-    Main_DDrawSurface_AddRef,                        /* (Compact done) */
-    Main_DDrawSurface_Release,
-    /*** IDirectDrawSurface ***/
-    Main_DDrawSurface_AddAttachedSurface,
-    Main_DDrawSurface_AddOverlayDirtyRect,
-    Main_DDrawSurface_Blt,
-    Main_DDrawSurface_BltBatch,
-    Main_DDrawSurface_BltFast,
-    Main_DDrawSurface_DeleteAttachedSurface,
-    Main_DDrawSurface_EnumAttachedSurfaces,
-    Main_DDrawSurface_EnumOverlayZOrders,
-    Main_DDrawSurface_Flip,
-    Main_DDrawSurface_GetAttachedSurface,
-    Main_DDrawSurface_GetBltStatus,
-    Main_DDrawSurface_GetCaps,
-    Main_DDrawSurface_GetClipper,
-    Main_DDrawSurface_GetColorKey,
-    Main_DDrawSurface_GetDC,
-    Main_DDrawSurface_GetFlipStatus,
-    Main_DDrawSurface_GetOverlayPosition,
-    Main_DDrawSurface_GetPalette,
-    Main_DDrawSurface_GetPixelFormat,
-    Main_DDrawSurface_GetSurfaceDesc,
-    Main_DDrawSurface_Initialize,
-    Main_DDrawSurface_IsLost,
-    Main_DDrawSurface_Lock,
-    Main_DDrawSurface_ReleaseDC,
-    Main_DDrawSurface_Restore,
-    Main_DDrawSurface_SetClipper,
-    Main_DDrawSurface_SetColorKey,
-    Main_DDrawSurface_SetOverlayPosition,
-    Main_DDrawSurface_SetPalette,
-    Main_DDrawSurface_Unlock,
-    Main_DDrawSurface_UpdateOverlay,
-    Main_DDrawSurface_UpdateOverlayDisplay,
-    Main_DDrawSurface_UpdateOverlayZOrder,
-    /*** IDirectDrawSurface2 ***/
-    Main_DDrawSurface_GetDDInterface,
-    Main_DDrawSurface_PageLock,
-    Main_DDrawSurface_PageUnlock,
-    /*** IDirectDrawSurface3 ***/
-    Main_DDrawSurface_SetSurfaceDesc,
-    /*** IDirectDrawSurface4 ***/
-    Main_DDrawSurface_SetPrivateData,
-    Main_DDrawSurface_GetPrivateData,
-    Main_DDrawSurface_FreePrivateData,
-    Main_DDrawSurface_GetUniquenessValue,
-    Main_DDrawSurface_ChangeUniquenessValue,
-    /*** IDirectDrawSurface7 ***/
-    Main_DDrawSurface_SetPriority,
-    Main_DDrawSurface_GetPriority,
-    Main_DDrawSurface_SetLOD,
-    Main_DDrawSurface_GetLOD
-};

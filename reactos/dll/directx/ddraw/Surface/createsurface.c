@@ -188,7 +188,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
 
         /* FIXME the lpLnk */
 
-        Main_DDrawSurface_AddRef((LPDIRECTDRAWSURFACE7)ThisSurfInt);
+        Main_DDrawSurface_AddRef(ThisSurfInt);
     }
 
     pDDraw->lpLcl->lpGbl->dsList = (LPDDRAWI_DDRAWSURFACE_INT) slist_int;
@@ -244,6 +244,7 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
     RtlCopyMemory(dst_pDesc,src_pDesc,sizeof(DDSURFACEDESC));
     dst_pDesc->dwSize =  sizeof(DDSURFACEDESC2);
 }
+
 
 
 

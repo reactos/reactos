@@ -28,7 +28,10 @@ extern IDirectDrawVtbl DirectDraw_Vtable;
 
 
 extern IDirectDrawSurface7Vtbl DirectDrawSurface7_Vtable;
-extern IDirectDrawSurface3Vtbl DirectDrawSurface3_VTable;
+extern IDirectDrawSurface4Vtbl DirectDrawSurface4_Vtable;
+extern IDirectDrawSurface3Vtbl DirectDrawSurface3_Vtable;
+extern IDirectDrawSurface2Vtbl DirectDrawSurface2_Vtable;
+extern IDirectDrawSurfaceVtbl DirectDrawSurface_Vtable;
 extern IDirectDrawPaletteVtbl DirectDrawPalette_Vtable;
 extern IDirectDrawClipperVtbl DirectDrawClipper_Vtable;
 extern IDirectDrawColorControlVtbl DirectDrawColorControl_Vtable;
