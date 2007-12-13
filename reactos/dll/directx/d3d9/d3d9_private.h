@@ -161,8 +161,8 @@ struct _tagDIRECTD3D9_INT_
 /* 0x0290 */    DWORD unknown000164; 
 /* 0x0294 */    DWORD unknown000165; 
 /* 0x0298 */    DWORD unknown000166; 
-/* 0x029c */    DWORD unknown000167; 
-/* 0x02a0 */    DWORD unknown000168; 
+/* 0x029c */    DWORD dwDisplayWidth; /* Current display res */
+/* 0x02a0 */    DWORD dwDisplayHeight; /* Current display res */
 /* 0x02a4 */    DWORD unknown000169; 
 /* 0x02a8 */    DWORD unknown000170; 
 /* 0x02ac */    DWORD unknown000171; 
@@ -223,7 +223,7 @@ struct _tagDIRECTD3D9_INT_
 /* 0x0388 */    DWORD unknown000226; 
 /* 0x038c */    DWORD unknown000227; 
 /* 0x0390 */    DWORD unknown000228; 
-/* 0x0394 */    DWORD unknown000229;  /* hDD */
+/* 0x0394 */    DWORD unknown000229; 
 /* 0x0398 */    DWORD unknown000230; 
 /* 0x039c */    DWORD unknown000231; 
 /* 0x03a0 */    DWORD unknown000232; 
