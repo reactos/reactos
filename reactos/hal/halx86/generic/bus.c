@@ -233,12 +233,12 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpGetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
+        return HalpFakePciBusHandler.GetBusData(&BusHandler,
+                                                &BusHandler,
+                                                *(PPCI_SLOT_NUMBER)&SlotNumber,
+                                                Buffer,
+                                                Offset,
+                                                Length);
     }
 
     /* Invalid bus */
@@ -312,12 +312,12 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpSetPCIData(&BusHandler,
-                              &BusHandler,
-                              *(PPCI_SLOT_NUMBER)&SlotNumber,
-                              Buffer,
-                              Offset,
-                              Length);
+        return HalpFakePciBusHandler.SetBusData(&BusHandler,
+                                                &BusHandler,
+                                                *(PPCI_SLOT_NUMBER)&SlotNumber,
+                                                Buffer,
+                                                Offset,
+                                                Length);
     }
 
     /* Invalid bus */

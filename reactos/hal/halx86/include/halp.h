@@ -117,7 +117,7 @@ HaliSetSystemInformation(
 
 typedef struct tagHALP_HOOKS
 {
-  void (*InitPciBus)(ULONG BusNumber, PBUS_HANDLER BusHandler);
+  void (*InitPciBus)(PBUS_HANDLER BusHandler);
 } HALP_HOOKS, *PHALP_HOOKS;
 
 extern HALP_HOOKS HalpHooks;

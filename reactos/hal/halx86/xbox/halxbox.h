@@ -18,8 +18,8 @@
 
 extern UCHAR XboxFont8x16[256 * 16];
 
-void HalpXboxInitPciBus(ULONG BusNumber, PBUS_HANDLER BusHandler);
-void HalpXboxInitPartIo(void);
+VOID HalpXboxInitPciBus(PBUS_HANDLER BusHandler);
+VOID HalpXboxInitPartIo(VOID);
 
 #endif /* HALXBOX_H_INCLUDED */
 

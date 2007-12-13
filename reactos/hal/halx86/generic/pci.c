@@ -55,7 +55,7 @@ PCI_CONFIG_HANDLER PCIConfigHandlerType2 =
 {
     /* Synchronization */
     (FncSync)HalpPCISynchronizeType2,
-    (FncReleaseSync)HalpPCIReleaseSynchronzationType2,
+    (FncReleaseSync)HalpPCIReleaseSynchronizationType2,
 
     /* Read */
     {
@@ -187,8 +187,8 @@ HalpPCISynchronizeType2(IN PBUS_HANDLER BusHandler,
 
 VOID
 NTAPI
-HalpPCIReleaseSynchronzationType2(IN PBUS_HANDLER BusHandler,
-                                  IN KIRQL Irql)
+HalpPCIReleaseSynchronizationType2(IN PBUS_HANDLER BusHandler,
+                                   IN KIRQL Irql)
 {
     PCI_TYPE2_CSE_BITS PciCfg2Cse;
     PPCIPBUSDATA BusData = (PPCIPBUSDATA)BusHandler->BusData;
@@ -893,6 +893,9 @@ VOID
 NTAPI
 HalpInitializePciBus(VOID)
 {
+    /* Initialize the hooks */
+    if (HalpHooks.InitPciBus) HalpHooks.InitPciBus(&HalpFakePciBusHandler);
+
     /* Initialize the stubs */
     HalpInitializePciStubs();
 

@@ -170,7 +170,7 @@ HalpPCISynchronizeType2(
 
 VOID
 NTAPI
-HalpPCIReleaseSynchronzationType2(
+HalpPCIReleaseSynchronizationType2(
     IN PBUS_HANDLER BusHandler,
     IN KIRQL Irql
 );
