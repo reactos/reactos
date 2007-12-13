@@ -59,13 +59,12 @@ ULONG WINAPI Main_DDrawSurface_AddRef(LPDDRAWI_DDRAWSURFACE_INT iface)
 }
 
 HRESULT WINAPI
-Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT iface, REFIID riid,
-				      LPVOID* ppObj)
+Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LPVOID* ppObj)
 {
-    LPDDRAWI_DDRAWSURFACE_INT This = (LPDDRAWI_DDRAWSURFACE_INT)iface;
     DX_WINDBG_trace();
     HRESULT retVal = DD_OK;
     *ppObj = NULL;
+
 
     _SEH_TRY
     {
@@ -141,6 +140,51 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT iface, REFIID riid,
                 }
             }
             This->lpVtbl = &DirectDrawSurface_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawColorControl, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawColorControl_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawGammaControl, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawGammaControl_Vtable;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        else if (IsEqualGUID(&IID_IDirectDrawSurfaceKernel, riid))
+        {
+            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &DirectDrawSurfaceKernel_Vtable;
             *ppObj = This;
             Main_DDrawSurface_AddRef(This);
         }
