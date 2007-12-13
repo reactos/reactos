@@ -1,7 +1,30 @@
 #ifndef LANG_EN_US_H__
 #define LANG_EN_US_H__
 
-static MUI_ENTRY WelcomePageEntries[] =
+// do not translate these
+static MUI_ENTRY LanguagePageEntries[] =
+{
+    {
+        6,
+        8,
+        "Select your language:",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue  F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSWelcomePageEntries[] =
 {
     {
         6,
@@ -71,7 +94,7 @@ static MUI_ENTRY WelcomePageEntries[] =
     }
 };
 
-static MUI_ENTRY IntroPageEntries[] =
+static MUI_ENTRY enUSIntroPageEntries[] =
 {
     {
         4, 
@@ -165,7 +188,7 @@ static MUI_ENTRY IntroPageEntries[] =
     }
 };
 
-static MUI_ENTRY LicensePageEntries[] =
+static MUI_ENTRY enUSLicensePageEntries[] =
 {
     {
         6,
@@ -283,7 +306,7 @@ static MUI_ENTRY LicensePageEntries[] =
     }
 };
 
-static MUI_ENTRY DevicePageEntries[] =
+static MUI_ENTRY enUSDevicePageEntries[] =
 {
     {
         6, 
@@ -370,7 +393,7 @@ static MUI_ENTRY DevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY RepairPageEntries[] =
+static MUI_ENTRY enUSRepairPageEntries[] =
 {
     {
         6, 
@@ -427,7 +450,7 @@ static MUI_ENTRY RepairPageEntries[] =
         0
     }
 };
-static MUI_ENTRY ComputerPageEntries[] =
+static MUI_ENTRY enUSComputerPageEntries[] =
 {
     {
         6,
@@ -473,7 +496,7 @@ static MUI_ENTRY ComputerPageEntries[] =
     }
 };
 
-static MUI_ENTRY FlushPageEntries[] =
+static MUI_ENTRY enUSFlushPageEntries[] =
 {
     {
         10,
@@ -507,7 +530,7 @@ static MUI_ENTRY FlushPageEntries[] =
     }
 };
 
-static MUI_ENTRY QuitPageEntries[] =
+static MUI_ENTRY enUSQuitPageEntries[] =
 {
     {
         10,
@@ -547,7 +570,7 @@ static MUI_ENTRY QuitPageEntries[] =
     }
 };
 
-static MUI_ENTRY DisplayPageEntries[] =
+static MUI_ENTRY enUSDisplayPageEntries[] =
 {
     {
         6,
@@ -592,7 +615,7 @@ static MUI_ENTRY DisplayPageEntries[] =
     }
 };
 
-static MUI_ENTRY SuccessPageEntries[] =
+static MUI_ENTRY enUSSuccessPageEntries[] =
 {
     {
         10,
@@ -632,7 +655,7 @@ static MUI_ENTRY SuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY BootPageEntries[] =
+static MUI_ENTRY enUSBootPageEntries[] =
 {
     {
         6,
@@ -676,48 +699,52 @@ static MUI_ENTRY BootPageEntries[] =
 MUI_PAGE enUSPages[] =
 {
     {
+        LANGUAGE_PAGE,
+        LanguagePageEntries
+    },
+    {
        START_PAGE,
-       WelcomePageEntries
+       enUSWelcomePageEntries
     },
     {
         INTRO_PAGE,
-        IntroPageEntries
+        enUSIntroPageEntries
     },
     {
         LICENSE_PAGE,
-        LicensePageEntries
+        enUSLicensePageEntries
     },
     {
         DEVICE_SETTINGS_PAGE,
-        DevicePageEntries
+        enUSDevicePageEntries
     },
     {
         REPAIR_INTRO_PAGE,
-        RepairPageEntries
+        enUSRepairPageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
-        ComputerPageEntries
+        enUSComputerPageEntries
     },
     {
         DISPLAY_SETTINGS_PAGE,
-        DisplayPageEntries
+        enUSDisplayPageEntries
     },
     {
         FLUSH_PAGE,
-        FlushPageEntries
+        enUSFlushPageEntries
     },
     {
         QUIT_PAGE,
-        QuitPageEntries
+        enUSQuitPageEntries
     },
     {
         SUCCESS_PAGE,
-        SuccessPageEntries
+        enUSSuccessPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
-        BootPageEntries
+        enUSBootPageEntries
     },
     {
         -1,

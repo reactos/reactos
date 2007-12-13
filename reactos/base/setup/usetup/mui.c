@@ -2,12 +2,17 @@
 #include "mui.h"
 
 #include "lang/en-US.h"
+#include "lang/de-DE.h"
 
-static MUI_LANGUAGE lang[] =
+static MUI_LANGUAGE LanguageList[] =
 {
     {
         "English (USA)",
         enUSPages
+    },
+    {
+        "German",
+        deDEPages
     },
     {
         NULL,
@@ -15,7 +20,7 @@ static MUI_LANGUAGE lang[] =
     }
 };
 
-static unsigned sel_lang = 0;
+static ULONG SelectedLanguage = 0;
 
 extern
 VOID
@@ -25,29 +30,61 @@ PopupError(PCHAR Text,
 	   ULONG WaitEvent);
 
 
-static
-MUI_ENTRY *
-findMUIEntriesOfPage(int pg, MUI_PAGE * pages)
+PGENERIC_LIST
+MUICreateLanguageList()
 {
-    int index = 0;
+    PGENERIC_LIST List;
+    ULONG Index;
+
+    List = CreateGenericList();
+    if (List == NULL)
+    {
+        return NULL;
+    }
+
+    Index = 0;
+
     do
     {
-        if (pages[index].Number == pg)
+        AppendGenericListEntry(List, LanguageList[Index].LanguageDescriptor, (PVOID)Index, (Index == 0 ? TRUE : FALSE));
+        Index++;
+    }while(LanguageList[Index].MuiPages && LanguageList[Index].LanguageDescriptor);
+
+    return List;
+}
+
+BOOLEAN
+MUISelectLanguage(ULONG LanguageIndex)
+{
+    SelectedLanguage = LanguageIndex;
+    return TRUE;
+}
+
+
+static
+MUI_ENTRY *
+findMUIEntriesOfPage(ULONG PageNumber, MUI_PAGE * Pages)
+{
+    ULONG Index = 0;
+    do
+    {
+        if (Pages[Index].Number == PageNumber)
         {
-            return pages[index].MuiEntry;
+            return Pages[Index].MuiEntry;
         }
-        index++;
-    }while(pages[index].MuiEntry != NULL);
+        Index++;
+    }while(Pages[Index].MuiEntry != NULL);
     return NULL;
 }
 
-void MUIDisplayPage(int pg)
+VOID
+MUIDisplayPage(ULONG pg)
 {
     MUI_ENTRY * entry;
     int index;
     int flags;
 
-    entry = findMUIEntriesOfPage(pg, lang[sel_lang].MuiPages);
+    entry = findMUIEntriesOfPage(pg, LanguageList[SelectedLanguage].MuiPages);
     if (!entry)
     {
         PopupError("Error: Failed to find translated page",

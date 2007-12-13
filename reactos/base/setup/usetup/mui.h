@@ -27,8 +27,14 @@ typedef struct
 #define TEXT_UNDERLINE 2
 #define TEXT_STATUS 4
 
+VOID
+MUIDisplayPage(ULONG PageNumber);
 
-void MUIDisplayPage(int pg);
+PGENERIC_LIST
+MUICreateLanguageList();
+
+BOOLEAN
+MUISelectLanguage(ULONG LanguageIndex);
 
 
 #endif

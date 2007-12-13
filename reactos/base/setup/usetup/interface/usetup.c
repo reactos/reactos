@@ -73,7 +73,7 @@ static PGENERIC_LIST ComputerList = NULL;
 static PGENERIC_LIST DisplayList = NULL;
 static PGENERIC_LIST KeyboardList = NULL;
 static PGENERIC_LIST LayoutList = NULL;
-
+static PGENERIC_LIST LanguageList = NULL;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -548,6 +548,56 @@ CheckUnattendedSetup(VOID)
   SetupCloseInfFile(UnattendInf);
 
   DPRINT("Running unattended setup\n");
+}
+
+static PAGE_NUMBER
+LanguagePage(PINPUT_RECORD Ir)
+{
+  if (LanguageList == NULL)
+    {
+      LanguageList = MUICreateLanguageList();
+      if (LanguageList == NULL)
+        {
+           PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
+           return START_PAGE;
+        }
+    }
+
+  DrawGenericList(LanguageList,
+		  7,
+		  15,
+		  xScreen - 10,
+		  yScreen - 10);
+
+  MUIDisplayPage(LANGUAGE_PAGE);
+
+  while(TRUE)
+    {
+      CONSOLE_ConInKey(Ir);
+
+      if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
+	{
+	  ScrollDownGenericList (LanguageList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
+	{
+	  ScrollUpGenericList (LanguageList);
+	}
+      else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
+	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_F3)) /* F3 */
+	{
+	  if (ConfirmQuit(Ir) == TRUE)
+	    return QUIT_PAGE;
+	}
+      else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
+	{
+      MUISelectLanguage((ULONG)LanguageList->CurrentEntry->UserData);
+	  return START_PAGE;
+	}
+    }
+  return START_PAGE;
 }
 
 
@@ -3425,6 +3475,12 @@ QuitPage(PINPUT_RECORD Ir)
       LayoutList = NULL;
     }
 
+  if (LanguageList != NULL)
+    {
+      DestroyGenericList(LanguageList, FALSE);
+      LanguageList = NULL;
+    }
+
   CONSOLE_SetStatusText("   ENTER = Reboot computer");
 
   while(TRUE)
@@ -3509,7 +3565,7 @@ RunUSetup(VOID)
   /* Hide the cursor */
   CONSOLE_SetCursorType(TRUE, FALSE);
 
-  Page = START_PAGE;
+  Page = LANGUAGE_PAGE;
   while (Page != REBOOT_PAGE)
     {
       CONSOLE_ClearScreen();
@@ -3520,6 +3576,10 @@ RunUSetup(VOID)
 
       switch (Page)
 	{
+      /* Language page */
+      case LANGUAGE_PAGE:
+        Page = LanguagePage(&Ir);
+        break;
 	  /* Start page */
 	  case START_PAGE:
 	    Page = SetupStartPage(&Ir);

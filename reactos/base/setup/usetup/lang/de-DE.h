@@ -1,7 +1,7 @@
 #ifndef LANG_DE_DE_H__
 #define LANG_DE_DE_H__
 
-static MUI_ENTRY WelcomePageEntries[] =
+static MUI_ENTRY deDEWelcomePageEntries[] =
 {
     {
         6,
@@ -71,7 +71,7 @@ static MUI_ENTRY WelcomePageEntries[] =
     }
 };
 
-static MUI_ENTRY IntroPageEntries[] =
+static MUI_ENTRY deDEIntroPageEntries[] =
 {
     {
         4, 
@@ -165,7 +165,7 @@ static MUI_ENTRY IntroPageEntries[] =
     }
 };
 
-static MUI_ENTRY LicensePageEntries[] =
+static MUI_ENTRY deDELicensePageEntries[] =
 {
     {
         6,
@@ -283,7 +283,7 @@ static MUI_ENTRY LicensePageEntries[] =
     }
 };
 
-static MUI_ENTRY DevicePageEntries[] =
+static MUI_ENTRY deDEDevicePageEntries[] =
 {
     {
         6, 
@@ -370,7 +370,7 @@ static MUI_ENTRY DevicePageEntries[] =
     }
 };
 
-static MUI_ENTRY RepairPageEntries[] =
+static MUI_ENTRY deDERepairPageEntries[] =
 {
     {
         6, 
@@ -427,7 +427,7 @@ static MUI_ENTRY RepairPageEntries[] =
         0
     }
 };
-static MUI_ENTRY ComputerPageEntries[] =
+static MUI_ENTRY deDEComputerPageEntries[] =
 {
     {
         6,
@@ -473,7 +473,7 @@ static MUI_ENTRY ComputerPageEntries[] =
     }
 };
 
-static MUI_ENTRY FlushPageEntries[] =
+static MUI_ENTRY deDEFlushPageEntries[] =
 {
     {
         10,
@@ -507,7 +507,7 @@ static MUI_ENTRY FlushPageEntries[] =
     }
 };
 
-static MUI_ENTRY QuitPageEntries[] =
+static MUI_ENTRY deDEQuitPageEntries[] =
 {
     {
         10,
@@ -547,7 +547,7 @@ static MUI_ENTRY QuitPageEntries[] =
     }
 };
 
-static MUI_ENTRY DisplayPageEntries[] =
+static MUI_ENTRY deDEDisplayPageEntries[] =
 {
     {
         6,
@@ -592,7 +592,7 @@ static MUI_ENTRY DisplayPageEntries[] =
     }
 };
 
-static MUI_ENTRY SuccessPageEntries[] =
+static MUI_ENTRY deDESuccessPageEntries[] =
 {
     {
         10,
@@ -632,7 +632,7 @@ static MUI_ENTRY SuccessPageEntries[] =
     }
 };
 
-static MUI_ENTRY BootPageEntries[] =
+static MUI_ENTRY deDEBootPageEntries[] =
 {
     {
         6,
@@ -677,47 +677,47 @@ MUI_PAGE deDEPages[] =
 {
     {
         START_PAGE,
-        WelcomePageEntries
+        deDEWelcomePageEntries
     },
     {
         INTRO_PAGE,
-        IntroPageEntries
+        deDEIntroPageEntries
     },
     {
         LICENSE_PAGE,
-        LicensePageEntries
+        deDELicensePageEntries
     },
     {
         DEVICE_SETTINGS_PAGE,
-        DevicePageEntries
+        deDEDevicePageEntries
     },
     {
         REPAIR_INTRO_PAGE,
-        RepairPageEntries
+        deDERepairPageEntries
     },
     {
         COMPUTER_SETTINGS_PAGE,
-        ComputerPageEntries
+        deDEComputerPageEntries
     },
     {
         DISPLAY_SETTINGS_PAGE,
-        DisplayPageEntries
+        deDEDisplayPageEntries
     },
     {
         FLUSH_PAGE,
-        FlushPageEntries
+        deDEFlushPageEntries
     },
     {
         QUIT_PAGE,
-        QuitPageEntries
+        deDEQuitPageEntries
     },
     {
         SUCCESS_PAGE,
-        SuccessPageEntries
+        deDESuccessPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
-        BootPageEntries
+        deDEBootPageEntries
     },
     {
         -1,
