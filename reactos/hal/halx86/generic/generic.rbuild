@@ -11,6 +11,7 @@
 		<file>cmos.c</file>
 		<file>dma.c</file>
 		<file>drive.c</file>
+		<file>display.c</file>
 		<file>misc.c</file>
 		<file>pci.c</file>
 		<file>portio.c</file>
@@ -30,12 +31,5 @@
 		<file>halinit.c</file>
 		<file>processor.c</file>
 		<file>spinlock.c</file>
-	</module>
-	<module name="hal_generic_pc" type="objectlibrary">
-		<include base="hal_generic_pc">../include</include>
-		<include base="ntoskrnl">include</include>
-		<define name="_DISABLE_TIDENTS" />
-		<define name="_NTHAL_" />
-		<file>display.c</file>
 	</module>
 </group>

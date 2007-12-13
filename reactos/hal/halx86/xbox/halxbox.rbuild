@@ -11,8 +11,6 @@
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
 	<library>ntoskrnl</library>
-	<file>display_xbox.c</file>
-	<file>font.c</file>
 	<file>halinit_xbox.c</file>
 	<file>part_xbox.c</file>
 	<file>pci_xbox.c</file>

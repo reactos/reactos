@@ -9,7 +9,6 @@
 	<define name="CONFIG_SMP" />
 	<define name="_NTHAL_" />
 	<library>hal_generic</library>
-	<library>hal_generic_pc</library>
 	<library>ntoskrnl</library>
 	<file>apic.c</file>
 	<file>halinit.c</file>

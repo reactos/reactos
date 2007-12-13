@@ -16,8 +16,6 @@
 #include <ntdddisk.h>
 #include <rosldr.h>
 
-extern UCHAR XboxFont8x16[256 * 16];
-
 VOID HalpXboxInitPciBus(PBUS_HANDLER BusHandler);
 VOID HalpXboxInitPartIo(VOID);
 

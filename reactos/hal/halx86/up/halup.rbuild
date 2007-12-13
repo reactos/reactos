@@ -10,7 +10,6 @@
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
 	<library>hal_generic</library>
 	<library>hal_generic_up</library>
-	<library>hal_generic_pc</library>
 	<library>ntoskrnl</library>
 	<file>halinit_up.c</file>
 	<file>halup.rc</file>
