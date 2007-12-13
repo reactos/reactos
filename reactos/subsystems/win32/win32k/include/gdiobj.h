@@ -11,10 +11,14 @@
 
 typedef struct _GDI_HANDLE_TABLE
 {
-  /* the table must be located at the beginning of this structure so it can be
-     properly mapped! */
+/* The table must be located at the beginning of this structure so it can be
+ * properly mapped!
+ */
+//////////////////////////////////////////////////////////////////////////////
   GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
-
+  DEVCAPS DevCaps;     // Device Capabilities
+  // Font data
+//////////////////////////////////////////////////////////////////////////////
   PPAGED_LOOKASIDE_LIST LookasideLists;
 
   SLIST_HEADER FreeEntriesHead;

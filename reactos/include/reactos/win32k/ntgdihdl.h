@@ -18,8 +18,8 @@
 /* Base address where the handle table is mapped to */
 #define GDI_HANDLE_TABLE_BASE_ADDRESS (0x400000)
 
-/* GDI handle table can hold 0x4000 handles */
-#define GDI_HANDLE_COUNT 0x4000
+/* GDI handle table can hold 0x10000 handles */
+#define GDI_HANDLE_COUNT 0x10000
 #define GDI_GLOBAL_PROCESS (0x0)
 
 /* Handle Masks and shifts */

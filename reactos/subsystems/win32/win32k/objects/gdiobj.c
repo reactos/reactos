@@ -238,7 +238,7 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 	DPRINT1("reporting gdi handle abusers:\n");
 
 	/* step through GDI handle table and find out who our culprit is... */
-	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++ )
+	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT-1; i++ )
 	{
 		for ( j = 0; j < n; j++ )
 		{
@@ -787,7 +787,7 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
    HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
    /* Check that the handle index is valid. */
-   if (HandleIndex >= GDI_HANDLE_COUNT)
+   if (HandleIndex >= GDI_HANDLE_COUNT-1)
       return NULL;
 
    Entry = &HandleTable->Entries[HandleIndex];
@@ -935,7 +935,7 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
    HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
    /* Check that the handle index is valid. */
-   if (HandleIndex >= GDI_HANDLE_COUNT)
+   if (HandleIndex >= GDI_HANDLE_COUNT-1)
       return NULL;
 
    /* Check if we have the requested type */
