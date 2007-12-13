@@ -1509,12 +1509,21 @@ NtGdiCreateClientObj(
     IN ULONG ulType
     )
 {
-//  INT Index;
-//  PGDI_TABLE_ENTRY Entry;
-  HANDLE handle = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TAG_CLIOBJ);
+// ATM we use DC object for KernelData. I think it should be at a minimum GDIOBJEMPTYHDR.
+// The UserData is set in user mode, so it is always NULL.
+//
+  INT Index;
+  PGDI_TABLE_ENTRY Entry;
+  HANDLE handle = GDIOBJ_AllocObj(GdiHandleTable, GDI_OBJECT_TYPE_CLIOBJ);
 // Need to change handle type based on ulType.
-//  Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)handle);
-//  Entry = &GdiHandleTable->Entries[Index];
+  Index = GDI_HANDLE_GET_INDEX((HGDIOBJ)handle);
+  Entry = &GdiHandleTable->Entries[Index];
+// mask out lower half and set the type by ulType.
+  Entry->Type &= GDI_HANDLE_UPPER_MASK;
+  Entry->Type |= ulType >> GDI_ENTRY_UPPER_SHIFT;
+// mask out handle type than set it by ulType.
+  handle = (HANDLE)(((ULONG_PTR)(handle)) & (GDI_HANDLE_REUSE_MASK|GDI_HANDLE_STOCK_MASK|0x0ffff));
+  handle = (HANDLE)(((ULONG_PTR)(handle)) | ulType);
   return handle;
 }
 
@@ -1525,7 +1534,7 @@ NtGdiDeleteClientObj(
     IN HANDLE h
     )
 {
-  return GDIOBJ_FreeObj(GdiHandleTable, h, GDI_OBJECT_TAG_CLIOBJ);
+  return GDIOBJ_FreeObj(GdiHandleTable, h, GDI_OBJECT_TYPE_CLIOBJ);
 }
 
 /* EOF */
