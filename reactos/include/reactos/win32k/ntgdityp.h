@@ -129,9 +129,55 @@ typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
 
 /* FIXME: Unknown; easy to guess, usually based on public types and converted */
-typedef struct _WIDTHDATA WIDTHDATA, *PWIDTHDATA;
-typedef struct _DEVCAPS DEVCAPS, *PDEVCAPS;
 typedef struct _REALIZATION_INFO REALIZATION_INFO, *PREALIZATION_INFO;
+
+typedef struct _WIDTHDATA
+{
+    USHORT      sOverhang;
+    USHORT      sHeight;
+    USHORT      sCharInc;
+    USHORT      sBreak;
+    BYTE        jFirst;
+    BYTE        jLast;
+    BYTE        jBreak;
+    BYTE        jDefault;
+    USHORT      sDBCSInc;
+    USHORT      sDefaultInc;
+} WIDTHDATA, *PWIDTHDATA;
+
+typedef struct _DEVCAPS // Very similar to GDIINFO
+{
+    ULONG ulVersion;
+    ULONG ulTechnology;
+    ULONG ulHorzSizeM;
+    ULONG ulVertSizeM;
+    ULONG ulHorzSize;
+    ULONG ulVertSize;
+    ULONG ulHorzRes;
+    ULONG ulVertRes;
+    ULONG ulBitsPixel;
+    ULONG ulPlanes;
+    ULONG ulNumPens;
+    ULONG ulNumFonts;
+    ULONG ulNumColors;
+    ULONG ulRasterCaps;
+    ULONG ulAspectX;
+    ULONG ulAspectY;
+    ULONG ulAspectXY;
+    ULONG ulLogPixelsX;
+    ULONG ulLogPixelsY;
+    ULONG ulSizePalette;
+    ULONG ulColorRes;
+    ULONG ulPhysicalWidth;
+    ULONG ulPhysicalHeight;
+    ULONG ulPhysicalOffsetX;
+    ULONG ulPhysicalOffsetY;
+    ULONG ulTextCaps;
+    ULONG ulVRefresh;
+    ULONG ulDesktopHorzRes;
+    ULONG ulDesktopVertRes;
+    ULONG ulBltAlignment;
+} DEVCAPS, *PDEVCAPS;
 
 /* Font Structures */
 typedef struct _TMDIFF
