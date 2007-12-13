@@ -145,7 +145,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
         }
         else if (IsEqualGUID(&IID_IDirectDrawColorControl, riid))
         {
-            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            if (This->lpVtbl != &DirectDrawColorControl_Vtable)
             {
                 This = internal_directdrawsurface_int_alloc(This);
                 if (!This)
@@ -160,7 +160,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
         }
         else if (IsEqualGUID(&IID_IDirectDrawGammaControl, riid))
         {
-            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            if (This->lpVtbl != &DirectDrawGammaControl_Vtable)
             {
                 This = internal_directdrawsurface_int_alloc(This);
                 if (!This)
@@ -175,7 +175,7 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
         }
         else if (IsEqualGUID(&IID_IDirectDrawSurfaceKernel, riid))
         {
-            if (This->lpVtbl != &DirectDrawSurface_Vtable)
+            if (This->lpVtbl != &DirectDrawSurfaceKernel_Vtable)
             {
                 This = internal_directdrawsurface_int_alloc(This);
                 if (!This)
@@ -188,6 +188,22 @@ Main_DDrawSurface_QueryInterface(LPDDRAWI_DDRAWSURFACE_INT This, REFIID riid, LP
             *ppObj = This;
             Main_DDrawSurface_AddRef(This);
         }
+        else if (IsEqualGUID(&IID_IDirect3D, riid))
+        {
+            if (This->lpVtbl != &IDirect3D_Vtbl)
+            {
+                This = internal_directdrawsurface_int_alloc(This);
+                if (!This)
+                {
+                    retVal = DDERR_OUTOFVIDEOMEMORY;
+                    _SEH_LEAVE;
+                }
+            }
+            This->lpVtbl = &IDirect3D_Vtbl;
+            *ppObj = This;
+            Main_DDrawSurface_AddRef(This);
+        }
+        
         else
         {
             DX_STUB_str("E_NOINTERFACE");

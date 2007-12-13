@@ -45,6 +45,9 @@
 	<directory name="Color">
 		<file>color_stubs.c</file>
 	</directory>
+	<directory name="d3d">
+		<file>DirectD3D_main.c</file>
+	</directory>
 	<directory name="Gamma">
 		<file>gamma_stubs.c</file>
 	</directory>
@@ -67,5 +70,6 @@
 		<file>DirectDrawSurface3_Vtable.c</file>
 		<file>DirectDrawSurface2_Vtable.c</file>
 		<file>DirectDrawSurface_Vtable.c</file>
+		<file>DirectD3D_Vtable.c</file>
 	</directory>
 </module>
