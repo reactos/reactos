@@ -434,7 +434,7 @@ Main_DirectDraw_GetFourCCCodes(LPDDRAWI_DIRECTDRAW_INT This, LPDWORD lpNumCodes,
 /* For DirectDraw 1 - 3 */
 HRESULT WINAPI
 Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDDSD,
-                               LPDIRECTDRAWSURFACE *ppSurf, IUnknown *pUnkOuter)
+                               LPDDRAWI_DDRAWSURFACE_INT *ppSurf, IUnknown *pUnkOuter)
 {
    HRESULT ret = DDERR_GENERIC;
    DDSURFACEDESC2 dd_desc_v2;
@@ -449,7 +449,7 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
             CopyDDSurfDescToDDSurfDesc2(&dd_desc_v2, (LPDDSURFACEDESC)pDDSD);
             ret = Internal_CreateSurface(This,
                                          &dd_desc_v2,
-                                         (LPDIRECTDRAWSURFACE7 *)ppSurf,
+                                         ppSurf,
                                          pUnkOuter);
         }
         else
@@ -470,14 +470,14 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
 /* For DirectDraw 4 - 7 */
 HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pDDSD,
-                               LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+                               LPDDRAWI_DDRAWSURFACE_INT *ppSurf, IUnknown *pUnkOuter)
 {
     HRESULT ret;
     DX_WINDBG_trace();
     // EnterCriticalSection(&ddcs);
     _SEH_TRY
     {
-        ret = Internal_CreateSurface(This, pDDSD, ppSurf,pUnkOuter);
+        ret = Internal_CreateSurface(This, pDDSD, ppSurf, pUnkOuter);
     }
     _SEH_HANDLE
     {
@@ -491,6 +491,7 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
 
 /* 5 of 31 DirectDraw7_Vtable api are working simluare to windows */
 /* 8 of 31 DirectDraw7_Vtable api are under devloping / testing */
+
 
 
 

@@ -83,7 +83,7 @@ HRESULT
 Internal_CreateSurface(
                        LPDDRAWI_DIRECTDRAW_INT pDDraw,
                        LPDDSURFACEDESC2 pDDSD,
-                       LPDIRECTDRAWSURFACE7 *ppSurf,
+                       LPDDRAWI_DDRAWSURFACE_INT *ppSurf,
                        IUnknown *pUnkOuter);
 
 /* convert DDSURFACEDESC to DDSURFACEDESC2 */

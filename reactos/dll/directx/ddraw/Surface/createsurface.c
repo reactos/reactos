@@ -22,7 +22,7 @@
 
 HRESULT
 Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
-                        LPDIRECTDRAWSURFACE7 *ppSurf, IUnknown *pUnkOuter)
+                        LPDDRAWI_DDRAWSURFACE_INT *ppSurf, IUnknown *pUnkOuter)
 {
     DDHAL_CANCREATESURFACEDATA mDdCanCreateSurface = { 0 };
     DDHAL_CREATESURFACEDATA mDdCreateSurface = { 0 };
@@ -175,8 +175,26 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
             ThisSurfaceGbl->dwLinearSize = pDDSD->lPitch;
         }
 
-        /* FIXME set right version */
-        ThisSurfInt->lpVtbl = &DirectDrawSurface7_Vtable;
+        if(pDDraw->lpVtbl == &DirectDraw7_Vtable)
+        {
+            ThisSurfInt->lpVtbl = &DirectDrawSurface7_Vtable;
+        }
+        else if(pDDraw->lpVtbl == &DirectDraw4_Vtable)
+        {
+            ThisSurfInt->lpVtbl = &DirectDrawSurface4_Vtable;
+        }
+        else if(pDDraw->lpVtbl == &DirectDraw2_Vtable)
+        {
+            ThisSurfInt->lpVtbl = &DirectDrawSurface2_Vtable;
+        }
+        else if(pDDraw->lpVtbl == &DirectDraw_Vtable)
+        {
+            ThisSurfInt->lpVtbl = &DirectDrawSurface_Vtable;
+        }
+        else
+        {
+            return DDERR_NOTINITIALIZED;
+        }
 
         ThisSurfLcl->lpSurfMore = ThisSurfaceMore;
         ThisSurfaceMore->dwSize = sizeof(DDRAWI_DDRAWSURFACE_MORE);
@@ -232,7 +250,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return mDdCreateSurface.ddRVal;
     }
 
-    *ppSurf = (LPDIRECTDRAWSURFACE7) &slist_int[0]->lpVtbl;
+    *ppSurf = (LPDDRAWI_DDRAWSURFACE_INT) &slist_int[0]->lpVtbl;
     return DD_OK;
 }
 
@@ -244,6 +262,7 @@ void CopyDDSurfDescToDDSurfDesc2(LPDDSURFACEDESC2 dst_pDesc, LPDDSURFACEDESC src
     RtlCopyMemory(dst_pDesc,src_pDesc,sizeof(DDSURFACEDESC));
     dst_pDesc->dwSize =  sizeof(DDSURFACEDESC2);
 }
+
 
 
 

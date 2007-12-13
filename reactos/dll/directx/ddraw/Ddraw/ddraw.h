@@ -31,10 +31,17 @@ Main_DirectDraw_CreatePalette(
                               LPUNKNOWN pUnkOuter);
 
 HRESULT WINAPI
+Main_DirectDraw_CreateSurface(
+                               LPDDRAWI_DIRECTDRAW_INT This,
+                               LPDDSURFACEDESC pDDSD,
+                               LPDDRAWI_DDRAWSURFACE_INT *ppSurf,
+                               IUnknown *pUnkOuter);
+
+HRESULT WINAPI
 Main_DirectDraw_CreateSurface4(
                                LPDDRAWI_DIRECTDRAW_INT This,
                                LPDDSURFACEDESC2 pDDSD,
-                               LPDIRECTDRAWSURFACE7 *ppSurf,
+                               LPDDRAWI_DDRAWSURFACE_INT *ppSurf,
                                IUnknown *pUnkOuter);
 
 HRESULT WINAPI
@@ -207,5 +214,6 @@ DWORD CALLBACK HelDdSurfSetOverlayPosition(LPDDHAL_SETOVERLAYPOSITIONDATA lpSetO
 DWORD CALLBACK HelDdSurfSetPalette(LPDDHAL_SETPALETTEDATA lpSetPaletteData);
 DWORD CALLBACK HelDdSurfUnlock(LPDDHAL_UNLOCKDATA lpUnLockData);
 DWORD CALLBACK HelDdSurfUpdateOverlay(LPDDHAL_UPDATEOVERLAYDATA lpUpDateOveryLayData);
+
 
 
