@@ -56,14 +56,14 @@ HalpAssignSlotResources(IN PUNICODE_STRING RegistryPath,
     BusHandler.BusNumber = BusNumber;
 
     /* Call the PCI function */
-    return HalpAssignPCISlotResources(&BusHandler,
-                                      &BusHandler,
-                                      RegistryPath,
-                                      DriverClassName,
-                                      DriverObject,
-                                      DeviceObject,
-                                      SlotNumber,
-                                      AllocatedResources);
+    return BusHandler.AssignSlotResources(&BusHandler,
+                                          &BusHandler,
+                                          RegistryPath,
+                                          DriverClassName,
+                                          DriverObject,
+                                          DeviceObject,
+                                          SlotNumber,
+                                          AllocatedResources);
 }
 
 BOOLEAN
@@ -233,12 +233,12 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpFakePciBusHandler.GetBusData(&BusHandler,
-                                                &BusHandler,
-                                                *(PPCI_SLOT_NUMBER)&SlotNumber,
-                                                Buffer,
-                                                Offset,
-                                                Length);
+        return BusHandler.GetBusData(&BusHandler,
+                                     &BusHandler,
+                                     *(PPCI_SLOT_NUMBER)&SlotNumber,
+                                     Buffer,
+                                     Offset,
+                                     Length);
     }
 
     /* Invalid bus */
@@ -312,12 +312,12 @@ HalSetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
         BusHandler.BusNumber = BusNumber;
 
         /* Call PCI function */
-        return HalpFakePciBusHandler.SetBusData(&BusHandler,
-                                                &BusHandler,
-                                                *(PPCI_SLOT_NUMBER)&SlotNumber,
-                                                Buffer,
-                                                Offset,
-                                                Length);
+        return BusHandler.SetBusData(&BusHandler,
+                                     &BusHandler,
+                                     *(PPCI_SLOT_NUMBER)&SlotNumber,
+                                     Buffer,
+                                     Offset,
+                                     Length);
     }
 
     /* Invalid bus */
