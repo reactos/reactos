@@ -1,0 +1,17 @@
+#! /bin/bash
+#
+# This file is used to set environment variables required when
+# compiling Cromwell using the Linux cross compiler under Cygwin.
+#
+# Instructions can be found for building a cross compiler here:
+#
+# http://www.xraylith.wisc.edu/~khan/software/gnu-win32/cygwin-to-linux-cross-howto.txt
+#
+# In order for the exports to be global, this script should be run
+# with the following command line: ". setcygwinenv"
+#
+export OBJCOPY=i686-pc-linux-gnu-objcopy
+export LD=i686-pc-linux-gnu-ld
+export CC=i686-pc-linux-gnu-gcc
+export -n INCLUDE
+alias make='make -e'
