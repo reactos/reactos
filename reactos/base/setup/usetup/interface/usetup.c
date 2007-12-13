@@ -729,7 +729,7 @@ SetupStartPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
 {
-  MUIDisplayPage(INTRO_PAGE);
+  MUIDisplayPage(START_PAGE);
 
   if (IsUnattendedSetup)
     {
@@ -833,7 +833,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 InstallIntroPage(PINPUT_RECORD Ir)
 {
-  MUIDisplayPage(INTRO_PAGE);
+  MUIDisplayPage(INSTALL_INTRO_PAGE);
 
   if (RepairUpdateFlag)
     {

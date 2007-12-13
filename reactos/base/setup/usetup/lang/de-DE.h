@@ -680,7 +680,7 @@ MUI_PAGE deDEPages[] =
         deDEWelcomePageEntries
     },
     {
-        INTRO_PAGE,
+        INSTALL_INTRO_PAGE,
         deDEIntroPageEntries
     },
     {

@@ -707,7 +707,7 @@ MUI_PAGE enUSPages[] =
        enUSWelcomePageEntries
     },
     {
-        INTRO_PAGE,
+        INSTALL_INTRO_PAGE,
         enUSIntroPageEntries
     },
     {
