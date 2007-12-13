@@ -1,7 +1,0 @@
-"ethboot" is a Cromwell image that can be used to chainload Cromwell
-via Etherboot. This makes it easy to test out new Cromwell builds 
-without needing to burn them into flash memory.
-
-"ethboot" can be used just like a kernel image, i.e. it needs to be copied to 
-your tftp directory and specified in the "filename" option of dhcpd.conf. 
-Select the Etherboot option in Cromwell and enjoy your new BIOS.
