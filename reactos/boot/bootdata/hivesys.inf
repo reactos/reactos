@@ -38,6 +38,12 @@ HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB","CurrentConfig",0x00010001,0x
 HKLM,"SYSTEM\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0000","FriendlyName",0x00000000,"New Hardware Profile"
 
 ; Keyboard Layouts
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00040402","Layout File",0x00000000,"kbdbgm.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00040402","Layout Text",0x00000000,"Bulgarian BDS 5237-1978"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00020402","Layout File",0x00000000,"kbdbgt.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00020402","Layout Text",0x00000000,"Bulgarian phonetic classic"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00030402","Layout File",0x00000000,"kbdbga.dll"
+HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00030402","Layout Text",0x00000000,"Bulgarian phonetic BDS 5237-2006 "
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout File",0x00000000,"kbdda.dll"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000406","Layout Text",0x00000000,"Danish"
 HKLM,"SYSTEM\CurrentControlSet\Control\KeyboardLayouts\00000407","Layout File",0x00000000,"kbdgr.dll"

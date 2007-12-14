@@ -130,6 +130,9 @@ dll\directx\wine\wined3d\wined3d.dll                1
 dll\directx\wine\d3d9\d3d9.dll                      1
 dll\directx\devenum\devenum.dll                     1
 
+dll\keyboard\kbdbgm\kbdbgm.dll                      1
+dll\keyboard\kbdbgt\kbdbgt.dll                      1
+dll\keyboard\kbdbga\kbdbga.dll                      1
 dll\keyboard\kbdbe\kbdbe.dll                        1
 dll\keyboard\kbdbur\kbdbur.dll                      1
 dll\keyboard\kbdcz1\kbdcz1.dll                      1
