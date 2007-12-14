@@ -1,7 +1,17 @@
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS ReactX
+ * FILE:            dll/directx/d3d9/d3d9_helpers.c
+ * PURPOSE:         d3d9.dll helper functions
+ * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
+ */
+
 #include <windows.h>
 #include <d3d9.h>
 
 #define DLLAPI __declspec(dllexport)
+
+typedef IDirect3D9* WINAPI (*LPDIRECT3DCREATE9)(UINT);
 
 struct _tagDIRECTD3D9_INT_
 {
@@ -11,7 +21,7 @@ struct _tagDIRECTD3D9_INT_
 /* 0x0020 */    DWORD dwProcessId; 
 /* 0x0024 */    struct _tagDIRECTD3D9_INT_ * lpInt; 
 /* 0x0028 */    DWORD dwIntRefCnt;      /* Increases and decreases by AddRef() and Release() */
-/* 0x002c */    DWORD unknown000011;      /* 0x00000001 - Probably AdapterIndex */
+/* 0x002c */    DWORD unknown000011;    /* 0x00000001 - Probably AdapterIndex */
 /* 0x0030 */    GUID DisplayGuid;       /*? Always {67685559-3106-11D0-B971-00AA00342F9F} ? */
 /* 0x0040 */    CHAR DeviceName[16];
 /* 0x0050 */    DWORD unknown000020; 
