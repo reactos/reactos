@@ -177,6 +177,9 @@ typedef struct _DEVCAPS // Very similar to GDIINFO
     ULONG ulDesktopHorzRes;
     ULONG ulDesktopVertRes;
     ULONG ulBltAlignment;
+    ULONG ulReserved[4];
+    ULONG ulShadeBlend;
+    ULONG ulColorMgmtCaps;
 } DEVCAPS, *PDEVCAPS;
 
 /* Font Structures */
