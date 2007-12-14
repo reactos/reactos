@@ -4,6 +4,15 @@
 	<directory name="kbdbe">
 		<xi:include href="kbdbe/kbdbe.rbuild" />
 	</directory>
+	<directory name="kbdbga">
+		<xi:include href="kbdbga/kbdbga.rbuild" />
+	</directory>
+	<directory name="kbdbgm">
+		<xi:include href="kbdbgm/kbdbgm.rbuild" />
+	</directory>
+	<directory name="kbdbgt">
+		<xi:include href="kbdbgt/kbdbgt.rbuild" />
+	</directory>
 	<directory name="kbdbur">
 		<xi:include href="kbdbur/kbdbur.rbuild" />
 	</directory>
