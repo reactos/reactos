@@ -103,7 +103,6 @@ HvMarkCellDirty(
    HCELL_INDEX CellIndex,
    BOOLEAN HoldingLock)
 {
-   LONG CellSize;
    ULONG CellBlock;
    ULONG CellLastBlock;
 
@@ -117,10 +116,6 @@ HvMarkCellDirty(
 
    CellBlock = (CellIndex & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
    CellLastBlock = ((CellIndex + HV_BLOCK_SIZE - 1) & HCELL_BLOCK_MASK) >> HCELL_BLOCK_SHIFT;
-
-   CellSize = HvpGetCellFullSize(RegistryHive, HvGetCell(RegistryHive, CellIndex));
-   if (CellSize < 0)
-      CellSize = -CellSize;
 
    RtlSetBits(&RegistryHive->DirtyVector,
               CellBlock, CellLastBlock - CellBlock);
@@ -229,7 +224,7 @@ HvpRemoveFree(
       pFreeCellOffset = FreeCellData;
    }
 
-   //ASSERT(FALSE);
+   ASSERT(FALSE);
 }
 
 static HCELL_INDEX CMAPI
@@ -349,8 +344,13 @@ HvAllocateCell(
    FreeCell = HvpGetCellHeader(RegistryHive, FreeCellOffset);
 
    /* Split the block in two parts */
-   /* FIXME: There is some minimal cell size that we must respect. */
-   if ((ULONG)FreeCell->Size > Size + sizeof(HCELL_INDEX))
+
+   /* The free block that is created has to be at least
+      sizeof(HCELL) + sizeof(HCELL_INDEX) big, so that free
+      cell list code can work. Moreover we round cell sizes
+      to 16 bytes, so creating a smaller block would result in
+      a cell that would never be allocated. */
+   if ((ULONG)FreeCell->Size > Size + 16)
    {
       NewCell = (PHCELL)((ULONG_PTR)FreeCell + Size);
       NewCell->Size = FreeCell->Size - Size;
