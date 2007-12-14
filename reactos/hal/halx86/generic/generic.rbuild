@@ -12,8 +12,8 @@
 		<file>dma.c</file>
 		<file>drive.c</file>
 		<file>display.c</file>
+		<file>halinit.c</file>
 		<file>misc.c</file>
-		<file>pci.c</file>
 		<file>portio.c</file>
 		<file>profil.c</file>
 		<file>reboot.c</file>
@@ -28,8 +28,14 @@
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>irq.S</file>
-		<file>halinit.c</file>
 		<file>processor.c</file>
 		<file>spinlock.c</file>
+	</module>
+	<module name="hal_generic_pc" type="objectlibrary">
+		<include base="hal_generic_pc">../include</include>
+		<include base="ntoskrnl">include</include>
+		<define name="_DISABLE_TIDENTS" />
+		<define name="_NTHAL_" />
+		<file>pci.c</file>
 	</module>
 </group>

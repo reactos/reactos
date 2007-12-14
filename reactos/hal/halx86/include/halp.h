@@ -115,12 +115,6 @@ HaliSetSystemInformation(
     IN OUT PVOID Buffer
 );
 
-typedef struct tagHALP_HOOKS
-{
-  void (*InitPciBus)(PBUS_HANDLER BusHandler);
-} HALP_HOOKS, *PHALP_HOOKS;
-
-extern HALP_HOOKS HalpHooks;
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
 #endif /* __INTERNAL_HAL_HAL_H */

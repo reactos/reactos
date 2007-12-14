@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <halxbox.h>
+#include "halxbox.h"
 
 #define NDEBUG
 #include <debug.h>

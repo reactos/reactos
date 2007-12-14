@@ -14,7 +14,6 @@
 
 /* GLOBALS *******************************************************************/
 
-HALP_HOOKS HalpHooks;
 BOOLEAN HalpPciLockSettings;
 
 /* PRIVATE FUNCTIONS *********************************************************/

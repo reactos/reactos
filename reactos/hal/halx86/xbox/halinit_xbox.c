@@ -11,7 +11,7 @@
 
 /* INCLUDES *****************************************************************/
 
-#include <halxbox.h>
+#include "halxbox.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -21,8 +21,6 @@
 VOID
 HalpInitPhase0(PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    HalpHooks.InitPciBus = HalpXboxInitPciBus;
-
     HalpXboxInitPartIo();
 }
 

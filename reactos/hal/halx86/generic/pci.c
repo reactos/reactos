@@ -346,6 +346,26 @@ HalpGetPCIData(IN PBUS_HANDLER BusHandler,
     PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
 
+#ifdef SARCH_XBOX
+    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
+     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
+     * video card, so it appears to be present on 1:0:0 - 1:31:0.
+     * We hack around these problems by indicating "device not present" for devices
+     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
+    if ((0 == BusHandler->BusNumber && 0 == Slot.u.bits.DeviceNumber &&
+         (1 == Slot.u.bits.FunctionNumber || 2 == Slot.u.bits.FunctionNumber)) ||
+        (1 == BusHandler->BusNumber && 0 != Slot.u.bits.DeviceNumber))
+    {
+        DPRINT("Blacklisted PCI slot\n");
+        if (0 == Offset && 2 <= Length)
+        {
+            *(PUSHORT)Buffer = PCI_INVALID_VENDORID;
+            return 2;
+        }
+        return 0;
+    }
+#endif
+
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
 
@@ -416,6 +436,21 @@ HalpSetPCIData(IN PBUS_HANDLER BusHandler,
     UCHAR PciBuffer[PCI_COMMON_HDR_LENGTH];
     PPCI_COMMON_CONFIG PciConfig = (PPCI_COMMON_CONFIG)PciBuffer;
     ULONG Len = 0;
+
+#ifdef SARCH_XBOX
+    /* Trying to get PCI config data from devices 0:0:1 and 0:0:2 will completely
+     * hang the Xbox. Also, the device number doesn't seem to be decoded for the
+     * video card, so it appears to be present on 1:0:0 - 1:31:0.
+     * We hack around these problems by indicating "device not present" for devices
+     * 0:0:1, 0:0:2, 1:1:0, 1:2:0, 1:3:0, ...., 1:31:0 */
+    if ((0 == BusHandler->BusNumber && 0 == Slot.u.bits.DeviceNumber &&
+         (1 == Slot.u.bits.FunctionNumber || 2 == Slot.u.bits.FunctionNumber)) ||
+        (1 == BusHandler->BusNumber && 0 != Slot.u.bits.DeviceNumber))
+    {
+        DPRINT1("Trying to set data on blacklisted PCI slot\n");
+        return 0;
+    }
+#endif
 
     /* Normalize the length */
     if (Length > sizeof(PCI_COMMON_CONFIG)) Length = sizeof(PCI_COMMON_CONFIG);
@@ -893,9 +928,6 @@ VOID
 NTAPI
 HalpInitializePciBus(VOID)
 {
-    /* Initialize the hooks */
-    if (HalpHooks.InitPciBus) HalpHooks.InitPciBus(&HalpFakePciBusHandler);
-
     /* Initialize the stubs */
     HalpInitializePciStubs();
 
