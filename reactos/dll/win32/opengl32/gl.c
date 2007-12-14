@@ -25,6 +25,9 @@
 #include <windows.h>
 #include "teb.h"
 
+#define C_ASSERT(e) extern char __C_ASSERT__[(e)?1:-1]
+C_ASSERT(FIELD_OFFSET(TEB, glTable) == 0xbe8);
+
 #include "opengl32.h"
 
 int STDCALL glEmptyFunc0() { return 0; }
