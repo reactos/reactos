@@ -353,6 +353,62 @@ BEGIN
 	PUSHBUTTON "Cancel", 14006, 206, 236, 50, 14
 END
 
+FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "General"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+
+GROUPBOX "Tasks", -1, 7, 10, 249, 45
+//ICON
+AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "Use Windows class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
+GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
+//ICON
+AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
+AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
+GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+//ICON
+AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
+PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
+END
+
+FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "View"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+GROUPBOX "Folder views", -1, 7, 10, 249, 60
+//ICON
+LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
+PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
+PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+END
+
+FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
+CAPTION "File Types"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
+PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
+LTEXT "Opens with:", -1, 12, 140, 40, 10
+//ICON
+LTEXT "Appname", 14005, 100, 140, 40, 10
+PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
+PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+END
+
 STRINGTABLE LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 BEGIN
 	/* columns in the shellview */
