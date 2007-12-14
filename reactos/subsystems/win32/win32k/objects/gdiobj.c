@@ -238,7 +238,7 @@ void IntDumpHandleTable(PGDI_HANDLE_TABLE HandleTable)
 	DPRINT1("reporting gdi handle abusers:\n");
 
 	/* step through GDI handle table and find out who our culprit is... */
-	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT-1; i++ )
+	for ( i = RESERVE_ENTRIES_COUNT; i < GDI_HANDLE_COUNT; i++ )
 	{
 		for ( j = 0; j < n; j++ )
 		{
@@ -776,7 +776,7 @@ GDIOBJ_LockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int line, HG
 GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
 #endif /* GDI_DEBUG */
 {
-   USHORT HandleIndex;
+   ULONG HandleIndex;
    PGDI_TABLE_ENTRY Entry;
    HANDLE ProcessId, HandleProcessId, LockedProcessId, PrevProcId;
    PGDIOBJ Object = NULL;
@@ -787,7 +787,7 @@ GDIOBJ_LockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
    HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
    /* Check that the handle index is valid. */
-   if (HandleIndex >= GDI_HANDLE_COUNT-1)
+   if (HandleIndex >= GDI_HANDLE_COUNT)
       return NULL;
 
    Entry = &HandleTable->Entries[HandleIndex];
@@ -924,7 +924,7 @@ GDIOBJ_ShareLockObjDbg (PGDI_HANDLE_TABLE HandleTable, const char* file, int lin
 GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD ExpectedType)
 #endif /* GDI_DEBUG */
 {
-   USHORT HandleIndex;
+   ULONG HandleIndex;
    PGDI_TABLE_ENTRY Entry;
    HANDLE ProcessId, HandleProcessId, LockedProcessId, PrevProcId;
    PGDIOBJ Object = NULL;
@@ -935,7 +935,7 @@ GDIOBJ_ShareLockObj (PGDI_HANDLE_TABLE HandleTable, HGDIOBJ hObj, DWORD Expected
    HandleUpper = GDI_HANDLE_GET_UPPER(hObj);
 
    /* Check that the handle index is valid. */
-   if (HandleIndex >= GDI_HANDLE_COUNT-1)
+   if (HandleIndex >= GDI_HANDLE_COUNT)
       return NULL;
 
    /* Check if we have the requested type */
