@@ -7,10 +7,10 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
+#include "desk.h"
+
 //#define NDEBUG
 #include <debug.h>
-
-#include "desk.h"
 
 DWORD WINAPI
 DisplayClassInstaller(

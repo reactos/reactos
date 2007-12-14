@@ -31,9 +31,9 @@
  * TODO: Implement format
  */
 
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntddk.h>
 
 #include "floppy.h"
 #include "hardware.h"

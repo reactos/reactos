@@ -6,10 +6,10 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
+#include "pciide.h"
+
 #define NDEBUG
 #include <debug.h>
-
-#include "pciide.h"
 
 IDE_CHANNEL_STATE NTAPI
 PciIdeChannelEnabled(

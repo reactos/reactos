@@ -6,11 +6,11 @@
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */
 
-#define NDEBUG
-#include <debug.h>
-
 #define INITGUID
 #include "pciidex.h"
+
+#define NDEBUG
+#include <debug.h>
 
 static DRIVER_DISPATCH PciIdeXForwardOrIgnore;
 static NTSTATUS NTAPI

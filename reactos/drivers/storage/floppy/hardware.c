@@ -48,9 +48,9 @@
  * TODO: Figure out the right delays in Send_Byte and Get_Byte
  */
 
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntddk.h>
 
 #include "floppy.h"
 #include "hardware.h"

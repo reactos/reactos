@@ -40,9 +40,9 @@
  * TODO: Media detection based on sector 1
  */
 
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntddk.h>
 
 #include "floppy.h"
 #include "hardware.h"

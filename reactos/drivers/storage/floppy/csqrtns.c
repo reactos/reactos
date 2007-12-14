@@ -38,9 +38,9 @@
  *       that my lock choice is a spin lock.
  */
 
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntddk.h>
 
 #include "floppy.h"
 #include "csqrtns.h"

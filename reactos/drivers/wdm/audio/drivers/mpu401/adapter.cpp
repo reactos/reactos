@@ -15,8 +15,8 @@
 #define PUT_GUIDS_HERE
 
 #define INITGUID
-#include <debug.h>
 #include <ntddk.h>
+#include <debug.h>
 
 #include <portcls.h>
 

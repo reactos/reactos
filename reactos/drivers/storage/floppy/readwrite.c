@@ -52,9 +52,9 @@
  * TODO: Figure out specify timings
  */
 
+#include <ntddk.h>
 #define NDEBUG
 #include <debug.h>
-#include <ntddk.h>
 
 #include "floppy.h"
 #include "csqrtns.h"
