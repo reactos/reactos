@@ -110,22 +110,22 @@ RtlAssert(
         DbgPrint("WARNING:  %s at %s:%d is UNIMPLEMENTED!\n",__FUNCTION__,__FILE__,__LINE__);
 
     #if defined(__GNUC__)
-        #define ERR_(ch, args...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define ERR_(ch, args...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, ##args)
-        #define WARN_(ch, args...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define WARN_(ch, args...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, ##args)
-        #define TRACE_(ch, args...) DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define TRACE_(ch, args...) DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, ##args)
-        #define INFO_(ch, args...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define INFO_(ch, args...)  DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, ##args)
     #elif defined(_MSC_VER)
-        #define ERR_(ch, ...)       DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define ERR_(ch, ...)       DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, __VA_ARGS__)
-        #define WARN_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define WARN_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, __VA_ARGS__)
-        #define TRACE_(ch, ...)     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define TRACE_(ch, ...)     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_TRACE_LEVEL, __VA_ARGS__)
-        #define INFO_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d)", __FILE__, __LINE__), \
+        #define INFO_(ch, ...)      DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, "(%s:%d) ", __FILE__, __LINE__), \
                                     DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_INFO_LEVEL, __VA_ARGS__)
     #else
         #error Unknown compiler
