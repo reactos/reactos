@@ -395,7 +395,8 @@ xHalQueryDriveLayout(IN PUNICODE_STRING DeviceName,
     return(Status);
 }
 
-VOID FASTCALL
+VOID
+FASTCALL
 xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                          IN PSTRING NtDeviceName,
                          OUT PUCHAR NtSystemPath,
@@ -1205,17 +1206,12 @@ Cleanup:
     return;
 }
 
-/* PUBLIC FUNCTIONS **********************************************************/
-
-/*
- * @implemented
- */
 VOID
 FASTCALL
-HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
-              IN ULONG SectorSize,
-              IN ULONG MbrTypeIdentifier,
-              OUT PVOID *MbrBuffer)
+xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+               IN ULONG SectorSize,
+               IN ULONG MbrTypeIdentifier,
+               OUT PVOID *MbrBuffer)
 {
     LARGE_INTEGER Offset;
     PUCHAR Buffer;
@@ -1316,15 +1312,12 @@ HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     }
 }
 
-/*
- * @implemented
- */
 NTSTATUS
 FASTCALL
-IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
-                     IN ULONG SectorSize,
-                     IN BOOLEAN ReturnRecognizedPartitions,
-                     IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                         IN ULONG SectorSize,
+                         IN BOOLEAN ReturnRecognizedPartitions,
+                         IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -1746,15 +1739,12 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-/*
- * @implemented
- */
 NTSTATUS
 FASTCALL
-IoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
-                          IN ULONG SectorSize,
-                          IN ULONG PartitionNumber,
-                          IN ULONG PartitionType)
+xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                              IN ULONG SectorSize,
+                              IN ULONG PartitionNumber,
+                              IN ULONG PartitionType)
 {
     PIRP Irp;
     KEVENT Event;
@@ -1937,16 +1927,13 @@ IoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
-/*
- * @implemented
- */
 NTSTATUS
 FASTCALL
-IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
-                      IN ULONG SectorSize,
-                      IN ULONG SectorsPerTrack,
-                      IN ULONG NumberOfHeads,
-                      IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                          IN ULONG SectorSize,
+                          IN ULONG SectorsPerTrack,
+                          IN ULONG NumberOfHeads,
+                          IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
     KEVENT Event;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -2229,6 +2216,74 @@ IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     return Status;
 }
 
+/* PUBLIC FUNCTIONS **********************************************************/
+
+/*
+ * @implemented
+ */
+VOID
+FASTCALL
+HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+              IN ULONG SectorSize,
+              IN ULONG MbrTypeIdentifier,
+              OUT PVOID *MbrBuffer)
+{
+    HalDispatchTable.HalExamineMBR(DeviceObject,
+                                   SectorSize,
+                                   MbrTypeIdentifier,
+                                   MbrBuffer);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+FASTCALL
+IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                     IN ULONG SectorSize,
+                     IN BOOLEAN ReturnRecognizedPartitions,
+                     IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
+{
+    return HalIoReadPartitionTable(DeviceObject,
+                                   SectorSize,
+                                   ReturnRecognizedPartitions,
+                                   PartitionBuffer);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+FASTCALL
+IoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                          IN ULONG SectorSize,
+                          IN ULONG PartitionNumber,
+                          IN ULONG PartitionType)
+{
+    return HalIoSetPartitionInformation(DeviceObject,
+                                        SectorSize,
+                                        PartitionNumber,
+                                        PartitionType);
+}
+
+/*
+ * @implemented
+ */
+NTSTATUS
+FASTCALL
+IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                      IN ULONG SectorSize,
+                      IN ULONG SectorsPerTrack,
+                      IN ULONG NumberOfHeads,
+                      IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
+{
+    return HalIoWritePartitionTable(DeviceObject,
+                                    SectorSize,
+                                    SectorsPerTrack,
+                                    NumberOfHeads,
+                                    PartitionBuffer);
+}
+
 /*
  * @implemented
  */
@@ -2239,11 +2294,10 @@ IoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      OUT PUCHAR NtSystemPath,
                      OUT PSTRING NtSystemPathString)
 {
-    /* Call our deprecated function for now */
-    xHalIoAssignDriveLetters(LoaderBlock,
-                             NtDeviceName,
-                             NtSystemPath,
-                             NtSystemPathString);
+    HalIoAssignDriveLetters(LoaderBlock,
+                            NtDeviceName,
+                            NtSystemPath,
+                            NtSystemPathString);
 }
 
 /* EOF */

@@ -9,6 +9,45 @@
 #define _HAL_
 
 //
+// Default implementations of HAL dispatch table
+//
+VOID
+FASTCALL
+xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
+               IN ULONG SectorSize,
+               IN ULONG MbrTypeIdentifier,
+               OUT PVOID *MbrBuffer);
+
+VOID
+FASTCALL
+xHalIoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+                         IN PSTRING NtDeviceName,
+                         OUT PUCHAR NtSystemPath,
+                         OUT PSTRING NtSystemPathString);
+
+NTSTATUS
+FASTCALL
+xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                         IN ULONG SectorSize,
+                         IN BOOLEAN ReturnRecognizedPartitions,
+                         IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer);
+
+NTSTATUS
+FASTCALL
+xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
+                              IN ULONG SectorSize,
+                              IN ULONG PartitionNumber,
+                              IN ULONG PartitionType);
+
+NTSTATUS
+FASTCALL
+xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
+                          IN ULONG SectorSize,
+                          IN ULONG SectorsPerTrack,
+                          IN ULONG NumberOfHeads,
+                          IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer);
+
+//
 // Various offsets in the boot record
 //
 #define PARTITION_TABLE_OFFSET                      (0x1BE / 2)
