@@ -16,6 +16,9 @@ HvpGetCellHeader(
 {
    PVOID Block;
 
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx\n",
+       __FUNCTION__, RegistryHive, CellIndex);
+
    ASSERT(CellIndex != HCELL_NIL);
    if (!RegistryHive->Flat)
    {
@@ -105,6 +108,9 @@ HvMarkCellDirty(
    ULONG CellLastBlock;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
+
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, HoldingLock %b\n",
+       __FUNCTION__, RegistryHive, CellIndex, HoldingLock);
 
    if ((CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT != Stable)
       return FALSE;
@@ -321,6 +327,9 @@ HvAllocateCell(
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, Size %x, %s, Vicinity %08lx\n",
+       __FUNCTION__, RegistryHive, Size, (Storage == 0) ? "Stable" : "Volatile", Vicinity);
+
    /* Round to 16 bytes multiple. */
    Size = ROUND_UP(Size + sizeof(HCELL), 16);
 
@@ -356,6 +365,9 @@ HvAllocateCell(
    FreeCell->Size = -FreeCell->Size;
    RtlZeroMemory(FreeCell + 1, Size - sizeof(HCELL));
 
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - CellIndex %08lx\n",
+       __FUNCTION__, FreeCellOffset);
+
    return FreeCellOffset;
 }
 
@@ -372,6 +384,9 @@ HvReallocateCell(
    HSTORAGE_TYPE Storage;
 
    ASSERT(CellIndex != HCELL_NIL);
+
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx, Size %x\n",
+       __FUNCTION__, RegistryHive, CellIndex, Size);
 
    Storage = (CellIndex & HCELL_TYPE_MASK) >> HCELL_TYPE_SHIFT;
 
@@ -415,6 +430,9 @@ HvFreeCell(
    ULONG CellBlock;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
+
+   CMLTRACE(CMLIB_HCELL_DEBUG, "%s - Hive %p, CellIndex %08lx\n",
+       __FUNCTION__, RegistryHive, CellIndex);
 
    Free = HvpGetCellHeader(RegistryHive, CellIndex);
 

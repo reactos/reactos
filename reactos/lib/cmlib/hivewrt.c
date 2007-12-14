@@ -163,7 +163,7 @@ HvpWriteHive(
    RegistryHive->BaseBlock->Type = HFILE_TYPE_PRIMARY;
    RegistryHive->BaseBlock->Sequence1++;
    RegistryHive->BaseBlock->CheckSum =
-      HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
+   HvpHiveHeaderChecksum(RegistryHive->BaseBlock);
 
    /* Write hive block */
    FileOffset = 0;

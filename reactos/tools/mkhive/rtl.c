@@ -5,6 +5,7 @@
  */
 
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "mkhive.h"
 #include <bitmap.c>
@@ -157,3 +158,14 @@ ExFreePool(
 	free(p);
 }
 
+ULONG
+__cdecl
+DbgPrint(
+  IN CHAR *Format,
+  IN ...)
+{
+    va_list ap;
+    va_start(ap, Format);
+    vprintf(Format, ap);
+    va_end(ap);
+}

@@ -7,6 +7,8 @@
 
 #include "cmlib.h"
 
+ULONG CmlibTraceLevel = 0;
+
 BOOLEAN CMAPI
 CmCreateRootNode(
    PHHIVE Hive,

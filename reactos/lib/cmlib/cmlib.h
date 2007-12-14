@@ -25,6 +25,30 @@
 
 #endif
 
+//
+// Debug support switch
+//
+#define _CMLIB_DEBUG_ 1
+
+//
+// These define the Debug Masks Supported
+//
+#define CMLIB_HCELL_DEBUG                                 0x01
+
+//
+// Debug/Tracing support
+//
+#if _CMLIB_DEBUG_
+#ifdef NEW_DEBUG_SYSTEM_IMPLEMENTED // enable when Debug Filters are implemented
+#define CMLTRACE DbgPrintEx
+#else
+#define CMLTRACE(x, ...)                                 \
+    if (x & CmlibTraceLevel) DbgPrint(__VA_ARGS__)
+#endif
+#else
+#define CMLTRACE(x, ...) DPRINT(__VA_ARGS__)
+#endif
+
 #ifndef _TYPEDEFS_HOST_H
  #include <ntddk.h>
 
@@ -158,6 +182,7 @@ typedef struct _CMHIVE
 
 #endif
 
+extern ULONG CmlibTraceLevel;
 
 /*
  * Public functions.
