@@ -16,8 +16,11 @@ typedef struct _GDI_HANDLE_TABLE
  */
 //////////////////////////////////////////////////////////////////////////////
   GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT];
-  DEVCAPS DevCaps;     // Device Capabilities
-  // Font data
+  DEVCAPS         DevCaps;                 // Device Capabilities
+  FLONG           flDeviceUniq;            // Device settings uniqueness.
+  PVOID           pvLangPack;              // Lanuage Pack.
+  CFONT           cfPublic[GDI_CFONT_MAX]; // Public Fonts.
+  DWORD           dwCsbSupported1;         // OEM code-page bitfield.
 //////////////////////////////////////////////////////////////////////////////
   PPAGED_LOOKASIDE_LIST LookasideLists;
 

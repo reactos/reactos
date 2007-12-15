@@ -21,6 +21,7 @@
 /* GDI handle table can hold 0x10000 handles */
 #define GDI_HANDLE_COUNT 0x10000
 #define GDI_GLOBAL_PROCESS (0x0)
+#define GDI_CFONT_MAX 16
 
 /* Handle Masks and shifts */
 #define GDI_HANDLE_INDEX_MASK (GDI_HANDLE_COUNT - 1)
@@ -212,6 +213,19 @@ typedef struct _GDI_TABLE_ENTRY
     LONG  Type;       /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
+
+//
+// User space only structure!
+//
+typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
+{
+    GDI_TABLE_ENTRY Entries[GDI_HANDLE_COUNT]; // Handle table.
+    DEVCAPS         DevCaps;                   // Shared device capabilities.
+    FLONG           flDeviceUniq;              // Device settings uniqueness.
+    PVOID           pvLangPack;                // Lanuage Pack.
+    CFONT           cfPublic[GDI_CFONT_MAX];   // Public Fonts.
+    DWORD           dwCsbSupported1;           // OEM code-page bitfield.
+} GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
 typedef struct _RGNATTR
 {

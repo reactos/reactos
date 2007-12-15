@@ -128,8 +128,11 @@ typedef CHWIDTHINFO *PCHWIDTHINFO;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
 
-/* FIXME: Unknown; easy to guess, usually based on public types and converted */
-typedef struct _REALIZATION_INFO REALIZATION_INFO, *PREALIZATION_INFO;
+typedef struct _REALIZATION_INFO // Based on LOCALESIGNATURE
+{
+    DWORD  dwCsbDefault[2];
+    DWORD  dwCsbSupported0;
+} REALIZATION_INFO, *PREALIZATION_INFO;
 
 typedef struct _WIDTHDATA
 {
@@ -240,6 +243,26 @@ typedef union
   FLOAT f;
   ULONG l;
 } gxf_long;
+
+typedef struct _CFONT
+{
+    struct _CFONT   *pcfNext;
+    HFONT           hf;
+    ULONG           cRef;               // Count of all pointers to this CFONT.
+    FLONG           fl;
+    LONG            lHeight;            // Precomputed logical height.
+    HDC             hdc;                // HDC of realization.  0 for display.
+    EFLOAT_S        efM11;              // efM11 of WtoD of DC of realization
+    EFLOAT_S        efM22;              // efM22 of WtoD of DC of realization
+    EFLOAT_S        efDtoWBaseline;     // Precomputed back transform.  (FXtoL)
+    EFLOAT_S        efDtoWAscent;       // Precomputed back transform.  (FXtoL)
+    WIDTHDATA       wd;
+    FLONG           flInfo;
+    USHORT          sWidth[256];        // Widths in pels.
+    ULONG           ulAveWidth;         // bogus average used by USER
+    TMW_INTERNAL    tmw;                // cached metrics
+    LOCALESIGNATURE lsLocSig;           // font signature information
+} CFONT, *PCFONT;
 
 //
 // GDI Batch structures.
