@@ -697,7 +697,6 @@ NtUserGetClassLong                      3
 NtUserGetClientOrigin                   2
 NtUserGetClientRect                     2
 NtUserGetMenuDefaultItem                3
-NtUserGetCursorIconSize                 3
 NtUserGetLastInputInfo                  1
 NtUserGetMinMaxInfo                     3
 NtUserGetMonitorInfo                    2

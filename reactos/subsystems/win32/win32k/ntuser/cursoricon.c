@@ -676,69 +676,54 @@ CLEANUP:
 }
 
 
+/* for hints how the prototype might be, see
+   http://forum.grafika.cz/read.php?23,1816012,1816139,quote=1
+   http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
 /*
  * @implemented
  */
 BOOL
-STDCALL
-NtUserGetCursorIconSize(
-   HANDLE hCurIcon,
-   BOOL *fIcon,
-   SIZE *Size)
+NTAPI
+NtUserGetIconSize(
+    HANDLE hCurIcon,
+    DWORD dwUnknown2, // Most of the time Zero.
+    PLONG plcx,       // &size.cx
+    PLONG plcy)       // &size.cy
 {
    PCURICON_OBJECT CurIcon;
-   PBITMAPOBJ bmp;
-   PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
-   BOOL Ret = FALSE;
-   SIZE SafeSize;
-   DECLARE_RETURN(BOOL);
+   NTSTATUS Status = STATUS_SUCCESS;
+   BOOL bRet = FALSE;
 
-   DPRINT("Enter NtUserGetCursorIconSize\n");
+   DPRINT("Enter NtUserGetIconSize\n");
    UserEnterExclusive();
-
-   WinSta = IntGetWinStaObj();
-   if(WinSta == NULL)
-   {
-      RETURN( FALSE);
-   }
 
    if (!(CurIcon = UserGetCurIconObject(hCurIcon)))
    {
-      ObDereferenceObject(WinSta);
-      RETURN(FALSE);
+      goto cleanup;
    }
 
-   /* Copy fields */
-   Status = MmCopyToCaller(fIcon, &CurIcon->IconInfo.fIcon, sizeof(BOOL));
-   if(!NT_SUCCESS(Status))
+   _SEH_TRY
    {
-      SetLastNtError(Status);
-      goto done;
+       ProbeForWrite(plcx, sizeof(LONG), 1);
+       RtlCopyMemory(plcx, &CurIcon->Size.cx, sizeof(LONG));
+       ProbeForWrite(plcy, sizeof(LONG), 1);
+       RtlCopyMemory(plcy, &CurIcon->Size.cy, sizeof(LONG));
    }
+   _SEH_HANDLE
+   {
+       Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
 
-   bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor);
-   if(!bmp)
-      goto done;
-
-   SafeSize.cx = bmp->SurfObj.sizlBitmap.cx;
-   SafeSize.cy = bmp->SurfObj.sizlBitmap.cy;
-   Status = MmCopyToCaller(Size, &SafeSize, sizeof(SIZE));
    if(NT_SUCCESS(Status))
-      Ret = TRUE;
+      bRet = TRUE;
    else
-      SetLastNtError(Status);
+      SetLastNtError(Status); // maybe not, test this
 
-   BITMAPOBJ_UnlockBitmap(bmp);
-
-done:
-   ObDereferenceObject(WinSta);
-   RETURN( Ret);
-
-CLEANUP:
-   DPRINT("Leave NtUserGetCursorIconSize, ret=%i\n",_ret_);
+cleanup:
+   DPRINT("Leave NtUserGetIconSize, ret=%i\n", bRet);
    UserLeave();
-   END_CLEANUP;
+   return bRet;
 }
 
 
