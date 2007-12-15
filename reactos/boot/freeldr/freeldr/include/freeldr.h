@@ -62,16 +62,16 @@
 #include <ui/noui.h>
 #include <ui/tui.h>
 /* arch files */
-#ifdef _X86_
+#if defined(_M_IX86)
 #include <arch/i386/hardware.h>
 #include <arch/i386/i386.h>
 #include <arch/i386/machpc.h>
 #include <arch/i386/machxbox.h>
 #include <internal/i386/intrin_i.h>
 #include <internal/i386/ke.h>
-#elif _PPC_
+#elif defined(_M_PPC)
 #include <arch/powerpc/hardware.h>
-#elif _MIPS_
+#elif defined(_M_MIPS)
 #include <arch/mips/arcbios.h>
 #endif
 /* misc files */
