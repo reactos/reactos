@@ -2208,9 +2208,14 @@ MingwModuleHandler::GenerateRules ()
 
 	if ( module.name != "zlib" ) /* Avoid make warning */
 	{
-		FileLocation proxyMakefile ( OutputDirectory,
+		DirectoryLocation root;
+		if ( backend->configuration.GenerateProxyMakefilesInSourceTree )
+			root = SourceDirectory;
+		else
+			root = OutputDirectory;
+		FileLocation proxyMakefile ( root,
 		                             module.output->relative_path,
-		                            "makefile" );
+		                            "GNUmakefile" );
 		CLEAN_FILE ( proxyMakefile );
 	}
 
