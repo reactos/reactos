@@ -28,6 +28,23 @@ PWSTR xwcschr( PWSTR String, WCHAR Char )
 	else return NULL;
 }
 
+int xwcsncmp(PCWSTR s1, PCWSTR s2, size_t n)
+{
+    while(n--)
+    {
+        if(*s1 != *s2)
+            return 1;
+
+        if(*s1 == 0)
+            return 0;
+
+        s1++;
+        s2++;
+    }
+
+    return 0;
+}
+
 /*
  * @implemented
  *
@@ -168,4 +185,32 @@ DbgPrint(
     va_start(ap, Format);
     vprintf(Format, ap);
     va_end(ap);
+
+    return 0;
+}
+
+VOID
+NTAPI
+RtlAssert(PVOID FailedAssertion,
+          PVOID FileName,
+          ULONG LineNumber,
+          PCHAR Message)
+{
+   if (NULL != Message)
+   {
+      DbgPrint("Assertion \'%s\' failed at %s line %d: %s\n",
+               (PCHAR)FailedAssertion,
+               (PCHAR)FileName,
+               LineNumber,
+               Message);
+   }
+   else
+   {
+      DbgPrint("Assertion \'%s\' failed at %s line %d\n",
+               (PCHAR)FailedAssertion,
+               (PCHAR)FileName,
+               LineNumber);
+   }
+
+   //DbgBreakPoint();
 }

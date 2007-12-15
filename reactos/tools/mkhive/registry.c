@@ -68,6 +68,8 @@ CreateInMemoryStructure(
 	Key->ValueCount = 0;
 
 	Key->NameSize = KeyName->Length;
+	/* FIXME: It's not enough to allocate this way, because later
+	          this memory gets overwritten with bigger names */
 	Key->Name = malloc (Key->NameSize);
 	if (!Key->Name)
 		return NULL;
@@ -136,7 +138,7 @@ RegpOpenOrCreateKey(
 			RtlInitUnicodeString(&KeyString, LocalKeyName);
 
 		/* Redirect from 'CurrentControlSet' to 'ControlSet001' */
-		if (!memcmp(LocalKeyName, L"CurrentControlSet", 34) &&
+		if (!xwcsncmp(LocalKeyName, L"CurrentControlSet", 17) &&
                     ParentKey->NameSize == 12 &&
                     !memcmp(ParentKey->Name, L"SYSTEM", 12))
 			RtlInitUnicodeString(&KeyString, L"ControlSet001");
