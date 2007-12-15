@@ -4,6 +4,7 @@
 #include "lang/bg-BG.rc"
 #include "lang/ca-ES.rc"
 #include "lang/de-DE.rc"
+#include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
 #include "lang/nb-NO.rc"
@@ -13,6 +14,7 @@
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
 #include "lang/it-IT.rc"
+
 
 
 

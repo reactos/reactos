@@ -1,0 +1,21 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&Αρχείο"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Έ&ξοδος\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&Βοήθεια"
+    BEGIN
+        MENUITEM "&Σχετικά με την Κονσόλα Διαχείρισης του ReactOS...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Κονσόλα Διαχείρισης του ReactOS"
+    IDS_CONSOLETITLE "Κονσόλα%1!u!"
+END

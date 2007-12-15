@@ -1,0 +1,79 @@
+/*
+ * XCOPY - Wine-compatible xcopy program
+ * English language support
+ *
+ * Copyright (C) 2007 J. Edmeades
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    STRING_INVPARMS, "Μη έγκυρος αριθμός παραμέτρων - Χρησιμοποιείστε το xcopy /? για βοήθεια\n"
+    STRING_INVPARM,  "Μη έγκυρη παράμετρος '%s' -  Χρησιμοποιείστε xcopy /? για βοήθεια\n"
+    STRING_PAUSE,    "Πατήστε <enter> για να ξεκινήσει η αντιγραφή\n"
+    STRING_SIMCOPY,  "%d αρχείο(α) θα αντιγραφούν\n"
+    STRING_COPY,     "%d αρχείο(α) αντιγράφηκαν\n"
+    STRING_QISDIR,   "Το '%s' είναι αρχείο ή κατάλογος\n" \
+                     "στον προορισμό;\n" \
+                     "(F - Αρχείο, D - Κατάλογος)\n"
+    STRING_SRCPROMPT,"%s? ((Υ)Ναι|(Ν)Όχι)\n"
+    STRING_OVERWRITE,"Επικάλυψη %s? ((Υ)Ναι|(Ν)Όχι|(Α)Όλα)\n"
+    STRING_COPYFAIL, "Η αντιογραφή του '%s' στο '%s' απέτυχε με r/c %d\n"
+    STRING_OPENFAIL, "Δεν ήταν δυνατό το άνοιγμα του '%s'\n"
+    STRING_READFAIL, "Αποτυχία κατά την ανάγνωση του '%s'\n"
+    STRING_YES_CHAR, "Y"
+    STRING_NO_CHAR,  "N"
+    STRING_ALL_CHAR, "A"
+    STRING_FILE_CHAR,"F"
+    STRING_DIR_CHAR, "D"
+
+    STRING_HELP,
+"XCOPY - Αντιγράφει αρχεία ή δέντρα καταλόγων σε έναν προορισμό\n\
+\n\
+Σύνταξη:\n\
+XCOPY πηγή [προορισμός] [/I] [/S] [/Q] [/F] [/L] [/W] [/T] [/N] [/U] \n\
+\t     [/R] [/H] [/C] [/P] [/A] [/M] [/E] [/D] [/Y] [/-Y]\n\
+\n\
+Όπου:\n\
+\n\
+[/I]  Assume directory if destination does not exist and copying 2 or \n\
+\tmore files\n\
+[/S]  Αντιγραφή καταλόγων και υποκαταλόγων\n\
+[/E]  Αντιγραφή καταλόγων και υποκαταλόγων, συμπεριλαμβανομένων και των άδειων\n\
+[/Q]  Απόκρυψη εμφάνισης λίστας ονομάτων κατά την αντιγραφή, δηλαδή σιωπηλή αντιγραφή.\n\
+[/F]  Εμφάνιση πλήρους μονοπατιού πηγής και προορισμού κατά την αντιγραφή\n\
+[/L]  Εμφάνιση απλά των ονομάτων που θα αντιγραφούν\n\
+[/W]  Προτροπή πριν την εκκίνηση αντιγραφής\n\
+[/T]  Δημιουργία άδειας δομής καταλόγων χωρίς αντιγραφή αρχείων\n\
+[/Y]  Αγνόηση προτρποπής κατά την επικάλυψη αρχείων\n\
+[/-Y] Προτροπή κατά την επικάλυψη αρχείων\n\
+[/P]  Προτροπή για κάθε αρχείο προς αντιγραφή\n\
+[/N]  Αντιγραφή με χρήση μικρών ονομάτων\n\
+[/U]  Αντιγραφή μόνο των αρχείων που υπάρχουν στον προορισμό\n\
+[/R]  Επικάλυψη κάθε αρχείου προς ανάγνωση μόνο\n\
+[/H]  Να συμπεριληφθούν κρυφά αρχεία και αρχεία συστήματος στην αντιγραφή\n\
+[/C]  Συνέχιση της διαδικασίας ακόμα κι αν προκύψει λάθος στο ενδιάμεσο\n\
+[/A]  Αντιγραφή μόνο αρχείων με archive attribute set\n\
+[/M]  Αντιγραφή μόνο αρχείων με archive attribute set, removes \n\
+\tarchive attribute\n\
+[/D | /D:m-d-y] Αντιγραφή νέων αρχείων ή αυτών που τροποποιήθηκαν μετά τη συγκεκριμένη ημερομηνία.\n\
+\t\tΑΝ δεν έχει ορισθεί ημερομηνία, να γίνει αντιγραφή μόνο αν ο προορισμός είναι παλαιότερος\n\
+\t\tαπό την πηγή\n\n"
+
+}
