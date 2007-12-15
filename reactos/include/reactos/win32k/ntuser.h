@@ -1210,13 +1210,6 @@ NtUserGetGUIThreadInfo(
 
 BOOL
 NTAPI
-NtUserGetCursorIconSize(
-  HANDLE Handle,
-  BOOL *fIcon,
-  SIZE *Size);
-
-BOOL
-NTAPI
 NtUserGetIconInfo(
     HANDLE Handle,
     PICONINFO IconInfo,
