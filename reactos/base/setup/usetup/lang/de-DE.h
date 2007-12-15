@@ -34,7 +34,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Druecken Sie L, um die Lizenzabkommen von ReactOS zu lesen",
         TEXT_NORMAL
@@ -46,14 +46,14 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Fuer weitere Informationen, besuchen Sie bitte:",
         TEXT_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org",
         TEXT_HIGHLIGHT
     },
@@ -74,31 +74,31 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
 static MUI_ENTRY deDEIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_UNDERLINE
     },
     {
-        6, 
-        8, 
+        6,
+        8,
         "Das ReactOS Setup ist noch in einer fruehen Entwicklungsphase. Es unter-",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "stuetzt noch nicht alle Funktionen eines vollstaendig nutzbaren Setups.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Folgende Begrenzungen sind vorhanden:",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         13,
         "- Setup kann nur eine primaere Partition auf einer HDD verwalten.",
         TEXT_NORMAL
@@ -128,32 +128,32 @@ static MUI_ENTRY deDEIntroPageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
-        18, 
+        8,
+        18,
         "- Setup unterstuetzt nur FAT Dateisysteme.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "- Dateisystemueberpruefung ist noch nicht implementiert.",
         TEXT_NORMAL
     },
     {
-        8, 
-        23, 
+        8,
+        23,
         "\x07  Druecken Sie ENTER, um ReactOS zu installieren.",
         TEXT_NORMAL
     },
     {
-        8, 
-        25, 
+        8,
+        25,
         "\x07  Druecken Sie F3, um das Setup zu beenden.",
         TEXT_NORMAL
     },
     {
         0,
-        0, 
+        0,
         "   ENTER = Fortsetzen   F3 = Beenden",
         TEXT_STATUS
     },
@@ -239,43 +239,43 @@ static MUI_ENTRY deDELicensePageEntries[] =
         "GNU General Public License with ReactOS please visit",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Warranty:",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "This is free software; see the source for copying conditions.",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
         TEXT_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   ENTER = Zurueck",
         TEXT_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -286,7 +286,7 @@ static MUI_ENTRY deDELicensePageEntries[] =
 static MUI_ENTRY deDEDevicePageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "Die untere Liste zeigt die derzeitigen Geraeteeinstellungen.",
         TEXT_NORMAL
@@ -322,7 +322,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        25, 
+        25,
         16, "Diese Geraeteeinstellungen akzeptieren",
         TEXT_NORMAL
     },
@@ -333,25 +333,25 @@ static MUI_ENTRY deDEDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "Dann druecken Sie ENTER, um eine Alternative Einstellung auszuwaehlen",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         21,
         " ",
         TEXT_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "Wenn alle Einstellungen korrekt sind, waehlen Sie \"Diese Geraete-",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "einstellungen akzeptieren\" und druecken Sie ENTER.",
         TEXT_NORMAL
@@ -373,49 +373,49 @@ static MUI_ENTRY deDEDevicePageEntries[] =
 static MUI_ENTRY deDERepairPageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "Das ReactOS Setup ist noch in einer fruehen Entwicklungsphase. Es unter-",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "stuetzt noch nicht alle Funktionen eines vollstaendig nutzbaren Setups.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Die Reparaturfunktionen sind noch nicht implementiert.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         15,
         "\x07  Druecken Sie U, um ReactOS zu aktualisieren.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         17,
         "\x07  Druecken Sie R, fuer die Wiederherstellungskonsole.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Druecken Sie ESC, um zur Hauptseite zurueckzukehren.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         21,
         "\x07  Druecken Sie ENTER, um den Computer neuzustarten.",
         TEXT_NORMAL
     },
     {
-        0, 
+        0,
         0,
         "   ESC = Hauptseite  ENTER = Neustarten",
         TEXT_STATUS
@@ -440,7 +440,7 @@ static MUI_ENTRY deDEComputerPageEntries[] =
         10,
         "\x07  Druecken Sie die HOCH- oder RUNTER-Taste um den gewuenschten",
         TEXT_NORMAL
-    },    
+    },
     {
         8,
         11,
@@ -840,7 +840,7 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_CABINET_SECTION,
         "Setup konnte die 'Ordner' Sektion im\n"
-        "Cabinet nicht finden.\n", 
+        "Cabinet nicht finden.\n",
         "ENTER = Computer neustarten"
     },
     {

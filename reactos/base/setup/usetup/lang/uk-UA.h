@@ -34,7 +34,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Натисніть <L> щоб переглянути ліцензійні умови ReactOS",
         TEXT_NORMAL
@@ -46,14 +46,14 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Для більш конкретної інформації про ReactOS, будь ласка відвідайте:",
         TEXT_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org/uk/",
         TEXT_HIGHLIGHT
     },
@@ -74,31 +74,31 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
 static MUI_ENTRY ukUAIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " ReactOS " KERNEL_VERSION_STR " Setup ",
         TEXT_UNDERLINE
     },
     {
-        6, 
-        8, 
+        6,
+        8,
         "ReactOS Setup is in an early development phase. It does not yet",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "support all the functions of a fully usable setup application.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "The following limitations apply:",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         13,
         "- Setup can not handle more than one primary partition per disk.",
         TEXT_NORMAL
@@ -128,32 +128,32 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
-        18, 
+        8,
+        18,
         "- Setup supports FAT file systems only.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "- File system checks are not implemented yet.",
         TEXT_NORMAL
     },
     {
-        8, 
-        23, 
+        8,
+        23,
         "\x07  Press ENTER to install ReactOS.",
         TEXT_NORMAL
     },
     {
-        8, 
-        25, 
+        8,
+        25,
         "\x07  Press F3 to quit without installing ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
-        0, 
+        0,
         "   ENTER = Continue   F3 = Quit",
         TEXT_STATUS
     },
@@ -239,43 +239,43 @@ static MUI_ENTRY ukUALicensePageEntries[] =
         "GNU General Public License with ReactOS please visit",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Warranty:",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "This is free software; see the source for copying conditions.",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         25,
         "There is NO warranty; not even for MERCHANTABILITY or",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         26,
         "FITNESS FOR A PARTICULAR PURPOSE",
         TEXT_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   ENTER = Return",
         TEXT_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -286,7 +286,7 @@ static MUI_ENTRY ukUALicensePageEntries[] =
 static MUI_ENTRY ukUADevicePageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "The list below shows the current device settings.",
         TEXT_NORMAL
@@ -322,7 +322,7 @@ static MUI_ENTRY ukUADevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        25, 
+        25,
         16, "Accept these device settings",
         TEXT_NORMAL
     },
@@ -333,25 +333,25 @@ static MUI_ENTRY ukUADevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "to select an entry. Then press the ENTER key to select alternative",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         21,
         "settings.",
         TEXT_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "When all settings are correct, select \"Accept these device settings\"",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "and press ENTER.",
         TEXT_NORMAL
@@ -373,49 +373,49 @@ static MUI_ENTRY ukUADevicePageEntries[] =
 static MUI_ENTRY ukUARepairPageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "ReactOS Setup is in an early development phase. It does not yet",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "support all the functions of a fully usable setup application.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "The repair functions are not implemented yet.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         15,
         "\x07  Press U for Updating OS.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         17,
         "\x07  Press R for the Recovery Console.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Press ESC to return to the main page.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         21,
         "\x07  Press ENTER to reboot your computer.",
         TEXT_NORMAL
     },
     {
-        0, 
+        0,
         0,
         "   ESC = Main page  ENTER = Reboot",
         TEXT_STATUS
@@ -440,7 +440,7 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
         10,
         "\x07  Press the UP or DOWN key to select the desired computer type.",
         TEXT_NORMAL
-    },    
+    },
     {
         8,
         11,

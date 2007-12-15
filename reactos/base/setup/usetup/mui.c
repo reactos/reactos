@@ -111,7 +111,7 @@ MUIDisplayPage(ULONG pg)
                    NULL,
                    NULL,
                    POPUP_WAIT_NONE);
-        return;        
+        return;
     }
 
     index = 0;
@@ -144,14 +144,14 @@ MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
 {
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
-        PopupError("invalid error number provided", 
+        PopupError("invalid error number provided",
                     "press enter to continue",
                     Ir,
                     POPUP_WAIT_ENTER);
 
         return;
     }
-    
+
     PopupError(enUSErrorEntries[ErrorNum].ErrorText,
                enUSErrorEntries[ErrorNum].ErrorStatus,
                Ir,

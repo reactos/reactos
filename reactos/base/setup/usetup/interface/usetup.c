@@ -760,7 +760,7 @@ static PAGE_NUMBER
 LicensePage(PINPUT_RECORD Ir)
 {
    MUIDisplayPage(LICENSE_PAGE);
-    
+
     while (TRUE)
     {
       CONSOLE_ConInKey(Ir);
@@ -943,7 +943,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
 
   CONSOLE_InvertTextXY (24, Line, 48, 1);
 
-  if (RepairUpdateFlag) 
+  if (RepairUpdateFlag)
     {
       return SELECT_PARTITION_PAGE;
     }

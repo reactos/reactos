@@ -34,7 +34,7 @@ static MUI_ENTRY esESWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Presione L para ver las condiciones y términos de licencia",
         TEXT_NORMAL
@@ -46,14 +46,14 @@ static MUI_ENTRY esESWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Para más información sobre ReactOS, visite por favor:",
         TEXT_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org",
         TEXT_HIGHLIGHT
     },
@@ -74,31 +74,31 @@ static MUI_ENTRY esESWelcomePageEntries[] =
 static MUI_ENTRY esESIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Instalación de ReactOS " KERNEL_VERSION_STR,
         TEXT_UNDERLINE
     },
     {
-        6, 
-        8, 
+        6,
+        8,
         "El instalador de ReactOS se encuentra en una etapa preliminar.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "Aún no posee todas las funciones de un instalador.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Se presentan las siguientes limitaciones:",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         13,
         "- El instalador no soporta más de una partición primaria por disco.",
         TEXT_NORMAL
@@ -128,32 +128,32 @@ static MUI_ENTRY esESIntroPageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
-        18, 
+        8,
+        18,
         "- El instalador soporta solamente el sistema de archivos FAT.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "- El comprobador de integridad del sistema de archivos no está aún implementado.",
         TEXT_NORMAL
     },
     {
-        8, 
-        23, 
+        8,
+        23,
         "\x07  Presione ENTER para instalar ReactOS.",
         TEXT_NORMAL
     },
     {
-        8, 
-        25, 
+        8,
+        25,
         "\x07  Presione F3 para salir sin instalar ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
-        0, 
+        0,
         "   ENTER = Continuar   F3 = Salir",
         TEXT_STATUS
     },
@@ -239,43 +239,43 @@ static MUI_ENTRY esESLicensePageEntries[] =
         "GNU General Public License con ReactOS por favor visite",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Garantía:",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "Este es software libre; vea el código para las condiciones de copia.",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         25,
         "NO existe garantía; ni siquiera para MERCANTIBILIDAD",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         26,
         "o el cumplimiento de algún propósito particular",
         TEXT_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   ENTER = Regresar",
         TEXT_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -286,7 +286,7 @@ static MUI_ENTRY esESLicensePageEntries[] =
 static MUI_ENTRY esESDevicePageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "La lista inferior muestra la configuración del dispositivo actual.",
         TEXT_NORMAL
@@ -322,7 +322,7 @@ static MUI_ENTRY esESDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        25, 
+        25,
         16, "Aceptar la configuración de los dispositivos",
         TEXT_NORMAL
     },
@@ -333,25 +333,25 @@ static MUI_ENTRY esESDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "para elegir. Luego presione ENTER para cambiar a una configuración",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         21,
         "alternativa.",
         TEXT_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "Cuando la configuración sea correcta, elija \"Aceptar la configuración",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "de los dispostivos\" y presione ENTER.",
         TEXT_NORMAL
@@ -373,49 +373,49 @@ static MUI_ENTRY esESDevicePageEntries[] =
 static MUI_ENTRY esESRepairPageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "El instalador de ReactOS se encuentra en una etapa preliminar.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "Aún no posee todas las funciones de un instalador.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Las funciones de reparación no han sido aún implementadas.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         15,
         "\x07  Presione U para actualizar el SO.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         17,
         "\x07  Presione R para la consola de recuperación.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Presione ESC para volver al menú principal.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         21,
         "\x07  Presione ENTER para reiniciar su computadora.",
         TEXT_NORMAL
     },
     {
-        0, 
+        0,
         0,
         "ESC = Menú inicial ENTER = Reiniciar",
         TEXT_STATUS
@@ -440,7 +440,7 @@ static MUI_ENTRY esESComputerPageEntries[] =
         10,
         "\x07  Presione las teclas ARRIBA y ABAJO para elegir el tipo.",
         TEXT_NORMAL
-    },    
+    },
     {
         8,
         11,

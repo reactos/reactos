@@ -56,7 +56,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Нажмите L для просмотра лицензионного соглашения ReactOS",
         TEXT_NORMAL
@@ -68,14 +68,14 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         23,
         "Для дополнительной информации о ReactOS посетите:",
         TEXT_NORMAL
     },
     {
-        6, 
-        24, 
+        6,
+        24,
         "http://www.reactos.org",
         TEXT_HIGHLIGHT
     },
@@ -96,31 +96,31 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
 static MUI_ENTRY ruRUIntroPageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
-        6, 
-        8, 
+        6,
+        8,
         "ReactOS находится в ранней стадии разработки и не поддерживает все",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "функции для полной совместимости с утанавливаемыми приложениями.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Имеются следующие ограничения:",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         13,
         "- Установка возможна только на первичный раздел диска",
         TEXT_NORMAL
@@ -150,32 +150,32 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
         TEXT_NORMAL
     },
     {
-        8, 
-        18, 
+        8,
+        18,
         "- При установке поддерживается только файловая система FAT.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "- Проверка файловой системы не осуществляется.",
         TEXT_NORMAL
     },
     {
-        8, 
-        23, 
+        8,
+        23,
         "\x07  Нажмите ввод для установки ReactOS.",
         TEXT_NORMAL
     },
     {
-        8, 
-        25, 
+        8,
+        25,
         "\x07  Нажмите F3 для выхода из установки ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
-        0, 
+        0,
         "   ВВОД = Продолжение   F3 = Выход",
         TEXT_STATUS
     },
@@ -261,43 +261,43 @@ static MUI_ENTRY ruRULicensePageEntries[] =
         "лицензионного соглашения GNU вместе с ReactOS, посетите",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         20,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         22,
         "Гарантии:",
         TEXT_HIGHLIGHT
     },
-    {           
+    {
         8,
         24,
         "Это свободное программное обеспечение; см. источник для просмотра прав.",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         25,
         "НЕТ НИКАКИХ ГАРАНТИЙ; нет гарантии ТОВАРНОГО СОСТОЯНИЯ или",
         TEXT_NORMAL
     },
-    {           
+    {
         8,
         26,
         "ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ",
         TEXT_NORMAL
     },
-    {           
+    {
         0,
         0,
         "   ВВОД = Возврат",
         TEXT_STATUS
     },
-    {           
+    {
         0,
         0,
         NULL,
@@ -308,7 +308,7 @@ static MUI_ENTRY ruRULicensePageEntries[] =
 static MUI_ENTRY ruRUDevicePageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "В списке ниже приведены устройства и их параметры.",
         TEXT_NORMAL
@@ -344,7 +344,7 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        25, 
+        25,
         16, "Применить данные параметры устройств",
         TEXT_NORMAL
     },
@@ -355,25 +355,25 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        6, 
-        20, 
+        6,
+        20,
         "для выделения элемента и клавишу ВВОД для выбора других вариантов",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         21,
         "параметров.",
         TEXT_NORMAL
     },
     {
-        6, 
-        23, 
+        6,
+        23,
         "Когда все параметры определены, выберите \"Применить данные параметры устройств\"",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         24,
         "и нажмите ВВОД.",
         TEXT_NORMAL
@@ -395,49 +395,49 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
 static MUI_ENTRY ruRURepairPageEntries[] =
 {
     {
-        6, 
+        6,
         8,
         "ReactOS находится в ранней стадии разработки и не поддерживает все",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         9,
         "функции для полной совместимости с утанавливаемыми приложениями.",
         TEXT_NORMAL
     },
     {
-        6, 
+        6,
         12,
         "Функция востановления в данным момент отсутствует.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         15,
         "\x07  Нажмите U для обновления ОС.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         17,
         "\x07  Нажмите R для запуска консоли востановления.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         19,
         "\x07  Нажмите ESC для возврата на главную страницу.",
         TEXT_NORMAL
     },
     {
-        8, 
+        8,
         21,
         "\x07  Нажмите ВВОД для перезагрузки компьютера.",
         TEXT_NORMAL
     },
     {
-        0, 
+        0,
         0,
         "   ESC = Главная страница  ВВОД = Перезагрузка",
         TEXT_STATUS
@@ -462,7 +462,7 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
         10,
         "\x07  Нажмите клавишу ВВЕРХ или ВНИЗ для выбора предпочтительного типа компьютера.",
         TEXT_NORMAL
-    },    
+    },
     {
         8,
         11,
