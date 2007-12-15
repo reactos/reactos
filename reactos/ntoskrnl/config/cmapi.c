@@ -1035,12 +1035,13 @@ Quickie:
 
 NTSTATUS
 NTAPI
-CmDeleteKey(IN PCM_KEY_CONTROL_BLOCK Kcb)
+CmDeleteKey(IN PCM_KEY_BODY KeyBody)
 {
     NTSTATUS Status;
     PHHIVE Hive;
     PCM_KEY_NODE Node, Parent;
     HCELL_INDEX Cell, ParentCell;
+    PCM_KEY_CONTROL_BLOCK Kcb = KeyBody->KeyControlBlock;
 
     /* Acquire hive lock */
     KeEnterCriticalRegion();

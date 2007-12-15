@@ -449,15 +449,15 @@ CmpCleanUpKcbValueCache(IN PCM_KEY_CONTROL_BLOCK Kcb)
     else if (Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND)
     {
         /* This is a sym link, check if there's only one reference left */
-        if ((((PCM_KEY_CONTROL_BLOCK)Kcb->ValueCache.RealKcb)->RefCount == 1) &&
-            !(((PCM_KEY_CONTROL_BLOCK)Kcb->ValueCache.RealKcb)->Delete))
+        if ((Kcb->ValueCache.RealKcb->RefCount == 1) &&
+            !(Kcb->ValueCache.RealKcb->Delete))
         {
             /* Disable delay close for the KCB */
-            ((PCM_KEY_CONTROL_BLOCK)Kcb->ValueCache.RealKcb)->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
+            Kcb->ValueCache.RealKcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
         }
 
         /* Dereference the KCB */
-        CmpDelayDerefKeyControlBlock((PCM_KEY_CONTROL_BLOCK)Kcb->ValueCache.RealKcb);
+        CmpDelayDerefKeyControlBlock(Kcb->ValueCache.RealKcb);
         Kcb->ExtFlags &= ~CM_KCB_SYM_LINK_FOUND;
     }
 }
@@ -498,6 +498,61 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
         LockHeldExclusively ?
             CmpDereferenceKeyControlBlockWithLock(Kcb,LockHeldExclusively) :
             CmpDelayDerefKeyControlBlock(Kcb);
+    }
+}
+
+VOID
+NTAPI
+CmpCleanUpSubKeyInfo(IN PCM_KEY_CONTROL_BLOCK Kcb)
+{
+    PCM_KEY_NODE KeyNode;
+    
+    /* Sanity check */
+    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+
+    /* Check if there's any cached subkey */
+    if (Kcb->ExtFlags & (CM_KCB_NO_SUBKEY | CM_KCB_SUBKEY_ONE | CM_KCB_SUBKEY_HINT))
+    {
+        /* Check if there's a hint */
+        if (Kcb->ExtFlags & (CM_KCB_SUBKEY_HINT))
+        {
+            /* Kill it */
+            ExFreePool(Kcb->IndexHint);
+        }
+        
+        /* Remove subkey flags */
+        Kcb->ExtFlags &= ~(CM_KCB_NO_SUBKEY | CM_KCB_SUBKEY_ONE | CM_KCB_SUBKEY_HINT);
+    }
+
+    /* Check if there's no linked cell */
+	if (Kcb->KeyCell == HCELL_NIL)
+    {
+        /* Make sure it's a delete */
+		ASSERT(Kcb->Delete);
+		KeyNode = NULL;
+	}
+    else
+    {
+        /* Get the key node */
+	    KeyNode = (PCM_KEY_NODE)HvGetCell(Kcb->KeyHive, Kcb->KeyCell);
+	}
+    
+    /* Check if we got the node */
+    if (!KeyNode)
+    {
+        /* We didn't, mark the cached data invalid */
+        Kcb->ExtFlags |= CM_KCB_INVALID_CACHED_INFO;
+    }
+    else
+    {
+        /* We have a keynode, update subkey counts */
+        Kcb->ExtFlags &= ~CM_KCB_INVALID_CACHED_INFO;
+        Kcb->SubKeyCount = KeyNode->SubKeyCounts[Stable] +
+                           KeyNode->SubKeyCounts[Volatile];
+        
+        /* Release the cell */
+        HvReleaseCell(Kcb->KeyHive, Kcb->KeyCell);
     }
 }
 
@@ -820,5 +875,4 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
 
     /* FIXME: Implement once we don't link parents to children anymore */
 }
-
 

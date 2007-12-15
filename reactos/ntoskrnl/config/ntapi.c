@@ -33,7 +33,7 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     HANDLE Handle;
     PAGED_CODE();
     DPRINT("NtCreateKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
-    
+
     /* Setup the parse context */
     ParseContext.CreateOperation = TRUE;
     ParseContext.CreateOptions = CreateOptions;
@@ -65,7 +65,7 @@ NtOpenKey(OUT PHANDLE KeyHandle,
     NTSTATUS Status;
     PAGED_CODE();
     DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
-    
+
     /* Just let the object manager handle this */
     Status = ObOpenObjectByName(ObjectAttributes,
                                 CmpKeyObjectType,
@@ -90,7 +90,6 @@ NtDeleteKey(IN HANDLE KeyHandle)
     REG_DELETE_KEY_INFORMATION DeleteKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
-
     DPRINT("NtDeleteKey(KH 0x%p)\n", KeyHandle);
 
     /* Verify that the handle is valid and is a registry key */
@@ -98,13 +97,9 @@ NtDeleteKey(IN HANDLE KeyHandle)
                                        DELETE,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -112,16 +107,17 @@ NtDeleteKey(IN HANDLE KeyHandle)
     Status = CmiCallRegisteredCallbacks(RegNtPreDeleteKey, &DeleteKeyInfo);
     if (NT_SUCCESS(Status))
     {
-        /* Call the internal API */
-        Status = CmDeleteKey(KeyObject->KeyControlBlock);
-
-        /* Remove the keep-alive reference */
-        ObDereferenceObject(KeyObject);
-        if (KeyObject->KeyControlBlock->KeyHive !=
-            KeyObject->KeyControlBlock->ParentKcb->KeyHive)
+        /* Check if we are read-only */
+        if ((KeyObject->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY) ||
+            (KeyObject->KeyControlBlock->ParentKcb->ExtFlags & CM_KCB_READ_ONLY_KEY))
         {
-            /* Dereference again */
-            ObDereferenceObject(KeyObject);
+            /* Fail */
+            Status = STATUS_ACCESS_DENIED;
+        }
+        else
+        {
+            /* Call the internal API */
+            Status = CmDeleteKey(KeyObject);            
         }
 
         /* Do post callback */
@@ -148,22 +144,26 @@ NtEnumerateKey(IN HANDLE KeyHandle,
     REG_ENUMERATE_KEY_INFORMATION EnumerateKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
-
     DPRINT("NtEnumerateKey() KH 0x%x, Index 0x%x, KIC %d, Length %d\n",
-        KeyHandle, Index, KeyInformationClass, Length);
+           KeyHandle, Index, KeyInformationClass, Length);
+
+    /* Reject classes we don't know about */
+    if ((KeyInformationClass != KeyBasicInformation) &&
+        (KeyInformationClass != KeyNodeInformation)  &&
+        (KeyInformationClass != KeyFullInformation))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_ENUMERATE_SUB_KEYS,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -209,22 +209,26 @@ NtEnumerateValueKey(IN HANDLE KeyHandle,
     REG_ENUMERATE_VALUE_KEY_INFORMATION EnumerateValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     PAGED_CODE();
-
     DPRINT("NtEnumerateValueKey() KH 0x%x, Index 0x%x, KVIC %d, Length %d\n",
-        KeyHandle, Index, KeyValueInformationClass, Length);
+           KeyHandle, Index, KeyValueInformationClass, Length);
+
+    /* Reject classes we don't know about */
+    if ((KeyValueInformationClass != KeyValueBasicInformation) &&
+        (KeyValueInformationClass != KeyValueFullInformation)  &&
+        (KeyValueInformationClass != KeyValuePartialInformation))
+    {
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Verify that the handle is valid and is a registry key */
     Status = ObReferenceObjectByHandle(KeyHandle,
                                        KEY_QUERY_VALUE,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
-    }
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -269,25 +273,57 @@ NtQueryKey(IN HANDLE KeyHandle,
     PCM_KEY_BODY KeyObject;
     REG_QUERY_KEY_INFORMATION QueryKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    OBJECT_HANDLE_INFORMATION HandleInfo;
     PAGED_CODE();
-
     DPRINT("NtQueryKey() KH 0x%x, KIC %d, Length %d\n",
-        KeyHandle, KeyInformationClass, Length);
+           KeyHandle, KeyInformationClass, Length);
 
-    /* Verify that the handle is valid and is a registry key */
-    Status = ObReferenceObjectByHandle(KeyHandle,
-                                       (KeyInformationClass !=
-                                        KeyNameInformation) ?
-                                       KEY_QUERY_VALUE : 0,
-                                       CmpKeyObjectType,
-                                       ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
-                                       NULL);
-    if (!NT_SUCCESS(Status))
+    /* Reject invalid classes */
+    if ((KeyInformationClass != KeyBasicInformation) &&
+        (KeyInformationClass != KeyNodeInformation)  &&
+        (KeyInformationClass != KeyFullInformation)  &&
+        (KeyInformationClass != KeyNameInformation) &&
+        (KeyInformationClass != KeyCachedInformation) &&
+        (KeyInformationClass != KeyFlagsInformation))
     {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
+        /* Fail */
+        return STATUS_INVALID_PARAMETER;
     }
+    
+    /* Check if just the name is required */
+    if (KeyInformationClass == KeyNameInformation)
+    {
+        /* Ignore access level */
+        Status = ObReferenceObjectByHandle(KeyHandle,
+                                           0,
+                                           CmpKeyObjectType,
+                                           ExGetPreviousMode(),
+                                           (PVOID*)&KeyObject,
+                                           &HandleInfo);
+        if (NT_SUCCESS(Status))
+        {
+            /* At least a single bit of access is required */
+            if (!HandleInfo.GrantedAccess)
+            {
+                /* No such luck */
+                ObDereferenceObject(KeyObject);
+                Status = STATUS_ACCESS_DENIED;
+            }
+        }
+    }
+    else
+    {
+        /* Get a reference */
+        Status = ObReferenceObjectByHandle(KeyHandle,
+                                           KEY_QUERY_VALUE,
+                                           CmpKeyObjectType,
+                                           ExGetPreviousMode(),
+                                           (PVOID*)&KeyObject,
+                                           NULL);
+    }
+    
+    /* Quit on failure */
+    if (!NT_SUCCESS(Status)) return Status;
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
@@ -331,8 +367,8 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     PCM_KEY_BODY KeyObject;
     REG_QUERY_VALUE_KEY_INFORMATION QueryValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
-
     DPRINT("NtQueryValueKey() KH 0x%x, VN '%wZ', KVIC %d, Length %d\n",
         KeyHandle, ValueName, KeyValueInformationClass, Length);
 
@@ -341,18 +377,32 @@ NtQueryValueKey(IN HANDLE KeyHandle,
                                        KEY_QUERY_VALUE,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Make sure the name is aligned properly */
+    if ((ValueNameCopy.Length & (sizeof(WCHAR) - 1)))
     {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
+        /* It isn't, so we'll fail */
+        ObDereferenceObject(KeyObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        /* Ignore any null characters at the end */
+        while ((ValueNameCopy.Length) &&
+               !(ValueNameCopy.Buffer[ValueNameCopy.Length / sizeof(WCHAR) - 1]))
+        {
+            /* Skip it */
+            ValueNameCopy.Length -= sizeof(WCHAR);
+        }
     }
 
     /* Setup the callback */
     PostOperationInfo.Object = (PVOID)KeyObject;
     QueryValueKeyInfo.Object = (PVOID)KeyObject;
-    QueryValueKeyInfo.ValueName = ValueName;
+    QueryValueKeyInfo.ValueName = &ValueNameCopy;
     QueryValueKeyInfo.KeyValueInformationClass = KeyValueInformationClass;
     QueryValueKeyInfo.Length = Length;
     QueryValueKeyInfo.ResultLength = ResultLength;
@@ -363,7 +413,7 @@ NtQueryValueKey(IN HANDLE KeyHandle,
     {
         /* Call the internal API */
         Status = CmQueryValueKey(KeyObject->KeyControlBlock,
-                                 *ValueName,
+                                 ValueNameCopy,
                                  KeyValueInformationClass,
                                  KeyValueInformation,
                                  Length,
@@ -373,8 +423,6 @@ NtQueryValueKey(IN HANDLE KeyHandle,
         PostOperationInfo.Status = Status;
         CmiCallRegisteredCallbacks(RegNtPostQueryValueKey, &PostOperationInfo);
     }
-
-    DPRINT("NtQueryValueKey() returning 0x%08X\n", Status);
 
     /* Dereference and return status */
     ObDereferenceObject(KeyObject);
@@ -394,8 +442,8 @@ NtSetValueKey(IN HANDLE KeyHandle,
     PCM_KEY_BODY KeyObject;
     REG_SET_VALUE_KEY_INFORMATION SetValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
+    UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
-
     DPRINT("NtSetValueKey() KH 0x%x, VN '%wZ', TI %x, T %d, DS %d\n",
         KeyHandle, ValueName, TitleIndex, Type, DataSize);
 
@@ -404,12 +452,34 @@ NtSetValueKey(IN HANDLE KeyHandle,
                                        KEY_SET_VALUE,
                                        CmpKeyObjectType,
                                        ExGetPreviousMode(),
-                                       (PVOID *)&KeyObject,
+                                       (PVOID*)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Make sure the name is aligned, not too long, and the data under 4GB */
+    if ( (ValueNameCopy.Length > 32767) ||
+         ((ValueNameCopy.Length & (sizeof(WCHAR) - 1))) ||
+         (DataSize > 0x80000000))
     {
-        DPRINT1("ObReferenceObjectByHandle() failed with Status = 0x%08X\n", Status);
-        return Status;
+        /* Fail */
+        ObDereferenceObject(KeyObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    /* Ignore any null characters at the end */
+    while ((ValueNameCopy.Length) &&
+           !(ValueNameCopy.Buffer[ValueNameCopy.Length / sizeof(WCHAR) - 1]))
+    {
+        /* Skip it */
+        ValueNameCopy.Length -= sizeof(WCHAR);
+    }
+    
+    /* Don't touch read-only keys */
+    if (KeyObject->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY)
+    {
+        /* Fail */
+        ObDereferenceObject(KeyObject);
+        return STATUS_ACCESS_DENIED;
     }
 
     /* Setup callback */
@@ -427,19 +497,18 @@ NtSetValueKey(IN HANDLE KeyHandle,
     {        
         /* Call the internal API */
         Status = CmSetValueKey(KeyObject->KeyControlBlock,
-                               ValueName,
+                               &ValueNameCopy,
                                Type,
                                Data,
                                DataSize);
     }
 
-    /* Do the post-callback and de-reference the key object */
+    /* Do the post-callback */
     PostOperationInfo.Status = Status;
     CmiCallRegisteredCallbacks(RegNtPostSetValueKey, &PostOperationInfo);
-    ObDereferenceObject(KeyObject);
 
-    /* Synchronize the hives and return */
-    CmpLazyFlush();
+    /* Dereference and return status */
+    ObDereferenceObject(KeyObject);
     return Status;
 }
 
@@ -453,6 +522,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
     REG_DELETE_VALUE_KEY_INFORMATION DeleteValueKeyInfo;
     REG_POST_OPERATION_INFORMATION PostOperationInfo;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
+    UNICODE_STRING ValueNameCopy = *ValueName;
     PAGED_CODE();
 
     /* Verify that the handle is valid and is a registry key */
@@ -462,10 +532,22 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                        PreviousMode,
                                        (PVOID *)&KeyObject,
                                        NULL);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status)) return Status;
+
+    /* Don't touch read-only keys */
+    if (KeyObject->KeyControlBlock->ExtFlags & CM_KCB_READ_ONLY_KEY)
     {
-        DPRINT("ObReferenceObjectByHandle() failed with Status = 0x%08X\n");
-        return Status;
+        /* Fail */
+        ObDereferenceObject(KeyObject);
+        return STATUS_ACCESS_DENIED;
+    }
+    
+    /* Make sure the name is aligned properly */
+    if ((ValueNameCopy.Length & (sizeof(WCHAR) - 1)))
+    {
+        /* It isn't, so we'll fail */
+        ObDereferenceObject(KeyObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Do the callback */
@@ -476,7 +558,7 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
     if (NT_SUCCESS(Status))
     {
         /* Call the internal API */
-        Status = CmDeleteValueKey(KeyObject->KeyControlBlock, *ValueName);
+        Status = CmDeleteValueKey(KeyObject->KeyControlBlock, ValueNameCopy);
 
         /* Do the post callback */
         PostOperationInfo.Object = (PVOID)KeyObject;
@@ -485,9 +567,8 @@ NtDeleteValueKey(IN HANDLE KeyHandle,
                                    &PostOperationInfo);
     }
 
-    /* Dereference the key body and synchronize the hives */
+    /* Dereference the key body */
     ObDereferenceObject(KeyObject);
-    CmpLazyFlush();
     return Status;
 }
 
@@ -509,8 +590,10 @@ NtFlushKey(IN HANDLE KeyHandle)
     if (!NT_SUCCESS(Status)) return Status;
     
     /* Lock the registry */
-    KeEnterCriticalRegion();
-    ExAcquireResourceExclusiveLite(&CmpRegistryLock, TRUE);
+    CmpLockRegistry();
+    
+    /* Lock the KCB */
+    CmpAcquireKcbLockShared(KeyObject->KeyControlBlock);
     
     /* Make sure KCB isn't deleted */
     if (KeyObject->KeyControlBlock->Delete)
@@ -524,9 +607,9 @@ NtFlushKey(IN HANDLE KeyHandle)
         Status = CmFlushKey(KeyObject->KeyControlBlock, FALSE);
     }
     
-    /* Release the lock */
-    ExReleaseResourceLite(&CmpRegistryLock);
-    KeLeaveCriticalRegion();
+    /* Release the locks */
+    CmpReleaseKcbLock(KeyObject->KeyControlBlock);
+    CmpUnlockRegistry();
     
     /* Dereference the object and return status */
     ObDereferenceObject(KeyObject);

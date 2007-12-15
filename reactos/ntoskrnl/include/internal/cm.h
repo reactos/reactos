@@ -53,7 +53,7 @@
 #define CM_KCB_KEY_NON_EXIST                            0x10
 #define CM_KCB_NO_DELAY_CLOSE                           0x20
 #define CM_KCB_INVALID_CACHED_INFO                      0x40
-#define CM_KEY_READ_ONLY_KEY                            0x80
+#define CM_KCB_READ_ONLY_KEY                            0x80
 
 //
 // CM_KEY_VALUE Types
@@ -577,6 +577,16 @@ CmpGetValueKeyFromCache(
     OUT PHCELL_INDEX CellToRelease
 );
 
+VALUE_SEARCH_RETURN_TYPE
+NTAPI
+CmpCompareNewValueDataAgainstKCBCache(
+    IN PCM_KEY_CONTROL_BLOCK Kcb,
+    IN PUNICODE_STRING ValueName,
+    IN ULONG Type,
+    IN PVOID Data,
+    IN ULONG DataSize
+);
+
 //
 // Registry Validation Functions
 //
@@ -860,9 +870,21 @@ CmpRemoveKeyControlBlock(
 
 VOID
 NTAPI
+CmpCleanUpKcbValueCache(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
+);
+
+VOID
+NTAPI
 CmpCleanUpKcbCacheWithLock(
     IN PCM_KEY_CONTROL_BLOCK Kcb,
     IN BOOLEAN LockHeldExclusively
+);
+
+VOID
+NTAPI
+CmpCleanUpSubKeyInfo(
+    IN PCM_KEY_CONTROL_BLOCK Kcb
 );
 
 VOID
@@ -1324,7 +1346,7 @@ CmEnumerateKey(IN PCM_KEY_CONTROL_BLOCK Kcb,
 NTSTATUS
 NTAPI
 CmDeleteKey(
-    IN PCM_KEY_CONTROL_BLOCK Kcb
+    IN PCM_KEY_BODY KeyBody
 );
 
 NTSTATUS
