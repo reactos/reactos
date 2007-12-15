@@ -503,6 +503,8 @@ HvInitialize(
       return Status;
    }
 
+   if (Operation != HINIT_CREATE) CmPrepareHive(Hive);
+
    return Status;
 }
 

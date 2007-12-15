@@ -216,7 +216,6 @@ CmpInitHiveFromFile(IN PCUNICODE_STRING HiveName,
 
     /* ROS: Init root key cell and prepare the hive */
     if (Operation == HINIT_CREATE) CmCreateRootNode(&NewHive->Hive, L"");
-    CmPrepareHive(&NewHive->Hive);
 
     /* Duplicate the hive name */
     NewHive->FileFullPath.Buffer = ExAllocatePoolWithTag(PagedPool,
@@ -670,7 +669,6 @@ CmpInitializeSystemHive(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                    &HiveName,
                                    2);
         if (!NT_SUCCESS(Status)) return FALSE;
-        CmPrepareHive(&SystemHive->Hive);
 
         /* Set the hive filename */
         RtlCreateUnicodeString(&SystemHive->FileFullPath,

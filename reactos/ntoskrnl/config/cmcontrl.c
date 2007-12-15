@@ -138,9 +138,6 @@ CmGetSystemControlValues(IN PVOID SystemHiveData,
     /* Sanity check, flat hives don't have release routines */
     ASSERT(SystemHive->ReleaseCellRoutine == NULL);
 
-    /* FIXME: Prepare it */
-    CmPrepareHive(SystemHive);
-
     /* Set the Root Cell */
     RootCell = ((PHBASE_BLOCK)SystemHiveData)->RootCell;
 
