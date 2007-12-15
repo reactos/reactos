@@ -4,6 +4,15 @@ HINSTANCE g_hInstance;
 HMODULE g_hModule = NULL;
 PGDI_TABLE_ENTRY GdiHandleTable;
 
+static
+PGDI_TABLE_ENTRY
+MyGdiQueryTable()
+{
+	PTEB pTeb = NtCurrentTeb();
+	PPEB pPeb = pTeb->ProcessEnvironmentBlock;
+	return pPeb->GdiSharedHandleTable;
+}
+
 static DWORD STDCALL
 IntSyscall(FARPROC proc, UINT cParams, PVOID pFirstParam)
 {
@@ -59,7 +68,6 @@ WinMain(HINSTANCE hInstance,
         int       nCmdShow)
 {
 	g_hInstance = hInstance;
-	GDIQUERYPROC GdiQueryTable;
 
 	printf("Win32k native API test\n");
 
@@ -73,12 +81,7 @@ WinMain(HINSTANCE hInstance,
 		return -1;
 	}
 
-	GdiQueryTable = (GDIQUERYPROC)GetProcAddress(GetModuleHandleW(L"GDI32.DLL"), "GdiQueryTable");
-	if(!GdiQueryTable)
-	{
-		return -1;
-	}
-	GdiHandleTable = GdiQueryTable();
+	GdiHandleTable = MyGdiQueryTable();
 	if(!GdiHandleTable)
 	{
 		return -1;

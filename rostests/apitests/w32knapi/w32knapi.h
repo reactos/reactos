@@ -32,8 +32,6 @@ typedef struct
 	INT nParams;
 } SYCALL_ENTRY, *PSYSCALL_ENTRY;
 
-typedef PGDI_TABLE_ENTRY (CALLBACK * GDIQUERYPROC) (void);
-
 extern HINSTANCE g_hInstance;
 extern HMODULE g_hModule;
 extern PGDI_TABLE_ENTRY GdiHandleTable;

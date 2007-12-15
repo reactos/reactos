@@ -26,8 +26,15 @@ INT
 Test_NtGdiGetDIBitsInternal(PTESTINFO pti)
 {
 	HBITMAP hBitmap;
-	BITMAPINFO bi;
+	struct
+	{
+		BITMAPINFO bi;
+		RGBQUAD Colors[20];
+	} bmp;
+//	BITMAPINFO bi;
 	INT ScreenBpp;
+	BITMAPCOREINFO bic;
+	DWORD data[20*16];
 
 	HDC hDCScreen = GetDC(NULL);
 	ASSERT(hDCScreen != NULL);
@@ -48,21 +55,74 @@ Test_NtGdiGetDIBitsInternal(PTESTINFO pti)
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	SetLastError(ERROR_SUCCESS);
-	RTEST(NtGdiGetDIBitsInternal((HDC)2345, hBitmap, 0, 15, NULL, &bi, 0, 0, 0) == 0);
+	RTEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 0, NULL, NULL, 0, 0, 0) == 0);
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	SetLastError(ERROR_SUCCESS);
-    ZeroMemory(&bi, sizeof(BITMAPINFO));
-    bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-	RTEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, &bi, DIB_RGB_COLORS,
-								 DIB_BitmapMaxBitsSize(&bi, 15), 0) > 0);
+	RTEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, NULL, 0, 0, 0) == 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+
+	ZeroMemory(&bmp, sizeof(bmp));
+	bmp.bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
+
+	SetLastError(ERROR_SUCCESS);
+	RTEST(NtGdiGetDIBitsInternal((HDC)0, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+	TEST(bmp.Colors[0].rgbRed == 0x44);
+
+	ZeroMemory(&bmp, sizeof(bmp));
+	bmp.bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
+
+	SetLastError(ERROR_SUCCESS);
+	RTEST(NtGdiGetDIBitsInternal((HDC)2345, hBitmap, 0, 15, NULL, &bmp.bi, 0, 0, 0) > 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+	TEST(bmp.Colors[0].rgbRed == 0x44);
+
+	ZeroMemory(&bmp, sizeof(bmp));
+	bmp.bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x44);
+
+	SetLastError(ERROR_SUCCESS);
+	RTEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, &bmp.bi, DIB_RGB_COLORS,
+								 DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0);
 	RTEST(GetLastError() == ERROR_SUCCESS);
 
 	ScreenBpp = GetDeviceCaps(hDCScreen, BITSPIXEL);
-	RTEST(bi.bmiHeader.biWidth == 16);
-	RTEST(bi.bmiHeader.biHeight == 16);
-	RTEST(bi.bmiHeader.biBitCount == ScreenBpp);
-	RTEST(bi.bmiHeader.biSizeImage == (16 * 16) * (ScreenBpp / 8));
+
+	RTEST(bmp.bi.bmiHeader.biWidth == 16);
+	RTEST(bmp.bi.bmiHeader.biHeight == 16);
+	RTEST(bmp.bi.bmiHeader.biBitCount == ScreenBpp);
+	RTEST(bmp.bi.bmiHeader.biSizeImage == (16 * 16) * (ScreenBpp / 8));
+
+	TEST(bmp.Colors[0].rgbRed == 0x44);
+
+	/* Test with pointer */
+//	ZeroMemory(&bmp.bi, sizeof(BITMAPINFO));
+	bmp.bi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+//	FillMemory(&bmp.Colors, sizeof(bmp.Colors), 0x11223344);
+
+	SetLastError(ERROR_SUCCESS);
+	TEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, (void*)data, &bmp.bi, DIB_RGB_COLORS,
+								 DIB_BitmapMaxBitsSize(&bmp.bi, 15), 0) > 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+
+	RTEST(bmp.bi.bmiHeader.biWidth == 16);
+	RTEST(bmp.bi.bmiHeader.biHeight == 16);
+	RTEST(bmp.bi.bmiHeader.biBitCount == ScreenBpp);
+	RTEST(bmp.bi.bmiHeader.biSizeImage == (16 * 16) * (ScreenBpp / 8));
+
+	TEST(bmp.Colors[0].rgbRed != 0x44);
+
+	/* Test a BITMAPCOREINFO structure */
+	SetLastError(ERROR_SUCCESS);
+	ZeroMemory(&bic, sizeof(BITMAPCOREINFO));
+	bic.bmciHeader.bcSize = sizeof(BITMAPCOREHEADER);
+	TEST(NtGdiGetDIBitsInternal(hDCScreen, hBitmap, 0, 15, NULL, (PBITMAPINFO)&bic, DIB_RGB_COLORS,
+								 DIB_BitmapMaxBitsSize((PBITMAPINFO)&bic, 15), 0) > 0);
+	RTEST(GetLastError() == ERROR_SUCCESS);
+
 
 	ReleaseDC(NULL, hDCScreen);
 	DeleteObject(hBitmap);
