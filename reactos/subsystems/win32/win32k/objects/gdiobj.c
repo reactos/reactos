@@ -640,6 +640,7 @@ LockHandle:
       if(((ULONG_PTR)PrevProcId & ~0x1) == 0)
       {
         DPRINT1("Attempted to free global gdi handle 0x%x, caller needs to get ownership first!!!\n", hObj);
+        DPRINT1("Type = 0x%lx, KernelData = 0x%p, ProcessId = 0x%p\n", Entry->Type, Entry->KernelData, Entry->ProcessId);
         KeRosDumpStackFrames(NULL, 20);
       }
       else
@@ -685,8 +686,8 @@ NtGdiDeleteObject(HGDIOBJ hObject)
   DPRINT("NtGdiDeleteObject handle 0x%08x\n", hObject);
   if(!IsObjectDead(hObject))
   {
-     return NULL != hObject
-                 ? GDIOBJ_FreeObj(GdiHandleTable, hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
+  return NULL != hObject
+         ? GDIOBJ_FreeObj(GdiHandleTable, hObject, GDI_OBJECT_TYPE_DONTCARE) : FALSE;
   }
   else
   {
@@ -1123,8 +1124,13 @@ LockHandle:
       /* we're locking an object that belongs to our process. First calculate
          the new object type including the stock object flag and then try to
          exchange it.*/
-      OldType = ((ULONG)hObj & GDI_HANDLE_BASETYPE_MASK);
-      OldType |= GDI_HANDLE_GET_UPPER(hObj) >> GDI_ENTRY_UPPER_SHIFT;
+      /* On Windows the higher 16 bit of the type field don't contain the
+         full type from the handle, but the base type.
+         (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
+      OldType = ((ULONG)hObj & GDI_HANDLE_BASETYPE_MASK) | ((ULONG)hObj >> GDI_ENTRY_UPPER_SHIFT);
+      /* We are currently not using bits 24..31 (flags) of the type field, but for compatibility
+         we copy them as we can't get them from the handle */
+      OldType |= Entry->Type & GDI_ENTRY_FLAGS_MASK;
 
       /* As the object should be a stock object, set it's flag, but only in the lower 16 bits */
       NewType = OldType | GDI_ENTRY_STOCK_MASK;
@@ -1197,6 +1203,7 @@ LockHandle:
       else
       {
         DPRINT1("Attempted to convert object 0x%x that is deleted! Should never get here!!!\n", hObj);
+        DPRINT1("OldType = 0x%x, Entry->Type = 0x%x, NewType = 0x%x, Entry->KernelData = 0x%x\n", OldType, Entry->Type, NewType, Entry->KernelData);
       }
     }
     else if(PrevProcId == LockedProcessId)
@@ -1323,6 +1330,7 @@ LockHandle:
       else
       {
         DPRINT1("Attempted to change ownership of an object 0x%x currently being destroyed!!!\n", ObjectHandle);
+        DPRINT1("Entry->Type = 0x%lx, Entry->KernelData = 0x%p\n", Entry->Type, Entry->KernelData);
       }
     }
     else if(PrevProcId == LockedProcessId)
