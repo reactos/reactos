@@ -96,10 +96,10 @@ DxEngRedrawDesktop()
 ULONG
 DxEngDispUniq()
 {
-    /* FIXME DisplayUniqVisrgn from gdishare memory */
-    UNIMPLEMENTED;
-    return FALSE;
+    return GdiHandleTable->flDeviceUniq;
 }
+
+ULONG gulVisRgnUniqueness; // Inc count everytime client region is updated.
 
 /************************************************************************/
 /* DxEngVisRgnUniq                                                      */
@@ -108,9 +108,7 @@ DxEngDispUniq()
 ULONG
 DxEngVisRgnUniq()
 {
-    /* FIXME DisplayUniqVisrgn from gdishare memory */
-    UNIMPLEMENTED;
-    return FALSE;
+    return gulVisRgnUniqueness;
 }
 
 /************************************************************************/
