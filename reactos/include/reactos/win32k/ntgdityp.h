@@ -117,6 +117,20 @@ typedef DWORD LFTYPE;
 #define GCABCW_NOFLOAT 0x0001
 #define GCABCW_INDICES 0x0002
 
+/* CAPS1 support */
+//#define C1_TRANSPARENT    0x0001
+#define TC_TT_ABLE        0x0002
+#define C1_TT_CR_ANY      0x0004
+#define C1_EMF_COMPLIANT  0x0008
+#define C1_DIBENGINE      0x0010
+#define C1_GAMMA_RAMP     0x0040
+#define C1_REINIT_ABLE    0x0080
+#define C1_GLYPH_INDEX    0x0100
+#define C1_BIT_PACKED     0x0200
+#define C1_BYTE_PACKED    0x0400
+#define C1_COLORCURSOR    0x0800
+#define C1_CMYK_ABLE      0x1000
+#define C1_SLOW_CARD      0x2000
 
 /* TYPES *********************************************************************/
 
