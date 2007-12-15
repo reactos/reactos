@@ -9,22 +9,24 @@ IsFunctionPresent(LPWSTR lpszFunction)
 	return TRUE;
 }
 
+static
+PGDI_TABLE_ENTRY
+MyGdiQueryTable()
+{
+	PTEB pTeb = NtCurrentTeb();
+	PPEB pPeb = pTeb->ProcessEnvironmentBlock;
+	return pPeb->GdiSharedHandleTable;
+}
+
 int APIENTRY
 WinMain(HINSTANCE hInstance,
         HINSTANCE hPrevInstance,
         LPSTR     lpCmdLine,
         int       nCmdShow)
 {
-	GDIQUERYPROC GdiQueryTable;
-
 	g_hInstance = hInstance;
 
-	GdiQueryTable = (GDIQUERYPROC)GetProcAddress(GetModuleHandleW(L"GDI32.DLL"), "GdiQueryTable");
-	if(!GdiQueryTable)
-	{
-		return -1;
-	}
-	GdiHandleTable = GdiQueryTable();
+	GdiHandleTable = MyGdiQueryTable();
 	if(!GdiHandleTable)
 	{
 		return -1;

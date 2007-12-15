@@ -1,6 +1,10 @@
 #ifndef _GDITEST_H
 #define _GDITEST_H
 
+#define WIN32_NO_STATUS
+#include <windows.h>
+#include <ndk/ntndk.h>
+
 #include "../apitest.h"
 #include "gdi.h"
 

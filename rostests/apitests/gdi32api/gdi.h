@@ -128,7 +128,11 @@ typedef struct
   ULONG       ulForegroundClr;
 
 #if (_WIN32_WINNT >= 0x0500)
-  unsigned    unk020_00000000[4];    // 020
+  COLORREF crBrushClr;               // 020
+  ULONG ulBrushClr;
+  COLORREF crPenClr;
+  ULONG ulPenClr;
+
 #endif
   int         iCS_CP;                // 030
   int         iGraphicsMode;
@@ -149,10 +153,10 @@ typedef struct
   long        lIcmMode;
   unsigned    hcmXform;              // 060
   HCOLORSPACE hColorSpace;
-  unsigned    unk068_00000000;
+  FLONG       flIcmFlags;
   unsigned    IcmBrushColor;
   unsigned    IcmPenColor;           // 070
-  unsigned    unk074_00000000;
+  PVOID       pvLIcm;
 #endif
 
   long        flTextAlign;           // 078
@@ -167,7 +171,10 @@ typedef struct
   MATRIX      mxDeviceToWorld;       // 0D0
   MATRIX      mxWorldToPage;         // 10C
 
-  unsigned    unk048_00000000[8];    // 148
+  EFLOAT_S    efM11PtoD;
+  EFLOAT_S    efM22PtoD;
+  EFLOAT_S    efDxPtoD;
+  EFLOAT_S    efDyPtoD;
 
   int         iMapMode;              // 168
 
@@ -186,8 +193,11 @@ typedef struct
   POINT       ptlBrushOrigin;        // 1a8
 
   unsigned    unk1b0_00000000[2];    // 1b0
-  unsigned    RectRegionFlag;        // 1b4
-  RECT        VisRectRegion;         // 1b8
+  RGNATTR VisRectRegion;
+
+//  unsigned    unk1b0_00000000[2];    // 1b0
+//  unsigned    RectRegionFlag;        // 1b4
+//  RECT        VisRectRegion;         // 1b8
 } DC_ATTR, *PDC_ATTR;
 
 

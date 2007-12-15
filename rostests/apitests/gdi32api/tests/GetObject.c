@@ -308,7 +308,7 @@ Test_Font(PTESTINFO pti)
 	BYTE bData[270];
 
 	FillMemory(&logfonta, sizeof(LOGFONTA), 0x77);
-	hFont = CreateFont(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
+	hFont = CreateFontA(8, 8, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
 		ANSI_CHARSET, OUT_CHARACTER_PRECIS, CLIP_CHARACTER_PRECIS,
 		ANTIALIASED_QUALITY, DEFAULT_PITCH, "testfont");
 	TEST(hFont);
