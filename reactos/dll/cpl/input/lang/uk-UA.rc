@@ -380,4 +380,6 @@ BEGIN
 	IDS_SYRIAC_PHONETIC_LAYOUT, 					"Сирійська (фонетична)"
 	IDS_DIVEHI_PHONETIC_LAYOUT, 					"Мальдівська (фонетична)"
 	IDS_DIVEHI_TYPEWRITER_LAYOUT, 					"Мальдівська (друкарська машинка)"
+	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Bulgarian Phonetic (Classic)"
+	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Bulgarian Phonetic (BDS)"
 END

@@ -14,7 +14,7 @@ typedef struct
 extern HINSTANCE hApplet;
 
 #define BEGIN_LAYOUT 5000
-#define END_LAYOUT   5133
+#define END_LAYOUT   5135
 
 /* input.c */
 VOID

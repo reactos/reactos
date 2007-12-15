@@ -371,4 +371,6 @@ BEGIN
 	IDS_SYRIAC_PHONETIC_LAYOUT, 					"Syriac Phonetic"
 	IDS_DIVEHI_PHONETIC_LAYOUT, 					"Divehi Phonetic"
 	IDS_DIVEHI_TYPEWRITER_LAYOUT, 					"Divehi Typewriter"
+	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Bulgarian Phonetic (Classic)"
+	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Bulgarian Phonetic (BDS)"
 END
