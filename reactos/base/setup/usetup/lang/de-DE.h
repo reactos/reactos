@@ -673,6 +673,199 @@ static MUI_ENTRY deDEBootPageEntries[] =
 
 };
 
+MUI_ERROR deDEErrorEntries[] =
+{
+    {
+        //ERROR_NOT_INSTALLED
+        "ReactOS ist nicht vollstaendig auf Ihrem System installiert.\n"
+	     "Wenn Sie das Setup jetzt beenden, muessen Sie das\n"
+	     "Setup erneut starten, um ROS zu installieren.\n"
+	     "\n"
+	     "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.\n"
+	     "  \x07  Druecken Sie F3 um das Setup zu beenden.",
+	     "F3 = Beenden  ENTER = Fortsetzen"
+    },
+    {
+        //ERROR_NO_HDD
+        "Setup konnte keine Festplatte finden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_NO_SOURCE_DRIVE
+        "Setup konnte das Quelllaufwerk nicht finden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_LOAD_TXTSETUPSIF
+        "Setup konnte TXTSETUP.SIF nicht finden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CORRUPT_TXTSETUPSIF
+        "Setup fand eine korrupte TXTSETUP.SIF.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_SIGNATURE_TXTSETUPSIF,
+        "Setup fand eine ungueltige Signatur in TXTSETUP.SIF.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_DRIVE_INFORMATION
+        "Setup konnte keine Laufwerksinformationen abfragen.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_WRITE_BOOT,
+        "Setup konnte den FAT Bootcode nicht auf der Partition installieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
+        "Setup konnte die Computertypenliste nicht laden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_LOAD_DISPLAY,
+        "Setup konnte die Displayeinstellungsliste nicht laden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_LOAD_KEYBOARD,
+        "Setup konnte die Tastaturtypenliste nicht laden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_LOAD_KBLAYOUT,
+        "Setup konnte die Tastaturlayoutliste nicht laden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_WARN_PARTITION,
+          "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
+		  "welche nicht richtig verwendet werden koennen!\n"
+		  "\n"
+		  "Partitionen zu erstellen/loeschen kann die Partitionstabelle zerstoeren.\n"
+		  "\n"
+		  "  \x07  Druecken Sie F3 um das Setup zu beenden."
+		  "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.",
+          "F3 = Beenden  ENTER = Fortsetzen"
+    },
+    {
+        //ERROR_NEW_PARTITION,
+        "Sie koennen keine neue Partition in einer bereits\n"
+		"vohandenen Partition erstellen!\n"
+		"\n"
+		"  * * Eine beliebige Taste zum Fortsetzen druecken.",
+        NULL
+    },
+    {
+        //ERROR_DELETE_SPACE,
+        "Sie koennen unpartitionieren Speicher nicht loeschen!\n"
+        "\n"
+        "  * Eine beliebige Taste zum Fortsetzen druecken.",
+        NULL
+    },
+    {
+        //ERROR_INSTALL_BOOTCODE,
+        "Setup konnte den FAT Bootcode nicht auf der Partition installieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_NO_FLOPPY,
+        "Keine Diskette in Laufwerk A:.",
+        "ENTER = Fortsetzen"
+    },
+    {
+        //ERROR_UPDATE_KBSETTINGS,
+        "Setup konnte das Tastaturlayout nicht aktualisieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Setup konnte die Display-Registrywerte nicht aktualisieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_IMPORT_HIVE,
+        "Setup konnte keine Hive Datei importieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_FIND_REGISTRY
+        "Setup konnte die Registrydateien nicht finden.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CREATE_HIVE,
+        "Setup konnte die Registry-Hives nicht erstellen.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_INITIALIZE_REGISTRY,
+        "Setup konnte die Registry nicht initialisieren.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_INVALID_CABINET_INF,
+        "Cabinet hat keine gueltige .inf Datei.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CABINET_MISSING,
+        "Cabinet nicht gefunden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CABINET_SCRIPT,
+        "Cabinet hat kein Setup Skript.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_COPY_QUEUE,
+        "Setup konnte die Liste mit zu kopierenden Dateien nicht finden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CREATE_DIR,
+        "Setup konnte die Installationspfade nicht erstellen.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_TXTSETUP_SECTION,
+        "Setup konnte die 'Ordner' Sektion in\n"
+        "TXTSETUP.SIF nicht finden.\n",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CABINET_SECTION,
+        "Setup konnte die 'Ordner' Sektion im\n"
+        "Cabinet nicht finden.\n", 
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_CREATE_INSTALL_DIR
+        "Setup konnte den Installationspfad nicht erstellen.",
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_FIND_SETUPDATA,
+        "Setup konnte die 'SetupData' Sektion in\n"
+		 "TXTSETUP.SIF nicht finden.\n",
+		 "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_WRITE_PTABLE,
+        "Setup konnte die Partitionstabellen nicht schreiben.\n"
+        "ENTER = Computer neustarten"
+    },
+    {
+        NULL,
+        NULL
+    }
+};
+
+
 MUI_PAGE deDEPages[] =
 {
     {
