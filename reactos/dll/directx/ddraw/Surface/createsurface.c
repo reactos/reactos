@@ -39,8 +39,7 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     DWORD num_of_surf=1;
     DWORD count;
 
-    /* Fixme adding vaidlate of income param */
-    if(pDDraw->lpLcl->dwLocalFlags == 0x20000)
+    if(pDDraw->lpLcl->dwLocalFlags != DDRAWILCL_SETCOOPCALLED)
     {
         return DDERR_NOCOOPERATIVELEVELSET;
     }
