@@ -86,7 +86,7 @@ HandleList_Update(HWND hHandleListCtrl, HANDLE ProcessId)
 		     ((ProcessId == (HANDLE)1) && ((pEntry->Type & GDI_HANDLE_BASETYPE_MASK) == 0)) )
 		{
 			if (ProcessId == (HANDLE)1 ||
-			    ProcessId == (HANDLE)((ULONG)pEntry->ProcessId & 0xfffc))
+			    ((LONG)ProcessId & 0xfffc) == ((ULONG)pEntry->ProcessId & 0xfffc))
 			{
 				handle = GDI_HANDLE_CREATE(i, pEntry->Type);
 				index = ListView_GetItemCount(hHandleListCtrl);
@@ -177,6 +177,9 @@ GetTypeName(HANDLE handle)
 			break;
 		case GDI_OBJECT_TYPE_DCE:
 			strText = L"DCE";
+			break;
+		case GDI_OBJECT_TYPE_PFE:
+			strText = L"PFE";
 			break;
 		case GDI_OBJECT_TYPE_DONTCARE:
 			strText = L"anything";
