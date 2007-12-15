@@ -10,9 +10,11 @@
 /* DATA **********************************************************************/
 
 extern PGDI_TABLE_ENTRY GdiHandleTable;
+extern PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable;
 extern HANDLE hProcessHeap;
 extern HANDLE CurrentProcessId;
 extern DWORD GDI_BatchLimit;
+extern PDEVCAPS GdiDevCaps;
 
 typedef INT
 (CALLBACK* EMFPLAYPROC)(

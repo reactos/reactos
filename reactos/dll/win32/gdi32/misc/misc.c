@@ -29,6 +29,7 @@
 #include "precomp.h"
 
 PGDI_TABLE_ENTRY GdiHandleTable = NULL;
+PGDI_SHARED_HANDLE_TABLE GdiSharedHandleTable = NULL;
 HANDLE CurrentProcessId = NULL;
 DWORD GDI_BatchLimit = 1;
 

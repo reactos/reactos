@@ -11,6 +11,7 @@
 
 extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;
+PDEVCAPS GdiDevCaps = NULL;
 
 /*
  * GDI32.DLL doesn't have an entry point. The initialization is done by a call
@@ -36,6 +37,8 @@ GdiProcessSetup (VOID)
 
         /* map the gdi handle table to user space */
 	GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+	GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+	GdiDevCaps = &GdiSharedHandleTable->DevCaps;
 	CurrentProcessId = NtCurrentTeb()->Cid.UniqueProcess;
 	GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
 }

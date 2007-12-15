@@ -406,7 +406,6 @@ DdGetScanLine(LPDDHAL_GETSCANLINEDATA pGetScanLine)
 }
 
 /* PRIVATE FUNCTIONS *********************************************************/
-static ULONG RemberDdQueryDisplaySettingsUniquenessID = 0;
 
 BOOL
 WINAPI
@@ -987,8 +986,7 @@ ULONG
 STDCALL
 DdQueryDisplaySettingsUniqueness()
 {
-    /* FIXME share memory */
- return RemberDdQueryDisplaySettingsUniquenessID;
+ return GdiSharedHandleTable->flDeviceUniq;
 }
 
 /*
