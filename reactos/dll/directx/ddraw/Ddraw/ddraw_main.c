@@ -442,6 +442,8 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
    DX_WINDBG_trace();
 
     // EnterCriticalSection(&ddcs);
+    *ppSurf = NULL;
+
     _SEH_TRY
     {
         if (pDDSD->dwSize == sizeof(DDSURFACEDESC))
@@ -475,6 +477,8 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     HRESULT ret;
     DX_WINDBG_trace();
     // EnterCriticalSection(&ddcs);
+    *ppSurf = NULL;
+
     _SEH_TRY
     {
         ret = Internal_CreateSurface(This, pDDSD, ppSurf, pUnkOuter);
