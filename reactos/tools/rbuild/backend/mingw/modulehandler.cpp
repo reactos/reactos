@@ -573,6 +573,21 @@ MingwModuleHandler::GenerateCleanTarget () const
 		fprintf ( fMakefile, " %s", clean_files[i].c_str() );
 	}
 	fprintf ( fMakefile, " 2>$(NUL)\n" );
+
+	if ( module.name != "zlib" ) /* Avoid make warning */
+	{
+		DirectoryLocation root;
+		if ( backend->configuration.GenerateProxyMakefilesInSourceTree )
+			root = SourceDirectory;
+		else
+			root = OutputDirectory;
+		FileLocation proxyMakefile ( root,
+		                             module.output->relative_path,
+		                            "GNUmakefile" );
+		fprintf ( fMakefile, "\t-@${rm} %s 2>$(NUL)\n",
+		          backend->GetFullName ( proxyMakefile ).c_str () );
+	}
+
 	fprintf ( fMakefile, "clean: %s_clean\n\n", module.name.c_str() );
 }
 
@@ -2205,19 +2220,6 @@ MingwModuleHandler::GenerateRules ()
 	string cc = ( module.host == HostTrue ? "${host_gcc}" : "${gcc}" );
 	string cppc = ( module.host == HostTrue ? "${host_gpp}" : "${gpp}" );
 	string ar = ( module.host == HostTrue ? "${host_ar}" : "${ar}" );
-
-	if ( module.name != "zlib" ) /* Avoid make warning */
-	{
-		DirectoryLocation root;
-		if ( backend->configuration.GenerateProxyMakefilesInSourceTree )
-			root = SourceDirectory;
-		else
-			root = OutputDirectory;
-		FileLocation proxyMakefile ( root,
-		                             module.output->relative_path,
-		                            "GNUmakefile" );
-		CLEAN_FILE ( proxyMakefile );
-	}
 
 	string targetMacro = GetTargetMacro ( module );
 	//CLEAN_FILE ( targetMacro );
