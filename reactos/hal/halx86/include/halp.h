@@ -115,6 +115,48 @@ HaliSetSystemInformation(
     IN OUT PVOID Buffer
 );
 
+//
+// BIOS Routines
+//
+BOOLEAN
+NTAPI
+HalpBiosDisplayReset(
+    VOID
+);
+
+ULONG
+NTAPI
+HalpBorrowTss(
+    VOID
+);
+
+ULONG
+NTAPI
+HalpReturnTss(
+    ULONG SavedTss
+);
+
+VOID
+NTAPI
+HalpBiosCall(
+    VOID
+);
+
+VOID
+NTAPI
+HalpTrap0D(
+    VOID
+);
+
+VOID
+NTAPI
+HalpTrap06(
+    VOID
+);
+
+extern PVOID HalpRealModeStart;
+extern PVOID HalpRealModeEnd;
+
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
 #endif /* __INTERNAL_HAL_HAL_H */

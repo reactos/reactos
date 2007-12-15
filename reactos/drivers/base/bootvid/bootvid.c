@@ -420,10 +420,8 @@ TryAgain:
             /* Now check if we have to set the mode */
             if (SetMode)
             {
-                //
-                // Reset the display
-                //
-                //HalResetDisplay();
+                /* Reset the display */
+                HalResetDisplay();
                 curr_x = 0;
                 curr_y = 0;
 
@@ -463,7 +461,7 @@ VidResetDisplay(IN BOOLEAN HalReset)
     curr_y = 0;
 
     /* Clear the screen with HAL if we were asked to */
-    //if (HalReset) HalResetDisplay();
+    if (HalReset) HalResetDisplay();
 
     /* Re-initialize the VGA Display */
     VgaInterpretCmdStream(AT_Initialization);

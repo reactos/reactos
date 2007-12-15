@@ -109,6 +109,7 @@ HalInitSystem(IN ULONG BootPhase,
         HalInitPnpDriver = NULL; // FIXME: TODO
         HalGetDmaAdapter = HalpGetDmaAdapter;
         HalGetInterruptTranslator = NULL;  // FIXME: TODO
+        HalResetDisplay = HalpBiosDisplayReset;
 
         /* Initialize the hardware lock (CMOS) */
         KeInitializeSpinLock(&HalpSystemHardwareLock);

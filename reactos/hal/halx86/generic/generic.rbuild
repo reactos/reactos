@@ -7,6 +7,7 @@
 		<define name="_DISABLE_TIDENTS" />
 		<define name="_NTHAL_" />
 		<file>beep.c</file>
+		<file>bios.c</file>
 		<file>bus.c</file>
 		<file>cmos.c</file>
 		<file>dma.c</file>
@@ -20,6 +21,7 @@
 		<file>sysinfo.c</file>
 		<file>timer.c</file>
 		<file>systimer.S</file>
+		<file>v86.s</file>
 		<pch>../include/hal.h</pch>
 	</module>
 	<module name="hal_generic_up" type="objectlibrary">
