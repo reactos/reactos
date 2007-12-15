@@ -72,7 +72,7 @@
 #include "settings.h"
 #include "host.h"
 #include "mui.h"
-
+#include "errorcode.h"
 
 extern HANDLE ProcessHeap;
 extern UNICODE_STRING SourceRootPath;

@@ -21,7 +21,6 @@ typedef struct
     MUI_PAGE * MuiPages;
 }MUI_LANGUAGE;
 
-
 #define TEXT_NORMAL 0
 #define TEXT_HIGHLIGHT 1
 #define TEXT_UNDERLINE 2

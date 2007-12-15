@@ -368,15 +368,7 @@ static BOOL
 ConfirmQuit(PINPUT_RECORD Ir)
 {
   BOOL Result = FALSE;
-
-  PopupError("ReactOS is not completely installed on your\n"
-	     "computer. If you quit Setup now, you will need to\n"
-	     "run Setup again to install ReactOS.\n"
-	     "\n"
-	     "  \x07  Press ENTER to continue Setup.\n"
-	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue",
-	     NULL, POPUP_WAIT_NONE);
+  MUIDisplayError(ERROR_NOT_INSTALLED, NULL, POPUP_WAIT_NONE);
 
   while(TRUE)
     {
@@ -628,17 +620,13 @@ SetupStartPage(PINPUT_RECORD Ir)
   if (!NT_SUCCESS (Status))
     {
       CONSOLE_PrintTextXY(6, 15, "NtQuerySystemInformation() failed (Status 0x%08lx)", Status);
-      PopupError("Setup could not retrieve system drive information.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_DRIVE_INFORMATION, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
   if (Sdi.NumberOfDisks == 0)
     {
-      PopupError("Setup could not find a harddisk.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_NO_HDD, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -649,9 +637,7 @@ SetupStartPage(PINPUT_RECORD Ir)
   if (!NT_SUCCESS(Status))
     {
       CONSOLE_PrintTextXY(6, 15, "GetSourcePaths() failed (Status 0x%08lx)", Status);
-      PopupError("Setup could not find its source drive.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_NO_SOURCE_DRIVE, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 #if 0
@@ -673,18 +659,14 @@ SetupStartPage(PINPUT_RECORD Ir)
 		       &ErrorLine);
   if (SetupInf == INVALID_HANDLE_VALUE)
     {
-      PopupError("Setup failed to load the file TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_LOAD_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
   /* Open 'Version' section */
   if (!SetupFindFirstLineW (SetupInf, L"Version", L"Signature", &Context))
     {
-      PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -692,18 +674,14 @@ SetupStartPage(PINPUT_RECORD Ir)
   /* Get pointer 'Signature' key */
   if (!INF_GetData (&Context, NULL, &Value))
     {
-      PopupError("Setup found a corrupt TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_CORRUPT_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
   /* Check 'Signature' string */
   if (_wcsicmp(Value, L"$ReactOS$") != 0)
     {
-      PopupError("Setup found an invalid signature in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_SIGNATURE_TXTSETUPSIF, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -916,9 +894,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       ComputerList = CreateComputerTypeList(SetupInf);
       if (ComputerList == NULL)
 	{
-	  PopupError("Setup failed to load the computer type list.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_LOAD_COMPUTER, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
     }
@@ -929,9 +905,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       DisplayList = CreateDisplayDriverList(SetupInf);
       if (DisplayList == NULL)
 	{
-	  PopupError("Setup failed to load the display settings list.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_LOAD_DISPLAY, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
     }
@@ -942,9 +916,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       KeyboardList = CreateKeyboardDriverList(SetupInf);
       if (KeyboardList == NULL)
 	{
-	  PopupError("Setup failed to load the keyboard type list.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_LOAD_KEYBOARD, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
     }
@@ -956,9 +928,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
       if (LayoutList == NULL)
 	{
 	  /* FIXME: report error */
-	  PopupError("Setup failed to load the keyboard layout list.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_LOAD_KBLAYOUT, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
     }
@@ -1284,15 +1254,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
   if (WarnLinuxPartitions == TRUE &&
       CheckForLinuxFdiskPartitions (PartitionList) == TRUE)
     {
-      PopupError ("Setup found that at least one harddisk contains an incompatible\n"
-		  "partition table that can not be handled properly!\n"
-		  "\n"
-		  "Creating or deleting partitions can destroy the partiton table.\n"
-		  "\n"
-		  "  \x07  Press F3 to quit Setup."
-		  "  \x07  Press ENTER to continue.",
-		  "F3= Quit  ENTER = Continue",
-		  NULL, POPUP_WAIT_NONE);
+      MUIDisplayError(ERROR_WARN_PARTITION, NULL, POPUP_WAIT_NONE);
       while (TRUE)
 	{
 	  CONSOLE_ConInKey (Ir);
@@ -1382,13 +1344,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == FALSE)
 	    {
-	      PopupError ("You can not create a new Partition inside\n"
-			  "of an already existing Partition!\n"
-			  "\n"
-			  "  * Press any key to continue.",
-			  NULL,
-			  Ir, POPUP_WAIT_ANY_KEY);
-
+          MUIDisplayError(ERROR_NEW_PARTITION, Ir, POPUP_WAIT_ANY_KEY);
 	      return SELECT_PARTITION_PAGE;
 	    }
 
@@ -1398,12 +1354,7 @@ SelectPartitionPage(PINPUT_RECORD Ir)
 	{
 	  if (PartitionList->CurrentPartition->Unpartitioned == TRUE)
 	    {
-	      PopupError ("You can not delete unpartitioned disk space!\n"
-			  "\n"
-			  "  * Press any key to continue.",
-			  NULL,
-			  Ir, POPUP_WAIT_ANY_KEY);
-
+          MUIDisplayError(ERROR_DELETE_SPACE, Ir, POPUP_WAIT_ANY_KEY);
 	      return SELECT_PARTITION_PAGE;
 	    }
 
@@ -2223,10 +2174,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
 	  if (WritePartitionsToDisk (PartitionList) == FALSE)
 	    {
 	      DPRINT ("WritePartitionsToDisk() failed\n");
-
-	      PopupError ("Setup failed to write partition tables.\n",
-			  "ENTER = Reboot computer",
-			  Ir, POPUP_WAIT_ENTER);
+          MUIDisplayError(ERROR_WRITE_PTABLE, Ir, POPUP_WAIT_ENTER);
 	      return QUIT_PAGE;
 	    }
 
@@ -2476,10 +2424,7 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
   /* Search for 'DefaultPath' in the 'SetupData' section */
   if (!SetupFindFirstLineW (SetupInf, L"SetupData", L"DefaultPath", &Context))
     {
-      PopupError("Setup failed to find the 'SetupData' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_FIND_SETUPDATA, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -2762,9 +2707,7 @@ PrepareCopyPageInfFile(HINF InfFile,
   if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
     {
       DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
-      PopupError("Setup could not create the install directory.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_CREATE_INSTALL_DIR, Ir, POPUP_WAIT_ENTER);
       return(FALSE);
     }
 
@@ -2773,16 +2716,12 @@ PrepareCopyPageInfFile(HINF InfFile,
   if (!SetupFindFirstLineW(InfFile, L"Directories", NULL, &DirContext))
     {
       if (SourceCabinet)
-	{
-	  PopupError("Setup failed to find the 'Directories' section\n"
-		     "in the cabinet.\n", "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
-	}
-      else
-	{
-	  PopupError("Setup failed to find the 'Directories' section\n"
-		     "in TXTSETUP.SIF.\n", "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+	    {
+          MUIDisplayError(ERROR_CABINET_SECTION, Ir, POPUP_WAIT_ENTER);
+	    }
+        else
+	    {
+          MUIDisplayError(ERROR_TXTSETUP_SECTION, Ir, POPUP_WAIT_ENTER);
         }
       return(FALSE);
     }
@@ -2818,9 +2757,7 @@ PrepareCopyPageInfFile(HINF InfFile,
 	  if (!NT_SUCCESS(Status) && Status != STATUS_OBJECT_NAME_COLLISION)
 	    {
 	      DPRINT("Creating directory '%S' failed: Status = 0x%08lx", PathBuffer, Status);
-	      PopupError("Setup could not create install directories.",
-			 "ENTER = Reboot computer",
-			 Ir, POPUP_WAIT_ENTER);
+          MUIDisplayError(ERROR_CREATE_DIR, Ir, POPUP_WAIT_ENTER);
 	      return(FALSE);
 	    }
 	}
@@ -2849,9 +2786,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   SetupFileQueue = SetupOpenFileQueue();
   if (SetupFileQueue == NULL)
     {
-      PopupError("Setup failed to open the copy file queue.\n",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_COPY_QUEUE, Ir, POPUP_WAIT_ENTER);
       return(QUIT_PAGE);
     }
 
@@ -2891,19 +2826,14 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 	  InfFileData = CabinetGetCabinetReservedArea(&InfFileSize);
 	  if (InfFileData == NULL)
 	    {
-	      PopupError("Cabinet has no setup script.\n",
-			 "ENTER = Reboot computer",
-			 Ir, POPUP_WAIT_ENTER);
+          MUIDisplayError(ERROR_CABINET_SCRIPT, Ir, POPUP_WAIT_ENTER);
 	      return QUIT_PAGE;
 	    }
 	}
       else
 	{
 	  DPRINT("Cannot open cabinet: %S.\n", CabinetGetCabinetName());
-
-	  PopupError("Cabinet not found.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_CABINET_MISSING, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
 
@@ -2914,9 +2844,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
 				   &ErrorLine);
       if (InfHandle == INVALID_HANDLE_VALUE)
 	{
-	  PopupError("Cabinet has no valid inf file.\n",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_INVALID_CABINET_INF, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
 
@@ -3104,9 +3032,7 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!SetInstallPathValue(&DestinationPath))
     {
       DPRINT("SetInstallPathValue() failed\n");
-      PopupError("Setup failed to set the initialize the registry.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_INITIALIZE_REGISTRY, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -3116,9 +3042,7 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!NT_SUCCESS(Status))
     {
       DPRINT("NtInitializeRegistry() failed (Status %lx)\n", Status);
-      PopupError("Setup failed to create the registry hives.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_CREATE_HIVE, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 #else
@@ -3131,9 +3055,7 @@ RegistryPage(PINPUT_RECORD Ir)
   if (!SetupFindFirstLineW(SetupInf, L"HiveInfs.Install", NULL, &InfContext))
     {
       DPRINT1("SetupFindFirstLine() failed\n");
-      PopupError("Setup failed to find the registry data files.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_FIND_REGISTRY, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -3164,9 +3086,7 @@ RegistryPage(PINPUT_RECORD Ir)
 	{
 	  DPRINT("Importing %S failed\n", File);
 
-	  PopupError("Setup failed to import a hive file.",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_IMPORT_HIVE, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
     }
@@ -3176,9 +3096,7 @@ RegistryPage(PINPUT_RECORD Ir)
   CONSOLE_SetStatusText("   Updating display registry settings...");
   if (!ProcessDisplayRegistry(SetupInf, DisplayList))
     {
-      PopupError("Setup failed to update display registry settings.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_UPDATE_DISPLAY_SETTINGS, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -3186,9 +3104,7 @@ RegistryPage(PINPUT_RECORD Ir)
   CONSOLE_SetStatusText("   Updating keyboard layout settings...");
   if (!ProcessKeyboardLayoutRegistry(LayoutList))
     {
-      PopupError("Setup failed to update keyboard layout settings.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 
@@ -3366,9 +3282,7 @@ BootLoaderFloppyPage(PINPUT_RECORD Ir)
 	{
 	  if (DoesFileExist(L"\\Device\\Floppy0", L"\\") == FALSE)
 	    {
-	      PopupError("No disk in drive A:.",
-			 "ENTER = Continue",
-			 Ir, POPUP_WAIT_ENTER);
+          MUIDisplayError(ERROR_NO_FLOPPY, Ir, POPUP_WAIT_ENTER);
 	      return BOOT_LOADER_FLOPPY_PAGE;
 	    }
 
@@ -3408,9 +3322,7 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
 					     PartitionType);
       if (!NT_SUCCESS(Status))
 	{
-	  PopupError("Setup failed to install the FAT bootcode on the system partition.",
-		     "ENTER = Reboot computer",
-		     Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_INSTALL_BOOTCODE, Ir, POPUP_WAIT_ENTER);
 	  return QUIT_PAGE;
 	}
 
@@ -3418,9 +3330,7 @@ BootLoaderHarddiskPage(PINPUT_RECORD Ir)
     }
   else
     {
-      PopupError("failed to install FAT bootcode on the system partition.",
-		 "ENTER = Reboot computer",
-		 Ir, POPUP_WAIT_ENTER);
+      MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
     }
 

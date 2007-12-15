@@ -1,4 +1,5 @@
 #include "usetup.h"
+#include "errorcode.h"
 #include "mui.h"
 
 #include "lang/en-US.h"
@@ -132,4 +133,23 @@ MUIDisplayPage(ULONG pg)
         }
         index++;
     }while(entry[index].Buffer != NULL);
+}
+
+VOID
+MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
+{
+    if (ErrorNum >= ERROR_LAST_ERROR_CODE)
+    {
+        PopupError("invalid error number provided", 
+                    "press enter to continue",
+                    Ir,
+                    POPUP_WAIT_ENTER);
+
+        return;
+    }
+    
+    PopupError(enUSErrorEntries[ErrorNum].ErrorText,
+               enUSErrorEntries[ErrorNum].ErrorStatus,
+               Ir,
+               WaitEvent);
 }
