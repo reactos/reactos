@@ -644,4 +644,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Ú&j"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Mappa"
 	FCIDM_SHVIEW_NEWLINK 	    "&Parancsikon"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

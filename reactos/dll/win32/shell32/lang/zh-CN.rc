@@ -642,6 +642,7 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "New"
 	FCIDM_SHVIEW_NEWFOLDER 	    "New &Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "New &Link"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END
 
 #pragma code_page(default)

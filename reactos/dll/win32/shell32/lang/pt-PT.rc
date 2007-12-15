@@ -643,4 +643,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Novo"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Pasta"
 	FCIDM_SHVIEW_NEWLINK 	    "&Atalho"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

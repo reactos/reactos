@@ -641,4 +641,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Ny"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Ny &mappe"
 	FCIDM_SHVIEW_NEWLINK 	    "Ny &snarvei"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

@@ -641,4 +641,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW            "Δημιουργία"
 	FCIDM_SHVIEW_NEWFOLDER      "Νέος &Φάκελος"
 	FCIDM_SHVIEW_NEWLINK        "Νέα &Συντόμευση"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

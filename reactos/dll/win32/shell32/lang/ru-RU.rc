@@ -640,4 +640,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Создать"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папка"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлык"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

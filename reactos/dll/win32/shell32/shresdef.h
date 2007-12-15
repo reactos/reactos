@@ -109,6 +109,7 @@
 #define FCIDM_SHVIEW_VIEW           147
 #define IDS_CONTROLPANEL            148
 #define IDS_NEWFOLDER               149
+#define IDS_FOLDER_OPTIONS          150
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964

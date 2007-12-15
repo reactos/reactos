@@ -642,4 +642,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	        "Nuovo"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Nuova &Cartella"
 	FCIDM_SHVIEW_NEWLINK 	    "Nuovo &Collegamento"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

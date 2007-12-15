@@ -640,4 +640,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Нови"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Нова &папка"
 	FCIDM_SHVIEW_NEWLINK        "Нова &връзка"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

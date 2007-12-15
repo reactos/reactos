@@ -642,4 +642,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW	    "&Nový"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Nová &složka"
 	FCIDM_SHVIEW_NEWLINK 	    "Nový &zástupce"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

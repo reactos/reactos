@@ -641,4 +641,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Uusi"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Uusi &Kansio"
 	FCIDM_SHVIEW_NEWLINK 	    "Uusi &Linkki"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

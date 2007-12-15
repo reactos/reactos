@@ -641,4 +641,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "新規作成"
 	FCIDM_SHVIEW_NEWFOLDER 	    "フォルダ(&F)"
 	FCIDM_SHVIEW_NEWLINK 	    "ショートカット(&L)"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

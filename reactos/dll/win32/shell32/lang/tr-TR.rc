@@ -641,4 +641,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Yeni"
 	FCIDM_SHVIEW_NEWFOLDER 	    "Yeni &Dizin"
 	FCIDM_SHVIEW_NEWLINK 	    "Yeni &Kýsayol"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END

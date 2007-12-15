@@ -642,4 +642,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "&Nowy"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Folder"
 	FCIDM_SHVIEW_NEWLINK 	    "&Skrót"
+	IDS_FOLDER_OPTIONS          "Folder Options"
 END
