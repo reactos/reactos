@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include "ntoskrnl.h"
-#include "cm.h"
 #define NDEBUG
 #include "debug.h"
 
@@ -18,7 +17,6 @@ BOOLEAN CmFirstTime = TRUE;
 
 /* FUNCTIONS *****************************************************************/
 
-#if 0
 NTSTATUS
 NTAPI
 NtCreateKey(OUT PHANDLE KeyHandle,
@@ -32,7 +30,9 @@ NtCreateKey(OUT PHANDLE KeyHandle,
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
     CM_PARSE_CONTEXT ParseContext = {0};
+    HANDLE Handle;
     PAGED_CODE();
+    DPRINT("NtCreateKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
     
     /* Setup the parse context */
     ParseContext.CreateOperation = TRUE;
@@ -46,13 +46,13 @@ NtCreateKey(OUT PHANDLE KeyHandle,
                                 NULL,
                                 DesiredAccess,
                                 &ParseContext,
-                                KeyHandle);
+                                &Handle);
+    if (NT_SUCCESS(Status)) *KeyHandle = Handle;
     
     /* Return data to user */
     if (Disposition) *Disposition = ParseContext.Disposition;
     return Status;
 }
-#endif
 
 NTSTATUS
 NTAPI
@@ -61,17 +61,25 @@ NtOpenKey(OUT PHANDLE KeyHandle,
           IN POBJECT_ATTRIBUTES ObjectAttributes)
 {
     CM_PARSE_CONTEXT ParseContext = {0};
+    HANDLE Handle;
+    NTSTATUS Status;
     PAGED_CODE();
-
+    DPRINT("NtOpenKey(OB 0x%wZ)\n", ObjectAttributes->ObjectName);
+    
     /* Just let the object manager handle this */
-    return ObOpenObjectByName(ObjectAttributes,
-                              CmpKeyObjectType,
-                              ExGetPreviousMode(),
-                              NULL,
-                              DesiredAccess,
-                              &ParseContext,
-                              KeyHandle);
+    Status = ObOpenObjectByName(ObjectAttributes,
+                                CmpKeyObjectType,
+                                ExGetPreviousMode(),
+                                NULL,
+                                DesiredAccess,
+                                &ParseContext,
+                                &Handle);
+    if (NT_SUCCESS(Status)) *KeyHandle = Handle;
+    
+    /* Return status */
+    return Status;
 }
+
 
 NTSTATUS
 NTAPI

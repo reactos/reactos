@@ -9,7 +9,6 @@
 /* INCLUDES ******************************************************************/
 
 #include "ntoskrnl.h"
-#include "cm.h"
 #define NDEBUG
 #include "debug.h"
 
@@ -224,18 +223,7 @@ CmpDoCreateChild(IN PHHIVE Hive,
     PCELL_DATA CellData;
     ULONG StorageType;
     LARGE_INTEGER SystemTime;
-    BOOLEAN Hack = FALSE;
     PCM_KEY_CONTROL_BLOCK Kcb;
-
-    /* ReactOS Hack */
-    if (Name->Buffer[0] == OBJ_NAME_PATH_SEPARATOR)
-    {
-        /* Skip initial path separator */
-        Name->Buffer++;
-        Name->Length -= sizeof(OBJ_NAME_PATH_SEPARATOR);
-        Name->MaximumLength -= sizeof(OBJ_NAME_PATH_SEPARATOR);
-        Hack = TRUE;
-    }
 
     /* Get the storage type */
     StorageType = Stable;
@@ -379,15 +367,6 @@ Quickie:
         /* Free any cells we might've allocated */
         if (ParseContext->Class.Length > 0) HvFreeCell(Hive, ClassCell);
         HvFreeCell(Hive, *KeyCell);
-    }
-
-    /* Check if we applied ReactOS hack */
-    if (Hack)
-    {
-        /* Restore name */
-        Name->Buffer--;
-        Name->Length += sizeof(OBJ_NAME_PATH_SEPARATOR);
-        Name->MaximumLength += sizeof(OBJ_NAME_PATH_SEPARATOR);
     }
 
     /* Return status */
@@ -996,16 +975,16 @@ CmpBuildHashStackAndLookupCache(IN PCM_KEY_BODY ParseObject,
 
 NTSTATUS
 NTAPI
-CmpParseKey2(IN PVOID ParseObject,
-             IN PVOID ObjectType,
-             IN OUT PACCESS_STATE AccessState,
-             IN KPROCESSOR_MODE AccessMode,
-             IN ULONG Attributes,
-             IN OUT PUNICODE_STRING CompleteName,
-             IN OUT PUNICODE_STRING RemainingName,
-             IN OUT PVOID Context OPTIONAL,
-             IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
-             OUT PVOID *Object)
+CmpParseKey(IN PVOID ParseObject,
+            IN PVOID ObjectType,
+            IN OUT PACCESS_STATE AccessState,
+            IN KPROCESSOR_MODE AccessMode,
+            IN ULONG Attributes,
+            IN OUT PUNICODE_STRING CompleteName,
+            IN OUT PUNICODE_STRING RemainingName,
+            IN OUT PVOID Context OPTIONAL,
+            IN PSECURITY_QUALITY_OF_SERVICE SecurityQos OPTIONAL,
+            OUT PVOID *Object)
 {
     NTSTATUS Status;
     PCM_KEY_CONTROL_BLOCK Kcb, ParentKcb;
@@ -1209,8 +1188,6 @@ CmpParseKey2(IN PVOID ParseObject,
                     /* Check if this was the last key for a create */
                     if ((Last) && (ParseContext))
                     {
-                        PCM_KEY_BODY KeyBody;
-
                         /* Check if we're doing a link node */
                         if (ParseContext->CreateLink)
                         {
@@ -1240,11 +1217,6 @@ CmpParseKey2(IN PVOID ParseObject,
                         
                         /* Check for reparse (in this case, someone beat us) */
                         if (Status == STATUS_REPARSE) break;
-                        
-                        /* ReactOS Hack: Link this key to the parent */
-                        KeyBody = (PCM_KEY_BODY)*Object;
-                        InsertTailList(&ParentKcb->KeyBodyListHead,
-                                       &KeyBody->KeyBodyList);
 
                         /* Update disposition */
                         ParseContext->Disposition = REG_CREATED_NEW_KEY;

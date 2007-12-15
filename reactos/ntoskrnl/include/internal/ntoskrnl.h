@@ -30,6 +30,7 @@
 #include "ob.h"
 #include "mm.h"
 #include "ex.h"
+#include "cm.h"
 #include "ps.h"
 #include "cc.h"
 #include "io.h"

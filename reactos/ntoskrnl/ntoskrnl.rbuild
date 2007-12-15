@@ -138,9 +138,6 @@
 		<file>cmwraprs.c</file>
 		<file>ntapi.c</file>
 	</directory>
-	<directory name="cm">
-		<file>regobj.c</file>
-	</directory>
 	<directory name="dbgk">
 		<file>dbgkutil.c</file>
 		<file>dbgkobj.c</file>
