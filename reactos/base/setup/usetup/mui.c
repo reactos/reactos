@@ -5,6 +5,7 @@
 #include "lang/es-ES.h"
 #include "lang/de-DE.h"
 #include "lang/uk-UA.h"
+#include "lang/ru-RU.h"
 
 static MUI_LANGUAGE LanguageList[] =
 {
@@ -15,6 +16,10 @@ static MUI_LANGUAGE LanguageList[] =
     {
         "German",
         deDEPages
+    },
+    {
+        "Russian",
+        ruRUPages
     },
     {
         "Spanish",
