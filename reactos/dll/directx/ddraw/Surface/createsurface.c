@@ -54,6 +54,10 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
     {
         return DDERR_INVALIDPARAMS;
     }
+    if (pDDraw->lpLcl->dwProcessId != GetCurrentProcessId() )
+    {
+        return DDERR_INVALIDOBJECT;
+    }
 
     if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT)
         && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
