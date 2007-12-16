@@ -296,7 +296,11 @@ DoAgain:
     }
     
     /* Search for the value */
-    SearchResult = SearchFail;
+    SearchResult = CmpCompareNewValueDataAgainstKCBCache(Kcb,
+                                                         ValueName,
+                                                         Type,
+                                                         Data,
+                                                         DataLength);
     if (SearchResult == SearchNeedExclusiveLock)
     {
         /* Try again with the exclusive lock */
