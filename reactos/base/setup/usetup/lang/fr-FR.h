@@ -176,7 +176,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         6,
         6,
-        "Licence:",
+        "Licence :",
         TEXT_HIGHLIGHT
     },
     {
@@ -254,7 +254,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         22,
-        "Warranty:",
+        "Garantie :",
         TEXT_HIGHLIGHT
     },
     {
@@ -300,31 +300,31 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         8,
         11,
-        "     Ordinateur:",
+        "     Ordinateur :",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "      Affichage:",
+        "      Affichage :",
         TEXT_NORMAL,
     },
     {
         8,
         13,
-        "        Clavier:",
+        "        Clavier :",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Réglage Clavier:",
+        "Réglage Clavier :",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "       Accepter:",
+        "       Accepter :",
         TEXT_NORMAL
     },
     {
