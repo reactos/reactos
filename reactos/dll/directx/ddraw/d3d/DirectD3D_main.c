@@ -68,3 +68,59 @@ Main_D3D_FindDevice(LPDIRECT3D iface, LPD3DFINDDEVICESEARCH D3DDFS, LPD3DFINDDEV
     DX_STUB;
 }
 
+HRESULT WINAPI
+Main_D3D_CreateDevice2(LPDIRECT3D2 iface, REFCLSID rclsid, LPDIRECTDRAWSURFACE lpDDS,
+                                     LPDIRECT3DDEVICE2 *lplpD3DDevice2)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+HRESULT WINAPI
+Main_D3D_CreateDevice3(LPDIRECT3D3 iface, REFCLSID rclsid,LPDIRECTDRAWSURFACE4 lpDDS,
+                      LPDIRECT3DDEVICE3 *lplpD3DDevice3,LPUNKNOWN lpUnk)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+HRESULT WINAPI
+Main_D3D_CreateVertexBuffer3(LPDIRECT3D3 iface, LPD3DVERTEXBUFFERDESC lpD3DVertBufDesc,
+                            LPDIRECT3DVERTEXBUFFER *lplpD3DVertBuf,DWORD dwFlags,LPUNKNOWN lpUnk)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+
+HRESULT WINAPI
+Main_D3D_CreateDevice7(LPDIRECT3D7 iface, REFCLSID rclsid,LPDIRECTDRAWSURFACE7 lpDDS,
+                      LPDIRECT3DDEVICE7 *lplpD3DDevice)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+HRESULT WINAPI
+Main_D3D_CreateVertexBuffer7(LPDIRECT3D7 iface, LPD3DVERTEXBUFFERDESC lpD3DVertBufDesc,
+                            LPDIRECT3DVERTEXBUFFER7 *lplpD3DVertBuf,DWORD dwFlags)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+HRESULT WINAPI
+Main_D3D_EnumZBufferFormats(LPDIRECT3D7 iface, REFCLSID riidDevice, LPD3DENUMPIXELFORMATSCALLBACK lpEnumCallback,LPVOID lpContext)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+HRESULT WINAPI
+Main_D3D_EvictManagedTextures(LPDIRECT3D7 iface)
+{
+    DX_WINDBG_trace();
+    DX_STUB;
+}
+
+

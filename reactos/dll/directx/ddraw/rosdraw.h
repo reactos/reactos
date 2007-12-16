@@ -40,11 +40,9 @@ extern IDirectDrawKernelVtbl        DirectDrawKernel_Vtable;
 extern IDirectDrawSurfaceKernelVtbl DirectDrawSurfaceKernel_Vtable;
 
 extern IDirect3DVtbl IDirect3D_Vtbl;
-/*
 extern IDirect3D2Vtbl IDirect3D2_Vtbl;
 extern IDirect3D3Vtbl IDirect3D3_Vtbl;
 extern IDirect3D7Vtbl IDirect3D7_Vtbl;
-*/
 
 /* Start up direct hal or hel
  * iface = a pointer to the com object

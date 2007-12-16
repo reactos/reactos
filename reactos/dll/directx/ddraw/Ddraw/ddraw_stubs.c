@@ -40,6 +40,24 @@ HRESULT WINAPI Main_DirectDraw_DuplicateSurface(LPDDRAWI_DIRECTDRAW_INT This, LP
 
 HRESULT WINAPI
 Main_DirectDraw_EnumSurfaces(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
+                 LPDDSURFACEDESC lpDDSD, LPVOID context,
+                 LPDDENUMSURFACESCALLBACK callback)
+{
+	DX_WINDBG_trace();
+	DX_STUB;
+}
+
+HRESULT WINAPI
+Main_DirectDraw_EnumSurfaces4(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
+                 LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
+                 LPDDENUMSURFACESCALLBACK2 callback)
+{
+	DX_WINDBG_trace();
+	DX_STUB;
+}
+
+HRESULT WINAPI
+Main_DirectDraw_EnumSurfaces7(LPDDRAWI_DIRECTDRAW_INT This, DWORD dwFlags,
                  LPDDSURFACEDESC2 lpDDSD2, LPVOID context,
                  LPDDENUMSURFACESCALLBACK7 callback)
 {

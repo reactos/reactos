@@ -71,5 +71,8 @@
 		<file>DirectDrawSurface2_Vtable.c</file>
 		<file>DirectDrawSurface_Vtable.c</file>
 		<file>DirectD3D_Vtable.c</file>
+		<file>DirectD3D2_Vtable.c</file>
+		<file>DirectD3D3_Vtable.c</file>
+		<file>DirectD3D7_Vtable.c</file>
 	</directory>
 </module>
