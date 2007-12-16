@@ -757,18 +757,18 @@ WSPSelect(
     HeapFree( GlobalHeap, 0, PollBuffer );
     NtClose( SockEvent );
 
-    AFD_DbgPrint(MID_TRACE,("lpErrno = %x\n", lpErrno));
 
     if( lpErrno ) {
-	switch( IOSB.Status ) {
-	case STATUS_SUCCESS: 
-	case STATUS_TIMEOUT: *lpErrno = 0; break;
-	default: *lpErrno = WSAEINVAL; break;
-	}
+        switch( IOSB.Status ) {
+            case STATUS_SUCCESS: 
+            case STATUS_TIMEOUT: *lpErrno = 0; break;
+            default: *lpErrno = WSAEINVAL; break;
+        }
+        AFD_DbgPrint(MID_TRACE,("*lpErrno = %x\n", *lpErrno));
     }
 
     AFD_DbgPrint(MID_TRACE,("%d events\n", OutCount));
-    
+
     return OutCount;
 }
 
