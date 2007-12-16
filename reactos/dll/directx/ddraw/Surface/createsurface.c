@@ -58,6 +58,12 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_INVALIDOBJECT;
     }
 
+    if  ( ((pDDSD->ddsCaps.dwCaps & DDSCAPS_SYSTEMMEMORY) == DDSCAPS_SYSTEMMEMORY) &&
+          ((pDDSD->ddsCaps.dwCaps & DDSCAPS_VIDEOMEMORY) == DDSCAPS_VIDEOMEMORY) )
+    {
+        return DDERR_INVALIDCAPS;
+    }
+
     if(!(pDDSD->dwFlags & DDSD_HEIGHT) && !(pDDSD->dwFlags & DDSD_HEIGHT)
         && !(pDDSD->ddsCaps.dwCaps & DDSCAPS_PRIMARYSURFACE))
     {
