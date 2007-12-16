@@ -106,8 +106,14 @@ WinLdrScanImportDescriptorTable(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
 	ImportTable = (PIMAGE_IMPORT_DESCRIPTOR)RtlImageDirectoryEntryToData(VaToPa(ScanDTE->DllBase),
 		TRUE, IMAGE_DIRECTORY_ENTRY_IMPORT, &ImportTableSize);
 
-	DbgPrint((DPRINT_WINDOWS, "WinLdrScanImportDescriptorTable(): %S ImportTable = 0x%X\n",
-		VaToPa(ScanDTE->BaseDllName.Buffer),ImportTable));
+	{
+		UNICODE_STRING BaseName;
+		BaseName.Buffer = VaToPa(ScanDTE->BaseDllName.Buffer);
+		BaseName.MaximumLength = ScanDTE->BaseDllName.MaximumLength;
+		BaseName.Length = ScanDTE->BaseDllName.Length;
+		DbgPrint((DPRINT_WINDOWS, "WinLdrScanImportDescriptorTable(): %wZ ImportTable = 0x%X\n",
+			&BaseName, ImportTable));
+	}
 
 	/* If image doesn't have any import directory - just return success */
 	if (ImportTable == NULL)

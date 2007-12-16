@@ -29,9 +29,6 @@ extern ULONG reactos_disk_count;
 extern ARC_DISK_SIGNATURE reactos_arc_disk_info[];
 extern char reactos_arc_strings[32][256];
 
-ARC_DISK_SIGNATURE BldrDiskInfo[32];
-CHAR BldrArcNames[32][256];
-
 BOOLEAN
 WinLdrCheckForLoadedDll(IN OUT PLOADER_PARAMETER_BLOCK WinLdrBlock,
                         IN PCH DllName,
@@ -138,7 +135,7 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		PARC_DISK_SIGNATURE ArcDiskInfo;
 
 		/* Get the ARC structure */
-		ArcDiskInfo = (PARC_DISK_SIGNATURE)MmHeapAlloc(sizeof(ARC_DISK_SIGNATURE));//&BldrDiskInfo[i];
+		ArcDiskInfo = (PARC_DISK_SIGNATURE)MmHeapAlloc(sizeof(ARC_DISK_SIGNATURE));
 		RtlZeroMemory(ArcDiskInfo, sizeof(ARC_DISK_SIGNATURE));
 
 		/* Copy the data over */
@@ -146,9 +143,9 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 		ArcDiskInfo->CheckSum = reactos_arc_disk_info[i].CheckSum;
 
 		/* Copy the ARC Name */
-		//ArcDiskInfo->ArcName = (PCHAR)MmAllocateMemory(sizeof(CHAR)*256);
-		strcpy(BldrArcNames[i], reactos_arc_disk_info[i].ArcName);
-		ArcDiskInfo->ArcName = (PCHAR)PaToVa(BldrArcNames[i]);
+		ArcDiskInfo->ArcName = (PCHAR)MmHeapAlloc(sizeof(CHAR)*256);
+		strcpy(ArcDiskInfo->ArcName, reactos_arc_disk_info[i].ArcName);
+		ArcDiskInfo->ArcName = (PCHAR)PaToVa(ArcDiskInfo->ArcName);
 
 		/* Mark partition table as valid */
 		ArcDiskInfo->ValidPartitionTable = TRUE; 
@@ -533,7 +530,6 @@ WinLdrpDumpMemoryDescriptors(PLOADER_PARAMETER_BLOCK LoaderBlock)
 	while (NextMd != &LoaderBlock->MemoryDescriptorListHead)
 	{
 		MemoryDescriptor = CONTAINING_RECORD(NextMd, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
-
 
 		DbgPrint((DPRINT_WINDOWS, "BP %08X PC %04X MT %d\n", MemoryDescriptor->BasePage,
 			MemoryDescriptor->PageCount, MemoryDescriptor->MemoryType));
