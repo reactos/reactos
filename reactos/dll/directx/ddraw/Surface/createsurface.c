@@ -76,6 +76,16 @@ Internal_CreateSurface( LPDDRAWI_DIRECTDRAW_INT pDDraw, LPDDSURFACEDESC2 pDDSD,
         return DDERR_INVALIDPARAMS;
     }
 
+    /*
+     * program does not need set the DDSD_LPSURFACE, 
+     * if they forget set it, the ddraw will autoamtic set it.
+     *
+     */
+    if ((pDDSD->dwFlags & DDSD_LPSURFACE) != DDSD_LPSURFACE)
+    {
+        pDDSD->dwFlags = pDDSD->dwFlags | DDSD_LPSURFACE;
+    }
+
     /* FIXME count our how many surface we need */
 
     DxHeapMemAlloc(slist_int, num_of_surf * sizeof( LPDDRAWI_DDRAWSURFACE_INT ) );
