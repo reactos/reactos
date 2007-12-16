@@ -75,7 +75,7 @@ VOID
 NTAPI
 FldrSetConfigurationData(
     IN PCONFIGURATION_COMPONENT_DATA ComponentKey,
-    IN PCM_FULL_RESOURCE_DESCRIPTOR ConfigurationData,
+    IN PCM_PARTIAL_RESOURCE_LIST ResourceList,
     IN ULONG Size
 );
 
