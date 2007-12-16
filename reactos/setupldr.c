@@ -279,8 +279,8 @@ LoadNlsFile(PCSTR szSourcePath, PCSTR szFileName, PCSTR szModuleName)
 
 VOID RunLoader(VOID)
 {
-  ULONG_PTR Base;
-  ULONG Size;
+  //ULONG_PTR Base;
+  //ULONG Size;
   const char *SourcePath;
   const char *LoadOptions = "", *DbgLoadOptions = "";
   UINT i;
@@ -447,9 +447,9 @@ VOID RunLoader(VOID)
   LoadKernelSymbols(SourcePath, "ntoskrnl.exe");
 
   /* Export the hardware hive */
-  Base = FrLdrCreateModule ("HARDWARE");
-  RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
-  FrLdrCloseModule (Base, Size);
+  //Base = FrLdrCreateModule ("HARDWARE");
+  //RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PVOID)Base, &Size);
+  //FrLdrCloseModule (Base, Size);
 
 #if 0
   printf("Base: %x\n", Base);

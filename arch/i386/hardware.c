@@ -80,44 +80,6 @@
 /* Timeout in ms for sending to keyboard controller. */
 #define CONTROLLER_TIMEOUT                              250
 
-
-typedef struct _CM_DISK_GEOMETRY_DEVICE_DATA
-{
-  ULONG BytesPerSector;
-  ULONG NumberOfCylinders;
-  ULONG SectorsPerTrack;
-  ULONG NumberOfHeads;
-} CM_DISK_GEOMETRY_DEVICE_DATA, *PCM_DISK_GEOMETRY_DEVICE_DATA;
-
-
-typedef struct _CM_PNP_BIOS_DEVICE_NODE
-{
-  USHORT Size;
-  CHAR  Node;
-  ULONG ProductId;
-  CHAR  DeviceType[3];
-  USHORT DeviceAttributes;
-} __attribute__((packed)) CM_PNP_BIOS_DEVICE_NODE, *PCM_PNP_BIOS_DEVICE_NODE;
-
-
-typedef struct _CM_PNP_BIOS_INSTALLATION_CHECK
-{
-  UCHAR  Signature[4];
-  UCHAR  Revision;
-  UCHAR  Length;
-  USHORT ControlField;
-  UCHAR  Checksum;
-  ULONG EventFlagAddress;
-  USHORT RealModeEntryOffset;
-  USHORT RealModeEntrySegment;
-  USHORT ProtectedModeEntryOffset;
-  ULONG ProtectedModeCodeBaseAddress;
-  ULONG OemDeviceId;
-  USHORT RealModeDataBaseAddress;
-  ULONG ProtectedModeDataBaseAddress;
-} __attribute__((packed)) CM_PNP_BIOS_INSTALLATION_CHECK, *PCM_PNP_BIOS_INSTALLATION_CHECK;
-
-
 static CHAR Hex[] = "0123456789abcdef";
 static unsigned int delay_count = 1;
 

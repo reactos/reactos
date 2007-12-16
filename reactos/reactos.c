@@ -900,7 +900,7 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
 	 * Export the hardware hive
 	 */
 	Base = FrLdrCreateModule ("HARDWARE");
-	RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PCHAR)Base, &Size);
+	//RegExportBinaryHive (L"\\Registry\\Machine\\HARDWARE", (PCHAR)Base, &Size);
 	FrLdrCloseModule (Base, Size);
 
 	UiDrawProgressBarCenter(20, 100, szLoadingMsg);
