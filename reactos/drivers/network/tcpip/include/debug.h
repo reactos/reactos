@@ -9,11 +9,9 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#define NORMAL_MASK    0x000000FF
-#define SPECIAL_MASK   0xFFFFFF00
-#define MIN_TRACE      0x00000001
-#define MID_TRACE      0x00000002
-#define MAX_TRACE      0x00000003
+#define MIN_TRACE      DPFLTR_WARNING_LEVEL
+#define MID_TRACE      DPFLTR_WARNING_LEVEL | DPFLTR_TRACE_LEVEL
+#define MAX_TRACE      DPFLTR_WARNING_LEVEL | DPFLTR_TRACE_LEVEL | DPFLTR_INFO_LEVEL
 
 #define DEBUG_CHECK    0x00000100
 #define DEBUG_MEMORY   0x00000200
@@ -33,33 +31,14 @@
 #define DEBUG_CPOINT   0x00800000
 #define DEBUG_LOCK     0x01000000
 #define DEBUG_INFO     0x02000000
-#define DEBUG_ULTRA    0xFFFFFFFF
+#define DEBUG_ULTRA    0x7FFFFFFF
 
 #ifdef DBG
 
-extern DWORD DebugTraceLevel;
-
-#ifdef _MSC_VER
-
+#define REMOVE_PARENS(...) __VA_ARGS__
 #define TI_DbgPrint(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
-        DbgPrint("(%s:%d) ", __FILE__, __LINE__); \
-        DbgPrint _x_ ; \
-    }
-
-#else /* _MSC_VER */
-
-#define TI_DbgPrint(_t_, _x_) \
-    if (((DebugTraceLevel & NORMAL_MASK) >= _t_) || \
-        ((DebugTraceLevel & _t_) > NORMAL_MASK)) { \
-        DbgPrint("(%s:%d)(%s) ", __FILE__, __LINE__, __FUNCTION__); \
-        DbgPrint _x_ ; \
-    }
-
-#endif /* _MSC_VER */
-
-#define ASSERT_IRQL(x) ASSERT(KeGetCurrentIrql() <= (x))
+    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) & DPFLTR_MASK, "(%s:%d) ", __FILE__, __LINE__), \
+    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) & DPFLTR_MASK, REMOVE_PARENS _x_)
 
 #else /* DBG */
 

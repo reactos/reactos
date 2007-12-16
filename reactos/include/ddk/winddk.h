@@ -240,7 +240,12 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 #define DPFLTR_INFO_LEVEL                   3
 #define DPFLTR_MASK                         0x80000000
 
-#define DPFLTR_PREFETCHER_ID                63
+typedef enum _DPFLTR_TYPE
+{
+    DPFLTR_I8042PRT_ID = 15,
+    DPFLTR_TCPIP_ID = 30,
+    DPFLTR_PREFETCHER_ID = 65,
+} DPFLTR_TYPE;
 
 #define MAXIMUM_PROCESSORS                32
 
