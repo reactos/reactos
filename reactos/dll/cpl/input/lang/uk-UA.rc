@@ -242,14 +242,19 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Мови та служби текстового вводу"
     IDS_CPLSYSTEMDESCRIPTION "Налаштовує параметри для текстового вводу."
+	IDS_KEYBOARD "Keyboard"
+	IDS_ADV_TEXT_SRV "Advanced Text Services"
+	IDS_NONE "(None)"
+	IDS_UNKNOWN "(Unknown)"
+	IDS_RESTART "Do you want to restart your computer now?"
+	IDS_SPEECH "Speech"
+	IDS_HRD_REC "Handwriting Recognition"
+	IDS_OFF_ADV_TXT_SRV "Do you want to turn off advanced text services?"
+	IDS_WHATS_THIS "What's This?"
 END
 
 STRINGTABLE
 BEGIN
-	//Selected language on "Add Input language" ("Додавання мови вводу")
-	IDS_SELECTED_LANGUAGE               "English (United States)"
-	//Selected keyboard layout on "Add Input language" ("Додавання мови вводу")
-	IDS_SELECTED_LAYOUT, 				"United States-Dvorak"
 	IDS_US_LAYOUT, 									"США"
 	IDS_BELGIAN_LAYOUT, 							"Бельгійська (із крапкою)"
 	IDS_BELGIAN_FRENCH_LAYOUT, 						"Французька (Бельгія)"

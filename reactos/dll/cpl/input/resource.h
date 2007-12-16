@@ -79,7 +79,16 @@
 /* IDS */
 #define IDS_CPLSYSTEMNAME	        1
 #define IDS_CPLSYSTEMDESCRIPTION	2
-
+#define IDS_KEYBOARD                3
+#define IDS_ADV_TEXT_SRV            4
+#define IDS_NONE                    5
+#define IDS_UNKNOWN                 6
+#define IDS_RESTART                 7
+#define IDS_SPEECH                  8
+#define IDS_HRD_REC                 9
+#define IDS_OFF_ADV_TXT_SRV         10
+#define IDS_WHATS_THIS              11
+/* Layouts */
 #define IDS_US_LAYOUT 							5000
 #define IDS_BELGIAN_LAYOUT 						5001
 #define IDS_BELGIAN_FRENCH_LAYOUT 				5002
@@ -212,9 +221,6 @@
 #define IDS_DIVEHI_TYPEWRITER_LAYOUT 	5133
 #define IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT 	5134
 #define IDS_BULGARIAN_PHONETIC_BDS_LAYOUT		5135
-
-#define IDS_SELECTED_LAYOUT   6000
-#define IDS_SELECTED_LANGUAGE 6001
 
 #endif /* __CPL_RESOURCE_H */
 

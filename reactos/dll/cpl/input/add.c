@@ -95,36 +95,27 @@ static
 VOID
 CreateLanguagesList(HWND hWnd)
 {
-    TCHAR LangSel[256];
+    //TCHAR LangSel[256];
 
     hLanguageList = hWnd;
     EnumSystemLocales(LanguagesEnumProc, LCID_INSTALLED);
 
-    LoadString(hApplet,
-               IDS_SELECTED_LANGUAGE,
-               LangSel,
-               256);
-
-    SendMessage(hLanguageList,
+    /*SendMessage(hLanguageList,
                 CB_SELECTSTRING,
                 (WPARAM) -1,
-                (LPARAM)LangSel);
+                (LPARAM)LangSel);*/
 }
 
 static
 VOID
 SelectCurrentLayout(HWND hWnd)
 {
-    TCHAR Layout[256];
+    //TCHAR Layout[256];
 
-    LoadString(hApplet,
-               IDS_SELECTED_LAYOUT,
-               Layout,
-               256);
-    SendMessage(hWnd,
+    /*SendMessage(hWnd,
                 CB_SELECTSTRING,
                 (WPARAM) -1,
-                (LPARAM)Layout);
+                (LPARAM)Layout);*/
 }
 
 INT_PTR CALLBACK

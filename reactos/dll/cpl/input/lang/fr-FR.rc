@@ -233,16 +233,21 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Services texte et langue de saisie"
     IDS_CPLSYSTEMDESCRIPTION "Personnalise les paramètres pour la langue de saisie de texte."
+	IDS_KEYBOARD "Keyboard"
+	IDS_ADV_TEXT_SRV "Advanced Text Services"
+	IDS_NONE "(None)"
+	IDS_UNKNOWN "(Unknown)"
+	IDS_RESTART "Do you want to restart your computer now?"
+	IDS_SPEECH "Speech"
+	IDS_HRD_REC "Handwriting Recognition"
+	IDS_OFF_ADV_TXT_SRV "Do you want to turn off advanced text services?"
+	IDS_WHATS_THIS "What's This?"
 END
 
 /* FIXME : To improve/complete */
 /* FIXME : À améliorer/compléter */
 STRINGTABLE
 BEGIN
-	//Selected language on "Add Input language"
-	IDS_SELECTED_LANGUAGE               "Anglais (États-Unis)"
-	//Selected keyboard layout on "Add Input language"
-	IDS_SELECTED_LAYOUT, 				"États-Unis-Dvorak"
 	IDS_US_LAYOUT, 									"US"
 	IDS_BELGIAN_LAYOUT, 							"Belge (Period)"
 	IDS_BELGIAN_FRENCH_LAYOUT, 						"Belge Français"
