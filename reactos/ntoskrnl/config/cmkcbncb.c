@@ -925,8 +925,8 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
     if (!(Flags & CMP_ENLIST_KCB_LOCKED_EXCLUSIVE))
     {
         /* Acquire the lock */
-        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);                                      
-    }                                                                                       
+        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
+    }
 
     /* Make sure we have the exclusive lock */
     ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
@@ -941,7 +941,7 @@ EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
                    CMP_ENLIST_KCB_LOCKED_EXCLUSIVE)))
     {
         /* Release the lock */
-        CmpReleaseKcbLock(KeyBody->KeyControlBlock);                                             
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);
     } 
 }
 
@@ -974,7 +974,7 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     ASSERT(IsListEmpty(&KeyBody->KeyBodyList) == FALSE);
     
     /* Lock the KCB */
-    if (!LockHeld) CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);                  
+    if (!LockHeld) CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);
     ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
            (CmpTestRegistryLockExclusive() == TRUE));
     
@@ -982,7 +982,5 @@ DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
     RemoveEntryList(&KeyBody->KeyBodyList);
 
     /* Unlock it it if we did a manual lock */
-    if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);                                                                                                                      
+    if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);
 }
-
-

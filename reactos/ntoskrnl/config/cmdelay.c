@@ -346,4 +346,3 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
 }
-

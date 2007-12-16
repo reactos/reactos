@@ -29,4 +29,3 @@ CmpInitHiveViewList(IN PCMHIVE Hive)
     Hive->PinnedViews = 0;
     Hive->UseCount = 0;
 }
-
