@@ -644,7 +644,7 @@ WSPSelect(
     PollBuffer = HeapAlloc(GlobalHeap, 0, PollBufferSize);
 
     if (!PollBuffer) {
-      if (*lpErrno) *lpErrno = WSAEFAULT;
+      if (lpErrno) *lpErrno = WSAEFAULT;
       NtClose(SockEvent);
       return SOCKET_ERROR;
     }
