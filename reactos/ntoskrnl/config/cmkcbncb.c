@@ -80,6 +80,7 @@ CmpRemoveKeyHash(IN PCM_KEY_HASH KeyHash)
 {
     PCM_KEY_HASH *Prev;
     PCM_KEY_HASH Current;
+    ASSERT_VALID_HASH(KeyHash);
 
     /* Lookup all the keys in this index entry */
     Prev = &GET_HASH_ENTRY(CmpCacheTable, KeyHash->ConvKey).Entry;
@@ -88,12 +89,14 @@ CmpRemoveKeyHash(IN PCM_KEY_HASH KeyHash)
         /* Save the current one and make sure it's valid */
         Current = *Prev;
         ASSERT(Current != NULL);
+        ASSERT_VALID_HASH(Current);
 
         /* Check if it matches */
         if (Current == KeyHash)
         {
             /* Then write the previous one */
             *Prev = Current->NextHash;
+            if (*Prev) ASSERT_VALID_HASH(*Prev);
             break;
         }
 
@@ -109,6 +112,7 @@ CmpInsertKeyHash(IN PCM_KEY_HASH KeyHash,
 {
     ULONG i;
     PCM_KEY_HASH Entry;
+    ASSERT_VALID_HASH(KeyHash);
 
     /* Get the hash index */
     i = GET_HASH_INDEX(KeyHash->ConvKey);
@@ -121,6 +125,7 @@ CmpInsertKeyHash(IN PCM_KEY_HASH KeyHash,
     while (Entry)
     {
         /* Check if this matches */
+        ASSERT_VALID_HASH(Entry);
         if ((KeyHash->ConvKey == Entry->ConvKey) &&
             (KeyHash->KeyCell == Entry->KeyCell) &&
             (KeyHash->KeyHive == Entry->KeyHive))
@@ -488,6 +493,9 @@ CmpCleanUpKcbCacheWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
     Parent = Kcb->ParentKcb;
     if (!Kcb->Delete) CmpRemoveKeyControlBlock(Kcb);
     
+    /* Set invalid KCB signature */
+    Kcb->Signature = CM_KCB_INVALID_SIGNATURE;
+    
     /* Free the KCB as well */
     CmpFreeKeyControlBlock(Kcb);
 
@@ -595,12 +603,15 @@ CmpDereferenceKeyControlBlockWithLock(IN PCM_KEY_CONTROL_BLOCK Kcb,
                                       IN BOOLEAN LockHeldExclusively)
 {
     /* Sanity check */
-    ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
-           (CmpTestRegistryLockExclusive() == TRUE));
+    ASSERT_KCB_VALID(Kcb);
 
     /* Check if this is the last reference */
     if ((InterlockedDecrement((PLONG)&Kcb->RefCount) & 0xFFFF) == 0)
     {
+        /* Sanity check */
+        ASSERT((CmpIsKcbLockedExclusive(Kcb) == TRUE) ||
+               (CmpTestRegistryLockExclusive() == TRUE));
+
         /* Check if we should do a direct delete */
         if (((CmpHoldLazyFlush) &&
              !(Kcb->ExtFlags & CM_KCB_SYM_LINK_FOUND) &&
@@ -699,6 +710,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     InitializeKCBKeyBodyList(Kcb);
 
     /* Set it up */
+    Kcb->Signature = CM_KCB_SIGNATURE;
     Kcb->Delete = FALSE;
     Kcb->RefCount = 1;
     Kcb->KeyHive = Hive;
@@ -706,6 +718,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     Kcb->ConvKey = ConvKey;
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
     Kcb->InDelayClose = 0;
+    ASSERT_KCB_VALID(Kcb);
 
     /* Check if we have two hash entires */
     HashLock = Flags & CMP_LOCK_HASHES_FOR_KCB ? TRUE : FALSE;
@@ -730,9 +743,11 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
     {
         /* Sanity check */
         ASSERT(!FoundKcb->Delete);
+        Kcb->Signature = CM_KCB_INVALID_SIGNATURE;
 
         /* Free the one we allocated and reference this one */
         CmpFreeKeyControlBlock(Kcb);
+        ASSERT_KCB_VALID(FoundKcb);
         Kcb = FoundKcb;
         if (!CmpReferenceKeyControlBlock(Kcb))
         {
@@ -790,6 +805,7 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
             {
                 /* Remove the KCB and free it */
                 CmpRemoveKeyControlBlock(Kcb);
+                Kcb->Signature = CM_KCB_INVALID_SIGNATURE;
                 CmpFreeKeyControlBlock(Kcb);
                 Kcb = NULL;
             }
@@ -833,12 +849,20 @@ CmpCreateKeyControlBlock(IN PHHIVE Hive,
 
                 /* Remove the KCB and free it */
                 CmpRemoveKeyControlBlock(Kcb);
+                Kcb->Signature = CM_KCB_INVALID_SIGNATURE;
                 CmpFreeKeyControlBlock(Kcb);
                 Kcb = NULL;
             }
         }
     }
 
+    /* Check if this is a KCB inside a frozen hive */
+	if ((Kcb) && (((PCMHIVE)Hive)->Frozen) && (!(Kcb->Flags & KEY_SYM_LINK)))
+    {
+        /* Don't add these to the delay close */
+		Kcb->ExtFlags |= CM_KCB_NO_DELAY_CLOSE;
+    }
+        
     /* Sanity check */
     ASSERT((!Kcb) || (Kcb->Delete == FALSE));
 
@@ -867,12 +891,98 @@ NTAPI
 EnlistKeyBodyWithKCB(IN PCM_KEY_BODY KeyBody,
                      IN ULONG Flags)
 {
+    ULONG i;
+
     /* Sanity check */
     ASSERT(KeyBody->KeyControlBlock != NULL);
     
     /* Initialize the list entry */
     InitializeListHead(&KeyBody->KeyBodyList);
 
-    /* FIXME: Implement once we don't link parents to children anymore */
+    /* Check if we can use the parent KCB array */
+    for (i = 0; i < 4; i++)
+    {
+        /* Add it into the list */
+        if (!InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+                                               KeyBodyArray[i],
+                                               KeyBody,
+                                               NULL))
+        {
+            /* Added */
+            return;
+        }
+    }
+    
+    /* Array full, check if we need to unlock the KCB */
+    if (Flags & CMP_ENLIST_KCB_LOCKED_SHARED)
+    {
+        /* It's shared, so release the KCB shared lock */
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);     
+        ASSERT(!(Flags & CMP_ENLIST_KCB_LOCKED_EXCLUSIVE));
+    } 
+
+    /* Check if we need to lock the KCB */
+    if (!(Flags & CMP_ENLIST_KCB_LOCKED_EXCLUSIVE))
+    {
+        /* Acquire the lock */
+        CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);                                      
+    }                                                                                       
+
+    /* Make sure we have the exclusive lock */
+    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+
+    /* do the insert */
+    InsertTailList(&KeyBody->KeyControlBlock->KeyBodyListHead,
+                   &KeyBody->KeyBodyList);
+
+    /* Check if we did a manual lock */
+    if (!(Flags & (CMP_ENLIST_KCB_LOCKED_SHARED |
+                   CMP_ENLIST_KCB_LOCKED_EXCLUSIVE)))
+    {
+        /* Release the lock */
+        CmpReleaseKcbLock(KeyBody->KeyControlBlock);                                             
+    } 
 }
+
+VOID
+NTAPI
+DelistKeyBodyFromKCB(IN PCM_KEY_BODY KeyBody,
+                     IN BOOLEAN LockHeld)
+{
+    ULONG i;
+
+    /* Sanity check */
+    ASSERT(KeyBody->KeyControlBlock != NULL);
+
+    /* Check if we can use the parent KCB array */
+    for (i = 0; i < 4; i++)
+    {
+        /* Add it into the list */
+        if (InterlockedCompareExchangePointer(&KeyBody->KeyControlBlock->
+                                              KeyBodyArray[i],
+                                              NULL,
+                                              KeyBody) == KeyBody)
+        {
+            /* Removed */
+            return;
+        }
+    }
+
+    /* Sanity checks */
+    ASSERT(IsListEmpty(&KeyBody->KeyControlBlock->KeyBodyListHead) == FALSE);
+    ASSERT(IsListEmpty(&KeyBody->KeyBodyList) == FALSE);
+    
+    /* Lock the KCB */
+    if (!LockHeld) CmpAcquireKcbLockExclusive(KeyBody->KeyControlBlock);                  
+    ASSERT((CmpIsKcbLockedExclusive(KeyBody->KeyControlBlock) == TRUE) ||
+           (CmpTestRegistryLockExclusive() == TRUE));
+    
+    /* Remove the entry */
+    RemoveEntryList(&KeyBody->KeyBodyList);
+
+    /* Unlock it it if we did a manual lock */
+    if (!LockHeld) CmpReleaseKcbLock(KeyBody->KeyControlBlock);                                                                                                                      
+}
+
 

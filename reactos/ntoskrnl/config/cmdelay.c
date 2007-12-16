@@ -100,15 +100,41 @@ VOID
 NTAPI
 CmpDelayDerefKCBWorker(IN PVOID Context)
 {
+    PCM_DELAY_DEREF_KCB_ITEM Entry;
     PAGED_CODE();
 
     /* Sanity check */
     ASSERT(CmpDelayDerefKCBWorkItemActive);
 
-    /* FIXME: TODO */
-    DPRINT1("CmpDelayDerefKCBWorker has work to do!\n");
-    return;
-    ASSERT(FALSE);
+    /* Lock the registry and and list lock */
+    CmpLockRegistry();
+    KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
+
+    /* Check if the list is empty */
+    while (!IsListEmpty(&CmpDelayDerefKCBListHead))
+    {
+        /* Grab an entry */
+        Entry = (PVOID)RemoveHeadList(&CmpDelayDerefKCBListHead);
+        
+        /* We can release the lock now */
+        KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
+        
+        /* Now grab the actual entry */
+        Entry = CONTAINING_RECORD(Entry, CM_DELAY_DEREF_KCB_ITEM, ListEntry);
+        Entry->ListEntry.Flink = Entry->ListEntry.Blink = NULL;
+        
+        /* Dereference and free */
+        CmpDereferenceKeyControlBlock(Entry->Kcb);
+        CmpFreeDelayItem(Entry);
+        
+        /* Lock the list again */
+        KeAcquireGuardedMutex(&CmpDelayDerefKCBLock);
+    }
+    
+    /* We're done */
+    CmpDelayDerefKCBWorkItemActive = FALSE;
+    KeReleaseGuardedMutex(&CmpDelayDerefKCBLock);
+    CmpUnlockRegistry();
 }
 
 VOID
@@ -133,19 +159,22 @@ VOID
 NTAPI
 CmpDelayDerefKeyControlBlock(IN PCM_KEY_CONTROL_BLOCK Kcb)
 {
-    USHORT OldRefCount, NewRefCount;
+    LONG OldRefCount, NewRefCount;
     LARGE_INTEGER Timeout;
     PCM_DELAY_DEREF_KCB_ITEM Entry;
     PAGED_CODE();
 
     /* Get the previous reference count */
-    OldRefCount = Kcb->RefCount;
-
-    /* Write the new one */
-    NewRefCount = (USHORT)InterlockedCompareExchange((PLONG)&Kcb->RefCount,
-                                                     OldRefCount - 1,
-                                                     OldRefCount);
-    if (NewRefCount != OldRefCount) return;
+    OldRefCount = *(PLONG)&Kcb->RefCount;
+    NewRefCount = OldRefCount - 1;
+    if (((NewRefCount & 0xFFFF) > 0) &&
+        (InterlockedCompareExchange((PLONG)&Kcb->RefCount,
+                                    NewRefCount,
+                                    OldRefCount) == OldRefCount))
+    {
+        /* KCB still had references, so we're done */
+        return;
+    }
 
     /* Allocate a delay item */
     Entry = CmpAllocateDelayItem();
@@ -179,6 +208,9 @@ CmpArmDelayedCloseTimer(VOID)
 {
     LARGE_INTEGER Timeout;
     PAGED_CODE();
+    
+    /* Set the worker active */
+    CmpDelayCloseWorkItemActive = TRUE;
 
     /* Setup the interval */
     Timeout.QuadPart = CmpDelayCloseIntervalInSeconds * -10000000;
@@ -220,14 +252,18 @@ CmpAddToDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb,
     if (Kcb->InDelayClose) ASSERT(FALSE);
 
     /* Get the previous reference count */
-    OldRefCount = Kcb->InDelayClose;
+    OldRefCount = *(PLONG)&Kcb->InDelayClose;
     ASSERT(OldRefCount == 0);
 
     /* Write the new one */
-    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
-                                             1,
-                                             OldRefCount);
-    if (NewRefCount != OldRefCount) ASSERT(FALSE);
+    NewRefCount = 1;
+    if (InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
+                                   NewRefCount,
+                                   OldRefCount) != OldRefCount)
+    {
+        /* Sanity check */
+        ASSERT(FALSE);
+    }
 
     /* Reset the delayed close index */
     Kcb->DelayedCloseIndex = 0;
@@ -290,15 +326,19 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Sanity check */
     if (!Kcb->InDelayClose) ASSERT(FALSE);
     
-    /* Get the old reference count */
-    OldRefCount = Kcb->InDelayClose;
+    /* Get the previous reference count */
+    OldRefCount = *(PLONG)&Kcb->InDelayClose;
     ASSERT(OldRefCount == 1);
     
-    /* Set it to 0 */
-    NewRefCount = InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
-                                             0,
-                                             OldRefCount);
-    if (NewRefCount != OldRefCount) ASSERT(FALSE);
+    /* Write the new one */
+    NewRefCount = 0;
+    if (InterlockedCompareExchange((PLONG)&Kcb->InDelayClose,
+                                   NewRefCount,
+                                   OldRefCount) != OldRefCount)
+    {
+        /* Sanity check */
+        ASSERT(FALSE);
+    }
     
     /* Remove the link to the entry */
     Kcb->DelayCloseEntry = NULL;
@@ -306,6 +346,4 @@ CmpRemoveFromDelayedClose(IN PCM_KEY_CONTROL_BLOCK Kcb)
     /* Set new delay size and remove the delete flag */
     Kcb->DelayedCloseIndex = CmpDelayedCloseSize;
 }
-
-
 

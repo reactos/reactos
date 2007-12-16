@@ -36,12 +36,17 @@
 #define CMTRACE(x, ...) DPRINT(__VA_ARGS__)
 #endif
 
-
 //
 // Hack since bigkeys are not yet supported
 //
 #define ASSERT_VALUE_BIG(h, s)                          \
     ASSERTMSG("Big keys not supported!", !CmpIsKeyValueBig(h, s));
+
+//
+// CM_KEY_CONTROL_BLOCK Signatures
+//
+#define CM_KCB_SIGNATURE                                TAG('C', 'm', 'K', 'b')
+#define CM_KCB_INVALID_SIGNATURE                        TAG('C', 'm', 'F', '4')
 
 //
 // CM_KEY_CONTROL_BLOCK Flags
@@ -81,6 +86,12 @@
 #define CMP_LOCK_HASHES_FOR_KCB                         0x2
 
 //
+// EnlistKeyBodyWithKCB Flags
+//
+#define CMP_ENLIST_KCB_LOCKED_SHARED                    0x1
+#define CMP_ENLIST_KCB_LOCKED_EXCLUSIVE                 0x2
+
+//
 // Maximum size of Value Cache
 //
 #define MAXIMUM_CACHED_DATA                             2 * PAGE_SIZE
@@ -94,9 +105,9 @@
 // Number of items that can fit inside an Allocation Page
 //
 #define CM_KCBS_PER_PAGE                                \
-    PAGE_SIZE / sizeof(CM_KEY_CONTROL_BLOCK)
+    ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_KEY_CONTROL_BLOCK))
 #define CM_DELAYS_PER_PAGE                              \
-    PAGE_SIZE / sizeof(CM_DELAYED_CLOSE_ENTRY)
+    ((PAGE_SIZE - FIELD_OFFSET(CM_ALLOC_PAGE, AllocPage)) / sizeof(CM_DELAY_ALLOC))
 
 //
 // Value Search Results
@@ -229,6 +240,7 @@ typedef struct _CM_NAME_CONTROL_BLOCK
 //
 typedef struct _CM_KEY_CONTROL_BLOCK
 {
+    ULONG Signature;
     USHORT RefCount;
     USHORT Flags;
     struct
@@ -905,6 +917,13 @@ NTAPI
 EnlistKeyBodyWithKCB(
     IN PCM_KEY_BODY KeyObject,
     IN ULONG Flags
+);
+
+VOID
+NTAPI
+DelistKeyBodyFromKCB(
+    IN PCM_KEY_BODY KeyBody,
+    IN BOOLEAN LockHeld
 );
 
 NTSTATUS

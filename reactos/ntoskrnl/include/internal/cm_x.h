@@ -63,6 +63,8 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
     GET_HASH_KEY(ConvKey) % CmpHashTableSize
 #define GET_HASH_ENTRY(Table, ConvKey)                              \
     (Table[GET_HASH_INDEX(ConvKey)])
+#define ASSERT_VALID_HASH(h)                                        \
+    ASSERT_KCB_VALID(CONTAINING_RECORD((h), CM_KEY_CONTROL_BLOCK, KeyHash))
 
 //
 // Returns whether or not the cell is cached
@@ -95,6 +97,12 @@ CmpIsKeyValueBig(IN PHHIVE Hive,
 #define CMP_ASSERT_EXCLUSIVE_REGISTRY_LOCK()                        \
     ASSERT((CmpSpecialBootCondition == TRUE) ||                     \
            (CmpTestRegistryLockExclusive() == TRUE))
+
+//
+// Makes sure this is a valid KCB
+//
+#define ASSERT_KCB_VALID(k)                                         \
+    ASSERT((k)->Signature == CM_KCB_SIGNATURE)
 
 //
 // Checks if a KCB is exclusively locked

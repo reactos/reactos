@@ -66,8 +66,8 @@ CmpDeleteKeyObject(PVOID DeletedObject)
         Kcb = KeyBody->KeyControlBlock;
         if (Kcb)
         {
-            /* Delist the key (once new parse routines are used) */
-            //DelistKeyBodyFromKCB(KeyBody, FALSE);
+            /* Delist the key */
+            DelistKeyBodyFromKCB(KeyBody, FALSE);
         }
         
         /* Dereference the KCB */
