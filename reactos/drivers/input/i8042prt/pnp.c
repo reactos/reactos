@@ -41,14 +41,14 @@ i8042ChangeMode(
 
 	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, KBD_READ_MODE))
 	{
-		DPRINT1("Can't read i8042 mode\n");
+		WARN_(I8042PRT, "Can't read i8042 mode\n");
 		return FALSE;
 	}
 
 	Status = i8042ReadDataWait(DeviceExtension, &Value);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("No response after read i8042 mode\n");
+		WARN_(I8042PRT, "No response after read i8042 mode\n");
 		return FALSE;
 	}
 
@@ -57,13 +57,13 @@ i8042ChangeMode(
 
 	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, KBD_WRITE_MODE))
 	{
-		DPRINT1("Can't set i8042 mode\n");
+		WARN_(I8042PRT, "Can't set i8042 mode\n");
 		return FALSE;
 	}
 
 	if (!i8042Write(DeviceExtension, DeviceExtension->DataPort, Value))
 	{
-		DPRINT1("Can't send i8042 mode\n");
+		WARN_(I8042PRT, "Can't send i8042 mode\n");
 		return FALSE;
 	}
 
@@ -85,20 +85,20 @@ i8042BasicDetect(
 
 	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_SELF_TEST))
 	{
-		DPRINT1("Writing CTRL_SELF_TEST command failed\n");
+		WARN_(I8042PRT, "Writing CTRL_SELF_TEST command failed\n");
 		return STATUS_IO_TIMEOUT;
 	}
 
 	Status = i8042ReadDataWait(DeviceExtension, &Value);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT1("Failed to read CTRL_SELF_TEST response, status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "Failed to read CTRL_SELF_TEST response, status 0x%08lx\n", Status);
 		return Status;
 	}
 
 	if (Value != 0x55)
 	{
-		DPRINT1("Got 0x%02x instead of 0x55\n", Value);
+		WARN_(I8042PRT, "Got 0x%02x instead of 0x55\n", Value);
 		return STATUS_IO_DEVICE_ERROR;
 	}
 
@@ -136,13 +136,13 @@ i8042DetectKeyboard(
 		Status = i8042SynchWritePort(DeviceExtension, 0, 0, TRUE);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("Can't finish SET_LEDS (0x%08lx)\n", Status);
+			WARN_(I8042PRT, "Can't finish SET_LEDS (0x%08lx)\n", Status);
 			return FALSE;
 		}
 	}
 	else
 	{
-		DPRINT("Warning: can't write SET_LEDS (0x%08lx)\n", Status);
+		WARN_(I8042PRT, "Warning: can't write SET_LEDS (0x%08lx)\n", Status);
 	}
 
 	/* Turn on translation and SF (Some machines don't reboot if SF is not set) */
@@ -167,7 +167,7 @@ i8042DetectMouse(
 	if (!i8042Write(DeviceExtension, DeviceExtension->ControlPort, CTRL_WRITE_MOUSE)
 	  ||!i8042Write(DeviceExtension, DeviceExtension->DataPort, MOU_CMD_RESET))
 	{
-		DPRINT1("Failed to write reset command to mouse\n");
+		WARN_(I8042PRT, "Failed to write reset command to mouse\n");
 		goto cleanup;
 	}
 
@@ -184,12 +184,12 @@ i8042DetectMouse(
 
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT1("No ACK after mouse reset, status 0x%08lx\n", Status);
+			WARN_(I8042PRT, "No ACK after mouse reset, status 0x%08lx\n", Status);
 			goto cleanup;
 		}
 		else if (Value != ExpectedReply[ReplyByte])
 		{
-			DPRINT1("Unexpected reply: 0x%02x (expected 0x%02x)\n",
+			WARN_(I8042PRT, "Unexpected reply: 0x%02x (expected 0x%02x)\n",
 			        Value, ExpectedReply[ReplyByte]);
 			goto cleanup;
 		}
@@ -210,7 +210,7 @@ cleanup:
 		i8042Flush(DeviceExtension);
 	}
 
-	DPRINT("Mouse %sdetected\n", Ok ? "" : "not ");
+	INFO_(I8042PRT, "Mouse %sdetected\n", Ok ? "" : "not ");
 
 	return Ok;
 }
@@ -223,24 +223,24 @@ i8042ConnectKeyboardInterrupt(
 	KIRQL DirqlMax;
 	NTSTATUS Status;
 
-	DPRINT("i8042ConnectKeyboardInterrupt()\n");
+	TRACE_(I8042PRT, "i8042ConnectKeyboardInterrupt()\n");
 
 	PortDeviceExtension = DeviceExtension->Common.PortDeviceExtension;
 	DirqlMax = MAX(
 		PortDeviceExtension->KeyboardInterrupt.Dirql,
 		PortDeviceExtension->MouseInterrupt.Dirql);
 
-	DPRINT("KeyboardInterrupt.Vector         %lu\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.Vector         %lu\n",
 		PortDeviceExtension->KeyboardInterrupt.Vector);
-	DPRINT("KeyboardInterrupt.Dirql          %lu\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.Dirql          %lu\n",
 		PortDeviceExtension->KeyboardInterrupt.Dirql);
-	DPRINT("KeyboardInterrupt.DirqlMax       %lu\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.DirqlMax       %lu\n",
 		DirqlMax);
-	DPRINT("KeyboardInterrupt.InterruptMode  %s\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.InterruptMode  %s\n",
 		PortDeviceExtension->KeyboardInterrupt.InterruptMode == LevelSensitive ? "LevelSensitive" : "Latched");
-	DPRINT("KeyboardInterrupt.ShareInterrupt %s\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.ShareInterrupt %s\n",
 		PortDeviceExtension->KeyboardInterrupt.ShareInterrupt ? "yes" : "no");
-	DPRINT("KeyboardInterrupt.Affinity       0x%lx\n",
+	INFO_(I8042PRT, "KeyboardInterrupt.Affinity       0x%lx\n",
 		PortDeviceExtension->KeyboardInterrupt.Affinity);
 	Status = IoConnectInterrupt(
 		&PortDeviceExtension->KeyboardInterrupt.Object,
@@ -251,7 +251,7 @@ i8042ConnectKeyboardInterrupt(
 		PortDeviceExtension->KeyboardInterrupt.Affinity, FALSE);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		WARN_(I8042PRT, "IoConnectInterrupt() failed with status 0x%08x\n", Status);
 		return Status;
 	}
 
@@ -269,7 +269,7 @@ i8042ConnectMouseInterrupt(
 	KIRQL DirqlMax;
 	NTSTATUS Status;
 
-	DPRINT("i8042ConnectMouseInterrupt()\n");
+	TRACE_(I8042PRT, "i8042ConnectMouseInterrupt()\n");
 
 	Status = i8042MouInitialize(DeviceExtension);
 	if (!NT_SUCCESS(Status))
@@ -280,17 +280,17 @@ i8042ConnectMouseInterrupt(
 		PortDeviceExtension->KeyboardInterrupt.Dirql,
 		PortDeviceExtension->MouseInterrupt.Dirql);
 
-	DPRINT("MouseInterrupt.Vector         %lu\n",
+	INFO_(I8042PRT, "MouseInterrupt.Vector         %lu\n",
 		PortDeviceExtension->MouseInterrupt.Vector);
-	DPRINT("MouseInterrupt.Dirql          %lu\n",
+	INFO_(I8042PRT, "MouseInterrupt.Dirql          %lu\n",
 		PortDeviceExtension->MouseInterrupt.Dirql);
-	DPRINT("MouseInterrupt.DirqlMax       %lu\n",
+	INFO_(I8042PRT, "MouseInterrupt.DirqlMax       %lu\n",
 		DirqlMax);
-	DPRINT("MouseInterrupt.InterruptMode  %s\n",
+	INFO_(I8042PRT, "MouseInterrupt.InterruptMode  %s\n",
 		PortDeviceExtension->MouseInterrupt.InterruptMode == LevelSensitive ? "LevelSensitive" : "Latched");
-	DPRINT("MouseInterrupt.ShareInterrupt %s\n",
+	INFO_(I8042PRT, "MouseInterrupt.ShareInterrupt %s\n",
 		PortDeviceExtension->MouseInterrupt.ShareInterrupt ? "yes" : "no");
-	DPRINT("MouseInterrupt.Affinity       0x%lx\n",
+	INFO_(I8042PRT, "MouseInterrupt.Affinity       0x%lx\n",
 		PortDeviceExtension->MouseInterrupt.Affinity);
 	Status = IoConnectInterrupt(
 		&PortDeviceExtension->MouseInterrupt.Object,
@@ -301,7 +301,7 @@ i8042ConnectMouseInterrupt(
 		PortDeviceExtension->MouseInterrupt.Affinity, FALSE);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoConnectInterrupt() failed with status 0x%08x\n", Status);
+		WARN_(I8042PRT, "IoConnectInterrupt() failed with status 0x%08x\n", Status);
 		goto cleanup;
 	}
 
@@ -378,21 +378,21 @@ StartProcedure(
 	if (!(DeviceExtension->Flags & (KEYBOARD_PRESENT | MOUSE_PRESENT)))
 	{
 		/* Try to detect them */
-		DPRINT("Check if the controller is really a i8042\n");
+		TRACE_(I8042PRT, "Check if the controller is really a i8042\n");
 		Status = i8042BasicDetect(DeviceExtension);
 		if (!NT_SUCCESS(Status))
 		{
-			DPRINT("i8042BasicDetect() failed with status 0x%08lx\n", Status);
+			WARN_(I8042PRT, "i8042BasicDetect() failed with status 0x%08lx\n", Status);
 			return STATUS_UNSUCCESSFUL;
 		}
-		DPRINT("Detecting keyboard\n");
+		TRACE_(I8042PRT, "Detecting keyboard\n");
 		if (!i8042DetectKeyboard(DeviceExtension))
 			return STATUS_UNSUCCESSFUL;
-		DPRINT("Detecting mouse\n");
+		TRACE_(I8042PRT, "Detecting mouse\n");
 		if (!i8042DetectMouse(DeviceExtension))
 			return STATUS_UNSUCCESSFUL;
-		DPRINT("Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
-		DPRINT("Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
+		INFO_(I8042PRT, "Keyboard present: %s\n", DeviceExtension->Flags & KEYBOARD_PRESENT ? "YES" : "NO");
+		INFO_(I8042PRT, "Mouse present   : %s\n", DeviceExtension->Flags & MOUSE_PRESENT ? "YES" : "NO");
 	}
 
 	/* Connect interrupts */
@@ -468,7 +468,7 @@ i8042PnpStartDevice(
 	ULONG i;
 	NTSTATUS Status;
 
-	DPRINT("i8042PnpStartDevice(%p)\n", DeviceObject);
+	TRACE_(I8042PRT, "i8042PnpStartDevice(%p)\n", DeviceObject);
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 	PortDeviceExtension = DeviceExtension->PortDeviceExtension;
 
@@ -476,12 +476,12 @@ i8042PnpStartDevice(
 
 	if (!AllocatedResources)
 	{
-		DPRINT("No allocated resources sent to driver\n");
+		WARN_(I8042PRT, "No allocated resources sent to driver\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	if (AllocatedResources->Count != 1)
 	{
-		DPRINT("Wrong number of allocated resources sent to driver\n");
+		WARN_(I8042PRT, "Wrong number of allocated resources sent to driver\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	if (AllocatedResources->List[0].PartialResourceList.Version != 1
@@ -489,7 +489,7 @@ i8042PnpStartDevice(
 	 || AllocatedResourcesTranslated->List[0].PartialResourceList.Version != 1
 	 || AllocatedResourcesTranslated->List[0].PartialResourceList.Revision != 1)
 	{
-		DPRINT("Revision mismatch: %u.%u != 1.1 or %u.%u != 1.1\n",
+		WARN_(I8042PRT, "Revision mismatch: %u.%u != 1.1 or %u.%u != 1.1\n",
 			AllocatedResources->List[0].PartialResourceList.Version,
 			AllocatedResources->List[0].PartialResourceList.Revision,
 			AllocatedResourcesTranslated->List[0].PartialResourceList.Version,
@@ -515,23 +515,23 @@ i8042PnpStartDevice(
 					if (!FoundDataPort)
 					{
 						PortDeviceExtension->DataPort = ULongToPtr(ResourceDescriptor->u.Port.Start.u.LowPart);
-						DPRINT("Found data port: %p\n", PortDeviceExtension->DataPort);
+						INFO_(I8042PRT, "Found data port: %p\n", PortDeviceExtension->DataPort);
 						FoundDataPort = TRUE;
 					}
 					else if (!FoundControlPort)
 					{
 						PortDeviceExtension->ControlPort = ULongToPtr(ResourceDescriptor->u.Port.Start.u.LowPart);
-						DPRINT("Found control port: %p\n", PortDeviceExtension->ControlPort);
+						INFO_(I8042PRT, "Found control port: %p\n", PortDeviceExtension->ControlPort);
 						FoundControlPort = TRUE;
 					}
 					else
 					{
-						DPRINT("Too much I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
+						WARN_(I8042PRT, "Too much I/O ranges provided: 0x%lx\n", ResourceDescriptor->u.Port.Length);
 						return STATUS_INVALID_PARAMETER;
 					}
 				}
 				else
-					DPRINT1("Invalid I/O range length: 0x%lx\n", ResourceDescriptor->u.Port.Length);
+					WARN_(I8042PRT, "Invalid I/O range length: 0x%lx\n", ResourceDescriptor->u.Port.Length);
 				break;
 			}
 			case CmResourceTypeInterrupt:
@@ -546,28 +546,28 @@ i8042PnpStartDevice(
 				else
 					InterruptData.InterruptMode = LevelSensitive;
 				InterruptData.ShareInterrupt = (ResourceDescriptorTranslated->ShareDisposition == CmResourceShareShared);
-				DPRINT("Found irq resource: %lu\n", ResourceDescriptor->u.Interrupt.Level);
+				INFO_(I8042PRT, "Found irq resource: %lu\n", ResourceDescriptor->u.Interrupt.Level);
 				FoundIrq = TRUE;
 				break;
 			}
 			default:
-				DPRINT("Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
+				WARN_(I8042PRT, "Unknown resource descriptor type 0x%x\n", ResourceDescriptor->Type);
 		}
 	}
 
 	if (!FoundIrq)
 	{
-		DPRINT("Interrupt resource was not found in allocated resources list\n");
+		WARN_(I8042PRT, "Interrupt resource was not found in allocated resources list\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	else if (DeviceExtension->Type == Keyboard && (!FoundDataPort || !FoundControlPort))
 	{
-		DPRINT("Some required resources were not found in allocated resources list\n");
+		WARN_(I8042PRT, "Some required resources were not found in allocated resources list\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 	else if (DeviceExtension->Type == Mouse && (FoundDataPort || FoundControlPort))
 	{
-		DPRINT("Too much resources were provided in allocated resources list\n");
+		WARN_(I8042PRT, "Too much resources were provided in allocated resources list\n");
 		return STATUS_INVALID_PARAMETER;
 	}
 
@@ -595,7 +595,7 @@ i8042PnpStartDevice(
 		}
 		default:
 		{
-			DPRINT1("Unknown FDO type %u\n", DeviceExtension->Type);
+			ERR_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
 			ASSERT(FALSE);
 			Status = STATUS_INVALID_DEVICE_REQUEST;
 		}
@@ -626,7 +626,7 @@ i8042Pnp(
 	{
 		case IRP_MN_START_DEVICE: /* 0x00 */
 		{
-			DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 
 			/* Call lower driver (if any) */
 			if (DeviceType != PhysicalDeviceObject)
@@ -650,7 +650,7 @@ i8042Pnp(
 				{
 					PDEVICE_RELATIONS DeviceRelations;
 
-					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(DEVICE_RELATIONS), I8042PRT_TAG);
 					if (DeviceRelations)
 					{
@@ -664,11 +664,11 @@ i8042Pnp(
 				}
 				case RemovalRelations:
 				{
-					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
+					TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / RemovalRelations\n");
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
 				default:
-					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					ERR_(I8042PRT, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					ASSERT(FALSE);
 					return ForwardIrpAndForget(DeviceObject, Irp);
@@ -677,14 +677,14 @@ i8042Pnp(
 		}
 		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* (optional) 0x0d */
 		{
-			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			TRACE_(I8042PRT, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
 			/* Nothing to do */
 			Status = Irp->IoStatus.Status;
 			break;
 		}
 		default:
 		{
-			DPRINT1("IRP_MJ_PNP / unknown minor function 0x%x\n", MinorFunction);
+			ERR_(I8042PRT, "IRP_MJ_PNP / unknown minor function 0x%x\n", MinorFunction);
 			ASSERT(FALSE);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}

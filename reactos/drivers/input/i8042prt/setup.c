@@ -42,7 +42,7 @@ IsFirstStageSetup(
 
 	if (hSetupKey != (HANDLE)NULL)
 		ZwClose(hSetupKey);
-	DPRINT("IsFirstStageSetup() returns %s\n", ret ? "YES" : "NO");
+	INFO_(I8042PRT, "IsFirstStageSetup() returns %s\n", ret ? "YES" : "NO");
 	return ret;
 }
 
@@ -64,14 +64,14 @@ SendStartDevice(
 	NTSTATUS Status;
 
 	Pdo = (PDEVICE_OBJECT)Context;
-	DPRINT("SendStartDevice(%p)\n", Pdo);
+	TRACE_(I8042PRT, "SendStartDevice(%p)\n", Pdo);
 
 	/* Create default resource list */
 	ResourceListSize = sizeof(CM_RESOURCE_LIST) + 3 * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 	AllocatedResources = ExAllocatePoolWithTag(PagedPool, ResourceListSize, I8042PRT_TAG);
 	if (!AllocatedResources)
 	{
-		DPRINT("ExAllocatePoolWithTag() failed\n");
+		WARN_(I8042PRT, "ExAllocatePoolWithTag() failed\n");
 		Status = STATUS_NO_MEMORY;
 		goto cleanup;
 	}
@@ -105,7 +105,7 @@ SendStartDevice(
 	AllocatedResourcesTranslated = ExAllocatePoolWithTag(PagedPool, ResourceListSize, I8042PRT_TAG);
 	if (!AllocatedResourcesTranslated)
 	{
-		DPRINT("ExAllocatePoolWithTag() failed\n");
+		WARN_(I8042PRT, "ExAllocatePoolWithTag() failed\n");
 		Status = STATUS_NO_MEMORY;
 		goto cleanup;
 	}
@@ -150,7 +150,7 @@ SendStartDevice(
 	}
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCallDriver() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoCallDriver() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -180,7 +180,7 @@ AddRegistryEntry(
 	Status = ZwOpenKey(&hDeviceMapKey, 0, &ObjectAttributes);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "ZwOpenKey() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -189,14 +189,14 @@ AddRegistryEntry(
 	Status = ZwCreateKey(&hPortKey, KEY_SET_VALUE, &ObjectAttributes, 0, NULL, REG_OPTION_VOLATILE, NULL);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ZwCreateKey() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "ZwCreateKey() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
 	Status = ZwSetValueKey(hPortKey, DeviceName, 0, REG_SZ, (PVOID)RegistryPath, wcslen(RegistryPath) * sizeof(WCHAR) + sizeof(UNICODE_NULL));
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ZwSetValueKey() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "ZwSetValueKey() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -220,7 +220,7 @@ i8042AddLegacyKeyboard(
 	PDEVICE_OBJECT Pdo = NULL;
 	NTSTATUS Status;
 
-	DPRINT("i8042AddLegacyKeyboard()\n");
+	TRACE_(I8042PRT, "i8042AddLegacyKeyboard()\n");
 
 	/* Create a named PDO */
 	Status = IoCreateDevice(
@@ -233,7 +233,7 @@ i8042AddLegacyKeyboard(
 		&Pdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoCreateDevice() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -247,7 +247,7 @@ i8042AddLegacyKeyboard(
 	Status = i8042AddDevice(DriverObject, Pdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("i8042AddDevice() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "i8042AddDevice() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 

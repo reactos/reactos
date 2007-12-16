@@ -88,7 +88,7 @@ i8042MouHandlePs2pp(
 			   (((DeviceExtension->MouseLogiBuffer[1] & 0x0C) >> 2) !=
 			     (DeviceExtension->MouseLogiBuffer[2] & 0x03)))
 				{
-					DPRINT1("Ps2pp packet fails sanity checks\n");
+					WARN_(I8042PRT, "Ps2pp packet fails sanity checks\n");
 					return;
 				}
 
@@ -133,6 +133,6 @@ i8042MouHandlePs2pp(
 			}
 
 		default:
-			DPRINT1("Unexpected input state for ps2pp!\n");
+			WARN_(I8042PRT, "Unexpected input state for ps2pp!\n");
 	}
 }

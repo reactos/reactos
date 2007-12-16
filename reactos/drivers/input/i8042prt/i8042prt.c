@@ -33,7 +33,7 @@ i8042AddDevice(
 	ULONG DeviceExtensionSize;
 	NTSTATUS Status;
 
-	DPRINT("i8042AddDevice(%p %p)\n", DriverObject, Pdo);
+	TRACE_(I8042PRT, "i8042AddDevice(%p %p)\n", DriverObject, Pdo);
 
 	DriverExtension = (PI8042_DRIVER_EXTENSION)IoGetDriverObjectExtension(DriverObject, DriverObject);
 
@@ -57,7 +57,7 @@ i8042AddDevice(
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoCreateDevice() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -70,7 +70,7 @@ i8042AddDevice(
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -107,7 +107,7 @@ i8042SendHookWorkItem(
 	PIRP NewIrp;
 	NTSTATUS Status;
 
-	DPRINT("i8042SendHookWorkItem(%p %p)\n", DeviceObject, Context);
+	TRACE_(I8042PRT, "i8042SendHookWorkItem(%p %p)\n", DeviceObject, Context);
 
 	WorkItemData = (PI8042_HOOK_WORKITEM)Context;
 	FdoDeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -135,7 +135,7 @@ i8042SendHookWorkItem(
 		}
 		default:
 		{
-			DPRINT1("Unknown FDO type %u\n", FdoDeviceExtension->Type);
+			ERR_(I8042PRT, "Unknown FDO type %u\n", FdoDeviceExtension->Type);
 			ASSERT(FALSE);
 			WorkItemData->Irp->IoStatus.Status = STATUS_INTERNAL_ERROR;
 			goto cleanup;
@@ -158,7 +158,7 @@ i8042SendHookWorkItem(
 
 	if (!NewIrp)
 	{
-		DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+		WARN_(I8042PRT, "IoBuildDeviceIoControlRequest() failed\n");
 		WorkItemData->Irp->IoStatus.Status = STATUS_INSUFFICIENT_RESOURCES;
 		goto cleanup;
 	}
@@ -176,7 +176,7 @@ i8042SendHookWorkItem(
 	}
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCallDriver() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoCallDriver() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -196,7 +196,7 @@ i8042SendHookWorkItem(
 				FALSE);
 			if (!NT_SUCCESS(Status))
 			{
-				DPRINT("KeyboardHook.InitializationRoutine() failed with status 0x%08lx\n", Status);
+				WARN_(I8042PRT, "KeyboardHook.InitializationRoutine() failed with status 0x%08lx\n", Status);
 				WorkItemData->Irp->IoStatus.Status = Status;
 				goto cleanup;
 			}
@@ -229,7 +229,7 @@ i8042StartIo(
 			i8042KbdStartIo(DeviceObject, Irp);
 			break;
 		default:
-			DPRINT1("Unknown FDO type %u\n", DeviceExtension->Type);
+			ERR_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
 			ASSERT(FALSE);
 			break;
 	}
@@ -251,7 +251,7 @@ i8042PacketWrite(
 		                Port))
 		{
 			/* something is really wrong! */
-			DPRINT1("Failed to send packet byte!\n");
+			WARN_(I8042PRT, "Failed to send packet byte!\n");
 			return FALSE;
 		}
 	}
@@ -343,7 +343,7 @@ i8042StartPacket(
 		case Keyboard: DeviceExtension->PacketPort = 0; break;
 		case Mouse: DeviceExtension->PacketPort = CTRL_WRITE_MOUSE; break;
 		default:
-			DPRINT1("Unknown FDO type %u\n", FdoDeviceExtension->Type);
+			ERR_(I8042PRT, "Unknown FDO type %u\n", FdoDeviceExtension->Type);
 			ASSERT(FALSE);
 			Status = STATUS_INTERNAL_ERROR;
 			goto done;
@@ -401,7 +401,7 @@ i8042DeviceControl(
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("i8042DeviceControl(%p %p)\n", DeviceObject, Irp);
+	TRACE_(I8042PRT, "i8042DeviceControl(%p %p)\n", DeviceObject, Irp);
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	switch (DeviceExtension->Type)
@@ -425,7 +425,7 @@ i8042InternalDeviceControl(
 	ULONG ControlCode;
 	NTSTATUS Status;
 
-	DPRINT("i8042InternalDeviceControl(%p %p)\n", DeviceObject, Irp);
+	TRACE_(I8042PRT, "i8042InternalDeviceControl(%p %p)\n", DeviceObject, Irp);
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	switch (DeviceExtension->Type)
@@ -442,7 +442,7 @@ i8042InternalDeviceControl(
 					Status = i8042MouInternalDeviceControl(DeviceObject, Irp);
 					break;
 				default:
-					DPRINT1("Unknown IO control code 0x%lx\n", ControlCode);
+					ERR_(I8042PRT, "Unknown IO control code 0x%lx\n", ControlCode);
 					ASSERT(FALSE);
 					Status = STATUS_INVALID_DEVICE_REQUEST;
 					break;
@@ -456,7 +456,7 @@ i8042InternalDeviceControl(
 			Status = i8042MouInternalDeviceControl(DeviceObject, Irp);
 			break;
 		default:
-			DPRINT1("Unknown FDO type %u\n", DeviceExtension->Type);
+			ERR_(I8042PRT, "Unknown FDO type %u\n", DeviceExtension->Type);
 			ASSERT(FALSE);
 			Status = STATUS_INTERNAL_ERROR;
 			IoCompleteRequest(Irp, IO_NO_INCREMENT);
@@ -482,7 +482,7 @@ DriverEntry(
 		(PVOID*)&DriverExtension);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoAllocateDriverObjectExtension() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "IoAllocateDriverObjectExtension() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 	RtlZeroMemory(DriverExtension, sizeof(I8042_DRIVER_EXTENSION));
@@ -496,14 +496,14 @@ DriverEntry(
 		&DriverExtension->RegistryPath);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("DuplicateUnicodeString() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "DuplicateUnicodeString() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
 	Status = ReadRegistryEntries(RegistryPath, &DriverExtension->Port.Settings);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ReadRegistryEntries() failed with status 0x%08lx\n", Status);
+		WARN_(I8042PRT, "ReadRegistryEntries() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
@@ -522,6 +522,14 @@ DriverEntry(
 
 	if (IsFirstStageSetup())
 		return i8042AddLegacyKeyboard(DriverObject, RegistryPath);
+
+	/* ROS Hack: ideally, we shouldn't have to initialize debug level this way */
+#ifndef NDEBUG
+	DbgSetDebugFilterState(
+		DPFLTR_I8042PRT_ID,
+		DPFLTR_ERROR_LEVEL | DPFLTR_WARNING_LEVEL | DPFLTR_TRACE_LEVEL | DPFLTR_INFO_LEVEL,
+		TRUE);
+#endif
 
 	return STATUS_SUCCESS;
 }

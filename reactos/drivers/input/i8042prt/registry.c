@@ -200,7 +200,7 @@ ReadRegistryEntries(
 		if (!RtlCreateUnicodeString(&Settings->KeyboardDeviceBaseName, DefaultKeyboardDeviceBaseName)
 		 || !RtlCreateUnicodeString(&Settings->PointerDeviceBaseName, DefaultPointerDeviceBaseName))
 		{
-			DPRINT("RtlCreateUnicodeString() failed\n");
+			WARN_(I8042PRT, "RtlCreateUnicodeString() failed\n");
 			Status = STATUS_NO_MEMORY;
 		}
 		else
@@ -211,20 +211,20 @@ ReadRegistryEntries(
 
 	if (NT_SUCCESS(Status))
 	{
-		DPRINT("KeyboardDataQueueSize : 0x%lx\n", Settings->KeyboardDataQueueSize);
-		DPRINT("KeyboardDeviceBaseName : %wZ\n", &Settings->KeyboardDeviceBaseName);
-		DPRINT("MouseDataQueueSize : 0x%lx\n", Settings->MouseDataQueueSize);
-		DPRINT("MouseResolution : 0x%lx\n", Settings->MouseResolution);
-		DPRINT("MouseSynchIn100ns : %lu\n", Settings->MouseSynchIn100ns);
-		DPRINT("NumberOfButtons : 0x%lx\n", Settings->NumberOfButtons);
-		DPRINT("PointerDeviceBaseName : %wZ\n", &Settings->PointerDeviceBaseName);
-		DPRINT("PollStatusIterations : 0x%lx\n", Settings->PollStatusIterations);
-		DPRINT("OverrideKeyboardType : 0x%lx\n", Settings->OverrideKeyboardType);
-		DPRINT("OverrideKeyboardSubtype : 0x%lx\n", Settings->OverrideKeyboardSubtype);
-		DPRINT("PollingIterations : 0x%lx\n", Settings->PollingIterations);
-		DPRINT("PollingIterationsMaximum : %lu\n", Settings->PollingIterationsMaximum);
-		DPRINT("ResendIterations : 0x%lx\n", Settings->ResendIterations);
-		DPRINT("SampleRate : %lu\n", Settings->SampleRate);
+		INFO_(I8042PRT, "KeyboardDataQueueSize : 0x%lx\n", Settings->KeyboardDataQueueSize);
+		INFO_(I8042PRT, "KeyboardDeviceBaseName : %wZ\n", &Settings->KeyboardDeviceBaseName);
+		INFO_(I8042PRT, "MouseDataQueueSize : 0x%lx\n", Settings->MouseDataQueueSize);
+		INFO_(I8042PRT, "MouseResolution : 0x%lx\n", Settings->MouseResolution);
+		INFO_(I8042PRT, "MouseSynchIn100ns : %lu\n", Settings->MouseSynchIn100ns);
+		INFO_(I8042PRT, "NumberOfButtons : 0x%lx\n", Settings->NumberOfButtons);
+		INFO_(I8042PRT, "PointerDeviceBaseName : %wZ\n", &Settings->PointerDeviceBaseName);
+		INFO_(I8042PRT, "PollStatusIterations : 0x%lx\n", Settings->PollStatusIterations);
+		INFO_(I8042PRT, "OverrideKeyboardType : 0x%lx\n", Settings->OverrideKeyboardType);
+		INFO_(I8042PRT, "OverrideKeyboardSubtype : 0x%lx\n", Settings->OverrideKeyboardSubtype);
+		INFO_(I8042PRT, "PollingIterations : 0x%lx\n", Settings->PollingIterations);
+		INFO_(I8042PRT, "PollingIterationsMaximum : %lu\n", Settings->PollingIterationsMaximum);
+		INFO_(I8042PRT, "ResendIterations : 0x%lx\n", Settings->ResendIterations);
+		INFO_(I8042PRT, "SampleRate : %lu\n", Settings->SampleRate);
 	}
 
 	return Status;

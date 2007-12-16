@@ -22,7 +22,7 @@ i8042Flush(
 	UCHAR Ignore;
 
 	while (NT_SUCCESS(i8042ReadData(DeviceExtension, KBD_OBF | MOU_OBF, &Ignore))) {
-		DPRINT("Data flushed\n"); /* drop */
+		INFO_(I8042PRT, "Data flushed\n"); /* drop */
 	}
 }
 
@@ -59,7 +59,7 @@ i8042ReadData(
 	if (PortStatus & StatusFlags)
 	{
 		*Data = READ_PORT_UCHAR(DeviceExtension->DataPort);
-		DPRINT("Read: 0x%02x (status: 0x%x)\n", Data[0], PortStatus);
+		INFO_(I8042PRT, "Read: 0x%02x (status: 0x%x)\n", Data[0], PortStatus);
 
 		// If the data is valid (not timeout, not parity error)
 		if ((PortStatus & KBD_PERR) == 0)
@@ -146,13 +146,13 @@ i8042SynchWritePort(
 		if (Port)
 			if (!i8042Write(DeviceExtension, DeviceExtension->DataPort, Port))
 			{
-				DPRINT1("Failed to write Port\n");
+				WARN_(I8042PRT, "Failed to write Port\n");
 				return STATUS_IO_TIMEOUT;
 			}
 
 		if (!i8042Write(DeviceExtension, DeviceExtension->DataPort, Value))
 		{
-			DPRINT1("Failed to write Value\n");
+			WARN_(I8042PRT, "Failed to write Value\n");
 			return STATUS_IO_TIMEOUT;
 		}
 
@@ -161,19 +161,19 @@ i8042SynchWritePort(
 			Status = i8042ReadDataWait(DeviceExtension, &Ack);
 			if (!NT_SUCCESS(Status))
 			{
-				DPRINT1("Failed to read Ack\n");
+				WARN_(I8042PRT, "Failed to read Ack\n");
 				return Status;
 			}
 			if (Ack == KBD_ACK)
 				return STATUS_SUCCESS;
 			else if (Ack == KBD_RESEND)
-				DPRINT("i8042 asks for a data resend\n");
+				INFO_(I8042PRT, "i8042 asks for a data resend\n");
 		}
 		else
 		{
 			return STATUS_SUCCESS;
 		}
-		DPRINT("Reiterating\n");
+		TRACE_(I8042PRT, "Reiterating\n");
 		ResendIterations--;
 	} while (ResendIterations);
 
@@ -205,7 +205,7 @@ i8042Write(
 	if (ResendIterations)
 	{
 		WRITE_PORT_UCHAR(addr, data);
-		DPRINT("Sent 0x%x to port %p\n", data, addr);
+		INFO_(I8042PRT, "Sent 0x%x to port %p\n", data, addr);
 		return TRUE;
 	}
 	return FALSE;
