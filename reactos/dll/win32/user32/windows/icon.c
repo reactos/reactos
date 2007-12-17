@@ -35,6 +35,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(user32);
 
 /* FUNCTIONS *****************************************************************/
 
+
 HICON
 ICON_CreateIconFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cxDesired, int cyDesired, int xHotspot, int yHotspot)
 {
@@ -147,16 +148,19 @@ ICON_CreateCursorFromData(HDC hDC, PVOID ImageData, ICONIMAGE* IconImage, int cx
  */
 HICON
 STDCALL
-CopyIcon(
-  HICON hIcon)
+CopyIcon(HICON hIcon)
 {
-  ICONINFO IconInfo;
+    HICON hRetIcon = NULL;
+    ICONINFO IconInfo;
 
-  if(GetIconInfo((HANDLE)hIcon, &IconInfo))
-  {
-    return NtUserCreateCursorIconHandle(&IconInfo, FALSE);
-  }
-  return (HICON)0;
+    if(GetIconInfo(hIcon, &IconInfo))
+    {
+        hRetIcon = CreateIconIndirect(&IconInfo);
+        DeleteObject(IconInfo.hbmColor);
+        DeleteObject(IconInfo.hbmMask);
+    }
+
+    return hRetIcon;
 }
 
 
