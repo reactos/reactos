@@ -13,42 +13,46 @@
 
 #include <debug.h>
 
-DLLAPI
+#define DEBUG_MESSAGE_BUFFER_SIZE   512
+
+static LPCSTR D3dError_WrongSdkVersion =
+    "D3D ERROR: D3D header version mismatch.\n"
+    "The application was compiled against and will only work with "
+    "D3D_SDK_VERSION (%d), but the currently installed runtime is "
+    "version (%d).\n"
+    "Recompile the application against the appropriate SDK for the installed runtime.\n"
+    "\n";
+
 HRESULT Direct3DShaderValidatorCreate9(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DLLAPI
 HRESULT PSGPError(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DLLAPI
 HRESULT PSGPSampleTexture(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DLLAPI
-HRESULT  DebugSetLevel(void)
+HRESULT DebugSetLevel(void)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DLLAPI
 HRESULT DebugSetMute(DWORD dw1)
 {
     UNIMPLEMENTED
     return 0;
 }
 
-DLLAPI
 IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 {
     HINSTANCE hDebugDll;
@@ -56,6 +60,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     DWORD LoadDebugDllSize;
     LPDIRECT3D9 D3D9Obj = 0;
     LPDIRECT3DCREATE9 DebugDirect3DCreate9 = 0;
+    CHAR DebugMessageBuffer[DEBUG_MESSAGE_BUFFER_SIZE];
 
     UNIMPLEMENTED
 
@@ -70,10 +75,23 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
             {
                 DebugDirect3DCreate9 = (LPDIRECT3DCREATE9)GetProcAddress(hDebugDll, "Direct3DCreate9");
 
-                D3D9Obj = DebugDirect3DCreate9(SDKVersion);
+                return DebugDirect3DCreate9(SDKVersion);
             }
         }
     }
+
+    if ((SDKVersion & 0x7FFFFFFF) != D3D_SDK_VERSION || (SDKVersion & 0x7FFFFFFF) != D3D9b_SDK_VERSION)
+    {
+        if (SDKVersion & 0x80000000)
+        {
+            FormatDebugString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, SDKVersion, D3D_SDK_VERSION);
+            OutputDebugStringA(DebugMessageBuffer);
+        }
+
+        return NULL;
+    }
+
+    CreateD3D9(&D3D9Obj);
 
     return D3D9Obj;
 }

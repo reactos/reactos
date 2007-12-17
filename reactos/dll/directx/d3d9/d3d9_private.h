@@ -11,9 +11,9 @@
 
 #define DLLAPI __declspec(dllexport)
 
-typedef IDirect3D9* WINAPI (*LPDIRECT3DCREATE9)(UINT);
+typedef IDirect3D9* (WINAPI *LPDIRECT3DCREATE9)(UINT);
 
-struct _tagDIRECTD3D9_INT_
+typedef struct _tagDIRECTD3D9_INT_
 {
 /* 0x0000 */    LPVOID lpVtbl; /* LPDIRECTD3D9 functoions table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
@@ -4594,4 +4594,4 @@ struct _tagDIRECTD3D9_INT_
 /* 0x47ac */    DWORD unknown004587; 
 /* 0x47b0 */    DWORD unknown004588; 
 /* 0x47b4 */    DWORD unknown004589;    /*? 0x00000020 */
-} *DIRECTD3D9_INT;
+} DIRECTD3D9_INT, *LPDIRECTD3D9_INT;
