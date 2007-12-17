@@ -676,9 +676,6 @@ CLEANUP:
 }
 
 
-/* for hints how the prototype might be, see
-   http://forum.grafika.cz/read.php?23,1816012,1816139,quote=1
-   http://www.cyber-ta.org/releases/malware-analysis/public/SOURCES/b47155634ccb2c30630da7e3666d3d07/b47155634ccb2c30630da7e3666d3d07.trace.html#NtUserGetIconSize */
 /*
  * @implemented
  */
@@ -686,7 +683,7 @@ BOOL
 NTAPI
 NtUserGetIconSize(
     HANDLE hCurIcon,
-    DWORD dwUnknown2, // Most of the time Zero.
+    UINT istepIfAniCur,
     PLONG plcx,       // &size.cx
     PLONG plcy)       // &size.cy
 {

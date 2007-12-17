@@ -353,6 +353,28 @@ NtUserCallOneParam(
       case ONEPARAM_ROUTINE_SETMESSAGEEXTRAINFO:
          RETURN( (DWORD)MsqSetMessageExtraInfo((LPARAM)Param));
 
+      case ONEPARAM_ROUTINE_CREATECURICONHANDLE:
+         {
+            PCURICON_OBJECT CurIcon;
+            PWINSTATION_OBJECT WinSta;
+
+            WinSta = IntGetWinStaObj();
+            if(WinSta == NULL)
+            {
+               RETURN(0);
+            }
+
+            if (!(CurIcon = IntCreateCurIconHandle(WinSta)))
+            {
+               SetLastWin32Error(ERROR_NOT_ENOUGH_MEMORY);
+               ObDereferenceObject(WinSta);
+               RETURN(0);
+            }
+
+            ObDereferenceObject(WinSta);
+            RETURN((DWORD)CurIcon->Self);
+         }
+
       case ONEPARAM_ROUTINE_GETCURSORPOSITION:
          {
             PWINSTATION_OBJECT WinSta;
