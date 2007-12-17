@@ -24,8 +24,8 @@ The following build tools are shared with Wine.
 reactos/tools/unicode             # Synced to Wine-0_9_5
 reactos/tools/wpp                 # Synced to Wine-0_9_5
 reactos/tools/bin2res             # Resource to binary converter
-reactos/tools/winebuild           # Synced to Wine-0_9_5
-reactos/tools/wmc                 # Synced to Wine-0_9_5
+reactos/tools/winebuild           # Synced to Wine-20071217
+reactos/tools/wmc                 # Synced to Wine-20071201
 reactos/tools/wrc                 # Synced to Wine-0_9_5
 reactos/tools/widl                # Synced to Wine-20060729
 

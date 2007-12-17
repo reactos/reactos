@@ -15,10 +15,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -37,7 +38,8 @@
 #include <sys/mman.h>
 #endif
 
-#include "winglue.h"
+#include "windef.h"
+#include "winbase.h"
 #include "build.h"
 
 /* Unicode string or integer id */
@@ -77,7 +79,7 @@ static const unsigned char *file_end;   /* end of resource file */
 static const char *file_name;  /* current resource file name */
 
 
-inline static struct resource *add_resource( DLLSPEC *spec )
+static inline struct resource *add_resource( DLLSPEC *spec )
 {
     spec->resources = xrealloc( spec->resources, (spec->nb_resources + 1) * sizeof(*spec->resources) );
     return &spec->resources[spec->nb_resources++];
@@ -140,7 +142,7 @@ static void get_string( struct string_id *str )
     }
     else
     {
-        char *p = xmalloc( (strlen((char*)file_pos) + 1) );
+        char *p = xmalloc(strlen((const char *)file_pos) + 1);
         str->str = p;
         str->id = 0;
         while ((*p++ = get_byte()));
@@ -240,16 +242,16 @@ static void free_resource_tree( struct res_tree *tree )
 }
 
 /* output a string preceded by its length */
-static void output_string( FILE *outfile, const char *str )
+static void output_string( const char *str )
 {
     unsigned int i, len = strlen(str);
-    fprintf( outfile, "\t.byte 0x%02x", len );
-    for (i = 0; i < len; i++) fprintf( outfile, ",0x%02x", (unsigned char)str[i] );
-    fprintf( outfile, " /* %s */\n", str );
+    output( "\t.byte 0x%02x", len );
+    for (i = 0; i < len; i++) output( ",0x%02x", (unsigned char)str[i] );
+    output( " /* %s */\n", str );
 }
 
 /* output the resource data */
-void output_res16_data( FILE *outfile, DLLSPEC *spec )
+void output_res16_data( DLLSPEC *spec )
 {
     const struct resource *res;
     unsigned int i;
@@ -258,14 +260,14 @@ void output_res16_data( FILE *outfile, DLLSPEC *spec )
 
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
     {
-        fprintf( outfile, ".L__wine_spec_resource_%u:\n", i );
-        dump_bytes( outfile, res->data, res->data_size );
-        fprintf( outfile, ".L__wine_spec_resource_%u_end:\n", i );
+        output( ".L__wine_spec_resource_%u:\n", i );
+        dump_bytes( res->data, res->data_size );
+        output( ".L__wine_spec_resource_%u_end:\n", i );
     }
 }
 
 /* output the resource definitions */
-void output_res16_directory( FILE *outfile, DLLSPEC *spec, const char *header_name )
+void output_res16_directory( DLLSPEC *spec, const char *header_name )
 {
     unsigned int i, j;
     struct res_tree *tree;
@@ -274,38 +276,39 @@ void output_res16_directory( FILE *outfile, DLLSPEC *spec, const char *header_na
 
     tree = build_resource_tree( spec );
 
-    fprintf( outfile, "\n.L__wine_spec_ne_rsrctab:\n" );
-    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );  /* alignment */
+    output( "\n.L__wine_spec_ne_rsrctab:\n" );
+    output( "\t%s 0\n", get_asm_short_keyword() );  /* alignment */
 
     /* type and name structures */
 
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
         if (type->type->str)
-            fprintf( outfile, "\t%s .L__wine_spec_restype_%u-.L__wine_spec_ne_rsrctab\n",
+            output( "\t%s .L__wine_spec_restype_%u-.L__wine_spec_ne_rsrctab\n",
                      get_asm_short_keyword(), i );
         else
-            fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), type->type->id | 0x8000 );
+            output( "\t%s 0x%04x\n", get_asm_short_keyword(), type->type->id | 0x8000 );
 
-        fprintf( outfile, "\t%s %u,0,0\n", get_asm_short_keyword(), type->nb_names );
+        output( "\t%s %u,0,0\n", get_asm_short_keyword(), type->nb_names );
 
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
         {
-            fprintf( outfile, "\t%s .L__wine_spec_resource_%u-%s\n",
-                     get_asm_short_keyword(), res - spec->resources, header_name );
-            fprintf( outfile, "\t%s .L__wine_spec_resource_%u_end-.L__wine_spec_resource_%u\n",
-                     get_asm_short_keyword(), res - spec->resources, res - spec->resources );
-            fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), res->memopt );
+            output( "\t%s .L__wine_spec_resource_%lu-%s\n",
+                     get_asm_short_keyword(), (unsigned long)(res - spec->resources), header_name );
+            output( "\t%s .L__wine_spec_resource_%lu_end-.L__wine_spec_resource_%lu\n",
+                     get_asm_short_keyword(), (unsigned long)(res - spec->resources),
+                     (unsigned long)(res - spec->resources) );
+            output( "\t%s 0x%04x\n", get_asm_short_keyword(), res->memopt );
             if (res->name.str)
-                fprintf( outfile, "\t%s .L__wine_spec_resname_%u_%u-.L__wine_spec_ne_rsrctab\n",
+                output( "\t%s .L__wine_spec_resname_%u_%u-.L__wine_spec_ne_rsrctab\n",
                          get_asm_short_keyword(), i, j );
             else
-                fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), res->name.id | 0x8000 );
+                output( "\t%s 0x%04x\n", get_asm_short_keyword(), res->name.id | 0x8000 );
 
-            fprintf( outfile, "\t%s 0,0\n", get_asm_short_keyword() );
+            output( "\t%s 0,0\n", get_asm_short_keyword() );
         }
     }
-    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );  /* terminator */
+    output( "\t%s 0\n", get_asm_short_keyword() );  /* terminator */
 
     /* name strings */
 
@@ -313,19 +316,19 @@ void output_res16_directory( FILE *outfile, DLLSPEC *spec, const char *header_na
     {
         if (type->type->str)
         {
-            fprintf( outfile, ".L__wine_spec_restype_%u:\n", i );
-            output_string( outfile, type->type->str );
+            output( ".L__wine_spec_restype_%u:\n", i );
+            output_string( type->type->str );
         }
         for (j = 0, res = type->res; j < type->nb_names; j++, res++)
         {
             if (res->name.str)
             {
-                fprintf( outfile, ".L__wine_spec_resname_%u_%u:\n", i, j );
-                output_string( outfile, res->name.str );
+                output( ".L__wine_spec_resname_%u_%u:\n", i, j );
+                output_string( res->name.str );
             }
         }
     }
-    fprintf( outfile, "\t.byte 0\n" );  /* names terminator */
+    output( "\t.byte 0\n" );  /* names terminator */
 
     free_resource_tree( tree );
 }
