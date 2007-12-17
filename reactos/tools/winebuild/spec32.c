@@ -63,28 +63,6 @@ int has_relays( DLLSPEC *spec )
 }
 
 /*******************************************************************
- *         make_internal_name
- *
- * Generate an internal name for an entry point. Used for stubs etc.
- */
-static const char *make_internal_name( const ORDDEF *odp, DLLSPEC *spec, const char *prefix )
-{
-    static char buffer[256];
-    if (odp->name || odp->export_name)
-    {
-        char *p;
-        sprintf( buffer, "__wine_%s_%s_%s", prefix, spec->file_name,
-                 odp->name ? odp->name : odp->export_name );
-        /* make sure name is a legal C identifier */
-        for (p = buffer; *p; p++) if (!isalnum(*p) && *p != '_') break;
-        if (!*p) return buffer;
-    }
-    sprintf( buffer, "__wine_%s_%s_%d", prefix, make_c_identifier(spec->file_name), odp->ordinal );
-    return buffer;
-}
-
-
-/*******************************************************************
  *         output_relay_debug
  *
  * Output entry points for relay debugging
@@ -353,7 +331,7 @@ static void output_stub_funcs( DLLSPEC *spec )
     {
         const ORDDEF *odp = &spec->entry_points[i];
         if (odp->type != TYPE_STUB) continue;
-        output( "void %s(void) ", make_internal_name( odp, spec, "stub" ) );
+        output( "void %s(void) ", (odp->name ? odp->name : odp->export_name) );
         if (odp->name)
             output( "{ __wine_spec_unimplemented_stub(__wine_spec_file_name, \"%s\"); }\n", odp->name );
         else if (odp->export_name)
@@ -624,7 +602,7 @@ void BuildDef32File( DLLSPEC *spec )
             }
             if (NULL != odp->name)
             {
-                output("=%s", make_internal_name( odp, spec, "stub" ));
+                output("=%s", odp->name);
             }
             break;
         }
