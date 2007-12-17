@@ -38,8 +38,7 @@
 #include <sys/mman.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
+#include "winglue.h"
 #include "build.h"
 
 /* Unicode string or integer id */

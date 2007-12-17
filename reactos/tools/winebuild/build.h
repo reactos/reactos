@@ -31,8 +31,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "winglue.h"
-
 typedef enum
 {
     TYPE_VARIABLE,     /* variable */

@@ -30,8 +30,7 @@
 #include <stdarg.h>
 #include <string.h>
 
-#include "windef.h"
-#include "winbase.h"
+#include "winglue.h"
 //#include "wine/exception.h"
 #include "build.h"
 

@@ -36,8 +36,7 @@
 # include <getopt.h>
 #endif
 
-#include "windef.h"
-#include "winbase.h"
+#include "winglue.h"
 #include "build.h"
 
 int UsePIC = 0;
@@ -49,7 +48,7 @@ int verbose = 0;
 int save_temps = 0;
 int link_ext_symbols = 0;
 
-#ifdef __i386__
+#if defined(__i386__) || defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86;
 #elif defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86_64;
