@@ -25,14 +25,15 @@ typedef enum
 
 typedef struct tagDCE
 {
-    struct tagDCE *next;
+    LIST_ENTRY   List;
     HDC          hDC;
     HWND         hwndCurrent;
     HWND         hwndDC;
     HRGN         hClipRgn;
-    DCE_TYPE     type;
+    PVOID        Class;
     DWORD        DCXFlags;
     PEPROCESS    pProcess;
+    DWORD        Count;
     HANDLE       Self;
 } DCE;  /* PDCE already declared at top of file */
 
@@ -40,7 +41,7 @@ typedef struct tagDCE
 #define DCX_DCEEMPTY		0x00000800
 #define DCX_DCEBUSY		0x00001000
 #define DCX_DCEDIRTY		0x00002000
-#define DCX_DCOWNED             0x00008000
+#define DCX_DCPOWNED            0x00008000
 #define DCX_USESTYLE		0x00010000
 #define DCX_KEEPCLIPRGN		0x00040000
 #define DCX_NOCLIPCHILDREN	0x00080000

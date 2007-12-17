@@ -1785,12 +1785,10 @@ AllocErr:
    /* Insert the window into the thread's window list. */
    InsertTailList (&PsGetCurrentThreadWin32Thread()->WindowListHead, &Window->ThreadListEntry);
 
+   /*  Handle "CS_CLASSDC", it is tested first. */
+   if (dwStyle & CS_CLASSDC) Window->Dce = DceAllocDCE(Window, DCE_CLASS_DC);
    /* Allocate a DCE for this window. */
-   if (dwStyle & CS_OWNDC)
-   {
-      Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
-   }
-   /* FIXME:  Handle "CS_CLASSDC" */
+   else if (dwStyle & CS_OWNDC) Window->Dce = DceAllocDCE(Window, DCE_WINDOW_DC);
 
    Pos.x = x;
    Pos.y = y;
