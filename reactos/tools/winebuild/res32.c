@@ -15,11 +15,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <ctype.h>
 #include <stdlib.h>
@@ -92,7 +91,7 @@ static const char *file_name;  /* current resource file name */
 #define RESDIR_SIZE(n)  (sizeof(IMAGE_RESOURCE_DIRECTORY) + (n) * sizeof(IMAGE_RESOURCE_DIRECTORY_ENTRY))
 
 
-static inline struct resource *add_resource( DLLSPEC *spec )
+inline static struct resource *add_resource( DLLSPEC *spec )
 {
     spec->resources = xrealloc( spec->resources, (spec->nb_resources + 1) * sizeof(spec->resources[0]) );
     return &spec->resources[spec->nb_resources++];
@@ -315,29 +314,29 @@ static void free_resource_tree( struct res_tree *tree )
 }
 
 /* output a Unicode string */
-static void output_string( const WCHAR *name )
+static void output_string( FILE *outfile, const WCHAR *name )
 {
     int i, len = strlenW(name);
-    output( "\t%s 0x%04x", get_asm_short_keyword(), len );
-    for (i = 0; i < len; i++) output( ",0x%04x", name[i] );
-    output( " /* " );
-    for (i = 0; i < len; i++) output( "%c", isprint((char)name[i]) ? (char)name[i] : '?' );
-    output( " */\n" );
+    fprintf( outfile, "\t%s 0x%04x", get_asm_short_keyword(), len );
+    for (i = 0; i < len; i++) fprintf( outfile, ",0x%04x", name[i] );
+    fprintf( outfile, " /* " );
+    for (i = 0; i < len; i++) fprintf( outfile, "%c", isprint((char)name[i]) ? (char)name[i] : '?' );
+    fprintf( outfile, " */\n" );
 }
 
 /* output a resource directory */
-static inline void output_res_dir( unsigned int nb_names, unsigned int nb_ids )
+static inline void output_res_dir( FILE *outfile, unsigned int nb_names, unsigned int nb_ids )
 {
-    output( "\t.long 0\n" );  /* Characteristics */
-    output( "\t.long 0\n" );  /* TimeDateStamp */
-    output( "\t%s 0,0\n",     /* Major/MinorVersion */
+    fprintf( outfile, "\t.long 0\n" );  /* Characteristics */
+    fprintf( outfile, "\t.long 0\n" );  /* TimeDateStamp */
+    fprintf( outfile, "\t%s 0,0\n",     /* Major/MinorVersion */
              get_asm_short_keyword() );
-    output( "\t%s %u,%u\n",   /* NumberOfNamed/IdEntries */
+    fprintf( outfile, "\t%s %u,%u\n",   /* NumberOfNamed/IdEntries */
              get_asm_short_keyword(), nb_names, nb_ids );
 }
 
 /* output the resource definitions */
-void output_resources( DLLSPEC *spec )
+void output_resources( FILE *outfile, DLLSPEC *spec )
 {
     int k, nb_id_types;
     unsigned int i, n, offset, data_offset;
@@ -387,19 +386,19 @@ void output_resources( DLLSPEC *spec )
 
     /* output the resource directories */
 
-    output( "\n/* resources */\n\n" );
-    output( "\t.data\n" );
-    output( "\t.align %d\n", get_alignment(get_ptr_size()) );
-    output( ".L__wine_spec_resources:\n" );
+    fprintf( outfile, "\n/* resources */\n\n" );
+    fprintf( outfile, "\t.data\n" );
+    fprintf( outfile, "\t.align %d\n", get_alignment(get_ptr_size()) );
+    fprintf( outfile, ".L__wine_spec_resources:\n" );
 
-    output_res_dir( tree->nb_types - nb_id_types, nb_id_types );
+    output_res_dir( outfile, tree->nb_types - nb_id_types, nb_id_types );
 
     /* dump the type directory */
 
     offset = RESDIR_SIZE( tree->nb_types );
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
-        output( "\t.long 0x%08x,0x%08x\n",
+        fprintf( outfile, "\t.long 0x%08x,0x%08x\n",
                  type->name_offset, offset | 0x80000000 );
         offset += RESDIR_SIZE( type->nb_names );
         for (n = 0, name = type->names; n < type->nb_names; n++, name++)
@@ -413,22 +412,22 @@ void output_resources( DLLSPEC *spec )
 
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
-        output_res_dir( type->nb_names - type->nb_id_names, type->nb_id_names );
+        output_res_dir( outfile, type->nb_names - type->nb_id_names, type->nb_id_names );
         offset += RESDIR_SIZE( type->nb_names );
         for (n = 0, name = type->names; n < type->nb_names; n++, name++)
         {
-            output( "\t.long 0x%08x,0x%08x\n",
+            fprintf( outfile, "\t.long 0x%08x,0x%08x\n",
                      name->name_offset, offset | 0x80000000 );
             offset += RESDIR_SIZE( name->nb_languages );
         }
 
         for (n = 0, name = type->names; n < type->nb_names; n++, name++)
         {
-            output_res_dir( 0, name->nb_languages );
+            output_res_dir( outfile, 0, name->nb_languages );
             for (k = 0, res = name->res; k < name->nb_languages; k++, res++)
             {
-                unsigned int entry_offset = (res - spec->resources) * sizeof(IMAGE_RESOURCE_DATA_ENTRY);
-                output( "\t.long 0x%08x,0x%08x\n", res->lang, data_offset + entry_offset );
+                fprintf( outfile, "\t.long 0x%08x,0x%08x\n", res->lang,
+                         data_offset + (res - spec->resources) * sizeof(IMAGE_RESOURCE_DATA_ENTRY) );
             }
         }
     }
@@ -436,28 +435,28 @@ void output_resources( DLLSPEC *spec )
     /* dump the resource data entries */
 
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
-        output( "\t.long .L__wine_spec_res_%d-.L__wine_spec_rva_base,%u,0,0\n",
+        fprintf( outfile, "\t.long .L__wine_spec_res_%d-.L__wine_spec_rva_base,%u,0,0\n",
                  i, res->data_size );
 
     /* dump the name strings */
 
     for (i = 0, type = tree->types; i < tree->nb_types; i++, type++)
     {
-        if (type->type->str) output_string( type->type->str );
+        if (type->type->str) output_string( outfile, type->type->str );
         for (n = 0, name = type->names; n < type->nb_names; n++, name++)
-            if (name->name->str) output_string( name->name->str );
+            if (name->name->str) output_string( outfile, name->name->str );
     }
 
     /* resource data */
 
     for (i = 0, res = spec->resources; i < spec->nb_resources; i++, res++)
     {
-        output( "\n\t.align %d\n", get_alignment(get_ptr_size()) );
-        output( ".L__wine_spec_res_%d:\n", i );
-        dump_bytes( res->data, res->data_size );
+        fprintf( outfile, "\n\t.align %d\n", get_alignment(get_ptr_size()) );
+        fprintf( outfile, ".L__wine_spec_res_%d:\n", i );
+        dump_bytes( outfile, res->data, res->data_size );
     }
-    output( ".L__wine_spec_resources_end:\n" );
-    output( "\t.byte 0\n" );
+    fprintf( outfile, ".L__wine_spec_resources_end:\n" );
+    fprintf( outfile, "\t.byte 0\n" );
 
     free_resource_tree( tree );
 }

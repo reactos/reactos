@@ -19,14 +19,16 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <assert.h>
 #include <stdio.h>
+#ifdef WIN32
+#include <io.h> /* unlink() */
+#endif//WIN32
 #include <signal.h>
 #include <errno.h>
 #include <string.h>
@@ -46,7 +48,6 @@ int display_warnings = 0;
 int kill_at = 0;
 int verbose = 0;
 int save_temps = 0;
-int link_ext_symbols = 0;
 
 #if defined(__i386__) || defined(__x86_64__)
 enum target_cpu target_cpu = CPU_x86;
@@ -64,6 +65,8 @@ enum target_cpu target_cpu = CPU_POWERPC;
 
 #ifdef __APPLE__
 enum target_platform target_platform = PLATFORM_APPLE;
+#elif defined(__svr4__)
+enum target_platform target_platform = PLATFORM_SVR4;
 #elif defined(_WINDOWS)
 enum target_platform target_platform = PLATFORM_WINDOWS;
 #else
@@ -74,7 +77,6 @@ char **lib_path = NULL;
 
 char *input_file_name = NULL;
 char *spec_file_name = NULL;
-FILE *output_file = NULL;
 const char *output_file_name = NULL;
 static const char *output_file_source_name;
 
@@ -82,6 +84,7 @@ char *as_command = NULL;
 char *ld_command = NULL;
 char *nm_command = NULL;
 
+static FILE *output_file;
 static int nb_res_files;
 static char **res_files;
 
@@ -124,6 +127,7 @@ static const struct
 {
     { "macos",   PLATFORM_APPLE },
     { "darwin",  PLATFORM_APPLE },
+    { "sunos",   PLATFORM_SVR4 },
     { "windows", PLATFORM_WINDOWS },
     { "winnt",   PLATFORM_WINDOWS }
 };
@@ -244,9 +248,8 @@ static const char usage_str[] =
 "       --as-cmd=AS          Command to use for assembling (default: as)\n"
 "   -d, --delay-lib=LIB      Import the specified library in delayed mode\n"
 "   -D SYM                   Ignored for C flags compatibility\n"
-"   -e, --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
 "   -E, --export=FILE        Export the symbols defined in the .spec or .def file\n"
-"       --external-symbols   Allow linking to external symbols\n"
+"   -e, --entry=FUNC         Set the DLL entry point function (default: DllMain)\n"
 "   -f FLAGS                 Compiler flags (only -fPIC is supported)\n"
 "   -F, --filename=DLLFILE   Set the DLL filename (default: from input file name)\n"
 "   -h, --help               Display this help message\n"
@@ -260,7 +263,6 @@ static const char usage_str[] =
 "   -L, --library-path=DIR   Look for imports libraries in DIR\n"
 "   -M, --main-module=MODULE Set the name of the main module for a Win16 dll\n"
 "       --nm-cmd=NM          Command to use to get undefined symbols (default: nm)\n"
-"       --nxcompat=y|n       Set the NX compatibility flag (default: yes)\n"
 "   -N, --dll-name=DLLNAME   Set the DLL name (default: from input file name)\n"
 "   -o, --output=NAME        Set the output file name (default: stdout)\n"
 "   -r, --res=RSRC.RES       Load resources from RSRC.RES\n"
@@ -276,7 +278,7 @@ static const char usage_str[] =
 "       --def                Build a .def file from a .spec file\n"
 "       --exe                Build a .c file for an executable\n"
 "       --relay16            Build the 16-bit relay assembly routines\n"
-"       --relay32            Build the 32-bit relay assembly routines\n\n"
+"       --relay32            Build the 32-bit relay assembly routines\n"
 "       --pedll              Build a .c file for PE dll\n\n"
 "The mode options are mutually exclusive; you must specify one and only one.\n\n";
 
@@ -286,16 +288,14 @@ enum long_options_values
     LONG_OPT_DEF,
     LONG_OPT_EXE,
     LONG_OPT_ASCMD,
-    LONG_OPT_EXTERNAL_SYMS,
     LONG_OPT_LDCMD,
     LONG_OPT_NMCMD,
-    LONG_OPT_NXCOMPAT,
     LONG_OPT_RELAY16,
     LONG_OPT_RELAY32,
     LONG_OPT_SAVE_TEMPS,
     LONG_OPT_SUBSYSTEM,
-    LONG_OPT_TARGET,
     LONG_OPT_VERSION,
+    LONG_OPT_TARGET,
     LONG_OPT_PEDLL
 };
 
@@ -303,21 +303,19 @@ static const char short_options[] = "C:D:E:F:H:I:K:L:M:N:d:e:f:hi:kl:m:o:r:u:vw"
 
 static const struct option long_options[] =
 {
-    { "dll",           0, 0, LONG_OPT_DLL },
-    { "def",           0, 0, LONG_OPT_DEF },
-    { "exe",           0, 0, LONG_OPT_EXE },
-    { "as-cmd",        1, 0, LONG_OPT_ASCMD },
-    { "external-symbols", 0, 0, LONG_OPT_EXTERNAL_SYMS },
-    { "ld-cmd",        1, 0, LONG_OPT_LDCMD },
-    { "nm-cmd",        1, 0, LONG_OPT_NMCMD },
-    { "nxcompat",      1, 0, LONG_OPT_NXCOMPAT },
-    { "relay16",       0, 0, LONG_OPT_RELAY16 },
-    { "relay32",       0, 0, LONG_OPT_RELAY32 },
-    { "save-temps",    0, 0, LONG_OPT_SAVE_TEMPS },
-    { "subsystem",     1, 0, LONG_OPT_SUBSYSTEM },
-    { "target",        1, 0, LONG_OPT_TARGET },
-    { "version",       0, 0, LONG_OPT_VERSION },
-    { "pedll",         1, 0, LONG_OPT_PEDLL },
+    { "dll",      0, 0, LONG_OPT_DLL },
+    { "def",      0, 0, LONG_OPT_DEF },
+    { "exe",      0, 0, LONG_OPT_EXE },
+    { "as-cmd",   1, 0, LONG_OPT_ASCMD },
+    { "ld-cmd",   1, 0, LONG_OPT_LDCMD },
+    { "nm-cmd",   1, 0, LONG_OPT_NMCMD },
+    { "relay16",  0, 0, LONG_OPT_RELAY16 },
+    { "relay32",  0, 0, LONG_OPT_RELAY32 },
+    { "save-temps",0, 0, LONG_OPT_SAVE_TEMPS },
+    { "subsystem",1, 0, LONG_OPT_SUBSYSTEM },
+    { "target",   1, 0, LONG_OPT_TARGET },
+    { "version",  0, 0, LONG_OPT_VERSION },
+    { "pedll",    1, 0, LONG_OPT_PEDLL },
     /* aliases for short options */
     { "delay-lib",     1, 0, 'd' },
     { "export",        1, 0, 'E' },
@@ -473,18 +471,11 @@ static char **parse_options( int argc, char **argv, DLLSPEC *spec )
         case LONG_OPT_ASCMD:
             as_command = xstrdup( optarg );
             break;
-        case LONG_OPT_EXTERNAL_SYMS:
-            link_ext_symbols = 1;
-            break;
         case LONG_OPT_LDCMD:
             ld_command = xstrdup( optarg );
             break;
         case LONG_OPT_NMCMD:
             nm_command = xstrdup( optarg );
-            break;
-        case LONG_OPT_NXCOMPAT:
-            if (optarg[0] == 'n' || optarg[0] == 'N')
-                spec->dll_characteristics &= ~IMAGE_DLLCHARACTERISTICS_NX_COMPAT;
             break;
         case LONG_OPT_RELAY16:
             set_exec_mode( MODE_RELAY16 );
@@ -573,7 +564,6 @@ static int parse_input_file( DLLSPEC *spec )
     char *extension = strrchr( spec_file_name, '.' );
     int result;
 
-    spec->src_name = xstrdup( input_file_name );
     if (extension && !strcmp( extension, ".def" ))
         result = parse_def_file( input_file, spec );
     else
@@ -602,8 +592,7 @@ int main(int argc, char **argv)
     switch(exec_mode)
     {
     case MODE_DLL:
-        if (spec->subsystem != IMAGE_SUBSYSTEM_NATIVE)
-            spec->characteristics |= IMAGE_FILE_DLL;
+        spec->characteristics |= IMAGE_FILE_DLL;
         load_resources( argv, spec );
         load_import_libs( argv );
         if (!spec_file_name) fatal_error( "missing .spec file\n" );
@@ -615,7 +604,7 @@ int main(int argc, char **argv)
                 break;
             case SPEC_WIN32:
                 read_undef_symbols( spec, argv );
-                BuildSpec32File( spec );
+                BuildSpec32File( output_file, spec );
                 break;
             default: assert(0);
         }
@@ -627,14 +616,14 @@ int main(int argc, char **argv)
         load_import_libs( argv );
         if (spec_file_name && !parse_input_file( spec )) break;
         read_undef_symbols( spec, argv );
-        BuildSpec32File( spec );
+        BuildSpec32File( output_file, spec );
         break;
     case MODE_DEF:
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
         if (spec->type == SPEC_WIN16) fatal_error( "Cannot yet build .def file for 16-bit dlls\n" );
         if (!spec_file_name) fatal_error( "missing .spec file\n" );
         if (!parse_input_file( spec )) break;
-        BuildDef32File( spec );
+        BuildDef32File( output_file, spec );
         break;
     case MODE_RELAY16:
         fatal_error( "Win16 relays are not supported in ReactOS version of winebuild\n" );
@@ -645,7 +634,7 @@ int main(int argc, char **argv)
     case MODE_PEDLL:
         if (argv[0]) fatal_error( "file argument '%s' not allowed in this mode\n", argv[0] );
         if (!parse_input_file( spec )) break;
-        BuildPedllFile( spec );
+        BuildPedllFile( output_file, spec );
         break;
     default:
         usage(1);
@@ -654,7 +643,7 @@ int main(int argc, char **argv)
     if (nb_errors) exit(1);
     if (output_file_name)
     {
-        if (fclose( output_file ) < 0) fatal_perror( "fclose" );
+        fclose( output_file );
         if (output_file_source_name) assemble_file( output_file_source_name, output_file_name );
         output_file_name = NULL;
     }

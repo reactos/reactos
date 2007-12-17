@@ -19,8 +19,6 @@ C_SRCS = \
 	spec32.c \
 	utils.c
 
-INSTALLDIRS = $(DESTDIR)$(bindir) $(DESTDIR)$(mandir)/man$(prog_manext)
-
 all: $(PROGRAMS) $(MANPAGES)
 
 @MAKE_RULES@
@@ -28,11 +26,12 @@ all: $(PROGRAMS) $(MANPAGES)
 winebuild$(EXEEXT): $(OBJS)
 	$(CC) $(CFLAGS) -o $@ $(OBJS) $(LIBPORT) $(LDFLAGS)
 
-install:: $(PROGRAMS) $(MANPAGES) $(INSTALLDIRS)
-	$(INSTALL_PROGRAM) winebuild$(EXEEXT) $(DESTDIR)$(bindir)/winebuild$(EXEEXT)
-	$(INSTALL_DATA) winebuild.man $(DESTDIR)$(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
+install:: $(PROGRAMS) $(MANPAGES)
+	$(MKINSTALLDIRS) $(bindir) $(mandir)/man$(prog_manext)
+	$(INSTALL_PROGRAM) winebuild$(EXEEXT) $(bindir)/winebuild$(EXEEXT)
+	$(INSTALL_DATA) winebuild.man $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
 
 uninstall::
-	$(RM) $(DESTDIR)$(bindir)/winebuild$(EXEEXT) $(DESTDIR)$(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
+	$(RM) $(bindir)/winebuild$(EXEEXT) $(mandir)/man$(prog_manext)/winebuild.$(prog_manext)
 
-@DEPENDENCIES@  # everything below this line is overwritten by make depend
+### Dependencies:

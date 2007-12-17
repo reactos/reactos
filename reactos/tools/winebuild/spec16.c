@@ -19,11 +19,10 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
-#include "wine/port.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -54,31 +53,31 @@ static inline int is_function( const ORDDEF *odp )
  *
  * Output entries for individual symbols in the entry table.
  */
-static void output_entries( DLLSPEC *spec, int first, int count )
+static void output_entries( FILE *outfile, DLLSPEC *spec, int first, int count )
 {
     int i;
 
     for (i = 0; i < count; i++)
     {
         ORDDEF *odp = spec->ordinals[first + i];
-        output( "\t.byte 0x03\n" );  /* flags: exported & public data */
+        fprintf( outfile, "\t.byte 0x03\n" );  /* flags: exported & public data */
         switch (odp->type)
         {
         case TYPE_CDECL:
         case TYPE_PASCAL:
         case TYPE_VARARGS:
         case TYPE_STUB:
-            output( "\t%s .L__wine_%s_%u-.L__wine_spec_code_segment\n",
+            fprintf( outfile, "\t%s .L__wine_%s_%u-.L__wine_spec_code_segment\n",
                      get_asm_short_keyword(),
                      make_c_identifier(spec->dll_name), first + i );
             break;
         case TYPE_VARIABLE:
-            output( "\t%s .L__wine_%s_%u-.L__wine_spec_data_segment\n",
+            fprintf( outfile, "\t%s .L__wine_%s_%u-.L__wine_spec_data_segment\n",
                      get_asm_short_keyword(),
                      make_c_identifier(spec->dll_name), first + i );
             break;
         case TYPE_ABS:
-            output( "\t%s 0x%04x  /* %s */\n",
+            fprintf( outfile, "\t%s 0x%04x  /* %s */\n",
                      get_asm_short_keyword(), odp->u.abs.value, odp->name );
             break;
         default:
@@ -91,7 +90,7 @@ static void output_entries( DLLSPEC *spec, int first, int count )
 /*******************************************************************
  *         output_entry_table
  */
-static void output_entry_table( DLLSPEC *spec )
+static void output_entry_table( FILE *outfile, DLLSPEC *spec )
 {
     int i, prev = 0, prev_sel = -1, bundle_count = 0;
 
@@ -126,10 +125,10 @@ static void output_entry_table( DLLSPEC *spec )
             /* flush previous bundle */
             if (bundle_count)
             {
-                output( "\t/* %s.%d - %s.%d */\n",
+                fprintf( outfile, "\t/* %s.%d - %s.%d */\n",
                          spec->dll_name, prev - bundle_count + 1, spec->dll_name, prev );
-                output( "\t.byte 0x%02x,0x%02x\n", bundle_count, prev_sel );
-                output_entries( spec, prev - bundle_count + 1, bundle_count );
+                fprintf( outfile, "\t.byte 0x%02x,0x%02x\n", bundle_count, prev_sel );
+                output_entries( outfile, spec, prev - bundle_count + 1, bundle_count );
             }
 
             if (prev + 1 != i)
@@ -137,10 +136,10 @@ static void output_entry_table( DLLSPEC *spec )
                 int skip = i - (prev + 1);
                 while (skip > 255)
                 {
-                    output( "\t.byte 0xff,0x00\n" );
+                    fprintf( outfile, "\t.byte 0xff,0x00\n" );
                     skip -= 255;
                 }
-                output( "\t.byte 0x%02x,0x00\n", skip );
+                fprintf( outfile, "\t.byte 0x%02x,0x00\n", skip );
             }
 
             bundle_count = 0;
@@ -153,24 +152,24 @@ static void output_entry_table( DLLSPEC *spec )
     /* flush last bundle */
     if (bundle_count)
     {
-        output( "\t.byte 0x%02x,0x%02x\n", bundle_count, prev_sel );
-        output_entries( spec, prev - bundle_count + 1, bundle_count );
+        fprintf( outfile, "\t.byte 0x%02x,0x%02x\n", bundle_count, prev_sel );
+        output_entries( outfile, spec, prev - bundle_count + 1, bundle_count );
     }
-    output( "\t.byte 0x00\n" );
+    fprintf( outfile, "\t.byte 0x00\n" );
 }
 
 
 /*******************************************************************
  *         output_resident_name
  */
-static void output_resident_name( const char *string, int ordinal )
+static void output_resident_name( FILE *outfile, const char *string, int ordinal )
 {
     unsigned int i, len = strlen(string);
 
-    output( "\t.byte 0x%02x", len );
-    for (i = 0; i < len; i++) output( ",0x%02x", (unsigned char)toupper(string[i]) );
-    output( " /* %s */\n", string );
-    output( "\t%s %u\n", get_asm_short_keyword(), ordinal );
+    fprintf( outfile, "\t.byte 0x%02x", len );
+    for (i = 0; i < len; i++) fprintf( outfile, ",0x%02x", (unsigned char)toupper(string[i]) );
+    fprintf( outfile, " /* %s */\n", string );
+    fprintf( outfile, "\t%s %u\n", get_asm_short_keyword(), ordinal );
 }
 
 
@@ -283,7 +282,7 @@ static int get_function_argsize( const ORDDEF *odp )
  * the same as for normal functions, but in addition the CONTEXT86 pointer
  * filled with the current register values is passed to the 32-bit routine.
  */
-static void output_call16_function( ORDDEF *odp )
+static void output_call16_function( FILE *outfile, ORDDEF *odp )
 {
     char name[256];
     int i, pos, stack_words;
@@ -293,41 +292,41 @@ static void output_call16_function( ORDDEF *odp )
 
     sprintf( name, ".L__wine_spec_call16_%s", get_relay_name(odp) );
 
-    output( "\t.align %d\n", get_alignment(4) );
-    output( "\t%s\n", func_declaration(name) );
-    output( "%s:\n", name );
-    output( "\tpushl %%ebp\n" );
-    output( "\tmovl %%esp,%%ebp\n" );
+    fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+    fprintf( outfile, "\t%s\n", func_declaration(name) );
+    fprintf( outfile, "%s:\n", name );
+    fprintf( outfile, "\tpushl %%ebp\n" );
+    fprintf( outfile, "\tmovl %%esp,%%ebp\n" );
     stack_words = 2;
     if (needs_ldt)
     {
-        output( "\tpushl %%esi\n" );
+        fprintf( outfile, "\tpushl %%esi\n" );
         stack_words++;
         if (UsePIC)
         {
-            output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-            output( "1:\tmovl wine_ldt_copy_ptr-1b(%%eax),%%esi\n" );
+            fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+            fprintf( outfile, "1:\tmovl wine_ldt_copy_ptr-1b(%%eax),%%esi\n" );
         }
         else
-            output( "\tmovl $%s,%%esi\n", asm_name("wine_ldt_copy") );
+            fprintf( outfile, "\tmovl $%s,%%esi\n", asm_name("wine_ldt_copy") );
     }
 
     /* preserve 16-byte stack alignment */
     stack_words += strlen(args);
     if ((odp->flags & FLAG_REGISTER) || (odp->type == TYPE_VARARGS)) stack_words++;
-    if (stack_words % 4) output( "\tsubl $%d,%%esp\n", 16 - 4 * (stack_words % 4) );
+    if (stack_words % 4) fprintf( outfile, "\tsubl $%d,%%esp\n", 16 - 4 * (stack_words % 4) );
 
     if (args[0] || odp->type == TYPE_VARARGS)
-        output( "\tmovl 12(%%ebp),%%ecx\n" );  /* args */
+        fprintf( outfile, "\tmovl 12(%%ebp),%%ecx\n" );  /* args */
 
     if (odp->flags & FLAG_REGISTER)
     {
-        output( "\tpushl 16(%%ebp)\n" );  /* context */
+        fprintf( outfile, "\tpushl 16(%%ebp)\n" );  /* context */
     }
     else if (odp->type == TYPE_VARARGS)
     {
-        output( "\tleal %d(%%ecx),%%eax\n", argsize );
-        output( "\tpushl %%eax\n" );  /* va_list16 */
+        fprintf( outfile, "\tleal %d(%%ecx),%%eax\n", argsize );
+        fprintf( outfile, "\tpushl %%eax\n" );  /* va_list16 */
     }
 
     pos = (odp->type == TYPE_PASCAL) ? 0 : argsize;
@@ -337,33 +336,33 @@ static void output_call16_function( ORDDEF *odp )
         {
         case 'w':  /* word */
             if (odp->type != TYPE_PASCAL) pos -= 2;
-            output( "\tmovzwl %d(%%ecx),%%eax\n", pos );
-            output( "\tpushl %%eax\n" );
+            fprintf( outfile, "\tmovzwl %d(%%ecx),%%eax\n", pos );
+            fprintf( outfile, "\tpushl %%eax\n" );
             if (odp->type == TYPE_PASCAL) pos += 2;
             break;
 
         case 's':  /* s_word */
             if (odp->type != TYPE_PASCAL) pos -= 2;
-            output( "\tmovswl %d(%%ecx),%%eax\n", pos );
-            output( "\tpushl %%eax\n" );
+            fprintf( outfile, "\tmovswl %d(%%ecx),%%eax\n", pos );
+            fprintf( outfile, "\tpushl %%eax\n" );
             if (odp->type == TYPE_PASCAL) pos += 2;
             break;
 
         case 'l':  /* long or segmented pointer */
         case 'T':  /* segmented pointer to null-terminated string */
             if (odp->type != TYPE_PASCAL) pos -= 4;
-            output( "\tpushl %d(%%ecx)\n", pos );
+            fprintf( outfile, "\tpushl %d(%%ecx)\n", pos );
             if (odp->type == TYPE_PASCAL) pos += 4;
             break;
 
         case 'p':  /* linear pointer */
         case 't':  /* linear pointer to null-terminated string */
             if (odp->type != TYPE_PASCAL) pos -= 4;
-            output( "\tmovzwl %d(%%ecx),%%edx\n", pos + 2 ); /* sel */
-            output( "\tshr $3,%%edx\n" );
-            output( "\tmovzwl %d(%%ecx),%%eax\n", pos ); /* offset */
-            output( "\taddl (%%esi,%%edx,4),%%eax\n" );
-            output( "\tpushl %%eax\n" );
+            fprintf( outfile, "\tmovzwl %d(%%ecx),%%edx\n", pos + 2 ); /* sel */
+            fprintf( outfile, "\tshr $3,%%edx\n" );
+            fprintf( outfile, "\tmovzwl %d(%%ecx),%%eax\n", pos ); /* offset */
+            fprintf( outfile, "\taddl (%%esi,%%edx,4),%%eax\n" );
+            fprintf( outfile, "\tpushl %%eax\n" );
             if (odp->type == TYPE_PASCAL) pos += 4;
             break;
 
@@ -372,13 +371,14 @@ static void output_call16_function( ORDDEF *odp )
         }
     }
 
-    output( "\tcall *8(%%ebp)\n" );
+    fprintf( outfile, "\tcall *8(%%ebp)\n" );
 
-    if (needs_ldt) output( "\tmovl -4(%%ebp),%%esi\n" );
+    if (needs_ldt) fprintf( outfile, "\tmovl -4(%%ebp),%%esi\n" );
+    if (odp->flags & FLAG_RET16) fprintf( outfile, "\tmovzwl %%ax,%%eax\n" );
 
-    output( "\tleave\n" );
-    output( "\tret\n" );
-    output_function_size( name );
+    fprintf( outfile, "\tleave\n" );
+    fprintf( outfile, "\tret\n" );
+    output_function_size( outfile, name );
 }
 
 
@@ -450,72 +450,72 @@ static int sort_func_list( ORDDEF **list, int count,
  *
  * Output the dll initialization code.
  */
-static void output_init_code( const DLLSPEC *spec, const char *header_name )
+static void output_init_code( FILE *outfile, const DLLSPEC *spec, const char *header_name )
 {
     char name[80];
 
     sprintf( name, ".L__wine_spec_%s_init", make_c_identifier(spec->dll_name) );
 
-    output( "\n/* dll initialization code */\n\n" );
-    output( "\t.text\n" );
-    output( "\t.align 4\n" );
-    output( "\t%s\n", func_declaration(name) );
-    output( "%s:\n", name );
-    output( "subl $4,%%esp\n" );
+    fprintf( outfile, "\n/* dll initialization code */\n\n" );
+    fprintf( outfile, "\t.text\n" );
+    fprintf( outfile, "\t.align 4\n" );
+    fprintf( outfile, "\t%s\n", func_declaration(name) );
+    fprintf( outfile, "%s:\n", name );
+    fprintf( outfile, "subl $4,%%esp\n" );
     if (UsePIC)
     {
-        output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-        output( "1:\tleal .L__wine_spec_file_name-1b(%%eax),%%ecx\n" );
-        output( "\tpushl %%ecx\n" );
-        output( "\tleal %s-1b(%%eax),%%ecx\n", header_name );
-        output( "\tpushl %%ecx\n" );
+        fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+        fprintf( outfile, "1:\tleal .L__wine_spec_file_name-1b(%%eax),%%ecx\n" );
+        fprintf( outfile, "\tpushl %%ecx\n" );
+        fprintf( outfile, "\tleal %s-1b(%%eax),%%ecx\n", header_name );
+        fprintf( outfile, "\tpushl %%ecx\n" );
     }
     else
     {
-        output( "\tpushl $.L__wine_spec_file_name\n" );
-        output( "\tpushl $%s\n", header_name );
+        fprintf( outfile, "\tpushl $.L__wine_spec_file_name\n" );
+        fprintf( outfile, "\tpushl $%s\n", header_name );
     }
-    output( "\tcall %s\n", asm_name("__wine_dll_register_16") );
-    output( "\taddl $12,%%esp\n" );
-    output( "\tret\n" );
-    output_function_size( name );
+    fprintf( outfile, "\tcall %s\n", asm_name("__wine_dll_register_16") );
+    fprintf( outfile, "\taddl $12,%%esp\n" );
+    fprintf( outfile, "\tret\n" );
+    output_function_size( outfile, name );
 
     sprintf( name, ".L__wine_spec_%s_fini", make_c_identifier(spec->dll_name) );
 
-    output( "\t.align 4\n" );
-    output( "\t%s\n", func_declaration(name) );
-    output( "%s:\n", name );
-    output( "subl $8,%%esp\n" );
+    fprintf( outfile, "\t.align 4\n" );
+    fprintf( outfile, "\t%s\n", func_declaration(name) );
+    fprintf( outfile, "%s:\n", name );
+    fprintf( outfile, "subl $8,%%esp\n" );
     if (UsePIC)
     {
-        output( "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
-        output( "1:\tleal %s-1b(%%eax),%%ecx\n", header_name );
-        output( "\tpushl %%ecx\n" );
+        fprintf( outfile, "\tcall %s\n", asm_name("__wine_spec_get_pc_thunk_eax") );
+        fprintf( outfile, "1:\tleal %s-1b(%%eax),%%ecx\n", header_name );
+        fprintf( outfile, "\tpushl %%ecx\n" );
     }
     else
     {
-        output( "\tpushl $%s\n", header_name );
+        fprintf( outfile, "\tpushl $%s\n", header_name );
     }
-    output( "\tcall %s\n", asm_name("__wine_dll_unregister_16") );
-    output( "\taddl $12,%%esp\n" );
-    output( "\tret\n" );
-    output_function_size( name );
+    fprintf( outfile, "\tcall %s\n", asm_name("__wine_dll_unregister_16") );
+    fprintf( outfile, "\taddl $12,%%esp\n" );
+    fprintf( outfile, "\tret\n" );
+    output_function_size( outfile, name );
 
     if (target_platform == PLATFORM_APPLE)
     {
-        output( "\t.mod_init_func\n" );
-        output( "\t.align %d\n", get_alignment(4) );
-        output( "\t.long .L__wine_spec_%s_init\n", make_c_identifier(spec->dll_name) );
-        output( "\t.mod_term_func\n" );
-        output( "\t.align %d\n", get_alignment(4) );
-        output( "\t.long .L__wine_spec_%s_fini\n", make_c_identifier(spec->dll_name) );
+        fprintf( outfile, "\t.mod_init_func\n" );
+        fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+        fprintf( outfile, "\t.long .L__wine_spec_%s_init\n", make_c_identifier(spec->dll_name) );
+        fprintf( outfile, "\t.mod_term_func\n" );
+        fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+        fprintf( outfile, "\t.long .L__wine_spec_%s_fini\n", make_c_identifier(spec->dll_name) );
     }
     else
     {
-        output( "\t.section \".init\",\"ax\"\n" );
-        output( "\tcall .L__wine_spec_%s_init\n", make_c_identifier(spec->dll_name) );
-        output( "\t.section \".fini\",\"ax\"\n" );
-        output( "\tcall .L__wine_spec_%s_fini\n", make_c_identifier(spec->dll_name) );
+        fprintf( outfile, "\t.section \".init\",\"ax\"\n" );
+        fprintf( outfile, "\tcall .L__wine_spec_%s_init\n", make_c_identifier(spec->dll_name) );
+        fprintf( outfile, "\t.section \".fini\",\"ax\"\n" );
+        fprintf( outfile, "\tcall .L__wine_spec_%s_fini\n", make_c_identifier(spec->dll_name) );
     }
 }
 
@@ -525,7 +525,7 @@ static void output_init_code( const DLLSPEC *spec, const char *header_name )
  *
  * Build a Win16 assembly file from a spec file.
  */
-void BuildSpec16File( DLLSPEC *spec )
+void BuildSpec16File( FILE *outfile, DLLSPEC *spec )
 {
     ORDDEF **typelist;
     int i, j, nb_funcs;
@@ -533,7 +533,7 @@ void BuildSpec16File( DLLSPEC *spec )
 
     /* File header */
 
-    output_standard_file_header();
+    output_standard_file_header( outfile );
 
     if (!spec->dll_name)  /* set default name from file name */
     {
@@ -558,135 +558,135 @@ void BuildSpec16File( DLLSPEC *spec )
     /* Output the module structure */
 
     sprintf( header_name, "__wine_spec_%s_dos_header", make_c_identifier(spec->dll_name) );
-    output( "\n/* module data */\n\n" );
-    output( "\t.data\n" );
-    output( "\t.align %d\n", get_alignment(4) );
-    output( "%s:\n", header_name );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* e_magic */
+    fprintf( outfile, "\n/* module data */\n\n" );
+    fprintf( outfile, "\t.data\n" );
+    fprintf( outfile, "\t.align %d\n", get_alignment(4) );
+    fprintf( outfile, "%s:\n", header_name );
+    fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* e_magic */
              IMAGE_DOS_SIGNATURE );
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cblp */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cp */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_crlc */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cparhdr */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_minalloc */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_maxalloc */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_ss */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_sp */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_csum */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_ip */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_cs */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_lfarlc */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_ovno */
-    output( "\t%s 0,0,0,0\n", get_asm_short_keyword() );                   /* e_res */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_oemid */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* e_oeminfo */
-    output( "\t%s 0,0,0,0,0,0,0,0,0,0\n", get_asm_short_keyword() );       /* e_res2 */
-    output( "\t.long .L__wine_spec_ne_header-%s\n", header_name );         /* e_lfanew */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_cblp */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_cp */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_crlc */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_cparhdr */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_minalloc */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_maxalloc */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_ss */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_sp */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_csum */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_ip */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_cs */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_lfarlc */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_ovno */
+    fprintf( outfile, "\t%s 0,0,0,0\n", get_asm_short_keyword() );                   /* e_res */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_oemid */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* e_oeminfo */
+    fprintf( outfile, "\t%s 0,0,0,0,0,0,0,0,0,0\n", get_asm_short_keyword() );       /* e_res2 */
+    fprintf( outfile, "\t.long .L__wine_spec_ne_header-%s\n", header_name );         /* e_lfanew */
 
-    output( ".L__wine_spec_ne_header:\n" );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_magic */
+    fprintf( outfile, ".L__wine_spec_ne_header:\n" );
+    fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_magic */
              IMAGE_OS2_SIGNATURE );
-    output( "\t.byte 0\n" );                                               /* ne_ver */
-    output( "\t.byte 0\n" );                                               /* ne_rev */
-    output( "\t%s .L__wine_spec_ne_enttab-.L__wine_spec_ne_header\n",      /* ne_enttab */
+    fprintf( outfile, "\t.byte 0\n" );                                               /* ne_ver */
+    fprintf( outfile, "\t.byte 0\n" );                                               /* ne_rev */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_enttab-.L__wine_spec_ne_header\n",      /* ne_enttab */
              get_asm_short_keyword() );
-    output( "\t%s .L__wine_spec_ne_enttab_end-.L__wine_spec_ne_enttab\n",  /* ne_cbenttab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_enttab_end-.L__wine_spec_ne_enttab\n",  /* ne_cbenttab */
              get_asm_short_keyword() );
-    output( "\t.long 0\n" );                                               /* ne_crc */
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_flags */
+    fprintf( outfile, "\t.long 0\n" );                                               /* ne_crc */
+    fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(),                      /* ne_flags */
              NE_FFLAGS_SINGLEDATA | NE_FFLAGS_LIBMODULE );
-    output( "\t%s 2\n", get_asm_short_keyword() );                         /* ne_autodata */
-    output( "\t%s %u\n", get_asm_short_keyword(), spec->heap_size );       /* ne_heap */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_stack */
-    output( "\t.long 0\n" );                                               /* ne_csip */
-    output( "\t.long 0\n" );                                               /* ne_sssp */
-    output( "\t%s 2\n", get_asm_short_keyword() );                         /* ne_cseg */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cmod */
-    output( "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cbnrestab */
-    output( "\t%s .L__wine_spec_ne_segtab-.L__wine_spec_ne_header\n",      /* ne_segtab */
+    fprintf( outfile, "\t%s 2\n", get_asm_short_keyword() );                         /* ne_autodata */
+    fprintf( outfile, "\t%s %u\n", get_asm_short_keyword(), spec->heap_size );       /* ne_heap */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* ne_stack */
+    fprintf( outfile, "\t.long 0\n" );                                               /* ne_csip */
+    fprintf( outfile, "\t.long 0\n" );                                               /* ne_sssp */
+    fprintf( outfile, "\t%s 2\n", get_asm_short_keyword() );                         /* ne_cseg */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cmod */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );                         /* ne_cbnrestab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_segtab-.L__wine_spec_ne_header\n",      /* ne_segtab */
              get_asm_short_keyword() );
-    output( "\t%s .L__wine_spec_ne_rsrctab-.L__wine_spec_ne_header\n",     /* ne_rsrctab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_rsrctab-.L__wine_spec_ne_header\n",     /* ne_rsrctab */
              get_asm_short_keyword() );
-    output( "\t%s .L__wine_spec_ne_restab-.L__wine_spec_ne_header\n",      /* ne_restab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_restab-.L__wine_spec_ne_header\n",      /* ne_restab */
              get_asm_short_keyword() );
-    output( "\t%s .L__wine_spec_ne_modtab-.L__wine_spec_ne_header\n",      /* ne_modtab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_modtab-.L__wine_spec_ne_header\n",      /* ne_modtab */
              get_asm_short_keyword() );
-    output( "\t%s .L__wine_spec_ne_imptab-.L__wine_spec_ne_header\n",      /* ne_imptab */
+    fprintf( outfile, "\t%s .L__wine_spec_ne_imptab-.L__wine_spec_ne_header\n",      /* ne_imptab */
              get_asm_short_keyword() );
-    output( "\t.long 0\n" );                                   /* ne_nrestab */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_cmovent */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_align */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_cres */
-    output( "\t.byte 0x%02x\n", NE_OSFLAGS_WINDOWS );          /* ne_exetyp */
-    output( "\t.byte 0x%02x\n", NE_AFLAGS_FASTLOAD );          /* ne_flagsothers */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_pretthunks */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_psegrefbytes */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_swaparea */
-    output( "\t%s 0\n", get_asm_short_keyword() );             /* ne_expver */
+    fprintf( outfile, "\t.long 0\n" );                                   /* ne_nrestab */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_cmovent */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_align */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_cres */
+    fprintf( outfile, "\t.byte 0x%02x\n", NE_OSFLAGS_WINDOWS );          /* ne_exetyp */
+    fprintf( outfile, "\t.byte 0x%02x\n", NE_AFLAGS_FASTLOAD );          /* ne_flagsothers */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_pretthunks */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_psegrefbytes */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_swaparea */
+    fprintf( outfile, "\t%s 0\n", get_asm_short_keyword() );             /* ne_expver */
 
     /* segment table */
 
-    output( "\n.L__wine_spec_ne_segtab:\n" );
+    fprintf( outfile, "\n.L__wine_spec_ne_segtab:\n" );
 
     /* code segment entry */
 
-    output( "\t%s .L__wine_spec_code_segment-%s\n",  /* filepos */
+    fprintf( outfile, "\t%s .L__wine_spec_code_segment-%s\n",  /* filepos */
              get_asm_short_keyword(), header_name );
-    output( "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* size */
+    fprintf( outfile, "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* size */
              get_asm_short_keyword() );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_32BIT );      /* flags */
-    output( "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* minsize */
+    fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_32BIT );      /* flags */
+    fprintf( outfile, "\t%s .L__wine_spec_code_segment_end-.L__wine_spec_code_segment\n", /* minsize */
              get_asm_short_keyword() );
 
     /* data segment entry */
 
-    output( "\t%s .L__wine_spec_data_segment-%s\n",  /* filepos */
+    fprintf( outfile, "\t%s .L__wine_spec_data_segment-%s\n",  /* filepos */
              get_asm_short_keyword(), header_name );
-    output( "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* size */
+    fprintf( outfile, "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* size */
              get_asm_short_keyword() );
-    output( "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_DATA );      /* flags */
-    output( "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* minsize */
+    fprintf( outfile, "\t%s 0x%04x\n", get_asm_short_keyword(), NE_SEGFLAGS_DATA );      /* flags */
+    fprintf( outfile, "\t%s .L__wine_spec_data_segment_end-.L__wine_spec_data_segment\n", /* minsize */
              get_asm_short_keyword() );
 
     /* resource directory */
 
-    output_res16_directory( spec, header_name );
+    output_res16_directory( outfile, spec, header_name );
 
     /* resident names table */
 
-    output( "\n\t.align %d\n", get_alignment(2) );
-    output( ".L__wine_spec_ne_restab:\n" );
-    output_resident_name( spec->dll_name, 0 );
+    fprintf( outfile, "\n\t.align %d\n", get_alignment(2) );
+    fprintf( outfile, ".L__wine_spec_ne_restab:\n" );
+    output_resident_name( outfile, spec->dll_name, 0 );
     for (i = 1; i <= spec->limit; i++)
     {
         ORDDEF *odp = spec->ordinals[i];
         if (!odp || !odp->name[0]) continue;
-        output_resident_name( odp->name, i );
+        output_resident_name( outfile, odp->name, i );
     }
-    output( "\t.byte 0\n" );
+    fprintf( outfile, "\t.byte 0\n" );
 
     /* imported names table */
 
-    output( "\n\t.align %d\n", get_alignment(2) );
-    output( ".L__wine_spec_ne_modtab:\n" );
-    output( ".L__wine_spec_ne_imptab:\n" );
-    output( "\t.byte 0,0\n" );
+    fprintf( outfile, "\n\t.align %d\n", get_alignment(2) );
+    fprintf( outfile, ".L__wine_spec_ne_modtab:\n" );
+    fprintf( outfile, ".L__wine_spec_ne_imptab:\n" );
+    fprintf( outfile, "\t.byte 0,0\n" );
 
     /* entry table */
 
-    output( "\n.L__wine_spec_ne_enttab:\n" );
-    output_entry_table( spec );
-    output( ".L__wine_spec_ne_enttab_end:\n" );
+    fprintf( outfile, "\n.L__wine_spec_ne_enttab:\n" );
+    output_entry_table( outfile, spec );
+    fprintf( outfile, ".L__wine_spec_ne_enttab_end:\n" );
 
     /* code segment */
 
-    output( "\n\t.align %d\n", get_alignment(2) );
-    output( ".L__wine_spec_code_segment:\n" );
+    fprintf( outfile, "\n\t.align %d\n", get_alignment(2) );
+    fprintf( outfile, ".L__wine_spec_code_segment:\n" );
 
     for ( i = 0; i < nb_funcs; i++ )
     {
         unsigned int arg_types[2];
-        int nop_words, argsize = 0;
+        int j, nop_words, argsize = 0;
 
         if ( typelist[i]->type == TYPE_PASCAL )
             argsize = get_function_argsize( typelist[i] );
@@ -709,9 +709,9 @@ void BuildSpec16File( DLLSPEC *spec )
         }
         if (typelist[i]->type == TYPE_VARARGS) arg_types[j / 10] |= ARG_VARARG << (3 * (j % 10));
 
-        output( ".L__wine_spec_callfrom16_%s:\n", get_callfrom16_name(typelist[i]) );
-        output( "\tpushl $.L__wine_spec_call16_%s\n", get_relay_name(typelist[i]) );
-        output( "\tlcall $0,$0\n" );
+        fprintf( outfile, ".L__wine_spec_callfrom16_%s:\n", get_callfrom16_name(typelist[i]) );
+        fprintf( outfile, "\tpushl $.L__wine_spec_call16_%s\n", get_relay_name(typelist[i]) );
+        fprintf( outfile, "\tlcall $0,$0\n" );
 
         if (typelist[i]->flags & FLAG_REGISTER)
         {
@@ -719,91 +719,90 @@ void BuildSpec16File( DLLSPEC *spec )
         }
         else if (typelist[i]->flags & FLAG_RET16)
         {
-            output( "\torw %%ax,%%ax\n" );
-            output( "\tnop\n" );  /* so that the lretw is aligned */
+            fprintf( outfile, "\torw %%ax,%%ax\n" );
+            fprintf( outfile, "\tnop\n" );  /* so that the lretw is aligned */
             nop_words = 2;
         }
         else
         {
-            output( "\tshld $16,%%eax,%%edx\n" );
-            output( "\torl %%eax,%%eax\n" );
+            fprintf( outfile, "shld $16,%%eax,%%edx\n" );
+            fprintf( outfile, "orl %%eax,%%eax\n" );
             nop_words = 1;
         }
 
         if (argsize)
         {
-            output( "\tlretw $%u\n", argsize );
+            fprintf( outfile, "lretw $%u\n", argsize );
             nop_words--;
         }
-        else output( "\tlretw\n" );
+        else fprintf( outfile, "lretw\n" );
 
-        if (nop_words) output( "\t%s\n", nop_sequence[nop_words-1] );
+        if (nop_words) fprintf( outfile, "\t%s\n", nop_sequence[nop_words-1] );
 
         /* the movl is here so that the code contains only valid instructions, */
         /* it's never actually executed, we only care about the arg_types[] values */
-        output( "\t%s 0x86c7\n", get_asm_short_keyword() );
-        output( "\t.long 0x%08x,0x%08x\n", arg_types[0], arg_types[1] );
+        fprintf( outfile, "\t%s 0x86c7\n", get_asm_short_keyword() );
+        fprintf( outfile, "\t.long 0x%08x,0x%08x\n", arg_types[0], arg_types[1] );
     }
 
     for (i = 0; i <= spec->limit; i++)
     {
         ORDDEF *odp = spec->ordinals[i];
         if (!odp || !is_function( odp )) continue;
-        output( ".L__wine_%s_%u:\n", make_c_identifier(spec->dll_name), i );
-        output( "\tpushw %%bp\n" );
-        output( "\tpushl $%s\n",
+        fprintf( outfile, ".L__wine_%s_%u:\n", make_c_identifier(spec->dll_name), i );
+        fprintf( outfile, "\tpushw %%bp\n" );
+        fprintf( outfile, "\tpushl $%s\n",
                  asm_name( odp->type == TYPE_STUB ? get_stub_name( odp, spec ) : odp->link_name ));
-        output( "\tcallw .L__wine_spec_callfrom16_%s\n", get_callfrom16_name( odp ) );
+        fprintf( outfile, "\tcallw .L__wine_spec_callfrom16_%s\n", get_callfrom16_name( odp ) );
     }
-    output( ".L__wine_spec_code_segment_end:\n" );
+    fprintf( outfile, ".L__wine_spec_code_segment_end:\n" );
 
     /* data segment */
 
-    output( "\n.L__wine_spec_data_segment:\n" );
-    output( "\t.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n" );  /* instance data */
+    fprintf( outfile, "\n.L__wine_spec_data_segment:\n" );
+    fprintf( outfile, "\t.byte 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n" );  /* instance data */
     for (i = 0; i <= spec->limit; i++)
     {
         ORDDEF *odp = spec->ordinals[i];
         if (!odp || odp->type != TYPE_VARIABLE) continue;
-        output( ".L__wine_%s_%u:\n", make_c_identifier(spec->dll_name), i );
-        output( "\t.long " );
+        fprintf( outfile, ".L__wine_%s_%u:\n", make_c_identifier(spec->dll_name), i );
+        fprintf( outfile, "\t.long " );
         for (j = 0; j < odp->u.var.n_values-1; j++)
-            output( "0x%08x,", odp->u.var.values[j] );
-        output( "0x%08x\n", odp->u.var.values[j] );
+            fprintf( outfile, "0x%08x,", odp->u.var.values[j] );
+        fprintf( outfile, "0x%08x\n", odp->u.var.values[j] );
     }
-    output( ".L__wine_spec_data_segment_end:\n" );
+    fprintf( outfile, ".L__wine_spec_data_segment_end:\n" );
 
     /* resource data */
 
     if (spec->nb_resources)
     {
-        output( "\n.L__wine_spec_resource_data:\n" );
-        output_res16_data( spec );
+        fprintf( outfile, "\n.L__wine_spec_resource_data:\n" );
+        output_res16_data( outfile, spec );
     }
 
-    output( "\t.byte 0\n" );  /* make sure the last symbol points to something */
+    fprintf( outfile, "\t.byte 0\n" );  /* make sure the last symbol points to something */
 
     /* relay functions */
 
     nb_funcs = sort_func_list( typelist, nb_funcs, relay_type_compare );
     if (nb_funcs)
     {
-        output( "\n/* relay functions */\n\n" );
-        output( "\t.text\n" );
-        for ( i = 0; i < nb_funcs; i++ ) output_call16_function( typelist[i] );
-        output( "\t.data\n" );
-        output( "wine_ldt_copy_ptr:\n" );
-        output( "\t.long %s\n", asm_name("wine_ldt_copy") );
+        fprintf( outfile, "\n/* relay functions */\n\n" );
+        fprintf( outfile, "\t.text\n" );
+        for ( i = 0; i < nb_funcs; i++ ) output_call16_function( outfile, typelist[i] );
+        fprintf( outfile, "\t.data\n" );
+        fprintf( outfile, "wine_ldt_copy_ptr:\n" );
+        fprintf( outfile, "\t.long %s\n", asm_name("wine_ldt_copy") );
     }
 
-    output( "\n\t%s\n", get_asm_string_section() );
-    output( ".L__wine_spec_file_name:\n" );
-    output( "\t%s \"%s\"\n", get_asm_string_keyword(), spec->file_name );
+    fprintf( outfile, "\n\t%s\n", get_asm_string_section() );
+    fprintf( outfile, ".L__wine_spec_file_name:\n" );
+    fprintf( outfile, "\t%s \"%s\"\n", get_asm_string_keyword(), spec->file_name );
 
-    output_stubs( spec );
-    output_get_pc_thunk();
-    output_init_code( spec, header_name );
-    output_gnu_stack_note();
+    output_stubs( outfile, spec );
+    output_get_pc_thunk( outfile );
+    output_init_code( outfile, spec, header_name );
 
     free( typelist );
 }

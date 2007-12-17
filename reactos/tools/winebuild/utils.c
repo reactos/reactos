@@ -15,11 +15,14 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
 
 #include "config.h"
-#include "wine/port.h"
+
+#if !defined(WIN32)
+#undef strdup
+#endif
 
 #include <assert.h>
 #include <ctype.h>
@@ -31,7 +34,6 @@
 # include <unistd.h>
 #endif
 
-#include "winglue.h"
 #include "build.h"
 
 #define MAX_TMP_FILES 8
@@ -163,18 +165,6 @@ void warning( const char *msg, ... )
     va_end( valist );
 }
 
-int output( const char *format, ... )
-{
-    int ret;
-    va_list valist;
-
-    va_start( valist, format );
-    ret = vfprintf( output_file, format, valist );
-    va_end( valist );
-    if (ret < 0) fatal_perror( "Output error" );
-    return ret;
-}
-
 /* get a name for a temp file, automatically cleaned up on exit */
 char *get_temp_file_name( const char *prefix, const char *suffix )
 {
@@ -206,29 +196,31 @@ char *get_temp_file_name( const char *prefix, const char *suffix )
 }
 
 /* output a standard header for generated files */
-void output_standard_file_header(void)
+void output_standard_file_header( FILE *outfile )
 {
     if (spec_file_name)
-        output( "/* File generated automatically from %s; do not edit! */\n", spec_file_name );
+        fprintf( outfile, "/* File generated automatically from %s; do not edit! */\n",
+                 spec_file_name );
     else
-        output( "/* File generated automatically; do not edit! */\n" );
-    output( "/* This file can be copied, modified and distributed without restriction. */\n\n" );
+        fprintf( outfile, "/* File generated automatically; do not edit! */\n" );
+    fprintf( outfile,
+             "/* This file can be copied, modified and distributed without restriction. */\n\n" );
 }
 
 /* dump a byte stream into the assembly code */
-void dump_bytes( const void *buffer, unsigned int size )
+void dump_bytes( FILE *outfile, const void *buffer, unsigned int size )
 {
     unsigned int i;
     const unsigned char *ptr = buffer;
 
     if (!size) return;
-    output( "\t.byte " );
+    fprintf( outfile, "\t.byte " );
     for (i = 0; i < size - 1; i++, ptr++)
     {
-        if ((i % 16) == 15) output( "0x%02x\n\t.byte ", *ptr );
-        else output( "0x%02x,", *ptr );
+        if ((i % 16) == 15) fprintf( outfile, "0x%02x\n\t.byte ", *ptr );
+        else fprintf( outfile, "0x%02x,", *ptr );
     }
-    output( "0x%02x\n", *ptr );
+    fprintf( outfile, "0x%02x\n", *ptr );
 }
 
 
@@ -332,12 +324,7 @@ DLLSPEC *alloc_dll_spec(void)
     spec->alloc_entry_points = 0;
     spec->nb_names           = 0;
     spec->nb_resources       = 0;
-    spec->characteristics    = IMAGE_FILE_EXECUTABLE_IMAGE;
-    if (get_ptr_size() > 4)
-        spec->characteristics |= IMAGE_FILE_LARGE_ADDRESS_AWARE;
-    else
-        spec->characteristics |= IMAGE_FILE_32BIT_MACHINE;
-    spec->dll_characteristics = IMAGE_DLLCHARACTERISTICS_NX_COMPAT;
+    spec->characteristics    = 0;
     spec->subsystem          = 0;
     spec->subsystem_major    = 4;
     spec->subsystem_minor    = 0;
@@ -457,7 +444,7 @@ unsigned int get_alignment(unsigned int align)
     case CPU_POWERPC:
     case CPU_ALPHA:
         n = 0;
-        while ((1u << n) != align) n++;
+        while ((1 << n) != align) n++;
         return n;
     }
     /* unreached */
@@ -536,7 +523,7 @@ const char *func_declaration( const char *func )
 }
 
 /* output a size declaration for an assembly function */
-void output_function_size( const char *name )
+void output_function_size( FILE *outfile, const char *name )
 {
     switch (target_platform)
     {
@@ -544,21 +531,7 @@ void output_function_size( const char *name )
     case PLATFORM_WINDOWS:
         break;
     default:
-        output( "\t.size %s, .-%s\n", name, name );
-        break;
-    }
-}
-
-/* output the GNU note for non-exec stack */
-void output_gnu_stack_note(void)
-{
-    switch (target_platform)
-    {
-    case PLATFORM_WINDOWS:
-    case PLATFORM_APPLE:
-        break;
-    default:
-        output( "\t.section .note.GNU-stack,\"\",@progbits\n" );
+        fprintf( outfile, "\t.size %s, .-%s\n", name, name );
         break;
     }
 }

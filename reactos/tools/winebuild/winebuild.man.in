@@ -73,25 +73,17 @@ Specify the module entry point function; if not specified, the default
 is
 .B DllMain
 for dlls, and
-.B main
-for executables (if the standard C
-.B main
-is not defined,
 .B WinMain
+for executables (if
+.B WinMain
+is not defined, the standard C
+.B main
 is used instead). This is only valid for Win32 modules.
 .TP
 .BI \-E,\ --export= filename
 Specify a .spec file (see \fBSPEC FILE SYNTAX\fR for details), 
 or a standard Windows .def file that defines the exports
 of the DLL or executable that is being built.
-.TP
-.B \--external-symbols
-Allow linking to external symbols directly from the spec
-file. Normally symbols exported by a dll have to be defined in the dll
-itself; this option makes it possible to use symbols defined in
-another Unix library (for symbols defined in another dll, a
-.I forward
-specification must be used instead).
 .TP
 .BI \-f\  flags
 Ignored for compatibility with the C compiler.
@@ -152,10 +144,6 @@ KRNL386.EXE. It shouldn't be needed otherwise.
 .BI \--nm-cmd= nm-command
 Specify the command to use to get the list of undefined symbols; the
 default is \fBnm\fR.
-.TP
-.BI --nxcompat= yes|no
-Specify whether the module is compatible with no-exec support. The
-default is yes.
 .TP
 .BI \-o,\ --output= file
 Set the name of the output file (default is standard output). If the
@@ -260,8 +248,7 @@ The entry point is not displayed in relay debugging traces (Win32
 only).
 .TP
 .B -noname
-The entry point will be exported by ordinal instead of by name. The
-name is still available for importing.
+The entry point will be imported by ordinal instead of by name.
 .TP
 .B -ret16
 The function returns a 16-bit value (Win16 only).
@@ -278,10 +265,6 @@ The function uses CPU register to pass arguments.
 .B -private
 The function cannot be imported from other dlls, it can only be
 accessed through GetProcAddress.
-.TP
-.B -ordinal
-The entry point will be imported by ordinal instead of by name. The
-name is still exported.
 .SS "Function ordinals"
 Syntax:
 .br
