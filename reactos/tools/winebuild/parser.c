@@ -19,10 +19,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <assert.h>
 #include <ctype.h>
@@ -43,6 +44,9 @@ static FILE *input_file;
 
 static const char *separator_chars;
 static const char *comment_chars;
+
+/* valid characters in ordinal names */
+static const char valid_ordname_chars[] = "/$:-_@?abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
 
 static const char * const TypeNames[TYPE_NBTYPES] =
 {
@@ -65,6 +69,7 @@ static const char * const FlagNames[] =
     "i386",        /* FLAG_I386 */
     "register",    /* FLAG_REGISTER */
     "private",     /* FLAG_PRIVATE */
+    "ordinal",     /* FLAG_ORDINAL */
     NULL
 };
 
@@ -74,12 +79,12 @@ static int IsNumberString(const char *s)
     return 1;
 }
 
-inline static int is_token_separator( char ch )
+static inline int is_token_separator( char ch )
 {
     return strchr( separator_chars, ch ) != NULL;
 }
 
-inline static int is_token_comment( char ch )
+static inline int is_token_comment( char ch )
 {
     return strchr( comment_chars, ch ) != NULL;
 }
@@ -445,6 +450,7 @@ static const char *parse_spec_flags( ORDDEF *odp )
 static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
 {
     const char *token;
+    size_t len;
 
     ORDDEF *odp = add_entry_point( spec );
     memset( odp, 0, sizeof(*odp) );
@@ -467,6 +473,13 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
     odp->name = xstrdup( token );
     odp->lineno = current_line;
     odp->ordinal = ordinal;
+
+    len = strspn( odp->name, valid_ordname_chars );
+    if (len < strlen( odp->name ))
+    {
+        error( "Character '%c' is not allowed in exported name '%s'\n", odp->name[len], odp->name );
+        goto error;
+    }
 
     switch(odp->type)
     {
@@ -532,11 +545,14 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
         }
     }
 
-    if (!strcmp( odp->name, "@" ) || odp->flags & FLAG_NONAME)
+    if (!strcmp( odp->name, "@" ) || odp->flags & (FLAG_NONAME | FLAG_ORDINAL))
     {
         if (ordinal == -1)
         {
-            error( "Nameless function needs an explicit ordinal number\n" );
+            if (!strcmp( odp->name, "@" ))
+                error( "Nameless function needs an explicit ordinal number\n" );
+            else
+                error( "Function imported by ordinal needs an explicit ordinal number\n" );
             goto error;
         }
         if (spec->type != SPEC_WIN32)
@@ -544,9 +560,16 @@ static int parse_spec_ordinal( int ordinal, DLLSPEC *spec )
             error( "Nameless functions not supported for Win16\n" );
             goto error;
         }
-        if (!strcmp( odp->name, "@" )) free( odp->name );
-        else odp->export_name = odp->name;
-        odp->name = NULL;
+        if (!strcmp( odp->name, "@" ))
+        {
+            free( odp->name );
+            odp->name = NULL;
+        }
+        else if (!(odp->flags & FLAG_ORDINAL))  /* -ordinal only affects the import library */
+        {
+            odp->export_name = odp->name;
+            odp->name = NULL;
+        }
     }
     return 1;
 

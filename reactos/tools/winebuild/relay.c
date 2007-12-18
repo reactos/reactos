@@ -19,10 +19,11 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
+#include "wine/port.h"
 
 #include <ctype.h>
 
@@ -31,18 +32,31 @@
 
 #include "build.h"
 
-static void function_header( FILE *outfile, const char *name )
+/* offset of a structure field relative to the start of the struct */
+#define STRUCTOFFSET(type,field) ((int)FIELD_OFFSET(type,field))
+
+/* offset of register relative to the start of the CONTEXT struct */
+#define CONTEXTOFFSET(reg)  STRUCTOFFSET(CONTEXT86,reg)
+
+/* offset of register relative to the start of the STACK16FRAME struct */
+#define STACK16OFFSET(reg)  STRUCTOFFSET(STACK16FRAME,reg)
+
+/* offset of register relative to the start of the STACK32FRAME struct */
+#define STACK32OFFSET(reg)  STRUCTOFFSET(STACK32FRAME,reg)
+
+/* offset of the stack pointer relative to %fs:(0) */
+#define STACKOFFSET 0xc0  /* STRUCTOFFSET(TEB,WOW32Reserved) */
+
+/* fix this if the ntdll_thread_regs structure is changed */
+#define GS_OFFSET  0x1d8  /* STRUCTOFFSET(TEB,SystemReserved2) + STRUCTOFFSET(ntdll_thread_data,gs) */
+
+static void function_header( const char *name )
 {
-    fprintf( outfile, "\n\t.align %d\n", get_alignment(4) );
-    fprintf( outfile, "\t%s\n", func_declaration(name) );
-    fprintf( outfile, "%s\n", asm_globl(name) );
+    output( "\n\t.align %d\n", get_alignment(4) );
+    output( "\t%s\n", func_declaration(name) );
+    output( "%s\n", asm_globl(name) );
 }
 
-
-static inline const char *data16_prefix(void)
-{
-    return (target_platform == PLATFORM_SVR4) ? "\tdata16\n" : "";
-}
 
 /*******************************************************************
  *         BuildCallFrom16Core
@@ -111,74 +125,73 @@ static inline const char *data16_prefix(void)
  * (sp-20) long   saved edx
  * (sp-24) long   saved previous stack
  */
-static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk )
+static void BuildCallFrom16Core( int reg_func, int thunk )
 {
     /* Function header */
-    if (thunk) function_header( outfile, "__wine_call_from_16_thunk" );
-    else if (reg_func) function_header( outfile, "__wine_call_from_16_regs" );
-    else function_header( outfile, "__wine_call_from_16" );
+    if (thunk) function_header( "__wine_call_from_16_thunk" );
+    else if (reg_func) function_header( "__wine_call_from_16_regs" );
+    else function_header( "__wine_call_from_16" );
 
     /* Create STACK16FRAME (except STACK32FRAME link) */
-    fprintf( outfile, "\tpushw %%gs\n" );
-    fprintf( outfile, "\tpushw %%fs\n" );
-    fprintf( outfile, "\tpushw %%es\n" );
-    fprintf( outfile, "\tpushw %%ds\n" );
-    fprintf( outfile, "\tpushl %%ebp\n" );
-    fprintf( outfile, "\tpushl %%ecx\n" );
-    fprintf( outfile, "\tpushl %%edx\n" );
+    output( "\tpushw %%gs\n" );
+    output( "\tpushw %%fs\n" );
+    output( "\tpushw %%es\n" );
+    output( "\tpushw %%ds\n" );
+    output( "\tpushl %%ebp\n" );
+    output( "\tpushl %%ecx\n" );
+    output( "\tpushl %%edx\n" );
 
     /* Save original EFlags register */
-    if (reg_func) fprintf( outfile, "\tpushfl\n" );
+    if (reg_func) output( "\tpushfl\n" );
 
     if ( UsePIC )
     {
-        fprintf( outfile, "\tcall 1f\n" );
-        fprintf( outfile, "1:\tpopl %%ecx\n" );
-        fprintf( outfile, "\t.byte 0x2e\n\tmovl %s-1b(%%ecx),%%edx\n",
-                 asm_name("CallTo16_DataSelector") );
+        output( "\tcall 1f\n" );
+        output( "1:\tpopl %%ecx\n" );
+        output( "\t.byte 0x2e\n\tmovl %s-1b(%%ecx),%%edx\n", asm_name("CallTo16_DataSelector") );
     }
     else
-        fprintf( outfile, "\t.byte 0x2e\n\tmovl %s,%%edx\n", asm_name("CallTo16_DataSelector") );
+        output( "\t.byte 0x2e\n\tmovl %s,%%edx\n", asm_name("CallTo16_DataSelector") );
 
     /* Load 32-bit segment registers */
-    fprintf( outfile, "%s\tmovw %%dx, %%ds\n", data16_prefix() );
-    fprintf( outfile, "%s\tmovw %%dx, %%es\n", data16_prefix() );
+    output( "\tmovw %%dx, %%ds\n" );
+    output( "\tmovw %%dx, %%es\n" );
 
     if ( UsePIC )
-        fprintf( outfile, "\tmovw %s-1b(%%ecx), %%fs\n", asm_name("CallTo16_TebSelector") );
+        output( "\tmovw %s-1b(%%ecx), %%fs\n", asm_name("CallTo16_TebSelector") );
     else
-        fprintf( outfile, "\tmovw %s, %%fs\n", asm_name("CallTo16_TebSelector") );
+        output( "\tmovw %s, %%fs\n", asm_name("CallTo16_TebSelector") );
 
-    fprintf( outfile, "\t.byte 0x64\n\tmov (%d),%%gs\n", STRUCTOFFSET(TEB,gs_sel) );
+    output( "\t.byte 0x64\n\tmov (%d),%%gs\n", GS_OFFSET );
 
     /* Translate STACK16FRAME base to flat offset in %edx */
-    fprintf( outfile, "\tmovw %%ss, %%dx\n" );
-    fprintf( outfile, "\tandl $0xfff8, %%edx\n" );
-    fprintf( outfile, "\tshrl $1, %%edx\n" );
+    output( "\tmovw %%ss, %%dx\n" );
+    output( "\tandl $0xfff8, %%edx\n" );
+    output( "\tshrl $1, %%edx\n" );
     if (UsePIC)
     {
-        fprintf( outfile, "\taddl wine_ldt_copy_ptr-1b(%%ecx),%%edx\n" );
-        fprintf( outfile, "\tmovl (%%edx), %%edx\n" );
+        output( "\taddl wine_ldt_copy_ptr-1b(%%ecx),%%edx\n" );
+        output( "\tmovl (%%edx), %%edx\n" );
     }
     else
-        fprintf( outfile, "\tmovl %s(%%edx), %%edx\n", asm_name("wine_ldt_copy") );
-    fprintf( outfile, "\tmovzwl %%sp, %%ebp\n" );
-    fprintf( outfile, "\tleal %d(%%ebp,%%edx), %%edx\n", reg_func ? 0 : -4 );
+        output( "\tmovl %s(%%edx), %%edx\n", asm_name("wine_ldt_copy") );
+    output( "\tmovzwl %%sp, %%ebp\n" );
+    output( "\tleal %d(%%ebp,%%edx), %%edx\n", reg_func ? 0 : -4 );
 
     /* Get saved flags into %ecx */
-    if (reg_func) fprintf( outfile, "\tpopl %%ecx\n" );
+    if (reg_func) output( "\tpopl %%ecx\n" );
 
     /* Get the 32-bit stack pointer from the TEB and complete STACK16FRAME */
-    fprintf( outfile, "\t.byte 0x64\n\tmovl (%d), %%ebp\n", STACKOFFSET );
-    fprintf( outfile, "\tpushl %%ebp\n" );
+    output( "\t.byte 0x64\n\tmovl (%d), %%ebp\n", STACKOFFSET );
+    output( "\tpushl %%ebp\n" );
 
     /* Switch stacks */
-    fprintf( outfile, "%s\t.byte 0x64\n\tmovw %%ss, (%d)\n", data16_prefix(), STACKOFFSET + 2 );
-    fprintf( outfile, "\t.byte 0x64\n\tmovw %%sp, (%d)\n", STACKOFFSET );
-    fprintf( outfile, "\tpushl %%ds\n" );
-    fprintf( outfile, "\tpopl %%ss\n" );
-    fprintf( outfile, "\tmovl %%ebp, %%esp\n" );
-    fprintf( outfile, "\taddl $%d, %%ebp\n", STRUCTOFFSET(STACK32FRAME, ebp) );
+    output( "\t.byte 0x64\n\tmovw %%ss, (%d)\n", STACKOFFSET + 2 );
+    output( "\t.byte 0x64\n\tmovw %%sp, (%d)\n", STACKOFFSET );
+    output( "\tpushl %%ds\n" );
+    output( "\tpopl %%ss\n" );
+    output( "\tmovl %%ebp, %%esp\n" );
+    output( "\taddl $%d, %%ebp\n", STACK32OFFSET(ebp) );
 
 
     /* At this point:
@@ -195,32 +208,32 @@ static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk )
     if ( thunk )
     {
         /* Set up registers as expected and call thunk */
-        fprintf( outfile, "\tleal %d(%%edx), %%ebx\n", sizeof(STACK16FRAME)-22 );
-        fprintf( outfile, "\tleal -4(%%esp), %%ebp\n" );
+        output( "\tleal %d(%%edx), %%ebx\n", (int)sizeof(STACK16FRAME)-22 );
+        output( "\tleal -4(%%esp), %%ebp\n" );
 
-        fprintf( outfile, "\tcall *%d(%%edx)\n", STACK16OFFSET(entry_point) );
+        output( "\tcall *%d(%%edx)\n", STACK16OFFSET(entry_point) );
 
         /* Switch stack back */
-        fprintf( outfile, "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
-        fprintf( outfile, "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
-        fprintf( outfile, "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
+        output( "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
 
         /* Restore registers and return directly to caller */
-        fprintf( outfile, "\taddl $8, %%esp\n" );
-        fprintf( outfile, "\tpopl %%ebp\n" );
-        fprintf( outfile, "\tpopw %%ds\n" );
-        fprintf( outfile, "\tpopw %%es\n" );
-        fprintf( outfile, "\tpopw %%fs\n" );
-        fprintf( outfile, "\tpopw %%gs\n" );
-        fprintf( outfile, "\taddl $20, %%esp\n" );
+        output( "\taddl $8, %%esp\n" );
+        output( "\tpopl %%ebp\n" );
+        output( "\tpopw %%ds\n" );
+        output( "\tpopw %%es\n" );
+        output( "\tpopw %%fs\n" );
+        output( "\tpopw %%gs\n" );
+        output( "\taddl $20, %%esp\n" );
 
-        fprintf( outfile, "\txorb %%ch, %%ch\n" );
-        fprintf( outfile, "\tpopl %%ebx\n" );
-        fprintf( outfile, "\taddw %%cx, %%sp\n" );
-        fprintf( outfile, "\tpush %%ebx\n" );
+        output( "\txorb %%ch, %%ch\n" );
+        output( "\tpopl %%ebx\n" );
+        output( "\taddw %%cx, %%sp\n" );
+        output( "\tpush %%ebx\n" );
 
-        fprintf( outfile, "\t.byte 0x66\n" );
-        fprintf( outfile, "\tlret\n" );
+        output( "\t.byte 0x66\n" );
+        output( "\tlret\n" );
 
         return;
     }
@@ -229,132 +242,131 @@ static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk )
     /* Build register CONTEXT */
     if ( reg_func )
     {
-        fprintf( outfile, "\tsubl $%d, %%esp\n", sizeof(CONTEXT86) );
+        output( "\tsubl $%d, %%esp\n", (int)sizeof(CONTEXT86) );
 
-        fprintf( outfile, "\tmovl %%ecx, %d(%%esp)\n", CONTEXTOFFSET(EFlags) );
+        output( "\tmovl %%ecx, %d(%%esp)\n", CONTEXTOFFSET(EFlags) );
 
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Eax) );
-        fprintf( outfile, "\tmovl %%ebx, %d(%%esp)\n", CONTEXTOFFSET(Ebx) );
-        fprintf( outfile, "\tmovl %%esi, %d(%%esp)\n", CONTEXTOFFSET(Esi) );
-        fprintf( outfile, "\tmovl %%edi, %d(%%esp)\n", CONTEXTOFFSET(Edi) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Eax) );
+        output( "\tmovl %%ebx, %d(%%esp)\n", CONTEXTOFFSET(Ebx) );
+        output( "\tmovl %%esi, %d(%%esp)\n", CONTEXTOFFSET(Esi) );
+        output( "\tmovl %%edi, %d(%%esp)\n", CONTEXTOFFSET(Edi) );
 
-        fprintf( outfile, "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(ebp) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Ebp) );
-        fprintf( outfile, "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(ecx) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Ecx) );
-        fprintf( outfile, "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(edx) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Edx) );
+        output( "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(ebp) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Ebp) );
+        output( "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(ecx) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Ecx) );
+        output( "\tmovl %d(%%edx), %%eax\n", STACK16OFFSET(edx) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Edx) );
 
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(ds) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegDs) );
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(es) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegEs) );
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(fs) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegFs) );
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(gs) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegGs) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(ds) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegDs) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(es) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegEs) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(fs) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegFs) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(gs) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegGs) );
 
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(cs) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegCs) );
-        fprintf( outfile, "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(ip) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Eip) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(cs) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegCs) );
+        output( "\tmovzwl %d(%%edx), %%eax\n", STACK16OFFSET(ip) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Eip) );
 
-        fprintf( outfile, "\t.byte 0x64\n\tmovzwl (%d), %%eax\n", STACKOFFSET+2 );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegSs) );
-        fprintf( outfile, "\t.byte 0x64\n\tmovzwl (%d), %%eax\n", STACKOFFSET );
-        fprintf( outfile, "\taddl $%d, %%eax\n", STACK16OFFSET(ip) );
-        fprintf( outfile, "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Esp) );
+        output( "\t.byte 0x64\n\tmovzwl (%d), %%eax\n", STACKOFFSET+2 );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(SegSs) );
+        output( "\t.byte 0x64\n\tmovzwl (%d), %%eax\n", STACKOFFSET );
+        output( "\taddl $%d, %%eax\n", STACK16OFFSET(ip) );
+        output( "\tmovl %%eax, %d(%%esp)\n", CONTEXTOFFSET(Esp) );
 #if 0
-        fprintf( outfile, "\tfsave %d(%%esp)\n", CONTEXTOFFSET(FloatSave) );
+        output( "\tfsave %d(%%esp)\n", CONTEXTOFFSET(FloatSave) );
 #endif
 
         /* Push address of CONTEXT86 structure -- popped by the relay routine */
-        fprintf( outfile, "\tmovl %%esp,%%eax\n" );
-        fprintf( outfile, "\tandl $~15,%%esp\n" );
-        fprintf( outfile, "\tsubl $4,%%esp\n" );
-        fprintf( outfile, "\tpushl %%eax\n" );
+        output( "\tmovl %%esp,%%eax\n" );
+        output( "\tandl $~15,%%esp\n" );
+        output( "\tsubl $4,%%esp\n" );
+        output( "\tpushl %%eax\n" );
     }
     else
     {
-        fprintf( outfile, "\tsubl $8,%%esp\n" );
-        fprintf( outfile, "\tandl $~15,%%esp\n" );
-        fprintf( outfile, "\taddl $8,%%esp\n" );
+        output( "\tsubl $8,%%esp\n" );
+        output( "\tandl $~15,%%esp\n" );
+        output( "\taddl $8,%%esp\n" );
     }
 
     /* Call relay routine (which will call the API entry point) */
-    fprintf( outfile, "\tleal %d(%%edx), %%eax\n", sizeof(STACK16FRAME) );
-    fprintf( outfile, "\tpushl %%eax\n" );
-    fprintf( outfile, "\tpushl %d(%%edx)\n", STACK16OFFSET(entry_point) );
-    fprintf( outfile, "\tcall *%d(%%edx)\n", STACK16OFFSET(relay) );
+    output( "\tleal %d(%%edx), %%eax\n", (int)sizeof(STACK16FRAME) );
+    output( "\tpushl %%eax\n" );
+    output( "\tpushl %d(%%edx)\n", STACK16OFFSET(entry_point) );
+    output( "\tcall *%d(%%edx)\n", STACK16OFFSET(relay) );
 
     if ( reg_func )
     {
-        fprintf( outfile, "\tleal -%d(%%ebp), %%ebx\n",
-                 sizeof(CONTEXT) + STRUCTOFFSET(STACK32FRAME, ebp) );
+        output( "\tleal -%d(%%ebp), %%ebx\n", (int)sizeof(CONTEXT) + STACK32OFFSET(ebp) );
 
         /* Switch stack back */
-        fprintf( outfile, "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
-        fprintf( outfile, "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
-        fprintf( outfile, "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
+        output( "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
 
         /* Get return address to CallFrom16 stub */
-        fprintf( outfile, "\taddw $%d, %%sp\n", STACK16OFFSET(callfrom_ip)-4 );
-        fprintf( outfile, "\tpopl %%eax\n" );
-        fprintf( outfile, "\tpopl %%edx\n" );
+        output( "\taddw $%d, %%sp\n", STACK16OFFSET(callfrom_ip)-4 );
+        output( "\tpopl %%eax\n" );
+        output( "\tpopl %%edx\n" );
 
         /* Restore all registers from CONTEXT */
-        fprintf( outfile, "\tmovw %d(%%ebx), %%ss\n", CONTEXTOFFSET(SegSs) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%esp\n", CONTEXTOFFSET(Esp) );
-        fprintf( outfile, "\taddl $4, %%esp\n" );  /* room for final return address */
+        output( "\tmovw %d(%%ebx), %%ss\n", CONTEXTOFFSET(SegSs) );
+        output( "\tmovl %d(%%ebx), %%esp\n", CONTEXTOFFSET(Esp) );
+        output( "\taddl $4, %%esp\n" );  /* room for final return address */
 
-        fprintf( outfile, "\tpushw %d(%%ebx)\n", CONTEXTOFFSET(SegCs) );
-        fprintf( outfile, "\tpushw %d(%%ebx)\n", CONTEXTOFFSET(Eip) );
-        fprintf( outfile, "\tpushl %%edx\n" );
-        fprintf( outfile, "\tpushl %%eax\n" );
-        fprintf( outfile, "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(EFlags) );
-        fprintf( outfile, "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegDs) );
+        output( "\tpushw %d(%%ebx)\n", CONTEXTOFFSET(SegCs) );
+        output( "\tpushw %d(%%ebx)\n", CONTEXTOFFSET(Eip) );
+        output( "\tpushl %%edx\n" );
+        output( "\tpushl %%eax\n" );
+        output( "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(EFlags) );
+        output( "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegDs) );
 
-        fprintf( outfile, "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegEs) );
-        fprintf( outfile, "\tpopl %%es\n" );
-        fprintf( outfile, "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegFs) );
-        fprintf( outfile, "\tpopl %%fs\n" );
-        fprintf( outfile, "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegGs) );
-        fprintf( outfile, "\tpopl %%gs\n" );
+        output( "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegEs) );
+        output( "\tpopl %%es\n" );
+        output( "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegFs) );
+        output( "\tpopl %%fs\n" );
+        output( "\tpushl %d(%%ebx)\n", CONTEXTOFFSET(SegGs) );
+        output( "\tpopl %%gs\n" );
 
-        fprintf( outfile, "\tmovl %d(%%ebx), %%ebp\n", CONTEXTOFFSET(Ebp) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%esi\n", CONTEXTOFFSET(Esi) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%edi\n", CONTEXTOFFSET(Edi) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%eax\n", CONTEXTOFFSET(Eax) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%edx\n", CONTEXTOFFSET(Edx) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%ecx\n", CONTEXTOFFSET(Ecx) );
-        fprintf( outfile, "\tmovl %d(%%ebx), %%ebx\n", CONTEXTOFFSET(Ebx) );
+        output( "\tmovl %d(%%ebx), %%ebp\n", CONTEXTOFFSET(Ebp) );
+        output( "\tmovl %d(%%ebx), %%esi\n", CONTEXTOFFSET(Esi) );
+        output( "\tmovl %d(%%ebx), %%edi\n", CONTEXTOFFSET(Edi) );
+        output( "\tmovl %d(%%ebx), %%eax\n", CONTEXTOFFSET(Eax) );
+        output( "\tmovl %d(%%ebx), %%edx\n", CONTEXTOFFSET(Edx) );
+        output( "\tmovl %d(%%ebx), %%ecx\n", CONTEXTOFFSET(Ecx) );
+        output( "\tmovl %d(%%ebx), %%ebx\n", CONTEXTOFFSET(Ebx) );
 
-        fprintf( outfile, "\tpopl %%ds\n" );
-        fprintf( outfile, "\tpopfl\n" );
-        fprintf( outfile, "\tlret\n" );
+        output( "\tpopl %%ds\n" );
+        output( "\tpopfl\n" );
+        output( "\tlret\n" );
     }
     else
     {
         /* Switch stack back */
-        fprintf( outfile, "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
-        fprintf( outfile, "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
-        fprintf( outfile, "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tmovw (%d), %%ss\n", STACKOFFSET+2 );
+        output( "\t.byte 0x64\n\tmovzwl (%d), %%esp\n", STACKOFFSET );
+        output( "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
 
         /* Restore registers */
-        fprintf( outfile, "\tpopl %%edx\n" );
-        fprintf( outfile, "\tpopl %%ecx\n" );
-        fprintf( outfile, "\tpopl %%ebp\n" );
-        fprintf( outfile, "\tpopw %%ds\n" );
-        fprintf( outfile, "\tpopw %%es\n" );
-        fprintf( outfile, "\tpopw %%fs\n" );
-        fprintf( outfile, "\tpopw %%gs\n" );
+        output( "\tpopl %%edx\n" );
+        output( "\tpopl %%ecx\n" );
+        output( "\tpopl %%ebp\n" );
+        output( "\tpopw %%ds\n" );
+        output( "\tpopw %%es\n" );
+        output( "\tpopw %%fs\n" );
+        output( "\tpopw %%gs\n" );
 
         /* Return to return stub which will return to caller */
-        fprintf( outfile, "\tlret $12\n" );
+        output( "\tlret $12\n" );
     }
-    if (thunk) output_function_size( outfile, "__wine_call_from_16_thunk" );
-    else if (reg_func) output_function_size( outfile, "__wine_call_from_16_regs" );
-    else output_function_size( outfile, "__wine_call_from_16" );
+    if (thunk) output_function_size( "__wine_call_from_16_thunk" );
+    else if (reg_func) output_function_size( "__wine_call_from_16_regs" );
+    else output_function_size( "__wine_call_from_16" );
 }
 
 
@@ -377,44 +389,44 @@ static void BuildCallFrom16Core( FILE *outfile, int reg_func, int thunk )
  * or else set to default values.  The target routine address is either
  * given directly or taken from the CONTEXT86.
  */
-static void BuildCallTo16Core( FILE *outfile, int reg_func )
+static void BuildCallTo16Core( int reg_func )
 {
     const char *name = reg_func ? "wine_call_to_16_regs" : "wine_call_to_16";
 
     /* Function header */
-    function_header( outfile, name );
+    function_header( name );
 
     /* Function entry sequence */
-    fprintf( outfile, "\tpushl %%ebp\n" );
-    fprintf( outfile, "\tmovl %%esp, %%ebp\n" );
+    output( "\tpushl %%ebp\n" );
+    output( "\tmovl %%esp, %%ebp\n" );
 
     /* Save the 32-bit registers */
-    fprintf( outfile, "\tpushl %%ebx\n" );
-    fprintf( outfile, "\tpushl %%esi\n" );
-    fprintf( outfile, "\tpushl %%edi\n" );
-    fprintf( outfile, "\t.byte 0x64\n\tmov %%gs,(%d)\n", STRUCTOFFSET(TEB,gs_sel) );
+    output( "\tpushl %%ebx\n" );
+    output( "\tpushl %%esi\n" );
+    output( "\tpushl %%edi\n" );
+    output( "\t.byte 0x64\n\tmov %%gs,(%d)\n", GS_OFFSET );
 
     /* Setup exception frame */
-    fprintf( outfile, "\t.byte 0x64\n\tpushl (%d)\n", STACKOFFSET );
-    fprintf( outfile, "\tpushl 16(%%ebp)\n" ); /* handler */
-    fprintf( outfile, "\t.byte 0x64\n\tpushl (%d)\n", STRUCTOFFSET(TEB,Tib.ExceptionList) );
-    fprintf( outfile, "\t.byte 0x64\n\tmovl %%esp,(%d)\n", STRUCTOFFSET(TEB,Tib.ExceptionList) );
+    output( "\t.byte 0x64\n\tpushl (%d)\n", STACKOFFSET );
+    output( "\tpushl 16(%%ebp)\n" ); /* handler */
+    output( "\t.byte 0x64\n\tpushl (0)\n" );
+    output( "\t.byte 0x64\n\tmovl %%esp,(0)\n" );
 
     /* Call the actual CallTo16 routine (simulate a lcall) */
-    fprintf( outfile, "\tpushl %%cs\n" );
-    fprintf( outfile, "\tcall .L%s\n", name );
+    output( "\tpushl %%cs\n" );
+    output( "\tcall .L%s\n", name );
 
     /* Remove exception frame */
-    fprintf( outfile, "\t.byte 0x64\n\tpopl (%d)\n", STRUCTOFFSET(TEB,Tib.ExceptionList) );
-    fprintf( outfile, "\taddl $4, %%esp\n" );
-    fprintf( outfile, "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
+    output( "\t.byte 0x64\n\tpopl (0)\n" );
+    output( "\taddl $4, %%esp\n" );
+    output( "\t.byte 0x64\n\tpopl (%d)\n", STACKOFFSET );
 
     if ( !reg_func )
     {
         /* Convert return value */
-        fprintf( outfile, "\tandl $0xffff,%%eax\n" );
-        fprintf( outfile, "\tshll $16,%%edx\n" );
-        fprintf( outfile, "\torl %%edx,%%eax\n" );
+        output( "\tandl $0xffff,%%eax\n" );
+        output( "\tshll $16,%%edx\n" );
+        output( "\torl %%edx,%%eax\n" );
     }
     else
     {
@@ -428,94 +440,94 @@ static void BuildCallTo16Core( FILE *outfile, int reg_func )
          *        at the cost of a somewhat less efficient return path.]
          */
 
-        fprintf( outfile, "\tmovl %d(%%esp), %%edi\n", STACK32OFFSET(target) - STACK32OFFSET(edi));
+        output( "\tmovl %d(%%esp), %%edi\n", STACK32OFFSET(target) - STACK32OFFSET(edi));
                 /* everything above edi has been popped already */
 
-        fprintf( outfile, "\tmovl %%eax, %d(%%edi)\n", CONTEXTOFFSET(Eax) );
-        fprintf( outfile, "\tmovl %%ebx, %d(%%edi)\n", CONTEXTOFFSET(Ebx) );
-        fprintf( outfile, "\tmovl %%ecx, %d(%%edi)\n", CONTEXTOFFSET(Ecx) );
-        fprintf( outfile, "\tmovl %%edx, %d(%%edi)\n", CONTEXTOFFSET(Edx) );
-        fprintf( outfile, "\tmovl %%ebp, %d(%%edi)\n", CONTEXTOFFSET(Ebp) );
-        fprintf( outfile, "\tmovl %%esi, %d(%%edi)\n", CONTEXTOFFSET(Esp) );
+        output( "\tmovl %%eax, %d(%%edi)\n", CONTEXTOFFSET(Eax) );
+        output( "\tmovl %%ebx, %d(%%edi)\n", CONTEXTOFFSET(Ebx) );
+        output( "\tmovl %%ecx, %d(%%edi)\n", CONTEXTOFFSET(Ecx) );
+        output( "\tmovl %%edx, %d(%%edi)\n", CONTEXTOFFSET(Edx) );
+        output( "\tmovl %%ebp, %d(%%edi)\n", CONTEXTOFFSET(Ebp) );
+        output( "\tmovl %%esi, %d(%%edi)\n", CONTEXTOFFSET(Esp) );
                  /* The return glue code saved %esp into %esi */
     }
 
     /* Restore the 32-bit registers */
-    fprintf( outfile, "\tpopl %%edi\n" );
-    fprintf( outfile, "\tpopl %%esi\n" );
-    fprintf( outfile, "\tpopl %%ebx\n" );
+    output( "\tpopl %%edi\n" );
+    output( "\tpopl %%esi\n" );
+    output( "\tpopl %%ebx\n" );
 
     /* Function exit sequence */
-    fprintf( outfile, "\tpopl %%ebp\n" );
-    fprintf( outfile, "\tret $12\n" );
+    output( "\tpopl %%ebp\n" );
+    output( "\tret $12\n" );
 
 
     /* Start of the actual CallTo16 routine */
 
-    fprintf( outfile, ".L%s:\n", name );
+    output( ".L%s:\n", name );
 
     /* Switch to the 16-bit stack */
-    fprintf( outfile, "\tmovl %%esp,%%edx\n" );
-    fprintf( outfile, "%s\t.byte 0x64\n\tmovw (%d),%%ss\n", data16_prefix(), STACKOFFSET + 2);
-    fprintf( outfile, "\t.byte 0x64\n\tmovw (%d),%%sp\n", STACKOFFSET );
-    fprintf( outfile, "\t.byte 0x64\n\tmovl %%edx,(%d)\n", STACKOFFSET );
+    output( "\tmovl %%esp,%%edx\n" );
+    output( "\t.byte 0x64\n\tmovw (%d),%%ss\n", STACKOFFSET + 2);
+    output( "\t.byte 0x64\n\tmovw (%d),%%sp\n", STACKOFFSET );
+    output( "\t.byte 0x64\n\tmovl %%edx,(%d)\n", STACKOFFSET );
 
     /* Make %bp point to the previous stackframe (built by CallFrom16) */
-    fprintf( outfile, "\tmovzwl %%sp,%%ebp\n" );
-    fprintf( outfile, "\tleal %d(%%ebp),%%ebp\n", STACK16OFFSET(bp) );
+    output( "\tmovzwl %%sp,%%ebp\n" );
+    output( "\tleal %d(%%ebp),%%ebp\n", STACK16OFFSET(bp) );
 
     /* Add the specified offset to the new sp */
-    fprintf( outfile, "\tsubw %d(%%edx), %%sp\n", STACK32OFFSET(nb_args) );
+    output( "\tsubw %d(%%edx), %%sp\n", STACK32OFFSET(nb_args) );
 
     if (reg_func)
     {
         /* Push the called routine address */
-        fprintf( outfile, "\tmovl %d(%%edx),%%edx\n", STACK32OFFSET(target) );
-        fprintf( outfile, "\tpushw %d(%%edx)\n", CONTEXTOFFSET(SegCs) );
-        fprintf( outfile, "\tpushw %d(%%edx)\n", CONTEXTOFFSET(Eip) );
+        output( "\tmovl %d(%%edx),%%edx\n", STACK32OFFSET(target) );
+        output( "\tpushw %d(%%edx)\n", CONTEXTOFFSET(SegCs) );
+        output( "\tpushw %d(%%edx)\n", CONTEXTOFFSET(Eip) );
 
         /* Get the registers */
-        fprintf( outfile, "\tpushw %d(%%edx)\n", CONTEXTOFFSET(SegDs) );
-        fprintf( outfile, "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegEs) );
-        fprintf( outfile, "\tpopl %%es\n" );
-        fprintf( outfile, "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegFs) );
-        fprintf( outfile, "\tpopl %%fs\n" );
-        fprintf( outfile, "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegGs) );
-        fprintf( outfile, "\tpopl %%gs\n" );
-        fprintf( outfile, "\tmovl %d(%%edx),%%ebp\n", CONTEXTOFFSET(Ebp) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%esi\n", CONTEXTOFFSET(Esi) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%edi\n", CONTEXTOFFSET(Edi) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%eax\n", CONTEXTOFFSET(Eax) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%ebx\n", CONTEXTOFFSET(Ebx) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%ecx\n", CONTEXTOFFSET(Ecx) );
-        fprintf( outfile, "\tmovl %d(%%edx),%%edx\n", CONTEXTOFFSET(Edx) );
+        output( "\tpushw %d(%%edx)\n", CONTEXTOFFSET(SegDs) );
+        output( "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegEs) );
+        output( "\tpopl %%es\n" );
+        output( "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegFs) );
+        output( "\tpopl %%fs\n" );
+        output( "\tpushl %d(%%edx)\n", CONTEXTOFFSET(SegGs) );
+        output( "\tpopl %%gs\n" );
+        output( "\tmovl %d(%%edx),%%ebp\n", CONTEXTOFFSET(Ebp) );
+        output( "\tmovl %d(%%edx),%%esi\n", CONTEXTOFFSET(Esi) );
+        output( "\tmovl %d(%%edx),%%edi\n", CONTEXTOFFSET(Edi) );
+        output( "\tmovl %d(%%edx),%%eax\n", CONTEXTOFFSET(Eax) );
+        output( "\tmovl %d(%%edx),%%ebx\n", CONTEXTOFFSET(Ebx) );
+        output( "\tmovl %d(%%edx),%%ecx\n", CONTEXTOFFSET(Ecx) );
+        output( "\tmovl %d(%%edx),%%edx\n", CONTEXTOFFSET(Edx) );
 
         /* Get the 16-bit ds */
-        fprintf( outfile, "\tpopw %%ds\n" );
+        output( "\tpopw %%ds\n" );
     }
     else  /* not a register function */
     {
         /* Push the called routine address */
-        fprintf( outfile, "\tpushl %d(%%edx)\n", STACK32OFFSET(target) );
+        output( "\tpushl %d(%%edx)\n", STACK32OFFSET(target) );
 
         /* Set %fs and %gs to the value saved by the last CallFrom16 */
-        fprintf( outfile, "\tpushw %d(%%ebp)\n", STACK16OFFSET(fs)-STACK16OFFSET(bp) );
-        fprintf( outfile, "\tpopw %%fs\n" );
-        fprintf( outfile, "\tpushw %d(%%ebp)\n", STACK16OFFSET(gs)-STACK16OFFSET(bp) );
-        fprintf( outfile, "\tpopw %%gs\n" );
+        output( "\tpushw %d(%%ebp)\n", STACK16OFFSET(fs)-STACK16OFFSET(bp) );
+        output( "\tpopw %%fs\n" );
+        output( "\tpushw %d(%%ebp)\n", STACK16OFFSET(gs)-STACK16OFFSET(bp) );
+        output( "\tpopw %%gs\n" );
 
         /* Set %ds and %es (and %ax just in case) equal to %ss */
-        fprintf( outfile, "\tmovw %%ss,%%ax\n" );
-        fprintf( outfile, "\tmovw %%ax,%%ds\n" );
-        fprintf( outfile, "\tmovw %%ax,%%es\n" );
+        output( "\tmovw %%ss,%%ax\n" );
+        output( "\tmovw %%ax,%%ds\n" );
+        output( "\tmovw %%ax,%%es\n" );
     }
 
     /* Jump to the called routine */
-    fprintf( outfile, "\t.byte 0x66\n" );
-    fprintf( outfile, "\tlret\n" );
+    output( "\t.byte 0x66\n" );
+    output( "\tlret\n" );
 
     /* Function footer */
-    output_function_size( outfile, name );
+    output_function_size( name );
 }
 
 
@@ -524,34 +536,34 @@ static void BuildCallTo16Core( FILE *outfile, int reg_func )
  *
  * Build the return code for 16-bit callbacks
  */
-static void BuildRet16Func( FILE *outfile )
+static void BuildRet16Func(void)
 {
-    function_header( outfile, "__wine_call_to_16_ret" );
+    function_header( "__wine_call_to_16_ret" );
 
     /* Save %esp into %esi */
-    fprintf( outfile, "\tmovl %%esp,%%esi\n" );
+    output( "\tmovl %%esp,%%esi\n" );
 
     /* Restore 32-bit segment registers */
 
-    fprintf( outfile, "\t.byte 0x2e\n\tmovl %s", asm_name("CallTo16_DataSelector") );
-    fprintf( outfile, "-%s,%%edi\n", asm_name("__wine_call16_start") );
-    fprintf( outfile, "%s\tmovw %%di,%%ds\n", data16_prefix() );
-    fprintf( outfile, "%s\tmovw %%di,%%es\n", data16_prefix() );
+    output( "\t.byte 0x2e\n\tmovl %s", asm_name("CallTo16_DataSelector") );
+    output( "-%s,%%edi\n", asm_name("__wine_call16_start") );
+    output( "\tmovw %%di,%%ds\n" );
+    output( "\tmovw %%di,%%es\n" );
 
-    fprintf( outfile, "\t.byte 0x2e\n\tmov %s", asm_name("CallTo16_TebSelector") );
-    fprintf( outfile, "-%s,%%fs\n", asm_name("__wine_call16_start") );
+    output( "\t.byte 0x2e\n\tmov %s", asm_name("CallTo16_TebSelector") );
+    output( "-%s,%%fs\n", asm_name("__wine_call16_start") );
 
-    fprintf( outfile, "\t.byte 0x64\n\tmov (%d),%%gs\n", STRUCTOFFSET(TEB,gs_sel) );
+    output( "\t.byte 0x64\n\tmov (%d),%%gs\n", GS_OFFSET );
 
     /* Restore the 32-bit stack */
 
-    fprintf( outfile, "%s\tmovw %%di,%%ss\n", data16_prefix() );
-    fprintf( outfile, "\t.byte 0x64\n\tmovl (%d),%%esp\n", STACKOFFSET );
+    output( "\tmovw %%di,%%ss\n" );
+    output( "\t.byte 0x64\n\tmovl (%d),%%esp\n", STACKOFFSET );
 
     /* Return to caller */
 
-    fprintf( outfile, "\tlret\n" );
-    output_function_size( outfile, "__wine_call_to_16_ret" );
+    output( "\tlret\n" );
+    output_function_size( "__wine_call_to_16_ret" );
 }
 
 
@@ -645,77 +657,77 @@ static void BuildRet16Func( FILE *outfile )
  * (ebp+4)   ret addr
  * (ebp)     ebp
  */
-static void BuildCallTo32CBClient( FILE *outfile, BOOL isEx )
+static void BuildCallTo32CBClient( BOOL isEx )
 {
-    function_header( outfile, isEx ? "CALL32_CBClientEx" : "CALL32_CBClient" );
+    function_header( isEx ? "CALL32_CBClientEx" : "CALL32_CBClient" );
 
     /* Entry code */
 
-    fprintf( outfile, "\tpushl %%ebp\n" );
-    fprintf( outfile, "\tmovl %%esp,%%ebp\n" );
-    fprintf( outfile, "\tpushl %%edi\n" );
-    fprintf( outfile, "\tpushl %%esi\n" );
-    fprintf( outfile, "\tpushl %%ebx\n" );
+    output( "\tpushl %%ebp\n" );
+    output( "\tmovl %%esp,%%ebp\n" );
+    output( "\tpushl %%edi\n" );
+    output( "\tpushl %%esi\n" );
+    output( "\tpushl %%ebx\n" );
 
     /* Get pointer to temporary area and save the 32-bit stack pointer */
 
-    fprintf( outfile, "\tmovl 16(%%ebp), %%ebx\n" );
-    fprintf( outfile, "\tleal -8(%%esp), %%eax\n" );
+    output( "\tmovl 16(%%ebp), %%ebx\n" );
+    output( "\tleal -8(%%esp), %%eax\n" );
 
     if ( !isEx )
-        fprintf( outfile, "\tmovl %%eax, -8(%%ebx)\n" );
+        output( "\tmovl %%eax, -8(%%ebx)\n" );
     else
-        fprintf( outfile, "\tmovl %%eax, 12(%%ebx)\n" );
+        output( "\tmovl %%eax, 12(%%ebx)\n" );
 
     /* Set up registers and call CBClient relay stub (simulating a far call) */
 
-    fprintf( outfile, "\tmovl 20(%%ebp), %%esi\n" );
-    fprintf( outfile, "\tmovl (%%esi), %%esi\n" );
+    output( "\tmovl 20(%%ebp), %%esi\n" );
+    output( "\tmovl (%%esi), %%esi\n" );
 
-    fprintf( outfile, "\tmovl 8(%%ebp), %%eax\n" );
-    fprintf( outfile, "\tmovl 12(%%ebp), %%ebp\n" );
+    output( "\tmovl 8(%%ebp), %%eax\n" );
+    output( "\tmovl 12(%%ebp), %%ebp\n" );
 
-    fprintf( outfile, "\tpushl %%cs\n" );
-    fprintf( outfile, "\tcall *%%eax\n" );
+    output( "\tpushl %%cs\n" );
+    output( "\tcall *%%eax\n" );
 
     /* Return new esi value to caller */
 
-    fprintf( outfile, "\tmovl 32(%%esp), %%edi\n" );
-    fprintf( outfile, "\tmovl %%esi, (%%edi)\n" );
+    output( "\tmovl 32(%%esp), %%edi\n" );
+    output( "\tmovl %%esi, (%%edi)\n" );
 
     /* Return argument size to caller */
     if ( isEx )
     {
-        fprintf( outfile, "\tmovl 36(%%esp), %%ebx\n" );
-        fprintf( outfile, "\tmovl %%ebp, (%%ebx)\n" );
+        output( "\tmovl 36(%%esp), %%ebx\n" );
+        output( "\tmovl %%ebp, (%%ebx)\n" );
     }
 
     /* Restore registers and return */
 
-    fprintf( outfile, "\tpopl %%ebx\n" );
-    fprintf( outfile, "\tpopl %%esi\n" );
-    fprintf( outfile, "\tpopl %%edi\n" );
-    fprintf( outfile, "\tpopl %%ebp\n" );
-    fprintf( outfile, "\tret\n" );
-    output_function_size( outfile, isEx ? "CALL32_CBClientEx" : "CALL32_CBClient" );
+    output( "\tpopl %%ebx\n" );
+    output( "\tpopl %%esi\n" );
+    output( "\tpopl %%edi\n" );
+    output( "\tpopl %%ebp\n" );
+    output( "\tret\n" );
+    output_function_size( isEx ? "CALL32_CBClientEx" : "CALL32_CBClient" );
 
     /* '16-bit' return stub */
 
-    function_header( outfile, isEx ? "CALL32_CBClientEx_Ret" : "CALL32_CBClient_Ret" );
+    function_header( isEx ? "CALL32_CBClientEx_Ret" : "CALL32_CBClient_Ret" );
     if ( !isEx )
     {
-        fprintf( outfile, "\tmovzwl %%sp, %%ebx\n" );
-        fprintf( outfile, "\tlssl %%ss:-16(%%ebx), %%esp\n" );
+        output( "\tmovzwl %%sp, %%ebx\n" );
+        output( "\tlssl %%ss:-16(%%ebx), %%esp\n" );
     }
     else
     {
-        fprintf( outfile, "\tmovzwl %%bp, %%ebx\n" );
-        fprintf( outfile, "\tsubw %%bp, %%sp\n" );
-        fprintf( outfile, "\tmovzwl %%sp, %%ebp\n" );
-        fprintf( outfile, "\tlssl %%ss:-12(%%ebx), %%esp\n" );
+        output( "\tmovzwl %%bp, %%ebx\n" );
+        output( "\tsubw %%bp, %%sp\n" );
+        output( "\tmovzwl %%sp, %%ebp\n" );
+        output( "\tlssl %%ss:-12(%%ebx), %%esp\n" );
     }
-    fprintf( outfile, "\tlret\n" );
-    output_function_size( outfile, isEx ? "CALL32_CBClientEx_Ret" : "CALL32_CBClient_Ret" );
+    output( "\tlret\n" );
+    output_function_size( isEx ? "CALL32_CBClientEx_Ret" : "CALL32_CBClient_Ret" );
 }
 
 
@@ -744,114 +756,114 @@ static void BuildCallTo32CBClient( FILE *outfile, BOOL isEx )
  * pointer on return (with the return address and arguments already
  * removed).
  */
-static void BuildCallFrom32Regs( FILE *outfile )
+static void BuildCallFrom32Regs(void)
 {
     static const int STACK_SPACE = 128 + sizeof(CONTEXT86);
 
     /* Function header */
 
-    function_header( outfile, "__wine_call_from_32_regs" );
+    function_header( "__wine_call_from_32_regs" );
 
     /* Allocate some buffer space on the stack */
 
-    fprintf( outfile, "\tpushl %%ebp\n" );
-    fprintf( outfile, "\tmovl %%esp,%%ebp\n ");
-    fprintf( outfile, "\tleal -%d(%%esp), %%esp\n", STACK_SPACE + 4 /* for context arg */);
+    output( "\tpushl %%ebp\n" );
+    output( "\tmovl %%esp,%%ebp\n ");
+    output( "\tleal -%d(%%esp), %%esp\n", STACK_SPACE + 4 /* for context arg */);
 
     /* Build the context structure */
 
-    fprintf( outfile, "\tpushfl\n" );
-    fprintf( outfile, "\tpopl %%eax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(EFlags) - STACK_SPACE );
-    fprintf( outfile, "\tmovl 0(%%ebp),%%eax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Ebp) - STACK_SPACE );
-    fprintf( outfile, "\tmovl 8(%%ebp),%%eax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eax) - STACK_SPACE );
-    fprintf( outfile, "\tmovl %%ebx,%d(%%ebp)\n", CONTEXTOFFSET(Ebx) - STACK_SPACE );
-    fprintf( outfile, "\tmovl %%ecx,%d(%%ebp)\n", CONTEXTOFFSET(Ecx) - STACK_SPACE );
-    fprintf( outfile, "\tmovl %%edx,%d(%%ebp)\n", CONTEXTOFFSET(Edx) - STACK_SPACE );
-    fprintf( outfile, "\tmovl %%esi,%d(%%ebp)\n", CONTEXTOFFSET(Esi) - STACK_SPACE );
-    fprintf( outfile, "\tmovl %%edi,%d(%%ebp)\n", CONTEXTOFFSET(Edi) - STACK_SPACE );
+    output( "\tpushfl\n" );
+    output( "\tpopl %%eax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(EFlags) - STACK_SPACE );
+    output( "\tmovl 0(%%ebp),%%eax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Ebp) - STACK_SPACE );
+    output( "\tmovl 8(%%ebp),%%eax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eax) - STACK_SPACE );
+    output( "\tmovl %%ebx,%d(%%ebp)\n", CONTEXTOFFSET(Ebx) - STACK_SPACE );
+    output( "\tmovl %%ecx,%d(%%ebp)\n", CONTEXTOFFSET(Ecx) - STACK_SPACE );
+    output( "\tmovl %%edx,%d(%%ebp)\n", CONTEXTOFFSET(Edx) - STACK_SPACE );
+    output( "\tmovl %%esi,%d(%%ebp)\n", CONTEXTOFFSET(Esi) - STACK_SPACE );
+    output( "\tmovl %%edi,%d(%%ebp)\n", CONTEXTOFFSET(Edi) - STACK_SPACE );
 
-    fprintf( outfile, "\txorl %%eax,%%eax\n" );
-    fprintf( outfile, "\tmovw %%cs,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegCs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%es,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegEs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%fs,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegFs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%gs,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegGs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%ss,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegSs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%ds,%%ax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegDs) - STACK_SPACE );
-    fprintf( outfile, "\tmovw %%ax,%%es\n" );  /* set %es equal to %ds just in case */
+    output( "\txorl %%eax,%%eax\n" );
+    output( "\tmovw %%cs,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegCs) - STACK_SPACE );
+    output( "\tmovw %%es,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegEs) - STACK_SPACE );
+    output( "\tmovw %%fs,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegFs) - STACK_SPACE );
+    output( "\tmovw %%gs,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegGs) - STACK_SPACE );
+    output( "\tmovw %%ss,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegSs) - STACK_SPACE );
+    output( "\tmovw %%ds,%%ax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(SegDs) - STACK_SPACE );
+    output( "\tmovw %%ax,%%es\n" );  /* set %es equal to %ds just in case */
 
-    fprintf( outfile, "\tmovl $0x%x,%%eax\n", CONTEXT86_FULL );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(ContextFlags) - STACK_SPACE );
+    output( "\tmovl $0x%x,%%eax\n", CONTEXT86_FULL );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(ContextFlags) - STACK_SPACE );
 
-    fprintf( outfile, "\tmovl 12(%%ebp),%%eax\n" ); /* Get %eip at time of call */
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eip) - STACK_SPACE );
+    output( "\tmovl 12(%%ebp),%%eax\n" ); /* Get %eip at time of call */
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Eip) - STACK_SPACE );
 
     /* Transfer the arguments */
 
-    fprintf( outfile, "\tmovl 4(%%ebp),%%ebx\n" );   /* get relay code addr */
-    fprintf( outfile, "\tmovzbl 4(%%ebx),%%ecx\n" ); /* fetch number of args to copy */
-    fprintf( outfile, "\tsubl %%ecx,%%esp\n" );
-    fprintf( outfile, "\tandl $~15,%%esp\n" );
-    fprintf( outfile, "\tleal 16(%%ebp),%%esi\n" );  /* get %esp at time of call */
-    fprintf( outfile, "\tmovl %%esp,%%edi\n" );
-    fprintf( outfile, "\tshrl $2,%%ecx\n" );
-    fprintf( outfile, "\tjz 1f\n" );
-    fprintf( outfile, "\tcld\n" );
-    fprintf( outfile, "\trep\n\tmovsl\n" );  /* copy args */
-    fprintf( outfile, "1:\tleal %d(%%ebp),%%eax\n", -STACK_SPACE );  /* get addr of context struct */
-    fprintf( outfile, "\tmovl %%eax,(%%edi)\n" );    /* and pass it as extra arg */
-    fprintf( outfile, "\tmovzbl 5(%%ebx),%%eax\n" ); /* fetch number of args to remove */
-    fprintf( outfile, "\tleal 16(%%ebp,%%eax),%%eax\n" );
-    fprintf( outfile, "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Esp) - STACK_SPACE );
+    output( "\tmovl 4(%%ebp),%%ebx\n" );   /* get relay code addr */
+    output( "\tmovzbl 4(%%ebx),%%ecx\n" ); /* fetch number of args to copy */
+    output( "\tsubl %%ecx,%%esp\n" );
+    output( "\tandl $~15,%%esp\n" );
+    output( "\tleal 16(%%ebp),%%esi\n" );  /* get %esp at time of call */
+    output( "\tmovl %%esp,%%edi\n" );
+    output( "\tshrl $2,%%ecx\n" );
+    output( "\tjz 1f\n" );
+    output( "\tcld\n" );
+    output( "\trep\n\tmovsl\n" );  /* copy args */
+    output( "1:\tleal %d(%%ebp),%%eax\n", -STACK_SPACE );  /* get addr of context struct */
+    output( "\tmovl %%eax,(%%edi)\n" );    /* and pass it as extra arg */
+    output( "\tmovzbl 5(%%ebx),%%eax\n" ); /* fetch number of args to remove */
+    output( "\tleal 16(%%ebp,%%eax),%%eax\n" );
+    output( "\tmovl %%eax,%d(%%ebp)\n", CONTEXTOFFSET(Esp) - STACK_SPACE );
 
     /* Call the entry point */
 
-    fprintf( outfile, "\taddl (%%ebx),%%ebx\n" );
-    fprintf( outfile, "\tcall *%%ebx\n" );
-    fprintf( outfile, "\tleal -%d(%%ebp),%%ecx\n", STACK_SPACE );
+    output( "\taddl (%%ebx),%%ebx\n" );
+    output( "\tcall *%%ebx\n" );
+    output( "\tleal -%d(%%ebp),%%ecx\n", STACK_SPACE );
 
     /* Restore the context structure */
 
-    fprintf( outfile, "2:\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegEs) );
-    fprintf( outfile, "\tpopl %%es\n" );
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegFs) );
-    fprintf( outfile, "\tpopl %%fs\n" );
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegGs) );
-    fprintf( outfile, "\tpopl %%gs\n" );
+    output( "2:\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegEs) );
+    output( "\tpopl %%es\n" );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegFs) );
+    output( "\tpopl %%fs\n" );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegGs) );
+    output( "\tpopl %%gs\n" );
 
-    fprintf( outfile, "\tmovl %d(%%ecx),%%edi\n", CONTEXTOFFSET(Edi) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%esi\n", CONTEXTOFFSET(Esi) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%edx\n", CONTEXTOFFSET(Edx) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%ebx\n", CONTEXTOFFSET(Ebx) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%eax\n", CONTEXTOFFSET(Eax) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%ebp\n", CONTEXTOFFSET(Ebp) );
+    output( "\tmovl %d(%%ecx),%%edi\n", CONTEXTOFFSET(Edi) );
+    output( "\tmovl %d(%%ecx),%%esi\n", CONTEXTOFFSET(Esi) );
+    output( "\tmovl %d(%%ecx),%%edx\n", CONTEXTOFFSET(Edx) );
+    output( "\tmovl %d(%%ecx),%%ebx\n", CONTEXTOFFSET(Ebx) );
+    output( "\tmovl %d(%%ecx),%%eax\n", CONTEXTOFFSET(Eax) );
+    output( "\tmovl %d(%%ecx),%%ebp\n", CONTEXTOFFSET(Ebp) );
 
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegSs) );
-    fprintf( outfile, "\tpopl %%ss\n" );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%esp\n", CONTEXTOFFSET(Esp) );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegSs) );
+    output( "\tpopl %%ss\n" );
+    output( "\tmovl %d(%%ecx),%%esp\n", CONTEXTOFFSET(Esp) );
 
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(EFlags) );
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegCs) );
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(Eip) );
-    fprintf( outfile, "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegDs) );
-    fprintf( outfile, "\tmovl %d(%%ecx),%%ecx\n", CONTEXTOFFSET(Ecx) );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(EFlags) );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegCs) );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(Eip) );
+    output( "\tpushl %d(%%ecx)\n", CONTEXTOFFSET(SegDs) );
+    output( "\tmovl %d(%%ecx),%%ecx\n", CONTEXTOFFSET(Ecx) );
 
-    fprintf( outfile, "\tpopl %%ds\n" );
-    fprintf( outfile, "\tiret\n" );
-    output_function_size( outfile, "__wine_call_from_32_regs" );
+    output( "\tpopl %%ds\n" );
+    output( "\tiret\n" );
+    output_function_size( "__wine_call_from_32_regs" );
 
-    function_header( outfile, "__wine_call_from_32_restore_regs" );
-    fprintf( outfile, "\tmovl 4(%%esp),%%ecx\n" );
-    fprintf( outfile, "\tjmp 2b\n" );
-    output_function_size( outfile, "__wine_call_from_32_restore_regs" );
+    function_header( "__wine_call_from_32_restore_regs" );
+    output( "\tmovl 4(%%esp),%%ecx\n" );
+    output( "\tjmp 2b\n" );
+    output_function_size( "__wine_call_from_32_restore_regs" );
 }
 
 
@@ -862,7 +874,7 @@ static void BuildCallFrom32Regs( FILE *outfile )
  * pending DPMI events.
  *
  * Stack layout:
- *
+ *   
  * (sp+12) long   eflags
  * (sp+6)  long   cs
  * (sp+2)  long   ip
@@ -871,38 +883,34 @@ static void BuildCallFrom32Regs( FILE *outfile )
  * On entry to function, fs register points to a valid TEB.
  * On exit from function, stack will be popped.
  */
-static void BuildPendingEventCheck( FILE *outfile )
+static void BuildPendingEventCheck(void)
 {
     /* Function header */
 
-    function_header( outfile, "DPMI_PendingEventCheck" );
+    function_header( "DPMI_PendingEventCheck" );
 
     /* Check for pending events. */
 
-    fprintf( outfile, "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n",
-             STRUCTOFFSET(TEB,vm86_pending) );
-    fprintf( outfile, "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
-
-    fprintf( outfile, "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n",
-             STRUCTOFFSET(TEB,dpmi_vif) );
-
-    fprintf( outfile, "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
+    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", STRUCTOFFSET(TEB,vm86_pending) );
+    output( "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
+    output( "\t.byte 0x64\n\ttestl $0xffffffff,(%d)\n", STRUCTOFFSET(TEB,dpmi_vif) );
+    output( "\tje %s\n", asm_name("DPMI_PendingEventCheck_Cleanup") );
 
     /* Process pending events. */
 
-    fprintf( outfile, "\tsti\n" );
+    output( "\tsti\n" );
 
     /* Start cleanup. Restore fs register. */
 
-    fprintf( outfile, "%s\n", asm_globl("DPMI_PendingEventCheck_Cleanup") );
-    fprintf( outfile, "\tpopw %%fs\n" );
+    output( "%s\n", asm_globl("DPMI_PendingEventCheck_Cleanup") );
+    output( "\tpopw %%fs\n" );
 
     /* Return from function. */
 
-    fprintf( outfile, "%s\n", asm_globl("DPMI_PendingEventCheck_Return") );
-    fprintf( outfile, "\tiret\n" );
+    output( "%s\n", asm_globl("DPMI_PendingEventCheck_Return") );
+    output( "\tiret\n" );
 
-    output_function_size( outfile, "DPMI_PendingEventCheck" );
+    output_function_size( "DPMI_PendingEventCheck" );
 }
 
 
@@ -911,58 +919,59 @@ static void BuildPendingEventCheck( FILE *outfile )
  *
  * Build all the 16-bit relay callbacks
  */
-void BuildRelays16( FILE *outfile )
+void BuildRelays16(void)
 {
     if (target_cpu != CPU_x86)
     {
-        fprintf( outfile, "/* File not used with this architecture. Do not edit! */\n\n" );
+        output( "/* File not used with this architecture. Do not edit! */\n\n" );
         return;
     }
 
     /* File header */
 
-    fprintf( outfile, "/* File generated automatically. Do not edit! */\n\n" );
-    fprintf( outfile, "\t.text\n" );
+    output( "/* File generated automatically. Do not edit! */\n\n" );
+    output( "\t.text\n" );
 
-    fprintf( outfile, "%s:\n\n", asm_name("__wine_spec_thunk_text_16") );
+    output( "%s:\n\n", asm_name("__wine_spec_thunk_text_16") );
 
-    fprintf( outfile, "%s\n", asm_globl("__wine_call16_start") );
+    output( "%s\n", asm_globl("__wine_call16_start") );
 
     /* Standard CallFrom16 routine */
-    BuildCallFrom16Core( outfile, FALSE, FALSE );
+    BuildCallFrom16Core( FALSE, FALSE );
 
     /* Register CallFrom16 routine */
-    BuildCallFrom16Core( outfile, TRUE, FALSE );
+    BuildCallFrom16Core( TRUE, FALSE );
 
     /* C16ThkSL CallFrom16 routine */
-    BuildCallFrom16Core( outfile, FALSE, TRUE );
+    BuildCallFrom16Core( FALSE, TRUE );
 
     /* Standard CallTo16 routine */
-    BuildCallTo16Core( outfile, 0 );
+    BuildCallTo16Core( 0 );
 
     /* Register CallTo16 routine */
-    BuildCallTo16Core( outfile, 1 );
+    BuildCallTo16Core( 1 );
 
     /* Standard CallTo16 return stub */
-    BuildRet16Func( outfile );
+    BuildRet16Func();
 
     /* CBClientThunkSL routine */
-    BuildCallTo32CBClient( outfile, FALSE );
+    BuildCallTo32CBClient( FALSE );
 
     /* CBClientThunkSLEx routine */
-    BuildCallTo32CBClient( outfile, TRUE  );
+    BuildCallTo32CBClient( TRUE  );
 
     /* Pending DPMI events check stub */
-    BuildPendingEventCheck( outfile );
+    BuildPendingEventCheck();
 
-    fprintf( outfile, "%s\n", asm_globl("__wine_call16_end") );
-    output_function_size( outfile, "__wine_spec_thunk_text_16" );
+    output( "%s\n", asm_globl("__wine_call16_end") );
+    output_function_size( "__wine_spec_thunk_text_16" );
 
     /* Declare the return address and data selector variables */
-    fprintf( outfile, "\n\t.data\n\t.align %d\n", get_alignment(4) );
-    fprintf( outfile, "%s\n\t.long 0\n", asm_globl("CallTo16_DataSelector") );
-    fprintf( outfile, "%s\n\t.long 0\n", asm_globl("CallTo16_TebSelector") );
-    if (UsePIC) fprintf( outfile, "wine_ldt_copy_ptr:\t.long %s\n", asm_name("wine_ldt_copy") );
+    output( "\n\t.data\n\t.align %d\n", get_alignment(4) );
+    output( "%s\n\t.long 0\n", asm_globl("CallTo16_DataSelector") );
+    output( "%s\n\t.long 0\n", asm_globl("CallTo16_TebSelector") );
+    if (UsePIC) output( "wine_ldt_copy_ptr:\t.long %s\n", asm_name("wine_ldt_copy") );
+    output_gnu_stack_note();
 }
 
 /*******************************************************************
@@ -970,22 +979,23 @@ void BuildRelays16( FILE *outfile )
  *
  * Build all the 32-bit relay callbacks
  */
-void BuildRelays32( FILE *outfile )
+void BuildRelays32(void)
 {
     if (target_cpu != CPU_x86)
     {
-        fprintf( outfile, "/* File not used with this architecture. Do not edit! */\n\n" );
+        output( "/* File not used with this architecture. Do not edit! */\n\n" );
         return;
     }
 
     /* File header */
 
-    fprintf( outfile, "/* File generated automatically. Do not edit! */\n\n" );
-    fprintf( outfile, "\t.text\n" );
-    fprintf( outfile, "%s:\n\n", asm_name("__wine_spec_thunk_text_32") );
+    output( "/* File generated automatically. Do not edit! */\n\n" );
+    output( "\t.text\n" );
+    output( "%s:\n\n", asm_name("__wine_spec_thunk_text_32") );
 
     /* 32-bit register entry point */
-    BuildCallFrom32Regs( outfile );
+    BuildCallFrom32Regs();
 
-    output_function_size( outfile, "__wine_spec_thunk_text_32" );
+    output_function_size( "__wine_spec_thunk_text_32" );
+    output_gnu_stack_note();
 }
