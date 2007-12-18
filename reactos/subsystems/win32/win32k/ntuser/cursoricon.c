@@ -668,6 +668,24 @@ NtUserGetIconInfo(
    {
        ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
        RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
+
+       if (pbpp)
+       {
+           PBITMAPOBJ bmp;
+           int colorBpp = 0;
+
+           ProbeForWrite(pbpp, sizeof(DWORD), 1);
+
+           bmp = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor);
+           if (bmp)
+           {
+               colorBpp = BitsPerFormat(bmp->SurfObj.iBitmapFormat);
+               BITMAPOBJ_UnlockBitmap(bmp);
+           }
+
+           RtlCopyMemory(pbpp, &colorBpp, sizeof(DWORD));
+       }
+
    }
    _SEH_HANDLE
    {
