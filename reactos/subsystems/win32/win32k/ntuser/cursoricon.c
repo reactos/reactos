@@ -623,12 +623,16 @@ BOOL
 STDCALL
 NtUserGetIconInfo(
    HANDLE hCurIcon,
-   PICONINFO IconInfo, DWORD UnkOne, DWORD UnkTwo, DWORD UnkThree, DWORD UnkFour )
+   PICONINFO IconInfo,
+   PUNICODE_STRING lpInstName, // optional
+   PUNICODE_STRING lpResName,  // optional
+   LPDWORD pbpp,               // optional
+   BOOL bInternal)
 {
    ICONINFO ii;
    PCURICON_OBJECT CurIcon;
    PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
+   NTSTATUS Status = STATUS_SUCCESS;
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
@@ -656,12 +660,22 @@ NtUserGetIconInfo(
    RtlCopyMemory(&ii, &CurIcon->IconInfo, sizeof(ICONINFO));
 
    /* Copy bitmaps */
-   ii.hbmMask = BITMAPOBJ_CopyBitmap(ii.hbmMask);
-   ii.hbmColor = BITMAPOBJ_CopyBitmap(ii.hbmColor);
+   ii.hbmMask = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmMask);
+   ii.hbmColor = BITMAPOBJ_CopyBitmap(CurIcon->IconInfo.hbmColor);
 
    /* Copy fields */
-   Status = MmCopyToCaller(IconInfo, &ii, sizeof(ICONINFO));
-   if(NT_SUCCESS(Status))
+   _SEH_TRY
+   {
+       ProbeForWrite(IconInfo, sizeof(ICONINFO), 1);
+       RtlCopyMemory(IconInfo, &ii, sizeof(ICONINFO));
+   }
+   _SEH_HANDLE
+   {
+       Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
+
+   if (NT_SUCCESS(Status))
       Ret = TRUE;
    else
       SetLastNtError(Status);
@@ -1156,19 +1170,17 @@ CLEANUP:
  * @implemented
  */
 BOOL
-STDCALL
+NTAPI
 NtUserSetCursorIconData(
-   HANDLE hCurIcon,
-   PBOOL fIcon,
-   POINT *Hotspot,
-   HMODULE hModule,
-   HRSRC hRsrc,
-   HRSRC hGroupRsrc)
+  HANDLE Handle,
+  HMODULE hModule,
+  PUNICODE_STRING pstrResName,
+  PICONINFO pIconInfo)
 {
    PCURICON_OBJECT CurIcon;
    PWINSTATION_OBJECT WinSta;
-   NTSTATUS Status;
-   POINT SafeHotspot;
+   PBITMAPOBJ pBmpObj;
+   NTSTATUS Status = STATUS_SUCCESS;
    BOOL Ret = FALSE;
    DECLARE_RETURN(BOOL);
 
@@ -1181,55 +1193,61 @@ NtUserSetCursorIconData(
       RETURN( FALSE);
    }
 
-   if(!(CurIcon = UserGetCurIconObject(hCurIcon)))
+   if(!(CurIcon = UserGetCurIconObject(Handle)))
    {
       ObDereferenceObject(WinSta);
       RETURN(FALSE);
    }
 
    CurIcon->hModule = hModule;
-   CurIcon->hRsrc = hRsrc;
-   CurIcon->hGroupRsrc = hGroupRsrc;
+   CurIcon->hRsrc = NULL; //hRsrc;
+   CurIcon->hGroupRsrc = NULL; //hGroupRsrc;
 
-   /* Copy fields */
-   if(fIcon)
+   _SEH_TRY
    {
-      Status = MmCopyFromCaller(&CurIcon->IconInfo.fIcon, fIcon, sizeof(BOOL));
-      if(!NT_SUCCESS(Status))
-      {
-         SetLastNtError(Status);
-         goto done;
-      }
+       ProbeForRead(pIconInfo, sizeof(ICONINFO), 1);
+       RtlCopyMemory(&CurIcon->IconInfo, pIconInfo, sizeof(ICONINFO));
+
+       CurIcon->IconInfo.hbmMask = BITMAPOBJ_CopyBitmap(pIconInfo->hbmMask);
+       CurIcon->IconInfo.hbmColor = BITMAPOBJ_CopyBitmap(pIconInfo->hbmColor);
+
+       if (CurIcon->IconInfo.hbmColor)
+       {
+           if ((pBmpObj = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmColor)))
+           {
+               CurIcon->Size.cx = pBmpObj->SurfObj.sizlBitmap.cx;
+               CurIcon->Size.cy = pBmpObj->SurfObj.sizlBitmap.cy;
+               BITMAPOBJ_UnlockBitmap(pBmpObj);
+               GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+           }
+       }
+       if (CurIcon->IconInfo.hbmMask)
+       {
+           if (CurIcon->IconInfo.hbmColor == NULL)
+           {
+               if ((pBmpObj = BITMAPOBJ_LockBitmap(CurIcon->IconInfo.hbmMask)))
+               {
+                   CurIcon->Size.cx = pBmpObj->SurfObj.sizlBitmap.cx;
+                   CurIcon->Size.cy = pBmpObj->SurfObj.sizlBitmap.cy;
+                   BITMAPOBJ_UnlockBitmap(pBmpObj);
+               }
+           }
+           GDIOBJ_SetOwnership(GdiHandleTable, CurIcon->IconInfo.hbmMask, NULL);
+       }
    }
+   _SEH_HANDLE
+   {
+        Status = _SEH_GetExceptionCode();
+   }
+   _SEH_END
+
+   if(!NT_SUCCESS(Status))
+      SetLastNtError(Status);
    else
-   {
-      if(!Hotspot)
-         Ret = TRUE;
-   }
-
-   if(Hotspot)
-   {
-      Status = MmCopyFromCaller(&SafeHotspot, Hotspot, sizeof(POINT));
-      if(NT_SUCCESS(Status))
-      {
-         CurIcon->IconInfo.xHotspot = SafeHotspot.x;
-         CurIcon->IconInfo.yHotspot = SafeHotspot.y;
-
-         Ret = TRUE;
-      }
-      else
-         SetLastNtError(Status);
-   }
-
-   if(!fIcon && !Hotspot)
-   {
       Ret = TRUE;
-   }
 
-done:
    ObDereferenceObject(WinSta);
    RETURN( Ret);
-
 
 CLEANUP:
    DPRINT("Leave NtUserSetCursorIconData, ret=%i\n",_ret_);

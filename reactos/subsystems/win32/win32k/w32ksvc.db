@@ -519,7 +519,7 @@ NtUserSetClipboardViewer                         1
 NtUserSetConsoleReserveKeys                      2
 NtUserSetCursor                                  1
 NtUserSetCursorContents                          2
-# NtUserSetCursorIconData                        4 Wrong number of param ?
+NtUserSetCursorIconData                          4
 NtUserSetCursorIconData                          6
 NtUserSetDbgTag                                  2
 NtUserSetFocus                                   1
