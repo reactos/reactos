@@ -205,7 +205,7 @@ HvpRemoveFree(
    PHCELL_INDEX FreeCellData;
    PHCELL_INDEX pFreeCellOffset;
    HSTORAGE_TYPE Storage;
-   ULONG Index;
+   ULONG Index, FreeListIndex;
 
    ASSERT(RegistryHive->ReadOnly == FALSE);
 
@@ -223,6 +223,24 @@ HvpRemoveFree(
       }
       pFreeCellOffset = FreeCellData;
    }
+
+   /* Something bad happened, print a useful trace info and bugcheck */
+   CMLTRACE(CMLIB_HCELL_DEBUG, "-- beginning of HvpRemoveFree trace --\n");
+   CMLTRACE(CMLIB_HCELL_DEBUG, "block we are about to free: %08x\n", CellIndex);
+   CMLTRACE(CMLIB_HCELL_DEBUG, "chosen free list index: %d\n", Index);
+   for (FreeListIndex = 0; FreeListIndex < 24; FreeListIndex++)
+   {
+      CMLTRACE(CMLIB_HCELL_DEBUG, "free list [%d]: ", FreeListIndex);
+      pFreeCellOffset = &RegistryHive->Storage[Storage].FreeDisplay[FreeListIndex];
+      while (*pFreeCellOffset != HCELL_NIL)
+      {
+         CMLTRACE(CMLIB_HCELL_DEBUG, "%08x ", *pFreeCellOffset);
+         FreeCellData = (PHCELL_INDEX)HvGetCell(RegistryHive, *pFreeCellOffset);
+         pFreeCellOffset = FreeCellData;
+      }
+      CMLTRACE(CMLIB_HCELL_DEBUG, "\n");
+   }
+   CMLTRACE(CMLIB_HCELL_DEBUG, "-- end of HvpRemoveFree trace --\n");
 
    ASSERT(FALSE);
 }
@@ -466,11 +484,23 @@ HvFreeCell(
       {
          if ((ULONG_PTR)Neighbor + Neighbor->Size == (ULONG_PTR)Free)
          {
-            Neighbor->Size += Free->Size;
+            HCELL_INDEX NeighborCellIndex =
+               (HCELL_INDEX)((ULONG_PTR)Neighbor - (ULONG_PTR)Bin +
+               Bin->FileOffset) | (CellIndex & HCELL_TYPE_MASK);
+
+            if (HvpComputeFreeListIndex(Neighbor->Size) !=
+                HvpComputeFreeListIndex(Neighbor->Size + Free->Size))
+            {
+               HvpRemoveFree(RegistryHive, Neighbor, NeighborCellIndex);
+               Neighbor->Size += Free->Size;
+               HvpAddFree(RegistryHive, Neighbor, NeighborCellIndex);
+            }
+            else
+               Neighbor->Size += Free->Size;
+
             if (CellType == Stable)
-               HvMarkCellDirty(RegistryHive,
-                               (HCELL_INDEX)((ULONG_PTR)Neighbor - (ULONG_PTR)Bin +
-                               Bin->FileOffset), FALSE);
+               HvMarkCellDirty(RegistryHive, NeighborCellIndex, FALSE);
+
             return;
          }
          Neighbor = (PHCELL)((ULONG_PTR)Neighbor + Neighbor->Size);
