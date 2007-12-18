@@ -4,6 +4,7 @@
  * FILE:        base/applications/games/solitaire/lang/es-ES.rc
  * PURPOSE:     Spanish Language File for Solitaire
  * PROGRAMMERS: Daniel "EmuandCo" Reimer (reimer.daniel@freenet.de)
+ * ACTUALIZADO: Javier Remacha - 18/12/17
  */
 #include "resource.h"
 
@@ -14,22 +15,22 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_OPTIONS DIALOGEX DISCARDABLE 0, 0, 186, 118
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
-CAPTION "Options"
+CAPTION "Opciones"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX        "Cards", -1, 7, 7, 65, 40
-    AUTORADIOBUTTON "Draw &One", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
-    AUTORADIOBUTTON "Draw &Three", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
+    GROUPBOX        "Cartas", -1, 7, 7, 65, 40
+    AUTORADIOBUTTON "Sacar &Una", IDC_OPT_DRAWONE, 14, 19, 52, 10, WS_GROUP | WS_TABSTOP
+    AUTORADIOBUTTON "Sacar &Tres", IDC_OPT_DRAWTHREE, 14, 32, 52, 10
 
-    AUTOCHECKBOX    "&Show Time", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
-    AUTOCHECKBOX    "S&tatus bar", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
+    AUTOCHECKBOX    "&Mostrar tiempo", IDC_OPT_SHOWTIME, 7 ,51 ,65 ,10, WS_TABSTOP | WS_DISABLED
+    AUTOCHECKBOX    "&Barra de estado", IDC_OPT_STATUSBAR, 7, 66, 64, 10, WS_TABSTOP
 
     DEFPUSHBUTTON   "Aceptar", IDOK, 35, 97, 50, 14
     PUSHBUTTON      "Cancelar", IDCANCEL, 101, 97, 50, 14
 END
 
 IDD_CARDBACK DIALOGEX 6, 6, 221, 96
-CAPTION "Select Card Back"
+CAPTION "Seleccionar el reverso"
 FONT 8, "MS Shell Dlg"
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU | DS_SHELLFONT
 BEGIN
@@ -37,8 +38,8 @@ BEGIN
     CONTROL       "", IDC_CARDBACK2, "Static", SS_NOTIFY, 58, 7, 50, 61
     CONTROL       "", IDC_CARDBACK3, "Static", SS_NOTIFY, 112, 7, 50, 61
     CONTROL       "", IDC_CARDBACK4, "Static", SS_NOTIFY, 166, 7, 50, 61
-    DEFPUSHBUTTON "OK", IDOK, 104, 77, 54, 13
-    PUSHBUTTON    "Cancel", IDCANCEL, 162, 77, 54, 13
+    DEFPUSHBUTTON "Aceptar", IDOK, 104, 77, 54, 13
+    PUSHBUTTON    "Cancelar", IDCANCEL, 162, 77, 54, 13
 END
 
 
@@ -46,10 +47,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SOL_NAME    "Solitaire"
-    IDS_SOL_ABOUT   "Solitaire by J Brown\n\nCardLib version 1.0."
+    IDS_SOL_NAME    "Solitario"
+    IDS_SOL_ABOUT   "Solitario por J Brown\n\nCardLib version 1.0."
     IDS_SOL_QUIT    "Quit the current game?"
-    IDS_SOL_WIN     "Congratulations, you win!!"
+    IDS_SOL_WIN     "Felicidadas, ¡¡Has ganado!!"
 END
 
 
@@ -61,7 +62,7 @@ BEGIN
     BEGIN
         MENUITEM "&Repartir\tF2",                   IDM_GAME_NEW
         MENUITEM SEPARATOR
-        MENUITEM "&Barajar...",                    IDM_GAME_DECK
+        MENUITEM "&Barajas...",                    IDM_GAME_DECK
         MENUITEM "&Opciones...",                 IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
         MENUITEM "&Salir",                       IDM_GAME_EXIT

@@ -1,0 +1,26 @@
+/*
+ *Spanish Language resource file
+ * Traducido por: Javier Remacha 2007-12-18
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDM_CONSOLEROOT MENU DISCARDABLE
+BEGIN
+    POPUP "&Archivo"
+    BEGIN
+        MENUITEM SEPARATOR
+        MENUITEM "Sa&lir\tAlt+F4", ID_FILE_EXIT
+    END
+
+    POPUP "&Ayuda"
+    BEGIN
+        MENUITEM "&Acerca de la Consola de Administración de ReactOS...", ID_HELP_ABOUT
+    END
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_APPTITLE "Consola de Administración de ReactOS"
+    IDS_CONSOLETITLE "Consola%1!u!"
+END

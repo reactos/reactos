@@ -69,7 +69,7 @@ FONT 8, "MS Shell Dlg"
 	EDITTEXT                     IDC_EDITCOLS,  49,  35,  30,  12, ES_NUMBER
 	EDITTEXT                     IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
 	DEFPUSHBUTTON   "Aceptar",   IDOK,          86,  32,  45,  15
-	PUSHBUTTON      "Cancel",    IDCANCEL,      86,  52,  45,  15
+	PUSHBUTTON      "Cancelar",    IDCANCEL,      86,  52,  45,  15
 }
 
 DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80

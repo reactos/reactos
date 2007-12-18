@@ -15,5 +15,5 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_DESCRIPTION "3D Text ScreenSaver"
     IDS_TITLE       "Acerca de.."
-    IDS_TEXT        "No options need to be set."
+    IDS_TEXT        "Ninguna opción necesita ser configurada."
 END
