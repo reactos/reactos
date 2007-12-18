@@ -208,6 +208,9 @@
 <directory name="rasdlg">
 	<xi:include href="rasdlg/rasdlg.rbuild" />
 </directory>
+<directory name="rasman">
+	<xi:include href="rasman/rasman.rbuild" />
+</directory>
 <directory name="riched20">
 	<xi:include href="riched20/riched20.rbuild" />
 </directory>
