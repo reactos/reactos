@@ -197,6 +197,14 @@ public:
 	bool InstallFiles;
 };
 
+class Convert
+{
+public:
+	static unsigned long HexToInt ( const std::string& value );
+    static bool IsValidHex ( const std::string& value );
+    static std::string StringToHex ( unsigned long num);
+};
+
 class Environment
 {
 public:

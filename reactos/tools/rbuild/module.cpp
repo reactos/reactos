@@ -2029,7 +2029,26 @@ BaseAddress::BaseAddress (  const XMLElement& node_,
                             const Module* module_ )
 	: Property( node_ , project_,  module_)
 {
-    //TODO: Add code to validate baseaddress
+    if (Convert::IsValidHex(value))
+    {
+        if ((Convert::HexToInt(value) >= Convert::HexToInt("0x00400000")) &&
+            (Convert::HexToInt(value) <= Convert::HexToInt("0x80000000")) )
+        {
+            //Is valid
+        }
+        else
+           throw XMLInvalidBuildFileException (
+			    node->location,
+			    "Out of range base address '%s' with value '%s'. Valid range is from 0x00400000 to 0x80000000",
+			    name.c_str(),
+			    value.c_str());
+    }
+    else
+		throw XMLInvalidBuildFileException (
+			node->location,
+			"Base adress '%s' has an invalid hexadecimal value '%s'",
+			name.c_str(),
+			value.c_str() );
 }
 
 PchFile::PchFile (

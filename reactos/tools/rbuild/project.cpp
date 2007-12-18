@@ -17,6 +17,7 @@
  */
 #include "pch.h"
 #include <assert.h>
+#include <sstream>
 
 #include "rbuild.h"
 #include "backend/backend.h"
@@ -33,6 +34,41 @@ Environment::GetVariable ( const string& name )
 		                  value );
 	else
 		return "";
+}
+
+bool 
+Convert::IsValidHex ( const std::string& value )
+{
+    return (HexToInt (value) != 0);
+}
+
+unsigned long
+Convert::HexToInt( const std::string& value )
+{
+    unsigned long num = 0; 
+    std::istringstream ss(value);
+    ss >> std::hex;
+    if (!(ss >> num))
+    {
+        return 0;
+    }
+    return num;
+}
+
+std::string 
+Convert::StringToHex (unsigned long num)
+{
+    std::string  s1;
+    char sign[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
+    int div, base = 16;
+    
+    while (num >= 1)
+    {
+        div = num % base;
+        num = num / base;
+        s1 = sign[div] + s1;
+    }
+    return s1;
 }
 
 string
