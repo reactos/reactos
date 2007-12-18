@@ -691,7 +691,12 @@ static HRESULT WINAPI ISF_ControlPanel_fnGetDisplayNameOf(IShellFolder2 * iface,
 		return E_OUTOFMEMORY;
 	    if (!WideCharToMultiByte(CP_ACP, 0, wszPath, -1, szPath, MAX_PATH, NULL, NULL))
 		wszPath[0] = '\0';
-	}
+    } else {
+        if (bSimplePidl) {
+	        if (!WideCharToMultiByte(CP_ACP, 0, wszPath, -1, szPath, MAX_PATH, NULL, NULL))
+		    wszPath[0] = '\0';
+        }
+    }
     }
 
     strRet->uType = STRRET_CSTR;
