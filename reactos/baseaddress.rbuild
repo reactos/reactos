@@ -126,6 +126,7 @@
   <property name="BASEADDRESS_FMIFS" value="0x76df0000" />
   <property name="BASEADDRESS_OLEAUT32" value="0x76e00000" />
   <property name="BASEADDRESS_RASAPI32" value="0x76ee0000" />
+  <property name="BASEADDRESS_RASMAN" value="0x76e90000h" />
   <property name="BASEADDRESS_WTSAPI32" value="0x76f50000" />
   <property name="BASEADDRESS_MSVFW32" value="0x76f60000" />
   <property name="BASEADDRESS_MSACM32" value="0x77400000" />
