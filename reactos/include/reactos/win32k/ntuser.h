@@ -1212,12 +1212,12 @@ NtUserGetGUIThreadInfo(
 BOOL
 NTAPI
 NtUserGetIconInfo(
-    HANDLE Handle,
-    PICONINFO IconInfo,
-    DWORD dwUnknown3,
-    DWORD dwUnknown4,
-    DWORD dwUnknown5,
-    DWORD dwUnknown6);
+   HANDLE hCurIcon,
+   PICONINFO IconInfo,
+   PUNICODE_STRING lpInstName,
+   PUNICODE_STRING lpResName,
+   LPDWORD pbpp,
+   BOOL bInternal);
 
 BOOL
 NTAPI
@@ -2066,11 +2066,9 @@ BOOL
 NTAPI
 NtUserSetCursorIconData(
   HANDLE Handle,
-  PBOOL fIcon,
-  POINT *Hotspot,
   HMODULE hModule,
-  HRSRC hRsrc,
-  HRSRC hGroupRsrc);
+  PUNICODE_STRING pstrResName,
+  PICONINFO pIconInfo);
 
 DWORD
 NTAPI
