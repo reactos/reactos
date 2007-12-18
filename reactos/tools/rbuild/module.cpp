@@ -2024,12 +2024,12 @@ Property::ProcessXML()
 {
 }
 
-BaseAdress::BaseAdress ( const XMLElement& node_,
-                     const Project& project_,
-                     const Module* module_ )
+BaseAddress::BaseAddress (  const XMLElement& node_,
+                            const Project& project_,
+                            const Module* module_ )
 	: Property( node_ , project_,  module_)
 {
-    //TODO: Add code to validate baseadress
+    //TODO: Add code to validate baseaddress
 }
 
 PchFile::PchFile (

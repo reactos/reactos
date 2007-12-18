@@ -119,7 +119,7 @@ class AutoManifest;
 class AutoResource;
 class InstallComponent;
 class InstallFolder;
-class BaseAdress;
+class BaseAddress;
 class BuildFamily;
 class Family;
 class PlatformLanguage;
@@ -876,12 +876,12 @@ public:
 	void ProcessXML();
 };
 
-class BaseAdress : public Property
+class BaseAddress : public Property
 {
 public:
-	BaseAdress ( const XMLElement& node_,
-	           const Project& project_,
-	           const Module* module_ );
+	BaseAddress ( const XMLElement& node_,
+				  const Project& project_,
+				  const Module* module_ );
 };
 
 class TestSupportCode

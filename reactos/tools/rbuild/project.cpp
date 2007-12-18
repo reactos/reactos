@@ -606,13 +606,13 @@ Project::ProcessXMLSubElement ( const XMLElement& e,
 		else
 			non_if_data.properties.push_back ( property );
 	}
-	else if ( e.name == "baseadress" )
+	else if ( e.name == "baseaddress" )
 	{
-		BaseAdress* baseadress = new BaseAdress ( e, *this, NULL );
+		BaseAddress* baseaddress = new BaseAddress ( e, *this, NULL );
 		if ( parseContext.ifData )
-			parseContext.ifData->data.properties.push_back ( baseadress );
+			parseContext.ifData->data.properties.push_back ( baseaddress );
 		else
-			non_if_data.properties.push_back ( baseadress );
+			non_if_data.properties.push_back ( baseaddress );
 	}
 	if ( subs_invalid && e.subElements.size() )
 	{
