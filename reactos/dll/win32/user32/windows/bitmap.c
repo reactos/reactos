@@ -797,9 +797,9 @@ CopyIcoCur(HANDLE hIconCur,
     if (!hIconCur)
         return NULL;
 
-    if (flags & LR_COPYFROMRESOURCE || flags & LR_CREATEDIBSECTION)
+    if (flags & LR_COPYFROMRESOURCE)
     {
-        FIXME("FIXME: LR_COPYFROMRESOURCE and LR_CREATEDIBSECTION are yet not implemented for icons\n");
+        FIXME("FIXME: LR_COPYFROMRESOURCE is yet not implemented for icons\n");
     }
 
     if (NtUserGetIconSize(hIconCur, 0, &origSize.cx, &origSize.cy))
@@ -833,6 +833,10 @@ CopyIcoCur(HANDLE hIconCur,
         }
     }
 
+    if (hNewIcon && (flags & LR_COPYDELETEORG))
+    {
+        DestroyCursor((HCURSOR)hIconCur);
+    }
 
     return hNewIcon;
 }
