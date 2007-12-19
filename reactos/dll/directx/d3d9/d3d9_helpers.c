@@ -88,6 +88,8 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9)
     pDirect3D9->unknown004583 = 0;
     pDirect3D9->unknown004589 = 0;
 
+    pDirect3D9->lpInt = pDirect3D9;
+
     *ppDirect3D9 = (LPDIRECT3D9)&pDirect3D9->lpVtbl;
 
     return ERROR_SUCCESS;

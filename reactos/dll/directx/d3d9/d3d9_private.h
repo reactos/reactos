@@ -24,7 +24,7 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
 /* 0x001c */    DWORD unknown000007;    /* 0x00000001 */
 /* 0x0020 */    DWORD dwProcessId; 
-/* 0x0024 */    struct _tagDIRECTD3D9_INT_ * lpInt; 
+/* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt; 
 /* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
 /* 0x002c */    DWORD unknown000011;    /* 0x00000001 - Probably AdapterIndex */
 /* 0x0030 */    GUID DisplayGuid;       /*? Always {67685559-3106-11D0-B971-00AA00342F9F} ? */
