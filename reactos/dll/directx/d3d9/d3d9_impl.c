@@ -5,20 +5,18 @@
  * PURPOSE:         IDirect3D9 implementation
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
-#include "d3d9_private.h"
+#include "d3d9_helpers.h"
 
 #include <debug.h>
-
-static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface);
 
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
 {
-    LPDIRECTD3D9_INT This = (LPDIRECTD3D9_INT)iface;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
 
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDirect3D9))
     {
-        IDirect3D9Impl_AddRef(iface);
+        IUnknown_AddRef(iface);
         *ppvObject = &This->lpVtbl;
         return S_OK;
     }
@@ -29,7 +27,7 @@ static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID ri
 
 static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 {
-    LPDIRECTD3D9_INT This = (LPDIRECTD3D9_INT)iface;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
     ULONG ref = InterlockedIncrement(&This->dwRefCnt);
 
     return ref;
@@ -37,7 +35,7 @@ static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface)
 
 static ULONG WINAPI IDirect3D9Impl_Release(LPDIRECT3D9 iface)
 {
-    LPDIRECTD3D9_INT This = (LPDIRECTD3D9_INT)iface;
+    LPDIRECT3D9_INT This = impl_from_IDirect3D9(iface);
     ULONG ref = InterlockedDecrement(&This->dwRefCnt);
 
     if (ref == 0)

@@ -5,7 +5,10 @@
  * PURPOSE:         d3d9.dll helper functions
  * PROGRAMERS:      Gregor Brunmar <gregor (dot) brunmar (at) home (dot) se>
  */
+#ifndef _D3D9_PRIVATE_H_
+#define _D3D9_PRIVATE_H_
 
+#define COBJMACROS
 #include <windows.h>
 #include <d3d9.h>
 
@@ -15,7 +18,7 @@ typedef IDirect3D9* (WINAPI *LPDIRECT3DCREATE9)(UINT);
 
 extern const IDirect3D9Vtbl Direct3D9_Vtbl;
 
-typedef struct _tagDIRECTD3D9_INT_
+typedef struct _tagDIRECT3D9_INT_
 {
 /* 0x0000 */    const IDirect3D9Vtbl *lpVtbl; /* LPDIRECTD3D9 functoions table */
 /* 0x0004 */    CRITICAL_SECTION d3d9_cs;
@@ -4596,4 +4599,6 @@ typedef struct _tagDIRECTD3D9_INT_
 /* 0x47ac */    DWORD unknown004587; 
 /* 0x47b0 */    DWORD unknown004588; 
 /* 0x47b4 */    DWORD unknown004589;    /*? 0x00000020 */
-} DIRECTD3D9_INT, *LPDIRECTD3D9_INT;
+} DIRECT3D9_INT, *LPDIRECT3D9_INT;
+
+#endif // _D3D9_PRIVATE_H_
