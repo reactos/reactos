@@ -16,6 +16,10 @@
 		<xi:include href="roswebparser/roswebparser.rbuild" />
 	</directory>
 
+	<directory name="syscalldump">
+		<xi:include href="syscalldump/syscalldump.rbuild" />
+	</directory>
+
 	<directory name="zoomin">
 		<xi:include href="zoomin/zoomin.rbuild" />
 	</directory>
