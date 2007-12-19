@@ -12,7 +12,7 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         6,
         11,
-        "Dieser Teil der Setups kopiert das ReactOS Betriebssystem auf Ihren",
+        "Dieser Teil des Setups kopiert das ReactOS Betriebssystem auf Ihren",
         TEXT_NORMAL
     },
     {
@@ -94,7 +94,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         6,
         12,
-        "Folgende Begrenzungen sind vorhanden:",
+        "Es gibt folgende Beschränkungen:",
         TEXT_NORMAL
     },
     {
@@ -329,13 +329,13 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         19,
-        "Sie koennen die Einstellungen durch die HOCH- und RUNTER-Tasten auswaehlen",
+        "Sie koennen die Einstellungen durch die Pfeiltasten auswaehlen.",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "Dann druecken Sie ENTER, um eine Alternative Einstellung auszuwaehlen",
+        "Dann druecken Sie die Eingabetaste, um eine Einstellung abzuändern.",
         TEXT_NORMAL
     },
     {
@@ -353,7 +353,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         24,
-        "einstellungen akzeptieren\" und druecken Sie ENTER.",
+        "einstellungen akzeptieren\" und druecken danach die Eingabetaste.",
         TEXT_NORMAL
     },
     {
@@ -708,7 +708,7 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         17,
-        "\x07  Druecken Sie D um eine vorhandene Partition zu löschen.",
+        "\x07  Druecken Sie D um eine vorhandene Partition zu loeschen.",
         TEXT_NORMAL
     },
     {
@@ -878,7 +878,7 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Sie möchten den Tastaturtyp aendern.",
+        "Sie moechten den Tastaturtyp aendern.",
         TEXT_NORMAL
     },
     {
@@ -890,13 +890,13 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         8,
         11,
-        "\x07 Druecken Sie zum Bestaetigen die Eingabetaste.",
+        "\x07  Druecken Sie zum Bestaetigen die Eingabetaste.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC Taste um die aenderungen zu verwerfen.",
+        "\x07  Druecken Sie ESC Taste um die Aenderungen zu verwerfen.",
         TEXT_NORMAL
     },
     {
@@ -918,7 +918,7 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Sie möchten das Tastaturlayout aendern.",
+        "Sie moechten das Tastaturlayout aendern.",
         TEXT_NORMAL
     },
     {
@@ -930,13 +930,19 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         8,
         11,
-        "\x07 Druecken Sie zum Bestaetigen die Eingabetaste.",
+        "\x07  Druecken Sie zum Bestaetigen die Eingabetaste.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC um die Auswahl zu beenden und zur vorherigen Setupseite zurueckzukehren.",
+        "\x07  Druecken Sie ESC um die Auswahl zu beenden und zur vorherigen ",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "   Setupseite zurueckzukehren.",
         TEXT_NORMAL
     },
     {
@@ -1023,19 +1029,19 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         6,
         8,
-        "Sie haben sich entschieden diese Partition zu löschen",
+        "Sie haben sich entschieden diese Partition zu loeschen",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Druecken Sie D um die Partition zu löschen.",
+        "\x07  Druecken Sie D um die Partition zu loeschen.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "Warnung: Alle Daten auf dieser Partition werden gelöscht!",
+        "Warnung: Alle Daten auf dieser Partition werden geloescht!",
         TEXT_NORMAL
     },
     {
@@ -1047,7 +1053,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         0,
         0,
-        "   D = Lösche Partition   ESC = Abbrechen   F3 = Beenden",
+        "   D = Loesche Partition   ESC = Abbrechen   F3 = Beenden",
         TEXT_STATUS
     },
     {
