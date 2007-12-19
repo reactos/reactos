@@ -8,5 +8,6 @@
 
 	<file>d3d9.c</file>
 	<file>d3d9_helpers.c</file>
+	<file>d3d9_impl.c</file>
 	<file>d3d9.rc</file>
 </module>
