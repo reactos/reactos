@@ -1,0 +1,8 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Προφύλαξη οθόνης Logon"
+    IDS_TITLE       "Περί"
+    IDS_TEXT        "Αυτή η προφύλαξη οθόνης δε διαθέτει επιλογές τις οποίες μπορείτε να ορίσετε."
+END

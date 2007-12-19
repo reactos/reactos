@@ -1,0 +1,48 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_DISPLAYADAPTER DIALOGEX 0, 0, 252, 226
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Προσαρμογέας"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  GROUPBOX "Τύπος προσαρμογέα", -1, 7, 3, 237, 50
+  LTEXT "", IDC_ADAPTERNAME, 40, 17, 190, 20, SS_NOPREFIX
+  PUSHBUTTON "&Ιδιότητες", IDC_ADAPTERPROPERTIES, 177, 33, 59, 14
+  GROUPBOX "Πληφορορίες για τον προσαρμογέα", -1, 7, 56, 237, 75
+  LTEXT "Τύπος chip:", -1, 13, 68, 58, 8
+  LTEXT "", IDC_CHIPTYPE, 71, 68, 160, 8, SS_NOPREFIX
+  LTEXT "Τύπος DAC:", -1, 13, 80, 58, 8
+  LTEXT "", IDC_DACTYPE, 71, 80, 160, 8, SS_NOPREFIX
+  LTEXT "Μέγεθος μνήμης:", -1, 13, 92, 58, 8
+  LTEXT "", IDC_MEMORYSIZE, 71, 92, 160, 8, SS_NOPREFIX
+  LTEXT "Συμβολοσειρά προσαρμογέα:", -1, 13, 104, 58, 8
+  LTEXT "", IDC_ADAPTERSTRING, 71, 104, 160, 8, SS_NOPREFIX
+  LTEXT "Στοιχεία BIOS:", -1, 13, 116, 58, 8
+  LTEXT "", IDC_BIOSINFORMATION, 71, 116, 160, 8, SS_NOPREFIX
+  PUSHBUTTON "&Λίστα καταστάσεων λειτουργίας...", IDC_LISTALLMODES, 7, 139, 75, 14
+END
+
+IDD_LISTALLMODES DIALOGEX 0, 0, 225, 135
+STYLE DS_SETFONT | DS_FIXEDSYS | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_DLGFRAME
+CAPTION "Λίστα καταστάσεων λειτουργίας"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+  DEFPUSHBUTTON "OK", IDOK, 112, 115, 50, 15
+  PUSHBUTTON "’κυρο", IDCANCEL, 167, 115, 50, 15
+  GROUPBOX "Λίστα έγκυρων καταστάσεων", -1, 6, 7, 212, 98
+  LISTBOX IDC_ALLVALIDMODES, 10, 20, 204, 87, LBS_NOTIFY | WS_VSCROLL
+END
+
+STRINGTABLE
+BEGIN
+  IDS_MODEFMT "%d by %d, %s, %s"
+  IDS_DEFREFRESHRATE "Προεπιλεγμένη ανανέωση"
+  IDES_REFRESHRATEFMT "%d Hertz"
+  IDS_4BPP "16 χρώματα"
+  IDS_8BPP "256 χρώματα"
+  IDS_15BPP "Πολλά χρώματα (15 bit)"
+  IDS_16BPP "Πολλά χρώματα (16 bit)"
+  IDS_24BPP "Φυσικά χρώματα (24 bit)"
+  IDS_32BPP "Φυσικά χρώματα (32 bit)"
+END
+

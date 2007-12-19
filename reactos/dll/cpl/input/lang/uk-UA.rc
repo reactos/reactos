@@ -242,15 +242,15 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Мови та служби текстового вводу"
     IDS_CPLSYSTEMDESCRIPTION "Налаштовує параметри для текстового вводу."
-	IDS_KEYBOARD "Keyboard"
-	IDS_ADV_TEXT_SRV "Advanced Text Services"
-	IDS_NONE "(None)"
-	IDS_UNKNOWN "(Unknown)"
-	IDS_RESTART "Do you want to restart your computer now?"
-	IDS_SPEECH "Speech"
-	IDS_HRD_REC "Handwriting Recognition"
-	IDS_OFF_ADV_TXT_SRV "Do you want to turn off advanced text services?"
-	IDS_WHATS_THIS "What's This?"
+	IDS_KEYBOARD "Клавіатура"
+	IDS_ADV_TEXT_SRV "Додаткові текстові служби"
+	IDS_NONE "(Немає)"
+	IDS_UNKNOWN "(Немає даних)"
+	IDS_RESTART "Ви дійсно бажаєте перезавантажити комп'ютер зараз?"
+	IDS_SPEECH "Мовлення"
+	IDS_HRD_REC "Розпізнавання рукописного тексту"
+	IDS_OFF_ADV_TXT_SRV "Ви дійсно бажаєте вимкнути додаткові текстові служби?"
+	IDS_WHATS_THIS "Що це?"
 END
 
 STRINGTABLE
@@ -385,6 +385,6 @@ BEGIN
 	IDS_SYRIAC_PHONETIC_LAYOUT, 					"Сирійська (фонетична)"
 	IDS_DIVEHI_PHONETIC_LAYOUT, 					"Мальдівська (фонетична)"
 	IDS_DIVEHI_TYPEWRITER_LAYOUT, 					"Мальдівська (друкарська машинка)"
-	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Bulgarian Phonetic (Classic)"
-	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Bulgarian Phonetic (BDS)"
+	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Болгарська фонетична (класична)"
+	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Болгарська фонетична (BDS)"
 END

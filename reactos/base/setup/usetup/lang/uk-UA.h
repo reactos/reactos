@@ -6,49 +6,49 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         6,
         8,
-        "╦рёъртю яЁюёшью фю яЁюуЁрьш єёЄрэютъш ReactOS",
+        "Ласкаво просимо до програми установки ReactOS",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "╓  ўрёЄшэр єёЄрэютъш ъюя│■║ юяхЁрЎ│щэє ёшёЄхьє ReactOS є ┬р°",
+        "Ця частина установки коп_ює операц_йну систему ReactOS у Ваш",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "ъюья'■ЄхЁ │ уюЄє║ фЁєує ўрёЄшэє єёЄрэютъш.",
+        "комп'ютер _ готує другу частину установки.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  ═рЄшёэ│Є№ <ENTER> ∙юс єёЄрэшЄш ReactOS.",
+        "\x07  Натисн_ть <ENTER> щоб устанити ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  ═рЄшёэ│Є№ <R> ∙юс т│фэютшЄш ReactOS.",
+        "\x07  Натисн_ть <R> щоб в_дновити ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  ═рЄшёэ│Є№ <L> ∙юс яхЁхуы эєЄш ы│Ўхэч│щэ│ єьютш ReactOS",
+        "\x07  Натисн_ть <L> щоб переглянути л_ценз_йн_ умови ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  ═рЄшёэ│Є№ <F3> ∙юс тшщЄш, эх тёЄрэюты■■ўш ReactOS.",
+        "\x07  Натисн_ть <F3> щоб вийти, не встановлюючи ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "─ы  с│ы№° ъюэъЁхЄэю┐ │эЇюЁьрЎ│┐ яЁю ReactOS, сєф№ ырёър т│фт│фрщЄх:",
+        "Для б_льш конкретної _нформац_ї про ReactOS, будь ласка в_дв_дайте:",
         TEXT_NORMAL
     },
     {
@@ -60,7 +60,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER=╧ЁюфютцшЄш  R=┬│фэютшЄш F3=┬шї│ф",
+        "   ENTER=Продовжити  R=В_дновити F3=Вих_д",
         TEXT_STATUS
     },
     {
@@ -680,7 +680,7 @@ MUI_PAGE ukUAPages[] =
        ukUAWelcomePageEntries
     },
     {
-        INTRO_PAGE,
+        INSTALL_INTRO_PAGE,
         ukUAIntroPageEntries
     },
     {

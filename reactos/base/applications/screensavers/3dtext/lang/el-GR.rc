@@ -1,0 +1,19 @@
+LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
+
+IDD_CONFIG DIALOGEX 0, 0, 273, 178
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Ρυθμίσεις Κειμένου 3Δ"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "OK",IDOK,216,7,50,14
+    PUSHBUTTON      "’κυρο",IDCANCEL,216,24,50,14
+    EDITTEXT        IDC_MESSAGE_TEXT,18,28,122,14,ES_AUTOHSCROLL
+    LTEXT           "Προσαρμοσμένο κείμενο:",IDC_STATIC_TEXT,18,17,65,8
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+    IDS_DESCRIPTION "Προφύλαξη οθόνης με κείμενο 3Δ"
+    IDS_TITLE       "Περί"
+    IDS_TEXT        "Αυτή η προφύλαξη οθόνης δε διαθέτει επιλογές τις οποίες μπορείτε να ορίσετε."
+END

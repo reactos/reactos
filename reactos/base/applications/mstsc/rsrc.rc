@@ -16,6 +16,7 @@ IDB_SPECT   BITMAP "res/spectrum.bmp"
 
 #include "lang/ca-ES.rc"
 #include "lang/de-DE.rc"
+#include "lang/el-GR.rc"
 #include "lang/en-US.rc"
 #include "lang/fr-FR.rc"
 #include "lang/it-IT.rc"

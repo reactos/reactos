@@ -355,101 +355,101 @@ END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Загальні"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 
-GROUPBOX "Tasks", -1, 7, 10, 249, 45
+GROUPBOX "Завдання", -1, 7, 10, 249, 45
 //ICON
-AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Use Windows class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
+AUTORADIOBUTTON "&Показувати список типових завдань у папках", 14001, 40, 25, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "Використовувати зви&чайні папки Windows", 14002, 40, 37, 120, 10, WS_TABSTOP
+GROUPBOX "Огляд папок", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
-AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+AUTORADIOBUTTON "Відкривати папки в то&му самому вікні", 14004, 40, 70, 140, 10, WS_TABSTOP
+AUTORADIOBUTTON "Відкрива&ти кожну папку в окремому вікні", 14005, 40, 82, 140, 10, WS_TABSTOP
+GROUPBOX "Клацання мишею", -1, 7, 110, 249, 60
 //ICON
-AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
+AUTORADIOBUTTON "Від&кривати одиночним, виділяти вказівником", 14007, 40, 120, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Підкресл&ювати підписи значків", 14008, 50, 132, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Підкр&еслювати лише при наведенні", 14009, 50, 144, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Відкрив&ати подвійним, виділяти одиночним", 14010, 40, 156, 170, 10, WS_TABSTOP
+PUSHBUTTON "&Відновити", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "View"
+CAPTION "Вигляд"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
+GROUPBOX "Подання папок", -1, 7, 10, 249, 60
 //ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+LTEXT "Можна застосувати вигляд, який використовується для цієї папки (наприклад, ""Таблиця"" або ""Плитка""), до всіх папок.", -1, 60, 20, 180, 20
+PUSHBUTTON "&Застосувати до всіх папок", 14001, 60, 50, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Скид для всіх папок", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Додаткові параметри:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Відновити", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "File Types"
+CAPTION "Типи файлів"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+LTEXT "Зареєстровані &типи файлів:", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
-LTEXT "Opens with:", -1, 12, 140, 40, 10
+PUSHBUTTON "&Створити", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "В&идалити", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Подробиці для розширення '%s'", 14003, 7, 130, 249, 70
+LTEXT "Відкривати у:", -1, 12, 140, 40, 10
 //ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+LTEXT "Додаток", 14005, 100, 140, 40, 10
+PUSHBUTTON "&Змінити...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "Файли з розширенням '%s' мають тип '%s'. Щоб\nзмінити параметри, які впливатимуть на всі файли '%s', натисніть кнопку\n""Додатково"".", 14007, 12, 155, 160, 30
+PUSHBUTTON "&Додатково", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "Підтвердження заміни файлу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Yes to &All", 12807, 85, 122, 60, 14
-	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 215, 122, 60, 14
+	DEFPUSHBUTTON "&Так", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Так для &всіх", 12807, 85, 122, 60, 14
+	PUSHBUTTON "&Ні", IDNO, 150, 122, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a system file named '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Would you like to replace the existing file", -1, 44, 35, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
+	LTEXT "Ця папка вже містить файл з ім'ям '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Ця папка вже містить доступний лише для читання файл з ім'ям '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Ця папка вже містить системний файл з ім'ям '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Замінити наявний файл", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "(дата й розмір невідомі)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-	LTEXT "with this one?", -1, 44, 75, 228, 10, SS_NOPREFIX
-	LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
+	LTEXT "на цей файл?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "(дата й розмір невідомі)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 LOGOFF_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Log Off ReactOS"
+CAPTION "Вихід із ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to log off?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 122, 40, 60, 14
+	LTEXT "Ви дійсно бажаєте вийти із системи?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "В&ихід", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Disconnect ReactOS"
+CAPTION "Вимкнення ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to disconnect?", -1, 49, 12, 137, 23
-	DEFPUSHBUTTON "&Disconnect", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 123, 40, 60, 14
+	LTEXT "Ви дійсно бажаєте відключитися?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "&Вимкнення", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 123, 40, 60, 14
 END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
@@ -476,7 +476,7 @@ BEGIN
 	LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 160, 186, 60, 14
 END
 
 MIXED_CONTENT2_DLG DIALOG 0, 0, 227, 206
@@ -492,7 +492,7 @@ BEGIN
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
 	AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
 	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 160, 185, 60, 14
 END
 
 AUTOPLAY2_DLG DIALOG 0, 0, 227, 181
@@ -506,42 +506,42 @@ BEGIN
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
 	AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
 	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 159, 160, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 159, 160, 60, 14
 END
 
 SHUTDOWN_DLG DIALOG 0, 0, 211, 103
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Shut Down ReactOS"
+CAPTION "Завершення роботи ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "What do you want the computer to do?", -1, 39, 7, 167, 10
+	LTEXT "Виберіть одну з таких можливостей?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
+	LTEXT "Збереження сеансу з переведенням комп'ютера до режиму низького енергоспоживання зі збереженням даних у пам'яті. Якщо натиснути будь-яку клавішу або пересунути мишу, комп'ютер повернеться до звичайного режиму.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-	PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
-	PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+	PUSHBUTTON "Скасувати", IDCANCEL, 75, 82, 60, 14
+	PUSHBUTTON "&Довідка", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "Форматування"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
-	PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-	LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
+	DEFPUSHBUTTON "&Почати", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "&Закрити", IDCANCEL, 118, 198, 60, 14
+	LTEXT "&Місткість:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "&File system", -1, 7, 35, 170, 9
+	LTEXT "&Файлова система", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+	LTEXT "&Розмір кластера", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Volume &label", -1, 7, 93, 170, 9
+	LTEXT "Мі&тка тому", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-	AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
+	GROUPBOX "&Способи форматування", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "&Швидке (очищення змісту)", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "&Використовувати стискання", 28675, 16, 152, 155, 10
 END
 
 STRINGTABLE DISCARDABLE
@@ -601,27 +601,27 @@ BEGIN
 
 	/* shell folder path default values */
 	IDS_PROGRAMS                "Start Menu\\Programs"
-	IDS_PERSONAL                "My Documents"
-	IDS_FAVORITES               "Favorites"
+	IDS_PERSONAL                "Мої документи"
+	IDS_FAVORITES               "Обране"
 	IDS_STARTUP                 "Start Menu\\Programs\\StartUp"
 	IDS_RECENT                  "Recent"
-	IDS_SENDTO                  "SendTo"
+	IDS_SENDTO                  "Надіслати"
 	IDS_STARTMENU               "Start Menu"
-	IDS_MYMUSIC                 "My Music"
-	IDS_MYVIDEO                 "My Videos"
-	IDS_DESKTOPDIRECTORY        "Desktop"
-	IDS_NETHOOD                 "NetHood"
-	IDS_TEMPLATES               "Templates"
+	IDS_MYMUSIC                 "Моя музика"
+	IDS_MYVIDEO                 "Мої відеозаписи"
+	IDS_DESKTOPDIRECTORY        "Робочий стіл"
+	IDS_NETHOOD                 "Мережне оточення"
+	IDS_TEMPLATES               "Шаблони"
 	IDS_APPDATA                 "Application Data"
-	IDS_PRINTHOOD               "PrintHood"
+	IDS_PRINTHOOD               "Принтери"
 	IDS_LOCAL_APPDATA           "Local Settings\\Application Data"
 	IDS_INTERNET_CACHE          "Local Settings\\Temporary Internet Files"
 	IDS_COOKIES                 "Cookies"
 	IDS_HISTORY                 "Local Settings\\History"
 	IDS_PROGRAM_FILES           "Program Files"
-	IDS_MYPICTURES              "My Pictures"
+	IDS_MYPICTURES              "Мої малюнки"
 	IDS_PROGRAM_FILES_COMMON    "Program Files\\Common Files"
-	IDS_COMMON_DOCUMENTS        "Documents"
+	IDS_COMMON_DOCUMENTS        "Загальні документи"
 	IDS_ADMINTOOLS              "Start Menu\\Programs\\Administrative Tools"
 	IDS_COMMON_MUSIC            "Documents\\My Music"
 	IDS_COMMON_PICTURES         "Documents\\My Pictures"
@@ -642,5 +642,5 @@ BEGIN
 	FCIDM_SHVIEW_NEW 	    "Створити"
 	FCIDM_SHVIEW_NEWFOLDER 	    "&Папку"
 	FCIDM_SHVIEW_NEWLINK 	    "&Ярлик"
-	IDS_FOLDER_OPTIONS          "Folder Options"
+	IDS_FOLDER_OPTIONS          "Властивості папки"
 END

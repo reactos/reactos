@@ -4,6 +4,7 @@
 
 #include "lang/en-US.h"
 #include "lang/de-DE.h"
+#include "lang/el-GR.h"
 #include "lang/es-ES.h"
 #include "lang/fr-FR.h"
 #include "lang/it-IT.h"
