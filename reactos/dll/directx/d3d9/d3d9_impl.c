@@ -14,13 +14,16 @@ static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface);
 /* IDirect3D9: IUnknown implementation */
 static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
 {
+    LPDIRECTD3D9_INT This = (LPDIRECTD3D9_INT)iface;
+
     if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDirect3D9))
     {
         IDirect3D9Impl_AddRef(iface);
-        *ppvObject = iface;
+        *ppvObject = &This->lpVtbl;
         return S_OK;
     }
 
+    *ppvObject = NULL;
     return E_NOINTERFACE;
 }
 
