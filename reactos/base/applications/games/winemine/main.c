@@ -404,7 +404,7 @@ void SaveBoard( BOARD *p_board )
 
     for( i = 0; i < 3; i++ ) {
         wsprintf( key_name, "Time%u", i );
-        RegSetValueEx( hkey, key_name, 0, REG_DWORD, (LPBYTE) p_board->best_time[i], sizeof(DWORD) );
+        RegSetValueEx( hkey, key_name, 0, REG_DWORD, (LPBYTE) &p_board->best_time[i], sizeof(DWORD) );
     }
 
     RegCloseKey( hkey );
