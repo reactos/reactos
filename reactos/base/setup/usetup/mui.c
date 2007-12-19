@@ -6,6 +6,7 @@
 #include "lang/de-DE.h"
 #include "lang/es-ES.h"
 #include "lang/fr-FR.h"
+#include "lang/it-IT.h"
 #include "lang/ru-RU.h"
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
@@ -23,6 +24,10 @@ static MUI_LANGUAGE LanguageList[] =
     {
         "German",
         deDEPages
+    },
+    {
+        "Italian",
+        itITPages
     },
     {
         "Russian",
