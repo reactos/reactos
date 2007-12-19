@@ -657,7 +657,6 @@ _DispatchOneParam:
 .func DispatchTwoParam
 _DispatchTwoParam:
     /* Call the common dispatcher */
-    xor edx, edx
     mov ecx, 2
     call _CommonDispatchException
 .endfunc
@@ -1230,6 +1229,7 @@ InvalidStack:
 
     /* Raise exception */
     mov eax, STATUS_FLOAT_STACK_CHECK
+    xor edx, edx
     jmp _DispatchTwoParam
 
 ValidNpxOpcode:
@@ -1449,6 +1449,7 @@ _KiTrap13:
     mov ebx, [ebp+KTRAP_FRAME_EIP]
     mov esi, -1
     mov eax, STATUS_ACCESS_VIOLATION
+    xor edx, edx
     jmp _DispatchTwoParam
 
 RaiseIrql:
@@ -1593,6 +1594,7 @@ TrapCopy:
     mov esi, [ebp+KTRAP_FRAME_ERROR_CODE]
     and esi, 0xFFFF
     mov eax, STATUS_ACCESS_VIOLATION
+    xor edx, edx
     jmp _DispatchTwoParam
 
 MsrCheck:
@@ -1802,6 +1804,7 @@ SetException:
     mov ebx, [ebp+KTRAP_FRAME_EIP]
     mov esi, -1
     mov eax, STATUS_ACCESS_VIOLATION
+    xor edx, edx
     jmp _DispatchTwoParam
 
 DispatchV86Gpf:
@@ -1900,8 +1903,8 @@ SysCallCopyFault:
     /* Check if the fault occured in a V86 mode */
 CheckVdmPf:
     mov ecx, [ebp+KTRAP_FRAME_ERROR_CODE]
-    and ecx, 1
     shr ecx, 1
+    and ecx, 1
     test dword ptr [ebp+KTRAP_FRAME_EFLAGS], EFLAGS_V86_MASK
     jnz VdmPF
 
