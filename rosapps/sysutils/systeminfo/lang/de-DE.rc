@@ -1,7 +1,7 @@
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S System [/U Benutzername [/P [Passwort]]]] [/FO Format] [/NH]\n\n\
 Beschreibung:\n\
@@ -58,5 +58,9 @@ IDS_VIRT_MEM_INUSE, 		"Auslagerungsdatei: In Verwendung:		%ld MB (%ld KB)\n"
 IDS_HOST_NAME,				"Domäne:			%s\n"
 IDS_PAGEFILE_LOC,			"Auslagerungsdateipfad(e) 		%s"
 IDS_TIME_ZONE,				"Zeitzone: 			%s\n"
+IDS_DOMINE,					"Domain:				%s\n"
+IDS_BIOS_DATE,				"BIOS Date:			%s\n"
+IDS_BIOS_VERSION,			"BIOS Version:			%s\n"
+IDS_NETWORK_CARDS,			"Network Card(s)			%u Installed.\n"
 
-}
+END

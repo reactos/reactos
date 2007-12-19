@@ -220,6 +220,18 @@ AllSysInfo(VOID)
 	}
 
 	//getting BIOS Version
+	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
+						 TEXT("HARDWARE\\DESCRIPTION\\System"),
+						 TEXT("SystemBiosVersion"),
+						 Buf))
+		if(GetOemStrings(IDS_BIOS_VERSION,Msg)) fprintf(stderr,Msg,Buf);
+
+	//gettings BIOS date
+	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
+						 TEXT("HARDWARE\\DESCRIPTION\\System"),
+						 TEXT("SystemBiosDate"),
+						 Buf))
+		if(GetOemStrings(IDS_BIOS_DATE,Msg)) fprintf(stderr,Msg,Buf);
 
 	//getting ReactOS Directory
 	if(!GetWindowsDirectory(Buf,BUFFER_SIZE)) printf("Error getting: GetWindowsDirectory");
@@ -327,11 +339,19 @@ AllSysInfo(VOID)
 	}
 
 	//getting Domain
+	if (GetRegistryValue(HKEY_LOCAL_MACHINE,
+						 TEXT("SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon"),
+						 TEXT("CachePrimaryDomain"),
+						 Buf))
+		if(GetOemStrings(IDS_DOMINE,Msg)) fprintf(stderr,Msg,Buf);
 
 	//getting Logon Server
 
 	//getting NetWork Card(s)
+	if(GetOemStrings(IDS_NETWORK_CARDS,Msg))
+	{
 
+	}
 }
 
 /* Main program */

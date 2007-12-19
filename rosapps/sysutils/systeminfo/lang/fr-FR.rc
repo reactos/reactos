@@ -1,9 +1,9 @@
 LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
-IDS_USAGE, "SYSTEMINFO [/S système [/U utilisateur [/P [motdepasse]]]] [/FO format] [/NH]\n\n\
+IDS_USAGE "SYSTEMINFO [/S système [/U utilisateur [/P [motdepasse]]]] [/FO format] [/NH]\n\n\
 Description:\n\
   Cet outil en ligne de commande permet à un administrateur d'effectuer une requête sur les informations\n\
   basiques de la configuration du système.\n\n\
@@ -56,5 +56,9 @@ IDS_VIRT_MEM_INUSE, 		"Mémoire virtuelle: Utilisée:		%ld Mo (%ld Ko)\n"
 IDS_HOST_NAME,				"Nom d'hôte:			%s\n"
 IDS_PAGEFILE_LOC,			"Emplacement(s) des fichiers d'échange 		%s"
 IDS_TIME_ZONE,				"Fuseau horaire: 			%s\n"
+IDS_DOMINE,					"Domain:				%s\n"
+IDS_BIOS_DATE,				"BIOS Date:			%s\n"
+IDS_BIOS_VERSION,			"BIOS Version:			%s\n"
+IDS_NETWORK_CARDS,			"Network Card(s)			%u Installed.\n"
 
-}
+END

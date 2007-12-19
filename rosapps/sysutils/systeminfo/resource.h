@@ -27,3 +27,7 @@
 #define IDS_HOST_NAME	 		124
 #define IDS_PAGEFILE_LOC	 	125
 #define IDS_TIME_ZONE		 	126
+#define IDS_DOMINE				127
+#define IDS_BIOS_DATE			128
+#define IDS_BIOS_VERSION		129
+#define IDS_NETWORK_CARDS		130

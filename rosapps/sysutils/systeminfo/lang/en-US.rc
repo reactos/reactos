@@ -1,7 +1,7 @@
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 
 STRINGTABLE DISCARDABLE
-{
+BEGIN
 
 IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
 Description:\n\
@@ -54,7 +54,11 @@ IDS_VIRT_MEM_MAX, 			"Virtual Memory: Max Size:	%ld MB (%ld KB)\n"
 IDS_VIRT_MEM_AVAIL, 		"Virtual Memory: Available:	%ld MB (%ld KB)\n"
 IDS_VIRT_MEM_INUSE, 		"Virtual Memory: In Use:		%ld MB (%ld KB)\n"
 IDS_HOST_NAME,				"Host Name:			%s\n"
-IDS_PAGEFILE_LOC,			"Page File Location(s) 		%s"
+IDS_PAGEFILE_LOC,			"Page File Location(s) 		%s\n"
 IDS_TIME_ZONE,				"Time zone: 			%s\n"
+IDS_DOMINE,					"Domain:				%s\n"
+IDS_BIOS_DATE,				"BIOS Date:			%s\n"
+IDS_BIOS_VERSION,			"BIOS Version:			%s\n"
+IDS_NETWORK_CARDS,			"Network Card(s)			%u Installed.\n"
 
-}
+END
