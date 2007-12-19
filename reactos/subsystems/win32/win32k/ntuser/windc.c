@@ -630,15 +630,11 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
             if (Window->Wnd->Class->Style & CS_CLASSDC ||
                 Window->Wnd->Style & CS_CLASSDC) /* Test Class first */
             {
-               PWINDOW_OBJECT CurrentWindow;
                if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
                    DceDeleteClipRgn(pDCE);
-               CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
-               if (CurrentWindow)
-               { // Update and reset Vis Rgn and clear the dirty bit.
-                 // Should release VisRgn than reset it to default.
-                 DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
-               }
+               // Update and reset Vis Rgn and clear the dirty bit.
+               // Should release VisRgn than reset it to default.
+               DceUpdateVisRgn(pDCE, Window, pDCE->DCXFlags);
                pDCE->DCXFlags = DCX_DCEEMPTY;
                pDCE->hwndCurrent = 0;
             }
