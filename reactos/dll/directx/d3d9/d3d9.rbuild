@@ -5,6 +5,8 @@
 
 	<library>advapi32</library>
 	<library>kernel32</library>
+	<library>uuid</library>
+	<library>dxguid</library>
 
 	<file>d3d9.c</file>
 	<file>d3d9_helpers.c</file>

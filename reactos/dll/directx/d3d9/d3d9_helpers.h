@@ -16,4 +16,4 @@ BOOL ReadRegistryValue(IN DWORD ValueType, IN LPCSTR ValueName, OUT LPBYTE DataB
 HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR FormatString, ... );
 
 /* Creates a Direct3D9 object */
-HRESULT CreateD3D9(IDirect3D9** ppDirect3D9);
+HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9);

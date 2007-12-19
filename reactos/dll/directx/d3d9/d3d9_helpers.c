@@ -56,7 +56,7 @@ HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR For
     return 0;
 }
 
-HRESULT CreateD3D9(IDirect3D9** ppDirect3D9)
+HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9)
 {
     LPDIRECTD3D9_INT pDirect3D9;
 
@@ -71,9 +71,9 @@ HRESULT CreateD3D9(IDirect3D9** ppDirect3D9)
     pDirect3D9->unknown000007 = 0;
     pDirect3D9->lpInt = 0;
 
-    //pDirect3D9->lpVtbl = &IDirect3D3_Vtbl;
+    pDirect3D9->lpVtbl = &Direct3D9_Vtbl;
     pDirect3D9->dwProcessId = GetCurrentThreadId();
-    pDirect3D9->dwIntRefCnt = 1;
+    pDirect3D9->dwRefCnt = 1;
 
     *ppDirect3D9 = (IDirect3D9*)pDirect3D9;
 

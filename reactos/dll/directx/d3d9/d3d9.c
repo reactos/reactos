@@ -61,6 +61,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     LPDIRECT3D9 D3D9Obj = 0;
     LPDIRECT3DCREATE9 DebugDirect3DCreate9 = 0;
     CHAR DebugMessageBuffer[DEBUG_MESSAGE_BUFFER_SIZE];
+    UINT NoDebugSDKVersion = SDKVersion & 0x7FFFFFFF;
 
     UNIMPLEMENTED
 
@@ -80,11 +81,11 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
         }
     }
 
-    if ((SDKVersion & 0x7FFFFFFF) != D3D_SDK_VERSION || (SDKVersion & 0x7FFFFFFF) != D3D9b_SDK_VERSION)
+    if (NoDebugSDKVersion != D3D_SDK_VERSION && NoDebugSDKVersion != D3D9b_SDK_VERSION)
     {
         if (SDKVersion & 0x80000000)
         {
-            FormatDebugString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, SDKVersion, D3D_SDK_VERSION);
+            FormatDebugString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
             OutputDebugStringA(DebugMessageBuffer);
         }
 
@@ -98,13 +99,13 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
-	switch (ul_reason_for_call)
-	{
-		case DLL_PROCESS_ATTACH:
-		case DLL_THREAD_ATTACH:
-		case DLL_THREAD_DETACH:
-		case DLL_PROCESS_DETACH:
-			break;
+    switch (ul_reason_for_call)
+    {
+        case DLL_PROCESS_ATTACH:
+        case DLL_THREAD_ATTACH:
+        case DLL_THREAD_DETACH:
+        case DLL_PROCESS_DETACH:
+            break;
     }
 
     return TRUE;

@@ -9,10 +9,17 @@
 
 #include <debug.h>
 
+static ULONG WINAPI IDirect3D9Impl_AddRef(LPDIRECT3D9 iface);
+
 /* IDirect3D9: IUnknown implementation */
-static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppobj)
+static HRESULT WINAPI IDirect3D9Impl_QueryInterface(LPDIRECT3D9 iface, REFIID riid, LPVOID* ppvObject)
 {
-    UNIMPLEMENTED
+    if (IsEqualGUID(riid, &IID_IUnknown) || IsEqualGUID(riid, &IID_IDirect3D9))
+    {
+        IDirect3D9Impl_AddRef(iface);
+        *ppvObject = iface;
+        return S_OK;
+    }
 
     return E_NOINTERFACE;
 }
@@ -146,7 +153,7 @@ static HMONITOR WINAPI IDirect3D9Impl_GetAdapterMonitor(LPDIRECT3D9 iface, UINT 
 static HRESULT WINAPI IDirect3D9Impl_CreateDevice(LPDIRECT3D9 iface, UINT Adapter, D3DDEVTYPE DeviceType,
                                                   HWND hFocusWindow, DWORD BehaviourFlags,
                                                   D3DPRESENT_PARAMETERS* pPresentationParameters,
-                                                  IDirect3DDevice9** ppReturnedDeviceInterface)
+                                                  struct IDirect3DDevice9** ppReturnedDeviceInterface)
 {
     UNIMPLEMENTED
 
