@@ -94,7 +94,7 @@ static MUI_ENTRY deDEIntroPageEntries[] =
     {
         6,
         12,
-        "Es gibt folgende Beschränkungen:",
+        "Es gibt folgende Beschraenkungen:",
         TEXT_NORMAL
     },
     {
@@ -335,7 +335,7 @@ static MUI_ENTRY deDEDevicePageEntries[] =
     {
         6,
         20,
-        "Dann druecken Sie die Eingabetaste, um eine Einstellung abzuändern.",
+        "Dann druecken Sie die Eingabetaste, um eine Einstellung abzuaendern.",
         TEXT_NORMAL
     },
     {
