@@ -10,6 +10,9 @@ gdiplus ../reactos/dll/win32/gdiplus
 iphlpapi ../reactos/dll/win32/iphlpapi
 kernel32 ../reactos/dll/win32/kernel32
 msvcrt ../reactos/dll/win32/msvcrt
+rasapi32 ../reactos/dll/win32/rasapi32
+rasdlg ../reactos/dll/win32/rasdlg
+rasman ../reactos/dll/win32/rasman
 rpcrt4 ../reactos/dll/win32/rpcrt4
 secur32 ../reactos/dll/win32/secur32
 snmpapi ../reactos/dll/win32/snmpapi
