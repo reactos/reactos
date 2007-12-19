@@ -117,10 +117,10 @@ END
 
 IDD_ABOUTBOX DIALOG DISCARDABLE  22, 17, 259, 210
 STYLE DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "О программе FreeLoader Debugger"
+CAPTION "О программе Отладчик FreeLoader"
 FONT 8, "Tahoma"
 BEGIN
-    CONTROL         "FreeLoader Debugger v1.0\nCopyright (C) 2003\nот Brian Palmer (brianp@reactos.org)",
+    CONTROL         "Отладчик FreeLoader v1.0\nАвторские права (C) 2003\nБраин Палмер (brianp@reactos.org)",
                     IDC_STATIC,"Static",SS_LEFTNOWORDWRAP | WS_GROUP,53,28,
                     122,26
     DEFPUSHBUTTON   "OK",IDOK,183,189,44,14,WS_GROUP
@@ -170,7 +170,7 @@ END
 
 STRINGTABLE DISCARDABLE
 BEGIN
-    IDS_LICENSE             "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA."
+    IDS_LICENSE             "Эта программа является свободным программным обеспечением; Вы можете распространять и/или изменять ее в соответствии с лицензией GNU General Public License версии 2 или более поздней, опубликованной Free Software Foundation.\r\n\r\nЭта программа распространяется с надеждой, что она может быть полезна, но БЕЗ ВСЯКОЙ ГАРАНТИИ; не подразумевается даже РАБОТОСПОСОБНОСТЬ или ПРИГОДНОСТЬ ДЛЯ ВЫПОЛНЕНИЯ НЕОБХОДИМЫХ ЗАДАЧ. См. GNU General Public License для получения дополнительных сведений.\r\n\r\nВы должны получить копию лицензии GNU вместе с этой программой, в противном случае обращайтесь в Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
 END
 
 #endif
