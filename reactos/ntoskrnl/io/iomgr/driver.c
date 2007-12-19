@@ -268,14 +268,46 @@ IopLoadServiceModule(
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
    ULONG ServiceStart;
-   UNICODE_STRING ServiceImagePath;
+   UNICODE_STRING ServiceImagePath, CCSName;
    NTSTATUS Status;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE CCSKey, ServiceKey;
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
 
    /* FIXME: This check may be removed once the bug is fixed */
    if (ServiceName->Buffer == NULL)
       return STATUS_UNSUCCESSFUL;
+
+   /* Open CurrentControlSet */
+   RtlInitUnicodeString(&CCSName,
+                        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
+   InitializeObjectAttributes(&ObjectAttributes,
+       &CCSName,
+       OBJ_CASE_INSENSITIVE,
+       NULL,
+       NULL);
+   Status = ZwOpenKey(&CCSKey, KEY_READ, &ObjectAttributes);
+
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       return Status;
+   }
+
+   /* Open service key */
+   InitializeObjectAttributes(&ObjectAttributes,
+       ServiceName,
+       OBJ_CASE_INSENSITIVE,
+       CCSKey,
+       NULL);
+   Status = ZwOpenKey(&ServiceKey, KEY_READ, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       ZwClose(CCSKey);
+       return Status;
+   }
 
    /*
     * Get information about the service.
@@ -293,12 +325,15 @@ IopLoadServiceModule(
    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
    QueryTable[1].EntryContext = &ServiceImagePath;
 
-   Status = RtlQueryRegistryValues(RTL_REGISTRY_SERVICES,
-      ServiceName->Buffer, QueryTable, NULL, NULL);
+   Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
+      (PWSTR)ServiceKey, QueryTable, NULL, NULL);
+
+   ZwClose(ServiceKey);
+   ZwClose(CCSKey);
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("RtlQueryRegistryValues() failed (Status %x)\n", Status);
+      DPRINT1("RtlQueryRegistryValues() failed (Status %x)\n", Status);
       return Status;
    }
 
@@ -412,9 +447,12 @@ IopInitializeDriverModule(
          wcscpy(NameBuffer, FILESYSTEM_ROOT_NAME);
       else
          wcscpy(NameBuffer, DRIVER_ROOT_NAME);
-      wcscat(NameBuffer, ServiceName->Buffer);
 
       RtlInitUnicodeString(&DriverName, NameBuffer);
+      DriverName.MaximumLength = sizeof(NameBuffer);
+
+      RtlAppendUnicodeStringToString(&DriverName, ServiceName);
+
       DPRINT("Driver name: '%wZ'\n", &DriverName);
    }
    else
