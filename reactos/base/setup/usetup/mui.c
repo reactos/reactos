@@ -15,11 +15,11 @@
 static MUI_LANGUAGE LanguageList[] =
 {
     {
-        "English (USA)",
+        "English",
         enUSPages
     },
     {
-        "French (France)",
+        "French",
         frFRPages
     },
     {

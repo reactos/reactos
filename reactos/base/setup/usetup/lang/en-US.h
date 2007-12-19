@@ -696,6 +696,403 @@ static MUI_ENTRY enUSBootPageEntries[] =
 
 };
 
+static MUI_ENTRY enUSSelectPartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "The list below shows existing partitions and unused disk",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        9,
+        "space for new partitions.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "\x07  Press UP or DOWN to select a list entry.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        15,
+        "\x07  Press C to create a new partition.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Press D to delete an existing partition.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Please wait...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSFormatPartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "Format partition",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        10,
+        "Setup will now format the partition. Press ENTER to continue.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        TEXT_NORMAL
+    }
+};
+
+static MUI_ENTRY enUSInstallDirectoryEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup installs ReactOS files onto the selected partition. Choose a",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        9,
+        "directory where you want ReactOS to be installed:",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        14,
+        "To change the suggested directory, press BACKSPACE to delete",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        15,
+        "characters and then type the directory where you want ReactOS to",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        16,
+        "be installed.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSFileCopyEntries[] =
+{
+    {
+        11,
+        12,
+        "Please wait while ReactOS Setup copies files to your ReactOS",
+        TEXT_NORMAL
+    },
+    {
+        30,
+        13,
+        "installation folder.",
+        TEXT_NORMAL
+    },
+    {
+        20,
+        14,
+        "This may take several minutes to complete.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "                                                           \xB3 Please wait...    ",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSBootLoaderEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup is installing the boot loader",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        12,
+        "Install bootloader on the harddisk (MBR).",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "Install bootloader on a floppy disk.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "Skip install bootloader.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSKeyboardSettingsEntries[] =
+{
+    {
+        6,
+        8,
+        "You want to change the type of keyboard to be installed.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Press the ESC key to return to the previous page without changing",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "   the keyboard type.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSLayoutSettingsEntries[] =
+{
+    {
+        6,
+        8,
+        "You want to change the keyboard layout to be installed.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "    layout. Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Press the ESC key to return to the previous page without changing",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "   the keyboard layout.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
+static MUI_ENTRY enUSPrepareCopyEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup prepares your computer for copying the ReactOS files. ",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Building the file copy list...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
+static MUI_ENTRY enUSSelectFSEntries[] =
+{
+    {
+        6,
+        17,
+        "Select a file system from the list below.",
+        0
+    },
+    {
+        8,
+        19,
+        "\x07  Press UP or DOWN to select a file system.",
+        0
+    },
+    {
+        8,
+        21,
+        "\x07  Press ENTER to format the partition.",
+        0
+    },
+    {
+        8,
+        23,
+        "\x07  Press ESC to select another partition.",
+        0
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        TEXT_STATUS
+    },
+
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY enUSDeletePartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "You have chosen to delete the partition",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        18,
+        "\x07  Press D to delete the partition.",
+        TEXT_NORMAL
+    },
+    {
+        11,
+        19,
+        "WARNING: All data on this partition will be lost!",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  Press ESC to cancel.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 MUI_ERROR enUSErrorEntries[] =
 {
     {
@@ -926,6 +1323,46 @@ MUI_PAGE enUSPages[] =
     {
         FLUSH_PAGE,
         enUSFlushPageEntries
+    },
+    {
+        SELECT_PARTITION_PAGE,
+        enUSSelectPartitionEntries
+    },
+    {
+        SELECT_FILE_SYSTEM_PAGE,
+        enUSSelectFSEntries
+    },
+    {
+        FORMAT_PARTITION_PAGE,
+        enUSFormatPartitionEntries
+    },
+    {
+        DELETE_PARTITION_PAGE,
+        enUSDeletePartitionEntries
+    },
+    {
+        INSTALL_DIRECTORY_PAGE,
+        enUSInstallDirectoryEntries
+    },
+    {
+        PREPARE_COPY_PAGE,
+        enUSPrepareCopyEntries
+    },
+    {
+        FILE_COPY_PAGE,
+        enUSFileCopyEntries
+    },
+    {
+        KEYBOARD_SETTINGS_PAGE,
+        enUSKeyboardSettingsEntries
+    },
+    {
+        BOOT_LOADER_PAGE,
+        enUSBootLoaderEntries
+    },
+    {
+        LAYOUT_SETTINGS_PAGE,
+        enUSLayoutSettingsEntries
     },
     {
         QUIT_PAGE,

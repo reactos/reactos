@@ -1107,13 +1107,7 @@ DisplaySettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 KeyboardSettingsPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "You want to change the type of keyboard to be installed.");
-
-  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard type.");
-  CONSOLE_SetTextXY(8, 11, "   Then press ENTER.");
-
-  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  CONSOLE_SetTextXY(8, 14, "   the keyboard type.");
+  MUIDisplayPage(KEYBOARD_SETTINGS_PAGE);
 
   DrawGenericList(KeyboardList,
 		  2,
@@ -1121,7 +1115,7 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 		  xScreen - 3,
 		  yScreen - 3);
 
-  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
+
 
   SaveGenericListState(KeyboardList);
 
@@ -1165,21 +1159,13 @@ KeyboardSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 LayoutSettingsPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "You want to change the keyboard layout to be installed.");
-
-  CONSOLE_SetTextXY(8, 10, "\x07  Press the UP or DOWN key to select the desired keyboard");
-  CONSOLE_SetTextXY(8, 11, "    layout. Then press ENTER.");
-
-  CONSOLE_SetTextXY(8, 13, "\x07  Press the ESC key to return to the previous page without changing");
-  CONSOLE_SetTextXY(8, 14, "   the keyboard layout.");
+  MUIDisplayPage(LAYOUT_SETTINGS_PAGE);
 
   DrawGenericList(LayoutList,
 		  2,
 		  18,
 		  xScreen - 3,
 		  yScreen - 3);
-
-  CONSOLE_SetStatusText("   ENTER = Continue   ESC = Cancel   F3 = Quit");
 
   SaveGenericListState(LayoutList);
 
@@ -1223,15 +1209,7 @@ LayoutSettingsPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 SelectPartitionPage(PINPUT_RECORD Ir)
 {
-  CONSOLE_SetTextXY(6, 8, "The list below shows existing partitions and unused disk");
-  CONSOLE_SetTextXY(6, 9, "space for new partitions.");
-
-  CONSOLE_SetTextXY(8, 11, "\x07  Press UP or DOWN to select a list entry.");
-  CONSOLE_SetTextXY(8, 13, "\x07  Press ENTER to install ReactOS onto the selected partition.");
-  CONSOLE_SetTextXY(8, 15, "\x07  Press C to create a new partition.");
-  CONSOLE_SetTextXY(8, 17, "\x07  Press D to delete an existing partition.");
-
-  CONSOLE_SetStatusText("   Please wait...");
+  MUIDisplayPage(SELECT_PARTITION_PAGE);
 
   if (PartitionList == NULL)
     {
@@ -1663,7 +1641,7 @@ DeletePartitionPage (PINPUT_RECORD Ir)
   DiskEntry = PartitionList->CurrentDisk;
   PartEntry = PartitionList->CurrentPartition;
 
-  CONSOLE_SetTextXY (6, 8, "You have chosen to delete the partition");
+  MUIDisplayPage(DELETE_PARTITION_PAGE);
 
   /* Determine partition type */
   PartType = NULL;
@@ -1769,13 +1747,6 @@ DeletePartitionPage (PINPUT_RECORD Ir)
 		   DiskEntry->Bus,
 		   DiskEntry->Id);
     }
-
-  CONSOLE_SetTextXY (8, 18, "\x07  Press D to delete the partition.");
-  CONSOLE_SetTextXY (11, 19, "WARNING: All data on this partition will be lost!");
-
-  CONSOLE_SetTextXY (8, 21, "\x07  Press ESC to cancel.");
-
-  CONSOLE_SetStatusText ("   D = Delete Partition   ESC = Cancel   F3 = Quit");
 
   while (TRUE)
     {
@@ -1944,12 +1915,7 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
 		  &DiskEntry->DriverName);
     }
 
-
-  CONSOLE_SetTextXY(6, 17, "Select a file system from the list below.");
-
-  CONSOLE_SetTextXY(8, 19, "\x07  Press UP or DOWN to select a file system.");
-  CONSOLE_SetTextXY(8, 21, "\x07  Press ENTER to format the partition.");
-  CONSOLE_SetTextXY(8, 23, "\x07  Press ESC to select another partition.");
+  MUIDisplayPage(SELECT_FILE_SYSTEM_PAGE);
 
   if (FileSystemList == NULL)
     {
@@ -1964,7 +1930,6 @@ SelectFileSystemPage (PINPUT_RECORD Ir)
     }
   DrawFileSystemList (FileSystemList);
 
-  CONSOLE_SetStatusText ("   ENTER = Continue   ESC = Cancel   F3 = Quit");
   if (RepairUpdateFlag)
     {
        return (CHECK_FILE_SYSTEM_PAGE);
@@ -2039,13 +2004,7 @@ FormatPartitionPage (PINPUT_RECORD Ir)
   PLIST_ENTRY Entry;
 #endif
 
-
-  CONSOLE_SetTextXY(6, 8, "Format partition");
-
-  CONSOLE_SetTextXY(6, 10, "Setup will now format the partition. Press ENTER to continue.");
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
-
+  MUIDisplayPage(FORMAT_PARTITION_PAGE);
 
   if (PartitionList == NULL ||
       PartitionList->CurrentDisk == NULL ||
@@ -2438,17 +2397,8 @@ InstallDirectoryPage(PINPUT_RECORD Ir)
       wcscpy(InstallDir, L"\\ReactOS");
     }
   Length = wcslen(InstallDir);
-
-  CONSOLE_SetTextXY(6, 8, "Setup installs ReactOS files onto the selected partition. Choose a");
-  CONSOLE_SetTextXY(6, 9, "directory where you want ReactOS to be installed:");
-
   CONSOLE_SetInputTextXY(8, 11, 51, InstallDir);
-
-  CONSOLE_SetTextXY(6, 14, "To change the suggested directory, press BACKSPACE to delete");
-  CONSOLE_SetTextXY(6, 15, "characters and then type the directory where you want ReactOS to");
-  CONSOLE_SetTextXY(6, 16, "be installed.");
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
+  MUIDisplayPage(INSTALL_DIRECTORY_PAGE);
 
   if (IsUnattendedSetup)
     {
@@ -2778,9 +2728,7 @@ PrepareCopyPage(PINPUT_RECORD Ir)
   UINT ErrorLine;
   PVOID InfFileData;
 
-  CONSOLE_SetTextXY(6, 8, "Setup prepares your computer for copying the ReactOS files. ");
-
-  CONSOLE_SetStatusText("   Building the file copy list...");
+  MUIDisplayPage(PREPARE_COPY_PAGE);
 
   /* Create the file queue */
   SetupFileQueue = SetupOpenFileQueue();
@@ -2939,13 +2887,7 @@ FileCopyPage(PINPUT_RECORD Ir)
 {
     COPYCONTEXT CopyContext;
 
-    /* Display status text */
-    CONSOLE_SetStatusText("                                                           \xB3 Please wait...    ");
-
-    /* Displey information text */
-    CONSOLE_SetTextXY(11, 12, "Please wait while ReactOS Setup copies files to your ReactOS");
-    CONSOLE_SetTextXY(30, 13, "installation folder.");
-    CONSOLE_SetTextXY(20, 14, "This may take several minutes to complete.");
+    MUIDisplayPage(FILE_COPY_PAGE);
 
     /* Create context for the copy process */
     CopyContext.DestinationRootPath = DestinationRootPath.Buffer;
@@ -3189,14 +3131,8 @@ BootLoaderPage(PINPUT_RECORD Ir)
         }
     }
 
-  CONSOLE_SetTextXY(6, 8, "Setup is installing the boot loader");
-
-  CONSOLE_SetTextXY(8, 12, "Install bootloader on the harddisk (MBR).");
-  CONSOLE_SetTextXY(8, 13, "Install bootloader on a floppy disk.");
-  CONSOLE_SetTextXY(8, 14, "Skip install bootloader.");
-  CONSOLE_InvertTextXY (8, Line, 48, 1);
-
-  CONSOLE_SetStatusText("   ENTER = Continue   F3 = Quit");
+  MUIDisplayPage(BOOT_LOADER_PAGE);
+  CONSOLE_InvertTextXY (8, Line, 60, 1);
 
   while(TRUE)
     {
@@ -3205,7 +3141,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-	  CONSOLE_NormalTextXY (8, Line, 48, 1);
+	  CONSOLE_NormalTextXY (8, Line, 60, 1);
 
 	  Line++;
       if (Line<12) Line=14;
@@ -3213,7 +3149,7 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
 
 
-	  CONSOLE_InvertTextXY (8, Line, 48, 1);
+	  CONSOLE_InvertTextXY (8, Line, 60, 1);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	       (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */

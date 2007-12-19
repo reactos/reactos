@@ -673,6 +673,392 @@ static MUI_ENTRY deDEBootPageEntries[] =
 
 };
 
+static MUI_ENTRY deDESelectPartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "Diese Liste zeigt existierende Partitionen an und den freien",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        9,
+        "Speicherplatz fuer neue Partitionen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "\x07  Druecken Sie die Pfeiltasten um eine Partition auszuwaehlen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Druecken Sie die Eingabetaste um die Auswahl zu bestaetigen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        15,
+        "\x07  Druecken Sie C um eine neue Partition zu erstellen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        17,
+        "\x07  Druecken Sie D um eine vorhandene Partition zu löschen.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Bitte warten...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEFormatPartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "Formatiere Partition",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        10,
+        "Setup wird nun die gewuenschte Partition formatieren.",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        11,
+        "Druecken Sie die Eingabetaste um fortzufahren.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   F3 = Beenden",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        TEXT_NORMAL
+    }
+};
+
+static MUI_ENTRY deDEInstallDirectoryEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup installiert die ReactOS Installationsdateien in die ausgewaehlte ",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        9,
+        "Partition. Waehlen Sie ein Installationsverzeichniss fuer ReactOS:",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        14,
+        "Um den Vorschlag zu aendern druecken sie die 'Delete' Taste um",
+        TEXT_NORMAL
+    },
+    {
+        6,
+        15,
+        "Zeichen zu loeschen und gegeben sie dann den Namen des Verzeichniss ein",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   F3 = Beenden",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEFileCopyEntries[] =
+{
+    {
+        11,
+        12,
+        "Bitte warten Sie waehrend ReactOS Setup die ReactOS Dateien",
+        TEXT_NORMAL
+    },
+    {
+        30,
+        13,
+        "in das Installationsverzeichniss kopiert.",
+        TEXT_NORMAL
+    },
+    {
+        20,
+        14,
+        "Dieser Vorgang kann mehrere Minuten in Anspruch nehmen.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "                                                           \xB3 Bitte warten...    ",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEBootLoaderEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup installiert nun den Betriebssystemlader.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        12,
+        "Installiere den Betriebssystemlader im MBR",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "Installiere den Betriebssystemlader auf einer Diskette",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "Auslassen der Installation des Betriebssystemladers",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   F3 = Abbrechen",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEKeyboardSettingsEntries[] =
+{
+    {
+        6,
+        8,
+        "Sie möchten den Tastaturtyp aendern.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Druecken Sie die Pfeiltasten um den gewuenschten Typ zu waehlen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "\x07 Druecken Sie zum Bestaetigen die Eingabetaste.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Druecken Sie ESC Taste um die aenderungen zu verwerfen.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDELayoutSettingsEntries[] =
+{
+    {
+        6,
+        8,
+        "Sie möchten das Tastaturlayout aendern.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Druecken Sie die Pfeiltasten um das gewuenschte Layout auszuwaehlen.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "\x07 Druecken Sie zum Bestaetigen die Eingabetaste.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  Druecken Sie ESC um die Auswahl zu beenden und zur vorherigen Setupseite zurueckzukehren.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
+static MUI_ENTRY deDEPrepareCopyEntries[] =
+{
+    {
+        6,
+        8,
+        "Setup bereitet ihren Computer fuer die Installation vor.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Erstelle Liste der zu kopierenden Dateien...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
+static MUI_ENTRY deDESelectFSEntries[] =
+{
+    {
+        6,
+        17,
+        "Waehlen Sie ein Dateisystem von der folgenden Liste.",
+        0
+    },
+    {
+        8,
+        19,
+        "\x07  Druecken Sie die Pfeiltasten um das Dateisystem zu aendern.",
+        0
+    },
+    {
+        8,
+        21,
+        "\x07  Druecken Sie die Eingabetaste um die Partition zu formatieren.",
+        0
+    },
+    {
+        8,
+        23,
+        "\x07  Druecken Sie ESC um eine andere Partition auszuwaehlen.",
+        0
+    },
+    {
+        0,
+        0,
+        "   ENTER = Fortfahren   ESC = Abbrechen   F3 = Beenden",
+        TEXT_STATUS
+    },
+
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+static MUI_ENTRY deDEDeletePartitionEntries[] =
+{
+    {
+        6,
+        8,
+        "Sie haben sich entschieden diese Partition zu löschen",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        18,
+        "\x07  Druecken Sie D um die Partition zu löschen.",
+        TEXT_NORMAL
+    },
+    {
+        11,
+        19,
+        "Warnung: Alle Daten auf dieser Partition werden gelöscht!",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        21,
+        "\x07  ESC um abzubrechen.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   D = Lösche Partition   ESC = Abbrechen   F3 = Beenden",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
+
 MUI_ERROR deDEErrorEntries[] =
 {
     {
@@ -899,6 +1285,46 @@ MUI_PAGE deDEPages[] =
     {
         FLUSH_PAGE,
         deDEFlushPageEntries
+    },
+    {
+        SELECT_PARTITION_PAGE,
+        deDESelectPartitionEntries
+    },
+    {
+        SELECT_FILE_SYSTEM_PAGE,
+        deDESelectFSEntries
+    },
+    {
+        FORMAT_PARTITION_PAGE,
+        deDEFormatPartitionEntries
+    },
+    {
+        DELETE_PARTITION_PAGE,
+        deDEDeletePartitionEntries
+    },
+    {
+        INSTALL_DIRECTORY_PAGE,
+        deDEInstallDirectoryEntries
+    },
+    {
+        PREPARE_COPY_PAGE,
+        deDEPrepareCopyEntries
+    },
+    {
+        FILE_COPY_PAGE,
+        deDEFileCopyEntries
+    },
+    {
+        KEYBOARD_SETTINGS_PAGE,
+        deDEKeyboardSettingsEntries
+    },
+    {
+        BOOT_LOADER_PAGE,
+        deDEBootLoaderEntries
+    },
+    {
+        LAYOUT_SETTINGS_PAGE,
+        deDELayoutSettingsEntries
     },
     {
         QUIT_PAGE,
