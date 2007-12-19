@@ -27,6 +27,10 @@ static MUI_LANGUAGE LanguageList[] =
         deDEPages
     },
     {
+        "Greek",
+        elGRPages
+    },
+    {
         "Italian",
         itITPages
     },
