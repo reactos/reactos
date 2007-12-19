@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  * Note: This really doesn't do much at the moment, but it forms the framework
  * upon which full support for datatype handling will eventually be built.
@@ -28,7 +28,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winreg.h"
 #include "winnls.h"
 #include "wine/debug.h"
 #include "dbghelp_private.h"
@@ -100,8 +99,8 @@ const char* symt_get_name(const struct symt* sym)
     }
 }
 
-static struct symt* symt_find_type_by_name(struct module* module,
-                                           enum SymTagEnum sym_tag,
+static struct symt* symt_find_type_by_name(const struct module* module,
+                                           enum SymTagEnum sym_tag, 
                                            const char* typename)
 {
     void*                       ptr;
@@ -132,7 +131,7 @@ static void symt_add_type(struct module* module, struct symt* symt)
     *p = symt;
 }
 
-struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt,
+struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt, 
                                   const char* typename, unsigned size)
 {
     struct symt_basic*          sym;
@@ -159,12 +158,13 @@ struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt,
     return sym;
 }
 
-struct symt_udt* symt_new_udt(struct module* module, const char* typename,
+struct symt_udt* symt_new_udt(struct module* module, const char* typename, 
                               unsigned size, enum UdtKind kind)
 {
     struct symt_udt*            sym;
 
-    TRACE_(dbghelp_symt)("Adding udt %s:%s\n", module->module.ModuleName, typename);
+    TRACE_(dbghelp_symt)("Adding udt %s:%s\n",
+                         debugstr_w(module->module.ModuleName), typename);
     if ((sym = pool_alloc(&module->pool, sizeof(*sym))))
     {
         sym->symt.tag = SymTagUDT;
@@ -187,7 +187,7 @@ BOOL symt_set_udt_size(struct module* module, struct symt_udt* udt, unsigned siz
     if (vector_length(&udt->vchildren) != 0)
     {
         if (udt->size != size)
-            FIXME_(dbghelp_symt)("Changing size for %s from %u to %u\n",
+            FIXME_(dbghelp_symt)("Changing size for %s from %u to %u\n", 
                                  udt->hash_elt.name, udt->size, size);
         return TRUE;
     }
@@ -213,28 +213,30 @@ BOOL symt_add_udt_element(struct module* module, struct symt_udt* udt_type,
     assert(udt_type->symt.tag == SymTagUDT);
 
     TRACE_(dbghelp_symt)("Adding %s to UDT %s\n", name, udt_type->hash_elt.name);
-    p = NULL;
-    while ((p = vector_iter_up(&udt_type->vchildren, p)))
+    if (name)
     {
-        m = (struct symt_data*)*p;
-        assert(m);
-        assert(m->symt.tag == SymTagData);
-        if (m->hash_elt.name[0] == name[0] && strcmp(m->hash_elt.name, name) == 0)
-            return TRUE;
+        int    i;
+        for (i=0; i<vector_length(&udt_type->vchildren); i++)
+        {
+            m = *(struct symt_data**)vector_at(&udt_type->vchildren, i);
+            assert(m);
+            assert(m->symt.tag == SymTagData);
+            if (strcmp(m->hash_elt.name, name) == 0)
+                return TRUE;
+        }
     }
 
     if ((m = pool_alloc(&module->pool, sizeof(*m))) == NULL) return FALSE;
     memset(m, 0, sizeof(*m));
     m->symt.tag      = SymTagData;
-    m->hash_elt.name = pool_strdup(&module->pool, name);
+    m->hash_elt.name = name ? pool_strdup(&module->pool, name) : "";
     m->hash_elt.next = NULL;
 
-    m->kind          = DataIsMember;
-    m->container     = &udt_type->symt;
-    m->type          = elt_type;
-    m->u.s.offset    = offset;
-    m->u.s.length    = ((offset & 7) || (size & 7)) ? size : 0;
-    m->u.s.reg_id    = 0;
+    m->kind            = DataIsMember;
+    m->container       = &udt_type->symt;
+    m->type            = elt_type;
+    m->u.member.offset = offset;
+    m->u.member.length = ((offset & 7) || (size & 7)) ? size : 0;
     p = vector_add(&udt_type->vchildren, &module->pool);
     *p = &m->symt;
 
@@ -281,24 +283,26 @@ BOOL symt_add_enum_element(struct module* module, struct symt_enum* enum_type,
     return TRUE;
 }
 
-struct symt_array* symt_new_array(struct module* module, int min, int max,
-                                  struct symt* base)
+struct symt_array* symt_new_array(struct module* module, int min, int max, 
+                                  struct symt* base, struct symt* index)
 {
     struct symt_array*  sym;
 
     if ((sym = pool_alloc(&module->pool, sizeof(*sym))))
     {
-        sym->symt.tag  = SymTagArrayType;
-        sym->start     = min;
-        sym->end       = max;
-        sym->basetype  = base;
+        sym->symt.tag   = SymTagArrayType;
+        sym->start      = min;
+        sym->end        = max;
+        sym->base_type  = base;
+        sym->index_type = index;
         symt_add_type(module, &sym->symt);
     }
     return sym;
 }
 
-struct symt_function_signature* symt_new_function_signature(struct module* module,
-                                                            struct symt* ret_type)
+struct symt_function_signature* symt_new_function_signature(struct module* module, 
+                                                            struct symt* ret_type,
+                                                            enum CV_call_e call_conv)
 {
     struct symt_function_signature*     sym;
 
@@ -307,6 +311,7 @@ struct symt_function_signature* symt_new_function_signature(struct module* modul
         sym->symt.tag = SymTagFunctionType;
         sym->rettype  = ret_type;
         vector_init(&sym->vchildren, sizeof(struct symt*), 4);
+        sym->call_conv = call_conv;
         symt_add_type(module, &sym->symt);
     }
     return sym;
@@ -316,12 +321,18 @@ BOOL symt_add_function_signature_parameter(struct module* module,
                                            struct symt_function_signature* sig_type,
                                            struct symt* param)
 {
-    struct symt**       p;
+    struct symt**                       p;
+    struct symt_function_arg_type*      arg;
 
     assert(sig_type->symt.tag == SymTagFunctionType);
+    arg = pool_alloc(&module->pool, sizeof(*arg));
+    if (!arg) return FALSE;
+    arg->symt.tag = SymTagFunctionArgType;
+    arg->arg_type = param;
+    arg->container = &sig_type->symt;
     p = vector_add(&sig_type->vchildren, &module->pool);
-    if (!p) return FALSE; /* FIXME we leak e */
-    *p = param;
+    if (!p) return FALSE; /* FIXME we leak arg */
+    *p = &arg->symt;
 
     return TRUE;
 }
@@ -339,7 +350,7 @@ struct symt_pointer* symt_new_pointer(struct module* module, struct symt* ref_ty
     return sym;
 }
 
-struct symt_typedef* symt_new_typedef(struct module* module, struct symt* ref,
+struct symt_typedef* symt_new_typedef(struct module* module, struct symt* ref, 
                                       const char* name)
 {
     struct symt_typedef* sym;
@@ -363,32 +374,33 @@ BOOL WINAPI SymEnumTypes(HANDLE hProcess, ULONG64 BaseOfDll,
                          PSYM_ENUMERATESYMBOLS_CALLBACK EnumSymbolsCallback,
                          PVOID UserContext)
 {
-    struct process*     pcs;
-    struct module*      module;
+    struct module_pair  pair;
     char                buffer[sizeof(SYMBOL_INFO) + 256];
     SYMBOL_INFO*        sym_info = (SYMBOL_INFO*)buffer;
     const char*         tmp;
     struct symt*        type;
-    void*               pos = NULL;
+    DWORD64             size;
+    int                 i;
 
     TRACE("(%p %s %p %p)\n",
           hProcess, wine_dbgstr_longlong(BaseOfDll), EnumSymbolsCallback,
           UserContext);
 
-    if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
-    module = module_find_by_addr(pcs, BaseOfDll, DMT_UNKNOWN);
-    if (!(module = module_get_debug(pcs, module))) return FALSE;
+    if (!(pair.pcs = process_find_by_handle(hProcess))) return FALSE;
+    pair.requested = module_find_by_addr(pair.pcs, BaseOfDll, DMT_UNKNOWN);
+    if (!module_get_debug(&pair)) return FALSE;
 
     sym_info->SizeOfStruct = sizeof(SYMBOL_INFO);
     sym_info->MaxNameLen = sizeof(buffer) - sizeof(SYMBOL_INFO);
 
-    while ((pos = vector_iter_up(&module->vtypes, pos)))
+    for (i=0; i<vector_length(&pair.effective->vtypes); i++)
     {
-        type = *(struct symt**)pos;
+        type = *(struct symt**)vector_at(&pair.effective->vtypes, i);
         sym_info->TypeIndex = (DWORD)type;
         sym_info->info = 0; /* FIXME */
-        symt_get_info(type, TI_GET_LENGTH, &sym_info->Size);
-        sym_info->ModBase = module->module.BaseOfImage;
+        symt_get_info(type, TI_GET_LENGTH, &size);
+        sym_info->Size = size;
+        sym_info->ModBase = pair.requested->module.BaseOfImage;
         sym_info->Flags = 0; /* FIXME */
         sym_info->Value = 0; /* FIXME */
         sym_info->Address = 0; /* FIXME */
@@ -398,22 +410,55 @@ BOOL WINAPI SymEnumTypes(HANDLE hProcess, ULONG64 BaseOfDll,
         tmp = symt_get_name(type);
         if (tmp)
         {
-            sym_info->NameLen = strlen(tmp) + 1;
-            strncpy(sym_info->Name, tmp, min(sym_info->NameLen, sym_info->MaxNameLen));
-            sym_info->Name[sym_info->MaxNameLen - 1] = '\0';
+            sym_info->NameLen = min(strlen(tmp),sym_info->MaxNameLen-1);
+            memcpy(sym_info->Name, tmp, sym_info->NameLen);
+            sym_info->Name[sym_info->NameLen] = '\0';
         }
-        else sym_info->Name[sym_info->NameLen = 0] = '\0';
+        else
+           sym_info->Name[sym_info->NameLen = 0] = '\0';
         if (!EnumSymbolsCallback(sym_info, sym_info->Size, UserContext)) break;
     }
     return TRUE;
 }
 
+struct enum_types_AtoW
+{
+    char                                buffer[sizeof(SYMBOL_INFOW) + 256 * sizeof(WCHAR)];
+    void*                               user;
+    PSYM_ENUMERATESYMBOLS_CALLBACKW     callback;
+};
+
+BOOL CALLBACK enum_types_AtoW(PSYMBOL_INFO si, ULONG addr, PVOID _et)
+{
+    struct enum_types_AtoW*     et = _et;
+    SYMBOL_INFOW*               siW = (SYMBOL_INFOW*)et->buffer;
+
+    copy_symbolW(siW, si);
+    return et->callback(siW, addr, et->user);
+}
+
+/******************************************************************
+ *		SymEnumTypesW (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymEnumTypesW(HANDLE hProcess, ULONG64 BaseOfDll,
+                          PSYM_ENUMERATESYMBOLS_CALLBACKW EnumSymbolsCallback,
+                          PVOID UserContext)
+{
+    struct enum_types_AtoW     et;
+
+    et.callback = EnumSymbolsCallback;
+    et.user = UserContext;
+
+    return SymEnumTypes(hProcess, BaseOfDll, enum_types_AtoW, &et);
+}
+
 /******************************************************************
  *		symt_get_info
  *
- * Retrieves inforamtion about a symt (either symbol or type)
+ * Retrieves information about a symt (either symbol or type)
  */
-BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
+BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req, 
                    void* pInfo)
 {
     unsigned            len;
@@ -439,7 +484,7 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
             case SymTagFunctionType: v = &((const struct symt_function_signature*)type)->vchildren; break;
             case SymTagFunction:     v = &((const struct symt_function*)type)->vchildren; break;
             default:
-                FIXME("Unsupported sym-tag %s for find-children\n",
+                FIXME("Unsupported sym-tag %s for find-children\n", 
                       symt_get_tag_str(type->tag));
                 return FALSE;
             }
@@ -459,7 +504,7 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
             {
             case DataIsGlobal:
             case DataIsFileStatic:
-                X(ULONG64) = ((const struct symt_data*)type)->u.address;
+                X(ULONG64) = ((const struct symt_data*)type)->u.var.offset;
                 break;
             default: return FALSE;
             }
@@ -473,14 +518,17 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         case SymTagFuncDebugStart:
         case SymTagFuncDebugEnd:
         case SymTagLabel:
-            X(ULONG64) = ((const struct symt_function_point*)type)->parent->address +
-                ((const struct symt_function_point*)type)->offset;
+            X(ULONG64) = ((const struct symt_function_point*)type)->parent->address + 
+                ((const struct symt_function_point*)type)->loc.offset;
             break;
         case SymTagThunk:
             X(ULONG64) = ((const struct symt_thunk*)type)->address;
             break;
+        case SymTagCompiland:
+            X(ULONG64) = ((const struct symt_compiland*)type)->address;
+            break;
         default:
-            FIXME("Unsupported sym-tag %s for get-address\n",
+            FIXME("Unsupported sym-tag %s for get-address\n", 
                   symt_get_tag_str(type->tag));
             return FALSE;
         }
@@ -501,11 +549,11 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         break;
 
     case TI_GET_BITPOSITION:
-        if (type->tag != SymTagData ||
-            ((const struct symt_data*)type)->kind != DataIsMember ||
-            ((const struct symt_data*)type)->u.s.length == 0)
-            return FALSE;
-        X(DWORD) = ((const struct symt_data*)type)->u.s.offset & 7;
+        if (type->tag == SymTagData &&
+            ((const struct symt_data*)type)->kind == DataIsMember &&
+            ((const struct symt_data*)type)->u.member.length != 0)
+            X(DWORD) = ((const struct symt_data*)type)->u.member.offset & 7;
+        else return FALSE;
         break;
 
     case TI_GET_CHILDRENCOUNT:
@@ -529,7 +577,7 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
             X(DWORD) = 0;
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-children-count\n",
+            FIXME("Unsupported sym-tag %s for get-children-count\n", 
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagData:
@@ -540,13 +588,20 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         break;
 
     case TI_GET_COUNT:
-        /* it seems that FunctionType also react to GET_COUNT (same value as
-         * GET_CHILDREN_COUNT ?, except for C++ methods, where it seems to
-         * also include 'this' (GET_CHILDREN_COUNT+1)
-         */
-        if (type->tag != SymTagArrayType) return FALSE;
-        X(DWORD) = ((const struct symt_array*)type)->end -
-            ((const struct symt_array*)type)->start + 1;
+        switch (type->tag)
+        {
+        case SymTagArrayType:
+            X(DWORD) = ((const struct symt_array*)type)->end - 
+                ((const struct symt_array*)type)->start + 1;
+            break;
+        case SymTagFunctionType:
+            /* this seems to be wrong for (future) C++ methods, where 'this' parameter
+             * should be included in this value (and not in GET_CHILDREN_COUNT)
+             */
+            X(DWORD) = vector_length(&((const struct symt_function_signature*)type)->vchildren);
+            break;
+        default: return FALSE;
+        }
         break;
 
     case TI_GET_DATAKIND:
@@ -558,44 +613,43 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         switch (type->tag)
         {
         case SymTagBaseType:
-            X(DWORD) = ((const struct symt_basic*)type)->size;
+            X(DWORD64) = ((const struct symt_basic*)type)->size;
             break;
         case SymTagFunction:
-            X(DWORD) = ((const struct symt_function*)type)->size;
+            X(DWORD64) = ((const struct symt_function*)type)->size;
             break;
         case SymTagPointerType:
-            X(DWORD) = sizeof(void*);
+            X(DWORD64) = sizeof(void*);
             break;
         case SymTagUDT:
-            X(DWORD) = ((const struct symt_udt*)type)->size;
+            X(DWORD64) = ((const struct symt_udt*)type)->size;
             break;
         case SymTagEnum:
-            X(DWORD) = sizeof(int); /* FIXME: should be size of base-type of enum !!! */
+            X(DWORD64) = sizeof(int); /* FIXME: should be size of base-type of enum !!! */
             break;
         case SymTagData:
             if (((const struct symt_data*)type)->kind != DataIsMember ||
-                !((const struct symt_data*)type)->u.s.length)
+                !((const struct symt_data*)type)->u.member.length)
                 return FALSE;
-            X(DWORD) = ((const struct symt_data*)type)->u.s.length;
+            X(DWORD64) = ((const struct symt_data*)type)->u.member.length;
             break;
-        case SymTagArrayType:
-            if (!symt_get_info(((const struct symt_array*)type)->basetype,
+        case SymTagArrayType:   
+            if (!symt_get_info(((const struct symt_array*)type)->base_type, 
                                TI_GET_LENGTH, pInfo))
                 return FALSE;
-            X(DWORD) *= ((const struct symt_array*)type)->end -
+            X(DWORD64) *= ((const struct symt_array*)type)->end - 
                 ((const struct symt_array*)type)->start + 1;
             break;
         case SymTagPublicSymbol:
-            X(DWORD) = ((const struct symt_public*)type)->size;
+            X(DWORD64) = ((const struct symt_public*)type)->size;
             break;
         case SymTagTypedef:
             return symt_get_info(((const struct symt_typedef*)type)->type, TI_GET_LENGTH, pInfo);
-            break;
         case SymTagThunk:
-            X(DWORD) = ((const struct symt_thunk*)type)->size;
+            X(DWORD64) = ((const struct symt_thunk*)type)->size;
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-length\n",
+            FIXME("Unsupported sym-tag %s for get-length\n", 
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagFunctionType:
@@ -618,8 +672,11 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         case SymTagThunk:
             X(DWORD) = (DWORD)((const struct symt_thunk*)type)->container;
             break;
+        case SymTagFunctionArgType:
+            X(DWORD) = (DWORD)((const struct symt_function_arg_type*)type)->container;
+            break;
         default:
-            FIXME("Unsupported sym-tag %s for get-lexical-parent\n",
+            FIXME("Unsupported sym-tag %s for get-lexical-parent\n", 
                   symt_get_tag_str(type->tag));
             return FALSE;
         }
@@ -645,17 +702,19 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
             {
             case DataIsParam:
             case DataIsLocal:
+                X(ULONG) = ((const struct symt_data*)type)->u.var.offset; 
+                break;
             case DataIsMember:
-                X(ULONG) = ((const struct symt_data*)type)->u.s.offset >> 3;
+                X(ULONG) = ((const struct symt_data*)type)->u.member.offset >> 3; 
                 break;
             default:
-                FIXME("Unknown kind (%u) for get-offset\n",
+                FIXME("Unknown kind (%u) for get-offset\n",     
                       ((const struct symt_data*)type)->kind);
                 return FALSE;
             }
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-offset\n",
+            FIXME("Unsupported sym-tag %s for get-offset\n", 
                   symt_get_tag_str(type->tag));
             return FALSE;
         }
@@ -682,7 +741,7 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         {
             /* hierarchical => hierarchical */
         case SymTagArrayType:
-            X(DWORD) = (DWORD)((const struct symt_array*)type)->basetype;
+            X(DWORD) = (DWORD)((const struct symt_array*)type)->base_type;
             break;
         case SymTagPointerType:
             X(DWORD) = (DWORD)((const struct symt_pointer*)type)->pointsto;
@@ -695,15 +754,19 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
             break;
             /* lexical => hierarchical */
         case SymTagData:
-            X(DWORD) = (DWORD)((const struct symt_data*)type)->type;
+            X(DWORD) = (DWORD)((const struct symt_data*)type)->type; 
             break;
         case SymTagFunction:
             X(DWORD) = (DWORD)((const struct symt_function*)type)->type;
             break;
-            /* FIXME: should also work for enums and FunctionArgType */
+            /* FIXME: should also work for enums */
+        case SymTagFunctionArgType:
+            X(DWORD) = (DWORD)((const struct symt_function_arg_type*)type)->arg_type;
+            break;
         default:
-            FIXME("Unsupported sym-tag %s for get-type\n",
+            FIXME("Unsupported sym-tag %s for get-type\n", 
                   symt_get_tag_str(type->tag));
+        case SymTagPublicSymbol:
         case SymTagThunk:
             return FALSE;
         }
@@ -720,11 +783,23 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
         X(VARIANT) = ((const struct symt_data*)type)->u.value;
         break;
 
+    case TI_GET_CALLING_CONVENTION:
+        if (type->tag != SymTagFunctionType) return FALSE;
+        if (((const struct symt_function_signature*)type)->call_conv == -1)
+        {
+            FIXME("No support for calling convention for this signature\n");
+            X(DWORD) = CV_CALL_FAR_C; /* FIXME */
+        }
+        else X(DWORD) = ((const struct symt_function_signature*)type)->call_conv;
+        break;
+    case TI_GET_ARRAYINDEXTYPEID:
+        if (type->tag != SymTagArrayType) return FALSE;
+        X(DWORD) = (DWORD)((const struct symt_array*)type)->index_type;
+        break;
+
 #undef X
 
     case TI_GET_ADDRESSOFFSET:
-    case TI_GET_ARRAYINDEXTYPEID:
-    case TI_GET_CALLING_CONVENTION:
     case TI_GET_CLASSPARENTID:
     case TI_GET_SYMINDEX:
     case TI_GET_THISADJUST:
@@ -733,6 +808,9 @@ BOOL symt_get_info(const struct symt* type, IMAGEHLP_SYMBOL_TYPE_INFO req,
     case TI_GET_VIRTUALTABLESHAPEID:
     case TI_IS_EQUIV_TO:
         FIXME("Unsupported GetInfo request (%u)\n", req);
+        return FALSE;
+    default:
+        FIXME("Unknown GetInfo request (%u)\n", req);
         return FALSE;
     }
 
@@ -747,13 +825,13 @@ BOOL WINAPI SymGetTypeInfo(HANDLE hProcess, DWORD64 ModBase,
                            ULONG TypeId, IMAGEHLP_SYMBOL_TYPE_INFO GetType,
                            PVOID pInfo)
 {
-    struct process*     pcs = process_find_by_handle(hProcess);
-    struct module*      module;
+    struct module_pair  pair;
 
-    if (!pcs) return FALSE;
+    pair.pcs = process_find_by_handle(hProcess);
+    if (!pair.pcs) return FALSE;
 
-    module = module_find_by_addr(pcs, ModBase, DMT_UNKNOWN);
-    if (!(module = module_get_debug(pcs, module)))
+    pair.requested = module_find_by_addr(pair.pcs, ModBase, DMT_UNKNOWN);
+    if (!module_get_debug(&pair))
     {
         FIXME("Someone didn't properly set ModBase (%s)\n", wine_dbgstr_longlong(ModBase));
         return FALSE;
@@ -767,7 +845,7 @@ BOOL WINAPI SymGetTypeInfo(HANDLE hProcess, DWORD64 ModBase,
  *
  */
 BOOL WINAPI SymGetTypeFromName(HANDLE hProcess, ULONG64 BaseOfDll,
-                               LPSTR Name, PSYMBOL_INFO Symbol)
+                               PCSTR Name, PSYMBOL_INFO Symbol)
 {
     struct process*     pcs = process_find_by_handle(hProcess);
     struct module*      module;

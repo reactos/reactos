@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -24,7 +24,6 @@
 #include <string.h>
 
 #include "dbghelp_private.h"
-#include "winreg.h"
 #include "winternl.h"
 #include "wine/debug.h"
 
@@ -42,10 +41,10 @@ DWORD WINAPI GetTimestampForLoadedLibrary(HMODULE Module)
 /***********************************************************************
  *		MapDebugInformation (DBGHELP.@)
  */
-PIMAGE_DEBUG_INFORMATION WINAPI MapDebugInformation(HANDLE FileHandle, LPSTR FileName,
-                                                    LPSTR SymbolPath, DWORD ImageBase)
+PIMAGE_DEBUG_INFORMATION WINAPI MapDebugInformation(HANDLE FileHandle, PCSTR FileName,
+                                                    PCSTR SymbolPath, ULONG ImageBase)
 {
-    FIXME("(%p, %s, %s, 0x%08lx): stub\n", FileHandle, FileName, SymbolPath, ImageBase);
+    FIXME("(%p, %s, %s, 0x%08x): stub\n", FileHandle, FileName, SymbolPath, ImageBase);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return NULL;
 }

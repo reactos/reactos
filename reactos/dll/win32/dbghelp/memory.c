@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #include "config.h"
@@ -39,12 +39,12 @@ DWORD WINAPI addr_to_linear(HANDLE hProcess, HANDLE hThread, ADDRESS* addr)
     {
     case AddrMode1616:
         if (GetThreadSelectorEntry(hThread, addr->Segment, &le))
-            return (le.HighWord.Bits.BaseHi << 24) +
+            return (le.HighWord.Bits.BaseHi << 24) + 
                 (le.HighWord.Bits.BaseMid << 16) + le.BaseLow + LOWORD(addr->Offset);
         break;
     case AddrMode1632:
         if (GetThreadSelectorEntry(hThread, addr->Segment, &le))
-            return (le.HighWord.Bits.BaseHi << 24) +
+            return (le.HighWord.Bits.BaseHi << 24) + 
                 (le.HighWord.Bits.BaseMid << 16) + le.BaseLow + addr->Offset;
         break;
     case AddrModeReal:
@@ -55,7 +55,7 @@ DWORD WINAPI addr_to_linear(HANDLE hProcess, HANDLE hThread, ADDRESS* addr)
         FIXME("Unsupported (yet) mode (%x)\n", addr->Mode);
         return 0;
     }
-    FIXME("Failed to linearize address %04x:%08lx (mode %x)\n",
+    FIXME("Failed to linearize address %04x:%08x (mode %x)\n",
           addr->Segment, addr->Offset, addr->Mode);
     return 0;
 }

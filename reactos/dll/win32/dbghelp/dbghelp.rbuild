@@ -3,8 +3,10 @@
 	<include base="dbghelp">.</include>
 	<include base="ReactOS">include/reactos/wine</include>
 	<define name="_WIN32_IE">0x600</define>
-	<define name="_WIN32_WINNT">0x501</define>
-	<define name="WINVER">0x501</define>
+	<define name="_WIN32_WINNT">0x502</define>
+	<define name="WINVER">0x502</define>
+	<define name="__WINESRC__" />
+	<define name="HAVE_REGEX_H" />
 	<library>wine</library>
 	<library>pseh</library>
 	<library>ntdll</library>
@@ -12,6 +14,7 @@
 	<library>psapi</library>
 	<file>coff.c</file>
 	<file>dbghelp.c</file>
+	<file>dwarf.c</file>
 	<file>elf_module.c</file>
 	<file>image.c</file>
 	<file>memory.c</file>

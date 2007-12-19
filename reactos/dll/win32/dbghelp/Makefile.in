@@ -3,11 +3,13 @@ TOPOBJDIR = ../..
 SRCDIR    = @srcdir@
 VPATH     = @srcdir@
 MODULE    = dbghelp.dll
+IMPORTLIB = libdbghelp.$(IMPLIBEXT)
 IMPORTS   = psapi kernel32 ntdll
 
 C_SRCS = \
 	coff.c \
 	dbghelp.c \
+	dwarf.c \
 	elf_module.c \
 	image.c \
 	memory.c \
@@ -21,9 +23,8 @@ C_SRCS = \
 	stack.c \
 	storage.c \
 	symbol.c \
-	type.c \
-	regex.c # ReactOS Port
+	type.c
 
 @MAKE_DLL_RULES@
 
-### Dependencies:
+@DEPENDENCIES@  # everything below this line is overwritten by make depend

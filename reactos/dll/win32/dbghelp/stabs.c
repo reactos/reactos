@@ -2,7 +2,7 @@
  * File stabs.c - read stabs information from the modules
  *
  * Copyright (C) 1996,      Eric Youngdale.
- *		 1999-2004, Eric Pouech
+ *		 1999-2005, Eric Pouech
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -16,7 +16,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  *
  * Maintenance Information
@@ -33,7 +33,9 @@
 
 #include <sys/types.h>
 #include <fcntl.h>
-#include <sys/stat.h>
+#ifdef HAVE_SYS_STAT_H
+# include <sys/stat.h>
+#endif
 #ifdef HAVE_SYS_MMAN_H
 #include <sys/mman.h>
 #endif
@@ -52,7 +54,6 @@
 
 #include "windef.h"
 #include "winbase.h"
-#include "winreg.h"
 #include "winnls.h"
 
 #include "dbghelp_private.h"
@@ -60,8 +61,6 @@
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
-
-UINT64 _strtoui64( const char *nptr, char **endptr, int base );
 
 #ifndef N_UNDF
 #define N_UNDF		0x00
@@ -73,9 +72,11 @@ UINT64 _strtoui64( const char *nptr, char **endptr, int base );
 #define N_LCSYM		0x28
 #define N_MAIN		0x2a
 #define N_ROSYM		0x2c
+#define N_BNSYM		0x2e
 #define N_OPT		0x3c
 #define N_RSYM		0x40
 #define N_SLINE		0x44
+#define N_ENSYM		0x4e
 #define N_SO		0x64
 #define N_LSYM		0x80
 #define N_BINCL		0x82
@@ -102,27 +103,36 @@ struct stab_nlist
 
 static void stab_strcpy(char* dest, int sz, const char* source)
 {
+    char*       ptr = dest;
     /*
      * A strcpy routine that stops when we hit the ':' character.
      * Faster than copying the whole thing, and then nuking the
      * ':'.
+     * Takes also care of (valid) a::b constructs
      */
-    while (*source != '\0' && *source != ':' && sz-- > 0)
-        *dest++ = *source++;
-    *dest-- = '\0';
-    /* GCC seems to emit, in some cases, a .<digit>+ suffix.
+    while (*source != '\0')
+    {
+        if (source[0] != ':' && sz-- > 0) *ptr++ = *source++;
+        else if (source[1] == ':' && (sz -= 2) > 0)
+        {
+            *ptr++ = *source++;
+            *ptr++ = *source++;
+        }
+        else break;
+    }
+    *ptr-- = '\0';
+    /* GCC emits, in some cases, a .<digit>+ suffix.
      * This is used for static variable inside functions, so
      * that we can have several such variables with same name in
      * the same compilation unit
      * We simply ignore that suffix when present (we also get rid
      * of it in ELF symtab parsing)
      */
-    if (isdigit(*dest))
+    if (ptr >= dest && isdigit(*ptr))
     {
-        while (isdigit(*dest)) dest--;
-        if (*dest == '.') *dest = '\0';
+        while (ptr > dest && isdigit(*ptr)) ptr--;
+        if (*ptr == '.') *ptr = '\0';
     }
-
     assert(sz > 0);
 }
 
@@ -151,7 +161,7 @@ static int stabs_new_include(const char* file, unsigned long val)
     {
         num_alloc_include_def += 256;
         if (!include_defs)
-            include_defs = HeapAlloc(GetProcessHeap(), 0,
+            include_defs = HeapAlloc(GetProcessHeap(), 0, 
                                      sizeof(include_defs[0]) * num_alloc_include_def);
         else
             include_defs = HeapReAlloc(GetProcessHeap(), 0, include_defs,
@@ -232,10 +242,10 @@ static struct symt** stabs_find_ref(long filenr, long subnr)
         if (cu_nrofentries <= subnr)
 	{
             if (!cu_vector)
-                cu_vector = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                cu_vector = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                       sizeof(cu_vector[0]) * (subnr+1));
             else
-                cu_vector = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                cu_vector = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                         cu_vector, sizeof(cu_vector[0]) * (subnr+1));
             cu_nrofentries = subnr + 1;
 	}
@@ -251,10 +261,10 @@ static struct symt** stabs_find_ref(long filenr, long subnr)
         if (idef->nrofentries <= subnr)
 	{
             if (!idef->vector)
-                idef->vector = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                idef->vector = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                          sizeof(idef->vector[0]) * (subnr+1));
             else
-                idef->vector = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                idef->vector = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, 
                                            idef->vector, sizeof(idef->vector[0]) * (subnr+1));
             idef->nrofentries = subnr + 1;
 	}
@@ -267,20 +277,25 @@ static struct symt** stabs_find_ref(long filenr, long subnr)
 static struct symt** stabs_read_type_enum(const char** x)
 {
     long        filenr, subnr;
+    const char* iter;
+    char*       end;
 
-    if (**x == '(')
+    iter = *x;
+    if (*iter == '(')
     {
-	(*x)++;					/* '('   */
-	filenr = strtol(*x, (char**)x, 10);	/* <int> */
-	(*x)++;					/* ','   */
-	subnr = strtol(*x, (char**)x, 10);	/* <int> */
-	(*x)++;					/* ')'   */
+        ++iter;                             /* '('   */
+        filenr = strtol(iter, &end, 10);    /* <int> */
+        iter = ++end;                       /* ','   */
+        subnr = strtol(iter, &end, 10);     /* <int> */
+        iter = ++end;                       /* ')'   */
     }
     else
     {
-    	filenr = 0;
-	subnr = strtol(*x, (char**)x, 10);      /* <int> */
+        filenr = 0;
+        subnr = strtol(iter, &end, 10);     /* <int> */
+        iter = end;
     }
+    *x = iter;
     return stabs_find_ref(filenr, subnr);
 }
 
@@ -292,7 +307,7 @@ struct ParseTypedefData
     int			idx;
     struct module*      module;
 #ifdef PTS_DEBUG
-    struct PTS_Error
+    struct PTS_Error 
     {
         const char*         ptr;
         unsigned            line;
@@ -349,27 +364,40 @@ static int stabs_get_basic(struct ParseTypedefData* ptd, unsigned basic, struct 
         case 35: stabs_basic[basic] = symt_new_basic(ptd->module, btComplex, "long double complex", 24); break;
         default: PTS_ABORTIF(ptd, 1);
         }
-    }
+    }   
     *symt = &stabs_basic[basic]->symt;
     return 0;
 }
 
-static int stabs_pts_read_type_def(struct ParseTypedefData* ptd,
+static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, 
                                    const char* typename, struct symt** dt);
 
 static int stabs_pts_read_id(struct ParseTypedefData* ptd)
 {
     const char*	        first = ptd->ptr;
-    unsigned int	len;
+    unsigned int	template = 0;
+    char                ch;
 
-    PTS_ABORTIF(ptd, (ptd->ptr = strchr(ptd->ptr, ':')) == NULL);
-    len = ptd->ptr - first;
-    PTS_ABORTIF(ptd, len >= sizeof(ptd->buf) - ptd->idx);
-    memcpy(ptd->buf + ptd->idx, first, len);
-    ptd->buf[ptd->idx + len] = '\0';
-    ptd->idx += len + 1;
-    ptd->ptr++; /* ':' */
-    return 0;
+    while ((ch = *ptd->ptr++) != '\0')
+    {
+        switch (ch)
+        {
+        case ':':
+            if (template == 0)
+            {
+                unsigned int len = ptd->ptr - first - 1;
+                PTS_ABORTIF(ptd, len >= sizeof(ptd->buf) - ptd->idx);
+                memcpy(ptd->buf + ptd->idx, first, len);
+                ptd->buf[ptd->idx + len] = '\0';
+                ptd->idx += len + 1;
+                return 0;
+            }
+            break;
+        case '<': template++; break;
+        case '>': PTS_ABORTIF(ptd, template == 0); template--; break;
+        }
+    }
+    return -1;
 }
 
 static int stabs_pts_read_number(struct ParseTypedefData* ptd, long* v)
@@ -404,7 +432,7 @@ static int stabs_pts_read_type_reference(struct ParseTypedefData* ptd,
 
 struct pts_range_value
 {
-    unsigned long long  val;
+    ULONGLONG           val;
     int                 sign;
 };
 
@@ -420,7 +448,7 @@ static int stabs_pts_read_range_value(struct ParseTypedefData* ptd, struct pts_r
         {
             switch (ptd->ptr[1])
             {
-            case '0':
+            case '0': 
                 PTS_ABORTIF(ptd, ptd->ptr[0] != '1');
                 prv->sign = -1;
                 prv->val = 0;
@@ -437,13 +465,13 @@ static int stabs_pts_read_range_value(struct ParseTypedefData* ptd, struct pts_r
         break;
     case '-':
         prv->sign = -1;
-        prv->val = _strtoui64(++ptd->ptr, &last, 10);
+        prv->val = strtoull(++ptd->ptr, &last, 10);
         ptd->ptr = last;
         break;
     case '+':
-    default:
+    default:    
         prv->sign = 1;
-        prv->val = _strtoui64(ptd->ptr, &last, 10);
+        prv->val = strtoull(ptd->ptr, &last, 10);
         ptd->ptr = last;
         break;
     }
@@ -459,7 +487,7 @@ static int stabs_pts_read_range(struct ParseTypedefData* ptd, const char* typena
     unsigned                    size;
     enum BasicType              bt;
     int                         i;
-    unsigned long long          v;
+    ULONGLONG                   v;
 
     /* type ';' <int> ';' <int> ';' */
     PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &ref) == -1);
@@ -532,7 +560,7 @@ static int stabs_pts_read_range(struct ParseTypedefData* ptd, const char* typena
     return 0;
 }
 
-static __inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
+static inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
 {
     struct symt*        dt;
     char*               tmp;
@@ -572,7 +600,7 @@ static __inline int stabs_pts_read_method_info(struct ParseTypedefData* ptd)
     return 0;
 }
 
-static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
+static inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd, 
                                            struct symt_udt* sdt)
 {
     long        	sz, ofs;
@@ -603,11 +631,11 @@ static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
             {
                 char    tmp[256];
                 WCHAR*  name;
-                DWORD   size;
+                DWORD64 size;
 
                 symt_get_info(adt, TI_GET_SYMNAME, &name);
-                strcmp(tmp, "__inherited_class_");
-                WideCharToMultiByte(CP_ACP, 0, name, -1,
+                strcpy(tmp, "__inherited_class_");
+                WideCharToMultiByte(CP_ACP, 0, name, -1, 
                                     tmp + strlen(tmp), sizeof(tmp) - strlen(tmp),
                                     NULL, NULL);
                 HeapFree(GetProcessHeap(), 0, name);
@@ -618,11 +646,11 @@ static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
                  * be much of a problem
                  */
                 symt_get_info(adt, TI_GET_LENGTH, &size);
-                symt_add_udt_element(ptd->module, sdt, tmp, adt, ofs, size * 8);
+                symt_add_udt_element(ptd->module, sdt, tmp, adt, ofs, (DWORD)size * 8);
             }
             PTS_ABORTIF(ptd, *ptd->ptr++ != ';');
         }
-
+        
     }
     /* if the structure has already been filled, just redo the parsing
      * but don't store results into the struct
@@ -630,7 +658,7 @@ static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
      */
 
     /* Now parse the individual elements of the structure/union. */
-    while (*ptd->ptr != ';')
+    while (*ptd->ptr != ';') 
     {
 	/* agg_name : type ',' <int:offset> ',' <int:size> */
 	idx = ptd->idx;
@@ -672,7 +700,7 @@ static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
          */
         if (*ptd->ptr == ':')
         {
-            ptd->ptr++;
+            ptd->ptr++; 
             stabs_pts_read_method_info(ptd);
             ptd->idx = idx;
             continue;
@@ -718,7 +746,7 @@ static __inline int stabs_pts_read_aggregate(struct ParseTypedefData* ptd,
     return 0;
 }
 
-static __inline int stabs_pts_read_enum(struct ParseTypedefData* ptd,
+static inline int stabs_pts_read_enum(struct ParseTypedefData* ptd, 
                                       struct symt_enum* edt)
 {
     long        value;
@@ -737,26 +765,27 @@ static __inline int stabs_pts_read_enum(struct ParseTypedefData* ptd,
     return 0;
 }
 
-static __inline int stabs_pts_read_array(struct ParseTypedefData* ptd,
+static inline int stabs_pts_read_array(struct ParseTypedefData* ptd,
                                        struct symt** adt)
 {
     long                lo, hi;
-    struct symt*        rdt;
+    struct symt*        range_dt;
+    struct symt*        base_dt;
 
     /* ar<typeinfo_nodef>;<int>;<int>;<typeinfo> */
 
     PTS_ABORTIF(ptd, *ptd->ptr++ != 'r');
-    /* FIXME: range type is lost, always assume int */
-    PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &rdt) == -1);
+
+    PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &range_dt) == -1);
     PTS_ABORTIF(ptd, *ptd->ptr++ != ';');	/* ';' */
     PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &lo) == -1);
     PTS_ABORTIF(ptd, *ptd->ptr++ != ';');	/* ';' */
     PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &hi) == -1);
     PTS_ABORTIF(ptd, *ptd->ptr++ != ';');	/* ';' */
 
-    PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &rdt) == -1);
+    PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &base_dt) == -1);
 
-    *adt = &symt_new_array(ptd->module, lo, hi, rdt)->symt;
+    *adt = &symt_new_array(ptd->module, lo, hi, base_dt, range_dt)->symt;
     return 0;
 }
 
@@ -781,7 +810,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
 	PTS_ABORTIF(ptd, new_dt != btNoType);
 
 	/* first handle attribute if any */
-	switch (*ptd->ptr)
+	switch (*ptd->ptr)      
         {
 	case '@':
 	    if (*++ptd->ptr == 's')
@@ -824,7 +853,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
 	    break;
 	case 'f':
 	    PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &ref_dt) == -1);
-	    new_dt = &symt_new_function_signature(ptd->module, ref_dt)->symt;
+	    new_dt = &symt_new_function_signature(ptd->module, ref_dt, -1)->symt;
 	    break;
 	case 'e':
 	    new_dt = &symt_new_enum(ptd->module, typename)->symt;
@@ -847,16 +876,28 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
                 }
                 else
                 {
+                    unsigned l1, l2;
                     if (udt->symt.tag != SymTagUDT)
                     {
                         ERR("Forward declaration (%p/%s) is not an aggregate (%u)\n",
                             udt, symt_get_name(&udt->symt), udt->symt.tag);
                         return -1;
                     }
-                    if (strcmp(udt->hash_elt.name, typename))
+                    /* FIXME: we currently don't correctly construct nested C++
+                     * classes names. Therefore, we could be here with either:
+                     * - typename and udt->hash_elt.name being the same string
+                     *   (non embedded case)
+                     * - typename being foo::bar while udt->hash_elt.name being 
+                     *   just bar
+                     * So, we twist the comparison to test both occurrences. When
+                     * we have proper C++ types in this file, this twist has to be
+                     * removed
+                     */
+                    l1 = strlen(udt->hash_elt.name);
+                    l2 = strlen(typename);
+                    if (l1 > l2 || strcmp(udt->hash_elt.name, typename + l2 - l1))
                         ERR("Forward declaration name mismatch %s <> %s\n",
                             udt->hash_elt.name, typename);
-                    /* should check typename is the same too */
                     new_dt = &udt->symt;
                 }
                 PTS_ABORTIF(ptd, stabs_pts_read_aggregate(ptd, udt) == -1);
@@ -894,7 +935,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
             {
                 ptd->ptr++;
                 PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &ref_dt) == -1);
-                new_dt = &symt_new_function_signature(ptd->module, ref_dt)->symt;
+                new_dt = &symt_new_function_signature(ptd->module, ref_dt, -1)->symt;
             }
             else
             {
@@ -904,7 +945,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
                 PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &cls_dt) == -1);
                 PTS_ABORTIF(ptd, *ptd->ptr++ != ',');
                 PTS_ABORTIF(ptd, stabs_pts_read_type_def(ptd, NULL, &ref_dt) == -1);
-                new_dt = &symt_new_function_signature(ptd->module, ref_dt)->symt;
+                new_dt = &symt_new_function_signature(ptd->module, ref_dt, -1)->symt;
                 while (*ptd->ptr == ',')
                 {
                     ptd->ptr++;
@@ -916,7 +957,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
             {
                 long    type, len, unk;
                 int     basic;
-
+                
                 PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &type) == -1);
                 PTS_ABORTIF(ptd, *ptd->ptr++ != ';');	/* ';' */
                 PTS_ABORTIF(ptd, stabs_pts_read_number(ptd, &len) == -1);
@@ -955,7 +996,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
             new_dt = &symt_new_basic(ptd->module, btVoid, typename, 0)->symt;
             PTS_ABORTIF(ptd, strcmp(typename, "void"));
         }
-    }
+    }            
 
     *stabs_find_ref(filenr1, subnr1) = *ret_dt = new_dt;
 
@@ -964,7 +1005,7 @@ static int stabs_pts_read_type_def(struct ParseTypedefData* ptd, const char* typ
     return 0;
 }
 
-static int stabs_parse_typedef(struct module* module, const char* ptr,
+static int stabs_parse_typedef(struct module* module, const char* ptr, 
                                const char* typename)
 {
     struct ParseTypedefData	ptd;
@@ -973,7 +1014,7 @@ static int stabs_parse_typedef(struct module* module, const char* ptr,
 
     /* check for already existing definition */
 
-    TRACE("%s\n", debugstr_a(ptr));
+    TRACE("%s => %s\n", typename, debugstr_a(ptr));
     ptd.module = module;
     ptd.idx = 0;
 #ifdef PTS_DEBUG
@@ -992,7 +1033,7 @@ static int stabs_parse_typedef(struct module* module, const char* ptr,
 	ret = stabs_pts_read_type_def(&ptd, typename, &dt);
     }
 
-    if (ret == -1 || *ptd.ptr)
+    if (ret == -1 || *ptd.ptr) 
     {
 #ifdef PTS_DEBUG
         int     i;
@@ -1001,13 +1042,13 @@ static int stabs_parse_typedef(struct module* module, const char* ptr,
         {
             for (i = 0; i < ptd.err_idx; i++)
             {
-                TRACE("[%d]: line %d => %s\n",
+                TRACE("[%d]: line %d => %s\n", 
                       i, ptd.errors[i].line, debugstr_a(ptd.errors[i].ptr));
             }
         }
         else
             TRACE("[0]: => %s\n", debugstr_a(ptd.ptr));
-
+            
 #else
 	ERR("Failure on %s at %s\n", debugstr_a(ptr), debugstr_a(ptd.ptr));
 #endif
@@ -1052,9 +1093,51 @@ struct pending_loc_var
 {
     char                name[256];
     struct symt*        type;
-    unsigned            offset;
-    unsigned            regno;
+    enum DataKind       kind;
+    struct location     loc;
 };
+
+struct pending_block
+{
+    struct pending_loc_var*     vars;
+    unsigned                    num;
+    unsigned                    allocated;
+};
+
+static inline void pending_add(struct pending_block* pending, const char* name,
+                               enum DataKind dt, const struct location* loc)
+{
+    if (pending->num == pending->allocated)
+    {
+        pending->allocated += 8;
+        if (!pending->vars)
+            pending->vars = HeapAlloc(GetProcessHeap(), 0, 
+                                     pending->allocated * sizeof(pending->vars[0]));
+        else    
+            pending->vars = HeapReAlloc(GetProcessHeap(), 0, pending->vars,
+                                       pending->allocated * sizeof(pending->vars[0]));
+    }
+    stab_strcpy(pending->vars[pending->num].name, 
+                sizeof(pending->vars[pending->num].name), name);
+    pending->vars[pending->num].type   = stabs_parse_type(name);
+    pending->vars[pending->num].kind   = dt;
+    pending->vars[pending->num].loc    = *loc;
+    pending->num++;
+}
+
+static void pending_flush(struct pending_block* pending, struct module* module, 
+                          struct symt_function* func, struct symt_block* block)
+{
+    int i;
+
+    for (i = 0; i < pending->num; i++)
+    {
+        symt_add_func_local(module, func, 
+                            pending->vars[i].kind, &pending->vars[i].loc,
+                            block, pending->vars[i].type, pending->vars[i].name);
+    }
+    pending->num = 0;
+}
 
 /******************************************************************
  *		stabs_finalize_function
@@ -1062,13 +1145,14 @@ struct pending_loc_var
  * Ends function creation: mainly:
  * - cleans up line number information
  * - tries to set up a debug-start tag (FIXME: heuristic to be enhanced)
- * - for stabs which have abolute address in them, initializes the size of the
+ * - for stabs which have abolute address in them, initializes the size of the 
  *   function (assuming that current function ends where next function starts)
  */
 static void stabs_finalize_function(struct module* module, struct symt_function* func,
-                                    unsigned long end)
+                                    unsigned long size)
 {
     IMAGEHLP_LINE       il;
+    struct location     loc;
 
     if (!func) return;
     symt_normalize_function(module, func);
@@ -1078,22 +1162,23 @@ static void stabs_finalize_function(struct module* module, struct symt_function*
     if (symt_fill_func_line_info(module, func, func->address, &il) &&
         symt_get_func_line_next(module, &il))
     {
-        symt_add_function_point(module, func, SymTagFuncDebugStart,
-                                il.Address - func->address, NULL);
+        loc.kind = loc_absolute;
+        loc.offset = il.Address - func->address;
+        symt_add_function_point(module, func, SymTagFuncDebugStart, 
+                                &loc, NULL);
     }
-    if (end) func->size = end - func->address;
+    if (size) func->size = size;
 }
 
-BOOL stabs_parse(struct module* module, unsigned long load_offset,
+BOOL stabs_parse(struct module* module, unsigned long load_offset, 
                  const void* pv_stab_ptr, int stablen,
                  const char* strs, int strtablen)
 {
     struct symt_function*       curr_func = NULL;
     struct symt_block*          block = NULL;
     struct symt_compiland*      compiland = NULL;
-    char                        currpath[PATH_MAX]; /* path to current file */
     char                        srcpath[PATH_MAX]; /* path to directory source file is in */
-    int                         i, j;
+    int                         i;
     int                         nstab;
     const char*                 ptr;
     char*                       stabbuff;
@@ -1105,16 +1190,16 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
     unsigned                    incl[32];
     int                         incl_stk = -1;
     int                         source_idx = -1;
-    struct pending_loc_var*     pending_vars = NULL;
-    unsigned                    num_pending_vars = 0;
-    unsigned                    num_allocated_pending_vars = 0;
+    struct pending_block        pending;
     BOOL                        ret = TRUE;
+    struct location             loc;
 
     nstab = stablen / sizeof(struct stab_nlist);
     strs_end = strs + strtablen;
 
     memset(srcpath, 0, sizeof(srcpath));
     memset(stabs_basic, 0, sizeof(stabs_basic));
+    memset(&pending, 0, sizeof(pending));
 
     /*
      * Allocate a buffer into which we can build stab strings for cases
@@ -1133,7 +1218,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             WARN("Bad stabs string %p\n", ptr);
             continue;
         }
-        if (ptr[strlen(ptr) - 1] == '\\')
+        if (*ptr != '\0' && (ptr[strlen(ptr) - 1] == '\\'))
         {
             /*
              * Indicates continuation.  Append this to the buffer, and go onto the
@@ -1164,6 +1249,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
         case N_RSYM:
         case N_LSYM:
         case N_ROSYM:
+        case N_PSYM:
             if (strchr(ptr, '=') != NULL)
             {
                 /*
@@ -1184,42 +1270,6 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 }
             }
         }
-
-#if 0
-        const char* defs[] = {"","","","",                      /* 00 */
-                              "","","","",                      /* 08 */
-                              "","","","",                      /* 10 */
-                              "","","","",                      /* 18 */
-                              "gsym","","fun","stsym",          /* 20 */
-                              "lcsym","main","rosym","",        /* 28 */
-                              "","","","",                      /* 30 */
-                              "","","opt","",                   /* 38 */
-                              "rsym","","sline","",             /* 40 */
-                              "","","","",                      /* 48 */
-                              "","","","",                      /* 50 */
-                              "","","","",                      /* 58 */
-                              "","","so","",                    /* 60 */
-                              "","","","",                      /* 68 */
-                              "","","","",                      /* 70 */
-                              "","","","",                      /* 78 */
-                              "lsym","bincl","sol","",          /* 80 */
-                              "","","","",                      /* 88 */
-                              "","","","",                      /* 90 */
-                              "","","","",                      /* 98 */
-                              "psym","eincl","","",             /* a0 */
-                              "","","","",                      /* a8 */
-                              "","","","",                      /* b0 */
-                              "","","","",                      /* b8 */
-                              "lbrac","excl","","",             /* c0 */
-                              "","","","",                      /* c8 */
-                              "","","","",                      /* d0 */
-                              "","","","",                      /* d8 */
-                              "rbrac","","","",                 /* e0 */
-        };
-
-        FIXME("Got %s<%u> %u/%lu (%s)\n",
-              defs[stab_ptr->n_type / 2], stab_ptr->n_type, stab_ptr->n_desc, stab_ptr->n_value, debugstr_a(ptr));
-#endif
 
         switch (stab_ptr->n_type)
         {
@@ -1246,19 +1296,17 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                                      stabs_parse_type(ptr));
             break;
         case N_LBRAC:
-            block = symt_open_func_block(module, curr_func, block,
-                                         stab_ptr->n_value, 0);
-            for (j = 0; j < num_pending_vars; j++)
+            if (curr_func)
             {
-                symt_add_func_local(module, curr_func, pending_vars[j].regno,
-                                    pending_vars[j].offset,
-                                    block, pending_vars[j].type, pending_vars[j].name);
+                block = symt_open_func_block(module, curr_func, block,
+                                             stab_ptr->n_value, 0);
+                pending_flush(&pending, module, curr_func, block);
             }
-            num_pending_vars = 0;
             break;
         case N_RBRAC:
-            block = symt_close_func_block(module, curr_func, block,
-                                          stab_ptr->n_value);
+            if (curr_func)
+                block = symt_close_func_block(module, curr_func, block,
+                                              stab_ptr->n_value);
             break;
         case N_PSYM:
             /* These are function parameters. */
@@ -1266,10 +1314,14 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             {
                 struct symt*    param_type = stabs_parse_type(ptr);
                 stab_strcpy(symname, sizeof(symname), ptr);
-                symt_add_func_local(module, curr_func, 0, stab_ptr->n_value,
-                                    NULL, param_type, symname);
-                symt_add_function_signature_parameter(module,
-                                                      (struct symt_function_signature*)curr_func->type,
+                loc.kind = loc_regrel;
+                loc.reg = 0; /* FIXME */
+                loc.offset = stab_ptr->n_value;
+                symt_add_func_local(module, curr_func,
+                                    (long)stab_ptr->n_value >= 0 ? DataIsParam : DataIsLocal,
+                                    &loc, NULL, param_type, symname);
+                symt_add_function_signature_parameter(module, 
+                                                      (struct symt_function_signature*)curr_func->type, 
                                                       param_type);
             }
             break;
@@ -1277,28 +1329,19 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             /* These are registers (as local variables) */
             if (curr_func != NULL)
             {
-                unsigned reg;
+                loc.kind = loc_register;
+                loc.offset = 0;
 
-                if (num_pending_vars == num_allocated_pending_vars)
-                {
-                    num_allocated_pending_vars += 8;
-                    if (!pending_vars)
-                        pending_vars = HeapAlloc(GetProcessHeap(), 0,
-                                                 num_allocated_pending_vars * sizeof(pending_vars[0]));
-                    else
-                        pending_vars = HeapReAlloc(GetProcessHeap(), 0, pending_vars,
-                                                   num_allocated_pending_vars * sizeof(pending_vars[0]));
-                }
                 switch (stab_ptr->n_value)
                 {
-                case  0: reg = CV_REG_EAX; break;
-                case  1: reg = CV_REG_ECX; break;
-                case  2: reg = CV_REG_EDX; break;
-                case  3: reg = CV_REG_EBX; break;
-                case  4: reg = CV_REG_ESP; break;
-                case  5: reg = CV_REG_EBP; break;
-                case  6: reg = CV_REG_ESI; break;
-                case  7: reg = CV_REG_EDI; break;
+                case  0: loc.reg = CV_REG_EAX; break;
+                case  1: loc.reg = CV_REG_ECX; break;
+                case  2: loc.reg = CV_REG_EDX; break;
+                case  3: loc.reg = CV_REG_EBX; break;
+                case  4: loc.reg = CV_REG_ESP; break;
+                case  5: loc.reg = CV_REG_EBP; break;
+                case  6: loc.reg = CV_REG_ESI; break;
+                case  7: loc.reg = CV_REG_EDI; break;
                 case 11:
                 case 12:
                 case 13:
@@ -1307,42 +1350,33 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 16:
                 case 17:
                 case 18:
-                case 19: reg = CV_REG_ST0 + stab_ptr->n_value - 12; break;
+                case 19: loc.reg = CV_REG_ST0 + stab_ptr->n_value - 12; break;
                 default:
                     FIXME("Unknown register value (%lu)\n", stab_ptr->n_value);
-                    reg = CV_REG_NONE;
+                    loc.reg = CV_REG_NONE;
                     break;
                 }
-
-                stab_strcpy(pending_vars[num_pending_vars].name,
-                            sizeof(pending_vars[num_pending_vars].name), ptr);
-                pending_vars[num_pending_vars].type   = stabs_parse_type(ptr);
-                pending_vars[num_pending_vars].offset = 0;
-                pending_vars[num_pending_vars].regno  = reg;
-                num_pending_vars++;
+                stab_strcpy(symname, sizeof(symname), ptr);
+                if (ptr[strlen(symname) + 1] == 'P')
+                {
+                    struct symt*    param_type = stabs_parse_type(ptr);
+                    stab_strcpy(symname, sizeof(symname), ptr);
+                    symt_add_func_local(module, curr_func, DataIsParam, &loc,
+                                        NULL, param_type, symname);
+                    symt_add_function_signature_parameter(module, 
+                                                          (struct symt_function_signature*)curr_func->type, 
+                                                          param_type);
+                }
+                else
+                    pending_add(&pending, ptr, DataIsLocal, &loc);
             }
             break;
         case N_LSYM:
             /* These are local variables */
-            if (curr_func != NULL)
-            {
-                if (num_pending_vars == num_allocated_pending_vars)
-                {
-                    num_allocated_pending_vars += 8;
-                    if (!pending_vars)
-                        pending_vars = HeapAlloc(GetProcessHeap(), 0,
-                                                 num_allocated_pending_vars * sizeof(pending_vars[0]));
-                    else
-                        pending_vars = HeapReAlloc(GetProcessHeap(), 0, pending_vars,
-                                                   num_allocated_pending_vars * sizeof(pending_vars[0]));
-                }
-                stab_strcpy(pending_vars[num_pending_vars].name,
-                            sizeof(pending_vars[num_pending_vars].name), ptr);
-                pending_vars[num_pending_vars].type   = stabs_parse_type(ptr);
-                pending_vars[num_pending_vars].offset = stab_ptr->n_value;
-                pending_vars[num_pending_vars].regno  = 0;
-                num_pending_vars++;
-            }
+            loc.kind = loc_regrel;
+            loc.reg = 0; /* FIXME */
+            loc.offset = stab_ptr->n_value;
+            if (curr_func != NULL) pending_add(&pending, ptr, DataIsLocal, &loc);
             break;
         case N_SLINE:
             /*
@@ -1352,15 +1386,11 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             if (curr_func != NULL)
             {
                 assert(source_idx >= 0);
-                symt_add_func_line(module, curr_func, source_idx,
+                symt_add_func_line(module, curr_func, source_idx, 
                                    stab_ptr->n_desc, stab_ptr->n_value);
             }
             break;
         case N_FUN:
-            /* First, clean up the previous function we were working on. */
-            stabs_finalize_function(module, curr_func,
-                                    stab_ptr->n_value ? load_offset + stab_ptr->n_value : 0);
-
             /*
              * For now, just declare the various functions.  Later
              * on, we will add the line number information and the
@@ -1377,15 +1407,29 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             if (*symname)
             {
                 struct symt_function_signature* func_type;
-                func_type = symt_new_function_signature(module,
-                                                        stabs_parse_type(ptr));
-                curr_func = symt_new_function(module, compiland, symname,
+
+                if (curr_func)
+                {
+                    /* First, clean up the previous function we were working on.
+                     * Assume size of the func is the delta between current offset
+                     * and offset of last function
+                     */
+                    stabs_finalize_function(module, curr_func, 
+                                            stab_ptr->n_value ?
+                                                (load_offset + stab_ptr->n_value - curr_func->address) : 0);
+                }
+                func_type = symt_new_function_signature(module, 
+                                                        stabs_parse_type(ptr), -1);
+                curr_func = symt_new_function(module, compiland, symname, 
                                               load_offset + stab_ptr->n_value, 0,
                                               &func_type->symt);
             }
             else
             {
-                /* some GCC seem to use a N_FUN "" to mark the end of a function */
+                /* some versions of GCC to use a N_FUN "" to mark the end of a function
+                 * and n_value contains the size of the func
+                 */
+                stabs_finalize_function(module, curr_func, stab_ptr->n_value);
                 curr_func = NULL;
             }
             break;
@@ -1398,8 +1442,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             {
                 /* Nuke old path. */
                 srcpath[0] = '\0';
-                stabs_finalize_function(module, curr_func,
-                                        stab_ptr->n_value ? load_offset + stab_ptr->n_value : 0);
+                stabs_finalize_function(module, curr_func, 0);
                 curr_func = NULL;
                 source_idx = -1;
                 incl_stk = -1;
@@ -1411,33 +1454,27 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 int len = strlen(ptr);
                 if (ptr[len-1] != '/')
                 {
-                    strcpy(currpath, srcpath);
-                    strcat(currpath, ptr);
                     stabs_reset_includes();
-                    compiland = symt_new_compiland(module, currpath);
-                    source_idx = source_new(module, currpath);
+                    source_idx = source_new(module, srcpath, ptr);
+                    compiland = symt_new_compiland(module, 0 /* FIXME */, source_idx);
                 }
                 else
                     strcpy(srcpath, ptr);
             }
             break;
         case N_SOL:
-            if (*ptr != '/')
-            {
-                strcpy(currpath, srcpath);
-                strcat(currpath, ptr);
-            }
-            else
-                strcpy(currpath, ptr);
-            source_idx = source_new(module, currpath);
+            source_idx = source_new(module, srcpath, ptr);
             break;
         case N_UNDF:
             strs += strtabinc;
             strtabinc = stab_ptr->n_value;
             /* I'm not sure this is needed, so trace it before we obsolete it */
-            if (curr_func) FIXME("UNDF: curr_func %s\n", curr_func->hash_elt.name);
-            stabs_finalize_function(module, curr_func, 0); /* FIXME */
-            curr_func = NULL;
+            if (curr_func)
+            {
+                FIXME("UNDF: curr_func %s\n", curr_func->hash_elt.name);
+                stabs_finalize_function(module, curr_func, 0); /* FIXME */
+                curr_func = NULL;
+            }
             break;
         case N_OPT:
             /* Ignore this. We don't care what it points to. */
@@ -1446,7 +1483,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             stabs_add_include(stabs_new_include(ptr, stab_ptr->n_value));
             assert(incl_stk < (int)(sizeof(incl) / sizeof(incl[0])) - 1);
             incl[++incl_stk] = source_idx;
-            source_idx = source_new(module, ptr);
+            source_idx = source_new(module, NULL, ptr);
             break;
         case N_EINCL:
             assert(incl_stk >= 0);
@@ -1464,19 +1501,30 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
         case N_MAIN:
             /* Always ignore these. GCC doesn't even generate them. */
             break;
+        case N_BNSYM:
+        case N_ENSYM:
+            /* Always ignore these, they seem to be used only on Darwin. */
+            break;
         default:
             ERR("Unknown stab type 0x%02x\n", stab_ptr->n_type);
             break;
         }
         stabbuff[0] = '\0';
-        TRACE("0x%02x %lx %s\n",
+        TRACE("0x%02x %lx %s\n", 
               stab_ptr->n_type, stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_un.n_strx));
     }
     module->module.SymType = SymDia;
+    module->module.CVSig = 'S' | ('T' << 8) | ('A' << 16) | ('B' << 24);
+    /* FIXME: we could have a finer grain here */
+    module->module.LineNumbers = TRUE;
+    module->module.GlobalSymbols = TRUE;
+    module->module.TypeInfo = TRUE;
+    module->module.SourceIndexed = TRUE;
+    module->module.Publics = TRUE;
 done:
     HeapFree(GetProcessHeap(), 0, stabbuff);
     stabs_free_includes();
-    if (pending_vars) HeapFree(GetProcessHeap(), 0, pending_vars);
+    HeapFree(GetProcessHeap(), 0, pending.vars);
 
     return ret;
 }
