@@ -59,8 +59,8 @@ IDS_HOST_NAME,				"Domäne:			%s\n"
 IDS_PAGEFILE_LOC,			"Auslagerungsdateipfad(e) 		%s"
 IDS_TIME_ZONE,				"Zeitzone: 			%s\n"
 IDS_DOMINE,					"Domain:				%s\n"
-IDS_BIOS_DATE,				"BIOS Date:			%s\n"
+IDS_BIOS_DATE,				"BIOS Datum:			%s\n"
 IDS_BIOS_VERSION,			"BIOS Version:			%s\n"
-IDS_NETWORK_CARDS,			"Network Card(s)			%u Installed.\n"
+IDS_NETWORK_CARDS,			"Netzwerkkarte(n)			%u Installiert.\n"
 
 END
