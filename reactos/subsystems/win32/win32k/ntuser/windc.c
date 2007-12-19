@@ -557,11 +557,6 @@ UserGetDCEx(PWINDOW_OBJECT Window OPTIONAL, HANDLE ClipRegion, ULONG Flags)
    if (Dce->DCXFlags & DCX_CACHE)
    {
       DPRINT("ENTER!!!!!! DCX_CACHE!!!!!!   hDC-> %x\n", Dce->hDC);
-      if (Dce->pProcess)      
-      {
-         DPRINT1("POWNED!\n");
-         return NULL; // should assert here.
-      }
       // Need to set ownership so Sync dcattr will work.
       DC_SetOwnership( Dce->hDC, PsGetCurrentProcess());
       DC_AllocateDcAttr( Dce->hDC );         // Allocate new dcattr
@@ -635,8 +630,16 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
             if (Window->Wnd->Class->Style & CS_CLASSDC ||
                 Window->Wnd->Style & CS_CLASSDC) /* Test Class first */
             {
+               PWINDOW_OBJECT CurrentWindow;
                if (pDCE->DCXFlags & (DCX_INTERSECTRGN | DCX_EXCLUDERGN)) /* Class DCE*/
                    DceDeleteClipRgn(pDCE);
+               CurrentWindow = UserGetWindowObject(pDCE->hwndCurrent);
+               if (CurrentWindow)
+               { // Update and reset Vis Rgn and clear the dirty bit.
+                 // Should release VisRgn than reset it to default.
+                 DceUpdateVisRgn(pDCE, CurrentWindow, pDCE->DCXFlags);
+               }
+               pDCE->DCXFlags = DCX_DCEEMPTY;
                pDCE->hwndCurrent = 0;
             }
             else if (Window->Wnd->Class->Style & CS_OWNDC ||
@@ -665,7 +668,6 @@ DceFreeWindowDCE(PWINDOW_OBJECT Window)
                DPRINT1("[%p] GetDC() without ReleaseDC()!\n", Window->hSelf);
                DceReleaseDC(pDCE, FALSE);
             }
-
             pDCE->DCXFlags |= DCX_DCEEMPTY;
             pDCE->hwndCurrent = 0;
          }
