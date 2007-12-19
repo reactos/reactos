@@ -17,14 +17,18 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 #ifndef __WINE_WINDEF16_H
 #define __WINE_WINDEF16_H
 
-/* #include "windef.h" */
-
+#ifndef RC_INVOKED
+#include <stdarg.h>
+#endif
+#include <windef.h>
+#include <winbase.h>
+#include <exception.h> // ROS Hack
 /* Standard data types */
 
 typedef unsigned short  BOOL16;
@@ -37,7 +41,20 @@ typedef UINT16          WPARAM16;
 typedef INT16          *LPINT16;
 typedef UINT16         *LPUINT16;
 
+typedef WORD            CATCHBUF[9];
+typedef WORD           *LPCATCHBUF;
+
 #define MAKESEGPTR(seg,off) ((SEGPTR)MAKELONG(off,seg))
+#define SELECTOROF(ptr)     (HIWORD(ptr))
+#define OFFSETOF(ptr)       (LOWORD(ptr))
+
+typedef WORD *VA_LIST16;
+
+#define __VA_ROUNDED16(type) \
+    ((sizeof(type) + sizeof(WORD) - 1) / sizeof(WORD) * sizeof(WORD))
+#define VA_ARG16(list,type) \
+    (((list) = (VA_LIST16)((char *)(list) + __VA_ROUNDED16(type))), \
+     *((type *)(void *)((char *)(list) - __VA_ROUNDED16(type))))
 
 #define HFILE_ERROR16   ((HFILE16)-1)
 
@@ -99,7 +116,7 @@ typedef HANDLE16 HGDIOBJ16;
 typedef HANDLE16 HGLOBAL16;
 typedef HANDLE16 HLOCAL16;
 
-#include "pshpack1.h"
+#include <pshpack1.h>
 
 /* The SIZE structure */
 
@@ -127,7 +144,7 @@ typedef struct
     INT16  bottom;
 } RECT16, *LPRECT16;
 
-#include "poppack.h"
+#include <poppack.h>
 
 /* Callback function pointers types */
 

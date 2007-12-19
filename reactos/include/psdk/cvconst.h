@@ -15,7 +15,7 @@
  *
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
 /* information in this file is highly derivated from MSDN DIA information pages */
@@ -121,7 +121,7 @@ enum DataKind
 /* values for registers (on different CPUs) */
 enum CV_HREG_e
 {
-    /* those values are common to all supported CPUs (and CPU independant) */
+    /* those values are common to all supported CPUs (and CPU independent) */
     CV_ALLREG_ERR       = 30000,
     CV_ALLREG_TEB       = 30001,
     CV_ALLREG_TIMER     = 30002,
@@ -420,6 +420,114 @@ enum CV_HREG_e
     CV_M32R_ACHI        = 32,
     CV_M32R_ACLO        = 33,
     CV_M32R_PC          = 34,
+
+    /* AMD/Intel x86_64 CPU */
+    CV_AMD64_NONE       = CV_REG_NONE,
+    CV_AMD64_AL         = CV_REG_AL,
+    CV_AMD64_CL         = CV_REG_CL,
+    CV_AMD64_DL         = CV_REG_DL,
+    CV_AMD64_BL         = CV_REG_BL,
+    CV_AMD64_AH         = CV_REG_AH,
+    CV_AMD64_CH         = CV_REG_CH,
+    CV_AMD64_DH         = CV_REG_DH,
+    CV_AMD64_BH         = CV_REG_BH,
+    CV_AMD64_AX         = CV_REG_AX,
+    CV_AMD64_CX         = CV_REG_CX,
+    CV_AMD64_DX         = CV_REG_DX,
+    CV_AMD64_BX         = CV_REG_BX,
+    CV_AMD64_SP         = CV_REG_SP,
+    CV_AMD64_BP         = CV_REG_BP,
+    CV_AMD64_SI         = CV_REG_SI,
+    CV_AMD64_DI         = CV_REG_DI,
+    CV_AMD64_EAX        = CV_REG_EAX,
+    CV_AMD64_ECX        = CV_REG_ECX,
+    CV_AMD64_EDX        = CV_REG_EDX,
+    CV_AMD64_EBX        = CV_REG_EBX,
+    CV_AMD64_ESP        = CV_REG_ESP,
+    CV_AMD64_EBP        = CV_REG_EBP,
+    CV_AMD64_ESI        = CV_REG_ESI,
+    CV_AMD64_EDI        = CV_REG_EDI,
+    CV_AMD64_ES         = CV_REG_ES,
+    CV_AMD64_CS         = CV_REG_CS,
+    CV_AMD64_SS         = CV_REG_SS,
+    CV_AMD64_DS         = CV_REG_DS,
+    CV_AMD64_FS         = CV_REG_FS,
+    CV_AMD64_GS         = CV_REG_GS,
+    CV_AMD64_FLAGS      = CV_REG_FLAGS,
+    CV_AMD64_RIP        = CV_REG_EIP,
+    CV_AMD64_EFLAGS     = CV_REG_EFLAGS,
+
+    /* <pcode> */
+    CV_AMD64_TEMP       = CV_REG_TEMP,
+    CV_AMD64_TEMPH      = CV_REG_TEMPH,
+    CV_AMD64_QUOTE      = CV_REG_QUOTE,
+    CV_AMD64_PCDR3      = CV_REG_PCDR3, /* this includes PCDR4 to PCDR7 */
+    CV_AMD64_CR0        = CV_REG_CR0,   /* this includes CR1 to CR4 */
+    CV_AMD64_DR0        = CV_REG_DR0,   /* this includes DR1 to DR7 */
+    /* </pcode> */
+
+    CV_AMD64_GDTR       = CV_REG_GDTR,
+    CV_AMD64_GDTL       = CV_REG_GDTL,
+    CV_AMD64_IDTR       = CV_REG_IDTR,
+    CV_AMD64_IDTL       = CV_REG_IDTL,
+    CV_AMD64_LDTR       = CV_REG_LDTR,
+    CV_AMD64_TR         = CV_REG_TR,
+
+    CV_AMD64_PSEUDO1    = CV_REG_PSEUDO1, /* this includes Pseudo02 to Pseuso09 */
+    CV_AMD64_ST0        = CV_REG_ST0,     /* this includes ST1 to ST7 */
+    CV_AMD64_CTRL       = CV_REG_CTRL,
+    CV_AMD64_STAT       = CV_REG_STAT,
+    CV_AMD64_TAG        = CV_REG_TAG,
+    CV_AMD64_FPIP       = CV_REG_FPIP,
+    CV_AMD64_FPCS       = CV_REG_FPCS,
+    CV_AMD64_FPDO       = CV_REG_FPDO,
+    CV_AMD64_FPDS       = CV_REG_FPDS,
+    CV_AMD64_ISEM       = CV_REG_ISEM,
+    CV_AMD64_FPEIP      = CV_REG_FPEIP,
+    CV_AMD64_FPEDO      = CV_REG_FPEDO,
+    CV_AMD64_MM0        = CV_REG_MM0,     /* this includes MM1 to MM7 */
+    CV_AMD64_XMM0       = CV_REG_XMM0,    /* this includes XMM1 to XMM7 */
+    CV_AMD64_XMM00      = CV_REG_XMM00,
+    CV_AMD64_XMM0L      = CV_REG_XMM0L,   /* this includes XMM1L to XMM7L */
+    CV_AMD64_XMM0H      = CV_REG_XMM0H,   /* this includes XMM1H to XMM7H */
+    CV_AMD64_MXCSR      = CV_REG_MXCSR,
+    CV_AMD64_EDXEAX     = CV_REG_EDXEAX,
+    CV_AMD64_EMM0L      = CV_REG_EMM0L,
+    CV_AMD64_EMM0H      = CV_REG_EMM0H,
+    CV_AMD64_MM00       = CV_REG_MM00,
+    CV_AMD64_MM01       = CV_REG_MM01,
+    CV_AMD64_MM10       = CV_REG_MM10,
+    CV_AMD64_MM11       = CV_REG_MM11,
+    CV_AMD64_MM20       = CV_REG_MM20,
+    CV_AMD64_MM21       = CV_REG_MM21,
+    CV_AMD64_MM30       = CV_REG_MM30,
+    CV_AMD64_MM31       = CV_REG_MM31,
+    CV_AMD64_MM40       = CV_REG_MM40,
+    CV_AMD64_MM41       = CV_REG_MM41,
+    CV_AMD64_MM50       = CV_REG_MM50,
+    CV_AMD64_MM51       = CV_REG_MM51,
+    CV_AMD64_MM60       = CV_REG_MM60,
+    CV_AMD64_MM61       = CV_REG_MM61,
+    CV_AMD64_MM70       = CV_REG_MM70,
+    CV_AMD64_MM71       = CV_REG_MM71,
+
+    CV_AMD64_RAX        = 328,
+    CV_AMD64_RBX        = 329,
+    CV_AMD64_RCX        = 330,
+    CV_AMD64_RDX        = 331,
+    CV_AMD64_RSI        = 332,
+    CV_AMD64_RDI        = 333,
+    CV_AMD64_RBP        = 334,
+    CV_AMD64_RSP        = 335,
+
+    CV_AMD64_R8         = 336,
+    CV_AMD64_R9         = 337,
+    CV_AMD64_R10        = 338,
+    CV_AMD64_R11        = 339,
+    CV_AMD64_R12        = 340,
+    CV_AMD64_R13        = 341,
+    CV_AMD64_R14        = 342,
+    CV_AMD64_R15        = 343,
 } CV_HREG_e;
 
 typedef enum
@@ -430,3 +538,24 @@ typedef enum
    THUNK_ORDINAL_PCODE,
    THUNK_ORDINAL_LOAD
 } THUNK_ORDINAL;
+
+typedef enum CV_call_e
+{
+    CV_CALL_NEAR_C,
+    CV_CALL_FAR_C,
+    CV_CALL_NEAR_PASCAL,
+    CV_CALL_FAR_PASCAL,
+    CV_CALL_NEAR_FAST,
+    CV_CALL_FAR_FAST,
+    CV_CALL_SKIPPED,
+    CV_CALL_NEAR_STD,
+    CV_CALL_FAR_STD,
+    CV_CALL_NEAR_SYS,
+    CV_CALL_FAR_SYS,
+    CV_CALL_THISCALL,
+    CV_CALL_MIPSCALL,
+    CV_CALL_GENERIC,
+    CV_CALL_ALPHACALL,
+    CV_CALL_PPCCALL,
+    CV_CALL_RESERVED,
+} CV_call_e;
