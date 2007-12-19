@@ -967,7 +967,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT1("Can't locate driver object for %wZ\n", ObjectName);
+      DPRINT1("Can't locate driver object for %wZ\n", &ObjectName);
       return Status;
    }
 
