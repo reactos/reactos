@@ -498,6 +498,116 @@ IntMultiByteToWideCharCP(UINT CodePage, DWORD Flags,
 }
 
 /**
+ * @name IntMultiByteToWideCharSYMBOL
+ *
+ * Internal version of MultiByteToWideChar for SYMBOL.
+ *
+ * @see MultiByteToWideChar
+ */
+
+static INT STDCALL 
+IntMultiByteToWideCharSYMBOL(DWORD Flags, 
+                             LPCSTR MultiByteString, INT MultiByteCount, 
+                             LPWSTR WideCharString, INT WideCharCount)
+{
+   LONG Count;
+   UCHAR Char;
+   INT WideCharMaxLen;
+
+
+   if (Flags != 0)
+   {
+      SetLastError(ERROR_INVALID_FLAGS);
+      return 0;
+   }
+
+   if (WideCharCount == 0) 
+   {
+      return MultiByteCount;
+   }
+
+   WideCharMaxLen = WideCharCount > MultiByteCount ? MultiByteCount : WideCharCount;
+
+   for (Count = 0; Count < WideCharMaxLen; Count++)
+   {
+      Char = MultiByteString[Count];
+      if ( Char < 0x20 )
+      {
+         WideCharString[Count] = Char;
+      }
+      else
+      {
+         WideCharString[Count] = Char + 0xf000;
+      }
+   }
+   if (MultiByteCount > WideCharMaxLen) 
+   {
+      SetLastError(ERROR_INSUFFICIENT_BUFFER);
+      return 0;
+   }
+
+   return WideCharMaxLen;
+}
+
+/**
+ * @name IntWideCharToMultiByteSYMBOL
+ *
+ * Internal version of WideCharToMultiByte for SYMBOL.
+ *
+ * @see WideCharToMultiByte
+ */
+
+static INT STDCALL
+IntWideCharToMultiByteSYMBOL(DWORD Flags,
+                             LPCWSTR WideCharString, INT WideCharCount,
+                             LPSTR MultiByteString, INT MultiByteCount)
+{
+   LONG Count;
+   INT MaxLen;
+   WCHAR Char;
+
+   if (Flags!=0)
+   {
+      SetLastError(ERROR_INVALID_PARAMETER);
+      return 0;
+   }
+
+
+   if( MultiByteCount == 0) 
+   {
+      return WideCharCount;
+   }
+
+   MaxLen = MultiByteCount>WideCharCount?WideCharCount:MultiByteCount;
+   for (Count = 0;Count<MaxLen;Count++)
+   {
+      Char = WideCharString[Count];
+      if (Char<0x20)
+      {
+         MultiByteString[Count] = Char;
+      }
+      else 
+      {
+         if ((Char>=0xf020)&&(Char<0xf100))
+         {
+            MultiByteString[Count] = Char - 0xf000;
+         }
+         else
+         {
+            SetLastError(ERROR_NO_UNICODE_TRANSLATION);
+            return 0;
+         }
+      }
+   }
+   if ( WideCharCount > MaxLen) 
+   {
+      SetLastError(ERROR_INSUFFICIENT_BUFFER);
+      return 0;
+   }
+   return MaxLen;
+}
+
+/**
  * @name IntWideCharToMultiByteUTF8
  *
  * Internal version of WideCharToMultiByte for UTF8.
@@ -951,9 +1061,9 @@ MultiByteToWideChar(UINT CodePage, DWORD Flags,
          return 0;
 
       case CP_SYMBOL:
-         DPRINT1("MultiByteToWideChar for CP_SYMBOL is not implemented!\n");
-         return 0;
-
+         return IntMultiByteToWideCharSYMBOL(
+            Flags, MultiByteString, MultiByteCount,
+            WideCharString, WideCharCount);
       default:
          return IntMultiByteToWideCharCP(
             CodePage, Flags, MultiByteString, MultiByteCount,
@@ -1034,8 +1144,14 @@ WideCharToMultiByte(UINT CodePage, DWORD Flags,
          return 0;
 
       case CP_SYMBOL:
-         DPRINT1("WideCharToMultiByte for CP_SYMBOL is not implemented!\n");
-         return 0;
+         if ((DefaultChar!=NULL) || (UsedDefaultChar!=NULL))
+         {
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return 0;
+         }
+         return IntWideCharToMultiByteSYMBOL(
+            Flags,WideCharString,WideCharCount,MultiByteString,
+            MultiByteCount);
 
       default:
          return IntWideCharToMultiByteCP(
