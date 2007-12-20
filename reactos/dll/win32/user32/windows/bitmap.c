@@ -799,7 +799,7 @@ CopyIcoCur(HANDLE hIconCur,
 
     if (flags & LR_COPYFROMRESOURCE)
     {
-        FIXME("FIXME: LR_COPYFROMRESOURCE is yet not implemented for icons\n");
+        TRACE("FIXME: LR_COPYFROMRESOURCE is yet not implemented for icons\n");
     }
 
     if (NtUserGetIconSize(hIconCur, 0, &origSize.cx, &origSize.cy))
