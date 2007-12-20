@@ -1,0 +1,72 @@
+#include "resource.h"
+/*
+ *Spanish Language resource file
+ * Traducido por: Javier Remacha 2007-12-19
+ */
+
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+STRINGTABLE DISCARDABLE
+{
+STRING_HELP,  "Uso: %S unidad: [-FS:sistema de archivos] [-V:etiqueta] [-Q] [-A:tamaño] [-C]\n\n\
+  [unidad:]       		Especifica la unidad a formatear.\n\
+  -FS:sistema de archivos 	Especifica el sistema de archivos (%s).\n\
+  -V:etiqueta         		Especifica la etiqueta del volumen.\n\
+  -Q               		Realiza un formato rápido.\n\
+  -A:tamaño        		Anula el tamaño por defecto de la unidad asignada. Configuración por defecto\n\
+                  		es altamente recomendado para uso general\n\
+                   		NTFS soporta 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
+                   		FAT soporta 8192, 16K, 32K, 64K, 128K, 256K.\n\
+                   		La compresión NTFS no es soportada para tamaños de la unidad asignada\n\
+                   		por encima de 4096.\n\
+  -C               		Por defecto los archivos creados en el nuevo volumen serán \n\
+                   		comprimidos.\n\n"
+
+STRING_COMPLETE   "%lu por ciento completado.\r"
+
+STRING_FORMAT_FAIL "FormatEx fue incapaz de completarse satisfactoriamente.\n\n"
+
+STRING_NO_SUPPORT  "Operación No Soportada"
+
+STRING_FMIFS_FAIL  "Imposible localizar puntos de entrada FMIFS.\n\n"
+
+STRING_UNKNOW_ARG  "Argumento desconocido: %S\n"
+
+STRING_DRIVE_PARM  "Parámetro de unidad requerido no encontrado.\n\n"
+
+STRING_ERROR_DRIVE_TYPE  "Imposible determinar el tipo de unidad"
+
+STRING_INSERT_DISK       "Inserte un nuevo disco en la unidad %C:\ny presione Enter cuando esté preparado..."
+
+STRING_NO_VOLUME         "Imposible consultar el volumen"
+
+STRING_NO_VOLUME_SIZE    "Imposible consultar el tamaño de volumen"
+
+STRING_FILESYSTEM        "El tipo del Sistema de archivos es %S.\n"
+
+STRING_LABEL_NAME_EDIT  "Introduzca la etiqueta del volumen para la unidad %C: "
+
+STRING_ERROR_LABEL     "Etiqueta de volumen incorrecta para esta unidad.\n"
+
+STRING_YN_FORMAT       "\nADVERTENCIA, ¡TODOS LOS DATOS DEL DISCO\n\
+UNIDAD %C: SE PERDERÁN!\nProceder con el formato (S/N)? "
+
+STRING_YES_NO_FAQ      "SN"
+
+STRING_VERIFYING       "Verificando"
+
+STRING_FAST_FMT        "Dando formato rápido"
+
+STRING_CREATE_FSYS     "Creando archivo de estrucutra del sistema.\n"
+
+STRING_FMT_COMPLETE    "Formato completado.\n"
+
+STRING_VOL_COMPRESS    "El volumen no soporta compresión.\n"
+
+STRING_ENTER_LABEL     "Etiqueta del Volumen (11 caracteres, Enter para ninguno)? "
+
+STRING_NO_LABEL        "Imposible etiquetar el volumen"
+
+STRING_FREE_SPACE     "\n%I64d bytes espacio total del disco.\n%I64d bytes disponibles en el disco.\n"
+
+STRING_SERIAL_NUMBER   "\nNúmero de Serie del Volumen es %04X-%04X\n"
+}
