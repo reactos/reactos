@@ -26,71 +26,10 @@ typedef struct _tagDIRECT3D9_INT_
 /* 0x0020 */    DWORD dwProcessId; 
 /* 0x0024 */    struct _tagDIRECT3D9_INT_ *lpInt; 
 /* 0x0028 */    LONG dwRefCnt;          /* Increases and decreases by AddRef() and Release() */
-/* 0x002c */    DWORD unknown000011;    /* 0x00000001 - Probably AdapterIndex */
+/* 0x002c */    DWORD unknown000011;    /* 0x00000001 - Probably NumDisplays */
 /* 0x0030 */    GUID DisplayGuid;       /*? Always {67685559-3106-11D0-B971-00AA00342F9F} ? */
-/* 0x0040 */    CHAR DeviceName[16];
-/* 0x0050 */    DWORD unknown000020; 
-/* 0x0054 */    DWORD unknown000021; 
-/* 0x0058 */    DWORD unknown000022; 
-/* 0x005c */    DWORD unknown000023; 
-/* 0x0060 */    DWORD unknown000024; 
-/* 0x0064 */    DWORD unknown000025; 
-/* 0x0068 */    DWORD unknown000026; 
-/* 0x006c */    DWORD unknown000027; 
-/* 0x0070 */    DWORD unknown000028; 
-/* 0x0074 */    DWORD unknown000029; 
-/* 0x0078 */    DWORD unknown000030; 
-/* 0x007c */    DWORD unknown000031; 
-/* 0x0080 */    DWORD unknown000032; 
-/* 0x0084 */    DWORD unknown000033; 
-/* 0x0088 */    DWORD unknown000034; 
-/* 0x008c */    DWORD unknown000035; 
-/* 0x0090 */    DWORD unknown000036; 
-/* 0x0094 */    DWORD unknown000037; 
-/* 0x0098 */    DWORD unknown000038; 
-/* 0x009c */    DWORD unknown000039; 
-/* 0x00a0 */    DWORD unknown000040; 
-/* 0x00a4 */    DWORD unknown000041; 
-/* 0x00a8 */    DWORD unknown000042; 
-/* 0x00ac */    DWORD unknown000043; 
-/* 0x00b0 */    DWORD unknown000044; 
-/* 0x00b4 */    DWORD unknown000045; 
-/* 0x00b8 */    DWORD unknown000046; 
-/* 0x00bc */    DWORD unknown000047; 
-/* 0x00c0 */    DWORD unknown000048; 
-/* 0x00c4 */    DWORD unknown000049; 
-/* 0x00c8 */    DWORD unknown000050; 
-/* 0x00cc */    DWORD unknown000051; 
-/* 0x00d0 */    DWORD unknown000052; 
-/* 0x00d4 */    DWORD unknown000053; 
-/* 0x00d8 */    DWORD unknown000054; 
-/* 0x00dc */    DWORD unknown000055; 
-/* 0x00e0 */    DWORD unknown000056; 
-/* 0x00e4 */    DWORD unknown000057; 
-/* 0x00e8 */    DWORD unknown000058; 
-/* 0x00ec */    DWORD unknown000059; 
-/* 0x00f0 */    DWORD unknown000060; 
-/* 0x00f4 */    DWORD unknown000061; 
-/* 0x00f8 */    DWORD unknown000062; 
-/* 0x00fc */    DWORD unknown000063; 
-/* 0x0100 */    DWORD unknown000064; 
-/* 0x0104 */    DWORD unknown000065; 
-/* 0x0108 */    DWORD unknown000066; 
-/* 0x010c */    DWORD unknown000067; 
-/* 0x0110 */    DWORD unknown000068; 
-/* 0x0114 */    DWORD unknown000069; 
-/* 0x0118 */    DWORD unknown000070; 
-/* 0x011c */    DWORD unknown000071; 
-/* 0x0120 */    DWORD unknown000072; 
-/* 0x0124 */    DWORD unknown000073; 
-/* 0x0128 */    DWORD unknown000074; 
-/* 0x012c */    DWORD unknown000075; 
-/* 0x0130 */    DWORD unknown000076; 
-/* 0x0134 */    DWORD unknown000077; 
-/* 0x0138 */    DWORD unknown000078; 
-/* 0x013c */    DWORD unknown000079; 
-/* 0x0140 */    DWORD unknown000080; 
-/* 0x0144 */    DWORD unknown000081;    /*? 0x80000001 */
+/* 0x0040 */    CHAR DeviceName[MAX_PATH];
+/* 0x0144 */    DWORD StateFlags;       /*? 0x80000001 */
 /* 0x0148 */    DWORD unknown000082;    /*? 0x00000001 */
 /* 0x014c */    DWORD unknown000083; 
 /* 0x0150 */    DWORD unknown000084; 

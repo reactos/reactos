@@ -22,4 +22,11 @@ HRESULT FormatDebugString(IN OUT LPSTR Buffer, IN LONG BufferSize, IN LPCSTR For
 /* Creates a Direct3D9 object */
 HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9);
 
+/* Allocates memory and returns an aligned pointer */
+HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize);
+
+/* Frees memory allocated with AlignedAlloc */
+VOID AlignedFree(IN OUT LPVOID pObject);
+
+
 #endif // _D3D9_HELPERS_H_

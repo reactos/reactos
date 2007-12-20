@@ -43,7 +43,7 @@ static ULONG WINAPI IDirect3D9Impl_Release(LPDIRECT3D9 iface)
         EnterCriticalSection(&This->d3d9_cs);
         /* TODO: Free resources here */
         LeaveCriticalSection(&This->d3d9_cs);
-        HeapFree(GetProcessHeap(), 0, This);
+        AlignedFree(This);
     }
 
     return ref;

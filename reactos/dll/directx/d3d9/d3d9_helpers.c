@@ -9,10 +9,13 @@
 #include "d3d9_helpers.h"
 #include <stdio.h>
 #include <ddraw.h>
+#include <debug.h>
 
-#include "d3d9_private.h"
+#define MEM_ALIGNMENT 0x20
 
 static LPCSTR D3dDebugRegPath = "Software\\Microsoft\\Direct3D";
+
+static const GUID DISPLAY_GUID = { 0x67685559, 0x3106, 0x11D0, { 0xB9, 0x71, 0x00, 0xAA, 0x00, 0x34, 0x2F, 0x9F } };
 
 LPDIRECT3D9_INT impl_from_IDirect3D9(LPDIRECT3D9 iface)
 {
@@ -67,9 +70,10 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9)
     if (ppDirect3D9 == 0)
         return DDERR_INVALIDPARAMS;
 
-    pDirect3D9 = HeapAlloc(GetProcessHeap(), 0, sizeof(DIRECT3D9_INT));
+    if (AlignedAlloc((LPVOID *)&pDirect3D9, sizeof(DIRECT3D9_INT)) != S_OK)
+        return DDERR_OUTOFMEMORY;
 
-    if (0 == pDirect3D9)
+    if (pDirect3D9 == 0)
         return DDERR_OUTOFMEMORY;
 
     pDirect3D9->unknown000007 = 0;
@@ -86,11 +90,64 @@ HRESULT CreateD3D9(OUT LPDIRECT3D9 *ppDirect3D9)
     pDirect3D9->unknown004581 = 0;
     pDirect3D9->unknown004582 = 0;
     pDirect3D9->unknown004583 = 0;
-    pDirect3D9->unknown004589 = 0;
+    pDirect3D9->unknown004589 = 0x20;
 
     pDirect3D9->lpInt = pDirect3D9;
+    pDirect3D9->unknown000007 = 1;
+
+    InitializeCriticalSection(&pDirect3D9->d3d9_cs);
+
+    memcpy(&pDirect3D9->DisplayGuid, &DISPLAY_GUID, sizeof(GUID));
 
     *ppDirect3D9 = (LPDIRECT3D9)&pDirect3D9->lpVtbl;
 
     return ERROR_SUCCESS;
+}
+
+HRESULT AlignedAlloc(IN OUT LPVOID *ppObject, IN SIZE_T dwSize)
+{
+    ULONG AddressOffset;
+    ULONG AlignedMask = MEM_ALIGNMENT - 1;
+    CHAR *AlignedPtr;
+    ULONG_PTR *AlignedOffsetPtr;
+
+    if (ppObject == 0)
+        return DDERR_INVALIDPARAMS;
+
+    if (dwSize == 0)
+    {
+        *ppObject = NULL;
+        return S_OK;
+    }
+
+    dwSize += MEM_ALIGNMENT;
+
+    AlignedPtr = (CHAR *)LocalAlloc(LMEM_ZEROINIT, dwSize);
+
+    if (AlignedPtr == 0)
+        return DDERR_OUTOFMEMORY;
+
+    AddressOffset = MEM_ALIGNMENT - ((ULONG)AlignedPtr & AlignedMask);
+	
+    AlignedPtr += AddressOffset;
+
+    AlignedOffsetPtr = (ULONG_PTR *)(AlignedPtr - sizeof(ULONG));
+    *AlignedOffsetPtr = AddressOffset;
+
+    *ppObject = (ULONG_PTR *)AlignedPtr;
+
+    return S_OK;
+}
+
+VOID AlignedFree(IN OUT LPVOID pObject)
+{
+    CHAR *NonAlignedPtr = pObject;
+    ULONG_PTR *AlignedPtr = pObject;
+
+    if (pObject == 0)
+        return;
+
+    NonAlignedPtr -= *(AlignedPtr - 1);
+
+    LocalFree(NonAlignedPtr);
 }
