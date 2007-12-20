@@ -112,7 +112,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8,
         15,
-        "  se ci sono partizioni estese nel disco duro.",
+        "  se ci sono partizioni estese nel disco fisso.",
         TEXT_NORMAL
     },
     {
@@ -124,7 +124,7 @@ static MUI_ENTRY itITIntroPageEntries[] =
     {
         8,
         17,
-        "  se ci sono altre partizioni estese nel disco duro.",
+        "  se ci sono altre partizioni estese nel disco fisso.",
         TEXT_NORMAL
     },
     {
@@ -176,7 +176,7 @@ static MUI_ENTRY itITLicensePageEntries[] =
     {
         8,
         8,
-        "ReactOS adesrisce ai termini di licenza",
+        "ReactOS aderisce ai termini di licenza",
         TEXT_NORMAL
     },
     {
@@ -518,7 +518,7 @@ static MUI_ENTRY itITQuitPageEntries[] =
     {
         10,
         8,
-        "Rimuovere il diskette dall'unità A: e",
+        "Rimuovere il disco floppy dall'unità A: e",
         TEXT_NORMAL
     },
     {
@@ -649,7 +649,7 @@ static MUI_ENTRY itITBootPageEntries[] =
     {
         6,
         13,
-        "Inserire un diskette formattato nell'unità A: e",
+        "Inserire un disco floppy formattato nell'unità A: e",
         TEXT_NORMAL
     },
     {
@@ -678,43 +678,43 @@ static MUI_ENTRY itITSelectPartitionEntries[] =
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "La lista seguente mostra le partizioni esistenti e lo spazio",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "libero per nuove partizioni.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Premere SU o GIU' per per selezionare un elemento della lista.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Premere INVIO per installare ReactOS sulla partizione selezionata.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Premere C per creare una nuova partizione.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Premere D per cancellare una nuova partizione.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
+        "   Attendere...",
         TEXT_STATUS
     },
     {
@@ -730,19 +730,19 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     {
         6,
         8,
-        "Format partition",
+        "Formattazione della partizione",
         TEXT_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "Setup formattera la partizione. Premere INVIO per continuare.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -758,37 +758,37 @@ static MUI_ENTRY itITInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "Setup installerà i file di ReactOS nella partizione selezionata. Scegliere una",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "cartella dove volete che ReactOS verrà installato:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "Per modificare la cartella suggerita premere CANC",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "e poi digitate la cartella dove volete che ReactOS sia",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "installato.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -804,19 +804,19 @@ static MUI_ENTRY itITFileCopyEntries[] =
     {
         11,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "Attendere mentre il setup di ReactOS copia i file nella cartella di",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "installation folder.",
+        "installazione di ReactOS.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "This may take several minutes to complete.",
+        "Potrebbe richiedere alcuni minuti.",
         TEXT_NORMAL
     },
     {
@@ -838,31 +838,31 @@ static MUI_ENTRY itITBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Setup sta installando il bootloader",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Installazione del bootloader sul disco fisso (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "Installazione del bootloader su un disco floppy.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Skip install bootloader.",
+        "Salta l'installazione del bootloader.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   INVIO = Continua   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -878,37 +878,37 @@ static MUI_ENTRY itITKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "Volete cambiare il tipo di tastiere da installare.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Premere SU o GIU' per per selezionare il tipo di tastiera desiderato.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Poi premere INVIO.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Premere ESC per tornare allapagina precedente senza modificare",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   il tipo di tastiera.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -924,37 +924,37 @@ static MUI_ENTRY itITLayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Volete cambiare il tipo di layout di tastiera da installare.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Premere SU o GIU' per per selezionare il tipo di layout di tastiera",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    desiderato. Poi premere INVIO.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Premere ESC per tornare allapagina precedente senza modificare",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   il layout di tastiera.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -971,13 +971,13 @@ static MUI_ENTRY itITPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup prepara il computer per la copia dei file di ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
+        "   Costruzione dell'elenco dei file da copiare...",
         TEXT_STATUS
     },
     {
@@ -994,31 +994,31 @@ static MUI_ENTRY itITSelectFSEntries[] =
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "Scegliere un file system dalla lista seguente.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Premere SU o GIU' per selezionare un filesystem.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Premere INVIO per formattare una partizione.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Premere ESC per selezionare un'altra partizione.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   INVIO = Continua   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
 
@@ -1035,31 +1035,31 @@ static MUI_ENTRY itITDeletePartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "Avete scelto di cancellare la partizione",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Premere D per cancellare la partizione.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+		"ATTENZIONE: Tutti i dati di questa partizione saranno persi!!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Premere ESC per annullare.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "   D = Cancella la partizione   ESC = Annulla   F3 = Termina",
         TEXT_STATUS
     },
     {
@@ -1085,7 +1085,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_NO_HDD
-        "Setup non ha trovato un harddisk.\n",
+        "Setup non ha trovato un disco fisso.\n",
         "INVIO = Riavviare il computer"
     },
     {
@@ -1140,7 +1140,7 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup ha trovato che al meno un hard disk contiene una tabella delle\n"
+          "Setup ha trovato che al meno un disco fisso contiene una tabella delle\n"
 		  "partizioni incompatibile che non può essere gestita correttamente!\n"
 		  "\n"
 		  "Il creare o cancellare partizioni può distruggere la tabella delle partizioni.\n"
@@ -1360,4 +1360,5 @@ MUI_PAGE itITPages[] =
 };
 
 #endif
+
 

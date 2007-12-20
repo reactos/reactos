@@ -281,7 +281,7 @@ END
 
 DRIVE_EXTRA_DLG DIALOGEX 0, 0, 240, 230
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Stromenti"
+CAPTION "Strumenti"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	GROUPBOX "Controllo errori", -1, 5, 5, 230, 60
@@ -355,193 +355,193 @@ END
 
 FOLDER_OPTIONS_GENERAL_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "General"
+CAPTION "Generale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 
-GROUPBOX "Tasks", -1, 7, 10, 249, 45
+GROUPBOX "Attività", -1, 7, 10, 249, 45
 //ICON
-AUTORADIOBUTTON "Show common tasks in &folders", 14001, 40, 25, 120, 10, WS_TABSTOP
-AUTORADIOBUTTON "Use Windows class&ic folders", 14002, 40, 37, 120, 10, WS_TABSTOP
-GROUPBOX "Browse folders", -1, 7, 60, 249, 45, WS_TABSTOP
+AUTORADIOBUTTON "Mostrare le attività comuni nelle cartelle", 14001, 40, 25, 120, 10, WS_TABSTOP
+AUTORADIOBUTTON "Utilizzare le cartelle nella forma 'Windows class&ic' ", 14002, 40, 37, 120, 10, WS_TABSTOP
+GROUPBOX "Sfoglia cartelle", -1, 7, 60, 249, 45, WS_TABSTOP
 //ICON
-AUTORADIOBUTTON "Open each folder in the sa&me window", 14004, 40, 70, 140, 10, WS_TABSTOP
-AUTORADIOBUTTON "Open each folder in its own &window", 14005, 40, 82, 140, 10, WS_TABSTOP
-GROUPBOX "Click items as follows", -1, 7, 110, 249, 60
+AUTORADIOBUTTON "Aprire ogni cartella nella stessa finestra", 14004, 40, 70, 140, 10, WS_TABSTOP
+AUTORADIOBUTTON "Aprire ogni cartella in una nuova finestra", 14005, 40, 82, 140, 10, WS_TABSTOP
+GROUPBOX "Click sugli elementi come segue", -1, 7, 110, 249, 60
 //ICON
-AUTORADIOBUTTON "&Single-click to open an item (point to select)", 14007, 40, 120, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles consistent with my &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "Underline icon titles only when I &point at them", 14009, 50, 144, 170, 10, WS_TABSTOP
-AUTORADIOBUTTON "&Double-click to open an item (single-click to select)", 14010, 40, 156, 170, 10, WS_TABSTOP
-PUSHBUTTON "&Restore Defaults", 14011, 180, 180, 60, 14, WS_TABSTOP
+AUTORADIOBUTTON "&Click singolo per aprire un elemento (seleziona ed apre)", 14007, 40, 120, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Sottolinea i titoli delle icone in modo coerente con il &browser", 14008, 50, 132, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "Sottolinea i titoli delle icone solo se &selezionate", 14009, 50, 144, 170, 10, WS_TABSTOP
+AUTORADIOBUTTON "&Doppio click per aprire un elemento (click singolo per selezionare)", 14010, 40, 156, 170, 10, WS_TABSTOP
+PUSHBUTTON "&Ripristina le impostazioni predefinite", 14011, 180, 180, 60, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_VIEW_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "View"
+CAPTION "Visualizzazione"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-GROUPBOX "Folder views", -1, 7, 10, 249, 60
+GROUPBOX "Vista delle cartelle", -1, 7, 10, 249, 60
 //ICON
-LTEXT "You can apply the view(such as Details or Tiles) that\nyou are using for this folder to all folders.", -1, 60, 20, 180, 20
-PUSHBUTTON "Apply to A&ll Folders", 14001, 60, 50, 80, 14, WS_TABSTOP
-PUSHBUTTON "&Reset All Folders", 14002, 150, 50, 80, 14, WS_TABSTOP
-LTEXT "Advanced settings:", -1, 7, 80, 100, 10
+LTEXT "Potete applicare la modalità di visualizzazione attuale\na tutte le cartelle.", -1, 60, 20, 180, 20
+PUSHBUTTON "Applicare a &tutte le cartelle", 14001, 60, 50, 80, 14, WS_TABSTOP
+PUSHBUTTON "&Ripristina tutte le cartelle", 14002, 150, 50, 80, 14, WS_TABSTOP
+LTEXT "Impostazioni avanzate:", -1, 7, 80, 100, 10
 CONTROL "", 14003, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 90, 249, 120
-PUSHBUTTON "Restore &Defaults", 14004, 180, 210, 80, 14, WS_TABSTOP
+PUSHBUTTON "Ripristina come predefinite", 14004, 180, 210, 80, 14, WS_TABSTOP
 END
 
 FOLDER_OPTIONS_FILETYPES_DLG DIALOGEX 0, 0, 264, 256
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION
-CAPTION "File Types"
+CAPTION "Tipi dei File"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-LTEXT "Registered file &types:", -1, 7, 10, 70, 10
+LTEXT "&Tipi di file Registrati:", -1, 7, 10, 70, 10
 CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 80
-PUSHBUTTON "&New", 14001, 120, 110, 50, 14, WS_TABSTOP
-PUSHBUTTON "&Delete", 14002, 180, 110, 50, 14, WS_TABSTOP
-GROUPBOX "Details for '%s' extension", 14003, 7, 130, 249, 70
-LTEXT "Opens with:", -1, 12, 140, 40, 10
+PUSHBUTTON "&Nuovo", 14001, 120, 110, 50, 14, WS_TABSTOP
+PUSHBUTTON "&Cancella", 14002, 180, 110, 50, 14, WS_TABSTOP
+GROUPBOX "Dettagli per l'estensione '%s'", 14003, 7, 130, 249, 70
+LTEXT "Si apre con:", -1, 12, 140, 40, 10
 //ICON
-LTEXT "Appname", 14005, 100, 140, 40, 10
-PUSHBUTTON "&Change...", 14006, 180, 140, 50, 14, WS_TABSTOP
-LTEXT "Files with extension '%s' are of type '%s'. To\nchange settings that affect all '%s' files, click\nAdvanced.", 14007, 12, 155, 160, 30
-PUSHBUTTON "Ad&vanced", 14008, 180, 175, 50, 14, WS_TABSTOP
+LTEXT "Nome", 14005, 100, 140, 40, 10
+PUSHBUTTON "&Cambia...", 14006, 180, 140, 50, 14, WS_TABSTOP
+LTEXT "I files con estensione '%s' sono di tipo '%s'.\nPer cambiare le impostazioni che influenzano tutti i file '%s', cliccare\nAvanzate.", 14007, 12, 155, 160, 30
+PUSHBUTTON "A&vanzate", 14008, 180, 175, 50, 14, WS_TABSTOP
 END
 
 CONFIRM_FILE_REPLACE_DLG DIALOGEX 0, 0, 282, 143
 STYLE DS_SETFONT | DS_MODALFRAME | DS_SETFOREGROUND | DS_3DLOOK | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Confirm File Replace"
+CAPTION "Conferma della sovrascrittura dei file"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Yes", IDYES, 20, 122, 60, 14
-	PUSHBUTTON "Yes to &All", 12807, 85, 122, 60, 14
+	DEFPUSHBUTTON "&Si", IDYES, 20, 122, 60, 14
+	PUSHBUTTON "Si &tutti", 12807, 85, 122, 60, 14
 	PUSHBUTTON "&No", IDNO, 150, 122, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 215, 122, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 215, 122, 60, 14
 	ICON 146, -1, 11, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "This folder already contains a file named '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a read-only file named '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "This folder already contains a system file named '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
-	LTEXT "Would you like to replace the existing file", -1, 44, 35, 228, 10, SS_NOPREFIX
+	LTEXT "Questa cartella contiene già un file con nome '%2'.", 12291, 44, 10, 231, 22, SS_NOPREFIX
+	LTEXT "Questa cartella contiene un file a solo lettura con nome '%2'.", 12292, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Questa cartella contiene un file di sistema con nome '%2'.", 12293, 41, 10, 222, 22, SS_NOPREFIX
+	LTEXT "Volete sostituire il file esistente", -1, 44, 35, 228, 10, SS_NOPREFIX
 	LTEXT "(unknown date and size)", 12302, 79, 51, 198, 20, SS_NOPREFIX
 	ICON "", 12300, 50, 49, 21, 20, SS_REALSIZECONTROL
-	LTEXT "with this one?", -1, 44, 75, 228, 10, SS_NOPREFIX
+	LTEXT "con questo?", -1, 44, 75, 228, 10, SS_NOPREFIX
 	LTEXT "(unknown date and size)", 12303, 79, 91, 198, 20, SS_NOPREFIX
 	ICON "", 12301, 50, 89, 21, 20, SS_REALSIZECONTROL
 END
 
 LOGOFF_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Log Off ReactOS"
+CAPTION "Chiudi sessione di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 45, 14344, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to log off?", -1, 43, 11, 140, 22
-	DEFPUSHBUTTON "&Log Off", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 122, 40, 60, 14
+	LTEXT "Siete sicuro di voler Chiudere la sessione?", -1, 43, 11, 140, 22
+	DEFPUSHBUTTON "&Chiudi sessione", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 122, 40, 60, 14
 END
 
 DISCONNECT_DLG DIALOGEX 0, 0, 190, 60
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Disconnect ReactOS"
+CAPTION "Scollega ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 49, 14346, 10, 10, 21, 20, SS_REALSIZECONTROL
-	LTEXT "Are you sure you want to disconnect?", -1, 49, 12, 137, 23
-	DEFPUSHBUTTON "&Disconnect", IDOK, 57, 40, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 123, 40, 60, 14
+	LTEXT "Siete sicuro di volervi scollegare?", -1, 49, 12, 137, 23
+	DEFPUSHBUTTON "&Scollega", IDOK, 57, 40, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 123, 40, 60, 14
 END
 
 AUTOPLAY1_DLG DIALOGEX 0, 0, 227, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "AutoPlay"
+CAPTION "Partenza automatica"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a content type, then choose an action for ReactOS to perform automatically when that type is used in this device:", 1000, 7, 7, 215, 20
+	LTEXT "&Selezionate un tipo di contenuto e poi un tipo di azione che ReactOS deve eseguire automaticamente quando quel tipo è usato in questo dispositivo:", 1000, 7, 7, 215, 20
 	CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
-	GROUPBOX "Actions", -1, 7, 45, 212, 146
-	AUTORADIOBUTTON "Select an action to &perform:", 1005, 14, 54, 202, 10, WS_GROUP
+	GROUPBOX "Azioni", -1, 7, 45, 212, 146
+	AUTORADIOBUTTON "Selezionare una azione da &eseguire:", 1005, 14, 54, 202, 10, WS_GROUP
 	CONTROL "LIST2", 1002, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 22, 66, 192, 107
-	AUTORADIOBUTTON "Prompt me each time to &choose an action", 1006, 14, 177, 202, 10
-	PUSHBUTTON "&Restore Defaults", 1008, 108, 197, 110, 14, WS_DISABLED
+	AUTORADIOBUTTON "&Chiedere ogni volta quale azione eseguire", 1006, 14, 177, 202, 10
+	PUSHBUTTON "&Ripristina le impostazioni predefinite", 1008, 108, 197, 110, 14, WS_DISABLED
 END
 
 MIXED_CONTENT1_DLG DIALOG 0, 0, 227, 207
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Contenuti misti"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "This disk or device contains more than one type of content.", 1001, 32, 7, 191, 20
-	LTEXT "What do you want ReactOS to do?", 1002, 32, 31, 188, 8
+	LTEXT "Questo disco o dispositivo contiene più di un tipo di contenuto.", 1001, 32, 7, 191, 20
+	LTEXT "Cosa volete che faccia ReactOS?", 1002, 32, 31, 188, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
 	DEFPUSHBUTTON "OK", IDOK, 96, 186, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 186, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 160, 186, 60, 14
 END
 
 MIXED_CONTENT2_DLG DIALOG 0, 0, 227, 206
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Mixed Content"
+CAPTION "Contenuti misti"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS can perform the same action each time you insert a disk or connect a device with this kind of file:", 1001, 30, 7, 193, 20
+	LTEXT "ReactOS può eseguire la stessa azione ogni volta che viene inserito un disco o connesso un dispositivo con questo tipo di file:", 1001, 30, 7, 193, 20
 	ICON "", 1005, 32, 27, 11, 10, SS_REALSIZECONTROL
 	EDITTEXT 1006, 49, 28, 177, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-	LTEXT "What do you want ReactOS to do?", 1002, 32, 41, 190, 8
+	LTEXT "Cosa volete che faccia ReactOS?", 1002, 32, 41, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 55, 188, 112
-	AUTOCHECKBOX "Always do the selected action.", 1004, 32, 171, 190, 10
+	AUTOCHECKBOX "Esegui sempre l'azione selezionata.", 1004, 32, 171, 190, 10
 	DEFPUSHBUTTON "OK", IDOK, 96, 185, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 160, 185, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 160, 185, 60, 14
 END
 
 AUTOPLAY2_DLG DIALOG 0, 0, 227, 181
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CAPTION
-CAPTION "Autoplay"
+CAPTION "Esecuzione automatica"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON "", 1000, 5, 7, 21, 20
-	LTEXT "ReactOS can perform the same action each time you connect this device.", 1001, 32, 7, 190, 22
-	LTEXT "&What do you want ReactOS to do?", 1002, 32, 31, 190, 8
+	LTEXT "ReactOS può eseguire la stessa azione ogni volta che collegate questo dispositivo.", 1001, 32, 7, 190, 22
+	LTEXT "&Cosa volete che faccia ReactOS?", 1002, 32, 31, 190, 8
 	CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 187, 96
-	AUTOCHECKBOX "&Always perform the selected action", 1004, 32, 143, 190, 8
+	AUTOCHECKBOX "&Esegui sempre l'azione selezionata", 1004, 32, 143, 190, 8
 	DEFPUSHBUTTON "OK", IDOK, 94, 160, 60, 14
-	PUSHBUTTON "Cancel", IDCANCEL, 159, 160, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 159, 160, 60, 14
 END
 
 SHUTDOWN_DLG DIALOG 0, 0, 211, 103
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Shut Down ReactOS"
+CAPTION "Spegnimento di ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
 	ICON 8240, -1, 6, 6, 21, 20, SS_REALSIZECONTROL | WS_GROUP
-	LTEXT "What do you want the computer to do?", -1, 39, 7, 167, 10
+	LTEXT "Cosa volete che faccia ReactOS?", -1, 39, 7, 167, 10
 	COMBOBOX 8224, 39, 20, 165, 200, CBS_DROPDOWNLIST | WS_VSCROLL
-	LTEXT "Maintains your session, keeping the computer running on low power with data still in memory. The computer wakes up when you press a key or move the mouse.", 8225, 39, 40, 167, 37
+	LTEXT "Mantenere la vostra sessione, il computer acceso a bassa potenza con i dati in memoria. Il computer si riattiverà quando è premuto un taso o mosso il mouse.", 8225, 39, 40, 167, 37
 	DEFPUSHBUTTON "OK", 1, 7, 82, 60, 14, WS_GROUP
-	PUSHBUTTON "Cancel", IDCANCEL, 75, 82, 60, 14
-	PUSHBUTTON "&Help", IDHELP, 144, 82, 60, 14
+	PUSHBUTTON "Annulla", IDCANCEL, 75, 82, 60, 14
+	PUSHBUTTON "&Aiuto", IDHELP, 144, 82, 60, 14
 END
 
 FORMAT_DLG DIALOGEX 50, 50, 184, 218
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Format"
+CAPTION "Formattazione"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	DEFPUSHBUTTON "&Start", IDOK, 53, 198, 60, 14
-	PUSHBUTTON "&Close", IDCANCEL, 118, 198, 60, 14
-	LTEXT "Ca&pacity:", -1, 7, 6, 169, 9
+	DEFPUSHBUTTON "&Inizia", IDOK, 53, 198, 60, 14
+	PUSHBUTTON "&Chiudi", IDCANCEL, 118, 198, 60, 14
+	LTEXT "Ca&pacità:", -1, 7, 6, 169, 9
 	COMBOBOX 28673, 7, 17, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	LTEXT "&File system", -1, 7, 35, 170, 9
 	COMBOBOX 28677, 7, 46, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
 	CONTROL "", 28678, "MSCTLS_PROGRESS32", 0, 7, 181, 170, 8
-	LTEXT "&Allocation unit size", -1, 7, 64, 170, 9
+	LTEXT "Dimensione dell'unità di &Allocazione", -1, 7, 64, 170, 9
 	COMBOBOX 28680, 7, 75, 170, 200, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Volume &label", -1, 7, 93, 170, 9
+	LTEXT "&Etichetta del Volume", -1, 7, 93, 170, 9
 	EDITTEXT 28679, 7, 103, 170, 13, ES_AUTOHSCROLL
-	GROUPBOX "Format &options", 4610, 7, 121, 170, 49
-	AUTOCHECKBOX "&Quick Format", 28674, 16, 135, 155, 10
-	AUTOCHECKBOX "&Enable Compression", 28675, 16, 152, 155, 10
+	GROUPBOX "Opzioni di &Formattazione", 4610, 7, 121, 170, 49
+	AUTOCHECKBOX "Formattazione &rapida", 28674, 16, 135, 155, 10
+	AUTOCHECKBOX "Abilita la &Compressione", 28675, 16, 152, 155, 10
 END
 
 STRINGTABLE DISCARDABLE
