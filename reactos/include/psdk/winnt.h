@@ -49,26 +49,8 @@ extern "C" {
 #include <basetsd.h>
 #include <guiddef.h>
 
-/* wchar_t checks
- * First check if wchar_t has already been defined by any host/OS */
-#ifndef _WCHAR_T_DECLARED      /* for FreeBSD 5 and later */
-#define _WCHAR_T_DECLARED
-#ifndef _WCHAR_T               /* for Mac OS X */
-#define _WCHAR_T
-#ifndef _WCHAR_T_
-#define _WCHAR_T_
-#ifndef _WCHAR_T_DEFINED       /* If you want to override the wchar_t setting, define this */
 #ifndef __cplusplus
-  typedef unsigned short wchar_t;
-#endif
-#endif
-#endif
-#endif
-#endif
-
-/* Set _WCHAR_T_DEFINED for the case that this is checked later */
-#ifndef _WCHAR_T_DEFINED
-#define _WCHAR_T_DEFINED
+    typedef unsigned short wchar_t;
 #endif
 
 #include <ctype.h>
