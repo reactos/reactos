@@ -95,6 +95,7 @@
   <property name="BASEADDRESS_SAMSRV" value="0x74f30000" />
   <property name="BASEADDRESS_SAMLIB" value="0x750C0000" />
   <property name="BASEADDRESS_CABINET" value="0x75120000" />
+  <property name="BASEADDRESS_NETCFGX" value="0x755F0000" />
   <property name="BASEADDRESS_IPHLPAPI" value="0x75700000" />
   <property name="BASEADDRESS_MSGINA" value="0x75970000" />
   <property name="BASEADDRESS_CRYPTNET" value="0x75e60000" />

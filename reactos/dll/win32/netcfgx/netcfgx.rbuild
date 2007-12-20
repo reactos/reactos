@@ -1,4 +1,4 @@
-<module name="netcfgx" type="win32dll" entrypoint="0" installbase="system32" installname="netcfgx.dll">
+<module name="netcfgx" type="win32dll" baseaddress="${BASEADDRESS_NETCFGX}" entrypoint="0" installbase="system32" installname="netcfgx.dll">
 	<importlibrary definition="netcfgx.def" />
 	<file>netcfgx.c</file>
 	<library>ntdll</library>
