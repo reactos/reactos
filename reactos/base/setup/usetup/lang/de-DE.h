@@ -637,13 +637,13 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         6,
         8,
-        "Das Setup kann den Bootloader nicht auf der Festplatte Ihres Computers",
+        "Das Setup kann das Betriebssystem-Ladeprogramm nicht auf der",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "installieren",
+        "Festplatte Ihres Computers installieren",
         TEXT_NORMAL
     },
     {
@@ -838,25 +838,25 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installiert nun den Betriebssystemlader.",
+        "Setup installiert nun das Betriebssystem-Ladeprogramm.",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Installiere den Betriebssystemlader im MBR",
+        "Betriebssystem-Ladeprogramm im MBR installieren",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Installiere den Betriebssystemlader auf einer Diskette",
+        "Betriebssystem-Ladeprogramm auf einer Diskette installieren",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Auslassen der Installation des Betriebssystemladers",
+        "Betriebssystem-Ladeprogramm nicht installieren",
         TEXT_NORMAL
     },
     {
