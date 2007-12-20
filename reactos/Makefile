@@ -470,13 +470,13 @@ $(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
 	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
 	${mkdir} $(INTERMEDIATE_)ntoskrnl 2>$(NUL)
 	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
+	$(Q)$(WMC_TARGET) -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
 
 $(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
 	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
 	${mkdir} $(INTERMEDIATE_)dll$(SEP)win32$(SEP)kernel32 2>$(NUL)
 	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -U -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
+	$(Q)$(WMC_TARGET) -U -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
 
 .PHONY: msvc6
 msvc6: $(RBUILD_TARGET)
