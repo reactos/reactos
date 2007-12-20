@@ -138,7 +138,7 @@ int main(int argc,char *argv[])
 	int ret;
 	int i;
 	int cmdlen;
-	char rcbasedir[MAX_PATH];
+	char rcbasedir[256];
 
 	atexit( cleanup_files );
 	signal(SIGSEGV, segvhandler);

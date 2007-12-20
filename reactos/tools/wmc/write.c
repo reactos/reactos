@@ -589,7 +589,7 @@ void write_bin_files(const char *basedir)
 {
 	lan_blk_t *lbp;
 	token_t *ttab;
-	char fname[MAX_PATH];
+	char fname[256];
 	int ntab;
 	int i;
 
