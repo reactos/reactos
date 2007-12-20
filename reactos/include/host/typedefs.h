@@ -71,7 +71,7 @@ typedef unsigned int ULONG, *PULONG, DWORD, *LPDWORD;
 typedef long long LONGLONG;
 typedef unsigned long long ULONGLONG;
 typedef int INT;
-typedef unsigned int UINT, *PUINT, *LPUINT;
+typedef unsigned int UINT, *PUINT, *LPUINT, UINT_PTR, *PUINT_PTR;
 typedef UCHAR BOOLEAN, *PBOOLEAN;
 typedef int BOOL;
 typedef long int W64 LONG_PTR, *PLONG_PTR;

@@ -1,18 +1,7 @@
 #ifndef _WINGLUE_H
 #define _WINGLUE_H
 
-typedef unsigned char BYTE;
-typedef unsigned short WORD;
-typedef unsigned long DWORD;
-typedef unsigned short WCHAR;
-#if defined(_WIN64)
-typedef unsigned __int64 UINT_PTR;
-#else
-typedef unsigned int UINT_PTR;
-#endif
-
-#define LOBYTE(w)	((BYTE)(w))
-#define HIBYTE(w)	((BYTE)(((WORD)(w)>>8)&0xFF))
+#include <host/typedefs.h>
 
 #define DLL_PROCESS_ATTACH 1
 #define DLL_PROCESS_DETACH 0
