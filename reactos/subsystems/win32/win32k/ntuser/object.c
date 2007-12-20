@@ -68,7 +68,47 @@ __inline static PUSER_HANDLE_ENTRY alloc_user_entry(PUSER_HANDLE_TABLE ht)
 
    if (ht->nb_handles >= ht->allocated_handles)  /* need to grow the array */
    {
-      DPRINT1("Out of user handles!\n");
+/**/
+      int i, iFree = 0, iWindow = 0, iMenu = 0, iCursorIcon = 0, 
+          iHook = 0, iCallProc = 0, iAccel = 0, iMonitor = 0;
+ /**/
+      DPRINT1("Out of user handles! Used -> %i, NM_Handle -> %d\n", usedHandles, ht->nb_handles);
+//#if 0
+      for(i = 0; i < ht->nb_handles; i++)
+      {
+         switch (ht->handles[i].type)
+         {
+           case otFree: // Should be zero.
+            iFree++;
+            break;
+           case otWindow:
+            iWindow++;
+            break;
+           case otMenu:
+            iMenu++;
+            break;
+           case otCursorIcon:
+            iCursorIcon++;
+            break;
+           case otHook:
+            iHook++;
+            break;
+           case otCallProc:
+            iCallProc++;
+            break;
+           case otAccel:
+            iAccel++;
+            break;
+           case otMonitor:
+            iMonitor++;
+            break;
+           default:
+            break;
+         }
+      }
+      DPRINT1("Handle Count by Type:\n Free = %d Window = %d Menu = %d CursorIcon = %d Hook = %d\n CallProc = %d Accel = %d Monitor = %d\n",
+      iFree, iWindow, iMenu, iCursorIcon, iHook, iCallProc, iAccel, iMonitor );
+//#endif      
       return NULL;
 #if 0
       PUSER_HANDLE_ENTRY new_handles;
