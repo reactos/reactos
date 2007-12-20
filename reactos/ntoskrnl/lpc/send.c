@@ -203,11 +203,6 @@ LpcRequestWaitReplyPort(IN PVOID PortObject,
         /* Then it's a callback */
         Callback = TRUE;
     }
-    else if (LpcpGetMessageType(LpcRequest))
-    {
-        /* This is a not kernel-mode message */
-        return STATUS_INVALID_PARAMETER;
-    }
     else
     {
         /* This is a kernel-mode message without a callback */
