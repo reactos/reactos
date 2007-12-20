@@ -509,6 +509,14 @@ IntVideoPortDispatchPower(
    return STATUS_NOT_IMPLEMENTED;
 }
 
+NTSTATUS NTAPI
+IntVideoPortDispatchSystemControl(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp)
+{
+   return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID NTAPI
 IntVideoPortUnload(PDRIVER_OBJECT DriverObject)
 {

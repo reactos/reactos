@@ -42,9 +42,9 @@ DriverEntry(IN PVOID Context1, IN PVOID Context2)
    InitData.HwInitialize = VBEInitialize;
    InitData.HwStartIO = VBEStartIO;
    InitData.HwResetHw = VBEResetHw;
-   InitData.HwGetPowerState = VBEGetPowerState;
-   InitData.HwSetPowerState = VBESetPowerState;
-   InitData.HwGetVideoChildDescriptor = VBEGetVideoChildDescriptor;
+   //InitData.HwGetPowerState = VBEGetPowerState;
+   //InitData.HwSetPowerState = VBESetPowerState;
+   //InitData.HwGetVideoChildDescriptor = VBEGetVideoChildDescriptor;
    InitData.HwDeviceExtensionSize = sizeof(VBE_DEVICE_EXTENSION);
 
    return VideoPortInitialize(Context1, Context2, &InitData, NULL);

@@ -1,7 +1,7 @@
 /*
  * VideoPort driver
  *
- * Copyright (C) ReactOS Team
+ * Copyright (C) 2002-2004, 2007 ReactOS Team
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -553,7 +553,7 @@ VideoPortInitialize(
    PUNICODE_STRING RegistryPath = Context2;
    NTSTATUS Status;
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
-   BOOL LegacyDetection = FALSE;
+   BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
 
    DPRINT("VideoPortInitialize\n");
 
@@ -571,6 +571,63 @@ VideoPortInitialize(
        HwInitializationData->HwStartIO == NULL)
    {
       return STATUS_INVALID_PARAMETER;
+   }
+
+   switch (HwInitializationData->HwInitDataSize)
+   {
+      /*
+       * NT4 drivers are special case, because we must use legacy method
+       * of detection instead of the Plug & Play one.
+       */
+
+      case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
+         DPRINT("We were loaded by a Windows NT miniport driver.\n");
+         break;
+
+      case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
+         DPRINT("We were loaded by a Windows 2000 miniport driver.\n");
+         break;
+
+      case sizeof(VIDEO_HW_INITIALIZATION_DATA):
+         DPRINT("We were loaded by a Windows XP or later miniport driver.\n");
+         break;
+
+      default:
+         DPRINT("Invalid HwInitializationData size.\n");
+         return STATUS_UNSUCCESSFUL;
+   }
+
+   /* Set dispatching routines */
+   DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
+   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
+   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] =
+       IntVideoPortDispatchDeviceControl;
+   DriverObject->MajorFunction[IRP_MJ_INTERNAL_DEVICE_CONTROL] =
+       IntVideoPortDispatchDeviceControl;
+   DriverObject->MajorFunction[IRP_MJ_WRITE] =
+       IntVideoPortDispatchWrite; // ReactOS-specific hack
+   DriverObject->DriverUnload = IntVideoPortUnload;
+
+   /* Determine type of the miniport driver */
+   if ((HwInitializationData->HwInitDataSize >=
+        FIELD_OFFSET(VIDEO_HW_INITIALIZATION_DATA, HwQueryInterface))
+       && HwInitializationData->HwSetPowerState
+       && HwInitializationData->HwGetPowerState
+       && HwInitializationData->HwGetVideoChildDescriptor)
+   {
+       DPRINT("The miniport is a PnP miniport driver\n");
+       PnpDriver = TRUE;
+   }
+
+   /* Check if legacy detection should be applied */
+   if (!PnpDriver || HwContext)
+   {
+       DPRINT("Legacy detection for adapter interface %d\n",
+           HwInitializationData->AdapterInterfaceType);
+
+       /* FIXME: Move the code for legacy detection
+          to another function and call it here */
+       LegacyDetection = TRUE;
    }
 
    /*
@@ -643,45 +700,6 @@ VideoPortInitialize(
    }
    DriverExtension->HwContext = HwContext;
 
-   switch (HwInitializationData->HwInitDataSize)
-   {
-      /*
-       * NT4 drivers are special case, because we must use legacy method
-       * of detection instead of the Plug & Play one.
-       */
-
-      case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows NT miniport driver.\n");
-         LegacyDetection = TRUE;
-         break;
-
-      case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows 2000 miniport driver.\n");
-         break;
-
-      case sizeof(VIDEO_HW_INITIALIZATION_DATA):
-         DPRINT("We were loaded by a Windows XP or later miniport driver.\n");
-         break;
-
-      default:
-         DPRINT("Invalid HwInitializationData size.\n");
-         return STATUS_UNSUCCESSFUL;
-   }
-
-   /* We can't check HwInitializationData->AdapterInterfaceType to know if
-    * we have to use legacy detection, as MSDN states that this member is
-    * ignored by videoprt and should remain zero-initialized.
-    * Force legacy detection, so NT4 drivers will still work on ReactOS.
-    * WARNING: this will cause all Plug-and-Play IRPs to fail.
-    */
-   LegacyDetection = TRUE;
-
-   DriverObject->MajorFunction[IRP_MJ_CREATE] = IntVideoPortDispatchOpen;
-   DriverObject->MajorFunction[IRP_MJ_CLOSE] = IntVideoPortDispatchClose;
-   DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IntVideoPortDispatchDeviceControl;
-   DriverObject->MajorFunction[IRP_MJ_WRITE] = IntVideoPortDispatchWrite;
-   DriverObject->DriverUnload = IntVideoPortUnload;
-
    /*
     * Plug & Play drivers registers the device in AddDevice routine. For
     * legacy drivers we must do it now.
@@ -710,6 +728,7 @@ VideoPortInitialize(
       DriverObject->DriverExtension->AddDevice = IntVideoPortAddDevice;
       DriverObject->MajorFunction[IRP_MJ_PNP] = IntVideoPortDispatchPnp;
       DriverObject->MajorFunction[IRP_MJ_POWER] = IntVideoPortDispatchPower;
+      DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = IntVideoPortDispatchSystemControl;
 
       return STATUS_SUCCESS;
    }

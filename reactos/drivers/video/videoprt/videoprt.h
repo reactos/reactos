@@ -165,6 +165,11 @@ IntVideoPortDispatchPower(
    IN PIRP Irp);
 
 NTSTATUS NTAPI
+IntVideoPortDispatchSystemControl(
+   IN PDEVICE_OBJECT DeviceObject,
+   IN PIRP Irp);
+
+NTSTATUS NTAPI
 IntVideoPortDispatchWrite(
    IN PDEVICE_OBJECT DeviceObject,
    IN PIRP Irp);
