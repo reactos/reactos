@@ -15,7 +15,7 @@
 #define NDEBUG
 #include <debug.h>
 
-LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = UnhandledExceptionFilter;
+LPTOP_LEVEL_EXCEPTION_FILTER GlobalTopLevelExceptionFilter = NULL;
 
 UINT
 WINAPI
@@ -213,6 +213,8 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
    LONG RetValue;
    HANDLE DebugPort = NULL;
    NTSTATUS ErrCode;
+   ULONG ErrorParameters[4];
+   ULONG ErrorResponse;
 
    if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION &&
        ExceptionInfo->ExceptionRecord->NumberParameters >= 2)
@@ -227,7 +229,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
          if (RetValue == EXCEPTION_CONTINUE_EXECUTION)
             return EXCEPTION_CONTINUE_EXECUTION;
          break;
-	  case EXCEPTION_EXECUTE_FAULT:
+      case EXCEPTION_EXECUTE_FAULT:
          /* FIXME */
          break;
       }
@@ -255,7 +257,7 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       if (ret != EXCEPTION_CONTINUE_SEARCH)
          return ret;
    }
-    
+
    if ((GetErrorMode() & SEM_NOGPFAULTERRORBOX) == 0)
    {
 #ifdef _X86_
@@ -304,6 +306,34 @@ UnhandledExceptionFilter(struct _EXCEPTION_POINTERS *ExceptionInfo)
       }
       _SEH_END;
 #endif
+   }
+
+   /* Save exception code and address */
+   ErrorParameters[0] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionCode;
+   ErrorParameters[1] = (ULONG)ExceptionInfo->ExceptionRecord->ExceptionAddress;
+
+   if (ExceptionInfo->ExceptionRecord->ExceptionCode == STATUS_ACCESS_VIOLATION)
+   {
+       /* get the type of operation that caused the access violation */
+       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[0];
+   }
+   else
+   {
+       ErrorParameters[2] = ExceptionInfo->ExceptionRecord->ExceptionInformation[2];
+   }
+
+   /* Save faulting address */
+   ErrorParameters[3] = ExceptionInfo->ExceptionRecord->ExceptionInformation[1];
+
+   /* Raise the harderror */
+   ErrCode = NtRaiseHardError(STATUS_UNHANDLED_EXCEPTION | 0x10000000,
+       4, 0, ErrorParameters, OptionOkCancel, &ErrorResponse);
+
+   if (NT_SUCCESS(ErrCode) && (ErrorResponse == ResponseCancel))
+   {
+       /* FIXME: Check the result, if the "Cancel" button was
+                 clicked run a debugger */
+       DPRINT1("Debugging is not implemented yet\n");
    }
 
    /*
