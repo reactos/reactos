@@ -133,6 +133,20 @@ char *dup_basename(const char *name, const char *ext)
 	return base;
 }
 
+void get_rcbasedir(char *basedir, const char *name)
+{
+	char *slash;
+	slash = strrchr(name, '/');
+
+	if (!slash)
+		slash = strrchr(name, '\\');
+
+	basedir[0] = 0;
+
+	strncpy(basedir, name, slash - name + 1);
+	basedir[slash-name + 1] = '\0';
+}
+
 void *xmalloc(size_t size)
 {
     void *res;

@@ -22,6 +22,6 @@
 
 void write_h_file(const char *fname);
 void write_rc_file(const char *fname);
-void write_bin_files(void);
+void write_bin_files(const char *basedir);
 
 #endif
