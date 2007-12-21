@@ -40,7 +40,7 @@
  * the new network support in Reactos.
  *
  * If you intend to extend this code by more, please contact me to avoid duplicate work.
- * There are already resources and code for TCP/IP configuration that are not 
+ * There are already resources and code for TCP/IP configuration that are not
  * mature enough for committing them to CVS yet.
  */
 
@@ -53,7 +53,13 @@
 #include <commctrl.h>
 #include <cpl.h>
 
-#include <debug.h>
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(ncpa);
+#ifndef _UNICODE
+#define debugstr_aw debugstr_a
+#else
+#define debugstr_aw debugstr_w
+#endif
 
 #include "resource.h"
 #include "ncpa.h"
@@ -96,7 +102,7 @@ EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tps
 
 	if(RegOpenKeyEx(hBaseKey,tpszRegPath,0,KEY_ENUMERATE_SUB_KEYS,&hKey)!=ERROR_SUCCESS)
 	{
-		DPRINT("EnumRegKeys failed (key not found): %S\n", tpszRegPath);
+		WARN("EnumRegKeys failed (key not found): %S\n", tpszRegPath);
 		return;
 	}
 
@@ -106,12 +112,12 @@ EnumRegKeys(ENUMREGKEYCALLBACK *pCallback,PVOID pCookie,HKEY hBaseKey,TCHAR *tps
 		ret = RegEnumKeyEx(hKey,i,tpszName,&dwNameLen,NULL,NULL,NULL,NULL);
 		if(ret != ERROR_SUCCESS)
 		{
-			DPRINT("EnumRegKeys: RegEnumKeyEx failed for %S (rc 0x%lx)\n", tpszName, ret);
+			WARN("EnumRegKeys: RegEnumKeyEx failed for %S (rc 0x%lx)\n", tpszName, ret);
 			break;
 		}
 
 		_stprintf(pszNewPath,_T("%s\\%s"),tpszRegPath,tpszName);
-		DPRINT("EnumRegKeys: Calling user supplied enum function\n");
+		TRACE("EnumRegKeys: Calling user supplied enum function\n");
 		pCallback(pCookie,hBaseKey,pszNewPath);
 
 		dwNameLen = sizeof(tpszName);
@@ -262,6 +268,7 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			if(!FindNICClassKeyForCfgInstance(pGlobalData->CurrentAdapterName, tpszSubKey))
 			{
+				WARN("NIC Entry not found for '%s'\n", debugstr_w(pGlobalData->CurrentAdapterName));
 				MessageBox(hwndDlg,_T("NIC Entry not found"),_T("Registry error"),MB_ICONSTOP);
 				MessageBox(hwndDlg,pGlobalData->CurrentAdapterName,tpszSubKey,MB_ICONSTOP);
 			}
@@ -309,7 +316,6 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				RegCloseKey(hNDIKey);
 
 				SetDlgItemText(hwndDlg,IDC_DESCRIPTION,tpszHelpText);
-				
 			}
 			if(HIWORD(wParam)!=LBN_DBLCLK)
 				break;
@@ -322,8 +328,9 @@ NICPropertyPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				}
 				else
 				{
+					FIXME("If you see this, then the IPHLPAPI.DLL probably needs more work because GetAdaptersInfo did not return the expected data.\n");
 					MessageBox(NULL,_T("If you see this, then the IPHLPAPI.DLL probably needs more work because GetAdaptersInfo did not return the expected data."),_T("Error"),MB_ICONSTOP);
-				}				
+				}
 			}
 			break;
 		}
@@ -360,8 +367,7 @@ DisplayNICProperties(HWND hParent, GLOBAL_NCPA_DATA* pGlobalData)
 	else
 		_tcscat(tpszName,_T(" Properties"));
 	RegCloseKey(hKey);
-	
-	
+
 	ZeroMemory(&psh, sizeof(PROPSHEETHEADER));
 	psh.dwSize = sizeof(PROPSHEETHEADER);
 	psh.dwFlags =  PSH_PROPSHEETPAGE | PSH_NOAPPLYNOW;
@@ -373,7 +379,6 @@ DisplayNICProperties(HWND hParent, GLOBAL_NCPA_DATA* pGlobalData)
 	psh.nStartPage = 0;
 	psh.ppsp = psp;
 	psh.pfnCallback = NULL;
-	
 
 	InitPropSheetPage(&psp[0], IDD_NETPROPERTIES, NICPropertyPageProc, (LPARAM)pGlobalData);
 	PropertySheet(&psh);
@@ -388,17 +393,18 @@ void RefreshNICInfo(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 	if (pGlobalData->pFirstAdapterInfo)
 		HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
 
-	BufferSize = sizeof(IP_ADAPTER_INFO);		
+	BufferSize = sizeof(IP_ADAPTER_INFO);
 	pGlobalData->pFirstAdapterInfo = (PIP_ADAPTER_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
-	
-	if (GetAdaptersInfo(pGlobalData->pFirstAdapterInfo, &BufferSize) == ERROR_BUFFER_OVERFLOW) 
+
+	if (GetAdaptersInfo(pGlobalData->pFirstAdapterInfo, &BufferSize) == ERROR_BUFFER_OVERFLOW)
 	{
-       HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
-       pGlobalData->pFirstAdapterInfo = (PIP_ADAPTER_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
+		HeapFree(GetProcessHeap(), 0, pGlobalData->pFirstAdapterInfo);
+		pGlobalData->pFirstAdapterInfo = (PIP_ADAPTER_INFO) HeapAlloc(GetProcessHeap(), 0, BufferSize);
 	}
 
 	if ((ErrRet = GetAdaptersInfo(pGlobalData->pFirstAdapterInfo, &BufferSize)) != NO_ERROR)
 	{
+		ERR("error adapterinfo\n");
 		MessageBox(hwndDlg, _T("error adapterinfo") ,_T("ncpa.cpl"),MB_ICONSTOP);
 
 		if (pGlobalData->pFirstAdapterInfo)
@@ -449,9 +455,9 @@ void UpdateCurrentAdapterInfo(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 		}
 	}
 	else if (ERROR_NO_DATA == dwRetVal)
-		DPRINT("There are no network adapters with IPv4 enabled on the local system\n");
+		WARN("There are no network adapters with IPv4 enabled on the local system\n");
 	else
-		DPRINT1("GetInterfaceInfo failed.\n");
+		ERR("GetInterfaceInfo failed.\n");
 }
 
 static VOID
@@ -471,7 +477,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 				if (firstError)
 				{
 					firstError = FALSE;
-					DPRINT1("Out of memory - could not allocate MIB_IFTABLE(1)");
+					WARN("Out of memory - could not allocate MIB_IFTABLE(1)");
 					return;
 				}
 			}
@@ -490,7 +496,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 				if (firstError)
 				{
 					firstError = FALSE;
-					DPRINT1("Out of memory - could not allocate MIB_IFTABLE(2)");
+					WARN("Out of memory - could not allocate MIB_IFTABLE(2)");
 				}
 
 				pGlobalData->IfTableSize = 0;
@@ -518,7 +524,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 		PMIB_IFROW pIfRow = NULL;
 		TCHAR Buffer[256], LocBuffer[256];
 		SYSTEMTIME TimeConnected;
-		
+
 		memset(&TimeConnected, 0, sizeof(TimeConnected));
 
 		if (pGlobalData->pCurrentAdapterInfo)
@@ -593,7 +599,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 			break;
 
 		default:
-			DPRINT1("Unknown operation status: %d\n", OperStatus);
+			WARN("Unknown operation status: %d\n", OperStatus);
 			OperStatus = IDS_STATUS_OPERATIONAL;
 			break;
 		}
@@ -630,7 +636,7 @@ UpdateNICStatusData(HWND hwndDlg, PGLOBAL_NCPA_DATA pGlobalData)
 		if (firstError)
 		{
 			firstError = FALSE;
-			DPRINT1("GetIfTable failed with error code: %d\n", dwRet);
+			ERR("GetIfTable failed with error code: %d\n", dwRet);
 			return;
 		}
 	}
@@ -698,7 +704,7 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	switch(uMsg)
 	{
 	case WM_INITDIALOG:
-		{	
+		{
 			pGlobalData = (PGLOBAL_NCPA_DATA)((LPPROPSHEETPAGE)lParam)->lParam;
 			if (pGlobalData == NULL)
 				return FALSE;
@@ -706,14 +712,14 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pGlobalData);
 
 			if (pGlobalData->pCurrentAdapterInfo)
-			{			
+			{
 				TCHAR Buffer[64];
 
 				if (pGlobalData->pCurrentAdapterInfo->DhcpEnabled)
 					LoadString(hApplet, IDS_ASSIGNED_DHCP, Buffer, sizeof(Buffer) / sizeof(TCHAR));
 				else
 					LoadString(hApplet, IDS_ASSIGNED_MANUAL, Buffer, sizeof(Buffer) / sizeof(TCHAR));
-				
+
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSTYPE, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pGlobalData->pCurrentAdapterInfo->IpAddressList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSIP, WM_SETTEXT, 0, (LPARAM)Buffer);
@@ -721,7 +727,7 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSSUBNET, WM_SETTEXT, 0, (LPARAM)Buffer);
 				_stprintf(Buffer, _T("%S"), pGlobalData->pCurrentAdapterInfo->GatewayList.IpAddress.String);
 				SendDlgItemMessage(hwndDlg, IDC_DETAILSGATEWAY, WM_SETTEXT, 0, (LPARAM)Buffer);
-			}			
+			}
 		}
 		break;
 	case WM_COMMAND:
@@ -733,10 +739,10 @@ NICSupportPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			break;
 		case IDC_DETAILS:
 			{
+				FIXME("Not implemented: show detail window\n");
 				MessageBox(hwndDlg,_T("not implemented: show detail window"),_T("ncpa.cpl"),MB_ICONSTOP);
 			}
 			break;
-			
 		}
 		break;
 	}
@@ -808,7 +814,7 @@ DisplayNICStatus(HWND hParent,TCHAR *tpszCfgInstanceID)
 
 	InitPropSheetPage(&psp[0], IDD_CARDPROPERTIES, NICStatusPageProc, (LPARAM)pGlobalData);
 	InitPropSheetPage(&psp[1], IDD_CARDSUPPORT, NICSupportPageProc, (LPARAM)pGlobalData);
-	 
+
 	PropertySheet(&psh);
 	return;
 }
@@ -828,6 +834,7 @@ EnumAdapters(HWND hwndDlg)
 	size=sizeof(Info);
 	if(GetAdaptersInfo(Info,&size)!=ERROR_SUCCESS)
 	{
+		WARN("IPHLPAPI.DLL failed to provide Adapter information\n");
 		MessageBox(hwndDlg,L"IPHLPAPI.DLL failed to provide Adapter information",L"Error",MB_ICONSTOP);
 		return;
 	}
@@ -859,33 +866,33 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	HWND hwndDlg = (HWND)pCookie;
 	DWORD dwCharacteristics;
 
-	DPRINT("NetAdapterCallback: %S\n", tpszSubKey);
+	TRACE("NetAdapterCallback: %s\n", debugstr_aw(tpszSubKey));
 
 	if(RegOpenKeyEx(hBaseKey,tpszSubKey,0,KEY_QUERY_VALUE,&hKey)!=ERROR_SUCCESS)
 		return;
 
-	DPRINT("NetAdapterCallback: Reading Characteristics\n");
+	TRACE("NetAdapterCallback: Reading Characteristics\n");
 	dwType = REG_DWORD;
 	dwSize = sizeof(dwCharacteristics);
 	if(RegQueryValueEx(hKey,_T("Characteristics"),NULL,&dwType,(BYTE*)&dwCharacteristics,&dwSize)!=ERROR_SUCCESS)
 		dwCharacteristics = 0;
-
 	if (dwCharacteristics & NCF_HIDDEN)
 		return;
-		
 	if (!(dwCharacteristics & NCF_VIRTUAL) && !(dwCharacteristics & NCF_PHYSICAL))
 		return;
-		
-	DPRINT("NetAdapterCallback: Reading DriverDesc\n");
+
+	TRACE("NetAdapterCallback: Reading DriverDesc\n");
 	dwType = REG_SZ;
 	dwSize = sizeof(tpszDisplayName);
 	if (RegQueryValueEx(hKey,_T("DriverDesc"),NULL,&dwType,(BYTE*)tpszDisplayName,&dwSize)!= ERROR_SUCCESS)
 		_tcscpy(tpszDisplayName,_T("Unnamed Adapter"));
+	TRACE("Network card: '%s'\n", debugstr_aw(tpszDisplayName));
 
 	// get the link to the Enum Subkey (currently unused)
 	//dwType = REG_SZ;
 	//dwSize = sizeof(tpszDeviceID);
 	//if(RegQueryValueEx(hKey,_T("MatchingDeviceId"),NULL,&dwType,(BYTE*)tpszDeviceID,&dwSize) != ERROR_SUCCESS) {
+	//	WARN("Missing MatchingDeviceId Entry\n");
 	//	MessageBox(hwndDlg,_T("Missing MatchingDeviceId Entry"),_T("Registry Problem"),MB_ICONSTOP);
 	//	return;
 	//}
@@ -893,7 +900,9 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	// get the card configuration GUID
 	dwType = REG_SZ;
 	dwSize = sizeof(tpszCfgInstanceID);
-	if(RegQueryValueEx(hKey,_T("NetCfgInstanceId"),NULL,&dwType,(BYTE*)tpszCfgInstanceID,&dwSize) != ERROR_SUCCESS) {
+	if(RegQueryValueEx(hKey,_T("NetCfgInstanceId"),NULL,&dwType,(BYTE*)tpszCfgInstanceID,&dwSize) != ERROR_SUCCESS)
+	{
+		ERR("Missing NetCfgInstanceId Entry\n");
 		MessageBox(hwndDlg,_T("Missing NetCfgInstanceId Entry"),_T("Registry Problem"),MB_ICONSTOP);
 		return;
 	}
@@ -905,7 +914,6 @@ NetAdapterCallback(void *pCookie,HKEY hBaseKey,TCHAR *tpszSubKey)
 	// really represents a device that is currently connected to the system
 	//
 	// How is this done properly ?
-	
 
 	nIndex = (int) SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_ADDSTRING,0,(LPARAM)tpszDisplayName);
 	SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETITEMDATA,nIndex,(LPARAM)ptpszCfgInstanceID);
@@ -940,7 +948,7 @@ NetworkPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 			EnableWindow(GetDlgItem(hwndDlg,IDC_ADD),FALSE);
 			EnableWindow(GetDlgItem(hwndDlg,IDC_REMOVE),FALSE);
-			
+
 			EnumAdapters(hwndDlg);
 			SendDlgItemMessage(hwndDlg,IDC_NETCARDLIST,LB_SETCURSEL,0,0);
 		}
@@ -1078,6 +1086,3 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD dwReason, LPVOID lpvReserved)
 
 	return TRUE;
 }
-
-
-

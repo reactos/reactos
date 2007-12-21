@@ -7,6 +7,7 @@
  *              Copyright 2006 Ge van Geldorp <gvg@reactos.org>
  */
 
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdarg.h>
@@ -21,20 +22,13 @@
 
 #ifdef _MSC_VER
 #include <cpl.h>
-#else
-
-// this is missing on reactos...
-#ifndef IPM_SETADDRESS
-#define IPM_SETADDRESS (WM_USER+101)
-#endif
-
 #endif
 
 #include "resource.h"
 #include "ncpa.h"
 
-#define NDEBUG
-#include <debug.h>
+#include <wine/debug.h>
+WINE_DEFAULT_DEBUG_CHANNEL(ncpa);
 
 typedef struct _TCPIP_PROPERTIES_DATA {
     DWORD AdapterIndex;
@@ -135,6 +129,7 @@ ShowError(HWND Parent, UINT MsgId)
                          MsgId, Msg, sizeof(Msg) / sizeof(Msg[0]))) {
         wcscpy(Msg, L"Unknown error");
     }
+    ERR("%s\n", debugstr_w(Msg));
     MessageBoxW(Parent, Msg, Error, MB_OK | MB_ICONSTOP);
 }
 
@@ -204,7 +199,7 @@ ValidateAndStore(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData)
 	RowToAdd.dwForwardNextHop = DlgData->Gateway;
 
 	CreateIpForwardEntry( &RowToAdd );
-        ASSERT(BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS));
+        assert(BST_CHECKED == IsDlgButtonChecked(Dlg, IDC_FIXEDDNS));
     } else {
         DlgData->IpAddress = INADDR_NONE;
         DlgData->SubnetMask = INADDR_NONE;
@@ -250,7 +245,7 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
 
     if (! ValidateAndStore(Dlg, DlgData)) {
         /* Should never happen, we should have validated at PSN_KILLACTIVE */
-        ASSERT(FALSE);
+        assert(FALSE);
         return FALSE;
     }
 
@@ -300,8 +295,6 @@ InternTCPIPSettings(HWND Dlg, PTCPIP_PROPERTIES_DATA DlgData) {
             goto cleanup;
     }
 
-    // arty ... Not needed anymore ... We update the address live now
-    //MessageBox(NULL, TEXT("You need to reboot before the new parameters take effect."), TEXT("Reboot required"), MB_OK | MB_ICONWARNING);
     ret = TRUE;
 
 cleanup:
