@@ -83,7 +83,7 @@ typedef struct _PNPROOT_FDO_DEVICE_EXTENSION
 
 typedef struct _BUFFER
 {
-    PVOID *Buffer;
+    PVOID *Data;
     PULONG Length;
 } BUFFER, *PBUFFER;
 
@@ -235,19 +235,17 @@ QueryStringCallback(
     IN PVOID Context,
     IN PVOID EntryContext)
 {
-    PUNICODE_STRING String = (PUNICODE_STRING)EntryContext;
+    PUNICODE_STRING Destination = (PUNICODE_STRING)EntryContext;
+    UNICODE_STRING Source;
 
     if (ValueType != REG_SZ || ValueLength == 0 || ValueLength % sizeof(WCHAR) != 0)
         return STATUS_SUCCESS;
 
-    String->Buffer = ExAllocatePoolWithTag(PagedPool, ValueLength, TAG_PNP_ROOT);
-    if (String->Buffer == NULL)
-        return STATUS_NO_MEMORY;
-    String->Length = String->MaximumLength = (USHORT)ValueLength;
-    RtlCopyMemory(String->Buffer, ValueData, ValueLength);
-    if (ValueLength > 0 && String->Buffer[ValueLength / sizeof(WCHAR) - 1] == L'\0')
-        String->Length -= sizeof(WCHAR);
-    return STATUS_SUCCESS;
+    Source.MaximumLength = Source.Length = ValueLength;
+    Source.Buffer = ValueData;
+    if (Source.Length > 0 && Source.Buffer[Source.Length / sizeof(WCHAR) - 1] == UNICODE_NULL)
+        Source.Length -= sizeof(WCHAR);
+    return RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &Source, Destination);
 }
 
 static NTSTATUS NTAPI
@@ -264,7 +262,7 @@ QueryBinaryValueCallback(
 
     if (ValueLength == 0)
     {
-        *Buffer->Buffer = NULL;
+        *Buffer->Data = NULL;
         return STATUS_SUCCESS;
     }
 
@@ -272,7 +270,7 @@ QueryBinaryValueCallback(
     if (BinaryValue == NULL)
         return STATUS_NO_MEMORY;
     RtlCopyMemory(BinaryValue, ValueData, ValueLength);
-    *Buffer->Buffer = BinaryValue;
+    *Buffer->Data = BinaryValue;
     if (Buffer->Length) *Buffer->Length = ValueLength;
     return STATUS_SUCCESS;
 }
@@ -454,9 +452,9 @@ EnumerateDevices(
                 }
 
                 /* Fill other informations */
-                Buffer1.Buffer = (PVOID *)&Device->ResourceRequirementsList;
+                Buffer1.Data = (PVOID *)&Device->ResourceRequirementsList;
                 Buffer1.Length = NULL;
-                Buffer2.Buffer = (PVOID *)&Device->ResourceList;
+                Buffer2.Data = (PVOID *)&Device->ResourceList;
                 Buffer2.Length = &Device->ResourceListSize;
                 RtlZeroMemory(QueryTable, sizeof(QueryTable));
                 QueryTable[0].QueryRoutine = QueryStringCallback;

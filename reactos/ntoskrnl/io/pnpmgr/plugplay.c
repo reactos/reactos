@@ -44,7 +44,6 @@ IopInitPlugPlayEvents(VOID)
     return STATUS_SUCCESS;
 }
 
-
 NTSTATUS
 IopQueueTargetDeviceEvent(const GUID *Guid,
                           PUNICODE_STRING DeviceIds)
@@ -258,119 +257,6 @@ IopTraverseDeviceNode(PDEVICE_NODE Node, PUNICODE_STRING DeviceInstance)
 static PDEVICE_OBJECT
 IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance)
 {
-#if 0
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING KeyName, ValueName;
-    LPWSTR KeyNameBuffer;
-    HANDLE InstanceKeyHandle;
-    HANDLE ControlKeyHandle;
-    NTSTATUS Status;
-    PKEY_VALUE_PARTIAL_INFORMATION ValueInformation;
-    ULONG ValueInformationLength;
-    PDEVICE_OBJECT DeviceObject = NULL;
-
-    DPRINT("IopGetDeviceObjectFromDeviceInstance(%wZ) called\n", DeviceInstance);
-
-    KeyNameBuffer = ExAllocatePool(PagedPool,
-                                   (49 * sizeof(WCHAR)) + DeviceInstance->Length);
-    if (KeyNameBuffer == NULL)
-    {
-        DPRINT1("Failed to allocate key name buffer!\n");
-        return NULL;
-    }
-
-    wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-    wcscat(KeyNameBuffer, DeviceInstance->Buffer);
-
-    RtlInitUnicodeString(&KeyName,
-                         KeyNameBuffer);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-
-    Status = ZwOpenKey(&InstanceKeyHandle,
-                       KEY_READ,
-                       &ObjectAttributes);
-    ExFreePool(KeyNameBuffer);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to open the instance key (Status %lx)\n", Status);
-        return NULL;
-    }
-
-    /* Open the 'Control' subkey */
-    RtlInitUnicodeString(&KeyName,
-                         L"Control");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE,
-                               InstanceKeyHandle,
-                               NULL);
-
-    Status = ZwOpenKey(&ControlKeyHandle,
-                       KEY_READ,
-                       &ObjectAttributes);
-    ZwClose(InstanceKeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to open the 'Control' key (Status %lx)\n", Status);
-        return NULL;
-    }
-
-    /* Query the 'DeviceReference' value */
-    RtlInitUnicodeString(&ValueName,
-                         L"DeviceReference");
-    ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                             Data[0]) + sizeof(ULONG);
-    ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
-    if (ValueInformation == NULL)
-    {
-        DPRINT1("Failed to allocate the name information buffer!\n");
-        ZwClose(ControlKeyHandle);
-        return NULL;
-    }
-
-    Status = ZwQueryValueKey(ControlKeyHandle,
-                             &ValueName,
-                             KeyValuePartialInformation,
-                             ValueInformation,
-                             ValueInformationLength,
-                             &ValueInformationLength);
-    ZwClose(ControlKeyHandle);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to query the 'DeviceReference' value (Status %lx)\n", Status);
-        return NULL;
-    }
-
-    /* Check the device object */
-    RtlCopyMemory(&DeviceObject,
-                  ValueInformation->Data,
-                  sizeof(PDEVICE_OBJECT));
-
-    DPRINT("DeviceObject: %p\n", DeviceObject);
-
-    if (DeviceObject->Type != IO_TYPE_DEVICE ||
-        DeviceObject->DeviceObjectExtension == NULL ||
-        DeviceObject->DeviceObjectExtension->DeviceNode == NULL ||
-        !RtlEqualUnicodeString(&DeviceObject->DeviceObjectExtension->DeviceNode->InstancePath,
-                               DeviceInstance, TRUE))
-    {
-        DPRINT1("Invalid object type!\n");
-        return NULL;
-    }
-
-    DPRINT("Instance path: %wZ\n", &DeviceObject->DeviceObjectExtension->DeviceNode->InstancePath);
-
-    ObReferenceObject(DeviceObject);
-
-    DPRINT("IopGetDeviceObjectFromDeviceInstance() done\n");
-
-    return DeviceObject;
-#endif
-
     if (IopRootDeviceNode == NULL)
         return NULL;
 
