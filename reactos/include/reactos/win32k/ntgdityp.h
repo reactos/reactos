@@ -135,12 +135,15 @@ typedef DWORD LFTYPE;
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
-typedef DWORD UNIVERSAL_FONT_ID;
-typedef UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
 typedef DWORD CHWIDTHINFO;
 typedef CHWIDTHINFO *PCHWIDTHINFO;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
+
+typedef struct _UNIVERSAL_FONT_ID 
+{
+    DWORD  dwUfid[2];
+} UNIVERSAL_FONT_ID *PUNIVERSAL_FONT_ID;
 
 typedef struct _REALIZATION_INFO // Based on LOCALESIGNATURE
 {
