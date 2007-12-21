@@ -64,9 +64,9 @@ HalpXboxReadSector(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject);
     ASSERT(Sector);
 
-   KeInitializeEvent(&Event,
-                     NotificationEvent,
-                     FALSE);
+    KeInitializeEvent(&Event,
+                      NotificationEvent,
+                      FALSE);
 
     /* Read the sector */
     Irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ,
@@ -105,7 +105,7 @@ HalpXboxDeviceHasXboxPartitioning(IN PDEVICE_OBJECT DeviceObject,
 {
     PVOID SectorData;
     LARGE_INTEGER Offset;
-  NTSTATUS Status;
+    NTSTATUS Status;
 
     DPRINT("HalpXboxDeviceHasXboxPartitioning(%p %lu %p)\n",
            DeviceObject,
