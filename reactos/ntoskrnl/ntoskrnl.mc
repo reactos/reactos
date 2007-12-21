@@ -1154,6 +1154,14 @@ Language=English
 The system is booting in safemode - Directory Services Repair
 .
 
+MessageId=0xB4
+Severity=Success
+Facility=System
+SymbolicName=VIDEO_DRIVER_INIT_FAILURE
+Language=English
+VIDEO_DRIVER_INIT_FAILURE
+.
+
 MessageId=0xB7
 Severity=Informational
 Facility=System
