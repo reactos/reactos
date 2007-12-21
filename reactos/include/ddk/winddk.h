@@ -3016,11 +3016,6 @@ extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalQuerySystemInformation       HALDISPATCH->HalQuerySystemInformation
 #define HalSetSystemInformation         HALDISPATCH->HalSetSystemInformation
 #define HalQueryBusSlots                HALDISPATCH->HalQueryBusSlots
-#define HalDeviceControl                HALDISPATCH->HalDeviceControl
-#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
-#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
-#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
-#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
 #define HalReferenceHandlerForBus       HALDISPATCH->HalReferenceHandlerForBus
 #define HalReferenceBusHandler          HALDISPATCH->HalReferenceBusHandler
 #define HalDereferenceBusHandler        HALDISPATCH->HalDereferenceBusHandler
@@ -3033,6 +3028,14 @@ extern DECL_EXPORT HAL_DISPATCH HalDispatchTable;
 #define HalMirrorPhysicalMemory         HALDISPATCH->HalMirrorPhysicalMemory
 #define HalEndOfBoot                    HALDISPATCH->HalEndOfBoot
 #define HalMirrorVerify                 HALDISPATCH->HalMirrorVerify
+
+#ifndef _NTOSKRNL_
+#define HalDeviceControl                HALDISPATCH->HalDeviceControl
+#define HalIoAssignDriveLetters         HALDISPATCH->HalIoAssignDriveLetters
+#define HalIoReadPartitionTable         HALDISPATCH->HalIoReadPartitionTable
+#define HalIoSetPartitionInformation    HALDISPATCH->HalIoSetPartitionInformation
+#define HalIoWritePartitionTable        HALDISPATCH->HalIoWritePartitionTable
+#endif
 
 typedef enum _FILE_INFORMATION_CLASS {
   FileDirectoryInformation = 1,

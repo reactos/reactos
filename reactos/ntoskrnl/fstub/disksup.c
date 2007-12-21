@@ -2228,10 +2228,10 @@ HalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
               IN ULONG MbrTypeIdentifier,
               OUT PVOID *MbrBuffer)
 {
-    HalDispatchTable.HalExamineMBR(DeviceObject,
-                                   SectorSize,
-                                   MbrTypeIdentifier,
-                                   MbrBuffer);
+    HALDISPATCH->HalExamineMBR(DeviceObject,
+                               SectorSize,
+                               MbrTypeIdentifier,
+                               MbrBuffer);
 }
 
 /*
@@ -2244,10 +2244,10 @@ IoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                      IN BOOLEAN ReturnRecognizedPartitions,
                      IN OUT PDRIVE_LAYOUT_INFORMATION *PartitionBuffer)
 {
-    return HalIoReadPartitionTable(DeviceObject,
-                                   SectorSize,
-                                   ReturnRecognizedPartitions,
-                                   PartitionBuffer);
+    return HALDISPATCH->HalIoReadPartitionTable(DeviceObject,
+                                                SectorSize,
+                                                ReturnRecognizedPartitions,
+                                                PartitionBuffer);
 }
 
 /*
@@ -2260,10 +2260,10 @@ IoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
                           IN ULONG PartitionNumber,
                           IN ULONG PartitionType)
 {
-    return HalIoSetPartitionInformation(DeviceObject,
-                                        SectorSize,
-                                        PartitionNumber,
-                                        PartitionType);
+    return HALDISPATCH->HalIoSetPartitionInformation(DeviceObject,
+                                                     SectorSize,
+                                                     PartitionNumber,
+                                                     PartitionType);
 }
 
 /*
@@ -2277,11 +2277,11 @@ IoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                       IN ULONG NumberOfHeads,
                       IN PDRIVE_LAYOUT_INFORMATION PartitionBuffer)
 {
-    return HalIoWritePartitionTable(DeviceObject,
-                                    SectorSize,
-                                    SectorsPerTrack,
-                                    NumberOfHeads,
-                                    PartitionBuffer);
+    return HALDISPATCH->HalIoWritePartitionTable(DeviceObject,
+                                                 SectorSize,
+                                                 SectorsPerTrack,
+                                                 NumberOfHeads,
+                                                 PartitionBuffer);
 }
 
 /*
@@ -2294,10 +2294,10 @@ IoAssignDriveLetters(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
                      OUT PUCHAR NtSystemPath,
                      OUT PSTRING NtSystemPathString)
 {
-    HalIoAssignDriveLetters(LoaderBlock,
-                            NtDeviceName,
-                            NtSystemPath,
-                            NtSystemPathString);
+    HALDISPATCH->HalIoAssignDriveLetters(LoaderBlock,
+                                         NtDeviceName,
+                                         NtSystemPath,
+                                         NtSystemPathString);
 }
 
 /* EOF */
