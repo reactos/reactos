@@ -556,10 +556,10 @@ LanguagePage(PINPUT_RECORD Ir)
     }
 
   DrawGenericList(LanguageList,
-		  7,
-		  15,
-		  xScreen - 10,
-		  yScreen - 10);
+		  2,
+		  18,
+		  xScreen - 3,
+		  yScreen - 3);
 
   MUIDisplayPage(LANGUAGE_PAGE);
 
