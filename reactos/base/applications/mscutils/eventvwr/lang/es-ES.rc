@@ -18,7 +18,7 @@ BEGIN
 		MENUITEM SEPARATOR
 		MENUITEM "S&alir",                    IDM_EXIT
 	END
-	POPUP "&View"
+	POPUP "&Ver"
 	BEGIN
 		MENUITEM "&Actualizar",               IDM_REFRESH
 	END
@@ -27,7 +27,7 @@ BEGIN
 	BEGIN
 		MENUITEM "A&yuda",                    IDM_HELP
 		MENUITEM SEPARATOR
-		MENUITEM "&Sobre...",                 IDM_ABOUT
+		MENUITEM "&Acerca de...",                 IDM_ABOUT
 	END
 END
 
@@ -39,18 +39,18 @@ END
 
 IDD_ABOUTBOX DIALOGEX 0, 0, 230, 75
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_CAPTION | WS_SYSMENU
-CAPTION "About"
+CAPTION "Acerca de"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON            IDI_EVENTVWR,IDC_MYICON,14,9,21,20
 	LTEXT           "ReactOS Visor de sucesos Versión 1.0",IDC_STATIC,49,10,119,8,SS_NOPREFIX
 	LTEXT           "Copyright (C) 2007 Marc Piulachs (marc.piulachs@codexchange.net)",IDC_STATIC,49,20,119,22
-	DEFPUSHBUTTON   "OK",IDOK,90,48,42,16,WS_GROUP
+	DEFPUSHBUTTON   "Aceptar",IDOK,90,48,42,16,WS_GROUP
 END
 
 IDD_PROGRESSBOX DIALOGEX 0, 0, 230, 40
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER 
-CAPTION "Wait.."
+CAPTION "Espere.."
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	CTEXT           "Recuperando eventos. Por favor, espere ...",IDC_STATIC,0,15,230,8,SS_NOPREFIX
@@ -59,7 +59,7 @@ END
 IDD_EVENTDETAILDIALOG DIALOGEX 0, 0, 276, 282
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Event Detail"
+CAPTION "Detalles del Evento"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
 	DEFPUSHBUTTON   "&Cerrar",IDOK,12,258,50,14
@@ -97,8 +97,8 @@ BEGIN
 	IDC_EVENTLOG_ERROR_TYPE        "Error"
 	IDC_EVENTLOG_WARNING_TYPE      "Advertencia"
 	IDC_EVENTLOG_INFORMATION_TYPE  "Información"
-	IDC_EVENTLOG_AUDIT_SUCCESS     "Audit Success"
-	IDC_EVENTLOG_AUDIT_FAILURE     "Audit Failure"
+	IDC_EVENTLOG_AUDIT_SUCCESS     "Auditoria Satisfactoria"
+	IDC_EVENTLOG_AUDIT_FAILURE     "Auditoria Fallida"
 	IDC_EVENTLOG_SUCCESS           "Acierto"
 	IDC_EVENTLOG_UNKNOWN_TYPE      "Evento Desconocido"
 END

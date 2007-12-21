@@ -637,7 +637,7 @@ static MUI_ENTRY esESBootPageEntries[] =
     {
         6,
         8,
-        "El instalador no pudo instalar el bootloader en el disco",
+        "El instalador no pudo instalar el cargador de arranque en el disco",
         TEXT_NORMAL
     },
     {
@@ -678,43 +678,43 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "La lista inferior muestra las particiones existentes y el espacio libre",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "en el disco para nuevas particiones.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar un elemento de la lista.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Presione ENTER para instalar ReactOS en la partición seleccionada.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Presione C para crear una nueva partición.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Presione D para borrar una partición existente.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
+        "   Espere por favor ...",
         TEXT_STATUS
     },
     {
@@ -730,19 +730,19 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     {
         6,
         8,
-        "Format partition",
+        "Formato de la partición",
         TEXT_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "El instalador formateará la partición. Presione ENTER para continuar.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -758,37 +758,37 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "El programa instalará los archivos de ReactOS en la partición seleccionada. Seleccione un",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "directorio donde quiere que sea instalado ReactOS:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "Para cambiar el directorio sugerido, presione RETROCESO para borrar",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "caracteres y escriba el directorio donde desea que ReactOS",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "sea instalado.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -804,25 +804,25 @@ static MUI_ENTRY esESFileCopyEntries[] =
     {
         11,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "Por favor espere mientras el Instalador de ReactOS copia archivos en su ",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "installation folder.",
+        "carpeta de instalación de ReactOS.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "This may take several minutes to complete.",
+        "Puede durar varios minutos.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 Please wait...    ",
+        "                                                           \xB3 Espere por favor...    ",
         TEXT_STATUS
     },
     {
@@ -838,31 +838,31 @@ static MUI_ENTRY esESBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "El programam está instalando el cargador de arranque",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Instalar cargador de arranque en el disco duro (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "Instalar cargador de inicio en un disquete.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Skip install bootloader.",
+        "Omitir la instalación del cargador de arranque.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -878,37 +878,37 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "Desea cambiar el tipo de teclado instalado.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar el tipo de teclado.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Luego presione ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Presione la tecla ESC para volver a la página anterior sin cambiar",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   el tipo de teclado.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -924,37 +924,37 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Desea cambiar la disposición del teclado a instalar.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Presione las teclas ARRIBA o ABAJO para select the la disposición del teclado",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    deseada. Luego presione ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Presione la tecla ESC para volver a la página anterior sin cambiar",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   la disposición del teclado.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -971,13 +971,13 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "El programa prepara su computadora para copiar los archivos de ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
+        "   Creando la lista de archivos a copiar...",
         TEXT_STATUS
     },
     {
@@ -994,31 +994,31 @@ static MUI_ENTRY esESSelectFSEntries[] =
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "Seleccione un sistema de archivos de la lista inferior.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Presione las teclas ARRIBA o ABAJO para seleccionar el sistema de archivos.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Presione ENTER para formatear partición.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Presione ESC para seleccionar otra partición.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuar   ESC = Cancelar   F3 = Salir",
         TEXT_STATUS
     },
 
@@ -1035,31 +1035,31 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "Ha elegido borrar la partición",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Presione D para borrar la partición.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "ADVERTENCIA: ¡Se perderán todos los datos de esta partición!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Presione ESC para cancelar.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "   D = Borrar Partición   ESC = Cancelar   F3 = Salir",
         TEXT_STATUS
     },
     {
@@ -1167,4 +1167,5 @@ MUI_PAGE esESPages[] =
 };
 
 #endif
+
 
