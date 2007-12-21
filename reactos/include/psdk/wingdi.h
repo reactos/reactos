@@ -1088,6 +1088,7 @@ extern "C" {
 #define DM_PAPERSIZE 2
 #define DM_PAPERLENGTH 4
 #define DM_PAPERWIDTH 8
+#define DM_POSITION 32
 #define DM_SCALE 16
 #define DM_COPIES 256
 #define DM_DEFAULTSOURCE 512
