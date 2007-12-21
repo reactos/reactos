@@ -11,7 +11,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 STRINGTABLE {
 	IDS_SECONDS, "secondes"
 	IDS_NOBODY,  "Anonyme"
-	IDS_ABOUT,   "by Joshua Thielen and ReactOS developers"
+	IDS_ABOUT,   "par Joshua Thielen et les développeurs de ReactOS"
 }
 
 IDM_WINEMINE MENU DISCARDABLE

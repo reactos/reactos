@@ -223,7 +223,7 @@ BEGIN
     CTEXT "+", -1, 98, 37, 8, 10
     AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
     AUTORADIOBUTTON "&ALT gauche", -1, 24, 45, 40, 12, NOT WS_TABSTOP
-    LTEXT "Touche:", -1, 110, 37, 14, 10
+    LTEXT "Touche :", -1, 110, 37, 14, 10
     COMBOBOX 1236, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
     DEFPUSHBUTTON "OK", IDOK, 212, 25, 50, 14
     PUSHBUTTON "Annuler", IDCANCEL, 212, 47, 50, 14
@@ -233,15 +233,15 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "Services texte et langue de saisie"
     IDS_CPLSYSTEMDESCRIPTION "Personnalise les paramètres pour la langue de saisie de texte."
-	IDS_KEYBOARD "Keyboard"
-	IDS_ADV_TEXT_SRV "Advanced Text Services"
-	IDS_NONE "(None)"
-	IDS_UNKNOWN "(Unknown)"
-	IDS_RESTART "Do you want to restart your computer now?"
-	IDS_SPEECH "Speech"
-	IDS_HRD_REC "Handwriting Recognition"
-	IDS_OFF_ADV_TXT_SRV "Do you want to turn off advanced text services?"
-	IDS_WHATS_THIS "What's This?"
+    IDS_KEYBOARD "Clavier"
+    IDS_ADV_TEXT_SRV "Services avancés de texte"
+    IDS_NONE "(Aucun)"
+    IDS_UNKNOWN "(Inconnu)"
+    IDS_RESTART "Désirez-vous redémarrer votre ordinateur maintenant ?"
+    IDS_SPEECH "Vocale"
+    IDS_HRD_REC "Reconnaissance de l'écriture manuelle"
+    IDS_OFF_ADV_TXT_SRV "Désirez-vous désactiver les services avancés de texte ?"
+    IDS_WHATS_THIS "Qu'est-ce que c'est ?"
 END
 
 /* FIXME : To improve/complete */
