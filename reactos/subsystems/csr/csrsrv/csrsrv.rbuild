@@ -4,10 +4,10 @@
 	<importlibrary definition="csrsrv.def" />
 	<include base="csrsrv">.</include>
 	<include base="csr">.</include>
+	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="_DISABLE_TIDENTS" />
 	<library>ntdll</library>
 	<library>pseh</library>
-	<library>intrlck</library>
 	<file>api.c</file>
 	<file>init.c</file>
 	<file>process.c</file>

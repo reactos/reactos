@@ -4,6 +4,7 @@
 /* PSDK/NDK Headers */
 #define NTOS_MODE_USER
 #include <stdio.h>
+#define WIN32_NO_STATUS
 #include <windows.h>
 #include <winnt.h>
 #include <ndk/ntndk.h>

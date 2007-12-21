@@ -50,7 +50,7 @@ CsrCheckRequestThreads(VOID)
     NTSTATUS Status;
 
     /* Decrease the count, and see if we're out */
-    if (!(InterlockedDecrement(&CsrpStaticThreadCount)))
+    if (!(_InterlockedDecrement((PLONG)&CsrpStaticThreadCount)))
     {
         /* Check if we've still got space for a Dynamic Thread */
         if (CsrpDynamicThreadTotal < CsrMaxApiRequestThreads)
@@ -366,8 +366,8 @@ CsrApiRequestThread(IN PVOID Parameter)
         NtSetEvent((HANDLE)Parameter, NULL);
 
         /* Increase the Thread Counts */
-        InterlockedIncrement(&CsrpStaticThreadCount);
-        InterlockedIncrement(&CsrpDynamicThreadTotal);
+        _InterlockedIncrement((PLONG)&CsrpStaticThreadCount);
+        _InterlockedIncrement((PLONG)&CsrpDynamicThreadTotal);
     }
 
     /* Now start the loop */
@@ -464,7 +464,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                 }
 
                 /* Increase the thread count */
-                InterlockedIncrement(&CsrpStaticThreadCount);
+                _InterlockedIncrement((PLONG)&CsrpStaticThreadCount);
 
                 /* If the response was 0xFFFFFFFF, we'll ignore it */
                 if (HardErrorMsg->Response == 0xFFFFFFFF)
@@ -523,7 +523,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                         (ServerDll->DispatchTable[ApiId])(&ReceiveMsg, &Reply);
 
                         /* Increase the static thread count */
-                        InterlockedIncrement(&CsrpStaticThreadCount);
+                        _InterlockedIncrement((PLONG)&CsrpStaticThreadCount);
                     }
                     _SEH_EXCEPT(CsrUnhandledExceptionFilter)
                     {
@@ -590,7 +590,7 @@ CsrApiRequestThread(IN PVOID Parameter)
 
                 /* Return a Debug Message */
                 DebugMessage = (PDBGKM_MSG)&ReceiveMsg;
-                DebugMessage->Status = DBG_CONTINUE;
+                DebugMessage->ReturnedStatus = DBG_CONTINUE;
                 ReplyMsg = &ReceiveMsg;
 
                 /* Remove our extra reference */
@@ -627,7 +627,7 @@ CsrApiRequestThread(IN PVOID Parameter)
                 }
 
                 /* Increase the thread count */
-                InterlockedIncrement(&CsrpStaticThreadCount);
+                _InterlockedIncrement((PLONG)&CsrpStaticThreadCount);
 
                 /* If the response was 0xFFFFFFFF, we'll ignore it */
                 if (HardErrorMsg->Response == 0xFFFFFFFF)

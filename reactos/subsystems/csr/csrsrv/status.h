@@ -106,6 +106,6 @@
  * - The skeleton code for winsrv and basesrv which connects with CSR/CSRSRV
  *   needs to be written. [NOT DONE]
  *
- * - The kernel's LPC implementation needs to be made compatible. [NOT DONE]
+ * - The kernel's LPC implementation needs to be made compatible. [DONE!]
  */
 
