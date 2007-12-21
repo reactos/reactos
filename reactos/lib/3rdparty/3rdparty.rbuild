@@ -13,9 +13,9 @@
 	<directory name="libwine">
 		<xi:include href="libwine/libwine.rbuild" />
 	</directory>
-	<directory name="libxml2">
+	<!--directory name="libxml2">
 		<xi:include href="libxml2/libxml2.rbuild" />
-	</directory>
+	</directory-->
 	<directory name="mingw">
 		<xi:include href="mingw/mingw.rbuild" />
 	</directory>
