@@ -34,7 +34,8 @@ extern char reactos_arc_hardware_data[HW_MAX_ARC_HEAP_SIZE];
 char szBootPath[256];
 char szHalName[256];
 CHAR SystemRoot[255];
-extern ULONG_PTR KernelBase, KernelEntryPoint;
+extern ULONG_PTR KernelBase;
+extern ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 extern BOOLEAN FrLdrLoadDriver(PCHAR szFileName, INT nPos);
 
@@ -86,7 +87,7 @@ static FrLdrLoadKernel(IN PCHAR szFileName,
     /* Get the NT header, kernel base and kernel entry */
     NtHeader = RtlImageNtHeader(LoadBase);
     KernelBase = NtHeader->OptionalHeader.ImageBase;
-    KernelEntryPoint = KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint;
+    KernelEntryPoint = (ROS_KERNEL_ENTRY_POINT)(KernelBase + NtHeader->OptionalHeader.AddressOfEntryPoint);
     LoaderBlock.KernelBase = KernelBase;
 
     /* Update Processbar and return success */

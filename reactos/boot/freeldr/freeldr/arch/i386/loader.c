@@ -34,7 +34,7 @@ PLOADER_MODULE CurrentModule = NULL;
 ULONG_PTR KernelBase;
 
 /* Kernel Entrypoint in Virtual Memory */
-ULONG_PTR KernelEntryPoint;
+ROS_KERNEL_ENTRY_POINT KernelEntryPoint;
 
 /* Page Directory and Tables for non-PAE Systems */
 extern PAGE_DIRECTORY_X86 startup_pagedirectory;
@@ -108,7 +108,6 @@ FASTCALL
 FrLdrSetupPae(ULONG Magic)
 {
     ULONG_PTR PageDirectoryBaseAddress = (ULONG_PTR)&startup_pagedirectory;
-    ASMCODE PagedJump;
 
     /* Set the PDBR */
     __writecr3(PageDirectoryBaseAddress);
@@ -117,8 +116,7 @@ FrLdrSetupPae(ULONG Magic)
     __writecr0(__readcr0() | X86_CR0_PG | X86_CR0_WP);
 
     /* Jump to Kernel */
-    PagedJump = (ASMCODE)(PVOID)(KernelEntryPoint);
-    PagedJump(Magic, &LoaderBlock);
+    (*KernelEntryPoint)(Magic, &LoaderBlock);
 }
 
 /*++
