@@ -18,7 +18,19 @@
 
 #include <windows.h>
 
-#define WINEMINE_REGKEY       "Software\\ReactOS\\WineMine"
+static const TCHAR szWineMineRegKey[] = TEXT("Software\\Microsoft\\WinMine");
+
+// Common Controls 6.0 for MSVC 2005 or later
+#if _MSC_VER >= 1400
+#   pragma comment(linker, "/manifestdependency:\"type='win32' "   \
+        "name='Microsoft.Windows.Common-Controls' "                \
+        "version='6.0.0.0' "                                       \
+        "processorArchitecture='x86' "                             \
+        "publicKeyToken='6595b64144ccf1df' "                       \
+        "language='*'\"")
+#endif
+
+#define ID_TIMER              1000
 
 #define BEGINNER_MINES        10
 #define BEGINNER_COLS         9
@@ -32,8 +44,8 @@
 #define EXPERT_COLS           30
 #define EXPERT_ROWS           16
 
-#define MAX_COLS        30
-#define MAX_ROWS        24
+#define MAX_COLS              30
+#define MAX_ROWS              24
 
 #define BOTTOM_MARGIN 20
 #define BOARD_WMARGIN 5
@@ -51,68 +63,58 @@ typedef enum { SPRESS_BMP, COOL_BMP, DEAD_BMP, OOH_BMP, SMILE_BMP } FACE_BMP;
 
 typedef enum { WAITING, PLAYING, GAMEOVER, WON } GAME_STATUS;
 
-typedef enum {
-     MPRESS_BMP, ONE_BMP, TWO_BMP, THREE_BMP, FOUR_BMP, FIVE_BMP, SIX_BMP,
-     SEVEN_BMP, EIGHT_BMP, BOX_BMP, FLAG_BMP, QUESTION_BMP, EXPLODE_BMP,
-     WRONG_BMP, MINE_BMP, QPRESS_BMP
+typedef enum
+{
+    MPRESS_BMP, ONE_BMP, TWO_BMP, THREE_BMP, FOUR_BMP, FIVE_BMP, SIX_BMP,
+    SEVEN_BMP, EIGHT_BMP, BOX_BMP, FLAG_BMP, QUESTION_BMP, EXPLODE_BMP,
+    WRONG_BMP, MINE_BMP, QPRESS_BMP
 } MINEBMP_OFFSET;
 
 typedef enum { BEGINNER, ADVANCED, EXPERT, CUSTOM } DIFFICULTY;
 
 typedef struct tagBOARD
 {
-    BOOL IsMarkQ;
-    HDC    hdc;
+    BOOL bMark;
     HINSTANCE hInst;
-    HWND    hWnd;
+    HWND hWnd;
     HBITMAP hMinesBMP;
     HBITMAP hFacesBMP;
     HBITMAP hLedsBMP;
-    RECT mines_rect;
-    RECT face_rect;
-    RECT timer_rect;
-    RECT counter_rect;
+    RECT MinesRect;
+    RECT FaceRect;
+    RECT TimerRect;
+    RECT CounterRect;
 
-    unsigned width;
-    unsigned height;
-    POINT pos;
+    ULONG uWidth;
+    ULONG uHeight;
+    POINT Pos;
 
-    unsigned time;
-    unsigned num_flags;
-    unsigned boxes_left;
-    unsigned num_mines;
+    ULONG uTime;
+    ULONG uNumFlags;
+    ULONG uBoxesLeft;
+    ULONG uNumMines;
 
-    /* difficulty info */
-    unsigned rows;
-    unsigned cols;
-    unsigned mines;
-    char best_name [3][16];
-    unsigned best_time [3];
-    DIFFICULTY difficulty;
+    ULONG uRows;
+    ULONG uCols;
+    ULONG uMines;
+    TCHAR szBestName[3][16];
+    ULONG uBestTime[3];
+    DIFFICULTY Difficulty;
 
-    POINT press;
+    POINT Press;
 
-    /* defines for mb */
-    #define MB_NONE 0
-    #define MB_LEFTDOWN 1
-    #define MB_LEFTUP 2
-    #define MB_RIGHTDOWN 3
-    #define MB_RIGHTUP 4
-    #define MB_BOTHDOWN 5
-    #define MB_BOTHUP 6
-    unsigned mb;
+    FACE_BMP FaceBmp;
+    GAME_STATUS Status;
 
-    FACE_BMP face_bmp;
-    GAME_STATUS status;
     struct BOX_STRUCT
     {
-        unsigned IsMine    : 1;
-        unsigned IsPressed : 1;
-        unsigned FlagType  : 2;
-        unsigned NumMines  : 4;
-    } box [MAX_COLS + 2] [MAX_ROWS + 2];
+        UINT bIsMine    : 1;
+        UINT bIsPressed : 1;
+        UINT uFlagType  : 2;
+        UINT uNumMines  : 4;
+    } Box [MAX_COLS + 2] [MAX_ROWS + 2];
 
-    /* defines for FlagType */
+    /* defines for uFlagType */
     #define NORMAL 0
     #define QUESTION 1
     #define FLAG 2
@@ -121,63 +123,33 @@ typedef struct tagBOARD
 } BOARD;
 
 void ExitApp( int error );
-
-void InitBoard( BOARD *p_board );
-
-void LoadBoard( BOARD *p_board );
-
-void SaveBoard( BOARD *p_board );
-
-void DestroyBoard( BOARD *p_board );
-
-void SetDifficulty( BOARD *p_board, DIFFICULTY difficulty );
-
-void CheckLevel( BOARD *p_board );
-
-void CreateBoard( BOARD *p_board );
-
-void CreateBoxes( BOARD *p_board );
-
-void TestBoard( HWND hWnd, BOARD *p_board, unsigned x, unsigned y, int msg );
-
-void TestMines( BOARD *p_board, POINT pt, int msg );
-
-void TestFace( BOARD *p_board, POINT pt, int msg );
-
-void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *p_board );
-
-void DrawMines( HDC hdc, HDC hMemDC, BOARD *p_board );
-
-void DrawMine( HDC hdc, HDC hMemDC, BOARD *p_board, unsigned col, unsigned row, BOOL IsPressed );
-
-void AddFlag( BOARD *p_board, unsigned col, unsigned row );
-
-void CompleteBox( BOARD *p_board, unsigned col, unsigned row );
-
-void CompleteBoxes( BOARD *p_board, unsigned col, unsigned row );
-
-void PressBox( BOARD *p_board, unsigned col, unsigned row );
-
-void PressBoxes( BOARD *p_board, unsigned col, unsigned row );
-
-void UnpressBox( BOARD *p_board, unsigned col, unsigned row );
-
-void UnpressBoxes( BOARD *p_board, unsigned col, unsigned row );
-
-void UpdateTimer( BOARD *p_board );
-
-void DrawLeds( HDC hdc, HDC hMemDC, BOARD *p_board, int number, int x, int y);
-
-void DrawFace( HDC hdc, HDC hMemDC, BOARD *p_board );
-
+void InitBoard( BOARD *pBoard );
+void LoadBoard( BOARD *pBoard );
+void SaveBoard( BOARD *pBoard );
+void DestroyBoard( BOARD *pBoard );
+void SetDifficulty( BOARD *pBoard, DIFFICULTY difficulty );
+void CheckLevel( BOARD *pBoard );
+void CreateBoard( BOARD *pBoard );
+void CreateBoxes( BOARD *pBoard );
+void TestBoard( HWND hWnd, BOARD *pBoard, LONG x, LONG y, int msg );
+void TestMines( BOARD *pBoard, POINT pt, int msg );
+void TestFace( BOARD *pBoard, POINT pt, int msg );
+void DrawBoard( HDC hdc, HDC hMemDC, PAINTSTRUCT *ps, BOARD *pBoard );
+void DrawMines( HDC hdc, HDC hMemDC, BOARD *pBoard );
+void DrawMine( HDC hdc, HDC hMemDC, BOARD *pBoard, ULONG uCol, ULONG uRow, BOOL IsPressed );
+void AddFlag( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void CompleteBox( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void CompleteBoxes( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void PressBox( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void PressBoxes( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void UnpressBox( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void UnpressBoxes( BOARD *pBoard, ULONG uCol, ULONG uRow );
+void UpdateTimer( BOARD *pBoard );
+void DrawLeds( HDC hdc, HDC hMemDC, BOARD *pBoard, LONG nNumber, LONG x, LONG y);
+void DrawFace( HDC hdc, HDC hMemDC, BOARD *pBoard );
 LRESULT WINAPI MainProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
-
-BOOL CALLBACK CustomDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-
-BOOL CALLBACK CongratsDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-
-BOOL CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
-
-BOOL CALLBACK AboutDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK CustomDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK CongratsDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
+INT_PTR CALLBACK TimesDlgProc( HWND hDlg, UINT uMsg, WPARAM wParam, LPARAM lParam );
 
 /* end of header */

@@ -10,14 +10,15 @@
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE {
-	IDS_APPNAME, "Saper"
 	IDS_SECONDS, "seconds"
+	IDS_NOBODY,  "Anonim"
+	IDS_ABOUT,   "by Joshua Thielen and ReactOS developers"
 }
 
-MENU_WINEMINE MENU DISCARDABLE
+IDM_WINEMINE MENU DISCARDABLE
 {
 	POPUP "&Game" {
-		MENUITEM "&Nowa gra",              IDM_NEW
+		MENUITEM "&Nowa gra\tF2",          IDM_NEW
 		MENUITEM SEPARATOR
 		MENUITEM "Poz&iom",                IDM_MARKQ
 		MENUITEM SEPARATOR
@@ -36,7 +37,7 @@ MENU_WINEMINE MENU DISCARDABLE
 	}
 }
 
-DLG_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
+IDD_TIMES DIALOGEX DISCARDABLE 0, 0, 200, 75
 STYLE DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Najlepsze czasy"
 FONT 8, "MS Shell Dlg"
@@ -55,7 +56,7 @@ FONT 8, "MS Shell Dlg"
 	PUSHBUTTON      "&Reset Scores",   IDRESET,    18,  57,  67,  15
 }
 
-DLG_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
+IDD_CONGRATS DIALOGEX DISCARDABLE  0, 0, 160, 60
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Gratulacje!"
 FONT 8, "MS Shell Dlg"
@@ -65,7 +66,7 @@ FONT 8, "MS Shell Dlg"
 	DEFPUSHBUTTON   "OK",               IDOK,          60,  40,  40,  15
 }
 
-DLG_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
+IDD_CUSTOM DIALOGEX DISCARDABLE  0, 0, 139, 80
 STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
 CAPTION "Ustawienia gry"
 FONT 8, "MS Shell Dlg"
@@ -78,16 +79,4 @@ FONT 8, "MS Shell Dlg"
 	EDITTEXT                         IDC_EDITMINES, 49,  55,  30,  12, ES_NUMBER
 	DEFPUSHBUTTON   "OK",            IDOK,          86,  32,  45,  15
 	PUSHBUTTON      "Anuluj",        IDCANCEL,      86,  52,  45,  15 
-}
-
-DLG_ABOUT DIALOGEX DISCARDABLE  0, 0, 145, 80
-STYLE  DS_MODALFRAME | WS_VISIBLE | WS_CAPTION | WS_SYSMENU | WS_POPUP | DS_SHELLFONT
-CAPTION "Winemine - informacje"
-FONT 8, "MS Shell Dlg"
-{
-	LTEXT                               "WineMine", IDNONE,  10,  10,  35,  10
-	LTEXT         "Copyright 2000, Joshua Thielen", IDNONE,  35,  25, 110,  10
-	LTEXT                       "Na licencji Wine", IDNONE,  35,  35, 100,  10
-	ICON                              IDI_WINEMINE, IDNONE,  10,  25,  20,  20
-	DEFPUSHBUTTON                             "OK", IDOK,    50,  60,  55,  15
 }

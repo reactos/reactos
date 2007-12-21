@@ -21,9 +21,8 @@
 
 #define IDNONE          -1
 
-#define ID_TIMER        1000
-
 /* menu defines */
+#define IDM_WINEMINE   1000
 #define IDM_NEW        1001
 #define IDM_EXIT       1002
 #define IDM_TIMES      1003
@@ -47,13 +46,19 @@
 #define IDC_EDITROWS   1032
 #define IDC_EDITMINES  1033
 
-#define IDS_APPNAME    1101
-#define IDS_SECONDS    1102
+#define IDS_SECONDS    1101
+#define IDS_NOBODY     1102
+#define IDS_ABOUT      1103
 
 #define IDI_WINEMINE   1201
+#define IDA_WINEMINE   1202
 
 #define IDB_FACES      1301
 #define IDB_LEDS       1302
 #define IDB_MINES      1303
 
 #define IDRESET        1401
+
+#define IDD_CONGRATS   1501
+#define IDD_TIMES      1502
+#define IDD_CUSTOM     1503
