@@ -51,8 +51,8 @@ cpp_quote("#define DOMDocument DOMDocument2")
 cpp_quote("#define CLSID_DOMDocument CLSID_DOMDocument2")
 
 cpp_quote("#ifndef __WIDL_XMLDOM_H")
-typedef enum tagDOMNodeType
-{
+typedef enum tagDOMNodeType 
+{  
     NODE_INVALID  		= 0,
     NODE_ELEMENT  		= 1,
     NODE_ATTRIBUTE		= 2,
@@ -272,13 +272,13 @@ interface IXMLDOMDocument : IXMLDOMNode
 
     [id(DISPID_XMLDOM_DOCUMENT_CREATENODE)]
     HRESULT createNode(
-        [in] VARIANT var,
-        [in] BSTR name,
+        [in] VARIANT var, 
+        [in] BSTR name, 
         [in] BSTR uri,
         [retval, out] IXMLDOMNode **node);
 
     [id(DISPID_XMLDOM_DOCUMENT_NODEFROMID)]
-    HRESULT nodeFromID(
+    HRESULT nodeFromID( 
         [in] BSTR id,
         [retval, out] IXMLDOMNode **node);
 
@@ -306,12 +306,12 @@ interface IXMLDOMDocument : IXMLDOMNode
     HRESULT abort();
 
     [id(DISPID_XMLDOM_DOCUMENT_LOADXML)]
-    HRESULT loadXML(
+    HRESULT loadXML( 
         [in] BSTR p,
         [out, retval] VARIANT_BOOL *pbool);
 
     [id(DISPID_XMLDOM_DOCUMENT_SAVE)]
-    HRESULT save(
+    HRESULT save( 
         [in] VARIANT var1);
 
     [propget, id(DISPID_XMLDOM_DOCUMENT_VALIDATE)]
@@ -461,7 +461,7 @@ interface IXMLDOMSelection : IXMLDOMNodeList
         [in] IXMLDOMNode *pNode,
         [retval, out] IXMLDOMNode **ppNode);
 
-    [id(DISPID_XMLDOM_SELECTION_REMOVENEXT)]
+    [id(DISPID_XMLDOM_SELECTION_REMOVENEXT)] 
     HRESULT removeNext(
         [retval, out] IXMLDOMNode **ppNode);
 
@@ -533,13 +533,13 @@ interface IXMLDOMNamedNodeMap : IDispatch
     [propget, id(DISPID_NEWENUM)]
     HRESULT _newEnum([retval, out] IUnknown **ppUnk);
 }
-
+ 
 [
 local,
 object,
 uuid (3efaa413-272f-11d2-836f-0000f87a7782)
 ]
-interface IXMLDOMDocumentFragment : IXMLDOMNode
+interface IXMLDOMDocumentFragment : IXMLDOMNode 
 {
 }
 
@@ -548,7 +548,7 @@ local,
 object,
 uuid (2933BF84-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMCharacterData : IXMLDOMNode
+interface IXMLDOMCharacterData : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_DATA_DATA)]
     HRESULT data([retval, out] BSTR *p);
@@ -591,7 +591,7 @@ local,
 object,
 uuid (2933BF85-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMAttribute : IXMLDOMNode
+interface IXMLDOMAttribute : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_ATTRIBUTE_GETNAME)]
     HRESULT name([retval, out] BSTR *p);
@@ -608,7 +608,7 @@ local,
 object,
 uuid (2933BF86-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMElement : IXMLDOMNode
+interface IXMLDOMElement : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_ELEMENT_GETTAGNAME)]
     HRESULT tagName([retval, out] BSTR *p);
@@ -656,7 +656,7 @@ local,
 object,
 uuid (2933BF87-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMText : IXMLDOMCharacterData
+interface IXMLDOMText : IXMLDOMCharacterData 
 {
     [id(DISPID_DOM_TEXT_SPLITTEXT)]
     HRESULT splitText(
@@ -669,7 +669,7 @@ local,
 object,
 uuid (2933BF88-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMComment : IXMLDOMCharacterData
+interface IXMLDOMComment : IXMLDOMCharacterData 
 {
 }
 
@@ -678,7 +678,7 @@ local,
 object,
 uuid (2933BF89-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMProcessingInstruction : IXMLDOMNode
+interface IXMLDOMProcessingInstruction : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_PI_TARGET)]
     HRESULT target([retval, out] BSTR *p);
@@ -695,7 +695,7 @@ local,
 object,
 uuid (2933BF8A-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMCDATASection : IXMLDOMText
+interface IXMLDOMCDATASection : IXMLDOMText 
 {
 }
 
@@ -704,7 +704,7 @@ local,
 object,
 uuid (2933BF8B-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMDocumentType : IXMLDOMNode
+interface IXMLDOMDocumentType : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_DOCUMENTTYPE_NAME)]
     HRESULT name([retval, out] BSTR *p);
@@ -721,7 +721,7 @@ local,
 object,
 uuid (2933BF8C-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMNotation : IXMLDOMNode
+interface IXMLDOMNotation : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_NOTATION_PUBLICID)]
     HRESULT publicId([retval, out] VARIANT *id);
@@ -735,7 +735,7 @@ local,
 object,
 uuid (2933BF8D-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMEntity : IXMLDOMNode
+interface IXMLDOMEntity : IXMLDOMNode 
 {
     [propget, id(DISPID_DOM_ENTITY_PUBLICID)]
     HRESULT publicId([retval, out] VARIANT *id1);
@@ -752,7 +752,7 @@ local,
 object,
 uuid (2933BF8E-7B36-11d2-B20E-00C04F983E60)
 ]
-interface IXMLDOMEntityReference : IXMLDOMNode
+interface IXMLDOMEntityReference : IXMLDOMNode 
 {
 }
 
@@ -777,55 +777,55 @@ uuid (3efaa425-272f-11d2-836f-0000f87a7782)
 ]
 interface IXTLRuntime : IXMLDOMNode
 {
-    [id(DISPID_XTLRUNTIME_UNIQUEID)]
+    [id(DISPID_XTLRUNTIME_UNIQUEID)] 
     HRESULT uniqueID(
-        [in]IXMLDOMNode *pNode,
+        [in]IXMLDOMNode *pNode, 
         [retval, out]long *pID);
 
     [id(DISPID_XTLRUNTIME_DEPTH)]
     HRESULT depth(
-        [in] IXMLDOMNode *pNode,
+        [in] IXMLDOMNode *pNode, 
         [retval, out]long * pDepth);
 
-    [id(DISPID_XTLRUNTIME_CHILDNUMBER)]
+    [id(DISPID_XTLRUNTIME_CHILDNUMBER)] 
     HRESULT childNumber(
-        [in]IXMLDOMNode *pNode,
+        [in]IXMLDOMNode *pNode, 
         [retval, out] long *pNumber);
 
     [id(DISPID_XTLRUNTIME_ANCESTORCHILDNUMBER)]
     HRESULT ancestorChildNumber(
-        [in]BSTR bstr,
-        [in]IXMLDOMNode *pNode,
+        [in]BSTR bstr, 
+        [in]IXMLDOMNode *pNode, 
         [retval, out]long *pNumber);
 
     [id(DISPID_XTLRUNTIME_ABSOLUTECHILDNUMBER)]
     HRESULT absoluteChildNumber(
-        [in]IXMLDOMNode *pNode,
+        [in]IXMLDOMNode *pNode, 
         [retval, out]long *pNumber);
 
     [id(DISPID_XTLRUNTIME_FORMATINDEX)]
     HRESULT formatIndex(
-        [in] long lIndex,
-        [in] BSTR bstr,
+        [in] long lIndex, 
+        [in] BSTR bstr, 
         [retval, out]BSTR *pbstr);
 
     [id(DISPID_XTLRUNTIME_FORMATNUMBER)]
     HRESULT formatNumber(
-        [in] double dblNumber,
-        [in] BSTR bstr,
+        [in] double dblNumber, 
+        [in] BSTR bstr, 
         [retval, out]BSTR *pbstr);
 
     [id(DISPID_XTLRUNTIME_FORMATDATE)]
     HRESULT formatDate(
-        [in] VARIANT var1,
-        [in] BSTR bstr,
+        [in] VARIANT var1, 
+        [in] BSTR bstr, 
         [optional, in] VARIANT var2,
         [retval, out]BSTR *pbstr);
 
     [id(DISPID_XTLRUNTIME_FORMATTIME)]
     HRESULT formatTime(
-        [in] VARIANT var1,
-        [in] BSTR bstr,
+        [in] VARIANT var1, 
+        [in] BSTR bstr, 
         [optional, in] VARIANT var2,
         [retval, out]BSTR *pbstr);
 
@@ -834,14 +834,14 @@ interface IXTLRuntime : IXMLDOMNode
 [
     uuid(3efaa427-272f-11d2-836f-0000f87a7782)
 ]
-dispinterface XMLDOMDocumentEvents
+dispinterface XMLDOMDocumentEvents 
 {
     properties:
     methods:
-    [id (DISPID_XMLDOMEVENT_ONDATAAVAILABLE)]
+    [id (DISPID_XMLDOMEVENT_ONDATAAVAILABLE)]  
     HRESULT ondataavailable();
-
-    [id (DISPID_XMLDOMEVENT_ONREADYSTATECHANGE)]
+ 
+    [id (DISPID_XMLDOMEVENT_ONREADYSTATECHANGE)] 
     HRESULT onreadystatechange();
 }
 
@@ -863,7 +863,7 @@ interface IXSLProcessor : IDispatch
 
     [id(DISPID_XMLDOM_PROCESSOR_SETSTARTMODE)]
     HRESULT setStartMode(
-        [in] BSTR p,
+        [in] BSTR p, 
         [in, defaultvalue("")] BSTR uri);
 
     [propget, id(DISPID_XMLDOM_PROCESSOR_STARTMODE)]
@@ -890,18 +890,18 @@ interface IXSLProcessor : IDispatch
 
     [id(DISPID_XMLDOM_PROCESSOR_ADDPARAMETER)]
     HRESULT addParameter(
-        [in] BSTR p,
-        [in] VARIANT var,
+        [in] BSTR p, 
+        [in] VARIANT var, 
         [in, defaultvalue("")] BSTR uri);
 
     [id(DISPID_XMLDOM_PROCESSOR_ADDOBJECT)]
     HRESULT addObject(
-        [in] IDispatch* obj,
+        [in] IDispatch* obj, 
         [in] BSTR uri);
 
     [propget, id(DISPID_XMLDOM_PROCESSOR_STYLESHEET)]
     HRESULT stylesheet([retval, out] IXMLDOMNode **node);
-}
+} 
 
 [
 local,
@@ -919,7 +919,7 @@ interface IXSLTemplate : IDispatch
     [id(DISPID_XMLDOM_TEMPLATE_CREATEPROCESSOR)]
     HRESULT createProcessor(
         [retval, out] IXSLProcessor **ppProcessor);
-}
+} 
 
 [
 local,

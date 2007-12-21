@@ -14,6 +14,7 @@
 	<file>mlang.idl</file>
 	<file>mshtml.idl</file>
 	<file>msxml.idl</file>
+	<file>msxml2.idl</file>
 	<file>oaidl.idl</file>
 	<file>objidl.idl</file>
 	<file>objsafe.idl</file>
@@ -39,4 +40,6 @@
 	<file>exdisp.idl</file>
 	<file>wtypes.idl</file>
 	<file>comcat.idl</file>
+	<file>xmldso.idl</file>
+	<file>xmldom.idl</file>
 </module>

@@ -19,11 +19,12 @@
 
 #include <msxmldid.h>
 
+#ifndef DO_NO_IMPORTS
 import "unknwn.idl";
 import "wtypes.idl";
 import "objidl.idl";
 import "oaidl.idl";
-
+#endif
 
 [
 local,
@@ -208,7 +209,7 @@ interface IXMLElement2 : IDispatch
     HRESULT removeChild([in]IXMLElement2 *pChildElem);
 
     [propget, id(DISPID_XMLELEMENT_ATTRIBUTES)]
-    HRESULT attributes([retval, out] IXMLElementCollection **pp);
+    HRESULT attributes([retval, out] IXMLElementCollection **pp); 
 }
 
 [
@@ -238,7 +239,7 @@ interface IXMLDocument2 : IDispatch
 
     [propget, id(DISPID_XMLDOCUMENT_MIMETYPE)]
     HRESULT mimeType([retval, out] BSTR *p);
-
+   
     [propget, id(DISPID_XMLDOCUMENT_READYSTATE)]
     HRESULT readyState([retval, out]long *pl);
 
@@ -259,8 +260,8 @@ interface IXMLDocument2 : IDispatch
 
     [id(DISPID_XMLDOCUMENT_CREATEELEMENT)]
     HRESULT createElement(
-        [in] VARIANT vType,
-        [optional, in] VARIANT var,
+        [in] VARIANT vType, 
+        [optional, in] VARIANT var, 
         [retval, out] IXMLElement2 **ppElem);
 
     [propget, id(DISPID_XMLDOCUMENT_ASYNC)]
@@ -322,8 +323,8 @@ interface IXMLError : IUnknown
 ]
 interface IXMLElementNotificationSink : IDispatch
 {
-    [id(DISPID_XMLNOTIFSINK_CHILDADDED)]
-    HRESULT ChildAdded([in]IDispatch *pChildElem);
+    [id(DISPID_XMLNOTIFSINK_CHILDADDED)] 
+    HRESULT ChildAdded([in]IDispatch *pChildElem); 
 }
 
 [
