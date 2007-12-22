@@ -4,6 +4,7 @@
 	<bootstrap installbase="$(CDOUTPUT)/system32" />
 	<importlibrary definition="def/ntdll.def" />
 	<include base="ntdll">inc</include>
+	<include base="ntdll" root="intermediate">def</include>
 	<include base="ReactOS">include/reactos/subsys</include>
 	<define name="__NTDLL__" />
 	<define name="_DISABLE_TIDENTS" />

@@ -5,3 +5,5 @@
 #define REACTOS_STR_INTERNAL_NAME	"ntdll\0"
 #define REACTOS_STR_ORIGINAL_FILENAME	"ntdll.dll\0"
 #include <reactos/version.rc>
+
+#include "ntstatus.rc"
