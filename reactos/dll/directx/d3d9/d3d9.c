@@ -61,7 +61,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
     LPDIRECT3D9 D3D9Obj = 0;
     LPDIRECT3DCREATE9 DebugDirect3DCreate9 = 0;
     CHAR DebugMessageBuffer[DEBUG_MESSAGE_BUFFER_SIZE];
-    UINT NoDebugSDKVersion = SDKVersion & 0x7FFFFFFF;
+    UINT NoDebugSDKVersion = SDKVersion & ~DX_D3D9_DEBUG;
 
     UNIMPLEMENTED
 
@@ -83,7 +83,7 @@ IDirect3D9* WINAPI Direct3DCreate9(UINT SDKVersion)
 
     if (NoDebugSDKVersion != D3D_SDK_VERSION && NoDebugSDKVersion != D3D9b_SDK_VERSION)
     {
-        if (SDKVersion & 0x80000000)
+        if (SDKVersion & DX_D3D9_DEBUG)
         {
             FormatDebugString(DebugMessageBuffer, DEBUG_MESSAGE_BUFFER_SIZE, D3dError_WrongSdkVersion, NoDebugSDKVersion, D3D_SDK_VERSION);
             OutputDebugStringA(DebugMessageBuffer);
