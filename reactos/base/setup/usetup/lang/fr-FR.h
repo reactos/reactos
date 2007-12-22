@@ -6,19 +6,19 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         6,
         8,
-        "Bienvenue à l'installation de ReactOS",
+        "Bienvenue a l'installation de ReactOS",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "Cette partie de l'installation copie le Système d'Exploitation ReactOS",
+        "Cette partie de l'installation copie le Systeme d'Exploitation ReactOS",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "sur votre ordinateur et le prépare à la 2e partie de l'installation.",
+        "sur votre ordinateur et le prepare a la 2e partie de l'installation.",
         TEXT_NORMAL
     },
     {
@@ -30,7 +30,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         8,
         17,
-        "\x07  Appuyez sur R pour réparer ReactOS.",
+        "\x07  Appuyez sur R pour reparer ReactOS.",
         TEXT_NORMAL
     },
     {
@@ -60,7 +60,7 @@ static MUI_ENTRY frFRWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continuer  R = Réparer F3 = Quitter",
+        "   ENTER = Continuer  R = Reparer F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -82,7 +82,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de développement.",
+        "L'Installation de ReactOS est en phase de developpement.",
         TEXT_NORMAL
     },
     {
@@ -94,7 +94,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         10,
-        " d'installation entièrement utilisable.",
+        " d'installation entierement utilisable.",
         TEXT_NORMAL
     },
     {
@@ -106,7 +106,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         13,
-        "- L'installation ne peut gérer plus d'une partition primaire par disque.",
+        "- L'installation ne peut gerer plus d'une partition primaire par disque.",
         TEXT_NORMAL
     },
     {
@@ -124,7 +124,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         16,
-        "- L'installation ne peut effacer la première partition secondaire",
+        "- L'installation ne peut effacer la premiere partition secondaire",
         TEXT_NORMAL
     },
     {
@@ -136,13 +136,13 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         8,
         18,
-        "- L'installation supporte uniquement le système de fichiers FAT.",
+        "- L'installation supporte uniquement le systeme de fichiers FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Les vérifications de système de fichers ne sont pas implémentées.",
+        "- Les verifications de systeme de fichers ne sont pas implementees.",
         TEXT_NORMAL
     },
     {
@@ -294,7 +294,7 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     {
         6,
         8,
-        "La liste ci-dessous montre les réglages matériels actuels.",
+        "La liste ci-dessous montre les reglages materiels actuels.",
         TEXT_NORMAL
     },
     {
@@ -316,9 +316,9 @@ static MUI_ENTRY frFRDevicePageEntries[] =
         TEXT_NORMAL
     },
     {
-        8,
+        4,
         14,
-        "Réglage Clavier :",
+        "Disposition clavier :",
         TEXT_NORMAL
     },
     {
@@ -329,37 +329,37 @@ static MUI_ENTRY frFRDevicePageEntries[] =
     },
     {
         25,
-        16, "Accepter ces réglages matériels",
+        16, "Accepter ces reglages materiels",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "Vous pouvez changer les réglages matériels en appuyant sur HAUT ou BAS",
+        "Vous pouvez changer les reglages materiels en appuyant sur HAUT ou BAS",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "pour selectionner une entrée.",
+        "pour selectionner une entree.",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "Appuyez sur ENTER pour choisir un autre réglage.",
+        "Appuyez sur ENTER pour choisir un autre reglage.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Quand tous les réglages sont corrects, sélectionner \"Accepter",
+        "Quand tous les reglages sont corrects, selectionner \"Accepter",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "ces réglages matériels\" et appuyer sur ENTER.",
+        "ces reglages materiels\" et appuyer sur ENTER.",
         TEXT_NORMAL
     },
     {
@@ -381,7 +381,7 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         8,
-        "L'Installation de ReactOS est en phase de développement.",
+        "L'Installation de ReactOS est en phase de developpement.",
         TEXT_NORMAL
     },
     {
@@ -393,43 +393,43 @@ static MUI_ENTRY frFRRepairPageEntries[] =
     {
         6,
         10,
-        "d'installation entièrement utilisable.",
+        "d'installation entierement utilisable.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "Les fonctions de réparation ne sont pas implémentées pour l'instant.",
+        "Les fonctions de reparation ne sont pas implementees pour l'instant.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Appuyez sur U pour mettre à jour l'OS.",
+        "\x07  Appuyez sur U pour mettre a jour l'OS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Appuyez sur R pour la Console de Réparation.",
+        "\x07  Appuyez sur R pour la Console de Reparation.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Appuyez sur ESC pour retourner à la page principale.",
+        "\x07  Appuyez sur ESC pour retourner a la page principale.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Appuyez sur ENTER pour redémarrer votre ordinateur.",
+        "\x07  Appuyez sur ENTER pour redemarrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = Page principale  ENTER = Redémarrer",
+        "   ESC = Page principale  ENTER = Redemarrer",
         TEXT_STATUS
     },
     {
@@ -444,13 +444,13 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         6,
         8,
-        "Vous voulez changer le type d'ordinateur installé.",
+        "Vous voulez changer le type d'ordinateur installe.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Appuyez sur HAUT ou BAS pour sélectionner le type d'ordinateur.",
+        "\x07  Appuyez sur HAUT ou BAS pour selectionner le type d'ordinateur.",
         TEXT_NORMAL
     },
     {
@@ -462,7 +462,7 @@ static MUI_ENTRY frFRComputerPageEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir à la page précédente sans changer",
+        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
         TEXT_NORMAL
     },
     {
@@ -490,7 +490,7 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         6,
-        "Le système s'assure quer toutes les données sont écrites sur le disque",
+        "Le systeme s'assure quer toutes les donnees sont ecrites sur le disque",
         TEXT_NORMAL
     },
     {
@@ -502,7 +502,7 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         9,
-        "Quand cela sera fini, votre ordinateur redémarrera automatiquement",
+        "Quand cela sera fini, votre ordinateur redemarrera automatiquement",
         TEXT_NORMAL
     },
     {
@@ -524,7 +524,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         6,
-        "ReactOS n'est pas complètement installé",
+        "ReactOS n'est pas completement installe",
         TEXT_NORMAL
     },
     {
@@ -542,7 +542,7 @@ static MUI_ENTRY frFRQuitPageEntries[] =
     {
         10,
         11,
-        "Appuyez sur ENTER pour redémarrer votre ordinateur.",
+        "Appuyez sur ENTER pour redemarrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
@@ -564,12 +564,12 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         6,
         8,
-        "Vous voulez changer le type d'écran à installer.",
+        "Vous voulez changer le type d'ecran a installer.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  Appuyez sur HAUT ou BAS pour sélectionner le type d'écran.",
+         "\x07  Appuyez sur HAUT ou BAS pour selectionner le type d'ecran.",
          TEXT_NORMAL
     },
     {
@@ -581,13 +581,13 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
     {
         8,
         13,
-        "\x07  Appuyez sur ESC pour revenir à la page précédente sans changer",
+        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   le type d'écran.",
+        "   le type d'ecran.",
         TEXT_NORMAL
     },
     {
@@ -609,7 +609,7 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         10,
         6,
-        "Les composants standards de ReactOS ont été installés avec succès.",
+        "Les composants standards de ReactOS ont ete installes avec succes.",
         TEXT_NORMAL
     },
     {
@@ -627,13 +627,13 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
     {
         10,
         11,
-        "Appuyez sur ENTER pour redémarrer votre ordinateur.",
+        "Appuyez sur ENTER pour redemarrer votre ordinateur.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Redémarrer l'ordinateur",
+        "   ENTER = Redemarrer l'ordinateur",
         TEXT_STATUS
     },
     {
@@ -661,7 +661,7 @@ static MUI_ENTRY frFRBootPageEntries[] =
     {
         6,
         13,
-        "Veuillez insérer une disquette formatée dans le lecteur A: et",
+        "Veuillez inserer une disquette formatee dans le lecteur A: et",
         TEXT_NORMAL
     },
     {
@@ -690,43 +690,43 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "La liste suivante montre les partitions existantes et",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "l'espace disque non utilise pour de nouvelles partitions.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Appuyez sur HAUT ou BAS pour selectionner une entree de la liste.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Appuyez sur ENTER pour installer ReactOS sur la partition choisie.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Appuyez sur C pour creer une nouvelle partition.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Appuyez sur D pour effacer une partition.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
+        "   Patientez...",
         TEXT_STATUS
     },
     {
@@ -742,19 +742,19 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     {
         6,
         8,
-        "Format partition",
+        "Formater la partition",
         TEXT_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "Setup va formater la partition. Appuyez sur ENTER pour continuer.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuer   F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -770,37 +770,37 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "Setup installe les fichiers de ReactOS sur la partition selectionnee.",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "Choisissez un repertoire ou vous voulez que ReactOS soit installe:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "Pour changer le repertoire propose, appuyez sur BACKSPACE pour effacer",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "des caracteres et ensuite tapez le repertoire ou vous voulez que",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        "ReactOS soit installe",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuer   F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -816,25 +816,25 @@ static MUI_ENTRY frFRFileCopyEntries[] =
     {
         11,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "Patientez pendant que ReactOS Setup copie les fichiers",
         TEXT_NORMAL
     },
     {
-        30,
+        15,
         13,
-        "installation folder.",
+        "dans le repertoire d'installation de ReactOS.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "This may take several minutes to complete.",
+        "Cela peut prendre plusieurs minutes.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 Please wait...    ",
+        "                                                           \xB3 Patientez...    ",
         TEXT_STATUS
     },
     {
@@ -850,31 +850,31 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Setup installe le chargeur de demarrage",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Installer le chargeur de demarrage sur le disque dur (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "Installer le chargeur de demarrage sur une disquette.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Skip install bootloader.",
+        "Ne pas installer le chargeur de demarrage.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Continuer   F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -890,37 +890,37 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "Vous voulez changer le type de clavier a installer.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Appuyez sur HAUT ou BAS pour selectionner le type de clavier,",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   puis appuyez sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   le type de clavier.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -936,37 +936,37 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Vous voulez changer la disposition du clavier.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Appuyez sur HAUT ou BAS pour selectionner la disposition",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    choisie. Puis appuyez sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Appuyez sur ESC pour revenir a la page precedente sans changer",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   la disposition du clavier.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
         TEXT_STATUS
     },
     {
@@ -983,13 +983,13 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Setup prepare votre ordinateur pour copier les fichiers de ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
+        "   Prepare la liste de fichiers a copier...",
         TEXT_STATUS
     },
     {
@@ -1006,31 +1006,31 @@ static MUI_ENTRY frFRSelectFSEntries[] =
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "Selectionnez un systeme de fichiers dans la liste suivante.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Appuyez sur HAUT ou BAS pour selectionner un systeme de fichiers.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Appuyez sur ENTER pour formater la partition.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Appuyez sur ESC pour selectionner une autre partition.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Continuer   ESC = Annuler   F3 = Quitter",
         TEXT_STATUS
     },
 
@@ -1047,31 +1047,31 @@ static MUI_ENTRY frFRDeletePartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "Vous avez choisi de supprimer la partition",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Appuyez sur D pour supprimer la partition.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "ATTENTION: Toutes les donnees de cette partition seront perdues!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Appuyez sur ESC pour annuler.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "   D = Supprimer la Partition   ESC = Annuler   F3 = Quitter",
         TEXT_STATUS
     },
     {
