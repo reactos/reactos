@@ -122,8 +122,8 @@ CallInitComplete(void)
 }
 
 BOOL
-FASTCALL
-CallHardError(void)
+CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+              IN PHARDERROR_MSG HardErrorMessage)
 {
     BOOL Ok;
     unsigned i;
@@ -135,7 +135,7 @@ CallHardError(void)
     {
         for (i = 0; i < HardErrorProcCount && Ok; i++)
         {
-            Ok = (*(HardErrorProcs[i]))();
+            Ok = (*(HardErrorProcs[i]))(ProcessData, HardErrorMessage);
         }
     }
 

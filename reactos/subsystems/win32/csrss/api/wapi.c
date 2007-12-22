@@ -106,7 +106,9 @@ CsrApiCallHandler(PCSRSS_PROCESS_DATA ProcessData,
     }
 }
 
-BOOL FASTCALL CallHardError(void);
+BOOL
+CallHardError(IN PCSRSS_PROCESS_DATA ProcessData,
+              IN PHARDERROR_MSG HardErrorMessage);
 
 static
 VOID
@@ -117,7 +119,7 @@ CsrHandleHardError(IN PCSRSS_PROCESS_DATA ProcessData,
     DPRINT1("CSR: received hard error %lx\n", Message->Status);
 
     /* Call the hard error handler in win32csr */
-    CallHardError();
+    (VOID)CallHardError(ProcessData, Message);
 }
 
 NTSTATUS STDCALL
