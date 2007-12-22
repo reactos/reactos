@@ -16,7 +16,7 @@ IDR_TASKMANAGER MENU DISCARDABLE
 BEGIN
     POPUP "&Fichier"
     BEGIN
-        MENUITEM "&Nouvelle tâche (Éxécuter...)",          ID_FILE_NEW
+        MENUITEM "&Nouvelle tâche (Exécuter...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Quitter le Gestionnaire des tâches",          ID_FILE_EXIT
     END
@@ -88,7 +88,7 @@ IDR_APPLICATION_PAGE_CONTEXT1 MENU DISCARDABLE
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "&Nouvelle tâche (Éxécuter...)",          ID_FILE_NEW
+        MENUITEM "&Nouvelle tâche (Exécuter...)",          ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "&Grandes icônes",                ID_VIEW_LARGE
         MENUITEM "&Petites icônes",                ID_VIEW_SMALL
@@ -215,11 +215,11 @@ STYLE DS_CONTROL | WS_CHILD | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX        "Util. de l'UC",IDC_CPU_USAGE_FRAME,5,5,60,54,WS_TABSTOP, WS_EX_TRANSPARENT
-    GROUPBOX        "Util. du fichier",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
+    GROUPBOX        "Util. de la mémoire",IDC_MEM_USAGE_FRAME,5,63,60,54,BS_LEFTTEXT, WS_EX_TRANSPARENT
     GROUPBOX        "Totaux",IDC_TOTALS_FRAME,5,122,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Charge dédiée (Ko)",IDC_COMMIT_CHARGE_FRAME,5,166,111,39,0,WS_EX_TRANSPARENT
     GROUPBOX        "Mémoire physique (Ko)",IDC_PHYSICAL_MEMORY_FRAME,131,122,111,39,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Kernel Memory (Ko)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Mémoire noyau (Ko)",IDC_KERNEL_MEMORY_FRAME,131,166,111,39,0,WS_EX_TRANSPARENT
     LTEXT           "Handles",IDS_TOTALS_HANDLE_COUNT,12,131,53,8
     LTEXT           "Threads",IDS_TOTALS_THREAD_COUNT,12,140,53,8
     LTEXT           "Processus",IDS_TOTALS_PROCESS_COUNT,12,149,53,8
@@ -257,7 +257,7 @@ BEGIN
     EDITTEXT        IDC_KERNEL_MEMORY_NONPAGED,185,193,48,8,ES_RIGHT |
                     ES_READONLY | ES_NUMBER | NOT WS_BORDER
     GROUPBOX        "Historique de l'utilisation de l'UC",IDC_CPU_USAGE_HISTORY_FRAME,74,5,168,54,0,WS_EX_TRANSPARENT
-    GROUPBOX        "Historique d'utilisation du fichier d'échange",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
+    GROUPBOX        "Historique d'utilisation de la mémoire",IDC_MEMORY_USAGE_HISTORY_FRAME,74,63,168,54,0,WS_EX_TRANSPARENT
     PUSHBUTTON      "Affichage de l'utilisation de l'UC",IDC_CPU_USAGE_GRAPH,12,17,47,37,0,
 		    WS_EX_CLIENTEDGE
     PUSHBUTTON      "Affichage de l'utilisation du fichier d'échange",IDC_MEM_USAGE_GRAPH,12,75,47,37,0,
@@ -613,13 +613,13 @@ BEGIN
     IDS_TAB_PERFORMANCE           "Performance"
     IDS_TAB_TASK                  "Tâche"
     IDS_TAB_STATUS                "Status"
-    IDS_TAB_IMAGENAME             "Nome d'image"
+    IDS_TAB_IMAGENAME             "Nom de l'image"
     IDS_TAB_PID                   "PID"
     IDS_TAB_USERNAME              "Nom d'utilisateur"
     IDS_TAB_SESSIONID             "Identificateur de session"
     IDS_TAB_CPU                   "UC"
     IDS_TAB_CPUTIME               "Temps de l'UC"
-    IDS_TAB_MEMUSAGE              "Utilisation du fichier"
+    IDS_TAB_MEMUSAGE              "Utilisation de la mémoire"
     IDS_TAB_PEAKMEMUSAGE          "Utilisation maximale du fichier"
     IDS_TAB_MEMDELTA              "Écart d'utilisation du fichier"
     IDS_TAB_PAGEFAULT             "Erreurs de page"
