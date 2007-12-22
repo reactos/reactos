@@ -372,15 +372,8 @@ $(OUTPUT):
 	${mkdir} $@
 endif
 
-
-NTOSKRNL_MC = ntoskrnl$(SEP)ntoskrnl.mc
-KERNEL32_MC = dll$(SEP)win32$(SEP)kernel32$(SEP)kernel32.mc
 NTDLL_MC = dll$(SEP)ntdll$(SEP)def$(SEP)ntstatus.mc
 BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
-BUGCODES_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)bugcodes.h
-BUGCODES_RC = $(INTERMEDIATE_)ntoskrnl$(SEP)bugcodes.rc
-ERRCODES_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)errcodes.h
-ERRCODES_RC = $(INTERMEDIATE_)dll$(SEP)win32$(SEP)kernel32$(SEP)errcodes.rc
 NTSTATUS_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)ntstatus.h
 NTSTATUS_RC = $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def$(SEP)ntstatus.rc
 
@@ -394,10 +387,6 @@ PREAUTO := \
 	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
-	$(BUGCODES_H) \
-	$(BUGCODES_RC) \
-	$(ERRCODES_H) \
-	$(ERRCODES_RC) \
 	$(NTSTATUS_H) \
 	$(NTSTATUS_RC) \
 	$(GENDIB_DIB_FILES) \
@@ -471,24 +460,11 @@ msvc: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msvc
 
-$(BUGCODES_H) $(BUGCODES_RC): $(WMC_TARGET) $(NTOSKRNL_MC)
-	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
-	${mkdir} $(INTERMEDIATE_)ntoskrnl 2>$(NUL)
-	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -H $(BUGCODES_H) -o $(BUGCODES_RC) $(NTOSKRNL_MC)
-
-$(ERRCODES_H) $(ERRCODES_RC): $(WMC_TARGET) $(KERNEL32_MC)
-	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
-	${mkdir} $(INTERMEDIATE_)dll$(SEP)win32$(SEP)kernel32 2>$(NUL)
-	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -U -H $(ERRCODES_H) -o $(ERRCODES_RC) $(KERNEL32_MC)
-
 $(NTSTATUS_H) $(NTSTATUS_RC): $(WMC_TARGET) $(NTDLL_MC)
 	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
 	${mkdir} $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def 2>$(NUL)
 	$(ECHO_WMC)
 	$(Q)$(WMC_TARGET) -i -U -H $(NTSTATUS_H) -o $(NTSTATUS_RC) $(NTDLL_MC)
-
 .PHONY: msvc6
 msvc6: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)

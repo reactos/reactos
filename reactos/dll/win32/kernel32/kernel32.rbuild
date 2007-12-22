@@ -117,6 +117,7 @@
 			</directory>
 		</if>
 	</directory>
+	<file>errcodes.mc</file>
 </module>
 <module name="kernel32" type="win32dll" baseaddress="${BASEADDRESS_KERNEL32}" installbase="system32" installname="kernel32.dll">
 	<importlibrary definition="kernel32.def" />

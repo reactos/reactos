@@ -122,7 +122,6 @@ protected:
 	void GenerateRules ();
 	void GenerateImportLibraryTargetIfNeeded ();
 	void GetDefinitionDependencies ( std::vector<FileLocation>& dependencies ) const;
-
 	std::string GetLinkingDependencies () const;
 	static MingwBackend* backend;
 	static FILE* fMakefile;
@@ -164,6 +163,7 @@ private:
 	void GenerateWindresCommand ( const FileLocation* sourceFile,
 	                              const std::string& windresflagsMacro );
 	void GenerateWinebuildCommands ( const FileLocation* sourceFile );
+	void GenerateWmcCommands ( const FileLocation* sourceFile);
 	std::string GetWidlFlags ( const CompilationUnit& compilationUnit );
 	void GenerateWidlCommandsServer (
 		const CompilationUnit& compilationUnit,
@@ -202,6 +202,8 @@ private:
 	                                 const std::string& widlflagsMacro );
 	const FileLocation* GenerateArchiveTarget ( const std::string& ar,
 	                                            const std::string& objs_macro ) const;
+	void GetMcObjectDependencies   ( std::vector<FileLocation>& dependencies,
+	                                 const FileLocation *file ) const;
 	void GetSpecObjectDependencies ( std::vector<FileLocation>& dependencies,
 	                                 const FileLocation *file ) const;
 	void GetWidlObjectDependencies ( std::vector<FileLocation>& dependencies,
@@ -213,10 +215,12 @@ private:
 	void GenerateBuildNonSymbolStrippedCode ();
 	void CleanupCompilationUnitVector ( std::vector<CompilationUnit*>& compilationUnits );
 	void GetRpcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
+    void GetMcHeaderDependencies ( std::vector<FileLocation>& dependencies ) const;
 	static std::string GetPropertyValue ( const Module& module, const std::string& name );
 	const FileLocation* GetRpcServerHeaderFilename ( const FileLocation *base ) const;
 	const FileLocation* GetRpcClientHeaderFilename ( const FileLocation *base ) const;
 	const FileLocation* GetIdlHeaderFilename ( const FileLocation *base ) const;
+    const FileLocation* GetMcHeaderFilename ( const FileLocation *base ) const;
 	std::string GetModuleCleanTarget ( const Module& module ) const;
 	void GetReferencedObjectLibraryModuleCleanTargets ( std::vector<std::string>& moduleNames ) const;
 public:

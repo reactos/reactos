@@ -289,6 +289,16 @@ MingwModuleHandler::GetActualSourceFilename (
 		delete objectFile;
 		return sourceFile;
 	}
+	else if ( extension == ".mc" || extension == ".MC" )
+	{
+		const FileLocation *objectFile = GetObjectFilename ( file, module, NULL );
+		FileLocation *sourceFile = new FileLocation (
+			objectFile->directory,
+			objectFile->relative_path,
+			ReplaceExtension ( objectFile->name, ".rc" ) );
+		delete objectFile;
+		return sourceFile;
+	}
 	else
 		return new FileLocation ( *file );
 }
@@ -392,6 +402,11 @@ MingwModuleHandler::GetImportLibraryDependency (
 				dep += ssprintf ( " $(%s_HEADERS)", importedModule.name.c_str () );
 				break;
 			}
+		    if ( GetExtension ( *objectFilename ) == ".rc" )
+		    {
+			    dep += ssprintf ( " $(%s_MCHEADERS)", importedModule.name.c_str () );
+			    break;
+		    }
 		}
 	}
 	else
@@ -433,6 +448,7 @@ MingwModuleHandler::GetModuleDependencies (
 	}
 	vector<FileLocation> v;
 	GetDefinitionDependencies ( v );
+
 	for ( size_t i = 0; i < v.size (); i++ )
 	{
 		const FileLocation& file = v[i];
@@ -502,6 +518,8 @@ MingwModuleHandler::GetObjectFilename (
 		return new FileLocation ( *module.output );
 	else if ( extension == ".rc" || extension == ".RC" )
 		newExtension = "_" + module.name + ".coff";
+	else if ( extension == ".mc" || extension == ".MC" )
+		newExtension = ".rc";
 	else if ( extension == ".spec" || extension == ".SPEC" )
 		newExtension = ".stubs.o";
 	else if ( extension == ".idl" || extension == ".IDL" )
@@ -1033,6 +1051,8 @@ MingwModuleHandler::GenerateObjectMacros (
 
 	const vector<CompilationUnit*>& compilationUnits = data.compilationUnits;
 	vector<const FileLocation *> headers;
+    vector<const FileLocation *> mcheaders;
+	vector<const FileLocation *> mcresources;
 	if ( compilationUnits.size () > 0 )
 	{
 		for ( i = 0; i < compilationUnits.size (); i++ )
@@ -1060,6 +1080,12 @@ MingwModuleHandler::GenerateObjectMacros (
 				const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), module, NULL );
 				if ( GetExtension ( *objectFilename ) == ".h" )
 					headers.push_back ( objectFilename );
+                else if ( GetExtension ( *objectFilename ) == ".rc"  )
+                {
+                    const FileLocation *headerFilename = GetMcHeaderFilename ( compilationUnit.GetFilename () );
+                    mcheaders.push_back ( headerFilename );
+					mcresources.push_back ( objectFilename );
+                }
 				else
 					fprintf (
 						fMakefile,
@@ -1083,6 +1109,38 @@ MingwModuleHandler::GenerateObjectMacros (
 				"%s%s",
 				( i%10 == 9 ? " \\\n\t" : " " ),
 				backend->GetFullName ( *headers[i] ).c_str () );
+		fprintf ( fMakefile, "\n" );
+	}
+
+    if ( mcheaders.size () > 0 )
+	{
+		fprintf (
+			fMakefile,
+			"%s_MCHEADERS %s",
+			module.name.c_str (),
+			assignmentOperation );
+		for ( i = 0; i < mcheaders.size (); i++ )
+			fprintf (
+				fMakefile,
+				"%s%s",
+				( i%10 == 9 ? " \\\n\t" : " " ),
+				backend->GetFullName ( *mcheaders[i] ).c_str () );
+		fprintf ( fMakefile, "\n" );
+	}
+
+    if ( mcresources.size () > 0 )
+	{
+		fprintf (
+			fMakefile,
+			"%s_RESOURCES %s",
+			module.name.c_str (),
+			assignmentOperation );
+		for ( i = 0; i < mcresources.size (); i++ )
+			fprintf (
+				fMakefile,
+				"%s%s",
+				( i%10 == 9 ? " \\\n\t" : " " ),
+				backend->GetFullName ( *mcresources[i] ).c_str () );
 		fprintf ( fMakefile, "\n" );
 	}
 
@@ -1296,6 +1354,37 @@ MingwModuleHandler::GenerateWinebuildCommands (
 	          backend->GetFullName ( *sourceFile ).c_str () );
 }
 
+void
+MingwModuleHandler::GenerateWmcCommands (
+	const FileLocation* sourceFile )
+{
+	string dependencies = backend->GetFullName ( *sourceFile );
+	dependencies += " " + NormalizeFilename ( module.xmlbuildFile );
+
+	string basename = GetBasename ( sourceFile->name );
+	FileLocation rc_file ( IntermediateDirectory,
+	                        sourceFile->relative_path,
+	                        basename + ".rc" );
+	FileLocation h_file ( IntermediateDirectory,
+	                        "include/reactos",
+	                        basename + ".h" );
+	CLEAN_FILE ( rc_file );
+	CLEAN_FILE ( h_file );
+
+	fprintf ( fMakefile,
+	          "%s %s: $(WMC_TARGET) %s\n",
+	          backend->GetFullName ( rc_file ).c_str (),
+			  backend->GetFullName ( h_file ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
+	fprintf ( fMakefile, "\t$(ECHO_WMC)\n" );
+	fprintf ( fMakefile,
+	          "\t%s -i -H %s -o %s %s\n",
+	          "$(Q)$(WMC_TARGET)",
+	          backend->GetFullName ( h_file ).c_str (),
+			  backend->GetFullName ( rc_file ).c_str (),
+	          backend->GetFullName ( *sourceFile ).c_str () );
+}
+
 string
 MingwModuleHandler::GetWidlFlags ( const CompilationUnit& compilationUnit )
 {
@@ -1369,6 +1458,13 @@ MingwModuleHandler::GetIdlHeaderFilename ( const FileLocation *base ) const
 {
 	string newname = GetBasename ( base->name ) + ".h";
 	return new FileLocation ( IntermediateDirectory, base->relative_path, newname );
+}
+
+const FileLocation*
+MingwModuleHandler::GetMcHeaderFilename ( const FileLocation *base ) const
+{
+	string newname = GetBasename ( base->name ) + ".h";
+	return new FileLocation ( IntermediateDirectory, "include/reactos" , newname );
 }
 
 void
@@ -1533,6 +1629,11 @@ MingwModuleHandler::GenerateCommands (
 	{
 		GenerateWindresCommand ( sourceFile,
 		                         windresflagsMacro );
+		return;
+	}
+	else if ( extension == ".mc" || extension == ".MC" )
+	{
+		GenerateWmcCommands ( sourceFile );
 		return;
 	}
 	else if ( extension == ".spec" || extension == ".SPEC" )
@@ -1830,7 +1931,12 @@ MingwModuleHandler::GenerateObjectFileTargets (
 		const FileLocation *objectFilename = GetObjectFilename ( compilationUnit.GetFilename (), module, NULL );
 		if ( GetExtension ( *objectFilename ) == ".h" )
 		{
-			moduleDependencies = ssprintf ( " $(%s_HEADERS)", module.name.c_str () );
+			moduleDependencies += ssprintf ( " $(%s_HEADERS)", module.name.c_str () );
+			break;
+		}
+		if ( GetExtension ( *objectFilename ) == ".rc" )
+		{
+			moduleDependencies += ssprintf ( " $(%s_RESOURCES)", module.name.c_str () );
 			break;
 		}
 	}
@@ -2341,7 +2447,24 @@ MingwModuleHandler::GetDefaultDependencies (
 	if ( module.type != BuildTool
 		&& module.name != "psdk" )
 
-		dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
+	dependencies.push_back ( "$(PSDK_TARGET) $(psdk_HEADERS)" );
+
+    /* Check if any dependent library relays on the generated headers */
+	for ( size_t i = 0; i < module.project.modules.size (); i++ )
+	{
+		const Module& m = *module.project.modules[i];
+	    for ( size_t j = 0; j < m.non_if_data.compilationUnits.size (); j++ )
+	    {
+			CompilationUnit& compilationUnit = *m.non_if_data.compilationUnits[j];
+			const FileLocation* sourceFile = compilationUnit.GetFilename ();
+			string extension = GetExtension ( *sourceFile );
+            if (extension == ".mc" || extension == ".MC" )
+            {
+                string dependency = ssprintf ( " $(%s_MCHEADERS)", m.name.c_str () );
+                dependencies.push_back ( dependency );
+            }
+        }
+    }
 }
 
 void
@@ -2417,7 +2540,7 @@ MingwModuleHandler::GenerateImportLibraryTargetIfNeeded ()
 
 		vector<FileLocation> deps;
 		GetDefinitionDependencies ( deps );
-
+        
 		fprintf ( fMakefile, "# IMPORT LIBRARY RULE:\n" );
 
 		fprintf ( fMakefile, "%s: %s",
@@ -2459,6 +2582,24 @@ MingwModuleHandler::GetSpecObjectDependencies (
 	FileLocation stubsDependency ( IntermediateDirectory,
 	                               file->relative_path,
 	                             basename + ".stubs.c" );
+	dependencies.push_back ( stubsDependency );
+}
+
+void
+MingwModuleHandler::GetMcObjectDependencies (
+	vector<FileLocation>& dependencies,
+	const FileLocation *file ) const
+{
+	string basename = GetBasename ( file->name );
+
+	FileLocation defDependency ( IntermediateDirectory,
+	                             "include/reactos",
+	                             basename + ".h" );
+	dependencies.push_back ( defDependency );
+
+	FileLocation stubsDependency ( IntermediateDirectory,
+	                               file->relative_path,
+	                             basename + ".rc" );
 	dependencies.push_back ( stubsDependency );
 }
 

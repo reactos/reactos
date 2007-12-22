@@ -417,6 +417,7 @@
 	<directory name="wmi">
 		<file>wmi.c</file>
 	</directory>
+	<file>bugcodes.mc</file>
 	<file>ntoskrnl.rc</file>
 	<linkerflag>-nostartfiles</linkerflag>
 	<linkerflag>-nostdlib</linkerflag>
