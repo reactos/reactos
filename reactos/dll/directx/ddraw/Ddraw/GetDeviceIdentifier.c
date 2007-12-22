@@ -75,6 +75,8 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
 
     DX_WINDBG_trace();
 
+    EnterCriticalSection( &ddcs );
+
     _SEH_TRY
     {
         if ( (IsBadWritePtr( pDDDI, sizeof(DDDEVICEIDENTIFIER2) ) ) ||
@@ -184,5 +186,6 @@ Main_DirectDraw_GetDeviceIdentifier7(LPDDRAWI_DIRECTDRAW_INT This,
     }
     _SEH_END;
 
+    LeaveCriticalSection( &ddcs );
     return retVal;
 }

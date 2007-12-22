@@ -32,9 +32,39 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
 
     DX_WINDBG_trace();
 
-        _SEH_TRY
+    EnterCriticalSection( &ddcs );
+
+    _SEH_TRY
     {
         if ((!pDriverCaps) && (!pHELCaps))
+        {
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+        }
+
+        /*
+         * DDCAPS_DX6 and DDCAPS_DX7 have same size so
+         * we do not need check both only one of them
+         */
+        if ( (pDriverCaps) &&
+             (pDriverCaps->dwSize != sizeof(DDCAPS_DX1) ) &&
+             (pDriverCaps->dwSize != sizeof(DDCAPS_DX3) ) &&
+             (pDriverCaps->dwSize != sizeof(DDCAPS_DX5) ) &&
+             (pDriverCaps->dwSize !=  sizeof(DDCAPS_DX7 )) )
+        {
+                retVal = DDERR_INVALIDPARAMS;
+                _SEH_LEAVE;
+        }
+
+        /*
+         * DDCAPS_DX6 and DDCAPS_DX7 have same size so
+         * we do not need check both only one of them
+         */
+        if ( (pHELCaps) &&
+             (pHELCaps->dwSize != sizeof(DDCAPS_DX1) ) &&
+             (pHELCaps->dwSize != sizeof(DDCAPS_DX3) ) &&
+             (pHELCaps->dwSize != sizeof(DDCAPS_DX5) ) &&
+             (pHELCaps->dwSize != sizeof(DDCAPS_DX7 )) )
         {
                 retVal = DDERR_INVALIDPARAMS;
                 _SEH_LEAVE;
@@ -153,13 +183,10 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
         if (pHELCaps)
         {
             /* Setup software caps */
-            DDSCAPS2 ddscaps = { 0 };
             LPDDCORECAPS CoreCaps = (LPDDCORECAPS)&This->lpLcl->lpGbl->ddHELCaps;
 
             DWORD dwTotal = 0;
             DWORD dwFree = 0;
-
-            Main_DirectDraw_GetAvailableVidMem4(This, &ddscaps, &dwTotal, &dwFree);
 
             switch (pHELCaps->dwSize)
             {
@@ -260,7 +287,6 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
             }
         }
 
-
     }
     _SEH_HANDLE
     {
@@ -268,6 +294,7 @@ Main_DirectDraw_GetCaps( LPDDRAWI_DIRECTDRAW_INT This, LPDDCAPS pDriverCaps,
     }
     _SEH_END;
 
-     return  retVal;
+    LeaveCriticalSection( &ddcs );
+    return  retVal;
 }
 
