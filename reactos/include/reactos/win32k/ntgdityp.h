@@ -135,10 +135,15 @@ typedef DWORD LFTYPE;
 /* TYPES *********************************************************************/
 
 typedef PVOID KERNEL_PVOID;
-typedef DWORD CHWIDTHINFO;
-typedef CHWIDTHINFO *PCHWIDTHINFO;
 typedef D3DNTHAL_CONTEXTCREATEDATA D3DNTHAL_CONTEXTCREATEI;
 typedef LONG FIX;
+
+typedef struct _CHWIDTHINFO
+{
+   LONG    lMaxNegA;
+   LONG    lMaxNegC;
+   LONG    lMinWidthD;
+} CHWIDTHINFO, *PCHWIDTHINFO;
 
 typedef struct _UNIVERSAL_FONT_ID 
 {
