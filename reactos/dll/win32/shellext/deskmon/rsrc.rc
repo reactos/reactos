@@ -5,6 +5,7 @@
 #include "lang/de-DE.rc"
 #include "lang/el-GR.rc"
 #include "lang/en-US.rc"
+#include "lang/es-ES.rc"
 #include "lang/fr-FR.rc"
 #include "lang/sk-SK.rc"
 #include "lang/uk-UA.rc"
