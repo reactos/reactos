@@ -545,13 +545,14 @@ CheckUnattendedSetup(VOID)
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
+  /* Initialize the computer settings list */
   if (LanguageList == NULL)
     {
-      LanguageList = MUICreateLanguageList();
+      LanguageList = CreateLanguageList(SetupInf);
       if (LanguageList == NULL)
         {
            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
-           return START_PAGE;
+           return INTRO_PAGE;
         }
     }
 
@@ -585,11 +586,12 @@ LanguagePage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-      MUISelectLanguage((ULONG)LanguageList->CurrentEntry->UserData);
-	  return START_PAGE;
+      MUISelectLanguage((PWCHAR)LanguageList->CurrentEntry->UserData);
+	  return INTRO_PAGE;
 	}
     }
-  return START_PAGE;
+
+  return INTRO_PAGE;
 }
 
 
@@ -695,7 +697,20 @@ SetupStartPage(PINPUT_RECORD Ir)
 
   CheckUnattendedSetup();
 
-  return INTRO_PAGE;
+    if (IsUnattendedSetup)
+    {
+        //TODO
+        //read options from inf
+        ComputerList = CreateComputerTypeList(SetupInf);
+        DisplayList = CreateDisplayDriverList(SetupInf);
+        KeyboardList = CreateKeyboardDriverList(SetupInf);
+        LayoutList = CreateKeyboardLayoutList(SetupInf);
+        LanguageList = CreateLanguageList(SetupInf);
+
+        return INSTALL_INTRO_PAGE;
+    }
+
+  return LANGUAGE_PAGE;
 }
 
 
@@ -708,17 +723,6 @@ static PAGE_NUMBER
 IntroPage(PINPUT_RECORD Ir)
 {
   MUIDisplayPage(START_PAGE);
-
-  if (IsUnattendedSetup)
-    {
-      //TODO
-      //read options from inf
-      ComputerList = CreateComputerTypeList(SetupInf);
-      DisplayList = CreateDisplayDriverList(SetupInf);
-      KeyboardList = CreateKeyboardDriverList(SetupInf);
-      LayoutList = CreateKeyboardLayoutList(SetupInf);
-      return INSTALL_INTRO_PAGE;
-    }
 
   while (TRUE)
     {
@@ -3044,7 +3048,7 @@ RegistryPage(PINPUT_RECORD Ir)
 
   /* Update keyboard layout settings */
   CONSOLE_SetStatusText("   Updating keyboard layout settings...");
-  if (!ProcessKeyboardLayoutRegistry(LayoutList))
+  if (!ProcessKeyboardLayoutRegistry(LanguageList))
     {
       MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
       return QUIT_PAGE;
@@ -3411,26 +3415,23 @@ RunUSetup(VOID)
   /* Hide the cursor */
   CONSOLE_SetCursorType(TRUE, FALSE);
 
-  Page = LANGUAGE_PAGE;
+  Page = START_PAGE;
   while (Page != REBOOT_PAGE)
     {
       CONSOLE_ClearScreen();
-
       CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
-
       CONSOLE_Flush();
 
       switch (Page)
 	{
-      /* Language page */
-      case LANGUAGE_PAGE:
-        Page = LanguagePage(&Ir);
-        break;
 	  /* Start page */
 	  case START_PAGE:
 	    Page = SetupStartPage(&Ir);
 	    break;
-
+      /* Language page */
+      case LANGUAGE_PAGE:
+        Page = LanguagePage(&Ir);
+        break;
 	  /* License page */
 	  case LICENSE_PAGE:
 	    Page = LicensePage(&Ir);

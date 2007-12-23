@@ -58,6 +58,7 @@ AnsiCodepage     = c_1252.nls
 OemCodepage      = c_437.nls
 UnicodeCasetable = l_intl.nls
 DefaultLayout    = 00000409
+DefaultLanguage  = 00000409
 
 [Computer]
 pci_up = "Standard-PC"
@@ -89,10 +90,6 @@ vbe_1024x768x8 = "VESA Display (1024x768x8)",,VBE,1024,768,8
 vbe_1024x768x16 = "VESA Display (1024x768x16)",,VBE,1024,768,16
 vbe_1024x768x32 = "VESA Display (1024x768x32)",,VBE,1024,768,32
 
-
-
-
-
 [Map.Display]
 ;<id> = <pnp id string>
 vga = "VGA Display"
@@ -100,6 +97,28 @@ vbe = "VBE Display"
 
 [Keyboard]
 Default = "XT-, AT- or extended keyboard (83-105 keys)"
+
+[Language] 
+;00000403 = "Catalan" 
+;00000406 = "Danish" 
+;00000813 = "Dutch" 
+00000409 = "English" 
+;0000040B = "Finnish" 
+0000040C = "French" 
+00000407 = "German" 
+;00000408 = "Greek" 
+;0000040D = "Hebrew" 
+;0000040E = "Hungarian"  
+00000410 = "Italian" 
+;00000411 = "Japanese" 
+;00000414 = "Norwegian" 
+;00000415 = "Polish" 
+;00000816 = "Portuguese" 
+;00000419 = "Russian" 
+;0000041B = "Slovak" 
+0000040A = "Spanish" 
+00000422 = "Ukrainian" 
+
 
 [KeyboardLayout]
 00040402 = "Bulgarian BDS 5237-1978"

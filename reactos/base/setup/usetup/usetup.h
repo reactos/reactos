@@ -82,8 +82,8 @@ extern BOOLEAN IsUnattendedSetup;
 
 typedef enum _PAGE_NUMBER
 {
-  LANGUAGE_PAGE = 0,
   START_PAGE,
+  LANGUAGE_PAGE,
   INTRO_PAGE,
   LICENSE_PAGE,
   INSTALL_INTRO_PAGE,

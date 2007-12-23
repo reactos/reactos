@@ -655,6 +655,65 @@ CreateKeyboardDriverList(HINF InfFile)
   return List;
 }
 
+PGENERIC_LIST 
+CreateLanguageList(HINF InfFile) 
+{ 
+    CHAR Buffer[128]; 
+    PGENERIC_LIST List; 
+    INFCONTEXT Context; 
+    PWCHAR KeyName; 
+    PWCHAR KeyValue; 
+    PWCHAR UserData; 
+    WCHAR DefaultLanguage[20]; 
+
+    /* Get default language id */ 
+    if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLanguage", &Context)) 
+     return NULL; 
+
+    if (!INF_GetData (&Context, NULL, &KeyValue)) 
+     return NULL; 
+
+    wcscpy(DefaultLanguage, KeyValue); 
+
+    List = CreateGenericList(); 
+    if (List == NULL) 
+     return NULL; 
+
+    if (!SetupFindFirstLineW (InfFile, L"Language", NULL, &Context)) 
+     { 
+       DestroyGenericList(List, FALSE); 
+       return NULL; 
+     } 
+
+    do 
+     { 
+       if (!INF_GetData (&Context, &KeyName, &KeyValue)) 
+    { 
+      /* FIXME: Handle error! */ 
+      DPRINT("INF_GetData() failed\n"); 
+      break; 
+    } 
+
+       UserData = (WCHAR*) RtlAllocateHeap(ProcessHeap, 
+		         0, 
+		         (wcslen(KeyName) + 1) * sizeof(WCHAR)); 
+       if (UserData == NULL) 
+    { 
+      /* FIXME: Handle error! */ 
+    } 
+
+       wcscpy(UserData, KeyName); 
+
+       sprintf(Buffer, "%S", KeyValue); 
+       AppendGenericListEntry(List, 
+	             Buffer, 
+	             UserData, 
+	             _wcsicmp(KeyName, DefaultLanguage) ? FALSE : TRUE); 
+     } 
+    while (SetupFindNextLine(&Context, &Context)); 
+
+    return List; 
+}
 
 PGENERIC_LIST
 CreateKeyboardLayoutList(HINF InfFile)

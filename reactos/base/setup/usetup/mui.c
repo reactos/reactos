@@ -1,3 +1,29 @@
+/*
+ *  ReactOS kernel
+ *  Copyright (C) 2008 ReactOS Team
+ *
+ *  This program is free software; you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation; either version 2 of the License, or
+ *  (at your option) any later version.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program; if not, write to the Free Software
+ *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+ */
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
+ * PROJECT:         ReactOS text-mode setup
+ * FILE:            subsys/system/usetup/mui.c
+ * PURPOSE:         Text-mode setup
+ * PROGRAMMER:      
+ */
+
 #include "usetup.h"
 #include "errorcode.h"
 #include "mui.h"
@@ -12,51 +38,71 @@
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
 
+/* The current selected language , by default en-us for now */
+static PWCHAR SelectedLanguageId = L"00000409";
+
 static MUI_LANGUAGE LanguageList[] =
 {
     {
-        "English",
-        enUSPages
+        L"00000409",    /* The Language ID */
+        L"00000409",    /* Default Keyboard Layout for this language */
+        L"English",     /* Language Name , not used just to make things easier when updating this file */
+        enUSPages       /* Translated strings  */
     },
     {
-        "French",
+        L"0000040C",
+        L"0000040C",
+        L"French",
         frFRPages
     },
     {
-        "German",
+        L"00000407",
+        L"00000407",
+        L"German",
         deDEPages
     },
     {
-        "Greek",
+        L"00000408",
+        L"00000408",
+        L"Greek",
         elGRPages
     },
     {
-        "Italian",
+        L"00000410",
+        L"00000410",
+        L"Italian",
         itITPages
     },
     {
-        "Russian",
+        L"00000419",
+        L"00000419",
+        L"Russian",
         ruRUPages
     },
     {
-        "Spanish",
+        L"0000040A",
+        L"0000040A",
+        L"Spanish",
         esESPages
     },
     {
-        "Swedish",
+        L"0000041D",
+        L"0000041D",
+        L"Swedish",
         svSEPages
     },
     {
-        "Ukrainian",
+        L"00000422",
+        L"00000422",
+        L"Ukrainian",
         ukUAPages
     },
     {
         NULL,
+        NULL,
         NULL
     }
 };
-
-static ULONG SelectedLanguage = 0;
 
 extern
 VOID
@@ -65,62 +111,58 @@ PopupError(PCHAR Text,
 	   PINPUT_RECORD Ir,
 	   ULONG WaitEvent);
 
-
-PGENERIC_LIST
-MUICreateLanguageList()
-{
-    PGENERIC_LIST List;
-    ULONG Index;
-
-    List = CreateGenericList();
-    if (List == NULL)
-    {
-        return NULL;
-    }
-
-    Index = 0;
-
-    do
-    {
-        AppendGenericListEntry(List, LanguageList[Index].LanguageDescriptor, (PVOID)Index, (Index == 0 ? TRUE : FALSE));
-        Index++;
-    }while(LanguageList[Index].MuiPages && LanguageList[Index].LanguageDescriptor);
-
-    return List;
-}
-
 BOOLEAN
-MUISelectLanguage(ULONG LanguageIndex)
+MUISelectLanguage(PWCHAR LanguageID)
 {
-    SelectedLanguage = LanguageIndex;
+    if (LanguageID == NULL)
+        return FALSE;
+
+    SelectedLanguageId = LanguageID;
     return TRUE;
 }
 
-
 static
 MUI_ENTRY *
-findMUIEntriesOfPage(ULONG PageNumber, MUI_PAGE * Pages)
+FindMUIEntriesOfPage (ULONG PageNumber)
 {
-    ULONG Index = 0;
+    ULONG muiIndex = 0;
+    ULONG lngIndex = 0;
+    MUI_PAGE * Pages = NULL;
+
     do
     {
-        if (Pages[Index].Number == PageNumber)
+        /* First we search the language list till we find current selected language messages */
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
         {
-            return Pages[Index].MuiEntry;
+            /* Get all available pages for this language */
+            Pages = LanguageList[lngIndex].MuiPages;
+
+            do
+            {
+                /* Get page messages */
+                if (Pages[muiIndex].Number == PageNumber)
+                    return Pages[muiIndex].MuiEntry;
+
+                muiIndex++;
+            }
+            while (Pages[muiIndex].MuiEntry != NULL);
         }
-        Index++;
-    }while(Pages[Index].MuiEntry != NULL);
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+
     return NULL;
 }
 
 VOID
-MUIDisplayPage(ULONG pg)
+MUIDisplayPage(ULONG page)
 {
     MUI_ENTRY * entry;
     int index;
     int flags;
 
-    entry = findMUIEntriesOfPage(pg, LanguageList[SelectedLanguage].MuiPages);
+    entry = FindMUIEntriesOfPage (page);
     if (!entry)
     {
         PopupError("Error: Failed to find translated page",
@@ -152,7 +194,8 @@ MUIDisplayPage(ULONG pg)
                 break;
         }
         index++;
-    }while(entry[index].Buffer != NULL);
+    }
+    while (entry[index].Buffer != NULL);
 }
 
 VOID
@@ -173,3 +216,5 @@ MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
                Ir,
                WaitEvent);
 }
+
+/* EOF */
