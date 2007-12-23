@@ -241,7 +241,7 @@ found:
          }
       }
 #else
-      DPRINT1("menu search not implemented");
+      DPRINT1("Menu search not implemented\n");
       mesg = WM_COMMAND;
 #endif
 
