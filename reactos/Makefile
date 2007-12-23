@@ -372,11 +372,7 @@ $(OUTPUT):
 	${mkdir} $@
 endif
 
-NTDLL_MC = dll$(SEP)ntdll$(SEP)def$(SEP)ntstatus.mc
 BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
-NTSTATUS_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)ntstatus.h
-NTSTATUS_RC = $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def$(SEP)ntstatus.rc
-
 
 include lib/lib.mak
 include tools/tools.mak
@@ -387,8 +383,6 @@ PREAUTO := \
 	$(BIN2C_TARGET) \
 	$(BIN2RES_TARGET) \
 	$(BUILDNO_H) \
-	$(NTSTATUS_H) \
-	$(NTSTATUS_RC) \
 	$(GENDIB_DIB_FILES) \
 	$(NCI_SERVICE_FILES)
 ifeq ($(ARCH),powerpc)
@@ -460,11 +454,6 @@ msvc: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)
 	$(Q)$(RBUILD_TARGET) $(RBUILD_FLAGS) $(ROS_RBUILDFLAGS) msvc
 
-$(NTSTATUS_H) $(NTSTATUS_RC): $(WMC_TARGET) $(NTDLL_MC)
-	${mkdir} $(INTERMEDIATE_)include$(SEP)reactos 2>$(NUL)
-	${mkdir} $(INTERMEDIATE_)dll$(SEP)ntdll$(SEP)def 2>$(NUL)
-	$(ECHO_WMC)
-	$(Q)$(WMC_TARGET) -i -U -H $(NTSTATUS_H) -o $(NTSTATUS_RC) $(NTDLL_MC)
 .PHONY: msvc6
 msvc6: $(RBUILD_TARGET)
 	$(ECHO_RBUILD)

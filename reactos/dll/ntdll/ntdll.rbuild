@@ -53,4 +53,8 @@
 	<directory name="." root="intermediate">
 		<file>napi.S</file>
 	</directory>
+
+	<directory name="def">
+		<file>ntstatus.mc</file>
+	</directory>
 </module>
