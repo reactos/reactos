@@ -54,7 +54,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT       "Les privilèges administrateur sont requis pour la plupart de ces paramètres.", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX    "Performance", IDC_STATIC, 6, 18, 244, 50
-    LTEXT       "Les  options de performance contrôlent comment les applications utilisent la mémoire, ce qui affecte la vitesse de l'ordinateur.", IDC_STATIC, 16, 29, 210, 25
+    LTEXT       "Les options de performance contrôlent comment les applications utilisent la mémoire, ce qui affecte la vitesse de l'ordinateur.", IDC_STATIC, 16, 29, 210, 25
     PUSHBUTTON  "Réglages", IDC_PERFOR, 194, 48, 50, 14
 
     GROUPBOX    "Profils Utilisateurs", IDC_STATIC, 6,75,244,48
@@ -66,7 +66,7 @@ BEGIN
     PUSHBUTTON  "Réglages", IDC_STAREC, 194, 162, 50, 14
 
     PUSHBUTTON  "Variables d'en&vironnement", IDC_ENVVAR, 70, 192, 94, 15
-    PUSHBUTTON  "Rapport d'e&rreurs", IDC_ERRORREPORT, 170, 192, 80, 14
+    PUSHBUTTON  "Rapport d'e&rreurs", IDC_ERRORREPORT, 170, 192, 80, 15
 END
 
 
@@ -162,7 +162,7 @@ BEGIN
 
     GROUPBOX    "Écrire les informations de débogage", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX    IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
-    LTEXT       "Ficher Cliché :", IDC_STATIC, 17, 202, 150, 8
+    LTEXT       "Fichier Cliché :", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT    IDC_STRRECDUMPFILE, 17, 210, 153, 12
     AUTOCHECKBOX "&Écraser tout fichier existant", IDC_STRRECOVERWRITE, 17, 228, 125, 10
 

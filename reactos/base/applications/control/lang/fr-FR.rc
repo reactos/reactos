@@ -28,9 +28,9 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_WINDOW_TITLE "Panneau de contrôle"
-	IDS_ABOUT "Panneau de contrôle simple (non basé sur Shell-namespace)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rSous licence GPL"
-	IDS_ABOUT_TITLE "À propos du panneau de contrôle"
+	IDS_WINDOW_TITLE "Panneau de configuration"
+	IDS_ABOUT "Panneau de configuration simple (non basé sur Shell-namespace)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rSous licence GPL"
+	IDS_ABOUT_TITLE "À propos du panneau de configuration"
 	IDS_NO_ITEMS "Aucun élément dans la ListView"
 	IDS_NAME "Nom"
 	IDS_COMMENT "Commentaire"

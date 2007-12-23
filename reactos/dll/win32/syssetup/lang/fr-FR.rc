@@ -30,7 +30,7 @@ BEGIN
     LTEXT "Cet assistant installe ReactOS sur votre ordinateur. Il a "\
           "besoin de certaines informations sur vous et votre ordinateur "\
           "pour configurer ReactOS correctement.", IDC_STATIC, 115, 50, 189, 100
-    LTEXT "Appuyez sur Suivant pour continuer l'assistant.", IDC_STATIC, 115, 160, 189, 31
+    LTEXT "Appuyez sur Suivant pour continuer l'installation.", IDC_STATIC, 115, 160, 189, 31
 END
 
 
@@ -40,7 +40,7 @@ CAPTION "Installation de ReactOS"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT           "Les développeurs de ReactOS voudraient présenter les projets Open Source suivants, "\
-                    "(ou seulement des composants) qui ont été utilisés pour créer ReactOS:",
+                    "(ou seulement des composants) qui ont été utilisés pour créer ReactOS :",
                     IDC_STATIC,15,7,286,19
     LISTBOX         IDC_PROJECTS,15,30,286,75,LBS_NOSEL | LBS_HASSTRINGS |
                     LBS_NOINTEGRALHEIGHT | WS_VSCROLL
@@ -233,10 +233,10 @@ BEGIN
     IDS_REACTOS_SETUP		    "Installation de ReactOS"
     IDS_UNKNOWN_ERROR           "Erreur inconnue"
     IDS_REGISTERING_COMPONENTS  "Enregistrement des composants..."
-    IDS_LOADLIBRARY_FAILED	    "Échec de LoadLibrary: "
-    IDS_GETPROCADDR_FAILED	    "Échec de GetProcAddr: "
-    IDS_REGSVR_FAILED           "Échec de DllRegisterServer: "
-    IDS_DLLINSTALL_FAILED	    "Échec de DllInstall: "
+    IDS_LOADLIBRARY_FAILED	    "Échec de LoadLibrary : "
+    IDS_GETPROCADDR_FAILED	    "Échec de GetProcAddr : "
+    IDS_REGSVR_FAILED           "Échec de DllRegisterServer : "
+    IDS_DLLINSTALL_FAILED	    "Échec de DllInstall : "
     IDS_TIMEOUT			        "Délai dépassé lors de l'enregistrement"
     IDS_REASON_UNKNOWN          ""
 END

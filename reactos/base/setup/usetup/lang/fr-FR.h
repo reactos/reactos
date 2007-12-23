@@ -776,7 +776,7 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Choisissez un repertoire ou vous voulez que ReactOS soit installe:",
+        "Choisissez un repertoire ou vous voulez que ReactOS soit installe :",
         TEXT_NORMAL
     },
     {
