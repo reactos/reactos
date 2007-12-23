@@ -1608,6 +1608,33 @@ ShowCommands (VOID)
 }
 #endif
 
+static VOID
+ExecuteAutoRunFile (VOID)
+{
+    TCHAR autorun[MAX_PATH];
+	DWORD len = MAX_PATH;
+	HKEY hkey;
+
+    if( RegOpenKeyEx(HKEY_LOCAL_MACHINE, 
+                    _T("SOFTWARE\\Microsoft\\Command Processor"),
+                    0, 
+                    KEY_READ, 
+                    &hkey ) == ERROR_SUCCESS)
+    {
+	    if(RegQueryValueEx(hkey, 
+                           _T("AutoRun"),
+                           0, 
+                           0, 
+                           (LPBYTE)autorun, 
+                           &len) == ERROR_SUCCESS)
+	    {
+		    ParseCommandLine (autorun);
+	    }
+    }
+
+	RegCloseKey(hkey);
+}
+
 /*
  * set up global initializations and process parameters
  *
@@ -1760,16 +1787,17 @@ Initialize (int argc, const TCHAR* argv[])
 #endif
 		}
 	}
+    else
+    {
+        /* Display a simple version string */
+        ConOutPrintf(_T("ReactOS Operating System [Version %s-%s]\n"), 
+            _T(KERNEL_RELEASE_STR),
+            _T(KERNEL_VERSION_BUILD_STR));
 
-	/* run cmdstart.bat */
-	if (IsExistingFile (_T("cmdstart.bat")))
-	{
-		ParseCommandLine (_T("cmdstart.bat"));
-	}
-	else if (IsExistingFile (_T("\\cmdstart.bat")))
-	{
-		ParseCommandLine (_T("\\cmdstart.bat"));
-	}
+	    ConOutPuts (_T("(C) Copyright 1998-2008 ReactOS Team.\n"));
+    }
+
+    ExecuteAutoRunFile ();
 
 #ifdef FEATURE_DIR_STACK
 	/* initialize directory stack */

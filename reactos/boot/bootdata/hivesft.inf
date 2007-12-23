@@ -8,6 +8,9 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",,0x00000012
 
+; CMD Settings
+HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
+
 ; Uninstall Application list
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall",,0x00000010
 
