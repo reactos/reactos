@@ -18,8 +18,8 @@ PGD_DXDDCLEANUPDXGRAPHICS gpfnCleanupDxGraphics = NULL;
 extern DRVFN gaEngFuncs;
 extern ULONG gcEngFuncs;
 
-PDRVFN gpDxFuncs;
-HANDLE ghDxGraphics;
+DRVFN gpDxFuncs[DXG_INDEX_DxDdIoctl];
+HANDLE ghDxGraphics = NULL;
 ULONG gdwDirectDrawContext;
 
 
@@ -126,7 +126,6 @@ HANDLE
 STDCALL 
 NtGdiDdCreateDirectDrawObject(HDC hdc)
 {
-
     PGD_DDCREATEDIRECTDRAWOBJECT pfnDdCreateDirectDrawObject = NULL;
     NTSTATUS Status;
     PEPROCESS Proc = NULL;
@@ -152,7 +151,6 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 
     DPRINT1("Calling dxg.sys DdCreateDirectDrawObject\n");
     return pfnDdCreateDirectDrawObject(hdc);
-
 }
 
 /*++

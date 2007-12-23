@@ -33,6 +33,8 @@ BOOL INTERNAL_CALL GDI_CleanupForProcess (PGDI_HANDLE_TABLE HandleTable, struct 
 PGDI_HANDLE_TABLE GdiHandleTable = NULL;
 PSECTION_OBJECT GdiTableSection = NULL;
 
+LIST_ENTRY GlobalDriverListHead;
+
 HANDLE GlobalUserHeap = NULL;
 PSECTION_OBJECT GlobalUserHeapSection = NULL;
 
@@ -402,6 +404,8 @@ DriverEntry (
         return STATUS_UNSUCCESSFUL;
     }
 
+  /* Initialize a list of loaded drivers in Win32 subsystem */
+  InitializeListHead(&GlobalDriverListHead);
 
   Status = InitUserImpl();
   if (!NT_SUCCESS(Status))

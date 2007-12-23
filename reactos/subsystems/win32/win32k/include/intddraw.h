@@ -8,7 +8,7 @@
 #include <reactos/drivers/directx/dxeng.h>
 
 /* From ddraw.c */
-extern PDRVFN gpDxFuncs;
+extern DRVFN gpDxFuncs[];
 
 typedef BOOL (NTAPI* PGD_DDSETGAMMARAMP)(HANDLE, HDC, LPVOID);
 typedef BOOL (NTAPI* PGD_DDRELEASEDC)(HANDLE);
