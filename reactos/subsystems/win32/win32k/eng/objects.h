@@ -21,7 +21,7 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Internal Objects
- * FILE:              subsys/win32k/eng/objects.h
+ * FILE:              subsystem/win32/win32k/eng/objects.h
  * PROGRAMER:         Jason Filby
  * REVISION HISTORY:
  *                 21/8/1999: Created
@@ -78,10 +78,6 @@ typedef struct _FONTGDI {
 typedef struct _PATHGDI {
   PATHOBJ PathObj;
 } PATHGDI;
-
-typedef struct _STRGDI {
-  STROBJ StrObj;
-} STRGDI;
 
 typedef BOOL (STDCALL *PFN_BitBlt)(SURFOBJ *, SURFOBJ *, SURFOBJ *, CLIPOBJ *,
                            XLATEOBJ *, RECTL *, POINTL *, POINTL *,

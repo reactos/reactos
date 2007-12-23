@@ -2,15 +2,61 @@
 #define _WIN32K_TEXT_H
 
 #define TAG_FINF        TAG('F', 'I', 'N', 'F')
+//
+// EXSTROBJ flags.
+//
+#define TO_MEM_ALLOCATED    0x0001
+#define TO_ALL_PTRS_VALID   0x0002
+#define TO_VALID            0x0004
+#define TO_ESC_NOT_ORIENT   0x0008
+#define TO_PWSZ_ALLOCATED   0x0010
+#define TSIM_UNDERLINE1     0x0020
+#define TSIM_UNDERLINE2     0x0040
+#define TSIM_STRIKEOUT      0x0080
+#define TO_HIGHRESTEXT      0x0100
+#define TO_BITMAPS          0x0200
+#define TO_PARTITION_INIT   0x0400
+#define TO_ALLOC_FACENAME   0x0800
+#define TO_SYS_PARTITION    0x1000
+//
+// Extended STROBJ
+// 
+typedef struct _STRGDI
+{
+  STROBJ    StrObj; // Text string object header.
+  FLONG     flTO;
+  INT       cgposCopied;
+  INT       cgposPositionsEnumerated;
+  PVOID     prfo;  // PRFONT -> PFONTGDI
+  PGLYPHPOS pgpos;
+  POINTFIX  ptfxRef;
+  POINTFIX  ptfxUpdate;
+  POINTFIX  ptfxEscapement;
+  RECTFX    rcfx;
+  FIX       fxExtent;
+  FIX       fxExtra;
+  FIX       fxBreakExtra;
+  DWORD     dwCodePage;
+  INT       cExtraRects;
+  RECTL     arclExtra[3];
+  RECTL     rclBackGroundSave;
+  PWCHAR    pwcPartition;
+  PLONG     plPartition;
+  PLONG     plNext;
+  PGLYPHPOS pgpNext;
+  LONG      lCurrentFont;
+  POINTL    ptlBaseLineAdjust;
+  INT       cTTSysGlyphs;
+  INT       cSysGlyphs;
+  INT       cDefGlyphs;
+  INT       cNumFaceNameGlyphs;
+  PVOID     pacFaceNameGlyphs;
+  ULONG     acFaceNameGlyphs[8];    
+} STRGDI, *PSTRGDI;
 
 /* GDI logical font object */
 typedef struct
 {
-//   HGDIOBJ     hHmgr;
-//   PVOID       pvEntry;
-//   ULONG       lucExcLock;
-//   ULONG       Tid;
-
    ENUMLOGFONTEXDVW logfont;  //LOGFONTW   logfont;
    FONTOBJ    *Font;
    BOOLEAN Initialized; /* Don't reinitialize for each DC */
