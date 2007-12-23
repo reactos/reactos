@@ -25,7 +25,7 @@ EDITMENU MENU LOADONCALL MOVEABLE DISCARDABLE
 {
   POPUP "DUMMY"
   BEGIN
-    MENUITEM "&Desacer", EM_UNDO
+    MENUITEM "&Deshacer", EM_UNDO
     MENUITEM SEPARATOR
     MENUITEM "Cor&tar", WM_CUT
     MENUITEM "&Copiar", WM_COPY
@@ -59,12 +59,12 @@ STRINGTABLE
   IDS_OK,       "Acceptar"
   IDS_CANCEL,   "Cancelar"
   IDS_ABORT,    "&Abortar"
-  IDS_RETRY,    "&Retratar"
+  IDS_RETRY,    "&Reintentar"
   IDS_IGNORE,   "&Ignorar"
   IDS_YES,      "&Si"
   IDS_NO,       "&No"
   IDS_HELP,     "Ayuda"
-  IDS_TRYAGAIN, "&Tratar Otravez"
+  IDS_TRYAGAIN, "In&tentar Otra vez"
   IDS_CONTINUE, "&Continuar"
 }
 
@@ -72,4 +72,5 @@ STRINGTABLE
 {
   IDS_MDI_MOREWINDOWS, "&Más Ventanas..."
 }
+
 

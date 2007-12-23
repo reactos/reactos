@@ -2,43 +2,43 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_VOLUME DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Volume"
+CAPTION "Volumen"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_CPLICON, IDI_CPLICON, 8,5,32,32
     LTEXT "",IDC_DEVICE_NAME,40,10,194,36
-    GROUPBOX "Device volume", -1, 7,30,230,100
+    GROUPBOX "Volumen del dispositivo", -1, 7,30,230,100
     ICON IDI_CPLICON, IDI_CPLICON, 17,45,32,32
     CONTROL "",IDC_VOLUME_TRACKBAR, "msctls_trackbar32", TBS_AUTOTICKS | TBS_ENABLESELRANGE | TBS_BOTTOM | TBS_HORZ | WS_TABSTOP, 65, 45, 140, 14
-    LTEXT "Low",-1,62,66,30,17
-    LTEXT "High",-1,195,66,30,17
-    CHECKBOX "&Mute", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
-    CHECKBOX "Place volume &icon in the taskbar", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "Ad&vanced...", -1, 150,105,75,15
-    GROUPBOX "Speaker settings", -1, 7,140,230,80
+    LTEXT "Bajo",-1,62,66,30,17
+    LTEXT "Alto",-1,195,66,30,17
+    CHECKBOX "&Silencio", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
+    CHECKBOX "Colocar un icono de volumen en la &barra de tareas", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
+    PUSHBUTTON "Propiedades avan&zadas...", -1, 150,105,75,15
+    GROUPBOX "Configuración del altavoz", -1, 7,140,230,80
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 160, 70, 70
-    LTEXT "Use the settings below to change individual speaker volume and other settings.",-1,70,155,150,36
-    PUSHBUTTON "&Speaker Volume...", -1, 70,195,75,15
-    PUSHBUTTON "A&dvanced...", -1, 150,195,75,15
+    LTEXT "Utilice esta configuración para cambiar el volumen del altavoz y otras configuraciones.",-1,70,155,150,36
+    PUSHBUTTON "Vol&umen de altavoz...", -1, 70,195,75,15
+    PUSHBUTTON "Propiedades &avanzadas...", -1, 150,195,75,15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Sounds"
+CAPTION "Sonidos"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "A sound scheme is a set of sounds applied to events to in ReactOS and programs. You can select an existing scheme or save one you have modified.",-1,8,7,230,40
-    LTEXT "Sound s&cheme:",-1,8,42,150,17
+    LTEXT "Una combinación de sonidos es un conjunto de sonidos asociados a sucesos en ReactOS y en los programas. Puede seleccionar una combinación existente o guardar una que haya modificado.",-1,8,7,230,40
+    LTEXT "&Combinación de sonidos:",-1,8,42,150,17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Sav&e As...", -1, 134,70,50,15
-    PUSHBUTTON "&Delete", -1, 188,70,50,15
-    LTEXT "To change sounds, click a program event in the following list and then select a sound to apply. You can save the changes as a new sound scheme.",-1,8,90,230,40
-    LTEXT "&Pogram events:",-1,8,118,150,17
+    PUSHBUTTON "G&uardar como...", -1, 134,70,50,15
+    PUSHBUTTON "&Eliminar", -1, 188,70,50,15
+    LTEXT "Para cambiar los sonidos, haga clic en un suceso de la siguiente lista y elija un sonido que desea utilizar. Puede guardar los cambios como una combinación nueva de sonidos.",-1,8,90,230,40
+    LTEXT "&Sucesos de programa:",-1,8,118,150,17
     CONTROL "", IDC_SCHEME_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 8, 130, 230, 60, WS_EX_CLIENTEDGE
-    LTEXT "&Sounds:",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
+    LTEXT "S&onidos:",IDC_TEXT_SOUND,8,194,80,17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_DISABLENOSCROLL | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
     PUSHBUTTON "", IDC_PLAY_SOUND, 168,205,15,15, WS_DISABLED
-    PUSHBUTTON "&Brouse...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
+    PUSHBUTTON "E&xaminar...", IDC_BROWSE_SOUND, 188,205,50,15, WS_DISABLED
 END
 
 IDD_AUDIO DIALOGEX 0, 0, 246, 228
@@ -46,46 +46,46 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Audio"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Sound playback", -1, 7,7,230,60
+    GROUPBOX "Reproducción de sonido", -1, 7,7,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,20,32,32
-    LTEXT "&Default device:",-1,50,20,80,17
+    LTEXT "Dispositivo p&redeterminado:",-1,50,20,80,17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", -1, 85,47,70,15
-    PUSHBUTTON "Adva&nced...", -1, 160,47,70,15
-    GROUPBOX "Sound recording", -1, 7,75,230,60
+    PUSHBUTTON "&Volumen...", -1, 85,47,70,15
+    PUSHBUTTON "Opciones avan&zadas...", -1, 160,47,70,15
+    GROUPBOX "Grabación de sonido", -1, 7,75,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,88,32,32
-    LTEXT "D&efault device:",-1,50,88,80,17
+    LTEXT "Dispositivo pre&determinado:",-1,50,88,80,17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", -1, 85,115,70,15
-    PUSHBUTTON "Advan&ced...", -1, 160,115,70,15
-    GROUPBOX "MIDI music playback", -1, 7,145,230,60
+    PUSHBUTTON "V&olumen...", -1, 85,115,70,15
+    PUSHBUTTON "Opcione&s avanzadas...", -1, 160,115,70,15
+    GROUPBOX "Reproducción de música MIDI", -1, 7,145,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,158,32,32
-    LTEXT "De&fault device:",-1,50,158,80,17
+    LTEXT "Dispositivo prede&terminado:",-1,50,158,80,17
     COMBOBOX IDC_DEVICE_MIDI_LIST, 50, 168, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "Volu&me...", -1, 85,185,70,15
-    PUSHBUTTON "A&bout...", -1, 160,185,70,15
-    CHECKBOX "&Use only default devices", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
+    PUSHBUTTON "Volu&men...", -1, 85,185,70,15
+    PUSHBUTTON "&Acerca de...", -1, 160,185,70,15
+    CHECKBOX "&Usar sólo dispositivos predeterminados", IDC_DEFAULT_DEV_CHECKBOX, 7, 212, 140, 10
 END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Voice"
+CAPTION "Voz"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "These settings control volume and advanced options for the voice playback or recording device you selected.",-1,8,7,230,40
-    GROUPBOX "Voice playback", -1, 7,37,230,60
+    LTEXT "Esta configuración controla el volumen y las opciones avanzadas del dispositivo de reproducción de voz o del dispositivo de grabación de voz seleccionados.",-1,8,7,230,40
+    GROUPBOX "Reproducción de voz", -1, 7,37,230,60
     ICON IDI_CPLICON, IDI_CPLICON, 15,50,32,32
-    LTEXT "&Default device:",-1,50,50,80,17
+    LTEXT "&Dispositivo predeterminado:",-1,50,50,80,17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "&Volume...", -1, 85,77,70,15
-    PUSHBUTTON "Adva&nced...", -1, 160,77,70,15
-    GROUPBOX "Voice recording", -1, 7,105,230,60
+    PUSHBUTTON "&Volumen...", -1, 85,77,70,15
+    PUSHBUTTON "Opciones &avanzadas...", -1, 160,77,70,15
+    GROUPBOX "Grabación de voz", -1, 7,105,230,60
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15,118,32,32
-    LTEXT "D&efault device:",-1,50,118,80,17
+    LTEXT "Dispositivo predet&erminado:",-1,50,118,80,17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST
-    PUSHBUTTON "V&olume...", -1, 85,145,70,15
-    PUSHBUTTON "Advan&ced...", -1, 160,145,70,15
-    PUSHBUTTON "&Test hardware...", -1, 160,175,70,15
+    PUSHBUTTON "Vol&umen...", -1, 85,145,70,15
+    PUSHBUTTON "&Opciones avanzadas...", -1, 160,145,70,15
+    PUSHBUTTON "&Prueba de hardware...", -1, 160,175,70,15
 END
 
 IDD_HARDWARE DIALOGEX 0, 0, 246, 228
@@ -97,9 +97,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Dispositivos de Audio y Sonido"
-    IDS_CPLDESCRIPTION "Cambia el esquema de sonidos de su computadora, o configura las propiedades de sus bocinas y dispositivos de grabación."
+    IDS_CPLNAME "Dispositivos de sonido y audio"
+    IDS_CPLDESCRIPTION "Cambie la combinación de sonidos para el equipo, o configure los parámetros para sus altavoces y dispositivos de grabación."
     IDS_NO_SOUND "(None)"
 END
+
 
 
