@@ -826,10 +826,6 @@ InstallReactOS(HINSTANCE hInstance)
     InitializeSetupActionLog(FALSE);
     LogItem(SYSSETUP_SEVERITY_INFORMATION, L"Installing ReactOS");
 
-    /* Set user langage to the system language */
-    SetUserDefaultLCID(GetSystemDefaultLCID());
-    SetThreadLocale(GetSystemDefaultLCID());
-
     if (!InitializeProfiles())
     {
         DebugPrint("InitializeProfiles() failed");
