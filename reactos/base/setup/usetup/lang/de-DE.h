@@ -36,13 +36,13 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
     {
         8,
         19,
-        "\x07  Druecken Sie L, um die Lizenzabkommen von ReactOS zu lesen",
+        "\x07  Druecken Sie L, um die Lizenzabkommen von ReactOS zu lesen.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Druecken Sie F3, um das Setup zu beenden ohne ReactOS zu installieren.",
+        "\x07  Druecken Sie F3, um das Setup zu beenden.",
         TEXT_NORMAL
     },
     {
@@ -438,7 +438,7 @@ static MUI_ENTRY deDEComputerPageEntries[] =
     {
         8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste um den gewuenschten",
+        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
         TEXT_NORMAL
     },
     {
@@ -557,7 +557,7 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
     },
     {   8,
         10,
-        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste um den gewuenschten",
+        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
          TEXT_NORMAL
     },
     {
@@ -637,7 +637,7 @@ static MUI_ENTRY deDEBootPageEntries[] =
     {
         6,
         8,
-        "Das Setup kann das Betriebssystem-Ladeprogramm nicht auf der",
+        "Das Setup kann das Boot-Sektor nicht auf der",
         TEXT_NORMAL
     },
     {
@@ -690,25 +690,25 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
     {
         8,
         11,
-        "\x07  Druecken Sie die Pfeiltasten um eine Partition auszuwaehlen.",
+        "\x07  Druecken Sie die Pfeiltasten, um eine Partition auszuwaehlen.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie die Eingabetaste um die Auswahl zu bestaetigen.",
+        "\x07  Druecken Sie die Eingabetaste, um die Auswahl zu bestaetigen.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Druecken Sie C um eine neue Partition zu erstellen.",
+        "\x07  Druecken Sie C, um eine neue Partition zu erstellen.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Druecken Sie D um eine vorhandene Partition zu loeschen.",
+        "\x07  Druecken Sie D, um eine vorhandene Partition zu loeschen.",
         TEXT_NORMAL
     },
     {
@@ -742,7 +742,7 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     {
         6,
         11,
-        "Druecken Sie die Eingabetaste um fortzufahren.",
+        "Druecken Sie die Eingabetaste, um fortzufahren.",
         TEXT_NORMAL
     },
     {
@@ -764,25 +764,25 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
     {
         6,
         8,
-        "Setup installiert die ReactOS Installationsdateien in die ausgewaehlte ",
+        "Setup installiert die ReactOS Installationsdateien in die ausgewaehlte",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "Partition. Waehlen Sie ein Installationsverzeichniss fuer ReactOS:",
+        "Partition. Waehlen Sie ein Installationsverzeichnis fuer ReactOS:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "Um den Vorschlag zu aendern druecken sie die 'Delete' Taste um",
+        "Um den Vorschlag zu aendern druecken sie die 'Entf' Taste um",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "Zeichen zu loeschen und gegeben sie dann den Namen des Verzeichniss ein",
+        "Zeichen zu loeschen und gegeben sie dann den Namen des Verzeichnis ein",
         TEXT_NORMAL
     },
     {
@@ -808,13 +808,13 @@ static MUI_ENTRY deDEFileCopyEntries[] =
         TEXT_NORMAL
     },
     {
-        30,
+        11,
         13,
-        "in das Installationsverzeichniss kopiert.",
+        "in das Installationsverzeichnis kopiert.",
         TEXT_NORMAL
     },
     {
-        20,
+        11,
         14,
         "Dieser Vorgang kann mehrere Minuten in Anspruch nehmen.",
         TEXT_NORMAL
@@ -838,25 +838,25 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     {
         6,
         8,
-        "Setup installiert nun das Betriebssystem-Ladeprogramm.",
+        "Setup installiert nun den Boot-Sektor.",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Betriebssystem-Ladeprogramm im MBR installieren",
+        "Boot-Sektor im MBR installieren.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Betriebssystem-Ladeprogramm auf einer Diskette installieren",
+        "Boot-Sektor auf einer Diskette installieren.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Betriebssystem-Ladeprogramm nicht installieren",
+        "Boot-Sektor nicht installieren.",
         TEXT_NORMAL
     },
     {
@@ -878,25 +878,31 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
     {
         6,
         8,
-        "Sie moechten den Tastaturtyp aendern.",
+        "Sie wollen den Tastaturtyp aendern, der installiert wird.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Druecken Sie die Pfeiltasten um den gewuenschten Typ zu waehlen.",
+        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Druecken Sie zum Bestaetigen die Eingabetaste.",
+        "   Typ zu waehlen. Dann druecken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC Taste um die Aenderungen zu verwerfen.",
+        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren,",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        14,
+        "   ohne den Tastaturtyp zu aendern.",
         TEXT_NORMAL
     },
     {
@@ -918,31 +924,31 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
     {
         6,
         8,
-        "Sie moechten das Tastaturlayout aendern.",
+        "Sie wollen das Tastaturlayout aendern, der installiert wird.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Druecken Sie die Pfeiltasten um das gewuenschte Layout auszuwaehlen.",
+        "\x07  Druecken Sie die HOCH- oder RUNTER-Taste, um den gewuenschten",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Druecken Sie zum Bestaetigen die Eingabetaste.",
+        "   Typ zu waehlen. Dann druecken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Druecken Sie ESC um die Auswahl zu beenden und zur vorherigen ",
+        "\x07  Druecken Sie ESC, um zur vorherigen Seite zurueckzukehren,",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   Setupseite zurueckzukehren.",
+        "   ohne das Tastaturlayout zu aendern.",
         TEXT_NORMAL
     },
     {
@@ -994,19 +1000,19 @@ static MUI_ENTRY deDESelectFSEntries[] =
     {
         8,
         19,
-        "\x07  Druecken Sie die Pfeiltasten um das Dateisystem zu aendern.",
+        "\x07  Druecken Sie die Pfeiltasten, um das Dateisystem zu aendern.",
         0
     },
     {
         8,
         21,
-        "\x07  Druecken Sie die Eingabetaste um die Partition zu formatieren.",
+        "\x07  Druecken Sie die Eingabetaste, um die Partition zu formatieren.",
         0
     },
     {
         8,
         23,
-        "\x07  Druecken Sie ESC um eine andere Partition auszuwaehlen.",
+        "\x07  Druecken Sie ESC, um eine andere Partition auszuwaehlen.",
         0
     },
     {
@@ -1035,7 +1041,7 @@ static MUI_ENTRY deDEDeletePartitionEntries[] =
     {
         8,
         18,
-        "\x07  Druecken Sie D um die Partition zu loeschen.",
+        "\x07  Druecken Sie D, um die Partition zu loeschen.",
         TEXT_NORMAL
     },
     {
@@ -1139,8 +1145,8 @@ MUI_ERROR deDEErrorEntries[] =
 		  "\n"
 		  "Partitionen zu erstellen/loeschen kann die Partitionstabelle zerstoeren.\n"
 		  "\n"
-		  "  \x07  Druecken Sie F3 um das Setup zu beenden."
-		  "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.",
+		  "  \x07  Druecken Sie F3, um das Setup zu beenden."
+		  "  \x07  Druecken Sie ENTER, um das Setup Fortzusetzen.",
           "F3 = Beenden  ENTER = Fortsetzen"
     },
     {
@@ -1210,7 +1216,7 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet hat kein Setup Skript.\n",
+        "Cabinet enthält kein Setup Skript.\n",
         "ENTER = Computer neustarten"
     },
     {
