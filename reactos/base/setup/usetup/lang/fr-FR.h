@@ -490,7 +490,7 @@ static MUI_ENTRY frFRFlushPageEntries[] =
     {
         10,
         6,
-        "Le systeme s'assure quer toutes les donnees sont ecrites sur le disque",
+        "Le systeme s'assure que toutes les donnees sont ecrites sur le disque",
         TEXT_NORMAL
     },
     {
