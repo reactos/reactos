@@ -337,6 +337,11 @@ NtSetDebugFilterState(IN ULONG ComponentId,
 		KdComponentTable[i].ComponentId = ComponentId;
 		KdComponentTable[i].Level = 0;
 	}
+
+    /* Convert level to mask, if needed */
+    if (Level < 32)
+        Level = 1 << Level;
+
 	if ( State )
 		KdComponentTable[i].Level |= Level;
 	else
