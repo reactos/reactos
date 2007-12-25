@@ -15,31 +15,25 @@
 
 	<property name="NTOSKRNL_SHARED" value="-Wl,--file-alignment,0x1000 -Wl,--section-alignment,0x1000 -nostartfiles -shared"/>
 
-	<if property="GDB" value="0">
-		<if property="OPTIMIZE" value="1">
-				<compilerflag>-Os</compilerflag>
-				<compilerflag>-ftracer</compilerflag>
-				<compilerflag>-momit-leaf-frame-pointer</compilerflag>
-				<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-		</if>
-		<if property="OPTIMIZE" value="2">
-				<compilerflag>-Os</compilerflag>
-				<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-		</if>
-		<if property="OPTIMIZE" value="3">
-				<compilerflag>-O1</compilerflag>
-				<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-		</if>
-		<if property="OPTIMIZE" value="4">
-				<compilerflag>-O2</compilerflag>
-				<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-		</if>
-		<if property="OPTIMIZE" value="5">
-				<compilerflag>-O3</compilerflag>
-				<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
-		</if>
+	<if property="OPTIMIZE" value="1">
+		<compilerflag>-Os</compilerflag>
+		<compilerflag>-ftracer</compilerflag>
+		<compilerflag>-momit-leaf-frame-pointer</compilerflag>
+	</if>
+	<if property="OPTIMIZE" value="2">
+		<compilerflag>-Os</compilerflag>
+	</if>
+	<if property="OPTIMIZE" value="3">
+		<compilerflag>-O1</compilerflag>
+	</if>
+	<if property="OPTIMIZE" value="4">
+		<compilerflag>-O2</compilerflag>
+	</if>
+	<if property="OPTIMIZE" value="5">
+		<compilerflag>-O3</compilerflag>
 	</if>
 
+	<compilerflag>-mpreferred-stack-boundary=2</compilerflag>
 	<compilerflag>-Wno-strict-aliasing</compilerflag>
 	<compilerflag>-Wpointer-arith</compilerflag>
 	<linkerflag>-enable-stdcall-fixup</linkerflag>
