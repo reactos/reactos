@@ -187,7 +187,7 @@ CmpLazyFlushWorker(IN PVOID Parameter)
     }
     
     /* Flush the next hive */
-    MoreWork = CmpDoFlushNextHive(ForceFlush, &Result, &DirtyCount);     
+    MoreWork = CmpDoFlushNextHive(ForceFlush, &Result, &DirtyCount);
     if (!MoreWork)
     {
         /* We're done */
@@ -232,7 +232,7 @@ CmpCmdInit(IN BOOLEAN SetupBoot)
     KeSetTimer(&CmpEnableLazyFlushTimer, DueTime, &CmpEnableLazyFlushDpc);
 
     /* Setup flush variables */
-    CmpNoWrite = CmpMiniNTBoot;    
+    CmpNoWrite = CmpMiniNTBoot;
     CmpWasSetupBoot = SetupBoot;
     
     /* Testing: Force Lazy Flushing */
@@ -260,7 +260,7 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
                                  0,
                                  NewHive,
                                  Allocate,
-								 CheckFlags);
+                                 CheckFlags);
     if (((Status == STATUS_ACCESS_DENIED) ||
          (Status == STATUS_NO_SUCH_USER) ||
          (Status == STATUS_WRONG_PASSWORD) ||
@@ -278,8 +278,8 @@ CmpCmdHiveOpen(IN POBJECT_ATTRIBUTES FileAttributes,
                                          0,
                                          NewHive,
                                          Allocate,
-										 CheckFlags);
-            
+                                         CheckFlags);
+
             /* Restore impersonation token */
             PsRevertToSelf();
         }

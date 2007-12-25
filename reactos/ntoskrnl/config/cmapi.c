@@ -38,9 +38,15 @@ CmpDoFlushAll(IN BOOLEAN ForceFlush)
         Hive = CONTAINING_RECORD(NextEntry, CMHIVE, HiveList);
         if (!(Hive->Hive.HiveFlags & HIVE_NOLAZYFLUSH))
         {
+            /* Acquire the flusher lock */
+            ExAcquirePushLockExclusive((PVOID)&Hive->FlusherLock);
+
             /* Do the sync */
             Status = HvSyncHive(&Hive->Hive);
             if (!NT_SUCCESS(Status)) Result = FALSE;
+
+            /* Release the flusher lock */
+            ExReleasePushLock((PVOID)&Hive->FlusherLock);
         }
 
         /* Try the next entry */

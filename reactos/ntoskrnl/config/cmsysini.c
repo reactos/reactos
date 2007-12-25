@@ -30,6 +30,8 @@ BOOLEAN CmpNoWrite;
 BOOLEAN CmpForceForceFlush;
 BOOLEAN CmpWasSetupBoot;
 
+extern BOOLEAN CmFirstTime;
+
 /* FUNCTIONS *****************************************************************/
 
 VOID
@@ -1637,7 +1639,7 @@ CmpReleaseTwoKcbLockByKey(IN ULONG ConvKey1,
         {
             ASSERT((GET_HASH_ENTRY(CmpCacheTable, ConvKey1).Owner == KeGetCurrentThread()) ||
                    (CmpTestRegistryLockExclusive()));
-            CmpReleaseKcbLockByKey(ConvKey1);        
+            CmpReleaseKcbLockByKey(ConvKey1);
         }
         CmpReleaseKcbLockByKey(ConvKey2);
     }
@@ -1647,7 +1649,7 @@ VOID
 NTAPI
 CmShutdownSystem(VOID)
 {
-    /* Kill the workers and fush all hives */
-    CmpShutdownWorkers();
+    /* Kill the workers and flush all hives */
+    if (!CmFirstTime) CmpShutdownWorkers();
     CmpDoFlushAll(TRUE);
 }
