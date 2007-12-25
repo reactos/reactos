@@ -70,10 +70,11 @@ UpdateGroupsList(HWND hwndListView)
         for (i = 0; i < entriesread; i++)
         {
            memset(&lvi, 0x00, sizeof(lvi));
-           lvi.mask = LVIF_TEXT | LVIF_STATE; // | LVIF_PARAM;
+           lvi.mask = LVIF_TEXT | LVIF_STATE | LVIF_IMAGE; // | LVIF_PARAM;
 //           lvi.lParam = (LPARAM)VarData;
            lvi.pszText = pBuffer[i].lgrpi1_name;
            lvi.state = 0; //(i == 0) ? LVIS_SELECTED : 0;
+           lvi.iImage = 0;
            iItem = ListView_InsertItem(hwndListView, &lvi);
 
            ListView_SetItemText(hwndListView, iItem, 1,
@@ -94,8 +95,18 @@ static VOID
 OnInitDialog(HWND hwndDlg)
 {
     HWND hwndListView;
+    HIMAGELIST hImgList;
+    HICON hIcon;
+
+    /* Create the image list */
+    hImgList = ImageList_Create(16,16,ILC_COLOR8 | ILC_MASK,5,5);
+    hIcon = LoadImage(hApplet,MAKEINTRESOURCE(IDI_GROUP),IMAGE_ICON,16,16,LR_DEFAULTCOLOR);
+    Index[0] = ImageList_AddIcon(hImgList,hIcon);
+    DestroyIcon(hIcon);
 
     hwndListView = GetDlgItem(hwndDlg, IDC_GROUPS_LIST);
+
+    (VOID)ListView_SetImageList(hwndListView, hImgList, LVSIL_SMALL);
 
     (void)ListView_SetExtendedListViewStyle(hwndListView, LVS_EX_FULLROWSELECT);
 
