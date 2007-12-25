@@ -26,10 +26,10 @@
 
 TCHAR m_Text[MAX_PATH];
 
-void LoadSettings()
+VOID LoadSettings(VOID)
 {
 	HKEY hkey;
-	DWORD len = MAX_PATH * sizeof(WCHAR);
+	DWORD len = MAX_PATH * sizeof(TCHAR);
 
 	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_READ, NULL, &hkey, NULL);
@@ -42,14 +42,14 @@ void LoadSettings()
 	RegCloseKey(hkey);
 }
 
-void SaveSettings()
+VOID SaveSettings(VOID)
 {
 	HKEY hkey;
 
 	RegCreateKeyEx(HKEY_CURRENT_USER, _T("Software\\Microsoft\\ScreenSavers\\Text3D"), 0,
 		_T(""), 0, KEY_WRITE, NULL, &hkey, NULL);
 
-	RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(WCHAR));
+	RegSetValueEx(hkey, _T("DisplayString"), 0, REG_SZ, (LPBYTE)m_Text, (_tcslen(m_Text) + 1) * sizeof(TCHAR));
 
 	RegCloseKey(hkey);
 }

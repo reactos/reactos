@@ -22,5 +22,5 @@
 
 TCHAR m_Text[MAX_PATH];
 
-void LoadSettings();
-void SaveSettings();
+VOID LoadSettings(VOID);
+VOID SaveSettings(VOID);
