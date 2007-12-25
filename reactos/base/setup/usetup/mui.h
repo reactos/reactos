@@ -34,11 +34,6 @@ typedef struct
 #define TEXT_ALIGN_CENTER      8
 
 VOID
-MUIDisplayPage(ULONG PageNumber);
-
-BOOLEAN
-//MUISelectLanguage(ULONG LanguageIndex);
-MUISelectLanguage(PWCHAR LanguageID);
-
+MUIDisplayPage (ULONG PageNumber);
 
 #endif

@@ -6,7 +6,25 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
     {
         6,
         8,
-        "Select your language:",
+        "Language Selection.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Please choose the language used for the installation process.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  This Language will be the default language for the final system.",
         TEXT_NORMAL
     },
     {

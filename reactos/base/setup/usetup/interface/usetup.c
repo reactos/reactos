@@ -44,6 +44,7 @@ LONG UnattendMBRInstallType = -1;
 LONG UnattendFormatPartition = 0;
 LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
+PWCHAR SelectedLanguageId;
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
 
@@ -571,11 +572,19 @@ LanguagePage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
+#if 0 //Dinamically update user interface
+      SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+      MUIDisplayPage(LANGUAGE_PAGE);
+#endif
 	  ScrollDownGenericList (LanguageList);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_UP)) /* UP */
 	{
+#if 0
+      SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+      MUIDisplayPage(LANGUAGE_PAGE);
+#endif
 	  ScrollUpGenericList (LanguageList);
 	}
       else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
@@ -586,7 +595,7 @@ LanguagePage(PINPUT_RECORD Ir)
 	}
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
-      MUISelectLanguage((PWCHAR)LanguageList->CurrentEntry->UserData);
+      SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
 	  return INTRO_PAGE;
 	}
     }

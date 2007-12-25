@@ -1,6 +1,46 @@
 #ifndef LANG_FR_FR_H__
 #define LANG_FR_FR_H__
 
+static MUI_ENTRY frFRLanguagePageEntries[] =
+{
+    {
+        6,
+        8,
+        "Language Selection.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Please choose the language used for the installation process.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  This Language will be the default language for the final system.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue  F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY frFRWelcomePageEntries[] =
 {
     {
@@ -1280,7 +1320,7 @@ MUI_PAGE frFRPages[] =
 {
     {
         LANGUAGE_PAGE,
-        LanguagePageEntries
+        frFRLanguagePageEntries
     },
     {
        START_PAGE,

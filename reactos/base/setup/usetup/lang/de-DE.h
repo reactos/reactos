@@ -1,6 +1,46 @@
 #ifndef LANG_DE_DE_H__
 #define LANG_DE_DE_H__
 
+static MUI_ENTRY deDELanguagePageEntries[] =
+{
+    {
+        6,
+        8,
+        "Language Selection.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Please choose the language used for the installation process.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  This Language will be the default language for the final system.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue  F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY deDEWelcomePageEntries[] =
 {
     {
@@ -1266,6 +1306,10 @@ MUI_ERROR deDEErrorEntries[] =
 
 MUI_PAGE deDEPages[] =
 {
+    {
+        LANGUAGE_PAGE,
+        deDELanguagePageEntries
+    },
     {
         START_PAGE,
         deDEWelcomePageEntries

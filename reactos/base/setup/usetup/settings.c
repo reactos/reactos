@@ -674,6 +674,8 @@ CreateLanguageList(HINF InfFile)
      return NULL; 
 
     wcscpy(DefaultLanguage, KeyValue); 
+    
+    SelectedLanguageId = KeyValue;
 
     List = CreateGenericList(); 
     if (List == NULL) 

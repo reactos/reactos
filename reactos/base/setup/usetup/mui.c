@@ -38,9 +38,6 @@
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
 
-/* The current selected language , by default en-us for now */
-static PWCHAR SelectedLanguageId = L"00000409";
-
 static MUI_LANGUAGE LanguageList[] =
 {
     {
@@ -111,16 +108,6 @@ PopupError(PCHAR Text,
 	   PINPUT_RECORD Ir,
 	   ULONG WaitEvent);
 
-BOOLEAN
-MUISelectLanguage(PWCHAR LanguageID)
-{
-    if (LanguageID == NULL)
-        return FALSE;
-
-    SelectedLanguageId = LanguageID;
-    return TRUE;
-}
-
 static
 MUI_ENTRY *
 FindMUIEntriesOfPage (ULONG PageNumber)
@@ -188,8 +175,8 @@ MUIDisplayPage(ULONG page)
                 CONSOLE_SetUnderlinedTextXY(entry[index].X, entry[index].Y, entry[index].Buffer);
                 break;
             case TEXT_STATUS:
-                  CONSOLE_SetStatusText(entry[index].Buffer);
-                  break;
+                CONSOLE_SetStatusText(entry[index].Buffer);
+                break;
             default:
                 break;
         }

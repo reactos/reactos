@@ -79,6 +79,7 @@ extern UNICODE_STRING SourceRootPath;
 extern UNICODE_STRING SourceRootDir;
 extern UNICODE_STRING SourcePath;
 extern BOOLEAN IsUnattendedSetup;
+extern PWCHAR SelectedLanguageId;
 
 typedef enum _PAGE_NUMBER
 {

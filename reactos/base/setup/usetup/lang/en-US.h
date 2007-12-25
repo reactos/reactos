@@ -1,13 +1,12 @@
 #ifndef LANG_EN_US_H__
 #define LANG_EN_US_H__
 
-// do not translate these
-static MUI_ENTRY LanguagePageEntries[] =
+static MUI_ENTRY enUSLanguagePageEntries[] =
 {
     {
         6,
         8,
-        "Language Selection.",
+        "Language Selection",
         TEXT_NORMAL
     },
     {
@@ -1308,7 +1307,7 @@ MUI_PAGE enUSPages[] =
 {
     {
         LANGUAGE_PAGE,
-        LanguagePageEntries
+        enUSLanguagePageEntries
     },
     {
        START_PAGE,

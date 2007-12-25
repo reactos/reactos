@@ -1,6 +1,46 @@
 #ifndef LANG_EL_GR_H__
 #define LANG_EL_GR_H__
 
+static MUI_ENTRY elGRLanguagePageEntries[] =
+{
+    {
+        6,
+        8,
+        "Language Selection.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Please choose the language used for the installation process.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  This Language will be the default language for the final system.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue  F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY elGRWelcomePageEntries[] =
 {
     {
@@ -1268,7 +1308,7 @@ MUI_PAGE elGRPages[] =
 {
     {
         LANGUAGE_PAGE,
-        LanguagePageEntries
+        elGRLanguagePageEntries
     },
     {
        START_PAGE,

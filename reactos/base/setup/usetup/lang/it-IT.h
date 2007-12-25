@@ -1,6 +1,46 @@
 #ifndef LANG_IT_IT_H__
 #define LANG_IT_IT_H__
 
+static MUI_ENTRY itITLanguagePageEntries[] =
+{
+    {
+        6,
+        8,
+        "Language Selection.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        10,
+        "\x07  Please choose the language used for the installation process.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        11,
+        "   Then press ENTER.",
+        TEXT_NORMAL
+    },
+    {
+        8,
+        13,
+        "\x07  This Language will be the default language for the final system.",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   ENTER = Continue  F3 = Quit",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY itITWelcomePageEntries[] =
 {
     {
@@ -1267,7 +1307,7 @@ MUI_PAGE itITPages[] =
 {
     {
         LANGUAGE_PAGE,
-        LanguagePageEntries
+        itITLanguagePageEntries
     },
     {
        START_PAGE,
