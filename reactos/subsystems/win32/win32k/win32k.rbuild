@@ -64,6 +64,7 @@
 		<file>perfcnt.c</file>
 		<file>semaphor.c</file>
 		<file>sort.c</file>
+		<file>string.c</file>
 		<file>surface.c</file>
 		<file>transblt.c</file>
 		<file>engwindow.c</file>

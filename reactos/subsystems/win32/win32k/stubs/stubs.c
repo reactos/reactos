@@ -739,36 +739,6 @@ PATHOBJ_vGetBounds(
 
 BOOL
 APIENTRY
-STROBJ_bEnum(
-	IN STROBJ  *pstro,
-	OUT ULONG  *pc,
-	OUT PGLYPHPOS  *ppgpos
-	)
-{
-  // www.osr.com/ddk/graphics/gdifncs_65uv.htm
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-DWORD
-APIENTRY
-STROBJ_dwGetCodePage ( IN STROBJ *pstro )
-{
-  // www.osr.com/ddk/graphics/gdifncs_9jmv.htm
-  UNIMPLEMENTED;
-  return 0;
-}
-
-VOID
-APIENTRY
-STROBJ_vEnumStart ( IN STROBJ *pstro )
-{
-  // www.osr.com/ddk/graphics/gdifncs_32uf.htm
-  UNIMPLEMENTED;
-}
-
-BOOL
-APIENTRY
 XFORMOBJ_bApplyXform(
 	IN XFORMOBJ  *pxo,
 	IN ULONG  iMode,
@@ -1082,55 +1052,6 @@ HT_Get8BPPMaskPalette(
 {
    UNIMPLEMENTED;
    return 0;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-STROBJ_bEnumPositionsOnly(
-   IN STROBJ *StringObj,
-   OUT ULONG *Count,
-   OUT PGLYPHPOS *Pos)
-{
-   UNIMPLEMENTED;
-   return (BOOL) DDI_ERROR;
-}
-
-/*
- * @unimplemented
- */
-BOOL APIENTRY
-STROBJ_bGetAdvanceWidths(
-   IN STROBJ *StringObj,
-   IN ULONG First,
-   IN ULONG Count,
-   OUT POINTQF *Widths)
-{
-   UNIMPLEMENTED;
-   return FALSE;
-}
-
-/*
- * @unimplemented
- */
-FIX APIENTRY
-STROBJ_fxBreakExtra(
-   IN STROBJ *StringObj)
-{
-   UNIMPLEMENTED;
-   return (FIX) 0;
-}
-
-/*
- * @unimplemented
- */
-FIX APIENTRY
-STROBJ_fxCharacterExtra(
-   IN STROBJ *StringObj)
-{
-   UNIMPLEMENTED;
-   return (FIX) 0;
 }
 
 /*
