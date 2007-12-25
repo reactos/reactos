@@ -119,10 +119,12 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     if (!Hive->ViewLock) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Allocate the flush lock */
+#if 0
     Hive->FlusherLock = ExAllocatePoolWithTag(NonPagedPool,
                                               sizeof(ERESOURCE),
                                               TAG_CM);
     if (!Hive->FlusherLock) return STATUS_INSUFFICIENT_RESOURCES;
+#endif
 
     /* Setup the handles */
     Hive->FileHandles[HFILE_TYPE_PRIMARY] = Primary;
@@ -134,7 +136,7 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     Hive->ViewLockOwner = NULL;
 
     /* Initialize the flush lock */
-    ExInitializeResourceLite(Hive->FlusherLock);
+    ExInitializePushLock((PULONG_PTR)&Hive->FlusherLock);
 
     /* Setup hive locks */
     ExInitializePushLock((PULONG_PTR)&Hive->HiveLock);
@@ -187,7 +189,9 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
     {
         /* Clear allocations and fail */
         ExFreePool(Hive->ViewLock);
+#if 0
         ExFreePool(Hive->FlusherLock);
+#endif
         ExFreePool(Hive);
         return Status;
     }
@@ -203,7 +207,9 @@ CmpInitializeHive(OUT PCMHIVE *RegistryHive,
         {
             /* Free all alocations */
             ExFreePool(Hive->ViewLock);
+#if 0
             ExFreePool(Hive->FlusherLock);
+#endif
             ExFreePool(Hive);
             return STATUS_REGISTRY_CORRUPT;
         }
