@@ -12,25 +12,25 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Por favor, seleccione el idioma a utilizar durante la instalación.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "Luego presione ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  El idioma seleccionado será también el idioma por defacto del sistema.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER = Continuar  R = Reparar F3 = Salir",
         TEXT_STATUS
     },
     {
