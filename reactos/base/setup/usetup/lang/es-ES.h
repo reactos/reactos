@@ -18,7 +18,7 @@ static MUI_ENTRY esESLanguagePageEntries[] =
     {
         8,
         11,
-        "Luego presione ENTER.",
+        "   Luego presione ENTER.",
         TEXT_NORMAL
     },
     {
