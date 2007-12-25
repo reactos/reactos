@@ -9,7 +9,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
   GROUPBOX "Standarts and formats", -1, 5, 5, 234, 162
   LTEXT "This option affects how some programs format numbers, currencies, dates, and time.", -1, 14, 17, 220, 25
-  LTEXT "Select an item to match its proferences, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
+  LTEXT "Select an item to match its properties, or click Customize to choose your own formats:", -1, 14, 37, 220, 22
   COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 83, CBS_DROPDOWNLIST | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
   PUSHBUTTON "Customi&ze...", IDC_SETUP_BUTTON, 178, 56, 52, 13
   LTEXT "Samples", -1, 14, 73, 70, 10
@@ -24,7 +24,7 @@ BEGIN
   EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP
   GROUPBOX "Geographic location", -1, 5, 172, 234, 55
-  LTEXT "Set up your location that services could supply you with the local information, for example, news and reports of weather", -1, 14, 184, 210, 24
+  LTEXT "Set up your location so that some services can supply you with local information; for example, news and weather reports.", -1, 14, 184, 210, 24
   COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 40, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
