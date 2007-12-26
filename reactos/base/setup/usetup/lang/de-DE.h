@@ -518,7 +518,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         6,
-        "Das System vergewissert sich nun, dass alle Daten gespeichert sind.",
+        "Das System vergewissert sich, dass alle Daten gespeichert sind.",
         TEXT_NORMAL
     },
     {
@@ -530,7 +530,7 @@ static MUI_ENTRY deDEFlushPageEntries[] =
     {
         10,
         9,
-        "Der Computer wird automatisch neustarten, wenn der Vorgang beendet ist.",
+        "Der PC wird automatisch neustarten, wenn der Vorgang beendet ist.",
         TEXT_NORMAL
     },
     {
