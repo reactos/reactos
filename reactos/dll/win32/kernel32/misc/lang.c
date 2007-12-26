@@ -454,7 +454,7 @@ EnumSystemLocalesW (
 	if (!NT_SUCCESS(result))
 		return result;
 
-	DPRINT1("Registry key succesfully opened\n");
+	DPRINT("Registry key succesfully opened\n");
 
 	length = sizeof(KEY_VALUE_FULL_INFORMATION) + 255*2;//MAX_PATH*sizeof(WCHAR);
 	pFullInfo = (PKEY_VALUE_FULL_INFORMATION)&fullInfo;
@@ -469,7 +469,7 @@ EnumSystemLocalesW (
 								length,
 								&length);
 
-	DPRINT1("First enumerate call result=%x\n", result);
+	DPRINT("First enumerate call result=%x\n", result);
 	while (result != STATUS_NO_MORE_ENTRIES)
 	{
 		int i;
@@ -484,7 +484,7 @@ EnumSystemLocalesW (
 
 		lpLocale[8]=0;
 
-		DPRINT1("Locale=%S\n", lpLocale);
+		DPRINT("Locale=%S\n", lpLocale);
 
 		// Call Enum func
 		if (!lpLocaleEnumProc((LPWSTR)lpLocale))
