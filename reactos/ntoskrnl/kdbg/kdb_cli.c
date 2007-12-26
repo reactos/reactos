@@ -21,6 +21,7 @@
  * FILE:            ntoskrnl/dbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
+ *                  Hervé Poussineau
  * UPDATE HISTORY:
  *                  Created 16/01/2005
  */
@@ -146,12 +147,137 @@ STATIC CONST struct
    /* Others */
    { NULL, NULL, "Others", NULL },
    { "bugcheck", "bugcheck", "Bugchecks the system.", KdbpCmdBugCheck },
-   { "filter", "filter [componentid] [error|warning|trace|info|level] [on|off]", "Enable/disable debug channels", KdbpCmdFilter },
+   { "filter", "filter componentname [error|warning|trace|info|level] [on|off]", "Enable/disable debug channels", KdbpCmdFilter },
    { "set", "set [var] [value]", "Sets var to value or displays value of var.", KdbpCmdSet },
    { "help", "help", "Display help screen.", KdbpCmdHelp }
 };
 
 /* FUNCTIONS *****************************************************************/
+
+/*!\brief Transform a component name to an integer
+ *
+ * \param ComponentName  The name of the component.
+ * \param ComponentId    Receives the component id on success.
+ *
+ * \retval TRUE   Success.
+ * \retval FALSE  Failure.
+ */
+STATIC BOOLEAN
+KdbpGetComponentId(
+   IN  PCCH ComponentName,
+   OUT PULONG ComponentId)
+{
+   ULONG i;
+
+   static struct {
+      PCCH Name;
+      ULONG Id;
+   } ComponentTable[] = {
+       { "SYSTEM", DPFLTR_SYSTEM_ID },
+       { "SMSS", DPFLTR_SMSS_ID },
+       { "SETUP", DPFLTR_SETUP_ID },
+       { "NTFS", DPFLTR_NTFS_ID },
+       { "FSTUB", DPFLTR_FSTUB_ID },
+       { "CRASHDUMP", DPFLTR_CRASHDUMP_ID },
+       { "CDAUDIO", DPFLTR_CDAUDIO_ID },
+       { "CDROM", DPFLTR_CDROM_ID },
+       { "CLASSPNP", DPFLTR_CLASSPNP_ID },
+       { "DISK", DPFLTR_DISK_ID },
+       { "REDBOOK", DPFLTR_REDBOOK_ID },
+       { "STORPROP", DPFLTR_STORPROP_ID },
+       { "SCSIPORT", DPFLTR_SCSIPORT_ID },
+       { "SCSIMINIPORT", DPFLTR_SCSIMINIPORT_ID },
+       { "CONFIG", DPFLTR_CONFIG_ID },
+       { "I8042PRT", DPFLTR_I8042PRT_ID },
+       { "SERMOUSE", DPFLTR_SERMOUSE_ID },
+       { "LSERMOUS", DPFLTR_LSERMOUS_ID },
+       { "KBDHID", DPFLTR_KBDHID_ID },
+       { "MOUHID", DPFLTR_MOUHID_ID },
+       { "KBDCLASS", DPFLTR_KBDCLASS_ID },
+       { "MOUCLASS", DPFLTR_MOUCLASS_ID },
+       { "TWOTRACK", DPFLTR_TWOTRACK_ID },
+       { "WMILIB", DPFLTR_WMILIB_ID },
+       { "ACPI", DPFLTR_ACPI_ID },
+       { "AMLI", DPFLTR_AMLI_ID },
+       { "HALIA64", DPFLTR_HALIA64_ID },
+       { "VIDEO", DPFLTR_VIDEO_ID },
+       { "SVCHOST", DPFLTR_SVCHOST_ID },
+       { "VIDEOPRT", DPFLTR_VIDEOPRT_ID },
+       { "TCPIP", DPFLTR_TCPIP_ID },
+       { "DMSYNTH", DPFLTR_DMSYNTH_ID },
+       { "NTOSPNP", DPFLTR_NTOSPNP_ID },
+       { "FASTFAT", DPFLTR_FASTFAT_ID },
+       { "SAMSS", DPFLTR_SAMSS_ID },
+       { "PNPMGR", DPFLTR_PNPMGR_ID },
+       { "NETAPI", DPFLTR_NETAPI_ID },
+       { "SCSERVER", DPFLTR_SCSERVER_ID },
+       { "SCCLIENT", DPFLTR_SCCLIENT_ID },
+       { "SERIAL", DPFLTR_SERIAL_ID },
+       { "SERENUM", DPFLTR_SERENUM_ID },
+       { "UHCD", DPFLTR_UHCD_ID },
+       { "BOOTOK", DPFLTR_BOOTOK_ID },
+       { "BOOTVRFY", DPFLTR_BOOTVRFY_ID },
+       { "RPCPROXY", DPFLTR_RPCPROXY_ID },
+       { "AUTOCHK", DPFLTR_AUTOCHK_ID },
+       { "DCOMSS", DPFLTR_DCOMSS_ID },
+       { "UNIMODEM", DPFLTR_UNIMODEM_ID },
+       { "SIS", DPFLTR_SIS_ID },
+       { "FLTMGR", DPFLTR_FLTMGR_ID },
+       { "WMICORE", DPFLTR_WMICORE_ID },
+       { "BURNENG", DPFLTR_BURNENG_ID },
+       { "IMAPI", DPFLTR_IMAPI_ID },
+       { "SXS", DPFLTR_SXS_ID },
+       { "FUSION", DPFLTR_FUSION_ID },
+       { "IDLETASK", DPFLTR_IDLETASK_ID },
+       { "SOFTPCI", DPFLTR_SOFTPCI_ID },
+       { "TAPE", DPFLTR_TAPE_ID },
+       { "MCHGR", DPFLTR_MCHGR_ID },
+       { "IDEP", DPFLTR_IDEP_ID },
+       { "PCIIDE", DPFLTR_PCIIDE_ID },
+       { "FLOPPY", DPFLTR_FLOPPY_ID },
+       { "FDC", DPFLTR_FDC_ID },
+       { "TERMSRV", DPFLTR_TERMSRV_ID },
+       { "W32TIME", DPFLTR_W32TIME_ID },
+       { "PREFETCHER", DPFLTR_PREFETCHER_ID },
+       { "RSFILTER", DPFLTR_RSFILTER_ID },
+       { "FCPORT", DPFLTR_FCPORT_ID },
+       { "PCI", DPFLTR_PCI_ID },
+       { "DMIO", DPFLTR_DMIO_ID },
+       { "DMCONFIG", DPFLTR_DMCONFIG_ID },
+       { "DMADMIN", DPFLTR_DMADMIN_ID },
+       { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
+       { "VSS", DPFLTR_VSS_ID },
+       { "PNPMEM", DPFLTR_PNPMEM_ID },
+       { "PROCESSOR", DPFLTR_PROCESSOR_ID },
+       { "DMSERVER", DPFLTR_DMSERVER_ID },
+       { "SR", DPFLTR_SR_ID },
+       { "INFINIBAND", DPFLTR_INFINIBAND_ID },
+       { "IHVDRIVER", DPFLTR_IHVDRIVER_ID },
+       { "IHVVIDEO", DPFLTR_IHVVIDEO_ID },
+       { "IHVAUDIO", DPFLTR_IHVAUDIO_ID },
+       { "IHVNETWORK", DPFLTR_IHVNETWORK_ID },
+       { "IHVSTREAMING", DPFLTR_IHVSTREAMING_ID },
+       { "IHVBUS", DPFLTR_IHVBUS_ID },
+       { "HPS", DPFLTR_HPS_ID },
+       { "RTLTHREADPOOL", DPFLTR_RTLTHREADPOOL_ID },
+       { "LDR", DPFLTR_LDR_ID },
+       { "TCPIP6", DPFLTR_TCPIP6_ID },
+       { "ISAPNP", DPFLTR_ISAPNP_ID },
+       { "SHPC", DPFLTR_SHPC_ID },
+       { "STORPORT", DPFLTR_STORPORT_ID },
+       { "STORMINIPORT", DPFLTR_STORMINIPORT_ID },
+       { "PRINTSPOOLER", DPFLTR_PRINTSPOOLER_ID },
+   };
+
+   for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+       if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
+       {
+           *ComponentId = ComponentTable[i].Id;
+           return TRUE;
+       }
+
+   return FALSE;
+}
 
 /*!\brief Evaluates an expression...
  *
@@ -259,10 +385,9 @@ KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
       KdbpPrint("filter: component id argument required!\n");
       return TRUE;
    }
-   ComponentId = strtoul(Argv[1], &pend, 0);
-   if (Argv[1] == pend)
+   if (!KdbpGetComponentId(Argv[1], &ComponentId))
    {
-      KdbpPrint("filter: '%s' is not a valid component id!\n", Argv[1]);
+      KdbpPrint("filter: '%s' is not a valid component name!\n", Argv[1]);
       return TRUE;
    }
 
@@ -282,16 +407,11 @@ KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
    else
    {
       Level = strtoul(Argv[2], &pend, 0);
-      if (Argv[2] == pend)
+      if (Argv[2] == pend || *pend != '\0')
       {
          KdbpPrint("filter: '%s' is not a valid level!\n", Argv[2]);
          return TRUE;
       }
-   }
-   if (Level < 31)
-   {
-      /* Interpret it as a bit shift */
-      Level = 1 << Level;
    }
 
    if (Argc < 4)
@@ -1290,7 +1410,7 @@ KdbpCmdMod(ULONG Argc, PCHAR Argv[])
 STATIC BOOLEAN
 KdbpCmdGdtLdtIdt(ULONG Argc, PCHAR Argv[])
 {
-    KDESCRIPTOR Reg = {0};
+   KDESCRIPTOR Reg = {0};
    ULONG SegDesc[2];
    ULONG SegBase;
    ULONG SegLimit;
