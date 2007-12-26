@@ -27,7 +27,7 @@ GetOffsetFromAdress64(PBYTE pModule, DWORD64 dwAdress, PBOOL pbX64)
 	PIMAGE_DOS_HEADER pDosHdr;
 	PIMAGE_NT_HEADERS32 pNtHdr32;
 	WORD NumberOfSections;
-	INT i;
+	INT i, nSection;
 	DWORD64 dwOffset = 0;
 
 	pDosHdr = (PIMAGE_DOS_HEADER)pModule;
@@ -46,14 +46,16 @@ GetOffsetFromAdress64(PBYTE pModule, DWORD64 dwAdress, PBOOL pbX64)
 		NumberOfSections = pNtHdr32->FileHeader.NumberOfSections;
 		pSectionHdr = (PIMAGE_SECTION_HEADER)(pNtHdr32 + 1);
 
+		nSection = 0;
 		for (i = 0; i < NumberOfSections; i++)
 		{
 			if (dwAdress >= pSectionHdr[i].VirtualAddress &&
-			    pSectionHdr[i].PointerToRawData > dwOffset)
+			    pSectionHdr[i].PointerToRawData > pSectionHdr[nSection].PointerToRawData)
 			{
-				dwOffset = pSectionHdr[i].PointerToRawData;
+				nSection = i;
 			}
 		}
+		dwOffset = pSectionHdr[nSection].PointerToRawData + dwAdress - pSectionHdr[nSection].VirtualAddress;
 		return dwOffset;
 	}
 	else
@@ -64,16 +66,32 @@ GetOffsetFromAdress64(PBYTE pModule, DWORD64 dwAdress, PBOOL pbX64)
 	}
 }
 
+DWORD64
+GetOffsetFromName(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name, PBOOL pbX64)
+{
+	pSym->SizeOfStruct = sizeof(SYMBOL_INFO);
+	pSym->MaxNameLen = MAX_SYMBOL_NAME-1;
+
+	if (!SymFromName(hProcess, Name, pSym))
+	{
+		printf("SymGetSymFromName64() failed: %ld\n", GetLastError());
+		return 0;
+	}
+	return GetOffsetFromAdress64(pModule, pSym->Address - pSym->ModBase, pbX64);
+}
+
 int main(int argc, char* argv[])
 {
 	HANDLE hProcess;
 	CHAR szModuleFileName[MAX_PATH+1];
     DWORD64 dwModuleBase;
-    DWORD64 dwFileOffset;
     HANDLE hFile = 0, hMap = 0;
     PBYTE pModule = NULL;
     UINT i;
     BOOL bX64;
+    DWORD64 dwW32pServiceTable, dwW32pServiceLimit, dwW32pArgumentTable;
+    DWORD dwServiceLimit;
+    BYTE *pdwArgs;
 
 	struct
 	{
@@ -124,18 +142,6 @@ cont:
 		goto cleanup;
 	}
 
-	Sym.Symbol.SizeOfStruct = sizeof(SYMBOL_INFO);
-	Sym.Symbol.MaxNameLen = MAX_SYMBOL_NAME-1;
-
-	if (!SymFromName(hProcess, "W32pServiceTable", &Sym.Symbol))
-	{
-		printf("SymGetSymFromName64() failed: %ld\n", GetLastError());
-		goto cleanup;
-	}
-
-	printf("Address for W32pServiceTable = %llx\n", Sym.Symbol.Address);
-	printf("Module base = %llx\n", dwModuleBase);
-
 	hMap = CreateFileMappingA(hFile, NULL, PAGE_READONLY, 0, 0, NULL); 
 	if (!hMap)
 	{
@@ -150,31 +156,40 @@ cont:
 		goto cleanup;
 	}
 
-	dwFileOffset = GetOffsetFromAdress64(pModule, Sym.Symbol.Address - dwModuleBase, &bX64);
-	if (!dwFileOffset)
+	dwW32pServiceTable = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pServiceTable", &bX64);
+	dwW32pServiceLimit = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pServiceLimit", &bX64);
+	dwW32pArgumentTable = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pArgumentTable", &bX64);
+	if (!dwW32pServiceTable || !dwW32pServiceLimit || !dwW32pArgumentTable)
 	{
-		printf("PE file is invalid!\n");
+		printf("Couldn't find adress!\n");
 		goto cleanup;
 	}
 
+	printf("dwW32pServiceTable = %llx\n", dwW32pServiceTable);
+	printf("dwW32pServiceLimit = %llx\n", dwW32pServiceLimit);
+	printf("dwW32pArgumentTable = %llx\n", dwW32pArgumentTable);
+
+	dwServiceLimit = *((DWORD*)(pModule + dwW32pServiceLimit));
+	pdwArgs = (BYTE*)(pModule + dwW32pArgumentTable);
+
 	if (!bX64)
 	{
-		DWORD *pdwEntries32 = (DWORD*)(pModule + dwFileOffset);
+		DWORD *pdwEntries32 = (DWORD*)(pModule + dwW32pServiceTable);
 
-		for (i = 0; pdwEntries32[i] > dwModuleBase; i++)
+		for (i = 0; i <= dwServiceLimit; i++)
 		{
 			SymFromAddr(hProcess, (DWORD64)pdwEntries32[i], 0, &Sym.Symbol);
-			printf("0x%x:%s\n", i+0x1000, Sym.Symbol.Name);
+			printf("0x%x:%s@%d\n", i+0x1000, Sym.Symbol.Name, pdwArgs[i]);
 		}
 	}
 	else
 	{
-		DWORD64 *pdwEntries64 = (DWORD64*)(pModule + dwFileOffset);
+		DWORD64 *pdwEntries64 = (DWORD64*)(pModule + dwW32pServiceTable);
 
-		for (i = 0; pdwEntries64[i] > dwModuleBase; i++)
+		for (i = 0; i <= dwServiceLimit; i++)
 		{
 			SymFromAddr(hProcess, (DWORD64)pdwEntries64[i], 0, &Sym.Symbol);
-			printf("0x%x:%s\n", i+0x1000, Sym.Symbol.Name);
+			printf("0x%x:%s@%d\n", i+0x1000, Sym.Symbol.Name, pdwArgs[i]);
 		}
 	}
 
