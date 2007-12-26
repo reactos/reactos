@@ -9,14 +9,6 @@
  */
 #include "precomp.h"
 
-#define NDEBUG
-
-#ifndef NDEBUG
-DWORD DebugTraceLevel = DEBUG_ULTRA & ~(DEBUG_LOCK | DEBUG_PBUFFER);
-#else
-DWORD DebugTraceLevel = 0;
-#endif /* NDEBUG */
-
 PDEVICE_OBJECT TCPDeviceObject   = NULL;
 PDEVICE_OBJECT UDPDeviceObject   = NULL;
 PDEVICE_OBJECT IPDeviceObject    = NULL;
@@ -860,9 +852,6 @@ DriverEntry(
      relative expiration time of IP_TIMEOUT milliseconds */
   DueTime.QuadPart = -(LONGLONG)IP_TIMEOUT * 10000;
   KeSetTimerEx(&IPTimer, DueTime, IP_TIMEOUT, &IPTimeoutDpc);
-
-  /* ROS Hack: ideally, DebugTraceLevel variable should be removed */
-  DbgSetDebugFilterState(DPFLTR_TCPIP_ID, DebugTraceLevel, TRUE);
 
   return STATUS_SUCCESS;
 }

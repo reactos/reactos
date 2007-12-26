@@ -9,9 +9,9 @@
 #ifndef __DEBUG_H
 #define __DEBUG_H
 
-#define MIN_TRACE      DPFLTR_WARNING_LEVEL
-#define MID_TRACE      DPFLTR_WARNING_LEVEL | DPFLTR_TRACE_LEVEL
-#define MAX_TRACE      DPFLTR_WARNING_LEVEL | DPFLTR_TRACE_LEVEL | DPFLTR_INFO_LEVEL
+#define MIN_TRACE      ((1 << DPFLTR_WARNING_LEVEL))
+#define MID_TRACE      ((1 << DPFLTR_WARNING_LEVEL) | (1 << DPFLTR_TRACE_LEVEL))
+#define MAX_TRACE      ((1 << DPFLTR_WARNING_LEVEL) | (1 << DPFLTR_TRACE_LEVEL) | (1 << DPFLTR_INFO_LEVEL))
 
 #define DEBUG_CHECK    0x00000100
 #define DEBUG_MEMORY   0x00000200
@@ -37,8 +37,8 @@
 
 #define REMOVE_PARENS(...) __VA_ARGS__
 #define TI_DbgPrint(_t_, _x_) \
-    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) & DPFLTR_MASK, "(%s:%d) ", __FILE__, __LINE__), \
-    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) & DPFLTR_MASK, REMOVE_PARENS _x_)
+    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) | DPFLTR_MASK, "(%s:%d) ", __FILE__, __LINE__), \
+    DbgPrintEx(DPFLTR_TCPIP_ID, (_t_) | DPFLTR_MASK, REMOVE_PARENS _x_)
 
 #else /* DBG */
 
