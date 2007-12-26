@@ -71,12 +71,11 @@ SmpEnvironmentQueryRoutine(IN PWSTR ValueName,
                            IN PVOID EntryContext)
 {
     DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-    DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
-    if (ValueType != REG_SZ)
+    if (ValueType != REG_SZ && ValueType != REG_EXPAND_SZ)
         return STATUS_SUCCESS;
 
-
+    DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
     return SmpSetEnvironmentVariable(Context,ValueName,ValueData);
 }
 
