@@ -2,7 +2,6 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="i8042prt" type="kernelmodedriver" installbase="system32/drivers" installname="i8042prt.sys">
 	<bootstrap installbase="$(CDOUTPUT)" />
-	<define name="NDEBUG" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>createclose.c</file>

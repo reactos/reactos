@@ -523,13 +523,5 @@ DriverEntry(
 	if (IsFirstStageSetup())
 		return i8042AddLegacyKeyboard(DriverObject, RegistryPath);
 
-	/* ROS Hack: ideally, we shouldn't have to initialize debug level this way */
-#ifndef NDEBUG
-	DbgSetDebugFilterState(
-		DPFLTR_I8042PRT_ID,
-		(1 << DPFLTR_ERROR_LEVEL) | (1 << DPFLTR_WARNING_LEVEL) | (1 << DPFLTR_TRACE_LEVEL) | (1 << DPFLTR_INFO_LEVEL),
-		TRUE);
-#endif
-
 	return STATUS_SUCCESS;
 }
