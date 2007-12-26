@@ -1,5 +1,4 @@
-/* $Id$
- *
+/*
  * initenv.c - Environment initialization
  *
  * ReactOS Operating System
@@ -39,91 +38,91 @@ PWSTR SmSystemEnvironment = NULL;
 NTSTATUS
 SmCreateEnvironment(VOID)
 {
-  return RtlCreateEnvironment(FALSE, &SmSystemEnvironment);
+    return RtlCreateEnvironment(FALSE, &SmSystemEnvironment);
 }
 
 
 static NTSTATUS
-SmpSetEnvironmentVariable(PVOID Context,
-			  PWSTR ValueName,
-			  PVOID ValueData)
+SmpSetEnvironmentVariable(IN PVOID Context,
+                          IN PWSTR ValueName,
+                          IN PVOID ValueData)
 {
-  UNICODE_STRING EnvVariable;
-  UNICODE_STRING EnvValue;
+    UNICODE_STRING EnvVariable;
+    UNICODE_STRING EnvValue;
 
-  RtlInitUnicodeString(&EnvVariable,
-		       ValueName);
-  RtlInitUnicodeString(&EnvValue,
-		       (PWSTR)ValueData);
-  RtlSetEnvironmentVariable(Context,
-			    &EnvVariable,
-			    &EnvValue);
+    RtlInitUnicodeString(&EnvVariable,
+                         ValueName);
+    RtlInitUnicodeString(&EnvValue,
+                         (PWSTR)ValueData);
+    RtlSetEnvironmentVariable(Context,
+                              &EnvVariable,
+                              &EnvValue);
 
-  return(STATUS_SUCCESS);
+    return STATUS_SUCCESS;
 }
 
 
 static NTSTATUS STDCALL
-SmpEnvironmentQueryRoutine(PWSTR ValueName,
-			  ULONG ValueType,
-			  PVOID ValueData,
-			  ULONG ValueLength,
-			  PVOID Context,
-			  PVOID EntryContext)
+SmpEnvironmentQueryRoutine(IN PWSTR ValueName,
+                           IN ULONG ValueType,
+                           IN PVOID ValueData,
+                           IN ULONG ValueLength,
+                           IN PVOID Context,
+                           IN PVOID EntryContext)
 {
-  DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
-  DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
+    DPRINT("ValueName '%S'  Type %lu  Length %lu\n", ValueName, ValueType, ValueLength);
+    DPRINT("ValueData '%S'\n", (PWSTR)ValueData);
 
-  if (ValueType != REG_SZ)
-    {
-      return(STATUS_SUCCESS);
-    }
-  return SmpSetEnvironmentVariable(Context,ValueName,ValueData);
+    if (ValueType != REG_SZ)
+        return STATUS_SUCCESS;
+
+
+    return SmpSetEnvironmentVariable(Context,ValueName,ValueData);
 }
 
 
 NTSTATUS
 SmSetEnvironmentVariables(VOID)
 {
-  RTL_QUERY_REGISTRY_TABLE QueryTable[2];
-  WCHAR ValueBuffer[MAX_PATH];
-  NTSTATUS Status;
+    RTL_QUERY_REGISTRY_TABLE QueryTable[2];
+    WCHAR ValueBuffer[MAX_PATH];
+    NTSTATUS Status;
 
-  /*
-   * The following environment variables must be set prior to reading
-   * other variables from the registry.
-   *
-   * Variables (example):
-   *    SystemRoot = "C:\reactos"
-   *    SystemDrive = "C:"
-   */
+    /*
+     * The following environment variables must be set prior to reading
+     * other variables from the registry.
+     *
+     * Variables (example):
+     *    SystemRoot = "C:\reactos"
+     *    SystemDrive = "C:"
+     */
 
-  /* Copy system root into value buffer */
-  wcscpy(ValueBuffer,
-	 SharedUserData->NtSystemRoot);
+    /* Copy system root into value buffer */
+    wcscpy(ValueBuffer,
+           SharedUserData->NtSystemRoot);
 
-  /* Set SystemRoot = "C:\reactos" */
-  SmpSetEnvironmentVariable(&SmSystemEnvironment,L"SystemRoot",ValueBuffer);
+    /* Set SystemRoot = "C:\reactos" */
+    SmpSetEnvironmentVariable(&SmSystemEnvironment, L"SystemRoot", ValueBuffer);
 
-  /* Cut off trailing path */
-  ValueBuffer[2] = 0;
+    /* Cut off trailing path */
+    ValueBuffer[2] = 0;
 
-  /* Set SystemDrive = "C:" */
-  SmpSetEnvironmentVariable(&SmSystemEnvironment,L"SystemDrive",ValueBuffer);
+    /* Set SystemDrive = "C:" */
+    SmpSetEnvironmentVariable(&SmSystemEnvironment, L"SystemDrive", ValueBuffer);
 
-  /* Read system environment from the registry. */
-  RtlZeroMemory(&QueryTable,
-		sizeof(QueryTable));
+    /* Read system environment from the registry. */
+    RtlZeroMemory(&QueryTable,
+                  sizeof(QueryTable));
 
-  QueryTable[0].QueryRoutine = SmpEnvironmentQueryRoutine;
+    QueryTable[0].QueryRoutine = SmpEnvironmentQueryRoutine;
 
-  Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
-				  L"\\Session Manager\\Environment",
-				  QueryTable,
-				  &SmSystemEnvironment,
-				  SmSystemEnvironment);
+    Status = RtlQueryRegistryValues(RTL_REGISTRY_CONTROL,
+                                    L"Session Manager\\Environment",
+                                    QueryTable,
+                                    &SmSystemEnvironment,
+                                    SmSystemEnvironment);
 
-  return(Status);
+    return Status;
 }
 
 /**********************************************************************
@@ -132,8 +131,8 @@ SmSetEnvironmentVariables(VOID)
 NTSTATUS
 SmUpdateEnvironment(VOID)
 {
-	/* TODO */
-	return STATUS_SUCCESS;
+    /* TODO */
+    return STATUS_SUCCESS;
 }
 
 /* EOF */
