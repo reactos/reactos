@@ -242,9 +242,101 @@ typedef struct _ADAPTER_OBJECT *PADAPTER_OBJECT;
 
 typedef enum _DPFLTR_TYPE
 {
+    DPFLTR_SYSTEM_ID = 0,
+    DPFLTR_SMSS_ID = 1,
+    DPFLTR_SETUP_ID = 2,
+    DPFLTR_NTFS_ID = 3,
+    DPFLTR_FSTUB_ID = 4,
+    DPFLTR_CRASHDUMP_ID = 5,
+    DPFLTR_CDAUDIO_ID = 6,
+    DPFLTR_CDROM_ID = 7,
+    DPFLTR_CLASSPNP_ID = 8,
+    DPFLTR_DISK_ID = 9,
+    DPFLTR_REDBOOK_ID = 10,
+    DPFLTR_STORPROP_ID = 11,
+    DPFLTR_SCSIPORT_ID = 12,
+    DPFLTR_SCSIMINIPORT_ID = 13,
+    DPFLTR_CONFIG_ID = 14,
     DPFLTR_I8042PRT_ID = 15,
+    DPFLTR_SERMOUSE_ID = 16,
+    DPFLTR_LSERMOUS_ID = 17,
+    DPFLTR_KBDHID_ID = 18,
+    DPFLTR_MOUHID_ID = 19,
+    DPFLTR_KBDCLASS_ID = 20,
+    DPFLTR_MOUCLASS_ID = 21,
+    DPFLTR_TWOTRACK_ID = 22,
+    DPFLTR_WMILIB_ID = 23,
+    DPFLTR_ACPI_ID = 24,
+    DPFLTR_AMLI_ID = 25,
+    DPFLTR_HALIA64_ID = 26,
+    DPFLTR_VIDEO_ID = 27,
+    DPFLTR_SVCHOST_ID = 28,
+    DPFLTR_VIDEOPRT_ID = 29,
     DPFLTR_TCPIP_ID = 30,
+    DPFLTR_DMSYNTH_ID = 31,
+    DPFLTR_NTOSPNP_ID = 32,
+    DPFLTR_FASTFAT_ID = 33,
+    DPFLTR_SAMSS_ID = 34,
+    DPFLTR_PNPMGR_ID = 35,
+    DPFLTR_NETAPI_ID = 36,
+    DPFLTR_SCSERVER_ID = 37,
+    DPFLTR_SCCLIENT_ID = 38,
+    DPFLTR_SERIAL_ID = 39,
+    DPFLTR_SERENUM_ID = 40,
+    DPFLTR_UHCD_ID = 41,
+    DPFLTR_BOOTOK_ID = 42,
+    DPFLTR_BOOTVRFY_ID = 43,
+    DPFLTR_RPCPROXY_ID = 44,
+    DPFLTR_AUTOCHK_ID = 45,
+    DPFLTR_DCOMSS_ID = 46,
+    DPFLTR_UNIMODEM_ID = 47,
+    DPFLTR_SIS_ID = 48,
+    DPFLTR_FLTMGR_ID = 49,
+    DPFLTR_WMICORE_ID = 50,
+    DPFLTR_BURNENG_ID = 51,
+    DPFLTR_IMAPI_ID = 52,
+    DPFLTR_SXS_ID = 53,
+    DPFLTR_FUSION_ID = 54,
+    DPFLTR_IDLETASK_ID = 55,
+    DPFLTR_SOFTPCI_ID = 56,
+    DPFLTR_TAPE_ID = 57,
+    DPFLTR_MCHGR_ID = 58,
+    DPFLTR_IDEP_ID = 59,
+    DPFLTR_PCIIDE_ID = 60,
+    DPFLTR_FLOPPY_ID = 61,
+    DPFLTR_FDC_ID = 62,
+    DPFLTR_TERMSRV_ID = 63,
+    DPFLTR_W32TIME_ID = 64,
     DPFLTR_PREFETCHER_ID = 65,
+    DPFLTR_RSFILTER_ID = 66,
+    DPFLTR_FCPORT_ID = 67,
+    DPFLTR_PCI_ID = 68,
+    DPFLTR_DMIO_ID = 69,
+    DPFLTR_DMCONFIG_ID = 70,
+    DPFLTR_DMADMIN_ID = 71,
+    DPFLTR_WSOCKTRANSPORT_ID = 72,
+    DPFLTR_VSS_ID = 73,
+    DPFLTR_PNPMEM_ID = 74,
+    DPFLTR_PROCESSOR_ID = 75,
+    DPFLTR_DMSERVER_ID = 76,
+    DPFLTR_SR_ID = 77,
+    DPFLTR_INFINIBAND_ID = 78,
+    DPFLTR_IHVDRIVER_ID = 79,
+    DPFLTR_IHVVIDEO_ID = 80,
+    DPFLTR_IHVAUDIO_ID = 81,
+    DPFLTR_IHVNETWORK_ID = 82,
+    DPFLTR_IHVSTREAMING_ID = 83,
+    DPFLTR_IHVBUS_ID = 84,
+    DPFLTR_HPS_ID = 85,
+    DPFLTR_RTLTHREADPOOL_ID = 86,
+    DPFLTR_LDR_ID = 87,
+    DPFLTR_TCPIP6_ID = 88,
+    DPFLTR_ISAPNP_ID = 89,
+    DPFLTR_SHPC_ID = 90,
+    DPFLTR_STORPORT_ID = 91,
+    DPFLTR_STORMINIPORT_ID = 92,
+    DPFLTR_PRINTSPOOLER_ID = 93,
+    DPFLTR_ENDOFTABLE_ID
 } DPFLTR_TYPE;
 
 #define MAXIMUM_PROCESSORS                32
@@ -5441,6 +5533,35 @@ KeGetCurrentProcessorNumber(VOID)
   return Number;
 }
 
+#elif defined(_MIPS_)
+
+typedef ULONG PFN_NUMBER, *PPFN_NUMBER;
+
+#define PASSIVE_LEVEL                      0
+#define APC_LEVEL                          1
+#define DISPATCH_LEVEL                     2
+#define PROFILE_LEVEL                     27
+#define IPI_LEVEL                         29
+#define HIGH_LEVEL                        31
+
+typedef struct _KPCR {
+    struct _KPRCB  *Prcb;         /* 20 */
+    KIRQL  Irql;                  /* 24 */
+    ULONG  IRR;                   /* 28 */
+    ULONG  IDR;                   /* 30 */
+} KPCR, *PKPCR;
+
+typedef struct _KFLOATING_SAVE {
+} KFLOATING_SAVE, *PKFLOATING_SAVE;
+
+static __inline
+ULONG
+DDKAPI
+KeGetCurrentProcessorNumber(VOID)
+{
+    return 0;
+}
+
 #else
 #error Unknown architecture
 #endif
@@ -9399,6 +9520,35 @@ KeRaiseIrqlToSynchLevel(
 
 #define KeLowerIrql(a) KfLowerIrql(a)
 #define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+#elif defined(_M_MIPS)
+
+#define KeLowerIrql(a) KfLowerIrql(a)
+#define KeRaiseIrql(a,b) *(b) = KfRaiseIrql(a)
+
+NTKERNELAPI
+VOID
+NTAPI
+KfLowerIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+NTAPI
+KfRaiseIrql(
+  IN KIRQL  NewIrql);
+
+NTKERNELAPI
+KIRQL
+NTAPI
+KeRaiseIrqlToDpcLevel(
+  VOID);
+
+NTKERNELAPI
+KIRQL
+DDKAPI
+KeRaiseIrqlToSynchLevel(
+    VOID);
 
 #else
 
