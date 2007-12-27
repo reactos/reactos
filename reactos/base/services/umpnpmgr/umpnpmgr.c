@@ -1494,6 +1494,8 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
     NTSTATUS Status;
     BOOL DeviceInstalled = FALSE;
 
+    DPRINT("InstallDevice(%S, %d)\n", DeviceInstance, ShowWizard);
+
     RtlInitUnicodeString(&PlugPlayData.DeviceInstance,
                          DeviceInstance);
     PlugPlayData.Operation = 0; /* Get status */
@@ -1503,25 +1505,40 @@ InstallDevice(PCWSTR DeviceInstance, BOOL ShowWizard)
                                (PVOID)&PlugPlayData,
                                sizeof(PLUGPLAY_CONTROL_STATUS_DATA));
     if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtPlugPlayControl('%S') failed with status 0x%08lx\n", DeviceInstance, Status);
         return FALSE;
+    }
 
     if ((PlugPlayData.DeviceStatus & (DNF_STARTED | DNF_START_FAILED)) != 0)
+    {
         /* Device is already started, or disabled due to some problem. Don't install it */
+        DPRINT("No need to install '%S'\n", DeviceInstance);
         return TRUE;
+    }
 
     /* Install device */
     SetEnvironmentVariableW(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
 
     hNewDev = LoadLibraryW(L"newdev.dll");
     if (!hNewDev)
+    {
+        DPRINT1("Unable to load newdev.dll\n");
         goto cleanup;
+    }
 
     DevInstallW = (PDEV_INSTALL_W)GetProcAddress(hNewDev, (LPCSTR)"DevInstallW");
     if (!DevInstallW)
+    {
+        DPRINT1("'DevInstallW' not found in newdev.dll\n");
         goto cleanup;
+    }
 
     if (!DevInstallW(NULL, NULL, DeviceInstance, ShowWizard ? SW_SHOWNOACTIVATE : SW_HIDE))
+    {
+        DPRINT1("DevInstallW('%S') failed\n", DeviceInstance);
         goto cleanup;
+    }
 
     DeviceInstalled = TRUE;
 
@@ -1660,8 +1677,6 @@ DeviceInstallThread(LPVOID lpParameter)
     UNREFERENCED_PARAMETER(lpParameter);
 
     showWizard = !SetupIsActive() && !IsConsoleBoot();
-
-    SetEnvironmentVariable(L"USERPROFILE", L"."); /* FIXME: why is it needed? */
 
     while (TRUE)
     {

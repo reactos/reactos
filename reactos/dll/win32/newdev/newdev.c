@@ -643,6 +643,8 @@ DevInstallW(
 	DWORD config_flags;
 	BOOL retval = FALSE;
 
+	TRACE("(%p, %p, %s, %d)\n", hWndParent, hInstance, debugstr_w(InstanceId), Show);
+
 	if (!IsUserAdmin())
 	{
 		/* XP kills the process... */
@@ -731,6 +733,7 @@ DevInstallW(
 		if (config_flags & CONFIGFLAG_FAILEDINSTALL)
 		{
 			/* The device is disabled */
+			TRACE("Device is disabled\n");
 			retval = TRUE;
 			goto cleanup;
 		}
@@ -748,6 +751,7 @@ DevInstallW(
 	{
 		/* Driver found ; install it */
 		retval = InstallCurrentDriver(DevInstData);
+		TRACE("InstallCurrentDriver() returned %d\n", retval);
 		if (retval && Show != SW_HIDE)
 		{
 			/* Should we display the 'Need to reboot' page? */
@@ -759,7 +763,10 @@ DevInstallW(
 				&installParams))
 			{
 				if (installParams.Flags & (DI_NEEDRESTART | DI_NEEDREBOOT))
+				{
+					TRACE("Displaying 'Reboot' wizard page\n");
 					retval = DisplayWizard(DevInstData, hWndParent, IDD_NEEDREBOOT);
+				}
 			}
 		}
 		goto cleanup;
@@ -767,10 +774,12 @@ DevInstallW(
 	else if (Show == SW_HIDE)
 	{
 		/* We can't show the wizard. Fail the install */
+		TRACE("No wizard\n");
 		goto cleanup;
 	}
 
 	/* Prepare the wizard, and display it */
+	TRACE("Need to show install wizard\n");
 	retval = DisplayWizard(DevInstData, hWndParent, IDD_WELCOMEPAGE);
 
 cleanup:
