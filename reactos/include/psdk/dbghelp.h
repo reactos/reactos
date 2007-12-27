@@ -785,6 +785,13 @@ BOOL WINAPI MiniDumpReadDumpStream(PVOID, ULONG, PMINIDUMP_DIRECTORY*, PVOID*,
 #include <poppack.h>
 
 /*************************
+ * User mode dump        *
+ *************************/
+typedef BOOL (WINAPI *PDBGHELP_CREATE_USER_DUMP_CALLBACK)(DWORD, PVOID*, LPDWORD, PVOID);
+BOOL WINAPI DbgHelpCreateUserDump(LPSTR, PDBGHELP_CREATE_USER_DUMP_CALLBACK, PVOID);
+BOOL WINAPI DbgHelpCreateUserDumpW(LPWSTR, PDBGHELP_CREATE_USER_DUMP_CALLBACK, PVOID);
+
+/*************************
  *    MODULE handling    *
  *************************/
 
