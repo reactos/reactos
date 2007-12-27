@@ -709,7 +709,7 @@ VideoPortAllocateBuffer(
    OUT PVOID *Buffer)
 {
    DPRINT("VideoPortAllocateBuffer\n");
-   *Buffer = ExAllocatePool(PagedPool, Size);
+   *Buffer = ExAllocatePoolWithTag ( PagedPool, Size, TAG_VIDEO_PORT_BUFFER ) ;
    return *Buffer == NULL ? ERROR_NOT_ENOUGH_MEMORY : NO_ERROR;
 }
 
