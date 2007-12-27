@@ -49,26 +49,36 @@ IopQueueTargetDeviceEvent(const GUID *Guid,
                           PUNICODE_STRING DeviceIds)
 {
     PPNP_EVENT_ENTRY EventEntry;
+    UNICODE_STRING Copy;
     ULONG TotalSize;
+    NTSTATUS Status;
 
+    ASSERT(DeviceIds);
+
+    /* Allocate a big enough buffer */
+    Copy.Length = 0;
+    Copy.MaximumLength = DeviceIds->Length + sizeof(UNICODE_NULL);
     TotalSize =
         FIELD_OFFSET(PLUGPLAY_EVENT_BLOCK, TargetDevice.DeviceIds) +
-        DeviceIds->MaximumLength;
+        Copy.MaximumLength;
 
     EventEntry = ExAllocatePool(NonPagedPool,
                                 TotalSize + FIELD_OFFSET(PNP_EVENT_ENTRY, Event));
-    if (EventEntry == NULL)
+    if (!EventEntry)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    memcpy(&EventEntry->Event.EventGuid,
-           Guid,
-           sizeof(GUID));
+    /* Fill the buffer with the event GUID */
+    RtlCopyMemory(&EventEntry->Event.EventGuid,
+                  Guid,
+                  sizeof(GUID));
     EventEntry->Event.EventCategory = TargetDeviceChangeEvent;
     EventEntry->Event.TotalSize = TotalSize;
 
-    memcpy(&EventEntry->Event.TargetDevice.DeviceIds,
-           DeviceIds->Buffer,
-           DeviceIds->MaximumLength);
+    /* Fill the device id */
+    Copy.Buffer = EventEntry->Event.TargetDevice.DeviceIds;
+    Status = RtlAppendUnicodeStringToString(&Copy, DeviceIds);
+    if (!NT_SUCCESS(Status))
+        return Status;
 
     InsertHeadList(&IopPnpEventQueueHead,
                    &EventEntry->ListEntry);
