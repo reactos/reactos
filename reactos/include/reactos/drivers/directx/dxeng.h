@@ -67,7 +67,7 @@ HDEV *DxEngEnumerateHdev(HDEV *hdev);
 
 /* Notes : same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
 BOOL
-DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp);
+DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 
 /* Notes : Lock the hDC */
 PDC DxEngLockDC(HDC hDC);
@@ -75,7 +75,8 @@ PDC DxEngLockDC(HDC hDC);
 /* Notes : Unlock the hDC */
 BOOL DxEngUnlockDC(PDC pDC);
 
-
+/* Notes : Set Gamma ramp */
+BOOL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 
 /* prototypes are not done yet, I need gather all my notes 
  * to make them correct 
@@ -89,7 +90,6 @@ DWORD DxEngUnlockHdev(DWORD x1);
 DWORD DxEngReferenceHdev(DWORD x1);
 DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1);
 DWORD DxEngUnreferenceHdev(DWORD x1);
-DWORD DxEngSetDeviceGammaRamp(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpSpritesVisible(DWORD x1);

@@ -123,16 +123,29 @@ DxEngEnumerateHdev(HDEV *hdev)
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngGetDeviceGammaRamp                                              */
-/************************************************************************/
-/* same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
+/*++
+* @name DxEngGetDeviceGammaRamp
+* @implemented
+*
+* The function DxEngSetDeviceGammaRamp Set Gamma ramp from from dxg.sys
+
+* @param HDEV hPDev
+* The hdev
+*
+* @param PGAMMARAMP Ramp
+* to fill in our gama ramp
+*
+* @return
+* This return FALSE or TRUE, FALSE for fail, TRUE for success
+*
+* @remarks.
+* ReactOS does not loop it, only set the gamma once.
+*
+*--*/
 BOOL
-DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp)
+DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 {
-    /* FIXME redirect it to NtGdiEngGetDeviceGammaRamp internal call  */
-    UNIMPLEMENTED;
-    return FALSE;
+    return IntGetDeviceGammaRamp(hPDev, Ramp);
 }
 
 
@@ -140,12 +153,12 @@ DxEngGetDeviceGammaRamp(HDC hDC, LPVOID lpRamp)
 * @name DxEngLockDC
 * @implemented
 *
-* The function DxEngLockDC lock a hdc from dxg.sys 
+* The function DxEngLockDC lock a hdc from dxg.sys
 *
 * @param HDC hDC
 * The handle we need want lock
 *
-* @return 
+* @return
 * This api return PDC or NULL depns if it sussess lock the hdc or not
 *
 * @remarks.
@@ -163,13 +176,13 @@ DxEngLockDC(HDC hDC)
 * @name DxEngUnlockDC
 * @implemented
 *
-* The function DxEngUnlockDC Unlock a pDC (hdc) from dxg.sys 
+* The function DxEngUnlockDC Unlock a pDC (hdc) from dxg.sys
 
 * @param PDC pDC
 * The handle we need unlock
 *
-* @return 
-* This api always return TRUE if it sussess or not 
+* @return
+* This api always return TRUE if it sussess or not
 *
 * @remarks.
 * none
@@ -265,13 +278,34 @@ DWORD DxEngUnreferenceHdev(DWORD x1)
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngSetDeviceGammaRamp                                              */
-/************************************************************************/
-DWORD DxEngSetDeviceGammaRamp(DWORD x1, DWORD x2, DWORD x3)
+
+/*++
+* @name DxEngSetDeviceGammaRamp
+* @implemented
+*
+* The function DxEngSetDeviceGammaRamp Set Gamma ramp from from dxg.sys
+
+* @param HDEV hPDev
+* The hdev
+*
+* @param PGAMMARAMP Ramp
+* to set in our gama ramp
+*
+* @param BOOL Unuse
+* Info on this are avail at request. at moment ReactOS does not
+* does not use it. and problare never need it.
+*
+* @return
+* This return FALSE or TRUE, FALSE for fail, TRUE for success
+*
+* @remarks.
+* ReactOS does not loop it, only set the gamma once.
+*
+*--*/
+BOOL
+DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+   return IntSetDeviceGammaRamp(hPDev, Ramp);
 }
 
 /************************************************************************/

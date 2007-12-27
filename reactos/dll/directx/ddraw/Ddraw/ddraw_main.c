@@ -441,7 +441,7 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
 
    DX_WINDBG_trace();
 
-    // EnterCriticalSection(&ddcs);
+    EnterCriticalSection(&ddcs);
     *ppSurf = NULL;
 
     _SEH_TRY
@@ -464,8 +464,8 @@ Main_DirectDraw_CreateSurface (LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC pDD
         ret = DDERR_INVALIDPARAMS;
     }
     _SEH_END;
-  // LeaveCriticalSection(&ddcs);
-  return ret;
+    LeaveCriticalSection(&ddcs);
+    return ret;
 }
 
 
@@ -476,7 +476,8 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
 {
     HRESULT ret;
     DX_WINDBG_trace();
-    // EnterCriticalSection(&ddcs);
+
+    EnterCriticalSection(&ddcs);
     *ppSurf = NULL;
 
     _SEH_TRY
@@ -489,7 +490,7 @@ Main_DirectDraw_CreateSurface4(LPDDRAWI_DIRECTDRAW_INT This, LPDDSURFACEDESC2 pD
     }
     _SEH_END;
 
-    // LeaveCriticalSection(&ddcs);
+    LeaveCriticalSection(&ddcs);
     return ret;
 }
 
