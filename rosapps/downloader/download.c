@@ -316,17 +316,22 @@ ThreadFunc(LPVOID Context)
 	end:
 		if (bTempfile)
 		{
-			DWORD dwSize = sizeof(DWORD);
-			DWORD dwValue, dwType = REG_DWORD;
-			if (RegQueryValueEx(hKey,
-								L"DeleteInstaller",
-								NULL,
-								&dwType,
-								(LPBYTE)&dwValue,
-								&dwSize) == ERROR_SUCCESS)
-				if (dwValue == 0x1)
-					DeleteFileW(path);
-			RegCloseKey(hKey);
+			if (bCancelled)
+				DeleteFileW(path);
+			else
+			{
+				DWORD dwSize = sizeof(DWORD);
+				DWORD dwValue, dwType = REG_DWORD;
+				if (RegQueryValueEx(hKey,
+									L"DeleteInstaller",
+									NULL,
+									&dwType,
+									(LPBYTE)&dwValue,
+									&dwSize) == ERROR_SUCCESS)
+					if (dwValue == 0x1)
+						DeleteFileW(path);
+				RegCloseKey(hKey);
+			}
 		}
 	EndDialog(Dlg, 0);
 	return 0;
