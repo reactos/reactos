@@ -77,7 +77,17 @@ GetOffsetFromName(HANDLE hProcess, PSYMBOL_INFO pSym, PBYTE pModule, PCSTR Name,
 		printf("SymGetSymFromName64() failed: %ld\n", GetLastError());
 		return 0;
 	}
+	printf("looking up adress for %s: 0x%llx\n", Name, pSym->Address);
 	return GetOffsetFromAdress64(pModule, pSym->Address - pSym->ModBase, pbX64);
+}
+
+BOOL CALLBACK EnumSymbolsProc(
+	PSYMBOL_INFO pSymInfo,
+	ULONG SymbolSize,
+	PVOID UserContext)
+{
+	printf("%s@%d ", pSymInfo->Name, (UINT)UserContext);
+	return TRUE;
 }
 
 int main(int argc, char* argv[])
@@ -159,15 +169,15 @@ cont:
 	dwW32pServiceTable = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pServiceTable", &bX64);
 	dwW32pServiceLimit = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pServiceLimit", &bX64);
 	dwW32pArgumentTable = GetOffsetFromName(hProcess, &Sym.Symbol, pModule, "W32pArgumentTable", &bX64);
+	printf("dwW32pServiceTable = %llx\n", dwW32pServiceTable);
+	printf("dwW32pServiceLimit = %llx\n", dwW32pServiceLimit);
+	printf("dwW32pArgumentTable = %llx\n", dwW32pArgumentTable);
+
 	if (!dwW32pServiceTable || !dwW32pServiceLimit || !dwW32pArgumentTable)
 	{
 		printf("Couldn't find adress!\n");
 		goto cleanup;
 	}
-
-	printf("dwW32pServiceTable = %llx\n", dwW32pServiceTable);
-	printf("dwW32pServiceLimit = %llx\n", dwW32pServiceLimit);
-	printf("dwW32pArgumentTable = %llx\n", dwW32pArgumentTable);
 
 	dwServiceLimit = *((DWORD*)(pModule + dwW32pServiceLimit));
 	pdwArgs = (BYTE*)(pModule + dwW32pArgumentTable);
@@ -176,20 +186,22 @@ cont:
 	{
 		DWORD *pdwEntries32 = (DWORD*)(pModule + dwW32pServiceTable);
 
-		for (i = 0; i <= dwServiceLimit; i++)
+		for (i = 0; i < dwServiceLimit; i++)
 		{
-			SymFromAddr(hProcess, (DWORD64)pdwEntries32[i], 0, &Sym.Symbol);
-			printf("0x%x:%s@%d\n", i+0x1000, Sym.Symbol.Name, pdwArgs[i]);
+			printf("0x%x:", i+0x1000);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries32[i], EnumSymbolsProc, (PVOID)(DWORD)pdwArgs[i]);
+			printf("\n");
 		}
 	}
 	else
 	{
 		DWORD64 *pdwEntries64 = (DWORD64*)(pModule + dwW32pServiceTable);
 
-		for (i = 0; i <= dwServiceLimit; i++)
+		for (i = 0; i < dwServiceLimit; i++)
 		{
-			SymFromAddr(hProcess, (DWORD64)pdwEntries64[i], 0, &Sym.Symbol);
-			printf("0x%x:%s@%d\n", i+0x1000, Sym.Symbol.Name, pdwArgs[i]);
+			printf("0x%x:", i+0x1000);
+			SymEnumSymbolsForAddr(hProcess, (DWORD64)pdwEntries64[i], EnumSymbolsProc, (PVOID)(i+0x1000));
+			printf("\n");
 		}
 	}
 
