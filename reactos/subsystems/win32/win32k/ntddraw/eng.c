@@ -116,7 +116,7 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * @name EngDxIoctl
 * @implemented
 *
-* The function EngDxIoctl is the ioctl call to diffent dx functions 
+* The function EngDxIoctl is the ioctl call to diffent dx functions
 * to the driver dxg.sys
 *
 * @param ULONG ulIoctl
@@ -128,7 +128,7 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * @param ULONG ulBufferSize
 * The buffer size in bytes
 *
-* @return 
+* @return
 * always return DDERR_UNSUPPORTED
 *
 * @remarks.
@@ -176,25 +176,37 @@ EngLockDirectDrawSurface(HANDLE hSurface)
     return pfnEngLockDirectDrawSurface(hSurface);
 }
 
-/************************************************************************/
-/* EngUnlockDirectDrawSurface                                           */
-/************************************************************************/
+
+/*++
+* @name EngUnlockDirectDrawSurface
+* @implemented
+*
+* The function EngUnlockDirectDrawSurface locking the dx surface
+
+* @param PDD_SURFACE_LOCAL pSurface
+* The Surface we whant lock
+*
+* @return
+* This return FALSE or TRUE, FALSE for fail, TRUE for success
+*
+* @remarks.
+* None
+*
+*--*/
 BOOL
 STDCALL
 EngUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 {
-    PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdUnlockDirectDrawSurface, pfnEngUnlockDirectDrawSurface);
-
-    if (pfnEngUnlockDirectDrawSurface == NULL)
-    {
-        DPRINT1("Warring no pfnEngUnlockDirectDrawSurface");
-        return DDHAL_DRIVER_NOTHANDLED;
-    }
+    PGD_ENGUNLOCKDIRECTDRAWSURFACE pfnEngUnlockDirectDrawSurface = (PGD_ENGUNLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdUnlockDirectDrawSurface].pfn;
+    BOOL retVal = FALSE;
 
     DPRINT1("Calling on dxg.sys pfnEngUnlockDirectDrawSurface");
-    return pfnEngUnlockDirectDrawSurface(pSurface);
+
+    if (pfnEngUnlockDirectDrawSurface != NULL)
+    {
+        retVal = pfnEngUnlockDirectDrawSurface(pSurface);
+    }
+
+    return retVal;
 }
 
