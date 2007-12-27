@@ -43,29 +43,29 @@ extern struct Application* SelectedApplication;
 extern WCHAR Strings [STRING_COUNT][MAX_STRING_LENGHT];
 
 typedef struct _IBindStatusCallbackImpl
-  {
-    const IBindStatusCallbackVtbl *vtbl;
-    LONG ref;
-    HWND hDialog;
-    BOOL *pbCancelled;
-  } IBindStatusCallbackImpl;
+{
+	const IBindStatusCallbackVtbl *vtbl;
+	LONG ref;
+	HWND hDialog;
+	BOOL *pbCancelled;
+} IBindStatusCallbackImpl;
 
 static HRESULT WINAPI
 dlQueryInterface(IBindStatusCallback* This, REFIID riid, void** ppvObject)
 {
 	if (NULL == ppvObject)
-    {
+	{
 		return E_POINTER;
-    }
+	}
 
 	if (IsEqualIID(riid, &IID_IUnknown) || IsEqualIID(riid, &IID_IBindStatusCallback))
-    {
+	{
 		IBindStatusCallback_AddRef( This );
 		*ppvObject = This;
 		return S_OK;
-    }
+	}
 
-  return E_NOINTERFACE;
+	return E_NOINTERFACE;
 }
 
 static ULONG WINAPI
@@ -83,10 +83,10 @@ dlRelease(IBindStatusCallback* iface)
 	DWORD ref = InterlockedDecrement(&This->ref);
 
 	if( !ref )
-    {
+	{
 		DestroyWindow( This->hDialog );
 		HeapFree(GetProcessHeap(), 0, This);
-    }
+	}
 
 	return ref;
 }
@@ -117,7 +117,7 @@ dlOnLowResource( IBindStatusCallback* iface, DWORD reserved)
 
 static HRESULT WINAPI
 dlOnProgress(IBindStatusCallback* iface, ULONG ulProgress,
-             ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
+			ULONG ulProgressMax, ULONG ulStatusCode, LPCWSTR szStatusText)
 {
 	IBindStatusCallbackImpl *This = (IBindStatusCallbackImpl *) iface;
 	HWND Item;
@@ -126,29 +126,29 @@ dlOnProgress(IBindStatusCallback* iface, ULONG ulProgress,
 
 	Item = GetDlgItem(This->hDialog, IDC_PROGRESS);
 	if (NULL != Item && 0 != ulProgressMax)
-    {
+	{
 		SendMessageW(Item, PBM_SETPOS, (ulProgress * 100) / ulProgressMax, 0);
-    }
+	}
 
 	Item = GetDlgItem(This->hDialog, IDC_STATUS);
 	if (NULL != Item && NULL != szStatusText)
-    {
+	{
 		SendMessageW(Item, WM_GETTEXT, sizeof(OldText) / sizeof(OldText[0]),
-                     (LPARAM) OldText);
+					(LPARAM) OldText);
 		if (sizeof(OldText) / sizeof(OldText[0]) - 1 <= wcslen(OldText) || 0 != wcscmp(OldText, szStatusText))
-        {
+		{
 			SendMessageW(Item, WM_SETTEXT, 0, (LPARAM) szStatusText);
-        }
-    }
+		}
+	}
 
 	SetLastError(0);
 	r = GetWindowLongPtrW(This->hDialog, GWLP_USERDATA);
 	if (0 != r || 0 != GetLastError())
-    {
+	{
 		*This->pbCancelled = TRUE;
 		DPRINT("Cancelled\n");
 		return E_ABORT;
-    }
+	}
 
 	return S_OK;
 }
@@ -171,7 +171,7 @@ dlGetBindInfo(IBindStatusCallback* iface, DWORD* grfBINDF, BINDINFO* pbindinfo)
 
 static HRESULT WINAPI
 dlOnDataAvailable(IBindStatusCallback* iface, DWORD grfBSCF,
-                  DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
+				DWORD dwSize, FORMATETC* pformatetc, STGMEDIUM* pstgmed)
 {
 	DPRINT1("OnDataAvailable implemented\n");
 
@@ -188,17 +188,17 @@ dlOnObjectAvailable(IBindStatusCallback* iface, REFIID riid, IUnknown* punk)
 
 static const IBindStatusCallbackVtbl dlVtbl =
 {
-    dlQueryInterface,
-    dlAddRef,
-    dlRelease,
-    dlOnStartBinding,
-    dlGetPriority,
-    dlOnLowResource,
-    dlOnProgress,
-    dlOnStopBinding,
-    dlGetBindInfo,
-    dlOnDataAvailable,
-    dlOnObjectAvailable
+	dlQueryInterface,
+	dlAddRef,
+	dlRelease,
+	dlOnStartBinding,
+	dlGetPriority,
+	dlOnLowResource,
+	dlOnProgress,
+	dlOnStopBinding,
+	dlGetBindInfo,
+	dlOnDataAvailable,
+	dlOnObjectAvailable
 };
 
 static IBindStatusCallback*
@@ -287,18 +287,18 @@ ThreadFunc(LPVOID Context)
 	dl = CreateDl(Context, &bCancelled);
 	r = URLDownloadToFileW(NULL, SelectedApplication->Location, path, 0, dl);
 	if (NULL != dl)
-    {
+	{
 		IBindStatusCallback_Release(dl);
-    }
+	}
 	if (S_OK != r)
-    {
+	{
 		MessageBoxW(0,Strings[IDS_DOWNLOAD_ERROR],0,0);
 		goto end;
-    }
+	}
 	else if (bCancelled)
-    {
+	{
 		goto end;
-    }
+	}
 	ShowWindow(Dlg, SW_HIDE);
 
 	/* run it */
@@ -306,9 +306,9 @@ ThreadFunc(LPVOID Context)
 	si.cb = sizeof(si);
 	r = CreateProcessW(path, NULL, NULL, NULL, 0, 0, NULL, NULL, &si, &pi);
 	if (0 == r)
-    {
+	{
 		goto end;
-    }
+	}
 	CloseHandle(pi.hThread);
 	WaitForSingleObject(pi.hProcess, INFINITE);
 	CloseHandle(pi.hProcess);
@@ -340,7 +340,7 @@ DownloadProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
 	HWND Item;
 
 	switch (Msg)
-    {
+	{
 		case WM_INITDIALOG:/*
       Icon = LoadIconW((HINSTANCE) GetWindowLongPtr(Dlg, GWLP_HINSTANCE),
                        MAKEINTRESOURCEW(IDI_ICON_MAIN));
@@ -349,13 +349,13 @@ DownloadProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
           SendMessageW(Dlg, WM_SETICON, ICON_BIG, (LPARAM) Icon);
           SendMessageW(Dlg, WM_SETICON, ICON_SMALL, (LPARAM) Icon);
         }*/
-		SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
-		Item = GetDlgItem(Dlg, IDC_PROGRESS);
-		if (NULL != Item)
-        {
-			SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0,100));
-			SendMessageW(Item, PBM_SETPOS, 0, 0);
-        }/*
+			SetWindowLongPtrW(Dlg, GWLP_USERDATA, 0);
+			Item = GetDlgItem(Dlg, IDC_PROGRESS);
+			if (NULL != Item)
+			{
+				SendMessageW(Item, PBM_SETRANGE, 0, MAKELPARAM(0,100));
+				SendMessageW(Item, PBM_SETPOS, 0, 0);
+			}/*
       Item = GetDlgItem(Dlg, IDC_REMOVE);
       if (NULL != Item)
         {
@@ -370,27 +370,27 @@ DownloadProc(HWND Dlg, UINT Msg, WPARAM wParam, LPARAM lParam)
               ShowWindow(Item, SW_HIDE);
             }
         }*/
-		Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
-		if (NULL == Thread)
-		{
+			Thread = CreateThread(NULL, 0, ThreadFunc, Dlg, 0, &ThreadId);
+			if (NULL == Thread)
+			{
+				return FALSE;
+			}
+			CloseHandle(Thread);
+			return TRUE;
+
+		case WM_COMMAND:
+			if (wParam == IDCANCEL)
+			{
+				SetWindowLongPtrW(Dlg, GWLP_USERDATA, 1);
+				PostMessage(Dlg, WM_CLOSE, 0, 0);
+			}
 			return FALSE;
-		}
-		CloseHandle(Thread);
-		return TRUE;
 
-    case WM_COMMAND:
-		if (wParam == IDCANCEL)
-		{
-			SetWindowLongPtrW(Dlg, GWLP_USERDATA, 1);
-			PostMessage(Dlg, WM_CLOSE, 0, 0);
-		}
-		return FALSE;
+		case WM_CLOSE:
+			EndDialog(Dlg, 0);
+			return TRUE;
 
-    case WM_CLOSE:
-        EndDialog(Dlg, 0);
-        return TRUE;
-
-	default:
-		return FALSE;
-    }
+		default:
+			return FALSE;
+	}
 }
