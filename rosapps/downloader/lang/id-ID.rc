@@ -54,4 +54,7 @@ BEGIN
   IDS_DOWNLOAD_FOLDER		"Downloader"
   IDS_UNABLECREATE_FOLDER	"Unable to create a folder with this name!"
   IDS_UPDATE_URL		"http://svn.reactos.org"
+  TTT_HELPBUTTON, "Get help about the downloader"
+  TTT_UPDATEBUTTON, "Not yet available"
+  TTT_PROFBUTTON, "Let you configure the downloader"
 END

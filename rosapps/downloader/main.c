@@ -143,6 +143,31 @@ CategoryChoosen(HWND hwnd, struct Category* Category)
 	}
 }
 
+BOOL CreateToolTip(HWND hwndTool, HWND hDlg, WCHAR* pText)
+{
+	if (!hwndTool || !hDlg || !pText)
+		return FALSE;
+
+	HWND hwndTip = CreateWindowExW(0, TOOLTIPS_CLASS, NULL,
+									WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
+									CW_USEDEFAULT, CW_USEDEFAULT,
+									CW_USEDEFAULT, CW_USEDEFAULT,
+									hDlg, NULL, 
+									GetModuleHandle(NULL), NULL);
+	if (!hwndTip)
+		return FALSE;
+
+	TOOLINFO toolInfo = {0};
+	toolInfo.cbSize = sizeof(toolInfo);
+	toolInfo.hwnd = hDlg;
+	toolInfo.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+	toolInfo.uId = (UINT_PTR)hwndTool;
+	toolInfo.lpszText = pText;
+	SendMessage(hwndTip, TTM_ADDTOOL, 0, (LPARAM)&toolInfo);
+
+	return TRUE;
+}
+
 BOOL
 SetupControls (HWND hwnd)
 {
@@ -150,6 +175,7 @@ SetupControls (HWND hwnd)
 	HIMAGELIST hImageList;
 	HINSTANCE hInstance = GetModuleHandle(NULL);
 	WCHAR Cats[MAX_STRING_LENGHT], Apps[MAX_STRING_LENGHT];
+	WCHAR Tooltip1[MAX_STRING_LENGHT], Tooltip2[MAX_STRING_LENGHT], Tooltip3[MAX_STRING_LENGHT];
 	TCHAR Buf[MAX_PATH];
 	char Tmp[MAX_PATH];
 	int i;
@@ -184,18 +210,28 @@ SetupControls (HWND hwnd)
 								WS_CHILD | WS_VISIBLE | BS_ICON,
 								550, 10, 40, 40,
 								hwnd, 0, hInstance, NULL);
+	LoadString(hInstance, TTT_HELPBUTTON, Tooltip1, MAX_STRING_LENGHT);
+	CreateToolTip(hHelpButton, hwnd, Tooltip1);
+	
 	hUpdateButton = CreateWindowW(L"Button", L"",
 								  WS_CHILD | WS_VISIBLE | BS_ICON,
 								  450, 10, 40, 40,
 								  hwnd, 0, hInstance, NULL);
+	LoadString(hInstance, TTT_UPDATEBUTTON, Tooltip2, MAX_STRING_LENGHT);
+	CreateToolTip(hUpdateButton, hwnd, Tooltip2);
+								  
 	hProfButton = CreateWindowW(L"Button", L"",
 								WS_CHILD | WS_VISIBLE | BS_ICON,
 								500, 10, 40, 40,
 								hwnd, 0, hInstance, NULL);
+	LoadString(hInstance, TTT_PROFBUTTON, Tooltip3, MAX_STRING_LENGHT);
+	CreateToolTip(hProfButton, hwnd, Tooltip3);
+								
 	hDownloadButton = CreateWindowW(L"Button", L"",
 									WS_CHILD | WS_VISIBLE | BS_BITMAP,
 									330, 505, 140, 33,
 									hwnd, 0, hInstance, NULL);
+									
 	hUninstallButton = CreateWindowW(L"Button", L"",
 									 WS_CHILD | WS_VISIBLE | BS_BITMAP,
 									 260, 505, 140, 33,
