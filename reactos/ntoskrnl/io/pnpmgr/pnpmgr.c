@@ -1653,6 +1653,8 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
             /* OK, value is correct ; prepare to return it */
             KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
             KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+            if (KeyValue.Length && KeyValue.Buffer[KeyValue.Length / sizeof(WCHAR) - 1] == UNICODE_NULL);
+                KeyValue.Length -= sizeof(WCHAR);
         }
 
         /* We're done */
@@ -2461,7 +2463,11 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
     * Make sure this device node is a direct child of the parent device node
     * that is given as an argument
     */
-   ASSERT(DeviceNode->Parent == ParentDeviceNode);
+   if (DeviceNode->Parent != ParentDeviceNode)
+   {
+       DPRINT("Not a direct child\n");
+       return STATUS_UNSUCCESSFUL;
+   }
 
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&

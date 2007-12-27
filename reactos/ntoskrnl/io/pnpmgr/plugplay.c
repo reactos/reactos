@@ -371,7 +371,7 @@ IopGetDeviceProperty(PPLUGPLAY_CONTROL_PROPERTY_DATA PropertyData)
     }
 
     /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&PropertyData->DeviceInstance);
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
     {
@@ -552,13 +552,11 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
     NTSTATUS Status = STATUS_SUCCESS;
 
     DPRINT("IopDeviceStatus() called\n");
-    DPRINT("Device name: %wZ\n", &StatusData->DeviceInstance);
 
     Status = IopCaptureUnicodeString(&DeviceInstance, &StatusData->DeviceInstance);
     if (!NT_SUCCESS(Status))
-    {
-	return Status;
-    }
+        return Status;
+    DPRINT("Device name: '%wZ'\n", &DeviceInstance);
 
     _SEH_TRY
     {
@@ -577,15 +575,13 @@ IopDeviceStatus(PPLUGPLAY_CONTROL_STATUS_DATA StatusData)
 
     if (!NT_SUCCESS(Status))
     {
-	if (DeviceInstance.Buffer)
-	{
-	    ExFreePool(DeviceInstance.Buffer);
-	}
-	return Status;
+        if (DeviceInstance.Buffer)
+            ExFreePool(DeviceInstance.Buffer);
+        return Status;
     }
 
     /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&StatusData->DeviceInstance);
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
@@ -649,7 +645,7 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
     }
 
     /* Get the device object */
-    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DepthData->DeviceInstance);
+    DeviceObject = IopGetDeviceObjectFromDeviceInstance(&DeviceInstance);
     ExFreePool(DeviceInstance.Buffer);
     if (DeviceObject == NULL)
         return STATUS_NO_SUCH_DEVICE;
