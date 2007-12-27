@@ -143,37 +143,49 @@ EngDxIoctl(ULONG ulIoctl,
            ULONG ulBufferSize)
 {
     PGD_ENGDXIOCTL pfnEngDxIoctl = (PGD_ENGDXIOCTL)gpDxFuncs[DXG_INDEX_DxDdIoctl].pfn;
-
-    if (pfnEngDxIoctl == NULL)
-    {
-        DPRINT1("Warring no pfnEngDxIoctl");
-        return DDERR_UNSUPPORTED;
-    }
+    DWORD retVal = DDERR_UNSUPPORTED;
 
     DPRINT1("Calling on dxg.sys pfnEngDxIoctl");
-    return pfnEngDxIoctl(ulIoctl, pBuffer, ulBufferSize);
+
+    if (pfnEngDxIoctl != NULL)
+    {
+        retVal = pfnEngDxIoctl(ulIoctl, pBuffer, ulBufferSize);
+    }
+
+    return retVal;
 }
 
-/************************************************************************/
-/* EngLockDirectDrawSurface                                             */
-/************************************************************************/
+/*++
+* @name EngLockDirectDrawSurface
+* @implemented
+*
+* The function EngUnlockDirectDrawSurface locking the dx surface
+
+* @param HANDLE hSurface
+* The handle of a surface
+*
+* @return
+* This return vaild or NULL pointer to PDD_SURFACE_LOCAL object
+*
+* @remarks.
+* None
+*
+*--*/
 PDD_SURFACE_LOCAL
 STDCALL
 EngLockDirectDrawSurface(HANDLE hSurface)
 {
-    PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = NULL;
-    INT i;
-
-    DXG_GET_INDEX_FUNCTION(DXG_INDEX_DxDdLockDirectDrawSurface, pfnEngLockDirectDrawSurface);
-
-    if (pfnEngLockDirectDrawSurface == NULL)
-    {
-        DPRINT1("Warring no pfnEngLockDirectDrawSurface");
-        return DDHAL_DRIVER_NOTHANDLED;
-    }
+    PGD_ENGLOCKDIRECTDRAWSURFACE pfnEngLockDirectDrawSurface = (PGD_ENGLOCKDIRECTDRAWSURFACE)gpDxFuncs[DXG_INDEX_DxDdLockDirectDrawSurface].pfn;
+    PDD_SURFACE_LOCAL retVal = NULL;
 
     DPRINT1("Calling on dxg.sys pfnEngLockDirectDrawSurface");
-    return pfnEngLockDirectDrawSurface(hSurface);
+
+    if (pfnEngLockDirectDrawSurface != NULL)
+    {
+       retVal = pfnEngLockDirectDrawSurface(hSurface);
+    }
+
+    return retVal;
 }
 
 
