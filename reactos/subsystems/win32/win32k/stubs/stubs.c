@@ -2758,17 +2758,6 @@ NtGdiSTROBJ_dwGetCodePage(
  /*
  * @unimplemented
  */
-DHPDEV
-NtGdiGetDhpdev(
-    IN HDEV hdev)
-{
-    UNIMPLEMENTED;
-    return NULL;
-}
-
- /*
- * @unimplemented
- */
 BOOL
 APIENTRY
 NtGdiGetEmbUFI(

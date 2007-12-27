@@ -44,7 +44,7 @@ typedef struct _STRGDI
   PLONG     plPartition;
   PLONG     plNext;
   PGLYPHPOS pgpNext;
-  LONG      lCurrentFont;
+  PLONG     plCurrentFont;
   POINTL    ptlBaseLineAdjust;
   INT       cTTSysGlyphs;
   INT       cSysGlyphs;

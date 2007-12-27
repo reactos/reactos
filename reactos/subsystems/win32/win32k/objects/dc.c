@@ -3346,4 +3346,30 @@ NtGdiGetAspectRatioFilterEx(HDC  hDC,
   return FALSE;
 }
 
+/*
+ * @implemented
+ */
+DHPDEV
+NtGdiGetDhpdev(
+    IN HDEV hdev)
+{
+  PGDIDEVICE pGdiDevice = (PGDIDEVICE) hdev;
+  if (!pGdiDevice) return NULL;
+  // ATM we have one, so this cheesie test
+  if (pGdiDevice != &PrimarySurface) return NULL;
+//
+//  if ( pGdiDevice < MmSystemRangeStart) return NULL;
+//  pPDev = &PrimarySurface;
+//  KeEnterCriticalRegion();
+//  do
+//  {
+//    if (pGdiDevice == pPDev) break;
+//    else
+//      pPDev = pPDev->ppdevNext;
+//  } while (pPDev != NULL);
+//  KeLeaveCriticalRegion();
+//  if (!pPDev) return NULL;
+  return pGdiDevice->PDev;
+}
+
 /* EOF */
