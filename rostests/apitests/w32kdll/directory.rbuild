@@ -13,3 +13,7 @@
 <directory name="w32kdll_2k3sp2">
 	<xi:include href="w32kdll_2k3sp2/w32kdll_2k3sp2.rbuild" />
 </directory>
+
+<directory name="w32kdll_vista">
+	<xi:include href="w32kdll_vista/w32kdll_vista.rbuild" />
+</directory>
