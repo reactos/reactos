@@ -543,7 +543,7 @@ IntPrepareDriver()
       PrimarySurface.DisplayNumber = DisplayNumber;
       PrimarySurface.flFlags = PDEV_DISPLAY; // Hard set,, add more flags.
       PrimarySurface.hsemDevLock = (PERESOURCE)EngCreateSemaphore();
-
+      PrimarySurface.ppdevNext = NULL; // Fixme! We need to support more than display drvs.
       ret = TRUE;
       goto cleanup;
    }
@@ -3353,22 +3353,19 @@ DHPDEV
 NtGdiGetDhpdev(
     IN HDEV hdev)
 {
-  PGDIDEVICE pGdiDevice = (PGDIDEVICE) hdev;
+  PGDIDEVICE pPDev, pGdiDevice = (PGDIDEVICE) hdev;
   if (!pGdiDevice) return NULL;
-  // ATM we have one, so this cheesie test
-  if (pGdiDevice != &PrimarySurface) return NULL;
-//
-//  if ( pGdiDevice < MmSystemRangeStart) return NULL;
-//  pPDev = &PrimarySurface;
-//  KeEnterCriticalRegion();
-//  do
-//  {
-//    if (pGdiDevice == pPDev) break;
-//    else
-//      pPDev = pPDev->ppdevNext;
-//  } while (pPDev != NULL);
-//  KeLeaveCriticalRegion();
-//  if (!pPDev) return NULL;
+  if ( pGdiDevice < (PGDIDEVICE)MmSystemRangeStart) return NULL;
+  pPDev = &PrimarySurface;
+  KeEnterCriticalRegion();
+  do
+  {
+    if (pGdiDevice == pPDev) break;
+    else
+      pPDev = pPDev->ppdevNext;
+  } while (pPDev != NULL);
+  KeLeaveCriticalRegion();
+  if (!pPDev) return NULL;
   return pGdiDevice->PDev;
 }
 

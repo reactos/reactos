@@ -49,13 +49,14 @@ typedef struct _GDIPOINTER /* should stay private to ENG */
   ULONG Status;
 } GDIPOINTER, *PGDIPOINTER;
 
-typedef struct
+typedef struct _GDIDEVICE
 {
   HANDLE Handle;                 // HSURF
   PVOID  pvEntry;
   ULONG  lucExcLock;
   ULONG  Tid;
 
+  struct _GDIDEVICE *ppdevNext;
   FLONG  flFlags;
   PERESOURCE hsemDevLock;
 
