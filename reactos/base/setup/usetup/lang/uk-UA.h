@@ -6,7 +6,7 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         6,
         8,
-        "Language Selection.",
+        "Вибiр мови",
         TEXT_NORMAL
     },
     {
@@ -30,7 +30,7 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -52,43 +52,43 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         6,
         11,
-        "Ця частина установки коп_ює операц_йну систему ReactOS у Ваш",
+        "Ця частина установки копiює операцiйну систему ReactOS у Ваш",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "комп'ютер _ готує другу частину установки.",
+        "комп'ютер i готує другу частину установки.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Натисн_ть <ENTER> щоб устанити ReactOS.",
+        "\x07  Натиснiть <ENTER> щоб устанити ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Натисн_ть <R> щоб в_дновити ReactOS.",
+        "\x07  Натиснiть <R> щоб в_дновити ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Натисн_ть <L> щоб переглянути л_ценз_йн_ умови ReactOS",
+        "\x07  Натиснiть <L> щоб переглянути лiцензiйнi умови ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Натисн_ть <F3> щоб вийти, не встановлюючи ReactOS.",
+        "\x07  Натиснiть <F3> щоб вийти, не встановлюючи ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Для б_льш конкретної _нформац_ї про ReactOS, будь ласка в_дв_дайте:",
+        "Для бiльш конкретної iнформацiї про ReactOS, будь ласка вiдвiдайте:",
         TEXT_NORMAL
     },
     {
@@ -100,7 +100,7 @@ static MUI_ENTRY ukUAWelcomePageEntries[] =
     {
         0,
         0,
-        "   ENTER=Продовжити  R=В_дновити F3=Вих_д",
+        "   ENTER=Продовжити  R=Вiдновити F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -116,85 +116,85 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS Setup is in an early development phase. It does not yet",
+        "ReactOS знаходиться в раннiй стадiї розробки i не пiдтримує всi",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "support all the functions of a fully usable setup application.",
+        "пiдтримуйте всi функцiї повноцiнного додатку установки.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "The following limitations apply:",
+        "Є наступнi обмеження:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- Setup can not handle more than one primary partition per disk.",
+        "- Установка можлива тiльки на первинний роздiл диска.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- Setup can not delete a primary partition from a disk",
+        "- При установцi не можна видалити первинний роздiл диска",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "  as long as extended partitions exist on this disk.",
+        "  поки на диску є розширений роздiл.",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "- Setup can not delete the first extended partition from a disk",
+        "- При установцi не можна видалити перший розширений роздiл з диска",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "  as long as other extended partitions exist on this disk.",
+        "  поки на диску iснують iншi розширенi роздiли.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "- Setup supports FAT file systems only.",
+        "- При установцi пiдтримується тiльки файлова система FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- File system checks are not implemented yet.",
+        "- Перевiрка файлової системи не здiйснюється.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Press ENTER to install ReactOS.",
+        "\x07  Натиснiть <ENTER> для установки ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Натиснiть <F3> для виходу з установки ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -210,73 +210,73 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         6,
         6,
-        "Licensing:",
+        "Лiцензiя:",
         TEXT_HIGHLIGHT
     },
     {
         8,
         8,
-        "The ReactOS System is licensed under the terms of the",
+        "ReactOS лiцензована вiдповiдно до Вiдкритої лiцензiйної",
         TEXT_NORMAL
     },
     {
         8,
         9,
-        "GNU GPL with parts containing code from other compatible",
+        "угоди GNU GPL i мiстить компоненти, якi поширюються",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "licenses such as the X11 or BSD and GNU LGPL licenses.",
+        "за сумiсними лiцензiями: X11, BSD i GNU LGPL.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "All software that is part of the ReactOS system is",
+        "Все програмне забезпечення, яке входить в систему ReactOS, випущено",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "therefore released under the GNU GPL as well as maintaining",
+        "пiд Вiдкритою лiцензiйною угодою GNU GPL iз збереженням",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "the original license.",
+        "первиннiй лiцензiї.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "This software comes with NO WARRANTY or restrictions on usage",
+        "Дане програмне забезпечення поставляється БЕЗ ГАРАНТiЇ i без обмежень",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "save applicable local and international law. The licensing of",
+        "у використаннi, як в мiсцевому, так i мiжнародному правi",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "ReactOS only covers distribution to third parties.",
+        "Лiцензiя ReactOS дозволяє передачу продукту третiм особам.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "If for some reason you did not receive a copy of the",
+        "Якщо через будь-якi причини Ви не отримали копiю Вiдкритої",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "GNU General Public License with ReactOS please visit",
+        "лiцензiйної угоди GNU разом з ReactOS, вiдвiдаєте",
         TEXT_NORMAL
     },
     {
@@ -288,31 +288,31 @@ static MUI_ENTRY ukUALicensePageEntries[] =
     {
         8,
         22,
-        "Warranty:",
+        "Гарантiї:",
         TEXT_HIGHLIGHT
     },
     {
         8,
         24,
-        "This is free software; see the source for copying conditions.",
+        "Це вiльне програмне забезпечення; див. джерело для перегляду прав.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "There is NO warranty; not even for MERCHANTABILITY or",
+        "НЕМАЄ НiЯКИХ ГАРАНТiЙ; немає гарантiї ТОВАРНОГО СТАНУ або",
         TEXT_NORMAL
     },
     {
         8,
         26,
-        "FITNESS FOR A PARTICULAR PURPOSE",
+        "ПРИДАТНОСТi ДЛЯ КОНКРЕТНИХ ЦiЛЕЙ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Return",
+        "   ENTER=Повернутися",
         TEXT_STATUS
     },
     {
@@ -328,78 +328,78 @@ static MUI_ENTRY ukUADevicePageEntries[] =
     {
         6,
         8,
-        "The list below shows the current device settings.",
+        "У списку нижче приведенi пристрої i їх параметри.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "       Computer:",
+        "      Комп'ютер:",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "        Display:",
+        "          Екран:",
         TEXT_NORMAL,
     },
     {
         8,
         13,
-        "       Keyboard:",
+        "     Клавiатура:",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Keyboard layout:",
+        "Клав. розкладка:",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "         Accept:",
+        "    Застосувати:",
         TEXT_NORMAL
     },
     {
         25,
-        16, "Accept these device settings",
+        16, "Застосувати данi параметри пристроїв",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "You can change the hardware settings by pressing the UP or DOWN keys",
+        "Ви можете змiнити параметри пристроїв натискаючи клавiшi <ВГОРУ> i <ВНИЗ>",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "to select an entry. Then press the ENTER key to select alternative",
+        "для видiлення елементу i клавiшу <ENTER> для вибору iнших варiантiв",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "settings.",
+        "параметрiв.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "When all settings are correct, select \"Accept these device settings\"",
+        "Коли всi параметри визначенi, виберiть \"Застосувати данi параметри пристроїв\"",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "and press ENTER.",
+        "i натиснiть <ENTER>.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -701,7 +701,7 @@ static MUI_ENTRY ukUABootPageEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -782,7 +782,7 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -828,7 +828,7 @@ static MUI_ENTRY ukUAInstallDirectoryEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -902,7 +902,7 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER=Продовжити  F3=Вихiд",
         TEXT_STATUS
     },
     {
@@ -1107,6 +1107,198 @@ static MUI_ENTRY ukUADeletePartitionEntries[] =
         0,
         NULL,
         0
+    }
+};
+
+MUI_ERROR ukUAErrorEntries[] =
+{
+    {
+        //ERROR_NOT_INSTALLED
+        "ReactOS is not completely installed on your\n"
+	     "computer. If you quit Setup now, you will need to\n"
+	     "run Setup again to install ReactOS.\n"
+	     "\n"
+	     "  \x07  Press ENTER to continue Setup.\n"
+	     "  \x07  Press F3 to quit Setup.",
+	     "F3= Quit  ENTER = Continue"
+    },
+    {
+        //ERROR_NO_HDD
+        "Setup could not find a harddisk.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_SOURCE_DRIVE
+        "Setup could not find its source drive.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_TXTSETUPSIF
+        "Setup failed to load the file TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CORRUPT_TXTSETUPSIF
+        "Setup found a corrupt TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_SIGNATURE_TXTSETUPSIF,
+        "Setup found an invalid signature in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_DRIVE_INFORMATION
+        "Setup could not retrieve system drive information.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WRITE_BOOT,
+        "failed to install FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
+        "Setup failed to load the computer type list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_DISPLAY,
+        "Setup failed to load the display settings list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_KEYBOARD,
+        "Setup failed to load the keyboard type list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_KBLAYOUT,
+        "Setup failed to load the keyboard layout list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WARN_PARTITION,
+          "Setup found that at least one harddisk contains an incompatible\n"
+		  "partition table that can not be handled properly!\n"
+		  "\n"
+		  "Creating or deleting partitions can destroy the partiton table.\n"
+		  "\n"
+		  "  \x07  Press F3 to quit Setup."
+		  "  \x07  Press ENTER to continue.",
+          "F3= Quit  ENTER = Continue"
+    },
+    {
+        //ERROR_NEW_PARTITION,
+        "You can not create a new Partition inside\n"
+		"of an already existing Partition!\n"
+		"\n"
+		"  * Press any key to continue.",
+        NULL
+    },
+    {
+        //ERROR_DELETE_SPACE,
+        "You can not delete unpartitioned disk space!\n"
+        "\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
+        //ERROR_INSTALL_BOOTCODE,
+        "Setup failed to install the FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
+        "No disk in drive A:.",
+        "ENTER = Continue"
+    },
+    {
+        //ERROR_UPDATE_KBSETTINGS,
+        "Setup failed to update keyboard layout settings.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Setup failed to update display registry settings.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_IMPORT_HIVE,
+        "Setup failed to import a hive file.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_FIND_REGISTRY
+        "Setup failed to find the registry data files.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_HIVE,
+        "Setup failed to create the registry hives.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_INITIALIZE_REGISTRY,
+        "Setup failed to set the initialize the registry.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_INVALID_CABINET_INF,
+        "Cabinet has no valid inf file.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_MISSING,
+        "Cabinet not found.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_SCRIPT,
+        "Cabinet has no setup script.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_COPY_QUEUE,
+        "Setup failed to open the copy file queue.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_DIR,
+        "Setup could not create install directories.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_TXTSETUP_SECTION,
+        "Setup failed to find the 'Directories' section\n"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_SECTION,
+        "Setup failed to find the 'Directories' section\n"
+        "in the cabinet.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_INSTALL_DIR
+        "Setup could not create the install directory.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_FIND_SETUPDATA,
+        "Setup failed to find the 'SetupData' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WRITE_PTABLE,
+        "Setup failed to write partition tables.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        NULL,
+        NULL
     }
 };
 

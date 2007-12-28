@@ -12,8 +12,8 @@ LANGUAGE LANG_UKRAINIAN, SUBLANG_DEFAULT
 
 STRINGTABLE {
 	IDS_SECONDS, "сек"
-	IDS_NOBODY,  "Nobody"
-	IDS_ABOUT,   "by Joshua Thielen and ReactOS developers"
+	IDS_NOBODY,  "Ніхто"
+	IDS_ABOUT,   "від Joshua Thielen і розробників ReactOS"
 }
 
 IDM_WINEMINE MENU DISCARDABLE
