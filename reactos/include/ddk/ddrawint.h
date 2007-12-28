@@ -1451,6 +1451,16 @@ typedef struct DD_KERNELCALLBACKS
 #define DDRAWI_VPORTGETCOLOR                  0x0001
 #define DDRAWI_VPORTSETCOLOR                  0x0002
 
+#ifndef __DDRAWI_INCLUDED__
+#define VIDMEM_ISLINEAR		0x00000001
+#define VIDMEM_ISRECTANGULAR	0x00000002
+#define VIDMEM_ISHEAP		0x00000004
+#define VIDMEM_ISNONLOCAL	0x00000008
+#define VIDMEM_ISWC		0x00000010
+#define VIDMEM_ISDISABLED	0x00000020
+#endif
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
