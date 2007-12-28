@@ -1582,19 +1582,20 @@ GdiRealizationInfo(HDC hdc,
     return 0;
 }
 
-
-
 /*
- * @unimplemented
+ * @implemented
  */
 BOOL
 STDCALL
 GetETM(HDC hdc,
        EXTTEXTMETRIC *petm)
 {
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
+  BOOL Ret = NtGdiGetETM(hdc, petm);
+  if ( Ret )
+  {
+     if ( petm ) petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
+  }
+  return Ret;
 }
 
 /*
