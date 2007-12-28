@@ -11023,6 +11023,23 @@ DbgPrintEx(
   IN PCCH  Format,
   IN ...);
 
+ULONG
+DDKCDECLAPI
+vDbgPrintEx(
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN LPCSTR Format,
+  IN va_list ap);
+
+ULONG
+DDKCDECLAPI
+vDbgPrintExWithPrefix(
+  IN LPCSTR Prefix,
+  IN ULONG ComponentId,
+  IN ULONG Level,
+  IN LPCSTR Format,
+  IN va_list ap);
+
 NTKERNELAPI
 ULONG
 DDKCDECLAPI
