@@ -45,7 +45,7 @@ CAPTION "Quitar Actualizaciones"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
 	ICON IDI_UPDATES,-1,PROPSHEETPADDING,6,16,16
-	LTEXT "Las siguientes actualizaciones pueden er quitadas automaticamente. Para quitar una actualización, seleccionala de la lista y presiona Quitar.",-1,36,7,PROPSHEETWIDTH-48,22
+	LTEXT "Las siguientes actualizaciones pueden ser quitadas automaticamente. Para quitar una actualización, seleccionela de la lista y presione Quitar.",-1,36,7,PROPSHEETWIDTH-48,22
 	LTEXT "Examinar:",-1,PROPSHEETPADDING,33,30,8
 	EDITTEXT IDC_UPD_FIND_EDIT, PROPSHEETPADDING+30, 30, 180, 14, WS_VISIBLE | WS_TABSTOP
 	LTEXT "Ver:",-1,250,33,30,8

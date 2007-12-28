@@ -82,7 +82,7 @@ END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
 STYLE DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Environment Variables"
+CAPTION "Variables de Usuario"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
   GROUPBOX "Variables de Usuario",-1,7,12,238,100
@@ -121,11 +121,11 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLSYSTEMNAME "Systema"
-  IDS_CPLSYSTEMDESCRIPTION "Ver información de su Computadora y cambiar varias opciones del systema."
+  IDS_CPLSYSTEMNAME "Sistema"
+  IDS_CPLSYSTEMDESCRIPTION "Ver información de su Computadora y cambiar varias opciones del sistema."
     IDS_VARIABLE "Variable"
-    IDS_VALUE    "Value"
-    IDS_NO_DUMP "(None)"
+    IDS_VALUE    "Valor"
+    IDS_NO_DUMP "(Ninguno)"
     IDS_MINI_DUMP "Minidump(64KB)"
     IDS_KERNEL_DUMP "Kernel dump"
     IDS_FULL_DUMP "Complete dump"

@@ -1,0 +1,267 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+IDR_MAINMENU MENU
+BEGIN
+  POPUP "Arc&hivo"
+  BEGIN
+    MENUITEM "Exportar...",   ID_EXPORT
+    MENUITEM SEPARATOR
+    MENUITEM "&Salir",       ID_EXIT
+  END
+  POPUP "Acción"
+  BEGIN
+    MENUITEM "Conectar a...", ID_CONNECT, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Iniciar",       ID_START, GRAYED
+    MENUITEM "Detener",        ID_STOP, GRAYED
+    MENUITEM "Pausar",       ID_PAUSE, GRAYED
+    MENUITEM "Reanudar",      ID_RESUME, GRAYED
+    MENUITEM "Reiniciar",     ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Actualizar",     ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Editar...",     ID_EDIT, GRAYED
+    MENUITEM "Crear...",   ID_CREATE, GRAYED
+    MENUITEM "Borrar...",   ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Propiedades...", ID_PROP, GRAYED
+  END
+  POPUP "Ver"
+  BEGIN
+    MENUITEM "Iconos Grandes", ID_VIEW_LARGE
+    MENUITEM "Iconos Pequeños", ID_VIEW_SMALL
+    MENUITEM "Lista",        ID_VIEW_LIST
+    MENUITEM "Detalles",     ID_VIEW_DETAILS
+    MENUITEM SEPARATOR
+    MENUITEM "Personalizar...",ID_VIEW_CUST, GRAYED
+  END
+  POPUP "Ayuda"
+  BEGIN
+    MENUITEM "Ayuda",        ID_HELP
+    MENUITEM "Acerca de",       ID_ABOUT
+  END
+END
+
+IDR_POPUP MENU
+BEGIN
+  POPUP "popup"
+  BEGIN
+    MENUITEM "Iniciar",       ID_START, GRAYED
+    MENUITEM "Detener",        ID_STOP, GRAYED
+    MENUITEM "Pausar",       ID_PAUSE, GRAYED
+    MENUITEM "Reanudar",      ID_RESUME, GRAYED
+    MENUITEM "Reiniciar",     ID_RESTART, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Actualizar",     ID_REFRESH
+    MENUITEM SEPARATOR
+    MENUITEM "Editar...",     ID_EDIT, GRAYED
+    MENUITEM "Borrar...",   ID_DELETE, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Propiedades...", ID_PROP, GRAYED
+    MENUITEM SEPARATOR
+    MENUITEM "Ayuda...",     ID_HELP
+  END
+END
+
+IDD_ABOUTBOX DIALOGEX 22,16,190,182
+CAPTION "Acerca de Gestor de Servicios"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
+BEGIN
+  LTEXT "Gestor de Servicios v0.8\nCopyright (C) 2005-2007\nby Ged Murphy (gedmurphy@reactos.org)", IDC_STATIC, 48, 7, 135, 30
+  PUSHBUTTON "Cerrar", IDOK, 75, 162, 44, 15
+  ICON IDI_SM_ICON, IDC_STATIC, 10, 10, 7, 30
+  EDITTEXT IDC_LICENSE_EDIT, 8, 44, 174, 107, WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_READONLY | ES_MULTILINE
+END
+
+IDD_DLG_GENERAL DIALOGEX 6, 6, 253, 232
+CAPTION "General"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  LTEXT "", IDC_SERV_NAME, 70,11,176,11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_DISP_NAME, 70, 29, 176, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  EDITTEXT IDC_DESCRIPTION, 70, 46, 176, 24, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_TABSTOP | ES_MULTILINE | ES_READONLY
+  EDITTEXT IDC_EXEPATH, 6, 86, 240, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP | ES_READONLY
+  COMBOBOX IDC_START_TYPE, 70, 107, 176, 40, WS_CHILD | WS_VISIBLE | WS_TABSTOP | CBS_DROPDOWNLIST
+  PUSHBUTTON "Iniciar", IDC_START, 6, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Detener", IDC_STOP, 68, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Pausar", IDC_PAUSE , 130, 155, 54, 15, WS_DISABLED
+  PUSHBUTTON "Reiniciar", IDC_RESUME, 192, 155, 54, 15, WS_DISABLED
+  LTEXT "Nombre del servicio:", IDC_STATIC, 4, 11, 53, 11
+  LTEXT "Nombre a mostrar:", IDC_STATIC, 4, 29, 53, 11
+  LTEXT "Descripción:", IDC_STATIC, 4, 51, 53, 11
+  LTEXT "Ruta de acceso al ejecutable:", IDC_STATIC, 6, 73, 82, 9
+  LTEXT "Tipo de inicio:", IDC_STATIC, 6, 108, 53, 11
+  LTEXT "Estado del servicio:", IDC_STATIC, 4, 138, 53, 11
+  LTEXT "", IDC_SERV_STATUS, 70, 138, 176, 11, WS_CHILD | WS_VISIBLE
+  LTEXT "Puede especificar los parámetros de inicio a aplicar cuando inicie el servicio desde aquí.",IDC_STATIC, 6,177,240,15
+  LTEXT "Parámetros de inicio:", IDC_STATIC, 6, 200, 58, 11
+  EDITTEXT IDC_START_PARAM, 68, 199, 178, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+  PUSHBUTTON "Editar", IDC_EDIT, 192, 215, 54, 15, WS_DISABLED
+END
+
+IDD_DLG_DEPEND DIALOGEX 6,6,253,225
+CAPTION "Dependencias"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  CONTROL "", IDC_DEPEND_TREE1, "SysTreeView32" ,0x50010007, 8, 70, 236, 68, 0x00000200
+  CONTROL "", IDC_DEPEND_TREE2, "SysTreeView32", 0x50010007, 8, 151, 234, 67, 0x00000200
+  LTEXT "Algunos servicios dependen de otros servicios, controladores de sistemas y grupos de orden de carga. Si un componente de sistema se detiene o no funciona correctamente, es posible que otros servicios dependientes resulten afectados.", IDC_STATIC,8, 7, 238, 26
+  LTEXT "Este servicio depende de los siguientes componentes", IDC_STATIC, 8, 57, 236, 9
+  LTEXT "", IDC_DEPEND_SERVICE, 8, 38, 236, 13
+END
+
+IDD_DLG_CREATE DIALOGEX 6,6,225,209
+CAPTION "Crear un servicio"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_VISIBLE | WS_DLGFRAME | WS_SYSMENU | WS_THICKFRAME | WS_GROUP | WS_TABSTOP
+BEGIN
+  EDITTEXT IDC_CREATE_SERVNAME, 72, 12, 150, 11, WS_CHILD | WS_VISIBLE | WS_EX_CLIENTEDGE
+  EDITTEXT IDC_CREATE_DISPNAME, 72, 31, 150, 11, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_PATH, 8, 62, 214, 13, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_DESC, 10, 97, 210, 48, WS_CHILD | WS_VISIBLE
+  EDITTEXT IDC_CREATE_OPTIONS, 10, 162, 210, 13, WS_CHILD | WS_VISIBLE
+  LTEXT "*Nombre del servicio :", IDC_STATIC, 12, 12, 54, 9
+  LTEXT "*Nombre a mostrar :", IDC_STATIC, 12, 33, 54, 9
+  LTEXT "*Ruta de acceso al ejecutable :", IDC_STATIC, 10, 51, 68, 9
+  LTEXT "Descripción :", IDC_STATIC, 12, 86, 44, 9
+  PUSHBUTTON "Aceptar", IDOK, 126, 192, 44, 13
+  PUSHBUTTON "Cancelar", IDCANCEL, 176, 192, 46, 13
+  LTEXT "Opciones adicionales (Pulsa Ayuda para detalles)", IDC_STATIC, 10, 151, 134, 9
+  PUSHBUTTON "Ayuda", ID_CREATE_HELP, 6, 192, 44, 13
+END
+
+IDD_DLG_DELETE DIALOGEX 6,6,185,148
+CAPTION "Borrar un servicio"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | DS_MODALFRAME
+BEGIN
+  ICON IDI_WARNING, IDC_STATIC, 10, 8, 24, 22
+  LTEXT "¿Esta seguro que quiere borrar el siguiente servicio? ¡No se puede deshacer una vez borrado!", IDC_STATIC, 50, 6, 125, 25
+  LTEXT "Nombre del servicio:",IDC_STATIC, 6, 40, 80, 9
+  LTEXT "", IDC_DEL_NAME, 15, 53, 160, 15
+  EDITTEXT IDC_DEL_DESC, 6, 73, 174, 48, WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_EX_STATICEDGE | ES_MULTILINE | ES_READONLY
+  PUSHBUTTON "Sí", IDOK, 26, 129, 54, 13
+  DEFPUSHBUTTON "No", IDCANCEL, 102, 129, 54, 13
+END
+
+IDD_DLG_HELP_OPTIONS DIALOGEX 6,6,200,150
+CAPTION "Opciones"
+FONT 8, "MS Shell Dlg",0,0
+STYLE 0x10CF0000
+BEGIN
+  LTEXT "", IDC_CREATE_HELP, 6, 5, 200, 150
+  PUSHBUTTON "Aceptar", IDOK, 75, 130, 44, 13
+END
+
+IDD_DLG_PROGRESS DIALOGEX 6,6,255,89
+CAPTION "Control de Servicios"
+FONT 8, "MS Shell Dlg",0,0
+STYLE WS_BORDER | WS_DLGFRAME | WS_SYSMENU | WS_VISIBLE | DS_MODALFRAME
+EXSTYLE WS_EX_TOOLWINDOW
+BEGIN
+  CONTROL "", IDC_SERVCON_PROGRESS, "msctls_progress32", 0x50000000, 8, 46, 238, 13
+  LTEXT "", IDC_SERVCON_INFO, 8, 5, 236, 11
+  LTEXT "", IDC_SERVCON_NAME, 8, 25, 66, 11
+  PUSHBUTTON "&Close", IDOK, 100, 70, 54, 13
+END
+
+
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_FIRSTCOLUMN "Nombre"
+  IDS_SECONDCOLUMN "Descripción"
+  IDS_THIRDCOLUMN "Estado"
+  IDS_FOURTHCOLUMN "Tipo de inicio"
+  IDS_FITHCOLUMN "Iniciar sesión como"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_SERVICES_STARTED "Iniciado"
+  IDS_SERVICES_STOPPED "Detenido"
+  IDS_SERVICES_AUTO "Automatico"
+  IDS_SERVICES_MAN "Manual"
+  IDS_SERVICES_DIS "Disabled"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_NUM_SERVICES "Núm Servicios: %d"
+  IDS_LICENSE "This program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA."
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_TOOLTIP_PROP "Propiedades"
+  IDS_TOOLTIP_REFRESH "Actualizar"
+  IDS_TOOLTIP_EXPORT "Exportar lista"
+  IDS_TOOLTIP_CREATE "Crear un nuevo servicio"
+  IDS_TOOLTIP_DELETE "Borra un servicio existente"
+  IDS_TOOLTIP_START "Iniciar servicio"
+  IDS_TOOLTIP_STOP "Detener servicio"
+  IDS_TOOLTIP_PAUSE "Pausar servicio"
+  IDS_TOOLTIP_RESTART "Reiniciar servicio"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_PROGRESS_INFO_START  "ReactOS está intentando iniciar el siguiente servicio"
+  IDS_PROGRESS_INFO_STOP   "ReactOS está intentando detener el siguiente servicio"
+  IDS_PROGRESS_INFO_PAUSE  "ReactOS está intentando pausar el siguiente servicio"
+  IDS_PROGRESS_INFO_RESUME "ReactOS está intentando reiniciar el siguiente servicio"
+  IDS_CREATE_SUCCESS "Servicio Creado satisfactoriamente"
+  IDS_DELETE_SUCCESS "Servicio Borrado satisfactoriamente"
+  IDS_CREATE_REQ "Los campos marcados con un\nasterísco son obligatorios"
+  IDS_DELETE_STOP "¡Debe detener manualmente el servicio antes de borrarlo!"
+END
+
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HELP_OPTIONS "OPCIONES DE CREACION:\r\nNOTA: El nombre de la opción incluye el signo igual.\r\n type= <own|share|interact|kernel|filesys|rec>\r\n       (por defecto = own)\r\n start= <boot|system|auto|demand|disabled>\r\n       (por defecto = demand) \r\n error= <normal|severe|critical|ignore>\r\n       (por defecto = normal)\r\n group= <LoadOrderGroup>\r\n E= <yes|no>\r\n depend= <Dependencies(separated by / (forward slash))>\r\n obj= <AccountName|ObjectName>\r\n       (por defecto = LocalSystem)\r\n password= <password>\r\n"
+END
+
+/* Hints */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_HINT_BLANK        " "
+  IDS_HINT_EXPORT       " Exporta la lista actual a un archivo."
+  IDS_HINT_EXIT         " Cierra el programa."
+
+  IDS_HINT_CONNECT      " Conectar a otro equipo."
+  IDS_HINT_START        " Inicia el servicio seleccionado."
+  IDS_HINT_STOP         " Detiene el servicio seleccionado."
+  IDS_HINT_PAUSE        " Pausa el servicio seleccionado."
+  IDS_HINT_RESUME       " Reanudar el servicio seleccionado."
+  IDS_HINT_RESTART      " Detener e iniciar el servicio seleccionado."
+  IDS_HINT_REFRESH      " Actualizar la lista de servicios."
+  IDS_HINT_EDIT         " Editar las propiedades del servicio seleccionado."
+  IDS_HINT_CREATE       " Crea un nuevo servicio."
+  IDS_HINT_DELETE       " Borra el servicio seleccionado."
+  IDS_HINT_PROP         " Abre la hoja de propiedades de la selección actual."
+
+  IDS_HINT_LARGE        " Muestra los elementos mediante iconos grandes."
+  IDS_HINT_SMALL        " Muestra los elementos mediante iconos pequeños."
+  IDS_HINT_LIST         " Muestra los elementos en una lista."
+  IDS_HINT_DETAILS      " Muestra información acerca de los elementos de la ventana."
+  IDS_HINT_CUST         " Personaliza la vista."
+
+  IDS_HINT_HELP         " Muestra la ventana de ayuda."
+  IDS_HINT_ABOUT        " Acerca del Gestor de Servicios de ReactOS."
+
+  IDS_HINT_SYS_RESTORE  " Restaura esta ventana a su tamaño normal."
+  IDS_HINT_SYS_MOVE     " Mueve esta ventana."
+  IDS_HINT_SYS_SIZE     " Redimensiona esta ventana."
+  IDS_HINT_SYS_MINIMIZE " Colapsa esta ventana a un icono."
+  IDS_HINT_SYS_MAXIMIZE " Expande esta ventana hasta llenar esta pantalla."
+  IDS_HINT_SYS_CLOSE    " Cierra esta ventana."
+END
+
+/* Application title */
+STRINGTABLE DISCARDABLE
+BEGIN
+  IDS_APPNAME "Gestor de Servicios de ReactOS"
+END

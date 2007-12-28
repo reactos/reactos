@@ -11,6 +11,7 @@
 IDI_COMPNAME    ICON "res/netid.ico"
 
 #include "lang/en-US.rc"
+#include "lang/es-ES.rc"
 #include "lang/de-DE.rc"
 #include "lang/fr-FR.rc"
 #include "lang/id-ID.rc"

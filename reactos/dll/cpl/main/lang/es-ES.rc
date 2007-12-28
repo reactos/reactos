@@ -5,23 +5,23 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Velocidad"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Character repeat", -1, 5, 5, 230, 130
+  GROUPBOX "Repetición de caracteres", -1, 5, 5, 230, 130
   ICON -1, IDC_ICON_REPEAT_DELAY, 15, 15, 15, 15
-  LTEXT "Repeat &delay", -1, 40, 15, 50, 10
-  LTEXT "Long", -1, 40, 30, 20, 10
-  LTEXT "Short", -1, 200, 30, 20, 10
+  LTEXT "Retra&so de la repetición", -1, 40, 15, 50, 10
+  LTEXT "Largo", -1, 40, 30, 20, 10
+  LTEXT "Corto", -1, 200, 30, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_DELAY, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 30, 130, 17
   ICON -1, IDC_ICON_REPEAT_RATE, 15, 70, 15, 15
-  LTEXT "&Repeat rate", -1, 40, 70, 50, 10
-  LTEXT "Slow", -1, 40, 85, 20, 10
-  LTEXT "Fast", -1, 200, 85, 20, 10
+  LTEXT "Velocidad de &repetición", -1, 40, 70, 50, 10
+  LTEXT "Lenta", -1, 40, 85, 20, 10
+  LTEXT "Rápida", -1, 200, 85, 20, 10
   CONTROL "",IDC_SLIDER_REPEAT_RATE, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 85, 130, 17
-  LTEXT "Click here and hold down a key to &test repeat rate:", -1, 15, 105, 150, 10
+  LTEXT "&Haga clic aquí y mantenga presionada una tecla para probar la velocidad de repetición:", -1, 15, 105, 150, 10
   EDITTEXT IDC_EDIT_REPEAT_RATE, 15, 115, 200, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  GROUPBOX "Cursor &blink rate:", -1, 5, 145, 230, 50
+  GROUPBOX "&Velocidad de intermitencia del cursor:", -1, 5, 145, 230, 50
   LTEXT "", IDC_TEXT_CURSOR_BLINK, 20, 165, 1, 8
-  LTEXT "None", -1, 40, 165, 30, 10
-  LTEXT "Fast", -1, 200, 165, 30, 10
+  LTEXT "Ninguna", -1, 40, 165, 30, 10
+  LTEXT "Rápida", -1, 200, 165, 30, 10
   CONTROL "",IDC_SLIDER_CURSOR_BLINK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 165, 130, 17
 END
 
@@ -34,107 +34,107 @@ END
 
 IDD_CLICK_LOCK DIALOGEX 0, 0, 246, 100
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
-CAPTION "Click Lock"
+CAPTION "Configuración de Bloqueo de clic"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Short", -1, 35,  50, 30, 10
-  LTEXT "Long", -1, 140, 50, 30, 10
+  LTEXT "Corto", -1, 35,  50, 30, 10
+  LTEXT "Largo", -1, 140, 50, 30, 10
   CONTROL "",IDC_SLIDER_CLICK_LOCK, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 65, 50, 70, 17
-  PUSHBUTTON "&Ok", IDOK, 120, 75, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 175, 75, 50, 15
-  LTEXT "&Adjust how long you need to hold down a mouse or trackball button before your click is locked",-1,60,15,170,30
+  PUSHBUTTON "&Aceptar", IDOK, 120, 75, 50, 15
+  PUSHBUTTON "&Cancelar", IDCANCEL, 175, 75, 50, 15
+  LTEXT "&Ajustar el tiempo que debe mantenerse presionado un botón del ratón o de la bola de seguimiento antes de que el clic se bloquee.",-1,60,15,170,30
   ICON -1, IDC_ICON_CLICK_LOCK, 15, 15, 15, 15
 END
 
 IDD_PAGE_BUTTON DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Button"
+CAPTION "Botones"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Button configuration", -1, 5, 5, 230, 70
-  CHECKBOX "&Switch primary and secondary buttons", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
+  GROUPBOX "Configuración de botones", -1, 5, 5, 230, 70
+  CHECKBOX "&Intercambiar botones primario y secundario", IDC_SWAP_MOUSE_BUTTONS, 10, 15, 140, 10
   CONTROL "", IDC_IMAGE_SWAP_MOUSE, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 165, 15, 65, 57, WS_EX_STATICEDGE
-  LTEXT "Select this checkbox to make the button the right one the one you use for primary functions such as selecting and dragging", -1, 10, 30, 150, 30
-  GROUPBOX "Double-click speed", -1, 5, 75, 230, 70
+  LTEXT "Activar esta casilla de verificación para asignar al botón de la derecha del ratón las funciones principales, tales como seleccionar y arrastrar", -1, 10, 30, 150, 30
+  GROUPBOX "Velocidad de doble clic", -1, 5, 75, 230, 70
   LTEXT "Double-click the folder to test your settings. If the folder does not open or close, try using a slower setting.", -1, 10, 85, 150, 30
-  LTEXT "Spee&d:   Slow", -1, 10, 120, 90, 8
-  LTEXT "Fast", -1, 140, 120, 30, 8
+  LTEXT "&Velocidad:   Lenta", -1, 10, 120, 90, 8
+  LTEXT "Rápida", -1, 140, 120, 30, 8
   CONTROL "",IDC_SLIDER_DOUBLE_CLICK_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 60, 120, 70, 17
   CONTROL "", IDC_IMAGE_DOUBLE_CLICK_SPEED, "Static", SS_ICON | SS_NOTIFY | SS_CENTERIMAGE | WS_VISIBLE, 165, 85, 65, 57, WS_EX_STATICEDGE
-  GROUPBOX "ClickLock", -1, 5, 150, 230, 70
-  CHECKBOX "&Turn on ClickLock", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
-  PUSHBUTTON "&Settings...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
-  LTEXT "Enables you to highlight or drag without holding down the mouse button. To set, briefly press the mouse button. To release, click the mouse button again", -1, 10, 180, 190, 30
+  GROUPBOX "Bloqueo de clic", -1, 5, 150, 230, 70
+  CHECKBOX "Ac&tivar bloqueo de clic", IDC_CHECK_CLICK_LOCK, 10, 160, 70, 20
+  PUSHBUTTON "C&onfiguración...", IDC_BUTTON_CLICK_LOCK, 170, 160, 50, 10
+  LTEXT "Le permite resaltar o arrastrar sin tener que mantener apretado el botón del ratón. Para activarlo, presione brevemente el botón del mouse. Para soltarlo, vuelva a hacer clic en el botón del ratón", -1, 10, 180, 190, 30
 END
 
 IDD_PAGE_POINTER DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Pointer"
+CAPTION "Punteros"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Scheme", -1, 5, 5, 170, 45
+  GROUPBOX "Esquema", -1, 5, 5, 170, 45
   COMBOBOX IDC_COMBO_CURSOR_SCHEME, 10, 15, 145, 200, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
-  PUSHBUTTON "Sa&ve As...", IDC_BUTTON_SAVEAS_SCHEME, 70, 30, 50, 15
-  PUSHBUTTON "&Delete", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
+  PUSHBUTTON "&Guardar como...", IDC_BUTTON_SAVEAS_SCHEME, 70, 30, 50, 15
+  PUSHBUTTON "&Eliminar", IDC_BUTTON_DELETE_SCHEME, 125, 30, 40, 15
   CONTROL "", IDC_IMAGE_CURRENT_CURSOR, "Static", SS_ICON | SS_CENTERIMAGE | WS_VISIBLE, 190, 9, 45, 41, WS_EX_STATICEDGE
-  LTEXT "&Customize", -1, 5, 60, 40, 10
+  LTEXT "Personali&zar", -1, 5, 60, 40, 10
   LISTBOX IDC_LISTBOX_CURSOR, 5, 70, 230, 120, WS_VISIBLE | WS_BORDER | WS_TABSTOP | WS_VSCROLL | LBS_OWNERDRAWFIXED | LBS_NOTIFY
-  CHECKBOX "&Enable pointer shadow", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
-  PUSHBUTTON "Use De&fault", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
-  PUSHBUTTON "&Browse", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
+  CHECKBOX "&Habilitar sombra del puntero", IDC_CHECK_DROP_SHADOW, 5, 200, 100, 10
+  PUSHBUTTON "&Predeterminada", IDC_BUTTON_USE_DEFAULT_CURSOR, 120, 200, 50, 15
+  PUSHBUTTON "E&xaminar", IDC_BUTTON_BROWSE_CURSOR, 175, 200, 50, 15
 END
 
 IDD_CURSOR_SCHEME_SAVEAS DIALOGEX 0, 0, 200, 75
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CAPTION | WS_SYSMENU
-CAPTION "Save Scheme"
+CAPTION "Guardar combinación"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  LTEXT "Save this cursor scheme as:", -1, 5, 5, 100, 10
+  LTEXT "Guardar esta combinación de cursores como:", -1, 5, 5, 100, 10
   EDITTEXT IDC_EDIT_SCHEME_NAME, 5, 15, 180, 15, WS_CHILD | WS_VISIBLE | WS_GROUP
-  PUSHBUTTON "&Ok", IDOK, 60, 45, 50, 15
-  PUSHBUTTON "&Cancel", IDCANCEL, 115, 45, 50, 15
+  PUSHBUTTON "&Aceptar", IDOK, 60, 45, 50, 15
+  PUSHBUTTON "&Cancelar", IDCANCEL, 115, 45, 50, 15
 END
 
 
 IDD_PAGE_OPTION DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Pointer Options"
+CAPTION "Opciones de puntero"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Motion", -1, 5, 5, 230, 60
-  LTEXT "Sele&ct a pointer speed:", -1, 60, 15, 110, 10
-  LTEXT "Slow", -1, 60, 30, 20, 10
+  GROUPBOX "Movimiento", -1, 5, 5, 230, 60
+  LTEXT "S&eleccionar la velocidad del puntero:", -1, 60, 15, 110, 10
+  LTEXT "Lenta", -1, 60, 30, 20, 10
   CONTROL "",IDC_SLIDER_MOUSE_SPEED, "msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 90, 30, 70, 17
-  LTEXT "Fast", -1, 170, 30, 20, 10
+  LTEXT "Rápida", -1, 170, 30, 20, 10
   ICON -1, IDC_ICON_MOUSE_SPEED, 15, 15, 15, 15
-  CHECKBOX "&Enhance pointer precision", IDC_CHECK_POINTER_PRECISION, 60, 50, 100, 10
-  GROUPBOX "Snap To", -1, 5, 65, 230, 40
-  CHECKBOX "A&utomatically move pointer to the default button in a dialog box",
+  CHECKBOX "&Habilitar precisión del puntero", IDC_CHECK_POINTER_PRECISION, 60, 50, 100, 10
+  GROUPBOX "Ajustar a", -1, 5, 65, 230, 40
+  CHECKBOX "Mover A&utomaticamente el puntero al botón predeterminado en un cuadro de diálogo",
            IDC_CHECK_SNAP_TO, 60, 75, 170, 20, BS_MULTILINE | BS_TOP
   ICON -1, IDC_ICON_SNAP_TO, 15, 75, 15, 15
-  GROUPBOX "Visibility", -1, 5, 105, 230, 95
-  CHECKBOX "&Display pointer trails", IDC_CHECK_POINTER_TRAIL, 60, 115, 80, 10
-  LTEXT "Short", IDC_TEXT_TRAIL_SHORT, 60, 130, 30, 10
-  LTEXT "Long", IDC_TEXT_TRAIL_LONG, 160, 130, 30, 10
+  GROUPBOX "Visibilidad", -1, 5, 105, 230, 95
+  CHECKBOX "&Mostrar rastro del puntero del ratón", IDC_CHECK_POINTER_TRAIL, 60, 115, 80, 10
+  LTEXT "Corto", IDC_TEXT_TRAIL_SHORT, 60, 130, 30, 10
+  LTEXT "Largo", IDC_TEXT_TRAIL_LONG, 160, 130, 30, 10
   ICON -1, IDC_ICON_POINTER_TRAIL, 15, 115, 15, 15
   CONTROL "", IDC_SLIDER_POINTER_TRAIL ,"msctls_trackbar32", TBS_AUTOTICKS | WS_TABSTOP, 80, 130, 70, 17
-  CHECKBOX "&Hide pointer while typing", IDC_CHECK_HIDE_POINTER, 60, 150, 90, 10
+  CHECKBOX "&Ocultar puntero mientras se escribe", IDC_CHECK_HIDE_POINTER, 60, 150, 90, 10
   ICON -1, IDC_ICON_HIDE_POINTER, 15, 145, 15, 15
-  CHECKBOX "&Show location of pointer when I press the CTRL key",
+  CHECKBOX "Mo&strar ubicación del puntero al presionar la tecla CTRL",
            IDC_CHECK_SHOW_POINTER, 60, 175, 170, 20, BS_MULTILINE | BS_TOP
   ICON -1, IDC_ICON_SHOW_POINTER, 15, 170, 15, 15
 END
 
 IDD_PAGE_WHEEL DIALOGEX 0, 0, 246, 228
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_CAPTION
-CAPTION "Wheel"
+CAPTION "Rueda"
 FONT 8, "MS Shell Dlg"
 BEGIN
-  GROUPBOX "Scrolling", -1, 5, 5, 230, 80
+  GROUPBOX "Desplazamiento", -1, 5, 5, 230, 80
   ICON -1, IDC_ICON_WHEEL, 20, 35, 15, 15
-  LTEXT "Roll the wheel one notch to scroll", -1, 60, 15, 150, 10
-  RADIOBUTTON "The following &number of lines at a time", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
-  RADIOBUTTON "&One screen at a time", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
+  LTEXT "Girar la rueda una posición para desplazar", -1, 60, 15, 150, 10
+  RADIOBUTTON "&El siguiente número de líneas a la vez", IDC_RADIO_WHEEL_SCROLL_LINES, 60, 30, 150, 10, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+  RADIOBUTTON "&Una pantalla a la vez", IDC_RADIO_WHEEL_SCROLL_PAGE, 60, 65, 90, 10
   EDITTEXT IDC_EDIT_WHEEL_SCROLL_LINES, 70, 45, 60, 15, ES_RIGHT | WS_VISIBLE | WS_GROUP | WS_TABSTOP
   CONTROL "", IDC_UPDOWN_WHEEL_SCROLL_LINES, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER, 125, 45, 12, 12
 END
@@ -142,31 +142,31 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_CPLNAME_1 "Raton"
-  IDS_CPLDESCRIPTION_1 "Ajusta las propiedades del raton."
+  IDS_CPLNAME_1 "Ratón"
+  IDS_CPLDESCRIPTION_1 "Ajusta las propiedades del ratón."
   IDS_CPLNAME_2 "Teclado"
   IDS_CPLDESCRIPTION_2 "Ajusta las propiedades del teclado."
-  IDS_ARROW "Normal Select"
-  IDS_HELP "Help Select"
-  IDS_APPSTARTING "Working in Background"
-  IDS_WAIT "Busy"
-  IDS_CROSSHAIR "Precision Select"
-  IDS_IBEAM "Text Select"
-  IDS_NWPEN "Handwriting"
-  IDS_NO "Unavailable"
-  IDS_SIZENS "Vertical Resize"
-  IDS_SIZEWE "Horizontal Resize"
-  IDS_SIZENWSE "Diagonal Resize 1"
-  IDS_SIZENESW "Diagonal Resize 2"
-  IDS_SIZEALL "Move"
-  IDS_UPARROW "Alternative Select"
-  IDS_HAND "Link Select"
-  IDS_NONE "(None)"
-  IDS_SYSTEM_SCHEME "(system scheme)"
-  IDS_BROWSE_FILTER "Cursors (*.ani, *.cur)\0*.ani;*.cur\0Animated Cursors (*.ani)\0*.ani\0Static Cursors (*.cur)\0*.cur\0All Files\0*.*\0\0"
-  IDS_BROWSE_TITLE "Browse"
-  IDS_REMOVE_TITLE "Confirm Scheme Removal"
-  IDS_REMOVE_TEXT "Are you sure you want to remove the cursor scheme '%s'?"
-  IDS_OVERWRITE_TITLE "Confirm Cursor Scheme Overwrite"
-  IDS_OVERWRITE_TEXT "The cursor scheme name you chose is already in use. Do you want to overwrite the existing cursor scheme?"
+  IDS_ARROW "Selección normal"
+  IDS_HELP "Selección de Ayuda"
+  IDS_APPSTARTING "Trabajando en segundo plano"
+  IDS_WAIT "Ocupado"
+  IDS_CROSSHAIR "Selección de precisión"
+  IDS_IBEAM "Selección de texto"
+  IDS_NWPEN "Escritura manual"
+  IDS_NO "No disponible"
+  IDS_SIZENS "Ajuste vertical"
+  IDS_SIZEWE "Ajuste horizontal"
+  IDS_SIZENWSE "Ajuste Diagonal 1"
+  IDS_SIZENESW "Ajuste Diagonal 2"
+  IDS_SIZEALL "Mover"
+  IDS_UPARROW "Selección alternativa"
+  IDS_HAND "Selección de vínculo"
+  IDS_NONE "(Ninguno)"
+  IDS_SYSTEM_SCHEME "(esquema de sistema)"
+  IDS_BROWSE_FILTER "Cursores (*.ani, *.cur)\0*.ani;*.cur\0Cursores Animados (*.ani)\0*.ani\0Cursores Estáticos(*.cur)\0*.cur\0Todos los archivos\0*.*\0\0"
+  IDS_BROWSE_TITLE "Examinar"
+  IDS_REMOVE_TITLE "Confirmar la eliminación de la combinación"
+  IDS_REMOVE_TEXT "¿Desea quitar completamente la combinación '%s' del sistema?"
+  IDS_OVERWRITE_TITLE "¿Desea reemplazar el esquema?"
+  IDS_OVERWRITE_TEXT "El nombre del esquema de cursores que seleccionó ya está en uso. ¿Desea reemplazar el esquema original?"
 END

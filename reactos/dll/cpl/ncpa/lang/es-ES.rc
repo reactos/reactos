@@ -92,9 +92,9 @@ BEGIN
  CONTROL "&Usar la siguiente Dirección IP:", IDC_NODHCP, "BUTTON", BS_AUTORADIOBUTTON, 14, 59, 105, 12
  LTEXT "Dirección IP:", -1, 14, 75, 135, 8
  CONTROL "",IDC_IPADDR,"SysIPAddress32",0,150,75-2,80,12
- LTEXT "Subnet mask:", -1, 14, 90, 135, 8
+ LTEXT "Máscara de subred:", -1, 14, 90, 135, 8
  CONTROL "",IDC_SUBNETMASK,"SysIPAddress32",0,150,90-2,80,12
- LTEXT "Default gateway:", -1, 14, 105, 135, 8
+ LTEXT "Puerta de enlace predeterminada:", -1, 14, 105, 135, 8
  CONTROL "",IDC_DEFGATEWAY,"SysIPAddress32",0,150,105-2,80,12
  CONTROL "Obtener dirección del servidor DNS automaticamente", IDC_AUTODNS, "BUTTON", BS_AUTORADIOBUTTON | WS_GROUP, 14, 139, 210, 12
  GROUPBOX "", -1, 9, 157, 228, 47, BS_GROUPBOX
@@ -115,26 +115,26 @@ END
 
 STRINGTABLE
 BEGIN
-  IDS_ASSIGNED_DHCP "Assigned by DHCP"
-  IDS_ASSIGNED_MANUAL "Manually configured"
+  IDS_ASSIGNED_DHCP "Asignado por DHCP"
+  IDS_ASSIGNED_MANUAL "Configurado manualmente"
 END
 
 STRINGTABLE
 BEGIN
   IDS_ERROR "Error"
-  IDS_ENTER_VALID_IPADDRESS "You must enter a valid IP address"
-  IDS_ENTER_VALID_SUBNET "You must enter a valid subnet mask"
-  IDS_CANNOT_LOAD_CONFIG "Unable to load current config data"
-  IDS_CANNOT_CREATE_PROPSHEET "Unable to create property sheet"
-  IDS_OUT_OF_MEMORY "Out of memory"
-  IDS_CANNOT_SAVE_CHANGES "Unable to save the changes you made"
-  IDS_STATUS_NON_OPERATIONAL "Non-operational"
-  IDS_STATUS_UNREACHABLE "No WAN adapter found"
-  IDS_STATUS_DISCONNECTED "Disconnected"
-  IDS_STATUS_CONNECTING "Connecting"
-  IDS_STATUS_CONNECTED "Connected"
-  IDS_STATUS_OPERATIONAL "Connected"
+  IDS_ENTER_VALID_IPADDRESS "Debes introducir una dirección IP correcta"
+  IDS_ENTER_VALID_SUBNET "Debes introducir una máscara de subred correcta"
+  IDS_CANNOT_LOAD_CONFIG "Imposible cargar la configuración actual"
+  IDS_CANNOT_CREATE_PROPSHEET "Imposible crear la capa correcta"
+  IDS_OUT_OF_MEMORY "Fuera de memoria"
+  IDS_CANNOT_SAVE_CHANGES "Imposible guardar los cambios realizados"
+  IDS_STATUS_NON_OPERATIONAL "No operativo"
+  IDS_STATUS_UNREACHABLE "Ningún adaptador WAN encontrado"
+  IDS_STATUS_DISCONNECTED "Desconectado"
+  IDS_STATUS_CONNECTING "Conectando"
+  IDS_STATUS_CONNECTED "Conectado"
+  IDS_STATUS_OPERATIONAL "Conectado"
   IDS_SPEED_MBPS "%d Mbps"
-  IDS_DURATION_DAY "%d day %s"
-  IDS_DURATION_DAYS "%d days %s"
+  IDS_DURATION_DAY "%d día %s"
+  IDS_DURATION_DAYS "%d días %s"
 END

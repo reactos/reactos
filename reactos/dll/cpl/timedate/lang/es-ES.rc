@@ -2,10 +2,10 @@ LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Dia && Hora"
+CAPTION "Fecha y Hora"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "&Dia", -1, 4, 2, 122, 125
+    GROUPBOX "&Fecha", -1, 4, 2, 122, 125
     COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     EDITTEXT IDC_YEARTEXT,65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
     CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
@@ -26,36 +26,36 @@ END
 
 IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Zona de Tiempo"
+CAPTION "Zona horaria"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136,
              CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
     CONTROL  "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
-    AUTOCHECKBOX "Automatically adjust clock for &daylight saving changes",
+    AUTOCHECKBOX "Cam&biar la hora automáticamente según el horario de verano",
                  IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
 END
 
 IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Internet Time"
+CAPTION "Hora de Internet"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     COMBOBOX        IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
-    AUTOCHECKBOX    "Automatically synchronize with an Internet time server", IDC_AUTOSYNC,
+    AUTOCHECKBOX    "Sincronizar automáticamente con un servidor horario de Internet", IDC_AUTOSYNC,
                     11 ,7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT           "Server:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON      "Update Now", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT           "Servidor:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON      "Actualizar ahora", IDC_UPDATEBUTTON, 187, 22, 49, 14
     LTEXT           "", IDC_SUCSYNC, 12, 54, 214, 23
     LTEXT           "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT           "Synchronization can only occur when your computer is connected to the internet.", -1, 12, 114, 225, 25
+    LTEXT           "La sincronización sólo se puede realizar cuando su equipo esté conectado a Internet.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Dia/Hora"
-    IDS_CPLDESCRIPTION "Cambia el dia, hora y la zona del tiempo."
-    IDS_TIMEZONETEXT "Zona de tiempo actual: %s"
+    IDS_CPLNAME "Fecha y hora"
+    IDS_CPLDESCRIPTION "Establecer la información de fecha, hora y la zona horaria de su equipo."
+    IDS_TIMEZONETEXT "Zona horaria actual: %s"
     IDS_TIMEZONEINVALID "Invalido"
     IDS_TIMEZONEUNKNOWN "Desconocido"
 END
