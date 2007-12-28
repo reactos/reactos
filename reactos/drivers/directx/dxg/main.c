@@ -14,7 +14,7 @@
 #include "dxg_driver.h"
 
 ULONG gcMaxDdHmgr = 0;
-ULONG gcSizeDdHmgr = 0; 
+ULONG gcSizeDdHmgr = 0;
 LONG gcDummyPageRefCnt = 0;
 HSEMAPHORE ghsemHmgr = NULL;
 HSEMAPHORE ghsemDummyPage = NULL;
@@ -63,7 +63,7 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     gcDummyPageRefCnt = 0;
     ghsemDummyPage = NULL;
 
-    /* 
+    /*
      * Setup internal driver functions list we got from dxg driver functions list
      */
     pDxgDrv->iDriverVersion = 0x80000; /* Note 12/1-2004 : DirectX 8 ? */
@@ -77,8 +77,8 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     }
 
     /*
-     * Check if all drv functions are sorted right 
-     * and if it really are exported 
+     * Check if all drv functions are sorted right
+     * and if it really are exported
      */
 
     for (i=1 ; i < DXENG_INDEX_DxEngLoadImage + 1; i++)
@@ -119,20 +119,24 @@ DxDdStartupDxGraphics (ULONG SizeEngDrv,
     return STATUS_NO_MEMORY;
 }
 
+
+
+
 NTSTATUS
 DxDdCleanupDxGraphics()
 {
     DdHmgDestroy();
 
-    if (!ghsemDummyPage)
+    if (ghsemDummyPage != 0 )
     {
-        if (!gpDummyPage)
+        if (gpDummyPage != 0 )
         {
             ExFreePoolWithTag(gpDummyPage,0);
             gpDummyPage = NULL;
             gcDummyPageRefCnt = 0;
         }
         EngDeleteSemaphore(ghsemDummyPage);
+        ghsemDummyPage = 0;
     }
 
     return 0;
@@ -149,7 +153,7 @@ DdHmgDestroy()
     if (gpentDdHmgr)
     {
         EngFreeMem(gpentDdHmgr);
-        gpentDdHmgr = NULL; 
+        gpentDdHmgr = NULL;
     }
 
     if (ghsemHmgr)
@@ -179,7 +183,7 @@ DdHmgCreate()
 
             if (gpLockShortDelay)
             {
-                gpLockShortDelay->QuadPart = ((LONGLONG)-100000);
+                gpLockShortDelay->HighPart = -1;
                 return TRUE;
             }
 
@@ -193,3 +197,6 @@ DdHmgCreate()
 
     return FALSE;
 }
+
+
+
