@@ -13,7 +13,7 @@ SermouseCreate(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("IRP_MJ_CREATE\n");
+	TRACE_(SERMOUSE, "IRP_MJ_CREATE\n");
 	ASSERT(((PSERMOUSE_DEVICE_EXTENSION)DeviceObject->DeviceExtension)->PnpState == dsStarted);
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
@@ -27,7 +27,7 @@ SermouseClose(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("IRP_MJ_CLOSE\n");
+	TRACE_(SERMOUSE, "IRP_MJ_CLOSE\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;
@@ -40,7 +40,7 @@ SermouseCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("IRP_MJ_CLEANUP\n");
+	TRACE_(SERMOUSE, "IRP_MJ_CLEANUP\n");
 
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	Irp->IoStatus.Information = 0;

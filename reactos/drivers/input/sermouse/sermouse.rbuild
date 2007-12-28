@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="sermouse" type="kernelmodedriver" installbase="system32/drivers" installname="sermouse.sys">
-	<include base="sermouse">.</include>
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>createclose.c</file>

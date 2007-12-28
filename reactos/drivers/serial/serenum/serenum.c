@@ -53,7 +53,7 @@ IrpStub(
 				return ForwardIrpToLowerDeviceAndForget(DeviceObject, Irp);
 			default:
 			{
-				DPRINT1("Serenum: FDO stub for major function 0x%lx\n",
+				WARN_(SERENUM, "FDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 				ASSERT(FALSE);
 				Status = Irp->IoStatus.Status;
@@ -74,7 +74,7 @@ IrpStub(
 				return ForwardIrpToAttachedFdoAndForget(DeviceObject, Irp);
 			default:
 			{
-				DPRINT1("Serenum: PDO stub for major function 0x%lx\n",
+				WARN_(SERENUM, "PDO stub for major function 0x%lx\n",
 					IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 				ASSERT(FALSE);
 				Status = Irp->IoStatus.Status;

@@ -18,7 +18,7 @@ SermouseAddDevice(
 	PSERMOUSE_DEVICE_EXTENSION DeviceExtension = NULL;
 	NTSTATUS Status;
 
-	DPRINT("SermouseAddDevice called. Pdo = 0x%p\n", Pdo);
+	TRACE_(SERMOUSE, "SermouseAddDevice called. Pdo = 0x%p\n", Pdo);
 
 	if (Pdo == NULL)
 		return STATUS_SUCCESS;
@@ -35,7 +35,7 @@ SermouseAddDevice(
 		&Fdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+		WARN_(SERMOUSE, "IoCreateDevice() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 
@@ -48,7 +48,7 @@ SermouseAddDevice(
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
+		WARN_(SERMOUSE, "IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
 		goto cleanup;
 	}
 	if (DeviceExtension->LowerDevice->Flags & DO_POWER_PAGABLE)
@@ -90,7 +90,7 @@ SermouseStartDevice(
 	MouseType = SermouseDetectLegacyDevice(DeviceExtension->LowerDevice);
 	if (MouseType == mtNone)
 	{
-		DPRINT("No mouse connected to Fdo %p\n",
+		WARN_(SERMOUSE, "No mouse connected to Fdo %p\n",
 			DeviceExtension->LowerDevice);
 		return STATUS_DEVICE_NOT_CONNECTED;
 	}
@@ -110,7 +110,7 @@ SermouseStartDevice(
 			DeviceExtension->AttributesInformation.NumberOfButtons = 3;
 			break;
 		default:
-			DPRINT("Unknown mouse type 0x%lx\n", MouseType);
+			WARN_(SERMOUSE, "Unknown mouse type 0x%lx\n", MouseType);
 			ASSERT(FALSE);
 			return STATUS_UNSUCCESSFUL;
 	}
@@ -170,7 +170,7 @@ SermousePnp(
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
-			DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			TRACE_(SERMOUSE, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status))
@@ -184,12 +184,12 @@ SermousePnp(
 				case BusRelations:
 				{
 					PDEVICE_RELATIONS DeviceRelations = NULL;
-					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
+					TRACE_(SERMOUSE, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / TargetDeviceRelation\n");
 
 					DeviceRelations = ExAllocatePoolWithTag(PagedPool, FIELD_OFFSET(DEVICE_RELATIONS, Objects), SERMOUSE_TAG);
 					if (!DeviceRelations)
 					{
-						DPRINT("ExAllocatePoolWithTag() failed\n");
+						WARN_(SERMOUSE, "ExAllocatePoolWithTag() failed\n");
 						Status = STATUS_NO_MEMORY;
 					}
 					else
@@ -202,7 +202,7 @@ SermousePnp(
 				}
 				default:
 				{
-					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					TRACE_(SERMOUSE, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 				}
@@ -211,7 +211,7 @@ SermousePnp(
 		}
 		default:
 		{
-			DPRINT1("IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
+			TRACE_(SERMOUSE, "IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}

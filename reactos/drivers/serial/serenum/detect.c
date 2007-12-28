@@ -38,7 +38,7 @@ DeviceIoControl(
 		&IoStatus);
 	if (Irp == NULL)
 	{
-		DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+		WARN_(SERENUM, "IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -46,7 +46,7 @@ DeviceIoControl(
 
 	if (Status == STATUS_PENDING)
 	{
-		DPRINT("Operation pending\n");
+		INFO_(SERENUM, "Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
@@ -90,7 +90,7 @@ ReadBytes(
 		KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
 		Status = ioStatus.Status;
 	}
-	DPRINT("Bytes received: %lu/%lu\n",
+	INFO_(SERENUM, "Bytes received: %lu/%lu\n",
 		ioStatus.Information, BufferSize);
 	*FilledBytes = ioStatus.Information;
 	return Status;
@@ -110,7 +110,7 @@ ReportDetectedDevice(
 	PFDO_DEVICE_EXTENSION FdoDeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("ReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
+	TRACE_(SERENUM, "ReportDetectedDevice() called with %wZ (%wZ) detected\n", DeviceId, DeviceDescription);
 
 	Status = IoCreateDevice(
 		DeviceObject->DriverObject,
@@ -175,9 +175,14 @@ IsValidPnpIdString(
 	IN PUCHAR Buffer,
 	IN ULONG BufferLength)
 {
+	ANSI_STRING String;
+
 	/* FIXME: IsValidPnpIdString not implemented */
-	DPRINT1("IsValidPnpIdString() unimplemented\n");
-	return STATUS_SUCCESS;
+	UNIMPLEMENTED;
+	String.Length = String.MaximumLength = BufferLength;
+	String.Buffer = (PCHAR)Buffer;
+	ERR_(SERENUM, "Buffer %Z\n", &String);
+	return TRUE;
 }
 
 static NTSTATUS
@@ -185,13 +190,13 @@ ReportDetectedPnpDevice(
 	IN PUCHAR Buffer,
 	IN ULONG BufferLength)
 {
-	ULONG i;
+	ANSI_STRING String;
+
 	/* FIXME: ReportDetectedPnpDevice not implemented */
-	DPRINT1("ReportDetectedPnpDevice() unimplemented\n");
-	DPRINT1("");
-	for (i = 0; i < BufferLength; i++)
-		DbgPrint("%c", Buffer[i]);
-	DbgPrint("\n");
+	UNIMPLEMENTED;
+	String.Length = String.MaximumLength = BufferLength;
+	String.Buffer = (PCHAR)Buffer;
+	ERR_(SERENUM, "Buffer %Z\n", &String);
 	/* Call ReportDetectedDevice */
 	return STATUS_SUCCESS;
 }
@@ -453,7 +458,7 @@ SerenumDetectLegacyDevice(
 	UNICODE_STRING CompatibleIds;
 	NTSTATUS Status;
 
-	DPRINT("SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
+	TRACE_(SERENUM, "SerenumDetectLegacyDevice(DeviceObject %p, LowerDevice %p)\n",
 		DeviceObject,
 		LowerDevice);
 

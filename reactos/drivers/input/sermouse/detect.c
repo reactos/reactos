@@ -39,7 +39,7 @@ DeviceIoControl(
 		&IoStatus);
 	if (Irp == NULL)
 	{
-		DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+		WARN_(SERMOUSE, "IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -47,7 +47,7 @@ DeviceIoControl(
 
 	if (Status == STATUS_PENDING)
 	{
-		DPRINT("Operation pending\n");
+		INFO_(SERMOUSE, "Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
@@ -91,7 +91,7 @@ ReadBytes(
 		KeWaitForSingleObject(&event, Suspended, KernelMode, FALSE, NULL);
 		Status = ioStatus.Status;
 	}
-	DPRINT("Bytes received: %lu/%lu\n",
+	INFO_(SERMOUSE, "Bytes received: %lu/%lu\n",
 		ioStatus.Information, BufferSize);
 	*FilledBytes = ioStatus.Information;
 	return Status;
@@ -125,7 +125,7 @@ SermouseDetectLegacyDevice(
 	SERMOUSE_MOUSE_TYPE MouseType = mtNone;
 	NTSTATUS Status;
 
-	DPRINT("SermouseDetectLegacyDevice(LowerDevice %p)\n", LowerDevice);
+	TRACE_(SERMOUSE, "SermouseDetectLegacyDevice(LowerDevice %p)\n", LowerDevice);
 
 	RtlZeroMemory(Buffer, sizeof(Buffer));
 
@@ -205,7 +205,7 @@ SermouseDetectLegacyDevice(
 		if (Buffer[i] == 'B')
 		{
 			/* Sign for Microsoft Ballpoint */
-			DPRINT1("Microsoft Ballpoint device detected. THIS DEVICE IS NOT YET SUPPORTED");
+			ERR_(SERMOUSE, "Microsoft Ballpoint device detected. THIS DEVICE IS NOT YET SUPPORTED");
 			MouseType = mtNone;
 			goto ByeBye;
 		}
@@ -220,13 +220,13 @@ SermouseDetectLegacyDevice(
 			switch (Buffer[i + 1])
 			{
 				case '3':
-					DPRINT("Microsoft Mouse with 3-buttons detected\n");
+					INFO_(SERMOUSE, "Microsoft Mouse with 3-buttons detected\n");
 					MouseType = mtLogitech;
 				case 'Z':
-					DPRINT("Microsoft Wheel Mouse detected\n");
+					INFO_(SERMOUSE, "Microsoft Wheel Mouse detected\n");
 					MouseType = mtWheelZ;
 				default:
-					DPRINT("Microsoft Mouse with 2-buttons detected\n");
+					INFO_(SERMOUSE, "Microsoft Mouse with 2-buttons detected\n");
 					MouseType = mtMicrosoft;
 			}
 			goto ByeBye;

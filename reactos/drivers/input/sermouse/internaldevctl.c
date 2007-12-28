@@ -24,7 +24,7 @@ SermouseInternalDeviceControl(
 	{
 		case IOCTL_INTERNAL_MOUSE_CONNECT:
 		{
-			DPRINT("IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_MOUSE_CONNECT\n");
+			TRACE_(SERMOUSE, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_MOUSE_CONNECT\n");
 			DeviceExtension->ConnectData =
 				*((PCONNECT_DATA)Stack->Parameters.DeviceIoControl.Type3InputBuffer);
 			Status = STATUS_SUCCESS;
@@ -32,7 +32,7 @@ SermouseInternalDeviceControl(
 		}
 		case IOCTL_INTERNAL_MOUSE_DISCONNECT:
 		{
-			DPRINT("IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_MOUSE_DISCONNECT\n");
+			TRACE_(SERMOUSE, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_INTERNAL_MOUSE_DISCONNECT\n");
 
 			/* Ask read loop to end */
 			KeSetEvent(&DeviceExtension->StopWorkerThreadEvent, (KPRIORITY)0, FALSE);
@@ -41,7 +41,7 @@ SermouseInternalDeviceControl(
 		}
 		case IOCTL_MOUSE_QUERY_ATTRIBUTES:
 		{
-			DPRINT("IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_MOUSE_QUERY_ATTRIBUTES\n");
+			TRACE_(SERMOUSE, "IRP_MJ_INTERNAL_DEVICE_CONTROL / IOCTL_MOUSE_QUERY_ATTRIBUTES\n");
 			if (Stack->Parameters.DeviceIoControl.OutputBufferLength >= sizeof(MOUSE_ATTRIBUTES))
 			{
 				*(PMOUSE_ATTRIBUTES)Irp->AssociatedIrp.SystemBuffer =
@@ -57,7 +57,7 @@ SermouseInternalDeviceControl(
 		}
 		default:
 		{
-			DPRINT1("IRP_MJ_INTERNAL_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
+			WARN_(SERMOUSE, "IRP_MJ_INTERNAL_DEVICE_CONTROL / unknown ioctl code 0x%lx\n",
 				Stack->Parameters.DeviceIoControl.IoControlCode);
 			ASSERT(FALSE);
 			Status = STATUS_INVALID_DEVICE_REQUEST;

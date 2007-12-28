@@ -37,7 +37,7 @@ SermouseDeviceIoControl(
 		&IoStatus);
 	if (Irp == NULL)
 	{
-		DPRINT("IoBuildDeviceIoControlRequest() failed\n");
+		WARN_(SERMOUSE, "IoBuildDeviceIoControlRequest() failed\n");
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
 
@@ -45,7 +45,7 @@ SermouseDeviceIoControl(
 
 	if (Status == STATUS_PENDING)
 	{
-		DPRINT("Operation pending\n");
+		INFO_(SERMOUSE, "Operation pending\n");
 		KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
 		Status = IoStatus.Status;
 	}
@@ -82,7 +82,7 @@ SermouseDeviceWorker(
 	LARGE_INTEGER Zero;
 	NTSTATUS Status;
 
-	DPRINT("SermouseDeviceWorker() called\n");
+	TRACE_(SERMOUSE, "SermouseDeviceWorker() called\n");
 
 	DeviceExtension = (PSERMOUSE_DEVICE_EXTENSION)((PDEVICE_OBJECT)Context)->DeviceExtension;
 	LowerDevice = DeviceExtension->LowerDevice;
@@ -169,7 +169,7 @@ SermouseDeviceWorker(
 		for (i = 0; i < ioStatus.Information; i++)
 		{
 			ReceivedByte = Buffer[i];
-			DPRINT("ReceivedByte 0x%02x\n", ReceivedByte);
+			INFO_(SERMOUSE, "ReceivedByte 0x%02x\n", ReceivedByte);
 
 			/* Synchronize */
 			if ((ReceivedByte & 0x40) == 0x40)

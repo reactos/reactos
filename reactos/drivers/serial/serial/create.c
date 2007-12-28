@@ -18,7 +18,7 @@ SerialCreate(
 	PSERIAL_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("IRP_MJ_CREATE\n");
+	TRACE_(SERIAL, "IRP_MJ_CREATE\n");
 	Stack = IoGetCurrentIrpStackLocation(Irp);
 	DeviceExtension = (PSERIAL_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
@@ -31,12 +31,12 @@ SerialCreate(
 
 	if(DeviceExtension->IsOpened)
 	{
-		DPRINT("COM%lu is already opened\n", DeviceExtension->ComPort);
+		WARN_(SERIAL, "COM%lu is already opened\n", DeviceExtension->ComPort);
 		Status = STATUS_ACCESS_DENIED;
 		goto ByeBye;
 	}
 
-	DPRINT("Open COM%lu: successfull\n", DeviceExtension->ComPort);
+	INFO_(SERIAL, "Open COM%lu: successfull\n", DeviceExtension->ComPort);
 	DeviceExtension->IsOpened = TRUE;
 	Status = STATUS_SUCCESS;
 

@@ -115,7 +115,7 @@ ForwardIrpAndWait(
 	KeInitializeEvent(&Event, NotificationEvent, FALSE);
 	IoCopyCurrentIrpStackLocationToNext(Irp);
 
-	DPRINT("Calling lower device %p\n", LowerDevice);
+	TRACE_(SERENUM, "Calling lower device %p\n", LowerDevice);
 	IoSetCompletionRoutine(Irp, ForwardIrpAndWaitCompletion, &Event, TRUE, TRUE, TRUE);
 
 	Status = IoCallDriver(LowerDevice, Irp);
@@ -142,7 +142,7 @@ ForwardIrpToLowerDeviceAndForget(
 
 	LowerDevice = DeviceExtension->LowerDevice;
 	ASSERT(LowerDevice);
-	DPRINT("Calling lower device 0x%p\n", LowerDevice);
+	TRACE_(SERENUM, "Calling lower device 0x%p\n", LowerDevice);
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(LowerDevice, Irp);
 }
@@ -160,7 +160,7 @@ ForwardIrpToAttachedFdoAndForget(
 
 	Fdo = DeviceExtension->AttachedFdo;
 	ASSERT(Fdo);
-	DPRINT("Calling attached Fdo 0x%p\n", Fdo);
+	TRACE_(SERENUM, "Calling attached Fdo 0x%p\n", Fdo);
 	IoSkipCurrentIrpStackLocation(Irp);
 	return IoCallDriver(Fdo, Irp);
 }

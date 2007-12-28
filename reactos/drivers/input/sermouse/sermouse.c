@@ -24,7 +24,7 @@ IrpStub(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT1("Irp stub for major function 0x%lx\n",
+	ERR_(SERMOUSE, "Irp stub for major function 0x%lx\n",
 		IoGetCurrentIrpStackLocation(Irp)->MajorFunction);
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);
 	return STATUS_NOT_SUPPORTED;
@@ -46,7 +46,7 @@ ReadRegistryEntries(
 	ParametersRegistryKey.Buffer = ExAllocatePoolWithTag(PagedPool, ParametersRegistryKey.MaximumLength, SERMOUSE_TAG);
 	if (!ParametersRegistryKey.Buffer)
 	{
-		DPRINT("ExAllocatePoolWithTag() failed\n");
+		WARN_(SERMOUSE, "ExAllocatePoolWithTag() failed\n");
 		return STATUS_NO_MEMORY;
 	}
 	RtlCopyUnicodeString(&ParametersRegistryKey, RegistryPath);
@@ -103,7 +103,7 @@ DriverEntry(
 		(PVOID*)&DriverExtension);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoAllocateDriverObjectExtension() failed with status 0x%08lx\n", Status);
+		WARN_(SERMOUSE, "IoAllocateDriverObjectExtension() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 	RtlZeroMemory(DriverExtension, sizeof(SERMOUSE_DRIVER_EXTENSION));
@@ -111,7 +111,7 @@ DriverEntry(
 	Status = ReadRegistryEntries(RegistryPath, DriverExtension);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("ReadRegistryEntries() failed with status 0x%08lx\n", Status);
+		WARN_(SERMOUSE, "ReadRegistryEntries() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 

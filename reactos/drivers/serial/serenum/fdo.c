@@ -18,7 +18,7 @@ SerenumAddDevice(
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("SerenumAddDevice called. Pdo = %p\n", Pdo);
+	TRACE_(SERENUM, "SerenumAddDevice called. Pdo = %p\n", Pdo);
 
 	/* Create new device object */
 	Status = IoCreateDevice(DriverObject,
@@ -30,7 +30,7 @@ SerenumAddDevice(
 	                        &Fdo);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoCreateDevice() failed with status 0x%08lx\n", Status);
+		WARN_(SERENUM, "IoCreateDevice() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)Fdo->DeviceExtension;
@@ -44,7 +44,7 @@ SerenumAddDevice(
 		&DeviceExtension->SerenumInterfaceName);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
+		WARN_(SERENUM, "IoRegisterDeviceInterface() failed with status 0x%08lx\n", Status);
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
@@ -56,7 +56,7 @@ SerenumAddDevice(
 	Status = IoAttachDeviceToDeviceStackSafe(Fdo, Pdo, &DeviceExtension->LowerDevice);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
+		WARN_(SERENUM, "IoAttachDeviceToDeviceStackSafe() failed with status 0x%08lx\n", Status);
 		IoDeleteDevice(Fdo);
 		return Status;
 	}
@@ -79,7 +79,7 @@ SerenumFdoStartDevice(
 	PFDO_DEVICE_EXTENSION DeviceExtension;
 	NTSTATUS Status;
 
-	DPRINT("SerenumFdoStartDevice() called\n");
+	TRACE_(SERENUM, "SerenumFdoStartDevice() called\n");
 	DeviceExtension = (PFDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
 
 	ASSERT(DeviceExtension->Common.PnpState == dsStopped);
@@ -87,7 +87,7 @@ SerenumFdoStartDevice(
 	Status = IoSetDeviceInterfaceState(&DeviceExtension->SerenumInterfaceName, TRUE);
 	if (!NT_SUCCESS(Status))
 	{
-		DPRINT("IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
+		WARN_(SERENUM, "IoSetDeviceInterfaceState() failed with status 0x%08lx\n", Status);
 		return Status;
 	}
 
@@ -177,7 +177,7 @@ SerenumFdoPnp(
 		*/
 		case IRP_MN_START_DEVICE: /* 0x0 */
 		{
-			DPRINT("IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
+			TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_START_DEVICE\n");
 			/* Call lower driver */
 			Status = ForwardIrpAndWait(DeviceObject, Irp);
 			if (NT_SUCCESS(Status))
@@ -191,13 +191,13 @@ SerenumFdoPnp(
 				case BusRelations:
 				{
 					PDEVICE_RELATIONS DeviceRelations = NULL;
-					DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
+					TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / BusRelations\n");
 					Status = SerenumFdoQueryBusRelations(DeviceObject, &DeviceRelations);
 					Information = (ULONG_PTR)DeviceRelations;
 					break;
 				}
 				default:
-					DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
+					TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_QUERY_DEVICE_RELATIONS / Unknown type 0x%lx\n",
 						Stack->Parameters.QueryDeviceRelations.Type);
 					return ForwardIrpAndForget(DeviceObject, Irp);
 			}
@@ -205,12 +205,12 @@ SerenumFdoPnp(
 		}
 		case IRP_MN_FILTER_RESOURCE_REQUIREMENTS: /* 0xd */
 		{
-			DPRINT("IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
+			TRACE_(SERENUM, "IRP_MJ_PNP / IRP_MN_FILTER_RESOURCE_REQUIREMENTS\n");
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 		default:
 		{
-			DPRINT1("IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
+			TRACE_(SERENUM, "IRP_MJ_PNP / unknown minor function 0x%lx\n", MinorFunction);
 			return ForwardIrpAndForget(DeviceObject, Irp);
 		}
 	}

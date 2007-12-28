@@ -14,7 +14,7 @@ SerialCleanup(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
 {
-	DPRINT("IRP_MJ_CLEANUP\n");
+	TRACE_(SERIAL, "IRP_MJ_CLEANUP\n");
 	Irp->IoStatus.Information = 0;
 	Irp->IoStatus.Status = STATUS_SUCCESS;
 	IoCompleteRequest(Irp, IO_NO_INCREMENT);

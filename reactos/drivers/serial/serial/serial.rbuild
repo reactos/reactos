@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="serial" type="kernelmodedriver" installbase="system32/drivers" installname="serial.sys">
-	<define name="NDEBUG" />
 	<library>ntoskrnl</library>
 	<library>hal</library>
 	<file>circularbuffer.c</file>

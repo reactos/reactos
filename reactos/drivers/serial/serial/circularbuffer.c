@@ -14,7 +14,7 @@ InitializeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer,
 	IN ULONG BufferSize)
 {
-	DPRINT("InitializeCircularBuffer(pBuffer %p, BufferSize %lu)\n", pBuffer, BufferSize);
+	TRACE_(SERIAL, "InitializeCircularBuffer(pBuffer %p, BufferSize %lu)\n", pBuffer, BufferSize);
 	ASSERT(pBuffer);
 	pBuffer->Buffer = (PUCHAR)ExAllocatePoolWithTag(NonPagedPool, BufferSize * sizeof(UCHAR), SERIAL_TAG);
 	if (!pBuffer->Buffer)
@@ -28,7 +28,7 @@ NTSTATUS
 FreeCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
-	DPRINT("FreeCircularBuffer(pBuffer %p)\n", pBuffer);
+	TRACE_(SERIAL, "FreeCircularBuffer(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer);
 	if (pBuffer->Buffer != NULL)
 		ExFreePoolWithTag(pBuffer->Buffer, SERIAL_TAG);
@@ -39,7 +39,7 @@ BOOLEAN
 IsCircularBufferEmpty(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
-	DPRINT("IsCircularBufferEmpty(pBuffer %p)\n", pBuffer);
+	TRACE_(SERIAL, "IsCircularBufferEmpty(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer);
 	return (pBuffer->ReadPosition == pBuffer->WritePosition);
 }
@@ -48,7 +48,7 @@ ULONG
 GetNumberOfElementsInCircularBuffer(
 	IN PCIRCULAR_BUFFER pBuffer)
 {
-	DPRINT("GetNumberOfElementsInCircularBuffer(pBuffer %p)\n", pBuffer);
+	TRACE_(SERIAL, "GetNumberOfElementsInCircularBuffer(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer);
 	return (pBuffer->WritePosition + pBuffer->Length - pBuffer->ReadPosition) % pBuffer->Length;
 }
@@ -59,7 +59,7 @@ PushCircularBufferEntry(
 	IN UCHAR Entry)
 {
 	ULONG NextPosition;
-	DPRINT("PushCircularBufferEntry(pBuffer %p, Entry 0x%x)\n", pBuffer, Entry);
+	TRACE_(SERIAL, "PushCircularBufferEntry(pBuffer %p, Entry 0x%x)\n", pBuffer, Entry);
 	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	NextPosition = (pBuffer->WritePosition + 1) % pBuffer->Length;
@@ -75,7 +75,7 @@ PopCircularBufferEntry(
 	IN PCIRCULAR_BUFFER pBuffer,
 	OUT PUCHAR Entry)
 {
-	DPRINT("PopCircularBufferEntry(pBuffer %p)\n", pBuffer);
+	TRACE_(SERIAL, "PopCircularBufferEntry(pBuffer %p)\n", pBuffer);
 	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	if (IsCircularBufferEmpty(pBuffer))
@@ -92,7 +92,7 @@ IncreaseCircularBufferSize(
 {
 	PUCHAR NewBuffer;
 
-	DPRINT("IncreaseCircularBufferSize(pBuffer %p, NewBufferSize %lu)\n", pBuffer, NewBufferSize);
+	TRACE_(SERIAL, "IncreaseCircularBufferSize(pBuffer %p, NewBufferSize %lu)\n", pBuffer, NewBufferSize);
 	ASSERT(pBuffer);
 	ASSERT(pBuffer->Length);
 	if (pBuffer->Length > NewBufferSize)
