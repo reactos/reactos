@@ -1116,6 +1116,101 @@ GetOutlineTextMetricsW(
   return NtGdiGetOutlineTextMetricsInternalW(hdc, cbData, lpOTM, &Tmd);
 }
 
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetKerningPairsW(HDC hdc,
+                 ULONG cPairs,
+                 LPKERNINGPAIR pkpDst)
+{
+    if ((cPairs != 0) || (pkpDst == 0))
+    {
+        return NtGdiGetKerningPairs(hdc,cPairs,pkpDst);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+}
+
+/*
+ * @implemented
+ */
+DWORD
+STDCALL
+GetKerningPairsA( HDC hDC,
+             DWORD cPairs,
+ LPKERNINGPAIR kern_pairA )
+{
+    INT charset;
+    CHARSETINFO csi;
+    CPINFO cpi;
+    DWORD i, total_kern_pairs, kern_pairs_copied = 0;
+    KERNINGPAIR *kern_pairW;
+
+    if (!cPairs && kern_pairA)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return 0;
+    }
+
+    charset = GetTextCharset(hDC);
+    if (!TranslateCharsetInfo(ULongToPtr(charset), &csi, TCI_SRCCHARSET))
+    {
+        DPRINT1("Can't find codepage for charset %d\n", charset);
+        return 0;
+    }
+    /* GetCPInfo() will fail on CP_SYMBOL, and WideCharToMultiByte is supposed
+     * to fail on an invalid character for CP_SYMBOL.
+     */
+    cpi.DefaultChar[0] = 0;
+    if (csi.ciACP != CP_SYMBOL && !GetCPInfo(csi.ciACP, &cpi))
+    {
+        DPRINT1("Can't find codepage %u info\n", csi.ciACP);
+        return 0;
+    }
+    DPRINT("charset %d => codepage %u\n", charset, csi.ciACP);
+
+    total_kern_pairs = GetKerningPairsW(hDC, 0, NULL);
+    if (!total_kern_pairs) return 0;
+
+    kern_pairW = HeapAlloc(GetProcessHeap(), 0, total_kern_pairs * sizeof(*kern_pairW));
+    GetKerningPairsW(hDC, total_kern_pairs, kern_pairW);
+
+    for (i = 0; i < total_kern_pairs; i++)
+    {
+        char first, second;
+
+        if (!WideCharToMultiByte(csi.ciACP, 0, &kern_pairW[i].wFirst, 1, &first, 1, NULL, NULL))
+            continue;
+
+        if (!WideCharToMultiByte(csi.ciACP, 0, &kern_pairW[i].wSecond, 1, &second, 1, NULL, NULL))
+            continue;
+
+        if (first == cpi.DefaultChar[0] || second == cpi.DefaultChar[0])
+            continue;
+
+        if (kern_pairA)
+        {
+            if (kern_pairs_copied >= cPairs) break;
+
+            kern_pairA->wFirst = (BYTE)first;
+            kern_pairA->wSecond = (BYTE)second;
+            kern_pairA->iKernAmount = kern_pairW[i].iKernAmount;
+            kern_pairA++;
+        }
+        kern_pairs_copied++;
+    }
+
+    HeapFree(GetProcessHeap(), 0, kern_pairW);
+
+    return kern_pairs_copied;
+}
+
+
 
 /*
  * @implemented

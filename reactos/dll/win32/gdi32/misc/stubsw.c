@@ -32,28 +32,6 @@ PolyTextOutW(
 	return FALSE;
 }
 
-
-/*
- * @implemented
- */
-DWORD
-STDCALL
-GetKerningPairsW(HDC hdc,
-                 ULONG cPairs,
-                 LPKERNINGPAIR pkpDst)
-{
-    if ((cPairs != 0) || (pkpDst == 0))
-    {
-        return NtGdiGetKerningPairs(hdc,cPairs,pkpDst);
-    }
-    else
-    {
-        SetLastError(ERROR_INVALID_PARAMETER);
-        return 0;
-    }
-}
-
-
 /*
  * @unimplemented
  */

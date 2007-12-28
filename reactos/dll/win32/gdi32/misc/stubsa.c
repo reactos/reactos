@@ -68,24 +68,6 @@ PolyTextOutA(
 	return FALSE;
 }
 
-
-/*
- * @unimplemented
- */
-DWORD
-STDCALL
-GetKerningPairsA(
-	HDC		a0,
-	DWORD		a1,
-	LPKERNINGPAIR	a2
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return 0;
-}
-
-
 /*
  * @unimplemented
  */
