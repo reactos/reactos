@@ -1506,6 +1506,8 @@ tolower
 toupper
 towlower
 towupper
+vDbgPrintEx
+vDbgPrintExWithPrefix
 vsprintf
 wcscat
 wcschr
