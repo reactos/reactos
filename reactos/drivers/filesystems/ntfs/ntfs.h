@@ -20,28 +20,40 @@
 #define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
 
 #include <pshpack1.h>
-typedef struct _BOOT_SECTOR
+typedef struct _BIOS_PARAMETERS_BLOCK
 {
-  UCHAR     Magic[3];				// 0x00
-  UCHAR     OemName[8];				// 0x03
   USHORT    BytesPerSector;			// 0x0B
-  UCHAR     SectorsPerCluster;			// 0x0D
+  UCHAR     SectorsPerCluster;		// 0x0D
   UCHAR     Unused0[7];				// 0x0E
   UCHAR     MediaId;				// 0x15
   UCHAR     Unused1[2];				// 0x16
-  USHORT    SectorsPerTrack;
-  USHORT    Heads;
-  UCHAR     Unused2[8];
-  UCHAR     Unknown0[4]; /* always 80 00 80 00 */
-  ULONGLONG SectorCount;
-  ULONGLONG MftLocation;
-  ULONGLONG MftMirrLocation;
-  CHAR      ClustersPerMftRecord;
-  UCHAR      Unused3[3];
-  CHAR      ClustersPerIndexRecord;
-  UCHAR      Unused4[3];
+  USHORT    SectorsPerTrack;		// 0x18
+  USHORT    Heads;					// 0x1A
+  UCHAR     Unused2[8];				// 0x1C
+} BIOS_PARAMETERS_BLOCK, *PBIOS_PARAMETERS_BLOCK;
+
+typedef struct _EXTENDED_BIOS_PARAMETERS_BLOCK
+{
+  UCHAR     Unknown[4];				// 0x24, always 80 00 80 00
+  ULONGLONG SectorCount;			// 0x28
+  ULONGLONG MftLocation;			// 0x30
+  ULONGLONG MftMirrLocation;		// 0x38
+  CHAR      ClustersPerMftRecord;	// 0x40
+  UCHAR     Unused3[3];				// 0x41
+  CHAR      ClustersPerIndexRecord; // 0x44
+  UCHAR     Unused4[3];				// 0x45
   ULONGLONG SerialNumber;			// 0x48
-  UCHAR     BootCode[432];			// 0x50
+  UCHAR     Checksum[4];			// 0x50
+} EXTENDED_BIOS_PARAMETERS_BLOCK, *PEXTENDED_BIOS_PARAMETERS_BLOCK;
+
+typedef struct _BOOT_SECTOR
+{
+  UCHAR     Jump[3];				// 0x00
+  UCHAR     OEMID[8];				// 0x03
+  BIOS_PARAMETERS_BLOCK BPB;
+  EXTENDED_BIOS_PARAMETERS_BLOCK EBPB;
+  UCHAR     BootStrap[426];			// 0x54
+  USHORT    EndSector;				// 0x1FE
 } BOOT_SECTOR, *PBOOT_SECTOR;
 #include <poppack.h>
 

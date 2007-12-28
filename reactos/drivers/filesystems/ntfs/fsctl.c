@@ -20,7 +20,7 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/ntfs/fsctl.c
+ * FILE:             drivers/filesystems/ntfs/fsctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Eric Kohl
  * Updated by Valentin Verkhovsky  2003/09/12
@@ -106,8 +106,8 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 			    TRUE);
   if (NT_SUCCESS(Status))
     {
-      DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OemName);
-      if (RtlCompareMemory(BootSector->OemName, "NTFS    ", 8) != 8)
+      DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OEMID);
+      if (RtlCompareMemory(BootSector->OEMID, "NTFS    ", 8) != 8)
 	{
 	  Status = STATUS_UNRECOGNIZED_VOLUME;
 	}
@@ -170,33 +170,33 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
     }
 
   /* Read data from the bootsector */
-  NtfsInfo->BytesPerSector = BootSector->BytesPerSector;
-  NtfsInfo->SectorsPerCluster = BootSector->SectorsPerCluster;
-  NtfsInfo->BytesPerCluster = BootSector->BytesPerSector * BootSector->SectorsPerCluster;
-  NtfsInfo->SectorCount = BootSector->SectorCount;
+  NtfsInfo->BytesPerSector = BootSector->BPB.BytesPerSector;
+  NtfsInfo->SectorsPerCluster = BootSector->BPB.SectorsPerCluster;
+  NtfsInfo->BytesPerCluster = BootSector->BPB.BytesPerSector * BootSector->BPB.SectorsPerCluster;
+  NtfsInfo->SectorCount = BootSector->EBPB.SectorCount;
 
-  NtfsInfo->MftStart.QuadPart = BootSector->MftLocation;
-  NtfsInfo->MftMirrStart.QuadPart = BootSector->MftMirrLocation;
-  NtfsInfo->SerialNumber = BootSector->SerialNumber;
-  if (BootSector->ClustersPerMftRecord > 0)
-    NtfsInfo->BytesPerFileRecord = BootSector->ClustersPerMftRecord * NtfsInfo->BytesPerCluster;
+  NtfsInfo->MftStart.QuadPart = BootSector->EBPB.MftLocation;
+  NtfsInfo->MftMirrStart.QuadPart = BootSector->EBPB.MftMirrLocation;
+  NtfsInfo->SerialNumber = BootSector->EBPB.SerialNumber;
+  if (BootSector->EBPB.ClustersPerMftRecord > 0)
+    NtfsInfo->BytesPerFileRecord = BootSector->EBPB.ClustersPerMftRecord * NtfsInfo->BytesPerCluster;
   else
-    NtfsInfo->BytesPerFileRecord = 1 << (-BootSector->ClustersPerMftRecord);
+    NtfsInfo->BytesPerFileRecord = 1 << (-BootSector->EBPB.ClustersPerMftRecord);
 
 //#ifndef NDEBUG
   DbgPrint("Boot sector information:\n");
-  DbgPrint("  BytesPerSector:         %hu\n", BootSector->BytesPerSector);
-  DbgPrint("  SectorsPerCluster:      %hu\n", BootSector->SectorsPerCluster);
+  DbgPrint("  BytesPerSector:         %hu\n", BootSector->BPB.BytesPerSector);
+  DbgPrint("  SectorsPerCluster:      %hu\n", BootSector->BPB.SectorsPerCluster);
 
-  DbgPrint("  SectorCount:            %I64u\n", BootSector->SectorCount);
+  DbgPrint("  SectorCount:            %I64u\n", BootSector->EBPB.SectorCount);
 
-  DbgPrint("  MftStart:               %I64u\n", BootSector->MftLocation);
-  DbgPrint("  MftMirrStart:           %I64u\n", BootSector->MftMirrLocation);
+  DbgPrint("  MftStart:               %I64u\n", BootSector->EBPB.MftLocation);
+  DbgPrint("  MftMirrStart:           %I64u\n", BootSector->EBPB.MftMirrLocation);
 
-  DbgPrint("  ClustersPerMftRecord:   %lx\n", BootSector->ClustersPerMftRecord);
-  DbgPrint("  ClustersPerIndexRecord: %lx\n", BootSector->ClustersPerIndexRecord);
+  DbgPrint("  ClustersPerMftRecord:   %lx\n", BootSector->EBPB.ClustersPerMftRecord);
+  DbgPrint("  ClustersPerIndexRecord: %lx\n", BootSector->EBPB.ClustersPerIndexRecord);
 
-  DbgPrint("  SerialNumber:           %I64x\n", BootSector->SerialNumber);
+  DbgPrint("  SerialNumber:           %I64x\n", BootSector->EBPB.SerialNumber);
 //#endif
 
   ExFreePool(BootSector);
