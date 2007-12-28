@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: interrupt.c 21844 2006-05-07 19:34:23Z ion $
  */
 
 #include "videoprt.h"
@@ -71,7 +70,7 @@ IntVideoPortSetupInterrupt(
 
       if (InterruptVector == 0)
       {
-         DPRINT("HalGetInterruptVector failed\n");
+         WARN_(VIDEOPRT, "HalGetInterruptVector failed\n");
          return FALSE;
       }
 
@@ -91,7 +90,7 @@ IntVideoPortSetupInterrupt(
 
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("IoConnectInterrupt failed with status 0x%08x\n", Status);
+         WARN_(VIDEOPRT, "IoConnectInterrupt failed with status 0x%08x\n", Status);
          return FALSE;
       }
    }
@@ -111,7 +110,7 @@ VideoPortEnableInterrupt(IN PVOID HwDeviceExtension)
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    BOOLEAN Status;
 
-   DPRINT("VideoPortEnableInterrupt\n");
+   TRACE_(VIDEOPRT, "VideoPortEnableInterrupt\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
@@ -133,7 +132,7 @@ VideoPortDisableInterrupt(IN PVOID HwDeviceExtension)
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    BOOLEAN Status;
 
-   DPRINT("VideoPortDisableInterrupt\n");
+   TRACE_(VIDEOPRT, "VideoPortDisableInterrupt\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 

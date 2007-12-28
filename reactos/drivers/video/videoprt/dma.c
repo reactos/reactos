@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: dma.c 27066 2007-06-07 22:12:10Z greatlrd $
  */
 
 #include "videoprt.h"
@@ -75,7 +74,7 @@ VideoPortPutDmaAdapter(
    IN PVOID HwDeviceExtension,
    IN PVP_DMA_ADAPTER VpDmaAdapter)
 {
-   DPRINT1("unimplemented VideoPortPutDmaAdapter\n");
+    UNIMPLEMENTED;
 }
 
 /*
@@ -94,7 +93,7 @@ VideoPortGetDmaAdapter(
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DPRINT("VideoPortGetDmaAdapter\n");
+   TRACE_(VIDEOPRT, "VideoPortGetDmaAdapter\n");
 
    DeviceDescription.Version = DEVICE_DESCRIPTION_VERSION;
    DeviceDescription.Master = TRUE /* ?? */;
@@ -114,7 +113,7 @@ VideoPortGetDmaAdapter(
 
    Adapter =
       (PVP_DMA_ADAPTER)HalGetAdapter(&DeviceDescription, &NumberOfMapRegisters);
-   DPRINT("Adapter %X\n", Adapter);
+   INFO_(VIDEOPRT, "Adapter %p\n", Adapter);
    return(Adapter);
 }
 

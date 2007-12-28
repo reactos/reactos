@@ -134,7 +134,7 @@ IntCreateRegistryPath(
    }
    else
    {
-      DPRINT1("Unparsable registry path %wZ", DriverRegistryPath);
+      WARN_(VIDEOPRT, "Unparsable registry path %wZ", DriverRegistryPath);
    }
 
    if (Valid)
@@ -190,7 +190,7 @@ IntVideoPortCreateAdapterDeviceObject(
    DeviceNumber = VideoPortDeviceNumber++;
    if (DeviceNumber == 0xFFFFFFFF)
    {
-      DPRINT("Can't find free device number\n");
+      WARN_(VIDEOPRT, "Can't find free device number\n");
       return STATUS_UNSUCCESSFUL;
    }
 
@@ -202,7 +202,7 @@ IntVideoPortCreateAdapterDeviceObject(
    swprintf(DeviceBuffer, L"\\Device\\Video%lu", DeviceNumber);
    RtlInitUnicodeString(&DeviceName, DeviceBuffer);
 
-   DPRINT("HwDeviceExtension size is: 0x%x\n",
+   INFO_(VIDEOPRT, "HwDeviceExtension size is: 0x%x\n",
        DriverExtension->InitializationData.HwDeviceExtensionSize);
 
    /* Create the device object. */
@@ -218,7 +218,7 @@ IntVideoPortCreateAdapterDeviceObject(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IoCreateDevice call failed with status 0x%08x\n", Status);
+      WARN_(VIDEOPRT, "IoCreateDevice call failed with status 0x%08x\n", Status);
       return Status;
    }
 
@@ -249,7 +249,7 @@ IntVideoPortCreateAdapterDeviceObject(
       &DeviceExtension->RegistryPath);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IntCreateRegistryPath() call failed with status 0x%08x\n", Status);
+      WARN_(VIDEOPRT, "IntCreateRegistryPath() call failed with status 0x%08x\n", Status);
       IoDeleteDevice(*DeviceObject);
       *DeviceObject = NULL;
       return Status;
@@ -267,7 +267,7 @@ IntVideoPortCreateAdapterDeviceObject(
          &Size);
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("Couldn't get an information from bus driver. We will try to\n"
+         WARN_(VIDEOPRT, "Couldn't get an information from bus driver. We will try to\n"
                 "use legacy detection method, but even that doesn't mean that\n"
                 "it will work.\n");
          DeviceExtension->PhysicalDeviceObject = NULL;
@@ -422,7 +422,7 @@ IntVideoPortFindAdapter(
          }
          else
          {
-            DPRINT("HwFindAdapter call failed with error 0x%X\n", Status);
+            WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
             RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
             IoDeleteDevice(DeviceObject);
 
@@ -443,7 +443,7 @@ IntVideoPortFindAdapter(
 
    if (Status != NO_ERROR)
    {
-      DPRINT("HwFindAdapter call failed with error 0x%X\n", Status);
+      WARN_(VIDEOPRT, "HwFindAdapter call failed with error 0x%X\n", Status);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
       return Status;
@@ -504,7 +504,7 @@ IntVideoPortFindAdapter(
          IoDisconnectInterrupt(DeviceExtension->InterruptObject);
       RtlFreeUnicodeString(&DeviceExtension->RegistryPath);
       IoDeleteDevice(DeviceObject);
-      DPRINT("STATUS_INSUFFICIENT_RESOURCES\n");
+      WARN_(VIDEOPRT, "STATUS_INSUFFICIENT_RESOURCES\n");
       return STATUS_INSUFFICIENT_RESOURCES;
    }
 
@@ -513,7 +513,7 @@ IntVideoPortFindAdapter(
     */
    VideoPortEnumerateChildren(&DeviceExtension->MiniPortDeviceExtension, NULL);
 
-   DPRINT("STATUS_SUCCESS\n");
+   INFO_(VIDEOPRT, "STATUS_SUCCESS\n");
    return STATUS_SUCCESS;
 }
 
@@ -555,7 +555,7 @@ VideoPortInitialize(
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
    BOOLEAN PnpDriver = FALSE, LegacyDetection = FALSE;
 
-   DPRINT("VideoPortInitialize\n");
+   TRACE_(VIDEOPRT, "VideoPortInitialize\n");
 
    /*
     * As a first thing do parameter checks.
@@ -581,19 +581,19 @@ VideoPortInitialize(
        */
 
       case SIZE_OF_NT4_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows NT miniport driver.\n");
+         INFO_(VIDEOPRT, "We were loaded by a Windows NT miniport driver.\n");
          break;
 
       case SIZE_OF_W2K_VIDEO_HW_INITIALIZATION_DATA:
-         DPRINT("We were loaded by a Windows 2000 miniport driver.\n");
+         INFO_(VIDEOPRT, "We were loaded by a Windows 2000 miniport driver.\n");
          break;
 
       case sizeof(VIDEO_HW_INITIALIZATION_DATA):
-         DPRINT("We were loaded by a Windows XP or later miniport driver.\n");
+         INFO_(VIDEOPRT, "We were loaded by a Windows XP or later miniport driver.\n");
          break;
 
       default:
-         DPRINT("Invalid HwInitializationData size.\n");
+         WARN_(VIDEOPRT, "Invalid HwInitializationData size.\n");
          return STATUS_UNSUCCESSFUL;
    }
 
@@ -615,14 +615,14 @@ VideoPortInitialize(
        && HwInitializationData->HwGetPowerState
        && HwInitializationData->HwGetVideoChildDescriptor)
    {
-       DPRINT("The miniport is a PnP miniport driver\n");
+       INFO_(VIDEOPRT, "The miniport is a PnP miniport driver\n");
        PnpDriver = TRUE;
    }
 
    /* Check if legacy detection should be applied */
    if (!PnpDriver || HwContext)
    {
-       DPRINT("Legacy detection for adapter interface %d\n",
+       INFO_(VIDEOPRT, "Legacy detection for adapter interface %d\n",
            HwInitializationData->AdapterInterfaceType);
 
        /* FIXME: Move the code for legacy detection
@@ -674,7 +674,7 @@ VideoPortInitialize(
          }
 
          RtlCopyUnicodeString(&DriverExtension->RegistryPath, RegistryPath);
-         DPRINT("RegistryPath: %wZ\n", &DriverExtension->RegistryPath);
+         INFO_(VIDEOPRT, "RegistryPath: %wZ\n", &DriverExtension->RegistryPath);
       }
       else
       {
@@ -716,11 +716,11 @@ VideoPortInitialize(
       }
       Status = IntVideoPortCreateAdapterDeviceObject(DriverObject, DriverExtension,
                                                      NULL, &DeviceObject);
-      DPRINT("IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
+      INFO_(VIDEOPRT, "IntVideoPortCreateAdapterDeviceObject returned 0x%x\n", Status);
       if (!NT_SUCCESS(Status))
          return Status;
       Status = IntVideoPortFindAdapter(DriverObject, DriverExtension, DeviceObject);
-      DPRINT("IntVideoPortFindAdapter returned 0x%x\n", Status);
+      INFO_(VIDEOPRT, "IntVideoPortFindAdapter returned 0x%x\n", Status);
       return Status;
    }
    else
@@ -743,14 +743,11 @@ VideoPortDebugPrint(
    IN VIDEO_DEBUG_LEVEL DebugPrintLevel,
    IN PCHAR DebugMessage, ...)
 {
-   char Buffer[256];
    va_list ap;
 
    va_start(ap, DebugMessage);
-   vsprintf(Buffer, DebugMessage, ap);
+   vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
    va_end(ap);
-
-   DbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, Buffer);
 }
 
 /*
@@ -764,12 +761,12 @@ VideoPortLogError(
    IN VP_STATUS ErrorCode,
    IN ULONG UniqueId)
 {
-   DPRINT1("VideoPortLogError ErrorCode %d (0x%x) UniqueId %lu (0x%lx)\n",
-           ErrorCode, ErrorCode, UniqueId, UniqueId);
-   if (NULL != Vrp)
-   {
-      DPRINT1("Vrp->IoControlCode %lu (0x%lx)\n", Vrp->IoControlCode, Vrp->IoControlCode);
-   }
+    UNIMPLEMENTED;
+
+    INFO_(VIDEOPRT, "VideoPortLogError ErrorCode %d (0x%x) UniqueId %lu (0x%lx)\n",
+          ErrorCode, ErrorCode, UniqueId, UniqueId);
+    if (Vrp)
+        INFO_(VIDEOPRT, "Vrp->IoControlCode %lu (0x%lx)\n", Vrp->IoControlCode, Vrp->IoControlCode);
 }
 
 /*
@@ -800,7 +797,7 @@ QueryRegistryCallback(
 {
    PQUERY_REGISTRY_CALLBACK_CONTEXT CallbackContext = (PQUERY_REGISTRY_CALLBACK_CONTEXT) Context;
 
-   DPRINT("Found registry value for name %S: type %d, length %d\n",
+   INFO_(VIDEOPRT, "Found registry value for name %S: type %d, length %d\n",
           ValueName, ValueType, ValueLength);
    return (*(CallbackContext->HwGetRegistryRoutine))(
       CallbackContext->HwDeviceExtension,
@@ -828,7 +825,7 @@ VideoPortGetRegistryParameters(
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
 
-   DPRINT("VideoPortGetRegistryParameters ParameterName %S, RegPath: %wZ\n",
+   TRACE_(VIDEOPRT, "VideoPortGetRegistryParameters ParameterName %S, RegPath: %wZ\n",
       ParameterName, &DeviceExtension->RegistryPath);
 
    Context.HwDeviceExtension = HwDeviceExtension;
@@ -846,7 +843,7 @@ VideoPortGetRegistryParameters(
       &Context,
       NULL)))
    {
-      DPRINT1("VideoPortGetRegistryParameters could not find the "
+      WARN_(VIDEOPRT, "VideoPortGetRegistryParameters could not find the "
         "requested parameter\n");
       return ERROR_INVALID_PARAMETER;
    }
@@ -873,7 +870,7 @@ VideoPortSetRegistryParameters(
 {
    VP_STATUS Status;
 
-   DPRINT("VideoPortSetRegistryParameters ParameterName %S, RegPath: %wZ\n",
+   TRACE_(VIDEOPRT, "VideoPortSetRegistryParameters ParameterName %S, RegPath: %wZ\n",
       ValueName,
       &VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->RegistryPath);
    ASSERT_IRQL(PASSIVE_LEVEL);
@@ -886,7 +883,7 @@ VideoPortSetRegistryParameters(
       ValueLength);
 
    if (Status != ERROR_SUCCESS)
-     DPRINT1("VideoPortSetRegistryParameters error 0x%x\n", Status);
+     WARN_(VIDEOPRT, "VideoPortSetRegistryParameters error 0x%x\n", Status);
 
    return Status;
 }
@@ -902,7 +899,7 @@ VideoPortGetVgaStatus(
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   DPRINT("VideoPortGetVgaStatus\n");
+   TRACE_(VIDEOPRT, "VideoPortGetVgaStatus\n");
 
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    if (KeGetCurrentIrql() == PASSIVE_LEVEL)
@@ -934,7 +931,7 @@ VideoPortGetRomImage(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
+   TRACE_(VIDEOPRT, "VideoPortGetRomImage(HwDeviceExtension 0x%X Length 0x%X)\n",
           HwDeviceExtension, Length);
 
    /* If the length is zero then free the existing buffer. */
@@ -992,7 +989,7 @@ VideoPortScanRom(
    BOOLEAN Found;
    PUCHAR SearchLocation;
 
-   DPRINT("VideoPortScanRom RomBase %p RomLength 0x%x String %s\n", RomBase, RomLength, String);
+   TRACE_(VIDEOPRT, "VideoPortScanRom RomBase %p RomLength 0x%x String %s\n", RomBase, RomLength, String);
 
    StringLength = strlen((PCHAR)String);
    Found = FALSE;
@@ -1004,7 +1001,7 @@ VideoPortScanRom(
       Found = (RtlCompareMemory(SearchLocation, String, StringLength) == StringLength);
       if (Found)
       {
-         DPRINT("Match found at %p\n", SearchLocation);
+         INFO_(VIDEOPRT, "Match found at %p\n", SearchLocation);
       }
    }
 
@@ -1084,7 +1081,7 @@ VideoPortEnumerateChildren(
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    if (DeviceExtension->DriverExtension->InitializationData.HwGetVideoChildDescriptor == NULL)
    {
-      DPRINT("Miniport's HwGetVideoChildDescriptor is NULL!\n");
+      WARN_(VIDEOPRT, "Miniport's HwGetVideoChildDescriptor is NULL!\n");
       return NO_ERROR;
    }
 
@@ -1126,7 +1123,7 @@ VideoPortEnumerateChildren(
                   // Compare the previous monitor ID with the current one, break the loop if they are identical
                   if (RtlCompareMemory(LastMonitorID, &ChildDescriptor[8], sizeof(LastMonitorID)) == sizeof(LastMonitorID))
                   {
-                     DPRINT("Found identical Monitor ID two times, stopping enumeration\n");
+                     INFO_(VIDEOPRT, "Found identical Monitor ID two times, stopping enumeration\n");
                      break;
                   }
                }
@@ -1139,17 +1136,17 @@ VideoPortEnumerateChildren(
       }
       else if (Status == VIDEO_ENUM_INVALID_DEVICE)
       {
-         DPRINT("Child device %d is invalid!\n", ChildEnumInfo.ChildIndex);
+         WARN_(VIDEOPRT, "Child device %d is invalid!\n", ChildEnumInfo.ChildIndex);
          continue;
       }
       else if (Status == VIDEO_ENUM_NO_MORE_DEVICES)
       {
-         DPRINT("End of child enumeration! (%d children enumerated)\n", i - 1);
+         INFO_(VIDEOPRT, "End of child enumeration! (%d children enumerated)\n", i - 1);
          break;
       }
       else
       {
-         DPRINT("HwGetVideoChildDescriptor returned unknown status code 0x%x!\n", Status);
+         WARN_(VIDEOPRT, "HwGetVideoChildDescriptor returned unknown status code 0x%x!\n", Status);
          break;
       }
 
@@ -1158,21 +1155,21 @@ VideoPortEnumerateChildren(
       {
          INT j;
          PUCHAR p = ChildDescriptor;
-         DPRINT("Monitor device enumerated! (ChildId = 0x%x)\n", ChildId);
+         INFO_(VIDEOPRT, "Monitor device enumerated! (ChildId = 0x%x)\n", ChildId);
          for (j = 0; j < sizeof (ChildDescriptor); j += 8)
          {
-            DPRINT("%02x %02x %02x %02x %02x %02x %02x %02x\n",
+            INFO_(VIDEOPRT, "%02x %02x %02x %02x %02x %02x %02x %02x\n",
                    p[j+0], p[j+1], p[j+2], p[j+3],
                    p[j+4], p[j+5], p[j+6], p[j+7]);
          }
       }
       else if (ChildType == Other)
       {
-         DPRINT("\"Other\" device enumerated: DeviceId = %S\n", (PWSTR)ChildDescriptor);
+         INFO_(VIDEOPRT, "\"Other\" device enumerated: DeviceId = %S\n", (PWSTR)ChildDescriptor);
       }
       else
       {
-         DPRINT("HwGetVideoChildDescriptor returned unsupported type: %d\n", ChildType);
+         WARN_(VIDEOPRT, "HwGetVideoChildDescriptor returned unsupported type: %d\n", ChildType);
       }
 #endif /* NDEBUG */
 
@@ -1191,8 +1188,8 @@ VideoPortCreateSecondaryDisplay(
    IN OUT PVOID *SecondaryDeviceExtension,
    IN ULONG Flag)
 {
-   DPRINT1("VideoPortCreateSecondaryDisplay: Unimplemented.\n");
-   return ERROR_DEV_NOT_EXIST;
+    UNIMPLEMENTED;
+    return ERROR_DEV_NOT_EXIST;
 }
 
 /*
@@ -1220,7 +1217,7 @@ VideoPortGetAssociatedDeviceExtension(IN PVOID DeviceObject)
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   DPRINT("VideoPortGetAssociatedDeviceExtension\n");
+   TRACE_(VIDEOPRT, "VideoPortGetAssociatedDeviceExtension\n");
    DeviceExtension = ((PDEVICE_OBJECT)DeviceObject)->DeviceExtension;
    if (!DeviceExtension)
       return NULL;
@@ -1287,11 +1284,11 @@ VideoPortCheckForDeviceExistence(
    NTSTATUS Status;
    BOOL DevicePresent;
 
-   DPRINT("VideoPortCheckForDeviceExistence\n");
+   TRACE_(VIDEOPRT, "VideoPortCheckForDeviceExistence\n");
 
    if (Flags & ~(CDE_USE_REVISION | CDE_USE_SUBSYSTEM_IDS))
    {
-       DPRINT1("VideoPortCheckForDeviceExistence: Unknown flags 0x%lx\n", Flags & ~(CDE_USE_REVISION | CDE_USE_SUBSYSTEM_IDS));
+       WARN_(VIDEOPRT, "VideoPortCheckForDeviceExistence: Unknown flags 0x%lx\n", Flags & ~(CDE_USE_REVISION | CDE_USE_SUBSYSTEM_IDS));
        return FALSE;
    }
 
@@ -1308,7 +1305,7 @@ VideoPortCheckForDeviceExistence(
       &IoStatusBlock, IRP_MN_QUERY_INTERFACE, &IoStack);
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("IopInitiatePnpIrp() failed! (Status 0x%lx)\n", Status);
+      WARN_(VIDEOPRT, "IopInitiatePnpIrp() failed! (Status 0x%lx)\n", Status);
       return FALSE;
    }
 
@@ -1337,8 +1334,8 @@ VideoPortRegisterBugcheckCallback(
    IN PVOID Callback,
    IN ULONG BugcheckDataSize)
 {
-   DPRINT1("VideoPortRegisterBugcheckCallback(): Unimplemented.\n");
-   return NO_ERROR;
+    UNIMPLEMENTED;
+    return NO_ERROR;
 }
 
 /*
@@ -1352,7 +1349,7 @@ VideoPortQueryPerformanceCounter(
 {
    LARGE_INTEGER Result;
 
-   DPRINT("VideoPortQueryPerformanceCounter\n");
+   TRACE_(VIDEOPRT, "VideoPortQueryPerformanceCounter\n");
    Result = KeQueryPerformanceCounter((PLARGE_INTEGER)PerformanceFrequency);
    return Result.QuadPart;
 }
@@ -1369,7 +1366,7 @@ VideoPortAcquireDeviceLock(
    NTSTATUS Status;
    (void)Status;
 
-   DPRINT("VideoPortAcquireDeviceLock\n");
+   TRACE_(VIDEOPRT, "VideoPortAcquireDeviceLock\n");
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    Status = KeWaitForMutexObject(&DeviceExtension->DeviceLock, Executive,
                                  KernelMode, FALSE, NULL);
@@ -1388,10 +1385,10 @@ VideoPortReleaseDeviceLock(
    LONG Status;
    (void)Status;
 
-   DPRINT("VideoPortReleaseDeviceLock\n");
+   TRACE_(VIDEOPRT, "VideoPortReleaseDeviceLock\n");
    DeviceExtension = VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension);
    Status = KeReleaseMutex(&DeviceExtension->DeviceLock, FALSE);
-   //ASSERT(Status == 0);
+   //ASSERT(Status == STATUS_SUCCESS);
 }
 
 /*
@@ -1403,7 +1400,7 @@ VpNotifyEaData(
    IN PDEVICE_OBJECT DeviceObject,
    IN PVOID Data)
 {
-     DPRINT1("unimplemented VpNotifyEaData\n");
+    UNIMPLEMENTED;
 }
 
 /*

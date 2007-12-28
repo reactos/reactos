@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id$
  */
 
 #include "videoprt.h"
@@ -69,7 +68,7 @@ I2CWrite(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Data)
    Ack = (READ_SDA() == LOW);
    DELAY_HALF();
 
-   DPRINT("I2CWrite: %s\n", Ack ? "Ack" : "Nak");
+   INFO_(VIDEOPRT, "I2CWrite: %s\n", Ack ? "Ack" : "Nak");
    return Ack;
 }
 
@@ -128,7 +127,7 @@ I2CStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
    /* make sure the bus is free */
    if (READ_SDA() == LOW || READ_SCL() == LOW)
      {
-        DPRINT1("I2CStart: Bus is not free!\n");
+        WARN_(VIDEOPRT, "I2CStart: Bus is not free!\n");
         return FALSE;
      }
 
@@ -139,11 +138,11 @@ I2CStart(PVOID HwDeviceExtension, PI2C_CALLBACKS i2c, UCHAR Address)
      {
         /* ??release the bus?? */
         I2CStop(HwDeviceExtension, i2c);
-        DPRINT1("I2CStart: Device not found (Address = 0x%x)\n", Address);
+        WARN_(VIDEOPRT, "I2CStart: Device not found (Address = 0x%x)\n", Address);
         return FALSE;
      }
 
-   DPRINT("I2CStart: SUCCESS!\n");
+   INFO_(VIDEOPRT, "I2CStart: SUCCESS!\n");
    return TRUE;
 }
 
@@ -182,12 +181,12 @@ VideoPortDDCMonitorHelper(
    PUCHAR pBuffer = (PUCHAR)pEdidBuffer;
    BOOL Ack;
 
-   DPRINT("VideoPortDDCMonitorHelper()\n");
+   TRACE_(VIDEOPRT, "VideoPortDDCMonitorHelper()\n");
 
    ASSERT_IRQL(PASSIVE_LEVEL);
    if (ddc->Size != sizeof (ddc))
      {
-        DPRINT("ddc->Size != %d (%d)\n", sizeof (ddc), ddc->Size);
+        WARN_(VIDEOPRT, "ddc->Size != %d (%d)\n", sizeof (ddc), ddc->Size);
         return FALSE;
      }
 
@@ -216,12 +215,12 @@ VideoPortDDCMonitorHelper(
        pBuffer[4] != 0xff || pBuffer[5] != 0xff ||
        pBuffer[6] != 0xff || pBuffer[7] != 0x00)
      {
-        DPRINT1("VideoPortDDCMonitorHelper(): Invalid EDID header!\n");
+        WARN_(VIDEOPRT, "VideoPortDDCMonitorHelper(): Invalid EDID header!\n");
         return FALSE;
      }
 
-   DPRINT("VideoPortDDCMonitorHelper(): EDID version %d rev. %d\n", pBuffer[18], pBuffer[19]);
-   DPRINT("VideoPortDDCMonitorHelper() - SUCCESS!\n");
+   INFO_(VIDEOPRT, "VideoPortDDCMonitorHelper(): EDID version %d rev. %d\n", pBuffer[18], pBuffer[19]);
+   INFO_(VIDEOPRT, "VideoPortDDCMonitorHelper() - SUCCESS!\n");
    return TRUE;
 }
 

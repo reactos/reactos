@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: int10.c 23763 2006-08-28 23:56:35Z ion $
  */
 
 #include "videoprt.h"
@@ -38,7 +37,7 @@ IntInt10AllocateBuffer(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("IntInt10AllocateBuffer\n");
+   TRACE_(VIDEOPRT, "IntInt10AllocateBuffer\n");
 
    IntAttachToCSRSS(&CallingProcess, &ApcState);
 
@@ -48,7 +47,7 @@ IntInt10AllocateBuffer(
 
    if (!NT_SUCCESS(Status))
    {
-      DPRINT("- ZwAllocateVirtualMemory failed\n");
+      WARN_(VIDEOPRT, "- ZwAllocateVirtualMemory failed\n");
       IntDetachFromCSRSS(&CallingProcess, &ApcState);
       return ERROR_NOT_ENOUGH_MEMORY;
    }
@@ -57,7 +56,7 @@ IntInt10AllocateBuffer(
    {
       ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, Length,
          MEM_RELEASE);
-      DPRINT("- Unacceptable memory allocated\n");
+      WARN_(VIDEOPRT, "- Unacceptable memory allocated\n");
       IntDetachFromCSRSS(&CallingProcess, &ApcState);
       return ERROR_NOT_ENOUGH_MEMORY;
    }
@@ -65,9 +64,9 @@ IntInt10AllocateBuffer(
    *Seg = (ULONG)MemoryAddress >> 4;
    *Off = (ULONG)MemoryAddress & 0xF;
 
-   DPRINT("- Segment: %x\n", (ULONG)MemoryAddress >> 4);
-   DPRINT("- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
-   DPRINT("- Length: %x\n", *Length);
+   INFO_(VIDEOPRT, "- Segment: %x\n", (ULONG)MemoryAddress >> 4);
+   INFO_(VIDEOPRT, "- Offset: %x\n", (ULONG)MemoryAddress & 0xF);
+   INFO_(VIDEOPRT, "- Length: %x\n", *Length);
 
    IntDetachFromCSRSS(&CallingProcess, &ApcState);
 
@@ -85,9 +84,9 @@ IntInt10FreeBuffer(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("IntInt10FreeBuffer\n");
-   DPRINT("- Segment: %x\n", Seg);
-   DPRINT("- Offset: %x\n", Off);
+   TRACE_(VIDEOPRT, "IntInt10FreeBuffer\n");
+   INFO_(VIDEOPRT, "- Segment: %x\n", Seg);
+   INFO_(VIDEOPRT, "- Offset: %x\n", Off);
 
    IntAttachToCSRSS(&CallingProcess, &ApcState);
    Status = ZwFreeVirtualMemory(NtCurrentProcess(), &MemoryAddress, 0,
@@ -108,11 +107,11 @@ IntInt10ReadMemory(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("IntInt10ReadMemory\n");
-   DPRINT("- Segment: %x\n", Seg);
-   DPRINT("- Offset: %x\n", Off);
-   DPRINT("- Buffer: %x\n", Buffer);
-   DPRINT("- Length: %x\n", Length);
+   TRACE_(VIDEOPRT, "IntInt10ReadMemory\n");
+   INFO_(VIDEOPRT, "- Segment: %x\n", Seg);
+   INFO_(VIDEOPRT, "- Offset: %x\n", Off);
+   INFO_(VIDEOPRT, "- Buffer: %x\n", Buffer);
+   INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
    IntAttachToCSRSS(&CallingProcess, &ApcState);
    RtlCopyMemory(Buffer, (PVOID)((Seg << 4) | Off), Length);
@@ -132,11 +131,11 @@ IntInt10WriteMemory(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("IntInt10WriteMemory\n");
-   DPRINT("- Segment: %x\n", Seg);
-   DPRINT("- Offset: %x\n", Off);
-   DPRINT("- Buffer: %x\n", Buffer);
-   DPRINT("- Length: %x\n", Length);
+   TRACE_(VIDEOPRT, "IntInt10WriteMemory\n");
+   INFO_(VIDEOPRT, "- Segment: %x\n", Seg);
+   INFO_(VIDEOPRT, "- Offset: %x\n", Off);
+   INFO_(VIDEOPRT, "- Buffer: %x\n", Buffer);
+   INFO_(VIDEOPRT, "- Length: %x\n", Length);
 
    IntAttachToCSRSS(&CallingProcess, &ApcState);
    RtlCopyMemory((PVOID)((Seg << 4) | Off), Buffer, Length);
@@ -208,7 +207,7 @@ VideoPortInt10(
    PKPROCESS CallingProcess;
    KAPC_STATE ApcState;
 
-   DPRINT("VideoPortInt10\n");
+   TRACE_(VIDEOPRT, "VideoPortInt10\n");
 
    if (!CsrssInitialized)
    {
@@ -218,19 +217,19 @@ VideoPortInt10(
    IntAttachToCSRSS(&CallingProcess, &ApcState);
 
    memset(&Regs, 0, sizeof(Regs));
-   DPRINT("- Input register Eax: %x\n", BiosArguments->Eax);
+   INFO_(VIDEOPRT, "- Input register Eax: %x\n", BiosArguments->Eax);
    Regs.Eax = BiosArguments->Eax;
-   DPRINT("- Input register Ebx: %x\n", BiosArguments->Ebx);
+   INFO_(VIDEOPRT, "- Input register Ebx: %x\n", BiosArguments->Ebx);
    Regs.Ebx = BiosArguments->Ebx;
-   DPRINT("- Input register Ecx: %x\n", BiosArguments->Ecx);
+   INFO_(VIDEOPRT, "- Input register Ecx: %x\n", BiosArguments->Ecx);
    Regs.Ecx = BiosArguments->Ecx;
-   DPRINT("- Input register Edx: %x\n", BiosArguments->Edx);
+   INFO_(VIDEOPRT, "- Input register Edx: %x\n", BiosArguments->Edx);
    Regs.Edx = BiosArguments->Edx;
-   DPRINT("- Input register Esi: %x\n", BiosArguments->Esi);
+   INFO_(VIDEOPRT, "- Input register Esi: %x\n", BiosArguments->Esi);
    Regs.Esi = BiosArguments->Esi;
-   DPRINT("- Input register Edi: %x\n", BiosArguments->Edi);
+   INFO_(VIDEOPRT, "- Input register Edi: %x\n", BiosArguments->Edi);
    Regs.Edi = BiosArguments->Edi;
-   DPRINT("- Input register Ebp: %x\n", BiosArguments->Ebp);
+   INFO_(VIDEOPRT, "- Input register Ebp: %x\n", BiosArguments->Ebp);
    Regs.Ebp = BiosArguments->Ebp;
    Status = Ke386CallBios(0x10, (PCONTEXT)&Regs);
    BiosArguments->Eax = Regs.Eax;

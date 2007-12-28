@@ -102,7 +102,7 @@ IntVideoPortDispatchOpen(
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
    PVIDEO_PORT_DRIVER_EXTENSION DriverExtension;
 
-   DPRINT("IntVideoPortDispatchOpen\n");
+   TRACE_(VIDEOPRT, "IntVideoPortDispatchOpen\n");
 
    if (CsrssInitialized == FALSE)
    {
@@ -111,9 +111,9 @@ IntVideoPortDispatchOpen(
        * to let us know its handle.
        */
 
-      DPRINT("Referencing CSRSS\n");
+      INFO_(VIDEOPRT, "Referencing CSRSS\n");
       Csrss = (PKPROCESS)PsGetCurrentProcess();
-      DPRINT("Csrss %p\n", Csrss);
+      INFO_(VIDEOPRT, "Csrss %p\n", Csrss);
 
       CsrssInitialized = TRUE;
 
@@ -159,7 +159,7 @@ IntVideoPortDispatchClose(
 {
    PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
 
-   DPRINT("IntVideoPortDispatchClose\n");
+   TRACE_(VIDEOPRT, "IntVideoPortDispatchClose\n");
 
    DeviceExtension = (PVIDEO_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
    if (DeviceExtension->DeviceOpened >= 1 &&
@@ -197,7 +197,7 @@ IntVideoPortDispatchDeviceControl(
    PVIDEO_REQUEST_PACKET vrp;
    NTSTATUS Status;
 
-   DPRINT("IntVideoPortDispatchDeviceControl\n");
+   TRACE_(VIDEOPRT, "IntVideoPortDispatchDeviceControl\n");
 
    IrpStack = IoGetCurrentIrpStackLocation(Irp);
    DeviceExtension = DeviceObject->DeviceExtension;
@@ -213,7 +213,7 @@ IntVideoPortDispatchDeviceControl(
    vrp->StatusBlock = (PSTATUS_BLOCK)&(Irp->IoStatus);
    vrp->IoControlCode = IrpStack->Parameters.DeviceIoControl.IoControlCode;
 
-   DPRINT("- IoControlCode: %x\n", vrp->IoControlCode);
+   INFO_(VIDEOPRT, "- IoControlCode: %x\n", vrp->IoControlCode);
 
    /* We're assuming METHOD_BUFFERED */
    vrp->InputBuffer = Irp->AssociatedIrp.SystemBuffer;
@@ -229,7 +229,7 @@ IntVideoPortDispatchDeviceControl(
    /* Free the VRP */
    ExFreePool(vrp);
 
-   DPRINT("- Returned status: %x\n", Irp->IoStatus.Status);
+   INFO_(VIDEOPRT, "- Returned status: %x\n", Irp->IoStatus.Status);
 
    if (Irp->IoStatus.Status != STATUS_SUCCESS)
    {
@@ -377,7 +377,7 @@ IntVideoPortPnPStartDevice(
          }
       }
    }
-   DPRINT("Interrupt level: 0x%x Interrupt Vector: 0x%x\n",
+   INFO_(VIDEOPRT, "Interrupt level: 0x%x Interrupt Vector: 0x%x\n",
           DeviceExtension->InterruptLevel,
           DeviceExtension->InterruptVector);
 

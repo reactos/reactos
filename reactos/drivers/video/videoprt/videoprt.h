@@ -33,21 +33,10 @@
 #include <ndk/ntndk.h>
 #include <reactos/helper.h>
 
-#define NDEBUG
 #include <debug.h>
 
 #define TAG_VIDEO_PORT  TAG('V', 'I', 'D', 'P')
 #define TAG_VIDEO_PORT_BUFFER  TAG('V', 'p', 'm', '\0' )
-
-#define DPFLTR_IHVVIDEO_ID 80 /* FIXME */
-
-/* ROS Internal. Please deprecate */
-NTHALAPI
-VOID
-NTAPI
-HalReleaseDisplayOwnership(
-    VOID
-);
 
 typedef struct _VIDEO_PORT_ADDRESS_MAPPING
 {

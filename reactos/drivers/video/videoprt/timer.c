@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: timer.c 21844 2006-05-07 19:34:23Z ion $
  */
 
 #include "videoprt.h"
@@ -50,7 +49,7 @@ IntVideoPortSetupTimer(
 
    if (DriverExtension->InitializationData.HwTimer != NULL)
    {
-      DPRINT("Initializing timer\n");
+      INFO_(VIDEOPRT, "Initializing timer\n");
 
       Status = IoInitializeTimer(
          DeviceObject,
@@ -59,7 +58,7 @@ IntVideoPortSetupTimer(
 
       if (!NT_SUCCESS(Status))
       {
-         DPRINT("IoInitializeTimer failed with status 0x%08x\n", Status);
+         WARN_(VIDEOPRT, "IoInitializeTimer failed with status 0x%08x\n", Status);
          return FALSE;
       }
    }
@@ -76,7 +75,7 @@ IntVideoPortSetupTimer(
 VOID NTAPI
 VideoPortStartTimer(IN PVOID HwDeviceExtension)
 {
-   DPRINT("VideoPortStartTimer\n");
+   TRACE_(VIDEOPRT, "VideoPortStartTimer\n");
    IoStartTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
 }
 
@@ -87,6 +86,6 @@ VideoPortStartTimer(IN PVOID HwDeviceExtension)
 VOID NTAPI
 VideoPortStopTimer(IN PVOID HwDeviceExtension)
 {
-   DPRINT("VideoPortStopTimer\n");
+   TRACE_(VIDEOPRT, "VideoPortStopTimer\n");
    IoStopTimer(VIDEO_PORT_GET_DEVICE_EXTENSION(HwDeviceExtension)->FunctionalDeviceObject);
 }

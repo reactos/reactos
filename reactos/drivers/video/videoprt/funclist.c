@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: videoprt.c 28975 2007-09-09 12:39:11Z fireball $
  */
 
 
@@ -46,7 +45,7 @@ IntVideoPortGetProcAddress(
 {
    ULONG i = 0;
 
-   DPRINT("VideoPortGetProcAddress(%s)\n", FunctionName);
+   TRACE_(VIDEOPRT, "VideoPortGetProcAddress(%s)\n", FunctionName);
 
    /* Search by name */
    for (i = 0; i < VP_EXPORTED_FUNCS; i++)
@@ -58,7 +57,7 @@ IntVideoPortGetProcAddress(
       }
    }
 
-   DPRINT("VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
+   WARN_(VIDEOPRT, "VideoPortGetProcAddress: Can't resolve symbol %s\n", FunctionName);
 
    return NULL;
 }

@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: services.c 21844 2006-05-07 19:34:23Z ion $
  */
 
 #include "videoprt.h"
@@ -41,7 +40,7 @@ VideoPortQueryServices(
   IN VIDEO_PORT_SERVICES ServicesType,
   IN OUT PINTERFACE Interface)
 {
-   DPRINT("VideoPortQueryServices - ServicesType: 0x%x\n", ServicesType);
+   TRACE_(VIDEOPRT, "VideoPortQueryServices - ServicesType: 0x%x\n", ServicesType);
 
    switch (ServicesType)
    {
@@ -77,9 +76,11 @@ VideoPortQueryServices(
          break;
 
       case VideoPortServicesI2C:
+          UNIMPLEMENTED;
+          return ERROR_CALL_NOT_IMPLEMENTED;
+
       case VideoPortServicesHeadless:
-         DPRINT1("VideoPortServices%s is UNIMPLEMENTED!\n",
-                 (ServicesType == VideoPortServicesI2C) ? "I2C" : "Headless");
+         UNIMPLEMENTED;
          return ERROR_CALL_NOT_IMPLEMENTED;
 
       default:
@@ -97,7 +98,7 @@ VideoPortGetAgpServices(
    VIDEO_PORT_AGP_INTERFACE Interface;
    VP_STATUS Status;
 
-   DPRINT("VideoPortGetAgpServices\n");
+   TRACE_(VIDEOPRT, "VideoPortGetAgpServices\n");
 
    Interface.Size = sizeof(Interface);
    Interface.Version = VIDEO_PORT_AGP_INTERFACE_VERSION_1;
@@ -106,7 +107,7 @@ VideoPortGetAgpServices(
                                    (PINTERFACE)&Interface);
    if (Status != NO_ERROR)
    {
-      DPRINT("VideoPortQueryServices() failed!\n");
+      WARN_(VIDEOPRT, "VideoPortQueryServices() failed!\n");
       return FALSE;
    }
 

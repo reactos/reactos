@@ -18,7 +18,6 @@
  * If not, write to the Free Software Foundation,
  * 59 Temple Place - Suite 330, Boston, MA 02111-1307, USA.
  *
- * $Id: spinlock.c 21844 2006-05-07 19:34:23Z ion $
  */
 
 #include "videoprt.h"
@@ -32,7 +31,7 @@ VideoPortCreateSpinLock(
    IN PVOID HwDeviceExtension,
    OUT PSPIN_LOCK *SpinLock)
 {
-   DPRINT("VideoPortCreateSpinLock\n");
+   TRACE_(VIDEOPRT, "VideoPortCreateSpinLock\n");
    *SpinLock = ExAllocatePool(NonPagedPool, sizeof(KSPIN_LOCK));
    if (*SpinLock == NULL)
       return ERROR_NOT_ENOUGH_MEMORY;
@@ -49,7 +48,7 @@ VideoPortDeleteSpinLock(
    IN PVOID HwDeviceExtension,
    IN PSPIN_LOCK SpinLock)
 {
-   DPRINT("VideoPortDeleteSpinLock\n");
+   TRACE_(VIDEOPRT, "VideoPortDeleteSpinLock\n");
    ExFreePool(SpinLock);
    return NO_ERROR;
 }
@@ -64,7 +63,7 @@ VideoPortAcquireSpinLock(
    IN PSPIN_LOCK SpinLock,
    OUT PUCHAR OldIrql)
 {
-   DPRINT("VideoPortAcquireSpinLock\n");
+   TRACE_(VIDEOPRT, "VideoPortAcquireSpinLock\n");
    KeAcquireSpinLock((PKSPIN_LOCK)SpinLock, OldIrql);
 }
 
@@ -77,7 +76,7 @@ VideoPortAcquireSpinLockAtDpcLevel(
    IN PVOID HwDeviceExtension,
    IN PSPIN_LOCK SpinLock)
 {
-   DPRINT("VideoPortAcquireSpinLockAtDpcLevel\n");
+   TRACE_(VIDEOPRT, "VideoPortAcquireSpinLockAtDpcLevel\n");
    KefAcquireSpinLockAtDpcLevel((PKSPIN_LOCK)SpinLock);
 }
 
@@ -91,7 +90,7 @@ VideoPortReleaseSpinLock(
    IN PSPIN_LOCK SpinLock,
    IN UCHAR NewIrql)
 {
-   DPRINT("VideoPortReleaseSpinLock\n");
+   TRACE_(VIDEOPRT, "VideoPortReleaseSpinLock\n");
    KeReleaseSpinLock((PKSPIN_LOCK)SpinLock, NewIrql);
 }
 
@@ -104,6 +103,6 @@ VideoPortReleaseSpinLockFromDpcLevel(
    IN PVOID HwDeviceExtension,
    IN PSPIN_LOCK SpinLock)
 {
-   DPRINT("VideoPortReleaseSpinLockFromDpcLevel\n");
+   TRACE_(VIDEOPRT, "VideoPortReleaseSpinLockFromDpcLevel\n");
    KefReleaseSpinLockFromDpcLevel((PKSPIN_LOCK)SpinLock);
 }
