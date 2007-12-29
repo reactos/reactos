@@ -1591,10 +1591,10 @@ GetETM(HDC hdc,
        EXTTEXTMETRIC *petm)
 {
   BOOL Ret = NtGdiGetETM(hdc, petm);
-  if ( Ret )
-  {
-     if ( petm ) petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
-  }
+
+  if (Ret && petm)
+    petm->emKernPairs = GetKerningPairsA(hdc, 0, 0);
+
   return Ret;
 }
 
