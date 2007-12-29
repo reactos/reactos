@@ -173,7 +173,7 @@ DECLARE_INTERFACE_(IFullScreenVideo, IUnknown)
   STDMETHOD(SetCaption)(THIS_ BSTR strCaption) PURE;
   STDMETHOD(GetCaption)(THIS_ BSTR *pstrCaption) PURE;
   STDMETHOD(SetDefault)(THIS) PURE;
-}
+};
 
 #undef INTERFACE
 #define INTERFACE IQualProp
