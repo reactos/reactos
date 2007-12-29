@@ -291,9 +291,8 @@ DWORD DxEngUnreferenceHdev(DWORD x1)
 * @param PGAMMARAMP Ramp
 * to set in our gama ramp
 *
-* @param BOOL Unuse
-* Info on this are avail at request. at moment ReactOS does not
-* does not use it. and problare never need it.
+* @param BOOL Test
+* Testing the gama or not. FALSE for no test, TRUE for testing
 *
 * @return
 * This return FALSE or TRUE, FALSE for fail, TRUE for success
