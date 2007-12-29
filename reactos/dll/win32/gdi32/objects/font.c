@@ -1174,8 +1174,10 @@ GetKerningPairsA( HDC hDC,
     }
     DPRINT("charset %d => codepage %u\n", charset, csi.ciACP);
 
-    total_kern_pairs = GetKerningPairsW(hDC, 0, NULL);
+    total_kern_pairs = NtGdiGetKerningPairs(hDC, 0, NULL);
     if (!total_kern_pairs) return 0;
+
+    if (!cPairs && !kern_pairA) return total_kern_pairs;
 
     kern_pairW = HeapAlloc(GetProcessHeap(), 0, total_kern_pairs * sizeof(*kern_pairW));
     GetKerningPairsW(hDC, total_kern_pairs, kern_pairW);

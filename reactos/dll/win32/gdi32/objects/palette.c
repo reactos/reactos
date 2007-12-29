@@ -86,10 +86,7 @@ RealizePalette(HDC hDC) /* [in] Handle of device context */
     }
  }
 #endif
-// return UserRealizePalette(hDC);
-
-//HACK!!!!!
- return  NtGdiRealizePalette(hDC);
+ return UserRealizePalette(hDC);
 }
 
 
