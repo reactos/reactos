@@ -245,11 +245,17 @@ UpdateDeviceGammaRamp( HDEV hPDev )
      return FALSE;
 }
 
+//
+// ICM registry subkey sets internal brightness range, gamma range is 128 or
+// 256 when icm is init.
+INT IcmGammaRangeSet = 128; // <- make it global
+
 BOOL
 FASTCALL
-IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
+IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 {
-  BOOL Ret = FALSE;
+  WORD IcmGR, i, R, G, B;
+  BOOL Ret = FALSE, TstPeak;
   PGDIDEVICE pGDev = (PGDIDEVICE) hPDev;
 
   if (!hPDev) return FALSE;
@@ -274,15 +280,40 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
      if (pGDev->flFlags & PDEV_GAMMARAMP_TABLE)
         if (RtlCompareMemory( pGDev->pvGammaRamp, Ramp, sizeof(GAMMARAMP)) ==
                                                sizeof(GAMMARAMP)) return TRUE;
-
+     // Verify Ramp is inside range.
+     IcmGR = -IcmGammaRangeSet;
+     TstPeak = (Test == FALSE);
+     for (i = 0; i < 256; i++)
+     {
+         R = Ramp->Red[i]   / 256;
+         G = Ramp->Green[i] / 256;
+         B = Ramp->Blue[i]  / 256;
+         if ( R >= IcmGR)
+         {
+            if ( R <= IcmGammaRangeSet + i)
+            {
+               if ( G >= IcmGR &&
+                   (G <= IcmGammaRangeSet + i) &&
+                    B >= IcmGR &&
+                   (B <= IcmGammaRangeSet + i) ) continue;
+            }
+         }
+         if (Test) return Ret; // Don't set and return.
+         // No test override, check max range
+         if (TstPeak)
+         {
+            if ( R != (IcmGR * 256) ||
+                 G != (IcmGR * 256) ||
+                 B != (IcmGR * 256) ) TstPeak = FALSE; // W/i range.
+         }
+     }
+     // ReactOS allocates a ramp even if it is 8BPP and Palette only.
+     // This way we have a record of the change in memory.
      if (!pGDev->pvGammaRamp && !(pGDev->flFlags & PDEV_GAMMARAMP_TABLE))
      {  // If the above is true and we have nothing allocated, create it.
         pGDev->pvGammaRamp = ExAllocatePoolWithTag(PagedPool, sizeof(GAMMARAMP), TAG_GDIICM);
         pGDev->flFlags |= PDEV_GAMMARAMP_TABLE;
      }
-     //
-     // Need to adjust the input Ramp with internal brightness before copy.
-     // ICM subkey sets internal brightness, gamma range 128 or 256 during icm init.
      RtlCopyMemory( pGDev->pvGammaRamp, Ramp, sizeof(GAMMARAMP));
 
      Ret = UpdateDeviceGammaRamp(hPDev);
@@ -290,7 +321,7 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
      return Ret;
   }
   else
-     return FALSE;
+     return Ret;
 }
 
 BOOL
@@ -341,7 +372,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
 
-  Ret = IntSetDeviceGammaRamp((HDEV)dc->pPDev, SafeRamp);
+  Ret = IntSetDeviceGammaRamp((HDEV)dc->pPDev, SafeRamp, TRUE);
   DC_UnlockDc(dc);
   ExFreePool(SafeRamp);
   return Ret;

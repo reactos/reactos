@@ -303,9 +303,9 @@ DWORD DxEngUnreferenceHdev(DWORD x1)
 *
 *--*/
 BOOL
-DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse)
+DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 {
-   return IntSetDeviceGammaRamp(hPDev, Ramp);
+   return IntSetDeviceGammaRamp(hPDev, Ramp, Test);
 }
 
 /************************************************************************/

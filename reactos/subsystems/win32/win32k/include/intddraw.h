@@ -123,6 +123,6 @@ typedef BOOL (NTAPI *PGD_ENGUNLOCKDIRECTDRAWSURFACE)(PDD_SURFACE_LOCAL);
 
 /* Gammaramp internal prototype */
 BOOL FASTCALL IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
-BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
+BOOL FASTCALL IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL);
 
 #endif /* _INT_W32k_DDRAW */
