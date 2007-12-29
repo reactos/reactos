@@ -405,13 +405,12 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
       case DevicePropertyLocationInformation:
       case DevicePropertyUINumber:
       {
-         LPCWSTR RegistryPropertyName;
-         UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT);
-         UNICODE_STRING ValueName;
+         LPWSTR RegistryPropertyName, KeyNameBuffer;
+         UNICODE_STRING KeyName, ValueName;
          OBJECT_ATTRIBUTES ObjectAttributes;
          KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
          ULONG ValueInformationLength;
-         HANDLE hEnum, KeyHandle;
+         HANDLE KeyHandle;
          NTSTATUS Status;
 
          switch (DeviceProperty)
@@ -437,70 +436,62 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             case DevicePropertyUINumber:
                RegistryPropertyName = L"UINumber"; break;
             default:
-               /* Should not happen */
-               ASSERT(FALSE);
-               return STATUS_UNSUCCESSFUL;
+               RegistryPropertyName = NULL; break;
          }
 
-            DPRINT("Registry property %S\n", RegistryPropertyName);
+         KeyNameBuffer = ExAllocatePool(PagedPool,
+            (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
 
-            /* Open Enum key */
-            InitializeObjectAttributes(&ObjectAttributes, &EnumU,
-                                       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-            Status = ZwOpenKey(&hEnum, 0, &ObjectAttributes);
-            if (!NT_SUCCESS(Status))
-                return Status;
+         DPRINT("KeyNameBuffer: 0x%p, value %S\n", KeyNameBuffer, RegistryPropertyName);
 
-            /* Open instance key */
-            InitializeObjectAttributes(&ObjectAttributes, &DeviceNode->InstancePath,
-                                       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, hEnum, NULL);
-            Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
-            ZwClose(hEnum);
-            if (!NT_SUCCESS(Status))
-                return Status;
+         if (KeyNameBuffer == NULL)
+            return STATUS_INSUFFICIENT_RESOURCES;
 
-             /* Allocate buffer to read as much data as required by the caller */
-             ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                                                   Data[0]) + BufferLength;
-             ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
-             if (!ValueInformation)
-             {
-                 ZwClose(KeyHandle);
-                 return STATUS_INSUFFICIENT_RESOURCES;
-             }
+         wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+         wcscat(KeyNameBuffer, DeviceNode->InstancePath.Buffer);
+         RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+         InitializeObjectAttributes(&ObjectAttributes, &KeyName,
+                                    OBJ_CASE_INSENSITIVE, NULL, NULL);
 
-             /* Read the value */
-             RtlInitUnicodeString(&ValueName, RegistryPropertyName);
-             Status = ZwQueryValueKey(KeyHandle, &ValueName,
-                                      KeyValuePartialInformation, ValueInformation,
-                                      ValueInformationLength,
-                                      &ValueInformationLength);
-             ZwClose(KeyHandle);
+         Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+         ExFreePool(KeyNameBuffer);
+         if (!NT_SUCCESS(Status))
+            return Status;
 
-             if (!NT_SUCCESS(Status))
-             {
-                 ExFreePool(ValueInformation);
-                 if (Status == STATUS_BUFFER_OVERFLOW)
-                 {
-                     *ResultLength = ValueInformation->DataLength;
-                     return STATUS_BUFFER_TOO_SMALL;
-                 }
-                 else
-                 {
-                     *ResultLength = 0;
-                     return Status;
-                 }
-             }
+         RtlInitUnicodeString(&ValueName, RegistryPropertyName);
+         ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                                               Data[0]) + BufferLength;
+         ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
+         if (ValueInformation == NULL)
+         {
+            ZwClose(KeyHandle);
+            return STATUS_INSUFFICIENT_RESOURCES;
+         }
 
-             /* Return data */
-             *ResultLength = ValueInformation->DataLength;
-             /* FIXME: Verify the value (NULL-terminated, correct format). */
-             RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
-                           ValueInformation->DataLength);
-             ExFreePool(ValueInformation);
+         Status = ZwQueryValueKey(KeyHandle, &ValueName,
+                                  KeyValuePartialInformation, ValueInformation,
+                                  ValueInformationLength,
+                                  &ValueInformationLength);
+         *ResultLength = ValueInformation->DataLength;
+         ZwClose(KeyHandle);
 
-             return STATUS_SUCCESS;
-        }
+         if (!NT_SUCCESS(Status))
+         {
+            ExFreePool(ValueInformation);
+            if (Status == STATUS_BUFFER_OVERFLOW)
+               return STATUS_BUFFER_TOO_SMALL;
+            else
+               return Status;
+         }
+
+         /* FIXME: Verify the value (NULL-terminated, correct format). */
+
+         RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
+                       ValueInformation->DataLength);
+         ExFreePool(ValueInformation);
+
+         return STATUS_SUCCESS;
+      }
 
    case DevicePropertyBootConfiguration:
       Length = 0;
@@ -521,36 +512,43 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
       Data = &DeviceNode->BootResources;
       break;
 
-        case DevicePropertyEnumeratorName:
-            /* A buffer overflow can't happen here, since InstancePath
-             * always contains the enumerator name followed by \\ */
-            Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
-            ASSERT(Ptr);
-            Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
-            Data = DeviceNode->InstancePath.Buffer;
-            break;
+   case DevicePropertyEnumeratorName:
+      Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
+      if (Ptr != NULL)
+      {
+         Length = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)DeviceNode->InstancePath.Buffer) + sizeof(WCHAR);
+         Data = DeviceNode->InstancePath.Buffer;
+      }
+      else
+      {
+         Length = 0;
+         Data = NULL;
+      }
+      break;
 
-        case DevicePropertyPhysicalDeviceObjectName:
-            /* InstancePath buffer is NULL terminated, so we can do this */
-            Length = DeviceNode->InstancePath.MaximumLength;
-            Data = DeviceNode->InstancePath.Buffer;
-            break;
+   case DevicePropertyPhysicalDeviceObjectName:
+      Length = DeviceNode->InstancePath.Length + sizeof(WCHAR);
+      Data = DeviceNode->InstancePath.Buffer;
+      break;
 
-        default:
-            return STATUS_INVALID_PARAMETER_2;
-    }
+   default:
+      return STATUS_INVALID_PARAMETER_2;
+  }
 
-    /* Prepare returned values */
-    *ResultLength = Length;
-    if (BufferLength < Length)
-        return STATUS_BUFFER_TOO_SMALL;
-    RtlCopyMemory(PropertyBuffer, Data, Length);
+  *ResultLength = Length;
+  if (BufferLength < Length)
+     return STATUS_BUFFER_TOO_SMALL;
+  RtlCopyMemory(PropertyBuffer, Data, Length);
 
-    /* NULL terminate the string (if required) */
-    if (DeviceProperty == DevicePropertyEnumeratorName)
-        ((LPWSTR)PropertyBuffer)[Length / sizeof(WCHAR)] = UNICODE_NULL;
+  /* Terminate the string */
+  if (DeviceProperty == DevicePropertyEnumeratorName
+     || DeviceProperty == DevicePropertyPhysicalDeviceObjectName)
+  {
+     Ptr = (PWSTR)PropertyBuffer;
+     Ptr[(Length / sizeof(WCHAR)) - 1] = 0;
+  }
 
-    return STATUS_SUCCESS;
+  return STATUS_SUCCESS;
 }
 
 /*
@@ -1603,98 +1601,98 @@ NTSTATUS
 IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                      PUNICODE_STRING ParentIdPrefix)
 {
-    ULONG BufferLength;
-    UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT);
-    PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation;
-    UNICODE_STRING KeyValue;
-    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"ParentIdPrefix");
-    OBJECT_ATTRIBUTES ObjectAttributes;
-    HANDLE hEnum, hKey = NULL;
-    ULONG crc32;
-    NTSTATUS Status;
+   ULONG KeyNameBufferLength;
+   PWSTR KeyNameBuffer = NULL;
+   PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
+   UNICODE_STRING KeyName;
+   UNICODE_STRING KeyValue;
+   UNICODE_STRING ValueName;
+   OBJECT_ATTRIBUTES ObjectAttributes;
+   HANDLE hKey = NULL;
+   ULONG crc32;
+   NTSTATUS Status;
 
-    /* Allocate a buffer big enough to read a MAX_PATH prefix */
-    BufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
-    ParentIdPrefixInformation = ExAllocatePool(PagedPool, BufferLength + sizeof(WCHAR));
+   /* HACK: As long as some devices have a NULL device
+    * instance path, the following test is required :(
+    */
+   if (DeviceNode->Parent->InstancePath.Length == 0)
+   {
+      DPRINT1("Parent of %wZ has NULL Instance path, please report!\n",
+          &DeviceNode->InstancePath);
+      return STATUS_UNSUCCESSFUL;
+   }
 
-    /* Check if allocation succeeded */
-    if (!ParentIdPrefixInformation)
-    {
-        Status = STATUS_NO_MEMORY;
-        goto cleanup;
-    }
+   /* 1. Try to retrieve ParentIdPrefix from registry */
+   KeyNameBufferLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data[0]) + MAX_PATH * sizeof(WCHAR);
+   ParentIdPrefixInformation = ExAllocatePool(PagedPool, KeyNameBufferLength + sizeof(WCHAR));
+   if (!ParentIdPrefixInformation)
+   {
+       Status = STATUS_INSUFFICIENT_RESOURCES;
+       goto cleanup;
+   }
+   KeyNameBuffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
+   if (!KeyNameBuffer)
+   {
+       Status = STATUS_INSUFFICIENT_RESOURCES;
+       goto cleanup;
+   }
+   wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+   wcscat(KeyNameBuffer, DeviceNode->Parent->InstancePath.Buffer);
+   RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+   Status = ZwOpenKey(&hKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+      goto cleanup;
+   RtlInitUnicodeString(&ValueName, L"ParentIdPrefix");
+   Status = ZwQueryValueKey(
+      hKey, &ValueName,
+      KeyValuePartialInformation, ParentIdPrefixInformation,
+      KeyNameBufferLength, &KeyNameBufferLength);
+   if (NT_SUCCESS(Status))
+   {
+      if (ParentIdPrefixInformation->Type != REG_SZ)
+         Status = STATUS_UNSUCCESSFUL;
+      else
+      {
+         KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+         KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+      }
+      goto cleanup;
+   }
+   if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
+   {
+      KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
+      KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
+      goto cleanup;
+   }
 
-    /* Open enum key */
-    InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-    Status = ZwOpenKey(&hEnum, 0, &ObjectAttributes);
-    if (!NT_SUCCESS(Status))
-        goto cleanup;
+   /* 2. Create the ParentIdPrefix value */
+   crc32 = RtlComputeCrc32(0,
+                           (PUCHAR)DeviceNode->Parent->InstancePath.Buffer,
+                           DeviceNode->Parent->InstancePath.Length);
 
-    /* Open instance key */
-    InitializeObjectAttributes(&ObjectAttributes, &DeviceNode->Parent->InstancePath, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, hEnum, NULL);
-    Status = ZwOpenKey(&hKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
-    ZwClose(hEnum);
-    if (!NT_SUCCESS(Status))
-        goto cleanup;
+   swprintf((PWSTR)ParentIdPrefixInformation->Data, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
+   RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation->Data);
 
-    /* Read the prefix */
-    Status = ZwQueryValueKey(
-        hKey, &ValueName,
-        KeyValuePartialInformation, ParentIdPrefixInformation,
-        BufferLength, &BufferLength);
-    if (NT_SUCCESS(Status))
-    {
-        /* Yes, we read something */
-        if (ParentIdPrefixInformation->Type != REG_SZ)
-            /* Hm, it was of the wrong type. Fail */
-            Status = STATUS_UNSUCCESSFUL;
-        else
-        {
-            /* OK, value is correct ; prepare to return it */
-            KeyValue.Length = KeyValue.MaximumLength = (USHORT)ParentIdPrefixInformation->DataLength;
-            KeyValue.Buffer = (PWSTR)ParentIdPrefixInformation->Data;
-            if (KeyValue.Length && KeyValue.Buffer[KeyValue.Length / sizeof(WCHAR) - 1] == UNICODE_NULL);
-                KeyValue.Length -= sizeof(WCHAR);
-        }
-
-        /* We're done */
-        goto cleanup;
-    }
-
-    /* Check if we failed due to value not calculated */
-    if (Status != STATUS_OBJECT_NAME_NOT_FOUND)
-        /* Another reason, fail */
-        goto cleanup;
-
-    /* Compute the prefix string of the parent */
-    crc32 = RtlComputeCrc32(0,
-                            (PUCHAR)DeviceNode->Parent->InstancePath.Buffer,
-                            DeviceNode->Parent->InstancePath.Length);
-
-    /* Prepare the value to return */
-    /* (yes, it's safe to reuse ParentIdPrefixInformation buffer, which is at least MAX_PATH WCHARs long */
-    swprintf((PWSTR)ParentIdPrefixInformation, L"%lx&%lx", DeviceNode->Parent->Level, crc32);
-    RtlInitUnicodeString(&KeyValue, (PWSTR)ParentIdPrefixInformation);
-
-    /* 3. Try to write the ParentIdPrefix to registry */
-    Status = ZwSetValueKey(hKey,
-                           &ValueName,
-                           0,
-                           REG_SZ,
-                           (PVOID)KeyValue.Buffer,
-                           KeyValue.MaximumLength);
+   /* 3. Try to write the ParentIdPrefix to registry */
+   Status = ZwSetValueKey(hKey,
+                          &ValueName,
+                          0,
+                          REG_SZ,
+                          (PVOID)KeyValue.Buffer,
+                          (wcslen(KeyValue.Buffer) + 1) * sizeof(WCHAR));
 
 cleanup:
-    if (NT_SUCCESS(Status))
-    {
-        /* Duplicate the string to return it */
-        Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &KeyValue, ParentIdPrefix);
-    }
-    /* General cleanup */
-    ExFreePool(ParentIdPrefixInformation);
-    if (hKey != NULL)
-        ZwClose(hKey);
-    return Status;
+   if (NT_SUCCESS(Status))
+   {
+      /* Duplicate the string to return it */
+      Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &KeyValue, ParentIdPrefix);
+   }
+   ExFreePool(ParentIdPrefixInformation);
+   ExFreePool(KeyNameBuffer);
+   if (hKey != NULL)
+      ZwClose(hKey);
+   return Status;
 }
 
 
@@ -1724,9 +1722,9 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    IO_STATUS_BLOCK IoStatusBlock;
    PDEVICE_NODE ParentDeviceNode;
    WCHAR InstancePath[MAX_PATH];
-   UNICODE_STRING InstancePathU = { 0, sizeof(InstancePath), InstancePath };
    IO_STACK_LOCATION Stack;
    NTSTATUS Status;
+   PWSTR KeyBuffer;
    PWSTR Ptr;
    USHORT Length;
    USHORT TotalLength;
@@ -1788,7 +1786,12 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    if (NT_SUCCESS(Status))
    {
       /* Copy the device id string */
-      RtlAppendUnicodeToString(&InstancePathU, (PWSTR)IoStatusBlock.Information);
+      wcscpy(InstancePath, (PWSTR)IoStatusBlock.Information);
+
+      /*
+       * FIXME: Check for valid characters, if there is invalid characters
+       * then bugcheck.
+       */
    }
    else
    {
@@ -1826,16 +1829,21 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    if (NT_SUCCESS(Status))
    {
       /* Append the instance id string */
-      RtlAppendUnicodeToString(&InstancePathU, L"\\");
+      wcscat(InstancePath, L"\\");
       if (ParentIdPrefix.Length > 0)
       {
          /* Add information from parent bus device to InstancePath */
-         RtlAppendUnicodeStringToString(&InstancePathU, &ParentIdPrefix);
+         wcscat(InstancePath, ParentIdPrefix.Buffer);
          if (IoStatusBlock.Information && *(PWSTR)IoStatusBlock.Information)
-            RtlAppendUnicodeToString(&InstancePathU, L"&");
+            wcscat(InstancePath, L"&");
       }
       if (IoStatusBlock.Information)
-         RtlAppendUnicodeToString(&InstancePathU, (PWSTR)IoStatusBlock.Information);
+         wcscat(InstancePath, (PWSTR)IoStatusBlock.Information);
+
+      /*
+       * FIXME: Check for valid characters, if there is invalid characters
+       * then bugcheck
+       */
    }
    else
    {
@@ -1843,25 +1851,29 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    }
    RtlFreeUnicodeString(&ParentIdPrefix);
 
-    /*
-     * FIXME: Check for valid characters, if there is invalid characters
-     * then bugcheck.
-     */
+   if (!RtlCreateUnicodeString(&DeviceNode->InstancePath, InstancePath))
+   {
+      DPRINT("No resources\n");
+      /* FIXME: Cleanup and disable device */
+   }
 
-    Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-                                       &InstancePathU, &DeviceNode->InstancePath);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("No resources\n");
-        /* FIXME: Cleanup and disable device */
-    }
+   DPRINT("InstancePath is %S\n", DeviceNode->InstancePath.Buffer);
 
-    DPRINT("InstancePath is %wZ\n", &DeviceNode->InstancePath);
+   /*
+    * Create registry key for the instance id, if it doesn't exist yet
+    */
+   KeyBuffer = ExAllocatePool(
+      PagedPool,
+      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
+   Status = IopCreateDeviceKeyPath(/*KeyBuffer*/&DeviceNode->InstancePath, &InstanceKey);
+   ExFreePool(KeyBuffer);
+   if (!NT_SUCCESS(Status))
+   {
+      DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
+   }
 
-    /* Create registry key for the instance id, if it doesn't exist yet */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceKey);
-    if (!NT_SUCCESS(Status))
-        DPRINT1("IopCreateDeviceKeyPath('%wZ') failed (Status 0x%08lx)\n", &DeviceNode->InstancePath, Status);
 
    {
       /* Set 'Capabilities' value */
@@ -2312,106 +2324,102 @@ NTSTATUS
 IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
                                 PVOID Context)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[4];
-    PDEVICE_NODE ParentDeviceNode;
-    PUNICODE_STRING Service;
-    UNICODE_STRING ClassGUID;
-    NTSTATUS Status;
+   RTL_QUERY_REGISTRY_TABLE QueryTable[3];
+   PDEVICE_NODE ParentDeviceNode;
+   PUNICODE_STRING Service;
+   UNICODE_STRING ClassGUID;
+   NTSTATUS Status;
 
-    DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
+   DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
 
-    ParentDeviceNode = (PDEVICE_NODE)Context;
+   ParentDeviceNode = (PDEVICE_NODE)Context;
 
-    /*
-     * We are called for the parent too, but we don't need to do special
-     * handling for this node
-     */
-    if (DeviceNode == ParentDeviceNode)
-    {
-        DPRINT("Success\n");
-        return STATUS_SUCCESS;
-    }
+   /*
+    * We are called for the parent too, but we don't need to do special
+    * handling for this node
+    */
+   if (DeviceNode == ParentDeviceNode)
+   {
+      DPRINT("Success\n");
+      return STATUS_SUCCESS;
+   }
 
-    /*
-     * Make sure this device node is a direct child of the parent device node
-     * that is given as an argument
-     */
-    ASSERT(DeviceNode->Parent == ParentDeviceNode);
+   /*
+    * Make sure this device node is a direct child of the parent device node
+    * that is given as an argument
+    */
+   if (DeviceNode->Parent != ParentDeviceNode)
+   {
+      /* Stop the traversal immediately and indicate successful operation */
+      DPRINT("Stop\n");
+      return STATUS_UNSUCCESSFUL;
+   }
 
-    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
-    {
-        OBJECT_ATTRIBUTES ObjectAttributes;
-        UNICODE_STRING EnumU = RTL_CONSTANT_STRING(ENUM_ROOT);
-        HANDLE hEnum;
+   if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
+   {
+      WCHAR RegKeyBuffer[MAX_PATH];
+      UNICODE_STRING RegKey;
 
-        /* Open Enum key */
-        InitializeObjectAttributes(&ObjectAttributes, &EnumU,
-                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL)
-        Status = ZwOpenKey(&hEnum, 0, &ObjectAttributes);
-        if (!NT_SUCCESS(Status))
-        {
-            /* FIXME: Log the error */
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return Status;
-        }
+      RegKey.Length = 0;
+      RegKey.MaximumLength = sizeof(RegKeyBuffer);
+      RegKey.Buffer = RegKeyBuffer;
 
-        /* Prepare query table */
-        RtlZeroMemory(QueryTable, sizeof(QueryTable));
-        Service = &DeviceNode->ServiceName;
-        RtlInitUnicodeString(Service, NULL);
-        RtlInitUnicodeString(&ClassGUID, NULL);
+      /*
+       * Retrieve configuration from Enum key
+       */
 
-        /* Hopefully, this string is always NULL terminated */
-        QueryTable[0].Name = DeviceNode->InstancePath.Buffer;
-        QueryTable[0].Flags = RTL_QUERY_REGISTRY_SUBKEY;
+      Service = &DeviceNode->ServiceName;
 
-        QueryTable[1].Name = L"Service";
-        QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
-        QueryTable[1].EntryContext = Service;
+      RtlZeroMemory(QueryTable, sizeof(QueryTable));
+      RtlInitUnicodeString(Service, NULL);
+      RtlInitUnicodeString(&ClassGUID, NULL);
 
-        QueryTable[2].Name = L"ClassGUID";
-        QueryTable[2].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        QueryTable[2].EntryContext = &ClassGUID;
-        QueryTable[2].DefaultType = REG_SZ;
-        QueryTable[2].DefaultData = L"";
-        QueryTable[2].DefaultLength = 0;
+      QueryTable[0].Name = L"Service";
+      QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_REQUIRED;
+      QueryTable[0].EntryContext = Service;
 
-        /* Read registry */
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE, (PWSTR)hEnum,
-                                        QueryTable, NULL, NULL);
-        ZwClose(hEnum);
+      QueryTable[1].Name = L"ClassGUID";
+      QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
+      QueryTable[1].EntryContext = &ClassGUID;
+      QueryTable[1].DefaultType = REG_SZ;
+      QueryTable[1].DefaultData = L"";
+      QueryTable[1].DefaultLength = 0;
 
-        /* Check for an error */
-        if (!NT_SUCCESS(Status))
-        {
-            /* FIXME: Log the error */
-            DPRINT("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
-                   &DeviceNode->InstancePath, Status);
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return STATUS_SUCCESS;
-        }
+      RtlAppendUnicodeToString(&RegKey, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+      RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
 
-        /* Check for a NULL service */
-        if (Service->Length == 0)
-        {
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+      Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
+         RegKey.Buffer, QueryTable, NULL, NULL);
 
-            if (ClassGUID.Length != 0)
-            {
-                /* Device has a ClassGUID value, but no Service value.
-                 * Suppose it is using the NULL driver, so state the
-                 * device is started */
-                DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
-                IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-                DeviceNode->Flags |= DN_STARTED;
-            }
-            return STATUS_SUCCESS;
-        }
+      if (!NT_SUCCESS(Status))
+      {
+         /* FIXME: Log the error */
+         DPRINT("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
+            &DeviceNode->InstancePath, Status);
+         IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
+         return STATUS_SUCCESS;
+      }
 
-        DPRINT("Got Service %wZ\n", Service);
-    }
+      if (Service->Buffer == NULL)
+      {
+         IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
 
-    return STATUS_SUCCESS;
+         if (ClassGUID.Length != 0)
+         {
+            /* Device has a ClassGUID value, but no Service value.
+             * Suppose it is using the NULL driver, so state the
+             * device is started */
+            DPRINT1("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
+            IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
+            DeviceNode->Flags |= DN_STARTED;
+         }
+         return STATUS_SUCCESS;
+      }
+
+      DPRINT("Got Service %S\n", Service->Buffer);
+   }
+
+   return STATUS_SUCCESS;
 }
 
 /*
@@ -2463,11 +2471,16 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
     * Make sure this device node is a direct child of the parent device node
     * that is given as an argument
     */
+#if 0
    if (DeviceNode->Parent != ParentDeviceNode)
    {
-       DPRINT("Not a direct child\n");
-       return STATUS_UNSUCCESSFUL;
+      /*
+       * Stop the traversal immediately and indicate unsuccessful operation
+       */
+      DPRINT("Stop\n");
+      return STATUS_UNSUCCESSFUL;
    }
+#endif
 
    if (!IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED) &&
        !IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) &&
@@ -2545,8 +2558,8 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
             IopDeviceNodeSetFlag(DeviceNode, DNF_START_FAILED);
             /* FIXME: Log the error (possibly in IopInitializeDeviceNodeService) */
-            DPRINT("Initialization of service %wZ failed (Status %x)\n",
-              &DeviceNode->ServiceName, Status);
+            CPRINT("Initialization of service %S failed (Status %x)\n",
+              DeviceNode->ServiceName.Buffer, Status);
          }
       }
    }
