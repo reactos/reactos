@@ -404,6 +404,7 @@ DWORD getNumRoutes(void)
 
     if( !NT_SUCCESS(status) ) {
         TRACE("failure: %08x\n", (int)status );
+        closeTcpFile( tcpFile );
         return 0;
     }
 
@@ -414,6 +415,7 @@ DWORD getNumRoutes(void)
             status = tdiGetMibForIpEntity( tcpFile, &entitySet[i], &isnmp );
             if( !NT_SUCCESS(status) ) {
                 tdiFreeThingSet( entitySet );
+                closeTcpFile( tcpFile );
                 return status;
             }
             numRoutes += isnmp.ipsi_numroutes;
@@ -503,6 +505,8 @@ RouteTable *getRouteTable(void)
 
         routesAdded += snmpInfo.ipsi_numroutes;
     }
+
+    closeTcpFile( tcpFile );
 
     TRACE("Return: %08x, %08x\n", status, out_route_table);
 
@@ -606,6 +610,8 @@ PMIB_IPNETTABLE getArpTable(void)
 	    if( AdapterArpTable ) tdiFreeThingSet( AdapterArpTable );
 	}
     }
+
+    closeTcpFile( tcpFile );
 
     tdiFreeThingSet( entitySet );
     IpArpTable->dwNumEntries = row;

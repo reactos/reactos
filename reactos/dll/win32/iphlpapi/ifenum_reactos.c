@@ -99,6 +99,7 @@ NTSTATUS openTcpFile(PHANDLE tcpFile) {
 
     if (!NT_SUCCESS(status)) {
         ERR("openTcpFile for <%wZ> failed: 0x%lx\n", &fileName, status);
+        *tcpFile = INVALID_HANDLE_VALUE;
     }
 
     return status;
@@ -106,7 +107,8 @@ NTSTATUS openTcpFile(PHANDLE tcpFile) {
 
 void closeTcpFile( HANDLE h ) {
     TRACE("called.\n");
-    NtClose( h );
+    ASSERT(h != INVALID_HANDLE_VALUE);
+    ZwClose( h );
 }
 
 /* A generic thing-getting function which interacts in the right way with
@@ -462,6 +464,7 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
 
     if( !NT_SUCCESS(status) ) {
         WARN("getNumInterfaces: failed %08x\n", status );
+        closeTcpFile( tcpFile );
         return 0;
     }
 
@@ -550,7 +553,7 @@ NTSTATUS getInterfaceInfoByName( HANDLE tcpFile, char *name, IFInfo *info ) {
 
     if( NT_SUCCESS(status) )
         for( i = 0; i < numInterfaces; i++ ) {
-            if( !strcmp(ifInfo[i].if_info.ent.if_descr, name) ) {
+            if( !strcmp((PCHAR)ifInfo[i].if_info.ent.if_descr, name) ) {
                 memcpy( info, &ifInfo[i], sizeof(*info) );
                 break;
             }
@@ -575,14 +578,14 @@ const char *getInterfaceNameByIndex(DWORD index)
         status = getInterfaceInfoByIndex( tcpFile, index, &ifInfo );
 
         if( NT_SUCCESS(status) ) {
-            adapter_name = ifInfo.if_info.ent.if_descr;
+            adapter_name = (char *)ifInfo.if_info.ent.if_descr;
 
             interfaceName = HeapAlloc( GetProcessHeap(), 0,
                                        strlen(adapter_name) + 1 );
             strcpy( interfaceName, adapter_name );
-
-            closeTcpFile( tcpFile );
         }
+
+        closeTcpFile( tcpFile );
     }
 
     return interfaceName;
@@ -603,8 +606,9 @@ DWORD getInterfaceIndexByName(const char *name, PDWORD index)
 
         if( NT_SUCCESS(status) ) {
             *index = ifInfo.if_info.ent.if_index;
-            closeTcpFile( tcpFile );
         }
+
+        closeTcpFile( tcpFile );
     }
 
     return status;
@@ -688,7 +692,7 @@ NTSTATUS getIPAddrEntryForIf(HANDLE tcpFile,
 
 DWORD getAddrByIndexOrName( char *name, DWORD index, IPHLPAddrType addrType ) {
     IFInfo ifInfo;
-    HANDLE tcpFile = INVALID_HANDLE_VALUE;
+    HANDLE tcpFile;
     NTSTATUS status = STATUS_SUCCESS;
     DWORD addrOut = INADDR_ANY;
 
@@ -705,7 +709,7 @@ DWORD getAddrByIndexOrName( char *name, DWORD index, IPHLPAddrType addrType ) {
             case IFStatus: addrOut = ifInfo.if_info.ent.if_operstatus; break;
             }
         }
-        closeTcpFile( &tcpFile );
+        closeTcpFile( tcpFile );
     }
 
     return addrOut;

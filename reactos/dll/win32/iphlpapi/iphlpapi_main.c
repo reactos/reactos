@@ -604,13 +604,13 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
               unsigned long addr;
 
               RegQueryValueExA(hKey, "WinsServer", NULL, NULL,
-               primaryWINS.String, &size);
+               (PBYTE)primaryWINS.String, &size);
               addr = inet_addr(primaryWINS.String);
               if (addr != INADDR_NONE && addr != INADDR_ANY)
                 winsEnabled = TRUE;
               size = sizeof(secondaryWINS.String);
               RegQueryValueExA(hKey, "BackupWinsServer", NULL, NULL,
-               secondaryWINS.String, &size);
+               (PBYTE)secondaryWINS.String, &size);
               addr = inet_addr(secondaryWINS.String);
               if (addr != INADDR_NONE && addr != INADDR_ANY)
                 winsEnabled = TRUE;
@@ -1390,7 +1390,7 @@ DWORD WINAPI GetNetworkParams(PFIXED_INFO pFixedInfo, PULONG pOutBufLen)
   {
     DWORD size = sizeof(pFixedInfo->ScopeId);
 
-    RegQueryValueExA(hKey, "ScopeID", NULL, NULL, pFixedInfo->ScopeId, &size);
+    RegQueryValueExA(hKey, "ScopeID", NULL, NULL, (PBYTE)pFixedInfo->ScopeId, &size);
     RegCloseKey(hKey);
   }
 

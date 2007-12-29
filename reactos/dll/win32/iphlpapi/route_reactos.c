@@ -53,7 +53,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(iphlpapi);
 
 DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
-    HANDLE tcpFile = INVALID_HANDLE_VALUE;
+    HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
     TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
         TCP_REQUEST_SET_INFORMATION_INIT;
@@ -63,45 +63,45 @@ DWORD createIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 
     TRACE("Called.\n");
 
-    if( NT_SUCCESS(status) )
+    if( NT_SUCCESS(status) ) {
         status = getNthIpEntity( tcpFile, 0, &id );
 
-    if( NT_SUCCESS(status) ) {
-        req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
-        req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-        req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-        req.Req.ID.toi_entity               = id;
-        req.Req.BufferSize                  = sizeof(*rte);
-        rte                                 =
-            (IPRouteEntry *)&req.Req.Buffer[0];
+        if( NT_SUCCESS(status) ) {
+            req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
+            req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
+            req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
+            req.Req.ID.toi_entity               = id;
+            req.Req.BufferSize                  = sizeof(*rte);
+            rte                                 =
+                (IPRouteEntry *)&req.Req.Buffer[0];
 
-	// dwForwardPolicy
-	// dwForwardNextHopAS
-	rte->ire_dest    = pRoute->dwForwardDest;
-	rte->ire_mask    = pRoute->dwForwardMask;
-	rte->ire_gw      = pRoute->dwForwardNextHop;
-	rte->ire_index   = pRoute->dwForwardIfIndex;
-	rte->ire_type    = IP_FORWARD_ADD;
-	rte->ire_proto   = pRoute->dwForwardProto;
-	rte->ire_age     = pRoute->dwForwardAge;
-	rte->ire_metric1 = pRoute->dwForwardMetric1;
-	rte->ire_metric2 = pRoute->dwForwardMetric2;
-	rte->ire_metric3 = pRoute->dwForwardMetric3;
-	rte->ire_metric4 = pRoute->dwForwardMetric4;
-	rte->ire_metric5 = pRoute->dwForwardMetric5;
+            // dwForwardPolicy
+            // dwForwardNextHopAS
+            rte->ire_dest    = pRoute->dwForwardDest;
+            rte->ire_mask    = pRoute->dwForwardMask;
+            rte->ire_gw      = pRoute->dwForwardNextHop;
+            rte->ire_index   = pRoute->dwForwardIfIndex;
+            rte->ire_type    = IP_FORWARD_ADD;
+            rte->ire_proto   = pRoute->dwForwardProto;
+            rte->ire_age     = pRoute->dwForwardAge;
+            rte->ire_metric1 = pRoute->dwForwardMetric1;
+            rte->ire_metric2 = pRoute->dwForwardMetric2;
+            rte->ire_metric3 = pRoute->dwForwardMetric3;
+            rte->ire_metric4 = pRoute->dwForwardMetric4;
+            rte->ire_metric5 = pRoute->dwForwardMetric5;
 
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_SET_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  NULL,
-                                  0,
-                                  &returnSize,
-                                  NULL );
-    }
+            status = DeviceIoControl( tcpFile,
+                                      IOCTL_TCP_SET_INFORMATION_EX,
+                                      &req,
+                                      sizeof(req),
+                                      NULL,
+                                      0,
+                                      &returnSize,
+                                      NULL );
+        }
 
-    if( tcpFile != INVALID_HANDLE_VALUE )
         closeTcpFile( tcpFile );
+    }
 
     TRACE("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
 
@@ -117,7 +117,7 @@ DWORD setIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 }
 
 DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
-    HANDLE tcpFile = INVALID_HANDLE_VALUE;
+    HANDLE tcpFile;
     NTSTATUS status = openTcpFile( &tcpFile );
     TCP_REQUEST_SET_INFORMATION_EX_SAFELY_SIZED req =
         TCP_REQUEST_SET_INFORMATION_INIT;
@@ -127,45 +127,45 @@ DWORD deleteIpForwardEntry( PMIB_IPFORWARDROW pRoute ) {
 
     TRACE("Called.\n");
 
-    if( NT_SUCCESS(status) )
+    if( NT_SUCCESS(status) ) {
         status = getNthIpEntity( tcpFile, 0, &id );
 
-    if( NT_SUCCESS(status) ) {
-        req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
-        req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
-        req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
-        req.Req.ID.toi_entity               = id;
-        req.Req.BufferSize                  = sizeof(*rte);
-        rte                                 =
-            (IPRouteEntry *)&req.Req.Buffer[0];
+        if( NT_SUCCESS(status) ) {
+            req.Req.ID.toi_class                = INFO_CLASS_PROTOCOL;
+            req.Req.ID.toi_type                 = INFO_TYPE_PROVIDER;
+            req.Req.ID.toi_id                   = IP_MIB_ROUTETABLE_ENTRY_ID;
+            req.Req.ID.toi_entity               = id;
+            req.Req.BufferSize                  = sizeof(*rte);
+            rte                                 =
+                (IPRouteEntry *)&req.Req.Buffer[0];
 
-	// dwForwardPolicy
-	// dwForwardNextHopAS
-	rte->ire_dest    = pRoute->dwForwardDest;
-	rte->ire_mask    = INADDR_NONE;
-	rte->ire_gw      = pRoute->dwForwardNextHop;
-	rte->ire_index   = pRoute->dwForwardIfIndex;
-	rte->ire_type    = IP_FORWARD_DEL;
-	rte->ire_proto   = pRoute->dwForwardProto;
-	rte->ire_age     = pRoute->dwForwardAge;
-	rte->ire_metric1 = pRoute->dwForwardMetric1;
-	rte->ire_metric2 = INADDR_NONE;
-	rte->ire_metric3 = INADDR_NONE;
-	rte->ire_metric4 = INADDR_NONE;
-	rte->ire_metric5 = INADDR_NONE;
+            // dwForwardPolicy
+            // dwForwardNextHopAS
+            rte->ire_dest    = pRoute->dwForwardDest;
+            rte->ire_mask    = INADDR_NONE;
+            rte->ire_gw      = pRoute->dwForwardNextHop;
+            rte->ire_index   = pRoute->dwForwardIfIndex;
+            rte->ire_type    = IP_FORWARD_DEL;
+            rte->ire_proto   = pRoute->dwForwardProto;
+            rte->ire_age     = pRoute->dwForwardAge;
+            rte->ire_metric1 = pRoute->dwForwardMetric1;
+            rte->ire_metric2 = INADDR_NONE;
+            rte->ire_metric3 = INADDR_NONE;
+            rte->ire_metric4 = INADDR_NONE;
+            rte->ire_metric5 = INADDR_NONE;
 
-        status = DeviceIoControl( tcpFile,
-                                  IOCTL_TCP_SET_INFORMATION_EX,
-                                  &req,
-                                  sizeof(req),
-                                  NULL,
-                                  0,
-                                  &returnSize,
-                                  NULL );
-    }
+            status = DeviceIoControl( tcpFile,
+                                      IOCTL_TCP_SET_INFORMATION_EX,
+                                      &req,
+                                      sizeof(req),
+                                      NULL,
+                                      0,
+                                      &returnSize,
+                                      NULL );
+        }
 
-    if( tcpFile != INVALID_HANDLE_VALUE )
         closeTcpFile( tcpFile );
+    }
 
     TRACE("Returning: %08x (IOCTL was %08x)\n", status, IOCTL_TCP_SET_INFORMATION_EX);
 
