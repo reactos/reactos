@@ -1,4 +1,11 @@
-// Polish language resource file (Sebastian Gasiorek, 2005-07-06)
+/*
+ *	Polish language resource file (Sebastian Gasiorek, 2005-07-06)
+ *      translation update by Caemyr (Dec,2007)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl
+ */
+
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -28,10 +35,10 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_WINDOW_TITLE "Control Panel"
-	IDS_ABOUT "Simple Control Panel (not Shell-namespace based)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rReleased under the GPL"
-	IDS_ABOUT_TITLE "About the Control Panel"
-	IDS_NO_ITEMS "No Items in ListView"
-	IDS_NAME "Name"
-	IDS_COMMENT "Comment"
+    IDS_WINDOW_TITLE "Panel Sterowania"
+	IDS_ABOUT "Podstawowy Panel Sterowania (nie oparty o Shell-namespace)\rCopyright 2004 GkWare e.K.\rhttp://www.gkware.com\rPodlega licencji GPL"
+	IDS_ABOUT_TITLE "O Panelu Sterowania"
+	IDS_NO_ITEMS "Brak sk³adników"
+	IDS_NAME "Nazwa"
+	IDS_COMMENT "Komentarz"
 END

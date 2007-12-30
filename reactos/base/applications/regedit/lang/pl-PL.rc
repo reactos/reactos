@@ -3,6 +3,8 @@
  *
  * Copyright 2005 Sebastian Gasiorek
  *
+ * Update by Caemyr (Dec,2007)
+ *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -398,7 +400,7 @@ END
 /*
  *STRINGTABLE DISCARDABLE
  *BEGIN
- *    ID_HELP_HELPTOPICS      "Opens Registry Editor Help."
- *    ID_HELP_ABOUT           "Displays program information, version number, and copyright."
+ *    ID_HELP_HELPTOPICS      "Otwiera pomoc Edytora Rejestru."
+ *    ID_HELP_ABOUT           "Wyœwietla informacje o programie, wersji number, licencji."
  *END
  */
