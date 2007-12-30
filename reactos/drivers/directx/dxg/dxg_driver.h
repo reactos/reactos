@@ -89,7 +89,7 @@ DRVFN gaDxgFuncs [] =
     //{DXG_INDEX_DxDdAllocPrivateUserMem, (PFN)DxDdAllocPrivateUserMem},
     //{DXG_INDEX_DxDdFreePrivateUserMem, (PFN)DxDdFreePrivateUserMem},
     {DXG_INDEX_DxDdLockDirectDrawSurface, (PFN)DxDdLockDirectDrawSurface},
-    //{DXG_INDEX_DxDdUnlockDirectDrawSurface, (PFN)DxDdUnlockDirectDrawSurface},
+    {DXG_INDEX_DxDdUnlockDirectDrawSurface, (PFN)DxDdUnlockDirectDrawSurface},
     //{DXG_INDEX_DxDdSetAccelLevel, (PFN)DxDdSetAccelLevel},
     //{DXG_INDEX_DxDdGetSurfaceLock, (PFN)DxDdGetSurfaceLock},
     //{DXG_INDEX_DxDdEnumLockedSurfaceRect, (PFN)DxDdEnumLockedSurfaceRect},

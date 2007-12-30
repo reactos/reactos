@@ -16,16 +16,32 @@ PDD_SURFACE_LOCAL
 STDCALL
 DxDdLockDirectDrawSurface(HANDLE hDdSurface)
 {
-   PDD_ENTRY pObject;
    PDD_SURFACE_LOCAL pSurfacelcl = NULL;
 
-   pObject = DdHmgLock(hDdSurface, 2, 0);
-   if (pObject != NULL)
+   pSurfacelcl = DdHmgLock(hDdSurface, 2, FALSE);
+   if (pSurfacelcl != NULL)
    {
-        pSurfacelcl = (PDD_SURFACE_LOCAL)((PBYTE)pObject + sizeof(PDD_ENTRY));
+        pSurfacelcl = (PDD_SURFACE_LOCAL)(((PBYTE)&pSurfacelcl) + sizeof(DD_BASEOBJECT));
    }
 
    return pSurfacelcl;
+}
+
+BOOL
+STDCALL
+DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
+{
+    BOOL retVal = FALSE;
+    PDD_BASEOBJECT pObject = NULL;
+
+    if (pSurface)
+    {
+        pObject = (PDD_BASEOBJECT)( ((PBYTE)&pSurface) - sizeof(DD_BASEOBJECT));
+        InterlockedDecrement(&pObject->cExclusiveLock);
+        retVal = TRUE;
+    }
+
+    return retVal;
 }
 
 

@@ -207,7 +207,7 @@ typedef DWORD (NTAPI *PGD_DXGENERICTRUNK)(ULONG_PTR, ULONG_PTR, SIZE_T*, PVOID, 
 //typedef x (NTAPI *PGD_DxDdAllocPrivateUserMem)(
 //typedef x (NTAPI *PGD_DxDdFreePrivateUserMem)(
 typedef PDD_SURFACE_LOCAL (NTAPI *PGD_DxDdLockDirectDrawSurface)(HANDLE hDdSurface);
-//typedef x (NTAPI *PGD_DxDdUnlockDirectDrawSurface)(
+typedef BOOL (NTAPI *PGD_DxDdUnlockDirectDrawSurface)(HANDLE hDdSurface);
 //typedef x (NTAPI *PGD_DxDdSetAccelLevel)(
 //typedef x (NTAPI *PGD_DxDdGetSurfaceLock)(
 //typedef x (NTAPI *PGD_DxDdEnumLockedSurfaceRect)(
