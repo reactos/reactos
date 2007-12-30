@@ -26,7 +26,7 @@
 // DATA
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-ULONG FsType = 0;	// Type of filesystem on boot device, set by FsOpenVolume()
+const FS_VTBL* pFSVtbl = NULL; // Type of filesystem on boot device, set by FsOpenVolume()
 PVOID FsStaticBufferDisk = 0, FsStaticBufferData = 0;
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -52,8 +52,6 @@ static BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG 
 {
 	CHAR ErrorText[80];
 
-	FsType = Type;
-
 	if( !FsStaticBufferDisk )
 		FsStaticBufferDisk = MmAllocateMemory( 0x20000 );
 	if( !FsStaticBufferDisk )
@@ -63,18 +61,31 @@ static BOOLEAN FsOpenVolume(ULONG DriveNumber, ULONGLONG StartSector, ULONGLONG 
 	}
 	FsStaticBufferData = ((PCHAR)FsStaticBufferDisk) + 0x10000;
 
-	switch (FsType)
+	switch (Type)
 	{
 	case FS_FAT:
-		return FatOpenVolume(DriveNumber, StartSector, SectorCount);
-	case FS_EXT2:
-		return Ext2OpenVolume(DriveNumber, StartSector);
+		pFSVtbl = &FatVtbl;
+		break;
 	case FS_NTFS:
-		return NtfsOpenVolume(DriveNumber, StartSector);
+		pFSVtbl = &NtfsVtbl;
+		break;
+	case FS_EXT2:
+		pFSVtbl = &Ext2Vtbl;
+		break;
 	case FS_ISO9660:
-		return IsoOpenVolume(DriveNumber);
+		pFSVtbl = &Iso9660Vtbl;
+		break;
 	default:
-		FsType = 0;
+		pFSVtbl = NULL;
+		break;
+	}
+
+	if (pFSVtbl && pFSVtbl->OpenVolume)
+	{
+		return (*pFSVtbl->OpenVolume)(DriveNumber, StartSector, SectorCount);
+	}
+	else
+	{
 		sprintf(ErrorText, "Unsupported file system. Type: 0x%x", Type);
 		FileSystemError(ErrorText);
 	}
@@ -143,23 +154,13 @@ PFILE FsOpenFile(PCSTR FileName)
 	//
 	// Check file system type and pass off to appropriate handler
 	//
-	switch (FsType)
+	if (pFSVtbl && pFSVtbl->OpenFile)
 	{
-	case FS_FAT:
-		FileHandle = FatOpenFile(FileName);
-		break;
-	case FS_ISO9660:
-		FileHandle = IsoOpenFile(FileName);
-		break;
-	case FS_EXT2:
-		FileHandle = Ext2OpenFile(FileName);
-		break;
-	case FS_NTFS:
-		FileHandle = NtfsOpenFile(FileName);
-		break;
-	default:
+		FileHandle = pFSVtbl->OpenFile(FileName);
+	}
+	else
+	{
 		FileSystemError("Error: Unknown filesystem.");
-		break;
 	}
 
 	//
@@ -179,18 +180,14 @@ PFILE FsOpenFile(PCSTR FileName)
 
 VOID FsCloseFile(PFILE FileHandle)
 {
-	switch (FsType)
+	if (pFSVtbl)
 	{
-	case FS_FAT:
-	case FS_ISO9660:
-	case FS_EXT2:
-		break;
-	case FS_NTFS:
-		NtfsCloseFile(FileHandle);
-		break;
-	default:
+		if (pFSVtbl->CloseFile)
+			(*pFSVtbl->CloseFile)(FileHandle);
+	}
+	else
+	{
 		FileSystemError("Error: Unknown filesystem.");
-		break;
 	}
 }
 
@@ -200,9 +197,6 @@ VOID FsCloseFile(PFILE FileHandle)
  */
 BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
 {
-	ULONGLONG		BytesReadBig;
-	BOOLEAN	Success;
-
 	//
 	// Set the number of bytes read equal to zero
 	//
@@ -211,124 +205,53 @@ BOOLEAN FsReadFile(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID 
 		*BytesRead = 0;
 	}
 
-	switch (FsType)
+	if (pFSVtbl && pFSVtbl->ReadFile)
 	{
-	case FS_FAT:
-
-		return FatReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
-
-	case FS_ISO9660:
-
-		return IsoReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
-
-	case FS_EXT2:
-
-		//return Ext2ReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
-		Success = Ext2ReadFile(FileHandle, BytesToRead, &BytesReadBig, Buffer);
-		*BytesRead = (ULONG)BytesReadBig;
-		return Success;
-
-	case FS_NTFS:
-
-		return NtfsReadFile(FileHandle, BytesToRead, BytesRead, Buffer);
-
-	default:
-
+		return (*pFSVtbl->ReadFile)(FileHandle, BytesToRead, BytesRead, Buffer);
+	}
+	else
+	{
 		FileSystemError("Unknown file system.");
 		return FALSE;
 	}
-
-	return FALSE;
 }
 
 ULONG FsGetFileSize(PFILE FileHandle)
 {
-	switch (FsType)
+	if (pFSVtbl && pFSVtbl->GetFileSize)
 	{
-	case FS_FAT:
-
-		return FatGetFileSize(FileHandle);
-
-	case FS_ISO9660:
-
-		return IsoGetFileSize(FileHandle);
-
-	case FS_EXT2:
-
-		return Ext2GetFileSize(FileHandle);
-
-	case FS_NTFS:
-
-		return NtfsGetFileSize(FileHandle);
-
-	default:
-		FileSystemError("Unknown file system.");
-		break;
+		return (*pFSVtbl->GetFileSize)(FileHandle);
 	}
-
-	return 0;
+	else
+	{
+		FileSystemError("Unknown file system.");
+		return 0;
+	}
 }
 
 VOID FsSetFilePointer(PFILE FileHandle, ULONG NewFilePointer)
 {
-	switch (FsType)
+	if (pFSVtbl && pFSVtbl->SetFilePointer)
 	{
-	case FS_FAT:
-
-		FatSetFilePointer(FileHandle, NewFilePointer);
-		break;
-
-	case FS_ISO9660:
-
-		IsoSetFilePointer(FileHandle, NewFilePointer);
-		break;
-
-	case FS_EXT2:
-
-		Ext2SetFilePointer(FileHandle, NewFilePointer);
-		break;
-
-	case FS_NTFS:
-
-		NtfsSetFilePointer(FileHandle, NewFilePointer);
-		break;
-
-	default:
+		(*pFSVtbl->SetFilePointer)(FileHandle, NewFilePointer);
+	}
+	else
+	{
 		FileSystemError("Unknown file system.");
-		break;
 	}
 }
 
 ULONG FsGetFilePointer(PFILE FileHandle)
 {
-	switch (FsType)
+	if (pFSVtbl && pFSVtbl->SetFilePointer)
 	{
-	case FS_FAT:
-
-		return FatGetFilePointer(FileHandle);
-		break;
-
-	case FS_ISO9660:
-
-		return IsoGetFilePointer(FileHandle);
-		break;
-
-	case FS_EXT2:
-
-		return Ext2GetFilePointer(FileHandle);
-		break;
-
-	case FS_NTFS:
-
-		return NtfsGetFilePointer(FileHandle);
-		break;
-
-	default:
-		FileSystemError("Unknown file system.");
-		break;
+		return (*pFSVtbl->GetFilePointer)(FileHandle);
 	}
-
-	return 0;
+	else
+	{
+		FileSystemError("Unknown file system.");
+		return 0;
+	}
 }
 
 BOOLEAN FsIsEndOfFile(PFILE FileHandle)

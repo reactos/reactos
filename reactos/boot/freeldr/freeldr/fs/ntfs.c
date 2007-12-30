@@ -685,7 +685,7 @@ static BOOLEAN NtfsLookupFile(PCSTR FileName, PNTFS_MFT_RECORD MftRecord, PNTFS_
     return TRUE;
 }
 
-BOOLEAN NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector)
+BOOLEAN NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
     NtfsBootSector = (PNTFS_BOOTSECTOR)DISKREADBUFFER;
 
@@ -821,3 +821,13 @@ ULONG NtfsGetFilePointer(FILE *File)
     PNTFS_FILE_HANDLE FileHandle = (PNTFS_FILE_HANDLE)File;
     return FileHandle->Offset;
 }
+
+const FS_VTBL NtfsVtbl = {
+	NtfsOpenVolume,
+	NtfsOpenFile,
+	NtfsCloseFile,
+	NtfsReadFile,
+	NtfsGetFileSize,
+	NtfsSetFilePointer,
+	NtfsGetFilePointer,
+};

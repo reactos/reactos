@@ -35,7 +35,7 @@ ULONG					Ext2GroupCount = 0;				// Number of groups in this file system
 ULONG					Ext2InodesPerBlock = 0;			// Number of inodes in one block
 ULONG					Ext2GroupDescPerBlock = 0;		// Number of group descriptors in one block
 
-BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector)
+BOOLEAN Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 
 	DbgPrint((DPRINT_FILESYSTEM, "Ext2OpenVolume() DriveNumber = 0x%x VolumeStartSector = %d\n", DriveNumber, VolumeStartSector));
@@ -102,7 +102,7 @@ FILE* Ext2OpenFile(PCSTR FileName)
 		DbgPrint((DPRINT_FILESYSTEM, "File is a symbolic link\n"));
 
 		// Now read in the symbolic link path
-		if (!Ext2ReadFile(&TempExt2FileInfo, TempExt2FileInfo.FileSize, NULL, SymLinkPath))
+		if (!Ext2ReadFileBig(&TempExt2FileInfo, TempExt2FileInfo.FileSize, NULL, SymLinkPath))
 		{
 			if (TempExt2FileInfo.FileBlockList != NULL)
 			{
@@ -331,11 +331,11 @@ BOOLEAN Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectoryS
 }
 
 /*
- * Ext2ReadFile()
+ * Ext2ReadFileBig()
  * Reads BytesToRead from open file and
  * returns the number of bytes read in BytesRead
  */
-BOOLEAN Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer)
+BOOLEAN Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer)
 {
 	PEXT2_FILE_INFO	Ext2FileInfo = (PEXT2_FILE_INFO)FileHandle;
 	ULONG				BlockNumber;
@@ -344,7 +344,7 @@ BOOLEAN Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRe
 	ULONG				LengthInBlock;
 	ULONG				NumberOfBlocks;
 
-	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFile() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer));
+	DbgPrint((DPRINT_FILESYSTEM, "Ext2ReadFileBig() BytesToRead = %d Buffer = 0x%x\n", (ULONG)BytesToRead, Buffer));
 
 	if (BytesRead != NULL)
 	{
@@ -519,7 +519,17 @@ BOOLEAN Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRe
 	return TRUE;
 }
 
-ULONGLONG Ext2GetFileSize(FILE *FileHandle)
+BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer)
+{
+	BOOLEAN	Success;
+	ULONGLONG BytesReadBig;
+
+	Success = Ext2ReadFileBig(FileHandle, BytesToRead, &BytesReadBig, Buffer);
+	*BytesRead = (ULONG)BytesReadBig;
+	return Success;
+}
+
+ULONG Ext2GetFileSize(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -528,7 +538,7 @@ ULONGLONG Ext2GetFileSize(FILE *FileHandle)
 	return Ext2FileHandle->FileSize;
 }
 
-VOID Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer)
+VOID Ext2SetFilePointer(FILE *FileHandle, ULONG NewFilePointer)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -537,7 +547,7 @@ VOID Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer)
 	Ext2FileHandle->FilePointer = NewFilePointer;
 }
 
-ULONGLONG Ext2GetFilePointer(FILE *FileHandle)
+ULONG Ext2GetFilePointer(FILE *FileHandle)
 {
 	PEXT2_FILE_INFO	Ext2FileHandle = (PEXT2_FILE_INFO)FileHandle;
 
@@ -787,7 +797,7 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 		return FALSE;
 	}
 
-	// Fill in file info struct so we can call Ext2ReadFile()
+	// Fill in file info struct so we can call Ext2ReadFileBig()
 	RtlZeroMemory(&DirectoryFileInfo, sizeof(EXT2_FILE_INFO));
 	DirectoryFileInfo.DriveNumber = Ext2DriveNumber;
 	DirectoryFileInfo.FileBlockList = Ext2ReadBlockPointerList(InodePointer);
@@ -815,7 +825,7 @@ BOOLEAN Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE Inode
 	}
 
 	// Now read the root directory data
-	if (!Ext2ReadFile(&DirectoryFileInfo, DirectoryFileInfo.FileSize, NULL, *DirectoryBuffer))
+	if (!Ext2ReadFileBig(&DirectoryFileInfo, DirectoryFileInfo.FileSize, NULL, *DirectoryBuffer))
 	{
 		MmFreeMemory(*DirectoryBuffer);
 		*DirectoryBuffer = NULL;
@@ -1167,3 +1177,13 @@ BOOLEAN Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBloc
 	MmFreeMemory(BlockBuffer);
 	return TRUE;
 }
+
+const FS_VTBL Ext2Vtbl = {
+	Ext2OpenVolume,
+	Ext2OpenFile,
+	NULL,
+	Ext2ReadFile,
+	Ext2GetFileSize,
+	Ext2SetFilePointer,
+	Ext2GetFilePointer,
+};

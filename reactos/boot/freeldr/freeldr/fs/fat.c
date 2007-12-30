@@ -115,7 +115,7 @@ VOID FatSwapFatXDirEntry(PFATX_DIRENTRY Obj)
 	SW(Obj, LastAccessDate);
 }
 
-BOOLEAN FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount)
+BOOLEAN FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 	char ErrMsg[80];
 	ULONG FatSize;
@@ -1407,3 +1407,13 @@ BOOLEAN FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG Sector
 {
 	return CacheReadDiskSectors(DriveNumber, SectorNumber + FatVolumeStartSector, SectorCount, Buffer);
 }
+
+const FS_VTBL FatVtbl = {
+	FatOpenVolume,
+	FatOpenFile,
+	NULL,
+	FatReadFile,
+	FatGetFileSize,
+	FatSetFilePointer,
+	FatGetFilePointer,
+};

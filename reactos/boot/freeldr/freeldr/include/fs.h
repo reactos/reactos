@@ -28,6 +28,7 @@
 #define	FS_EXT2			3
 #define FS_REISER		4
 #define FS_ISO9660		5
+#define FS_PXE			6
 
 #define FILE			VOID
 #define PFILE			FILE *
@@ -44,5 +45,16 @@ ULONG		FsGetFilePointer(PFILE FileHandle);
 BOOLEAN	FsIsEndOfFile(PFILE FileHandle);
 ULONG		FsGetNumPathParts(PCSTR Path);
 VOID	FsGetFirstNameFromPath(PCHAR Buffer, PCSTR Path);
+
+typedef struct
+{
+	BOOLEAN (*OpenVolume)(UCHAR DriveNumber, ULONGLONG StartSector, ULONGLONG SectorCount);
+	PFILE (*OpenFile)(PCSTR FileName);
+	VOID (*CloseFile)(PFILE FileHandle);
+	BOOLEAN (*ReadFile)(PFILE FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+	ULONG (*GetFileSize)(PFILE FileHandle);
+	VOID (*SetFilePointer)(PFILE FileHandle, ULONG NewFilePointer);
+	ULONG (*GetFilePointer)(PFILE FileHandle);
+} FS_VTBL;
 
 #endif // #defined __FS_H

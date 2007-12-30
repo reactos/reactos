@@ -152,7 +152,7 @@ typedef struct
 
 
 
-BOOLEAN	FatOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector, ULONG PartitionSectorCount);
+BOOLEAN	FatOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
 ULONG	FatDetermineFatType(PFAT_BOOTSECTOR FatBootSector, ULONG PartitionSectorCount);
 PVOID	FatBufferDirectory(ULONG DirectoryStartCluster, ULONG* EntryCountPointer, BOOLEAN RootDirectory);
 BOOLEAN	FatSearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG EntryCount, PCHAR FileName, PFAT_FILE_INFO FatFileInfoPointer);
@@ -188,5 +188,7 @@ BOOLEAN	FatReadVolumeSectors(ULONG DriveNumber, ULONG SectorNumber, ULONG Sector
 #define FATX32			5
 
 #define ISFATX(FT) ((FT) == FATX16 || (FT) == FATX32)
+
+extern const FS_VTBL FatVtbl;
 
 #endif // #defined __FAT_H

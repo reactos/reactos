@@ -666,16 +666,17 @@ typedef struct
 
 
 
-BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector);
+BOOLEAN	Ext2OpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
 FILE*	Ext2OpenFile(PCSTR FileName);
 BOOLEAN	Ext2LookupFile(PCSTR FileName, PEXT2_FILE_INFO Ext2FileInfoPointer);
 BOOLEAN	Ext2SearchDirectoryBufferForFile(PVOID DirectoryBuffer, ULONG DirectorySize, PCHAR FileName, PEXT2_DIR_ENTRY DirectoryEntry);
-BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
-ULONGLONG		Ext2GetFileSize(FILE *FileHandle);
-VOID	Ext2SetFilePointer(FILE *FileHandle, ULONGLONG NewFilePointer);
-ULONGLONG		Ext2GetFilePointer(FILE *FileHandle);
+BOOLEAN	Ext2ReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
+ULONG		Ext2GetFileSize(FILE *FileHandle);
+VOID	Ext2SetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
+ULONG		Ext2GetFilePointer(FILE *FileHandle);
 BOOLEAN	Ext2ReadVolumeSectors(UCHAR DriveNumber, ULONGLONG SectorNumber, ULONGLONG SectorCount, PVOID Buffer);
 
+BOOLEAN	Ext2ReadFileBig(FILE *FileHandle, ULONGLONG BytesToRead, ULONGLONG* BytesRead, PVOID Buffer);
 BOOLEAN	Ext2ReadSuperBlock(VOID);
 BOOLEAN	Ext2ReadGroupDescriptors(VOID);
 BOOLEAN	Ext2ReadDirectory(ULONG Inode, PVOID* DirectoryBuffer, PEXT2_INODE InodePointer);
@@ -693,5 +694,7 @@ ULONGLONG		Ext2GetInodeFileSize(PEXT2_INODE Inode);
 BOOLEAN	Ext2CopyIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG IndirectBlock);
 BOOLEAN	Ext2CopyDoubleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG DoubleIndirectBlock);
 BOOLEAN	Ext2CopyTripleIndirectBlockPointers(ULONG* BlockList, ULONG* CurrentBlockInList, ULONG BlockCount, ULONG TripleIndirectBlock);
+
+extern const FS_VTBL Ext2Vtbl;
 
 #endif // #defined __EXT2_H

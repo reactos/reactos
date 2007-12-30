@@ -28,7 +28,7 @@ static ULONG		IsoRootLength;		// Length of the root directory
 ULONG			IsoDriveNumber = 0;
 
 
-BOOLEAN IsoOpenVolume(ULONG DriveNumber)
+BOOLEAN IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount)
 {
 	PPVD Pvd = (PPVD)DISKREADBUFFER;
 
@@ -467,3 +467,13 @@ ULONG IsoGetFilePointer(FILE *FileHandle)
 
 	return IsoFileHandle->FilePointer;
 }
+
+const FS_VTBL Iso9660Vtbl = {
+	IsoOpenVolume,
+	IsoOpenFile,
+	NULL,
+	IsoReadFile,
+	IsoGetFileSize,
+	IsoSetFilePointer,
+	IsoGetFilePointer,
+};

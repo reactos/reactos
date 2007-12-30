@@ -218,12 +218,14 @@ typedef struct
 	ULONGLONG			Offset;
 } PACKED NTFS_FILE_HANDLE, *PNTFS_FILE_HANDLE;
 
-BOOLEAN	NtfsOpenVolume(ULONG DriveNumber, ULONG VolumeStartSector);
+BOOLEAN	NtfsOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
 FILE*	NtfsOpenFile(PCSTR FileName);
 VOID	NtfsCloseFile(FILE *FileHandle);
 BOOLEAN	NtfsReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG	NtfsGetFileSize(FILE *FileHandle);
 VOID	NtfsSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG	NtfsGetFilePointer(FILE *FileHandle);
+
+extern const FS_VTBL NtfsVtbl;
 
 #endif // #defined __NTFS_H

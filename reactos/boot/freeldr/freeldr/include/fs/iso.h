@@ -105,11 +105,13 @@ typedef struct
 } ISO_FILE_INFO, * PISO_FILE_INFO;
 
 
-BOOLEAN	IsoOpenVolume(ULONG DriveNumber);
+BOOLEAN	IsoOpenVolume(UCHAR DriveNumber, ULONGLONG VolumeStartSector, ULONGLONG PartitionSectorCount);
 FILE*	IsoOpenFile(PCSTR FileName);
 BOOLEAN	IsoReadFile(FILE *FileHandle, ULONG BytesToRead, ULONG* BytesRead, PVOID Buffer);
 ULONG		IsoGetFileSize(FILE *FileHandle);
 VOID	IsoSetFilePointer(FILE *FileHandle, ULONG NewFilePointer);
 ULONG		IsoGetFilePointer(FILE *FileHandle);
+
+extern const FS_VTBL Iso9660Vtbl;
 
 #endif // #defined __FAT_H
