@@ -176,7 +176,6 @@
 #define LDC_INIT_PAGE     0x00000080
 #define LDC_KILL_DOCUMENT 0x00010000
 
-
 /* DC_ATTR Xform Flags */
 #define METAFILE_TO_WORLD_IDENTITY          0x00000001
 #define WORLD_TO_PAGE_IDENTITY              0x00000002
@@ -194,13 +193,8 @@
 #define PAGE_EXTENTS_CHANGED                0x00004000
 #define WORLD_XFORM_CHANGED                 0x00008000
 
-
-/* RGN_ATTR Dirty Flags */
+/* RGN_ATTR Flags */
 #define DIRTY_RGNATTR                       0x00000020
-
-/* RGN_ATTR Type Flags */
-#define RGNATTR_INIT                        0x00000001
-#define RGNATTR_SET                         0x00000002
 
 
 /* TYPES *********************************************************************/
@@ -210,7 +204,12 @@ typedef struct _GDI_TABLE_ENTRY
     PVOID KernelData; /* Points to the kernel mode structure */
     SHORT ProcessId;  /* process id that created the object, 0 for stock objects */
     SHORT nCount;     /* usage count of object handles */
+    union{            // temp union structure.
     LONG  Type;       /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
+    SHORT nUpper:16;
+    CHAR  ObjectType:8;
+    CHAR  Flags:8;
+    };
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 
@@ -227,12 +226,12 @@ typedef struct __GDI_SHARED_HANDLE_TABLE // Must match win32k/include/gdiobj.h
     DWORD           dwCsbSupported1;           // OEM code-page bitfield.
 } GDI_SHARED_HANDLE_TABLE, *PGDI_SHARED_HANDLE_TABLE;
 
-typedef struct _RGNATTR
+typedef struct _RGN_ATTR
 {
     ULONG AttrFlags;
-    ULONG Flags;
+    ULONG Flags;     // Clipping region's complexity. NULL, SIMPLE & COMPLEXREGION
     RECTL Rect;
-} RGNATTR,*PRGNATTR;
+} RGN_ATTR,*PRGN_ATTR;
 
 // Local DC structure (_DC_ATTR) PVOID pvLDC;
 typedef struct _LDC
@@ -306,7 +305,7 @@ typedef struct _DC_ATTR
     SIZEL szlVirtualDeviceMm;
     SIZEL szlVirtualDeviceSize;
     POINTL ptlBrushOrigin;
-    RGNATTR VisRectRegion;
+    RGN_ATTR VisRectRegion;
 } DC_ATTR, *PDC_ATTR;
 
 typedef struct _BRUSH_ATTR
@@ -315,19 +314,11 @@ typedef struct _BRUSH_ATTR
     DWORD    dwUnused[3];
 } BRUSH_ATTR, *PBRUSH_ATTR;
 
-typedef struct _REGION_ATTR
-{
-    FLONG flFlags;
-    DWORD dwType;
-    RECT  rcBound;
-} REGION_ATTR, *PREGION_ATTR;
-
 typedef struct _FONT_ATTR
 {
     DWORD dwUnknown;
     void *pCharWidthData;
 } FONT_ATTR, *PFONT_ATTR;
-
 
 typedef enum tagGdiPathState
 {
