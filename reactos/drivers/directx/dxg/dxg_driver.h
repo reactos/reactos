@@ -1,6 +1,6 @@
 
 
-DRVFN gaDxgFuncs [] = 
+DRVFN gaDxgFuncs [] =
 {
     {DXG_INDEX_DxDxgGenericThunk, (PFN)DxDxgGenericThunk},
     //{DXG_INDEX_DxD3dContextCreate, (PFN)DxD3dContextCreate},
@@ -88,7 +88,7 @@ DRVFN gaDxgFuncs [] =
     //{DXG_INDEX_DxDdEnableDirectDrawRedirection, (PFN)DxDdEnableDirectDrawRedirection},
     //{DXG_INDEX_DxDdAllocPrivateUserMem, (PFN)DxDdAllocPrivateUserMem},
     //{DXG_INDEX_DxDdFreePrivateUserMem, (PFN)DxDdFreePrivateUserMem},
-    //{DXG_INDEX_DxDdLockDirectDrawSurface, (PFN)DxDdLockDirectDrawSurface},
+    {DXG_INDEX_DxDdLockDirectDrawSurface, (PFN)DxDdLockDirectDrawSurface},
     //{DXG_INDEX_DxDdUnlockDirectDrawSurface, (PFN)DxDdUnlockDirectDrawSurface},
     //{DXG_INDEX_DxDdSetAccelLevel, (PFN)DxDdSetAccelLevel},
     //{DXG_INDEX_DxDdGetSurfaceLock, (PFN)DxDdGetSurfaceLock},
