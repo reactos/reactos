@@ -34,7 +34,7 @@
 
 /* GLOBALS ******************************************************************/
 
-#define YEAR_STR_MAX_SIZE        4
+#define YEAR_STR_MAX_SIZE        5
 #define MAX_SHRT_DATE_SEPARATORS 3
 #define STD_DATE_SEP             _T(".")
 #define YEAR_DIFF                (99)
@@ -425,7 +425,7 @@ SetMaxDate(HWND hwndDlg, LCID lcid)
 static INT
 GetMaxDate(LCID lcid)
 {
-    INT nMaxDateVal;
+    INT nMaxDateVal = 0;
 
     GetCalendarInfo(lcid,
                     CAL_GREGORIAN,
