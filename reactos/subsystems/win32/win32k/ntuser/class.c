@@ -2248,13 +2248,7 @@ InvalidParameter:
             }
          }
          else
-         {
-            if (CapturedClassName.Length == 0)
-                WARN("Tried to get information of a non-existing class atom 0x%p process 0x%p init: 0x%x\n", CapturedClassName.Buffer, PsGetCurrentProcessId(), pi->RegisteredSysClasses);
-            else
-                WARN("Tried to get information of a non-existing class \"%wZ\" process 0x%p init: 0x%x\n", &CapturedClassName, PsGetCurrentProcessId(), pi->RegisteredSysClasses);
             SetLastWin32Error(ERROR_CLASS_DOES_NOT_EXIST);
-         }
     }
     _SEH_HANDLE
     {
