@@ -60,7 +60,7 @@ static MUI_LANGUAGE LanguageList[] =
     },
     {
         L"00000408",
-        L"00000408",
+        L"00000409",
         L"Greek",
         elGRPages
     },
