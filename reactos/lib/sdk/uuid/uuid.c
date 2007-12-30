@@ -54,6 +54,8 @@
 #include "urlmon.h"
 #include "objsel.h"
 #include "richole.h"
+#include "xmldom.h"
+#include "xmldso.h"
 
 /* FIXME: cguids declares GUIDs but does not define their values */
 
