@@ -57,6 +57,7 @@ reactos/dll/win32/msimg32         # Autosync
 reactos/dll/win32/msi             # Needs a widl update
 reactos/dll/win32/msvcrt20        # Out of sync
 reactos/dll/win32/msvfw32         # Autosync
+reactos/dll/win32/msxml3          # Synced to Wine-20071230
 reactos/dll/win32/netapi32        # Autosync
 reactos/dll/win32/objsel          # Autosync
 reactos/dll/win32/odbc32          # Out of sync. Depends on port of Linux ODBC.

@@ -157,6 +157,9 @@
 <directory name="mswsock">
 	<xi:include href="mswsock/mswsock.rbuild" />
 </directory>
+<directory name="msxml3">
+	<xi:include href="msxml3/msxml3.rbuild" />
+</directory>
 <directory name="netapi32">
 	<xi:include href="netapi32/netapi32.rbuild" />
 </directory>
