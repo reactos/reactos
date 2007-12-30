@@ -31,11 +31,58 @@
 
 #include "tags.h"
 
+typedef struct _DD_BASEOBJECT
+{
+    HANDLE hHmgr;
+    ULONG ulShareCount;
+    LONG cExclusiveLock;
+    PVOID Tid;
+} DD_BASEOBJECT, *PDD_BASEOBJECT, *POBJ;
+
+ typedef struct _DD_ENTRY
+{
+    union
+    {
+        POBJ pobj;
+        HANDLE hFree;
+    };
+    union
+    {
+         ULONG ulObj;
+         struct
+         {
+                USHORT Count;
+                USHORT Lock;
+                HANDLE Pid;
+         };
+    } ObjectOwner;
+    USHORT FullUnique;
+    UCHAR Objt;
+    UCHAR Flags;
+    PVOID pUser;
+} DD_ENTRY, *PDD_ENTRY;
+
+
+
 
 /* exported functions */
 NTSTATUS DriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS GsDriverEntry(IN PVOID Context1, IN PVOID Context2);
 NTSTATUS DxDdCleanupDxGraphics();
+
+/* Global pointers */
+extern ULONG gcSizeDdHmgr;
+extern PDD_ENTRY gpentDdHmgr;
+extern ULONG gcMaxDdHmgr;
+extern PDD_ENTRY gpentDdHmgrLast;
+extern HANDLE ghFreeDdHmgr;
+extern HSEMAPHORE ghsemHmgr;
+extern LONG gcDummyPageRefCnt;
+extern HSEMAPHORE ghsemDummyPage;
+extern VOID *gpDummyPage;
+extern PEPROCESS gpepSession;
+extern PLARGE_INTEGER gpLockShortDelay;
+
 
 
 /* Driver list export functions */
@@ -43,8 +90,12 @@ DWORD STDCALL DxDxgGenericThunk(ULONG_PTR ulIndex, ULONG_PTR ulHandle, SIZE_T *p
 DWORD STDCALL DxDdIoctl(ULONG ulIoctl, PVOID pBuffer, ULONG ulBufferSize);
 
 /* Internel functions */
-BOOL DdHmgCreate();
-BOOL DdHmgDestroy();
+BOOL FASTCALL VerifyObjectOwner(PDD_ENTRY pEntry);
+BOOL FASTCALL DdHmgCreate();
+BOOL FASTCALL DdHmgDestroy();
+PVOID FASTCALL DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned);
+
+
 
 /* define stuff */
 #define drvDxEngLockDC          gpEngFuncs[DXENG_INDEX_DxEngLockDC]
@@ -53,3 +104,4 @@ BOOL DdHmgDestroy();
 #define drvDxEngUnlockDC        gpEngFuncs[DXENG_INDEX_DxEngUnlockDC]
 #define drvDxEngUnlockHdev      gpEngFuncs[DXENG_INDEX_DxEngUnlockHdev]
 #define drvDxEngLockHdev        gpEngFuncs[DXENG_INDEX_DxEngLockHdev]
+
