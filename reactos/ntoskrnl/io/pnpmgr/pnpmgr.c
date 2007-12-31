@@ -312,31 +312,33 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
                     OUT PVOID PropertyBuffer,
                     OUT PULONG ResultLength)
 {
-   PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-   DEVICE_CAPABILITIES DeviceCaps;
-   ULONG Length;
-   PVOID Data = NULL;
-   PWSTR Ptr;
-   NTSTATUS Status;
+    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
+    DEVICE_CAPABILITIES DeviceCaps;
+    ULONG Length;
+    PVOID Data = NULL;
+    PWSTR Ptr;
+    NTSTATUS Status;
 
-   DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
+    DPRINT("IoGetDeviceProperty(0x%p %d)\n", DeviceObject, DeviceProperty);
 
-   if (DeviceNode == NULL)
-      return STATUS_INVALID_DEVICE_REQUEST;
+    *ResultLength = 0;
 
-   switch (DeviceProperty)
-   {
-      case DevicePropertyBusNumber:
-         Length = sizeof(ULONG);
-         Data = &DeviceNode->ChildBusNumber;
-         break;
+    if (DeviceNode == NULL)
+        return STATUS_INVALID_DEVICE_REQUEST;
 
-      /* Complete, untested */
-      case DevicePropertyBusTypeGuid:
-         /* Sanity check */
-         if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
-             (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
-         {
+    switch (DeviceProperty)
+    {
+    case DevicePropertyBusNumber:
+        Length = sizeof(ULONG);
+        Data = &DeviceNode->ChildBusNumber;
+        break;
+
+        /* Complete, untested */
+    case DevicePropertyBusTypeGuid:
+        /* Sanity check */
+        if ((DeviceNode->ChildBusTypeIndex != 0xFFFF) &&
+            (DeviceNode->ChildBusTypeIndex < IopBusTypeGuidList->GuidCount))
+        {
             /* Return the GUID */
             *ResultLength = sizeof(GUID);
 
@@ -348,44 +350,44 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 
             /* Copy the GUID */
             RtlCopyMemory(PropertyBuffer,
-                          &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
-                          sizeof(GUID));
+                &(IopBusTypeGuidList->Guids[DeviceNode->ChildBusTypeIndex]),
+                sizeof(GUID));
             return STATUS_SUCCESS;
-         }
-         else
-         {
+        }
+        else
+        {
             return STATUS_OBJECT_NAME_NOT_FOUND;
-         }
-         break;
+        }
+        break;
 
-      case DevicePropertyLegacyBusType:
-         Length = sizeof(INTERFACE_TYPE);
-         Data = &DeviceNode->ChildInterfaceType;
-         break;
+    case DevicePropertyLegacyBusType:
+        Length = sizeof(INTERFACE_TYPE);
+        Data = &DeviceNode->ChildInterfaceType;
+        break;
 
-      case DevicePropertyAddress:
-         /* Query the device caps */
-         Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
-         if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
-         {
+    case DevicePropertyAddress:
+        /* Query the device caps */
+        Status = IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps);
+        if (NT_SUCCESS(Status) && (DeviceCaps.Address != (ULONG)-1))
+        {
             /* Return length */
             *ResultLength = sizeof(ULONG);
 
             /* Check if the buffer given was large enough */
             if (BufferLength < *ResultLength)
             {
-               return STATUS_BUFFER_TOO_SMALL;
+                return STATUS_BUFFER_TOO_SMALL;
             }
 
             /* Return address */
             *(PULONG)PropertyBuffer = DeviceCaps.Address;
             return STATUS_SUCCESS;
-         }
-         else
-         {
+        }
+        else
+        {
             return STATUS_OBJECT_NAME_NOT_FOUND;
-         }
-         break;
+        }
+        break;
 
 //    case DevicePropertyUINumber:
 //      if (DeviceNode->CapabilityFlags == NULL)
@@ -394,161 +396,165 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 //      Data = &DeviceNode->CapabilityFlags->UINumber;
 //      break;
 
-      case DevicePropertyClassName:
-      case DevicePropertyClassGuid:
-      case DevicePropertyDriverKeyName:
-      case DevicePropertyManufacturer:
-      case DevicePropertyFriendlyName:
-      case DevicePropertyHardwareID:
-      case DevicePropertyCompatibleIDs:
-      case DevicePropertyDeviceDescription:
-      case DevicePropertyLocationInformation:
-      case DevicePropertyUINumber:
-      {
-         LPWSTR RegistryPropertyName, KeyNameBuffer;
-         UNICODE_STRING KeyName, ValueName;
-         OBJECT_ATTRIBUTES ObjectAttributes;
-         KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
-         ULONG ValueInformationLength;
-         HANDLE KeyHandle;
-         NTSTATUS Status;
+    case DevicePropertyClassName:
+    case DevicePropertyClassGuid:
+    case DevicePropertyDriverKeyName:
+    case DevicePropertyManufacturer:
+    case DevicePropertyFriendlyName:
+    case DevicePropertyHardwareID:
+    case DevicePropertyCompatibleIDs:
+    case DevicePropertyDeviceDescription:
+    case DevicePropertyLocationInformation:
+    case DevicePropertyUINumber:
+        {
+            LPCWSTR RegistryPropertyName;
+            UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+            UNICODE_STRING ValueName;
+            OBJECT_ATTRIBUTES ObjectAttributes;
+            KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
+            ULONG ValueInformationLength;
+            HANDLE KeyHandle, EnumRootHandle;
+            NTSTATUS Status;
 
-         switch (DeviceProperty)
-         {
+            switch (DeviceProperty)
+            {
             case DevicePropertyClassName:
-               RegistryPropertyName = L"Class"; break;
+                RegistryPropertyName = L"Class"; break;
             case DevicePropertyClassGuid:
-               RegistryPropertyName = L"ClassGuid"; break;
+                RegistryPropertyName = L"ClassGuid"; break;
             case DevicePropertyDriverKeyName:
-               RegistryPropertyName = L"Driver"; break;
+                RegistryPropertyName = L"Driver"; break;
             case DevicePropertyManufacturer:
-               RegistryPropertyName = L"Mfg"; break;
+                RegistryPropertyName = L"Mfg"; break;
             case DevicePropertyFriendlyName:
-               RegistryPropertyName = L"FriendlyName"; break;
+                RegistryPropertyName = L"FriendlyName"; break;
             case DevicePropertyHardwareID:
-               RegistryPropertyName = L"HardwareID"; break;
+                RegistryPropertyName = L"HardwareID"; break;
             case DevicePropertyCompatibleIDs:
-               RegistryPropertyName = L"CompatibleIDs"; break;
+                RegistryPropertyName = L"CompatibleIDs"; break;
             case DevicePropertyDeviceDescription:
-               RegistryPropertyName = L"DeviceDesc"; break;
+                RegistryPropertyName = L"DeviceDesc"; break;
             case DevicePropertyLocationInformation:
-               RegistryPropertyName = L"LocationInformation"; break;
+                RegistryPropertyName = L"LocationInformation"; break;
             case DevicePropertyUINumber:
-               RegistryPropertyName = L"UINumber"; break;
+                RegistryPropertyName = L"UINumber"; break;
             default:
-               RegistryPropertyName = NULL; break;
-         }
+                /* Should not happen */
+                ASSERT(FALSE);
+                return STATUS_UNSUCCESSFUL;
+            }
 
-         KeyNameBuffer = ExAllocatePool(PagedPool,
-            (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
+            DPRINT("Registry property %S\n", RegistryPropertyName);
 
-         DPRINT("KeyNameBuffer: 0x%p, value %S\n", KeyNameBuffer, RegistryPropertyName);
+            /* Open Enum key */
+            InitializeObjectAttributes(&ObjectAttributes, &EnumRoot,
+                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
+            Status = ZwOpenKey(&EnumRootHandle, 0, &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error opening ENUM_ROOT, Status=0x%08x\n", Status);
+                return Status;
+            }
 
-         if (KeyNameBuffer == NULL)
-            return STATUS_INSUFFICIENT_RESOURCES;
+            /* Open instance key */
+            InitializeObjectAttributes(&ObjectAttributes, &DeviceNode->InstancePath,
+                OBJ_CASE_INSENSITIVE, EnumRootHandle, NULL);
 
-         wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-         wcscat(KeyNameBuffer, DeviceNode->InstancePath.Buffer);
-         RtlInitUnicodeString(&KeyName, KeyNameBuffer);
-         InitializeObjectAttributes(&ObjectAttributes, &KeyName,
-                                    OBJ_CASE_INSENSITIVE, NULL, NULL);
+            Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Error opening InstancePath, Status=0x%08x\n", Status);
+                return Status;
+            }
 
-         Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
-         ExFreePool(KeyNameBuffer);
-         if (!NT_SUCCESS(Status))
-            return Status;
+            /* Allocate buffer to read as much data as required by the caller */
+            ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
+                Data[0]) + BufferLength;
+            ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
+            if (!ValueInformation)
+            {
+                ZwClose(KeyHandle);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-         RtlInitUnicodeString(&ValueName, RegistryPropertyName);
-         ValueInformationLength = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION,
-                                               Data[0]) + BufferLength;
-         ValueInformation = ExAllocatePool(PagedPool, ValueInformationLength);
-         if (ValueInformation == NULL)
-         {
+            /* Read the value */
+            RtlInitUnicodeString(&ValueName, RegistryPropertyName);
+            Status = ZwQueryValueKey(KeyHandle, &ValueName,
+                KeyValuePartialInformation, ValueInformation,
+                ValueInformationLength,
+                &ValueInformationLength);
             ZwClose(KeyHandle);
-            return STATUS_INSUFFICIENT_RESOURCES;
-         }
 
-         Status = ZwQueryValueKey(KeyHandle, &ValueName,
-                                  KeyValuePartialInformation, ValueInformation,
-                                  ValueInformationLength,
-                                  &ValueInformationLength);
-         *ResultLength = ValueInformation->DataLength;
-         ZwClose(KeyHandle);
+            /* Return data */
+            *ResultLength = ValueInformation->DataLength;
 
-         if (!NT_SUCCESS(Status))
-         {
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("Problem: Status=%0x08x, ResultLength = %d\n", Status, *ResultLength);
+                ExFreePool(ValueInformation);
+                if (Status == STATUS_BUFFER_OVERFLOW)
+                    return STATUS_BUFFER_TOO_SMALL;
+                else
+                    return Status;
+            }
+
+            /* FIXME: Verify the value (NULL-terminated, correct format). */
+            RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
+                ValueInformation->DataLength);
             ExFreePool(ValueInformation);
-            if (Status == STATUS_BUFFER_OVERFLOW)
-               return STATUS_BUFFER_TOO_SMALL;
-            else
-               return Status;
-         }
 
-         /* FIXME: Verify the value (NULL-terminated, correct format). */
+            return STATUS_SUCCESS;
+        }
 
-         RtlCopyMemory(PropertyBuffer, ValueInformation->Data,
-                       ValueInformation->DataLength);
-         ExFreePool(ValueInformation);
+    case DevicePropertyBootConfiguration:
+        Length = 0;
+        if (DeviceNode->BootResources->Count != 0)
+        {
+            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
+        }
+        Data = &DeviceNode->BootResources;
+        break;
 
-         return STATUS_SUCCESS;
-      }
+        /* FIXME: use a translated boot configuration instead */
+    case DevicePropertyBootConfigurationTranslated:
+        Length = 0;
+        if (DeviceNode->BootResources->Count != 0)
+        {
+            Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
+        }
+        Data = &DeviceNode->BootResources;
+        break;
 
-   case DevicePropertyBootConfiguration:
-      Length = 0;
-      if (DeviceNode->BootResources->Count != 0)
-      {
-         Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
-      }
-      Data = &DeviceNode->BootResources;
-      break;
+    case DevicePropertyEnumeratorName:
+        /* A buffer overflow can't happen here, since InstancePath
+        * always contains the enumerator name followed by \\ */
+        Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
+        ASSERT(Ptr);
+        Length = (Ptr - DeviceNode->InstancePath.Buffer + 1) * sizeof(WCHAR);
+        Data = DeviceNode->InstancePath.Buffer;
+        break;
 
-   /* FIXME: use a translated boot configuration instead */
-   case DevicePropertyBootConfigurationTranslated:
-      Length = 0;
-      if (DeviceNode->BootResources->Count != 0)
-      {
-         Length = CM_RESOURCE_LIST_SIZE(DeviceNode->BootResources);
-      }
-      Data = &DeviceNode->BootResources;
-      break;
+    case DevicePropertyPhysicalDeviceObjectName:
+        /* InstancePath buffer is NULL terminated, so we can do this */
+        Length = DeviceNode->InstancePath.MaximumLength;
+        Data = DeviceNode->InstancePath.Buffer;
+        break;
 
-   case DevicePropertyEnumeratorName:
-      Ptr = wcschr(DeviceNode->InstancePath.Buffer, L'\\');
-      if (Ptr != NULL)
-      {
-         Length = (ULONG)((ULONG_PTR)Ptr - (ULONG_PTR)DeviceNode->InstancePath.Buffer) + sizeof(WCHAR);
-         Data = DeviceNode->InstancePath.Buffer;
-      }
-      else
-      {
-         Length = 0;
-         Data = NULL;
-      }
-      break;
+    default:
+        return STATUS_INVALID_PARAMETER_2;
+    }
 
-   case DevicePropertyPhysicalDeviceObjectName:
-      Length = DeviceNode->InstancePath.Length + sizeof(WCHAR);
-      Data = DeviceNode->InstancePath.Buffer;
-      break;
+    /* Prepare returned values */
+    *ResultLength = Length;
+    if (BufferLength < Length)
+        return STATUS_BUFFER_TOO_SMALL;
+    RtlCopyMemory(PropertyBuffer, Data, Length);
 
-   default:
-      return STATUS_INVALID_PARAMETER_2;
-  }
+    /* NULL terminate the string (if required) */
+    if (DeviceProperty == DevicePropertyEnumeratorName)
+        ((LPWSTR)PropertyBuffer)[Length / sizeof(WCHAR)] = UNICODE_NULL;
 
-  *ResultLength = Length;
-  if (BufferLength < Length)
-     return STATUS_BUFFER_TOO_SMALL;
-  RtlCopyMemory(PropertyBuffer, Data, Length);
-
-  /* Terminate the string */
-  if (DeviceProperty == DevicePropertyEnumeratorName
-     || DeviceProperty == DevicePropertyPhysicalDeviceObjectName)
-  {
-     Ptr = (PWSTR)PropertyBuffer;
-     Ptr[(Length / sizeof(WCHAR)) - 1] = 0;
-  }
-
-  return STATUS_SUCCESS;
+    return STATUS_SUCCESS;
 }
 
 /*
