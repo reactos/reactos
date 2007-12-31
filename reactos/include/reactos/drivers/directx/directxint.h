@@ -2,15 +2,20 @@
 #ifndef _DXINTERNEL_
 #define _DXINTERNEL_
 
+typedef struct _DD_BASEOBJECT
+{
+    HANDLE hHmgr;
+    ULONG ulShareCount;
+    LONG cExclusiveLock;
+    PVOID Tid;
+} DD_BASEOBJECT, *PDD_BASEOBJECT;
+
 typedef struct _EDD_DIRECTDRAW_LOCAL
 {
     //
     // GDI Object Header
     //
-    HANDLE hHmgr;
-    PVOID pEntry;
-    INT cExcLock;
-    HANDLE Tid;
+    DD_BASEOBJECT pobj;
 
     struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal;
     struct _EDD_DIRECTDRAW_GLOBAL * peDirectDrawGlobal2;
@@ -35,10 +40,7 @@ typedef struct _EDD_SURFACE
     //
     // GDI Object Header
     //
-    HANDLE hHmgr;
-    PVOID pEntry;
-    INT cExcLock;
-    HANDLE Tid;
+    DD_BASEOBJECT pobj;
 
     //
     // Direct Draw Surface Data

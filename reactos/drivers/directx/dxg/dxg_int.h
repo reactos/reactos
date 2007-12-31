@@ -31,19 +31,13 @@
 
 #include "tags.h"
 
-typedef struct _DD_BASEOBJECT
-{
-    HANDLE hHmgr;
-    ULONG ulShareCount;
-    LONG cExclusiveLock;
-    PVOID Tid;
-} DD_BASEOBJECT, *PDD_BASEOBJECT, *POBJ;
+
 
  typedef struct _DD_ENTRY
 {
     union
     {
-        POBJ pobj;
+        PDD_BASEOBJECT pobj;
         HANDLE hFree;
     };
     union
