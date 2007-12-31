@@ -62,6 +62,12 @@ typedef struct _DD_BASEOBJECT
     PVOID pUser;
 } DD_ENTRY, *PDD_ENTRY;
 
+typedef struct _EDD_SURFACE_LOCAL
+{
+     DD_BASEOBJECT Object;
+     DD_SURFACE_LOCAL Surfacelcl;
+} EDD_SURFACE_LOCAL, *PEDD_SURFACE_LOCAL;
+
 
 
 
