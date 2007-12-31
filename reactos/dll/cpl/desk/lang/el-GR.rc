@@ -2,20 +2,20 @@ LANGUAGE LANG_GREEK, SUBLANG_DEFAULT
 
 IDD_BACKGROUND DIALOGEX DISCARDABLE 0, 0, 246, 188
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Ταπετσαρία"
+CAPTION "Φόντο"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL         "", IDC_BACKGROUND_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
     CONTROL         "", IDC_BACKGROUND_LIST, "SysListView32", LVS_REPORT |
                     LVS_SINGLESEL | LVS_NOCOLUMNHEADER | LVS_SHAREIMAGELISTS |
-                    WS_BORDER | WS_TABSTOP, 7, 99, 173, 71
-    LTEXT           "Επιλέξτε μια εικόνα ως ταπετσαρία:",
+                    WS_BORDER | WS_TABSTOP, 7, 99, 163, 71
+    LTEXT           "Επιλέξτε Φόντο:",
                     IDC_STATIC, 8, 87, 180, 8
-    PUSHBUTTON      "&Αναζήτηση...", IDC_BROWSE_BUTTON, 187, 135, 50, 14
-    PUSHBUTTON      "&Χρώμα...", IDC_COLOR_BUTTON, 187, 155, 50, 14
-    LTEXT           "Τοποθεσία:", IDC_STATIC, 187, 98, 36, 8
-    COMBOBOX        IDC_PLACEMENT_COMBO, 187, 108, 50, 90,
+    PUSHBUTTON      "&Αναζήτηση...", IDC_BROWSE_BUTTON, 177, 135, 64, 14
+    PUSHBUTTON      "&Χρώμα...", IDC_COLOR_BUTTON, 177, 155, 64, 14
+    LTEXT           "Θέση:", IDC_STATIC, 177, 98, 36, 8
+    COMBOBOX        IDC_PLACEMENT_COMBO, 177, 108, 64, 90,
                     CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
 END
 
@@ -26,21 +26,21 @@ FONT 8, "MS Shell Dlg", 0, 0
 BEGIN
     CONTROL         "", IDC_SCREENS_PREVIEW, "Static", SS_OWNERDRAW,
                     70, 10, 105, 70, WS_EX_STATICEDGE
-    GROUPBOX        "Προφύλαξη οθόνης",IDC_SCREENS_DUMMY, 8, 92, 230, 52
+    GROUPBOX        "Προφύλαξη οθόνης",IDC_SCREENS_DUMMY, 8, 92, 230, 54
     COMBOBOX        IDC_SCREENS_LIST, 14, 103, 100, 100, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON      "Ρυθμίσεις",IDC_SCREENS_SETTINGS, 120, 103, 50, 13, WS_GROUP
-    PUSHBUTTON      "Προεπισκόπηση",IDC_SCREENS_TESTSC, 175, 103, 50, 13
-    LTEXT           "Αναμονή",IDC_WAITTEXT, 14, 125, 16, 9
-    EDITTEXT        IDC_SCREENS_TIMEDELAY, 34, 123, 32, 13, ES_RIGHT | WS_GROUP
+    PUSHBUTTON      "Προεπισκόπηση",IDC_SCREENS_TESTSC, 175, 103, 56, 13
+    LTEXT           "Αναμονή:",IDC_WAITTEXT, 14, 121, 125, 9
+    EDITTEXT        IDC_SCREENS_TIMEDELAY, 47, 119, 32, 13, ES_RIGHT | WS_GROUP
     CONTROL         "",IDC_SCREENS_TIME ,UPDOWN_CLASS,UDS_SETBUDDYINT |
                     UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS |
                     WS_BORDER | WS_GROUP, 54, 123, 12, 13
-    LTEXT           "λεπτά", IDC_MINTEXT, 70, 125, 26, 9
+    LTEXT           "λεπτά", IDC_MINTEXT, 83, 121, 26, 9
     CONTROL         "Κατά τη συνέχιση, προστασία με κωδικό πρόσβασης.",IDC_SCREENS_USEPASSCHK,"button",
-                    BS_AUTOCHECKBOX | WS_TABSTOP, 108, 120, 124, 19
+                    BS_AUTOCHECKBOX | WS_TABSTOP, 14, 134, 180, 8
     GROUPBOX        "Ενέργεια οθόνης", IDC_SCREENS_DUMMY2, 6, 155, 232, 41
     LTEXT           "Για ρύθμιση των χαρακτηριστικών εξοικονόμησης ενέργειας, κάντε κλικ στο κουμπί 'Ενέργεια'.",
-                    IDC_STATIC, 14, 166, 146 ,20
+                    IDC_STATIC, 14, 166, 146 ,26
     PUSHBUTTON      "Ενέργεια...", IDC_SCREENS_POWER_BUTTON, 176, 171, 50, 13
 END
 
@@ -99,21 +99,21 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ρυθμίσεις"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT           "Σύρετε τα εικονίδια της οθόνης, ώστε να ταιριάξουν με τη φυσική διάταξη των οθονών σας.",-1,3,3,240,10
-    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,16,240,82,WS_EX_CLIENTEDGE
-    LTEXT           "&Εμφάνιση:",1820,3,100,30,8
-    LTEXT           "<κανένα>",IDC_SETTINGS_DEVICE,9,109,224,8
-    GROUPBOX        "&Ανάλυση οθόνης",1818,3,120,115,43
+    LTEXT           "Σύρετε τα εικονίδια της οθόνης, ώστε να ταιριάξουν με τη φυσική διάταξη των οθονών σας.",-1,3,3,240,18
+    CONTROL         "",IDC_SETTINGS_MONSEL,"MONITORSELWNDCLASS",WS_CHILD|WS_VISIBLE|WS_TABSTOP,3,23,240,82,WS_EX_CLIENTEDGE
+    LTEXT           "&Εμφάνιση:",1820,3,108,30,8
+    LTEXT           "<κανένα>",IDC_SETTINGS_DEVICE,9,117,224,8
+    GROUPBOX        "&Ανάλυση οθόνης",1818,3,128,115,43
     CONTROL         "",IDC_SETTINGS_RESOLUTION,"msctls_trackbar32",
-                    TBS_AUTOTICKS | WS_TABSTOP, 30, 130, 58, 17
-    LTEXT           "Μικρότερη",1815,9,130,15,8,NOT WS_GROUP
-    LTEXT           "Μεγαλύτερη",1816,93,130,21,8,NOT WS_GROUP
-    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,150,100,10,NOT WS_GROUP | SS_CENTER
-    GROUPBOX        "&Ποιότητα χρώματος",1817,125,120,115,43
-    COMBOBOX        IDC_SETTINGS_BPP,131,130,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
+                    TBS_AUTOTICKS | WS_TABSTOP, 30, 138, 58, 17
+    LTEXT           "Μικρότερη",1815,9,138,15,8,NOT WS_GROUP
+    LTEXT           "Μεγαλύτερη",1816,93,138,21,8,NOT WS_GROUP
+    LTEXT           "",IDC_SETTINGS_RESOLUTION_TEXT,10,158,100,10,NOT WS_GROUP | SS_CENTER
+    GROUPBOX        "&Ποιότητα χρώματος",1817,125,128,115,43
+    COMBOBOX        IDC_SETTINGS_BPP,131,138,103,80,CBS_DROPDOWNLIST | CBS_AUTOHSCROLL |
                     WS_VSCROLL | WS_TABSTOP
-    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,148,103,9
-    PUSHBUTTON      "Για &προχωρημένους...",IDC_SETTINGS_ADVANCED,166,165,74,14
+    CONTROL         "",IDC_SETTINGS_SPECTRUM,"Static",SS_OWNERDRAW | SS_SUNKEN,131,156,103,9
+    PUSHBUTTON      "Για &προχωρημένους...",IDC_SETTINGS_ADVANCED,166,173,74,14
 END
 
 IDD_ADVANCED_GENERAL DIALOGEX DISCARDABLE 0, 0, 246, 204
@@ -125,48 +125,48 @@ END
 
 IDR_PREVIEW_MENU MENU
 BEGIN
-    MENUITEM "Normal",           ID_MENU_NORMAL
-    MENUITEM "Disabled",         ID_MENU_DISABLED
-    MENUITEM "Selected",         ID_MENU_SELECTED
+    MENUITEM "Κανονικό",           ID_MENU_NORMAL
+    MENUITEM "Αενεργό",         ID_MENU_DISABLED
+    MENUITEM "Επιλεγμένο",         ID_MENU_SELECTED
 END
 
 IDM_MONITOR_MENU MENU
 BEGIN
     POPUP ""
     BEGIN
-        MENUITEM "&Attached",   ID_MENU_ATTACHED
-        MENUITEM "&Primary",    ID_MENU_PRIMARY
+        MENUITEM "&Προσκωλημένη",   ID_MENU_ATTACHED
+        MENUITEM "&Κύρια",    ID_MENU_PRIMARY
         MENUITEM SEPARATOR
-        MENUITEM "&Identify",   ID_MENU_IDENTIFY
+        MENUITEM "&Αναγνώρηση",   ID_MENU_IDENTIFY
         MENUITEM "Ιδιότητες", ID_MENU_PROPERTIES
     END
 END
 
 STRINGTABLE
 BEGIN
-    IDS_MULTIPLEMONITORS "(Multiple Monitors)"
-    IDS_UNKNOWNMONITOR "(Unknown Monitor)"
-    IDS_ADVANCEDTITLEFMT "%s and %s"
+    IDS_MULTIPLEMONITORS "(Πολλαπλές οθόνες)"
+    IDS_UNKNOWNMONITOR "(’γνωστη οθόνη)"
+    IDS_ADVANCEDTITLEFMT "%s και %s"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Display"
+    IDS_CPLNAME "Οθόνη"
     IDS_CPLDESCRIPTION "Παραμετροποιεί την επιφάνεια εργασίας και την προφύλαξη οθόνης."
     IDS_NONE "(Κενό)"
     IDS_CENTER "Κέντρο"
-    IDS_STRETCH "Τεντωμένο"
-    IDS_TILE "Πολλαπλές εικόνες"
+    IDS_STRETCH "Παραμόρφωση"
+    IDS_TILE "Σε παράθεση"
 END
 
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_COLOR_4BIT "16 χρώματα"
     IDS_COLOR_8BIT "256 χρώματα"
-    IDS_COLOR_16BIT "High Color (16 Bit)"
-    IDS_COLOR_24BIT "True Color (24 Bit)"
-    IDS_COLOR_32BIT "True Color (32 Bit)"
-    IDS_PIXEL "%lux%lu Pixel"
+    IDS_COLOR_16BIT "Μέτρια (16 Bit)"
+    IDS_COLOR_24BIT "Υψηλή (24 Bit)"
+    IDS_COLOR_32BIT "Πολύ υψηλή (32 Bit)"
+    IDS_PIXEL "%lu επί %lu Pixel"
 END
 
 STRINGTABLE DISCARDABLE
@@ -181,7 +181,7 @@ BEGIN
     IDS_ACTWIN   "Ενεργό παράθυρο"
     IDS_WINTEXT  "Κείμενο σε παράθυρο"
     IDS_MESSBOX  "Παράθυρο μηνύματος"
-    IDS_MESSTEXT "Message Text"
+    IDS_MESSTEXT "Κείμενο μυνήματος"
     IDS_BUTTEXT  "OK"
 END
 
@@ -198,15 +198,15 @@ BEGIN
     IDS_ELEMENT_9 "Γραμμή κύλισης"
     IDS_ELEMENT_10 "Αντικείμενα 3-Δ"
     IDS_ELEMENT_11 "Τίτλος παλέτας"
-    IDS_ELEMENT_12 "Symbol title"
-    IDS_ELEMENT_13 "Captionbar"
-    IDS_ELEMENT_14 "Deactivated menu elements"
+    IDS_ELEMENT_12 "Τίτλος εικονιδίου"
+    IDS_ELEMENT_13 "Γραμμή τίτλου"
+    IDS_ELEMENT_14 "Αενεργά στοιχεία μενού"
     IDS_ELEMENT_15 "Παράθυρο μηνύματος"
-    IDS_ELEMENT_16 "Scrollbar controls"
+    IDS_ELEMENT_16 "Γραμμή κύλισης"
     IDS_ELEMENT_17 "Φόντο εφαρμογών"
-    IDS_ELEMENT_18 "Small captionbar"
+    IDS_ELEMENT_18 "Μικρή γραμμή τίτλου"
     IDS_ELEMENT_19 "Διάκενο εικονιδίων (οριζόντιο)"
     IDS_ELEMENT_20 "Διάκενο εικονιδίων (κατακόρυφο)"
-    IDS_ELEMENT_21 "Quickinfo"
+    IDS_ELEMENT_21 "Γρήγορη επεξήγηση"
     IDS_ELEMENT_22 "Εικονίδιο"
 END
