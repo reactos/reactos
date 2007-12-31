@@ -87,6 +87,10 @@
 		<xi:include href="ramdrv/ramdrv.rbuild" />
 	</directory>
 
+	<directory name="roscalc">
+		<xi:include href="roscalc/roscalc.rbuild" />
+	</directory>
+
 	<directory name="roshttpd">
 		<xi:include href="roshttpd/roshttpd.rbuild" />
 	</directory>
