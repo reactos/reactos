@@ -204,7 +204,8 @@ DWORD	_ILGetDrive		(LPCITEMIDLIST, LPSTR, UINT);
 BOOL	_ILIsUnicode		(LPCITEMIDLIST pidl);
 BOOL	_ILIsDesktop		(LPCITEMIDLIST pidl);
 BOOL	_ILIsMyComputer		(LPCITEMIDLIST pidl);
-BOOL _ILIsMyDocuments       (LPCITEMIDLIST pidl);
+BOOL    _ILIsMyDocuments       (LPCITEMIDLIST pidl);
+BOOL    _ILIsControlPanel       (LPCITEMIDLIST pidl);
 BOOL    _ILIsBitBucket      (LPCITEMIDLIST pidl);
 BOOL	_ILIsDrive		(LPCITEMIDLIST pidl);
 BOOL	_ILIsFolder		(LPCITEMIDLIST pidl);
@@ -254,6 +255,7 @@ LPITEMIDLIST	_ILCreateIExplore	(void);
 LPITEMIDLIST	_ILCreateControlPanel	(void);
 LPITEMIDLIST	_ILCreatePrinters	(void);
 LPITEMIDLIST	_ILCreateNetwork	(void);
+LPITEMIDLIST   _ILCreateNetHood     (void);
 LPITEMIDLIST	_ILCreateBitBucket	(void);
 LPITEMIDLIST	_ILCreateDrive		(LPCWSTR);
 

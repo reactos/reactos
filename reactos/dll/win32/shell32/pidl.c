@@ -1381,21 +1381,7 @@ LPITEMIDLIST _ILCreateIExplore(void)
 
 LPITEMIDLIST _ILCreateControlPanel(void)
 {
-    LPITEMIDLIST parent = _ILCreateGuid(PT_GUID, &CLSID_MyComputer), ret = NULL;
-
-    TRACE("()\n");
-    if (parent)
-    {
-        LPITEMIDLIST cpl = _ILCreateGuid(PT_SHELLEXT, &CLSID_ControlPanel);
-
-        if (cpl)
-        {
-            ret = ILCombine(parent, cpl);
-            SHFree(cpl);
-        }
-        SHFree(parent);
-    }
-    return ret;
+    return _ILCreateGuid(PT_SHELLEXT, &CLSID_ControlPanel);
 }
 
 LPITEMIDLIST _ILCreatePrinters(void)
@@ -1627,6 +1613,23 @@ BOOL _ILIsMyDocuments(LPCITEMIDLIST pidl)
         return IsEqualIID(iid, &CLSID_MyDocuments);
     return FALSE;
 }
+
+BOOL _ILIsControlPanel(LPCITEMIDLIST pidl)
+{
+    REFIID iid = _ILGetGUIDPointer(pidl);
+
+    TRACE("(%p)\n",pidl);
+
+    if (iid)
+        return IsEqualIID(iid, &CLSID_ControlPanel);
+    return FALSE;
+}
+
+LPITEMIDLIST _ILCreateNetHood(void)
+{
+    return _ILCreateGuid(PT_GUID, &CLSID_NetworkPlaces);
+}
+
 
 BOOL _ILIsMyComputer(LPCITEMIDLIST pidl)
 {

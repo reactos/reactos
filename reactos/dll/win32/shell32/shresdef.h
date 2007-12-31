@@ -110,6 +110,8 @@
 #define IDS_CONTROLPANEL            148
 #define IDS_NEWFOLDER               149
 #define IDS_FOLDER_OPTIONS          150
+#define IDS_COLUMN_EXTENSION        151
+#define IDS_NO_EXTENSION            152
 
 /* Note: this string is referenced from the registry */
 #define IDS_RECYCLEBIN_FOLDER_NAME   8964
