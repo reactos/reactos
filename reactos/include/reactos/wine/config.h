@@ -276,10 +276,10 @@
 /* #undef HAVE_LIBSOCKET */
 
 /* Define if you have the libxml2 library */
-/* #undef HAVE_LIBXML2 */
+#define HAVE_LIBXML2
 
 /* Define to 1 if you have the <libxml/parser.h> header file. */
-/* #undef HAVE_LIBXML_PARSER_H */
+#define HAVE_LIBXML_PARSER_H
 
 /* Define to 1 if you have the `xpg4' library (-lxpg4). */
 /* #undef HAVE_LIBXPG4 */

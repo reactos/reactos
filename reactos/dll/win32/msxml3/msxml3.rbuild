@@ -9,9 +9,12 @@
 	<define name="_WIN32_IE">0x600</define>
 	<define name="_WIN32_WINNT">0x601</define>
 	<define name="WINVER">0x501</define>
+	<define name="LIBXML_STATIC" />
+	<library>libxml2</library>
 	<library>wine</library>
 	<library>urlmon</library>
 	<library>wininet</library>
+	<library>ws2_32</library>
 	<library>comctl32</library>
 	<library>shell32</library>
 	<library>shlwapi</library>

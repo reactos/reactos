@@ -57,6 +57,9 @@
 #   include <fp_class.h>
 #  endif
 #endif
+
+/* Small ReactOS hack */
+#define fpclassify fpclass
 #include <assert.h>
 
 #if defined(TRIO_DOCUMENTATION)
