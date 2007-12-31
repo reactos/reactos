@@ -398,12 +398,12 @@ CreateFreeLoaderIniForReactos(PWCHAR IniPath,
 		    L"SystemPath",
 		    ArcPath);
 
-  /* Options=/SOS*/
+  /* Options=*/
   IniCacheInsertKey(IniSection,
 		    NULL,
 		    INSERT_LAST,
 		    L"Options",
-		    L"/SOS");
+		    L"");
 
   /* Create "ReactOS_Debug" section */
   IniSection = IniCacheAppendSection(IniCache,
