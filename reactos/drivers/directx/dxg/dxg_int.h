@@ -31,7 +31,9 @@
 
 #include "tags.h"
 
-
+#define ObjType_DDSURFACE_TYPE    2
+#define ObjType_DDVIDEOPORT_TYPE  4
+#define ObjType_DDMOTIONCOMP_TYPE 5
 
  typedef struct _DD_ENTRY
 {

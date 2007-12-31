@@ -19,7 +19,7 @@ DxDdLockDirectDrawSurface(HANDLE hDdSurface)
    PEDD_SURFACE pEDDSurface = NULL;
    PDD_SURFACE_LOCAL pSurfacelcl = NULL;
 
-   pEDDSurface = DdHmgLock(hDdSurface, 2, FALSE);
+   pEDDSurface = DdHmgLock(hDdSurface, ObjType_DDSURFACE_TYPE, FALSE);
    if (pEDDSurface != NULL)
    {
         pSurfacelcl = &pEDDSurface->ddsSurfaceLocal;
@@ -44,6 +44,10 @@ DxDdUnlockDirectDrawSurface(PDD_SURFACE_LOCAL pSurface)
 
     return retVal;
 }
+
+
+
+
 
 
 

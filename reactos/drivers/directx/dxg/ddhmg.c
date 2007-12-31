@@ -31,6 +31,19 @@ VerifyObjectOwner(PDD_ENTRY pEntry)
     return ( (check == Pid) || (!check));
 }
 
+/*++
+* @name DdHmgCreate
+* @implemented
+*
+* The function DdHmgCreate is internal use in dxg.sys
+* It Create all DX kernel object that is need it, for create DX object.
+*
+* @return
+* return FALSE for fail, return TRUE for sussess create DX object
+*
+* @remarks.
+* Only use internal in dxg.sys
+*--*/
 BOOL
 FASTCALL
 DdHmgCreate()
@@ -64,6 +77,19 @@ DdHmgCreate()
     return FALSE;
 }
 
+/*++
+* @name DdHmgDestroy
+* @implemented
+*
+* The function DdHmgDestroy is internal use in dxg.sys
+* It destore all DX kernel object
+*
+* @return
+* return FALSE for fail or noting to destore, return TRUE for sussess destore all dx object
+*
+* @remarks.
+* Only use internal in dxg.sys
+*--*/
 BOOL
 FASTCALL
 DdHmgDestroy()
@@ -88,6 +114,34 @@ DdHmgDestroy()
     return TRUE;
 }
 
+/*++
+* @name DdHmgLock
+* @implemented
+*
+* The function DdHmgLock is internal use in dxg.sys
+* it lock a Dx kernel object
+*
+* @param HANDLE DdHandle
+* The handle we want lock
+*
+* @param UCHAR ObjectType
+* The type of the object we expected the handle contain
+* value 0 is for getting ?
+* value 1 is for getting EDD_DIRECTDRAW_LOCAL
+* value 2 is for getting EDD_SURFACE
+* value 3 is for getting ?
+* value 4 is for getting EDD_VIDEOPORT
+* value 5 is for getting EDD_MOTIONCOMP
+
+* @param BOOLEAN LockOwned
+* if it need be EngAcquireSemaphore or not
+*
+* @return
+* return a EDD_* object, or NULL depnes if it success or not.
+*
+* @remarks.
+* Only use internal in dxg.sys
+*--*/
 PVOID
 FASTCALL
 DdHmgLock( HANDLE DdHandle, UCHAR ObjectType,  BOOLEAN LockOwned)
