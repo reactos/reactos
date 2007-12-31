@@ -97,6 +97,43 @@ typedef enum _TRANSFORMTYPE
     GdiLpToDp,
 } TRANSFORMTYPE, *PTRANSFORMTYPE;
 
+typedef enum _GDIOBJTYPE
+{
+    GDIObjType_DEF_TYPE,
+    GDIObjType_DC_TYPE,
+    GDIObjType_UNUSED1_TYPE,
+    GDIObjType_UNUSED2_TYPE,
+    GDIObjType_RGN_TYPE,
+    GDIObjType_SURF_TYPE,
+    GDIObjType_CLIENTOBJ_TYPE,
+    GDIObjType_PATH_TYPE,
+    GDIObjType_PAL_TYPE,
+    GDIObjType_ICMLCS_TYPE,
+    GDIObjType_LFONT_TYPE,
+    GDIObjType_RFONT_TYPE,
+    GDIObjType_PFE_TYPE,
+    GDIObjType_PFT_TYPE,
+    GDIObjType_ICMCXF_TYPE,
+    GDIObjType_SPRITE_TYPE,
+    GDIObjType_BRUSH_TYPE,
+    GDIObjType_UMPD_TYPE,
+    GDIObjType_UNUSED4_TYPE,
+    GDIObjType_SPACE_TYPE,
+    GDIObjType_UNUSED5_TYPE,
+    GDIObjType_META_TYPE,
+    GDIObjType_EFSTATE_TYPE,
+    GDIObjType_BMFD_TYPE,
+    GDIObjType_VTFD_TYPE,
+    GDIObjType_TTFD_TYPE,
+    GDIObjType_RC_TYPE,
+    GDIObjType_TEMP_TYPE,
+    GDIObjType_DRVOBJ_TYPE,
+    GDIObjType_DCIOBJ_TYPE,
+    GDIObjType_SPOOL_TYPE,
+} GDIOBJTYPE, *PGDIOBJTYPE;
+
+#define GDIObjType_MAX_TYPE GDIObjType_SPOOL_TYPE
+
 #define GdiWorldSpaceToPageSpace    0x203
 
 /* FIXME: Unknown */
@@ -538,9 +575,9 @@ typedef struct _DRIVER_FUNCTIONS
   PGD_STRETCHBLTROP              StretchBltROP;
   PFN_DrvPlgBlt                  PlgBlt;
   PGD_ALPHABLEND                 AlphaBlend;
-//  PFN_DrvSynthesizeFont          SynthesizeFont;
+  PVOID                          SynthesizeFont;
   PVOID                          Unknown5;
-//  PFN_DrvGetSynthesizedFontFiles GetSynthesizedFontFiles;
+  PVOID                          GetSynthesizedFontFiles;
   PVOID                          Unknown6;
   PGD_TRANSPARENTBLT             TransparentBlt;
   PFN_DrvQueryPerBandInfo        QueryPerBandInfo;
