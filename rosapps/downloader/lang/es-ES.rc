@@ -1,6 +1,6 @@
 /*
  *Spanish Language resource file
- * Actualizado Javier Remacha 2007-12-01
+ * Actualizado Javier Remacha 2007-12-01,2007-12-31
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -59,7 +59,7 @@ BEGIN
   IDS_DOWNLOAD_FOLDER		"Downloader"
   IDS_UNABLECREATE_FOLDER	"¡Imposible crear una carpeta con este nombre!"
   IDS_UPDATE_URL		"http://svn.reactos.org"
-  TTT_HELPBUTTON, "Get help about the downloader"
-  TTT_UPDATEBUTTON, "Not yet available"
-  TTT_PROFBUTTON, "Let you configure the downloader"
+  TTT_HELPBUTTON, 		"Obtenga ayuda acerca de Downloader"
+  TTT_UPDATEBUTTON, 		"No disponible todavía"
+  TTT_PROFBUTTON, 		"Le permite configurar Downloader"
 END

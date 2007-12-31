@@ -30,6 +30,8 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
+1 24 DISCARDABLE "manifest.xml"
+
 // Icons
 
 IDI_CALC_BIG            ICON    DISCARDABLE     "res/calc.ico"
@@ -40,6 +42,8 @@ IDI_CALC_SMALL          ICON    DISCARDABLE     "res/calc_sm.ico"
 IDB_BITMAP_ROS          BITMAP  DISCARDABLE     "res/ROS_logo.bmp"
 
 
+#include "lang/de-DE.rc"
 #include "lang/en-US.rc"
+#include "lang/es-ES.rc"
 #include "lang/it-IT.rc"
 
