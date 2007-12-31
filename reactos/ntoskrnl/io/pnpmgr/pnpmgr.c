@@ -490,7 +490,7 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
 
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Problem: Status=%0x08x, ResultLength = %d\n", Status, *ResultLength);
+                DPRINT1("Problem: Status=0x%08x, ResultLength = %d\n", Status, *ResultLength);
                 ExFreePool(ValueInformation);
                 if (Status == STATUS_BUFFER_OVERFLOW)
                     return STATUS_BUFFER_TOO_SMALL;
