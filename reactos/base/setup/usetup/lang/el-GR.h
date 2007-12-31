@@ -4,6 +4,12 @@
 static MUI_ENTRY elGRLanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Language Selection.",
@@ -43,6 +49,12 @@ static MUI_ENTRY elGRLanguagePageEntries[] =
 
 static MUI_ENTRY elGRWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -208,6 +220,12 @@ static MUI_ENTRY elGRIntroPageEntries[] =
 static MUI_ENTRY elGRLicensePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         6,
         "Licensing:",
@@ -326,6 +344,12 @@ static MUI_ENTRY elGRLicensePageEntries[] =
 static MUI_ENTRY elGRDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Η παρακάτω λίστα δείχνει τις ρυθμίσεις συσκευών.",
@@ -413,6 +437,12 @@ static MUI_ENTRY elGRDevicePageEntries[] =
 static MUI_ENTRY elGRRepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Η εγκατάσταση του ReactOS βρίσκεται σε πρώιμο στάδιο ανάπτυξης. Δεν υποστηρίζει ακόμα",
@@ -470,6 +500,12 @@ static MUI_ENTRY elGRRepairPageEntries[] =
 static MUI_ENTRY elGRComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Θέλετε να αλλάξετε τον τύπο του υπολογιστή που θα εγκατασταθεί.",
@@ -516,6 +552,12 @@ static MUI_ENTRY elGRComputerPageEntries[] =
 static MUI_ENTRY elGRFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Το σύστημα επιβεβαιώνει τώρα ότι όλα τα δεδομένα αποθηκεύτηκαν στο δίσκο",
@@ -549,6 +591,12 @@ static MUI_ENTRY elGRFlushPageEntries[] =
 
 static MUI_ENTRY elGRQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY elGRQuitPageEntries[] =
 
 static MUI_ENTRY elGRDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY elGRDisplayPageEntries[] =
 static MUI_ENTRY elGRSuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Τα βασικά στοιχεία του ReactOS εγκαταστάθηκαν επιτυχώς.",
@@ -674,6 +734,12 @@ static MUI_ENTRY elGRSuccessPageEntries[] =
 
 static MUI_ENTRY elGRBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY elGRBootPageEntries[] =
 
 static MUI_ENTRY elGRSelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY elGRSelectPartitionEntries[] =
 static MUI_ENTRY elGRFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Format partition",
@@ -795,6 +873,12 @@ static MUI_ENTRY elGRFormatPartitionEntries[] =
 
 static MUI_ENTRY elGRInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY elGRInstallDirectoryEntries[] =
 static MUI_ENTRY elGRFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
@@ -875,6 +965,12 @@ static MUI_ENTRY elGRFileCopyEntries[] =
 
 static MUI_ENTRY elGRBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY elGRBootLoaderEntries[] =
 
 static MUI_ENTRY elGRKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY elGRKeyboardSettingsEntries[] =
 
 static MUI_ENTRY elGRLayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY elGRLayoutSettingsEntries[] =
 static MUI_ENTRY elGRPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY elGRPrepareCopyEntries[] =
 
 static MUI_ENTRY elGRSelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1192,12 @@ static MUI_ENTRY elGRSelectFSEntries[] =
 
 static MUI_ENTRY elGRDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

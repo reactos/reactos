@@ -4,6 +4,12 @@
 static MUI_ENTRY frFRLanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Selection de la langue.",
@@ -43,6 +49,12 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
 
 static MUI_ENTRY frFRWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -116,7 +128,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         4,
         3,
-        "Installation de ReactOS " KERNEL_VERSION_STR,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -213,6 +225,12 @@ static MUI_ENTRY frFRIntroPageEntries[] =
 
 static MUI_ENTRY frFRLicensePageEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         6,
@@ -332,6 +350,12 @@ static MUI_ENTRY frFRLicensePageEntries[] =
 static MUI_ENTRY frFRDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "La liste ci-dessous montre les reglages materiels actuels.",
@@ -419,6 +443,12 @@ static MUI_ENTRY frFRDevicePageEntries[] =
 static MUI_ENTRY frFRRepairPageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "L'Installation de ReactOS est en phase de developpement.",
@@ -482,6 +512,12 @@ static MUI_ENTRY frFRRepairPageEntries[] =
 static MUI_ENTRY frFRComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Vous voulez changer le type d'ordinateur installe.",
@@ -528,6 +564,12 @@ static MUI_ENTRY frFRComputerPageEntries[] =
 static MUI_ENTRY frFRFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Le systeme s'assure que toutes les donnees sont ecrites sur le disque",
@@ -561,6 +603,12 @@ static MUI_ENTRY frFRFlushPageEntries[] =
 
 static MUI_ENTRY frFRQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -601,6 +649,12 @@ static MUI_ENTRY frFRQuitPageEntries[] =
 
 static MUI_ENTRY frFRDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -647,6 +701,12 @@ static MUI_ENTRY frFRDisplayPageEntries[] =
 static MUI_ENTRY frFRSuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Les composants standards de ReactOS ont ete installes avec succes.",
@@ -686,6 +746,12 @@ static MUI_ENTRY frFRSuccessPageEntries[] =
 
 static MUI_ENTRY frFRBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -727,6 +793,12 @@ static MUI_ENTRY frFRBootPageEntries[] =
 
 static MUI_ENTRY frFRSelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -780,6 +852,12 @@ static MUI_ENTRY frFRSelectPartitionEntries[] =
 static MUI_ENTRY frFRFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Formater la partition",
@@ -807,6 +885,12 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
 
 static MUI_ENTRY frFRInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -854,6 +938,12 @@ static MUI_ENTRY frFRInstallDirectoryEntries[] =
 static MUI_ENTRY frFRFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Patientez pendant que ReactOS Setup copie les fichiers",
@@ -887,6 +977,12 @@ static MUI_ENTRY frFRFileCopyEntries[] =
 
 static MUI_ENTRY frFRBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -927,6 +1023,12 @@ static MUI_ENTRY frFRBootLoaderEntries[] =
 
 static MUI_ENTRY frFRKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -973,6 +1075,12 @@ static MUI_ENTRY frFRKeyboardSettingsEntries[] =
 
 static MUI_ENTRY frFRLayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1021,6 +1129,12 @@ static MUI_ENTRY frFRLayoutSettingsEntries[] =
 static MUI_ENTRY frFRPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepare votre ordinateur pour copier les fichiers de ReactOS. ",
@@ -1043,6 +1157,12 @@ static MUI_ENTRY frFRPrepareCopyEntries[] =
 
 static MUI_ENTRY frFRSelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1084,6 +1204,12 @@ static MUI_ENTRY frFRSelectFSEntries[] =
 
 static MUI_ENTRY frFRDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        "Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

@@ -4,6 +4,12 @@
 static MUI_ENTRY enUSLanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Language Selection",
@@ -43,6 +49,12 @@ static MUI_ENTRY enUSLanguagePageEntries[] =
 
 static MUI_ENTRY enUSWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -208,6 +220,12 @@ static MUI_ENTRY enUSIntroPageEntries[] =
 static MUI_ENTRY enUSLicensePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         6,
         "Licensing:",
@@ -326,6 +344,12 @@ static MUI_ENTRY enUSLicensePageEntries[] =
 static MUI_ENTRY enUSDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "The list below shows the current device settings.",
@@ -413,6 +437,12 @@ static MUI_ENTRY enUSDevicePageEntries[] =
 static MUI_ENTRY enUSRepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "ReactOS Setup is in an early development phase. It does not yet",
@@ -470,6 +500,12 @@ static MUI_ENTRY enUSRepairPageEntries[] =
 static MUI_ENTRY enUSComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "You want to change the type of computer to be installed.",
@@ -516,6 +552,12 @@ static MUI_ENTRY enUSComputerPageEntries[] =
 static MUI_ENTRY enUSFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "The system is now making sure all data is stored on your disk",
@@ -549,6 +591,12 @@ static MUI_ENTRY enUSFlushPageEntries[] =
 
 static MUI_ENTRY enUSQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY enUSQuitPageEntries[] =
 
 static MUI_ENTRY enUSDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY enUSDisplayPageEntries[] =
 static MUI_ENTRY enUSSuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "The basic components of ReactOS have been installed successfully.",
@@ -674,6 +734,12 @@ static MUI_ENTRY enUSSuccessPageEntries[] =
 
 static MUI_ENTRY enUSBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY enUSBootPageEntries[] =
 
 static MUI_ENTRY enUSSelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY enUSSelectPartitionEntries[] =
 static MUI_ENTRY enUSFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Format partition",
@@ -795,6 +873,12 @@ static MUI_ENTRY enUSFormatPartitionEntries[] =
 
 static MUI_ENTRY enUSInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY enUSInstallDirectoryEntries[] =
 static MUI_ENTRY enUSFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
@@ -875,6 +965,12 @@ static MUI_ENTRY enUSFileCopyEntries[] =
 
 static MUI_ENTRY enUSBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY enUSBootLoaderEntries[] =
 
 static MUI_ENTRY enUSKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY enUSKeyboardSettingsEntries[] =
 
 static MUI_ENTRY enUSLayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY enUSLayoutSettingsEntries[] =
 static MUI_ENTRY enUSPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY enUSPrepareCopyEntries[] =
 
 static MUI_ENTRY enUSSelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1192,12 @@ static MUI_ENTRY enUSSelectFSEntries[] =
 
 static MUI_ENTRY enUSDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

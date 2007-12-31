@@ -4,6 +4,12 @@
 static MUI_ENTRY ruRULanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Language Selection.",
@@ -43,6 +49,12 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
 
 static MUI_ENTRY ruRUWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -208,6 +220,12 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
 static MUI_ENTRY ruRULicensePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         6,
         "Лицензия:",
@@ -326,6 +344,12 @@ static MUI_ENTRY ruRULicensePageEntries[] =
 static MUI_ENTRY ruRUDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "В списке ниже приведены устройства и их параметры.",
@@ -413,6 +437,12 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
 static MUI_ENTRY ruRURepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "ReactOS находится в ранней стадии разработки и не поддерживает все",
@@ -470,6 +500,12 @@ static MUI_ENTRY ruRURepairPageEntries[] =
 static MUI_ENTRY ruRUComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Вы хотите изменить устанавливаемый тип компьютера.",
@@ -516,6 +552,12 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
 static MUI_ENTRY ruRUFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Система проверяет все ли данные записаны на диск",
@@ -549,6 +591,12 @@ static MUI_ENTRY ruRUFlushPageEntries[] =
 
 static MUI_ENTRY ruRUQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY ruRUQuitPageEntries[] =
 
 static MUI_ENTRY ruRUDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY ruRUDisplayPageEntries[] =
 static MUI_ENTRY ruRUSuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Основные компоненты ReactOS были успешно установлены.",
@@ -674,6 +734,12 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
 
 static MUI_ENTRY ruRUBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY ruRUBootPageEntries[] =
 
 static MUI_ENTRY ruRUSelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
 static MUI_ENTRY ruRUFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Format partition",
@@ -795,6 +873,12 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
 
 static MUI_ENTRY ruRUInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
 static MUI_ENTRY ruRUFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
@@ -875,6 +965,12 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
 
 static MUI_ENTRY ruRUBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
 
 static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
 
 static MUI_ENTRY ruRULayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
 static MUI_ENTRY ruRUPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
 
 static MUI_ENTRY ruRUSelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1192,12 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
 
 static MUI_ENTRY ruRUDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

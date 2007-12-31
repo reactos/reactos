@@ -4,6 +4,12 @@
 static MUI_ENTRY esESLanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Selección de idioma",
@@ -43,6 +49,12 @@ static MUI_ENTRY esESLanguagePageEntries[] =
 
 static MUI_ENTRY esESWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -116,7 +128,7 @@ static MUI_ENTRY esESIntroPageEntries[] =
     {
         4,
         3,
-        " Instalación de ReactOS " KERNEL_VERSION_STR,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
@@ -207,6 +219,12 @@ static MUI_ENTRY esESIntroPageEntries[] =
 
 static MUI_ENTRY esESLicensePageEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         6,
@@ -326,6 +344,12 @@ static MUI_ENTRY esESLicensePageEntries[] =
 static MUI_ENTRY esESDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "La lista inferior muestra la configuración del dispositivo actual.",
@@ -413,6 +437,12 @@ static MUI_ENTRY esESDevicePageEntries[] =
 static MUI_ENTRY esESRepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "El instalador de ReactOS se encuentra en una etapa preliminar.",
@@ -470,6 +500,12 @@ static MUI_ENTRY esESRepairPageEntries[] =
 static MUI_ENTRY esESComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Desea modificar el tipo de equipo a instalar.",
@@ -516,6 +552,12 @@ static MUI_ENTRY esESComputerPageEntries[] =
 static MUI_ENTRY esESFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "El sistema se está asegurando que todos los datos sean salvados",
@@ -549,6 +591,12 @@ static MUI_ENTRY esESFlushPageEntries[] =
 
 static MUI_ENTRY esESQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY esESQuitPageEntries[] =
 
 static MUI_ENTRY esESDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY esESDisplayPageEntries[] =
 static MUI_ENTRY esESSuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Los componentes básicos de ReactOS han sido instalados correctamente.",
@@ -674,6 +734,12 @@ static MUI_ENTRY esESSuccessPageEntries[] =
 
 static MUI_ENTRY esESBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY esESBootPageEntries[] =
 
 static MUI_ENTRY esESSelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY esESSelectPartitionEntries[] =
 static MUI_ENTRY esESFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Formato de la partición",
@@ -795,6 +873,12 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
 
 static MUI_ENTRY esESInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY esESInstallDirectoryEntries[] =
 static MUI_ENTRY esESFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Por favor espere mientras el Instalador de ReactOS copia archivos en su ",
@@ -875,6 +965,12 @@ static MUI_ENTRY esESFileCopyEntries[] =
 
 static MUI_ENTRY esESBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY esESBootLoaderEntries[] =
 
 static MUI_ENTRY esESKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY esESKeyboardSettingsEntries[] =
 
 static MUI_ENTRY esESLayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY esESLayoutSettingsEntries[] =
 static MUI_ENTRY esESPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "El programa prepara su computadora para copiar los archivos de ReactOS. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY esESPrepareCopyEntries[] =
 
 static MUI_ENTRY esESSelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1073,6 +1193,12 @@ static MUI_ENTRY esESSelectFSEntries[] =
 static MUI_ENTRY esESDeletePartitionEntries[] =
 {
     {
+        4,
+        3,
+        " Instalación de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Ha elegido borrar la partición",
@@ -1107,6 +1233,198 @@ static MUI_ENTRY esESDeletePartitionEntries[] =
         0,
         NULL,
         0
+    }
+};
+
+MUI_ERROR esESErrorEntries[] =
+{
+    {
+        //ERROR_NOT_INSTALLED
+        "ReactOS is not completely installed on your\n"
+	     "computer. If you quit Setup now, you will need to\n"
+	     "run Setup again to install ReactOS.\n"
+	     "\n"
+	     "  \x07  Press ENTER to continue Setup.\n"
+	     "  \x07  Press F3 to quit Setup.",
+	     "F3= Quit  ENTER = Continue"
+    },
+    {
+        //ERROR_NO_HDD
+        "Setup could not find a harddisk.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_SOURCE_DRIVE
+        "Setup could not find its source drive.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_TXTSETUPSIF
+        "Setup failed to load the file TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CORRUPT_TXTSETUPSIF
+        "Setup found a corrupt TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_SIGNATURE_TXTSETUPSIF,
+        "Setup found an invalid signature in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_DRIVE_INFORMATION
+        "Setup could not retrieve system drive information.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WRITE_BOOT,
+        "failed to install FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_COMPUTER,
+        "Setup failed to load the computer type list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_DISPLAY,
+        "Setup failed to load the display settings list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_KEYBOARD,
+        "Setup failed to load the keyboard type list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_LOAD_KBLAYOUT,
+        "Setup failed to load the keyboard layout list.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WARN_PARTITION,
+          "Setup found that at least one harddisk contains an incompatible\n"
+		  "partition table that can not be handled properly!\n"
+		  "\n"
+		  "Creating or deleting partitions can destroy the partiton table.\n"
+		  "\n"
+		  "  \x07  Press F3 to quit Setup."
+		  "  \x07  Press ENTER to continue.",
+          "F3= Quit  ENTER = Continue"
+    },
+    {
+        //ERROR_NEW_PARTITION,
+        "You can not create a new Partition inside\n"
+		"of an already existing Partition!\n"
+		"\n"
+		"  * Press any key to continue.",
+        NULL
+    },
+    {
+        //ERROR_DELETE_SPACE,
+        "You can not delete unpartitioned disk space!\n"
+        "\n"
+        "  * Press any key to continue.",
+        NULL
+    },
+    {
+        //ERROR_INSTALL_BOOTCODE,
+        "Setup failed to install the FAT bootcode on the system partition.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_NO_FLOPPY,
+        "No disk in drive A:.",
+        "ENTER = Continue"
+    },
+    {
+        //ERROR_UPDATE_KBSETTINGS,
+        "Setup failed to update keyboard layout settings.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_DISPLAY_SETTINGS,
+        "Setup failed to update display registry settings.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_IMPORT_HIVE,
+        "Setup failed to import a hive file.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_FIND_REGISTRY
+        "Setup failed to find the registry data files.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_HIVE,
+        "Setup failed to create the registry hives.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_INITIALIZE_REGISTRY,
+        "Setup failed to set the initialize the registry.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_INVALID_CABINET_INF,
+        "Cabinet has no valid inf file.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_MISSING,
+        "Cabinet not found.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_SCRIPT,
+        "Cabinet has no setup script.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_COPY_QUEUE,
+        "Setup failed to open the copy file queue.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_DIR,
+        "Setup could not create install directories.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_TXTSETUP_SECTION,
+        "Setup failed to find the 'Directories' section\n"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CABINET_SECTION,
+        "Setup failed to find the 'Directories' section\n"
+        "in the cabinet.\n",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_CREATE_INSTALL_DIR
+        "Setup could not create the install directory.",
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_FIND_SETUPDATA,
+        "Setup failed to find the 'SetupData' section\n"
+		 "in TXTSETUP.SIF.\n",
+		 "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_WRITE_PTABLE,
+        "Setup failed to write partition tables.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        NULL,
+        NULL
     }
 };
 

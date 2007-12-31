@@ -3428,8 +3428,10 @@ RunUSetup(VOID)
   while (Page != REBOOT_PAGE)
     {
       CONSOLE_ClearScreen();
-      CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
       CONSOLE_Flush();
+
+      //CONSOLE_SetUnderlinedTextXY(4, 3, " ReactOS " KERNEL_VERSION_STR " Setup ");
+      //CONSOLE_Flush();
 
       switch (Page)
 	{
@@ -3539,7 +3541,6 @@ RunUSetup(VOID)
 	  case BOOT_LOADER_HARDDISK_PAGE:
 	    Page = BootLoaderHarddiskPage(&Ir);
 	    break;
-
 
 	  /* Repair pages */
 	  case REPAIR_INTRO_PAGE:

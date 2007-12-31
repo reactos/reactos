@@ -4,6 +4,12 @@
 static MUI_ENTRY deDELanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Language Selection.",
@@ -43,6 +49,12 @@ static MUI_ENTRY deDELanguagePageEntries[] =
 
 static MUI_ENTRY deDEWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -113,6 +125,12 @@ static MUI_ENTRY deDEWelcomePageEntries[] =
 
 static MUI_ENTRY deDEIntroPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         4,
         3,
@@ -207,6 +225,12 @@ static MUI_ENTRY deDEIntroPageEntries[] =
 
 static MUI_ENTRY deDELicensePageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         6,
@@ -326,6 +350,12 @@ static MUI_ENTRY deDELicensePageEntries[] =
 static MUI_ENTRY deDEDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Die untere Liste zeigt die derzeitigen Geraeteeinstellungen.",
@@ -413,6 +443,12 @@ static MUI_ENTRY deDEDevicePageEntries[] =
 static MUI_ENTRY deDERepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Das ReactOS Setup ist noch in einer fruehen Entwicklungsphase. Es unter-",
@@ -470,6 +506,12 @@ static MUI_ENTRY deDERepairPageEntries[] =
 static MUI_ENTRY deDEComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Sie wollen den Computertyp aendern, der installiert wird.",
@@ -516,6 +558,12 @@ static MUI_ENTRY deDEComputerPageEntries[] =
 static MUI_ENTRY deDEFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Das System vergewissert sich, dass alle Daten gespeichert sind.",
@@ -549,6 +597,12 @@ static MUI_ENTRY deDEFlushPageEntries[] =
 
 static MUI_ENTRY deDEQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +643,12 @@ static MUI_ENTRY deDEQuitPageEntries[] =
 
 static MUI_ENTRY deDEDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +695,12 @@ static MUI_ENTRY deDEDisplayPageEntries[] =
 static MUI_ENTRY deDESuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Die Standardkomponenten von ReactOS wurden erfolgreich installiert.",
@@ -674,6 +740,12 @@ static MUI_ENTRY deDESuccessPageEntries[] =
 
 static MUI_ENTRY deDEBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +787,12 @@ static MUI_ENTRY deDEBootPageEntries[] =
 
 static MUI_ENTRY deDESelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +846,12 @@ static MUI_ENTRY deDESelectPartitionEntries[] =
 static MUI_ENTRY deDEFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Formatiere Partition",
@@ -801,6 +885,12 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
 
 static MUI_ENTRY deDEInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +932,12 @@ static MUI_ENTRY deDEInstallDirectoryEntries[] =
 static MUI_ENTRY deDEFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Bitte warten Sie waehrend ReactOS Setup die ReactOS Dateien",
@@ -875,6 +971,12 @@ static MUI_ENTRY deDEFileCopyEntries[] =
 
 static MUI_ENTRY deDEBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1017,12 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
 
 static MUI_ENTRY deDEKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1069,12 @@ static MUI_ENTRY deDEKeyboardSettingsEntries[] =
 
 static MUI_ENTRY deDELayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1123,12 @@ static MUI_ENTRY deDELayoutSettingsEntries[] =
 static MUI_ENTRY deDEPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup bereitet ihren Computer fuer die Installation vor.",
@@ -1031,6 +1151,12 @@ static MUI_ENTRY deDEPrepareCopyEntries[] =
 
 static MUI_ENTRY deDESelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1198,12 @@ static MUI_ENTRY deDESelectFSEntries[] =
 
 static MUI_ENTRY deDEDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

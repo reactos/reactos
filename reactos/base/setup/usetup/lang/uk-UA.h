@@ -4,6 +4,12 @@
 static MUI_ENTRY ukUALanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Вибiр мови",
@@ -43,6 +49,12 @@ static MUI_ENTRY ukUALanguagePageEntries[] =
 
 static MUI_ENTRY ukUAWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -208,6 +220,12 @@ static MUI_ENTRY ukUAIntroPageEntries[] =
 static MUI_ENTRY ukUALicensePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         6,
         "Лiцензiя:",
@@ -326,6 +344,12 @@ static MUI_ENTRY ukUALicensePageEntries[] =
 static MUI_ENTRY ukUADevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "У списку нижче приведенi пристрої i їх параметри.",
@@ -413,6 +437,12 @@ static MUI_ENTRY ukUADevicePageEntries[] =
 static MUI_ENTRY ukUARepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "ReactOS Setup is in an early development phase. It does not yet",
@@ -470,6 +500,12 @@ static MUI_ENTRY ukUARepairPageEntries[] =
 static MUI_ENTRY ukUAComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "You want to change the type of computer to be installed.",
@@ -516,6 +552,12 @@ static MUI_ENTRY ukUAComputerPageEntries[] =
 static MUI_ENTRY ukUAFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "The system is now making sure all data is stored on your disk",
@@ -549,6 +591,12 @@ static MUI_ENTRY ukUAFlushPageEntries[] =
 
 static MUI_ENTRY ukUAQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY ukUAQuitPageEntries[] =
 
 static MUI_ENTRY ukUADisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY ukUADisplayPageEntries[] =
 static MUI_ENTRY ukUASuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "The basic components of ReactOS have been installed successfully.",
@@ -674,6 +734,12 @@ static MUI_ENTRY ukUASuccessPageEntries[] =
 
 static MUI_ENTRY ukUABootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY ukUABootPageEntries[] =
 
 static MUI_ENTRY ukUASelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY ukUASelectPartitionEntries[] =
 static MUI_ENTRY ukUAFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Format partition",
@@ -795,6 +873,12 @@ static MUI_ENTRY ukUAFormatPartitionEntries[] =
 
 static MUI_ENTRY ukUAInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY ukUAInstallDirectoryEntries[] =
 static MUI_ENTRY ukUAFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
@@ -875,6 +965,12 @@ static MUI_ENTRY ukUAFileCopyEntries[] =
 
 static MUI_ENTRY ukUABootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY ukUABootLoaderEntries[] =
 
 static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY ukUAKeyboardSettingsEntries[] =
 
 static MUI_ENTRY ukUALayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY ukUALayoutSettingsEntries[] =
 static MUI_ENTRY ukUAPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY ukUAPrepareCopyEntries[] =
 
 static MUI_ENTRY ukUASelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1192,12 @@ static MUI_ENTRY ukUASelectFSEntries[] =
 
 static MUI_ENTRY ukUADeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,

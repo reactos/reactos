@@ -4,6 +4,12 @@
 static MUI_ENTRY svSELanguagePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Language Selection.",
@@ -43,6 +49,12 @@ static MUI_ENTRY svSELanguagePageEntries[] =
 
 static MUI_ENTRY svSEWelcomePageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -208,6 +220,12 @@ static MUI_ENTRY svSEIntroPageEntries[] =
 static MUI_ENTRY svSELicensePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         6,
         "Licensering:",
@@ -326,6 +344,12 @@ static MUI_ENTRY svSELicensePageEntries[] =
 static MUI_ENTRY svSEDevicePageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Listan nedanför visar inställningarna för maskinvaran.",
@@ -413,6 +437,12 @@ static MUI_ENTRY svSEDevicePageEntries[] =
 static MUI_ENTRY svSERepairPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "ReactOS Setup är i en tidig utvecklingsfas och saknar därför ett antal",
@@ -470,6 +500,12 @@ static MUI_ENTRY svSERepairPageEntries[] =
 static MUI_ENTRY svSEComputerPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Ändra vilken typ av dator som ska installeras.",
@@ -516,6 +552,12 @@ static MUI_ENTRY svSEComputerPageEntries[] =
 static MUI_ENTRY svSEFlushPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "Datorn försäkrar sig om att all data är lagrad på hårdisken.",
@@ -549,6 +591,12 @@ static MUI_ENTRY svSEFlushPageEntries[] =
 
 static MUI_ENTRY svSEQuitPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         10,
         6,
@@ -589,6 +637,12 @@ static MUI_ENTRY svSEQuitPageEntries[] =
 
 static MUI_ENTRY svSEDisplayPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -635,6 +689,12 @@ static MUI_ENTRY svSEDisplayPageEntries[] =
 static MUI_ENTRY svSESuccessPageEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         10,
         6,
         "ReactOS har nu installerats på datorn.",
@@ -674,6 +734,12 @@ static MUI_ENTRY svSESuccessPageEntries[] =
 
 static MUI_ENTRY svSEBootPageEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -715,6 +781,12 @@ static MUI_ENTRY svSEBootPageEntries[] =
 
 static MUI_ENTRY svSESelectPartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -768,6 +840,12 @@ static MUI_ENTRY svSESelectPartitionEntries[] =
 static MUI_ENTRY svSEFormatPartitionEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Format partition",
@@ -795,6 +873,12 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
 
 static MUI_ENTRY svSEInstallDirectoryEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -842,6 +926,12 @@ static MUI_ENTRY svSEInstallDirectoryEntries[] =
 static MUI_ENTRY svSEFileCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         11,
         12,
         "Please wait while ReactOS Setup copies files to your ReactOS",
@@ -875,6 +965,12 @@ static MUI_ENTRY svSEFileCopyEntries[] =
 
 static MUI_ENTRY svSEBootLoaderEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -915,6 +1011,12 @@ static MUI_ENTRY svSEBootLoaderEntries[] =
 
 static MUI_ENTRY svSEKeyboardSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -961,6 +1063,12 @@ static MUI_ENTRY svSEKeyboardSettingsEntries[] =
 
 static MUI_ENTRY svSELayoutSettingsEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
@@ -1009,6 +1117,12 @@ static MUI_ENTRY svSELayoutSettingsEntries[] =
 static MUI_ENTRY svSEPrepareCopyEntries[] =
 {
     {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
         6,
         8,
         "Setup prepares your computer for copying the ReactOS files. ",
@@ -1031,6 +1145,12 @@ static MUI_ENTRY svSEPrepareCopyEntries[] =
 
 static MUI_ENTRY svSESelectFSEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         17,
@@ -1072,6 +1192,12 @@ static MUI_ENTRY svSESelectFSEntries[] =
 
 static MUI_ENTRY svSEDeletePartitionEntries[] =
 {
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
     {
         6,
         8,
