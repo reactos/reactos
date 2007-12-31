@@ -674,47 +674,6 @@ SetAbortProc(
 	return 0;
 }
 
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ScaleViewportExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	LPSIZE	a5
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-ScaleWindowExtEx(
-	HDC	a0,
-	int	a1,
-	int	a2,
-	int	a3,
-	int	a4,
-	LPSIZE	a5
-	)
-{
-	UNIMPLEMENTED;
-	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-	return FALSE;
-}
-
-
 /*
  * @implemented
  */
@@ -1463,22 +1422,6 @@ GetTextFaceAliasW(HDC hdc,
     }
     return retValue;
 }
-
-
-
-/*
- * @unimplemented
- */
-BOOL
-STDCALL
-MirrorRgn(HWND hwnd,HRGN hrgn)
-{
-    UNIMPLEMENTED;
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return 0;
-}
-
-
 
 /*
  * @unimplemented

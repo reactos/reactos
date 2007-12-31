@@ -565,6 +565,86 @@ SetViewportOrgEx(HDC hdc,
 /*
  * @implemented
  */
+BOOL
+STDCALL
+ScaleViewportExtEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	int	a3,
+	int	a4,
+	LPSIZE	a5
+	)
+{
+#if 0
+  if (GDI_HANDLE_GET_TYPE(a0) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(a0) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_;
+    else
+    {
+      PLDC pLDC = GdiGetLDC(a0);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_;
+      }
+    }
+  }
+#endif
+  if (!GdiIsHandleValid((HGDIOBJ) a0) ||
+      (GDI_HANDLE_GET_TYPE(a0) != GDI_OBJECT_TYPE_DC)) return FALSE;
+
+  return NtGdiScaleViewportExtEx(a0, a1, a2, a3, a4, a5);
+}
+
+/*
+ * @implemented
+ */
+BOOL
+STDCALL
+ScaleWindowExtEx(
+	HDC	a0,
+	int	a1,
+	int	a2,
+	int	a3,
+	int	a4,
+	LPSIZE	a5
+	)
+{
+#if 0
+  if (GDI_HANDLE_GET_TYPE(a0) != GDI_OBJECT_TYPE_DC)
+  {
+    if (GDI_HANDLE_GET_TYPE(a0) == GDI_OBJECT_TYPE_METADC)
+      return MFDRV_;
+    else
+    {
+      PLDC pLDC = GdiGetLDC(a0);
+      if ( !pLDC )
+      {
+         SetLastError(ERROR_INVALID_HANDLE);
+         return FALSE;
+      }
+      if (pLDC->iType == LDC_EMFLDC)
+      {
+        return EMFDRV_;
+      }
+    }
+  }
+#endif
+  if (!GdiIsHandleValid((HGDIOBJ) a0) ||
+      (GDI_HANDLE_GET_TYPE(a0) != GDI_OBJECT_TYPE_DC)) return FALSE;
+
+  return NtGdiScaleWindowExtEx(a0, a1, a2, a3, a4, a5);
+}
+
+/*
+ * @implemented
+ */
 DWORD
 STDCALL
 GetLayout(HDC hdc
