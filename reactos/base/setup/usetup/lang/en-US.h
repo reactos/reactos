@@ -1308,7 +1308,7 @@ MUI_ERROR enUSErrorEntries[] =
           "Setup found that at least one harddisk contains an incompatible\n"
 		  "partition table that can not be handled properly!\n"
 		  "\n"
-		  "Creating or deleting partitions can destroy the partiton table.\n"
+		  "Creating or deleting partitions can destroy the partition table.\n"
 		  "\n"
 		  "  \x07  Press F3 to quit Setup."
 		  "  \x07  Press ENTER to continue.",

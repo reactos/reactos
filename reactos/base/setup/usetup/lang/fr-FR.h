@@ -1253,187 +1253,187 @@ MUI_ERROR frFRErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-	     "computer. If you quit Setup now, you will need to\n"
-	     "run Setup again to install ReactOS.\n"
+        "ReactOS n'est pas completement installe sur votre\n"
+	     "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
+	     "lancer Setup de nouveau pour installer ReactOS.\n"
 	     "\n"
-	     "  \x07  Press ENTER to continue Setup.\n"
-	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue"
+	     "  \x07  Appuyer sur ENTER pour continuer Setup.\n"
+	     "  \x07  Appuyer sur F3 pour quitter Setup.",
+	     "F3= Quitter  ENTER = Continuer"
     },
     {
         //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu trouver un disque dur.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu trouver son lecteur source.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pas reussi a charger le fichier TXTSETUP.SIF.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
-        "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup a trouve un fichier TXTSETUP.SIF corrompu.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
-        "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup a trouve une signature invalide dans TXTSETUP.SIF.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_DRIVE_INFORMATION
-        "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu recuperer les informations du disque système.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_WRITE_BOOT,
-        "failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Echec de l'installation du code de démarrage FAT sur la partition systeme.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu charger la liste de type d'ordinateurs.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu charger la liste de réglages des écrans.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu charger la liste de types de claviers.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu charger la liste de dispositions de claviers.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-		  "partition table that can not be handled properly!\n"
+          "Setup a detecte qu'au moins un dique dur contient une table\n"
+		  "de partition incompatible qui ne peut etre prise en compte!\n"
 		  "\n"
-		  "Creating or deleting partitions can destroy the partiton table.\n"
+		  "Creer ou effacer des partitions peut detruire la table de partition.\n"
 		  "\n"
-		  "  \x07  Press F3 to quit Setup."
-		  "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+		  "  \x07  Appuyer sur F3 pour quitter Setup."
+		  "  \x07  Appuyer sur ENTER pour continuer Setup.",
+          "F3= Quitter  ENTER = Continuer"
     },
     {
         //ERROR_NEW_PARTITION,
-        "You can not create a new Partition inside\n"
-		"of an already existing Partition!\n"
+        "Vous ne pouvez creer une nouvelle Partition à l'interieur\n"
+		"d'une Partition deja existante!\n"
 		"\n"
-		"  * Press any key to continue.",
+		"  * Appuyez sur une touche pour continuer.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
-        "You can not delete unpartitioned disk space!\n"
+        "Vous ne pouvez supprimer de l'espace disque non partitionne!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Appuyez sur une touche pour continuer.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
-        "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "Echec de l'installation du code de démarrage FAT sur la partition systeme.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        "Pas de disque dans le lecteur A:.",
+        "ENTER = Continuer"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
-        "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu mettre a jour les reglages de disposition du clavier.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
-        "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu mettre a jour les reglages de l'ecran.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_IMPORT_HIVE,
-        "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu importer un fichier ruche.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_FIND_REGISTRY
-        "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu trouver les fichiers de la base de registres.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_HIVE,
-        "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu creer les ruches de la base de registres.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
-        "Setup failed to set the initialize the registry.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu initialiser la base de registres.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_INVALID_CABINET_INF,
-        "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "Le Cabinet n'a pas de fichier inf valide.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        "Cabinet non trouve.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Cabinet n'a pas de script de setup.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu creer les repertoires d'installation.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu trouver la section 'Directories'\n"
+        "dans TXTSETUP.SIF.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "Setup n'a pu trouver la section 'Directories\n"
+        "dans le cabinet.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        "Setup n'a pu creer le repertoire d'installation.",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
+        "Setup n'a pu trouver la section 'SetupData'\n"
 		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer"
+		 "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
-        "ENTER = Reboot computer"
+        "Setup n'a pu ecrire les tables de partition.\n"
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         NULL,
