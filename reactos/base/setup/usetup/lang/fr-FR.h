@@ -6,31 +6,31 @@ static MUI_ENTRY frFRLanguagePageEntries[] =
     {
         6,
         8,
-        "Language Selection.",
+        "Selection de la langue.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Veuillez choisir la langue utilisee pour le processus d'installation",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   et appuyez sur ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  Cette langue sera la langue par defaut pour le systeme final.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER = Continuer  F3 = Quitter",
         TEXT_STATUS
     },
     {
