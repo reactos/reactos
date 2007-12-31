@@ -129,12 +129,7 @@ NtGdiCreateEnhMetaFile (
 	LPCWSTR		Description
 	);
 
-/* Use NtGdiPolyPolyDraw with PolyPolyRgn. */
-HRGN
-STDCALL
-NtGdiCreatePolygonRgn(CONST PPOINT  pt,
-                           INT  Count,
-                           INT  PolyFillMode);
+
 
 /* Meta are user-mode. */
 BOOL
@@ -275,10 +270,7 @@ INT
 STDCALL
 NtGdiGetPixelFormat(HDC  hDC);
 
-/* Should be done in user-mode using shared GDI Objects. */
-UINT
-STDCALL
-NtGdiGetTextCharset(HDC  hDC);
+
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
