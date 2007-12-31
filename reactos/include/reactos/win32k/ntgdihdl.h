@@ -206,10 +206,11 @@ typedef struct _GDI_TABLE_ENTRY
     SHORT nCount;     /* usage count of object handles */
     union{            // temp union structure.
     LONG  Type;       /* the first 16 bit is the object type including the stock obj flag, the last 16 bits is just the object type */
-    SHORT nUpper:16;
-    CHAR  ObjectType:8;
-    CHAR  Flags:8;
-    };
+    struct{
+    SHORT FullUnique;
+    CHAR  ObjectType;
+    CHAR  Flags;
+    };};
     PVOID UserData;   /* Points to the user mode structure, usually NULL though */
 } GDI_TABLE_ENTRY, *PGDI_TABLE_ENTRY;
 

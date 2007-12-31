@@ -58,9 +58,9 @@ typedef struct _GDIOBJHDR
 typedef struct _GDIOBJEMPTYHDR
 {
   HGDIOBJ     hHmgr;
-  PVOID       pvEntry;
+  ULONG       Count;
   ULONG       lucExcLock;
-  ULONG       Tid;
+  PW32THREAD  Tid;
 } GDIOBJEMPTYHDR, *PGDIOBJEMPTYHDR;
 
 BOOL    INTERNAL_CALL GDIOBJ_OwnedByCurrentProcess(PGDI_HANDLE_TABLE HandleTable, HGDIOBJ ObjectHandle);
