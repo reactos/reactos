@@ -19,8 +19,6 @@
 
 /* GLOBALS *******************************************************************/
 
-#define ENUM_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum"
-
 PDEVICE_NODE IopRootDeviceNode;
 KSPIN_LOCK IopDeviceTreeLock;
 ERESOURCE PpRegistryDeviceResource;

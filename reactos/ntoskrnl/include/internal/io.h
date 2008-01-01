@@ -47,6 +47,11 @@
 #endif
 
 //
+// Registry path to the enumeration root key
+//
+#define ENUM_ROOT L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum"
+
+//
 // Returns the type of METHOD_ used in this IOCTL
 //
 #define IO_METHOD_FROM_CTL_CODE(c)                      (c & 0x00000003)

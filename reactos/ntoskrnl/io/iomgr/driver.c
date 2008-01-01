@@ -571,16 +571,45 @@ IopAttachFilterDrivers(
    PDEVICE_NODE DeviceNode,
    BOOLEAN Lower)
 {
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
-   PWCHAR KeyBuffer;
+   RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
+   OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
+   UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+   HANDLE EnumRootKey, SubKey;
    NTSTATUS Status;
+
+   /* Open enumeration root key */
+   InitializeObjectAttributes(&ObjectAttributes,
+       &EnumRoot,
+       OBJ_CASE_INSENSITIVE,
+       NULL,
+       NULL);
+   Status = ZwOpenKey(&EnumRootKey, KEY_READ, &ObjectAttributes);
+
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       return Status;
+   }
+
+   /* Open subkey */
+   InitializeObjectAttributes(&ObjectAttributes,
+       &DeviceNode->InstancePath,
+       OBJ_CASE_INSENSITIVE,
+       EnumRootKey,
+       NULL);
+   Status = ZwOpenKey(&SubKey, KEY_READ, &ObjectAttributes);
+   if (!NT_SUCCESS(Status))
+   {
+       DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+       ZwClose(EnumRootKey);
+       return Status;
+   }
 
    /*
     * First load the device filters
     */
-
    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
    if (Lower)
      QueryTable[0].Name = L"LowerFilters";
@@ -588,15 +617,9 @@ IopAttachFilterDrivers(
      QueryTable[0].Name = L"UpperFilters";
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
 
-   KeyBuffer = ExAllocatePool(
-      PagedPool,
-      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
-
    RtlQueryRegistryValues(
-      RTL_REGISTRY_ABSOLUTE,
-      KeyBuffer,
+      RTL_REGISTRY_HANDLE,
+      (PWSTR)SubKey,
       QueryTable,
       DeviceNode,
       NULL);
@@ -604,7 +627,6 @@ IopAttachFilterDrivers(
    /*
     * Now get the class GUID
     */
-
    Class.Length = 0;
    Class.MaximumLength = 40 * sizeof(WCHAR);
    Class.Buffer = ClassBuffer;
@@ -614,13 +636,15 @@ IopAttachFilterDrivers(
    QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED | RTL_QUERY_REGISTRY_DIRECT;
 
    Status = RtlQueryRegistryValues(
-      RTL_REGISTRY_ABSOLUTE,
-      KeyBuffer,
+      RTL_REGISTRY_HANDLE,
+      (PWSTR)SubKey,
       QueryTable,
       DeviceNode,
       NULL);
 
-   ExFreePool(KeyBuffer);
+   /* Close handles */
+   ZwClose(SubKey);
+   ZwClose(EnumRootKey);
 
    /*
     * Load the class filter driver
@@ -628,6 +652,34 @@ IopAttachFilterDrivers(
 
    if (NT_SUCCESS(Status))
    {
+       UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
+       InitializeObjectAttributes(&ObjectAttributes,
+           &ControlClass,
+           OBJ_CASE_INSENSITIVE,
+           NULL,
+           NULL);
+       Status = ZwOpenKey(&EnumRootKey, KEY_READ, &ObjectAttributes);
+
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           return Status;
+       }
+
+       /* Open subkey */
+       InitializeObjectAttributes(&ObjectAttributes,
+           &Class,
+           OBJ_CASE_INSENSITIVE,
+           EnumRootKey,
+           NULL);
+       Status = ZwOpenKey(&SubKey, KEY_READ, &ObjectAttributes);
+       if (!NT_SUCCESS(Status))
+       {
+           DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
+           ZwClose(EnumRootKey);
+           return Status;
+       }
+
       QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
       if (Lower)
          QueryTable[0].Name = L"LowerFilters";
@@ -636,18 +688,16 @@ IopAttachFilterDrivers(
       QueryTable[0].EntryContext = NULL;
       QueryTable[0].Flags = RTL_QUERY_REGISTRY_REQUIRED;
 
-      KeyBuffer = ExAllocatePool(PagedPool, (58 * sizeof(WCHAR)) + Class.Length);
-      wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class\\");
-      wcscat(KeyBuffer, ClassBuffer);
-
       RtlQueryRegistryValues(
-         RTL_REGISTRY_ABSOLUTE,
-         KeyBuffer,
+         RTL_REGISTRY_HANDLE,
+         (PWSTR)SubKey,
          QueryTable,
          DeviceNode,
          NULL);
 
-      ExFreePool(KeyBuffer);
+      /* Clean up */
+      ZwClose(SubKey);
+      ZwClose(EnumRootKey);
    }
 
    return STATUS_SUCCESS;
