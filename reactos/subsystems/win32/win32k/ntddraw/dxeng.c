@@ -402,10 +402,10 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 /************************************************************************/
 /* DxEngGetDCState                                                      */
 /************************************************************************/
-/* Note type 0 = ? */
-/* Note type 1 = ? */
-/* Note type 2 = ? */
-/* Note type 3 = Get Driver hdev */
+/* Note type 0 = N/A */
+/* Note type 1 = Is DC full screen */
+/* Note type 2 = Get Complexity of visiable region. */
+/* Note type 3 = Get Driver hdev, which is pPDev. */
 
 DWORD
 DxEngGetDCState(HDC hDC,
@@ -419,15 +419,15 @@ DxEngGetDCState(HDC hDC,
         switch (type)
         {
             case 1:
-                UNIMPLEMENTED;
-                return 0;
+                retVal = (DWORD) pDC->DC_Flags & DC_FLAG_FULLSCREEN;
+                break;
             case 2:
                 UNIMPLEMENTED;
-                return 0;
+                break;
             case 3:
-            {
-                PGDIDEVICE GDIDevice = (PGDIDEVICE)pDC->pPDev;
-                retVal = (DWORD)GDIDevice->hPDev;
+            {   // Return HDEV of this DC.            
+                retVal = (DWORD) pDC->pPDev;
+                break;
             }
             default:
                 UNIMPLEMENTED;
