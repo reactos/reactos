@@ -96,7 +96,7 @@ CcMdlReadComplete (IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlReadCompleteDev (MdlChain, FileObject);
+    CcMdlReadComplete2 (MdlChain, FileObject);
 }
 
 /*
@@ -122,7 +122,7 @@ CcMdlWriteComplete (IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlWriteCompleteDev (FileObject, FileOffset, MdlChain);
+    CcMdlWriteComplete2 (FileObject, FileOffset, MdlChain);
 }
 
 /*

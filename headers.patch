@@ -1,3 +1,15 @@
+Index: include/reactos/exeformat.h
+===================================================================
+--- include/reactos/exeformat.h	(revision 31533)
++++ include/reactos/exeformat.h	(working copy)
+@@ -35,6 +35,7 @@
+ typedef NTSTATUS (NTAPI * PEXEFMT_CB_READ_FILE)
+ (
+  IN PVOID File,
++ ULONG SectorSize,
+  IN PLARGE_INTEGER Offset,
+  IN ULONG Length,
+  OUT PVOID * Data,
 Index: ntoskrnl/include/internal/mm.h
 ===================================================================
 --- ntoskrnl/include/internal/mm.h	(revision 31533)
@@ -126,6 +138,19 @@ Index: ntoskrnl/ntoskrnl.def
  CcCanIWrite@16
  CcCopyRead@24
  CcCopyWrite@20
+Index: drivers/filesystems/cdfs/cdfs.h
+===================================================================
+--- drivers/filesystems/cdfs/cdfs.h	(revision 31533)
++++ drivers/filesystems/cdfs/cdfs.h	(working copy)
+@@ -6,7 +6,7 @@
+ #include <ntddcdrm.h>
+ #include <ccros.h>
+ 
+-#define USE_ROS_CC_AND_FS
++//#define USE_ROS_CC_AND_FS
+ 
+ #define CDFS_BASIC_SECTOR 2048
+ #define CDFS_PRIMARY_DESCRIPTOR_LOCATION 16
 Index: drivers/filesystems/vfat/vfat.h
 ===================================================================
 --- drivers/filesystems/vfat/vfat.h	(revision 31533)
