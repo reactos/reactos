@@ -122,13 +122,16 @@ CcMdlWriteComplete (IN PFILE_OBJECT FileObject,
     }
 
     /* Use slow path */
-    CcMdlWriteCompleteDev (FileOffset, MdlChain, FileObject);
+    CcMdlWriteCompleteDev (FileObject, FileOffset, MdlChain);
 }
 
-VOID STDCALL
-CcMdlWriteCompleteDev (IN PLARGE_INTEGER FileOffset, 
-                       IN PMDL MdlChain, 
-                       IN PFILE_OBJECT FileObject)
+/*
+ * @unimplemented
+ */
+VOID NTAPI
+CcMdlWriteCompleteDev (IN PFILE_OBJECT FileObject, 
+                       IN PLARGE_INTEGER FileOffset, 
+                       IN PMDL MdlChain)
 {
     UNIMPLEMENTED;
 }

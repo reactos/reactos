@@ -45,8 +45,8 @@ CcMapData (IN PFILE_OBJECT FileObject,
     PLIST_ENTRY entry;
     PCACHE_VIEW current = NULL;
 
-    DPRINT ("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d, Wait %d,"
-            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart, Length, Wait, piBcb, pBuffer);
+    DPRINT ("CcMapData(FileObject 0x%p, FileOffset %I64x, Length %d,"
+            " pBcb 0x%p, pBuffer 0x%p)\n", FileObject, FileOffset->QuadPart, Length, piBcb, pBuffer);
 
     ASSERT (FileObject);
     ASSERT (FileObject->SectionObjectPointer);

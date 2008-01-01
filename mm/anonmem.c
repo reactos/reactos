@@ -628,7 +628,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
    BoundaryAddressMultiple.QuadPart = 0;
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN(PBaseAddress);
-   RegionSize = PAGE_ROUND_UP(PBaseAddress + PRegionSize) -
+   RegionSize = PAGE_ROUND_UP((ULONG_PTR)PBaseAddress + PRegionSize) -
                 PAGE_ROUND_DOWN(PBaseAddress);
 
    /* 
@@ -899,7 +899,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
           *PRegionSize,FreeType);
 
    BaseAddress = (PVOID)PAGE_ROUND_DOWN((*PBaseAddress));
-   RegionSize = PAGE_ROUND_UP((*PBaseAddress) + (*PRegionSize)) -
+   RegionSize = PAGE_ROUND_UP((ULONG_PTR)(*PBaseAddress) + (*PRegionSize)) -
                 PAGE_ROUND_DOWN((*PBaseAddress));
 
    Status = ObReferenceObjectByHandle(ProcessHandle,

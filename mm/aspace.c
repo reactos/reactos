@@ -21,7 +21,7 @@
 /* GLOBALS ******************************************************************/
 
 static MADDRESS_SPACE KernelAddressSpace;
-FAST_MUTEX KernelAddressSpaceLock;
+EX_PUSH_LOCK KernelAddressSpaceLock;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -29,21 +29,13 @@ VOID
 NTAPI
 MmLockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-   /*
-    * Don't bother with locking if we are the first thread.
-    */
-   if (KeGetCurrentThread() == NULL)
-   {
-      return;
-   }
-
    if (AddressSpace->Process)
    {
-       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&AddressSpace->Process->AddressCreationLock);
+       ExAcquirePushLockExclusive((PEX_PUSH_LOCK)&AddressSpace->Process->AddressCreationLock);
    }
    else
    {
-       ExEnterCriticalRegionAndAcquireFastMutexUnsafe(&KernelAddressSpaceLock);
+       ExAcquirePushLockExclusive(&KernelAddressSpaceLock);
    }
 }
 
@@ -51,20 +43,13 @@ VOID
 NTAPI
 MmUnlockAddressSpace(PMADDRESS_SPACE AddressSpace)
 {
-   /*
-    * Don't bother locking if we are the first thread.
-    */
-   if (KeGetCurrentThread() == NULL)
-   {
-      return;
-   }
    if (AddressSpace->Process)
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&AddressSpace->Process->AddressCreationLock);
+        ExReleasePushLock((PEX_PUSH_LOCK)&AddressSpace->Process->AddressCreationLock);
    }
    else
    {
-        ExReleaseFastMutexUnsafeAndLeaveCriticalRegion(&KernelAddressSpaceLock);
+        ExReleasePushLock(&KernelAddressSpaceLock);
    }
 }
 
@@ -98,11 +83,11 @@ MmInitializeAddressSpace(PEPROCESS Process,
    AddressSpace->MemoryAreaRoot = NULL;
    if (Process)
    {
-       ExInitializeFastMutex(&Process->AddressCreationLock);
+       ExInitializePushLock((PULONG_PTR)&Process->AddressCreationLock);
    }
    else
    {
-        ExInitializeFastMutex(&KernelAddressSpaceLock);
+        ExInitializePushLock((PULONG_PTR)&KernelAddressSpaceLock);
    }
    if (Process != NULL)
    {

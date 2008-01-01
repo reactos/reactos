@@ -113,7 +113,7 @@ MmInitVirtualMemory(ULONG_PTR LastKernelAddress,
     */
    MiInitPageDirectoryMap();
 
-   BaseAddress = (PVOID)KPCR_BASE;
+   BaseAddress = (PVOID)KIP0PCRADDRESS;
    MmCreateMemoryArea(MmGetKernelAddressSpace(),
                       MEMORY_AREA_SYSTEM,
                       &BaseAddress,

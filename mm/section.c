@@ -1058,7 +1058,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
                          &MemoryArea->Data.SectionData.RegionListHead,
                          Address, &RegionBase);
 
-   DPRINT("SegmentOffset %x, SectionOffset %x, Address %x, StartingAddress %x\n", SegmentOffset, SectionOffset, Address, MemoryArea->StartingAddress);
+   DPRINT("SegmentOffset %x, Address %x, StartingAddress %x\n", SegmentOffset, Address, MemoryArea->StartingAddress);
    /*
     * Lock the segment
     */
@@ -1436,7 +1436,7 @@ MmspNotPresentFaultImageSectionView(PMADDRESS_SPACE AddressSpace,
          PageOp[i]->Status = STATUS_SUCCESS;
          MmspCompleteAndReleasePageOp(PageOp[i]);
       }
-      DPRINT("%x %x %x %x Address 0x%.8X\n", *(PULONG)Address, Region->Protect, Attributes, MemoryArea->StartingAddress + SegmentOffset, Address);
+      DPRINT("%x %x %x %x Address 0x%.8X\n", *(PULONG)Address, Region->Protect, Attributes, (ULONG_PTR)MemoryArea->StartingAddress + SegmentOffset, Address);
       return(STATUS_SUCCESS);
    }
    else if (IS_SWAP_FROM_SSE(Entry))

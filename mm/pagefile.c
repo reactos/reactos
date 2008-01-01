@@ -35,6 +35,11 @@
 #pragma alloc_text(INIT, MmInitPagingFile)
 #endif
 
+PVOID
+NTAPI
+MiFindExportedRoutineByName(IN PVOID DllBase,
+                            IN PANSI_STRING ExportName);
+
 
 /* TYPES *********************************************************************/
 
@@ -740,16 +745,14 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    }
 
    /* Load the diskdump driver. */
-   ModuleObject = LdrGetModuleObject(&DiskDumpName);
+   Status = MmLoadSystemImage(&DiskDumpName, NULL, NULL, 0, (PVOID)&ModuleObject, NULL);
    if (ModuleObject == NULL)
    {
       return(STATUS_OBJECT_NAME_NOT_FOUND);
    }
    RtlInitAnsiString(&ProcName, "DiskDumpFunctions");
-   Status = LdrGetProcedureAddress(ModuleObject->DllBase,
-                                   &ProcName,
-                                   0,
-                                   (PVOID*)&MmCoreDumpFunctions);
+   MmCoreDumpFunctions = MiFindExportedRoutineByName(ModuleObject->DllBase,
+                                                     &ProcName);
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(PageFile);
