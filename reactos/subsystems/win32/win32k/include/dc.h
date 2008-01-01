@@ -62,7 +62,7 @@ typedef struct _GDIDEVICE
 
   PVOID  pvGammaRamp;
 
-  DHPDEV PDev;
+  DHPDEV hPDev;
   DEVMODEW DMW;
   HSURF FillPatterns[HS_DDI_MAX];
   DEVINFO DevInfo;

@@ -402,12 +402,18 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 /************************************************************************/
 /* DxEngGetDCState                                                      */
 /************************************************************************/
+/* Note type 0 = ? */
+/* Note type 1 = ? */
+/* Note type 2 = ? */
+/* Note type 3 = Get Driver hdev */
+
 DWORD
 DxEngGetDCState(HDC hDC,
                 DWORD type)
 {
-    PEDD_DIRECTDRAW_GLOBAL pEDDgpl = NULL;
     PDC pDC = DC_LockDc(hDC);
+    DWORD retVal = 0;
+
     if (pDC)
     {
         switch (type)
@@ -421,17 +427,16 @@ DxEngGetDCState(HDC hDC,
             case 3:
             {
                 PGDIDEVICE GDIDevice = (PGDIDEVICE)pDC->pPDev;
-                pEDDgpl = GDIDevice->pEDDgpl;
-                DC_UnlockDc(pDC);
-                return (DWORD)pEDDgpl;
+                retVal = (DWORD)GDIDevice->hPDev;
             }
             default:
                 UNIMPLEMENTED;
                 break;
         }
+        DC_UnlockDc(pDC);
     }
 
-    return 0;
+    return retVal;
 }
 
 /************************************************************************/

@@ -84,7 +84,7 @@ EngCreateDriverObj(
   DrvObjUser->pvObj = pvObj;
   DrvObjUser->pFreeProc = pFreeObjProc;
   DrvObjUser->hdev = hdev;
-  DrvObjUser->dhpdev = ((GDIDEVICE*)hdev)->PDev;
+  DrvObjUser->dhpdev = ((GDIDEVICE*)hdev)->hPDev;
 
   /* fill internal object */
   ExInitializeFastMutex(&DrvObjInt->Lock);

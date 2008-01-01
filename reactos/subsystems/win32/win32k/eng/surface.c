@@ -458,7 +458,7 @@ EngAssociateSurface(IN HSURF Surface,
 
   /* Associate the hdev */
   SurfObj->hdev = Dev;
-  SurfObj->dhpdev = Device->PDev;
+  SurfObj->dhpdev = Device->hPDev;
 
   /* Hook up specified functions */
   BitmapObj->flHooks = Hooks;

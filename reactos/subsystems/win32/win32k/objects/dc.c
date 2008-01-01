@@ -460,7 +460,7 @@ IntPrepareDriver()
       PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
       if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
       {
-         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
+         PrimarySurface.hPDev = PrimarySurface.DriverFunctions.EnablePDEV(
             &PrimarySurface.DMW,
             L"",
             HS_DDI_MAX,
@@ -472,7 +472,7 @@ IntPrepareDriver()
             NULL,
             L"",
             (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
-         DoDefault = (NULL == PrimarySurface.PDev);
+         DoDefault = (NULL == PrimarySurface.hPDev);
          if (DoDefault)
          {
             DPRINT1("DrvEnablePDev with registry parameters failed\n");
@@ -487,7 +487,7 @@ IntPrepareDriver()
       {
          RtlZeroMemory(&(PrimarySurface.DMW), sizeof(DEVMODEW));
          PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
-         PrimarySurface.PDev = PrimarySurface.DriverFunctions.EnablePDEV(
+         PrimarySurface.hPDev = PrimarySurface.DriverFunctions.EnablePDEV(
             &PrimarySurface.DMW,
             L"",
             HS_DDI_MAX,
@@ -500,7 +500,7 @@ IntPrepareDriver()
             L"",
             (HANDLE) (PrimarySurface.VideoFileObject->DeviceObject));
 
-         if (NULL == PrimarySurface.PDev)
+         if (NULL == PrimarySurface.hPDev)
          {
             ObDereferenceObject(PrimarySurface.VideoFileObject);
             DPRINT1("DrvEnablePDEV with default parameters failed\n");
@@ -532,7 +532,7 @@ IntPrepareDriver()
 
       /* Complete initialization of the physical device */
       PrimarySurface.DriverFunctions.CompletePDEV(
-         PrimarySurface.PDev,
+         PrimarySurface.hPDev,
          (HDEV)&PrimarySurface);
 
       DPRINT("calling DRIVER_ReferenceDriver\n");
@@ -635,17 +635,17 @@ IntCreatePrimarySurface()
    DPRINT("calling EnableSurface\n");
    /* Enable the drawing surface */
    PrimarySurface.Handle =
-      PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.PDev);
+      PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.hPDev);
    if (NULL == PrimarySurface.Handle)
    {
-/*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);*/
-      PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
+/*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, FALSE);*/
+      PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.hPDev);
       ObDereferenceObject(PrimarySurface.VideoFileObject);
       DPRINT1("DrvEnableSurface failed\n");
       return FALSE;
    }
 
-   PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, TRUE);
+   PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, TRUE);
 
    calledFromUser = UserIsEntered(); //fixme: possibly upgrade a shared lock
    if (!calledFromUser){
@@ -656,7 +656,7 @@ IntCreatePrimarySurface()
    IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
    SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
-   SurfObj->dhpdev = PrimarySurface.PDev;
+   SurfObj->dhpdev = PrimarySurface.hPDev;
    SurfSize = SurfObj->sizlBitmap;
    SurfaceRect.left = SurfaceRect.top = 0;
    SurfaceRect.right = SurfObj->sizlBitmap.cx;
@@ -703,9 +703,9 @@ IntDestroyPrimarySurface()
      */
 
     DPRINT("Reseting display\n" );
-    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.PDev, FALSE);
-    PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.PDev);
-    PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.PDev);
+    PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, FALSE);
+    PrimarySurface.DriverFunctions.DisableSurface(PrimarySurface.hPDev);
+    PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.hPDev);
     PrimarySurface.PreparedDriver = FALSE;
     KeSetEvent(&VideoDriverNeedsPreparation, 1, FALSE);
     KeResetEvent(&VideoDriverPrepared);
@@ -793,12 +793,12 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->DC_Type = DC_TYPE_DIRECT;
   NewDC->IsIC = CreateAsIC;
 
-  NewDC->PDev = PrimarySurface.PDev;
+  NewDC->PDev = PrimarySurface.hPDev;
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev;
   NewDC->pPDev = (PVOID)&PrimarySurface;
   NewDC->w.hBitmap = PrimarySurface.Handle;
 
-  NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel * 
+  NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel *
                                      ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
   DPRINT("Bits per pel: %u\n", NewDC->w.bitsPerPixel);
 
@@ -1272,7 +1272,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
   sDc_Attr = dcs->pDc_Attr;
   if(!sDc_Attr) sDc_Attr = &dcs->Dc_Attr;
-  
+
   dc->w.flags              = dcs->w.flags & ~DC_SAVED;
 
   dc->w.hFirstBitmap       = dcs->w.hFirstBitmap;
@@ -2386,7 +2386,7 @@ DC_AllocDC(PUNICODE_STRING Driver)
   }
   Dc_Attr = NewDC->pDc_Attr;
   if(!Dc_Attr) Dc_Attr = &NewDC->Dc_Attr;
-  
+
   NewDC->hHmgr = (HGDIOBJ) hDC; // Save the handle for this DC object.
   NewDC->w.xformWorld2Wnd.eM11 = 1.0f;
   NewDC->w.xformWorld2Wnd.eM12 = 0.0f;
@@ -2653,7 +2653,7 @@ DC_LockDisplay(HDC hDC)
   DC_UnlockDc(dc);
   if (!Resource) return;
   KeEnterCriticalRegion();
-  ExAcquireResourceExclusiveLite( Resource , TRUE);  
+  ExAcquireResourceExclusiveLite( Resource , TRUE);
 }
 
 VOID
@@ -3366,7 +3366,7 @@ NtGdiGetDhpdev(
   } while (pPDev != NULL);
   KeLeaveCriticalRegion();
   if (!pPDev) return NULL;
-  return pGdiDevice->PDev;
+  return pGdiDevice->hPDev;
 }
 
 /* EOF */

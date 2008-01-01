@@ -98,7 +98,7 @@ IntGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
         {
           int NewValue = i * 256;
           if (NewValue > 65535) NewValue = 65535;
-          
+
           Ramp->Red[i] = Ramp->Green[i] = Ramp->Blue[i] = ((WORD)NewValue);
         }
      return TRUE;
@@ -122,7 +122,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);   
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -132,7 +132,7 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
       DC_UnlockDc(dc);
       SetLastWin32Error(STATUS_NO_MEMORY);
       return FALSE;
-  }  
+  }
 
   Ret = IntGetDeviceGammaRamp((HDEV)dc->pPDev, SafeRamp);
 
@@ -208,7 +208,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
       (pGDev->DevInfo.iDitherFormat == BMF_32BPP))
   {
      if (pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
-         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->PDev,
+         return pGDev->DriverFunctions.IcmSetDeviceGammaRamp( pGDev->hPDev,
                                                         IGRF_RGB_256WORDS,
                                                        pGDev->pvGammaRamp);
 
@@ -232,7 +232,7 @@ UpdateDeviceGammaRamp( HDEV hPDev )
      // PALOBJ_cGetColors check mode flags and update Gamma Correction.
      // Set the HDEV to pal and go.
         palGDI->hPDev = hPDev;
-        Ret = pGDev->DriverFunctions.SetPalette(pGDev->PDev, 
+        Ret = pGDev->DriverFunctions.SetPalette(pGDev->hPDev,
                                                      palPtr,
                                                           0,
                                                           0,
@@ -270,9 +270,9 @@ IntSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
      if (!pGDev->DriverFunctions.IcmSetDeviceGammaRamp)
      {  // No driver support
         if (!(pGDev->DevInfo.flGraphicsCaps2 & GCAPS2_CHANGEGAMMARAMP))
-        { // Driver does not support Gamma Ramp, so test to see we 
+        { // Driver does not support Gamma Ramp, so test to see we
           // have BMF_8BPP only and palette operation support.
-           if ((pGDev->DevInfo.iDitherFormat != BMF_8BPP) || 
+           if ((pGDev->DevInfo.iDitherFormat != BMF_8BPP) ||
               !(pGDev->GDIInfo.flRaster & RC_PALETTE))  return FALSE;
         }
      }
@@ -338,7 +338,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
   dc = DC_LockDc(hDC);
   if (!dc)
   {
-     SetLastWin32Error(ERROR_INVALID_HANDLE);   
+     SetLastWin32Error(ERROR_INVALID_HANDLE);
      return FALSE;
   }
 
@@ -348,7 +348,7 @@ NtGdiSetDeviceGammaRamp(HDC  hDC,
       DC_UnlockDc(dc);
       SetLastWin32Error(STATUS_NO_MEMORY);
       return FALSE;
-  }  
+  }
   _SEH_TRY
   {
      ProbeForRead( Ramp,
