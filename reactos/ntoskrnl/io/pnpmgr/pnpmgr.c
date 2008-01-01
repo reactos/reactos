@@ -3303,6 +3303,30 @@ IopUpdateRootKey(VOID)
    }
 }
 
+NTSTATUS
+IopOpenRegistryKeyEx(PHANDLE KeyHandle,
+                     HANDLE ParentKey,
+                     PUNICODE_STRING Name,
+                     ACCESS_MASK DesiredAccess)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    PAGED_CODE();
+
+    *KeyHandle = NULL;
+
+    InitializeObjectAttributes(&ObjectAttributes,
+        Name,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+        ParentKey,
+        NULL);
+
+    Status = ZwOpenKey(KeyHandle, DesiredAccess, &ObjectAttributes);
+
+    return Status;
+}
+
 static NTSTATUS INIT_FUNCTION
 NTAPI
 PnpDriverInitializeEmpty(IN struct _DRIVER_OBJECT *DriverObject, IN PUNICODE_STRING RegistryPath)

@@ -556,8 +556,14 @@ IopQueueTargetDeviceEvent(
 NTSTATUS
 IopInitializePnpServices(
     IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN BootDrivers)
-;
+    IN BOOLEAN BootDrivers);
+
+NTSTATUS
+IopOpenRegistryKeyEx(
+    PHANDLE KeyHandle,
+    HANDLE ParentKey,
+    PUNICODE_STRING Name,
+    ACCESS_MASK DesiredAccess);
 
 //
 // Initialization Routines
