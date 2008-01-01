@@ -21,6 +21,7 @@
 /* Creates an IEnumIDList; add LPITEMIDLISTs to it with AddToEnumList. */
 LPENUMIDLIST IEnumIDList_Constructor(void);
 BOOL AddToEnumList(IEnumIDList *list, LPITEMIDLIST pidl);
+BOOL HasItemWithCLSID(IEnumIDList *list, LPITEMIDLIST pidl);
 
 /* Enumerates the folders and/or files (depending on dwFlags) in lpszPath and
  * adds them to the already-created list.

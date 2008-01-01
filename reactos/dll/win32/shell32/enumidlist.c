@@ -98,6 +98,29 @@ BOOL AddToEnumList(
 	}
 	return FALSE;
 }
+/**************************************************************************
+ *  HasItemWithCLSID()
+ */
+BOOL HasItemWithCLSID(IEnumIDList *iface, LPITEMIDLIST pidl)
+{
+	IEnumIDListImpl *This = (IEnumIDListImpl *)iface;
+	LPENUMLIST  pCur;
+    REFIID refid = _ILGetGUIDPointer(pidl);
+
+    pCur = This->mpFirst;
+
+    while(pCur)
+    {
+        REFIID curid = _ILGetGUIDPointer(pCur->pidl);
+        if (IsEqualIID(curid, refid))
+        {
+            return TRUE;
+        }
+        pCur = pCur->pNext;
+    }
+    return FALSE;
+}
+
 
 /**************************************************************************
  *  CreateFolderEnumList()

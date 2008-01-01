@@ -239,6 +239,34 @@ static HRESULT WINAPI ISF_Desktop_fnParseDisplayName (IShellFolder2 * iface,
     return hr;
 }
 
+static const WCHAR ClassicStartMenuW[] =  {'S','O','F','T','W','A','R','E','\\',
+ 'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
+ 'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\','E','x','p','l','o','r','e','r',
+ '\\','H','i','d','e','D','e','s','k','t','o','p','I','c','o','n','s','\\',
+ 'C','l','a','s','s','i','c','S','t','a','r','t','M','e','n','u','\0' };
+
+INT
+HideNamespaceExtension(WCHAR *iid)
+{
+    DWORD Result, dwResult;
+    dwResult = sizeof(DWORD);
+
+    if (RegGetValueW(HKEY_CURRENT_USER, /* FIXME use NewStartPanel when activated */
+                     ClassicStartMenuW,
+                     iid,
+                     RRF_RT_DWORD,
+                     NULL,
+                     &Result,
+                     &dwResult) != ERROR_SUCCESS)
+    {
+        return -1;     
+    }
+    
+    return Result;
+}
+
+
+
 /**************************************************************************
  *  CreateDesktopEnumList()
  */
@@ -252,6 +280,8 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
 {
     BOOL ret = TRUE;
     WCHAR szPath[MAX_PATH];
+    static WCHAR MyDocumentsClassString[] = L"{450D8FBA-AD25-11D0-98A8-0800361B1103}";
+
 
     TRACE("(%p)->(flags=0x%08x)\n", list, dwFlags);
 
@@ -260,14 +290,23 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
     {
         HKEY hkey;
         UINT i;
+        DWORD dwResult;
 
         /* create the pidl for This item */
-        ret = AddToEnumList(list, _ILCreateMyDocuments());
+        if (HideNamespaceExtension(MyDocumentsClassString) < 1)
+        {
+            ret = AddToEnumList(list, _ILCreateMyDocuments());
+        }
         ret = AddToEnumList(list, _ILCreateMyComputer());
 
-        for (i=0; i<2; i++) {
-            if (ret && !RegOpenKeyExW(i == 0 ? HKEY_LOCAL_MACHINE : HKEY_CURRENT_USER,
-                                      Desktop_NameSpaceW, 0, KEY_READ, &hkey))
+        for (i = 0; i < 2; i++)
+        {
+            if (i == 0)
+                dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
+            else 
+                dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, Desktop_NameSpaceW, 0, KEY_READ, &hkey);
+
+            if (dwResult == ERROR_SUCCESS)
             {
                 WCHAR iid[50];
                 LPITEMIDLIST pidl;
@@ -282,24 +321,69 @@ static BOOL CreateDesktopEnumList(IEnumIDList *list, DWORD dwFlags)
                     r = RegEnumKeyExW(hkey, i, iid, &size, 0, NULL, NULL, NULL);
                     if (ERROR_SUCCESS == r)
                     {
-                        pidl = _ILCreateGuidFromStrW(iid);
-                        if (_ILIsMyDocuments(pidl))
+                        if (HideNamespaceExtension(iid) < 1)
                         {
-                            SHFree(pidl);
-                        }
-                        else
+                           pidl = _ILCreateGuidFromStrW(iid);
+                           if (!HasItemWithCLSID(list, pidl))
+                           {
+                               ret = AddToEnumList(list, pidl);
+                           }
+                           else
+                           {
+                                SHFree(pidl);
+                           }
+                       }
+                    }
+                    else if (ERROR_NO_MORE_ITEMS == r)
+                        break;
+                    else
+                        ret = FALSE;
+                    i++;
+                }
+                RegCloseKey(hkey);
+            }
+        }
+        for (i = 0; i < 2; i++)
+        {
+            if (i == 0)
+                dwResult = RegOpenKeyExW(HKEY_LOCAL_MACHINE, ClassicStartMenuW, 0, KEY_READ, &hkey);
+            else 
+                dwResult = RegOpenKeyExW(HKEY_CURRENT_USER, ClassicStartMenuW, 0, KEY_READ, &hkey);
+
+            if (dwResult == ERROR_SUCCESS)
+            {
+                DWORD j = 0, dwVal, Val, dwType, dwIID;
+                LONG r;
+                WCHAR iid[50];
+
+                while(ret)
+                {
+                    dwVal = sizeof(Val);
+                    dwIID = sizeof(iid) / sizeof(WCHAR);
+
+                    r = RegEnumValueW(hkey, j++, iid, &dwIID, NULL, &dwType, (LPBYTE)&Val, &dwVal);
+                    if (r == ERROR_SUCCESS)
+                    {
+                        if (Val == 0 && dwType == REG_DWORD)
                         {
-                            ret = AddToEnumList(list, pidl);
+                            LPITEMIDLIST pidl = _ILCreateGuidFromStrW(iid);
+                            if (!HasItemWithCLSID(list, pidl))
+                            {
+                               AddToEnumList(list, pidl);
+                            }
+                            else
+                            {
+                                SHFree(pidl);
+                            }
                         }
-                        i++;
                     }
                     else if (ERROR_NO_MORE_ITEMS == r)
                         break;
                     else
                         ret = FALSE;
                 }
-                RegCloseKey(hkey);
             }
+
         }
     }
 

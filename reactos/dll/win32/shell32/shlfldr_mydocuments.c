@@ -52,7 +52,7 @@
 #include "debughlp.h"
 #include "shfldr.h"
 
-WINE_DEFAULT_DEBUG_CHANNEL (shell);
+WINE_DEFAULT_DEBUG_CHANNEL (mydocs);
 
 /***********************************************************************
 *     MyDocumentsfolder implementation
@@ -500,13 +500,14 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
     if (!pszPath)
         return E_OUTOFMEMORY;
 
-    if (_ILIsMyDocuments (pidl) || _ILIsDesktop(pidl))
+    if (_ILIsMyDocuments (pidl))
     {
         if ((GET_SHGDN_RELATION (dwFlags) == SHGDN_NORMAL) &&
             (GET_SHGDN_FOR (dwFlags) & SHGDN_FORPARSING))
             strcpyW(pszPath, This->sPathTarget);
         else
             HCR_GetClassNameW(&CLSID_MyDocuments, pszPath, MAX_PATH);
+        TRACE("CP\n");
     }
     else if (_ILIsPidlSimple (pidl))
     {
@@ -563,6 +564,7 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
                     hr = SHELL32_GetDisplayNameOfChild (iface, pidl, dwFlags,
                                                         pszPath,
                                                         MAX_PATH);
+                            TRACE("CP\n");
                 }
                 else
                 {
@@ -570,12 +572,14 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
                     pszPath[0] = ':';
                     pszPath[1] = ':';
                     SHELL32_GUIDToStringW (clsid, &pszPath[2]);
+                            TRACE("CP\n");
                 }
             }
             else
             {
                 /* user friendly name */
                 HCR_GetClassNameW (clsid, pszPath, MAX_PATH);
+                        TRACE("CP\n");
             }
         }
         else
@@ -587,14 +591,20 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
                 (GET_SHGDN_RELATION(dwFlags) != SHGDN_INFOLDER))
             {
                 lstrcpynW(pszPath, This->sPathTarget, MAX_PATH - 1);
-                PathAddBackslashW(pszPath);
-                cLen = lstrlenW(pszPath);
+                TRACE("CP %s\n", debugstr_w(pszPath));
             }
 
-            _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
-
-            if (!_ILIsFolder(pidl))
-                SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
+            if (!_ILIsDesktop(pidl))
+            {
+                PathAddBackslashW(pszPath);
+                cLen = lstrlenW(pszPath);
+                _ILSimpleGetTextW(pidl, pszPath + cLen, MAX_PATH - cLen);
+                if (!_ILIsFolder(pidl))
+                {
+                    SHELL_FS_ProcessDisplayFilename(pszPath, dwFlags);
+                            TRACE("CP\n");
+                }
+            }
         }
     }
     else
@@ -602,31 +612,18 @@ WINAPI ISF_MyDocuments_fnGetDisplayNameOf (IShellFolder2 * iface,
         /* a complex pidl, let the subfolder do the work */
         hr = SHELL32_GetDisplayNameOfChild (iface, pidl, dwFlags,
                                             pszPath, MAX_PATH);
+                        TRACE("CP\n");                                
     }
 
     if (SUCCEEDED(hr))
     {
-        /* Win9x always returns ANSI strings, NT always returns Unicode strings */
-        if (GetVersion() & 0x80000000)
-        {
-            strRet->uType = STRRET_CSTR;
-            if (!WideCharToMultiByte(CP_ACP, 0, pszPath, -1, strRet->u.cStr, MAX_PATH,
-                                     NULL, NULL))
-                strRet->u.cStr[0] = '\0';
-            CoTaskMemFree(pszPath);
-        }
-        else
-        {
-            strRet->uType = STRRET_WSTR;
-            strRet->u.pOleStr = pszPath;
-        }
+        strRet->uType = STRRET_WSTR;
+        strRet->u.pOleStr = pszPath;
     }
     else
         CoTaskMemFree(pszPath);
 
-    TRACE ("-- (%p)->(%s,0x%08x)\n", This,
-     strRet->uType == STRRET_CSTR ? strRet->u.cStr :
-     debugstr_w(strRet->u.pOleStr), hr);
+    TRACE ("-- (%p)->(%s,0x%08x)\n", This, debugstr_w(strRet->u.pOleStr), hr);
     return hr;
 }
 
