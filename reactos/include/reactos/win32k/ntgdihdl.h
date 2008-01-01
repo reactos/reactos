@@ -369,11 +369,11 @@ typedef struct _WIN_DC_INFO
 typedef struct _DC
 {
   HGDIOBJ     hHmgr;  // Handle for this DC object.
-  PVOID       pvEntry;
+  ULONG       Count;
   ULONG       lucExcLock;
-  ULONG       Tid;
+  PVOID       Tid;
 
-  DHPDEV      PDev;   // GDIDEVICE.PDev
+  DHPDEV      PDev;   // GDIDEVICE.hPDev
   INT         DC_Type;
   INT         DC_Flags;
   PVOID       pPDev;  // PGDIDEVICE
