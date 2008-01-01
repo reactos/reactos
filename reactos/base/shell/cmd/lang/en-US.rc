@@ -596,7 +596,7 @@ SHIFT    Shifts the position of replaceable parameters in batch files.\n"
 STRING_HELP2, "START    Starts a separate window to run a specified program or command.\n\
          Executes command.\n\
 TIME     Displays or sets the system time.\n\
-TIMER    Allow the use of ten stopwaches.\n\
+TIMER    Allow the use of ten stopwatches.\n\
 TITLE    Sets the window title for a CMD.EXE session.\n\
 TYPE     Displays the contents of a text file.\n\
 VER      Displays the ReactOS version.\n\
