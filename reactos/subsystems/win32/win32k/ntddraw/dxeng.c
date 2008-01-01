@@ -399,14 +399,31 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngGetDCState                                                      */
-/************************************************************************/
-/* Note type 0 = N/A */
-/* Note type 1 = Is DC full screen */
-/* Note type 2 = Get Complexity of visiable region. */
-/* Note type 3 = Get Driver hdev, which is pPDev. */
 
+
+/*++
+* @name DxEngGetDCState
+* @implemented
+*
+* The function DxEngGetDCState getting sate 
+* if it DC full screen /  Get Complexity of visiable region or
+* Get Driver hdev, which is pPDev
+*
+* @param HDC hdc
+* The hdc
+*
+* @param DWORD type
+* value 1 = Is DC full screen 
+* value 2 = Get Complexity of visiable region. 
+* value 3 = Get Driver hdev, which is pPDev. 
+*
+* @return
+* return one of the type value 
+*
+* @remarks.
+* we do not have type 2 implement yet
+*
+*--*/
 DWORD
 DxEngGetDCState(HDC hDC,
                 DWORD type)
@@ -425,12 +442,14 @@ DxEngGetDCState(HDC hDC,
                 UNIMPLEMENTED;
                 break;
             case 3:
-            {   // Return HDEV of this DC.            
+            {
+                /* Return HDEV of this DC. */            
                 retVal = (DWORD) pDC->pPDev;
                 break;
             }
             default:
-                UNIMPLEMENTED;
+                /* if it does not found a type it wanted we return 0 as value */
+                DPRINT1("warning did not found type %d\n",type); 
                 break;
         }
         DC_UnlockDc(pDC);
