@@ -54,64 +54,64 @@ NtfsHasFileSystem(PDEVICE_OBJECT DeviceToMount)
 
   Size = sizeof(DISK_GEOMETRY);
   Status = NtfsDeviceIoControl(DeviceToMount,
-			       IOCTL_DISK_GET_DRIVE_GEOMETRY,
-			       NULL,
-			       0,
-			       &DiskGeometry,
-			       &Size,
-			       TRUE);
+                               IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                               NULL,
+                               0,
+                               &DiskGeometry,
+                               &Size,
+                               TRUE);
   if (!NT_SUCCESS(Status))
+  {
+    DPRINT1("NtfsDeviceIoControl() failed (Status %lx)\n", Status);
+    return(Status);
+  }
+
+  if (DiskGeometry.MediaType == FixedMedia)
+  {
+    /* We have found a hard disk */
+    Size = sizeof(PARTITION_INFORMATION);
+    Status = NtfsDeviceIoControl(DeviceToMount,
+                                 IOCTL_DISK_GET_PARTITION_INFO,
+                                 NULL,
+                                 0,
+                                 &PartitionInfo,
+                                 &Size,
+                                 TRUE);
+    if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtfsDeviceIoControl() failed (Status %lx)\n", Status);
       return(Status);
     }
 
-  if (DiskGeometry.MediaType == FixedMedia)
+    if (PartitionInfo.PartitionType != PARTITION_IFS)
     {
-      /* We have found a hard disk */
-      Size = sizeof(PARTITION_INFORMATION);
-      Status = NtfsDeviceIoControl(DeviceToMount,
-				   IOCTL_DISK_GET_PARTITION_INFO,
-				   NULL,
-				   0,
-				   &PartitionInfo,
-				   &Size,
-				   TRUE);
-      if (!NT_SUCCESS(Status))
-	{
-	  DPRINT1("NtfsDeviceIoControl() failed (Status %lx)\n", Status);
-	  return(Status);
-	}
-
-      if (PartitionInfo.PartitionType != PARTITION_IFS)
-	{
-	  DPRINT1("Invalid partition type\n");
-	  return(STATUS_UNRECOGNIZED_VOLUME);
-	}
+      DPRINT1("Invalid partition type\n");
+      return(STATUS_UNRECOGNIZED_VOLUME);
     }
+  }
 
   DPRINT1("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
   BootSector = ExAllocatePool(NonPagedPool,
-			      DiskGeometry.BytesPerSector);
+                              DiskGeometry.BytesPerSector);
   if (BootSector == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
+  {
+    return(STATUS_INSUFFICIENT_RESOURCES);
+  }
 
   Status = NtfsReadSectors (DeviceToMount,
-			    0,
-			    1,
-			    DiskGeometry.BytesPerSector,
-			    (PVOID)BootSector,
-			    TRUE);
+                            0,
+                            1,
+                            DiskGeometry.BytesPerSector,
+                            (PVOID)BootSector,
+                            TRUE);
   if (NT_SUCCESS(Status))
+  {
+    DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OEMID);
+    if (RtlCompareMemory(BootSector->OEMID, "NTFS    ", 8) != 8)
     {
-      DPRINT1("NTFS-identifier: [%.8s]\n", BootSector->OEMID);
-      if (RtlCompareMemory(BootSector->OEMID, "NTFS    ", 8) != 8)
-	{
-	  Status = STATUS_UNRECOGNIZED_VOLUME;
-	}
+      Status = STATUS_UNRECOGNIZED_VOLUME;
     }
+  }
 
   ExFreePool(BootSector);
 
@@ -137,37 +137,37 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
   Size = sizeof(DISK_GEOMETRY);
   Status = NtfsDeviceIoControl(DeviceObject,
-			       IOCTL_DISK_GET_DRIVE_GEOMETRY,
-			       NULL,
-			       0,
-			       &DiskGeometry,
-			       &Size,
-			       TRUE);
+                               IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                               NULL,
+                               0,
+                               &DiskGeometry,
+                               &Size,
+                               TRUE);
   if (!NT_SUCCESS(Status))
-    {
-      DPRINT("NtfsDeviceIoControl() failed (Status %lx)\n", Status);
-      return(Status);
-    }
+  {
+    DPRINT("NtfsDeviceIoControl() failed (Status %lx)\n", Status);
+    return(Status);
+  }
 
   DPRINT("BytesPerSector: %lu\n", DiskGeometry.BytesPerSector);
   BootSector = ExAllocatePool(NonPagedPool,
-			      DiskGeometry.BytesPerSector);
+                              DiskGeometry.BytesPerSector);
   if (BootSector == NULL)
-    {
-      return(STATUS_INSUFFICIENT_RESOURCES);
-    }
+  {
+    return(STATUS_INSUFFICIENT_RESOURCES);
+  }
 
   Status = NtfsReadSectors(DeviceObject,
-			   0, /* Partition boot sector */
-			   1,
-			   DiskGeometry.BytesPerSector,
-			   (PVOID)BootSector,
-			   TRUE);
+                           0, /* Partition boot sector */
+                           1,
+                           DiskGeometry.BytesPerSector,
+                           (PVOID)BootSector,
+                           TRUE);
   if (!NT_SUCCESS(Status))
-    {
-      ExFreePool(BootSector);
-      return Status;
-    }
+  {
+    ExFreePool(BootSector);
+    return Status;
+  }
 
   /* Read data from the bootsector */
   NtfsInfo->BytesPerSector = BootSector->BPB.BytesPerSector;
@@ -202,39 +202,39 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   ExFreePool(BootSector);
 
   MftRecord = ExAllocatePool(NonPagedPool,
-			     NtfsInfo->BytesPerFileRecord);
+                             NtfsInfo->BytesPerFileRecord);
   if (MftRecord == NULL)
-    {
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  {
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   Status = NtfsReadSectors(DeviceObject,
-			   NtfsInfo->MftStart.u.LowPart * NtfsInfo->SectorsPerCluster,
-			   NtfsInfo->BytesPerFileRecord / NtfsInfo->BytesPerSector,
-			   NtfsInfo->BytesPerSector,
-			   (PVOID)MftRecord,
-			   TRUE);
+                           NtfsInfo->MftStart.u.LowPart * NtfsInfo->SectorsPerCluster,
+                           NtfsInfo->BytesPerFileRecord / NtfsInfo->BytesPerSector,
+                           NtfsInfo->BytesPerSector,
+                           (PVOID)MftRecord,
+                           TRUE);
   if (!NT_SUCCESS(Status))
-    {
-      ExFreePool (MftRecord);
-      return Status;
-    }
+  {
+    ExFreePool (MftRecord);
+    return Status;
+  }
 
   VolumeRecord = ExAllocatePool(NonPagedPool, NtfsInfo->BytesPerFileRecord);
   if (VolumeRecord == NULL)
-    {
-      ExFreePool (MftRecord);
-      return STATUS_INSUFFICIENT_RESOURCES;
-    }
+  {
+    ExFreePool (MftRecord);
+    return STATUS_INSUFFICIENT_RESOURCES;
+  }
 
   /* Read Volume File (MFT index 3) */
   DeviceExt->StorageDevice = DeviceObject;
   Status = ReadFileRecord(DeviceExt, 3, VolumeRecord, MftRecord);
   if (!NT_SUCCESS(Status))
-    {
-      ExFreePool (MftRecord);
-      return Status;
-    }
+  {
+    ExFreePool (MftRecord);
+    return Status;
+  }
 
 #ifndef NDEBUG
   DbgPrint("\n\n");
@@ -253,32 +253,32 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
   DPRINT("Attribute %p\n", Attribute);
 
   if (Attribute != NULL && ((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength != 0)
-    {
-      DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
-      NtfsInfo->VolumeLabelLength =
-	min (((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
-      RtlCopyMemory (NtfsInfo->VolumeLabel,
-		     (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset),
-		     NtfsInfo->VolumeLabelLength);
-    }
+  {
+    DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
+    NtfsInfo->VolumeLabelLength =
+      min (((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength, MAXIMUM_VOLUME_LABEL_LENGTH);
+    RtlCopyMemory (NtfsInfo->VolumeLabel,
+                   (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset),
+                   NtfsInfo->VolumeLabelLength);
+  }
   else
-    {
-      NtfsInfo->VolumeLabelLength = 0;
-    }
+  {
+    NtfsInfo->VolumeLabelLength = 0;
+  }
 
   /* Get volume information */
   Attribute = FindAttribute (VolumeRecord, AttributeVolumeInformation, NULL);
   DPRINT("Attribute %p\n", Attribute);
 
   if (Attribute != NULL && ((PRESIDENT_ATTRIBUTE)Attribute)->ValueLength != 0)
-    {
-      DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
-      VolumeInfo = (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset);
+  {
+    DPRINT("Data length %lu\n", AttributeDataLength (Attribute));
+    VolumeInfo = (PVOID)((ULONG_PTR)Attribute + ((PRESIDENT_ATTRIBUTE)Attribute)->ValueOffset);
 
-      NtfsInfo->MajorVersion = VolumeInfo->MajorVersion;
-      NtfsInfo->MinorVersion = VolumeInfo->MinorVersion;
-      NtfsInfo->Flags = VolumeInfo->Flags;
-    }
+    NtfsInfo->MajorVersion = VolumeInfo->MajorVersion;
+    NtfsInfo->MinorVersion = VolumeInfo->MinorVersion;
+    NtfsInfo->Flags = VolumeInfo->Flags;
+  }
 
   ExFreePool (MftRecord);
 
@@ -288,7 +288,7 @@ NtfsGetVolumeData(PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
-		PIRP Irp)
+                PIRP Irp)
 {
   PDEVICE_EXTENSION DeviceExt = NULL;
   PDEVICE_OBJECT NewDeviceObject = NULL;
@@ -302,10 +302,10 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   DPRINT1("NtfsMountVolume() called\n");
 
   if (DeviceObject != NtfsGlobalData->DeviceObject)
-    {
-      Status = STATUS_INVALID_DEVICE_REQUEST;
-      goto ByeBye;
-    }
+  {
+    Status = STATUS_INVALID_DEVICE_REQUEST;
+    goto ByeBye;
+  }
 
   Stack = IoGetCurrentIrpStackLocation(Irp);
   DeviceToMount = Stack->Parameters.MountVolume.DeviceObject;
@@ -313,28 +313,28 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 
   Status = NtfsHasFileSystem(DeviceToMount);
   if (!NT_SUCCESS(Status))
-    {
-      goto ByeBye;
-    }
+  {
+    goto ByeBye;
+  }
 
   Status = IoCreateDevice(NtfsGlobalData->DriverObject,
-			  sizeof(DEVICE_EXTENSION),
-			  NULL,
-			  FILE_DEVICE_FILE_SYSTEM,
-//			  FILE_DEVICE_DISK_FILE_SYSTEM,
-			  0,
-			  FALSE,
-			  &NewDeviceObject);
+                          sizeof(DEVICE_EXTENSION),
+                          NULL,
+                          FILE_DEVICE_FILE_SYSTEM,
+//                          FILE_DEVICE_DISK_FILE_SYSTEM,
+                          0,
+                          FALSE,
+                          &NewDeviceObject);
   if (!NT_SUCCESS(Status))
     goto ByeBye;
 
   NewDeviceObject->Flags = NewDeviceObject->Flags | DO_DIRECT_IO;
   DeviceExt = (PVOID)NewDeviceObject->DeviceExtension;
   RtlZeroMemory(DeviceExt,
-		sizeof(DEVICE_EXTENSION));
+                sizeof(DEVICE_EXTENSION));
 
   Status = NtfsGetVolumeData(DeviceToMount,
-			     DeviceExt);
+                             DeviceExt);
   if (!NT_SUCCESS(Status))
     goto ByeBye;
 
@@ -348,26 +348,26 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   NewDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
   DeviceExt->StreamFileObject = IoCreateStreamFileObject(NULL,
-							 DeviceExt->StorageDevice);
+                                                         DeviceExt->StorageDevice);
 
 
   Fcb = NtfsCreateFCB(NULL);
   if (Fcb == NULL)
-    {
-      Status = STATUS_INSUFFICIENT_RESOURCES;
-      goto ByeBye;
-    }
+  {
+    Status = STATUS_INSUFFICIENT_RESOURCES;
+    goto ByeBye;
+  }
 
   Ccb = ExAllocatePoolWithTag(NonPagedPool,
-			      sizeof(CCB),
-			      TAG_CCB);
+                              sizeof(CCB),
+                              TAG_CCB);
   if (Ccb == NULL)
-    {
-      Status =  STATUS_INSUFFICIENT_RESOURCES;
-      goto ByeBye;
-    }
+  {
+    Status =  STATUS_INSUFFICIENT_RESOURCES;
+    goto ByeBye;
+  }
   RtlZeroMemory(Ccb,
-		sizeof(CCB));
+                sizeof(CCB));
 
   DeviceExt->StreamFileObject->FsContext = Fcb;
   DeviceExt->StreamFileObject->FsContext2 = Ccb;
@@ -388,12 +388,12 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
 //  Fcb->Entry.DataLengthL = DeviceExt->CdInfo.VolumeSpaceSize * BLOCKSIZE;
 #ifdef ROS_USE_CC_AND_FS
   Status = CcRosInitializeFileCache(DeviceExt->StreamFileObject,
-				    CACHEPAGESIZE(DeviceExt));
+                                    CACHEPAGESIZE(DeviceExt));
   if (!NT_SUCCESS (Status))
-    {
-      DbgPrint("CcRosInitializeFileCache() failed (Status %lx)\n", Status);
-      goto ByeBye;
-    }
+  {
+    DbgPrint("CcRosInitializeFileCache() failed (Status %lx)\n", Status);
+    goto ByeBye;
+  }
 #else
   CcInitializeCacheMap(DeviceExt->StreamFileObject,
                        (PCC_FILE_SIZES)(&Fcb->RFCB.AllocationSize),
@@ -413,24 +413,24 @@ NtfsMountVolume(PDEVICE_OBJECT DeviceObject,
   /* Get volume label */
   NewDeviceObject->Vpb->VolumeLabelLength = DeviceExt->NtfsInfo.VolumeLabelLength;
   RtlCopyMemory (NewDeviceObject->Vpb->VolumeLabel,
-		 DeviceExt->NtfsInfo.VolumeLabel,
-		 DeviceExt->NtfsInfo.VolumeLabelLength);
+                 DeviceExt->NtfsInfo.VolumeLabel,
+                 DeviceExt->NtfsInfo.VolumeLabelLength);
 
   Status = STATUS_SUCCESS;
 
 ByeBye:
   if (!NT_SUCCESS(Status))
-    {
-      /* Cleanup */
-      if (DeviceExt && DeviceExt->StreamFileObject)
-	ObDereferenceObject(DeviceExt->StreamFileObject);
-      if (Fcb)
-	ExFreePool(Fcb);
-      if (Ccb)
-	ExFreePool(Ccb);
-      if (NewDeviceObject)
-	IoDeleteDevice(NewDeviceObject);
-    }
+  {
+    /* Cleanup */
+    if (DeviceExt && DeviceExt->StreamFileObject)
+      ObDereferenceObject(DeviceExt->StreamFileObject);
+    if (Fcb)
+      ExFreePool(Fcb);
+    if (Ccb)
+      ExFreePool(Ccb);
+    if (NewDeviceObject)
+      IoDeleteDevice(NewDeviceObject);
+  }
 
   DPRINT("NtfsMountVolume() done (Status: %lx)\n", Status);
 
@@ -440,7 +440,7 @@ ByeBye:
 
 static NTSTATUS
 NtfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
-		 PIRP Irp)
+                 PIRP Irp)
 {
   DPRINT1("NtfsVerifyVolume() called\n");
 
@@ -450,7 +450,7 @@ NtfsVerifyVolume(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS STDCALL
 NtfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
-		      PIRP Irp)
+                      PIRP Irp)
 {
   PIO_STACK_LOCATION Stack;
   NTSTATUS Status;
@@ -460,27 +460,27 @@ NtfsFileSystemControl(PDEVICE_OBJECT DeviceObject,
   Stack = IoGetCurrentIrpStackLocation(Irp);
 
   switch (Stack->MinorFunction)
-    {
-      case IRP_MN_USER_FS_REQUEST:
-	DPRINT("NTFS: IRP_MN_USER_FS_REQUEST\n");
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	break;
+  {
+    case IRP_MN_USER_FS_REQUEST:
+      DPRINT("NTFS: IRP_MN_USER_FS_REQUEST\n");
+      Status = STATUS_INVALID_DEVICE_REQUEST;
+      break;
 
-      case IRP_MN_MOUNT_VOLUME:
-	DPRINT("NTFS: IRP_MN_MOUNT_VOLUME\n");
-	Status = NtfsMountVolume(DeviceObject, Irp);
-	break;
+    case IRP_MN_MOUNT_VOLUME:
+      DPRINT("NTFS: IRP_MN_MOUNT_VOLUME\n");
+      Status = NtfsMountVolume(DeviceObject, Irp);
+      break;
 
-      case IRP_MN_VERIFY_VOLUME:
-	DPRINT1("NTFS: IRP_MN_VERIFY_VOLUME\n");
-	Status = NtfsVerifyVolume(DeviceObject, Irp);
-	break;
+    case IRP_MN_VERIFY_VOLUME:
+      DPRINT1("NTFS: IRP_MN_VERIFY_VOLUME\n");
+      Status = NtfsVerifyVolume(DeviceObject, Irp);
+      break;
 
-      default:
-	DPRINT("NTFS FSC: MinorFunction %d\n", Stack->MinorFunction);
-	Status = STATUS_INVALID_DEVICE_REQUEST;
-	break;
-    }
+    default:
+      DPRINT("NTFS FSC: MinorFunction %d\n", Stack->MinorFunction);
+      Status = STATUS_INVALID_DEVICE_REQUEST;
+      break;
+  }
 
   Irp->IoStatus.Status = Status;
   Irp->IoStatus.Information = 0;
