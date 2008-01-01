@@ -32,6 +32,8 @@ static HDC hDC;		// Private GDI Device Context
 
 GLuint base;			// Base Display List For The Font Set
 GLfloat rot;			// Used To Rotate The Text
+GLfloat extentX = 0.0f;
+GLfloat extentY = 0.0f;
 
 #define APPNAME _T("3DText")
 
@@ -45,6 +47,12 @@ GLvoid BuildFont(GLvoid)
     GLYPHMETRICSFLOAT gmf[256];
     // Windows Font Handle
     HFONT font;
+    int i;
+    TCHAR c;
+    GLfloat cellOriginX = 0.0f;
+    GLfloat stringOriginX;
+    GLfloat stringExtentX = 0.0f;
+    GLfloat stringExtentY = 0.0f;
 
     // Storage For 256 Characters
     base = glGenLists(256);
@@ -75,6 +83,23 @@ GLvoid BuildFont(GLvoid)
                        0.2f,				// Font Thickness In The Z Direction
                        WGL_FONT_POLYGONS,		// Use Polygons, Not Lines
                        gmf);				// Address Of Buffer To Recieve Data
+
+    // Calculate the string extent
+    for (i = 0; i < _tcslen(m_Text); i++)
+    {
+        c = m_Text[i];
+
+        stringOriginX = cellOriginX + gmf[c].gmfptGlyphOrigin.x;
+
+        stringExtentX = stringOriginX + gmf[c].gmfBlackBoxX;
+        if (gmf[c].gmfBlackBoxY > stringExtentY)
+            stringExtentY = gmf[c].gmfBlackBoxY;
+
+        cellOriginX = cellOriginX + gmf[c].gmfCellIncX;
+    }
+
+    extentX = stringExtentX;
+    extentY = stringExtentY;
 }
 
 // Delete The Font
@@ -201,7 +226,9 @@ GLvoid DrawGLScene(GLvoid)
     glRotatef(rot * 1.4f, 0.0f, 0.0f, 1.0f);
 
     // Move to the Left and Down before drawing
-    glTranslatef(-3.5f, 0.0f, 0.0f);
+    glTranslatef(-(extentX / 2.0f),
+                 -(extentY / 2.0f),
+                 0.0f);
 
     // Pulsing Colors Based On The Rotation
     glColor3f((1.0f * (cos(rot / 20.0f))),
