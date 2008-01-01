@@ -16,28 +16,16 @@
  *  along with this program; if not, write to the Free Software
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
-/* $Id$
- *
+/*
  * DC.C - Device context functions
  *
  */
 
 #include <w32k.h>
+#include <bugcodes.h>
 
 #define NDEBUG
 #include <debug.h>
-
-/* ROS Internal. Please deprecate */
-NTHALAPI
-BOOLEAN
-NTAPI
-HalQueryDisplayOwnership(
-    VOID
-);
-
-#ifndef OBJ_COLORSPACE
-#define OBJ_COLORSPACE	(14)
-#endif
 
 static GDIDEVICE PrimarySurface;
 static KEVENT VideoDriverNeedsPreparation;
@@ -740,8 +728,15 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
         {
           if (! IntPrepareDriverIfNeeded())
             {
-              DPRINT1("Unable to prepare graphics driver, returning NULL ic\n");
-              return NULL;
+              /* Here, we have two possibilities:
+               * a) return NULL, and hope that the caller
+               *    won't call us in a loop
+               * b) bugcheck, but caller is unable to
+               *    react on the problem
+               */
+              /*DPRINT1("Unable to prepare graphics driver, returning NULL ic\n");
+              return NULL;*/
+              KeBugCheck(VIDEO_DRIVER_INIT_FAILURE);
             }
         }
       else
@@ -2846,7 +2841,11 @@ IntEnumDisplaySettings(
         return FALSE;
       }
 
-      IntPrepareDriverIfNeeded();
+      if (!IntPrepareDriverIfNeeded())
+      {
+        DPRINT1("IntPrepareDriverIfNeeded failed\n");
+        return FALSE;
+      }
 
       /*
        * DriverFileNames may be a list of drivers in REG_SZ_MULTI format,
