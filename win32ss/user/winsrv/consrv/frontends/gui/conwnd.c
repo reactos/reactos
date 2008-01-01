@@ -2356,6 +2356,11 @@ ConWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
             {
                 return DefWindowProcW(hWnd, msg, wParam, lParam);
             }
+            /* Detect Alt+Shift */
+            if (wParam == VK_SHIFT && (msg == WM_SYSKEYDOWN || msg == WM_SYSKEYUP))
+            {
+                return DefWindowProcW(hWnd, msg, wParam, lParam);
+            }
 
             OnKey(GuiData, msg, wParam, lParam);
             break;

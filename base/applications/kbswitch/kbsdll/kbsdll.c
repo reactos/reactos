@@ -79,8 +79,16 @@ KbSwitchSetHooks(VOID)
 VOID WINAPI
 KbSwitchDeleteHooks(VOID)
 {
-    if (hWinHook) UnhookWindowsHookEx(hWinHook);
-    if (hShellHook) UnhookWindowsHookEx(hShellHook);
+    if (hWinHook)
+    {
+        UnhookWindowsHookEx(hWinHook);
+        hWinHook = NULL;
+    }
+    if (hShellHook)
+    {
+        UnhookWindowsHookEx(hShellHook);
+        hShellHook = NULL;
+    }
 }
 
 BOOL WINAPI
