@@ -12,31 +12,31 @@ static MUI_ENTRY deDELanguagePageEntries[] =
     {
         6,
         8,
-        "Language Selection.",
+        "Sprachauswahl.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Bitte waehlen Sie die Sprache, die Sie waehrend des Setups verwenden wollen.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Dann druecken Sie ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  Diese Sprache wird spaeter als Standardsprache im System verwendet.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER = Fortsetzen  F3 = Beenden",
         TEXT_STATUS
     },
     {
