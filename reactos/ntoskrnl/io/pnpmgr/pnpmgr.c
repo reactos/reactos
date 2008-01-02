@@ -408,7 +408,6 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             LPCWSTR RegistryPropertyName;
             UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
             UNICODE_STRING ValueName;
-            OBJECT_ATTRIBUTES ObjectAttributes;
             KEY_VALUE_PARTIAL_INFORMATION *ValueInformation;
             ULONG ValueInformationLength;
             HANDLE KeyHandle, EnumRootHandle;
@@ -445,9 +444,8 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             DPRINT("Registry property %S\n", RegistryPropertyName);
 
             /* Open Enum key */
-            InitializeObjectAttributes(&ObjectAttributes, &EnumRoot,
-                OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-            Status = ZwOpenKey(&EnumRootHandle, 0, &ObjectAttributes);
+            Status = IopOpenRegistryKeyEx(&EnumRootHandle, NULL,
+                &EnumRoot, KEY_READ);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Error opening ENUM_ROOT, Status=0x%08x\n", Status);
@@ -455,13 +453,12 @@ IoGetDeviceProperty(IN PDEVICE_OBJECT DeviceObject,
             }
 
             /* Open instance key */
-            InitializeObjectAttributes(&ObjectAttributes, &DeviceNode->InstancePath,
-                OBJ_CASE_INSENSITIVE, EnumRootHandle, NULL);
-
-            Status = ZwOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
+            Status = IopOpenRegistryKeyEx(&KeyHandle, EnumRootHandle,
+                &DeviceNode->InstancePath, KEY_READ);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("Error opening InstancePath, Status=0x%08x\n", Status);
+                ZwClose(EnumRootHandle);
                 return Status;
             }
 
@@ -686,10 +683,7 @@ IoOpenDeviceRegistryKey(IN PDEVICE_OBJECT DeviceObject,
    /*
     * Open the base key.
     */
-
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName,
-                              OBJ_CASE_INSENSITIVE, NULL, NULL);
-   Status = ZwOpenKey(DevInstRegKey, DesiredAccess, &ObjectAttributes);
+   Status = IopOpenRegistryKeyEx(DevInstRegKey, NULL, &KeyName, DesiredAccess);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("IoOpenDeviceRegistryKey(%wZ): Base key doesn't exist, exiting... (Status 0x%08lx)\n", &KeyName, Status);
@@ -1100,14 +1094,7 @@ IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
     *Handle = NULL;
 
     /* Open root key for device instances */
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &EnumU,
-                               OBJ_CASE_INSENSITIVE,
-                               NULL,
-                               NULL);
-    Status = ZwOpenKey(&hParent,
-                       KEY_CREATE_SUB_KEY,
-                       &ObjectAttributes);
+    Status = IopOpenRegistryKeyEx(&hParent, NULL, &EnumU, KEY_CREATE_SUB_KEY);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("ZwOpenKey('%wZ') failed with status 0x%08lx\n", &EnumU, Status);
@@ -1611,7 +1598,6 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
    UNICODE_STRING KeyName;
    UNICODE_STRING KeyValue;
    UNICODE_STRING ValueName;
-   OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE hKey = NULL;
    ULONG crc32;
    NTSTATUS Status;
@@ -1643,8 +1629,7 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
    wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
    wcscat(KeyNameBuffer, DeviceNode->Parent->InstancePath.Buffer);
    RtlInitUnicodeString(&KeyName, KeyNameBuffer);
-   InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE, NULL, NULL);
-   Status = ZwOpenKey(&hKey, KEY_QUERY_VALUE | KEY_SET_VALUE, &ObjectAttributes);
+   Status = IopOpenRegistryKeyEx(&hKey, NULL, &KeyName, KEY_QUERY_VALUE | KEY_SET_VALUE);
    if (!NT_SUCCESS(Status))
       goto cleanup;
    RtlInitUnicodeString(&ValueName, L"ParentIdPrefix");
@@ -2704,8 +2689,7 @@ IopEnumerateDetectedDevices(
 
     if (RelativePath)
     {
-        InitializeObjectAttributes(&ObjectAttributes, RelativePath, OBJ_KERNEL_HANDLE, hBaseKey, NULL);
-        Status = ZwOpenKey(&hDevicesKey, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+        Status = IopOpenRegistryKeyEx(&hDevicesKey, hBaseKey, RelativePath, KEY_ENUMERATE_SUB_KEYS);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
@@ -2759,11 +2743,9 @@ IopEnumerateDetectedDevices(
       /* Open device key */
       DeviceName.Length = DeviceName.MaximumLength = (USHORT)pDeviceInformation->NameLength;
       DeviceName.Buffer = pDeviceInformation->Name;
-      InitializeObjectAttributes(&ObjectAttributes, &DeviceName, OBJ_KERNEL_HANDLE, hDevicesKey, NULL);
-      Status = ZwOpenKey(
-         &hDeviceKey,
-         KEY_QUERY_VALUE + (EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0),
-         &ObjectAttributes);
+
+      Status = IopOpenRegistryKeyEx(&hDeviceKey, hDevicesKey, &DeviceName,
+          KEY_QUERY_VALUE + (EnumerateSubKeys ? KEY_ENUMERATE_SUB_KEYS : 0));
       if (!NT_SUCCESS(Status))
       {
          DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
@@ -3281,8 +3263,7 @@ IopUpdateRootKey(VOID)
    }
    else
    {
-        InitializeObjectAttributes(&ObjectAttributes, &MultiKeyPathU, OBJ_KERNEL_HANDLE, NULL, NULL);
-        Status = ZwOpenKey(&hEnum, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+        Status = IopOpenRegistryKeyEx(&hEnum, NULL, &MultiKeyPathU, KEY_ENUMERATE_SUB_KEYS);
         if (!NT_SUCCESS(Status))
         {
             /* Nothing to do, don't return with an error status */

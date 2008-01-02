@@ -280,7 +280,6 @@ EnumerateDevices(
     IN PDEVICE_OBJECT DeviceObject)
 {
     PPNPROOT_FDO_DEVICE_EXTENSION DeviceExtension;
-    OBJECT_ATTRIBUTES ObjectAttributes;
     PKEY_BASIC_INFORMATION KeyInfo = NULL, SubKeyInfo = NULL;
     UNICODE_STRING LegacyU = RTL_CONSTANT_STRING(L"LEGACY_");
     UNICODE_STRING KeyName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\" REGSTR_PATH_SYSTEMENUM L"\\" REGSTR_KEY_ROOTENUM);
@@ -318,17 +317,10 @@ EnumerateDevices(
         goto cleanup;
     }
 
-    InitializeObjectAttributes(
-        &ObjectAttributes,
-        &KeyName,
-        OBJ_CASE_INSENSITIVE,
-        NULL,
-        NULL);
-
-    Status = ZwOpenKey(&KeyHandle, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+    Status = IopOpenRegistryKeyEx(&KeyHandle, NULL, &KeyName, KEY_ENUMERATE_SUB_KEYS);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("ZwOpenKey(%wZ) failed with status 0x%08lx\n", &KeyName, Status);
+        DPRINT("IopOpenRegistryKeyEx(%wZ) failed with status 0x%08lx\n", &KeyName, Status);
         goto cleanup;
     }
 
@@ -370,16 +362,10 @@ EnumerateDevices(
         }
 
         /* Open the key */
-        InitializeObjectAttributes(
-            &ObjectAttributes,
-            &SubKeyName,
-            0, /* Attributes */
-            KeyHandle,
-            NULL); /* Security descriptor */
-        Status = ZwOpenKey(&SubKeyHandle, KEY_ENUMERATE_SUB_KEYS, &ObjectAttributes);
+        Status = IopOpenRegistryKeyEx(&SubKeyHandle, KeyHandle, &SubKeyName, KEY_ENUMERATE_SUB_KEYS);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+            DPRINT("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
             break;
         }
 
@@ -438,16 +424,10 @@ EnumerateDevices(
                 }
 
                 /* Open registry key to fill other informations */
-                InitializeObjectAttributes(
-                    &ObjectAttributes,
-                    &Device->InstanceID,
-                    0, /* Attributes */
-                    SubKeyHandle,
-                    NULL); /* Security descriptor */
-                Status = ZwOpenKey(&DeviceKeyHandle, KEY_READ, &ObjectAttributes);
+                Status = IopOpenRegistryKeyEx(&DeviceKeyHandle, SubKeyHandle, &Device->InstanceID, KEY_READ);
                 if (!NT_SUCCESS(Status))
                 {
-                    DPRINT("ZwOpenKey() failed with status 0x%08lx\n", Status);
+                    DPRINT("IopOpenRegistryKeyEx() failed with status 0x%08lx\n", Status);
                     break;
                 }
 

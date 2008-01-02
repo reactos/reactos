@@ -270,7 +270,6 @@ IopLoadServiceModule(
    ULONG ServiceStart;
    UNICODE_STRING ServiceImagePath, CCSName;
    NTSTATUS Status;
-   OBJECT_ATTRIBUTES ObjectAttributes;
    HANDLE CCSKey, ServiceKey;
 
    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
@@ -282,13 +281,7 @@ IopLoadServiceModule(
    /* Open CurrentControlSet */
    RtlInitUnicodeString(&CCSName,
                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-   InitializeObjectAttributes(&ObjectAttributes,
-       &CCSName,
-       OBJ_CASE_INSENSITIVE,
-       NULL,
-       NULL);
-   Status = ZwOpenKey(&CCSKey, KEY_READ, &ObjectAttributes);
-
+   Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
    if (!NT_SUCCESS(Status))
    {
        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
@@ -296,12 +289,7 @@ IopLoadServiceModule(
    }
 
    /* Open service key */
-   InitializeObjectAttributes(&ObjectAttributes,
-       ServiceName,
-       OBJ_CASE_INSENSITIVE,
-       CCSKey,
-       NULL);
-   Status = ZwOpenKey(&ServiceKey, KEY_READ, &ObjectAttributes);
+   Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
    if (!NT_SUCCESS(Status))
    {
        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
@@ -572,7 +560,6 @@ IopAttachFilterDrivers(
    BOOLEAN Lower)
 {
    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = {{0}};
-   OBJECT_ATTRIBUTES ObjectAttributes;
    UNICODE_STRING Class;
    WCHAR ClassBuffer[40];
    UNICODE_STRING EnumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
@@ -580,13 +567,8 @@ IopAttachFilterDrivers(
    NTSTATUS Status;
 
    /* Open enumeration root key */
-   InitializeObjectAttributes(&ObjectAttributes,
-       &EnumRoot,
-       OBJ_CASE_INSENSITIVE,
-       NULL,
-       NULL);
-   Status = ZwOpenKey(&EnumRootKey, KEY_READ, &ObjectAttributes);
-
+   Status = IopOpenRegistryKeyEx(&EnumRootKey, NULL,
+       &EnumRoot, KEY_READ);
    if (!NT_SUCCESS(Status))
    {
        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
@@ -594,12 +576,8 @@ IopAttachFilterDrivers(
    }
 
    /* Open subkey */
-   InitializeObjectAttributes(&ObjectAttributes,
-       &DeviceNode->InstancePath,
-       OBJ_CASE_INSENSITIVE,
-       EnumRootKey,
-       NULL);
-   Status = ZwOpenKey(&SubKey, KEY_READ, &ObjectAttributes);
+   Status = IopOpenRegistryKeyEx(&SubKey, EnumRootKey,
+       &DeviceNode->InstancePath, KEY_READ);
    if (!NT_SUCCESS(Status))
    {
        DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
@@ -649,17 +627,12 @@ IopAttachFilterDrivers(
    /*
     * Load the class filter driver
     */
-
    if (NT_SUCCESS(Status))
    {
        UNICODE_STRING ControlClass = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Class");
-       InitializeObjectAttributes(&ObjectAttributes,
-           &ControlClass,
-           OBJ_CASE_INSENSITIVE,
-           NULL,
-           NULL);
-       Status = ZwOpenKey(&EnumRootKey, KEY_READ, &ObjectAttributes);
 
+       Status = IopOpenRegistryKeyEx(&EnumRootKey, NULL,
+           &ControlClass, KEY_READ);
        if (!NT_SUCCESS(Status))
        {
            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
@@ -667,12 +640,8 @@ IopAttachFilterDrivers(
        }
 
        /* Open subkey */
-       InitializeObjectAttributes(&ObjectAttributes,
-           &Class,
-           OBJ_CASE_INSENSITIVE,
-           EnumRootKey,
-           NULL);
-       Status = ZwOpenKey(&SubKey, KEY_READ, &ObjectAttributes);
+       Status = IopOpenRegistryKeyEx(&SubKey, EnumRootKey,
+           &Class, KEY_READ);
        if (!NT_SUCCESS(Status))
        {
            DPRINT1("ZwOpenKey() failed with Status %08X\n", Status);
