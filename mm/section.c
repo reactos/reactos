@@ -3197,6 +3197,7 @@ MmCreatePhysicalMemorySection(VOID)
    OBJECT_ATTRIBUTES Obj;
    UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
    LARGE_INTEGER SectionSize;
+   HANDLE Handle;
 
    /*
     * Create the section mapping physical memory
@@ -3225,11 +3226,12 @@ MmCreatePhysicalMemorySection(VOID)
                            SECTION_ALL_ACCESS,
                            0,
                            NULL,
-                           NULL);
+                           &Handle);
    if (!NT_SUCCESS(Status))
    {
       ObDereferenceObject(PhysSection);
    }
+   ObCloseHandle(Handle, KernelMode);
    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
    PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
