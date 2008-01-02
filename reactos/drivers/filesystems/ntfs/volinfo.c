@@ -36,8 +36,8 @@
 
 static NTSTATUS
 NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			   PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
-			   PULONG BufferLength)
+                           PFILE_FS_VOLUME_INFORMATION FsVolumeInfo,
+                           PULONG BufferLength)
 {
   DPRINT("NtfsGetFsVolumeInformation() called\n");
   DPRINT("FsVolumeInfo = %p\n", FsVolumeInfo);
@@ -46,12 +46,12 @@ NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
   DPRINT("Vpb %p\n", DeviceObject->Vpb);
 
   DPRINT("Required length %lu\n",
-	 sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
+         sizeof(FILE_FS_VOLUME_INFORMATION) + DeviceObject->Vpb->VolumeLabelLength);
   DPRINT("LabelLength %hu\n",
-	 DeviceObject->Vpb->VolumeLabelLength);
+         DeviceObject->Vpb->VolumeLabelLength);
   DPRINT("Label %*.S\n",
-	 DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR),
-	 DeviceObject->Vpb->VolumeLabel);
+         DeviceObject->Vpb->VolumeLabelLength / sizeof(WCHAR),
+         DeviceObject->Vpb->VolumeLabel);
 
   if (*BufferLength < sizeof(FILE_FS_VOLUME_INFORMATION))
     return STATUS_INFO_LENGTH_MISMATCH;
@@ -63,8 +63,8 @@ NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
   FsVolumeInfo->VolumeSerialNumber = DeviceObject->Vpb->SerialNumber;
   FsVolumeInfo->VolumeLabelLength = DeviceObject->Vpb->VolumeLabelLength;
   memcpy(FsVolumeInfo->VolumeLabel,
-	 DeviceObject->Vpb->VolumeLabel,
-	 DeviceObject->Vpb->VolumeLabelLength);
+         DeviceObject->Vpb->VolumeLabel,
+         DeviceObject->Vpb->VolumeLabelLength);
 
   /* dummy entries */
   FsVolumeInfo->VolumeCreationTime.QuadPart = 0;
@@ -81,8 +81,8 @@ NtfsGetFsVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 NtfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
-			      PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
-			      PULONG BufferLength)
+                              PFILE_FS_ATTRIBUTE_INFORMATION FsAttributeInfo,
+                              PULONG BufferLength)
 {
   DPRINT("NtfsGetFsAttributeInformation()\n");
   DPRINT("FsAttributeInfo = %p\n", FsAttributeInfo);
@@ -113,8 +113,8 @@ NtfsGetFsAttributeInformation(PDEVICE_EXTENSION DeviceExt,
 
 static NTSTATUS
 NtfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
-			 PFILE_FS_SIZE_INFORMATION FsSizeInfo,
-			 PULONG BufferLength)
+                         PFILE_FS_SIZE_INFORMATION FsSizeInfo,
+                         PULONG BufferLength)
 {
   PDEVICE_EXTENSION DeviceExt;
   NTSTATUS Status = STATUS_SUCCESS;
@@ -142,7 +142,7 @@ NtfsGetFsSizeInformation(PDEVICE_OBJECT DeviceObject,
 
 static NTSTATUS
 NtfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
-			   PULONG BufferLength)
+                           PULONG BufferLength)
 {
   DPRINT("NtfsGetFsDeviceInformation()\n");
   DPRINT("FsDeviceInfo = %p\n", FsDeviceInfo);
@@ -167,7 +167,7 @@ NtfsGetFsDeviceInformation(PFILE_FS_DEVICE_INFORMATION FsDeviceInfo,
 
 NTSTATUS STDCALL
 NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			   PIRP Irp)
+                           PIRP Irp)
 {
   FS_INFORMATION_CLASS FsInformationClass;
   PIO_STACK_LOCATION Stack;
@@ -186,33 +186,33 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
   DPRINT("SystemBuffer %p\n", SystemBuffer);
 
   switch (FsInformationClass)
-    {
-      case FileFsVolumeInformation:
-	Status = NtfsGetFsVolumeInformation(DeviceObject,
-					    SystemBuffer,
-					    &BufferLength);
-	break;
+  {
+    case FileFsVolumeInformation:
+      Status = NtfsGetFsVolumeInformation(DeviceObject,
+                                          SystemBuffer,
+                                          &BufferLength);
+      break;
 
-      case FileFsAttributeInformation:
-	Status = NtfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
-					       SystemBuffer,
-					       &BufferLength);
-	break;
+    case FileFsAttributeInformation:
+      Status = NtfsGetFsAttributeInformation(DeviceObject->DeviceExtension,
+                                             SystemBuffer,
+                                             &BufferLength);
+      break;
 
-      case FileFsSizeInformation:
-	Status = NtfsGetFsSizeInformation(DeviceObject,
-					  SystemBuffer,
-					  &BufferLength);
-	break;
+    case FileFsSizeInformation:
+      Status = NtfsGetFsSizeInformation(DeviceObject,
+                                        SystemBuffer,
+                                        &BufferLength);
+      break;
 
-      case FileFsDeviceInformation:
-	Status = NtfsGetFsDeviceInformation(SystemBuffer,
-					    &BufferLength);
-	break;
+    case FileFsDeviceInformation:
+      Status = NtfsGetFsDeviceInformation(SystemBuffer,
+                                          &BufferLength);
+      break;
 
-      default:
-	Status = STATUS_NOT_SUPPORTED;
-    }
+    default:
+      Status = STATUS_NOT_SUPPORTED;
+  }
 
   Irp->IoStatus.Status = Status;
   if (NT_SUCCESS(Status))
@@ -228,7 +228,7 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
 
 NTSTATUS STDCALL
 NtfsSetVolumeInformation(PDEVICE_OBJECT DeviceObject,
-			PIRP Irp)
+                         PIRP Irp)
 {
   DPRINT("NtfsSetVolumeInformation() called\n");
 
