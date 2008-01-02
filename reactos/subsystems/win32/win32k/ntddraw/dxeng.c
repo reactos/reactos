@@ -10,6 +10,7 @@
 
 #include <w32k.h>
 #include <debug.h>
+ERESOURCE  ghsemShareDevLock;
 
 
 
@@ -214,22 +215,57 @@ DWORD DxEngScreenAccessCheck()
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngLockShareSem                                                    */
-/************************************************************************/
-DWORD DxEngLockShareSem()
+/*++
+* @name DxEngLockShareSem
+* @implemented
+*
+* The function DxEngLockShareSem doing share lock of  ghsemShareDevLock
+*
+* @return
+* This function returns TRUE for susssess, or FALSE for fail, FALSE can only
+* mean it being already lock.
+*
+* @remarks.
+* it being use in diffent ntuser* functions and ntgdi*
+* ReactOS specify it is not been inuse at moment
+*SystemResourcesList
+*--*/
+BOOLEAN
+DxEngLockShareSem()
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOLEAN retVal = 0;
+
+    if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == FALSE)
+    {
+        KeEnterCriticalRegion();
+        retVal = ExAcquireResourceExclusiveLite(&ghsemShareDevLock, TRUE);
+    }
+
+    return retVal;
 }
 
-/************************************************************************/
-/* DxEngUnlockShareSem                                                  */
-/************************************************************************/
-DWORD DxEngUnlockShareSem()
+/*++
+* @name DxEngUnlockShareSem
+* @implemented
+*
+* The function DxEngUnlockShareSem doing share unlock of  ghsemShareDevLock
+*
+* @return
+* This function returns TRUE no matter what
+*
+* @remarks.
+* ReactOS specify it is not been inuse at moment
+*
+*--*/
+BOOLEAN
+DxEngUnlockShareSem()
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    if (ExIsResourceAcquiredExclusiveLite(&ghsemShareDevLock) == TRUE)
+    {
+        ExReleaseResourceLite(&ghsemShareDevLock);
+        KeLeaveCriticalRegion();
+    }
+    return TRUE;
 }
 
 /************************************************************************/
@@ -415,9 +451,9 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 * The DC handle
 *
 * @param DWORD type
-* value 1 = Is DC fullscreen 
-* value 2 = Get Complexity of visible region. 
-* value 3 = Get Driver hdev, which is a pPDev. 
+* value 1 = Is DC fullscreen
+* value 2 = Get Complexity of visible region.
+* value 3 = Get Driver hdev, which is a pPDev.
 *
 * @return
 * Return one of the type values
@@ -445,13 +481,13 @@ DxEngGetDCState(HDC hDC,
                 break;
             case 3:
             {
-                /* Return the HDEV of this DC. */            
+                /* Return the HDEV of this DC. */
                 retVal = (DWORD) pDC->pPDev;
                 break;
             }
             default:
                 /* if a valid type is not found, zero is returned */
-                DPRINT1("Warning did not find type %d\n",type); 
+                DPRINT1("Warning did not find type %d\n",type);
                 break;
         }
         DC_UnlockDc(pDC);

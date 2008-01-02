@@ -78,13 +78,15 @@ BOOL DxEngUnlockDC(PDC pDC);
 /* Notes : Set Gamma ramp */
 BOOL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 
-/* prototypes are not done yet, I need gather all my notes 
- * to make them correct 
+BOOLEAN DxEngLockShareSem();
+BOOLEAN DxEngUnlockShareSem();
+
+/* prototypes are not done yet, I need gather all my notes
+ * to make them correct
  */
 DWORD DxEngCreateMemoryDC(DWORD x1);
 DWORD DxEngScreenAccessCheck();
-DWORD DxEngLockShareSem();
-DWORD DxEngUnlockShareSem();
+
 DWORD DxEngLockHdev(DWORD x1);
 DWORD DxEngUnlockHdev(DWORD x1);
 DWORD DxEngReferenceHdev(DWORD x1);
