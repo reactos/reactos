@@ -29,7 +29,7 @@
  *                  Eric Kohl
  *                  Ge van Geldorp
  *                  Royce Mitchell III
- *                  Aleksey Bragin 
+ *                  Aleksey Bragin
  *                  Jason Filby
  *                  Thomas Weidenmueller
  *                  Gunnar Andre' Dalsnes
@@ -713,7 +713,7 @@ INIT_FUNCTION
 NTAPI
 MmInitMemoryAreas(VOID)
 {
-   DPRINT("MmInitMemoryAreas()\n",0);
+   DPRINT("MmInitMemoryAreas()\n");
    return(STATUS_SUCCESS);
 }
 

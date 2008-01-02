@@ -7,7 +7,7 @@
  *
  * PROGRAMMERS:     No programmer listed.
  */
-
+#include <ntoskrnl.h>
 #define __ELF_WORD_SIZE 32
 #include "elf.inc.h"
 

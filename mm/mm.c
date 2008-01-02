@@ -193,17 +193,6 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
       CPRINT("Page fault at high IRQL was %d, address %x\n", KeGetCurrentIrql(), Address);
       return(STATUS_UNSUCCESSFUL);
    }
-   if (PsGetCurrentProcess() == NULL)
-   {
-      /* Allow this! It lets us page alloc much earlier! It won't be needed 
-       * after my init patch anyways
-       */
-      DPRINT("No current process\n");
-      if (Address < (ULONG_PTR)MmSystemRangeStart)
-      {
-         return(STATUS_ACCESS_VIOLATION);
-      }
-   }
 
    /*
     * Find the memory area for the faulting address
@@ -274,7 +263,7 @@ MmNotPresentFault(KPROCESSOR_MODE Mode,
             break;
 
          case MEMORY_AREA_SHARED_DATA:
-	    Pfn = MmSharedDataPagePhysicalAddress.QuadPart >> PAGE_SHIFT;
+            Pfn = MmSharedDataPagePhysicalAddress.LowPart >> PAGE_SHIFT;
             Status =
                MmCreateVirtualMapping(PsGetCurrentProcess(),
                                       (PVOID)PAGE_ROUND_DOWN(Address),
@@ -310,12 +299,14 @@ MmAccessFault(IN BOOLEAN StoreInstruction,
     /* Cute little hack for ROS */
     if ((ULONG_PTR)Address >= (ULONG_PTR)MmSystemRangeStart)
     {
+#ifdef _M_IX86
         /* Check for an invalid page directory in kernel mode */
         if (Mmi386MakeKernelPageTableGlobal(Address))
         {
             /* All is well with the world */
             return STATUS_SUCCESS;
         }
+#endif
     }
 
     /* Keep same old ReactOS Behaviour */
@@ -397,70 +388,6 @@ MmSetAddressRangeModified (
 {
    UNIMPLEMENTED;
    return (FALSE);
-}
-
-/*
- * @implemented
- */
-PVOID
-NTAPI
-MmGetSystemRoutineAddress(IN PUNICODE_STRING SystemRoutineName)
-{
-    PVOID ProcAddress;
-    ANSI_STRING AnsiRoutineName;
-    NTSTATUS Status;
-    PLIST_ENTRY NextEntry;
-    extern LIST_ENTRY ModuleListHead;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    BOOLEAN Found = FALSE;
-    UNICODE_STRING KernelName = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
-    UNICODE_STRING HalName = RTL_CONSTANT_STRING(L"hal.dll");
-
-    /* Convert routine to ansi name */
-    Status = RtlUnicodeStringToAnsiString(&AnsiRoutineName,
-                                          SystemRoutineName,
-                                          TRUE);
-    if (!NT_SUCCESS(Status)) return NULL;
-
-    /* Loop the loaded module list */
-    NextEntry = ModuleListHead.Flink;
-    while (NextEntry != &ModuleListHead)
-    {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        /* Check if it's the kernel or HAL */
-        if (RtlEqualUnicodeString(&KernelName, &LdrEntry->BaseDllName, TRUE))
-        {
-            /* Found it */
-            Found = TRUE;
-        }
-        else if (RtlEqualUnicodeString(&HalName, &LdrEntry->BaseDllName, TRUE))
-        {
-            /* Found it */
-            Found = TRUE;
-        }
-
-        /* Check if we found a valid binary */
-        if (Found)
-        {
-            /* Find the procedure name */
-            Status = LdrGetProcedureAddress(LdrEntry->DllBase,
-                                            &AnsiRoutineName,
-                                            0,
-                                            &ProcAddress);
-            break;
-        }
-
-        /* Keep looping */
-        NextEntry = NextEntry->Flink;
-    }
-
-    /* Free the string and return */
-    RtlFreeAnsiString(&AnsiRoutineName);
-    return (NT_SUCCESS(Status) ? ProcAddress : NULL);
 }
 
 NTSTATUS

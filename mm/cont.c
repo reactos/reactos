@@ -16,7 +16,7 @@
 
 /* FUNCTIONS *****************************************************************/
 
-static VOID 
+static VOID
 MmFreeContinuousPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
                      PFN_TYPE Page, SWAPENTRY SwapEntry,
                      BOOLEAN Dirty)

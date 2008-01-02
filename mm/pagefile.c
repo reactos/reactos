@@ -323,6 +323,8 @@ MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_TYPE Page)
    return(Status);
 }
 
+extern BOOLEAN PagingReady;
+
 VOID
 INIT_FUNCTION
 NTAPI
@@ -366,11 +368,16 @@ MmReserveSwapPages(ULONG Nr)
    KIRQL oldIrql;
    ULONG MiAvailSwapPages;
 
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiAvailSwapPages =
       (MiFreeSwapPages * MM_PAGEFILE_COMMIT_RATIO) + MM_PAGEFILE_COMMIT_GRACE;
    MiReservedSwapPages = MiReservedSwapPages + Nr;
-   if (MM_PAGEFILE_COMMIT_RATIO != 0 && MiAvailSwapPages < MiReservedSwapPages)
+   if ((MM_PAGEFILE_COMMIT_RATIO != 0) && (MiAvailSwapPages < MiReservedSwapPages))
    {
       KeReleaseSpinLock(&PagingFileListLock, oldIrql);
       return(FALSE);
@@ -385,6 +392,11 @@ MmDereserveSwapPages(ULONG Nr)
 {
    KIRQL oldIrql;
 
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
    MiReservedSwapPages = MiReservedSwapPages - Nr;
    KeReleaseSpinLock(&PagingFileListLock, oldIrql);
@@ -396,6 +408,11 @@ MiAllocPageFromPagingFile(PPAGINGFILE PagingFile)
    KIRQL oldIrql;
    ULONG i, j;
 
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFile->AllocMapLock, &oldIrql);
 
    for (i = 0; i < PagingFile->AllocMapSize; i++)
@@ -425,6 +442,11 @@ MmFreeSwapPage(SWAPENTRY Entry)
    ULONG off;
    KIRQL oldIrql;
 
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    i = FILE_FROM_ENTRY(Entry);
    off = OFFSET_FROM_ENTRY(Entry);
 
@@ -469,6 +491,11 @@ MmAllocSwapPage(VOID)
    ULONG off;
    SWAPENTRY entry;
 
+   if (!PagingReady)
+   {
+       DPRINT1("PAGING USED TOO SOON!!!\n");
+       while (TRUE);
+   }
    KeAcquireSpinLock(&PagingFileListLock, &oldIrql);
 
    if (MiFreeSwapPages == 0)
@@ -553,12 +580,14 @@ MmDumpToPagingFile(ULONG BugCode,
    Headers->Type = MmCoreDumpType;
    if (TrapFrame != NULL)
    {
+#ifdef _M_IX86
       if (!(TrapFrame->EFlags & (1 << 17)))
       {
          memcpy(&Headers->TrapFrame, TrapFrame,
                 sizeof(KTRAP_FRAME) - (4 * sizeof(ULONG)));
       }
       else
+#endif
       {
          memcpy(&Headers->TrapFrame, TrapFrame, sizeof(KTRAP_FRAME));
       }
@@ -672,7 +701,7 @@ MmInitializeCrashDump(HANDLE PageFileHandle, ULONG PageFileNum)
    UNICODE_STRING DiskDumpName = RTL_CONSTANT_STRING(L"DiskDump");
    ANSI_STRING ProcName;
    PIO_STACK_LOCATION StackPtr;
-   PLDR_DATA_TABLE_ENTRY ModuleObject;
+   PLDR_DATA_TABLE_ENTRY ModuleObject = NULL;
 
    Status = ZwFsControlFile(PageFileHandle,
                             0,

@@ -95,7 +95,7 @@ MmMapIoSpace (IN PHYSICAL_ADDRESS PhysicalAddress,
       DPRINT("MmMapIoSpace failed (%lx)\n", Status);
       return (NULL);
    }
-   Pfn = PhysicalAddress.QuadPart >> PAGE_SHIFT;
+   Pfn = PhysicalAddress.LowPart >> PAGE_SHIFT;
    for (i = 0; i < PAGE_ROUND_UP(NumberOfBytes); i += PAGE_SIZE, Pfn++)
    {
       Status = MmCreateVirtualMappingForKernel((char*)Result + i,
