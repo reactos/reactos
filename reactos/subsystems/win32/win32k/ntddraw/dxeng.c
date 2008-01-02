@@ -99,7 +99,7 @@ DxEngDispUniq()
     return GdiHandleTable->flDeviceUniq;
 }
 
-ULONG gulVisRgnUniqueness; // Inc count everytime client region is updated.
+ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
 
 /************************************************************************/
 /* DxEngVisRgnUniq                                                      */
@@ -114,11 +114,11 @@ DxEngVisRgnUniq()
 /************************************************************************/
 /* DxEngEnumerateHdev                                                   */
 /************************************************************************/
-/* Enumate all drivers in win32k */
+/* Enumerate all drivers in win32k */
 HDEV *
 DxEngEnumerateHdev(HDEV *hdev)
 {
-    /* FIXME Enumate all drivers in win32k */
+    /* FIXME Enumerate all drivers in win32k */
     UNIMPLEMENTED;
     return FALSE;
 }
@@ -133,13 +133,13 @@ DxEngEnumerateHdev(HDEV *hdev)
 * The hdev
 *
 * @param PGAMMARAMP Ramp
-* to fill in our gama ramp
+* to fill in our gamma ramp
 *
 * @return
-* This return FALSE or TRUE, FALSE for fail, TRUE for success
+*Returns TRUE for success, FALSE for failure
 *
 * @remarks.
-* ReactOS does not loop it, only set the gamma once.
+* ReactOS does not loop it, only sets the gamma once.
 *
 *--*/
 BOOL
@@ -153,13 +153,13 @@ DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 * @name DxEngLockDC
 * @implemented
 *
-* The function DxEngLockDC lock a hdc from dxg.sys
+* The function DxEngLockDC locks a hdc from dxg.sys
 *
 * @param HDC hDC
-* The handle we need want lock
+* The handle we want to lock
 *
 * @return
-* This api return PDC or NULL depns if it sussess lock the hdc or not
+* Returns PDC if lock succeeded or NULL depns if it failed
 *
 * @remarks.
 * none
@@ -176,13 +176,13 @@ DxEngLockDC(HDC hDC)
 * @name DxEngUnlockDC
 * @implemented
 *
-* The function DxEngUnlockDC Unlock a pDC (hdc) from dxg.sys
+* The function DxEngUnlockDC unlocks a pDC (hdc) from dxg.sys
 
 * @param PDC pDC
-* The handle we need unlock
+* The handle we want to unlock
 *
 * @return
-* This api always return TRUE if it sussess or not
+* This function returns TRUE no matter what
 *
 * @remarks.
 * none
@@ -283,22 +283,22 @@ DWORD DxEngUnreferenceHdev(DWORD x1)
 * @name DxEngSetDeviceGammaRamp
 * @implemented
 *
-* The function DxEngSetDeviceGammaRamp Set Gamma ramp from from dxg.sys
+* The function DxEngSetDeviceGammaRamp sets gamma ramp from dxg.sys
 
 * @param HDEV hPDev
 * The hdev
 *
 * @param PGAMMARAMP Ramp
-* to set in our gama ramp
+* Value to change gamma ramp to
 *
 * @param BOOL Test
-* Testing the gama or not. FALSE for no test, TRUE for testing
+* Whether gamma should be tested. TRUE to test, FALSE to not test
 *
 * @return
-* This return FALSE or TRUE, FALSE for fail, TRUE for success
+*Returns TRUE for success, FALSE for failure
 *
 * @remarks.
-* ReactOS does not loop it, only set the gamma once.
+* ReactOS does not loop and only sets the gamma once.
 *
 *--*/
 BOOL
@@ -405,23 +405,25 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 * @name DxEngGetDCState
 * @implemented
 *
-* The function DxEngGetDCState getting sate 
-* if it DC full screen /  Get Complexity of visiable region or
-* Get Driver hdev, which is pPDev
+* The function DxEngGetDCState is capable of returning three
+* DC states depending on what value is passed in its second parameter:
+* 1. If the DC is full screen
+* 2. Get Complexity of visible region
+* 3. Get Driver hdev, which is pPDev
 *
 * @param HDC hdc
-* The hdc
+* The DC handle
 *
 * @param DWORD type
-* value 1 = Is DC full screen 
-* value 2 = Get Complexity of visiable region. 
-* value 3 = Get Driver hdev, which is pPDev. 
+* value 1 = Is DC fullscreen 
+* value 2 = Get Complexity of visible region. 
+* value 3 = Get Driver hdev, which is a pPDev. 
 *
 * @return
-* return one of the type value 
+* Return one of the type values
 *
 * @remarks.
-* we do not have type 2 implement yet
+* We do not have type 2 implement yet
 *
 *--*/
 DWORD
@@ -443,13 +445,13 @@ DxEngGetDCState(HDC hDC,
                 break;
             case 3:
             {
-                /* Return HDEV of this DC. */            
+                /* Return the HDEV of this DC. */            
                 retVal = (DWORD) pDC->pPDev;
                 break;
             }
             default:
-                /* if it does not found a type it wanted we return 0 as value */
-                DPRINT1("warning did not found type %d\n",type); 
+                /* if a valid type is not found, zero is returned */
+                DPRINT1("Warning did not find type %d\n",type); 
                 break;
         }
         DC_UnlockDc(pDC);
