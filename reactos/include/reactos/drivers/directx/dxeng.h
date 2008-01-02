@@ -49,47 +49,27 @@
 /************************************************************************/
 /* win32k.sys internal protypes for the driver functions it export      */
 /************************************************************************/
-
-/* Notes : Check see if termal server got a connections or not */
 BOOL DxEngNUIsTermSrv();
-
-/* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
 BOOL DxEngRedrawDesktop();
-
-/* Notes : return the DisplayUniqVisrgn counter from gdishare memory */
 ULONG DxEngDispUniq();
-
-/* Notes :  return the VisRgnUniq counter for win32k */
 ULONG DxEngVisRgnUniq();
-
-/* Notes : Enumate all drivers in win32k */
 HDEV *DxEngEnumerateHdev(HDEV *hdev);
-
-/* Notes : same protypes NtGdiEngGetDeviceGammaRamp, diffent is we skipp the user mode checks and seh */
-BOOL
-DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
-
-/* Notes : Lock the hDC */
+BOOL DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp);
 PDC DxEngLockDC(HDC hDC);
-
-/* Notes : Unlock the hDC */
 BOOL DxEngUnlockDC(PDC pDC);
-
-/* Notes : Set Gamma ramp */
 BOOL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
-
 BOOLEAN DxEngLockShareSem();
 BOOLEAN DxEngUnlockShareSem();
 BOOLEAN DxEngCleanDC(HDC hdc);
 DWORD DxEngGetHdevData(HDEV hdev, DWORD Index);
 BOOLEAN DxEngSetHdevData(HDEV hdev, DWORD Index, DWORD Save);
+BOOLEAN DxEngIncDispUniq();
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
  */
 DWORD DxEngCreateMemoryDC(DWORD x1);
 DWORD DxEngScreenAccessCheck();
-
 DWORD DxEngLockHdev(DWORD x1);
 DWORD DxEngUnlockHdev(DWORD x1);
 DWORD DxEngReferenceHdev(DWORD x1);
@@ -98,7 +78,6 @@ DWORD DxEngUnreferenceHdev(DWORD x1);
 DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngSpSpritesVisible(DWORD x1);
-
 DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
 DWORD DxEngSetDCOwner(DWORD x1, DWORD x2);
@@ -116,5 +95,5 @@ DWORD DxEngSyncPaletteTableWithDevice(DWORD x1, DWORD x2);
 DWORD DxEngSetPaletteState(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngGetRedirectionBitmap(DWORD x1);
 DWORD DxEngLoadImage(DWORD x1,DWORD x2);
-DWORD DxEngIncDispUniq();
+
 

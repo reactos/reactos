@@ -89,11 +89,19 @@ DxEngRedrawDesktop()
 }
 
 
-/************************************************************************/
-/* DxEngDispUniq                                                        */
-/************************************************************************/
-
-/*  Notes : return the DisplayUniqVisrgn counter from gdishare memory  */
+/*++
+* @name DxEngDispUniq
+* @implemented
+*
+* The function DxEngDispUniq return the DisplayUniqVisrgn counter from gdishare memory
+*
+* @return
+* return DisplayUniqVisrgn counter value from gdishare memory
+*
+* @remarks.
+* none
+*
+*--*/
 ULONG
 DxEngDispUniq()
 {
@@ -633,13 +641,24 @@ DWORD DxEngLoadImage(DWORD x1,DWORD x2)
     return FALSE;
 }
 
-/************************************************************************/
-/* DxEngIncDispUniq                                                       */
-/************************************************************************/
-DWORD DxEngIncDispUniq()
+/*++
+* @name DxEngIncDispUniq
+* @implemented
+*
+* The function DxEngIncDispUniq incress DisplayUniqVisrgn counter from gdishare memory
+*
+* @return
+* This function returns TRUE no matter what
+*
+* @remarks.
+* none
+*
+*--*/
+BOOLEAN
+DxEngIncDispUniq()
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    InterlockedIncrement((LONG*)&GdiHandleTable->flDeviceUniq);
+    return TRUE;
 }
 
 
