@@ -34,6 +34,7 @@
 #include "lang/es-ES.h"
 #include "lang/fr-FR.h"
 #include "lang/it-IT.h"
+#include "lang/pl-PL.h"
 #include "lang/ru-RU.h"
 #include "lang/sv-SE.h"
 #include "lang/uk-UA.h"
@@ -88,6 +89,13 @@ static MUI_LANGUAGE LanguageList[] =
         L"Spanish",
         esESPages,
         esESErrorEntries
+    },
+    {
+        L"00000415",
+        L"00000415",
+        L"Polish",
+        plPLPages,
+        plPLErrorEntries
     },
     {
         L"0000041D",

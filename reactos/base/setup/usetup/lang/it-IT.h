@@ -1470,8 +1470,8 @@ MUI_PAGE itITPages[] =
         itITLanguagePageEntries
     },
     {
-       START_PAGE,
-       itITWelcomePageEntries
+        START_PAGE,
+        itITWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,

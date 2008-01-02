@@ -11,7 +11,7 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 STRINGTABLE DISCARDABLE
 BEGIN
     IDS_CAPTION  "Instalator ReactOS"
-    IDS_TEXT     "Nie mo¿esz zainstalowaæ ReactOS bezpoœrednio z tego CD!\n\nProszê zrestartowaæ komputer i uruchomiæ z tego CD, aby zainstalowaæ ReactOS."
+    IDS_TEXT     "Nie mo¿esz zainstalowaæ ReactOS bezpoœrednio!\n\nProszê zrestartowaæ komputer i uruchomiæ z tego CD, aby zainstalowaæ ReactOS."
 END
 
 /* EOF */

@@ -1309,7 +1309,7 @@ MUI_ERROR enUSErrorEntries[] =
     },
     {
         //ERROR_WRITE_BOOT,
-        "failed to install FAT bootcode on the system partition.",
+        "Setup failed to install FAT bootcode on the system partition.",
         "ENTER = Reboot computer"
     },
     {
