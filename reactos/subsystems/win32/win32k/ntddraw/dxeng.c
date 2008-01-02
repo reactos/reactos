@@ -93,10 +93,10 @@ DxEngRedrawDesktop()
 * @name DxEngDispUniq
 * @implemented
 *
-* The function DxEngDispUniq return the DisplayUniqVisrgn counter from gdishare memory
+* The function DxEngDispUniq returns the DisplayUniqVisrgn counter value from GDI shared memory
 *
 * @return
-* return DisplayUniqVisrgn counter value from gdishare memory
+* Returns the DisplayUniqVisrgn counter value from GDI shared memory
 *
 * @remarks.
 * none
@@ -136,19 +136,19 @@ DxEngEnumerateHdev(HDEV *hdev)
 * @name DxEngGetDeviceGammaRamp
 * @implemented
 *
-* The function DxEngSetDeviceGammaRamp Set Gamma ramp from from dxg.sys
+* The function DxEngGetDeviceGammaRamp gets the gamma ramp in dxg.sys.
 
 * @param HDEV hPDev
-* The hdev
+* The hdev.
 *
 * @param PGAMMARAMP Ramp
-* to fill in our gamma ramp
+* Pointer to store the gamma ramp value in.
 *
 * @return
 *Returns TRUE for success, FALSE for failure
 *
 * @remarks.
-* ReactOS does not loop it, only sets the gamma once.
+* None
 *
 *--*/
 BOOL
@@ -168,7 +168,7 @@ DxEngGetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp)
 * The handle we want to lock
 *
 * @return
-* Returns PDC if lock succeeded or NULL depns if it failed
+* Returns PDC if lock succeeded or NULL if it failed.
 *
 * @remarks.
 * none
@@ -185,13 +185,13 @@ DxEngLockDC(HDC hDC)
 * @name DxEngUnlockDC
 * @implemented
 *
-* The function DxEngUnlockDC unlocks a pDC (hdc) from dxg.sys
+* The function DxEngUnlockDC unlocks a pDC (hdc) from dxg.sys.
 
 * @param PDC pDC
-* The handle we want to unlock
+* The handle we want to unlock.
 *
 * @return
-* This function returns TRUE no matter what
+* This function returns TRUE no matter what.
 *
 * @remarks.
 * none
@@ -227,15 +227,15 @@ DWORD DxEngScreenAccessCheck()
 * @name DxEngLockShareSem
 * @implemented
 *
-* The function DxEngLockShareSem doing share lock of  ghsemShareDevLock
+* The function DxEngLockShareSem locks a struct of type ghsemShareDevLock that can be shared.
 *
 * @return
-* This function returns TRUE for susssess, or FALSE for fail, FALSE can only
-* mean it being already lock.
+* This function returns TRUE for success and FALSE for failure.
+* FALSE must mean the struct has already been locked.
 *
 * @remarks.
-* it being use in diffent ntuser* functions and ntgdi*
-* ReactOS specify it is not been inuse at moment
+* It is being used in various ntuser* functions and ntgdi*
+* ReactOS specific: It is not in use yet.
 *SystemResourcesList
 *--*/
 BOOLEAN
@@ -256,13 +256,13 @@ DxEngLockShareSem()
 * @name DxEngUnlockShareSem
 * @implemented
 *
-* The function DxEngUnlockShareSem doing share unlock of  ghsemShareDevLock
+* The function DxEngUnlockShareSem unlocks the struct of type ghsemShareDevLock.
 *
 * @return
-* This function returns TRUE no matter what
+* This function returns TRUE no matter what.
 *
 * @remarks.
-* ReactOS specify it is not been inuse at moment
+* ReactOS specific: It is not in use yet.
 *
 *--*/
 BOOLEAN
@@ -333,16 +333,16 @@ DWORD DxEngUnreferenceHdev(DWORD x1)
 * The hdev
 *
 * @param PGAMMARAMP Ramp
-* Value to change gamma ramp to
+* Value to change gamma ramp to.
 *
 * @param BOOL Test
-* Whether gamma should be tested. TRUE to test, FALSE to not test
+* Whether gamma should be tested. TRUE to test, FALSE to not test.
 *
 * @return
-*Returns TRUE for success, FALSE for failure
+*Returns TRUE for success, FALSE for failure.
 *
 * @remarks.
-* ReactOS does not loop and only sets the gamma once.
+* None
 *
 *--*/
 BOOL
@@ -402,13 +402,13 @@ DxEngGetHdevData(HDEV hdev,
 * Support only DxEGShDevData_dd_nCount it is a internal counter how many time hdev been lock and unlock
 *
 * @param DWORD Data
-* The value to be save to hdev
+* The value to be saved to hdev's internal counter.
 *
 * @return
 * Returns TRUE for success, FALSE for failure
 *
 * @remarks.
-* ReactOS specfiy Not finish implement, I have not save the value into the hdev yet.
+* ReactOS specific: Implementation ins incomplete, I do not save the value into the hdev yet.
 *
 *--*/
 BOOLEAN
@@ -495,7 +495,7 @@ DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
 * Return one of the type values
 *
 * @remarks.
-* We do not have type 2 implement yet
+* We do not have type 2 implemented yet
 *
 *--*/
 DWORD
@@ -644,10 +644,10 @@ DWORD DxEngLoadImage(DWORD x1,DWORD x2)
 * @name DxEngIncDispUniq
 * @implemented
 *
-* The function DxEngIncDispUniq incress DisplayUniqVisrgn counter from gdishare memory
+* The function DxEngIncDispUniq increments the DisplayUniqVisrgn counter from GDI shared memory.
 *
 * @return
-* This function returns TRUE no matter what
+* This function returns TRUE no matter what.
 *
 * @remarks.
 * none
