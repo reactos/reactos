@@ -1593,7 +1593,6 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
                      PUNICODE_STRING ParentIdPrefix)
 {
    ULONG KeyNameBufferLength;
-   PWSTR KeyNameBuffer = NULL;
    PKEY_VALUE_PARTIAL_INFORMATION ParentIdPrefixInformation = NULL;
    UNICODE_STRING KeyName;
    UNICODE_STRING KeyValue;
@@ -1620,15 +1619,20 @@ IopGetParentIdPrefix(PDEVICE_NODE DeviceNode,
        Status = STATUS_INSUFFICIENT_RESOURCES;
        goto cleanup;
    }
-   KeyNameBuffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
-   if (!KeyNameBuffer)
+
+
+   KeyName.Buffer = ExAllocatePool(PagedPool, (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length);
+   if (!KeyName.Buffer)
    {
        Status = STATUS_INSUFFICIENT_RESOURCES;
        goto cleanup;
    }
-   wcscpy(KeyNameBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyNameBuffer, DeviceNode->Parent->InstancePath.Buffer);
-   RtlInitUnicodeString(&KeyName, KeyNameBuffer);
+   KeyName.Length = 0;
+   KeyName.MaximumLength = (49 * sizeof(WCHAR)) + DeviceNode->Parent->InstancePath.Length;
+
+   RtlAppendUnicodeToString(&KeyName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
+   RtlAppendUnicodeStringToString(&KeyName, &DeviceNode->Parent->InstancePath);
+
    Status = IopOpenRegistryKeyEx(&hKey, NULL, &KeyName, KEY_QUERY_VALUE | KEY_SET_VALUE);
    if (!NT_SUCCESS(Status))
       goto cleanup;
@@ -1678,7 +1682,7 @@ cleanup:
       Status = RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE, &KeyValue, ParentIdPrefix);
    }
    ExFreePool(ParentIdPrefixInformation);
-   ExFreePool(KeyNameBuffer);
+   RtlFreeUnicodeString(&KeyName);
    if (hKey != NULL)
       ZwClose(hKey);
    return Status;
@@ -1713,7 +1717,6 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    WCHAR InstancePath[MAX_PATH];
    IO_STACK_LOCATION Stack;
    NTSTATUS Status;
-   PWSTR KeyBuffer;
    PWSTR Ptr;
    USHORT Length;
    USHORT TotalLength;
@@ -1851,18 +1854,11 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
    /*
     * Create registry key for the instance id, if it doesn't exist yet
     */
-   KeyBuffer = ExAllocatePool(
-      PagedPool,
-      (49 * sizeof(WCHAR)) + DeviceNode->InstancePath.Length);
-   wcscpy(KeyBuffer, L"\\Registry\\Machine\\System\\CurrentControlSet\\Enum\\");
-   wcscat(KeyBuffer, DeviceNode->InstancePath.Buffer);
-   Status = IopCreateDeviceKeyPath(/*KeyBuffer*/&DeviceNode->InstancePath, &InstanceKey);
-   ExFreePool(KeyBuffer);
+   Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, &InstanceKey);
    if (!NT_SUCCESS(Status))
    {
       DPRINT1("Failed to create the instance key! (Status %lx)\n", Status);
    }
-
 
    {
       /* Set 'Capabilities' value */

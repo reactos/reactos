@@ -222,27 +222,31 @@ IopNormalizeImagePath(
 
    if (InputImagePath.Length == 0)
    {
-      ImagePath->Length = (33 * sizeof(WCHAR)) + ServiceName->Length;
-      ImagePath->MaximumLength = ImagePath->Length + sizeof(UNICODE_NULL);
+      ImagePath->Length = 0;
+      ImagePath->MaximumLength =
+          (33 * sizeof(WCHAR)) + ServiceName->Length + sizeof(UNICODE_NULL);
       ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->MaximumLength);
       if (ImagePath->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
-      wcscpy(ImagePath->Buffer, L"\\SystemRoot\\system32\\drivers\\");
-      wcscat(ImagePath->Buffer, ServiceName->Buffer);
-      wcscat(ImagePath->Buffer, L".sys");
+      RtlAppendUnicodeToString(ImagePath, L"\\SystemRoot\\system32\\drivers\\");
+      RtlAppendUnicodeStringToString(ImagePath, ServiceName);
+      RtlAppendUnicodeToString(ImagePath, L".sys");
    } else
    if (InputImagePath.Buffer[0] != L'\\')
    {
-      ImagePath->Length = (12 * sizeof(WCHAR)) + InputImagePath.Length;
-      ImagePath->MaximumLength = ImagePath->Length + sizeof(UNICODE_NULL);
+      ImagePath->Length = 0;
+      ImagePath->MaximumLength =
+          12 * sizeof(WCHAR) + InputImagePath.Length + sizeof(UNICODE_NULL);
       ImagePath->Buffer = ExAllocatePool(NonPagedPool, ImagePath->MaximumLength);
       if (ImagePath->Buffer == NULL)
          return STATUS_NO_MEMORY;
 
-      wcscpy(ImagePath->Buffer, L"\\SystemRoot\\");
-      wcscat(ImagePath->Buffer, InputImagePath.Buffer);
-      ExFreePool(InputImagePath.Buffer);
+      RtlAppendUnicodeToString(ImagePath, L"\\SystemRoot\\");
+      RtlAppendUnicodeStringToString(ImagePath, &InputImagePath);
+
+      /* Free caller's string */
+      RtlFreeUnicodeString(&InputImagePath);
    }
 
    return STATUS_SUCCESS;
