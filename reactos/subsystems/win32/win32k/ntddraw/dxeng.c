@@ -411,7 +411,7 @@ DWORD DxEngDeleteDC(DWORD x1, DWORD x2)
 /************************************************************************/
 /* DxEngCleanDC                                                         */
 /************************************************************************/
-DWORD DxEngCleanDC(DWORD x1)
+BOOLEAN DxEngCleanDC(HDC hdc)
 {
     UNIMPLEMENTED;
     return FALSE;

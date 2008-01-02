@@ -80,6 +80,7 @@ BOOL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 
 BOOLEAN DxEngLockShareSem();
 BOOLEAN DxEngUnlockShareSem();
+BOOLEAN DxEngCleanDC(HDC hdc);
 
 /* prototypes are not done yet, I need gather all my notes
  * to make them correct
@@ -99,7 +100,6 @@ DWORD DxEngGetHdevData(PEDD_DIRECTDRAW_GLOBAL pEDDgpl, DWORD Index);
 DWORD DxEngSetHdevData(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngDeleteDC(DWORD x1, DWORD x2);
-DWORD DxEngCleanDC(DWORD x1);
 DWORD DxEngSetDCOwner(DWORD x1, DWORD x2);
 DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3);
 DWORD DxEngGetDCState(HDC hDC, DWORD type);
