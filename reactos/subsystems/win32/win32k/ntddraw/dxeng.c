@@ -383,7 +383,7 @@ DWORD DxEngSpSpritesVisible(DWORD x1)
 /************************************************************************/
 DWORD
 DxEngGetHdevData(HDEV hdev,
-                 DWORD Index)
+                 DXEGSHDEVDATA Index)
 {
     UNIMPLEMENTED;
     return 0;
@@ -398,11 +398,11 @@ DxEngGetHdevData(HDEV hdev,
 * @param HDEV hPDev
 * The hdev
 *
-* @param DWORD Index
-* Support only Index 8 it is a internal counter how many time hdev been lock and unlock
+* @param DXEGSHDEVDATA Type
+* Support only DxEGShDevData_dd_nCount it is a internal counter how many time hdev been lock and unlock
 *
-* @param DWORD Save
-* The value to be save to hdev internal counter
+* @param DWORD Data
+* The value to be save to hdev
 *
 * @return
 * Returns TRUE for success, FALSE for failure
@@ -412,19 +412,18 @@ DxEngGetHdevData(HDEV hdev,
 *
 *--*/
 BOOLEAN
-DxEngSetHdevData(HDEV hdev,
-                 DWORD Index,
-                 DWORD Save)
+DxEngSetHdevData(HDEV hDev,
+                 DXEGSHDEVDATA Type,
+                 DWORD Data)
 {
-    BOOL retVal = FALSE;
-    if (Index == 8)
-    {
-        /* Counter how many time hdev been lock/unlock, we do not support it yet in ReactOS */
-        DPRINT1("Warning not supproted yet\n");
-        retVal = TRUE;
-    }
+  BOOL retVal = FALSE; // Default, no set.
 
-    return retVal;
+  if ( Type == DxEGShDevData_dd_nCount )
+  {
+     ((PGDIDEVICE)hDev)->DxDD_nCount = Data;
+     retVal = TRUE; // Set
+  }
+  return retVal;
 }
 
 /************************************************************************/

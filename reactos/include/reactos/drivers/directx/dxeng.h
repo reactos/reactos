@@ -46,6 +46,29 @@
 #define DXENG_INDEX_DxEngGetRedirectionBitmap           0x29
 #define DXENG_INDEX_DxEngLoadImage                      0x2A
 
+typedef enum _DXEGSHDEVDATA
+{
+  DxEGShDevData_Surface,
+  DxEGShDevData_hSpooler,
+  DxEGShDevData_DitherFmt,
+  DxEGShDevData_FxCaps,
+  DxEGShDevData_FxCaps2,
+  DxEGShDevData_DrvFuncs,
+  DxEGShDevData_dhpdev,
+  DxEGShDevData_eddg,
+  DxEGShDevData_dd_nCount,
+  DxEGShDevData_dd_flags,
+  DxEGShDevData_disable,
+  DxEGShDevData_metadev,
+  DxEGShDevData_display,
+  DxEGShDevData_Parent,
+  DxEGShDevData_OpenRefs,
+  DxEGShDevData_palette,
+  DxEGShDevData_ldev,
+  DxEGShDevData_GDev,
+  DxEGShDevData_clonedev,
+} DXEGSHDEVDATA,*PDXEGSHDEVDATA;
+
 /************************************************************************/
 /* win32k.sys internal protypes for the driver functions it export      */
 /************************************************************************/
@@ -61,8 +84,8 @@ BOOL DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Unuse);
 BOOLEAN DxEngLockShareSem();
 BOOLEAN DxEngUnlockShareSem();
 BOOLEAN DxEngCleanDC(HDC hdc);
-DWORD DxEngGetHdevData(HDEV hdev, DWORD Index);
-BOOLEAN DxEngSetHdevData(HDEV hdev, DWORD Index, DWORD Save);
+DWORD DxEngGetHdevData(HDEV, DXEGSHDEVDATA);
+BOOLEAN DxEngSetHdevData(HDEV, DXEGSHDEVDATA, DWORD);
 BOOLEAN DxEngIncDispUniq();
 
 /* prototypes are not done yet, I need gather all my notes

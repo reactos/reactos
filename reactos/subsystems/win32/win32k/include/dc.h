@@ -69,7 +69,7 @@ typedef struct _GDIDEVICE
 
   HSURF         FillPatterns[HS_DDI_MAX];
 
-  ULONG         DxDD_Data;
+  ULONG         DxDD_nCount;
 
   DEVINFO       DevInfo;
   GDIINFO       GDIInfo;
