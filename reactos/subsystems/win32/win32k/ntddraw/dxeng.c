@@ -382,11 +382,79 @@ DWORD DxEngSpSpritesVisible(DWORD x1)
 /* DxEngGetHdevData                                                     */
 /************************************************************************/
 DWORD
-DxEngGetHdevData(HDEV hdev,
-                 DXEGSHDEVDATA Index)
+DxEngGetHdevData(HDEV hDev,
+                 DXEGSHDEVDATA Type)
 {
-    UNIMPLEMENTED;
-    return 0;
+  DWORD retVal = 0;
+  PGDIDEVICE PDev = (PGDIDEVICE)hDev;
+
+    switch ( Type )
+    {
+      case DxEGShDevData_Surface:
+        retVal = (DWORD) PDev->pSurface; // ptr to Surface handle.
+        break;
+      case DxEGShDevData_hSpooler:
+        retVal = (DWORD) PDev->hSpooler; // If the device is a spooler driver.
+        break;
+      case DxEGShDevData_DitherFmt:
+        retVal = (DWORD) PDev->DevInfo.iDitherFormat;
+        break;
+      case DxEGShDevData_FxCaps:
+        retVal = (DWORD) PDev->DevInfo.flGraphicsCaps;
+        break;
+      case DxEGShDevData_FxCaps2:
+        retVal = (DWORD) PDev->DevInfo.flGraphicsCaps2;
+        break;
+      case DxEGShDevData_DrvFuncs:
+        retVal = (DWORD) &PDev->DriverFunctions;
+        break;
+      case DxEGShDevData_dhpdev:
+        retVal = (DWORD) PDev->hPDev; // DHPDEV
+        break;
+      case DxEGShDevData_eddg:
+        retVal = (DWORD) PDev->pEDDgpl;
+        break;
+      case DxEGShDevData_dd_nCount:
+        retVal = (DWORD) PDev->DxDd_nCount;
+        break;
+      case DxEGShDevData_dd_flags:
+        retVal = (DWORD) PDev->DxDd_Flags;
+        break;
+      case DxEGShDevData_disable:
+        retVal = (DWORD) PDev->flFlags & PDEV_DISABLED;
+        break;
+      case DxEGShDevData_metadev:
+        retVal = (DWORD) PDev->flFlags & PDEV_META_DEVICE;
+        break;
+      case DxEGShDevData_display:
+        retVal = (DWORD) PDev->flFlags & PDEV_DISPLAY;
+        break;
+      case DxEGShDevData_Parent:
+        retVal = (DWORD) PDev->ppdevParent;
+        break;
+      case DxEGShDevData_OpenRefs:
+        retVal = (DWORD) PDev->cPdevOpenRefs == 0;
+        break;
+      case DxEGShDevData_palette:
+        retVal = (DWORD) PDev->GDIInfo.flRaster & RC_PALETTE;
+        break;
+      case DxEGShDevData_ldev:
+      // ATM we do not support the Loader Device driver structure.
+//        retVal = (DWORD) PDev->pldev;
+        break;
+      case DxEGShDevData_GDev:
+        retVal = (DWORD) PDev->pGraphicsDev; // P"GRAPHICS_DEVICE"
+        break;
+      case DxEGShDevData_clonedev:
+        retVal = (DWORD) PDev->flFlags & PDEV_CLONE_DEVICE;
+        break;
+        
+      default:
+        break;            
+    }
+  
+  return retVal;
+
 }
 
 /*++
@@ -420,7 +488,7 @@ DxEngSetHdevData(HDEV hDev,
 
   if ( Type == DxEGShDevData_dd_nCount )
   {
-     ((PGDIDEVICE)hDev)->DxDD_nCount = Data;
+     ((PGDIDEVICE)hDev)->DxDd_nCount = Data;
      retVal = TRUE; // Set
   }
   return retVal;
