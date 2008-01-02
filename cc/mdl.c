@@ -129,9 +129,19 @@ CcMdlWriteComplete (IN PFILE_OBJECT FileObject,
  * @unimplemented
  */
 VOID NTAPI
-CcMdlWriteCompleteDev (IN PFILE_OBJECT FileObject, 
-                       IN PLARGE_INTEGER FileOffset, 
-                       IN PMDL MdlChain)
+CcMdlReadComplete2 (IN PMDL MemoryDescriptorList, 
+                    IN PFILE_OBJECT FileObject)
+{
+    UNIMPLEMENTED;
+}
+
+/*
+ * @unimplemented
+ */
+VOID NTAPI
+CcMdlWriteComplete2 (IN PFILE_OBJECT FileObject, 
+                     IN PLARGE_INTEGER FileOffset, 
+                     IN PMDL MdlChain)
 {
     UNIMPLEMENTED;
 }
