@@ -41,58 +41,67 @@
 static MUI_LANGUAGE LanguageList[] =
 {
     {
-        L"00000409",    /* The Language ID */
-        L"00000409",    /* Default Keyboard Layout for this language */
-        L"English",     /* Language Name , not used just to make things easier when updating this file */
-        enUSPages       /* Translated strings  */
+        L"00000409",        /* The Language ID */
+        L"00000409",        /* Default Keyboard Layout for this language */
+        L"English",         /* Language Name , not used just to make things easier when updating this file */
+        enUSPages,          /* Translated page strings  */
+        enUSErrorEntries    /* Translated error strings */
     },
     {
         L"0000040C",
         L"0000040C",
         L"French",
-        frFRPages
+        frFRPages,
+        frFRErrorEntries
     },
     {
         L"00000407",
         L"00000407",
         L"German",
-        deDEPages
+        deDEPages,
+        deDEErrorEntries
     },
     {
         L"00000408",
         L"00000409",
         L"Greek",
-        elGRPages
+        elGRPages,
+        elGRErrorEntries
     },
     {
         L"00000410",
         L"00000410",
         L"Italian",
-        itITPages
+        itITPages,
+        itITErrorEntries
     },
     {
         L"00000419",
         L"00000419",
         L"Russian",
-        ruRUPages
+        ruRUPages,
+        ruRUErrorEntries
     },
     {
         L"0000040A",
         L"0000040A",
         L"Spanish",
-        esESPages
+        esESPages,
+        esESErrorEntries
     },
     {
         L"0000041D",
         L"0000041D",
         L"Swedish",
-        svSEPages
+        svSEPages,
+        svSEErrorEntries
     },
     {
         L"00000422",
         L"00000422",
         L"Ukrainian",
-        ukUAPages
+        ukUAPages,
+        ukUAErrorEntries
     },
     {
         NULL,
@@ -133,6 +142,28 @@ FindMUIEntriesOfPage (ULONG PageNumber)
                 muiIndex++;
             }
             while (Pages[muiIndex].MuiEntry != NULL);
+        }
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+
+    return NULL;
+}
+
+static
+MUI_ERROR *
+FindMUIErrorEntries ()
+{
+    ULONG lngIndex = 0;
+
+    do
+    {
+        /* First we search the language list till we find current selected language messages */
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            /* Get all available error messages for this language */
+            return LanguageList[lngIndex].MuiErrors;
         }
 
         lngIndex++;
@@ -188,18 +219,30 @@ MUIDisplayPage(ULONG page)
 VOID
 MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
 {
+    MUI_ERROR * entry;
+
     if (ErrorNum >= ERROR_LAST_ERROR_CODE)
     {
-        PopupError("invalid error number provided",
-                    "press enter to continue",
-                    Ir,
-                    POPUP_WAIT_ENTER);
+        PopupError("Pnvalid error number provided",
+                   "Press ENTER to continue",
+                   Ir,
+                   POPUP_WAIT_ENTER);
 
         return;
     }
 
-    PopupError(enUSErrorEntries[ErrorNum].ErrorText,
-               enUSErrorEntries[ErrorNum].ErrorStatus,
+    entry = FindMUIErrorEntries ();
+    if (!entry)
+    {
+        PopupError("Error: Failed to find translated error message",
+                   NULL,
+                   NULL,
+                   POPUP_WAIT_NONE);
+        return;
+    }
+
+    PopupError(entry[ErrorNum].ErrorText,
+               entry[ErrorNum].ErrorStatus,
                Ir,
                WaitEvent);
 }

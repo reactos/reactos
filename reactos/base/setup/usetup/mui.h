@@ -11,6 +11,12 @@ typedef struct
 
 typedef struct
 {
+    CHAR * ErrorText;
+    CHAR * ErrorStatus;
+}MUI_ERROR;
+
+typedef struct
+{
     long Number;
     MUI_ENTRY * MuiEntry;
 }MUI_PAGE;
@@ -21,19 +27,24 @@ typedef struct
     PWCHAR LanguageKeyboardLayoutID;
     PWCHAR LanguageDescriptor;
     MUI_PAGE * MuiPages;
+    MUI_ERROR * MuiErrors;
 }MUI_LANGUAGE;
+
 
 #define TEXT_NORMAL            0
 #define TEXT_HIGHLIGHT         1
 #define TEXT_UNDERLINE         2
 #define TEXT_STATUS            4
 
-#define TEXT_ALIGN_DEFAULT     5
-#define TEXT_ALIGN_RIGHT       6
-#define TEXT_ALIGN_LEFT        7
-#define TEXT_ALIGN_CENTER      8
+#define TEXT_ALIGN_DEFAULT     8
+#define TEXT_ALIGN_RIGHT       16
+#define TEXT_ALIGN_LEFT        32
+#define TEXT_ALIGN_CENTER      64
 
 VOID
 MUIDisplayPage (ULONG PageNumber);
+
+VOID
+MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 
 #endif

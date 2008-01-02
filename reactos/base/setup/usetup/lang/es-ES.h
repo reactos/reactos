@@ -1241,12 +1241,12 @@ MUI_ERROR esESErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS is not completely installed on your\n"
-	     "computer. If you quit Setup now, you will need to\n"
-	     "run Setup again to install ReactOS.\n"
-	     "\n"
-	     "  \x07  Press ENTER to continue Setup.\n"
-	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue"
+        "computer. If you quit Setup now, you will need to\n"
+        "run Setup again to install ReactOS.\n"
+        "\n"
+        "  \x07  Presione ENTER para continuar el Setup.\n"
+        "  \x07  Presione F3 para abandonar el Setup.",
+        "F3 = Salir  ENTER = Continuar"
     },
     {
         //ERROR_NO_HDD
@@ -1305,14 +1305,14 @@ MUI_ERROR esESErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-		  "partition table that can not be handled properly!\n"
-		  "\n"
-		  "Creating or deleting partitions can destroy the partiton table.\n"
-		  "\n"
-		  "  \x07  Press F3 to quit Setup."
-		  "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+        "Setup found that at least one harddisk contains an incompatible\n"
+        "partition table that can not be handled properly!\n"
+        "\n"
+        "Creating or deleting partitions can destroy the partiton table.\n"
+        "\n"
+        "  \x07  Press F3 to quit Setup."
+        "  \x07  Press ENTER to continue.",
+        "F3= Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
@@ -1414,8 +1414,8 @@ MUI_ERROR esESErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Setup failed to find the 'SetupData' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1525,5 +1525,6 @@ MUI_PAGE esESPages[] =
 };
 
 #endif
+
 
 
