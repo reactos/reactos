@@ -353,7 +353,7 @@ IntPrepareDriver()
          ret = PrimarySurface.PreparedDriver;
       goto cleanup;
    }
-
+   // HAX! Fixme so I can support more than one! So how many?
    for (DisplayNumber = 0; ; DisplayNumber++)
    {
       DPRINT("Trying to load display driver no. %d\n", DisplayNumber);
@@ -445,6 +445,7 @@ IntPrepareDriver()
       }
 
       /* Allocate a phyical device handle from the driver */
+      // Support DMW.dmSize + DMW.dmDriverExtra & Alloc DMW then set prt pdmwDev.
       PrimarySurface.DMW.dmSize = sizeof (PrimarySurface.DMW);
       if (SetupDevMode(&PrimarySurface.DMW, DisplayNumber))
       {
@@ -503,6 +504,17 @@ IntPrepareDriver()
          PrimarySurface.DMW.dmDisplayFrequency = PrimarySurface.GDIInfo.ulVRefresh;
       }
 
+      if (!PrimarySurface.DMW.dmDriverExtra)
+      {
+         PrimarySurface.pdmwDev = &PrimarySurface.DMW; // HAX!
+      }
+      else
+      {
+         DPRINT1("WARNING!!! Need to Alloc DMW !!!!!!\n");
+      }
+      // Dont remove until we finish testing other drivers.
+      DPRINT1("DMW extra %x !!!!!!\n",PrimarySurface.DMW.dmDriverExtra);
+
       if (0 == PrimarySurface.GDIInfo.ulLogPixelsX)
       {
          DPRINT("Adjusting GDIInfo.ulLogPixelsX\n");
@@ -531,7 +543,11 @@ IntPrepareDriver()
       PrimarySurface.DisplayNumber = DisplayNumber;
       PrimarySurface.flFlags = PDEV_DISPLAY; // Hard set,, add more flags.
       PrimarySurface.hsemDevLock = (PERESOURCE)EngCreateSemaphore();
-      PrimarySurface.ppdevNext = NULL; // Fixme! We need to support more than display drvs.
+      // Should be null,, but make sure for now.
+      PrimarySurface.pvGammaRamp = NULL;
+      PrimarySurface.ppdevNext = NULL;    // Fixme! We need to support more than display drvs.
+      PrimarySurface.ppdevParent = NULL;  // Always NULL if primary.
+      PrimarySurface.pGraphicsDev = NULL; // Fixme!
       ret = TRUE;
       goto cleanup;
    }

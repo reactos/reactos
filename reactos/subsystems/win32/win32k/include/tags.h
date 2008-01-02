@@ -33,6 +33,8 @@
 #define TAG_CLIP	TAG('C', 'L', 'I', 'P') /* clipping */
 #define TAG_COORD	TAG('C', 'O', 'R', 'D') /* coords */
 #define TAG_DC		TAG('D', 'C', 'D', 'C') /* dc */
+#define TAG_GDIDEV	TAG('G', 'd', 'e', 'v') /* gdi dev support*/
+#define TAG_GDIPDEV	TAG('G', 'D', 'e', 'v') /* gdi PDev */
 #define TAG_GDIOBJ	TAG('G', 'D', 'I', 'O') /* gdi obj */
 #define TAG_GDIHNDTBLE	TAG('G', 'D', 'I', 'H') /* gdi handle table */
 #define TAG_GDIICM	TAG('G', 'i', 'c', 'm') /* gdi Icm */
