@@ -157,11 +157,11 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 * @name NtGdiDxgGenericThunk
 * @implemented
 *
-* The function NtGdiDxgGenericThunk redirect dx call to other thing.
-* from dxg.sys
+* The function NtGdiDxgGenericThunk redirects DirectX calls to another function.
+* Redirection is done in dxg.sys in XP or higher.  If dxg.sys does not exist, redirection takes place in win32k.sys
 *
 * @param ULONG_PTR ulIndex
-* The functions we want redirct
+* The functions we want to redirect
 *
 * @param ULONG_PTR ulHandle
 * Unknown
@@ -179,11 +179,11 @@ NtGdiDdCreateDirectDrawObject(HDC hdc)
 * Unknown
 *
 * @return 
-* always return DDHAL_DRIVER_NOTHANDLED
+* Always returns DDHAL_DRIVER_NOTHANDLED
 *
 * @remarks.
-* dxg.sys NtGdiDxgGenericThunk call are redirect to dxg.sys
-* This api are not longer use in Windows NT 2000/XP/2003
+* dxg.sys NtGdiDxgGenericThunk calls are redirected to dxg.sys
+* This function is no longer used but is still present in Windows NT 2000/XP/2003.
 *
 *--*/
 DWORD

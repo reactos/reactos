@@ -116,8 +116,8 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * @name EngDxIoctl
 * @implemented
 *
-* The function EngDxIoctl is the ioctl call to diffent dx functions
-* to the driver dxg.sys
+* The function EngDxIoctl is the ioctl call to different DirectX functions
+* in the driver dxg.sys
 *
 * @param ULONG ulIoctl
 * The ioctl code that we want call to
@@ -129,11 +129,11 @@ EngFreePrivateUserMem(PDD_SURFACE_LOCAL  psl,
 * The buffer size in bytes
 *
 * @return
-* always return DDERR_UNSUPPORTED
+* Always returns DDERR_UNSUPPORTED
 *
 * @remarks.
-* dxg.sys EngDxIoctl call are redirect to dxg.sys
-* This api are not longer use in Windows NT 2000/XP/2003
+* dxg.sys EngDxIoctl call is redirected to dxg.sys
+* This function is no longer used in Windows NT 2000/XP/2003
 *
 *--*/
 DWORD
@@ -159,13 +159,13 @@ EngDxIoctl(ULONG ulIoctl,
 * @name EngLockDirectDrawSurface
 * @implemented
 *
-* The function EngUnlockDirectDrawSurface locking the dx surface
+* The function EngUnlockDirectDrawSurface locks the DirectX surface.
 
 * @param HANDLE hSurface
 * The handle of a surface
 *
 * @return
-* This return vaild or NULL pointer to PDD_SURFACE_LOCAL object
+* This return a vaild or NULL pointer to a PDD_SURFACE_LOCAL object
 *
 * @remarks.
 * None
@@ -193,13 +193,13 @@ EngLockDirectDrawSurface(HANDLE hSurface)
 * @name EngUnlockDirectDrawSurface
 * @implemented
 *
-* The function EngUnlockDirectDrawSurface locking the dx surface
+* The function EngUnlockDirectDrawSurface unlocks the DirectX surface
 
 * @param PDD_SURFACE_LOCAL pSurface
-* The Surface we whant lock
+* The Surface we want to unlock
 *
 * @return
-* This return FALSE or TRUE, FALSE for fail, TRUE for success
+* This return TRUE for success, FALSE for failure
 *
 * @remarks.
 * None
