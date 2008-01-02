@@ -33,56 +33,66 @@
 typedef struct _GDIPOINTER /* should stay private to ENG */
 {
   /* private GDI pointer handling information, required for software emulation */
-  BOOL Enabled;
-  POINTL Pos;
-  SIZEL Size;
-  POINTL HotSpot;
+  BOOL     Enabled;
+  POINTL   Pos;
+  SIZEL    Size;
+  POINTL   HotSpot;
   XLATEOBJ *XlateObject;
-  HSURF ColorSurface;
-  HSURF MaskSurface;
-  HSURF SaveSurface;
-  int  ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
+  HSURF    ColorSurface;
+  HSURF    MaskSurface;
+  HSURF    SaveSurface;
+  int      ShowPointer; /* counter negtive  do not show the mouse postive show the mouse */
 
   /* public pointer information */
-  RECTL Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
+  RECTL    Exclude; /* required publicly for SPS_ACCEPT_EXCLUDE */
   PGD_MOVEPOINTER MovePointer;
-  ULONG Status;
+  ULONG    Status;
 } GDIPOINTER, *PGDIPOINTER;
 
 typedef struct _GDIDEVICE
 {
-  HANDLE Handle;                 // HSURF
-  PVOID  pvEntry;
-  ULONG  lucExcLock;
-  ULONG  Tid;
+  HANDLE        hHmgr;
+  ULONG         csCount;
+  ULONG         lucExcLock;
+  PVOID         Tid;
 
   struct _GDIDEVICE *ppdevNext;
-  FLONG  flFlags;
-  PERESOURCE hsemDevLock;
+  INT           cPdevRefs;
+  INT           cPdevOpenRefs;
+  struct _GDIDEVICE *ppdevParent;
+  FLONG         flFlags;
+  PERESOURCE    hsemDevLock;    // Device lock.
 
-  PVOID  pvGammaRamp;
+  PVOID         pvGammaRamp;    // Gamma ramp pointer.
 
-  DHPDEV hPDev;
-  DEVMODEW DMW;
-  HSURF FillPatterns[HS_DDI_MAX];
-  DEVINFO DevInfo;
-  GDIINFO GDIInfo;
+  DHPDEV        hPDev;          // DHPDEV for device.
 
-  HANDLE hSpooler;
-  ULONG DisplayNumber;
+  HSURF         FillPatterns[HS_DDI_MAX];
 
-  PFILE_OBJECT VideoFileObject;
-  BOOLEAN PreparedDriver;
-  GDIPOINTER Pointer;
+  ULONG         DxDD_Data;
 
+  DEVINFO       DevInfo;
+  GDIINFO       GDIInfo;
+  HSURF         pSurface;       // SURFACE for this device.
+  HANDLE        hSpooler;       // Handle to spooler, if spooler dev driver.
+  ULONG         DisplayNumber;
+  PVOID         pGraphicsDev;   // PGRAPHICS_DEVICE see VideoFileObject
+
+  DEVMODEW      DMW;
+  PVOID         pdmwDev;        // Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size.
+
+  FLONG         DxDd_Flags;     // DxDD active status flags.
+
+  PFILE_OBJECT  VideoFileObject;
+  BOOLEAN       PreparedDriver;
+  GDIPOINTER    Pointer;
   /* Stuff to keep track of software cursors; win32k gdi part */
   UINT SafetyRemoveLevel; /* at what level was the cursor removed?
 			     0 for not removed */
   UINT SafetyRemoveCount;
 
-  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
-
   DRIVER_FUNCTIONS DriverFunctions;
+  struct _EDD_DIRECTDRAW_GLOBAL * pEDDgpl;
 } GDIDEVICE, *PGDIDEVICE;
 
 /*  Internal functions  */

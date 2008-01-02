@@ -49,7 +49,7 @@ SynchonizeDriver(FLONG Flags)
 
   Device = IntEnumHDev();
 
-  SurfObj = EngLockSurface((HSURF)Device->Handle);
+  SurfObj = EngLockSurface( Device->pSurface );
   if(!SurfObj) return;
   DoDeviceSync( SurfObj, NULL, Flags);
   EngUnlockSurface(SurfObj);

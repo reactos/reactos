@@ -622,9 +622,9 @@ IntCreatePrimarySurface()
 
    DPRINT("calling EnableSurface\n");
    /* Enable the drawing surface */
-   PrimarySurface.Handle =
+   PrimarySurface.pSurface =
       PrimarySurface.DriverFunctions.EnableSurface(PrimarySurface.hPDev);
-   if (NULL == PrimarySurface.Handle)
+   if (NULL == PrimarySurface.pSurface)
    {
 /*      PrimarySurface.DriverFunctions.AssertMode(PrimarySurface.hPDev, FALSE);*/
       PrimarySurface.DriverFunctions.DisablePDEV(PrimarySurface.hPDev);
@@ -643,7 +643,7 @@ IntCreatePrimarySurface()
    /* attach monitor */
    IntAttachMonitor(&PrimarySurface, PrimarySurface.DisplayNumber);
 
-   SurfObj = EngLockSurface((HSURF)PrimarySurface.Handle);
+   SurfObj = EngLockSurface(PrimarySurface.pSurface);
    SurfObj->dhpdev = PrimarySurface.hPDev;
    SurfSize = SurfObj->sizlBitmap;
    SurfaceRect.left = SurfaceRect.top = 0;
@@ -791,7 +791,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->PDev = PrimarySurface.hPDev;
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev;
   NewDC->pPDev = (PVOID)&PrimarySurface;
-  NewDC->w.hBitmap = PrimarySurface.Handle;
+  NewDC->w.hBitmap = (HBITMAP)PrimarySurface.pSurface;
 
   NewDC->w.bitsPerPixel = ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cBitsPixel *
                                      ((PGDIDEVICE)NewDC->pPDev)->GDIInfo.cPlanes;
@@ -2668,11 +2668,11 @@ DC_UnlockDisplay(HDC hDC)
 BOOL FASTCALL
 IntIsPrimarySurface(SURFOBJ *SurfObj)
 {
-   if (PrimarySurface.Handle == NULL)
+   if (PrimarySurface.pSurface == NULL)
      {
        return FALSE;
      }
-   return SurfObj->hsurf == PrimarySurface.Handle;
+   return SurfObj->hsurf == PrimarySurface.pSurface;
 }
 
 //
