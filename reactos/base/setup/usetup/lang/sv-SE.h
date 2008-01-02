@@ -1236,6 +1236,35 @@ static MUI_ENTRY svSEDeletePartitionEntries[] =
     }
 };
 
+static MUI_ENTRY svSERegistryEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Setup is updating the system configuration. ",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Creating registry hives...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
 MUI_ERROR svSEErrorEntries[] =
 {
     {
@@ -1517,6 +1546,10 @@ MUI_PAGE svSEPages[] =
     {
         BOOT_LOADER_FLOPPY_PAGE,
         svSEBootPageEntries
+    },
+    {
+        REGISTRY_PAGE,
+        svSERegistryEntries
     },
     {
         -1,

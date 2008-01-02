@@ -2975,9 +2975,7 @@ RegistryPage(PINPUT_RECORD Ir)
   BOOLEAN Delete;
   NTSTATUS Status;
 
-  CONSOLE_SetTextXY(6, 8, "Setup is updating the system configuration");
-
-  CONSOLE_SetStatusText("   Creating registry hives...");
+  MUIDisplayPage(REGISTRY_PAGE);
 
   if (RepairUpdateFlag)
     {

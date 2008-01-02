@@ -1236,6 +1236,35 @@ static MUI_ENTRY enUSDeletePartitionEntries[] =
     }
 };
 
+static MUI_ENTRY enUSRegistryEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Setup is updating the system configuration. ",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Creating registry hives...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
+
 MUI_ERROR enUSErrorEntries[] =
 {
     {
@@ -1436,8 +1465,8 @@ MUI_PAGE enUSPages[] =
         enUSLanguagePageEntries
     },
     {
-       START_PAGE,
-       enUSWelcomePageEntries
+        START_PAGE,
+        enUSWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,
@@ -1518,6 +1547,10 @@ MUI_PAGE enUSPages[] =
     {
         BOOT_LOADER_FLOPPY_PAGE,
         enUSBootPageEntries
+    },
+    {
+        REGISTRY_PAGE,
+        enUSRegistryEntries
     },
     {
         -1,

@@ -1236,6 +1236,34 @@ static MUI_ENTRY elGRDeletePartitionEntries[] =
     }
 };
 
+static MUI_ENTRY elGRRegistryEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_UNDERLINE
+    },
+    {
+        6,
+        8,
+        "Setup is updating the system configuration. ",
+        TEXT_NORMAL
+    },
+    {
+        0,
+        0,
+        "   Creating registry hives...",
+        TEXT_STATUS
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    },
+
+};
 
 MUI_ERROR elGRErrorEntries[] =
 {
@@ -1519,6 +1547,10 @@ MUI_PAGE elGRPages[] =
     {
         BOOT_LOADER_FLOPPY_PAGE,
         elGRBootPageEntries
+    },
+    {
+        REGISTRY_PAGE,
+        elGRRegistryEntries
     },
     {
         -1,
