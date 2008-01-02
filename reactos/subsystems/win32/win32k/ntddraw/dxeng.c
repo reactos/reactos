@@ -374,20 +374,49 @@ DWORD DxEngSpSpritesVisible(DWORD x1)
 /* DxEngGetHdevData                                                     */
 /************************************************************************/
 DWORD
-DxEngGetHdevData(PEDD_DIRECTDRAW_GLOBAL pEDDgpl,
+DxEngGetHdevData(HDEV hdev,
                  DWORD Index)
 {
     UNIMPLEMENTED;
     return 0;
 }
 
-/************************************************************************/
-/* DxEngSetHdevData                                                     */
-/************************************************************************/
-DWORD DxEngSetHdevData(DWORD x1, DWORD x2, DWORD x3)
+/*++
+* @name DxEngSetHdevData
+* @implemented
+*
+* The function DxEngSetHdevData sets a value in hdev
+
+* @param HDEV hPDev
+* The hdev
+*
+* @param DWORD Index
+* Support only Index 8 it is a internal counter how many time hdev been lock and unlock
+*
+* @param DWORD Save
+* The value to be save to hdev internal counter
+*
+* @return
+* Returns TRUE for success, FALSE for failure
+*
+* @remarks.
+* ReactOS specfiy Not finish implement, I have not save the value into the hdev yet.
+*
+*--*/
+BOOLEAN
+DxEngSetHdevData(HDEV hdev,
+                 DWORD Index,
+                 DWORD Save)
 {
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOL retVal = FALSE;
+    if (Index == 8)
+    {
+        /* Counter how many time hdev been lock/unlock, we do not support it yet in ReactOS */
+        DPRINT1("Warning not supproted yet\n");
+        retVal = TRUE;
+    }
+
+    return retVal;
 }
 
 /************************************************************************/
