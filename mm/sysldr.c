@@ -1353,8 +1353,6 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-#if 0
-
 BOOLEAN
 NTAPI
 MmVerifyImageIsOkForMpUse(IN PVOID BaseAddress)
@@ -1458,8 +1456,6 @@ MmCheckSystemImage(IN HANDLE ImageHandle,
     ZwClose(SectionHandle);
     return Status;
 }
-
-#endif
 
 NTSTATUS
 NTAPI

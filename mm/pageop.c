@@ -17,7 +17,7 @@
 #if defined (ALLOC_PRAGMA)
 #pragma alloc_text(INIT, MmInitializePageOp)
 #endif
- 
+
 
 /* GLOBALS *******************************************************************/
 

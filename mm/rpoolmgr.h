@@ -143,7 +143,7 @@ RiPrintLastOwner ( PR_USED Block )
 		if ( Block->LastOwnerStack[i] != 0xDEADBEEF )
 		{
 			R_DEBUG(" ");
-			if (!R_PRINT_ADDRESS ((PVOID)Block->LastOwnerStack[i]) )
+			//if (!R_PRINT_ADDRESS ((PVOID)Block->LastOwnerStack[i]) )
 			{
 				R_DEBUG("<%X>", Block->LastOwnerStack[i] );
 			}
@@ -427,12 +427,12 @@ RUsedRedZoneCheck ( PR_POOL pool, PR_USED pUsed, char* Addr, const char* file, i
 
 	ASSERT ( Addr >= (char*)pool->UserBase && Addr < ((char*)pool->UserBase + pool->UserSize - 16) );
 #ifdef R_MAGIC
-	if ( pUsed->UsedMagic == MM_PPOOL_FREEMAGIC )
+	if ( pUsed->UsedMagic == R_FREE_MAGIC )
 	{
 		pUsed->UserSize = 0; // just to keep from confusion, MmpBadBlock() doesn't return...
 		RiBadBlock ( pUsed, Addr, "double-free", file, line, 0 );
 	}
-	if ( pUsed->UsedMagic != MM_PPOOL_USEDMAGIC )
+	if ( pUsed->UsedMagic != R_USED_MAGIC )
 	{
 		RiBadBlock ( pUsed, Addr, "bad magic", file, line, 0 );
 	}
@@ -650,7 +650,7 @@ RiUsedInit ( PR_USED Block, rulong Tag )
 {
 	Block->Status = 1;
 	RUsedFillStack ( Block );
-#if R_MAGIC
+#ifdef R_MAGIC
 	Block->UsedMagic = R_USED_MAGIC;
 #endif//R_MAGIC
 	//ASSERT_SIZE ( Block->Size );
@@ -978,7 +978,7 @@ RPoolQueryTag ( void* Addr )
 {
 	PR_USED Block = RBodyToHdr(Addr);
 	// TODO FIXME - should we validate params?
-#if R_MAGIC
+#ifdef R_MAGIC
 	if ( Block->UsedMagic != R_USED_MAGIC )
 		return 0xDEADBEEF;
 #endif//R_MAGIC

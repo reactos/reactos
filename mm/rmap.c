@@ -120,7 +120,7 @@ MmWritePagePhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                + MemoryArea->Data.SectionData.ViewOffset;
       /*
        * Get or create a pageop
@@ -245,7 +245,7 @@ MmPageOutPhysicalAddress(PFN_TYPE Page)
    Type = MemoryArea->Type;
    if (Type == MEMORY_AREA_SECTION_VIEW)
    {
-      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress 
+      Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
              + MemoryArea->Data.SectionData.ViewOffset;;
 
       /*
@@ -410,7 +410,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    new_entry->Process = (PEPROCESS)Process;
 #ifdef DBG
    new_entry->Caller = __builtin_return_address(0);
-#endif   
+#endif
 
    if (MmGetPfnForProcess(Process, Address) != Page)
    {
@@ -429,7 +429,7 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    {
       if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)
       {
-          DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ", 
+          DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ",
                    current_entry->Address);
           KeRosPrintAddress(new_entry->Caller);
           DbgPrint("\n    previous caller ");
