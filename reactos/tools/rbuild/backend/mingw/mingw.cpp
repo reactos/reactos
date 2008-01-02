@@ -929,7 +929,7 @@ bool
 MingwBackend::TryToDetectThisBinutils ( const string& binutils )
 {
 	string command = ssprintf (
-		"%s -v 1>%s",
+		"%s -v 1>%s 2>%s",
 		FixSeparatorForSystemCommand(binutils).c_str (),
 		NUL,
 		NUL );
