@@ -35,14 +35,14 @@ VerifyObjectOwner(PDD_ENTRY pEntry)
 * @name DdHmgCreate
 * @implemented
 *
-* The function DdHmgCreate is internal use in dxg.sys
-* It Create all DX kernel object that is need it, for create DX object.
+* The function DdHmgCreate is used internally in dxg.sys
+* It creates all DX kernel objects that are need it for creation of DX objects.
 *
 * @return
-* return FALSE for fail, return TRUE for sussess create DX object
+* Return FALSE for failure and TRUE for success in creating the DX object
 *
 * @remarks.
-* Only use internal in dxg.sys
+* Only used internally in dxg.sys
 *--*/
 BOOL
 FASTCALL
@@ -81,14 +81,14 @@ DdHmgCreate()
 * @name DdHmgDestroy
 * @implemented
 *
-* The function DdHmgDestroy is internal use in dxg.sys
-* It destore all DX kernel object
+* The function DdHmgDestroy is used internally in dxg.sys
+* It destroys all DX kernel objects
 *
 * @return
-* return FALSE for fail or noting to destore, return TRUE for sussess destore all dx object
+* Always returns true, as a failure here would result in a BSOD.
 *
 * @remarks.
-* Only use internal in dxg.sys
+* Only used internally in dxg.sys
 *--*/
 BOOL
 FASTCALL
@@ -118,29 +118,29 @@ DdHmgDestroy()
 * @name DdHmgLock
 * @implemented
 *
-* The function DdHmgLock is internal use in dxg.sys
-* it lock a Dx kernel object
+* The function DdHmgLock is used internally in dxg.sys
+* It locks a DX kernel object
 *
 * @param HANDLE DdHandle
-* The handle we want lock
+* The handle we want locked
 *
 * @param UCHAR ObjectType
-* The type of the object we expected the handle contain
-* value 0 is for getting ?
-* value 1 is for getting EDD_DIRECTDRAW_LOCAL
-* value 2 is for getting EDD_SURFACE
-* value 3 is for getting ?
-* value 4 is for getting EDD_VIDEOPORT
-* value 5 is for getting EDD_MOTIONCOMP
+* The type of the object we expected the handle to contain
+* value 0 is for ?
+* value 1 is for EDD_DIRECTDRAW_LOCAL
+* value 2 is for EDD_SURFACE
+* value 3 is for ?
+* value 4 is for EDD_VIDEOPORT
+* value 5 is for EDD_MOTIONCOMP
 
 * @param BOOLEAN LockOwned
-* if it need be EngAcquireSemaphore or not
+* If it needs to call EngAcquireSemaphore or not
 *
 * @return
-* return a EDD_* object, or NULL depnes if it success or not.
+* Returns an EDD_* object, or NULL if it fails
 *
 * @remarks.
-* Only use internal in dxg.sys
+* Only used internally in dxg.sys
 *--*/
 PVOID
 FASTCALL
