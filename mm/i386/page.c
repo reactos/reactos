@@ -75,22 +75,23 @@ extern BOOLEAN Ke386NoExecute;
 
 BOOLEAN MmUnmapPageTable(PULONG Pt);
 
-VOID
-STDCALL
-MiFlushTlbIpiRoutine(PVOID Address)
+ULONG_PTR
+NTAPI
+MiFlushTlbIpiRoutine(ULONG_PTR Address)
 {
-   if (Address == (PVOID)0xffffffff)
+   if (Address == (ULONG_PTR)-1)
    {
       KeFlushCurrentTb();
    }
-   else if (Address == (PVOID)0xfffffffe)
+   else if (Address == (ULONG_PTR)-2)
    {
       KeFlushCurrentTb();
    }
    else
    {
-       __invlpg(Address);
+       __invlpg((PVOID)Address);
    }
+   return 0;
 }
 
 VOID
@@ -101,13 +102,13 @@ MiFlushTlb(PULONG Pt, PVOID Address)
    {
       MmUnmapPageTable(Pt);
    }
-   if (KeNumberProcessors>1)
+   if (KeNumberProcessors > 1)
    {
-      KeIpiGenericCall(MiFlushTlbIpiRoutine, Address);
+      KeIpiGenericCall(MiFlushTlbIpiRoutine, (ULONG_PTR)Address);
    }
    else
    {
-      MiFlushTlbIpiRoutine(Address);
+      MiFlushTlbIpiRoutine((ULONG_PTR)Address);
    }
 #else
    if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
@@ -325,17 +326,33 @@ Mmi386ReleaseMmInfo(PEPROCESS Process)
 }
 
 NTSTATUS
+NTAPI
+MmInitializeHandBuiltProcess(IN PEPROCESS Process,
+                             IN PLARGE_INTEGER DirectoryTableBase)
+{
+    /* Share the directory base with the idle process */
+    *DirectoryTableBase = PsGetCurrentProcess()->Pcb.DirectoryTableBase;
+    
+    /* Initialize the Addresss Space */
+    MmInitializeAddressSpace(Process, (PMADDRESS_SPACE)&Process->VadRoot);
+    
+    /* The process now has an address space */
+    Process->HasAddressSpace = TRUE;
+    return STATUS_SUCCESS;
+}
+
+BOOLEAN
 STDCALL
-MmCopyMmInfo(PEPROCESS Src,
-             PEPROCESS Dest,
-             PPHYSICAL_ADDRESS DirectoryTableBase)
+MmCreateProcessAddressSpace(IN ULONG MinWs,
+                            IN PEPROCESS Process,
+                            IN PLARGE_INTEGER DirectoryTableBase)
 {
    NTSTATUS Status;
    ULONG i, j;
    PFN_TYPE Pfn[7];
    ULONG Count;
 
-   DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", Src, Dest);
+   DPRINT("MmCopyMmInfo(Src %x, Dest %x)\n", MinWs, Process);
 
    Count = Ke386Pae ? 7 : 2;
 
@@ -344,11 +361,12 @@ MmCopyMmInfo(PEPROCESS Src,
       Status = MmRequestPageMemoryConsumer(MC_NPPOOL, FALSE, &Pfn[i]);
       if (!NT_SUCCESS(Status))
       {
-	 for (j = 0; j < i; j++)
-	 {
-	    MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
-	 }
-	 return Status;
+          for (j = 0; j < i; j++)
+          {
+              MmReleasePageMemoryConsumer(MC_NPPOOL, Pfn[j]);
+          }
+          
+          return FALSE;
       }
    }
 
@@ -400,7 +418,7 @@ MmCopyMmInfo(PEPROCESS Src,
 
    DirectoryTableBase->QuadPart = PFN_TO_PTE(Pfn[0]);
    DPRINT("Finished MmCopyMmInfo(): %I64x\n", DirectoryTableBase->QuadPart);
-   return(STATUS_SUCCESS);
+   return TRUE;
 }
 
 VOID
@@ -625,7 +643,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 
    if (Address < MmSystemRangeStart && Process && Process != PsGetCurrentProcess())
    {
-      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.QuadPart));
+      PageDir = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase.LowPart));
       if (PageDir == NULL)
       {
          KEBUGCHECK(0);
@@ -1925,8 +1943,16 @@ MmCreateVirtualMapping(PEPROCESS Process,
    {
       if (!MmIsUsablePage(Pages[i]))
       {
-         DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
-         KEBUGCHECK(0);
+          /* Is this an attempt to map KUSER_SHARED_DATA? */
+         if ((Address == (PVOID)0x7FFE0000) && (PageCount == 1) && (Pages[0] == 2))
+         {
+            // allow
+         }
+         else
+         {
+            DPRINT1("Page at address %x not usable\n", PFN_TO_PTE(Pages[i]));
+            KEBUGCHECK(0);
+         }
       }
    }
 
