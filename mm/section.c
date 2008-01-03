@@ -2492,6 +2492,8 @@ MmPageOutSectionView(PMADDRESS_SPACE AddressSpace,
    Context.Segment = MemoryArea->Data.SectionData.Segment;
    Context.Section = MemoryArea->Data.SectionData.Section;
 
+   Context.Consumer = MemoryArea->Type == MEMORY_AREA_CACHE_SEGMENT ? MC_CACHE : MC_USER;
+
    Context.Offset = (ULONG_PTR)Address - (ULONG_PTR)MemoryArea->StartingAddress
                     + MemoryArea->Data.SectionData.ViewOffset;
    FileOffset = Context.Offset + Context.Segment->FileOffset;
