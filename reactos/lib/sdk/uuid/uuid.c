@@ -63,6 +63,7 @@
 
 #include "vfw.h"
 #include "mapiguid.h"
+#include "hlguids.h"
 
 #if 0 /* FIXME */
 #include "uuids.h"
