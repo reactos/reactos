@@ -26,6 +26,7 @@ interface IHlinkBrowseContext;
 cpp_quote("HRESULT WINAPI HlinkCreateFromMoniker(IMoniker*, LPCWSTR, LPCWSTR, IHlinkSite*, DWORD, IUnknown*, REFIID, void**);")
 cpp_quote("HRESULT WINAPI HlinkCreateFromString(LPCWSTR, LPCWSTR, LPCWSTR, IHlinkSite*, DWORD, IUnknown*, REFIID, void**);")
 cpp_quote("HRESULT WINAPI HlinkCreateFromData(IDataObject*, IHlinkSite*, DWORD dwSiteData, IUnknown*, REFIID, void**);")
+cpp_quote("HRESULT WINAPI HlinkCreateExtensionServices(LPCWSTR, HWND, LPCWSTR, LPCWSTR, IUnknown*, REFIID, void**);")
 cpp_quote("HRESULT WINAPI HlinkQueryCreateFromData(IDataObject*);")
 cpp_quote("HRESULT WINAPI HlinkClone(IHlink*, REFIID, IHlinkSite*, DWORD, void **);")
 cpp_quote("HRESULT WINAPI HlinkCreateBrowseContext(IUnknown*, REFIID, void **);")
@@ -34,6 +35,17 @@ cpp_quote("HRESULT WINAPI HlinkNavigate(IHlink*, IHlinkFrame*, DWORD, LPBC, IBin
 cpp_quote("HRESULT WINAPI HlinkOnNavigate(IHlinkFrame*, IHlinkBrowseContext*, DWORD, IMoniker*, LPCWSTR, LPCWSTR, ULONG*);")
 cpp_quote("HRESULT WINAPI HlinkIsShortcut(LPCWSTR);")
 cpp_quote("HRESULT WINAPI HlinkTranslateURL(LPCWSTR,DWORD,LPWSTR*);")
+
+typedef enum _HLSR_NOREDEF10 {
+    HLSR_HOME,
+    HLSR_SEARCHPAGE,
+    HLSR_HISTORYFOLDER
+} HLSR;
+
+cpp_quote("HRESULT WINAPI HlinkSetSpecialReference(ULONG uReference, LPCWSTR pwzReference);")
+cpp_quote("HRESULT WINAPI HlinkGetSpecialReference(ULONG uReference, LPWSTR *ppwzReference);")
+
+cpp_quote("#define SID_SHlinkFrame IID_IHlinkFrame")
 
 /*****************************************************************************
  *    IHlink interface
@@ -274,6 +286,10 @@ interface IHlinkBrowseContext : IUnknown
         [in, unique] IMoniker *pimk,
         [out] DWORD *pdwRegister);
 
+cpp_quote("#ifdef WINE_NO_UNICODE_MACROS")
+cpp_quote("#undef GetObject")
+cpp_quote("#endif")
+
     HRESULT GetObject(
         [in, unique] IMoniker *pimk,
         [in] BOOL fBindIfRootRegistered,
@@ -377,24 +393,24 @@ interface IHlinkFrame : IUnknown
 {
     typedef IHlinkFrame *LPHLINKFRAME;
 
-    HRESULT SetBrowseContext(
+    HRESULT SetBrowseContext( 
         [in, unique] IHlinkBrowseContext * pihlbc);
-    HRESULT GetBrowseContext(
+    HRESULT GetBrowseContext( 
         [out] IHlinkBrowseContext ** ppihlbc);
-    HRESULT Navigate(
-        [in] DWORD grfHLNF,
-        [in, unique] LPBC pbc,
-        [in, unique] IBindStatusCallback *pibsc,
+    HRESULT Navigate( 
+        [in] DWORD grfHLNF, 
+        [in, unique] LPBC pbc, 
+        [in, unique] IBindStatusCallback *pibsc, 
         [in, unique] IHlink *pihlNavigate);
-    HRESULT OnNavigate(
-        [in] DWORD grfHLNF,
-        [in, unique] IMoniker *pimkTarget,
-        [in, unique] LPCWSTR pwzLocation,
-        [in, unique] LPCWSTR pwzFriendlyName,
+    HRESULT OnNavigate( 
+        [in] DWORD grfHLNF, 
+        [in, unique] IMoniker *pimkTarget, 
+        [in, unique] LPCWSTR pwzLocation, 
+        [in, unique] LPCWSTR pwzFriendlyName, 
         [in] DWORD dwreserved);
-    HRESULT UpdateHlink(
-        [in] ULONG uHLID,
-        [in, unique] IMoniker *pimkTarget,
-        [in, unique] LPCWSTR pwzLocation,
+    HRESULT UpdateHlink( 
+        [in] ULONG uHLID, 
+        [in, unique] IMoniker *pimkTarget, 
+        [in, unique] LPCWSTR pwzLocation, 
         [in, unique] LPCWSTR pwzFriendlyName);
 }
