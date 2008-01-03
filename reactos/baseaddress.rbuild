@@ -62,6 +62,7 @@
   <property name="BASEADDRESS_URLMON" value="0x6b3c0000" />
   <property name="BASEADDRESS_SERIALUI" value="0x6b3D0000" />
   <property name="BASEADDRESS_WINSTA" value="0x6b3D0000" />
+  <property name="BASEADDRESS_HLINK" value="0x6C6E0000" />
   <property name="BASEADDRESS_DESKMON" value="0x6d400000" />
   <property name="BASEADDRESS_DESKADP" value="0x6d410000" />
   <property name="BASEADDRESS_WLDAP32" value="0x6e130000" />
