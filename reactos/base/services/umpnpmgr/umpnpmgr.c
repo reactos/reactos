@@ -120,6 +120,10 @@ RpcServerThread(LPVOID lpParameter)
         return 0;
     }
 
+    /* ROS HACK (this should never happen...) */
+    DPRINT1("*** Other devices won't be installed correctly. If something\n");
+    DPRINT1("*** doesn't work, try to reboot to get a new chance.\n");
+
     DPRINT("RpcServerThread() done\n");
 
     return 0;
