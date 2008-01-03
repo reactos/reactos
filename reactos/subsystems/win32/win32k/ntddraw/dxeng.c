@@ -10,9 +10,8 @@
 
 #include <w32k.h>
 #include <debug.h>
+
 ERESOURCE  ghsemShareDevLock;
-
-
 
 ULONG gcEngFuncs = DXENG_INDEX_DxEngLoadImage + 1;
 DRVFN gaEngFuncs [] =
@@ -62,32 +61,6 @@ DRVFN gaEngFuncs [] =
     {DXENG_INDEX_DxEngLoadImage, (PFN)DxEngLoadImage}
 };
 
-/************************************************************************/
-/* DxEngNUIsTermSrv                                                     */
-/************************************************************************/
-
-/* Notes : Check see if termal server got a connections or not */
-BOOL
-DxEngNUIsTermSrv()
-{
-    /* FIXME ReactOS does not suport terminal server yet, we can not check if we got a connections or not */
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngRedrawDesktop                                                   */
-/************************************************************************/
-
-/* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
-BOOL
-DxEngRedrawDesktop()
-{
-    /* FIXME add redraw code */
-    UNIMPLEMENTED;
-    return TRUE;
-}
-
 
 /*++
 * @name DxEngDispUniq
@@ -108,35 +81,11 @@ DxEngDispUniq()
     return GdiHandleTable->flDeviceUniq;
 }
 
-ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
-
-/************************************************************************/
-/* DxEngVisRgnUniq                                                      */
-/************************************************************************/
-/* Notes :  return the VisRgnUniq counter for win32k */
-ULONG
-DxEngVisRgnUniq()
-{
-    return gulVisRgnUniqueness;
-}
-
-/************************************************************************/
-/* DxEngEnumerateHdev                                                   */
-/************************************************************************/
-/* Enumerate all drivers in win32k */
-HDEV *
-DxEngEnumerateHdev(HDEV *hdev)
-{
-    /* FIXME Enumerate all drivers in win32k */
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 /*++
 * @name DxEngGetDeviceGammaRamp
 * @implemented
 *
-* The function DxEngGetDeviceGammaRamp gets the gamma ramp in dxg.sys.
+* The function DxEngGetDeviceGammaRamp gets the gamma ramp to dxg.sys.
 
 * @param HDEV hPDev
 * The hdev.
@@ -204,25 +153,6 @@ DxEngUnlockDC(PDC pDC)
     return TRUE;
 }
 
-
-/************************************************************************/
-/* DxEngCreateMemoryDC                                                  */
-/************************************************************************/
-DWORD DxEngCreateMemoryDC(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngScreenAccessCheck                                               */
-/************************************************************************/
-DWORD DxEngScreenAccessCheck()
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
 /*++
 * @name DxEngLockShareSem
 * @implemented
@@ -276,53 +206,6 @@ DxEngUnlockShareSem()
     return TRUE;
 }
 
-/************************************************************************/
-/* DxEngLockHdev                                                        */
-/************************************************************************/
-DWORD DxEngLockHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngUnlockHdev                                                      */
-/************************************************************************/
-DWORD DxEngUnlockHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngReferenceHdev                                                   */
-/************************************************************************/
-DWORD DxEngReferenceHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngIsHdevLockedByCurrentThread                                     */
-/************************************************************************/
-DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
-/************************************************************************/
-/* DxEngUnreferenceHdev                                                 */
-/************************************************************************/
-DWORD DxEngUnreferenceHdev(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
 /*++
 * @name DxEngSetDeviceGammaRamp
 * @implemented
@@ -351,36 +234,45 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
    return IntSetDeviceGammaRamp(hPDev, Ramp, Test);
 }
 
-/************************************************************************/
-/* DxEngSpTearDownSprites                                               */
-/************************************************************************/
-DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
+/*++
+* @name DxEngGetHdevData
+* @implemented
+*
+* The function DxEngGetHdevData get a value in hdev
 
-/************************************************************************/
-/* DxEngSpUnTearDownSprites                                             */
-/************************************************************************/
-DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngSpSpritesVisible                                                */
-/************************************************************************/
-DWORD DxEngSpSpritesVisible(DWORD x1)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngGetHdevData                                                     */
-/************************************************************************/
+* @param HDEV hPDev
+* The hdev
+*
+* @param DXEGSHDEVDATA Type
+* follow type are supported
+* type                      what it does
+* DxEGShDevData_Surface     get pointer to Surface handle.
+* DxEGShDevData_hSpooler    get If the device is a spooler driver.
+* DxEGShDevData_DitherFmt   get the device iDitherFormat
+* DxEGShDevData_FxCaps      get the device flGraphicsCaps
+* DxEGShDevData_FxCaps2     get the device flGraphicsCaps2
+* DxEGShDevData_DrvFuncs    get the device DriverFunctions function table
+* DxEGShDevData_dhpdev      get the device hPDev the real DHPDEV
+* DxEGShDevData_eddg        get the device pEDDgpl
+* DxEGShDevData_dd_nCount   get the device DxDd_nCount
+* DxEGShDevData_dd_flags    get the device DxDd_Flags
+* DxEGShDevData_disable     get if the device pdev is disable or not
+* DxEGShDevData_metadev     get if the device pdev is meta device or not
+* DxEGShDevData_display     get if the device is primary display driver or not
+* DxEGShDevData_Parent      get the ppdevParent
+* DxEGShDevData_OpenRefs    get the pdevOpenRefs counter
+* DxEGShDevData_palette     get the device RC_PALETTE is set or not
+* DxEGShDevData_ldev        ATM we do not support the Loader Device driver structure
+* DxEGShDevData_GDev        get the device pGraphicsDev
+* DxEGShDevData_clonedev    get the device PDEV_CLONE_DEVICE flag is set or not
+*
+* @return
+* Returns the data we requested
+*
+* @remarks.
+* ReactOS specific: Implementation ins incomplete, I do not save the value into the hdev yet.
+*
+*--*/
 DWORD
 DxEngGetHdevData(HDEV hDev,
                  DXEGSHDEVDATA Type)
@@ -448,11 +340,11 @@ DxEngGetHdevData(HDEV hDev,
       case DxEGShDevData_clonedev:
         retVal = (DWORD) PDev->flFlags & PDEV_CLONE_DEVICE;
         break;
-        
+
       default:
-        break;            
+        break;
     }
-  
+
   return retVal;
 
 }
@@ -476,7 +368,7 @@ DxEngGetHdevData(HDEV hDev,
 * Returns TRUE for success, FALSE for failure
 *
 * @remarks.
-* ReactOS specific: Implementation ins incomplete, I do not save the value into the hdev yet.
+* none
 *
 *--*/
 BOOLEAN
@@ -493,53 +385,6 @@ DxEngSetHdevData(HDEV hDev,
   }
   return retVal;
 }
-
-/************************************************************************/
-/* DxEngGetDesktopDC                                                    */
-/************************************************************************/
-DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngDeleteDC                                                        */
-/************************************************************************/
-DWORD DxEngDeleteDC(DWORD x1, DWORD x2)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngCleanDC                                                         */
-/************************************************************************/
-BOOLEAN DxEngCleanDC(HDC hdc)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngSetDCOwner                                                      */
-/************************************************************************/
-DWORD DxEngSetDCOwner(DWORD x1, DWORD x2)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-/************************************************************************/
-/* DxEngSetDCState                                                      */
-/************************************************************************/
-DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
 
 /*++
 * @name DxEngGetDCState
@@ -598,6 +443,184 @@ DxEngGetDCState(HDC hDC,
     }
 
     return retVal;
+}
+
+/*++
+* @name DxEngIncDispUniq
+* @implemented
+*
+* The function DxEngIncDispUniq increments the DisplayUniqVisrgn counter from GDI shared memory.
+*
+* @return
+* This function returns TRUE no matter what.
+*
+* @remarks.
+* none
+*
+*--*/
+BOOLEAN
+DxEngIncDispUniq()
+{
+    InterlockedIncrement((LONG*)&GdiHandleTable->flDeviceUniq);
+    return TRUE;
+}
+
+/************************************************************************/
+/* DxEngNUIsTermSrv                                                     */
+/************************************************************************/
+
+/* Notes : Check see if termal server got a connections or not */
+BOOL
+DxEngNUIsTermSrv()
+{
+    /* FIXME ReactOS does not suport terminal server yet, we can not check if we got a connections or not */
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngRedrawDesktop                                                   */
+/************************************************************************/
+
+/* Notes : it always return TRUE, and it update whole the screen (redaw current desktop) */
+BOOL
+DxEngRedrawDesktop()
+{
+    /* FIXME add redraw code */
+    UNIMPLEMENTED;
+    return TRUE;
+}
+ULONG gulVisRgnUniqueness; // Increase count everytime client region is updated.
+
+/************************************************************************/
+/* DxEngVisRgnUniq                                                      */
+/************************************************************************/
+/* Notes :  return the VisRgnUniq counter for win32k */
+ULONG
+DxEngVisRgnUniq()
+{
+    return gulVisRgnUniqueness;
+}
+
+/************************************************************************/
+/* DxEngEnumerateHdev                                                   */
+/************************************************************************/
+/* Enumerate all drivers in win32k */
+HDEV *
+DxEngEnumerateHdev(HDEV *hdev)
+{
+    /* FIXME Enumerate all drivers in win32k */
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngCreateMemoryDC                                                  */
+/************************************************************************/
+DWORD DxEngCreateMemoryDC(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngScreenAccessCheck                                               */
+/************************************************************************/
+DWORD DxEngScreenAccessCheck()
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngLockHdev                                                        */
+/************************************************************************/
+DWORD DxEngLockHdev(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngUnlockHdev                                                      */
+/************************************************************************/
+DWORD DxEngUnlockHdev(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngReferenceHdev                                                   */
+/************************************************************************/
+DWORD DxEngReferenceHdev(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngIsHdevLockedByCurrentThread                                     */
+/************************************************************************/
+DWORD DxEngIsHdevLockedByCurrentThread(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+
+/************************************************************************/
+/* DxEngUnreferenceHdev                                                 */
+/************************************************************************/
+DWORD DxEngUnreferenceHdev(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngGetDesktopDC                                                    */
+/************************************************************************/
+DWORD DxEngGetDesktopDC(DWORD x1, DWORD x2, DWORD x3)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngDeleteDC                                                        */
+/************************************************************************/
+DWORD DxEngDeleteDC(DWORD x1, DWORD x2)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngCleanDC                                                         */
+/************************************************************************/
+BOOLEAN DxEngCleanDC(HDC hdc)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngSetDCOwner                                                      */
+/************************************************************************/
+DWORD DxEngSetDCOwner(DWORD x1, DWORD x2)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+/************************************************************************/
+/* DxEngSetDCState                                                      */
+/************************************************************************/
+DWORD DxEngSetDCState(DWORD x1, DWORD x2, DWORD x3)
+{
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
 /************************************************************************/
@@ -708,24 +731,29 @@ DWORD DxEngLoadImage(DWORD x1,DWORD x2)
     return FALSE;
 }
 
-/*++
-* @name DxEngIncDispUniq
-* @implemented
-*
-* The function DxEngIncDispUniq increments the DisplayUniqVisrgn counter from GDI shared memory.
-*
-* @return
-* This function returns TRUE no matter what.
-*
-* @remarks.
-* none
-*
-*--*/
-BOOLEAN
-DxEngIncDispUniq()
+/************************************************************************/
+/* DxEngSpTearDownSprites                                               */
+/************************************************************************/
+DWORD DxEngSpTearDownSprites(DWORD x1, DWORD x2, DWORD x3)
 {
-    InterlockedIncrement((LONG*)&GdiHandleTable->flDeviceUniq);
-    return TRUE;
+    UNIMPLEMENTED;
+    return FALSE;
 }
 
+/************************************************************************/
+/* DxEngSpUnTearDownSprites                                             */
+/************************************************************************/
+DWORD DxEngSpUnTearDownSprites(DWORD x1, DWORD x2, DWORD x3)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
 
+/************************************************************************/
+/* DxEngSpSpritesVisible                                                */
+/************************************************************************/
+DWORD DxEngSpSpritesVisible(DWORD x1)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
