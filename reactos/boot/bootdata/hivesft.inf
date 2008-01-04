@@ -3,6 +3,9 @@ Signature="$ReactOS$
 
 [AddReg]
 
+; DirectX
+HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
+
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
