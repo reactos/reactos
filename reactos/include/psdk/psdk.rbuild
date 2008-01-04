@@ -36,6 +36,7 @@
 	<file>unknwn.idl</file>
 	<file>urlhist.idl</file>
 	<file>urlmon.idl</file>
+	<file>mscoree.idl</file>
 	<file>mshtmhst.idl</file>
 	<file>exdisp.idl</file>
 	<file>wtypes.idl</file>
