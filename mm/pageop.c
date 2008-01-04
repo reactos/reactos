@@ -46,10 +46,7 @@ MmReleasePageOp(PMM_PAGEOP PageOp)
       KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
       return;
    }
-   if (PageOp->MArea)
-   {
-      (void)InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
-   }
+   (void)InterlockedDecrementUL(&PageOp->MArea->PageOpCount);
    PrevPageOp = MmPageOpHashTable[PageOp->Hash];
    if (PrevPageOp == PageOp)
    {
@@ -144,6 +141,8 @@ MmCheckForPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    return(NULL);
 }
 
+extern BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+
 PMM_PAGEOP
 NTAPI
 MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
@@ -157,6 +156,12 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    ULONG_PTR Hash = 0;
    KIRQL oldIrql;
    PMM_PAGEOP PageOp;
+
+   if (!PageOpReady)
+   {
+       DPRINT1("PAGEOPS USED TOO SOON!!!\n");
+       while (TRUE);
+   }
 
    /*
     * Calcuate the hash value for pageop structure
@@ -256,10 +261,7 @@ MmGetPageOp(PMEMORY_AREA MArea, HANDLE Pid, PVOID Address,
    PageOp->MArea = MArea;
    KeInitializeEvent(&PageOp->CompletionEvent, NotificationEvent, FALSE);
    MmPageOpHashTable[Hash] = PageOp;
-   if (MArea)
-   {
-      (void)InterlockedIncrementUL(&MArea->PageOpCount);
-   }
+   (void)InterlockedIncrementUL(&MArea->PageOpCount);
 
    KeReleaseSpinLock(&MmPageOpHashTableLock, oldIrql);
    return(PageOp);
@@ -281,10 +283,3 @@ MmInitializePageOp(VOID)
                                     TAG_MM_PAGEOP,
                                     50);
 }
-
-
-
-
-
-
-

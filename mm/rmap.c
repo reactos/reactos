@@ -390,6 +390,8 @@ MmIsDirtyPageRmap(PFN_TYPE Page)
    return(FALSE);
 }
 
+extern BOOLEAN RmapReady, PageOpReady, SectionsReady, PagingReady;
+
 VOID
 NTAPI
 MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
@@ -398,6 +400,12 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY new_entry;
    ULONG PrevSize;
+
+   if (!RmapReady)
+   {
+       DPRINT1("RMAPS USED TOO SOON!!!\n");
+       while (TRUE);
+   }
 
    Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
@@ -409,7 +417,11 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
    new_entry->Address = Address;
    new_entry->Process = (PEPROCESS)Process;
 #ifdef DBG
+#ifdef __GNUC__
    new_entry->Caller = __builtin_return_address(0);
+#else
+   new_entry->Caller = _ReturnAddress();
+#endif
 #endif
 
    if (MmGetPfnForProcess(Process, Address) != Page)
@@ -431,9 +443,9 @@ MmInsertRmap(PFN_TYPE Page, PEPROCESS Process,
       {
           DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ",
                    current_entry->Address);
-          KeRosPrintAddress(new_entry->Caller);
+          DbgPrint("%p", new_entry->Caller);
           DbgPrint("\n    previous caller ");
-          KeRosPrintAddress(current_entry->Caller);
+          DbgPrint("%p", current_entry->Caller);
           DbgPrint("\n");
           KeBugCheck(0);
       }
@@ -465,6 +477,12 @@ MmDeleteAllRmaps(PFN_TYPE Page, PVOID Context,
    PMM_RMAP_ENTRY current_entry;
    PMM_RMAP_ENTRY previous_entry;
    PEPROCESS Process;
+
+   if (!RmapReady)
+   {
+       DPRINT1("RMAPS USED TOO SOON!!!\n");
+       while (TRUE);
+   }
 
    ExAcquireFastMutex(&RmapListLock);
    current_entry = MmGetRmapListHeadPage(Page);
@@ -504,6 +522,12 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
 {
    PMM_RMAP_ENTRY current_entry, previous_entry;
 
+   if (!RmapReady)
+   {
+       DPRINT1("RMAPS USED TOO SOON!!!\n");
+       while (TRUE);
+   }
+
    ExAcquireFastMutex(&RmapListLock);
    previous_entry = NULL;
    current_entry = MmGetRmapListHeadPage(Page);
@@ -535,6 +559,5 @@ MmDeleteRmap(PFN_TYPE Page, PEPROCESS Process,
       previous_entry = current_entry;
       current_entry = current_entry->Next;
    }
-   DPRINT1("%x %x %x\n", Page, Process, Address);
    KEBUGCHECK(0);
 }

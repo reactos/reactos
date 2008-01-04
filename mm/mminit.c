@@ -493,10 +493,29 @@ MmInitSystem(IN ULONG Phase,
     return TRUE;
 }
 
+#if 0
+
+VOID static
+MiFreeInitMemoryPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
+                     PFN_TYPE Page, SWAPENTRY SwapEntry,
+                     BOOLEAN Dirty)
+{
+   ASSERT(SwapEntry == 0);
+   if (Page != 0)
+   {
+      MmReleasePageMemoryConsumer(MC_NPPOOL, Page);
+   }
+}
+
 VOID
 NTAPI
 MiFreeInitMemory(VOID)
 {
    MmLockAddressSpace(MmGetKernelAddressSpace());
+   MmFreeMemoryAreaByPtr(MmGetKernelAddressSpace(),
+                         (PVOID)&_init_start__,
+                         MiFreeInitMemoryPage,
+                         NULL);
    MmUnlockAddressSpace(MmGetKernelAddressSpace());
 }
+#endif
