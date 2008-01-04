@@ -6,6 +6,15 @@ Signature="$ReactOS$
 ; DirectX
 HKLM,"SOFTWARE\Microsoft\DirectX","Version",0x00000000,"4.09.00.0904"
 
+; RPC
+HKLM,Software\Microsoft\Rpc\SecurityService,1,2,"secur32.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,10,2,"secur32.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,14,2,"schannel.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,16,2,"secur32.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,18,2,"secur32.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,68,2,"netlogon.dll"
+HKLM,Software\Microsoft\Rpc\SecurityService,9,2,"secur32.dll"
+
 ; Common shell folders
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Folders",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\User Shell Folders",,0x00000012
