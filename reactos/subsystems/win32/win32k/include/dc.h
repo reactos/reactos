@@ -30,7 +30,16 @@
 #define PDEV_DRIVER_PUNTED_CALL  0x00040000 // Driver calls back to GDI engine
 #define PDEV_CLONE_DEVICE        0x00080000
 
-typedef struct _GDIPOINTER /* should stay private to ENG */
+// Graphics Device structure.
+typedef struct _GRAPHICS_DEVICE
+{
+  CHAR szNtDeviceName[CCHDEVICENAME];           // Yes char AscII
+  CHAR szWinDeviceName[CCHDEVICENAME];          // <- chk GetMonitorInfoW MxIxEX.szDevice
+  struct _GRAPHICS_DEVICE * pNextGraphicsDevice;
+  DWORD StateFlags;                             // See DISPLAY_DEVICE_*
+} GRAPHICS_DEVICE, *PGRAPHICS_DEVICE;
+
+typedef struct _GDIPOINTER /* should stay private to ENG? No, part of GDIDEVICE aka HDEV aka PDEV. */
 {
   /* private GDI pointer handling information, required for software emulation */
   BOOL     Enabled;
@@ -76,7 +85,7 @@ typedef struct _GDIDEVICE
   HSURF         pSurface;       // SURFACE for this device.
   HANDLE        hSpooler;       // Handle to spooler, if spooler dev driver.
   ULONG         DisplayNumber;
-  PVOID         pGraphicsDev;   // PGRAPHICS_DEVICE see VideoFileObject
+  PVOID         pGraphicsDev;   // PGRAPHICS_DEVICE
 
   DEVMODEW      DMW;
   PVOID         pdmwDev;        // Ptr->DEVMODEW.dmSize + dmDriverExtra == alloc size.
