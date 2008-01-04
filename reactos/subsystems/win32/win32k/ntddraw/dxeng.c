@@ -238,39 +238,39 @@ DxEngSetDeviceGammaRamp(HDEV hPDev, PGAMMARAMP Ramp, BOOL Test)
 * @name DxEngGetHdevData
 * @implemented
 *
-* The function DxEngGetHdevData get a value in hdev
+* The function DxEngGetHdevData retrieves a value from the HDEV
 
 * @param HDEV hPDev
-* The hdev
+* The HDEV
 *
 * @param DXEGSHDEVDATA Type
-* follow type are supported
-* type                      what it does
-* DxEGShDevData_Surface     get pointer to Surface handle.
-* DxEGShDevData_hSpooler    get If the device is a spooler driver.
-* DxEGShDevData_DitherFmt   get the device iDitherFormat
-* DxEGShDevData_FxCaps      get the device flGraphicsCaps
-* DxEGShDevData_FxCaps2     get the device flGraphicsCaps2
-* DxEGShDevData_DrvFuncs    get the device DriverFunctions function table
-* DxEGShDevData_dhpdev      get the device hPDev the real DHPDEV
-* DxEGShDevData_eddg        get the device pEDDgpl
-* DxEGShDevData_dd_nCount   get the device DxDd_nCount
-* DxEGShDevData_dd_flags    get the device DxDd_Flags
-* DxEGShDevData_disable     get if the device pdev is disable or not
-* DxEGShDevData_metadev     get if the device pdev is meta device or not
-* DxEGShDevData_display     get if the device is primary display driver or not
-* DxEGShDevData_Parent      get the ppdevParent
-* DxEGShDevData_OpenRefs    get the pdevOpenRefs counter
-* DxEGShDevData_palette     get the device RC_PALETTE is set or not
-* DxEGShDevData_ldev        ATM we do not support the Loader Device driver structure
-* DxEGShDevData_GDev        get the device pGraphicsDev
-* DxEGShDevData_clonedev    get the device PDEV_CLONE_DEVICE flag is set or not
+* The following typs are supported
+* Type                                            Purpose
+* DxEGShDevData_Surface      Retrieve pointer to Surface handle.
+* DxEGShDevData_hSpooler     See if the device is a spooler driver.
+* DxEGShDevData_DitherFmt    Retrieve the device iDitherFormat
+* DxEGShDevData_FxCaps       Retrieve the device flGraphicsCaps
+* DxEGShDevData_FxCaps2      Retrieve the device flGraphicsCaps2
+* DxEGShDevData_DrvFuncs     Retrieve the device DriverFunctions function table
+* DxEGShDevData_dhpdev       Retrieve the device hPDev, the real DHPDEV
+* DxEGShDevData_eddg         Retrieve the device pEDDgpl
+* DxEGShDevData_dd_nCount    Retrieve the device DxDd_nCount
+* DxEGShDevData_dd_flags     Retrieve the device DxDd_Flags
+* DxEGShDevData_disable      See if the device pdev is disabled
+* DxEGShDevData_metadev      See if the device pdev is a meta device
+* DxEGShDevData_display      See if the device is the primary display driver
+* DxEGShDevData_Parent       Retrieve the ppdevParent
+* DxEGShDevData_OpenRefs     Retrieve the pdevOpenRefs counter
+* DxEGShDevData_palette      See if the device RC_PALETTE is set
+* DxEGShDevData_ldev         ATM we do not support the Loader Device driver structure
+* DxEGShDevData_GDev         Retrieve the device pGraphicsDev
+* DxEGShDevData_clonedev     Retrieve the device PDEV_CLONE_DEVICE flag is set or not
 *
 * @return
 * Returns the data we requested
 *
 * @remarks.
-* ReactOS specific: Implementation ins incomplete, I do not save the value into the hdev yet.
+* ReactOS specific: Implementation is incomplete, I do not save the value into the hdev yet.
 *
 *--*/
 DWORD
@@ -359,7 +359,7 @@ DxEngGetHdevData(HDEV hDev,
 * The hdev
 *
 * @param DXEGSHDEVDATA Type
-* Support only DxEGShDevData_dd_nCount it is a internal counter how many time hdev been lock and unlock
+* Supports only DxEGShDevData_dd_nCount. It is an internal counter on how many times hdev has been locked and unlocked
 *
 * @param DWORD Data
 * The value to be saved to hdev's internal counter.
