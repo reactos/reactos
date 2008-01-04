@@ -94,6 +94,9 @@
 <directory name="hid">
 	<xi:include href="hid/hid.rbuild" />
 </directory>
+<directory name="hlink">
+	<xi:include href="hlink/hlink.rbuild" />
+</directory>
 <directory name="icmp">
 	<xi:include href="icmp/icmp.rbuild" />
 </directory>
@@ -234,6 +237,9 @@
 </directory>
 <directory name="samsrv">
 	<xi:include href="samsrv/samsrv.rbuild" />
+</directory>
+<directory name="schannel">
+	<xi:include href="schannel/schannel.rbuild" />
 </directory>
 <directory name="secur32">
 	<xi:include href="secur32/secur32.rbuild" />

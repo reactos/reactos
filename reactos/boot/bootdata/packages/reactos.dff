@@ -190,6 +190,7 @@ dll\win32\gdiplus\gdiplus.dll                       1
 dll\win32\glu32\glu32.dll                           1
 dll\win32\hhctrl.ocx\hhctrl.ocx                     1
 dll\win32\hid\hid.dll                               1
+dll\win32\hlink\hlink.dll                           1
 dll\win32\icmp\icmp.dll                             1
 dll\win32\imagehlp\imagehlp.dll                     1
 dll\win32\imm32\imm32.dll                           1
@@ -236,6 +237,7 @@ dll\win32\rsabase\rsabase.dll                       1
 dll\win32\rsaenh\rsaenh.dll                         1
 dll\win32\samlib\samlib.dll                         1
 dll\win32\samsrv\samsrv.dll                         1
+dll\win32\schannel\schannel.dll                     1
 dll\win32\secur32\secur32.dll                       1
 dll\win32\sensapi\sensapi.dll                       1
 dll\win32\serialui\serialui.dll                     1

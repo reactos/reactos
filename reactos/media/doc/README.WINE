@@ -44,6 +44,7 @@ reactos/dll/win32/cryptdll        # Autosync
 reactos/dll/win32/cryptnet        # Autosync
 reactos/dll/win32/dbghelp         # Synced to Wine-0_9_51
 reactos/dll/win32/hhctrl.ocx      # Autosync
+reactos/dll/win32/hlink           # Autosync
 reactos/dll/win32/icmp            # Synced to Wine-0_9_10
 reactos/dll/win32/imm32           # Autosync
 reactos/dll/win32/iphlpapi        # Out of sync
@@ -73,6 +74,7 @@ reactos/dll/win32/riched32        # Autosync
 reactos/dll/win32/rpcrt4          # Synced to Wine-0_9_10
 reactos/dll/win32/rsabase         # Autosync
 reactos/dll/win32/rsaenh          # Autosync
+reactos/dll/win32/schannel        # Autosync
 reactos/dll/win32/sensapi         # Autosync
 reactos/dll/win32/setupapi        # Forked at Wine-20050524
 reactos/dll/win32/shell32         # Forked at Wine-20071011
