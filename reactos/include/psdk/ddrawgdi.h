@@ -17,6 +17,8 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#ifndef _DDRAWGDI_
+#define _DDRAWGDI_
 #include <d3dhal.h>
 
 /* Define the real export names */
@@ -159,3 +161,4 @@ DdSwapTextureHandles(
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl1,
     LPDDRAWI_DDRAWSURFACE_LCL pDDSLcl2
 );
+#endif
