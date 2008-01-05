@@ -2,6 +2,7 @@
 * translated by xrogers
 * xxrogers@users.sourceforge.net
 * https://sourceforge.net/projects/reactospl
+* updated by Caemyr - Olaf Siejka (Jan, 2008)
 */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -267,13 +268,13 @@ BEGIN
     IDS_PETABYTE "PB RAM"
     IDS_VARIABLE "Zmienna"
     IDS_VALUE    "Wartoœæ"
-    IDS_NO_DUMP "(None)"
-    IDS_MINI_DUMP "Minidump(64KB)"
-    IDS_KERNEL_DUMP "Kernel dump"
-    IDS_FULL_DUMP "Complete dump"
-    IDS_USERPROFILE_NAME "Name"
-    IDS_USERPROFILE_SIZE "Size"
-    IDS_USERPROFILE_TYPE "Type"
-    IDS_USERPROFILE_STATUS "Status"
-    IDS_USERPROFILE_MODIFIED "Modified"
+    IDS_NO_DUMP "(Brak)"
+    IDS_MINI_DUMP "Minimalny zrzut pamiêci(64KB)"
+    IDS_KERNEL_DUMP "Zrzut pamiêci kernela"
+    IDS_FULL_DUMP "Zrzut ca³ej pamiêci"
+    IDS_USERPROFILE_NAME "Nazwa"
+    IDS_USERPROFILE_SIZE "Rozmiar"
+    IDS_USERPROFILE_TYPE "Typ"
+    IDS_USERPROFILE_STATUS "Stan"
+    IDS_USERPROFILE_MODIFIED "Zmodyfikowano"
 END

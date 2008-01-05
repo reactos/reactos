@@ -401,6 +401,6 @@ END
  *STRINGTABLE DISCARDABLE
  *BEGIN
  *    ID_HELP_HELPTOPICS      "Otwiera pomoc Edytora Rejestru."
- *    ID_HELP_ABOUT           "Wyœwietla informacje o programie, wersji number, licencji."
+ *    ID_HELP_ABOUT           "Wyœwietla informacje o programie, numerze wersji, licencji."
  *END
  */

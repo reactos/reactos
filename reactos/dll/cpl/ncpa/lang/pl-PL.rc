@@ -1,4 +1,11 @@
-// Revised by Caemyr (Olaf Siejka) - 07.2007
+/*
+ *      translated by Polish Translation Team
+ *      https://sourceforge.net/projects/reactospl
+ *      Updated by Caemyr - Olaf Siejka (Jul, 2007),(Jan, 2008)
+ *      Use ReactOS forum PM or IRC to contact me
+ *      http://www.reactos.org
+ *      IRC: irc.freenode.net #reactos-pl;
+ */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
@@ -119,13 +126,13 @@ BEGIN
   IDS_CANNOT_CREATE_PROPSHEET "Nie mo¿na utworzyæ przegl¹du ustawieñ"
   IDS_OUT_OF_MEMORY "Brak wolnej pamiêci"
   IDS_CANNOT_SAVE_CHANGES "Nie mo¿na zapisaæ dokonanych zmian!"
-  IDS_STATUS_NON_OPERATIONAL "Non-operational"
-  IDS_STATUS_UNREACHABLE "No WAN adapter found"
-  IDS_STATUS_DISCONNECTED "Disconnected"
-  IDS_STATUS_CONNECTING "Connecting"
-  IDS_STATUS_CONNECTED "Connected"
-  IDS_STATUS_OPERATIONAL "Connected"
+  IDS_STATUS_NON_OPERATIONAL "Niedzia³aj¹cy"
+  IDS_STATUS_UNREACHABLE "Nie znaleziono adaptera WAN"
+  IDS_STATUS_DISCONNECTED "Roz³¹czony"
+  IDS_STATUS_CONNECTING "£¹czenie"
+  IDS_STATUS_CONNECTED "Po³¹czony"
+  IDS_STATUS_OPERATIONAL "Po³¹czony"
   IDS_SPEED_MBPS "%d Mbps"
-  IDS_DURATION_DAY "%d day %s"
-  IDS_DURATION_DAYS "%d days %s"
+  IDS_DURATION_DAY "%d dzieñ %s"
+  IDS_DURATION_DAYS "%d dni %s"
 END
