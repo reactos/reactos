@@ -21,6 +21,7 @@ NtApphelpCacheControl 2
 NtAreMappedFilesTheSame 2
 NtAssignProcessToJobObject 2
 NtCallbackReturn 3
+NtCancelDeviceWakeupRequest 1
 NtCancelIoFile 2
 NtCancelTimer 2
 NtClearEvent 1
@@ -138,8 +139,8 @@ NtOpenTimer 3
 NtPlugPlayControl 3
 NtPowerInformation 5
 NtPrivilegeCheck 3
-NtPrivilegedServiceAuditAlarm 5
 NtPrivilegeObjectAuditAlarm 6
+NtPrivilegedServiceAuditAlarm 5
 NtProtectVirtualMemory 5
 NtPulseEvent 2
 NtQueryAttributesFile 2
@@ -197,11 +198,13 @@ NtReleaseMutant 2
 NtReleaseSemaphore 3
 NtRemoveIoCompletion 5
 NtRemoveProcessDebug 2
+NtRenameKey 2
 NtReplaceKey 3
 NtReplyPort 2
 NtReplyWaitReceivePort 4
 NtReplyWaitReceivePortEx 5
 NtReplyWaitReplyPort 2
+NtRequestDeviceWakeup 1
 NtRequestPort 2
 NtRequestWaitReplyPort 3
 NtRequestWakeupLatency 1

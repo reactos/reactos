@@ -864,6 +864,15 @@ NtQueryOpenSubKeysEx(IN POBJECT_ATTRIBUTES TargetKey,
 
 NTSTATUS
 NTAPI
+NtRenameKey(IN HANDLE KeyHandle,
+            IN PUNICODE_STRING ReplacementName)
+{
+    UNIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
 NtReplaceKey(IN POBJECT_ATTRIBUTES ObjectAttributes,
              IN HANDLE Key,
              IN POBJECT_ATTRIBUTES ReplacedObjectAttributes)
