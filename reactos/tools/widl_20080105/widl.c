@@ -549,7 +549,12 @@ int main(int argc,char *argv[])
   }
 
   if(do_header) {
-    header_token = make_token(header_name);
+    if (strrchr(header_name, '\\'))
+        header_token = make_token(strrchr(header_name, '\\') + 1);
+    else if (strrchr(header_name, '/'))
+        header_token = make_token(strrchr(header_name, '/') + 1);
+    else
+        header_token = make_token(header_name);
 
     if(!(header = fopen(header_name, "w"))) {
       fprintf(stderr, "Could not open %s for output\n", header_name);
