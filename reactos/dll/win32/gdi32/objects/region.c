@@ -6,24 +6,35 @@ VOID
 FASTCALL
 SortRects(PRECT pRect, INT nCount)
 {
-  INT i = 0, a = 0, b = 0;
+  INT i = 0, a = 0, b = 0, c, s;
   RECT sRect;
 
   if (nCount > 0)
   {
-      for(;;)
-      {
-         do
-         {
-            if(pRect[b].top != pRect[i].bottom) break;
-            if(pRect[b].left < pRect[a].left)
-            {
-               sRect = pRect[a];
-               pRect[a] = pRect[b];
-               pRect[b] = sRect;
-            }
-         } while(0);
-      }
+     i = 1; // set index point
+     c = nCount; // set inverse count
+     do
+     {
+        s = i; // set sort count
+        if ( i < nCount )
+        {
+           a = i - 1;
+           b = i;
+           do
+           {
+              if(pRect[b].top != pRect[i].bottom) break;
+              if(pRect[b].left < pRect[a].left)
+              {
+                 sRect = pRect[a];
+                 pRect[a] = pRect[b];
+                 pRect[b] = sRect;
+              }
+              ++s;
+              ++b;
+           } while ( s < nCount );
+        }
+        ++i;
+     } while ( c-- != 1 );
   }
 }
 
@@ -223,9 +234,9 @@ GetClipRgn(
 {
   INT Ret = NtGdiGetRandomRgn(hdc, hrgn, 1);
 //  if (Ret)
- // {
- //    if(GetLayout(hdc) & LAYOUT_RTL) MirrorRgnDC(hdc,(HRGN)Ret, NULL);
- // }
+//  {
+//     if(GetLayout(hdc) & LAYOUT_RTL) MirrorRgnDC(hdc,(HRGN)Ret, NULL);
+//  }
   return Ret;
 }
 
