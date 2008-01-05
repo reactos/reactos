@@ -12,6 +12,7 @@
 	<define name="_NTOSKRNL_" />
 	<define name="__NO_CTYPE_INLINES" />
 	<library>rtl</library>
+	<library>ntdllsys</library>
 	<library>libcntpr</library>
 	<library>pseh</library>
 	<linkerflag>-lgcc</linkerflag>
@@ -48,10 +49,6 @@
 	</directory>
 	<directory name="inc">
 		<pch>ntdll.h</pch>
-	</directory>
-
-	<directory name="." root="intermediate">
-		<file>napi.S</file>
 	</directory>
 
 	<directory name="def">
