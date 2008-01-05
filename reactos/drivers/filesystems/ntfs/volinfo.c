@@ -181,6 +181,7 @@ NtfsQueryVolumeInformation(PDEVICE_OBJECT DeviceObject,
   FsInformationClass = Stack->Parameters.QueryVolume.FsInformationClass;
   BufferLength = Stack->Parameters.QueryVolume.Length;
   SystemBuffer = Irp->AssociatedIrp.SystemBuffer;
+  RtlZeroMemory(SystemBuffer, BufferLength);
 
   DPRINT("FsInformationClass %d\n", FsInformationClass);
   DPRINT("SystemBuffer %p\n", SystemBuffer);
