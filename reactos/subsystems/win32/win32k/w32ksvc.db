@@ -729,7 +729,6 @@ NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
 NtGdiPolyTextOut                        3
-NtGdiRealizePalette                     1
 NtGdiRemoveFontResource                 1
 #
 # ReactOS only system calls

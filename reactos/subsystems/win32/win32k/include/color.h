@@ -14,6 +14,6 @@ const PALETTEENTRY* FASTCALL COLOR_GetSystemPaletteTemplate (VOID);
 COLORREF STDCALL COLOR_LookupNearestColor (PALETTEENTRY* palPalEntry, INT size, COLORREF color);
 INT STDCALL COLOR_PaletteLookupExactIndex (PALETTEENTRY* palPalEntry, INT size, COLORREF col);
 INT STDCALL COLOR_PaletteLookupPixel(PALETTEENTRY *palPalEntry, INT size, XLATEOBJ *XlateObj, COLORREF col, BOOL skipReserved);
-
+UINT STDCALL NtGdiRealizePalette (HDC);
 
 #endif /* _WIN32K_COLOR_H */

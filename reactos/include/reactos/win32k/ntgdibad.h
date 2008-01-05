@@ -170,13 +170,6 @@ NtGdiPolyTextOut(HDC  hDC,
                       CONST LPPOLYTEXTW txt,
                       int  Count);
 
-/* Call UserRealizePalette. */
-UINT
-STDCALL
-NtGdiRealizePalette (
-	HDC	hDC
-	);
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL

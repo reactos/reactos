@@ -475,6 +475,9 @@ NtUserCallOneParam(
       }
       case ONEPARAM_ROUTINE_RELEASEDC:
          RETURN (UserReleaseDC(NULL, (HDC) Param, FALSE));
+
+      case ONEPARAM_ROUTINE_REALIZEPALETTE:
+         RETURN (NtGdiRealizePalette((HDC) Param));
    }
    DPRINT1("Calling invalid routine number 0x%x in NtUserCallOneParam(), Param=0x%x\n",
            Routine, Param);

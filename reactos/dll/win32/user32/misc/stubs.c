@@ -239,14 +239,13 @@ DragObject(
 
 
 /*
- * @unimplemented
+ * @implemented
  */
 UINT
 STDCALL
 UserRealizePalette ( HDC hDC )
 {
-  UNIMPLEMENTED;
-  return FALSE;
+  return NtUserCallOneParam((DWORD) hDC, ONEPARAM_ROUTINE_REALIZEPALETTE);
 }
 
 /*
