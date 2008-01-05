@@ -261,6 +261,14 @@ NtQueryValueKey(
 NTSYSCALLAPI
 NTSTATUS
 NTAPI
+NtRenameKey(
+    IN HANDLE KeyHandle,
+    IN PUNICODE_STRING ReplacementName
+);
+
+NTSYSCALLAPI
+NTSTATUS
+NTAPI
 NtReplaceKey(
     IN POBJECT_ATTRIBUTES ObjectAttributes,
     IN HANDLE Key,
