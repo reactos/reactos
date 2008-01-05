@@ -171,10 +171,11 @@ IopGetDeviceObjectPointer(IN PUNICODE_STRING ObjectName,
         /* Return the requested data */
         *DeviceObject = IoGetRelatedDeviceObject(LocalFileObject);
         *FileObject = LocalFileObject;
-        ZwClose(FileHandle);
     }
 
     /* Close the handle */
+    ZwClose(FileHandle);
+
     return Status;
 }
 
