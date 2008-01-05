@@ -44,23 +44,6 @@ NtGdiDescribePixelFormat(HDC  hDC,
   return 0;
 }
 
-UINT
-STDCALL
-NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
-                                    DWORD  BufSize,
-                                    CONST PPIXELFORMATDESCRIPTOR  pfd)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
-INT
-STDCALL
-NtGdiGetPixelFormat(HDC  hDC)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
 
 BOOL
 APIENTRY

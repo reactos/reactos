@@ -23,16 +23,6 @@
 #define NDEBUG
 #include <debug.h>
 
-BOOL
-STDCALL
-NtGdiColorMatchToTarget(HDC  hDC,
-                             HDC  hDCTarget,
-                             DWORD  Action)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
 HANDLE
 APIENTRY
 NtGdiCreateColorSpace(
@@ -49,29 +39,6 @@ NtGdiDeleteColorSpace(
 {
   UNIMPLEMENTED;
   return FALSE;
-}
-
-INT
-STDCALL
-NtGdiEnumICMProfiles(HDC    hDC,
-                    LPWSTR lpstrBuffer,
-                    UINT   cch )
-{
-  /*
-   * FIXME - build list of file names into lpstrBuffer.
-   * (MULTI-SZ would probably be best format)
-   * return (needed) length of buffer in bytes
-   */
-  UNIMPLEMENTED;
-  return 0;
-}
-
-HCOLORSPACE
-STDCALL
-NtGdiGetColorSpace(HDC  hDC)
-{
-  /* FIXME: Need to to whatever GetColorSpace actually does */
-  return  0;
 }
 
 BOOL
@@ -162,26 +129,6 @@ NtGdiGetDeviceGammaRamp(HDC  hDC,
      return FALSE;
   }
   return Ret;
-}
-
-BOOL
-STDCALL
-NtGdiGetICMProfile(HDC  hDC,
-                        LPDWORD  NameSize,
-                        LPWSTR  Filename)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
-                           LPLOGCOLORSPACEW  Buffer,
-                           DWORD  Size)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 BOOL
@@ -399,26 +346,6 @@ NtGdiSetIcmMode(HDC  hDC,
     }
 
   return  0;
-}
-
-BOOL
-STDCALL
-NtGdiSetICMProfile(HDC  hDC,
-                        LPWSTR  Filename)
-{
-  UNIMPLEMENTED;
-  return FALSE;
-}
-
-BOOL
-STDCALL
-NtGdiUpdateICMRegKey(DWORD  Reserved,
-                          LPWSTR  CMID,
-                          LPWSTR  Filename,
-                          UINT  Command)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 /* EOF */

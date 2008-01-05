@@ -677,20 +677,17 @@ NtGdiUMPDEngFreeUserMem                          1
 NtGdiDrawStream                                  3
 #
 #
-#ReactOS specify syscall 
+#ReactOS specific syscalls
 NtGdiSetDIBits                          7
-NtGdiSetEnhMetaFileBits                 2
-NtGdiSetICMProfile                      2
 NtGdiSetMapperFlags                     2
 NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
 NtGdiSetWindowOrgEx                     4
 NtGdiStretchDIBits                      13
-NtGdiUpdateICMRegKey                    4
 NtUserBuildMenuItemList                 4
 NtUserCreateCursorIconHandle            2
-NtUserEnumClipboardFormats              1 
+NtUserEnumClipboardFormats              1
 NtUserGetActiveWindow                   0
 NtUserGetCapture                        0
 NtUserGetClassLong                      3
@@ -713,7 +710,7 @@ NtUserMonitorFromPoint                  3
 NtUserMonitorFromRect                   2
 NtUserMonitorFromWindow                 2
 NtUserRegisterClassEx                   6
-NtUserRegisterClipboardFormat           1 
+NtUserRegisterClipboardFormat           1
 NtUserSendMessage                       5
 NtUserSendMessageCallback               6
 NtUserSendMessageTimeout                8
@@ -721,36 +718,16 @@ NtUserSendNotifyMessage                 4
 NtUserSetScrollBarInfo                  3
 NtUserGetDesktopWindow                  0
 NtGdiAddFontResource                    2
-NtGdiCloseEnhMetaFile                   1
-NtGdiColorMatchToTarget                 3
-NtGdiCopyEnhMetaFile                    2
 NtGdiCreateDIBitmap                     6
-NtGdiCreateEnhMetaFile                  4
 NtGdiCreateScalableFontResource         4
-NtGdiDeleteEnhMetaFile                  1
-NtGdiEnumEnhMetaFile                    5
 NtGdiEnumFonts                          4
-NtGdiEnumICMProfiles                    3
 NtGdiExtTextOut                         8
-NtGdiGdiComment                         3
 NtGdiGetAspectRatioFilterEx             2
-NtGdiGetColorSpace                      1
-NtGdiGetEnhMetaFile                     1
-NtGdiGetEnhMetaFileBits                 3
-NtGdiGetEnhMetaFileDescription          3
-NtGdiGetEnhMetaFileHeader               3
-NtGdiGetEnhMetaFilePaletteEntries       3
-NtGdiGetEnhMetaFilePixelFormat          3
 NtGdiGetFontFamilyInfo                  4
 NtGdiGetFontLanguageInfo                1
-NtGdiGetICMProfile                      3
-NtGdiGetLogColorSpace                   3
-NtGdiGetPixelFormat                     1
 NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
-NtGdiPlayEnhMetaFile                    3
-NtGdiPlayEnhMetaFileRecord              4
 NtGdiPolyTextOut                        3
 NtGdiRealizePalette                     1
 NtGdiRemoveFontResource                 1

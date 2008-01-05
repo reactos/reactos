@@ -85,27 +85,6 @@ STDCALL
 NtGdiAddFontResource(PUNICODE_STRING Filename,
 					 DWORD fl);
 
-/* Metafiles are user mode */
-HENHMETAFILE
-STDCALL
-NtGdiCloseEnhMetaFile (
-	HDC	hDC
-	);
-
-/* Does not exist */
-BOOL
-STDCALL
-NtGdiColorMatchToTarget(HDC  hDC,
-                             HDC  hDCTarget,
-                             DWORD  Action);
-
-/* Metafiles are user mode */
-HENHMETAFILE
-STDCALL
-NtGdiCopyEnhMetaFile (
-	HENHMETAFILE	Src,
-	LPCWSTR		File
-	);
 
 /* Use NtGdiCreateDIBitmapInternal */
 HBITMAP
@@ -119,35 +98,7 @@ NtGdiCreateDIBitmap (
 	UINT			Usage
 	);
 
-/* Metafiles are user mode */
-HDC
-STDCALL
-NtGdiCreateEnhMetaFile (
-	HDC		hDCRef,
-	LPCWSTR		File,
-	CONST LPRECT	Rect,
-	LPCWSTR		Description
-	);
 
-
-
-/* Meta are user-mode. */
-BOOL
-STDCALL
-NtGdiDeleteEnhMetaFile (
-	HENHMETAFILE	emf
-	);
-
-/* Meta are user-mode. */
-BOOL
-STDCALL
-NtGdiEnumEnhMetaFile (
-	HDC		hDC,
-	HENHMETAFILE	emf,
-	ENHMFENUMPROC	EnhMetaFunc,
-	LPVOID		Data,
-	CONST LPRECT	Rect
-	);
 
 /* Should be done in user-mode. */
 int
@@ -156,13 +107,6 @@ NtGdiEnumFonts(HDC  hDC,
                    LPCWSTR FaceName,
                    FONTENUMPROCW  FontFunc,
                    LPARAM  lParam);
-
-/* Should be done in user-mode. */
-INT
-STDCALL
-NtGdiEnumICMProfiles(HDC    hDC,
-                    LPWSTR lpstrBuffer,
-                    UINT   cch );
 
 /* Use NtGdiExtTextOutW with 0, 0 at the end. */
 BOOL
@@ -179,98 +123,13 @@ NtGdiExtTextOut(HDC  hdc,
 /* Should be done in user-mode. */
 BOOL
 STDCALL
-NtGdiGdiComment (
-	HDC		hDC,
-	UINT		Size,
-	CONST LPBYTE	Data
-	);
-
-/* Should be done in user-mode. */
-BOOL
-STDCALL
 NtGdiGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio);
-
-/* Use NtGdiGetColorSpaceforBitmap. */
-HCOLORSPACE
-STDCALL
-NtGdiGetColorSpace(HDC  hDC);
-
-/* Meta are user-mode. */
-HENHMETAFILE
-STDCALL
-NtGdiGetEnhMetaFile (
-	LPCWSTR	MetaFile
-	);
-
-/* Meta are user-mode. */
-UINT
-STDCALL
-NtGdiGetEnhMetaFileBits (
-	HENHMETAFILE	hemf,
-	UINT		BufSize,
-	LPBYTE		Buffer
-	);
-
-/* Meta are user-mode. */
-UINT
-STDCALL
-NtGdiGetEnhMetaFileDescription (
-	HENHMETAFILE	hemf,
-	UINT		BufSize,
-	LPWSTR		Description
-	);
-
-/* Meta are user-mode. */
-UINT
-STDCALL
-NtGdiGetEnhMetaFileHeader (
-	HENHMETAFILE	hemf,
-	UINT		BufSize,
-	LPENHMETAHEADER	emh
-	);
-
-/* Meta are user-mode. */
-UINT
-STDCALL
-NtGdiGetEnhMetaFilePaletteEntries (
-	HENHMETAFILE	hemf,
-	UINT		Entries,
-	LPPALETTEENTRY	pe
-	);
-
-/* Meta are user-mode. */
-UINT
-STDCALL
-NtGdiGetEnhMetaFilePixelFormat(HENHMETAFILE  hEMF,
-                                    DWORD  BufSize,
-                                    CONST PPIXELFORMATDESCRIPTOR  pfd);
 
 /* Should be done in user-mode. */
 DWORD
 STDCALL
 NtGdiGetFontLanguageInfo(HDC  hDC);
-
-/* Should be done in user-mode. */
-BOOL
-STDCALL
-NtGdiGetICMProfile(HDC  hDC,
-                        LPDWORD  NameSize,
-                        LPWSTR  Filename);
-
-/* Should be done in user-mode. */
-BOOL
-STDCALL
-NtGdiGetLogColorSpace(HCOLORSPACE  hColorSpace,
-                           LPLOGCOLORSPACEW  Buffer,
-                           DWORD  Size);
- 
-/* Should be done in user-mode using shared GDI Objects. */
-INT
-STDCALL
-NtGdiGetPixelFormat(HDC  hDC);
-
-
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
@@ -304,25 +163,6 @@ NtGdiOffsetWindowOrgEx (
 	LPPOINT	Point
 	);
 
-/* Metafiles are user-mode. */
-BOOL
-STDCALL
-NtGdiPlayEnhMetaFile (
-	HDC		hDC,
-	HENHMETAFILE	hemf,
-	CONST PRECT	Rect
-	);
-
-/* Metafiles are user-mode. */
-BOOL
-STDCALL
-NtGdiPlayEnhMetaFileRecord (
-	HDC			hDC,
-	LPHANDLETABLE		Handletable,
-	CONST ENHMETARECORD	* EnhMetaRecord,
-	UINT			Handles
-	);
-
 /* Use NtGdiPolyTextOutW with 0 at the end. */
 BOOL
 STDCALL
@@ -354,20 +194,6 @@ NtGdiSetDIBits (
 	CONST BITMAPINFO	* bmi,
 	UINT			ColorUse
 	);
-
-/* Metafiles are user-mode. */
-HENHMETAFILE
-STDCALL
-NtGdiSetEnhMetaFileBits (
-	UINT		BufSize,
-	CONST PBYTE	Data
-	);
-
-/* Should be done in user-mode. */
-BOOL
-STDCALL
-NtGdiSetICMProfile(HDC  hDC,
-                        LPWSTR  Filename);
 
 /* Needs to be done in user-mode, using shared GDI Object Attributes. */
 DWORD
@@ -433,14 +259,6 @@ NtGdiStretchDIBits (
 	UINT			Usage,
 	DWORD			ROP
 	);
-
-/* Needs to be done in user-mode. */
-BOOL
-STDCALL
-NtGdiUpdateICMRegKey(DWORD  Reserved,
-                          LPWSTR  CMID,
-                          LPWSTR  Filename,
-                          UINT  Command);
 
 
 #endif /* WIN32K_NTGDI_BAD_INCLUDED */
