@@ -540,9 +540,13 @@ SH_FileVersionDlgProc(
 	   SendMessageW(hDlgCtrl, WM_SETTEXT, (WPARAM)NULL, (LPARAM)str);
        return TRUE;
 	 }
+     break;
+
   case WM_DESTROY:
        buf = (LPVOID)GetWindowLong(hwndDlg, DWL_USER);
 	   HeapFree(GetProcessHeap(), 0, buf);
+       break;
+
   default:
 	  break;
   }
