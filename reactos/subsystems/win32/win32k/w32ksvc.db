@@ -679,7 +679,6 @@ NtGdiDrawStream                                  3
 #
 #ReactOS specific syscalls
 NtGdiSetDIBits                          7
-NtGdiSetMapperFlags                     2
 NtGdiSetViewportExtEx                   4
 NtGdiSetViewportOrgEx                   4
 NtGdiSetWindowExtEx                     4
@@ -719,15 +718,11 @@ NtUserSetScrollBarInfo                  3
 NtUserGetDesktopWindow                  0
 NtGdiAddFontResource                    2
 NtGdiCreateDIBitmap                     6
-NtGdiCreateScalableFontResource         4
-NtGdiEnumFonts                          4
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetFontFamilyInfo                  4
-NtGdiGetFontLanguageInfo                1
 NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
-NtGdiRemoveFontResource                 1
 #
 # ReactOS only system calls
 NtUserAcquireOrReleaseInputOwnership    1

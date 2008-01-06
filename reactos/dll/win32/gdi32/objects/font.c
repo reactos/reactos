@@ -1412,26 +1412,7 @@ CreateFontW(
 
 
 /*
- * @implemented
- */
-BOOL
-STDCALL
-CreateScalableFontResourceW(
-	DWORD		fdwHidden,
-	LPCWSTR		lpszFontRes,
-	LPCWSTR		lpszFontFile,
-	LPCWSTR		lpszCurrentPath
-	)
-{
-  return NtGdiCreateScalableFontResource ( fdwHidden,
-					  lpszFontRes,
-					  lpszFontFile,
-					  lpszCurrentPath );
-}
-
-
-/*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1442,39 +1423,7 @@ CreateScalableFontResourceA(
 	LPCSTR		lpszCurrentPath
 	)
 {
-  NTSTATUS Status;
-  LPWSTR lpszFontResW, lpszFontFileW, lpszCurrentPathW;
-  BOOL rc = FALSE;
-
-  Status = HEAP_strdupA2W ( &lpszFontResW, lpszFontRes );
-  if (!NT_SUCCESS (Status))
-    SetLastError (RtlNtStatusToDosError(Status));
-  else
-    {
-      Status = HEAP_strdupA2W ( &lpszFontFileW, lpszFontFile );
-      if (!NT_SUCCESS (Status))
-	SetLastError (RtlNtStatusToDosError(Status));
-      else
-	{
-	  Status = HEAP_strdupA2W ( &lpszCurrentPathW, lpszCurrentPath );
-	  if (!NT_SUCCESS (Status))
-	    SetLastError (RtlNtStatusToDosError(Status));
-	  else
-	    {
-	      rc = NtGdiCreateScalableFontResource ( fdwHidden,
-						    lpszFontResW,
-						    lpszFontFileW,
-						    lpszCurrentPathW );
-
-	      HEAP_free ( lpszCurrentPathW );
-	    }
-
-	  HEAP_free ( lpszFontFileW );
-	}
-
-      HEAP_free ( lpszFontResW );
-    }
-  return rc;
+  return FALSE;
 }
 
 
@@ -1584,7 +1533,7 @@ RemoveFontResourceA(LPCSTR lpFileName)
 }
 
 /*
- * @implemented
+ * @unimplemented
  */
 BOOL
 STDCALL
@@ -1595,7 +1544,6 @@ RemoveFontResourceExA(LPCSTR lpFileName,
 {
     NTSTATUS Status;
     LPWSTR lpFileNameW;
-    BOOL rc = 0;
 
     /* FIXME the flags */
     /* FIXME the pdv */
@@ -1606,12 +1554,11 @@ RemoveFontResourceExA(LPCSTR lpFileName,
     SetLastError (RtlNtStatusToDosError(Status));
     else
     {
-        rc = NtGdiRemoveFontResource ( lpFileNameW );
 
         HEAP_free ( lpFileNameW );
     }
 
-  return rc;
+  return 0;
 }
 
 /*
@@ -1626,7 +1573,7 @@ RemoveFontResourceExW(LPCWSTR lpFileName,
     /* FIXME the flags */
     /* FIXME the pdv */
     /* FIXME NtGdiRemoveFontResource handle flags and pdv */
-    return NtGdiRemoveFontResource ( lpFileName);
+    return 0;
 }
 
 

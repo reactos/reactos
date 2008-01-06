@@ -575,18 +575,6 @@ NtGdiHfontCreate(
 
 }
 
-
-BOOL
-STDCALL
-NtGdiCreateScalableFontResource(DWORD  Hidden,
-                                     LPCWSTR  FontRes,
-                                     LPCWSTR  FontFile,
-                                     LPCWSTR  CurrentPath)
-{
-    DPRINT1("NtGdiCreateScalableFontResource - is unimplemented, have a nice day and keep going");
-  return FALSE;
-}
-
 /*************************************************************************
  * TranslateCharsetInfo
  *
@@ -1410,16 +1398,6 @@ NtGdiGetFontFamilyInfo(HDC Dc,
   return Count;
 }
 
-int
-STDCALL
-NtGdiEnumFonts(HDC  hDC,
-                   LPCWSTR FaceName,
-                   FONTENUMPROCW  FontFunc,
-                   LPARAM  lParam)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
 FT_Glyph STDCALL
 NtGdiGlyphCacheGet(
    FT_Face Face,
@@ -2443,13 +2421,6 @@ NtGdiGetCharWidthW(
    return TRUE;
 }
 
-DWORD
-STDCALL
-NtGdiGetFontLanguageInfo(HDC  hDC)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
 
  /*
  * @implemented
@@ -3999,24 +3970,6 @@ NtGdiGetTextMetricsW(
 
   return TRUE;
 }
-
-BOOL
-STDCALL
-NtGdiRemoveFontResource(LPCWSTR  FileName)
-{
-  DPRINT1("NtGdiRemoveFontResource is UNIMPLEMENTED\n");
-  return FALSE;
-}
-
-DWORD
-STDCALL
-NtGdiSetMapperFlags(HDC  hDC,
-                          DWORD  Flag)
-{
-  UNIMPLEMENTED;
-  return 0;
-}
-
 
 BOOL
 STDCALL

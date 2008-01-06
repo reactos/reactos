@@ -59,16 +59,6 @@ NtGdiGetFontFamilyInfo(
     DWORD Size
 );
 
-/* The gdi32 call does all the work in user-mode, save for NtGdiMakeFontDir */
-BOOL
-NTAPI
-NtGdiCreateScalableFontResource(
-    DWORD Hidden,
-    LPCWSTR FontRes,
-    LPCWSTR FontFile,
-    LPCWSTR CurrentPath
-);
-
 /* The gdi32 call Should Use NtGdiGetTextExtent */
 BOOL
 NTAPI
@@ -98,26 +88,11 @@ NtGdiCreateDIBitmap (
 	UINT			Usage
 	);
 
-
-
-/* Should be done in user-mode. */
-int
-STDCALL
-NtGdiEnumFonts(HDC  hDC,
-                   LPCWSTR FaceName,
-                   FONTENUMPROCW  FontFunc,
-                   LPARAM  lParam);
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL
 NtGdiGetAspectRatioFilterEx(HDC  hDC,
                                  LPSIZE  AspectRatio);
-
-/* Should be done in user-mode. */
-DWORD
-STDCALL
-NtGdiGetFontLanguageInfo(HDC  hDC);
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL STDCALL  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
@@ -151,11 +126,6 @@ NtGdiOffsetWindowOrgEx (
 	LPPOINT	Point
 	);
 
-/* Should be done in user-mode. */
-BOOL
-STDCALL
-NtGdiRemoveFontResource(LPCWSTR  FileName);
-
 /* Use SetDIBitsToDevice in gdi32. */
 INT
 STDCALL
@@ -168,12 +138,6 @@ NtGdiSetDIBits (
 	CONST BITMAPINFO	* bmi,
 	UINT			ColorUse
 	);
-
-/* Needs to be done in user-mode, using shared GDI Object Attributes. */
-DWORD
-STDCALL
-NtGdiSetMapperFlags(HDC  hDC,
-                          DWORD  Flag);
 
 /* Needs to be done in user-mode. */
 BOOL

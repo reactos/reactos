@@ -298,4 +298,19 @@ GetStringBitmapW(HDC hdc,
 }
 
 
+BOOL
+WINAPI
+CreateScalableFontResourceW(
+	DWORD fdwHidden,
+	LPCWSTR lpszFontRes,
+	LPCWSTR lpszFontFile,
+	LPCWSTR lpszCurrentPath
+	)
+{
+	UNIMPLEMENTED;
+	SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+	return FALSE;
+}
+  
+
 /* EOF */
