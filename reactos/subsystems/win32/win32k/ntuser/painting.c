@@ -1886,6 +1886,24 @@ cleanup:
    return Ret;
 }
 
+INT
+FASTCALL
+UserRealizePalette(HDC hdc)
+{
+  HWND hWnd;
+  DWORD Ret;
+
+  Ret = IntGdiRealizePalette(hdc);
+  if (Ret) // There was a change.
+  {
+      hWnd = IntWindowFromDC(hdc);
+      if (hWnd) // Send broadcast if dc is associated with a window.
+      {  // FYI: Thread locked in CallOneParam.
+         co_IntSendMessage((HWND)HWND_BROADCAST, WM_PALETTECHANGED, (WPARAM)hWnd, 0);
+      }
+  }
+  return Ret;
+}
 
 BOOL
 STDCALL

@@ -805,7 +805,7 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   NewDC->IsIC = CreateAsIC;
 
   NewDC->PDev = PrimarySurface.hPDev;
-  if(pUMdhpdev) pUMdhpdev = NewDC->PDev;
+  if(pUMdhpdev) pUMdhpdev = NewDC->PDev; // set DHPDEV for device.
   NewDC->pPDev = (PVOID)&PrimarySurface;
   NewDC->w.hBitmap = (HBITMAP)PrimarySurface.pSurface;
 

@@ -125,7 +125,7 @@ IntAnimatePalette(HPALETTE hPal,
             if (dc->w.hPalette == hPal)
             {
                 DC_UnlockDc(dc);
-                NtGdiRealizePalette(hDC);
+                IntGdiRealizePalette(hDC);
             }
             else
                 DC_UnlockDc(dc);
@@ -484,7 +484,7 @@ A logical palette is a buffer between color-intensive applications and the syste
    the dc palette.
 -- If it is an RGB palette, then an XLATEOBJ is created between the RGB values and the dc palette.
 */
-UINT STDCALL NtGdiRealizePalette(HDC hDC)
+UINT FASTCALL IntGdiRealizePalette(HDC hDC)
 {
   /*
    * This function doesn't do any real work now and there's plenty

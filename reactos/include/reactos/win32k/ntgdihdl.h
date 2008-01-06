@@ -373,7 +373,7 @@ typedef struct _DC
   ULONG       lucExcLock;
   PVOID       Tid;
 
-  DHPDEV      PDev;   // GDIDEVICE.hPDev
+  DHPDEV      PDev;   // <- GDIDEVICE.hPDev DHPDEV for device.
   INT         DC_Type;
   INT         DC_Flags;
   PVOID       pPDev;  // PGDIDEVICE

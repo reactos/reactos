@@ -12,5 +12,6 @@ IntInvalidateWindows(PWINDOW_OBJECT Window, HRGN hRgn, ULONG Flags);
 BOOL FASTCALL
 IntGetPaintMessage(HWND hWnd, UINT MsgFilterMin, UINT MsgFilterMax, PW32THREAD Thread,
                    MSG *Message, BOOL Remove);
+INT FASTCALL UserRealizePalette(HDC);
 
 #endif /* _WIN32K_PAINTING_H */
