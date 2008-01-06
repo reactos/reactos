@@ -63,6 +63,8 @@
 				<file>ofw.c</file>
 				<file>ofw_util.s</file>
 				<file>ofw_calls.s</file>
+                                <file>ofwdisk.c</file>
+                                <file>ofw_method.c</file>
 				<file>prep.c</file>
 				<file>prep_ide.c</file>
 				<file>prep_pci.c</file>

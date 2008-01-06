@@ -10,11 +10,9 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#include <reactos/ppcboot.h>
 
 #define NDEBUG
 #include <debug.h>
-#include <ppcdebug.h>
 #include "ppcmmu/mmu.h"
 
 /* GLOBALS *******************************************************************/
@@ -27,6 +25,9 @@ extern LOADER_MODULE KeLoaderModules[64];
 extern ULONG KeLoaderModuleCount;
 extern ULONG_PTR MmFreeLdrLastKernelAddress;
 KPRCB PrcbData[MAXIMUM_PROCESSORS];
+/* BIOS Memory Map. Not NTLDR-compliant yet */
+extern ULONG KeMemoryMapRangeCount;
+extern ADDRESS_RANGE KeMemoryMap[64];
 
 /* FUNCTIONS *****************************************************************/
 
@@ -124,17 +125,11 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
                    IN PVOID IdleStack,
                    IN PKPRCB Prcb,
                    IN CCHAR Number,
-                   IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
+                   IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ULONG FeatureBits;
     LARGE_INTEGER PageDirectory;
     PVOID DpcStack;
-    boot_infos_t *BootInfo = ((boot_infos_t *)LoaderBlock->ArchExtra);
-
-#ifdef _M_PPC
-    /* Set the machine type in LoaderBlock for HAL */
-    KeLoaderBlock->u.PowerPC.MachineType = BootInfo->machineType;
-#endif
 
     /* Detect and set the CPU Type */
     KiSetProcessorType();
@@ -207,28 +202,44 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     InitThread->Affinity = 1 << Number;
     InitThread->WaitIrql = DISPATCH_LEVEL;
     InitProcess->ActiveProcessors = 1 << Number;
+    
+    /* HACK for MmUpdatePageDir */
+    ((PETHREAD)InitThread)->ThreadsProcess = (PEPROCESS)InitProcess;
 
     /* Set up the thread-related fields in the PRCB */
-    //Prcb->CurrentThread = InitThread;
+    Prcb->CurrentThread = InitThread;
     Prcb->NextThread = NULL;
-    //Prcb->IdleThread = InitThread;
+    Prcb->IdleThread = InitThread;
 
+    /* Initialize Kernel Memory Address Space */
+    MmInit1(MmFreeLdrFirstKrnlPhysAddr,
+            MmFreeLdrLastKrnlPhysAddr,
+            MmFreeLdrLastKernelAddress,
+            KeMemoryMap,
+            KeMemoryMapRangeCount,
+            4096);
+
+    DPRINT1("\n");
     /* Initialize the Kernel Executive */
-    ExpInitializeExecutive(0, (PLOADER_PARAMETER_BLOCK)LoaderBlock);
+    ExpInitializeExecutive(0, LoaderBlock);
 
+    DPRINT1("\n");
     /* Only do this on the boot CPU */
     if (!Number)
     {
+        DPRINT1("\n");
         /* Calculate the time reciprocal */
         KiTimeIncrementReciprocal =
             KiComputeReciprocal(KeMaximumIncrement,
                                 &KiTimeIncrementShiftCount);
 
+        DPRINT1("\n");
         /* Update DPC Values in case they got updated by the executive */
         Prcb->MaximumDpcQueueDepth = KiMaximumDpcQueueDepth;
         Prcb->MinimumDpcRate = KiMinimumDpcRate;
         Prcb->AdjustDpcThreshold = KiAdjustDpcThreshold;
 
+        DPRINT1("\n");
         /* Allocate the DPC Stack */
         DpcStack = MmCreateKernelStack(FALSE, 0);
         if (!DpcStack) KeBugCheckEx(NO_PAGES_AVAILABLE, 1, 0, 0, 0);
@@ -238,13 +249,16 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
     /* Free Initial Memory */
     // MiFreeInitMemory();
 
+    DPRINT1("\n");
     /* Setup decrementer exception */
     KiSetupDecrementerTrap();
 
+    DPRINT1("\n");
     while (1)
     {
         LARGE_INTEGER Timeout;
         Timeout.QuadPart = 0x7fffffffffffffffLL;
+        DPRINT1("\n");
         KeDelayExecutionThread(KernelMode, FALSE, &Timeout);
     }
 }
@@ -299,7 +313,7 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Skip initial setup if this isn't the Boot CPU */
     if (Cpu) goto AppCpuInit;
-
+    
     /* Initialize the PCR */
     RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,

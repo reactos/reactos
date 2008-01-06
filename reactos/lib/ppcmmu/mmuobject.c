@@ -74,7 +74,7 @@ void TakeException(int n, ppc_trap_frame_t *tf);
 int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 {
     ppc_trap_frame_t *trap_frame = (action >= 0x100) ? tf : arg1;
-    int ret = 0;
+    int ret = 0, tmp;
 
     switch(action)
     {
@@ -163,6 +163,26 @@ int _mmumain(int action, void *arg1, void *arg2, void *arg3, void *tf)
 
     default:
 	while(1);
+    }
+
+    /* Restore bats when we were called voluntarily.  We may not get a chance
+     * to do this after returning.
+     *
+     * At this point, we're in address space that matches physical space.
+     * We turn off mapping, restore bats, then let rfi switch us back to where
+     * we came.
+     */
+    if (action >= 0x100) {
+        int i;
+
+        __asm__("mfmsr %0" : "=r" (tmp));
+        tmp &= ~0x30;
+        __asm__("mtmsr %0" : : "r" (tmp));
+        
+        for(i = 0; i < 4; i++) {
+            SetBat(i, 0, GetPhys(0xf000 + i * 16), GetPhys(0xf004 + i * 16));
+            SetBat(i, 1, GetPhys(0xf008 + i * 16), GetPhys(0xf00c + i * 16));
+        }
     }
 
     return ret;
@@ -275,7 +295,7 @@ void initme()
     /* Default to hang on unknown exception */
     for(i = 0; i < 30; i++)
     {
-        callback[i] = TakeException;
+        callback[i] = (MmuTrapHandler)TakeException;
         if (i != 1) /* Preserve reset handler */
             copy_trap_handler(i);
     }
@@ -284,7 +304,7 @@ void initme()
     callback[5] = SerialInterrupt;
 
     /* Program Exception */
-    callback[6] = TakeException;
+    callback[6] = (MmuTrapHandler)TakeException;
 
     /* Floating point exception */
     callback[8] = fpenable;
@@ -293,14 +313,14 @@ void initme()
     callback[9] = ignore;
 
     /* Single Step */
-    callback[0x20] = TakeException;
+    callback[0x20] = (MmuTrapHandler)TakeException;
 }
 
 ppc_map_t *allocpage()
 {
     MmuFreePage *FreePage = 0;
 
-    if(NextPage < PPC_PAGE_NUMBER(RamSize)) {
+    while(NextPage < PPC_PAGE_NUMBER(RamSize) && ) {
 	return &PpcPageTable[NextPage++];
     } else {
 	FreePage = FreeList;
@@ -472,7 +492,7 @@ int PageMatch(vaddr_t addr, ppc_pte_t pte)
 	(((addr >> 22) & 63) == api_pte);
 }
 
-ppc_map_t *mmuvirtmap(vaddr_t addr, int vsid)
+ppc_map_t *mmuvirtmap(vaddr_t addr)
 {
     int seg = (addr >> 28) & 15;
     MmuVsidInfo *seginfo = Segs[seg];
@@ -501,7 +521,7 @@ void mmudelpage(ppc_map_info_t *info, int count)
 	}
 	else
 	{
-	    PagePtr = mmuvirtmap(info[i].proc, info[i].addr);
+	    PagePtr = mmuvirtmap(info[i].addr);
 	    ipa = PPC_PAGE_ADDR(PagePtr - PpcPageTable);
 	}
 
@@ -539,7 +559,7 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	} else {
 	    vaddr_t addr = info[i].addr;
 	    int vsid = ((addr >> 28) & 15) | (info[i].proc << 4);
-	    PagePtr = mmuvirtmap(info[i].addr, vsid);
+	    PagePtr = mmuvirtmap(info[i].addr);
 	    if(!PagePtr)
 		info[i].phys = 0;
 	    else
@@ -549,6 +569,10 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	    }
 	}
     }
+}
+
+int mmupagefree(paddr_t page)
+{
 }
 
 void mmusetvsid(int start, int end, int vsid)
@@ -568,8 +592,7 @@ void mmusetvsid(int start, int end, int vsid)
 int ptegreload(ppc_trap_frame_t *frame, vaddr_t addr)
 {
     int hfun = (Clock >> 3) & 1, ptegnum = PtegNumber(addr, hfun);
-    int vsid = GetSR((addr >> 28) & 15) & PPC_VSID_MASK;
-    ppc_map_t *map = mmuvirtmap(addr, vsid);
+    ppc_map_t *map = mmuvirtmap(addr);
     if(!map) return 0;
     map->pte.pteh = (map->pte.pteh & ~64) | (hfun << 6);
     PpcHashedPTE[ptegnum].block[Clock & 7] = map->pte;

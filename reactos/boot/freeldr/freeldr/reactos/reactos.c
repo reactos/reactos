@@ -608,15 +608,31 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
     LoaderBlock.MmapLength = (unsigned long)MachGetMemoryMap((PBIOS_MEMORY_MAP)reactos_memory_map, 32) * sizeof(memory_map_t);
     if (LoaderBlock.MmapLength)
     {
-#ifdef _M_IX86
         ULONG i;
-#endif
         LoaderBlock.Flags |= MB_FLAGS_MEM_INFO | MB_FLAGS_MMAP_INFO;
         LoaderBlock.MmapAddr = (unsigned long)&reactos_memory_map;
         reactos_memory_map_descriptor_size = sizeof(memory_map_t); // GetBiosMemoryMap uses a fixed value of 24
-#ifdef _M_IX86
         for (i=0; i<(LoaderBlock.MmapLength/sizeof(memory_map_t)); i++)
         {
+#ifdef _M_PPC
+            ULONG tmp;
+            /* Also swap from long long to high/low
+             * We also have unusable memory that will be available to kernel
+             * land.  Mark it here.
+             */
+            if (BiosMemoryAcpiReclaim == reactos_memory_map[i].type)
+            {
+                reactos_memory_map[i].type = BiosMemoryUsable;
+            }
+
+            tmp = reactos_memory_map[i].base_addr_low;
+            reactos_memory_map[i].base_addr_low = reactos_memory_map[i].base_addr_high;
+            reactos_memory_map[i].base_addr_high = tmp;
+            tmp = reactos_memory_map[i].length_low;
+            reactos_memory_map[i].length_low = reactos_memory_map[i].length_high;
+            reactos_memory_map[i].length_high = tmp;
+#endif
+
             if (BiosMemoryUsable == reactos_memory_map[i].type &&
                 0 == reactos_memory_map[i].base_addr_low)
             {
@@ -633,7 +649,6 @@ LoadAndBootReactOS(PCSTR OperatingSystemName)
                 LoaderBlock.MemHigher = (reactos_memory_map[i].base_addr_low + reactos_memory_map[i].length_low) / 1024 - 1024;
             }
         }
-#endif
     }
 
 	/*

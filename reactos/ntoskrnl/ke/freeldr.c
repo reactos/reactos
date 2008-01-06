@@ -12,6 +12,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifdef _M_PPC
+#include <ppcmmu/mmu.h>
+#endif
+
 typedef struct _BIOS_MEMORY_DESCRIPTOR
 {
     ULONG BlockBase;
@@ -459,6 +463,7 @@ KiRosBuildOsMemoryMap(VOID)
     /* If anything failed until now, return error code */
     if (Status != STATUS_SUCCESS) return Status;
 
+#ifdef _M_IX86
     /* Set the top 16MB region as reserved */
     Status = KiRosConfigureArcDescriptor(0xFC0, 0x1000, MemorySpecialMemory);
     if (Status != STATUS_SUCCESS) return Status;
@@ -470,6 +475,7 @@ KiRosBuildOsMemoryMap(VOID)
     /* Build an entry for the IVT */
     Status = KiRosAllocateArcDescriptor(0, 1, MemoryFirmwarePermanent);
     if (Status != STATUS_SUCCESS) return Status;
+#endif
 
     /* Build an entry for the KPCR and KUSER_SHARED_DATA */
     Status = KiRosAllocateArcDescriptor(1, 3, LoaderMemoryData);
@@ -762,6 +768,7 @@ KiRosAllocateNtDescriptor(IN TYPE_OF_MEMORY MemoryType,
 
         /* Find a descriptor that already contains our base address */
         MdBlock = KiRosFindNtDescriptor(BasePage);
+
         if (MdBlock)
         {
             /* If it contains our limit as well, break out early */
@@ -908,6 +915,9 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     WCHAR PathSetup[] = L"\\SystemRoot\\";
     CHAR DriverNameLow[256];
     ULONG Base;
+#ifdef _M_PPC
+    ULONG KernelBase = RosLoaderBlock->ModsAddr[0].ModStart;
+#endif
 
     /* First get some kernel-loader globals */
     AcpiTableDetected = (RosLoaderBlock->Flags & MB_FLAGS_ACPI_TABLE) ? TRUE : FALSE;
@@ -940,8 +950,10 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
     /* Build entries for ReactOS memory ranges, which uses ARC Descriptors */
     KiRosBuildOsMemoryMap();
 
+#ifdef _M_IX86
     /* Build entries for the reserved map, which uses ARC Descriptors */
     KiRosBuildReservedMemoryMap();
+#endif
 
     /* Now convert the BIOS and ARC Descriptors into NT Memory Descirptors */
     KiRosBuildArcMemoryList();
@@ -1068,6 +1080,10 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
                                       0,
                                       &Base);
         }
+
+#ifdef _M_PPC
+        ModStart = (PVOID)((ULONG)ModStart + 0x80800000 - KernelBase);
+#endif
 
         /* Lowercase the drivername so we can check its extension later */
         strcpy(DriverNameLow, DriverName);
@@ -1213,7 +1229,7 @@ KiRosFrldrLpbToNtLpb(IN PROS_LOADER_PARAMETER_BLOCK RosLoaderBlock,
         InsertTailList(&LoaderBlock->ArcDiskInformation->DiskSignatureListHead,
                        &ArcDiskInfo->ListEntry);
     }
-    
+
     /* Copy the ARC Hardware Tree */
     RtlCopyMemory(BldrArcHwBuffer, (PVOID)RosLoaderBlock->ArchExtra, 16 * 1024);
     LoaderBlock->ConfigurationRoot = (PVOID)BldrArcHwBuffer;
@@ -1234,7 +1250,7 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                              IN PROS_LOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLOADER_PARAMETER_BLOCK NtLoaderBlock;
-    ULONG size, i;
+    ULONG size, i = 0, *ent;
 #if defined(_M_IX86)
     PKTSS Tss;
     PKGDTENTRY TssEntry;
@@ -1255,7 +1271,15 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 #endif
 
 #if defined(_M_PPC)
+    // Zero bats.  We might have residual bats set that will interfere with
+    // our mapping of ofwldr.
+    for (i = 0; i < 4; i++)
+    {
+        SetBat(i, 0, 0, 0); SetBat(i, 1, 0, 0);
+    }
     KiSetupSyscallHandler();
+    DbgPrint("Kernel Power (%08x)\n", LoaderBlock);
+    DbgPrint("ArchExtra (%08x)!\n", LoaderBlock->ArchExtra);
 #endif
 
     /* Save pointer to ROS Block */
@@ -1264,16 +1288,25 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
                                                ModsAddr[KeRosLoaderBlock->
                                                         ModsCount - 1].
                                                ModEnd);
+#if defined(_M_PPC)
+    MmFreeLdrFirstKrnlPhysAddr = KeRosLoaderBlock->ModsAddr[0].ModStart;
+    MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress;
+    DbgPrint("kernel phys = %08x-%08x\n", 
+             MmFreeLdrFirstKrnlPhysAddr,
+             MmFreeLdrLastKrnlPhysAddr);
+#else
     MmFreeLdrFirstKrnlPhysAddr = KeRosLoaderBlock->ModsAddr[0].ModStart -
                                  KSEG0_BASE;
     MmFreeLdrLastKrnlPhysAddr = MmFreeLdrLastKernelAddress - KSEG0_BASE;
+#endif
 
     /* Save memory manager data */
     KeMemoryMapRangeCount = 0;
     if (LoaderBlock->Flags & MB_FLAGS_MMAP_INFO)
     {
         /* We have a memory map from the nice BIOS */
-        size = *((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
+        ent = ((PULONG)(LoaderBlock->MmapAddr - sizeof(ULONG)));
+        size = *ent;
         i = 0;
 
         /* Map it until we run out of size */
@@ -1309,6 +1342,10 @@ KiRosPrepareForSystemStartup(IN ULONG Dummy,
 
     /* Convert the loader block */
     KiRosFrldrLpbToNtLpb(KeRosLoaderBlock, &NtLoaderBlock);
+
+#if defined(_M_PPC)
+    DbgPrint("Finished KiRosFrldrLpbToNtLpb\n");
+#endif
 
     /* Do general System Startup */
     KiSystemStartup(NtLoaderBlock);

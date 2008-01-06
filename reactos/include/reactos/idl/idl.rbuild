@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <!DOCTYPE group SYSTEM "../../../tools/rbuild/project.dtd">
 <group>
-<module name="pnp_server" type="rpcserver">
+<module name="pnp_server" type="rpcserver" allowwarnings="true">
 	<include base="ReactOS">.</include>
 	<include base="ReactOS">w32api/include</include>
 	<file>pnp.idl</file>
@@ -21,7 +21,7 @@
 	<include base="ReactOS">w32api/include</include>
 	<file switches="--oldnames">svcctl.idl</file>
 </module>
-<module name="eventlog_server" type="rpcserver">
+<module name="eventlog_server" type="rpcserver" allowwarnings="true">
 	<include base="ReactOS">.</include>
 	<include base="ReactOS">w32api/include</include>
 	<file switches="--oldnames">eventlogrpc.idl</file>

@@ -94,13 +94,13 @@ mmumain:
 	lwz 0,392(1)
 	mtcr 0
         lwz 0,396(1)
-        mtlr 0
+        mtsrr0 0
         lwz 0,400(1)
         mtctr 0
 	lwz 0,388(1) /* Copy out new MSR bits if needed */
 	lwz 1,4(1)
-	mtmsr 0
-        blr
+        mtsrr1 0
+        rfi
 
         .globl trap_start
         .globl trap_end

@@ -1528,11 +1528,12 @@ PRKTHREAD
 FORCEINLINE
 KeGetCurrentThread(VOID)
 {
+#ifdef _M_IX86
     /* Return the current thread */
-#ifdef _M_PPC
-    return ((PKIPCR)KeGetPcr())->PrcbData->CurrentThread;
-#else
     return ((PKIPCR)KeGetPcr())->PrcbData.CurrentThread;
+#else
+    PKPRCB Prcb = KeGetCurrentPrcb();
+    return Prcb->CurrentThread;
 #endif
 }
 

@@ -11,7 +11,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-#include <ppcdebug.h>
 
 ULONG
 NTAPI

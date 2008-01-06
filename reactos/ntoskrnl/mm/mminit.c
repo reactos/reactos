@@ -11,7 +11,7 @@
 /* INCLUDES *****************************************************************/
 
 #include <ntoskrnl.h>
-#define NDEBUG
+//#define NDEBUG
 #include <internal/debug.h>
 
 /* GLOBALS *****************************************************************/
@@ -277,6 +277,7 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
     }
 
    /* Set the page directory */
+   DPRINT("CurrentProcess: %x\n", PsGetCurrentProcess());
    PsGetCurrentProcess()->Pcb.DirectoryTableBase.LowPart = (ULONG)MmGetPageDirectory();
 
    if ((BIOSMemoryMap != NULL) && (AddressRangeCount > 0))
@@ -322,6 +323,9 @@ MmInit1(ULONG_PTR FirstKrnlPhysAddr,
    MmSystemRangeStart = (PVOID)KSEG0_BASE;
    MmUserProbeAddress = (ULONG_PTR)MmSystemRangeStart - 0x10000;
    MmHighestUserAddress = (PVOID)(MmUserProbeAddress - 1);
+   DPRINT("MmSystemRangeStart:  %08x\n", MmSystemRangeStart);
+   DPRINT("MmUserProbeAddress:  %08x\n", MmUserProbeAddress);
+   DPRINT("MmHighestUserAddress:%08x\n", MmHighestUserAddress);
 
    /*
     * Initialize memory managment statistics

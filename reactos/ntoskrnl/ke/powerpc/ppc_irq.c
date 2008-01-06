@@ -33,6 +33,8 @@ extern ULONG KeMaximumIncrement;
 extern ULONG KeMinimumIncrement;
 extern ULONG KeTimeAdjustment;
 
+extern void PearPCDebug(int ch);
+
 /* GLOBALS *****************************************************************/
 
 /* Interrupt handler list */
@@ -470,11 +472,6 @@ KiInterruptDispatch3 (ULONG vector, PKIRQ_TRAPFRAME Trapframe)
        CurrentThread = KeGetCurrentThread();
        if (CurrentThread!=NULL && CurrentThread->ApcState.UserApcPending)
          {
-           DPRINT("PID: %d, TID: %d CS %04x/%04x\n",
-                  ((PETHREAD)CurrentThread)->ThreadsProcess->UniqueProcessId,
-                  ((PETHREAD)CurrentThread)->Cid.UniqueThread,
-                  Trapframe->Cs,
-                  CurrentThread->TrapFrame ? CurrentThread->TrapFrame->Cs : 0);
            if (CurrentThread->TrapFrame == NULL)
              {
                OldTrapFrame = CurrentThread->TrapFrame;
@@ -765,8 +762,10 @@ KiSystemService(ppc_trap_frame_t *trap_frame)
     {
     case 0x10000: /* DebugService */
 	for( i = 0; i < trap_frame->gpr[5]; i++ )
-	    SetPhysByte(0x800003f8, ((PCHAR)trap_frame->gpr[4])[i]);
-
+        {
+            PearPCDebug(((PCHAR)trap_frame->gpr[4])[i]);
+            WRITE_PORT_UCHAR((PVOID)0x800003f8, ((PCHAR)trap_frame->gpr[4])[i]);
+        }
 	trap_frame->gpr[3] = KdpServiceDispatcher
 	    (trap_frame->gpr[3],
 	     (PCHAR)trap_frame->gpr[4],

@@ -39,16 +39,11 @@ KiDoubleFaultStack:
 	.globl DrawNumber
 	
 NtProcessStartup:
-    lis		30,AP_MAGIC@ha
-    ori		30,30,AP_MAGIC@l
-    cmpw	0,30,3
-    bne		.m1
-
     /*
      * Set a normal MSR value
      */
     xor		0,0,0     
-    ori		30,0,0x3031
+    ori		30,0,0x3030
     mtmsr	30
 
     /*
@@ -58,16 +53,13 @@ NtProcessStartup:
 
     /* Bye bye asm land! */
     mr		4,3
-    bl		KiRosPrepareForSystemStartup
 		
-.m1:
     /* Load the initial kernel stack */
     lis		1,_kernel_stack_top@ha
     ori		1,1,_kernel_stack_top@l
     addi	1,1,-SIZEOF_FX_SAVE_AREA
     
     /* Call the main kernel initialization */
-    mr		4,3
     bl		KiRosPrepareForSystemStartup
 
 	.global NtCurrentTeb
@@ -78,4 +70,9 @@ NtCurrentTeb:
         .globl KeSynchronizeExecution
 
 KeSynchronizeExecution: 
+        blr
+
+        .globl PearPCDebug
+PearPCDebug:
+//        .long 0x00333303
         blr

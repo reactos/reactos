@@ -197,36 +197,7 @@ PPC_QUAL long _InterlockedCompareExchange(volatile long * const Destination, con
 
 PPC_QUAL long long _InterlockedCompareExchange64(volatile long long * const Destination, const long long Exchange, const long long Comperand)
 {
-	unsigned long lo32Retval = (unsigned long)((Comperand >>  0) & 0xFFFFFFFF);
-	long hi32Retval = (unsigned long)((Comperand >> 32) & 0xFFFFFFFF);
-
-	unsigned long lo32Exchange = (unsigned long)((Exchange >>  0) & 0xFFFFFFFF);
-	long hi32Exchange = (unsigned long)((Exchange >> 32) & 0xFFFFFFFF);
-
-#if 0
-	__asm__
-	(
-		"cmpxchg8b %[Destination]" :
-		"a" (lo32Retval), "d" (hi32Retval) :
-		[Destination] "rm" (Destination), "b" (lo32Exchange), "c" (hi32Exchange) :
-		"memory"
-	);
-#endif
-	{
-		union u_
-		{
-			long long ll;
-			struct s_
-			{
-				unsigned long lo32;
-				long hi32;
-			}
-			s;
-		}
-		u = { s : { lo32 : lo32Retval, hi32 : hi32Retval } };
-
-		return u.ll;
-	}
+    return 0;
 }
 
 PPC_QUAL void * _InterlockedCompareExchangePointer(void * volatile * const Destination, void * const Exchange, void * const Comperand)
@@ -716,7 +687,7 @@ PPC_QUAL unsigned long long __emulu(const unsigned int a, const unsigned int b)
 
 
 /*** Port I/O ***/
-PPC_QUAL unsigned char __inbyte(const unsigned short Port)
+PPC_QUAL unsigned char __inbyte(const unsigned long Port)
 {
     int ret;
     __asm__(
@@ -731,7 +702,7 @@ PPC_QUAL unsigned char __inbyte(const unsigned short Port)
     return ret;
 }
 
-PPC_QUAL unsigned short __inword(const unsigned short Port)
+PPC_QUAL unsigned short __inword(const unsigned long Port)
 {
     int ret;
     __asm__(
@@ -746,7 +717,7 @@ PPC_QUAL unsigned short __inword(const unsigned short Port)
     return ret;
 }
 
-PPC_QUAL unsigned long __indword(const unsigned short Port)
+PPC_QUAL unsigned long __indword(const unsigned long Port)
 {
     int ret;
     __asm__(
@@ -761,28 +732,28 @@ PPC_QUAL unsigned long __indword(const unsigned short Port)
     return ret;
 }
 
-PPC_QUAL void __inbytestring(unsigned short Port, unsigned char * Buffer, unsigned long Count)
+PPC_QUAL void __inbytestring(unsigned long Port, unsigned char * Buffer, unsigned long Count)
 {
     while(Count--) {
 	*Buffer++ = __inbyte(Port);
     }
 }
 
-PPC_QUAL void __inwordstring(unsigned short Port, unsigned short * Buffer, unsigned long Count)
+PPC_QUAL void __inwordstring(unsigned long Port, unsigned short * Buffer, unsigned long Count)
 {
     while(Count--) {
 	*Buffer++ = __inword(Port);
     }
 }
 
-PPC_QUAL void __indwordstring(unsigned short Port, unsigned long * Buffer, unsigned long Count)
+PPC_QUAL void __indwordstring(unsigned long Port, unsigned long * Buffer, unsigned long Count)
 {
     while(Count--) {
 	*Buffer++ = __indword(Port);
     }
 }
 
-PPC_QUAL void __outbyte(unsigned short const Port, const unsigned char Data)
+PPC_QUAL void __outbyte(unsigned long const Port, const unsigned char Data)
 {
     __asm__(
 	"mfmsr 5\n\t"
@@ -798,7 +769,7 @@ PPC_QUAL void __outbyte(unsigned short const Port, const unsigned char Data)
 	);
 }
 
-PPC_QUAL void __outword(unsigned short const Port, const unsigned short Data)
+PPC_QUAL void __outword(unsigned long const Port, const unsigned short Data)
 {
     __asm__(
 	"mfmsr 5\n\t"
@@ -814,7 +785,7 @@ PPC_QUAL void __outword(unsigned short const Port, const unsigned short Data)
 	);
 }
 
-PPC_QUAL void __outdword(unsigned short const Port, const unsigned long Data)
+PPC_QUAL void __outdword(unsigned long const Port, const unsigned long Data)
 {
     __asm__(
 	"mfmsr 5\n\t"
@@ -830,7 +801,7 @@ PPC_QUAL void __outdword(unsigned short const Port, const unsigned long Data)
 	);
 }
 
-PPC_QUAL void __outbytestring(unsigned short const Port, const unsigned char * const Buffer, const unsigned long Count)
+PPC_QUAL void __outbytestring(unsigned long const Port, const unsigned char * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
     const unsigned char *buffer = Buffer;
@@ -839,7 +810,7 @@ PPC_QUAL void __outbytestring(unsigned short const Port, const unsigned char * c
     }
 }
 
-PPC_QUAL void __outwordstring(unsigned short const Port, const unsigned short * const Buffer, const unsigned long Count)
+PPC_QUAL void __outwordstring(unsigned long const Port, const unsigned short * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
     const unsigned short *buffer = Buffer;
@@ -848,7 +819,7 @@ PPC_QUAL void __outwordstring(unsigned short const Port, const unsigned short * 
     }
 }
 
-PPC_QUAL void __outdwordstring(unsigned short const Port, const unsigned long * const Buffer, const unsigned long Count)
+PPC_QUAL void __outdwordstring(unsigned long const Port, const unsigned long * const Buffer, const unsigned long Count)
 {
     unsigned long count = Count;
     const unsigned long *buffer = Buffer;
@@ -897,10 +868,9 @@ PPC_QUAL void _disable(void)
 
 PPC_QUAL void _enable(void)
 {
- __asm__ __volatile__("mfmsr 0\n\t" \
-                      "lis    8,0x8000@ha\n\t" \
-                      "or    0,8,0\n\t" \
-                      "mtmsr 0\n\t");
+    __asm__ __volatile__("mfmsr 8\n\t" \
+			 "ori   8,8,0x8000\n\t" \
+			 "mtmsr 8\n\t");
 }
 
 /*** Protected memory management ***/

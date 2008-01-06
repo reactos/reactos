@@ -104,7 +104,7 @@ stackend:
 	.long	0,0,0,0
 	
 	.globl _bss
-	.section ".bss"
+	.section ".bss2"
 _bss:
 	.long	0
 

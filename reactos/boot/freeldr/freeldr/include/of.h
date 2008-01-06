@@ -14,5 +14,6 @@ extern of_proxy ofproxy;
 
 int setjmp( jmp_buf buf );
 int longjmp( jmp_buf buf, int retval );
+int ofw_callmethod_ret(const char *method, int handle, int nargs, int *args, int ret);
 
 #endif/*FREELDR_OF_H*/

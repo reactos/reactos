@@ -1,11 +1,10 @@
 #include "freeldr.h"
 #include "machine.h"
-#include "ppcboot.h"
 #include "ppcmmu/mmu.h"
 #include "prep.h"
 
-extern boot_infos_t BootInfo;
 int prep_serial = 0x800003f8;
+extern int mem_range_end;
 
 void sync() { __asm__("eieio\n\tsync"); }
 
@@ -83,7 +82,7 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
     // Find the last ram address in physical space ... this bypasses mapping
     // but could run into non-ram objects right above ram.  Usually systems
     // aren't designed like that though.
-    for (physAddr = 0x30000, change = newStore; 
+    for (physAddr = 0x40000, change = newStore; 
          (physAddr < 0x80000000) && (change == newStore); 
          physAddr += 1 << 12)
     {
@@ -101,86 +100,27 @@ ULONG PpcPrepGetMemoryMap( PBIOS_MEMORY_MAP BiosMemoryMap,
 
     __asm__("mtmsr %0\n" : : "r" (oldmsr));
 
+    mem_range_end = physAddr;
+
     printf("Actual RAM: %d Mb\n", physAddr >> 20);
-    PpcInitializeMmu(BiosMemoryMap[0].BaseAddress + BiosMemoryMap[0].Length);
     return 1;
 }
 
 /* Most PReP hardware is in standard locations, based on the corresponding 
  * hardware on PCs. */
 VOID PpcPrepHwDetect() {
-    PPC_DEVICE_TREE tree;
-    PPC_DEVICE_RANGE range;
-    int interrupt;
+  PCONFIGURATION_COMPONENT_DATA SystemKey;
 
-    /* Start the tree */
-    if(!PpcDevTreeInitialize
-       (&tree,
-        PAGE_SIZE, sizeof(long long), 
-        (PPC_DEVICE_ALLOC)MmAllocateMemory, 
-        (PPC_DEVICE_FREE)MmFreeMemory))
-        return;
+  /* Create the 'System' key */
+  FldrCreateSystemKey(&SystemKey);
 
-    /* PCI Bus */
-    PpcDevTreeAddDevice(&tree, PPC_DEVICE_PCI_EAGLE, "pci");
-
-    /* Check out the devices on the bus */
-    pci_setup(&tree, &pci1_desc);
-    
-    /* End PCI Bus */
-    PpcDevTreeCloseDevice(&tree);
-
-    /* ISA Bus */
-    PpcDevTreeAddDevice(&tree, PPC_DEVICE_ISA_BUS, "isa");
-
-    /* Serial port */
-    PpcDevTreeAddDevice(&tree, PPC_DEVICE_SERIAL_8250, "com1");
-    range.start = (PVOID)0x800003f8;
-    range.len = 8;
-    range.type = PPC_DEVICE_IO_RANGE;
-    interrupt = 4;
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_INTERRUPT, "interrupt", 
-         (char *)&interrupt, sizeof(interrupt));
-    PpcDevTreeCloseDevice(&tree);
-
-    /* We probably have an ISA IDE controller */
-    PpcDevTreeAddDevice(&tree, PPC_DEVICE_IDE_DISK, "ide0");
-    range.start = (PVOID)0x800001f8;
-    range.len = 8;
-    range.type = PPC_DEVICE_IO_RANGE;
-    interrupt = 14;
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_INTERRUPT, "interrupt", 
-         (char *)&interrupt, sizeof(interrupt));
-    PpcDevTreeCloseDevice(&tree);
-
-    /* Describe VGA */
-    PpcDevTreeAddDevice(&tree, PPC_DEVICE_VGA, "vga");
-    range.start = (PVOID)0x800003c0;
-    range.len = 0x20;
-    range.type = PPC_DEVICE_IO_RANGE;
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_SPACE_RANGE, "reg", (char *)&range, sizeof(range));
-    range.start = BootInfo.dispDeviceBase;
-    range.len = BootInfo.dispDeviceRowBytes * BootInfo.dispDeviceRect[3];
-    range.type = PPC_DEVICE_MEM_RANGE;
-    PpcDevTreeAddProperty
-        (&tree, PPC_DEVICE_SPACE_RANGE, "mem", (char *)&range, sizeof(range));
-    PpcDevTreeCloseDevice(&tree);
-
-    /* End ISA Bus */
-    PpcDevTreeCloseDevice(&tree);
-
-    /* And finish by closing the root node */
-    PpcDevTreeCloseDevice(&tree);
-
-    /* Now fish out the root node.  The dev tree is a slab of memory */
-    BootInfo.machine = PpcDevTreeGetRootNode(&tree);
+  /* Set empty component information */
+  FldrSetComponentInformation(SystemKey,
+                              0x0,
+                              0x0,
+                              0xFFFFFFFF);
+  
+  printf("DetectHardware() Done\n");
 }
 
 void PpcPrepInit()

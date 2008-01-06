@@ -26,6 +26,7 @@
 #undef DbgPrint
 #define DbgPrint printf
 
+extern PVOID KernelBase;
 extern PVOID KernelMemory;
 
 PVOID
@@ -264,9 +265,10 @@ LdrPEProcessImportDirectoryEntry(PVOID DriverBase,
             *ImportAddressList = LdrPEGetExportByName((PVOID)LoaderModule->ModStart, pe_name->Name, pe_name->Hint);
 
             /* Fixup the address to be virtual */
-            *ImportAddressList = (PVOID)((ULONG_PTR)*ImportAddressList + (KSEG0_BASE - (ULONG_PTR)KernelMemory));
+            *ImportAddressList = (PVOID)(ULONG_PTR)*ImportAddressList + (ULONG_PTR)KernelBase - (ULONG_PTR)KernelMemory;
 
-            //DbgPrint("Looked for: %s and found: %p\n", pe_name->Name, *ImportAddressList);
+
+            //DbgPrint("Looked for: %s and found: %x\n", pe_name->Name, *ImportAddressList);
             if ((*ImportAddressList) == NULL)
             {
                 DbgPrint("Failed to import %s from %s\n", pe_name->Name, LoaderModule->String);
