@@ -3,10 +3,10 @@
  <assemblyIdentity
   version="1.0.0.0"
   processorArchitecture="X86"
-  name="ReactOS.System.ControlPanel.System"
+  name="ReactOS.System.ControlPanel.Intl"
   type="win32"
  />
- <description>ReactOS System Control Panel</description>
+ <description>ReactOS Regional Settings Control Panel</description>
  <dependency>
   <dependentAssembly>
    <assemblyIdentity

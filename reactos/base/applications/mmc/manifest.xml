@@ -3,7 +3,7 @@
  <assemblyIdentity
   version="1.0.0.0"
   processorArchitecture="X86"
-  name="ReactOS.System.Management.Console"
+  name="ReactOS.Application.System.Management.Console"
   type="win32"
  />
  <description>ReactOS System Management Console</description>

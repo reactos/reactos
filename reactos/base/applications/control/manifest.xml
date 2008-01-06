@@ -3,11 +3,11 @@
   xmlns="urn:schemas-microsoft-com:asm.v1"
   manifestVersion="1.0">
 <assemblyIdentity
-    name="ReactOS.Application.Device.Manager"
+    name="ReactOS.Application.Control.Panel"
     processorArchitecture="x86"
     version="1.0.0.0"
     type="win32"/>
-<description>ReactOS Device Manager</description>
+<description>ReactOS Control Panel</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

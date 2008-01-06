@@ -6,7 +6,7 @@
   name="ReactOS.System.Net.rasdlg"
   type="win32"
  />
- <description>ReactOS Ras dialog</description>
+ <description>ReactOS Ras Dialog</description>
  <dependency>
   <dependentAssembly>
    <assemblyIdentity
