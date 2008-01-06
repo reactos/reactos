@@ -91,6 +91,9 @@ typedef long RPC_STATUS;
     #define RPCNSAPI
 #endif
 
+#ifndef RPC_NO_WINDOWS_H
+#include <rpcasync.h>
+#endif
 
 #ifdef __RPC_MAC__
     #include <setjmp.h>
