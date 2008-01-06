@@ -1,101 +1,115 @@
-Index: rpc_transport.c
-===================================================================
---- rpc_transport.c	(revision 27793)
-+++ rpc_transport.c	(working copy)
-@@ -56,9 +56,6 @@
+--- H:\Working Copies\wine\dlls\rpcrt4\rpc_transport.c	Sun Jan 06 19:27:38 2008
++++ H:\Working Copies\ReactOS\trunk\reactos\dll\win32\rpcrt4\rpc_transport.c	Sun Jan 06 19:28:07 2008
+@@ -56,6 +56,9 @@
  #include <sys/poll.h>
  #endif
  
--#include <winsock2.h>
--#include <ws2tcpip.h>
--
++#include <winsock2.h>
++#include <ws2tcpip.h>
++
  #include "windef.h"
  #include "winbase.h"
  #include "winnls.h"
-@@ -76,8 +73,6 @@
+@@ -73,6 +76,8 @@
  #include "rpc_server.h"
  #include "epm_towers.h"
  
--#include "unix_func.h"
--
++#include "unix_func.h"
++
  #ifndef SOL_TCP
  # define SOL_TCP IPPROTO_TCP
  #endif
-@@ -781,7 +776,7 @@
+@@ -128,7 +133,7 @@
+   RpcConnection_np *npc = (RpcConnection_np *) Connection;
+   TRACE("listening on %s\n", pname);
+ 
+-  npc->pipe = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX,
++  npc->pipe = CreateNamedPipeA(pname, PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+                                PIPE_TYPE_MESSAGE | PIPE_READMODE_MESSAGE,
+                                PIPE_UNLIMITED_INSTANCES,
+                                RPC_MAX_PACKET_SIZE, RPC_MAX_PACKET_SIZE, 5000, NULL);
+@@ -715,12 +720,14 @@
+   if (tcpc == NULL)
+     return NULL;
+   tcpc->sock = -1;
++#ifndef __REACTOS__
+   if (socketpair(PF_UNIX, SOCK_STREAM, 0, tcpc->cancel_fds) < 0)
+   {
+     ERR("socketpair() failed: %s\n", strerror(errno));
+     HeapFree(GetProcessHeap(), 0, tcpc);
+     return NULL;
+   }
++#endif
+   return &tcpc->common;
+ }
+ 
+@@ -785,8 +792,7 @@
  
      /* RPC depends on having minimal latency so disable the Nagle algorithm */
      val = 1;
--    setsockopt(sock, SOL_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
-+    setsockopt(sock, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+-    setsockopt(sock, SOL_TCP, TCP_NODELAY, &val, sizeof(val));
+-    fcntl(sock, F_SETFL, O_NONBLOCK); /* make socket nonblocking */
++    setsockopt(sock, SOL_TCP, TCP_NODELAY, (char *)&val, sizeof(val));
  
      tcpc->sock = sock;
  
-@@ -804,7 +799,6 @@
+@@ -808,6 +814,7 @@
+     struct addrinfo *ai;
      struct addrinfo *ai_cur;
      struct addrinfo hints;
++    u_long blocking;
      RpcConnection *first_connection = NULL;
--    u_long blocking;
  
      TRACE("(%p, %s)\n", protseq, endpoint);
- 
-@@ -855,7 +849,7 @@
+@@ -859,7 +866,7 @@
          {
              WARN("bind failed: %s\n", strerror(errno));
              close(sock);
--            if (errno == WSAEADDRINUSE)
-+            if (errno == EADDRINUSE)
+-            if (errno == EADDRINUSE)
++            if (errno == WSAEADDRINUSE)
                status = RPC_S_DUPLICATE_ENDPOINT;
              else
                status = RPC_S_CANT_CREATE_ENDPOINT;
-@@ -884,8 +878,7 @@
+@@ -888,7 +895,8 @@
           * race-condition (poll() says it is readable, connection drops,
           * and accept() blocks until the next connection comes...)
           */
--        blocking = 1;
--        ret = ioctlsocket(sock, FIONBIO, &blocking);
-+        ret = fcntl(sock, F_SETFL, O_NONBLOCK);
+-        ret = fcntl(sock, F_SETFL, O_NONBLOCK);
++        blocking = 1;
++        ret = ioctlsocket(sock, FIONBIO, &blocking);
          if (ret < 0)
          {
              WARN("couldn't make socket non-blocking, error %d\n", ret);
-@@ -928,7 +921,6 @@
+@@ -931,6 +939,7 @@
    int ret;
    struct sockaddr_in address;
    socklen_t addrsize;
--  u_long blocking;
++  u_long blocking;
    RpcConnection_tcp *server = (RpcConnection_tcp*) old_conn;
    RpcConnection_tcp *client = (RpcConnection_tcp*) new_conn;
  
-@@ -940,8 +932,7 @@
+@@ -942,7 +951,8 @@
      return RPC_S_OUT_OF_RESOURCES;
    }
    /* reset to blocking behaviour */
--  blocking = 0;
--  ret = ioctlsocket(ret, FIONBIO, &blocking);
-+  fcntl(ret, F_SETFL, 0);
+-  fcntl(ret, F_SETFL, 0);
++  blocking = 0;
++  ret = ioctlsocket(ret, FIONBIO, &blocking);
    client->sock = ret;
    TRACE("Accepted a new TCP connection\n");
    return RPC_S_OK;
-@@ -1125,12 +1116,10 @@
+@@ -1189,10 +1199,12 @@
      if (ps)
      {
          int fds[2];
--        u_long blocking;
++        u_long blocking;
          if (!socketpair(PF_UNIX, SOCK_DGRAM, 0, fds))
          {
--            blocking = 1;
--            ioctlsocket(fds[0], FIONBIO, &blocking);
--            ioctlsocket(fds[1], FIONBIO, &blocking);
-+            fcntl(fds[0], F_SETFL, O_NONBLOCK);
-+            fcntl(fds[1], F_SETFL, O_NONBLOCK);
+-            fcntl(fds[0], F_SETFL, O_NONBLOCK);
+-            fcntl(fds[1], F_SETFL, O_NONBLOCK);
++            blocking = 1;
++            ioctlsocket(fds[0], FIONBIO, &blocking);
++            ioctlsocket(fds[1], FIONBIO, &blocking);
              ps->mgr_event_rcv = fds[0];
              ps->mgr_event_snd = fds[1];
          }
-@@ -1211,7 +1200,7 @@
-     
-     if (!poll_info)
-         return -1;
--
-+    
-     ret = poll(poll_info, count, -1);
-     if (ret < 0)
-     {
