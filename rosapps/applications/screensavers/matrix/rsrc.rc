@@ -7,6 +7,8 @@ IDB_BITMAP1      BITMAP  DISCARDABLE  "matrix.bmp"
 IDC_BLANKCURSOR  CURSOR  DISCARDABLE  "cursor1.cur"
 IDI_ICON1        ICON    DISCARDABLE  "icon1.ico"
 
+1 24 DISCARDABLE "manifest.xml"
+
 #include "lang/bg-BG.rc"
 #include "lang/de-DE.rc"
 #include "lang/en-US.rc"

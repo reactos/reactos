@@ -3,10 +3,10 @@
  <assemblyIdentity
   version="1.0.0.0"
   processorArchitecture="X86"
-  name="ReactOS.Application.WordPad"
+  name="ReactOS.Application.Magnify"
   type="win32"
  />
- <description>ReactOS Word Pad</description>
+ <description>ReactOS Magnifier</description>
  <dependency>
   <dependentAssembly>
    <assemblyIdentity

@@ -10,6 +10,8 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/version.rc>
 
+1 24 DISCARDABLE "manifest.xml"
+
 IDI_ICON ICON "res/magnify.ico"
 
 #include "rsrc.rc"

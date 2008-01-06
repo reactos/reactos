@@ -3,10 +3,10 @@
  <assemblyIdentity
   version="1.0.0.0"
   processorArchitecture="X86"
-  name="ReactOS.VMware.SVGA.Installer"
+  name="ReactOS.Application.ImageSoft"
   type="win32"
  />
- <description>ReactOS VMware(r) SVGA driver Installer</description>
+ <description>ReactOS ImageSoft</description>
  <dependency>
   <dependentAssembly>
    <assemblyIdentity
