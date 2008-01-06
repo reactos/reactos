@@ -46,10 +46,10 @@ PGENERIC_LIST
 CreateKeyboardDriverList(HINF InfFile);
 
 PGENERIC_LIST
-CreateKeyboardLayoutList(HINF InfFile);
+CreateKeyboardLayoutList(HINF InfFile, WCHAR *DefaultKBLayout);
 
 PGENERIC_LIST 
-CreateLanguageList(HINF InfFile); 
+CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage); 
 
 BOOLEAN
 ProcessKeyboardLayoutRegistry(PGENERIC_LIST List);

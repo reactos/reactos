@@ -45,6 +45,8 @@ LONG UnattendFormatPartition = 0;
 LONG AutoPartition = 0;
 WCHAR UnattendInstallationDirectory[MAX_PATH];
 PWCHAR SelectedLanguageId;
+WCHAR DefaultLanguage[20];
+WCHAR DefaultKBLayout[20];
 BOOLEAN RepairUpdateFlag = FALSE;
 HANDLE hPnpThread = INVALID_HANDLE_VALUE;
 
@@ -543,13 +545,39 @@ CheckUnattendedSetup(VOID)
   DPRINT("Running unattended setup\n");
 }
 
+void
+UpdateKBLayout()
+{
+  PLIST_ENTRY Entry;
+  PGENERIC_LIST_ENTRY ListEntry;
+  WCHAR szNewLayout[20];
+
+  MUIDefaultKeyboardLayout(szNewLayout);
+
+  if (LayoutList == NULL)
+  {
+      LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+  }
+  Entry = LayoutList->ListHead.Flink;
+  while (Entry != &LayoutList->ListHead)
+    {
+      ListEntry = CONTAINING_RECORD (Entry, GENERIC_LIST_ENTRY, Entry);
+      if (!wcscmp(szNewLayout, ListEntry->UserData))
+      {
+        LayoutList->CurrentEntry = ListEntry;
+        break;
+      }
+      Entry = Entry->Flink;
+    }
+}
+
 static PAGE_NUMBER
 LanguagePage(PINPUT_RECORD Ir)
 {
   /* Initialize the computer settings list */
   if (LanguageList == NULL)
     {
-      LanguageList = CreateLanguageList(SetupInf);
+      LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
       if (LanguageList == NULL)
         {
            PopupError("Setup failed to initialize available translations", NULL, NULL, POPUP_WAIT_NONE);
@@ -572,7 +600,7 @@ LanguagePage(PINPUT_RECORD Ir)
       if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
 	  (Ir->Event.KeyEvent.wVirtualKeyCode == VK_DOWN)) /* DOWN */
 	{
-#if 0 //Dinamically update user interface
+#if 0 //Dynamically update user interface
       SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
       MUIDisplayPage(LANGUAGE_PAGE);
 #endif
@@ -596,6 +624,10 @@ LanguagePage(PINPUT_RECORD Ir)
       else if (Ir->Event.KeyEvent.uChar.AsciiChar == 0x0D) /* ENTER */
 	{
       SelectedLanguageId = (PWCHAR)LanguageList->CurrentEntry->UserData;
+      if (wcscmp(SelectedLanguageId, DefaultLanguage))
+    {
+      UpdateKBLayout();
+    }
 	  return INTRO_PAGE;
 	}
     }
@@ -713,8 +745,8 @@ SetupStartPage(PINPUT_RECORD Ir)
         ComputerList = CreateComputerTypeList(SetupInf);
         DisplayList = CreateDisplayDriverList(SetupInf);
         KeyboardList = CreateKeyboardDriverList(SetupInf);
-        LayoutList = CreateKeyboardLayoutList(SetupInf);
-        LanguageList = CreateLanguageList(SetupInf);
+        LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
+        LanguageList = CreateLanguageList(SetupInf, DefaultLanguage);
 
         return INSTALL_INTRO_PAGE;
     }
@@ -937,7 +969,7 @@ DeviceSettingsPage(PINPUT_RECORD Ir)
   /* Initialize the keyboard layout list */
   if (LayoutList == NULL)
     {
-      LayoutList = CreateKeyboardLayoutList(SetupInf);
+      LayoutList = CreateKeyboardLayoutList(SetupInf, DefaultKBLayout);
       if (LayoutList == NULL)
 	{
 	  /* FIXME: report error */

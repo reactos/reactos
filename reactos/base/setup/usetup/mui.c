@@ -182,6 +182,27 @@ FindMUIErrorEntries ()
 }
 
 VOID
+MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout)
+{
+    ULONG lngIndex = 0;
+    do
+    {
+        /* First we search the language list till we find current selected language messages */
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            /* Get all available error messages for this language */
+            wcscpy(KeyboardLayout, LanguageList[lngIndex].LanguageKeyboardLayoutID);
+            return;
+        }
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+
+    KeyboardLayout[0] = L'\0';
+}
+
+VOID
 MUIDisplayPage(ULONG page)
 {
     MUI_ENTRY * entry;

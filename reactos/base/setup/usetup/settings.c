@@ -656,7 +656,7 @@ CreateKeyboardDriverList(HINF InfFile)
 }
 
 PGENERIC_LIST 
-CreateLanguageList(HINF InfFile) 
+CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage) 
 { 
     CHAR Buffer[128]; 
     PGENERIC_LIST List; 
@@ -664,7 +664,6 @@ CreateLanguageList(HINF InfFile)
     PWCHAR KeyName; 
     PWCHAR KeyValue; 
     PWCHAR UserData; 
-    WCHAR DefaultLanguage[20]; 
 
     /* Get default language id */ 
     if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLanguage", &Context)) 
@@ -718,7 +717,7 @@ CreateLanguageList(HINF InfFile)
 }
 
 PGENERIC_LIST
-CreateKeyboardLayoutList(HINF InfFile)
+CreateKeyboardLayoutList(HINF InfFile, WCHAR * DefaultKBLayout)
 {
   CHAR Buffer[128];
   PGENERIC_LIST List;
@@ -726,7 +725,6 @@ CreateKeyboardLayoutList(HINF InfFile)
   PWCHAR KeyName;
   PWCHAR KeyValue;
   PWCHAR UserData;
-  WCHAR DefaultLayout[20];
 
   /* Get default layout id */
   if (!SetupFindFirstLineW (InfFile, L"NLS", L"DefaultLayout", &Context))
@@ -735,7 +733,7 @@ CreateKeyboardLayoutList(HINF InfFile)
   if (!INF_GetData (&Context, NULL, &KeyValue))
     return NULL;
 
-  wcscpy(DefaultLayout, KeyValue);
+  wcscpy(DefaultKBLayout, KeyValue);
 
   List = CreateGenericList();
   if (List == NULL)
@@ -753,6 +751,7 @@ CreateKeyboardLayoutList(HINF InfFile)
 	{
 	  /* FIXME: Handle error! */
 	  DPRINT("INF_GetData() failed\n");
+      DestroyGenericList(List, FALSE);
 	  break;
 	}
 
@@ -770,7 +769,7 @@ CreateKeyboardLayoutList(HINF InfFile)
       AppendGenericListEntry(List,
 			     Buffer,
 			     UserData,
-			     _wcsicmp(KeyName, DefaultLayout) ? FALSE : TRUE);
+			     _wcsicmp(KeyName, DefaultKBLayout) ? FALSE : TRUE);
     }
   while (SetupFindNextLine(&Context, &Context));
 

@@ -47,4 +47,8 @@ MUIDisplayPage (ULONG PageNumber);
 VOID
 MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 
+VOID
+MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout);
+
+
 #endif
