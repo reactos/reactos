@@ -53,8 +53,6 @@ void WINAPI NdrClientInitializeNew( PRPC_MESSAGE pRpcMessage, PMIDL_STUB_MESSAGE
   TRACE("(pRpcMessage == ^%p, pStubMsg == ^%p, pStubDesc == ^%p, ProcNum == %d)\n",
     pRpcMessage, pStubMsg, pStubDesc, ProcNum);
 
-  assert( pRpcMessage && pStubMsg && pStubDesc );
-
   pRpcMessage->Handle = NULL;
   pRpcMessage->ProcNum = ProcNum;
   pRpcMessage->RpcInterfaceInformation = pStubDesc->RpcInterfaceInformation;
@@ -106,22 +104,42 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
 {
   TRACE("(pRpcMsg == ^%p, pStubMsg == ^%p, pStubDesc == ^%p)\n", pRpcMsg, pStubMsg, pStubDesc);
 
-  assert( pRpcMsg && pStubMsg && pStubDesc );
-
-  /* not everyone allocates stack space for w2kReserved */
-  memset(pStubMsg, 0, FIELD_OFFSET(MIDL_STUB_MESSAGE,pCSInfo));
-
-  pStubMsg->ReuseBuffer = TRUE;
-  pStubMsg->IsClient = FALSE;
-  pStubMsg->StubDesc = pStubDesc;
-  pStubMsg->pfnAllocate = pStubDesc->pfnAllocate;
-  pStubMsg->pfnFree = pStubDesc->pfnFree;
   pStubMsg->RpcMsg = pRpcMsg;
   pStubMsg->Buffer = pStubMsg->BufferStart = pRpcMsg->Buffer;
+  pStubMsg->BufferEnd = pStubMsg->Buffer + pRpcMsg->BufferLength;
   pStubMsg->BufferLength = pRpcMsg->BufferLength;
-  pStubMsg->BufferEnd = pStubMsg->Buffer + pStubMsg->BufferLength;
+  pStubMsg->IsClient = FALSE;
+  pStubMsg->ReuseBuffer = FALSE;
+  pStubMsg->pAllocAllNodesContext = NULL;
+  pStubMsg->pPointerQueueState = NULL;
+  pStubMsg->IgnoreEmbeddedPointers = 0;
+  pStubMsg->PointerBufferMark = NULL;
+  pStubMsg->uFlags = 0;
+  pStubMsg->pfnAllocate = pStubDesc->pfnAllocate;
+  pStubMsg->pfnFree = pStubDesc->pfnFree;
+  pStubMsg->StackTop = NULL;
+  pStubMsg->StubDesc = pStubDesc;
+  pStubMsg->FullPtrXlatTables = NULL;
+  pStubMsg->FullPtrRefId = 0;
+  pStubMsg->PointerLength = 0;
+  pStubMsg->fInDontFree = 0;
+  pStubMsg->fDontCallFreeInst = 0;
+  pStubMsg->fInOnlyParam = 0;
+  pStubMsg->fHasReturn = 0;
+  pStubMsg->fHasExtensions = 0;
+  pStubMsg->fHasNewCorrDesc = 0;
+  pStubMsg->fUnused = 0;
+  pStubMsg->dwDestContext = MSHCTX_DIFFERENTMACHINE;
+  pStubMsg->pvDestContext = NULL;
+  pStubMsg->pRpcChannelBuffer = NULL;
+  pStubMsg->pArrayInfo = NULL;
+  pStubMsg->dwStubPhase = 0;
+  /* FIXME: LowStackMark */
+  pStubMsg->pAsyncMsg = NULL;
+  pStubMsg->pCorrInfo = NULL;
+  pStubMsg->pCorrMemory = NULL;
+  pStubMsg->pMemoryList = NULL;
 
-  /* FIXME: determine the proper return value */
   return NULL;
 }
 
@@ -130,31 +148,33 @@ unsigned char* WINAPI NdrServerInitializeNew( PRPC_MESSAGE pRpcMsg, PMIDL_STUB_M
  */
 unsigned char *WINAPI NdrGetBuffer(PMIDL_STUB_MESSAGE stubmsg, ULONG buflen, RPC_BINDING_HANDLE handle)
 {
-  TRACE("(stubmsg == ^%p, buflen == %u, handle == %p): wild guess.\n", stubmsg, buflen, handle);
-  
-  assert( stubmsg && stubmsg->RpcMsg );
+  RPC_STATUS status;
 
-  /* I guess this is our chance to put the binding handle into the RPC_MESSAGE */
+  TRACE("(stubmsg == ^%p, buflen == %u, handle == %p)\n", stubmsg, buflen, handle);
+  
   stubmsg->RpcMsg->Handle = handle;
-  
   stubmsg->RpcMsg->BufferLength = buflen;
-  if (I_RpcGetBuffer(stubmsg->RpcMsg) != S_OK)
-    return NULL;
 
-  stubmsg->Buffer = stubmsg->BufferStart = stubmsg->RpcMsg->Buffer;
+  status = I_RpcGetBuffer(stubmsg->RpcMsg);
+  if (status != RPC_S_OK)
+    RpcRaiseException(status);
+
+  stubmsg->Buffer = stubmsg->RpcMsg->Buffer;
+  stubmsg->fBufferValid = TRUE;
   stubmsg->BufferLength = stubmsg->RpcMsg->BufferLength;
-  stubmsg->BufferEnd = stubmsg->Buffer + stubmsg->BufferLength;
-  return (stubmsg->Buffer = (unsigned char *)stubmsg->RpcMsg->Buffer);
+  return stubmsg->Buffer;
 }
 /***********************************************************************
  *           NdrFreeBuffer [RPCRT4.@]
  */
 void WINAPI NdrFreeBuffer(PMIDL_STUB_MESSAGE pStubMsg)
 {
-  TRACE("(pStubMsg == ^%p): wild guess.\n", pStubMsg);
-  I_RpcFreeBuffer(pStubMsg->RpcMsg);
-  pStubMsg->BufferLength = 0;
-  pStubMsg->Buffer = pStubMsg->BufferEnd = (unsigned char *)(pStubMsg->RpcMsg->Buffer = NULL);
+  TRACE("(pStubMsg == ^%p)\n", pStubMsg);
+  if (pStubMsg->fBufferValid)
+  {
+    I_RpcFreeBuffer(pStubMsg->RpcMsg);
+    pStubMsg->fBufferValid = FALSE;
+  }
 }
 
 /************************************************************************

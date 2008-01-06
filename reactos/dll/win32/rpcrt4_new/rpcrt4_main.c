@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
+ * 
  * WINE RPC TODO's (and a few TODONT's)
  *
  * - Ove's decreasingly incomplete widl is an IDL compiler for wine.  For widl
@@ -45,11 +45,11 @@
  *
  * - Some transports are not yet implemented.  The existing transport implementations
  *   are incomplete and may be bug-infested.
- *
+ * 
  * - The various transports that we do support ought to be supported in a more
  *   object-oriented manner, as in DCE's RPC implementation, instead of cluttering
  *   up the code with conditionals like we do now.
- *
+ * 
  * - Data marshalling: So far, only the beginnings of a full implementation
  *   exist in wine.  NDR protocol itself is documented, but the MS API's to
  *   convert data-types in memory into NDR are not.  This is challenging work,
@@ -59,7 +59,7 @@
  *   use it to implement out-of-process OLE client/server communications.
  *   ATM there is maybe a disconnect between the marshalling in the OLE DLLs
  *   and the marshalling going on here [TODO: well, is there or not?]
- *
+ * 
  * - In-source API Documentation, at least for those functions which we have
  *   implemented, but preferably for everything we can document, would be nice,
  *   since some of this stuff is quite obscure.
@@ -100,6 +100,8 @@
 #include "winerror.h"
 #include "winbase.h"
 #include "winuser.h"
+#include "winnt.h"
+#include "winternl.h"
 #include "iptypes.h"
 #include "iphlpapi.h"
 #include "wine/unicode.h"
@@ -133,6 +135,33 @@ static CRITICAL_SECTION_DEBUG critsect_debug =
 };
 static CRITICAL_SECTION uuid_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
+static CRITICAL_SECTION threaddata_cs;
+static CRITICAL_SECTION_DEBUG threaddata_cs_debug =
+{
+    0, 0, &threaddata_cs,
+    { &threaddata_cs_debug.ProcessLocksList, &threaddata_cs_debug.ProcessLocksList },
+      0, 0, { (DWORD_PTR)(__FILE__ ": threaddata_cs") }
+};
+static CRITICAL_SECTION threaddata_cs = { &threaddata_cs_debug, -1, 0, 0, 0, 0 };
+
+struct list threaddata_list = LIST_INIT(threaddata_list);
+
+struct context_handle_list
+{
+    struct context_handle_list *next;
+    NDR_SCONTEXT context_handle;
+};
+
+struct threaddata
+{
+    struct list entry;
+    CRITICAL_SECTION cs;
+    DWORD thread_id;
+    RpcConnection *connection;
+    RpcBinding *server_binding;
+    struct context_handle_list *context_handle_list;
+};
+
 /***********************************************************************
  * DllMain
  *
@@ -148,12 +177,30 @@ static CRITICAL_SECTION uuid_cs = { &critsect_debug, -1, 0, 0, 0, 0 };
 
 BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+    struct threaddata *tdata;
+
     switch (fdwReason) {
     case DLL_PROCESS_ATTACH:
-        DisableThreadLibraryCalls(hinstDLL);
         master_mutex = CreateMutexA( NULL, FALSE, RPCSS_MASTER_MUTEX_NAME);
         if (!master_mutex)
           ERR("Failed to create master mutex\n");
+        break;
+
+    case DLL_THREAD_DETACH:
+        tdata = NtCurrentTeb()->ReservedForNtRpc;
+        if (tdata)
+        {
+            EnterCriticalSection(&threaddata_cs);
+            list_remove(&tdata->entry);
+            LeaveCriticalSection(&threaddata_cs);
+
+            DeleteCriticalSection(&tdata->cs);
+            if (tdata->connection)
+                ERR("tdata->connection should be NULL but is still set to %p\n", tdata->connection);
+            if (tdata->server_binding)
+                ERR("tdata->server_binding should be NULL but is still set to %p\n", tdata->server_binding);
+            HeapFree(GetProcessHeap(), 0, tdata);
+        }
         break;
 
     case DLL_PROCESS_DETACH:
@@ -202,10 +249,12 @@ RPC_STATUS WINAPI RpcStringFreeW(RPC_WSTR* String)
  *
  * Raises an exception.
  */
-void WINAPI RpcRaiseException(RPC_STATUS exception)
+void DECLSPEC_NORETURN WINAPI RpcRaiseException(RPC_STATUS exception)
 {
-  /* FIXME: translate exception? */
+  /* shouldn't return */
   RaiseException(exception, 0, 0, NULL);
+  ERR("handler continued execution\n");
+  ExitProcess(1);
 }
 
 /*************************************************************************
@@ -215,7 +264,7 @@ void WINAPI RpcRaiseException(RPC_STATUS exception)
  *     UUID *Uuid1        [I] Uuid to compare
  *     UUID *Uuid2        [I] Uuid to compare
  *     RPC_STATUS *Status [O] returns RPC_S_OK
- *
+ * 
  * RETURNS
  *    -1  if Uuid1 is less than Uuid2
  *     0  if Uuid1 and Uuid2 are equal
@@ -321,7 +370,7 @@ static void RPC_UuidGetSystemTime(ULONGLONG *time)
     *time += TICKS_15_OCT_1582_TO_1601;
 }
 
-/* Assume that a hardware address is at least 6 bytes long */
+/* Assume that a hardware address is at least 6 bytes long */ 
 #define ADDRESS_BYTES_NEEDED 6
 
 static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
@@ -368,9 +417,9 @@ static RPC_STATUS RPC_UuidGetNodeAddress(BYTE *address)
  *  RPC_S_UUID_LOCAL_ONLY if UUID is only locally unique.
  *
  *  FIXME: No compensation for changes across reloading
- *         this dll or across reboots (e.g. clock going
+ *         this dll or across reboots (e.g. clock going 
  *         backwards and swapped network cards). The RFC
- *         suggests using NVRAM for storing persistent
+ *         suggests using NVRAM for storing persistent 
  *         values.
  */
 RPC_STATUS WINAPI UuidCreate(UUID *Uuid)
@@ -693,11 +742,11 @@ static BOOL RPCRT4_StartRPCSS(void)
 
 /***********************************************************************
  *           RPCRT4_RPCSSOnDemandCall (internal)
- *
+ * 
  * Attempts to send a message to the RPCSS process
  * on the local machine, invoking it if necessary.
  * For remote RPCSS calls, use.... your imagination.
- *
+ * 
  * PARAMS
  *     msg             [I] pointer to the RPCSS message
  *     vardata_payload [I] pointer vardata portion of the RPCSS message
@@ -728,7 +777,7 @@ BOOL RPCRT4_RPCSSOnDemandCall(PRPCSS_NP_MESSAGE msg, char *vardata_payload, PRPC
             Sleep(200);
             client_handle = RPCRT4_RpcssNPConnect();
             if (INVALID_HANDLE_VALUE != client_handle) break;
-        }
+        } 
         /* we are only willing to try twice */
 	if (j++ >= 1) break;
     }
@@ -823,8 +872,154 @@ void WINAPI I_RpcFree(void *Object)
 /******************************************************************************
  * I_RpcMapWin32Status   (rpcrt4.@)
  */
-DWORD WINAPI I_RpcMapWin32Status(RPC_STATUS status)
+LONG WINAPI I_RpcMapWin32Status(RPC_STATUS status)
 {
     FIXME("(%ld): stub\n", status);
     return 0;
+}
+
+/******************************************************************************
+ * RpcErrorStartEnumeration   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcErrorStartEnumeration(RPC_ERROR_ENUM_HANDLE* EnumHandle)
+{
+    FIXME("(%p): stub\n", EnumHandle);
+    return RPC_S_ENTRY_NOT_FOUND;
+}
+
+/******************************************************************************
+ * RpcMgmtSetCancelTimeout   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcMgmtSetCancelTimeout(LONG Timeout)
+{
+    FIXME("(%d): stub\n", Timeout);
+    return RPC_S_OK;
+}
+
+static struct threaddata *get_or_create_threaddata(void)
+{
+    struct threaddata *tdata = NtCurrentTeb()->ReservedForNtRpc;
+    if (!tdata)
+    {
+        tdata = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*tdata));
+        if (!tdata) return NULL;
+
+        InitializeCriticalSection(&tdata->cs);
+        tdata->thread_id = GetCurrentThreadId();
+
+        EnterCriticalSection(&threaddata_cs);
+        list_add_tail(&threaddata_list, &tdata->entry);
+        LeaveCriticalSection(&threaddata_cs);
+
+        NtCurrentTeb()->ReservedForNtRpc = tdata;
+        return tdata;
+    }
+    return tdata;
+}
+
+void RPCRT4_SetThreadCurrentConnection(RpcConnection *Connection)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    if (!tdata) return;
+
+    EnterCriticalSection(&tdata->cs);
+    tdata->connection = Connection;
+    LeaveCriticalSection(&tdata->cs);
+}
+
+void RPCRT4_SetThreadCurrentCallHandle(RpcBinding *Binding)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    if (!tdata) return;
+
+    tdata->server_binding = Binding;
+}
+
+RpcBinding *RPCRT4_GetThreadCurrentCallHandle(void)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    if (!tdata) return NULL;
+
+    return tdata->server_binding;
+}
+
+void RPCRT4_PushThreadContextHandle(NDR_SCONTEXT SContext)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    struct context_handle_list *context_handle_list;
+
+    if (!tdata) return;
+
+    context_handle_list = HeapAlloc(GetProcessHeap(), 0, sizeof(*context_handle_list));
+    if (!context_handle_list) return;
+
+    context_handle_list->context_handle = SContext;
+    context_handle_list->next = tdata->context_handle_list;
+    tdata->context_handle_list = context_handle_list;
+}
+
+void RPCRT4_RemoveThreadContextHandle(NDR_SCONTEXT SContext)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    struct context_handle_list *current, *prev;
+
+    if (!tdata) return;
+
+    for (current = tdata->context_handle_list, prev = NULL; current; prev = current, current = current->next)
+    {
+        if (current->context_handle == SContext)
+        {
+            if (prev)
+                prev->next = current->next;
+            else
+                tdata->context_handle_list = current->next;
+            HeapFree(GetProcessHeap(), 0, current);
+            return;
+        }
+    }
+}
+
+NDR_SCONTEXT RPCRT4_PopThreadContextHandle(void)
+{
+    struct threaddata *tdata = get_or_create_threaddata();
+    struct context_handle_list *context_handle_list;
+    NDR_SCONTEXT context_handle;
+
+    if (!tdata) return NULL;
+
+    context_handle_list = tdata->context_handle_list;
+    if (!context_handle_list) return NULL;
+    tdata->context_handle_list = context_handle_list->next;
+
+    context_handle = context_handle_list->context_handle;
+    HeapFree(GetProcessHeap(), 0, context_handle_list);
+    return context_handle;
+}
+
+/******************************************************************************
+ * RpcCancelThread   (rpcrt4.@)
+ */
+RPC_STATUS RPC_ENTRY RpcCancelThread(void* ThreadHandle)
+{
+    DWORD target_tid;
+    struct threaddata *tdata;
+
+    TRACE("(%p)\n", ThreadHandle);
+
+    target_tid = GetThreadId(ThreadHandle);
+    if (!target_tid)
+        return RPC_S_INVALID_ARG;
+
+    EnterCriticalSection(&threaddata_cs);
+    LIST_FOR_EACH_ENTRY(tdata, &threaddata_list, struct threaddata, entry)
+        if (tdata->thread_id == target_tid)
+        {
+            EnterCriticalSection(&tdata->cs);
+            if (tdata->connection) rpcrt4_conn_cancel_call(tdata->connection);
+            LeaveCriticalSection(&tdata->cs);
+            break;
+        }
+    LeaveCriticalSection(&threaddata_cs);
+
+    return RPC_S_OK;
 }

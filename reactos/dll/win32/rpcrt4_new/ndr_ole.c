@@ -82,7 +82,7 @@ typedef struct RpcStreamImpl
   DWORD RefCount;
   PMIDL_STUB_MESSAGE pMsg;
   LPDWORD size;
-  char *data;
+  unsigned char *data;
   DWORD pos;
 } RpcStreamImpl;
 
@@ -145,7 +145,7 @@ static HRESULT WINAPI RpcStream_Write(LPSTREAM iface,
                                      ULONG *pcbWritten)
 {
   RpcStreamImpl *This = (RpcStreamImpl *)iface;
-  if (This->data + cb > (char *)This->pMsg->BufferEnd)
+  if (This->data + cb > (unsigned char *)This->pMsg->RpcMsg->Buffer + This->pMsg->BufferLength)
     return STG_E_MEDIUMFULL;
   memcpy(This->data + This->pos, pv, cb);
   This->pos += cb;
@@ -215,7 +215,7 @@ static LPSTREAM RpcStream_Create(PMIDL_STUB_MESSAGE pStubMsg, BOOL init)
   This->RefCount = 1;
   This->pMsg = pStubMsg;
   This->size = (LPDWORD)pStubMsg->Buffer;
-  This->data = (char*)(This->size + 1);
+  This->data = (unsigned char*)(This->size + 1);
   This->pos = 0;
   if (init) *This->size = 0;
   TRACE("init size=%d\n", *This->size);

@@ -67,7 +67,7 @@ static DWORD RPCRT4_GetHeaderSize(const RpcPktHdr *Header)
     0, 0, 0, 0, 0
   };
   ULONG ret = 0;
-
+  
   if (Header->common.ptype < sizeof(header_sizes) / sizeof(header_sizes[0])) {
     ret = header_sizes[Header->common.ptype];
     if (ret == 0)
@@ -108,7 +108,7 @@ static VOID RPCRT4_BuildCommonHeader(RpcPktHdr *Header, unsigned char PacketType
   Header->common.call_id = 1;
   Header->common.flags = 0;
   /* Flags and fragment length are computed in RPCRT4_Send. */
-}
+}                              
 
 static RpcPktHdr *RPCRT4_BuildRequestHeader(unsigned long DataRepresentation,
                                      unsigned long BufferLength,
@@ -241,6 +241,7 @@ RpcPktHdr *RPCRT4_BuildBindNackHeader(unsigned long DataRepresentation,
 RpcPktHdr *RPCRT4_BuildBindAckHeader(unsigned long DataRepresentation,
                                      unsigned short MaxTransmissionSize,
                                      unsigned short MaxReceiveSize,
+                                     unsigned long AssocGroupId,
                                      LPCSTR ServerAddress,
                                      unsigned long Result,
                                      unsigned long Reason,
@@ -266,6 +267,7 @@ RpcPktHdr *RPCRT4_BuildBindAckHeader(unsigned long DataRepresentation,
   header->common.frag_len = header_size;
   header->bind_ack.max_tsize = MaxTransmissionSize;
   header->bind_ack.max_rsize = MaxReceiveSize;
+  header->bind_ack.assoc_gid = AssocGroupId;
   server_address = (RpcAddressString*)(&header->bind_ack + 1);
   server_address->length = strlen(ServerAddress) + 1;
   strcpy(server_address->string, ServerAddress);
@@ -415,7 +417,7 @@ static RPC_STATUS RPCRT4_SecurePacket(RpcConnection *Connection,
             sec_status = DecryptMessage(&Connection->ctx, &message, 0 /* FIXME */, 0);
             if (sec_status != SEC_E_OK)
             {
-                ERR("EncryptMessage failed with 0x%08x\n", sec_status);
+                ERR("DecryptMessage failed with 0x%08x\n", sec_status);
                 return RPC_S_SEC_PKG_ERROR;
             }
         }
@@ -432,10 +434,10 @@ static RPC_STATUS RPCRT4_SecurePacket(RpcConnection *Connection,
 
     return RPC_S_OK;
 }
-
+         
 /***********************************************************************
  *           RPCRT4_SendAuth (internal)
- *
+ * 
  * Transmit a packet with authorization data over connection in acceptable fragments.
  */
 static RPC_STATUS RPCRT4_SendAuth(RpcConnection *Connection, RpcPktHdr *Header,
@@ -448,6 +450,8 @@ static RPC_STATUS RPCRT4_SendAuth(RpcConnection *Connection, RpcPktHdr *Header,
   unsigned char *pkt;
   LONG alen;
   RPC_STATUS status;
+
+  RPCRT4_SetThreadCurrentConnection(Connection);
 
   buffer_pos = Buffer;
   /* The packet building functions save the packet header size, so we can use it. */
@@ -518,6 +522,7 @@ static RPC_STATUS RPCRT4_SendAuth(RpcConnection *Connection, RpcPktHdr *Header,
         if (status != RPC_S_OK)
         {
           HeapFree(GetProcessHeap(), 0, pkt);
+          RPCRT4_SetThreadCurrentConnection(NULL);
           return status;
         }
       }
@@ -528,7 +533,8 @@ write:
     HeapFree(GetProcessHeap(), 0, pkt);
     if (count<0) {
       WARN("rpcrt4_conn_write failed (auth)\n");
-      return RPC_S_PROTOCOL_ERROR;
+      RPCRT4_SetThreadCurrentConnection(NULL);
+      return RPC_S_CALL_FAILED;
     }
 
     buffer_pos += Header->common.frag_len - hdr_size - alen - auth_pad_len;
@@ -536,6 +542,7 @@ write:
     Header->common.flags &= ~RPC_FLG_FIRST;
   }
 
+  RPCRT4_SetThreadCurrentConnection(NULL);
   return RPC_S_OK;
 }
 
@@ -653,7 +660,7 @@ static RPC_STATUS RPCRT_AuthorizeConnection(RpcConnection* conn,
 
 /***********************************************************************
  *           RPCRT4_Send (internal)
- *
+ * 
  * Transmit a packet over connection in acceptable fragments.
  */
 RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
@@ -677,7 +684,7 @@ RPC_STATUS RPCRT4_Send(RpcConnection *Connection, RpcPktHdr *Header,
 
 /***********************************************************************
  *           RPCRT4_Receive (internal)
- *
+ * 
  * Receive a packet from connection and merge the fragments.
  */
 RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
@@ -697,11 +704,13 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
 
   TRACE("(%p, %p, %p)\n", Connection, Header, pMsg);
 
+  RPCRT4_SetThreadCurrentConnection(Connection);
+
   /* read packet common header */
   dwRead = rpcrt4_conn_read(Connection, &common_hdr, sizeof(common_hdr));
   if (dwRead != sizeof(common_hdr)) {
     WARN("Short read of header, %d bytes\n", dwRead);
-    status = RPC_S_PROTOCOL_ERROR;
+    status = RPC_S_CALL_FAILED;
     goto fail;
   }
 
@@ -727,7 +736,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   dwRead = rpcrt4_conn_read(Connection, &(*Header)->common + 1, hdr_length - sizeof(common_hdr));
   if (dwRead != hdr_length - sizeof(common_hdr)) {
     WARN("bad header length, %d bytes, hdr_length %d\n", dwRead, hdr_length);
-    status = RPC_S_PROTOCOL_ERROR;
+    status = RPC_S_CALL_FAILED;
     goto fail;
   }
 
@@ -753,7 +762,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   if (auth_length) {
     auth_data = HeapAlloc(GetProcessHeap(), 0, RPC_AUTH_VERIFIER_LEN(&common_hdr));
     if (!auth_data) {
-      status = RPC_S_PROTOCOL_ERROR;
+      status = RPC_S_OUT_OF_RESOURCES;
       goto fail;
     }
   }
@@ -799,7 +808,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
         (unsigned char *)pMsg->Buffer + buffer_length, data_length);
     if (dwRead != data_length) {
       WARN("bad data length, %d/%ld\n", dwRead, data_length);
-      status = RPC_S_PROTOCOL_ERROR;
+      status = RPC_S_CALL_FAILED;
       goto fail;
     }
 
@@ -819,7 +828,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       if (dwRead != header_auth_len) {
         WARN("bad authentication data length, %d/%d\n", dwRead,
           header_auth_len);
-        status = RPC_S_PROTOCOL_ERROR;
+        status = RPC_S_CALL_FAILED;
         goto fail;
       }
 
@@ -828,12 +837,15 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       if ((common_hdr.ptype != PKT_BIND) &&
           (common_hdr.ptype != PKT_BIND_ACK) &&
           (common_hdr.ptype != PKT_AUTH3))
+      {
         status = RPCRT4_SecurePacket(Connection, SECURE_PACKET_RECEIVE,
             *Header, hdr_length,
             (unsigned char *)pMsg->Buffer + buffer_length, data_length,
             (RpcAuthVerifier *)auth_data,
             (unsigned char *)auth_data + sizeof(RpcAuthVerifier),
             header_auth_len - sizeof(RpcAuthVerifier));
+        if (status != RPC_S_OK) goto fail;
+      }
     }
 
     buffer_length += data_length;
@@ -844,7 +856,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
       dwRead = rpcrt4_conn_read(Connection, *Header, hdr_length);
       if (dwRead != hdr_length) {
         WARN("invalid packet header size (%d)\n", dwRead);
-        status = RPC_S_PROTOCOL_ERROR;
+        status = RPC_S_CALL_FAILED;
         goto fail;
       }
 
@@ -869,6 +881,7 @@ RPC_STATUS RPCRT4_Receive(RpcConnection *Connection, RpcPktHdr **Header,
   status = RPC_S_OK;
 
 fail:
+  RPCRT4_SetThreadCurrentConnection(NULL);
   if (status != RPC_S_OK) {
     RPCRT4_FreeHeader(*Header);
     *Header = NULL;

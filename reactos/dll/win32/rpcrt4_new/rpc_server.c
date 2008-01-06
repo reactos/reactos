@@ -42,6 +42,7 @@
 #include "wine/exception.h"
 
 #include "rpc_server.h"
+#include "rpc_assoc.h"
 #include "rpc_message.h"
 #include "rpc_defs.h"
 #include "ncastatus.h"
@@ -167,10 +168,13 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
   RpcServerInterface* sif;
   RPC_DISPATCH_FUNCTION func;
   UUID *object_uuid;
-  RpcPktHdr *response;
+  RpcPktHdr *response = NULL;
   void *buf = msg->Buffer;
   RPC_STATUS status;
   BOOL exception;
+  NDR_SCONTEXT context_handle;
+
+  msg->Handle = (RPC_BINDING_HANDLE)conn->server_binding;
 
   switch (hdr->common.ptype) {
     case PKT_BIND:
@@ -178,11 +182,21 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
 
       /* FIXME: do more checks! */
       if (hdr->bind.max_tsize < RPC_MIN_PACKET_SIZE ||
-          !UuidIsNil(&conn->ActiveInterface.SyntaxGUID, &status)) {
+          !UuidIsNil(&conn->ActiveInterface.SyntaxGUID, &status) ||
+          conn->server_binding) {
         TRACE("packet size less than min size, or active interface syntax guid non-null\n");
         sif = NULL;
       } else {
-        sif = RPCRT4_find_interface(NULL, &hdr->bind.abstract, FALSE);
+        /* create temporary binding */
+        if (RPCRT4_MakeBinding(&conn->server_binding, conn) == RPC_S_OK &&
+            RpcServerAssoc_GetAssociation(rpcrt4_conn_get_name(conn),
+                                          conn->NetworkAddr, conn->Endpoint,
+                                          conn->NetworkOptions,
+                                          hdr->bind.assoc_gid,
+                                          &conn->server_binding->Assoc) == RPC_S_OK)
+          sif = RPCRT4_find_interface(NULL, &hdr->bind.abstract, FALSE);
+        else
+          sif = NULL;
       }
       if (sif == NULL) {
         TRACE("rejecting bind request on connection %p\n", conn);
@@ -197,6 +211,7 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
         response = RPCRT4_BuildBindAckHeader(NDR_LOCAL_DATA_REPRESENTATION,
                                              RPC_MAX_PACKET_SIZE,
                                              RPC_MAX_PACKET_SIZE,
+                                             conn->server_binding->Assoc->assoc_group_id,
                                              conn->Endpoint,
                                              RESULT_ACCEPT, REASON_NONE,
                                              &sif->If->TransferSyntax);
@@ -272,13 +287,14 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
 
       /* put in the drep. FIXME: is this more universally applicable?
          perhaps we should move this outward... */
-      msg->DataRepresentation =
+      msg->DataRepresentation = 
         MAKELONG( MAKEWORD(hdr->common.drep[0], hdr->common.drep[1]),
                   MAKEWORD(hdr->common.drep[2], hdr->common.drep[3]));
 
       exception = FALSE;
 
       /* dispatch */
+      RPCRT4_SetThreadCurrentCallHandle(msg->Handle);
       __TRY {
         if (func) func(msg);
       } __EXCEPT(rpc_filter) {
@@ -290,6 +306,11 @@ static void RPCRT4_process_packet(RpcConnection* conn, RpcPktHdr* hdr, RPC_MESSA
         response = RPCRT4_BuildFaultHeader(msg->DataRepresentation,
                                            RPC2NCA_STATUS(status));
       } __ENDTRY
+      RPCRT4_SetThreadCurrentCallHandle(NULL);
+
+      /* release any unmarshalled context handles */
+      while ((context_handle = RPCRT4_PopThreadContextHandle()) != NULL)
+          RpcServerAssoc_ReleaseContextHandle(conn->server_binding->Assoc, context_handle, TRUE);
 
       if (!exception)
         response = RPCRT4_BuildResponseHeader(msg->DataRepresentation,
@@ -318,7 +339,6 @@ fail:
   if (msg->Buffer == buf) msg->Buffer = NULL;
   TRACE("freeing Buffer=%p\n", buf);
   HeapFree(GetProcessHeap(), 0, buf);
-  RPCRT4_DestroyBinding(msg->Handle);
   msg->Handle = 0;
   I_RpcFreeBuffer(msg);
   msg->Buffer = NULL;
@@ -338,7 +358,6 @@ static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
 {
   RpcConnection* conn = (RpcConnection*)the_arg;
   RpcPktHdr *hdr;
-  RpcBinding *pbind;
   RPC_MESSAGE *msg;
   RPC_STATUS status;
   RpcPacket *packet;
@@ -347,11 +366,6 @@ static DWORD CALLBACK RPCRT4_io_thread(LPVOID the_arg)
 
   for (;;) {
     msg = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(RPC_MESSAGE));
-
-    /* create temporary binding for dispatch, it will be freed in
-     * RPCRT4_process_packet */
-    RPCRT4_MakeBinding(&pbind, conn);
-    msg->Handle = (RPC_BINDING_HANDLE)pbind;
 
     status = RPCRT4_Receive(conn, &hdr, msg);
     if (status != RPC_S_OK) {
@@ -503,7 +517,7 @@ static RPC_STATUS RPCRT4_start_listen(BOOL auto_listen)
       status = RPCRT4_start_listen_protseq(cps, TRUE);
       if (status != RPC_S_OK)
         break;
-
+      
       /* make sure server is actually listening on the interface before
        * returning */
       RPCRT4_sync_with_server_thread(cps);
@@ -613,14 +627,14 @@ RPC_STATUS WINAPI RpcServerInqBindings( RPC_BINDING_VECTOR** BindingVector )
 RPC_STATUS WINAPI RpcServerUseProtseqEpA( RPC_CSTR Protseq, UINT MaxCalls, RPC_CSTR Endpoint, LPVOID SecurityDescriptor )
 {
   RPC_POLICY policy;
-
+  
   TRACE( "(%s,%u,%s,%p)\n", Protseq, MaxCalls, Endpoint, SecurityDescriptor );
-
+  
   /* This should provide the default behaviour */
   policy.Length        = sizeof( policy );
   policy.EndpointFlags = 0;
   policy.NICFlags      = 0;
-
+  
   return RpcServerUseProtseqEpExA( Protseq, MaxCalls, Endpoint, SecurityDescriptor, &policy );
 }
 
@@ -630,14 +644,14 @@ RPC_STATUS WINAPI RpcServerUseProtseqEpA( RPC_CSTR Protseq, UINT MaxCalls, RPC_C
 RPC_STATUS WINAPI RpcServerUseProtseqEpW( RPC_WSTR Protseq, UINT MaxCalls, RPC_WSTR Endpoint, LPVOID SecurityDescriptor )
 {
   RPC_POLICY policy;
-
+  
   TRACE( "(%s,%u,%s,%p)\n", debugstr_w( Protseq ), MaxCalls, debugstr_w( Endpoint ), SecurityDescriptor );
-
+  
   /* This should provide the default behaviour */
   policy.Length        = sizeof( policy );
   policy.EndpointFlags = 0;
   policy.NICFlags      = 0;
-
+  
   return RpcServerUseProtseqEpExW( Protseq, MaxCalls, Endpoint, SecurityDescriptor, &policy );
 }
 
@@ -935,7 +949,7 @@ RPC_STATUS WINAPI RpcObjectSetType( UUID* ObjUuid, UUID* TypeUuid )
   if ((! TypeUuid) || UuidIsNil(TypeUuid, &dummy)) {
     /* ... and drop it from the list */
     if (map) {
-      if (prev)
+      if (prev) 
         prev->next = map->next;
       else
         RpcObjTypeMaps = map->next;
@@ -966,7 +980,7 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoA( RPC_CSTR ServerPrincName, ULONG Au
                             LPVOID Arg )
 {
   FIXME( "(%s,%u,%p,%p): stub\n", ServerPrincName, AuthnSvc, GetKeyFn, Arg );
-
+  
   return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
 }
 
@@ -977,7 +991,7 @@ RPC_STATUS WINAPI RpcServerRegisterAuthInfoW( RPC_WSTR ServerPrincName, ULONG Au
                             LPVOID Arg )
 {
   FIXME( "(%s,%u,%p,%p): stub\n", debugstr_w( ServerPrincName ), AuthnSvc, GetKeyFn, Arg );
-
+  
   return RPC_S_UNKNOWN_AUTHN_SERVICE; /* We don't know any authentication services */
 }
 
@@ -1013,7 +1027,7 @@ RPC_STATUS WINAPI RpcMgmtWaitServerListen( void )
     LeaveCriticalSection(&listen_cs);
     return RPC_S_NOT_LISTENING;
   }
-
+  
   LeaveCriticalSection(&listen_cs);
 
   FIXME("not waiting for server calls to finish\n");
@@ -1032,7 +1046,7 @@ RPC_STATUS WINAPI RpcMgmtStopServerListening ( RPC_BINDING_HANDLE Binding )
     FIXME("client-side invocation not implemented.\n");
     return RPC_S_WRONG_KIND_OF_BINDING;
   }
-
+  
   RPCRT4_stop_listen(FALSE);
 
   return RPC_S_OK;
@@ -1113,4 +1127,13 @@ RPC_STATUS WINAPI RpcMgmtSetServerStackSize(ULONG ThreadStackSize)
 {
   FIXME("(0x%x): stub\n", ThreadStackSize);
   return RPC_S_OK;
+}
+
+/***********************************************************************
+ *             I_RpcGetCurrentCallHandle (RPCRT4.@)
+ */
+RPC_BINDING_HANDLE WINAPI I_RpcGetCurrentCallHandle(void)
+{
+    TRACE("\n");
+    return RPCRT4_GetThreadCurrentCallHandle();
 }

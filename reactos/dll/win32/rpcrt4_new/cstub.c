@@ -41,7 +41,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(ole);
 
 static WINE_EXCEPTION_FILTER(stub_filter)
 {
-    if (GetExceptionCode() == EXCEPTION_ACCESS_VIOLATION)
+    if (GetExceptionInformation()->ExceptionRecord->ExceptionFlags & EXCEPTION_NONCONTINUABLE)
         return EXCEPTION_CONTINUE_SEARCH;
     return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -109,13 +109,15 @@ static CRITICAL_SECTION delegating_vtbl_section = { &critsect_debug, -1, 0, 0, 0
 typedef struct
 {
     DWORD ref;
+    DWORD size;
+    void **methods;
     IUnknownVtbl vtbl;
+    /* remaining entries in vtbl */
 } ref_counted_vtbl;
 
 static struct
 {
     ref_counted_vtbl *table;
-    DWORD size;
 } current_vtbl;
 
 
@@ -156,7 +158,7 @@ typedef struct {
 } vtbl_method_t;
 #include "poppack.h"
 
-static void fill_table(IUnknownVtbl *vtbl, DWORD num)
+static void fill_table(IUnknownVtbl *vtbl, void **methods, DWORD num)
 {
     vtbl_method_t *method;
     void **entry;
@@ -166,7 +168,7 @@ static void fill_table(IUnknownVtbl *vtbl, DWORD num)
     vtbl->AddRef = delegating_AddRef;
     vtbl->Release = delegating_Release;
 
-    method = (vtbl_method_t*)((void **)vtbl + num);
+    method = (vtbl_method_t*)methods;
     entry = (void**)(vtbl + 1);
 
     for(i = 3; i < num; i++)
@@ -209,19 +211,25 @@ void create_delegating_vtbl(DWORD num_methods)
     }
 
     EnterCriticalSection(&delegating_vtbl_section);
-    if(num_methods > current_vtbl.size)
+    if(!current_vtbl.table || num_methods > current_vtbl.table->size)
     {
         DWORD size;
+        DWORD old_protect;
         if(current_vtbl.table && current_vtbl.table->ref == 0)
         {
             TRACE("freeing old table\n");
+            VirtualFree(current_vtbl.table->methods,
+                        (current_vtbl.table->size - 3) * sizeof(vtbl_method_t),
+                        MEM_RELEASE);
             HeapFree(GetProcessHeap(), 0, current_vtbl.table);
         }
-        size = sizeof(DWORD) + num_methods * sizeof(void*) + (num_methods - 3) * sizeof(vtbl_method_t);
-        current_vtbl.table = HeapAlloc(GetProcessHeap(), 0, size);
-        fill_table(&current_vtbl.table->vtbl, num_methods);
+        size = (num_methods - 3) * sizeof(vtbl_method_t);
+        current_vtbl.table = HeapAlloc(GetProcessHeap(), 0, FIELD_OFFSET(ref_counted_vtbl, vtbl) + num_methods * sizeof(void*));
         current_vtbl.table->ref = 0;
-        current_vtbl.size = num_methods;
+        current_vtbl.table->size = num_methods;
+        current_vtbl.table->methods = VirtualAlloc(NULL, size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+        fill_table(&current_vtbl.table->vtbl, current_vtbl.table->methods, num_methods);
+        VirtualProtect(current_vtbl.table->methods, size, PAGE_EXECUTE_READ, &old_protect);
     }
     LeaveCriticalSection(&delegating_vtbl_section);
 }
@@ -247,6 +255,9 @@ static void release_delegating_vtbl(IUnknownVtbl *vtbl)
     if(table->ref == 0 && table != current_vtbl.table)
     {
         TRACE("... and we're not current so free'ing\n");
+        VirtualFree(current_vtbl.table->methods,
+                    (current_vtbl.table->size - 3) * sizeof(vtbl_method_t),
+                    MEM_RELEASE);
         HeapFree(GetProcessHeap(), 0, table);
     }
     LeaveCriticalSection(&delegating_vtbl_section);
@@ -558,6 +569,9 @@ void WINAPI NdrStubInitialize(PRPC_MESSAGE pRpcMsg,
   TRACE("(%p,%p,%p,%p)\n", pRpcMsg, pStubMsg, pStubDescriptor, pRpcChannelBuffer);
   NdrServerInitializeNew(pRpcMsg, pStubMsg, pStubDescriptor);
   pStubMsg->pRpcChannelBuffer = pRpcChannelBuffer;
+  IRpcChannelBuffer_GetDestCtx(pStubMsg->pRpcChannelBuffer,
+                               &pStubMsg->dwDestContext,
+                               &pStubMsg->pvDestContext);
 }
 
 /***********************************************************************
@@ -581,7 +595,5 @@ void WINAPI NdrStubGetBuffer(LPRPCSTUBBUFFER iface,
     return;
   }
 
-  pStubMsg->BufferStart = pStubMsg->RpcMsg->Buffer;
-  pStubMsg->BufferEnd = pStubMsg->BufferStart + pStubMsg->BufferLength;
-  pStubMsg->Buffer = pStubMsg->BufferStart;
+  pStubMsg->Buffer = pStubMsg->RpcMsg->Buffer;
 }

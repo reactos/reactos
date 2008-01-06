@@ -23,11 +23,13 @@
 	<file>cproxy.c</file>
 	<file>cpsf.c</file>
 	<file>cstub.c</file>
+	<file>ndr_contexthandle.c</file>
 	<file>ndr_clientserver.c</file>
 	<file>ndr_fullpointer.c</file>
 	<file>ndr_marshall.c</file>
 	<file>ndr_ole.c</file>
 	<file>ndr_stubless.c</file>
+	<file>rpc_assoc.c</file>
 	<file>rpc_binding.c</file>
 	<file>rpc_epmap.c</file>
 	<file>rpc_message.c</file>

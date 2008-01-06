@@ -63,7 +63,13 @@ PFULL_PTR_XLAT_TABLES WINAPI NdrFullPointerXlatInit(ULONG NumberOfPointers,
 
 void WINAPI NdrFullPointerXlatFree(PFULL_PTR_XLAT_TABLES pXlatTables)
 {
+    ULONG i;
+
     TRACE("(%p)\n", pXlatTables);
+
+    /* free the entries in the table */
+    for (i = 0; i < pXlatTables->RefIdToPointer.NumberOfEntries; i++)
+        HeapFree(GetProcessHeap(), 0, pXlatTables->RefIdToPointer.XlatTable[i]);
 
     HeapFree(GetProcessHeap(), 0, pXlatTables->RefIdToPointer.XlatTable);
     HeapFree(GetProcessHeap(), 0, pXlatTables->RefIdToPointer.StateTable);
