@@ -29,7 +29,6 @@
 	<library>kdcom</library>
 	<library>bootvid</library>
 	<library>wdmguid</library>
-	<library>ppcmmu</library>
 	<directory name="include">
 		<pch>ntoskrnl.h</pch>
 	</directory>
