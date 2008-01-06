@@ -320,7 +320,7 @@ ppc_map_t *allocpage()
 {
     MmuFreePage *FreePage = 0;
 
-    while(NextPage < PPC_PAGE_NUMBER(RamSize) && ) {
+    if(NextPage < PPC_PAGE_NUMBER(RamSize)) {
 	return &PpcPageTable[NextPage++];
     } else {
 	FreePage = FreeList;
@@ -569,10 +569,6 @@ void mmugetpage(ppc_map_info_t *info, int count)
 	    }
 	}
     }
-}
-
-int mmupagefree(paddr_t page)
-{
 }
 
 void mmusetvsid(int start, int end, int vsid)
