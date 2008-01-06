@@ -2023,28 +2023,6 @@ NtGdiEudcLoadUnloadLink(
     return FALSE;
 }
 
-
- /*
- * @unimplemented
- */
-BOOL
-APIENTRY
-NtGdiExtTextOutW(
-    IN HDC hdc,
-    IN INT x,
-    IN INT y,
-    IN UINT flOpts,
-    IN OPTIONAL LPRECT prcl,
-    IN LPWSTR pwsz,
-    IN INT cwc,
-    IN OPTIONAL LPINT pdx,
-    IN DWORD dwCodePage)
-{
-    UNIMPLEMENTED;
-    return FALSE;
-}
-
-
  /*
  * @unimplemented
  */

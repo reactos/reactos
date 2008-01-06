@@ -108,18 +108,6 @@ NtGdiEnumFonts(HDC  hDC,
                    FONTENUMPROCW  FontFunc,
                    LPARAM  lParam);
 
-/* Use NtGdiExtTextOutW with 0, 0 at the end. */
-BOOL
-STDCALL
-NtGdiExtTextOut(HDC  hdc,
-                     int  X,
-                     int  Y,
-                     UINT  fuOptions,
-                     CONST RECT  *lprc,
-                     LPCWSTR  lpString,
-                     UINT  cbCount,
-                     CONST INT  *lpDx);
-
 /* Should be done in user-mode. */
 BOOL
 STDCALL
@@ -162,13 +150,6 @@ NtGdiOffsetWindowOrgEx (
 	int	YOffset,
 	LPPOINT	Point
 	);
-
-/* Use NtGdiPolyTextOutW with 0 at the end. */
-BOOL
-STDCALL
-NtGdiPolyTextOut(HDC  hDC,
-                      CONST LPPOLYTEXTW txt,
-                      int  Count);
 
 /* Should be done in user-mode. */
 BOOL

@@ -1523,16 +1523,18 @@ NtGdiGlyphCacheSet(
    return GlyphCopy;
 }
 
-BOOL STDCALL
-NtGdiExtTextOut(
-   HDC hDC,
-   INT XStart,
-   INT YStart,
-   UINT fuOptions,
-   CONST RECT *lprc,
-   LPCWSTR UnsafeString,
-   UINT Count,
-   CONST INT *UnsafeDx)
+BOOL
+APIENTRY
+NtGdiExtTextOutW(
+    IN HDC hDC,
+    IN INT XStart,
+    IN INT YStart,
+    IN UINT fuOptions,
+    IN OPTIONAL LPRECT lprc,
+    IN LPWSTR UnsafeString,
+    IN INT Count,
+    IN OPTIONAL LPINT UnsafeDx,
+    IN DWORD dwCodePage)
 {
    /*
     * FIXME:
@@ -3996,16 +3998,6 @@ NtGdiGetTextMetricsW(
     }
 
   return TRUE;
-}
-
-BOOL
-STDCALL
-NtGdiPolyTextOut(HDC  hDC,
-                      CONST LPPOLYTEXTW  txt,
-                      int  Count)
-{
-  UNIMPLEMENTED;
-  return FALSE;
 }
 
 BOOL

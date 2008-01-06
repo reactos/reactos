@@ -721,14 +721,12 @@ NtGdiAddFontResource                    2
 NtGdiCreateDIBitmap                     6
 NtGdiCreateScalableFontResource         4
 NtGdiEnumFonts                          4
-NtGdiExtTextOut                         8
 NtGdiGetAspectRatioFilterEx             2
 NtGdiGetFontFamilyInfo                  4
 NtGdiGetFontLanguageInfo                1
 NtGdiGetTextExtentPoint32               4
 NtGdiOffsetViewportOrgEx                4
 NtGdiOffsetWindowOrgEx                  4
-NtGdiPolyTextOut                        3
 NtGdiRemoveFontResource                 1
 #
 # ReactOS only system calls

@@ -43,7 +43,7 @@ TextOutW(
 	LPCWSTR  lpString,
 	int  cbString)
 {
-  return NtGdiExtTextOut(hdc, nXStart, nYStart, 0, NULL, lpString, cbString, NULL);
+  return NtGdiExtTextOutW(hdc, nXStart, nYStart, 0, NULL, (LPWSTR)lpString, cbString, NULL, 0);
 }
 
 
@@ -350,7 +350,7 @@ ExtTextOutW(
 	CONST INT	*lpDx
 	)
 {
-  return NtGdiExtTextOut(hdc, X, Y, fuOptions, lprc, lpString, cbCount, lpDx);
+  return NtGdiExtTextOutW(hdc, X, Y, fuOptions, (LPRECT)lprc, (LPWSTR)lpString, cbCount, (LPINT)lpDx, 0);
 }
 
 
