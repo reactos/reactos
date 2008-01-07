@@ -29,6 +29,9 @@
 #include <shlobj.h>
 #include <shlwapi.h>
 #include "resource.h"
+#include <wine/debug.h>
+
+WINE_DEFAULT_DEBUG_CHANNEL(userinit);
 
 #define CMP_MAGIC  0x01234567
 
@@ -47,17 +50,29 @@ ReadRegSzKey(
     DWORD cbData = 0;
     LPWSTR Value;
 
+    TRACE("(%p, %s, %p)\n", hKey, debugstr_w(pszKey), pValue);
+
     rc = RegQueryValueExW(hKey, pszKey, NULL, &dwType, NULL, &cbData);
     if (rc != ERROR_SUCCESS)
+    {
+        WARN("RegQueryValueEx(%s) failed with error %lu\n", debugstr_w(pszKey), rc);
         return rc;
+    }
     if (dwType != REG_SZ)
+    {
+        WARN("Wrong registry data type (%u vs %u)\n", dwType, REG_SZ);
         return ERROR_FILE_NOT_FOUND;
+    }
     Value = (WCHAR*) HeapAlloc(GetProcessHeap(), 0, cbData + sizeof(WCHAR));
     if (!Value)
+    {
+        WARN("No memory\n");
         return ERROR_NOT_ENOUGH_MEMORY;
+    }
     rc = RegQueryValueExW(hKey, pszKey, NULL, NULL, (LPBYTE)Value, &cbData);
     if (rc != ERROR_SUCCESS)
     {
+        WARN("RegQueryValueEx(%s) failed with error %lu\n", debugstr_w(pszKey), rc);
         HeapFree(GetProcessHeap(), 0, Value);
         return rc;
     }
@@ -77,16 +92,26 @@ BOOL IsConsoleShell(VOID)
     LONG rc;
     BOOL ret = FALSE;
 
+    TRACE("()\n");
+
     rc = RegOpenKeyEx(
         HKEY_LOCAL_MACHINE,
         REGSTR_PATH_CURRENT_CONTROL_SET,
         0,
         KEY_QUERY_VALUE,
         &ControlKey);
+    if (rc != ERROR_SUCCESS)
+    {
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
+        goto cleanup;
+    }
 
     rc = ReadRegSzKey(ControlKey, L"SystemStartOptions", &SystemStartOptions);
     if (rc != ERROR_SUCCESS)
+    {
+        WARN("ReadRegSzKey() failed with error %lu\n", rc);
         goto cleanup;
+    }
 
     /* Check for CONSOLE in SystemStartOptions */
     CurrentOption = SystemStartOptions;
@@ -97,6 +122,7 @@ BOOL IsConsoleShell(VOID)
             *NextOption = L'\0';
         if (wcsicmp(CurrentOption, L"CONSOLE") == 0)
         {
+            TRACE("Found 'CONSOLE' boot option\n");
             ret = TRUE;
             goto cleanup;
         }
@@ -120,26 +146,38 @@ BOOL GetShell(
     WCHAR Shell[MAX_PATH];
     BOOL Ret = FALSE;
     BOOL ConsoleShell = IsConsoleShell();
+    LONG rc;
 
-    if (RegOpenKeyEx(hRootKey, REGSTR_PATH_WINLOGON,
-                     0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    TRACE("(%p, %p)\n", CommandLine, hRootKey);
+
+    rc = RegOpenKeyEx(hRootKey, REGSTR_PATH_WINLOGON,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc == ERROR_SUCCESS)
     {
         Size = MAX_PATH * sizeof(WCHAR);
-        if (RegQueryValueEx(hKey,
-                            ConsoleShell ? L"ConsoleShell" : L"Shell",
-                            NULL,
-                            &Type,
-                            (LPBYTE)Shell,
-                            &Size) == ERROR_SUCCESS)
+        rc = RegQueryValueEx(hKey,
+                             ConsoleShell ? L"ConsoleShell" : L"Shell",
+                             NULL,
+                             &Type,
+                             (LPBYTE)Shell,
+                             &Size);
+        if (rc == ERROR_SUCCESS)
         {
             if ((Type == REG_SZ) || (Type == REG_EXPAND_SZ))
             {
+                TRACE("Found command line %s\n", debugstr_w(Shell));
                 wcscpy(CommandLine, Shell);
                 Ret = TRUE;
             }
+            else
+                WARN("Wrong type %lu (expected %u or %u)\n", Type, REG_SZ, REG_EXPAND_SZ);
         }
+        else
+            WARN("RegQueryValueEx() failed with error %lu\n", rc);
         RegCloseKey(hKey);
     }
+    else
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
 
     return Ret;
 }
@@ -155,10 +193,13 @@ StartAutoApplications(
     SHELLEXECUTEINFOW ExecInfo;
     size_t len;
 
+    TRACE("(%d)\n", clsid);
+
     hResult = SHGetFolderPathW(NULL, clsid, NULL, SHGFP_TYPE_CURRENT, szPath);
     len = wcslen(szPath);
     if (!SUCCEEDED(hResult) || len == 0)
     {
+        WARN("SHGetFolderPath() failed with error %lu\n", GetLastError());
         return;
     }
 
@@ -166,6 +207,7 @@ StartAutoApplications(
     hFind = FindFirstFileW(szPath, &findData);
     if (hFind == INVALID_HANDLE_VALUE)
     {
+        WARN("FindFirstFile(%s) failed with error %lu\n", debugstr_w(szPath), GetLastError());
         return;
     }
     szPath[len] = L'\0';
@@ -179,6 +221,8 @@ StartAutoApplications(
             ExecInfo.lpVerb = L"open";
             ExecInfo.lpFile = findData.cFileName;
             ExecInfo.lpDirectory = szPath;
+            TRACE("Executing %s in directory %s\n",
+                debugstr_w(findData.cFileName), debugstr_w(szPath));
             ShellExecuteExW(&ExecInfo);
         }
     } while (FindNextFileW(hFind, &findData));
@@ -192,6 +236,8 @@ TryToStartShell(
     STARTUPINFO si;
     PROCESS_INFORMATION pi;
     WCHAR ExpandedShell[MAX_PATH];
+
+    TRACE("(%s)\n", debugstr_w(Shell));
 
     ZeroMemory(&si, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
@@ -210,6 +256,7 @@ TryToStartShell(
                       &si,
                       &pi))
     {
+        WARN("CreateProcess() failed with error %lu\n", GetLastError());
         return FALSE;
     }
 
@@ -227,15 +274,19 @@ VOID StartShell(VOID)
     WCHAR Shell[MAX_PATH];
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
+    TRACE("()\n");
+
     /* Try to run shell in user key */
     if (GetShell(Shell, HKEY_CURRENT_USER) && TryToStartShell(Shell))
     {
+        TRACE("Failed to start a shell from HKEY_CURRENT_USER\n");
         return;
     }
 
     /* Try to run shell in local machine key */
     if (GetShell(Shell, HKEY_LOCAL_MACHINE) && TryToStartShell(Shell))
     {
+        TRACE("Failed to start a shell from HKEY_LOCAL_MACHINE\n");
         return;
     }
 
@@ -256,12 +307,13 @@ VOID StartShell(VOID)
     }
     if (!TryToStartShell(Shell))
     {
+        WARN("Failed to start default shell %s\n", debugstr_w(Shell));
         LoadString( GetModuleHandle(NULL), STRING_USERINIT_FAIL, szMsg, sizeof(szMsg) / sizeof(szMsg[0]));
         MessageBox(0, szMsg, NULL, 0);
     }
 }
 
-WCHAR g_RegColorNames[][32] = {
+const WCHAR g_RegColorNames[][32] = {
     L"Scrollbar",             /* 00 = COLOR_SCROLLBAR */
     L"Background",            /* 01 = COLOR_DESKTOP */
     L"ActiveTitle",           /* 02 = COLOR_ACTIVECAPTION  */
@@ -302,6 +354,8 @@ COLORREF StrToColorref(
 {
     BYTE rgb[3];
 
+    TRACE("(%s)\n", debugstr_w(lpszCol));
+
     rgb[0] = StrToIntW(lpszCol);
     lpszCol = StrChrW(lpszCol, L' ') + 1;
     rgb[1] = StrToIntW(lpszCol);
@@ -318,25 +372,32 @@ VOID SetUserSysColors(VOID)
     WCHAR szColor[20];
     DWORD Type, Size;
     COLORREF crColor;
+    LONG rc;
 
-    if (!RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_COLORS,
-                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    TRACE("()\n");
+
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_COLORS,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc != ERROR_SUCCESS)
     {
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
         return;
     }
     for(i = 0; i < NUM_SYSCOLORS; i++)
     {
         Size = sizeof(szColor);
-        if (RegQueryValueEx(hKey, g_RegColorNames[i], NULL, &Type,
-                            (LPBYTE)szColor, &Size) == ERROR_SUCCESS &&
-            Type == REG_SZ)
+        rc = RegQueryValueEx(hKey, g_RegColorNames[i], NULL, &Type,
+                             (LPBYTE)szColor, &Size);
+        if (rc == ERROR_SUCCESS && Type == REG_SZ)
         {
             crColor = StrToColorref(szColor);
             SetSysColors(1, &i, &crColor);
         }
+        else
+            WARN("RegQueryValueEx(%s) failed with error %lu\n",
+                debugstr_w(g_RegColorNames[i]), rc);
     }
     RegCloseKey(hKey);
-    return;
 }
 
 static
@@ -347,17 +408,22 @@ VOID LoadUserFontSetting(
     HKEY hKey;
     LOGFONTW lfTemp;
     DWORD Type, Size;
-    INT error;
+    LONG rc;
+
+    TRACE("(%s, %p)\n", debugstr_w(lpValueName), pFont);
 
     Size = sizeof(LOGFONTW);
-    if (!RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
-                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc != ERROR_SUCCESS)
     {
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
         return;
     }
-    error = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&lfTemp, &Size);
-    if ((error != ERROR_SUCCESS) || (Type != REG_BINARY))
+    rc = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&lfTemp, &Size);
+    if (rc != ERROR_SUCCESS || Type != REG_BINARY)
     {
+        WARN("RegQueryValueEx() failed with error %lu\n", rc);
         return;
     }
     RegCloseKey(hKey);
@@ -372,18 +438,23 @@ VOID LoadUserMetricSetting(
 {
     HKEY hKey;
     DWORD Type, Size;
-    INT ret;
     WCHAR strValue[8];
+    LONG rc;
+
+    TRACE("(%s, %p)\n", debugstr_w(lpValueName), pValue);
 
     Size = sizeof(strValue);
-    if (!RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
-                      0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_METRICS,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc != ERROR_SUCCESS)
     {
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
         return;
     }
-    ret = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&strValue, &Size);
-    if ((ret != ERROR_SUCCESS) || (Type != REG_SZ))
+    rc = RegQueryValueEx(hKey, lpValueName, NULL, &Type, (LPBYTE)&strValue, &Size);
+    if (rc != ERROR_SUCCESS || Type != REG_SZ)
     {
+        WARN("RegQueryValueEx() failed with error %lu\n", rc);
         return;
     }
     RegCloseKey(hKey);
@@ -395,6 +466,8 @@ VOID SetUserMetrics(VOID)
 {
     NONCLIENTMETRICSW ncmetrics;
     MINIMIZEDMETRICS mmmetrics;
+
+    TRACE("()\n");
 
     ncmetrics.cbSize = sizeof(NONCLIENTMETRICSW);
     mmmetrics.cbSize = sizeof(MINIMIZEDMETRICS);
@@ -427,20 +500,25 @@ VOID SetUserWallpaper(VOID)
     HKEY hKey;
     DWORD Type, Size;
     WCHAR szWallpaper[MAX_PATH + 1];
+    LONG rc;
 
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
-                     0, KEY_QUERY_VALUE, &hKey) == ERROR_SUCCESS)
+    TRACE("()\n");
+
+    rc = RegOpenKeyEx(HKEY_CURRENT_USER, REGSTR_PATH_DESKTOP,
+                      0, KEY_QUERY_VALUE, &hKey);
+    if (rc == ERROR_SUCCESS)
     {
         Size = sizeof(szWallpaper);
-        if (RegQueryValueEx(hKey,
-                            L"Wallpaper",
-                            NULL,
-                            &Type,
-                            (LPBYTE)szWallpaper,
-                            &Size) == ERROR_SUCCESS &&
-            Type == REG_SZ)
+        rc = RegQueryValueEx(hKey,
+                             L"Wallpaper",
+                             NULL,
+                             &Type,
+                             (LPBYTE)szWallpaper,
+                             &Size);
+        if (rc == ERROR_SUCCESS && Type == REG_SZ)
         {
             ExpandEnvironmentStrings(szWallpaper, szWallpaper, MAX_PATH);
+            TRACE("Using wallpaper %s\n", debugstr_w(szWallpaper));
 
             /* Load and change the wallpaper */
             SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, szWallpaper, SPIF_SENDCHANGE);
@@ -448,15 +526,20 @@ VOID SetUserWallpaper(VOID)
         else
         {
             /* remove the wallpaper */
+            TRACE("No wallpaper set in registry (error %lu)\n", rc);
             SystemParametersInfo(SPI_SETDESKWALLPAPER, 0, NULL, SPIF_SENDCHANGE);
         }
         RegCloseKey(hKey);
     }
+    else
+        WARN("RegOpenKeyEx() failed with error %lu\n", rc);
 }
 
 static
 VOID SetUserSettings(VOID)
 {
+    TRACE("()\n");
+
     SetUserSysColors();
     SetUserMetrics();
     SetUserWallpaper();
@@ -470,15 +553,21 @@ NotifyLogon(VOID)
     HINSTANCE hModule;
     PCMP_REPORT_LOGON CMP_Report_LogOn;
 
+    TRACE("()\n");
+
     hModule = LoadLibrary(L"setupapi.dll");
     if (hModule)
     {
         CMP_Report_LogOn = (PCMP_REPORT_LOGON)GetProcAddress(hModule, "CMP_Report_LogOn");
         if (CMP_Report_LogOn)
             CMP_Report_LogOn(CMP_MAGIC, GetCurrentProcessId());
+        else
+            WARN("GetProcAddress() failed\n");
 
         FreeLibrary(hModule);
     }
+    else
+        WARN("LoadLibrary() failed with error %lu\n", GetLastError());
 }
 
 #ifdef _MSC_VER
