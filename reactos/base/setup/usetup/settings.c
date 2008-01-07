@@ -20,7 +20,8 @@
  * PROJECT:         ReactOS text-mode setup
  * FILE:            subsys/system/usetup/settings.c
  * PURPOSE:         Device settings support functions
- * PROGRAMMER:      Eric Kohl
+ * PROGRAMMERS:     Eric Kohl
+ *                  Colin Finck
  */
 
 /* INCLUDES *****************************************************************/
@@ -616,6 +617,85 @@ ProcessDisplayRegistry(HINF InfFile, PGENERIC_LIST List)
 }
 
 
+BOOLEAN
+ProcessLocaleRegistry(PGENERIC_LIST List)
+{
+    PGENERIC_LIST_ENTRY Entry;
+    PWCHAR LanguageId;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    Entry = GetGenericListEntry(List);
+    if (Entry == NULL)
+        return FALSE;
+
+    LanguageId = (PWCHAR)Entry->UserData;
+    if (LanguageId == NULL)
+        return FALSE;
+
+    /* Open the NLS language key */
+    RtlInitUnicodeString(&KeyName,
+                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status =  NtOpenKey(&KeyHandle,
+                        KEY_ALL_ACCESS,
+                        &ObjectAttributes);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Set default language */
+    RtlInitUnicodeString(&ValueName,
+                         L"Default");
+
+    Status = NtSetValueKey(KeyHandle,
+                           &ValueName,
+                           0,
+                           REG_SZ,
+                           (PVOID)(LanguageId + 4),
+                           8 * sizeof(PWCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    /* Set install language */
+    RtlInitUnicodeString(&ValueName,
+                         L"InstallLanguage");
+    Status = NtSetValueKey (KeyHandle,
+                            &ValueName,
+                            0,
+                            REG_SZ,
+                            (PVOID)(LanguageId + 4),
+                            8 * sizeof(PWCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    NtClose(KeyHandle);
+
+    return TRUE;
+}
+
+
 PGENERIC_LIST
 CreateKeyboardDriverList(HINF InfFile)
 {
@@ -791,8 +871,10 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
+    ULONG Disposition;
     HANDLE KeyHandle;
     NTSTATUS Status;
+    WCHAR szKeyName[48] = L"\\Registry\\User\\.DEFAULT\\Keyboard Layout";       // 48 = "\Registry\User\.DEFAULT\Keyboard Layout\Preload" + NULL char
 
     Entry = GetGenericListEntry(List);
     if (Entry == NULL)
@@ -802,9 +884,8 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
     if (LanguageId == NULL)
         return FALSE;
 
-    /* Open the nls language key */
-    RtlInitUnicodeString(&KeyName,
-                         L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language");
+    // First create the "Keyboard Layout" key
+    RtlInitUnicodeString(&KeyName, szKeyName);
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &KeyName,
@@ -812,42 +893,63 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
                                NULL,
                                NULL);
 
-    Status =  NtOpenKey(&KeyHandle,
-                        KEY_ALL_ACCESS,
-                        &ObjectAttributes);
+    Status =  NtCreateKey(&KeyHandle,
+                          KEY_ALL_ACCESS,
+                          &ObjectAttributes,
+                          0,
+                          NULL,
+                          0,
+                          &Disposition);
 
-    if (!NT_SUCCESS(Status))
+    if(NT_SUCCESS(Status))
+        NtClose(KeyHandle);
+    else
     {
-        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
         return FALSE;
     }
 
-    /* Set default language */
+    // Then create the "Preload" key
+    KeyName.MaximumLength = sizeof(szKeyName);
+    Status = RtlAppendUnicodeToString(&KeyName, L"\\Preload");
+
+    if(!NT_SUCCESS(Status))
+    {
+        DPRINT1("RtlAppend failed! (%lx)\n", Status);
+        DPRINT1("String is %wZ\n", &KeyName);
+        return FALSE;
+    }
+
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &KeyName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+
+    Status = NtCreateKey(&KeyHandle,
+                         KEY_ALL_ACCESS,
+                         &ObjectAttributes,
+                         0,
+                         NULL,
+                         0,
+                         &Disposition);
+
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtCreateKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    /* Set default keyboard layout */
     RtlInitUnicodeString(&ValueName,
-                         L"Default");
+                         L"1");
 
     Status = NtSetValueKey(KeyHandle,
                            &ValueName,
                            0,
                            REG_SZ,
-                           (PVOID)(LanguageId + 4),
-                           8 * sizeof(PWCHAR));
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
-        NtClose(KeyHandle);
-        return FALSE;
-    }
-
-    /* Set install language */
-    RtlInitUnicodeString(&ValueName,
-                         L"InstallLanguage");
-    Status = NtSetValueKey (KeyHandle,
-                            &ValueName,
-                            0,
-                            REG_SZ,
-                            (PVOID)(LanguageId + 4),
-                            8 * sizeof(PWCHAR));
+                           (PVOID)LanguageId,
+                           (8 + 1) * sizeof(WCHAR));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

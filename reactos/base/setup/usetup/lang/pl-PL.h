@@ -1278,12 +1278,12 @@ MUI_ERROR plPLErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS nie zosta³ w pe³ni zainstalowany na twoim\n"
-	     "komputerze. Jeœli wyjdziesz teraz, trzeba bêdzie\n"
-	     "ponownie uruchomiæ instalator by zainstalowaæ ReactOS.\n"
-	     "\n"
-	     "  \x07  Naciœnij ENTER aby kontynuowaæ instalacjê.\n"
-	     "  \x07  Naciœnij F3 aby wyjœæ z instalatora.",
-	     "F3= Quit  ENTER = Continue"
+        "komputerze. Jeœli wyjdziesz teraz, trzeba bêdzie\n"
+        "ponownie uruchomiæ instalator by zainstalowaæ ReactOS.\n"
+        "\n"
+        "  \x07  Naciœnij ENTER aby kontynuowaæ instalacjê.\n"
+        "  \x07  Naciœnij F3 aby wyjœæ z instalatora.",
+        "F3= Quit  ENTER = Continue"
     },
     {
         //ERROR_NO_HDD
@@ -1342,21 +1342,21 @@ MUI_ERROR plPLErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Instalator wykry³, ¿e co najmniej jeden dysk twardy zawiera niekompatybiln¹ \n"
-		  "tablicê partycji, która nie bêdzie poprawnie obs³ugiwana!\n"
-		  "\n"
-		  "Tworzenie lub kasowanie partycji mo¿e zniszczyæ ca³¹ tablicê partycji.\n"
-		  "\n"
-		  "  \x07  Naciœnij F3 aby wyjœæ z instalatora."
-		  "  \x07  Naciœnij ENTER aby kontynuowaæ.",
-          "F3= Wyjœcie  ENTER = Kontynuacja"
+        "Instalator wykry³, ¿e co najmniej jeden dysk twardy zawiera niekompatybiln¹ \n"
+        "tablicê partycji, która nie bêdzie poprawnie obs³ugiwana!\n"
+        "\n"
+        "Tworzenie lub kasowanie partycji mo¿e zniszczyæ ca³¹ tablicê partycji.\n"
+        "\n"
+        "  \x07  Naciœnij F3 aby wyjœæ z instalatora."
+        "  \x07  Naciœnij ENTER aby kontynuowaæ.",
+        "F3= Wyjœcie  ENTER = Kontynuacja"
     },
     {
         //ERROR_NEW_PARTITION,
         "Nie mo¿esz stworzyæ nowej partycji w miejscu ju¿\n"
-		"istniej¹cej!\n"
-		"\n"
-		"  * Naciœnij dowolny klawisz aby kontynuowaæ.",
+        "istniej¹cej!\n"
+        "\n"
+        "  * Naciœnij dowolny klawisz aby kontynuowaæ.",
         NULL
     },
     {
@@ -1451,8 +1451,8 @@ MUI_ERROR plPLErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Instalator nie by³ w stanie znaleŸæ sekcji 'SetupData'\n"
-		 "w pliku TXTSETUP.SIF.\n",
-		 "ENTER = Restart komputera"
+        "w pliku TXTSETUP.SIF.\n",
+        "ENTER = Restart komputera"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1462,6 +1462,11 @@ MUI_ERROR plPLErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

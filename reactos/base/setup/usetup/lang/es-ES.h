@@ -1346,9 +1346,9 @@ MUI_ERROR esESErrorEntries[] =
     {
         //ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
-		"of an already existing Partition!\n"
-		"\n"
-		"  * Press any key to continue.",
+        "of an already existing Partition!\n"
+        "\n"
+        "  * Press any key to continue.",
         NULL
     },
     {
@@ -1454,6 +1454,11 @@ MUI_ERROR esESErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

@@ -5,6 +5,7 @@
  * FILE:            subsystems/win32/win32k/ntuser/kbdlayout.c
  * PURPOSE:         Keyboard layout management
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
+ *                  Copyright 2008 Colin Finck
  *
  */
 
@@ -53,7 +54,7 @@ static NTSTATUS NTAPI ReadRegistryValue( PUNICODE_STRING KeyName,
 
    InitializeObjectAttributes(&KeyAttributes, KeyName, OBJ_CASE_INSENSITIVE,
                               NULL, NULL);
-   Status = ZwOpenKey(&KeyHandle, KEY_ALL_ACCESS, &KeyAttributes);
+   Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
    if( !NT_SUCCESS(Status) )
    {
       return Status;
@@ -270,24 +271,77 @@ BOOL UserInitDefaultKeyboardLayout()
 
 PKBL W32kGetDefaultKeyLayout(VOID)
 {
-   LCID LocaleId;
-   NTSTATUS Status;
-   PKBL pKbl;
+   const WCHAR szKeyboardLayoutPath[] = L"\\Keyboard Layout\\Preload";
 
-   // This is probably wrong...
-   // I need to do more research.
-   Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
-   if (!NT_SUCCESS(Status))
+   HANDLE KeyHandle;
+   LCID LayoutLocaleId = 0;
+   NTSTATUS Status;
+   OBJECT_ATTRIBUTES KeyAttributes;
+   PKBL pKbl;
+   UNICODE_STRING CurrentUserPath;
+   UNICODE_STRING FullKeyboardLayoutPath;
+   UNICODE_STRING LayoutValueName;
+   UNICODE_STRING LayoutLocaleIdString;
+   WCHAR wszBuffer[MAX_PATH];
+
+   // Get the path to HKEY_CURRENT_USER
+   Status = RtlFormatCurrentUserKeyPath(&CurrentUserPath);
+
+   if( NT_SUCCESS(Status) )
    {
-      DPRINT1("Could not get default locale (%08lx).\n", Status);
-      DPRINT1("Assuming default locale = 0x409 (US).\n");
-      LocaleId = 0x409;
+      // FIXME: Is this 100% correct?
+      // We're called very early, so \\REGISTRY\\USER might not be available yet. Check this first.
+      InitializeObjectAttributes(&KeyAttributes, &CurrentUserPath, OBJ_CASE_INSENSITIVE, NULL, NULL);
+      Status = ZwOpenKey(&KeyHandle, KEY_READ, &KeyAttributes);
+
+      if(Status == STATUS_OBJECT_NAME_NOT_FOUND)
+      {
+         // Fall back to US English without any debug message
+         LayoutLocaleId = 0x409;
+      }
+      else
+      {
+         // The path is available, so build the full path to HKEY_CURRENT_USER\Keyboard Layout\Preload
+         ZwClose(KeyHandle);
+
+         RtlCopyMemory(wszBuffer, CurrentUserPath.Buffer, CurrentUserPath.MaximumLength);
+         RtlInitUnicodeString(&FullKeyboardLayoutPath, wszBuffer);
+         FullKeyboardLayoutPath.MaximumLength = MAX_PATH;
+
+         Status = RtlAppendUnicodeToString(&FullKeyboardLayoutPath, szKeyboardLayoutPath);
+
+         if( NT_SUCCESS(Status) )
+         {
+            // Return the first keyboard layout listed there
+            RtlInitUnicodeString(&LayoutValueName, L"1");
+
+            Status = ReadRegistryValue(&FullKeyboardLayoutPath, &LayoutValueName, &LayoutLocaleIdString);
+
+            if( NT_SUCCESS(Status) )
+               RtlUnicodeStringToInteger(&LayoutLocaleIdString, 16, &LayoutLocaleId);
+            else
+               DPRINT1("ReadRegistryValue failed! (%08lx).\n", Status);
+         }
+         else
+            DPRINT1("RtlAppendUnicodeToString failed! (%08lx)\n", Status);
+      }
+
+      RtlFreeUnicodeString(&CurrentUserPath);
+   }
+   else
+      DPRINT1("RtlFormatCurrentUserKeyPath failed! (%08lx)\n", Status);
+
+   if(!LayoutLocaleId)
+   {
+      // This block is only reached in case of a failure, so use DPRINT1 here
+      DPRINT1("Assuming default locale for the keyboard layout (0x409 - US)\n");
+      LayoutLocaleId = 0x409;
    }
 
    pKbl = KBLList;
    do
    {
-      if(pKbl->klid == LocaleId)
+      if(pKbl->klid == LayoutLocaleId)
       {
          return pKbl;
       }
@@ -296,11 +350,11 @@ PKBL W32kGetDefaultKeyLayout(VOID)
    } while(pKbl != KBLList);
 
    DPRINT("Loading new default keyboard layout.\n");
-   pKbl = UserLoadDllAndCreateKbl(LocaleId);
+   pKbl = UserLoadDllAndCreateKbl(LayoutLocaleId);
 
    if(!pKbl)
    {
-      DPRINT("Failed to load %x!!! Returning any availableKL.\n", LocaleId);
+      DPRINT("Failed to load %x!!! Returning any availableKL.\n", LayoutLocaleId);
       return KBLList;
    }
 

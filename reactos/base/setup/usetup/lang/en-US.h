@@ -1270,12 +1270,12 @@ MUI_ERROR enUSErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS is not completely installed on your\n"
-	     "computer. If you quit Setup now, you will need to\n"
-	     "run Setup again to install ReactOS.\n"
-	     "\n"
-	     "  \x07  Press ENTER to continue Setup.\n"
-	     "  \x07  Press F3 to quit Setup.",
-	     "F3 = Quit  ENTER = Continue"
+        "computer. If you quit Setup now, you will need to\n"
+        "run Setup again to install ReactOS.\n"
+        "\n"
+        "  \x07  Press ENTER to continue Setup.\n"
+        "  \x07  Press F3 to quit Setup.",
+        "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NO_HDD
@@ -1335,20 +1335,20 @@ MUI_ERROR enUSErrorEntries[] =
     {
         //ERROR_WARN_PARTITION,
           "Setup found that at least one harddisk contains an incompatible\n"
-		  "partition table that can not be handled properly!\n"
-		  "\n"
-		  "Creating or deleting partitions can destroy the partition table.\n"
-		  "\n"
-		  "  \x07  Press F3 to quit Setup."
-		  "  \x07  Press ENTER to continue.",
+          "partition table that can not be handled properly!\n"
+          "\n"
+          "Creating or deleting partitions can destroy the partition table.\n"
+          "\n"
+          "  \x07  Press F3 to quit Setup."
+          "  \x07  Press ENTER to continue.",
           "F3= Quit  ENTER = Continue"
     },
     {
         //ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
-		"of an already existing Partition!\n"
-		"\n"
-		"  * Press any key to continue.",
+        "of an already existing Partition!\n"
+        "\n"
+        "  * Press any key to continue.",
         NULL
     },
     {
@@ -1443,8 +1443,8 @@ MUI_ERROR enUSErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Setup failed to find the 'SetupData' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Reboot computer"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1454,6 +1454,11 @@ MUI_ERROR enUSErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

@@ -1270,12 +1270,12 @@ MUI_ERROR ruRUErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS не был полностью установлен на ваш\n"
-	     "компьютер. Если вы выйдите из установки сейчас,\n"
-	     "то вам нужно запустить программу установки снова,\n"
-	     "если вы хотите установить ReactOS\n"
-	     "  \x07  Нажмите ENTER для продолжения установки.\n"
-	     "  \x07  Нажмите F3 выхода из установки.",
-	     "F3 = Выход  ENTER = Продолжить"
+        "компьютер. Если вы выйдите из установки сейчас,\n"
+        "то вам нужно запустить программу установки снова,\n"
+        "если вы хотите установить ReactOS\n"
+        "  \x07  Нажмите ENTER для продолжения установки.\n"
+        "  \x07  Нажмите F3 выхода из установки.",
+        "F3 = Выход  ENTER = Продолжить"
     },
     {
         //ERROR_NO_HDD
@@ -1334,21 +1334,21 @@ MUI_ERROR ruRUErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup found that at least one harddisk contains an incompatible\n"
-		  "partition table that can not be handled properly!\n"
-		  "\n"
-		  "Creating or deleting partitions can destroy the partiton table.\n"
-		  "\n"
-		  "  \x07  Нажмите F3 для выхода из установки."
-		  "  \x07  Нажмите ENTER для продолжения.",
-          "F3 = Выход  ENTER = Продолжить"
+        "Setup found that at least one harddisk contains an incompatible\n"
+        "partition table that can not be handled properly!\n"
+        "\n"
+        "Creating or deleting partitions can destroy the partiton table.\n"
+        "\n"
+        "  \x07  Нажмите F3 для выхода из установки."
+        "  \x07  Нажмите ENTER для продолжения.",
+        "F3 = Выход  ENTER = Продолжить"
     },
     {
         //ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
-		"of an already existing Partition!\n"
-		"\n"
-		"  * Нажмите любую клавишу для продолжения.",
+        "of an already existing Partition!\n"
+        "\n"
+        "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
@@ -1443,8 +1443,8 @@ MUI_ERROR ruRUErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Не удалось найти секцию 'SetupData'\n"
-		 "в файле TXTSETUP.SIF.\n",
-		 "ENTER = Перезагрузка"
+        "в файле TXTSETUP.SIF.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1454,6 +1454,11 @@ MUI_ERROR ruRUErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

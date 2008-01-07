@@ -4,7 +4,7 @@
 static MUI_ENTRY itITLanguagePageEntries[] =
 {
     {
-        4, 
+        4,
         3,
         " Installazione di ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
@@ -1276,12 +1276,12 @@ MUI_ERROR itITErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS non è installato completamente nel vostro\n"
-	     "computer. Se esce adesso, dovrà eseguire il Setup\n"
-	     "nuovamente per installare ReactOS.\n"
-	     "\n"
-	     "  \x07  Premere INVIO per continuare il setup.\n"
-	     "  \x07  Premere F3 per uscire.",
-	     "F3= Uscire INVIO = Continuare"
+        "computer. Se esce adesso, dovrà eseguire il Setup\n"
+        "nuovamente per installare ReactOS.\n"
+        "\n"
+        "  \x07  Premere INVIO per continuare il setup.\n"
+        "  \x07  Premere F3 per uscire.",
+        "F3= Uscire INVIO = Continuare"
     },
     {
         //ERROR_NO_HDD
@@ -1340,21 +1340,21 @@ MUI_ERROR itITErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup ha trovato che al meno un disco fisso contiene una tabella delle\n"
-		  "partizioni incompatibile che non può essere gestita correttamente!\n"
-		  "\n"
-		  "Il creare o cancellare partizioni può distruggere la tabella delle partizioni.\n"
-		  "\n"
-		  "  \x07  Premere F3 per uscire dal Setup."
-		  "  \x07  Premere INVIO per continuare.",
-          "F3= Uscire  INVIO = Continuare"
+        "Setup ha trovato che al meno un disco fisso contiene una tabella delle\n"
+        "partizioni incompatibile che non può essere gestita correttamente!\n"
+        "\n"
+        "Il creare o cancellare partizioni può distruggere la tabella delle partizioni.\n"
+        "\n"
+        "  \x07  Premere F3 per uscire dal Setup."
+        "  \x07  Premere INVIO per continuare.",
+        "F3= Uscire  INVIO = Continuare"
     },
     {
         //ERROR_NEW_PARTITION,
         "Non si può creare una nuova partizione all'interno\n"
-		"di una partizione già esistente!\n"
-		"\n"
-		"  * Premere un tasto qualsiasi per continuare.",
+        "di una partizione già esistente!\n"
+        "\n"
+        "  * Premere un tasto qualsiasi per continuare.",
         NULL
     },
     {
@@ -1449,8 +1449,8 @@ MUI_ERROR itITErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Setup non ha trovato la sezione 'SetupData'\n"
-		 "in TXTSETUP.SIF.\n",
-		 "INVIO = Riavviare il computer"
+        "in TXTSETUP.SIF.\n",
+        "INVIO = Riavviare il computer"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1460,6 +1460,11 @@ MUI_ERROR itITErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

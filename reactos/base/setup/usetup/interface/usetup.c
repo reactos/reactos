@@ -3139,9 +3139,17 @@ RegistryPage(PINPUT_RECORD Ir)
         return QUIT_PAGE;
     }
 
+    /* Set the locale */
+    CONSOLE_SetStatusText("   Updating locale settings...");
+    if (!ProcessLocaleRegistry(LanguageList))
+    {
+        MUIDisplayError(ERROR_UPDATE_LOCALESETTINGS, Ir, POPUP_WAIT_ENTER);
+        return QUIT_PAGE;
+    }
+
     /* Update keyboard layout settings */
     CONSOLE_SetStatusText("   Updating keyboard layout settings...");
-    if (!ProcessKeyboardLayoutRegistry(LanguageList))
+    if (!ProcessKeyboardLayoutRegistry(LayoutList))
     {
         MUIDisplayError(ERROR_UPDATE_KBSETTINGS, Ir, POPUP_WAIT_ENTER);
         return QUIT_PAGE;

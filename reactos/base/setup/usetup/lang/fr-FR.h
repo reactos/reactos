@@ -1282,12 +1282,12 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS n'est pas completement installe sur votre\n"
-	     "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
-	     "lancer Setup de nouveau pour installer ReactOS.\n"
-	     "\n"
-	     "  \x07  Appuyer sur ENTER pour continuer Setup.\n"
-	     "  \x07  Appuyer sur F3 pour quitter Setup.",
-	     "F3= Quitter  ENTER = Continuer"
+        "ordinateur. Si vous quittez Setup maintenant, vous devrez\n"
+        "lancer Setup de nouveau pour installer ReactOS.\n"
+        "\n"
+        "  \x07  Appuyer sur ENTER pour continuer Setup.\n"
+        "  \x07  Appuyer sur F3 pour quitter Setup.",
+        "F3= Quitter  ENTER = Continuer"
     },
     {
         //ERROR_NO_HDD
@@ -1346,21 +1346,21 @@ MUI_ERROR frFRErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup a detecte qu'au moins un dique dur contient une table\n"
-		  "de partition incompatible qui ne peut etre prise en compte!\n"
-		  "\n"
-		  "Creer ou effacer des partitions peut detruire la table de partition.\n"
-		  "\n"
-		  "  \x07  Appuyer sur F3 pour quitter Setup."
-		  "  \x07  Appuyer sur ENTER pour continuer Setup.",
-          "F3= Quitter  ENTER = Continuer"
+        "Setup a detecte qu'au moins un dique dur contient une table\n"
+        "de partition incompatible qui ne peut etre prise en compte!\n"
+        "\n"
+        "Creer ou effacer des partitions peut detruire la table de partition.\n"
+        "\n"
+        "  \x07  Appuyer sur F3 pour quitter Setup."
+        "  \x07  Appuyer sur ENTER pour continuer Setup.",
+        "F3= Quitter  ENTER = Continuer"
     },
     {
         //ERROR_NEW_PARTITION,
         "Vous ne pouvez creer une nouvelle Partition à l'interieur\n"
-		"d'une Partition deja existante!\n"
-		"\n"
-		"  * Appuyez sur une touche pour continuer.",
+        "d'une Partition deja existante!\n"
+        "\n"
+        "  * Appuyez sur une touche pour continuer.",
         NULL
     },
     {
@@ -1455,8 +1455,8 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Setup n'a pu trouver la section 'SetupData'\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Redemarrer l'ordinateur"
+        "in TXTSETUP.SIF.\n",
+        "ENTER = Redemarrer l'ordinateur"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1466,6 +1466,11 @@ MUI_ERROR frFRErrorEntries[] =
     {
         //ERROR_ADDING_CODEPAGE,
         "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup could not set the system locale.\n"
         "ENTER = Reboot computer"
     },
     {

@@ -1276,12 +1276,12 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_NOT_INSTALLED
         "ReactOS ist nicht vollstaendig auf Ihrem System installiert.\n"
-	     "Wenn Sie das Setup jetzt beenden, muessen Sie das\n"
-	     "Setup erneut starten, um ROS zu installieren.\n"
-	     "\n"
-	     "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.\n"
-	     "  \x07  Druecken Sie F3 um das Setup zu beenden.",
-	     "F3 = Beenden  ENTER = Fortsetzen"
+        "Wenn Sie das Setup jetzt beenden, muessen Sie das\n"
+        "Setup erneut starten, um ROS zu installieren.\n"
+        "\n"
+        "  \x07  Druecken Sie ENTER um das Setup Fortzusetzen.\n"
+        "  \x07  Druecken Sie F3 um das Setup zu beenden.",
+        "F3 = Beenden  ENTER = Fortsetzen"
     },
     {
         //ERROR_NO_HDD
@@ -1340,21 +1340,21 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_WARN_PARTITION,
-          "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
-		  "welche nicht richtig verwendet werden koennen!\n"
-		  "\n"
-		  "Partitionen zu erstellen/loeschen kann die Partitionstabelle zerstoeren.\n"
-		  "\n"
-		  "  \x07  Druecken Sie F3, um das Setup zu beenden."
-		  "  \x07  Druecken Sie ENTER, um das Setup Fortzusetzen.",
-          "F3 = Beenden  ENTER = Fortsetzen"
+        "Setup hat mindestens eine Festplatte mit einer inkompatiblen Partitionstabelle\n"
+        "welche nicht richtig verwendet werden koennen!\n"
+        "\n"
+        "Partitionen zu erstellen/loeschen kann die Partitionstabelle zerstoeren.\n"
+        "\n"
+        "  \x07  Druecken Sie F3, um das Setup zu beenden."
+        "  \x07  Druecken Sie ENTER, um das Setup Fortzusetzen.",
+        "F3 = Beenden  ENTER = Fortsetzen"
     },
     {
         //ERROR_NEW_PARTITION,
         "Sie koennen keine neue Partition in einer bereits\n"
-		"vohandenen Partition erstellen!\n"
-		"\n"
-		"  * * Eine beliebige Taste zum Fortsetzen druecken.",
+        "vohandenen Partition erstellen!\n"
+        "\n"
+        "  * * Eine beliebige Taste zum Fortsetzen druecken.",
         NULL
     },
     {
@@ -1449,8 +1449,8 @@ MUI_ERROR deDEErrorEntries[] =
     {
         //ERROR_FIND_SETUPDATA,
         "Setup konnte die 'SetupData' Sektion in\n"
-		 "TXTSETUP.SIF nicht finden.\n",
-		 "ENTER = Computer neustarten"
+        "TXTSETUP.SIF nicht finden.\n",
+        "ENTER = Computer neustarten"
     },
     {
         //ERROR_WRITE_PTABLE,
@@ -1459,8 +1459,13 @@ MUI_ERROR deDEErrorEntries[] =
     },
     {
         //ERROR_ADDING_CODEPAGE,
-        "Setup failed to add codepage to registry.\n"
-        "ENTER = Reboot computer"
+        "Setup konnte den CodePage-Eintrag nicht hinzufuegen.\n"
+        "ENTER = Computer neustarten"
+    },
+    {
+        //ERROR_UPDATE_LOCALESETTINGS,
+        "Setup konnte die Systemsprache nicht einstellen.\n"
+        "ENTER = Computer neustarten"
     },
     {
         NULL,

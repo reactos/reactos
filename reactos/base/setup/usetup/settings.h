@@ -52,6 +52,9 @@ PGENERIC_LIST
 CreateLanguageList(HINF InfFile, WCHAR * DefaultLanguage); 
 
 BOOLEAN
+ProcessLocaleRegistry(PGENERIC_LIST List);
+
+BOOLEAN
 ProcessKeyboardLayoutRegistry(PGENERIC_LIST List);
 
 BOOLEAN
