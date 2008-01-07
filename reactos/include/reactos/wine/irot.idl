@@ -18,8 +18,8 @@
 
 import "wtypes.idl";
 
-cpp_quote("#define IROT_PROTSEQ {'n','c','a','l','r','p','c',0}");
-cpp_quote("#define IROT_ENDPOINT {'i','r','o','t',0}");
+cpp_quote("#define IROT_PROTSEQ {'n','c','a','l','r','p','c',0}")
+cpp_quote("#define IROT_ENDPOINT {'i','r','o','t',0}")
 
 typedef struct tagMonikerComparisonData {
         ULONG ulCntData;
@@ -51,6 +51,7 @@ interface Irot
         typedef DWORD IrotCookie;
 
         typedef handle_t IrotHandle;
+        typedef [context_handle] void *IrotContextHandle;
 
         HRESULT IrotRegister(
                 [in]  IrotHandle h,
@@ -59,11 +60,13 @@ interface Irot
                 [in]  const InterfaceData *moniker,
                 [in]  const FILETIME *time,
                 [in]  DWORD grfFlags,
-                [out] IrotCookie *cookie);
+                [out] IrotCookie *cookie,
+                [out] IrotContextHandle *ctxt_handle);
 
         HRESULT IrotRevoke(
                 [in]  IrotHandle h,
                 [in]  IrotCookie cookie,
+                [in, out] IrotContextHandle *ctxt_handle,
                 [out] PInterfaceData *object,
                 [out] PInterfaceData *moniker);
 
