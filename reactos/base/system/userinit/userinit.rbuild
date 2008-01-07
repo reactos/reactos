@@ -2,6 +2,7 @@
 <!DOCTYPE module SYSTEM "../../../tools/rbuild/project.dtd">
 <module name="userinit" type="win32gui" installbase="system32" installname="userinit.exe" unicode="yes">
 	<include base="userinit">.</include>
+	<library>wine</library>
 	<library>ntdll</library>
 	<library>kernel32</library>
 	<library>user32</library>
