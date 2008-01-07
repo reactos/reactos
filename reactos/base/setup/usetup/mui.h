@@ -25,6 +25,9 @@ typedef struct
 {
     PWCHAR LanguageID;
     PWCHAR LanguageKeyboardLayoutID;
+    PWCHAR ACPage;
+    PWCHAR OEMCPage;
+    PWCHAR MACCPage;
     PWCHAR LanguageDescriptor;
     MUI_PAGE * MuiPages;
     MUI_ERROR * MuiErrors;

@@ -44,6 +44,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000409",        /* The Language ID */
         L"00000409",        /* Default Keyboard Layout for this language */
+        L"1252",            /* ANSI Codepage */
+        L"437",             /* OEM Codepage */
+        L"10000",           /* MAC Codepage */
         L"English",         /* Language Name , not used just to make things easier when updating this file */
         enUSPages,          /* Translated page strings  */
         enUSErrorEntries    /* Translated error strings */
@@ -51,6 +54,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"0000040C",
         L"0000040C",
+        L"1252",
+        L"850",
+        L"10000",
         L"French",
         frFRPages,
         frFRErrorEntries
@@ -58,6 +64,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000407",
         L"00000407",
+        L"1252",
+        L"850",
+        L"10000",
         L"German",
         deDEPages,
         deDEErrorEntries
@@ -65,6 +74,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000408",
         L"00000409",
+        L"1253",
+        L"737",
+        L"10006",
         L"Greek",
         elGRPages,
         elGRErrorEntries
@@ -72,6 +84,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000410",
         L"00000410",
+        L"1252",
+        L"850",
+        L"10000",
         L"Italian",
         itITPages,
         itITErrorEntries
@@ -79,6 +94,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000419",
         L"00000419",
+        L"1251",
+        L"866",
+        L"10007",
         L"Russian",
         ruRUPages,
         ruRUErrorEntries
@@ -86,6 +104,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"0000040A",
         L"0000040A",
+        L"1252",
+        L"850",
+        L"10000",
         L"Spanish",
         esESPages,
         esESErrorEntries
@@ -93,6 +114,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000415",
         L"00000415",
+        L"1250",
+        L"852",
+        L"10029",
         L"Polish",
         plPLPages,
         plPLErrorEntries
@@ -100,6 +124,9 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"0000041D",
         L"0000041D",
+        L"1252",
+        L"850",
+        L"10000",
         L"Swedish",
         svSEPages,
         svSEErrorEntries
@@ -107,11 +134,16 @@ static MUI_LANGUAGE LanguageList[] =
     {
         L"00000422",
         L"00000422",
+        L"1251",
+        L"866",
+        L"10017",
         L"Ukrainian",
         ukUAPages,
         ukUAErrorEntries
     },
     {
+        NULL,
+        NULL,
         NULL,
         NULL,
         NULL
