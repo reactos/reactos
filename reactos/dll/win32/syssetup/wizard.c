@@ -801,7 +801,7 @@ RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
                        &StartupInfo,
                        &ProcessInformation))
     {
-      MessageBox(hwnd, _T("Error: failed to launch rundll32"), _T("Error"), MB_ICONERROR);
+      MessageBox(hwnd, _T("Error: failed to launch rundll32"), NULL, MB_ICONERROR);
       return FALSE;
     }
 
@@ -809,6 +809,36 @@ RunControlPanelApplet(HWND hwnd, WCHAR *lpCommandLine)
   CloseHandle(ProcessInformation.hThread);
   CloseHandle(ProcessInformation.hProcess);
   return TRUE;
+}
+
+static VOID
+WriteUserLocale(VOID)
+{
+  HKEY hKey;
+  LCID lcid;
+  TCHAR Locale[8];
+  DWORD dwDisp;
+
+  lcid = GetSystemDefaultLCID();
+
+  if (GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, (WORD*)Locale, sizeof(Locale)) == 0)
+  {
+	return;
+  }
+
+  if (RegOpenKey(HKEY_CURRENT_USER, L"Control Panel\\International", &hKey) != ERROR_SUCCESS)
+  {
+    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Control Panel\\International", 
+                       0, NULL, REG_OPTION_NON_VOLATILE,
+                       KEY_WRITE, NULL, &hKey, &dwDisp))
+	{
+	  return;
+    }
+  }
+
+  RegSetValueExW(hKey, L"Locale", 0, REG_SZ, (LPBYTE) Locale, (DWORD)(sizeof(Locale) / sizeof(TCHAR)));
+
+  RegCloseKey(hKey);
 }
 
 static INT_PTR CALLBACK
@@ -830,10 +860,9 @@ LocalePageDlgProc(HWND hwndDlg,
           /* Save pointer to the global setup data */
           SetupData = (PSETUPDATA)((LPPROPSHEETPAGE)lParam)->lParam;
           SetWindowLongPtr(hwndDlg, GWL_USERDATA, (DWORD_PTR)SetupData);
-
+          WriteUserLocale();
 
           SetKeyboardLayoutName(GetDlgItem(hwndDlg, IDC_LAYOUTTEXT));
-
         }
         break;
 
@@ -852,7 +881,7 @@ LocalePageDlgProc(HWND hwndDlg,
 
         case IDC_CUSTOMLAYOUT:
           {
-            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL main.cpl,@1"));
+            wcscpy(szBuffer, _T("rundll32.exe shell32.dll,Control_RunDLL input.dll,@1"));
             RunControlPanelApplet(hwndDlg, szBuffer);
           }
           break;
@@ -1933,8 +1962,10 @@ FinishDlgProc(HWND hwndDlg,
         break;
 
       case WM_DESTROY:
-         SetupIsActive(0);
-         return TRUE;
+         {
+           SetupIsActive(0);
+           return TRUE;
+         }
 
       case WM_TIMER:
          {
