@@ -10998,6 +10998,19 @@ NTAPI
 KdEnableDebugger(
   VOID);
 
+#if (NTDDI_VERSION >= NTDDI_WS03SP1)
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KdChangeOption(
+  IN KD_OPTION Option,
+  IN ULONG InBufferBytes OPTIONAL,
+  IN PVOID InBuffer,
+  IN ULONG OutBufferBytes OPTIONAL,
+  OUT PVOID OutBuffer,
+  OUT PULONG OutBufferNeeded OPTIONAL);
+#endif
+
 VOID
 NTAPI
 DbgBreakPoint(
