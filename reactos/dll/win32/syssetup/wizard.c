@@ -816,27 +816,26 @@ WriteUserLocale(VOID)
 {
   HKEY hKey;
   LCID lcid;
-  TCHAR Locale[8];
+  TCHAR Locale[12];
   DWORD dwDisp;
+  LONG ret = ERROR_SUCCESS;
 
   lcid = GetSystemDefaultLCID();
 
-  if (GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, (WORD*)Locale, sizeof(Locale)) == 0)
+  if (GetLocaleInfo(MAKELCID(lcid, SORT_DEFAULT), LOCALE_ILANGUAGE, (WORD*)Locale, sizeof(Locale)) != 0)
   {
-	return;
-  }
+    if (RegOpenKey(HKEY_CURRENT_USER, L"Control Panel\\International", &hKey) != ERROR_SUCCESS)
+    {
+      ret = RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Control Panel\\International", 
+                           0, NULL, REG_OPTION_NON_VOLATILE,
+                           KEY_WRITE, NULL, &hKey, &dwDisp);
+    }
 
-  if (RegOpenKey(HKEY_CURRENT_USER, L"Control Panel\\International", &hKey) != ERROR_SUCCESS)
-  {
-    if (RegCreateKeyEx(HKEY_LOCAL_MACHINE, L"Control Panel\\International", 
-                       0, NULL, REG_OPTION_NON_VOLATILE,
-                       KEY_WRITE, NULL, &hKey, &dwDisp))
-	{
-	  return;
+    if (ret == ERROR_SUCCESS)
+    {
+       RegSetValueEx(hKey, L"Locale", 0, REG_SZ, (LPBYTE)Locale, (DWORD)(lstrlen(Locale)+1));
     }
   }
-
-  RegSetValueExW(hKey, L"Locale", 0, REG_SZ, (LPBYTE) Locale, (DWORD)(sizeof(Locale) / sizeof(TCHAR)));
 
   RegCloseKey(hKey);
 }
