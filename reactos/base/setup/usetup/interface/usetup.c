@@ -3093,6 +3093,14 @@ RegistryPage(PINPUT_RECORD Ir)
       return QUIT_PAGE;
     }
 
+  /* Add codepage information to registry */
+  CONSOLE_SetStatusText("   Adding codepage information to registry...");
+  if (!AddCodePage())
+    {
+      MUIDisplayError(ERROR_ADDING_CODEPAGE, Ir, POPUP_WAIT_ENTER);
+      return QUIT_PAGE;
+    }
+
   /* Update the mounted devices list */
   SetMountedDeviceValues(PartitionList);
 

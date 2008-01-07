@@ -6,37 +6,37 @@ static MUI_ENTRY ruRULanguagePageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Language Selection.",
+        "Выбор языка",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Please choose the language used for the installation process.",
+        "\x07  Пожалуйста выберите язык используемый при установке.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  This Language will be the default language for the final system.",
+        "\x07  Этот язык будет установлен по умолчанию в установленной системе.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue  F3 = Quit",
+        "   ENTER = Продолжить  F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -52,55 +52,55 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "„®Ўа® Ї®¦ «®ў вм ў гбв ­®ўЄг ReactOS",
+        "Добро пожаловать в установку ReactOS",
         TEXT_HIGHLIGHT
     },
     {
         6,
         11,
-        "Ќ  нв®© бв ¤ЁЁ гбв ­®ўЄЁ Ўг¤гв бЄ®ЇЁа®ў ­л д ©«л ®ЇҐа жЁ®­­®© бЁбвҐ¬л ReactOS",
+        "На этой стадии установки будут скопированы файлы операционной системы ReactOS",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "­  ў и Є®¬ЇмовҐа Ё Ї®¤Ј®в®ў«Ґ­  ўв®а п бв ¤Ёп гбв ­®ўЄЁ.",
+        "на ваш компьютер и подготовлена вторая стадия установки.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Ќ ¦¬ЁвҐ ‚‚Ћ„ ¤«п гбв ­®ўЄЁ ReactOS.",
+        "\x07  Нажмите ENTER для установки ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Ќ ¦¬ЁвҐ R ¤«п ў®бв ­®ў«Ґ­Ёп ReactOS.",
+        "\x07  Нажмите R для востановления ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ќ ¦¬ЁвҐ L ¤«п Їа®б¬®ва  «ЁжҐ­§Ё®­­®Ј® б®Ј« иҐ­Ёп ReactOS",
+        "\x07  Нажмите L для просмотра лицензионного соглашения ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Ќ ¦¬ЁвҐ F3 ¤«п ўле®¤  Ё§ гбв ­®ўЄЁ ReactOS.",
+        "\x07  Нажмите F3 для выхода из установки ReactOS.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "„«п ¤®Ї®«­ЁвҐ«м­®© Ё­д®а¬ жЁЁ ® ReactOS Ї®бҐвЁвҐ:",
+        "Для дополнительной информации о ReactOS посетите:",
         TEXT_NORMAL
     },
     {
@@ -112,7 +112,7 @@ static MUI_ENTRY ruRUWelcomePageEntries[] =
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ  R = ‚®бв ­®ў«Ґ­ЁҐ F3 = ‚ле®¤",
+        "   ENTER = Продолжение  R = Востановление F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -128,85 +128,85 @@ static MUI_ENTRY ruRUIntroPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS ­ е®¤Ёвбп ў а ­­Ґ© бв ¤ЁЁ а §а Ў®вЄЁ Ё ­Ґ Ї®¤¤Ґа¦Ёў Ґв ўбҐ",
+        "ReactOS находится в ранней стадии разработки и не поддерживает все",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "дг­ЄжЁЁ ¤«п Ї®«­®© б®ў¬ҐбвЁ¬®бвЁ б гв ­ ў«Ёў Ґ¬л¬Ё ЇаЁ«®¦Ґ­Ёп¬Ё.",
+        "функции для полной совместимости с утанавливаемыми приложениями.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "€¬Ґовбп б«Ґ¤гойЁҐ ®Ја ­ЁзҐ­Ёп:",
+        "Имеются следующие ограничения:",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "- “бв ­®ўЄ  ў®§¬®¦­  в®«мЄ® ­  ЇҐаўЁз­л© а §¤Ґ« ¤ЁбЄ ",
+        "- Установка возможна только на первичный раздел диска",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "- ЏаЁ гбв ­®ўЄҐ ­Ґ«м§п г¤ «Ёвм ЇҐаўЁз­л© а §¤Ґ« ¤ЁбЄ ",
+        "- При установке нельзя удалить первичный раздел диска",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "  Ї®Є  Ё¬ҐҐвбп а биЁаҐ­­л© а §¤Ґ«.",
+        "  пока имеется расширенный раздел.",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "- ЏаЁ гбв ­®ўЄҐ ­Ґ«м§п г¤ «Ёвм ЇҐаўл© а биЁаҐ­­л© а §¤Ґ« б ¤ЁбЄ ",
+        "- При установке нельзя удалить первый расширенный раздел с диска",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "  Ї®Є  бгйҐбвўгов ¤агЈЁҐ а биЁаҐ­­лҐ а §¤Ґ«л.",
+        "  пока существуют другие расширенные разделы.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "- ЏаЁ гбв ­®ўЄҐ Ї®¤¤Ґа¦Ёў Ґвбп в®«мЄ® д ©«®ў п бЁбвҐ¬  FAT.",
+        "- При установке поддерживается только файловая система FAT.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "- Џа®ўҐаЄ  д ©«®ў®© бЁбвҐ¬л ­Ґ ®бгйҐбвў«пҐвбп.",
+        "- Проверка файловой системы не осуществляется.",
         TEXT_NORMAL
     },
     {
         8,
         23,
-        "\x07  Ќ ¦¬ЁвҐ ўў®¤ ¤«п гбв ­®ўЄЁ ReactOS.",
+        "\x07  Нажмите ENTER для установки ReactOS.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "\x07  Ќ ¦¬ЁвҐ F3 ¤«п ўле®¤  Ё§ гбв ­®ўЄЁ ReactOS.",
+        "\x07  Нажмите F3 для выхода из установки ReactOS.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ   F3 = ‚ле®¤",
+        "   ENTER = Продолжение   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -222,79 +222,79 @@ static MUI_ENTRY ruRULicensePageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         6,
-        "‹ЁжҐ­§Ёп:",
+        "Лицензия:",
         TEXT_HIGHLIGHT
     },
     {
         8,
         8,
-        "ReactOS «ЁжҐ­§Ёа®ў ­  ў б®®вўҐвбвўЁЁ б ЋвЄалвл¬ «ЁжҐ­§Ё®­­л¬",
+        "ReactOS лицензирована в соответствии с Открытым лицензионным",
         TEXT_NORMAL
     },
     {
         8,
         9,
-        "б®Ј« иҐ­ЁҐ¬ GNU GPL Ё б®¤Ґа¦Ёв Є®¬Ї®­Ґ­вл а бЇа®бва ­пҐ¬лҐ",
+        "соглашением GNU GPL и содержит компоненты распространяемые",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "б б®ў¬ҐбвЁ¬л¬Ё «ЁжҐ­§Ёп¬Ё: X11, BSD Ё GNU LGPL.",
+        "с совместимыми лицензиями: X11, BSD и GNU LGPL.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "‚бҐ Їа®Ја ¬¬­®Ґ ®ЎҐбЇҐзҐ­ЁҐ ўе®¤пйҐҐ ў бЁбвҐ¬г ReactOS ўлЇгйҐ­®",
+        "Все программное обеспечение входящее в систему ReactOS выпущено",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Ї®¤ ЋвЄалвл¬ «ЁжҐ­§Ё®­­л¬ б®Ј« иҐ­ЁҐ¬ GNU GPL б б®еа ­Ґ­ЁҐ¬",
+        "под Открытым лицензионным соглашением GNU GPL с сохранением",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "ЇҐаў®­ з «м­®© «ЁжҐ­§ЁЁ.",
+        "первоначальной лицензии.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "„ ­­®Ґ Їа®Ја ¬¬­®Ґ ®ЎҐбЇҐзҐ­ЁҐ Ї®бв ў«пҐвбп Ѓ…‡ ѓЂђЂЌ’€€ Ё ЎҐ§ ®Ја ­ЁзҐ­Ё©",
+        "Данное программное обеспечение поставляется БЕЗ ГАРАНТИИ и без ограничений",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "ў ЁбЇ®«м§®ў ­ЁЁ, Є Є ў ¬Ґбв­®¬, в Є Ё ¬Ґ¦¤г­ а®¤­®¬ Їа ўҐ.",
+        "в использовании, как в местном, так и международном праве.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "‹ЁжҐ­§Ёп ReactOS а §аҐи Ґв ЇҐаҐ¤ зг Їа®¤гЄв  ваҐвмЁ¬ «Ёж ¬.",
+        "Лицензия ReactOS разрешает передачу продукта третьим лицам.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "…б«Ё Ї® Є Є®¬-«ЁЎ® ЇаЁзЁ­ ¬ ўл ­Ґ Ї®«гзЁ«Ё Є®ЇЁо ЋвЄалв®Ј®",
+        "Если по каком-либо причинам вы не получили копию Открытого",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "«ЁжҐ­§Ё®­­®Ј® б®Ј« иҐ­Ёп GNU ў¬ҐбвҐ б ReactOS, Ї®бҐвЁвҐ",
+        "лицензионного соглашения GNU вместе с ReactOS, посетите",
         TEXT_NORMAL
     },
     {
@@ -306,31 +306,31 @@ static MUI_ENTRY ruRULicensePageEntries[] =
     {
         8,
         22,
-        "ѓ а ­вЁЁ:",
+        "Гарантии:",
         TEXT_HIGHLIGHT
     },
     {
         8,
         24,
-        "ќв® бў®Ў®¤­®Ґ Їа®Ја ¬¬­®Ґ ®ЎҐбЇҐзҐ­ЁҐ; б¬. Ёбв®з­ЁЄ ¤«п Їа®б¬®ва  Їа ў.",
+        "Это свободное программное обеспечение; см. источник для просмотра прав.",
         TEXT_NORMAL
     },
     {
         8,
         25,
-        "Ќ…’ Ќ€ЉЂЉ€• ѓЂђЂЌ’€‰; ­Ґв Ј а ­вЁЁ ’Ћ‚ЂђЌЋѓЋ ‘Ћ‘’ЋџЌ€џ Ё«Ё",
+        "НЕТ НИКАКИХ ГАРАНТИЙ; нет гарантии ТОВАРНОГО СОСТОЯНИЯ или",
         TEXT_NORMAL
     },
     {
         8,
         26,
-        "Џђ€ѓЋ„ЌЋ‘’€ „‹џ ЉЋЌЉђ…’Ќ›• –…‹…‰",
+        "ПРИГОДНОСТИ ДЛЯ КОНКРЕТНЫХ ЦЕЛЕЙ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = ‚®§ўа в",
+        "   ENTER = Возврат",
         TEXT_STATUS
     },
     {
@@ -346,84 +346,84 @@ static MUI_ENTRY ruRUDevicePageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "‚ бЇЁбЄҐ ­Ё¦Ґ ЇаЁўҐ¤Ґ­л гбва®©бвў  Ё Ёе Ї а ¬Ґвал.",
+        "В списке ниже приведены устройства и их параметры.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "       Љ®¬ЇмовҐа:",
+        "       Компьютер:",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "        ќЄа ­:",
+        "        Экран:",
         TEXT_NORMAL,
     },
     {
         8,
         13,
-        "       Љ« ўЁ вга :",
+        "       Клавиатура:",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "ђ бЄ« ¤Є  Є« ўЁ вгал:",
+        "Раскладка клавиатуры:",
         TEXT_NORMAL
     },
     {
         8,
         16,
-        "         ЏаЁ¬Ґ­Ёвм:",
+        "         Применить:",
         TEXT_NORMAL
     },
     {
         25,
-        16, "ЏаЁ¬Ґ­Ёвм ¤ ­­лҐ Ї а ¬Ґвал гбва®©бвў",
+        16, "Применить данные параметры устройств",
         TEXT_NORMAL
     },
     {
         6,
         19,
-        "‚л ¬®¦ҐвҐ Ё§¬Ґ­Ёвм Ї а ¬Ґвал гбва®©бвў ­ ¦Ё¬ п Є« ўЁиЁ ‚‚…ђ• Ё ‚Ќ€‡",
+        "Вы можете изменить параметры устройств нажимая клавиши ВВЕРХ и ВНИЗ",
         TEXT_NORMAL
     },
     {
         6,
         20,
-        "¤«п ўл¤Ґ«Ґ­Ёп н«Ґ¬Ґ­в  Ё Є« ўЁиг ‚‚Ћ„ ¤«п ўлЎ®а  ¤агЈЁе ў аЁ ­в®ў",
+        "для выделения элемента и клавишу ENTER для выбора других вариантов",
         TEXT_NORMAL
     },
     {
         6,
         21,
-        "Ї а ¬Ґва®ў.",
+        "параметров.",
         TEXT_NORMAL
     },
     {
         6,
         23,
-        "Љ®Ј¤  ўбҐ Ї а ¬Ґвал ®ЇаҐ¤Ґ«Ґ­л, ўлЎҐаЁвҐ \"ЏаЁ¬Ґ­Ёвм ¤ ­­лҐ Ї а ¬Ґвал гбва®©бвў\"",
+        "Когда все параметры определены, выберите \"Применить данные параметры устройств\"",
         TEXT_NORMAL
     },
     {
         6,
         24,
-        "Ё ­ ¦¬ЁвҐ ‚‚Ћ„.",
+        "и нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ   F3 = ‚ле®¤",
+        "   ENTER = Продолжение   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -439,55 +439,55 @@ static MUI_ENTRY ruRURepairPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "ReactOS ­ е®¤Ёвбп ў а ­­Ґ© бв ¤ЁЁ а §а Ў®вЄЁ Ё ­Ґ Ї®¤¤Ґа¦Ёў Ґв ўбҐ",
+        "ReactOS находится в ранней стадии разработки и не поддерживает все",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "дг­ЄжЁЁ ¤«п Ї®«­®© б®ў¬ҐбвЁ¬®бвЁ б гв ­ ў«Ёў Ґ¬л¬Ё ЇаЁ«®¦Ґ­Ёп¬Ё.",
+        "функции для полной совместимости с утанавливаемыми приложениями.",
         TEXT_NORMAL
     },
     {
         6,
         12,
-        "”г­ЄжЁп ў®бв ­®ў«Ґ­Ёп ў ¤ ­­л¬ ¬®¬Ґ­в ®вбгвбвўгҐв.",
+        "Функция востановления в данным момент отсутствует.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Ќ ¦¬ЁвҐ U ¤«п ®Ў­®ў«Ґ­Ёп Ћ‘.",
+        "\x07  Нажмите U для обновления ОС.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Ќ ¦¬ЁвҐ R ¤«п § ЇгбЄ  Є®­б®«Ё ў®бв ­®ў«Ґ­Ёп.",
+        "\x07  Нажмите R для запуска консоли востановления.",
         TEXT_NORMAL
     },
     {
         8,
         19,
-        "\x07  Ќ ¦¬ЁвҐ ESC ¤«п ў®§ўа в  ­  Ј« ў­го бва ­Ёжг.",
+        "\x07  Нажмите ESC для возврата на главную страницу.",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Ќ ¦¬ЁвҐ ‚‚Ћ„ ¤«п ЇҐаҐ§ Јаг§ЄЁ Є®¬ЇмовҐа .",
+        "\x07  Нажмите ENTER для перезагрузки компьютера.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ESC = ѓ« ў­ п бва ­Ёж   ‚‚Ћ„ = ЏҐаҐ§ Јаг§Є ",
+        "   ESC = Главная страница  ENTER = Перезагрузка",
         TEXT_STATUS
     },
     {
@@ -502,43 +502,43 @@ static MUI_ENTRY ruRUComputerPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "‚л е®вЁвҐ Ё§¬Ґ­Ёвм гбв ­ ў«Ёў Ґ¬л© вЁЇ Є®¬ЇмовҐа .",
+        "Вы хотите изменить устанавливаемый тип компьютера.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Ќ ¦¬ЁвҐ Є« ўЁиг ‚‚…ђ• Ё«Ё ‚Ќ€‡ ¤«п ўлЎ®а  ЇаҐ¤Ї®звЁвҐ«м­®Ј® вЁЇ  Є®¬ЇмовҐа .",
+        "\x07  Нажмите клавишу ВВЕРХ или ВНИЗ для выбора предпочтительного типа компьютера.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   ‡ вҐ¬ ­ ¦¬ЁвҐ ‚‚Ћ„.",
+        "   Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Ќ ¦¬ЁвҐ Є« ўЁиг ESC ¤«п ў®§ўа в  Є ЇаҐ¤л¤гйҐ© бва ­ЁжҐ ЎҐ§ Ё§¬Ґ­Ґ­Ёп",
+        "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   вЁЇ  Є®¬ЇмовҐа .",
+        "   типа компьютера.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ   ESC = Ћв¬Ґ­    F3 = ‚ле®¤",
+        "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -554,31 +554,31 @@ static MUI_ENTRY ruRUFlushPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "‘ЁбвҐ¬  Їа®ўҐапҐв ўбҐ «Ё ¤ ­­лҐ § ЇЁб ­л ­  ¤ЁбЄ",
+        "Система проверяет все ли данные записаны на диск",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "ќв® ¬®¦Ґв § ­пвм ¬Ё­гвг",
+        "Это может занять минуту",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "Џ®б«Ґ § ўҐаиҐ­Ёп Є®¬ЇмовҐа Ўг¤Ґв  ўв®¬ вЁзҐбЄЁ ЇҐаҐ§ Јаг¦Ґ­",
+        "После завершения компьютер будет автоматически перезагружен",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ЋзЁбвЄ  ЄҐи ",
+        "   Очистка кеша",
         TEXT_STATUS
     },
     {
@@ -594,37 +594,37 @@ static MUI_ENTRY ruRUQuitPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "ReactOS гбв ­®ў«Ґ­ ­Ґ Ї®«­®бвмо",
+        "ReactOS установлен не полностью",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "€§ў«ҐЄЁвҐ ЈЁЎЄЁ© ¤ЁбЄ Ё§ ¤ЁбЄ®ў®¤  A: Ё",
+        "Извлеките гибкий диск из дисковода A: и",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "ўбҐ CD-ROM Ё§ CD-¤ЁбЄ®ў®¤®ў.",
+        "все CD-ROM из CD-дисководов.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Ќ ¦¬ЁвҐ ‚‚Ћ„ ¤«п ЇҐаҐ§ Јаг§ЄЁ Є®¬ЇмовҐа .",
+        "Нажмите ENTER для перезагрузки компьютера.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Џ®¦ «г©бв  Ї®¤®¦¤ЁвҐ ...",
+        "   Пожалуйста подождите ...",
         TEXT_STATUS,
     },
     {
@@ -640,42 +640,42 @@ static MUI_ENTRY ruRUDisplayPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "‚л е®вЁвҐ Ё§¬Ґ­Ёвм гбв ­ ў«Ёў Ґ¬л© вЁЇ нЄа ­ .",
+        "Вы хотите изменить устанавливаемый тип экрана.",
         TEXT_NORMAL
     },
     {   8,
         10,
-         "\x07  Ќ ¦¬ЁвҐ Є« ўЁиЁ ‚‚Ћђ• Ё«Ё ‚Ќ€‡ ¤«п ўлЎ®а  вЁЇ  нЄа ­ .",
+         "\x07  Нажмите клавиши ВВОРХ или ВНИЗ для выбора типа экрана.",
          TEXT_NORMAL
     },
     {
         8,
         11,
-        "   ‡ вҐ¬ ­ ¦¬ЁвҐ ‚‚Ћ„.",
+        "   Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Ќ ¦¬ЁвҐ Є« ўЁиг ESC ¤«п ў®§ўа в  Є ЇаҐ¤л¤гйҐ© бва ­ЁжҐ ЎҐ§ Ё§¬Ґ­Ґ­Ёп",
+        "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   вЁЇ  нЄа ­ .",
+        "   типа экрана.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ   ESC = Ћв¬Ґ­    F3 = ‚ле®¤",
+        "   ENTER = Продолжение   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -691,37 +691,37 @@ static MUI_ENTRY ruRUSuccessPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         10,
         6,
-        "Ћб­®ў­лҐ Є®¬Ї®­Ґ­вл ReactOS Ўл«Ё гбЇҐи­® гбв ­®ў«Ґ­л.",
+        "Основные компоненты ReactOS были успешно установлены.",
         TEXT_NORMAL
     },
     {
         10,
         8,
-        "€§ў«ҐЄЁвҐ ЈЁЎЄЁ© ¤ЁбЄ Ё§ ¤ЁбЄ®ў®¤  A: Ё",
+        "Извлеките гибкий диск из дисковода A: и",
         TEXT_NORMAL
     },
     {
         10,
         9,
-        "ўбҐ CD-ROM Ё§ CD-¤ЁбЄ®ў®¤®ў.",
+        "все CD-ROM из CD-дисководов.",
         TEXT_NORMAL
     },
     {
         10,
         11,
-        "Ќ ¦¬ЁвҐ ‚‚Ћ„ ¤«п ЇҐаҐ§ Јаг§ЄЁ Є®¬ЇмовҐа .",
+        "Нажмите ENTER для перезагрузки компьютера.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = ЏҐаҐ§ Јаг§Ёвм Є®¬ЇмовҐа",
+        "   ENTER = Перезагрузить компьютер",
         TEXT_STATUS
     },
     {
@@ -737,37 +737,37 @@ static MUI_ENTRY ruRUBootPageEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Џа®Ја ¬¬  гбв ­®ўЄЁ ­Ґ б¬®Ј«  гбв ­®ўЁвм § Јаг§зЁЄ ­ ",
+        "Программа установки не смогла установить загрузчик на",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "¦ҐбвЄЁ© ¤ЁбЄ ў иҐЈ® Є®¬ЇмовҐа .",
+        "жесткий диск вашего компьютера.",
         TEXT_NORMAL
     },
     {
         6,
         13,
-        "Џ®¦ «г©бв  ўбв ўвҐ ®вд®а¬ вЁа®ў ­­л© ЈЁЎЄЁ© ¤ЁбЄ ў ¤ЁбЄ®ў®¤ A: Ё",
+        "Пожалуйста вставте отформатированный гибкий диск в дисковод A: и",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "­ ¦¬ЁвҐ ‚‚Ћ„.",
+        "нажмите ENTER.",
         TEXT_NORMAL,
     },
     {
         0,
         0,
-        "   ‚‚Ћ„ = Џа®¤®«¦Ґ­ЁҐ   F3 = ‚ле®¤",
+        "   ENTER = Продолжение   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -784,49 +784,49 @@ static MUI_ENTRY ruRUSelectPartitionEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "The list below shows existing partitions and unused disk",
+        "В списке ниже показаны существующие разделы и неиспользуемое пространство",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "space for new partitions.",
+        "для нового раздела.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "\x07  Press UP or DOWN to select a list entry.",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора элемента.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press ENTER to install ReactOS onto the selected partition.",
+        "\x07  Нажмите ENTER для установки ReactOS на выделенный раздел.",
         TEXT_NORMAL
     },
     {
         8,
         15,
-        "\x07  Press C to create a new partition.",
+        "\x07  Нажмите C для создания нового раздела.",
         TEXT_NORMAL
     },
     {
         8,
         17,
-        "\x07  Press D to delete an existing partition.",
+        "\x07  Нажмите D для удаления существующего раздела.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Please wait...",
+        "   Пожалуйста подождите...",
         TEXT_STATUS
     },
     {
@@ -842,25 +842,25 @@ static MUI_ENTRY ruRUFormatPartitionEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Format partition",
+        "Форматирование раздела",
         TEXT_NORMAL
     },
     {
         6,
         10,
-        "Setup will now format the partition. Press ENTER to continue.",
+        "Для установки раздел будет отформатирован. Нажмите ENTER для продолжения.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Продолжение   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -876,43 +876,43 @@ static MUI_ENTRY ruRUInstallDirectoryEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Setup installs ReactOS files onto the selected partition. Choose a",
+        "Установка файлов ReactOS на выбранный раздел. Выберите директорию",
         TEXT_NORMAL
     },
     {
         6,
         9,
-        "directory where you want ReactOS to be installed:",
+        "в которую будет установлена система:",
         TEXT_NORMAL
     },
     {
         6,
         14,
-        "To change the suggested directory, press BACKSPACE to delete",
+        "Чтобы изменить выбранную директорию нажмите BACKSPACE и удалите символы,",
         TEXT_NORMAL
     },
     {
         6,
         15,
-        "characters and then type the directory where you want ReactOS to",
+        "а за тем наберите новое имя директории для установки ReactOS",
         TEXT_NORMAL
     },
     {
         6,
         16,
-        "be installed.",
+        " ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Продолжить   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -928,31 +928,31 @@ static MUI_ENTRY ruRUFileCopyEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         11,
         12,
-        "Please wait while ReactOS Setup copies files to your ReactOS",
+        "Пожалуйста подождите пока программа установки скопирует файлы ReactOS",
         TEXT_NORMAL
     },
     {
         30,
         13,
-        "installation folder.",
+        "в установочную директорию.",
         TEXT_NORMAL
     },
     {
         20,
         14,
-        "This may take several minutes to complete.",
+        "Это может занять несколько минут.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "                                                           \xB3 Please wait...    ",
+        "                                                           \xB3 Пожалуйста подождите...    ",
         TEXT_STATUS
     },
     {
@@ -968,37 +968,37 @@ static MUI_ENTRY ruRUBootLoaderEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is installing the boot loader",
+        "Установка загрузчика ReactOS",
         TEXT_NORMAL
     },
     {
         8,
         12,
-        "Install bootloader on the harddisk (MBR).",
+        "Установка на жесткий диск (MBR).",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "Install bootloader on a floppy disk.",
+        "Установка на гибкий диск.",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "Skip install bootloader.",
+        "Не устанавливать загрузчик.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   F3 = Quit",
+        "   ENTER = Продолжить   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -1014,43 +1014,43 @@ static MUI_ENTRY ruRUKeyboardSettingsEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the type of keyboard to be installed.",
+        "Изменение типа клавиатуры.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard type.",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужного типа клавиатуры.",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "   Then press ENTER.",
+        "   Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без изменения",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard type.",
+        "   типа клавиатуры.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -1066,43 +1066,43 @@ static MUI_ENTRY ruRULayoutSettingsEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "You want to change the keyboard layout to be installed.",
+        "Выбор устанавливаемой раскладки клавиатуры.",
         TEXT_NORMAL
     },
     {
         8,
         10,
-        "\x07  Press the UP or DOWN key to select the desired keyboard",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора нужной раскладки",
         TEXT_NORMAL
     },
     {
         8,
         11,
-        "    layout. Then press ENTER.",
+        "    клавиатуры. Затем нажмите ENTER.",
         TEXT_NORMAL
     },
     {
         8,
         13,
-        "\x07  Press the ESC key to return to the previous page without changing",
+        "\x07  Нажмите клавишу ESC для возврата к предыдущей странице без",
         TEXT_NORMAL
     },
     {
         8,
         14,
-        "   the keyboard layout.",
+        "   изменения раскладки клавиатуры.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -1119,19 +1119,19 @@ static MUI_ENTRY ruRUPrepareCopyEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Setup prepares your computer for copying the ReactOS files. ",
+        "Подготовка вашего компьютера к копированию файлов ReactOS. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Building the file copy list...",
+        "   Подготовка списка копируемых файлов...",
         TEXT_STATUS
     },
     {
@@ -1148,37 +1148,37 @@ static MUI_ENTRY ruRUSelectFSEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         17,
-        "Select a file system from the list below.",
+        "Выберите файловую систему из списка ниже.",
         0
     },
     {
         8,
         19,
-        "\x07  Press UP or DOWN to select a file system.",
+        "\x07  Нажмите ВВЕРХ или ВНИЗ для выбора файловой системы.",
         0
     },
     {
         8,
         21,
-        "\x07  Press ENTER to format the partition.",
+        "\x07  Нажмите ENTER для форматирования раздела.",
         0
     },
     {
         8,
         23,
-        "\x07  Press ESC to select another partition.",
+        "\x07  Нажмите ESC для выбора другого раздела.",
         0
     },
     {
         0,
         0,
-        "   ENTER = Continue   ESC = Cancel   F3 = Quit",
+        "   ENTER = Продолжить   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
 
@@ -1195,37 +1195,37 @@ static MUI_ENTRY ruRUDeletePartitionEntries[] =
     {
         4,
         3,
-        " “бв ­®ўЄ  ReactOS " KERNEL_VERSION_STR " ",
+        " Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "You have chosen to delete the partition",
+        "Вы выбрали удаление раздела.",
         TEXT_NORMAL
     },
     {
         8,
         18,
-        "\x07  Press D to delete the partition.",
+        "\x07  Нажмите D для удаления раздела.",
         TEXT_NORMAL
     },
     {
         11,
         19,
-        "WARNING: All data on this partition will be lost!",
+        "ВНИМАНИЕ: Все данные с этого раздела будут потеряны!",
         TEXT_NORMAL
     },
     {
         8,
         21,
-        "\x07  Press ESC to cancel.",
+        "\x07  Нажмите ESC для отмены.",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   D = Delete Partition   ESC = Cancel   F3 = Quit",
+        "   D = Удалить раздел   ESC = Отмена   F3 = Выход",
         TEXT_STATUS
     },
     {
@@ -1241,19 +1241,19 @@ static MUI_ENTRY ruRURegistryEntries[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        "Установка ReactOS " KERNEL_VERSION_STR " ",
         TEXT_UNDERLINE
     },
     {
         6,
         8,
-        "Setup is updating the system configuration. ",
+        "Программа установки обновляет конфигурацию системы. ",
         TEXT_NORMAL
     },
     {
         0,
         0,
-        "   Creating registry hives...",
+        "   Создание кустов системного реестра...",
         TEXT_STATUS
     },
     {
@@ -1269,68 +1269,68 @@ MUI_ERROR ruRUErrorEntries[] =
 {
     {
         //ERROR_NOT_INSTALLED
-        "ReactOS is not completely installed on your\n"
-	     "computer. If you quit Setup now, you will need to\n"
-	     "run Setup again to install ReactOS.\n"
-	     "\n"
-	     "  \x07  Press ENTER to continue Setup.\n"
-	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue"
+        "ReactOS не был полностью установлен на ваш\n"
+	     "компьютер. Если вы выйдите из установки сейчас,\n"
+	     "то вам нужно запустить программу установки снова,\n"
+	     "если вы хотите установить ReactOS\n"
+	     "  \x07  Нажмите ENTER для продолжения установки.\n"
+	     "  \x07  Нажмите F3 выхода из установки.",
+	     "F3 = Выход  ENTER = Продолжить"
     },
     {
         //ERROR_NO_HDD
-        "Setup could not find a harddisk.\n",
-        "ENTER = Reboot computer"
+        "Не удалось найти жесткий диск.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_NO_SOURCE_DRIVE
-        "Setup could not find its source drive.\n",
-        "ENTER = Reboot computer"
+        "Не удалось найти установочный диск.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_LOAD_TXTSETUPSIF
-        "Setup failed to load the file TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Не удалось загрузить файл TXTSETUP.SIF.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CORRUPT_TXTSETUPSIF
         "Setup found a corrupt TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_SIGNATURE_TXTSETUPSIF,
         "Setup found an invalid signature in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_DRIVE_INFORMATION
         "Setup could not retrieve system drive information.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_WRITE_BOOT,
         "Setup failed to install FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_LOAD_COMPUTER,
-        "Setup failed to load the computer type list.\n",
-        "ENTER = Reboot computer"
+        "Не удалось загрузить список типов компьютера.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_LOAD_DISPLAY,
-        "Setup failed to load the display settings list.\n",
-        "ENTER = Reboot computer"
+        "Не удалось загрузить список режимов экрана.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_LOAD_KEYBOARD,
-        "Setup failed to load the keyboard type list.\n",
-        "ENTER = Reboot computer"
+        "Не удалось загрузить список типов клавиатуры.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_LOAD_KBLAYOUT,
-        "Setup failed to load the keyboard layout list.\n",
-        "ENTER = Reboot computer"
+        "Не удалось загрузить список раскладок клавиатуры.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_WARN_PARTITION,
@@ -1339,116 +1339,121 @@ MUI_ERROR ruRUErrorEntries[] =
 		  "\n"
 		  "Creating or deleting partitions can destroy the partiton table.\n"
 		  "\n"
-		  "  \x07  Press F3 to quit Setup."
-		  "  \x07  Press ENTER to continue.",
-          "F3= Quit  ENTER = Continue"
+		  "  \x07  Нажмите F3 для выхода из установки."
+		  "  \x07  Нажмите ENTER для продолжения.",
+          "F3 = Выход  ENTER = Продолжить"
     },
     {
         //ERROR_NEW_PARTITION,
         "You can not create a new Partition inside\n"
 		"of an already existing Partition!\n"
 		"\n"
-		"  * Press any key to continue.",
+		"  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_DELETE_SPACE,
         "You can not delete unpartitioned disk space!\n"
         "\n"
-        "  * Press any key to continue.",
+        "  * Нажмите любую клавишу для продолжения.",
         NULL
     },
     {
         //ERROR_INSTALL_BOOTCODE,
         "Setup failed to install the FAT bootcode on the system partition.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_NO_FLOPPY,
-        "No disk in drive A:.",
-        "ENTER = Continue"
+        "Нет диска в дисководе A:.",
+        "ENTER = Продолжить"
     },
     {
         //ERROR_UPDATE_KBSETTINGS,
         "Setup failed to update keyboard layout settings.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_UPDATE_DISPLAY_SETTINGS,
         "Setup failed to update display registry settings.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_IMPORT_HIVE,
         "Setup failed to import a hive file.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_FIND_REGISTRY
         "Setup failed to find the registry data files.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CREATE_HIVE,
         "Setup failed to create the registry hives.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_INITIALIZE_REGISTRY,
         "Setup failed to set the initialize the registry.",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_INVALID_CABINET_INF,
         "Cabinet has no valid inf file.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CABINET_MISSING,
-        "Cabinet not found.\n",
-        "ENTER = Reboot computer"
+        "Cabinet не найден.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CABINET_SCRIPT,
-        "Cabinet has no setup script.\n",
-        "ENTER = Reboot computer"
+        "Cabinet не смог найти установочный скрипт.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_COPY_QUEUE,
         "Setup failed to open the copy file queue.\n",
-        "ENTER = Reboot computer"
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CREATE_DIR,
-        "Setup could not create install directories.",
-        "ENTER = Reboot computer"
+        "Не удалось создать установочные директории.",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_TXTSETUP_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in TXTSETUP.SIF.\n",
-        "ENTER = Reboot computer"
+        "Не удалось найти секцию 'Directories'\n"
+        "в файле TXTSETUP.SIF.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CABINET_SECTION,
-        "Setup failed to find the 'Directories' section\n"
-        "in the cabinet.\n",
-        "ENTER = Reboot computer"
+        "Не удалось найти секцию 'Directories'\n"
+        "в cabinet.\n",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_CREATE_INSTALL_DIR
-        "Setup could not create the install directory.",
-        "ENTER = Reboot computer"
+        "Не удалось создать директорию для установки.",
+        "ENTER = Перезагрузка"
     },
     {
         //ERROR_FIND_SETUPDATA,
-        "Setup failed to find the 'SetupData' section\n"
-		 "in TXTSETUP.SIF.\n",
-		 "ENTER = Reboot computer"
+        "Не удалось найти секцию 'SetupData'\n"
+		 "в файле TXTSETUP.SIF.\n",
+		 "ENTER = Перезагрузка"
     },
     {
         //ERROR_WRITE_PTABLE,
-        "Setup failed to write partition tables.\n"
+        "Не удалось записать таблицу разделов.\n"
+        "ENTER = Перезагрузка"
+    },
+    {
+        //ERROR_ADDING_CODEPAGE,
+        "Setup failed to add codepage to registry.\n"
         "ENTER = Reboot computer"
     },
     {
@@ -1457,6 +1462,7 @@ MUI_ERROR ruRUErrorEntries[] =
     }
 };
 
+
 MUI_PAGE ruRUPages[] =
 {
     {
@@ -1464,8 +1470,8 @@ MUI_PAGE ruRUPages[] =
         ruRULanguagePageEntries
     },
     {
-       START_PAGE,
-       ruRUWelcomePageEntries
+        START_PAGE,
+        ruRUWelcomePageEntries
     },
     {
         INSTALL_INTRO_PAGE,

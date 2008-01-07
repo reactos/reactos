@@ -53,5 +53,8 @@ MUIDisplayError (ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent);
 VOID
 MUIDefaultKeyboardLayout(WCHAR * KeyboardLayout);
 
+BOOLEAN
+AddCodePage(VOID);
+
 
 #endif

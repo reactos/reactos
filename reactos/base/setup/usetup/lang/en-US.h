@@ -1275,7 +1275,7 @@ MUI_ERROR enUSErrorEntries[] =
 	     "\n"
 	     "  \x07  Press ENTER to continue Setup.\n"
 	     "  \x07  Press F3 to quit Setup.",
-	     "F3= Quit  ENTER = Continue"
+	     "F3 = Quit  ENTER = Continue"
     },
     {
         //ERROR_NO_HDD
@@ -1449,6 +1449,11 @@ MUI_ERROR enUSErrorEntries[] =
     {
         //ERROR_WRITE_PTABLE,
         "Setup failed to write partition tables.\n"
+        "ENTER = Reboot computer"
+    },
+    {
+        //ERROR_ADDING_CODEPAGE,
+        "Setup failed to add codepage to registry.\n"
         "ENTER = Reboot computer"
     },
     {

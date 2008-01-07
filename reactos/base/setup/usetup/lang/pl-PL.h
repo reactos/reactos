@@ -1460,6 +1460,11 @@ MUI_ERROR plPLErrorEntries[] =
         "ENTER = Restart komputera"
     },
     {
+        //ERROR_ADDING_CODEPAGE,
+        "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }

@@ -821,7 +821,7 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 			  0,
 			  REG_SZ,
 			  (PVOID)(LanguageId + 4),
-			  8);
+			  8 * sizeof(PWCHAR));
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
@@ -837,7 +837,7 @@ ProcessKeyboardLayoutRegistry(PGENERIC_LIST List)
 			  0,
 			  REG_SZ,
 			  (PVOID)(LanguageId + 4),
-			  8);
+			  8 * sizeof(PWCHAR));
   if (!NT_SUCCESS(Status))
     {
       DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);

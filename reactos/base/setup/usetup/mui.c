@@ -28,6 +28,9 @@
 #include "errorcode.h"
 #include "mui.h"
 
+#define NDEBUG
+#include <debug.h>
+
 #include "lang/en-US.h"
 #include "lang/de-DE.h"
 #include "lang/el-GR.h"
@@ -306,6 +309,101 @@ MUIDisplayError(ULONG ErrorNum, PINPUT_RECORD Ir, ULONG WaitEvent)
                entry[ErrorNum].ErrorStatus,
                Ir,
                WaitEvent);
+}
+
+static BOOLEAN
+AddCodepageToRegistry(PWCHAR ACPage, PWCHAR OEMCPage, PWCHAR MACCPage)
+{
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    UNICODE_STRING KeyName;
+    UNICODE_STRING ValueName;
+    HANDLE KeyHandle;
+    NTSTATUS Status;
+
+    // Open the nls codepage key
+    RtlInitUnicodeString(&KeyName,
+		                 L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage");
+    InitializeObjectAttributes(&ObjectAttributes,
+			                   &KeyName,
+			                   OBJ_CASE_INSENSITIVE,
+			                   NULL,
+			                   NULL);
+    Status =  NtOpenKey(&KeyHandle,
+		                KEY_ALL_ACCESS,
+		                &ObjectAttributes);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtOpenKey() failed (Status %lx)\n", Status);
+        return FALSE;
+    }
+
+    // Set ANSI codepage
+    RtlInitUnicodeString(&ValueName, L"ACP");
+    Status = NtSetValueKey(KeyHandle,
+			                &ValueName,
+			                0,
+			                REG_SZ,
+			                (PVOID)ACPage,
+			                4 * sizeof(PWCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    // Set OEM codepage
+    RtlInitUnicodeString(&ValueName, L"OEMCP");
+    Status = NtSetValueKey(KeyHandle,
+			               &ValueName,
+			               0,
+			               REG_SZ,
+			               (PVOID)OEMCPage,
+			               3 * sizeof(PWCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    // Set MAC codepage
+    RtlInitUnicodeString(&ValueName, L"MACCP");
+    Status = NtSetValueKey(KeyHandle,
+			               &ValueName,
+			               0,
+			               REG_SZ,
+			               (PVOID)MACCPage,
+			               5 * sizeof(PWCHAR));
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtSetValueKey() failed (Status %lx)\n", Status);
+        NtClose(KeyHandle);
+        return FALSE;
+    }
+
+    NtClose(KeyHandle);
+
+    return TRUE;
+}
+
+BOOLEAN
+AddCodePage(VOID)
+{
+    ULONG lngIndex = 0;
+    do
+    {
+        if (_wcsicmp(LanguageList[lngIndex].LanguageID , SelectedLanguageId) == 0)
+        {
+            return AddCodepageToRegistry(LanguageList[lngIndex].ACPage,
+                                         LanguageList[lngIndex].OEMCPage,
+                                         LanguageList[lngIndex].MACCPage);
+        }
+
+        lngIndex++;
+    }
+    while (LanguageList[lngIndex].MuiPages != NULL);
+	return FALSE;
 }
 
 /* EOF */

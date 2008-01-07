@@ -1452,6 +1452,11 @@ MUI_ERROR ukUAErrorEntries[] =
         "ENTER = Reboot computer"
     },
     {
+        //ERROR_ADDING_CODEPAGE,
+        "Setup failed to add codepage to registry.\n"
+        "ENTER = Reboot computer"
+    },
+    {
         NULL,
         NULL
     }
