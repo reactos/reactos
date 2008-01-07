@@ -575,10 +575,10 @@ NotifyLogon(VOID)
 #endif /* _MSC_VER */
 
 int WINAPI
-WinMain(IN HINSTANCE hInst,
-        IN HINSTANCE hPrevInstance,
-        IN LPSTR lpszCmdLine,
-        IN int nCmdShow)
+wWinMain(IN HINSTANCE hInst,
+         IN HINSTANCE hPrevInstance,
+         IN LPWSTR lpszCmdLine,
+         IN int nCmdShow)
 {
     NotifyLogon();
     SetUserSettings();
