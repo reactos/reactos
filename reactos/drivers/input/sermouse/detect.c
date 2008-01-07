@@ -141,14 +141,14 @@ SermouseDetectLegacyDevice(
 	if (!NT_SUCCESS(Status)) return mtNone;
 
 	/* Reset UART */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Reset UART\n");
 	Mcr = 0; /* MCR: DTR/RTS/OUT2 off */
 	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Mcr, sizeof(Mcr), NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Set communications parameters */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Set communications parameters\n");
 	/* DLAB off */
 	Fcr = 0;
 	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_FIFO_CONTROL,
@@ -168,7 +168,7 @@ SermouseDetectLegacyDevice(
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Flush receive buffer */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Flush receive buffer\n");
 	Command = SERIAL_PURGE_RXCLEAR;
 	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_MODEM_CONTROL,
 		&Command, sizeof(Command), NULL, NULL);
@@ -177,7 +177,7 @@ SermouseDetectLegacyDevice(
 	Wait(100);
 
 	/* Enable DTR/RTS */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Enable DTR/RTS\n");
 	Status = DeviceIoControl(LowerDevice, IOCTL_SERIAL_SET_DTR,
 		NULL, 0, NULL, NULL);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
@@ -186,7 +186,7 @@ SermouseDetectLegacyDevice(
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Set timeout to 500 microseconds */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Set timeout to 500 microseconds\n");
 	Timeouts.ReadIntervalTimeout = 100;
 	Timeouts.ReadTotalTimeoutMultiplier = 0;
 	Timeouts.ReadTotalTimeoutConstant = 500;
@@ -196,7 +196,7 @@ SermouseDetectLegacyDevice(
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 
 	/* Fill the read buffer */
-	CHECKPOINT;
+	TRACE_(SERMOUSE, "Fill the read buffer\n");
 	Status = ReadBytes(LowerDevice, Buffer, sizeof(Buffer)/sizeof(Buffer[0]), &Count);
 	if (!NT_SUCCESS(Status)) goto ByeBye;
 

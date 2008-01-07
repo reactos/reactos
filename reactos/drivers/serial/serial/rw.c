@@ -227,8 +227,8 @@ SerialRead(
 		return STATUS_PENDING;
 	}
 
-	/* insufficient resources, we can't pend the Irp */
-	CHECKPOINT;
+	/* Insufficient resources, we can't pend the Irp */
+	INFO_(SERIAL, "Insufficient resources\n");
 	Status = IoAcquireRemoveLock(&DeviceExtension->RemoveLock, ULongToPtr(DeviceExtension->ComPort));
 	if (!NT_SUCCESS(Status))
 	{

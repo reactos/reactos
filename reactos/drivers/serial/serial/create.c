@@ -24,7 +24,7 @@ SerialCreate(
 
 	if (Stack->Parameters.Create.Options & FILE_DIRECTORY_FILE)
 	{
-		CHECKPOINT;
+		INFO_(SERIAL, "Not a directory\n");
 		Status = STATUS_NOT_A_DIRECTORY;
 		goto ByeBye;
 	}

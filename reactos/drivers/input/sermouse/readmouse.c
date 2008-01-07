@@ -149,8 +149,8 @@ SermouseDeviceWorker(
 			&ioStatus);
 		if (!Irp)
 		{
-			/* no memory actually, try later */
-			CHECKPOINT;
+			/* No memory actually, try later */
+			INFO_(SERMOUSE, "No memory actually, trying again\n");
 			KeStallExecutionProcessor(10);
 			continue;
 		}
