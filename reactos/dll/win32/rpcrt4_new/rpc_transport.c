@@ -90,7 +90,7 @@ typedef struct _RpcConnection_np
 {
   RpcConnection common;
   HANDLE pipe;
-  OVERLAPPED ovl;
+  OVERLAPPED ovl[2];
   BOOL listening;
 } RpcConnection_np;
 
@@ -112,11 +112,11 @@ static RPC_STATUS rpcrt4_conn_listen_pipe(RpcConnection_np *npc)
     return RPC_S_OK;
 
   npc->listening = TRUE;
-  if (ConnectNamedPipe(npc->pipe, &npc->ovl))
+  if (ConnectNamedPipe(npc->pipe, &npc->ovl[0]))
     return RPC_S_OK;
 
   if (GetLastError() == ERROR_PIPE_CONNECTED) {
-    SetEvent(npc->ovl.hEvent);
+    SetEvent(npc->ovl[0].hEvent);
     return RPC_S_OK;
   }
   if (GetLastError() == ERROR_IO_PENDING) {
@@ -146,7 +146,8 @@ static RPC_STATUS rpcrt4_conn_create_pipe(RpcConnection *Connection, LPCSTR pnam
   }
 
   memset(&npc->ovl, 0, sizeof(npc->ovl));
-  npc->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+  npc->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+  npc->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
 
   /* Note: we don't call ConnectNamedPipe here because it must be done in the
    * server thread as the thread must be alertable */
@@ -209,7 +210,9 @@ static RPC_STATUS rpcrt4_conn_open_pipe(RpcConnection *Connection, LPCSTR pname,
   /* pipe is connected; change to message-read mode. */
   dwMode = PIPE_READMODE_MESSAGE;
   SetNamedPipeHandleState(pipe, &dwMode, NULL, NULL);
-  npc->ovl.hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+  npc->ovl[0].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+  npc->ovl[1].hEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+
   npc->pipe = pipe;
 
   return RPC_S_OK;
@@ -315,7 +318,8 @@ static void rpcrt4_conn_np_handoff(RpcConnection_np *old_npc, RpcConnection_np *
    * to the child, then reopen the server binding to continue listening */
 
   new_npc->pipe = old_npc->pipe;
-  new_npc->ovl = old_npc->ovl;
+  new_npc->ovl[0] = old_npc->ovl[0];
+  new_npc->ovl[1] = old_npc->ovl[1];
   old_npc->pipe = 0;
   memset(&old_npc->ovl, 0, sizeof(old_npc->ovl));
   old_npc->listening = FALSE;
@@ -366,9 +370,14 @@ static int rpcrt4_conn_np_read(RpcConnection *Connection,
   while (bytes_left)
   {
     DWORD bytes_read;
-    ret = ReadFile(npc->pipe, buf, bytes_left, &bytes_read, NULL);
-    if (!ret || !bytes_read)
+    ret = ReadFile(npc->pipe, buf, bytes_left, &bytes_read, &npc->ovl[0]);
+    if ((!ret || !bytes_read) && (GetLastError() != ERROR_IO_PENDING))
         break;
+
+    ret = GetOverlappedResult(npc->pipe, &npc->ovl[0], &bytes_read, TRUE);
+    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
+        break;
+
     bytes_left -= bytes_read;
     buf += bytes_read;
   }
@@ -386,9 +395,14 @@ static int rpcrt4_conn_np_write(RpcConnection *Connection,
   while (bytes_left)
   {
     DWORD bytes_written;
-    ret = WriteFile(npc->pipe, buf, count, &bytes_written, NULL);
-    if (!ret || !bytes_written)
+    ret = WriteFile(npc->pipe, buf, count, &bytes_written, &npc->ovl[1]);
+    if ((!ret || !bytes_written) && (GetLastError() != ERROR_IO_PENDING))
         break;
+
+    ret = GetOverlappedResult(npc->pipe, &npc->ovl[1], &bytes_written, TRUE);
+    if (!ret /*&& GetLastError() != ERROR_MORE_DATA*/)
+        break;
+
     bytes_left -= bytes_written;
     buf += bytes_written;
   }
@@ -403,10 +417,15 @@ static int rpcrt4_conn_np_close(RpcConnection *Connection)
     CloseHandle(npc->pipe);
     npc->pipe = 0;
   }
-  if (npc->ovl.hEvent) {
-    CloseHandle(npc->ovl.hEvent);
-    npc->ovl.hEvent = 0;
+  if (npc->ovl[0].hEvent) {
+    CloseHandle(npc->ovl[0].hEvent);
+    npc->ovl[0].hEvent = 0;
   }
+  if (npc->ovl[1].hEvent) {
+    CloseHandle(npc->ovl[1].hEvent);
+    npc->ovl[1].hEvent = 0;
+  }
+
   return 0;
 }
 
@@ -554,7 +573,7 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
     while (conn) {
         rpcrt4_conn_listen_pipe(conn);
-        if (conn->ovl.hEvent)
+        if (conn->ovl[0].hEvent)
             (*count)++;
         conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
     }
@@ -575,7 +594,7 @@ static void *rpcrt4_protseq_np_get_wait_array(RpcServerProtseq *protseq, void *p
     *count = 1;
     conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
     while (conn) {
-        if ((objs[*count] = conn->ovl.hEvent))
+        if ((objs[*count] = conn->ovl[0].hEvent))
             (*count)++;
         conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
     }
@@ -622,7 +641,7 @@ static int rpcrt4_protseq_np_wait_for_new_connection(RpcServerProtseq *protseq, 
         EnterCriticalSection(&protseq->cs);
         conn = CONTAINING_RECORD(protseq->conn, RpcConnection_np, common);
         while (conn) {
-            if (b_handle == conn->ovl.hEvent) break;
+            if (b_handle == conn->ovl[0].hEvent) break;
             conn = CONTAINING_RECORD(conn->common.Next, RpcConnection_np, common);
         }
         cconn = NULL;
