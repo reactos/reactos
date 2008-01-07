@@ -15,8 +15,8 @@
 
 extern ULONG NtMajorVersion;
 extern ULONG NtMinorVersion;
-extern ULONG NtOSCSDVersion;
-extern ULONG NtGlobalFlag;
+extern ULONG CmNtCSDVersion;
+extern ULONG NtBuildNumber;
 extern MM_SYSTEMSIZE MmSystemSize;
 
 #define MM_HIGHEST_VAD_ADDRESS \
@@ -40,7 +40,7 @@ MmSetMemoryPriorityProcess(IN PEPROCESS Process,
     }
 
     /* Save the old priority and update it */
-    OldPriority = Process->Vm.Flags.MemoryPriority;
+    OldPriority = (UCHAR)Process->Vm.Flags.MemoryPriority;
     Process->Vm.Flags.MemoryPriority = MemoryPriority;
 
     /* Return the old priority */
@@ -166,7 +166,7 @@ MmDeleteTeb(PEPROCESS Process,
 
     /* Lock the Address Space */
     MmLockAddressSpace(ProcessAddressSpace);
-    
+
     MemoryArea = MmLocateMemoryAreaByAddress(ProcessAddressSpace, (PVOID)Teb);
     if (MemoryArea)
     {
@@ -180,7 +180,8 @@ MmDeleteTeb(PEPROCESS Process,
 
 PVOID
 STDCALL
-MmCreateKernelStack(BOOLEAN GuiStack)
+MmCreateKernelStack(BOOLEAN GuiStack,
+                    UCHAR Node)
 {
     PMEMORY_AREA StackArea;
     ULONG i;
@@ -241,8 +242,9 @@ MmCreateKernelStack(BOOLEAN GuiStack)
         KEBUGCHECK(0);
     }
 
-    /* Return the stack */
-    return KernelStack;
+    /* Return the stack base */
+    return (PVOID)((ULONG_PTR)KernelStack +
+                   (GuiStack ? KERNEL_LARGE_STACK_SIZE : KERNEL_STACK_SIZE));
 }
 
 /*
@@ -258,7 +260,7 @@ MmGrowKernelStack(PVOID StackPointer)
     ASSERT(((PCHAR)Thread->Tcb.StackBase - (PCHAR)Thread->Tcb.StackLimit) <=
            (KERNEL_LARGE_STACK_SIZE + PAGE_SIZE));
 
-    /* 
+    /*
      * We'll give you three more pages.
      * NOTE: See note in MmCreateKernelStack. These pages are already being reserved.
      * It would be more efficient to only grow them (commit them) here.
@@ -329,9 +331,9 @@ MmCreatePeb(PEPROCESS Process)
     /* Default Version Data (could get changed below) */
     Peb->OSMajorVersion = NtMajorVersion;
     Peb->OSMinorVersion = NtMinorVersion;
-    Peb->OSBuildNumber = 2195;
+    Peb->OSBuildNumber = (USHORT)(NtBuildNumber & 0x3FFF);
     Peb->OSPlatformId = 2; /* VER_PLATFORM_WIN32_NT */
-    Peb->OSCSDVersion = NtOSCSDVersion;
+    Peb->OSCSDVersion = (USHORT)CmNtCSDVersion;
 
     /* Heap and Debug Data */
     Peb->NumberOfProcessors = KeNumberProcessors;
@@ -463,6 +465,11 @@ MmCreateTeb(PEPROCESS Process,
         Teb->DeallocationStack = InitialTeb->AllocatedStackBase;
     }
 
+    /* Initialize the static unicode string */
+    Teb->StaticUnicodeString.Length = 0;
+    Teb->StaticUnicodeString.MaximumLength = sizeof(Teb->StaticUnicodeBuffer);
+    Teb->StaticUnicodeString.Buffer = Teb->StaticUnicodeBuffer;
+
     /* Return TEB Address */
     DPRINT("Allocated: %x\n", Teb);
     if (Attached) KeDetachProcess();
@@ -470,10 +477,37 @@ MmCreateTeb(PEPROCESS Process,
 }
 
 NTSTATUS
-STDCALL
-MmCreateProcessAddressSpace(IN PEPROCESS Process,
-                            IN PROS_SECTION_OBJECT Section OPTIONAL,
-                            IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
+NTAPI
+MmInitializeHandBuiltProcess2(IN PEPROCESS Process)
+{
+    PVOID BaseAddress;
+    PMEMORY_AREA MemoryArea;
+    PHYSICAL_ADDRESS BoundaryAddressMultiple;
+    NTSTATUS Status;
+    PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
+    BoundaryAddressMultiple.QuadPart = 0;
+
+    /* Create the shared data page */
+    BaseAddress = (PVOID)USER_SHARED_DATA;
+    Status = MmCreateMemoryArea(ProcessAddressSpace,
+                                MEMORY_AREA_SHARED_DATA,
+                                &BaseAddress,
+                                PAGE_SIZE,
+                                PAGE_EXECUTE_READ,
+                                &MemoryArea,
+                                FALSE,
+                                0,
+                                BoundaryAddressMultiple);
+    return Status;
+}
+
+NTSTATUS
+NTAPI
+MmInitializeProcessAddressSpace(IN PEPROCESS Process,
+                                IN PEPROCESS ProcessClone OPTIONAL,
+                                IN PVOID Section OPTIONAL,
+                                IN OUT PULONG Flags,
+                                IN POBJECT_NAME_INFORMATION *AuditName OPTIONAL)
 {
     NTSTATUS Status;
     PMADDRESS_SPACE ProcessAddressSpace = (PMADDRESS_SPACE)&Process->VadRoot;
@@ -482,6 +516,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     PHYSICAL_ADDRESS BoundaryAddressMultiple;
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
+    PROS_SECTION_OBJECT SectionObject = Section;
     BoundaryAddressMultiple.QuadPart = 0;
 
     /* Initialize the Addresss Space */
@@ -545,7 +580,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
     Process->HasAddressSpace = TRUE;
 
     /* Check if there's a Section Object */
-    if (Section)
+    if (SectionObject)
     {
         UNICODE_STRING FileName;
         PWCHAR szSrc;
@@ -557,7 +592,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         MmUnlockAddressSpace(ProcessAddressSpace);
 
         DPRINT("Mapping process image. Section: %p, Process: %p, ImageBase: %p\n",
-                 Section, Process, &ImageBase);
+                 SectionObject, Process, &ImageBase);
         Status = MmMapViewOfSection(Section,
                                     (PEPROCESS)Process,
                                     (PVOID*)&ImageBase,
@@ -579,7 +614,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
 
         /* Determine the image file name and save it to EPROCESS */
         DPRINT("Getting Image name\n");
-        FileName = Section->FileObject->FileName;
+        FileName = SectionObject->FileObject->FileName;
         szSrc = (PWCHAR)(FileName.Buffer + FileName.Length);
         while (szSrc >= FileName.Buffer)
         {
@@ -607,7 +642,7 @@ MmCreateProcessAddressSpace(IN PEPROCESS Process,
         if (AuditName)
         {
             /* Setup the audit name */
-            SeInitializeProcessAuditName(Section->FileObject,
+            SeInitializeProcessAuditName(SectionObject->FileObject,
                                          FALSE,
                                          AuditName);
         }
@@ -632,7 +667,7 @@ MmCleanProcessAddressSpace(IN PEPROCESS Process)
     /* FIXME: Add part of MmDeleteProcessAddressSpace here */
 }
 
-NTSTATUS 
+NTSTATUS
 NTAPI
 MmDeleteProcessAddressSpace(PEPROCESS Process)
 {

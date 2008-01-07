@@ -994,11 +994,11 @@ MmspNotPresentFaultPhysMemSectionView(PMADDRESS_SPACE AddressSpace,
     * Just map the desired physical page
     */
    Pfn = (Offset + MemoryArea->Data.SectionData.ViewOffset) >> PAGE_SHIFT;
-   Status = MmCreateVirtualMapping(AddressSpace->Process,
-                                   Address,
-                                   Region->Protect,
-                                   &Pfn,
-                                   1);
+   Status = MmCreateVirtualMappingUnsafe(AddressSpace->Process,
+                                         Address,
+                                         Region->Protect,
+                                         &Pfn,
+                                         1);
    if (!NT_SUCCESS(Status))
    {
       DPRINT("MmCreateVirtualMapping failed, not out of memory\n");
@@ -5597,7 +5597,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
       CHECKPOINT1;
       return STATUS_INVALID_PAGE_PROTECTION;
    }
-
 
    Section = (PROS_SECTION_OBJECT)SectionObject;
    AddressSpace = (PMADDRESS_SPACE)&(Process)->VadRoot;
