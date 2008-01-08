@@ -2202,8 +2202,8 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
                 IN ULONG ProcessHandleCount,
                 IN ULONG SystemHandleCount)
 {
-   DPRINT("MmpCloseSection(OB %x, HC %d) RC %d\n",
-          Object, ProcessHandleCount, ObGetObjectPointerCount(Object));
+   DPRINT("MmpCloseSection(OB %x, HC %d)\n",
+          Object, ProcessHandleCount);
 }
 
 NTSTATUS
