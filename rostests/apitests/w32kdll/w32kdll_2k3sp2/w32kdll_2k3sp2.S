@@ -4649,15 +4649,15 @@ _NtGdiDrawStream@12:
     call *(%ecx)
     ret $0xc
 
-.global _UMPDDrvQuerySpoolType@8
-_UMPDDrvQuerySpoolType@8:
+.global _NtGdiMakeObjectXferable@8
+_NtGdiMakeObjectXferable@8:
     movl $0x1297, %eax
     movl $KUSER_SHARED_SYSCALL, %ecx
     call *(%ecx)
     ret $0x8
 
-.global _DefaultHTCallBack@4
-_DefaultHTCallBack@4:
+.global _NtGdiMakeObjectUnXferable@4
+_NtGdiMakeObjectUnXferable@4:
     movl $0x1298, %eax
     movl $KUSER_SHARED_SYSCALL, %ecx
     call *(%ecx)

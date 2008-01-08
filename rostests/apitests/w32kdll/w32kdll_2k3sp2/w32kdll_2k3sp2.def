@@ -670,5 +670,5 @@ NtGdiSetPUMPDOBJ@16
 NtGdiBRUSHOBJ_DeleteRbrush@8
 NtGdiUMPDEngFreeUserMem@4
 NtGdiDrawStream@12
-UMPDDrvQuerySpoolType@8
-DefaultHTCallBack@4
+NtGdiMakeObjectXferable@8
+NtGdiMakeObjectUnXferable@4
