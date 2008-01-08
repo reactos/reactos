@@ -3027,8 +3027,11 @@ static INT HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr)
     /*
      * HACK peek at the buffer
      */
+#if 0
+    /* This is Wine code, we don't support MSG_PEEK yet so we have to do it
+       a bit different */
     NETCON_recv(&lpwhr->netConnection, buffer, buflen, MSG_PEEK, &rc);
-
+#endif
     /*
      * We should first receive 'HTTP/1.x nnn OK' where nnn is the status code.
      */
@@ -3036,6 +3039,9 @@ static INT HTTP_GetResponseHeaders(LPWININETHTTPREQW lpwhr)
     memset(buffer, 0, MAX_REPLY_LEN);
     if (!NETCON_getNextLine(&lpwhr->netConnection, bufferA, &buflen))
         goto lend;
+#if 1
+    rc = buflen;
+#endif
     MultiByteToWideChar( CP_ACP, 0, bufferA, buflen, buffer, MAX_REPLY_LEN );
 
     /* regenerate raw headers */
