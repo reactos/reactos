@@ -173,7 +173,7 @@ NtGdiExtEscape(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return -1;
    }
-   if ( pDC->IsIC )
+   if ( pDC->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(pDC);
       return 0;

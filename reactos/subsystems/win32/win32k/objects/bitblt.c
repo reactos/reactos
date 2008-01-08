@@ -58,7 +58,7 @@ NtGdiAlphaBlend(
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
-	if (DCDest->IsIC)
+	if (DCDest->DC_Type == DC_TYPE_INFO)
 	{
 		DC_UnlockDc(DCDest);
 		/* Yes, Windows really returns TRUE in this case */
@@ -75,7 +75,7 @@ NtGdiAlphaBlend(
 			SetLastWin32Error(ERROR_INVALID_HANDLE);
 			return FALSE;
 		}
-		if (DCSrc->IsIC)
+		if (DCSrc->DC_Type == DC_TYPE_INFO)
 		{
 			DC_UnlockDc(DCSrc);
 			DC_UnlockDc(DCDest);
@@ -204,7 +204,7 @@ NtGdiBitBlt(
 		DPRINT("Invalid destination dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCDest);
 		return FALSE;
 	}
-	if (DCDest->IsIC)
+	if (DCDest->DC_Type == DC_TYPE_INFO)
 	{
 		DC_UnlockDc(DCDest);
 		/* Yes, Windows really returns TRUE in this case */
@@ -222,7 +222,7 @@ NtGdiBitBlt(
 				DPRINT("Invalid source dc handle (0x%08x) passed to NtGdiBitBlt\n", hDCSrc);
 				return FALSE;
 			}
-			if (DCSrc->IsIC)
+			if (DCSrc->DC_Type == DC_TYPE_INFO)
 			{
 				DC_UnlockDc(DCSrc);
 				DC_UnlockDc(DCDest);
@@ -424,7 +424,7 @@ NtGdiTransparentBlt(
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (DCDest->IsIC)
+  if (DCDest->DC_Type == DC_TYPE_INFO)
   {
     DC_UnlockDc(DCDest);
     /* Yes, Windows really returns TRUE in this case */
@@ -442,7 +442,7 @@ NtGdiTransparentBlt(
   {
     DCSrc = DCDest;
   }
-  if (DCSrc->IsIC)
+  if (DCSrc->DC_Type == DC_TYPE_INFO)
   {
     DC_UnlockDc(DCSrc);
     if(hdcDst != hdcSrc)
@@ -814,7 +814,7 @@ NtGdiStretchBlt(
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return FALSE;
 	}
-	if (DCDest->IsIC)
+	if (DCDest->DC_Type == DC_TYPE_INFO)
 	{
 		DC_UnlockDc(DCDest);
 		/* Yes, Windows really returns TRUE in this case */
@@ -833,7 +833,7 @@ NtGdiStretchBlt(
 				SetLastWin32Error(ERROR_INVALID_HANDLE);
 				return FALSE;
 			}
-			if (DCSrc->IsIC)
+			if (DCSrc->DC_Type == DC_TYPE_INFO)
 			{
 				DC_UnlockDc(DCSrc);
 				DC_UnlockDc(DCDest);
@@ -1103,7 +1103,7 @@ IntGdiPolyPatBlt(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return FALSE;
    }
-   if (dc->IsIC)
+   if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */
@@ -1155,7 +1155,7 @@ NtGdiPatBlt(
    }
    Dc_Attr = dc->pDc_Attr;
    if(!Dc_Attr) Dc_Attr = &dc->Dc_Attr;
-   if (dc->IsIC)
+   if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       /* Yes, Windows really returns TRUE in this case */

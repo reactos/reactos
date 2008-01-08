@@ -5,12 +5,8 @@
 #include "driver.h"
 
   /* DC flags */
-#define DC_MEMORY     0x0001   /* It is a memory DC */
 #define DC_SAVED      0x0002   /* It is a saved DC */
 #define DC_DIRTY      0x0004   /* hVisRgn has to be updated */
-#define DC_THUNKHOOK  0x0008   /* DC hook is in the 16-bit code */
-
-#define  GDI_DC_TYPE  (1)
 
 // GDIDEVICE flags
 #define PDEV_DISPLAY             0x00000001 // Display device

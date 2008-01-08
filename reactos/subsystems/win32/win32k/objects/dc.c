@@ -62,7 +62,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
-  INT DC_Type = DC_TYPE_DIRECT;
 
   DisplayDC = NULL;
   if (hDC == NULL)
@@ -74,7 +73,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
           return NULL;
         }
       hDC = DisplayDC;
-      DC_Type = DC_TYPE_MEMORY; // Null hDC == Memory DC.
     }
 
   /*  Allocate a new DC based on the original DC's device  */
@@ -106,8 +104,6 @@ NtGdiCreateCompatibleDC(HDC hDC)
 
   /* Copy information from original DC to new DC  */
   NewDC->hSelf = hNewDC;
-  NewDC->IsIC = FALSE;
-  NewDC->DC_Type = DC_Type;
 
   NewDC->PDev = OrigDC->PDev;
 
@@ -131,7 +127,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
         }
       return NULL;
     }
-  NewDC->w.flags        = DC_MEMORY;
+  NewDC->DC_Type        = DC_TYPE_MEMORY; // Always!
   NewDC->w.hBitmap      = hBitmap;
   NewDC->w.hFirstBitmap = hBitmap;
   NewDC->pPDev          = OrigDC->pPDev;
@@ -802,7 +798,6 @@ IntGdiCreateDC(PUNICODE_STRING Driver,
   if(!nDc_Attr) nDc_Attr = &NewDC->Dc_Attr;
 
   NewDC->DC_Type = DC_TYPE_DIRECT;
-  NewDC->IsIC = CreateAsIC;
 
   NewDC->PDev = PrimarySurface.hPDev;
   if(pUMdhpdev) pUMdhpdev = NewDC->PDev; // set DHPDEV for device.
@@ -974,7 +969,7 @@ IntGdiDeleteDC(HDC hDC, BOOL Force)
     NtGdiSelectBrush (DCHandle, STOCK_WHITE_BRUSH);
     NtGdiSelectFont (DCHandle, STOCK_SYSTEM_FONT);
     DC_LockDC (DCHandle); NtGdiSelectXxx does not recognize stock objects yet  */
-    if (DCToDelete->w.flags & DC_MEMORY)
+    if (DCToDelete->DC_Type == DC_TYPE_MEMORY)
     {
       NtGdiDeleteObject (DCToDelete->w.hFirstBitmap);
     }
@@ -1256,7 +1251,7 @@ IntGdiCopyToSaveState(PDC dc, PDC newdc)
   nDc_Attr->szlViewportExt  = Dc_Attr->szlViewportExt;
 
   newdc->saveLevel = 0;
-  newdc->IsIC = dc->IsIC;
+  newdc->DC_Type = dc->DC_Type;
 
 #if 0
   PATH_InitGdiPath( &newdc->w.path );
@@ -1330,7 +1325,7 @@ IntGdiCopyFromSaveState(PDC dc, PDC dcs, HDC hDC)
   Dc_Attr->szlViewportExt  = sDc_Attr->szlViewportExt;
   dc->PalIndexed           = dcs->PalIndexed;
 
-  if (!(dc->w.flags & DC_MEMORY))
+  if (dc->DC_Type != DC_TYPE_MEMORY)
   {
      dc->w.bitsPerPixel = dcs->w.bitsPerPixel;
   }
@@ -1928,7 +1923,7 @@ NtGdiSelectBitmap(
     if(!pDc_Attr) pDc_Attr = &pDC->Dc_Attr;
 
     /* must be memory dc to select bitmap */
-    if (!(pDC->w.flags & DC_MEMORY))
+    if (pDC->DC_Type != DC_TYPE_MEMORY)
     {
         DC_UnlockDc(pDC);
         return NULL;

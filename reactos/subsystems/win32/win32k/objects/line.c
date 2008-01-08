@@ -393,7 +393,7 @@ NtGdiLineTo(HDC  hDC,
     SetLastWin32Error(ERROR_INVALID_HANDLE);
     return FALSE;
   }
-  if (dc->IsIC)
+  if (dc->DC_Type == DC_TYPE_INFO)
   {
     DC_UnlockDc(dc);
     /* Yes, Windows really returns TRUE in this case */

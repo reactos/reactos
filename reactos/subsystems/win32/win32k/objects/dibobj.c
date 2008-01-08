@@ -33,7 +33,7 @@ IntSetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, CONST RGBQUAD *Color
    UINT Index;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
-   if (dc->IsIC)
+   if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       return 0;
@@ -91,7 +91,7 @@ IntGetDIBColorTable(HDC hDC, UINT StartIndex, UINT Entries, RGBQUAD *Colors)
    UINT Index;
 
    if (!(dc = DC_LockDc(hDC))) return 0;
-   if (dc->IsIC)
+   if (dc->DC_Type == DC_TYPE_INFO)
    {
       DC_UnlockDc(dc);
       return 0;
@@ -297,7 +297,7 @@ NtGdiSetDIBits(
       SetLastWin32Error(ERROR_INVALID_HANDLE);
       return 0;
     }
-  if (Dc->IsIC)
+  if (Dc->DC_Type == DC_TYPE_INFO)
     {
       DC_UnlockDc(Dc);
       return 0;
@@ -351,7 +351,7 @@ NtGdiSetDIBitsToDeviceInternal(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return 0;
     }
-    if (pDC->IsIC)
+    if (pDC->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(pDC);
         return 0;
@@ -466,7 +466,7 @@ NtGdiGetDIBitsInternal(HDC hDC,
     /* Get handle for the palette in DC. */
     Dc = DC_LockDc(hDC);
     if (Dc == NULL) return 0;
-    if (Dc->IsIC)
+    if (Dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(Dc);
         return 0;

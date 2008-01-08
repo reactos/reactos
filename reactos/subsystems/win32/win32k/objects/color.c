@@ -548,7 +548,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   // The RealizePalette function modifies the palette for the device associated with the specified device context. If the
   // device context is a memory DC, the color table for the bitmap selected into the DC is modified. If the device
   // context is a display DC, the physical palette for that device is modified.
-  if(dc->w.flags == DC_MEMORY)
+  if(dc->DC_Type == DC_TYPE_MEMORY)
   {
     // Memory managed DC
 	ASSERT(sysGDI->NumColors <= 256);
@@ -571,7 +571,7 @@ UINT FASTCALL IntGdiRealizePalette(HDC hDC)
   PALETTE_UnlockPalette(palGDI);
 
   // Step 3: Create the XLATEOBJ for device managed DCs
-  if(dc->w.flags != DC_MEMORY)
+  if(dc->DC_Type != DC_TYPE_MEMORY)
   {
     // Device managed DC
     palGDI->logicalToSystem = IntEngCreateXlate(sysMode, palMode, systemPalette, dc->w.hPalette);

@@ -226,7 +226,7 @@ NtGdiEllipse(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->IsIC)
+    if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -665,7 +665,7 @@ NtGdiPie(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->IsIC)
+    if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -861,7 +861,7 @@ NtGdiPolyPolyDraw( IN HDC hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->IsIC)
+    if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -1155,7 +1155,7 @@ NtGdiRectangle(HDC  hDC,
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->IsIC)
+    if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -1461,7 +1461,7 @@ NtGdiRoundRect(
         DPRINT1("NtGdiRoundRect() - hDC is invalid\n");
         SetLastWin32Error(ERROR_INVALID_HANDLE);
     }
-    else if (dc->IsIC)
+    else if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */
@@ -1599,7 +1599,7 @@ NtGdiGradientFill(
         SetLastWin32Error(ERROR_INVALID_HANDLE);
         return FALSE;
     }
-    if (dc->IsIC)
+    if (dc->DC_Type == DC_TYPE_INFO)
     {
         DC_UnlockDc(dc);
         /* Yes, Windows really returns TRUE in this case */

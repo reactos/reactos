@@ -257,7 +257,7 @@ NtGdiGetPixel(HDC hDC, INT XPos, INT YPos)
 		SetLastWin32Error(ERROR_INVALID_HANDLE);
 		return Result;
 	}
-	if (dc->IsIC)
+	if (dc->DC_Type == DC_TYPE_INFO)
 	{
 		DC_UnlockDc(dc);
 		return Result;

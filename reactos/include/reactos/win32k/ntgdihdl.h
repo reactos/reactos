@@ -394,7 +394,6 @@ typedef struct _DC
 
   INT         saveLevel; // DCLEVEL lSaveDepth
   HDC         hSelf;  // DCLEVEL hdcSave Used only for MemoryDC & SaveDC.
-  BOOL        IsIC;      // Use DC_Type
 
   HPALETTE    PalIndexed;
 
