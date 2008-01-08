@@ -746,46 +746,46 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Enter this router's IP address on the remote network or if you expect the remote router to provide the address, leave as 0.0.0.0. Usually the operator of the remote network or router will tell you what to use.", 1331, 5, 4, 308, 35
-	LTEXT "My &IP address:", 1332, 4, 51, 100, 8, NOT WS_GROUP
+	LTEXT "Введіть IP-адресу цього маршрутизатора в віддаленій мережі або залиште нульову адресу (0.0.0.0), якщо її повинен надати віддалений маршрутизатор. Необхідні відомості можна отримати від оператора віддаленої мережі або маршрутизатора.", 1331, 5, 4, 308, 35
+	LTEXT "&Моя IP-адреса:", 1332, 4, 51, 100, 8, NOT WS_GROUP
 	CONTROL "", 1330, "RASIPADDRESS", WS_TABSTOP, 21, 62, 104, 12
-	LTEXT "Note: If you have a network adapter installed, you should NOT choose the same address as your network adapter.", 1333, 5, 94, 306, 36, NOT WS_GROUP
+	LTEXT "Примітка: якщо установлено мережну плату, НЕ СЛІД використовувати ту саму адресу, що й у вашої мережної плати.", 1333, 5, 94, 306, 36, NOT WS_GROUP
 END
 
 172 DIALOG 6, 18, 317, 144
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Some dial-up servers and routers require an interactive login after connecting. You can run a script automatically to respond for you.", 1339, 5, 3, 309, 27
-	AUTOCHECKBOX "Show &terminal window", 1462, 15, 31, 162, 10
-	AUTOCHECKBOX "&Run script:", 1463, 15, 45, 58, 10
+	LTEXT "Деякі сервери й маршрутизатори віддаленого доступу після з'єднання потребують від користувача ввійти до них. Для автоматичного вводу інформації можна використовувати сценарії.", 1339, 5, 3, 309, 27
+	AUTOCHECKBOX "&Показати вікно термінала", 1462, 15, 31, 162, 10
+	AUTOCHECKBOX "&Сценарій:", 1463, 15, 45, 58, 10
 	COMBOBOX 1334, 30, 60, 275, 88, CBS_DROPDOWN | CBS_AUTOHSCROLL | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "&Edit...", 1335, 180, 77, 60, 14
-	PUSHBUTTON "&Browse...", 1465, 244, 77, 60, 14
+	PUSHBUTTON "З&мінити...", 1335, 180, 77, 60, 14
+	PUSHBUTTON "О&гляд...", 1465, 244, 77, 60, 14
 END
 
 173 DIALOGEX 6, 18, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Dialing"
+CAPTION "Набір номера"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Dialing policy", 1344, 9, 4, 213, 53, WS_GROUP
-	LTEXT "&Number of redial attempts:", 1349, 16, 22, 140, 8, NOT WS_GROUP
+	GROUPBOX "Політика набору номера", 1344, 9, 4, 213, 53, WS_GROUP
+	LTEXT "&Кількість спроб повторного набору:", 1349, 16, 22, 140, 8, NOT WS_GROUP
 	EDITTEXT 1340, 158, 19, 56, 14, ES_AUTOHSCROLL
-	LTEXT "&Seconds between redial attempts:", 1351, 16, 38, 140, 8, NOT WS_GROUP
+	LTEXT "Інтервал між спробам&и набору (с):", 1351, 16, 38, 140, 8, NOT WS_GROUP
 	EDITTEXT 1342, 158, 36, 56, 14, ES_AUTOHSCROLL
-	GROUPBOX "Connection type", 1343, 9, 63, 213, 56, WS_GROUP
-	LTEXT "Idl&e seconds before hanging up:", 1350, 28, 88, 124, 8, NOT WS_GROUP
-	AUTORADIOBUTTON "&Demand dial connection", 1347, 16, 78, 135, 10, WS_GROUP
-	AUTORADIOBUTTON "&Persistent connection", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
+	GROUPBOX "Тип підключення", 1343, 9, 63, 213, 56, WS_GROUP
+	LTEXT "&Час простою до роз'єднання (с):", 1350, 28, 88, 124, 8, NOT WS_GROUP
+	AUTORADIOBUTTON "Підкл&ючення на вимогу", 1347, 16, 78, 135, 10, WS_GROUP
+	AUTORADIOBUTTON "&Постійне підключення", 1348, 16, 103, 199, 10, NOT WS_TABSTOP, WS_EX_TRANSPARENT
 	EDITTEXT 1341, 159, 85, 56, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "&Callback...", 1345, 150, 125, 70, 14, WS_GROUP
-	PUSHBUTTON "&Multiple Lines...", 1346, 74, 125, 70, 14
+	PUSHBUTTON "&Відповідний виклик...", 1345, 150, 125, 70, 14, WS_GROUP
+	PUSHBUTTON "&Декілька ліній...", 1346, 74, 125, 70, 14
 END
 
 174 DIALOG 0, 0, 215, 226
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Router"
+CAPTION "Маршрутизатор"
 FONT 8, "MS Shell Dlg"
 BEGIN
  CTEXT "NYI...need spec from KCrocker", -1, 57, 86, 106, 28
@@ -795,74 +795,74 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Completing the demand dial interface wizard.", 1352, 122, 5, 192, 32
-	LTEXT "To create this interface and enable it on the router, click Finish.", 1354, 122, 41, 192, 26, NOT WS_GROUP
-	LTEXT "To edit this interface in the Routing and RemoteAccess Manager, select it in Routing Interfaces and press Properties.", 1355, 122, 68, 190, 39, NOT WS_GROUP
+	LTEXT "Завершення роботи майстра інтерфейсу виклику на вимогу.", 1352, 122, 5, 192, 32
+	LTEXT "Щоб створити цей інтерфейс і підключити його до маршрутизатора, натисніть кнопку ""Готово"".", 1354, 122, 41, 192, 26, NOT WS_GROUP
+	LTEXT "Щоб змінити цей інтерфейс за допомогою диспетчера маршрутизації та віддаленого доступу, виберіть його серед інтерфейсів маршрутизатора й натисніть кнопку ""Властивості"".", 1355, 122, 68, 190, 39, NOT WS_GROUP
 END
 
 179 DIALOG 6, 18, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the &modem or adapter this interface will use.", 1356, 7, 4, 306, 11
+	LTEXT "&Виберіть модем або адаптер, який використовуватиметься цим інтерфейсом.", 1356, 7, 4, 306, 11
 	CONTROL "", 1355, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C415, 6, 15, 305, 80
-	LTEXT "The list shows devices set up for routing.", 1357, 15, 98, 288, 37, NOT WS_GROUP
+	LTEXT "У цьому списку наведені пристрої, вибрані для маршрутизації.", 1357, 15, 98, 288, 37, NOT WS_GROUP
 END
 
 180 DIALOG 6, 18, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Enter the phone number of the dial-up server or router you are calling. Alternate phone numbers, if any, are dialed automatically if the primary number cannot be reached.", 1360, 7, 4, 305, 42
-	LTEXT "&Phone number or address:", 1361, 7, 50, 275, 8, NOT WS_GROUP
+	LTEXT "Введіть номер телефону сервера або маршрутизатора віддаленого доступу, який слід викликати. Якщо перший номер виявиться недоступним, буде автоматично продовжено набір додаткових номерів, якщо вони є.", 1360, 7, 4, 305, 42
+	LTEXT "&Номер телефону або адреса:", 1361, 7, 50, 275, 8, NOT WS_GROUP
 	EDITTEXT 1358, 7, 62, 304, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "Alternates...", 1359, 250, 80, 60, 14
+	PUSHBUTTON "Інші...", 1359, 250, 80, 60, 14
 END
 
 181 DIALOG 6, 18, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_VISIBLE | WS_CAPTION
-CAPTION "Security"
+CAPTION "Безпека"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Authentication and encryption policy", 1367, 6, 8, 216, 103, WS_GROUP
-	AUTORADIOBUTTON "A&ccept any authentication including clear text", 1370, 16, 20, 195, 10, BS_TOP | BS_MULTILINE
-	AUTORADIOBUTTON "Acc&ept only encrypted authentication", 1373, 16, 36, 195, 10, BS_TOP | BS_MULTILINE
-	AUTORADIOBUTTON "Accept &only MS encrypted authentication", 1374, 16, 52, 195, 10, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "&Require data encryption", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTOCHECKBOX "Require &strong data encryption", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Use t&wo-way authentication", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
-	PUSHBUTTON "&Unsave Password", 1369, 59, 117, 80, 14, WS_GROUP
-	PUSHBUTTON "Ad&vanced...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
-	AUTOCHECKBOX "&Detect file and print sharing before dialing", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
+	GROUPBOX "Політика перевірки автентичності й шифрування", 1367, 6, 8, 216, 103, WS_GROUP
+	AUTORADIOBUTTON "Дозволити будь-яку &перевірку автентичності, включаючи відкритий текст", 1370, 16, 20, 195, 10, BS_TOP | BS_MULTILINE
+	AUTORADIOBUTTON "До&зволити лише шифровану перевірку автентичності", 1373, 16, 36, 195, 10, BS_TOP | BS_MULTILINE
+	AUTORADIOBUTTON "Дозволити лиш&е перевірку автентичності з шифруванням MS", 1374, 16, 52, 195, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Вимага&ти шифрування даних", 1363, 27, 65, 184, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Вимагати стійкого шифрування даних", 1364, 41, 80, 172, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Дво&бічна перевірка автентичності", 1362, 17, 95, 194, 10, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "В&идалити збережений пароль", 1369, 59, 117, 80, 14, WS_GROUP
+	PUSHBUTTON "&Додатково...", 1368, 142, 117, 80, 14, NOT WS_VISIBLE | WS_DISABLED
+	AUTOCHECKBOX "Виявляти спільні файли й при&нтери до установки зв'язку", 1365, 7, 198, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_VISIBLE | WS_DISABLED
 END
 
 182 DIALOG 6, 18, 248, 148
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "Security"
+CAPTION "Безпека"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Authentication and encryption policy", 1367, 7, 8, 200, 98, WS_GROUP
-	AUTORADIOBUTTON "Accept any authentication including &clear text", 1370, 14, 24, 183, 10
-	AUTORADIOBUTTON "Accept only &encrypted authentication", 1373, 14, 39, 183, 10
-	AUTORADIOBUTTON "Accept only &MS encrypted authentication", 1374, 14, 53, 184, 10
-	AUTOCHECKBOX "Require &data encryption", 1363, 33, 67, 165, 10, WS_GROUP
-	AUTOCHECKBOX "Require &strong data encryption", 1364, 48, 79, 152, 10
-	AUTOCHECKBOX "&Use current username and password ", 1366, 31, 91, 165, 10
-	PUSHBUTTON "Unsave &password", 1369, 6, 114, 100, 14, WS_GROUP
-	PUSHBUTTON "&Advanced...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
-	AUTOCHECKBOX "Detect &file and print sharing before dialing", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
+	GROUPBOX "Політика перевірки автентичності й шифрування", 1367, 7, 8, 200, 98, WS_GROUP
+	AUTORADIOBUTTON "Дозволити будь-яку &перевірку автентичності, включаючи відкритий текст", 1370, 14, 24, 183, 10
+	AUTORADIOBUTTON "Дозволити лише &шифровану перевірку автентичності", 1373, 14, 39, 183, 10
+	AUTORADIOBUTTON "Дозволити лиш&е перевірку автентичності з шифруванням MS", 1374, 14, 53, 184, 10
+	AUTOCHECKBOX "Вимага&ти шифрування даних", 1363, 33, 67, 165, 10, WS_GROUP
+	AUTOCHECKBOX "&Вимагати стійкого шифрування даних", 1364, 48, 79, 152, 10
+	AUTOCHECKBOX "В&икористовувати поточні ім'я й пароль ", 1366, 31, 91, 165, 10
+	PUSHBUTTON "Видалити &збережений пароль", 1369, 6, 114, 100, 14, WS_GROUP
+	PUSHBUTTON "&Додатково...", 1368, 109, 114, 60, 14, NOT WS_VISIBLE | WS_DISABLED
+	AUTOCHECKBOX "Виявляти спільні файли й при&нтери до установки зв'язку", 1365, 14, 134, 193, 10, NOT WS_VISIBLE | WS_DISABLED
 END
 
 183 DIALOG 6, 18, 317, 144
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Check all that apply:", 1388, 7, 4, 296, 9
-	AUTOCHECKBOX "Route &IP packets on this interface.", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Route IP&X packets on this interface.", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "&Add a user account so a remote router can dial in.", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Send a &plain-text password if that is the only way to connect.", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "&Use scripting to complete the connection with the remote router.", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
+	LTEXT "Позначте всі застосовні параметри:", 1388, 7, 4, 296, 9
+	AUTOCHECKBOX "&Переспрямовувати пакети IP на цей інтерфейс.", 1386, 20, 19, 285, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "П&ереспрямовувати пакети IPX на цей інтерфейс.", 1387, 20, 35, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Додати о&бліковий запис для вхідних дзвінків віддаленого маршрутизатора.", 1382, 20, 52, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Надс&илати незашифрований пароль, якщо це єдиний спосіб підключення.", 1385, 20, 70, 287, 11, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "Викори&стовувати сценарій для завершення підключення до віддаленого маршрутизатора.", 1384, 20, 87, 289, 22, BS_LEFT | BS_TOP | BS_MULTILINE
 END
 
 184 DIALOG 0, 0, 317, 143
@@ -873,13 +873,13 @@ END
 
 186 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Майстер нових підключень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "A connection that is created for your use only is saved in your user account and is not available unless you are logged on.", -1, 7, 4, 306, 23
-	LTEXT "Create this connection for:", -1, 14, 27, 288, 12
-	AUTORADIOBUTTON "&Anyone's use", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&My use only", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Підключення, створене лише для вашого використання, зберігається в профілі вашого облікового запису й недоступне, поки ви не ввійдете до системи.", -1, 7, 4, 306, 23
+	LTEXT "Створити це підключення:", -1, 14, 27, 288, 12
+	AUTORADIOBUTTON "для в&сіх користувачів", 1400, 26, 40, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "лише дл&я мене", 1401, 26, 55, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 498 DIALOG 12, 16, 215, 126
@@ -887,12 +887,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Підключення до %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 206, 36
-	LTEXT "&User name:", 1399, 8, 51, 49, 8
+	LTEXT "ReactOS не вдалося підключитися до мережі з використанням наданих імені користувача й пароля. Введіть ім'я користувача й пароль заново.", 1396, 7, 6, 206, 36
+	LTEXT "&Користувач:", 1399, 8, 51, 49, 8
 	EDITTEXT 1394, 66, 46, 143, 14, ES_AUTOHSCROLL
-	LTEXT "&Password:", 1397, 8, 70, 49, 8, NOT WS_GROUP
+	LTEXT "Парол&ь:", 1397, 8, 70, 49, 8, NOT WS_GROUP
 	EDITTEXT 1393, 66, 64, 143, 14, ES_PASSWORD | ES_AUTOHSCROLL
-	AUTOCHECKBOX "&Save password", 1391, 66, 84, 143, 10
+	AUTOCHECKBOX "&Зберегти пароль", 1391, 66, 84, 143, 10
 	CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 98, 200, 1
 	DEFPUSHBUTTON "OK", 1, 81, 104, 60, 14, WS_GROUP
 	PUSHBUTTON "Скасувати", 2, 145, 104, 60, 14
@@ -903,73 +903,73 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 CAPTION "Підключення до %1"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "ReactOS was unable to connect to the network using the user name and password you provided. Please re-enter the user name and password.", 1396, 7, 6, 209, 26
-	LTEXT "&User name:", 1399, 7, 72, 44, 8
+	LTEXT "ReactOS не вдалося підключитися до мережі з використанням наданих імені користувача й пароля. Введіть ім'я користувача й пароль заново.", 1396, 7, 6, 209, 26
+	LTEXT "&Користувач:", 1399, 7, 72, 44, 8
 	EDITTEXT 1394, 97, 69, 115, 14, ES_AUTOHSCROLL
-	LTEXT "&Password:", 1397, 7, 90, 45, 8, NOT WS_GROUP
+	LTEXT "Парол&ь:", 1397, 7, 90, 45, 8, NOT WS_GROUP
 	EDITTEXT 1393, 97, 87, 115, 14, ES_PASSWORD | ES_AUTOHSCROLL
-	LTEXT "&Domain:", 1395, 7, 108, 53, 8, NOT WS_GROUP
+	LTEXT "&Домен:", 1395, 7, 108, 53, 8, NOT WS_GROUP
 	EDITTEXT 1392, 97, 105, 115, 14, ES_UPPERCASE | ES_AUTOHSCROLL
-	AUTOCHECKBOX "&Save user name and  password", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Зберегти пароль", 1391, 85, 125, 123, 10, BS_TOP | BS_MULTILINE
 	DEFPUSHBUTTON "OK", 1, 87, 146, 60, 14, WS_GROUP
 	PUSHBUTTON "Скасувати", 2, 151, 146, 60, 14
 	CONTROL "", 1398, "STATIC", SS_ETCHEDHORZ | WS_GROUP, 7, 140, 205, 1
-	LTEXT "You can enter a domain name or leave the domain field empty.\n(Domain names are not required for connections to the Internet)", -1, 8, 38, 209, 26
+	LTEXT "Поле імені домену можна заповнити або залишити \nпустим. (Для підключення до Інтернету ім'я домену не є обов'язковим)", -1, 8, 38, 209, 26
 END
 
 502 DIALOG 20, 60, 215, 73
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "PPP Settings"
+CAPTION "Параметри PPP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX "&Enable LCP extensions", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "E&nable software compression", 1424, 9, 22, 201, 10, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Negotiate &multi-link for single link connections", 1557, 9, 37, 202, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Увімкнути розширення LCP", 1423, 9, 7, 200, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Використовувати програмне стискання даних", 1424, 9, 22, 201, 10, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "У&згоджувати багатоканальність для одноканальних підключень", 1557, 9, 37, 202, 10, BS_TOP | BS_MULTILINE
 	DEFPUSHBUTTON "OK", 1, 82, 53, 60, 14
 	PUSHBUTTON "Скасувати", 2, 148, 53, 60, 14
 END
 
 509 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Майстер нових підключень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Choose the role you want for this computer:", -1, 10, 5, 275, 9
-	AUTORADIOBUTTON "&Host", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Guest", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
-	LTEXT "This computer has the information you want to access.", -1, 45, 31, 253, 13, NOT WS_GROUP | WS_TABSTOP
-	LTEXT "This computer is used to access information on the host computer.", -1, 43, 56, 253, 23, NOT WS_GROUP
+	LTEXT "Виберіть роль для цього комп'ютера:", -1, 10, 5, 275, 9
+	AUTORADIOBUTTON "&Ведений комп'ютер", 1483, 31, 20, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Провідний комп'ютер", 1484, 31, 44, 265, 10, BS_TOP | BS_MULTILINE
+	LTEXT "Цей комп'ютер містить інформацію, до якої потрібно отримати доступ.", -1, 45, 31, 253, 13, NOT WS_GROUP | WS_TABSTOP
+	LTEXT "Цей комп'ютер використовується для доступу до інформації на веденому комп'ютері.", -1, 43, 56, 253, 23, NOT WS_GROUP
 END
 
 511 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Select a device:", -1, 8, 5, 261, 8
+	LTEXT "&Виберіть пристрій:", -1, 8, 5, 261, 8
 	COMBOBOX 1485, 9, 18, 302, 62, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
 528 DIALOG 0, 0, 227, 215
 STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
-CAPTION "Connections"
+CAPTION "Підключення"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Logon privileges", 1582, 8, 10, 213, 63
-	LTEXT "Non-administrators may be allowed to create or modify connections before logging on.", 1581, 16, 21, 194, 30
-	AUTOCHECKBOX "Allo&w creating and modifying connections before logon", 1497, 16, 56, 195, 10, BS_TOP | BS_MULTILINE
+	GROUPBOX "Привілеї входу", 1582, 8, 10, 213, 63
+	LTEXT "Користувачам, які не є адміністраторами, може бути дозволено створювати або змінювати підключення перед входом до мережі.", 1581, 16, 21, 194, 30
+	AUTOCHECKBOX "Дозволити ство&рення й зміну підключень перед входом до мережі", 1497, 16, 56, 195, 10, BS_TOP | BS_MULTILINE
 END
 
 532 DIALOGEX 0, 0, 263, 263
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Router Callback"
+CAPTION "Відповідний виклик маршрутизатора"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "When you dial into a router, it may offer to call you back to reduce your phone charges or to increase security.  Specify whether you want callback or not.", 1043, 7, 5, 253, 24
-	AUTORADIOBUTTON "&No callback", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Al&ways call me back at the number(s) below:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
+	LTEXT "Після установки зв'язку з маршрутизатором він може зробити виклик у відповідь, що зменшить ваші витрати на телефонування та підвищить безпеку з'єднання.  Використовувати зворотний виклик?", 1043, 7, 5, 253, 24
+	AUTORADIOBUTTON "&Відповідний виклик не виконується", 1501, 9, 36, 252, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Зав&жди робити зворотний виклик за вказаними номерами:", 1502, 9, 48, 252, 10, BS_TOP | BS_MULTILINE, WS_EX_TRANSPARENT
 	CONTROL "", 1503, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00008401, 15, 63, 240, 143
-	PUSHBUTTON "&Edit...", 1504, 131, 213, 60, 14
-	PUSHBUTTON "&Delete", 1505, 194, 213, 60, 14
+	PUSHBUTTON "З&мінити...", 1504, 131, 213, 60, 14
+	PUSHBUTTON "В&идалити", 1505, 194, 213, 60, 14
 	CONTROL "", -1, "STATIC", SS_ETCHEDHORZ, 7, 233, 249, 1
 	DEFPUSHBUTTON "OK", 1, 132, 242, 60, 14
 	PUSHBUTTON "Скасувати", 2, 196, 242, 60, 14
@@ -977,23 +977,23 @@ END
 
 534 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | WS_CHILD | WS_CAPTION
-CAPTION "Options"
+CAPTION "Параметри"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Connection type", 1289, 7, 7, 215, 55
-	AUTORADIOBUTTON "&Demand dial", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	LTEXT "Idle ti&me before hanging up:", 1299, 27, 33, 99, 8, NOT WS_GROUP
+	GROUPBOX "Тип підключення", 1289, 7, 7, 215, 55
+	AUTORADIOBUTTON "В&иклик на вимогу", 1506, 16, 20, 199, 9, BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	LTEXT "&Час простою до роз'єднання:", 1299, 27, 33, 99, 8, NOT WS_GROUP
 	COMBOBOX 1291, 144, 30, 70, 108, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Persistent connection", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	GROUPBOX "Dialing policy", 1290, 7, 66, 215, 48
-	LTEXT "&Redial attempts:", 1300, 14, 79, 123, 8
+	AUTORADIOBUTTON "&Постійне підключення", 1507, 16, 47, 197, 9, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	GROUPBOX "Політика набору номера", 1290, 7, 66, 215, 48
+	LTEXT "&Кількість спроб повторного набору:", 1300, 14, 79, 123, 8
 	EDITTEXT 1287, 143, 76, 70, 14, ES_AUTOHSCROLL | ES_NUMBER
-	LTEXT "A&verage redial intervals:", 1301, 14, 96, 123, 8
+	LTEXT "&Середній інтервал між спробами:", 1301, 14, 96, 123, 8
 	COMBOBOX 1292, 143, 94, 70, 123, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	GROUPBOX "Multiple devices", 1288, 7, 116, 215, 35
+	GROUPBOX "Використання декількох пристроїв", 1288, 7, 116, 215, 35
 	COMBOBOX 1551, 16, 130, 128, 41, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	PUSHBUTTON "C&onfigure...", 1293, 150, 129, 65, 14
-	PUSHBUTTON "Call&back", 1302, 8, 195, 60, 14
+	PUSHBUTTON "&Налаштувати...", 1293, 150, 129, 65, 14
+	PUSHBUTTON "&Відповідний виклик", 1302, 8, 195, 60, 14
 	PUSHBUTTON "&X.25", 1295, 73, 195, 50, 14
 END
 
@@ -1053,22 +1053,22 @@ END
 
 544 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Майстер нових підключень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Internet Connection Sharing allows other computers on your local network to access external resources through this connection.", -1, 10, 5, 300, 22
-	AUTOCHECKBOX "&Enable Internet Connection Sharing for this connection", 1512, 21, 31, 272, 10
-	LTEXT "To dial this connection automatically  when a computer on your local network attempts to access external resources, select the following check box.", 1514, 10, 56, 294, 22
-	AUTOCHECKBOX "Enab&le on-demand dialing", 1513, 21, 86, 260, 10
+	LTEXT "Спільний доступ до підключення до Інтернету дає змогу іншим комп'ютерам у вашій локальній мережі отримувати доступ до зовнішніх ресурсів через це підключення.", -1, 10, 5, 300, 22
+	AUTOCHECKBOX "&Дозволити спільний доступ для цього підключення", 1512, 21, 31, 272, 10
+	LTEXT "Щоб установлювати це підключення автоматично, коли будь-який комп'ютер у вашій локальній мережі намагатиметься отримати доступ до зовнішніх ресурсів, установіть цей прапорець.", 1514, 10, 56, 294, 22
+	AUTOCHECKBOX "До&зволити виклик на вимогу", 1513, 21, 86, 260, 10
 END
 
 545 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "New Connection Wizard"
+CAPTION "Майстер нових підключень"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Shared access allows other computers on your local network to access external resources through this dial-up connection. You can enable shared access for one connection and one local network at a time.", -1, 10, 5, 300, 25
-	LTEXT "&Select the local network that will access resources through this connection:", -1, 21, 35, 285, 8
+	LTEXT "Спільний доступ дає змогу іншим комп'ютерам у вашій локальній мережі отримувати доступ до зовнішніх ресурсів через це підключення віддаленого доступу. Одночасно можна дозволяти спільний доступ лише для одного підключення й одної локальної мережі.", -1, 10, 5, 300, 25
+	LTEXT "&Виберіть локальну мережу, яка отримає доступ до ресурсів через це підключення:", -1, 21, 35, 285, 8
 	COMBOBOX 1522, 21, 48, 231, 56, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | NOT WS_TABSTOP
 END
 
@@ -1076,36 +1076,36 @@ END
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "You can configure this connection to use your smart card to log you into the remote network.  Select whether to use your smart card with this connection.", -1, 10, 5, 303, 22
-	AUTORADIOBUTTON "&Use my smart card ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "&Do not use my smart card ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Можна налаштувати це підключення для використання смарт-картки для входу до віддаленої мережі.  Використовувати смарт-картку для цього підключення?", -1, 10, 5, 303, 22
+	AUTORADIOBUTTON "&Використовувати мою смарт-картку ", 1524, 26, 29, 264, 12, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Не використовувати мою смарт-картку ", 1525, 26, 44, 261, 16, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 END
 
 547 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
-CAPTION "Demand Dial Interface Wizard"
+CAPTION "Майстер інтерфейсу виклику на вимогу"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Welcome to the Demand Dial Interface Wizard.", 1530, 122, 8, 192, 32
-	LTEXT "Using this wizard you can create a demand dial interface to connect this router to other routers.", 1531, 122, 43, 192, 37
-	LTEXT "Press Next to continue.", 1532, 122, 85, 191, 29
+	LTEXT "Майстер інтерфейсу виклику на вимогу.", 1530, 122, 8, 192, 32
+	LTEXT "За допомогою цього майстра можна створити інтерфейс виклику на вимогу для підключення цього маршрутизатора до інших маршрутизаторів.", 1531, 122, 43, 192, 37
+	LTEXT "Щоб продовжити, натисніть кнопку ""Далі"".", 1532, 122, 85, 191, 29
 END
 
 548 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "Connect using a &modem, ISDN adapter, or other physical device.", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect using &virtual private networking (VPN)", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Connect using PPP over Ethernet (PPPoE)", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Підключатися за допо&могою модема, адаптера ISDN або іншого фізичного пристрою.", 1531, 21, 17, 290, 15, BS_LEFT | BS_TOP | BS_MULTILINE | WS_GROUP | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Підключатися за допомогою &віртуальної приватної мережі (VPN)", 1532, 21, 38, 291, 15, BS_LEFT | BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Підключатися за допомогою PPP через Ethernet (PPPoE)", 1688, 21, 58, 290, 12, NOT WS_TABSTOP
 END
 
 550 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_CHILD | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Enter the name or IP address of the router to which you are connecting.", 1535, 10, 8, 289, 18
-	LTEXT "&Host name or IP address (such as reactos.org or 145.52.0.1):", 1537, 21, 35, 285, 8
+	LTEXT "Введіть ім'я або IP-адресу маршрутизатора, до якого ви підключаєтеся.", 1535, 10, 8, 289, 18
+	LTEXT "Ім'я комп'ютера або IP-адреса (напр&иклад, reactos.org або 145.52.0.1):", 1537, 21, 35, 285, 8
 	EDITTEXT 1536, 21, 47, 285, 14, ES_AUTOHSCROLL
 END
 
@@ -1174,16 +1174,16 @@ STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Connec&t using:", 1124, 7, 4, 193, 8
+	LTEXT "Підкл&ючення через:", 1124, 7, 4, 193, 8
 	CONTROL "", 1128, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x00004C0D, 7, 17, 195, 44, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&Up", 1132, 208, 18, 16, 14, BS_ICON
-	PUSHBUTTON "&Down", 1131, 208, 36, 16, 14, BS_ICON
-	AUTOCHECKBOX "A&ll devices call the same numbers", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
-	PUSHBUTTON "C&onfigure...", 1130, 140, 66, 60, 14
-	GROUPBOX "Sample type", 1125, 7, 87, 213, 56, WS_GROUP
-	LTEXT "&Phone number:", 1135, 19, 102, 191, 8
+	PUSHBUTTON "В&гору", 1132, 208, 18, 16, 14, BS_ICON
+	PUSHBUTTON "В&низ", 1131, 208, 36, 16, 14, BS_ICON
+	AUTOCHECKBOX "На&бирати однакові номери для підключення всіх пристроїв", 1119, 7, 65, 131, 21, BS_TOP | BS_MULTILINE
+	PUSHBUTTON "Нала&штувати...", 1130, 140, 66, 60, 14
+	GROUPBOX "Зразок", 1125, 7, 87, 213, 56, WS_GROUP
+	LTEXT "Номер &телефону:", 1135, 19, 102, 191, 8
 	EDITTEXT 1123, 17, 112, 138, 14, ES_AUTOHSCROLL
-	PUSHBUTTON "Alter&nates", 1129, 161, 112, 50, 14
+	PUSHBUTTON "&Інші", 1129, 161, 112, 50, 14
 	AUTOCHECKBOX "&Після підключення показати значок в області сповіщень", 1120, 11, 194, 212, 20, BS_TOP | BS_MULTILINE
 END
 
@@ -1659,12 +1659,12 @@ END
 
 7005 DIALOG 0, 0, 230, 215
 STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Callback"
+CAPTION "Відповідний виклик"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTORADIOBUTTON "&Do not allow callback", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "All&ow the caller to set the callback number", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	AUTORADIOBUTTON "Al&ways use the following callback number:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "&Заборонити зворотний виклик", 7009, 9, 7, 219, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Доз&волити абонентові визначати номер зворотного виклику", 7006, 9, 20, 218, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	AUTORADIOBUTTON "Завжди викорис&товувати для зворотного виклику цей номер:", 7007, 9, 34, 217, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	EDITTEXT 7008, 19, 49, 204, 14, ES_AUTOHSCROLL | WS_GROUP
 END
 
@@ -1673,149 +1673,149 @@ STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
 CAPTION "Загальні"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Incoming connections", -1, 7, 4, 214, 110, WS_GROUP
-	LTEXT "Allow incoming connections on these devices.", -1, 17, 17, 195, 8
-	LTEXT "&Devices:", -1, 17, 29, 29, 8
+	GROUPBOX "Вхідні підключення", -1, 7, 4, 214, 110, WS_GROUP
+	LTEXT "Дозволити вхідні підключення для таких пристроїв:", -1, 17, 17, 195, 8
+	LTEXT "&Пристрої:", -1, 17, 29, 29, 8
 	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x00004405, 17, 41, 193, 47, WS_EX_CLIENTEDGE
-	AUTOCHECKBOX "&Enable multilink", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	PUSHBUTTON "P&roperties", 7013, 145, 94, 65, 14, WS_GROUP
-	GROUPBOX "Virtual private network", -1, 6, 122, 214, 49, WS_GROUP
-	AUTOCHECKBOX "Allo&w others to make private connections to my computer by tunneling through the Internet or other network", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTOCHECKBOX "&Show icon in notification area when connected", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Багатоканальне підключення", 7012, 17, 96, 121, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7013, 145, 94, 65, 14, WS_GROUP
+	GROUPBOX "Віртуальна приватна мережа (VPN)", -1, 6, 122, 214, 49, WS_GROUP
+	AUTOCHECKBOX "Дозволити іншим ко&ристувачам робити приватні підключення до мого комп'ютера через тунель в Інтернеті або іншій мережі", 7014, 17, 137, 195, 27, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "Після підключення показати значок &в області сповіщень", 7015, 12, 184, 209, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 END
 
 7016 DIALOGEX 0, 0, 265, 190
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming TCP/IP Properties"
+CAPTION "Властивості вхідних викликів TCP/IP"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Network access", -1, 6, 5, 252, 32
-	AUTOCHECKBOX "Allow &callers to access my local area network", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
-	GROUPBOX "TCP/IP address assignment", -1, 6, 42, 250, 122
-	AUTORADIOBUTTON "&Assign TCP/IP addresses automatically using DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "S&pecify TCP/IP addresses", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
-	LTEXT "&From:", -1, 29, 88, 53, 8
+	GROUPBOX "Доступ до мережі", -1, 6, 5, 252, 32
+	AUTOCHECKBOX "Дозволити абонентам доступ до локальної ме&режі", 7017, 20, 20, 228, 9, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "Призначення адрес TCP/IP", -1, 6, 42, 250, 122
+	AUTORADIOBUTTON "Приз&начити адреси TCP/IP автоматично за допомогою DHCP", 7019, 20, 54, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Указати адреси TCP/IP", 7020, 20, 71, 231, 10, BS_TOP | BS_MULTILINE
+	LTEXT "&З:", -1, 29, 88, 53, 8
 	CONTROL "", 7018, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 85, 103, 13
-	LTEXT "&To:", -1, 29, 105, 53, 8
+	LTEXT "&По:", -1, 29, 105, 53, 8
 	CONTROL "", 7021, "RASIPADDRESS", WS_GROUP | WS_TABSTOP, 90, 102, 103, 13
-	LTEXT "Total:", -1, 29, 124, 53, 10
+	LTEXT "Усього:", -1, 29, 124, 53, 10
 	LTEXT "", 7024, 90, 121, 150, 14, 0, WS_EX_STATICEDGE
-	AUTOCHECKBOX "Allo&w calling computer to specify its own IP address", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "&Дозволити абоненту вказати свою IP-адресу", 7022, 20, 144, 231, 10, BS_TOP | BS_MULTILINE | WS_GROUP
 	DEFPUSHBUTTON "OK", 1, 133, 169, 60, 14, WS_GROUP
 	PUSHBUTTON "Скасувати", 2, 197, 169, 60, 14
 END
 
 7025 DIALOG 0, 0, 250, 157
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming IPX Properties"
+CAPTION "Властивості вхідних викликів IPX"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	GROUPBOX "Network access", -1, 8, 6, 234, 32
-	AUTOCHECKBOX "Allow &callers to access my local area network", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
-	GROUPBOX "Network number assignment", -1, 8, 43, 234, 87
-	AUTOCHECKBOX "&Assign same network number to all computers", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "Assi&gn network numbers automatically", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Specify network numbers:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	GROUPBOX "Доступ до мережі", -1, 8, 6, 234, 32
+	AUTOCHECKBOX "Дозволити абонентам доступ до локальної ме&режі", 7032, 18, 19, 194, 12, BS_LEFT | BS_TOP | BS_MULTILINE
+	GROUPBOX "Призначення номера мережі", -1, 8, 43, 234, 87
+	AUTOCHECKBOX "&Призначити один номер мережі всім комп'ютерам", 7028, 17, 56, 203, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "Приз&начати номери мереж автоматично", 7026, 28, 68, 191, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Указати номери мереж:", 7027, 28, 81, 189, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
 	EDITTEXT 7029, 40, 92, 154, 14, ES_UPPERCASE | WS_GROUP
-	AUTOCHECKBOX "Allo&w callers to specify their own node numbers", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTOCHECKBOX "Дозволити &абонентам указувати свої номери вузлів", 7031, 17, 113, 208, 11, BS_TOP | BS_MULTILINE | WS_GROUP
 	DEFPUSHBUTTON "OK", 1, 116, 136, 60, 14, WS_GROUP
 	PUSHBUTTON "Скасувати", 2, 181, 136, 60, 14
 END
 
 7033 DIALOG 0, 0, 220, 50
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Incoming Protocol Properties"
+CAPTION "Властивості протоколів"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	AUTOCHECKBOX "Allow &callers to access my local area network", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Дозволити абонентам доступ до локальної мережі", 7034, 7, 7, 208, 18, BS_LEFT | BS_TOP | BS_MULTILINE
 	DEFPUSHBUTTON "OK", 1, 86, 30, 60, 14
 	PUSHBUTTON "Скасувати", 2, 151, 30, 60, 14
 END
 
 7035 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "Networking"
+CAPTION "Мережа"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Network components:", -1, 7, 7, 217, 9
+	LTEXT "&Мережні компоненти:", -1, 7, 7, 217, 9
 	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 7, 17, 215, 89, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&Install...", 7037, 9, 110, 67, 14, WS_GROUP
-	PUSHBUTTON "&Uninstall", 7038, 80, 110, 67, 14, WS_GROUP
-	PUSHBUTTON "P&roperties", 7039, 153, 110, 67, 14, WS_GROUP
-	GROUPBOX "Description", -1, 7, 138, 213, 69
+	PUSHBUTTON "&Установити...", 7037, 9, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "&Видалити", 7038, 80, 110, 67, 14, WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7039, 153, 110, 67, 14, WS_GROUP
+	GROUPBOX "Опис", -1, 7, 138, 213, 69
 	LTEXT "<protocol description>", 7040, 17, 150, 193, 48
 END
 
 7042 DIALOGEX 0, 0, 230, 215
 STYLE DS_SETFONT | DS_CONTEXTHELP | WS_CHILD | WS_CAPTION
-CAPTION "Users"
+CAPTION "Користувачі"
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Users allowed to connect:", -1, 7, 5, 213, 8
+	LTEXT "Користувачі, яким дозволено &підключатися:", -1, 7, 5, 213, 8
 	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 7, 19, 214, 83, WS_EX_CLIENTEDGE
-	PUSHBUTTON "&New...", 7044, 7, 107, 67, 14, WS_GROUP
-	PUSHBUTTON "&Delete", 7045, 80, 107, 67, 14, WS_GROUP
-	PUSHBUTTON "P&roperties", 7046, 153, 107, 67, 14, WS_GROUP
-	AUTOCHECKBOX "Re&quire all users to secure their passwords and data.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
-	AUTOCHECKBOX "Al&ways allow directly connected devices such as palmtop computers to connect without providing a password.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
-	LTEXT "Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 9, 126, 212, 23
+	PUSHBUTTON "&Новий...", 7044, 7, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "В&идалити", 7045, 80, 107, 67, 14, WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7046, 153, 107, 67, 14, WS_GROUP
+	AUTOCHECKBOX "&Усі користувачі повинні тримати в секреті свої паролі й дані.", 7048, 8, 151, 217, 12, BS_TOP | BS_MULTILINE
+	AUTOCHECKBOX "&Завжди дозволяти пристроям із прямим з'єднанням, наприклад, кишеньковим комп'ютерам, підключення без пароля.", 7049, 8, 169, 217, 23, BS_TOP | BS_MULTILINE
+	LTEXT "Інші фактори, такі як вимкнення облікового запису, можуть перешкодити підключенню користувача.", -1, 9, 126, 212, 23
 END
 
 7049 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each user who should be allowed a connection to this computer.  Note that other factors, such as a disabled user account, may affect a user's ability to connect.", -1, 10, 1, 275, 27
-	LTEXT "&Users allowed to connect:", -1, 10, 28, 275, 8
+	LTEXT "Установіть прапорці поруч із користувачами, яким слід дозволити підключатися до цього комп'ютера.  Інші фактори, такі як вимкнення облікового запису, можуть перешкодити підключенню користувача.", -1, 10, 1, 275, 27
+	LTEXT "Користувачі, яким дозволено &підключатися:", -1, 10, 28, 275, 8
 	CONTROL "", 7043, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 42, 275, 73
-	PUSHBUTTON "&Add...", 7044, 10, 122, 65, 14, WS_GROUP
-	PUSHBUTTON "&Remove", 7045, 79, 122, 65, 14, WS_GROUP
-	PUSHBUTTON "&Properties", 7046, 147, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "&Додати...", 7044, 10, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "В&идалити", 7045, 79, 122, 65, 14, WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7046, 147, 122, 65, 14, WS_GROUP
 END
 
 7050 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each device you want to use for incoming connections.", -1, 10, 4, 299, 10
-	LTEXT "&Connection devices:", -1, 10, 16, 275, 8
+	LTEXT "Установіть прапорці поруч із пристроями, які потрібно використовувати для вхідних підключень.", -1, 10, 4, 299, 10
+	LTEXT "&Пристрої для підключення:", -1, 10, 16, 275, 8
 	CONTROL "", 7011, "SYSLISTVIEW32", WS_BORDER | WS_GROUP | WS_TABSTOP | 0x0000440D, 10, 26, 297, 87
-	PUSHBUTTON "P&roperties", 7013, 243, 120, 65, 14, WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7013, 243, 120, 65, 14, WS_GROUP
 END
 
 7051 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Select the check box next to each type of networking software that should be enabled for incoming connections.", -1, 10, 1, 288, 20
-	LTEXT "Networking &software:", -1, 10, 24, 274, 8
+	LTEXT "Установіть прапорці поруч із назвами мережних програм, які слід дозволити для вхідних підключень.", -1, 10, 1, 288, 20
+	LTEXT "&Мережне програмне забезпечення:", -1, 10, 24, 274, 8
 	CONTROL "", 7036, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000440D, 10, 34, 286, 33
-	PUSHBUTTON "&Install...", 7037, 108, 71, 60, 14, WS_GROUP
-	PUSHBUTTON "&Uninstall", 7038, 172, 71, 60, 14, WS_GROUP
-	PUSHBUTTON "&Properties", 7039, 236, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "&Установити...", 7037, 108, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "В&идалити", 7038, 172, 71, 60, 14, WS_GROUP
+	PUSHBUTTON "Влас&тивості", 7039, 236, 71, 60, 14, WS_GROUP
 	LTEXT "<protocol description>", 7040, 21, 105, 273, 38
-	LTEXT "Description:", -1, 21, 95, 275, 8
+	LTEXT "Опис:", -1, 21, 95, 275, 8
 END
 
 7052 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "Virtual private connections to your computer through the Internet are possible only if your computer has a known name or IP address on the Internet.", -1, 10, 4, 290, 20
-	AUTORADIOBUTTON "&Allow virtual private connections", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
-	AUTORADIOBUTTON "&Do not allow virtual private connections", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
-	LTEXT "Do you want to allow virtual private connections to this computer?", -1, 17, 49, 275, 8
-	LTEXT " If you allow VPN connections, ReactOS will modify the Internet Connection Firewall to allow your computer to send and receive VPN packets.", -1, 10, 25, 293, 25
+	LTEXT "Віртуальні приватні підключення через Інтернет можливі, лише якщо ваш комп'ютер має відоме ім'я або IP-адресу в Інтернеті.", -1, 10, 4, 290, 20
+	AUTORADIOBUTTON "Дозвол&ити віртуальні приватні підключення", 7053, 29, 63, 265, 10, BS_TOP | BS_MULTILINE | WS_GROUP
+	AUTORADIOBUTTON "&Заборонити віртуальні приватні підключення", 7054, 29, 78, 265, 10, BS_TOP | BS_MULTILINE | NOT WS_TABSTOP
+	LTEXT "Дозволити віртуальні приватні підключення до цього комп'ютера?", -1, 17, 49, 275, 8
+	LTEXT " Якщо дозволити VPN-підключення, Windows змінить брандмауер підключення до Інтернету таким чином, що вашому комп'ютеру буде дозволено надсилати й отримувати VPN-пакети.", -1, 10, 25, 293, 25
 END
 
 7055 DIALOG 0, 0, 317, 143
 STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
 FONT 8, "MS Shell Dlg"
 BEGIN
-	LTEXT "&Device for this connection:", -1, 23, 24, 275, 8
+	LTEXT "&Пристрій для цього підключення:", -1, 23, 24, 275, 8
 	COMBOBOX 7056, 22, 36, 275, 125, CBS_DROPDOWNLIST | WS_VSCROLL | NOT WS_TABSTOP
-	LTEXT "Devices other than the one you select will not be affected and may be used for other purposes.", -1, 10, 4, 275, 17
-	PUSHBUTTON "&Properties", 7061, 232, 53, 65, 14, WS_GROUP
+	LTEXT "Усі пристрої, окрім вибраних, не будуть задіяні й можуть використовуватися для інших потреб.", -1, 10, 4, 275, 17
+	PUSHBUTTON "Влас&тивості", 7061, 232, 53, 65, 14, WS_GROUP
 END
 
 7379 DIALOG 0, 0, 317, 143
