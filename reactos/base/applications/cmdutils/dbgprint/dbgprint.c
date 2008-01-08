@@ -52,7 +52,7 @@ int _tmain(int argc, TCHAR ** argv)
 		}
 		offset++;
 	}
-	DbgPrint(buf);
+	OutputDebugString(buf);
 	HeapFree(GetProcessHeap(), 0, buf);
 	return 0;
 }
