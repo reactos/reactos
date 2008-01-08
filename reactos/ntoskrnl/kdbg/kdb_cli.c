@@ -173,6 +173,7 @@ KdbpGetComponentId(
       PCCH Name;
       ULONG Id;
    } ComponentTable[] = {
+       { "DEFAULT", DPFLTR_DEFAULT_ID },
        { "SYSTEM", DPFLTR_SYSTEM_ID },
        { "SMSS", DPFLTR_SMSS_ID },
        { "SETUP", DPFLTR_SETUP_ID },
@@ -382,7 +383,7 @@ KdbpCmdFilter(ULONG Argc, PCHAR Argv[])
 
    if (Argc < 2)
    {
-      KdbpPrint("filter: component id argument required!\n");
+      KdbpPrint("filter: component name argument required!\n");
       return TRUE;
    }
    if (!KdbpGetComponentId(Argv[1], &ComponentId))

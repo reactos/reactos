@@ -31,6 +31,8 @@ typedef struct
 KD_COMPONENT_DATA KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
 ULONG KdComponentTableEntries = 0;
 
+ULONG Kd_DEFAULT_MASK = 1 << DPFLTR_ERROR_LEVEL;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 ULONG
@@ -295,58 +297,86 @@ KdChangeOption(IN KD_OPTION Option,
 
 
 NTSTATUS
-STDCALL
+NTAPI
 NtQueryDebugFilterState(IN ULONG ComponentId,
                         IN ULONG Level)
 {
-	unsigned int i;
+    ULONG i;
 
-	/* convert Level to mask if it isn't already one */
-	if ( Level < 32 )
-		Level = 1 << Level;
+    /* Convert Level to mask if it isn't already one */
+    if (Level < 32)
+        Level = 1 << Level;
 
-	for ( i = 0; i < KdComponentTableEntries; i++ )
-	{
-		if ( ComponentId == KdComponentTable[i].ComponentId )
-		{
-			if ( Level & KdComponentTable[i].Level )
-				return TRUE;
-			break;
-		}
-	}
-	return FALSE;
+    /* Check if it is not the default component */
+    if (ComponentId != DPFLTR_DEFAULT_ID)
+    {
+        /* No, search for an existing entry in the table */
+        for (i = 0; i < KdComponentTableEntries; i++)
+        {
+            /* Check if it is the right component */
+            if (ComponentId == KdComponentTable[i].ComponentId)
+            {
+                /* Check if mask are matching */
+                return (Level & KdComponentTable[i].Level) != 0;
+            }
+        }
+    }
+
+    /* Entry not found in the table, use default mask */
+    return (Level & Kd_DEFAULT_MASK) != 0;
 }
 
 NTSTATUS
-STDCALL
+NTAPI
 NtSetDebugFilterState(IN ULONG ComponentId,
                       IN ULONG Level,
                       IN BOOLEAN State)
 {
-	unsigned int i;
-	for ( i = 0; i < KdComponentTableEntries; i++ )
-	{
-		if ( ComponentId == KdComponentTable[i].ComponentId )
-			break;
-	}
-	if ( i == KdComponentTableEntries )
-	{
-		if ( i == MAX_KD_COMPONENT_TABLE_ENTRIES )
-			return STATUS_INVALID_PARAMETER_1;
-		++KdComponentTableEntries;
-		KdComponentTable[i].ComponentId = ComponentId;
-		KdComponentTable[i].Level = 0;
-	}
+    ULONG i;
 
-    /* Convert level to mask, if needed */
+    /* Convert Level to mask if it isn't already one */
     if (Level < 32)
         Level = 1 << Level;
 
-	if ( State )
-		KdComponentTable[i].Level |= Level;
-	else
-		KdComponentTable[i].Level &= ~Level;
-	return STATUS_SUCCESS;
+    /* Check if it is the default component */
+    if (ComponentId == DPFLTR_DEFAULT_ID)
+    {
+        /* Yes, modify the default mask */
+        if (State)
+            Kd_DEFAULT_MASK |= Level;
+        else
+            Kd_DEFAULT_MASK &= ~Level;
+
+        return STATUS_SUCCESS;
+    }
+
+    /* Search for an existing entry */
+    for (i = 0; i < KdComponentTableEntries; i++ )
+    {
+        if (ComponentId == KdComponentTable[i].ComponentId)
+            break;
+    }
+
+    /* Check if we have found an existing entry */
+    if (i == KdComponentTableEntries)
+    {
+        /* Check if we have enough space in the table */
+        if (i == MAX_KD_COMPONENT_TABLE_ENTRIES)
+            return STATUS_INVALID_PARAMETER_1;
+
+        /* Add a new entry */
+        ++KdComponentTableEntries;
+        KdComponentTable[i].ComponentId = ComponentId;
+        KdComponentTable[i].Level = Kd_DEFAULT_MASK;
+    }
+
+    /* Update entry table */
+    if (State)
+        KdComponentTable[i].Level |= Level;
+    else
+        KdComponentTable[i].Level &= ~Level;
+
+    return STATUS_SUCCESS;
 }
 
 /*
