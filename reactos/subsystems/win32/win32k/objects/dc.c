@@ -62,6 +62,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   HDC hNewDC, DisplayDC;
   HRGN hVisRgn;
   UNICODE_STRING DriverName;
+  DWORD Layout = 0;
 
   DisplayDC = NULL;
   if (hDC == NULL)
@@ -142,6 +143,8 @@ NtGdiCreateCompatibleDC(HDC hDC)
   nDc_Attr->crBackgroundClr = oDc_Attr->crBackgroundClr;
   nDc_Attr->jBkMode         = oDc_Attr->jBkMode;
   nDc_Attr->jROP2           = oDc_Attr->jROP2;
+  nDc_Attr->dwLayout        = oDc_Attr->dwLayout;
+  if (oDc_Attr->dwLayout & LAYOUT_ORIENTATIONMASK) Layout = oDc_Attr->dwLayout;
 
   DC_UnlockDc(NewDC);
   DC_UnlockDc(OrigDC);
@@ -153,6 +156,7 @@ NtGdiCreateCompatibleDC(HDC hDC)
   hVisRgn = NtGdiCreateRectRgn(0, 0, 1, 1);
   IntGdiSelectVisRgn(hNewDC, hVisRgn);
   NtGdiDeleteObject(hVisRgn);
+  if (Layout) NtGdiSetLayout( hNewDC, -1, Layout);
 
   DC_InitDC(hNewDC);
   return hNewDC;
