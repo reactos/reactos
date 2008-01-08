@@ -10,21 +10,21 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ustawienia"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Jêzyk domyœlny", -1, 7,7,231,53
-    LTEXT "Wybierz co najmniej jeden z zainstalowanych jêzyków do u¿ycia na twoim komputerze.",-1,14,18,220,17
-    COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
-    GROUPBOX "&Zainstalowane us³ugi", -1, 7,65,231,115
-    LTEXT "Wybierz us³ugi dla ka¿dego z zainstalowanych jêzyków na liœcie. U¿yj przycisków Dodaj i Usuñ aby zmodyfikowaæ liste.",-1,14,75,220,17
-    CONTROL "TEXT", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78
-    PUSHBUTTON "&Domyœlny", IDC_SET_DEFAULT, 179, 106, 53, 14
-    PUSHBUTTON "D&odaj...", IDC_ADD_BUTTON, 179, 124, 53, 14
-    PUSHBUTTON "&Usuñ...", IDC_REMOVE_BUTTON, 179, 142, 53, 14
-    PUSHBUTTON "&W³aœciwoœci", IDC_PROP_BUTTON, 179, 160, 53, 14
-    GROUPBOX "Ustawienia", -1, 7,185,231,36
-    PUSHBUTTON "&Pasek Jêzyków...", IDC_LANG_BAR_BUTTON, 14, 198, 70, 14
-    PUSHBUTTON "&Ustawienia klawiszy...", IDC_KEY_SETTINGS_BUTTON, 90, 198, 70, 14
+	GROUPBOX "Jêzyk domyœlny", -1, 7,7,237,53
+	LTEXT "Wybierz co najmniej jeden z zainstalowanych jêzyków do u¿ycia na twoim komputerze.",-1,14,18,220,17
+	COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
+	GROUPBOX "&Zainstalowane us³ugi", -1, 7,65,237,115
+	LTEXT "Wybierz us³ugi dla ka¿dego z zainstalowanych jêzyków na liœcie.\nU¿yj przycisków Dodaj i Usuñ aby zmodyfikowaæ liste.",-1,14,75,220,17
+	CONTROL "TEXT", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78
+	PUSHBUTTON "&Domyœlny", IDC_SET_DEFAULT, 179, 106, 59, 14
+	PUSHBUTTON "D&odaj...", IDC_ADD_BUTTON, 179, 124, 59, 14
+	PUSHBUTTON "&Usuñ...", IDC_REMOVE_BUTTON, 179, 142, 59, 14
+	PUSHBUTTON "&W³aœciwoœci", IDC_PROP_BUTTON, 179, 160, 59, 14
+	GROUPBOX "Ustawienia", -1, 7,185,237,36
+	PUSHBUTTON "&Pasek Jêzyków...", IDC_LANG_BAR_BUTTON, 14, 198, 70, 14
+	PUSHBUTTON "&Ustawienia klawiszy...", IDC_KEY_SETTINGS_BUTTON, 90, 198, 70, 14
 END
 
 IDD_PROPPAGEADVANCED DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
@@ -32,12 +32,12 @@ STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Zaawansowane"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    GROUPBOX "Kompatybilnoœæ", -1, 7,7,231,60
-    AUTOCHECKBOX "&Rozszerz wspieranie zaawansowanych us³ug tekstowych na wszystkie programy", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
-    LTEXT "Zaznacz t¹ opcjê by uruchomiæ zaawansowane us³ugi tekstowe w Notatniku i innych programach, które normalnie nie obs³uguj¹ rozpoznawania mowy i pisma odrêcznego czy innych zaawansowanych us³ug wprowadzania.",-1,14,33,220,25
-    GROUPBOX "Konfiguracja systemu", -1, 7,74,231,60
-    AUTOCHECKBOX "&Wy³¹cz zaawansowane us³ugi tekstowe", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
-    LTEXT "Zaznacz t¹ opcjê by wy³¹czyæ zaawansowane us³ugi tekstowe we wszystkich programach. Nie zalecane dla u¿ytkowników jêzyków Dalekiego Wschodu, jako ¿e zamyka to Pasek Jêzyków.",-1,14,100,220,25
+	GROUPBOX "Kompatybilnoœæ", -1, 7,7,231,60
+	AUTOCHECKBOX "&Rozszerz wspieranie zaawansowanych us³ug tekstowych na wszystkie programy", IDC_SUPPORT_ADV_SERV_CHECKBOX, 14, 19, 210, 10, WS_GROUP
+	LTEXT "Zaznacz t¹ opcjê by uruchomiæ zaawansowane us³ugi tekstowe w Notatniku i innych programach, które normalnie nie obs³uguj¹ rozpoznawania mowy i pisma odrêcznego czy innych zaawansowanych us³ug wprowadzania.",-1,14,33,220,25
+	GROUPBOX "Konfiguracja systemu", -1, 7,74,231,60
+	AUTOCHECKBOX "&Wy³¹cz zaawansowane us³ugi tekstowe", IDC_TURNOFF_ADV_TXTSERV_CHECKBOX, 14, 86, 210, 10, WS_GROUP
+	LTEXT "Zaznacz t¹ opcjê by wy³¹czyæ zaawansowane us³ugi tekstowe we wszystkich programach. Nie zalecane dla u¿ytkowników jêzyków Dalekiego Wschodu, jako ¿e zamyka to Pasek Jêzyków.",-1,14,100,220,25
 END
 
 IDD_LANGBAR DIALOG 20, 20, 240, 120
@@ -45,14 +45,14 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Ustawienia Paska Jêzyków"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "", -1, 7, 7, 226, 85
-    AUTOCHECKBOX "&Poka¿ Pasek Jêzyków na pulpicie", IDC_LANGBAR_ON_DESK_CHECKBOX, 17, 17, 210, 10, WS_GROUP
-    AUTOCHECKBOX "&Ustaw Pasek Jêzyków jako przeŸroczysty, gdy nie jest aktywny", IDC_LANGBAR_TRANSP_INACT_CHECKBOX, 17, 32, 210, 10
-    AUTOCHECKBOX "Poka¿ &dodatkowe ikony Paska Jêzyków w obszarze powiadomienia", IDC_ADDIT_LANGBAR_ICON_NOTIFYAREA_CHECKBOX, 17, 47, 210, 10
-    AUTOCHECKBOX "Poka¿ &opisy tekstowe na Pasku Jêzyków", IDC_TEXTLABEL_ON_LANGBAR_CHECKBOX, 17, 62, 210, 10
-    AUTOCHECKBOX "Wy³¹cz &zaawansowane us³ugi tekstowe", IDC_OFF_ADVAN_TEXTSERV_CHECKBOX, 17, 77, 200, 10
-    DEFPUSHBUTTON "OK", IDOK, 129, 99, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 182, 99, 50, 14
+	GROUPBOX "", -1, 7, 7, 226, 85
+	AUTOCHECKBOX "&Poka¿ Pasek Jêzyków na pulpicie", IDC_LANGBAR_ON_DESK_CHECKBOX, 17, 17, 210, 10, WS_GROUP
+	AUTOCHECKBOX "&Ustaw Pasek Jêzyków jako przeŸroczysty, gdy nie jest aktywny", IDC_LANGBAR_TRANSP_INACT_CHECKBOX, 17, 32, 210, 10
+	AUTOCHECKBOX "Poka¿ &dodatkowe ikony Paska Jêzyków w obszarze powiadomienia", IDC_ADDIT_LANGBAR_ICON_NOTIFYAREA_CHECKBOX, 17, 47, 210, 10
+	AUTOCHECKBOX "Poka¿ &opisy tekstowe na Pasku Jêzyków", IDC_TEXTLABEL_ON_LANGBAR_CHECKBOX, 17, 62, 210, 10
+	AUTOCHECKBOX "Wy³¹cz &zaawansowane us³ugi tekstowe", IDC_OFF_ADVAN_TEXTSERV_CHECKBOX, 17, 77, 200, 10
+	DEFPUSHBUTTON "OK", IDOK, 129, 99, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 182, 99, 50, 14
 END
 
 IDD_KEYSETTINGS DIALOG 0, 0, 272, 163
@@ -60,16 +60,16 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zaawansowane ustawienia klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Wy³¹czenie CAPSLOCK", -1, 7, 7, 258, 26
-    AUTORADIOBUTTON "Naciœniêcie klawisza CAPS&LOCK", IDC_PRESS_CAPSLOCK_KEY_RADIOBTN, 14, 17, 120, 11, WS_GROUP
-    AUTORADIOBUTTON "Naciœniêcie klawisza SHI&FT", IDC_PRESS_SHIFT_KEY_RADIOBTN, 144, 17, 120, 11, NOT WS_TABSTOP
-    GROUPBOX "Klawisze skrótu jêzyków", -1, 7, 37, 258, 95
-    LTEXT "Akcja", -1, 14, 47, 60, 9
-    RTEXT "&Sekwencja klawiszy", -1, 177, 47, 79, 9
-    LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
-    PUSHBUTTON "Z&mieñ sekwencjê klawiszy...", IDC_CHANGE_KEY_SEQ_BUTTON, 152, 113, 106, 14, WS_GROUP
-    DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 146, 140, 70, 14
+	GROUPBOX "Wy³¹czenie CAPSLOCK", -1, 7, 7, 258, 26
+	AUTORADIOBUTTON "Naciœniêcie klawisza CAPS&LOCK", IDC_PRESS_CAPSLOCK_KEY_RADIOBTN, 14, 17, 120, 11, WS_GROUP
+	AUTORADIOBUTTON "Naciœniêcie klawisza SHI&FT", IDC_PRESS_SHIFT_KEY_RADIOBTN, 144, 17, 120, 11, NOT WS_TABSTOP
+	GROUPBOX "Klawisze skrótu jêzyków", -1, 7, 37, 258, 95
+	LTEXT "Akcja", -1, 14, 47, 60, 9
+	RTEXT "&Sekwencja klawiszy", -1, 177, 47, 79, 9
+	LISTBOX IDC_KEY_LISTBOX, 14, 57, 244, 52, LBS_OWNERDRAWFIXED | LBS_HASSTRINGS | WS_VSCROLL | WS_TABSTOP
+	PUSHBUTTON "Z&mieñ sekwencjê klawiszy...", IDC_CHANGE_KEY_SEQ_BUTTON, 152, 113, 106, 14, WS_GROUP
+	DEFPUSHBUTTON "OK", IDOK, 66, 140, 70, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 146, 140, 70, 14
 END
 
 IDD_ADD DIALOG 20, 20, 227, 90
@@ -77,12 +77,12 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Dodawanie jêzyków"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
-    COMBOBOX IDC_INPUT_LANGUAGE_COMBO, 7, 17, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    LTEXT "&Uk³ad klawiatury/IME:", -1, 7, 36, 110, 10
-    COMBOBOX IDC_KEYBOARD_LAYOUT_COMBO, 7, 47, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 169, 68, 50, 14
+	LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
+	COMBOBOX IDC_INPUT_LANGUAGE_COMBO, 7, 17, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	LTEXT "&Uk³ad klawiatury/IME:", -1, 7, 36, 110, 10
+	COMBOBOX IDC_KEYBOARD_LAYOUT_COMBO, 7, 47, 212, 110, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 116, 68, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 169, 68, 50, 14
 END
 
 IDD_ADD2 DIALOG 20, 20, 257, 176
@@ -90,18 +90,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Dodawanie jêzyków"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
-    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Uk³ad klawiatury/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
-    COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Rozpoznawanie pisma odrêcznego:", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
-    COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Mowa:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
-    COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Wiêcej us³ug tekstowych:", IDC_MORE_TEXT_SERV_CHECKBOX, 37, 123, 110, 10
-    COMBOBOX IDC_MORE_TEXT_SERV_COMBO, 49, 134, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 146, 155, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 199, 155, 50, 14
+	LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
+	COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Uk³ad klawiatury/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
+	COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Rozpoznawanie pisma odrêcznego:", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
+	COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Mowa:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
+	COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Wiêcej us³ug tekstowych:", IDC_MORE_TEXT_SERV_CHECKBOX, 37, 123, 110, 10
+	COMBOBOX IDC_MORE_TEXT_SERV_COMBO, 49, 134, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 146, 155, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 199, 155, 50, 14
 END
 
 IDD_ADD3 DIALOG 20, 20, 257, 147
@@ -109,16 +109,16 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Dodawanie jêzyków"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
-    COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Uk³ad klawiatury/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
-    COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Rozpoznawanie pisma odrêcznego:", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
-    COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    AUTOCHECKBOX "&Mowa:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
-    COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 146, 126, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 199, 126, 50, 14
+	LTEXT "&Jêzyk:", -1, 7, 7, 61, 10
+	COMBOBOX IDC_INPUT_LANG_COMBO, 7, 17, 105, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Uk³ad klawiatury/IME:", IDC_KEYBOARD_LO_CHECKBOX, 37, 36, 110, 10
+	COMBOBOX IDC_KEYBOARD_LO_COMBO, 49, 47, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Rozpoznawanie pisma odrêcznego:", IDC_HANDWRITING_REC_CHECKBOX, 37, 65, 110, 10
+	COMBOBOX IDC_HANDWRITING_REC_COMBO, 49, 76, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	AUTOCHECKBOX "&Mowa:", IDC_SPEECH_CHECKBOX, 37, 94, 110, 10
+	COMBOBOX IDC_SPEECH_COMBO, 49, 105, 200, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 146, 126, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 199, 126, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ2 DIALOG 5, 100, 269, 78
@@ -126,18 +126,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zmiana sekwencji klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", -1, 16, 5, 250, 10
-    GROUPBOX "", -1, 12, 17, 184, 48
-    AUTOCHECKBOX "&W³¹cz sekwencjê klawiszy", IDC_ENABLE_KEY_SEQ_CHECKBOX, 17, 17, 85, 8
-    CTEXT "SHIFT", -1, 68, 37, 27, 12
-    CTEXT "+", -1, 57, 37, 8, 9
-    CTEXT "+", -1, 98, 37, 8, 10
-    CHECKBOX "&CTRL", IDC_CTRL_CHECKBOX, 24, 31, 30, 11, NOT WS_TABSTOP
-    CHECKBOX "&ALT", IDC_ALT_CHECKBOX, 24, 45, 40, 12, NOT WS_TABSTOP
-    LTEXT "&Klawisz:", -1, 110, 37, 14, 10
-    COMBOBOX IDC_CKEY_COMBOBOX, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 212, 25, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 212, 47, 50, 14
+	LTEXT "", -1, 16, 5, 250, 10
+	GROUPBOX "", -1, 12, 17, 184, 48
+	AUTOCHECKBOX "&W³¹cz sekwencjê klawiszy", IDC_ENABLE_KEY_SEQ_CHECKBOX, 17, 17, 85, 8
+	CTEXT "SHIFT", -1, 68, 37, 27, 12
+	CTEXT "+", -1, 57, 37, 8, 9
+	CTEXT "+", -1, 98, 37, 8, 10
+	CHECKBOX "&CTRL", IDC_CTRL_CHECKBOX, 24, 31, 30, 11, NOT WS_TABSTOP
+	CHECKBOX "&ALT", IDC_ALT_CHECKBOX, 24, 45, 40, 12, NOT WS_TABSTOP
+	LTEXT "&Klawisz:", -1, 110, 37, 14, 10
+	COMBOBOX IDC_CKEY_COMBOBOX, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 212, 25, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 212, 47, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ DIALOG 5, 100, 285, 74
@@ -145,19 +145,19 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zmiana sekwencji klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "", -1, 9, 5, 209, 60
-    AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
-    LTEXT "SHIFT", -1, 73, 37, 27, 12
-    CTEXT "+", -1, 62, 37, 8, 9
-    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Lewy &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
-    AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 121, 15, 90, 12
-    LTEXT "SHIFT", -1, 179, 37, 27, 12
-    CTEXT "+", -1, 168, 37, 8, 9
-    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 135, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 135, 45, 40, 12, NOT WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 227, 18, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 227, 44, 50, 14
+	GROUPBOX "", -1, 9, 5, 209, 60
+	AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+	LTEXT "SHIFT", -1, 73, 37, 27, 12
+	CTEXT "+", -1, 62, 37, 8, 9
+	AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
+	AUTORADIOBUTTON "Lewy &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+	AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 121, 15, 90, 12
+	LTEXT "SHIFT", -1, 179, 37, 27, 12
+	CTEXT "+", -1, 168, 37, 8, 9
+	AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 135, 31, 30, 11, WS_GROUP
+	AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 135, 45, 40, 12, NOT WS_TABSTOP
+	DEFPUSHBUTTON "OK", IDOK, 227, 18, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 227, 44, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ3 DIALOG 5, 100, 249, 125
@@ -165,21 +165,21 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zmiana sekwencji klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "", -1, 9, 5, 174, 110
-    AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
-    LTEXT "SHIFT", -1, 73, 37, 27, 12
-    CTEXT "+", -1, 62, 37, 8, 9
-    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Left &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
-    AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
-    LTEXT "SHIFT", -1, 73, 87, 27, 12
-    CTEXT "+", -1, 62, 87, 8, 9
-    CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 77, 13, 33
-    AUTORADIOBUTTON "Z&nak akcentu ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 87, 69, 10, WS_GROUP
-    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 192, 25, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 192, 47, 50, 14
+	GROUPBOX "", -1, 9, 5, 174, 110
+	AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+	LTEXT "SHIFT", -1, 73, 37, 27, 12
+	CTEXT "+", -1, 62, 37, 8, 9
+	AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, WS_GROUP
+	AUTORADIOBUTTON "Left &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+	AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
+	LTEXT "SHIFT", -1, 73, 87, 27, 12
+	CTEXT "+", -1, 62, 87, 8, 9
+	CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 77, 13, 33
+	AUTORADIOBUTTON "Z&nak akcentu ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 87, 69, 10, WS_GROUP
+	AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
+	DEFPUSHBUTTON "OK", IDOK, 192, 25, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 192, 47, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ4 DIALOG 5, 100, 249, 125
@@ -187,21 +187,21 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zmiana sekwencji klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "", -1, 9, 5, 174, 110
-    AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
-    LTEXT "SHIFT", -1, 73, 37, 27, 12
-    CTEXT "+", -1, 62, 37, 8, 9
-    CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 27, 13, 33
-    AUTORADIOBUTTON "Z&nak akcentu ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 37, 69, 10, WS_GROUP
-    AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, NOT WS_TABSTOP
-    AUTORADIOBUTTON "Lewy &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
-    AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
-    LTEXT "SHIFT", -1, 73, 87, 27, 12
-    CTEXT "+", -1, 62, 87, 8, 9
-    AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
-    DEFPUSHBUTTON "OK", IDOK, 192, 25, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 192, 47, 50, 14
+	GROUPBOX "", -1, 9, 5, 174, 110
+	AUTOCHECKBOX "&Zmieñ jêzyk", IDC_SWITCH_INPUT_LANG_CHECKBOX, 15, 15, 90, 12
+	LTEXT "SHIFT", -1, 73, 37, 27, 12
+	CTEXT "+", -1, 62, 37, 8, 9
+	CONTROL "", IDC_CKS_BUTTON, "BUTTON", BS_OWNERDRAW, 96, 27, 13, 33
+	AUTORADIOBUTTON "Z&nak akcentu ( ` )", IDC_GRAVE_ACCENT_RADIOBTN, 110, 37, 69, 10, WS_GROUP
+	AUTORADIOBUTTON "&CTRL", IDC_INLANG_CTRL_RADIOBTN, 29, 31, 30, 11, NOT WS_TABSTOP
+	AUTORADIOBUTTON "Lewy &ALT", IDC_INLANG_LEFTALT_RADIOBTN, 29, 45, 40, 12, NOT WS_TABSTOP
+	AUTOCHECKBOX "Z&mieñ uk³ad klawiatury", IDC_SWITCH_KEYBOARD_LO_CHECKBOX, 15, 65, 90, 12
+	LTEXT "SHIFT", -1, 73, 87, 27, 12
+	CTEXT "+", -1, 62, 87, 8, 9
+	AUTORADIOBUTTON "C&TRL", IDC_LAYOUT_CTRL_RADIOBTN, 29, 81, 30, 11, WS_GROUP
+	AUTORADIOBUTTON "Lewy A&LT", IDC_LAYOUT_LEFTALT_RADIOBTN, 29, 95, 40, 12, NOT WS_TABSTOP
+	DEFPUSHBUTTON "OK", IDOK, 192, 25, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 192, 47, 50, 14
 END
 
 IDD_CHANGE_KEY_SEQ5 DIALOG 5, 100, 269, 78
@@ -209,18 +209,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "Zmiana sekwencji klawiszy"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "", 1240, 16, 5, 250, 10
-    GROUPBOX "", -1, 12, 17, 184, 48
-    AUTOCHECKBOX "&W³¹cz sekwencjê klawiszy", 1249, 17, 17, 85, 8
-    CTEXT "SHIFT", -1, 68, 37, 27, 12
-    CTEXT "+", -1, 57, 37, 8, 9
-    CTEXT "+", -1, 98, 37, 8, 10
-    AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
-    AUTORADIOBUTTON "Lewy &ALT", -1, 24, 45, 40, 12, NOT WS_TABSTOP
-    LTEXT "&Klawisz:", -1, 110, 37, 14, 10
-    COMBOBOX 1236, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 212, 25, 50, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 212, 47, 50, 14
+	LTEXT "", 1240, 16, 5, 250, 10
+	GROUPBOX "", -1, 12, 17, 184, 48
+	AUTOCHECKBOX "&W³¹cz sekwencjê klawiszy", 1249, 17, 17, 85, 8
+	CTEXT "SHIFT", -1, 68, 37, 27, 12
+	CTEXT "+", -1, 57, 37, 8, 9
+	CTEXT "+", -1, 98, 37, 8, 10
+	AUTORADIOBUTTON "&CTRL", -1, 24, 31, 30, 11, WS_GROUP
+	AUTORADIOBUTTON "Lewy &ALT", -1, 24, 45, 40, 12, NOT WS_TABSTOP
+	LTEXT "&Klawisz:", -1, 110, 37, 14, 10
+	COMBOBOX 1236, 127, 34, 46, 48, CBS_DROPDOWNLIST | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 212, 25, 50, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 212, 47, 50, 14
 END
 
 IDD_INPUT_LANG_PROP DIALOG 20, 20, 227, 75
@@ -228,18 +228,18 @@ STYLE DS_SETFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_3DLOOK | DS_CONTEXTHELP | W
 CAPTION "W³aœciwoœci jêzyka"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Jêzyk:", -1, 7, 7, 61, 8
-    LTEXT "", -1, 73, 7, 129, 8
-    LTEXT "&Uk³ad klawiatury/IME:", -1, 7, 21, 110, 10
-    COMBOBOX IDC_KEYBOARD_LAYOUT_IME_COMBO, 7, 32, 212, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
-    DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
-    PUSHBUTTON "Anuluj", IDCANCEL, 169, 53, 52, 14
+	LTEXT "Jêzyk:", -1, 7, 7, 61, 8
+	LTEXT "", -1, 73, 7, 129, 8
+	LTEXT "&Uk³ad klawiatury/IME:", -1, 7, 21, 110, 10
+	COMBOBOX IDC_KEYBOARD_LAYOUT_IME_COMBO, 7, 32, 212, 60, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL
+	DEFPUSHBUTTON "OK", IDOK, 116, 53, 52, 14
+	PUSHBUTTON "Anuluj", IDCANCEL, 169, 53, 52, 14
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLSYSTEMNAME "Jêzyki i ts³ugi tekstowe"
-    IDS_CPLSYSTEMDESCRIPTION "Umo¿liwia zmianê ustawieñ jêzyków."
+	IDS_CPLSYSTEMNAME "Jêzyki i ts³ugi tekstowe"
+	IDS_CPLSYSTEMDESCRIPTION "Umo¿liwia zmianê ustawieñ jêzyków."
 	IDS_KEYBOARD "Klawiatura"
 	IDS_ADV_TEXT_SRV "Zaawansowane us³ugi tekstowe"
 	IDS_NONE "(Brak)"
@@ -253,136 +253,136 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_US_LAYOUT, 									"Angielski (USA)"
-	IDS_BELGIAN_LAYOUT, 							"Belgijski (Period)"
-	IDS_BELGIAN_FRENCH_LAYOUT, 						"Belgijski Francuski"
-	IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT, 			"Portugalski (Brazylijski ABNT)"
-	IDS_CANADIAN_FRENCH_LAYOUT, 					"Kanadyjski Francuski"
-	IDS_CANADIAN_FRENCH_LEGACY_LAYOUT, 				"Kanadyjski Francuski (Legacy)"
-	IDS_DANISH_LAYOUT, 								"Duñski"
-	IDS_DUTCH_LAYOUT, 								"Holenderski"
-	IDS_FINNISH_LAYOUT, 							"Fiñski"
-	IDS_FRENCH_LAYOUT, 								"Francuski"
-	IDS_GERMAN_LAYOUT, 								"Niemiecki"
-	IDS_GERMAN_IBM_LAYOUT, 							"Niemiecki (IBM)"
-	IDS_ICELANDIC_LAYOUT, 							"Islandzki"
-	IDS_IRISH_LAYOUT, 								"Irlandzki"
-	IDS_ITALIAN_LAYOUT, 							"W³oski"
-	IDS_ITALIAN_142_LAYOUT, 						"W³oski (142)"
-	IDS_LATIN_AMERICAN_LAYOUT, 						"Latynoamerykañski"
-	IDS_NORWEGIAN_LAYOUT, 							"Norweski"
-	IDS_PORTUGUESE_LAYOUT, 							"Portugalski"
-	IDS_SPANISH_LAYOUT, 							"Hiszpañski"
-	IDS_SPANISH_VARIANTION_LAYOUT, 					"Hiszpañski (odmiana)"
-	IDS_SWEDISH_LAYOUT, 							"Szwedzki"
-	IDS_SWISS_FRENCH_LAYOUT, 						"Szwajcarski Francuski"
-	IDS_SWISS_GERMAN_LAYOUT, 						"Szwajcarski Niemiecki"
-	IDS_UNITED_KINGDOM_LAYOUT, 						"Angielski (Wielka Brytania)"
-	IDS_UNITED_STATES_INTERNATIONAL_LAYOUT, 		"Miêdzynarodowy (USA)"
-	IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT, 	"Angielski (Dvoraka dla leworêcznych)"
+	IDS_US_LAYOUT,                                  "Angielski (USA)"
+	IDS_BELGIAN_LAYOUT,                             "Belgijski (Period)"
+	IDS_BELGIAN_FRENCH_LAYOUT,                      "Belgijski Francuski"
+	IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portugalski (Brazylijski ABNT)"
+	IDS_CANADIAN_FRENCH_LAYOUT,                     "Kanadyjski Francuski"
+	IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Kanadyjski Francuski (Legacy)"
+	IDS_DANISH_LAYOUT,                              "Duñski"
+	IDS_DUTCH_LAYOUT,                               "Holenderski"
+	IDS_FINNISH_LAYOUT,                             "Fiñski"
+	IDS_FRENCH_LAYOUT,                              "Francuski"
+	IDS_GERMAN_LAYOUT,                              "Niemiecki"
+	IDS_GERMAN_IBM_LAYOUT,                          "Niemiecki (IBM)"
+	IDS_ICELANDIC_LAYOUT,                           "Islandzki"
+	IDS_IRISH_LAYOUT,                               "Irlandzki"
+	IDS_ITALIAN_LAYOUT,                             "W³oski"
+	IDS_ITALIAN_142_LAYOUT,                         "W³oski (142)"
+	IDS_LATIN_AMERICAN_LAYOUT,                      "Latynoamerykañski"
+	IDS_NORWEGIAN_LAYOUT,                           "Norweski"
+	IDS_PORTUGUESE_LAYOUT,                          "Portugalski"
+	IDS_SPANISH_LAYOUT,                             "Hiszpañski"
+	IDS_SPANISH_VARIANTION_LAYOUT,                  "Hiszpañski (odmiana)"
+	IDS_SWEDISH_LAYOUT,                             "Szwedzki"
+	IDS_SWISS_FRENCH_LAYOUT,                        "Szwajcarski Francuski"
+	IDS_SWISS_GERMAN_LAYOUT,                        "Szwajcarski Niemiecki"
+	IDS_UNITED_KINGDOM_LAYOUT,                      "Angielski (Wielka Brytania)"
+	IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "Miêdzynarodowy (USA)"
+	IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "Angielski (Dvoraka dla leworêcznych)"
 	IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "Angielski (Dvoraka dla praworêcznych)"
-	IDS_ALBANIAN_LAYOUT, 							"Albañski"
-	IDS_CROATIAN_LAYOUT, 							"Chorwacki"
-	IDS_CZECH_LAYOUT, 								"Czeski"
-	IDS_CZECH_QWERTY_LAYOUT, 						"Czeski (QWERTY)"
-	IDS_HUNGARIAN_LAYOUT, 							"Wêgierski"
-	IDS_HUNGARIAN_101_KEY_LAYOUT, 					"Wêgierski (101-klawiszy)"
-	IDS_POLISH_LAYOUT, 								"Polski (Programisty)"
-	IDS_POLISH_214_LAYOUT, 							"Polski (214)"
-	IDS_ROMANIAN_LAYOUT, 							"Rumuñski"
-	IDS_SERBIAN_LATIN_LAYOUT, 						"Serbski (Latin)"
-	IDS_SLOVAK_LAYOUT, 								"S³owacki"
-	IDS_SLOVAK_QWERTY_LAYOUT, 						"S³owacki (QWERTY)"
-	IDS_SLOVENIAN_LAYOUT, 							"Sloweñski"
-	IDS_ESTONIAN_LAYOUT, 							"Estoñski"
-	IDS_LATVIAN_LAYOUT, 							"£otewski"
-	IDS_LATVIAN_QWERTY_LAYOUT, 						"£otewski (QWERTY)"
-	IDS_LITHUANIAN_IBM_LAYOUT, 						"Litewski (IBM)"
-	IDS_GREEK_LAYOUT, 								"Grecki"
-	IDS_GREEK_LATIN_LAYOUT, 						"Grecki (Latin)"
-	IDS_GREEK_220_LAYOUT, 							"Grecki (220)"
-	IDS_GREEK_319_LAYOUT, 							"Grecki (319)"
-	IDS_GREEK_220_LATIN_LAYOUT, 					"Grecki (220, Latin)"
-	IDS_GREEK_319_LATIN_LAYOUT, 					"Grecki (319, Latin)"
-	IDS_BELARUSIAN_LAYOUT, 							"Bia³oruski"
-	IDS_BULGARIAN_LAYOUT, 							"Bu³garski"
-	IDS_BULGARIAN_LATIN_LAYOUT, 					"Bu³garski (Latin)"
-	IDS_RUSSIAN_LAYOUT, 							"Rosyjski"
-	IDS_RUSSIAN_TYPEWRITER_LAYOUT, 					"Rosyjski (Maszynisty)"
-	IDS_SERBIAN_CYRILLIC_LAYOUT, 					"Serbski (Cyrylica)"
-	IDS_UKRAINIAN_LAYOUT, 							"Ukraiñski"
-	IDS_TURKISH_F_LAYOUT, 							"Turecki (F)"
-	IDS_TURKISH_Q_LAYOUT, 							"Turecki (Q)"
-	IDS_JAPANESE_LAYOUT, 							"Japoñski"
-	IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT, 	"Japoñski (MS-IME2002)"
-	IDS_KOREAN_LAYOUT, 								"Koreañski"
-	IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT, 		"Koreañski (MS-IME2002)"
-	IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT, 		"Chiñski (Tradycyjny) - Klawiatura US"
-	IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT, 		"Chiñski (Tradycyjny) - Fonetyczny"
-	IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT, 		"Chiñski (Tradycyjny) - ChangJie"
-	IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT, 		"Chiñski (Tradycyjny) - Kod Big5"
-	IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT, 			"Chiñski (Tradycyjny) - DaYi"
-	IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT, 		"Chiñski (Tradycyjny) - Unicode"
-	IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT, 	"Chiñski (Tradycyjny) - Alfanumeryczny"
-	IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT, 		"Chiñski (Uproszczony) - Klawiatura US"
-	IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT, 			"Chiñski (Uproszczony) - QuanPin"
-	IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT, 		"Chiñski (Uproszczony) - ShuangPin"
-	IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT, 			"Chiñski (Uproszczony) - ZhengMa"
-	IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT, 			"Chiñski (Uproszczony) - NeiMa"
-	IDS_THAI_KEDMANEE_LAYOUT, 						"Tajski (Kedmanee)"
-	IDS_THAI_PATTACHOTE_LAYOUT, 					"Tajski (Pattachote)"
-	IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT, 			"Tajski (Kedmanee, bez ShiftLock)"
-	IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT, 		"Tajski (Pattachote, bez ShiftLock)"
-	IDS_HEBREW_LAYOUT, 								"Hebrajski"
-	IDS_ARABIC_101_LAYOUT, 							"Arabski (101)"
-	IDS_ARABIC_102_LAYOUT, 							"Arabski(102)"
-	IDS_ARABIC_102_AZERTY_LAYOUT, 					"Arabski (102, AZERTY)"
-	IDS_CZECH_PROGRAMMERS_LAYOUT, 					"Czeski (Programisty)"
-	IDS_LITHUANIAN_LAYOUT, 							"Litewski"
-	IDS_BELGIAN_COMMA_LAYOUT, 						"Belgijski (Comma)"
-	IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT, 	"Chiñski (Tradycyjny) - Nowa fonetyka"
-	IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT, 	"Chiñski (Uproszczony) - Microsoft Pinyin IME 3.0"
-	IDS_UNITED_STATES_DVIRAK_LAYOUT, 				"Angielski (US-Dvorak)"
-	IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT, 	"Chiñski (Tradycyjny) - Nowy ChangJie"
-	IDS_ASSAMESE_LAYOUT, 							"Assamski"
-	IDS_BENGALI_LAYOUT, 							"Bengalski"
-	IDS_DEVANAGARI_INSCRIPT_LAYOUT, 				"Dewanagari (INSCRIPT)"
-	IDS_GUJARATI_LAYOUT, 							"GudŸarati"
-	IDS_KANNADA_LAYOUT, 							"Kannada"
-	IDS_MALAYALAM_LAYOUT, 							"Malayalam"
-	IDS_ORIYA_LAYOUT, 								"Orija"
-	IDS_PUNJABI_LAYOUT, 							"Pend¿abski"
-	IDS_TAMIL_LAYOUT, 								"Tamilski"
-	IDS_TELUGU_LAYOUT, 								"Telugu"
-	IDS_MARATHI_LAYOUT, 							"Marathi"
-	IDS_HINDI_TRADITIONAL_LAYOUT, 					"Hindi (Tradycyjny)"
-	IDS_CANTONESE_PHONETIC_LAYOUT, 					"Kantoñski (Fonetyczny)"
-	IDS_FAEROESE_LAYOUT, 							"Farerski"
-	IDS_FYRO_MACEDONIAN_LAYOUT, 					"Macedoñski(FYRO)"
-	IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT, 			"Kanadyjski wielojêzykowy"
-	IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT, 			"Chiñski (Tradycyjny) - Quick"
-	IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT, 			"Chiñski (Tradycyjny) - Array"
-	IDS_KAZAKH_LAYOUT, 								"Kazachski"
-	IDS_UZBEK_CYRILLIC_LAYOUT, 						"Uzbecki (Cyrylica)"
-	IDS_AZERI_CYRILLIC_LAYOUT, 						"Azerski (Cyrylica)"
-	IDS_TATAR_LAYOUT, 								"Tatarski"
-	IDS_AZERI_LATIN_LAYOUT, 						"Azerski (Latin)"
-	IDS_VIETNAMESE_LAYOUT, 							"Wietnamski"
-	IDS_GEORGIAN_LAYOUT, 							"Gruziñski"
-	IDS_ARMENIAN_EASTERN_LAYOUT, 					"Armeñski wschodni"
-	IDS_ARMENIAN_WESTERN_LAYOUT, 					"Armeñski zachodni"
-	IDS_GREEK_POLYTONIC_LAYOUT, 					"Grecki Politoniczny"
-	IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT, 			"Tablica Angielska (US) dla Arabskiego (IBM 238_L)"
-	IDS_FARSI_LAYOUT, 								"Perski"
-	IDS_GAELIC_LAYOUT, 								"Gaelicki"
-	IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT, 			"Portugalski (Brazylijski ABNT2)"
-	IDS_MONGOLIAN_CYRILLIC_LAYOUT, 					"Mongolski (Cyrylica)"
-	IDS_KYRGYZ_CYRILLIC_LAYOUT, 					"Kirgiski (Cyrylica)"
-	IDS_URDU_LAYOUT, 								"Urdu"
-	IDS_SYRIAC_LAYOUT, 								"Syriacki"
-	IDS_SYRIAC_PHONETIC_LAYOUT, 					"Syriacki (Fonetyczny)"
-	IDS_DIVEHI_PHONETIC_LAYOUT, 					"Malediwski (Fonetyczny)"
-	IDS_DIVEHI_TYPEWRITER_LAYOUT, 					"Malediwski (Maszynisty)"
-	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Bu³garski (Fonetyczny)"
-	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Bu³garski (Fonetyczny, BDS)"
+	IDS_ALBANIAN_LAYOUT,                            "Albañski"
+	IDS_CROATIAN_LAYOUT,                            "Chorwacki"
+	IDS_CZECH_LAYOUT,                               "Czeski"
+	IDS_CZECH_QWERTY_LAYOUT,                        "Czeski (QWERTY)"
+	IDS_HUNGARIAN_LAYOUT,                           "Wêgierski"
+	IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Wêgierski (101-klawiszy)"
+	IDS_POLISH_LAYOUT,                              "Polski (Programisty)"
+	IDS_POLISH_214_LAYOUT,                          "Polski (214)"
+	IDS_ROMANIAN_LAYOUT,                            "Rumuñski"
+	IDS_SERBIAN_LATIN_LAYOUT,                       "Serbski (Latin)"
+	IDS_SLOVAK_LAYOUT,                              "S³owacki"
+	IDS_SLOVAK_QWERTY_LAYOUT,                       "S³owacki (QWERTY)"
+	IDS_SLOVENIAN_LAYOUT,                           "Sloweñski"
+	IDS_ESTONIAN_LAYOUT,                            "Estoñski"
+	IDS_LATVIAN_LAYOUT,                             "£otewski"
+	IDS_LATVIAN_QWERTY_LAYOUT,                      "£otewski (QWERTY)"
+	IDS_LITHUANIAN_IBM_LAYOUT,                      "Litewski (IBM)"
+	IDS_GREEK_LAYOUT,                               "Grecki"
+	IDS_GREEK_LATIN_LAYOUT,                         "Grecki (Latin)"
+	IDS_GREEK_220_LAYOUT,                           "Grecki (220)"
+	IDS_GREEK_319_LAYOUT,                           "Grecki (319)"
+	IDS_GREEK_220_LATIN_LAYOUT,                     "Grecki (220, Latin)"
+	IDS_GREEK_319_LATIN_LAYOUT,                     "Grecki (319, Latin)"
+	IDS_BELARUSIAN_LAYOUT,                          "Bia³oruski"
+	IDS_BULGARIAN_LAYOUT,                           "Bu³garski"
+	IDS_BULGARIAN_LATIN_LAYOUT,                     "Bu³garski (Latin)"
+	IDS_RUSSIAN_LAYOUT,                             "Rosyjski"
+	IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Rosyjski (Maszynisty)"
+	IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Serbski (Cyrylica)"
+	IDS_UKRAINIAN_LAYOUT,                           "Ukraiñski"
+	IDS_TURKISH_F_LAYOUT,                           "Turecki (F)"
+	IDS_TURKISH_Q_LAYOUT,                           "Turecki (Q)"
+	IDS_JAPANESE_LAYOUT,                            "Japoñski"
+	IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Japoñski (MS-IME2002)"
+	IDS_KOREAN_LAYOUT,                              "Koreañski"
+	IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Koreañski (MS-IME2002)"
+	IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT,      "Chiñski (Tradycyjny) - Klawiatura US"
+	IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT,        "Chiñski (Tradycyjny) - Fonetyczny"
+	IDS_CHINESE_TRADITIONAL_CHANGJIE_LAYOUT,        "Chiñski (Tradycyjny) - ChangJie"
+	IDS_CHINESE_TRADITIONAL_BIG5CODE_LAYOUT,        "Chiñski (Tradycyjny) - Kod Big5"
+	IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT,            "Chiñski (Tradycyjny) - DaYi"
+	IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT,         "Chiñski (Tradycyjny) - Unicode"
+	IDS_CHINESE_TRADITIONAL_ALPHANUMERIC_LAYOUT,    "Chiñski (Tradycyjny) - Alfanumeryczny"
+	IDS_CHINESE_SIMPLIFIED_USKEYBOARD_LAYOUT,       "Chiñski (Uproszczony) - Klawiatura US"
+	IDS_CHINESE_SIMPLIFIED_QUANPIN_LAYOUT,          "Chiñski (Uproszczony) - QuanPin"
+	IDS_CHINESE_SIMPLIFIED_SHUANGPIN_LAYOUT,        "Chiñski (Uproszczony) - ShuangPin"
+	IDS_CHINESE_SIMPLIFIED_ZHENGMA_LAYOUT,          "Chiñski (Uproszczony) - ZhengMa"
+	IDS_CHINESE_SIMPLIFIED_NEIMA_LAYOUT,            "Chiñski (Uproszczony) - NeiMa"
+	IDS_THAI_KEDMANEE_LAYOUT,                       "Tajski (Kedmanee)"
+	IDS_THAI_PATTACHOTE_LAYOUT,                     "Tajski (Pattachote)"
+	IDS_THAI_KEDMANEE_NONSHIFTLOCK_LAYOUT,          "Tajski (Kedmanee, bez ShiftLock)"
+	IDS_THAI_PATTACHOTE_NONSHIFTLOCK_LAYOUT,        "Tajski (Pattachote, bez ShiftLock)"
+	IDS_HEBREW_LAYOUT,                              "Hebrajski"
+	IDS_ARABIC_101_LAYOUT,                          "Arabski (101)"
+	IDS_ARABIC_102_LAYOUT,                          "Arabski(102)"
+	IDS_ARABIC_102_AZERTY_LAYOUT,                   "Arabski (102, AZERTY)"
+	IDS_CZECH_PROGRAMMERS_LAYOUT,                   "Czeski (Programisty)"
+	IDS_LITHUANIAN_LAYOUT,                          "Litewski"
+	IDS_BELGIAN_COMMA_LAYOUT,                       "Belgijski (Comma)"
+	IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT,     "Chiñski (Tradycyjny) - Nowa fonetyka"
+	IDS_CHINESE_SIMPLIFIED_MSPINYINIME30_LAYOUT,    "Chiñski (Uproszczony) - Microsoft Pinyin IME 3.0"
+	IDS_UNITED_STATES_DVIRAK_LAYOUT,                "Angielski (US-Dvorak)"
+	IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT,     "Chiñski (Tradycyjny) - Nowy ChangJie"
+	IDS_ASSAMESE_LAYOUT,                            "Assamski"
+	IDS_BENGALI_LAYOUT,                             "Bengalski"
+	IDS_DEVANAGARI_INSCRIPT_LAYOUT,                 "Dewanagari (INSCRIPT)"
+	IDS_GUJARATI_LAYOUT,                            "GudŸarati"
+	IDS_KANNADA_LAYOUT,                             "Kannada"
+	IDS_MALAYALAM_LAYOUT,                           "Malayalam"
+	IDS_ORIYA_LAYOUT,                               "Orija"
+	IDS_PUNJABI_LAYOUT,                             "Pend¿abski"
+	IDS_TAMIL_LAYOUT,                               "Tamilski"
+	IDS_TELUGU_LAYOUT,                              "Telugu"
+	IDS_MARATHI_LAYOUT,                             "Marathi"
+	IDS_HINDI_TRADITIONAL_LAYOUT,                   "Hindi (Tradycyjny)"
+	IDS_CANTONESE_PHONETIC_LAYOUT,                  "Kantoñski (Fonetyczny)"
+	IDS_FAEROESE_LAYOUT,                            "Farerski"
+	IDS_FYRO_MACEDONIAN_LAYOUT,                     "Macedoñski(FYRO)"
+	IDS_CANADIAN_MULTILINGUAL_STD_LAYOUT,           "Kanadyjski wielojêzykowy"
+	IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT,           "Chiñski (Tradycyjny) - Quick"
+	IDS_CHINESE_TRADITIONAL_ARRAY_LAYOUT,           "Chiñski (Tradycyjny) - Array"
+	IDS_KAZAKH_LAYOUT,                              "Kazachski"
+	IDS_UZBEK_CYRILLIC_LAYOUT,                      "Uzbecki (Cyrylica)"
+	IDS_AZERI_CYRILLIC_LAYOUT,                      "Azerski (Cyrylica)"
+	IDS_TATAR_LAYOUT,                               "Tatarski"
+	IDS_AZERI_LATIN_LAYOUT,                         "Azerski (Latin)"
+	IDS_VIETNAMESE_LAYOUT,                          "Wietnamski"
+	IDS_GEORGIAN_LAYOUT,                            "Gruziñski"
+	IDS_ARMENIAN_EASTERN_LAYOUT,                    "Armeñski wschodni"
+	IDS_ARMENIAN_WESTERN_LAYOUT,                    "Armeñski zachodni"
+	IDS_GREEK_POLYTONIC_LAYOUT,                     "Grecki Politoniczny"
+	IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT,          "Tablica Angielska (US) dla Arabskiego (IBM 238_L)"
+	IDS_FARSI_LAYOUT,                               "Perski"
+	IDS_GAELIC_LAYOUT,                              "Gaelicki"
+	IDS_PORTUGUESE_BRAZIL_ABNT2_LAYOUT,             "Portugalski (Brazylijski ABNT2)"
+	IDS_MONGOLIAN_CYRILLIC_LAYOUT,                  "Mongolski (Cyrylica)"
+	IDS_KYRGYZ_CYRILLIC_LAYOUT,                     "Kirgiski (Cyrylica)"
+	IDS_URDU_LAYOUT,                                "Urdu"
+	IDS_SYRIAC_LAYOUT,                              "Syriacki"
+	IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syriacki (Fonetyczny)"
+	IDS_DIVEHI_PHONETIC_LAYOUT,                     "Malediwski (Fonetyczny)"
+	IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Malediwski (Maszynisty)"
+	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bu³garski (Fonetyczny)"
+	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bu³garski (Fonetyczny, BDS)"
 END

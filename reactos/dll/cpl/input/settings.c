@@ -174,18 +174,20 @@ InitDefaultLangList(HWND hWnd)
             /* FIXME: If it is established more than one English layouts of the keyboard it is incorrectly determined Lang */
             GetLocaleInfo(Lcid, LOCALE_SLANGUAGE, (LPTSTR)Lang, sizeof(Lang));
 
-            if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0, KEY_QUERY_VALUE, &hSubKey) != ERROR_SUCCESS)
-                return FALSE;
+            if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Keyboard Layout\\Substitutes", 0, KEY_QUERY_VALUE, &hSubKey) == ERROR_SUCCESS)
+            {
+                dwBufLen = BUFSIZE;
+                LONG Ret;
 
-            dwBufLen = BUFSIZE;
+                Ret = RegQueryValueEx(hSubKey,(LPCTSTR)szPreload,NULL,NULL,(LPBYTE)szSub,&dwBufLen);
+                if (Ret == ERROR_SUCCESS)
+                    _tcscpy(szPreload, szSub);
+            }
+
             TCHAR szLOName[BUFSIZE], szBuf[BUFSIZE];
-            LONG Ret;
             HTREEITEM hRoot = 0, hKeyBrd = 0, hParent;
 
-            Ret = RegQueryValueEx(hSubKey,(LPCTSTR)szPreload,NULL,NULL,(LPBYTE)szSub,&dwBufLen);
-            if (Ret == ERROR_SUCCESS) _tcscpy(szPreload, szSub);
-
-            GetLayoutName(szPreload,szLOName);	
+            GetLayoutName(szPreload,szLOName);
 
             hParent = GetRootHandle(hWnd, Lang);
             if (hParent == 0)

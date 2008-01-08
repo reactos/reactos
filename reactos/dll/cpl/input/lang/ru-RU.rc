@@ -5,19 +5,19 @@ LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 IDD_PROPPAGESETTINGS DIALOGEX 0, 0, PROPSHEETWIDTH, PROPSHEETHEIGHT
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Установки"
-FONT 8, "MS Shell Dlg", 0, 0, 0x0
+FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Основной язык ввода", -1, 7,7,231,53
+    GROUPBOX "Основной язык ввода", -1, 7,7,237,53
     LTEXT "Выберите один основной язык ввода при включении компьютера.",-1,14,18,220,17
     COMBOBOX IDC_DEFAULT_INPUT_LANG, 14, 40, 218, 46, CBS_DROPDOWNLIST | CBS_SORT
-    GROUPBOX "Ус&тановленные сервисы", -1, 7,65,231,115
-    LTEXT "Выберите сервис который вы хотите для каждого языка отображонного в листе. Используя клавиши добавление и исключение для изменения листа.",-1,14,75,220,17
+    GROUPBOX "Ус&тановленные сервисы", -1, 7,65,237,115
+    LTEXT "Выберите сервис который вы хотите для каждого языка отображонного в листе.\nИспользуя клавиши добавление и исключение для изменения листа.",-1,14,75,220,17
     CONTROL "TEXT", IDC_KEYLAYOUT_TREE, "SysTreeView32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | 0x00000034, 14, 96, 160, 78
-    PUSHBUTTON "&Установить по умолчанию", IDC_SET_DEFAULT, 179, 106, 53, 14
-    PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 179, 124, 53, 14
-    PUSHBUTTON "&Исключить...", IDC_REMOVE_BUTTON, 179, 142, 53, 14
-    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 179, 160, 53, 14
-    GROUPBOX "Свойства", -1, 7,185,231,36
+    PUSHBUTTON "&Установить по умолчанию", IDC_SET_DEFAULT, 179, 106, 59, 14
+    PUSHBUTTON "&Добавить...", IDC_ADD_BUTTON, 179, 124, 59, 14
+    PUSHBUTTON "&Исключить...", IDC_REMOVE_BUTTON, 179, 142, 59, 14
+    PUSHBUTTON "&Свойства...", IDC_PROP_BUTTON, 179, 160, 59, 14
+    GROUPBOX "Свойства", -1, 7,185,237,36
     PUSHBUTTON "Языковая панель...", IDC_LANG_BAR_BUTTON, 14, 198, 70, 14
     PUSHBUTTON "Установки клавиш...", IDC_KEY_SETTINGS_BUTTON, 90, 198, 70, 14
 END
@@ -248,67 +248,67 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_US_LAYOUT,                           "US"
-    IDS_BELGIAN_LAYOUT,                      "Belgian (Period)"
-    IDS_BELGIAN_FRENCH_LAYOUT,               "Belgian French"
-    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,    "Portuguese (Brazilian ABNT)"
-    IDS_CANADIAN_FRENCH_LAYOUT,              "Canadian French"
-    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,       "Canadian French (Legacy)"
-    IDS_DANISH_LAYOUT,                       "Danish"
-    IDS_DUTCH_LAYOUT,                        "Dutch"
-    IDS_FINNISH_LAYOUT,                      "Finnish"
-    IDS_FRENCH_LAYOUT,                       "French"
-    IDS_GERMAN_LAYOUT,                       "German"
-    IDS_GERMAN_IBM_LAYOUT,                   "German (IBM)"
-    IDS_ICELANDIC_LAYOUT,                    "Icelandic"
-    IDS_IRISH_LAYOUT,                        "Irish"
-    IDS_ITALIAN_LAYOUT,                      "Italian"
-    IDS_ITALIAN_142_LAYOUT,                  "Italian (142)"
-    IDS_LATIN_AMERICAN_LAYOUT,               "Latin American"
-    IDS_NORWEGIAN_LAYOUT,                    "Norwegian"
-    IDS_PORTUGUESE_LAYOUT,                   "Portuguese"
-    IDS_SPANISH_LAYOUT,                      "Spanish"
-    IDS_SPANISH_VARIANTION_LAYOUT,           "Spanish Variation"
-    IDS_SWEDISH_LAYOUT,                      "Swedish"
-    IDS_SWISS_FRENCH_LAYOUT,                 "Swiss French"
-    IDS_SWISS_GERMAN_LAYOUT,                 "Swiss German"
-    IDS_UNITED_KINGDOM_LAYOUT,               "United Kingdom"
-    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,  "United States-International"
+    IDS_US_LAYOUT,                                  "US"
+    IDS_BELGIAN_LAYOUT,                             "Belgian (Period)"
+    IDS_BELGIAN_FRENCH_LAYOUT,                      "Belgian French"
+    IDS_PORTUGUESE_BRAZILIAN_ABNT_LAYOUT,           "Portuguese (Brazilian ABNT)"
+    IDS_CANADIAN_FRENCH_LAYOUT,                     "Canadian French"
+    IDS_CANADIAN_FRENCH_LEGACY_LAYOUT,              "Canadian French (Legacy)"
+    IDS_DANISH_LAYOUT,                              "Danish"
+    IDS_DUTCH_LAYOUT,                               "Dutch"
+    IDS_FINNISH_LAYOUT,                             "Finnish"
+    IDS_FRENCH_LAYOUT,                              "French"
+    IDS_GERMAN_LAYOUT,                              "German"
+    IDS_GERMAN_IBM_LAYOUT,                          "German (IBM)"
+    IDS_ICELANDIC_LAYOUT,                           "Icelandic"
+    IDS_IRISH_LAYOUT,                               "Irish"
+    IDS_ITALIAN_LAYOUT,                             "Italian"
+    IDS_ITALIAN_142_LAYOUT,                         "Italian (142)"
+    IDS_LATIN_AMERICAN_LAYOUT,                      "Latin American"
+    IDS_NORWEGIAN_LAYOUT,                           "Norwegian"
+    IDS_PORTUGUESE_LAYOUT,                          "Portuguese"
+    IDS_SPANISH_LAYOUT,                             "Spanish"
+    IDS_SPANISH_VARIANTION_LAYOUT,                  "Spanish Variation"
+    IDS_SWEDISH_LAYOUT,                             "Swedish"
+    IDS_SWISS_FRENCH_LAYOUT,                        "Swiss French"
+    IDS_SWISS_GERMAN_LAYOUT,                        "Swiss German"
+    IDS_UNITED_KINGDOM_LAYOUT,                      "United Kingdom"
+    IDS_UNITED_STATES_INTERNATIONAL_LAYOUT,         "United States-International"
     IDS_UNITED_STATES_DVORAK_FOR_LEFT_HAND_LAYOUT,  "United States-Dvorak for left hand"
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT, "United States-Dvorak for right hand"
-    IDS_ALBANIAN_LAYOUT,                     "Albanian"
-    IDS_CROATIAN_LAYOUT,                     "Croatian"
-    IDS_CZECH_LAYOUT,                        "Czech"
-    IDS_CZECH_QWERTY_LAYOUT,                 "Czech (QWERTY)"
-    IDS_HUNGARIAN_LAYOUT,                    "Hungarian"
-    IDS_HUNGARIAN_101_KEY_LAYOUT,            "Hungarian 101-key"
-    IDS_POLISH_LAYOUT,                       "Polish (Programmers)"
-    IDS_POLISH_214_LAYOUT,                   "Polish (214)"
-    IDS_ROMANIAN_LAYOUT,                     "Romanian"
-    IDS_SERBIAN_LATIN_LAYOUT,                "Serbian (Latin)"
-    IDS_SLOVAK_LAYOUT,                       "Slovak"
-    IDS_SLOVAK_QWERTY_LAYOUT,                "Slovak (QWERTY)"
-    IDS_SLOVENIAN_LAYOUT,                    "Slovenian"
-    IDS_ESTONIAN_LAYOUT,                     "Estonian"
-    IDS_LATVIAN_LAYOUT,                      "Latvian"
-    IDS_LATVIAN_QWERTY_LAYOUT,               "Latvian (QWERTY)"
-    IDS_LITHUANIAN_IBM_LAYOUT,               "Lithuanian IBM"
-    IDS_GREEK_LAYOUT,                        "Greek"
-    IDS_GREEK_LATIN_LAYOUT,                  "Greek Latin"
-    IDS_GREEK_220_LAYOUT,                    "Greek (220)"
-    IDS_GREEK_319_LAYOUT,                    "Greek (319)"
-    IDS_GREEK_220_LATIN_LAYOUT,              "Greek (220) Latin"
-    IDS_GREEK_319_LATIN_LAYOUT,              "Greek (319) Latin"
-    IDS_BELARUSIAN_LAYOUT,                   "Belarusian"
-    IDS_BULGARIAN_LAYOUT,                    "Bulgarian"
-    IDS_BULGARIAN_LATIN_LAYOUT,              "Bulgarian (Latin)"
-    IDS_RUSSIAN_LAYOUT,                      "Russian"
-    IDS_RUSSIAN_TYPEWRITER_LAYOUT,           "Russian (Typewriter)"
-    IDS_SERBIAN_CYRILLIC_LAYOUT,             "Serbian (Cyrillic)"
-    IDS_UKRAINIAN_LAYOUT,                    "Ukrainian"
-    IDS_TURKISH_F_LAYOUT,                    "Turkish F"
-    IDS_TURKISH_Q_LAYOUT,                    "Turkish Q"
-    IDS_JAPANESE_LAYOUT,                     "Japanese"
+    IDS_ALBANIAN_LAYOUT,                            "Albanian"
+    IDS_CROATIAN_LAYOUT,                            "Croatian"
+    IDS_CZECH_LAYOUT,                               "Czech"
+    IDS_CZECH_QWERTY_LAYOUT,                        "Czech (QWERTY)"
+    IDS_HUNGARIAN_LAYOUT,                           "Hungarian"
+    IDS_HUNGARIAN_101_KEY_LAYOUT,                   "Hungarian 101-key"
+    IDS_POLISH_LAYOUT,                              "Polish (Programmers)"
+    IDS_POLISH_214_LAYOUT,                          "Polish (214)"
+    IDS_ROMANIAN_LAYOUT,                            "Romanian"
+    IDS_SERBIAN_LATIN_LAYOUT,                       "Serbian (Latin)"
+    IDS_SLOVAK_LAYOUT,                              "Slovak"
+    IDS_SLOVAK_QWERTY_LAYOUT,                       "Slovak (QWERTY)"
+    IDS_SLOVENIAN_LAYOUT,                           "Slovenian"
+    IDS_ESTONIAN_LAYOUT,                            "Estonian"
+    IDS_LATVIAN_LAYOUT,                             "Latvian"
+    IDS_LATVIAN_QWERTY_LAYOUT,                      "Latvian (QWERTY)"
+    IDS_LITHUANIAN_IBM_LAYOUT,                      "Lithuanian IBM"
+    IDS_GREEK_LAYOUT,                               "Greek"
+    IDS_GREEK_LATIN_LAYOUT,                         "Greek Latin"
+    IDS_GREEK_220_LAYOUT,                           "Greek (220)"
+    IDS_GREEK_319_LAYOUT,                           "Greek (319)"
+    IDS_GREEK_220_LATIN_LAYOUT,                     "Greek (220) Latin"
+    IDS_GREEK_319_LATIN_LAYOUT,                     "Greek (319) Latin"
+    IDS_BELARUSIAN_LAYOUT,                          "Belarusian"
+    IDS_BULGARIAN_LAYOUT,                           "Bulgarian"
+    IDS_BULGARIAN_LATIN_LAYOUT,                     "Bulgarian (Latin)"
+    IDS_RUSSIAN_LAYOUT,                             "Russian"
+    IDS_RUSSIAN_TYPEWRITER_LAYOUT,                  "Russian (Typewriter)"
+    IDS_SERBIAN_CYRILLIC_LAYOUT,                    "Serbian (Cyrillic)"
+    IDS_UKRAINIAN_LAYOUT,                           "Ukrainian"
+    IDS_TURKISH_F_LAYOUT,                           "Turkish F"
+    IDS_TURKISH_Q_LAYOUT,                           "Turkish Q"
+    IDS_JAPANESE_LAYOUT,                            "Japanese"
     IDS_JAPANESE_INPUT_SYSTEM_MSIME2002_LAYOUT,     "Japanese Input System (MS-IME2002)"
     IDS_KOREAN_LAYOUT,                              "Korean"
     IDS_KOREAN_INPUT_SYSTEM_MSIME2002_LAYOUT,       "Korean Input System (MS-IME2002)"
@@ -378,6 +378,6 @@ BEGIN
     IDS_SYRIAC_PHONETIC_LAYOUT,                     "Syriac Phonetic"
     IDS_DIVEHI_PHONETIC_LAYOUT,                     "Divehi Phonetic"
     IDS_DIVEHI_TYPEWRITER_LAYOUT,                   "Divehi Typewriter"
-	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT, 			"Bulgarian Phonetic (Classic)"
-	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT, 				"Bulgarian Phonetic (BDS)"
+	IDS_BULGARIAN_PHONETIC_CLASSIC_LAYOUT,          "Bulgarian Phonetic (Classic)"
+	IDS_BULGARIAN_PHONETIC_BDS_LAYOUT,              "Bulgarian Phonetic (BDS)"
 END
