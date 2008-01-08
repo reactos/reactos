@@ -372,6 +372,9 @@ $(OUTPUT):
 	${mkdir} $@
 endif
 
+$(TEMPORARY):
+	${mkdir} $@
+
 BUILDNO_H = $(INTERMEDIATE_)include$(SEP)reactos$(SEP)buildno.h
 
 include lib/lib.mak
