@@ -124,9 +124,7 @@ GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
   PGDI_HANDLE_TABLE HandleTable = NULL;
   LARGE_INTEGER htSize;
   UINT ObjType;
-  UINT i;
   ULONG ViewSize = 0;
-  PGDI_TABLE_ENTRY Entry;
   NTSTATUS Status;
 
   ASSERT(SectionObject != NULL);
@@ -157,16 +155,6 @@ GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
 
   RtlZeroMemory(HandleTable, sizeof(GDI_HANDLE_TABLE));
 
-  /*
-   * initialize the free entry cache
-   */
-  InitializeSListHead(&HandleTable->FreeEntriesHead);
-  Entry = &HandleTable->Entries[RESERVE_ENTRIES_COUNT];
-  for(i = GDI_HANDLE_COUNT - 1; i >= RESERVE_ENTRIES_COUNT; i--)
-  {
-    InterlockedPushEntrySList(&HandleTable->FreeEntriesHead, &HandleTable->FreeEntries[i]);
-  }
-
   HandleTable->LookasideLists = ExAllocatePoolWithTag(NonPagedPool,
                                                       BASE_OBJTYPE_COUNT * sizeof(PAGED_LOOKASIDE_LIST),
                                                       TAG_GDIHNDTBLE);
@@ -188,6 +176,9 @@ GDIOBJ_iAllocHandleTable(OUT PSECTION_OBJECT *SectionObject)
   }
 
   ShortDelay.QuadPart = -5000LL; /* FIXME - 0.5 ms? */
+  
+  HandleTable->FirstFree = 0;
+  HandleTable->FirstUnused = RESERVE_ENTRIES_COUNT;
 
   return HandleTable;
 }
@@ -329,6 +320,69 @@ LockErrorDebugOutput(HGDIOBJ hObj, PGDI_TABLE_ENTRY Entry, LPSTR Function)
     KeRosDumpStackFrames(NULL, 20);
 }
 
+ULONG
+FASTCALL
+InterlockedPopFreeEntry(PGDI_HANDLE_TABLE HandleTable)
+{
+	ULONG idxFirstFree, idxNextFree, idxPrev;
+	PGDI_TABLE_ENTRY pFreeEntry;
+
+	DPRINT("Enter InterLockedPopFreeEntry\n");
+
+	do
+	{
+		idxFirstFree = HandleTable->FirstFree;
+		if (idxFirstFree)
+		{
+			pFreeEntry = HandleTable->Entries + idxFirstFree;
+			ASSERT(((ULONG)pFreeEntry->KernelData & ~GDI_HANDLE_INDEX_MASK) == 0);
+			idxNextFree = (ULONG)pFreeEntry->KernelData;
+			idxPrev = (ULONG)_InterlockedCompareExchange((LONG*)&HandleTable->FirstFree, idxNextFree, idxFirstFree);
+		}
+		else 
+		{
+			idxFirstFree = HandleTable->FirstUnused;
+			idxNextFree = idxFirstFree + 1;
+			if (idxNextFree >= GDI_HANDLE_COUNT)
+			{
+				DPRINT1("No more gdi handles left!\n");
+				return 0;
+			}
+			idxPrev = (ULONG)_InterlockedCompareExchange((LONG*)&HandleTable->FirstUnused, idxNextFree, idxFirstFree);
+		}
+	}
+	while (idxPrev != idxFirstFree);
+
+	return idxFirstFree;
+}
+
+/* Pushes an entry of the handle table to the free list,
+   The entry must be unlocked and the base type field must be 0 */
+VOID
+FASTCALL
+InterlockedPushFreeEntry(PGDI_HANDLE_TABLE HandleTable, ULONG idxToFree)
+{
+	ULONG idxFirstFree, idxPrev;
+	PGDI_TABLE_ENTRY pFreeEntry;
+
+	DPRINT("Enter InterlockedPushFreeEntry\n");
+
+	pFreeEntry = HandleTable->Entries + idxToFree;
+	ASSERT((pFreeEntry->Type & GDI_ENTRY_BASETYPE_MASK) == 0);
+	ASSERT(pFreeEntry->ProcessId == 0);
+	pFreeEntry->UserData = NULL;
+
+	do
+	{
+		idxFirstFree = HandleTable->FirstFree;
+		pFreeEntry->KernelData = (PVOID)idxFirstFree;
+
+		idxPrev = (ULONG)_InterlockedCompareExchange((LONG*)&HandleTable->FirstFree, idxToFree, idxFirstFree);
+	}
+	while (idxPrev != idxFirstFree);
+}
+
+
 /*!
  * Allocate memory for GDI object and return handle to it.
  *
@@ -380,7 +434,7 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
   }
   if(newObject != NULL)
   {
-    PSLIST_ENTRY FreeEntry;
+    UINT Index;
     PGDI_TABLE_ENTRY Entry;
     PGDIOBJ ObjectBody;
     LONG TypeInfo;
@@ -407,15 +461,11 @@ GDIOBJ_AllocObj(PGDI_HANDLE_TABLE HandleTable, ULONG ObjectType)
        (type = BRSUH, PEN, EXTPEN, basetype = BRUSH) */
     TypeInfo = (ObjectType & GDI_HANDLE_BASETYPE_MASK) | (ObjectType >> GDI_ENTRY_UPPER_SHIFT);
 
-    FreeEntry = InterlockedPopEntrySList(&HandleTable->FreeEntriesHead);
-    if(FreeEntry != NULL)
+    Index = InterlockedPopFreeEntry(HandleTable);
+    if (Index != 0)
     {
       HANDLE PrevProcId;
-      UINT Index;
 
-      /* calculate the entry from the address of the entry in the free slot array */
-      Index = ((ULONG_PTR)FreeEntry - (ULONG_PTR)&HandleTable->FreeEntries[0]) /
-               sizeof(HandleTable->FreeEntries[0]);
       Entry = &HandleTable->Entries[Index];
 
 LockHandle:
@@ -423,8 +473,6 @@ LockHandle:
       if(PrevProcId == NULL)
       {
         HGDIOBJ Handle;
-
-        ASSERT(Entry->KernelData == NULL);
 
         Entry->KernelData = ObjectBody;
 
@@ -554,7 +602,8 @@ LockHandle:
   if(PrevProcId == ProcessId)
   {
     if( (Entry->KernelData != NULL) &&
-        ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) == HandleUpper) )
+        ((Entry->Type << GDI_ENTRY_UPPER_SHIFT) == HandleUpper) &&
+        ((Entry->Type & GDI_ENTRY_BASETYPE_MASK) == (HandleUpper & GDI_ENTRY_BASETYPE_MASK)) )
     {
       PGDIOBJHDR GdiHdr;
 
@@ -565,16 +614,14 @@ LockHandle:
         BOOL Ret;
         PW32PROCESS W32Process = PsGetCurrentProcessWin32Process();
 
-        /* Clear the type field so when unlocking the handle it gets finally deleted and increment reuse counter */
-        Entry->Type = (Entry->Type + GDI_ENTRY_REUSE_INC) & GDI_ENTRY_REUSE_MASK;
-        Entry->KernelData = NULL;
+        /* Clear the basetype field so when unlocking the handle it gets finally deleted and increment reuse counter */
+        Entry->Type = (Entry->Type + GDI_ENTRY_REUSE_INC) & ~GDI_ENTRY_BASETYPE_MASK;
 
         /* unlock the handle slot */
         (void)InterlockedExchangePointer(&Entry->ProcessId, NULL);
 
         /* push this entry to the free list */
-        InterlockedPushEntrySList(&HandleTable->FreeEntriesHead,
-                                  &HandleTable->FreeEntries[GDI_ENTRY_TO_INDEX(HandleTable, Entry)]);
+        InterlockedPushFreeEntry(HandleTable, GDI_ENTRY_TO_INDEX(HandleTable, Entry));
 
         if(W32Process != NULL)
         {
@@ -646,7 +693,7 @@ LockHandle:
       else
       {
         DPRINT1("Attempted to free foreign handle: 0x%x Owner: 0x%x from Caller: 0x%x\n", hObj, (ULONG_PTR)PrevProcId & ~0x1, (ULONG_PTR)ProcessId & ~0x1);
-        KeRosDumpStackFrames(NULL, 20);
+      KeRosDumpStackFrames(NULL, 20);
       }
 #ifdef GDI_DEBUG
       DPRINT1("-> called from %s:%i\n", file, line);

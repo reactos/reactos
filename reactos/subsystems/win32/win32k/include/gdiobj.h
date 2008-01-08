@@ -24,9 +24,9 @@ typedef struct _GDI_HANDLE_TABLE
 //////////////////////////////////////////////////////////////////////////////
   PPAGED_LOOKASIDE_LIST LookasideLists;
 
-  SLIST_HEADER FreeEntriesHead;
-  SLIST_ENTRY FreeEntries[((GDI_HANDLE_COUNT * sizeof(GDI_TABLE_ENTRY)) << 3) /
-                          (sizeof(SLIST_ENTRY) << 3)];
+  ULONG           FirstFree;
+  ULONG           FirstUnused;
+
 } GDI_HANDLE_TABLE, *PGDI_HANDLE_TABLE;
 
 extern PGDI_HANDLE_TABLE GdiHandleTable;
