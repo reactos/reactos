@@ -3,11 +3,11 @@
   xmlns="urn:schemas-microsoft-com:asm.v1"
   manifestVersion="1.0">
 <assemblyIdentity
-    name="ReactOS.Application.Remote.Desktop.Client"
+    name="Win32 Application.default.App"
     processorArchitecture="x86"
     version="1.0.0.0"
     type="win32"/>
-<description>ReactOS Remote Desktop Client</description>
+<description>ReactOS Service Manager</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

@@ -25,8 +25,6 @@
 #include "commctrl.h"
 #include "notepad_res.h"
 
-1 24 DISCARDABLE "manifest.xml"
-
 IDI_NPICON ICON "res/notepad.ico"
 
 #include "lang/bg-BG.rc"

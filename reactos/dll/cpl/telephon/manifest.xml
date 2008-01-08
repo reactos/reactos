@@ -3,10 +3,10 @@
  <assemblyIdentity
   version="1.0.0.0"
   processorArchitecture="X86"
-  name="ReactOS.System.ControlPanel.Telephon"
+  name="ReactOS.System.ControlPanel.System"
   type="win32"
  />
- <description>ReactOS Telephon Control Panel</description>
+ <description>ReactOS System Control Panel</description>
  <dependency>
   <dependentAssembly>
    <assemblyIdentity

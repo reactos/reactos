@@ -1,8 +1,6 @@
 #include <windows.h>
 #include "resource.h"
 
-123 24 DISCARDABLE "manifest.xml"
-
 IDB_WATERMARK BITMAP "resources/watermark.bmp"
 IDB_HEADER    BITMAP "resources/header.bmp"
 

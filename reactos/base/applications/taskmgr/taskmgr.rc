@@ -8,8 +8,6 @@
 #define res res
 #endif
 
-1 24 DISCARDABLE "manifest.xml"
-
 /* BINRES taskmgr.ico */
 IDI_TASKMANAGER         ICON    DISCARDABLE "res/taskmgr.ico"
 /* {

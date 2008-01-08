@@ -3,10 +3,10 @@
 <assemblyIdentity
     version="1.0.0.0"
     processorArchitecture="X86"
-    name="ReactOS.Application.Explorer"
+    name="ReactOS.Explorer"
     type="win32"
 />
-<description>ReactOS Explorer</description>
+<description>ROS Explorer</description>
 <dependency>
     <dependentAssembly>
         <assemblyIdentity

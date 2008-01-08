@@ -23,8 +23,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 24 DISCARDABLE "manifest.xml"
-
 IDI_CALCICON ICON "calculator.ico"
 
 #include "lang/bg-BG.rc"

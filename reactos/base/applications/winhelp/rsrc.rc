@@ -23,8 +23,6 @@
 #include "winhelp.h"
 #include "winhelp_res.h"
 
-1 24 DISCARDABLE "manifest.xml"
-
 #include "lang/bg-BG.rc"
 #include "lang/cs-CZ.rc"
 #include "lang/da-DK.rc"

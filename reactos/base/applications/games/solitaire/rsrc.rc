@@ -3,8 +3,6 @@
 
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
-1 24 DISCARDABLE "manifest.xml"
-
 IDI_SOLITAIRE ICON DISCARDABLE "solitaire.ico"
 
 #include "lang/bg-BG.rc"

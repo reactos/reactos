@@ -24,8 +24,6 @@
 
 #include "version.rc"
 
-124 24 DISCARDABLE "manifest.xml"
-
 LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 shv_accel ACCELERATORS
